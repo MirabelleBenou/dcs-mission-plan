@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
 build_mission_plan.py — DCS Mission Plan shell v1.0
-Produit dcs_mission_plan.html (fichier autonome, single-file, offline).
+Produit dist/dcs_mission_plan.html (fichier autonome, single-file, offline).
 
 Usage : python3 build_mission_plan.py
-Sortie : ./dcs_mission_plan.html
+Sortie : ./dist/dcs_mission_plan.html
 
-Sources modules actifs (à placer à côté de ce script) :
-  dcs_hq.html
-  DCS_World_Briefing_Generator.html
-  dcs_recon_station.html
-  dcs_field_manual.html
+Sources modules actifs (produits par les quatre autres build_*.py, dans ./dist/) :
+  dist/dcs_hq.html
+  dist/dcs_briefing_generator.html
+  dist/dcs_recon_station.html
+  dist/dcs_field_manual.html
 
 Sources images (à placer dans ./tiles/) :
   tiles/hq.webp  tiles/bg.webp  tiles/rs.webp  tiles/fm.webp  tiles/rp.webp  tiles/kg.webp
@@ -21,14 +21,14 @@ import os
 import sys
 
 # ── Configuration ──────────────────────────────────────────────────────────────
-OUT_FILE = 'dcs_mission_plan.html'
+OUT_FILE = 'dist/dcs_mission_plan.html'
 
 # status : 'active' = module embarqué ; 'soon' = carte voilée uniquement
 MODULES = [
-    {'id': 'hq', 'status': 'active', 'src': 'dcs_hq.html',                        'tile': 'tiles/hq.webp'},
-    {'id': 'bg', 'status': 'active', 'src': 'dcs_briefing_generator.html',       'tile': 'tiles/bg.webp'},
-    {'id': 'rs', 'status': 'active', 'src': 'dcs_recon_station.html',             'tile': 'tiles/rs.webp'},
-    {'id': 'fm', 'status': 'active', 'src': 'dcs_field_manual.html',              'tile': 'tiles/fm.webp'},
+    {'id': 'hq', 'status': 'active', 'src': 'dist/dcs_hq.html',                        'tile': 'tiles/hq.webp'},
+    {'id': 'bg', 'status': 'active', 'src': 'dist/dcs_briefing_generator.html',       'tile': 'tiles/bg.webp'},
+    {'id': 'rs', 'status': 'active', 'src': 'dist/dcs_recon_station.html',             'tile': 'tiles/rs.webp'},
+    {'id': 'fm', 'status': 'active', 'src': 'dist/dcs_field_manual.html',              'tile': 'tiles/fm.webp'},
     {'id': 'rp', 'status': 'soon',   'src': '',                                    'tile': 'tiles/rp.webp'},
     {'id': 'kg', 'status': 'soon',   'src': '',                                    'tile': 'tiles/kg.webp'},
 ]
@@ -38,16 +38,16 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def encode_file_b64(path):
     abs_path = os.path.join(SCRIPT_DIR, path)
-    if not os.path.exists(abs_path):
-        return None
+    if not os.path.isfile(abs_path):
+        raise SystemExit(f"[ERREUR] Entrée manquante : {abs_path}")
     with open(abs_path, 'rb') as f:
         return base64.b64encode(f.read()).decode('ascii')
 
 
 def encode_module_b64(path):
     abs_path = os.path.join(SCRIPT_DIR, path)
-    if not os.path.exists(abs_path):
-        return None
+    if not os.path.isfile(abs_path):
+        raise SystemExit(f"[ERREUR] Entrée manquante : {abs_path} (lancer d'abord les quatre builds de modules)")
     with open(abs_path, 'r', encoding='utf-8') as fh:
         html = fh.read()
     return base64.b64encode(html.encode('utf-8')).decode('ascii')
@@ -762,6 +762,7 @@ def main():
     html = build_html(module_html_js, tile_uris)
 
     out_path = os.path.join(SCRIPT_DIR, OUT_FILE)
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
     with open(out_path, 'w', encoding='utf-8') as f:
         f.write(html)
 

@@ -16,38 +16,25 @@ MODULE_ID   = 'fm'
 
 # ── Assets ──────────────────────────────────────────────────────────────────────
 
-ASSETS_CANDIDATES = [
-    '/mnt/project/assets.json',
-    '/mnt/user-data/uploads/assets.json',
-    os.path.join(HERE, 'assets.json'),
-]
-
-A = None
-for cand in ASSETS_CANDIDATES:
-    if os.path.exists(cand):
-        with open(cand) as f:
-            A = json.load(f)
-        print(f'✓ assets.json chargé depuis {cand}')
-        break
-
-if A is None:
-    print('⚠ assets.json introuvable — fallback Google Fonts CDN pour les polices.', file=sys.stderr)
-    A = {}
+ASSETS_PATH = os.path.join(HERE, 'assets.json')
+if not os.path.isfile(ASSETS_PATH):
+    raise SystemExit(f"[ERREUR] Entrée manquante : {ASSETS_PATH} (assets.json attendu à la racine du dépôt)")
+with open(ASSETS_PATH) as f:
+    A = json.load(f)
+print(f'✓ assets.json chargé depuis {ASSETS_PATH}')
 
 def b64_font(key):
     return A.get(key, '')
 
 # ── Images ──────────────────────────────────────────────────────────────────────
 
-UPLOAD_DIR = '/mnt/user-data/uploads'
+TILES_DIR = os.path.join(HERE, 'tiles')
 
 def encode_image(filename):
     """Encode une image en data URI base64. Ne jamais redimensionner (règle REX)."""
-    path = os.path.join(UPLOAD_DIR, filename)
-    if not os.path.exists(path):
-        path = os.path.join(HERE, filename)
-    if not os.path.exists(path):
-        return None
+    path = os.path.join(TILES_DIR, filename)
+    if not os.path.isfile(path):
+        raise SystemExit(f"[ERREUR] Entrée manquante : {path} (tuile {filename} attendue dans tiles/)")
     with open(path, 'rb') as f:
         b64 = base64.b64encode(f.read()).decode('ascii')
     ext = filename.rsplit('.', 1)[-1].lower()
@@ -1636,7 +1623,8 @@ document.addEventListener('DOMContentLoaded', init);
 
 # ── Écriture ─────────────────────────────────────────────────────────────────────
 
-OUTPUT_PATH = os.path.join(HERE, 'dcs_field_manual.html')
+os.makedirs(os.path.join(HERE, 'dist'), exist_ok=True)
+OUTPUT_PATH = os.path.join(HERE, 'dist', 'dcs_field_manual.html')
 with open(OUTPUT_PATH, 'w', encoding='utf-8') as f:
     f.write(HTML)
 

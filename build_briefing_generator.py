@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Build unifié — DCS Briefing Generator v2.2.0.
-Produit dcs_briefing_generator.html (fusion build_css.py + build_html.py).
+Produit dist/dcs_briefing_generator.html (fusion build_css.py + build_html.py).
 Usage : python3 build_briefing_generator.py
 """
 """Build the v2 KHR-26 Cold War briefing generator with tablet support."""
@@ -10,7 +10,10 @@ import os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
-with open(os.path.join(HERE, 'assets.json')) as f:
+ASSETS_PATH = os.path.join(HERE, 'assets.json')
+if not os.path.isfile(ASSETS_PATH):
+    raise SystemExit(f"[ERREUR] Entrée manquante : {ASSETS_PATH} (assets.json attendu à la racine du dépôt)")
+with open(ASSETS_PATH) as f:
     A = json.load(f)
 
 CSS = r"""
@@ -2734,7 +2737,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 
 APP_VERSION = "2.2.0"
 
-with open(os.path.join(HERE, 'assets.json')) as f:
+ASSETS_PATH = os.path.join(HERE, 'assets.json')
+if not os.path.isfile(ASSETS_PATH):
+    raise SystemExit(f"[ERREUR] Entrée manquante : {ASSETS_PATH} (assets.json attendu à la racine du dépôt)")
+with open(ASSETS_PATH) as f:
     A = json.load(f)
 
 # CSS déjà en mémoire depuis le bloc CSS
@@ -7698,7 +7704,8 @@ HTML = HTML.replace('__DEFAULT_WING_CONFIG__', _default_wing_config_js)
 HTML = HTML.replace('__APP_VERSION__', APP_VERSION)
 
 # Write the final file
-output_path = os.path.join(HERE, 'dcs_briefing_generator.html')
+os.makedirs(os.path.join(HERE, 'dist'), exist_ok=True)
+output_path = os.path.join(HERE, 'dist', 'dcs_briefing_generator.html')
 with open(output_path, 'w', encoding='utf-8') as f:
     f.write(HTML)
 

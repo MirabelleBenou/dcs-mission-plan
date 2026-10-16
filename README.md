@@ -137,16 +137,18 @@ Each tool builds to a standalone HTML, then the landing page embeds the live too
 
 ```bash
 # 1) Build the tools
-python3 build_briefing_generator.py             # → dcs_briefing_generator.html
-python3 build_recon_station.py                  # → dcs_recon_station.html
-python3 build_hq.py                             # → dcs_hq.html
-python3 build_field_manual.py                   # → dcs_field_manual.html
+python3 build_briefing_generator.py             # → dist/dcs_briefing_generator.html
+python3 build_recon_station.py                  # → dist/dcs_recon_station.html
+python3 build_hq.py                             # → dist/dcs_hq.html
+python3 build_field_manual.py                   # → dist/dcs_field_manual.html
 
 # 2) Assemble the landing page (embeds the tools + board tiles)
-python3 build_mission_plan.py                   # → dcs_mission_plan.html
+python3 build_mission_plan.py                   # → dist/dcs_mission_plan.html
 ```
 
-The output `dcs_mission_plan.html` is the distributable (and the file published online).
+Run the four tool builds first, then the landing-page build: the latter reads the four modules from `dist/` and the tiles from `tiles/`. Inputs (`assets.json`, `tiles/`) are read from the repository, and a build stops with a non-zero exit code if one is missing.
+
+The output `dist/dcs_mission_plan.html` is the distributable (and the file published online). `docs/index.html` is a byte-for-byte copy of `dist/dcs_mission_plan.html`, made at each milestone.
 
 ### Project structure
 ```

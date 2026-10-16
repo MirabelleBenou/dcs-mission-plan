@@ -7,7 +7,9 @@ import base64
 import re
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-ASSETS_PATH = os.path.join('/mnt/project', 'assets.json')
+ASSETS_PATH = os.path.join(HERE, 'assets.json')
+if not os.path.isfile(ASSETS_PATH):
+    raise SystemExit(f"[ERREUR] Entrée manquante : {ASSETS_PATH} (assets.json attendu à la racine du dépôt)")
 
 APP_VERSION = "0.1.0"
 
@@ -1511,12 +1513,12 @@ function renderWingSquadronCard(sqIdx) {{
       wingConfig.squadrons[sqIdx][fieldName] = inp.value;
       if (fieldName === 'id') {{
         toggle.textContent = inp.value || '(sans id)';
-        inp.classList.toggle('wing-id-warning', /[\s/]/.test(inp.value) && inp.value.length > 0);
+        inp.classList.toggle('wing-id-warning', /[\\s/]/.test(inp.value) && inp.value.length > 0);
       }}
       persistWingConfig(); updateWingSizeCounter();
     }});
     if (fieldName === 'id' && value) {{
-      inp.classList.toggle('wing-id-warning', /[\s/]/.test(value));
+      inp.classList.toggle('wing-id-warning', /[\\s/]/.test(value));
     }}
     wrap.appendChild(lbl); wrap.appendChild(inp);
     return wrap;
@@ -1596,12 +1598,12 @@ function bindWingEditorEvents() {{
     inp.addEventListener('input', () => {{
       wingConfig.wing[field] = inp.value;
       if (field === 'id') {{
-        inp.classList.toggle('wing-id-warning', /[\s/]/.test(inp.value) && inp.value.length > 0);
+        inp.classList.toggle('wing-id-warning', /[\\s/]/.test(inp.value) && inp.value.length > 0);
       }}
       persistWingConfig(); updateWingSizeCounter();
     }});
     if (field === 'id') {{
-      inp.classList.toggle('wing-id-warning', /[\s/]/.test(inp.value) && inp.value.length > 0);
+      inp.classList.toggle('wing-id-warning', /[\\s/]/.test(inp.value) && inp.value.length > 0);
     }}
   }});
 
@@ -1635,7 +1637,7 @@ function bindWingEditorEvents() {{
 // ── Wing actions ───────────────────────────────────────────────
 function exportWingConfig() {{
   const blob = new Blob([JSON.stringify(wingConfig, null, 2)], {{ type: 'application/json' }});
-  const wid  = (wingConfig.wing.id || 'wing').toLowerCase().replace(/[\s/]+/g, '_');
+  const wid  = (wingConfig.wing.id || 'wing').toLowerCase().replace(/[\\s/]+/g, '_');
   const fname = 'wing_config_' + wid + '_' + Date.now() + '.json';
   if (navigator.share && navigator.canShare) {{
     try {{
@@ -2303,11 +2305,11 @@ function formatLuaNumber(n) {{
   let s = n.toPrecision(17);
   if (s.includes('e') || s.includes('E')) {{
     // Reformater en décimal plein
-    s = n.toFixed(15).replace(/\.?0+$/, '');
+    s = n.toFixed(15).replace(/\\.?0+$/, '');
     if (!s.includes('.')) s = s + '.0';
   }} else {{
     // Supprimer les zéros trailing
-    s = s.replace(/\.?0+$/, '');
+    s = s.replace(/\\.?0+$/, '');
     if (s.endsWith('.')) s = s.slice(0, -1);
   }}
   return s;
@@ -2332,7 +2334,7 @@ function serializeLua(val, indent) {{
   for (const [k, v] of entries) {{
     const vs = serializeLua(v, indent + 1);
     if (vs === null) continue;
-    const ks = (/^\d+$/.test(String(k))) ? '[' + k + ']' : '["' + k + '"]';
+    const ks = (/^\\d+$/.test(String(k))) ? '[' + k + ']' : '["' + k + '"]';
     out += tab1 + ks + ' = ' + vs + ', -- end of ' + ks + '\\n';
   }}
   out += tab + '}}';
@@ -2736,7 +2738,8 @@ HTML_FINAL = (HTML
     .replace('__REBUILD_MIZ__', _REBUILD_MIZ)
 )
 
-OUTPUT_PATH = os.path.join(HERE, 'dcs_hq.html')
+os.makedirs(os.path.join(HERE, 'dist'), exist_ok=True)
+OUTPUT_PATH = os.path.join(HERE, 'dist', 'dcs_hq.html')
 
 with open(OUTPUT_PATH, 'w', encoding='utf-8') as f:
     f.write(HTML_FINAL)

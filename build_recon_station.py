@@ -8,6 +8,8 @@ import re
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ASSETS_PATH = os.path.join(HERE, 'assets.json')
+if not os.path.isfile(ASSETS_PATH):
+    raise SystemExit(f"[ERREUR] Entrée manquante : {ASSETS_PATH} (assets.json attendu à la racine du dépôt)")
 
 APP_VERSION = "1.0.0"
 
@@ -3351,7 +3353,8 @@ init();
 """
 
 # ---------- Build output ----------
-OUTPUT_PATH = os.path.join(HERE, 'dcs_recon_station.html')
+os.makedirs(os.path.join(HERE, 'dist'), exist_ok=True)
+OUTPUT_PATH = os.path.join(HERE, 'dist', 'dcs_recon_station.html')
 
 with open(OUTPUT_PATH, 'w', encoding='utf-8') as f:
     f.write(HTML)
