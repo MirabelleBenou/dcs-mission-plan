@@ -1798,6 +1798,48 @@ const I18N = {
     'sec.preview': 'Aperçu',
     'tab.fuel': 'Carburant',
     'tab.threats': 'Menaces',
+    'ph.meta.docRef': 'OPS-M3-1989',
+    'ph.meta.operation': 'FOOTHOLD',
+    'ph.meta.mission': 'M3',
+    'ph.meta.date': '1989-03-22',
+    'ph.meta.time': '10:00 L',
+    'ph.flight.callsign': 'CAESAR',
+    'ph.flight.aircraft': 'Mi-24P',
+    'ph.flight.count': '2',
+    'ph.flight.task': 'CAS / Défense de zone',
+    'ph.mission.objective': 'Intercepter le convoi avant la FARP',
+    'ph.mission.execution.*': 'Chemin côtier jusqu\'à l\'IP',
+    'ph.times.*.label': 'Décollage',
+    'ph.times.*.value': '09:45',
+    'ph.crew.*.callsign': 'CAESAR 1-1',
+    'ph.crew.*.pilot': 'VIPER',
+    'ph.crew.*.crew': 'HUSKER',
+    'ph.crew.*.board': '41',
+    'ph.nav.*.name': 'IP',
+    'ph.nav.*.course': '059',
+    'ph.nav.*.distance': '32',
+    'ph.nav.*.altitude': '50',
+    'ph.nav.*.tos': '10:05',
+    'ph.nav.*.note': 'Île + rivière',
+    'ph.radios.*.name': 'R-863',
+    'ph.radios.*.channels.*.channel': '0',
+    'ph.radios.*.channels.*.label': 'Groupe 1',
+    'ph.radios.*.channels.*.frequency': '127.50',
+    'ph.radios.*.channels.*.modulation': 'AM',
+    'ph.fields.*.icao': 'LCRA',
+    'ph.fields.*.name': 'Akrotiri',
+    'ph.fields.*.runway': '10',
+    'ph.fields.*.frequency': '270.00',
+    'ph.weather.metar': 'LCRA 221000Z 18002KT 9999 SCT082 20/15 Q1013',
+    'ph.weather.wind': '180/02',
+    'ph.weather.visibility': '≥ 10 km',
+    'ph.weather.qnh': '1013 hPa',
+    'ph.weather.clouds': 'SCT 8200 ft',
+    'ph.fuel.joker': '600',
+    'ph.fuel.bingo': '450',
+    'ph.loadout.*': '4 × 9M114 Shturm',
+    'ph.threats.*': 'SA-13',
+    'ph.notes': 'Repère : petite île + rivière',
     'f.classification': 'Classification',
     'f.docRef': 'Référence',
     'f.operation': 'Opération',
@@ -2002,6 +2044,48 @@ const I18N = {
     'sec.preview': 'Preview',
     'tab.fuel': 'Fuel',
     'tab.threats': 'Threats',
+    'ph.meta.docRef': 'OPS-M3-1989',
+    'ph.meta.operation': 'FOOTHOLD',
+    'ph.meta.mission': 'M3',
+    'ph.meta.date': '1989-03-22',
+    'ph.meta.time': '10:00 L',
+    'ph.flight.callsign': 'CAESAR',
+    'ph.flight.aircraft': 'Mi-24P',
+    'ph.flight.count': '2',
+    'ph.flight.task': 'CAS / Area defence',
+    'ph.mission.objective': 'Intercept the convoy before the FARP',
+    'ph.mission.execution.*': 'Coastal route to the IP',
+    'ph.times.*.label': 'Take-off',
+    'ph.times.*.value': '09:45',
+    'ph.crew.*.callsign': 'CAESAR 1-1',
+    'ph.crew.*.pilot': 'VIPER',
+    'ph.crew.*.crew': 'HUSKER',
+    'ph.crew.*.board': '41',
+    'ph.nav.*.name': 'IP',
+    'ph.nav.*.course': '059',
+    'ph.nav.*.distance': '32',
+    'ph.nav.*.altitude': '50',
+    'ph.nav.*.tos': '10:05',
+    'ph.nav.*.note': 'Island + river',
+    'ph.radios.*.name': 'R-863',
+    'ph.radios.*.channels.*.channel': '0',
+    'ph.radios.*.channels.*.label': 'Group 1',
+    'ph.radios.*.channels.*.frequency': '127.50',
+    'ph.radios.*.channels.*.modulation': 'AM',
+    'ph.fields.*.icao': 'LCRA',
+    'ph.fields.*.name': 'Akrotiri',
+    'ph.fields.*.runway': '10',
+    'ph.fields.*.frequency': '270.00',
+    'ph.weather.metar': 'LCRA 221000Z 18002KT 9999 SCT082 20/15 Q1013',
+    'ph.weather.wind': '180/02',
+    'ph.weather.visibility': '≥ 10 km',
+    'ph.weather.qnh': '1013 hPa',
+    'ph.weather.clouds': 'SCT 8200 ft',
+    'ph.fuel.joker': '600',
+    'ph.fuel.bingo': '450',
+    'ph.loadout.*': '4 × 9M114 Shturm',
+    'ph.threats.*': 'SA-13',
+    'ph.notes': 'Landmark: small island + river',
     'f.classification': 'Classification',
     'f.docRef': 'Reference',
     'f.operation': 'Operation',
@@ -2878,14 +2962,19 @@ const LIST_SPECS = {
 };
 function listSpec(path) { return LIST_SPECS[path.replace(/\.\d+\./g, '.*.')]; }
 
+/* Exemple grisé d'un champ : clé ph.<chemin> (indices de liste → *) ; jamais écrit dans l'état */
+function phAttr(path) {
+  const key = 'ph.' + path.replace(/\.\d+(?=\.|$)/g, '.*');
+  return ' placeholder="' + esc(t(key)) + '"';
+}
 function fInput(labelKey, path, value, extra) {
-  return '<div class="ed-field"><label>' + esc(t(labelKey)) + '</label><input type="text" data-path="' + path + '" value="' + esc(value) + '"' + (extra || '') + '></div>';
+  return '<div class="ed-field"><label>' + esc(t(labelKey)) + '</label><input type="text" data-path="' + path + '" value="' + esc(value) + '"' + phAttr(path) + (extra || '') + '></div>';
 }
 function fInputBare(path, value, extra) {
-  return '<div class="ed-field"><input type="text" data-path="' + path + '" value="' + esc(value) + '"' + (extra || '') + '></div>';
+  return '<div class="ed-field"><input type="text" data-path="' + path + '" value="' + esc(value) + '"' + phAttr(path) + (extra || '') + '></div>';
 }
 function fArea(labelKey, path, value) {
-  return '<div class="ed-field"><label>' + esc(t(labelKey)) + '</label><textarea data-path="' + path + '">' + esc(value) + '</textarea></div>';
+  return '<div class="ed-field"><label>' + esc(t(labelKey)) + '</label><textarea data-path="' + path + '"' + phAttr(path) + '>' + esc(value) + '</textarea></div>';
 }
 function fSelect(labelKey, path, value, options) {
   return '<div class="ed-field"><label>' + esc(t(labelKey)) + '</label><select data-path="' + path + '">' +
