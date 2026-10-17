@@ -9,9 +9,9 @@ Sortie : ./dist/dcs_mission_plan.html
 Sources modules actifs (produits par les cinq autres build_*.py, dans ./dist/) :
   dist/dcs_hq.html
   dist/dcs_briefing_generator.html
+  dist/dcs_datacard_generator.html
   dist/dcs_recon_station.html
   dist/dcs_field_manual.html
-  dist/dcs_datacard_generator.html
 
 Sources images (à placer dans ./tiles/) :
   tiles/hq.webp  tiles/bg.webp  tiles/rs.webp  tiles/fm.webp  tiles/rp.webp  tiles/kg.webp
@@ -25,12 +25,14 @@ import sys
 OUT_FILE = 'dist/dcs_mission_plan.html'
 
 # status : 'active' = module embarqué ; 'soon' = carte voilée uniquement
+# Ordre des modules actifs = ordre des cartes de la landing. RÈGLE : Field Manual reste TOUJOURS le dernier
+# module actif ; tout module activé plus tard s'insère avant lui.
 MODULES = [
     {'id': 'hq', 'status': 'active', 'src': 'dist/dcs_hq.html',                        'tile': 'tiles/hq.webp'},
     {'id': 'bg', 'status': 'active', 'src': 'dist/dcs_briefing_generator.html',       'tile': 'tiles/bg.webp'},
+    {'id': 'dg', 'status': 'active', 'src': 'dist/dcs_datacard_generator.html',        'tile': 'tiles/kg.webp'},
     {'id': 'rs', 'status': 'active', 'src': 'dist/dcs_recon_station.html',             'tile': 'tiles/rs.webp'},
     {'id': 'fm', 'status': 'active', 'src': 'dist/dcs_field_manual.html',              'tile': 'tiles/fm.webp'},
-    {'id': 'dg', 'status': 'active', 'src': 'dist/dcs_datacard_generator.html',        'tile': 'tiles/kg.webp'},
     {'id': 'rp', 'status': 'soon',   'src': '',                                    'tile': 'tiles/rp.webp'},
 ]
 
@@ -236,11 +238,12 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
 #card-fm::before{{background:radial-gradient(circle at 90% 10%, rgba(96,64,30,.5), transparent 14%);}}
 #card-dg .shot{{background-image:url("{tile_dg}");}}
 #card-dg::before{{background:radial-gradient(circle at 10% 92%, rgba(96,64,30,.5), transparent 15%);}}
-.active-row .print:nth-child(1){{transform:rotate(-1.8deg);}}
-.active-row .print:nth-child(2){{transform:rotate(1.8deg);}}
-.active-row .print:nth-child(3){{transform:rotate(0deg);}}
-.active-row .print:nth-child(4){{transform:rotate(-1.4deg);}}
-.active-row .print:nth-child(5){{transform:rotate(1.2deg);}}
+/* Rotation propre à chaque carte, visée par son id (et non par sa position) : l'ordre des cartes peut changer. */
+.active-row .print[id="card-hq"]{{transform:rotate(-1.8deg);}}
+.active-row .print[id="card-bg"]{{transform:rotate(1.8deg);}}
+.active-row .print[id="card-rs"]{{transform:rotate(0deg);}}
+.active-row .print[id="card-fm"]{{transform:rotate(-1.4deg);}}
+.active-row .print[id="card-dg"]{{transform:rotate(1.2deg);}}
 .print.active:hover{{transform:rotate(0) translateY(-7px); cursor:pointer; box-shadow:0 30px 64px rgba(0,0,0,.6), 0 0 0 2px var(--card-accent);}}
 .cta{{margin:2px 8px 12px; display:inline-block; font-family:var(--f-ui); font-size:12.5px; letter-spacing:.08em; text-transform:uppercase;
   color:#15120c; background:var(--card-accent); border:1px solid var(--paper-edge); padding:9px 15px; border-radius:var(--rad);}}
@@ -356,7 +359,9 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
 
     <div class="wall-stage">
 
-      <!-- Modules actifs : dossiers ouverts, traitement identique -->
+      <!-- Modules actifs : dossiers ouverts, traitement identique.
+           Ordre : HQ · Briefing Generator · Datacard Generator · Recon Station · Field Manual.
+           RÈGLE : Field Manual reste TOUJOURS la dernière carte active ; un module activé plus tard s'insère avant. -->
       <div class="active-row">
         <div class="print active reveal d3" id="card-hq" style="--card-accent:var(--a-hq)" tabindex="0" role="button" aria-label="HQ">
           <span class="tape"></span><span class="pin tl"></span><span class="pin tr"></span>
@@ -388,6 +393,20 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
           <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>
         </div>
 
+        <div class="print active reveal d4" id="card-dg" style="--card-accent:var(--a-dg)" tabindex="0" role="button" aria-label="Datacard Generator">
+          <span class="tape"></span><span class="pin tl"></span><span class="pin tr"></span>
+          <div class="shot"></div>
+          <div class="caption">
+            <div class="cap-row">
+              <span class="logo" style="background:var(--a-dg)">D·G</span>
+              <span class="ptitle">Datacard Generator</span>
+              <span class="pver">v1.0.0</span>
+            </div>
+            <div class="pdesc" data-i18n="dg.desc">Datacards de vol d'une page pour le kneeboard — saisie ou depuis un briefing, day et night, export PNG et PDF.</div>
+            <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
+          </div>
+          <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>
+        </div>
         <div class="print active reveal d3" id="card-rs" style="--card-accent:var(--a-rs)" tabindex="0" role="button" aria-label="Recon Station">
           <span class="tape"></span><span class="pin tl"></span><span class="pin tr"></span>
           <div class="shot"></div>
@@ -412,20 +431,6 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
               <span class="pver">v1.0.0</span>
             </div>
             <div class="pdesc" data-i18n="fm.desc">Le manuel d'emploi de la suite — un chapitre par module, schémas et mode d'emploi, entièrement hors-ligne.</div>
-            <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
-          </div>
-          <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>
-        </div>
-        <div class="print active reveal d4" id="card-dg" style="--card-accent:var(--a-dg)" tabindex="0" role="button" aria-label="Datacard Generator">
-          <span class="tape"></span><span class="pin tl"></span><span class="pin tr"></span>
-          <div class="shot"></div>
-          <div class="caption">
-            <div class="cap-row">
-              <span class="logo" style="background:var(--a-dg)">D·G</span>
-              <span class="ptitle">Datacard Generator</span>
-              <span class="pver">v1.0.0</span>
-            </div>
-            <div class="pdesc" data-i18n="dg.desc">Datacards de vol d'une page pour le kneeboard — saisie ou depuis un briefing, day et night, export PNG et PDF.</div>
             <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
           </div>
           <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>

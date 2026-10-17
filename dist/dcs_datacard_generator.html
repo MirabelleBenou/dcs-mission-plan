@@ -801,7 +801,6 @@ body {
 }
 .imp-filebtn:hover { background: rgba(0, 0, 0, 0.06); border-color: var(--amber, #c8901f); }
 .imp-filename { opacity: .75; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.imp-empty { font-size: 12px; opacity: .7; padding: 6px 0; }
 
 /* ============ DATACARD ============ */
 .dc-sheet {
@@ -1122,9 +1121,21 @@ body {
   .tb-btn .tb-btn-label.solo { display: none; }
   .tb-btn { padding: 0 10px; }
 }
+.tb-brand-short { display: none; }
+@media (max-width: 1400px) {
+  /* Le tampon du shell dit déjà où l'on est : le titre se réduit à « D·G » */
+  .tb-brand-main { display: none; }
+  .tb-brand-short { display: inline; }
+}
 @media (max-width: 1350px) {
   .tb-brand { font-size: 13px; }
   .tb-version { display: none; }
+}
+@media (max-width: 1250px) {
+  /* « Depuis le briefing » ne garde que son icône (infobulle conservée) ; le sélecteur de thème se resserre */
+  #btn-briefing .tb-btn-label { display: none; }
+  #btn-briefing { padding: 0 8px; }
+  .tb-select { max-width: 124px; padding: 0 26px 0 8px; text-overflow: ellipsis; overflow: hidden; }
 }
 
 /* ============ TABLETTE ≤ 1100 px ============ */
@@ -1261,12 +1272,12 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
 <!-- ===== TOOLBAR ===== -->
 <header class="toolbar" role="toolbar" aria-label="Datacard Generator" data-i18n-aria-label="app.title">
-  <div class="tb-brand"><span class="tb-brand-main" data-i18n="app.title">Datacard Generator</span></div>
+  <div class="tb-brand"><span class="tb-brand-main" data-i18n="app.title">Datacard Generator</span><span class="tb-brand-short" data-i18n="app.short">D·G</span></div>
   <div class="tb-seg" id="mode-seg" role="group" data-i18n-title="tb.mode.tip" title="Version de jour ou de nuit de la datacard" data-i18n-aria-label="tb.mode.tip" aria-label="Version de jour ou de nuit de la datacard">
     <button type="button" class="seg-btn" id="mode-day" data-mode="day" aria-pressed="true" data-i18n="tb.mode.day">Day</button>
     <button type="button" class="seg-btn" id="mode-night" data-mode="night" aria-pressed="false" data-i18n="tb.mode.night">Night</button>
   </div>
-  <button class="tb-btn" id="btn-briefing" data-i18n-title="tb.briefing" title="Depuis le briefing">
+  <button class="tb-btn" id="btn-briefing" data-i18n-title="tb.briefing.tip" title="Importer depuis le briefing" data-i18n-aria-label="tb.briefing.tip" aria-label="Importer depuis le briefing">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="9 15 12 18 15 15"/><line x1="12" y1="11" x2="12" y2="18"/></svg>
     <span class="tb-btn-label"><span class="tb-long" data-i18n="tb.briefing">Depuis le briefing</span><span class="tb-short" data-i18n="tb.briefing.short">Briefing</span></span>
   </button>
@@ -1655,6 +1666,8 @@ const I18N = {
     'tb.mode.night': 'Night',
     'tb.mode.tip': 'Version de jour ou de nuit de la datacard',
     'tb.briefing': 'Depuis le briefing',
+    'tb.briefing.tip': 'Importer depuis le briefing',
+    'app.short': 'D·G',
     'tb.briefing.short': 'Briefing',
     'tb.json.import': 'Importer JSON',
     'tb.json.export': 'Exporter JSON',
@@ -1687,7 +1700,7 @@ const I18N = {
     'imp.src.file': 'Fichier JSON du briefing',
     'imp.choose': 'Choisir un fichier…',
     'imp.flights': 'Vols à importer',
-    'imp.empty': 'Ce briefing ne contient aucun vol.',
+    'imp.general': 'Données générales (sans vol)',
     'imp.go': 'Importer',
     'imp.cancel': 'Annuler',
     'toast.imported': '{n} datacard(s) importée(s) ✓',
@@ -1855,6 +1868,8 @@ const I18N = {
     'tb.mode.night': 'Night',
     'tb.mode.tip': 'Day or night version of the datacard',
     'tb.briefing': 'From briefing',
+    'tb.briefing.tip': 'Import from briefing',
+    'app.short': 'D·G',
     'tb.briefing.short': 'Briefing',
     'tb.json.import': 'Import JSON',
     'tb.json.export': 'Export JSON',
@@ -1887,7 +1902,7 @@ const I18N = {
     'imp.src.file': 'Briefing JSON file',
     'imp.choose': 'Choose a file…',
     'imp.flights': 'Flights to import',
-    'imp.empty': 'This briefing has no flights.',
+    'imp.general': 'General data (no flight)',
     'imp.go': 'Import',
     'imp.cancel': 'Cancel',
     'toast.imported': '{n} datacard(s) imported ✓',
@@ -2472,6 +2487,27 @@ function cardFromPhase(b, ph) {
   const th = (mi.threats && typeof mi.threats === 'object') ? mi.threats : {};
   c.threats = splitThreats(th.sam).concat(splitThreats(th.aaa)).slice(0, LIMITS.threats);
   c.notes = str(ph.notes);
+  return c;
+}
+
+/* La datacard des données générales d'un briefing (celles qui ne dépendent d'aucun vol). */
+function cardFromGeneral(b) {
+  const c = newCard();
+  const meta = (b.meta && typeof b.meta === 'object') ? b.meta : {};
+  c.meta.classification = normClassif(meta.classification, 'confidential');
+  ['docRef', 'operation', 'mission', 'date', 'time'].forEach(k => { c.meta[k] = str(meta[k]); });
+  const mi = (b.mission && typeof b.mission === 'object') ? b.mission : {};
+  c.mission.execution = (Array.isArray(mi.objectives) ? mi.objectives : []).map(str).filter(hasText).slice(0, LIMITS.steps);
+  c.radios = radiosFromBriefing(b, '');
+  c.fields = (Array.isArray(mi.farp) ? mi.farp : []).filter(f => f && typeof f === 'object').slice(0, LIMITS.fields)
+    .map(f => ({ role: '', icao: str(f.icao), name: str(f.name), runway: str(f.rwy), frequency: '' }));
+  const si = (b.sitac && typeof b.sitac === 'object') ? b.sitac : {};
+  c.weather.metar = str(si.metar);
+  const dm = decodeMetar(c.weather.metar);
+  c.weather.wind = dm.wind; c.weather.visibility = dm.visibility; c.weather.qnh = dm.qnh; c.weather.clouds = dm.clouds;
+  const th = (mi.threats && typeof mi.threats === 'object') ? mi.threats : {};
+  c.threats = splitThreats(th.sam).concat(splitThreats(th.aaa)).slice(0, LIMITS.threats);
+  c.notes = str(th.note);
   return c;
 }
 
@@ -3136,14 +3172,21 @@ function impRefresh() {
   const b = impBriefing();
   const list = document.getElementById('imp-list');
   const phases = b ? b.phases.filter(p => p && typeof p === 'object') : [];
-  if (!phases.length) {
-    list.innerHTML = '<div class="imp-empty">' + esc(b ? t('imp.empty') : '') + '</div>';
+  if (!b) {
+    list.innerHTML = '';
   } else {
+    /* Après les vols, toujours la ligne des données générales : cochée d'office quand le briefing n'a aucun vol. */
     list.innerHTML = phases.map((ph, i) =>
       '<label class="export-png-page-row"><input type="checkbox" class="export-png-page-cb imp-cb" data-i="' + i + '" checked>' +
-      '<span class="export-png-page-num">' + pad2(i + 1) + '</span><span>' + esc(phaseLabel(ph) || '—') + '</span></label>').join('');
+      '<span class="export-png-page-num">' + pad2(i + 1) + '</span><span>' + esc(phaseLabel(ph) || '—') + '</span></label>').join('') +
+      '<label class="export-png-page-row"><input type="checkbox" class="export-png-page-cb imp-cb" data-i="general"' + (phases.length ? '' : ' checked') + '>' +
+      '<span class="export-png-page-num"></span><span>' + esc(t('imp.general')) + '</span></label>';
   }
-  document.getElementById('imp-go').disabled = !phases.length;
+  impUpdateGo();
+}
+
+function impUpdateGo() {
+  document.getElementById('imp-go').disabled = !document.querySelector('#imp-list .imp-cb:checked');
 }
 
 function openImportModal(fileBriefing, fileName) {
@@ -3159,9 +3202,15 @@ function runImport() {
   const b = impBriefing();
   if (!b) return;
   const phases = b.phases.filter(p => p && typeof p === 'object');
-  const picked = Array.from(document.querySelectorAll('#imp-list .imp-cb:checked')).map(cb => phases[parseInt(cb.dataset.i, 10)]).filter(Boolean);
-  if (!picked.length) return;
-  const cards = picked.map(ph => cardFromPhase(b, ph));
+  const boxes = Array.from(document.querySelectorAll('#imp-list .imp-cb:checked'));
+  const cards = [];
+  boxes.forEach(cb => {
+    if (cb.dataset.i === 'general') return;
+    const ph = phases[parseInt(cb.dataset.i, 10)];
+    if (ph) cards.push(cardFromPhase(b, ph));
+  });
+  if (boxes.some(cb => cb.dataset.i === 'general')) cards.push(cardFromGeneral(b));
+  if (!cards.length) return;
   if (isBlankDoc(doc)) { doc.cards = cards; curIdx = 0; }
   else { const first = doc.cards.length; doc.cards = doc.cards.concat(cards); curIdx = first; }
   persistState();
@@ -3358,6 +3407,7 @@ function bindEvents() {
   document.getElementById('import-modal-close').addEventListener('click', closeImportModal);
   document.getElementById('imp-cancel').addEventListener('click', closeImportModal);
   document.getElementById('imp-go').addEventListener('click', runImport);
+  document.getElementById('imp-list').addEventListener('change', impUpdateGo);
   document.getElementById('imp-src-current').addEventListener('change', () => { imp.src = 'current'; impRefresh(); });
   document.getElementById('imp-src-file').addEventListener('change', () => { imp.src = 'file'; impRefresh(); });
   const fb = document.getElementById('file-briefing');
