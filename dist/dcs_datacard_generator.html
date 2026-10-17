@@ -578,11 +578,20 @@ body {
   min-height: 54px;
   cursor: pointer;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 2px;
   text-align: center;
   overflow: hidden;
+  white-space: nowrap;
   transition: all .15s;
+}
+.tab-bar button .tab-ico {
+  font-size: 16px;
+  line-height: 1;
+  font-family: var(--f-stencil);
+  font-weight: 700;
 }
 .tab-bar button.current {
   background: var(--olive);
@@ -1186,6 +1195,46 @@ body {
   }
   .tab-bar { display: flex; }
   .preview-wrap { padding: 16px 8px 30px 8px; }
+
+  /* Barre du haut et barre d'onglets : une seule ligne, qui défile au doigt ; un fondu signale le bord qui déborde */
+  .toolbar, .tab-bar {
+    --fade-w: 22px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    flex-wrap: nowrap;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    touch-action: pan-x;
+  }
+  .toolbar { --fade-gap: 8px; }
+  .tab-bar { --fade-gap: 2px; }
+  .toolbar::-webkit-scrollbar, .tab-bar::-webkit-scrollbar { display: none; }
+  .toolbar > * { flex-shrink: 0; }
+  .toolbar::before, .toolbar::after, .tab-bar::before, .tab-bar::after {
+    content: '';
+    position: sticky;
+    flex: 0 0 var(--fade-w);
+    width: var(--fade-w);
+    align-self: stretch;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity .15s;
+    z-index: 2;
+  }
+  .toolbar::before, .tab-bar::before {
+    left: 0;
+    margin-right: calc(-1 * (var(--fade-w) + var(--fade-gap)));
+    background: linear-gradient(90deg, rgba(0,0,0,.55), transparent);
+  }
+  .toolbar::after, .tab-bar::after {
+    right: 0;
+    margin-left: calc(-1 * (var(--fade-w) + var(--fade-gap)));
+    background: linear-gradient(270deg, rgba(0,0,0,.55), transparent);
+  }
+  .toolbar.fade-l::before, .tab-bar.fade-l::before,
+  .toolbar.fade-r::after, .tab-bar.fade-r::after { opacity: 1; }
+  .tab-bar button { flex: 1 0 auto; min-width: 56px; padding: 6px 8px; }
 }
 @media (max-width: 600px) {
   .tb-btn { padding: 0 6px; min-width: 38px; height: 38px; }
@@ -1387,18 +1436,18 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
 <!-- ===== ONGLETS (tablette) ===== -->
 <nav class="tab-bar" id="tab-bar" role="tablist" aria-label="Datacard Generator" data-i18n-aria-label="app.title">
-  <button type="button" data-tab="meta" role="tab" data-i18n="sec.meta">Méta</button>
-  <button type="button" data-tab="flight" role="tab" data-i18n="sec.flight">Vol</button>
-  <button type="button" data-tab="mission" role="tab" data-i18n="sec.mission">Mission</button>
-  <button type="button" data-tab="times" role="tab" data-i18n="sec.times">Horaires</button>
-  <button type="button" data-tab="crew" role="tab" data-i18n="sec.crew">Équipages</button>
-  <button type="button" data-tab="nav" role="tab" data-i18n="sec.nav">Navigation</button>
-  <button type="button" data-tab="radio" role="tab" data-i18n="sec.radio">Radio</button>
-  <button type="button" data-tab="fields" role="tab" data-i18n="sec.fields">Terrains</button>
-  <button type="button" data-tab="weather" role="tab" data-i18n="sec.weather">Météo</button>
-  <button type="button" data-tab="fuel" role="tab" data-i18n="sec.fuel">Carburant et emport</button>
-  <button type="button" data-tab="threats" role="tab" data-i18n="sec.threats">Menaces et notes</button>
-  <button type="button" data-tab="preview" role="tab" data-i18n="sec.preview">Aperçu</button>
+  <button type="button" data-tab="meta" role="tab"><span class="tab-ico">⚙</span><span data-i18n="sec.meta">Méta</span></button>
+  <button type="button" data-tab="flight" role="tab"><span class="tab-ico">✈</span><span data-i18n="sec.flight">Vol</span></button>
+  <button type="button" data-tab="mission" role="tab"><span class="tab-ico">▣</span><span data-i18n="sec.mission">Mission</span></button>
+  <button type="button" data-tab="times" role="tab"><span class="tab-ico">⏱</span><span data-i18n="sec.times">Horaires</span></button>
+  <button type="button" data-tab="crew" role="tab"><span class="tab-ico">👤</span><span data-i18n="sec.crew">Équipages</span></button>
+  <button type="button" data-tab="nav" role="tab"><span class="tab-ico">🧭</span><span data-i18n="sec.nav">Navigation</span></button>
+  <button type="button" data-tab="radio" role="tab"><span class="tab-ico">📻</span><span data-i18n="sec.radio">Radio</span></button>
+  <button type="button" data-tab="fields" role="tab"><span class="tab-ico">🛬</span><span data-i18n="sec.fields">Terrains</span></button>
+  <button type="button" data-tab="weather" role="tab"><span class="tab-ico">☁</span><span data-i18n="sec.weather">Météo</span></button>
+  <button type="button" data-tab="fuel" role="tab"><span class="tab-ico">⛽</span><span data-i18n="tab.fuel">Carburant</span></button>
+  <button type="button" data-tab="threats" role="tab"><span class="tab-ico">⚠</span><span data-i18n="tab.threats">Menaces</span></button>
+  <button type="button" data-tab="preview" role="tab"><span class="tab-ico">◈</span><span data-i18n="sec.preview">Aperçu</span></button>
 </nav>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -1737,6 +1786,8 @@ const I18N = {
     'sec.fuel': 'Carburant et emport',
     'sec.threats': 'Menaces et notes',
     'sec.preview': 'Aperçu',
+    'tab.fuel': 'Carburant',
+    'tab.threats': 'Menaces',
     'f.classification': 'Classification',
     'f.docRef': 'Référence',
     'f.operation': 'Opération',
@@ -1939,6 +1990,8 @@ const I18N = {
     'sec.fuel': 'Fuel and loadout',
     'sec.threats': 'Threats and notes',
     'sec.preview': 'Preview',
+    'tab.fuel': 'Fuel',
+    'tab.threats': 'Threats',
     'f.classification': 'Classification',
     'f.docRef': 'Reference',
     'f.operation': 'Operation',
@@ -3052,8 +3105,44 @@ function setActiveTab(id) {
   document.body.dataset.activeTab = id;
   document.querySelectorAll('#tab-bar button').forEach(b => b.classList.toggle('current', b.dataset.tab === id));
   if (id === 'preview') applyPreviewScale();
+  const cur = document.querySelector('#tab-bar button.current');
+  if (cur) revealInScroller(document.getElementById('tab-bar'), cur);
   const ed = document.getElementById('editor');
   if (ed) ed.scrollTop = 0;
+}
+
+/* ----- Barres défilantes (barre du haut et onglets, sous 1 100 px) ----- */
+function revealInScroller(bar, el) {
+  if (!bar || !el || bar.scrollWidth <= bar.clientWidth) return;
+  const b = bar.getBoundingClientRect();
+  const r = el.getBoundingClientRect();
+  if (r.left < b.left) bar.scrollLeft += r.left - b.left - 8;
+  else if (r.right > b.right) bar.scrollLeft += r.right - b.right + 8;
+}
+
+function initScrollBar(bar) {
+  if (!bar) return;
+  const mq = window.matchMedia('(max-width: 1100px)');
+  const update = () => {
+    const max = bar.scrollWidth - bar.clientWidth;
+    bar.classList.toggle('fade-l', mq.matches && bar.scrollLeft > 1);
+    bar.classList.toggle('fade-r', mq.matches && bar.scrollLeft < max - 1);
+  };
+  const child = t => { while (t && t.parentNode !== bar) t = t.parentNode; return t; };
+  bar.addEventListener('scroll', update, { passive: true });
+  /* Un appui sur un contrôle partiellement visible le ramène entier dans la vue, puis l'active */
+  bar.addEventListener('click', e => { if (mq.matches) revealInScroller(bar, child(e.target)); }, true);
+  bar.addEventListener('focusin', e => { if (mq.matches) revealInScroller(bar, child(e.target)); });
+  /* Molette verticale → défilement horizontal */
+  bar.addEventListener('wheel', e => {
+    if (!mq.matches || bar.scrollWidth <= bar.clientWidth) return;
+    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) { bar.scrollLeft += e.deltaY; e.preventDefault(); }
+  }, { passive: false });
+  window.addEventListener('resize', update);
+  if (window.ResizeObserver) new ResizeObserver(update).observe(bar);
+  /* Le shell ajoute son bouton de retour et son tampon après le chargement */
+  new MutationObserver(update).observe(bar, { childList: true, subtree: true, characterData: true });
+  update();
 }
 
 /* ----- Thème de la chrome : n'écrit la clé partagée que sur un choix explicite ----- */
@@ -3421,6 +3510,8 @@ function bindEvents() {
   });
 
   document.querySelectorAll('#tab-bar button').forEach(b => b.addEventListener('click', () => setActiveTab(b.dataset.tab)));
+  initScrollBar(document.querySelector('.toolbar'));
+  initScrollBar(document.getElementById('tab-bar'));
 
   window.addEventListener('beforeprint', fillPrintRoot);
   window.addEventListener('afterprint', clearPrintRoot);
