@@ -204,6 +204,42 @@ body {
   padding-right: max(14px, env(safe-area-inset-right));
 }
 
+/* v2.3.1 — barre du haut défilante : elle défile dès qu'elle déborde, un fondu signale le bord qui cache du contenu */
+.toolbar {
+  --fade-w: 22px;
+  --fade-gap: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  flex-wrap: nowrap;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  touch-action: pan-x;
+}
+.toolbar::-webkit-scrollbar { display: none; }
+.toolbar::before, .toolbar::after {
+  content: '';
+  position: sticky;
+  flex: 0 0 var(--fade-w);
+  width: var(--fade-w);
+  align-self: stretch;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .15s;
+  z-index: 2;
+}
+.toolbar::before {
+  left: 0;
+  margin-right: calc(-1 * (var(--fade-w) + var(--fade-gap)));
+  background: linear-gradient(90deg, rgba(0,0,0,.55), transparent);
+}
+.toolbar::after {
+  right: 0;
+  margin-left: calc(-1 * (var(--fade-w) + var(--fade-gap)));
+  background: linear-gradient(270deg, rgba(0,0,0,.55), transparent);
+}
+.toolbar.fade-l::before, .toolbar.fade-r::after { opacity: 1; }
+
 .tb-brand {
   display: flex; align-items: center; gap: 10px;
   color: var(--paper);
@@ -2841,7 +2877,7 @@ import os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
-APP_VERSION = "2.3.0"
+APP_VERSION = "2.3.1"
 
 ASSETS_PATH = os.path.join(HERE, 'assets.json')
 if not os.path.isfile(ASSETS_PATH):
@@ -8115,6 +8151,39 @@ function bindSimpleEvents() {
 }
 
 /* ============= INIT ============= */
+function revealInToolbar(bar, el) {
+  if (!bar || !el || bar.scrollWidth <= bar.clientWidth) return;
+  const b = bar.getBoundingClientRect();
+  const r = el.getBoundingClientRect();
+  if (r.left < b.left) bar.scrollLeft += r.left - b.left - 8;
+  else if (r.right > b.right) bar.scrollLeft += r.right - b.right + 8;
+}
+
+function initToolbarScroll() {
+  const bar = document.querySelector('.toolbar');
+  if (!bar) return;
+  const update = () => {
+    const max = bar.scrollWidth - bar.clientWidth;
+    bar.classList.toggle('fade-l', bar.scrollLeft > 1);
+    bar.classList.toggle('fade-r', bar.scrollLeft < max - 1);
+  };
+  const child = t => { while (t && t.parentNode !== bar) t = t.parentNode; return t; };
+  bar.addEventListener('scroll', update, { passive: true });
+  // Un appui sur un contrôle partiellement visible le ramène entier dans la vue, puis l'active
+  bar.addEventListener('click', e => revealInToolbar(bar, child(e.target)), true);
+  bar.addEventListener('focusin', e => revealInToolbar(bar, child(e.target)));
+  // Molette verticale → défilement horizontal
+  bar.addEventListener('wheel', e => {
+    if (bar.scrollWidth <= bar.clientWidth) return;
+    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) { bar.scrollLeft += e.deltaY; e.preventDefault(); }
+  }, { passive: false });
+  window.addEventListener('resize', update);
+  if (window.ResizeObserver) new ResizeObserver(update).observe(bar);
+  // Le shell ajoute son bouton de retour et son tampon après le chargement
+  new MutationObserver(update).observe(bar, { childList: true, subtree: true, characterData: true });
+  update();
+}
+
 function init() {
   initLang();                          // Phase 9 — lire la langue avant tout
   applyTheme(loadTheme());             // poser le thème AVANT le branding (cf. brief E)
@@ -8128,6 +8197,7 @@ function init() {
   bindEditorEvents();
   bindSimpleEvents();    // v2.3.0 : sélecteur de mode, Exemple, éditeur simplifié
   bindTabBar();
+  initToolbarScroll();
   bindWingImportEvent();  // P1.B — filet import + storage listener
   setActiveTab('meta');
   renderPreview();
