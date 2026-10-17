@@ -852,6 +852,7 @@ body {
   flex-direction: column;
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
+  font-synthesis: none;
 }
 .dc-page * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -891,6 +892,7 @@ body {
   color: var(--dc-ink);
   white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
 }
 .dc-sub {
   margin-top: 4px;
@@ -940,8 +942,10 @@ body {
 .dc-pill.thr-moderate { background: var(--dc-mod); }
 .dc-pill.thr-low { background: var(--dc-lo); }
 .dc-head.dc-head2 { flex: 0 0 62px; height: 62px; padding-top: 4px; align-items: center; }
-.dc-head2 .dc-cs { font-size: 46px; line-height: 54px; height: 54px; }
-.dc-head2 .dc-ttl { font-size: 36px; line-height: 50px; }
+.dc-head2 .dc-hl { flex: 1 1 0; min-width: 0; margin-right: 24px; }
+.dc-head2 .dc-hr { flex: 0 0 auto; max-width: none; }
+.dc-head2 .dc-cs { font-size: 44px; line-height: 54px; height: 54px; text-overflow: ellipsis; }
+.dc-head2 .dc-ttl { font-size: 32px; line-height: 40px; letter-spacing: 6px; margin-right: -6px; white-space: nowrap; }
 
 .dc-body {
   flex: 1 1 auto;
@@ -1024,7 +1028,7 @@ body {
   font-family: 'Roboto Mono', 'Courier New', monospace;
   font-weight: 400; font-size: 22px;
 }
-.dc-tab .nm { font-size: 23px; font-weight: 700; }
+.dc-tab .nm { font-size: 23px; font-weight: 500; }
 .dc-tab tbody tr:nth-child(even) td { background: var(--dc-alt); }
 .dc-bbt { padding: 4px 12px 8px 12px; }
 
@@ -1039,6 +1043,11 @@ body {
 .dc-nav .ix { font-size: 22px; }
 
 /* Radio */
+.dc-rhead { display: flex; height: 24px; line-height: 24px; color: var(--dc-muted); white-space: nowrap; }
+.dc-rhead span { flex: 0 0 auto; padding: 0 2px; font-size: 13px; font-weight: 500; letter-spacing: 2px; overflow: hidden; }
+.dc-rhead .h1 { width: 58px; }
+.dc-rhead .h2 { width: 196px; }
+.dc-rhead .h3 { width: 160px; }
 .dc-rname {
   font-family: 'Roboto Mono', 'Courier New', monospace;
   font-weight: 400; font-size: 17px; letter-spacing: 1px;
@@ -1047,14 +1056,14 @@ body {
 .dc-radio .dc-tab tbody tr:nth-child(even) td { background: transparent; }
 .dc-radio .dc-tab tbody tr:nth-child(odd) td { background: var(--dc-alt); }
 .dc-radio td { height: 35px; }
-.dc-radio .us { font-size: 21px; font-weight: 700; text-transform: uppercase; }
+.dc-radio .us { font-size: 21px; font-weight: 500; text-transform: uppercase; }
 .dc-radio .fq { font-size: 24px; }
 .dc-radio .md { font-size: 15px; color: var(--dc-muted); text-align: right; letter-spacing: 1px; }
 
 /* Terrains */
 .dc-fields td { height: 32px; padding: 0 4px; }
 .dc-fields .ro {
-  font-size: 25px; font-weight: 700; color: var(--dc-acc);
+  font-size: 25px; font-weight: 500; color: var(--dc-acc);
   text-transform: uppercase;
 }
 .dc-fields .nm { font-size: 18px; }
@@ -1101,10 +1110,10 @@ body {
 .dc-chip {
   display: block;
   border: 2px solid var(--dc-hi); color: var(--dc-hi);
-  font-size: 21px; font-weight: 700; line-height: 28px;
+  font-size: 21px; font-weight: 500; line-height: 28px;
   padding: 0 10px; text-transform: uppercase; white-space: nowrap;
 }
-.dc-notes { font-size: 20px; line-height: 26px; font-weight: 700; white-space: pre-line; overflow-wrap: anywhere; }
+.dc-notes { font-size: 20px; line-height: 26px; font-weight: 500; white-space: pre-line; overflow-wrap: anywhere; }
 
 /* ============ ADAPTATION < 1800 px : libellés courts ============ */
 @media (max-width: 1800px) {
@@ -1398,7 +1407,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 const KEY_STATE = 'datacard_state_v1';
 const KEY_THEME = 'theme_v1';
 const KEY_LANG = 'lang_v1';
-const KEY_BRIEFING = ['kh', 'r26_briefing_state_v2'].join('');   // clé du Briefing Generator, lecture seule : le briefing en cours
+/* Clé de stockage écrite par le Briefing Generator (identifiant déjà public) ; ici en lecture seule. */
+const KEY_BRIEFING = 'khr26_briefing_state_v2';
 const KEY_WING = 'wing_config_v1';                // lecture seule : indicatifs des escadrons
 const FORMAT_ID = 'dcs-datacard-v1';
 const THEME_IDS = ['cw-nato', 'cw-soviet', 'modern-nato', 'modern-east'];
