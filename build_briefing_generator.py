@@ -357,6 +357,46 @@ body {
 }
 .tb-lang-btn:active { transform: translateY(1px); }
 
+/* Brief complet / simplifié — sélecteur à deux positions (v2.3.0) */
+.tb-seg {
+  display: inline-flex;
+  align-items: stretch;
+  height: 40px;
+  flex-shrink: 0;
+  border: 1px solid var(--khaki);
+}
+.tb-seg .seg-btn {
+  font-family: var(--f-ui);
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  font-size: 12px;
+  text-transform: uppercase;
+  background: transparent;
+  color: var(--paper);
+  border: 0;
+  padding: 0 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all .15s ease;
+}
+.tb-seg .seg-btn + .seg-btn { border-left: 1px solid var(--khaki); }
+.tb-seg .seg-btn:hover, .tb-seg .seg-btn:focus-visible {
+  background: var(--olive);
+  color: var(--amber);
+  outline: none;
+}
+.tb-seg .seg-btn.active,
+.tb-seg .seg-btn.active:hover {
+  background: var(--amber-dark);
+  color: var(--paper-light);
+  box-shadow: inset 0 -3px 0 var(--amber);
+}
+.tb-seg .seg-short { display: none; }
+@media (max-width: 1500px) {
+  .tb-seg .seg-long { display: none; }
+  .tb-seg .seg-short { display: inline; }
+}
+
 /* ============ MAIN APP ============ */
 .app {
   position: fixed;
@@ -2307,6 +2347,68 @@ body[data-theme="modern-east"] .stamp-classif::after {
   pointer-events: auto;
 }
 
+/* ============ BRIEF COMPLET / SIMPLIFIÉ (v2.3.0) ============ */
+/* Un élément marqué data-fmt n'existe que dans le mode indiqué. */
+body[data-format="simple"] [data-fmt="full"] { display: none !important; }
+body[data-format="full"] [data-fmt="simple"] { display: none !important; }
+
+.ed-card-bar { display: flex; justify-content: flex-end; gap: 6px; }
+.ed-card-bar .ed-btn-icon { min-width: 40px; min-height: 36px; font-size: 16px; }
+.ed-btn-icon.neutral { background: var(--olive); border-color: var(--khaki); }
+.ed-btn-icon.neutral:hover { background: var(--olive-dark); }
+.ed-btn-icon:disabled { opacity: .35; cursor: not-allowed; }
+.ed-radio-item-row.s-row { grid-template-columns: 1.5fr 1fr 70px 44px; }
+@media (max-width: 600px) {
+  .ed-radio-item-row.s-row { grid-template-columns: 1fr 80px 60px 40px; }
+}
+
+/* Pages du brief simplifié : tableau des vols, photos */
+.p-flights {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0 6px 0;
+  font-family: var(--f-typewriter);
+  font-size: 12px;
+}
+.p-flights th {
+  text-align: left;
+  font-family: var(--f-condensed);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--rust);
+  text-transform: uppercase;
+  padding: 4px 6px;
+  border-bottom: 2px solid var(--ink);
+}
+.p-flights th.c-vol { width: 105px; }
+.p-flights th.c-ac  { width: 100px; }
+.p-flights th.c-dep { width: 80px; }
+.p-flights td {
+  padding: 6px 6px;
+  vertical-align: top;
+  border-bottom: 1px dotted var(--paper-edge);
+}
+.p-flights .fl-vol {
+  font-family: var(--f-condensed);
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.p-flights .fl-ac,
+.p-flights .fl-dep { font-family: var(--f-mono); white-space: nowrap; }
+.p-photo .p-imgframe img { max-height: 330px; }
+.p-photo-caption {
+  font-family: var(--f-typewriter);
+  font-style: italic;
+  font-size: 12px;
+  color: var(--ink);
+  margin: 2px 0 10px 0;
+  line-height: 1.4;
+}
+
 /* ============ RESPONSIVE — TABLET / MOBILE ============ */
 @media (max-width: 1100px) {
   /* Hide some toolbar buttons text */
@@ -2329,6 +2431,10 @@ body[data-theme="modern-east"] .stamp-classif::after {
 
   /* Hide non-active editor sections */
   body:not([data-active-tab="preview"]) .ed-section { display: none; }
+  body[data-active-tab="s-situation"] .ed-section[data-section="s-situation"],
+  body[data-active-tab="s-mission"] .ed-section[data-section="s-mission"],
+  body[data-active-tab="s-coord"] .ed-section[data-section="s-coord"],
+  body[data-active-tab="s-photos"] .ed-section[data-section="s-photos"],
   body[data-active-tab="meta"] .ed-section[data-section="meta"],
   body[data-active-tab="cover"] .ed-section[data-section="cover"],
   body[data-active-tab="sitac"] .ed-section[data-section="sitac"],
@@ -2735,7 +2841,7 @@ import os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
-APP_VERSION = "2.2.0"
+APP_VERSION = "2.3.0"
 
 ASSETS_PATH = os.path.join(HERE, 'assets.json')
 if not os.path.isfile(ASSETS_PATH):
@@ -2762,11 +2868,15 @@ __CSS__
 <!-- JSZip v3.10.1 — embarqué pour export ZIP multi-pages (étape B) -->
 <script>__LIB_JSZIP__</script>
 </head>
-<body data-theme="cw-nato">
+<body data-theme="cw-nato" data-format="simple">
 
 <!-- ===== TOOLBAR ===== -->
 <header class="toolbar" role="toolbar" aria-label="Actions principales">
   <div class="tb-brand"><span class="tb-brand-main">MY WING</span> <span class="tb-brand-sub">░ BRIEFING</span></div>
+  <div class="tb-seg" id="format-seg" role="group" data-i18n-title="toolbar.format.tooltip" title="Choisir le format du briefing" data-i18n-aria-label="toolbar.format.tooltip" aria-label="Choisir le format du briefing">
+    <button type="button" class="seg-btn" data-format="full" aria-pressed="false"><span class="seg-long" data-i18n="toolbar.format.full">Brief complet</span><span class="seg-short" data-i18n="toolbar.format.fullShort">Complet</span></button>
+    <button type="button" class="seg-btn" data-format="simple" aria-pressed="true"><span class="seg-long" data-i18n="toolbar.format.simple">Brief simplifié</span><span class="seg-short" data-i18n="toolbar.format.simpleShort">Simplifié</span></button>
+  </div>
   <button class="tb-btn" id="btn-save" data-i18n-title="toolbar.save.tooltip" title="Exporter le briefing en JSON">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
     <span class="tb-btn-label" data-i18n="toolbar.save">Sauver</span>
@@ -2780,9 +2890,13 @@ __CSS__
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
     <span class="tb-btn-label" data-i18n="toolbar.export">Exporter</span>
   </button>
-  <button class="tb-btn danger" id="btn-reset" data-i18n-title="toolbar.reset.tooltip" title="Réinitialiser au briefing par défaut">
+  <button class="tb-btn danger" id="btn-reset" data-i18n-title="toolbar.reset.tooltip" title="Vider le briefing (repartir d'une page blanche)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
     <span class="tb-btn-label" data-i18n="toolbar.reset">Reset</span>
+  </button>
+  <button class="tb-btn" id="btn-example" data-i18n-title="toolbar.example.tooltip" title="Charger le briefing d'exemple (remplace le briefing en cours)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+    <span class="tb-btn-label" data-i18n="toolbar.example">Exemple</span>
   </button>
   <select class="tb-select" id="theme-select" data-i18n-title="toolbar.theme.tooltip" title="Thème graphique">
     <option value="cw-nato"     data-i18n="theme.cw-nato">Cold War OTAN</option>
@@ -2861,13 +2975,81 @@ __CSS__
             </select>
           </div>
         </div>
+        <div class="ed-field" data-fmt="simple"><label data-i18n="editor.meta.time">Heure (Z)</label><input data-bind="meta.time" type="text" placeholder="1000Z"></div>
         <div class="ed-field"><label data-i18n="editor.meta.docRef">Référence document</label><input data-bind="meta.docRef" type="text" placeholder="KHR26-FH-M3-1989"></div>
         <div class="ed-help" data-i18n="editor.meta.help">Métadonnées présentes dans tous les pieds de page.</div>
       </div>
     </details>
 
+    <!-- S1 SITUATION (brief simplifié) -->
+    <details class="ed-section" data-section="s-situation" data-fmt="simple" open>
+      <summary data-i18n="editor.simple.situation.summary">01 ░ SITUATION</summary>
+      <div class="ed-content">
+        <div class="panel-mobile-header" data-i18n="editor.simple.situation.summary">01 ░ SITUATION</div>
+        <div class="ed-field">
+          <label data-i18n="editor.sitac.points">Points de situation</label>
+          <div class="ed-list" data-list="sitac.points"></div>
+          <button type="button" class="ed-btn-add" data-add="sitac.points" data-i18n="editor.sitac.addPoint">+ Ajouter un point</button>
+        </div>
+      </div>
+    </details>
+
+    <!-- S2 MISSION (brief simplifié) : objectifs + vols -->
+    <details class="ed-section" data-section="s-mission" data-fmt="simple" open>
+      <summary data-i18n="editor.simple.mission.summary">02 ░ MISSION</summary>
+      <div class="ed-content">
+        <div class="panel-mobile-header" data-i18n="editor.simple.mission.summary">02 ░ MISSION</div>
+        <div class="ed-field">
+          <label data-i18n="editor.mission.objectives">Objectifs principaux</label>
+          <div class="ed-list" data-list="mission.objectives"></div>
+          <button type="button" class="ed-btn-add" data-add="mission.objectives" data-i18n="editor.mission.addObjective">+ Ajouter un objectif</button>
+        </div>
+        <div class="ed-field">
+          <label data-i18n="editor.simple.flights">Vols</label>
+          <div class="ed-img-list" id="s-flights-list"></div>
+          <button type="button" class="ed-btn-add" id="s-flight-add" data-i18n="editor.simple.addFlight">+ Ajouter un vol</button>
+        </div>
+      </div>
+    </details>
+
+    <!-- S3 COORDINATION (brief simplifié) : fréquences, terrains, METAR -->
+    <details class="ed-section" data-section="s-coord" data-fmt="simple" open>
+      <summary data-i18n="editor.simple.coord.summary">03 ░ COORDINATION</summary>
+      <div class="ed-content">
+        <div class="panel-mobile-header" data-i18n="editor.simple.coord.summary">03 ░ COORDINATION</div>
+        <div class="ed-field">
+          <label data-i18n="simple.freq">Fréquences</label>
+          <div id="s-radio-items-list"></div>
+          <button type="button" class="ed-btn-add" id="s-radio-item-add" data-i18n="editor.radio.addItem">+ Ajouter un item</button>
+        </div>
+        <div class="ed-field">
+          <label data-i18n="simple.airfields">Terrains</label>
+          <div id="s-airfields-list"></div>
+          <button type="button" class="ed-btn-add" id="s-airfield-add" data-i18n="editor.mission.addFarp">+ Ajouter une base</button>
+        </div>
+        <div class="ed-field">
+          <label data-i18n="editor.sitac.metar">METAR</label>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input data-bind="sitac.metar" type="text" placeholder="LCRA 221000Z 18002KT 9999 SCT082 20/15 Q1013" style="flex:1;">
+            <button type="button" class="ed-btn-add" id="s-metar-assistant-btn" data-i18n="editor.sitac.metarAssistant">🛠 Assistant METAR</button>
+          </div>
+          <div id="s-metar-slot"></div>
+        </div>
+      </div>
+    </details>
+
+    <!-- S4 PHOTOS (brief simplifié) -->
+    <details class="ed-section" data-section="s-photos" data-fmt="simple" open>
+      <summary data-i18n="editor.simple.photos.summary">04 ░ PHOTOS</summary>
+      <div class="ed-content">
+        <div class="panel-mobile-header" data-i18n="editor.simple.photos.summary">04 ░ PHOTOS</div>
+        <div class="ed-img-list" id="s-photos-list"></div>
+        <button type="button" class="ed-btn-add" id="s-photo-add" data-i18n="editor.simple.addPhoto">+ Ajouter une photo</button>
+      </div>
+    </details>
+
     <!-- 01 COVER -->
-    <details class="ed-section" data-section="cover">
+    <details class="ed-section" data-section="cover" data-fmt="full">
       <summary data-i18n="editor.cover.summary">01 ░ OPÉRATION (COUVERTURE)</summary>
       <div class="ed-content">
         <div class="panel-mobile-header" data-i18n="editor.cover.summaryShort">01 ░ OPÉRATION</div>
@@ -2884,7 +3066,7 @@ __CSS__
     </details>
 
     <!-- 02 SITAC -->
-    <details class="ed-section" data-section="sitac">
+    <details class="ed-section" data-section="sitac" data-fmt="full">
       <summary data-i18n="editor.sitac.summary">02 ░ SITAC</summary>
       <div class="ed-content">
         <div class="panel-mobile-header" data-i18n="editor.sitac.summary">02 ░ SITAC</div>
@@ -2919,7 +3101,7 @@ __CSS__
     </details>
 
     <!-- 03 MISSION -->
-    <details class="ed-section" data-section="mission">
+    <details class="ed-section" data-section="mission" data-fmt="full">
       <summary data-i18n="editor.mission.summary">03 ░ APERÇU MISSION</summary>
       <div class="ed-content">
         <div class="panel-mobile-header" data-i18n="editor.mission.summary">03 ░ APERÇU MISSION</div>
@@ -2946,7 +3128,7 @@ __CSS__
     </details>
 
     <!-- 04 RADIO PLAN -->
-    <details class="ed-section" data-section="radio" open>
+    <details class="ed-section" data-section="radio" data-fmt="full" open>
       <summary data-i18n="editor.radio.summary">04 ░ PLAN RADIO</summary>
       <div class="ed-content">
         <div class="panel-mobile-header" data-i18n="editor.radio.summary">04 ░ PLAN RADIO</div>
@@ -2966,7 +3148,7 @@ __CSS__
     </details>
 
     <!-- 05 PHASES -->
-    <details class="ed-section" data-section="phases" open>
+    <details class="ed-section" data-section="phases" data-fmt="full" open>
       <summary data-i18n="editor.phases.summary">05 ░ MISSIONS</summary>
       <div class="ed-content">
         <div class="panel-mobile-header" data-i18n="editor.phases.summary">05 ░ MISSIONS</div>
@@ -2985,7 +3167,7 @@ __CSS__
     </details>
 
     <!-- 07 ÉQUIPAGE -->
-    <details class="ed-section" data-section="roster">
+    <details class="ed-section" data-section="roster" data-fmt="full">
       <summary data-i18n="editor.roster.summary">07 ░ ÉQUIPAGE</summary>
       <div class="ed-content">
         <div class="panel-mobile-header" data-i18n="editor.roster.summary">07 ░ ÉQUIPAGE</div>
@@ -2998,7 +3180,7 @@ __CSS__
     </details>
 
     <!-- 08 CHARTS -->
-    <details class="ed-section" data-section="charts">
+    <details class="ed-section" data-section="charts" data-fmt="full">
       <summary data-i18n="editor.charts.summary">08 ░ CHARTS</summary>
       <div class="ed-content">
         <div class="panel-mobile-header" data-i18n="editor.charts.summary">08 ░ CHARTS</div>
@@ -3008,7 +3190,7 @@ __CSS__
     </details>
 
     <!-- 09 ANNEXES -->
-    <details class="ed-section" data-section="annexes">
+    <details class="ed-section" data-section="annexes" data-fmt="full">
       <summary data-i18n="editor.annexes.summary">09 ░ ANNEXES</summary>
       <div class="ed-content">
         <div class="panel-mobile-header" data-i18n="editor.annexes.summary">09 ░ ANNEXES</div>
@@ -3018,7 +3200,7 @@ __CSS__
     </details>
 
     <!-- 10 WING — read-only consumer (édition dans HQ) -->
-    <details class="ed-section" data-section="wing">
+    <details class="ed-section" data-section="wing" data-fmt="full">
       <summary data-i18n="editor.wing.summary">10 ░ CONFIGURATION WING</summary>
       <div class="ed-content">
         <div class="panel-mobile-header" data-i18n="editor.wing.summaryShort">10 ░ CONFIG WING</div>
@@ -3059,15 +3241,19 @@ __CSS__
 <!-- ============ MOBILE TAB BAR ============ -->
 <nav class="tab-bar" id="tab-bar" role="tablist" aria-label="Sections du briefing">
   <button type="button" data-tab="meta" role="tab"><span class="tab-ico">⚙</span><span data-i18n="tab.meta">Méta</span></button>
-  <button type="button" data-tab="cover" role="tab"><span class="tab-ico">◉</span><span data-i18n="tab.cover">Couv.</span></button>
-  <button type="button" data-tab="sitac" role="tab"><span class="tab-ico">▣</span><span data-i18n="tab.sitac">SITAC</span></button>
-  <button type="button" data-tab="mission" role="tab"><span class="tab-ico">✈</span><span data-i18n="tab.mission">Mission</span></button>
-  <button type="button" data-tab="radio" role="tab"><span class="tab-ico">📻</span><span data-i18n="tab.radio">Radio</span></button>
-  <button type="button" data-tab="phases" role="tab"><span class="tab-ico">⊕</span><span data-i18n="tab.phases">Missions</span></button>
-  <button type="button" data-tab="roster" role="tab"><span class="tab-ico">👤</span><span data-i18n="tab.roster">Équipage</span></button>
-  <button type="button" data-tab="charts" role="tab"><span class="tab-ico">🗺</span><span data-i18n="tab.charts">Charts</span></button>
-  <button type="button" data-tab="annexes" role="tab"><span class="tab-ico">📎</span><span data-i18n="tab.annexes">Annexes</span></button>
-  <button type="button" data-tab="wing" role="tab"><span class="tab-ico">🛡</span><span data-i18n="tab.wing">Wing</span></button>
+  <button type="button" data-tab="s-situation" data-fmt="simple" role="tab"><span class="tab-ico">▣</span><span data-i18n="tab.simple.situation">Situation</span></button>
+  <button type="button" data-tab="s-mission" data-fmt="simple" role="tab"><span class="tab-ico">✈</span><span data-i18n="tab.mission">Mission</span></button>
+  <button type="button" data-tab="s-coord" data-fmt="simple" role="tab"><span class="tab-ico">📻</span><span data-i18n="tab.simple.coord">Coordination</span></button>
+  <button type="button" data-tab="s-photos" data-fmt="simple" role="tab"><span class="tab-ico">🖼</span><span data-i18n="tab.simple.photos">Photos</span></button>
+  <button type="button" data-tab="cover" data-fmt="full" role="tab"><span class="tab-ico">◉</span><span data-i18n="tab.cover">Couv.</span></button>
+  <button type="button" data-tab="sitac" data-fmt="full" role="tab"><span class="tab-ico">▣</span><span data-i18n="tab.sitac">SITAC</span></button>
+  <button type="button" data-tab="mission" data-fmt="full" role="tab"><span class="tab-ico">✈</span><span data-i18n="tab.mission">Mission</span></button>
+  <button type="button" data-tab="radio" data-fmt="full" role="tab"><span class="tab-ico">📻</span><span data-i18n="tab.radio">Radio</span></button>
+  <button type="button" data-tab="phases" data-fmt="full" role="tab"><span class="tab-ico">⊕</span><span data-i18n="tab.phases">Missions</span></button>
+  <button type="button" data-tab="roster" data-fmt="full" role="tab"><span class="tab-ico">👤</span><span data-i18n="tab.roster">Équipage</span></button>
+  <button type="button" data-tab="charts" data-fmt="full" role="tab"><span class="tab-ico">🗺</span><span data-i18n="tab.charts">Charts</span></button>
+  <button type="button" data-tab="annexes" data-fmt="full" role="tab"><span class="tab-ico">📎</span><span data-i18n="tab.annexes">Annexes</span></button>
+  <button type="button" data-tab="wing" data-fmt="full" role="tab"><span class="tab-ico">🛡</span><span data-i18n="tab.wing">Wing</span></button>
   <button type="button" data-tab="preview" role="tab"><span class="tab-ico">◈</span><span data-i18n="tab.preview">Aperçu</span></button>
 </nav>
 
@@ -3123,7 +3309,7 @@ const I18N = {
     'toolbar.save.tooltip':   'Exporter le briefing en JSON',
     'toolbar.load.tooltip':   'Charger un briefing JSON',
     'toolbar.export.tooltip': 'Exporter en PDF ou PNG (kneeboard DCS)',
-    'toolbar.reset.tooltip':  'Réinitialiser au briefing par défaut',
+    'toolbar.reset.tooltip':  'Vider le briefing (repartir d\'une page blanche)',
     'toolbar.theme.tooltip':  'Thème graphique',
     'toolbar.lang.tooltip':   'Switch language / Changer de langue',
     // ── Document ──
@@ -3354,7 +3540,7 @@ const I18N = {
     'toast.langSwitched':      'Interface en français',
     'toast.briefingSaved':     'Briefing exporté ✓',
     'toast.briefingLoaded':    'Briefing chargé ✓',
-    'toast.briefingReset':     'Briefing réinitialisé ✓',
+    'toast.briefingReset':     'Briefing vidé ✓',
     'toast.briefingOptimized': 'Briefing optimisé — {n} image(s) recompressée(s) ✓',
     'toast.briefingOptimizedOnLoad': 'Briefing optimisé au chargement — {n} image(s) ✓',
     'toast.imageCompressing':  'Compression image...',
@@ -3366,7 +3552,7 @@ const I18N = {
     'toast.exportError':       '⚠ Erreur export PNG : ',
     'toast.exportGenProgress': 'Génération ',
     // ── Confirmations ──
-    'confirm.resetBriefing': 'Réinitialiser tout le briefing ?',
+    'confirm.resetBriefing': 'Vider tout le briefing ?',
     'confirm.deletePhase':   'Supprimer la mission',
     'confirm.deleteRadioAc': 'Supprimer la configuration radio de l\'appareil',
     'confirm.deleteGroup':   'Supprimer ce groupe ?',
@@ -3403,7 +3589,50 @@ const I18N = {
     'theme.cw-nato':      'Cold War OTAN',
     'theme.cw-soviet':    'Cold War Soviétique',
     'theme.modern-nato':  'OTAN moderne',
-    'theme.modern-east':  'Bloc Est moderne'
+    'theme.modern-east':  'Bloc Est moderne',
+    // ── Brief complet / simplifié (v2.3.0) ──
+    'toolbar.format.full':        'Brief complet',
+    'toolbar.format.simple':      'Brief simplifié',
+    'toolbar.format.fullShort':   'Complet',
+    'toolbar.format.simpleShort': 'Simplifié',
+    'toolbar.format.tooltip':     'Choisir le format du briefing',
+    'toolbar.example':            'Exemple',
+    'toolbar.example.tooltip':    'Charger le briefing d\'exemple (remplace le briefing en cours)',
+    'confirm.loadExample':        'Remplacer le briefing en cours par l\'exemple ?',
+    'toast.exampleLoaded':        'Exemple chargé ✓',
+    'tab.simple.situation':       'Situation',
+    'tab.simple.coord':           'Coordination',
+    'tab.simple.photos':          'Photos',
+    'editor.meta.time':           'Heure (Z)',
+    'editor.simple.situation.summary': '01 ░ SITUATION',
+    'editor.simple.mission.summary':   '02 ░ MISSION',
+    'editor.simple.coord.summary':     '03 ░ COORDINATION',
+    'editor.simple.photos.summary':    '04 ░ PHOTOS',
+    'editor.simple.flights':      'Vols',
+    'editor.simple.flightNum':    'VOL',
+    'editor.simple.photoNum':     'PHOTO',
+    'editor.simple.count':        'Nombre',
+    'editor.simple.addFlight':    '+ Ajouter un vol',
+    'editor.simple.addPhoto':     '+ Ajouter une photo',
+    'editor.simple.noFlights':    'Aucun vol. Toucher « + Ajouter un vol ».',
+    'editor.simple.noPhotos':     'Aucune photo. Toucher « + Ajouter une photo ».',
+    'editor.simple.up':           'Monter',
+    'editor.simple.down':         'Descendre',
+    'simple.subtitle':            'BRIEF SIMPLIFIÉ',
+    'simple.hdr.operation':       'OPÉRATION',
+    'simple.hdr.mission':         'MISSION',
+    'simple.situation':           'Situation',
+    'simple.mission':             'Mission',
+    'simple.th.flight':           'Vol',
+    'simple.th.aircraft':         'Appareil',
+    'simple.task':                'Tâche',
+    'simple.departure':           'Départ',
+    'simple.freq':                'Fréquences',
+    'simple.airfields':           'Terrains',
+    'simple.weather':             'Météo',
+    'simple.photosBanner':        'PHOTOS ░ RECONNAISSANCE',
+    'simple.photoLabel':          'PHOTO',
+    'simple.noPhoto':             '◯ PHOTO MANQUANTE ◯',
   },
   en: {
     // ── Toolbar ──
@@ -3414,7 +3643,7 @@ const I18N = {
     'toolbar.save.tooltip':   'Export briefing as JSON',
     'toolbar.load.tooltip':   'Load a JSON briefing',
     'toolbar.export.tooltip': 'Export to PDF or PNG (DCS kneeboard)',
-    'toolbar.reset.tooltip':  'Reset to default briefing',
+    'toolbar.reset.tooltip':  'Clear the briefing (start from a blank page)',
     'toolbar.theme.tooltip':  'Graphic theme',
     'toolbar.lang.tooltip':   'Switch language / Changer de langue',
     // ── Document ──
@@ -3645,7 +3874,7 @@ const I18N = {
     'toast.langSwitched':      'Interface in English',
     'toast.briefingSaved':     'Briefing exported ✓',
     'toast.briefingLoaded':    'Briefing loaded ✓',
-    'toast.briefingReset':     'Briefing reset ✓',
+    'toast.briefingReset':     'Briefing cleared ✓',
     'toast.briefingOptimized': 'Briefing optimized — {n} image(s) recompressed ✓',
     'toast.briefingOptimizedOnLoad': 'Briefing optimized on load — {n} image(s) ✓',
     'toast.imageCompressing':  'Compressing image…',
@@ -3657,7 +3886,7 @@ const I18N = {
     'toast.exportError':       '⚠ PNG export error: ',
     'toast.exportGenProgress': 'Generating ',
     // ── Confirmations ──
-    'confirm.resetBriefing': 'Reset the entire briefing?',
+    'confirm.resetBriefing': 'Clear the entire briefing?',
     'confirm.deletePhase':   'Delete mission',
     'confirm.deleteRadioAc': 'Delete radio config for aircraft',
     'confirm.deleteGroup':   'Delete this group?',
@@ -3694,7 +3923,50 @@ const I18N = {
     'theme.cw-nato':      'Cold War NATO',
     'theme.cw-soviet':    'Cold War Soviet',
     'theme.modern-nato':  'Modern NATO',
-    'theme.modern-east':  'Modern Eastern Bloc'
+    'theme.modern-east':  'Modern Eastern Bloc',
+    // ── Full / quick brief (v2.3.0) ──
+    'toolbar.format.full':        'Full brief',
+    'toolbar.format.simple':      'Quick brief',
+    'toolbar.format.fullShort':   'Full',
+    'toolbar.format.simpleShort': 'Quick',
+    'toolbar.format.tooltip':     'Choose the briefing format',
+    'toolbar.example':            'Example',
+    'toolbar.example.tooltip':    'Load the example briefing (replaces the current one)',
+    'confirm.loadExample':        'Replace the current briefing with the example?',
+    'toast.exampleLoaded':        'Example loaded ✓',
+    'tab.simple.situation':       'Situation',
+    'tab.simple.coord':           'Coordination',
+    'tab.simple.photos':          'Photos',
+    'editor.meta.time':           'Time (Z)',
+    'editor.simple.situation.summary': '01 ░ SITUATION',
+    'editor.simple.mission.summary':   '02 ░ MISSION',
+    'editor.simple.coord.summary':     '03 ░ COORDINATION',
+    'editor.simple.photos.summary':    '04 ░ PHOTOS',
+    'editor.simple.flights':      'Flights',
+    'editor.simple.flightNum':    'FLIGHT',
+    'editor.simple.photoNum':     'PHOTO',
+    'editor.simple.count':        'Count',
+    'editor.simple.addFlight':    '+ Add flight',
+    'editor.simple.addPhoto':     '+ Add photo',
+    'editor.simple.noFlights':    'No flights. Tap « + Add flight ».',
+    'editor.simple.noPhotos':     'No photos. Tap « + Add photo ».',
+    'editor.simple.up':           'Move up',
+    'editor.simple.down':         'Move down',
+    'simple.subtitle':            'QUICK BRIEF',
+    'simple.hdr.operation':       'OPERATION',
+    'simple.hdr.mission':         'MISSION',
+    'simple.situation':           'Situation',
+    'simple.mission':             'Mission',
+    'simple.th.flight':           'Flight',
+    'simple.th.aircraft':         'Aircraft',
+    'simple.task':                'Task',
+    'simple.departure':           'Departure',
+    'simple.freq':                'Frequencies',
+    'simple.airfields':           'Airfields',
+    'simple.weather':             'Weather',
+    'simple.photosBanner':        'PHOTOS ░ RECONNAISSANCE',
+    'simple.photoLabel':          'PHOTO',
+    'simple.noPhoto':             '◯ NO PHOTO ◯',
   }
 };
 
@@ -3831,11 +4103,40 @@ function getAllAircraft() {
   return Array.from(set);
 }
 
+/* DEFAULTS = briefing VIDE (v2.3.0). Le contenu de démonstration est EXAMPLE_BRIEFING
+   (bouton « Exemple »). meta.format : 'simple' (brief simplifié) | 'full' (brief complet). */
 const DEFAULTS = {
+  meta: {
+    operation: '',
+    mission: '',
+    date: '',
+    time: '',
+    format: 'simple',
+    classification: 'confidential',
+    docRef: ''
+  },
+  cover: { title: '', narrative: '', mapImage: '' },
+  sitac: { date: '', points: [], metar: '', mapImage: '' },
+  mission: {
+    objectives: [],
+    farp: [],
+    threats: { tanks: '', apc: '', aaa: '', sam: '', note: '' }
+  },
+  radioPlan: { items: [], aircraftPlans: [] },
+  phases: [],
+  charts: [],
+  annexes: [],
+  roster: { groups: [] },
+  photos: []   // brief simplifié : { title, img, caption }
+};
+
+/* Briefing d'exemple (ancienne démonstration). Toujours en brief complet. */
+const EXAMPLE_BRIEFING = {
   meta: {
     operation: 'FOOTHOLD',
     mission: 'M3',
     date: '1989-03-22',
+    format: 'full',
     classification: 'confidential',
     docRef: 'VEAW-FH-M3-1989'
   },
@@ -3999,10 +4300,29 @@ function loadState() {
       }
       normalizeCharts(state);
       normalizeAnnexes(state);
+      applyLoadedFormat(parsed);
+      normalizePhotos(state);
       return;
     }
   } catch(e) { console.warn('Storage load failed:', e); }
   state = structuredClone(DEFAULTS);
+}
+
+/* v2.3.0 — le format se lit sur ce que CONTIENT le fichier / le stockage (pas sur le résultat
+   de la fusion avec DEFAULTS, qui porte 'simple') : sans champ meta.format, c'est un brief complet. */
+function applyLoadedFormat(parsed) {
+  const fmt = parsed && parsed.meta ? parsed.meta.format : undefined;
+  state.meta.format = (fmt === 'simple' || fmt === 'full') ? fmt : 'full';
+}
+
+/* photos du brief simplifié : toujours une liste de { title, img, caption } */
+function normalizePhotos(s) {
+  if (!Array.isArray(s.photos)) s.photos = [];
+  s.photos = s.photos.map(p => ({
+    title: (p && p.title) || '',
+    img: (p && p.img) || '',
+    caption: (p && p.caption) || ''
+  }));
 }
 
 function persistState() {
@@ -4214,6 +4534,14 @@ async function recompressOversizedImagesInState(s) {
       }
     });
   }
+  // Photos (brief simplifié)
+  if (Array.isArray(s.photos)) {
+    s.photos.forEach((ph, pi) => {
+      if (ph && typeof ph.img === 'string') {
+        tasks.push(['photos[' + pi + '].img', ph, 'img']);
+      }
+    });
+  }
   // Plan radio
   if (s.radioPlan && Array.isArray(s.radioPlan.aircraftPlans)) {
     s.radioPlan.aircraftPlans.forEach((ap, api) => {
@@ -4262,6 +4590,7 @@ function renderEditorBindings() {
   renderAirfields(); // aérodromes structurés (Partie 1)
   migrateAirfieldStrings(); // migration silencieuse strings→objets
   renderWingReadOnly();  // P1.B : afficher wing courant en read-only
+  renderSimpleEditor();  // v2.3.0 : éditeur du brief simplifié + mode courant
 }
 
 /* Returns all unique squadron+subgroup+aircraft combos from missions */
@@ -5784,8 +6113,7 @@ function renderMetarAssistant(p) {
     }
     state.sitac.metar = newMetar;
     // Mettre à jour le champ data-bind
-    const inp = document.querySelector('[data-bind="sitac.metar"]');
-    if (inp) inp.value = newMetar;
+    document.querySelectorAll('[data-bind="sitac.metar"]').forEach(inp => { inp.value = newMetar; });
     schedulePreview();
     document.getElementById('metar-assistant-panel').open = false;
   });
@@ -5948,7 +6276,11 @@ function migrateAirfieldStrings() {
 
 function renderAirfields() {
   migrateAirfieldStrings();
-  const list = document.getElementById('airfields-list');
+  // deux éditeurs : mode complet (#airfields-list) et brief simplifié (#s-airfields-list)
+  ['airfields-list', 's-airfields-list'].forEach(id => renderAirfieldsInto(document.getElementById(id)));
+}
+
+function renderAirfieldsInto(list) {
   if (!list) return;
   list.innerHTML = '';
   const items = state.mission.farp || [];
@@ -6164,7 +6496,7 @@ function bindEditorEvents() {
     btn.addEventListener('click', () => {
       const path = btn.dataset.add;
       getByPath(state, path).push('');
-      renderList(document.querySelector(`[data-list="${path}"]`));
+      renderList(btn.parentElement.querySelector(`[data-list="${path}"]`));
       schedulePreview();
     });
   });
@@ -6288,6 +6620,19 @@ function schedulePreview() {
   });
 }
 
+/* Sous-titre des pages. Mode complet : texte historique, inchangé.
+   Brief simplifié : éléments vides omis, se termine par le libellé du format. */
+function pageSubtitle() {
+  if (state.meta.format === 'simple') {
+    const parts = [];
+    if (state.meta.operation) parts.push(t('simple.hdr.operation') + ' ' + state.meta.operation);
+    if (state.meta.mission) parts.push(t('simple.hdr.mission') + ' ' + state.meta.mission);
+    parts.push(t('simple.subtitle'));
+    return parts.map(p => escapeHtml(p)).join(' • ');
+  }
+  return `OPÉRATION ${escapeHtml(state.meta.operation)} • MISSION ${escapeHtml(state.meta.mission)}`;
+}
+
 function pageHeader(opts) {
   opts = opts || {};
   // Default right logo to wing logo for consistency on pages without a squadron logo
@@ -6302,7 +6647,7 @@ function pageHeader(opts) {
       <div class="p-title">
         <div class="p-classif">${escapeHtml(t('classif.' + state.meta.classification, state.meta.classification))}</div>
         <h1>${escapeHtml(wingConfig.wing.shortName)} ░ BRIEFING</h1>
-        <div class="p-sub">OPÉRATION ${escapeHtml(state.meta.operation)} • MISSION ${escapeHtml(state.meta.mission)}</div>
+        <div class="p-sub">${pageSubtitle()}</div>
       </div>
       <div class="p-header-logo" role="img" aria-label="${escapeAttr(rightAlt)}" style="background-image:url('${rightLogo}')"></div>
     </header>
@@ -6326,7 +6671,9 @@ function imgFrame(label, url) {
 
 function pageMeta() {
   const d = formatMissionDate(state.meta.date);
-  return `<div class="doc-meta">DOC ▸ ${escapeHtml(state.meta.docRef)} ▸ ${escapeHtml(d)}</div>`;
+  // v2.3.0 : un élément vide est omis avec son séparateur (briefing vierge)
+  const parts = [state.meta.docRef, d].filter(Boolean).map(p => escapeHtml(p));
+  return `<div class="doc-meta">DOC${parts.length ? ' ▸ ' + parts.join(' ▸ ') : ''}</div>`;
 }
 
 function formatMissionDate(d) {
@@ -6434,6 +6781,112 @@ function getPhaseSquadronInfo(ph) {
     logo: sq.logo,
     isGuest: false
   };
+}
+
+/* ============= BRIEF SIMPLIFIÉ — PAGES (v2.3.0) =============
+   Une page de mission (Situation, Mission + tableau des vols, Fréquences, Terrains, Météo),
+   puis des pages de photos (deux par page) s'il y en a. Un bloc sans contenu n'est pas rendu.
+   Pas de bloc Menaces dans ce mode. */
+function simpleBannerText() {
+  let s = t('simple.hdr.mission');
+  if (state.meta.mission) s += ' ' + state.meta.mission;
+  const d = formatMissionDate(state.meta.date);
+  if (d) s += ' ░ ' + d;
+  if (state.meta.time) s += ' ░ ' + state.meta.time;
+  return s;
+}
+
+/* Une ligne par mission de l'état : [vol, appareil, tâche, départ] */
+function simpleFlightRows() {
+  return (state.phases || []).map(ph => {
+    const info = getPhaseSquadronInfo(ph);
+    const vol = info ? getRosterLabelParts(info).shortLabel : '';
+    const acft = (info && info.aircraft && info.aircraft !== '?') ? info.aircraft : '';
+    const n = parseInt(ph.count, 10);
+    const app = (Number.isInteger(n) && n >= 1) ? (acft ? n + '× ' + acft : n + '×') : acft;
+    return [vol, app, ph.title || '', ph.departure || ''];
+  });
+}
+
+function simplePhotoBlock(p, n) {
+  const label = t('simple.photoLabel') + ' ' + n + (p.title ? ' — ' + p.title : '');
+  const frame = p.img
+    ? imgFrame(label, p.img)
+    : `<div class="p-imgframe empty" data-label="${escapeAttr(label)}" data-empty-label="${escapeAttr(t('simple.noPhoto'))}"></div>`;
+  return `<div class="p-photo">${frame}${p.caption ? `<div class="p-photo-caption">${escapeHtml(p.caption)}</div>` : ''}</div>`;
+}
+
+function buildSimplePages() {
+  const pages = [];
+  const points = ((state.sitac && state.sitac.points) || []).filter(Boolean);
+  const objectives = ((state.mission && state.mission.objectives) || []).filter(Boolean);
+  const rows = simpleFlightRows();
+  const radioItems = ((state.radioPlan && state.radioPlan.items) || []).filter(it => it && (it.label || it.frequency));
+  const airfields = (state.mission && Array.isArray(state.mission.farp)) ? renderAirfieldPreviewItems() : '';
+  const metar = ((state.sitac && state.sitac.metar) || '').trim();
+  const dash = v => escapeHtml(v || '—');
+
+  let body = `<div class="p-section">${escapeHtml(simpleBannerText())}</div>`;
+
+  if (points.length) {
+    body += `<div class="p-subsection">${t('simple.situation')}</div>
+      <ul class="p-bullets">${points.map(p => `<li>${escapeHtml(p)}</li>`).join('')}</ul>`;
+  }
+
+  if (objectives.length || rows.length) {
+    body += `<div class="p-subsection">${t('simple.mission')}</div>`;
+    if (objectives.length) {
+      body += `<ul class="p-bullets">${objectives.map(o => `<li>${escapeHtml(o)}</li>`).join('')}</ul>`;
+    }
+    if (rows.length) {
+      body += `<table class="p-flights">
+        <thead><tr>
+          <th class="c-vol">${t('simple.th.flight')}</th>
+          <th class="c-ac">${t('simple.th.aircraft')}</th>
+          <th>${t('simple.task')}</th>
+          <th class="c-dep">${t('simple.departure')}</th>
+        </tr></thead>
+        <tbody>${rows.map(r => `<tr>
+          <td class="fl-vol">${dash(r[0])}</td>
+          <td class="fl-ac">${dash(r[1])}</td>
+          <td class="fl-task">${dash(r[2])}</td>
+          <td class="fl-dep">${dash(r[3])}</td>
+        </tr>`).join('')}</tbody>
+      </table>`;
+    }
+  }
+
+  if (radioItems.length || airfields) {
+    const freqHtml = radioItems.length
+      ? `<div class="p-subsection">${t('simple.freq')}</div>
+         <table class="radio-summary">${radioItems.map(it => `
+           <tr>
+             <th>${escapeHtml(it.label || '—')}</th>
+             <td><span class="radio-freq">${escapeHtml(it.frequency || '—')}</span><span class="radio-mod">${escapeHtml(it.modulation || '')}</span></td>
+           </tr>`).join('')}
+         </table>`
+      : '';
+    const fieldsHtml = airfields
+      ? `<div class="p-subsection">${t('simple.airfields')}</div><ul class="p-bullets">${airfields}</ul>`
+      : '';
+    body += `<div class="p-2col" style="margin-top:14px;"><div>${freqHtml}</div><div>${fieldsHtml}</div></div>`;
+  }
+
+  if (metar) {
+    body += `<div class="p-subsection">${t('simple.weather')}</div>
+      <div class="metar-line">${escapeHtml(metar)}</div>`;
+  }
+
+  pages.push({ body });
+
+  const photos = (state.photos || []).filter(p => p && (p.img || p.title || p.caption));
+  for (let k = 0; k < photos.length; k += 2) {
+    pages.push({
+      body: `<div class="p-section">${t('simple.photosBanner')}</div>` +
+        photos.slice(k, k + 2).map((p, j) => simplePhotoBlock(p, k + j + 1)).join('')
+    });
+  }
+  return pages;
 }
 
 function buildPages() {
@@ -6884,7 +7337,7 @@ function threatClass(lvl) {
 }
 
 function renderPreview() {
-  const pages = buildPages();
+  const pages = (state.meta && state.meta.format === 'simple') ? buildSimplePages() : buildPages();
   const total = pages.length;
   const html = pages.map((p, i) => `
     <article class="page">
@@ -6995,6 +7448,8 @@ function loadJsonFile(file) {
           ph.threatLevel = normalizeThreatLevel(ph.threatLevel);
         });
       }
+      applyLoadedFormat(parsed);
+      normalizePhotos(state);
       currentPhaseIdx = 0;
 
       // v2.1.1 : recompresse silencieusement les images trop lourdes (briefings v2.1.0 et antérieurs)
@@ -7279,6 +7734,386 @@ function initOverflowObserver() {
   detectPageOverflows();
 }
 
+/* ============= BRIEF COMPLET / SIMPLIFIÉ — ÉDITEUR (v2.3.0) ============= */
+/* Le mode vit dans l'état (meta.format) ; <body data-format> pilote l'affichage (CSS data-fmt). */
+const _metarHome = { parent: null, next: null };
+
+/* Le panneau de l'assistant METAR n'existe qu'une fois (ids fixes) : il est déplacé dans la
+   section Coordination en mode simplifié, et remis à sa place d'origine en mode complet. */
+function placeMetarPanel(fmt) {
+  const panel = document.getElementById('metar-assistant-panel');
+  const slot = document.getElementById('s-metar-slot');
+  if (!panel || !slot) return;
+  if (!_metarHome.parent) { _metarHome.parent = panel.parentNode; _metarHome.next = panel.nextSibling; }
+  if (fmt === 'simple') {
+    if (panel.parentNode !== slot) slot.appendChild(panel);
+  } else if (panel.parentNode !== _metarHome.parent) {
+    _metarHome.parent.insertBefore(panel, _metarHome.next);
+  }
+}
+
+function applyFormatUi() {
+  const fmt = (state && state.meta && state.meta.format === 'simple') ? 'simple' : 'full';
+  document.body.dataset.format = fmt;
+  document.querySelectorAll('#format-seg .seg-btn').forEach(b => {
+    const on = b.dataset.format === fmt;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+  placeMetarPanel(fmt);
+  // l'onglet courant doit exister dans ce mode
+  const tabBtn = document.querySelector('.tab-bar button[data-tab="' + activeTab + '"]');
+  const shared = activeTab === 'meta' || activeTab === 'preview';
+  if (!shared && !(tabBtn && tabBtn.dataset.fmt === fmt)) setActiveTab('meta');
+}
+
+function renderSimpleEditor() {
+  applyFormatUi();
+  renderSimpleFlights();
+  renderSimpleRadioItems();
+  renderPhotosEditor();
+}
+
+function setFormat(fmt) {
+  if (fmt !== 'full' && fmt !== 'simple') return;
+  if (state.meta.format === fmt) return;
+  state.meta.format = fmt;   // seul changement d'état : aucune donnée n'est perdue ni modifiée
+  applyFormatUi();
+  // rafraîchit l'éditeur du mode qui devient visible (les données ont pu changer dans l'autre)
+  document.querySelectorAll('[data-bind]').forEach(input => {
+    const v = getByPath(state, input.dataset.bind);
+    if (v != null) input.value = v;
+  });
+  document.querySelectorAll('[data-list]').forEach(renderList);
+  renderAirfields();
+  if (fmt === 'simple') {
+    renderSimpleFlights();
+    renderSimpleRadioItems();
+    renderPhotosEditor();
+  } else {
+    renderPhaseEditor();
+    renderRadioPlan();
+    renderRoster();
+  }
+  schedulePreview();
+}
+
+function loadExample() {
+  if (!confirm(t('confirm.loadExample'))) return;
+  state = mergeDeep(structuredClone(DEFAULTS), structuredClone(EXAMPLE_BRIEFING));
+  state.meta.format = 'full';
+  currentPhaseIdx = 0;
+  renderEditorBindings();
+  schedulePreview();
+  persistState();
+  showToast(t('toast.exampleLoaded'));
+}
+
+function newBlankFlight() {
+  return {
+    title: '', objective: '', execution: [],
+    flightPlan: '', threatLevel: 'low', notes: '', images: [],
+    squadron: '', aircraft: '', subgroup: '',
+    guestSquadron: { name: '', subgroup: '', aircraft: '' },
+    count: '', departure: ''
+  };
+}
+
+/* Vols = missions de l'état (state.phases) ; les champs propres au mode complet sont conservés. */
+function renderSimpleFlights() {
+  const list = document.getElementById('s-flights-list');
+  if (!list) return;
+  list.innerHTML = '';
+  const phases = Array.isArray(state.phases) ? state.phases : [];
+  if (phases.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'phase-empty';
+    empty.textContent = t('editor.simple.noFlights');
+    list.appendChild(empty);
+    return;
+  }
+
+  const sqOptions = [`<option value="">${t('select.noSquadron')}</option>`]
+    .concat(wingConfig.squadrons.map(s => {
+      const aircraftLabel = s.aircraft.length === 1 ? s.aircraft[0] : s.aircraft.join(' / ');
+      return `<option value="${escapeAttr(s.id)}">${escapeHtml(s.id)} ${escapeHtml(s.callsign)} — ${escapeHtml(aircraftLabel)}</option>`;
+    }))
+    .concat([`<option value="__guest__">${t('editor.phases.guestOption')}</option>`])
+    .join('');
+
+  phases.forEach((ph, i) => {
+    const isGuest = ph.squadron === '__guest__';
+    const selectedSq = isGuest ? null : getSquadron(ph.squadron);
+    const showAircraft = !isGuest && selectedSq && selectedSq.aircraft.length > 1;
+    const g = ph.guestSquadron || { name: '', subgroup: '', aircraft: '' };
+    const n = parseInt(ph.count, 10);
+
+    const aircraftHtml = showAircraft ? `
+      <div class="ed-field"><label>${t('editor.phases.aircraft')}</label>
+        <select class="fl-aircraft">${selectedSq.aircraft.map(a => `<option value="${escapeAttr(a)}">${escapeHtml(a)}</option>`).join('')}</select>
+      </div>` : '';
+    const guestHtml = isGuest ? `
+      <div class="ed-guest-fields">
+        <div class="ed-field"><label>${t('editor.phases.guestName')}</label>
+          <input class="fl-g-name" type="text" value="${escapeAttr(g.name)}" placeholder="${escapeAttr(t('placeholder.guestName'))}"></div>
+        <div class="ed-field"><label>${t('editor.phases.guestSub')}</label>
+          <input class="fl-g-sub" type="text" value="${escapeAttr(g.subgroup)}" placeholder="${escapeAttr(t('placeholder.guestName'))} 1 ${escapeAttr(t('placeholder.optional'))}"></div>
+        <div class="ed-field"><label>${t('editor.phases.guestAircraft')}</label>
+          <input class="fl-g-ac" type="text" value="${escapeAttr(g.aircraft)}" placeholder="${escapeAttr(t('placeholder.guestAircraft'))}"></div>
+      </div>` : '';
+
+    const card = document.createElement('div');
+    card.className = 'ed-img-card';
+    card.innerHTML = `
+      <div class="ed-img-card-num">${t('editor.simple.flightNum')} ${i + 1}</div>
+      <div class="ed-card-bar">
+        <button type="button" class="ed-btn-icon neutral" data-fl="up" title="${escapeAttr(t('editor.simple.up'))}" aria-label="${escapeAttr(t('editor.simple.up'))}" ${i === 0 ? 'disabled' : ''}>↑</button>
+        <button type="button" class="ed-btn-icon neutral" data-fl="down" title="${escapeAttr(t('editor.simple.down'))}" aria-label="${escapeAttr(t('editor.simple.down'))}" ${i === phases.length - 1 ? 'disabled' : ''}>↓</button>
+        <button type="button" class="ed-btn-icon" data-fl="rm" title="${escapeAttr(t('editor.imgCard.remove'))}" aria-label="${escapeAttr(t('editor.imgCard.remove'))}">×</button>
+      </div>
+      <div class="ed-field"><label>${t('simple.task')}</label>
+        <input class="fl-title" type="text" value="${escapeAttr(ph.title || '')}"></div>
+      <div class="ed-field"><label>${t('editor.phases.squadron')}</label>
+        <select class="fl-squadron">${sqOptions}</select></div>
+      ${guestHtml}
+      ${aircraftHtml}
+      <div class="ed-field"><label>${t('editor.phases.subgroup')} <span class="ed-label-hint">${t('editor.phases.subgroupHint')}</span></label>
+        <input class="fl-subgroup" type="text" value="${escapeAttr(ph.subgroup || '')}" placeholder="${escapeAttr(t('placeholder.subgroup'))}"></div>
+      <div class="ed-field-row">
+        <div class="ed-field"><label>${t('editor.simple.count')}</label>
+          <input class="fl-count" type="number" min="1" step="1" value="${(Number.isInteger(n) && n >= 1) ? n : ''}"></div>
+        <div class="ed-field"><label>${t('simple.departure')}</label>
+          <input class="fl-departure" type="text" value="${escapeAttr(ph.departure || '')}"></div>
+      </div>
+    `;
+    list.appendChild(card);
+
+    card.querySelector('.fl-squadron').value = ph.squadron || '';
+    const acSel = card.querySelector('.fl-aircraft');
+    if (acSel) acSel.value = ph.aircraft || selectedSq.aircraft[0];
+
+    const bindText = (sel, fn) => {
+      const el = card.querySelector(sel);
+      if (el) el.addEventListener('input', () => { fn(el.value); schedulePreview(); });
+    };
+    bindText('.fl-title', v => { state.phases[i].title = v; });
+    bindText('.fl-subgroup', v => { state.phases[i].subgroup = v; });
+    bindText('.fl-departure', v => { state.phases[i].departure = v; });
+    const guest = () => state.phases[i].guestSquadron ||
+      (state.phases[i].guestSquadron = { name: '', subgroup: '', aircraft: '' });
+    bindText('.fl-g-name', v => { guest().name = v; });
+    bindText('.fl-g-sub', v => { guest().subgroup = v; });
+    bindText('.fl-g-ac', v => { guest().aircraft = v; });
+
+    const countEl = card.querySelector('.fl-count');
+    countEl.addEventListener('input', () => {
+      const c = parseInt(countEl.value, 10);
+      state.phases[i].count = (Number.isInteger(c) && c >= 1) ? c : '';
+      schedulePreview();
+    });
+    countEl.addEventListener('change', () => { countEl.value = state.phases[i].count === '' ? '' : state.phases[i].count; });
+
+    card.querySelector('.fl-squadron').addEventListener('change', e => {
+      const p = state.phases[i];
+      const newSqId = e.target.value;
+      p.squadron = newSqId;
+      if (newSqId === '__guest__') {
+        if (!p.guestSquadron) p.guestSquadron = { name: '', subgroup: '', aircraft: '' };
+        p.aircraft = '';
+      } else {
+        const newSq = getSquadron(newSqId);
+        if (!newSq) p.aircraft = '';
+        else if (newSq.aircraft.length === 1) p.aircraft = newSq.aircraft[0];
+        else if (!newSq.aircraft.includes(p.aircraft)) p.aircraft = newSq.aircraft[0];
+      }
+      renderSimpleFlights(); schedulePreview();
+    });
+    if (acSel) acSel.addEventListener('change', e => { state.phases[i].aircraft = e.target.value; schedulePreview(); });
+
+    card.querySelector('[data-fl="up"]').addEventListener('click', () => {
+      if (i === 0) return;
+      [state.phases[i - 1], state.phases[i]] = [state.phases[i], state.phases[i - 1]];
+      renderSimpleFlights(); schedulePreview();
+    });
+    card.querySelector('[data-fl="down"]').addEventListener('click', () => {
+      if (i >= state.phases.length - 1) return;
+      [state.phases[i + 1], state.phases[i]] = [state.phases[i], state.phases[i + 1]];
+      renderSimpleFlights(); schedulePreview();
+    });
+    card.querySelector('[data-fl="rm"]').addEventListener('click', () => {
+      if (!confirm(t('confirm.deletePhase') + ' ' + (i + 1) + ' ?')) return;
+      state.phases.splice(i, 1);
+      renderSimpleFlights(); schedulePreview();
+    });
+  });
+}
+
+/* Fréquences globales (radioPlan.items), sans la case « afficher à l'aperçu ». */
+function renderSimpleRadioItems() {
+  const list = document.getElementById('s-radio-items-list');
+  if (!list) return;
+  list.innerHTML = '';
+  ensureRadioPlanShape();
+  const items = state.radioPlan.items;
+  items.forEach((it, i) => {
+    const row = document.createElement('div');
+    row.className = 'ed-radio-item-row s-row';
+    row.innerHTML = `
+      <input type="text" data-ri-label placeholder="${escapeAttr(t('editor.radio.labelEx'))}">
+      <input type="text" data-ri-freq placeholder="${escapeAttr(t('editor.radio.freqLabel'))}">
+      <select data-ri-mod>
+        <option value="AM">AM</option>
+        <option value="FM">FM</option>
+      </select>
+      <button type="button" class="ed-btn-icon" data-ri-rm aria-label="${escapeAttr(t('editor.imgCard.remove'))}">×</button>
+    `;
+    row.querySelector('[data-ri-label]').value = it.label || '';
+    row.querySelector('[data-ri-freq]').value = it.frequency || '';
+    row.querySelector('[data-ri-mod]').value = it.modulation || 'AM';
+    row.querySelector('[data-ri-label]').addEventListener('input', e => { items[i].label = e.target.value; schedulePreview(); });
+    row.querySelector('[data-ri-freq]').addEventListener('input', e => { items[i].frequency = e.target.value; schedulePreview(); });
+    row.querySelector('[data-ri-mod]').addEventListener('change', e => { items[i].modulation = e.target.value; schedulePreview(); });
+    row.querySelector('[data-ri-rm]').addEventListener('click', () => {
+      const removedId = items[i].id;
+      items.splice(i, 1);
+      // même nettoyage que l'éditeur du mode complet : plus de référence vers l'item supprimé
+      state.radioPlan.aircraftPlans.forEach(ap => {
+        (ap.radios || []).forEach(r => {
+          (r.channels || []).forEach(ch => { if (ch.itemId === removedId) ch.itemId = ''; });
+        });
+      });
+      renderSimpleRadioItems(); schedulePreview();
+    });
+    list.appendChild(row);
+  });
+  if (items.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'phase-empty';
+    empty.textContent = t('editor.radio.addItem');
+    list.appendChild(empty);
+  }
+}
+
+/* Photos du brief simplifié : state.photos = [{ title, img, caption }] */
+function renderPhotosEditor() {
+  const listEl = document.getElementById('s-photos-list');
+  if (!listEl) return;
+  listEl.innerHTML = '';
+  const photos = Array.isArray(state.photos) ? state.photos : [];
+  if (photos.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'phase-empty';
+    empty.textContent = t('editor.simple.noPhotos');
+    listEl.appendChild(empty);
+    return;
+  }
+
+  photos.forEach((ph, k) => {
+    const card = document.createElement('div');
+    card.className = 'ed-img-card';
+    card.innerHTML = `
+      <div class="ed-img-card-num">${t('editor.simple.photoNum')} ${k + 1}</div>
+      <div class="ed-card-bar">
+        <button type="button" class="ed-btn-icon neutral" data-ph="up" title="${escapeAttr(t('editor.simple.up'))}" aria-label="${escapeAttr(t('editor.simple.up'))}" ${k === 0 ? 'disabled' : ''}>↑</button>
+        <button type="button" class="ed-btn-icon neutral" data-ph="down" title="${escapeAttr(t('editor.simple.down'))}" aria-label="${escapeAttr(t('editor.simple.down'))}" ${k === photos.length - 1 ? 'disabled' : ''}>↓</button>
+        <button type="button" class="ed-btn-icon" data-ph="rm" title="${escapeAttr(t('editor.imgCard.remove'))}" aria-label="${escapeAttr(t('editor.imgCard.remove'))}">×</button>
+      </div>
+      <div class="ed-field"><label>${t('editor.annexes.titleLabel')}</label>
+        <input type="text" class="ph-title" value="${escapeAttr(ph.title)}"></div>
+      <div class="ed-field">
+        <label>${t('editor.image.label')}</label>
+        <label class="ed-img-zone ${ph.img ? 'has-img' : ''}" data-photo-zone="${k}">
+          <input type="file" accept="image/*">
+          ${ph.img
+            ? `<img src="${ph.img}" alt="Photo ${k + 1}">`
+            : `<span class="img-text">${t('editor.imgZone.tapShort')}</span>`}
+          ${ph.img ? `<button type="button" class="img-rm">×</button>` : ''}
+        </label>
+      </div>
+      <div class="ed-field"><label>${t('editor.annexes.captionLabel')}</label>
+        <textarea class="ph-caption" rows="2">${escapeHtml(ph.caption)}</textarea></div>
+    `;
+    listEl.appendChild(card);
+
+    card.querySelector('.ph-title').addEventListener('input', e => { state.photos[k].title = e.target.value; schedulePreview(); });
+    card.querySelector('.ph-caption').addEventListener('input', e => { state.photos[k].caption = e.target.value; schedulePreview(); });
+
+    card.querySelector('[data-ph="up"]').addEventListener('click', () => {
+      if (k === 0) return;
+      [state.photos[k - 1], state.photos[k]] = [state.photos[k], state.photos[k - 1]];
+      renderPhotosEditor(); schedulePreview();
+    });
+    card.querySelector('[data-ph="down"]').addEventListener('click', () => {
+      if (k >= state.photos.length - 1) return;
+      [state.photos[k + 1], state.photos[k]] = [state.photos[k], state.photos[k + 1]];
+      renderPhotosEditor(); schedulePreview();
+    });
+    card.querySelector('[data-ph="rm"]').addEventListener('click', () => {
+      state.photos.splice(k, 1);
+      renderPhotosEditor(); schedulePreview();
+    });
+
+    const zone = card.querySelector('[data-photo-zone]');
+    zone.querySelector('input[type="file"]').addEventListener('change', async e => {
+      const f = e.target.files[0];
+      if (!f) return;
+      showToast(t('toast.imageCompressing'));
+      try {
+        const { dataUrl } = await compressImageFile(f);
+        state.photos[k].img = dataUrl;
+        renderPhotosEditor();
+        schedulePreview();
+        showToast(t('toast.imageLoaded'));
+      } catch (err) {
+        showToast(t('toast.imageError') + err.message);
+      }
+      e.target.value = '';
+    });
+    const rmImg = zone.querySelector('.img-rm');
+    if (rmImg) {
+      rmImg.addEventListener('click', e => {
+        e.preventDefault();
+        e.stopPropagation();
+        state.photos[k].img = '';
+        renderPhotosEditor();
+        schedulePreview();
+      });
+    }
+  });
+}
+
+function bindSimpleEvents() {
+  document.querySelectorAll('#format-seg .seg-btn').forEach(b => {
+    b.addEventListener('click', () => setFormat(b.dataset.format));
+  });
+  document.getElementById('btn-example').addEventListener('click', loadExample);
+  document.getElementById('s-flight-add').addEventListener('click', () => {
+    if (!Array.isArray(state.phases)) state.phases = [];
+    state.phases.push(newBlankFlight());
+    renderSimpleFlights(); schedulePreview();
+  });
+  document.getElementById('s-photo-add').addEventListener('click', () => {
+    if (!Array.isArray(state.photos)) state.photos = [];
+    state.photos.push({ title: '', img: '', caption: '' });
+    renderPhotosEditor(); schedulePreview();
+  });
+  document.getElementById('s-radio-item-add').addEventListener('click', () => {
+    ensureRadioPlanShape();
+    const checkedCount = state.radioPlan.items.filter(it => it.showOnOverview).length;
+    state.radioPlan.items.push({
+      id: genId('it'), label: '', frequency: '', modulation: 'AM',
+      showOnOverview: checkedCount < 6
+    });
+    renderSimpleRadioItems(); schedulePreview();
+  });
+  document.getElementById('s-airfield-add').addEventListener('click', () => {
+    if (!state.mission.farp) state.mission.farp = [];
+    state.mission.farp.push({ icao: '', name: '', isFarp: false, rwy: '', atc: false });
+    renderAirfields(); schedulePreview();
+  });
+  document.getElementById('s-metar-assistant-btn').addEventListener('click', () => { openMetarAssistant(); });
+}
+
 /* ============= INIT ============= */
 function init() {
   initLang();                          // Phase 9 — lire la langue avant tout
@@ -7291,6 +8126,7 @@ function init() {
   updateFlagButton();                  // Phase 9 — afficher le bon drapeau
   renderEditorBindings();
   bindEditorEvents();
+  bindSimpleEvents();    // v2.3.0 : sélecteur de mode, Exemple, éditeur simplifié
   bindTabBar();
   bindWingImportEvent();  // P1.B — filet import + storage listener
   setActiveTab('meta');
