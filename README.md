@@ -39,7 +39,7 @@ The landing page presents each tool as a **pinned print** on the board. Active t
 | **Recon Station** | Turn a screenshot into a reconnaissance analysis photo — sensor looks, annotations, lossless PNG | ✅ `v1.0.0` |
 | **Field Manual** | In-app documentation for the suite — one illustrated chapter per tool, diagrams, FR/EN, offline | ✅ `v1.0.0` |
 | **Route Planner** | Route legs, turn points, interactive map and loadouts | ⏳ Planned |
-| **Kneeboard Generator** | Printable kneeboard cards — frequencies, waypoints, checklists | ⏳ Planned |
+| **Datacard Generator** | One-page flight datacards for the kneeboard — from scratch or from a briefing — day & night, PNG & PDF export | ✅ `v1.0.0` |
 
 > Each tool is a standalone HTML file with its own build; the landing page embeds the live tools and stages them all on one board.
 
@@ -141,12 +141,13 @@ python3 build_briefing_generator.py             # → dist/dcs_briefing_generato
 python3 build_recon_station.py                  # → dist/dcs_recon_station.html
 python3 build_hq.py                             # → dist/dcs_hq.html
 python3 build_field_manual.py                   # → dist/dcs_field_manual.html
+python3 build_datacard_generator.py            # → dist/dcs_datacard_generator.html
 
 # 2) Assemble the landing page (embeds the tools + board tiles)
 python3 build_mission_plan.py                   # → dist/dcs_mission_plan.html
 ```
 
-Run the four tool builds first, then the landing-page build: the latter reads the four modules from `dist/` and the tiles from `tiles/`. Inputs (`assets.json`, `tiles/`) are read from the repository, and a build stops with a non-zero exit code if one is missing.
+Run the five tool builds first, then the landing-page build: the latter reads the five modules from `dist/` and the tiles from `tiles/`. Inputs (`assets.json`, `tiles/`) are read from the repository, and a build stops with a non-zero exit code if one is missing.
 
 The output `dist/dcs_mission_plan.html` is the distributable (and the file published online). `docs/index.html` is a byte-for-byte copy of `dist/dcs_mission_plan.html`, made at each milestone.
 
@@ -158,6 +159,7 @@ The output `dist/dcs_mission_plan.html` is the distributable (and the file publi
 ├── build_recon_station.py         # Recon Station builder
 ├── build_hq.py                    # HQ builder
 ├── build_field_manual.py          # Field Manual builder
+├── build_datacard_generator.py    # Datacard Generator builder
 ├── assets.json                    # Embedded fonts, kraft texture (base64)
 ├── tiles/                         # Board tiles (512² WebP): hq, bg, rs, fm, rp, kg
 ├── docs/screenshots/              # README images
@@ -171,7 +173,7 @@ The output `dist/dcs_mission_plan.html` is the distributable (and the file publi
 ### ⏳ Work in Progress
 - ⏳ **HQ** — flight-package / Commander UI, and in-game `.miz` validation (out of beta)
 - ⏳ **Route Planner** — route legs, turn points, interactive map
-- ⏳ **Kneeboard Generator** — printable kneeboard cards
+- ⏳ **Datacard Generator** — import waypoints and loadouts from HQ (`.miz`)
 - ⏳ **UI polish** and more themes
 
 ### 📋 Planned (Briefing Generator)

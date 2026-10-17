@@ -6,11 +6,12 @@ Produit dist/dcs_mission_plan.html (fichier autonome, single-file, offline).
 Usage : python3 build_mission_plan.py
 Sortie : ./dist/dcs_mission_plan.html
 
-Sources modules actifs (produits par les quatre autres build_*.py, dans ./dist/) :
+Sources modules actifs (produits par les cinq autres build_*.py, dans ./dist/) :
   dist/dcs_hq.html
   dist/dcs_briefing_generator.html
   dist/dcs_recon_station.html
   dist/dcs_field_manual.html
+  dist/dcs_datacard_generator.html
 
 Sources images (à placer dans ./tiles/) :
   tiles/hq.webp  tiles/bg.webp  tiles/rs.webp  tiles/fm.webp  tiles/rp.webp  tiles/kg.webp
@@ -29,8 +30,8 @@ MODULES = [
     {'id': 'bg', 'status': 'active', 'src': 'dist/dcs_briefing_generator.html',       'tile': 'tiles/bg.webp'},
     {'id': 'rs', 'status': 'active', 'src': 'dist/dcs_recon_station.html',             'tile': 'tiles/rs.webp'},
     {'id': 'fm', 'status': 'active', 'src': 'dist/dcs_field_manual.html',              'tile': 'tiles/fm.webp'},
+    {'id': 'dg', 'status': 'active', 'src': 'dist/dcs_datacard_generator.html',        'tile': 'tiles/kg.webp'},
     {'id': 'rp', 'status': 'soon',   'src': '',                                    'tile': 'tiles/rp.webp'},
-    {'id': 'kg', 'status': 'soon',   'src': '',                                    'tile': 'tiles/kg.webp'},
 ]
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -47,7 +48,7 @@ def encode_file_b64(path):
 def encode_module_b64(path):
     abs_path = os.path.join(SCRIPT_DIR, path)
     if not os.path.isfile(abs_path):
-        raise SystemExit(f"[ERREUR] Entrée manquante : {abs_path} (lancer d'abord les quatre builds de modules)")
+        raise SystemExit(f"[ERREUR] Entrée manquante : {abs_path} (lancer d'abord les cinq builds de modules)")
     with open(abs_path, 'r', encoding='utf-8') as fh:
         html = fh.read()
     return base64.b64encode(html.encode('utf-8')).decode('ascii')
@@ -89,7 +90,7 @@ def build_html(module_html_js, tile_uris):
     tile_rs = tile_uris.get('rs', '')
     tile_fm = tile_uris.get('fm', '')
     tile_rp = tile_uris.get('rp', '')
-    tile_kg = tile_uris.get('kg', '')
+    tile_dg = tile_uris.get('dg', '')
 
     return f'''<!DOCTYPE html>
 <html lang="fr">
@@ -115,7 +116,7 @@ def build_html(module_html_js, tile_uris):
   --f-ui:'Oswald','Arial Narrow',sans-serif;
   --f-body:'Barlow Condensed',sans-serif;
   --f-mono:'JetBrains Mono',monospace;
-  --a-hq:#4FB286; --a-bg:#c0892a; --a-rp:#7ac97a; --a-kg:#8fb0c0; --a-rs:#c95a9c; --a-fm:#7E8FA6;
+  --a-hq:#4FB286; --a-bg:#c0892a; --a-rp:#7ac97a; --a-dg:#8fb0c0; --a-rs:#c95a9c; --a-fm:#7E8FA6;
 }}
 [data-theme="cw-nato"]{{ --paper:#d8c9a5; --paper-edge:#8a7a52; --ink:#1f1c16; --ink-2:#463f30;
   --accent:#a98a4e; --olive:#4a5230; --stamp:#a83524; --amber:#c0892a;
@@ -205,8 +206,6 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
 #card-rs::before{{background:radial-gradient(circle at 8% 90%, rgba(96,64,30,.5), transparent 15%);}}
 .soon-row .print:nth-child(1)::before{{background:
   radial-gradient(circle at 94% 88%, rgba(96,64,30,.54), transparent 18%), radial-gradient(circle at 10% 10%, rgba(80,52,24,.42), transparent 12%);}}
-.soon-row .print:nth-child(2)::before{{background:
-  radial-gradient(circle at 50% 92%, rgba(96,64,30,.48), transparent 16%);}}
 [data-theme^="modern"] .print::after{{opacity:.32;}}
 [data-theme^="modern"] .print::before{{opacity:.35;}}
 .pin{{position:absolute; width:15px; height:15px; border-radius:50%; z-index:6;
@@ -235,10 +234,13 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
 #card-rs .shot{{background-image:url("{tile_rs}");}}
 #card-fm .shot{{background-image:url("{tile_fm}");}}
 #card-fm::before{{background:radial-gradient(circle at 90% 10%, rgba(96,64,30,.5), transparent 14%);}}
+#card-dg .shot{{background-image:url("{tile_dg}");}}
+#card-dg::before{{background:radial-gradient(circle at 10% 92%, rgba(96,64,30,.5), transparent 15%);}}
 .active-row .print:nth-child(1){{transform:rotate(-1.8deg);}}
 .active-row .print:nth-child(2){{transform:rotate(1.8deg);}}
 .active-row .print:nth-child(3){{transform:rotate(0deg);}}
 .active-row .print:nth-child(4){{transform:rotate(-1.4deg);}}
+.active-row .print:nth-child(5){{transform:rotate(1.2deg);}}
 .print.active:hover{{transform:rotate(0) translateY(-7px); cursor:pointer; box-shadow:0 30px 64px rgba(0,0,0,.6), 0 0 0 2px var(--card-accent);}}
 .cta{{margin:2px 8px 12px; display:inline-block; font-family:var(--f-ui); font-size:12.5px; letter-spacing:.08em; text-transform:uppercase;
   color:#15120c; background:var(--card-accent); border:1px solid var(--paper-edge); padding:9px 15px; border-radius:var(--rad);}}
@@ -246,7 +248,6 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
 
 /* sealed (à venir) — plus petites, voilées + tampon */
 .soon-row .print:nth-child(1){{transform:rotate(-3deg) translate(2px,0);}}
-.soon-row .print:nth-child(2){{transform:rotate(2.6deg) translate(-2px,0);}}
 .print.sealed .shot{{height:150px;}}
 .print.sealed .shot::after{{content:''; position:absolute; inset:0; background:rgba(10,8,6,.32);}}
 .avenir{{position:absolute; top:10px; right:10px; z-index:4; font-family:var(--f-disp); font-size:11px; letter-spacing:.16em; text-transform:uppercase;
@@ -415,6 +416,20 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
           </div>
           <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>
         </div>
+        <div class="print active reveal d4" id="card-dg" style="--card-accent:var(--a-dg)" tabindex="0" role="button" aria-label="Datacard Generator">
+          <span class="tape"></span><span class="pin tl"></span><span class="pin tr"></span>
+          <div class="shot"></div>
+          <div class="caption">
+            <div class="cap-row">
+              <span class="logo" style="background:var(--a-dg)">D·G</span>
+              <span class="ptitle">Datacard Generator</span>
+              <span class="pver">v1.0.0</span>
+            </div>
+            <div class="pdesc" data-i18n="dg.desc">Datacards de vol d'une page pour le kneeboard — saisie ou depuis un briefing, day et night, export PNG et PDF.</div>
+            <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
+          </div>
+          <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>
+        </div>
       </div>
 
       <!-- Modules à venir -->
@@ -427,18 +442,6 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
             <div class="cap-row">
               <span class="logo" style="background:var(--a-rp)">R·P</span>
               <span class="ptitle">Route Planner</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="print sealed reveal d5" aria-disabled="true">
-          <span class="pin tl"></span><span class="pin tr"></span>
-          <span class="avenir" data-i18n="soon">À venir</span>
-          <div class="shot" style="background-image:url('{tile_kg}')"></div>
-          <div class="caption">
-            <div class="cap-row">
-              <span class="logo" style="background:var(--a-kg)">K·G</span>
-              <span class="ptitle">Kneeboard Generator</span>
             </div>
           </div>
         </div>
@@ -465,7 +468,7 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
   /* ── Données ──────────────────────────────────────────────── */
   {module_html_js}
 
-  var APP_VERSION = '1.2.0';
+  var APP_VERSION = '1.3.0';
   var KEY_LANG  = 'lang_v1';
   var KEY_THEME = 'theme_v1';
 
@@ -483,6 +486,7 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
       'bg.desc': 'Briefings complets — SITAC, plan radio, aérodromes, charts, annexes — export PDF prêt à partager.',
       'rs.desc': "Transforme une capture en photo d'analyse de reconnaissance — niveaux de gris, annotations, export PNG pleine résolution.",
       'fm.desc': "Le manuel d'emploi de la suite — un chapitre par module, schémas et mode d'emploi, entièrement hors-ligne.",
+      'dg.desc': "Datacards de vol d'une page pour le kneeboard — saisie ou depuis un briefing, day et night, export PNG et PDF.",
       'status.op': 'Opérationnel',
       cta: '▶ Ouvrir le dossier',
       soon: 'À venir',
@@ -499,6 +503,7 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
       'bg.desc': 'Complete briefings — SITAC, radio plan, airfields, charts, annexes — PDF export ready to share.',
       'rs.desc': 'Turns a screenshot into a reconnaissance analysis photo — greyscale, annotations, full-resolution PNG export.',
       'fm.desc': "The suite's field manual — one chapter per module, diagrams and how-tos, fully offline.",
+      'dg.desc': 'One-page flight datacards for the kneeboard — from scratch or from a briefing, day and night, PNG and PDF export.',
       'status.op': 'Operational',
       cta: '▶ Open the file',
       soon: 'Coming soon',
@@ -731,6 +736,10 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
     document.getElementById('card-fm').addEventListener('click', function() {{ openModule('fm'); }});
     document.getElementById('card-fm').addEventListener('keydown', function(e) {{
       if (e.key === 'Enter' || e.key === ' ') {{ e.preventDefault(); openModule('fm'); }}
+    }});
+    document.getElementById('card-dg').addEventListener('click', function() {{ openModule('dg'); }});
+    document.getElementById('card-dg').addEventListener('keydown', function(e) {{
+      if (e.key === 'Enter' || e.key === ' ') {{ e.preventDefault(); openModule('dg'); }}
     }});
 
     document.getElementById('flag-btn').addEventListener('click', toggleLang);
