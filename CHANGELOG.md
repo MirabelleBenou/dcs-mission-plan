@@ -43,6 +43,14 @@ Initial release. Command post for the suite.
 
 ## Briefing Generator
 
+### `v2.3.0`
+#### Added
+- **Full or quick brief** — a toolbar switch between the full dossier (unchanged) and a new **quick brief**: one page with the situation, the mission and a flight table (flight, aircraft, task, departure), frequencies, airfields and weather, followed by recon photo pages, two photos per page. Both modes share the same data, so switching never loses anything.
+- **Example** button — loads the former demonstration briefing.
+- Optional mission time (Z) in the quick-brief banner.
+#### Changed
+- **Blank start** — the tool now opens on an empty briefing, in quick mode; **Reset** clears to a blank page. Existing briefings open unchanged, in full mode.
+
 ### `v2.2.0`
 #### Added
 - **Bilingual UI** — full FR/EN internationalization.
