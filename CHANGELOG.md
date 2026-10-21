@@ -14,6 +14,13 @@ The suite bundles several **independently-versioned tools**, so entries are grou
 - **Tablet & mobile** first-class target (touch, drag, rotation-safe).
 - Wing configuration shared automatically across embedded tools.
 
+### `v1.3.0`
+#### Added
+- **Datacard Generator** is live on the board, right after Briefing Generator (see below). Field Manual stays the last live tool.
+#### Changed
+- Embeds **Briefing Generator v2.3.1** — scrollable toolbar on tablets and phones (see below).
+- The *Kneeboard Generator* placeholder is replaced by the Datacard Generator, on the board and in Field Manual; Route Planner is the only tool still *Coming soon*.
+
 ### `v1.2.0`
 #### Changed
 - Embeds **Briefing Generator v2.3.0** — full or quick brief, blank start (see below).
@@ -46,6 +53,10 @@ Initial release. Command post for the suite.
 ---
 
 ## Briefing Generator
+
+### `v2.3.1`
+#### Fixed
+- **Scrollable toolbar** — on tablets (portrait or landscape) and phones, the top bar now scrolls sideways instead of running off-screen; a soft fade marks the hidden side, and every control (theme, language) stays reachable.
 
 ### `v2.3.0`
 #### Added
@@ -80,6 +91,20 @@ Initial release. Command post for the suite.
 - **Editable info block** (9 fields) and **classification banner** (4 levels).
 - **Wing logos** — manual upload or shared from HQ; colour / grey / white modes.
 - 4 themes, FR/EN.
+
+---
+
+## Datacard Generator — `v1.0.0`
+
+Initial release. One-page flight datacards for the cockpit kneeboard.
+
+### Added
+- **One datacard per flight** — mission, times, crew, navigation, radio, airfields, weather, fuel & loadout, threats & notes; navigation moves to a second page when it does not fit.
+- **Day & Night** versions, readable in VR; the suite themes only change the editor.
+- **From scratch or from a briefing** — import flights from the Briefing Generator (current briefing or its JSON file), or only its general data (frequencies, airfields, METAR, objectives) when it has no flights.
+- **Fully generic** — no built-in aircraft tables: radios, loadouts and units (kg/lb, km/NM, m/ft) are yours.
+- **Exports** — PNG at 1000 × 1414 (drop it in DCS's kneeboard folder), ZIP for several pages, PDF (one A4 page per datacard page), and JSON import/export of the whole pack.
+- Example values in empty fields, FR/EN, 4 editor themes, tablet and phone layout with scrollable bars, fully offline.
 
 ---
 
