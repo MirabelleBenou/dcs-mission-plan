@@ -14,6 +14,10 @@ The suite bundles several **independently-versioned tools**, so entries are grou
 - **Tablet & mobile** first-class target (touch, drag, rotation-safe).
 - Wing configuration shared automatically across embedded tools.
 
+### `v1.5.1`
+#### Fixed
+- Embeds **Briefing Generator v2.4.1**, **Datacard Generator v1.0.1** and **Field Manual v1.2.1** — real bold headings and sharper PNG exports (see below).
+
 ### `v1.5.0`
 #### Changed
 - Embeds **Briefing Generator v2.4.0** — map, threats and targets in the quick brief, targets in the full brief, overflow pages (see below).
@@ -63,6 +67,11 @@ Initial release. Command post for the suite.
 ---
 
 ## Briefing Generator
+
+### `v2.4.1`
+#### Fixed
+- **No more faux bold** — page headings, table headers and flight names used *Impact*, a system font with a single weight that the browser thickened artificially (smudgy on Windows, a different font on Android). They now use the embedded **Oswald 600/700**, identical everywhere: preview, PDF and PNG. The editor chrome no longer asks for weights that aren't embedded either.
+- **PNG export at 2×** — **1588 × 2246** px per page instead of 794 × 1123, whatever the screen.
 
 ### `v2.4.0`
 #### Added
@@ -119,11 +128,17 @@ Initial release. Command post for the suite.
 
 ---
 
-## Datacard Generator — `v1.0.0`
+## Datacard Generator
+
+### `v1.0.1`
+#### Fixed
+- **PNG export at 2×** — **2000 × 2828** px per page instead of 1000 × 1414; the toolbar's bold labels use an embedded Oswald 700.
+
+### `v1.0.0`
 
 Initial release. One-page flight datacards for the cockpit kneeboard.
 
-### Added
+#### Added
 - **One datacard per flight** — mission, times, crew, navigation, radio, airfields, weather, fuel & loadout, threats & notes; navigation moves to a second page when it does not fit.
 - **Day & Night** versions, readable in VR; the suite themes only change the editor.
 - **From scratch or from a briefing** — import flights from the Briefing Generator (current briefing or its JSON file), or only its general data (frequencies, airfields, METAR, objectives) when it has no flights.
@@ -134,6 +149,10 @@ Initial release. One-page flight datacards for the cockpit kneeboard.
 ---
 
 ## Field Manual
+
+### `v1.2.1`
+#### Changed
+- Export sizes updated (Datacard Generator PNG: 2000 × 2828 px); the quick brief's overflow pages described exactly.
 
 ### `v1.2.0`
 #### Changed
