@@ -400,7 +400,7 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
             <div class="cap-row">
               <span class="logo" style="background:var(--a-dg)">D·G</span>
               <span class="ptitle">Datacard Generator</span>
-              <span class="pver">v1.0.1</span>
+              <span class="pver">v1.0.2</span>
             </div>
             <div class="pdesc" data-i18n="dg.desc">Datacards de vol d'une page pour le kneeboard — saisie ou depuis un briefing, day et night, export PNG et PDF.</div>
             <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
@@ -473,7 +473,7 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
   /* ── Données ──────────────────────────────────────────────── */
   {module_html_js}
 
-  var APP_VERSION = '1.5.2';
+  var APP_VERSION = '1.5.3';
   var KEY_LANG  = 'lang_v1';
   var KEY_THEME = 'theme_v1';
 

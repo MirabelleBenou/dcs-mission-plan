@@ -39,7 +39,7 @@ The landing page presents each tool as a **pinned print** on the board. Active t
 | **Recon Station** | Turn a screenshot into a reconnaissance analysis photo — sensor looks, annotations, lossless PNG | ✅ `v1.0.0` |
 | **Field Manual** | In-app documentation for the suite — one illustrated chapter per tool, diagrams, FR/EN, offline | ✅ `v1.2.1` |
 | **Route Planner** | Route legs, turn points, interactive map and loadouts | ⏳ Planned |
-| **Datacard Generator** | One-page flight datacards for the kneeboard — from scratch or from a briefing — day & night, PNG & PDF export | ✅ `v1.0.1` |
+| **Datacard Generator** | One-page flight datacards for the kneeboard — from scratch or from a briefing — day & night, PNG & PDF export | ✅ `v1.0.2` |
 
 > Each tool is a standalone HTML file with its own build; the landing page embeds the live tools and stages them all on one board.
 

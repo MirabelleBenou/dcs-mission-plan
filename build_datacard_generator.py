@@ -16,7 +16,7 @@ import subprocess
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-APP_VERSION = "1.0.1"
+APP_VERSION = "1.0.2"
 OUT_PATH = os.path.join(HERE, 'dist', 'dcs_datacard_generator.html')
 ASSETS_PATH = os.path.join(HERE, 'assets.json')
 
@@ -1097,7 +1097,11 @@ body {
   font-synthesis: none;
 }
 .dc-page * { box-sizing: border-box; margin: 0; padding: 0; }
+.dc-page { --dc-fo: 'Oswald', 'Arial Narrow', sans-serif; --dc-fm: 'Roboto Mono', 'Courier New', monospace; --dc-fs: 'Stardos Stencil', 'Impact', sans-serif; }
 
+/* Échelle typographique, graisses, interlettrages, marges et filets : ceux de la maquette validée (lot mp-dg-v1.0.2). */
+
+/* Bandeaux haut et bas */
 .dc-top, .dc-foot {
   flex: 0 0 32px;
   height: 32px;
@@ -1107,255 +1111,217 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 0 26px;
-  font-size: 15px;
-  letter-spacing: 3px;
+  font: 500 15px/32px var(--dc-fo);
+  letter-spacing: .14em;
   text-transform: uppercase;
   white-space: nowrap;
 }
 .dc-top span, .dc-foot span { color: var(--dc-band-fg); }
 
+/* En-tête de la page 1 : 136 px, rangée de tête calée sur le filet */
 .dc-head {
-  flex: 0 0 143px;
-  height: 143px;
+  flex: 0 0 136px;
+  height: 136px;
+  margin-top: 10px;
   display: flex;
   justify-content: space-between;
-  padding: 10px 30px 0 30px;
-  border-bottom: 3px solid var(--dc-rule);
+  align-items: flex-end;
+  padding: 0 30px 8px 30px;
+  border-bottom: 4px solid var(--dc-rule);
   overflow: hidden;
 }
 .dc-hl { display: flex; flex-direction: column; min-width: 0; flex: 1 1 auto; }
 .dc-cs {
-  font-family: 'Stardos Stencil', 'Impact', sans-serif;
-  font-weight: 700;
-  font-size: 82px;
-  line-height: 90px;
-  height: 90px;
-  letter-spacing: 1px;
+  font: 700 76px/.9 var(--dc-fs);
+  letter-spacing: .04em;
   color: var(--dc-ink);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  padding: 6px 0 10px 0;
+  margin: -6px 0 -10px 0;
 }
 .dc-sub {
   margin-top: 4px;
-  font-size: 22px;
-  line-height: 30px;
-  height: 30px;
-  letter-spacing: 2px;
+  font: 500 20px/1.2 var(--dc-fo);
+  letter-spacing: .1em;
   color: var(--dc-ink);
   white-space: nowrap;
   overflow: hidden;
 }
 .dc-hr {
-  display: flex; flex-direction: column; align-items: flex-end;
+  display: flex; flex-direction: column; align-items: flex-end; align-self: flex-start;
   flex: 0 0 auto;
   max-width: 470px;
-  padding-top: 0;
 }
 .dc-ttl {
-  font-family: 'Stardos Stencil', 'Impact', sans-serif;
-  font-weight: 700;
-  font-size: 36px;
-  line-height: 40px;
-  letter-spacing: 7px;
+  font: 700 34px/1 var(--dc-fs);
+  letter-spacing: .16em;
   color: var(--dc-acc);
-  margin-right: -7px;
 }
 .dc-op {
-  font-size: 22px; line-height: 28px; letter-spacing: 1.5px;
+  margin-top: 4px;
+  font: 500 20px/1.25 var(--dc-fo);
+  letter-spacing: .08em;
   color: var(--dc-ink);
   white-space: nowrap; overflow: hidden; max-width: 470px;
 }
 .dc-dt {
-  font-family: 'Roboto Mono', 'Courier New', monospace;
-  font-weight: 400;
-  font-size: 21px; line-height: 27px;
+  font: 400 22px/1.3 var(--dc-fm);
   color: var(--dc-ink);
   white-space: nowrap; overflow: hidden; max-width: 470px;
 }
 .dc-pill {
   margin-top: 6px;
-  font-size: 19px; line-height: 26px; letter-spacing: 2px;
-  padding: 0 11px;
+  padding: 3px 10px;
+  font: 500 17px/1.2 var(--dc-fo);
+  letter-spacing: .12em;
   color: var(--dc-pill-fg);
   white-space: nowrap;
 }
 .dc-pill.thr-high { background: var(--dc-hi); }
 .dc-pill.thr-moderate { background: var(--dc-mod); }
 .dc-pill.thr-low { background: var(--dc-lo); }
-.dc-head.dc-head2 { flex: 0 0 62px; height: 62px; padding-top: 4px; align-items: center; }
+/* En-tête réduit de la page 2 : règles de l'addendum 1 de mp-dg-v1.0.0 (C17), inchangées */
+.dc-head.dc-head2 { flex: 0 0 62px; height: 62px; padding: 4px 30px 0 30px; align-items: center; }
 .dc-head2 .dc-hl { flex: 1 1 0; min-width: 0; margin-right: 24px; }
-.dc-head2 .dc-hr { flex: 0 0 auto; max-width: none; }
-.dc-head2 .dc-cs { font-size: 44px; line-height: 54px; height: 54px; text-overflow: ellipsis; }
+.dc-head2 .dc-hr { flex: 0 0 auto; align-self: center; max-width: none; }
+.dc-head2 .dc-cs { font-size: 44px; line-height: 54px; height: 54px; letter-spacing: 1px; padding: 0; margin: 0; text-overflow: ellipsis; }
 .dc-head2 .dc-ttl { font-size: 32px; line-height: 40px; letter-spacing: 6px; margin-right: -6px; white-space: nowrap; }
 
+/* Grille des rangées */
 .dc-body {
   flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
-  padding: 13px 30px 0 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 0 0 0;
 }
-.dc-row { display: flex; gap: 13px; margin-bottom: 10px; align-items: stretch; }
-.dc-row > .dc-block, .dc-row > .dc-col { flex: 1 1 0; min-width: 0; }
-.dc-r1.dc-two > :first-child { flex: 0 0 564px; }
-.dc-r1.dc-two > :last-child { flex: 0 0 363px; }
-.dc-r4.dc-two > :first-child { flex: 0 0 515px; }
-.dc-r4.dc-two > :last-child { flex: 0 0 412px; }
-.dc-r5 { gap: 14px; }
-.dc-col { display: flex; flex-direction: column; gap: 8px; }
+.dc-row { flex: 0 0 auto; padding: 0 30px; }
+.dc-row.dc-two { display: grid; gap: 12px; }
+.dc-r1.dc-two { grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); }
+.dc-r4.dc-two { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
+.dc-r5.dc-two { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.dc-row > .dc-block, .dc-row > .dc-col { min-width: 0; }
+.dc-col { display: flex; flex-direction: column; gap: 12px; }
 .dc-col > .dc-block:last-child { flex: 1 1 auto; }
 
+/* Blocs */
 .dc-block {
   border: 2px solid var(--dc-bd);
   background: var(--dc-blk);
-  display: flex;
-  flex-direction: column;
+  padding: 0 12px 10px 12px;
   min-width: 0;
 }
 .dc-bh {
-  flex: 0 0 30px;
-  height: 30px;
-  line-height: 30px;
+  display: block;
   background: var(--dc-bh-bg);
   color: var(--dc-bh-fg);
-  padding: 0 14px;
-  font-size: 17px;
-  font-weight: 500;
-  letter-spacing: 4px;
+  margin: 0 -12px 8px -12px;
+  padding: 6px 12px;
+  font: 500 16px/1 var(--dc-fo);
+  letter-spacing: .16em;
   text-transform: uppercase;
   white-space: nowrap;
   overflow: hidden;
 }
-.dc-bb { padding: 10px 12px 10px 12px; flex: 1 1 auto; min-width: 0; }
+.dc-bb, .dc-bbt { min-width: 0; }
 
 /* Mission */
-.dc-obj { font-size: 22px; line-height: 27px; margin-bottom: 10px; white-space: pre-line; overflow-wrap: anywhere; }
+.dc-obj { font: 500 19px/1.35 var(--dc-fo); letter-spacing: .02em; margin-bottom: 6px; white-space: pre-line; overflow-wrap: anywhere; }
 .dc-steps { list-style: none; }
-.dc-steps li { display: flex; font-size: 21px; line-height: 26.5px; padding-left: 8px; }
-.dc-steps .n { flex: 0 0 22px; }
+.dc-steps li { display: flex; font: 500 19px/1.4 var(--dc-fo); letter-spacing: .03em; }
+.dc-steps .n { flex: 0 0 26px; text-align: right; padding-right: 4px; }
 .dc-steps .x { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
 
 /* Horaires */
-.dc-times { padding-top: 4px; }
+.dc-times { display: grid; gap: 4px; }
 .dc-trow {
-  display: flex; justify-content: space-between; align-items: baseline;
+  display: flex; justify-content: space-between; align-items: baseline; gap: 8px;
   border-bottom: 1px dotted var(--dc-dot);
-  height: 36px; line-height: 36px;
-  padding: 0 4px;
+  padding: 2px;
 }
-.dc-trow:last-child { border-bottom: 0; }
 .dc-tl {
-  font-size: 15px; letter-spacing: 2.5px; text-transform: uppercase;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1 1 auto; min-width: 0; padding-right: 8px;
+  font: 500 15px/1 var(--dc-fo); letter-spacing: .12em; text-transform: uppercase;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1 1 auto; min-width: 0;
 }
-.dc-tv {
-  font-family: 'Roboto Mono', 'Courier New', monospace;
-  font-weight: 400; font-size: 28px; white-space: nowrap; flex: 0 0 auto;
-}
+.dc-tv { font: 400 28px/1.05 var(--dc-fm); white-space: nowrap; flex: 0 0 auto; }
 
 /* Tableaux */
 .dc-tab { width: 100%; border-collapse: collapse; table-layout: fixed; }
 .dc-tab th {
-  font-size: 13px; font-weight: 500; letter-spacing: 2px; text-transform: none;
-  color: var(--dc-muted); text-align: left; height: 24px; padding: 0 5px;
+  font: 500 13px/1 var(--dc-fo); letter-spacing: .1em;
+  text-align: left; padding: 4px 6px; opacity: .75;
   white-space: nowrap; overflow: hidden;
 }
 .dc-tab td {
-  height: 32px; padding: 0 5px;
+  font: 400 22px/1.2 var(--dc-fm); padding: 3px 6px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  vertical-align: middle;
 }
 .dc-tab .r { text-align: right; }
-.dc-tab .m, .dc-m {
-  font-family: 'Roboto Mono', 'Courier New', monospace;
-  font-weight: 400; font-size: 22px;
-}
-.dc-tab .nm { font-size: 23px; font-weight: 500; }
 .dc-tab tbody tr:nth-child(even) td { background: var(--dc-alt); }
-.dc-bbt { padding: 4px 12px 8px 12px; }
 
 /* Équipages */
-.dc-crew td { height: 31px; }
-.dc-crew .nm { font-size: 24px; }
+.dc-crew td.nm { font-family: var(--dc-fo); font-weight: 500; letter-spacing: .05em; }
 
 /* Navigation */
-.dc-nav td { height: 32px; }
-.dc-nav .nm { font-size: 24px; }
-.dc-nav .nt { font-size: 19px; font-weight: 500; }
-.dc-nav .ix { font-size: 22px; }
+.dc-nav td.nm { font-family: var(--dc-fo); font-weight: 500; font-size: 21px; letter-spacing: .04em; }
+.dc-nav td.nt { font-family: var(--dc-fo); font-weight: 500; font-size: 17px; opacity: .85; }
 
-/* Radio */
-.dc-rhead { display: flex; height: 24px; line-height: 24px; color: var(--dc-muted); white-space: nowrap; }
-.dc-rhead span { flex: 0 0 auto; padding: 0 2px; font-size: 13px; font-weight: 500; letter-spacing: 2px; overflow: hidden; }
-.dc-rhead .h1 { width: 58px; }
-.dc-rhead .h2 { width: 196px; }
-.dc-rhead .h3 { width: 160px; }
-.dc-rname {
-  font-family: 'Roboto Mono', 'Courier New', monospace;
-  font-weight: 400; font-size: 17px; letter-spacing: 1px;
-  color: var(--dc-acc); height: 28px; line-height: 34px; padding: 0 5px;
-}
-.dc-radio .dc-tab tbody tr:nth-child(even) td { background: transparent; }
-.dc-radio .dc-tab tbody tr:nth-child(odd) td { background: var(--dc-alt); }
-.dc-radio td { height: 35px; }
-.dc-radio .us { font-size: 21px; font-weight: 500; text-transform: uppercase; }
-.dc-radio .fq { font-size: 24px; }
-.dc-radio .md { font-size: 15px; color: var(--dc-muted); text-align: right; letter-spacing: 1px; }
+/* Radio : rangées alternées recommencées à chaque poste, filet plein entre deux postes */
+.dc-radio td.us { font-family: var(--dc-fo); font-weight: 500; font-size: 18px; letter-spacing: .05em; text-transform: uppercase; }
+.dc-radio td.fq { font-size: 24px; }
+.dc-radio td.md { font-size: 14px; opacity: .7; }
+.dc-radio tr.rsep td { font: 500 15px/1 var(--dc-fo); letter-spacing: .12em; color: var(--dc-acc); padding-top: 8px; background: none !important; }
+.dc-radio tbody tr:nth-child(even) td { background: none; }
+.dc-radio tbody tr.z td { background: var(--dc-alt); }
+.dc-radio tr.rsep-n td, .dc-radio tr.pn td { border-top: 1px solid var(--dc-dot); padding-top: 10px; }
 
 /* Terrains */
-.dc-fields td { height: 32px; padding: 0 4px; }
-.dc-fields .ro {
-  font-size: 25px; font-weight: 500; color: var(--dc-acc);
-  text-transform: uppercase;
-}
-.dc-fields .nm { font-size: 18px; }
-.dc-fields .m { font-size: 21px; }
+.dc-fields td.ro { font-family: var(--dc-fo); font-weight: 500; color: var(--dc-acc); text-transform: uppercase; }
+.dc-fields td.nm { font-family: var(--dc-fo); font-weight: 500; font-size: 18px; }
 
-/* Météo */
+/* Météo : quatre paires sur deux colonnes, valeur calée à droite, filet pointillé dessous */
 .dc-metar {
   background: var(--dc-metar);
-  font-family: 'Roboto Mono', 'Courier New', monospace;
-  font-weight: 400; font-size: 16px; line-height: 20px;
-  padding: 5px 10px; margin-bottom: 6px;
+  font: 400 15px/1.3 var(--dc-fm);
+  padding: 4px 6px; margin-bottom: 4px;
   overflow-wrap: anywhere;
 }
-.dc-wtab { width: 100%; border-collapse: collapse; }
-.dc-wtab td { height: 28px; padding: 0 3px; white-space: nowrap; vertical-align: middle; }
-.dc-wtab .wl {
-  font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: var(--dc-ink);
+.dc-wgrid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 14px; }
+.dc-wgrid .wp {
+  display: flex; justify-content: space-between; align-items: baseline;
+  border-bottom: 1px dotted var(--dc-dot); padding: 2px; min-width: 0;
 }
-.dc-wtab .wv {
-  font-family: 'Roboto Mono', 'Courier New', monospace;
-  font-weight: 400; font-size: 21px; text-align: right;
-}
+.dc-wgrid .wp.wp0 { border-bottom: 0; }
+.dc-wgrid .wl { font: 500 13px/1 var(--dc-fo); letter-spacing: .12em; text-transform: uppercase; white-space: nowrap; margin-right: calc(8px - .12em); }
+.dc-wgrid .wv { font: 400 19px/1.1 var(--dc-fm); white-space: nowrap; }
 
 /* Carburant · Emport */
-.dc-fuelwrap { display: flex; gap: 18px; }
-.dc-fuel { flex: 0 0 150px; }
-.dc-frow {
+.dc-fuelwrap { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 14px; align-items: start; }
+.dc-fuelwrap.dc-solo { display: block; }
+.dc-fp {
   display: flex; justify-content: space-between; align-items: baseline;
-  border-bottom: 1px dotted var(--dc-dot); height: 36px; line-height: 36px;
+  border-bottom: 1px dotted var(--dc-dot); padding: 2px;
 }
-.dc-frow:last-child { border-bottom: 0; }
-.dc-frow .fl { font-size: 15px; letter-spacing: 2.5px; text-transform: uppercase; }
-.dc-frow .fv { font-family: 'Roboto Mono', 'Courier New', monospace; font-weight: 400; font-size: 24px; white-space: nowrap; }
-.dc-load { list-style: none; flex: 1 1 auto; min-width: 0; }
-.dc-load li {
-  font-family: 'Roboto Mono', 'Courier New', monospace; font-weight: 400;
-  font-size: 20px; line-height: 28px; display: flex;
-}
-.dc-load .bl { flex: 0 0 22px; color: var(--dc-acc); font-size: 17px; }
+.dc-fp .fl { font: 500 15px/1 var(--dc-fo); letter-spacing: .12em; text-transform: uppercase; }
+.dc-fp .fv { font: 400 21px/1.1 var(--dc-fm); white-space: nowrap; }
+.dc-load { list-style: none; min-width: 0; }
+.dc-load li { font: 400 19px/1.4 var(--dc-fm); display: flex; }
+.dc-load .bl { flex: 0 0 2ch; color: var(--dc-acc); }
 .dc-load .lx { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
 
 /* Menaces · Notes */
-.dc-chips { display: flex; flex-wrap: wrap; gap: 6px 8px; margin-bottom: 8px; }
+.dc-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .dc-chip {
   display: block;
   border: 2px solid var(--dc-hi); color: var(--dc-hi);
-  font-size: 21px; font-weight: 500; line-height: 28px;
-  padding: 0 10px; text-transform: uppercase; white-space: nowrap;
+  font: 500 18px/1 var(--dc-fo); letter-spacing: .06em;
+  padding: 5px 8px; text-transform: uppercase; white-space: nowrap;
 }
-.dc-notes { font-size: 20px; line-height: 26px; font-weight: 500; white-space: pre-line; overflow-wrap: anywhere; }
+.dc-notes { margin-top: 9px; font: 500 17px/1.35 var(--dc-fo); letter-spacing: .02em; white-space: pre-line; overflow-wrap: anywhere; }
 
 /* ============ ADAPTATION < 1800 px : libellés courts ============ */
 @media (max-width: 1800px) {
@@ -2749,21 +2715,22 @@ function blkRadio(c) {
     ch: r.channels.filter(x => anyText(x, ['channel', 'label', 'frequency', 'modulation']))
   })).filter(r => hasText(r.name) || r.ch.length);
   if (!radios.length) return '';
-  let b = '<div class="dc-rhead"><span class="h1">' + esc(t('dc.h.ch')) + '</span><span class="h2">' + esc(t('dc.h.use')) +
-    '</span><span class="h3">' + esc(t('dc.h.freq')) + '</span></div>';
-  b += radios.map(r => {
-    let s = '<div class="dc-radio">';
-    if (hasText(r.name)) s += '<div class="dc-rname">' + esc(r.name) + '</div>';
-    if (r.ch.length) {
-      s += '<table class="dc-tab"><colgroup><col style="width:58px"><col style="width:196px"><col style="width:160px"><col></colgroup><tbody>' +
-        r.ch.map(x =>
-          '<tr><td class="m">' + dash(x.channel) + '</td><td class="us">' + esc(x.label) + '</td>' +
-          '<td class="m fq">' + dash(x.frequency) + '</td><td class="md">' + esc(x.modulation) + '</td></tr>').join('') +
-        '</tbody></table>';
-    }
-    return s + '</div>';
+  /* Un seul tableau : une ligne de nom par poste ; rangées alternées recommencées à chaque poste (la 1re surlignée) ;
+     filet plein au-dessus du nom de chaque poste sauf le premier (ou de sa 1re rangée s'il n'a pas de nom). */
+  const rows = radios.map((r, ri) => {
+    let s = '';
+    if (hasText(r.name)) s += '<tr class="rsep' + (ri ? ' rsep-n' : '') + '"><td class="dc-rname" colspan="4">' + esc(r.name) + '</td></tr>';
+    s += r.ch.map((x, k) => {
+      const cl = [k % 2 === 0 ? 'z' : '', (k === 0 && ri && !hasText(r.name)) ? 'pn' : ''].filter(Boolean).join(' ');
+      return '<tr' + (cl ? ' class="' + cl + '"' : '') + '><td>' + dash(x.channel) + '</td><td class="us">' + esc(x.label) + '</td>' +
+        '<td class="fq">' + dash(x.frequency) + '</td><td class="md">' + esc(x.modulation) + '</td></tr>';
+    }).join('');
+    return s;
   }).join('');
-  return blockHtml('radio', t('dc.b.radio'), b, 'dc-bbt');
+  return blockHtml('radio', t('dc.b.radio'),
+    '<table class="dc-tab dc-radio"><colgroup><col style="width:58px"><col style="width:178px"><col style="width:195px"><col></colgroup>' +
+    '<thead><tr><th>' + esc(t('dc.h.ch')) + '</th><th>' + esc(t('dc.h.use')) + '</th><th>' + esc(t('dc.h.freq')) + '</th><th></th></tr></thead>' +
+    '<tbody>' + rows + '</tbody></table>', 'dc-bbt');
 }
 
 function blkFields(c) {
@@ -2783,16 +2750,16 @@ function blkWeather(c) {
   const vals = [['dc.w.wind', w.wind], ['dc.w.vis', w.visibility], ['dc.w.qnh', w.qnh], ['dc.w.clouds', w.clouds]];
   const hasV = vals.some(v => hasText(v[1]));
   if (!hasText(w.metar) && !hasV) return '';
-  const cell = v => hasText(v[1])
-    ? '<td class="wl">' + esc(t(v[0])) + '</td><td class="wv">' + esc(v[1]) + '</td>'
-    : '<td class="wl"></td><td class="wv"></td>';
+  const pair = v => hasText(v[1])
+    ? '<div class="wp"><span class="wl">' + esc(t(v[0])) + '</span><span class="wv">' + esc(v[1]) + '</span></div>'
+    : '<div class="wp wp0"></div>';
   let b = '';
   if (hasText(w.metar)) b += '<div class="dc-metar">' + esc(w.metar) + '</div>';
   if (hasV) {
-    let rows = '';
-    if (hasText(w.wind) || hasText(w.visibility)) rows += '<tr>' + cell(vals[0]) + cell(vals[1]) + '</tr>';
-    if (hasText(w.qnh) || hasText(w.clouds)) rows += '<tr>' + cell(vals[2]) + cell(vals[3]) + '</tr>';
-    b += '<table class="dc-wtab"><tbody>' + rows + '</tbody></table>';
+    let cells = '';
+    if (hasText(w.wind) || hasText(w.visibility)) cells += pair(vals[0]) + pair(vals[1]);
+    if (hasText(w.qnh) || hasText(w.clouds)) cells += pair(vals[2]) + pair(vals[3]);
+    b += '<div class="dc-wgrid">' + cells + '</div>';
   }
   return blockHtml('weather', t('dc.b.weather'), b);
 }
@@ -2802,10 +2769,10 @@ function blkFuel(c) {
   const load = c.loadout.filter(hasText);
   if (!fuelRows.length && !load.length) return '';
   const mu = unitLabel(c, 'mass');
-  let b = '<div class="dc-fuelwrap">';
+  let b = '<div class="dc-fuelwrap' + (fuelRows.length && load.length ? '' : ' dc-solo') + '">';
   if (fuelRows.length) {
     b += '<div class="dc-fuel">' + fuelRows.map(r =>
-      '<div class="dc-frow"><span class="fl">' + esc(t(r[0])) + '</span><span class="fv">' + esc(r[1].trim() + ' ' + mu) + '</span></div>').join('') + '</div>';
+      '<div class="dc-fp"><span class="fl">' + esc(t(r[0])) + '</span><span class="fv">' + esc(r[1].trim() + ' ' + mu) + '</span></div>').join('') + '</div>';
   }
   if (load.length) {
     b += '<ul class="dc-load">' + load.map(l => '<li><span class="bl">▪</span><span class="lx">' + esc(l) + '</span></li>').join('') + '</ul>';
