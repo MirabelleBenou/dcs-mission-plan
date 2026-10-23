@@ -1075,11 +1075,18 @@ body {
 }
 .p-header .p-header-logo {
   width: 64px; height: 64px;
-  /* FIX Bug B (complément) : background-image au lieu d'object-fit pour
-     compatibilité html2canvas */
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
+  /* FIX Bug B : <img> sans object-fit (html2canvas le rend mal), centré et
+     contenu dans sa boîte par max-width/max-height. Pas de background-image :
+     html2canvas peint une image de fond à sa taille CSS, puis l'échelle ×2
+     de l'export PNG l'agrandit — logo flou. Une <img> est dessinée depuis sa
+     source pleine résolution. */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.p-header .p-header-logo img {
+  max-width: 100%; max-height: 100%;
+  width: auto; height: auto;
   filter: contrast(1.05);
 }
 .p-header .p-title { text-align: center; }
@@ -1925,11 +1932,15 @@ body {
 .squadron-cell .squadron-logo-sm {
   width: 38px;
   height: 38px;
-  /* FIX Bug B : background-image au lieu d'object-fit pour compatibilité html2canvas */
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
+  /* FIX Bug B : <img> sans object-fit, centrée dans sa boîte (voir .p-header-logo) */
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
+}
+.squadron-cell .squadron-logo-sm img {
+  max-width: 100%; max-height: 100%;
+  width: auto; height: auto;
 }
 .squadron-cell .squadron-info { flex: 1; min-width: 0; overflow: hidden; }
 .squadron-cell .squadron-info strong {
@@ -3025,7 +3036,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   <button class="tb-lang-btn" id="btn-lang" data-i18n-title="toolbar.lang.tooltip" title="Switch language / Changer de langue">🇬🇧</button>
   <div class="tb-spacer"></div>
   <div class="tb-classif">CLASSIFIED // FOR EYES ONLY</div>
-  <span class="tb-version">v2.4.1</span>
+  <span class="tb-version">v2.4.2</span>
 </header>
 
 <!-- ===== EXPORT MODAL ===== -->
@@ -6843,18 +6854,20 @@ function pageHeader(opts) {
   // Default right logo to wing logo for consistency on pages without a squadron logo
   const rightLogo = opts.rightLogo || wingConfig.wing.logo;
   const rightAlt = opts.rightAlt || wingConfig.wing.shortName;
-  // FIX Bug B (complément) : <img> → <div background-image> pour les logos du header
-  // car object-fit:contain est mal géré par html2canvas (issues #1322, #2425).
-  // background-size:contain est correctement rendu.
+  // FIX Bug B : logos du header = <img> sans object-fit (mal rendu par html2canvas,
+  // issues #1322, #2425), dans une boîte flex de taille fixe. Pas de background-image :
+  // html2canvas le peint à sa taille CSS et l'échelle ×2 de l'export PNG le floute.
+  const logoBox = (cls, src, alt) =>
+    `<div class="${cls}">${src ? `<img src="${escapeAttr(src)}" alt="${escapeAttr(alt)}">` : ''}</div>`;
   return `
     <header class="p-header">
-      <div class="p-header-logo" role="img" aria-label="${escapeAttr(wingConfig.wing.shortName)}" style="background-image:url('${wingConfig.wing.logo}')"></div>
+      ${logoBox('p-header-logo', wingConfig.wing.logo, wingConfig.wing.shortName)}
       <div class="p-title">
         <div class="p-classif">${escapeHtml(t('classif.' + state.meta.classification, state.meta.classification))}</div>
         <h1>${escapeHtml(wingConfig.wing.shortName)} ░ BRIEFING</h1>
         <div class="p-sub">${pageSubtitle()}</div>
       </div>
-      <div class="p-header-logo" role="img" aria-label="${escapeAttr(rightAlt)}" style="background-image:url('${rightLogo}')"></div>
+      ${logoBox('p-header-logo', rightLogo, rightAlt)}
     </header>
   `;
 }
@@ -7226,11 +7239,11 @@ function buildPages() {
         <div class="squadron-grid">
           ${engagedList.map(e => {
             const info = e.info;
-            // FIX Bug B : remplacer <img> par <div> background-image pour contourner
-            // le bug html2canvas avec object-fit:contain (issues #1322, #2425).
-            // background-size:contain est correctement rendu, contrairement à object-fit.
+            // FIX Bug B : <img> sans object-fit (mal rendu par html2canvas, issues #1322,
+            // #2425), dans une boîte flex de taille fixe ; pas de background-image (peint
+            // à sa taille CSS par html2canvas, flou à l'échelle ×2 du PNG).
             const logoHtml = info.logo
-              ? `<div class="squadron-logo-sm" role="img" aria-label="${escapeAttr(info.id)}" style="background-image:url('${info.logo}')"></div>`
+              ? `<div class="squadron-logo-sm"><img src="${escapeAttr(info.logo)}" alt="${escapeAttr(info.id)}"></div>`
               : `<div class="squadron-logo-guest">INV.</div>`;
             // If sub-group defined → show it as the primary name (replaces callsign)
             const primaryName = info.subgroup ? info.subgroup : info.callsign;
@@ -8754,6 +8767,36 @@ function handleExportPngChoice() {
    Plus de second canvas, plus de drawImage, plus de scale 900/794, plus de
    fillRect, plus de cssText bricolé. Le bug de footer disparaît par construction
    (le footer est en position absolute dans la zone figée du clone). */
+/* Logos SVG sans width/height (seulement un viewBox) : html2canvas 1.4.1 ne les
+   peint pas quand ils sont des <img> (ils étaient peints en image de fond).
+   On leur donne, sur le clone seulement, une taille issue du viewBox. */
+function sizeSvgLogosForPng(root) {
+  const pending = [];
+  root.querySelectorAll('.p-header-logo img, .squadron-logo-sm img').forEach(function(img) {
+    const src = img.getAttribute('src') || '';
+    const m = /^data:image\/svg\+xml(;base64|;charset=[^;,]+)?,(.*)$/s.exec(src);
+    if (!m) return;
+    try {
+      const txt = m[1] === ';base64'
+        ? decodeURIComponent(escape(atob(m[2])))
+        : decodeURIComponent(m[2]);
+      const doc = new DOMParser().parseFromString(txt, 'image/svg+xml');
+      const svg = doc.documentElement;
+      if (!svg || svg.nodeName.toLowerCase() !== 'svg' || svg.querySelector('parsererror')) return;
+      if (svg.getAttribute('width') && svg.getAttribute('height')) return;
+      const vb = (svg.getAttribute('viewBox') || '').trim().split(/[\s,]+/).map(Number);
+      if (vb.length !== 4 || !(vb[2] > 0) || !(vb[3] > 0)) return;
+      svg.setAttribute('width', String(vb[2]));
+      svg.setAttribute('height', String(vb[3]));
+      const out = new XMLSerializer().serializeToString(svg);
+      img.setAttribute('src', 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(out))));
+      // currentSrc doit suivre la nouvelle source avant la capture
+      if (img.decode) pending.push(img.decode().catch(function() {}));
+    } catch (e) { /* source laissée telle quelle */ }
+  });
+  return Promise.all(pending);
+}
+
 async function renderPageToPng(pageEl) {
   // Attendre que les polices custom soient chargées (Stardos Stencil, Special Elite…)
   // Évite le FOUT (Flash of Unstyled Text) dans les premiers PNG générés juste après
@@ -8773,6 +8816,7 @@ async function renderPageToPng(pageEl) {
   document.body.appendChild(clone);
 
   try {
+    await sizeSvgLogosForPng(clone);
     const canvas = await html2canvas(clone, {
       backgroundColor: null,   // la couleur de fond vient de la règle .page (--page-bg)
       logging: false,
