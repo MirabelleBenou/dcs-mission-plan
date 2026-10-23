@@ -2440,7 +2440,7 @@ body[data-format="full"] [data-fmt="simple"] { display: none !important; }
 
 /* v2.4.0 — page « carte, menaces, cibles » : carte plafonnée en hauteur */
 .p-imgframe.p-map-cap img  { max-height: 430px; }
-.p-imgframe.p-map-full img { max-height: 960px; }
+.p-imgframe.p-map-full img { max-height: 800px; }   /* carte seule : la page tient (≈ 820 px utiles sous le bandeau) */
 
 /* v2.4.0 — tableau des cibles (au modèle du tableau des vols), brief simplifié et brief complet */
 .p-targets {
@@ -7123,23 +7123,19 @@ function buildSimplePages() {
   const hasThreats = threatCells.length > 0 || !!threatNote;
   const tgList = nonEmptyTargets();
   if (mapUrl || hasThreats || tgList.length) {
-    const hdr = [];
-    if (mapUrl) hdr.push(t('simple.hdr.map'));
-    if (hasThreats) hdr.push(t('simple.hdr.threats'));
-    if (tgList.length) hdr.push(t('simple.hdr.targets'));
-    const bannerHtml = hdr.map(h => escapeHtml(h)).join(' ░ ');
     const crowded = hasThreats || tgList.length > 0;
     const tb = [];
-    if (mapUrl) tb.push(imgFrame(t('preview.sitacImgCaption'), mapUrl, crowded ? 'p-map-cap' : 'p-map-full'));
+    if (mapUrl) tb.push({ tag: 'map', html: imgFrame(t('preview.sitacImgCaption'), mapUrl, crowded ? 'p-map-cap' : 'p-map-full') });
     if (hasThreats) {
-      tb.push(`<div class="p-subsection">${t('simple.threats')}</div>` +
+      tb.push({ tag: 'threats', html: `<div class="p-subsection">${t('simple.threats')}</div>` +
         (threatCells.length ? `<div class="menace-grid">${threatCells.join('')}</div>` : '') +
-        (threatNote ? `<div class="txt-small" style="margin-top:6px;font-style:italic;">▲ ${escapeHtml(threatNote)}</div>` : ''));
+        (threatNote ? `<div class="txt-small" style="margin-top:6px;font-style:italic;">▲ ${escapeHtml(threatNote)}</div>` : '') });
     }
     if (tgList.length) {
-      tb.push(`<div class="p-subsection">${t('preview.targets')}</div>${targetsTableHtml(tgList)}`);
+      tb.push({ tag: 'targets', html: `<div class="p-subsection">${t('preview.targets')}</div>${targetsTableHtml(tgList)}` });
     }
-    paginateBlocks(cont => `<div class="p-section">${bannerHtml}${cont ? contLabel() : ''}</div>`, tb)
+    // chaque page de la série nomme ce qu'elle porte (CARTE, MENACES, CIBLES), sans « SUITE »
+    paginateBlocks((cont, tags) => `<div class="p-section">${tags.map(g => escapeHtml(t('simple.hdr.' + g))).join(' ░ ')}</div>`, tb)
       .forEach(body => pages.push({ body }));
   }
 
@@ -7649,18 +7645,40 @@ function noteImgDims(url) {
   };
   im.src = url;
 }
+/* Dans le conteneur de mesure, une image n'est jamais une image : c'est un bloc dont la taille est calculée ici,
+   de façon synchrone, à partir des dimensions naturelles (_imgDims) et des limites CSS qui s'appliquent à cette
+   image à cet endroit (largeur du cadre, max-width, max-height). Rien n'est chargé ni décodé : la hauteur mesurée
+   est celle que prendra l'image chargée dans #preview (même règle que « width:auto; max-width; max-height »).
+   Dimensions encore inconnues : l'image réelle est mesurée (provisoire) et un re-rendu suit dès qu'elles le sont. */
 function withImgPlaceholders(html) {
-  return html.replace(/<img src="(data:[^"]+)"/g, (m, url) => {
+  return html.replace(/<img src="(data:[^"]+)"[^>]*>/g, (m, url) => {
     const d = _imgDims.get(url);
     if (d === undefined) { noteImgDims(url); return m; }
     if (!d) return m;
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${d.w}" height="${d.h}"/>`;
-    return `<img src="data:image/svg+xml,${encodeURIComponent(svg)}"`;
+    return `<div class="img-ph" data-w="${d.w}" data-h="${d.h}"></div>`;
+  });
+}
+function sizeImgPlaceholders(root) {
+  root.querySelectorAll('.img-ph').forEach(ph => {
+    const parent = ph.parentNode;
+    const probe = document.createElement('img');   // lit les limites CSS qu'aurait l'image à cet endroit
+    parent.insertBefore(probe, ph);
+    const cs = getComputedStyle(probe);
+    const pcs = getComputedStyle(parent);
+    const avail = parent.clientWidth - parseFloat(pcs.paddingLeft) - parseFloat(pcs.paddingRight);
+    const lim = (v, base) => v === 'none' ? Infinity : v.endsWith('%') ? base * parseFloat(v) / 100 : parseFloat(v);
+    const maxW = lim(cs.maxWidth, avail);
+    const maxH = cs.maxHeight.endsWith('%') ? Infinity : lim(cs.maxHeight, 0);
+    probe.remove();
+    const W = parseFloat(ph.dataset.w), H = parseFloat(ph.dataset.h);
+    const k = Math.min(1, maxW / W, maxH / H);
+    ph.style.cssText = `display:block;margin:0 auto;width:${W * k}px;height:${H * k}px`;
   });
 }
 
 let _measureHost = null;
-function pageFits(body) {
+/* Met le corps de page dans le conteneur de mesure (hors de #preview) et rend la page mesurée. */
+function layoutForMeasure(body) {
   if (!_measureHost) {
     _measureHost = document.createElement('div');
     _measureHost.id = 'page-measure';
@@ -7669,22 +7687,28 @@ function pageFits(body) {
     document.body.appendChild(_measureHost);
   }
   _measureHost.innerHTML = `<article class="page page--for-png">${pageMeta()}${pageHeader({})}<div style="padding-bottom:28px;">${withImgPlaceholders(body)}</div>${pageFooter(1, 1)}</article>`;
-  const pg = _measureHost.firstElementChild;
+  sizeImgPlaceholders(_measureHost);
+  return _measureHost.firstElementChild;
+}
+function pageFits(body) {
+  const pg = layoutForMeasure(body);
   const over = pg.scrollHeight - pg.clientHeight;
   _measureHost.innerHTML = '';
   return over <= OVERFLOW_THRESHOLD_PX;
 }
 
-/* headFn(cont) → bandeau de la page (cont = vrai pour une page « suite ») ; blocks → blocs en HTML ; tail → fin de page.
+/* headFn(cont, tags) → bandeau de la page (cont = vrai pour une page « suite » ; tags = les étiquettes des blocs
+   qu'elle porte) ; blocks → blocs en HTML, ou { html, tag } ; tail → fin de page.
    Retourne les corps de page. Rien ne déborde : un seul corps, la concaténation telle quelle. */
 function paginateBlocks(headFn, blocks, tail) {
   tail = tail || '';
-  const make = (cont, list) => headFn(cont) + list.join('') + tail;
-  const whole = make(false, blocks);
+  const items = blocks.map(b => typeof b === 'string' ? { html: b } : b);
+  const make = (cont, list) => headFn(cont, list.map(i => i.tag)) + list.map(i => i.html).join('') + tail;
+  const whole = make(false, items);
   if (pageFits(whole)) return [whole];
   const out = [];
   let cur = [];
-  blocks.forEach(b => {
+  items.forEach(b => {
     if (cur.length === 0) { cur.push(b); return; }
     if (pageFits(make(out.length > 0, cur.concat([b])))) cur.push(b);
     else { out.push(make(out.length > 0, cur)); cur = [b]; }
@@ -8089,6 +8113,12 @@ function initOverflowObserver() {
     characterData: true,
     attributes: true,
   });
+  // Une image qui finit de charger change la hauteur du contenu sans muter le DOM : on re-vérifie
+  previewEl.addEventListener('load', function(e) {
+    if (!e.target || e.target.tagName !== 'IMG') return;
+    clearTimeout(overflowObserver._timer);
+    overflowObserver._timer = setTimeout(detectPageOverflows, 50);
+  }, true);
   // Première passe immédiate à l'initialisation
   detectPageOverflows();
 }
