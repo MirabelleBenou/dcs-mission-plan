@@ -14,6 +14,10 @@ The suite bundles several **independently-versioned tools**, so entries are grou
 - **Tablet & mobile** first-class target (touch, drag, rotation-safe).
 - Wing configuration shared automatically across embedded tools.
 
+### `v1.5.2`
+#### Fixed
+- Embeds **Briefing Generator v2.4.2** — sharp logos in PNG export (see below). Released together with v1.5.1.
+
 ### `v1.5.1`
 #### Fixed
 - Embeds **Briefing Generator v2.4.1**, **Datacard Generator v1.0.1** and **Field Manual v1.2.1** — real bold headings and sharper PNG exports (see below).
@@ -67,6 +71,10 @@ Initial release. Command post for the suite.
 ---
 
 ## Briefing Generator
+
+### `v2.4.2`
+#### Fixed
+- **Sharp logos in PNG export** — the wing and squadron logos were painted as CSS backgrounds at their on-screen size (64 px) and came out blurry in the 2× PNG; they are now real images, drawn at full resolution. On screen and in the PDF, nothing changes.
 
 ### `v2.4.1`
 #### Fixed
