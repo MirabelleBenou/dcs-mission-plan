@@ -1002,6 +1002,7 @@ body {
 .wing-ro-meta {
   font-family: var(--f-ui);
   font-size: 10px;
+  font-weight: 500;
   letter-spacing: 1px;
   color: var(--khaki-light);
   margin-top: 3px;
@@ -1010,6 +1011,7 @@ body {
 .wing-hq-hint {
   font-family: var(--f-ui);
   font-size: 10px;
+  font-weight: 500;
   letter-spacing: 1.5px;
   color: var(--khaki-light);
   text-align: center;
@@ -1256,6 +1258,7 @@ body {
   color: var(--red-stamp);
   letter-spacing: 4px;
   font-family: var(--f-stencil);
+  font-weight: 700;
 }
 
 /* THREAT CHIPS */
@@ -1798,7 +1801,7 @@ body {
   flex: 1;
   background: rgba(216, 201, 165, .92) !important;
   border-left-color: var(--amber) !important;
-  font-weight: 700;
+  font-weight: 400;
   letter-spacing: 1px;
 }
 .ed-channels-list {
@@ -2303,7 +2306,7 @@ body[data-theme="modern-east"] .stamp-classif::after {
 }
 
 .ed-label-hint {
-  font-weight: 400;
+  font-weight: 500;
   font-size: 10px;
   letter-spacing: 0.5px;
   color: var(--khaki);
@@ -2491,7 +2494,7 @@ body[data-format="full"] [data-fmt="simple"] { display: none !important; }
   letter-spacing: 1px;
   text-transform: uppercase;
 }
-.p-targets .tg-nature { font-weight: 700; }
+.p-targets .tg-nature { font-weight: 400; }
 .p-targets .tg-pos { font-family: var(--f-mono); }
 
 /* v2.4.0 — éditeur : liste des cibles (une rangée : N°, Nature, Position, Remarque, ×) */
@@ -8088,7 +8091,10 @@ function applyTheme(themeId) {
    Il disparaît dynamiquement si l'utilisateur supprime du contenu.
    Le MutationObserver surveille #preview — aucun re-check disséminé ailleurs.
    ================================================================ */
-const OVERFLOW_THRESHOLD_PX = 10;
+/* Seuil de dépassement toléré (px). Doit rester < 28, le padding-bottom du corps de page (renderPreview) :
+   scrollHeight − clientHeight compte ce padding, donc tant que le dépassement reste sous 28 px le contenu ne touche pas le pied.
+   Partagé par pageFits (pagination) et par le bandeau « Contenu tronqué ». */
+const OVERFLOW_THRESHOLD_PX = 16;
 let overflowObserver = null;
 
 function detectPageOverflows() {
