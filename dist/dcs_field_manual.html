@@ -422,7 +422,7 @@ body {
   flex-shrink: 0;
 }
 .fm-plaque.active .fm-plaque-badge {
-  color: var(--chapter-accent, var(--fm-accent));
+  color: var(--accent-ink);
   border: 1px solid var(--chapter-accent, var(--fm-accent));
 }
 .fm-plaque.soon .fm-plaque-badge {
@@ -447,6 +447,10 @@ body {
 }
 
 /* ── CHAPITRE PAGE ── */
+/* La couleur d'un module marque, l'encre écrit : l'encre d'accent (50 % accent, 50 % encre) porte le texte. */
+.fm-chapter, .fm-plaque, .fm-stub-placeholder {
+  --accent-ink: color-mix(in srgb, var(--chapter-accent, var(--fm-accent)) 50%, var(--ink));
+}
 .fm-chapter {
   max-width: 860px;
   margin: 0 auto;
@@ -535,7 +539,7 @@ body {
   font-family: var(--f-stencil);
   font-size: 14px;
   letter-spacing: 3px;
-  color: var(--chapter-accent, var(--fm-accent));
+  color: var(--accent-ink);
   text-transform: uppercase;
   margin-bottom: 12px;
   padding-left: 12px;
@@ -605,8 +609,9 @@ body[lang="fr"] .lang-block[data-lang="en"] { display: none; }
 }
 
 .fm-callout a {
-  color: var(--chapter-accent, var(--fm-accent));
+  color: var(--accent-ink);
   text-decoration: underline;
+  text-decoration-color: var(--chapter-accent, var(--fm-accent));
 }
 
 kbd {
@@ -647,8 +652,9 @@ kbd {
 .fm-schema {
   margin: 28px 0;
   border: 1px solid var(--khaki);
-  background: rgba(0,0,0,.2);
+  background: rgba(0,0,0,.10);
   padding: 20px;
+  position: relative;
 }
 .fm-schema svg {
   display: block;
@@ -664,7 +670,7 @@ kbd {
   color: var(--ink);
   text-transform: uppercase;
   text-align: center;
-  opacity: .65;
+  opacity: .85;
 }
 
 /* ── STUB ── */
@@ -684,7 +690,7 @@ kbd {
   font-family: var(--f-stencil);
   font-size: 18px;
   letter-spacing: 4px;
-  color: var(--chapter-accent, var(--fm-accent));
+  color: var(--accent-ink);
   text-transform: uppercase;
 }
 .fm-stub-placeholder small {
@@ -709,6 +715,138 @@ kbd {
 .fm-plaque[data-module="bg"]  { --chapter-accent: #c0892a; --chapter-accent-rgb: 192,137,42; }
 .fm-plaque[data-module="rp"]  { --chapter-accent: #7ac97a; --chapter-accent-rgb: 122,201,122; }
 .fm-plaque[data-module="dg"]  { --chapter-accent: #4f7a8e; --chapter-accent-rgb: 79,122,142; }
+
+
+/* ── SCHÉMAS : la couleur du module marque, l'encre écrit ── */
+.sv-box {
+  fill: var(--paper-light);
+}
+.sv-m-hq { fill: color-mix(in srgb, #4FB286 20%, var(--paper-light)); stroke: #4FB286; }
+.sv-m-bg { fill: color-mix(in srgb, #c0892a 20%, var(--paper-light)); stroke: #c0892a; }
+.sv-m-rs { fill: color-mix(in srgb, #C95A9C 20%, var(--paper-light)); stroke: #C95A9C; }
+.sv-m-dg { fill: color-mix(in srgb, #4f7a8e 20%, var(--paper-light)); stroke: #4f7a8e; }
+.sv-pill { fill: var(--olive-dark); }
+.sv-pill-t { fill: var(--paper-light); }
+.fm-schema.tall svg { max-height: 425px; }
+
+/* ── ZOOM : image ou schéma ouvert plein écran ── */
+.fm-zoom-host { position: relative; }
+[data-zoomable] { cursor: zoom-in; }
+[data-zoomable]:focus-visible {
+  outline: 2px solid var(--chapter-accent, var(--fm-accent));
+  outline-offset: 2px;
+}
+.fm-hero-img[data-zoomable]:focus-visible,
+.cover-img-box[data-zoomable]:focus-visible { outline-offset: -3px; }
+.fm-zoom-badge {
+  position: absolute;
+  top: 8px; right: 8px;
+  z-index: 3;
+  width: 26px; height: 26px;
+  border-radius: 3px;
+  background: rgba(26, 30, 16, .66);
+  color: #f0e8d0;
+  font-family: system-ui, 'Segoe UI Symbol', 'DejaVu Sans', sans-serif;
+  font-size: 15px;
+  line-height: 26px;
+  text-align: center;
+  opacity: .72;
+  pointer-events: none;
+  transition: opacity .12s;
+}
+.fm-zoom-badge::after { content: "\2922"; }
+.fm-hero > .fm-zoom-badge { right: 38px; }
+.fm-zoom-host:hover > .fm-zoom-badge,
+.fm-zoom-host:focus-within > .fm-zoom-badge { opacity: 1; }
+
+body.zm-open #fm-root { overflow: hidden; }
+.zm {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+  background: rgba(0, 0, 0, .88);
+  color: var(--paper);
+  font-family: var(--f-ui);
+}
+.zm[hidden] { display: none !important; }
+.zm-stage {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  touch-action: none;
+  overscroll-behavior: none;
+  -webkit-user-select: none;
+  user-select: none;
+  cursor: default;
+}
+.zm.zoomed .zm-stage { cursor: grab; }
+.zm.zoomed .zm-stage:active { cursor: grabbing; }
+.zm-box {
+  position: absolute;
+  left: 0; top: 0;
+  color: var(--ink);
+  will-change: transform;
+}
+.zm-box img {
+  display: block;
+  width: 100%;
+  height: auto;
+  -webkit-user-drag: none;
+  box-shadow: 0 0 0 1px var(--khaki), 0 10px 40px rgba(0, 0, 0, .6);
+}
+.zm-box .fm-schema {
+  margin: 0;
+  border: 0;
+  padding: calc(20px * var(--zs, 1));
+  background-color: var(--paper);
+  background-image: linear-gradient(rgba(0, 0, 0, .10), rgba(0, 0, 0, .10)), var(--kraft-bg);
+  background-size: auto, 400px 566px;
+  box-shadow: 0 0 0 1px var(--khaki), 0 10px 40px rgba(0, 0, 0, .6);
+}
+.zm-box .fm-schema svg { max-height: none; width: 100%; height: auto; }
+.zm-box .fm-schema-legend {
+  margin-top: calc(10px * var(--zs, 1));
+  font-size: calc(10px * var(--zs, 1));
+  letter-spacing: calc(1.5px * var(--zs, 1));
+}
+.zm-bar {
+  position: absolute;
+  left: 50%;
+  bottom: max(14px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 2;
+}
+.zm-btn {
+  min-width: 44px;
+  height: 44px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--f-ui);
+  font-size: 13px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  line-height: 1;
+  color: var(--paper);
+  background: linear-gradient(180deg, var(--olive-dark) 0%, var(--olive-deep) 100%);
+  border: 1px solid var(--khaki);
+  border-radius: 0;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .5);
+}
+.zm-btn:hover { background: var(--olive); border-color: var(--fm-accent); }
+.zm-btn:focus-visible { outline: 2px solid var(--fm-accent); outline-offset: 2px; background: var(--olive); }
+.zm-sym { width: 44px; padding: 0; font-size: 24px; letter-spacing: 0; text-transform: none; }
+.zm-close {
+  position: absolute;
+  top: max(10px, env(safe-area-inset-top));
+  right: max(10px, env(safe-area-inset-right));
+  z-index: 2;
+  font-size: 28px;
+}
 
 </style>
 </head>
@@ -880,8 +1018,8 @@ kbd {
             </pattern>
           </defs>
 
-          <text x="360" y="26" text-anchor="middle" font-size="13" letter-spacing="3" fill="currentColor" opacity=".75" class="lang-block" data-lang="fr">ANATOMIE D'UNE PHOTO RECON</text>
-          <text x="360" y="26" text-anchor="middle" font-size="13" letter-spacing="3" fill="currentColor" opacity=".75" class="lang-block" data-lang="en">ANATOMY OF A RECON PHOTO</text>
+          <text x="360" y="26" text-anchor="middle" font-size="13" letter-spacing="3" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">ANATOMIE D'UNE PHOTO RECON</text>
+          <text x="360" y="26" text-anchor="middle" font-size="13" letter-spacing="3" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">ANATOMY OF A RECON PHOTO</text>
           <line x1="120" y1="34" x2="600" y2="34" stroke="currentColor" stroke-width=".6" opacity=".3"/>
 
           <!-- PHOTO (fond sombre, repères clairs) -->
@@ -1052,49 +1190,49 @@ kbd {
             <marker id="haf" markerWidth="8" markerHeight="8" refX="6.5" refY="3.5" orient="auto"><path d="M0,0 L8,3.5 L0,7 Z" fill="currentColor" opacity=".35"/></marker>
           </defs>
 
-          <text x="360" y="26" text-anchor="middle" font-size="13" letter-spacing="3" fill="currentColor" opacity=".75" class="lang-block" data-lang="fr">HQ — LE HUB DE LA SUITE</text>
-          <text x="360" y="26" text-anchor="middle" font-size="13" letter-spacing="3" fill="currentColor" opacity=".75" class="lang-block" data-lang="en">HQ — THE SUITE'S HUB</text>
+          <text x="360" y="26" text-anchor="middle" font-size="13" letter-spacing="3" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">HQ — LE HUB DE LA SUITE</text>
+          <text x="360" y="26" text-anchor="middle" font-size="13" letter-spacing="3" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">HQ — THE SUITE'S HUB</text>
           <line x1="120" y1="34" x2="600" y2="34" stroke="currentColor" stroke-width=".6" opacity=".3"/>
 
-          <rect x="48" y="92" width="86" height="42" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <rect class="sv-box" x="48" y="92" width="86" height="42" rx="3" stroke="currentColor" stroke-width="1.2"/>
           <text x="91" y="112" text-anchor="middle" font-size="12" fill="currentColor">.miz</text>
-          <text x="91" y="126" text-anchor="middle" font-size="8" fill="currentColor" opacity=".7">mission</text>
+          <text x="91" y="126" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9">mission</text>
           <line x1="134" y1="113" x2="286" y2="113" stroke="currentColor" stroke-width="1.2" opacity=".6" marker-end="url(#ha)"/>
-          <text x="210" y="105" text-anchor="middle" font-size="9" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">charger</text>
-          <text x="210" y="105" text-anchor="middle" font-size="9" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">load</text>
+          <text x="210" y="105" text-anchor="middle" font-size="9" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">charger</text>
+          <text x="210" y="105" text-anchor="middle" font-size="9" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">load</text>
 
-          <rect x="288" y="84" width="150" height="64" rx="3" fill="none" stroke="#4FB286" stroke-width="2"/>
-          <text x="363" y="116" text-anchor="middle" font-size="22" fill="#4FB286" letter-spacing="2">HQ</text>
-          <text x="363" y="134" text-anchor="middle" font-size="8.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">poste de commandement</text>
-          <text x="363" y="134" text-anchor="middle" font-size="8.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">command post</text>
+          <rect class="sv-box sv-m-hq" x="288" y="84" width="150" height="64" rx="3" stroke-width="2"/>
+          <text x="363" y="116" text-anchor="middle" font-size="22" fill="currentColor" letter-spacing="2">HQ</text>
+          <text x="363" y="134" text-anchor="middle" font-size="8.5" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">poste de commandement</text>
+          <text x="363" y="134" text-anchor="middle" font-size="8.5" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">command post</text>
 
           <line x1="438" y1="113" x2="512" y2="113" stroke="currentColor" stroke-width="1.2" opacity=".35" stroke-dasharray="4 3" marker-end="url(#haf)"/>
-          <rect x="514" y="86" width="172" height="58" rx="3" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="4 3" opacity=".5"/>
-          <text x="600" y="108" text-anchor="middle" font-size="9.5" fill="currentColor" opacity=".6" class="lang-block" data-lang="fr">Snapshot de mission</text>
-          <text x="600" y="108" text-anchor="middle" font-size="9.5" fill="currentColor" opacity=".6" class="lang-block" data-lang="en">Mission snapshot</text>
-          <text x="600" y="124" text-anchor="middle" font-size="9.5" fill="currentColor" opacity=".6" class="lang-block" data-lang="fr">→ modules Flight Lead</text>
-          <text x="600" y="124" text-anchor="middle" font-size="9.5" fill="currentColor" opacity=".6" class="lang-block" data-lang="en">→ Flight Lead modules</text>
-          <text x="600" y="137" text-anchor="middle" font-size="8.5" fill="currentColor" opacity=".5" class="lang-block" data-lang="fr">(à venir)</text>
-          <text x="600" y="137" text-anchor="middle" font-size="8.5" fill="currentColor" opacity=".5" class="lang-block" data-lang="en">(coming)</text>
+          <rect class="sv-box" x="514" y="86" width="172" height="58" rx="3" stroke="currentColor" stroke-width="1" stroke-opacity=".6" stroke-dasharray="4 3"/>
+          <text x="600" y="108" text-anchor="middle" font-size="9.5" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">Snapshot de mission</text>
+          <text x="600" y="108" text-anchor="middle" font-size="9.5" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">Mission snapshot</text>
+          <text x="600" y="124" text-anchor="middle" font-size="9.5" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">→ modules Flight Lead</text>
+          <text x="600" y="124" text-anchor="middle" font-size="9.5" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">→ Flight Lead modules</text>
+          <text x="600" y="137" text-anchor="middle" font-size="8.5" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">(à venir)</text>
+          <text x="600" y="137" text-anchor="middle" font-size="8.5" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">(coming)</text>
 
           <line x1="363" y1="148" x2="363" y2="196" stroke="currentColor" stroke-width="1.2" opacity=".6" marker-end="url(#ha)"/>
-          <rect x="250" y="198" width="226" height="32" rx="3" fill="none" stroke="currentColor" stroke-width="1.4"/>
+          <rect class="sv-box" x="250" y="198" width="226" height="32" rx="3" stroke="currentColor" stroke-width="1.4"/>
           <text x="363" y="214" text-anchor="middle" font-size="11" fill="currentColor">wing_config</text>
-          <text x="363" y="226" text-anchor="middle" font-size="8" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">identité d'escadre partagée</text>
-          <text x="363" y="226" text-anchor="middle" font-size="8" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">shared wing identity</text>
+          <text x="363" y="226" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">identité d'escadre partagée</text>
+          <text x="363" y="226" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">shared wing identity</text>
 
           <line x1="320" y1="230" x2="270" y2="276" stroke="currentColor" stroke-width="1.2" opacity=".6" marker-end="url(#ha)"/>
           <line x1="406" y1="230" x2="456" y2="276" stroke="currentColor" stroke-width="1.2" opacity=".6" marker-end="url(#ha)"/>
-          <rect x="170" y="278" width="140" height="46" rx="3" fill="none" stroke="#c0892a" stroke-width="1.6"/>
-          <text x="240" y="300" text-anchor="middle" font-size="12" fill="#c0892a">Briefing Generator</text>
-          <text x="240" y="315" text-anchor="middle" font-size="8" fill="currentColor" opacity=".6" class="lang-block" data-lang="fr">branding + escadrons</text>
-          <text x="240" y="315" text-anchor="middle" font-size="8" fill="currentColor" opacity=".6" class="lang-block" data-lang="en">branding + squadrons</text>
-          <rect x="416" y="278" width="140" height="46" rx="3" fill="none" stroke="#C95A9C" stroke-width="1.6"/>
-          <text x="486" y="300" text-anchor="middle" font-size="12" fill="#C95A9C">Recon Station</text>
-          <text x="486" y="315" text-anchor="middle" font-size="8" fill="currentColor" opacity=".6">logos</text>
+          <rect class="sv-box sv-m-bg" x="170" y="278" width="140" height="46" rx="3" stroke-width="2"/>
+          <text x="240" y="300" text-anchor="middle" font-size="12" fill="currentColor">Briefing Generator</text>
+          <text x="240" y="315" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">branding + escadrons</text>
+          <text x="240" y="315" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">branding + squadrons</text>
+          <rect class="sv-box sv-m-rs" x="416" y="278" width="140" height="46" rx="3" stroke-width="2"/>
+          <text x="486" y="300" text-anchor="middle" font-size="12" fill="currentColor">Recon Station</text>
+          <text x="486" y="315" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9">logos</text>
 
-          <text x="360" y="352" text-anchor="middle" font-size="9" fill="currentColor" opacity=".55" class="lang-block" data-lang="fr">HQ édite — les autres consomment</text>
-          <text x="360" y="352" text-anchor="middle" font-size="9" fill="currentColor" opacity=".55" class="lang-block" data-lang="en">HQ edits — the others consume</text>
+          <text x="360" y="352" text-anchor="middle" font-size="9" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">HQ édite — les autres consomment</text>
+          <text x="360" y="352" text-anchor="middle" font-size="9" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">HQ edits — the others consume</text>
         </svg>
         <div class="fm-schema-legend">
           <span class="lang-block" data-lang="fr">Fig. 1 — HQ édite l'identité d'escadre ; les autres modules la consomment.</span>
@@ -1187,96 +1325,131 @@ kbd {
       </div>
 
       <!-- Schéma SVG -->
-      <div class="fm-schema">
-        <svg viewBox="0 0 720 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ce qui alimente quoi">
-          <defs>
-            <marker id="bm" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="currentColor" opacity=".6"/></marker>
-          </defs>
-          <text x="360" y="24" text-anchor="middle" font-size="13" letter-spacing="3" fill="currentColor" opacity=".75" class="lang-block" data-lang="fr">CE QUI ALIMENTE QUOI</text>
-          <text x="360" y="24" text-anchor="middle" font-size="13" letter-spacing="3" fill="currentColor" opacity=".75" class="lang-block" data-lang="en">WHAT FEEDS WHAT</text>
+      <div class="fm-schema tall">
+        <svg viewBox="0 0 720 425" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ce qui alimente quoi">
+          <defs><marker id="bm" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="currentColor" opacity=".8"/></marker></defs>
+          <text x="360" y="24" font-size="13" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.9" letter-spacing="3">CE QUI ALIMENTE QUOI</text>
+          <text x="360" y="24" font-size="13" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en" opacity="0.9" letter-spacing="3">WHAT FEEDS WHAT</text>
           <line x1="120" y1="32" x2="600" y2="32" stroke="currentColor" stroke-width=".6" opacity=".3"/>
-
-          <rect x="16" y="66" width="96" height="42" rx="3" fill="none" stroke="#4FB286" stroke-width="1.8"/>
-          <text x="64" y="84" text-anchor="middle" font-size="12" fill="#4FB286">HQ</text>
-          <text x="64" y="98" text-anchor="middle" font-size="7.5" fill="currentColor" opacity=".7">wing_config</text>
-
-          <rect x="156" y="66" width="96" height="42" rx="3" fill="none" stroke="currentColor" stroke-width="1.4"/>
-          <text x="204" y="91" text-anchor="middle" font-size="11" fill="currentColor" class="lang-block" data-lang="fr">Escadrons</text>
-          <text x="204" y="91" text-anchor="middle" font-size="11" fill="currentColor" class="lang-block" data-lang="en">Squadrons</text>
-
-          <rect x="296" y="66" width="96" height="42" rx="3" fill="none" stroke="#c0892a" stroke-width="1.8"/>
-          <text x="344" y="91" text-anchor="middle" font-size="11" fill="#c0892a">Missions</text>
-
-          <rect x="436" y="66" width="96" height="42" rx="3" fill="none" stroke="currentColor" stroke-width="1.4"/>
-          <text x="484" y="84" text-anchor="middle" font-size="10" fill="currentColor" class="lang-block" data-lang="fr">Appareil</text>
-          <text x="484" y="84" text-anchor="middle" font-size="10" fill="currentColor" class="lang-block" data-lang="en">Aircraft</text>
-          <text x="484" y="98" text-anchor="middle" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">sélectionné</text>
-          <text x="484" y="98" text-anchor="middle" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">selected</text>
-
-          <rect x="576" y="66" width="100" height="42" rx="3" fill="none" stroke="currentColor" stroke-width="1.4"/>
-          <text x="626" y="91" text-anchor="middle" font-size="10.5" fill="currentColor" class="lang-block" data-lang="fr">Plan radio</text>
-          <text x="626" y="91" text-anchor="middle" font-size="10.5" fill="currentColor" class="lang-block" data-lang="en">Radio plan</text>
-
-          <line x1="112" y1="87" x2="154" y2="87" stroke="currentColor" stroke-width="1.2" opacity=".6" marker-end="url(#bm)"/>
-          <text x="133" y="80" text-anchor="middle" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">identité</text>
-          <text x="133" y="80" text-anchor="middle" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">identity</text>
-          <line x1="252" y1="87" x2="294" y2="87" stroke="currentColor" stroke-width="1.2" opacity=".6" marker-end="url(#bm)"/>
-          <text x="273" y="80" text-anchor="middle" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">escadron</text>
-          <text x="273" y="80" text-anchor="middle" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">squadron</text>
-          <line x1="392" y1="87" x2="434" y2="87" stroke="currentColor" stroke-width="1.2" opacity=".6" marker-end="url(#bm)"/>
-          <text x="413" y="80" text-anchor="middle" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">type choisi</text>
-          <text x="413" y="80" text-anchor="middle" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">type chosen</text>
-          <line x1="532" y1="87" x2="574" y2="87" stroke="currentColor" stroke-width="1.2" opacity=".6" marker-end="url(#bm)"/>
-          <text x="553" y="80" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">réf radio</text>
-          <text x="553" y="80" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">radio ref</text>
-
-          <rect x="250" y="190" width="140" height="42" rx="3" fill="none" stroke="currentColor" stroke-width="1.4"/>
-          <text x="320" y="215" text-anchor="middle" font-size="11" fill="currentColor" class="lang-block" data-lang="fr">Équipage</text>
-          <text x="320" y="215" text-anchor="middle" font-size="11" fill="currentColor" class="lang-block" data-lang="en">Crew</text>
-          <path d="M204,108 C204,160 270,165 280,189" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".55" marker-end="url(#bm)"/>
-          <text x="214" y="150" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">callsign → indicatifs</text>
-          <text x="214" y="150" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">callsign → call signs</text>
-          <path d="M344,108 C344,150 350,160 350,189" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".55" marker-end="url(#bm)"/>
-          <text x="356" y="150" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">groupes liés</text>
-          <text x="356" y="150" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">linked groups</text>
-
-          <rect x="40" y="296" width="150" height="42" rx="3" fill="none" stroke="currentColor" stroke-width="1.4"/>
-          <text x="115" y="315" text-anchor="middle" font-size="10.5" fill="currentColor" class="lang-block" data-lang="fr">Aérodromes / FARP</text>
-          <text x="115" y="315" text-anchor="middle" font-size="10.5" fill="currentColor" class="lang-block" data-lang="en">Airfields / FARPs</text>
-          <text x="115" y="329" text-anchor="middle" font-size="7.5" fill="currentColor" opacity=".7">ICAO</text>
-          <rect x="250" y="296" width="120" height="42" rx="3" fill="none" stroke="currentColor" stroke-width="1.4"/>
-          <text x="310" y="321" text-anchor="middle" font-size="11" fill="currentColor">METAR</text>
-          <line x1="190" y1="317" x2="248" y2="317" stroke="currentColor" stroke-width="1.2" opacity=".6" marker-end="url(#bm)"/>
-          <text x="219" y="310" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">pré-rempli</text>
-          <text x="219" y="310" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">pre-filled</text>
-
-          <rect x="470" y="296" width="160" height="42" rx="3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-dasharray="4 3" opacity=".75"/>
-          <text x="550" y="315" text-anchor="middle" font-size="10.5" fill="currentColor" class="lang-block" data-lang="fr">Métadonnées</text>
-          <text x="550" y="315" text-anchor="middle" font-size="10.5" fill="currentColor" class="lang-block" data-lang="en">Metadata</text>
-          <text x="550" y="329" text-anchor="middle" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">en-têtes &amp; pieds de page</text>
-          <text x="550" y="329" text-anchor="middle" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">page headers &amp; footers</text>
-
-          <!-- Datacard Generator : ce qui l'alimente (v1.1.0) -->
-          <rect x="470" y="190" width="170" height="42" rx="3" fill="none" stroke="#4f7a8e" stroke-width="1.8"/>
-          <text x="555" y="208" text-anchor="middle" font-size="11" fill="#4f7a8e">Datacard Generator</text>
-          <text x="555" y="222" text-anchor="middle" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">une datacard par vol</text>
-          <text x="555" y="222" text-anchor="middle" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">one datacard per flight</text>
-          <path d="M392,100 C432,108 488,140 500,188" fill="none" stroke="#4f7a8e" stroke-width="1.2" opacity=".55" stroke-dasharray="4 3" marker-end="url(#bm)"/>
-          <text x="438" y="140" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">vols</text>
-          <text x="438" y="140" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">flights</text>
-          <line x1="626" y1="108" x2="620" y2="188" stroke="#4f7a8e" stroke-width="1.2" opacity=".6" stroke-dasharray="4 3" marker-end="url(#bm)"/>
-          <text x="628" y="152" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">fréquences</text>
-          <text x="628" y="152" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">frequencies</text>
-          <line x1="390" y1="211" x2="468" y2="211" stroke="#4f7a8e" stroke-width="1.2" opacity=".6" stroke-dasharray="4 3" marker-end="url(#bm)"/>
-          <text x="429" y="204" text-anchor="middle" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">équipage</text>
-          <text x="429" y="204" text-anchor="middle" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">crew</text>
-          <path d="M370,306 C440,300 500,268 520,234" fill="none" stroke="#4f7a8e" stroke-width="1.2" opacity=".55" stroke-dasharray="4 3" marker-end="url(#bm)"/>
-          <text x="536" y="266" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">METAR décodé</text>
-          <text x="536" y="266" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">decoded METAR</text>
+          <rect class="sv-box sv-m-hq" x="16" y="66" width="96" height="42" rx="3" stroke-width="2"/>
+          <text x="64" y="84" font-size="12" text-anchor="middle" fill="currentColor">HQ</text>
+          <text x="64" y="98" font-size="8" text-anchor="middle" fill="currentColor" opacity="0.9">wing_config</text>
+          <rect class="sv-box" x="156" y="66" width="96" height="42" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <text x="204" y="91" font-size="11" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">Escadrons</text>
+          <text x="204" y="91" font-size="11" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">Squadrons</text>
+          <rect class="sv-pill" x="223" y="59.5" width="26" height="13" rx="2"/>
+          <text x="236" y="69.1" font-size="8.5" text-anchor="middle" class="sv-pill-t lang-block" data-lang="fr" letter-spacing="1" dx="0.5">C·S</text>
+          <text x="236" y="69.1" font-size="8.5" text-anchor="middle" class="sv-pill-t lang-block" data-lang="en" letter-spacing="1" dx="0.5">F·Q</text>
+          <rect class="sv-box sv-m-bg" x="296" y="66" width="96" height="42" rx="3" stroke-width="2"/>
+          <text x="344" y="84" font-size="11" text-anchor="middle" fill="currentColor">Missions</text>
+          <text x="344" y="98" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.9">vols</text>
+          <text x="344" y="98" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en" opacity="0.9">flights</text>
+          <rect class="sv-pill" x="363" y="59.5" width="26" height="13" rx="2"/>
+          <text x="376" y="69.1" font-size="8.5" text-anchor="middle" class="sv-pill-t lang-block" data-lang="fr" letter-spacing="1" dx="0.5">C·S</text>
+          <text x="376" y="69.1" font-size="8.5" text-anchor="middle" class="sv-pill-t lang-block" data-lang="en" letter-spacing="1" dx="0.5">F·Q</text>
+          <rect class="sv-box" x="436" y="66" width="96" height="42" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <text x="484" y="84" font-size="10" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">Appareil</text>
+          <text x="484" y="84" font-size="10" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">Aircraft</text>
+          <text x="484" y="98" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.9">sélectionné</text>
+          <text x="484" y="98" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en" opacity="0.9">selected</text>
+          <rect class="sv-pill" x="503" y="59.5" width="26" height="13" rx="2"/>
+          <text x="516" y="69.1" font-size="8.5" text-anchor="middle" class="sv-pill-t lang-block" data-lang="fr" letter-spacing="1" dx="0.5">C·S</text>
+          <text x="516" y="69.1" font-size="8.5" text-anchor="middle" class="sv-pill-t lang-block" data-lang="en" letter-spacing="1" dx="0.5">F·Q</text>
+          <rect class="sv-box" x="576" y="66" width="100" height="42" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <text x="626" y="91" font-size="10.5" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">Plan radio</text>
+          <text x="626" y="91" font-size="10.5" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">Radio plan</text>
+          <rect class="sv-pill" x="647" y="59.5" width="26" height="13" rx="2"/>
+          <text x="660" y="69.1" font-size="8.5" text-anchor="middle" class="sv-pill-t lang-block" data-lang="fr" letter-spacing="1" dx="0.5">C·S</text>
+          <text x="660" y="69.1" font-size="8.5" text-anchor="middle" class="sv-pill-t lang-block" data-lang="en" letter-spacing="1" dx="0.5">F·Q</text>
+          <line x1="112" y1="87" x2="154" y2="87" stroke="currentColor" stroke-width="1.2" opacity="0.8" marker-end="url(#bm)"/>
+          <text x="133" y="80" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.9">identité</text>
+          <text x="133" y="80" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en" opacity="0.9">identity</text>
+          <line x1="252" y1="87" x2="294" y2="87" stroke="currentColor" stroke-width="1.2" opacity="0.8" marker-end="url(#bm)"/>
+          <text x="273" y="80" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.9">escadron</text>
+          <text x="273" y="80" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en" opacity="0.9">squadron</text>
+          <line x1="392" y1="87" x2="434" y2="87" stroke="currentColor" stroke-width="1.2" opacity="0.8" marker-end="url(#bm)"/>
+          <text x="413" y="80" font-size="8" text-anchor="middle" fill="currentColor" opacity="0.9">type</text>
+          <line x1="532" y1="87" x2="574" y2="87" stroke="currentColor" stroke-width="1.2" opacity="0.8" marker-end="url(#bm)"/>
+          <text x="553" y="80" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.9">réf radio</text>
+          <text x="553" y="80" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en" opacity="0.9">radio ref</text>
+          <rect class="sv-box" x="250" y="190" width="140" height="42" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <text x="320" y="215" font-size="11" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">Équipage</text>
+          <text x="320" y="215" font-size="11" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">Crew</text>
+          <rect class="sv-pill" x="374" y="183.5" width="13" height="13" rx="2"/>
+          <text x="380.5" y="193.1" font-size="8.5" text-anchor="middle" class="sv-pill-t lang-block" data-lang="fr" letter-spacing="1" dx="0.5">C</text>
+          <text x="380.5" y="193.1" font-size="8.5" text-anchor="middle" class="sv-pill-t lang-block" data-lang="en" letter-spacing="1" dx="0.5">F</text>
+          <path d="M204,108 C204,160 270,165 280,189" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.8" marker-end="url(#bm)"/>
+          <text x="196" y="150" font-size="8" text-anchor="end" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.9">callsign → indicatifs</text>
+          <text x="196" y="150" font-size="8" text-anchor="end" fill="currentColor" class="lang-block" data-lang="en" opacity="0.9">callsign → call signs</text>
+          <path d="M344,108 C344,150 350,160 350,189" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.8" marker-end="url(#bm)"/>
+          <text x="356" y="150" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.9">groupes liés</text>
+          <text x="356" y="150" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.9">linked groups</text>
+          <rect class="sv-box" x="40" y="296" width="150" height="42" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <text x="115" y="315" font-size="10.5" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">Aérodromes / FARP</text>
+          <text x="115" y="315" font-size="10.5" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">Airfields / FARPs</text>
+          <text x="115" y="329" font-size="8" text-anchor="middle" fill="currentColor" opacity="0.9">ICAO</text>
+          <rect class="sv-pill" x="161" y="289.5" width="26" height="13" rx="2"/>
+          <text x="174" y="299.1" font-size="8.5" text-anchor="middle" class="sv-pill-t lang-block" data-lang="fr" letter-spacing="1" dx="0.5">C·S</text>
+          <text x="174" y="299.1" font-size="8.5" text-anchor="middle" class="sv-pill-t lang-block" data-lang="en" letter-spacing="1" dx="0.5">F·Q</text>
+          <rect class="sv-box" x="250" y="296" width="120" height="42" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <text x="310" y="321" font-size="11" text-anchor="middle" fill="currentColor">METAR</text>
+          <rect class="sv-pill" x="341" y="289.5" width="26" height="13" rx="2"/>
+          <text x="354" y="299.1" font-size="8.5" text-anchor="middle" class="sv-pill-t lang-block" data-lang="fr" letter-spacing="1" dx="0.5">C·S</text>
+          <text x="354" y="299.1" font-size="8.5" text-anchor="middle" class="sv-pill-t lang-block" data-lang="en" letter-spacing="1" dx="0.5">F·Q</text>
+          <line x1="190" y1="317" x2="248" y2="317" stroke="currentColor" stroke-width="1.2" opacity="0.8" marker-end="url(#bm)"/>
+          <text x="219" y="310" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.9">pré-rempli</text>
+          <text x="219" y="310" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en" opacity="0.9">pre-filled</text>
+          <rect class="sv-box" x="470" y="296" width="160" height="42" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <text x="550" y="315" font-size="10.5" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">Métadonnées</text>
+          <text x="550" y="315" font-size="10.5" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">Metadata</text>
+          <text x="550" y="329" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.9">en-têtes &amp; pieds de page</text>
+          <text x="550" y="329" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en" opacity="0.9">page headers &amp; footers</text>
+          <rect class="sv-pill" x="601" y="289.5" width="26" height="13" rx="2"/>
+          <text x="614" y="299.1" font-size="8.5" text-anchor="middle" class="sv-pill-t lang-block" data-lang="fr" letter-spacing="1" dx="0.5">C·S</text>
+          <text x="614" y="299.1" font-size="8.5" text-anchor="middle" class="sv-pill-t lang-block" data-lang="en" letter-spacing="1" dx="0.5">F·Q</text>
+          <rect class="sv-box" x="40" y="360" width="190" height="36" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <text x="135" y="382" font-size="10" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">Couverture · charts · annexes</text>
+          <text x="135" y="382" font-size="10" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">Cover · charts · annexes</text>
+          <rect class="sv-pill" x="214" y="353.5" width="13" height="13" rx="2"/>
+          <text x="220.5" y="363.1" font-size="8.5" text-anchor="middle" class="sv-pill-t lang-block" data-lang="fr" letter-spacing="1" dx="0.5">C</text>
+          <text x="220.5" y="363.1" font-size="8.5" text-anchor="middle" class="sv-pill-t lang-block" data-lang="en" letter-spacing="1" dx="0.5">F</text>
+          <rect class="sv-box" x="250" y="360" width="120" height="36" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <text x="310" y="382" font-size="11" text-anchor="middle" fill="currentColor">Photos</text>
+          <rect class="sv-pill" x="354" y="353.5" width="13" height="13" rx="2"/>
+          <text x="360.5" y="363.1" font-size="8.5" text-anchor="middle" class="sv-pill-t lang-block" data-lang="fr" letter-spacing="1" dx="0.5">S</text>
+          <text x="360.5" y="363.1" font-size="8.5" text-anchor="middle" class="sv-pill-t lang-block" data-lang="en" letter-spacing="1" dx="0.5">Q</text>
+          <rect class="sv-box sv-m-dg" x="470" y="190" width="170" height="42" rx="3" stroke-width="2"/>
+          <text x="555" y="208" font-size="11" text-anchor="middle" fill="currentColor">Datacard Generator</text>
+          <text x="555" y="222" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.9">une datacard par vol</text>
+          <text x="555" y="222" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en" opacity="0.9">one datacard per flight</text>
+          <path d="M392,100 C432,108 488,140 500,188" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.8" stroke-dasharray="4 3" marker-end="url(#bm)"/>
+          <text x="458" y="140" font-size="8" text-anchor="end" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.9">vols</text>
+          <text x="458" y="140" font-size="8" text-anchor="end" fill="currentColor" class="lang-block" data-lang="en" opacity="0.9">flights</text>
+          <line x1="626" y1="108" x2="620" y2="188" stroke="currentColor" stroke-width="1.2" opacity="0.8" stroke-dasharray="4 3" marker-end="url(#bm)"/>
+          <text x="628" y="152" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.9">fréquences</text>
+          <text x="628" y="152" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.9">frequencies</text>
+          <line x1="390" y1="211" x2="468" y2="211" stroke="currentColor" stroke-width="1.2" opacity="0.8" stroke-dasharray="4 3" marker-end="url(#bm)"/>
+          <text x="429" y="204" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.9">équipage</text>
+          <text x="429" y="204" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en" opacity="0.9">crew</text>
+          <path d="M370,306 C440,300 500,268 520,234" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.8" stroke-dasharray="4 3" marker-end="url(#bm)"/>
+          <text x="536" y="266" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.9">METAR décodé</text>
+          <text x="536" y="266" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.9">decoded METAR</text>
+          <rect class="sv-pill" x="470" y="364" width="13" height="13" rx="2"/>
+          <text x="476.5" y="373.6" font-size="8.5" text-anchor="middle" class="sv-pill-t lang-block" data-lang="fr" letter-spacing="1" dx="0.5">C</text>
+          <text x="476.5" y="373.6" font-size="8.5" text-anchor="middle" class="sv-pill-t lang-block" data-lang="en" letter-spacing="1" dx="0.5">F</text>
+          <text x="489" y="374" font-size="9" fill="currentColor" class="lang-block" data-lang="fr">brief complet</text>
+          <text x="489" y="374" font-size="9" fill="currentColor" class="lang-block" data-lang="en">full brief</text>
+          <rect class="sv-pill" x="470" y="384" width="13" height="13" rx="2"/>
+          <text x="476.5" y="393.6" font-size="8.5" text-anchor="middle" class="sv-pill-t lang-block" data-lang="fr" letter-spacing="1" dx="0.5">S</text>
+          <text x="476.5" y="393.6" font-size="8.5" text-anchor="middle" class="sv-pill-t lang-block" data-lang="en" letter-spacing="1" dx="0.5">Q</text>
+          <text x="489" y="394" font-size="9" fill="currentColor" class="lang-block" data-lang="fr">brief simplifié</text>
+          <text x="489" y="394" font-size="9" fill="currentColor" class="lang-block" data-lang="en">quick brief</text>
+          <text x="470" y="414" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.9">Tireté : lu par le Datacard Generator</text>
+          <text x="470" y="414" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.9">Dashed: read by the Datacard Generator</text>
         </svg>
         <div class="fm-schema-legend">
-          <span class="lang-block" data-lang="fr">Fig. 1 — Comment les saisies d’une section alimentent les autres — et la datacard.</span>
-          <span class="lang-block" data-lang="en">Fig. 1 — How entries in one section feed the others — and the datacard.</span>
+          <span class="lang-block" data-lang="fr">Fig. 1 — Comment les saisies d’une section alimentent les autres — et la datacard. C : saisi en brief complet ; S : en brief simplifié.</span>
+          <span class="lang-block" data-lang="en">Fig. 1 — How entries in one section feed the others — and the datacard. F: entered in the full brief; Q: in the quick brief.</span>
         </div>
       </div>
 
@@ -1431,57 +1604,58 @@ kbd {
           <defs>
             <marker id="dgl" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="currentColor" opacity=".55"/></marker>
           </defs>
-          <text x="360" y="26" text-anchor="middle" font-size="13" letter-spacing="3" fill="currentColor" opacity=".75" class="lang-block" data-lang="fr">ANATOMIE D’UNE DATACARD</text>
-          <text x="360" y="26" text-anchor="middle" font-size="13" letter-spacing="3" fill="currentColor" opacity=".75" class="lang-block" data-lang="en">ANATOMY OF A DATACARD</text>
+          <text x="360" y="26" text-anchor="middle" font-size="13" letter-spacing="3" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">ANATOMIE D’UNE DATACARD</text>
+          <text x="360" y="26" text-anchor="middle" font-size="13" letter-spacing="3" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">ANATOMY OF A DATACARD</text>
           <line x1="120" y1="34" x2="600" y2="34" stroke="currentColor" stroke-width=".6" opacity=".3"/>
 
           <!-- La page, ses bandeaux et son en-tête -->
+          <rect class="sv-box" x="270" y="50" width="180" height="255"/>
           <rect x="270" y="50" width="180" height="8" fill="currentColor" opacity=".85"/>
           <rect x="270" y="297" width="180" height="8" fill="currentColor" opacity=".85"/>
           <text x="276" y="80" font-size="17" fill="currentColor">CAESAR</text>
           <line x1="276" y1="88" x2="350" y2="88" stroke="currentColor" stroke-width="1.4" opacity=".7"/>
-          <text x="444" y="70" text-anchor="end" font-size="9" letter-spacing="1" fill="#4f7a8e">DATACARD</text>
+          <text x="444" y="70" text-anchor="end" font-size="9" letter-spacing="1" fill="currentColor">DATACARD</text>
           <line x1="392" y1="77" x2="444" y2="77" stroke="currentColor" stroke-width="1" opacity=".6"/>
           <rect x="414" y="83" width="30" height="7" fill="#a83524" opacity=".85"/>
 
           <!-- Les blocs -->
-          <rect x="274" y="96" width="106" height="44" fill="none" stroke="currentColor" stroke-width="1.1"/>
+          <rect x="274" y="96" width="106" height="44" class="sv-box" stroke="currentColor" stroke-width="1.1"/>
           <rect x="274" y="96" width="106" height="6" fill="currentColor" opacity=".75"/>
-          <text x="327" y="123.5" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">MISSION</text>
-          <text x="327" y="123.5" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">MISSION</text>
-          <rect x="384" y="96" width="62" height="44" fill="none" stroke="currentColor" stroke-width="1.1"/>
+          <text x="327" y="123.5" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">MISSION</text>
+          <text x="327" y="123.5" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">MISSION</text>
+          <rect x="384" y="96" width="62" height="44" class="sv-box" stroke="currentColor" stroke-width="1.1"/>
           <rect x="384" y="96" width="62" height="6" fill="currentColor" opacity=".75"/>
-          <text x="415" y="123.5" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">HORAIRES</text>
-          <text x="415" y="123.5" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">TIMES</text>
-          <rect x="274" y="144" width="172" height="24" fill="none" stroke="currentColor" stroke-width="1.1"/>
+          <text x="415" y="123.5" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">HORAIRES</text>
+          <text x="415" y="123.5" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">TIMES</text>
+          <rect x="274" y="144" width="172" height="24" class="sv-box" stroke="currentColor" stroke-width="1.1"/>
           <rect x="274" y="144" width="172" height="6" fill="currentColor" opacity=".75"/>
-          <text x="360" y="161.5" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">ÉQUIPAGES</text>
-          <text x="360" y="161.5" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">CREW</text>
-          <rect x="274" y="172" width="172" height="44" fill="none" stroke="currentColor" stroke-width="1.1" stroke-dasharray="4 3"/>
+          <text x="360" y="161.5" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">ÉQUIPAGES</text>
+          <text x="360" y="161.5" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">CREW</text>
+          <rect x="274" y="172" width="172" height="44" class="sv-box" stroke="currentColor" stroke-width="1.1" stroke-dasharray="4 3"/>
           <rect x="274" y="172" width="172" height="6" fill="currentColor" opacity=".75"/>
-          <text x="360" y="199.5" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">NAVIGATION</text>
-          <text x="360" y="199.5" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">NAVIGATION</text>
-          <rect x="274" y="220" width="90" height="50" fill="none" stroke="currentColor" stroke-width="1.1"/>
+          <text x="360" y="199.5" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">NAVIGATION</text>
+          <text x="360" y="199.5" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">NAVIGATION</text>
+          <rect x="274" y="220" width="90" height="50" class="sv-box" stroke="currentColor" stroke-width="1.1"/>
           <rect x="274" y="220" width="90" height="6" fill="currentColor" opacity=".75"/>
-          <text x="319" y="250.5" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">RADIO</text>
-          <text x="319" y="250.5" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">RADIO</text>
-          <rect x="368" y="220" width="78" height="23" fill="none" stroke="currentColor" stroke-width="1.1"/>
+          <text x="319" y="250.5" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">RADIO</text>
+          <text x="319" y="250.5" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">RADIO</text>
+          <rect x="368" y="220" width="78" height="23" class="sv-box" stroke="currentColor" stroke-width="1.1"/>
           <rect x="368" y="220" width="78" height="6" fill="currentColor" opacity=".75"/>
-          <text x="407" y="237" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">TERRAINS</text>
-          <text x="407" y="237" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">AIRFIELDS</text>
-          <rect x="368" y="247" width="78" height="23" fill="none" stroke="currentColor" stroke-width="1.1"/>
+          <text x="407" y="237" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">TERRAINS</text>
+          <text x="407" y="237" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">AIRFIELDS</text>
+          <rect x="368" y="247" width="78" height="23" class="sv-box" stroke="currentColor" stroke-width="1.1"/>
           <rect x="368" y="247" width="78" height="6" fill="currentColor" opacity=".75"/>
-          <text x="407" y="264" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">MÉTÉO</text>
-          <text x="407" y="264" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">WEATHER</text>
-          <rect x="274" y="274" width="84" height="19" fill="none" stroke="currentColor" stroke-width="1.1"/>
+          <text x="407" y="264" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">MÉTÉO</text>
+          <text x="407" y="264" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">WEATHER</text>
+          <rect x="274" y="274" width="84" height="19" class="sv-box" stroke="currentColor" stroke-width="1.1"/>
           <rect x="274" y="274" width="84" height="6" fill="currentColor" opacity=".75"/>
-          <text x="316" y="289" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">CARBURANT · EMPORT</text>
-          <text x="316" y="289" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">FUEL · LOADOUT</text>
-          <rect x="362" y="274" width="84" height="19" fill="none" stroke="currentColor" stroke-width="1.1"/>
+          <text x="316" y="289" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">CARBURANT · EMPORT</text>
+          <text x="316" y="289" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">FUEL · LOADOUT</text>
+          <rect x="362" y="274" width="84" height="19" class="sv-box" stroke="currentColor" stroke-width="1.1"/>
           <rect x="362" y="274" width="84" height="6" fill="currentColor" opacity=".75"/>
-          <text x="404" y="289" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">MENACES · NOTES</text>
-          <text x="404" y="289" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">THREATS · NOTES</text>
-          <rect x="270" y="50" width="180" height="255" fill="none" stroke="#4f7a8e" stroke-width="2"/>
+          <text x="404" y="289" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">MENACES · NOTES</text>
+          <text x="404" y="289" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">THREATS · NOTES</text>
+          <path d="M270,50 h180 v255 h-180 z" fill="none" stroke="#4f7a8e" stroke-width="2"/>
 
           <!-- Libellés à gauche -->
           <line x1="232" y1="54" x2="270" y2="54" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#dgl)"/>
@@ -1570,6 +1744,77 @@ kbd {
         <div class="lang-block" data-lang="en"><p>For each flight: the briefing’s meta; the <strong>callsign</strong> (the subgroup, otherwise the squadron callsign), the aircraft, the count (the flight’s own, otherwise the number of pilots in its crew), the task, and the threat; the objective and the steps, sub-tasks included; the flight’s <strong>crew</strong>; the <strong>radio</strong>, from its aircraft’s plan, or failing that a “Frequencies” radio carrying every frequency in the briefing; the <strong>airfields</strong>, with the departure field marked DEP; the <strong>METAR</strong>, decoded; the SAM and AAA threats; the notes. Left to fill in by hand: <strong>times</strong>, <strong>navigation</strong>, <strong>fuel</strong>, and <strong>loadout</strong>. Once imported, the datacard lives on its own: changing the briefing doesn’t change it.</p></div>
       </div>
 
+      <!-- Figure 2 : ce qui alimente la datacard -->
+      <div class="fm-schema">
+        <svg viewBox="0 0 720 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ce qui alimente la datacard">
+          <defs><marker id="dgf" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="currentColor" opacity=".8"/></marker></defs>
+          <text x="360" y="26" font-size="13" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.9" letter-spacing="3">CE QUI ALIMENTE LA DATACARD</text>
+          <text x="360" y="26" font-size="13" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en" opacity="0.9" letter-spacing="3">WHAT FEEDS THE DATACARD</text>
+          <line x1="120" y1="34" x2="600" y2="34" stroke="currentColor" stroke-width=".6" opacity=".3"/>
+          <rect class="sv-box sv-m-bg" x="24" y="60" width="220" height="200" rx="3" stroke-width="2"/>
+          <text x="134" y="80" font-size="11" text-anchor="middle" fill="currentColor">Briefing Generator</text>
+          <text x="40" y="102" font-size="9" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.95">méta (opération, mission, date)</text>
+          <text x="40" y="102" font-size="9" fill="currentColor" class="lang-block" data-lang="en" opacity="0.95">meta (operation, mission, date)</text>
+          <text x="40" y="122" font-size="9" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.95">vols : indicatif, appareil, tâche</text>
+          <text x="40" y="122" font-size="9" fill="currentColor" class="lang-block" data-lang="en" opacity="0.95">flights: callsign, aircraft, task</text>
+          <text x="40" y="142" font-size="9" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.95">objectif et étapes</text>
+          <text x="40" y="142" font-size="9" fill="currentColor" class="lang-block" data-lang="en" opacity="0.95">objective and steps</text>
+          <text x="40" y="162" font-size="9" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.95">équipage</text>
+          <text x="40" y="162" font-size="9" fill="currentColor" class="lang-block" data-lang="en" opacity="0.95">crew</text>
+          <text x="40" y="182" font-size="9" fill="currentColor" opacity="0.95">radio</text>
+          <text x="40" y="202" font-size="9" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.95">terrains, départ marqué DEP</text>
+          <text x="40" y="202" font-size="9" fill="currentColor" class="lang-block" data-lang="en" opacity="0.95">airfields, departure marked DEP</text>
+          <text x="40" y="222" font-size="9" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.95">METAR, décodé</text>
+          <text x="40" y="222" font-size="9" fill="currentColor" class="lang-block" data-lang="en" opacity="0.95">METAR, decoded</text>
+          <text x="40" y="242" font-size="9" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.95">menaces · notes</text>
+          <text x="40" y="242" font-size="9" fill="currentColor" class="lang-block" data-lang="en" opacity="0.95">threats · notes</text>
+          <rect class="sv-box" x="24" y="282" width="220" height="56" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <text x="134" y="306" font-size="11" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">Saisie à la main</text>
+          <text x="134" y="306" font-size="11" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">Typed in by hand</text>
+          <text x="134" y="322" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.9">horaires · navigation · carburant · emport</text>
+          <text x="134" y="322" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en" opacity="0.9">times · navigation · fuel · loadout</text>
+          <rect class="sv-box" x="320" y="56" width="150" height="48" rx="3" stroke="currentColor" stroke-width="1.4" stroke-dasharray="4 3"/>
+          <text x="395" y="76" font-size="11" text-anchor="middle" fill="currentColor">HQ (.miz)</text>
+          <text x="395" y="92" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.9">navigation · emport — à venir</text>
+          <text x="395" y="92" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en" opacity="0.9">navigation · loadout — coming</text>
+          <rect class="sv-box sv-m-dg" x="320" y="168" width="150" height="60" rx="3" stroke-width="2"/>
+          <text x="395" y="195" font-size="11" text-anchor="middle" fill="currentColor">Datacard Generator</text>
+          <text x="395" y="212" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.9">une datacard par vol</text>
+          <text x="395" y="212" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en" opacity="0.9">one datacard per flight</text>
+          <line x1="244" y1="170" x2="318" y2="192" stroke="currentColor" stroke-width="1.2" opacity="0.8" marker-end="url(#dgf)"/>
+          <text x="282" y="150" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.9">un vol =</text>
+          <text x="282" y="150" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en" opacity="0.9">one flight =</text>
+          <text x="282" y="160" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.9">une datacard</text>
+          <text x="282" y="160" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en" opacity="0.9">one datacard</text>
+          <path d="M244,306 C300,306 330,262 350,230" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.8" marker-end="url(#dgf)"/>
+          <line x1="395" y1="104" x2="395" y2="166" stroke="currentColor" stroke-width="1.2" opacity="0.8" stroke-dasharray="4 3" marker-end="url(#dgf)"/>
+          <text x="401" y="140" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.9">à venir</text>
+          <text x="401" y="140" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.9">coming</text>
+          <rect class="sv-box" x="540" y="112" width="160" height="40" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <text x="620" y="129" font-size="11" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">PNG · kneeboard DCS</text>
+          <text x="620" y="129" font-size="11" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">PNG · DCS kneeboard</text>
+          <text x="620" y="143" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.9">1 000 × 1 414 px</text>
+          <text x="620" y="143" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en" opacity="0.9">1,000 × 1,414 px</text>
+          <rect class="sv-box" x="540" y="178" width="160" height="40" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <text x="620" y="195" font-size="11" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">PDF · impression</text>
+          <text x="620" y="195" font-size="11" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">PDF · printing</text>
+          <text x="620" y="209" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.9">une page A4 par page</text>
+          <text x="620" y="209" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en" opacity="0.9">one A4 sheet per page</text>
+          <rect class="sv-box" x="540" y="244" width="160" height="40" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <text x="620" y="268" font-size="11" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">JSON · archive, partage</text>
+          <text x="620" y="268" font-size="11" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">JSON · archive, share</text>
+          <path d="M470,188 C505,188 505,132 538,132" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.8" marker-end="url(#dgf)"/>
+          <line x1="470" y1="198" x2="538" y2="198" stroke="currentColor" stroke-width="1.2" opacity="0.8" marker-end="url(#dgf)"/>
+          <path d="M470,208 C505,208 505,264 538,264" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.8" marker-end="url(#dgf)"/>
+          <text x="360" y="360" font-size="9" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.9">Le Briefing Generator ne connaît pas la datacard : la lecture va dans un seul sens.</text>
+          <text x="360" y="360" font-size="9" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en" opacity="0.9">The Briefing Generator knows nothing of the datacard: reading goes one way only.</text>
+        </svg>
+        <div class="fm-schema-legend">
+          <span class="lang-block" data-lang="fr">Fig. 2 — Ce qui alimente la datacard, et ce qu’elle produit.</span>
+          <span class="lang-block" data-lang="en">Fig. 2 — What feeds the datacard, and what it produces.</span>
+        </div>
+      </div>
+
       <!-- Day ou Night -->
       <div class="fm-prose">
         <h3 class="lang-block" data-lang="fr">Day ou Night</h3>
@@ -1642,6 +1887,17 @@ kbd {
 
 </main><!-- /fm-root -->
 
+<!-- ======== ZOOM (images et schémas) ======== -->
+<div id="fm-zoom" class="zm" role="dialog" aria-modal="true" hidden>
+  <div class="zm-stage"><div class="zm-box"></div></div>
+  <div class="zm-bar" role="toolbar">
+    <button type="button" class="zm-btn zm-sym" data-zm="out">&minus;</button>
+    <button type="button" class="zm-btn" data-zm="fit"></button>
+    <button type="button" class="zm-btn zm-sym" data-zm="in">+</button>
+  </div>
+  <button type="button" class="zm-btn zm-sym zm-close" data-zm="close">&times;</button>
+</div>
+
 <script>
 /* =============================================
    DCS FIELD MANUAL — JS
@@ -1672,6 +1928,11 @@ var I18N = {
     'bg.hero.sub':      'Générateur de briefings multi-sections',
     'dg.hero.title':    'Datacard Generator',
     'dg.hero.sub':      'Datacards de vol pour le kneeboard',
+    'zoom.open':        'Agrandir',
+    'zoom.close':       'Fermer',
+    'zoom.in':          'Zoomer',
+    'zoom.out':         'Dézoomer',
+    'zoom.fit':         'Ajuster',
     'stub.coming':      'Chapitre en préparation'
   },
   en: {
@@ -1696,6 +1957,11 @@ var I18N = {
     'bg.hero.sub':      'Multi-section briefing generator',
     'dg.hero.title':    'Datacard Generator',
     'dg.hero.sub':      'Flight datacards for the kneeboard',
+    'zoom.open':        'Enlarge',
+    'zoom.close':       'Close',
+    'zoom.in':          'Zoom in',
+    'zoom.out':         'Zoom out',
+    'zoom.fit':         'Fit',
     'stub.coming':      'Chapter in preparation'
   }
 };
@@ -1726,6 +1992,8 @@ function applyI18n() {
   document.documentElement.lang = CURRENT_LANG;
   // Drapeau
   updateFlag();
+  // Libellés du zoom (images et schémas)
+  fmZoomRefresh();
 }
 
 // ── Drapeaux SVG inline ───────────────────────
@@ -1798,10 +2066,391 @@ function onHashChange() {
   showPage(hash);
 }
 
+
+// ── Zoom des images et des schémas ────────────────────────────
+var ZM_MAX = 4;          // zoom maximal, relatif à l'ajustement
+var ZM_STEP = 1.5;       // pas des boutons + et −
+var ZM_REF = 812;        // largeur de référence d'un panneau de schéma (échelle --zs)
+var ZM_SIDE = 16, ZM_TOP = 60, ZM_BOTTOM = 72;   // marges réservées autour de l'ajustement
+
+var zm = {
+  dlg: null, stage: null, box: null, opener: null, schema: false,
+  natW: 1, natH: 1, fitW: 1, s: 1, x: 0, y: 0,
+  ptrs: {}, drag: null, pinch: null, moved: false, lastTap: null, ghost: null
+};
+
+function zmBtnLabels() {
+  return [
+    ['out', 'zoom.out'], ['in', 'zoom.in'], ['close', 'zoom.close']
+  ];
+}
+
+function fmZoomRefresh() {
+  document.querySelectorAll('[data-zoomable]').forEach(function(el) {
+    el.setAttribute('aria-label', t('zoom.open'));
+    el.setAttribute('title', t('zoom.open'));
+  });
+  if (!zm.dlg) return;
+  zmBtnLabels().forEach(function(p) {
+    var b = zm.dlg.querySelector('[data-zm="' + p[0] + '"]');
+    if (b) { b.setAttribute('aria-label', t(p[1])); b.setAttribute('title', t(p[1])); }
+  });
+  var fit = zm.dlg.querySelector('[data-zm="fit"]');
+  if (fit) { fit.textContent = t('zoom.fit'); fit.setAttribute('aria-label', t('zoom.fit')); fit.setAttribute('title', t('zoom.fit')); }
+}
+
+function zmView() {
+  return { w: zm.stage.clientWidth, h: zm.stage.clientHeight };
+}
+
+function zmFitRect() {
+  var v = zmView();
+  return {
+    x: ZM_SIDE, y: ZM_TOP,
+    w: Math.max(80, v.w - 2 * ZM_SIDE),
+    h: Math.max(80, v.h - ZM_TOP - ZM_BOTTOM)
+  };
+}
+
+function zmSetWidth(w) {
+  zm.box.style.width = w + 'px';
+  if (zm.schema) zm.box.style.setProperty('--zs', String(w / ZM_REF));
+}
+
+function zmComputeFit() {
+  var f = zmFitRect(), aspect;
+  if (zm.schema) {
+    zmSetWidth(1000);
+    aspect = zm.box.offsetHeight / 1000;
+  } else {
+    aspect = zm.natH / zm.natW;
+  }
+  zm.fitW = Math.min(f.w, f.h / aspect);
+}
+
+function zmClamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+function zmApply() {
+  zm.s = zmClamp(zm.s, 1, ZM_MAX);
+  var w = zm.fitW * zm.s;
+  zmSetWidth(w);
+  var h = zm.box.offsetHeight;
+  var v = zmView(), f = zmFitRect();
+  if (zm.s <= 1.0001) {
+    zm.s = 1;
+    zm.x = f.x + (f.w - w) / 2;
+    zm.y = f.y + (f.h - h) / 2;
+  } else {
+    // plus grand que l'écran : pas de bord vide ; plus petit : entièrement visible
+    zm.x = (w >= v.w) ? zmClamp(zm.x, v.w - w, 0) : zmClamp(zm.x, 0, v.w - w);
+    zm.y = (h >= v.h) ? zmClamp(zm.y, v.h - h, 0) : zmClamp(zm.y, 0, v.h - h);
+  }
+  zm.box.style.transform = 'translate3d(' + zm.x + 'px,' + zm.y + 'px,0)';
+  zm.dlg.classList.toggle('zoomed', zm.s > 1.0001);
+}
+
+function zmZoomAt(ns, ax, ay) {
+  ns = zmClamp(ns, 1, ZM_MAX);
+  if (ns === zm.s) return;
+  var r = ns / zm.s;
+  zm.x = ax - (ax - zm.x) * r;
+  zm.y = ay - (ay - zm.y) * r;
+  zm.s = ns;
+  zmApply();
+}
+
+function zmZoomCenter(ns) {
+  var v = zmView();
+  zmZoomAt(ns, v.w / 2, v.h / 2);
+}
+
+function zmFit() {
+  zm.s = 1;
+  zmApply();
+}
+
+// Cloner un schéma : identifiants uniques (marqueurs, motifs) pour que les pointes de flèche s'y affichent
+function zmCloneSchema(el) {
+  var c = el.cloneNode(true);
+  var badge = c.querySelector('.fm-zoom-badge');
+  if (badge) badge.remove();
+  ['role', 'tabindex', 'aria-label', 'title', 'data-zoomable'].forEach(function(a) { c.removeAttribute(a); });
+  c.classList.remove('fm-zoom-host');
+  var ids = [];
+  c.querySelectorAll('[id]').forEach(function(n) { ids.push(n.id); });
+  if (ids.length) {
+    var all = c.querySelectorAll('*');
+    for (var i = 0; i < all.length; i++) {
+      var n = all[i];
+      if (n.id) n.id = 'zm-' + n.id;
+      var attrs = n.attributes;
+      for (var j = 0; j < attrs.length; j++) {
+        var v = attrs[j].value;
+        if (v.indexOf('url(#') === -1) continue;
+        ids.forEach(function(id) { v = v.split('url(#' + id + ')').join('url(#zm-' + id + ')'); });
+        n.setAttribute(attrs[j].name, v);
+      }
+    }
+  }
+  return c;
+}
+
+function zmOpen(el) {
+  zm.opener = el;
+  zm.schema = el.classList.contains('fm-schema');
+  zm.box.innerHTML = '';
+  zm.box.style.width = '';
+  zm.box.style.removeProperty('--zs');
+  var label = '';
+  var nat = null, img = null;
+  if (zm.schema) {
+    var svg = el.querySelector('svg');
+    label = svg ? (svg.getAttribute('aria-label') || '') : '';
+    zm.box.appendChild(zmCloneSchema(el));
+  } else {
+    var src = el.currentSrc || el.src || '';
+    if (!src) {
+      var m = /url\(["']?([^"')]+)["']?\)/.exec(getComputedStyle(el).backgroundImage || '');
+      src = m ? m[1] : '';
+    }
+    label = el.getAttribute('alt') || 'Field Manual';
+    nat = el.naturalWidth ? [el.naturalWidth, el.naturalHeight] : (el._fmNat || null);
+    img = new Image();
+    img.alt = '';
+    img.draggable = false;
+    zm.box.appendChild(img);
+    img.src = src;
+  }
+  zm.dlg.setAttribute('aria-label', label);
+  zm.dlg.hidden = false;
+  document.body.classList.add('zm-open');
+  var root = document.getElementById('fm-root'), bar = document.querySelector('.toolbar');
+  if (root) root.inert = true;
+  if (bar) bar.inert = true;
+  zm.ptrs = {}; zm.drag = null; zm.pinch = null; zm.lastTap = null;
+  fmZoomRefresh();
+  var ready = function() {
+    zmComputeFit();
+    zm.s = 1;
+    zmApply();
+  };
+  if (zm.schema) {
+    ready();
+  } else if (nat) {
+    zm.natW = nat[0]; zm.natH = nat[1];
+    ready();
+  } else {
+    img.onload = function() {
+      zm.natW = img.naturalWidth || 1;
+      zm.natH = img.naturalHeight || 1;
+      if (!zm.dlg.hidden && zm.box.firstChild === img) ready();
+    };
+    if (img.complete && img.naturalWidth) img.onload();
+  }
+  var cb = zm.dlg.querySelector('[data-zm="close"]');
+  if (cb) cb.focus({ preventScroll: true });
+}
+
+function zmClose() {
+  if (zm.dlg.hidden) return;
+  zm.dlg.hidden = true;
+  zm.box.innerHTML = '';
+  zm.ptrs = {}; zm.drag = null; zm.pinch = null;
+  document.body.classList.remove('zm-open');
+  var root = document.getElementById('fm-root'), bar = document.querySelector('.toolbar');
+  if (root) root.inert = false;
+  if (bar) bar.inert = false;
+  var o = zm.opener;
+  zm.opener = null;
+  if (o && o.focus) o.focus({ preventScroll: true });
+}
+
+function zmDist(a, b) { return Math.sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y)); }
+
+function zmTwo() {
+  var ids = Object.keys(zm.ptrs);
+  return [zm.ptrs[ids[0]], zm.ptrs[ids[1]]];
+}
+
+function zmStartDrag() {
+  var ids = Object.keys(zm.ptrs);
+  if (ids.length !== 1) { zm.drag = null; return; }
+  var p = zm.ptrs[ids[0]];
+  zm.drag = { px: p.x, py: p.y, x: zm.x, y: zm.y };
+}
+
+function zmStartPinch() {
+  var pp = zmTwo();
+  zm.drag = null;
+  zm.pinch = {
+    d: Math.max(1, zmDist(pp[0], pp[1])),
+    mx: (pp[0].x + pp[1].x) / 2, my: (pp[0].y + pp[1].y) / 2,
+    s: zm.s, x: zm.x, y: zm.y
+  };
+}
+
+function zmTap(x, y, ptype) {
+  var now = Date.now(), lt = zm.lastTap;
+  var r = zm.box.getBoundingClientRect();
+  var inside = x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+  if (lt && now - lt.t < 400 && Math.abs(x - lt.x) < 30 && Math.abs(y - lt.y) < 30) {
+    zm.lastTap = null;
+    zmZoomAt(zm.s > 1.0001 ? 1 : 2, x, y);
+    return;
+  }
+  zm.lastTap = { t: now, x: x, y: y };
+  if (!inside && zm.s <= 1.0001) {
+    if (ptype === 'touch') zm.ghost = { t: now, x: x, y: y };
+    zmClose();
+  }
+}
+
+function zmOnDown(e) {
+  if (e.pointerType === 'mouse' && e.button !== 0) return;
+  try { zm.stage.setPointerCapture(e.pointerId); } catch (err) {}
+  zm.ptrs[e.pointerId] = { x: e.clientX, y: e.clientY };
+  var n = Object.keys(zm.ptrs).length;
+  if (n === 1) { zm.moved = false; zmStartDrag(); }
+  else if (n === 2) { zm.moved = true; zmStartPinch(); }
+}
+
+function zmOnMove(e) {
+  var p = zm.ptrs[e.pointerId];
+  if (!p) return;
+  p.x = e.clientX; p.y = e.clientY;
+  var n = Object.keys(zm.ptrs).length;
+  if (n >= 2 && zm.pinch) {
+    var pp = zmTwo();
+    var d = zmDist(pp[0], pp[1]);
+    var mx = (pp[0].x + pp[1].x) / 2, my = (pp[0].y + pp[1].y) / 2;
+    var ns = zmClamp(zm.pinch.s * d / zm.pinch.d, 1, ZM_MAX);
+    var r = ns / zm.pinch.s;
+    zm.s = ns;
+    zm.x = mx - (zm.pinch.mx - zm.pinch.x) * r;
+    zm.y = my - (zm.pinch.my - zm.pinch.y) * r;
+    zmApply();
+  } else if (zm.drag) {
+    var dx = p.x - zm.drag.px, dy = p.y - zm.drag.py;
+    if (Math.sqrt(dx * dx + dy * dy) > 6) zm.moved = true;
+    if (zm.moved && zm.s > 1.0001) {
+      zm.x = zm.drag.x + dx;
+      zm.y = zm.drag.y + dy;
+      zmApply();
+    }
+  }
+}
+
+function zmOnUp(e) {
+  var p = zm.ptrs[e.pointerId];
+  if (!p) return;
+  delete zm.ptrs[e.pointerId];
+  var n = Object.keys(zm.ptrs).length;
+  if (n === 1) { zm.pinch = null; zmStartDrag(); }
+  else if (n === 0) {
+    zm.pinch = null; zm.drag = null;
+    if (!zm.moved && e.type === 'pointerup') zmTap(e.clientX, e.clientY, e.pointerType);
+  }
+}
+
+function zmOnWheel(e) {
+  e.preventDefault();
+  var dy = e.deltaY;
+  if (e.deltaMode === 1) dy *= 16; else if (e.deltaMode === 2) dy *= 400;
+  var k = e.ctrlKey ? 0.01 : 0.0015;
+  zmZoomAt(zm.s * Math.exp(-dy * k), e.clientX, e.clientY);
+}
+
+function zmOnKey(e) {
+  if (!zm.dlg || zm.dlg.hidden) return;
+  if (e.key === 'Escape') { e.preventDefault(); zmClose(); return; }
+  if (e.key === 'Tab') {
+    var f = [].slice.call(zm.dlg.querySelectorAll('button'));
+    if (!f.length) return;
+    var i = f.indexOf(document.activeElement);
+    e.preventDefault();
+    f[(i + (e.shiftKey ? f.length - 1 : 1)) % f.length].focus();
+    return;
+  }
+  if (e.key === '+' || e.key === '=') { e.preventDefault(); zmZoomCenter(zm.s * ZM_STEP); }
+  else if (e.key === '-') { e.preventDefault(); zmZoomCenter(zm.s / ZM_STEP); }
+  else if (e.key === '0') { e.preventDefault(); zmFit(); }
+  else if (zm.s > 1.0001 && e.key.indexOf('Arrow') === 0) {
+    e.preventDefault();
+    var step = 80;
+    if (e.key === 'ArrowLeft') zm.x += step;
+    else if (e.key === 'ArrowRight') zm.x -= step;
+    else if (e.key === 'ArrowUp') zm.y += step;
+    else zm.y -= step;
+    zmApply();
+  }
+}
+
+function initZoom() {
+  zm.dlg = document.getElementById('fm-zoom');
+  if (!zm.dlg) return;
+  zm.stage = zm.dlg.querySelector('.zm-stage');
+  zm.box = zm.dlg.querySelector('.zm-box');
+
+  document.querySelectorAll('.fm-schema, .fm-hero-img, .cover-img-box').forEach(function(el) {
+    el.setAttribute('role', 'button');
+    el.setAttribute('tabindex', '0');
+    el.setAttribute('data-zoomable', '1');
+    var host = el.classList.contains('fm-hero-img') ? el.parentNode : el;
+    host.classList.add('fm-zoom-host');
+    var b = document.createElement('span');
+    b.className = 'fm-zoom-badge';
+    b.setAttribute('aria-hidden', 'true');
+    host.appendChild(b);
+    el.addEventListener('click', function(e) {
+      // le toucher sur le fond qui ferme la fenêtre ne doit pas rouvrir ce qui se trouve dessous
+      var g = zm.ghost;
+      if (g && Date.now() - g.t < 400 &&
+          Math.abs(e.clientX - g.x) < 14 && Math.abs(e.clientY - g.y) < 14) { zm.ghost = null; return; }
+      zmOpen(el);
+    });
+    el.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); zmOpen(el); }
+    });
+    if (el.classList.contains('cover-img-box')) {
+      var m = /url\(["']?([^"')]+)["']?\)/.exec(getComputedStyle(el).backgroundImage || '');
+      if (m) {
+        var pre = new Image();
+        pre.onload = function() { el._fmNat = [pre.naturalWidth, pre.naturalHeight]; };
+        pre.src = m[1];
+      }
+    }
+  });
+
+  zm.dlg.querySelectorAll('[data-zm]').forEach(function(b) {
+    b.addEventListener('click', function() {
+      var a = b.getAttribute('data-zm');
+      if (a === 'close') zmClose();
+      else if (a === 'fit') zmFit();
+      else if (a === 'in') zmZoomCenter(zm.s * ZM_STEP);
+      else if (a === 'out') zmZoomCenter(zm.s / ZM_STEP);
+    });
+  });
+
+  zm.stage.addEventListener('pointerdown', zmOnDown);
+  zm.stage.addEventListener('pointermove', zmOnMove);
+  zm.stage.addEventListener('pointerup', zmOnUp);
+  zm.stage.addEventListener('pointercancel', zmOnUp);
+  zm.stage.addEventListener('wheel', zmOnWheel, { passive: false });
+  document.addEventListener('keydown', zmOnKey);
+  window.addEventListener('resize', function() {
+    if (zm.dlg.hidden) return;
+    zmComputeFit();
+    zmApply();
+  });
+  fmZoomRefresh();
+}
+
+
 // ── Init ──────────────────────────────────────
 function init() {
   initTheme();
   initLang();
+  initZoom();
   applyI18n();
 
   document.getElementById('btn-lang').addEventListener('click', toggleLang);
