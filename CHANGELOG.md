@@ -14,6 +14,10 @@ The suite bundles several **independently-versioned tools**, so entries are grou
 - **Tablet & mobile** first-class target (touch, drag, rotation-safe).
 - Wing configuration shared automatically across embedded tools.
 
+### `v1.5.3`
+#### Fixed
+- Embeds **Datacard Generator v1.0.2** — back to the validated layout (see below).
+
 ### `v1.5.2`
 #### Fixed
 - Embeds **Briefing Generator v2.4.2** — sharp logos in PNG export (see below). Released together with v1.5.1.
@@ -137,6 +141,12 @@ Initial release. Command post for the suite.
 ---
 
 ## Datacard Generator
+
+### `v1.0.2`
+#### Fixed
+- **Back to the validated layout** — text sizes, letter-spacing and line heights follow the design again (body text had grown 2–3 px larger and crowded the values); the weather block gets back its two-column grid (a value no longer runs into the next label), fuel values their dotted rules, threat chips fit on one line.
+#### Changed
+- **Radio** — alternating rows restart with each radio set (the first channel of each set is highlighted) and a thin rule separates two sets.
 
 ### `v1.0.1`
 #### Fixed
