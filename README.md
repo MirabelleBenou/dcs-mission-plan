@@ -35,11 +35,11 @@ The landing page presents each tool as a **pinned print** on the board. Active t
 | Tool | What it does | Status |
 |------|--------------|--------|
 | **HQ** | Command post — configure your wing once (branding, squadrons), shared with the other tools; experimental `.miz` mission reader/patcher | 🧪 Beta `v0.1.0` |
-| **Briefing Generator** | Mission briefings, full or quick — SITAC, radio plan, airfields, charts, recon photos — PDF & PNG export | ✅ `v2.4.0` |
+| **Briefing Generator** | Mission briefings, full or quick — SITAC, radio plan, airfields, charts, recon photos — PDF & PNG export | ✅ `v2.4.1` |
 | **Recon Station** | Turn a screenshot into a reconnaissance analysis photo — sensor looks, annotations, lossless PNG | ✅ `v1.0.0` |
-| **Field Manual** | In-app documentation for the suite — one illustrated chapter per tool, diagrams, FR/EN, offline | ✅ `v1.2.0` |
+| **Field Manual** | In-app documentation for the suite — one illustrated chapter per tool, diagrams, FR/EN, offline | ✅ `v1.2.1` |
 | **Route Planner** | Route legs, turn points, interactive map and loadouts | ⏳ Planned |
-| **Datacard Generator** | One-page flight datacards for the kneeboard — from scratch or from a briefing — day & night, PNG & PDF export | ✅ `v1.0.0` |
+| **Datacard Generator** | One-page flight datacards for the kneeboard — from scratch or from a briefing — day & night, PNG & PDF export | ✅ `v1.0.1` |
 
 > Each tool is a standalone HTML file with its own build; the landing page embeds the live tools and stages them all on one board.
 

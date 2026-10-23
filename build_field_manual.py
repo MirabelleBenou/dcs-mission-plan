@@ -11,7 +11,7 @@ import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
-APP_VERSION = '1.2.0'
+APP_VERSION = '1.2.1'
 MODULE_ID   = 'fm'
 
 # ── Assets ──────────────────────────────────────────────────────────────────────
@@ -371,7 +371,7 @@ def _build_dg_feed_svg():
     o.append('          ' + T(401, 140, 8, 'à venir', 'coming', anchor='start', op=.9))
     # sorties
     outs = [
-        (112, 'PNG · kneeboard DCS', 'PNG · DCS kneeboard', '1 000 × 1 414 px', '1,000 × 1,414 px'),
+        (112, 'PNG · kneeboard DCS', 'PNG · DCS kneeboard', '2 000 × 2 828 px', '2,000 × 2,828 px'),
         (178, 'PDF · impression', 'PDF · printing', 'une page A4 par page', 'one A4 sheet per page'),
         (244, 'JSON · archive, partage', 'JSON · archive, share', None, None),
     ]
@@ -2122,8 +2122,8 @@ kbd {{
       <div class="fm-prose">
         <h3 class="lang-block" data-lang="fr">La page simplifiée</h3>
         <h3 class="lang-block" data-lang="en">The quick-brief page</h3>
-        <div class="lang-block" data-lang="fr"><p>Le brief simplifié produit <strong>une page de mission</strong> : un bandeau « MISSION » suivi du code de mission, de la date et de l’heure, la <strong>Situation</strong>, la <strong>Mission</strong> avec le <strong>tableau des vols</strong> (Vol, Appareil, Tâche, Départ — « 2× F-16C » quand le nombre est renseigné), les <strong>Fréquences</strong> et les <strong>Terrains</strong> côte à côte, puis la <strong>Météo</strong>. Vient ensuite, si une carte est chargée ou si des menaces ou des cibles sont saisies, une page <strong>« CARTE ░ MENACES ░ CIBLES »</strong> : la carte, les menaces — une ligne par catégorie renseignée — et le <strong>tableau des cibles</strong> (N°, Nature, Position, Remarque) ; son bandeau ne nomme que ce qu’elle porte. Un bloc vide ne s’affiche pas, et une page qui déborde se poursuit sur une page « SUITE ». Suivent, s’il y a des photos, des <strong>pages de photos</strong>, deux par page, sous le bandeau « PHOTOS ░ RECONNAISSANCE ».</p></div>
-        <div class="lang-block" data-lang="en"><p>The quick brief produces <strong>one mission page</strong>: a “MISSION” banner followed by the mission code, date, and time, the <strong>Situation</strong>, the <strong>Mission</strong> with the <strong>flights table</strong> (Flight, Aircraft, Task, Departure — “2× F-16C” when the count is filled in), <strong>Frequencies</strong> and <strong>Airfields</strong> side by side, then the <strong>Weather</strong>. Next comes, if a map is loaded or threats or targets are entered, a <strong>“MAP ░ THREATS ░ TARGETS”</strong> page: the map, the threats — one line per category filled in — and the <strong>targets table</strong> (No., Type, Position, Remarks); its banner names only what it holds. An empty block is not shown, and a page that overflows continues on a “CONT.” page. If there are photos, <strong>photo pages</strong> follow, two per page, under the “PHOTOS ░ RECONNAISSANCE” banner.</p></div>
+        <div class="lang-block" data-lang="fr"><p>Le brief simplifié produit <strong>une page de mission</strong> : un bandeau « MISSION » suivi du code de mission, de la date et de l’heure, la <strong>Situation</strong>, la <strong>Mission</strong> avec le <strong>tableau des vols</strong> (Vol, Appareil, Tâche, Départ — « 2× F-16C » quand le nombre est renseigné), les <strong>Fréquences</strong> et les <strong>Terrains</strong> côte à côte, puis la <strong>Météo</strong>. Vient ensuite, si une carte est chargée ou si des menaces ou des cibles sont saisies, une page <strong>« CARTE ░ MENACES ░ CIBLES »</strong> : la carte, les menaces — une ligne par catégorie renseignée — et le <strong>tableau des cibles</strong> (N°, Nature, Position, Remarque) ; son bandeau ne nomme que ce qu’elle porte. Un bloc vide ne s’affiche pas, et une page qui déborde se poursuit sur la page suivante : « SUITE » pour la mission, le nom de ce qu’elle porte pour la page carte, menaces, cibles. Suivent, s’il y a des photos, des <strong>pages de photos</strong>, deux par page, sous le bandeau « PHOTOS ░ RECONNAISSANCE ».</p></div>
+        <div class="lang-block" data-lang="en"><p>The quick brief produces <strong>one mission page</strong>: a “MISSION” banner followed by the mission code, date, and time, the <strong>Situation</strong>, the <strong>Mission</strong> with the <strong>flights table</strong> (Flight, Aircraft, Task, Departure — “2× F-16C” when the count is filled in), <strong>Frequencies</strong> and <strong>Airfields</strong> side by side, then the <strong>Weather</strong>. Next comes, if a map is loaded or threats or targets are entered, a <strong>“MAP ░ THREATS ░ TARGETS”</strong> page: the map, the threats — one line per category filled in — and the <strong>targets table</strong> (No., Type, Position, Remarks); its banner names only what it holds. An empty block is not shown, and a page that overflows continues on the next page: “CONT.” for the mission, the name of what it holds for the map, threats, targets page. If there are photos, <strong>photo pages</strong> follow, two per page, under the “PHOTOS ░ RECONNAISSANCE” banner.</p></div>
       </div>
 
       <!-- Le brief complet, section par section -->
@@ -2446,8 +2446,8 @@ kbd {{
       <div class="fm-prose">
         <h3 class="lang-block" data-lang="fr">Exporter</h3>
         <h3 class="lang-block" data-lang="en">Export</h3>
-        <div class="lang-block" data-lang="fr"><p><strong>Exporter</strong> propose le <strong>PDF</strong> ou le <strong>PNG</strong>. Le PDF passe par l’impression du navigateur : chaque page de chaque datacard occupe une feuille <strong>A4</strong> entière, couleurs de fond comprises. Le PNG produit une image de <strong>1 000 × 1 414 px</strong> par page, au format d’une page de kneeboard ; vous choisissez les pages, et plusieurs pages partent dans un fichier ZIP. L’export suit la version jour ou nuit affichée.</p></div>
-        <div class="lang-block" data-lang="en"><p><strong>Export</strong> offers <strong>PDF</strong> or <strong>PNG</strong>. The PDF goes through the browser’s print: each page of each datacard takes up a whole <strong>A4</strong> sheet, background colours included. The PNG produces a <strong>1,000 × 1,414 px</strong> image per page, the size of a kneeboard page; you pick the pages, and several pages go out in a ZIP file. The export follows the day or night version on display.</p></div>
+        <div class="lang-block" data-lang="fr"><p><strong>Exporter</strong> propose le <strong>PDF</strong> ou le <strong>PNG</strong>. Le PDF passe par l’impression du navigateur : chaque page de chaque datacard occupe une feuille <strong>A4</strong> entière, couleurs de fond comprises. Le PNG produit une image de <strong>2 000 × 2 828 px</strong> par page, au format d’une page de kneeboard ; vous choisissez les pages, et plusieurs pages partent dans un fichier ZIP. L’export suit la version jour ou nuit affichée.</p></div>
+        <div class="lang-block" data-lang="en"><p><strong>Export</strong> offers <strong>PDF</strong> or <strong>PNG</strong>. The PDF goes through the browser’s print: each page of each datacard takes up a whole <strong>A4</strong> sheet, background colours included. The PNG produces a <strong>2,000 × 2,828 px</strong> image per page, the size of a kneeboard page; you pick the pages, and several pages go out in a ZIP file. The export follows the day or night version on display.</p></div>
       </div>
 
       <!-- Sur tablette et téléphone -->

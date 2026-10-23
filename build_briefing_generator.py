@@ -51,12 +51,24 @@ CSS = r"""
 }
 @font-face {
   /* Partie B (2c) — Chrome éditeur : Oswald Medium latin subset (~13 Ko woff2).
-     Rendu homogène PC ↔ tablette ; remplace Impact dans le chrome UI uniquement.
-     Pages imprimées conservent --f-condensed / Impact. */
+     Rendu homogène PC ↔ tablette. Depuis v2.4.1, Oswald 600 et 700 sont embarquées
+     aussi : le chrome éditeur et les pages (--f-condensed) n'ont plus de faux gras. */
   font-family: 'Oswald';
   font-weight: 500;
   font-display: swap;
   src: url('data:font/woff2;base64,__OSWALD_500__') format('woff2');
+}
+@font-face {
+  font-family: 'Oswald';
+  font-weight: 600;
+  font-display: swap;
+  src: url('data:font/woff2;base64,__OSWALD_600__') format('woff2');
+}
+@font-face {
+  font-family: 'Oswald';
+  font-weight: 700;
+  font-display: swap;
+  src: url('data:font/woff2;base64,__OSWALD_700__') format('woff2');
 }
 
 :root {
@@ -64,7 +76,7 @@ CSS = r"""
      redéfinira --f-typewriter sur les thèmes modernes). */
   --f-stencil: 'Stardos Stencil', 'Impact', 'Arial Narrow Bold', sans-serif;
   --f-typewriter: 'Special Elite', 'Courier New', 'Courier', monospace;
-  --f-condensed: 'Impact', 'Arial Narrow', 'Helvetica Condensed', sans-serif;
+  --f-condensed: 'Oswald', 'Arial Narrow', sans-serif;
   --f-ui: 'Oswald', 'Arial Narrow', sans-serif; /* Chrome éditeur — 2c */
   --f-mono: ui-monospace, 'SF Mono', 'Menlo', 'Consolas', monospace;
 
@@ -2948,6 +2960,8 @@ CSS = CSS.replace('__STARDOS_700__', A['STARDOS_700'])
 CSS = CSS.replace('__SPECIAL_ELITE__', A['SPECIAL_ELITE'])
 CSS = CSS.replace('__ROBOTO_MONO_400__', A['ROBOTO_MONO_400'])
 CSS = CSS.replace('__OSWALD_500__', A['OSWALD_500'])  # 2c
+CSS = CSS.replace('__OSWALD_600__', A['OSWALD_600'])
+CSS = CSS.replace('__OSWALD_700__', A['OSWALD_700'])
 
 # ════════════════════════════════════════════════════════════════════
 # Bloc HTML (ex-build_html.py) — CSS déjà en mémoire, pas de lecture fichier
@@ -2959,7 +2973,7 @@ import os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
-APP_VERSION = "2.4.0"
+APP_VERSION = "2.4.1"
 
 ASSETS_PATH = os.path.join(HERE, 'assets.json')
 if not os.path.isfile(ASSETS_PATH):
@@ -3044,7 +3058,7 @@ __CSS__
       <button class="export-choice" id="export-choice-png" type="button">
         <div class="export-choice-icon">🖼</div>
         <div class="export-choice-label">PNG</div>
-        <div class="export-choice-desc" data-i18n="modal.export.png.desc">Kneeboard DCS · 794×1123, A4</div>
+        <div class="export-choice-desc" data-i18n="modal.export.png.desc">Kneeboard DCS · 1588×2246, A4</div>
       </button>
     </div>
     <!-- Le panneau PNG (sélecteur de pages) apparaît ici en step 2 — implémenté étape B -->
@@ -3475,7 +3489,7 @@ const I18N = {
     'modal.export.title':          'Exporter le briefing',
     'modal.export.subtitle':       'Choisissez le format de sortie',
     'modal.export.pdf.desc':       'Impression système · Toutes les pages',
-    'modal.export.png.desc':       'Kneeboard DCS · 794×1123, A4',
+    'modal.export.png.desc':       'Kneeboard DCS · 1588×2246, A4',
     'modal.export.png.pages':      'Pages à exporter',
     'modal.export.png.checkAll':   'Tout cocher',
     'modal.export.png.uncheckAll': 'Tout décocher',
@@ -3828,7 +3842,7 @@ const I18N = {
     'modal.export.title':          'Export briefing',
     'modal.export.subtitle':       'Choose output format',
     'modal.export.pdf.desc':       'System print · All pages',
-    'modal.export.png.desc':       'DCS Kneeboard · 794×1123, A4',
+    'modal.export.png.desc':       'DCS Kneeboard · 1588×2246, A4',
     'modal.export.png.pages':      'Pages to export',
     'modal.export.png.checkAll':   'Check all',
     'modal.export.png.uncheckAll': 'Uncheck all',
@@ -8742,11 +8756,11 @@ function handleExportPngChoice() {
   updatePngExportCount();
 }
 
-/* ---- Rendu d'une page en PNG A4 natif (794×1123) ---- */
+/* ---- Rendu d'une page en PNG A4 en double résolution (1588×2246) ---- */
 
 /* renderPageToPng — version chatF (consolidation post-chatE étape B)
    La classe .page--for-png réplique les règles @media print en CSS standard.
-   html2canvas capture le clone avec scale: 1 explicite → PNG 794×1123 px exact,
+   html2canvas capture le clone avec scale: 2 explicite → PNG 1588×2246 px exact,
    indépendamment du devicePixelRatio de l'appareil (FIX Bug A).
    Plus de second canvas, plus de drawImage, plus de scale 900/794, plus de
    fillRect, plus de cssText bricolé. Le bug de footer disparaît par construction
@@ -8775,7 +8789,7 @@ async function renderPageToPng(pageEl) {
       logging: false,
       useCORS: true,
       allowTaint: false,
-      scale: 1,   // FIX Bug A : forcer scale 1:1 (ignore devicePixelRatio) → 794×1123 px exact
+      scale: 2,   // FIX Bug A : échelle fixe (ignore devicePixelRatio) → 1588×2246 px exact (A4 794×1123 ×2)
     });
 
     return new Promise(function(resolve, reject) {

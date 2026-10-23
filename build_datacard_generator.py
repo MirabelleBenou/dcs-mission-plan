@@ -16,11 +16,11 @@ import subprocess
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-APP_VERSION = "1.0.0"
+APP_VERSION = "1.0.1"
 OUT_PATH = os.path.join(HERE, 'dist', 'dcs_datacard_generator.html')
 ASSETS_PATH = os.path.join(HERE, 'assets.json')
 
-REQUIRED_ASSETS = ['STARDOS_700', 'OSWALD_500', 'ROBOTO_MONO_400', 'lib_html2canvas', 'lib_jszip']
+REQUIRED_ASSETS = ['STARDOS_700', 'OSWALD_500', 'OSWALD_700', 'ROBOTO_MONO_400', 'lib_html2canvas', 'lib_jszip']
 
 if not os.path.isfile(ASSETS_PATH):
     raise SystemExit(f"[ERREUR] Entrée manquante : {ASSETS_PATH} (assets.json attendu à la racine du dépôt)")
@@ -260,10 +260,16 @@ CSS = r"""
   font-display: swap;
   src: url('data:font/woff2;base64,__OSWALD_500__') format('woff2');
 }
+@font-face {
+  font-family: 'Oswald';
+  font-weight: 700;
+  font-display: swap;
+  src: url('data:font/woff2;base64,__OSWALD_700__') format('woff2');
+}
 
 :root {
   --f-stencil: 'Stardos Stencil', 'Impact', 'Arial Narrow Bold', sans-serif;
-  --f-condensed: 'Impact', 'Arial Narrow', 'Helvetica Condensed', sans-serif;
+  --f-condensed: 'Oswald', 'Arial Narrow', sans-serif;
   --f-ui: 'Oswald', 'Arial Narrow', sans-serif;
   --f-typewriter: 'Roboto Mono', 'Courier New', 'Courier', monospace;
   --f-mono: 'Roboto Mono', 'Courier New', 'Courier', monospace;
@@ -1504,6 +1510,7 @@ _tab_rules = ',\n'.join(
 CSS = CSS.replace('__TAB_SECTION_RULES__', _tab_rules)
 CSS = CSS.replace('__STARDOS_700__', A['STARDOS_700'])
 CSS = CSS.replace('__OSWALD_500__', A['OSWALD_500'])
+CSS = CSS.replace('__OSWALD_700__', A['OSWALD_700'])
 CSS = CSS.replace('__ROBOTO_MONO_400__', A['ROBOTO_MONO_400'])
 
 HTML = r"""<!DOCTYPE html>
@@ -3456,7 +3463,7 @@ function showPngConfig() {
   updatePngCount();
 }
 
-/* ============= EXPORT PNG : 1 000 × 1 414 px ============= */
+/* ============= EXPORT PNG : 2 000 × 2 828 px (×2) ============= */
 async function renderPageToPng(html) {
   if (document.fonts && document.fonts.ready) await document.fonts.ready;
   const holder = document.createElement('div');
@@ -3470,7 +3477,7 @@ async function renderPageToPng(html) {
       logging: false,
       useCORS: true,
       allowTaint: false,
-      scale: 1,
+      scale: 2,   // échelle fixe (ignore devicePixelRatio) → 2 000 × 2 828 px
       width: PAGE_W,
       height: PAGE_H,
       windowWidth: PAGE_W,
