@@ -385,7 +385,7 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
             <div class="cap-row">
               <span class="logo" style="background:var(--a-bg)">B·G</span>
               <span class="ptitle">Briefing Generator</span>
-              <span class="pver">v2.4.2</span>
+              <span class="pver">v2.4.3</span>
             </div>
             <div class="pdesc" data-i18n="bg.desc">Briefings complets — SITAC, plan radio, aérodromes, charts, annexes — export PDF prêt à partager.</div>
             <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
@@ -400,7 +400,7 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
             <div class="cap-row">
               <span class="logo" style="background:var(--a-dg)">D·G</span>
               <span class="ptitle">Datacard Generator</span>
-              <span class="pver">v1.0.2</span>
+              <span class="pver">v1.1.0</span>
             </div>
             <div class="pdesc" data-i18n="dg.desc">Datacards de vol d'une page pour le kneeboard — saisie ou depuis un briefing, day et night, export PNG et PDF.</div>
             <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
@@ -428,7 +428,7 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
             <div class="cap-row">
               <span class="logo" style="background:var(--a-fm)">F·M</span>
               <span class="ptitle">Field Manual</span>
-              <span class="pver">v1.2.1</span>
+              <span class="pver">v1.2.2</span>
             </div>
             <div class="pdesc" data-i18n="fm.desc">Le manuel d'emploi de la suite — un chapitre par module, schémas et mode d'emploi, entièrement hors-ligne.</div>
             <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
@@ -473,7 +473,7 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
   /* ── Données ──────────────────────────────────────────────── */
   {module_html_js}
 
-  var APP_VERSION = '1.5.3';
+  var APP_VERSION = '1.6.0';
   var KEY_LANG  = 'lang_v1';
   var KEY_THEME = 'theme_v1';
 

@@ -2049,7 +2049,8 @@ body {
 }
 
 /* ============ EDITOR — phase images list ============ */
-.ed-img-list { display: flex; flex-direction: column; gap: 14px; }
+/* padding-top = débord de l'étiquette numérotée (10 px) + 2 px : elle ne mord plus sur l'intitulé au-dessus */
+.ed-img-list { display: flex; flex-direction: column; gap: 14px; padding-top: 12px; }
 .ed-img-card {
   border: 1px solid var(--khaki);
   background: rgba(0,0,0,.15);
@@ -2987,7 +2988,7 @@ import os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
-APP_VERSION = "2.4.2"
+APP_VERSION = "2.4.3"
 
 ASSETS_PATH = os.path.join(HERE, 'assets.json')
 if not os.path.isfile(ASSETS_PATH):

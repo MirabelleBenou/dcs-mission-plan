@@ -2041,7 +2041,8 @@ body {
 }
 
 /* ============ EDITOR — phase images list ============ */
-.ed-img-list { display: flex; flex-direction: column; gap: 14px; }
+/* padding-top = débord de l'étiquette numérotée (10 px) + 2 px : elle ne mord plus sur l'intitulé au-dessus */
+.ed-img-list { display: flex; flex-direction: column; gap: 14px; padding-top: 12px; }
 .ed-img-card {
   border: 1px solid var(--khaki);
   background: rgba(0,0,0,.15);
@@ -3036,7 +3037,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   <button class="tb-lang-btn" id="btn-lang" data-i18n-title="toolbar.lang.tooltip" title="Switch language / Changer de langue">🇬🇧</button>
   <div class="tb-spacer"></div>
   <div class="tb-classif">CLASSIFIED // FOR EYES ONLY</div>
-  <span class="tb-version">v2.4.2</span>
+  <span class="tb-version">v2.4.3</span>
 </header>
 
 <!-- ===== EXPORT MODAL ===== -->

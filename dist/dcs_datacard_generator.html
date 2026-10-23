@@ -462,6 +462,23 @@ body {
   letter-spacing: 1px;
   color: var(--khaki-light);
 }
+.ed-navset { margin-bottom: 6px; }
+.ed-warn {
+  font-family: var(--f-ui);
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--amber);
+  border-left: 3px solid var(--red-stamp);
+  background: rgba(0, 0, 0, .18);
+  padding: 5px 8px;
+  margin: 6px 0 8px;
+}
+.ed-warn[hidden] { display: none; }
+.ed-coord { font-family: var(--f-typewriter); font-size: 11px; line-height: 1.35; overflow-wrap: anywhere; }
+.ed-coord:empty { display: none; }
+.ed-coord.ok { color: var(--khaki-light); }
+.ed-coord.bad { color: #e8806a; }
+.ed-field input[readonly] { background: rgba(216, 201, 165, .5); color: #4a4636; cursor: not-allowed; }
 
 /* Listes */
 .ed-list { display: flex; flex-direction: column; gap: 8px; }
@@ -1039,6 +1056,10 @@ body {
 .dc-crew td.nm { font-family: var(--dc-fo); font-weight: 500; letter-spacing: .05em; }
 
 /* Navigation */
+.dc-navc td.cc { font-size: 20px; letter-spacing: .02em; text-align: left; text-overflow: clip; }
+.dc-navc th.cc { text-align: left; }
+.dc-navc th:nth-child(5), .dc-navc td:nth-child(5) { padding-left: 18px; }
+.dc-navc th:nth-child(6), .dc-navc td:nth-child(6) { padding-left: 14px; }
 .dc-nav td.nm { font-family: var(--dc-fo); font-weight: 500; font-size: 21px; letter-spacing: .04em; }
 .dc-nav td.nt { font-family: var(--dc-fo); font-weight: 500; font-size: 17px; opacity: .85; }
 
@@ -1330,7 +1351,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <option value="modern-east" data-i18n="theme.modern-east">Bloc Est moderne</option>
   </select>
   <div class="tb-spacer"></div>
-  <span class="tb-version">v1.0.2</span>
+  <span class="tb-version">v1.1.0</span>
   <button class="tb-lang-btn" id="btn-lang" data-i18n-title="tb.lang.tip" title="Switch language / Changer de langue">🇬🇧</button>
 </header>
 
@@ -1740,8 +1761,6 @@ const I18N = {
     'pack.del': 'Supprimer',
     'pack.prev': 'Datacard précédente',
     'pack.next': 'Datacard suivante',
-    'pack.up': 'Monter la datacard',
-    'pack.down': 'Descendre la datacard',
     'li.up': 'Monter',
     'li.down': 'Descendre',
     'li.del': 'Supprimer',
@@ -1832,6 +1851,27 @@ const I18N = {
     'f.nav.altitude': 'Altitude',
     'f.nav.tos': 'Heure',
     'f.nav.note': 'Note',
+    'f.nav.display': 'Affichage',
+    'nav.mode.course': 'Cap / distance',
+    'nav.mode.mgrs': 'MGRS',
+    'nav.mode.dms': "° ' \"",
+    'f.nav.ref': 'Cap',
+    'nav.ref.true': 'Vrai',
+    'nav.ref.mag': 'Magnétique',
+    'f.nav.decl': 'Déclinaison (°)',
+    'ph.navDisplay.decl': '3,5',
+    'nav.decl.help': 'en degrés, + vers l\'Est ; lue au CDU de l\'A-10C (POSINFO), au DED du F-16 (MVAR) ou à l\'HSI du F/A-18',
+    'nav.decl.warn': 'Déclinaison manquante : cap vrai affiché',
+    'f.nav.coord': 'Coordonnées',
+    'ph.nav.*.coord': '36S VD 47535 77241',
+    'nav.coord.bad': '✗ Format non reconnu',
+    'nav.calc.tip': 'Calculé depuis les coordonnées',
+    'dc.h.course.t': 'CAP V °',
+    'dc.h.course.m': 'CAP M °',
+    'dc.h.mgrs': 'MGRS',
+    'dc.h.coord': 'COORDONNÉES',
+    'dc.b.nav.true': 'NAVIGATION · CAP VRAI',
+    'dc.b.nav.mag': 'NAVIGATION · CAP MAGNÉTIQUE · DÉCL. {d}° {h}',
     'f.radio.name': 'Poste',
     'f.radio.channel': 'Canal',
     'f.radio.label': 'Usage',
@@ -1986,8 +2026,6 @@ const I18N = {
     'pack.del': 'Delete',
     'pack.prev': 'Previous datacard',
     'pack.next': 'Next datacard',
-    'pack.up': 'Move datacard up',
-    'pack.down': 'Move datacard down',
     'li.up': 'Move up',
     'li.down': 'Move down',
     'li.del': 'Delete',
@@ -2078,6 +2116,27 @@ const I18N = {
     'f.nav.altitude': 'Altitude',
     'f.nav.tos': 'Time',
     'f.nav.note': 'Note',
+    'f.nav.display': 'Display',
+    'nav.mode.course': 'Heading / distance',
+    'nav.mode.mgrs': 'MGRS',
+    'nav.mode.dms': "° ' \"",
+    'f.nav.ref': 'Heading',
+    'nav.ref.true': 'True',
+    'nav.ref.mag': 'Magnetic',
+    'f.nav.decl': 'Variation (°)',
+    'ph.navDisplay.decl': '3,5',
+    'nav.decl.help': 'in degrees, + East; read on the A-10C CDU (POSINFO), the F-16 DED (MVAR) or the F/A-18 HSI',
+    'nav.decl.warn': 'Variation missing: true heading shown',
+    'f.nav.coord': 'Coordinates',
+    'ph.nav.*.coord': '36S VD 47535 77241',
+    'nav.coord.bad': '✗ Format not recognized',
+    'nav.calc.tip': 'Computed from coordinates',
+    'dc.h.course.t': 'HDG T °',
+    'dc.h.course.m': 'HDG M °',
+    'dc.h.mgrs': 'MGRS',
+    'dc.h.coord': 'COORDINATES',
+    'dc.b.nav.true': 'NAVIGATION · TRUE HEADING',
+    'dc.b.nav.mag': 'NAVIGATION · MAGNETIC HEADING · VAR {d}° {h}',
     'f.radio.name': 'Radio',
     'f.radio.channel': 'Channel',
     'f.radio.label': 'Use',
@@ -2239,6 +2298,285 @@ function showToast(msg) {
   showToast._h = setTimeout(() => el.classList.remove('show'), 2200);
 }
 
+/* ============= COORDONNÉES DE NAVIGATION ============= */
+/* Datum WGS84. Lecture : MGRS, degrés-minutes-secondes, degrés-minutes décimales, degrés décimaux.
+   Conversions : série de Krüger (ordre 4) ; cap initial du grand cercle et distance haversine (R = 6 371,0088 km). */
+const NAV_MODES = ['course', 'mgrs', 'dms'];
+const NAV_REFS = ['true', 'mag'];
+const NAV_R_KM = 6371.0088;
+const NAV_NM_KM = 1.852;
+
+const WGS_A = 6378137;
+const WGS_F = 1 / 298.257223563;
+const UTM_K0 = 0.9996;
+const UTM_N = WGS_F / (2 - WGS_F);
+const UTM_A = WGS_A / (1 + UTM_N) * (1 + UTM_N * UTM_N / 4 + Math.pow(UTM_N, 4) / 64);
+const UTM_ALPHA = (function (n) {
+  const n2 = n * n, n3 = n2 * n, n4 = n3 * n;
+  return [
+    n / 2 - 2 * n2 / 3 + 5 * n3 / 16 + 41 * n4 / 180,
+    13 * n2 / 48 - 3 * n3 / 5 + 557 * n4 / 1440,
+    61 * n3 / 240 - 103 * n4 / 140,
+    49561 * n4 / 161280
+  ];
+})(UTM_N);
+const UTM_BETA = (function (n) {
+  const n2 = n * n, n3 = n2 * n, n4 = n3 * n;
+  return [
+    n / 2 - 2 * n2 / 3 + 37 * n3 / 96 - n4 / 360,
+    n2 / 48 + n3 / 15 - 437 * n4 / 1440,
+    17 * n3 / 480 - 37 * n4 / 840,
+    4397 * n4 / 161280
+  ];
+})(UTM_N);
+const UTM_DELTA = (function (n) {
+  const n2 = n * n, n3 = n2 * n, n4 = n3 * n;
+  return [
+    2 * n - 2 * n2 / 3 - 2 * n3 + 116 * n4 / 45,
+    7 * n2 / 3 - 8 * n3 / 5 - 227 * n4 / 45,
+    56 * n3 / 15 - 136 * n4 / 35,
+    4279 * n4 / 630
+  ];
+})(UTM_N);
+
+const MGRS_BANDS = 'CDEFGHJKLMNPQRSTUVWX';
+const MGRS_BAND_MIN_N = [1100000, 2000000, 2800000, 3700000, 4600000, 5500000, 6400000, 7300000, 8200000, 9100000,
+  0, 800000, 1700000, 2600000, 3500000, 4400000, 5300000, 6200000, 7000000, 7900000];
+const MGRS_COLS = 'ABCDEFGHJKLMNPQRSTUVWXYZ';   /* 24 lettres, sans I ni O */
+const MGRS_ROWS = 'ABCDEFGHJKLMNPQRSTUV';       /* 20 lettres, sans I ni O */
+
+function utmZoneFor(lat, lon) {
+  let z = Math.floor((lon + 180) / 6) + 1;
+  if (z < 1) z = 1;
+  if (z > 60) z = 60;
+  if (lat >= 56 && lat < 64 && lon >= 3 && lon < 12) z = 32;
+  if (lat >= 72 && lat < 84) {
+    if (lon >= 0 && lon < 9) z = 31;
+    else if (lon >= 9 && lon < 21) z = 33;
+    else if (lon >= 21 && lon < 33) z = 35;
+    else if (lon >= 33 && lon < 42) z = 37;
+  }
+  return z;
+}
+
+/* lat/lon (degrés) → { zone, north, e, n } ; zone imposée facultative */
+function llToUtm(lat, lon, zone) {
+  const z = zone || utmZoneFor(lat, lon);
+  const lon0 = ((z - 1) * 6 - 180 + 3) * Math.PI / 180;
+  const phi = lat * Math.PI / 180;
+  const dl = lon * Math.PI / 180 - lon0;
+  const n = UTM_N, s = Math.sin(phi);
+  const q = 2 * Math.sqrt(n) / (1 + n);
+  const tt = Math.sinh(Math.atanh(s) - q * Math.atanh(q * s));
+  const xi0 = Math.atan2(tt, Math.cos(dl));
+  const eta0 = Math.atanh(Math.sin(dl) / Math.sqrt(1 + tt * tt));
+  let xi = xi0, eta = eta0;
+  for (let j = 1; j <= 4; j++) {
+    xi += UTM_ALPHA[j - 1] * Math.sin(2 * j * xi0) * Math.cosh(2 * j * eta0);
+    eta += UTM_ALPHA[j - 1] * Math.cos(2 * j * xi0) * Math.sinh(2 * j * eta0);
+  }
+  const north = lat >= 0;
+  return { zone: z, north: north, e: 500000 + UTM_K0 * UTM_A * eta, n: (north ? 0 : 10000000) + UTM_K0 * UTM_A * xi };
+}
+
+/* UTM → { lat, lon } */
+function utmToLl(zone, north, e, nn) {
+  const lon0 = ((zone - 1) * 6 - 180 + 3) * Math.PI / 180;
+  const xi = (nn - (north ? 0 : 10000000)) / (UTM_K0 * UTM_A);
+  const eta = (e - 500000) / (UTM_K0 * UTM_A);
+  let xi1 = xi, eta1 = eta;
+  for (let j = 1; j <= 4; j++) {
+    xi1 -= UTM_BETA[j - 1] * Math.sin(2 * j * xi) * Math.cosh(2 * j * eta);
+    eta1 -= UTM_BETA[j - 1] * Math.cos(2 * j * xi) * Math.sinh(2 * j * eta);
+  }
+  const chi = Math.asin(Math.sin(xi1) / Math.cosh(eta1));
+  let phi = chi;
+  for (let j = 1; j <= 4; j++) phi += UTM_DELTA[j - 1] * Math.sin(2 * j * chi);
+  const lam = lon0 + Math.atan2(Math.sinh(eta1), Math.cos(xi1));
+  return { lat: phi * 180 / Math.PI, lon: lam * 180 / Math.PI };
+}
+
+function mgrsBandFor(lat) {
+  if (lat < -80 || lat > 84) return '';
+  let i = Math.floor((lat + 80) / 8);
+  if (i > 19) i = 19;
+  return MGRS_BANDS.charAt(i);
+}
+
+function mgrsSet(zone) { const s = zone % 6; return s === 0 ? 6 : s; }
+function mgrsColOrigin(zone) { return 'AJSAJS'.charAt(mgrsSet(zone) - 1); }
+function mgrsRowOrigin(zone) { return 'AFAFAF'.charAt(mgrsSet(zone) - 1); }
+
+/* lat/lon → « 36S VD 47535 77241 » (10 chiffres, troncature au mètre ; 10 µm de tolérance pour les mètres entiers) ;
+   '' hors de la zone UTM (80°S – 84°N) */
+function toMGRS(lat, lon) {
+  const band = mgrsBandFor(lat);
+  if (!band) return '';
+  const u = llToUtm(lat, lon);
+  const e = Math.floor(u.e + 1e-5), nn = Math.floor(u.n + 1e-5);
+  const col = MGRS_COLS.charAt((MGRS_COLS.indexOf(mgrsColOrigin(u.zone)) + Math.floor(e / 100000) - 1) % 24);
+  const row = MGRS_ROWS.charAt((MGRS_ROWS.indexOf(mgrsRowOrigin(u.zone)) + Math.floor(nn / 100000)) % 20);
+  const p5 = v => String(v % 100000).padStart(5, '0');
+  return pad2(u.zone) + band + ' ' + col + row + ' ' + p5(e) + ' ' + p5(nn);
+}
+
+/* Chaîne MGRS → { lat, lon } (centre de la case, y compris celle de 1 m à 10 chiffres) ou null */
+function parseMGRS(s) {
+  const m = /^\s*(\d{1,2})\s*([C-HJ-NP-X])\s*([A-HJ-NP-Z])\s*([A-HJ-NP-V])\s*((?:\d\s*)*)$/i.exec(s);
+  if (!m) return null;
+  const zone = parseInt(m[1], 10);
+  if (zone < 1 || zone > 60) return null;
+  const band = m[2].toUpperCase(), colL = m[3].toUpperCase(), rowL = m[4].toUpperCase();
+  if (band === 'X' && (zone === 32 || zone === 34 || zone === 36)) return null;
+  const groups = m[5].trim() ? m[5].trim().split(/\s+/) : [];
+  if (groups.length > 2 || (groups.length === 2 && groups[0].length !== groups[1].length)) return null;
+  const digits = groups.join('');
+  const k = digits.length;
+  if (k < 2 || k > 10 || k % 2 !== 0) return null;
+  const half = k / 2;
+  const cell = Math.pow(10, 5 - half);
+  const de = parseInt(digits.slice(0, half), 10) * cell + cell / 2;   /* centre de la case (1 m : demi-mètre) */
+  const dn = parseInt(digits.slice(half), 10) * cell + cell / 2;
+  const ci = (MGRS_COLS.indexOf(colL) - MGRS_COLS.indexOf(mgrsColOrigin(zone)) + 24) % 24;
+  if (ci > 7) return null;                         /* colonne absente de cette zone */
+  const e100 = (ci + 1) * 100000;
+  const ri = (MGRS_ROWS.indexOf(rowL) - MGRS_ROWS.indexOf(mgrsRowOrigin(zone)) + 20) % 20;
+  let n100 = ri * 100000;
+  const bi = MGRS_BANDS.indexOf(band);
+  while (n100 < MGRS_BAND_MIN_N[bi]) n100 += 2000000;
+  const ll = utmToLl(zone, band >= 'N', e100 + de, n100 + dn);
+  const south = -80 + bi * 8, north = bi === 19 ? 84 : south + 8;
+  if (ll.lat < south - 0.15 || ll.lat > north + 0.15) return null;   /* la case n'est pas dans la bande annoncée */
+  return ll;
+}
+
+/* Un nombre de lat/lon : degrés [minutes [secondes]] → valeur absolue en degrés, ou null */
+function parseDegPart(s, maxDeg) {
+  const m = /^\s*(\d+(?:\.\d+)?)\s*°?\s*(?:(\d+(?:\.\d+)?)\s*'?\s*(?:(\d+(?:\.\d+)?)\s*"?)?)?\s*$/.exec(s);
+  if (!m) return null;
+  const d = parseFloat(m[1]);
+  const mi = m[2] != null ? parseFloat(m[2]) : null;
+  const se = m[3] != null ? parseFloat(m[3]) : null;
+  if (mi != null && m[1].indexOf('.') !== -1) return null;          /* degrés décimaux : ni minutes ni secondes */
+  if (se != null && m[2].indexOf('.') !== -1) return null;          /* minutes décimales : pas de secondes */
+  if (mi != null && mi >= 60) return null;
+  if (se != null && se >= 60) return null;
+  const v = d + (mi || 0) / 60 + (se || 0) / 3600;
+  if (v > maxDeg) return null;
+  return v;
+}
+
+function parseLatLon(s) {
+  let x = s.toUpperCase().replace(/[′’´‘]/g, "'").replace(/[″”“]/g, '"').replace(/''/g, '"').replace(/[º˚]/g, '°');
+  x = x.trim();
+  if (!x) return null;
+  const letters = [];
+  const re = /[NSEW]/g;
+  let mm;
+  while ((mm = re.exec(x)) !== null) letters.push({ ch: mm[0], i: mm.index });
+  if (letters.length === 0) {
+    const m = /^([+-]?\d+(?:\.\d+)?)\s*°?\s*[,;\/\s]\s*([+-]?\d+(?:\.\d+)?)\s*°?$/.exec(x);
+    if (!m) return null;
+    const lat = parseFloat(m[1]), lon = parseFloat(m[2]);
+    if (Math.abs(lat) > 90 || Math.abs(lon) > 180) return null;
+    return { lat: lat, lon: lon };
+  }
+  if (letters.length !== 2) return null;
+  const a = letters[0], b = letters[1];
+  if ('NS'.indexOf(a.ch) === -1 || 'EW'.indexOf(b.ch) === -1) return null;
+  let latS, lonS;
+  if (a.i === 0 && b.i < x.length - 1) { latS = x.slice(1, b.i); lonS = x.slice(b.i + 1); }          /* N35… E032… */
+  else if (a.i > 0 && b.i === x.length - 1) { latS = x.slice(0, a.i); lonS = x.slice(a.i + 1, b.i); } /* 35…N 032…E */
+  else return null;
+  latS = latS.replace(/^[\s,;\/]+|[\s,;\/]+$/g, '');
+  lonS = lonS.replace(/^[\s,;\/]+|[\s,;\/]+$/g, '');
+  const la = parseDegPart(latS, 90), lo = parseDegPart(lonS, 180);
+  if (la == null || lo == null) return null;
+  return { lat: a.ch === 'S' ? -la : la, lon: b.ch === 'W' ? -lo : lo };
+}
+
+/* Chaîne saisie → { lat, lon } ou null (MGRS d'abord, puis latitude / longitude) */
+function parseCoord(s) {
+  if (typeof s !== 'string' || !s.trim()) return null;
+  const g = parseMGRS(s);
+  if (g) return g;
+  return parseLatLon(s);
+}
+
+function fmtDms(v, pos, neg, w) {
+  const h = v < 0 ? neg : pos;
+  const tot = Math.round(Math.abs(v) * 3600);
+  const d = Math.floor(tot / 3600), mi = Math.floor((tot % 3600) / 60), se = tot % 60;
+  return h + String(d).padStart(w, '0') + '°' + pad2(mi) + "'" + pad2(se) + '"';
+}
+/* « N35°02'11" E032°25'29" » */
+function toDMS(lat, lon) { return fmtDms(lat, 'N', 'S', 2) + ' ' + fmtDms(lon, 'E', 'W', 3); }
+
+/* Cap initial du grand cercle (vrai, 0–360) et distance (km) entre deux points */
+function legCalc(a, b) {
+  const r = Math.PI / 180;
+  const p1 = a.lat * r, p2 = b.lat * r, dl = (b.lon - a.lon) * r;
+  const y = Math.sin(dl) * Math.cos(p2);
+  const x = Math.cos(p1) * Math.sin(p2) - Math.sin(p1) * Math.cos(p2) * Math.cos(dl);
+  const brg = (Math.atan2(y, x) / r + 360) % 360;
+  const h = Math.sin((p2 - p1) / 2) * Math.sin((p2 - p1) / 2) + Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) * Math.sin(dl / 2);
+  const km = 2 * NAV_R_KM * Math.asin(Math.min(1, Math.sqrt(h)));
+  return { brg: brg, km: km };
+}
+
+function fmtHdg(deg) {
+  const n = Math.round(deg) % 360;
+  return n === 0 ? '360' : String(n).padStart(3, '0');
+}
+
+/* Déclinaison saisie (« 3,5 », « -2.5 », « 3° ») → nombre, ou null si illisible */
+function parseDecl(s) {
+  if (typeof s !== 'string') return null;
+  const m = /^\s*([+-]?\d+(?:[.,]\d+)?)\s*°?\s*$/.exec(s);
+  if (!m) return null;
+  const v = parseFloat(m[1].replace(',', '.'));
+  return (isFinite(v) && Math.abs(v) <= 90) ? v : null;
+}
+
+/* Les lignes de la datacard qui comptent : une rangée dont aucun champ n'est rempli n'existe pas pour la navigation. */
+const NAV_KEYS = ['name', 'coord', 'course', 'distance', 'altitude', 'tos', 'note'];
+
+/* Pour chaque point de c.nav (même indice) : { pt, calc } — pt : coordonnée lue (ou null) ;
+   calc : { cap, dist } (chaînes) quand la branche (point précédent non vide → ce point) est calculable, sinon null. */
+function navLegs(c) {
+  const nd = c.navDisplay;
+  const decl = nd.ref === 'mag' ? parseDecl(nd.decl) : null;
+  const useMag = decl != null;
+  const nm = c.units.distance === 'nm';
+  const out = [];
+  let prev = null;
+  c.nav.forEach(r => {
+    const blank = !NAV_KEYS.some(k => hasText(r[k]));
+    const pt = parseCoord(r.coord);
+    let calc = null;
+    if (!blank) {
+      if (prev && prev.pt && pt) {
+        const L = legCalc(prev.pt, pt);
+        let brg = L.brg;
+        if (useMag) brg = ((brg - decl) % 360 + 360) % 360;
+        const d = nm ? L.km / NAV_NM_KM : L.km;
+        calc = { cap: fmtHdg(brg), dist: String(Math.round(d)) };
+      }
+    }
+    const o = { pt: pt, calc: calc, blank: blank };
+    out.push(o);
+    if (!blank) prev = o;
+  });
+  return out;
+}
+
+/* Valeur de l'en-tête du bloc : { mag, decl } selon le réglage et la déclinaison lisible */
+function navHeadingRef(c) {
+  const nd = c.navDisplay;
+  const decl = nd.ref === 'mag' ? parseDecl(nd.decl) : null;
+  return { mag: decl != null, decl: decl };
+}
+
 /* ============= MODÈLE ============= */
 function defaultTimes() {
   return ['d1', 'd2', 'd3', 'd4', 'd5'].map(k => ({ label: t('times.' + k), value: '' }));
@@ -2253,6 +2591,7 @@ function newCard() {
     times: defaultTimes(),
     crew: [],
     nav: [],
+    navDisplay: { mode: 'course', ref: 'true', decl: '' },
     radios: [],
     fields: [],
     weather: { metar: '', wind: '', visibility: '', qnh: '', clouds: '' },
@@ -2317,8 +2656,14 @@ function normalizeCard(src) {
   if (Array.isArray(src.nav)) {
     c.nav = src.nav.slice(0, LIMITS.nav).map(o => ({
       name: str(o && o.name), course: str(o && o.course), distance: str(o && o.distance),
-      altitude: str(o && o.altitude), tos: str(o && o.tos), note: str(o && o.note)
+      altitude: str(o && o.altitude), tos: str(o && o.tos), note: str(o && o.note), coord: str(o && o.coord)
     }));
+  }
+  const nd = src.navDisplay;
+  if (nd && typeof nd === 'object') {
+    if (NAV_MODES.indexOf(nd.mode) !== -1) c.navDisplay.mode = nd.mode;
+    if (NAV_REFS.indexOf(nd.ref) !== -1) c.navDisplay.ref = nd.ref;
+    if ('decl' in nd) c.navDisplay.decl = str(nd.decl);
   }
   if (Array.isArray(src.radios)) {
     c.radios = src.radios.slice(0, LIMITS.radios).map(r => ({
@@ -2632,7 +2977,7 @@ function classifLabel(c) { return t('classif.' + c.meta.classification); }
 function unitLabel(c, kind) { return t('u.' + c.units[kind]); }
 
 function anyText(o, keys) { return keys.some(k => hasText(o[k])); }
-function navRows(c) { return c.nav.filter(r => anyText(r, ['name', 'course', 'distance', 'altitude', 'tos', 'note'])); }
+function navRows(c) { return c.nav.filter(r => anyText(r, NAV_KEYS)); }
 
 function blockHtml(name, title, bodyHtml, bodyClass) {
   return '<section class="dc-block" data-block="' + name + '"><h3 class="dc-bh">' + esc(title) + '</h3>' +
@@ -2678,23 +3023,64 @@ function blkCrew(c) {
     '<table class="dc-tab dc-crew"><colgroup>' + cols + '</colgroup><thead><tr>' + h + '</tr></thead><tbody>' + body + '</tbody></table>', 'dc-bbt');
 }
 
+/* Décimale de la déclinaison pour le titre : 3 → « 3 », 2.5 → « 2,5 » en français, « 2.5 » en anglais */
+function fmtDecl(v) {
+  const x = String(+Math.abs(v).toFixed(2));
+  return CURRENT_LANG === 'fr' ? x.replace('.', ',') : x;
+}
+
+/* Colonnes du bloc Navigation selon l'affichage (largeurs en px ; la dernière colonne, la note, prend le reste) */
+const NAV_COLS = {
+  course: [50, 288, 90, 108, 89, 136],
+  mgrs:   [50, 262, 236, 84, 100],
+  dms:    [50, 224, 290, 84, 100]
+};
+
 function blkNav(c) {
   const rows = navRows(c);
   if (!rows.length) return '';
+  const nd = c.navDisplay, mode = nd.mode;
+  const legs = navLegs(c);
+  const shown = [];
+  c.nav.forEach((r, i) => { if (anyText(r, NAV_KEYS)) shown.push({ r: r, g: legs[i] }); });
   const du = unitLabel(c, 'distance'), au = unitLabel(c, 'altitude');
-  const head = '<th>#</th><th>' + esc(t('dc.h.point')) + '</th>' +
-    '<th class="r">' + esc(t('dc.h.course')) + '</th>' +
-    '<th class="r">' + esc(t('dc.h.dist', { u: du })) + '</th>' +
-    '<th class="r">' + esc(t('dc.h.alt', { u: au })) + '</th>' +
-    '<th class="r">' + esc(t('dc.h.tos')) + '</th>' +
-    '<th>' + esc(t('dc.h.note')) + '</th>';
-  const body = rows.map((r, i) =>
-    '<tr><td class="m ix">' + i + '</td><td class="nm">' + esc(r.name) + '</td>' +
-    '<td class="m r">' + dash(r.course) + '</td><td class="m r">' + dash(r.distance) + '</td>' +
-    '<td class="m r">' + dash(r.altitude) + '</td><td class="m r">' + dash(r.tos) + '</td>' +
-    '<td class="nt">' + esc(r.note) + '</td></tr>').join('');
-  return blockHtml('nav', t('dc.b.nav'),
-    '<table class="dc-tab dc-nav"><colgroup><col style="width:50px"><col style="width:288px"><col style="width:90px"><col style="width:108px"><col style="width:89px"><col style="width:136px"><col></colgroup>' +
+  let title = t('dc.b.nav'), head, body;
+  if (mode === 'course') {
+    const calcAny = shown.some(x => x.g.calc);
+    const ref = navHeadingRef(c);
+    if (calcAny) title = ref.mag ? t('dc.b.nav.mag', { d: fmtDecl(ref.decl), h: ref.decl >= 0 ? 'E' : 'W' }) : t('dc.b.nav.true');
+    const hc = calcAny ? t(ref.mag ? 'dc.h.course.m' : 'dc.h.course.t') : t('dc.h.course');
+    head = '<th>#</th><th>' + esc(t('dc.h.point')) + '</th>' +
+      '<th class="r">' + esc(hc) + '</th>' +
+      '<th class="r">' + esc(t('dc.h.dist', { u: du })) + '</th>' +
+      '<th class="r">' + esc(t('dc.h.alt', { u: au })) + '</th>' +
+      '<th class="r">' + esc(t('dc.h.tos')) + '</th>' +
+      '<th>' + esc(t('dc.h.note')) + '</th>';
+    body = shown.map((x, i) => {
+      const r = x.r, k = x.g.calc;
+      return '<tr><td class="m ix">' + i + '</td><td class="nm">' + esc(r.name) + '</td>' +
+        '<td class="m r">' + (k ? esc(k.cap) : dash(r.course)) + '</td><td class="m r">' + (k ? esc(k.dist) : dash(r.distance)) + '</td>' +
+        '<td class="m r">' + dash(r.altitude) + '</td><td class="m r">' + dash(r.tos) + '</td>' +
+        '<td class="nt">' + esc(r.note) + '</td></tr>';
+    }).join('');
+  } else {
+    head = '<th>#</th><th>' + esc(t('dc.h.point')) + '</th>' +
+      '<th class="cc">' + esc(t(mode === 'mgrs' ? 'dc.h.mgrs' : 'dc.h.coord')) + '</th>' +
+      '<th class="r">' + esc(t('dc.h.alt', { u: au })) + '</th>' +
+      '<th class="r">' + esc(t('dc.h.tos')) + '</th>' +
+      '<th>' + esc(t('dc.h.note')) + '</th>';
+    body = shown.map((x, i) => {
+      const r = x.r, p = x.g.pt;
+      const cc = p ? (mode === 'mgrs' ? (toMGRS(p.lat, p.lon) || '—') : toDMS(p.lat, p.lon)) : '—';
+      return '<tr><td class="m ix">' + i + '</td><td class="nm">' + esc(r.name) + '</td>' +
+        '<td class="m cc">' + esc(cc) + '</td>' +
+        '<td class="m r">' + dash(r.altitude) + '</td><td class="m r">' + dash(r.tos) + '</td>' +
+        '<td class="nt">' + esc(r.note) + '</td></tr>';
+    }).join('');
+  }
+  const cols = '<colgroup>' + NAV_COLS[mode].map(w => '<col style="width:' + w + 'px">').join('') + '<col></colgroup>';
+  return blockHtml('nav', title,
+    '<table class="dc-tab dc-nav' + (mode === 'course' ? '' : ' dc-navc') + '">' + cols +
     '<thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody></table>', 'dc-bbt');
 }
 
@@ -2916,7 +3302,7 @@ const LIST_SPECS = {
   'mission.execution': { max: LIMITS.steps, make: () => '' },
   'times': { max: LIMITS.times, make: () => ({ label: '', value: '' }) },
   'crew': { max: LIMITS.crew, make: () => ({ callsign: '', pilot: '', crew: '', board: '' }) },
-  'nav': { max: LIMITS.nav, make: () => ({ name: '', course: '', distance: '', altitude: '', tos: '', note: '' }) },
+  'nav': { max: LIMITS.nav, make: () => ({ name: '', course: '', distance: '', altitude: '', tos: '', note: '', coord: '' }) },
   'radios': { max: LIMITS.radios, make: () => ({ name: '', channels: [] }) },
   'radios.*.channels': { max: LIMITS.channels, make: () => ({ channel: '', label: '', frequency: '', modulation: '' }) },
   'fields': { max: LIMITS.fields, make: () => ({ role: '', icao: '', name: '', runway: '', frequency: '' }) },
@@ -2959,6 +3345,49 @@ function listHtml(path, items, renderItem, addKey) {
 
 function unitOptions(kind) { return UNIT_CHOICES[kind].map(k => [k, t('u.' + k)]); }
 
+/* Réglages d'affichage de la navigation (en tête de la section) et état d'une coordonnée saisie */
+function navDeclMissing(c) { return c.navDisplay.ref === 'mag' && parseDecl(c.navDisplay.decl) == null; }
+
+function navSettingsHtml(c) {
+  const nd = c.navDisplay;
+  return '<div class="ed-field-row three ed-navset">' +
+    fSelect('f.nav.display', 'navDisplay.mode', nd.mode, [['course', t('nav.mode.course')], ['mgrs', t('nav.mode.mgrs')], ['dms', t('nav.mode.dms')]]) +
+    fSelect('f.nav.ref', 'navDisplay.ref', nd.ref, [['true', t('nav.ref.true')], ['mag', t('nav.ref.mag')]]) +
+    fInput('f.nav.decl', 'navDisplay.decl', nd.decl, ' inputmode="decimal" autocomplete="off"') + '</div>' +
+    '<div class="ed-help">' + esc(t('nav.decl.help')) + '</div>' +
+    '<div class="ed-warn" data-nav-warn' + (navDeclMissing(c) ? '' : ' hidden') + '>' + esc(t('nav.decl.warn')) + '</div>';
+}
+
+function coordState(raw, pt) {
+  if (!hasText(raw)) return { cls: '', text: '' };
+  if (!pt) return { cls: 'bad', text: t('nav.coord.bad') };
+  return { cls: 'ok', text: '✓ ' + (toMGRS(pt.lat, pt.lon) || '—') + ' · ' + toDMS(pt.lat, pt.lon) };
+}
+
+/* Remet à jour, sans refaire l'éditeur (le curseur reste en place) : lignes d'état, Cap et Distance calculés, avertissement */
+function syncNavEditor() {
+  const c = curCard();
+  const legs = navLegs(c);
+  const cm = c.navDisplay.mode === 'course';
+  document.querySelectorAll('#editor .li[data-list="nav"]').forEach(li => {
+    const i = parseInt(li.dataset.i, 10);
+    const x = c.nav[i], g = legs[i];
+    if (!x || !g) return;
+    const st = li.querySelector('[data-coord-state]');
+    if (st) { const o = coordState(x.coord, g.pt); st.textContent = o.text; st.className = 'ed-coord ' + o.cls; }
+    const lock = cm && !!g.calc;
+    [['course', lock ? g.calc.cap : x.course], ['distance', lock ? g.calc.dist : x.distance]].forEach(p => {
+      const el = li.querySelector('[data-path="nav.' + i + '.' + p[0] + '"]');
+      if (!el) return;
+      if (el.value !== p[1]) el.value = p[1];
+      el.readOnly = lock;
+      if (lock) el.title = t('nav.calc.tip'); else el.removeAttribute('title');
+    });
+  });
+  const w = document.querySelector('#editor [data-nav-warn]');
+  if (w) w.hidden = !navDeclMissing(c);
+}
+
 const SECTION_BUILDERS = {
   meta: c =>
     fSelect('f.classification', 'meta.classification', c.meta.classification, CLASSIF_KEYS.map(k => [k, t('classif.' + k)])) +
@@ -2988,11 +3417,22 @@ const SECTION_BUILDERS = {
     '<div class="li-grid g2">' + fInput('f.crew.callsign', 'crew.' + i + '.callsign', x.callsign) + fInput('f.crew.pilot', 'crew.' + i + '.pilot', x.pilot) + '</div>' +
     '<div class="li-grid g2">' + fInput('f.crew.crew', 'crew.' + i + '.crew', x.crew) + fInput('f.crew.board', 'crew.' + i + '.board', x.board) + '</div>', 'add.crew'),
 
-  nav: c => listHtml('nav', c.nav, (x, i) =>
-    '<div class="li-grid gs">' + fInput('f.nav.name', 'nav.' + i + '.name', x.name) + '</div>' +
-    '<div class="li-grid g3">' + fInput('f.nav.course', 'nav.' + i + '.course', x.course) + fInput('f.nav.distance', 'nav.' + i + '.distance', x.distance) +
-    fInput('f.nav.altitude', 'nav.' + i + '.altitude', x.altitude) + '</div>' +
-    '<div class="li-grid g2">' + fInput('f.nav.tos', 'nav.' + i + '.tos', x.tos) + fInput('f.nav.note', 'nav.' + i + '.note', x.note) + '</div>', 'add.point'),
+  nav: c => navSettingsHtml(c) + (() => {
+    const legs = navLegs(c), cm = c.navDisplay.mode === 'course';
+    return listHtml('nav', c.nav, (x, i) => {
+      const g = legs[i], lock = cm && !!g.calc;
+      const ro = lock ? ' readonly title="' + esc(t('nav.calc.tip')) + '"' : '';
+      const st = coordState(x.coord, g.pt);
+      return '<div class="li-grid gs">' + fInput('f.nav.name', 'nav.' + i + '.name', x.name) + '</div>' +
+        '<div class="li-grid gs"><div class="ed-field"><label>' + esc(t('f.nav.coord')) + '</label>' +
+        '<input type="text" data-path="nav.' + i + '.coord" value="' + esc(x.coord) + '"' + phAttr('nav.' + i + '.coord') + ' autocomplete="off" spellcheck="false">' +
+        '<div class="ed-coord ' + st.cls + '" data-coord-state>' + esc(st.text) + '</div></div></div>' +
+        '<div class="li-grid g3">' + fInput('f.nav.course', 'nav.' + i + '.course', lock ? g.calc.cap : x.course, ro) +
+        fInput('f.nav.distance', 'nav.' + i + '.distance', lock ? g.calc.dist : x.distance, ro) +
+        fInput('f.nav.altitude', 'nav.' + i + '.altitude', x.altitude) + '</div>' +
+        '<div class="li-grid g2">' + fInput('f.nav.tos', 'nav.' + i + '.tos', x.tos) + fInput('f.nav.note', 'nav.' + i + '.note', x.note) + '</div>';
+    }, 'add.point');
+  })(),
 
   radio: c => listHtml('radios', c.radios, (r, i) =>
     '<div class="li-grid gs">' + fInput('f.radio.name', 'radios.' + i + '.name', r.name) + '</div>' +
@@ -3062,7 +3502,6 @@ function renderPack() {
     '<div class="pack-btns">' +
     ico('prev', '◄', 'pack.prev', curIdx === 0) + ico('next', '►', 'pack.next', curIdx === N - 1) +
     b('add', t('pack.add')) + b('dup', t('pack.dup')) + b('del', t('pack.del'), ' danger') +
-    ico('up', '▲', 'pack.up', curIdx === 0) + ico('down', '▼', 'pack.down', curIdx === N - 1) +
     '</div>';
 }
 
@@ -3107,6 +3546,7 @@ function onEditorInput(e) {
   else setPath(c, path, el.value);
   if (path === 'weather.metar') syncMetar(c);
   if (path === 'flight.callsign') updatePackTitle();
+  if (/^nav(Display)?\./.test(path) || path === 'units.distance') syncNavEditor();
   touch();
 }
 
@@ -3152,10 +3592,6 @@ function onPackClick(e) {
     if (!confirm(t('confirm.delete'))) return;
     if (N > 1) { doc.cards.splice(curIdx, 1); if (curIdx >= doc.cards.length) curIdx = doc.cards.length - 1; }
     else doc.cards[0] = newCard();
-  } else if (act === 'up' && curIdx > 0) {
-    const tmp = doc.cards[curIdx - 1]; doc.cards[curIdx - 1] = doc.cards[curIdx]; doc.cards[curIdx] = tmp; curIdx--;
-  } else if (act === 'down' && curIdx < N - 1) {
-    const tmp = doc.cards[curIdx + 1]; doc.cards[curIdx + 1] = doc.cards[curIdx]; doc.cards[curIdx] = tmp; curIdx++;
   } else return;
   persistState();
   renderAll();
