@@ -1822,6 +1822,10 @@ body {
   border-left: 3px solid var(--rust);
   padding: 5px 10px;
   font-size: 12px;
+  /* v2.4.0 — une ligne par catégorie : le nom (colonne fixe) puis les menaces */
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
 }
 .menace-cell strong {
   font-family: var(--f-condensed);
@@ -1830,8 +1834,13 @@ body {
   letter-spacing: 2px;
   color: var(--rust);
   text-transform: uppercase;
-  display: block;
-  margin-bottom: 2px;
+  flex: 0 0 var(--menace-name-w, 124px);
+  white-space: nowrap;
+}
+.menace-cell .menace-val {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 /* SQUADRON CHIP (on phase pages, just under section title) */
@@ -2411,7 +2420,7 @@ body[data-format="full"] [data-fmt="simple"] { display: none !important; }
 }
 .p-flights th.c-vol { width: 105px; }
 .p-flights th.c-ac  { width: 100px; }
-.p-flights th.c-dep { width: 80px; }
+.p-flights th.c-dep { width: 90px; }   /* v2.4.0 : 80 → 90, « FARP DELTA » tient sur une ligne ; plus long, il passe à la ligne */
 .p-flights td {
   padding: 6px 6px;
   vertical-align: top;
@@ -2426,8 +2435,81 @@ body[data-format="full"] [data-fmt="simple"] { display: none !important; }
   white-space: nowrap;
 }
 .p-flights .fl-ac,
-.p-flights .fl-dep { font-family: var(--f-mono); white-space: nowrap; }
+.p-flights .fl-dep { font-family: var(--f-mono); white-space: normal; overflow-wrap: anywhere; }  /* v2.4.0 : passe à la ligne au lieu de sortir de la page */
 .p-photo .p-imgframe img { max-height: 330px; }
+
+/* v2.4.0 — page « carte, menaces, cibles » : carte plafonnée en hauteur */
+.p-imgframe.p-map-cap img  { max-height: 430px; }
+.p-imgframe.p-map-full img { max-height: 960px; }
+
+/* v2.4.0 — tableau des cibles (au modèle du tableau des vols), brief simplifié et brief complet */
+.p-targets {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  margin: 12px 0 6px 0;
+  font-family: var(--f-typewriter);
+  font-size: 12px;
+}
+.p-targets th {
+  text-align: left;
+  font-family: var(--f-condensed);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--rust);
+  text-transform: uppercase;
+  padding: 4px 6px;
+  border-bottom: 2px solid var(--ink);
+}
+.p-targets th.c-num { width: 46px; }
+.p-targets th.c-nat { width: 170px; }
+.p-targets th.c-pos { width: 170px; }
+.p-targets td {
+  padding: 6px 6px;
+  vertical-align: top;
+  border-bottom: 1px dotted var(--paper-edge);
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.p-targets .tg-num {
+  font-family: var(--f-condensed);
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.p-targets .tg-nature { font-weight: 700; }
+.p-targets .tg-pos { font-family: var(--f-mono); }
+
+/* v2.4.0 — éditeur : liste des cibles (une rangée : N°, Nature, Position, Remarque, ×) */
+.ed-targets { container-type: inline-size; }
+.ed-target-row {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.4fr) 44px;
+  grid-template-areas: "num nature pos remark rm";
+  gap: 6px;
+  margin-bottom: 6px;
+  align-items: center;
+}
+.ed-target-row input { min-width: 0; }
+.ed-target-row [data-tg="num"]    { grid-area: num; }
+.ed-target-row [data-tg="nature"] { grid-area: nature; }
+.ed-target-row [data-tg="position"] { grid-area: pos; }
+.ed-target-row [data-tg="remark"] { grid-area: remark; }
+.ed-target-row [data-tg-rm]       { grid-area: rm; align-self: stretch; }
+@container (max-width: 520px) {
+  .ed-target-row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 44px;
+    grid-template-areas: "num nature rm" "pos remark rm";
+  }
+}
+@media (max-width: 600px) {
+  .ed-target-row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 44px;
+    grid-template-areas: "num nature rm" "pos remark rm";
+  }
+}
 .p-photo-caption {
   font-family: var(--f-typewriter);
   font-style: italic;
@@ -2928,7 +3010,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   <button class="tb-lang-btn" id="btn-lang" data-i18n-title="toolbar.lang.tooltip" title="Switch language / Changer de langue">🇬🇧</button>
   <div class="tb-spacer"></div>
   <div class="tb-classif">CLASSIFIED // FOR EYES ONLY</div>
-  <span class="tb-version">v2.3.2</span>
+  <span class="tb-version">v2.4.0</span>
 </header>
 
 <!-- ===== EXPORT MODAL ===== -->
@@ -3012,6 +3094,22 @@ https://github.com/nodeca/pako/blob/main/LICENSE
           <div class="ed-list" data-list="sitac.points"></div>
           <button type="button" class="ed-btn-add" data-add="sitac.points" data-i18n="editor.sitac.addPoint">+ Ajouter un point</button>
         </div>
+        <div class="ed-field">
+          <label data-i18n="editor.simple.map">Carte (image)</label>
+          <label class="ed-img-zone" data-img-bind="sitac.mapImage">
+            <input type="file" accept="image/*">
+            <span class="img-text" data-i18n="editor.imgZone.tap">▲ TOUCHER POUR CHARGER UNE CARTE ▲</span>
+          </label>
+        </div>
+        <div class="ed-field-row">
+          <div class="ed-field"><label data-i18n="editor.mission.tanks">Menaces — Chars</label><input data-bind="mission.threats.tanks" type="text"></div>
+          <div class="ed-field"><label data-i18n="editor.mission.apc">Menaces — APC</label><input data-bind="mission.threats.apc" type="text"></div>
+        </div>
+        <div class="ed-field-row">
+          <div class="ed-field"><label data-i18n="editor.mission.aaa">Menaces — AAA</label><input data-bind="mission.threats.aaa" type="text"></div>
+          <div class="ed-field"><label data-i18n="editor.mission.sam">Menaces — SAM</label><input data-bind="mission.threats.sam" type="text"></div>
+        </div>
+        <div class="ed-field"><label data-i18n="editor.mission.threatsNote">Note menaces (libre)</label><textarea data-bind="mission.threats.note" rows="2"></textarea></div>
       </div>
     </details>
 
@@ -3029,6 +3127,11 @@ https://github.com/nodeca/pako/blob/main/LICENSE
           <label data-i18n="editor.simple.flights">Vols</label>
           <div class="ed-img-list" id="s-flights-list"></div>
           <button type="button" class="ed-btn-add" id="s-flight-add" data-i18n="editor.simple.addFlight">+ Ajouter un vol</button>
+        </div>
+        <div class="ed-field">
+          <label data-i18n="editor.targets.label">Cibles</label>
+          <div class="ed-targets" id="s-targets-list"></div>
+          <button type="button" class="ed-btn-add" id="s-target-add" data-i18n="editor.targets.add">+ Ajouter une cible</button>
         </div>
       </div>
     </details>
@@ -3130,6 +3233,11 @@ https://github.com/nodeca/pako/blob/main/LICENSE
           <label data-i18n="editor.mission.objectives">Objectifs principaux</label>
           <div class="ed-list" data-list="mission.objectives"></div>
           <button type="button" class="ed-btn-add" data-add="mission.objectives" data-i18n="editor.mission.addObjective">+ Ajouter un objectif</button>
+        </div>
+        <div class="ed-field">
+          <label data-i18n="editor.targets.label">Cibles</label>
+          <div class="ed-targets" id="targets-list"></div>
+          <button type="button" class="ed-btn-add" id="target-add" data-i18n="editor.targets.add">+ Ajouter une cible</button>
         </div>
         <div class="ed-field">
           <label data-i18n="editor.mission.farp">FARP &amp; Aéroports</label>
@@ -3639,6 +3747,25 @@ const I18N = {
     'editor.simple.noPhotos':     'Aucune photo. Toucher « + Ajouter une photo ».',
     'editor.simple.up':           'Monter',
     'editor.simple.down':         'Descendre',
+    'editor.simple.map':          'Carte (image)',
+    'editor.targets.label':       'Cibles',
+    'editor.targets.add':         '+ Ajouter une cible',
+    'editor.targets.num':         'N°',
+    'editor.targets.nature':      'Nature',
+    'editor.targets.position':    'Position',
+    'editor.targets.remark':      'Remarque',
+    'editor.targets.empty':       'Aucune cible. Toucher « + Ajouter une cible ».',
+    'editor.radio.overviewCheckTooltip': 'Afficher dans l’aperçu (6 au plus)',
+    'preview.targets':            'Cibles',
+    'preview.targetNum':          'N°',
+    'preview.targetNature':       'Nature',
+    'preview.targetPosition':     'Position',
+    'preview.targetRemark':       'Remarque',
+    'simple.threats':             'Menaces',
+    'simple.hdr.map':             'CARTE',
+    'simple.hdr.threats':         'MENACES',
+    'simple.hdr.targets':         'CIBLES',
+    'simple.hdr.cont':            'SUITE',
     'simple.subtitle':            'BRIEF SIMPLIFIÉ',
     'simple.hdr.operation':       'OPÉRATION',
     'simple.hdr.mission':         'MISSION',
@@ -3973,6 +4100,25 @@ const I18N = {
     'editor.simple.noPhotos':     'No photos. Tap « + Add photo ».',
     'editor.simple.up':           'Move up',
     'editor.simple.down':         'Move down',
+    'editor.simple.map':          'Map (image)',
+    'editor.targets.label':       'Targets',
+    'editor.targets.add':         '+ Add target',
+    'editor.targets.num':         'No.',
+    'editor.targets.nature':      'Type',
+    'editor.targets.position':    'Position',
+    'editor.targets.remark':      'Remarks',
+    'editor.targets.empty':       'No target. Tap “+ Add target”.',
+    'editor.radio.overviewCheckTooltip': 'Show in the overview (6 at most)',
+    'preview.targets':            'Targets',
+    'preview.targetNum':          'No.',
+    'preview.targetNature':       'Type',
+    'preview.targetPosition':     'Position',
+    'preview.targetRemark':       'Remarks',
+    'simple.threats':             'Threats',
+    'simple.hdr.map':             'MAP',
+    'simple.hdr.threats':         'THREATS',
+    'simple.hdr.targets':         'TARGETS',
+    'simple.hdr.cont':            'CONT.',
     'simple.subtitle':            'QUICK BRIEF',
     'simple.hdr.operation':       'OPERATION',
     'simple.hdr.mission':         'MISSION',
@@ -4107,6 +4253,9 @@ function rerenderAllDynamic() {
   try { renderSimpleFlights(); }    catch(e) { console.warn('rerender simple flights failed:', e); }
   try { renderSimpleRadioItems(); } catch(e) { console.warn('rerender simple radio failed:', e); }
   try { renderPhotosEditor(); }     catch(e) { console.warn('rerender photos failed:', e); }
+  // v2.4.0 : listes de cibles (les deux formats) et zones d'image liées à l'état (leur texte vient de t())
+  try { renderTargets(); }          catch(e) { console.warn('rerender targets failed:', e); }
+  try { document.querySelectorAll('[data-img-bind]').forEach(refreshImgZone); } catch(e) { console.warn('rerender img zones failed:', e); }
   // P1.B: wing read-only panel re-rendered via renderWingReadOnly() depuis storage listener
 }
 
@@ -4145,7 +4294,8 @@ const DEFAULTS = {
   mission: {
     objectives: [],
     farp: [],
-    threats: { tanks: '', apc: '', aaa: '', sam: '', note: '' }
+    threats: { tanks: '', apc: '', aaa: '', sam: '', note: '' },
+    targets: []   // v2.4.0 : { num, nature, position, remark } — partagée par les deux formats
   },
   radioPlan: { items: [], aircraftPlans: [] },
   phases: [],
@@ -4327,6 +4477,7 @@ function loadState() {
       normalizeAnnexes(state);
       applyLoadedFormat(parsed);
       normalizePhotos(state);
+      normalizeTargets(state);
       return;
     }
   } catch(e) { console.warn('Storage load failed:', e); }
@@ -4338,6 +4489,19 @@ function loadState() {
 function applyLoadedFormat(parsed) {
   const fmt = parsed && parsed.meta ? parsed.meta.format : undefined;
   state.meta.format = (fmt === 'simple' || fmt === 'full') ? fmt : 'full';
+}
+
+/* v2.4.0 — cibles : toujours une liste d'objets à quatre chaînes { num, nature, position, remark } */
+function normalizeTargets(s) {
+  if (!s.mission || typeof s.mission !== 'object') s.mission = {};
+  const str = v => (v == null ? '' : String(v));
+  const list = Array.isArray(s.mission.targets) ? s.mission.targets : [];
+  s.mission.targets = list.map(tg => ({
+    num: str(tg && tg.num),
+    nature: str(tg && tg.nature),
+    position: str(tg && tg.position),
+    remark: str(tg && tg.remark)
+  }));
 }
 
 /* photos du brief simplifié : toujours une liste de { title, img, caption } */
@@ -4615,6 +4779,7 @@ function renderEditorBindings() {
   renderAirfields(); // aérodromes structurés (Partie 1)
   migrateAirfieldStrings(); // migration silencieuse strings→objets
   renderWingReadOnly();  // P1.B : afficher wing courant en read-only
+  renderTargets();       // v2.4.0 : liste des cibles (éditeur simplifié et éditeur complet)
   renderSimpleEditor();  // v2.3.0 : éditeur du brief simplifié + mode courant
 }
 
@@ -6689,8 +6854,8 @@ function pageFooter(pageNum, totalPages) {
   `;
 }
 
-function imgFrame(label, url) {
-  if (url) return `<div class="p-imgframe" data-label="${escapeAttr(label)}"><img src="${url}" alt="${escapeAttr(label)}"></div>`;
+function imgFrame(label, url, extraClass) {
+  if (url) return `<div class="p-imgframe${extraClass ? ' ' + extraClass : ''}" data-label="${escapeAttr(label)}"><img src="${url}" alt="${escapeAttr(label)}"></div>`;
   return `<div class="p-imgframe empty" data-label="${escapeAttr(label)}" data-empty-label="${escapeAttr(t('preview.noMapProvided'))}"></div>`;
 }
 
@@ -6833,6 +6998,44 @@ function simpleFlightRows() {
   });
 }
 
+/* ============= v2.4.0 — menaces et cibles (partagés par les deux formats) ============= */
+const THREAT_CATS = [
+  ['tanks', 'preview.threatTanks'],
+  ['apc',   'preview.threatApc'],
+  ['aaa',   'preview.threatAaa'],
+  ['sam',   'preview.threatSam']
+];
+
+/* Une cellule du bloc Menaces : le nom de la catégorie et les menaces sur la même ligne. */
+function threatCellHtml(nameKey, value) {
+  return `<div class="menace-cell"><strong>${t(nameKey)}</strong><span class="menace-val">${escapeHtml(value)}</span></div>`;
+}
+
+/* Les cibles qui comptent : une cible dont les quatre champs sont vides est ignorée. */
+function nonEmptyTargets() {
+  const list = (state.mission && Array.isArray(state.mission.targets)) ? state.mission.targets : [];
+  const f = v => String(v == null ? '' : v).trim();
+  return list.filter(tg => tg && (f(tg.num) || f(tg.nature) || f(tg.position) || f(tg.remark)));
+}
+
+function targetsTableHtml(list) {
+  const cell = v => escapeHtml(String(v == null ? '' : v).trim() ? v : '—');
+  return `<table class="p-targets">
+        <thead><tr>
+          <th class="c-num">${t('preview.targetNum')}</th>
+          <th class="c-nat">${t('preview.targetNature')}</th>
+          <th class="c-pos">${t('preview.targetPosition')}</th>
+          <th>${t('preview.targetRemark')}</th>
+        </tr></thead>
+        <tbody>${list.map(tg => `<tr>
+          <td class="tg-num">${cell(tg.num)}</td>
+          <td class="tg-nature">${cell(tg.nature)}</td>
+          <td class="tg-pos">${cell(tg.position)}</td>
+          <td class="tg-remark">${cell(tg.remark)}</td>
+        </tr>`).join('')}</tbody>
+      </table>`;
+}
+
 function simplePhotoBlock(p, n) {
   const label = t('simple.photoLabel') + ' ' + n + (p.title ? ' — ' + p.title : '');
   const frame = p.img
@@ -6850,21 +7053,24 @@ function buildSimplePages() {
   const airfields = (state.mission && Array.isArray(state.mission.farp)) ? renderAirfieldPreviewItems() : '';
   const metar = ((state.sitac && state.sitac.metar) || '').trim();
   const dash = v => escapeHtml(v || '—');
+  const contLabel = () => ' ░ ' + escapeHtml(t('simple.hdr.cont'));
 
-  let body = `<div class="p-section">${escapeHtml(simpleBannerText())}</div>`;
+  // v2.4.0 — la page de mission est faite de blocs (rubrique + contenu) ; un bloc ne se coupe pas :
+  // ceux qui ne tiennent plus passent sur une page « suite » (paginateBlocks).
+  const blocks = [];
 
   if (points.length) {
-    body += `<div class="p-subsection">${t('simple.situation')}</div>
-      <ul class="p-bullets">${points.map(p => `<li>${escapeHtml(p)}</li>`).join('')}</ul>`;
+    blocks.push(`<div class="p-subsection">${t('simple.situation')}</div>
+      <ul class="p-bullets">${points.map(p => `<li>${escapeHtml(p)}</li>`).join('')}</ul>`);
   }
 
   if (objectives.length || rows.length) {
-    body += `<div class="p-subsection">${t('simple.mission')}</div>`;
+    let b = `<div class="p-subsection">${t('simple.mission')}</div>`;
     if (objectives.length) {
-      body += `<ul class="p-bullets">${objectives.map(o => `<li>${escapeHtml(o)}</li>`).join('')}</ul>`;
+      b += `<ul class="p-bullets">${objectives.map(o => `<li>${escapeHtml(o)}</li>`).join('')}</ul>`;
     }
     if (rows.length) {
-      body += `<table class="p-flights">
+      b += `<table class="p-flights">
         <thead><tr>
           <th class="c-vol">${t('simple.th.flight')}</th>
           <th class="c-ac">${t('simple.th.aircraft')}</th>
@@ -6879,6 +7085,7 @@ function buildSimplePages() {
         </tr>`).join('')}</tbody>
       </table>`;
     }
+    blocks.push(b);
   }
 
   if (radioItems.length || airfields) {
@@ -6894,15 +7101,47 @@ function buildSimplePages() {
     const fieldsHtml = airfields
       ? `<div class="p-subsection">${t('simple.airfields')}</div><ul class="p-bullets">${airfields}</ul>`
       : '';
-    body += `<div class="p-2col" style="margin-top:14px;"><div>${freqHtml}</div><div>${fieldsHtml}</div></div>`;
+    blocks.push(`<div class="p-2col" style="margin-top:14px;"><div>${freqHtml}</div><div>${fieldsHtml}</div></div>`);
   }
 
   if (metar) {
-    body += `<div class="p-subsection">${t('simple.weather')}</div>
-      <div class="metar-line">${escapeHtml(metar)}</div>`;
+    blocks.push(`<div class="p-subsection">${t('simple.weather')}</div>
+      <div class="metar-line">${escapeHtml(metar)}</div>`);
   }
 
-  pages.push({ body });
+  const bannerText = simpleBannerText();
+  paginateBlocks(cont => `<div class="p-section">${escapeHtml(bannerText)}${cont ? contLabel() : ''}</div>`, blocks)
+    .forEach(body => pages.push({ body }));
+
+  // v2.4.0 — page « carte, menaces, cibles » : seulement si l'un des trois est présent
+  const mapUrl = (state.sitac && state.sitac.mapImage) || '';
+  const th = (state.mission && state.mission.threats) || {};
+  const threatCells = THREAT_CATS
+    .filter(([k]) => String(th[k] == null ? '' : th[k]).trim())
+    .map(([k, key]) => threatCellHtml(key, th[k]));
+  const threatNote = String(th.note == null ? '' : th.note).trim() ? th.note : '';
+  const hasThreats = threatCells.length > 0 || !!threatNote;
+  const tgList = nonEmptyTargets();
+  if (mapUrl || hasThreats || tgList.length) {
+    const hdr = [];
+    if (mapUrl) hdr.push(t('simple.hdr.map'));
+    if (hasThreats) hdr.push(t('simple.hdr.threats'));
+    if (tgList.length) hdr.push(t('simple.hdr.targets'));
+    const bannerHtml = hdr.map(h => escapeHtml(h)).join(' ░ ');
+    const crowded = hasThreats || tgList.length > 0;
+    const tb = [];
+    if (mapUrl) tb.push(imgFrame(t('preview.sitacImgCaption'), mapUrl, crowded ? 'p-map-cap' : 'p-map-full'));
+    if (hasThreats) {
+      tb.push(`<div class="p-subsection">${t('simple.threats')}</div>` +
+        (threatCells.length ? `<div class="menace-grid">${threatCells.join('')}</div>` : '') +
+        (threatNote ? `<div class="txt-small" style="margin-top:6px;font-style:italic;">▲ ${escapeHtml(threatNote)}</div>` : ''));
+    }
+    if (tgList.length) {
+      tb.push(`<div class="p-subsection">${t('preview.targets')}</div>${targetsTableHtml(tgList)}`);
+    }
+    paginateBlocks(cont => `<div class="p-section">${bannerHtml}${cont ? contLabel() : ''}</div>`, tb)
+      .forEach(body => pages.push({ body }));
+  }
 
   const photos = (state.photos || []).filter(p => p && (p.img || p.title || p.caption));
   for (let k = 0; k < photos.length; k += 2) {
@@ -6955,15 +7194,22 @@ function buildPages() {
   });
   const engagedList = Array.from(engagedMap.values());
 
-  pages.push({
-    body: `
-      <div class="p-section">${t('preview.missionOverview')}</div>
-
+  // v2.4.0 — la page est découpée en blocs (Objectifs · Cibles · Escadrons engagés · Terrains et plan radio · Menaces) :
+  // si elle déborde, les blocs qui ne tiennent plus passent sur une page « suite » (paginateBlocks).
+  // Quand rien ne déborde, la concaténation redonne exactement le corps de page historique.
+  const ovTargets = nonEmptyTargets();
+  const ovBlocks = [
+    `
       <div class="p-subsection">${t('preview.objectives')}</div>
       <ul class="p-bullets">
         ${(state.mission.objectives || []).filter(o=>o).map(o => `<li>${escapeHtml(o)}</li>`).join('')}
       </ul>
-
+`,
+    ovTargets.length ? `
+      <div class="p-subsection">${t('preview.targets')}</div>
+      ${targetsTableHtml(ovTargets)}
+` : '',
+    `
       ${engagedList.length ? `
         <div class="p-subsection">${t('preview.squadronsEngaged')}</div>
         <div class="squadron-grid">
@@ -6989,7 +7235,8 @@ function buildPages() {
           }).join('')}
         </div>
       ` : ''}
-
+`,
+    `
       <div class="p-2col" style="margin-top:14px;">
         <div>
           <div class="p-subsection">${t('preview.farpAirports')}</div>
@@ -7002,17 +7249,18 @@ function buildPages() {
           ${renderRadioSummary()}
         </div>
       </div>
-
+`,
+    `
       <div class="p-subsection">${t('preview.threatsIdentified')}</div>
       <div class="menace-grid">
-        <div class="menace-cell"><strong>${t('preview.threatTanks')}</strong>${escapeHtml(state.mission.threats.tanks || '—')}</div>
-        <div class="menace-cell"><strong>${t('preview.threatApc')}</strong>${escapeHtml(state.mission.threats.apc || '—')}</div>
-        <div class="menace-cell"><strong>${t('preview.threatAaa')}</strong>${escapeHtml(state.mission.threats.aaa || '—')}</div>
-        <div class="menace-cell"><strong>${t('preview.threatSam')}</strong>${escapeHtml(state.mission.threats.sam || '—')}</div>
+        ${THREAT_CATS.map(([k, key]) => threatCellHtml(key, state.mission.threats[k] || '—')).join('\n        ')}
       </div>
       ${state.mission.threats.note ? `<div class="txt-small" style="margin-top:6px;font-style:italic;">▲ ${escapeHtml(state.mission.threats.note)}</div>` : ''}
     `
-  });
+  ];
+  paginateBlocks(cont => `
+      <div class="p-section">${t('preview.missionOverview')}${cont ? ' ░ ' + escapeHtml(t('simple.hdr.cont')) : ''}</div>
+`, ovBlocks).forEach(body => pages.push({ body }));
 
   // PAGE ÉQUIPAGE — optionnelle, UN SEUL <table> par paire de groupes pour stabilité
   // Architecture choisie pour éviter le bug Skia/PDF où plusieurs <table> avec backgrounds
@@ -7361,7 +7609,92 @@ function threatClass(lvl) {
   return 't-faible';
 }
 
+/* ============= PAGES « SUITE » (v2.4.0) =============
+   Quand le contenu d'une page de mission dépasse la hauteur utile de la page A4 figée, les blocs qui ne
+   tiennent plus passent sur une page suivante (même bandeau + « ░ SUITE »), tant qu'il le faut. Un bloc ne se
+   coupe pas ; un bloc plus haut qu'une page reste seul (la détection « Contenu tronqué » le signale).
+   La mesure se fait AVANT l'écriture de #preview, dans un conteneur hors de #preview qui a les styles d'une page
+   (.page--for-png : mêmes marges que l'export PNG et l'impression, quelle que soit la largeur de l'écran), une fois
+   les polices chargées. Une page « tient » quand elle ne déclencherait pas le bandeau « Contenu tronqué ». */
+/* Re-rendu de l'aperçu sans toucher au stockage (une mesure qui change n'est pas une saisie). */
+let _reflowTimer = null;
+function scheduleReflow() {
+  if (_reflowTimer) cancelAnimationFrame(_reflowTimer);
+  _reflowTimer = requestAnimationFrame(() => { _reflowTimer = null; renderPreview(); });
+}
+
+let _fontsOk = false;
+let _fontsPromise = null;
+function ensureFonts() {
+  if (_fontsOk || _fontsPromise) return;
+  if (!document.fonts || !document.fonts.ready) { _fontsOk = true; return; }
+  const loads = Array.from(document.fonts).map(f => f.load().catch(() => null));
+  _fontsPromise = Promise.all(loads)
+    .then(() => document.fonts.ready)
+    .catch(() => null)
+    .then(() => { _fontsOk = true; scheduleReflow(); });   // la pagination est refaite avec les vraies polices
+}
+
+/* Dimensions naturelles des images (lues une fois) : la mesure ne dépend pas du moment où l'image est décodée. */
+const _imgDims = new Map();
+function noteImgDims(url) {
+  if (_imgDims.has(url)) return;
+  _imgDims.set(url, null);
+  const im = new Image();
+  im.onload = () => {
+    if (im.naturalWidth > 0 && im.naturalHeight > 0) {
+      _imgDims.set(url, { w: im.naturalWidth, h: im.naturalHeight });
+      scheduleReflow();   // la pagination est refaite avec les vraies dimensions
+    }
+  };
+  im.src = url;
+}
+function withImgPlaceholders(html) {
+  return html.replace(/<img src="(data:[^"]+)"/g, (m, url) => {
+    const d = _imgDims.get(url);
+    if (d === undefined) { noteImgDims(url); return m; }
+    if (!d) return m;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${d.w}" height="${d.h}"/>`;
+    return `<img src="data:image/svg+xml,${encodeURIComponent(svg)}"`;
+  });
+}
+
+let _measureHost = null;
+function pageFits(body) {
+  if (!_measureHost) {
+    _measureHost = document.createElement('div');
+    _measureHost.id = 'page-measure';
+    _measureHost.setAttribute('aria-hidden', 'true');
+    _measureHost.style.cssText = 'position:fixed;left:-10000px;top:0;visibility:hidden;pointer-events:none;';
+    document.body.appendChild(_measureHost);
+  }
+  _measureHost.innerHTML = `<article class="page page--for-png">${pageMeta()}${pageHeader({})}<div style="padding-bottom:28px;">${withImgPlaceholders(body)}</div>${pageFooter(1, 1)}</article>`;
+  const pg = _measureHost.firstElementChild;
+  const over = pg.scrollHeight - pg.clientHeight;
+  _measureHost.innerHTML = '';
+  return over <= OVERFLOW_THRESHOLD_PX;
+}
+
+/* headFn(cont) → bandeau de la page (cont = vrai pour une page « suite ») ; blocks → blocs en HTML ; tail → fin de page.
+   Retourne les corps de page. Rien ne déborde : un seul corps, la concaténation telle quelle. */
+function paginateBlocks(headFn, blocks, tail) {
+  tail = tail || '';
+  const make = (cont, list) => headFn(cont) + list.join('') + tail;
+  const whole = make(false, blocks);
+  if (pageFits(whole)) return [whole];
+  const out = [];
+  let cur = [];
+  blocks.forEach(b => {
+    if (cur.length === 0) { cur.push(b); return; }
+    if (pageFits(make(out.length > 0, cur.concat([b])))) cur.push(b);
+    else { out.push(make(out.length > 0, cur)); cur = [b]; }
+  });
+  if (cur.length) out.push(make(out.length > 0, cur));
+  return out;
+}
+
 function renderPreview() {
+  ensureFonts();
   const pages = (state.meta && state.meta.format === 'simple') ? buildSimplePages() : buildPages();
   const total = pages.length;
   const html = pages.map((p, i) => `
@@ -7475,6 +7808,7 @@ function loadJsonFile(file) {
       }
       applyLoadedFormat(parsed);
       normalizePhotos(state);
+      normalizeTargets(state);
       currentPhaseIdx = 0;
 
       // v2.1.1 : recompresse silencieusement les images trop lourdes (briefings v2.1.0 et antérieurs)
@@ -7810,6 +8144,8 @@ function setFormat(fmt) {
     if (v != null) input.value = v;
   });
   document.querySelectorAll('[data-list]').forEach(renderList);
+  document.querySelectorAll('[data-img-bind]').forEach(refreshImgZone);   // v2.4.0 : la carte est partagée
+  renderTargets();                                                       // v2.4.0 : les cibles aussi
   renderAirfields();
   if (fmt === 'simple') {
     renderSimpleFlights();
@@ -8107,6 +8443,63 @@ function renderPhotosEditor() {
   });
 }
 
+/* v2.4.0 — Cibles : state.mission.targets = [{ num, nature, position, remark }].
+   Un composant, deux conteneurs (#s-targets-list du brief simplifié, #targets-list du brief complet) :
+   chacun rejoue le même rendu, et la liste est la même dans les deux formats. */
+const TARGET_FIELDS = [
+  ['num', 'editor.targets.num'],
+  ['nature', 'editor.targets.nature'],
+  ['position', 'editor.targets.position'],
+  ['remark', 'editor.targets.remark']
+];
+
+function renderTargets() {
+  const containers = ['s-targets-list', 'targets-list']
+    .map(id => document.getElementById(id)).filter(Boolean);
+  if (!containers.length) return;
+  if (!state.mission) state.mission = {};
+  if (!Array.isArray(state.mission.targets)) state.mission.targets = [];
+  const targets = state.mission.targets;
+  containers.forEach(list => {
+    list.innerHTML = '';
+    if (targets.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'phase-empty';
+      empty.textContent = t('editor.targets.empty');
+      list.appendChild(empty);
+      return;
+    }
+    targets.forEach((tg, i) => {
+      const row = document.createElement('div');
+      row.className = 'ed-target-row';
+      row.innerHTML = TARGET_FIELDS.map(([k, key]) =>
+        `<input type="text" data-tg="${k}" placeholder="${escapeAttr(t(key))}" aria-label="${escapeAttr(t(key))}">`
+      ).join('') +
+        `<button type="button" class="ed-btn-icon" data-tg-rm aria-label="${escapeAttr(t('editor.imgCard.remove'))}">×</button>`;
+      TARGET_FIELDS.forEach(([k]) => {
+        const inp = row.querySelector(`[data-tg="${k}"]`);
+        inp.value = tg[k] || '';
+        inp.addEventListener('input', () => { targets[i][k] = inp.value; schedulePreview(); });
+      });
+      row.querySelector('[data-tg-rm]').addEventListener('click', () => {
+        targets.splice(i, 1);
+        renderTargets(); schedulePreview();
+      });
+      list.appendChild(row);
+    });
+  });
+}
+
+function addTarget() {
+  if (!state.mission) state.mission = {};
+  if (!Array.isArray(state.mission.targets)) state.mission.targets = [];
+  state.mission.targets.push({
+    num: 'T' + (state.mission.targets.length + 1),
+    nature: '', position: '', remark: ''
+  });
+  renderTargets(); schedulePreview();
+}
+
 function bindSimpleEvents() {
   document.querySelectorAll('#format-seg .seg-btn').forEach(b => {
     b.addEventListener('click', () => setFormat(b.dataset.format));
@@ -8137,6 +8530,8 @@ function bindSimpleEvents() {
     renderAirfields(); schedulePreview();
   });
   document.getElementById('s-metar-assistant-btn').addEventListener('click', () => { openMetarAssistant(); });
+  document.getElementById('s-target-add').addEventListener('click', addTarget);
+  document.getElementById('target-add').addEventListener('click', addTarget);
 }
 
 /* ============= INIT ============= */
@@ -8208,7 +8603,7 @@ function init() {
   });
   document.getElementById('btn-print').addEventListener('click', openExportModal);
   document.getElementById('btn-reset').addEventListener('click', resetAll);
-  document.getElementById('theme-select').addEventListener('change', e => applyTheme(e.target.value));
+  document.getElementById('theme-select').addEventListener('change', e => { applyTheme(e.target.value); scheduleReflow(); });   // v2.4.0 : la pagination suit les polices du thème
   document.getElementById('btn-lang').addEventListener('click', () => {
     setLang(CURRENT_LANG === 'fr' ? 'en' : 'fr');
   });
