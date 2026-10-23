@@ -16,7 +16,7 @@ import subprocess
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-APP_VERSION = "1.1.0"
+APP_VERSION = "1.2.0"
 OUT_PATH = os.path.join(HERE, 'dist', 'dcs_datacard_generator.html')
 ASSETS_PATH = os.path.join(HERE, 'assets.json')
 
@@ -1865,7 +1865,7 @@ const I18N = {
     'f.nav.display': 'Affichage',
     'nav.mode.course': 'Cap / distance',
     'nav.mode.mgrs': 'MGRS',
-    'nav.mode.dms': "° ' \"",
+    'nav.mode.dms': 'DMS',
     'f.nav.ref': 'Cap',
     'nav.ref.true': 'Vrai',
     'nav.ref.mag': 'Magnétique',
@@ -1877,6 +1877,9 @@ const I18N = {
     'ph.nav.*.coord': '36S VD 47535 77241',
     'nav.coord.bad': '✗ Format non reconnu',
     'nav.calc.tip': 'Calculé depuis les coordonnées',
+    'nav.coord.help': 'MGRS, ou N35°02\'11" E032°25\'29", ou N35°02.183\' E032°25.483\', ou 35.0365, 32.4248',
+    'nav.est.prev': '≈ estimé depuis le point précédent (cap, distance) :',
+    'nav.est.next': '≈ estimé depuis le point suivant (cap, distance) :',
     'dc.h.course.t': 'CAP V °',
     'dc.h.course.m': 'CAP M °',
     'dc.h.mgrs': 'MGRS',
@@ -2130,7 +2133,7 @@ const I18N = {
     'f.nav.display': 'Display',
     'nav.mode.course': 'Heading / distance',
     'nav.mode.mgrs': 'MGRS',
-    'nav.mode.dms': "° ' \"",
+    'nav.mode.dms': 'DMS',
     'f.nav.ref': 'Heading',
     'nav.ref.true': 'True',
     'nav.ref.mag': 'Magnetic',
@@ -2142,6 +2145,9 @@ const I18N = {
     'ph.nav.*.coord': '36S VD 47535 77241',
     'nav.coord.bad': '✗ Format not recognized',
     'nav.calc.tip': 'Computed from coordinates',
+    'nav.coord.help': 'MGRS, or N35°02\'11" E032°25\'29", or N35°02.183\' E032°25.483\', or 35.0365, 32.4248',
+    'nav.est.prev': '≈ estimated from the previous point (heading, distance):',
+    'nav.est.next': '≈ estimated from the next point (heading, distance):',
     'dc.h.course.t': 'HDG T °',
     'dc.h.course.m': 'HDG M °',
     'dc.h.mgrs': 'MGRS',
@@ -2552,7 +2558,38 @@ function parseDecl(s) {
 /* Les lignes de la datacard qui comptent : une rangée dont aucun champ n'est rempli n'existe pas pour la navigation. */
 const NAV_KEYS = ['name', 'coord', 'course', 'distance', 'altitude', 'tos', 'note'];
 
-/* Pour chaque point de c.nav (même indice) : { pt, calc } — pt : coordonnée lue (ou null) ;
+/* Point d'arrivée du grand cercle depuis a, au cap initial brg (vrai, °) sur km kilomètres */
+function legDest(a, brg, km) {
+  const r = Math.PI / 180;
+  const d = km / NAV_R_KM, th = brg * r, p1 = a.lat * r, l1 = a.lon * r;
+  const p2 = Math.asin(Math.sin(p1) * Math.cos(d) + Math.cos(p1) * Math.sin(d) * Math.cos(th));
+  const l2 = l1 + Math.atan2(Math.sin(th) * Math.sin(d) * Math.cos(p1), Math.cos(d) - Math.sin(p1) * Math.sin(p2));
+  return { lat: p2 / r, lon: ((l2 / r + 540) % 360) - 180 };
+}
+
+/* Point X tel que le cap initial de X vers b vaut brg (vrai) et la distance de X à b vaut km ; null si non convergent */
+function legOrigin(b, brg, km) {
+  let th = (brg + 180) % 360;
+  for (let it = 0; it < 200; it++) {
+    const x = legDest(b, th, km);
+    const L = legCalc(x, b);
+    let e = brg - L.brg;
+    e = ((e + 540) % 360) - 180;
+    if (Math.abs(e) < 0.00001) return x;
+    th = ((th + e) % 360 + 360) % 360;
+  }
+  return null;
+}
+
+/* Nombre lisible d'un champ Cap / Distance (virgule ou point décimal), sinon null */
+function readNum(s) {
+  if (typeof s !== 'string') return null;
+  const m = /^\s*(\d+(?:[.,]\d+)?)\s*$/.exec(s);
+  return m ? parseFloat(m[1].replace(',', '.')) : null;
+}
+
+/* Pour chaque point de c.nav (même indice) : { pt, est, estDir, calc, blank } — pt : coordonnée saisie lue (ou null) ;
+   est : coordonnées estimées par le cap et la distance saisis (ou null), estDir 'prev' (vers l'avant) ou 'next' (à rebours) ;
    calc : { cap, dist } (chaînes) quand la branche (point précédent non vide → ce point) est calculable, sinon null. */
 function navLegs(c) {
   const nd = c.navDisplay;
@@ -2574,10 +2611,37 @@ function navLegs(c) {
         calc = { cap: fmtHdg(brg), dist: String(Math.round(d)) };
       }
     }
-    const o = { pt: pt, calc: calc, blank: blank };
+    const o = { pt: pt, est: null, estDir: '', calc: calc, blank: blank };
     out.push(o);
     if (!blank) prev = o;
   });
+  /* Cap et distance saisis d'un point, lus : { brg (vrai), km } ou null */
+  const leg = i => {
+    const r = c.nav[i];
+    const cap = readNum(r.course), dist = readNum(r.distance);
+    if (cap == null || dist == null || cap > 360 || !(dist > 0)) return null;
+    let brg = cap;
+    if (useMag) brg = (cap + decl) % 360;
+    return { brg: brg, km: nm ? dist * NAV_NM_KM : dist };
+  };
+  const live = out.map((o, i) => i).filter(i => !out[i].blank);
+  /* vers l'avant : le point précédent est placé (saisi ou estimé) */
+  live.forEach((i, k) => {
+    const o = out[i];
+    if (o.pt || k === 0) return;
+    const p = out[live[k - 1]], base = p.pt || p.est, L = leg(i);
+    if (base && L) { o.est = legDest(base, L.brg, L.km); o.estDir = 'prev'; }
+  });
+  /* à rebours : le point suivant est placé et la branche saisie sur lui est lisible */
+  for (let k = live.length - 2; k >= 0; k--) {
+    const o = out[live[k]], n = out[live[k + 1]];
+    if (o.pt || o.est) continue;
+    const base = n.pt || n.est, L = leg(live[k + 1]);
+    if (base && L) {
+      const x = legOrigin(base, L.brg, L.km);
+      if (x) { o.est = x; o.estDir = 'next'; }
+    }
+  }
   return out;
 }
 
@@ -3081,8 +3145,8 @@ function blkNav(c) {
       '<th class="r">' + esc(t('dc.h.tos')) + '</th>' +
       '<th>' + esc(t('dc.h.note')) + '</th>';
     body = shown.map((x, i) => {
-      const r = x.r, p = x.g.pt;
-      const cc = p ? (mode === 'mgrs' ? (toMGRS(p.lat, p.lon) || '—') : toDMS(p.lat, p.lon)) : '—';
+      const r = x.r, p = x.g.pt || x.g.est;
+      const cc = p ? (x.g.pt ? '' : '≈ ') + (mode === 'mgrs' ? (toMGRS(p.lat, p.lon) || '—') : toDMS(p.lat, p.lon)) : '—';
       return '<tr><td class="m ix">' + i + '</td><td class="nm">' + esc(r.name) + '</td>' +
         '<td class="m cc">' + esc(cc) + '</td>' +
         '<td class="m r">' + dash(r.altitude) + '</td><td class="m r">' + dash(r.tos) + '</td>' +
@@ -3366,10 +3430,12 @@ function navSettingsHtml(c) {
     fSelect('f.nav.ref', 'navDisplay.ref', nd.ref, [['true', t('nav.ref.true')], ['mag', t('nav.ref.mag')]]) +
     fInput('f.nav.decl', 'navDisplay.decl', nd.decl, ' inputmode="decimal" autocomplete="off"') + '</div>' +
     '<div class="ed-help">' + esc(t('nav.decl.help')) + '</div>' +
+    '<div class="ed-help">' + esc(t('f.nav.coord')) + (CURRENT_LANG === 'fr' ? ' : ' : ': ') + esc(t('nav.coord.help')) + '</div>' +
     '<div class="ed-warn" data-nav-warn' + (navDeclMissing(c) ? '' : ' hidden') + '>' + esc(t('nav.decl.warn')) + '</div>';
 }
 
-function coordState(raw, pt) {
+function coordState(raw, pt, g) {
+  if (!pt && g && g.est && !hasText(raw)) return { cls: 'ok', text: t(g.estDir === 'next' ? 'nav.est.next' : 'nav.est.prev') + ' ' + (toMGRS(g.est.lat, g.est.lon) || '—') + ' · ' + toDMS(g.est.lat, g.est.lon) };
   if (!hasText(raw)) return { cls: '', text: '' };
   if (!pt) return { cls: 'bad', text: t('nav.coord.bad') };
   return { cls: 'ok', text: '✓ ' + (toMGRS(pt.lat, pt.lon) || '—') + ' · ' + toDMS(pt.lat, pt.lon) };
@@ -3385,7 +3451,7 @@ function syncNavEditor() {
     const x = c.nav[i], g = legs[i];
     if (!x || !g) return;
     const st = li.querySelector('[data-coord-state]');
-    if (st) { const o = coordState(x.coord, g.pt); st.textContent = o.text; st.className = 'ed-coord ' + o.cls; }
+    if (st) { const o = coordState(x.coord, g.pt, g); st.textContent = o.text; st.className = 'ed-coord ' + o.cls; }
     const lock = cm && !!g.calc;
     [['course', lock ? g.calc.cap : x.course], ['distance', lock ? g.calc.dist : x.distance]].forEach(p => {
       const el = li.querySelector('[data-path="nav.' + i + '.' + p[0] + '"]');
@@ -3433,7 +3499,7 @@ const SECTION_BUILDERS = {
     return listHtml('nav', c.nav, (x, i) => {
       const g = legs[i], lock = cm && !!g.calc;
       const ro = lock ? ' readonly title="' + esc(t('nav.calc.tip')) + '"' : '';
-      const st = coordState(x.coord, g.pt);
+      const st = coordState(x.coord, g.pt, g);
       return '<div class="li-grid gs">' + fInput('f.nav.name', 'nav.' + i + '.name', x.name) + '</div>' +
         '<div class="li-grid gs"><div class="ed-field"><label>' + esc(t('f.nav.coord')) + '</label>' +
         '<input type="text" data-path="nav.' + i + '.coord" value="' + esc(x.coord) + '"' + phAttr('nav.' + i + '.coord') + ' autocomplete="off" spellcheck="false">' +
