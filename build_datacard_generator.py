@@ -1286,7 +1286,6 @@ body {
 /* Navigation */
 .dc-navc td.cc { font-size: 20px; letter-spacing: .02em; text-align: left; text-overflow: clip; }
 .dc-navc th.cc { text-align: left; }
-.dc-navc td.cc .est { display: inline-block; width: 14px; overflow: hidden; vertical-align: top; }
 .dc-navc th:nth-child(5), .dc-navc td:nth-child(5) { padding-left: 18px; }
 .dc-navc th:nth-child(6), .dc-navc td:nth-child(6) { padding-left: 14px; }
 .dc-nav td.nm { font-family: var(--dc-fo); font-weight: 500; font-size: 21px; letter-spacing: .04em; }
@@ -1879,8 +1878,8 @@ const I18N = {
     'nav.coord.bad': '✗ Format non reconnu',
     'nav.calc.tip': 'Calculé depuis les coordonnées',
     'nav.coord.help': 'MGRS, ou N35°02\'11" E032°25\'29", ou N35°02.183\' E032°25.483\', ou 35.0365, 32.4248, ou 36.49.30N/34.44.29E',
-    'nav.est.prev': '≈ estimé depuis le point précédent (cap, distance) :',
-    'nav.est.next': '≈ estimé depuis le point suivant (cap, distance) :',
+    'nav.est.prev': 'Estimé depuis le point précédent (cap, distance) :',
+    'nav.est.next': 'Estimé depuis le point suivant (cap, distance) :',
     'dc.h.course.t': 'CAP V °',
     'dc.h.course.m': 'CAP M °',
     'dc.h.mgrs': 'MGRS',
@@ -2147,8 +2146,8 @@ const I18N = {
     'nav.coord.bad': '✗ Format not recognized',
     'nav.calc.tip': 'Computed from coordinates',
     'nav.coord.help': 'MGRS, or N35°02\'11" E032°25\'29", or N35°02.183\' E032°25.483\', or 35.0365, 32.4248, or 36.49.30N/34.44.29E',
-    'nav.est.prev': '≈ estimated from the previous point (heading, distance):',
-    'nav.est.next': '≈ estimated from the next point (heading, distance):',
+    'nav.est.prev': 'Estimated from the previous point (heading, distance):',
+    'nav.est.next': 'Estimated from the next point (heading, distance):',
     'dc.h.course.t': 'HDG T °',
     'dc.h.course.m': 'HDG M °',
     'dc.h.mgrs': 'MGRS',
@@ -3130,8 +3129,8 @@ function fmtDecl(v) {
 /* Colonnes du bloc Navigation selon l'affichage (largeurs en px ; la dernière colonne, la note, prend le reste) */
 const NAV_COLS = {
   course: [50, 288, 90, 108, 89, 136],
-  mgrs:   [50, 262, 254, 84, 100],
-  dms:    [50, 224, 304, 84, 100]
+  mgrs:   [50, 262, 236, 84, 100],
+  dms:    [50, 224, 290, 84, 100]
 };
 
 function blkNav(c) {
@@ -3170,9 +3169,8 @@ function blkNav(c) {
     body = shown.map((x, i) => {
       const r = x.r, p = x.g.pt || x.g.est;
       const cc = p ? esc(mode === 'mgrs' ? (toMGRS(p.lat, p.lon) || '—') : toDMS(p.lat, p.lon)) : esc('—');
-      const pre = (p && !x.g.pt) ? '<span class="est">≈ </span>' : '';
       return '<tr><td class="m ix">' + i + '</td><td class="nm">' + esc(r.name) + '</td>' +
-        '<td class="m cc">' + pre + cc + '</td>' +
+        '<td class="m cc">' + cc + '</td>' +
         '<td class="m r">' + dash(r.altitude) + '</td><td class="m r">' + dash(r.tos) + '</td>' +
         '<td class="nt">' + esc(r.note) + '</td></tr>';
     }).join('');
