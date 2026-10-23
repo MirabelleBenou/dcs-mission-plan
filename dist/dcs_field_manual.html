@@ -7,7 +7,7 @@
 
 <style>
 /* =============================================
-   DCS FIELD MANUAL v1.0.0
+   DCS FIELD MANUAL v1.1.0
    Documentation module — Mission Plan suite
    ============================================= */
 
@@ -604,6 +604,11 @@ body[lang="fr"] .lang-block[data-lang="en"] { display: none; }
   color: var(--red-stamp);
 }
 
+.fm-callout a {
+  color: var(--chapter-accent, var(--fm-accent));
+  text-decoration: underline;
+}
+
 kbd {
   font-family: var(--f-typewriter);
   font-size: 11px;
@@ -696,13 +701,14 @@ kbd {
 #page-rs  { --chapter-accent: #C95A9C; --chapter-accent-rgb: 201,90,156; }
 #page-hq  { --chapter-accent: #4FB286; --chapter-accent-rgb: 79,178,134; }
 #page-bg  { --chapter-accent: #c0892a; --chapter-accent-rgb: 192,137,42; }
+#page-dg  { --chapter-accent: #4f7a8e; --chapter-accent-rgb: 79,122,142; }
 
 /* Plaques accents individuels */
 .fm-plaque[data-module="rs"]  { --chapter-accent: #C95A9C; --chapter-accent-rgb: 201,90,156; }
 .fm-plaque[data-module="hq"]  { --chapter-accent: #4FB286; --chapter-accent-rgb: 79,178,134; }
 .fm-plaque[data-module="bg"]  { --chapter-accent: #c0892a; --chapter-accent-rgb: 192,137,42; }
 .fm-plaque[data-module="rp"]  { --chapter-accent: #7ac97a; --chapter-accent-rgb: 122,201,122; }
-.fm-plaque[data-module="dg"]  { --chapter-accent: #8fb0c0; --chapter-accent-rgb: 143,176,192; }
+.fm-plaque[data-module="dg"]  { --chapter-accent: #4f7a8e; --chapter-accent-rgb: 79,122,142; }
 
 </style>
 </head>
@@ -716,7 +722,7 @@ kbd {
   </div>
   <div class="tb-sep" aria-hidden="true"></div>
   <div class="tb-spacer"></div>
-  <span class="tb-version">v1.0.0</span>
+  <span class="tb-version">v1.1.0</span>
   <button id="btn-lang" aria-label="Changer de langue" title="Switch language">
     <svg id="flag-svg" viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg">
       <!-- flag FR par défaut -->
@@ -787,6 +793,19 @@ kbd {
           <div class="fm-plaque-badge" data-i18n="index.badge.active">Manuel</div>
         </div>
 
+        <!-- DG -->
+        <div class="fm-plaque active" data-module="dg" tabindex="0" role="button"
+             aria-label="DG — Datacard Generator"
+             onclick="navigate('dg')"
+             onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();navigate('dg')}">
+          <div class="fm-plaque-monogram">DG</div>
+          <div class="fm-plaque-info">
+            <div class="fm-plaque-name">Datacard Generator</div>
+            <div class="fm-plaque-desc" data-i18n="index.dg.desc">Datacards de vol d’une page</div>
+          </div>
+          <div class="fm-plaque-badge" data-i18n="index.badge.active">Manuel</div>
+        </div>
+
         <!-- RS -->
         <div class="fm-plaque active" data-module="rs" tabindex="0" role="button"
              aria-label="RS — Recon Station"
@@ -806,16 +825,6 @@ kbd {
           <div class="fm-plaque-info">
             <div class="fm-plaque-name">Route Planner</div>
             <div class="fm-plaque-desc" data-i18n="index.rp.desc">Planification d'itinéraires</div>
-          </div>
-          <div class="fm-soon-stamp" data-i18n-soon><!-- rempli par JS --></div>
-        </div>
-
-        <!-- DG — À venir -->
-        <div class="fm-plaque soon" data-module="dg" aria-hidden="true">
-          <div class="fm-plaque-monogram" style="opacity:.4;">DG</div>
-          <div class="fm-plaque-info">
-            <div class="fm-plaque-name">Datacard</div>
-            <div class="fm-plaque-desc" data-i18n="index.dg.desc">Génération de datacards</div>
           </div>
           <div class="fm-soon-stamp" data-i18n-soon><!-- rempli par JS --></div>
         </div>
@@ -1157,8 +1166,24 @@ kbd {
       <div class="fm-prose">
         <h3 class="lang-block" data-lang="fr">À quoi ça sert</h3>
         <h3 class="lang-block" data-lang="en">What it’s for</h3>
-        <div class="lang-block" data-lang="fr"><p>Le Briefing Generator assemble un <strong>briefing de mission complet, multi-pages</strong>, prêt à imprimer ou à emporter en vol : couverture, situation tactique, aperçu de mission, plan radio, missions individuelles, équipage, cartes et annexes. On remplit des sections dans l’éditeur, on prévisualise la mise en page A4, puis on exporte en <strong>PDF</strong> ou en <strong>PNG par page</strong> (genouillères). L’identité d’escadre (logo, noms, escadrons) est <strong>héritée de HQ</strong>. Quatre thèmes, tout hors-ligne.</p></div>
-        <div class="lang-block" data-lang="en"><p>The Briefing Generator assembles a <strong>complete, multi-page mission briefing</strong>, ready to print or take into the cockpit: cover, tactical situation, mission overview, radio plan, individual missions, crew, charts, and annexes. You fill sections in the editor, preview the A4 layout, then export to <strong>PDF</strong> or <strong>per-page PNG</strong> (kneeboards). The wing identity (logo, names, squadrons) is <strong>inherited from HQ</strong>. Four themes, fully offline.</p></div>
+        <div class="lang-block" data-lang="fr"><p>Le Briefing Generator prépare le briefing d’une mission, prêt à imprimer ou à emporter en vol, dans l’un de <strong>deux formats</strong>. Le <strong>brief simplifié</strong> tient sur <strong>une page</strong> — situation, mission et tableau des vols, fréquences, terrains, météo —, suivie de pages de photos s’il y en a. Le <strong>brief complet</strong> est un dossier <strong>multi-pages</strong> : couverture, situation tactique, aperçu de mission, plan radio, missions individuelles, équipage, cartes et annexes. On remplit des sections dans l’éditeur, on vérifie la mise en page A4 dans l’aperçu, puis on exporte en <strong>PDF</strong> ou en <strong>PNG par page</strong> (genouillères). L’identité d’escadre (logo, noms, escadrons) est <strong>héritée de HQ</strong>. Quatre thèmes, tout hors-ligne.</p></div>
+        <div class="lang-block" data-lang="en"><p>The Briefing Generator prepares a mission briefing, ready to print or take into the cockpit, in one of <strong>two formats</strong>. The <strong>quick brief</strong> fits on <strong>one page</strong> — situation, mission and flights table, frequencies, airfields, weather —, followed by photo pages if there are any. The <strong>full brief</strong> is a <strong>multi-page</strong> file: cover, tactical situation, mission overview, radio plan, individual missions, crew, charts, and annexes. You fill sections in the editor, check the A4 layout in the preview, then export to <strong>PDF</strong> or <strong>per-page PNG</strong> (kneeboards). The wing identity (logo, names, squadrons) is <strong>inherited from HQ</strong>. Four themes, fully offline.</p></div>
+      </div>
+
+      <!-- Deux formats -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Deux formats : complet ou simplifié</h3>
+        <h3 class="lang-block" data-lang="en">Two formats: full or quick</h3>
+        <div class="lang-block" data-lang="fr"><p>Le sélecteur <strong>Brief complet | Brief simplifié</strong> de la barre du haut choisit le format. Changer de format <strong>ne perd rien</strong> : seules les sections affichées et les pages produites changent ; ce que vous avez saisi pour l’autre format reste dans le briefing et réapparaît quand vous y revenez. Un briefing enregistré avant l’arrivée des deux formats s’ouvre en brief complet. Sur un écran étroit, le sélecteur affiche <strong>Complet | Simplifié</strong>.</p></div>
+        <div class="lang-block" data-lang="en"><p>The <strong>Full brief | Quick brief</strong> selector in the top bar picks the format. Switching <strong>loses nothing</strong>: only the sections shown and the pages produced change; what you entered for the other format stays in the briefing and comes back when you switch again. A briefing saved before the two formats existed opens as a full brief. On a narrow screen, the selector reads <strong>Full | Quick</strong>.</p></div>
+      </div>
+
+      <!-- Démarrer -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Démarrer : page blanche ou exemple</h3>
+        <h3 class="lang-block" data-lang="en">Getting started: blank page or example</h3>
+        <div class="lang-block" data-lang="fr"><p>L’outil s’ouvre sur un <strong>briefing vide</strong>, en brief simplifié. Le bouton <strong>Exemple</strong> charge un briefing de démonstration complet, pour voir ce que l’outil sait faire ; il remplace le briefing en cours, après confirmation. <strong>Reset</strong> vide tout le briefing, après confirmation, pour repartir d’une page blanche. Les champs vides montrent un <strong>exemple grisé</strong> (« FOOTHOLD », « M3 », « 1000Z »…) qui n’apparaît ni dans l’aperçu ni à l’export.</p></div>
+        <div class="lang-block" data-lang="en"><p>The tool opens on an <strong>empty briefing</strong>, as a quick brief. The <strong>Example</strong> button loads a full demonstration briefing, to show what the tool can do; it replaces the current briefing, after confirmation. <strong>Reset</strong> clears the whole briefing, after confirmation, to start from a blank page. Empty fields show a <strong>greyed-out example</strong> (“FOOTHOLD”, “M3”, “1000Z”…) that never appears in the preview or the export.</p></div>
       </div>
 
       <!-- Schéma SVG -->
@@ -1230,11 +1255,53 @@ kbd {
           <text x="550" y="315" text-anchor="middle" font-size="10.5" fill="currentColor" class="lang-block" data-lang="en">Metadata</text>
           <text x="550" y="329" text-anchor="middle" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">en-têtes &amp; pieds de page</text>
           <text x="550" y="329" text-anchor="middle" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">page headers &amp; footers</text>
+
+          <!-- Datacard Generator : ce qui l'alimente (v1.1.0) -->
+          <rect x="470" y="190" width="170" height="42" rx="3" fill="none" stroke="#4f7a8e" stroke-width="1.8"/>
+          <text x="555" y="208" text-anchor="middle" font-size="11" fill="#4f7a8e">Datacard Generator</text>
+          <text x="555" y="222" text-anchor="middle" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">une datacard par vol</text>
+          <text x="555" y="222" text-anchor="middle" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">one datacard per flight</text>
+          <path d="M392,100 C432,108 488,140 500,188" fill="none" stroke="#4f7a8e" stroke-width="1.2" opacity=".55" stroke-dasharray="4 3" marker-end="url(#bm)"/>
+          <text x="438" y="140" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">vols</text>
+          <text x="438" y="140" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">flights</text>
+          <line x1="626" y1="108" x2="620" y2="188" stroke="#4f7a8e" stroke-width="1.2" opacity=".6" stroke-dasharray="4 3" marker-end="url(#bm)"/>
+          <text x="628" y="152" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">fréquences</text>
+          <text x="628" y="152" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">frequencies</text>
+          <line x1="390" y1="211" x2="468" y2="211" stroke="#4f7a8e" stroke-width="1.2" opacity=".6" stroke-dasharray="4 3" marker-end="url(#bm)"/>
+          <text x="429" y="204" text-anchor="middle" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">équipage</text>
+          <text x="429" y="204" text-anchor="middle" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">crew</text>
+          <path d="M370,306 C440,300 500,268 520,234" fill="none" stroke="#4f7a8e" stroke-width="1.2" opacity=".55" stroke-dasharray="4 3" marker-end="url(#bm)"/>
+          <text x="536" y="266" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">METAR décodé</text>
+          <text x="536" y="266" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">decoded METAR</text>
         </svg>
         <div class="fm-schema-legend">
-          <span class="lang-block" data-lang="fr">Fig. 1 — Comment les saisies d’une section alimentent les autres.</span>
-          <span class="lang-block" data-lang="en">Fig. 1 — How entries in one section feed the others.</span>
+          <span class="lang-block" data-lang="fr">Fig. 1 — Comment les saisies d’une section alimentent les autres — et la datacard.</span>
+          <span class="lang-block" data-lang="en">Fig. 1 — How entries in one section feed the others — and the datacard.</span>
         </div>
+      </div>
+
+      <!-- Le brief simplifié -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Le brief simplifié</h3>
+        <h3 class="lang-block" data-lang="en">The quick brief</h3>
+        <div class="lang-block" data-lang="fr"><p>Cinq sections. <strong>Méta</strong> : opération, mission, date, <strong>Heure (Z)</strong>, classification, référence. <strong>Situation</strong> : la situation, en points. <strong>Mission</strong> : les objectifs, puis les <strong>vols</strong> — pour chacun l’escadron (ou un escadron invité), l’appareil et le sous-groupe, la <strong>Tâche</strong>, le <strong>Nombre</strong> d’appareils et le <strong>Départ</strong>. <strong>Coordination</strong> : les fréquences, les terrains et le METAR, avec son assistant. <strong>Photos</strong> : pour chaque photo, un titre, l’image et une légende.</p></div>
+        <div class="lang-block" data-lang="en"><p>Five sections. <strong>Meta</strong>: operation, mission, date, <strong>Time (Z)</strong>, classification, reference. <strong>Situation</strong>: the situation, as bullet points. <strong>Mission</strong>: the objectives, then the <strong>flights</strong> — for each, the squadron (or a guest squadron), the aircraft and subgroup, the <strong>Task</strong>, the aircraft <strong>Count</strong>, and the <strong>Departure</strong>. <strong>Coordination</strong>: frequencies, airfields, and the METAR, with its assistant. <strong>Photos</strong>: for each photo, a title, the image, and a caption.</p></div>
+      </div>
+
+      <!-- La page simplifiée -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">La page simplifiée</h3>
+        <h3 class="lang-block" data-lang="en">The quick-brief page</h3>
+        <div class="lang-block" data-lang="fr"><p>Le brief simplifié produit <strong>une page de mission</strong> : un bandeau « MISSION ░ date ░ heure », la <strong>Situation</strong>, la <strong>Mission</strong> avec le <strong>tableau des vols</strong> (Vol, Appareil, Tâche, Départ — « 2× F-16C » quand le nombre est renseigné), les <strong>Fréquences</strong> et les <strong>Terrains</strong> côte à côte, puis la <strong>Météo</strong>. Les menaces n’y figurent pas, même renseignées ; un bloc vide ne s’affiche pas. Suivent, s’il y a des photos, des <strong>pages de photos</strong>, deux par page, sous le bandeau « PHOTOS ░ RECONNAISSANCE ».</p></div>
+        <div class="lang-block" data-lang="en"><p>The quick brief produces <strong>one mission page</strong>: a “MISSION ░ date ░ time” banner, the <strong>Situation</strong>, the <strong>Mission</strong> with the <strong>flights table</strong> (Flight, Aircraft, Task, Departure — “2× F-16C” when the count is filled in), <strong>Frequencies</strong> and <strong>Airfields</strong> side by side, then the <strong>Weather</strong>. Threats are left out, even when filled in; an empty block is not shown. If there are photos, <strong>photo pages</strong> follow, two per page, under the “PHOTOS ░ RECONNAISSANCE” banner.</p></div>
+      </div>
+
+      <!-- Le brief complet, section par section -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Le brief complet, section par section</h3>
+        <h3 class="lang-block" data-lang="en">The full brief, section by section</h3>
+        <div class="lang-block" data-lang="fr"><p>Le brief complet garde toutes ses sections, décrites ci-dessous ; elles n’apparaissent qu’en brief complet.</p></div>
+        <div class="lang-block" data-lang="en"><p>The full brief keeps all its sections, described below; they only appear in the full brief.</p></div>
       </div>
 
       <!-- Métadonnées & couverture -->
@@ -1303,20 +1370,275 @@ kbd {
       <div class="fm-prose">
         <h3 class="lang-block" data-lang="fr">Sauvegarder &amp; reprendre</h3>
         <h3 class="lang-block" data-lang="en">Save &amp; resume</h3>
-        <div class="lang-block" data-lang="fr"><p>Le briefing est <strong>sauvegardé automatiquement</strong> dans le navigateur. Exportez-le en fichier <code>.json</code> pour l’archiver, le partager ou le reprendre sur une autre machine ; réimportez-le pour continuer ; un bouton permet de repartir de zéro.</p></div>
-        <div class="lang-block" data-lang="en"><p>The briefing is <strong>saved automatically</strong> in the browser. Export it as a <code>.json</code> file to archive, share, or resume it on another machine; re-import to continue; a button lets you start over.</p></div>
+        <div class="lang-block" data-lang="fr"><p>Le briefing est <strong>sauvegardé automatiquement</strong> dans le navigateur. <strong>Sauver</strong> l’exporte en fichier <code>.json</code> pour l’archiver, le partager ou le reprendre sur une autre machine ; <strong>Charger</strong> le réimporte. Le format choisi voyage avec le fichier.</p></div>
+        <div class="lang-block" data-lang="en"><p>The briefing is <strong>saved automatically</strong> in the browser. <strong>Save</strong> exports it as a <code>.json</code> file to archive, share, or resume it on another machine; <strong>Load</strong> re-imports it. The chosen format travels with the file.</p></div>
       </div>
 
       <!-- Exporter -->
       <div class="fm-prose">
         <h3 class="lang-block" data-lang="fr">Exporter le briefing</h3>
         <h3 class="lang-block" data-lang="en">Exporting the briefing</h3>
-        <div class="lang-block" data-lang="fr"><p>Vérifiez la mise en page en mode <strong>Aperçu</strong>, puis exportez. Le <strong>PDF</strong> passe par l’impression du navigateur (<kbd>Ctrl</kbd>+<kbd>P</kbd> → « Enregistrer en PDF »), y compris sur Android. L’<strong>export PNG par page</strong> produit des images individuelles, idéales en genouillères.</p></div>
-        <div class="lang-block" data-lang="en"><p>Check the layout in <strong>Preview</strong> mode, then export. The <strong>PDF</strong> goes through the browser’s print (<kbd>Ctrl</kbd>+<kbd>P</kbd> → “Save as PDF”), including on Android. The <strong>per-page PNG export</strong> produces individual images, ideal as kneeboards.</p></div>
+        <div class="lang-block" data-lang="fr"><p>Vérifiez la mise en page dans l’<strong>Aperçu</strong>, puis <strong>Exporter</strong> : l’export porte les pages du format en cours. Le <strong>PDF</strong> passe par l’impression du navigateur (<kbd>Ctrl</kbd>+<kbd>P</kbd> → « Enregistrer en PDF »), y compris sur Android. L’<strong>export PNG</strong> produit une image par page, idéale en genouillère.</p></div>
+        <div class="lang-block" data-lang="en"><p>Check the layout in the <strong>Preview</strong>, then <strong>Export</strong>: the export carries the pages of the current format. The <strong>PDF</strong> goes through the browser’s print (<kbd>Ctrl</kbd>+<kbd>P</kbd> → “Save as PDF”), including on Android. The <strong>PNG export</strong> produces one image per page, ideal as a kneeboard.</p></div>
+      </div>
+
+      <!-- La barre du haut sur tablette et téléphone -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">La barre du haut sur tablette et téléphone</h3>
+        <h3 class="lang-block" data-lang="en">The top bar on tablets and phones</h3>
+        <div class="lang-block" data-lang="fr"><p>Quand la barre du haut ne tient pas dans la largeur, elle <strong>défile</strong> au doigt, à la molette ou au pavé tactile ; un <strong>fondu</strong> sur un bord signale qu’il reste des boutons de ce côté. Toucher un bouton à moitié visible le ramène en entier avant de l’activer. Sous 1 100 px de large, l’éditeur passe en <strong>onglets</strong> : un par section, plus <strong>Aperçu</strong>.</p></div>
+        <div class="lang-block" data-lang="en"><p>When the top bar doesn’t fit the width, it <strong>scrolls</strong> by finger, mouse wheel, or touchpad; a <strong>fade</strong> on one edge shows there are more buttons that way. Tapping a half-visible button brings it fully into view before activating it. Below 1,100 px wide, the editor switches to <strong>tabs</strong>: one per section, plus <strong>Preview</strong>.</p></div>
+      </div>
+
+      <!-- Et la datacard ? -->
+      <div class="fm-callout note">
+        <div class="lang-block" data-lang="fr">Et la datacard ? — Le Briefing Generator ne connaît pas la datacard : c’est le <strong>Datacard Generator</strong> qui lit le briefing, en cours ou en fichier, et en tire une datacard par vol. <a href="#dg">Voir son chapitre</a>.</div>
+        <div class="lang-block" data-lang="en">What about the datacard? — The Briefing Generator knows nothing of the datacard: the <strong>Datacard Generator</strong> reads the briefing, current or from a file, and turns each flight into a datacard. <a href="#dg">See its chapter</a>.</div>
       </div>
 
     </div><!-- /fm-chapter -->
   </section><!-- /page-bg -->
+
+  <!-- ===== PAGE DG ===== -->
+  <section id="page-dg" class="fm-page hidden">
+    <div class="fm-chapter" style="--chapter-accent:#4f7a8e; --chapter-accent-rgb:79,122,142;">
+
+      <button class="fm-back-btn" onclick="navigate('index')" data-i18n="btn.back">◄ Index</button>
+
+      <div class="fm-hero">
+        <img class="fm-hero-img" src="data:image/webp;base64,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" alt="Datacard Generator" draggable="false">
+        <div class="fm-hero-pin" aria-hidden="true"></div>
+        <div class="fm-hero-caption">
+          <div><div class="fm-hero-monogram">DG</div></div>
+          <div>
+            <div class="fm-hero-title" data-i18n="dg.hero.title">Datacard Generator</div>
+            <div class="fm-hero-sub" data-i18n="dg.hero.sub">Datacards de vol pour le kneeboard</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- À quoi ça sert -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">À quoi ça sert</h3>
+        <h3 class="lang-block" data-lang="en">What it’s for</h3>
+        <div class="lang-block" data-lang="fr"><p>Le Datacard Generator produit la <strong>datacard d’un vol</strong> : une fiche d’une page, au format d’une page de kneeboard, qui réunit ce dont l’équipage a besoin en l’air — indicatif et tâche, horaires, équipages, navigation, radio, terrains, météo, carburant, emport, menaces. On la remplit <strong>à la main</strong> ou <strong>depuis le Briefing Generator</strong> ; on en tient un <strong>paquet</strong>, une par vol de la mission ; on l’exporte en <strong>PNG</strong> pour le kneeboard de DCS ou en <strong>PDF</strong> pour l’imprimer, en version <strong>jour</strong> ou <strong>nuit</strong>.</p></div>
+        <div class="lang-block" data-lang="en"><p>The Datacard Generator produces a <strong>flight’s datacard</strong>: a one-page sheet, the size of a kneeboard page, that gathers what the crew needs in the air — callsign and task, times, crew, navigation, radio, airfields, weather, fuel, loadout, threats. You fill it <strong>by hand</strong> or <strong>from the Briefing Generator</strong>; you keep a <strong>deck</strong> of them, one per flight in the mission; you export to <strong>PNG</strong> for the DCS kneeboard or to <strong>PDF</strong> for printing, in a <strong>day</strong> or <strong>night</strong> version.</p></div>
+      </div>
+
+      <!-- Schéma SVG : anatomie d’une datacard -->
+      <div class="fm-schema">
+        <svg viewBox="0 0 720 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Anatomie d’une datacard">
+          <defs>
+            <marker id="dgl" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="currentColor" opacity=".55"/></marker>
+          </defs>
+          <text x="360" y="26" text-anchor="middle" font-size="13" letter-spacing="3" fill="currentColor" opacity=".75" class="lang-block" data-lang="fr">ANATOMIE D’UNE DATACARD</text>
+          <text x="360" y="26" text-anchor="middle" font-size="13" letter-spacing="3" fill="currentColor" opacity=".75" class="lang-block" data-lang="en">ANATOMY OF A DATACARD</text>
+          <line x1="120" y1="34" x2="600" y2="34" stroke="currentColor" stroke-width=".6" opacity=".3"/>
+
+          <!-- La page, ses bandeaux et son en-tête -->
+          <rect x="270" y="50" width="180" height="8" fill="currentColor" opacity=".85"/>
+          <rect x="270" y="297" width="180" height="8" fill="currentColor" opacity=".85"/>
+          <text x="276" y="80" font-size="17" fill="currentColor">CAESAR</text>
+          <line x1="276" y1="88" x2="350" y2="88" stroke="currentColor" stroke-width="1.4" opacity=".7"/>
+          <text x="444" y="70" text-anchor="end" font-size="9" letter-spacing="1" fill="#4f7a8e">DATACARD</text>
+          <line x1="392" y1="77" x2="444" y2="77" stroke="currentColor" stroke-width="1" opacity=".6"/>
+          <rect x="414" y="83" width="30" height="7" fill="#a83524" opacity=".85"/>
+
+          <!-- Les blocs -->
+          <rect x="274" y="96" width="106" height="44" fill="none" stroke="currentColor" stroke-width="1.1"/>
+          <rect x="274" y="96" width="106" height="6" fill="currentColor" opacity=".75"/>
+          <text x="327" y="123.5" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">MISSION</text>
+          <text x="327" y="123.5" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">MISSION</text>
+          <rect x="384" y="96" width="62" height="44" fill="none" stroke="currentColor" stroke-width="1.1"/>
+          <rect x="384" y="96" width="62" height="6" fill="currentColor" opacity=".75"/>
+          <text x="415" y="123.5" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">HORAIRES</text>
+          <text x="415" y="123.5" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">TIMES</text>
+          <rect x="274" y="144" width="172" height="24" fill="none" stroke="currentColor" stroke-width="1.1"/>
+          <rect x="274" y="144" width="172" height="6" fill="currentColor" opacity=".75"/>
+          <text x="360" y="161.5" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">ÉQUIPAGES</text>
+          <text x="360" y="161.5" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">CREW</text>
+          <rect x="274" y="172" width="172" height="44" fill="none" stroke="currentColor" stroke-width="1.1" stroke-dasharray="4 3"/>
+          <rect x="274" y="172" width="172" height="6" fill="currentColor" opacity=".75"/>
+          <text x="360" y="199.5" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">NAVIGATION</text>
+          <text x="360" y="199.5" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">NAVIGATION</text>
+          <rect x="274" y="220" width="90" height="50" fill="none" stroke="currentColor" stroke-width="1.1"/>
+          <rect x="274" y="220" width="90" height="6" fill="currentColor" opacity=".75"/>
+          <text x="319" y="250.5" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">RADIO</text>
+          <text x="319" y="250.5" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">RADIO</text>
+          <rect x="368" y="220" width="78" height="23" fill="none" stroke="currentColor" stroke-width="1.1"/>
+          <rect x="368" y="220" width="78" height="6" fill="currentColor" opacity=".75"/>
+          <text x="407" y="237" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">TERRAINS</text>
+          <text x="407" y="237" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">AIRFIELDS</text>
+          <rect x="368" y="247" width="78" height="23" fill="none" stroke="currentColor" stroke-width="1.1"/>
+          <rect x="368" y="247" width="78" height="6" fill="currentColor" opacity=".75"/>
+          <text x="407" y="264" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">MÉTÉO</text>
+          <text x="407" y="264" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">WEATHER</text>
+          <rect x="274" y="274" width="84" height="19" fill="none" stroke="currentColor" stroke-width="1.1"/>
+          <rect x="274" y="274" width="84" height="6" fill="currentColor" opacity=".75"/>
+          <text x="316" y="289" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">CARBURANT · EMPORT</text>
+          <text x="316" y="289" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">FUEL · LOADOUT</text>
+          <rect x="362" y="274" width="84" height="19" fill="none" stroke="currentColor" stroke-width="1.1"/>
+          <rect x="362" y="274" width="84" height="6" fill="currentColor" opacity=".75"/>
+          <text x="404" y="289" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">MENACES · NOTES</text>
+          <text x="404" y="289" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">THREATS · NOTES</text>
+          <rect x="270" y="50" width="180" height="255" fill="none" stroke="#4f7a8e" stroke-width="2"/>
+
+          <!-- Libellés à gauche -->
+          <line x1="232" y1="54" x2="270" y2="54" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#dgl)"/>
+          <line x1="232" y1="84" x2="270" y2="84" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#dgl)"/>
+          <line x1="232" y1="118" x2="270" y2="118" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#dgl)"/>
+          <line x1="232" y1="156" x2="270" y2="156" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#dgl)"/>
+          <line x1="232" y1="245" x2="270" y2="245" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#dgl)"/>
+          <line x1="232" y1="284" x2="270" y2="284" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#dgl)"/>
+          <g font-size="11" fill="currentColor" text-anchor="end">
+            <text x="226" y="58" class="lang-block" data-lang="fr">Classification · référence · page</text>
+            <text x="226" y="58" class="lang-block" data-lang="en">Classification · reference · page</text>
+            <text x="226" y="88" class="lang-block" data-lang="fr">Indicatif · appareil · tâche</text>
+            <text x="226" y="88" class="lang-block" data-lang="en">Callsign · aircraft · task</text>
+            <text x="226" y="122" class="lang-block" data-lang="fr">Objectif et étapes</text>
+            <text x="226" y="122" class="lang-block" data-lang="en">Objective and steps</text>
+            <text x="226" y="160" class="lang-block" data-lang="fr">Indicatif · pilote · équipier · n°</text>
+            <text x="226" y="160" class="lang-block" data-lang="en">Callsign · pilot · crew · no.</text>
+            <text x="226" y="249" class="lang-block" data-lang="fr">Postes et canaux</text>
+            <text x="226" y="249" class="lang-block" data-lang="en">Radios and channels</text>
+            <text x="226" y="288" class="lang-block" data-lang="fr">Joker · bingo · emport</text>
+            <text x="226" y="288" class="lang-block" data-lang="en">Joker · bingo · loadout</text>
+          </g>
+
+          <!-- Libellés à droite -->
+          <line x1="488" y1="72" x2="450" y2="72" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#dgl)"/>
+          <line x1="488" y1="118" x2="450" y2="118" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#dgl)"/>
+          <line x1="488" y1="194" x2="450" y2="194" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#dgl)"/>
+          <line x1="488" y1="231" x2="450" y2="231" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#dgl)"/>
+          <line x1="488" y1="258" x2="450" y2="258" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#dgl)"/>
+          <line x1="488" y1="284" x2="450" y2="284" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#dgl)"/>
+          <g font-size="11" fill="currentColor" text-anchor="start">
+            <text x="494" y="76" class="lang-block" data-lang="fr">Opération · date · menace</text>
+            <text x="494" y="76" class="lang-block" data-lang="en">Operation · date · threat</text>
+            <text x="494" y="122" class="lang-block" data-lang="fr">Mise en route → RTB</text>
+            <text x="494" y="122" class="lang-block" data-lang="en">Start-up → RTB</text>
+            <text x="494" class="lang-block" data-lang="fr"><tspan x="494" y="191">Points, caps, distances</tspan> <tspan x="494" y="205">→ page 2 si elle déborde</tspan></text>
+            <text x="494" class="lang-block" data-lang="en"><tspan x="494" y="191">Points, headings, distances</tspan> <tspan x="494" y="205">→ page 2 if it overflows</tspan></text>
+            <text x="494" y="235" class="lang-block" data-lang="fr">DEP · ARR · ALT</text>
+            <text x="494" y="235" class="lang-block" data-lang="en">DEP · ARR · ALT</text>
+            <text x="494" y="262" class="lang-block" data-lang="fr">METAR décodé</text>
+            <text x="494" y="262" class="lang-block" data-lang="en">Decoded METAR</text>
+            <text x="494" y="288" class="lang-block" data-lang="fr">Menaces · notes</text>
+            <text x="494" y="288" class="lang-block" data-lang="en">Threats · notes</text>
+          </g>
+
+          <!-- Libellé du pied -->
+          <line x1="360" y1="336" x2="360" y2="307" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#dgl)"/>
+          <text x="360" y="350" text-anchor="middle" font-size="11" fill="currentColor" class="lang-block" data-lang="fr">Pied : indicatif · opération · classification · page</text>
+          <text x="360" y="350" text-anchor="middle" font-size="11" fill="currentColor" class="lang-block" data-lang="en">Footer: callsign · operation · classification · page</text>
+        </svg>
+        <div class="fm-schema-legend">
+          <span class="lang-block" data-lang="fr">Fig. 1 — L’anatomie d’une datacard : où se range chaque bloc.</span>
+          <span class="lang-block" data-lang="en">Fig. 1 — Anatomy of a datacard: where each block goes.</span>
+        </div>
+      </div>
+
+      <!-- Le paquet de datacards -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Le paquet de datacards</h3>
+        <h3 class="lang-block" data-lang="en">The datacard deck</h3>
+        <div class="lang-block" data-lang="fr"><p>Le document est un <strong>paquet</strong> de datacards, une par vol. En haut de l’éditeur, « Datacard 2 / 3 — CAESAR » dit où l’on est ; les flèches passent d’une carte à l’autre, et les boutons <strong>Ajouter</strong>, <strong>Dupliquer</strong>, <strong>Supprimer</strong>, monter et descendre organisent le paquet. L’aperçu montre la carte courante. La dernière carte ne se supprime pas : elle se vide.</p></div>
+        <div class="lang-block" data-lang="en"><p>The document is a <strong>deck</strong> of datacards, one per flight. At the top of the editor, “Datacard 2 / 3 — CAESAR” tells you where you are; the arrows move from card to card, and the <strong>Add</strong>, <strong>Duplicate</strong>, <strong>Delete</strong>, move-up and move-down buttons organise the deck. The preview shows the current card. The last card can’t be deleted: it is cleared instead.</p></div>
+      </div>
+
+      <!-- Remplir une datacard -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Remplir une datacard</h3>
+        <h3 class="lang-block" data-lang="en">Filling in a datacard</h3>
+        <div class="lang-block" data-lang="fr"><p>Onze sections, dans l’ordre de la fiche : <strong>Méta</strong> (classification, référence, opération, mission, date, heure) ; <strong>Vol</strong> (indicatif, appareil, nombre, tâche, niveau de menace, unités) ; <strong>Mission</strong> (objectif et étapes) ; <strong>Horaires</strong> (mise en route, décollage, IP, TOT et RTB proposés, modifiables) ; <strong>Équipages</strong> ; <strong>Navigation</strong> (jusqu’à 30 points : cap, distance, altitude, heure, note) ; <strong>Radio</strong> (jusqu’à 4 postes de 12 canaux) ; <strong>Terrains</strong> (départ, arrivée, dégagement) ; <strong>Météo</strong> ; <strong>Carburant et emport</strong> (joker, bingo, lignes d’emport) ; <strong>Menaces et notes</strong>. Tout est <strong>texte libre</strong>. Chaque champ vide montre un exemple grisé, qui n’entre jamais dans la datacard.</p></div>
+        <div class="lang-block" data-lang="en"><p>Eleven sections, in the order of the sheet: <strong>Meta</strong> (classification, reference, operation, mission, date, time); <strong>Flight</strong> (callsign, aircraft, count, task, threat level, units); <strong>Mission</strong> (objective and steps); <strong>Times</strong> (start-up, take-off, IP, TOT, and RTB suggested, editable); <strong>Crew</strong>; <strong>Navigation</strong> (up to 30 points: heading, distance, altitude, time, note); <strong>Radio</strong> (up to 4 radios of 12 channels); <strong>Airfields</strong> (departure, arrival, alternate); <strong>Weather</strong>; <strong>Fuel and loadout</strong> (joker, bingo, loadout lines); <strong>Threats and notes</strong>. Everything is <strong>free text</strong>. Each empty field shows a greyed-out example, which never makes it onto the datacard.</p></div>
+      </div>
+
+      <!-- Depuis le briefing -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Depuis le briefing</h3>
+        <h3 class="lang-block" data-lang="en">From the briefing</h3>
+        <div class="lang-block" data-lang="fr"><p><strong>Depuis le briefing</strong> ouvre une fenêtre à deux sources : le <strong>briefing en cours</strong> — celui que le Briefing Generator a enregistré dans ce navigateur, grisé s’il n’y en a pas — ou un <strong>fichier JSON</strong> de briefing. La fenêtre liste les <strong>vols</strong> du briefing, tous cochés, et une ligne <strong>Données générales (sans vol)</strong>, cochée d’office quand le briefing n’a aucun vol : c’est le cas d’un brief simplifié qui ne porte que des fréquences, des terrains et un METAR. <strong>Importer</strong> ajoute une datacard par ligne cochée, à la fin du paquet ; une datacard vierge laissée seule est remplacée. Un fichier de briefing ouvert par <strong>Importer JSON</strong> ouvre la même fenêtre.</p></div>
+        <div class="lang-block" data-lang="en"><p><strong>From briefing</strong> opens a window with two sources: the <strong>current briefing</strong> — the one the Briefing Generator saved in this browser, greyed out if there is none — or a briefing <strong>JSON file</strong>. The window lists the briefing’s <strong>flights</strong>, all ticked, and a <strong>General data (no flight)</strong> line, ticked by default when the briefing has no flights: that is the case of a quick brief that only carries frequencies, airfields, and a METAR. <strong>Import</strong> adds one datacard per ticked line, at the end of the deck; a lone blank datacard is replaced. A briefing file opened with <strong>Import JSON</strong> opens the same window.</p></div>
+      </div>
+
+      <!-- Ce que l’import remplit -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Ce que l'import remplit</h3>
+        <h3 class="lang-block" data-lang="en">What the import fills in</h3>
+        <div class="lang-block" data-lang="fr"><p>Pour chaque vol : la méta du briefing ; l’<strong>indicatif</strong> (le sous-groupe, sinon l’indicatif de l’escadron), l’appareil, le nombre (celui du vol, sinon le nombre de pilotes de son équipage), la tâche et la menace ; l’objectif et les étapes, sous-tâches comprises ; l’<strong>équipage</strong> du vol ; la <strong>radio</strong>, depuis le plan de son appareil, ou à défaut un poste « Fréquences » qui reprend toutes les fréquences du briefing ; les <strong>terrains</strong>, le terrain de départ marqué DEP ; le <strong>METAR</strong>, décodé ; les menaces SAM et AAA ; les notes. Restent à remplir à la main : les <strong>horaires</strong>, la <strong>navigation</strong>, le <strong>carburant</strong> et l’<strong>emport</strong>. La datacard importée vit ensuite seule : modifier le briefing ne la change pas.</p></div>
+        <div class="lang-block" data-lang="en"><p>For each flight: the briefing’s meta; the <strong>callsign</strong> (the subgroup, otherwise the squadron callsign), the aircraft, the count (the flight’s own, otherwise the number of pilots in its crew), the task, and the threat; the objective and the steps, sub-tasks included; the flight’s <strong>crew</strong>; the <strong>radio</strong>, from its aircraft’s plan, or failing that a “Frequencies” radio carrying every frequency in the briefing; the <strong>airfields</strong>, with the departure field marked DEP; the <strong>METAR</strong>, decoded; the SAM and AAA threats; the notes. Left to fill in by hand: <strong>times</strong>, <strong>navigation</strong>, <strong>fuel</strong>, and <strong>loadout</strong>. Once imported, the datacard lives on its own: changing the briefing doesn’t change it.</p></div>
+      </div>
+
+      <!-- Day ou Night -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Day ou Night</h3>
+        <h3 class="lang-block" data-lang="en">Day or Night</h3>
+        <div class="lang-block" data-lang="fr"><p>Le sélecteur <strong>Day | Night</strong> donne à tout le paquet sa version de <strong>jour</strong> — encre sombre sur papier clair — ou de <strong>nuit</strong> — tons sourds sur fond sombre, sans aucun blanc pur, pour ne pas éblouir dans un cockpit de nuit. Les thèmes de l’outil ne changent rien à la datacard : seule cette bascule compte.</p></div>
+        <div class="lang-block" data-lang="en"><p>The <strong>Day | Night</strong> selector gives the whole deck its <strong>day</strong> version — dark ink on light paper — or its <strong>night</strong> version — muted tones on a dark background, with no pure white, so as not to dazzle in a night cockpit. The tool’s themes change nothing on the datacard: only this switch counts.</p></div>
+      </div>
+
+      <!-- Unités, dates et METAR -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Unités, dates et METAR</h3>
+        <h3 class="lang-block" data-lang="en">Units, dates, and METAR</h3>
+        <div class="lang-block" data-lang="fr"><p>Les unités (masse <strong>kg</strong> ou <strong>lb</strong>, distance <strong>km</strong> ou <strong>NM</strong>, altitude <strong>m</strong> ou <strong>ft</strong>) changent les intitulés et les suffixes de la fiche, <strong>jamais les valeurs saisies</strong> : rien n’est converti. Une date saisie au format AAAA-MM-JJ s’affiche « 22 MAR 1989 » ; toute autre forme s’affiche telle quelle. Le <strong>METAR</strong>, saisi ou importé, se décode tout seul en vent, visibilité, QNH et nuages, qui restent modifiables ensuite ; la météo garde les conventions du METAR, quelles que soient les unités de la carte.</p></div>
+        <div class="lang-block" data-lang="en"><p>Units (mass <strong>kg</strong> or <strong>lb</strong>, distance <strong>km</strong> or <strong>NM</strong>, altitude <strong>m</strong> or <strong>ft</strong>) change the sheet’s headings and suffixes, <strong>never the values you entered</strong>: nothing is converted. A date entered as YYYY-MM-DD shows as “22 MAR 1989”; any other form shows as typed. The <strong>METAR</strong>, typed or imported, decodes itself into wind, visibility, QNH, and clouds, which stay editable afterwards; the weather keeps METAR conventions, whatever the card’s units.</p></div>
+      </div>
+
+      <!-- Quand la page déborde -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Quand la page déborde</h3>
+        <h3 class="lang-block" data-lang="en">When the page overflows</h3>
+        <div class="lang-block" data-lang="fr"><p>La fiche se compose selon son contenu : un bloc vide ne s’affiche pas, et une valeur absente d’un tableau s’écrit « — ». Quand tout ne tient pas sur la page, la <strong>navigation passe sur une page 2</strong>, avec un en-tête réduit « DATACARD · NAVIGATION ».</p></div>
+        <div class="lang-block" data-lang="en"><p>The sheet lays itself out from its content: an empty block is not shown, and a missing value in a table reads “—”. When everything doesn’t fit on the page, <strong>navigation moves to a page 2</strong>, with a reduced “DATACARD · NAVIGATION” header.</p></div>
+      </div>
+
+      <!-- Sauvegarder & reprendre -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Sauvegarder &amp; reprendre</h3>
+        <h3 class="lang-block" data-lang="en">Save &amp; resume</h3>
+        <div class="lang-block" data-lang="fr"><p>Le paquet est <strong>sauvegardé automatiquement</strong> dans le navigateur. <strong>Exporter JSON</strong> l’enregistre en fichier pour l’archiver ou le partager ; <strong>Importer JSON</strong> le recharge, en remplaçant le paquet en cours après confirmation. <strong>Exemple</strong> charge une datacard de démonstration ; <strong>Reset</strong> vide le document. Tous deux demandent confirmation.</p></div>
+        <div class="lang-block" data-lang="en"><p>The deck is <strong>saved automatically</strong> in the browser. <strong>Export JSON</strong> writes it to a file to archive or share it; <strong>Import JSON</strong> reloads it, replacing the current deck after confirmation. <strong>Example</strong> loads a demonstration datacard; <strong>Reset</strong> clears the document. Both ask for confirmation.</p></div>
+      </div>
+
+      <!-- Exporter -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Exporter</h3>
+        <h3 class="lang-block" data-lang="en">Export</h3>
+        <div class="lang-block" data-lang="fr"><p><strong>Exporter</strong> propose le <strong>PDF</strong> ou le <strong>PNG</strong>. Le PDF passe par l’impression du navigateur : chaque page de chaque datacard occupe une feuille <strong>A4</strong> entière, couleurs de fond comprises. Le PNG produit une image de <strong>1 000 × 1 414 px</strong> par page, au format d’une page de kneeboard ; vous choisissez les pages, et plusieurs pages partent dans un fichier ZIP. L’export suit la version jour ou nuit affichée.</p></div>
+        <div class="lang-block" data-lang="en"><p><strong>Export</strong> offers <strong>PDF</strong> or <strong>PNG</strong>. The PDF goes through the browser’s print: each page of each datacard takes up a whole <strong>A4</strong> sheet, background colours included. The PNG produces a <strong>1,000 × 1,414 px</strong> image per page, the size of a kneeboard page; you pick the pages, and several pages go out in a ZIP file. The export follows the day or night version on display.</p></div>
+      </div>
+
+      <!-- Sur tablette et téléphone -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Sur tablette et téléphone</h3>
+        <h3 class="lang-block" data-lang="en">On tablets and phones</h3>
+        <div class="lang-block" data-lang="fr"><p>Sous 1 100 px de large, l’éditeur passe en <strong>onglets à icône</strong>, un par section, plus <strong>Aperçu</strong>. La barre du haut défile au doigt quand elle ne tient pas ; un fondu sur un bord signale les boutons cachés.</p></div>
+        <div class="lang-block" data-lang="en"><p>Below 1,100 px wide, the editor switches to <strong>icon tabs</strong>, one per section, plus <strong>Preview</strong>. The top bar scrolls by finger when it doesn’t fit; a fade on one edge shows the hidden buttons.</p></div>
+      </div>
+
+      <!-- Tout est générique -->
+      <div class="fm-callout note">
+        <div class="lang-block" data-lang="fr">Tout est générique — Le Datacard Generator ne contient aucune table d’appareils, de radios ou d’emports : ce que vous saisissez s’affiche tel quel. Il sert donc à tout appareil, sans mise à jour quand un module DCS change.</div>
+        <div class="lang-block" data-lang="en">Everything is generic — The Datacard Generator holds no table of aircraft, radios, or loadouts: what you type shows as typed. It therefore works for any aircraft, with no update needed when a DCS module changes.</div>
+      </div>
+
+      <!-- Contenu tronqué -->
+      <div class="fm-callout warn">
+        <div class="lang-block" data-lang="fr">Contenu tronqué — Si la page 1 déborde encore une fois la navigation passée en page 2, l’éditeur affiche « Contenu tronqué ». Allégez alors la mission, les notes ou les menaces : la fiche ne se réduit pas d’elle-même.</div>
+        <div class="lang-block" data-lang="en">Content truncated — If page 1 still overflows once navigation has moved to page 2, the editor shows “Content truncated”. Trim the mission, notes, or threats: the sheet doesn’t shrink on its own.</div>
+      </div>
+
+      <!-- À venir -->
+      <div class="fm-callout note">
+        <div class="lang-block" data-lang="fr">À venir — L’import des points de navigation et de l’emport depuis HQ (mission <code>.miz</code>) est prévu dans une prochaine version.</div>
+        <div class="lang-block" data-lang="en">Coming — Importing navigation points and loadouts from HQ (<code>.miz</code> mission) is planned for a future version.</div>
+      </div>
+
+    </div><!-- /fm-chapter -->
+  </section><!-- /page-dg -->
+
 
 </main><!-- /fm-root -->
 
@@ -1336,7 +1658,7 @@ var I18N = {
     'index.bg.desc':    'Générateur de briefings multi-sections',
     'index.rs.desc':    'Compositeur photo-renseignement canvas',
     'index.rp.desc':    "Planification d’itinéraires",
-    'index.dg.desc':    'Génération de datacards',
+    'index.dg.desc':    'Datacards de vol d’une page',
     'index.soon':       'À VENIR',
     'btn.back':         '◄ Index',
     'rs.hero.title':    'Recon Station',
@@ -1348,6 +1670,8 @@ var I18N = {
     'hq.hero.sub':      'Configuration escadre centralisée',
     'bg.hero.title':    'Briefing Generator',
     'bg.hero.sub':      'Générateur de briefings multi-sections',
+    'dg.hero.title':    'Datacard Generator',
+    'dg.hero.sub':      'Datacards de vol pour le kneeboard',
     'stub.coming':      'Chapitre en préparation'
   },
   en: {
@@ -1358,7 +1682,7 @@ var I18N = {
     'index.bg.desc':    'Multi-section briefing generator',
     'index.rs.desc':    'Canvas photo-intelligence composer',
     'index.rp.desc':    'Route planning',
-    'index.dg.desc':    'Datacard generation',
+    'index.dg.desc':    'One-page flight datacards',
     'index.soon':       'COMING',
     'btn.back':         '◄ Index',
     'rs.hero.title':    'Recon Station',
@@ -1370,6 +1694,8 @@ var I18N = {
     'hq.hero.sub':      'Centralised wing configuration',
     'bg.hero.title':    'Briefing Generator',
     'bg.hero.sub':      'Multi-section briefing generator',
+    'dg.hero.title':    'Datacard Generator',
+    'dg.hero.sub':      'Flight datacards for the kneeboard',
     'stub.coming':      'Chapter in preparation'
   }
 };
@@ -1444,7 +1770,7 @@ function initTheme() {
 }
 
 // ── Routing hash ──────────────────────────────
-var PAGES = ['index', 'rs', 'hq', 'bg'];
+var PAGES = ['index', 'rs', 'hq', 'bg', 'dg'];
 
 function showPage(id) {
   if (PAGES.indexOf(id) === -1) id = 'index';

@@ -428,7 +428,7 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
             <div class="cap-row">
               <span class="logo" style="background:var(--a-fm)">F·M</span>
               <span class="ptitle">Field Manual</span>
-              <span class="pver">v1.0.0</span>
+              <span class="pver">v1.1.0</span>
             </div>
             <div class="pdesc" data-i18n="fm.desc">Le manuel d'emploi de la suite — un chapitre par module, schémas et mode d'emploi, entièrement hors-ligne.</div>
             <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
@@ -473,7 +473,7 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
   /* ── Données ──────────────────────────────────────────────── */
   {module_html_js}
 
-  var APP_VERSION = '1.3.0';
+  var APP_VERSION = '1.4.0';
   var KEY_LANG  = 'lang_v1';
   var KEY_THEME = 'theme_v1';
 

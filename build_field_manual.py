@@ -11,7 +11,7 @@ import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
-APP_VERSION = '1.0.0'
+APP_VERSION = '1.1.0'
 MODULE_ID   = 'fm'
 
 # ── Assets ──────────────────────────────────────────────────────────────────────
@@ -45,6 +45,7 @@ RS_TILE    = encode_image('rs.webp')
 FM_COVER   = encode_image('fm_cover.webp')
 HQ_TILE    = encode_image('hq.webp')
 BG_TILE    = encode_image('bg.webp')
+DG_TILE    = encode_image('kg.webp')
 
 if RS_TILE:
     print(f'✓ rs.webp embarqué ({len(RS_TILE)//1024} Ko base64)')
@@ -60,6 +61,11 @@ if BG_TILE:
     print(f'✓ bg.webp embarqué ({len(BG_TILE)//1024} Ko base64)')
 else:
     print('⚠ bg.webp introuvable', file=sys.stderr)
+
+if DG_TILE:
+    print(f'✓ kg.webp embarqué ({len(DG_TILE)//1024} Ko base64)')
+else:
+    print('⚠ kg.webp introuvable', file=sys.stderr)
 
 if FM_COVER:
     print(f'✓ fm_cover.webp embarqué ({len(FM_COVER)//1024} Ko base64)')
@@ -150,6 +156,7 @@ else:
 RS_TILE_SRC = RS_TILE if RS_TILE else "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
 HQ_TILE_SRC = HQ_TILE if HQ_TILE else "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
 BG_TILE_SRC = BG_TILE if BG_TILE else "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+DG_TILE_SRC = DG_TILE if DG_TILE else "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
 
 # ── HTML principal ───────────────────────────────────────────────────────────────
 
@@ -742,6 +749,11 @@ body[lang="fr"] .lang-block[data-lang="en"] {{ display: none; }}
   color: var(--red-stamp);
 }}
 
+.fm-callout a {{
+  color: var(--chapter-accent, var(--fm-accent));
+  text-decoration: underline;
+}}
+
 kbd {{
   font-family: var(--f-typewriter);
   font-size: 11px;
@@ -834,13 +846,14 @@ kbd {{
 #page-rs  {{ --chapter-accent: #C95A9C; --chapter-accent-rgb: 201,90,156; }}
 #page-hq  {{ --chapter-accent: #4FB286; --chapter-accent-rgb: 79,178,134; }}
 #page-bg  {{ --chapter-accent: #c0892a; --chapter-accent-rgb: 192,137,42; }}
+#page-dg  {{ --chapter-accent: #4f7a8e; --chapter-accent-rgb: 79,122,142; }}
 
 /* Plaques accents individuels */
 .fm-plaque[data-module="rs"]  {{ --chapter-accent: #C95A9C; --chapter-accent-rgb: 201,90,156; }}
 .fm-plaque[data-module="hq"]  {{ --chapter-accent: #4FB286; --chapter-accent-rgb: 79,178,134; }}
 .fm-plaque[data-module="bg"]  {{ --chapter-accent: #c0892a; --chapter-accent-rgb: 192,137,42; }}
 .fm-plaque[data-module="rp"]  {{ --chapter-accent: #7ac97a; --chapter-accent-rgb: 122,201,122; }}
-.fm-plaque[data-module="dg"]  {{ --chapter-accent: #8fb0c0; --chapter-accent-rgb: 143,176,192; }}
+.fm-plaque[data-module="dg"]  {{ --chapter-accent: #4f7a8e; --chapter-accent-rgb: 79,122,142; }}
 
 </style>
 </head>
@@ -918,6 +931,19 @@ kbd {{
           <div class="fm-plaque-badge" data-i18n="index.badge.active">Manuel</div>
         </div>
 
+        <!-- DG -->
+        <div class="fm-plaque active" data-module="dg" tabindex="0" role="button"
+             aria-label="DG — Datacard Generator"
+             onclick="navigate('dg')"
+             onkeydown="if(event.key==='Enter'||event.key===' '){{event.preventDefault();navigate('dg')}}">
+          <div class="fm-plaque-monogram">DG</div>
+          <div class="fm-plaque-info">
+            <div class="fm-plaque-name">Datacard Generator</div>
+            <div class="fm-plaque-desc" data-i18n="index.dg.desc">Datacards de vol d’une page</div>
+          </div>
+          <div class="fm-plaque-badge" data-i18n="index.badge.active">Manuel</div>
+        </div>
+
         <!-- RS -->
         <div class="fm-plaque active" data-module="rs" tabindex="0" role="button"
              aria-label="RS — Recon Station"
@@ -937,16 +963,6 @@ kbd {{
           <div class="fm-plaque-info">
             <div class="fm-plaque-name">Route Planner</div>
             <div class="fm-plaque-desc" data-i18n="index.rp.desc">Planification d'itinéraires</div>
-          </div>
-          <div class="fm-soon-stamp" data-i18n-soon><!-- rempli par JS --></div>
-        </div>
-
-        <!-- DG — À venir -->
-        <div class="fm-plaque soon" data-module="dg" aria-hidden="true">
-          <div class="fm-plaque-monogram" style="opacity:.4;">DG</div>
-          <div class="fm-plaque-info">
-            <div class="fm-plaque-name">Datacard</div>
-            <div class="fm-plaque-desc" data-i18n="index.dg.desc">Génération de datacards</div>
           </div>
           <div class="fm-soon-stamp" data-i18n-soon><!-- rempli par JS --></div>
         </div>
@@ -1288,8 +1304,24 @@ kbd {{
       <div class="fm-prose">
         <h3 class="lang-block" data-lang="fr">À quoi ça sert</h3>
         <h3 class="lang-block" data-lang="en">What it’s for</h3>
-        <div class="lang-block" data-lang="fr"><p>Le Briefing Generator assemble un <strong>briefing de mission complet, multi-pages</strong>, prêt à imprimer ou à emporter en vol : couverture, situation tactique, aperçu de mission, plan radio, missions individuelles, équipage, cartes et annexes. On remplit des sections dans l’éditeur, on prévisualise la mise en page A4, puis on exporte en <strong>PDF</strong> ou en <strong>PNG par page</strong> (genouillères). L’identité d’escadre (logo, noms, escadrons) est <strong>héritée de HQ</strong>. Quatre thèmes, tout hors-ligne.</p></div>
-        <div class="lang-block" data-lang="en"><p>The Briefing Generator assembles a <strong>complete, multi-page mission briefing</strong>, ready to print or take into the cockpit: cover, tactical situation, mission overview, radio plan, individual missions, crew, charts, and annexes. You fill sections in the editor, preview the A4 layout, then export to <strong>PDF</strong> or <strong>per-page PNG</strong> (kneeboards). The wing identity (logo, names, squadrons) is <strong>inherited from HQ</strong>. Four themes, fully offline.</p></div>
+        <div class="lang-block" data-lang="fr"><p>Le Briefing Generator prépare le briefing d’une mission, prêt à imprimer ou à emporter en vol, dans l’un de <strong>deux formats</strong>. Le <strong>brief simplifié</strong> tient sur <strong>une page</strong> — situation, mission et tableau des vols, fréquences, terrains, météo —, suivie de pages de photos s’il y en a. Le <strong>brief complet</strong> est un dossier <strong>multi-pages</strong> : couverture, situation tactique, aperçu de mission, plan radio, missions individuelles, équipage, cartes et annexes. On remplit des sections dans l’éditeur, on vérifie la mise en page A4 dans l’aperçu, puis on exporte en <strong>PDF</strong> ou en <strong>PNG par page</strong> (genouillères). L’identité d’escadre (logo, noms, escadrons) est <strong>héritée de HQ</strong>. Quatre thèmes, tout hors-ligne.</p></div>
+        <div class="lang-block" data-lang="en"><p>The Briefing Generator prepares a mission briefing, ready to print or take into the cockpit, in one of <strong>two formats</strong>. The <strong>quick brief</strong> fits on <strong>one page</strong> — situation, mission and flights table, frequencies, airfields, weather —, followed by photo pages if there are any. The <strong>full brief</strong> is a <strong>multi-page</strong> file: cover, tactical situation, mission overview, radio plan, individual missions, crew, charts, and annexes. You fill sections in the editor, check the A4 layout in the preview, then export to <strong>PDF</strong> or <strong>per-page PNG</strong> (kneeboards). The wing identity (logo, names, squadrons) is <strong>inherited from HQ</strong>. Four themes, fully offline.</p></div>
+      </div>
+
+      <!-- Deux formats -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Deux formats : complet ou simplifié</h3>
+        <h3 class="lang-block" data-lang="en">Two formats: full or quick</h3>
+        <div class="lang-block" data-lang="fr"><p>Le sélecteur <strong>Brief complet | Brief simplifié</strong> de la barre du haut choisit le format. Changer de format <strong>ne perd rien</strong> : seules les sections affichées et les pages produites changent ; ce que vous avez saisi pour l’autre format reste dans le briefing et réapparaît quand vous y revenez. Un briefing enregistré avant l’arrivée des deux formats s’ouvre en brief complet. Sur un écran étroit, le sélecteur affiche <strong>Complet | Simplifié</strong>.</p></div>
+        <div class="lang-block" data-lang="en"><p>The <strong>Full brief | Quick brief</strong> selector in the top bar picks the format. Switching <strong>loses nothing</strong>: only the sections shown and the pages produced change; what you entered for the other format stays in the briefing and comes back when you switch again. A briefing saved before the two formats existed opens as a full brief. On a narrow screen, the selector reads <strong>Full | Quick</strong>.</p></div>
+      </div>
+
+      <!-- Démarrer -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Démarrer : page blanche ou exemple</h3>
+        <h3 class="lang-block" data-lang="en">Getting started: blank page or example</h3>
+        <div class="lang-block" data-lang="fr"><p>L’outil s’ouvre sur un <strong>briefing vide</strong>, en brief simplifié. Le bouton <strong>Exemple</strong> charge un briefing de démonstration complet, pour voir ce que l’outil sait faire ; il remplace le briefing en cours, après confirmation. <strong>Reset</strong> vide tout le briefing, après confirmation, pour repartir d’une page blanche. Les champs vides montrent un <strong>exemple grisé</strong> (« FOOTHOLD », « M3 », « 1000Z »…) qui n’apparaît ni dans l’aperçu ni à l’export.</p></div>
+        <div class="lang-block" data-lang="en"><p>The tool opens on an <strong>empty briefing</strong>, as a quick brief. The <strong>Example</strong> button loads a full demonstration briefing, to show what the tool can do; it replaces the current briefing, after confirmation. <strong>Reset</strong> clears the whole briefing, after confirmation, to start from a blank page. Empty fields show a <strong>greyed-out example</strong> (“FOOTHOLD”, “M3”, “1000Z”…) that never appears in the preview or the export.</p></div>
       </div>
 
       <!-- Schéma SVG -->
@@ -1361,11 +1393,53 @@ kbd {{
           <text x="550" y="315" text-anchor="middle" font-size="10.5" fill="currentColor" class="lang-block" data-lang="en">Metadata</text>
           <text x="550" y="329" text-anchor="middle" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">en-têtes &amp; pieds de page</text>
           <text x="550" y="329" text-anchor="middle" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">page headers &amp; footers</text>
+
+          <!-- Datacard Generator : ce qui l'alimente (v1.1.0) -->
+          <rect x="470" y="190" width="170" height="42" rx="3" fill="none" stroke="#4f7a8e" stroke-width="1.8"/>
+          <text x="555" y="208" text-anchor="middle" font-size="11" fill="#4f7a8e">Datacard Generator</text>
+          <text x="555" y="222" text-anchor="middle" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">une datacard par vol</text>
+          <text x="555" y="222" text-anchor="middle" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">one datacard per flight</text>
+          <path d="M392,100 C432,108 488,140 500,188" fill="none" stroke="#4f7a8e" stroke-width="1.2" opacity=".55" stroke-dasharray="4 3" marker-end="url(#bm)"/>
+          <text x="438" y="140" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">vols</text>
+          <text x="438" y="140" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">flights</text>
+          <line x1="626" y1="108" x2="620" y2="188" stroke="#4f7a8e" stroke-width="1.2" opacity=".6" stroke-dasharray="4 3" marker-end="url(#bm)"/>
+          <text x="628" y="152" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">fréquences</text>
+          <text x="628" y="152" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">frequencies</text>
+          <line x1="390" y1="211" x2="468" y2="211" stroke="#4f7a8e" stroke-width="1.2" opacity=".6" stroke-dasharray="4 3" marker-end="url(#bm)"/>
+          <text x="429" y="204" text-anchor="middle" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">équipage</text>
+          <text x="429" y="204" text-anchor="middle" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">crew</text>
+          <path d="M370,306 C440,300 500,268 520,234" fill="none" stroke="#4f7a8e" stroke-width="1.2" opacity=".55" stroke-dasharray="4 3" marker-end="url(#bm)"/>
+          <text x="536" y="266" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">METAR décodé</text>
+          <text x="536" y="266" font-size="7.5" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">decoded METAR</text>
         </svg>
         <div class="fm-schema-legend">
-          <span class="lang-block" data-lang="fr">Fig. 1 — Comment les saisies d’une section alimentent les autres.</span>
-          <span class="lang-block" data-lang="en">Fig. 1 — How entries in one section feed the others.</span>
+          <span class="lang-block" data-lang="fr">Fig. 1 — Comment les saisies d’une section alimentent les autres — et la datacard.</span>
+          <span class="lang-block" data-lang="en">Fig. 1 — How entries in one section feed the others — and the datacard.</span>
         </div>
+      </div>
+
+      <!-- Le brief simplifié -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Le brief simplifié</h3>
+        <h3 class="lang-block" data-lang="en">The quick brief</h3>
+        <div class="lang-block" data-lang="fr"><p>Cinq sections. <strong>Méta</strong> : opération, mission, date, <strong>Heure (Z)</strong>, classification, référence. <strong>Situation</strong> : la situation, en points. <strong>Mission</strong> : les objectifs, puis les <strong>vols</strong> — pour chacun l’escadron (ou un escadron invité), l’appareil et le sous-groupe, la <strong>Tâche</strong>, le <strong>Nombre</strong> d’appareils et le <strong>Départ</strong>. <strong>Coordination</strong> : les fréquences, les terrains et le METAR, avec son assistant. <strong>Photos</strong> : pour chaque photo, un titre, l’image et une légende.</p></div>
+        <div class="lang-block" data-lang="en"><p>Five sections. <strong>Meta</strong>: operation, mission, date, <strong>Time (Z)</strong>, classification, reference. <strong>Situation</strong>: the situation, as bullet points. <strong>Mission</strong>: the objectives, then the <strong>flights</strong> — for each, the squadron (or a guest squadron), the aircraft and subgroup, the <strong>Task</strong>, the aircraft <strong>Count</strong>, and the <strong>Departure</strong>. <strong>Coordination</strong>: frequencies, airfields, and the METAR, with its assistant. <strong>Photos</strong>: for each photo, a title, the image, and a caption.</p></div>
+      </div>
+
+      <!-- La page simplifiée -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">La page simplifiée</h3>
+        <h3 class="lang-block" data-lang="en">The quick-brief page</h3>
+        <div class="lang-block" data-lang="fr"><p>Le brief simplifié produit <strong>une page de mission</strong> : un bandeau « MISSION ░ date ░ heure », la <strong>Situation</strong>, la <strong>Mission</strong> avec le <strong>tableau des vols</strong> (Vol, Appareil, Tâche, Départ — « 2× F-16C » quand le nombre est renseigné), les <strong>Fréquences</strong> et les <strong>Terrains</strong> côte à côte, puis la <strong>Météo</strong>. Les menaces n’y figurent pas, même renseignées ; un bloc vide ne s’affiche pas. Suivent, s’il y a des photos, des <strong>pages de photos</strong>, deux par page, sous le bandeau « PHOTOS ░ RECONNAISSANCE ».</p></div>
+        <div class="lang-block" data-lang="en"><p>The quick brief produces <strong>one mission page</strong>: a “MISSION ░ date ░ time” banner, the <strong>Situation</strong>, the <strong>Mission</strong> with the <strong>flights table</strong> (Flight, Aircraft, Task, Departure — “2× F-16C” when the count is filled in), <strong>Frequencies</strong> and <strong>Airfields</strong> side by side, then the <strong>Weather</strong>. Threats are left out, even when filled in; an empty block is not shown. If there are photos, <strong>photo pages</strong> follow, two per page, under the “PHOTOS ░ RECONNAISSANCE” banner.</p></div>
+      </div>
+
+      <!-- Le brief complet, section par section -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Le brief complet, section par section</h3>
+        <h3 class="lang-block" data-lang="en">The full brief, section by section</h3>
+        <div class="lang-block" data-lang="fr"><p>Le brief complet garde toutes ses sections, décrites ci-dessous ; elles n’apparaissent qu’en brief complet.</p></div>
+        <div class="lang-block" data-lang="en"><p>The full brief keeps all its sections, described below; they only appear in the full brief.</p></div>
       </div>
 
       <!-- Métadonnées & couverture -->
@@ -1434,20 +1508,275 @@ kbd {{
       <div class="fm-prose">
         <h3 class="lang-block" data-lang="fr">Sauvegarder &amp; reprendre</h3>
         <h3 class="lang-block" data-lang="en">Save &amp; resume</h3>
-        <div class="lang-block" data-lang="fr"><p>Le briefing est <strong>sauvegardé automatiquement</strong> dans le navigateur. Exportez-le en fichier <code>.json</code> pour l’archiver, le partager ou le reprendre sur une autre machine ; réimportez-le pour continuer ; un bouton permet de repartir de zéro.</p></div>
-        <div class="lang-block" data-lang="en"><p>The briefing is <strong>saved automatically</strong> in the browser. Export it as a <code>.json</code> file to archive, share, or resume it on another machine; re-import to continue; a button lets you start over.</p></div>
+        <div class="lang-block" data-lang="fr"><p>Le briefing est <strong>sauvegardé automatiquement</strong> dans le navigateur. <strong>Sauver</strong> l’exporte en fichier <code>.json</code> pour l’archiver, le partager ou le reprendre sur une autre machine ; <strong>Charger</strong> le réimporte. Le format choisi voyage avec le fichier.</p></div>
+        <div class="lang-block" data-lang="en"><p>The briefing is <strong>saved automatically</strong> in the browser. <strong>Save</strong> exports it as a <code>.json</code> file to archive, share, or resume it on another machine; <strong>Load</strong> re-imports it. The chosen format travels with the file.</p></div>
       </div>
 
       <!-- Exporter -->
       <div class="fm-prose">
         <h3 class="lang-block" data-lang="fr">Exporter le briefing</h3>
         <h3 class="lang-block" data-lang="en">Exporting the briefing</h3>
-        <div class="lang-block" data-lang="fr"><p>Vérifiez la mise en page en mode <strong>Aperçu</strong>, puis exportez. Le <strong>PDF</strong> passe par l’impression du navigateur (<kbd>Ctrl</kbd>+<kbd>P</kbd> → « Enregistrer en PDF »), y compris sur Android. L’<strong>export PNG par page</strong> produit des images individuelles, idéales en genouillères.</p></div>
-        <div class="lang-block" data-lang="en"><p>Check the layout in <strong>Preview</strong> mode, then export. The <strong>PDF</strong> goes through the browser’s print (<kbd>Ctrl</kbd>+<kbd>P</kbd> → “Save as PDF”), including on Android. The <strong>per-page PNG export</strong> produces individual images, ideal as kneeboards.</p></div>
+        <div class="lang-block" data-lang="fr"><p>Vérifiez la mise en page dans l’<strong>Aperçu</strong>, puis <strong>Exporter</strong> : l’export porte les pages du format en cours. Le <strong>PDF</strong> passe par l’impression du navigateur (<kbd>Ctrl</kbd>+<kbd>P</kbd> → « Enregistrer en PDF »), y compris sur Android. L’<strong>export PNG</strong> produit une image par page, idéale en genouillère.</p></div>
+        <div class="lang-block" data-lang="en"><p>Check the layout in the <strong>Preview</strong>, then <strong>Export</strong>: the export carries the pages of the current format. The <strong>PDF</strong> goes through the browser’s print (<kbd>Ctrl</kbd>+<kbd>P</kbd> → “Save as PDF”), including on Android. The <strong>PNG export</strong> produces one image per page, ideal as a kneeboard.</p></div>
+      </div>
+
+      <!-- La barre du haut sur tablette et téléphone -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">La barre du haut sur tablette et téléphone</h3>
+        <h3 class="lang-block" data-lang="en">The top bar on tablets and phones</h3>
+        <div class="lang-block" data-lang="fr"><p>Quand la barre du haut ne tient pas dans la largeur, elle <strong>défile</strong> au doigt, à la molette ou au pavé tactile ; un <strong>fondu</strong> sur un bord signale qu’il reste des boutons de ce côté. Toucher un bouton à moitié visible le ramène en entier avant de l’activer. Sous 1 100 px de large, l’éditeur passe en <strong>onglets</strong> : un par section, plus <strong>Aperçu</strong>.</p></div>
+        <div class="lang-block" data-lang="en"><p>When the top bar doesn’t fit the width, it <strong>scrolls</strong> by finger, mouse wheel, or touchpad; a <strong>fade</strong> on one edge shows there are more buttons that way. Tapping a half-visible button brings it fully into view before activating it. Below 1,100 px wide, the editor switches to <strong>tabs</strong>: one per section, plus <strong>Preview</strong>.</p></div>
+      </div>
+
+      <!-- Et la datacard ? -->
+      <div class="fm-callout note">
+        <div class="lang-block" data-lang="fr">Et la datacard ? — Le Briefing Generator ne connaît pas la datacard : c’est le <strong>Datacard Generator</strong> qui lit le briefing, en cours ou en fichier, et en tire une datacard par vol. <a href="#dg">Voir son chapitre</a>.</div>
+        <div class="lang-block" data-lang="en">What about the datacard? — The Briefing Generator knows nothing of the datacard: the <strong>Datacard Generator</strong> reads the briefing, current or from a file, and turns each flight into a datacard. <a href="#dg">See its chapter</a>.</div>
       </div>
 
     </div><!-- /fm-chapter -->
   </section><!-- /page-bg -->
+
+  <!-- ===== PAGE DG ===== -->
+  <section id="page-dg" class="fm-page hidden">
+    <div class="fm-chapter" style="--chapter-accent:#4f7a8e; --chapter-accent-rgb:79,122,142;">
+
+      <button class="fm-back-btn" onclick="navigate('index')" data-i18n="btn.back">◄ Index</button>
+
+      <div class="fm-hero">
+        <img class="fm-hero-img" src="{DG_TILE_SRC}" alt="Datacard Generator" draggable="false">
+        <div class="fm-hero-pin" aria-hidden="true"></div>
+        <div class="fm-hero-caption">
+          <div><div class="fm-hero-monogram">DG</div></div>
+          <div>
+            <div class="fm-hero-title" data-i18n="dg.hero.title">Datacard Generator</div>
+            <div class="fm-hero-sub" data-i18n="dg.hero.sub">Datacards de vol pour le kneeboard</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- À quoi ça sert -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">À quoi ça sert</h3>
+        <h3 class="lang-block" data-lang="en">What it’s for</h3>
+        <div class="lang-block" data-lang="fr"><p>Le Datacard Generator produit la <strong>datacard d’un vol</strong> : une fiche d’une page, au format d’une page de kneeboard, qui réunit ce dont l’équipage a besoin en l’air — indicatif et tâche, horaires, équipages, navigation, radio, terrains, météo, carburant, emport, menaces. On la remplit <strong>à la main</strong> ou <strong>depuis le Briefing Generator</strong> ; on en tient un <strong>paquet</strong>, une par vol de la mission ; on l’exporte en <strong>PNG</strong> pour le kneeboard de DCS ou en <strong>PDF</strong> pour l’imprimer, en version <strong>jour</strong> ou <strong>nuit</strong>.</p></div>
+        <div class="lang-block" data-lang="en"><p>The Datacard Generator produces a <strong>flight’s datacard</strong>: a one-page sheet, the size of a kneeboard page, that gathers what the crew needs in the air — callsign and task, times, crew, navigation, radio, airfields, weather, fuel, loadout, threats. You fill it <strong>by hand</strong> or <strong>from the Briefing Generator</strong>; you keep a <strong>deck</strong> of them, one per flight in the mission; you export to <strong>PNG</strong> for the DCS kneeboard or to <strong>PDF</strong> for printing, in a <strong>day</strong> or <strong>night</strong> version.</p></div>
+      </div>
+
+      <!-- Schéma SVG : anatomie d’une datacard -->
+      <div class="fm-schema">
+        <svg viewBox="0 0 720 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Anatomie d’une datacard">
+          <defs>
+            <marker id="dgl" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="currentColor" opacity=".55"/></marker>
+          </defs>
+          <text x="360" y="26" text-anchor="middle" font-size="13" letter-spacing="3" fill="currentColor" opacity=".75" class="lang-block" data-lang="fr">ANATOMIE D’UNE DATACARD</text>
+          <text x="360" y="26" text-anchor="middle" font-size="13" letter-spacing="3" fill="currentColor" opacity=".75" class="lang-block" data-lang="en">ANATOMY OF A DATACARD</text>
+          <line x1="120" y1="34" x2="600" y2="34" stroke="currentColor" stroke-width=".6" opacity=".3"/>
+
+          <!-- La page, ses bandeaux et son en-tête -->
+          <rect x="270" y="50" width="180" height="8" fill="currentColor" opacity=".85"/>
+          <rect x="270" y="297" width="180" height="8" fill="currentColor" opacity=".85"/>
+          <text x="276" y="80" font-size="17" fill="currentColor">CAESAR</text>
+          <line x1="276" y1="88" x2="350" y2="88" stroke="currentColor" stroke-width="1.4" opacity=".7"/>
+          <text x="444" y="70" text-anchor="end" font-size="9" letter-spacing="1" fill="#4f7a8e">DATACARD</text>
+          <line x1="392" y1="77" x2="444" y2="77" stroke="currentColor" stroke-width="1" opacity=".6"/>
+          <rect x="414" y="83" width="30" height="7" fill="#a83524" opacity=".85"/>
+
+          <!-- Les blocs -->
+          <rect x="274" y="96" width="106" height="44" fill="none" stroke="currentColor" stroke-width="1.1"/>
+          <rect x="274" y="96" width="106" height="6" fill="currentColor" opacity=".75"/>
+          <text x="327" y="123.5" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">MISSION</text>
+          <text x="327" y="123.5" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">MISSION</text>
+          <rect x="384" y="96" width="62" height="44" fill="none" stroke="currentColor" stroke-width="1.1"/>
+          <rect x="384" y="96" width="62" height="6" fill="currentColor" opacity=".75"/>
+          <text x="415" y="123.5" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">HORAIRES</text>
+          <text x="415" y="123.5" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">TIMES</text>
+          <rect x="274" y="144" width="172" height="24" fill="none" stroke="currentColor" stroke-width="1.1"/>
+          <rect x="274" y="144" width="172" height="6" fill="currentColor" opacity=".75"/>
+          <text x="360" y="161.5" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">ÉQUIPAGES</text>
+          <text x="360" y="161.5" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">CREW</text>
+          <rect x="274" y="172" width="172" height="44" fill="none" stroke="currentColor" stroke-width="1.1" stroke-dasharray="4 3"/>
+          <rect x="274" y="172" width="172" height="6" fill="currentColor" opacity=".75"/>
+          <text x="360" y="199.5" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">NAVIGATION</text>
+          <text x="360" y="199.5" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">NAVIGATION</text>
+          <rect x="274" y="220" width="90" height="50" fill="none" stroke="currentColor" stroke-width="1.1"/>
+          <rect x="274" y="220" width="90" height="6" fill="currentColor" opacity=".75"/>
+          <text x="319" y="250.5" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">RADIO</text>
+          <text x="319" y="250.5" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">RADIO</text>
+          <rect x="368" y="220" width="78" height="23" fill="none" stroke="currentColor" stroke-width="1.1"/>
+          <rect x="368" y="220" width="78" height="6" fill="currentColor" opacity=".75"/>
+          <text x="407" y="237" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">TERRAINS</text>
+          <text x="407" y="237" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">AIRFIELDS</text>
+          <rect x="368" y="247" width="78" height="23" fill="none" stroke="currentColor" stroke-width="1.1"/>
+          <rect x="368" y="247" width="78" height="6" fill="currentColor" opacity=".75"/>
+          <text x="407" y="264" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">MÉTÉO</text>
+          <text x="407" y="264" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">WEATHER</text>
+          <rect x="274" y="274" width="84" height="19" fill="none" stroke="currentColor" stroke-width="1.1"/>
+          <rect x="274" y="274" width="84" height="6" fill="currentColor" opacity=".75"/>
+          <text x="316" y="289" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">CARBURANT · EMPORT</text>
+          <text x="316" y="289" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">FUEL · LOADOUT</text>
+          <rect x="362" y="274" width="84" height="19" fill="none" stroke="currentColor" stroke-width="1.1"/>
+          <rect x="362" y="274" width="84" height="6" fill="currentColor" opacity=".75"/>
+          <text x="404" y="289" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="fr">MENACES · NOTES</text>
+          <text x="404" y="289" text-anchor="middle" font-size="7" fill="currentColor" opacity=".7" class="lang-block" data-lang="en">THREATS · NOTES</text>
+          <rect x="270" y="50" width="180" height="255" fill="none" stroke="#4f7a8e" stroke-width="2"/>
+
+          <!-- Libellés à gauche -->
+          <line x1="232" y1="54" x2="270" y2="54" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#dgl)"/>
+          <line x1="232" y1="84" x2="270" y2="84" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#dgl)"/>
+          <line x1="232" y1="118" x2="270" y2="118" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#dgl)"/>
+          <line x1="232" y1="156" x2="270" y2="156" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#dgl)"/>
+          <line x1="232" y1="245" x2="270" y2="245" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#dgl)"/>
+          <line x1="232" y1="284" x2="270" y2="284" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#dgl)"/>
+          <g font-size="11" fill="currentColor" text-anchor="end">
+            <text x="226" y="58" class="lang-block" data-lang="fr">Classification · référence · page</text>
+            <text x="226" y="58" class="lang-block" data-lang="en">Classification · reference · page</text>
+            <text x="226" y="88" class="lang-block" data-lang="fr">Indicatif · appareil · tâche</text>
+            <text x="226" y="88" class="lang-block" data-lang="en">Callsign · aircraft · task</text>
+            <text x="226" y="122" class="lang-block" data-lang="fr">Objectif et étapes</text>
+            <text x="226" y="122" class="lang-block" data-lang="en">Objective and steps</text>
+            <text x="226" y="160" class="lang-block" data-lang="fr">Indicatif · pilote · équipier · n°</text>
+            <text x="226" y="160" class="lang-block" data-lang="en">Callsign · pilot · crew · no.</text>
+            <text x="226" y="249" class="lang-block" data-lang="fr">Postes et canaux</text>
+            <text x="226" y="249" class="lang-block" data-lang="en">Radios and channels</text>
+            <text x="226" y="288" class="lang-block" data-lang="fr">Joker · bingo · emport</text>
+            <text x="226" y="288" class="lang-block" data-lang="en">Joker · bingo · loadout</text>
+          </g>
+
+          <!-- Libellés à droite -->
+          <line x1="488" y1="72" x2="450" y2="72" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#dgl)"/>
+          <line x1="488" y1="118" x2="450" y2="118" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#dgl)"/>
+          <line x1="488" y1="194" x2="450" y2="194" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#dgl)"/>
+          <line x1="488" y1="231" x2="450" y2="231" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#dgl)"/>
+          <line x1="488" y1="258" x2="450" y2="258" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#dgl)"/>
+          <line x1="488" y1="284" x2="450" y2="284" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#dgl)"/>
+          <g font-size="11" fill="currentColor" text-anchor="start">
+            <text x="494" y="76" class="lang-block" data-lang="fr">Opération · date · menace</text>
+            <text x="494" y="76" class="lang-block" data-lang="en">Operation · date · threat</text>
+            <text x="494" y="122" class="lang-block" data-lang="fr">Mise en route → RTB</text>
+            <text x="494" y="122" class="lang-block" data-lang="en">Start-up → RTB</text>
+            <text x="494" class="lang-block" data-lang="fr"><tspan x="494" y="191">Points, caps, distances</tspan> <tspan x="494" y="205">→ page 2 si elle déborde</tspan></text>
+            <text x="494" class="lang-block" data-lang="en"><tspan x="494" y="191">Points, headings, distances</tspan> <tspan x="494" y="205">→ page 2 if it overflows</tspan></text>
+            <text x="494" y="235" class="lang-block" data-lang="fr">DEP · ARR · ALT</text>
+            <text x="494" y="235" class="lang-block" data-lang="en">DEP · ARR · ALT</text>
+            <text x="494" y="262" class="lang-block" data-lang="fr">METAR décodé</text>
+            <text x="494" y="262" class="lang-block" data-lang="en">Decoded METAR</text>
+            <text x="494" y="288" class="lang-block" data-lang="fr">Menaces · notes</text>
+            <text x="494" y="288" class="lang-block" data-lang="en">Threats · notes</text>
+          </g>
+
+          <!-- Libellé du pied -->
+          <line x1="360" y1="336" x2="360" y2="307" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#dgl)"/>
+          <text x="360" y="350" text-anchor="middle" font-size="11" fill="currentColor" class="lang-block" data-lang="fr">Pied : indicatif · opération · classification · page</text>
+          <text x="360" y="350" text-anchor="middle" font-size="11" fill="currentColor" class="lang-block" data-lang="en">Footer: callsign · operation · classification · page</text>
+        </svg>
+        <div class="fm-schema-legend">
+          <span class="lang-block" data-lang="fr">Fig. 1 — L’anatomie d’une datacard : où se range chaque bloc.</span>
+          <span class="lang-block" data-lang="en">Fig. 1 — Anatomy of a datacard: where each block goes.</span>
+        </div>
+      </div>
+
+      <!-- Le paquet de datacards -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Le paquet de datacards</h3>
+        <h3 class="lang-block" data-lang="en">The datacard deck</h3>
+        <div class="lang-block" data-lang="fr"><p>Le document est un <strong>paquet</strong> de datacards, une par vol. En haut de l’éditeur, « Datacard 2 / 3 — CAESAR » dit où l’on est ; les flèches passent d’une carte à l’autre, et les boutons <strong>Ajouter</strong>, <strong>Dupliquer</strong>, <strong>Supprimer</strong>, monter et descendre organisent le paquet. L’aperçu montre la carte courante. La dernière carte ne se supprime pas : elle se vide.</p></div>
+        <div class="lang-block" data-lang="en"><p>The document is a <strong>deck</strong> of datacards, one per flight. At the top of the editor, “Datacard 2 / 3 — CAESAR” tells you where you are; the arrows move from card to card, and the <strong>Add</strong>, <strong>Duplicate</strong>, <strong>Delete</strong>, move-up and move-down buttons organise the deck. The preview shows the current card. The last card can’t be deleted: it is cleared instead.</p></div>
+      </div>
+
+      <!-- Remplir une datacard -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Remplir une datacard</h3>
+        <h3 class="lang-block" data-lang="en">Filling in a datacard</h3>
+        <div class="lang-block" data-lang="fr"><p>Onze sections, dans l’ordre de la fiche : <strong>Méta</strong> (classification, référence, opération, mission, date, heure) ; <strong>Vol</strong> (indicatif, appareil, nombre, tâche, niveau de menace, unités) ; <strong>Mission</strong> (objectif et étapes) ; <strong>Horaires</strong> (mise en route, décollage, IP, TOT et RTB proposés, modifiables) ; <strong>Équipages</strong> ; <strong>Navigation</strong> (jusqu’à 30 points : cap, distance, altitude, heure, note) ; <strong>Radio</strong> (jusqu’à 4 postes de 12 canaux) ; <strong>Terrains</strong> (départ, arrivée, dégagement) ; <strong>Météo</strong> ; <strong>Carburant et emport</strong> (joker, bingo, lignes d’emport) ; <strong>Menaces et notes</strong>. Tout est <strong>texte libre</strong>. Chaque champ vide montre un exemple grisé, qui n’entre jamais dans la datacard.</p></div>
+        <div class="lang-block" data-lang="en"><p>Eleven sections, in the order of the sheet: <strong>Meta</strong> (classification, reference, operation, mission, date, time); <strong>Flight</strong> (callsign, aircraft, count, task, threat level, units); <strong>Mission</strong> (objective and steps); <strong>Times</strong> (start-up, take-off, IP, TOT, and RTB suggested, editable); <strong>Crew</strong>; <strong>Navigation</strong> (up to 30 points: heading, distance, altitude, time, note); <strong>Radio</strong> (up to 4 radios of 12 channels); <strong>Airfields</strong> (departure, arrival, alternate); <strong>Weather</strong>; <strong>Fuel and loadout</strong> (joker, bingo, loadout lines); <strong>Threats and notes</strong>. Everything is <strong>free text</strong>. Each empty field shows a greyed-out example, which never makes it onto the datacard.</p></div>
+      </div>
+
+      <!-- Depuis le briefing -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Depuis le briefing</h3>
+        <h3 class="lang-block" data-lang="en">From the briefing</h3>
+        <div class="lang-block" data-lang="fr"><p><strong>Depuis le briefing</strong> ouvre une fenêtre à deux sources : le <strong>briefing en cours</strong> — celui que le Briefing Generator a enregistré dans ce navigateur, grisé s’il n’y en a pas — ou un <strong>fichier JSON</strong> de briefing. La fenêtre liste les <strong>vols</strong> du briefing, tous cochés, et une ligne <strong>Données générales (sans vol)</strong>, cochée d’office quand le briefing n’a aucun vol : c’est le cas d’un brief simplifié qui ne porte que des fréquences, des terrains et un METAR. <strong>Importer</strong> ajoute une datacard par ligne cochée, à la fin du paquet ; une datacard vierge laissée seule est remplacée. Un fichier de briefing ouvert par <strong>Importer JSON</strong> ouvre la même fenêtre.</p></div>
+        <div class="lang-block" data-lang="en"><p><strong>From briefing</strong> opens a window with two sources: the <strong>current briefing</strong> — the one the Briefing Generator saved in this browser, greyed out if there is none — or a briefing <strong>JSON file</strong>. The window lists the briefing’s <strong>flights</strong>, all ticked, and a <strong>General data (no flight)</strong> line, ticked by default when the briefing has no flights: that is the case of a quick brief that only carries frequencies, airfields, and a METAR. <strong>Import</strong> adds one datacard per ticked line, at the end of the deck; a lone blank datacard is replaced. A briefing file opened with <strong>Import JSON</strong> opens the same window.</p></div>
+      </div>
+
+      <!-- Ce que l’import remplit -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Ce que l'import remplit</h3>
+        <h3 class="lang-block" data-lang="en">What the import fills in</h3>
+        <div class="lang-block" data-lang="fr"><p>Pour chaque vol : la méta du briefing ; l’<strong>indicatif</strong> (le sous-groupe, sinon l’indicatif de l’escadron), l’appareil, le nombre (celui du vol, sinon le nombre de pilotes de son équipage), la tâche et la menace ; l’objectif et les étapes, sous-tâches comprises ; l’<strong>équipage</strong> du vol ; la <strong>radio</strong>, depuis le plan de son appareil, ou à défaut un poste « Fréquences » qui reprend toutes les fréquences du briefing ; les <strong>terrains</strong>, le terrain de départ marqué DEP ; le <strong>METAR</strong>, décodé ; les menaces SAM et AAA ; les notes. Restent à remplir à la main : les <strong>horaires</strong>, la <strong>navigation</strong>, le <strong>carburant</strong> et l’<strong>emport</strong>. La datacard importée vit ensuite seule : modifier le briefing ne la change pas.</p></div>
+        <div class="lang-block" data-lang="en"><p>For each flight: the briefing’s meta; the <strong>callsign</strong> (the subgroup, otherwise the squadron callsign), the aircraft, the count (the flight’s own, otherwise the number of pilots in its crew), the task, and the threat; the objective and the steps, sub-tasks included; the flight’s <strong>crew</strong>; the <strong>radio</strong>, from its aircraft’s plan, or failing that a “Frequencies” radio carrying every frequency in the briefing; the <strong>airfields</strong>, with the departure field marked DEP; the <strong>METAR</strong>, decoded; the SAM and AAA threats; the notes. Left to fill in by hand: <strong>times</strong>, <strong>navigation</strong>, <strong>fuel</strong>, and <strong>loadout</strong>. Once imported, the datacard lives on its own: changing the briefing doesn’t change it.</p></div>
+      </div>
+
+      <!-- Day ou Night -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Day ou Night</h3>
+        <h3 class="lang-block" data-lang="en">Day or Night</h3>
+        <div class="lang-block" data-lang="fr"><p>Le sélecteur <strong>Day | Night</strong> donne à tout le paquet sa version de <strong>jour</strong> — encre sombre sur papier clair — ou de <strong>nuit</strong> — tons sourds sur fond sombre, sans aucun blanc pur, pour ne pas éblouir dans un cockpit de nuit. Les thèmes de l’outil ne changent rien à la datacard : seule cette bascule compte.</p></div>
+        <div class="lang-block" data-lang="en"><p>The <strong>Day | Night</strong> selector gives the whole deck its <strong>day</strong> version — dark ink on light paper — or its <strong>night</strong> version — muted tones on a dark background, with no pure white, so as not to dazzle in a night cockpit. The tool’s themes change nothing on the datacard: only this switch counts.</p></div>
+      </div>
+
+      <!-- Unités, dates et METAR -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Unités, dates et METAR</h3>
+        <h3 class="lang-block" data-lang="en">Units, dates, and METAR</h3>
+        <div class="lang-block" data-lang="fr"><p>Les unités (masse <strong>kg</strong> ou <strong>lb</strong>, distance <strong>km</strong> ou <strong>NM</strong>, altitude <strong>m</strong> ou <strong>ft</strong>) changent les intitulés et les suffixes de la fiche, <strong>jamais les valeurs saisies</strong> : rien n’est converti. Une date saisie au format AAAA-MM-JJ s’affiche « 22 MAR 1989 » ; toute autre forme s’affiche telle quelle. Le <strong>METAR</strong>, saisi ou importé, se décode tout seul en vent, visibilité, QNH et nuages, qui restent modifiables ensuite ; la météo garde les conventions du METAR, quelles que soient les unités de la carte.</p></div>
+        <div class="lang-block" data-lang="en"><p>Units (mass <strong>kg</strong> or <strong>lb</strong>, distance <strong>km</strong> or <strong>NM</strong>, altitude <strong>m</strong> or <strong>ft</strong>) change the sheet’s headings and suffixes, <strong>never the values you entered</strong>: nothing is converted. A date entered as YYYY-MM-DD shows as “22 MAR 1989”; any other form shows as typed. The <strong>METAR</strong>, typed or imported, decodes itself into wind, visibility, QNH, and clouds, which stay editable afterwards; the weather keeps METAR conventions, whatever the card’s units.</p></div>
+      </div>
+
+      <!-- Quand la page déborde -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Quand la page déborde</h3>
+        <h3 class="lang-block" data-lang="en">When the page overflows</h3>
+        <div class="lang-block" data-lang="fr"><p>La fiche se compose selon son contenu : un bloc vide ne s’affiche pas, et une valeur absente d’un tableau s’écrit « — ». Quand tout ne tient pas sur la page, la <strong>navigation passe sur une page 2</strong>, avec un en-tête réduit « DATACARD · NAVIGATION ».</p></div>
+        <div class="lang-block" data-lang="en"><p>The sheet lays itself out from its content: an empty block is not shown, and a missing value in a table reads “—”. When everything doesn’t fit on the page, <strong>navigation moves to a page 2</strong>, with a reduced “DATACARD · NAVIGATION” header.</p></div>
+      </div>
+
+      <!-- Sauvegarder & reprendre -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Sauvegarder &amp; reprendre</h3>
+        <h3 class="lang-block" data-lang="en">Save &amp; resume</h3>
+        <div class="lang-block" data-lang="fr"><p>Le paquet est <strong>sauvegardé automatiquement</strong> dans le navigateur. <strong>Exporter JSON</strong> l’enregistre en fichier pour l’archiver ou le partager ; <strong>Importer JSON</strong> le recharge, en remplaçant le paquet en cours après confirmation. <strong>Exemple</strong> charge une datacard de démonstration ; <strong>Reset</strong> vide le document. Tous deux demandent confirmation.</p></div>
+        <div class="lang-block" data-lang="en"><p>The deck is <strong>saved automatically</strong> in the browser. <strong>Export JSON</strong> writes it to a file to archive or share it; <strong>Import JSON</strong> reloads it, replacing the current deck after confirmation. <strong>Example</strong> loads a demonstration datacard; <strong>Reset</strong> clears the document. Both ask for confirmation.</p></div>
+      </div>
+
+      <!-- Exporter -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Exporter</h3>
+        <h3 class="lang-block" data-lang="en">Export</h3>
+        <div class="lang-block" data-lang="fr"><p><strong>Exporter</strong> propose le <strong>PDF</strong> ou le <strong>PNG</strong>. Le PDF passe par l’impression du navigateur : chaque page de chaque datacard occupe une feuille <strong>A4</strong> entière, couleurs de fond comprises. Le PNG produit une image de <strong>1 000 × 1 414 px</strong> par page, au format d’une page de kneeboard ; vous choisissez les pages, et plusieurs pages partent dans un fichier ZIP. L’export suit la version jour ou nuit affichée.</p></div>
+        <div class="lang-block" data-lang="en"><p><strong>Export</strong> offers <strong>PDF</strong> or <strong>PNG</strong>. The PDF goes through the browser’s print: each page of each datacard takes up a whole <strong>A4</strong> sheet, background colours included. The PNG produces a <strong>1,000 × 1,414 px</strong> image per page, the size of a kneeboard page; you pick the pages, and several pages go out in a ZIP file. The export follows the day or night version on display.</p></div>
+      </div>
+
+      <!-- Sur tablette et téléphone -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Sur tablette et téléphone</h3>
+        <h3 class="lang-block" data-lang="en">On tablets and phones</h3>
+        <div class="lang-block" data-lang="fr"><p>Sous 1 100 px de large, l’éditeur passe en <strong>onglets à icône</strong>, un par section, plus <strong>Aperçu</strong>. La barre du haut défile au doigt quand elle ne tient pas ; un fondu sur un bord signale les boutons cachés.</p></div>
+        <div class="lang-block" data-lang="en"><p>Below 1,100 px wide, the editor switches to <strong>icon tabs</strong>, one per section, plus <strong>Preview</strong>. The top bar scrolls by finger when it doesn’t fit; a fade on one edge shows the hidden buttons.</p></div>
+      </div>
+
+      <!-- Tout est générique -->
+      <div class="fm-callout note">
+        <div class="lang-block" data-lang="fr">Tout est générique — Le Datacard Generator ne contient aucune table d’appareils, de radios ou d’emports : ce que vous saisissez s’affiche tel quel. Il sert donc à tout appareil, sans mise à jour quand un module DCS change.</div>
+        <div class="lang-block" data-lang="en">Everything is generic — The Datacard Generator holds no table of aircraft, radios, or loadouts: what you type shows as typed. It therefore works for any aircraft, with no update needed when a DCS module changes.</div>
+      </div>
+
+      <!-- Contenu tronqué -->
+      <div class="fm-callout warn">
+        <div class="lang-block" data-lang="fr">Contenu tronqué — Si la page 1 déborde encore une fois la navigation passée en page 2, l’éditeur affiche « Contenu tronqué ». Allégez alors la mission, les notes ou les menaces : la fiche ne se réduit pas d’elle-même.</div>
+        <div class="lang-block" data-lang="en">Content truncated — If page 1 still overflows once navigation has moved to page 2, the editor shows “Content truncated”. Trim the mission, notes, or threats: the sheet doesn’t shrink on its own.</div>
+      </div>
+
+      <!-- À venir -->
+      <div class="fm-callout note">
+        <div class="lang-block" data-lang="fr">À venir — L’import des points de navigation et de l’emport depuis HQ (mission <code>.miz</code>) est prévu dans une prochaine version.</div>
+        <div class="lang-block" data-lang="en">Coming — Importing navigation points and loadouts from HQ (<code>.miz</code> mission) is planned for a future version.</div>
+      </div>
+
+    </div><!-- /fm-chapter -->
+  </section><!-- /page-dg -->
+
 
 </main><!-- /fm-root -->
 
@@ -1467,7 +1796,7 @@ var I18N = {{
     'index.bg.desc':    'Générateur de briefings multi-sections',
     'index.rs.desc':    'Compositeur photo-renseignement canvas',
     'index.rp.desc':    "Planification d\u2019itin\u00e9raires",
-    'index.dg.desc':    'Génération de datacards',
+    'index.dg.desc':    'Datacards de vol d’une page',
     'index.soon':       'À VENIR',
     'btn.back':         '◄ Index',
     'rs.hero.title':    'Recon Station',
@@ -1479,6 +1808,8 @@ var I18N = {{
     'hq.hero.sub':      'Configuration escadre centralisée',
     'bg.hero.title':    'Briefing Generator',
     'bg.hero.sub':      'Générateur de briefings multi-sections',
+    'dg.hero.title':    'Datacard Generator',
+    'dg.hero.sub':      'Datacards de vol pour le kneeboard',
     'stub.coming':      'Chapitre en préparation'
   }},
   en: {{
@@ -1489,7 +1820,7 @@ var I18N = {{
     'index.bg.desc':    'Multi-section briefing generator',
     'index.rs.desc':    'Canvas photo-intelligence composer',
     'index.rp.desc':    'Route planning',
-    'index.dg.desc':    'Datacard generation',
+    'index.dg.desc':    'One-page flight datacards',
     'index.soon':       'COMING',
     'btn.back':         '◄ Index',
     'rs.hero.title':    'Recon Station',
@@ -1501,6 +1832,8 @@ var I18N = {{
     'hq.hero.sub':      'Centralised wing configuration',
     'bg.hero.title':    'Briefing Generator',
     'bg.hero.sub':      'Multi-section briefing generator',
+    'dg.hero.title':    'Datacard Generator',
+    'dg.hero.sub':      'Flight datacards for the kneeboard',
     'stub.coming':      'Chapter in preparation'
   }}
 }};
@@ -1575,7 +1908,7 @@ function initTheme() {{
 }}
 
 // ── Routing hash ──────────────────────────────
-var PAGES = ['index', 'rs', 'hq', 'bg'];
+var PAGES = ['index', 'rs', 'hq', 'bg', 'dg'];
 
 function showPage(id) {{
   if (PAGES.indexOf(id) === -1) id = 'index';
@@ -1657,10 +1990,12 @@ grep_ok('id="page-index"',  'page-index présent')
 grep_ok('id="page-rs"',     'page-rs présent')
 grep_ok('id="page-hq"',     'page-hq présent')
 grep_ok('id="page-bg"',     'page-bg présent')
+grep_ok('id="page-dg"',     'page-dg présent')
 grep_ok('--fm-accent:', '--fm-accent présent')
 grep_ok('--chapter-accent: #C95A9C', '--chapter-accent RS')
 grep_ok('--chapter-accent: #4FB286', '--chapter-accent HQ')
 grep_ok('--chapter-accent: #c0892a', '--chapter-accent BG')
+grep_ok('--chapter-accent: #4f7a8e', '--chapter-accent DG')
 grep_ok('class="toolbar"',  'toolbar présent')
 grep_absent('MT_onModuleSave', 'MT_onModuleSave absent')
 grep_absent('app-header',      'app-header absent')
