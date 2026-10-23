@@ -14,6 +14,12 @@ The suite bundles several **independently-versioned tools**, so entries are grou
 - **Tablet & mobile** first-class target (touch, drag, rotation-safe).
 - Wing configuration shared automatically across embedded tools.
 
+### `v1.6.0`
+#### Added
+- Embeds **Datacard Generator v1.1.0** — navigation coordinates (see below).
+#### Changed
+- Embeds **Briefing Generator v2.4.3** and **Field Manual v1.2.2**.
+
 ### `v1.5.3`
 #### Fixed
 - Embeds **Datacard Generator v1.0.2** — back to the validated layout (see below).
@@ -75,6 +81,10 @@ Initial release. Command post for the suite.
 ---
 
 ## Briefing Generator
+
+### `v2.4.3`
+#### Fixed
+- In the editor, a card's number tag (“FLIGHT 1”, “PHOTO 1”…) no longer overlaps the label above the list.
 
 ### `v2.4.2`
 #### Fixed
@@ -142,6 +152,14 @@ Initial release. Command post for the suite.
 
 ## Datacard Generator
 
+### `v1.1.0`
+#### Added
+- **Navigation coordinates** — each waypoint takes coordinates, pasted as shown by the F10 map or an aircraft: MGRS, degrees-minutes-seconds, degrees-decimal minutes or decimal degrees; the editor tells whether they were recognised.
+- **Three ways to show the navigation**, chosen per datacard: **heading / distance** (computed between two waypoints that have coordinates, otherwise as typed), **MGRS** (10 digits) or **degrees, minutes, seconds**.
+- **True or magnetic heading** — with the variation typed in the datacard (read on the A-10C CDU, the F-16 DED or the F/A-18 HSI); the block title says which, and the variation used.
+#### Changed
+- The deck's move-up / move-down buttons are gone: one datacard per flight.
+
 ### `v1.0.2`
 #### Fixed
 - **Back to the validated layout** — text sizes, letter-spacing and line heights follow the design again (body text had grown 2–3 px larger and crowded the values); the weather block gets back its two-column grid (a value no longer runs into the next label), fuel values their dotted rules, threat chips fit on one line.
@@ -167,6 +185,10 @@ Initial release. One-page flight datacards for the cockpit kneeboard.
 ---
 
 ## Field Manual
+
+### `v1.2.2`
+#### Changed
+- Datacard Generator chapter: navigation coordinates and display modes; the deck buttons.
 
 ### `v1.2.1`
 #### Changed
