@@ -14,6 +14,11 @@ The suite bundles several **independently-versioned tools**, so entries are grou
 - **Tablet & mobile** first-class target (touch, drag, rotation-safe).
 - Wing configuration shared automatically across embedded tools.
 
+### `v1.5.0`
+#### Changed
+- Embeds **Briefing Generator v2.4.0** — map, threats and targets in the quick brief, targets in the full brief, overflow pages (see below).
+- Embeds **Field Manual v1.2.0** — Briefing Generator chapter updated for v2.4 (see below).
+
 ### `v1.4.0`
 #### Changed
 - Embeds **Field Manual v1.1.0** — Datacard Generator chapter, zoomable images and diagrams, more readable colours (see below).
@@ -58,6 +63,17 @@ Initial release. Command post for the suite.
 ---
 
 ## Briefing Generator
+
+### `v2.4.0`
+#### Added
+- **Map, threats and targets in the quick brief** — the Situation section takes a map (the full brief's SITAC map) and the threat fields (tanks, APC, AAA, SAM, note); the Mission section takes a **targets** list (number, type, position, remark). They print on a **“MAP ░ THREATS ░ TARGETS”** page right after the mission page, only when there is something to show; its banner names what it holds.
+- **Targets in the full brief** — the same list, shared by both formats, prints as a table under the objectives of the Mission overview page.
+- **Overflow pages** — when a mission page no longer fits, the blocks that don't fit move to a following page instead of being cut off. Page measurement no longer depends on images loading.
+#### Changed
+- **Threats on one line per category** — category and threats side by side, in both formats; the quick brief only shows the categories filled in.
+#### Fixed
+- A long *Departure* or *Aircraft* value no longer runs off the flights table.
+- Missing tooltip translation on a frequency's “show in overview” box.
 
 ### `v2.3.2`
 #### Fixed
@@ -118,6 +134,10 @@ Initial release. One-page flight datacards for the cockpit kneeboard.
 ---
 
 ## Field Manual
+
+### `v1.2.0`
+#### Changed
+- **Briefing Generator chapter** updated for v2.4: the quick brief's map, threats and targets, the “map, threats, targets” page, targets in the full brief, overflow pages; the *what feeds what* diagram gains a **Map · threats · targets** box (C·S).
 
 ### `v1.1.0`
 #### Added
