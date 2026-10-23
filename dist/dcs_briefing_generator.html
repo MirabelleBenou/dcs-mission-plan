@@ -2928,7 +2928,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   <button class="tb-lang-btn" id="btn-lang" data-i18n-title="toolbar.lang.tooltip" title="Switch language / Changer de langue">🇬🇧</button>
   <div class="tb-spacer"></div>
   <div class="tb-classif">CLASSIFIED // FOR EYES ONLY</div>
-  <span class="tb-version">v2.3.1</span>
+  <span class="tb-version">v2.3.2</span>
 </header>
 
 <!-- ===== EXPORT MODAL ===== -->
@@ -4103,6 +4103,10 @@ function rerenderAllDynamic() {
   try { renderRoster(); }           catch(e) { console.warn('rerender roster failed:', e); }
   try { renderRadioItems(); }       catch(e) { console.warn('rerender radio items failed:', e); }
   try { renderRadioAircrafts(); }   catch(e) { console.warn('rerender radio ac failed:', e); }
+  // Brief simplifié (v2.3.2) : vols, fréquences et photos construisent leurs libellés par t()
+  try { renderSimpleFlights(); }    catch(e) { console.warn('rerender simple flights failed:', e); }
+  try { renderSimpleRadioItems(); } catch(e) { console.warn('rerender simple radio failed:', e); }
+  try { renderPhotosEditor(); }     catch(e) { console.warn('rerender photos failed:', e); }
   // P1.B: wing read-only panel re-rendered via renderWingReadOnly() depuis storage listener
 }
 

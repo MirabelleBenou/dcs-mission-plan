@@ -385,7 +385,7 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
             <div class="cap-row">
               <span class="logo" style="background:var(--a-bg)">B·G</span>
               <span class="ptitle">Briefing Generator</span>
-              <span class="pver">v2.3.1</span>
+              <span class="pver">v2.3.2</span>
             </div>
             <div class="pdesc" data-i18n="bg.desc">Briefings complets — SITAC, plan radio, aérodromes, charts, annexes — export PDF prêt à partager.</div>
             <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>

@@ -1304,23 +1304,23 @@ kbd {{
       <div class="fm-prose">
         <h3 class="lang-block" data-lang="fr">À quoi ça sert</h3>
         <h3 class="lang-block" data-lang="en">What it’s for</h3>
-        <div class="lang-block" data-lang="fr"><p>Le Briefing Generator prépare le briefing d’une mission, prêt à imprimer ou à emporter en vol, dans l’un de <strong>deux formats</strong>. Le <strong>brief simplifié</strong> tient sur <strong>une page</strong> — situation, mission et tableau des vols, fréquences, terrains, météo —, suivie de pages de photos s’il y en a. Le <strong>brief complet</strong> est un dossier <strong>multi-pages</strong> : couverture, situation tactique, aperçu de mission, plan radio, missions individuelles, équipage, cartes et annexes. On remplit des sections dans l’éditeur, on vérifie la mise en page A4 dans l’aperçu, puis on exporte en <strong>PDF</strong> ou en <strong>PNG par page</strong> (genouillères). L’identité d’escadre (logo, noms, escadrons) est <strong>héritée de HQ</strong>. Quatre thèmes, tout hors-ligne.</p></div>
+        <div class="lang-block" data-lang="fr"><p>Le Briefing Generator prépare le briefing d’une mission, prêt à imprimer ou à emporter en vol, dans l’un de <strong>deux formats</strong>. Le <strong>brief simplifié</strong> tient sur <strong>une page</strong> — situation, mission et tableau des vols, fréquences, terrains, météo —, suivie de pages de photos s’il y en a. Le <strong>brief complet</strong> est un dossier <strong>multi-pages</strong> : couverture, situation tactique, aperçu de mission, plan radio, missions individuelles, équipage, cartes et annexes. On remplit des sections dans l’éditeur, on vérifie la mise en page A4 dans l’aperçu, puis on exporte en <strong>PDF</strong> ou en <strong>PNG par page</strong> (genouillères). L’identité d’escadre (logo, noms, escadrons) est <strong>héritée de HQ</strong>. Quatre thèmes, tout hors-ligne.</p></div>
         <div class="lang-block" data-lang="en"><p>The Briefing Generator prepares a mission briefing, ready to print or take into the cockpit, in one of <strong>two formats</strong>. The <strong>quick brief</strong> fits on <strong>one page</strong> — situation, mission and flights table, frequencies, airfields, weather —, followed by photo pages if there are any. The <strong>full brief</strong> is a <strong>multi-page</strong> file: cover, tactical situation, mission overview, radio plan, individual missions, crew, charts, and annexes. You fill sections in the editor, check the A4 layout in the preview, then export to <strong>PDF</strong> or <strong>per-page PNG</strong> (kneeboards). The wing identity (logo, names, squadrons) is <strong>inherited from HQ</strong>. Four themes, fully offline.</p></div>
       </div>
 
       <!-- Deux formats -->
       <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Deux formats : complet ou simplifié</h3>
+        <h3 class="lang-block" data-lang="fr">Deux formats : complet ou simplifié</h3>
         <h3 class="lang-block" data-lang="en">Two formats: full or quick</h3>
-        <div class="lang-block" data-lang="fr"><p>Le sélecteur <strong>Brief complet | Brief simplifié</strong> de la barre du haut choisit le format. Changer de format <strong>ne perd rien</strong> : seules les sections affichées et les pages produites changent ; ce que vous avez saisi pour l’autre format reste dans le briefing et réapparaît quand vous y revenez. Un briefing enregistré avant l’arrivée des deux formats s’ouvre en brief complet. Sur un écran étroit, le sélecteur affiche <strong>Complet | Simplifié</strong>.</p></div>
+        <div class="lang-block" data-lang="fr"><p>Le sélecteur <strong>Brief complet | Brief simplifié</strong> de la barre du haut choisit le format. Changer de format <strong>ne perd rien</strong> : seules les sections affichées et les pages produites changent ; ce que vous avez saisi pour l’autre format reste dans le briefing et réapparaît quand vous y revenez. Un briefing enregistré avant l’arrivée des deux formats s’ouvre en brief complet. Sur un écran étroit, le sélecteur affiche <strong>Complet | Simplifié</strong>.</p></div>
         <div class="lang-block" data-lang="en"><p>The <strong>Full brief | Quick brief</strong> selector in the top bar picks the format. Switching <strong>loses nothing</strong>: only the sections shown and the pages produced change; what you entered for the other format stays in the briefing and comes back when you switch again. A briefing saved before the two formats existed opens as a full brief. On a narrow screen, the selector reads <strong>Full | Quick</strong>.</p></div>
       </div>
 
       <!-- Démarrer -->
       <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Démarrer : page blanche ou exemple</h3>
+        <h3 class="lang-block" data-lang="fr">Démarrer : page blanche ou exemple</h3>
         <h3 class="lang-block" data-lang="en">Getting started: blank page or example</h3>
-        <div class="lang-block" data-lang="fr"><p>L’outil s’ouvre sur un <strong>briefing vide</strong>, en brief simplifié. Le bouton <strong>Exemple</strong> charge un briefing de démonstration complet, pour voir ce que l’outil sait faire ; il remplace le briefing en cours, après confirmation. <strong>Reset</strong> vide tout le briefing, après confirmation, pour repartir d’une page blanche. Les champs vides montrent un <strong>exemple grisé</strong> (« FOOTHOLD », « M3 », « 1000Z »…) qui n’apparaît ni dans l’aperçu ni à l’export.</p></div>
+        <div class="lang-block" data-lang="fr"><p>L’outil s’ouvre sur un <strong>briefing vide</strong>, en brief simplifié. Le bouton <strong>Exemple</strong> charge un briefing de démonstration complet, pour voir ce que l’outil sait faire ; il remplace le briefing en cours, après confirmation. <strong>Reset</strong> vide tout le briefing, après confirmation, pour repartir d’une page blanche. Les champs vides montrent un <strong>exemple grisé</strong> (« FOOTHOLD », « M3 », « 1000Z »…) qui n’apparaît ni dans l’aperçu ni à l’export.</p></div>
         <div class="lang-block" data-lang="en"><p>The tool opens on an <strong>empty briefing</strong>, as a quick brief. The <strong>Example</strong> button loads a full demonstration briefing, to show what the tool can do; it replaces the current briefing, after confirmation. <strong>Reset</strong> clears the whole briefing, after confirmation, to start from a blank page. Empty fields show a <strong>greyed-out example</strong> (“FOOTHOLD”, “M3”, “1000Z”…) that never appears in the preview or the export.</p></div>
       </div>
 
@@ -1422,7 +1422,7 @@ kbd {{
       <div class="fm-prose">
         <h3 class="lang-block" data-lang="fr">Le brief simplifié</h3>
         <h3 class="lang-block" data-lang="en">The quick brief</h3>
-        <div class="lang-block" data-lang="fr"><p>Cinq sections. <strong>Méta</strong> : opération, mission, date, <strong>Heure (Z)</strong>, classification, référence. <strong>Situation</strong> : la situation, en points. <strong>Mission</strong> : les objectifs, puis les <strong>vols</strong> — pour chacun l’escadron (ou un escadron invité), l’appareil et le sous-groupe, la <strong>Tâche</strong>, le <strong>Nombre</strong> d’appareils et le <strong>Départ</strong>. <strong>Coordination</strong> : les fréquences, les terrains et le METAR, avec son assistant. <strong>Photos</strong> : pour chaque photo, un titre, l’image et une légende.</p></div>
+        <div class="lang-block" data-lang="fr"><p>Cinq sections. <strong>Méta</strong> : opération, mission, date, <strong>Heure (Z)</strong>, classification, référence. <strong>Situation</strong> : la situation, en points. <strong>Mission</strong> : les objectifs, puis les <strong>vols</strong> — pour chacun l’escadron (ou un escadron invité), l’appareil et le sous-groupe, la <strong>Tâche</strong>, le <strong>Nombre</strong> d’appareils et le <strong>Départ</strong>. <strong>Coordination</strong> : les fréquences, les terrains et le METAR, avec son assistant. <strong>Photos</strong> : pour chaque photo, un titre, l’image et une légende.</p></div>
         <div class="lang-block" data-lang="en"><p>Five sections. <strong>Meta</strong>: operation, mission, date, <strong>Time (Z)</strong>, classification, reference. <strong>Situation</strong>: the situation, as bullet points. <strong>Mission</strong>: the objectives, then the <strong>flights</strong> — for each, the squadron (or a guest squadron), the aircraft and subgroup, the <strong>Task</strong>, the aircraft <strong>Count</strong>, and the <strong>Departure</strong>. <strong>Coordination</strong>: frequencies, airfields, and the METAR, with its assistant. <strong>Photos</strong>: for each photo, a title, the image, and a caption.</p></div>
       </div>
 
@@ -1430,21 +1430,21 @@ kbd {{
       <div class="fm-prose">
         <h3 class="lang-block" data-lang="fr">La page simplifiée</h3>
         <h3 class="lang-block" data-lang="en">The quick-brief page</h3>
-        <div class="lang-block" data-lang="fr"><p>Le brief simplifié produit <strong>une page de mission</strong> : un bandeau « MISSION ░ date ░ heure », la <strong>Situation</strong>, la <strong>Mission</strong> avec le <strong>tableau des vols</strong> (Vol, Appareil, Tâche, Départ — « 2× F-16C » quand le nombre est renseigné), les <strong>Fréquences</strong> et les <strong>Terrains</strong> côte à côte, puis la <strong>Météo</strong>. Les menaces n’y figurent pas, même renseignées ; un bloc vide ne s’affiche pas. Suivent, s’il y a des photos, des <strong>pages de photos</strong>, deux par page, sous le bandeau « PHOTOS ░ RECONNAISSANCE ».</p></div>
-        <div class="lang-block" data-lang="en"><p>The quick brief produces <strong>one mission page</strong>: a “MISSION ░ date ░ time” banner, the <strong>Situation</strong>, the <strong>Mission</strong> with the <strong>flights table</strong> (Flight, Aircraft, Task, Departure — “2× F-16C” when the count is filled in), <strong>Frequencies</strong> and <strong>Airfields</strong> side by side, then the <strong>Weather</strong>. Threats are left out, even when filled in; an empty block is not shown. If there are photos, <strong>photo pages</strong> follow, two per page, under the “PHOTOS ░ RECONNAISSANCE” banner.</p></div>
+        <div class="lang-block" data-lang="fr"><p>Le brief simplifié produit <strong>une page de mission</strong> : un bandeau « MISSION » suivi du code de mission, de la date et de l’heure, la <strong>Situation</strong>, la <strong>Mission</strong> avec le <strong>tableau des vols</strong> (Vol, Appareil, Tâche, Départ — « 2× F-16C » quand le nombre est renseigné), les <strong>Fréquences</strong> et les <strong>Terrains</strong> côte à côte, puis la <strong>Météo</strong>. Les menaces n’y figurent pas, même renseignées ; un bloc vide ne s’affiche pas. Suivent, s’il y a des photos, des <strong>pages de photos</strong>, deux par page, sous le bandeau « PHOTOS ░ RECONNAISSANCE ».</p></div>
+        <div class="lang-block" data-lang="en"><p>The quick brief produces <strong>one mission page</strong>: a “MISSION” banner followed by the mission code, date, and time, the <strong>Situation</strong>, the <strong>Mission</strong> with the <strong>flights table</strong> (Flight, Aircraft, Task, Departure — “2× F-16C” when the count is filled in), <strong>Frequencies</strong> and <strong>Airfields</strong> side by side, then the <strong>Weather</strong>. Threats are left out, even when filled in; an empty block is not shown. If there are photos, <strong>photo pages</strong> follow, two per page, under the “PHOTOS ░ RECONNAISSANCE” banner.</p></div>
       </div>
 
       <!-- Le brief complet, section par section -->
       <div class="fm-prose">
         <h3 class="lang-block" data-lang="fr">Le brief complet, section par section</h3>
         <h3 class="lang-block" data-lang="en">The full brief, section by section</h3>
-        <div class="lang-block" data-lang="fr"><p>Le brief complet garde toutes ses sections, décrites ci-dessous ; elles n’apparaissent qu’en brief complet.</p></div>
+        <div class="lang-block" data-lang="fr"><p>Le brief complet garde toutes ses sections, décrites ci-dessous ; elles n’apparaissent qu’en brief complet.</p></div>
         <div class="lang-block" data-lang="en"><p>The full brief keeps all its sections, described below; they only appear in the full brief.</p></div>
       </div>
 
       <!-- Métadonnées & couverture -->
       <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Le squelette : métadonnées &amp; couverture</h3>
+        <h3 class="lang-block" data-lang="fr">Le squelette : métadonnées &amp; couverture</h3>
         <h3 class="lang-block" data-lang="en">The skeleton: metadata &amp; cover</h3>
         <div class="lang-block" data-lang="fr"><p>Les <strong>Métadonnées</strong> (opération, mission, date, classification, référence du document) alimentent l’en-tête et le pied de toutes les pages. La <strong>Couverture</strong> porte le titre, un narratif d’introduction et une carte du théâtre.</p></div>
         <div class="lang-block" data-lang="en"><p><strong>Metadata</strong> (operation, mission, date, classification, document reference) feed the header and footer of every page. The <strong>Cover</strong> carries the title, an intro narrative, and a theatre map.</p></div>
@@ -1454,7 +1454,7 @@ kbd {{
       <div class="fm-prose">
         <h3 class="lang-block" data-lang="fr">Situation tactique (SITAC)</h3>
         <h3 class="lang-block" data-lang="en">Tactical situation (SITAC)</h3>
-        <div class="lang-block" data-lang="fr"><p>Décrivez la situation par points, ajoutez une carte tactique, et renseignez le <strong>METAR</strong>. L’<strong>Assistant METAR</strong> vous évite la saisie à la main : soit un formulaire guidé (vent, visibilité, nuages, QNH, température…), soit l’<strong>import d’un .miz</strong> dont il extrait automatiquement la météo de la mission. Le champ METAR reste éditable librement.</p></div>
+        <div class="lang-block" data-lang="fr"><p>Décrivez la situation par points, ajoutez une carte tactique, et renseignez le <strong>METAR</strong>. L’<strong>Assistant METAR</strong> vous évite la saisie à la main : soit un formulaire guidé (vent, visibilité, nuages, QNH, température…), soit l’<strong>import d’un .miz</strong> dont il extrait automatiquement la météo de la mission. Le champ METAR reste éditable librement.</p></div>
         <div class="lang-block" data-lang="en"><p>Describe the situation as bullet points, add a tactical map, and fill in the <strong>METAR</strong>. The <strong>METAR Assistant</strong> spares you manual entry: either a guided form (wind, visibility, clouds, QNH, temperature…), or <strong>importing a .miz</strong> from which it extracts the mission weather automatically. The METAR field stays freely editable.</p></div>
       </div>
 
@@ -1462,7 +1462,7 @@ kbd {{
       <div class="fm-prose">
         <h3 class="lang-block" data-lang="fr">Aperçu de mission</h3>
         <h3 class="lang-block" data-lang="en">Mission overview</h3>
-        <div class="lang-block" data-lang="fr"><p>Objectifs, menaces, et une liste structurée d’<strong>aérodromes &amp; FARP</strong> : pour chacun, code <strong>ICAO</strong>, bascule <strong>FARP</strong>, nom, piste en service ou cap, et case <strong>ATC</strong>. Chaque entrée se range proprement dans l’aperçu.</p></div>
+        <div class="lang-block" data-lang="fr"><p>Objectifs, menaces, et une liste structurée d’<strong>aérodromes &amp; FARP</strong> : pour chacun, code <strong>ICAO</strong>, bascule <strong>FARP</strong>, nom, piste en service ou cap, et case <strong>ATC</strong>. Chaque entrée se range proprement dans l’aperçu.</p></div>
         <div class="lang-block" data-lang="en"><p>Objectives, threats, and a structured list of <strong>airfields &amp; FARPs</strong>: for each, <strong>ICAO</strong> code, <strong>FARP</strong> toggle, name, active runway or heading, and an <strong>ATC</strong> box. Each entry lays out cleanly in the preview.</p></div>
       </div>
 
@@ -1470,7 +1470,7 @@ kbd {{
       <div class="fm-prose">
         <h3 class="lang-block" data-lang="fr">Plan radio</h3>
         <h3 class="lang-block" data-lang="en">Radio plan</h3>
-        <div class="lang-block" data-lang="fr"><p>Un plan <strong>global</strong> (nombre d’entrées illimité ; jusqu’à six retenues à l’aperçu) plus des plans <strong>par appareil</strong>, avec une référence radio propre à chaque type. De quoi cadrer fréquences et canaux pour toute la formation.</p></div>
+        <div class="lang-block" data-lang="fr"><p>Un plan <strong>global</strong> (nombre d’entrées illimité ; jusqu’à six retenues à l’aperçu) plus des plans <strong>par appareil</strong>, avec une référence radio propre à chaque type. De quoi cadrer fréquences et canaux pour toute la formation.</p></div>
         <div class="lang-block" data-lang="en"><p>A <strong>global</strong> plan (unlimited entries; up to six shown in the preview) plus <strong>per-aircraft</strong> plans, with a radio reference specific to each type. Everything you need to set frequencies and channels for the whole formation.</p></div>
       </div>
 
@@ -1478,7 +1478,7 @@ kbd {{
       <div class="fm-prose">
         <h3 class="lang-block" data-lang="fr">Missions individuelles</h3>
         <h3 class="lang-block" data-lang="en">Individual missions</h3>
-        <div class="lang-block" data-lang="fr"><p>Autant de missions que nécessaire, parcourues par les flèches (ajouter, dupliquer, réordonner, supprimer). Chacune : titre, escadron, appareil et sous-groupe, objectif, <strong>étapes d’exécution</strong> ordonnables (avec sous-tâches), plan de vol, niveau de menace, notes et images.</p></div>
+        <div class="lang-block" data-lang="fr"><p>Autant de missions que nécessaire, parcourues par les flèches (ajouter, dupliquer, réordonner, supprimer). Chacune : titre, escadron, appareil et sous-groupe, objectif, <strong>étapes d’exécution</strong> ordonnables (avec sous-tâches), plan de vol, niveau de menace, notes et images.</p></div>
         <div class="lang-block" data-lang="en"><p>As many missions as needed, browsed with arrows (add, duplicate, reorder, delete). Each one: title, squadron, aircraft and subgroup, objective, orderable <strong>execution steps</strong> (with sub-tasks), flight plan, threat level, notes, and images.</p></div>
       </div>
 
@@ -1494,7 +1494,7 @@ kbd {{
       <div class="fm-prose">
         <h3 class="lang-block" data-lang="fr">Charts &amp; annexes</h3>
         <h3 class="lang-block" data-lang="en">Charts &amp; annexes</h3>
-        <div class="lang-block" data-lang="fr"><p><strong>Charts</strong> : une liste illimitée de cartes d’aéroport (image + titre). <strong>Annexes</strong> : des pages libres illimitées pour tout ce qui ne rentre pas ailleurs. Les images trop lourdes sont recompressées automatiquement.</p></div>
+        <div class="lang-block" data-lang="fr"><p><strong>Charts</strong> : une liste illimitée de cartes d’aéroport (image + titre). <strong>Annexes</strong> : des pages libres illimitées pour tout ce qui ne rentre pas ailleurs. Les images trop lourdes sont recompressées automatiquement.</p></div>
         <div class="lang-block" data-lang="en"><p><strong>Charts</strong>: an unlimited list of airfield charts (image + title). <strong>Annexes</strong>: unlimited free pages for anything that doesn’t fit elsewhere. Oversized images are recompressed automatically.</p></div>
       </div>
 
@@ -1508,7 +1508,7 @@ kbd {{
       <div class="fm-prose">
         <h3 class="lang-block" data-lang="fr">Sauvegarder &amp; reprendre</h3>
         <h3 class="lang-block" data-lang="en">Save &amp; resume</h3>
-        <div class="lang-block" data-lang="fr"><p>Le briefing est <strong>sauvegardé automatiquement</strong> dans le navigateur. <strong>Sauver</strong> l’exporte en fichier <code>.json</code> pour l’archiver, le partager ou le reprendre sur une autre machine ; <strong>Charger</strong> le réimporte. Le format choisi voyage avec le fichier.</p></div>
+        <div class="lang-block" data-lang="fr"><p>Le briefing est <strong>sauvegardé automatiquement</strong> dans le navigateur. <strong>Sauver</strong> l’exporte en fichier <code>.json</code> pour l’archiver, le partager ou le reprendre sur une autre machine ; <strong>Charger</strong> le réimporte. Le format choisi voyage avec le fichier.</p></div>
         <div class="lang-block" data-lang="en"><p>The briefing is <strong>saved automatically</strong> in the browser. <strong>Save</strong> exports it as a <code>.json</code> file to archive, share, or resume it on another machine; <strong>Load</strong> re-imports it. The chosen format travels with the file.</p></div>
       </div>
 
@@ -1516,7 +1516,7 @@ kbd {{
       <div class="fm-prose">
         <h3 class="lang-block" data-lang="fr">Exporter le briefing</h3>
         <h3 class="lang-block" data-lang="en">Exporting the briefing</h3>
-        <div class="lang-block" data-lang="fr"><p>Vérifiez la mise en page dans l’<strong>Aperçu</strong>, puis <strong>Exporter</strong> : l’export porte les pages du format en cours. Le <strong>PDF</strong> passe par l’impression du navigateur (<kbd>Ctrl</kbd>+<kbd>P</kbd> → « Enregistrer en PDF »), y compris sur Android. L’<strong>export PNG</strong> produit une image par page, idéale en genouillère.</p></div>
+        <div class="lang-block" data-lang="fr"><p>Vérifiez la mise en page dans l’<strong>Aperçu</strong>, puis <strong>Exporter</strong> : l’export porte les pages du format en cours. Le <strong>PDF</strong> passe par l’impression du navigateur (<kbd>Ctrl</kbd>+<kbd>P</kbd> → « Enregistrer en PDF »), y compris sur Android. L’<strong>export PNG</strong> produit une image par page, idéale en genouillère.</p></div>
         <div class="lang-block" data-lang="en"><p>Check the layout in the <strong>Preview</strong>, then <strong>Export</strong>: the export carries the pages of the current format. The <strong>PDF</strong> goes through the browser’s print (<kbd>Ctrl</kbd>+<kbd>P</kbd> → “Save as PDF”), including on Android. The <strong>PNG export</strong> produces one image per page, ideal as a kneeboard.</p></div>
       </div>
 
@@ -1524,13 +1524,13 @@ kbd {{
       <div class="fm-prose">
         <h3 class="lang-block" data-lang="fr">La barre du haut sur tablette et téléphone</h3>
         <h3 class="lang-block" data-lang="en">The top bar on tablets and phones</h3>
-        <div class="lang-block" data-lang="fr"><p>Quand la barre du haut ne tient pas dans la largeur, elle <strong>défile</strong> au doigt, à la molette ou au pavé tactile ; un <strong>fondu</strong> sur un bord signale qu’il reste des boutons de ce côté. Toucher un bouton à moitié visible le ramène en entier avant de l’activer. Sous 1 100 px de large, l’éditeur passe en <strong>onglets</strong> : un par section, plus <strong>Aperçu</strong>.</p></div>
-        <div class="lang-block" data-lang="en"><p>When the top bar doesn’t fit the width, it <strong>scrolls</strong> by finger, mouse wheel, or touchpad; a <strong>fade</strong> on one edge shows there are more buttons that way. Tapping a half-visible button brings it fully into view before activating it. Below 1,100 px wide, the editor switches to <strong>tabs</strong>: one per section, plus <strong>Preview</strong>.</p></div>
+        <div class="lang-block" data-lang="fr"><p>Quand la barre du haut ne tient pas dans la largeur, elle <strong>défile</strong> au doigt, à la molette ou au pavé tactile ; un <strong>fondu</strong> sur un bord signale qu’il reste des boutons de ce côté. Toucher un bouton à moitié visible le ramène en entier avant de l’activer. Jusqu’à 1 100 px de large, l’éditeur passe en <strong>onglets</strong> : un par section, plus <strong>Aperçu</strong>.</p></div>
+        <div class="lang-block" data-lang="en"><p>When the top bar doesn’t fit the width, it <strong>scrolls</strong> by finger, mouse wheel, or touchpad; a <strong>fade</strong> on one edge shows there are more buttons that way. Tapping a half-visible button brings it fully into view before activating it. Up to 1,100 px wide, the editor switches to <strong>tabs</strong>: one per section, plus <strong>Preview</strong>.</p></div>
       </div>
 
       <!-- Et la datacard ? -->
       <div class="fm-callout note">
-        <div class="lang-block" data-lang="fr">Et la datacard ? — Le Briefing Generator ne connaît pas la datacard : c’est le <strong>Datacard Generator</strong> qui lit le briefing, en cours ou en fichier, et en tire une datacard par vol. <a href="#dg">Voir son chapitre</a>.</div>
+        <div class="lang-block" data-lang="fr">Et la datacard ? — Le Briefing Generator ne connaît pas la datacard : c’est le <strong>Datacard Generator</strong> qui lit le briefing, en cours ou en fichier, et en tire une datacard par vol. <a href="#dg">Voir son chapitre</a>.</div>
         <div class="lang-block" data-lang="en">What about the datacard? — The Briefing Generator knows nothing of the datacard: the <strong>Datacard Generator</strong> reads the briefing, current or from a file, and turns each flight into a datacard. <a href="#dg">See its chapter</a>.</div>
       </div>
 
@@ -1559,7 +1559,7 @@ kbd {{
       <div class="fm-prose">
         <h3 class="lang-block" data-lang="fr">À quoi ça sert</h3>
         <h3 class="lang-block" data-lang="en">What it’s for</h3>
-        <div class="lang-block" data-lang="fr"><p>Le Datacard Generator produit la <strong>datacard d’un vol</strong> : une fiche d’une page, au format d’une page de kneeboard, qui réunit ce dont l’équipage a besoin en l’air — indicatif et tâche, horaires, équipages, navigation, radio, terrains, météo, carburant, emport, menaces. On la remplit <strong>à la main</strong> ou <strong>depuis le Briefing Generator</strong> ; on en tient un <strong>paquet</strong>, une par vol de la mission ; on l’exporte en <strong>PNG</strong> pour le kneeboard de DCS ou en <strong>PDF</strong> pour l’imprimer, en version <strong>jour</strong> ou <strong>nuit</strong>.</p></div>
+        <div class="lang-block" data-lang="fr"><p>Le Datacard Generator produit la <strong>datacard d’un vol</strong> : une fiche d’une page, au format d’une page de kneeboard, qui réunit ce dont l’équipage a besoin en l’air — indicatif et tâche, horaires, équipages, navigation, radio, terrains, météo, carburant, emport, menaces. On la remplit <strong>à la main</strong> ou <strong>depuis le Briefing Generator</strong> ; on en tient un <strong>paquet</strong>, une par vol de la mission ; on l’exporte en <strong>PNG</strong> pour le kneeboard de DCS ou en <strong>PDF</strong> pour l’imprimer, en version <strong>jour</strong> ou <strong>nuit</strong>.</p></div>
         <div class="lang-block" data-lang="en"><p>The Datacard Generator produces a <strong>flight’s datacard</strong>: a one-page sheet, the size of a kneeboard page, that gathers what the crew needs in the air — callsign and task, times, crew, navigation, radio, airfields, weather, fuel, loadout, threats. You fill it <strong>by hand</strong> or <strong>from the Briefing Generator</strong>; you keep a <strong>deck</strong> of them, one per flight in the mission; you export to <strong>PNG</strong> for the DCS kneeboard or to <strong>PDF</strong> for printing, in a <strong>day</strong> or <strong>night</strong> version.</p></div>
       </div>
 
@@ -1671,7 +1671,7 @@ kbd {{
           <text x="360" y="350" text-anchor="middle" font-size="11" fill="currentColor" class="lang-block" data-lang="en">Footer: callsign · operation · classification · page</text>
         </svg>
         <div class="fm-schema-legend">
-          <span class="lang-block" data-lang="fr">Fig. 1 — L’anatomie d’une datacard : où se range chaque bloc.</span>
+          <span class="lang-block" data-lang="fr">Fig. 1 — L’anatomie d’une datacard : où se range chaque bloc.</span>
           <span class="lang-block" data-lang="en">Fig. 1 — Anatomy of a datacard: where each block goes.</span>
         </div>
       </div>
@@ -1680,7 +1680,7 @@ kbd {{
       <div class="fm-prose">
         <h3 class="lang-block" data-lang="fr">Le paquet de datacards</h3>
         <h3 class="lang-block" data-lang="en">The datacard deck</h3>
-        <div class="lang-block" data-lang="fr"><p>Le document est un <strong>paquet</strong> de datacards, une par vol. En haut de l’éditeur, « Datacard 2 / 3 — CAESAR » dit où l’on est ; les flèches passent d’une carte à l’autre, et les boutons <strong>Ajouter</strong>, <strong>Dupliquer</strong>, <strong>Supprimer</strong>, monter et descendre organisent le paquet. L’aperçu montre la carte courante. La dernière carte ne se supprime pas : elle se vide.</p></div>
+        <div class="lang-block" data-lang="fr"><p>Le document est un <strong>paquet</strong> de datacards, une par vol. En haut de l’éditeur, « Datacard 2 / 3 — CAESAR » dit où l’on est ; les flèches passent d’une carte à l’autre, et les boutons <strong>Ajouter</strong>, <strong>Dupliquer</strong>, <strong>Supprimer</strong>, monter et descendre organisent le paquet. L’aperçu montre la carte courante. La dernière carte ne se supprime pas : elle se vide.</p></div>
         <div class="lang-block" data-lang="en"><p>The document is a <strong>deck</strong> of datacards, one per flight. At the top of the editor, “Datacard 2 / 3 — CAESAR” tells you where you are; the arrows move from card to card, and the <strong>Add</strong>, <strong>Duplicate</strong>, <strong>Delete</strong>, move-up and move-down buttons organise the deck. The preview shows the current card. The last card can’t be deleted: it is cleared instead.</p></div>
       </div>
 
@@ -1688,7 +1688,7 @@ kbd {{
       <div class="fm-prose">
         <h3 class="lang-block" data-lang="fr">Remplir une datacard</h3>
         <h3 class="lang-block" data-lang="en">Filling in a datacard</h3>
-        <div class="lang-block" data-lang="fr"><p>Onze sections, dans l’ordre de la fiche : <strong>Méta</strong> (classification, référence, opération, mission, date, heure) ; <strong>Vol</strong> (indicatif, appareil, nombre, tâche, niveau de menace, unités) ; <strong>Mission</strong> (objectif et étapes) ; <strong>Horaires</strong> (mise en route, décollage, IP, TOT et RTB proposés, modifiables) ; <strong>Équipages</strong> ; <strong>Navigation</strong> (jusqu’à 30 points : cap, distance, altitude, heure, note) ; <strong>Radio</strong> (jusqu’à 4 postes de 12 canaux) ; <strong>Terrains</strong> (départ, arrivée, dégagement) ; <strong>Météo</strong> ; <strong>Carburant et emport</strong> (joker, bingo, lignes d’emport) ; <strong>Menaces et notes</strong>. Tout est <strong>texte libre</strong>. Chaque champ vide montre un exemple grisé, qui n’entre jamais dans la datacard.</p></div>
+        <div class="lang-block" data-lang="fr"><p>Onze sections, dans l’ordre de la fiche : <strong>Méta</strong> (classification, référence, opération, mission, date, heure) ; <strong>Vol</strong> (indicatif, appareil, nombre, tâche, niveau de menace, unités) ; <strong>Mission</strong> (objectif et étapes) ; <strong>Horaires</strong> (mise en route, décollage, IP, TOT et RTB proposés, modifiables) ; <strong>Équipages</strong> ; <strong>Navigation</strong> (jusqu’à 30 points : cap, distance, altitude, heure, note) ; <strong>Radio</strong> (jusqu’à 4 postes de 12 canaux) ; <strong>Terrains</strong> (départ, arrivée, dégagement) ; <strong>Météo</strong> ; <strong>Carburant et emport</strong> (joker, bingo, lignes d’emport) ; <strong>Menaces et notes</strong>. Tout est <strong>texte libre</strong>. Chaque champ vide montre un exemple grisé, qui n’entre jamais dans la datacard.</p></div>
         <div class="lang-block" data-lang="en"><p>Eleven sections, in the order of the sheet: <strong>Meta</strong> (classification, reference, operation, mission, date, time); <strong>Flight</strong> (callsign, aircraft, count, task, threat level, units); <strong>Mission</strong> (objective and steps); <strong>Times</strong> (start-up, take-off, IP, TOT, and RTB suggested, editable); <strong>Crew</strong>; <strong>Navigation</strong> (up to 30 points: heading, distance, altitude, time, note); <strong>Radio</strong> (up to 4 radios of 12 channels); <strong>Airfields</strong> (departure, arrival, alternate); <strong>Weather</strong>; <strong>Fuel and loadout</strong> (joker, bingo, loadout lines); <strong>Threats and notes</strong>. Everything is <strong>free text</strong>. Each empty field shows a greyed-out example, which never makes it onto the datacard.</p></div>
       </div>
 
@@ -1696,15 +1696,15 @@ kbd {{
       <div class="fm-prose">
         <h3 class="lang-block" data-lang="fr">Depuis le briefing</h3>
         <h3 class="lang-block" data-lang="en">From the briefing</h3>
-        <div class="lang-block" data-lang="fr"><p><strong>Depuis le briefing</strong> ouvre une fenêtre à deux sources : le <strong>briefing en cours</strong> — celui que le Briefing Generator a enregistré dans ce navigateur, grisé s’il n’y en a pas — ou un <strong>fichier JSON</strong> de briefing. La fenêtre liste les <strong>vols</strong> du briefing, tous cochés, et une ligne <strong>Données générales (sans vol)</strong>, cochée d’office quand le briefing n’a aucun vol : c’est le cas d’un brief simplifié qui ne porte que des fréquences, des terrains et un METAR. <strong>Importer</strong> ajoute une datacard par ligne cochée, à la fin du paquet ; une datacard vierge laissée seule est remplacée. Un fichier de briefing ouvert par <strong>Importer JSON</strong> ouvre la même fenêtre.</p></div>
+        <div class="lang-block" data-lang="fr"><p><strong>Depuis le briefing</strong> ouvre une fenêtre à deux sources : le <strong>briefing en cours</strong> — celui que le Briefing Generator a enregistré dans ce navigateur, grisé s’il n’y en a pas — ou un <strong>fichier JSON</strong> de briefing. La fenêtre liste les <strong>vols</strong> du briefing, tous cochés, et une ligne <strong>Données générales (sans vol)</strong>, cochée d’office quand le briefing n’a aucun vol : c’est le cas d’un brief simplifié qui ne porte que des fréquences, des terrains et un METAR. <strong>Importer</strong> ajoute une datacard par ligne cochée, à la fin du paquet ; une datacard vierge laissée seule est remplacée. Un fichier de briefing ouvert par <strong>Importer JSON</strong> ouvre la même fenêtre.</p></div>
         <div class="lang-block" data-lang="en"><p><strong>From briefing</strong> opens a window with two sources: the <strong>current briefing</strong> — the one the Briefing Generator saved in this browser, greyed out if there is none — or a briefing <strong>JSON file</strong>. The window lists the briefing’s <strong>flights</strong>, all ticked, and a <strong>General data (no flight)</strong> line, ticked by default when the briefing has no flights: that is the case of a quick brief that only carries frequencies, airfields, and a METAR. <strong>Import</strong> adds one datacard per ticked line, at the end of the deck; a lone blank datacard is replaced. A briefing file opened with <strong>Import JSON</strong> opens the same window.</p></div>
       </div>
 
       <!-- Ce que l’import remplit -->
       <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Ce que l'import remplit</h3>
+        <h3 class="lang-block" data-lang="fr">Ce que l’import remplit</h3>
         <h3 class="lang-block" data-lang="en">What the import fills in</h3>
-        <div class="lang-block" data-lang="fr"><p>Pour chaque vol : la méta du briefing ; l’<strong>indicatif</strong> (le sous-groupe, sinon l’indicatif de l’escadron), l’appareil, le nombre (celui du vol, sinon le nombre de pilotes de son équipage), la tâche et la menace ; l’objectif et les étapes, sous-tâches comprises ; l’<strong>équipage</strong> du vol ; la <strong>radio</strong>, depuis le plan de son appareil, ou à défaut un poste « Fréquences » qui reprend toutes les fréquences du briefing ; les <strong>terrains</strong>, le terrain de départ marqué DEP ; le <strong>METAR</strong>, décodé ; les menaces SAM et AAA ; les notes. Restent à remplir à la main : les <strong>horaires</strong>, la <strong>navigation</strong>, le <strong>carburant</strong> et l’<strong>emport</strong>. La datacard importée vit ensuite seule : modifier le briefing ne la change pas.</p></div>
+        <div class="lang-block" data-lang="fr"><p>Pour chaque vol : la méta du briefing ; l’<strong>indicatif</strong> (le sous-groupe, sinon l’indicatif de l’escadron), l’appareil, le nombre (celui du vol, sinon le nombre de pilotes de son équipage), la tâche et la menace ; l’objectif et les étapes, sous-tâches comprises ; l’<strong>équipage</strong> du vol ; la <strong>radio</strong>, depuis le plan de son appareil, ou à défaut un poste « Fréquences » qui reprend toutes les fréquences du briefing ; les <strong>terrains</strong>, le terrain de départ marqué DEP ; le <strong>METAR</strong>, décodé ; les menaces SAM et AAA ; les notes. Restent à remplir à la main : les <strong>horaires</strong>, la <strong>navigation</strong>, le <strong>carburant</strong> et l’<strong>emport</strong>. La datacard importée vit ensuite seule : modifier le briefing ne la change pas.</p></div>
         <div class="lang-block" data-lang="en"><p>For each flight: the briefing’s meta; the <strong>callsign</strong> (the subgroup, otherwise the squadron callsign), the aircraft, the count (the flight’s own, otherwise the number of pilots in its crew), the task, and the threat; the objective and the steps, sub-tasks included; the flight’s <strong>crew</strong>; the <strong>radio</strong>, from its aircraft’s plan, or failing that a “Frequencies” radio carrying every frequency in the briefing; the <strong>airfields</strong>, with the departure field marked DEP; the <strong>METAR</strong>, decoded; the SAM and AAA threats; the notes. Left to fill in by hand: <strong>times</strong>, <strong>navigation</strong>, <strong>fuel</strong>, and <strong>loadout</strong>. Once imported, the datacard lives on its own: changing the briefing doesn’t change it.</p></div>
       </div>
 
@@ -1712,7 +1712,7 @@ kbd {{
       <div class="fm-prose">
         <h3 class="lang-block" data-lang="fr">Day ou Night</h3>
         <h3 class="lang-block" data-lang="en">Day or Night</h3>
-        <div class="lang-block" data-lang="fr"><p>Le sélecteur <strong>Day | Night</strong> donne à tout le paquet sa version de <strong>jour</strong> — encre sombre sur papier clair — ou de <strong>nuit</strong> — tons sourds sur fond sombre, sans aucun blanc pur, pour ne pas éblouir dans un cockpit de nuit. Les thèmes de l’outil ne changent rien à la datacard : seule cette bascule compte.</p></div>
+        <div class="lang-block" data-lang="fr"><p>Le sélecteur <strong>Day | Night</strong> donne à tout le paquet sa version de <strong>jour</strong> — encre sombre sur papier clair — ou de <strong>nuit</strong> — tons sourds sur fond sombre, sans aucun blanc pur, pour ne pas éblouir dans un cockpit de nuit. Les thèmes de l’outil ne changent rien à la datacard : seule cette bascule compte.</p></div>
         <div class="lang-block" data-lang="en"><p>The <strong>Day | Night</strong> selector gives the whole deck its <strong>day</strong> version — dark ink on light paper — or its <strong>night</strong> version — muted tones on a dark background, with no pure white, so as not to dazzle in a night cockpit. The tool’s themes change nothing on the datacard: only this switch counts.</p></div>
       </div>
 
@@ -1720,7 +1720,7 @@ kbd {{
       <div class="fm-prose">
         <h3 class="lang-block" data-lang="fr">Unités, dates et METAR</h3>
         <h3 class="lang-block" data-lang="en">Units, dates, and METAR</h3>
-        <div class="lang-block" data-lang="fr"><p>Les unités (masse <strong>kg</strong> ou <strong>lb</strong>, distance <strong>km</strong> ou <strong>NM</strong>, altitude <strong>m</strong> ou <strong>ft</strong>) changent les intitulés et les suffixes de la fiche, <strong>jamais les valeurs saisies</strong> : rien n’est converti. Une date saisie au format AAAA-MM-JJ s’affiche « 22 MAR 1989 » ; toute autre forme s’affiche telle quelle. Le <strong>METAR</strong>, saisi ou importé, se décode tout seul en vent, visibilité, QNH et nuages, qui restent modifiables ensuite ; la météo garde les conventions du METAR, quelles que soient les unités de la carte.</p></div>
+        <div class="lang-block" data-lang="fr"><p>Les unités (masse <strong>kg</strong> ou <strong>lb</strong>, distance <strong>km</strong> ou <strong>NM</strong>, altitude <strong>m</strong> ou <strong>ft</strong>) changent les intitulés et les suffixes de la fiche, <strong>jamais les valeurs saisies</strong> : rien n’est converti. Une date saisie au format AAAA-MM-JJ s’affiche « 22 MAR 1989 » ; toute autre forme s’affiche telle quelle. Le <strong>METAR</strong>, saisi ou importé, se décode tout seul en vent, visibilité, QNH et nuages, qui restent modifiables ensuite ; la météo garde les conventions du METAR, quelles que soient les unités de la carte.</p></div>
         <div class="lang-block" data-lang="en"><p>Units (mass <strong>kg</strong> or <strong>lb</strong>, distance <strong>km</strong> or <strong>NM</strong>, altitude <strong>m</strong> or <strong>ft</strong>) change the sheet’s headings and suffixes, <strong>never the values you entered</strong>: nothing is converted. A date entered as YYYY-MM-DD shows as “22 MAR 1989”; any other form shows as typed. The <strong>METAR</strong>, typed or imported, decodes itself into wind, visibility, QNH, and clouds, which stay editable afterwards; the weather keeps METAR conventions, whatever the card’s units.</p></div>
       </div>
 
@@ -1728,7 +1728,7 @@ kbd {{
       <div class="fm-prose">
         <h3 class="lang-block" data-lang="fr">Quand la page déborde</h3>
         <h3 class="lang-block" data-lang="en">When the page overflows</h3>
-        <div class="lang-block" data-lang="fr"><p>La fiche se compose selon son contenu : un bloc vide ne s’affiche pas, et une valeur absente d’un tableau s’écrit « — ». Quand tout ne tient pas sur la page, la <strong>navigation passe sur une page 2</strong>, avec un en-tête réduit « DATACARD · NAVIGATION ».</p></div>
+        <div class="lang-block" data-lang="fr"><p>La fiche se compose selon son contenu : un bloc vide ne s’affiche pas, et une valeur absente d’un tableau s’écrit « — ». Quand tout ne tient pas sur la page, la <strong>navigation passe sur une page 2</strong>, avec un en-tête réduit « DATACARD · NAVIGATION ».</p></div>
         <div class="lang-block" data-lang="en"><p>The sheet lays itself out from its content: an empty block is not shown, and a missing value in a table reads “—”. When everything doesn’t fit on the page, <strong>navigation moves to a page 2</strong>, with a reduced “DATACARD · NAVIGATION” header.</p></div>
       </div>
 
@@ -1736,15 +1736,15 @@ kbd {{
       <div class="fm-prose">
         <h3 class="lang-block" data-lang="fr">Sauvegarder &amp; reprendre</h3>
         <h3 class="lang-block" data-lang="en">Save &amp; resume</h3>
-        <div class="lang-block" data-lang="fr"><p>Le paquet est <strong>sauvegardé automatiquement</strong> dans le navigateur. <strong>Exporter JSON</strong> l’enregistre en fichier pour l’archiver ou le partager ; <strong>Importer JSON</strong> le recharge, en remplaçant le paquet en cours après confirmation. <strong>Exemple</strong> charge une datacard de démonstration ; <strong>Reset</strong> vide le document. Tous deux demandent confirmation.</p></div>
-        <div class="lang-block" data-lang="en"><p>The deck is <strong>saved automatically</strong> in the browser. <strong>Export JSON</strong> writes it to a file to archive or share it; <strong>Import JSON</strong> reloads it, replacing the current deck after confirmation. <strong>Example</strong> loads a demonstration datacard; <strong>Reset</strong> clears the document. Both ask for confirmation.</p></div>
+        <div class="lang-block" data-lang="fr"><p>Le paquet est <strong>sauvegardé automatiquement</strong> dans le navigateur. <strong>Exporter JSON</strong> l’enregistre en fichier pour l’archiver ou le partager ; <strong>Importer JSON</strong> le recharge ; il remplace le paquet en cours, après confirmation si celui-ci n’est pas vierge. <strong>Exemple</strong> charge une datacard de démonstration ; <strong>Reset</strong> vide le document. Tous deux demandent confirmation.</p></div>
+        <div class="lang-block" data-lang="en"><p>The deck is <strong>saved automatically</strong> in the browser. <strong>Export JSON</strong> writes it to a file to archive or share it; <strong>Import JSON</strong> reloads it; it replaces the current deck, after confirmation unless that deck is blank. <strong>Example</strong> loads a demonstration datacard; <strong>Reset</strong> clears the document. Both ask for confirmation.</p></div>
       </div>
 
       <!-- Exporter -->
       <div class="fm-prose">
         <h3 class="lang-block" data-lang="fr">Exporter</h3>
         <h3 class="lang-block" data-lang="en">Export</h3>
-        <div class="lang-block" data-lang="fr"><p><strong>Exporter</strong> propose le <strong>PDF</strong> ou le <strong>PNG</strong>. Le PDF passe par l’impression du navigateur : chaque page de chaque datacard occupe une feuille <strong>A4</strong> entière, couleurs de fond comprises. Le PNG produit une image de <strong>1 000 × 1 414 px</strong> par page, au format d’une page de kneeboard ; vous choisissez les pages, et plusieurs pages partent dans un fichier ZIP. L’export suit la version jour ou nuit affichée.</p></div>
+        <div class="lang-block" data-lang="fr"><p><strong>Exporter</strong> propose le <strong>PDF</strong> ou le <strong>PNG</strong>. Le PDF passe par l’impression du navigateur : chaque page de chaque datacard occupe une feuille <strong>A4</strong> entière, couleurs de fond comprises. Le PNG produit une image de <strong>1 000 × 1 414 px</strong> par page, au format d’une page de kneeboard ; vous choisissez les pages, et plusieurs pages partent dans un fichier ZIP. L’export suit la version jour ou nuit affichée.</p></div>
         <div class="lang-block" data-lang="en"><p><strong>Export</strong> offers <strong>PDF</strong> or <strong>PNG</strong>. The PDF goes through the browser’s print: each page of each datacard takes up a whole <strong>A4</strong> sheet, background colours included. The PNG produces a <strong>1,000 × 1,414 px</strong> image per page, the size of a kneeboard page; you pick the pages, and several pages go out in a ZIP file. The export follows the day or night version on display.</p></div>
       </div>
 
@@ -1752,19 +1752,19 @@ kbd {{
       <div class="fm-prose">
         <h3 class="lang-block" data-lang="fr">Sur tablette et téléphone</h3>
         <h3 class="lang-block" data-lang="en">On tablets and phones</h3>
-        <div class="lang-block" data-lang="fr"><p>Sous 1 100 px de large, l’éditeur passe en <strong>onglets à icône</strong>, un par section, plus <strong>Aperçu</strong>. La barre du haut défile au doigt quand elle ne tient pas ; un fondu sur un bord signale les boutons cachés.</p></div>
-        <div class="lang-block" data-lang="en"><p>Below 1,100 px wide, the editor switches to <strong>icon tabs</strong>, one per section, plus <strong>Preview</strong>. The top bar scrolls by finger when it doesn’t fit; a fade on one edge shows the hidden buttons.</p></div>
+        <div class="lang-block" data-lang="fr"><p>Jusqu’à 1 100 px de large, l’éditeur passe en <strong>onglets à icône</strong>, un par section, plus <strong>Aperçu</strong>. La barre du haut défile au doigt quand elle ne tient pas ; un fondu sur un bord signale les boutons cachés.</p></div>
+        <div class="lang-block" data-lang="en"><p>Up to 1,100 px wide, the editor switches to <strong>icon tabs</strong>, one per section, plus <strong>Preview</strong>. The top bar scrolls by finger when it doesn’t fit; a fade on one edge shows the hidden buttons.</p></div>
       </div>
 
       <!-- Tout est générique -->
       <div class="fm-callout note">
-        <div class="lang-block" data-lang="fr">Tout est générique — Le Datacard Generator ne contient aucune table d’appareils, de radios ou d’emports : ce que vous saisissez s’affiche tel quel. Il sert donc à tout appareil, sans mise à jour quand un module DCS change.</div>
+        <div class="lang-block" data-lang="fr">Tout est générique — Le Datacard Generator ne contient aucune table d’appareils, de radios ou d’emports : ce que vous saisissez s’affiche tel quel. Il sert donc à tout appareil, sans mise à jour quand un module DCS change.</div>
         <div class="lang-block" data-lang="en">Everything is generic — The Datacard Generator holds no table of aircraft, radios, or loadouts: what you type shows as typed. It therefore works for any aircraft, with no update needed when a DCS module changes.</div>
       </div>
 
       <!-- Contenu tronqué -->
       <div class="fm-callout warn">
-        <div class="lang-block" data-lang="fr">Contenu tronqué — Si la page 1 déborde encore une fois la navigation passée en page 2, l’éditeur affiche « Contenu tronqué ». Allégez alors la mission, les notes ou les menaces : la fiche ne se réduit pas d’elle-même.</div>
+        <div class="lang-block" data-lang="fr">Contenu tronqué — Si la page 1 déborde encore une fois la navigation passée en page 2, l’éditeur affiche « Contenu tronqué ». Allégez alors la mission, les notes ou les menaces : la fiche ne se réduit pas d’elle-même.</div>
         <div class="lang-block" data-lang="en">Content truncated — If page 1 still overflows once navigation has moved to page 2, the editor shows “Content truncated”. Trim the mission, notes, or threats: the sheet doesn’t shrink on its own.</div>
       </div>
 

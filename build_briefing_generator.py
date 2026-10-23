@@ -2877,7 +2877,7 @@ import os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
-APP_VERSION = "2.3.1"
+APP_VERSION = "2.3.2"
 
 ASSETS_PATH = os.path.join(HERE, 'assets.json')
 if not os.path.isfile(ASSETS_PATH):
@@ -4118,6 +4118,10 @@ function rerenderAllDynamic() {
   try { renderRoster(); }           catch(e) { console.warn('rerender roster failed:', e); }
   try { renderRadioItems(); }       catch(e) { console.warn('rerender radio items failed:', e); }
   try { renderRadioAircrafts(); }   catch(e) { console.warn('rerender radio ac failed:', e); }
+  // Brief simplifié (v2.3.2) : vols, fréquences et photos construisent leurs libellés par t()
+  try { renderSimpleFlights(); }    catch(e) { console.warn('rerender simple flights failed:', e); }
+  try { renderSimpleRadioItems(); } catch(e) { console.warn('rerender simple radio failed:', e); }
+  try { renderPhotosEditor(); }     catch(e) { console.warn('rerender photos failed:', e); }
   // P1.B: wing read-only panel re-rendered via renderWingReadOnly() depuis storage listener
 }
 
