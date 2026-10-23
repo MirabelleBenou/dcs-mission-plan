@@ -14,6 +14,12 @@ The suite bundles several **independently-versioned tools**, so entries are grou
 - **Tablet & mobile** first-class target (touch, drag, rotation-safe).
 - Wing configuration shared automatically across embedded tools.
 
+### `v1.7.0`
+#### Added
+- Embeds **Datacard Generator v1.2.0** — waypoints placed by heading and distance (see below). Released together with v1.5.3 and v1.6.0.
+#### Changed
+- Embeds **Field Manual v1.2.3**.
+
 ### `v1.6.0`
 #### Added
 - Embeds **Datacard Generator v1.1.0** — navigation coordinates (see below).
@@ -152,6 +158,13 @@ Initial release. Command post for the suite.
 
 ## Datacard Generator
 
+### `v1.2.0`
+#### Added
+- **Waypoints placed by heading and distance** — a waypoint without coordinates, next to a placed one, gets its coordinates from the heading and distance of the leg between them, forwards (from the previous waypoint) or backwards (from the next one), in a chain; shown in MGRS and DMS like typed coordinates, and flagged as estimated in the editor only.
+- **Dotted DMS input** — `36.49.30N/34.44.29E` (with `/`, a comma or spaces; hemisphere before or after) is recognised.
+#### Changed
+- The navigation display list says **DMS**; a one-line hint lists the accepted coordinate formats.
+
 ### `v1.1.0`
 #### Added
 - **Navigation coordinates** — each waypoint takes coordinates, pasted as shown by the F10 map or an aircraft: MGRS, degrees-minutes-seconds, degrees-decimal minutes or decimal degrees; the editor tells whether they were recognised.
@@ -185,6 +198,10 @@ Initial release. One-page flight datacards for the cockpit kneeboard.
 ---
 
 ## Field Manual
+
+### `v1.2.3`
+#### Changed
+- Datacard Generator chapter: waypoints placed by heading and distance.
 
 ### `v1.2.2`
 #### Changed
