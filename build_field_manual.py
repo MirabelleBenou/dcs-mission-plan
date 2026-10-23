@@ -445,7 +445,7 @@ body.zm-open #fm-root { overflow: hidden; }
   position: fixed;
   inset: 0;
   z-index: 5000;
-  background: rgba(0, 0, 0, .88);
+  background: rgba(0, 0, 0, .94);
   color: var(--paper);
   font-family: var(--f-ui);
 }
@@ -466,6 +466,7 @@ body.zm-open #fm-root { overflow: hidden; }
   position: absolute;
   left: 0; top: 0;
   color: var(--ink);
+  font-family: var(--f-typewriter);
   will-change: transform;
 }
 .zm-box img {
@@ -1359,7 +1360,7 @@ body {{
 /* ── CHAPITRE PAGE ── */
 /* La couleur d'un module marque, l'encre écrit : l'encre d'accent (50 % accent, 50 % encre) porte le texte. */
 .fm-chapter, .fm-plaque, .fm-stub-placeholder {{
-  --accent-ink: color-mix(in srgb, var(--chapter-accent, var(--fm-accent)) 50%, var(--ink));
+  --accent-ink: color-mix(in srgb, var(--chapter-accent, var(--fm-accent)) 40%, var(--ink));
 }}
 .fm-chapter {{
   max-width: 860px;
