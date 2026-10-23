@@ -1286,6 +1286,7 @@ body {
 /* Navigation */
 .dc-navc td.cc { font-size: 20px; letter-spacing: .02em; text-align: left; text-overflow: clip; }
 .dc-navc th.cc { text-align: left; }
+.dc-navc td.cc .est { display: inline-block; width: 14px; overflow: hidden; vertical-align: top; }
 .dc-navc th:nth-child(5), .dc-navc td:nth-child(5) { padding-left: 18px; }
 .dc-navc th:nth-child(6), .dc-navc td:nth-child(6) { padding-left: 14px; }
 .dc-nav td.nm { font-family: var(--dc-fo); font-weight: 500; font-size: 21px; letter-spacing: .04em; }
@@ -1877,7 +1878,7 @@ const I18N = {
     'ph.nav.*.coord': '36S VD 47535 77241',
     'nav.coord.bad': '✗ Format non reconnu',
     'nav.calc.tip': 'Calculé depuis les coordonnées',
-    'nav.coord.help': 'MGRS, ou N35°02\'11" E032°25\'29", ou N35°02.183\' E032°25.483\', ou 35.0365, 32.4248',
+    'nav.coord.help': 'MGRS, ou N35°02\'11" E032°25\'29", ou N35°02.183\' E032°25.483\', ou 35.0365, 32.4248, ou 36.49.30N/34.44.29E',
     'nav.est.prev': '≈ estimé depuis le point précédent (cap, distance) :',
     'nav.est.next': '≈ estimé depuis le point suivant (cap, distance) :',
     'dc.h.course.t': 'CAP V °',
@@ -2145,7 +2146,7 @@ const I18N = {
     'ph.nav.*.coord': '36S VD 47535 77241',
     'nav.coord.bad': '✗ Format not recognized',
     'nav.calc.tip': 'Computed from coordinates',
-    'nav.coord.help': 'MGRS, or N35°02\'11" E032°25\'29", or N35°02.183\' E032°25.483\', or 35.0365, 32.4248',
+    'nav.coord.help': 'MGRS, or N35°02\'11" E032°25\'29", or N35°02.183\' E032°25.483\', or 35.0365, 32.4248, or 36.49.30N/34.44.29E',
     'nav.est.prev': '≈ estimated from the previous point (heading, distance):',
     'nav.est.next': '≈ estimated from the next point (heading, distance):',
     'dc.h.course.t': 'HDG T °',
@@ -2483,10 +2484,32 @@ function parseDegPart(s, maxDeg) {
   return v;
 }
 
+/* DMS pointé : « 36.49.30N/34.44.29E », « 36.49.30N 34.44.29E », « N36.49.30/E034.44.29 » (x en majuscules) */
+function parseDottedDms(x) {
+  const C = '(?:([NSEW])\\s*)?(\\d{1,3})\\.(\\d{2})\\.(\\d{2})(?:\\s*([NSEW]))?';
+  const m = new RegExp('^' + C + '(?:\\s*[\\/,;]\\s*|\\s+)' + C + '$').exec(x);
+  if (!m) return null;
+  const one = (a, b, c, d, e, maxDeg, pos, neg) => {
+    if ((a ? 1 : 0) + (e ? 1 : 0) !== 1) return null;
+    const h = a || e;
+    if (h !== pos && h !== neg) return null;
+    const dg = parseInt(b, 10), mi = parseInt(c, 10), se = parseInt(d, 10);
+    if (mi >= 60 || se >= 60) return null;
+    const v = dg + mi / 60 + se / 3600;
+    if (v > maxDeg) return null;
+    return h === neg ? -v : v;
+  };
+  const lat = one(m[1], m[2], m[3], m[4], m[5], 90, 'N', 'S');
+  const lon = one(m[6], m[7], m[8], m[9], m[10], 180, 'E', 'W');
+  return (lat == null || lon == null) ? null : { lat: lat, lon: lon };
+}
+
 function parseLatLon(s) {
   let x = s.toUpperCase().replace(/[′’´‘]/g, "'").replace(/[″”“]/g, '"').replace(/''/g, '"').replace(/[º˚]/g, '°');
   x = x.trim();
   if (!x) return null;
+  const dm = parseDottedDms(x);
+  if (dm) return dm;
   const letters = [];
   const re = /[NSEW]/g;
   let mm;
@@ -3107,8 +3130,8 @@ function fmtDecl(v) {
 /* Colonnes du bloc Navigation selon l'affichage (largeurs en px ; la dernière colonne, la note, prend le reste) */
 const NAV_COLS = {
   course: [50, 288, 90, 108, 89, 136],
-  mgrs:   [50, 262, 236, 84, 100],
-  dms:    [50, 224, 290, 84, 100]
+  mgrs:   [50, 262, 254, 84, 100],
+  dms:    [50, 224, 304, 84, 100]
 };
 
 function blkNav(c) {
@@ -3146,9 +3169,10 @@ function blkNav(c) {
       '<th>' + esc(t('dc.h.note')) + '</th>';
     body = shown.map((x, i) => {
       const r = x.r, p = x.g.pt || x.g.est;
-      const cc = p ? (x.g.pt ? '' : '≈ ') + (mode === 'mgrs' ? (toMGRS(p.lat, p.lon) || '—') : toDMS(p.lat, p.lon)) : '—';
+      const cc = p ? esc(mode === 'mgrs' ? (toMGRS(p.lat, p.lon) || '—') : toDMS(p.lat, p.lon)) : esc('—');
+      const pre = (p && !x.g.pt) ? '<span class="est">≈ </span>' : '';
       return '<tr><td class="m ix">' + i + '</td><td class="nm">' + esc(r.name) + '</td>' +
-        '<td class="m cc">' + esc(cc) + '</td>' +
+        '<td class="m cc">' + pre + cc + '</td>' +
         '<td class="m r">' + dash(r.altitude) + '</td><td class="m r">' + dash(r.tos) + '</td>' +
         '<td class="nt">' + esc(r.note) + '</td></tr>';
     }).join('');
