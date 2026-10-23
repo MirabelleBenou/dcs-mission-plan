@@ -14,6 +14,11 @@ The suite bundles several **independently-versioned tools**, so entries are grou
 - **Tablet & mobile** first-class target (touch, drag, rotation-safe).
 - Wing configuration shared automatically across embedded tools.
 
+### `v1.4.0`
+#### Changed
+- Embeds **Field Manual v1.1.0** — Datacard Generator chapter, zoomable images and diagrams, more readable colours (see below).
+- Embeds **Briefing Generator v2.3.2** — the quick-brief editor follows the language switch (see below).
+
 ### `v1.3.0`
 #### Added
 - **Datacard Generator** is live on the board, right after Briefing Generator (see below). Field Manual stays the last live tool.
@@ -53,6 +58,10 @@ Initial release. Command post for the suite.
 ---
 
 ## Briefing Generator
+
+### `v2.3.2`
+#### Fixed
+- **Quick brief follows the language** — switching FR ↔ EN now also re-labels the quick-brief editor (flights, radio items, photo cards), not only the full brief.
 
 ### `v2.3.1`
 #### Fixed
@@ -108,9 +117,19 @@ Initial release. One-page flight datacards for the cockpit kneeboard.
 
 ---
 
-## Field Manual — `v1.0.0`
+## Field Manual
 
-### Added
+### `v1.1.0`
+#### Added
+- **Datacard Generator chapter** — what the tool does, what a briefing import fills in, day and night, units, exports; with an *anatomy of a datacard* diagram and a *what feeds the datacard* diagram.
+- **Zoom** — click or tap any image or diagram to open it full screen; zoom up to 4× (wheel, pinch, buttons, double-tap) and pan. Diagrams stay vector-sharp.
+#### Changed
+- **Briefing Generator chapter** updated for v2.3: full or quick brief, blank start, the editor tabs on narrow screens; its *what feeds what* diagram now tags each section **C** (full brief) and/or **S** (quick brief).
+- **Readability** — module colours now mark (bars, borders, tints) while text is written in ink: headings, links and diagram labels reach a 4.5:1 contrast in all four themes; diagram panels are lighter.
+- French typography — non-breaking thin spaces before high punctuation and inside quotes.
+
+### `v1.0.0`
+#### Added
 - **In-app suite documentation** — opens on the board like the other tools. One illustrated chapter per module (Recon Station, HQ, Briefing Generator); upcoming tools (Route Planner, Kneeboard) stubbed as *coming*.
 - **No screenshots** — line-art SVG diagrams (one per chapter) and reused board tiles, on a "paper" surface.
 - 4 themes, FR/EN, fully offline.
