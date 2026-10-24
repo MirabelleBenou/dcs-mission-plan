@@ -844,7 +844,7 @@ button, input, select { font: inherit; }
 .panel { overflow-y: auto; padding: 16px; background: var(--olive-deep); counter-reset: sec; }
 
 /* bandeau de repli */
-.fallback { position: absolute; z-index: 600; left: 56px; top: 12px; max-width: calc(100% - 180px);
+.fallback { position: absolute; z-index: 600; left: 56px; top: 12px; max-width: calc(100% - 56px - 180px);
   background: rgba(31,28,22,.88); color: var(--paper-light); border-left: 3px solid var(--red-stamp);
   font-size: 12px; letter-spacing: .5px; padding: 8px 12px; display: none; }
 .fallback.show { display: block; }
@@ -875,6 +875,7 @@ select.in { appearance: none; -webkit-appearance: none; padding-right: 22px;
 .pt-del { height: 40px; border: 1px solid var(--khaki); background: transparent; color: var(--khaki-light); cursor: pointer; font-size: 16px; padding: 0; }
 .pt-del:hover, .pt-del:focus-visible { border-color: var(--red-faded); color: var(--paper-light); background: var(--rust); outline: none; }
 .pt-head { display: grid; grid-template-columns: 30px 1fr 84px 76px 34px; gap: 6px; margin-bottom: 4px; }
+.pt-head[hidden] { display: none; }
 .pt-head span { font-size: 9.5px; letter-spacing: 1.2px; color: var(--khaki-light); text-transform: uppercase; min-width: 0; }
 .hint { font-size: 11.5px; color: var(--khaki-light); letter-spacing: .3px; line-height: 1.45; margin: 8px 0 0; }
 .ed-warn { font-size: 11px; letter-spacing: 1px; color: var(--amber); border-left: 3px solid var(--red-stamp); background: rgba(0,0,0,.18);
@@ -905,7 +906,21 @@ table.nav td.r { text-align: right; white-space: nowrap; }
   border-top: 2px solid #1f1c16; }
 .total b { font-family: var(--f-mono); font-weight: 400; font-size: 13px; letter-spacing: 0; }
 
+.sheet-top.sub { border-top: 2px solid #f0e8d6; }
+#nav-refs-wrap[hidden] { display: none; }
+
 .actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+
+/* bloc « Ajouter » : un point par ses coordonnées, ou par cap et distance depuis le dernier point */
+.add-block { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--khaki); }
+.add-block .tb-group { display: flex; width: 100%; margin-bottom: 10px; }
+.add-block .tb-group .tb-btn { flex: 1 1 0; min-width: 0; padding: 0 8px; font-size: 11px; letter-spacing: 1px; }
+.add-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.add-fields[hidden], .add-coord[hidden] { display: none; }
+.add-fields .lbl, .add-coord .lbl { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.add-from { font-size: 11.5px; color: var(--khaki-light); letter-spacing: .3px; line-height: 1.45; margin: 0 0 8px; overflow-wrap: anywhere; }
+.add-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.add-actions .tb-btn { flex: 1 1 0; }
 
 /* ---------- carte : marqueurs et étiquettes ---------- */
 .wp-icon { width: 30px; height: 30px; }
@@ -922,6 +937,31 @@ table.nav td.r { text-align: right; white-space: nowrap; }
 .ins { width: 18px; height: 18px; border-radius: 50%; background: #f0e8d6; border: 2px solid var(--route); color: var(--route); box-shadow: 0 0 0 1px rgba(31,28,22,.6);
   font-weight: 700; font-size: 13px; line-height: 13px; text-align: center; }
 .mgrs-canvas { position: absolute; left: 0; top: 0; pointer-events: none; }
+/* points de référence : un losange de 24 px, sa lettre, le nom sur l'étiquette papier des points */
+.rf-icon { width: 24px; height: 24px; }
+.rf-dot { width: 24px; height: 24px; box-sizing: border-box; transform: rotate(45deg); background: #1f1c16; border: 2px solid #f0e8d6;
+  display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 1.5px rgba(31,28,22,.55); }
+.rf-dot span { transform: rotate(-45deg); font-family: var(--f-ui); font-weight: 700; font-size: 13px; line-height: 1; color: #f0e8d6; }
+.rf-dot.sel { background: var(--route); }
+.rf-icon .wp-name { left: 34px; top: 2px; }
+/* aérodromes : un rond (terrain à piste) ou un carré à « H » (hélistation), dessinés selon le zoom (classes de la couche) */
+.af-icon { display: none; box-sizing: border-box; background: #f0e8d6; border: 2.5px solid #1f1c16; }
+.af-icon::before { content: ''; position: absolute; left: -9px; top: -9px; right: -9px; bottom: -9px; }
+.af-a { width: 12px; height: 12px; border-radius: 50%; }
+.af-a::after { content: ''; position: absolute; left: 50%; top: 50%; width: 4px; height: 4px; margin: -2px 0 0 -2px; border-radius: 50%; background: #1f1c16; }
+.af-h { width: 10px; height: 10px; border-width: 2px; align-items: center; justify-content: center; }
+.af-h b { font-family: var(--f-ui); font-weight: 700; font-size: 8px; line-height: 1; color: #1f1c16; }
+.af-name { display: none; position: absolute; left: 14px; top: 50%; transform: translateY(-50%); white-space: nowrap;
+  font-family: var(--f-ui); font-weight: 500; font-size: 11px; line-height: 1.3; color: #1f1c16; background: rgba(240,232,214,.8); padding: 0 4px; }
+.af-h .af-name { left: 12px; }
+.leaflet-airfields-pane.afz7 .af-a { display: block; }
+.leaflet-airfields-pane.afz10 .af-h { display: flex; }
+.leaflet-airfields-pane.afz9 .af-a .af-name { display: block; }
+.leaflet-airfields-pane.afz12 .af-h .af-name { display: block; }
+/* ce que pose un toucher sur la carte : Point · Réf. */
+.tapmode { background: var(--olive-deep); border: 2px solid var(--amber-dark); box-shadow: 0 2px 8px rgba(0,0,0,.4); }
+.tapmode .tb-btn { height: 36px; min-width: 0; padding: 0 10px; font-size: 11px; letter-spacing: 1px; }
+#btn-airfields:disabled { pointer-events: auto; cursor: not-allowed; }
 .leaflet-control-attribution { font-family: var(--f-ui); font-weight: 500; font-size: 10px !important; background: rgba(240,232,214,.8) !important; }
 .leaflet-container { font-family: var(--f-ui); }
 body, body[data-theme="cw-nato"] { --route: #a83524; }
@@ -944,25 +984,27 @@ body[data-theme="modern-east"] { --route: #7a2424; }
   .tb-btn .tb-btn-label.solo { display: inline; }
 }
 
+/* ---------- barre du haut : une seule ligne qui défile quand elle déborde (à tout écran : avec « Lieux » et « Aérodromes », elle
+   ne tient plus sur un portable) ; un fondu signale le bord qui déborde ---------- */
+.toolbar {
+  --fade-w: 22px; --fade-gap: 8px;
+  flex-wrap: nowrap; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; touch-action: pan-x;
+}
+.toolbar > * { flex-shrink: 0; }
+.toolbar::before, .toolbar::after {
+  content: ''; position: sticky; flex: 0 0 var(--fade-w); width: var(--fade-w); align-self: stretch;
+  pointer-events: none; opacity: 0; transition: opacity .15s; z-index: 2;
+}
+.toolbar::before { left: 0; margin-right: calc(-1 * (var(--fade-w) + var(--fade-gap))); background: inherit; mask-image: linear-gradient(90deg, #000, transparent); -webkit-mask-image: linear-gradient(90deg, #000, transparent); }
+.toolbar::after { right: 0; margin-left: calc(-1 * (var(--fade-w) + var(--fade-gap))); background: inherit; mask-image: linear-gradient(270deg, #000, transparent); -webkit-mask-image: linear-gradient(270deg, #000, transparent); }
+.toolbar.fade-l::before, .toolbar.fade-r::after { opacity: 1; }
+
 /* ---------- tablette portrait, téléphone ---------- */
 @media (max-width: 1099px) {
   .app { position: static; display: block; padding-top: 56px; }
   .mapwrap { height: 58vh; min-height: 340px; border-left: none; border-bottom: 2px solid var(--amber-dark); }
   .app > .panel { order: 0; }
   .panel { overflow: visible; }
-  /* Barre du haut : une seule ligne qui défile au doigt ; un fondu signale le bord qui déborde */
-  .toolbar {
-    --fade-w: 22px; --fade-gap: 8px;
-    flex-wrap: nowrap; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; touch-action: pan-x;
-  }
-  .toolbar > * { flex-shrink: 0; }
-  .toolbar::before, .toolbar::after {
-    content: ''; position: sticky; flex: 0 0 var(--fade-w); width: var(--fade-w); align-self: stretch;
-    pointer-events: none; opacity: 0; transition: opacity .15s; z-index: 2;
-  }
-  .toolbar::before { left: 0; margin-right: calc(-1 * (var(--fade-w) + var(--fade-gap))); background: inherit; mask-image: linear-gradient(90deg, #000, transparent); -webkit-mask-image: linear-gradient(90deg, #000, transparent); }
-  .toolbar::after { right: 0; margin-left: calc(-1 * (var(--fade-w) + var(--fade-gap))); background: inherit; mask-image: linear-gradient(270deg, #000, transparent); -webkit-mask-image: linear-gradient(270deg, #000, transparent); }
-  .toolbar.fade-l::before, .toolbar.fade-r::after { opacity: 1; }
 }
 @media (max-width: 520px) {
   .pt-row, .pt-head { grid-template-columns: 28px 1fr 62px 80px 30px; gap: 4px; }
@@ -993,6 +1035,8 @@ body[data-theme="modern-east"] { --route: #7a2424; }
     <option value="grid" data-i18n="layer.grid">Grille seule</option>
   </select>
   <button type="button" class="tb-btn" id="btn-grid" aria-pressed="true" data-i18n="tb.grid" data-i18n-title="tb.grid" title="Grille MGRS">Grille MGRS</button>
+  <button type="button" class="tb-btn" id="btn-places" aria-pressed="false" data-i18n="tb.places" data-i18n-title="tb.places.tip" title="Noms de lieux (Esri)">Lieux</button>
+  <button type="button" class="tb-btn" id="btn-airfields" aria-pressed="true" data-i18n="tb.airfields" data-i18n-title="tb.airfields.tip" title="Aérodromes et hélistations DCS">Aérodromes</button>
   <span class="tb-sep"></span>
   <span class="tb-label" data-i18n="tb.theatre">Théâtre</span>
   <select class="tb-sel" id="theatre" data-i18n-aria-label="tb.theatre" aria-label="Théâtre"></select>
@@ -1038,7 +1082,33 @@ body[data-theme="modern-east"] { --route: #7a2424; }
         </div>
         <div class="pt-head"><span data-i18n="th.no">N°</span><span data-i18n="th.name">Nom</span><span id="alt-unit"></span><span data-i18n="th.ref">Réf.</span><span></span></div>
         <div id="pts"></div>
+        <div class="add-block" id="add-block">
+          <div class="lbl" data-i18n="add.title">Ajouter</div>
+          <span class="tb-group" role="group"><button type="button" class="tb-btn" data-addmode="coord" aria-pressed="true" data-i18n="add.coord">Coordonnées</button><button type="button" class="tb-btn" data-addmode="hd" aria-pressed="false" data-i18n="add.hd">Cap et distance</button></span>
+          <div class="add-coord" id="add-coord">
+            <input class="in" id="add-coord-in" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" data-i18n-placeholder="add.coord.ph" data-i18n-aria-label="add.coord" placeholder="MGRS, DMS, DDM ou décimal" aria-label="Coordonnées">
+          </div>
+          <div id="add-hd" hidden>
+            <p class="add-from" id="add-from"></p>
+            <div class="add-fields">
+              <div><label class="lbl" for="add-hdg" data-i18n="add.hdg">Cap (°)</label><input class="in" id="add-hdg" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"></div>
+              <div><label class="lbl" for="add-dist" id="add-dist-lbl"></label><input class="in" id="add-dist" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"></div>
+            </div>
+          </div>
+          <div class="add-actions">
+            <button type="button" class="tb-btn primary" id="btn-add-wp" data-i18n="add.wp">+ Point</button>
+            <button type="button" class="tb-btn" id="btn-add-ref" data-i18n="add.ref">+ Réf.</button>
+          </div>
+        </div>
         <p class="hint" data-i18n="help.route">Touchez la carte pour ajouter un point ; glissez un point pour le déplacer ; le « + » d'une branche insère un point.</p>
+      </div>
+    </div>
+    <div class="ed-section" data-section="refs">
+      <div class="ed-head"><span class="ed-title" data-i18n="sec.refs">Points de référence</span><small id="ref-count"></small></div>
+      <div class="ed-body">
+        <div class="pt-head" id="ref-head" hidden><span>#</span><span data-i18n="th.name">Nom</span><span id="alt-unit2"></span><span data-i18n="th.ref">Réf.</span><span></span></div>
+        <div id="refs"></div>
+        <p class="hint" data-i18n="help.refs">Choisissez « Réf. » en haut de la carte, puis touchez la carte ; glissez une référence pour la déplacer.</p>
       </div>
     </div>
     <div class="ed-section" data-section="nav">
@@ -1057,6 +1127,10 @@ body[data-theme="modern-east"] { --route: #7a2424; }
             <tbody id="nav-body"></tbody>
           </table>
           <div class="total"><span data-i18n="nav.total">TOTAL</span><b id="nav-total"></b></div>
+          <div id="nav-refs-wrap" hidden>
+            <div class="sheet-top sub"><span data-i18n="nav.refs">POINTS DE RÉFÉRENCE</span></div>
+            <table class="nav"><tbody id="nav-refs"></tbody></table>
+          </div>
         </div>
         <div class="actions">
           <button type="button" class="tb-btn primary" id="btn-handoff" data-i18n="btn.handoff">→ Vers la datacard</button>
@@ -1074,8 +1148,10 @@ body[data-theme="modern-east"] { --route: #7a2424; }
 'use strict';
 
 /* =====================================================
-   ROUTE PLANNER v1.0.0
-   Une route sur une carte : caps, distances, MGRS et DMS,
+   ROUTE PLANNER v1.1.0
+   Une route sur une carte (points posés, saisis par coordonnées
+   ou par cap et distance), des points de référence, les noms de lieux
+   et les aérodromes DCS : caps, distances, MGRS et DMS,
    envoyés dans la navigation d'une datacard.
    Monofichier ; seules les tuiles de carte viennent du réseau.
    ===================================================== */
@@ -1088,6 +1164,7 @@ const FORMAT_ID = 'dcs-route-v1';
 const THEME_IDS = ['cw-nato', 'cw-soviet', 'modern-nato', 'modern-east'];
 const LAYER_IDS = ['dcs', 'topo', 'sat', 'grid'];
 const MAX_POINTS = 30;
+const MAX_REFS = 12;
 const NM_KM = 1.852;
 const FT_M = 0.3048;
 const FALLBACK_MS = 4000;      /* délai avant le repli en grille seule */
@@ -1114,6 +1191,9 @@ const THEATRES = [
 ];
 const THEATRE_IDS = THEATRES.map(x => x.id);
 
+/* Aérodromes DCS par théâtre : [ nom, lat, lon, « a » (terrain à piste) ou « h » (hélistation) ] — pydcs, LGPL-3.0 */
+const AIRFIELDS = {"Caucasus":[["Anapa-Vityazevo",45.004948,37.347825,"a"],["Batumi",41.609597,41.600237,"a"],["Beslan",43.205706,44.605808,"a"],["Gelendzhik",44.572901,38.011614,"a"],["Gudauta",43.114327,40.569741,"a"],["Kobuleti",41.929919,41.863275,"a"],["Krasnodar-Center",45.08695,38.939985,"a"],["Krasnodar-Pashkovsky",45.038008,39.188135,"a"],["Krymsk",44.967937,37.99503,"a"],["Kutaisi",42.177616,42.481292,"a"],["Maykop-Khanskaya",44.681285,40.035254,"a"],["Mineralnye Vody",44.227853,43.081192,"a"],["Mozdok",43.791711,44.605839,"a"],["Nalchik",43.514002,43.636451,"a"],["Novorossiysk",44.668096,37.778258,"a"],["Senaki-Kolkhi",42.240849,42.048014,"a"],["Sochi-Adler",43.444354,39.941076,"a"],["Soganlug",41.649542,44.938358,"a"],["Sukhumi-Babushara",42.861092,41.124999,"a"],["Tbilisi-Lochini",41.667034,44.956288,"a"],["Vaziani",41.629026,45.027231,"a"]],"Falklands":[["Almirante Schroeders",-53.60693,-70.476206,"a"],["Comandante Luis Piedrabuena",-49.994984,-68.951448,"a"],["El Calafate",-50.280244,-72.052749,"a"],["Franco Bianco",-52.736586,-69.333789,"a"],["Gobernador Gregores",-48.783169,-70.147972,"a"],["Goose Green",-51.819815,-58.980164,"a"],["Gull Point",-52.179394,-58.860684,"a"],["Hipico Flying Club",-48.756736,-70.23128,"a"],["Mount Pleasant",-51.820679,-58.457737,"a"],["O'Higgins",-48.469006,-72.563329,"a"],["Pampa Guanaco",-54.049979,-68.808998,"a"],["Port Stanley",-51.685912,-57.777841,"a"],["Porvenir",-53.253687,-70.319301,"a"],["Puerto Natales",-51.670708,-72.528191,"a"],["Puerto Santa Cruz",-50.01703,-68.579085,"a"],["Puerto Williams",-54.930991,-67.626219,"a"],["Punta Arenas",-53.005534,-70.856917,"a"],["Rio Chico",-51.669047,-69.266067,"a"],["Rio Gallegos",-51.608851,-69.31226,"a"],["Rio Grande",-53.777598,-67.749881,"a"],["Rio Turbio",-51.605055,-72.219823,"a"],["San Carlos FOB",-51.501283,-59.004904,"a"],["San Julian",-49.306694,-67.802726,"a"],["Tolhuin",-54.499616,-67.172385,"a"],["Ushuaia",-54.843308,-68.295847,"a"],["Ushuaia Helo Port",-54.822824,-68.30419,"a"]],"GermanyCW":[["Adelsheim",49.36917,9.440137,"a"],["Airracing Frankfurt",50.008207,8.098693,"a"],["Airracing Koblenz",50.292048,7.830378,"a"],["Airracing Lubeck",53.711666,10.766574,"a"],["Allstedt",51.380584,11.446474,"a"],["Altes Lager",51.995486,12.983764,"a"],["Bad Durkheim",49.472683,8.194936,"a"],["Barth",54.338192,12.709697,"a"],["Bienenfarm",52.658628,12.747121,"a"],["Bindersleben",50.979473,10.962329,"a"],["Bitburg",49.944659,6.564183,"a"],["Bornholm",55.063383,14.759014,"a"],["Brand",52.036838,13.746437,"a"],["Brandis",51.328329,12.656378,"a"],["Braunschweig",52.319083,10.55393,"a"],["Bremen",53.046942,8.788273,"a"],["Briest",52.437638,12.453931,"a"],["Buchel",50.174095,7.063849,"a"],["Buckeburg",52.278579,9.083267,"a"],["Celle",52.591416,10.024321,"a"],["Chojna",52.939562,14.421984,"a"],["Cochstedt",51.855915,11.417947,"a"],["Cologne",50.867921,7.147544,"a"],["Damgarten",54.264011,12.444217,"a"],["Dedelow",53.35552,13.785071,"a"],["Dessau",51.831724,12.193084,"a"],["Dusseldorf",51.286957,6.767706,"a"],["Falkenberg",51.546467,13.216107,"a"],["Fassberg",52.919426,10.184823,"a"],["Finow",52.82714,13.694045,"a"],["Frankfurt",50.040431,8.56732,"a"],["Fritzlar",51.11461,9.285835,"a"],["Fulda",50.539912,9.643016,"a"],["Gardelegen",52.529523,11.350135,"a"],["Garz",53.878503,14.153541,"a"],["Gatow",52.475349,13.138099,"a"],["Gelnhausen",50.196331,9.166998,"a"],["Giebelstadt",49.647901,9.964734,"a"],["Glindbruchkippe",52.323828,10.180462,"a"],["Gross Mohrdorf",54.383196,12.912291,"a"],["Grosse Wiese",52.136877,10.570782,"a"],["Gutersloh",51.922807,8.304065,"a"],["H FRG 01",52.266053,10.615637,"h"],["H FRG 02",53.8786,10.642456,"h"],["H FRG 03",53.644215,10.140129,"h"],["H FRG 04",53.442231,10.517905,"h"],["H FRG 05",53.159288,10.948311,"h"],["H FRG 06",53.072719,8.907938,"h"],["H FRG 07",53.115475,11.184009,"h"],["H FRG 08",52.606016,10.630505,"h"],["H FRG 09",52.518209,10.844313,"h"],["H FRG 10",52.386183,9.771017,"h"],["H FRG 11",52.805371,10.05105,"h"],["H FRG 12",53.675743,10.800685,"h"],["H FRG 13",52.031402,8.583062,"h"],["H FRG 14",52.464729,13.223081,"h"],["H FRG 15",52.603458,13.314887,"h"],["H FRG 16",52.110315,9.444643,"h"],["H FRG 17",53.151013,9.481281,"h"],["H FRG 18",54.150636,10.552375,"h"],["H FRG 19",53.464559,9.908176,"h"],["H FRG 20",51.713308,10.589121,"h"],["H FRG 21",52.33576,10.639428,"h"],["H FRG 23",52.947966,10.115503,"h"],["H FRG 25",50.724076,9.931884,"h"],["H FRG 27",51.323422,9.477091,"h"],["H FRG 30",50.019608,7.349018,"h"],["H FRG 31",49.920066,7.293042,"h"],["H FRG 32",49.474709,7.881511,"h"],["H FRG 34",50.416494,7.441757,"h"],["H FRG 38",50.51797,9.134742,"h"],["H FRG 39",50.577254,9.69558,"h"],["H FRG 40",50.37408,7.58396,"h"],["H FRG 41",49.793274,9.984979,"h"],["H FRG 42",49.828193,9.887384,"h"],["H FRG 43",49.760147,9.491092,"h"],["H FRG 44",49.944071,8.916184,"h"],["H FRG 45",49.744633,9.071655,"h"],["H FRG 46",50.050912,9.8238,"h"],["H FRG 47",49.576087,9.349869,"h"],["H FRG 48",49.922038,6.677135,"h"],["H FRG 49",50.069393,8.56591,"h"],["H FRG 50",52.831764,9.775313,"h"],["H FRG 51",49.613483,7.381087,"h"],["H GDR 01",53.438107,11.144806,"h"],["H GDR 02",52.618756,12.356065,"h"],["H GDR 03",53.112142,13.52652,"h"],["H GDR 04",53.524126,13.320291,"h"],["H GDR 05",53.638532,13.897128,"h"],["H GDR 06",52.41448,12.534486,"h"],["H GDR 07",52.984533,11.703077,"h"],["H GDR 08",52.707228,13.543298,"h"],["H GDR 09",53.867262,13.115553,"h"],["H GDR 10",52.504551,13.52469,"h"],["H GDR 11",52.385353,13.611285,"h"],["H GDR 12",52.484843,11.596376,"h"],["H GDR 13",53.609172,12.206164,"h"],["H GDR 14",53.044028,13.381989,"h"],["H GDR 15",52.186174,12.179097,"h"],["H GDR 16",52.221177,11.781077,"h"],["H GDR 17",53.900057,11.387239,"h"],["H GDR 18",51.848138,10.766606,"h"],["H GDR 19",51.84587,11.29379,"h"],["H GDR 21",54.281007,12.518647,"h"],["H GDR 22",52.070556,13.089146,"h"],["H GDR 24",52.166627,13.484154,"h"],["H GDR 25",51.138687,11.772348,"h"],["H GDR 26",51.493927,11.907455,"h"],["H GDR 30",54.510481,13.618227,"h"],["H GDR 31",54.368925,13.08567,"h"],["H GDR 32",54.347369,13.455492,"h"],["H GDR 33",50.859189,10.743133,"h"],["H GDR 34",53.072506,12.629696,"h"],["H Med FRG 01",53.847982,10.688355,"h"],["H Med FRG 02",53.5613,10.024595,"h"],["H Med FRG 04",53.25235,10.398181,"h"],["H Med FRG 06",52.296393,8.891155,"h"],["H Med FRG 11",51.730317,8.778217,"h"],["H Med FRG 12",51.817208,10.336158,"h"],["H Med FRG 13",49.452728,7.767097,"h"],["H Med FRG 14",50.97467,9.80471,"h"],["H Med FRG 15",51.25702,9.379733,"h"],["H Med FRG 16",51.552895,8.332072,"h"],["H Med FRG 17",51.399203,9.659754,"h"],["H Med FRG 21",49.246115,7.36523,"h"],["H Med FRG 24",51.554183,8.568386,"h"],["H Med FRG 26",49.927511,6.839789,"h"],["H Med FRG 27",50.077334,8.216295,"h"],["H Med FRG 29",49.402495,7.558637,"h"],["H Med GDR 01",54.093302,12.088701,"h"],["H Med GDR 02",54.302377,13.072044,"h"],["H Med GDR 03",54.090878,13.376113,"h"],["H Med GDR 08",52.27098,11.878193,"h"],["H Med GDR 09",52.162426,11.633036,"h"],["H Med GDR 10",51.959779,12.100928,"h"],["H Med GDR 11",51.770921,10.790493,"h"],["H Med GDR 12",50.987916,10.316368,"h"],["H Med GDR 13",51.289264,10.743367,"h"],["H Med GDR 14",50.809081,10.21873,"h"],["H Med GDR 16",50.88609,11.617336,"h"],["H Radar FRG 02",50.233296,8.457879,"h"],["H Radar GDR 01",51.799798,10.612503,"h"],["H Radar GDR 02",50.571778,10.08525,"h"],["H Radar GDR 03",51.107844,10.193686,"h"],["H Radar GDR 04",51.624039,10.724236,"h"],["H Radar GDR 05",52.006375,10.723486,"h"],["H Radar GDR 06",52.325383,11.455597,"h"],["H Radar GDR 07",53.280173,11.081132,"h"],["H Radar GDR 08",52.791891,10.811338,"h"],["H Radar GDR 09",52.493991,14.088625,"h"],["Hahn",49.948452,7.263905,"a"],["Haina",50.991663,10.47957,"a"],["Hamburg",53.626844,9.981322,"a"],["Hamburg Finkenwerder",53.534149,9.832895,"a"],["Hannover",52.454479,9.693753,"a"],["Hasselfelde",51.705393,10.878693,"a"],["Heidelberg",49.39351,8.652137,"a"],["Herrenteich",49.343501,8.489852,"a"],["Hildesheim",52.179792,9.94579,"a"],["Hockenheim",49.325263,8.527476,"a"],["Holzdorf",51.767796,13.169713,"a"],["Kammermark",53.195961,12.165032,"a"],["Kastrup",55.619241,12.652365,"a"],["Kiel",54.379501,10.144681,"a"],["Kothen",51.721377,11.961542,"a"],["Laage",53.918052,12.2794,"a"],["Landstuhl",49.403076,7.53632,"a"],["Langenselbold",50.174621,9.063287,"a"],["Larz",53.306376,12.752547,"a"],["Leipzig Mockau",51.393782,12.408046,"a"],["Lubeck",53.804876,10.716882,"a"],["Luneburg",53.248542,10.459531,"a"],["Mahlwinkel",52.388279,11.826442,"a"],["Mainz Finthen",49.969133,8.147878,"a"],["Marxwalde",52.612976,14.24273,"a"],["Mendig",50.366013,7.315629,"a"],["Merseburg",51.363973,11.950009,"a"],["Neubrandenburg",53.602225,13.306104,"a"],["Neuruppin",52.941057,12.786901,"a"],["Nordholz",53.767587,8.658519,"a"],["Northeim",52.984329,11.237112,"a"],["Norvenich",50.831274,6.658648,"a"],["Ober-Morlen",50.362445,8.712215,"a"],["Obermehler Schlotheim",51.267735,10.634806,"a"],["Oranienburg",52.724895,13.216861,"a"],["Parchim",53.427856,11.786589,"a"],["Peenemunde",54.1587,13.773616,"a"],["Perwenitz",52.675639,13.006942,"a"],["Pferdsfeld",49.855128,7.604706,"a"],["Pinnow",53.616543,11.563143,"a"],["Pottschutthohe",49.264469,7.488764,"a"],["Ramstein",49.436899,7.600077,"a"],["Revinge",55.728818,13.427335,"a"],["Rinteln",52.174688,9.052913,"a"],["Schkeuditz",51.415024,12.227159,"a"],["Schonefeld",52.384226,13.534355,"a"],["Schweinfurt",50.048852,10.169674,"a"],["Sembach",49.506152,7.863412,"a"],["Sittensen",53.320957,9.582918,"a"],["Spangdahlem",49.976572,6.698828,"a"],["Sperenberg",52.136914,13.305952,"a"],["Sprendlingen",49.87099,7.959922,"a"],["Stendal",52.629081,11.819859,"a"],["Sturup",55.535659,13.376404,"a"],["Szczecin-Goleniow",53.584757,14.90226,"a"],["Tagra",55.600852,13.714128,"a"],["Tegel",52.55843,13.292892,"a"],["Tempelhof",52.471066,13.404304,"a"],["Templin",53.031999,13.542582,"a"],["Thurland",51.696381,12.210248,"a"],["Tutow",53.921793,13.219059,"a"],["Uelzen",52.983622,10.464483,"a"],["Uetersen",53.646507,9.704034,"a"],["Ummern",52.620466,10.411015,"a"],["Verden-Scharnhorst",52.965761,9.280623,"a"],["Walldorf",49.303708,8.661445,"a"],["Waren Vielist",53.565922,12.653834,"a"],["Werneuchen",52.631801,13.768795,"a"],["Weser Wumme",53.056097,9.208309,"a"],["Wiesbaden",50.049819,8.325573,"a"],["Wismar",53.914448,11.502445,"a"],["Wittstock",53.202366,12.522975,"a"],["Worms",49.606503,8.365413,"a"],["Wunstorf",52.457325,9.427111,"a"],["Zerbst",51.999629,12.14426,"a"],["Zollschen",51.266365,12.099991,"a"],["Zweibrucken",49.209551,7.400867,"a"]],"Kola":[["Afrikanda",67.457305,32.784017,"a"],["Alakurtti",66.972733,30.348535,"a"],["Alta",69.977261,23.365899,"a"],["Andoya",69.297581,16.135409,"a"],["Arvidsjaur",65.591501,19.277802,"a"],["Banak",70.068784,24.973511,"a"],["Bardufoss",69.055348,18.543504,"a"],["Boden Heli Base",65.809326,21.694523,"a"],["Bodo",67.269203,14.365363,"a"],["Enontekio",68.362497,23.424096,"a"],["Evenes",68.49119,16.67814,"a"],["Hemavan",65.805459,15.083595,"a"],["Hosio",65.896111,25.703854,"a"],["Ivalo",68.607118,27.404838,"a"],["Jokkmokk",66.496346,20.147011,"a"],["Kalevala",65.209507,31.133596,"a"],["Kalixfors",67.764963,20.251009,"a"],["Kallax",65.543786,22.121867,"a"],["Kemi Tornio",65.781484,24.582284,"a"],["Kilpyavr",69.094912,32.400591,"a"],["Kirkenes",69.725364,29.89007,"a"],["Kiruna",67.822005,20.33681,"a"],["Kittila",67.700992,24.846872,"a"],["Koshka Yavr",69.251218,31.196377,"a"],["Kuusamo",65.987367,29.239947,"a"],["Luostari Pechenga",69.402386,30.990917,"a"],["Monchegorsk",67.989043,33.018672,"a"],["Murmansk International",68.78165,32.75136,"a"],["Olenya",68.151778,33.464299,"a"],["Poduzhemye",64.918655,34.262989,"a"],["Rovaniemi",66.564846,25.830487,"a"],["Severomorsk-1",69.030502,33.422995,"a"],["Severomorsk-3",68.867062,33.718115,"a"],["Sodankyla",67.395033,26.619135,"a"],["Tromso",69.681508,18.917733,"a"],["Vidsel",65.875266,20.149866,"a"],["Vuojarvi",67.069133,26.539804,"a"]],"MarianaIslands":[["Andersen AFB",13.581703,144.931052,"a"],["Antonio B. Won Pat Intl",13.48478,144.796824,"a"],["North West Field",13.625334,144.858399,"h"],["Olf Orote",13.438201,144.64224,"a"],["Pagan Airstrip",18.123154,145.763149,"a"],["Rota Intl",14.174373,145.241092,"a"],["Saipan Intl",15.118931,145.729129,"a"],["Tinian Intl",14.999194,145.619182,"a"]],"Nevada":[["Beatty",36.861003,-116.786418,"a"],["Boulder City",35.948667,-114.861818,"a"],["Creech",36.583819,-115.676442,"a"],["Echo Bay",36.31106,-114.463899,"a"],["Groom Lake",37.233179,-115.792336,"a"],["Henderson Executive",35.973994,-115.133052,"a"],["Jean",35.769187,-115.329568,"a"],["Laughlin",35.156103,-114.559452,"a"],["Lincoln County",37.787356,-114.419911,"a"],["McCarran International",36.07641,-115.144632,"a"],["Mesquite",36.833119,-114.055907,"a"],["Mina",38.379786,-118.096677,"a"],["Nellis",36.235224,-115.033001,"a"],["North Las Vegas",36.213472,-115.194768,"a"],["Pahute Mesa",37.101996,-116.312846,"a"],["Tonopah",38.062431,-117.083286,"a"],["Tonopah Test Range",37.798875,-116.780792,"a"]],"Normandy":[["Abbeville Drucat",50.138133,1.837893,"a"],["Alderney",49.706759,-2.214594,"a"],["Amiens-Glisy",49.872011,2.390358,"a"],["Argentan",48.768762,-0.030445,"a"],["Avranches Le Val-Saint-Pere",48.668148,-1.380639,"a"],["Azeville",49.480991,-1.317616,"a"],["Barville",48.480139,0.313983,"a"],["Bazenville",49.303964,-0.564728,"a"],["Beaumont-le-Roger",49.096381,0.796926,"a"],["Beauvais-Tille",49.454163,2.113238,"a"],["Bembridg",50.678471,-1.110802,"a"],["Beny-sur-Mer",49.298021,-0.426621,"a"],["Bernay Saint Martin",49.104433,0.598438,"a"],["Beuzeville",49.420546,-1.298552,"a"],["Biggin Hill",51.33001,0.03165,"a"],["Biniville",49.436721,-1.46897,"a"],["Broglie",49.015629,0.49886,"a"],["Brucheville",49.368674,-1.215765,"a"],["Cardonville",49.351013,-1.050997,"a"],["Carpiquet",49.175126,-0.454461,"a"],["Chailey",50.952521,-0.047401,"a"],["Chippelle",49.241917,-0.97165,"a"],["Conches",48.93481,0.961308,"a"],["Cormeilles-en-Vexin",49.09328,2.035435,"a"],["Creil",49.252764,2.505931,"a"],["Cretteville",49.336592,-1.379356,"a"],["Cricqueville-en-Bessin",49.364575,-1.006884,"a"],["Deanland",50.884349,0.161353,"a"],["Deauville",49.364267,0.157245,"a"],["Detling",51.305788,0.601579,"a"],["Deux Jumeaux",49.347327,-0.980809,"a"],["Dinan-Trelivan",48.443383,-2.103121,"a"],["Dunkirk-Mardyck",51.030384,2.256982,"a"],["Eastchurch",51.390358,0.847936,"a"],["Essay",48.520544,0.257691,"a"],["Evreux",49.023804,1.21326,"a"],["Farnborough",51.278719,-0.77468,"a"],["Fecamp-Benouville",49.746304,0.356102,"a"],["Flers",48.749217,-0.595621,"a"],["Ford",50.818497,-0.59117,"a"],["Friston",50.761749,0.171492,"a"],["Funtington",50.868196,-0.869079,"a"],["Goulet",48.749692,-0.111457,"a"],["Gravesend",51.418056,0.396748,"a"],["Guernsey",49.435785,-2.595957,"a"],["Guyancourt",48.758745,2.079925,"a"],["Hauterive",48.499941,0.200091,"a"],["Hawkinge",51.111742,1.15806,"a"],["Headcorn",51.182858,0.6887,"a"],["High Halden",51.124641,0.705641,"a"],["Holmsley South",50.790069,-1.700979,"a"],["Jersey",49.207677,-2.199688,"a"],["Kenley",51.304183,-0.096943,"a"],["Lantheuil",49.271457,-0.538403,"a"],["Lashenden",51.156294,0.644352,"a"],["Le Molay",49.261537,-0.881665,"a"],["Lessay",49.202167,-1.508343,"a"],["Lignerolles",49.175104,-0.788931,"a"],["Longues-sur-Mer",49.342662,-0.70616,"a"],["Lonrai",48.467673,0.037384,"a"],["Lymington",50.762479,-1.514305,"a"],["Lympne",51.082915,1.019371,"a"],["Manston",51.342411,1.34618,"a"],["Maupertus",49.649802,-1.466956,"a"],["Meautis",49.283189,-1.300239,"a"],["Merville Calonne",50.620596,2.653471,"a"],["Needs Oar Point",50.771664,-1.43453,"a"],["Northolt",51.552791,-0.419285,"a"],["Odiham",51.234422,-0.941727,"a"],["Orly",48.73514,2.391826,"a"],["Picauville",49.396374,-1.411155,"a"],["Poix",49.818859,1.977265,"a"],["Ronai",48.823384,-0.161215,"a"],["Rouen-Boos",49.38723,1.178984,"a"],["Rucqueville",49.251425,-0.58031,"a"],["Saint Pierre du Mont",49.390508,-0.957074,"a"],["Saint-Andre-de-lEure",48.891284,1.268338,"a"],["Saint-Aubin",49.885015,1.080429,"a"],["Saint-Omer Wizernes",50.728845,2.232303,"a"],["Saint-Pol-Bryas",50.396662,2.350691,"a"],["Sainte-Croix-sur-Mer",49.320276,-0.517246,"a"],["Sainte-Laurent-sur-Mer",49.364463,-0.873488,"a"],["Sommervieu",49.300228,-0.670951,"a"],["Stoney Cross",50.914793,-1.653211,"a"],["Tangmere",50.84576,-0.701897,"a"],["Triqueville",49.336215,0.45828,"a"],["Villacoublay",48.767349,2.205032,"a"],["Vrigny",48.672283,-0.002161,"a"],["West Malling",51.27036,0.404697,"a"]],"PersianGulf":[["Abu Dhabi Intl",24.453708,54.654268,"a"],["Abu Musa Island",25.875991,55.032918,"a"],["Al Ain Intl",24.261428,55.609245,"a"],["Al Dhafra AFB",24.248288,54.547699,"a"],["Al Maktoum Intl",24.897057,55.160239,"a"],["Al Minhad AFB",25.026881,55.365758,"a"],["Al-Bateen",24.428077,54.45858,"a"],["Bandar Abbas Intl",27.217687,56.378962,"a"],["Bandar Lengeh",26.532264,54.824667,"a"],["Bandar-e-Jask",25.654673,57.801436,"a"],["Dubai Intl",25.256376,55.365261,"a"],["Fujairah Intl",25.11094,56.327351,"a"],["Havadarya",27.158224,56.172019,"a"],["Jiroft",28.723517,57.675095,"a"],["Kerman",30.27311,56.951551,"a"],["Khasab",26.169826,56.24017,"a"],["Kish Intl",26.528148,53.981049,"a"],["Lar",27.674732,54.383145,"a"],["Lavan Island",26.811108,53.353293,"a"],["Liwa AFB",23.650775,53.824429,"a"],["Qeshm Island",26.754669,55.902384,"a"],["Ras Al Khaimah Intl",25.613494,55.938797,"a"],["Sas Al Nakheel",24.441109,54.517023,"a"],["Sharjah Intl",25.330675,55.518263,"a"],["Shiraz Intl",29.54091,52.591074,"a"],["Sir Abu Nuayr",25.216871,54.23365,"a"],["Sirri Island",25.909603,54.539254,"a"],["Tunb Island AFB",26.258888,55.315782,"a"],["Tunb Kochak",26.243322,55.145568,"a"]],"SinaiMap":[["Abu Rudeis",28.899536,33.202337,"a"],["Abu Suwayr",30.575386,32.09627,"a"],["Al Bahr al Ahmar",26.556378,33.121031,"a"],["Al Ismailiyah",30.598815,32.234582,"a"],["Al Khatatbah",30.312375,30.874447,"a"],["Al Mansurah",30.965201,31.431509,"a"],["Al Rahmaniyah Air Base",31.043422,30.664376,"a"],["As Salihiyah",30.795111,32.042546,"a"],["AzZaqaziq",30.594823,31.664577,"a"],["Baluza",30.99977,32.552221,"a"],["Ben-Gurion",32.007029,34.8931,"a"],["Beni Suef",29.197907,31.019001,"a"],["Bilbeis Air Base",30.398675,31.60728,"a"],["Bir Hasanah",30.194637,33.412829,"a"],["Birma Air Base",30.837038,30.936019,"a"],["Borg El Arab International Airport",30.916902,29.693893,"a"],["Cairo International Airport",30.108988,31.43482,"a"],["Cairo West",30.108373,30.895657,"a"],["Damascus Intl",33.395471,36.510202,"a"],["Difarsuwar Airfield",30.425742,32.335384,"a"],["Ein Shamer",32.440849,35.007511,"a"],["El Arish",31.037878,33.819091,"a"],["El Gora",31.073011,34.14836,"a"],["El Minya",28.101047,30.729653,"a"],["Fayed",30.329071,32.267488,"a"],["Gebel El Basur Air Base",30.538232,30.552675,"a"],["Hatzerim",31.238604,34.658504,"a"],["Hatzor",31.760479,34.725331,"a"],["Hurghada International Airport",27.176465,33.791691,"a"],["Inshas Airbase",30.334249,31.446579,"a"],["Jiyanklis Air Base",30.822325,30.192399,"a"],["Kedem",31.260615,34.639945,"a"],["Khalkhalah Air Base",33.078937,36.540704,"a"],["Kibrit Air Base",30.243534,32.491179,"a"],["King Feisal Air Base",30.343686,36.147409,"a"],["Kom Awshim",29.553644,30.893503,"a"],["Megiddo",32.597143,35.230212,"a"],["Melez",30.409932,33.149742,"a"],["Mezzeh Air Base",33.477649,36.223628,"a"],["Nevatim",31.208343,35.012075,"a"],["Ovda",29.940817,34.934128,"a"],["Palmachim",31.901788,34.692886,"a"],["Quwaysina",30.579003,31.129037,"a"],["Rafic Hariri Intl",33.824474,35.483232,"a"],["Ramat David",32.666468,35.184092,"a"],["Ramon Airbase",30.777574,34.666146,"a"],["Ramon International Airport",29.727039,35.014024,"a"],["Sde Dov",32.114672,34.782279,"a"],["Sharm El Sheikh International Airport",27.978735,34.393277,"a"],["St Catherine",28.685165,34.062628,"a"],["Taba International Airport",29.588024,34.778285,"a"],["Tabuk",28.371022,36.606148,"a"],["Tel Nof",31.836021,34.817828,"a"],["Wadi Abu Rish",28.971017,31.698667,"a"],["Wadi al Jandali",30.072551,31.8333,"a"]],"Syria":[["Abu al-Duhur",35.732306,37.104128,"a"],["Adana Sakirpasa",36.981938,35.280098,"a"],["Adiyaman",37.731261,38.468922,"a"],["Akrotiri",34.590373,32.987777,"a"],["Al Qusayr",34.569276,36.571454,"a"],["Al-Dumayr",33.609697,36.749135,"a"],["Aleppo",36.180618,37.224367,"a"],["An Nasiriyah",33.918607,36.86584,"a"],["At Tanf",33.50645,38.614884,"h"],["Bassel Al-Assad",35.403848,35.95024,"a"],["Beirut-Rafic Hariri",33.825144,35.483038,"a"],["Ben Gurion",32.006079,34.882423,"a"],["Chukurova",36.892733,35.069324,"a"],["Damascus",33.425508,36.518512,"a"],["Deir ez-Zor",35.285432,40.176061,"a"],["Diyarbakir",37.893339,40.198688,"a"],["Ercan",35.149641,33.512512,"a"],["Eyn Shemer",32.440932,35.006998,"a"],["Gaziantep",36.948128,37.478344,"a"],["Gazipasa",36.298922,32.297628,"a"],["Gecitkale",35.236011,33.720895,"a"],["Gulechoba",38.012022,39.95472,"a"],["H3",32.936195,39.745813,"a"],["H3 Northwest",33.075956,39.596579,"a"],["H3 Southwest",32.743345,39.602408,"a"],["H4",32.539283,38.195079,"a"],["H4 Emergency",32.386262,37.781702,"a"],["H_med_orig_01",37.011605,35.352592,"h"],["H_med_orig_02",34.78798,32.44528,"h"],["H_med_orig_03",34.921449,33.604271,"h"],["H_med_orig_04",34.707989,32.981915,"h"],["H_med_orig_05",32.785536,34.980603,"h"],["H_med_orig_06",35.12802,33.378603,"h"],["H_med_orig_07",32.833474,34.986785,"h"],["H_med_orig_08",33.892996,35.523027,"h"],["H_med_orig_09",37.02812,35.351901,"h"],["Haifa",32.810748,35.04354,"a"],["Hama",35.118044,36.712379,"a"],["Hatay",36.36232,36.287422,"a"],["Hatzerim",31.23881,34.65768,"a"],["Hatzor",31.760397,34.725255,"a"],["HC01",34.924215,33.603722,"h"],["HC02",34.830847,33.478191,"h"],["HC03",35.311947,33.290077,"h"],["HC04",35.267204,33.495894,"h"],["HC05",35.093867,33.88578,"h"],["HC06",35.084005,33.897191,"h"],["Herzliya",32.179374,34.837941,"a"],["HI01",32.882232,35.718988,"h"],["HI02",32.937677,35.568728,"h"],["HI03",32.805606,35.401592,"h"],["HI05",32.808126,35.425282,"h"],["HI06",32.606246,34.973019,"h"],["HI07",32.823077,35.436181,"h"],["HI08",32.961879,35.550067,"h"],["HI09",32.982102,35.514712,"h"],["HI11",32.994809,35.484072,"h"],["HI12",33.017099,35.704507,"h"],["HI13",32.983324,35.72711,"h"],["HI14",32.762867,35.302697,"h"],["HI15",33.010471,35.662957,"h"],["HI16",32.945547,35.204643,"h"],["HI17",32.624007,35.379087,"h"],["HI18",32.467857,35.023209,"h"],["HI20",32.999346,35.407542,"h"],["HI21",32.761123,35.400593,"h"],["HI22",32.0876,34.919761,"h"],["HI23",31.747503,34.935721,"h"],["HI24",32.143485,34.815281,"h"],["HI25",33.182911,35.234251,"h"],["HI26",32.084786,34.781245,"h"],["HJ01",33.313847,38.702709,"h"],["HJ02",32.586732,35.924607,"h"],["HJ03",32.484175,36.065887,"h"],["HJ04",32.476518,36.063329,"h"],["HL01",33.265524,35.216251,"h"],["HL02",33.169388,35.187009,"h"],["HL03",33.182843,35.495829,"h"],["HL04",33.132564,35.393307,"h"],["HL05",33.153759,35.196448,"h"],["HL06",33.305878,35.540964,"h"],["HL07",33.262178,35.418498,"h"],["HL08",33.203768,35.353058,"h"],["HL09",34.365203,36.512112,"h"],["HL10",34.264351,36.483222,"h"],["HL11",33.709881,35.966698,"h"],["HL12",33.173722,35.275311,"h"],["HL13",33.138224,35.504537,"h"],["HMed00",36.576166,36.19892,"h"],["HMed01",34.974999,33.847998,"h"],["HMed02",35.95595,38.989263,"h"],["HMed03",35.516699,35.791235,"h"],["HMed04",37.052941,35.278848,"h"],["HMed05",35.144324,33.353882,"h"],["HMed06",35.146529,36.753378,"h"],["HMed07",35.333284,33.324346,"h"],["HMed08",35.343964,33.194806,"h"],["HMed09",35.00429,34.059131,"h"],["HMed10",33.207394,35.571165,"h"],["HMed11",32.570588,35.846153,"h"],["HMed12",31.99319,35.890023,"h"],["HMed13",32.181805,34.978768,"h"],["HMed14",34.883778,35.886966,"h"],["HMed15",36.206243,36.152401,"h"],["HMed16",34.72074,36.732967,"h"],["HMed17",33.523602,36.354867,"h"],["HMed18",32.708162,35.302076,"h"],["HMed19",32.82105,34.990642,"h"],["HMed20",32.16534,34.845362,"h"],["HMed21",33.455981,36.235228,"h"],["HMed22",31.881649,36.00978,"h"],["HMed23",34.692108,32.960268,"h"],["HMed24",33.893458,35.567333,"h"],["HMed25",31.719399,35.797812,"h"],["HMed26",36.194001,37.097927,"h"],["HMed27",35.960658,38.041776,"h"],["HMed28",34.558056,38.278748,"h"],["HMed29",35.338798,40.129427,"h"],["HMed30",37.050695,37.38983,"h"],["HOil01",34.602758,37.901716,"h"],["HOil02",35.337805,39.76084,"h"],["HOil03",35.191099,39.90297,"h"],["HOil04",35.194105,40.081764,"h"],["HOil05",35.328835,40.105461,"h"],["HOil06",32.11399,36.106201,"h"],["HS02",35.338551,36.074308,"h"],["HS03",34.669694,38.298284,"h"],["HS04",35.791042,37.726268,"h"],["HS05",35.789131,37.724785,"h"],["HS06",33.27904,36.08532,"h"],["HS07",34.65768,38.289161,"h"],["HS08",34.644829,36.743643,"h"],["HS09",36.060355,37.343139,"h"],["HS10",36.050691,37.332313,"h"],["HS11",33.386339,36.272711,"h"],["HS12",33.429514,36.118745,"h"],["HS13",33.74569,36.803543,"h"],["HS14",33.455405,36.087091,"h"],["HS15",33.394596,36.359739,"h"],["HS16",35.98784,37.414272,"h"],["HS17",34.627049,38.242949,"h"],["HS18",34.610936,38.252986,"h"],["HS19",33.415748,36.284515,"h"],["HS20",33.353465,36.484825,"h"],["HS21",33.411661,36.191734,"h"],["HS22",33.707949,36.672864,"h"],["HS23",33.181959,36.572013,"h"],["HS24",33.444788,36.309884,"h"],["HS25",33.457617,36.130844,"h"],["HS26",33.046853,39.608339,"h"],["HS27",33.427553,35.934889,"h"],["HS28",33.27497,36.27019,"h"],["HS29",33.251736,36.270972,"h"],["HS30",33.28116,36.264183,"h"],["HS31",33.732974,36.509039,"h"],["HS32",32.075858,36.144587,"h"],["HS33",33.035233,35.138647,"h"],["HS34",34.927537,35.99203,"h"],["HS35",33.804145,36.149846,"h"],["HS36",33.234722,36.148784,"h"],["HS37",33.552185,36.447207,"h"],["HS38",32.438261,36.019166,"h"],["HS39",32.587032,35.399849,"h"],["HS40",32.825222,35.996227,"h"],["HS41",32.75794,35.897852,"h"],["HS42",32.746107,35.87959,"h"],["HStad01",36.999064,35.329559,"h"],["HStad02",35.146097,33.3141,"h"],["HStad03",36.21602,37.156712,"h"],["HStad04",35.560507,35.744414,"h"],["HStad05",35.116772,36.761856,"h"],["HStad06",33.528229,36.298248,"h"],["HT01",36.848222,34.721373,"h"],["HT02",37.019719,35.34361,"h"],["Incirlik",37.002048,35.426089,"a"],["Jirah",36.096872,37.936536,"a"],["Kahramanmaras",37.538483,36.952401,"a"],["Kedem",31.260531,34.640461,"a"],["Khalkhalah",33.078369,36.5411,"a"],["Kharab Ishk",36.546869,38.587487,"h"],["King Abdullah II",32.00551,36.223695,"a"],["King Hussein Air College",32.35668,36.259855,"a"],["Kingsfield",35.014806,33.717033,"a"],["Kiryat Shmona",33.215815,35.595835,"a"],["Konya",37.977748,32.561488,"a"],["Kuweires",36.187494,37.581495,"a"],["Lakatamia",35.104606,33.321655,"a"],["Larnaca",34.873174,33.623249,"a"],["Marj as Sultan North",33.50028,36.467149,"a"],["Marj as Sultan South",33.487222,36.475394,"a"],["Marj Ruhayyil",33.288761,36.455438,"a"],["Marka",31.972763,35.991746,"a"],["Megiddo",32.597107,35.230082,"a"],["Mezzeh",33.477795,36.224216,"a"],["Minakh",36.521376,37.041337,"a"],["Muwaffaq Salti",31.817617,36.778686,"a"],["Naqoura",33.107905,35.127286,"h"],["Nevatim",31.208377,35.012096,"a"],["Palmachim",31.902807,34.693438,"a"],["Palmyra",34.557297,38.316824,"a"],["Paphos",34.718152,32.484789,"a"],["Pinarbashi",35.273829,33.268239,"a"],["Prince Hassan",32.160735,37.149403,"a"],["Qabr as Sitt",33.458735,36.357718,"a"],["Ramat David",32.666411,35.184166,"a"],["Rayak",33.851123,35.987324,"a"],["Rene Mouawad",34.5893,36.011449,"a"],["Rosh Pina",32.982648,35.570738,"a"],["Ruwayshid",32.404967,39.130518,"a"],["Sanliurfa",37.448071,38.898378,"a"],["Sanliurfa Heliport",37.186493,38.791602,"h"],["Sayqal",33.679842,37.217112,"a"],["Shayrat",34.490202,36.907613,"a"],["T2",34.389768,40.153521,"a"],["T3",34.528957,38.729439,"a"],["Tabqa",35.754721,38.566448,"a"],["Taftanaz",35.974105,36.781442,"a"],["Tal Siman",36.262422,38.928313,"a"],["Tel Nof",31.838354,34.832634,"a"],["Teyman",31.286974,34.722804,"a"],["Tha'lah",32.704004,36.413775,"a"],["Tiyas",34.522629,37.630123,"a"],["Wujah Al Hajar",34.281337,35.680106,"a"],["Zarqa",32.025762,36.143735,"a"]],"TheChannel":[["Abbeville Drucat",50.143451,1.831946,"a"],["Biggin Hill",51.326717,0.031103,"a"],["Detling",51.305042,0.599863,"a"],["Dunkirk Mardyck",51.029624,2.252449,"a"],["Eastchurch",51.390137,0.8469,"a"],["Hawkinge",51.111906,1.160257,"a"],["Headcorn",51.182612,0.689498,"a"],["High Halden",51.121641,0.693747,"a"],["Lympne",51.080665,1.017045,"a"],["Manston",51.34198,1.346141,"a"],["Merville Calonne",50.619514,2.638131,"a"],["Saint Omer Longuenesse",50.7287,2.231933,"a"]]};
+
 /* Couches Olympus : [minNativeZoom, maxNativeZoom, minZoom], empilées dans cet ordre (config.json d'Olympus du 24 octobre) */
 const DCS_LEVELS = {
   'alt-syria':                 [[1, 15, 1], [16, 16, 16], [17, 17, 17]],
@@ -1128,6 +1208,7 @@ const DCS_LEVELS = {
 const DCS_URL = 'https://maps.dcsolympus.com/maps/{key}/{z}/{x}/{y}.png';
 const TOPO_URL = 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png';
 const SAT_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+const PLACES_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}';
 
 /* Contenu du bouton « Exemple » (document dcs-route-v1) */
 const EXAMPLE_ROUTE = {
@@ -1178,6 +1259,29 @@ const EXAMPLE_ROUTE = {
       "alt": 50,
       "altRef": "AGL"
     }
+  ],
+  "refs": [
+    {
+      "name": "ÎLE PETRA",
+      "lat": 35.184,
+      "lon": 32.8445,
+      "alt": 0,
+      "altRef": "MSL"
+    },
+    {
+      "name": "PONT KARAVOSTASI",
+      "lat": 35.1395,
+      "lon": 32.8262,
+      "alt": 15,
+      "altRef": "AGL"
+    },
+    {
+      "name": "SA-9 SUSPECT",
+      "lat": 35.121,
+      "lon": 32.87,
+      "alt": 120,
+      "altRef": "MSL"
+    }
   ]
 };
 
@@ -1193,6 +1297,11 @@ const I18N = {
     'layer.grid': 'Grille seule',
     'layer.dcsOff': 'Carte DCS — absente de ce théâtre',
     'tb.grid': 'Grille MGRS',
+    'tb.places': 'Lieux',
+    'tb.places.tip': 'Noms de lieux (Esri)',
+    'tb.airfields': 'Aérodromes',
+    'tb.airfields.tip': 'Aérodromes et hélistations DCS',
+    'tb.airfields.off': 'Aérodromes — absents de ce théâtre',
     'tb.theatre': 'Théâtre',
     'u.km': 'km',
     'u.nm': 'NM',
@@ -1229,6 +1338,7 @@ const I18N = {
     'attr.dcs': 'Carte DCS © <a href="https://github.com/Pax1601/DCSOlympus">DCS Olympus</a>',
     'attr.topo': 'Données © <a href="https://www.openstreetmap.org/copyright">contributeurs OpenStreetMap</a>, SRTM · style © <a href="https://opentopomap.org">OpenTopoMap</a> (CC-BY-SA)',
     'attr.sat': 'Esri, Maxar, Earthstar Geographics, and the GIS User Community',
+    'attr.places': 'Lieux © Esri, HERE, Garmin, OpenStreetMap contributors',
     'fallback': 'Fond indisponible — grille seule',
     'sec.route': 'Route',
     'sec.points': '{n} points',
@@ -1244,6 +1354,22 @@ const I18N = {
     'help.route': 'Touchez la carte pour ajouter un point\u202f; glissez un point pour le déplacer\u202f; le « + » d\'une branche insère un point.',
     'tip.insert': 'Insérer un point',
     'tip.delete': 'Supprimer',
+    'tap.wp': 'Point',
+    'tap.ref': 'Réf.',
+    'tap.title': 'Ce que pose un toucher sur la carte',
+    'add.title': 'Ajouter',
+    'add.coord': 'Coordonnées',
+    'add.hd': 'Cap et distance',
+    'add.coord.ph': 'MGRS, DMS, DDM ou décimal',
+    'add.hdg': 'Cap (°)',
+    'add.dist': 'Distance ({u})',
+    'add.from': 'depuis {name}',
+    'add.first': 'Posez d\'abord un point.',
+    'add.wp': '+ Point',
+    'add.ref': '+ Réf.',
+    'sec.refs': 'Points de référence',
+    'help.refs': 'Choisissez « Réf. » en haut de la carte, puis touchez la carte\u202f; glissez une référence pour la déplacer.',
+    'nav.refs': 'POINTS DE RÉFÉRENCE',
     'sec.nav': 'Navigation',
     'f.ref': 'Cap',
     'ref.true': 'Vrai',
@@ -1262,6 +1388,12 @@ const I18N = {
     'btn.export': 'Exporter JSON',
     'toast.standalone': 'Route enregistrée : ouvrez le Datacard Generator, puis Importer → Route en cours.',
     'toast.max': '30 points au plus.',
+    'toast.maxRefs': '12 points de référence au plus.',
+    'toast.refsDropped': '{n} points de référence écartés (12 au plus)',
+    'toast.pointAdded': 'Point ajouté\u202f: {name}',
+    'toast.refAdded': 'Référence ajoutée\u202f: {name}',
+    'toast.badCoord': 'Coordonnées non reconnues.',
+    'toast.badHd': 'Cap ou distance invalide.',
     'toast.opened': 'Route ouverte ✓',
     'toast.openedDropped': 'Route ouverte ✓ · {n} points écartés (30 au plus)',
     'zoom.in': 'Zoom avant',
@@ -1282,6 +1414,11 @@ const I18N = {
     'layer.grid': 'Grid only',
     'layer.dcsOff': 'DCS map — not available for this theatre',
     'tb.grid': 'MGRS grid',
+    'tb.places': 'Places',
+    'tb.places.tip': 'Place names (Esri)',
+    'tb.airfields': 'Airfields',
+    'tb.airfields.tip': 'DCS airfields and helipads',
+    'tb.airfields.off': 'Airfields — not available for this theatre',
     'tb.theatre': 'Theatre',
     'u.km': 'km',
     'u.nm': 'NM',
@@ -1318,6 +1455,7 @@ const I18N = {
     'attr.dcs': 'DCS map © <a href="https://github.com/Pax1601/DCSOlympus">DCS Olympus</a>',
     'attr.topo': 'Map data © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>, SRTM · style © <a href="https://opentopomap.org">OpenTopoMap</a> (CC-BY-SA)',
     'attr.sat': 'Esri, Maxar, Earthstar Geographics, and the GIS User Community',
+    'attr.places': 'Places © Esri, HERE, Garmin, OpenStreetMap contributors',
     'fallback': 'Map unavailable — grid only',
     'sec.route': 'Route',
     'sec.points': '{n} waypoints',
@@ -1333,6 +1471,22 @@ const I18N = {
     'help.route': 'Tap the map to add a waypoint; drag a waypoint to move it; a leg\'s “+” inserts a waypoint.',
     'tip.insert': 'Insert a waypoint',
     'tip.delete': 'Delete',
+    'tap.wp': 'Waypoint',
+    'tap.ref': 'Ref.',
+    'tap.title': 'What a tap on the map adds',
+    'add.title': 'Add',
+    'add.coord': 'Coordinates',
+    'add.hd': 'Heading and distance',
+    'add.coord.ph': 'MGRS, DMS, DDM or decimal',
+    'add.hdg': 'Heading (°)',
+    'add.dist': 'Distance ({u})',
+    'add.from': 'from {name}',
+    'add.first': 'Place a waypoint first.',
+    'add.wp': '+ Waypoint',
+    'add.ref': '+ Ref.',
+    'sec.refs': 'Reference points',
+    'help.refs': 'Choose “Ref.” at the top of the map, then tap the map; drag a reference to move it.',
+    'nav.refs': 'REFERENCE POINTS',
     'sec.nav': 'Navigation',
     'f.ref': 'Heading',
     'ref.true': 'True',
@@ -1351,6 +1505,12 @@ const I18N = {
     'btn.export': 'Export JSON',
     'toast.standalone': 'Route saved: open the Datacard Generator, then Import → Current route.',
     'toast.max': '30 waypoints at most.',
+    'toast.maxRefs': '12 reference points at most.',
+    'toast.refsDropped': '{n} reference points dropped (12 at most)',
+    'toast.pointAdded': 'Waypoint added: {name}',
+    'toast.refAdded': 'Reference added: {name}',
+    'toast.badCoord': 'Coordinates not recognised.',
+    'toast.badHd': 'Invalid heading or distance.',
     'toast.opened': 'Route opened ✓',
     'toast.openedDropped': 'Route opened ✓ · {n} waypoints dropped (30 at most)',
     'zoom.in': 'Zoom in',
@@ -1726,12 +1886,16 @@ function defaultState() {
     units: { distance: 'km', altitude: 'm' },
     navDisplay: { ref: 'true', decl: '' },
     points: [],
-    ui: { layer: 'topo', grid: true }
+    refs: [],
+    ui: { layer: 'topo', grid: true, places: false, airfields: true }
   };
 }
 
 let S = defaultState();
 let sel = -1;                 /* point sélectionné (non enregistré) */
+let selR = -1;                /* point de référence sélectionné (non enregistré) */
+let tapMode = 'wp';           /* ce que pose un toucher sur la carte : 'wp' (point) ou 'ref' (référence) — non enregistré */
+let addMode = 'coord';        /* bloc Ajouter : 'coord' ou 'hd' (cap et distance) — non enregistré */
 
 function r7(v) { return Math.round(v * 1e7) / 1e7; }
 
@@ -1748,9 +1912,21 @@ function nextName(points, rank) {
   return 'WP' + k;
 }
 
-/* Un objet lu (fichier ou stockage) → { route, dropped } ; null si ce n'est pas une route dcs-route-v1.
-   Un point dont lat ou lon n'est pas un nombre dans les bornes est écarté ; au-delà de 30 points, le reste est écarté
-   (dropped les compte) ; les champs absents prennent leurs défauts. */
+/* REF<k> : k le plus petit entier ≥ (rang + 1) qu'aucune référence ne porte déjà sous la forme REF<k> */
+function nextRefName(refs, rank) {
+  const used = {};
+  refs.forEach(p => { used[p.name] = true; });
+  let k = rank + 1;
+  while (used['REF' + k]) k++;
+  return 'REF' + k;
+}
+
+/* La lettre d'une référence : A, B, C… selon son rang */
+function refLetter(i) { return String.fromCharCode(65 + i); }
+
+/* Un objet lu (fichier ou stockage) → { route, dropped, droppedRefs } ; null si ce n'est pas une route dcs-route-v1.
+   Un point (ou une référence) dont lat ou lon n'est pas un nombre dans les bornes est écarté ; au-delà de 30 points
+   (12 références), le reste est écarté (dropped, droppedRefs les comptent) ; les champs absents prennent leurs défauts. */
 function parseRoute(src) {
   if (!src || typeof src !== 'object' || Array.isArray(src) || src.format !== FORMAT_ID || !Array.isArray(src.points)) return null;
   const d = defaultState();
@@ -1762,9 +1938,10 @@ function parseRoute(src) {
     theatre: THEATRE_IDS.indexOf(src.theatre) !== -1 ? src.theatre : d.theatre,
     units: { distance: un.distance === 'nm' ? 'nm' : 'km', altitude: un.altitude === 'ft' ? 'ft' : 'm' },
     navDisplay: { ref: nd.ref === 'mag' ? 'mag' : 'true', decl: str(nd.decl) },
-    points: []
+    points: [],
+    refs: []
   };
-  let dropped = 0;
+  let dropped = 0, droppedRefs = 0;
   src.points.forEach(p => {
     if (!p || typeof p !== 'object' || !validCoord(p.lat, p.lon)) return;
     if (route.points.length >= MAX_POINTS) { dropped++; return; }
@@ -1775,7 +1952,17 @@ function parseRoute(src) {
       altRef: p.altRef === 'MSL' ? 'MSL' : 'AGL'
     });
   });
-  return { route: route, dropped: dropped };
+  if (Array.isArray(src.refs)) src.refs.forEach(p => {
+    if (!p || typeof p !== 'object' || !validCoord(p.lat, p.lon)) return;
+    if (route.refs.length >= MAX_REFS) { droppedRefs++; return; }
+    route.refs.push({
+      name: typeof p.name === 'string' ? p.name : nextRefName(route.refs, route.refs.length),
+      lat: r7(p.lat), lon: r7(p.lon),
+      alt: (typeof p.alt === 'number' && isFinite(p.alt)) ? p.alt : 0,
+      altRef: p.altRef === 'MSL' ? 'MSL' : 'AGL'
+    });
+  });
+  return { route: route, dropped: dropped, droppedRefs: droppedRefs };
 }
 
 function persistState() {
@@ -1790,7 +1977,9 @@ function loadState() {
       const res = parseRoute(o);
       if (res) {
         const ui = (o.ui && typeof o.ui === 'object') ? o.ui : {};
-        S = Object.assign(res.route, { ui: { layer: LAYER_IDS.indexOf(ui.layer) !== -1 ? ui.layer : 'topo', grid: typeof ui.grid === 'boolean' ? ui.grid : true } });
+        S = Object.assign(res.route, { ui: {
+          layer: LAYER_IDS.indexOf(ui.layer) !== -1 ? ui.layer : 'topo', grid: typeof ui.grid === 'boolean' ? ui.grid : true,
+          places: typeof ui.places === 'boolean' ? ui.places : false, airfields: typeof ui.airfields === 'boolean' ? ui.airfields : true } });
         return;
       }
     }
@@ -1804,7 +1993,8 @@ function exportObject() {
     format: FORMAT_ID, name: S.name, theatre: S.theatre,
     units: { distance: S.units.distance, altitude: S.units.altitude },
     navDisplay: { ref: S.navDisplay.ref, decl: S.navDisplay.decl },
-    points: S.points.map(p => ({ name: p.name, lat: p.lat, lon: p.lon, alt: p.alt, altRef: p.altRef }))
+    points: S.points.map(p => ({ name: p.name, lat: p.lat, lon: p.lon, alt: p.alt, altRef: p.altRef })),
+    refs: S.refs.map(p => ({ name: p.name, lat: p.lat, lon: p.lon, alt: p.alt, altRef: p.altRef }))
   };
 }
 
@@ -1845,6 +2035,11 @@ function legInfo(a, b) {
 /* ============= CARTE ============= */
 let map = null;
 let routeGroup = null;
+let refGroup = null;
+let placesLayer = null;
+let afLayer = null;
+let afKey = '';
+let tapCtl = null;
 let linePair = null;
 let gridCanvas = null;
 let gridQueued = false;
@@ -1872,7 +2067,7 @@ function setTheatreView() {
 }
 
 function frameRoute() {
-  const pts = S.points;
+  const pts = S.points.concat(S.refs);
   if (!pts.length) { setTheatreView(); return; }
   applyView(() => {
     if (pts.length === 1) { map.setView([pts[0].lat, pts[0].lon], 11, { animate: false }); return; }
@@ -1902,7 +2097,56 @@ function setFallback(on) {
   inFallback = on;
   $('fallback').classList.toggle('show', on);
   updateMapClass();
+  syncPlaces();
   scheduleGrid();
+}
+
+/* La surcouche des noms de lieux : dans son panneau (au-dessus du fond, sous la grille), sur tous les fonds ; hors du repli :
+   ses échecs ne comptent pas et, en repli, elle n'est pas affichée */
+function syncPlaces() {
+  if (!mapCreated) return;
+  const want = !!S.ui.places && !inFallback;
+  if (want && !placesLayer) {
+    placesLayer = L.tileLayer(PLACES_URL, { pane: 'places', maxNativeZoom: 19, maxZoom: 18, attribution: t('attr.places') });
+    placesLayer.addTo(map);
+  } else if (!want && placesLayer) {
+    map.removeLayer(placesLayer);
+    placesLayer = null;
+  }
+}
+
+/* Les aérodromes du théâtre choisi, dans leur panneau (au-dessus de la grille, sous les références et la route).
+   Tous les marqueurs sont portés par la couche ; le zoom décide de ce qui se dessine (classes du panneau, CSS). */
+function airfieldsOf(theatre) { return Object.prototype.hasOwnProperty.call(AIRFIELDS, theatre) ? AIRFIELDS[theatre] : null; }
+
+function syncAfZoom() {
+  const pane = map.getPane('airfields');
+  const z = map.getZoom();
+  [['afz7', 7], ['afz9', 9], ['afz10', 10], ['afz12', 12]].forEach(c => pane.classList.toggle(c[0], z >= c[1]));
+}
+
+function syncAirfields() {
+  if (!mapCreated) return;
+  const list = airfieldsOf(S.theatre);
+  const key = list && S.ui.airfields ? S.theatre : '';
+  if (key === afKey) return;
+  afKey = key;
+  if (afLayer) { map.removeLayer(afLayer); afLayer = null; }
+  if (!key) return;
+  afLayer = L.layerGroup();
+  list.forEach(a => {
+    const heli = a[3] === 'h';
+    const mk = L.marker([a[1], a[2]], {
+      pane: 'airfields', keyboard: false, title: a[0],
+      icon: L.divIcon({
+        className: 'af-icon ' + (heli ? 'af-h' : 'af-a'), iconSize: heli ? [10, 10] : [12, 12], iconAnchor: heli ? [5, 5] : [6, 6],
+        html: (heli ? '<b>H</b>' : '') + '<span class="af-name">' + esc(a[0]) + '</span>'
+      })
+    });
+    mk.on('click', ev => { L.DomEvent.stop(ev); addFromAirfield(a[1], a[2], a[0].toUpperCase()); });
+    mk.addTo(afLayer);
+  });
+  afLayer.addTo(map);
 }
 
 function clearBase() {
@@ -1948,6 +2192,11 @@ function refreshZoomTitles() {
 function refreshAttribution() {
   refreshZoomTitles();
   const ctl = map.attributionControl;
+  if (placesLayer) {
+    ctl.removeAttribution(placesLayer.options.attribution);
+    placesLayer.options.attribution = t('attr.places');
+    ctl.addAttribution(placesLayer.options.attribution);
+  }
   baseLayers.forEach(l => {
     ctl.removeAttribution(l.options.attribution);
     l.options.attribution = attrText(S.ui.layer);
@@ -1975,16 +2224,27 @@ function createMap() {
     e.preventDefault();
     window.open(a.href, '_blank', 'noopener');
   });
+  /* Les noms de lieux : au-dessus du fond, sous le canevas de la grille */
+  const placesPane = map.createPane('places');
+  placesPane.style.zIndex = 300;
+  placesPane.style.pointerEvents = 'none';
   /* Le canevas de la grille : au-dessus des tuiles, sous la route */
   const pane = map.createPane('mgrs');
   pane.style.zIndex = 350;
   pane.style.pointerEvents = 'none';
+  /* Les aérodromes : au-dessus de la grille, sous les références et la route ; les références : sous les points */
+  map.createPane('airfields').style.zIndex = 380;
+  map.createPane('refs').style.zIndex = 450;
   gridCanvas = document.createElement('canvas');
   gridCanvas.className = 'mgrs-canvas';
   pane.appendChild(gridCanvas);
+  refGroup = L.layerGroup().addTo(map);
   routeGroup = L.layerGroup().addTo(map);
   map.on('move zoom viewreset resize', scheduleGrid);
   map.on('zoomend', drawRoute);
+  map.on('zoomend', syncAfZoom);
+  syncAfZoom();
+  createTapControl();
   map.on('click', onMapClick);
   /* Le conteneur change de taille (fenêtre, rotation, iframe rendue visible par le shell) */
   const wrap = $('map');
@@ -2201,18 +2461,54 @@ function drawRoute() {
       renderNav();
     });
     mk.on('dragend', () => {
-      sel = i;
+      sel = i; selR = -1;
       persistState();
-      setTimeout(() => { drawRoute(); syncRows(); renderNav(); }, 0);
+      setTimeout(() => { drawRoute(); drawRefs(); syncRows(); renderNav(); }, 0);
     });
     mk.on('click', ev => { L.DomEvent.stop(ev); selectPoint(i); });
     mk.addTo(routeGroup);
   });
 }
 
+/* Les points de référence : un losange et sa lettre, sans ligne qui les relie ; sous les points de la route */
+function rfIcon(p, i) {
+  return L.divIcon({
+    className: 'rf-icon', iconSize: [24, 24], iconAnchor: [12, 12],
+    html: '<div class="rf-dot' + (i === selR ? ' sel' : '') + '"><span>' + refLetter(i) + '</span></div><div class="wp-name">' + esc(p.name) + '</div>'
+  });
+}
+
+function drawRefs() {
+  if (!refGroup) return;
+  refGroup.clearLayers();
+  S.refs.forEach((p, i) => {
+    const mk = L.marker([p.lat, p.lon], { pane: 'refs', draggable: true, autoPan: true, zIndexOffset: i === selR ? 1000 : 0, icon: rfIcon(p, i), title: p.name });
+    mk.on('drag', ev => {
+      const q = ev.target.getLatLng();
+      p.lat = r7(q.lat); p.lon = r7(q.lng);
+      renderNav();
+    });
+    mk.on('dragend', () => {
+      selR = i; sel = -1;
+      persistState();
+      setTimeout(() => { drawRoute(); drawRefs(); syncRows(); renderNav(); }, 0);
+    });
+    mk.on('click', ev => { L.DomEvent.stop(ev); selectRef(i); });
+    mk.addTo(refGroup);
+  });
+}
+
 function selectPoint(i) {
-  sel = i;
+  sel = i; selR = -1;
   drawRoute();
+  drawRefs();
+  syncRows();
+}
+
+function selectRef(i) {
+  selR = i; sel = -1;
+  drawRoute();
+  drawRefs();
   syncRows();
 }
 
@@ -2220,12 +2516,46 @@ function newPointFrom(src, lat, lon, rank) {
   return { name: nextName(S.points, rank), lat: r7(lat), lon: r7(lon), alt: src ? src.alt : 0, altRef: src ? src.altRef : 'AGL' };
 }
 
-function onMapClick(ev) {
-  if (S.points.length >= MAX_POINTS) { showToast(t('toast.max')); return; }
+/* Un point d'une référence neuve : altitude et référence de la référence précédente, sinon 0 et MSL */
+function newRefFrom(src, lat, lon, rank) {
+  return { name: nextRefName(S.refs, rank), lat: r7(lat), lon: r7(lon), alt: src ? src.alt : 0, altRef: src ? src.altRef : 'MSL' };
+}
+
+/* Ajoute un point à la fin de la route (null au plafond) ; name : le nom imposé (un aérodrome), sinon WP<k> */
+function addPoint(lat, lon, name) {
+  if (S.points.length >= MAX_POINTS) { showToast(t('toast.max')); return null; }
   const last = S.points.length ? S.points[S.points.length - 1] : null;
-  S.points.push(newPointFrom(last, ev.latlng.lat, ev.latlng.lng, S.points.length));
-  sel = S.points.length - 1;
+  const p = newPointFrom(last, lat, lon, S.points.length);
+  if (name) p.name = name;
+  S.points.push(p);
+  sel = S.points.length - 1; selR = -1;
   afterEdit(true);
+  return p;
+}
+
+/* Ajoute un point de référence à la fin de la liste (null au plafond) */
+function addRef(lat, lon, name) {
+  if (S.refs.length >= MAX_REFS) { showToast(t('toast.maxRefs')); return null; }
+  const last = S.refs.length ? S.refs[S.refs.length - 1] : null;
+  const p = newRefFrom(last, lat, lon, S.refs.length);
+  if (name) p.name = name;
+  S.refs.push(p);
+  selR = S.refs.length - 1; sel = -1;
+  afterEdit(true);
+  return p;
+}
+
+/* Selon le mode du contrôle de la carte : un point de route ou une référence */
+function addAt(lat, lon, name) {
+  return tapMode === 'ref' ? addRef(lat, lon, name) : addPoint(lat, lon, name);
+}
+
+function onMapClick(ev) { addAt(ev.latlng.lat, ev.latlng.lng); }
+
+/* Aérodrome touché : le point ou la référence porte son nom en majuscules, et un toast le dit */
+function addFromAirfield(lat, lon, name) {
+  const p = addAt(lat, lon, name);
+  if (p) showToast(t(tapMode === 'ref' ? 'toast.refAdded' : 'toast.pointAdded', { name: p.name }));
 }
 
 /* Insère un point dans la branche (i-1 → i), à son rang ; altitude et référence du point suivant */
@@ -2243,11 +2573,19 @@ function deletePoint(i) {
   afterEdit(true);
 }
 
-/* Après une modification de la liste : enregistrer, redessiner la carte, la fiche et (si rebuild) les rangées */
+function deleteRef(i) {
+  S.refs.splice(i, 1);
+  if (selR > i) selR--;
+  else if (selR === i) selR = Math.min(i, S.refs.length - 1);
+  afterEdit(true);
+}
+
+/* Après une modification des listes : enregistrer, redessiner la carte, la fiche et (si rebuild) les rangées */
 function afterEdit(rebuildRows) {
   persistState();
   drawRoute();
-  if (rebuildRows) renderPts(); else syncRows();
+  drawRefs();
+  if (rebuildRows) { renderPts(); renderRefs(); } else syncRows();
   renderNav();
   syncControls();
 }
@@ -2265,8 +2603,23 @@ function renderPts() {
   $('pt-count').textContent = t('sec.points', { n: S.points.length });
 }
 
+/* Les rangées des points de référence : le gabarit des rangées de points, la lettre à la place du numéro */
+function renderRefs() {
+  $('refs').innerHTML = S.refs.map((p, i) =>
+    '<div class="pt-row' + (i === selR ? ' sel' : '') + '" data-i="' + i + '"><button type="button" class="pt-num" data-act="select">' + refLetter(i) + '</button>' +
+    '<input class="in" data-k="name" type="text" autocomplete="off" spellcheck="false" value="' + esc(p.name) + '">' +
+    '<input class="in" data-k="alt" type="text" inputmode="numeric" autocomplete="off" value="' + altValue(p.alt) + '">' +
+    '<select class="in" data-k="altRef"><option value="AGL"' + (p.altRef === 'AGL' ? ' selected' : '') + '>' + esc(t('ref.AGL')) + '</option>' +
+    '<option value="MSL"' + (p.altRef === 'MSL' ? ' selected' : '') + '>' + esc(t('ref.MSL')) + '</option></select>' +
+    '<button type="button" class="pt-del" data-act="delete" title="' + esc(t('tip.delete')) + '" aria-label="' + esc(t('tip.delete')) + '">×</button></div>').join('');
+  $('ref-head').hidden = !S.refs.length;
+  $('alt-unit2').textContent = t('th.alt', { u: t(S.units.altitude === 'ft' ? 'u.ft' : 'u.m') });
+  $('ref-count').textContent = String(S.refs.length);
+}
+
 function syncRows() {
   document.querySelectorAll('#pts .pt-row').forEach(r => r.classList.toggle('sel', parseInt(r.dataset.i, 10) === sel));
+  document.querySelectorAll('#refs .pt-row').forEach(r => r.classList.toggle('sel', parseInt(r.dataset.i, 10) === selR));
 }
 
 function navTitle() {
@@ -2288,6 +2641,14 @@ function renderNav() {
   });
   $('nav-body').innerHTML = rows;
   $('nav-total').textContent = fmtDist(total);
+  /* Les points de référence : après le total ; ni dans les branches ni dans le total */
+  let rr = '';
+  S.refs.forEach((p, i) => {
+    rr += '<tr><td class="n">' + refLetter(i) + '</td><td class="nm">' + esc(p.name) + '<span class="co alt">' + esc(altText(p)) + '</span></td>' +
+      '<td colspan="2"><span class="co">' + esc(toMGRS(p.lat, p.lon)) + '</span><span class="co dms">' + esc(toDMS(p.lat, p.lon)) + '</span></td></tr>';
+  });
+  $('nav-refs').innerHTML = rr;
+  $('nav-refs-wrap').hidden = !S.refs.length;
 }
 
 function renderTheatreOptions() {
@@ -2321,6 +2682,16 @@ function syncControls() {
   $('decl-warn').hidden = !(S.navDisplay.ref === 'mag' && parseDecl(S.navDisplay.decl) == null);
   $('btn-handoff').disabled = S.points.length === 0;
   $('theme').value = document.body.dataset.theme;
+  const pl = $('btn-places');
+  pl.classList.toggle('on', !!S.ui.places);
+  pl.setAttribute('aria-pressed', S.ui.places ? 'true' : 'false');
+  const af = $('btn-airfields');
+  const hasAf = !!airfieldsOf(S.theatre);
+  af.disabled = !hasAf;
+  af.classList.toggle('on', hasAf && !!S.ui.airfields);
+  af.setAttribute('aria-pressed', hasAf && S.ui.airfields ? 'true' : 'false');
+  af.title = t(hasAf ? 'tb.airfields.tip' : 'tb.airfields.off');
+  syncAdd();
 }
 
 function renderAll() {
@@ -2329,16 +2700,114 @@ function renderAll() {
   $('route-name').value = S.name;
   $('decl').value = S.navDisplay.decl;
   renderPts();
+  renderRefs();
   renderNav();
   drawRoute();
+  drawRefs();
+  syncTapControl();
+  syncAirfields();
   syncControls();
 }
 
+/* ============= AJOUTER UN POINT : COORDONNÉES, OU CAP ET DISTANCE ============= */
+function setAddMode(m) {
+  addMode = m === 'hd' ? 'hd' : 'coord';
+  syncAdd();
+}
+
+function syncAdd() {
+  document.querySelectorAll('[data-addmode]').forEach(b => {
+    const on = b.dataset.addmode === addMode;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+  const last = S.points.length ? S.points[S.points.length - 1] : null;
+  $('add-coord').hidden = addMode !== 'coord';
+  $('add-hd').hidden = addMode !== 'hd';
+  $('add-from').textContent = last ? t('add.from', { name: last.name }) : t('add.first');
+  $('add-dist-lbl').textContent = t('add.dist', { u: t(S.units.distance === 'nm' ? 'u.nm' : 'u.km') });
+  const off = addMode === 'hd' && !last;
+  $('btn-add-wp').disabled = off;
+  $('btn-add-ref').disabled = off;
+}
+
+/* La position à ajouter, lue du bloc Ajouter ; null (et un toast) si elle est illisible */
+function readAddPosition() {
+  if (addMode === 'coord') {
+    const g = parseCoord($('add-coord-in').value);
+    if (!g) { showToast(t('toast.badCoord')); return null; }
+    return { lat: r7(g.lat), lon: r7(g.lon) };
+  }
+  const last = S.points.length ? S.points[S.points.length - 1] : null;
+  if (!last) return null;
+  const cap = readNum($('add-hdg').value), dist = readNum($('add-dist').value);
+  if (cap == null || cap > 360 || dist == null || !(dist > 0)) { showToast(t('toast.badHd')); return null; }
+  /* cap magnétique (navigation en cap magnétique et déclinaison lisible) : le point se calcule au cap vrai cap + déclinaison */
+  const d = declValue();
+  const brg = d == null ? cap : (((cap + d) % 360) + 360) % 360;
+  const km = S.units.distance === 'nm' ? dist * NM_KM : dist;
+  const p = legDest(last, brg, km);
+  return { lat: r7(p.lat), lon: r7(p.lon) };
+}
+
+/* « + Point » (kind 'wp') ou « + Réf. » (kind 'ref') : la carte se recentre sur le point sans changer de zoom ;
+   le champ Coordonnées se vide, Cap et Distance restent (on enchaîne) */
+function addFromInput(kind) {
+  const pos = readAddPosition();
+  if (!pos) return;
+  const p = kind === 'ref' ? addRef(pos.lat, pos.lon) : addPoint(pos.lat, pos.lon);
+  if (!p) return;
+  if (addMode === 'coord') $('add-coord-in').value = '';
+  map.setView([pos.lat, pos.lon], map.getZoom(), { animate: false });
+  showToast(t(kind === 'ref' ? 'toast.refAdded' : 'toast.pointAdded', { name: p.name }));
+}
+
+/* ============= CONTRÔLE DE LA CARTE : CE QUE POSE UN TOUCHER ============= */
+function createTapControl() {
+  const Ctl = L.Control.extend({
+    options: { position: 'topright' },
+    onAdd: function () {
+      const d = L.DomUtil.create('div', 'tapmode tb-group');
+      d.setAttribute('role', 'group');
+      d.id = 'tapmode';
+      d.innerHTML = '<button type="button" class="tb-btn" data-tap="wp"></button><button type="button" class="tb-btn" data-tap="ref"></button>';
+      L.DomEvent.disableClickPropagation(d);
+      L.DomEvent.disableScrollPropagation(d);
+      d.addEventListener('click', e => {
+        const b = e.target.closest('[data-tap]');
+        if (b) setTapMode(b.dataset.tap);
+      });
+      return d;
+    }
+  });
+  tapCtl = new Ctl();
+  tapCtl.addTo(map);
+  syncTapControl();
+}
+
+function setTapMode(m) {
+  tapMode = m === 'ref' ? 'ref' : 'wp';
+  syncTapControl();
+}
+
+function syncTapControl() {
+  const d = $('tapmode');
+  if (!d) return;
+  d.title = t('tap.title');
+  d.setAttribute('aria-label', t('tap.title'));
+  d.querySelectorAll('[data-tap]').forEach(b => {
+    const on = b.dataset.tap === tapMode;
+    b.textContent = t('tap.' + b.dataset.tap);
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+}
+
 /* Saisie dans une rangée : l'état change, la rangée n'est pas reconstruite (le focus reste) */
-function onRowInput(ev) {
+function onRowInput(ev, kind) {
   const row = ev.target.closest('.pt-row');
   if (!row) return;
-  const p = S.points[parseInt(row.dataset.i, 10)];
+  const p = (kind === 'ref' ? S.refs : S.points)[parseInt(row.dataset.i, 10)];
   if (!p) return;
   const k = ev.target.dataset.k;
   if (k === 'name') p.name = ev.target.value;
@@ -2350,29 +2819,28 @@ function onRowInput(ev) {
   } else if (k === 'altRef') p.altRef = ev.target.value === 'MSL' ? 'MSL' : 'AGL';
   else return;
   persistState();
-  if (k === 'name') drawRoute();
+  if (k === 'name') { if (kind === 'ref') drawRefs(); else drawRoute(); }
   renderNav();
 }
 
-function onRowChange(ev) {
+function onRowChange(ev, kind) {
   const row = ev.target.closest('.pt-row');
   if (!row || ev.target.dataset.k !== 'alt') return;
-  const p = S.points[parseInt(row.dataset.i, 10)];
+  const p = (kind === 'ref' ? S.refs : S.points)[parseInt(row.dataset.i, 10)];
   if (p) ev.target.value = altValue(p.alt);
 }
 
-function onRowClick(ev) {
+function onRowClick(ev, kind) {
   const row = ev.target.closest('.pt-row');
   if (!row) return;
   const i = parseInt(row.dataset.i, 10);
   const btn = ev.target.closest('button');
   if (!btn) return;
-  if (btn.dataset.act === 'delete') deletePoint(i);
-  else if (btn.dataset.act === 'select' && S.points[i]) {
-    sel = i;
-    map.setView([S.points[i].lat, S.points[i].lon], map.getZoom(), { animate: false });
-    drawRoute();
-    syncRows();
+  const list = kind === 'ref' ? S.refs : S.points;
+  if (btn.dataset.act === 'delete') { if (kind === 'ref') deleteRef(i); else deletePoint(i); }
+  else if (btn.dataset.act === 'select' && list[i]) {
+    map.setView([list[i].lat, list[i].lon], map.getZoom(), { animate: false });
+    if (kind === 'ref') selectRef(i); else selectPoint(i);
   }
 }
 
@@ -2421,7 +2889,8 @@ function setRoute(route) {
   S.units = route.units;
   S.navDisplay = route.navDisplay;
   S.points = route.points;
-  sel = -1;
+  S.refs = route.refs;
+  sel = -1; selR = -1;
   resolveLayer();
   persistState();
   renderAll();
@@ -2438,7 +2907,8 @@ function openRouteFile(file) {
     if (!res) { showToast(t('err.json')); return; }
     if (S.points.length && !confirm(t('confirm.open'))) return;
     setRoute(res.route);
-    showToast(res.dropped ? t('toast.openedDropped', { n: res.dropped }) : t('toast.opened'));
+    showToast((res.dropped ? t('toast.openedDropped', { n: res.dropped }) : t('toast.opened')) +
+      (res.droppedRefs ? ' · ' + t('toast.refsDropped', { n: res.droppedRefs }) : ''));
   };
   reader.onerror = () => showToast(t('err.json'));
   reader.readAsText(file);
@@ -2453,7 +2923,8 @@ function clearRoute() {
   if (!confirm(t('confirm.clear'))) return;
   S.name = '';
   S.points = [];
-  sel = -1;
+  S.refs = [];
+  sel = -1; selR = -1;
   persistState();
   renderAll();
   setTheatreView();
@@ -2483,11 +2954,11 @@ function revealInScroller(bar, el) {
 
 function initScrollBar(bar) {
   if (!bar) return;
-  const mq = window.matchMedia('(max-width: 1099px)');
+  const mq = { matches: true };   /* à tout écran : la barre défile dès qu'elle déborde */
   const update = () => {
     const max = bar.scrollWidth - bar.clientWidth;
-    bar.classList.toggle('fade-l', mq.matches && bar.scrollLeft > 1);
-    bar.classList.toggle('fade-r', mq.matches && bar.scrollLeft < max - 1);
+    bar.classList.toggle('fade-l', mq.matches && max > 6 && bar.scrollLeft > 1);          /* un débord de quelques pixels n'appelle pas de fondu */
+    bar.classList.toggle('fade-r', mq.matches && max > 6 && bar.scrollLeft < max - 1);
   };
   const child = x => { while (x && x.parentNode !== bar) x = x.parentNode; return x; };
   bar.addEventListener('scroll', update, { passive: true });
@@ -2504,6 +2975,8 @@ function initScrollBar(bar) {
   /* Le shell ajoute son bouton de retour après le chargement */
   new MutationObserver(update).observe(bar, { childList: true, subtree: true, characterData: true });
   update();
+  /* Les polices embarquées changent la largeur des libellés sans évènement de taille */
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(update).catch(() => {});
 }
 
 /* Thème de la chrome : n'écrit la clé partagée que sur un choix explicite */
@@ -2547,12 +3020,26 @@ function bindEvents() {
     syncControls();
     scheduleGrid();
   });
+  $('btn-places').addEventListener('click', () => {
+    S.ui.places = !S.ui.places;
+    persistState();
+    syncPlaces();
+    syncControls();
+  });
+  $('btn-airfields').addEventListener('click', () => {
+    if (!airfieldsOf(S.theatre)) return;
+    S.ui.airfields = !S.ui.airfields;
+    persistState();
+    syncAirfields();
+    syncControls();
+  });
   $('theatre').addEventListener('change', e => {
     const wasDcs = S.ui.layer === 'dcs';
     S.theatre = theatreOf(e.target.value).id;
     persistState();
     setTheatreView();
     if (wasDcs) setBase();        /* la couche DCS change avec le théâtre (ou passe en Topographique) */
+    syncAirfields();
     syncControls();
   });
   document.querySelectorAll('[data-dist]').forEach(b => b.addEventListener('click', () => {
@@ -2561,7 +3048,7 @@ function bindEvents() {
   }));
   document.querySelectorAll('[data-alt]').forEach(b => b.addEventListener('click', () => {
     S.units.altitude = b.dataset.alt === 'ft' ? 'ft' : 'm';
-    persistState(); renderPts(); renderNav(); syncControls();
+    persistState(); renderPts(); renderRefs(); renderNav(); syncControls();
   }));
   document.querySelectorAll('[data-ref]').forEach(b => b.addEventListener('click', () => {
     S.navDisplay.ref = b.dataset.ref === 'mag' ? 'mag' : 'true';
@@ -2573,9 +3060,21 @@ function bindEvents() {
   });
   $('route-name').addEventListener('input', e => { S.name = e.target.value; persistState(); });
   const pts = $('pts');
-  pts.addEventListener('input', onRowInput);
-  pts.addEventListener('change', onRowChange);
-  pts.addEventListener('click', onRowClick);
+  pts.addEventListener('input', ev => onRowInput(ev, 'wp'));
+  pts.addEventListener('change', ev => onRowChange(ev, 'wp'));
+  pts.addEventListener('click', ev => onRowClick(ev, 'wp'));
+  const refs = $('refs');
+  refs.addEventListener('input', ev => onRowInput(ev, 'ref'));
+  refs.addEventListener('change', ev => onRowChange(ev, 'ref'));
+  refs.addEventListener('click', ev => onRowClick(ev, 'ref'));
+  document.querySelectorAll('[data-addmode]').forEach(b => b.addEventListener('click', () => setAddMode(b.dataset.addmode)));
+  $('btn-add-wp').addEventListener('click', () => addFromInput('wp'));
+  $('btn-add-ref').addEventListener('click', () => addFromInput('ref'));
+  ['add-coord-in', 'add-hdg', 'add-dist'].forEach(id => $(id).addEventListener('keydown', ev => {
+    if (ev.key !== 'Enter') return;
+    ev.preventDefault();
+    if (!$('btn-add-wp').disabled) addFromInput('wp');
+  }));
 
   const fileOpen = $('file-open');
   $('btn-open').addEventListener('click', () => { fileOpen.value = ''; fileOpen.click(); });
@@ -2595,6 +3094,7 @@ function bindEvents() {
     const cur = document.body.dataset.theme;
     if (sl && cur && sl.value !== cur && THEME_IDS.indexOf(cur) !== -1) sl.value = cur;
     drawRoute();
+    drawRefs();
   }).observe(document.body, { attributes: true, attributeFilter: ['data-theme'] });
 
   /* De retour en ligne : retenter le fond choisi */
@@ -2613,6 +3113,8 @@ function init() {
   renderAll();
   frameRoute();
   setBase();
+  syncPlaces();
+  syncAirfields();
   persistState();
   /* Les polices embarquées servent au canevas : redessiner la grille une fois chargées */
   if (document.fonts && document.fonts.load) {
@@ -2621,7 +3123,8 @@ function init() {
       document.fonts.load("700 11px 'Oswald'")
     ]).then(() => document.fonts.ready).then(scheduleGrid).catch(() => {});
   }
-  window.__RP = { map: map, get S() { return S; }, drawGrid: drawGrid, setBase: setBase, get baseLayers() { return baseLayers; }, get inFallback() { return inFallback; } };
+  window.__RP = { map: map, get S() { return S; }, drawGrid: drawGrid, setBase: setBase, get baseLayers() { return baseLayers; }, get inFallback() { return inFallback; },
+    get placesLayer() { return placesLayer; }, get airfieldLayer() { return afLayer; }, get tapMode() { return tapMode; } };
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

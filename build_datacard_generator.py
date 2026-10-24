@@ -16,7 +16,7 @@ import subprocess
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-APP_VERSION = "1.3.0"
+APP_VERSION = "1.4.0"
 OUT_PATH = os.path.join(HERE, 'dist', 'dcs_datacard_generator.html')
 ASSETS_PATH = os.path.join(HERE, 'assets.json')
 
@@ -1493,8 +1493,8 @@ __TAB_SECTION_RULES__
 }
 """
 
-# Règles « un onglet = une section » sous 1 100 px, générées pour les onze sections.
-SECTION_IDS = ['meta', 'flight', 'mission', 'times', 'crew', 'nav', 'radio', 'fields', 'weather', 'fuel', 'threats']
+# Règles « un onglet = une section » sous 1 100 px, générées pour les douze sections.
+SECTION_IDS = ['meta', 'flight', 'mission', 'times', 'crew', 'nav', 'refs', 'radio', 'fields', 'weather', 'fuel', 'threats']
 _tab_rules = ',\n'.join(
     f'  body[data-active-tab="{s}"] .ed-section[data-section="{s}"]' for s in SECTION_IDS
 ) + ' {\n    display: block;\n    border: none;\n  }'
@@ -1625,7 +1625,7 @@ __CSS__
       <h3 data-i18n="imp.route.title">Route à importer</h3>
       <div class="imp-note imp-route-line" id="imp-route-line"></div>
       <label class="imp-src"><input type="radio" name="imp-route-mode" id="imp-route-fill" value="fill" checked><span data-i18n="imp.route.fill">Remplir la navigation de la datacard affichée</span></label>
-      <div class="imp-note" data-i18n="imp.route.fillNote">Sa navigation est remplacée.</div>
+      <div class="imp-note" data-i18n="imp.route.fillNote">Sa navigation et ses points de référence sont remplacés.</div>
       <label class="imp-src"><input type="radio" name="imp-route-mode" id="imp-route-new" value="new"><span data-i18n="imp.route.new">Nouvelle datacard</span></label>
     </div>
     <div class="export-png-actions-bottom">
@@ -1655,6 +1655,7 @@ __CSS__
   <button type="button" data-tab="times" role="tab"><span class="tab-ico">⏱</span><span data-i18n="sec.times">Horaires</span></button>
   <button type="button" data-tab="crew" role="tab"><span class="tab-ico">👤</span><span data-i18n="sec.crew">Équipages</span></button>
   <button type="button" data-tab="nav" role="tab"><span class="tab-ico">🧭</span><span data-i18n="sec.nav">Navigation</span></button>
+  <button type="button" data-tab="refs" role="tab"><span class="tab-ico">◆</span><span data-i18n="sec.refs">Points de référence</span></button>
   <button type="button" data-tab="radio" role="tab"><span class="tab-ico">📻</span><span data-i18n="sec.radio">Radio</span></button>
   <button type="button" data-tab="fields" role="tab"><span class="tab-ico">🛬</span><span data-i18n="sec.fields">Terrains</span></button>
   <button type="button" data-tab="weather" role="tab"><span class="tab-ico">☁</span><span data-i18n="sec.weather">Météo</span></button>
@@ -1701,7 +1702,7 @@ const MOBILE_BREAKPOINT = 1100;
 const PAGE_W = 1000;
 const PAGE_H = 1414;
 
-const LIMITS = { steps: 8, times: 8, crew: 6, nav: 30, radios: 4, channels: 12, fields: 5, loadout: 8, threats: 12 };
+const LIMITS = { steps: 8, times: 8, crew: 6, nav: 30, refs: 12, radios: 4, channels: 12, fields: 5, loadout: 8, threats: 12 };
 
 const CLASSIF_KEYS = ['confidential', 'secret', 'top-secret', 'unclassified', 'nato-restricted', 'nato-secret'];
 const CLASSIF_LEGACY_MAP = {
@@ -1723,7 +1724,7 @@ const THREAT_LEGACY_MAP = {
 };
 const THREAT_KEYS = ['', 'low', 'moderate', 'high'];
 const UNIT_CHOICES = { mass: ['kg', 'lb'], distance: ['km', 'nm'], altitude: ['m', 'ft'] };
-const SECTION_IDS = ['meta', 'flight', 'mission', 'times', 'crew', 'nav', 'radio', 'fields', 'weather', 'fuel', 'threats'];
+const SECTION_IDS = ['meta', 'flight', 'mission', 'times', 'crew', 'nav', 'refs', 'radio', 'fields', 'weather', 'fuel', 'threats'];
 const TAB_IDS = SECTION_IDS.concat(['preview']);
 
 /* Contenu du bouton « Exemple » (document dcs-datacard-v1) */
@@ -1775,7 +1776,8 @@ const I18N = {
     'imp.route.line': '« {name} » — {n} points',
     'imp.route.noname': 'Route sans nom',
     'imp.route.fill': 'Remplir la navigation de la datacard affichée',
-    'imp.route.fillNote': 'Sa navigation est remplacée.',
+    'imp.route.fillNote': 'Sa navigation et ses points de référence sont remplacés.',
+    'imp.route.refs': ' · {k} réf.',
     'imp.route.new': 'Nouvelle datacard',
     'toast.routeImported': 'Route importée\u202f: {n} points ✓',
     'imp.choose': 'Choisir un fichier…',
@@ -1803,12 +1805,14 @@ const I18N = {
     'li.down': 'Descendre',
     'li.del': 'Supprimer',
     'warn.overflow': 'Contenu tronqué : la page 1 déborde même sans la navigation.',
+    'warn.overflow2': 'Contenu tronqué\u202f: la page 2 déborde.',
     'sec.meta': 'Méta',
     'sec.flight': 'Vol',
     'sec.mission': 'Mission',
     'sec.times': 'Horaires',
     'sec.crew': 'Équipages',
     'sec.nav': 'Navigation',
+    'sec.refs': 'Points de référence',
     'sec.radio': 'Radio',
     'sec.fields': 'Terrains',
     'sec.weather': 'Météo',
@@ -1840,6 +1844,10 @@ const I18N = {
     'ph.nav.*.altitude': '50',
     'ph.nav.*.tos': '10:05',
     'ph.nav.*.note': 'Île + rivière',
+    'ph.refs.*.name': 'ÎLE PETRA',
+    'ph.refs.*.coord': '36S VD 85842 93459',
+    'ph.refs.*.altitude': '0',
+    'ph.refs.*.note': 'Repère côtier',
     'ph.radios.*.name': 'R-863',
     'ph.radios.*.channels.*.channel': '0',
     'ph.radios.*.channels.*.label': 'Groupe 1',
@@ -1938,6 +1946,7 @@ const I18N = {
     'add.time': '+ Ajouter un horaire',
     'add.crew': '+ Ajouter un équipage',
     'add.point': '+ Ajouter un point',
+    'add.ref': '+ Point de référence',
     'add.radio': '+ Ajouter un poste',
     'add.channel': '+ Ajouter un canal',
     'add.field': '+ Ajouter un terrain',
@@ -1966,6 +1975,7 @@ const I18N = {
     'dc.b.times': 'HORAIRES',
     'dc.b.crew': 'ÉQUIPAGES',
     'dc.b.nav': 'NAVIGATION',
+    'dc.b.refs': 'POINTS DE RÉFÉRENCE',
     'dc.b.radio': 'RADIO',
     'dc.b.fields': 'TERRAINS',
     'dc.b.weather': 'MÉTÉO',
@@ -2052,7 +2062,8 @@ const I18N = {
     'imp.route.line': '“{name}” — {n} waypoints',
     'imp.route.noname': 'Untitled route',
     'imp.route.fill': 'Fill the navigation of the datacard shown',
-    'imp.route.fillNote': 'Its navigation is replaced.',
+    'imp.route.fillNote': 'Its navigation and reference points are replaced.',
+    'imp.route.refs': ' · {k} ref.',
     'imp.route.new': 'New datacard',
     'toast.routeImported': 'Route imported: {n} waypoints ✓',
     'imp.choose': 'Choose a file…',
@@ -2080,12 +2091,14 @@ const I18N = {
     'li.down': 'Move down',
     'li.del': 'Delete',
     'warn.overflow': 'Content truncated: page 1 overflows even without navigation.',
+    'warn.overflow2': 'Content truncated: page 2 overflows.',
     'sec.meta': 'Meta',
     'sec.flight': 'Flight',
     'sec.mission': 'Mission',
     'sec.times': 'Times',
     'sec.crew': 'Crew',
     'sec.nav': 'Navigation',
+    'sec.refs': 'Reference points',
     'sec.radio': 'Radio',
     'sec.fields': 'Airfields',
     'sec.weather': 'Weather',
@@ -2117,6 +2130,10 @@ const I18N = {
     'ph.nav.*.altitude': '50',
     'ph.nav.*.tos': '10:05',
     'ph.nav.*.note': 'Island + river',
+    'ph.refs.*.name': 'PETRA ISLAND',
+    'ph.refs.*.coord': '36S VD 85842 93459',
+    'ph.refs.*.altitude': '0',
+    'ph.refs.*.note': 'Coastal landmark',
     'ph.radios.*.name': 'R-863',
     'ph.radios.*.channels.*.channel': '0',
     'ph.radios.*.channels.*.label': 'Group 1',
@@ -2215,6 +2232,7 @@ const I18N = {
     'add.time': '+ Add time',
     'add.crew': '+ Add crew member',
     'add.point': '+ Add point',
+    'add.ref': '+ Reference point',
     'add.radio': '+ Add radio',
     'add.channel': '+ Add channel',
     'add.field': '+ Add airfield',
@@ -2243,6 +2261,7 @@ const I18N = {
     'dc.b.times': 'TIMES',
     'dc.b.crew': 'CREW',
     'dc.b.nav': 'NAVIGATION',
+    'dc.b.refs': 'REFERENCE POINTS',
     'dc.b.radio': 'RADIO',
     'dc.b.fields': 'AIRFIELDS',
     'dc.b.weather': 'WEATHER',
@@ -2725,6 +2744,7 @@ function newCard() {
     crew: [],
     nav: [],
     navDisplay: { mode: 'course', ref: 'true', decl: '' },
+    refs: [],
     radios: [],
     fields: [],
     weather: { metar: '', wind: '', visibility: '', qnh: '', clouds: '' },
@@ -2797,6 +2817,11 @@ function normalizeCard(src) {
     if (NAV_MODES.indexOf(nd.mode) !== -1) c.navDisplay.mode = nd.mode;
     if (NAV_REFS.indexOf(nd.ref) !== -1) c.navDisplay.ref = nd.ref;
     if ('decl' in nd) c.navDisplay.decl = str(nd.decl);
+  }
+  if (Array.isArray(src.refs)) {
+    c.refs = src.refs.slice(0, LIMITS.refs).map(o => ({
+      name: str(o && o.name), coord: str(o && o.coord), altitude: str(o && o.altitude), note: str(o && o.note)
+    }));
   }
   if (Array.isArray(src.radios)) {
     c.radios = src.radios.slice(0, LIMITS.radios).map(r => ({
@@ -3111,6 +3136,9 @@ function unitLabel(c, kind) { return t('u.' + c.units[kind]); }
 
 function anyText(o, keys) { return keys.some(k => hasText(o[k])); }
 function navRows(c) { return c.nav.filter(r => anyText(r, NAV_KEYS)); }
+/* Points de référence : une rangée dont aucun champ n'est rempli n'existe pas pour le bloc. */
+const REF_KEYS = ['name', 'coord', 'altitude', 'note'];
+function refRows(c) { return c.refs.filter(r => anyText(r, REF_KEYS)); }
 
 function blockHtml(name, title, bodyHtml, bodyClass) {
   return '<section class="dc-block" data-block="' + name + '"><h3 class="dc-bh">' + esc(title) + '</h3>' +
@@ -3214,6 +3242,36 @@ function blkNav(c) {
   const cols = '<colgroup>' + NAV_COLS[mode].map(w => '<col style="width:' + w + 'px">').join('') + '<col></colgroup>';
   return blockHtml('nav', title,
     '<table class="dc-tab dc-nav' + (mode === 'course' ? '' : ' dc-navc') + '">' + cols +
+    '<thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody></table>', 'dc-bbt');
+}
+
+/* Largeurs du bloc Points de référence (px ; la note, dernière colonne, prend le reste) */
+const REF_COLS = {
+  mgrs: [50, 262, 236, 84],
+  dms:  [50, 224, 290, 84]
+};
+
+/* Bloc « Points de référence » : le tableau de la navigation en mode coordonnées (mêmes classes), sans heure */
+function blkRefs(c) {
+  const rows = refRows(c);
+  if (!rows.length) return '';
+  const mode = c.navDisplay.mode === 'dms' ? 'dms' : 'mgrs';
+  const au = unitLabel(c, 'altitude');
+  const head = '<th>#</th><th>' + esc(t('dc.h.point')) + '</th>' +
+    '<th class="cc">' + esc(t(mode === 'mgrs' ? 'dc.h.mgrs' : 'dc.h.coord')) + '</th>' +
+    '<th class="r">' + esc(t('dc.h.alt', { u: au })) + '</th>' +
+    '<th>' + esc(t('dc.h.note')) + '</th>';
+  const body = rows.map((r, i) => {
+    const p = parseCoord(r.coord);
+    const cc = p ? esc(mode === 'mgrs' ? (toMGRS(p.lat, p.lon) || '—') : toDMS(p.lat, p.lon)) : esc('—');
+    return '<tr><td class="m ix">' + String.fromCharCode(65 + i) + '</td><td class="nm">' + esc(r.name) + '</td>' +
+      '<td class="m cc">' + cc + '</td>' +
+      '<td class="m r">' + dash(r.altitude) + '</td>' +
+      '<td class="nt">' + esc(r.note) + '</td></tr>';
+  }).join('');
+  const cols = '<colgroup>' + REF_COLS[mode].map(w => '<col style="width:' + w + 'px">').join('') + '<col></colgroup>';
+  return blockHtml('refs', t('dc.b.refs'),
+    '<table class="dc-tab dc-nav dc-navc dc-refs">' + cols +
     '<thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody></table>', 'dc-bbt');
 }
 
@@ -3330,8 +3388,9 @@ function headNav(c) {
     '<div class="dc-hr"><div class="dc-ttl">' + esc(t('dc.page2')) + '</div></div></div>';
 }
 
-/* Une page de datacard. kind : 'main' (page 1) ou 'nav' (page de navigation). */
-function pageHtml(c, mode, p, N, kind, withNav) {
+/* Une page de datacard. kind : 'main' (page 1) ou 'nav' (page de navigation).
+   withNav : la navigation est sur cette page ; withRefs : les points de référence aussi (après la navigation). */
+function pageHtml(c, mode, p, N, kind, withNav, withRefs) {
   const cls = esc(classifLabel(c));
   const pg = p + ' / ' + N;
   const top = '<div class="dc-top"><span>' + cls + '</span><span>' + esc(c.meta.docRef.trim()) + '</span><span>' + pg + '</span></div>';
@@ -3341,7 +3400,7 @@ function pageHtml(c, mode, p, N, kind, withNav) {
   let head, body;
   if (kind === 'nav') {
     head = headNav(c);
-    body = rowHtml('dc-r3', [blkNav(c)]);
+    body = (withNav ? rowHtml('dc-r3', [blkNav(c)]) : '') + (withRefs ? rowHtml('dc-r3', [blkRefs(c)]) : '');
   } else {
     head = headMain(c);
     const fields = blkFields(c), weather = blkWeather(c);
@@ -3349,6 +3408,7 @@ function pageHtml(c, mode, p, N, kind, withNav) {
     body = rowHtml('dc-r1', [blkMission(c), blkTimes(c)]) +
       rowHtml('dc-r2', [blkCrew(c)]) +
       (withNav ? rowHtml('dc-r3', [blkNav(c)]) : '') +
+      (withRefs ? rowHtml('dc-r3', [blkRefs(c)]) : '') +
       rowHtml('dc-r4', [blkRadio(c), col]) +
       rowHtml('dc-r5', [blkFuel(c), blkThreats(c)]);
   }
@@ -3373,17 +3433,31 @@ function overflowsHtml(html) {
   return over;
 }
 
+/* Découpage d'une carte, toujours décidé à la mesure du rendu. plan.split : deux pages ; plan.p2 : ce que porte la page 2
+   (« refs » : les seules références ; « navrefs » : la navigation puis les références, ou la navigation seule sans référence). */
 function planCard(c) {
   const key = CURRENT_LANG + '|' + JSON.stringify(c);
   if (layoutCache.has(key)) return layoutCache.get(key);
-  const plan = { split: false, overflow: false };
-  if (navRows(c).length) {
-    if (overflowsHtml(pageHtml(c, 'day', 1, 1, 'main', true))) {
+  const plan = { split: false, overflow: false, overflow2: false, p2: 'navrefs' };
+  const hasNav = navRows(c).length > 0, hasRefs = refRows(c).length > 0;
+  if (hasRefs) {
+    /* 1 · tout tient en page 1 (navigation puis références) ; 2 · la page 1 avec la navigation seule tient : les références
+       passent seules en page 2 ; 3 · page 1 sans navigation ni références, page 2 avec la navigation puis les références */
+    if (overflowsHtml(pageHtml(c, 'day', 1, 1, 'main', true, true))) {
       plan.split = true;
-      plan.overflow = overflowsHtml(pageHtml(c, 'day', 1, 2, 'main', false));
+      if (hasNav && !overflowsHtml(pageHtml(c, 'day', 1, 2, 'main', true, false))) plan.p2 = 'refs';
+      else {
+        plan.overflow = overflowsHtml(pageHtml(c, 'day', 1, 2, 'main', false, false));
+        plan.overflow2 = overflowsHtml(pageHtml(c, 'day', 2, 2, 'nav', hasNav, true));   /* page 2 : la navigation puis les références */
+      }
+    }
+  } else if (hasNav) {
+    if (overflowsHtml(pageHtml(c, 'day', 1, 1, 'main', true, false))) {
+      plan.split = true;
+      plan.overflow = overflowsHtml(pageHtml(c, 'day', 1, 2, 'main', false, false));
     }
   } else {
-    plan.overflow = overflowsHtml(pageHtml(c, 'day', 1, 1, 'main', false));
+    plan.overflow = overflowsHtml(pageHtml(c, 'day', 1, 1, 'main', false, false));
   }
   if (layoutCache.size > 80) layoutCache.clear();
   layoutCache.set(key, plan);
@@ -3393,9 +3467,12 @@ function planCard(c) {
 /* Les pages d'une carte, dans un mode donné */
 function cardPages(c, mode) {
   const plan = planCard(c);
+  const hasRefs = refRows(c).length > 0;
   const pages = plan.split
-    ? [pageHtml(c, mode, 1, 2, 'main', false), pageHtml(c, mode, 2, 2, 'nav', false)]
-    : [pageHtml(c, mode, 1, 1, 'main', true)];
+    ? (plan.p2 === 'refs'
+      ? [pageHtml(c, mode, 1, 2, 'main', true, false), pageHtml(c, mode, 2, 2, 'nav', false, true)]
+      : [pageHtml(c, mode, 1, 2, 'main', false, false), pageHtml(c, mode, 2, 2, 'nav', true, hasRefs)])
+    : [pageHtml(c, mode, 1, 1, 'main', true, hasRefs)];
   return { plan, pages };
 }
 
@@ -3406,6 +3483,7 @@ function renderPreview() {
   document.getElementById('preview').innerHTML = res.pages.map(h => '<div class="dc-sheet">' + h + '</div>').join('');
   const warn = document.getElementById('dc-warn');
   if (res.plan.overflow) { warn.textContent = t('warn.overflow'); warn.hidden = false; }
+  else if (res.plan.overflow2) { warn.textContent = t('warn.overflow2'); warn.hidden = false; }
   else { warn.textContent = ''; warn.hidden = true; }
   applyPreviewScale();
 }
@@ -3436,6 +3514,7 @@ const LIST_SPECS = {
   'times': { max: LIMITS.times, make: () => ({ label: '', value: '' }) },
   'crew': { max: LIMITS.crew, make: () => ({ callsign: '', pilot: '', crew: '', board: '' }) },
   'nav': { max: LIMITS.nav, make: () => ({ name: '', course: '', distance: '', altitude: '', tos: '', note: '', coord: '' }) },
+  'refs': { max: LIMITS.refs, make: () => ({ name: '', coord: '', altitude: '', note: '' }) },
   'radios': { max: LIMITS.radios, make: () => ({ name: '', channels: [] }) },
   'radios.*.channels': { max: LIMITS.channels, make: () => ({ channel: '', label: '', frequency: '', modulation: '' }) },
   'fields': { max: LIMITS.fields, make: () => ({ role: '', icao: '', name: '', runway: '', frequency: '' }) },
@@ -3523,6 +3602,18 @@ function syncNavEditor() {
   if (w) w.hidden = !navDeclMissing(c);
 }
 
+/* Points de référence : la ligne d'état de chaque coordonnée, sans refaire l'éditeur */
+function syncRefsEditor() {
+  const c = curCard();
+  document.querySelectorAll('#editor .li[data-list="refs"]').forEach(li => {
+    const x = c.refs[parseInt(li.dataset.i, 10)];
+    const st = li.querySelector('[data-coord-state]');
+    if (!x || !st) return;
+    const o = coordState(x.coord, parseCoord(x.coord), null);
+    st.textContent = o.text; st.className = 'ed-coord ' + o.cls;
+  });
+}
+
 const SECTION_BUILDERS = {
   meta: c =>
     fSelect('f.classification', 'meta.classification', c.meta.classification, CLASSIF_KEYS.map(k => [k, t('classif.' + k)])) +
@@ -3568,6 +3659,17 @@ const SECTION_BUILDERS = {
         '<div class="li-grid g2">' + fInput('f.nav.tos', 'nav.' + i + '.tos', x.tos) + fInput('f.nav.note', 'nav.' + i + '.note', x.note) + '</div>';
     }, 'add.point');
   })(),
+
+  refs: c =>
+    '<div class="ed-help">' + esc(t('f.nav.coord')) + (CURRENT_LANG === 'fr' ? ' : ' : ': ') + esc(t('nav.coord.help')) + '</div>' +
+    listHtml('refs', c.refs, (x, i) => {
+      const st = coordState(x.coord, parseCoord(x.coord), null);
+      return '<div class="li-grid gs">' + fInput('f.nav.name', 'refs.' + i + '.name', x.name) + '</div>' +
+        '<div class="li-grid gs"><div class="ed-field"><label>' + esc(t('f.nav.coord')) + '</label>' +
+        '<input type="text" data-path="refs.' + i + '.coord" value="' + esc(x.coord) + '"' + phAttr('refs.' + i + '.coord') + ' autocomplete="off" spellcheck="false">' +
+        '<div class="ed-coord ' + st.cls + '" data-coord-state>' + esc(st.text) + '</div></div></div>' +
+        '<div class="li-grid g2">' + fInput('f.nav.altitude', 'refs.' + i + '.altitude', x.altitude) + fInput('f.nav.note', 'refs.' + i + '.note', x.note) + '</div>';
+    }, 'add.ref'),
 
   radio: c => listHtml('radios', c.radios, (r, i) =>
     '<div class="li-grid gs">' + fInput('f.radio.name', 'radios.' + i + '.name', r.name) + '</div>' +
@@ -3682,6 +3784,7 @@ function onEditorInput(e) {
   if (path === 'weather.metar') syncMetar(c);
   if (path === 'flight.callsign') updatePackTitle();
   if (/^nav(Display)?\./.test(path) || path === 'units.distance') syncNavEditor();
+  if (/^refs\./.test(path)) syncRefsEditor();
   touch();
 }
 
@@ -3889,27 +3992,34 @@ function isRouteObject(o) {
   return !!(o && typeof o === 'object' && !Array.isArray(o) && o.format === ROUTE_FORMAT && Array.isArray(o.points));
 }
 
-/* Route lue : { name, units, navDisplay, points } (points valides, 30 au plus), ou null si ce n'est pas une route */
+/* Route lue : { name, units, navDisplay, points, refs } (points valides, 30 au plus ; références valides, 12 au plus),
+   ou null si ce n'est pas une route */
 function routeFromObject(o) {
   if (!isRouteObject(o)) return null;
   const un = (o.units && typeof o.units === 'object') ? o.units : {};
   const nd = (o.navDisplay && typeof o.navDisplay === 'object') ? o.navDisplay : {};
-  const points = [];
-  o.points.forEach(p => {
-    if (!p || typeof p !== 'object') return;
-    if (typeof p.lat !== 'number' || typeof p.lon !== 'number' || !isFinite(p.lat) || !isFinite(p.lon)) return;
-    if (Math.abs(p.lat) > 90 || Math.abs(p.lon) > 180) return;
-    points.push({
-      name: str(p.name), lat: p.lat, lon: p.lon,
-      alt: (typeof p.alt === 'number' && isFinite(p.alt)) ? p.alt : 0,
-      altRef: p.altRef === 'MSL' ? 'MSL' : 'AGL'
+  const readPts = list => {
+    const out = [];
+    list.forEach(p => {
+      if (!p || typeof p !== 'object') return;
+      if (typeof p.lat !== 'number' || typeof p.lon !== 'number' || !isFinite(p.lat) || !isFinite(p.lon)) return;
+      if (Math.abs(p.lat) > 90 || Math.abs(p.lon) > 180) return;
+      out.push({
+        name: str(p.name), lat: p.lat, lon: p.lon,
+        alt: (typeof p.alt === 'number' && isFinite(p.alt)) ? p.alt : 0,
+        altRef: p.altRef === 'MSL' ? 'MSL' : 'AGL'
+      });
     });
-  });
+    return out;
+  };
+  const points = readPts(o.points);
+  const refs = Array.isArray(o.refs) ? readPts(o.refs) : [];
   return {
     name: str(o.name),
     units: { distance: un.distance === 'nm' ? 'nm' : 'km', altitude: un.altitude === 'ft' ? 'ft' : 'm' },
     navDisplay: { ref: nd.ref === 'mag' ? 'mag' : 'true', decl: str(nd.decl) },
-    points: points.slice(0, LIMITS.nav)
+    points: points.slice(0, LIMITS.nav),
+    refs: refs.slice(0, LIMITS.refs)
   };
 }
 
@@ -3924,11 +4034,15 @@ function routeAltStr(m, unit) {
   return String(Math.round(unit === 'ft' ? m / FT_M : m));
 }
 
-/* Remplace la navigation d'une datacard par les points de la route ; unités et cap de la route ; le mode d'affichage ne change pas. */
+/* Remplace la navigation et les points de référence d'une datacard par ceux de la route ; unités et cap de la route ;
+   le mode d'affichage ne change pas. Une route sans référence vide les références de la carte. */
 function applyRouteToCard(c, r) {
   c.nav = r.points.slice(0, LIMITS.nav).map(p => ({
     name: p.name, course: '', distance: '', altitude: routeAltStr(p.alt, r.units.altitude), tos: '',
     note: p.altRef === 'AGL' ? 'AGL' : '', coord: toMGRS(p.lat, p.lon)
+  }));
+  c.refs = r.refs.slice(0, LIMITS.refs).map(p => ({
+    name: p.name, coord: toMGRS(p.lat, p.lon), altitude: routeAltStr(p.alt, r.units.altitude), note: p.altRef === 'AGL' ? 'AGL' : ''
   }));
   c.units.distance = r.units.distance;
   c.units.altitude = r.units.altitude;
@@ -3963,7 +4077,8 @@ function impRefresh() {
   document.getElementById('imp-route-block').hidden = !r;
   if (r) {
     const nm = hasText(r.name) ? r.name.trim() : t('imp.route.noname');
-    document.getElementById('imp-route-line').textContent = t('imp.route.line', { name: nm, n: r.points.length });
+    document.getElementById('imp-route-line').textContent = t('imp.route.line', { name: nm, n: r.points.length }) +
+      (r.refs.length ? t('imp.route.refs', { k: r.refs.length }) : '');
   }
   const b = impBriefing();
   const list = document.getElementById('imp-list');
