@@ -6,11 +6,12 @@ Produit dist/dcs_mission_plan.html (fichier autonome, single-file, offline).
 Usage : python3 build_mission_plan.py
 Sortie : ./dist/dcs_mission_plan.html
 
-Sources modules actifs (produits par les cinq autres build_*.py, dans ./dist/) :
+Sources modules actifs (produits par les six autres build_*.py, dans ./dist/) :
   dist/dcs_hq.html
   dist/dcs_briefing_generator.html
   dist/dcs_datacard_generator.html
   dist/dcs_recon_station.html
+  dist/dcs_route_planner.html
   dist/dcs_field_manual.html
 
 Sources images (à placer dans ./tiles/) :
@@ -32,8 +33,8 @@ MODULES = [
     {'id': 'bg', 'status': 'active', 'src': 'dist/dcs_briefing_generator.html',       'tile': 'tiles/bg.webp'},
     {'id': 'dg', 'status': 'active', 'src': 'dist/dcs_datacard_generator.html',        'tile': 'tiles/kg.webp'},
     {'id': 'rs', 'status': 'active', 'src': 'dist/dcs_recon_station.html',             'tile': 'tiles/rs.webp'},
+    {'id': 'rp', 'status': 'active', 'src': 'dist/dcs_route_planner.html',             'tile': 'tiles/rp.webp'},
     {'id': 'fm', 'status': 'active', 'src': 'dist/dcs_field_manual.html',              'tile': 'tiles/fm.webp'},
-    {'id': 'rp', 'status': 'soon',   'src': '',                                    'tile': 'tiles/rp.webp'},
 ]
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -50,7 +51,7 @@ def encode_file_b64(path):
 def encode_module_b64(path):
     abs_path = os.path.join(SCRIPT_DIR, path)
     if not os.path.isfile(abs_path):
-        raise SystemExit(f"[ERREUR] Entrée manquante : {abs_path} (lancer d'abord les cinq builds de modules)")
+        raise SystemExit(f"[ERREUR] Entrée manquante : {abs_path} (lancer d'abord les six builds de modules)")
     with open(abs_path, 'r', encoding='utf-8') as fh:
         html = fh.read()
     return base64.b64encode(html.encode('utf-8')).decode('ascii')
@@ -238,12 +239,16 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
 #card-fm::before{{background:radial-gradient(circle at 90% 10%, rgba(96,64,30,.5), transparent 14%);}}
 #card-dg .shot{{background-image:url("{tile_dg}");}}
 #card-dg::before{{background:radial-gradient(circle at 10% 92%, rgba(96,64,30,.5), transparent 15%);}}
+#card-rp .shot{{background-image:url("{tile_rp}");}}
+#card-rp::before{{background:
+  radial-gradient(circle at 94% 88%, rgba(96,64,30,.54), transparent 18%), radial-gradient(circle at 10% 10%, rgba(80,52,24,.42), transparent 12%);}}
 /* Rotation propre à chaque carte, visée par son id (et non par sa position) : l'ordre des cartes peut changer. */
 .active-row .print[id="card-hq"]{{transform:rotate(-1.8deg);}}
 .active-row .print[id="card-bg"]{{transform:rotate(1.8deg);}}
 .active-row .print[id="card-rs"]{{transform:rotate(0deg);}}
 .active-row .print[id="card-fm"]{{transform:rotate(-1.4deg);}}
 .active-row .print[id="card-dg"]{{transform:rotate(1.2deg);}}
+.active-row .print[id="card-rp"]{{transform:rotate(-1deg);}}
 .print.active:hover{{transform:rotate(0) translateY(-7px); cursor:pointer; box-shadow:0 30px 64px rgba(0,0,0,.6), 0 0 0 2px var(--card-accent);}}
 .cta{{margin:2px 8px 12px; display:inline-block; font-family:var(--f-ui); font-size:12.5px; letter-spacing:.08em; text-transform:uppercase;
   color:#15120c; background:var(--card-accent); border:1px solid var(--paper-edge); padding:9px 15px; border-radius:var(--rad);}}
@@ -360,7 +365,7 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
     <div class="wall-stage">
 
       <!-- Modules actifs : dossiers ouverts, traitement identique.
-           Ordre : HQ · Briefing Generator · Datacard Generator · Recon Station · Field Manual.
+           Ordre : HQ · Briefing Generator · Datacard Generator · Recon Station · Route Planner · Field Manual.
            RÈGLE : Field Manual reste TOUJOURS la dernière carte active ; un module activé plus tard s'insère avant. -->
       <div class="active-row">
         <div class="print active reveal d3" id="card-hq" style="--card-accent:var(--a-hq)" tabindex="0" role="button" aria-label="HQ">
@@ -400,7 +405,7 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
             <div class="cap-row">
               <span class="logo" style="background:var(--a-dg)">D·G</span>
               <span class="ptitle">Datacard Generator</span>
-              <span class="pver">v1.2.0</span>
+              <span class="pver">v1.3.0</span>
             </div>
             <div class="pdesc" data-i18n="dg.desc">Datacards de vol d'une page pour le kneeboard — saisie ou depuis un briefing, day et night, export PNG et PDF.</div>
             <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
@@ -421,6 +426,20 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
           </div>
           <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>
         </div>
+        <div class="print active reveal d3" id="card-rp" style="--card-accent:var(--a-rp)" tabindex="0" role="button" aria-label="Route Planner">
+          <span class="tape"></span><span class="pin tl"></span><span class="pin tr"></span>
+          <div class="shot"></div>
+          <div class="caption">
+            <div class="cap-row">
+              <span class="logo" style="background:var(--a-rp)">R·P</span>
+              <span class="ptitle">Route Planner</span>
+              <span class="pver">v1.0.0</span>
+            </div>
+            <div class="pdesc" data-i18n="rp.desc">Tracé de route sur carte — carte DCS, topographique ou satellite, grille MGRS ; caps, distances, MGRS et DMS, envoyés à la datacard.</div>
+            <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
+          </div>
+          <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>
+        </div>
         <div class="print active reveal d3" id="card-fm" style="--card-accent:var(--a-fm)" tabindex="0" role="button" aria-label="Field Manual">
           <span class="tape"></span><span class="pin tl"></span><span class="pin tr"></span>
           <div class="shot"></div>
@@ -434,21 +453,6 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
             <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
           </div>
           <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>
-        </div>
-      </div>
-
-      <!-- Modules à venir -->
-      <div class="soon-row">
-        <div class="print sealed reveal d4" aria-disabled="true">
-          <span class="pin tl"></span><span class="pin tr"></span>
-          <span class="avenir" data-i18n="soon">À venir</span>
-          <div class="shot" style="background-image:url('{tile_rp}')"></div>
-          <div class="caption">
-            <div class="cap-row">
-              <span class="logo" style="background:var(--a-rp)">R·P</span>
-              <span class="ptitle">Route Planner</span>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -473,7 +477,7 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
   /* ── Données ──────────────────────────────────────────────── */
   {module_html_js}
 
-  var APP_VERSION = '1.7.0';
+  var APP_VERSION = '1.8.0';
   var KEY_LANG  = 'lang_v1';
   var KEY_THEME = 'theme_v1';
 
@@ -492,6 +496,7 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
       'rs.desc': "Transforme une capture en photo d'analyse de reconnaissance — niveaux de gris, annotations, export PNG pleine résolution.",
       'fm.desc': "Le manuel d'emploi de la suite — un chapitre par module, schémas et mode d'emploi, entièrement hors-ligne.",
       'dg.desc': "Datacards de vol d'une page pour le kneeboard — saisie ou depuis un briefing, day et night, export PNG et PDF.",
+      'rp.desc': 'Tracé de route sur carte — carte DCS, topographique ou satellite, grille MGRS ; caps, distances, MGRS et DMS, envoyés à la datacard.',
       'status.op': 'Opérationnel',
       cta: '▶ Ouvrir le dossier',
       soon: 'À venir',
@@ -509,6 +514,7 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
       'rs.desc': 'Turns a screenshot into a reconnaissance analysis photo — greyscale, annotations, full-resolution PNG export.',
       'fm.desc': "The suite's field manual — one chapter per module, diagrams and how-tos, fully offline.",
       'dg.desc': 'One-page flight datacards for the kneeboard — from scratch or from a briefing, day and night, PNG and PDF export.',
+      'rp.desc': 'Lay a route on a map — DCS, topographic or satellite, MGRS grid; headings, distances, MGRS and DMS, sent to the datacard.',
       'status.op': 'Operational',
       cta: '▶ Open the file',
       soon: 'Coming soon',
@@ -694,6 +700,9 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
     activeModule = id;
   }}
 
+  /* Point d'entrée pour les modules (le Route Planner ouvre le Datacard Generator) */
+  window.MP_OPEN_MODULE = openModule;
+
   function goHub() {{
     Object.keys(iframes).forEach(function(iid) {{ iframes[iid].style.display = 'none'; }});
     document.getElementById('module-view').style.display = 'none';
@@ -737,6 +746,10 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
     document.getElementById('card-rs').addEventListener('click', function() {{ openModule('rs'); }});
     document.getElementById('card-rs').addEventListener('keydown', function(e) {{
       if (e.key === 'Enter' || e.key === ' ') {{ e.preventDefault(); openModule('rs'); }}
+    }});
+    document.getElementById('card-rp').addEventListener('click', function() {{ openModule('rp'); }});
+    document.getElementById('card-rp').addEventListener('keydown', function(e) {{
+      if (e.key === 'Enter' || e.key === ' ') {{ e.preventDefault(); openModule('rp'); }}
     }});
     document.getElementById('card-fm').addEventListener('click', function() {{ openModule('fm'); }});
     document.getElementById('card-fm').addEventListener('keydown', function(e) {{

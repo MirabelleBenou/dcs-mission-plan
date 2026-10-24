@@ -8,9 +8,11 @@
 ![Platform](https://img.shields.io/badge/platform-Web-green)
 ![Offline](https://img.shields.io/badge/offline-yes-success)
 ![Tablet & mobile](https://img.shields.io/badge/tablet%20%26%20mobile-ready-orange)
-![Tools](https://img.shields.io/badge/tools-4%20live%20%C2%B7%202%20planned-brown)
+![Tools](https://img.shields.io/badge/tools-6%20live-brown)
 
 🌐 **[Use it online »](https://mirabellebenou.github.io/dcs-mission-plan/)** &nbsp;·&nbsp; 💾 **[Download the offline file »](../../releases)**
+
+> 🗺️ **Thanks to the [DCS Olympus](https://github.com/Pax1601/DCSOlympus) team!** The Route Planner's **DCS map** layer uses the DCS map tiles they kindly share with the community — come and say hi on their **[Discord](https://discord.gg/kNAQkhUHnQ)**.
 
 A single-page **"situation board"** that brings together a suite of mission-prep tools for DCS World virtual pilots and wings — staged like a Cold War operations table. Open the board, pick a tool, prepare your mission. It runs entirely in your browser: **online for those who don't want to download**, or as **one offline HTML file** you can keep, share, and use without internet.
 
@@ -38,8 +40,8 @@ The landing page presents each tool as a **pinned print** on the board. Active t
 | **Briefing Generator** | Mission briefings, full or quick — SITAC, radio plan, airfields, charts, recon photos — PDF & PNG export | ✅ `v2.4.3` |
 | **Recon Station** | Turn a screenshot into a reconnaissance analysis photo — sensor looks, annotations, lossless PNG | ✅ `v1.0.0` |
 | **Field Manual** | In-app documentation for the suite — one illustrated chapter per tool, diagrams, FR/EN, offline | ✅ `v1.2.3` |
-| **Route Planner** | Route legs, turn points, interactive map and loadouts | ⏳ Planned |
-| **Datacard Generator** | One-page flight datacards for the kneeboard — from scratch or from a briefing — day & night, PNG & PDF export | ✅ `v1.2.0` |
+| **Route Planner** | Lay a route on a map — DCS map (by DCS Olympus), topographic or satellite, MGRS grid — headings, distances, MGRS & DMS, sent to the datacard | ✅ `v1.0.0` |
+| **Datacard Generator** | One-page flight datacards for the kneeboard — from scratch or from a briefing — day & night, PNG & PDF export | ✅ `v1.3.0` |
 
 > Each tool is a standalone HTML file with its own build; the landing page embeds the live tools and stages them all on one board.
 
@@ -142,12 +144,13 @@ python3 build_recon_station.py                  # → dist/dcs_recon_station.htm
 python3 build_hq.py                             # → dist/dcs_hq.html
 python3 build_field_manual.py                   # → dist/dcs_field_manual.html
 python3 build_datacard_generator.py            # → dist/dcs_datacard_generator.html
+python3 build_route_planner.py                 # → dist/dcs_route_planner.html
 
 # 2) Assemble the landing page (embeds the tools + board tiles)
 python3 build_mission_plan.py                   # → dist/dcs_mission_plan.html
 ```
 
-Run the five tool builds first, then the landing-page build: the latter reads the five modules from `dist/` and the tiles from `tiles/`. Inputs (`assets.json`, `tiles/`) are read from the repository, and a build stops with a non-zero exit code if one is missing.
+Run the six tool builds first, then the landing-page build: the latter reads the six modules from `dist/` and the tiles from `tiles/`. Inputs (`assets.json`, `tiles/`) are read from the repository, and a build stops with a non-zero exit code if one is missing.
 
 The output `dist/dcs_mission_plan.html` is the distributable (and the file published online). `docs/index.html` is a byte-for-byte copy of `dist/dcs_mission_plan.html`, made at each milestone.
 
@@ -160,7 +163,8 @@ The output `dist/dcs_mission_plan.html` is the distributable (and the file publi
 ├── build_hq.py                    # HQ builder
 ├── build_field_manual.py          # Field Manual builder
 ├── build_datacard_generator.py    # Datacard Generator builder
-├── assets.json                    # Embedded fonts, kraft texture (base64)
+├── build_route_planner.py         # Route Planner builder
+├── assets.json                    # Embedded fonts, libraries, kraft texture (base64)
 ├── tiles/                         # Board tiles (512² WebP): hq, bg, rs, fm, rp, kg
 ├── docs/screenshots/              # README images
 ├── CHANGELOG.md
@@ -172,7 +176,7 @@ The output `dist/dcs_mission_plan.html` is the distributable (and the file publi
 
 ### ⏳ Work in Progress
 - ⏳ **HQ** — flight-package / Commander UI, and in-game `.miz` validation (out of beta)
-- ⏳ **Route Planner** — route legs, turn points, interactive map
+- ⏳ **Route Planner** — read routes from a `.miz`, automatic magnetic variation, kneeboard export
 - ⏳ **Datacard Generator** — import waypoints and loadouts from HQ (`.miz`)
 - ⏳ **UI polish** and more themes
 
@@ -201,6 +205,8 @@ For code contributions: fork, branch, study the build scripts to understand the 
 ## 🙏 Acknowledgments
 
 - Built for the DCS World virtual aviation community
+- DCS map tiles by the **[DCS Olympus](https://github.com/Pax1601/DCSOlympus)** team — [Discord](https://discord.gg/kNAQkhUHnQ)
+- Map engine [Leaflet](https://leafletjs.com) (BSD-2-Clause); topographic tiles © OpenStreetMap contributors, SRTM, style © OpenTopoMap (CC-BY-SA); satellite imagery © Esri, Maxar, Earthstar Geographics
 - Initial version developed for the **4th VEAW** virtual wing — distributed as a generic wing config example
 - Cold War kraft SVG file provided by Flappie, thanks to him !
 

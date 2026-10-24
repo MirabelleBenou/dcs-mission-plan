@@ -1319,9 +1319,9 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <button type="button" class="seg-btn" id="mode-day" data-mode="day" aria-pressed="true" data-i18n="tb.mode.day">Day</button>
     <button type="button" class="seg-btn" id="mode-night" data-mode="night" aria-pressed="false" data-i18n="tb.mode.night">Night</button>
   </div>
-  <button class="tb-btn" id="btn-briefing" data-i18n-title="tb.briefing.tip" title="Importer depuis le briefing" data-i18n-aria-label="tb.briefing.tip" aria-label="Importer depuis le briefing">
+  <button class="tb-btn" id="btn-briefing" data-i18n-title="tb.briefing.tip" title="Importer un briefing ou une route" data-i18n-aria-label="tb.briefing.tip" aria-label="Importer un briefing ou une route">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="9 15 12 18 15 15"/><line x1="12" y1="11" x2="12" y2="18"/></svg>
-    <span class="tb-btn-label"><span class="tb-long" data-i18n="tb.briefing">Depuis le briefing</span><span class="tb-short" data-i18n="tb.briefing.short">Briefing</span></span>
+    <span class="tb-btn-label"><span class="tb-long" data-i18n="tb.briefing">Importer</span><span class="tb-short" data-i18n="tb.briefing.short">Importer</span></span>
   </button>
   <button class="tb-btn" id="btn-json-import" data-i18n-title="tb.json.import" title="Importer JSON">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -1351,7 +1351,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <option value="modern-east" data-i18n="theme.modern-east">Bloc Est moderne</option>
   </select>
   <div class="tb-spacer"></div>
-  <span class="tb-version">v1.2.0</span>
+  <span class="tb-version">v1.3.0</span>
   <button class="tb-lang-btn" id="btn-lang" data-i18n-title="tb.lang.tip" title="Switch language / Changer de langue">🇬🇧</button>
 </header>
 
@@ -1388,25 +1388,34 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   </div>
 </div>
 
-<!-- ===== FENÊTRE D'IMPORT DEPUIS UN BRIEFING ===== -->
+<!-- ===== FENÊTRE D'IMPORT (briefing ou route) ===== -->
 <div class="export-modal" id="import-modal" hidden role="dialog" aria-labelledby="import-modal-title" aria-modal="true">
   <div class="export-modal-backdrop" id="import-modal-backdrop"></div>
   <div class="export-modal-panel" role="document">
     <button class="export-modal-close" id="import-modal-close" data-i18n-aria-label="modal.close" aria-label="Fermer">×</button>
-    <h2 id="import-modal-title" data-i18n="imp.title">Importer depuis le Briefing Generator</h2>
+    <h2 id="import-modal-title" data-i18n="imp.title">Importer dans la datacard</h2>
     <div class="imp-block">
       <label class="imp-src" id="imp-src-current-row"><input type="radio" name="imp-src" id="imp-src-current" value="current"><span data-i18n="imp.src.current">Briefing en cours</span></label>
       <div class="imp-note" id="imp-current-note" hidden></div>
-      <label class="imp-src" id="imp-src-file-row"><input type="radio" name="imp-src" id="imp-src-file" value="file"><span data-i18n="imp.src.file">Fichier JSON du briefing</span></label>
+      <label class="imp-src" id="imp-src-route-row"><input type="radio" name="imp-src" id="imp-src-route" value="route"><span data-i18n="imp.src.route">Route en cours</span></label>
+      <div class="imp-note" id="imp-route-note" hidden></div>
+      <label class="imp-src" id="imp-src-file-row"><input type="radio" name="imp-src" id="imp-src-file" value="file"><span data-i18n="imp.src.file">Fichier JSON (briefing ou route)</span></label>
       <div class="imp-file" id="imp-file-zone" hidden>
         <button type="button" class="imp-filebtn" id="imp-file-btn" data-i18n="imp.choose">Choisir un fichier…</button>
         <span class="imp-filename" id="imp-file-name"></span>
         <input type="file" id="file-briefing" accept=".json,application/json" hidden>
       </div>
     </div>
-    <div class="imp-block">
+    <div class="imp-block" id="imp-flights-block">
       <h3 data-i18n="imp.flights">Vols à importer</h3>
       <div class="export-png-list" id="imp-list"></div>
+    </div>
+    <div class="imp-block" id="imp-route-block" hidden>
+      <h3 data-i18n="imp.route.title">Route à importer</h3>
+      <div class="imp-note imp-route-line" id="imp-route-line"></div>
+      <label class="imp-src"><input type="radio" name="imp-route-mode" id="imp-route-fill" value="fill" checked><span data-i18n="imp.route.fill">Remplir la navigation de la datacard affichée</span></label>
+      <div class="imp-note" data-i18n="imp.route.fillNote">Sa navigation est remplacée.</div>
+      <label class="imp-src"><input type="radio" name="imp-route-mode" id="imp-route-new" value="new"><span data-i18n="imp.route.new">Nouvelle datacard</span></label>
     </div>
     <div class="export-png-actions-bottom">
       <button type="button" class="export-png-back" id="imp-cancel" data-i18n="imp.cancel">Annuler</button>
@@ -1464,6 +1473,11 @@ const KEY_LANG = 'lang_v1';
 const KEY_BRIEFING = 'khr26_briefing_state_v2';
 const KEY_WING = 'wing_config_v1';                // lecture seule : indicatifs des escadrons
 const FORMAT_ID = 'dcs-datacard-v1';
+/* Route Planner : clé de l'état de la route (lecture seule), clé du passage vers la datacard, format du fichier */
+const KEY_ROUTE = 'route_state_v1';
+const KEY_HANDOFF = 'route_handoff_v1';
+const ROUTE_FORMAT = 'dcs-route-v1';
+const FT_M = 0.3048;
 const THEME_IDS = ['cw-nato', 'cw-soviet', 'modern-nato', 'modern-east'];
 const MOBILE_BREAKPOINT = 1100;
 const PAGE_W = 1000;
@@ -1707,10 +1721,10 @@ const I18N = {
     'tb.mode.day': 'Day',
     'tb.mode.night': 'Night',
     'tb.mode.tip': 'Version de jour ou de nuit de la datacard',
-    'tb.briefing': 'Depuis le briefing',
-    'tb.briefing.tip': 'Importer depuis le briefing',
+    'tb.briefing': 'Importer',
+    'tb.briefing.tip': 'Importer un briefing ou une route',
     'app.short': 'D·G',
-    'tb.briefing.short': 'Briefing',
+    'tb.briefing.short': 'Importer',
     'tb.json.import': 'Importer JSON',
     'tb.json.export': 'Exporter JSON',
     'tb.export': 'Exporter',
@@ -1736,10 +1750,19 @@ const I18N = {
     'ex.error': 'Erreur d\'export : ',
     'toast.pngOne': 'PNG exporté ✓',
     'toast.pngMany': '{n} PNG exportés ✓',
-    'imp.title': 'Importer depuis le Briefing Generator',
+    'imp.title': 'Importer dans la datacard',
     'imp.src.current': 'Briefing en cours',
     'imp.src.currentOff': 'Aucun briefing enregistré dans ce navigateur.',
-    'imp.src.file': 'Fichier JSON du briefing',
+    'imp.src.route': 'Route en cours',
+    'imp.src.routeOff': 'Aucune route enregistrée dans ce navigateur.',
+    'imp.src.file': 'Fichier JSON (briefing ou route)',
+    'imp.route.title': 'Route à importer',
+    'imp.route.line': '« {name} » — {n} points',
+    'imp.route.noname': 'Route sans nom',
+    'imp.route.fill': 'Remplir la navigation de la datacard affichée',
+    'imp.route.fillNote': 'Sa navigation est remplacée.',
+    'imp.route.new': 'Nouvelle datacard',
+    'toast.routeImported': 'Route importée\u202f: {n} points ✓',
     'imp.choose': 'Choisir un fichier…',
     'imp.flights': 'Vols à importer',
     'imp.general': 'Données générales (sans vol)',
@@ -1975,10 +1998,10 @@ const I18N = {
     'tb.mode.day': 'Day',
     'tb.mode.night': 'Night',
     'tb.mode.tip': 'Day or night version of the datacard',
-    'tb.briefing': 'From briefing',
-    'tb.briefing.tip': 'Import from briefing',
+    'tb.briefing': 'Import',
+    'tb.briefing.tip': 'Import a briefing or a route',
     'app.short': 'D·G',
-    'tb.briefing.short': 'Briefing',
+    'tb.briefing.short': 'Import',
     'tb.json.import': 'Import JSON',
     'tb.json.export': 'Export JSON',
     'tb.export': 'Export',
@@ -2004,10 +2027,19 @@ const I18N = {
     'ex.error': 'Export error: ',
     'toast.pngOne': 'PNG exported ✓',
     'toast.pngMany': '{n} PNGs exported ✓',
-    'imp.title': 'Import from the Briefing Generator',
+    'imp.title': 'Import into the datacard',
     'imp.src.current': 'Current briefing',
     'imp.src.currentOff': 'No briefing saved in this browser.',
-    'imp.src.file': 'Briefing JSON file',
+    'imp.src.route': 'Current route',
+    'imp.src.routeOff': 'No route saved in this browser.',
+    'imp.src.file': 'JSON file (briefing or route)',
+    'imp.route.title': 'Route to import',
+    'imp.route.line': '“{name}” — {n} waypoints',
+    'imp.route.noname': 'Untitled route',
+    'imp.route.fill': 'Fill the navigation of the datacard shown',
+    'imp.route.fillNote': 'Its navigation is replaced.',
+    'imp.route.new': 'New datacard',
+    'toast.routeImported': 'Route imported: {n} waypoints ✓',
     'imp.choose': 'Choose a file…',
     'imp.flights': 'Flights to import',
     'imp.general': 'General data (no flight)',
@@ -3815,6 +3847,7 @@ function loadJsonFile(file) {
     let parsed;
     try { parsed = JSON.parse(reader.result); } catch (e) { showToast(t('err.json')); return; }
     if (isBriefingObject(parsed)) { openImportModal(parsed, file.name); return; }
+    if (isRouteObject(parsed)) { openImportModal(null, file.name, routeFromObject(parsed)); return; }
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed) || parsed.format !== FORMAT_ID) { showToast(t('err.json')); return; }
     if (!isBlankDoc(doc) && !confirm(t('confirm.json'))) return;
     setDoc(normalizeDoc(parsed));
@@ -3824,11 +3857,68 @@ function loadJsonFile(file) {
   reader.readAsText(file);
 }
 
-/* ============= IMPORT DEPUIS UN BRIEFING ============= */
-const imp = { src: 'current', fileBriefing: null, fileName: '', current: null };
+/* ============= IMPORT DEPUIS UN BRIEFING OU UNE ROUTE ============= */
+const imp = { src: 'current', fileBriefing: null, fileRoute: null, fileName: '', current: null, currentRoute: null };
 
 function impBriefing() {
-  return imp.src === 'file' ? imp.fileBriefing : imp.current;
+  if (imp.src === 'file') return imp.fileBriefing;
+  return imp.src === 'current' ? imp.current : null;
+}
+function impRoute() {
+  if (imp.src === 'file') return imp.fileRoute;
+  return imp.src === 'route' ? imp.currentRoute : null;
+}
+
+/* ----- Route du Route Planner ----- */
+function isRouteObject(o) {
+  return !!(o && typeof o === 'object' && !Array.isArray(o) && o.format === ROUTE_FORMAT && Array.isArray(o.points));
+}
+
+/* Route lue : { name, units, navDisplay, points } (points valides, 30 au plus), ou null si ce n'est pas une route */
+function routeFromObject(o) {
+  if (!isRouteObject(o)) return null;
+  const un = (o.units && typeof o.units === 'object') ? o.units : {};
+  const nd = (o.navDisplay && typeof o.navDisplay === 'object') ? o.navDisplay : {};
+  const points = [];
+  o.points.forEach(p => {
+    if (!p || typeof p !== 'object') return;
+    if (typeof p.lat !== 'number' || typeof p.lon !== 'number' || !isFinite(p.lat) || !isFinite(p.lon)) return;
+    if (Math.abs(p.lat) > 90 || Math.abs(p.lon) > 180) return;
+    points.push({
+      name: str(p.name), lat: p.lat, lon: p.lon,
+      alt: (typeof p.alt === 'number' && isFinite(p.alt)) ? p.alt : 0,
+      altRef: p.altRef === 'MSL' ? 'MSL' : 'AGL'
+    });
+  });
+  return {
+    name: str(o.name),
+    units: { distance: un.distance === 'nm' ? 'nm' : 'km', altitude: un.altitude === 'ft' ? 'ft' : 'm' },
+    navDisplay: { ref: nd.ref === 'mag' ? 'mag' : 'true', decl: str(nd.decl) },
+    points: points.slice(0, LIMITS.nav)
+  };
+}
+
+/* La route enregistrée par le Route Planner, en lecture seule ; null s'il n'y a aucun point. */
+function readCurrentRoute() {
+  const r = routeFromObject(readJsonKey(KEY_ROUTE));
+  return (r && r.points.length) ? r : null;
+}
+
+/* Altitude d'un point (mètres) → chaîne entière dans l'unité de la route */
+function routeAltStr(m, unit) {
+  return String(Math.round(unit === 'ft' ? m / FT_M : m));
+}
+
+/* Remplace la navigation d'une datacard par les points de la route ; unités et cap de la route ; le mode d'affichage ne change pas. */
+function applyRouteToCard(c, r) {
+  c.nav = r.points.slice(0, LIMITS.nav).map(p => ({
+    name: p.name, course: '', distance: '', altitude: routeAltStr(p.alt, r.units.altitude), tos: '',
+    note: p.altRef === 'AGL' ? 'AGL' : '', coord: toMGRS(p.lat, p.lon)
+  }));
+  c.units.distance = r.units.distance;
+  c.units.altitude = r.units.altitude;
+  c.navDisplay.ref = r.navDisplay.ref;
+  c.navDisplay.decl = r.navDisplay.decl;
 }
 
 function impRefresh() {
@@ -3840,10 +3930,26 @@ function impRefresh() {
   curRadio.disabled = off;
   note.hidden = !off;
   note.textContent = off ? t('imp.src.currentOff') : '';
+  const rtRow = document.getElementById('imp-src-route-row');
+  const rtRadio = document.getElementById('imp-src-route');
+  const rtNote = document.getElementById('imp-route-note');
+  const rtOff = !imp.currentRoute;
+  rtRow.classList.toggle('off', rtOff);
+  rtRadio.disabled = rtOff;
+  rtNote.hidden = !rtOff;
+  rtNote.textContent = rtOff ? t('imp.src.routeOff') : '';
   document.getElementById('imp-src-current').checked = imp.src === 'current';
+  document.getElementById('imp-src-route').checked = imp.src === 'route';
   document.getElementById('imp-src-file').checked = imp.src === 'file';
   document.getElementById('imp-file-zone').hidden = imp.src !== 'file';
   document.getElementById('imp-file-name').textContent = imp.fileName;
+  const r = impRoute();
+  document.getElementById('imp-flights-block').hidden = !!r;
+  document.getElementById('imp-route-block').hidden = !r;
+  if (r) {
+    const nm = hasText(r.name) ? r.name.trim() : t('imp.route.noname');
+    document.getElementById('imp-route-line').textContent = t('imp.route.line', { name: nm, n: r.points.length });
+  }
   const b = impBriefing();
   const list = document.getElementById('imp-list');
   const phases = b ? b.phases.filter(p => p && typeof p === 'object') : [];
@@ -3861,19 +3967,55 @@ function impRefresh() {
 }
 
 function impUpdateGo() {
-  document.getElementById('imp-go').disabled = !document.querySelector('#imp-list .imp-cb:checked');
+  const r = impRoute();
+  document.getElementById('imp-go').disabled = r ? !r.points.length : !document.querySelector('#imp-list .imp-cb:checked');
 }
 
-function openImportModal(fileBriefing, fileName) {
+/* fileBriefing / fileRoute : un fichier déjà lu ; forceSrc 'route' : ouvrir sur « Route en cours » (passage depuis le Route Planner) */
+function openImportModal(fileBriefing, fileName, fileRoute, forceSrc) {
   imp.current = readCurrentBriefing();
-  if (fileBriefing) { imp.fileBriefing = fileBriefing; imp.fileName = fileName || ''; imp.src = 'file'; }
-  else { imp.src = imp.current ? 'current' : 'file'; if (imp.src === 'file') { imp.fileBriefing = null; imp.fileName = ''; } }
+  imp.currentRoute = readCurrentRoute();
+  if (fileBriefing) { imp.fileBriefing = fileBriefing; imp.fileRoute = null; imp.fileName = fileName || ''; imp.src = 'file'; }
+  else if (fileRoute) { imp.fileRoute = fileRoute; imp.fileBriefing = null; imp.fileName = fileName || ''; imp.src = 'file'; }
+  else if (forceSrc === 'route' && imp.currentRoute) { imp.src = 'route'; }
+  else {
+    imp.src = imp.current ? 'current' : (imp.currentRoute ? 'route' : 'file');
+    if (imp.src === 'file') { imp.fileBriefing = null; imp.fileRoute = null; imp.fileName = ''; }
+  }
+  document.getElementById('imp-route-fill').checked = true;
   impRefresh();
   document.getElementById('import-modal').hidden = false;
 }
 function closeImportModal() { document.getElementById('import-modal').hidden = true; }
 
+/* Passage depuis le Route Planner : la clé est lue puis supprimée, la fenêtre s'ouvre sur « Route en cours ». */
+function checkRouteHandoff() {
+  let v = null;
+  try { v = localStorage.getItem(KEY_HANDOFF); } catch (e) { return; }
+  if (v === null) return;
+  try { localStorage.removeItem(KEY_HANDOFF); } catch (e) { /* ignore */ }
+  openImportModal(null, '', null, 'route');
+}
+
+function runRouteImport() {
+  const r = impRoute();
+  if (!r || !r.points.length) return;
+  if (document.getElementById('imp-route-new').checked) {
+    const c = newCard();
+    applyRouteToCard(c, r);
+    if (isBlankDoc(doc)) { doc.cards = [c]; curIdx = 0; }
+    else { doc.cards.push(c); curIdx = doc.cards.length - 1; }
+  } else {
+    applyRouteToCard(curCard(), r);
+  }
+  persistState();
+  renderAll();
+  closeImportModal();
+  showToast(t('toast.routeImported', { n: r.points.length }));
+}
+
 function runImport() {
+  if (impRoute()) { runRouteImport(); return; }
   const b = impBriefing();
   if (!b) return;
   const phases = b.phases.filter(p => p && typeof p === 'object');
@@ -3899,8 +4041,10 @@ function loadBriefingFile(file) {
   reader.onload = () => {
     let parsed;
     try { parsed = JSON.parse(reader.result); } catch (e) { showToast(t('err.json')); return; }
-    if (!isBriefingObject(parsed)) { showToast(t('err.json')); return; }
-    imp.fileBriefing = parsed; imp.fileName = file.name; imp.src = 'file';
+    if (isBriefingObject(parsed)) { imp.fileBriefing = parsed; imp.fileRoute = null; }
+    else if (isRouteObject(parsed)) { imp.fileRoute = routeFromObject(parsed); imp.fileBriefing = null; }
+    else { showToast(t('err.json')); return; }
+    imp.fileName = file.name; imp.src = 'file';
     impRefresh();
   };
   reader.onerror = () => showToast(t('err.json'));
@@ -4084,6 +4228,7 @@ function bindEvents() {
   document.getElementById('imp-go').addEventListener('click', runImport);
   document.getElementById('imp-list').addEventListener('change', impUpdateGo);
   document.getElementById('imp-src-current').addEventListener('change', () => { imp.src = 'current'; impRefresh(); });
+  document.getElementById('imp-src-route').addEventListener('change', () => { imp.src = 'route'; impRefresh(); });
   document.getElementById('imp-src-file').addEventListener('change', () => { imp.src = 'file'; impRefresh(); });
   const fb = document.getElementById('file-briefing');
   document.getElementById('imp-file-btn').addEventListener('click', () => { fb.value = ''; fb.click(); });
@@ -4098,6 +4243,9 @@ function bindEvents() {
   document.querySelectorAll('#tab-bar button').forEach(b => b.addEventListener('click', () => setActiveTab(b.dataset.tab)));
   initScrollBar(document.querySelector('.toolbar'));
   initScrollBar(document.getElementById('tab-bar'));
+
+  /* Passage depuis le Route Planner (même origine : l'évènement vient d'un autre document) */
+  window.addEventListener('storage', e => { if (e.key === KEY_HANDOFF) checkRouteHandoff(); });
 
   window.addEventListener('beforeprint', fillPrintRoot);
   window.addEventListener('afterprint', clearPrintRoot);
@@ -4122,6 +4270,7 @@ function init() {
   bindEvents();
   setActiveTab('meta');
   renderAll();
+  checkRouteHandoff();
   /* Les polices embarquées mesurent autrement que les polices de repli : refaire le découpage une fois chargées. */
   if (document.fonts && document.fonts.load) {
     Promise.all([
