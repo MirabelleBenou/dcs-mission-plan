@@ -341,7 +341,10 @@ table.nav td.r { text-align: right; white-space: nowrap; }
 .mgrs-canvas { position: absolute; left: 0; top: 0; pointer-events: none; }
 .leaflet-control-attribution { font-family: var(--f-ui); font-weight: 500; font-size: 10px !important; background: rgba(240,232,214,.8) !important; }
 .leaflet-container { font-family: var(--f-ui); }
-body { --route: var(--red-stamp); }
+body, body[data-theme="cw-nato"] { --route: #a83524; }
+body[data-theme="cw-soviet"] { --route: #841e1e; }
+body[data-theme="modern-nato"] { --route: #b03a2e; }
+body[data-theme="modern-east"] { --route: #7a2424; }
 
 /* ---------- toast ---------- */
 .toast {
@@ -476,7 +479,7 @@ __CSS__
       <div class="ed-body">
         <div class="hdg">
           <div><div class="lbl" data-i18n="f.ref">Cap</div><span class="tb-group" role="group"><button type="button" class="tb-btn" data-ref="true" aria-pressed="true" data-i18n="ref.true">Vrai</button><button type="button" class="tb-btn" data-ref="mag" aria-pressed="false" data-i18n="ref.mag">Magnétique</button></span></div>
-          <div class="decl"><label class="lbl" for="decl" data-i18n="f.decl">Déclinaison (°)</label><input class="in" id="decl" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="+4,5"></div>
+          <div class="decl"><label class="lbl" for="decl" data-i18n="f.decl">Déclinaison (°)</label><input class="in" id="decl" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" data-i18n-placeholder="f.decl.ph" placeholder="+4,5"></div>
         </div>
         <p class="hint" data-i18n="nav.decl.help"></p>
         <div class="ed-warn" id="decl-warn" role="alert" hidden data-i18n="nav.decl.warn"></div>
@@ -935,6 +938,7 @@ const I18N = {
     'ref.true': 'Vrai',
     'ref.mag': 'Magnétique',
     'f.decl': 'Déclinaison (°)',
+    'f.decl.ph': '+4,5',
     'nav.decl.help': 'en degrés, + vers l\'Est\u202f; lue au CDU de l\'A-10C (POSINFO), au DED du F-16 (MVAR) ou à l\'HSI du F/A-18',
     'nav.decl.warn': 'Déclinaison manquante\u202f: cap vrai affiché',
     'nav.title.true': 'NAVIGATION — CAP VRAI',
@@ -1023,6 +1027,7 @@ const I18N = {
     'ref.true': 'True',
     'ref.mag': 'Magnetic',
     'f.decl': 'Variation (°)',
+    'f.decl.ph': '+4.5',
     'nav.decl.help': 'in degrees, + East; read on the A-10C CDU (POSINFO), the F-16 DED (MVAR) or the F/A-18 HSI',
     'nav.decl.warn': 'Variation missing: true heading shown',
     'nav.title.true': 'NAVIGATION — TRUE HEADING',
@@ -1073,6 +1078,7 @@ function initLang() {
 function applyI18nStatic() {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
   document.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = t(el.dataset.i18nTitle); });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.placeholder = t(el.dataset.i18nPlaceholder); });
   document.querySelectorAll('[data-i18n-aria-label]').forEach(el => { el.setAttribute('aria-label', t(el.dataset.i18nAriaLabel)); });
   document.title = t('app.title');
 }
@@ -1135,10 +1141,10 @@ function validCoord(lat, lon) {
 }
 
 /* WP<k> : le plus petit entier k ≥ 0 qu'aucun point ne porte déjà sous la forme WP<k> */
-function nextName(points) {
+function nextName(points, rank) {
   const used = {};
   points.forEach(p => { used[p.name] = true; });
-  let k = 0;
+  let k = rank > 0 ? rank : 0;
   while (used['WP' + k]) k++;
   return 'WP' + k;
 }
@@ -1164,7 +1170,7 @@ function parseRoute(src) {
     if (!p || typeof p !== 'object' || !validCoord(p.lat, p.lon)) return;
     if (route.points.length >= MAX_POINTS) { dropped++; return; }
     route.points.push({
-      name: typeof p.name === 'string' ? p.name : nextName(route.points),
+      name: typeof p.name === 'string' ? p.name : nextName(route.points, route.points.length),
       lat: r7(p.lat), lon: r7(p.lon),
       alt: (typeof p.alt === 'number' && isFinite(p.alt)) ? p.alt : 0,
       altRef: p.altRef === 'MSL' ? 'MSL' : 'AGL'
@@ -1611,14 +1617,14 @@ function selectPoint(i) {
   syncRows();
 }
 
-function newPointFrom(src, lat, lon) {
-  return { name: nextName(S.points), lat: r7(lat), lon: r7(lon), alt: src ? src.alt : 0, altRef: src ? src.altRef : 'AGL' };
+function newPointFrom(src, lat, lon, rank) {
+  return { name: nextName(S.points, rank), lat: r7(lat), lon: r7(lon), alt: src ? src.alt : 0, altRef: src ? src.altRef : 'AGL' };
 }
 
 function onMapClick(ev) {
   if (S.points.length >= MAX_POINTS) { showToast(t('toast.max')); return; }
   const last = S.points.length ? S.points[S.points.length - 1] : null;
-  S.points.push(newPointFrom(last, ev.latlng.lat, ev.latlng.lng));
+  S.points.push(newPointFrom(last, ev.latlng.lat, ev.latlng.lng, S.points.length));
   sel = S.points.length - 1;
   afterEdit(true);
 }
@@ -1626,7 +1632,7 @@ function onMapClick(ev) {
 /* Insère un point dans la branche (i-1 → i), à son rang ; altitude et référence du point suivant */
 function insertPoint(i, lat, lon) {
   if (S.points.length >= MAX_POINTS) { showToast(t('toast.max')); return; }
-  S.points.splice(i, 0, newPointFrom(S.points[i], lat, lon));
+  S.points.splice(i, 0, newPointFrom(S.points[i], lat, lon, i));
   sel = i;
   afterEdit(true);
 }
