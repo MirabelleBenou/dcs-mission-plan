@@ -14,6 +14,15 @@ The suite bundles several **independently-versioned tools**, so entries are grou
 - **Tablet & mobile** first-class target (touch, drag, rotation-safe).
 - Wing configuration shared automatically across embedded tools.
 
+### `v1.8.0`
+#### Added
+- Embeds **Route Planner v1.0.0** — lay a route on a map and send it to the datacard (see below).
+- Embeds **Datacard Generator v1.3.0** — imports a route from the Route Planner (see below).
+#### Changed
+- Six tools on the board: **Route Planner** joins the live tools, before Recon Station; the *Coming soon* row is gone.
+- Cards appear in reading order, and each card tilts its own way on hover.
+- Embeds **Briefing Generator v2.4.4**.
+
 ### `v1.7.0`
 #### Added
 - Embeds **Datacard Generator v1.2.0** — waypoints placed by heading and distance (see below). Released together with v1.5.3 and v1.6.0.
@@ -88,6 +97,10 @@ Initial release. Command post for the suite.
 
 ## Briefing Generator
 
+### `v2.4.4`
+#### Fixed
+- On a scrolling toolbar (tablet, phone), the edge fades now blend into the bar instead of showing as two dark bands.
+
 ### `v2.4.3`
 #### Fixed
 - In the editor, a card's number tag (“FLIGHT 1”, “PHOTO 1”…) no longer overlaps the label above the list.
@@ -158,6 +171,13 @@ Initial release. Command post for the suite.
 
 ## Datacard Generator
 
+### `v1.3.0`
+#### Added
+- **Import a route** from the Route Planner — the current route or a route file — into the navigation of the datacard shown, or into a new datacard: waypoint names, MGRS coordinates, altitudes (AGL noted), units and heading reference; headings and distances are computed from the coordinates.
+#### Changed
+- The toolbar's **Import** button (formerly *From briefing*) takes a briefing or a route; **Import JSON** recognises route files.
+- On a scrolling toolbar, the edge fades blend into the bar.
+
 ### `v1.2.0`
 #### Added
 - **Waypoints placed by heading and distance** — a waypoint without coordinates, next to a placed one, gets its coordinates from the heading and distance of the leg between them, forwards (from the previous waypoint) or backwards (from the next one), in a chain; shown in MGRS and DMS like typed coordinates, and flagged as estimated in the editor only.
@@ -196,6 +216,17 @@ Initial release. One-page flight datacards for the cockpit kneeboard.
 - Example values in empty fields, FR/EN, 4 editor themes, tablet and phone layout with scrollable bars, fully offline.
 
 ---
+
+## Route Planner
+
+### `v1.0.0`
+Initial release. Lay a route on a map, read it, send it to the datacard.
+- **Map layers** — **DCS map** (the DCS map tiles shared by the [DCS Olympus](https://github.com/Pax1601/DCSOlympus) team, on the eight theatres they cover), **topographic** (OpenTopoMap), **satellite** (Esri World Imagery) or **grid only**; the choice is yours, and offline the map falls back to grid only by itself.
+- **MGRS grid** over any layer — zones and bands, 100 km squares with their letters, then 10 km and 1 km lines as you zoom in.
+- **The route** — tap the map to add a waypoint, drag it to move it, a leg's "+" inserts one; name, altitude and AGL / MSL per waypoint; up to 30 waypoints, numbered from 0 like DCS.
+- **Navigation sheet** — per leg, true or magnetic heading (typed variation) and distance; per waypoint, MGRS (10 digits) and DMS; total distance. Distance in km or NM, altitude in m or ft, chosen separately.
+- **To the datacard** — one button opens the Datacard Generator on the route import.
+- **JSON** save and open, an example route, 14 theatres, 4 themes, FR/EN, tablet and phone layouts.
 
 ## Field Manual
 
