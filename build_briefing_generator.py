@@ -243,12 +243,16 @@ body {
 .toolbar::before {
   left: 0;
   margin-right: calc(-1 * (var(--fade-w) + var(--fade-gap)));
-  background: linear-gradient(90deg, rgba(0,0,0,.55), transparent);
+  background: inherit;
+  mask-image: linear-gradient(90deg, #000, transparent);
+  -webkit-mask-image: linear-gradient(90deg, #000, transparent);
 }
 .toolbar::after {
   right: 0;
   margin-left: calc(-1 * (var(--fade-w) + var(--fade-gap)));
-  background: linear-gradient(270deg, rgba(0,0,0,.55), transparent);
+  background: inherit;
+  mask-image: linear-gradient(270deg, #000, transparent);
+  -webkit-mask-image: linear-gradient(270deg, #000, transparent);
 }
 .toolbar.fade-l::before, .toolbar.fade-r::after { opacity: 1; }
 
@@ -2988,7 +2992,7 @@ import os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
-APP_VERSION = "2.4.3"
+APP_VERSION = "2.4.4"
 
 ASSETS_PATH = os.path.join(HERE, 'assets.json')
 if not os.path.isfile(ASSETS_PATH):

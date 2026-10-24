@@ -32,8 +32,8 @@ MODULES = [
     {'id': 'hq', 'status': 'active', 'src': 'dist/dcs_hq.html',                        'tile': 'tiles/hq.webp'},
     {'id': 'bg', 'status': 'active', 'src': 'dist/dcs_briefing_generator.html',       'tile': 'tiles/bg.webp'},
     {'id': 'dg', 'status': 'active', 'src': 'dist/dcs_datacard_generator.html',        'tile': 'tiles/kg.webp'},
-    {'id': 'rs', 'status': 'active', 'src': 'dist/dcs_recon_station.html',             'tile': 'tiles/rs.webp'},
     {'id': 'rp', 'status': 'active', 'src': 'dist/dcs_route_planner.html',             'tile': 'tiles/rp.webp'},
+    {'id': 'rs', 'status': 'active', 'src': 'dist/dcs_recon_station.html',             'tile': 'tiles/rs.webp'},
     {'id': 'fm', 'status': 'active', 'src': 'dist/dcs_field_manual.html',              'tile': 'tiles/fm.webp'},
 ]
 
@@ -300,7 +300,7 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
 /* Animations — translate, jamais transform (cf. DESIGN §6.1) */
 .reveal{{opacity:0; translate:0 12px; animation:rise .65s cubic-bezier(.2,.7,.2,1) forwards;}}
 @keyframes rise{{to{{opacity:1; translate:0 0;}}}}
-.d1{{animation-delay:.05s}}.d2{{animation-delay:.16s}}.d3{{animation-delay:.3s}}.d4{{animation-delay:.42s}}.d5{{animation-delay:.54s}}
+.d1{{animation-delay:.05s}}.d2{{animation-delay:.16s}}.d3{{animation-delay:.3s}}.d4{{animation-delay:.42s}}.d5{{animation-delay:.54s}}.d6{{animation-delay:.66s}}
 
 /* ===== VUE MODULE ===== */
 #landing{{display:flex; flex-direction:column; flex:1;}}
@@ -365,10 +365,10 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
     <div class="wall-stage">
 
       <!-- Modules actifs : dossiers ouverts, traitement identique.
-           Ordre : HQ · Briefing Generator · Datacard Generator · Recon Station · Route Planner · Field Manual.
+           Ordre : HQ · Briefing Generator · Datacard Generator · Route Planner · Recon Station · Field Manual.
            RÈGLE : Field Manual reste TOUJOURS la dernière carte active ; un module activé plus tard s'insère avant. -->
       <div class="active-row">
-        <div class="print active reveal d3" id="card-hq" style="--card-accent:var(--a-hq)" tabindex="0" role="button" aria-label="HQ">
+        <div class="print active reveal d1" id="card-hq" style="--card-accent:var(--a-hq)" tabindex="0" role="button" aria-label="HQ">
           <span class="tape"></span><span class="pin tl"></span><span class="pin tr"></span>
           <div class="shot"></div>
           <div class="caption">
@@ -383,14 +383,14 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
           <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>
         </div>
 
-        <div class="print active reveal d3" id="card-bg" style="--card-accent:var(--a-bg)" tabindex="0" role="button" aria-label="Briefing Generator">
+        <div class="print active reveal d2" id="card-bg" style="--card-accent:var(--a-bg)" tabindex="0" role="button" aria-label="Briefing Generator">
           <span class="tape"></span><span class="pin tl"></span><span class="pin tr"></span>
           <div class="shot"></div>
           <div class="caption">
             <div class="cap-row">
               <span class="logo" style="background:var(--a-bg)">B·G</span>
               <span class="ptitle">Briefing Generator</span>
-              <span class="pver">v2.4.3</span>
+              <span class="pver">v2.4.4</span>
             </div>
             <div class="pdesc" data-i18n="bg.desc">Briefings complets — SITAC, plan radio, aérodromes, charts, annexes — export PDF prêt à partager.</div>
             <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
@@ -398,7 +398,7 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
           <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>
         </div>
 
-        <div class="print active reveal d4" id="card-dg" style="--card-accent:var(--a-dg)" tabindex="0" role="button" aria-label="Datacard Generator">
+        <div class="print active reveal d3" id="card-dg" style="--card-accent:var(--a-dg)" tabindex="0" role="button" aria-label="Datacard Generator">
           <span class="tape"></span><span class="pin tl"></span><span class="pin tr"></span>
           <div class="shot"></div>
           <div class="caption">
@@ -412,21 +412,7 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
           </div>
           <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>
         </div>
-        <div class="print active reveal d3" id="card-rs" style="--card-accent:var(--a-rs)" tabindex="0" role="button" aria-label="Recon Station">
-          <span class="tape"></span><span class="pin tl"></span><span class="pin tr"></span>
-          <div class="shot"></div>
-          <div class="caption">
-            <div class="cap-row">
-              <span class="logo" style="background:var(--a-rs)">R·S</span>
-              <span class="ptitle">Recon Station</span>
-              <span class="pver">v1.0.0</span>
-            </div>
-            <div class="pdesc" data-i18n="rs.desc">Transforme une capture en photo d'analyse de reconnaissance — niveaux de gris, annotations, export PNG pleine résolution.</div>
-            <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
-          </div>
-          <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>
-        </div>
-        <div class="print active reveal d3" id="card-rp" style="--card-accent:var(--a-rp)" tabindex="0" role="button" aria-label="Route Planner">
+        <div class="print active reveal d4" id="card-rp" style="--card-accent:var(--a-rp)" tabindex="0" role="button" aria-label="Route Planner">
           <span class="tape"></span><span class="pin tl"></span><span class="pin tr"></span>
           <div class="shot"></div>
           <div class="caption">
@@ -440,7 +426,21 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
           </div>
           <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>
         </div>
-        <div class="print active reveal d3" id="card-fm" style="--card-accent:var(--a-fm)" tabindex="0" role="button" aria-label="Field Manual">
+        <div class="print active reveal d5" id="card-rs" style="--card-accent:var(--a-rs)" tabindex="0" role="button" aria-label="Recon Station">
+          <span class="tape"></span><span class="pin tl"></span><span class="pin tr"></span>
+          <div class="shot"></div>
+          <div class="caption">
+            <div class="cap-row">
+              <span class="logo" style="background:var(--a-rs)">R·S</span>
+              <span class="ptitle">Recon Station</span>
+              <span class="pver">v1.0.0</span>
+            </div>
+            <div class="pdesc" data-i18n="rs.desc">Transforme une capture en photo d'analyse de reconnaissance — niveaux de gris, annotations, export PNG pleine résolution.</div>
+            <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
+          </div>
+          <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>
+        </div>
+        <div class="print active reveal d6" id="card-fm" style="--card-accent:var(--a-fm)" tabindex="0" role="button" aria-label="Field Manual">
           <span class="tape"></span><span class="pin tl"></span><span class="pin tr"></span>
           <div class="shot"></div>
           <div class="caption">

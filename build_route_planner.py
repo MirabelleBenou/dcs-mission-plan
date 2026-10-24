@@ -377,8 +377,8 @@ body[data-theme="modern-east"] { --route: #7a2424; }
     content: ''; position: sticky; flex: 0 0 var(--fade-w); width: var(--fade-w); align-self: stretch;
     pointer-events: none; opacity: 0; transition: opacity .15s; z-index: 2;
   }
-  .toolbar::before { left: 0; margin-right: calc(-1 * (var(--fade-w) + var(--fade-gap))); background: linear-gradient(90deg, rgba(0,0,0,.55), transparent); }
-  .toolbar::after { right: 0; margin-left: calc(-1 * (var(--fade-w) + var(--fade-gap))); background: linear-gradient(270deg, rgba(0,0,0,.55), transparent); }
+  .toolbar::before { left: 0; margin-right: calc(-1 * (var(--fade-w) + var(--fade-gap))); background: inherit; mask-image: linear-gradient(90deg, #000, transparent); -webkit-mask-image: linear-gradient(90deg, #000, transparent); }
+  .toolbar::after { right: 0; margin-left: calc(-1 * (var(--fade-w) + var(--fade-gap))); background: inherit; mask-image: linear-gradient(270deg, #000, transparent); -webkit-mask-image: linear-gradient(270deg, #000, transparent); }
   .toolbar.fade-l::before, .toolbar.fade-r::after { opacity: 1; }
 }
 @media (max-width: 520px) {

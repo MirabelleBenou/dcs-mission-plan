@@ -37,7 +37,7 @@ The landing page presents each tool as a **pinned print** on the board. Active t
 | Tool | What it does | Status |
 |------|--------------|--------|
 | **HQ** | Command post — configure your wing once (branding, squadrons), shared with the other tools; experimental `.miz` mission reader/patcher | 🧪 Beta `v0.1.0` |
-| **Briefing Generator** | Mission briefings, full or quick — SITAC, radio plan, airfields, charts, recon photos — PDF & PNG export | ✅ `v2.4.3` |
+| **Briefing Generator** | Mission briefings, full or quick — SITAC, radio plan, airfields, charts, recon photos — PDF & PNG export | ✅ `v2.4.4` |
 | **Recon Station** | Turn a screenshot into a reconnaissance analysis photo — sensor looks, annotations, lossless PNG | ✅ `v1.0.0` |
 | **Field Manual** | In-app documentation for the suite — one illustrated chapter per tool, diagrams, FR/EN, offline | ✅ `v1.2.3` |
 | **Route Planner** | Lay a route on a map — DCS map (by DCS Olympus), topographic or satellite, MGRS grid — headings, distances, MGRS & DMS, sent to the datacard | ✅ `v1.0.0` |
