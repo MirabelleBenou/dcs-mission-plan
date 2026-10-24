@@ -242,14 +242,20 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
 #card-rp .shot{{background-image:url("{tile_rp}");}}
 #card-rp::before{{background:
   radial-gradient(circle at 94% 88%, rgba(96,64,30,.54), transparent 18%), radial-gradient(circle at 10% 10%, rgba(80,52,24,.42), transparent 12%);}}
-/* Rotation propre à chaque carte, visée par son id (et non par sa position) : l'ordre des cartes peut changer. */
-.active-row .print[id="card-hq"]{{transform:rotate(-1.8deg);}}
-.active-row .print[id="card-bg"]{{transform:rotate(1.8deg);}}
-.active-row .print[id="card-rs"]{{transform:rotate(0deg);}}
-.active-row .print[id="card-fm"]{{transform:rotate(-1.4deg);}}
-.active-row .print[id="card-dg"]{{transform:rotate(1.2deg);}}
-.active-row .print[id="card-rp"]{{transform:rotate(-1deg);}}
+/* Chaque carte a son angle au repos, son angle au survol et sa durée de bascule, visés par son id (et non par sa position) : l'ordre des cartes peut changer. */
+.active-row .print[id="card-hq"]{{transform:rotate(-1.8deg); transition:transform .42s cubic-bezier(.2,.75,.2,1), box-shadow .42s;}}
+.active-row .print[id="card-bg"]{{transform:rotate(1.1deg); transition:transform .36s cubic-bezier(.2,.75,.2,1), box-shadow .36s;}}
+.active-row .print[id="card-dg"]{{transform:rotate(1.6deg); transition:transform .46s cubic-bezier(.2,.75,.2,1), box-shadow .46s;}}
+.active-row .print[id="card-rp"]{{transform:rotate(-0.9deg); transition:transform .38s cubic-bezier(.2,.75,.2,1), box-shadow .38s;}}
+.active-row .print[id="card-rs"]{{transform:rotate(0.6deg); transition:transform .44s cubic-bezier(.2,.75,.2,1), box-shadow .44s;}}
+.active-row .print[id="card-fm"]{{transform:rotate(-1.4deg); transition:transform .4s cubic-bezier(.2,.75,.2,1), box-shadow .4s;}}
 .print.active:hover{{transform:rotate(0) translateY(-7px); cursor:pointer; box-shadow:0 30px 64px rgba(0,0,0,.6), 0 0 0 2px var(--card-accent);}}
+.active-row .print[id="card-hq"]:hover{{transform:rotate(-0.7deg) translateY(-7px);}}
+.active-row .print[id="card-bg"]:hover{{transform:rotate(0.3deg) translateY(-7px);}}
+.active-row .print[id="card-dg"]:hover{{transform:rotate(0.6deg) translateY(-7px);}}
+.active-row .print[id="card-rp"]:hover{{transform:rotate(-0.2deg) translateY(-7px);}}
+.active-row .print[id="card-rs"]:hover{{transform:rotate(-0.4deg) translateY(-7px);}}
+.active-row .print[id="card-fm"]:hover{{transform:rotate(-0.5deg) translateY(-7px);}}
 .cta{{margin:2px 8px 12px; display:inline-block; font-family:var(--f-ui); font-size:12.5px; letter-spacing:.08em; text-transform:uppercase;
   color:#15120c; background:var(--card-accent); border:1px solid var(--paper-edge); padding:9px 15px; border-radius:var(--rad);}}
 .print.active:hover .cta{{filter:brightness(1.12);}}
