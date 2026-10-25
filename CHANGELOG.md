@@ -14,6 +14,10 @@ The suite bundles several **independently-versioned tools**, so entries are grou
 - **Tablet & mobile** first-class target (touch, drag, rotation-safe).
 - Wing configuration shared automatically across embedded tools.
 
+### `v1.12.0`
+#### Added
+- Embeds **Route Planner v1.4.0** — CombatFlite layers (see below).
+
 ### `v1.11.0`
 #### Added
 - Embeds **Route Planner v1.3.0** — leg boxes, ground speed and minute marks (see below).
@@ -259,6 +263,13 @@ Initial release. One-page flight datacards for the cockpit kneeboard.
 ---
 
 ## Route Planner
+
+### `v1.4.0`
+#### Added
+- **CombatFlite layers** — *Open* now also reads a CombatFlite mission file (`.cf`): pick the layers you want and they are drawn on the map, read-only — threat rings, zones (lines, curves, FLOT, corridors), orbits, kill boxes with their grid, targets and other points, text boxes — with CombatFlite's colours (fills softened so the route stays readable). The theatre follows the file.
+- A **Layers** section lists them: show or hide each one, remove one or all. Layers are kept in your browser, apart from the route.
+- **Read** mode on the map switch (*Waypoint · Ref. · Read*): tap a layer item to read its card; a point's card can turn it into a reference point. In *Waypoint* or *Ref.* mode, layers let taps through, and a tapped target becomes a waypoint or a reference point named after it — like an airfield.
+- **Export** lets you choose what the route file carries: the route, and any of the layers. A file with layers and no route adds its layers without touching your route.
 
 ### `v1.3.0`
 #### Added
