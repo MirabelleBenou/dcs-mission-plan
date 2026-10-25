@@ -1306,7 +1306,7 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
       <div class="ed-body">
         <div id="layers-list"></div>
         <button type="button" class="tb-btn cf-clear" id="btn-layers-clear" data-i18n="layers.removeAll">Retirer tous les calques</button>
-        <p class="hint" data-i18n="layers.help">Touchez un objet pour le lire ; un point peut devenir point de référence.</p>
+        <p class="hint" data-i18n="layers.help">En mode Lire, touchez un objet pour lire sa fiche. En mode Point ou Réf., une cible touchée devient un point de la route ou une référence.</p>
       </div>
     </div>
     <div class="ed-section" data-section="nav">
@@ -1696,6 +1696,7 @@ const I18N = {
     'tip.delete': 'Supprimer',
     'tap.wp': 'Point',
     'tap.ref': 'Réf.',
+    'tap.read': 'Lire',
     'tap.title': 'Ce que pose un toucher sur la carte',
     'add.title': 'Ajouter',
     'add.coord': 'Coordonnées',
@@ -1795,7 +1796,7 @@ const I18N = {
     'layers.count.n': '{n} calques',
     'layers.remove': 'Retirer ce calque',
     'layers.removeAll': 'Retirer tous les calques',
-    'layers.help': 'Touchez un objet pour le lire ; un point peut devenir point de référence.',
+    'layers.help': 'En mode Lire, touchez un objet pour lire sa fiche. En mode Point ou Réf., une cible touchée devient un point de la route ou une référence.',
     'confirm.layer': 'Retirer le calque « {name} » ?',
     'confirm.layers': 'Retirer tous les calques ?',
     'cf.k.lines': 'Zone',
@@ -1908,6 +1909,7 @@ const I18N = {
     'tip.delete': 'Delete',
     'tap.wp': 'Waypoint',
     'tap.ref': 'Ref.',
+    'tap.read': 'Read',
     'tap.title': 'What a tap on the map adds',
     'add.title': 'Add',
     'add.coord': 'Coordinates',
@@ -2007,7 +2009,7 @@ const I18N = {
     'layers.count.n': '{n} layers',
     'layers.remove': 'Remove this layer',
     'layers.removeAll': 'Remove all layers',
-    'layers.help': 'Tap an item to read it; a point can become a reference point.',
+    'layers.help': 'In Read mode, tap an item to read it. In Waypoint or Ref. mode, a tapped target becomes a waypoint or a reference point.',
     'confirm.layer': 'Remove layer “{name}”?',
     'confirm.layers': 'Remove all layers?',
     'cf.k.lines': 'Zone',
@@ -2403,7 +2405,7 @@ function defaultState() {
 let S = defaultState();
 let sel = -1;                 /* point sélectionné (non enregistré) */
 let selR = -1;                /* point de référence sélectionné (non enregistré) */
-let tapMode = 'wp';           /* ce que pose un toucher sur la carte : 'wp' (point) ou 'ref' (référence) — non enregistré */
+let tapMode = 'wp';           /* ce que fait un toucher sur la carte : 'wp' (pose un point), 'ref' (pose une référence) ou 'read' (ouvre les fiches des calques, ne pose rien) — non enregistré */
 let addMode = 'coord';        /* bloc Ajouter : 'coord' ou 'hd' (cap et distance) — non enregistré */
 
 function r7(v) { return Math.round(v * 1e7) / 1e7; }
@@ -3306,7 +3308,7 @@ function drawRoute() {
         zIndexOffset: 400, keyboard: false, title: t('tip.insert'),
         icon: L.divIcon({ className: 'ins-icon', iconSize: [18, 18], iconAnchor: [9, 9], html: '<div class="ins">+</div>' })
       }).addTo(routeGroup);
-      ins.on('click', ev => { L.DomEvent.stop(ev); insertPoint(i, q[0], q[1]); });
+      ins.on('click', ev => { L.DomEvent.stop(ev); if (tapMode !== 'read') insertPoint(i, q[0], q[1]); });
     }
   }
   pts.forEach((p, i) => {
@@ -3552,6 +3554,7 @@ function addRef(lat, lon, name) {
 
 /* Selon le mode du contrôle de la carte : un point de route ou une référence */
 function addAt(lat, lon, name) {
+  if (tapMode === 'read') return null;
   return tapMode === 'ref' ? addRef(lat, lon, name) : addPoint(lat, lon, name);
 }
 
@@ -3699,8 +3702,10 @@ function cfMean(pts) {
 }
 
 /* Le style commun : contour à la couleur, à lineOpacity, d'au moins 1,5 px ; tirets selon dash ; remplissage (cfFill) à 0,4 × fillOpacity */
+function cfReading() { return tapMode === 'read'; }
+
 function cfPathStyle(it, extra) {
-  const o = { pane: 'layers', color: it.color, opacity: typeof it.lineOpacity === 'number' ? it.lineOpacity : 1, weight: Math.max(1.5, it.lineWidth || 2), fill: false,
+  const o = { pane: 'layers', interactive: cfReading(), color: it.color, opacity: typeof it.lineOpacity === 'number' ? it.lineOpacity : 1, weight: Math.max(1.5, it.lineWidth || 2), fill: false,
     lineJoin: 'round', bubblingMouseEvents: false, className: 'cf-obj cf-' + it.type, cfId: it.id, cfType: it.type, cfName: it.name };
   if (it.dash === 'dot') o.dashArray = '2 6'; else if (it.dash === 'dash') o.dashArray = '8 6';
   return Object.assign(o, extra || {});
@@ -3716,10 +3721,11 @@ function cfTagEl(layer, it) {
 }
 
 function cfBindPopup(layer, it) {
+  if (!cfReading()) return;
   layer.bindPopup(() => cfFiche(it), { className: 'cf-popup', maxWidth: 280, minWidth: 150, autoPanPadding: [16, 16] });
 }
 
-/* Un objet vectoriel : sa fiche s'ouvre au toucher, rien ne se déplace, aucun point de route ne se pose */
+/* Un objet vectoriel : touchable (fiche) seulement en mode Lire ; sinon il laisse passer le toucher */
 function cfAddObj(layer, it) {
   cfBindPopup(layer, it);
   layer.addTo(cfGroup);
@@ -3728,6 +3734,7 @@ function cfAddObj(layer, it) {
 
 /* Un trait épais et invisible sous un contour mince : le doigt le trouve (un contour sans remplissage ne se touche qu'à sa ligne) */
 function cfAddHit(geo, it, circle) {
+  if (!cfReading()) return;
   const o = { pane: 'layers', color: '#000000', opacity: 0, weight: 18, fill: false, bubblingMouseEvents: false, className: 'cf-hit', cfHit: true };
   const h = circle ? L.circle(geo.c, Object.assign({ radius: geo.r }, o)) : L.polyline(geo, o);
   cfBindPopup(h, it);
@@ -3805,19 +3812,20 @@ function cfSymbolSvg(kind, color) {
 function cfDrawPoint(it) {
   const mk = L.marker([it.lat, it.lon], { pane: 'layers', zIndexOffset: 100000, keyboard: false, title: it.name,
     icon: L.divIcon({ className: 'cf-pt-icon', iconSize: [18, 18], iconAnchor: [9, 9], popupAnchor: [0, -11], html: cfSymbolSvg(it.kind, it.color) }) });
-  cfBindPopup(mk, it);
+  if (cfReading()) cfBindPopup(mk, it);
+  else mk.on('click', ev => { L.DomEvent.stop(ev); addFromAirfield(it.lat, it.lon, it.name); });   /* une cible agit comme un aérodrome */
   mk.addTo(cfGroup);
   cfTagEl(mk, it);
   cfPointMarks.push({ mk: mk, name: it.name });
 }
 
-/* Un cadre de texte centré sur son point : il ne s'ouvre pas, mais il ne laisse pas non plus le toucher poser un point de route */
+/* Un cadre de texte centré sur son point : il ne s'ouvre pas et laisse passer le toucher */
 function cfDrawText(it) {
   const fs = Math.max(6, Math.round(it.size / 4));
   const lines = it.text.split(/\r\n|\r|\n/).map(s => s.trim()).join('\n');
   const style = 'background:' + (it.filled ? it.bg : 'transparent') + ';color:' + it.fg + ';border:' + (it.border ? '2px solid ' + it.fg : '0 none') +
     ';font-weight:' + (it.bold ? 700 : 500) + ';font-size:' + fs + 'px';
-  const mk = L.marker([it.lat, it.lon], { pane: 'layers', zIndexOffset: 100000, keyboard: false,
+  const mk = L.marker([it.lat, it.lon], { pane: 'layers', interactive: false, zIndexOffset: 100000, keyboard: false,
     icon: L.divIcon({ className: 'cf-tx-icon', iconSize: [0, 0], html: '<div class="cf-tx" style="' + style + '">' + esc(lines) + '</div>' }) });
   mk.addTo(cfGroup);
   cfTagEl(mk, it);
@@ -4101,7 +4109,7 @@ function createTapControl() {
       const d = L.DomUtil.create('div', 'tapmode tb-group');
       d.setAttribute('role', 'group');
       d.id = 'tapmode';
-      d.innerHTML = '<button type="button" class="tb-btn" data-tap="wp"></button><button type="button" class="tb-btn" data-tap="ref"></button>';
+      d.innerHTML = '<button type="button" class="tb-btn" data-tap="wp"></button><button type="button" class="tb-btn" data-tap="ref"></button><button type="button" class="tb-btn" data-tap="read"></button>';
       L.DomEvent.disableClickPropagation(d);
       L.DomEvent.disableScrollPropagation(d);
       d.addEventListener('click', e => {
@@ -4117,8 +4125,13 @@ function createTapControl() {
 }
 
 function setTapMode(m) {
-  tapMode = m === 'ref' ? 'ref' : 'wp';
+  const was = tapMode;
+  tapMode = m === 'ref' ? 'ref' : m === 'read' ? 'read' : 'wp';
   syncTapControl();
+  if (tapMode !== was) {
+    if (map) map.closePopup();
+    drawLayers();   /* les objets ne sont touchables qu'en mode Lire ; une cible agit comme un aérodrome dans les deux autres */
+  }
 }
 
 function syncTapControl() {
@@ -4774,7 +4787,8 @@ const CFI = { fileName: '', theatre: '', known: true, layers: [], checked: [] };
 function cfTheatreMsg() { return t('toast.cfTheatre', { t: CFI.theatre, theatre: t('th.' + S.theatre) }); }
 
 function cfImportRender() {
-  $('cf-import-file').textContent = t('cf.file', { name: CFI.fileName, t: CFI.theatre });
+  const tid = cfTheatreId(CFI.theatre);
+  $('cf-import-file').textContent = t('cf.file', { name: CFI.fileName, t: tid ? t('th.' + tid) : CFI.theatre });
   $('cf-import-list').innerHTML = CFI.layers.map((l, i) =>
     '<label class="rt-row"><input type="checkbox" data-i="' + i + '"' + (CFI.checked[i] ? ' checked' : '') + '>' +
     '<span class="rt-nm">' + esc(l.name) + '</span><span class="rt-n">' + esc(cfCounts(l.items)) + '</span></label>').join('');
