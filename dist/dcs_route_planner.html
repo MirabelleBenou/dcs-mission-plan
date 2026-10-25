@@ -831,7 +831,7 @@ select[data-tbm-src] { display: none !important; }
 @supports (width: calc-size(max-content, round(up, size, 1px))) { .tbm-lbl::after { width: calc-size(max-content, round(up, size, 1px)); } }
 .tbm-trigger-open { border-color: var(--amber) !important; }
 .tbm-panel {
-  position: fixed; z-index: 5000; min-width: 180px; max-width: min(340px, calc(100vw - 16px));
+  position: fixed; z-index: 10500; min-width: 180px; max-width: min(340px, calc(100vw - 16px));
   max-height: min(62vh, 440px); overflow-y: auto; overscroll-behavior: contain;
   background: linear-gradient(180deg, var(--olive-dark) 0%, var(--olive-deep) 100%);
   border: 1px solid var(--amber-dark); border-top: 3px solid var(--amber);
@@ -1027,6 +1027,11 @@ body[data-theme="modern-east"] { --route: #7a2424; }
 .rt-in { display: block; width: 100%; min-width: 0; min-height: 44px; padding: 8px 10px; background: rgba(255,255,255,.35); color: var(--ink);
   border: 1px solid var(--ink); border-radius: 2px; font-family: var(--f-typewriter); font-weight: 400; font-size: 13px; }
 .rt-in:focus { outline: 2px solid var(--amber); outline-offset: 1px; }
+/* la liste Théâtre prend le composant des listes de la barre (le <select> reste, masqué) ; même aspect fermé que le <select> */
+.rt-in.tbm-trigger { display: block; text-align: start; cursor: pointer; padding-right: 28px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%231f1c16' stroke-width='1.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center; }
+.rt-in.tbm-trigger .tbm-lbl { margin: 0; padding: 0; }
 select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; cursor: pointer;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%231f1c16' stroke-width='1.5'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 10px center; }
@@ -3427,10 +3432,12 @@ function rtVisible(id) { return !$(id).hidden; }
 function rtShow(id, opener, focusId) {
   RT.opener = opener || null;
   $(id).hidden = false;
-  const f = $(focusId);
+  let f = $(focusId);
+  if (f && f.hasAttribute('data-tbm-src')) f = f.previousElementSibling;   /* le <select> est masqué : le focus va à son bouton */
   if (f) f.focus({ preventScroll: true });
 }
 function rtHide(id) {
+  if (TBM.cur) tbmClose(false);      /* la liste ouverte se ferme avec la fenêtre */
   $(id).hidden = true;
   const o = RT.opener;
   RT.opener = null;
@@ -4023,7 +4030,7 @@ function init() {
   applyTheme(loadTheme(), false);
   applyI18nStatic();
   updateFlagButton();
-  initToolbarMenus([['layer', () => t('tb.layer')], ['theatre', () => t('tb.theatre')], ['theme', () => t('tb.theme.tip')]]);   /* les listes de la barre au thème de l'interface */
+  initToolbarMenus([['layer', () => t('tb.layer')], ['theatre', () => t('tb.theatre')], ['theme', () => t('tb.theme.tip')], ['rt-theatre', () => t('tb.theatre')]]);   /* les listes de la barre au thème de l'interface */
   loadState();
   createMap();
   bindEvents();
