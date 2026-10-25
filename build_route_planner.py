@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build — DCS Route Planner v1.2.0.
+"""Build — DCS Route Planner v1.4.0.
 
 Produit dist/dcs_route_planner.html : un fichier unique, hors ligne, sans serveur ;
 seules les tuiles de carte (DCS Olympus, OpenTopoMap, Esri) viennent du réseau, et le
@@ -18,7 +18,7 @@ import subprocess
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-APP_VERSION = "1.3.0"
+APP_VERSION = "1.4.0"
 OUT_PATH = os.path.join(HERE, 'dist', 'dcs_route_planner.html')
 ASSETS_PATH = os.path.join(HERE, 'assets.json')
 AIRFIELDS_PATH = os.path.join(HERE, 'airfields.json')
@@ -547,6 +547,62 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 }
 @media print { .rt-modal { display: none; } }
 
+/* ---------- calques CombatFlite (lot rp-v1.4.0) ---------- */
+.ed-section[hidden] { display: none; }
+/* le pane des calques (z-index 390) : le tracé vectoriel dessous, les symboles et les noms (marqueurs) dessus ;
+   « .leaflet-map-pane svg » donnerait z-index 200 à son SVG, au-dessus de tout marqueur de petite ordonnée */
+.leaflet-map-pane .leaflet-layers-pane > svg { z-index: 0; max-width: none !important; max-height: none !important; }
+.cf-pt-icon { width: 18px; height: 18px; }
+.cf-pt-icon::before { content: ''; position: absolute; left: -9px; top: -9px; right: -9px; bottom: -9px; }   /* toucher de 36 px */
+.cf-pt-icon svg { position: absolute; left: 0; top: 0; z-index: 0; display: block; overflow: visible; pointer-events: none; }
+.cf-pt-nm { position: absolute; z-index: 1; left: 22px; top: 50%; transform: translateY(-50%); white-space: nowrap; pointer-events: none;
+  font-family: var(--f-condensed); font-weight: 500; font-size: 10.5px; line-height: 1.2; color: #1f1c16;
+  text-shadow: 0 0 2px rgba(240,232,214,.95), 0 0 2px rgba(240,232,214,.95), 0 0 3px rgba(240,232,214,.8); }
+.cf-name-icon, .cf-tx-icon { width: 0; height: 0; }
+.cf-name { position: absolute; z-index: 1; display: inline-block; transform: translate(-50%, -50%); white-space: nowrap; pointer-events: none;
+  font-family: var(--f-condensed); font-weight: 700; font-size: 11px; line-height: 1;
+  text-shadow: 0 0 2px rgba(240,232,214,.95), 0 0 2px rgba(240,232,214,.95), 0 0 3px rgba(240,232,214,.8); }
+.cf-tx { position: absolute; z-index: 1; display: block; transform: translate(-50%, -50%); box-sizing: border-box; white-space: pre; text-align: center;
+  font-family: var(--f-condensed); line-height: 1.15; padding: 2px 6px; user-select: none; -webkit-user-select: none; }
+.cf-popup .leaflet-popup-content-wrapper { background: var(--paper-light); color: var(--ink); border: 2px solid var(--ink); border-radius: 2px; box-shadow: 0 4px 16px rgba(0,0,0,.45); }
+.cf-popup .leaflet-popup-tip { background: var(--paper-light); box-shadow: none; }
+.cf-popup .leaflet-popup-content { margin: 10px 14px 12px; min-width: 150px; font-family: var(--f-typewriter); font-weight: 400; font-size: 12px; line-height: 1.45; }
+.cf-popup a.leaflet-popup-close-button { top: 0; right: 0; width: 44px; height: 44px; padding: 0; font: 400 26px/44px var(--f-typewriter); color: var(--ink); text-align: center; }
+.cf-popup a.leaflet-popup-close-button:hover, .cf-popup a.leaflet-popup-close-button:focus-visible { color: var(--amber-dark); outline: none; }
+.cf-f-nm { font-family: var(--f-condensed); font-weight: 700; font-size: 14px; letter-spacing: .5px; line-height: 1.25; margin: 0 0 4px; padding-right: 30px; overflow-wrap: anywhere; }
+.cf-f-l { overflow-wrap: anywhere; }
+.cf-f-mgrs { font-family: var(--f-mono); font-weight: 400; margin-top: 2px; }
+.cf-fiche .rt-btn { display: block; width: 100%; margin-top: 10px; min-height: 44px; padding: 8px 12px; letter-spacing: 1.5px; font-size: 12px; text-transform: none; }
+/* section « Calques » du panneau */
+.cf-row { display: flex; align-items: center; gap: 4px; min-height: 44px; }
+.cf-vis { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; flex: none; cursor: pointer; }
+.cf-vis input { width: 20px; height: 20px; margin: 0; accent-color: var(--amber); cursor: pointer; }
+.cf-main { flex: 1 1 auto; min-width: 0; display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0 10px; padding: 4px 0; }
+.cf-nm { font-family: var(--f-ui); font-weight: 500; font-size: 14px; color: var(--paper); overflow-wrap: anywhere; }
+.cf-n { margin-left: auto; font-family: var(--f-ui); font-weight: 500; font-size: 11px; color: var(--khaki-light); text-align: right; }
+.cf-del { width: 44px; height: 44px; flex: none; padding: 0; border: 1px solid var(--khaki); background: transparent; color: var(--khaki-light); font-size: 24px; line-height: 1; cursor: pointer; }
+.cf-del:hover, .cf-del:focus-visible { border-color: var(--red-faded); color: var(--paper-light); background: var(--rust); outline: none; }
+.cf-clear { width: 100%; height: 44px; margin-top: 8px; }
+/* fenêtres « Calques CombatFlite » et « Exporter » : la structure des fenêtres du Route Tool, la livrée de la maquette */
+.cf-modal .rt-panel { background: var(--olive-dark); color: var(--paper); border: 1px solid var(--khaki); border-radius: 0; padding: 16px 20px; max-width: 460px; font-family: var(--f-ui); font-weight: 500; }
+.cf-modal .rt-panel h2 { font-family: var(--f-stencil); font-weight: 700; font-size: 17px; letter-spacing: 2px; text-transform: none; color: var(--amber); margin: 4px 44px 10px 0; }
+.cf-modal .rt-close { color: var(--paper); font-size: 30px; }
+.cf-modal .rt-close:hover, .cf-modal .rt-close:focus-visible { color: var(--amber); }
+.cf-modal .rt-file { font-size: 12px; margin: 0 0 2px; opacity: 1; color: var(--khaki-light); }
+.cf-modal .rt-note { font-size: 12px; opacity: 1; color: var(--khaki-light); margin: 0 0 8px; }
+.cf-modal .rt-list { max-height: none; overflow: visible; border: none; background: none; padding: 0; margin: 0 0 12px; }
+.cf-modal .rt-row { gap: 12px; padding: 0; font-size: 14px; }
+.cf-modal .rt-row + .rt-row { border-top: 1px solid rgba(168,154,114,.25); }
+.cf-modal .rt-row input { width: 20px; height: 20px; accent-color: var(--amber); }
+.cf-modal .rt-nm { font-weight: 500; }
+.cf-modal .rt-n { white-space: normal; text-align: right; max-width: 55%; font-size: 11px; opacity: 1; color: var(--khaki-light); }
+.cf-modal .rt-actions { justify-content: flex-end; gap: 8px; margin-top: 4px; }
+.cf-modal .rt-btn { flex: 0 0 auto; padding: 8px 16px; font-family: var(--f-ui); font-weight: 700; font-size: 12px; letter-spacing: 1.5px; color: var(--paper); border: 2px solid var(--khaki); }
+.cf-modal .rt-btn:hover, .cf-modal .rt-btn:focus-visible { background: var(--olive); border-color: var(--amber); color: var(--amber); }
+.cf-modal .rt-btn.go { background: transparent; color: var(--amber); border-color: var(--amber); }
+.cf-modal .rt-btn.go:hover, .cf-modal .rt-btn.go:focus-visible { background: var(--olive); color: var(--paper-light); }
+.cf-modal .rt-btn:disabled { opacity: .35; }
+
 /* ---------- toast ---------- */
 .toast {
   position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px);
@@ -715,6 +771,14 @@ __CSS__
         <p class="hint" data-i18n="help.refs">Choisissez « Réf. » en haut de la carte, puis touchez la carte ; glissez une référence pour la déplacer.</p>
       </div>
     </div>
+    <div class="ed-section" data-section="layers" id="sec-layers" hidden>
+      <div class="ed-head"><span class="ed-title" data-i18n="sec.layers">Calques</span><small id="layers-count"></small></div>
+      <div class="ed-body">
+        <div id="layers-list"></div>
+        <button type="button" class="tb-btn cf-clear" id="btn-layers-clear" data-i18n="layers.removeAll">Retirer tous les calques</button>
+        <p class="hint" data-i18n="layers.help">Touchez un objet pour le lire ; un point peut devenir point de référence.</p>
+      </div>
+    </div>
     <div class="ed-section" data-section="nav">
       <div class="ed-head"><span class="ed-title" data-i18n="sec.nav">Navigation</span></div>
       <div class="ed-body">
@@ -793,6 +857,36 @@ __CSS__
       <button type="button" class="rt-btn" id="rt-export-cancel" data-i18n="rt.cancel">Annuler</button>
     </div>
     <input type="file" id="file-rt" hidden>
+  </div>
+</div>
+
+<!-- ===== FENÊTRE : CALQUES D'UN FICHIER COMBATFLITE ===== -->
+<div class="rt-modal cf-modal" id="cf-import-modal" hidden role="dialog" aria-modal="true" aria-labelledby="cf-import-title">
+  <div class="rt-backdrop" id="cf-import-backdrop"></div>
+  <div class="rt-panel" role="document">
+    <button type="button" class="rt-close" id="cf-import-close" data-i18n-aria-label="modal.close" aria-label="Fermer">&times;</button>
+    <h2 id="cf-import-title" data-i18n="cf.import.title">Calques CombatFlite</h2>
+    <p class="rt-file" id="cf-import-file"></p>
+    <p class="rt-note" data-i18n="cf.import.note">Cochez les calques à afficher. Ils restent en lecture seule.</p>
+    <div class="rt-list" id="cf-import-list"></div>
+    <div class="rt-actions">
+      <button type="button" class="rt-btn" id="cf-import-cancel" data-i18n="rt.cancel">Annuler</button>
+      <button type="button" class="rt-btn go" id="cf-import-go" data-i18n="cf.import.go">Afficher</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== FENÊTRE : EXPORTER — CHOISIR CE QU'EMPORTE LE FICHIER ===== -->
+<div class="rt-modal cf-modal" id="cf-export-modal" hidden role="dialog" aria-modal="true" aria-labelledby="cf-export-title">
+  <div class="rt-backdrop" id="cf-export-backdrop"></div>
+  <div class="rt-panel" role="document">
+    <button type="button" class="rt-close" id="cf-export-close" data-i18n-aria-label="modal.close" aria-label="Fermer">&times;</button>
+    <h2 id="cf-export-title" data-i18n="cf.exp.title">Exporter</h2>
+    <div class="rt-list" id="cf-export-list"></div>
+    <div class="rt-actions">
+      <button type="button" class="rt-btn" id="cf-export-cancel" data-i18n="rt.cancel">Annuler</button>
+      <button type="button" class="rt-btn go" id="cf-export-go" data-i18n="cf.exp.go">Exporter</button>
+    </div>
   </div>
 </div>
 
@@ -1106,11 +1200,12 @@ JS = r"""
 'use strict';
 
 /* =====================================================
-   ROUTE PLANNER v1.3.0
+   ROUTE PLANNER v1.4.0
    Une route sur une carte (points posés, saisis par coordonnées
    ou par cap et distance), des points de référence, les noms de lieux
    et les aérodromes DCS : caps, distances, vitesse sol et minutage,
-   MGRS et DMS, envoyés dans la navigation d'une datacard.
+   MGRS et DMS, envoyés dans la navigation d'une datacard ; les calques
+   d'un fichier CombatFlite (.cf), en lecture seule, à part de la route.
    Monofichier ; seules les tuiles de carte viennent du réseau.
    ===================================================== */
 
@@ -1142,6 +1237,17 @@ const TICK_NUM_GAP = 24;       /* écart minimal entre deux chiffres, en pixels 
 const TICK_NUM_OFF = 20;       /* chiffre à 20 px à gauche du tracé */
 const TICK_END_MIN = 0.05;     /* pas de trait à moins de 3 s du point d'arrivée (minutes) */
 const TICK_CULL_ABOVE = 300;   /* au-delà de ce nombre de traits sur une branche, seuls ceux de l'écran sont dessinés */
+const KEY_LAYERS = 'route_layers_v1';
+const LAYERS_FORMAT = 'dcs-layers-v1';
+const LAYERS_Z = 390;          /* le pane des calques : au-dessus du fond, de la grille et des aérodromes, sous la route, les références et les boîtes */
+const CF_NAMES_ZOOM = 11;      /* le nom d'un point de calque : à partir du zoom 11 */
+const CF_FILL_K = 0.4;         /* remplissages atténués à 40 % de l'opacité du fichier */
+const NM_M = 1852;
+const CF_ITEM_TYPES = ['zone', 'circle', 'orbit', 'box', 'point', 'text'];
+const CF_ZONE_KINDS = ['lines', 'curve', 'flot', 'corridor'];
+const CF_POINT_KINDS = ['target', 'dmpi', 'exit', 'lz', 'other'];
+const CF_DASHES = ['solid', 'dot', 'dash'];
+const CF_COUNT_ORDER = ['zone', 'circle', 'point', 'orbit', 'box', 'text'];
 
 /* Théâtres : cadrage (centre, zoom) et clé de la couche Olympus ('' : aucune) */
 const THEATRES = [
@@ -1363,7 +1469,56 @@ const I18N = {
     'err.json': 'Fichier non reconnu.',
     'confirm.open': 'Remplacer la route en cours ?',
     'confirm.example': 'Charger l\'exemple à la place de la route en cours ?',
-    'confirm.clear': 'Effacer la route ?'
+    'confirm.clear': 'Effacer la route ?',
+    'err.cf': 'Fichier CombatFlite non reconnu.',
+    'err.cfBrowser': 'Ce navigateur ne sait pas lire les fichiers CombatFlite.',
+    'err.layersQuota': 'Calques trop lourds pour le navigateur : ils ne seront pas gardés après rechargement.',
+    'cf.import.title': 'Calques CombatFlite',
+    'cf.file': 'Fichier : {name} · théâtre {t}',
+    'cf.import.note': 'Cochez les calques à afficher. Ils restent en lecture seule.',
+    'cf.import.go': 'Afficher',
+    'cf.n.zone.1': '{n} zone',
+    'cf.n.zone.n': '{n} zones',
+    'cf.n.circle.1': '{n} cercle',
+    'cf.n.circle.n': '{n} cercles',
+    'cf.n.point.1': '{n} point',
+    'cf.n.point.n': '{n} points',
+    'cf.n.orbit.1': '{n} orbite',
+    'cf.n.orbit.n': '{n} orbites',
+    'cf.n.box.1': '{n} boîte',
+    'cf.n.box.n': '{n} boîtes',
+    'cf.n.text.1': '{n} texte',
+    'cf.n.text.n': '{n} textes',
+    'cf.empty': 'vide',
+    'toast.cfShown.1': '{n} calque affiché ✓',
+    'toast.cfShown.n': '{n} calques affichés ✓',
+    'toast.cfTheatre': 'théâtre inconnu ({t}), gardé : {theatre}',
+    'sec.layers': 'Calques',
+    'layers.count.1': '{n} calque',
+    'layers.count.n': '{n} calques',
+    'layers.remove': 'Retirer ce calque',
+    'layers.removeAll': 'Retirer tous les calques',
+    'layers.help': 'Touchez un objet pour le lire ; un point peut devenir point de référence.',
+    'confirm.layer': 'Retirer le calque « {name} » ?',
+    'confirm.layers': 'Retirer tous les calques ?',
+    'cf.k.lines': 'Zone',
+    'cf.k.curve': 'Courbe',
+    'cf.k.flot': 'FLOT',
+    'cf.k.corridor': 'Couloir',
+    'cf.nm': '{w} NM',
+    'cf.p.target': 'Cible',
+    'cf.p.dmpi': 'DMPI',
+    'cf.p.exit': 'Point de sortie',
+    'cf.p.lz': 'LZ',
+    'cf.p.other': 'Point',
+    'cf.mhz': '{f} MHz',
+    'cf.toRef': '→ Point de référence',
+    'cf.exp.title': 'Exporter',
+    'cf.exp.route': 'La route',
+    'cf.exp.routeN': '{n} points · {m} réf.',
+    'cf.exp.go': 'Exporter',
+    'toast.layersAdded.1': '{n} calque ajouté ✓ (fichier sans route : la route n\'est pas touchée)',
+    'toast.layersAdded.n': '{n} calques ajoutés ✓ (fichier sans route : la route n\'est pas touchée)'
   },
   en: {
     'app.title': 'Route Planner',
@@ -1526,7 +1681,56 @@ const I18N = {
     'err.json': 'Unrecognised file.',
     'confirm.open': 'Replace the current route?',
     'confirm.example': 'Load the example instead of the current route?',
-    'confirm.clear': 'Clear the route?'
+    'confirm.clear': 'Clear the route?',
+    'err.cf': 'Unrecognised CombatFlite file.',
+    'err.cfBrowser': 'This browser cannot read CombatFlite files.',
+    'err.layersQuota': 'Layers too large for the browser: they will not be kept after reload.',
+    'cf.import.title': 'CombatFlite layers',
+    'cf.file': 'File: {name} · theatre {t}',
+    'cf.import.note': 'Tick the layers to show. They are read-only.',
+    'cf.import.go': 'Show',
+    'cf.n.zone.1': '{n} zone',
+    'cf.n.zone.n': '{n} zones',
+    'cf.n.circle.1': '{n} ring',
+    'cf.n.circle.n': '{n} rings',
+    'cf.n.point.1': '{n} point',
+    'cf.n.point.n': '{n} points',
+    'cf.n.orbit.1': '{n} orbit',
+    'cf.n.orbit.n': '{n} orbits',
+    'cf.n.box.1': '{n} box',
+    'cf.n.box.n': '{n} boxes',
+    'cf.n.text.1': '{n} text',
+    'cf.n.text.n': '{n} texts',
+    'cf.empty': 'empty',
+    'toast.cfShown.1': '{n} layer shown ✓',
+    'toast.cfShown.n': '{n} layers shown ✓',
+    'toast.cfTheatre': 'unknown theatre ({t}), kept: {theatre}',
+    'sec.layers': 'Layers',
+    'layers.count.1': '{n} layer',
+    'layers.count.n': '{n} layers',
+    'layers.remove': 'Remove this layer',
+    'layers.removeAll': 'Remove all layers',
+    'layers.help': 'Tap an item to read it; a point can become a reference point.',
+    'confirm.layer': 'Remove layer “{name}”?',
+    'confirm.layers': 'Remove all layers?',
+    'cf.k.lines': 'Zone',
+    'cf.k.curve': 'Curve',
+    'cf.k.flot': 'FLOT',
+    'cf.k.corridor': 'Corridor',
+    'cf.nm': '{w} NM',
+    'cf.p.target': 'Target',
+    'cf.p.dmpi': 'DMPI',
+    'cf.p.exit': 'Exit point',
+    'cf.p.lz': 'LZ',
+    'cf.p.other': 'Point',
+    'cf.mhz': '{f} MHz',
+    'cf.toRef': '→ Reference point',
+    'cf.exp.title': 'Export',
+    'cf.exp.route': 'The route',
+    'cf.exp.routeN': '{n} waypoints · {m} ref.',
+    'cf.exp.go': 'Export',
+    'toast.layersAdded.1': '{n} layer added ✓ (no route in the file: the route is unchanged)',
+    'toast.layersAdded.n': '{n} layers added ✓ (no route in the file: the route is unchanged)'
   }
 };
 
@@ -1747,6 +1951,17 @@ function resolveLayer() {
   if (S.ui.layer === 'dcs' && !dcsKey()) S.ui.layer = 'topo';
 }
 
+/* Le théâtre change (la route est gardée) : la liste de la barre, ou un fichier CombatFlite qui nomme le sien */
+function setTheatre(id) {
+  const wasDcs = S.ui.layer === 'dcs';
+  S.theatre = theatreOf(id).id;
+  persistState();
+  setTheatreView();
+  if (wasDcs) setBase();        /* la couche DCS change avec le théâtre (ou passe en Topographique) */
+  syncAirfields();
+  syncControls();
+}
+
 /* ============= UNITÉS, DISTANCES, CAPS ============= */
 function declValue() { return S.navDisplay.ref === 'mag' ? parseDecl(S.navDisplay.decl) : null; }
 
@@ -1814,6 +2029,244 @@ function timing() {
     el.push(sec);
   }
   return { legs: legs, el: el, km: km, sec: sec };
+}
+
+/* ============= CALQUES COMBATFLITE : MODÈLE dcs-layers-v1, LECTURE DU .cf, STOCKAGE ============= */
+/* Les calques vivent à part de la route : sous route_layers_v1, jamais dans route_state_v1. Un calque :
+   { id, name, visible, source: { kind: 'combatflite', file }, items: [ … ] } ; six types d'objets (longueurs en NM, angles en degrés
+   vrais, opacités de 0 à 1) — le dessin du lot suivant édite ce même modèle. */
+let CF_LAYERS = [];
+
+function cfRandId() {
+  try { if (window.crypto && typeof window.crypto.randomUUID === 'function') return window.crypto.randomUUID(); } catch (e) { /* repli ci-dessous */ }
+  return 'cf-' + Math.random().toString(36).slice(2, 12) + Date.now().toString(36);
+}
+
+function cfNum(v) { return (typeof v === 'number' && isFinite(v)) ? v : null; }
+function cfLat(v) { const n = cfNum(v); return (n != null && Math.abs(n) <= 90) ? n : null; }
+function cfLon(v) { const n = cfNum(v); return (n != null && Math.abs(n) <= 180) ? n : null; }
+function cfColor(v, d) { return (typeof v === 'string' && /^#[0-9a-fA-F]{6}$/.test(v)) ? v.toLowerCase() : d; }
+function cfOpa(v, d) { const n = cfNum(v); return n == null ? d : Math.max(0, Math.min(1, n)); }
+function cfPos(v, d, max) { const n = cfNum(v); return (n != null && n > 0) ? Math.min(n, max) : d; }
+function cfInt(v, d, max) { const n = cfNum(v); return n == null ? d : Math.max(1, Math.min(max, Math.round(n))); }
+function cfPick(v, list, d) { return list.indexOf(v) !== -1 ? v : d; }
+
+/* Un objet lu (fichier JSON, stockage, ou objet brut du .cf) → l'objet du modèle, dans l'ordre des champs du cadrage ; null s'il est
+   illisible : type inconnu, une coordonnée qui n'est pas un nombre dans les bornes, une zone de moins de 2 points, une taille absente */
+function cfItem(src) {
+  if (!src || typeof src !== 'object' || Array.isArray(src) || CF_ITEM_TYPES.indexOf(src.type) === -1) return null;
+  const type = src.type;
+  const id = (typeof src.id === 'string' && src.id !== '') ? src.id : cfRandId();
+  const name = str(src.name);
+  if (type === 'zone') {
+    if (!Array.isArray(src.points)) return null;
+    const pts = [];
+    for (let i = 0; i < src.points.length; i++) {
+      const p = src.points[i];
+      if (!Array.isArray(p)) return null;
+      const la = cfLat(p[0]), lo = cfLon(p[1]);
+      if (la == null || lo == null) return null;
+      pts.push([la, lo]);
+    }
+    if (pts.length < 2) return null;
+    return { id: id, type: type, name: name, kind: cfPick(src.kind, CF_ZONE_KINDS, 'lines'), points: pts, closed: src.closed === true, filled: src.filled === true,
+      widthNm: cfPos(src.widthNm, 5, 1000), color: cfColor(src.color, '#000000'), lineOpacity: cfOpa(src.lineOpacity, 1), fillOpacity: cfOpa(src.fillOpacity, 0.5),
+      lineWidth: cfPos(src.lineWidth, 2, 30), dash: cfPick(src.dash, CF_DASHES, 'solid') };
+  }
+  const lat = cfLat(src.lat), lon = cfLon(src.lon);
+  if (lat == null || lon == null) return null;
+  if (type === 'circle') {
+    const r = cfPos(src.radiusNm, 0, 100000);
+    if (!(r > 0)) return null;
+    return { id: id, type: type, name: name, lat: lat, lon: lon, radiusNm: r, filled: src.filled === true, color: cfColor(src.color, '#000000'),
+      lineOpacity: cfOpa(src.lineOpacity, 1), fillOpacity: cfOpa(src.fillOpacity, 0.5), lineWidth: cfPos(src.lineWidth, 2, 30), dash: cfPick(src.dash, CF_DASHES, 'solid'),
+      maxAlt: str(src.maxAlt), showName: src.showName === true };
+  }
+  if (type === 'orbit') {
+    const lat2 = cfLat(src.lat2), lon2 = cfLon(src.lon2);
+    if (lat2 == null || lon2 == null) return null;
+    let brg = cfNum(src.brg);
+    if (brg == null) brg = legCalc({ lat: lat2, lon: lon2 }, { lat: lat, lon: lon }).brg;
+    return { id: id, type: type, name: name, lat: lat, lon: lon, lat2: lat2, lon2: lon2, brg: brg, widthNm: cfPos(src.widthNm, 10, 1000), clockwise: src.clockwise === true,
+      kind: str(src.kind), minAlt: str(src.minAlt), maxAlt: str(src.maxAlt), frq: str(src.frq), color: cfColor(src.color, '#000000') };
+  }
+  if (type === 'box') {
+    const brg = cfNum(src.brg), len = cfPos(src.lengthNm, 0, 100000), wid = cfPos(src.widthNm, 0, 100000);
+    if (brg == null || !(len > 0) || !(wid > 0)) return null;
+    return { id: id, type: type, name: name, lat: lat, lon: lon, brg: brg, lengthNm: len, widthNm: wid, gridH: cfInt(src.gridH, 1, 100), gridV: cfInt(src.gridV, 1, 100),
+      showGrid: src.showGrid === true, kind: str(src.kind), minAlt: str(src.minAlt), maxAlt: str(src.maxAlt), color: cfColor(src.color, '#000000'),
+      lineWidth: cfPos(src.lineWidth, 2, 30), filled: src.filled === true, fillOpacity: cfOpa(src.fillOpacity, 0.5) };
+  }
+  if (type === 'point') {
+    return { id: id, type: type, name: name, lat: lat, lon: lon, kind: cfPick(src.kind, CF_POINT_KINDS, 'other'), note: str(src.note), color: cfColor(src.color, '#000000') };
+  }
+  return { id: id, type: type, name: name, lat: lat, lon: lon, text: typeof src.text === 'string' ? src.text : '', bg: cfColor(src.bg, '#ffffff'), fg: cfColor(src.fg, '#000000'),
+    size: cfPos(src.size, 40, 400), bold: src.bold === true, border: src.border === true, filled: src.filled === true };
+}
+
+/* Un calque lu → le calque du modèle ; null s'il est illisible (pas un objet, pas de tableau d'objets) ; ses objets illisibles sont écartés */
+function cfLayer(src) {
+  if (!src || typeof src !== 'object' || Array.isArray(src) || !Array.isArray(src.items)) return null;
+  const items = [];
+  src.items.forEach(it => { const o = cfItem(it); if (o) items.push(o); });
+  const so = (src.source && typeof src.source === 'object' && !Array.isArray(src.source)) ? src.source : {};
+  return { id: (typeof src.id === 'string' && src.id !== '') ? src.id : cfRandId(), name: str(src.name), visible: src.visible !== false,
+    source: { kind: 'combatflite', file: str(so.file) }, items: items };
+}
+
+/* Des calques s'ajoutent aux calques présents ; un calque de même id remplace le sien, à sa place */
+function cfMerge(list) {
+  list.forEach(l => {
+    const k = CF_LAYERS.findIndex(x => x.id === l.id);
+    if (k >= 0) CF_LAYERS[k] = l; else CF_LAYERS.push(l);
+  });
+}
+
+function persistLayers() {
+  try { localStorage.setItem(KEY_LAYERS, JSON.stringify({ format: LAYERS_FORMAT, layers: CF_LAYERS })); return true; }
+  catch (e) { showToast(t('err.layersQuota'), 4500); return false; }     /* les calques restent en mémoire */
+}
+
+function loadLayers() {
+  CF_LAYERS = [];
+  try {
+    const raw = localStorage.getItem(KEY_LAYERS);
+    if (!raw) return;
+    const o = JSON.parse(raw);
+    if (o && typeof o === 'object' && o.format === LAYERS_FORMAT && Array.isArray(o.layers)) cfMerge(o.layers.map(cfLayer).filter(Boolean));
+  } catch (e) { CF_LAYERS = []; }
+}
+
+/* ---- Le zip d'un .cf : répertoire central, entrée « mission.xml » (sans casse), méthode 0 (stockée) ou 8 (deflate) ---- */
+function zipIsZip(bytes) { return bytes.length >= 2 && bytes[0] === 0x50 && bytes[1] === 0x4B; }
+
+/* → { method, data, size } ; null si le zip est tronqué, chiffré, sans mission.xml */
+function zipFindEntry(b) {
+  const n = b.length;
+  if (n < 22) return null;
+  const dv = new DataView(b.buffer, b.byteOffset, b.byteLength);
+  let e = -1;
+  for (let i = n - 22; i >= 0 && i >= n - 22 - 65535; i--) if (dv.getUint32(i, true) === 0x06054b50) { e = i; break; }
+  if (e < 0) return null;
+  const count = dv.getUint16(e + 10, true), cdSize = dv.getUint32(e + 12, true), cdOff = dv.getUint32(e + 16, true);
+  if (cdOff + cdSize > e) return null;
+  let p = cdOff;
+  for (let k = 0; k < count; k++) {
+    if (p + 46 > n || dv.getUint32(p, true) !== 0x02014b50) return null;
+    const flags = dv.getUint16(p + 8, true), method = dv.getUint16(p + 10, true), csz = dv.getUint32(p + 20, true), usz = dv.getUint32(p + 24, true);
+    const nl = dv.getUint16(p + 28, true), xl = dv.getUint16(p + 30, true), cl = dv.getUint16(p + 32, true), lho = dv.getUint32(p + 42, true);
+    if (p + 46 + nl > n) return null;
+    const name = new TextDecoder('utf-8').decode(b.subarray(p + 46, p + 46 + nl));
+    if (name.toLowerCase() === 'mission.xml') {
+      if ((flags & 1) || lho + 30 > n || dv.getUint32(lho, true) !== 0x04034b50) return null;
+      const start = lho + 30 + dv.getUint16(lho + 26, true) + dv.getUint16(lho + 28, true);
+      if (start + csz > n || usz > 64 * 1048576) return null;
+      return { method: method, data: b.subarray(start, start + csz), size: usz };
+    }
+    p += 46 + nl + xl + cl;
+  }
+  return null;
+}
+
+async function zipInflate(ent) {
+  if (ent.method === 0) return ent.data;
+  if (ent.method !== 8) throw new Error('cf');
+  const buf = await new Response(new Blob([ent.data]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer();
+  return new Uint8Array(buf);
+}
+
+/* ---- Le XML de CombatFlite ---- */
+function cfKid(el, name) { for (let c = el.firstElementChild; c; c = c.nextElementSibling) if (c.nodeName === name) return c; return null; }
+function cfKids(el, name) { const out = []; for (let c = el.firstElementChild; c; c = c.nextElementSibling) if (c.nodeName === name) out.push(c); return out; }
+function cfS(el, name) { const k = cfKid(el, name); return k ? k.textContent.trim() : ''; }
+function cfN(el, name) { const s = cfS(el, name); if (s === '') return null; const n = Number(s); return isFinite(n) ? n : null; }
+function cfB(el, name) { return cfS(el, name).toLowerCase() === 'true'; }
+/* un entier ARGB signé (-16776961) → #rrggbb des 24 bits bas, en minuscules ; l'alpha est ignoré */
+function cfArgb(el, name) { const n = cfN(el, name); return n == null ? null : '#' + ((n & 0xFFFFFF) >>> 0).toString(16).padStart(6, '0'); }
+/* une opacité de 0 à 255 → 0 à 1 */
+function cfOp(el, name) { const n = cfN(el, name); return n == null ? null : n / 255; }
+function cfDashOf(s) { const l = s.toLowerCase(); return l === 'dot' ? 'dot' : (l === 'dash' ? 'dash' : 'solid'); }
+
+function cfRawZone(el) {
+  const pts = [];
+  const pp = cfKid(el, 'Polypoints');
+  if (pp) cfKids(pp, 'Polypoint').forEach(q => { pts.push([cfN(q, 'Lat'), cfN(q, 'Lon')]); });
+  return { id: cfS(el, 'Tag'), type: 'zone', name: cfS(el, 'Name'), kind: cfS(el, 'Type').toLowerCase(), points: pts, closed: cfB(el, 'Closed'), filled: cfB(el, 'Filled'),
+    widthNm: cfN(el, 'CorridorWidth'), color: cfArgb(el, 'Color'), lineOpacity: cfOp(el, 'LineOpacity'), fillOpacity: cfOp(el, 'FillOpacity'),
+    lineWidth: cfN(el, 'LineThickness'), dash: cfDashOf(cfS(el, 'LineStyle')) };
+}
+function cfRawCircle(el) {
+  return { id: cfS(el, 'Tag'), type: 'circle', name: cfS(el, 'Name'), lat: cfN(el, 'Lat'), lon: cfN(el, 'Lon'), radiusNm: cfN(el, 'Radius'), filled: cfB(el, 'Filled'),
+    color: cfArgb(el, 'Color'), lineOpacity: cfOp(el, 'LineOpacity'), fillOpacity: cfOp(el, 'FillOpacity'), lineWidth: cfN(el, 'LineThickness'), dash: cfDashOf(cfS(el, 'LineStyle')),
+    maxAlt: cfS(el, 'MaxAlt'), showName: cfB(el, 'ShowCenterLabel') };
+}
+function cfRawOrbit(el) {
+  return { id: cfS(el, 'Tag'), type: 'orbit', name: cfS(el, 'Name'), lat: cfN(el, 'Lat'), lon: cfN(el, 'Lon'), lat2: cfN(el, 'Lat2'), lon2: cfN(el, 'Lon2'), brg: cfN(el, 'Brg'),
+    widthNm: cfN(el, 'Width'), clockwise: cfB(el, 'Clockwise'), kind: cfS(el, 'Type'), minAlt: cfS(el, 'MinAlt'), maxAlt: cfS(el, 'MaxAlt'), frq: cfS(el, 'Frq'), color: cfArgb(el, 'Color') };
+}
+function cfRawBox(el) {
+  return { id: cfS(el, 'Tag'), type: 'box', name: cfS(el, 'Name'), lat: cfN(el, 'Lat'), lon: cfN(el, 'Lon'), brg: cfN(el, 'Brg'), lengthNm: cfN(el, 'Length'), widthNm: cfN(el, 'Width'),
+    gridH: cfN(el, 'GRGHorizontalSegments'), gridV: cfN(el, 'GRGVerticalSegments'), showGrid: cfB(el, 'ShowGRGLines'), kind: cfS(el, 'Type'), minAlt: cfS(el, 'MinAlt'), maxAlt: cfS(el, 'MaxAlt'),
+    color: cfArgb(el, 'Color'), lineWidth: cfN(el, 'LineThickness'), filled: cfB(el, 'Filled'), fillOpacity: cfOp(el, 'FillOpacity') };
+}
+function cfRawPoint(el) {
+  const k = cfS(el, 'Type').toLowerCase();
+  return { id: cfS(el, 'Tag'), type: 'point', name: cfS(el, 'Name'), lat: cfN(el, 'Lat'), lon: cfN(el, 'Lon'),
+    kind: k === 'target' ? 'target' : (k === 'dmpi' ? 'dmpi' : (k === 'exit pt' ? 'exit' : (k === 'lz' ? 'lz' : 'other'))),
+    note: cfS(el, 'Comment'), color: cfArgb(el, 'Color') };
+}
+function cfRawText(el) {
+  const k = cfKid(el, 'Text');
+  return { id: cfS(el, 'Tag'), type: 'text', name: cfS(el, 'Name'), lat: cfN(el, 'Lat'), lon: cfN(el, 'Lon'), text: k ? k.textContent : '', bg: cfArgb(el, 'BackColor'), fg: cfArgb(el, 'ForeColor'),
+    size: cfN(el, 'FontSize'), bold: cfB(el, 'Bold'), border: cfB(el, 'Border'), filled: cfB(el, 'Filled') };
+}
+
+const CF_GROUPS = [['Polygons', 'Polygon', cfRawZone], ['Circles', 'Circle', cfRawCircle], ['Orbits', 'Orbit', cfRawOrbit],
+  ['AORs', 'AOR', cfRawBox], ['RefPoints', 'RefPoint', cfRawPoint], ['ITBs', 'ITB', cfRawText]];
+
+/* La racine « Mission » → { theatre, layers, pre } : un calque par « Airspace », dans l'ordre du fichier ; pre[k] : le calque k est pré-coché
+   (au moins un de ses objets porte Enabled à True) */
+function cfParseMission(root, fileName) {
+  const layers = [], pre = [];
+  cfKids(root, 'Airspace').forEach(a => {
+    const raw = [];
+    let enabled = false;
+    CF_GROUPS.forEach(g => {
+      const box = cfKid(a, g[0]);
+      if (!box) return;
+      cfKids(box, g[1]).forEach(el => { if (cfB(el, 'Enabled')) enabled = true; raw.push(g[2](el)); });
+    });
+    const l = cfLayer({ id: cfS(a, 'Tag'), name: cfS(a, 'Name'), visible: true, source: { kind: 'combatflite', file: fileName }, items: raw });
+    if (l) { layers.push(l); pre.push(enabled); }
+  });
+  return { theatre: cfS(root, 'Theater'), layers: layers, pre: pre };
+}
+
+/* Les octets d'un .cf → { theatre, layers, pre } ; lève 'nods' sans DecompressionStream, 'cf' pour un fichier non reconnu */
+async function cfRead(bytes, fileName) {
+  const ent = zipFindEntry(bytes);
+  if (!ent) throw new Error('cf');
+  if (ent.method === 8 && typeof DecompressionStream !== 'function') throw new Error('nods');
+  const xml = await zipInflate(ent);
+  const doc = new DOMParser().parseFromString(new TextDecoder('utf-8').decode(xml), 'application/xml');
+  const root = doc.documentElement;
+  if (!root || root.nodeName !== 'Mission' || doc.getElementsByTagName('parsererror').length) throw new Error('cf');
+  return cfParseMission(root, fileName);
+}
+
+/* Le théâtre que nomme un .cf : son identifiant dans le Route Planner (sans casse), sinon '' */
+function cfTheatreId(raw) {
+  const low = String(raw == null ? '' : raw).trim().toLowerCase();
+  for (let i = 0; i < THEATRES.length; i++) if (THEATRES[i].id.toLowerCase() === low) return THEATRES[i].id;
+  return '';
+}
+
+/* « 8 zones · 3 points · 1 boîte · 1 texte » ; « vide » sans objet */
+function cfCounts(items) {
+  const c = {};
+  items.forEach(i => { c[i.type] = (c[i.type] || 0) + 1; });
+  const parts = CF_COUNT_ORDER.filter(k => c[k]).map(k => t('cf.n.' + k + (c[k] === 1 ? '.1' : '.n'), { n: c[k] }));
+  return parts.length ? parts.join(' · ') : t('cf.empty');
 }
 
 /* ============= CARTE ============= */
@@ -2025,15 +2478,19 @@ function createMap() {
   map.createPane('legticks').style.zIndex = 420;        /* les traits des minutes : au-dessus de la route, sous les références */
   map.createPane('legnums').style.zIndex = 455;
   map.createPane('legboxes').style.zIndex = 620;
+  /* Les calques CombatFlite : au-dessus du fond, de la grille et des aérodromes, sous la route, les références et les boîtes de branche */
+  map.createPane('layers').style.zIndex = LAYERS_Z;
   gridCanvas = document.createElement('canvas');
   gridCanvas.className = 'mgrs-canvas';
   pane.appendChild(gridCanvas);
+  cfGroup = L.layerGroup().addTo(map);
   refGroup = L.layerGroup().addTo(map);
   routeGroup = L.layerGroup().addTo(map);
   decorGroup = L.layerGroup().addTo(map);
   map.on('move zoom viewreset resize', scheduleGrid);
   map.on('zoomend', drawRoute);
   map.on('zoomend', syncAfZoom);
+  map.on('zoomend', cfSyncPointNames);
   syncAfZoom();
   createTapControl();
   map.on('click', onMapClick);
@@ -2554,6 +3011,309 @@ function afterEdit(rebuildRows) {
   syncControls();
 }
 
+/* ============= CALQUES : GÉOMÉTRIE ET DESSIN ============= */
+let cfGroup = null;           /* les objets des calques visibles, dans le pane « layers » (z-index 390) */
+let cfPointMarks = [];        /* les symboles de points : { mk, name } — le nom ne se dessine qu'à partir du zoom 11 */
+
+const CF_RAD = Math.PI / 180;
+
+/* La destination sur la sphère (rayon 6 371 008,8 m) : [lat, lon], un cap (degrés vrais) et une distance en NM */
+function cfDest(p, brg, nm) { const d = legDest({ lat: p[0], lon: p[1] }, brg, nm * NM_KM); return [d.lat, d.lon]; }
+
+/* La boîte de CombatFlite : ses quatre coins (NO, NE, SE, SO), les traits de sa grille, le milieu du côté NO–NE */
+function cfBoxGeom(b) {
+  const no = cfDest([b.lat, b.lon], b.brg - 90, b.widthNm / 2);
+  const ne = cfDest(no, b.brg, b.lengthNm);
+  const se = cfDest(ne, b.brg + 90, b.widthNm);
+  const so = cfDest(se, b.brg + 180, b.lengthNm);
+  const grid = [];
+  for (let k = 1; k < b.gridH; k++) { const a = cfDest(no, b.brg, b.lengthNm * k / b.gridH); grid.push([a, cfDest(a, b.brg + 90, b.widthNm)]); }
+  for (let k = 1; k < b.gridV; k++) { const a = cfDest(no, b.brg + 90, b.widthNm * k / b.gridV); grid.push([a, cfDest(a, b.brg, b.lengthNm)]); }
+  return { corners: [no, ne, se, so], grid: grid, nameAt: [(no[0] + ne[0]) / 2, (no[1] + ne[1]) / 2] };
+}
+
+/* L'hippodrome : la branche d'arrivée va de (lat2, lon2) à (lat, lon) au cap brg ; le virage est à la gauche de brg (clockwise faux) ou à sa
+   droite ; deux branches écartées de widthNm, reliées par deux demi-cercles de diamètre widthNm. Repère métrique local autour de (lat, lon). */
+function cfOrbitGeom(o) {
+  const kx = Math.cos(o.lat * CF_RAD) * 111320, ky = 110540;
+  const xy = (la, lo) => [(lo - o.lon) * kx, (la - o.lat) * ky];
+  const ll = p => [o.lat + p[1] / ky, o.lon + p[0] / kx];
+  const th = o.brg * CF_RAD, ux = Math.sin(th), uy = Math.cos(th);
+  const nx = o.clockwise ? uy : -uy, ny = o.clockwise ? -ux : ux;          /* le côté du virage : la gauche de brg, ou sa droite */
+  const w = o.widthNm * NM_M, r = w / 2;
+  const a0 = xy(o.lat2, o.lon2), a1 = [0, 0];
+  const pts = [a0, a1];
+  const cx1 = a1[0] + nx * r, cy1 = a1[1] + ny * r;                        /* centre du demi-cercle d'arrivée */
+  for (let k = 1; k <= 12; k++) { const a = Math.PI * k / 12; pts.push([cx1 + r * (-Math.cos(a) * nx + Math.sin(a) * ux), cy1 + r * (-Math.cos(a) * ny + Math.sin(a) * uy)]); }
+  const cx0 = a0[0] + nx * r, cy0 = a0[1] + ny * r;                        /* centre du demi-cercle de départ */
+  for (let k = 0; k <= 12; k++) { const a = Math.PI * k / 12; pts.push([cx0 + r * (Math.cos(a) * nx - Math.sin(a) * ux), cy0 + r * (Math.cos(a) * ny - Math.sin(a) * uy)]); }
+  const outer = [(a0[0] + a1[0]) / 2 + nx * w, (a0[1] + a1[1]) / 2 + ny * w];
+  return { path: pts.map(ll), nameAt: ll(outer) };
+}
+
+/* Une bande de widthNm centrée sur la ligne : les côtés décalés de widthNm / 2, la direction en un point étant celle de ses deux voisins */
+function cfBand(pts, widthNm) {
+  const half = widthNm * NM_M / 2, left = [], right = [];
+  for (let i = 0; i < pts.length; i++) {
+    const a = pts[Math.max(0, i - 1)], b = pts[Math.min(pts.length - 1, i + 1)], p = pts[i];
+    const kx = Math.cos(p[0] * CF_RAD) * 111320, ky = 110540;
+    let dx = (b[1] - a[1]) * kx, dy = (b[0] - a[0]) * ky;
+    const m = Math.hypot(dx, dy) || 1;
+    dx /= m; dy /= m;
+    const nx = -dy, ny = dx;
+    left.push([p[0] + ny * half / ky, p[1] + nx * half / kx]);
+    right.push([p[0] - ny * half / ky, p[1] - nx * half / kx]);
+  }
+  return left.concat(right.reverse());
+}
+
+/* La courbe de Catmull-Rom qui passe par les points, fermée : 8 segments par côté */
+function cfSpline(pts) {
+  const n = pts.length, out = [];
+  const g = i => pts[((i % n) + n) % n];
+  for (let i = 0; i < n; i++) {
+    const p0 = g(i - 1), p1 = g(i), p2 = g(i + 1), p3 = g(i + 2);
+    for (let k = 0; k < 8; k++) {
+      const u = k / 8, u2 = u * u, u3 = u2 * u;
+      out.push([0, 1].map(c => 0.5 * (2 * p1[c] + (-p0[c] + p2[c]) * u + (2 * p0[c] - 5 * p1[c] + 4 * p2[c] - p3[c]) * u2 + (-p0[c] + 3 * p1[c] - 3 * p2[c] + p3[c]) * u3)));
+    }
+  }
+  return out;
+}
+
+/* Les demi-cercles d'un FLOT : rayon 1,1 NM, un tous les 3 NM le long de chaque segment, du côté gauche du sens des points ;
+   chacun est une suite de points (de derrière, par la gauche, à devant) */
+function cfFlotBumps(pts) {
+  const out = [];
+  for (let i = 0; i + 1 < pts.length; i++) {
+    const a = pts[i], b = pts[i + 1];
+    const kx = Math.cos((a[0] + b[0]) / 2 * CF_RAD) * 111320, ky = 110540;
+    const dx = (b[1] - a[1]) * kx, dy = (b[0] - a[0]) * ky;
+    const len = Math.hypot(dx, dy);
+    if (!(len > 0)) continue;
+    const ux = dx / len, uy = dy / len, nx = -uy, ny = ux;
+    const nm = len / NM_M, n = Math.floor(nm / 3);
+    if (n < 1) continue;
+    const first = (nm - 3 * (n - 1)) / 2, r = 1.1 * NM_M;
+    for (let j = 0; j < n; j++) {
+      const c = (first + 3 * j) * NM_M, cx = ux * c, cy = uy * c, arc = [];
+      for (let s = 0; s <= 12; s++) {
+        const th = Math.PI - Math.PI * s / 12;
+        arc.push([a[0] + (cy + r * (Math.cos(th) * uy + Math.sin(th) * ny)) / ky, a[1] + (cx + r * (Math.cos(th) * ux + Math.sin(th) * nx)) / kx]);
+      }
+      out.push(arc);
+    }
+  }
+  return out;
+}
+
+function cfMean(pts) {
+  let la = 0, lo = 0;
+  pts.forEach(p => { la += p[0]; lo += p[1]; });
+  return [la / pts.length, lo / pts.length];
+}
+
+/* Le style commun : contour à la couleur, à lineOpacity, d'au moins 1,5 px ; tirets selon dash ; remplissage (cfFill) à 0,4 × fillOpacity */
+function cfPathStyle(it, extra) {
+  const o = { pane: 'layers', color: it.color, opacity: typeof it.lineOpacity === 'number' ? it.lineOpacity : 1, weight: Math.max(1.5, it.lineWidth || 2), fill: false,
+    lineJoin: 'round', bubblingMouseEvents: false, className: 'cf-obj cf-' + it.type, cfId: it.id, cfType: it.type, cfName: it.name };
+  if (it.dash === 'dot') o.dashArray = '2 6'; else if (it.dash === 'dash') o.dashArray = '8 6';
+  return Object.assign(o, extra || {});
+}
+function cfFill(it) { return { fill: true, fillColor: it.color, fillOpacity: CF_FILL_K * it.fillOpacity }; }
+
+function cfTagEl(layer, it) {
+  const el = layer.getElement && layer.getElement();
+  if (!el) return;
+  el.setAttribute('data-cf-id', it.id);
+  el.setAttribute('data-cf-type', it.type);
+  el.setAttribute('data-cf-name', it.name);
+}
+
+function cfBindPopup(layer, it) {
+  layer.bindPopup(() => cfFiche(it), { className: 'cf-popup', maxWidth: 280, minWidth: 150, autoPanPadding: [16, 16] });
+}
+
+/* Un objet vectoriel : sa fiche s'ouvre au toucher, rien ne se déplace, aucun point de route ne se pose */
+function cfAddObj(layer, it) {
+  cfBindPopup(layer, it);
+  layer.addTo(cfGroup);
+  cfTagEl(layer, it);
+}
+
+/* Un trait épais et invisible sous un contour mince : le doigt le trouve (un contour sans remplissage ne se touche qu'à sa ligne) */
+function cfAddHit(geo, it, circle) {
+  const o = { pane: 'layers', color: '#000000', opacity: 0, weight: 18, fill: false, bubblingMouseEvents: false, className: 'cf-hit', cfHit: true };
+  const h = circle ? L.circle(geo.c, Object.assign({ radius: geo.r }, o)) : L.polyline(geo, o);
+  cfBindPopup(h, it);
+  h.addTo(cfGroup);
+}
+
+function cfNameMarker(at, text, color) {
+  if (!text) return;
+  L.marker(at, { pane: 'layers', interactive: false, keyboard: false, zIndexOffset: 200000,
+    icon: L.divIcon({ className: 'cf-name-icon', iconSize: [0, 0], html: '<span class="cf-name" style="color:' + color + '">' + esc(text) + '</span>' }) }).addTo(cfGroup);
+}
+
+function cfDrawZone(it) {
+  const pts = it.points, mid = pts[Math.floor(pts.length / 2)];
+  let nameAt = mid;
+  if (it.kind === 'corridor') {
+    const poly = L.polygon(cfBand(pts, it.widthNm), cfPathStyle(it, Object.assign({ weight: 1.5 }, cfFill(it))));
+    cfAddObj(poly, it);
+    L.polyline(pts, { pane: 'layers', color: it.color, opacity: it.lineOpacity, weight: 1.5, dashArray: '6 6', fill: false, interactive: false, className: 'cf-center' }).addTo(cfGroup);
+  } else if (it.kind === 'flot') {
+    cfAddHit(pts, it, false);
+    cfAddObj(L.polyline(pts, cfPathStyle(it)), it);
+    L.polyline(cfFlotBumps(pts), { pane: 'layers', color: it.color, opacity: it.lineOpacity, weight: 2.5, fill: false, interactive: false, className: 'cf-bumps' }).addTo(cfGroup);
+  } else {
+    let ring = pts, closed = it.closed;
+    if (it.kind === 'curve' && pts.length >= 3) { ring = cfSpline(pts); closed = true; }
+    nameAt = cfMean(pts);
+    if (closed) {
+      if (!it.filled) cfAddHit(ring.concat([ring[0]]), it, false);
+      cfAddObj(L.polygon(ring, cfPathStyle(it, it.filled ? cfFill(it) : {})), it);
+    } else {
+      cfAddHit(ring, it, false);
+      cfAddObj(L.polyline(ring, cfPathStyle(it)), it);
+    }
+  }
+  cfNameMarker(nameAt, it.name, it.color);
+}
+
+function cfDrawCircle(it) {
+  const c = [it.lat, it.lon], r = it.radiusNm * NM_M;
+  if (!it.filled) cfAddHit({ c: c, r: r }, it, true);
+  cfAddObj(L.circle(c, cfPathStyle(it, Object.assign({ radius: r }, it.filled ? cfFill(it) : {}))), it);
+  if (it.showName) cfNameMarker(c, it.name, it.color);
+}
+
+function cfDrawOrbit(it) {
+  const g = cfOrbitGeom(it);
+  cfAddHit(g.path, it, false);
+  cfAddObj(L.polyline(g.path, cfPathStyle(it, { weight: 2.5, dashArray: '10 6' })), it);
+  cfNameMarker(g.nameAt, it.name, it.color);
+}
+
+function cfDrawBox(it) {
+  const g = cfBoxGeom(it);
+  cfAddHit(g.corners.concat([g.corners[0]]), it, false);
+  cfAddObj(L.polygon(g.corners, cfPathStyle(it, it.filled ? cfFill(it) : {})), it);
+  if (it.showGrid && g.grid.length) {
+    L.polyline(g.grid, { pane: 'layers', color: it.color, opacity: 1, weight: 1.2, dashArray: '4 4', fill: false, interactive: false, className: 'cf-grid' }).addTo(cfGroup);
+  }
+  cfNameMarker(g.nameAt, it.name, it.color);
+}
+
+/* Le symbole d'un point : 18 px, à la couleur, sur un fond papier */
+function cfSymbolSvg(kind, color) {
+  let g;
+  if (kind === 'target') g = '<circle cx="9" cy="9" r="6"/><path d="M9 1.5V16.5M1.5 9H16.5"/>';
+  else if (kind === 'dmpi') g = '<path d="M4 4L14 14M14 4L4 14"/>';
+  else if (kind === 'exit') g = '<path d="M9 3L15.5 14.5H2.5Z"/>';
+  else if (kind === 'lz') g = '<circle cx="9" cy="9" r="6.5"/><path d="M6.7 5.8V12.2M11.3 5.8V12.2M6.7 9H11.3"/>';
+  else g = '<rect x="4.5" y="4.5" width="9" height="9"/>';
+  return '<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="9" fill="rgba(240,232,214,.85)"/>' +
+    '<g stroke="' + color + '" stroke-width="2" fill="none" stroke-linejoin="miter">' + g + '</g></svg>';
+}
+
+function cfDrawPoint(it) {
+  const mk = L.marker([it.lat, it.lon], { pane: 'layers', zIndexOffset: 100000, keyboard: false, title: it.name,
+    icon: L.divIcon({ className: 'cf-pt-icon', iconSize: [18, 18], iconAnchor: [9, 9], popupAnchor: [0, -11], html: cfSymbolSvg(it.kind, it.color) }) });
+  cfBindPopup(mk, it);
+  mk.addTo(cfGroup);
+  cfTagEl(mk, it);
+  cfPointMarks.push({ mk: mk, name: it.name });
+}
+
+/* Un cadre de texte centré sur son point : il ne s'ouvre pas, mais il ne laisse pas non plus le toucher poser un point de route */
+function cfDrawText(it) {
+  const fs = Math.max(6, Math.round(it.size / 4));
+  const lines = it.text.split(/\r\n|\r|\n/).map(s => s.trim()).join('\n');
+  const style = 'background:' + (it.filled ? it.bg : 'transparent') + ';color:' + it.fg + ';border:' + (it.border ? '2px solid ' + it.fg : '0 none') +
+    ';font-weight:' + (it.bold ? 700 : 500) + ';font-size:' + fs + 'px';
+  const mk = L.marker([it.lat, it.lon], { pane: 'layers', zIndexOffset: 100000, keyboard: false,
+    icon: L.divIcon({ className: 'cf-tx-icon', iconSize: [0, 0], html: '<div class="cf-tx" style="' + style + '">' + esc(lines) + '</div>' }) });
+  mk.addTo(cfGroup);
+  cfTagEl(mk, it);
+}
+
+function cfDrawItem(it) {
+  if (it.type === 'zone') cfDrawZone(it);
+  else if (it.type === 'circle') cfDrawCircle(it);
+  else if (it.type === 'orbit') cfDrawOrbit(it);
+  else if (it.type === 'box') cfDrawBox(it);
+  else if (it.type === 'point') cfDrawPoint(it);
+  else if (it.type === 'text') cfDrawText(it);
+}
+
+/* Le nom d'un point : dans le DOM du symbole à partir du zoom 11, absent en dessous */
+function cfSyncPointNames() {
+  if (!map) return;
+  const on = map.getZoom() >= CF_NAMES_ZOOM;
+  cfPointMarks.forEach(m => {
+    const el = m.mk.getElement && m.mk.getElement();
+    if (!el) return;
+    const has = el.querySelector('.cf-pt-nm');
+    if (on && m.name && !has) {
+      const s = document.createElement('span');
+      s.className = 'cf-pt-nm';
+      s.textContent = m.name;
+      el.appendChild(s);
+    } else if ((!on || !m.name) && has) has.remove();
+  });
+}
+
+/* Les calques visibles, dans l'ordre de la section (le premier dessous) */
+function drawLayers() {
+  if (!cfGroup) return;
+  cfGroup.clearLayers();
+  cfPointMarks = [];
+  CF_LAYERS.forEach(l => { if (l.visible) l.items.forEach(cfDrawItem); });
+  cfSyncPointNames();
+}
+
+/* La fiche d'un objet (popup) : son nom, puis ce que dit son type ; un point offre « → Point de référence » */
+function cfFmtNm(v) { return decimal(Number.isInteger(v) ? String(v) : (Math.round(v * 10) / 10).toFixed(1)); }
+
+function cfFiche(it) {
+  const d = document.createElement('div');
+  d.className = 'cf-fiche';
+  const line = (cls, txt) => { const e = document.createElement('div'); e.className = cls; e.textContent = txt; d.appendChild(e); };
+  const alts = [it.minAlt, it.maxAlt].filter(Boolean).join(' – ');
+  if (it.name) line('cf-f-nm', it.name);
+  if (it.type === 'circle') {
+    line('cf-f-l', t('cf.nm', { w: decimal((Math.round(it.radiusNm * 10) / 10).toFixed(1)) }));
+    if (it.maxAlt) line('cf-f-l', it.maxAlt);
+  } else if (it.type === 'zone') {
+    line('cf-f-l', t('cf.k.' + it.kind));
+    if (it.kind === 'corridor') line('cf-f-l', t('cf.nm', { w: cfFmtNm(it.widthNm) }));
+  } else if (it.type === 'orbit') {
+    if (it.kind) line('cf-f-l', it.kind);
+    if (alts) line('cf-f-l', alts);
+    if (it.frq) line('cf-f-l', t('cf.mhz', { f: it.frq }));
+  } else if (it.type === 'box') {
+    if (it.kind) line('cf-f-l', it.kind);
+    if (alts) line('cf-f-l', alts);
+  } else if (it.type === 'point') {
+    line('cf-f-l', t('cf.p.' + it.kind));
+    line('cf-f-mgrs', toMGRS(it.lat, it.lon));
+    if (it.note) line('cf-f-l', it.note);
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'rt-btn go';
+    b.textContent = t('cf.toRef');
+    b.addEventListener('click', ev => {
+      L.DomEvent.stop(ev);
+      const p = addRef(it.lat, it.lon, it.name);       /* le chemin d'aujourd'hui : le refus au-delà de 12 est le sien */
+      map.closePopup();
+      if (p) showToast(t('toast.refAdded', { name: p.name }));
+    });
+    d.appendChild(b);
+  }
+  return d;
+}
+
 /* ============= PANNEAU ============= */
 function renderPts() {
   const dflt = speedDisp(S.groundSpeed);
@@ -2686,6 +3446,7 @@ function renderAll() {
   $('decl').value = S.navDisplay.decl;
   renderPts();
   renderRefs();
+  renderLayers();
   renderNav();
   drawRoute();
   drawRefs();
@@ -2858,8 +3619,16 @@ function fallbackDownload(blob, fname, toastMsg) {
   if (toastMsg) showToast(toastMsg);
 }
 
-function downloadJson() {
-  const blob = new Blob([JSON.stringify(exportObject(), null, 2)], { type: 'application/json' });
+/* sel (avec des calques) : { route, layers: [id…] } — la route décochée laisse points et refs vides ; les calques cochés, dans l'ordre de la section,
+   forment le champ « layers » ; sans sel : le fichier d'avant les calques, à l'octet */
+function downloadJson(sel) {
+  const obj = exportObject();
+  if (sel) {
+    if (!sel.route) { obj.points = []; obj.refs = []; }
+    const chosen = CF_LAYERS.filter(l => sel.layers.indexOf(l.id) !== -1);
+    if (chosen.length) obj.layers = chosen;
+  }
+  const blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' });
   const fname = 'route_' + (slug(S.name) || 'route') + '_' + stamp() + '.json';
   if (navigator.share && navigator.canShare) {
     try {
@@ -2897,6 +3666,11 @@ function setRoute(route) {
    sinon une route JSON dcs-route-v1 */
 function openRouteFile(file) {
   readFileBytes(file, bytes => {
+    if (zipIsZip(bytes)) {          /* un .cf (zip de CombatFlite) se reconnaît à ses deux premiers octets, « PK » */
+      cfRead(bytes, file.name).then(res => openCfImport(file.name, res))
+        .catch(e => showToast(t(e && e.message === 'nods' ? 'err.cfBrowser' : 'err.cf')));
+      return;
+    }
     const text = bytesToText(bytes);
     if (/^\s*presets/.test(text)) {
       const data = parseRouteTool(text);
@@ -2908,10 +3682,19 @@ function openRouteFile(file) {
     try { parsed = JSON.parse(text); } catch (e) { showToast(t('err.json')); return; }
     const res = parseRoute(parsed);
     if (!res) { showToast(t('err.json')); return; }
+    /* « layers » : des calques qui s'ajoutent aux calques présents (un même id remplace le sien) ; sans route dans le fichier, la route n'est pas touchée */
+    const lays = Array.isArray(parsed.layers) ? parsed.layers.map(cfLayer).filter(Boolean) : [];
+    if (!res.route.points.length && lays.length) {
+      cfMerge(lays);
+      if (layersChanged()) showToast(t(cfOne(lays.length) ? 'toast.layersAdded.1' : 'toast.layersAdded.n', { n: lays.length }), 4500);
+      return;
+    }
     if (S.points.length && !confirm(t('confirm.open'))) return;
     setRoute(res.route);
-    showToast((res.dropped ? t('toast.openedDropped', { n: res.dropped }) : t('toast.opened')) +
-      (res.droppedRefs ? ' · ' + t('toast.refsDropped', { n: res.droppedRefs }) : ''));
+    let msg = (res.dropped ? t('toast.openedDropped', { n: res.dropped }) : t('toast.opened')) +
+      (res.droppedRefs ? ' · ' + t('toast.refsDropped', { n: res.droppedRefs }) : '');
+    if (lays.length) { cfMerge(lays); if (layersChanged()) msg += ' · ' + t(cfOne(lays.length) ? 'toast.cfShown.1' : 'toast.cfShown.n', { n: lays.length }); }
+    showToast(msg);
   }, () => showToast(t('err.json')));
 }
 
@@ -3219,6 +4002,7 @@ function bytesToText(bytes) {
 /* ---- Fenêtres : « Ouvrir une route du Route Tool » et « Exporter vers le Route Tool » ---- */
 const RT = { fileName: '', routes: [], theatre: 'Caucasus', sel: 0, opener: null };
 
+const RT_MODALS = ['rt-open-modal', 'rt-export-modal', 'cf-import-modal', 'cf-export-modal'];
 function rtVisible(id) { return !$(id).hidden; }
 function rtShow(id, opener, focusId) {
   RT.opener = opener || null;
@@ -3235,13 +4019,13 @@ function rtHide(id) {
   if (o && o.focus && !o.disabled) { try { o.focus({ preventScroll: true }); } catch (e) { /* ignore */ } }
 }
 function rtCloseAll() {
-  if (rtVisible('rt-open-modal')) rtHide('rt-open-modal');
-  if (rtVisible('rt-export-modal')) rtHide('rt-export-modal');
+  RT_MODALS.forEach(id => { if (rtVisible(id)) rtHide(id); });
 }
 /* Tab reste dans la fenêtre ouverte */
 function rtTrap(ev) {
   if (ev.key !== 'Tab') return;
-  const m = rtVisible('rt-open-modal') ? $('rt-open-modal') : (rtVisible('rt-export-modal') ? $('rt-export-modal') : null);
+  const id = RT_MODALS.filter(rtVisible)[0];
+  const m = id ? $(id) : null;
   if (!m) return;
   const els = Array.prototype.filter.call(m.querySelectorAll('button, input, select'), e => !e.disabled && !e.hidden && e.type !== 'hidden' && e.offsetParent !== null);
   if (!els.length) return;
@@ -3359,6 +4143,120 @@ function rtExportAdd(file) {
   }, () => showToast(t('err.rt')));
 }
 
+/* ============= CALQUES : SECTION DU PANNEAU, FENÊTRES D'IMPORT ET D'EXPORT ============= */
+/* FR : le singulier jusqu'à 1 (0 compris) ; EN : le singulier pour 1 seulement */
+function cfOne(n) { return CURRENT_LANG === 'fr' ? n < 2 : n === 1; }
+
+/* Les calques ont changé : enregistrer (false si le stockage refuse), refaire la section et la carte */
+function layersChanged() {
+  const ok = persistLayers();
+  renderLayers();
+  drawLayers();
+  return ok;
+}
+
+function renderLayers() {
+  const n = CF_LAYERS.length;
+  $('sec-layers').hidden = !n;
+  $('layers-count').textContent = t(n === 1 ? 'layers.count.1' : 'layers.count.n', { n: n });
+  $('layers-list').innerHTML = CF_LAYERS.map(l =>
+    '<div class="cf-row" data-id="' + esc(l.id) + '" title="' + esc(l.source.file) + '">' +
+    '<label class="cf-vis"><input type="checkbox" data-act="vis"' + (l.visible ? ' checked' : '') + ' aria-label="' + esc(l.name) + '"></label>' +
+    '<div class="cf-main"><span class="cf-nm">' + esc(l.name) + '</span><span class="cf-n">' + esc(cfCounts(l.items)) + '</span></div>' +
+    '<button type="button" class="cf-del" data-act="del" title="' + esc(t('layers.remove')) + '" aria-label="' + esc(t('layers.remove')) + '">×</button></div>').join('');
+}
+
+function cfLayerOfRow(el) {
+  const row = el.closest('.cf-row');
+  return row ? CF_LAYERS.find(x => x.id === row.dataset.id) : null;
+}
+
+function removeLayer(l) {
+  if (!confirm(t('confirm.layer', { name: l.name }))) return;
+  CF_LAYERS = CF_LAYERS.filter(x => x !== l);
+  layersChanged();
+}
+
+function removeAllLayers() {
+  if (!CF_LAYERS.length || !confirm(t('confirm.layers'))) return;
+  CF_LAYERS = [];
+  layersChanged();
+}
+
+/* ---- Fenêtre « Calques CombatFlite » : un .cf lu, les calques à cocher ---- */
+const CFI = { fileName: '', theatre: '', known: true, layers: [], checked: [] };
+
+function cfTheatreMsg() { return t('toast.cfTheatre', { t: CFI.theatre, theatre: t('th.' + S.theatre) }); }
+
+function cfImportRender() {
+  $('cf-import-file').textContent = t('cf.file', { name: CFI.fileName, t: CFI.theatre });
+  $('cf-import-list').innerHTML = CFI.layers.map((l, i) =>
+    '<label class="rt-row"><input type="checkbox" data-i="' + i + '"' + (CFI.checked[i] ? ' checked' : '') + '>' +
+    '<span class="rt-nm">' + esc(l.name) + '</span><span class="rt-n">' + esc(cfCounts(l.items)) + '</span></label>').join('');
+}
+
+/* Le théâtre du fichier, s'il est connu, devient celui du Route Planner (comme un choix à la liste : la route reste) ; sinon il reste et un toast le dit */
+function openCfImport(fileName, res) {
+  CFI.fileName = fileName;
+  CFI.theatre = res.theatre;
+  CFI.layers = res.layers;
+  CFI.checked = res.pre.slice();
+  const id = cfTheatreId(res.theatre);
+  CFI.known = !!id;
+  if (id) { if (id !== S.theatre) setTheatre(id); }
+  else showToast(cfTheatreMsg(), 5000);
+  cfImportRender();
+  rtShow('cf-import-modal', $('btn-open'), 'cf-import-go');
+  const first = $('cf-import-list').querySelector('input');
+  if (first) first.focus({ preventScroll: true });
+}
+
+/* « Afficher » : les calques cochés s'ajoutent aux calques présents (un même id remplace le sien) ; la carte ne bouge pas */
+function cfImportGo() {
+  const picked = CFI.layers.filter((l, i) => CFI.checked[i]).map(l => Object.assign({}, l, { visible: true }));
+  cfMerge(picked);
+  rtHide('cf-import-modal');
+  if (!layersChanged()) return;
+  let msg = t(cfOne(picked.length) ? 'toast.cfShown.1' : 'toast.cfShown.n', { n: picked.length });
+  if (!CFI.known) msg += ' · ' + cfTheatreMsg();
+  showToast(msg, CFI.known ? 2600 : 5000);
+}
+
+/* ---- Fenêtre « Exporter » : la route et les calques que le fichier emporte ---- */
+const CFE = { route: true, checked: [] };
+
+function cfExportRender() {
+  $('cf-export-list').innerHTML =
+    '<label class="rt-row"><input type="checkbox" data-k="route"' + (CFE.route ? ' checked' : '') + '><span class="rt-nm">' + esc(t('cf.exp.route')) + '</span>' +
+    '<span class="rt-n">' + esc(t('cf.exp.routeN', { n: S.points.length, m: S.refs.length })) + '</span></label>' +
+    CF_LAYERS.map((l, i) =>
+      '<label class="rt-row"><input type="checkbox" data-i="' + i + '"' + (CFE.checked[i] ? ' checked' : '') + '>' +
+      '<span class="rt-nm">' + esc(l.name) + '</span><span class="rt-n">' + esc(cfCounts(l.items)) + '</span></label>').join('');
+  cfExportSync();
+}
+
+/* Exporter sans rien de coché est désactivé */
+function cfExportSync() { $('cf-export-go').disabled = !(CFE.route || CFE.checked.some(Boolean)); }
+
+function openCfExport(opener) {
+  CFE.route = true;
+  CFE.checked = CF_LAYERS.map(l => l.visible);
+  cfExportRender();
+  rtShow('cf-export-modal', opener, 'cf-export-go');
+}
+
+function cfExportGo() {
+  const sel = { route: CFE.route, layers: CF_LAYERS.filter((l, i) => CFE.checked[i]).map(l => l.id) };
+  rtHide('cf-export-modal');
+  downloadJson(sel);
+}
+
+/* « Enregistrer » et « Exporter JSON » : sans calque, le fichier d'aujourd'hui, sans fenêtre ; avec des calques, la fenêtre « Exporter » */
+function onSaveClick(ev) {
+  if (!CF_LAYERS.length) { downloadJson(); return; }
+  openCfExport(ev && ev.currentTarget);
+}
+
 /* ============= VERS LA DATACARD ============= */
 function sendToDatacard() {
   if (!S.points.length) return;
@@ -3436,6 +4334,9 @@ function setLang(lang) {
   refreshAttribution();
   if (rtVisible('rt-open-modal')) rtOpenRender();
   if (rtVisible('rt-export-modal')) rtExportRender();
+  if (rtVisible('cf-import-modal')) cfImportRender();
+  if (rtVisible('cf-export-modal')) cfExportRender();
+  map.closePopup();
 }
 
 /* ============= CÂBLAGE ============= */
@@ -3464,15 +4365,7 @@ function bindEvents() {
     syncAirfields();
     syncControls();
   });
-  $('theatre').addEventListener('change', e => {
-    const wasDcs = S.ui.layer === 'dcs';
-    S.theatre = theatreOf(e.target.value).id;
-    persistState();
-    setTheatreView();
-    if (wasDcs) setBase();        /* la couche DCS change avec le théâtre (ou passe en Topographique) */
-    syncAirfields();
-    syncControls();
-  });
+  $('theatre').addEventListener('change', e => setTheatre(e.target.value));
   document.querySelectorAll('[data-dist]').forEach(b => b.addEventListener('click', () => {
     S.units.distance = b.dataset.dist === 'nm' ? 'nm' : 'km';
     persistState(); renderPts(); renderNav(); drawRoute(); syncControls();
@@ -3533,21 +4426,49 @@ function bindEvents() {
 
   const fileOpen = $('file-open');
   $('btn-open').addEventListener('click', () => { fileOpen.value = ''; fileOpen.click(); });
-  fileOpen.addEventListener('change', () => { if (fileOpen.files && fileOpen.files[0]) openRouteFile(fileOpen.files[0]); });
-  $('btn-save').addEventListener('click', downloadJson);
-  $('btn-export').addEventListener('click', downloadJson);
+  /* la sélection est remise à zéro après lecture : choisir deux fois le même fichier le relit */
+  fileOpen.addEventListener('change', () => { const f = fileOpen.files && fileOpen.files[0]; if (f) openRouteFile(f); fileOpen.value = ''; });
+  $('btn-save').addEventListener('click', onSaveClick);
+  $('btn-export').addEventListener('click', onSaveClick);
   $('btn-export-rt').addEventListener('click', openExportRouteTool);
   ['rt-open-backdrop', 'rt-open-close', 'rt-open-cancel'].forEach(id => $(id).addEventListener('click', () => rtHide('rt-open-modal')));
   ['rt-export-backdrop', 'rt-export-close', 'rt-export-cancel'].forEach(id => $(id).addEventListener('click', () => rtHide('rt-export-modal')));
   $('rt-theatre').addEventListener('change', e => { if (hasRouteTool(e.target.value)) RT.theatre = e.target.value; });
   $('rt-routes').addEventListener('change', e => { const k = parseInt(e.target.value, 10); if (k >= 0 && k < RT.routes.length) RT.sel = k; });
   $('rt-open-go').addEventListener('click', rtOpenGo);
+  /* les calques CombatFlite : la section du panneau, les fenêtres d'import et d'export */
+  $('layers-list').addEventListener('change', ev => {
+    const l = ev.target.dataset.act === 'vis' ? cfLayerOfRow(ev.target) : null;
+    if (!l) return;
+    l.visible = ev.target.checked;
+    persistLayers();
+    drawLayers();
+  });
+  $('layers-list').addEventListener('click', ev => {
+    const b = ev.target.closest('button[data-act="del"]');
+    const l = b ? cfLayerOfRow(b) : null;
+    if (l) removeLayer(l);
+  });
+  $('btn-layers-clear').addEventListener('click', removeAllLayers);
+  ['cf-import-backdrop', 'cf-import-close', 'cf-import-cancel'].forEach(id => $(id).addEventListener('click', () => rtHide('cf-import-modal')));
+  ['cf-export-backdrop', 'cf-export-close', 'cf-export-cancel'].forEach(id => $(id).addEventListener('click', () => rtHide('cf-export-modal')));
+  $('cf-import-go').addEventListener('click', cfImportGo);
+  $('cf-import-list').addEventListener('change', ev => {
+    const i = parseInt(ev.target.dataset.i, 10);
+    if (i >= 0 && i < CFI.checked.length) CFI.checked[i] = ev.target.checked;
+  });
+  $('cf-export-go').addEventListener('click', cfExportGo);
+  $('cf-export-list').addEventListener('change', ev => {
+    if (ev.target.dataset.k === 'route') CFE.route = ev.target.checked;
+    else { const i = parseInt(ev.target.dataset.i, 10); if (i >= 0 && i < CFE.checked.length) CFE.checked[i] = ev.target.checked; }
+    cfExportSync();
+  });
   const fileRt = $('file-rt');
   $('rt-add').addEventListener('click', () => { fileRt.value = ''; fileRt.click(); });
   fileRt.addEventListener('change', () => { if (fileRt.files && fileRt.files[0]) rtExportAdd(fileRt.files[0]); });
   $('rt-new').addEventListener('click', rtExportNew);
   document.addEventListener('keydown', ev => {
-    if (ev.key === 'Escape' && (rtVisible('rt-open-modal') || rtVisible('rt-export-modal'))) { ev.preventDefault(); rtCloseAll(); }
+    if (ev.key === 'Escape' && RT_MODALS.some(rtVisible)) { ev.preventDefault(); rtCloseAll(); }
     else rtTrap(ev);
   });
   $('btn-example').addEventListener('click', loadExample);
@@ -3847,9 +4768,11 @@ function init() {
   updateFlagButton();
   initToolbarMenus([['layer', () => t('tb.layer')], ['theatre', () => t('tb.theatre')], ['theme', () => t('tb.theme.tip')], ['rt-theatre', () => t('tb.theatre')]]);   /* les listes de la barre au thème de l'interface */
   loadState();
+  loadLayers();
   createMap();
   bindEvents();
   renderAll();
+  drawLayers();
   frameRoute();
   setBase();
   syncPlaces();
@@ -3863,7 +4786,8 @@ function init() {
     ]).then(() => document.fonts.ready).then(scheduleGrid).catch(() => {});
   }
   window.__RP = { map: map, get decorGroup() { return decorGroup; }, timing: timing, get S() { return S; }, drawGrid: drawGrid, setBase: setBase, get baseLayers() { return baseLayers; }, get inFallback() { return inFallback; },
-    get placesLayer() { return placesLayer; }, get airfieldLayer() { return afLayer; }, get tapMode() { return tapMode; } };
+    get placesLayer() { return placesLayer; }, get airfieldLayer() { return afLayer; }, get tapMode() { return tapMode; },
+    get layers() { return CF_LAYERS; }, get layersGroup() { return cfGroup; } };
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
