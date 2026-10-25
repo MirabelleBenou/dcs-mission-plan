@@ -14,6 +14,10 @@ The suite bundles several **independently-versioned tools**, so entries are grou
 - **Tablet & mobile** first-class target (touch, drag, rotation-safe).
 - Wing configuration shared automatically across embedded tools.
 
+### `v1.11.0`
+#### Added
+- Embeds **Route Planner v1.3.0** — leg boxes, ground speed and minute marks (see below).
+
 ### `v1.10.0`
 #### Added
 - Embeds **Route Planner v1.2.0** — DCS Route Tool import and export (see below).
@@ -255,6 +259,15 @@ Initial release. One-page flight datacards for the cockpit kneeboard.
 ---
 
 ## Route Planner
+
+### `v1.3.0`
+#### Added
+- **Leg boxes** — a house-shaped box on each leg: the name of the waypoint it leads to, heading, distance, ground speed, altitude and ETE (*Full*), or heading and distance only (*Minimal*). Each box lies along its leg with its roof pointing the way you fly, text always upright; drag it out of the way and it keeps its place, even when the leg moves. *None* brings back the plain heading · distance label.
+- **Ground speed** — one default speed for the route and an optional speed per leg, in km/h or knots following the distance unit.
+- **Minute marks** — a tick at every minute of each leg, longer every five minutes, and the **elapsed time** under each waypoint (`00+21+05`); ETE per leg and total time on the navigation sheet.
+- **Route line** and **minute marks** in the route colour or in black — your choice, kept in your browser.
+#### Changed
+- The route file (`dcs-route-v1`) also keeps the ground speeds, the box style and where each box was dragged; older files open with the defaults.
 
 ### `v1.2.0`
 #### Added
