@@ -14,6 +14,16 @@ The suite bundles several **independently-versioned tools**, so entries are grou
 - **Tablet & mobile** first-class target (touch, drag, rotation-safe).
 - Wing configuration shared automatically across embedded tools.
 
+### `v1.9.1`
+#### Changed
+- Toolbar drop-down lists follow the UI theme on the board and in every tool — no more white system menus on tablets (see below). Released together with v1.9.0.
+- Embeds **Briefing Generator v2.4.5**, **Datacard Generator v1.4.1**, **HQ v0.1.1**, **Recon Station v1.0.1** and **Route Planner v1.1.1**.
+
+### `v1.9.0`
+#### Added
+- Embeds **Route Planner v1.1.0** — typed waypoints, reference points, place names, DCS airfields (see below).
+- Embeds **Datacard Generator v1.4.0** — reference points block (see below).
+
 ### `v1.8.0`
 #### Added
 - Embeds **Route Planner v1.0.0** — lay a route on a map and send it to the datacard (see below).
@@ -80,22 +90,30 @@ The suite bundles several **independently-versioned tools**, so entries are grou
 
 ---
 
-## HQ — `v0.1.0` (beta)
+## HQ
 
+### `v0.1.1` (beta)
+#### Changed
+- The theme list opens as a themed drop-down (dark olive panel, amber marks, 44 px rows), by touch or keyboard; its title follows the language.
+
+### `v0.1.0` (beta)
 Initial release. Command post for the suite.
-
-### Added
+#### Added
 - **Wing hub** — single source for wing branding, squadrons and callsigns; consumed automatically by Briefing Generator and Recon Station.
 - **Experimental `.miz` engine** — read a mission, export a mission snapshot (JSON), and apply **surgical patches**: scalar deltas (radio, group frequency, livery) and structural replacements (routes & payloads).
 - 4 themes, FR/EN.
 
-### Notes
+#### Notes
 - Advanced flight-package / Commander UI is **in development** (dev-gated).
 - In-game `.miz` validation in DCS is **pending** — hence the **beta** label.
 
 ---
 
 ## Briefing Generator
+
+### `v2.4.5`
+#### Changed
+- The theme list opens as a themed drop-down instead of the system menu — touch and keyboard (arrows, Home/End, type-ahead, Esc).
 
 ### `v2.4.4`
 #### Fixed
@@ -156,9 +174,14 @@ Initial release. Command post for the suite.
 
 ---
 
-## Recon Station — `v1.0.0`
+## Recon Station
 
-### Added
+### `v1.0.1`
+#### Changed
+- The theme list opens as a themed drop-down instead of the system menu — touch and keyboard.
+
+### `v1.0.0`
+#### Added
 - Turn a screenshot into a **reconnaissance analysis photo**; native **Canvas 2D** engine (preview = export); **lossless full-resolution PNG**.
 - **Sensor looks** — EO, IR white-hot, IR black-hot, SAR (stylizations, not radiometric data).
 - **Image effects** — greyscale, contrast, vignette, grain, scanlines.
@@ -170,6 +193,16 @@ Initial release. Command post for the suite.
 ---
 
 ## Datacard Generator
+
+### `v1.4.1`
+#### Changed
+- The theme list opens as a themed drop-down instead of the system menu — touch and keyboard.
+
+### `v1.4.0`
+#### Added
+- **Reference points** — up to 12 per datacard (name, coordinates in any format, altitude, note), edited in their own section and printed in a **Reference points** block, lettered A, B, C…, in MGRS or DMS like the navigation.
+- **Cascading layout** — the navigation keeps its place on page 1 while it fits; the reference points then move to page 2 on their own, and both move there only when the navigation no longer fits. A datacard without reference points lays out exactly as before.
+- A route imported from the Route Planner brings its reference points along.
 
 ### `v1.3.0`
 #### Added
@@ -218,6 +251,19 @@ Initial release. One-page flight datacards for the cockpit kneeboard.
 ---
 
 ## Route Planner
+
+### `v1.1.1`
+#### Changed
+- The **Map**, **Theatre** and theme lists open as themed drop-downs instead of the system menu — touch and keyboard; *DCS map* shows greyed out with its reason on theatres it does not cover. Tapping the map while a list is open only closes the list.
+
+### `v1.1.0`
+#### Added
+- **Type a waypoint** — by coordinates (MGRS, DMS, DDM or decimal) or by heading and distance from the last waypoint (true or magnetic, km or NM).
+- **Reference points** — up to 12 lettered diamonds (A, B, C…) off the route: a *Waypoint · Ref.* switch on the map chooses what a tap adds; listed in their own section and on the navigation sheet, saved in the route file, and sent to the datacard.
+- **Place names** overlay (Esri World Boundaries and Places) over any layer.
+- **DCS airfields and helipads** for 11 theatres (names and positions from [pydcs](https://github.com/pydcs/dcs), LGPL-3.0) — runways from zoom 7, helipads from zoom 10; tap one to add a waypoint or a reference point named after it.
+#### Changed
+- The toolbar scrolls at every width when it overflows.
 
 ### `v1.0.0`
 Initial release. Lay a route on a map, read it, send it to the datacard.
