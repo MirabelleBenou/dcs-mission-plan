@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Build — DCS Route Planner v1.4.0.
+"""Build — DCS Route Planner v1.5.0.
 
 Produit dist/dcs_route_planner.html : un fichier unique, hors ligne, sans serveur ;
 seules les tuiles de carte (DCS Olympus, OpenTopoMap, Esri) viennent du réseau, et le
 module retombe de lui-même sur la grille seule quand elles sont injoignables.
 Les polices et les bibliothèques (Leaflet 1.9.4, BSD-2) viennent d'assets.json, à la
-racine du dépôt ; les aérodromes DCS (noms et positions, pydcs, LGPL-3.0) viennent d'airfields.json.
+racine du dépôt ; les aérodromes DCS (noms et positions, pydcs, LGPL-3.0) viennent d'airfields.json ;
+les villes DCS (noms et positions) viennent de towns.json.
 
 Usage : python3 build_route_planner.py
 """
@@ -18,10 +19,11 @@ import subprocess
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-APP_VERSION = "1.4.0"
+APP_VERSION = "1.5.0"
 OUT_PATH = os.path.join(HERE, 'dist', 'dcs_route_planner.html')
 ASSETS_PATH = os.path.join(HERE, 'assets.json')
 AIRFIELDS_PATH = os.path.join(HERE, 'airfields.json')
+TOWNS_PATH = os.path.join(HERE, 'towns.json')
 
 REQUIRED_ASSETS = ['STARDOS_700', 'OSWALD_500', 'OSWALD_700', 'ROBOTO_MONO_400', 'lib_leaflet', 'lib_leaflet_css']
 
@@ -45,6 +47,23 @@ for _th, _list in AF['theatres'].items():
         if not (isinstance(_a, list) and len(_a) == 4 and isinstance(_a[0], str) and isinstance(_a[1], (int, float))
                 and isinstance(_a[2], (int, float)) and _a[3] in ('a', 'h')):
             raise SystemExit(f"[ERREUR] airfields.json : entrée illisible dans {_th} : {_a!r}")
+
+# Villes DCS : { "format": "dcs-towns-v1", "theatres": { "<théâtre>": [ ["Nom", lat, lon], … ] } }
+def _is_num(v):
+    return isinstance(v, (int, float)) and not isinstance(v, bool)
+
+if not os.path.isfile(TOWNS_PATH):
+    raise SystemExit(f"[ERREUR] Entrée manquante : {TOWNS_PATH} (towns.json attendu à la racine du dépôt)")
+with open(TOWNS_PATH, encoding='utf-8') as f:
+    TW = json.load(f)
+if not isinstance(TW, dict) or TW.get('format') != 'dcs-towns-v1' or not isinstance(TW.get('theatres'), dict):
+    raise SystemExit("[ERREUR] towns.json : le format doit être « dcs-towns-v1 » avec une table « theatres »")
+for _th, _list in TW['theatres'].items():
+    if not isinstance(_list, list):
+        raise SystemExit(f"[ERREUR] towns.json : la liste de {_th} est illisible")
+    for _a in _list:
+        if not (isinstance(_a, list) and len(_a) == 3 and isinstance(_a[0], str) and _is_num(_a[1]) and _is_num(_a[2])):
+            raise SystemExit(f"[ERREUR] towns.json : entrée illisible dans {_th} : {_a!r}")
 
 # Contenu du bouton « Exemple » : document au format dcs-route-v1, copié tel quel.
 EXAMPLE_ROUTE_JSON = r'''{
@@ -487,7 +506,44 @@ table.nav td.r { text-align: right; white-space: nowrap; }
 /* ce que pose un toucher sur la carte : Point · Réf. */
 .tapmode { background: var(--olive-deep); border: 2px solid var(--amber-dark); box-shadow: 0 2px 8px rgba(0,0,0,.4); }
 .tapmode .tb-btn { height: 36px; min-width: 0; padding: 0 10px; font-size: 11px; letter-spacing: 1px; }
-#btn-airfields:disabled { pointer-events: auto; cursor: not-allowed; }
+#btn-airfields:disabled, #btn-towns:disabled { pointer-events: auto; cursor: not-allowed; }
+/* villes DCS (lot rp-v1.5.0) : un point de 5 px et le nom à côté, posés sans chevauchement (pane « towns », z-index 370) ;
+   le rectangle de l'étiquette est celui du bloc .tw, calculé en pixels (voir syncTowns) */
+.tw-icon { width: 0; height: 0; }
+.tw { position: absolute; display: block; cursor: pointer; }
+.tw-dot { position: absolute; display: block; box-sizing: border-box; width: 5px; height: 5px; border-radius: 50%; background: #2e2a22; border: 1px solid #f0e8d6; }
+.tw-nm { position: absolute; display: block; white-space: nowrap; font-family: var(--f-condensed); font-weight: 500; font-size: 11px; line-height: 13px; color: #2e2a22;
+  text-shadow: 0 0 2px rgba(240,232,214,.95), 0 0 2px rgba(240,232,214,.95), 0 0 3px rgba(240,232,214,.8); }
+/* recherche sur la carte : la loupe sous le zoom, son panneau à sa droite, l'anneau qui signale le résultat */
+.rp-search .rp-search-btn { display: flex; align-items: center; justify-content: center; color: #1f1c16; }
+.rp-search .rp-search-btn svg { display: block; width: 16px; height: 16px; flex: none; }
+.sr-panel { position: absolute; top: 0; left: calc(100% + 6px); pointer-events: auto; box-sizing: border-box;
+  background: var(--olive-deep); border: 2px solid var(--amber-dark); box-shadow: 0 2px 8px rgba(0,0,0,.4); cursor: default; }
+.sr-panel[hidden] { display: none; }
+.sr-head { display: flex; align-items: stretch; height: 44px; }
+.sr-in { flex: 1 1 auto; min-width: 0; height: 44px; box-sizing: border-box; margin: 0; padding: 0 12px; border: 0; border-radius: 0; outline: none; -webkit-appearance: none; appearance: none;
+  background: var(--paper-light); color: #1f1c16; font-family: var(--f-ui); font-weight: 500; font-size: 15px; }
+.sr-in::placeholder { color: rgba(31,28,22,.5); }
+.sr-in::-webkit-search-cancel-button, .sr-in::-webkit-search-decoration { -webkit-appearance: none; display: none; }
+.sr-in:focus { box-shadow: inset 0 -3px 0 var(--amber); }
+.sr-x { flex: none; width: 44px; height: 44px; margin: 0; padding: 0; border: 0; border-left: 1px solid var(--khaki); background: transparent; color: var(--paper);
+  font-family: var(--f-ui); font-weight: 500; font-size: 26px; line-height: 1; cursor: pointer; }
+.sr-x:hover, .sr-x:focus-visible { background: var(--olive); color: var(--amber); outline: none; }
+.sr-list { overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--amber-dark) transparent; }
+.sr-list[hidden] { display: none; }
+.sr-row { display: flex; align-items: center; gap: 10px; min-height: 44px; box-sizing: border-box; padding: 0 12px; border-top: 1px solid rgba(168,154,114,.25); cursor: pointer; user-select: none; -webkit-user-select: none; }
+.sr-row.active { background: var(--olive); }
+.sr-row.none { cursor: default; }
+.sr-nm { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--f-ui); font-weight: 500; font-size: 14px; color: var(--paper-light); }
+.sr-kd { flex: 0 1 auto; min-width: 0; max-width: 50%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--f-ui); font-weight: 500; font-size: 11px; letter-spacing: 1px; color: var(--amber); }
+.sr-ring-icon { width: 0; height: 0; }
+.sr-ring { position: absolute; left: 0; top: 0; display: block; box-sizing: border-box; width: 12px; height: 12px; margin: -6px 0 0 -6px; border: 3px solid #ff6a00; border-radius: 50%;
+  background: transparent; pointer-events: none; animation: sr-pulse 1s ease-out 3 both; }
+@keyframes sr-pulse {
+  from { width: 12px; height: 12px; margin: -6px 0 0 -6px; opacity: 1; }
+  to { width: 44px; height: 44px; margin: -22px 0 0 -22px; opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .sr-ring { animation: none; width: 32px; height: 32px; margin: -16px 0 0 -16px; } }
 .leaflet-control-attribution { font-family: var(--f-ui); font-weight: 500; font-size: 10px !important; background: rgba(240,232,214,.8) !important; }
 .leaflet-container { font-family: var(--f-ui); }
 body, body[data-theme="cw-nato"] { --route: #a83524; }
@@ -696,6 +752,7 @@ __CSS__
   </select>
   <button type="button" class="tb-btn" id="btn-grid" aria-pressed="true" data-i18n="tb.grid" data-i18n-title="tb.grid" title="Grille MGRS">Grille MGRS</button>
   <button type="button" class="tb-btn" id="btn-places" aria-pressed="false" data-i18n="tb.places" data-i18n-title="tb.places.tip" title="Noms de lieux (Esri)">Lieux</button>
+  <button type="button" class="tb-btn" id="btn-towns" aria-pressed="true" data-i18n="tb.towns" data-i18n-title="tb.towns.tip" title="Villes DCS (à partir du zoom 10)">Villes</button>
   <button type="button" class="tb-btn" id="btn-airfields" aria-pressed="true" data-i18n="tb.airfields" data-i18n-title="tb.airfields.tip" title="Aérodromes et hélistations DCS">Aérodromes</button>
   <span class="tb-sep"></span>
   <span class="tb-label" data-i18n="tb.theatre">Théâtre</span>
@@ -1202,8 +1259,8 @@ JS = r"""
 /* =====================================================
    ROUTE PLANNER v1.4.0
    Une route sur une carte (points posés, saisis par coordonnées
-   ou par cap et distance), des points de référence, les noms de lieux
-   et les aérodromes DCS : caps, distances, vitesse sol et minutage,
+   ou par cap et distance), des points de référence, les noms de lieux,
+   les villes et les aérodromes DCS, une recherche sur la carte : caps, distances, vitesse sol et minutage,
    MGRS et DMS, envoyés dans la navigation d'une datacard ; les calques
    d'un fichier CombatFlite (.cf), en lecture seule, à part de la route.
    Monofichier ; seules les tuiles de carte viennent du réseau.
@@ -1287,6 +1344,9 @@ const TM_PARAMS = {
 /* Aérodromes DCS par théâtre : [ nom, lat, lon, « a » (terrain à piste) ou « h » (hélistation) ] — pydcs, LGPL-3.0 */
 const AIRFIELDS = __AIRFIELDS__;
 
+/* Villes DCS par théâtre : [ nom, lat, lon ] — les noms tels qu'ils sont écrits dans les cartes de DCS */
+const TOWNS = __TOWNS__;
+
 /* Couches Olympus : [minNativeZoom, maxNativeZoom, minZoom], empilées dans cet ordre (config.json d'Olympus du 24 octobre) */
 const DCS_LEVELS = {
   'alt-syria':                 [[1, 15, 1], [16, 16, 16], [17, 17, 17]],
@@ -1323,6 +1383,18 @@ const I18N = {
     'tb.airfields': 'Aérodromes',
     'tb.airfields.tip': 'Aérodromes et hélistations DCS',
     'tb.airfields.off': 'Aérodromes — absents de ce théâtre',
+    'tb.towns': 'Villes',
+    'tb.towns.tip': 'Villes DCS (à partir du zoom 10)',
+    'tb.towns.off': 'Villes — absentes de ce théâtre',
+    'sr.title': 'Rechercher sur la carte',
+    'sr.ph': 'Ville, aérodrome, point…',
+    'sr.close': 'Fermer',
+    'sr.none': 'Aucun résultat',
+    'sr.k.wp': 'Point {n}',
+    'sr.k.ref': 'Réf. {n}',
+    'sr.k.af': 'Aérodrome',
+    'sr.k.hp': 'Hélistation',
+    'sr.k.town': 'Ville',
     'tb.theatre': 'Théâtre',
     'u.km': 'km',
     'u.nm': 'NM',
@@ -1400,7 +1472,7 @@ const I18N = {
     'tap.wp': 'Point',
     'tap.ref': 'Réf.',
     'tap.read': 'Lire',
-    'tap.title': 'Ce que pose un toucher sur la carte',
+    'tap.title': 'Ce que fait un toucher sur la carte',
     'add.title': 'Ajouter',
     'add.coord': 'Coordonnées',
     'add.hd': 'Cap et distance',
@@ -1536,6 +1608,18 @@ const I18N = {
     'tb.airfields': 'Airfields',
     'tb.airfields.tip': 'DCS airfields and helipads',
     'tb.airfields.off': 'Airfields — not available for this theatre',
+    'tb.towns': 'Towns',
+    'tb.towns.tip': 'DCS towns (from zoom 10)',
+    'tb.towns.off': 'Towns — not available for this theatre',
+    'sr.title': 'Search the map',
+    'sr.ph': 'Town, airfield, waypoint…',
+    'sr.close': 'Close',
+    'sr.none': 'No results',
+    'sr.k.wp': 'Waypoint {n}',
+    'sr.k.ref': 'Ref. {n}',
+    'sr.k.af': 'Airfield',
+    'sr.k.hp': 'Helipad',
+    'sr.k.town': 'Town',
     'tb.theatre': 'Theatre',
     'u.km': 'km',
     'u.nm': 'NM',
@@ -1613,7 +1697,7 @@ const I18N = {
     'tap.wp': 'Waypoint',
     'tap.ref': 'Ref.',
     'tap.read': 'Read',
-    'tap.title': 'What a tap on the map adds',
+    'tap.title': 'What a tap on the map does',
     'add.title': 'Add',
     'add.coord': 'Coordinates',
     'add.hd': 'Heading and distance',
@@ -1813,7 +1897,7 @@ function defaultState() {
     groundSpeed: GS_DEFAULT, legBoxes: 'full',
     points: [],
     refs: [],
-    ui: { layer: 'topo', grid: true, places: false, airfields: true, trace: 'route', ticks: 'route' }
+    ui: { layer: 'topo', grid: true, places: false, towns: true, airfields: true, trace: 'route', ticks: 'route' }
   };
 }
 
@@ -1919,7 +2003,8 @@ function loadState() {
         const ui = (o.ui && typeof o.ui === 'object') ? o.ui : {};
         S = Object.assign(res.route, { ui: {
           layer: LAYER_IDS.indexOf(ui.layer) !== -1 ? ui.layer : 'topo', grid: typeof ui.grid === 'boolean' ? ui.grid : true,
-          places: typeof ui.places === 'boolean' ? ui.places : false, airfields: typeof ui.airfields === 'boolean' ? ui.airfields : true,
+          places: typeof ui.places === 'boolean' ? ui.places : false, towns: typeof ui.towns === 'boolean' ? ui.towns : true,
+          airfields: typeof ui.airfields === 'boolean' ? ui.airfields : true,
           trace: ui.trace === 'black' ? 'black' : 'route', ticks: ui.ticks === 'black' ? 'black' : 'route' } });
         return;
       }
@@ -2366,7 +2451,7 @@ function syncAfZoom() {
   [['afz7', 7], ['afz9', 9], ['afz10', 10], ['afz12', 12]].forEach(c => pane.classList.toggle(c[0], z >= c[1]));
 }
 
-function syncAirfields() {
+function syncAirfieldsNow() {
   if (!mapCreated) return;
   const list = airfieldsOf(S.theatre);
   const key = list && S.ui.airfields ? S.theatre : '';
@@ -2388,6 +2473,240 @@ function syncAirfields() {
     mk.addTo(afLayer);
   });
   afLayer.addTo(map);
+}
+
+/* Les aérodromes sont des obstacles pour les villes : elles se recalculent quand ils changent */
+function syncAirfields() {
+  syncAirfieldsNow();
+  syncTowns();
+}
+
+/* ============= VILLES DCS ============= */
+/* Les villes du théâtre, dans leur panneau « towns » (z-index 370 : au-dessus de la grille, sous les aérodromes et les calques).
+   À partir du zoom 10, posées sans chevauchement : les villes proches de la route d'abord, puis un ordre stable ; elles évitent aussi
+   les points de la route, les références, les boîtes de branche et les aérodromes affichés. Le résultat ne dépend que de la vue,
+   de la route et des obstacles. */
+const TOWNS_ZOOM = 10;         /* les villes se dessinent à partir de ce zoom */
+const TW_NEAR_NM = 10;         /* groupe A : les villes à 10 NM ou moins de la route */
+const TW_DOT = 5;              /* le point : 5 px */
+const TW_GAP = 4;              /* du point au nom : 4 px */
+const TW_H = 13;               /* hauteur de la ligne du nom */
+const TW_MARGIN = 2;           /* marge de l'étiquette, tout autour, pour la pose */
+const TW_PAD = 0.1;            /* emprise des candidates : la vue agrandie de 10 % de chaque côté */
+const TW_FONT = '500 11px Oswald, "Arial Narrow", sans-serif';
+
+let twLayer = null;            /* le groupe des étiquettes posées, dans l'ordre de priorité */
+let twSig = '';                /* ce qui est posé (théâtre, villes, côtés) : inchangé, le DOM n'est pas refait */
+let twHold = false;            /* vrai pendant un glisser (un point, une référence, une boîte) : rien n'est recalculé */
+let twInfo = null;             /* le dernier calcul (candidates, obstacles), pour les contrôles */
+let twCtx = null;
+const twWidths = new Map();    /* largeur du nom, à la police réelle, par nom */
+const twLists = {};            /* par théâtre : les villes dans l'ordre stable (capitales d'abord, puis FNV-1a, puis nom) */
+
+let twHoldT = 0;
+function twDragStart() { twHold = true; clearTimeout(twHoldT); twHoldT = setTimeout(() => { twHold = false; }, 60000); }
+function twDragEnd() { twHold = false; clearTimeout(twHoldT); }
+
+function townsOf(theatre) { return Object.prototype.hasOwnProperty.call(TOWNS, theatre) ? TOWNS[theatre] : null; }
+
+/* FNV-1a 32 bits du nom en UTF-8 (base 0x811c9dc5, multiplicateur 0x01000193), non signé */
+function fnv1a(s) {
+  const b = new TextEncoder().encode(s);
+  let h = 0x811c9dc5;
+  for (let i = 0; i < b.length; i++) h = Math.imul(h ^ b[i], 0x01000193) >>> 0;
+  return h >>> 0;
+}
+
+/* Un nom entièrement en capitales : au moins une lettre, aucune minuscule */
+function twIsCaps(n) { return /\p{L}/u.test(n) && !/\p{Ll}/u.test(n); }
+
+function twList(theatre) {
+  if (twLists[theatre]) return twLists[theatre];
+  const raw = townsOf(theatre);
+  if (!raw) return null;
+  const list = raw.map((a, i) => ({ i: i, n: a[0], lat: a[1], lon: a[2], caps: twIsCaps(a[0]), h: fnv1a(a[0]) }));
+  list.sort((a, b) => (a.caps === b.caps ? 0 : a.caps ? -1 : 1) || (a.h - b.h) || (a.n < b.n ? -1 : a.n > b.n ? 1 : 0));
+  twLists[theatre] = list;
+  return list;
+}
+
+/* La largeur du nom (sans ses espaces de bout, que la page ne dessine pas), à la police réelle, mise en cache par nom */
+function twWidth(name) {
+  let w = twWidths.get(name);
+  if (w !== undefined) return w;
+  const k = name.trim();
+  try {
+    if (!twCtx) twCtx = document.createElement('canvas').getContext('2d');
+    twCtx.font = TW_FONT;
+    w = twCtx.measureText(k).width;
+  } catch (e) { w = k.length * 6; }
+  twWidths.set(name, w);
+  return w;
+}
+
+/* Distance de la ville à la route : au segment le plus proche entre deux points consécutifs (sur la sphère du bloc de coordonnées) ;
+   un seul point : la distance à ce point */
+function twVec(lat, lon) {
+  const la = lat * Math.PI / 180, lo = lon * Math.PI / 180, c = Math.cos(la);
+  return [c * Math.cos(lo), c * Math.sin(lo), Math.sin(la)];
+}
+function twCross(a, b) { return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]; }
+function twDot(a, b) { return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; }
+function twAngle(a, b) { const c = twCross(a, b); return Math.atan2(Math.hypot(c[0], c[1], c[2]), twDot(a, b)); }
+
+function twRoutePrep() {
+  const v = S.points.map(p => twVec(p.lat, p.lon));
+  const segs = [];
+  for (let i = 1; i < v.length; i++) {
+    const n = twCross(v[i - 1], v[i]), l = Math.hypot(n[0], n[1], n[2]);
+    segs.push({ a: v[i - 1], b: v[i], n: l > 1e-12 ? [n[0] / l, n[1] / l, n[2] / l] : null });
+  }
+  return { v: v, segs: segs };
+}
+
+/* → km ; Infinity sans point */
+function twRouteDistKm(P, rt) {
+  if (!rt.v.length) return Infinity;
+  if (rt.v.length === 1) return twAngle(P, rt.v[0]) * NAV_R_KM;
+  let best = Infinity;
+  rt.segs.forEach(sg => {
+    let ang = Math.min(twAngle(P, sg.a), twAngle(P, sg.b));
+    if (sg.n) {
+      const pd = twDot(P, sg.n);
+      const c = [P[0] - pd * sg.n[0], P[1] - pd * sg.n[1], P[2] - pd * sg.n[2]], cl = Math.hypot(c[0], c[1], c[2]);
+      if (cl > 1e-12) {
+        const u = [c[0] / cl, c[1] / cl, c[2] / cl];
+        if (twDot(twCross(sg.a, u), sg.n) >= 0 && twDot(twCross(u, sg.b), sg.n) >= 0) ang = Math.min(ang, Math.asin(Math.min(1, Math.abs(pd))));
+      }
+    }
+    if (ang < best) best = ang;
+  });
+  return best * NAV_R_KM;
+}
+
+/* Les obstacles, en pixels de la carte (lus dans le DOM de la carte) : les marqueurs des points de la route et des références avec leur nom,
+   les boîtes de branche, et les aérodromes affichés au zoom courant avec leur nom s'il est visible. Le contrôle Point · Réf. · Lire
+   et la loupe n'en sont pas. */
+function twObstacles() {
+  /* « moveend » précède « viewreset » : après un grand déplacement, les marqueurs ne sont pas encore replacés ; on les replace avant de les lire */
+  const fresh = m => { if (m && m.update && m._icon) m.update(); };
+  ptMarkers.forEach(fresh);
+  if (refGroup) refGroup.eachLayer(fresh);
+  if (decorGroup) decorGroup.eachLayer(m => { if (m.options && m.options.pane === 'legboxes') fresh(m); });
+  if (afLayer) afLayer.eachLayer(fresh);
+  const base = map.getContainer().getBoundingClientRect();
+  const out = [];
+  const push = (kind, el) => {
+    const r = el.getBoundingClientRect();
+    if (!(r.width > 0 && r.height > 0)) return;
+    out.push({ kind: kind, l: r.left - base.left, t: r.top - base.top, r: r.right - base.left, b: r.bottom - base.top });
+  };
+  ptMarkers.forEach(m => {
+    const el = m.getElement && m.getElement();
+    if (el) el.querySelectorAll('.wp-dot, .wp-name, .wp-time').forEach(e => push('wp', e));
+  });
+  if (refGroup) refGroup.eachLayer(m => {
+    const el = m.getElement && m.getElement();
+    if (el) el.querySelectorAll('.rf-dot, .wp-name').forEach(e => push('ref', e));
+  });
+  const boxes = map.getPane('legboxes');
+  if (boxes) boxes.querySelectorAll('.lb').forEach(e => push('box', e));
+  if (afLayer) afLayer.eachLayer(m => {
+    const el = m.getElement && m.getElement();
+    if (!el) return;
+    push('af', el);
+    const nm = el.querySelector('.af-name');
+    if (nm) push('af', nm);
+  });
+  return out;
+}
+
+function twHits(r, rects) {
+  for (let i = 0; i < rects.length; i++) {
+    const o = rects[i];
+    if (r.l < o.r && r.r > o.l && r.t < o.b && r.b > o.t) return true;
+  }
+  return false;
+}
+
+/* Le rectangle de l'étiquette (le point et le nom, sans marge) autour de l'ancre (x, y) ; side : « r » (nom à droite) ou « l » */
+function twRect(x, y, w, side) {
+  const half = TW_DOT / 2, hh = TW_H / 2;
+  return side === 'r' ? { l: x - half, t: y - hh, r: x + half + TW_GAP + w, b: y + hh }
+                      : { l: x - half - TW_GAP - w, t: y - hh, r: x + half, b: y + hh };
+}
+function twGrow(r, m) { return { l: r.l - m, t: r.t - m, r: r.r + m, b: r.b + m }; }
+
+function twIcon(e, side, w) {
+  const half = TW_DOT / 2, hh = TW_H / 2, tot = TW_DOT + TW_GAP + w;
+  const dotTop = (TW_H - TW_DOT) / 2;
+  const nm = '<span class="tw-nm" style="left:' + (side === 'r' ? TW_DOT + TW_GAP : 0) + 'px;top:0;width:' + w + 'px;height:' + TW_H + 'px">' + esc(e.n) + '</span>';
+  const dot = '<i class="tw-dot" style="left:' + (side === 'r' ? 0 : w + TW_GAP) + 'px;top:' + dotTop + 'px"></i>';
+  return L.divIcon({
+    className: 'tw-icon', iconSize: [0, 0], iconAnchor: [0, 0],
+    html: '<div class="tw tw-' + side + '" style="left:' + (side === 'r' ? -half : -(half + TW_GAP + w)) + 'px;top:' + (-hh) + 'px;width:' + tot + 'px;height:' + TW_H + 'px">' +
+      (side === 'r' ? dot + nm : nm + dot) + '</div>'
+  });
+}
+
+/* Recalculé au zoom et au déplacement, à toute modification de la route, des références ou d'une boîte de branche, au changement
+   de théâtre et à l'interrupteur — jamais pendant un glisser */
+function syncTowns() {
+  if (!mapCreated || !twLayer || twHold) return;
+  const list = S.ui.towns ? twList(S.theatre) : null;
+  if (!list || map.getZoom() < TOWNS_ZOOM || !mapSized()) {
+    if (twSig !== '') { twLayer.clearLayers(); twSig = ''; }
+    twInfo = null;
+    return;
+  }
+  /* 1 · les candidates : la vue agrandie de 10 % de chaque côté */
+  const bd = map.getBounds().pad(TW_PAD), s = bd.getSouth(), n = bd.getNorth(), w = bd.getWest(), e = bd.getEast();
+  const cand = list.filter(c => c.lat >= s && c.lat <= n && c.lon >= w && c.lon <= e);
+  /* 2 · la priorité : A (à 10 NM ou moins de la route, par distance), puis B (capitales) et C (les autres), dans l'ordre stable de la liste */
+  const rt = twRoutePrep();
+  const near = [], rest = [];
+  cand.forEach(c => {
+    const d = rt.v.length ? twRouteDistKm(twVec(c.lat, c.lon), rt) / NM_KM : Infinity;
+    if (d <= TW_NEAR_NM) near.push({ c: c, d: d }); else rest.push(c);
+  });
+  near.sort((a, b) => (a.d - b.d) || (a.c.n < b.c.n ? -1 : a.c.n > b.c.n ? 1 : 0));
+  const order = near.map(x => x.c).concat(rest);
+  /* 3 · les obstacles, 4 · le glouton : à droite, sinon à gauche, sinon rien */
+  const obs = twObstacles();
+  const placed = [], res = [];
+  order.forEach(c => {
+    const a = map.layerPointToContainerPoint(map.latLngToLayerPoint([c.lat, c.lon]).round());
+    const wd = twWidth(c.n);
+    const rr = twRect(a.x, a.y, wd, 'r'), rl = twRect(a.x, a.y, wd, 'l');
+    let side = null, rect = null;
+    if (!twHits(twGrow(rr, TW_MARGIN), obs) && !twHits(twGrow(rr, TW_MARGIN), placed)) { side = 'r'; rect = rr; }
+    else if (!twHits(twGrow(rl, TW_MARGIN), obs) && !twHits(twGrow(rl, TW_MARGIN), placed)) { side = 'l'; rect = rl; }
+    if (side) placed.push(rect);
+    res.push({ c: c, w: wd, side: side, rect: rect, right: rr, left: rl });
+  });
+  twInfo = { zoom: map.getZoom(), obstacles: obs, candidates: res };
+  const shown = res.filter(x => x.side);
+  const sig = S.theatre + '|' + shown.map(x => x.c.i + x.side + x.w).join(',');
+  if (sig === twSig) return;
+  twSig = sig;
+  twLayer.clearLayers();
+  shown.forEach(x => {
+    const c = x.c;
+    const mk = L.marker([c.lat, c.lon], { pane: 'towns', keyboard: false, title: c.n, icon: twIcon(c, x.side, x.w) });
+    /* une ville agit comme un aérodrome : un point de route (mode Point), une référence (mode Réf.), rien en mode Lire */
+    mk.on('click', ev => { L.DomEvent.stop(ev); addFromAirfield(c.lat, c.lon, c.n.toUpperCase()); });
+    twLayer.addLayer(mk);
+  });
+}
+
+/* Pour les contrôles : les étiquettes posées (nom, côté, rectangle), les candidates non posées (leurs deux places) et les obstacles */
+function townsReport() {
+  if (!twInfo) return null;
+  const rd = r => r ? { l: r.l, t: r.t, r: r.r, b: r.b } : null;
+  return {
+    zoom: twInfo.zoom, obstacles: twInfo.obstacles.map(o => ({ kind: o.kind, l: o.l, t: o.t, r: o.r, b: o.b })),
+    candidates: twInfo.candidates.map(x => ({ name: x.c.n, side: x.side, width: x.w, rect: rd(x.rect), right: rd(x.right), left: rd(x.left) }))
+  };
 }
 
 function clearBase() {
@@ -2475,6 +2794,12 @@ function createMap() {
   pane.style.pointerEvents = 'none';
   /* Les aérodromes : au-dessus de la grille, sous les références et la route ; les références : sous les points */
   map.createPane('airfields').style.zIndex = 380;
+  /* Les villes DCS : au-dessus de la grille, sous les aérodromes (380) et les calques (390) */
+  map.createPane('towns').style.zIndex = 370;
+  /* L'anneau de la recherche : au-dessus de tout, sans toucher */
+  const ringPane = map.createPane('ring');
+  ringPane.style.zIndex = 650;
+  ringPane.style.pointerEvents = 'none';
   map.createPane('refs').style.zIndex = 450;
   /* Les chiffres des minutes : au-dessus des références, sous les points ; les boîtes de branche : au-dessus des points */
   map.createPane('legticks').style.zIndex = 420;        /* les traits des minutes : au-dessus de la route, sous les références */
@@ -2485,6 +2810,7 @@ function createMap() {
   gridCanvas = document.createElement('canvas');
   gridCanvas.className = 'mgrs-canvas';
   pane.appendChild(gridCanvas);
+  twLayer = L.layerGroup().addTo(map);
   cfGroup = L.layerGroup().addTo(map);
   refGroup = L.layerGroup().addTo(map);
   routeGroup = L.layerGroup().addTo(map);
@@ -2494,7 +2820,9 @@ function createMap() {
   map.on('zoomend', syncAfZoom);
   map.on('zoomend', cfSyncPointNames);
   syncAfZoom();
+  map.on('moveend', syncTowns);          /* après zoomend : les classes des aérodromes et la route sont à jour */
   createTapControl();
+  createSearchControl();
   map.on('click', onMapClick);
   /* Le conteneur change de taille (fenêtre, rotation, iframe rendue visible par le shell) */
   const wrap = $('map');
@@ -2503,6 +2831,7 @@ function createMap() {
     map.invalidateSize({ animate: false });
     if (pendingView) { const f = pendingView; pendingView = null; f(); }
     scheduleGrid();
+    syncTowns();
   };
   if (window.ResizeObserver) new ResizeObserver(onSize).observe(wrap);
   window.addEventListener('resize', onSize);
@@ -2717,7 +3046,7 @@ function drawRoute() {
     const a = pts[i - 1], b = pts[i];
     const pa = map.latLngToContainerPoint([a.lat, a.lon]), pb = map.latLngToContainerPoint([b.lat, b.lon]);
     const px = pa.distanceTo(pb);
-    if (px >= INSERT_MIN_PX) {
+    if (px >= INSERT_MIN_PX && tapMode !== 'read') {      /* en mode Lire, pas de « + » d'insertion */
       const q = [a.lat + (b.lat - a.lat) * INSERT_AT, a.lon + (b.lon - a.lon) * INSERT_AT];
       const ins = L.marker(q, {
         zIndexOffset: 400, keyboard: false, title: t('tip.insert'),
@@ -2729,6 +3058,7 @@ function drawRoute() {
   pts.forEach((p, i) => {
     const mk = L.marker([p.lat, p.lon], { draggable: true, autoPan: true, zIndexOffset: i === sel ? 2000 : 1000, icon: wpIcon(p, i, tm), title: p.name });
     ptMarkers.push(mk);
+    mk.on('dragstart', twDragStart);
     mk.on('drag', ev => {
       const q = ev.target.getLatLng();
       p.lat = r7(q.lat); p.lon = r7(q.lng);
@@ -2738,6 +3068,7 @@ function drawRoute() {
       updateTimes();
     });
     mk.on('dragend', () => {
+      twDragEnd();
       sel = i; selR = -1;
       persistState();
       setTimeout(() => { drawRoute(); drawRefs(); syncRows(); renderNav(); }, 0);
@@ -2749,8 +3080,6 @@ function drawRoute() {
 }
 
 /* ============= TRAITS DES MINUTES, CHIFFRES ET BOÎTES DE BRANCHE ============= */
-function decorInk() { return S.ui.ticks === 'black' ? '#1f1c16' : routeColor(); }
-
 /* Les traits d'une branche : un trait coupe le tracé à angle droit à chaque minute entière (recomptée depuis le début de la branche),
    ou toutes les 5 minutes quand la branche est trop serrée ; pa : départ à l'écran, (ux, uy) : vecteur unitaire du sens du vol, len : longueur en px */
 function drawTicks(i, pa, ux, uy, len, leg) {
@@ -2854,7 +3183,9 @@ function drawBox(i, pa, pb, len, leg) {
   }).addTo(decorGroup);
   const sp = map.latLngToContainerPoint(ll);
   mk.on('click', ev => { L.DomEvent.stop(ev); });
+  mk.on('dragstart', twDragStart);
   mk.on('dragend', () => {
+    twDragEnd();
     const q = map.latLngToContainerPoint(mk.getLatLng());
     const dx = cx + (q.x - sp.x) - mx, dy = cy + (q.y - sp.y) - my;
     const clamp = v => Math.max(-BOX_LIMIT, Math.min(BOX_LIMIT, Math.round(v)));
@@ -2865,7 +3196,7 @@ function drawBox(i, pa, pb, len, leg) {
 }
 
 /* Tout ce qui se dessine le long des branches ; redessiné au zoom, à chaque changement de la route ou des réglages */
-function drawDecor() {
+function drawDecorNow() {
   if (!decorGroup) return;
   decorGroup.clearLayers();
   const pts = S.points;
@@ -2892,6 +3223,11 @@ function drawDecor() {
   }
 }
 
+function drawDecor() {
+  drawDecorNow();
+  syncTowns();       /* les boîtes de branche sont des obstacles pour les villes */
+}
+
 /* Les points de référence : un losange et sa lettre, sans ligne qui les relie ; sous les points de la route */
 function rfIcon(p, i) {
   return L.divIcon({
@@ -2905,12 +3241,14 @@ function drawRefs() {
   refGroup.clearLayers();
   S.refs.forEach((p, i) => {
     const mk = L.marker([p.lat, p.lon], { pane: 'refs', draggable: true, autoPan: true, zIndexOffset: i === selR ? 1000 : 0, icon: rfIcon(p, i), title: p.name });
+    mk.on('dragstart', twDragStart);
     mk.on('drag', ev => {
       const q = ev.target.getLatLng();
       p.lat = r7(q.lat); p.lon = r7(q.lng);
       renderNav();
     });
     mk.on('dragend', () => {
+      twDragEnd();
       selR = i; sel = -1;
       persistState();
       setTimeout(() => { drawRoute(); drawRefs(); syncRows(); renderNav(); }, 0);
@@ -2918,6 +3256,7 @@ function drawRefs() {
     mk.on('click', ev => { L.DomEvent.stop(ev); selectRef(i); });
     mk.addTo(refGroup);
   });
+  syncTowns();
 }
 
 function selectPoint(i) {
@@ -2969,6 +3308,7 @@ function addRef(lat, lon, name) {
 
 /* Selon le mode du contrôle de la carte : un point de route ou une référence */
 function addAt(lat, lon, name) {
+  if (SR.open) { srClose(); return null; }       /* un toucher sur la carte, la recherche ouverte : il ferme le panneau et ne pose rien */
   if (tapMode === 'read') return null;
   return tapMode === 'ref' ? addRef(lat, lon, name) : addPoint(lat, lon, name);
 }
@@ -3284,6 +3624,13 @@ function drawLayers() {
 /* La fiche d'un objet (popup) : son nom, puis ce que dit son type ; un point offre « → Point de référence » */
 function cfFmtNm(v) { return decimal(Number.isInteger(v) ? String(v) : (Math.round(v * 10) / 10).toFixed(1)); }
 
+/* L'altitude d'un cercle ne s'affiche pas quand elle est vide ou vaut le nombre 0 (« 0 », « 0.0 »), espaces mis de côté */
+function cfAltShown(v) {
+  const s = String(v == null ? '' : v).replace(/\s+/g, '');
+  if (s === '') return false;
+  return !(/^[+-]?(\d+([.,]\d*)?|[.,]\d+)$/.test(s) && Number(s.replace(',', '.')) === 0);
+}
+
 function cfFiche(it) {
   const d = document.createElement('div');
   d.className = 'cf-fiche';
@@ -3292,7 +3639,7 @@ function cfFiche(it) {
   if (it.name) line('cf-f-nm', it.name);
   if (it.type === 'circle') {
     line('cf-f-l', t('cf.nm', { w: decimal((Math.round(it.radiusNm * 10) / 10).toFixed(1)) }));
-    if (it.maxAlt) line('cf-f-l', it.maxAlt);
+    if (cfAltShown(it.maxAlt)) line('cf-f-l', it.maxAlt);
   } else if (it.type === 'zone') {
     line('cf-f-l', t('cf.k.' + it.kind));
     if (it.kind === 'corridor') line('cf-f-l', t('cf.nm', { w: cfFmtNm(it.widthNm) }));
@@ -3438,6 +3785,12 @@ function syncControls() {
   const pl = $('btn-places');
   pl.classList.toggle('on', !!S.ui.places);
   pl.setAttribute('aria-pressed', S.ui.places ? 'true' : 'false');
+  const tw = $('btn-towns');
+  const hasTw = !!townsOf(S.theatre);
+  tw.disabled = !hasTw;
+  tw.classList.toggle('on', hasTw && !!S.ui.towns);
+  tw.setAttribute('aria-pressed', hasTw && S.ui.towns ? 'true' : 'false');
+  tw.title = t(hasTw ? 'tb.towns.tip' : 'tb.towns.off');
   const af = $('btn-airfields');
   const hasAf = !!airfieldsOf(S.theatre);
   af.disabled = !hasAf;
@@ -3459,6 +3812,7 @@ function renderAll() {
   drawRoute();
   drawRefs();
   syncTapControl();
+  srSyncTexts();
   syncAirfields();
   syncControls();
 }
@@ -3546,6 +3900,7 @@ function setTapMode(m) {
   if (tapMode !== was) {
     if (map) map.closePopup();
     drawLayers();   /* les objets ne sont touchables qu'en mode Lire ; une cible agit comme un aérodrome dans les deux autres */
+    drawRoute();    /* les « + » d'insertion ne s'affichent pas en mode Lire */
   }
 }
 
@@ -3609,6 +3964,230 @@ function onRowClick(ev, kind) {
     map.setView([list[i].lat, list[i].lon], map.getZoom(), { animate: false });
     if (kind === 'ref') selectRef(i); else selectPoint(i);
   }
+}
+
+/* ============= RECHERCHE SUR LA CARTE ============= */
+/* Une loupe sous le zoom ; son panneau à droite : un champ, une croix, au plus 8 résultats. Choisir centre la carte (zoom 11 au moins)
+   et signale la position par un anneau qui pulse 3 s ; cela n'ajoute jamais rien à la route. */
+const SR_MIN = 2;              /* caractères avant la liste */
+const SR_ROWS = 8;             /* rangées au plus */
+const SR_ZOOM = 11;            /* zoom de la carte après le choix : celui-ci au moins */
+const SR_RING_MS = 3000;       /* l'anneau reste 3 s */
+const SR = { open: false, q: '', rows: [], active: 0, ring: null, ringTimer: 0, norms: {} };
+
+/* Sans accents ni majuscules : décomposition NFD, marques retirées, minuscules */
+function srNorm(s) { return String(s).normalize('NFD').replace(/\p{M}/gu, '').toLowerCase(); }
+
+/* La position du nom d'un objet de calque : celle de son nom (zone, orbite, boîte), son centre (cercle), sa position (point) */
+function cfNameAt(it) {
+  if (it.type === 'zone') {
+    const pts = it.points;
+    return (it.kind === 'corridor' || it.kind === 'flot') ? pts[Math.floor(pts.length / 2)] : cfMean(pts);
+  }
+  if (it.type === 'orbit') return cfOrbitGeom(it).nameAt;
+  if (it.type === 'box') return cfBoxGeom(it).nameAt;
+  return [it.lat, it.lon];
+}
+
+/* Tout ce qui se cherche, sur le théâtre en cours : points de la route, références, objets nommés des calques visibles, aérodromes
+   et hélistations, villes. kind : l'ordre des genres (0 point · 1 référence · 2 objet de calque · 3 aérodrome ou hélistation · 4 ville) */
+function srItems() {
+  const out = [];
+  const add = (kind, name, lat, lon, genre) => { if (typeof name === 'string' && name !== '') out.push({ kind: kind, name: name, nn: srNorm(name), lat: lat, lon: lon, genre: genre }); };
+  S.points.forEach((p, i) => add(0, p.name, p.lat, p.lon, t('sr.k.wp', { n: i + 1 })));
+  S.refs.forEach((p, i) => add(1, p.name, p.lat, p.lon, t('sr.k.ref', { n: i + 1 })));
+  CF_LAYERS.forEach(l => {
+    if (!l.visible) return;
+    l.items.forEach(it => {
+      if (it.type === 'text' || typeof it.name !== 'string' || it.name.trim() === '') return;
+      const at = cfNameAt(it);
+      add(2, it.name, at[0], at[1], l.name);
+    });
+  });
+  const af = airfieldsOf(S.theatre);
+  if (af) af.forEach(a => add(3, a[0], a[1], a[2], t(a[3] === 'h' ? 'sr.k.hp' : 'sr.k.af')));
+  const tw = townsOf(S.theatre);
+  if (tw) {
+    if (!SR.norms[S.theatre]) SR.norms[S.theatre] = tw.map(a => srNorm(a[0]));
+    const nn = SR.norms[S.theatre], g = t('sr.k.town');
+    tw.forEach((a, i) => { if (a[0] !== '') out.push({ kind: 4, name: a[0], nn: nn[i], lat: a[1], lon: a[2], genre: g }); });
+  }
+  return out;
+}
+
+/* La requête passe par norm puis trim ; rang 0 : le nom commence par elle ; rang 1 : un de ses mots (suites de lettres et de chiffres)
+   commence par elle ; rang 2 : il la contient. Tri : rang, genre, nom normalisé (unités de code), nom ; les 8 premiers. */
+function srSearch(q) {
+  const k = srNorm(q).trim();
+  if (k.length < SR_MIN) return null;
+  const hits = [];
+  srItems().forEach(it => {
+    let rank = -1;
+    if (it.nn.startsWith(k)) rank = 0;
+    else if (it.nn.split(/[^\p{L}\p{N}]+/u).some(w => w !== '' && w.startsWith(k))) rank = 1;
+    else if (it.nn.indexOf(k) !== -1) rank = 2;
+    if (rank >= 0) { it.rank = rank; hits.push(it); }
+  });
+  hits.sort((a, b) => (a.rank - b.rank) || (a.kind - b.kind) || (a.nn < b.nn ? -1 : a.nn > b.nn ? 1 : 0) || (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+  return hits.slice(0, SR_ROWS);
+}
+
+function srPlace() {
+  const p = $('sr-panel');
+  if (!p || !map) return;
+  const sz = map.getSize();
+  p.style.width = Math.max(120, Math.min(340, sz.x - 70)) + 'px';
+  /* le haut du panneau est aligné sur celui de la loupe */
+  const btn = document.querySelector('.rp-search-btn');
+  p.style.top = '0px';
+  p.style.top = (btn.getBoundingClientRect().top - p.getBoundingClientRect().top) + 'px';
+  /* la liste défile plutôt que de déborder de la carte */
+  const top = p.getBoundingClientRect().top - map.getContainer().getBoundingClientRect().top;
+  const list = $('sr-list');
+  list.style.maxHeight = Math.max(44, sz.y - top - 44 - 4 - 12) + 'px';
+}
+
+function srRender() {
+  const list = $('sr-list'), input = $('sr-in');
+  const rows = srSearch(SR.q);
+  SR.rows = rows || [];
+  if (SR.active >= SR.rows.length) SR.active = Math.max(0, SR.rows.length - 1);
+  if (!rows) {
+    list.hidden = true;
+    list.innerHTML = '';
+    input.removeAttribute('aria-activedescendant');
+    input.setAttribute('aria-expanded', 'false');
+    return;
+  }
+  list.hidden = false;
+  input.setAttribute('aria-expanded', 'true');
+  if (!rows.length) {
+    list.innerHTML = '<div class="sr-row none" role="presentation"><span class="sr-nm">' + esc(t('sr.none')) + '</span></div>';
+    input.removeAttribute('aria-activedescendant');
+  } else {
+    list.innerHTML = rows.map((r, i) =>
+      '<div class="sr-row' + (i === SR.active ? ' active' : '') + '" role="option" id="sr-opt-' + i + '" data-i="' + i + '" aria-selected="' + (i === SR.active ? 'true' : 'false') + '">' +
+      '<span class="sr-nm">' + esc(r.name) + '</span><span class="sr-kd">' + esc(r.genre) + '</span></div>').join('');
+    input.setAttribute('aria-activedescendant', 'sr-opt-' + SR.active);
+  }
+  srPlace();
+}
+
+function srSetActive(i, scroll) {
+  if (!SR.rows.length) return;
+  SR.active = Math.max(0, Math.min(SR.rows.length - 1, i));
+  const list = $('sr-list');
+  list.querySelectorAll('.sr-row[data-i]').forEach(r => {
+    const on = parseInt(r.dataset.i, 10) === SR.active;
+    r.classList.toggle('active', on);
+    r.setAttribute('aria-selected', on ? 'true' : 'false');
+    if (on && scroll) r.scrollIntoView({ block: 'nearest' });
+  });
+  $('sr-in').setAttribute('aria-activedescendant', 'sr-opt-' + SR.active);
+}
+
+function srOpen() {
+  if (!map || SR.open) return;
+  SR.open = true;
+  document.querySelector('.rp-search-btn').setAttribute('aria-expanded', 'true');
+  const p = $('sr-panel'), input = $('sr-in');
+  p.hidden = false;
+  input.value = SR.q;
+  SR.active = 0;
+  srRender();
+  srPlace();
+  input.focus();
+  input.select();
+}
+
+function srClose() {
+  if (!SR.open) return;
+  SR.open = false;
+  document.querySelector('.rp-search-btn').setAttribute('aria-expanded', 'false');
+  $('sr-panel').hidden = true;
+  const input = $('sr-in');
+  if (document.activeElement === input) input.blur();
+}
+
+/* L'anneau : sur la position, un cercle de 3 px de trait qui passe de 12 à 44 px en s'effaçant, trois fois 1 s, puis retiré ;
+   un nouveau choix remplace celui qui est en cours */
+function srRing(lat, lon) {
+  srClearRing();
+  SR.ring = L.marker([lat, lon], { pane: 'ring', interactive: false, keyboard: false,
+    icon: L.divIcon({ className: 'sr-ring-icon', iconSize: [0, 0], iconAnchor: [0, 0], html: '<span class="sr-ring"></span>' }) }).addTo(map);
+  SR.ringTimer = setTimeout(srClearRing, SR_RING_MS);
+}
+function srClearRing() {
+  clearTimeout(SR.ringTimer);
+  SR.ringTimer = 0;
+  if (SR.ring) { map.removeLayer(SR.ring); SR.ring = null; }
+}
+
+/* Choisir : le panneau se ferme, la carte se centre sur le résultat (zoom courant, 11 au moins, sans animation), l'anneau pulse ;
+   rien n'est ajouté à la route */
+function srChoose(i) {
+  const r = SR.rows[i];
+  if (!r) return;
+  srClose();
+  map.setView([r.lat, r.lon], Math.max(map.getZoom(), SR_ZOOM), { animate: false });
+  srRing(r.lat, r.lon);
+}
+
+function srSyncTexts() {
+  const b = document.querySelector('.rp-search-btn');
+  if (!b) return;
+  b.title = t('sr.title');
+  b.setAttribute('aria-label', t('sr.title'));
+  const input = $('sr-in');
+  input.placeholder = t('sr.ph');
+  input.setAttribute('aria-label', t('sr.title'));
+  const x = $('sr-x');
+  x.title = t('sr.close');
+  x.setAttribute('aria-label', t('sr.close'));
+  if (SR.open) srRender();
+}
+
+function createSearchControl() {
+  const Ctl = L.Control.extend({
+    options: { position: 'topleft' },
+    onAdd: function () {
+      const d = L.DomUtil.create('div', 'leaflet-control rp-search');
+      d.innerHTML =
+        '<div class="leaflet-bar"><a class="rp-search-btn" href="#" role="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="sr-panel">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="10" r="6.5"/><path d="M15 15l6 6"/></svg></a></div>' +
+        '<div class="sr-panel" id="sr-panel" role="search" hidden>' +
+        '<div class="sr-head"><input class="sr-in" id="sr-in" type="search" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" role="combobox" aria-autocomplete="list" aria-controls="sr-list" aria-expanded="false">' +
+        '<button type="button" class="sr-x" id="sr-x">&times;</button></div>' +
+        '<div class="sr-list" id="sr-list" role="listbox" hidden></div></div>';
+      L.DomEvent.disableClickPropagation(d);
+      L.DomEvent.disableScrollPropagation(d);
+      d.querySelector('.rp-search-btn').addEventListener('click', ev => { ev.preventDefault(); if (SR.open) srClose(); else srOpen(); });
+      const input = d.querySelector('#sr-in');
+      input.addEventListener('input', () => { SR.q = input.value; SR.active = 0; srRender(); });
+      input.addEventListener('keydown', ev => {
+        ev.stopPropagation();           /* ni la carte ni la page ne lisent les touches du champ */
+        if (ev.key === 'ArrowDown') { ev.preventDefault(); srSetActive(SR.active + 1, true); }
+        else if (ev.key === 'ArrowUp') { ev.preventDefault(); srSetActive(SR.active - 1, true); }
+        else if (ev.key === 'Enter') { ev.preventDefault(); if (SR.rows.length) srChoose(SR.active); }
+        else if (ev.key === 'Escape') { ev.preventDefault(); srClose(); }
+      });
+      d.querySelector('#sr-x').addEventListener('click', () => srClose());
+      const list = d.querySelector('#sr-list');
+      list.addEventListener('click', ev => {
+        const row = ev.target.closest ? ev.target.closest('.sr-row[data-i]') : null;
+        if (row) srChoose(parseInt(row.dataset.i, 10));
+      });
+      list.addEventListener('mousemove', ev => {
+        const row = ev.target.closest ? ev.target.closest('.sr-row[data-i]') : null;
+        if (row && parseInt(row.dataset.i, 10) !== SR.active) srSetActive(parseInt(row.dataset.i, 10), false);
+      });
+      return d;
+    }
+  });
+  new Ctl().addTo(map);
+  document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && SR.open) { ev.preventDefault(); srClose(); } });
+  map.on('resize', () => { if (SR.open) srPlace(); });
+  srSyncTexts();
 }
 
 /* ============= FICHIERS ============= */
@@ -4372,6 +4951,13 @@ function bindEvents() {
     syncPlaces();
     syncControls();
   });
+  $('btn-towns').addEventListener('click', () => {
+    if (!townsOf(S.theatre)) return;
+    S.ui.towns = !S.ui.towns;
+    persistState();
+    syncTowns();
+    syncControls();
+  });
   $('btn-airfields').addEventListener('click', () => {
     if (!airfieldsOf(S.theatre)) return;
     S.ui.airfields = !S.ui.airfields;
@@ -4791,16 +5377,19 @@ function init() {
   setBase();
   syncPlaces();
   syncAirfields();
+  syncTowns();
   persistState();
   /* Les polices embarquées servent au canevas : redessiner la grille une fois chargées */
   if (document.fonts && document.fonts.load) {
     Promise.all([
       document.fonts.load("700 15px 'Stardos Stencil'"),
-      document.fonts.load("700 11px 'Oswald'")
-    ]).then(() => document.fonts.ready).then(scheduleGrid).catch(() => {});
+      document.fonts.load("700 11px 'Oswald'"),
+      document.fonts.load("500 11px 'Oswald'")
+    ]).then(() => document.fonts.ready).then(() => { scheduleGrid(); twWidths.clear(); syncTowns(); }).catch(() => {});
   }
   window.__RP = { map: map, get decorGroup() { return decorGroup; }, timing: timing, get S() { return S; }, drawGrid: drawGrid, setBase: setBase, get baseLayers() { return baseLayers; }, get inFallback() { return inFallback; },
     get placesLayer() { return placesLayer; }, get airfieldLayer() { return afLayer; }, get tapMode() { return tapMode; },
+    get townsLayer() { return twLayer; }, townsReport: townsReport, get search() { return SR; },
     get layers() { return CF_LAYERS; }, get layersGroup() { return cfGroup; } };
 }
 
@@ -4822,7 +5411,8 @@ def build():
     example_js = json.dumps(example, ensure_ascii=False, indent=2).replace('</', '<\\/')
 
     airfields_js = json.dumps(AF['theatres'], ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
-    js = JS.replace('__EXAMPLE_ROUTE__', example_js).replace('__AIRFIELDS__', airfields_js)
+    towns_js = json.dumps(TW['theatres'], ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
+    js = JS.replace('__EXAMPLE_ROUTE__', example_js).replace('__AIRFIELDS__', airfields_js).replace('__TOWNS__', towns_js)
     js = js.replace('@@GEO_BLOCK@@\n', GEO_BLOCK).replace('@@READNUM_BLOCK@@\n', READNUM_BLOCK)
     if '@@' in js:
         raise SystemExit("[ERREUR] Marqueur @@ non remplacé dans le script")
