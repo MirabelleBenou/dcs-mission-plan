@@ -159,6 +159,50 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
 .seg button.on{{background:var(--amber); color:#15120c;}}
 .theme-sel{{font-family:var(--f-ui); font-size:12px; letter-spacing:.05em; text-transform:uppercase; background:rgba(0,0,0,.45);
   color:var(--amber); border:1px solid var(--line); padding:7px 11px; border-radius:var(--rad); cursor:pointer; outline:none;}}
+
+/* ---------- Liste du thème au thème de la landing (lot mp-ui-listes) ----------
+   Le <select> reste dans la page, masqué ; un bouton de mêmes classes prend sa place (voir initToolbarMenus). */
+select[data-tbm-src] {{ display: none !important; }}
+.tbm-trigger {{ position: relative; display: inline-block; text-align: left; white-space: nowrap; }}
+.tbm-lbl {{ display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; padding: 4px 16px 4px 4px; margin: -3.25px 0 -2.75px; pointer-events: none; }}
+.tbm-lbl::after {{ content: attr(data-w); display: block; height: 0; overflow: hidden; visibility: hidden; white-space: pre; }}
+@supports (width: calc-size(max-content, round(up, size, 1px))) {{ .tbm-lbl::after {{ width: calc-size(max-content, round(up, size, 1px)); }} }}
+.tbm-trigger::after {{ content: ''; position: absolute; right: 3px; top: 50%; width: 10px; height: 6px; margin-top: -3px; pointer-events: none;
+  background: currentColor; -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='black' stroke-width='2'/></svg>") center / 10px 6px no-repeat;
+  mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='black' stroke-width='2'/></svg>") center / 10px 6px no-repeat; }}
+.tbm-trigger-open {{ border-color: var(--amber) !important; }}
+.tbm-panel {{
+  position: fixed; z-index: 5000; min-width: 180px; max-width: min(340px, calc(100vw - 16px));
+  max-height: min(62vh, 440px); overflow-y: auto; overscroll-behavior: contain;
+  background: linear-gradient(180deg, var(--board) 0%, var(--board-2) 100%);
+  border: 1px solid var(--line); border-top: 3px solid var(--amber); border-radius: var(--rad);
+  box-shadow: 0 12px 28px rgba(0,0,0,.55), 0 2px 0 rgba(0,0,0,.35);
+  padding: 4px 0; margin: 0; list-style: none; scrollbar-width: thin; scrollbar-color: var(--line) transparent;
+  transform-origin: top left; animation: tbm-in .12s ease-out;
+}}
+@keyframes tbm-in {{ from {{ opacity: 0; transform: translateY(-4px); }} to {{ opacity: 1; transform: none; }} }}
+.tbm-head {{
+  font-family: var(--f-ui); font-size: 10px; letter-spacing: 1.8px; text-transform: uppercase;
+  color: var(--accent); padding: 8px 14px 6px; border-bottom: 1px solid var(--line); margin-bottom: 2px;
+}}
+.tbm-opt {{
+  position: relative; display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 16px 0 18px;
+  font-family: var(--f-ui); font-size: 13px; letter-spacing: 1.3px; text-transform: uppercase;
+  color: var(--paper); cursor: pointer; white-space: nowrap; user-select: none;
+}}
+.tbm-opt + .tbm-opt {{ border-top: 1px solid var(--line); }}
+.tbm-opt .tbm-mark {{ width: 7px; height: 7px; flex: none; transform: rotate(45deg); border: 1px solid var(--accent); }}
+.tbm-opt.active, .tbm-opt:hover {{ background: rgba(255,255,255,.06); color: var(--amber); }}
+.tbm-opt.active .tbm-mark, .tbm-opt:hover .tbm-mark {{ border-color: var(--amber); }}
+.tbm-opt[aria-selected="true"] {{ color: var(--amber); }}
+.tbm-opt[aria-selected="true"]::before {{ content: ''; position: absolute; left: 0; top: 6px; bottom: 6px; width: 3px; background: var(--amber); }}
+.tbm-opt[aria-selected="true"] .tbm-mark {{ background: var(--amber); border-color: var(--amber); }}
+.tbm-opt[aria-disabled="true"] {{ color: var(--accent); cursor: not-allowed; background: none; }}
+.tbm-opt[aria-disabled="true"] .tbm-mark {{ border-style: dashed; border-color: var(--accent); background: none; }}
+.tbm-opt[aria-disabled="true"] .tbm-note {{ color: var(--accent); font-size: 10px; letter-spacing: 1px; margin-left: auto; padding-left: 14px; }}
+@media (prefers-reduced-motion: reduce) {{ .tbm-panel {{ animation: none; }} }}
+@media print {{ .tbm-panel {{ display: none; }} }}
+
 .flag{{font-size:15px; background:rgba(0,0,0,.45); border:1px solid var(--line); width:38px; height:34px; border-radius:var(--rad); cursor:pointer; color:var(--amber);}}
 .classif{{font-family:var(--f-mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--stamp);
   border:1px solid var(--stamp); padding:5px 9px; border-radius:var(--rad); opacity:.85;}}
@@ -336,7 +380,7 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
     <div class="plate"><span class="mark">DCS · MISSION PLAN</span></div>
     <div class="spacer"></div>
     <div class="ctrl">
-      <select class="theme-sel" id="theme-sel" onchange="setTheme(this.value)" title="Thème">
+      <select class="theme-sel" id="theme-sel" onchange="setTheme(this.value)" data-i18n-title="theme.sel" title="Thème">
         <option value="cw-nato" data-i18n="theme.cwnato">Cold War OTAN</option>
         <option value="cw-soviet" data-i18n="theme.cwsoviet">Cold War Soviétique</option>
         <option value="modern-nato" data-i18n="theme.modernnato">OTAN moderne</option>
@@ -381,7 +425,7 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
             <div class="cap-row">
               <span class="logo" style="background:var(--a-hq)">H·Q</span>
               <span class="ptitle">HQ</span>
-              <span class="pver">v0.1.0</span>
+              <span class="pver">v0.1.1</span>
             </div>
             <div class="pdesc" data-i18n="hq.desc">Poste de commandement — configuration Wing, identité escadrons, logos partagés avec tous les modules.</div>
             <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
@@ -396,7 +440,7 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
             <div class="cap-row">
               <span class="logo" style="background:var(--a-bg)">B·G</span>
               <span class="ptitle">Briefing Generator</span>
-              <span class="pver">v2.4.4</span>
+              <span class="pver">v2.4.5</span>
             </div>
             <div class="pdesc" data-i18n="bg.desc">Briefings complets — SITAC, plan radio, aérodromes, charts, annexes — export PDF prêt à partager.</div>
             <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
@@ -411,7 +455,7 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
             <div class="cap-row">
               <span class="logo" style="background:var(--a-dg)">D·G</span>
               <span class="ptitle">Datacard Generator</span>
-              <span class="pver">v1.4.0</span>
+              <span class="pver">v1.4.1</span>
             </div>
             <div class="pdesc" data-i18n="dg.desc">Datacards de vol d'une page pour le kneeboard — saisie ou depuis un briefing, day et night, export PNG et PDF.</div>
             <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
@@ -425,7 +469,7 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
             <div class="cap-row">
               <span class="logo" style="background:var(--a-rp)">R·P</span>
               <span class="ptitle">Route Planner</span>
-              <span class="pver">v1.1.0</span>
+              <span class="pver">v1.1.1</span>
             </div>
             <div class="pdesc" data-i18n="rp.desc">Tracé de route sur carte — carte DCS, topographique ou satellite, grille MGRS, aérodromes ; points de référence ; caps, distances, MGRS et DMS, envoyés à la datacard.</div>
             <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
@@ -439,7 +483,7 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
             <div class="cap-row">
               <span class="logo" style="background:var(--a-rs)">R·S</span>
               <span class="ptitle">Recon Station</span>
-              <span class="pver">v1.0.0</span>
+              <span class="pver">v1.0.1</span>
             </div>
             <div class="pdesc" data-i18n="rs.desc">Transforme une capture en photo d'analyse de reconnaissance — niveaux de gris, annotations, export PNG pleine résolution.</div>
             <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
@@ -483,7 +527,7 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
   /* ── Données ──────────────────────────────────────────────── */
   {module_html_js}
 
-  var APP_VERSION = '1.9.0';
+  var APP_VERSION = '1.9.1';
   var KEY_LANG  = 'lang_v1';
   var KEY_THEME = 'theme_v1';
 
@@ -511,7 +555,8 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
       'theme.cwnato': 'Cold War OTAN',
       'theme.cwsoviet': 'Cold War Soviétique',
       'theme.modernnato': 'OTAN moderne',
-      'theme.moderneast': 'Bloc Est moderne'
+      'theme.moderneast': 'Bloc Est moderne',
+      'theme.sel': 'Thème'
     }},
     en: {{
       ribbon: '// Operational planning suite',
@@ -529,7 +574,8 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
       'theme.cwnato': 'Cold War NATO',
       'theme.cwsoviet': 'Cold War Soviet',
       'theme.modernnato': 'Modern NATO',
-      'theme.moderneast': 'Modern East Bloc'
+      'theme.moderneast': 'Modern East Bloc',
+      'theme.sel': 'Theme'
     }}
   }};
 
@@ -584,6 +630,9 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
       /* Les options select : mettre à jour textContent */
       var txt = t(key);
       if (txt !== key) el.textContent = txt;
+    }});
+    document.querySelectorAll('[data-i18n-title]').forEach(function(el) {{
+      el.title = t(el.getAttribute('data-i18n-title'));
     }});
     /* Sync bigstamp / classif via thème actuel */
     var cur = document.body.getAttribute('data-theme') || 'cw-nato';
@@ -723,6 +772,275 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
     }} catch(e) {{}}
   }}
 
+/* ============= LISTES DE LA BARRE — thème de l'interface (lot mp-ui-listes) =============
+   Le <select> reste dans la page (id, options, écouteurs) : il garde la valeur, mais il est masqué.
+   Un <button> de mêmes classes prend sa place et porte le libellé de l'option choisie ; la liste ouverte
+   est un <ul role="listbox"> posé en fin de <body> (la barre défile et couperait ce qui déborde).
+   Le libellé suit toujours le <select> : mutations du DOM (options reconstruites, traduites, désactivées,
+   title) et affectations par le code (value, selectedIndex) interceptées sur l'instance. */
+const TBM = {{ cur: null, bound: false, swallow: false }};
+
+function initToolbarMenus(specs) {{
+  specs.forEach(sp => tbmAttach(document.getElementById(sp[0]), sp[1]));
+  if (TBM.bound) return;
+  TBM.bound = true;
+  document.addEventListener('pointerdown', tbmOutside, true);
+  window.addEventListener('click', tbmSwallowClick, true);
+  window.addEventListener('resize', () => tbmClose(false));
+  window.addEventListener('blur', () => tbmClose(false));
+  window.addEventListener('scroll', tbmScrolled, true);
+}}
+
+function tbmAttach(sel, labelFn) {{
+  if (!sel || !sel.parentNode || sel.hasAttribute('data-tbm-src')) return;
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = sel.className + ' tbm-trigger';
+  btn.setAttribute('aria-haspopup', 'listbox');
+  btn.setAttribute('aria-expanded', 'false');
+  btn.setAttribute('aria-controls', 'tbm-list-' + sel.id);
+  const lbl = document.createElement('span');
+  lbl.className = 'tbm-lbl';
+  btn.appendChild(lbl);
+  const m = {{ sel: sel, btn: btn, lbl: lbl, labelFn: labelFn, panel: null, active: -1, type: '', typeTimer: 0, x0: 0, y0: 0 }};
+  sel.parentNode.insertBefore(btn, sel);
+  sel.setAttribute('data-tbm-src', '');
+  ['value', 'selectedIndex'].forEach(k => {{
+    const d = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, k);
+    if (!d || !d.set) return;
+    Object.defineProperty(sel, k, {{
+      configurable: true, enumerable: true,
+      get() {{ return d.get.call(this); }},
+      set(v) {{ d.set.call(this, v); tbmSync(m); }}
+    }});
+  }});
+  new MutationObserver(() => tbmSync(m)).observe(sel, {{
+    childList: true, subtree: true, characterData: true, attributes: true,
+    attributeFilter: ['title', 'aria-label', 'disabled', 'label', 'selected', 'value']
+  }});
+  sel.addEventListener('change', () => tbmSync(m));
+  ['focus', 'mouseover'].forEach(ev => btn.addEventListener(ev, () => tbmSync(m)));   /* filet : option.selected posé par le code */
+  btn.addEventListener('click', () => {{ if (m.panel) tbmClose(true); else tbmOpen(m); }});
+  btn.addEventListener('keydown', e => {{
+    if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown' || e.key === 'ArrowUp') {{
+      e.preventDefault();
+      if (!m.panel) tbmOpen(m);
+    }}
+  }});
+  tbmSync(m);
+}}
+
+/* Le libellé affiché = l'option choisie ; la largeur = l'option la plus large (comme le <select>) */
+function tbmSync(m) {{
+  const sel = m.sel, o = sel.options, i = sel.selectedIndex;
+  const txt = i >= 0 && o[i] ? o[i].label : '';
+  if (m.lbl.textContent !== txt) m.lbl.textContent = txt;
+  const all = [];
+  for (let k = 0; k < o.length; k++) all.push(o[k].label);
+  const w = all.join(String.fromCharCode(10));
+  if (m.lbl.getAttribute('data-w') !== w) m.lbl.setAttribute('data-w', w);
+  let name = '';
+  try {{ name = m.labelFn(); }} catch (e) {{ name = ''; }}
+  m.btn.setAttribute('aria-label', name);
+  if (sel.hasAttribute('title')) m.btn.title = sel.title; else m.btn.removeAttribute('title');
+  m.btn.disabled = sel.disabled;
+}}
+
+function tbmOpen(m) {{
+  if (TBM.cur) tbmClose(false);
+  if (m.sel.disabled) return;
+  tbmSync(m);
+  const sel = m.sel, opts = sel.options, name = m.labelFn();
+  const ul = document.createElement('ul');
+  ul.className = 'tbm-panel';
+  ul.id = 'tbm-list-' + sel.id;
+  ul.setAttribute('role', 'listbox');
+  ul.setAttribute('aria-label', name);
+  ul.tabIndex = -1;
+  const head = document.createElement('li');
+  head.className = 'tbm-head';
+  head.setAttribute('role', 'presentation');
+  head.textContent = name;
+  ul.appendChild(head);
+  for (let k = 0; k < opts.length; k++) {{
+    const o = opts[k], li = document.createElement('li');
+    li.className = 'tbm-opt';
+    li.id = 'tbm-' + sel.id + '-' + k;
+    li.setAttribute('role', 'option');
+    li.setAttribute('aria-selected', k === sel.selectedIndex ? 'true' : 'false');
+    li.setAttribute('data-i', String(k));
+    const mark = document.createElement('span');
+    mark.className = 'tbm-mark';
+    const txt = document.createElement('span');
+    txt.className = 'tbm-txt';
+    let label = o.label, note = '';
+    if (o.disabled) {{
+      li.setAttribute('aria-disabled', 'true');
+      const j = label.indexOf(' — ');
+      if (j >= 0) {{ note = label.slice(j + 3); label = label.slice(0, j); }}
+    }}
+    txt.textContent = label;
+    li.appendChild(mark);
+    li.appendChild(txt);
+    if (note) {{
+      const n = document.createElement('span');
+      n.className = 'tbm-note';
+      n.textContent = note;
+      li.appendChild(n);
+    }}
+    ul.appendChild(li);
+  }}
+  ul.addEventListener('keydown', e => tbmKey(m, e));
+  ul.addEventListener('click', e => {{
+    const li = e.target.closest ? e.target.closest('.tbm-opt') : null;
+    if (!li || li.getAttribute('aria-disabled') === 'true') return;
+    tbmChoose(m, Number(li.getAttribute('data-i')));
+  }});
+  ul.addEventListener('mousemove', e => {{
+    const li = e.target.closest ? e.target.closest('.tbm-opt') : null;
+    if (!li || li.getAttribute('aria-disabled') === 'true') return;
+    const k = Number(li.getAttribute('data-i'));
+    if (k !== m.active) tbmSetActive(m, k, false);
+  }});
+  document.body.appendChild(ul);
+  m.panel = ul;
+  TBM.cur = m;
+  m.btn.classList.add('tbm-trigger-open');
+  m.btn.setAttribute('aria-expanded', 'true');
+  tbmPlace(m);
+  let k0 = sel.selectedIndex;
+  if (k0 < 0 || (opts[k0] && opts[k0].disabled)) k0 = tbmFirst(m, 1);
+  tbmSetActive(m, k0, 'center');
+  ul.focus({{ preventScroll: true }});
+}}
+
+/* Sous le bouton (4 px), bord gauche aligné, au moins aussi large, à 8 px au moins des bords de la fenêtre */
+function tbmPlace(m) {{
+  const r = m.btn.getBoundingClientRect(), p = m.panel;
+  const vw = document.documentElement.clientWidth, vh = window.innerHeight;
+  const top = r.bottom + 4;
+  m.x0 = r.left; m.y0 = r.top;
+  p.style.minWidth = Math.max(180, r.width) + 'px';
+  p.style.top = top + 'px';
+  p.style.left = r.left + 'px';
+  p.style.maxHeight = Math.max(60, Math.min(0.62 * vh, 440, vh - top - 12)) + 'px';
+  const w = p.getBoundingClientRect().width;
+  let left = r.left;
+  if (left + w > vw - 8) left = vw - 8 - w;
+  if (left < 8) left = 8;
+  p.style.left = left + 'px';
+}}
+
+function tbmFirst(m, d) {{
+  const o = m.sel.options;
+  let k = d > 0 ? 0 : o.length - 1;
+  for (; k >= 0 && k < o.length; k += d) if (!o[k].disabled) return k;
+  return -1;
+}}
+
+function tbmSetActive(m, k, reveal) {{
+  const p = m.panel;
+  if (!p) return;
+  const prev = p.querySelector('.tbm-opt.active');
+  if (prev) prev.classList.remove('active');
+  m.active = k;
+  const li = k >= 0 ? p.querySelector('.tbm-opt[data-i="' + k + '"]') : null;
+  if (!li) {{ p.removeAttribute('aria-activedescendant'); return; }}
+  li.classList.add('active');
+  p.setAttribute('aria-activedescendant', li.id);
+  if (!reveal) return;
+  const t = li.offsetTop, h = li.offsetHeight;
+  if (k === tbmFirst(m, 1)) p.scrollTop = 0;
+  else if (t < p.scrollTop) p.scrollTop = t;
+  else if (t + h > p.scrollTop + p.clientHeight) p.scrollTop = reveal === 'center' ? Math.max(0, t - (p.clientHeight - h) / 2) : t + h - p.clientHeight;
+}}
+
+function tbmStep(m, d) {{
+  const o = m.sel.options;
+  for (let k = m.active + d; k >= 0 && k < o.length; k += d) {{
+    if (!o[k].disabled) {{ tbmSetActive(m, k, true); return; }}
+  }}
+}}
+
+/* Saisie de lettres : première option qui commence par elles, remise à zéro après 0,7 s */
+function tbmType(m, ch) {{
+  clearTimeout(m.typeTimer);
+  m.type += ch.toLowerCase();
+  m.typeTimer = setTimeout(() => {{ m.type = ''; }}, 700);
+  const o = m.sel.options;
+  for (let k = 0; k < o.length; k++) {{
+    if (!o[k].disabled && o[k].label.toLowerCase().indexOf(m.type) === 0) {{ tbmSetActive(m, k, true); return; }}
+  }}
+}}
+
+function tbmKey(m, e) {{
+  const k = e.key;
+  if (k === 'ArrowDown' || k === 'ArrowUp') {{ e.preventDefault(); tbmStep(m, k === 'ArrowDown' ? 1 : -1); }}
+  else if (k === 'Home') {{ e.preventDefault(); tbmSetActive(m, tbmFirst(m, 1), true); }}
+  else if (k === 'End') {{ e.preventDefault(); tbmSetActive(m, tbmFirst(m, -1), true); }}
+  else if (k === 'Enter' || k === ' ') {{ e.preventDefault(); if (m.active >= 0) tbmChoose(m, m.active); }}
+  else if (k === 'Escape') {{ e.preventDefault(); e.stopPropagation(); tbmClose(true); }}
+  else if (k === 'Tab') {{ tbmClose(true); }}   /* sans preventDefault : le focus part du bouton vers le contrôle suivant */
+  else if (k.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {{ e.preventDefault(); tbmType(m, k); }}
+}}
+
+/* Choisir : si la valeur change, le <select> la prend et reçoit un évènement change (qui bouillonne) */
+function tbmChoose(m, k) {{
+  const sel = m.sel, o = sel.options[k];
+  if (!o || o.disabled) return;
+  const changed = k !== sel.selectedIndex;
+  tbmClose(true);
+  if (!changed) return;
+  sel.selectedIndex = k;
+  sel.dispatchEvent(new Event('change', {{ bubbles: true }}));
+}}
+
+function tbmClose(refocus) {{
+  const m = TBM.cur;
+  if (!m) return;
+  TBM.cur = null;
+  clearTimeout(m.typeTimer);
+  m.type = '';
+  if (m.panel) m.panel.remove();
+  m.panel = null;
+  m.active = -1;
+  m.btn.classList.remove('tbm-trigger-open');
+  m.btn.setAttribute('aria-expanded', 'false');
+  if (refocus) m.btn.focus({{ preventScroll: true }});
+}}
+
+/* Un toucher ou un clic hors de la liste et du bouton la ferme, sans agir ailleurs (le clic qui suit est avalé) ;
+   le bouton d'une autre liste ferme celle-ci et s'ouvre ensuite par son propre clic. */
+function tbmOutside(e) {{
+  const m = TBM.cur;
+  if (!m) return;
+  const t = e.target;
+  if (m.panel.contains(t) || m.btn.contains(t)) return;
+  const other = t && t.closest ? t.closest('.tbm-trigger') : null;
+  tbmClose(false);
+  if (other) return;
+  TBM.swallow = true;
+  const rel = () => {{ document.removeEventListener('pointerup', rel, true); document.removeEventListener('pointercancel', rel, true); setTimeout(() => {{ TBM.swallow = false; }}, 350); }};
+  document.addEventListener('pointerup', rel, true);
+  document.addEventListener('pointercancel', rel, true);
+}}
+
+function tbmSwallowClick(e) {{
+  if (!TBM.swallow) return;
+  TBM.swallow = false;
+  e.stopPropagation();
+  e.preventDefault();
+}}
+
+/* Le défilement de la barre (ou de la page) déplace le bouton : la liste se ferme */
+function tbmScrolled(e) {{
+  const m = TBM.cur;
+  if (!m || !m.panel) return;
+  if (e.target === m.panel || (e.target.nodeType && m.panel.contains(e.target))) return;
+  const r = m.btn.getBoundingClientRect();
+  if (Math.abs(r.left - m.x0) > 0.5 || Math.abs(r.top - m.y0) > 0.5) tbmClose(false);
+}}
+
   /* ── Init ───────────────────────────────────────────────────── */
   function init() {{
     initLang();
@@ -739,6 +1057,7 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
     setTheme(cur);
     applyI18n();
     updateFlagBtn();
+    initToolbarMenus([['theme-sel', function() {{ return t('theme.sel'); }}]]);   /* la liste du thème au thème de la landing */
 
     /* Clics cartes */
     document.getElementById('card-hq').addEventListener('click', function() {{ openModule('hq'); }});
