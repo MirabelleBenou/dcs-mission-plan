@@ -40,7 +40,7 @@ The landing page presents each tool as a **pinned print** on the board. Active t
 | **Briefing Generator** | Mission briefings, full or quick — SITAC, radio plan, airfields, charts, recon photos — PDF & PNG export | ✅ `v2.4.5` |
 | **Recon Station** | Turn a screenshot into a reconnaissance analysis photo — sensor looks, annotations, lossless PNG | ✅ `v1.0.1` |
 | **Field Manual** | In-app documentation for the suite — one illustrated chapter per tool, diagrams, FR/EN, offline | ✅ `v1.2.3` |
-| **Route Planner** | Lay a route on a map — DCS map (by DCS Olympus), topographic or satellite, MGRS grid, place names, DCS towns and airfields, map search — type coordinates or heading & distance, reference points, headings, distances, MGRS & DMS, sent to the datacard; DCS Route Tool import & export; leg boxes, ground speed and minute marks; CombatFlite layers (.cf) | ✅ `v1.5.0` |
+| **Route Planner** | Lay a route on a map — DCS map (by DCS Olympus), topographic or satellite, MGRS grid, place names, DCS towns and airfields, map search — type coordinates or heading & distance, reference points, headings, distances, MGRS & DMS, sent to the datacard; DCS Route Tool import & export; leg boxes, ground speed and minute marks; CombatFlite layers (.cf); draw your own layers — circles, zones, lines, points, text — by touch | ✅ `v1.6.0` |
 | **Datacard Generator** | One-page flight datacards for the kneeboard — from scratch, from a briefing or from a route — reference points, day & night, PNG & PDF export | ✅ `v1.4.1` |
 
 > Each tool is a standalone HTML file with its own build; the landing page embeds the live tools and stages them all on one board.
@@ -178,7 +178,7 @@ The output `dist/dcs_mission_plan.html` is the distributable (and the file publi
 
 ### ⏳ Work in Progress
 - ⏳ **HQ** — flight-package / Commander UI, and in-game `.miz` validation (out of beta)
-- ⏳ **Route Planner** — drawing tools for layers (threat rings, zones, corridors, FLOT, orbits, kill boxes, targets, text) and NATO symbols, clock times from a TOT, read routes from a `.miz`, automatic magnetic variation, kneeboard export
+- ⏳ **Route Planner** — more drawing tools (orbits, kill boxes, FLOT, corridors, curves) and NATO symbols, clock times from a TOT, read routes from a `.miz`, automatic magnetic variation, kneeboard export
 - ⏳ **Datacard Generator** — import waypoints and loadouts from HQ (`.miz`)
 - ⏳ **UI polish** and more themes
 
