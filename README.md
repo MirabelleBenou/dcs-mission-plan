@@ -40,7 +40,7 @@ The landing page presents each tool as a **pinned print** on the board. Active t
 | **Briefing Generator** | Mission briefings, full or quick — SITAC, radio plan, airfields, charts, recon photos — PDF & PNG export | ✅ `v2.4.5` |
 | **Recon Station** | Turn a screenshot into a reconnaissance analysis photo — sensor looks, annotations, lossless PNG | ✅ `v1.0.1` |
 | **Field Manual** | In-app documentation for the suite — one illustrated chapter per tool, diagrams, FR/EN, offline | ✅ `v1.2.3` |
-| **Route Planner** | Lay a route on a map — DCS map (by DCS Olympus), topographic or satellite, MGRS grid, place names, DCS airfields — type coordinates or heading & distance, reference points, headings, distances, MGRS & DMS, sent to the datacard | ✅ `v1.1.1` |
+| **Route Planner** | Lay a route on a map — DCS map (by DCS Olympus), topographic or satellite, MGRS grid, place names, DCS airfields — type coordinates or heading & distance, reference points, headings, distances, MGRS & DMS, sent to the datacard; DCS Route Tool import & export | ✅ `v1.2.0` |
 | **Datacard Generator** | One-page flight datacards for the kneeboard — from scratch, from a briefing or from a route — reference points, day & night, PNG & PDF export | ✅ `v1.4.1` |
 
 > Each tool is a standalone HTML file with its own build; the landing page embeds the live tools and stages them all on one board.
@@ -177,7 +177,7 @@ The output `dist/dcs_mission_plan.html` is the distributable (and the file publi
 
 ### ⏳ Work in Progress
 - ⏳ **HQ** — flight-package / Commander UI, and in-game `.miz` validation (out of beta)
-- ⏳ **Route Planner** — DCS Route Tool import & export, NATO symbols and drawing, read routes from a `.miz`, automatic magnetic variation, kneeboard export
+- ⏳ **Route Planner** — NATO symbols and drawing, DCS town names, read routes from a `.miz`, automatic magnetic variation, kneeboard export
 - ⏳ **Datacard Generator** — import waypoints and loadouts from HQ (`.miz`)
 - ⏳ **UI polish** and more themes
 
@@ -208,7 +208,7 @@ For code contributions: fork, branch, study the build scripts to understand the 
 - Built for the DCS World virtual aviation community
 - DCS map tiles by the **[DCS Olympus](https://github.com/Pax1601/DCSOlympus)** team — [Discord](https://discord.gg/kNAQkhUHnQ)
 - Map engine [Leaflet](https://leafletjs.com) (BSD-2-Clause); topographic tiles © OpenStreetMap contributors, SRTM, style © OpenTopoMap (CC-BY-SA); satellite imagery © Esri, Maxar, Earthstar Geographics
-- DCS airfield & helipad names and positions from **[pydcs](https://github.com/pydcs/dcs)** (LGPL-3.0); place-name overlay © Esri, HERE, Garmin, OpenStreetMap contributors
+- DCS airfield & helipad names and positions, and the DCS map projections, from **[pydcs](https://github.com/pydcs/dcs)** (LGPL-3.0); place-name overlay © Esri, HERE, Garmin, OpenStreetMap contributors
 - Initial version developed for the **4th VEAW** virtual wing — distributed as a generic wing config example
 - Cold War kraft SVG file provided by Flappie, thanks to him !
 

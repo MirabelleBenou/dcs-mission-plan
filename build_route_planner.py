@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build — DCS Route Planner v1.1.1.
+"""Build — DCS Route Planner v1.2.0.
 
 Produit dist/dcs_route_planner.html : un fichier unique, hors ligne, sans serveur ;
 seules les tuiles de carte (DCS Olympus, OpenTopoMap, Esri) viennent du réseau, et le
@@ -18,7 +18,7 @@ import subprocess
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-APP_VERSION = "1.1.1"
+APP_VERSION = "1.2.0"
 OUT_PATH = os.path.join(HERE, 'dist', 'dcs_route_planner.html')
 ASSETS_PATH = os.path.join(HERE, 'assets.json')
 AIRFIELDS_PATH = os.path.join(HERE, 'airfields.json')
@@ -464,6 +464,53 @@ body[data-theme="cw-soviet"] { --route: #841e1e; }
 body[data-theme="modern-nato"] { --route: #b03a2e; }
 body[data-theme="modern-east"] { --route: #7a2424; }
 
+/* ---------- fenêtres du Route Tool (au style de la fenêtre d'import du Datacard Generator) ---------- */
+.rt-modal[hidden] { display: none !important; }
+.rt-modal { position: fixed; inset: 0; z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 16px; }
+.rt-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.55); backdrop-filter: blur(2px); }
+.rt-panel { position: relative; background: var(--paper); color: var(--ink); border: 2px solid var(--ink); border-radius: 4px;
+  padding: 24px 28px; max-width: 520px; width: 100%; max-height: 92vh; max-height: 92dvh; overflow-y: auto; box-shadow: 0 8px 40px rgba(0,0,0,.5);
+  font-family: var(--f-typewriter); font-weight: 400; }
+.rt-close { position: absolute; top: 4px; right: 6px; width: 44px; height: 44px; background: none; border: none; color: var(--ink);
+  font-size: 26px; line-height: 1; cursor: pointer; padding: 0; font-family: inherit; }
+.rt-close:hover, .rt-close:focus-visible { color: var(--amber-dark); outline: none; }
+.rt-panel h2 { font-family: var(--f-stencil); font-weight: 700; font-size: 20px; letter-spacing: 2px; margin: 0 40px 14px 0; text-transform: uppercase; overflow-wrap: anywhere; }
+.rt-file { font-size: 12px; margin: 0 0 14px; overflow-wrap: anywhere; opacity: .85; }
+.rt-block { margin-bottom: 14px; }
+.rt-lbl { display: block; font-family: var(--f-stencil); font-weight: 700; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; margin: 0 0 6px; }
+.rt-in { display: block; width: 100%; min-width: 0; min-height: 44px; padding: 8px 10px; background: rgba(255,255,255,.35); color: var(--ink);
+  border: 1px solid var(--ink); border-radius: 2px; font-family: var(--f-typewriter); font-weight: 400; font-size: 13px; }
+.rt-in:focus { outline: 2px solid var(--amber); outline-offset: 1px; }
+select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%231f1c16' stroke-width='1.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center; }
+.rt-note { font-size: 11.5px; line-height: 1.45; margin: 6px 0 0; opacity: .8; overflow-wrap: anywhere; }
+.rt-warn { opacity: 1; border-left: 3px solid var(--amber-dark); padding-left: 8px; }
+.rt-warn[hidden] { display: none; }
+.rt-list { max-height: 280px; overflow-y: auto; border: 1px solid rgba(0,0,0,.25); border-radius: 2px; padding: 4px 10px; margin-bottom: 14px; background: rgba(255,255,255,.25); }
+.rt-row { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 6px 0; font-size: 13px; cursor: pointer; }
+.rt-row + .rt-row { border-top: 1px dashed rgba(0,0,0,.2); }
+.rt-row input { accent-color: var(--amber); width: 18px; height: 18px; flex: none; margin: 0; }
+.rt-nm { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.rt-n { flex: none; font-size: 11px; opacity: .75; white-space: nowrap; }
+.rt-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: space-between; margin-top: 16px; }
+.rt-actions.col { flex-direction: column; flex-wrap: nowrap; }
+.rt-btn { min-height: 44px; min-width: 44px; padding: 8px 18px; background: transparent; color: var(--ink); border: 2px solid var(--ink); border-radius: 2px;
+  font-family: var(--f-stencil); font-weight: 700; font-size: 13px; letter-spacing: 2px; line-height: 1.25; text-transform: uppercase; text-align: center;
+  cursor: pointer; flex: 1 1 auto; overflow-wrap: anywhere; }
+.rt-btn:hover, .rt-btn:focus-visible { background: rgba(0,0,0,.06); border-color: var(--amber-dark); outline: none; }
+.rt-fn { text-transform: none; letter-spacing: 1px; }
+.rt-btn.go { background: var(--amber); color: #f6efdc; border-color: var(--amber); }
+.rt-btn.go:hover, .rt-btn.go:focus-visible { background: var(--ink); border-color: var(--ink); color: #f6efdc; }
+.rt-btn:disabled { opacity: .4; cursor: not-allowed; pointer-events: none; }
+#btn-export-rt:disabled { pointer-events: auto; cursor: not-allowed; }
+@media (max-width: 520px) {
+  .rt-panel { padding: 18px 16px; }
+  .rt-panel h2 { font-size: 17px; letter-spacing: 1.5px; }
+  .rt-btn { padding: 8px 12px; letter-spacing: 1.5px; }
+}
+@media print { .rt-modal { display: none; } }
+
 /* ---------- toast ---------- */
 .toast {
   position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px);
@@ -555,10 +602,10 @@ __CSS__
   <span class="tb-group" role="group"><button type="button" class="tb-btn" data-dist="km" aria-pressed="false" data-i18n="u.km">km</button><button type="button" class="tb-btn" data-dist="nm" aria-pressed="false" data-i18n="u.nm">NM</button></span>
   <span class="tb-group" role="group"><button type="button" class="tb-btn" data-alt="m" aria-pressed="false" data-i18n="u.m">m</button><button type="button" class="tb-btn" data-alt="ft" aria-pressed="false" data-i18n="u.ft">ft</button></span>
   <span class="tb-sep"></span>
-  <button type="button" class="tb-btn" id="btn-open" data-i18n-title="tb.open.tip" title="Ouvrir une route" data-i18n-aria-label="tb.open.tip" aria-label="Ouvrir une route">
+  <button type="button" class="tb-btn" id="btn-open" data-i18n-title="tb.open.tip" title="Ouvrir une route (JSON) ou un fichier du Route Tool de DCS" data-i18n-aria-label="tb.open.tip" aria-label="Ouvrir une route (JSON) ou un fichier du Route Tool de DCS">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3M7 8l5-5 5 5M5 21h14"/></svg>
     <span class="tb-btn-label solo" data-i18n="tb.open">Ouvrir</span></button>
-  <input type="file" id="file-open" accept=".json,application/json" hidden>
+  <input type="file" id="file-open" hidden>
   <button type="button" class="tb-btn" id="btn-save" data-i18n-title="tb.save.tip" title="Enregistrer la route (JSON)" data-i18n-aria-label="tb.save.tip" aria-label="Enregistrer la route (JSON)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3h11l3 3v15H5zM8 3v6h8V3M8 21v-7h8v7"/></svg>
     <span class="tb-btn-label solo" data-i18n="tb.save">Enregistrer</span></button>
@@ -646,6 +693,7 @@ __CSS__
         <div class="actions">
           <button type="button" class="tb-btn primary" id="btn-handoff" data-i18n="btn.handoff">→ Vers la datacard</button>
           <button type="button" class="tb-btn" id="btn-export" data-i18n="btn.export">Exporter JSON</button>
+          <button type="button" class="tb-btn" id="btn-export-rt" data-i18n="btn.exportRt">Exporter vers le Route Tool</button>
         </div>
       </div>
     </div>
@@ -653,6 +701,48 @@ __CSS__
 </main>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- ===== FENÊTRE : OUVRIR UNE ROUTE DU ROUTE TOOL ===== -->
+<div class="rt-modal" id="rt-open-modal" hidden role="dialog" aria-modal="true" aria-labelledby="rt-open-title">
+  <div class="rt-backdrop" id="rt-open-backdrop"></div>
+  <div class="rt-panel" role="document">
+    <button type="button" class="rt-close" id="rt-open-close" data-i18n-aria-label="modal.close" aria-label="Fermer">&times;</button>
+    <h2 id="rt-open-title" data-i18n="rt.open.title">Ouvrir une route du Route Tool</h2>
+    <p class="rt-file" id="rt-open-file"></p>
+    <div class="rt-block">
+      <label class="rt-lbl" for="rt-theatre" data-i18n="tb.theatre">Théâtre</label>
+      <select class="rt-in" id="rt-theatre"></select>
+      <p class="rt-note" data-i18n="rt.open.theatreNote">Le théâtre décide de la conversion des coordonnées.</p>
+    </div>
+    <div class="rt-list" id="rt-routes" role="radiogroup"></div>
+    <p class="rt-note rt-warn" id="rt-replace-note" hidden data-i18n="rt.open.replace">La route en cours est remplacée.</p>
+    <div class="rt-actions">
+      <button type="button" class="rt-btn" id="rt-open-cancel" data-i18n="rt.cancel">Annuler</button>
+      <button type="button" class="rt-btn go" id="rt-open-go" data-i18n="rt.open.go">Ouvrir la route</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== FENÊTRE : EXPORTER VERS LE ROUTE TOOL ===== -->
+<div class="rt-modal" id="rt-export-modal" hidden role="dialog" aria-modal="true" aria-labelledby="rt-export-title">
+  <div class="rt-backdrop" id="rt-export-backdrop"></div>
+  <div class="rt-panel" role="document">
+    <button type="button" class="rt-close" id="rt-export-close" data-i18n-aria-label="modal.close" aria-label="Fermer">&times;</button>
+    <h2 id="rt-export-title" data-i18n="rt.exp.title">Exporter vers le Route Tool</h2>
+    <div class="rt-block">
+      <label class="rt-lbl" for="rt-name" data-i18n="rt.exp.name">Nom de la route dans le Route Tool</label>
+      <input class="rt-in" id="rt-name" type="text" autocomplete="off" spellcheck="false">
+    </div>
+    <p class="rt-note" id="rt-help"></p>
+    <p class="rt-note rt-warn" id="rt-refs-note" hidden data-i18n="rt.exp.refs">Les points de référence ne passent pas au Route Tool.</p>
+    <div class="rt-actions col">
+      <button type="button" class="rt-btn go" id="rt-add"></button>
+      <button type="button" class="rt-btn" id="rt-new" data-i18n="rt.exp.new">Créer un fichier neuf</button>
+      <button type="button" class="rt-btn" id="rt-export-cancel" data-i18n="rt.cancel">Annuler</button>
+    </div>
+    <input type="file" id="file-rt" hidden>
+  </div>
+</div>
 
 <script>
 __APP_JS__
@@ -964,7 +1054,7 @@ JS = r"""
 'use strict';
 
 /* =====================================================
-   ROUTE PLANNER v1.1.1
+   ROUTE PLANNER v1.2.0
    Une route sur une carte (points posés, saisis par coordonnées
    ou par cap et distance), des points de référence, les noms de lieux
    et les aérodromes DCS : caps, distances, MGRS et DMS,
@@ -1006,6 +1096,22 @@ const THEATRES = [
   { id: 'Falklands',          c: [-51.7, -59.0],   z: 7, dcs: '' }
 ];
 const THEATRE_IDS = THEATRES.map(x => x.id);
+
+/* Les projections de DCS, une par théâtre (pydcs, LGPL-3.0) : Mercator transverse WGS84, échelle 0,9996, latitude d'origine 0 ;
+   [ méridien central (°), faux est (m), faux nord (m) ]. DCS pose x au nord, y à l'est. Ni MarianaIslandsWWII, ni Iraq, ni Afghanistan. */
+const TM_PARAMS = {
+  Caucasus:       [33,   -99516.9999999732,     -4998114.999999984],
+  Falklands:      [-57,  147639.99999997593,    5815417.000000032],
+  GermanyCW:      [21,   35427.619999985734,    -6061633.128000011],
+  Kola:           [21,   -62702.00000000087,    -7543624.999999979],
+  MarianaIslands: [147,  238417.99999989968,    -1491840.000000048],
+  Nevada:         [-117, -193996.80999964548,   -4410028.063999966],
+  Normandy:       [-3,   -195526.00000000204,   -5484812.999999951],
+  PersianGulf:    [57,   75755.99999999645,     -2894933.0000000377],
+  SinaiMap:       [33,   169221.9999999585,     -3325312.9999999693],
+  Syria:          [39,   282801.00000003993,    -3879865.9999999935],
+  TheChannel:     [3,    99376.00000000288,     -5636889.00000001]
+};
 
 /* Aérodromes DCS par théâtre : [ nom, lat, lon, « a » (terrain à piste) ou « h » (hélistation) ] — pydcs, LGPL-3.0 */
 const AIRFIELDS = __AIRFIELDS__;
@@ -1052,7 +1158,7 @@ const I18N = {
     'u.m': 'm',
     'u.ft': 'ft',
     'tb.open': 'Ouvrir',
-    'tb.open.tip': 'Ouvrir une route',
+    'tb.open.tip': 'Ouvrir une route (JSON) ou un fichier du Route Tool de DCS',
     'tb.save': 'Enregistrer',
     'tb.save.tip': 'Enregistrer la route (JSON)',
     'tb.example': 'Exemple',
@@ -1130,6 +1236,30 @@ const I18N = {
     'nav.total': 'TOTAL',
     'btn.handoff': '→ Vers la datacard',
     'btn.export': 'Exporter JSON',
+    'btn.exportRt': 'Exporter vers le Route Tool',
+    'tb.rt.off': 'Route Tool indisponible pour ce théâtre',
+    'err.rt': 'Fichier du Route Tool non reconnu.',
+    'modal.close': 'Fermer',
+    'rt.cancel': 'Annuler',
+    'rt.open.title': 'Ouvrir une route du Route Tool',
+    'rt.open.file': 'Fichier\u202f: {name}',
+    'rt.open.theatreNote': 'Le théâtre décide de la conversion des coordonnées.',
+    'rt.open.untitled': 'Route sans nom',
+    'rt.open.n': '{n} points',
+    'rt.open.n1': '{n} point',
+    'rt.open.replace': 'La route en cours est remplacée.',
+    'rt.open.go': 'Ouvrir la route',
+    'rt.exp.title': 'Exporter vers le Route Tool',
+    'rt.exp.name': 'Nom de la route dans le Route Tool',
+    'rt.exp.help': 'Le Route Tool range toutes les routes d\'une carte dans un seul fichier, {t}.lua, dans Saved Games\\DCS\\Config\\RouteToolPresets. Pour garder vos routes, ouvrez d\'abord ce fichier\u202f: la route y est ajoutée. Sans fichier, un fichier neuf ne contient que cette route.',
+    'rt.exp.add': 'Ajouter à mon fichier {t}.lua…',
+    'rt.exp.new': 'Créer un fichier neuf',
+    'rt.exp.refs': 'Les points de référence ne passent pas au Route Tool.',
+    'toast.rtOpened': 'Route ouverte depuis le Route Tool ✓',
+    'toast.dropped': '{n} points écartés (30 au plus)',
+    'toast.rtOther': 'Ce fichier est celui de {theatre}\u202f: choisissez {t}.lua.',
+    'toast.rtTaken': 'Nom déjà pris\u202f: route enregistrée sous « {name} ».',
+    'toast.rtReady': '{t}.lua prêt\u202f: copiez-le dans Saved Games\\DCS\\Config\\RouteToolPresets (il remplace l\'ancien).',
     'toast.standalone': 'Route enregistrée : ouvrez le Datacard Generator, puis Importer → Route en cours.',
     'toast.max': '30 points au plus.',
     'toast.maxRefs': '12 points de référence au plus.',
@@ -1169,7 +1299,7 @@ const I18N = {
     'u.m': 'm',
     'u.ft': 'ft',
     'tb.open': 'Open',
-    'tb.open.tip': 'Open a route',
+    'tb.open.tip': 'Open a route (JSON) or a DCS Route Tool file',
     'tb.save': 'Save',
     'tb.save.tip': 'Save the route (JSON)',
     'tb.example': 'Example',
@@ -1247,6 +1377,30 @@ const I18N = {
     'nav.total': 'TOTAL',
     'btn.handoff': '→ To the datacard',
     'btn.export': 'Export JSON',
+    'btn.exportRt': 'Export to the Route Tool',
+    'tb.rt.off': 'Route Tool not available for this theatre',
+    'err.rt': 'Unrecognised Route Tool file.',
+    'modal.close': 'Close',
+    'rt.cancel': 'Cancel',
+    'rt.open.title': 'Open a Route Tool route',
+    'rt.open.file': 'File: {name}',
+    'rt.open.theatreNote': 'The theatre sets how coordinates are converted.',
+    'rt.open.untitled': 'Untitled route',
+    'rt.open.n': '{n} waypoints',
+    'rt.open.n1': '{n} waypoint',
+    'rt.open.replace': 'The current route is replaced.',
+    'rt.open.go': 'Open route',
+    'rt.exp.title': 'Export to the Route Tool',
+    'rt.exp.name': 'Route name in the Route Tool',
+    'rt.exp.help': 'The Route Tool keeps all routes of a map in one file, {t}.lua, in Saved Games\\DCS\\Config\\RouteToolPresets. To keep your routes, open that file first: the route is added to it. Without it, a new file holds only this route.',
+    'rt.exp.add': 'Add to my {t}.lua file…',
+    'rt.exp.new': 'Create a new file',
+    'rt.exp.refs': 'Reference points are not exported to the Route Tool.',
+    'toast.rtOpened': 'Route opened from the Route Tool ✓',
+    'toast.dropped': '{n} waypoints dropped (30 at most)',
+    'toast.rtOther': 'This file belongs to {theatre}: choose {t}.lua.',
+    'toast.rtTaken': 'Name already taken: route saved as “{name}”.',
+    'toast.rtReady': '{t}.lua ready: copy it into Saved Games\\DCS\\Config\\RouteToolPresets (it replaces the old one).',
     'toast.standalone': 'Route saved: open the Datacard Generator, then Import → Current route.',
     'toast.max': '30 waypoints at most.',
     'toast.maxRefs': '12 reference points at most.',
@@ -1323,12 +1477,12 @@ function str(v) {
 function pad2(n) { return String(n).padStart(2, '0'); }
 const $ = id => document.getElementById(id);
 
-function showToast(msg) {
+function showToast(msg, ms) {
   const el = $('toast');
   el.textContent = msg;
   el.classList.add('show');
   clearTimeout(showToast._h);
-  showToast._h = setTimeout(() => el.classList.remove('show'), 2200);
+  showToast._h = setTimeout(() => el.classList.remove('show'), ms || 2200);
 }
 
 /* ============= COORDONNÉES DE NAVIGATION ============= */
@@ -2137,6 +2291,10 @@ function syncControls() {
   mark('data-ref', S.navDisplay.ref);
   $('decl-warn').hidden = !(S.navDisplay.ref === 'mag' && parseDecl(S.navDisplay.decl) == null);
   $('btn-handoff').disabled = S.points.length === 0;
+  const rtb = $('btn-export-rt');
+  const hasRt = hasRouteTool(S.theatre);
+  rtb.disabled = !S.points.length || !hasRt;
+  if (hasRt) rtb.removeAttribute('title'); else rtb.title = t('tb.rt.off');
   $('theme').value = document.body.dataset.theme;
   const pl = $('btn-places');
   pl.classList.toggle('on', !!S.ui.places);
@@ -2354,20 +2512,26 @@ function setRoute(route) {
   frameRoute();
 }
 
+/* « Ouvrir » : le contenu décide — un texte qui commence par « presets » est un fichier du Route Tool (fenêtre de choix),
+   sinon une route JSON dcs-route-v1 */
 function openRouteFile(file) {
-  const reader = new FileReader();
-  reader.onload = () => {
+  readFileBytes(file, bytes => {
+    const text = bytesToText(bytes);
+    if (/^\s*presets/.test(text)) {
+      const data = parseRouteTool(text);
+      if (!data || !data.routes.length) { showToast(t('err.rt')); return; }
+      openRouteToolModal(file.name, data);
+      return;
+    }
     let parsed;
-    try { parsed = JSON.parse(reader.result); } catch (e) { showToast(t('err.json')); return; }
+    try { parsed = JSON.parse(text); } catch (e) { showToast(t('err.json')); return; }
     const res = parseRoute(parsed);
     if (!res) { showToast(t('err.json')); return; }
     if (S.points.length && !confirm(t('confirm.open'))) return;
     setRoute(res.route);
     showToast((res.dropped ? t('toast.openedDropped', { n: res.dropped }) : t('toast.opened')) +
       (res.droppedRefs ? ' · ' + t('toast.refsDropped', { n: res.droppedRefs }) : ''));
-  };
-  reader.onerror = () => showToast(t('err.json'));
-  reader.readAsText(file);
+  }, () => showToast(t('err.json')));
 }
 
 function loadExample() {
@@ -2384,6 +2548,432 @@ function clearRoute() {
   persistState();
   renderAll();
   setTheatreView();
+}
+
+/* ============= LE ROUTE TOOL DE DCS : PROJECTIONS, LECTURE, ÉCRITURE ============= */
+/* Mercator transverse du théâtre (série de Krüger du bloc de coordonnées) : x est le nord, y l'est, avec les faux de pydcs.
+   lat/lon (degrés) → { x, y } (mètres) */
+function llToDcs(theatre, lat, lon) {
+  const p = TM_PARAMS[theatre];
+  let d = lon - p[0];
+  while (d > 180) d -= 360;
+  while (d < -180) d += 360;
+  const phi = lat * Math.PI / 180, dl = d * Math.PI / 180;
+  const n = UTM_N, s = Math.sin(phi);
+  const q = 2 * Math.sqrt(n) / (1 + n);
+  const tt = Math.sinh(Math.atanh(s) - q * Math.atanh(q * s));
+  const xi0 = Math.atan2(tt, Math.cos(dl));
+  const eta0 = Math.atanh(Math.sin(dl) / Math.sqrt(1 + tt * tt));
+  let xi = xi0, eta = eta0;
+  for (let j = 1; j <= 4; j++) {
+    xi += UTM_ALPHA[j - 1] * Math.sin(2 * j * xi0) * Math.cosh(2 * j * eta0);
+    eta += UTM_ALPHA[j - 1] * Math.cos(2 * j * xi0) * Math.sinh(2 * j * eta0);
+  }
+  return { x: UTM_K0 * UTM_A * xi + p[2], y: UTM_K0 * UTM_A * eta + p[1] };
+}
+
+/* { x, y } (mètres DCS) → lat/lon (degrés) */
+function dcsToLl(theatre, x, y) {
+  const p = TM_PARAMS[theatre];
+  const xi = (x - p[2]) / (UTM_K0 * UTM_A);
+  const eta = (y - p[1]) / (UTM_K0 * UTM_A);
+  let xi1 = xi, eta1 = eta;
+  for (let j = 1; j <= 4; j++) {
+    xi1 -= UTM_BETA[j - 1] * Math.sin(2 * j * xi) * Math.cosh(2 * j * eta);
+    eta1 -= UTM_BETA[j - 1] * Math.cos(2 * j * xi) * Math.sinh(2 * j * eta);
+  }
+  const chi = Math.asin(Math.sin(xi1) / Math.cosh(eta1));
+  let phi = chi;
+  for (let j = 1; j <= 4; j++) phi += UTM_DELTA[j - 1] * Math.sin(2 * j * chi);
+  let lon = p[0] + Math.atan2(Math.sinh(eta1), Math.cos(xi1)) * 180 / Math.PI;
+  while (lon > 180) lon -= 360;
+  while (lon < -180) lon += 360;
+  return { lat: phi * 180 / Math.PI, lon: lon };
+}
+
+function hasRouteTool(id) { return Object.prototype.hasOwnProperty.call(TM_PARAMS, id); }
+function routeToolTheatres() { return THEATRES.filter(x => hasRouteTool(x.id)); }
+
+/* Le théâtre que nomme un fichier : son nom sans extension, ou ce nom suivi d'un espace ou d'une parenthèse
+   (« Syria (1).lua »), sans casse ; '' si aucun */
+function theatreOfFileName(name) {
+  const low = String(name == null ? '' : name).replace(/\.[^.\\/]*$/, '').toLowerCase();
+  for (let i = 0; i < THEATRES.length; i++) {
+    const id = THEATRES[i].id.toLowerCase();
+    if (low === id || (low.indexOf(id) === 0 && /^[ (]/.test(low.charAt(id.length)))) return THEATRES[i].id;
+  }
+  return '';
+}
+
+/* ---- Lecteur Lua minimal : tables, chaînes, nombres, true / false / nil, commentaires « -- ». Ni eval, ni motif de lignes.
+   Une table lue : { items: [ { k, v } ] } (k : chaîne ou nombre) ; lève une erreur si le texte sort de ce sous-ensemble. ---- */
+function luaParse(src) {
+  const n = src.length;
+  let i = 0;
+  const bad = () => { throw new Error('lua'); };
+  const isSpace = c => c === 32 || c === 9 || c === 10 || c === 13 || c === 12 || c === 11;
+  const isIdStart = c => (c >= 65 && c <= 90) || (c >= 97 && c <= 122) || c === 95;
+  const isDigit = c => c >= 48 && c <= 57;
+
+  function skip() {
+    for (;;) {
+      while (i < n && isSpace(src.charCodeAt(i))) i++;
+      if (src.charAt(i) === '-' && src.charAt(i + 1) === '-') {
+        i += 2;
+        const lm = /^\[(=*)\[/.exec(src.slice(i, i + 40));
+        if (lm) {
+          const close = ']' + lm[1] + ']';
+          const e = src.indexOf(close, i + lm[0].length);
+          if (e < 0) bad();
+          i = e + close.length;
+        } else {
+          while (i < n && src.charAt(i) !== '\n') i++;
+        }
+        continue;
+      }
+      return;
+    }
+  }
+
+  function readString() {
+    const q = src.charAt(i++);
+    let out = '';
+    for (;;) {
+      if (i >= n) bad();
+      const ch = src.charAt(i++);
+      if (ch === q) return out;
+      if (ch === '\n' || ch === '\r') bad();
+      if (ch !== '\\') { out += ch; continue; }
+      const e = src.charAt(i++);
+      const map = { n: '\n', t: '\t', r: '\r', a: '\x07', b: '\b', f: '\f', v: '\v', '\\': '\\', '"': '"', "'": "'" };
+      if (Object.prototype.hasOwnProperty.call(map, e)) out += map[e];
+      else if (e === '\n') out += '\n';
+      else if (isDigit(e.charCodeAt(0))) {
+        let d = e;
+        while (d.length < 3 && isDigit(src.charCodeAt(i))) d += src.charAt(i++);
+        const v = parseInt(d, 10);
+        if (v > 255) bad();
+        out += String.fromCharCode(v);
+      } else bad();
+    }
+  }
+
+  const NUM = /-?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?/y;
+  function readNumber() {
+    NUM.lastIndex = i;
+    const m = NUM.exec(src);
+    if (!m) bad();
+    i += m[0].length;
+    const v = parseFloat(m[0]);
+    if (!isFinite(v)) bad();
+    return v;
+  }
+
+  function readIdent() {
+    const s = i;
+    while (i < n && (isIdStart(src.charCodeAt(i)) || isDigit(src.charCodeAt(i)))) i++;
+    return src.slice(s, i);
+  }
+
+  function keyword(id) {
+    if (id === 'true') return true;
+    if (id === 'false') return false;
+    if (id === 'nil') return null;
+    return bad();
+  }
+
+  function readValue(depth) {
+    if (depth > 64) bad();
+    skip();
+    const c = src.charAt(i);
+    if (c === '{') return readTable(depth + 1);
+    if (c === '"' || c === "'") return readString();
+    if (c === '-' || c === '.' || isDigit(src.charCodeAt(i))) return readNumber();
+    if (isIdStart(src.charCodeAt(i))) return keyword(readIdent());
+    return bad();
+  }
+
+  function readTable(depth) {
+    i++;                                  /* « { » */
+    const items = [];
+    let auto = 1;
+    for (;;) {
+      skip();
+      const c = src.charAt(i);
+      if (c === '}') { i++; return { items: items }; }
+      if (i >= n) bad();
+      let k, v;
+      if (c === '[') {
+        i++;
+        k = readValue(depth);
+        if (typeof k !== 'string' && typeof k !== 'number') bad();
+        skip();
+        if (src.charAt(i++) !== ']') bad();
+        skip();
+        if (src.charAt(i++) !== '=') bad();
+        v = readValue(depth);
+      } else if (isIdStart(src.charCodeAt(i))) {
+        const id = readIdent();
+        skip();
+        if (src.charAt(i) === '=' && src.charAt(i + 1) !== '=') { i++; k = id; v = readValue(depth); }
+        else { k = auto++; v = keyword(id); }
+      } else {
+        k = auto++;
+        v = readValue(depth);
+      }
+      items.push({ k: k, v: v });
+      skip();
+      const s = src.charAt(i);
+      if (s === ',' || s === ';') i++;
+      else if (s !== '}') bad();
+    }
+  }
+
+  skip();
+  if (src.substr(i, 7) !== 'presets') bad();
+  i += 7;
+  skip();
+  if (src.charAt(i++) !== '=') bad();
+  const v = readValue(0);
+  skip();
+  if (src.charAt(i) === ';') { i++; skip(); }
+  if (i < n) bad();
+  return v;
+}
+
+function luaIsTable(v) { return !!v && typeof v === 'object' && Array.isArray(v.items); }
+function luaGet(tbl, key) {
+  let r;
+  tbl.items.forEach(it => { if (it.k === key) r = it.v; });
+  return r;
+}
+
+/* Le texte d'un fichier du Route Tool → { routes: [ { name, points: [ { x, y, alt, altRef, name } ] } ] } ; null s'il ne se lit pas.
+   Les routes gardent l'ordre du fichier, les points celui de leurs indices ; un point sans x ni y numériques est écarté. */
+function parseRouteTool(text) {
+  let tbl;
+  try { tbl = luaParse(text); } catch (e) { return null; }
+  if (!luaIsTable(tbl)) return null;
+  const routes = [];
+  for (let a = 0; a < tbl.items.length; a++) {
+    const it = tbl.items[a];
+    if (!luaIsTable(it.v)) return null;
+    const idx = it.v.items.filter(p => typeof p.k === 'number' && Math.floor(p.k) === p.k && luaIsTable(p.v));
+    idx.sort((p, q) => p.k - q.k);
+    const points = [];
+    idx.forEach(p => {
+      const x = luaGet(p.v, 'x'), y = luaGet(p.v, 'y'), alt = luaGet(p.v, 'alt'), nm = luaGet(p.v, 'name');
+      if (typeof x !== 'number' || typeof y !== 'number') return;
+      points.push({ x: x, y: y, alt: typeof alt === 'number' ? alt : 0,
+        altRef: luaGet(p.v, 'alt_type') === 'RADIO' ? 'AGL' : 'MSL', name: typeof nm === 'string' ? nm : '' });
+    });
+    routes.push({ name: String(it.k), points: points });
+  }
+  return { routes: routes };
+}
+
+/* Un nombre à la façon de Lua (%.14g) : 14 chiffres significatifs, sans zéros de fin ; sous 1e-4, 0 */
+function luaNum(v) {
+  if (typeof v !== 'number' || !isFinite(v) || Math.abs(v) < 1e-4) return '0';
+  return String(Number(v.toPrecision(14)));
+}
+function luaStr(s) {
+  return '"' + String(s == null ? '' : s).replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\r\n|\r|\n/g, '\\n') + '"';
+}
+
+/* Le bloc d'une route, à la forme de DCS (LF, tabulations ; ETA 0 et non verrouillé : DCS recalcule les heures) */
+function routeToolBlock(name, points, theatre) {
+  let s = '\t[' + luaStr(name) + '] = \n\t{\n';
+  points.forEach((p, k) => {
+    const c = llToDcs(theatre, p.lat, p.lon);
+    s += '\t\t[' + (k + 1) + '] = \n\t\t{\n' +
+      '\t\t\t["alt"] = ' + luaNum(p.alt) + ',\n' +
+      '\t\t\t["type"] = "Turning Point",\n' +
+      '\t\t\t["ETA"] = 0,\n' +
+      '\t\t\t["ETA_locked"] = false,\n' +
+      '\t\t\t["y"] = ' + luaNum(c.y) + ',\n' +
+      '\t\t\t["x"] = ' + luaNum(c.x) + ',\n' +
+      '\t\t\t["name"] = ' + luaStr(p.name) + ',\n' +
+      '\t\t\t["action"] = "Turning Point",\n' +
+      '\t\t\t["alt_type"] = "' + (p.altRef === 'AGL' ? 'RADIO' : 'BARO') + '",\n' +
+      '\t\t\t["speed_locked"] = false,\n' +
+      '\t\t}, -- end of [' + (k + 1) + ']\n';
+  });
+  return s + '\t}, -- end of [' + luaStr(name) + ']\n';
+}
+
+const RT_END = '} -- end of presets';
+
+/* Le plus petit nom libre : « nom », puis « nom (2) », « nom (3) »… */
+function freeRouteName(name, taken) {
+  if (taken.indexOf(name) === -1) return name;
+  let k = 2;
+  while (taken.indexOf(name + ' (' + k + ')') !== -1) k++;
+  return name + ' (' + k + ')';
+}
+
+/* Les octets d'un fichier existant + le bloc → les trois morceaux du fichier neuf, ou null sans ligne « } -- end of presets » :
+   tout ce qui précède la dernière de ces lignes reste tel quel, octet pour octet */
+function appendRouteBlock(bytes, block) {
+  const pat = new TextEncoder().encode(RT_END);
+  for (let p = bytes.length - pat.length; p >= 0; p--) {
+    if (p > 0 && bytes[p - 1] !== 10) continue;
+    let ok = true;
+    for (let j = 0; j < pat.length; j++) if (bytes[p + j] !== pat[j]) { ok = false; break; }
+    if (ok) return [bytes.subarray(0, p), new TextEncoder().encode(block), bytes.subarray(p)];
+  }
+  return null;
+}
+
+function readFileBytes(file, done, fail) {
+  const reader = new FileReader();
+  reader.onload = () => done(new Uint8Array(reader.result));
+  reader.onerror = fail;
+  reader.readAsArrayBuffer(file);
+}
+function bytesToText(bytes) {
+  try { return new TextDecoder('utf-8').decode(bytes); } catch (e) { return ''; }
+}
+
+/* ---- Fenêtres : « Ouvrir une route du Route Tool » et « Exporter vers le Route Tool » ---- */
+const RT = { fileName: '', routes: [], theatre: 'Caucasus', sel: 0, opener: null };
+
+function rtVisible(id) { return !$(id).hidden; }
+function rtShow(id, opener, focusId) {
+  RT.opener = opener || null;
+  $(id).hidden = false;
+  const f = $(focusId);
+  if (f) f.focus({ preventScroll: true });
+}
+function rtHide(id) {
+  $(id).hidden = true;
+  const o = RT.opener;
+  RT.opener = null;
+  if (o && o.focus && !o.disabled) { try { o.focus({ preventScroll: true }); } catch (e) { /* ignore */ } }
+}
+function rtCloseAll() {
+  if (rtVisible('rt-open-modal')) rtHide('rt-open-modal');
+  if (rtVisible('rt-export-modal')) rtHide('rt-export-modal');
+}
+/* Tab reste dans la fenêtre ouverte */
+function rtTrap(ev) {
+  if (ev.key !== 'Tab') return;
+  const m = rtVisible('rt-open-modal') ? $('rt-open-modal') : (rtVisible('rt-export-modal') ? $('rt-export-modal') : null);
+  if (!m) return;
+  const els = Array.prototype.filter.call(m.querySelectorAll('button, input, select'), e => !e.disabled && !e.hidden && e.type !== 'hidden' && e.offsetParent !== null);
+  if (!els.length) return;
+  const first = els[0], last = els[els.length - 1];
+  if (ev.shiftKey && (document.activeElement === first || !m.contains(document.activeElement))) { ev.preventDefault(); last.focus(); }
+  else if (!ev.shiftKey && (document.activeElement === last || !m.contains(document.activeElement))) { ev.preventDefault(); first.focus(); }
+}
+
+function rtPointsLabel(n) { return t(n === 1 ? 'rt.open.n1' : 'rt.open.n', { n: n }); }
+
+function rtOpenRender() {
+  $('rt-open-file').textContent = t('rt.open.file', { name: RT.fileName });
+  $('rt-theatre').innerHTML = routeToolTheatres().map(x => '<option value="' + x.id + '">' + esc(t('th.' + x.id)) + '</option>').join('');
+  $('rt-theatre').value = RT.theatre;
+  $('rt-routes').innerHTML = RT.routes.map((r, i) =>
+    '<label class="rt-row"><input type="radio" name="rt-route" value="' + i + '"' + (i === RT.sel ? ' checked' : '') + '>' +
+    '<span class="rt-nm">' + esc(r.name === '' ? t('rt.open.untitled') : r.name) + '</span>' +
+    '<span class="rt-n">' + esc(rtPointsLabel(r.points.length)) + '</span></label>').join('');
+  $('rt-replace-note').hidden = !S.points.length;
+}
+
+/* Un fichier du Route Tool lu : la fenêtre s'ouvre, le théâtre préchoisi */
+function openRouteToolModal(fileName, data) {
+  const named = theatreOfFileName(fileName);
+  RT.fileName = fileName;
+  RT.routes = data.routes;
+  RT.sel = 0;
+  RT.theatre = hasRouteTool(named) ? named : (hasRouteTool(S.theatre) ? S.theatre : routeToolTheatres()[0].id);
+  rtOpenRender();
+  rtShow('rt-open-modal', $('btn-open'), 'rt-theatre');
+}
+
+function rtOpenGo() {
+  const r = RT.routes[RT.sel];
+  if (!r) return;
+  const th = RT.theatre;
+  const pts = [];
+  let dropped = 0;
+  r.points.forEach(p => {
+    const ll = dcsToLl(th, p.x, p.y);
+    if (!validCoord(ll.lat, ll.lon)) return;
+    if (pts.length >= MAX_POINTS) { dropped++; return; }
+    pts.push({ name: p.name !== '' ? p.name : nextName(pts, pts.length), lat: r7(ll.lat), lon: r7(ll.lon), alt: p.alt, altRef: p.altRef });
+  });
+  rtHide('rt-open-modal');
+  setRoute({ name: r.name, theatre: th, units: S.units, navDisplay: S.navDisplay, points: pts, refs: [] });
+  showToast(t('toast.rtOpened') + (dropped ? ' · ' + t('toast.dropped', { n: dropped }) : ''));
+}
+
+function rtExportName() {
+  const v = $('rt-name').value.trim();
+  return v !== '' ? v : t('app.title');
+}
+
+function rtExportRender() {
+  /* le nom du fichier garde sa casse (le bouton est en capitales) */
+  $('rt-add').innerHTML = esc(t('rt.exp.add', { t: '\u0001' })).replace('\u0001.lua', '<span class="rt-fn">' + esc(S.theatre) + '.lua</span>');
+  $('rt-help').textContent = t('rt.exp.help', { t: S.theatre });
+  $('rt-refs-note').hidden = !S.refs.length;
+}
+
+function openExportRouteTool() {
+  if (!S.points.length || !hasRouteTool(S.theatre)) return;
+  $('rt-name').value = S.name.trim() !== '' ? S.name.trim() : t('app.title');
+  rtExportRender();
+  rtShow('rt-export-modal', $('btn-export-rt'), 'rt-name');
+}
+
+/* Remet le fichier au navigateur : partage (tablette) ou téléchargement, sous le nom exact <théâtre>.lua, UTF-8 sans BOM */
+function deliverLua(parts, fname, msg) {
+  const blob = new Blob(parts, { type: 'application/octet-stream' });
+  if (navigator.share && navigator.canShare) {
+    try {
+      const file = new File(parts, fname, { type: 'text/plain' });
+      if (navigator.canShare({ files: [file] })) {
+        navigator.share({ files: [file], title: t('app.title'), text: fname }).catch(() => {
+          fallbackDownload(blob, fname, msg);
+        });
+        return;
+      }
+    } catch (e) { /* repli ci-dessous */ }
+  }
+  fallbackDownload(blob, fname, msg);
+}
+
+function rtFinish(parts, name, finalName) {
+  const fname = S.theatre + '.lua';
+  rtHide('rt-export-modal');
+  let msg = t('toast.rtReady', { t: S.theatre });
+  if (finalName !== name) msg = t('toast.rtTaken', { name: finalName }) + ' ' + msg;
+  deliverLua(parts, fname, '');
+  showToast(msg, 6500);
+}
+
+/* « Créer un fichier neuf » */
+function rtExportNew() {
+  const name = rtExportName();
+  const block = routeToolBlock(name, S.points, S.theatre);
+  rtFinish([new TextEncoder().encode('presets = \n{\n' + block + RT_END + '\n')], name, name);
+}
+
+/* « Ajouter à mon fichier… » : le fichier choisi est lu, contrôlé, puis reçoit la route avant sa dernière ligne de fin */
+function rtExportAdd(file) {
+  const th = S.theatre;
+  readFileBytes(file, bytes => {
+    const data = parseRouteTool(bytesToText(bytes));
+    if (!data) { showToast(t('err.rt')); return; }
+    const named = theatreOfFileName(file.name);
+    if (named && named !== th) { showToast(t('toast.rtOther', { theatre: t('th.' + named), t: th })); return; }
+    const name = rtExportName();
+    const finalName = freeRouteName(name, data.routes.map(r => r.name));
+    const parts = appendRouteBlock(bytes, routeToolBlock(finalName, S.points, th));
+    if (!parts) { showToast(t('err.rt')); return; }
+    rtFinish(parts, name, finalName);
+  }, () => showToast(t('err.rt')));
 }
 
 /* ============= VERS LA DATACARD ============= */
@@ -2461,6 +3051,8 @@ function setLang(lang) {
   updateFlagButton();
   renderAll();
   refreshAttribution();
+  if (rtVisible('rt-open-modal')) rtOpenRender();
+  if (rtVisible('rt-export-modal')) rtExportRender();
 }
 
 /* ============= CÂBLAGE ============= */
@@ -2537,6 +3129,20 @@ function bindEvents() {
   fileOpen.addEventListener('change', () => { if (fileOpen.files && fileOpen.files[0]) openRouteFile(fileOpen.files[0]); });
   $('btn-save').addEventListener('click', downloadJson);
   $('btn-export').addEventListener('click', downloadJson);
+  $('btn-export-rt').addEventListener('click', openExportRouteTool);
+  ['rt-open-backdrop', 'rt-open-close', 'rt-open-cancel'].forEach(id => $(id).addEventListener('click', () => rtHide('rt-open-modal')));
+  ['rt-export-backdrop', 'rt-export-close', 'rt-export-cancel'].forEach(id => $(id).addEventListener('click', () => rtHide('rt-export-modal')));
+  $('rt-theatre').addEventListener('change', e => { if (hasRouteTool(e.target.value)) RT.theatre = e.target.value; });
+  $('rt-routes').addEventListener('change', e => { const k = parseInt(e.target.value, 10); if (k >= 0 && k < RT.routes.length) RT.sel = k; });
+  $('rt-open-go').addEventListener('click', rtOpenGo);
+  const fileRt = $('file-rt');
+  $('rt-add').addEventListener('click', () => { fileRt.value = ''; fileRt.click(); });
+  fileRt.addEventListener('change', () => { if (fileRt.files && fileRt.files[0]) rtExportAdd(fileRt.files[0]); });
+  $('rt-new').addEventListener('click', rtExportNew);
+  document.addEventListener('keydown', ev => {
+    if (ev.key === 'Escape' && (rtVisible('rt-open-modal') || rtVisible('rt-export-modal'))) { ev.preventDefault(); rtCloseAll(); }
+    else rtTrap(ev);
+  });
   $('btn-example').addEventListener('click', loadExample);
   $('btn-clear').addEventListener('click', clearRoute);
   $('btn-handoff').addEventListener('click', sendToDatacard);
