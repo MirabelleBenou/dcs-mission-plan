@@ -360,7 +360,7 @@ select[data-tbm-src] { display: none !important; }
 /* bandeau de repli */
 .fallback { position: absolute; z-index: 600; left: 56px; top: 12px; max-width: calc(100% - 56px - 180px);
   background: rgba(31,28,22,.88); color: var(--paper-light); border-left: 3px solid var(--red-stamp);
-  font-size: 12px; letter-spacing: .5px; padding: 8px 12px; display: none; }
+  font-size: 12px; letter-spacing: .5px; padding: 8px 12px; display: none; overflow-wrap: anywhere; }
 .fallback.show { display: block; }
 
 /* ---------- panneau ---------- */
@@ -2727,9 +2727,28 @@ function updateMapClass() {
   $('map').classList.toggle('grid-only', displayLayer() === 'grid');
 }
 
+/* Le bandeau de repli ne passe jamais sous le contrôle #tapmode : son bord droit reste à 8 px au moins à gauche du contrôle
+   (il passe alors sur plusieurs lignes) ; si la place à gauche du contrôle est sous 90 px (écran de moins de 400 px), il se pose sous le contrôle */
+const FB_LEFT = 56, FB_GAP = 8, FB_MIN = 90;
+function fallbackLayout() {
+  const f = $('fallback'), tm = $('tapmode');
+  if (!f || !tm || !f.offsetParent) return;
+  const host = f.offsetParent.getBoundingClientRect(), tr = tm.getBoundingClientRect();
+  if (!tr.width) return;
+  const avail = Math.floor(tr.left - host.left - FB_GAP - FB_LEFT);
+  if (avail >= FB_MIN) {
+    f.style.top = '';
+    f.style.maxWidth = avail + 'px';
+  } else {
+    f.style.top = Math.ceil(tr.bottom - host.top + FB_GAP) + 'px';
+    f.style.maxWidth = Math.max(120, Math.floor(host.width - FB_LEFT - 10)) + 'px';
+  }
+}
+
 function setFallback(on) {
   inFallback = on;
   $('fallback').classList.toggle('show', on);
+  if (on) fallbackLayout();
   updateMapClass();
   syncPlaces();
   scheduleGrid();
@@ -5161,6 +5180,11 @@ function createTapControl() {
   tapCtl = new Ctl();
   tapCtl.addTo(map);
   syncTapControl();
+  if (window.ResizeObserver) {
+    const ro = new ResizeObserver(() => fallbackLayout());
+    ro.observe($('tapmode')); ro.observe($('map'));
+  }
+  window.addEventListener('resize', fallbackLayout);
 }
 
 function setTapMode(m) {
@@ -5188,6 +5212,7 @@ function syncTapControl() {
     b.classList.toggle('on', on);
     b.setAttribute('aria-pressed', on ? 'true' : 'false');
   });
+  fallbackLayout();
 }
 
 /* Saisie dans une rangée : l'état change, la rangée n'est pas reconstruite (le focus reste) */
