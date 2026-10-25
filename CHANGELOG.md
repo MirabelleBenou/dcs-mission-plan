@@ -14,6 +14,10 @@ The suite bundles several **independently-versioned tools**, so entries are grou
 - **Tablet & mobile** first-class target (touch, drag, rotation-safe).
 - Wing configuration shared automatically across embedded tools.
 
+### `v1.10.0`
+#### Added
+- Embeds **Route Planner v1.2.0** — DCS Route Tool import and export (see below).
+
 ### `v1.9.1`
 #### Changed
 - Toolbar drop-down lists follow the UI theme on the board and in every tool — no more white system menus on tablets (see below). Released together with v1.9.0.
@@ -251,6 +255,13 @@ Initial release. One-page flight datacards for the cockpit kneeboard.
 ---
 
 ## Route Planner
+
+### `v1.2.0`
+#### Added
+- **DCS Route Tool** — *Open* now also reads a Route Tool file (`Saved Games\DCS\Config\RouteToolPresets\<map>.lua`): pick the theatre (guessed from the file name) and one of its routes. **Export to the Route Tool** adds the route to your existing `<map>.lua` — every other route kept byte for byte — or writes a new file; no timing is written, DCS computes it. Coordinates use each map's DCS projection (11 theatres, from [pydcs](https://github.com/pydcs/dcs)); reference points are not exported.
+#### Changed
+- **Portrait tablets and phones**: the map stays in place and only the panel below it scrolls, the on-screen keyboard included.
+- *Open* accepts any file and recognises it by its content.
 
 ### `v1.1.1`
 #### Changed
