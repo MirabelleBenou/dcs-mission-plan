@@ -1099,9 +1099,10 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
   .app > .panel { order: 0; }
   .panel { overflow: visible; }
 }
-/* En portrait (sous 1 100 px de large, à partir de 600 px de haut) la page ne défile plus : la carte reste en haut, à sa hauteur,
-   et seul le panneau, dessous, défile. Sous 600 px de haut, la page défile comme ci-dessus. */
-@media (max-width: 1099px) and (min-height: 600px) {
+/* En portrait (sous 1 100 px de large, à partir de 600 px de haut, ou toute fenêtre plus haute que large : le clavier virtuel ne la fait pas
+   changer de mise en page) la page ne défile plus : la carte reste en haut, à sa hauteur, et seul le panneau, dessous, défile.
+   Sous 600 px de haut en paysage, la page défile comme ci-dessus. */
+@media (max-width: 1099px) and ((min-height: 600px) or (orientation: portrait)) {
   .app { position: fixed; top: 56px; bottom: 0; left: 0; right: 0; padding-top: 0; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
   .mapwrap { min-width: 0; }
   .panel { overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; min-height: 0; }
@@ -2467,7 +2468,7 @@ function createMap() {
 
 /* En portrait (la page ne défile pas), un champ du panneau qui prend le focus est amené en vue dans le panneau, y compris
    après le redimensionnement du viewport visuel (clavier virtuel) ; la carte ne bouge pas */
-const PORTRAIT_FIXED_MQ = '(max-width: 1099px) and (min-height: 600px)';
+const PORTRAIT_FIXED_MQ = '(max-width: 1099px) and ((min-height: 600px) or (orientation: portrait))';
 function revealPanelField(el) {
   if (!window.matchMedia || !window.matchMedia(PORTRAIT_FIXED_MQ).matches) return;
   const go = () => { try { el.scrollIntoView({ block: 'center', inline: 'nearest' }); } catch (e) { /* ignore */ } };
