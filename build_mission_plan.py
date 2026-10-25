@@ -470,9 +470,9 @@ select[data-tbm-src] {{ display: none !important; }}
             <div class="cap-row">
               <span class="logo" style="background:var(--a-rp)">R·P</span>
               <span class="ptitle">Route Planner</span>
-              <span class="pver">v1.2.0</span>
+              <span class="pver">v1.3.0</span>
             </div>
-            <div class="pdesc" data-i18n="rp.desc">Tracé de route sur carte — carte DCS, topographique ou satellite, grille MGRS, aérodromes ; points de référence ; caps, distances, MGRS et DMS, envoyés à la datacard ; import et export du Route Tool de DCS.</div>
+            <div class="pdesc" data-i18n="rp.desc">Tracé de route sur carte — carte DCS, topographique ou satellite, grille MGRS, aérodromes ; points de référence ; caps, distances, vitesse sol et minutage ; MGRS et DMS, envoyés à la datacard ; import et export du Route Tool de DCS.</div>
             <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
           </div>
           <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>
@@ -528,7 +528,7 @@ select[data-tbm-src] {{ display: none !important; }}
   /* ── Données ──────────────────────────────────────────────── */
   {module_html_js}
 
-  var APP_VERSION = '1.10.0';
+  var APP_VERSION = '1.11.0';
   var KEY_LANG  = 'lang_v1';
   var KEY_THEME = 'theme_v1';
 
@@ -547,7 +547,7 @@ select[data-tbm-src] {{ display: none !important; }}
       'rs.desc': "Transforme une capture en photo d'analyse de reconnaissance — niveaux de gris, annotations, export PNG pleine résolution.",
       'fm.desc': "Le manuel d'emploi de la suite — un chapitre par module, schémas et mode d'emploi, entièrement hors-ligne.",
       'dg.desc': "Datacards de vol d'une page pour le kneeboard — saisie ou depuis un briefing, day et night, export PNG et PDF.",
-      'rp.desc': 'Tracé de route sur carte — carte DCS, topographique ou satellite, grille MGRS, aérodromes ; points de référence ; caps, distances, MGRS et DMS, envoyés à la datacard ; import et export du Route Tool de DCS.',
+      'rp.desc': 'Tracé de route sur carte — carte DCS, topographique ou satellite, grille MGRS, aérodromes ; points de référence ; caps, distances, vitesse sol et minutage ; MGRS et DMS, envoyés à la datacard ; import et export du Route Tool de DCS.',
       'status.op': 'Opérationnel',
       cta: '▶ Ouvrir le dossier',
       soon: 'À venir',
@@ -566,7 +566,7 @@ select[data-tbm-src] {{ display: none !important; }}
       'rs.desc': 'Turns a screenshot into a reconnaissance analysis photo — greyscale, annotations, full-resolution PNG export.',
       'fm.desc': "The suite's field manual — one chapter per module, diagrams and how-tos, fully offline.",
       'dg.desc': 'One-page flight datacards for the kneeboard — from scratch or from a briefing, day and night, PNG and PDF export.',
-      'rp.desc': 'Lay a route on a map — DCS, topographic or satellite, MGRS grid, airfields; reference points; headings, distances, MGRS and DMS, sent to the datacard; DCS Route Tool import and export.',
+      'rp.desc': 'Lay a route on a map — DCS, topographic or satellite, MGRS grid, airfields; reference points; headings, distances, ground speed and minute marks; MGRS and DMS, sent to the datacard; DCS Route Tool import and export.',
       'status.op': 'Operational',
       cta: '▶ Open the file',
       soon: 'Coming soon',

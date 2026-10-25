@@ -18,7 +18,7 @@ import subprocess
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-APP_VERSION = "1.2.0"
+APP_VERSION = "1.3.0"
 OUT_PATH = os.path.join(HERE, 'dist', 'dcs_route_planner.html')
 ASSETS_PATH = os.path.join(HERE, 'assets.json')
 AIRFIELDS_PATH = os.path.join(HERE, 'airfields.json')
@@ -372,6 +372,10 @@ select.in { appearance: none; -webkit-appearance: none; padding-right: 22px;
 .pt-head { display: grid; grid-template-columns: 30px 1fr 84px 76px 34px; gap: 6px; margin-bottom: 4px; }
 .pt-head[hidden] { display: none; }
 .pt-head span { font-size: 9.5px; letter-spacing: 1.2px; color: var(--khaki-light); text-transform: uppercase; min-width: 0; }
+.pt-row.pts, .pt-head.pts { grid-template-columns: 30px minmax(0, 1fr) 58px 62px 66px 34px; }
+.pt-row.pts input.in[data-k="alt"], .pt-row.pts input.in[data-k="gs"] { padding: 8px 5px 8px 7px; }
+.in:disabled { background: transparent; border: 1px dashed var(--amber-dark); color: var(--khaki-light); -webkit-text-fill-color: var(--khaki-light);
+  text-align: center; cursor: not-allowed; opacity: 1; padding-left: 5px; }
 .hint { font-size: 11.5px; color: var(--khaki-light); letter-spacing: .3px; line-height: 1.45; margin: 8px 0 0; }
 .ed-warn { font-size: 11px; letter-spacing: 1px; color: var(--amber); border-left: 3px solid var(--red-stamp); background: rgba(0,0,0,.18);
   padding: 5px 8px; margin: 6px 0 12px; }
@@ -381,6 +385,10 @@ select.in { appearance: none; -webkit-appearance: none; padding-right: 22px;
 .hdg .tb-group .tb-btn { height: 40px; }
 .hdg .decl { width: 110px; }
 .hdg + .hint { margin: -4px 0 12px; }
+.nav-set { gap: 12px 16px; }
+.nav-set .gs { width: 132px; }
+.nav-set .gs .lbl { white-space: nowrap; }
+.nav-set .lbl { margin-bottom: 6px; }
 
 /* fiche papier */
 .sheet { background: var(--paper-light); color: #1f1c16; box-shadow: 0 2px 0 var(--paper-edge), 0 8px 18px rgba(0,0,0,.35); }
@@ -390,7 +398,7 @@ table.nav { width: 100%; border-collapse: collapse; font-family: var(--f-mono); 
 table.nav th { font-family: var(--f-ui); font-weight: 700; font-size: 10px; letter-spacing: 1.2px; text-align: left; padding: 6px 6px;
   border-bottom: 2px solid #1f1c16; text-transform: uppercase; }
 table.nav td { padding: 5px 6px; border-bottom: 1px solid rgba(31,28,22,.18); vertical-align: top; }
-table.nav tr.leg td { background: rgba(31,28,22,.06); color: #463f30; font-size: 11.5px; }
+table.nav tr.leg td { background: rgba(31,28,22,.06); color: #463f30; font-size: 11.5px; white-space: nowrap; }
 table.nav td.n { font-family: var(--f-stencil); font-weight: 700; width: 26px; }
 table.nav td.nm { font-family: var(--f-ui); font-weight: 700; letter-spacing: .5px; font-size: 12.5px; overflow-wrap: anywhere; }
 table.nav .co { display: block; font-size: 11.5px; }
@@ -418,6 +426,29 @@ table.nav td.r { text-align: right; white-space: nowrap; }
 .add-actions .tb-btn { flex: 1 1 0; }
 
 /* ---------- carte : marqueurs et étiquettes ---------- */
+/* temps écoulé sous le nom de chaque point ; chiffres des minutes ; boîtes de branche */
+.wp-time { position: absolute; left: 34px; top: 22px; white-space: nowrap; font-family: var(--f-mono); font-weight: 400; font-size: 11px;
+  line-height: 16px; color: #f0e8d6; background: var(--route); padding: 0 5px; }
+.rp-tick-icon, .rp-tickn-icon { width: 0; height: 0; }
+.rp-tick { position: absolute; top: -2.25px; height: 4.5px; transform-origin: 50% 50%; background: rgba(31,28,22,.45); }
+.rp-tick > i { position: absolute; left: 0; right: 0; top: 1px; height: 2.5px; background: var(--route); }
+.rp-tick.blk { background: rgba(240,232,214,.7); }
+.rp-tick.blk > i { background: #1f1c16; }
+.rp-tickn { display: inline-block; white-space: nowrap; transform: translate(-50%, -50%); font-family: var(--f-condensed); font-weight: 700; font-size: 12.5px; line-height: 1;
+  color: var(--route); background: transparent;
+  text-shadow: 0 0 2px rgba(240,232,214,.95), 0 0 2px rgba(240,232,214,.95), 0 0 3px rgba(240,232,214,.8); }
+.rp-tickn.blk { color: #1f1c16; }
+.lb-icon { width: 0; height: 0; }
+.lb-pos { position: absolute; left: 0; top: 0; width: 0; height: 0; }
+.lb { position: absolute; transform-origin: 50% 50%; box-sizing: border-box; user-select: none; -webkit-user-select: none; touch-action: none;
+  filter: drop-shadow(0 1px 2px rgba(31,28,22,.55)); font-family: var(--f-mono); font-weight: 400; font-size: 12px; color: #1f1c16; }
+.lb .lb-shape { position: absolute; left: 0; top: 0; display: block; overflow: visible; pointer-events: none; z-index: 0; }   /* « .leaflet-map-pane svg » lui donnerait z-index 200 */
+.lb-bg { fill: rgba(240,232,214,.94); stroke: var(--route); stroke-width: 1.6; stroke-linejoin: miter; }
+.lb-ln { fill: none; stroke: var(--route); stroke-width: 1.6; }
+.lb-r { position: absolute; z-index: 1; left: 0; width: 100%; height: 19px; line-height: 19px; text-align: center; white-space: nowrap; }
+.lb-r.lb-ete { color: var(--route); }
+.lb-nm { position: absolute; z-index: 1; left: 0; width: 100%; height: 16px; line-height: 16px; padding: 0 4px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-family: var(--f-condensed); font-weight: 700; font-size: 12px; letter-spacing: 1px; color: var(--route); }
 .wp-icon { width: 30px; height: 30px; }
 .wp-dot { width: 30px; height: 30px; border-radius: 50%; border: 3px solid var(--route); background: rgba(240,232,214,.92);
   font-family: var(--f-stencil); font-weight: 700; color: var(--route); display: flex; align-items: center; justify-content: center;
@@ -563,6 +594,8 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 }
 @media (max-width: 520px) {
   .pt-row, .pt-head { grid-template-columns: 28px 1fr 62px 80px 30px; gap: 4px; }
+  .pt-row.pts, .pt-head.pts { grid-template-columns: 28px minmax(0, 1fr) 62px 54px 64px 30px; }
+  .pt-row.pts select.in { padding: 8px 14px 8px 5px; background-position: right 4px center; }
   .pt-row select.in { padding: 8px 18px 8px 6px; font-size: 12px; background-position: right 5px center; }
   .panel { padding: 10px; }
   table.nav { font-size: 11px; }
@@ -651,7 +684,7 @@ __CSS__
           <label class="lbl" for="route-name" data-i18n="f.name">Nom de la route</label>
           <input class="in" id="route-name" type="text" maxlength="60" autocomplete="off" spellcheck="false">
         </div>
-        <div class="pt-head"><span data-i18n="th.no">N°</span><span data-i18n="th.name">Nom</span><span id="alt-unit"></span><span data-i18n="th.ref">Réf.</span><span></span></div>
+        <div class="pt-head pts"><span data-i18n="th.no">N°</span><span data-i18n="th.name">Nom</span><span id="alt-unit"></span><span id="spd-unit"></span><span data-i18n="th.ref">Réf.</span><span></span></div>
         <div id="pts"></div>
         <div class="add-block" id="add-block">
           <div class="lbl" data-i18n="add.title">Ajouter</div>
@@ -685,6 +718,12 @@ __CSS__
     <div class="ed-section" data-section="nav">
       <div class="ed-head"><span class="ed-title" data-i18n="sec.nav">Navigation</span></div>
       <div class="ed-body">
+        <div class="hdg nav-set">
+          <div><div class="lbl" data-i18n="f.lbx">Boîtes de branche</div><span class="tb-group" role="group" data-i18n-aria-label="f.lbx" aria-label="Boîtes de branche"><button type="button" class="tb-btn" data-lbx="none" aria-pressed="false" data-i18n="lbx.none">Aucune</button><button type="button" class="tb-btn" data-lbx="min" aria-pressed="false" data-i18n="lbx.min">Minimale</button><button type="button" class="tb-btn" data-lbx="full" aria-pressed="true" data-i18n="lbx.full">Complète</button></span></div>
+          <div class="gs"><label class="lbl" for="gs-def" id="gs-lbl"></label><input class="in" id="gs-def" type="text" inputmode="numeric" autocomplete="off" spellcheck="false"></div>
+          <div><div class="lbl" data-i18n="f.trace">Tracé</div><span class="tb-group" role="group" data-i18n-aria-label="f.trace" aria-label="Tracé"><button type="button" class="tb-btn" data-trc="route" aria-pressed="true" data-i18n="col.route">Couleur</button><button type="button" class="tb-btn" data-trc="black" aria-pressed="false" data-i18n="col.black">Noir</button></span></div>
+          <div><div class="lbl" data-i18n="f.ticks">Traits des minutes</div><span class="tb-group" role="group" data-i18n-aria-label="f.ticks" aria-label="Traits des minutes"><button type="button" class="tb-btn" data-tck="route" aria-pressed="true" data-i18n="col.route">Couleur</button><button type="button" class="tb-btn" data-tck="black" aria-pressed="false" data-i18n="col.black">Noir</button></span></div>
+        </div>
         <div class="hdg">
           <div><div class="lbl" data-i18n="f.ref">Cap</div><span class="tb-group" role="group"><button type="button" class="tb-btn" data-ref="true" aria-pressed="true" data-i18n="ref.true">Vrai</button><button type="button" class="tb-btn" data-ref="mag" aria-pressed="false" data-i18n="ref.mag">Magnétique</button></span></div>
           <div class="decl"><label class="lbl" for="decl" data-i18n="f.decl">Déclinaison (°)</label><input class="in" id="decl" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" data-i18n-placeholder="f.decl.ph" placeholder="+4,5"></div>
@@ -1067,11 +1106,11 @@ JS = r"""
 'use strict';
 
 /* =====================================================
-   ROUTE PLANNER v1.2.0
+   ROUTE PLANNER v1.3.0
    Une route sur une carte (points posés, saisis par coordonnées
    ou par cap et distance), des points de référence, les noms de lieux
-   et les aérodromes DCS : caps, distances, MGRS et DMS,
-   envoyés dans la navigation d'une datacard.
+   et les aérodromes DCS : caps, distances, vitesse sol et minutage,
+   MGRS et DMS, envoyés dans la navigation d'une datacard.
    Monofichier ; seules les tuiles de carte viennent du réseau.
    ===================================================== */
 
@@ -1090,6 +1129,19 @@ const FALLBACK_MS = 4000;      /* délai avant le repli en grille seule */
 const LEG_LABEL_MIN_PX = 120;  /* étiquette « cap · distance » : branche d'au moins 120 px */
 const INSERT_MIN_PX = 60;      /* « + » d'insertion : branche d'au moins 60 px */
 const INSERT_AT = 0.28;        /* position du « + » sur la branche */
+const GS_DEFAULT = 220;        /* vitesse sol par défaut de la route, km/h */
+const GS_MAX_IN = 2000;        /* saisie d'une vitesse : entier de 1 à 2 000, dans l'unité affichée */
+const LEGBOX_IDS = ['none', 'min', 'full'];
+const BOX_MIN_PX = 60;         /* une branche de moins de 60 px à l'écran n'a pas de boîte */
+const BOX_ROW_H = 19;          /* hauteur d'une ligne de la boîte */
+const BOX_GAP = 16;            /* écart par défaut entre la branche et le bord de la boîte */
+const BOX_LIMIT = 20000;       /* garde-fou : une place plus lointaine (en pixels) se lit comme absente */
+const BOX_DIMS = { full: { w: 104, roof: 24, rows: 5 }, min: { w: 92, roof: 12, rows: 2 } };
+const TICK_DENSE_PX = 7;       /* pixels par minute à partir desquels on trace un trait par minute */
+const TICK_NUM_GAP = 24;       /* écart minimal entre deux chiffres, en pixels */
+const TICK_NUM_OFF = 20;       /* chiffre à 20 px à gauche du tracé */
+const TICK_END_MIN = 0.05;     /* pas de trait à moins de 3 s du point d'arrivée (minutes) */
+const TICK_CULL_ABOVE = 300;   /* au-delà de ce nombre de traits sur une branche, seuls ceux de l'écran sont dessinés */
 
 /* Théâtres : cadrage (centre, zoom) et clé de la couche Olympus ('' : aucune) */
 const THEATRES = [
@@ -1210,6 +1262,28 @@ const I18N = {
     'th.name': 'Nom',
     'th.alt': 'Alt. ({u})',
     'th.ref': 'Réf.',
+    'th.spd.kmh': 'Vit. km/h',
+    'th.spd.kt': 'Vit. kt',
+    'spd.none': '—',
+    'u.kmh': 'km/h',
+    'u.kt': 'kt',
+    'f.lbx': 'Boîtes de branche',
+    'lbx.none': 'Aucune',
+    'lbx.min': 'Minimale',
+    'lbx.full': 'Complète',
+    'f.gs': 'Vitesse sol ({u})',
+    'f.trace': 'Tracé',
+    'f.ticks': 'Traits des minutes',
+    'col.route': 'Couleur',
+    'col.black': 'Noir',
+    'lb.true': '°V',
+    'lb.mag': '°M',
+    'lb.ete': 'ETE',
+    'lb.tip': 'Glissez la boîte pour la déplacer',
+    'tick.fmt': '{k}\u2032',
+    'nav.leg': '↓ {cap}° · {spd} · ETE {ete}',
+    'nav.t': 'T {t}',
+    'nav.total.v': '{d} · {t}',
     'ref.AGL': 'SOL',
     'ref.MSL': 'MER',
     'refl.AGL': 'sol',
@@ -1351,6 +1425,28 @@ const I18N = {
     'th.name': 'Name',
     'th.alt': 'Alt. ({u})',
     'th.ref': 'Ref.',
+    'th.spd.kmh': 'Spd km/h',
+    'th.spd.kt': 'Spd kt',
+    'spd.none': '—',
+    'u.kmh': 'km/h',
+    'u.kt': 'kt',
+    'f.lbx': 'Leg boxes',
+    'lbx.none': 'None',
+    'lbx.min': 'Minimal',
+    'lbx.full': 'Full',
+    'f.gs': 'Ground speed ({u})',
+    'f.trace': 'Route line',
+    'f.ticks': 'Minute marks',
+    'col.route': 'Colour',
+    'col.black': 'Black',
+    'lb.true': '°T',
+    'lb.mag': '°M',
+    'lb.ete': 'ETE',
+    'lb.tip': 'Drag the box to move it',
+    'tick.fmt': '{k}\u2032',
+    'nav.leg': '↓ {cap}° · {spd} · ETE {ete}',
+    'nav.t': 'T {t}',
+    'nav.total.v': '{d} · {t}',
     'ref.AGL': 'AGL',
     'ref.MSL': 'MSL',
     'refl.AGL': 'AGL',
@@ -1508,9 +1604,10 @@ function defaultState() {
     format: FORMAT_ID, name: '', theatre: 'Caucasus',
     units: { distance: 'km', altitude: 'm' },
     navDisplay: { ref: 'true', decl: '' },
+    groundSpeed: GS_DEFAULT, legBoxes: 'full',
     points: [],
     refs: [],
-    ui: { layer: 'topo', grid: true, places: false, airfields: true }
+    ui: { layer: 'topo', grid: true, places: false, airfields: true, trace: 'route', ticks: 'route' }
   };
 }
 
@@ -1547,6 +1644,14 @@ function nextRefName(refs, rank) {
 /* La lettre d'une référence : A, B, C… selon son rang */
 function refLetter(i) { return String.fromCharCode(65 + i); }
 
+/* La place d'une boîte lue : { along, side } en entiers, sinon null (la place par défaut s'applique) */
+function readBox(b) {
+  if (!b || typeof b !== 'object' || Array.isArray(b)) return null;
+  if (!Number.isInteger(b.along) || !Number.isInteger(b.side)) return null;
+  if (Math.abs(b.along) > BOX_LIMIT || Math.abs(b.side) > BOX_LIMIT) return null;
+  return { along: b.along, side: b.side };
+}
+
 /* Un objet lu (fichier ou stockage) → { route, dropped, droppedRefs } ; null si ce n'est pas une route dcs-route-v1.
    Un point (ou une référence) dont lat ou lon n'est pas un nombre dans les bornes est écarté ; au-delà de 30 points
    (12 références), le reste est écarté (dropped, droppedRefs les comptent) ; les champs absents prennent leurs défauts. */
@@ -1561,6 +1666,8 @@ function parseRoute(src) {
     theatre: THEATRE_IDS.indexOf(src.theatre) !== -1 ? src.theatre : d.theatre,
     units: { distance: un.distance === 'nm' ? 'nm' : 'km', altitude: un.altitude === 'ft' ? 'ft' : 'm' },
     navDisplay: { ref: nd.ref === 'mag' ? 'mag' : 'true', decl: str(nd.decl) },
+    groundSpeed: (typeof src.groundSpeed === 'number' && isFinite(src.groundSpeed) && src.groundSpeed > 0) ? src.groundSpeed : GS_DEFAULT,
+    legBoxes: LEGBOX_IDS.indexOf(src.legBoxes) !== -1 ? src.legBoxes : 'full',
     points: [],
     refs: []
   };
@@ -1568,12 +1675,16 @@ function parseRoute(src) {
   src.points.forEach(p => {
     if (!p || typeof p !== 'object' || !validCoord(p.lat, p.lon)) return;
     if (route.points.length >= MAX_POINTS) { dropped++; return; }
-    route.points.push({
+    const q = {
       name: typeof p.name === 'string' ? p.name : nextName(route.points, route.points.length),
       lat: r7(p.lat), lon: r7(p.lon),
       alt: (typeof p.alt === 'number' && isFinite(p.alt)) ? p.alt : 0,
       altRef: p.altRef === 'MSL' ? 'MSL' : 'AGL'
-    });
+    };
+    /* gs : la vitesse de la branche qui arrive au point, jamais sur le point 0 ; box : la place de sa boîte */
+    if (route.points.length > 0 && typeof p.gs === 'number' && isFinite(p.gs) && p.gs > 0) q.gs = p.gs;
+    if (route.points.length > 0) { const bx = readBox(p.box); if (bx) q.box = bx; }
+    route.points.push(q);
   });
   if (Array.isArray(src.refs)) src.refs.forEach(p => {
     if (!p || typeof p !== 'object' || !validCoord(p.lat, p.lon)) return;
@@ -1602,7 +1713,8 @@ function loadState() {
         const ui = (o.ui && typeof o.ui === 'object') ? o.ui : {};
         S = Object.assign(res.route, { ui: {
           layer: LAYER_IDS.indexOf(ui.layer) !== -1 ? ui.layer : 'topo', grid: typeof ui.grid === 'boolean' ? ui.grid : true,
-          places: typeof ui.places === 'boolean' ? ui.places : false, airfields: typeof ui.airfields === 'boolean' ? ui.airfields : true } });
+          places: typeof ui.places === 'boolean' ? ui.places : false, airfields: typeof ui.airfields === 'boolean' ? ui.airfields : true,
+          trace: ui.trace === 'black' ? 'black' : 'route', ticks: ui.ticks === 'black' ? 'black' : 'route' } });
         return;
       }
     }
@@ -1616,7 +1728,13 @@ function exportObject() {
     format: FORMAT_ID, name: S.name, theatre: S.theatre,
     units: { distance: S.units.distance, altitude: S.units.altitude },
     navDisplay: { ref: S.navDisplay.ref, decl: S.navDisplay.decl },
-    points: S.points.map(p => ({ name: p.name, lat: p.lat, lon: p.lon, alt: p.alt, altRef: p.altRef })),
+    groundSpeed: S.groundSpeed, legBoxes: S.legBoxes,
+    points: S.points.map((p, i) => {
+      const o = { name: p.name, lat: p.lat, lon: p.lon, alt: p.alt, altRef: p.altRef };
+      if (i > 0 && typeof p.gs === 'number') o.gs = p.gs;
+      if (i > 0 && p.box) o.box = { along: p.box.along, side: p.box.side };
+      return o;
+    }),
     refs: S.refs.map(p => ({ name: p.name, lat: p.lat, lon: p.lon, alt: p.alt, altRef: p.altRef }))
   };
 }
@@ -1655,9 +1773,54 @@ function legInfo(a, b) {
   return { cap: fmtHdg(brg), km: L.km };
 }
 
+/* ============= VITESSE SOL ET TEMPS ============= */
+function r4(v) { return Math.round(v * 1e4) / 1e4; }
+
+/* À la seconde la plus proche (0,5 s vers le haut) */
+function secRound(s) { return Math.floor(s + 0.5); }
+/* Temps de branche : MM:SS (minutes sur deux chiffres au moins) */
+function fmtEte(s) { const n = secRound(s); return pad2(Math.floor(n / 60)) + ':' + pad2(n % 60); }
+/* Temps écoulé : HH+MM+SS */
+function fmtElapsed(s) { const n = secRound(s); return pad2(Math.floor(n / 3600)) + '+' + pad2(Math.floor(n / 60) % 60) + '+' + pad2(n % 60); }
+
+/* Vitesse (km/h) de la branche qui arrive au point i : la sienne, sinon celle de la route ; le point 0 n'en a pas */
+function legSpeed(i) {
+  const p = S.points[i];
+  return (i > 0 && p && typeof p.gs === 'number' && p.gs > 0) ? p.gs : S.groundSpeed;
+}
+/* km/h → entier dans l'unité affichée (km/h, ou kt quand la distance est en NM) */
+function speedDisp(kmh) { return Math.round(S.units.distance === 'nm' ? kmh / NM_KM : kmh); }
+function speedText(kmh) { return speedDisp(kmh) + ' ' + t(S.units.distance === 'nm' ? 'u.kt' : 'u.kmh'); }
+/* Une saisie de vitesse (unité affichée) → km/h ; null si elle est hors règle (entier de 1 à 2 000) */
+function readSpeed(s) {
+  const v = readNum(s);
+  if (v == null) return null;
+  const n = Math.round(v);
+  if (n < 1 || n > GS_MAX_IN) return null;
+  return S.units.distance === 'nm' ? r4(n * NM_KM) : n;
+}
+
+/* Le minutage de la route : par branche (cap, distance, vitesse, durée non arrondie en secondes) et temps écoulé à chaque point
+   (somme non arrondie des durées qui précèdent) */
+function timing() {
+  const pts = S.points, legs = [null], el = [0];
+  let km = 0, sec = 0;
+  for (let i = 1; i < pts.length; i++) {
+    const l = legInfo(pts[i - 1], pts[i]);
+    const v = legSpeed(i);
+    const sc = l.km / v * 3600;
+    legs.push({ cap: l.cap, km: l.km, v: v, sec: sc });
+    km += l.km; sec += sc;
+    el.push(sec);
+  }
+  return { legs: legs, el: el, km: km, sec: sec };
+}
+
 /* ============= CARTE ============= */
 let map = null;
 let routeGroup = null;
+let decorGroup = null;        /* traits des minutes, chiffres, boîtes de branche, étiquettes « cap · distance » */
+let ptMarkers = [];           /* les marqueurs des points de la route, dans l'ordre */
 let refGroup = null;
 let placesLayer = null;
 let afLayer = null;
@@ -1858,11 +2021,16 @@ function createMap() {
   /* Les aérodromes : au-dessus de la grille, sous les références et la route ; les références : sous les points */
   map.createPane('airfields').style.zIndex = 380;
   map.createPane('refs').style.zIndex = 450;
+  /* Les chiffres des minutes : au-dessus des références, sous les points ; les boîtes de branche : au-dessus des points */
+  map.createPane('legticks').style.zIndex = 420;        /* les traits des minutes : au-dessus de la route, sous les références */
+  map.createPane('legnums').style.zIndex = 455;
+  map.createPane('legboxes').style.zIndex = 620;
   gridCanvas = document.createElement('canvas');
   gridCanvas.className = 'mgrs-canvas';
   pane.appendChild(gridCanvas);
   refGroup = L.layerGroup().addTo(map);
   routeGroup = L.layerGroup().addTo(map);
+  decorGroup = L.layerGroup().addTo(map);
   map.on('move zoom viewreset resize', scheduleGrid);
   map.on('zoomend', drawRoute);
   map.on('zoomend', syncAfZoom);
@@ -2050,10 +2218,21 @@ function routeColor() {
   return getComputedStyle(document.body).getPropertyValue('--route').trim() || '#a83524';
 }
 
-function wpIcon(p, i) {
+function wpIcon(p, i, tm) {
   return L.divIcon({
     className: 'wp-icon', iconSize: [30, 30], iconAnchor: [15, 15],
-    html: '<div class="wp-dot' + (i === sel ? ' sel' : '') + '">' + i + '</div><div class="wp-name">' + esc(p.name) + '</div>'
+    html: '<div class="wp-dot' + (i === sel ? ' sel' : '') + '">' + i + '</div><div class="wp-name">' + esc(p.name) + '</div>' +
+      '<div class="wp-time">' + esc(fmtElapsed(tm.el[i])) + '</div>'
+  });
+}
+
+/* Le temps écoulé sous chaque point, remis à jour pendant qu'un point se déplace (les marqueurs ne sont pas refaits) */
+function updateTimes() {
+  const tm = timing();
+  ptMarkers.forEach((m, k) => {
+    const el = m.getElement && m.getElement();
+    const n = el && el.querySelector('.wp-time');
+    if (n) n.textContent = fmtElapsed(tm.el[k]);
   });
 }
 
@@ -2061,25 +2240,24 @@ function drawRoute() {
   if (!routeGroup) return;
   routeGroup.clearLayers();
   linePair = null;
+  ptMarkers = [];
   const pts = S.points;
+  const tm = timing();
   const ll = pts.map(p => [p.lat, p.lon]);
   if (ll.length > 1) {
+    /* Tracé noir : la ligne #1f1c16 de 4 px sur un liseré papier de 8 px ; sinon le tracé de la couleur du thème */
+    const black = S.ui.trace === 'black';
     linePair = [
-      L.polyline(ll, { color: '#1f1c16', weight: 9, opacity: 0.45, lineCap: 'round', lineJoin: 'round', interactive: false }).addTo(routeGroup),
-      L.polyline(ll, { color: routeColor(), weight: 5, opacity: 1, lineCap: 'round', lineJoin: 'round', interactive: false }).addTo(routeGroup)
+      L.polyline(ll, black ? { color: '#f0e8d6', weight: 8, opacity: 0.75, lineCap: 'round', lineJoin: 'round', interactive: false }
+                           : { color: '#1f1c16', weight: 9, opacity: 0.45, lineCap: 'round', lineJoin: 'round', interactive: false }).addTo(routeGroup),
+      L.polyline(ll, black ? { color: '#1f1c16', weight: 4, opacity: 1, lineCap: 'round', lineJoin: 'round', interactive: false }
+                           : { color: routeColor(), weight: 5, opacity: 1, lineCap: 'round', lineJoin: 'round', interactive: false }).addTo(routeGroup)
     ];
   }
   for (let i = 1; i < pts.length; i++) {
     const a = pts[i - 1], b = pts[i];
     const pa = map.latLngToContainerPoint([a.lat, a.lon]), pb = map.latLngToContainerPoint([b.lat, b.lon]);
     const px = pa.distanceTo(pb);
-    if (px >= LEG_LABEL_MIN_PX) {
-      const l = legInfo(a, b);
-      L.marker([(a.lat + b.lat) / 2, (a.lon + b.lon) / 2], {
-        interactive: false, keyboard: false,
-        icon: L.divIcon({ className: 'leg-label-icon', iconSize: [0, 0], html: '<span class="leg-label">' + l.cap + '° · ' + esc(fmtDist(l.km)) + '</span>' })
-      }).addTo(routeGroup);
-    }
     if (px >= INSERT_MIN_PX) {
       const q = [a.lat + (b.lat - a.lat) * INSERT_AT, a.lon + (b.lon - a.lon) * INSERT_AT];
       const ins = L.marker(q, {
@@ -2090,12 +2268,15 @@ function drawRoute() {
     }
   }
   pts.forEach((p, i) => {
-    const mk = L.marker([p.lat, p.lon], { draggable: true, autoPan: true, zIndexOffset: i === sel ? 2000 : 1000, icon: wpIcon(p, i), title: p.name });
+    const mk = L.marker([p.lat, p.lon], { draggable: true, autoPan: true, zIndexOffset: i === sel ? 2000 : 1000, icon: wpIcon(p, i, tm), title: p.name });
+    ptMarkers.push(mk);
     mk.on('drag', ev => {
       const q = ev.target.getLatLng();
       p.lat = r7(q.lat); p.lon = r7(q.lng);
       if (linePair) { const l2 = S.points.map(x => [x.lat, x.lon]); linePair.forEach(pl => pl.setLatLngs(l2)); }
       renderNav();
+      drawDecor();
+      updateTimes();
     });
     mk.on('dragend', () => {
       sel = i; selR = -1;
@@ -2105,6 +2286,151 @@ function drawRoute() {
     mk.on('click', ev => { L.DomEvent.stop(ev); selectPoint(i); });
     mk.addTo(routeGroup);
   });
+  drawDecor();
+}
+
+/* ============= TRAITS DES MINUTES, CHIFFRES ET BOÎTES DE BRANCHE ============= */
+function decorInk() { return S.ui.ticks === 'black' ? '#1f1c16' : routeColor(); }
+
+/* Les traits d'une branche : un trait coupe le tracé à angle droit à chaque minute entière (recomptée depuis le début de la branche),
+   ou toutes les 5 minutes quand la branche est trop serrée ; pa : départ à l'écran, (ux, uy) : vecteur unitaire du sens du vol, len : longueur en px */
+function drawTicks(i, pa, ux, uy, len, leg) {
+  const T = leg.sec / 60;                       /* durée de la branche en minutes */
+  if (!(T > 0) || !(len > 0)) return;
+  const p = len / T;                            /* pixels par minute */
+  let step;
+  if (p >= TICK_DENSE_PX) step = 1;
+  else if (5 * p >= TICK_DENSE_PX) step = 5;
+  else return;
+  const rx = -uy, ry = ux;                      /* à droite du sens du vol */
+  const black = S.ui.ticks === 'black';
+  const nEvery = Math.max(1, Math.ceil(TICK_NUM_GAP / (step * p)));   /* un chiffre sur n traits */
+  const size = map.getSize();
+  const cull = T / step > TICK_CULL_ABOVE;
+  let j = 0;
+  for (let k = step; k < T && T - k >= TICK_END_MIN; k += step) {
+    j++;
+    const f = k / T;
+    const cx = pa.x + ux * len * f, cy = pa.y + uy * len * f;
+    if (cull && (cx < -60 || cy < -60 || cx > size.x + 60 || cy > size.y + 60)) continue;
+    /* le trait : 12 px de long (6 de chaque côté), 18 px aux multiples de 5 ; épaisseur 2,5 px sur un liseré de 4,5 px.
+       Un bloc tourné, posé au pixel près (le marqueur Leaflet est arrondi : le reste sous-pixel passe par .lb-pos) */
+    const tl = k % 5 === 0 ? 18 : 12;
+    const tll = map.containerPointToLatLng([cx, cy]);
+    const ab = map.project(tll);
+    const fx = Math.round((ab.x - Math.round(ab.x)) * 100) / 100, fy = Math.round((ab.y - Math.round(ab.y)) * 100) / 100;
+    const ang = Math.round(Math.atan2(ry, rx) * 180 / Math.PI * 1000) / 1000;
+    L.marker(tll, {
+      pane: 'legticks', interactive: false, keyboard: false,
+      icon: L.divIcon({ className: 'rp-tick-icon', iconSize: [0, 0],
+        html: '<div class="lb-pos" style="transform:translate(' + fx + 'px,' + fy + 'px)"><div class="rp-tick rp-leg' + i + (black ? ' blk' : '') + (tl === 18 ? ' rp-tick5' : '') +
+          '" data-leg="' + i + '" data-k="' + k + '" style="width:' + tl + 'px;left:' + (-tl / 2) + 'px;transform:rotate(' + ang + 'deg)"><i></i></div></div>' })
+    }).addTo(decorGroup);
+    if (j % nEvery === 0) {
+      /* le chiffre : 20 px à gauche du tracé dans le sens du vol, côté opposé aux boîtes */
+      const nl = map.containerPointToLatLng([cx - rx * TICK_NUM_OFF, cy - ry * TICK_NUM_OFF]);
+      L.marker(nl, {
+        pane: 'legnums', interactive: false, keyboard: false,
+        icon: L.divIcon({ className: 'rp-tickn-icon', iconSize: [0, 0], html: '<span class="rp-tickn' + (black ? ' blk' : '') + '">' + esc(t('tick.fmt', { k: k })) + '</span>' })
+      }).addTo(decorGroup);
+    }
+  }
+}
+
+/* Le contenu d'une boîte : [cap, distance, vitesse, altitude d'arrivée, ETE] ; la minimale ne garde que les deux premières */
+function boxLines(i, leg, mode) {
+  const p = S.points[i];
+  const lines = [leg.cap + t(declValue() == null ? 'lb.true' : 'lb.mag'), fmtDist(leg.km)];
+  if (mode === 'full') { lines.push(speedText(leg.v)); lines.push(altText(p)); lines.push(t('lb.ete') + ' ' + fmtEte(leg.sec)); }
+  return lines;
+}
+
+/* La boîte en maison : toit (le nom du point d'arrivée) puis les lignes. Toit en haut (up), ou toit en bas avec le nom au-dessus du toit
+   et les lignes au-dessus du nom, dans le même ordre ; rot : l'angle appliqué ; (fx, fy) : le reste sous-pixel du centre */
+function boxHtml(i, leg, mode, up, rot, fx, fy) {
+  const D = BOX_DIMS[mode], w = D.w, roof = D.roof, rows = D.rows, H = roof + rows * BOX_ROW_H, e = 0.8, m = w / 2;
+  const lines = boxLines(i, leg, mode);
+  let d, ys = [];
+  if (up) {
+    d = 'M' + e + ',' + roof + ' L' + m + ',' + e + ' L' + (w - e) + ',' + roof + ' L' + (w - e) + ',' + (H - e) + ' L' + e + ',' + (H - e) + ' Z';
+    for (let k = 0; k < rows; k++) ys.push(roof + k * BOX_ROW_H);
+  } else {
+    const base = rows * BOX_ROW_H;
+    d = 'M' + e + ',' + e + ' L' + (w - e) + ',' + e + ' L' + (w - e) + ',' + base + ' L' + m + ',' + (H - e) + ' L' + e + ',' + base + ' Z';
+    for (let k = 1; k <= rows; k++) ys.push(k * BOX_ROW_H);
+  }
+  const ln = ys.map(y => 'M' + e + ',' + y + ' H' + (w - e)).join(' ');
+  const nm = '<div class="lb-nm" style="top:' + (up ? roof - 17 : rows * BOX_ROW_H + 1) + 'px">' + (mode === 'full' ? esc(S.points[i].name.toUpperCase()) : '') + '</div>';
+  const rowsHtml = lines.map((tx, k) =>
+    '<div class="lb-r' + (mode === 'full' && k === 4 ? ' lb-ete' : '') + '" style="top:' + ((up ? roof : 0) + k * BOX_ROW_H) + 'px">' + esc(tx) + '</div>').join('');
+  return '<div class="lb-pos" style="transform:translate(' + fx + 'px,' + fy + 'px)">' +
+    '<div class="lb lb-' + mode + (up ? ' lb-up' : ' lb-down') + '" data-leg="' + i + '" data-rot="' + rot + '" style="width:' + w + 'px;height:' + H + 'px;left:' + (-w / 2) + 'px;top:' + (-H / 2) + 'px;transform:rotate(' + rot + 'deg)">' +
+    '<svg class="lb-shape" width="' + w + '" height="' + H + '" viewBox="0 0 ' + w + ' ' + H + '" aria-hidden="true"><path class="lb-bg" d="' + d + '"/><path class="lb-ln" d="' + ln + '"/></svg>' +
+    (up ? nm + rowsHtml : rowsHtml + nm) + '</div></div>';
+}
+
+/* La boîte de la branche (i-1 → i) : parallèle à sa branche, la pointe du toit dans le sens du tracé ; sa place est gardée en pixels
+   (along le long du tracé, side à sa droite) depuis le milieu de la branche à l'écran */
+function drawBox(i, pa, pb, len, leg) {
+  const mode = S.legBoxes, D = BOX_DIMS[mode];
+  const p = S.points[i];
+  const ux = (pb.x - pa.x) / len, uy = (pb.y - pa.y) / len;
+  const rx = -uy, ry = ux;
+  const mx = (pa.x + pb.x) / 2, my = (pa.y + pb.y) / 2;
+  const along = p.box ? p.box.along : 0, side = p.box ? p.box.side : D.w / 2 + BOX_GAP;
+  const cx = mx + along * ux + side * rx, cy = my + along * uy + side * ry;
+  const h = Math.atan2(pb.x - pa.x, -(pb.y - pa.y)) * 180 / Math.PI;      /* cap à l'écran : 0 vers le haut, sens horaire */
+  const up = Math.abs(h) <= 90;
+  const rot = Math.round((up ? h : (h > 0 ? h - 180 : h + 180)) * 1000) / 1000;
+  const ll = map.containerPointToLatLng([cx, cy]);
+  const ab = map.project(ll);
+  const fx = Math.round((ab.x - Math.round(ab.x)) * 100) / 100, fy = Math.round((ab.y - Math.round(ab.y)) * 100) / 100;
+  /* le trait de rappel : sous la boîte, du milieu de la branche à son centre */
+  if (Math.abs(along) > 40 || Math.abs(side) > D.w / 2 + 36) {
+    L.polyline([map.containerPointToLatLng([mx, my]), ll], { color: routeColor(), weight: 1.4, opacity: 1, dashArray: '4 4', lineCap: 'butt', interactive: false, className: 'rp-recall rp-leg' + i }).addTo(decorGroup);
+  }
+  const mk = L.marker(ll, {
+    pane: 'legboxes', draggable: true, autoPan: false, keyboard: false, title: t('lb.tip'),
+    icon: L.divIcon({ className: 'lb-icon', iconSize: [0, 0], html: boxHtml(i, leg, mode, up, rot, fx, fy) })
+  }).addTo(decorGroup);
+  const sp = map.latLngToContainerPoint(ll);
+  mk.on('click', ev => { L.DomEvent.stop(ev); });
+  mk.on('dragend', () => {
+    const q = map.latLngToContainerPoint(mk.getLatLng());
+    const dx = cx + (q.x - sp.x) - mx, dy = cy + (q.y - sp.y) - my;
+    const clamp = v => Math.max(-BOX_LIMIT, Math.min(BOX_LIMIT, Math.round(v)));
+    if (S.points[i]) S.points[i].box = { along: clamp(dx * ux + dy * uy), side: clamp(dx * rx + dy * ry) };
+    persistState();
+    setTimeout(drawDecor, 0);
+  });
+}
+
+/* Tout ce qui se dessine le long des branches ; redessiné au zoom, à chaque changement de la route ou des réglages */
+function drawDecor() {
+  if (!decorGroup) return;
+  decorGroup.clearLayers();
+  const pts = S.points;
+  if (pts.length < 2) return;
+  const tm = timing();
+  const px = pts.map(p => map.latLngToContainerPoint([p.lat, p.lon]));
+  for (let i = 1; i < pts.length; i++) {
+    const pa = px[i - 1], pb = px[i];
+    const len = pa.distanceTo(pb);
+    const leg = tm.legs[i];
+    if (len > 0) drawTicks(i, pa, (pb.x - pa.x) / len, (pb.y - pa.y) / len, len, leg);
+    if (S.legBoxes === 'none') {
+      /* « Aucune » : l'étiquette « cap · distance » de toujours */
+      if (len >= LEG_LABEL_MIN_PX) {
+        const a = pts[i - 1], b = pts[i];
+        L.marker([(a.lat + b.lat) / 2, (a.lon + b.lon) / 2], {
+          interactive: false, keyboard: false,
+          icon: L.divIcon({ className: 'leg-label-icon', iconSize: [0, 0], html: '<span class="leg-label">' + leg.cap + '° · ' + esc(fmtDist(leg.km)) + '</span>' })
+        }).addTo(decorGroup);
+      }
+    } else if (len >= BOX_MIN_PX) {
+      drawBox(i, pa, pb, len, leg);
+    }
+  }
 }
 
 /* Les points de référence : un losange et sa lettre, sans ligne qui les relie ; sous les points de la route */
@@ -2205,6 +2531,7 @@ function insertPoint(i, lat, lon) {
 
 function deletePoint(i) {
   S.points.splice(i, 1);
+  if (S.points.length) { delete S.points[0].gs; delete S.points[0].box; }   /* le point 0 n'a ni vitesse ni boîte */
   if (sel > i) sel--;
   else if (sel === i) sel = Math.min(i, S.points.length - 1);
   afterEdit(true);
@@ -2229,14 +2556,18 @@ function afterEdit(rebuildRows) {
 
 /* ============= PANNEAU ============= */
 function renderPts() {
+  const dflt = speedDisp(S.groundSpeed);
   $('pts').innerHTML = S.points.map((p, i) =>
-    '<div class="pt-row' + (i === sel ? ' sel' : '') + '" data-i="' + i + '"><button type="button" class="pt-num" data-act="select">' + i + '</button>' +
+    '<div class="pt-row pts' + (i === sel ? ' sel' : '') + '" data-i="' + i + '"><button type="button" class="pt-num" data-act="select">' + i + '</button>' +
     '<input class="in" data-k="name" type="text" autocomplete="off" spellcheck="false" value="' + esc(p.name) + '">' +
     '<input class="in" data-k="alt" type="text" inputmode="numeric" autocomplete="off" value="' + altValue(p.alt) + '">' +
+    (i === 0 ? '<input class="in" data-k="gs" type="text" disabled tabindex="-1" aria-label="' + esc(t(S.units.distance === 'nm' ? 'th.spd.kt' : 'th.spd.kmh')) + '" value="' + esc(t('spd.none')) + '">'
+             : '<input class="in" data-k="gs" type="text" inputmode="numeric" autocomplete="off" aria-label="' + esc(t(S.units.distance === 'nm' ? 'th.spd.kt' : 'th.spd.kmh')) + '" value="' + (typeof p.gs === 'number' ? speedDisp(p.gs) : '') + '" placeholder="' + dflt + '">') +
     '<select class="in" data-k="altRef"><option value="AGL"' + (p.altRef === 'AGL' ? ' selected' : '') + '>' + esc(t('ref.AGL')) + '</option>' +
     '<option value="MSL"' + (p.altRef === 'MSL' ? ' selected' : '') + '>' + esc(t('ref.MSL')) + '</option></select>' +
     '<button type="button" class="pt-del" data-act="delete" title="' + esc(t('tip.delete')) + '" aria-label="' + esc(t('tip.delete')) + '">×</button></div>').join('');
   $('alt-unit').textContent = t('th.alt', { u: t(S.units.altitude === 'ft' ? 'u.ft' : 'u.m') });
+  $('spd-unit').textContent = t(S.units.distance === 'nm' ? 'th.spd.kt' : 'th.spd.kmh');
   $('pt-count').textContent = t('sec.points', { n: S.points.length });
 }
 
@@ -2254,6 +2585,12 @@ function renderRefs() {
   $('ref-count').textContent = String(S.refs.length);
 }
 
+/* La vitesse par défaut, en exemple grisé dans les champs vides de la colonne */
+function syncSpeedPlaceholders() {
+  const d = String(speedDisp(S.groundSpeed));
+  document.querySelectorAll('#pts input[data-k="gs"]:not(:disabled)').forEach(el => { el.placeholder = d; });
+}
+
 function syncRows() {
   document.querySelectorAll('#pts .pt-row').forEach(r => r.classList.toggle('sel', parseInt(r.dataset.i, 10) === sel));
   document.querySelectorAll('#refs .pt-row').forEach(r => r.classList.toggle('sel', parseInt(r.dataset.i, 10) === selR));
@@ -2266,18 +2603,18 @@ function navTitle() {
 
 function renderNav() {
   $('nav-title').textContent = navTitle();
-  let rows = '', total = 0;
+  const tm = timing();
+  let rows = '';
   S.points.forEach((p, i) => {
     if (i > 0) {
-      const l = legInfo(S.points[i - 1], p);
-      total += l.km;
-      rows += '<tr class="leg"><td></td><td colspan="2">↓ ' + l.cap + '°</td><td class="r">' + esc(fmtDist(l.km)) + '</td></tr>';
+      const lg = tm.legs[i];
+      rows += '<tr class="leg"><td></td><td colspan="2">' + esc(t('nav.leg', { cap: lg.cap, spd: speedText(lg.v), ete: fmtEte(lg.sec) })) + '</td><td class="r">' + esc(fmtDist(lg.km)) + '</td></tr>';
     }
-    rows += '<tr><td class="n">' + i + '</td><td class="nm">' + esc(p.name) + '<span class="co alt">' + esc(altText(p)) + '</span></td>' +
+    rows += '<tr><td class="n">' + i + '</td><td class="nm">' + esc(p.name) + '<span class="co alt">' + esc(altText(p)) + '</span><span class="co alt tm">' + esc(t('nav.t', { t: fmtElapsed(tm.el[i]) })) + '</span></td>' +
       '<td colspan="2"><span class="co">' + esc(toMGRS(p.lat, p.lon)) + '</span><span class="co dms">' + esc(toDMS(p.lat, p.lon)) + '</span></td></tr>';
   });
   $('nav-body').innerHTML = rows;
-  $('nav-total').textContent = fmtDist(total);
+  $('nav-total').textContent = t('nav.total.v', { d: fmtDist(tm.km), t: fmtElapsed(tm.sec) });
   /* Les points de référence : après le total ; ni dans les branches ni dans le total */
   let rr = '';
   S.refs.forEach((p, i) => {
@@ -2316,6 +2653,13 @@ function syncControls() {
   mark('data-dist', S.units.distance);
   mark('data-alt', S.units.altitude);
   mark('data-ref', S.navDisplay.ref);
+  mark('data-lbx', S.legBoxes);
+  mark('data-trc', S.ui.trace);
+  mark('data-tck', S.ui.ticks);
+  $('gs-lbl').textContent = t('f.gs', { u: t(S.units.distance === 'nm' ? 'u.kt' : 'u.kmh') });
+  const gsIn = $('gs-def');
+  if (document.activeElement !== gsIn) gsIn.value = speedDisp(S.groundSpeed);
+  syncSpeedPlaceholders();
   $('decl-warn').hidden = !(S.navDisplay.ref === 'mag' && parseDecl(S.navDisplay.decl) == null);
   $('btn-handoff').disabled = S.points.length === 0;
   const rtb = $('btn-export-rt');
@@ -2457,18 +2801,26 @@ function onRowInput(ev, kind) {
     if (v == null) return;
     const n = Math.min(99999, Math.round(v));
     p.alt = S.units.altitude === 'ft' ? n * FT_M : n;
+  } else if (k === 'gs') {
+    if (kind === 'ref' || parseInt(row.dataset.i, 10) === 0) return;
+    if (ev.target.value.trim() === '') delete p.gs;           /* vide : la vitesse de la route s'applique */
+    else { const v = readSpeed(ev.target.value); if (v == null) return; p.gs = v; }
   } else if (k === 'altRef') p.altRef = ev.target.value === 'MSL' ? 'MSL' : 'AGL';
   else return;
   persistState();
   if (k === 'name') { if (kind === 'ref') drawRefs(); else drawRoute(); }
+  else if (kind !== 'ref') { drawDecor(); updateTimes(); }       /* altitude, référence, vitesse : boîtes, traits et temps écoulés */
   renderNav();
 }
 
 function onRowChange(ev, kind) {
   const row = ev.target.closest('.pt-row');
-  if (!row || ev.target.dataset.k !== 'alt') return;
+  const k = ev.target.dataset.k;
+  if (!row || (k !== 'alt' && k !== 'gs')) return;
   const p = (kind === 'ref' ? S.refs : S.points)[parseInt(row.dataset.i, 10)];
-  if (p) ev.target.value = altValue(p.alt);
+  if (!p) return;
+  if (k === 'alt') ev.target.value = altValue(p.alt);
+  else if (kind !== 'ref' && parseInt(row.dataset.i, 10) > 0) ev.target.value = typeof p.gs === 'number' ? speedDisp(p.gs) : '';
 }
 
 function onRowClick(ev, kind) {
@@ -2529,6 +2881,8 @@ function setRoute(route) {
   S.theatre = route.theatre;
   S.units = route.units;
   S.navDisplay = route.navDisplay;
+  S.groundSpeed = route.groundSpeed;
+  S.legBoxes = route.legBoxes;
   S.points = route.points;
   S.refs = route.refs;
   sel = -1; selR = -1;
@@ -2933,7 +3287,7 @@ function rtOpenGo() {
     pts.push({ name: p.name !== '' ? p.name : nextName(pts, pts.length), lat: r7(ll.lat), lon: r7(ll.lon), alt: p.alt, altRef: p.altRef });
   });
   rtHide('rt-open-modal');
-  setRoute({ name: r.name, theatre: th, units: S.units, navDisplay: S.navDisplay, points: pts, refs: [] });
+  setRoute({ name: r.name, theatre: th, units: S.units, navDisplay: S.navDisplay, groundSpeed: S.groundSpeed, legBoxes: S.legBoxes, points: pts, refs: [] });
   showToast(t('toast.rtOpened') + (dropped ? ' · ' + t('toast.dropped', { n: dropped }) : ''));
 }
 
@@ -3125,12 +3479,32 @@ function bindEvents() {
   }));
   document.querySelectorAll('[data-alt]').forEach(b => b.addEventListener('click', () => {
     S.units.altitude = b.dataset.alt === 'ft' ? 'ft' : 'm';
-    persistState(); renderPts(); renderRefs(); renderNav(); syncControls();
+    persistState(); renderPts(); renderRefs(); renderNav(); drawDecor(); syncControls();
   }));
   document.querySelectorAll('[data-ref]').forEach(b => b.addEventListener('click', () => {
     S.navDisplay.ref = b.dataset.ref === 'mag' ? 'mag' : 'true';
     persistState(); renderNav(); drawRoute(); syncControls();
   }));
+  document.querySelectorAll('[data-lbx]').forEach(b => b.addEventListener('click', () => {
+    S.legBoxes = LEGBOX_IDS.indexOf(b.dataset.lbx) !== -1 ? b.dataset.lbx : 'full';
+    persistState(); drawDecor(); syncControls();
+  }));
+  document.querySelectorAll('[data-trc]').forEach(b => b.addEventListener('click', () => {
+    S.ui.trace = b.dataset.trc === 'black' ? 'black' : 'route';
+    persistState(); drawRoute(); syncControls();
+  }));
+  document.querySelectorAll('[data-tck]').forEach(b => b.addEventListener('click', () => {
+    S.ui.ticks = b.dataset.tck === 'black' ? 'black' : 'route';
+    persistState(); drawDecor(); syncControls();
+  }));
+  /* La vitesse sol de la route : mêmes règles que la colonne ; une saisie hors règle (ou vide) ne change rien, le champ reprend sa valeur en quittant */
+  $('gs-def').addEventListener('input', e => {
+    const v = readSpeed(e.target.value);
+    if (v == null) return;
+    S.groundSpeed = v;
+    persistState(); renderNav(); drawDecor(); updateTimes(); syncSpeedPlaceholders();
+  });
+  $('gs-def').addEventListener('change', e => { e.target.value = speedDisp(S.groundSpeed); });
   $('decl').addEventListener('input', e => {
     S.navDisplay.decl = e.target.value;
     persistState(); renderNav(); drawRoute(); syncControls();
@@ -3488,7 +3862,7 @@ function init() {
       document.fonts.load("700 11px 'Oswald'")
     ]).then(() => document.fonts.ready).then(scheduleGrid).catch(() => {});
   }
-  window.__RP = { map: map, get S() { return S; }, drawGrid: drawGrid, setBase: setBase, get baseLayers() { return baseLayers; }, get inFallback() { return inFallback; },
+  window.__RP = { map: map, get decorGroup() { return decorGroup; }, timing: timing, get S() { return S; }, drawGrid: drawGrid, setBase: setBase, get baseLayers() { return baseLayers; }, get inFallback() { return inFallback; },
     get placesLayer() { return placesLayer; }, get airfieldLayer() { return afLayer; }, get tapMode() { return tapMode; } };
 }
 
