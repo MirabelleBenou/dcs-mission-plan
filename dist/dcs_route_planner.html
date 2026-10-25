@@ -1099,6 +1099,13 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
   .app > .panel { order: 0; }
   .panel { overflow: visible; }
 }
+/* En portrait (sous 1 100 px de large, à partir de 600 px de haut) la page ne défile plus : la carte reste en haut, à sa hauteur,
+   et seul le panneau, dessous, défile. Sous 600 px de haut, la page défile comme ci-dessus. */
+@media (max-width: 1099px) and (min-height: 600px) {
+  .app { position: fixed; top: 56px; bottom: 0; left: 0; right: 0; padding-top: 0; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+  .mapwrap { min-width: 0; }
+  .panel { overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; min-height: 0; }
+}
 @media (max-width: 520px) {
   .pt-row, .pt-head { grid-template-columns: 28px 1fr 62px 80px 30px; gap: 4px; }
   .pt-row select.in { padding: 8px 18px 8px 6px; font-size: 12px; background-position: right 5px center; }
@@ -2458,6 +2465,20 @@ function createMap() {
   window.addEventListener('resize', onSize);
 }
 
+/* En portrait (la page ne défile pas), un champ du panneau qui prend le focus est amené en vue dans le panneau, y compris
+   après le redimensionnement du viewport visuel (clavier virtuel) ; la carte ne bouge pas */
+const PORTRAIT_FIXED_MQ = '(max-width: 1099px) and (min-height: 600px)';
+function revealPanelField(el) {
+  if (!window.matchMedia || !window.matchMedia(PORTRAIT_FIXED_MQ).matches) return;
+  const go = () => { try { el.scrollIntoView({ block: 'center', inline: 'nearest' }); } catch (e) { /* ignore */ } };
+  go();
+  const vv = window.visualViewport;
+  if (!vv) return;
+  const again = () => { vv.removeEventListener('resize', again); if (document.activeElement === el) go(); };
+  vv.addEventListener('resize', again);
+  setTimeout(() => vv.removeEventListener('resize', again), 1000);
+}
+
 /* ============= GRILLE MGRS ============= */
 function scheduleGrid() {
   if (gridQueued || !mapCreated) return;
@@ -3699,6 +3720,10 @@ function bindEvents() {
     persistState(); renderNav(); drawRoute(); syncControls();
   });
   $('route-name').addEventListener('input', e => { S.name = e.target.value; persistState(); });
+  $('panel').addEventListener('focusin', ev => {
+    const el = ev.target;
+    if (el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) revealPanelField(el);
+  });
   const pts = $('pts');
   pts.addEventListener('input', ev => onRowInput(ev, 'wp'));
   pts.addEventListener('change', ev => onRowChange(ev, 'wp'));
