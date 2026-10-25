@@ -14,6 +14,10 @@ The suite bundles several **independently-versioned tools**, so entries are grou
 - **Tablet & mobile** first-class target (touch, drag, rotation-safe).
 - Wing configuration shared automatically across embedded tools.
 
+### `v1.13.0`
+#### Added
+- Embeds **Route Planner v1.5.0** — DCS towns and map search (see below).
+
 ### `v1.12.0`
 #### Added
 - Embeds **Route Planner v1.4.0** — CombatFlite layers (see below).
@@ -263,6 +267,14 @@ Initial release. One-page flight datacards for the cockpit kneeboard.
 ---
 
 ## Route Planner
+
+### `v1.5.0`
+#### Added
+- **DCS towns** — the names of the towns of the DCS maps (Caucasus, Germany Cold War, Syria) appear from zoom 10, without overlapping each other or your route: towns close to the route first, major towns in bold. They work offline. A **Towns** button turns them on or off. Tap a town to make it a waypoint or a reference point, like an airfield.
+- **Map search** — a magnifier under the zoom buttons: type two letters to find a town, an airfield or helipad, a waypoint, a reference point or a layer item (accents ignored); pick a result to centre the map on it, marked by a pulsing ring.
+
+#### Changed
+- In *Read* mode the leg insertion "+" handles are hidden; a CombatFlite ring without altitude no longer shows "0".
 
 ### `v1.4.0`
 #### Added
