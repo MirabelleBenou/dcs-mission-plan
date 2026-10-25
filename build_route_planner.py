@@ -514,6 +514,7 @@ table.nav td.r { text-align: right; white-space: nowrap; }
 .tw-dot { position: absolute; display: block; box-sizing: border-box; width: 5px; height: 5px; border-radius: 50%; background: #2e2a22; border: 1px solid #f0e8d6; }
 .tw-nm { position: absolute; display: block; white-space: nowrap; font-family: var(--f-condensed); font-weight: 500; font-size: 11px; line-height: 13px; color: #2e2a22;
   text-shadow: 0 0 2px rgba(240,232,214,.95), 0 0 2px rgba(240,232,214,.95), 0 0 3px rgba(240,232,214,.8); }
+.tw-nm.tw-cap { font-weight: 700; }     /* un nom entièrement en capitales (une grande ville) : Oswald 700, déjà embarquée */
 /* recherche sur la carte : la loupe sous le zoom, son panneau à sa droite, l'anneau qui signale le résultat */
 .rp-search .rp-search-btn { display: flex; align-items: center; justify-content: center; color: #1f1c16; }
 .rp-search .rp-search-btn svg { display: block; width: 16px; height: 16px; flex: none; }
@@ -2491,9 +2492,12 @@ const TW_NEAR_NM = 10;         /* groupe A : les villes à 10 NM ou moins de la 
 const TW_DOT = 5;              /* le point : 5 px */
 const TW_GAP = 4;              /* du point au nom : 4 px */
 const TW_H = 13;               /* hauteur de la ligne du nom */
-const TW_MARGIN = 2;           /* marge de l'étiquette, tout autour, pour la pose */
+const TW_MARGIN = 2;           /* marge de l'étiquette, tout autour, pour la pose : 2 px à partir du zoom 11 */
+const TW_MARGIN_Z10 = 8;       /* ... et 8 px au zoom 10 (zoom < 11) */
 const TW_PAD = 0.1;            /* emprise des candidates : la vue agrandie de 10 % de chaque côté */
 const TW_FONT = '500 11px Oswald, "Arial Narrow", sans-serif';
+const TW_FONT_CAP = '700 11px Oswald, "Arial Narrow", sans-serif';   /* le nom d'une ville « capitales » : Oswald 700 */
+function twMargin(z) { return z < 11 ? TW_MARGIN_Z10 : TW_MARGIN; }
 
 let twLayer = null;            /* le groupe des étiquettes posées, dans l'ordre de priorité */
 let twSig = '';                /* ce qui est posé (théâtre, villes, côtés) : inchangé, le DOM n'est pas refait */
@@ -2530,14 +2534,15 @@ function twList(theatre) {
   return list;
 }
 
-/* La largeur du nom (sans ses espaces de bout, que la page ne dessine pas), à la police réelle, mise en cache par nom */
+/* La largeur du nom (sans ses espaces de bout, que la page ne dessine pas), à la police réelle (graisse comprise : 700 pour un nom
+   entièrement en capitales, 500 sinon), mise en cache par nom */
 function twWidth(name) {
   let w = twWidths.get(name);
   if (w !== undefined) return w;
   const k = name.trim();
   try {
     if (!twCtx) twCtx = document.createElement('canvas').getContext('2d');
-    twCtx.font = TW_FONT;
+    twCtx.font = twIsCaps(name) ? TW_FONT_CAP : TW_FONT;
     w = twCtx.measureText(k).width;
   } catch (e) { w = k.length * 6; }
   twWidths.set(name, w);
@@ -2585,14 +2590,14 @@ function twRouteDistKm(P, rt) {
 }
 
 /* Les obstacles, en pixels de la carte (lus dans le DOM de la carte) : les marqueurs des points de la route et des références avec leur nom,
-   les boîtes de branche, et les aérodromes affichés au zoom courant avec leur nom s'il est visible. Le contrôle Point · Réf. · Lire
-   et la loupe n'en sont pas. */
+   les boîtes de branche, les chiffres des minutes, et les aérodromes affichés au zoom courant avec leur nom s'il est visible. Le contrôle
+   Point · Réf. · Lire, la loupe, les traits des minutes et le tracé n'en sont pas. */
 function twObstacles() {
   /* « moveend » précède « viewreset » : après un grand déplacement, les marqueurs ne sont pas encore replacés ; on les replace avant de les lire */
   const fresh = m => { if (m && m.update && m._icon) m.update(); };
   ptMarkers.forEach(fresh);
   if (refGroup) refGroup.eachLayer(fresh);
-  if (decorGroup) decorGroup.eachLayer(m => { if (m.options && m.options.pane === 'legboxes') fresh(m); });
+  if (decorGroup) decorGroup.eachLayer(m => { if (m.options && (m.options.pane === 'legboxes' || m.options.pane === 'legnums')) fresh(m); });
   if (afLayer) afLayer.eachLayer(fresh);
   const base = map.getContainer().getBoundingClientRect();
   const out = [];
@@ -2611,6 +2616,8 @@ function twObstacles() {
   });
   const boxes = map.getPane('legboxes');
   if (boxes) boxes.querySelectorAll('.lb').forEach(e => push('box', e));
+  const nums = map.getPane('legnums');          /* les chiffres des minutes (les traits et le tracé n'en sont pas) */
+  if (nums) nums.querySelectorAll('.rp-tickn').forEach(e => push('tickn', e));
   if (afLayer) afLayer.eachLayer(m => {
     const el = m.getElement && m.getElement();
     if (!el) return;
@@ -2640,7 +2647,7 @@ function twGrow(r, m) { return { l: r.l - m, t: r.t - m, r: r.r + m, b: r.b + m 
 function twIcon(e, side, w) {
   const half = TW_DOT / 2, hh = TW_H / 2, tot = TW_DOT + TW_GAP + w;
   const dotTop = (TW_H - TW_DOT) / 2;
-  const nm = '<span class="tw-nm" style="left:' + (side === 'r' ? TW_DOT + TW_GAP : 0) + 'px;top:0;width:' + w + 'px;height:' + TW_H + 'px">' + esc(e.n) + '</span>';
+  const nm = '<span class="tw-nm' + (e.caps ? ' tw-cap' : '') + '" style="left:' + (side === 'r' ? TW_DOT + TW_GAP : 0) + 'px;top:0;width:' + w + 'px;height:' + TW_H + 'px">' + esc(e.n) + '</span>';
   const dot = '<i class="tw-dot" style="left:' + (side === 'r' ? 0 : w + TW_GAP) + 'px;top:' + dotTop + 'px"></i>';
   return L.divIcon({
     className: 'tw-icon', iconSize: [0, 0], iconAnchor: [0, 0],
@@ -2673,18 +2680,19 @@ function syncTowns() {
   const order = near.map(x => x.c).concat(rest);
   /* 3 · les obstacles, 4 · le glouton : à droite, sinon à gauche, sinon rien */
   const obs = twObstacles();
+  const mg = twMargin(map.getZoom());
   const placed = [], res = [];
   order.forEach(c => {
     const a = map.layerPointToContainerPoint(map.latLngToLayerPoint([c.lat, c.lon]).round());
     const wd = twWidth(c.n);
     const rr = twRect(a.x, a.y, wd, 'r'), rl = twRect(a.x, a.y, wd, 'l');
     let side = null, rect = null;
-    if (!twHits(twGrow(rr, TW_MARGIN), obs) && !twHits(twGrow(rr, TW_MARGIN), placed)) { side = 'r'; rect = rr; }
-    else if (!twHits(twGrow(rl, TW_MARGIN), obs) && !twHits(twGrow(rl, TW_MARGIN), placed)) { side = 'l'; rect = rl; }
+    if (!twHits(twGrow(rr, mg), obs) && !twHits(twGrow(rr, mg), placed)) { side = 'r'; rect = rr; }
+    else if (!twHits(twGrow(rl, mg), obs) && !twHits(twGrow(rl, mg), placed)) { side = 'l'; rect = rl; }
     if (side) placed.push(rect);
     res.push({ c: c, w: wd, side: side, rect: rect, right: rr, left: rl });
   });
-  twInfo = { zoom: map.getZoom(), obstacles: obs, candidates: res };
+  twInfo = { zoom: map.getZoom(), margin: mg, obstacles: obs, candidates: res };
   const shown = res.filter(x => x.side);
   const sig = S.theatre + '|' + shown.map(x => x.c.i + x.side + x.w).join(',');
   if (sig === twSig) return;
@@ -2704,7 +2712,7 @@ function townsReport() {
   if (!twInfo) return null;
   const rd = r => r ? { l: r.l, t: r.t, r: r.r, b: r.b } : null;
   return {
-    zoom: twInfo.zoom, obstacles: twInfo.obstacles.map(o => ({ kind: o.kind, l: o.l, t: o.t, r: o.r, b: o.b })),
+    zoom: twInfo.zoom, margin: twInfo.margin, obstacles: twInfo.obstacles.map(o => ({ kind: o.kind, l: o.l, t: o.t, r: o.r, b: o.b })),
     candidates: twInfo.candidates.map(x => ({ name: x.c.n, side: x.side, width: x.w, rect: rd(x.rect), right: rd(x.right), left: rd(x.left) }))
   };
 }
