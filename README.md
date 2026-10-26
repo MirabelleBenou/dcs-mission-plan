@@ -101,6 +101,10 @@ The Field Manual is the suite's **built-in documentation**, opened from the boar
 
 ![briefing-generator](docs/screenshots/briefing_generator.jpg)
 
+**Datacard Generator** — a one-page kneeboard datacard, built from scratch or from a briefing or a route
+
+![datacard-generator](docs/screenshots/datacard_generator.jpg)
+
 **Route Planner** — a route with leg boxes and minute marks, an orbit and a kill box drawn by touch
 
 ![route-planner](docs/screenshots/route_planner.jpg)
@@ -108,6 +112,8 @@ The Field Manual is the suite's **built-in documentation**, opened from the boar
 **Recon Station** — a frame, an ellipse, a stamp and a magnifier drawn on the image, with the info block
 
 ![recon-station](docs/screenshots/recon_station.jpg)
+
+<sub>Recon Station sample image: USDA National Agriculture Imagery Program (NAIP) aerial photograph, public domain.</sub>
 
 ## 🚀 Quick Start
 
