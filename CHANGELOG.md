@@ -14,6 +14,14 @@ The suite bundles several **independently-versioned tools**, so entries are grou
 - **Tablet & mobile** first-class target (touch, drag, rotation-safe).
 - Wing configuration shared automatically across embedded tools.
 
+### `v1.16.0`
+#### Added
+- Embeds **Recon Station v1.1.0** — annotations drawn by touch (see below).
+
+### `v1.15.0`
+#### Added
+- Embeds **Route Planner v1.7.0** — orbits, kill boxes, curves, FLOT and corridors by touch (see below).
+
 ### `v1.14.0`
 #### Added
 - Embeds **Route Planner v1.6.0** — touch drawing in layers, resizable map in portrait (see below).
@@ -196,6 +204,17 @@ Initial release. Command post for the suite.
 
 ## Recon Station
 
+### `v1.1.0`
+#### Added
+- **Annotate by touch** — a drawing bar sits on the image: *Select · Frame · Ellipse · Polyline · Arrow · Bracket · Text · Loupe*. One tap places, large handles adjust: frames and magnifiers resize by their four edges and their four corners (the opposite side or corner stays put), frames rotate by their own handle, the magnifier's inset keeps the proportions of its source and stays inside the image. *Settings*, *Copy*, *Delete* and *OK* on the bar, as in the Route Planner; settings can be changed while you create.
+- The image is never hidden under the drawing bar, on a computer as on a tablet.
+
+#### Changed
+- *Add a magnifier* moves from the *Legend* section to *Shapes*.
+- The export is unchanged: the same annotations give the same PNG.
+
+## Recon Station
+
 ### `v1.0.1`
 #### Changed
 - The theme list opens as a themed drop-down instead of the system menu — touch and keyboard.
@@ -269,6 +288,14 @@ Initial release. One-page flight datacards for the cockpit kneeboard.
 - Example values in empty fields, FR/EN, 4 editor themes, tablet and phone layout with scrollable bars, fully offline.
 
 ---
+
+## Route Planner
+
+### `v1.7.0`
+#### Added
+- **Orbits** and **kill boxes** in *Draw* mode. An orbit is set by its two ends and its width; drag the width handle to the side you want to turn to. A kill box shows its grid (3 × 3 by default, set in *Settings*), resizes by its four edges and its four corners — the opposite side or corner stays put, live size in NM — and rotates by its own handle.
+- **Curves, FLOT and corridors** — a zone can be drawn straight or curved, a line can be a plain line, a FLOT or a corridor; chosen in *Settings*, the corridor's width is dragged on the map.
+- **Settings while you create** — choosing a tool opens the settings of the shape to come, placed above the message so the map stays visible.
 
 ## Route Planner
 

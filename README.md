@@ -66,7 +66,7 @@ Recon Station turns any screenshot into a convincing **reconnaissance analysis p
 
 - **Sensor looks** — EO (default), IR white-hot, IR black-hot, SAR (stylizations, not radiometric data)
 - **Image effects** — greyscale, contrast, vignette, grain, scanlines (sliders, off by default)
-- **Annotations, by touch** — a drawing bar on the image: frames, ellipses, polylines, arrows, brackets, text labels (stamp, cursive grease-pencil, plain) and magnifiers; one tap places, large handles adjust (frames and magnifiers by their four edges, frames rotate); numbered movable markers
+- **Annotations, by touch** — a drawing bar on the image: frames, ellipses, polylines, arrows, brackets, text labels (stamp, cursive grease-pencil, plain) and magnifiers; one tap places, large handles adjust (frames and magnifiers by their edges and corners, frames rotate); numbered movable markers
 - **Editable info block** — 9 fields, bold text, black/white
 - **Classification banner** — top/bottom bars, 4 levels, off by default
 - **Wing logos** — upload manually or pull the shared wing branding from HQ; colour / grey / white modes
@@ -93,12 +93,21 @@ The Field Manual is the suite's **built-in documentation**, opened from the boar
 
 ## 📸 Screenshots
 
-<!-- Drop your screenshots in docs/screenshots/ and update the paths below -->
-![board](docs/screenshots/board.png)
+**The board** — every tool on one page, 4 themes, FR/EN
 
-![briefing-generator](docs/screenshots/briefing_generator.png)
+![board](docs/screenshots/board.jpg)
 
-![recon-station](docs/screenshots/recon_station.png)
+**Briefing Generator** — the editor on the left, the printed briefing on the right
+
+![briefing-generator](docs/screenshots/briefing_generator.jpg)
+
+**Route Planner** — a route with leg boxes and minute marks, an orbit and a kill box drawn by touch
+
+![route-planner](docs/screenshots/route_planner.jpg)
+
+**Recon Station** — a frame, an ellipse, a stamp and a magnifier drawn on the image, with the info block
+
+![recon-station](docs/screenshots/recon_station.jpg)
 
 ## 🚀 Quick Start
 
