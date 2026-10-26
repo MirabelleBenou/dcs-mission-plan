@@ -162,6 +162,8 @@ RSD_CSS = r'''/* ======== ANNOTER AU DOIGT (lot mp-rs-v1.1.0) — la barre, le m
   .rsd-sheet.mq-draft { bottom: 196px; }
 }
 @media (max-width: 600px) { .rsd-ui { left: 6px; right: 6px; } .rsd-sheet { bottom: 134px; } .rsd-sheet.mq-draft { bottom: 190px; } }
+/* la bande réservée en bas de l'aperçu : l'image ne passe pas sous la barre ni sous le message (--rsd-band, mesurée en JS) */
+.preview-inner { padding-bottom: var(--rsd-band, 16px); }
 /* les boutons de la barre, du message et de la fiche : ceux du Route Planner (RS a son propre .tb-btn clair) */
 .rsd-ui .tb-btn, .rsd-sheet .tb-btn {
   font-family: var(--f-ui); font-weight: 700; letter-spacing: 1.5px; font-size: 12px; text-transform: uppercase;
@@ -745,6 +747,23 @@ function rsdPlaceSheet() {
   sh.style.bottom = Math.round(bottom - base) + 'px';
   sh.style.maxHeight = Math.max(RSD_SHEET_MIN, Math.floor(base - (top + RSD_SHEET_TOP))) + 'px';
 }
+/* La bande du bas : l'image ne passe jamais sous la barre ni sous le message.
+   Hauteur = marge basse de la barre + barre + 6 px + message (44 px, son minimum) + 8 px, mesurée sur la barre affichée ;
+   elle ne dépend pas de la présence du message (l'image ne saute pas). Sans image, rien n'est réservé. */
+const RSD_BAND_GAP = 6, RSD_BAND_MSG = 44, RSD_BAND_AIR = 8;
+function rsdBand() {
+  const pv = rsd$('preview-panel'), ui = rsd$('rsd-ui'), bar = rsd$('rsd-bar'), inner = pv && pv.querySelector('.preview-inner');
+  if (!pv || !inner || !ui || !bar) return;
+  let px = '';
+  if (SOURCE_READY && !ui.hidden && ui.getClientRects().length && bar.getClientRects().length) {
+    const ir = inner.getBoundingClientRect(), br = bar.getBoundingClientRect();
+    const band = Math.ceil(ir.bottom - (br.top - RSD_BAND_GAP - RSD_BAND_MSG - RSD_BAND_AIR));
+    if (band > 0) px = band + 'px';
+  }
+  if (pv.style.getPropertyValue('--rsd-band') !== px) {
+    if (px) pv.style.setProperty('--rsd-band', px); else pv.style.removeProperty('--rsd-band');
+  }
+}
 function rsdRenderSheet(force) {
   const sh = rsd$('rsd-sheet'), tg = rsdSheetTarget();
   if (!RSD.sheet || !tg || !SOURCE_READY) { sh.hidden = true; sh.classList.remove('mq-draft'); RSD.sheetKey = ''; rsdPlaceSheet(); return; }
@@ -772,6 +791,7 @@ function rsdSyncUi() {
   rsdRenderBar();
   rsdRenderHint();
   rsdRenderSheet(false);
+  rsdBand();
   rsdPlaceSheet();
 }
 
@@ -1113,10 +1133,10 @@ function rsdInit() {
     else if (rsdSel()) rsdDeselect();
   });
   if (window.ResizeObserver) {
-    RSD.ro = new ResizeObserver(() => { rsdPlace(); rsdPlaceSheet(); });
-    [rsd$('preview-panel'), rsd$('preview-canvas'), rsd$('rsd-hint'), sh].forEach(el => RSD.ro.observe(el));
+    RSD.ro = new ResizeObserver(() => { rsdBand(); rsdPlace(); rsdPlaceSheet(); });
+    [rsd$('preview-panel'), rsd$('preview-canvas'), rsd$('rsd-hint'), rsd$('rsd-bar'), sh].forEach(el => RSD.ro.observe(el));
   }
-  window.addEventListener('resize', () => { rsdPlace(); rsdPlaceSheet(); });
+  window.addEventListener('resize', () => { rsdBand(); rsdPlace(); rsdPlaceSheet(); });
   rsdSyncUi();
 }
 '''.replace('__RSD_ICONS__', json.dumps(RSD_ICONS, ensure_ascii=False))
