@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build — DCS Route Planner v1.6.0.
+"""Build — DCS Route Planner v1.7.0.
 
 Produit dist/dcs_route_planner.html : un fichier unique, hors ligne, sans serveur ;
 seules les tuiles de carte (DCS Olympus, OpenTopoMap, Esri) viennent du réseau, et le
@@ -19,7 +19,7 @@ import subprocess
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-APP_VERSION = "1.6.0"
+APP_VERSION = "1.7.0"
 OUT_PATH = os.path.join(HERE, 'dist', 'dcs_route_planner.html')
 ASSETS_PATH = os.path.join(HERE, 'assets.json')
 AIRFIELDS_PATH = os.path.join(HERE, 'airfields.json')
@@ -806,6 +806,37 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
   .rp-split.on .grip, .rp-split.on .grip::after { border-color: var(--amber); }
 }
 
+/* lot rp-v1.7.0 : maquette_dessin_17.css (R297, valeur pour valeur) — orbites, boîtes, courbes, FLOT, couloirs ; les réglages pendant la création.
+   .dr-h.v.rot (losange) n'est plus utilisé : la boîte a des barrettes de bord (.dr-h.v.edge) et une poignée de rotation (.dr-h.r.rot) ; la règle reste, sans élément. */
+.dr-h.v.rot i { background: var(--amber); border-color: var(--ink); transform: rotate(45deg); }
+.mq-step { display: flex; align-items: stretch; height: 40px; }
+.mq-step .tb-btn { height: 40px; min-width: 40px; padding: 0; font-size: 18px; }
+.mq-step span { flex: 1; display: flex; align-items: center; justify-content: center; min-width: 30px; font-family: var(--f-mono); font-size: 15px;
+  background: var(--paper-light); color: var(--ink); border-top: 1px solid var(--khaki); border-bottom: 1px solid var(--khaki); }
+.mq-gshow { flex: 0 0 132px !important; }
+.mq-turn { flex: 0 0 150px !important; }
+.mq-cw { flex: 0 0 110px !important; }
+.mq-flip { width: 100%; height: 40px; }
+@media (max-width: 600px) {
+  .dr-tool { min-width: 0; padding: 4px 0; }
+  .dr-tool i { font-size: 8.5px; letter-spacing: .4px; }
+  .dr-tool svg { width: 21px; height: 21px; }
+  .mq-gshow { flex: 0 0 104px !important; }
+  .mq-turn { flex: 0 0 132px !important; }
+  .mq-cw { flex: 0 0 96px !important; }
+  .dr-sheet .dr-row2 { gap: 6px; }
+}
+.dr-h.v.edge i { width: 22px; height: 10px; margin: -5px 0 0 -11px; border-radius: 2px; background: var(--paper-light); }
+.dr-h.r.rot i { width: 22px; height: 22px; margin: -11px 0 0 -11px; }
+.dr-h.r.rot i::after { content: '⟳'; position: absolute; inset: 0; font: 700 15px/18px var(--f-ui); color: var(--ink); text-align: center; }
+.dr-hint .tb-btn.mq-props svg { width: 18px; height: 18px; }
+.dr-hint .tb-btn.mq-props.on { background: var(--amber-dark); border-color: var(--amber); }
+.dr-sheet.mq-draft { bottom: 156px; max-height: calc(100% - 190px); }
+@media (max-width: 600px) { .dr-sheet.mq-draft { bottom: 150px; } }
+
+/* ce que la maquette ne dit pas (lot rp-v1.7.0) : « À gauche » et « Afficher / Masquer » tiennent sur une ligne dans les 150 / 132 px (104 sous 600 px) de la maquette */
+.mq-turn .dr-seg .tb-btn, .mq-gshow .dr-seg .tb-btn { font-size: 10.5px; letter-spacing: .6px; padding: 0 3px; white-space: nowrap; }
+@media (max-width: 600px) { .mq-turn .dr-seg .tb-btn, .mq-gshow .dr-seg .tb-btn { font-size: 9px; letter-spacing: .2px; padding: 0 2px; } }
 /* ce que la maquette ne dit pas : le svg du pane d'édition sous ses poignées, leurs gestes, le cadenas, les rangées du menu, le message sans boutons */
 .leaflet-map-pane .leaflet-drawedit-pane > svg { z-index: 0; max-width: none !important; max-height: none !important; }
 .dr-h { touch-action: none; -webkit-user-select: none; user-select: none; cursor: grab; }
@@ -1429,7 +1460,7 @@ JS = r"""
 'use strict';
 
 /* =====================================================
-   ROUTE PLANNER v1.6.0
+   ROUTE PLANNER v1.7.0
    Une route sur une carte (points posés, saisis par coordonnées
    ou par cap et distance), des points de référence, les noms de lieux,
    les villes et les aérodromes DCS, une recherche sur la carte : caps, distances, vitesse sol et minutage,
@@ -1836,6 +1867,41 @@ const I18N = {
     'dr.t.line': 'Une ligne a au moins deux sommets.',
     'dr.t.min': 'Il faut au moins {n} sommets.',
     'dr.confirmDel': 'Supprimer « {name} »\u202f?',
+    'dr.tool.orbit': 'Orbite',
+    'dr.tool.box': 'Boîte',
+    'dr.msg.orbit': 'Touchez l\'entrée de l\'orbite, puis sa sortie.',
+    'dr.msg.orbit2': 'Touchez la sortie de l\'orbite.',
+    'dr.msg.box': 'Touchez le début de l\'axe de la boîte, puis sa fin.',
+    'dr.msg.box2': 'Touchez la fin de l\'axe.',
+    'dr.sheet.draft': '{g} · réglages · à venir',
+    'dr.f.width': 'Largeur (NM)',
+    'dr.f.length': 'Longueur (NM)',
+    'dr.f.turn': 'Virage',
+    'dr.turn.r': 'À droite',
+    'dr.turn.l': 'À gauche',
+    'dr.f.mission': 'Mission',
+    'dr.f.mission.ph': 'AAR, CAP, AWACS…',
+    'dr.f.frq': 'Fréquence',
+    'dr.f.frq.ph': '251.000',
+    'dr.f.minAlt': 'Alt. min',
+    'dr.f.minAlt.ph': 'FL150',
+    'dr.f.maxAlt.ph': 'FL250',
+    'dr.f.gridH': 'Grille · lignes',
+    'dr.f.gridV': 'Grille · colonnes',
+    'dr.f.grid': 'Grille',
+    'dr.grid.show': 'Afficher',
+    'dr.grid.hide': 'Masquer',
+    'dr.f.shape': 'Tracé',
+    'dr.shape.lines': 'Droit',
+    'dr.shape.curve': 'Courbe',
+    'dr.lt.line': 'Ligne',
+    'dr.lt.flot': 'FLOT',
+    'dr.lt.corridor': 'Couloir',
+    'dr.f.enemy': 'Côté ennemi',
+    'dr.f.flip': 'Inverser',
+    'dr.d.corr': 'Couloir {w} NM',
+    'dr.step.dec': 'Moins',
+    'dr.step.inc': 'Plus',
     'sp.title': 'Glissez pour agrandir ou réduire la carte\u202f; touchez deux fois pour revenir à la taille d\'origine'
   },
   en: {
@@ -2134,6 +2200,41 @@ const I18N = {
     'dr.t.line': 'A line needs at least two vertices.',
     'dr.t.min': 'At least {n} vertices are needed.',
     'dr.confirmDel': 'Delete “{name}”?',
+    'dr.tool.orbit': 'Orbit',
+    'dr.tool.box': 'Box',
+    'dr.msg.orbit': 'Tap the orbit\'s entry point, then its exit.',
+    'dr.msg.orbit2': 'Tap the orbit\'s exit point.',
+    'dr.msg.box': 'Tap the start of the box axis, then its end.',
+    'dr.msg.box2': 'Tap the end of the axis.',
+    'dr.sheet.draft': '{g} · settings · upcoming',
+    'dr.f.width': 'Width (NM)',
+    'dr.f.length': 'Length (NM)',
+    'dr.f.turn': 'Turn',
+    'dr.turn.r': 'Right',
+    'dr.turn.l': 'Left',
+    'dr.f.mission': 'Mission',
+    'dr.f.mission.ph': 'AAR, CAP, AWACS…',
+    'dr.f.frq': 'Frequency',
+    'dr.f.frq.ph': '251.000',
+    'dr.f.minAlt': 'Min alt.',
+    'dr.f.minAlt.ph': 'FL150',
+    'dr.f.maxAlt.ph': 'FL250',
+    'dr.f.gridH': 'Grid · rows',
+    'dr.f.gridV': 'Grid · columns',
+    'dr.f.grid': 'Grid',
+    'dr.grid.show': 'Show',
+    'dr.grid.hide': 'Hide',
+    'dr.f.shape': 'Shape',
+    'dr.shape.lines': 'Straight',
+    'dr.shape.curve': 'Curve',
+    'dr.lt.line': 'Line',
+    'dr.lt.flot': 'FLOT',
+    'dr.lt.corridor': 'Corridor',
+    'dr.f.enemy': 'Enemy side',
+    'dr.f.flip': 'Flip',
+    'dr.d.corr': 'Corridor {w} NM',
+    'dr.step.dec': 'Less',
+    'dr.step.inc': 'More',
     'sp.title': 'Drag to resize the map; double-tap to restore its size'
   }
 };
@@ -4035,15 +4136,20 @@ const DR_ICONS = {
   ok: "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.6\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg>",
   move: "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\"><path d=\"M12 2v20M2 12h20M12 2l-3 3M12 2l3 3M12 22l-3-3M12 22l3-3M2 12l3-3M2 12l3 3M22 12l-3-3M22 12l-3 3\"/></svg>",
   lock: "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><rect x=\"5\" y=\"11\" width=\"14\" height=\"10\"/><path d=\"M8 11V7a4 4 0 0 1 8 0v4\"/></svg>",
-  vtx: "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><rect x=\"8\" y=\"8\" width=\"8\" height=\"8\"/><path d=\"M3 3l18 18\"/></svg>"
+  vtx: "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><rect x=\"8\" y=\"8\" width=\"8\" height=\"8\"/><path d=\"M3 3l18 18\"/></svg>",
+  orbit: "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M7 7h10a5 5 0 0 1 0 10H7A5 5 0 0 1 7 7z\" stroke-dasharray=\"3.2 2.2\"/><path d=\"M15 4.5l2.5 2.5L15 9.5\" stroke-dasharray=\"none\"/></svg>",
+  box: "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><rect x=\"3.5\" y=\"4.5\" width=\"17\" height=\"15\"/><path d=\"M9.2 4.5v15M14.8 4.5v15M3.5 9.5h17M3.5 14.5h17\" stroke-width=\"1\" stroke-dasharray=\"2 1.6\"/></svg>"
 };
 
 const DR_COLORS = ['#000000', '#c8102e', '#1f4fa8', '#2e7d32', '#e07b00', '#7b2d8e', '#ffffff'];
 const DR_COLOR0 = '#c8102e';   /* la couleur d'un objet neuf, au départ de la session */
-const DR_TOOLS = ['select', 'circle', 'zone', 'line', 'point', 'text'];
+const DR_TOOLS = ['select', 'circle', 'zone', 'line', 'point', 'text', 'orbit', 'box'];
 const DR_HIT = { circle: 22, path: 22, point: 26, text: 34 };   /* rayons de toucher, en pixels */
 const DR_COPY_PX = 24;         /* une copie : 24 px à droite, 24 px en bas, au zoom courant */
 const DR_MOVE_TOL = 4;         /* un glisser de poignée commence au-delà de 4 px */
+const DR_MIN_NM = 0.5;         /* la largeur d'une orbite, les dimensions d'une boîte : au moins 0,5 NM */
+const DR_ROT_PX = 40;          /* la poignée de rotation d'une boîte : 40 px au-delà du milieu du bord avant */
+const DR_GRID_MAX = 10;        /* la grille d'une boîte : de 1 à 10 */
 const DR_DASH_SVG = {
   solid: '<svg viewBox="0 0 28 10" aria-hidden="true"><path d="M1 5H27" fill="none" stroke="currentColor" stroke-width="2"/></svg>',
   dash: '<svg viewBox="0 0 28 10" aria-hidden="true"><path d="M1 5H27" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="5 4"/></svg>',
@@ -4053,8 +4159,11 @@ const DR_DASH_SVG = {
 /* L'état du dessin : en mémoire seulement (ni le mode, ni le calque actif, ni la sélection, ni l'outil, ni la couleur ne s'enregistrent) */
 const DR = {
   layerId: null,        /* le calque actif (où l'on dessine) */
-  tool: 'select',       /* select · circle · zone · line · point · text */
-  build: null,          /* une zone ou une ligne en cours : { kind, pts: [[lat, lon], …] } */
+  tool: 'select',       /* select · circle · zone · line · point · text · orbit · box */
+  build: null,          /* une zone, une ligne, une orbite ou une boîte en cours : { kind, pts: [[lat, lon], …] } */
+  draft: null,          /* le brouillon des réglages de l'objet à venir : { n, tool, it, vals, flip } (jamais enregistré) */
+  lab: null,            /* l'étiquette d'une poignée de boîte en cours de glisser : { at, text } */
+  draftN: 0,
   sel: null,            /* l'objet choisi : { lid, id } */
   vtx: -1,              /* le sommet choisi de l'objet choisi */
   sheet: false,         /* la fiche « Réglages » est ouverte */
@@ -4085,6 +4194,7 @@ function drKindLabel(k) { return k === 'lz' ? t('dr.p.lz') : (k === 'other' ? t(
 /* Le tracé d'un objet à contour : { pts, closed } (zone, orbite, boîte) */
 function drPath(it) {
   if (it.type === 'zone') {
+    if (it.kind === 'corridor') return { pts: cfBand(it.points, it.widthNm), closed: true };          /* un couloir se choisit dans sa bande */
     if (it.kind === 'curve' && it.points.length >= 3) return { pts: cfSpline(it.points), closed: true };
     return { pts: it.points, closed: it.kind === 'lines' && it.closed === true };
   }
@@ -4127,7 +4237,7 @@ function drHit(it, p) {
   let d = Infinity;
   for (let i = 0; i + 1 < n; i++) d = Math.min(d, drSegDist(p, q[i], q[i + 1]));
   if (g.closed && n > 2) d = Math.min(d, drSegDist(p, q[n - 1], q[0]));
-  const area = g.closed && (it.type !== 'zone' || it.filled === true);
+  const area = g.closed && (it.type !== 'zone' || it.filled === true || it.kind === 'corridor');
   return (d <= DR_HIT.path || (area && drInside(p, q))) ? d : -1;
 }
 
@@ -4168,12 +4278,14 @@ function drEnsureLayer() {
 /* ---- Créer ---- */
 function drAdd(it) {
   const l = drEnsureLayer();
+  drApplyDraft(it);       /* seuls les réglages changés dans la fiche « à venir » passent à l'objet */
   l.items.push(it);
   persistLayers();
   renderLayers();
   drawLayers();
   DR.tool = 'select';
   DR.build = null;
+  DR.draft = null;        /* la fiche, si elle est ouverte, reste ouverte sur l'objet créé */
   drClearPreview();
   drSelect(l.id, it.id);
 }
@@ -4200,10 +4312,29 @@ function drNewZone(pts, area) {
     lineOpacity: 1, fillOpacity: 0.5, lineWidth: 2, dash: 'solid' };
 }
 
-/* Terminer la zone ou la ligne en cours (quiet : sans toast) ; false si elle n'a pas assez de sommets */
+function dr1(v) { return Math.round(v * 10) / 10; }
+/* Un cap vrai au dixième, dans [0 ; 360[ */
+function drBrg(v) { const n = Math.round(v * 10) % 3600; return (n < 0 ? n + 3600 : n) / 10; }
+
+/* L'orbite : le premier toucher est l'entrée (lat2, lon2), le second la sortie (lat, lon) ; brg = cap vrai de l'entrée vers la sortie */
+function drNewOrbit(a, b) {
+  const brg = legCalc({ lat: a[0], lon: a[1] }, { lat: b[0], lon: b[1] }).brg;
+  return { id: cfRandId(), type: 'orbit', name: '', lat: b[0], lon: b[1], lat2: a[0], lon2: a[1], brg: Math.round(brg * 100) / 100, widthNm: 10, clockwise: true,
+    kind: '', minAlt: '', maxAlt: '', frq: '', color: DR.color };
+}
+
+/* La boîte : le premier toucher est le début de l'axe (milieu du bord arrière), le second sa fin ; widthNm = lengthNm */
+function drNewBox(a, b) {
+  const v = legCalc({ lat: a[0], lon: a[1] }, { lat: b[0], lon: b[1] });
+  const len = Math.max(DR_MIN_NM, dr1(v.km / NM_KM));
+  return { id: cfRandId(), type: 'box', name: '', lat: a[0], lon: a[1], brg: drBrg(v.brg), lengthNm: len, widthNm: len, gridH: 3, gridV: 3, showGrid: true,
+    kind: '', minAlt: '', maxAlt: '', color: DR.color, lineWidth: 2, filled: false, fillOpacity: 0.5 };
+}
+
+/* Terminer la zone ou la ligne en cours (quiet : sans toast) ; false si elle n'a pas assez de sommets (une orbite ou une boîte ne se termine pas : deux touchers) */
 function drFinish(quiet) {
   const b = DR.build;
-  if (!b) return false;
+  if (!b || b.kind === 'orbit' || b.kind === 'box') return false;
   const area = b.kind === 'zone';
   if (b.pts.length < (area ? 3 : 2)) { if (!quiet) showToast(t(area ? 'dr.t.zone' : 'dr.t.line')); return false; }
   drAdd(drNewZone(b.pts, area));
@@ -4214,6 +4345,8 @@ function drFinish(quiet) {
 function drCancel() {
   DR.build = null;
   DR.tool = 'select';
+  DR.draft = null;        /* ✕, Échap et le retour à Choisir ferment la fiche et oublient le brouillon */
+  DR.sheet = false;
   drClearPreview();
   drBuildHandles();
   drSyncUi();
@@ -4221,13 +4354,17 @@ function drCancel() {
 
 function drSetTool(x) {
   if (DR_TOOLS.indexOf(x) === -1 || x === DR.tool) return;
+  const sheet = DR.sheet;
   if (DR.build) {
     if (drFinish(true)) { DR.sel = null; DR.vtx = -1; DR.sheet = false; }   /* assez de sommets : la zone se termine, rien n'est choisi */
     DR.build = null;
   }
   DR.tool = x;
   DR.menu = false;
-  DR.build = (x === 'zone' || x === 'line') ? { kind: x, pts: [] } : null;
+  DR.draft = x === 'select' ? null : drNewDraft(x);                         /* un outil de création : le brouillon de l'objet à venir */
+  DR.sheet = x === 'select' ? false : sheet;                                /* changer d'outil, fiche ouverte : elle se rouvre sur le brouillon du nouvel outil */
+  DR.sheetKey = '';
+  DR.build = (x === 'zone' || x === 'line' || x === 'orbit' || x === 'box') ? { kind: x, pts: [] } : null;
   drClearPreview();
   drBuildHandles();
   drContour();
@@ -4253,6 +4390,9 @@ function drMapClick(ev) {
   }
   if (DR.build) {
     DR.build.pts.push(drLL(ll));
+    const b = DR.build;
+    if (b.kind === 'orbit' && b.pts.length === 2) { drAdd(drNewOrbit(b.pts[0], b.pts[1])); return; }     /* l'entrée, puis la sortie */
+    if (b.kind === 'box' && b.pts.length === 2) { drAdd(drNewBox(b.pts[0], b.pts[1])); return; }       /* le début de l'axe, puis sa fin */
     drBuildRefresh();
   }
 }
@@ -4273,7 +4413,10 @@ function drBuildPreview() {
   drClearPreview();
   const b = DR.build;
   if (!b || !drOn()) return;
+  if (b.kind !== 'zone' && b.kind !== 'line') return;
+  const dash = DR.draft ? DR.draft.it.dash : 'solid';                         /* la couleur et le trait du brouillon */
   const st = { pane: 'drawedit', color: DR.color, weight: 2.5, opacity: 1, interactive: false, lineJoin: 'round', lineCap: 'round' };
+  if (dash === 'dot') st.dashArray = '2 6'; else if (dash === 'dash') st.dashArray = '8 6';
   if (b.pts.length >= 2) DR.preview.push(L.polyline(b.pts, st).addTo(map));
   if (b.kind === 'zone' && b.pts.length >= 3) {
     DR.preview.push(L.polyline([b.pts[b.pts.length - 1], b.pts[0]], Object.assign({}, st, { dashArray: '6 6', opacity: 0.7 })).addTo(map));
@@ -4313,21 +4456,28 @@ function drContour() {
   if (DR.contour) DR.contour.addTo(map);
 }
 
-/* L'étiquette du rayon, à gauche de la poignée de rayon */
+/* L'étiquette d'une poignée de mesure, à gauche d'elle : le rayon d'un cercle, la largeur d'une orbite (dès que l'orbite est choisie), la mesure
+   de la poignée de boîte tirée (DR.lab) */
+function drLabInfo(it) {
+  if (it.type === 'circle') return { at: cfDest([it.lat, it.lon], 90, it.radiusNm), text: t('cf.nm', { w: cfFmtNm(it.radiusNm) }) };
+  if (it.type === 'orbit') return { at: cfOrbitGeom(it).nameAt, text: t('cf.nm', { w: cfFmtNm(it.widthNm) }) };
+  if (it.type === 'box' && DR.lab) return { at: DR.lab.at(), text: DR.lab.text() };
+  return null;
+}
+
 function drRlab() {
-  const s = drSel();
-  if (!s || s.it.type !== 'circle' || !drOn() || DR.build) {
+  const s = drSel(), info = (s && drOn() && !DR.build) ? drLabInfo(s.it) : null;
+  if (!info) {
     if (DR.rlab) { map.removeLayer(DR.rlab); DR.rlab = null; }
     return;
   }
-  const it = s.it, at = cfDest([it.lat, it.lon], 90, it.radiusNm);
   if (!DR.rlab) {
-    DR.rlab = L.marker(at, { pane: 'drawedit', interactive: false, keyboard: false, zIndexOffset: 300,
+    DR.rlab = L.marker(info.at, { pane: 'drawedit', interactive: false, keyboard: false, zIndexOffset: 300,
       icon: L.divIcon({ className: 'dr-rlab-icon', iconSize: [0, 0], html: '<span class="dr-rlab"></span>' }) }).addTo(map);
   }
-  DR.rlab.setLatLng(at);
+  DR.rlab.setLatLng(info.at);
   const el = DR.rlab.getElement();
-  if (el && el.firstChild) el.firstChild.textContent = t('cf.nm', { w: cfFmtNm(it.radiusNm) });
+  if (el && el.firstChild) el.firstChild.textContent = info.text;
 }
 
 /* ---- Les poignées : 44 px de cible, 16 px visibles ---- */
@@ -4377,13 +4527,14 @@ function drBind(h) {
 }
 
 /* Déplacer des couples (lat, lon) d'un objet du même vecteur, en pixels du zoom courant */
-function drMoveCb(it, pairs) {
+function drMoveCb(it, pairs, post) {
   let base = null;
   return {
     start: () => { const z = map.getZoom(); base = pairs.map(f => map.project(L.latLng(it[f[0]], it[f[1]]), z)); },
     move: d => {
       const z = map.getZoom();
       pairs.forEach((f, i) => { const ll = map.unproject(base[i].add(d), z); it[f[0]] = r7(ll.lat); it[f[1]] = r7(ll.lng); });
+      if (post) post();
       drLive();
     },
     end: () => drCommit()
@@ -4417,6 +4568,142 @@ function drVertexCb(pts, k, live, done) {
 function drMid(it, a, b) {
   const z = map.getZoom();
   return map.unproject(map.project(L.latLng(it.points[a][0], it.points[a][1]), z).add(map.project(L.latLng(it.points[b][0], it.points[b][1]), z)).divideBy(2), z);
+}
+
+/* ---- Les poignées de l'orbite ---- */
+/* Le cap d'une orbite : de l'entrée (lat2, lon2) vers la sortie (lat, lon) */
+function drOrbitBrg(it) {
+  it.brg = Math.round(legCalc({ lat: it.lat2, lon: it.lon2 }, { lat: it.lat, lon: it.lon }).brg * 100) / 100;
+}
+
+function drOrbitHandles(it) {
+  drMk('v', () => L.latLng(it.lat2, it.lon2), drMoveCb(it, [['lat2', 'lon2']], () => drOrbitBrg(it)));       /* l'entrée : seule, brg se recalcule */
+  drMk('v', () => L.latLng(it.lat, it.lon), drMoveCb(it, [['lat', 'lon']], () => drOrbitBrg(it)));           /* la sortie */
+  drMk('r', () => { const a = cfOrbitGeom(it).nameAt; return L.latLng(a[0], a[1]); }, {
+    move: (d, e) => {
+      /* la largeur : la distance du doigt à la droite entrée → sortie ; le côté du doigt décide du virage (à droite de l'axe : clockwise) */
+      const F = map.mouseEventToLatLng(e), en = { lat: it.lat2, lon: it.lon2 };
+      const ax = legCalc(en, { lat: it.lat, lon: it.lon }), fg = legCalc(en, { lat: F.lat, lon: F.lng });
+      const xt = fg.km * Math.sin((fg.brg - ax.brg) * CF_RAD) / NM_KM;
+      if (xt > 0) it.clockwise = true; else if (xt < 0) it.clockwise = false;
+      it.widthNm = Math.max(DR_MIN_NM, dr1(Math.abs(xt)));
+      drLive();
+    },
+    end: () => drCommit()
+  });
+  drMk('mv', () => L.latLng((it.lat + it.lat2) / 2, (it.lon + it.lon2) / 2), drMoveCb(it, [['lat', 'lon'], ['lat2', 'lon2']]));   /* les deux extrémités ensemble */
+  drRlab();
+}
+
+/* ---- Les poignées de la boîte ---- */
+function drBoxMid(a, b) { return L.latLng((a[0] + b[0]) / 2, (a[1] + b[1]) / 2); }
+const DR_BOX_EDGE = {      /* le milieu de chaque bord, des coins [NO, NE, SE, SO] */
+  left: g => drBoxMid(g.corners[0], g.corners[1]),
+  front: g => drBoxMid(g.corners[1], g.corners[2]),
+  right: g => drBoxMid(g.corners[2], g.corners[3]),
+  back: g => drBoxMid(g.corners[3], g.corners[0])
+};
+
+/* Un bord se tire seul, le long de sa normale ; le bord opposé reste en place. Tout se mesure contre l'état du début du glisser, sur la boîte telle
+   que cfBoxGeom la dessine (ses coins se calculent de proche en proche : mesurer au doigt par un grand cercle ferait dériver une boîte de 30 NM de
+   ~0,1 NM). Deux inconnues, la dimension p et un décalage s du début de l'axe ; deux équations : le milieu du bord tiré suit le doigt (déplacement
+   en pixels de la poignée), le milieu du bord opposé reste où il était. Un doigt immobile ou parallèle au bord ne change donc rien. */
+function drBoxEdgeCb(it, side, h) {
+  const opp = { front: 'back', back: 'front', left: 'right', right: 'left' }[side];
+  const isLen = side === 'front' || side === 'back';
+  /* [∂(bord tiré)/∂p, ∂(bord tiré)/∂s], [∂(bord opposé)/∂p, ∂(bord opposé)/∂s], dans la coordonnée du bord (le long de l'axe, ou en travers) */
+  const J = { front: [1, 1, 0, 1], back: [0, 1, 1, 1], right: [0.5, 1, -0.5, 1], left: [-0.5, -1, 0.5, -1] }[side];
+  const det = J[0] * J[3] - J[1] * J[2];
+  const dir = { front: 0, back: 0, right: 90, left: -90 }[side];       /* le sens du décalage s, relativement à brg */
+  let B = null, M0 = null, coord = null, o0 = 0;
+  const build = (p, s) => {
+    const st = cfDest([B.lat, B.lon], B.brg + dir, s);
+    return { lat: st[0], lon: st[1], brg: B.brg, lengthNm: isLen ? p : B.len, widthNm: isLen ? B.wid : p, gridH: 1, gridV: 1 };
+  };
+  const mid = (box, sd) => DR_BOX_EDGE[sd](cfBoxGeom(box));
+  return {
+    start: () => {
+      B = { lat: it.lat, lon: it.lon, brg: it.brg, len: it.lengthNm, wid: it.widthNm };
+      const kd = NAV_R_KM * 1000 * CF_RAD, kx = Math.cos(B.lat * CF_RAD) * kd, sb = Math.sin(B.brg * CF_RAD), cb = Math.cos(B.brg * CF_RAD);
+      coord = ll => {       /* le repère plan local, en mètres : le long de l'axe, ou en travers (à droite) */
+        const x = (ll.lng - B.lon) * kx, y = (ll.lat - B.lat) * kd;
+        return isLen ? x * sb + y * cb : x * cb - y * sb;
+      };
+      const base = build(isLen ? B.len : B.wid, 0);
+      M0 = mid(base, side);
+      o0 = coord(mid(base, opp));
+      DR.lab = { at: () => h.pos(), text: () => t('cf.nm', { w: cfFmtNm(isLen ? it.lengthNm : it.widthNm) }) };
+    },
+    move: d => {
+      const z = map.getZoom();
+      const tc = coord(map.unproject(map.project(M0, z).add(d), z));
+      let p = isLen ? B.len : B.wid, s = 0;
+      for (let k = 0; k < 6; k++) {
+        const box = build(p, s);
+        const rd = (coord(mid(box, side)) - tc) / NM_M, ro = (coord(mid(box, opp)) - o0) / NM_M;
+        p = Math.max(DR_MIN_NM, p + (-rd * J[3] + ro * J[1]) / det);
+        s += (-ro * J[0] + rd * J[2]) / det;
+      }
+      p = Math.max(DR_MIN_NM, dr1(p));
+      for (let k = 0; k < 3; k++) s -= (coord(mid(build(p, s), opp)) - o0) / NM_M / J[3];     /* le bord opposé, remis où il était */
+      const nb = build(p, s);
+      if (p === (isLen ? B.len : B.wid) && Math.abs(s) < 1e-6) { it.lat = B.lat; it.lon = B.lon; }
+      else { it.lat = r7(nb.lat); it.lon = r7(nb.lon); }
+      if (isLen) it.lengthNm = p; else it.widthNm = p;
+      drLive();
+    },
+    end: () => drCommit()
+  };
+}
+
+/* La poignée de rotation : 40 px au-delà du milieu du bord avant, dans l'axe (à l'écran) */
+function drBoxRotPos(it) {
+  const g = cfBoxGeom(it), c = cfMean(g.corners), f = DR_BOX_EDGE.front(g);
+  const pc = map.latLngToContainerPoint(c), pf = map.latLngToContainerPoint(L.latLng(f));
+  let dx = pf.x - pc.x, dy = pf.y - pc.y;
+  const m = Math.hypot(dx, dy);
+  if (m < 0.5) { dx = Math.sin(it.brg * CF_RAD); dy = -Math.cos(it.brg * CF_RAD); } else { dx /= m; dy /= m; }
+  return map.containerPointToLatLng(L.point(pf.x + dx * DR_ROT_PX, pf.y + dy * DR_ROT_PX));
+}
+
+/* La boîte tourne autour de son centre (la moyenne de ses quatre coins) : le début de l'axe se replace pour que le centre ne bouge pas */
+function drBoxPivot(it, brg, c0) {
+  it.brg = brg;
+  const st = cfDest(c0, brg + 180, it.lengthNm / 2);
+  it.lat = st[0]; it.lon = st[1];
+  for (let k = 0; k < 3; k++) {
+    const m = cfMean(cfBoxGeom(it).corners);
+    it.lat += c0[0] - m[0]; it.lon += c0[1] - m[1];
+  }
+  it.lat = r7(it.lat); it.lon = r7(it.lon);
+}
+
+function drBoxHandles(it) {
+  ['left', 'front', 'right', 'back'].forEach(side => {
+    const along = side === 'front' || side === 'back';
+    const h = drMk('v edge', () => DR_BOX_EDGE[side](cfBoxGeom(it)), {});
+    const cb = drBoxEdgeCb(it, side, h);
+    h.start = cb.start; h.move = cb.move; h.end = cb.end;
+    h.upd = () => {                     /* la barrette suit le sens de son bord, et le garde pendant une rotation */
+      const el = h.mk.getElement(), i = el && el.querySelector('i');
+      if (i) i.style.transform = 'rotate(' + (along ? it.brg : it.brg + 90) + 'deg)';
+    };
+    h.upd();
+  });
+  let c0 = null;
+  const rot = drMk('r rot', () => drBoxRotPos(it), {
+    start: () => {
+      c0 = cfMean(cfBoxGeom(it).corners);
+      DR.lab = { at: () => rot.pos(), text: () => fmtHdg(it.brg) + '°' };
+    },
+    move: (d, e) => {
+      const F = map.mouseEventToLatLng(e);
+      drBoxPivot(it, drBrg(legCalc({ lat: c0[0], lon: c0[1] }, { lat: F.lat, lon: F.lng }).brg), c0);
+      drLive();
+    },
+    end: () => drCommit()
+  });
+  drMk('mv', () => { const m = cfMean(cfBoxGeom(it).corners); return L.latLng(m[0], m[1]); }, drMoveCb(it, [['lat', 'lon']]));
 }
 
 /* Refaire les poignées de ce qu'on édite : le tracé en cours, ou l'objet choisi ; keep : la poignée en cours de glisser, qui devient le sommet keepIdx */
@@ -4486,14 +4773,16 @@ function drBuildHandles(keep, keepIdx) {
     }
     drMk('mv', () => { const m = cfMean(it.points); return L.latLng(m[0], m[1]); }, drMovePts(it));
   } else if (it.type === 'orbit') {
-    drMk('v', () => L.latLng((it.lat + it.lat2) / 2, (it.lon + it.lon2) / 2), drMoveCb(it, [['lat', 'lon'], ['lat2', 'lon2']]));
+    drOrbitHandles(it);
+  } else if (it.type === 'box') {
+    drBoxHandles(it);
   } else {
-    drMk('v', () => L.latLng(it.lat, it.lon), drMoveCb(it, [['lat', 'lon']]));     /* point, texte, boîte */
+    drMk('v', () => L.latLng(it.lat, it.lon), drMoveCb(it, [['lat', 'lon']]));     /* point, texte */
   }
 }
 
 function drPlaceHandles() {
-  DR.hs.forEach(h => { if (h.pos) h.mk.setLatLng(h.pos()); });
+  DR.hs.forEach(h => { if (h.pos) h.mk.setLatLng(h.pos()); if (h.upd) h.upd(); });
 }
 
 /* Pendant un glisser : l'objet, le contour, les poignées et l'étiquette suivent (une fois par image) ; rien ne s'enregistre */
@@ -4513,9 +4802,11 @@ function drLiveNow() {
 
 /* La fin d'un glisser : la seule écriture de route_layers_v1 */
 function drCommit() {
+  DR.lab = null;
   drLiveNow();
   persistLayers();
   drBuildHandles();
+  if (DR.sheet) drRenderSheet(true);      /* la fiche suit ce que le glisser a changé (virage…) */
   drSyncUi();
 }
 
@@ -4533,7 +4824,13 @@ function drDesc(it) {
   const nm = hasText(it.name) ? it.name : '';
   const join = x => nm ? nm + ' · ' + x : x;
   if (it.type === 'circle') return join(t('cf.nm', { w: cfFmtNm(it.radiusNm) }));
-  if (it.type === 'zone') return join(t(cfOne(it.points.length) ? 'dr.nv.1' : 'dr.nv.n', { n: it.points.length }));
+  if (it.type === 'zone') {
+    if (it.kind === 'flot') return join(t('cf.k.flot'));
+    if (it.kind === 'corridor') return join(t('dr.d.corr', { w: cfFmtNm(it.widthNm) }));
+    return join(t(cfOne(it.points.length) ? 'dr.nv.1' : 'dr.nv.n', { n: it.points.length }));
+  }
+  if (it.type === 'orbit') return join(t('cf.nm', { w: cfFmtNm(it.widthNm) }) + ' · ' + t(it.clockwise ? 'dr.turn.r' : 'dr.turn.l'));
+  if (it.type === 'box') return join(cfFmtNm(it.lengthNm) + ' × ' + t('cf.nm', { w: cfFmtNm(it.widthNm) }) + ' · ' + it.gridH + ' × ' + it.gridV);
   if (it.type === 'point') return join(drKindLabel(it.kind));
   if (it.type === 'text') return it.text.replace(/\s*[\r\n]+\s*/g, ' ').trim();
   return nm || t('dr.g.' + drGenre(it));
@@ -4542,8 +4839,11 @@ function drDesc(it) {
 function drUpdateDesc() {
   const s = drSel(), el = document.querySelector('#dr-bar .dr-sel span');
   if (s && el) el.textContent = drDesc(s.it);
-  const r = $('dr-f-radius');       /* la fiche ouverte suit le rayon, sauf si on y écrit */
-  if (s && s.it.type === 'circle' && r && document.activeElement !== r) r.value = decimal(String(s.it.radiusNm));
+  /* la fiche ouverte suit le rayon, la largeur, la longueur, sauf si on y écrit */
+  if (s) [['dr-f-radius', 'radiusNm'], ['dr-f-width', 'widthNm'], ['dr-f-length', 'lengthNm']].forEach(f => {
+    const r = $(f[0]);
+    if (r && s.it[f[1]] != null && document.activeElement !== r) r.value = decimal(String(s.it[f[1]]));
+  });
 }
 
 function drToolBtn(attrs, icon, label, cls) {
@@ -4585,12 +4885,18 @@ function drRenderHint() {
   else if (tool === 'circle') m = esc(t('dr.msg.circle'));
   else if (tool === 'point') m = esc(t('dr.msg.point'));
   else if (tool === 'text') m = esc(t('dr.msg.text'));
+  else if (tool === 'orbit' || tool === 'box') m = esc(t('dr.msg.' + tool + (b && b.pts.length ? '2' : '')));
   else {
     const n = b ? b.pts.length : 0;
     if (!n) m = esc(t('dr.msg.zone'));
     else m = '<b>' + esc(t(cfOne(n) ? 'dr.nv.1' : 'dr.nv.n', { n: n })) + '</b> ' + esc(t('dr.build.add')) + (tool === 'zone' && n >= 3 ? ' ' + esc(t('dr.build.close')) : '');
     a += '<button type="button" class="tb-btn" data-dr="undo" title="' + esc(t('dr.undo')) + '" aria-label="' + esc(t('dr.undo')) + '">↶</button>' +
       '<button type="button" class="tb-btn go" data-dr="finish">' + esc(t('dr.finish')) + '</button>';
+  }
+  if (tool !== 'select') {
+    /* les réglages de l'objet à venir : le bouton avant ↶ / Terminer / ✕ */
+    a = '<button type="button" class="tb-btn mq-props' + (DR.sheet ? ' on' : '') + '" data-dr="props" aria-pressed="' + (DR.sheet ? 'true' : 'false') + '" title="' + esc(t('dr.b.props')) +
+      '" aria-label="' + esc(t('dr.b.props')) + '">' + DR_ICONS.props + '</button>' + a;
   }
   if (tool !== 'select') a += '<button type="button" class="tb-btn" data-dr="cancel" title="' + esc(t('dr.cancel')) + '" aria-label="' + esc(t('dr.cancel')) + '">✕</button>';
   msg.innerHTML = m;
@@ -4613,28 +4919,67 @@ function drRenderPop() {
   }).join('');
 }
 
-/* ---- La fiche « Réglages » ---- */
-function drSheetHtml(it) {
+/* ---- La fiche « Réglages » : celle de l'objet choisi, ou (draft) celle de l'objet à venir, aux mêmes champs ---- */
+function drSheetHtml(it, draft) {
   const g = drGenre(it);
   const f = (label, id, body, cls) => '<div class="dr-f' + (cls ? ' ' + cls : '') + '"><label' + (id ? ' for="' + id + '"' : '') + '>' + esc(label) + '</label>' + body + '</div>';
   const col = it.type === 'text' ? it.fg : it.color;
   const seg = (field, items) => '<div class="dr-seg" role="group">' + items.map(x =>
     '<button type="button" class="tb-btn' + (x.on ? ' on' : '') + '" data-f="' + field + '" data-v="' + x.v + '" aria-pressed="' + (x.on ? 'true' : 'false') + '"' +
     (x.label ? ' title="' + esc(x.label) + '" aria-label="' + esc(x.label) + '"' : '') + '>' + x.html + '</button>').join('') + '</div>';
-  let h = '<div class="sh-head"><b>' + esc(t('dr.sheet', { g: t('dr.g.' + g) })) + '</b><button type="button" class="sh-x" data-dr="props" title="' + esc(t('dr.f.close')) +
+  const num = (id, fld, v) => '<input type="text" id="' + id + '" data-f="' + fld + '" inputmode="decimal" autocomplete="off" value="' + esc(decimal(String(v))) + '">';
+  const txt = (id, fld, v, ph) => '<input type="text" id="' + id + '" data-f="' + fld + '" autocomplete="off" spellcheck="false" placeholder="' + esc(t(ph)) + '" value="' + esc(v) + '">';
+  const step = (fld, v) => '<div class="mq-step" role="group">' +
+    '<button type="button" class="tb-btn" data-f="' + fld + '" data-v="' + Math.max(1, v - 1) + '" title="' + esc(t('dr.step.dec')) + '" aria-label="' + esc(t('dr.step.dec')) + '">−</button>' +
+    '<span>' + v + '</span>' +
+    '<button type="button" class="tb-btn" data-f="' + fld + '" data-v="' + Math.min(DR_GRID_MAX, v + 1) + '" title="' + esc(t('dr.step.inc')) + '" aria-label="' + esc(t('dr.step.inc')) + '">+</button></div>';
+  const yn = (field, on, yes, no) => seg(field, [{ v: '1', on: !!on, html: esc(t(yes)) }, { v: '0', on: !on, html: esc(t(no)) }]);   /* le « oui » d'abord */
+  const alts = () => '<div class="dr-row2">' + f(t('dr.f.minAlt'), 'dr-f-minalt', txt('dr-f-minalt', 'minAlt', it.minAlt, 'dr.f.minAlt.ph')) +
+    f(t('dr.f.alt'), 'dr-f-alt', txt('dr-f-alt', 'maxAlt', it.maxAlt, 'dr.f.maxAlt.ph')) + '</div>';
+  let h = '<div class="sh-head"><b>' + esc(t(draft ? 'dr.sheet.draft' : 'dr.sheet', { g: t('dr.g.' + g) })) + '</b><button type="button" class="sh-x" data-dr="props" title="' + esc(t('dr.f.close')) +
     '" aria-label="' + esc(t('dr.f.close')) + '">×</button></div>';
   if (it.type === 'text') h += f(t('dr.f.text'), 'dr-f-text', '<input type="text" id="dr-f-text" data-f="text" autocomplete="off" spellcheck="false" value="' + esc(it.text) + '">');
   else h += f(t('dr.f.name'), 'dr-f-name', '<input type="text" id="dr-f-name" data-f="name" autocomplete="off" spellcheck="false" placeholder="' + esc(t('dr.f.unnamed')) + '" value="' + esc(it.name) + '">');
   h += f(t('dr.f.color'), '', '<div class="dr-sw" role="group">' + DR_COLORS.map(c =>
     '<button type="button" data-f="color" data-v="' + c + '" style="background:' + c + '" aria-label="' + c + '" aria-pressed="' + (col === c ? 'true' : 'false') + '"' + (col === c ? ' class="on"' : '') + '></button>').join('') + '</div>');
   if (it.type === 'circle') {
-    h += '<div class="dr-row2">' + f(t('dr.f.radius'), 'dr-f-radius', '<input type="text" id="dr-f-radius" data-f="radius" inputmode="decimal" autocomplete="off" value="' + esc(decimal(String(it.radiusNm))) + '">') +
+    h += '<div class="dr-row2">' + f(t('dr.f.radius'), 'dr-f-radius', num('dr-f-radius', 'radius', it.radiusNm)) +
       f(t('dr.f.alt'), 'dr-f-alt', '<input type="text" id="dr-f-alt" data-f="maxAlt" autocomplete="off" spellcheck="false" placeholder="' + esc(t('dr.f.alt.ph')) + '" value="' + esc(it.maxAlt) + '">') + '</div>';
+  }
+  if (it.type === 'orbit') {
+    h += '<div class="dr-row2">' + f(t('dr.f.width'), 'dr-f-width', num('dr-f-width', 'width', it.widthNm)) +
+      f(t('dr.f.turn'), '', yn('turn', it.clockwise, 'dr.turn.r', 'dr.turn.l'), 'mq-turn') + '</div>';
+    h += '<div class="dr-row2">' + f(t('dr.f.mission'), 'dr-f-mission', txt('dr-f-mission', 'mission', it.kind, 'dr.f.mission.ph')) +
+      f(t('dr.f.frq'), 'dr-f-frq', txt('dr-f-frq', 'frq', it.frq, 'dr.f.frq.ph')) + '</div>';
+    h += alts();
+  }
+  if (it.type === 'box') {
+    h += '<div class="dr-row2">' + f(t('dr.f.length'), 'dr-f-length', num('dr-f-length', 'length', it.lengthNm)) +
+      f(t('dr.f.width'), 'dr-f-width', num('dr-f-width', 'width', it.widthNm)) + '</div>';
+    h += '<div class="dr-row2">' + f(t('dr.f.gridH'), '', step('gridH', it.gridH)) + f(t('dr.f.gridV'), '', step('gridV', it.gridV)) + '</div>';
+    h += '<div class="dr-row2">' + f(t('dr.f.grid'), '', yn('showGrid', it.showGrid, 'dr.grid.show', 'dr.grid.hide'), 'mq-gshow') +
+      f(t('dr.f.fill'), '', seg('fill', [{ v: '0', on: !it.filled, html: esc(t('dr.f.none')) }, { v: '1', on: !!it.filled, html: esc(t('dr.f.filled')) }])) + '</div>';
+    h += alts();
   }
   if (it.type === 'circle' || it.type === 'zone') {
     const dash = ['solid', 'dash', 'dot'].map(v => ({ v: v, on: it.dash === v, html: DR_DASH_SVG[v], label: t('dr.dash.' + v) }));
     let row = f(t('dr.f.line'), '', seg('dash', dash));
     if (g !== 'line') row += f(t('dr.f.fill'), '', seg('fill', [{ v: '0', on: !it.filled, html: esc(t('dr.f.none')) }, { v: '1', on: !!it.filled, html: esc(t('dr.f.filled')) }]), 'dr-f-in');
+    h += '<div class="dr-row2">' + row + '</div>';
+  }
+  if (it.type === 'zone' && g === 'zone') {
+    h += f(t('dr.f.shape'), '', seg('shape', [{ v: 'lines', on: it.kind !== 'curve', html: esc(t('dr.shape.lines')) }, { v: 'curve', on: it.kind === 'curve', html: esc(t('dr.shape.curve')) }]));
+  }
+  if (it.type === 'zone' && g === 'line') {
+    const lt = it.kind === 'flot' ? 'flot' : (it.kind === 'corridor' ? 'corridor' : 'lines');
+    let row = f(t('dr.f.type'), '', seg('ltype', [{ v: 'lines', on: lt === 'lines', html: esc(t('dr.lt.line')) }, { v: 'flot', on: lt === 'flot', html: esc(t('dr.lt.flot')) },
+      { v: 'corridor', on: lt === 'corridor', html: esc(t('dr.lt.corridor')) }]));
+    if (lt === 'corridor') row += f(t('dr.f.width'), 'dr-f-width', num('dr-f-width', 'width', it.widthNm), 'mq-cw');
+    if (lt === 'flot') {
+      const on = draft && DR.draft && DR.draft.flip;
+      row += f(t('dr.f.enemy'), '', '<button type="button" class="tb-btn mq-flip' + (on ? ' on' : '') + '" data-f="flip" data-v="1"' + (draft ? ' aria-pressed="' + (on ? 'true' : 'false') + '"' : '') +
+        '><span aria-hidden="true">⇄</span> ' + esc(t('dr.f.flip')) + '</button>', 'mq-cw');
+    }
     h += '<div class="dr-row2">' + row + '</div>';
   }
   if (it.type === 'point') {
@@ -4658,12 +5003,20 @@ function drSheetLists() {
   $('dr-sheet').querySelectorAll('select[data-f]').forEach(sel => tbmAttach(sel, () => t(DR_LIST_LABELS[sel.dataset.f] || 'dr.f.type')));
 }
 
+/* La fiche s'ouvre sur l'objet choisi (outil Choisir), ou, avec un outil de création, sur le brouillon de l'objet à venir : { it, draft } ou null */
+function drSheetTarget() {
+  const s = drSel();
+  if (DR.tool === 'select') return s ? { it: s.it, draft: false } : null;
+  return DR.draft ? { it: DR.draft.it, draft: true } : null;
+}
+
 function drRenderSheet(force) {
-  const sh = $('dr-sheet'), s = drSel();
-  if (!DR.sheet || !s) { drSheetListClose(); sh.hidden = true; DR.sheetKey = ''; return; }
-  const key = s.l.id + '/' + s.it.id + '/' + CURRENT_LANG;
+  const sh = $('dr-sheet'), tg = drSheetTarget();
+  if (!DR.sheet || !tg) { drSheetListClose(); sh.hidden = true; sh.classList.remove('mq-draft'); DR.sheetKey = ''; return; }
+  const key = (tg.draft ? 'draft/' + DR.draft.n : DR.sel.lid + '/' + DR.sel.id) + '/' + CURRENT_LANG;
   sh.hidden = false;
-  if (key !== DR.sheetKey || force) { drSheetListClose(); DR.sheetKey = key; sh.innerHTML = drSheetHtml(s.it); drSheetLists(); }
+  sh.classList.toggle('mq-draft', tg.draft);
+  if (key !== DR.sheetKey || force) { drSheetListClose(); DR.sheetKey = key; sh.innerHTML = drSheetHtml(tg.it, tg.draft); drSheetLists(); }
 }
 
 /* Tout ce que montre le mode, remis d'aplomb */
@@ -4671,6 +5024,7 @@ function drSyncUi() {
   if (!drOn() || !$('dr-ui')) return;
   const s = drSel();
   if (DR.sel && !s) { DR.sel = null; DR.vtx = -1; DR.sheet = false; }
+  if (DR.sheet && !drSheetTarget()) DR.sheet = false;
   if (DR.vtx >= 0 && (!s || !s.it.points || DR.vtx >= s.it.points.length)) DR.vtx = -1;
   drRenderBar();
   drRenderHint();
@@ -4678,26 +5032,98 @@ function drSyncUi() {
   drRenderSheet(false);
 }
 
-/* Un réglage de la fiche : il s'applique et s'enregistre aussitôt */
-function drApply(it, f, v) {
-  if (f === 'name') it.name = v;
-  else if (f === 'text') it.text = v;
-  else if (f === 'maxAlt') it.maxAlt = v;
-  else if (f === 'radius') {
+/* Les champs numériques de la fiche : leur champ de l'objet */
+const DR_NUM_F = { radius: 'radiusNm', length: 'lengthNm', width: 'widthNm' };
+
+/* Un réglage posé sur un objet (le choisi, un neuf, ou le brouillon) ; false s'il ne le concerne pas ou s'il est illisible */
+function drSetField(it, f, v) {
+  const ty = it.type, ob = ty === 'orbit' || ty === 'box';
+  if (f === 'name') { if (ty === 'text') return false; it.name = v; }
+  else if (f === 'text') { if (ty !== 'text') return false; it.text = v; }
+  else if (f === 'maxAlt') { if (ty !== 'circle' && !ob) return false; it.maxAlt = v; }
+  else if (f === 'minAlt') { if (!ob) return false; it.minAlt = v; }
+  else if (f === 'frq') { if (ty !== 'orbit') return false; it.frq = v; }
+  else if (f === 'mission') { if (!ob) return false; it.kind = v; }
+  else if (f === 'radius' || f === 'length' || f === 'width') {
     const n = readNum(v);
-    if (n == null || !(n > 0)) return;
-    it.radiusNm = Math.min(n, 100000);
-  } else if (f === 'color') { if (it.type === 'text') it.fg = v; else it.color = v; DR.color = v; }
+    if (n == null || !(n > 0)) return false;
+    if (f === 'radius' && ty === 'circle') it.radiusNm = Math.min(n, 100000);
+    else if (f === 'length' && ty === 'box') it.lengthNm = Math.min(n, 100000);
+    else if (f === 'width' && (ty === 'box' || ty === 'orbit' || ty === 'zone')) it.widthNm = Math.min(n, ty === 'box' ? 100000 : 1000);
+    else return false;
+  } else if (f === 'color') { if (ty === 'text') it.fg = v; else it.color = v; DR.color = v; }
   else if (f === 'dash') it.dash = v;
   else if (f === 'fill' || f === 'frame') it.filled = v === '1';
   else if (f === 'kind') { if (CF_POINT_KINDS.indexOf(v) !== -1) it.kind = v; }
-  else return;
+  else if (f === 'turn') { if (ty !== 'orbit') return false; it.clockwise = v === '1'; }
+  else if (f === 'showGrid') { if (ty !== 'box') return false; it.showGrid = v === '1'; }
+  else if (f === 'gridH' || f === 'gridV') {
+    if (ty !== 'box') return false;
+    it[f] = Math.max(1, Math.min(DR_GRID_MAX, Math.round(Number(v)) || 1));
+  } else if (f === 'shape') {
+    if (ty !== 'zone') return false;
+    it.kind = v === 'curve' ? 'curve' : 'lines';
+    if (it.kind === 'lines') it.closed = true;
+  } else if (f === 'ltype') {
+    if (ty !== 'zone') return false;
+    it.kind = v === 'flot' ? 'flot' : (v === 'corridor' ? 'corridor' : 'lines');
+    it.closed = false;
+    it.filled = it.kind === 'corridor';
+    if (it.kind === 'corridor' && !(it.widthNm > 0)) it.widthNm = 5;
+  } else return false;
+  return true;
+}
+
+/* Un réglage de la fiche : sur un objet il s'applique et s'enregistre aussitôt ; sur le brouillon il se retient (rien ne s'enregistre) */
+function drApply(tg, f, v) {
+  const it = tg.it;
+  if (f === 'flip') { drFlip(tg); return; }
+  if (!drSetField(it, f, v)) return;
+  if (tg.draft) {
+    DR.draft.vals[f] = v;
+    drBuildPreview();
+    return;
+  }
   persistLayers();
   drawLayers();
   drContour();
   drPlaceHandles();
   drRlab();
   drRenderBar();
+}
+
+/* ⇄ Inverser : l'ordre des sommets d'un FLOT se renverse (les festons changent de côté) ; sur le brouillon, au moment de la création */
+function drFlip(tg) {
+  if (tg.draft) { DR.draft.flip = !DR.draft.flip; return; }
+  if (tg.it.type !== 'zone') return;
+  tg.it.points = tg.it.points.slice().reverse();
+  DR.vtx = -1;
+  drChanged();
+}
+
+/* À la création : seuls les réglages changés dans la fiche « à venir » passent à l'objet ; la géométrie vient des touchers */
+function drNewDraft(tool) {
+  const z = { lat: 0, lng: 0 }, p = [[0, 0], [0, 0], [0, 0]];
+  let it;
+  if (tool === 'circle') it = drNewCircle(z);
+  else if (tool === 'zone') it = drNewZone(p, true);
+  else if (tool === 'line') it = drNewZone(p, false);
+  else if (tool === 'point') { it = drNewPoint(z); it.name = ''; }
+  else if (tool === 'text') it = drNewText(z);
+  else if (tool === 'orbit') it = drNewOrbit([0, 0], [0, 0.1]);
+  else it = drNewBox([0, 0], [0, 0.1]);
+  return { n: ++DR.draftN, tool: tool, it: it, vals: {}, flip: false };
+}
+
+function drApplyDraft(it) {
+  const d = DR.draft;
+  if (!d) return;
+  Object.keys(d.vals).forEach(f => {
+    if (f === 'length') return;                                          /* la longueur d'une boîte vient des touchers */
+    if (f === 'name' && it.type === 'point' && !hasText(d.vals[f])) return;      /* un point garde « PT {n} » sauf nom saisi */
+    drSetField(it, f, d.vals[f]);
+  });
+  if (d.flip && it.type === 'zone') it.points = it.points.slice().reverse();
 }
 
 function drCopy() {
@@ -4781,6 +5207,7 @@ function drAfterLayers() {
 }
 
 function drEnter() {
+  DR.draft = null; DR.lab = null;
   DR.tool = 'select'; DR.build = null; DR.sel = null; DR.vtx = -1; DR.sheet = false; DR.menu = false;
   if (!drLayer()) { const l = drDrawn()[0]; DR.layerId = l ? l.id : null; }
   map.getContainer().classList.add('rp-drawing');
@@ -4790,7 +5217,7 @@ function drEnter() {
 
 function drExit() {
   if (DR.build) { drFinish(true); DR.build = null; }       /* assez de sommets : elle se termine ; sinon elle s'abandonne sans rien écrire */
-  DR.tool = 'select'; DR.sel = null; DR.vtx = -1; DR.sheet = false; DR.menu = false;
+  DR.tool = 'select'; DR.sel = null; DR.vtx = -1; DR.sheet = false; DR.menu = false; DR.draft = null; DR.lab = null;
   drClearPreview();
   drBuildHandles();
   drContour();
@@ -4822,27 +5249,27 @@ function drOnClick(ev) {
   else if (a === 'finish') drFinish(false);
   else if (a === 'cancel') drCancel();
   else if (a === 'vtx') drRemoveVertex();
-  else if (a === 'props') { if (drSel()) { DR.sheet = !DR.sheet; DR.sheetKey = ''; drSyncUi(); } }
+  else if (a === 'props') { if (drSheetTarget()) { DR.sheet = !DR.sheet; DR.sheetKey = ''; drSyncUi(); } }
   else if (a === 'dup') drCopy();
   else if (a === 'del') drDelete();
   else if (a === 'ok') drDeselect();
 }
 
 function drOnSheet(ev) {
-  const s = drSel();
-  if (!s) return;
+  const tg = drSheetTarget();
+  if (!tg) return;
   if (ev.type === 'click') {
     const b = ev.target.closest ? ev.target.closest('button[data-f]') : null;
     if (!b) return;
-    drApply(s.it, b.dataset.f, b.dataset.v);
+    drApply(tg, b.dataset.f, b.dataset.v);
     drRenderSheet(true);
   } else {
     const el = ev.target;
     if (!el || !el.dataset || !el.dataset.f) return;
-    if (ev.type === 'change' && el.dataset.f === 'radius') { el.value = decimal(String(s.it.radiusNm)); return; }
+    if (ev.type === 'change' && DR_NUM_F[el.dataset.f]) { el.value = decimal(String(tg.it[DR_NUM_F[el.dataset.f]])); return; }
     if (ev.type === 'input' && el.tagName === 'SELECT') return;
     if (ev.type === 'change' && el.tagName !== 'SELECT') return;
-    drApply(s.it, el.dataset.f, el.value);
+    drApply(tg, el.dataset.f, el.value);
   }
 }
 
