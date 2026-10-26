@@ -14,6 +14,11 @@ The suite bundles several **independently-versioned tools**, so entries are grou
 - **Tablet & mobile** first-class target (touch, drag, rotation-safe).
 - Wing configuration shared automatically across embedded tools.
 
+### `v1.16.1`
+#### Changed
+- Drop-down lists in the tools' forms follow the UI theme too — no more white system menus on tablets (see below).
+- Embeds **Briefing Generator v2.4.6**, **Datacard Generator v1.4.2**, **Recon Station v1.1.1** and **Route Planner v1.7.1**.
+
 ### `v1.16.0`
 #### Added
 - Embeds **Recon Station v1.1.0** — annotations drawn by touch (see below).
@@ -139,6 +144,10 @@ Initial release. Command post for the suite.
 
 ## Briefing Generator
 
+### `v2.4.6`
+#### Changed
+- Form drop-down lists (classification, threat, units, radio items, airfield role, imagery, altitude reference…) open as a themed list instead of the system menu, in the field's own font — touch and keyboard; a list near the bottom of the screen opens upwards.
+
 ### `v2.4.5`
 #### Changed
 - The theme list opens as a themed drop-down instead of the system menu — touch and keyboard (arrows, Home/End, type-ahead, Esc).
@@ -204,6 +213,12 @@ Initial release. Command post for the suite.
 
 ## Recon Station
 
+### `v1.1.1`
+#### Changed
+- Form drop-down lists (classification, threat, units, radio items, airfield role, imagery, altitude reference…) open as a themed list instead of the system menu, in the field's own font — touch and keyboard; a list near the bottom of the screen opens upwards.
+
+## Recon Station
+
 ### `v1.1.0`
 #### Added
 - **Annotate by touch** — a drawing bar sits on the image: *Select · Frame · Ellipse · Polyline · Arrow · Bracket · Text · Loupe*. One tap places, large handles adjust: frames and magnifiers resize by their four edges and their four corners (the opposite side or corner stays put), frames rotate by their own handle, the magnifier's inset keeps the proportions of its source and stays inside the image. *Settings*, *Copy*, *Delete* and *OK* on the bar, as in the Route Planner; settings can be changed while you create.
@@ -232,6 +247,10 @@ Initial release. Command post for the suite.
 ---
 
 ## Datacard Generator
+
+### `v1.4.2`
+#### Changed
+- Form drop-down lists (classification, threat, units, radio items, airfield role, imagery, altitude reference…) open as a themed list instead of the system menu, in the field's own font — touch and keyboard; a list near the bottom of the screen opens upwards.
 
 ### `v1.4.1`
 #### Changed
@@ -288,6 +307,12 @@ Initial release. One-page flight datacards for the cockpit kneeboard.
 - Example values in empty fields, FR/EN, 4 editor themes, tablet and phone layout with scrollable bars, fully offline.
 
 ---
+
+## Route Planner
+
+### `v1.7.1`
+#### Changed
+- Form drop-down lists (classification, threat, units, radio items, airfield role, imagery, altitude reference…) open as a themed list instead of the system menu, in the field's own font — touch and keyboard; a list near the bottom of the screen opens upwards.
 
 ## Route Planner
 
