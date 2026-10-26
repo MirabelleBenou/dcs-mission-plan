@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build — DCS Route Planner v1.7.0.
+"""Build — DCS Route Planner v1.7.1.
 
 Produit dist/dcs_route_planner.html : un fichier unique, hors ligne, sans serveur ;
 seules les tuiles de carte (DCS Olympus, OpenTopoMap, Esri) viennent du réseau, et le
@@ -19,7 +19,7 @@ import subprocess
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-APP_VERSION = "1.7.0"
+APP_VERSION = "1.7.1"
 OUT_PATH = os.path.join(HERE, 'dist', 'dcs_route_planner.html')
 ASSETS_PATH = os.path.join(HERE, 'assets.json')
 AIRFIELDS_PATH = os.path.join(HERE, 'airfields.json')
@@ -335,6 +335,31 @@ select[data-tbm-src] { display: none !important; }
 .tbm-opt[aria-disabled="true"] .tbm-note { color: var(--khaki); font-size: 10px; letter-spacing: 1px; margin-left: auto; padding-left: 14px; }
 @media (prefers-reduced-motion: reduce) { .tbm-panel { animation: none; } }
 @media print { .tbm-panel { display: none; } }
+
+/* ---------- Listes des formulaires au thème de l'interface (lot mp-ui-listes-formulaires) ----------
+   Le bouton d'une référence d'altitude garde la boîte, le texte et le chevron du <select.in> ; la liste ouverte garde la police,
+   la casse et la graisse du champ (celles de la fiche Dessin et de la fenêtre Route Tool aussi). */
+.in.tbm-trigger {
+  display: block; text-align: left; cursor: pointer; contain: inline-size; letter-spacing: normal; text-transform: none; padding-right: 22px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%231f1c16' stroke-width='1.5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 7px center;
+}
+.in.tbm-trigger .tbm-lbl { margin: 0; padding: 0; line-height: 22px; }
+.in.tbm-trigger .tbm-lbl::after { display: none; }
+.in.tbm-trigger.tbm-trigger-open {
+  outline: none; border-left-color: var(--red-stamp); background-color: #ece0c2; box-shadow: 0 0 0 1px var(--amber);
+  border-top-color: var(--khaki) !important; border-right-color: var(--khaki) !important; border-bottom-color: var(--khaki) !important;
+}
+@media (max-width: 520px) {
+  .pt-row.pts .in.tbm-trigger { padding: 8px 14px 8px 5px; background-position: right 4px center; }
+  .pt-row .in.tbm-trigger { padding: 8px 18px 8px 6px; font-size: 12px; background-position: right 5px center; }
+}
+
+.tbm-panel.tbm-p-field { max-width: calc(100vw - 16px); }
+.tbm-panel.tbm-p-field .tbm-opt {
+  font-family: var(--f-typewriter); font-weight: 400; font-size: 14px; letter-spacing: .2px; text-transform: none;
+}
+.tbm-panel.tbm-p-field .tbm-opt[aria-selected="true"] { font-weight: 400; }
+.tbm-panel.tbm-up { border-top: 1px solid var(--amber-dark); border-bottom: 3px solid var(--amber); transform-origin: bottom left; }
 .leaflet-bar a, .leaflet-bar a:hover { font-family: var(--f-ui); font-weight: 700; }
 .tb-label { font-size: 10px; font-weight: 500; letter-spacing: 1.5px; color: var(--khaki-light); text-transform: uppercase; flex: none; margin-left: 4px; }
 .tb-sep { width: 1px; height: 28px; background: var(--khaki); opacity: .6; flex: none; margin: 0 2px; }
@@ -1459,7 +1484,7 @@ JS = r"""
 'use strict';
 
 /* =====================================================
-   ROUTE PLANNER v1.7.0
+   ROUTE PLANNER v1.7.1
    Une route sur une carte (points posés, saisis par coordonnées
    ou par cap et distance), des points de référence, les noms de lieux,
    les villes et les aérodromes DCS, une recherche sur la carte : caps, distances, vitesse sol et minutage,
@@ -5060,7 +5085,7 @@ function drSheetListClose() {
   if (TBM.cur && sh && sh.contains(TBM.cur.sel)) tbmClose(false);
 }
 function drSheetLists() {
-  $('dr-sheet').querySelectorAll('select[data-f]').forEach(sel => tbmAttach(sel, () => t(DR_LIST_LABELS[sel.dataset.f] || 'dr.f.type')));
+  $('dr-sheet').querySelectorAll('select[data-f]').forEach(sel => tbmAttach(sel, () => t(DR_LIST_LABELS[sel.dataset.f] || 'dr.f.type'), 'sheet'));
 }
 
 /* La fiche s'ouvre sur l'objet choisi (outil Choisir), ou, avec un outil de création, sur le brouillon de l'objet à venir : { it, draft } ou null */
@@ -6930,10 +6955,10 @@ function bindEvents() {
    est un <ul role="listbox"> posé en fin de <body> (la barre défile et couperait ce qui déborde).
    Le libellé suit toujours le <select> : mutations du DOM (options reconstruites, traduites, désactivées,
    title) et affectations par le code (value, selectedIndex) interceptées sur l'instance. */
-const TBM = { cur: null, bound: false, swallow: false };
+const TBM = { cur: null, bound: false, swallow: false, n: 0, all: [], map: new WeakMap(), label: null, mo: null, ro: null };
 
 function initToolbarMenus(specs) {
-  specs.forEach(sp => tbmAttach(document.getElementById(sp[0]), sp[1]));
+  specs.forEach(sp => tbmAttach(document.getElementById(sp[0]), sp[1], sp[2]));
   if (TBM.bound) return;
   TBM.bound = true;
   document.addEventListener('pointerdown', tbmOutside, true);
@@ -6943,18 +6968,62 @@ function initToolbarMenus(specs) {
   window.addEventListener('scroll', tbmScrolled, true);
 }
 
-function tbmAttach(sel, labelFn) {
-  if (!sel || !sel.parentNode || sel.hasAttribute('data-tbm-src')) return;
+/* ----- Listes des formulaires (lot mp-ui-listes-formulaires) -----
+   Tout <select> hors de la barre du haut passe par le même composant, présent au chargement ou inséré ensuite
+   (formulaire reconstruit, rangée ajoutée, onglet ouvert) : un observateur le rattache dès son insertion, et
+   détache le bouton d'un <select> qui quitte la page (la liste ouverte sur lui se ferme). labelFn(select) donne l'intitulé. */
+function initFormMenus(labelFn) {
+  TBM.label = labelFn;
+  tbmScan(document.body);
+  if (TBM.mo) return;
+  TBM.mo = new MutationObserver(recs => {
+    for (let i = TBM.all.length - 1; i >= 0; i--) if (!TBM.all[i].sel.isConnected) tbmForget(TBM.all[i]);
+    recs.forEach(r => r.addedNodes.forEach(n => { if (n.nodeType === 1) tbmScan(n); }));
+  });
+  TBM.mo.observe(document.body, { childList: true, subtree: true });
+}
+
+function tbmScan(root) {
+  if (!TBM.label || !root || root.nodeType !== 1 || root.classList.contains('tbm-panel')) return;
+  if (root.tagName !== 'SELECT' && !root.firstElementChild) return;
+  const list = root.tagName === 'SELECT' ? [root] : Array.prototype.slice.call(root.querySelectorAll('select'));
+  list.forEach(s => {
+    if (TBM.map.has(s) || (s.closest && s.closest('header.toolbar'))) return;
+    tbmAttach(s, () => TBM.label(s), 'field');
+  });
+}
+
+function tbmForget(m) {
+  if (TBM.cur === m) tbmClose(false);
+  if (m.mo) m.mo.disconnect();
+  if (TBM.ro) TBM.ro.unobserve(m.btn);
+  if (m.btn.parentNode) m.btn.parentNode.removeChild(m.btn);
+  TBM.map.delete(m.sel);
+  const i = TBM.all.indexOf(m);
+  if (i >= 0) TBM.all.splice(i, 1);
+}
+
+/* Un champ de moins de 120 px de large : chevron à 8 px du bord (12 px sinon) */
+function tbmNarrow(btn) {
+  const w = btn.offsetWidth;
+  if (w > 0) btn.classList.toggle('tbm-narrow', w < 120);
+}
+
+/* mode : rien (liste de la barre) · 'field' (liste de formulaire, bouton d'un champ) · 'sheet' (liste de formulaire,
+   bouton fermé déjà habillé par le module) */
+function tbmAttach(sel, labelFn, mode) {
+  if (!sel || !sel.parentNode || TBM.map.has(sel)) return;
+  const uid = sel.id || 'f' + (++TBM.n);
   const btn = document.createElement('button');
   btn.type = 'button';
-  btn.className = sel.className + ' tbm-trigger';
+  btn.className = sel.className + ' tbm-trigger' + (mode === 'field' ? ' tbm-field' : '');
   btn.setAttribute('aria-haspopup', 'listbox');
   btn.setAttribute('aria-expanded', 'false');
-  btn.setAttribute('aria-controls', 'tbm-list-' + sel.id);
+  btn.setAttribute('aria-controls', 'tbm-list-' + uid);
   const lbl = document.createElement('span');
   lbl.className = 'tbm-lbl';
   btn.appendChild(lbl);
-  const m = { sel: sel, btn: btn, lbl: lbl, labelFn: labelFn, panel: null, active: -1, type: '', typeTimer: 0, x0: 0, y0: 0 };
+  const m = { sel: sel, btn: btn, lbl: lbl, labelFn: labelFn, panel: null, active: -1, type: '', typeTimer: 0, x0: 0, y0: 0, uid: uid, form: !!mode, mo: null };
   sel.parentNode.insertBefore(btn, sel);
   sel.setAttribute('data-tbm-src', '');
   ['value', 'selectedIndex'].forEach(k => {
@@ -6966,10 +7035,17 @@ function tbmAttach(sel, labelFn) {
       set(v) { d.set.call(this, v); tbmSync(m); }
     });
   });
-  new MutationObserver(() => tbmSync(m)).observe(sel, {
+  m.mo = new MutationObserver(() => tbmSync(m));
+  m.mo.observe(sel, {
     childList: true, subtree: true, characterData: true, attributes: true,
     attributeFilter: ['title', 'aria-label', 'disabled', 'label', 'selected', 'value']
   });
+  TBM.map.set(sel, m);
+  TBM.all.push(m);
+  if (mode === 'field' && window.ResizeObserver) {
+    if (!TBM.ro) TBM.ro = new ResizeObserver(es => es.forEach(e => tbmNarrow(e.target)));
+    TBM.ro.observe(btn);
+  }
   sel.addEventListener('change', () => tbmSync(m));
   ['focus', 'mouseover'].forEach(ev => btn.addEventListener(ev, () => tbmSync(m)));   /* filet : option.selected posé par le code */
   btn.addEventListener('click', () => { if (m.panel) tbmClose(true); else tbmOpen(m); });
@@ -7004,8 +7080,8 @@ function tbmOpen(m) {
   tbmSync(m);
   const sel = m.sel, opts = sel.options, name = m.labelFn();
   const ul = document.createElement('ul');
-  ul.className = 'tbm-panel';
-  ul.id = 'tbm-list-' + sel.id;
+  ul.className = 'tbm-panel' + (m.form ? ' tbm-p-field' : '');
+  ul.id = 'tbm-list-' + m.uid;
   ul.setAttribute('role', 'listbox');
   ul.setAttribute('aria-label', name);
   ul.tabIndex = -1;
@@ -7017,7 +7093,7 @@ function tbmOpen(m) {
   for (let k = 0; k < opts.length; k++) {
     const o = opts[k], li = document.createElement('li');
     li.className = 'tbm-opt';
-    li.id = 'tbm-' + sel.id + '-' + k;
+    li.id = 'tbm-' + m.uid + '-' + k;
     li.setAttribute('role', 'option');
     li.setAttribute('aria-selected', k === sel.selectedIndex ? 'true' : 'false');
     li.setAttribute('data-i', String(k));
@@ -7066,12 +7142,38 @@ function tbmOpen(m) {
   ul.focus({ preventScroll: true });
 }
 
-/* Sous le bouton (4 px), bord gauche aligné, au moins aussi large, à 8 px au moins des bords de la fenêtre */
+/* Sous le bouton (4 px), bord gauche aligné, au moins aussi large, à 8 px au moins des bords de la fenêtre.
+   Liste de formulaire : la place utile va du bas de la barre du haut au haut de la barre d'onglets fixée en bas (portrait),
+   sinon au bas de la fenêtre ; dessous si elle y tient entière, sinon dessus si la place y est plus grande (classe tbm-up). */
 function tbmPlace(m) {
   const r = m.btn.getBoundingClientRect(), p = m.panel;
   const vw = document.documentElement.clientWidth, vh = window.innerHeight;
-  const top = r.bottom + 4;
+  let top = r.bottom + 4;
   m.x0 = r.left; m.y0 = r.top;
+  if (m.form) {
+    const tb = document.querySelector('header.toolbar'), bar = document.querySelector('.tab-bar');
+    const lo = tb ? tb.getBoundingClientRect().bottom : 0;
+    let hi = vh;
+    if (bar) {
+      const bs = getComputedStyle(bar), br = bar.getBoundingClientRect();
+      if (bs.position === 'fixed' && bs.display !== 'none' && br.height > 0 && br.top > lo) hi = Math.min(hi, br.top);
+    }
+    const cap = Math.min(0.62 * vh, 440);
+    const below = hi - (r.bottom + 4) - 12, above = (r.top - 4) - lo - 12;
+    p.style.minWidth = Math.min(Math.max(180, r.width), vw - 16) + 'px';
+    p.style.maxHeight = 'none';
+    const up = Math.min(p.offsetHeight, cap) > below && above > below;
+    p.style.maxHeight = Math.max(60, Math.min(cap, up ? above : below)) + 'px';
+    p.classList.toggle('tbm-up', up);
+    p.style.top = (up ? r.top - 4 - p.offsetHeight : r.bottom + 4) + 'px';
+    p.style.left = r.left + 'px';
+    const fw = p.getBoundingClientRect().width;
+    let fl = r.left;
+    if (fl + fw > vw - 8) fl = vw - 8 - fw;
+    if (fl < 8) fl = 8;
+    p.style.left = fl + 'px';
+    return;
+  }
   p.style.minWidth = Math.max(180, r.width) + 'px';
   p.style.top = top + 'px';
   p.style.left = r.left + 'px';
@@ -7144,6 +7246,7 @@ function tbmChoose(m, k) {
   tbmClose(true);
   if (!changed) return;
   sel.selectedIndex = k;
+  if (m.form) sel.dispatchEvent(new Event('input', { bubbles: true }));   /* comme le contrôle natif : input puis change */
   sel.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
@@ -7198,7 +7301,8 @@ function init() {
   applyTheme(loadTheme(), false);
   applyI18nStatic();
   updateFlagButton();
-  initToolbarMenus([['layer', () => t('tb.layer')], ['theatre', () => t('tb.theatre')], ['theme', () => t('tb.theme.tip')], ['rt-theatre', () => t('tb.theatre')]]);   /* les listes de la barre au thème de l'interface */
+  initToolbarMenus([['layer', () => t('tb.layer')], ['theatre', () => t('tb.theatre')], ['theme', () => t('tb.theme.tip')], ['rt-theatre', () => t('tb.theatre'), 'sheet']]);   /* les listes de la barre au thème de l'interface */
+  initFormMenus(sel => (sel.dataset.k === 'altRef' ? t('th.ref') : ''));   /* les listes des formulaires */
   loadState();
   loadLayers();
   createMap();
