@@ -109,7 +109,7 @@ The Field Manual is the suite's **built-in documentation**, opened from the boar
 
 ![route-planner](docs/screenshots/route_planner.jpg)
 
-**Recon Station** — a frame, an ellipse, a stamp and a magnifier drawn on the image, with the info block
+**Recon Station** — numbered targets with their legend, a frame, an ellipse and a magnifier drawn on the image, with the info block
 
 ![recon-station](docs/screenshots/recon_station.jpg)
 
