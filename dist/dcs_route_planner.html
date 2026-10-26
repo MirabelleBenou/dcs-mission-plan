@@ -1346,6 +1346,16 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .dr-sheet .sh-x:hover, .dr-sheet .sh-x:focus-visible { border-color: var(--amber); outline: none; }
 .dr-f input:focus, .dr-f select:focus, .dr-new input:focus { outline: none; border-left-color: var(--red-stamp); box-shadow: 0 0 0 1px var(--amber); }
 .rp-split:focus-visible { outline: 2px solid var(--amber); outline-offset: -2px; }
+/* la liste « Type » de la fiche prend la liste du module (le <select> reste, masqué) ; le bouton garde l'aspect d'un champ de la fiche
+   (les valeurs de « .dr-f select ») et un chevron de la puce « Calque » ; rien de .tb-sel ni de .tbm-trigger n'en change l'aspect fermé */
+.dr-f .tbm-trigger { display: block; position: relative; width: 100%; height: 40px; box-sizing: border-box; margin: 0; text-align: left; cursor: pointer;
+  font-family: var(--f-mono); font-size: 14px; font-weight: 400; line-height: normal; letter-spacing: normal; text-transform: none; white-space: nowrap;
+  padding: 0 8px; background: var(--paper-light); color: var(--ink); border: 1px solid var(--khaki); border-left: 3px solid var(--amber-dark); border-radius: 0; }
+.dr-f .tbm-trigger .tbm-lbl { margin: 0; padding: 0; }
+.dr-f .tbm-trigger::after { content: ''; position: absolute; right: 9px; top: 50%; width: 7px; height: 7px; margin-top: -6px;
+  border-right: 2px solid var(--amber); border-bottom: 2px solid var(--amber); transform: rotate(45deg); pointer-events: none; }
+.dr-f .tbm-trigger.tbm-trigger-open::after { transform: rotate(-135deg); margin-top: -2px; }
+.dr-f .tbm-trigger:focus-visible { outline: none; border-left-color: var(--red-stamp); box-shadow: 0 0 0 1px var(--amber); }
 
 /* ---------- étiquettes des boutons : seulement en très grand écran ---------- */
 @media (min-width: 1801px) {
@@ -5203,12 +5213,23 @@ function drSheetHtml(it) {
   return h;
 }
 
+/* Les listes de la fiche passent par la liste du module (tbmAttach) : le <select> reste, masqué ; la fiche se reconstruit, le
+   rattachement se refait sur le <select> neuf, et une liste ouverte sur l'ancien se ferme avant qu'il ne disparaisse */
+const DR_LIST_LABELS = { kind: 'dr.f.type' };
+function drSheetListClose() {
+  const sh = $('dr-sheet');
+  if (TBM.cur && sh && sh.contains(TBM.cur.sel)) tbmClose(false);
+}
+function drSheetLists() {
+  $('dr-sheet').querySelectorAll('select[data-f]').forEach(sel => tbmAttach(sel, () => t(DR_LIST_LABELS[sel.dataset.f] || 'dr.f.type')));
+}
+
 function drRenderSheet(force) {
   const sh = $('dr-sheet'), s = drSel();
-  if (!DR.sheet || !s) { sh.hidden = true; DR.sheetKey = ''; return; }
+  if (!DR.sheet || !s) { drSheetListClose(); sh.hidden = true; DR.sheetKey = ''; return; }
   const key = s.l.id + '/' + s.it.id + '/' + CURRENT_LANG;
   sh.hidden = false;
-  if (key !== DR.sheetKey || force) { DR.sheetKey = key; sh.innerHTML = drSheetHtml(s.it); }
+  if (key !== DR.sheetKey || force) { drSheetListClose(); DR.sheetKey = key; sh.innerHTML = drSheetHtml(s.it); drSheetLists(); }
 }
 
 /* Tout ce que montre le mode, remis d'aplomb */
@@ -5341,6 +5362,7 @@ function drExit() {
   drContour();
   drRlab();
   map.getContainer().classList.remove('rp-drawing');
+  drSheetListClose();
   $('dr-ui').hidden = true;
   $('dr-sheet').hidden = true;
   $('dr-pop').hidden = true;
