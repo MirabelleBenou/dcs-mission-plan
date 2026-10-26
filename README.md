@@ -38,7 +38,7 @@ The landing page presents each tool as a **pinned print** on the board. Active t
 |------|--------------|--------|
 | **HQ** | Command post — configure your wing once (branding, squadrons), shared with the other tools; experimental `.miz` mission reader/patcher | 🧪 Beta `v0.1.1` |
 | **Briefing Generator** | Mission briefings, full or quick — SITAC, radio plan, airfields, charts, recon photos — PDF & PNG export | ✅ `v2.4.5` |
-| **Recon Station** | Turn a screenshot into a reconnaissance analysis photo — sensor looks, annotations, lossless PNG | ✅ `v1.0.1` |
+| **Recon Station** | Turn a screenshot into a reconnaissance analysis photo — sensor looks, annotations drawn by touch, lossless PNG | ✅ `v1.1.0` |
 | **Field Manual** | In-app documentation for the suite — one illustrated chapter per tool, diagrams, FR/EN, offline | ✅ `v1.2.3` |
 | **Route Planner** | Lay a route on a map — DCS map (by DCS Olympus), topographic or satellite, MGRS grid, place names, DCS towns and airfields, map search — type coordinates or heading & distance, reference points, headings, distances, MGRS & DMS, sent to the datacard; DCS Route Tool import & export; leg boxes, ground speed and minute marks; CombatFlite layers (.cf); draw your own layers by touch — circles, zones and curves, lines, FLOT and corridors, points, text, orbits, kill boxes with their grid | ✅ `v1.7.0` |
 | **Datacard Generator** | One-page flight datacards for the kneeboard — from scratch, from a briefing or from a route — reference points, day & night, PNG & PDF export | ✅ `v1.4.1` |
@@ -66,7 +66,7 @@ Recon Station turns any screenshot into a convincing **reconnaissance analysis p
 
 - **Sensor looks** — EO (default), IR white-hot, IR black-hot, SAR (stylizations, not radiometric data)
 - **Image effects** — greyscale, contrast, vignette, grain, scanlines (sliders, off by default)
-- **Annotations** — numbered movable markers, a magnifier/loupe (crops after effects), shapes (ellipse, rectangle, polygon, arrow, bracket), and labels (stamp, cursive grease-pencil, plain)
+- **Annotations, by touch** — a drawing bar on the image: frames, ellipses, polylines, arrows, brackets, text labels (stamp, cursive grease-pencil, plain) and magnifiers; one tap places, large handles adjust (frames and magnifiers by their four edges, frames rotate); numbered movable markers
 - **Editable info block** — 9 fields, bold text, black/white
 - **Classification banner** — top/bottom bars, 4 levels, off by default
 - **Wing logos** — upload manually or pull the shared wing branding from HQ; colour / grey / white modes

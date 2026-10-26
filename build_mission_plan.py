@@ -484,9 +484,9 @@ select[data-tbm-src] {{ display: none !important; }}
             <div class="cap-row">
               <span class="logo" style="background:var(--a-rs)">R·S</span>
               <span class="ptitle">Recon Station</span>
-              <span class="pver">v1.0.1</span>
+              <span class="pver">v1.1.0</span>
             </div>
-            <div class="pdesc" data-i18n="rs.desc">Transforme une capture en photo d'analyse de reconnaissance — niveaux de gris, annotations, export PNG pleine résolution.</div>
+            <div class="pdesc" data-i18n="rs.desc">Transforme une capture en photo d'analyse de reconnaissance — niveaux de gris, annotations au doigt, export PNG pleine résolution.</div>
             <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
           </div>
           <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>
@@ -528,7 +528,7 @@ select[data-tbm-src] {{ display: none !important; }}
   /* ── Données ──────────────────────────────────────────────── */
   {module_html_js}
 
-  var APP_VERSION = '1.15.0';
+  var APP_VERSION = '1.16.0';
   var KEY_LANG  = 'lang_v1';
   var KEY_THEME = 'theme_v1';
 
@@ -544,7 +544,7 @@ select[data-tbm-src] {{ display: none !important; }}
       ribbon: '// Suite de préparation opérationnelle',
       'hq.desc': 'Poste de commandement — configuration Wing, identité escadrons, logos partagés avec tous les modules.',
       'bg.desc': 'Briefings complets — SITAC, plan radio, aérodromes, charts, annexes — export PDF prêt à partager.',
-      'rs.desc': "Transforme une capture en photo d'analyse de reconnaissance — niveaux de gris, annotations, export PNG pleine résolution.",
+      'rs.desc': "Transforme une capture en photo d'analyse de reconnaissance — niveaux de gris, annotations au doigt, export PNG pleine résolution.",
       'fm.desc': "Le manuel d'emploi de la suite — un chapitre par module, schémas et mode d'emploi, entièrement hors-ligne.",
       'dg.desc': "Datacards de vol d'une page pour le kneeboard — saisie ou depuis un briefing, day et night, export PNG et PDF.",
       'rp.desc': 'Tracé de route sur carte — carte DCS, topographique ou satellite, grille MGRS, villes et aérodromes, recherche ; points de référence ; caps, distances, vitesse sol et minutage ; calques CombatFlite et dessin au doigt (zones, FLOT, couloirs, orbites, boîtes) ; MGRS et DMS, envoyés à la datacard ; import et export du Route Tool de DCS.',
@@ -563,7 +563,7 @@ select[data-tbm-src] {{ display: none !important; }}
       ribbon: '// Operational planning suite',
       'hq.desc': 'Command hub — Wing configuration, squadron identity, logos shared across all modules.',
       'bg.desc': 'Complete briefings — SITAC, radio plan, airfields, charts, annexes — PDF export ready to share.',
-      'rs.desc': 'Turns a screenshot into a reconnaissance analysis photo — greyscale, annotations, full-resolution PNG export.',
+      'rs.desc': 'Turns a screenshot into a reconnaissance analysis photo — greyscale, touch annotations, full-resolution PNG export.',
       'fm.desc': "The suite's field manual — one chapter per module, diagrams and how-tos, fully offline.",
       'dg.desc': 'One-page flight datacards for the kneeboard — from scratch or from a briefing, day and night, PNG and PDF export.',
       'rp.desc': 'Lay a route on a map — DCS, topographic or satellite, MGRS grid, towns and airfields, search; reference points; headings, distances, ground speed and minute marks; CombatFlite layers and touch drawing (zones, FLOT, corridors, orbits, boxes); MGRS and DMS, sent to the datacard; DCS Route Tool import and export.',

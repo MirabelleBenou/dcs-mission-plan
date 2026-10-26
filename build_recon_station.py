@@ -11,7 +11,7 @@ ASSETS_PATH = os.path.join(HERE, 'assets.json')
 if not os.path.isfile(ASSETS_PATH):
     raise SystemExit(f"[ERREUR] Entrée manquante : {ASSETS_PATH} (assets.json attendu à la racine du dépôt)")
 
-APP_VERSION = "1.0.1"
+APP_VERSION = "1.1.0"
 
 with open(ASSETS_PATH) as f:
     A = json.load(f)
@@ -27,6 +27,1221 @@ KRAFT_NATO  = _kraft_variant(A['KRAFT_SVG'], '#d6c7a3', '#ccbe99')
 KRAFT_SOV   = _kraft_variant(A['KRAFT_SVG'], '#d4c075', '#c8b060')
 KRAFT_MNATO = _kraft_variant(A['KRAFT_SVG'], '#e4dfd2', '#d8d4c8')
 KRAFT_MEAST = _kraft_variant(A['KRAFT_SVG'], '#c8c1b2', '#bcb5a6')
+
+# ---------- Annoter au doigt (lot mp-rs-v1.1.0) ----------
+# Icônes de la barre : celles de la maquette du CdP (SVG 24×24, trait currentColor).
+RSD_ICONS = {
+ "select": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><path d=\"M6 3l12 9-5.2 1.1L15.6 20l-2.6 1.1-2.8-6.9L6 18z\"/></svg>",
+ "rect": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><rect x=\"3.5\" y=\"6\" width=\"17\" height=\"12\"/></svg>",
+ "ellipse": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><ellipse cx=\"12\" cy=\"12\" rx=\"9\" ry=\"6\"/></svg>",
+ "poly": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><path d=\"M3 18l6-9 6 5 6-9\"/><rect x=\"7.5\" y=\"7.5\" width=\"3\" height=\"3\" fill=\"currentColor\"/><rect x=\"13.5\" y=\"12.5\" width=\"3\" height=\"3\" fill=\"currentColor\"/></svg>",
+ "arrow": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><path d=\"M4 20L18.5 5.5\"/><path d=\"M11 5h8v8\"/></svg>",
+ "bracket": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><path d=\"M4 9v6M20 9v6M4 12h16\"/></svg>",
+ "label": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><path d=\"M5 6V4h14v2M12 4v16M9 20h6\"/></svg>",
+ "inset": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><circle cx=\"10\" cy=\"10\" r=\"6\"/><path d=\"M14.5 14.5L20.5 20.5\"/><path d=\"M7.5 10h5M10 7.5v5\"/></svg>",
+ "props": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><path d=\"M4 7h10M18 7h2M4 17h4M12 17h8\"/><circle cx=\"16\" cy=\"7\" r=\"2\"/><circle cx=\"10\" cy=\"17\" r=\"2\"/></svg>",
+ "dup": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><rect x=\"8\" y=\"8\" width=\"12\" height=\"12\"/><path d=\"M4 16V4h12\"/></svg>",
+ "del": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><path d=\"M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6\"/></svg>",
+ "ok": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.6\"><path d=\"M4 12.5l5 5L20 6.5\"/></svg>",
+ "move": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><path d=\"M12 2v20M2 12h20M12 2l-3 3M12 2l3 3M12 22l-3-3M12 22l3-3M2 12l3-3M2 12l3 3M22 12l-3-3M22 12l-3 3\"/></svg>",
+ "vtx": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"round\"><rect x=\"8\" y=\"8\" width=\"8\" height=\"8\"/><path d=\"M3 3l18 18\"/></svg>"
+}
+
+RSD_CSS = r'''/* ======== ANNOTER AU DOIGT (lot mp-rs-v1.1.0) — la barre, le message, la fiche et les poignées du Route Planner sur l'aperçu ========
+   Valeurs de la maquette du CdP (R297), reprises telles quelles ; les règles des calques, des pas à pas et de la grille n'ont pas d'élément ici. */
+.dr-ui { position: absolute; left: 10px; right: 10px; bottom: 26px; z-index: 1000; display: flex; flex-direction: column; gap: 6px;
+  pointer-events: none; font-family: var(--f-ui); }
+.dr-ui > * { pointer-events: auto; }
+.dr-ui[hidden] { display: none; }
+.dr-hint { align-self: center; max-width: 100%; box-sizing: border-box; display: flex; align-items: center; gap: 8px;
+  background: var(--olive-deep); border: 2px solid var(--amber-dark); box-shadow: 0 2px 8px rgba(0,0,0,.4);
+  color: var(--paper-light); padding: 4px 4px 4px 12px; min-height: 44px; }
+.dr-hint[hidden] { display: none; }
+.dr-hint .dr-msg { font-family: var(--f-ui); font-weight: 500; font-size: 13px; letter-spacing: .3px; line-height: 1.25; }
+.dr-hint .dr-msg b { font-weight: 700; color: var(--amber); letter-spacing: 1.2px; text-transform: uppercase; margin-right: 6px; }
+.dr-hint .tb-btn { height: 36px; font-size: 11px; padding: 0 10px; border-color: var(--khaki); }
+.dr-hint .tb-btn.go { background: var(--amber-dark); color: var(--paper-light); border-color: var(--amber); }
+.dr-hint .dr-acts { display: flex; gap: 4px; flex: none; }
+
+.dr-bar { display: flex; align-items: stretch; gap: 8px; background: var(--olive-deep); border: 2px solid var(--amber-dark);
+  box-shadow: 0 2px 8px rgba(0,0,0,.45); padding: 6px; box-sizing: border-box; }
+.dr-tools { display: flex; flex: 1 1 auto; justify-content: flex-end; gap: 0; min-width: 0; }
+.dr-tool { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; flex: 1 1 0; min-width: 44px; max-width: 72px;
+  min-height: 52px; background: transparent; color: var(--paper); border: 1px solid var(--khaki); border-left: none; cursor: pointer; padding: 4px 2px; }
+.dr-tool:first-child { border-left: 1px solid var(--khaki); }
+.dr-tool svg { width: 22px; height: 22px; display: block; }
+.dr-tool i { font-style: normal; font-weight: 700; font-size: 9.5px; letter-spacing: 1px; text-transform: uppercase; line-height: 1; }
+.dr-tool.on { background: var(--amber-dark); color: var(--paper-light); border-color: var(--amber); box-shadow: inset 0 -3px 0 var(--amber); }
+.dr-tool.danger { color: #f0a090; }
+.dr-sel { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; justify-content: center; padding: 0 6px; color: var(--paper-light); }
+.dr-sel small { font-weight: 700; font-size: 9.5px; letter-spacing: 1.5px; color: var(--amber); text-transform: uppercase; }
+.dr-sel span { font-family: var(--f-mono); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dr-bar.selmode .dr-tools { flex: 0 0 auto; }
+.dr-bar.selmode .dr-tool { width: 60px; flex: none; }
+
+/* la fiche de propriétés (feuille du bas) */
+.dr-sheet { position: absolute; right: 10px; bottom: 100px; width: 340px; max-width: calc(100% - 20px); box-sizing: border-box; z-index: 1001;
+  background: var(--olive-deep); border: 2px solid var(--amber-dark); box-shadow: 0 4px 14px rgba(0,0,0,.5); color: var(--paper-light);
+  padding: 10px 12px 12px; font-family: var(--f-ui); max-height: calc(100% - 130px); overflow: auto; }
+.dr-sheet[hidden] { display: none; }
+.dr-sheet .sh-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.dr-sheet .sh-head b { font-weight: 700; font-size: 11px; letter-spacing: 1.5px; color: var(--amber); text-transform: uppercase; }
+.dr-sheet .sh-x { width: 40px; height: 40px; background: transparent; border: 1px solid var(--khaki); color: var(--paper); font-size: 18px; cursor: pointer; }
+.dr-f { margin-top: 8px; }
+.dr-f > label { display: block; font-weight: 700; font-size: 9.5px; letter-spacing: 1.5px; color: var(--amber); text-transform: uppercase; margin-bottom: 4px; }
+.dr-f input[type=text], .dr-f input[type=number], .dr-f select { width: 100%; height: 40px; box-sizing: border-box; font-family: var(--f-mono); font-size: 14px;
+  padding: 0 8px; background: var(--paper-light); color: var(--ink); border: 1px solid var(--khaki); border-left: 3px solid var(--amber-dark); }
+.dr-sw { display: flex; gap: 6px; flex-wrap: wrap; }
+.dr-sw button { width: 36px; height: 36px; border: 2px solid var(--khaki); cursor: pointer; padding: 0; position: relative; }
+.dr-sw button.on { border-color: var(--amber); box-shadow: 0 0 0 2px var(--olive-deep), 0 0 0 4px var(--amber); }
+.dr-seg { display: flex; } .dr-seg .tb-btn { flex: 1; height: 40px; min-width: 0; padding: 0 6px; }
+
+/* poignées : 44 px de cible, 16 px visibles */
+.dr-h { background: none; border: none; }
+.dr-h i { position: absolute; left: 50%; top: 50%; width: 16px; height: 16px; margin: -8px 0 0 -8px; box-sizing: border-box;
+  background: var(--paper-light); border: 2px solid var(--amber-dark); box-shadow: 0 1px 3px rgba(0,0,0,.6); }
+.dr-h.v i { border-radius: 2px; }
+.dr-h.v.on i { background: var(--amber); border-color: var(--ink); width: 20px; height: 20px; margin: -10px 0 0 -10px; }
+.dr-h.r i { border-radius: 50%; background: var(--amber); border-color: var(--ink); }
+.dr-h.mid i { width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: rgba(227,214,181,.75); border: 1.5px solid var(--amber-dark);
+  font-style: normal; font-weight: 700; font-size: 12px; line-height: 10px; text-align: center; color: var(--amber-dark); }
+.dr-h.mv i { width: 26px; height: 26px; margin: -13px 0 0 -13px; border-radius: 50%; background: var(--olive-deep); border-color: var(--amber); color: var(--amber); }
+.dr-h.mv i svg { width: 16px; height: 16px; margin: 3px; display: block; }
+.dr-h.first i { width: 22px; height: 22px; margin: -11px 0 0 -11px; background: var(--amber); }
+
+@media (max-width: 600px) {
+  .dr-ui { left: 6px; right: 6px; }
+  .dr-bar { flex-wrap: wrap; gap: 6px; }
+  .dr-tool { min-height: 50px; }
+  .dr-bar.selmode .dr-tool { width: 52px; }
+  .dr-sheet { left: 6px; right: 6px; width: auto; max-width: none; bottom: 94px; }
+  .dr-hint .dr-msg { font-size: 12px; }
+  .dr-sheet { padding: 8px 10px 10px; bottom: 90px; max-height: calc(100% - 100px); }
+  .dr-f { margin-top: 6px; }
+  .dr-sw { gap: 5px; } .dr-sw button { width: 34px; height: 34px; }
+  .dr-sheet .sh-x { width: 36px; height: 36px; }
+}
+
+/* 1.7.0 : barrettes de bord, rotation, réglages de l'objet à venir */
+@media (max-width: 600px) {
+  .dr-tool { min-width: 0; padding: 4px 0; }
+  .dr-tool i { font-size: 8.5px; letter-spacing: .4px; }
+  .dr-tool svg { width: 21px; height: 21px; }
+}
+.dr-h.v.edge i { width: 22px; height: 10px; margin: -5px 0 0 -11px; border-radius: 2px; background: var(--paper-light); }
+.dr-h.r.rot i { width: 22px; height: 22px; margin: -11px 0 0 -11px; }
+.dr-h.r.rot i::after { content: '⟳'; position: absolute; inset: 0; font: 700 15px/18px var(--f-ui); color: var(--ink); text-align: center; }
+.dr-hint .tb-btn.mq-props svg { width: 18px; height: 18px; }
+.dr-hint .tb-btn.mq-props.on { background: var(--amber-dark); border-color: var(--amber); }
+
+/* Recon Station : la couche des poignées, au-dessus du canevas */
+.rsd-ov { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
+.rsd-svg, .rsd-prev { position: absolute; left: 0; top: 0; pointer-events: none; overflow: visible; }
+.rsd-h { position: absolute; width: 44px; height: 44px; margin: -22px 0 0 -22px; pointer-events: auto; touch-action: none; cursor: grab; }
+.rsd-h.mv.src i { background: var(--paper-light); color: var(--amber-dark); border-color: var(--amber-dark); }
+.rsd-h.r.corner i { border-radius: 2px; width: 14px; height: 14px; margin: -7px 0 0 -7px; }
+.rsd-ui { z-index: 20; bottom: 14px; }
+.rsd-sheet { z-index: 21; bottom: 92px; }
+.rsd-sheet.mq-draft { bottom: 150px; }
+.rsd-ui .dr-bar { justify-content: center; }
+.rsd-ui .dr-tools { justify-content: center; flex: 1 1 auto; }
+.rsd-ui .dr-tool { max-width: 78px; }
+.dr-sw.rsd-sw button { width: auto; min-width: 86px; height: 40px; padding: 0 10px; display: flex; align-items: center; justify-content: center; }
+.dr-sw.rsd-sw button span { font-family: var(--f-ui); font-weight: 700; font-size: 11px; letter-spacing: 1.2px; text-transform: uppercase; color: #fff; }
+.dr-sw.rsd-sw button[data-v=white] span { color: #111; }
+@media (max-width: 600px) {
+  .rsd-ui .dr-tool { min-width: 0; padding: 4px 0; }
+  .rsd-ui .dr-tool i { font-size: 8.5px; letter-spacing: .4px; }
+  .rsd-ui .dr-tool svg { width: 21px; height: 21px; }
+  .rsd-sheet { bottom: 86px; }
+}
+/* sous 1 101 px, la barre d'onglets (48 px, fixe) occupe le bas : la barre de dessin et la fiche se posent au-dessus */
+@media (max-width: 1100px) {
+  .rsd-ui { position: fixed; left: 10px; right: 10px; bottom: 60px; }
+  .rsd-sheet { position: fixed; bottom: 140px; }
+  .rsd-sheet.mq-draft { bottom: 196px; }
+}
+@media (max-width: 600px) { .rsd-ui { left: 6px; right: 6px; } .rsd-sheet { bottom: 134px; } .rsd-sheet.mq-draft { bottom: 190px; } }
+/* les boutons de la barre, du message et de la fiche : ceux du Route Planner (RS a son propre .tb-btn clair) */
+.rsd-ui .tb-btn, .rsd-sheet .tb-btn {
+  font-family: var(--f-ui); font-weight: 700; letter-spacing: 1.5px; font-size: 12px; text-transform: uppercase;
+  background: transparent; color: var(--paper); border: 1px solid var(--khaki); height: 40px; min-width: 44px;
+  padding: 0 12px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border-radius: 0; box-shadow: none; }
+.rsd-ui .tb-btn.on, .rsd-sheet .tb-btn.on, .rsd-ui .tb-btn.go { background: var(--amber-dark); color: var(--paper-light); border-color: var(--amber); box-shadow: inset 0 -3px 0 var(--amber); }
+.rsd-sheet .dr-seg .tb-btn + .tb-btn { border-left: none; }
+.rsd-ui .dr-hint .tb-btn { height: 36px; font-size: 11px; padding: 0 10px; }
+.rsd-sheet .sh-x { background: transparent; color: var(--paper); border: 1px solid var(--khaki); }
+.rsd-sheet input[type=text] { width: 100%; height: 40px; box-sizing: border-box; font-family: 'Roboto Mono', monospace; font-size: 14px; padding: 0 8px;
+  background: var(--paper-light); color: var(--ink); border: 1px solid var(--khaki); border-left: 3px solid var(--amber-dark); }
+'''
+
+RSD_JS = r'''// =============================================================
+//  ANNOTER AU DOIGT — lot mp-rs-v1.1.0
+//  Un toucher pose, une poignée ajuste. La méthode du mode Dessin du Route Planner, sur un canevas :
+//  la barre, le message et la fiche sont du DOM posé sur l'aperçu ; les poignées (cible 44 px) vivent dans une
+//  couche DOM au-dessus du canevas ; rien de cela n'entre dans composeRecon ni dans l'export.
+//  Le modèle des annotations (STATE.annotations) et son enregistrement ne changent pas : aucun champ neuf,
+//  aucune clé de travail (l'outil, la sélection, le brouillon, la couleur ne s'enregistrent jamais).
+// =============================================================
+const RSD_TOOLS = ['select', 'rect', 'ellipse', 'poly', 'arrow', 'bracket', 'label', 'inset'];
+const RSD_TYPES = ['rect', 'ellipse', 'poly', 'arrow', 'bracket', 'label', 'inset'];
+const RSD_COLORS = { red: '#E22', black: '#000', white: '#fff' };
+const RSD_HIT = { path: 22, label: 44, inset: 8, ellipseQ: 1.3 };   /* rayons de toucher, en pixels (l'ellipse : valeur normalisée) */
+const RSD_COPY_PX = 24;        /* une copie : 24 px à droite, 24 px en bas, à l'écran */
+const RSD_MOVE_TOL = 4;        /* un glisser de poignée (ou de repère) commence au-delà de 4 px */
+const RSD_TAP_TOL = 8;         /* au-delà de 8 px, un toucher sur l'image n'est plus un toucher */
+const RSD_ROT_PX = 40;         /* la poignée de rotation du cadre : 40 px au-delà du milieu du bord haut */
+const RSD_MIN_PX = 8;          /* le côté d'un cadre : 8 px au moins */
+const RSD_SHEET_GAP = 6, RSD_SHEET_TOP = 10, RSD_SHEET_MIN = 160;
+const RSD_ICONS = __RSD_ICONS__;
+
+/* L'état : en mémoire seulement */
+const RSD = {
+  tool: 'select',       /* select · rect · ellipse · poly · arrow · bracket · label · inset */
+  sel: null,            /* l'id de l'annotation choisie */
+  vtx: -1,              /* le point choisi d'un tracé choisi */
+  sheet: false,         /* la fiche « Réglages » est ouverte */
+  build: null,          /* un tracé, une flèche ou un crochet en cours : { kind, pts: [{x, y}] } (fractions de l'image) */
+  draft: null,          /* le brouillon des réglages de l'objet à venir : { n, tool, it, vals } (jamais enregistré) */
+  draftN: 0,
+  color: 'red',         /* la dernière couleur choisie dans une fiche */
+  hs: [],               /* les poignées : { el, pos, upd, tap, start, move, end } */
+  raf: 0, sheetKey: '', busy: false, sig: '', ro: null
+};
+
+const rsd$ = id => document.getElementById(id);
+const rsdEsc = s => escapeAttr(String(s == null ? '' : s));
+const rsdCl = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+const rsdSub = (s, o) => Object.keys(o).reduce((r, k) => r.split('{' + k + '}').join(o[k]), s);
+
+function rsdSel() {
+  if (!RSD.sel) return null;
+  return (STATE.annotations || []).find(a => a.id === RSD.sel && RSD_TYPES.indexOf(a.type) !== -1) || null;
+}
+function rsdColorOf(a) { return a.color || (a.type === 'inset' ? 'white' : 'red'); }
+
+/* La vue : le canevas tel qu'il est posé, en pixels de l'écran (ov = la couche des poignées) */
+function rsdView() {
+  const cv = rsd$('preview-canvas'), ov = rsd$('rsd-ov');
+  const c = cv.getBoundingClientRect(), o = ov.getBoundingClientRect();
+  return { cl: c.left, ct: c.top, w: c.width, h: c.height, l: c.left - o.left, t: c.top - o.top, ow: o.width, oh: o.height,
+    ok: !cv.hidden && c.width > 0 && c.height > 0 };
+}
+const rsdAtN = (v, nx, ny) => ({ x: v.l + nx * v.w, y: v.t + ny * v.h });      /* fractions de l'image → couche */
+const rsdAtP = (v, px, py) => ({ x: v.l + px, y: v.t + py });                   /* pixels du canevas → couche */
+
+/* ---------- la géométrie, en pixels du canevas à l'écran ---------- */
+function rsdRectG(a, v) {
+  const th = (a.angle || 0) * Math.PI / 180;
+  return { cx: (a.x + a.w / 2) * v.w, cy: (a.y + a.h / 2) * v.h, hw: a.w * v.w / 2, hh: a.h * v.h / 2,
+    ux: Math.cos(th), uy: Math.sin(th), vx: -Math.sin(th), vy: Math.cos(th) };
+}
+function rsdRectCorners(g) {
+  return [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(k => ({ x: g.cx + k[0] * g.hw * g.ux + k[1] * g.hh * g.vx, y: g.cy + k[0] * g.hw * g.uy + k[1] * g.hh * g.vy }));
+}
+function rsdBracketG(a, v) {
+  const x1 = a.x1 * v.w, y1 = a.y1 * v.h, x2 = a.x2 * v.w, y2 = a.y2 * v.h;
+  const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy) || 1, ux = dx / len, uy = dy / len;
+  const m = Math.min(v.w, v.h), dep = (a.depth || 0.04) * m;
+  return { x1: x1, y1: y1, x2: x2, y2: y2, px: -uy, py: ux, m: m, dep: dep, ox: -uy * dep, oy: ux * dep };
+}
+let RSD_MEAS = null;
+function rsdLabelBox(a, v) {      /* le rectangle qu'occupe un texte à l'écran (mesuré avec les polices de composeRecon) */
+  const W = SOURCE_IMG ? SOURCE_IMG.naturalWidth : 1920, k = v.w / W, sc = W / 1920, s = n => Math.round(n * sc);
+  if (!RSD_MEAS) RSD_MEAS = document.createElement('canvas').getContext('2d');
+  let fs, font, bw, bh;
+  if (a.style === 'stamp') { fs = s(22); font = '700 ' + fs + 'px "Roboto Mono",monospace'; }
+  else if (a.style === 'cursive') { fs = s(36); font = '400 ' + fs + 'px "Caveat",cursive'; }
+  else { fs = s(22); font = '400 ' + fs + 'px "Roboto Mono",monospace'; }
+  RSD_MEAS.font = font;
+  const tw = RSD_MEAS.measureText(a.text || '').width;
+  if (a.style === 'stamp') { bw = tw + s(8) * 2; bh = fs + s(8) * 1.4; } else { bw = tw + s(6); bh = fs * 1.15; }
+  bw = Math.max(bw * k, 24); bh = Math.max(bh * k, 18);
+  return { x: a.x * v.w - bw / 2, y: a.y * v.h - bh / 2, w: bw, h: bh };
+}
+
+/* ---------- la couche : contour de la sélection, tracé en cours ---------- */
+function rsdPts(list) { return list.map(p => p.x.toFixed(2) + ',' + p.y.toFixed(2)).join(' '); }
+function rsdContourShape(a, v) {
+  if (a.type === 'rect') return '<polygon points="' + rsdPts(rsdRectCorners(rsdRectG(a, v))) + '"/>';
+  if (a.type === 'ellipse') return '<ellipse cx="' + (a.cx * v.w) + '" cy="' + (a.cy * v.h) + '" rx="' + (a.rx * v.w) + '" ry="' + (a.ry * v.h) + '"/>';
+  if (a.type === 'poly') {
+    const q = (a.pts || []).map(p => ({ x: p.x * v.w, y: p.y * v.h }));
+    return '<' + (a.closed ? 'polygon' : 'polyline') + ' points="' + rsdPts(q) + '"/>';
+  }
+  if (a.type === 'arrow') return '<line x1="' + (a.x1 * v.w) + '" y1="' + (a.y1 * v.h) + '" x2="' + (a.x2 * v.w) + '" y2="' + (a.y2 * v.h) + '"/>';
+  if (a.type === 'bracket') {
+    const g = rsdBracketG(a, v);
+    return '<polyline points="' + rsdPts([{ x: g.x1 + g.ox, y: g.y1 + g.oy }, { x: g.x1, y: g.y1 }, { x: g.x2, y: g.y2 }, { x: g.x2 + g.ox, y: g.y2 + g.oy }]) + '"/>';
+  }
+  if (a.type === 'label') { const b = rsdLabelBox(a, v); return '<rect x="' + b.x + '" y="' + b.y + '" width="' + b.w + '" height="' + b.h + '"/>'; }
+  if (a.type === 'inset') {
+    const r = o => '<rect x="' + (o.x * v.w) + '" y="' + (o.y * v.h) + '" width="' + (o.w * v.w) + '" height="' + (o.h * v.h) + '"/>';
+    return r(a.src) + r(a.box);
+  }
+  return '';
+}
+function rsdContour(v) {
+  const svg = rsd$('rsd-svg'), a = rsdSel();
+  svg.setAttribute('width', v.ow); svg.setAttribute('height', v.oh);
+  const sh = (a && !RSD.build && v.ok) ? rsdContourShape(a, v) : '';
+  svg.innerHTML = sh ? '<g class="rsd-contour" transform="translate(' + v.l + ' ' + v.t + ')" fill="none" stroke="#c0892a" stroke-width="7" stroke-opacity="0.45" stroke-linecap="round" stroke-linejoin="round">' + sh + '</g>' : '';
+}
+/* le tracé en cours (tracé, flèche, crochet) : dessiné à la couleur du brouillon */
+function rsdPreviewDraw(v) {
+  v = v || rsdView();
+  const svg = rsd$('rsd-prev'), b = RSD.build;
+  svg.setAttribute('width', v.ow); svg.setAttribute('height', v.oh);
+  if (!b || !b.pts.length || !v.ok) { svg.innerHTML = ''; return; }
+  const col = RSD_COLORS[RSD.draft ? rsdColorOf(RSD.draft.it) : RSD.color] || RSD_COLORS.red;
+  const q = b.pts.map(p => ({ x: p.x * v.w, y: p.y * v.h }));
+  const closed = b.kind === 'poly' && RSD.draft && RSD.draft.it.closed;
+  const line = (pts, extra) => (pts.length >= 2 ? '<polyline points="' + rsdPts(pts) + '" ' + extra + '/>' : '');
+  let h = '<g transform="translate(' + v.l + ' ' + v.t + ')" fill="none" stroke-linecap="round" stroke-linejoin="round">';
+  const pts = closed && q.length >= 3 ? q.concat([q[0]]) : q;
+  h += line(pts, 'stroke="rgba(0,0,0,.45)" stroke-width="6"') + line(pts, 'stroke="' + col + '" stroke-width="3"');
+  if (b.kind === 'poly' && !closed && q.length >= 3) h += line([q[q.length - 1], q[0]], 'stroke="' + col + '" stroke-width="2" stroke-opacity="0.7" stroke-dasharray="6 6"');
+  svg.innerHTML = h + '</g>';
+}
+
+/* ---------- les poignées : 44 px de cible, 16 px visibles ---------- */
+function rsdMk(cls, pos, cb, keepEl) {
+  const mid = cls.indexOf('mid') !== -1, mv = cls.indexOf('mv') !== -1;
+  const el = document.createElement('div');
+  el.className = 'rsd-h dr-h ' + cls;
+  el.innerHTML = '<i>' + (mid ? '+' : (mv ? RSD_ICONS.move : '')) + '</i>';
+  rsd$('rsd-ov').appendChild(el);
+  const h = Object.assign({ el: el, pos: pos }, cb || {});
+  rsdBind(h);
+  RSD.hs.push(h);
+  return h;
+}
+
+/* Un toucher (sans glisser) appelle h.tap ; un glisser appelle h.start, h.move(delta en px, évènement) puis h.end */
+function rsdBind(h) {
+  const el = h.el;
+  let st = null;
+  el.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    st = { id: e.pointerId, x0: e.clientX, y0: e.clientY, moved: false };
+    try { el.setPointerCapture(e.pointerId); } catch (x) { /* ignore */ }
+  });
+  el.addEventListener('pointermove', e => {
+    if (!st || e.pointerId !== st.id) return;
+    const d = { x: e.clientX - st.x0, y: e.clientY - st.y0 };
+    if (!st.moved) {
+      if (Math.hypot(d.x, d.y) < RSD_MOVE_TOL) return;
+      st.moved = true;
+      RSD.busy = true;
+      if (h.start) h.start(e);
+    }
+    if (h.move) h.move(d, e);
+  });
+  const stop = e => {
+    if (!st || e.pointerId !== st.id) return;
+    const was = st;
+    st = null;
+    try { el.releasePointerCapture(e.pointerId); } catch (x) { /* ignore */ }
+    if (was.moved) { RSD.busy = false; if (h.end) h.end(); }
+    else if (e.type === 'pointerup' && h.tap) h.tap();
+  };
+  el.addEventListener('pointerup', stop);
+  el.addEventListener('pointercancel', stop);
+}
+
+function rsdPlaceOne(h, v) {
+  const p = h.pos(v);
+  h.el.style.left = p.x + 'px';
+  h.el.style.top = p.y + 'px';
+  if (h.upd) h.upd(v);
+}
+/* Tout se replace : les poignées, le contour, le tracé en cours */
+function rsdPlace() {
+  const v = rsdView();
+  RSD.hs.forEach(h => { h.el.style.display = v.ok ? '' : 'none'; if (v.ok) rsdPlaceOne(h, v); });
+  rsdContour(v);
+  rsdPreviewDraw(v);
+}
+
+/* Déplacer des couples (x, y) en fractions, ensemble, sans quitter l'image : bb(base) donne l'étendue [x0, y0, x1, y1] de ce qui bouge */
+function rsdMoveCb(refs, bb, build) {
+  let base = null, v = null;
+  return {
+    start: () => { v = rsdView(); base = refs.map(r => ({ x: r[0][r[1]], y: r[0][r[2]] })); },
+    move: d => {
+      let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+      if (bb) { const b = bb(base); x0 = b[0]; y0 = b[1]; x1 = b[2]; y1 = b[3]; }
+      else base.forEach(p => { x0 = Math.min(x0, p.x); y0 = Math.min(y0, p.y); x1 = Math.max(x1, p.x); y1 = Math.max(y1, p.y); });
+      const dx = rsdCl(d.x / v.w, -x0, 1 - x1), dy = rsdCl(d.y / v.h, -y0, 1 - y1);
+      refs.forEach((r, i) => { r[0][r[1]] = base[i].x + dx; r[0][r[2]] = base[i].y + dy; });
+      rsdLive();
+    },
+    end: build ? rsdBuildEnd : rsdCommit
+  };
+}
+function rsdMeanPts(pts) { return { x: pts.reduce((s, p) => s + p.x, 0) / pts.length, y: pts.reduce((s, p) => s + p.y, 0) / pts.length }; }
+function rsdMoveHandle(a, pts) {   /* ✥ : tout bouge ensemble */
+  return rsdMoveCb(pts.map(p => [p, 'x', 'y']));
+}
+function rsdEdgeIcon(h, deg) { const i = h.el.firstChild; if (i) i.style.transform = deg ? 'rotate(' + deg + 'deg)' : ''; }
+
+/* ----- le cadre : quatre barrettes de bord, la rotation, ✥ ----- */
+function rsdRectHandles(a) {
+  ['l', 'r', 't', 'b'].forEach(side => {
+    const horiz = side === 'l' || side === 'r';
+    const nrm = g => side === 'r' ? [g.ux, g.uy] : side === 'l' ? [-g.ux, -g.uy] : side === 't' ? [-g.vx, -g.vy] : [g.vx, g.vy];
+    const h = rsdMk('v edge', v => { const g = rsdRectG(a, v), n = nrm(g), e = horiz ? g.hw : g.hh; return rsdAtP(v, g.cx + n[0] * e, g.cy + n[1] * e); }, {});
+    h.upd = () => rsdEdgeIcon(h, (a.angle || 0) + (horiz ? 90 : 0));      /* la barrette suit le sens de son bord, et le garde pendant une rotation */
+    let B = null;
+    /* un bord se tire seul, le long de sa normale ; le bord opposé reste en place (mesuré en pixels, contre l'état du début du glisser) */
+    h.start = () => { const v = rsdView(), g = rsdRectG(a, v); B = { v: v, g: g, n: nrm(g), s0: horiz ? 2 * g.hw : 2 * g.hh }; };
+    h.move = d => {
+      const s = Math.max(RSD_MIN_PX, B.s0 + d.x * B.n[0] + d.y * B.n[1]), dd = s - B.s0;
+      const cx = B.g.cx + B.n[0] * dd / 2, cy = B.g.cy + B.n[1] * dd / 2;
+      if (horiz) a.w = s / B.v.w; else a.h = s / B.v.h;
+      a.x = cx / B.v.w - a.w / 2; a.y = cy / B.v.h - a.h / 2;
+      rsdLive();
+    };
+    h.end = rsdCommit;
+  });
+  let c = null;
+  const rot = rsdMk('r rot', v => { const g = rsdRectG(a, v), d = g.hh + RSD_ROT_PX; return rsdAtP(v, g.cx - g.vx * d, g.cy - g.vy * d); }, {});
+  rot.start = () => { const v = rsdView(), g = rsdRectG(a, v); c = { x: v.cl + g.cx, y: v.ct + g.cy }; };
+  rot.move = (d, e) => {                    /* même convention que la base : atan2(dx, −dy), au dixième de degré */
+    a.angle = Math.round(Math.atan2(e.clientX - c.x, -(e.clientY - c.y)) * 1800 / Math.PI) / 10;
+    rsdLive();
+  };
+  rot.end = rsdCommit;
+  rsdMk('mv', v => rsdAtN(v, a.x + a.w / 2, a.y + a.h / 2), rsdMoveCb([[a, 'x', 'y']], b => [b[0].x + a.w / 2, b[0].y + a.h / 2, b[0].x + a.w / 2, b[0].y + a.h / 2]));
+}
+
+/* ----- l'ellipse : quatre barrettes (gauche, droite → rx ; haut, bas → ry), le bord opposé en place ----- */
+function rsdEllipseHandles(a) {
+  [['l', -1, 0], ['r', 1, 0], ['t', 0, -1], ['b', 0, 1]].forEach(k => {
+    const sx = k[1], sy = k[2];
+    const h = rsdMk('v edge', v => rsdAtN(v, a.cx + sx * a.rx, a.cy + sy * a.ry), {});
+    h.upd = () => rsdEdgeIcon(h, sx ? 90 : 0);
+    let B = null;
+    h.start = () => { B = { v: rsdView(), cx: a.cx, cy: a.cy, rx: a.rx, ry: a.ry }; };
+    h.move = d => {
+      if (sx) {
+        const r = Math.max(0.005, B.rx + sx * (d.x / B.v.w) / 2), fixed = B.cx - sx * B.rx;
+        a.rx = r; a.cx = fixed + sx * r;
+      } else {
+        const r = Math.max(0.005, B.ry + sy * (d.y / B.v.h) / 2), fixed = B.cy - sy * B.ry;
+        a.ry = r; a.cy = fixed + sy * r;
+      }
+      rsdLive();
+    };
+    h.end = rsdCommit;
+  });
+  rsdMk('mv', v => rsdAtN(v, a.cx, a.cy), rsdMoveCb([[a, 'cx', 'cy']], b => [b[0].x - a.rx, b[0].y - a.ry, b[0].x + a.rx, b[0].y + a.ry]));
+}
+
+/* ----- le tracé : un carré par point, un « + » au milieu de chaque segment, ✥ ----- */
+function rsdPolyHandles(a, keep, keepIdx) {
+  const n = a.pts.length, area = a.closed === true;
+  for (let k = 0; k < n; k++) {
+    if (keep && k === keepIdx) continue;
+    const h = rsdMk('v' + (RSD.vtx === k ? ' on' : ''), v => rsdAtN(v, a.pts[k].x, a.pts[k].y), rsdMoveCb([[a.pts[k], 'x', 'y']]));
+    h.tap = () => { RSD.vtx = RSD.vtx === k ? -1 : k; rsdBuildHandles(); rsdSyncUi(); };
+  }
+  const segs = area ? (n > 2 ? n : 1) : n - 1;
+  const mvH = () => rsdMk('mv', v => { const m = rsdMeanPts(a.pts); return rsdAtN(v, m.x, m.y); }, rsdMoveHandle(a, a.pts));
+  if (n < 3) mvH();                       /* deux points : le « + » est au même endroit que ✥ ; il reste au-dessus */
+  for (let k = 0; k < segs; k++) {
+    const ia = k, ib = (k + 1) % n, at = k + 1;
+    const midPt = () => ({ x: (a.pts[ia].x + a.pts[ib].x) / 2, y: (a.pts[ia].y + a.pts[ib].y) / 2 });
+    const h = rsdMk('mid', v => { const m = midPt(); return rsdAtN(v, m.x, m.y); }, {});
+    h.tap = () => {
+      const m = midPt();
+      a.pts.splice(at, 0, { x: m.x, y: m.y });
+      RSD.vtx = at;
+      rsdChanged();
+    };
+    h.start = () => {                   /* glisser un « + » : le point s'insère, et se déplace */
+      const m = midPt();
+      a.pts.splice(at, 0, { x: m.x, y: m.y });
+      if (RSD.vtx >= at) RSD.vtx++;
+      h.el.classList.remove('mid');
+      h.el.classList.add('v');
+      h.el.firstChild.textContent = '';
+      h.pos = v => rsdAtN(v, a.pts[at].x, a.pts[at].y);
+      h.tap = null;
+      const cb = rsdMoveCb([[a.pts[at], 'x', 'y']]);
+      h.start = cb.start; h.move = cb.move; h.end = () => { cb.end(); rsdBuildHandles(); rsdSyncUi(); };
+      cb.start();
+      rsdBuildHandles(h, at);
+    };
+  }
+  if (n >= 3) mvH();
+}
+
+/* ----- la flèche et le crochet ----- */
+function rsdSegHandles(a) {
+  rsdMk('v', v => rsdAtN(v, a.x1, a.y1), rsdMoveCb([[a, 'x1', 'y1']]));
+  rsdMk('mv', v => rsdAtN(v, (a.x1 + a.x2) / 2, (a.y1 + a.y2) / 2), rsdMoveCb([[a, 'x1', 'y1'], [a, 'x2', 'y2']]));
+  if (a.type === 'arrow') { rsdMk('r', v => rsdAtN(v, a.x2, a.y2), rsdMoveCb([[a, 'x2', 'y2']])); return; }
+  rsdMk('v', v => rsdAtN(v, a.x2, a.y2), rsdMoveCb([[a, 'x2', 'y2']]));
+  /* la profondeur : décalée de depth × min(largeur, hauteur) du côté du crochet ; glissée, depth = la distance signée à la droite des extrémités */
+  const dh = rsdMk('r', v => { const g = rsdBracketG(a, v); return rsdAtP(v, (g.x1 + g.x2) / 2 + g.px * g.dep, (g.y1 + g.y2) / 2 + g.py * g.dep); }, {});
+  let B = null;
+  dh.start = () => { const v = rsdView(); B = { v: v, g: rsdBracketG(a, v) }; };
+  dh.move = (d, e) => {
+    const g = B.g, fx = e.clientX - B.v.cl, fy = e.clientY - B.v.ct;
+    const sd = (fx - g.x1) * g.px + (fy - g.y1) * g.py;
+    let dep = Math.round(rsdCl(sd / g.m, -0.2, 0.2) * 10000) / 10000;
+    if (dep === 0) dep = sd < 0 ? -0.0001 : 0.0001;       /* 0 se lit 0,04 à l'export : jamais 0 */
+    a.depth = dep;
+    rsdLive();
+  };
+  dh.end = rsdCommit;
+}
+
+/* ----- la loupe : la zone source et l'encart, chacun quatre barrettes et ✥ ; l'encart garde les proportions de la source ----- */
+function rsdInsetFit(a, anchor) {     /* l'encart reste dans l'image : s'il déborde, il se réduit en gardant les proportions */
+  const b = a.box, r = a.src.h / a.src.w;
+  b.h = b.w * r;
+  const k = Math.min(1, (1 - b.x) / b.w, (1 - b.y) / b.h);
+  if (k < 1) { b.w *= k; b.h = b.w * r; }
+}
+function rsdInsetHandles(a) {
+  const src = a.src, box = a.box;
+  [['l', -1, 0], ['r', 1, 0], ['t', 0, -1], ['b', 0, 1]].forEach(k => {
+    const sx = k[1], sy = k[2];
+    /* la zone source : un bord bouge, l'opposé reste ; l'encart suit (hauteur = largeur × h / w) */
+    const hs = rsdMk('v edge', v => rsdAtN(v, src.x + (sx > 0 ? src.w : sx < 0 ? 0 : src.w / 2), src.y + (sy > 0 ? src.h : sy < 0 ? 0 : src.h / 2)), {});
+    hs.upd = () => rsdEdgeIcon(hs, sx ? 90 : 0);
+    let B = null;
+    hs.start = () => { B = { v: rsdView(), s: Object.assign({}, src), b: Object.assign({}, box) }; };
+    hs.move = d => {
+      const s0 = B.s, MIN = 0.03;
+      let x = s0.x, y = s0.y, w = s0.w, h = s0.h;
+      if (sx < 0) { x = rsdCl(s0.x + d.x / B.v.w, 0, s0.x + s0.w - MIN); w = s0.x + s0.w - x; }
+      else if (sx > 0) { w = rsdCl(s0.w + d.x / B.v.w, MIN, 1 - s0.x); }
+      else if (sy < 0) { y = rsdCl(s0.y + d.y / B.v.h, 0, s0.y + s0.h - MIN); h = s0.y + s0.h - y; }
+      else { h = rsdCl(s0.h + d.y / B.v.h, MIN, 1 - s0.y); }
+      const keep = { x: src.x, y: src.y, w: src.w, h: src.h }, kb = { x: box.x, y: box.y, w: box.w, h: box.h };
+      src.x = x; src.y = y; src.w = w; src.h = h;
+      box.x = B.b.x; box.y = B.b.y; box.w = B.b.w;
+      rsdInsetFit(a);
+      if (Math.min(box.w, box.h) < 0.05) { Object.assign(src, keep); Object.assign(box, kb); return; }   /* l'encart : 0,05 au moins */
+      rsdLive();
+    };
+    hs.end = rsdCommit;
+  });
+  rsdMk('mv src', v => rsdAtN(v, src.x + src.w / 2, src.y + src.h / 2), rsdMoveCb([[src, 'x', 'y']], b => [b[0].x, b[0].y, b[0].x + src.w, b[0].y + src.h]));
+  [['l', -1, 0], ['r', 1, 0], ['t', 0, -1], ['b', 0, 1]].forEach(k => {
+    const sx = k[1], sy = k[2];
+    /* l'encart : un bord gauche ou droit → sa largeur, la hauteur suit, son bord haut reste ; un bord haut ou bas → sa hauteur, la largeur suit, son bord gauche reste */
+    const hb = rsdMk('v edge', v => rsdAtN(v, box.x + (sx > 0 ? box.w : sx < 0 ? 0 : box.w / 2), box.y + (sy > 0 ? box.h : sy < 0 ? 0 : box.h / 2)), {});
+    hb.upd = () => rsdEdgeIcon(hb, sx ? 90 : 0);
+    let B = null;
+    hb.start = () => { B = { v: rsdView(), b: Object.assign({}, box), r: src.h / src.w }; };
+    hb.move = d => {
+      const b0 = B.b, r = B.r, MIN = 0.05;
+      if (sx) {
+        const R = b0.x + b0.w;
+        const req = sx > 0 ? b0.w + d.x / B.v.w : b0.w - d.x / B.v.w;
+        const max = Math.min(sx > 0 ? 1 - b0.x : R, (1 - b0.y) / r), min = Math.max(MIN, MIN / r);
+        const w = Math.min(max, Math.max(min, req));
+        box.w = w; box.h = w * r; box.x = sx > 0 ? b0.x : R - w; box.y = b0.y;
+      } else {
+        const Bm = b0.y + b0.h;
+        const req = sy > 0 ? b0.h + d.y / B.v.h : b0.h - d.y / B.v.h;
+        const max = Math.min(sy > 0 ? 1 - b0.y : Bm, (1 - b0.x) * r), min = Math.max(MIN, MIN * r);
+        const h = Math.min(max, Math.max(min, req));
+        box.h = h; box.w = h / r; box.y = sy > 0 ? b0.y : Bm - h; box.x = b0.x;
+      }
+      rsdLive();
+    };
+    hb.end = rsdCommit;
+  });
+  rsdMk('mv', v => rsdAtN(v, box.x + box.w / 2, box.y + box.h / 2), rsdMoveCb([[box, 'x', 'y']], b => [b[0].x, b[0].y, b[0].x + box.w, b[0].y + box.h]));
+}
+
+function rsdHandlesFor(a) {
+  if (a.type === 'rect') rsdRectHandles(a);
+  else if (a.type === 'ellipse') rsdEllipseHandles(a);
+  else if (a.type === 'poly') rsdPolyHandles(a);
+  else if (a.type === 'arrow' || a.type === 'bracket') rsdSegHandles(a);
+  else if (a.type === 'label') rsdMk('mv', v => rsdAtN(v, a.x, a.y), rsdMoveCb([[a, 'x', 'y']]));
+  else if (a.type === 'inset') rsdInsetHandles(a);
+}
+
+/* Refaire les poignées de ce qu'on édite : le tracé en cours, ou l'objet choisi ; keep : la poignée en cours de glisser, qui devient le point keepIdx */
+function rsdBuildHandles(keep, keepIdx) {
+  RSD.hs.forEach(h => { if (h !== keep) h.el.remove(); });
+  RSD.hs = keep ? [keep] : [];
+  if (SOURCE_READY) {
+    const b = RSD.build;
+    if (b) {
+      b.pts.forEach((p, k) => {
+        const first = b.kind === 'poly' && k === 0 && b.pts.length >= 3;
+        const h = rsdMk('v' + (first ? ' first' : ''), v => rsdAtN(v, p.x, p.y), rsdMoveCb([[p, 'x', 'y']], null, true));
+        if (first) h.tap = () => rsdClosePoly();
+      });
+    } else {
+      const a = rsdSel();
+      if (a) {
+        if (a.type === 'poly') rsdPolyHandles(a, keep, keepIdx); else rsdHandlesFor(a);
+      }
+    }
+  }
+  RSD.sig = rsdSig();
+  rsdPlace();
+}
+function rsdSig() {
+  if (RSD.build) return 'b/' + RSD.build.kind + '/' + RSD.build.pts.length;
+  const a = rsdSel();
+  if (!a) return '';
+  return a.type + '/' + a.id + (a.type === 'poly' ? '/' + a.pts.length + '/' + (a.closed ? 1 : 0) + '/' + RSD.vtx : '');
+}
+
+/* Pendant un glisser : l'objet, le contour et les poignées suivent (une fois par image) ; rien ne s'enregistre */
+function rsdLive() {
+  if (RSD.raf) return;
+  RSD.raf = requestAnimationFrame(() => { RSD.raf = 0; rsdLiveNow(); });
+}
+function rsdLiveNow() {
+  if (RSD.raf) { cancelAnimationFrame(RSD.raf); RSD.raf = 0; }
+  rsdPlace();
+  rsdUpdateDesc();
+  if (!RSD.build) renderPreview();
+}
+/* La fin d'un glisser : la seule écriture de recon_state_v1 */
+function rsdCommit() {
+  RSD.busy = false;
+  if (RSD.raf) { cancelAnimationFrame(RSD.raf); RSD.raf = 0; }
+  saveState();
+  rsdEditors();
+  renderPreview();
+  if (RSD.sig !== rsdSig()) rsdBuildHandles(); else rsdPlace();
+  rsdUpdateDesc();
+  if (RSD.sheet) rsdRenderSheet(true);
+}
+/* La fin d'un glisser sur le tracé en cours : rien ne s'enregistre */
+function rsdBuildEnd() {
+  RSD.busy = false;
+  if (RSD.raf) { cancelAnimationFrame(RSD.raf); RSD.raf = 0; }
+  rsdPlace();
+}
+/* Un changement discret (insertion d'un point, retrait, réglage) : écrire, redessiner, refaire les poignées */
+function rsdChanged() {
+  saveState();
+  rsdEditors();
+  schedulePreview();
+  rsdBuildHandles();
+  rsdSyncUi();
+}
+function rsdEditors() { renderShapesEditor(); renderLabelEditor(); renderInsetEditor(); }
+
+/* L'aperçu vient d'être redessiné : l'objet choisi existe-t-il encore, ses poignées sont-elles les bonnes ? */
+function rsdRefresh() {
+  if (RSD.sel && !rsdSel()) { RSD.sel = null; RSD.vtx = -1; RSD.sheet = false; rsdBuildHandles(); rsdSyncUi(); return; }
+  if (!RSD.busy && RSD.sig !== rsdSig()) { rsdBuildHandles(); rsdSyncUi(); return; }
+  rsdPlace();
+}
+
+/* ---------- la barre, le message, la fiche ---------- */
+function rsdColorName(c) { return t('rsd.c.' + c); }
+function rsdDesc(a) {
+  if (a.type === 'poly') return rsdSub(t(a.pts.length === 1 ? 'rsd.n.1' : 'rsd.n.n'), { n: a.pts.length }) + (a.closed ? ' · ' + t('rsd.sh.closed') : '');
+  if (a.type === 'label') return a.text || '';
+  if (a.type === 'inset') return a.label || t('rsd.g.inset');
+  return rsdColorName(rsdColorOf(a));
+}
+function rsdUpdateDesc() {
+  const a = rsdSel(), el = document.querySelector('#rsd-bar .dr-sel span');
+  if (a && el) el.textContent = rsdDesc(a);
+}
+function rsdToolBtn(attrs, icon, label, cls) {
+  return '<button type="button" class="dr-tool' + (cls ? ' ' + cls : '') + '" ' + attrs + ' title="' + rsdEsc(label) + '" aria-label="' + rsdEsc(label) + '">' +
+    RSD_ICONS[icon] + '<i>' + rsdEsc(label) + '</i></button>';
+}
+function rsdRenderBar() {
+  const bar = rsd$('rsd-bar'), a = rsdSel();
+  bar.className = 'dr-bar' + (a ? ' selmode' : '');
+  bar.setAttribute('aria-label', t('rsd.bar.aria'));
+  let h = '';
+  if (!a) {
+    h += '<div class="dr-tools" role="group">' + RSD_TOOLS.map(k =>
+      rsdToolBtn('data-dr="tool" data-tool="' + k + '" aria-pressed="' + (RSD.tool === k ? 'true' : 'false') + '"', k, t('rsd.tool.' + k), RSD.tool === k ? 'on' : '')).join('') + '</div>';
+  } else {
+    h += '<div class="dr-sel"><small>' + rsdEsc(t('rsd.g.' + a.type) + (RSD.vtx >= 0 ? ' · ' + rsdSub(t('rsd.vtx.n'), { n: RSD.vtx + 1 }) : '')) + '</small><span>' + rsdEsc(rsdDesc(a)) + '</span></div>';
+    h += '<div class="dr-tools" role="group">' +
+      (RSD.vtx >= 0 ? rsdToolBtn('data-dr="vtx"', 'vtx', t('rsd.b.vtx')) : '') +
+      rsdToolBtn('data-dr="props" aria-pressed="' + (RSD.sheet ? 'true' : 'false') + '"', 'props', t('rsd.b.props'), RSD.sheet ? 'on' : '') +
+      rsdToolBtn('data-dr="dup"', 'dup', t('rsd.b.copy')) +
+      rsdToolBtn('data-dr="del"', 'del', t('rsd.b.del'), 'danger') +
+      rsdToolBtn('data-dr="ok"', 'ok', t('rsd.b.ok')) + '</div>';
+  }
+  bar.innerHTML = h;
+}
+function rsdRenderHint() {
+  const hint = rsd$('rsd-hint'), msg = rsd$('rsd-msg'), acts = rsd$('rsd-acts');
+  if (rsdSel()) { hint.hidden = true; return; }
+  hint.hidden = false;
+  const tool = RSD.tool, b = RSD.build;
+  let m = '', a = '';
+  if (tool === 'select') m = rsdEsc(t('rsd.msg.select'));
+  else if (tool === 'poly') {
+    const n = b ? b.pts.length : 0;
+    if (!n) m = rsdEsc(t('rsd.msg.poly'));
+    else m = '<b>' + rsdEsc(rsdSub(t(n === 1 ? 'rsd.n.1' : 'rsd.n.n'), { n: n })) + '</b> ' + rsdEsc(t('rsd.build.add')) + (n >= 3 ? rsdEsc(t('rsd.build.close')) : '');
+    a += '<button type="button" class="tb-btn" data-dr="undo" title="' + rsdEsc(t('rsd.undo')) + '" aria-label="' + rsdEsc(t('rsd.undo')) + '">↶</button>' +
+      '<button type="button" class="tb-btn go" data-dr="finish">' + rsdEsc(t('rsd.finish')) + '</button>';
+  } else m = rsdEsc(t('rsd.msg.' + tool + ((tool === 'arrow' || tool === 'bracket') && b && b.pts.length ? '2' : '')));
+  if (tool !== 'select') {
+    /* les réglages de l'objet à venir : le bouton avant ↶ / Terminer / ✕ */
+    a = '<button type="button" class="tb-btn mq-props' + (RSD.sheet ? ' on' : '') + '" data-dr="props" aria-pressed="' + (RSD.sheet ? 'true' : 'false') + '" title="' + rsdEsc(t('rsd.b.props')) +
+      '" aria-label="' + rsdEsc(t('rsd.b.props')) + '">' + RSD_ICONS.props + '</button>' + a;
+    a += '<button type="button" class="tb-btn" data-dr="cancel" title="' + rsdEsc(t('rsd.cancel')) + '" aria-label="' + rsdEsc(t('rsd.cancel')) + '">✕</button>';
+  }
+  msg.innerHTML = m;
+  acts.innerHTML = a;
+  acts.hidden = !a;
+}
+
+/* ----- la fiche « Réglages » : celle de l'objet choisi, ou (draft) celle de l'objet à venir, aux mêmes champs ----- */
+function rsdSheetHtml(a, draft) {
+  const g = a.type;
+  const f = (label, id, body) => '<div class="dr-f"><label' + (id ? ' for="' + id + '"' : '') + '>' + rsdEsc(label) + '</label>' + body + '</div>';
+  const seg = (field, items) => '<div class="dr-seg" role="group">' + items.map(x =>
+    '<button type="button" class="tb-btn' + (x.on ? ' on' : '') + '" data-f="' + field + '" data-v="' + x.v + '" aria-pressed="' + (x.on ? 'true' : 'false') + '">' + rsdEsc(x.label) + '</button>').join('') + '</div>';
+  const col = rsdColorOf(a);
+  const sw = '<div class="dr-sw rsd-sw" role="group">' + (g === 'inset' ? ['white', 'black', 'red'] : ['red', 'black', 'white']).map(c =>
+    '<button type="button" data-f="color" data-v="' + c + '" style="background:' + RSD_COLORS[c] + '" aria-pressed="' + (col === c ? 'true' : 'false') + '"' + (col === c ? ' class="on"' : '') + '><span>' + rsdEsc(rsdColorName(c)) + '</span></button>').join('') + '</div>';
+  let h = '<div class="sh-head"><b>' + rsdEsc(rsdSub(t(draft ? 'rsd.sheet.draft' : 'rsd.sheet'), { g: t('rsd.g.' + g) })) + '</b><button type="button" class="sh-x" data-dr="props" title="' + rsdEsc(t('rsd.f.close')) +
+    '" aria-label="' + rsdEsc(t('rsd.f.close')) + '">×</button></div>';
+  if (g === 'label') {
+    h += f(t('rsd.f.text'), 'rsd-f-text', '<input type="text" id="rsd-f-text" data-f="text" autocomplete="off" spellcheck="false" value="' + rsdEsc(a.text) + '">');
+    h += f(t('rsd.f.color'), '', sw);
+    h += f(t('rsd.f.style'), '', seg('style', ['stamp', 'cursive', 'plain'].map(s => ({ v: s, on: a.style === s, label: t('rsd.st.' + s) }))));
+  } else if (g === 'poly') {
+    h += f(t('rsd.f.color'), '', sw);
+    h += f(t('rsd.f.shape'), '', seg('closed', [{ v: '0', on: a.closed !== true, label: t('rsd.sh.open') }, { v: '1', on: a.closed === true, label: t('rsd.sh.closed') }]));
+  } else if (g === 'inset') {
+    h += f(t('rsd.f.caption'), 'rsd-f-caption', '<input type="text" id="rsd-f-caption" data-f="legend" autocomplete="off" spellcheck="false" placeholder="' + rsdEsc(t('rsd.f.caption.ph')) + '" value="' + rsdEsc(a.label || '') + '">');
+    h += f(t('rsd.f.color'), '', sw);
+  } else h += f(t('rsd.f.color'), '', sw);
+  return h;
+}
+/* La fiche s'ouvre sur l'objet choisi (outil Choisir), ou, avec un outil de création, sur le brouillon de l'objet à venir : { a, draft } ou null */
+function rsdSheetTarget() {
+  const a = rsdSel();
+  if (RSD.tool === 'select') return a ? { a: a, draft: false } : null;
+  return RSD.draft ? { a: RSD.draft.it, draft: true } : null;
+}
+/* La fiche « à venir » se pose d'après le message, mesuré : son bas à 6 px au-dessus du message, sa hauteur bornée à la place qui reste (aperçu + 10 px),
+   160 px au moins (elle couvre alors le haut de l'aperçu, jamais le message). La fiche d'un objet choisi garde sa place de feuille du bas. */
+function rsdPlaceSheet() {
+  const sh = rsd$('rsd-sheet'), hint = rsd$('rsd-hint'), pv = rsd$('preview-panel');
+  if (!sh || !hint) return;
+  if (sh.hidden || !sh.classList.contains('mq-draft') || hint.hidden) { sh.style.bottom = ''; sh.style.maxHeight = ''; return; }
+  const fixed = getComputedStyle(sh).position === 'fixed';
+  const p = pv.getBoundingClientRect(), h = hint.getBoundingClientRect();
+  const top = p.top + (fixed ? 0 : pv.clientTop), bottom = fixed ? document.documentElement.clientHeight : top + pv.clientHeight, base = h.top - RSD_SHEET_GAP;
+  sh.style.bottom = Math.round(bottom - base) + 'px';
+  sh.style.maxHeight = Math.max(RSD_SHEET_MIN, Math.floor(base - (top + RSD_SHEET_TOP))) + 'px';
+}
+function rsdRenderSheet(force) {
+  const sh = rsd$('rsd-sheet'), tg = rsdSheetTarget();
+  if (!RSD.sheet || !tg || !SOURCE_READY) { sh.hidden = true; sh.classList.remove('mq-draft'); RSD.sheetKey = ''; rsdPlaceSheet(); return; }
+  const key = (tg.draft ? 'draft/' + RSD.draft.n : RSD.sel) + '/' + CURRENT_LANG;
+  sh.hidden = false;
+  sh.classList.toggle('mq-draft', tg.draft);
+  if (key !== RSD.sheetKey || force) {
+    if (tg.draft && tg.a.type === 'label' && !('text' in RSD.draft.vals)) tg.a.text = t('rsd.new.text');
+    RSD.sheetKey = key;
+    sh.innerHTML = rsdSheetHtml(tg.a, tg.draft);
+  }
+  rsdPlaceSheet();
+}
+
+/* Tout ce que montre le mode, remis d'aplomb */
+function rsdSyncUi() {
+  const ui = rsd$('rsd-ui');
+  if (!ui) return;
+  ui.hidden = !SOURCE_READY;
+  if (!SOURCE_READY) { rsd$('rsd-sheet').hidden = true; return; }
+  const a = rsdSel();
+  if (RSD.sel && !a) { RSD.sel = null; RSD.vtx = -1; RSD.sheet = false; }
+  if (RSD.sheet && !rsdSheetTarget()) RSD.sheet = false;
+  if (RSD.vtx >= 0 && (!a || a.type !== 'poly' || RSD.vtx >= a.pts.length)) RSD.vtx = -1;
+  rsdRenderBar();
+  rsdRenderHint();
+  rsdRenderSheet(false);
+  rsdPlaceSheet();
+}
+
+/* ---------- le choix, la création ---------- */
+function rsdSelect(id) {
+  RSD.sel = id; RSD.vtx = -1;
+  rsdBuildHandles();
+  rsdSyncUi();
+}
+function rsdDeselect() {
+  RSD.sel = null; RSD.vtx = -1; RSD.sheet = false;
+  rsdBuildHandles();
+  rsdSyncUi();
+}
+/* Abandonner la création en cours, ou quitter un outil de pose : retour à Choisir, rien n'est écrit */
+function rsdCancel() {
+  RSD.build = null; RSD.tool = 'select'; RSD.draft = null; RSD.sheet = false;
+  rsdBuildHandles();
+  rsdSyncUi();
+}
+function rsdSetTool(x) {
+  if (RSD_TOOLS.indexOf(x) === -1 || x === RSD.tool) return;
+  const sheet = RSD.sheet;
+  if (RSD.build) {
+    if (rsdFinish(true)) { RSD.sel = null; RSD.vtx = -1; RSD.sheet = false; }     /* assez de points : le tracé se termine, rien n'est choisi */
+    RSD.build = null;
+  }
+  RSD.tool = x;
+  RSD.draft = x === 'select' ? null : rsdNewDraft(x);
+  RSD.sheet = x === 'select' ? false : sheet;                                      /* changer d'outil, fiche ouverte : elle se rouvre sur le brouillon du nouvel outil */
+  RSD.sheetKey = '';
+  RSD.build = (x === 'poly' || x === 'arrow' || x === 'bracket') ? { kind: x, pts: [] } : null;
+  rsdBuildHandles();
+  rsdSyncUi();
+}
+
+/* Le brouillon des réglages de l'objet à venir : la géométrie vient des touchers, les réglages de la fiche */
+function rsdNewDraft(tool) {
+  const c = tool === 'inset' ? 'white' : RSD.color;
+  let it;
+  if (tool === 'rect') it = { type: 'rect', x: 0, y: 0, w: 0.18, h: 0.12, angle: 0, color: c };
+  else if (tool === 'ellipse') it = { type: 'ellipse', cx: 0, cy: 0, rx: 0.08, ry: 0.05, color: c };
+  else if (tool === 'poly') it = { type: 'poly', pts: [], closed: false, color: c };
+  else if (tool === 'arrow') it = { type: 'arrow', x1: 0, y1: 0, x2: 0, y2: 0, color: c };
+  else if (tool === 'bracket') it = { type: 'bracket', x1: 0, y1: 0, x2: 0, y2: 0, depth: 0.04, color: c };
+  else if (tool === 'label') it = { type: 'label', x: 0, y: 0, text: t('rsd.new.text'), style: 'stamp', color: c };
+  else it = { type: 'inset', src: { x: 0, y: 0, w: 0.12, h: 0.12 }, box: { x: 0, y: 0, w: 0.22, h: 0.22 }, color: 'white', label: '' };
+  return { n: ++RSD.draftN, tool: tool, it: it, vals: {} };
+}
+/* Un réglage posé sur un objet (le choisi, un neuf, ou le brouillon) ; false s'il ne le concerne pas ou s'il est illisible */
+function rsdSetField(a, f, v) {
+  const ty = a.type;
+  if (f === 'color') { if (!RSD_COLORS[v]) return false; a.color = v; RSD.color = v; }
+  else if (f === 'text') { if (ty !== 'label') return false; a.text = v; }
+  else if (f === 'style') { if (ty !== 'label' || ['stamp', 'cursive', 'plain'].indexOf(v) === -1) return false; a.style = v; }
+  else if (f === 'closed') { if (ty !== 'poly') return false; a.closed = v === '1'; }
+  else if (f === 'legend') { if (ty !== 'inset') return false; a.label = v; }
+  else return false;
+  return true;
+}
+/* Un réglage de la fiche : sur un objet il s'applique et s'enregistre aussitôt ; sur le brouillon il se retient (rien ne s'enregistre) */
+function rsdApply(tg, f, v) {
+  if (!rsdSetField(tg.a, f, v)) return;
+  if (tg.draft) { RSD.draft.vals[f] = v; rsdPreviewDraw(); rsdRenderBar(); return; }
+  saveState();
+  rsdEditors();
+  schedulePreview();
+  if (f === 'closed') rsdBuildHandles(); else rsdPlace();
+  rsdRenderBar();
+}
+/* À la création : seuls les réglages changés dans la fiche « à venir » passent à l'objet */
+function rsdApplyDraft(a, skip) {
+  const d = RSD.draft;
+  if (!d) return;
+  Object.keys(d.vals).forEach(f => { if (!skip || skip.indexOf(f) === -1) rsdSetField(a, f, d.vals[f]); });
+}
+function rsdAdd(a, skip) {
+  rsdApplyDraft(a, skip);
+  STATE.annotations = STATE.annotations || [];
+  STATE.annotations.push(a);
+  RSD.tool = 'select'; RSD.build = null; RSD.draft = null;       /* la fiche, si elle est ouverte, reste ouverte sur l'objet créé */
+  RSD.sel = a.id; RSD.vtx = -1;
+  saveState();
+  rsdEditors();
+  schedulePreview();
+  rsdBuildHandles();
+  rsdSyncUi();
+}
+function rsdFinish(quiet) {
+  const b = RSD.build;
+  if (!b || b.kind !== 'poly') return false;
+  if (b.pts.length < 2) { if (!quiet) showToast(t('rsd.t.min')); return false; }
+  rsdAdd({ id: uid(), type: 'poly', pts: b.pts.map(p => ({ x: p.x, y: p.y })), closed: false, color: RSD.color });
+  return true;
+}
+function rsdClosePoly() {
+  const b = RSD.build;
+  if (!b || b.kind !== 'poly' || b.pts.length < 3) return;
+  rsdAdd({ id: uid(), type: 'poly', pts: b.pts.map(p => ({ x: p.x, y: p.y })), closed: true, color: RSD.color }, ['closed']);
+}
+
+/* Un toucher sur l'image avec un outil de création : n = le point, en fractions de l'image */
+function rsdCreate(tool, n) {
+  const c = RSD.color;
+  if (tool === 'rect') {
+    rsdAdd({ id: uid(), type: 'rect', x: rsdCl(n.x - 0.09, 0, 1 - 0.18), y: rsdCl(n.y - 0.06, 0, 1 - 0.12), w: 0.18, h: 0.12, angle: 0, color: c });
+  } else if (tool === 'ellipse') {
+    rsdAdd({ id: uid(), type: 'ellipse', cx: rsdCl(n.x, 0.08, 1 - 0.08), cy: rsdCl(n.y, 0.05, 1 - 0.05), rx: 0.08, ry: 0.05, color: c });
+  } else if (tool === 'label') {
+    RSD.sheet = true;
+    rsdAdd({ id: uid(), type: 'label', x: n.x, y: n.y, text: t('rsd.new.text'), style: 'stamp', color: c });
+    const f = rsd$('rsd-f-text');
+    if (f) { f.focus(); f.select(); }
+  } else if (tool === 'inset') {
+    const sw = 0.12, sh = 0.12, bw = 0.22, bh = bw * (sh / sw), m = 0.02;
+    const bx = n.x < 0.5 ? 1 - m - bw : m, by = n.y < 0.5 ? 1 - m - bh : m;      /* l'encart : dans le coin opposé au toucher */
+    rsdAdd({ id: uid(), type: 'inset', src: { x: rsdCl(n.x - sw / 2, 0, 1 - sw), y: rsdCl(n.y - sh / 2, 0, 1 - sh), w: sw, h: sh }, box: { x: bx, y: by, w: bw, h: bh }, color: 'white', label: '' });
+  } else if (RSD.build) {
+    const b = RSD.build;
+    b.pts.push({ x: n.x, y: n.y });
+    if (tool === 'arrow' && b.pts.length === 2) { rsdAdd({ id: uid(), type: 'arrow', x1: b.pts[0].x, y1: b.pts[0].y, x2: b.pts[1].x, y2: b.pts[1].y, color: c }); return; }
+    if (tool === 'bracket' && b.pts.length === 2) { rsdAdd({ id: uid(), type: 'bracket', x1: b.pts[0].x, y1: b.pts[0].y, x2: b.pts[1].x, y2: b.pts[1].y, depth: 0.04, color: c }); return; }
+    rsdBuildHandles();
+    rsdSyncUi();
+  }
+}
+
+/* ----- toucher : l'annotation la plus proche, la dernière dessinée à égalité ----- */
+function rsdSegDist(p, a, b) {
+  const dx = b.x - a.x, dy = b.y - a.y, l2 = dx * dx + dy * dy;
+  let u = l2 ? ((p.x - a.x) * dx + (p.y - a.y) * dy) / l2 : 0;
+  u = Math.max(0, Math.min(1, u));
+  return Math.hypot(p.x - (a.x + u * dx), p.y - (a.y + u * dy));
+}
+function rsdInside(p, q) {
+  let on = false;
+  for (let i = 0, j = q.length - 1; i < q.length; j = i++) {
+    if ((q[i].y > p.y) !== (q[j].y > p.y) && p.x < (q[j].x - q[i].x) * (p.y - q[i].y) / (q[j].y - q[i].y) + q[i].x) on = !on;
+  }
+  return on;
+}
+function rsdBoxDist(p, x, y, w, h, tol) {         /* un rectangle droit : la distance à son bord, ou -1 s'il n'est pas touché (dedans, ou à tol près) */
+  const ax = Math.max(x - p.x, p.x - (x + w)), ay = Math.max(y - p.y, p.y - (y + h));
+  if (ax > 0 || ay > 0) { const d = Math.hypot(Math.max(ax, 0), Math.max(ay, 0)); return d <= tol ? d : -1; }
+  return -Math.max(ax, ay);
+}
+/* La distance (px) de p (pixels du canevas) à l'annotation si elle est touchée, sinon -1 */
+function rsdHit(a, p, v) {
+  if (a.type === 'rect') {
+    const g = rsdRectG(a, v), dx = p.x - g.cx, dy = p.y - g.cy;
+    const lx = dx * g.ux + dy * g.uy, ly = dx * g.vx + dy * g.vy;
+    const ax = Math.abs(lx) - g.hw, ay = Math.abs(ly) - g.hh;
+    if (ax > 0 || ay > 0) { const d = Math.hypot(Math.max(ax, 0), Math.max(ay, 0)); return d <= RSD_HIT.path ? d : -1; }
+    return -Math.max(ax, ay);
+  }
+  if (a.type === 'ellipse') {
+    const rx = a.rx * v.w || 0.01, ry = a.ry * v.h || 0.01;
+    const q = Math.pow((p.x - a.cx * v.w) / rx, 2) + Math.pow((p.y - a.cy * v.h) / ry, 2);
+    return q <= RSD_HIT.ellipseQ ? Math.abs(Math.sqrt(q) - 1) * Math.min(rx, ry) : -1;
+  }
+  if (a.type === 'poly') {
+    const q = (a.pts || []).map(x => ({ x: x.x * v.w, y: x.y * v.h })), n = q.length;
+    if (!n) return -1;
+    let d = Infinity;
+    for (let i = 0; i + 1 < n; i++) d = Math.min(d, rsdSegDist(p, q[i], q[i + 1]));
+    if (a.closed && n > 2) d = Math.min(d, rsdSegDist(p, q[n - 1], q[0]));
+    if (n === 1) d = Math.hypot(p.x - q[0].x, p.y - q[0].y);
+    return (d <= RSD_HIT.path || (a.closed && n > 2 && rsdInside(p, q))) ? d : -1;
+  }
+  if (a.type === 'arrow' || a.type === 'bracket') {
+    const d = rsdSegDist(p, { x: a.x1 * v.w, y: a.y1 * v.h }, { x: a.x2 * v.w, y: a.y2 * v.h });
+    return d <= RSD_HIT.path ? d : -1;
+  }
+  if (a.type === 'label') {
+    const d = Math.hypot(p.x - a.x * v.w, p.y - a.y * v.h);
+    return d <= RSD_HIT.label ? d : -1;
+  }
+  if (a.type === 'inset') {
+    const d1 = rsdBoxDist(p, a.src.x * v.w, a.src.y * v.h, a.src.w * v.w, a.src.h * v.h, RSD_HIT.inset);
+    const d2 = rsdBoxDist(p, a.box.x * v.w, a.box.y * v.h, a.box.w * v.w, a.box.h * v.h, RSD_HIT.inset);
+    if (d1 < 0) return d2;
+    return d2 < 0 ? d1 : Math.min(d1, d2);
+  }
+  return -1;
+}
+function rsdPickAt(p, v) {
+  let best = null, bd = Infinity;
+  (STATE.annotations || []).forEach(a => {
+    if (RSD_TYPES.indexOf(a.type) === -1) return;
+    const d = rsdHit(a, p, v);
+    if (d >= 0 && d <= bd) { best = a; bd = d; }                   /* à égalité, le dernier */
+  });
+  if (best) rsdSelect(best.id); else rsdDeselect();
+}
+
+/* ----- les actions de la barre ----- */
+function rsdCopy() {
+  const a = rsdSel(), v = rsdView();
+  if (!a || !v.ok) return;
+  const dx = RSD_COPY_PX / v.w, dy = RSD_COPY_PX / v.h;
+  const c = JSON.parse(JSON.stringify(a));
+  c.id = uid();
+  /* l'étendue de ce qui bouge, en fractions : 24 px à droite et en bas ; sans place de ce côté, de l'autre */
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  const ext = (x, y, w, h) => { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x + (w || 0)); y1 = Math.max(y1, y + (h || 0)); };
+  if (c.type === 'rect') ext(c.x, c.y, c.w, c.h);
+  else if (c.type === 'ellipse') ext(c.cx - c.rx, c.cy - c.ry, 2 * c.rx, 2 * c.ry);
+  else if (c.type === 'poly') c.pts.forEach(p => ext(p.x, p.y));
+  else if (c.type === 'arrow' || c.type === 'bracket') { ext(c.x1, c.y1); ext(c.x2, c.y2); }
+  else if (c.type === 'label') ext(c.x, c.y);
+  else if (c.type === 'inset') { ext(c.src.x, c.src.y, c.src.w, c.src.h); ext(c.box.x, c.box.y, c.box.w, c.box.h); }
+  const sx = x1 + dx <= 1 ? dx : (x0 - dx >= 0 ? -dx : 0), sy = y1 + dy <= 1 ? dy : (y0 - dy >= 0 ? -dy : 0);
+  if (c.type === 'rect') { c.x += sx; c.y += sy; }
+  else if (c.type === 'ellipse') { c.cx += sx; c.cy += sy; }
+  else if (c.type === 'poly') c.pts.forEach(p => { p.x += sx; p.y += sy; });
+  else if (c.type === 'arrow' || c.type === 'bracket') { c.x1 += sx; c.y1 += sy; c.x2 += sx; c.y2 += sy; }
+  else if (c.type === 'label') { c.x += sx; c.y += sy; }
+  else if (c.type === 'inset') { c.src.x += sx; c.src.y += sy; c.box.x += sx; c.box.y += sy; }
+  STATE.annotations.push(c);
+  RSD.sel = c.id; RSD.vtx = -1;
+  saveState();
+  rsdEditors();
+  schedulePreview();
+  rsdBuildHandles();
+  rsdSyncUi();
+}
+function rsdDelete() {
+  const a = rsdSel();
+  if (!a) return;
+  STATE.annotations = STATE.annotations.filter(x => x !== a);
+  saveState();
+  rsdEditors();
+  schedulePreview();
+  rsdDeselect();
+}
+/* « Point » : retire le point choisi, sauf sous deux points */
+function rsdRemoveVertex() {
+  const a = rsdSel();
+  if (!a || a.type !== 'poly' || RSD.vtx < 0) return;
+  if (a.pts.length <= 2) { showToast(t('rsd.t.min')); return; }
+  a.pts.splice(RSD.vtx, 1);
+  RSD.vtx = -1;
+  rsdChanged();
+}
+
+function rsdOnClick(ev) {
+  const b = ev.target.closest ? ev.target.closest('[data-dr]') : null;
+  if (!b) return;
+  const a = b.dataset.dr;
+  if (a === 'tool') rsdSetTool(b.dataset.tool);
+  else if (a === 'undo') { if (RSD.build) { RSD.build.pts.pop(); rsdBuildHandles(); rsdSyncUi(); } }
+  else if (a === 'finish') rsdFinish(false);
+  else if (a === 'cancel') rsdCancel();
+  else if (a === 'vtx') rsdRemoveVertex();
+  else if (a === 'props') { if (rsdSheetTarget()) { RSD.sheet = !RSD.sheet; RSD.sheetKey = ''; rsdSyncUi(); } }
+  else if (a === 'dup') rsdCopy();
+  else if (a === 'del') rsdDelete();
+  else if (a === 'ok') rsdDeselect();
+}
+function rsdOnSheet(ev) {
+  const tg = rsdSheetTarget();
+  if (!tg) return;
+  if (ev.type === 'click') {
+    const b = ev.target.closest ? ev.target.closest('button[data-f]') : null;
+    if (!b) return;
+    rsdApply(tg, b.dataset.f, b.dataset.v);
+    rsdRenderSheet(true);
+  } else if (ev.type === 'input') {
+    const el = ev.target;
+    if (!el || !el.dataset || !el.dataset.f) return;
+    rsdApply(tg, el.dataset.f, el.value);
+  }
+}
+
+/* ---------- l'image : un toucher crée ou choisit ; un repère numéroté ou une cible se glisse directement ---------- */
+const RSD_SLOP = 0.04;
+function rsdHitMarker(p) {            /* p en fractions : une cible, puis un repère (comme à la base) */
+  for (let i = 0; i < STATE.cartouche.length; i++) {
+    const e = STATE.cartouche[i];
+    if (e.point && e.target && Math.hypot(e.target.x - p.x, e.target.y - p.y) < RSD_SLOP) return { type: 'target', idx: i };
+  }
+  for (let i = 0; i < STATE.cartouche.length; i++) {
+    const e = STATE.cartouche[i];
+    if (e.point && Math.hypot(e.x - p.x, e.y - p.y) < RSD_SLOP) return { type: 'marker', idx: i };
+  }
+  return null;
+}
+function rsdInitCanvas() {
+  const cv = rsd$('preview-canvas');
+  cv.style.touchAction = 'none';
+  let st = null;
+  const norm = ev => { const v = rsdView(); return { v: v, x: (ev.clientX - v.cl) / v.w, y: (ev.clientY - v.ct) / v.h }; };
+  cv.addEventListener('pointerdown', ev => {
+    if (ev.pointerType === 'mouse' && ev.button !== 0) return;
+    const n = norm(ev);
+    st = { id: ev.pointerId, x0: ev.clientX, y0: ev.clientY, moved: false, far: false, hit: RSD.tool === 'select' ? rsdHitMarker(n) : null };
+    try { cv.setPointerCapture(ev.pointerId); } catch (x) { /* ignore */ }
+  });
+  cv.addEventListener('pointermove', ev => {
+    if (!st || ev.pointerId !== st.id) return;
+    const dist = Math.hypot(ev.clientX - st.x0, ev.clientY - st.y0);
+    if (dist > RSD_TAP_TOL) st.far = true;
+    if (!st.hit) return;
+    if (!st.moved) { if (dist < RSD_MOVE_TOL) return; st.moved = true; }
+    ev.preventDefault();
+    const p = norm(ev), e = STATE.cartouche[st.hit.idx];
+    if (!e) return;
+    const q = { x: rsdCl(p.x, 0, 1), y: rsdCl(p.y, 0, 1) };
+    if (st.hit.type === 'marker') { e.x = q.x; e.y = q.y; }
+    else if (e.target) { e.target.x = q.x; e.target.y = q.y; }
+    rsdLive();
+  });
+  const up = ev => {
+    if (!st || ev.pointerId !== st.id) return;
+    const was = st;
+    st = null;
+    try { cv.releasePointerCapture(ev.pointerId); } catch (x) { /* ignore */ }
+    if (was.moved) { saveState(); renderPreview(); return; }             /* un repère ou une cible glissé : une seule écriture, à la fin */
+    if (ev.type !== 'pointerup' || was.far) return;
+    const n = norm(ev);
+    if (!n.v.ok) return;
+    if (RSD.tool === 'select') rsdPickAt({ x: ev.clientX - n.v.cl, y: ev.clientY - n.v.ct }, n.v);
+    else rsdCreate(RSD.tool, { x: rsdCl(n.x, 0, 1), y: rsdCl(n.y, 0, 1) });
+  };
+  cv.addEventListener('pointerup', up);
+  cv.addEventListener('pointercancel', up);
+}
+
+function rsdInit() {
+  const ui = rsd$('rsd-ui'), sh = rsd$('rsd-sheet');
+  ui.addEventListener('click', rsdOnClick);
+  sh.addEventListener('click', ev => { if (ev.target.closest && ev.target.closest('[data-dr]')) rsdOnClick(ev); else rsdOnSheet(ev); });
+  sh.addEventListener('input', rsdOnSheet);
+  rsdInitCanvas();
+  document.addEventListener('keydown', ev => {
+    if (ev.key !== 'Escape' || !SOURCE_READY || (typeof TBM !== 'undefined' && TBM.cur)) return;
+    if (RSD.build || RSD.tool !== 'select') rsdCancel();
+    else if (RSD.sheet && rsdSel()) { RSD.sheet = false; rsdSyncUi(); }
+    else if (rsdSel()) rsdDeselect();
+  });
+  if (window.ResizeObserver) {
+    RSD.ro = new ResizeObserver(() => { rsdPlace(); rsdPlaceSheet(); });
+    [rsd$('preview-panel'), rsd$('preview-canvas'), rsd$('rsd-hint'), sh].forEach(el => RSD.ro.observe(el));
+  }
+  window.addEventListener('resize', () => { rsdPlace(); rsdPlaceSheet(); });
+  rsdSyncUi();
+}
+'''.replace('__RSD_ICONS__', json.dumps(RSD_ICONS, ensure_ascii=False))
+
+RSD_I18N_FR = r'''    // Annoter au doigt (lot mp-rs-v1.1.0)
+    'rsd.bar.aria': 'Annoter l\'image',
+    'rsd.tool.select': 'Choisir',
+    'rsd.tool.rect': 'Cadre',
+    'rsd.tool.ellipse': 'Ellipse',
+    'rsd.tool.poly': 'Tracé',
+    'rsd.tool.arrow': 'Flèche',
+    'rsd.tool.bracket': 'Crochet',
+    'rsd.tool.label': 'Texte',
+    'rsd.tool.inset': 'Loupe',
+    'rsd.g.rect': 'Cadre',
+    'rsd.g.ellipse': 'Ellipse',
+    'rsd.g.poly': 'Tracé',
+    'rsd.g.arrow': 'Flèche',
+    'rsd.g.bracket': 'Crochet',
+    'rsd.g.label': 'Texte',
+    'rsd.g.inset': 'Loupe',
+    'rsd.msg.select': 'Touchez une annotation pour la modifier.',
+    'rsd.msg.rect': 'Touchez l\'image : le centre du cadre.',
+    'rsd.msg.ellipse': 'Touchez l\'image : le centre de l\'ellipse.',
+    'rsd.msg.poly': 'Touchez l\'image pour poser les points.',
+    'rsd.msg.arrow': 'Touchez le départ de la flèche, puis sa pointe.',
+    'rsd.msg.arrow2': 'Touchez la pointe.',
+    'rsd.msg.bracket': 'Touchez une extrémité du crochet, puis l\'autre.',
+    'rsd.msg.bracket2': 'Touchez l\'autre extrémité.',
+    'rsd.msg.label': 'Touchez l\'image pour poser le texte.',
+    'rsd.msg.inset': 'Touchez la zone à agrandir.',
+    'rsd.n.1': '{n} point',
+    'rsd.n.n': '{n} points',
+    'rsd.build.add': '— touchez pour en ajouter',
+    'rsd.build.close': ', ou le premier pour fermer',
+    'rsd.finish': 'Terminer',
+    'rsd.undo': 'Retirer le dernier point',
+    'rsd.cancel': 'Abandonner',
+    'rsd.b.vtx': 'Point',
+    'rsd.b.props': 'Réglages',
+    'rsd.b.copy': 'Copier',
+    'rsd.b.del': 'Suppr.',
+    'rsd.b.ok': 'OK',
+    'rsd.vtx.n': 'point {n}',
+    'rsd.sheet': '{g} · réglages',
+    'rsd.sheet.draft': '{g} · réglages · à venir',
+    'rsd.f.color': 'Couleur',
+    'rsd.c.red': 'Rouge',
+    'rsd.c.black': 'Noir',
+    'rsd.c.white': 'Blanc',
+    'rsd.f.text': 'Texte',
+    'rsd.f.style': 'Style',
+    'rsd.st.stamp': 'Tampon',
+    'rsd.st.cursive': 'Manuscrit',
+    'rsd.st.plain': 'Simple',
+    'rsd.f.shape': 'Tracé',
+    'rsd.sh.open': 'Ouvert',
+    'rsd.sh.closed': 'Fermé',
+    'rsd.f.caption': 'Légende',
+    'rsd.f.caption.ph': 'Agrandissement',
+    'rsd.f.close': 'Fermer',
+    'rsd.new.text': 'CIBLE',
+    'rsd.t.min': 'Un tracé a au moins deux points.',
+'''
+
+RSD_I18N_EN = r'''    // Touch annotations (lot mp-rs-v1.1.0)
+    'rsd.bar.aria': 'Annotate the image',
+    'rsd.tool.select': 'Select',
+    'rsd.tool.rect': 'Frame',
+    'rsd.tool.ellipse': 'Ellipse',
+    'rsd.tool.poly': 'Polyline',
+    'rsd.tool.arrow': 'Arrow',
+    'rsd.tool.bracket': 'Bracket',
+    'rsd.tool.label': 'Text',
+    'rsd.tool.inset': 'Loupe',
+    'rsd.g.rect': 'Frame',
+    'rsd.g.ellipse': 'Ellipse',
+    'rsd.g.poly': 'Polyline',
+    'rsd.g.arrow': 'Arrow',
+    'rsd.g.bracket': 'Bracket',
+    'rsd.g.label': 'Text',
+    'rsd.g.inset': 'Loupe',
+    'rsd.msg.select': 'Tap an annotation to edit it.',
+    'rsd.msg.rect': 'Tap the image: the frame\'s centre.',
+    'rsd.msg.ellipse': 'Tap the image: the ellipse\'s centre.',
+    'rsd.msg.poly': 'Tap the image to place the points.',
+    'rsd.msg.arrow': 'Tap the arrow\'s start, then its tip.',
+    'rsd.msg.arrow2': 'Tap the tip.',
+    'rsd.msg.bracket': 'Tap one end of the bracket, then the other.',
+    'rsd.msg.bracket2': 'Tap the other end.',
+    'rsd.msg.label': 'Tap the image to place the text.',
+    'rsd.msg.inset': 'Tap the area to magnify.',
+    'rsd.n.1': '{n} point',
+    'rsd.n.n': '{n} points',
+    'rsd.build.add': '— tap to add more',
+    'rsd.build.close': ', or the first one to close',
+    'rsd.finish': 'Finish',
+    'rsd.undo': 'Remove the last point',
+    'rsd.cancel': 'Cancel',
+    'rsd.b.vtx': 'Point',
+    'rsd.b.props': 'Settings',
+    'rsd.b.copy': 'Copy',
+    'rsd.b.del': 'Delete',
+    'rsd.b.ok': 'OK',
+    'rsd.vtx.n': 'point {n}',
+    'rsd.sheet': '{g} · settings',
+    'rsd.sheet.draft': '{g} · settings · upcoming',
+    'rsd.f.color': 'Colour',
+    'rsd.c.red': 'Red',
+    'rsd.c.black': 'Black',
+    'rsd.c.white': 'White',
+    'rsd.f.text': 'Text',
+    'rsd.f.style': 'Style',
+    'rsd.st.stamp': 'Stamp',
+    'rsd.st.cursive': 'Cursive',
+    'rsd.st.plain': 'Plain',
+    'rsd.f.shape': 'Shape',
+    'rsd.sh.open': 'Open',
+    'rsd.sh.closed': 'Closed',
+    'rsd.f.caption': 'Caption',
+    'rsd.f.caption.ph': 'Close-up',
+    'rsd.f.close': 'Close',
+    'rsd.new.text': 'TARGET',
+    'rsd.t.min': 'A polyline needs at least two points.',
+'''
 
 # ---------- HTML ----------
 HTML = f"""<!DOCTYPE html>
@@ -66,6 +1281,12 @@ HTML = f"""<!DOCTYPE html>
   font-weight: 500;
   font-display: swap;
   src: url('data:font/woff2;base64,{A["OSWALD_500"]}') format('woff2');
+}}
+@font-face {{
+  font-family: 'Oswald';
+  font-weight: 700;
+  font-display: swap;
+  src: url('data:font/woff2;base64,{A["OSWALD_700"]}') format('woff2');
 }}
 @font-face {{
   font-family: 'Caveat';
@@ -947,6 +2168,8 @@ select[data-tbm-src] {{ display: none !important; }}
 @media (min-width: 1101px) {{
   .tab-bar {{ display: none; }}
 }}
+
+{RSD_CSS}
 </style>
 </head>
 <body data-theme="cw-nato">
@@ -1189,6 +2412,13 @@ select[data-tbm-src] {{ display: none !important; }}
       </div>
       <canvas id="preview-canvas" hidden></canvas>
     </div>
+    <!-- Annoter au doigt : la couche des poignées, la barre, le message et la fiche -->
+    <div class="rsd-ov" id="rsd-ov"><svg class="rsd-svg" id="rsd-svg" aria-hidden="true"></svg><svg class="rsd-prev" id="rsd-prev" aria-hidden="true"></svg></div>
+    <div class="dr-ui rsd-ui" id="rsd-ui" hidden>
+      <div class="dr-hint" id="rsd-hint" role="status" hidden><span class="dr-msg" id="rsd-msg"></span><span class="dr-acts" id="rsd-acts"></span></div>
+      <div class="dr-bar" id="rsd-bar" role="toolbar"></div>
+    </div>
+    <div class="dr-sheet rsd-sheet" id="rsd-sheet" role="group" hidden></div>
   </div>
 
 </div><!-- /app -->
@@ -1343,7 +2573,7 @@ const I18N = {{
     'editor.classif.title': 'CLASSIFICATION',
     'editor.classif.enable': 'Activer le bandeau',
     'editor.classif.level': 'NIVEAU',
-  }},
+{RSD_I18N_FR}  }},
   en: {{
     'toolbar.theme.tooltip': 'Graphic theme',
     'toolbar.lang.tooltip': 'Switch to French',
@@ -1457,7 +2687,7 @@ const I18N = {{
     'editor.classif.title': 'CLASSIFICATION',
     'editor.classif.enable': 'Enable banner',
     'editor.classif.level': 'LEVEL',
-  }}
+{RSD_I18N_EN}  }}
 }};
 
 let CURRENT_LANG = 'fr';
@@ -1622,6 +2852,7 @@ function rerenderDynamic() {{
   renderLogoMode();
   renderTextColor();
   renderMarkerColor();
+  rsdSyncUi();
   // Le logo grid n'a pas de texte i18n (logos visuels)
 }}
 
@@ -1728,6 +2959,7 @@ function loadImageFile(file) {{
       document.getElementById('preview-placeholder').hidden = true;
       document.getElementById('preview-canvas').hidden = false;
       showToast(t('toast.image-loaded'), 'ok', 1800);
+      rsdSyncUi();
       schedulePreview();
     }};
     img.src = e.target.result;
@@ -2751,98 +3983,15 @@ async function renderPreview() {{
   canvas.height = H;
   composeRecon(ctx, W, H, STATE, logoImg);
   drawEditOverlays(ctx, W, H);
+  rsdRefresh();     // les poignées (DOM) suivent ce qui vient d'être dessiné
 }}
 
-// ── Overlays d'édition (poignées resize, points target) ──────
-// Aperçu uniquement — jamais inclus dans composeRecon (non exportés)
+// ── Overlays d'édition (croix des cibles) ──────────────────────
+// Aperçu uniquement — jamais inclus dans composeRecon (non exportés).
+// Les poignées des annotations ne sont plus dessinées ici : ce sont des éléments DOM (voir « Annoter au doigt »).
 function drawEditOverlays(ctx, W, H) {{
   const scale = W / 1920;
   const s = v => Math.round(v * scale);
-  const HW = s(22);
-
-  // Poignées resize insets
-  (STATE.annotations || []).filter(a => a.type === 'inset').forEach(ins => {{
-    if (ins.box) {{
-      const bx = (ins.box.x + ins.box.w) * W;
-      const by = (ins.box.y + ins.box.h) * H;
-      ctx.fillStyle = 'rgba(255,255,255,0.85)';
-      ctx.strokeStyle = '#000';
-      ctx.lineWidth = s(1.5);
-      ctx.fillRect(bx - HW/2, by - HW/2, HW, HW);
-      ctx.strokeRect(bx - HW/2, by - HW/2, HW, HW);
-      ctx.beginPath();
-      ctx.moveTo(bx - HW*0.3, by + HW*0.3);
-      ctx.lineTo(bx + HW*0.3, by - HW*0.3);
-      ctx.moveTo(bx,           by + HW*0.3);
-      ctx.lineTo(bx + HW*0.3, by);
-      ctx.strokeStyle = '#333';
-      ctx.lineWidth = s(2);
-      ctx.stroke();
-    }}
-    if (ins.src) {{
-      const sx = (ins.src.x + ins.src.w) * W;
-      const sy = (ins.src.y + ins.src.h) * H;
-      ctx.fillStyle = 'rgba(255,255,100,0.80)';
-      ctx.strokeStyle = '#000';
-      ctx.lineWidth = s(1.5);
-      ctx.fillRect(sx - HW/2, sy - HW/2, HW, HW);
-      ctx.strokeRect(sx - HW/2, sy - HW/2, HW, HW);
-      ctx.beginPath();
-      ctx.moveTo(sx - HW*0.3, sy + HW*0.3);
-      ctx.lineTo(sx + HW*0.3, sy - HW*0.3);
-      ctx.moveTo(sx,           sy + HW*0.3);
-      ctx.lineTo(sx + HW*0.3, sy);
-      ctx.strokeStyle = '#333';
-      ctx.lineWidth = s(2);
-      ctx.stroke();
-    }}
-  }});
-
-  // Poignées formes libres (Lot 1)
-  (STATE.annotations || []).forEach(sh => {{
-    const COL2 = {{ red:'#E22', black:'#000', white:'#fff' }}[sh.color || 'red'];
-    const HH = HW;
-
-    function handleRect(hx, hy, fill) {{
-      ctx.fillStyle = fill || 'rgba(255,255,255,0.85)';
-      ctx.strokeStyle = '#000'; ctx.lineWidth = s(1.5);
-      ctx.fillRect(hx - HH/2, hy - HH/2, HH, HH);
-      ctx.strokeRect(hx - HH/2, hy - HH/2, HH, HH);
-    }}
-    function handleCirc(hx, hy, fill) {{
-      ctx.fillStyle = fill || 'rgba(255,255,255,0.85)';
-      ctx.strokeStyle = '#000'; ctx.lineWidth = s(1.5);
-      ctx.beginPath(); ctx.arc(hx, hy, HH/2, 0, Math.PI*2);
-      ctx.fill(); ctx.stroke();
-    }}
-
-    if (sh.type === 'ellipse') {{
-      // Poignée resize = coin de la bbox
-      handleRect((sh.cx + sh.rx)*W, (sh.cy + sh.ry)*H, 'rgba(255,200,50,0.9)');
-    }} else if (sh.type === 'rect') {{
-      const rx2=(sh.x+sh.w/2)*W, ry2=(sh.y+sh.h/2)*H;
-      const rw=sh.w*W, rh=sh.h*H;
-      const ang=(sh.angle||0)*Math.PI/180;
-      // Coin bas-droit (resize)
-      const cbrx= rx2 + Math.cos(ang)*(rw/2) - Math.sin(ang)*(rh/2) * (-1);
-      const cbry= ry2 + Math.sin(ang)*(rw/2) + Math.cos(ang)*(rh/2);
-      // Rotation handle = au-dessus du rect
-      const rotDist = rh/2 + s(30);
-      const rhx = rx2 - Math.sin(ang)*rotDist;
-      const rhy = ry2 - Math.cos(ang)*rotDist;
-      handleRect(rx2 + (rw/2)*Math.cos(ang) - (rh/2)*Math.sin(ang),
-                 ry2 + (rw/2)*Math.sin(ang) + (rh/2)*Math.cos(ang),
-                 'rgba(255,200,50,0.9)');
-      handleCirc(rhx, rhy, 'rgba(100,200,255,0.9)');
-    }} else if (sh.type === 'poly') {{
-      (sh.pts || []).forEach(pt => {{
-        handleCirc(pt.x*W, pt.y*H, 'rgba(255,255,255,0.85)');
-      }});
-    }} else if (sh.type === 'arrow' || sh.type === 'bracket') {{
-      handleCirc(sh.x1*W, sh.y1*H, 'rgba(255,255,255,0.85)');
-      handleCirc(sh.x2*W, sh.y2*H, 'rgba(255,200,50,0.9)');
-    }}
-  }});
 
   // Croix pour points target (amorce)
   STATE.cartouche.forEach(e => {{
@@ -3120,6 +4269,7 @@ function initEvents() {{
     btn.addEventListener('click', () => {{
       const tab = btn.dataset.tab;
       document.getElementById('app').dataset.activeTab = tab;
+      requestAnimationFrame(() => {{ rsdPlace(); rsdPlaceSheet(); }});     // au retour sur l'aperçu, les poignées se replacent
       document.querySelectorAll('.tab-btn').forEach(b => {{
         b.classList.toggle('active', b.dataset.tab === tab);
         b.setAttribute('aria-selected', b.dataset.tab === tab ? 'true' : 'false');
@@ -3127,235 +4277,10 @@ function initEvents() {{
     }});
   }});
 
-  // R2-A — Drag étendu : markers, targets, box/src insets, poignées resize
-  const cv = document.getElementById('preview-canvas');
-  cv.style.touchAction = 'none';
-
-  let dragState = null;
-  let dragOffX = 0, dragOffY = 0;
-
-  const toNorm = ev => {{
-    const rect = cv.getBoundingClientRect();
-    return {{
-      x: (ev.clientX - rect.left)  / rect.width,
-      y: (ev.clientY - rect.top)   / rect.height
-    }};
-  }};
-
-  const SLOP = 0.04;
-  const RSLOP = 0.035;
-
-  function hitTestAll(p) {{
-    const annots = (STATE.annotations || []).filter(a => a.type === 'inset');
-    // 1. Poignées resize (priorité max)
-    for (const ins of annots) {{
-      if (ins.box) {{
-        const bx2 = ins.box.x + ins.box.w, by2 = ins.box.y + ins.box.h;
-        if (Math.hypot(bx2 - p.x, by2 - p.y) < RSLOP)
-          return {{ type:'resize-box', ins }};
-      }}
-      if (ins.src) {{
-        const sx2 = ins.src.x + ins.src.w, sy2 = ins.src.y + ins.src.h;
-        if (Math.hypot(sx2 - p.x, sy2 - p.y) < RSLOP)
-          return {{ type:'resize-src', ins }};
-      }}
-    }}
-    // 1b. Poignées formes libres (Lot 1)
-    const fshapes = (STATE.annotations || []).filter(a =>
-      ['ellipse','rect','poly','arrow','bracket'].includes(a.type));
-    for (const sh of fshapes) {{
-      if (sh.type === 'ellipse') {{
-        const hx=sh.cx+sh.rx, hy=sh.cy+sh.ry;
-        if (Math.hypot(hx - p.x, hy - p.y) < RSLOP)
-          return {{ type:'resize-ellipse', sh }};
-      }} else if (sh.type === 'rect') {{
-        const ang=(sh.angle||0)*Math.PI/180;
-        const rcx=sh.x+sh.w/2, rcy=sh.y+sh.h/2;
-        const brx=rcx+(sh.w/2)*Math.cos(ang)-(sh.h/2)*Math.sin(ang);
-        const bry=rcy+(sh.w/2)*Math.sin(ang)+(sh.h/2)*Math.cos(ang);
-        if (Math.hypot(brx - p.x, bry - p.y) < RSLOP)
-          return {{ type:'resize-rect', sh }};
-        const rhx=rcx - Math.sin(ang)*(sh.h/2 + 0.04);
-        const rhy=rcy - Math.cos(ang)*(sh.h/2 + 0.04);
-        if (Math.hypot(rhx - p.x, rhy - p.y) < RSLOP)
-          return {{ type:'rotate-rect', sh, cx:rcx, cy:rcy }};
-      }} else if (sh.type === 'poly') {{
-        for (let pi=0; pi<(sh.pts||[]).length; pi++) {{
-          const pt=sh.pts[pi];
-          if (Math.hypot(pt.x - p.x, pt.y - p.y) < SLOP)
-            return {{ type:'drag-poly-pt', sh, pi }};
-        }}
-      }} else if (sh.type === 'arrow' || sh.type === 'bracket') {{
-        if (Math.hypot(sh.x2 - p.x, sh.y2 - p.y) < SLOP)
-          return {{ type:'drag-shape-p2', sh }};
-        if (Math.hypot(sh.x1 - p.x, sh.y1 - p.y) < SLOP)
-          return {{ type:'drag-shape-p1', sh }};
-      }}
-    }}
-    // 1c. Corps des formes libres
-    for (const sh of fshapes) {{
-      if (sh.type === 'ellipse') {{
-        const edx=(p.x-sh.cx)/(sh.rx||0.01), edy=(p.y-sh.cy)/(sh.ry||0.01);
-        if (edx*edx+edy*edy <= 1.2)
-          return {{ type:'drag-ellipse', sh, ox:p.x-sh.cx, oy:p.y-sh.cy }};
-      }} else if (sh.type === 'rect') {{
-        if (p.x>=sh.x&&p.x<=sh.x+sh.w&&p.y>=sh.y&&p.y<=sh.y+sh.h)
-          return {{ type:'drag-rect', sh, ox:p.x-sh.x, oy:p.y-sh.y }};
-      }} else if (sh.type === 'poly') {{
-        if ((sh.pts||[]).length>0) {{
-          const c0=sh.pts[0];
-          if (Math.hypot(c0.x-p.x, c0.y-p.y) < SLOP*2)
-            return {{ type:'drag-poly-group', sh, ox:p.x, oy:p.y, snapX:sh.pts.map(q=>q.x), snapY:sh.pts.map(q=>q.y) }};
-        }}
-      }} else if (sh.type === 'arrow' || sh.type === 'bracket') {{
-        const mx=(sh.x1+sh.x2)/2, my=(sh.y1+sh.y2)/2;
-        if (Math.hypot(mx-p.x, my-p.y) < SLOP*1.5)
-          return {{ type:'drag-shape-mid', sh, ox:p.x, oy:p.y }};
-      }}
-    }}
-
-    // 2. Corps box
-    for (const ins of annots) {{
-      if (!ins.box) continue;
-      const b = ins.box;
-      if (p.x >= b.x && p.x <= b.x+b.w && p.y >= b.y && p.y <= b.y+b.h)
-        return {{ type:'drag-box', ins, ox: p.x-b.x, oy: p.y-b.y }};
-    }}
-    // 3. Corps src
-    for (const ins of annots) {{
-      if (!ins.src) continue;
-      const s2 = ins.src;
-      if (p.x >= s2.x && p.x <= s2.x+s2.w && p.y >= s2.y && p.y <= s2.y+s2.h)
-        return {{ type:'drag-src', ins, ox: p.x-s2.x, oy: p.y-s2.y }};
-    }}
-    // 4. Points target
-    for (let i=0; i<STATE.cartouche.length; i++) {{
-      const e = STATE.cartouche[i];
-      if (e.point && e.target && Math.hypot(e.target.x - p.x, e.target.y - p.y) < SLOP)
-        return {{ type:'target', idx: i }};
-    }}
-    // 5. Cercles markers
-    for (let i=0; i<STATE.cartouche.length; i++) {{
-      const e = STATE.cartouche[i];
-      if (e.point && Math.hypot(e.x - p.x, e.y - p.y) < SLOP)
-        return {{ type:'marker', idx: i }};
-    }}
-    // 6. Labels (R2-B Lot 2)
-    const lbls = (STATE.annotations || []).filter(a => a.type === 'label');
-    for (const lb of lbls) {{
-      if (Math.hypot(lb.x - p.x, lb.y - p.y) < SLOP)
-        return {{ type:'drag-label', lb, ox: p.x - lb.x, oy: p.y - lb.y }};
-    }}
-    return null;
-  }}
-
-  cv.addEventListener('pointerdown', ev => {{
-    const p = toNorm(ev);
-    const hit = hitTestAll(p);
-    if (hit) {{
-      dragState = hit;
-      dragOffX = hit.ox || 0;
-      dragOffY = hit.oy || 0;
-      cv.setPointerCapture(ev.pointerId);
-    }}
-  }});
-
-  cv.addEventListener('pointermove', ev => {{
-    if (!dragState) return;
-    ev.preventDefault();
-    const p = toNorm(ev);
-    const cl = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
-    if (dragState.type === 'marker') {{
-      const e = STATE.cartouche[dragState.idx];
-      e.x = cl(p.x, 0, 1); e.y = cl(p.y, 0, 1);
-    }} else if (dragState.type === 'target') {{
-      const e = STATE.cartouche[dragState.idx];
-      if (e.target) {{ e.target.x = cl(p.x, 0, 1); e.target.y = cl(p.y, 0, 1); }}
-    }} else if (dragState.type === 'drag-box') {{
-      const b = dragState.ins.box;
-      b.x = cl(p.x - dragOffX, 0, 1 - b.w);
-      b.y = cl(p.y - dragOffY, 0, 1 - b.h);
-    }} else if (dragState.type === 'drag-src') {{
-      const s2 = dragState.ins.src;
-      s2.x = cl(p.x - dragOffX, 0, 1 - s2.w);
-      s2.y = cl(p.y - dragOffY, 0, 1 - s2.h);
-    }} else if (dragState.type === 'resize-box') {{
-      const b = dragState.ins.box;
-      b.w = cl(p.x - b.x, 0.05, 0.85);
-      b.h = cl(p.y - b.y, 0.04, 0.85);
-      // Conformer src au ratio de la box
-      const s2b = dragState.ins.src;
-      if (b.w > 0) {{
-        s2b.h = cl(s2b.w * (b.h / b.w), 0.03, 0.70);
-        if (s2b.y + s2b.h > 1) s2b.y = 1 - s2b.h;
-      }}
-    }} else if (dragState.type === 'resize-src') {{
-      const s2 = dragState.ins.src;
-      s2.w = cl(p.x - s2.x, 0.03, 0.70);
-      s2.h = cl(p.y - s2.y, 0.03, 0.70);
-      // Conformer box au ratio de la src
-      const bs = dragState.ins.box;
-      if (s2.w > 0) {{
-        bs.h = cl(bs.w * (s2.h / s2.w), 0.04, 0.85);
-        if (bs.y + bs.h > 1) bs.y = 1 - bs.h;
-      }}
-    }} else if (dragState.type === 'resize-ellipse') {{
-      const sh=dragState.sh;
-      sh.rx = cl(p.x - sh.cx, 0.01, 0.5);
-      sh.ry = cl(p.y - sh.cy, 0.01, 0.5);
-    }} else if (dragState.type === 'resize-rect') {{
-      const sh=dragState.sh;
-      const ang=(sh.angle||0)*Math.PI/180;
-      const rcx=sh.x+sh.w/2, rcy=sh.y+sh.h/2;
-      // Rotation inverse pour trouver le coin en coords locales
-      const dx=p.x-rcx, dy=p.y-rcy;
-      const lx= dx*Math.cos(-ang) - dy*Math.sin(-ang);
-      const ly= dx*Math.sin(-ang) + dy*Math.cos(-ang);
-      sh.w = cl(lx*2, 0.02, 0.95);
-      sh.h = cl(ly*2, 0.01, 0.95);
-      sh.x = rcx - sh.w/2; sh.y = rcy - sh.h/2;
-    }} else if (dragState.type === 'rotate-rect') {{
-      const sh=dragState.sh;
-      const rcx=dragState.cx, rcy=dragState.cy;
-      sh.angle = Math.atan2(p.x-rcx, -(p.y-rcy)) * 180/Math.PI;
-    }} else if (dragState.type === 'drag-ellipse') {{
-      const sh=dragState.sh;
-      sh.cx = cl(p.x - dragOffX, sh.rx, 1-sh.rx);
-      sh.cy = cl(p.y - dragOffY, sh.ry, 1-sh.ry);
-    }} else if (dragState.type === 'drag-rect') {{
-      const sh=dragState.sh;
-      sh.x = cl(p.x - dragOffX, 0, 1-sh.w);
-      sh.y = cl(p.y - dragOffY, 0, 1-sh.h);
-    }} else if (dragState.type === 'drag-poly-pt') {{
-      const sh=dragState.sh, pi=dragState.pi;
-      sh.pts[pi].x = cl(p.x, 0, 1);
-      sh.pts[pi].y = cl(p.y, 0, 1);
-    }} else if (dragState.type === 'drag-poly-group') {{
-      const sh=dragState.sh;
-      const ddx=p.x-dragState.ox, ddy=p.y-dragState.oy;
-      dragState.ox=p.x; dragState.oy=p.y;
-      sh.pts.forEach(pt => {{ pt.x=cl(pt.x+ddx,0,1); pt.y=cl(pt.y+ddy,0,1); }});
-    }} else if (dragState.type === 'drag-shape-p1') {{
-      dragState.sh.x1=cl(p.x,0,1); dragState.sh.y1=cl(p.y,0,1);
-    }} else if (dragState.type === 'drag-shape-p2') {{
-      dragState.sh.x2=cl(p.x,0,1); dragState.sh.y2=cl(p.y,0,1);
-    }} else if (dragState.type === 'drag-shape-mid') {{
-      const sh=dragState.sh;
-      const ddx=p.x-dragState.ox, ddy=p.y-dragState.oy;
-      dragState.ox=p.x; dragState.oy=p.y;
-      sh.x1=cl(sh.x1+ddx,0,1); sh.y1=cl(sh.y1+ddy,0,1);
-      sh.x2=cl(sh.x2+ddx,0,1); sh.y2=cl(sh.y2+ddy,0,1);
-    }} else if (dragState.type === 'drag-label') {{
-      dragState.lb.x = cl(p.x - dragOffX, 0, 1);
-      dragState.lb.y = cl(p.y - dragOffY, 0, 1);
-    }}
-    schedulePreview();
-  }});
-
-  cv.addEventListener('pointerup', () => {{
-    if (dragState) {{ dragState = null; saveState(); }}
-  }});
+  // Le glisser des repères et des cibles, le toucher qui crée ou qui choisit : voir rsdInitCanvas() (« Annoter au doigt »)
 }}
+
+{RSD_JS}
 
 /* ============= LISTES DE LA BARRE — thème de l'interface (lot mp-ui-listes) =============
    Le <select> reste dans la page (id, options, écouteurs) : il garde la valeur, mais il est masqué.
@@ -3649,6 +4574,7 @@ async function init() {{
   if (_cl) _cl.value   = STATE.classification.level;
 
   initEvents();
+  rsdInit();
 
   if (hasState) {{
     showToast(t('toast.state-restored'), '', 3500);
@@ -3742,8 +4668,6 @@ grep_present("renderInsetEditor", "renderInsetEditor présent")
 grep_present("drawEditOverlays", "drawEditOverlays présent")
 grep_present("amorce-cb", "toggle amorce présent")
 grep_present("btn-add-inset", "bouton loupe présent")
-grep_present("resize-box", "hit-test resize-box présent")
-grep_present("resize-src", "hit-test resize-src présent")
 grep_present("base.getContext", "canvas offscreen base présent")
 grep_present("drawImage(base,", "blit base → ctx présent")
 grep_present("editor.inset.add", "clé i18n inset.add")
@@ -3755,8 +4679,6 @@ grep_present("type:'ellipse'", "type ellipse présent")
 grep_present("type:'arrow'", "type arrow présent")
 grep_present("type:'bracket'", "type bracket présent")
 grep_present("btn-add-ellipse", "bouton ellipse présent")
-grep_present("rotate-rect", "rotate-rect hit-test présent")
-grep_present("drag-poly-pt", "drag-poly-pt présent")
 grep_present("editor.shapes.title", "clé i18n shapes.title")
 # R2-B Lot 2
 grep_present("'Caveat'", "CAVEAT_400 dans assets (font-family Caveat)")
@@ -3768,7 +4690,6 @@ grep_present("renderLabelEditor", "renderLabelEditor présent")
 grep_present("btn-add-label", "bouton + Label présent")
 grep_present("lb.style === 'stamp'", "rendu stamp présent")
 grep_present("lb.style === 'cursive'", "rendu cursive présent")
-grep_present("drag-label", "drag-label hit-test présent")
 grep_present("STATE.classification", "STATE.classification présent")
 grep_present("classif-enable", "toggle classif présent")
 grep_present("classif-level", "select niveau classif présent")
@@ -3778,8 +4699,6 @@ grep_present("barH = bannerH", "bandeau réutilise bannerH")
 grep_present("bannerH", "bannerH défini (correction A)")
 grep_present("blockY = H - blockH - s(12) - bannerH", "blockY réserve bannerH")
 grep_present("cartY  = cartMg + bannerH", "cartY réserve bannerH")
-grep_present("bs.h = cl(bs.w * (s2.h / s2.w)", "ratio loupe resize-src (correction B)")
-grep_present("s2b.h = cl(s2b.w * (b.h / b.w)", "ratio loupe resize-box (correction B)")
 grep_present("editor.classif.title", "clé i18n classif.title")
 grep_present("editor.label.add", "clé i18n label.add")
 grep_present("z-max", "commentaire z-max bandeau")
@@ -3794,6 +4713,11 @@ if insets_pos < shapes_pos < labels_pos < band_pos:
 else:
   print(f"  [FAIL] z-order incorrect: insets={insets_pos} shapes={shapes_pos} labels={labels_pos} band={band_pos}")
 # R2-C
+grep_present("rsdInitCanvas", "annoter au doigt : le canevas (toucher, repères)")
+grep_present("rsdRectHandles", "annoter au doigt : poignées du cadre")
+grep_present("rsdInsetHandles", "annoter au doigt : poignées de la loupe")
+grep_present("rsdPlaceSheet", "annoter au doigt : fiche « à venir » posée d'après le message")
+grep_present("font-family: 'Oswald';\n  font-weight: 700;", "Oswald 700 embarquée (face du Route Planner)")
 grep_present("applySensorPreset", "applySensorPreset présent")
 grep_present("sensorMode", "sensorMode dans STATE")
 grep_present("ir-white", "mode ir-white présent")
