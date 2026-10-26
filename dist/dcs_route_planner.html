@@ -1358,12 +1358,10 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .dr-h.r.rot i::after { content: '⟳'; position: absolute; inset: 0; font: 700 15px/18px var(--f-ui); color: var(--ink); text-align: center; }
 .dr-hint .tb-btn.mq-props svg { width: 18px; height: 18px; }
 .dr-hint .tb-btn.mq-props.on { background: var(--amber-dark); border-color: var(--amber); }
-.dr-sheet.mq-draft { bottom: 156px; max-height: calc(100% - 190px); }
-@media (max-width: 600px) { .dr-sheet.mq-draft { bottom: 150px; } }
 
 /* ce que la maquette ne dit pas (lot rp-v1.7.0) : « À gauche » et « Afficher / Masquer » tiennent sur une ligne dans les 150 / 132 px (104 sous 600 px) de la maquette */
 .mq-turn .dr-seg .tb-btn, .mq-gshow .dr-seg .tb-btn { font-size: 10.5px; letter-spacing: .6px; padding: 0 3px; white-space: nowrap; }
-@media (max-width: 600px) { .mq-turn .dr-seg .tb-btn, .mq-gshow .dr-seg .tb-btn { font-size: 9px; letter-spacing: .2px; padding: 0 2px; } }
+@media (max-width: 600px) { .mq-turn .dr-seg .tb-btn, .mq-gshow .dr-seg .tb-btn { letter-spacing: 0; padding: 0 1px; } }
 /* ce que la maquette ne dit pas : le svg du pane d'édition sous ses poignées, leurs gestes, le cadenas, les rangées du menu, le message sans boutons */
 .leaflet-map-pane .leaflet-drawedit-pane > svg { z-index: 0; max-width: none !important; max-height: none !important; }
 .dr-h { touch-action: none; -webkit-user-select: none; user-select: none; cursor: grab; }
@@ -5576,13 +5574,34 @@ function drSheetTarget() {
   return DR.draft ? { it: DR.draft.it, draft: true } : null;
 }
 
+/* La fiche « à venir » se pose d'après le message, mesuré : son bas à 6 px au-dessus du message, sa hauteur bornée à la place qui reste (carte + 10 px),
+   160 px au moins (elle couvre alors le haut de la carte, jamais le message). La fiche d'un objet choisi garde sa place de feuille du bas. */
+const DR_SHEET_GAP = 6, DR_SHEET_TOP = 10, DR_SHEET_MIN = 160;
+function drPlaceSheet() {
+  const sh = $('dr-sheet'), hint = $('dr-hint'), wrap = sh && sh.offsetParent;
+  if (!sh || !hint) return;
+  if (sh.hidden || !sh.classList.contains('mq-draft') || hint.hidden || !wrap) { sh.style.bottom = ''; sh.style.maxHeight = ''; return; }
+  const w = wrap.getBoundingClientRect(), h = hint.getBoundingClientRect();
+  const top = w.top + wrap.clientTop, base = h.top - DR_SHEET_GAP;
+  sh.style.bottom = Math.round((top + wrap.clientHeight) - base) + 'px';
+  sh.style.maxHeight = Math.max(DR_SHEET_MIN, Math.floor(base - (top + DR_SHEET_TOP))) + 'px';
+}
+let drSheetRo = null;
+function drWatchSheet() {
+  if (drSheetRo || !window.ResizeObserver) return;
+  drSheetRo = new ResizeObserver(() => drPlaceSheet());
+  drSheetRo.observe($('dr-hint')); drSheetRo.observe($('dr-sheet')); drSheetRo.observe($('dr-sheet').parentNode);
+}
+
 function drRenderSheet(force) {
   const sh = $('dr-sheet'), tg = drSheetTarget();
-  if (!DR.sheet || !tg) { drSheetListClose(); sh.hidden = true; sh.classList.remove('mq-draft'); DR.sheetKey = ''; return; }
+  if (!DR.sheet || !tg) { drSheetListClose(); sh.hidden = true; sh.classList.remove('mq-draft'); DR.sheetKey = ''; drPlaceSheet(); return; }
   const key = (tg.draft ? 'draft/' + DR.draft.n : DR.sel.lid + '/' + DR.sel.id) + '/' + CURRENT_LANG;
   sh.hidden = false;
   sh.classList.toggle('mq-draft', tg.draft);
   if (key !== DR.sheetKey || force) { drSheetListClose(); DR.sheetKey = key; sh.innerHTML = drSheetHtml(tg.it, tg.draft); drSheetLists(); }
+  drWatchSheet();
+  drPlaceSheet();
 }
 
 /* Tout ce que montre le mode, remis d'aplomb */
@@ -5596,6 +5615,7 @@ function drSyncUi() {
   drRenderHint();
   drRenderPop();
   drRenderSheet(false);
+  drPlaceSheet();
 }
 
 /* Les champs numériques de la fiche : leur champ de l'objet */
