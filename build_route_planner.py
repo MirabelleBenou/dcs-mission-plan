@@ -827,6 +827,7 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
   .dr-sheet .dr-row2 { gap: 6px; }
 }
 .dr-h.v.edge i { width: 22px; height: 10px; margin: -5px 0 0 -11px; border-radius: 2px; background: var(--paper-light); }
+.dr-h.v.corner i { width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 2px; background: var(--paper-light); border: 2px solid var(--amber-dark); }
 .dr-h.r.rot i { width: 22px; height: 22px; margin: -11px 0 0 -11px; }
 .dr-h.r.rot i::after { content: '⟳'; position: absolute; inset: 0; font: 700 15px/18px var(--f-ui); color: var(--ink); text-align: center; }
 .dr-hint .tb-btn.mq-props svg { width: 18px; height: 18px; }
@@ -1871,6 +1872,7 @@ const I18N = {
     'dr.msg.orbit2': 'Touchez la sortie de l\'orbite.',
     'dr.msg.box': 'Touchez le début de l\'axe de la boîte, puis sa fin.',
     'dr.msg.box2': 'Touchez la fin de l\'axe.',
+    'dr.lab.box': '{l} × {w} NM',
     'dr.sheet.draft': '{g} · réglages · à venir',
     'dr.f.width': 'Largeur (NM)',
     'dr.f.length': 'Longueur (NM)',
@@ -2204,6 +2206,7 @@ const I18N = {
     'dr.msg.orbit2': 'Tap the orbit\'s exit point.',
     'dr.msg.box': 'Tap the start of the box axis, then its end.',
     'dr.msg.box2': 'Tap the end of the axis.',
+    'dr.lab.box': '{l} × {w} NM',
     'dr.sheet.draft': '{g} · settings · upcoming',
     'dr.f.width': 'Width (NM)',
     'dr.f.length': 'Length (NM)',
@@ -4654,6 +4657,54 @@ function drBoxEdgeCb(it, side, h) {
   };
 }
 
+/* Un angle se tire avec le coin opposé immobile, brg inchangé. Même méthode que les bords : tout se mesure contre l'état du début du glisser, dans le repère
+   plan local de la boîte (le long de l'axe a, en travers c), puis le coin opposé est remis exactement où il était sur la boîte telle que cfBoxGeom la dessine. */
+function drBoxCornerCb(it, k, h) {
+  const sa = (k === 1 || k === 2) ? 1 : -1, sc = (k === 2 || k === 3) ? 1 : -1, opp = (k + 2) % 4;      /* sa : coin avant (+) ou arrière ; sc : côté droit (+) ou gauche */
+  let B = null, kd = 0, kx = 0, sb = 0, cb = 0, C0 = null, O0 = null, oa = 0, oc = 0;
+  const xy = ll => { const a = Array.isArray(ll) ? ll : [ll.lat, ll.lng]; return [(a[1] - B.lon) * kx, (a[0] - B.lat) * kd]; };
+  const ac = p => [p[0] * sb + p[1] * cb, p[0] * cb - p[1] * sb];
+  return {
+    start: () => {
+      B = { lat: it.lat, lon: it.lon, brg: it.brg, len: it.lengthNm, wid: it.widthNm };
+      kd = NAV_R_KM * 1000 * CF_RAD; kx = Math.cos(B.lat * CF_RAD) * kd; sb = Math.sin(B.brg * CF_RAD); cb = Math.cos(B.brg * CF_RAD);
+      const g = cfBoxGeom(it).corners;
+      C0 = L.latLng(g[k]); O0 = xy(g[opp]); [oa, oc] = ac(O0);
+      DR.lab = { at: () => h.pos(), text: () => t('dr.lab.box', { l: cfFmtNm(it.lengthNm), w: cfFmtNm(it.widthNm) }) };
+    },
+    move: d => {
+      const z = map.getZoom(), T = map.project(C0, z).add(d);
+      /* le coin opposé remis où il était : le début de l'axe se déduit des dimensions (le milieu du bord arrière) */
+      const place = (len, wid) => {
+        const a = sa > 0 ? oa : oa - len * NM_M, c = oc + sc * wid * NM_M / 2;
+        let lat = B.lat + (a * cb - c * sb) / kd, lon = B.lon + (a * sb + c * cb) / kx;
+        for (let n = 0; n < 3; n++) {
+          const o = xy(cfBoxGeom({ lat: lat, lon: lon, brg: B.brg, lengthNm: len, widthNm: wid, gridH: 1, gridV: 1 }).corners[opp]);
+          lat -= (o[1] - O0[1]) / kd; lon -= (o[0] - O0[0]) / kx;
+        }
+        return { lat: lat, lon: lon, brg: B.brg, lengthNm: len, widthNm: wid, gridH: 1, gridV: 1 };
+      };
+      /* les dimensions qui posent le coin tiré sous le doigt, sur la boîte telle que cfBoxGeom la dessine (la largeur d'une boîte n'est pas la même en
+         degrés au nord et au sud : un repère plan unique se tromperait de ~0,4 % sur 20 NM) */
+      const f = ac(xy(map.unproject(T, z)));
+      let len = Math.max(DR_MIN_NM, sa * (f[0] - oa) / NM_M), wid = Math.max(DR_MIN_NM, sc * (f[1] - oc) / NM_M);
+      for (let n = 0; n < 5; n++) {
+        const q = cfBoxGeom(place(len, wid)).corners.map(c => map.project(L.latLng(c), z));
+        const e = T.subtract(q[k]);
+        const ua = q[1].subtract(q[0]), uc = q[2].subtract(q[1]), la = Math.hypot(ua.x, ua.y) || 1, lc = Math.hypot(uc.x, uc.y) || 1;
+        len = Math.max(DR_MIN_NM, len + sa * (e.x * ua.x + e.y * ua.y) / la / (la / len));
+        wid = Math.max(DR_MIN_NM, wid + sc * (e.x * uc.x + e.y * uc.y) / lc / (lc / wid));
+      }
+      len = Math.max(DR_MIN_NM, dr1(len)); wid = Math.max(DR_MIN_NM, dr1(wid));
+      if (len === B.len && wid === B.wid) { it.lat = B.lat; it.lon = B.lon; }
+      else { const nb = place(len, wid); it.lat = r7(nb.lat); it.lon = r7(nb.lon); }
+      it.lengthNm = len; it.widthNm = wid;
+      drLive();
+    },
+    end: () => drCommit()
+  };
+}
+
 /* La poignée de rotation : 40 px au-delà du milieu du bord avant, dans l'axe (à l'écran) */
 function drBoxRotPos(it) {
   const g = cfBoxGeom(it), c = cfMean(g.corners), f = DR_BOX_EDGE.front(g);
@@ -4688,6 +4739,16 @@ function drBoxHandles(it) {
     };
     h.upd();
   });
+  for (let k = 0; k < 4; k++) {
+    const h = drMk('v corner', () => L.latLng(cfBoxGeom(it).corners[k]), {});
+    const cb = drBoxCornerCb(it, k, h);
+    h.start = cb.start; h.move = cb.move; h.end = cb.end;
+    h.upd = () => {       /* au-dessus des bords ; en dessous de 88 px de côté à l'écran, le bord l'emporte */
+      const q = cfBoxGeom(it).corners.map(c => map.latLngToContainerPoint(L.latLng(c)));
+      h.mk.setZIndexOffset(Math.min(q[0].distanceTo(q[1]), q[1].distanceTo(q[2])) > 88 ? 3000 : -3000);
+    };
+    h.upd();
+  }
   let c0 = null;
   const rot = drMk('r rot', () => drBoxRotPos(it), {
     start: () => {
@@ -4701,7 +4762,8 @@ function drBoxHandles(it) {
     },
     end: () => drCommit()
   });
-  drMk('mv', () => { const m = cfMean(cfBoxGeom(it).corners); return L.latLng(m[0], m[1]); }, drMoveCb(it, [['lat', 'lon']]));
+  rot.mk.setZIndexOffset(6000);
+  drMk('mv', () => { const m = cfMean(cfBoxGeom(it).corners); return L.latLng(m[0], m[1]); }, drMoveCb(it, [['lat', 'lon']])).mk.setZIndexOffset(9000);
 }
 
 /* Refaire les poignées de ce qu'on édite : le tracé en cours, ou l'objet choisi ; keep : la poignée en cours de glisser, qui devient le sommet keepIdx */
