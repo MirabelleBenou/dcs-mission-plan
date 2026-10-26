@@ -1005,6 +1005,7 @@ select[data-tbm-src] { display: none !important; }
   .dr-tool svg { width: 21px; height: 21px; }
 }
 .dr-h.v.edge i { width: 22px; height: 10px; margin: -5px 0 0 -11px; border-radius: 2px; background: var(--paper-light); }
+.dr-h.v.corner i { width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 2px; background: var(--paper-light); border: 2px solid var(--amber-dark); }
 .dr-h.r.rot i { width: 22px; height: 22px; margin: -11px 0 0 -11px; }
 .dr-h.r.rot i::after { content: '⟳'; position: absolute; inset: 0; font: 700 15px/18px var(--f-ui); color: var(--ink); text-align: center; }
 .dr-hint .tb-btn.mq-props svg { width: 18px; height: 18px; }
@@ -1214,8 +1215,6 @@ select[data-tbm-src] { display: none !important; }
       <div class="ed-body">
         <div id="cartouche-editor"></div>
         <button class="btn-add-row" id="btn-add-cartouche" data-i18n="editor.cartouche.add">+ AJOUTER UN MARQUAGE</button>
-        <button class="btn-add-row btn-add-inset" id="btn-add-inset" data-i18n="editor.inset.add">+ AJOUTER UNE LOUPE</button>
-        <div id="inset-editor"></div>
       </div>
     </details>
 
@@ -1231,6 +1230,8 @@ select[data-tbm-src] { display: none !important; }
           <button type="button" id="btn-add-bracket" title="Crochet" data-i18n-title="editor.shapes.bracket.tooltip">⊐</button>
         </div>
         <div id="shapes-editor"></div>
+        <button class="btn-add-row btn-add-inset" id="btn-add-inset" data-i18n="editor.inset.add">+ AJOUTER UNE LOUPE</button>
+        <div id="inset-editor"></div>
         <button class="btn-add-row btn-add-inset" id="btn-add-label" data-i18n="editor.label.add" data-i18n-title="editor.label.add.tooltip">+ LABEL</button>
         <div id="label-editor"></div>
       </div>
@@ -3490,7 +3491,11 @@ function rsdMoveHandle(a, pts) {   /* ✥ : tout bouge ensemble */
 }
 function rsdEdgeIcon(h, deg) { const i = h.el.firstChild; if (i) i.style.transform = deg ? 'rotate(' + deg + 'deg)' : ''; }
 
-/* ----- le cadre : quatre barrettes de bord, la rotation, ✥ ----- */
+/* Une poignée d'angle : au-dessus des bords ; sous 88 px de plus petit côté à l'écran, le bord l'emporte (règle du Route Planner) */
+const RSD_CORNERS = [[-1, -1], [1, -1], [1, 1], [-1, 1]];
+function rsdCornerZ(h, size) { h.upd = v => { h.el.style.zIndex = size(v) > 88 ? '' : '-1'; }; }
+
+/* ----- le cadre : quatre barrettes de bord, quatre angles, la rotation, ✥ ----- */
 function rsdRectHandles(a) {
   ['l', 'r', 't', 'b'].forEach(side => {
     const horiz = side === 'l' || side === 'r';
@@ -3504,6 +3509,27 @@ function rsdRectHandles(a) {
       const s = Math.max(RSD_MIN_PX, B.s0 + d.x * B.n[0] + d.y * B.n[1]), dd = s - B.s0;
       const cx = B.g.cx + B.n[0] * dd / 2, cy = B.g.cy + B.n[1] * dd / 2;
       if (horiz) a.w = s / B.v.w; else a.h = s / B.v.h;
+      a.x = cx / B.v.w - a.w / 2; a.y = cy / B.v.h - a.h / 2;
+      rsdLive();
+    };
+    h.end = rsdCommit;
+  });
+  RSD_CORNERS.forEach(k => {
+    const sx = k[0], sy = k[1];
+    const h = rsdMk('v corner', v => { const g = rsdRectG(a, v); return rsdAtP(v, g.cx + sx * g.hw * g.ux + sy * g.hh * g.vx, g.cy + sx * g.hw * g.uy + sy * g.hh * g.vy); }, {});
+    rsdCornerZ(h, v => { const g = rsdRectG(a, v); return Math.min(2 * g.hw, 2 * g.hh); });
+    let B = null;
+    /* un angle se tire seul ; le coin opposé reste en place, l'angle ne change pas (pixels de l'écran, repère tourné du cadre, contre l'état du début du glisser) */
+    h.start = () => {
+      const v = rsdView(), g = rsdRectG(a, v);
+      B = { v: v, g: g, p: { x: g.cx + sx * g.hw * g.ux + sy * g.hh * g.vx, y: g.cy + sx * g.hw * g.uy + sy * g.hh * g.vy },
+            o: { x: g.cx - sx * g.hw * g.ux - sy * g.hh * g.vx, y: g.cy - sx * g.hw * g.uy - sy * g.hh * g.vy } };
+    };
+    h.move = d => {
+      const g = B.g, qx = B.p.x + d.x - B.o.x, qy = B.p.y + d.y - B.o.y;
+      const w = Math.max(RSD_MIN_PX, sx * (qx * g.ux + qy * g.uy)), hh = Math.max(RSD_MIN_PX, sy * (qx * g.vx + qy * g.vy));
+      const cx = B.o.x + (sx * w * g.ux + sy * hh * g.vx) / 2, cy = B.o.y + (sx * w * g.uy + sy * hh * g.vy) / 2;
+      a.w = w / B.v.w; a.h = hh / B.v.h;
       a.x = cx / B.v.w - a.w / 2; a.y = cy / B.v.h - a.h / 2;
       rsdLive();
     };
@@ -3635,7 +3661,6 @@ function rsdInsetHandles(a) {
     };
     hs.end = rsdCommit;
   });
-  rsdMk('mv src', v => rsdAtN(v, src.x + src.w / 2, src.y + src.h / 2), rsdMoveCb([[src, 'x', 'y']], b => [b[0].x, b[0].y, b[0].x + src.w, b[0].y + src.h]));
   [['l', -1, 0], ['r', 1, 0], ['t', 0, -1], ['b', 0, 1]].forEach(k => {
     const sx = k[1], sy = k[2];
     /* l'encart : un bord gauche ou droit → sa largeur, la hauteur suit, son bord haut reste ; un bord haut ou bas → sa hauteur, la largeur suit, son bord gauche reste */
@@ -3662,6 +3687,48 @@ function rsdInsetHandles(a) {
     };
     hb.end = rsdCommit;
   });
+  /* les angles de la zone source : le coin opposé reste, l'encart suit les proportions et reste dans l'image */
+  RSD_CORNERS.forEach(k => {
+    const sx = k[0], sy = k[1];
+    const h = rsdMk('v corner', v => rsdAtN(v, src.x + (sx > 0 ? src.w : 0), src.y + (sy > 0 ? src.h : 0)), {});
+    rsdCornerZ(h, v => Math.min(src.w * v.w, src.h * v.h));
+    let B = null;
+    h.start = () => { B = { v: rsdView(), s: Object.assign({}, src), b: Object.assign({}, box) }; };
+    h.move = d => {
+      const s0 = B.s, MIN = 0.03;
+      let x = s0.x, y = s0.y, w = s0.w, hh = s0.h;
+      if (sx < 0) { x = rsdCl(s0.x + d.x / B.v.w, 0, s0.x + s0.w - MIN); w = s0.x + s0.w - x; } else { w = rsdCl(s0.w + d.x / B.v.w, MIN, 1 - s0.x); }
+      if (sy < 0) { y = rsdCl(s0.y + d.y / B.v.h, 0, s0.y + s0.h - MIN); hh = s0.y + s0.h - y; } else { hh = rsdCl(s0.h + d.y / B.v.h, MIN, 1 - s0.y); }
+      const keep = { x: src.x, y: src.y, w: src.w, h: src.h }, kb = { x: box.x, y: box.y, w: box.w, h: box.h };
+      src.x = x; src.y = y; src.w = w; src.h = hh;
+      box.x = B.b.x; box.y = B.b.y; box.w = B.b.w;
+      rsdInsetFit(a);
+      if (Math.min(box.w, box.h) < 0.05) { Object.assign(src, keep); Object.assign(box, kb); return; }
+      rsdLive();
+    };
+    h.end = rsdCommit;
+  });
+  /* les angles de l'encart : le coin opposé reste ; l'encart garde les proportions de la source, sa taille suit le déplacement projeté sur la diagonale ; il reste dans l'image */
+  RSD_CORNERS.forEach(k => {
+    const sx = k[0], sy = k[1];
+    const h = rsdMk('v corner', v => rsdAtN(v, box.x + (sx > 0 ? box.w : 0), box.y + (sy > 0 ? box.h : 0)), {});
+    rsdCornerZ(h, v => Math.min(box.w * v.w, box.h * v.h));
+    let B = null;
+    h.start = () => { B = { v: rsdView(), b: Object.assign({}, box), r: src.h / src.w }; };
+    h.move = d => {
+      const b0 = B.b, r = B.r, MIN = 0.05, V = B.v;
+      const Fx = sx > 0 ? b0.x : b0.x + b0.w, Fy = sy > 0 ? b0.y : b0.y + b0.h;       /* le coin opposé, en fractions */
+      const dx = sx * b0.w * V.w, dy = sy * b0.h * V.h, len = Math.hypot(dx, dy) || 1;     /* la diagonale, en pixels */
+      const t = (d.x * dx + d.y * dy) / len;                                              /* le déplacement projeté sur elle */
+      const req = b0.w * (len + t) / len;
+      const max = Math.min(sx > 0 ? 1 - Fx : Fx, (sy > 0 ? 1 - Fy : Fy) / r), min = Math.max(MIN, MIN / r);
+      const w = Math.min(max, Math.max(min, req));
+      box.w = w; box.h = w * r; box.x = sx > 0 ? Fx : Fx - w; box.y = sy > 0 ? Fy : Fy - box.h;
+      rsdLive();
+    };
+    h.end = rsdCommit;
+  });
+  rsdMk('mv src', v => rsdAtN(v, src.x + src.w / 2, src.y + src.h / 2), rsdMoveCb([[src, 'x', 'y']], b => [b[0].x, b[0].y, b[0].x + src.w, b[0].y + src.h]));
   rsdMk('mv', v => rsdAtN(v, box.x + box.w / 2, box.y + box.h / 2), rsdMoveCb([[box, 'x', 'y']], b => [b[0].x, b[0].y, b[0].x + box.w, b[0].y + box.h]));
 }
 
