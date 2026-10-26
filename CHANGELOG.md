@@ -14,6 +14,10 @@ The suite bundles several **independently-versioned tools**, so entries are grou
 - **Tablet & mobile** first-class target (touch, drag, rotation-safe).
 - Wing configuration shared automatically across embedded tools.
 
+### `v1.14.0`
+#### Added
+- Embeds **Route Planner v1.6.0** — touch drawing in layers, resizable map in portrait (see below).
+
 ### `v1.13.0`
 #### Added
 - Embeds **Route Planner v1.5.0** — DCS towns and map search (see below).
@@ -267,6 +271,15 @@ Initial release. One-page flight datacards for the cockpit kneeboard.
 ---
 
 ## Route Planner
+
+### `v1.6.0`
+#### Added
+- **Draw mode** — a fourth button next to *Waypoint · Ref. · Read*: draw your own layers by touch — circles, zones, lines, typed points (target, DMPI, exit point, LZ…) and text. One tap places, a handle adjusts: drag a circle's radius (shown live in NM), move vertices, tap a "+" to insert one, move the whole shape. *Settings* for name, colour, line style and fill; *Copy* and *Delete*. The route fades while you draw and stays untouched.
+- **Your own layers** — create and name layers, choose the one you draw in; CombatFlite layers stay read-only, and *Copy to draw* turns one into an editable copy. Drawn layers are saved in the browser and travel in the exported file.
+- **Resizable map in portrait** — drag the bar between the map and the panel to give the map more or less room; double-tap it to restore the default. The size is remembered.
+
+#### Changed
+- The "map unavailable" banner no longer slides under the tap-mode control on phones.
 
 ### `v1.5.0`
 #### Added
