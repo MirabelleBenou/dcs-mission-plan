@@ -1423,7 +1423,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <option value="modern-east" data-i18n="theme.modern-east">Bloc Est moderne</option>
   </select>
   <div class="tb-spacer"></div>
-  <span class="tb-version">v1.4.2</span>
+  <span class="tb-version">v1.5.0</span>
   <button class="tb-lang-btn" id="btn-lang" data-i18n-title="tb.lang.tip" title="Switch language / Changer de langue">🇬🇧</button>
 </header>
 
@@ -1965,6 +1965,13 @@ const I18N = {
     'ph.navDisplay.decl': '3,5',
     'nav.decl.help': 'en degrés, + vers l\'Est ; lue au CDU de l\'A-10C (POSINFO), au DED du F-16 (MVAR) ou à l\'HSI du F/A-18',
     'nav.decl.warn': 'Déclinaison manquante : cap vrai affiché',
+    'f.nav.vmode': 'Déclinaison',
+    'nav.vmode.calc': 'Calculée',
+    'nav.vmode.manual': 'Saisie',
+    'nav.vy.date': 'Année {a} · champ Date',
+    'nav.vy.def': 'Année 1985 par défaut · champ Date vide',
+    'nav.vy.pre': ' · avant 1985 : modèle de 1985',
+    'nav.vy.model': 'Modèle de DCS (WMM {e}), par branche au point de départ',
     'f.nav.coord': 'Coordonnées',
     'ph.nav.*.coord': '36S VD 47535 77241',
     'nav.coord.bad': '✗ Format non reconnu',
@@ -1978,6 +1985,8 @@ const I18N = {
     'dc.h.coord': 'COORDONNÉES',
     'dc.b.nav.true': 'NAVIGATION · CAP VRAI',
     'dc.b.nav.mag': 'NAVIGATION · CAP MAGNÉTIQUE · DÉCL. {d}° {h}',
+    'dc.b.nav.calc': 'NAVIGATION · CAP MAGNÉTIQUE · VAR {a} ({min} à {max}°)',
+    'dc.b.nav.calc1': 'NAVIGATION · CAP MAGNÉTIQUE · VAR {a} ({v}°)',
     'f.radio.name': 'Poste',
     'f.radio.channel': 'Canal',
     'f.radio.label': 'Usage',
@@ -2251,6 +2260,13 @@ const I18N = {
     'ph.navDisplay.decl': '3,5',
     'nav.decl.help': 'in degrees, + East; read on the A-10C CDU (POSINFO), the F-16 DED (MVAR) or the F/A-18 HSI',
     'nav.decl.warn': 'Variation missing: true heading shown',
+    'f.nav.vmode': 'Variation',
+    'nav.vmode.calc': 'Computed',
+    'nav.vmode.manual': 'Entered',
+    'nav.vy.date': 'Year {a} · Date field',
+    'nav.vy.def': 'Year 1985 by default · Date field empty',
+    'nav.vy.pre': ' · before 1985: 1985 model',
+    'nav.vy.model': 'DCS model (WMM {e}), per leg at its start point',
     'f.nav.coord': 'Coordinates',
     'ph.nav.*.coord': '36S VD 47535 77241',
     'nav.coord.bad': '✗ Format not recognized',
@@ -2264,6 +2280,8 @@ const I18N = {
     'dc.h.coord': 'COORDINATES',
     'dc.b.nav.true': 'NAVIGATION · TRUE HEADING',
     'dc.b.nav.mag': 'NAVIGATION · MAGNETIC HEADING · VAR {d}° {h}',
+    'dc.b.nav.calc': 'NAVIGATION · MAGNETIC HEADING · VAR {a} ({min} to {max}°)',
+    'dc.b.nav.calc1': 'NAVIGATION · MAGNETIC HEADING · VAR {a} ({v}°)',
     'f.radio.name': 'Radio',
     'f.radio.channel': 'Channel',
     'f.radio.label': 'Use',
@@ -2722,13 +2740,154 @@ function readNum(s) {
   return m ? parseFloat(m[1].replace(',', '.')) : null;
 }
 
+/* ===== DÉCLINAISON MAGNÉTIQUE (WMM, comme DCS) ===== */
+/* Le modèle est celui des fichiers Data/MagVar/COF de DCS World : les World Magnetic Models de la NOAA (domaine public),
+   un jeu de coefficients tous les cinq ans, de 1985.0 à 2025.0 (degré 12). Table : par époque, 90 termes (n = 1 … 12,
+   m = 0 … n) × quatre valeurs (g, h, ġ, ḣ) en dixièmes de nT et de nT/an, en base 36. */
+const MAG_EPOCHS = [1985, 1990, 1995, 2000, 2005, 2010, 2015, 2020, 2025];
+const MAG_TABLE = {
+  1985: '-6ejy 0 63 0 -eop 16d5 2y -8r -fz6 0 -34 0 ngo -gw3 i -2p d3b -2eo 2l -5j a27 0 2b 0 -gzy -2e7 -k 1p 9kx 26i -6 d 6h6 -2b4 o -3m 77e 0 -c 0 616 1r4 1 d 2rq -1wj -2p 10 -39x k5 -h p 19p -2b3 -2l 6 -1o4 0 e 0 2q2 c2 -5 -9 1yn 156 -c 6 -q1 -170 -m 3 -17r -jy 9 o -ck pf 0 -e es 0 v 0 hq -3f 0 7 e9 of i -l -1gc iu -2 -e x -e7 -4 -17 5n -14 o -7 -s9 5s i 0 ld 0 -1 0 -gv -m9 -8 0 7 -77 -c c 72 -9 b k -29 60 0 q 1x 55 6 9 1y -5k -i 8 -18 -25 -c 4 54 0 2 0 1f 12 0 -6 c -5m 7 -f -3c 1e 1 1 -2j -6q 2 -b 1 3e -3 4 1b 24 -1 -k 1t -4j 2 9 -2n -31 -m f 1l 0 0 0 31 -5s 0 0 9 4e 0 0 -3e 2i 0 0 2n -1e 0 0 -x -1s 0 0 -a 2j 0 0 1t 2r 0 0 f -1m 0 0 -1c n 0 0 -y 0 0 0 -1b c 0 0 p 4 0 0 -1j p 0 0 -l 1k 0 0 1a -18 0 0 w -5 0 0 6 -g 0 0 j 11 0 0 s -5 0 0 -2 -1p 0 0 n 0 0 0 -8 d 0 0 -k k 0 0 l -b 0 0 2 -s 0 0 -4 7 0 0 -4 -1 0 0 g -o 0 0 f -4 0 0 -7 -f 0 0 n -f 0 0 z 7 0 0 -i 0 0 0 0 3 0 0 1 6 0 0 -3 p 0 0 5 -h 0 0 5 3 0 0 -6 2 0 0 -4 -1 0 0 0 1 0 0 -5 1 0 0 0 -e 0 0 7 4 0 0 -2 7 0 0',
+  1990: '-6d65 0 4g 0 -ead 15q0 2l -3u -ggv 0 -39 0 nmm -hkv 11 -3k d1z -2yr i -45 a4p 0 l 0 -hbj -275 -24 v 9mc 291 0 8 68m -2pw -1m -35 77b 0 -8 0 621 1xa a x 2hv -1sn -22 11 -395 pd 8 s 12o -2ad -1s 0 -1lv 0 h 0 2pu bc 0 0 1wh 15b 0 -l -us -16y -r c -193 -is 0 c -ac r2 u 6 ge 0 8 0 hp -43 0 -6 go mu f -6 -1ed jg 0 0 4 -fm 0 -n 4a -e 0 0 -qo 6u 0 0 l5 0 5 0 -h9 -lu 0 6 d -7f -9 8 8e 1 f 0 1b 5j r 0 27 4z -a 0 2t -5z 0 4 j -1w 0 0 6d 0 0 0 n 2p -b 4 -c -5d 0 -8 -39 1u 0 5 -4v -5l -l 3 m 3q 0 5 1l 2q a 0 u -5a 0 -7 -1y -2j 0 0 10 0 0 0 2n -63 0 0 -9 3z 0 0 -2z 2n 0 0 2z -1v 0 0 -w -1s 0 0 -e 2j 0 0 1r 2h 0 0 8 -28 0 0 -1j l 0 0 -x 0 0 0 -q q 0 0 19 c 0 0 -1k q 0 0 -10 1l 0 0 13 -14 0 0 w -4 0 0 h -h 0 0 u 12 0 0 11 -8 0 0 7 -1t 0 0 d 0 0 0 -e 0 0 0 -p a 0 0 w -g 0 0 2 -m 0 0 -b b 0 0 3 -7 0 0 -3 -h 0 0 9 -f 0 0 -b -d 0 0 o -b 0 0 u 6 0 0 -d 0 0 0 1 7 0 0 5 1y 0 0 7 d 0 0 4 -f 0 0 -2 3 0 0 -b 2 0 0 9 -b 0 0 -6 c 0 0 8 -2 0 0 2 -d 0 0 4 6 0 0 2 1o 0 0',
+  1995: '-6d11 0 4w 0 -dr2 150k 3o -50 -gxn 0 -3t 0 nr6 -i7b 14 -42 d09 -38a -3 -20 a6c 0 8 0 -hjk -20j -1u 14 9md 2bm -5 m 5wv -37p -2d -3i 794 0 c 0 61h 202 b d 28t -1s5 -1w a -38d rq 3 p vm -2d1 -19 -c -1m7 0 9 0 2qc c5 5 5 1u6 17s -e f -xx -15p -h 6 -198 -gg 0 h -6h t0 l 6 j1 0 4 0 i8 -48 -3 7 ht kn 3 -f -1az ja l -5 -5 -fd 0 -7 4l u -4 b -pa 99 -4 q lo 0 -3 0 -ix -l5 -b 3 1 -6t -5 0 88 g 5 7 1o 5k d -6 2f 4l 1 1 2k -6k 0 -6 -o -1w -9 -4 6v 0 1 0 y 45 0 4 -f -5f 4 -3 -2o 1r 3 1 -4l -5o -d 8 q 3e 5 -1 10 1y 4 -d -1d -5a -9 -9 -2d -2g 1 -b t 0 0 0 23 -5i 0 0 4 42 0 0 -2v 31 0 0 2p -23 0 0 -n -1w 0 0 -o 2l 0 0 1w 25 0 0 -5 -29 0 0 -1t q 0 0 -t 0 0 0 -x w 0 0 s h 0 0 -17 t 0 0 -v 1k 0 0 o -y 0 0 s -7 0 0 7 -t 0 0 15 n 0 0 10 -g 0 0 6 -1u 0 0 h 0 0 0 -g 3 0 0 -10 a 0 0 c -10 0 0 -6 -e 0 0 1 j 0 0 -7 2 0 0 -8 -d 0 0 d -o 0 0 -3 -6 0 0 m -m 0 0 16 d 0 0 -i 0 0 0 9 3 0 0 -1 e 0 0 -5 8 0 0 8 -u 0 0 2 7 0 0 5 5 0 0 4 -8 0 0 -4 6 0 0 3 1 0 0 2 -d 0 0 4 -4 0 0 6 9 0 0',
+  2000: '-6cio 0 43 0 -daj 142x 33 -5o -hhn 0 -3s 0 nou -j68 -7 -5z cy0 -3lz -i -2o a7c 0 3 0 -hoj -1qf -17 1s 9ov 29e 9 -d 5lc -3r5 -2c -3p 76x 0 -g 0 62f 23x 9 n 1xm -1rb -24 7 -33j xl m 11 ti -2c3 -w -5 -1mv 0 -9 0 2po bo -2 0 1pc 1ca -p l -11d -11i -r n -1aw -aq -9 v -3p t8 h 0 ki 0 c 0 iy -4u 2 -3 kl h0 h -h -19f hk g -9 -12 -hh -1 -a 4r 2 -3 -1 -nn by 8 j li 0 -4 0 -kj -hb -8 e m -6t -2 2 9x 2h b 7 21 6i 4 4 1g 46 0 -3 2c -7o -2 -8 -f -26 -2 -1 6h 0 -3 0 21 3g 6 -5 -2d -5s -8 1 -1u 2c 3 -2 -4p -5w -2 0 2e 4b 5 1 1d 2j 0 -1 -26 -4b -6 3 -24 -1i 1 2 1l 0 0 0 2d -5o 0 0 k 3v 0 0 -2q 3c 0 0 24 -1q 0 0 -1y -2e 0 0 -k 2m 0 0 2k 1e 0 0 -m -2c 0 0 -1u w 0 0 -m 0 0 0 -1l 9 0 0 g -7 0 0 -11 13 0 0 -6 1c 0 0 15 -1h 0 0 m -a 0 0 m -o 0 0 1a d 0 0 n -n 0 0 1 -1s 0 0 x 0 0 0 -b -f 0 0 -o 7 0 0 q -b 0 0 -d -n 0 0 -h d 0 0 -6 -6 0 0 4 -s 0 0 7 -g 0 0 -3 -1 0 0 n -j 0 0 16 e 0 0 -f 0 0 0 -2 -a 0 0 -3 7 0 0 5 m 0 0 2 -p 0 0 9 -2 0 0 -e 0 0 0 6 -2 0 0 -6 0 0 0 -a 2 0 0 -3 -9 0 0 3 -2 0 0 4 a 0 0',
+  2005: '-6c28 0 28 0 -cwd 1372 2y -5t -i26 0 -47 0 nid -k0r -26 -6g csa -3zj -8 -42 aay 0 4 0 -hsb -1jj -q 1e 9mb 22t -c -1y 578 -41m -1t -6 73i 0 -p 0 65p 267 s m 1mp -1qs -1y g -2xe 14i 1q 1m rs -2cn -12 1 -1r6 0 -s 0 2qi bs 7 0 1lz 1dy -w h -11x -y6 -b l -1ar -5f 1 1c -3x ss -8 -b kc 0 -7 0 jd -5n 4 -6 lb f7 -3 -j -160 ho n -4 -45 -hm -l -5 42 -1 -6 -3 -nz e0 e 7 m9 0 2 0 -kp -h3 -1 6 -e -68 -3 4 ap 20 b 2 3g 72 6 3 2n 32 5 -8 1l -7c -4 -2 i -1f 6 1 6x 0 1 0 25 34 3 -2 -38 -5u -4 1 -1x 2o 3 3 -52 -5i -3 4 2s 4h 2 1 2k 25 4 -2 -38 -3l -7 4 -1g -2 4 4 1k 0 0 0 2r -5l 0 0 z 3l 0 0 -1y 3i 0 0 1f -1v 0 0 -30 -29 0 0 -d 28 0 0 2g t 0 0 -1v -27 0 0 -2j 1o 0 0 -n 0 0 0 -1r o 0 0 g 2 0 0 -q 18 0 0 0 1c 0 0 v -1t 0 0 4 -b 0 0 l -y 0 0 13 -8 0 0 -1 -n 0 0 -n -27 0 0 s 0 0 0 -g 3 0 0 -h c 0 0 h -8 0 0 -1 -p 0 0 1 9 0 0 -7 -6 0 0 7 -r 0 0 i -9 0 0 0 -d 0 0 b -k 0 0 15 -c 0 0 -o 0 0 0 -4 -4 0 0 2 3 0 0 8 o 0 0 -3 -q 0 0 b 6 0 0 -5 3 0 0 4 0 0 0 -3 0 0 0 -3 3 0 0 -1 -9 0 0 -3 -4 0 0 -1 8 0 0',
+  2010: '-6bli 0 38 0 -c8n 125g 4l -77 -ihq 0 -3d 0 ncl -kw5 -18 -69 cvi -4g1 j -3a ac9 0 4 0 -hy6 -18i -15 21 9i7 1xz -t -13 4w4 -452 -25 -q 71i 0 -i 0 68p 27k n b 1ab -1mo -2f r -2r7 19n 1a 13 ou -2dv -l -8 -1s5 0 -a 0 2r8 ce 6 4 1jn 1gh -i i -137 -wu -a c -19a 0 9 14 -26 s1 a -6 k8 0 -2 0 j2 -5s -2 -2 l4 c9 -1 -l -13a h3 k -4 -6c -if -h -6 3o v -3 5 -ln fa h 9 md 0 1 0 -kv -g3 -1 7 -1b -5v -6 3 cl 1t d -1 3v 6x 4 -1 2w 1y 3 -8 h -7p -7 -3 1d -x 6 3 6s 0 -1 0 29 32 1 -1 -41 -5k -6 2 -1k 3b 2 4 -5d -4u -2 4 37 4n 3 1 31 1y 3 -1 -3x -30 -6 4 -11 h 2 3 1i 0 0 0 2m -5p -1 0 y 37 0 -2 -1g 3k 3 0 v -20 -4 -1 -3g -22 -3 1 -7 28 1 0 2c l -1 -2 -2d -1p -4 3 -2t 1y -2 2 -k 0 0 0 -1r s 0 1 9 -1 -1 -1 -b 1b 2 0 -2 18 0 -1 p -20 -1 -1 -3 -a -2 0 m -13 0 -1 v -k -1 -2 -a -k -2 0 -s -2b -2 -1 u 0 0 0 -f 2 0 0 -l h 0 1 h -6 1 0 -5 -i 0 1 5 9 0 0 -8 -4 0 1 4 -p 0 0 i -d 0 -1 1 -l 0 -1 7 -j -1 0 12 -i 0 -1 -m 0 0 0 -2 -9 0 0 3 3 1 0 a l 1 0 -6 -p -1 0 9 5 0 0 -1 6 0 1 5 0 0 0 -4 1 0 0 -4 3 0 0 2 -9 0 0 -8 -2 -1 0 0 9 1 0',
+  2015: '-6b5d 0 2z 0 -bkz 110a 4z -7g -iv9 0 -2e 0 n8t -lyg -x -7j cxq -4yc o -3p afb 0 v 0 -i5f -w1 -1q 2c 9gg 1w2 -4 -4 4hn -45j -2w n 700 0 -4 0 6a1 26q 8 -6 xf -1ge -2k 1h -2l2 1e9 14 u jj -2jj -16 -1h -1sm 0 -2 0 2s1 d6 1 4 1hg 1ip -e g -136 -x6 0 -b -17q 4h d x 17 rt 12 1 jb 0 -5 0 iq -5r -2 0 k8 98 -6 -m -102 gc o -7 -82 -ih -b 1 3o 21 3 a -jp hd f d mo 0 2 0 -l5 -f1 -2 7 -1w -5e -4 5 ef 1k d -2 46 6s 2 -1 2l x -4 -7 -s -7n -9 1 1v -n 3 1 6o 0 0 0 2e 2u 1 -3 -4p -51 -5 3 -w 3o 5 3 -5q -42 -2 6 3p 4i 4 -1 39 1l 2 -2 -4g -2j -4 3 -k m 3 0 1i 0 0 0 2g -60 -1 -2 v 30 -1 -1 -v 39 4 -2 6 -1w -5 1 -3p -1x -2 1 -1 26 1 0 2f a 0 -2 -2j -13 -2 4 -2x 2d -1 3 -j 0 0 0 -1t x 0 1 2 -3 -1 -1 6 1a 3 0 -6 18 -1 0 h -27 -1 -2 -7 -6 -1 1 l -15 0 -1 n -s -2 -2 -i -b -1 1 -10 -2f -2 -1 v 0 0 0 -f -1 0 0 -n l -1 1 l -7 1 0 -9 -b 0 1 6 7 0 0 -7 -2 0 0 2 -l 0 1 h -f 0 0 -2 -p 0 -1 4 -k -1 0 z -n -1 -1 -k 0 1 0 -3 -a 0 0 4 5 0 0 d i 1 -1 -9 -m -1 0 9 3 0 0 1 7 1 0 5 -1 0 0 -4 3 0 0 -4 2 0 0 2 -9 0 0 -9 -2 0 0 0 7 0 0',
+  2020: '-6avx 0 1v 0 -b6z zwh 25 -6z -jag 0 -37 0 n0c -n30 -1z -8e cxs -5o4 -m -6n aiv 0 s 0 -ide -mu -1q 1l 9je 1v6 y -a 421 -46t -3e b 6yv 0 -b 0 68u 26c -g 2 ny -180 -1o 1x -2dy 1ji 1i 11 db -2p9 -1j -1k -1t4 0 -3 0 2sv d9 6 1 1g6 1lw -7 p -133 -xp 1 -9 -160 8y c u 3t rj a 5 ib 0 -6 0 i8 -5b -4 1 ka 6y 5 -i -xr en e -e -a2 -hw -e 9 3r 2i 0 1 -hz ix 8 a me 0 -1 0 -lc -ea -3 5 -2b -4o -1 6 fp n 7 -7 4e 6j 2 -2 1s -m -5 -c -20 -7k -8 2 2q -j a 3 6k 0 -1 0 2q 2c 1 -3 -4v -49 -1 7 -4 3k 5 -2 -5v -3a -1 5 49 45 4 -3 3t 10 5 -5 -4l -1x 0 4 -3 s 4 1 1e 0 -1 0 2a -6h -2 -3 t 33 0 2 -e 2q 4 -4 -b -1f -3 4 -3p -1q 0 1 b 26 3 0 2h 4 0 -2 -2l -f 0 5 -3b 2p -4 2 -j 0 0 0 -1q y 0 0 -1 -2 0 1 h z 2 -3 -9 1c -1 1 6 -2e -2 -2 -9 -1 0 1 j -16 -1 0 e -y -2 -1 -o -1 -1 2 -13 -2g 0 0 u 0 0 0 -e 0 -1 0 -p q 0 1 o -5 0 0 -9 -4 0 2 3 6 -1 0 -7 -2 0 0 -1 -h 0 1 e -g -1 0 -6 -u -1 -1 2 -k -1 0 v -q -1 0 -k 0 0 0 -1 -c 0 0 5 5 0 0 d d 0 -1 -c -i 0 1 7 1 0 0 3 7 0 0 5 -1 0 0 -2 6 0 1 -5 2 0 0 1 -9 0 0 -b 0 0 0 -3 5 -1 -1',
+  2025: '-6aha 0 3c 0 -avw z2m 2p -5z -jq6 0 -38 0 mrr -o6g -1g -7p cq5 -6af -28 -3d ai2 0 -d 0 -ijt -fq -16 14 9li 1tz 4 -3 3i0 -48n -4c -15 6wm 0 -g 0 663 25e -o -b fh -117 -1o 15 -263 1mw 1k g 3d -2wc -1y -18 -1ss 0 6 0 2uh cm e -5 1g0 1p6 0 m -12j -y5 6 4 -13g by m h 5t th 9 j hw 0 -2 0 hq -54 -4 3 ld 4o 9 -g -w5 dk c -4 -bd -gm -9 9 45 31 3 7 -gv k7 9 9 m3 0 0 0 -le -dl -1 6 -2g -40 -1 5 gh -a 5 -8 4e 6i -1 0 p -22 -8 -a -33 -6z -8 6 3y -n 8 -2 6g 0 -1 0 30 1z 2 -2 -4v -3i 0 5 k 36 5 -4 -61 -2p -1 4 4p 3j 3 -5 46 7 2 -6 -4o -1g 0 3 9 13 2 2 1a 0 0 0 26 -6w -1 -3 u 3e 1 3 -2 2b 3 -3 -p -x -3 3 -3n -1g 0 2 o 20 3 -1 2e -6 -1 -2 -2f 8 1 4 -3l 2s -1 1 -d 0 1 0 -1s x 0 0 2 0 1 0 k o 1 -2 -a 1h 0 1 -6 -2j -3 -1 -9 4 0 1 f -16 -1 0 9 -12 -1 -1 -r 9 0 2 -13 -2j 0 0 t 0 0 0 -f 0 0 0 -p t 0 1 o -6 0 0 -6 2 0 1 -1 5 -1 0 -6 -3 0 0 -1 -c 0 1 b -h -1 0 -a -t -1 0 -2 -i -1 0 q -n -1 0 -k 0 0 0 -2 -d 0 0 3 7 0 0 c a 0 -1 -d -e 0 1 6 0 0 0 6 6 1 0 5 -1 0 0 -1 8 0 0 -4 1 0 0 -2 -a -1 0 -d 1 0 0 -7 2 -1 -1'
+};
+const MAG_COEF = {};
+
+/* Les 360 coefficients d'une époque, décodés une fois */
+function magCoef(ep) {
+  if (!MAG_COEF[ep]) MAG_COEF[ep] = MAG_TABLE[ep].split(' ').map(s => parseInt(s, 36) / 10);
+  return MAG_COEF[ep];
+}
+
+/* L'année décimale d'une date texte : AAAA-MM-JJ, AAAA-MM (le 1er du mois) ou AAAA (le 1er juillet) ; null si elle ne se lit pas */
+function magDecYear(s) {
+  if (typeof s !== 'string') return null;
+  const m = /^\s*(\d{4})(?:-(\d{2})(?:-(\d{2}))?)?\s*$/.exec(s);
+  if (!m) return null;
+  const y = +m[1];
+  const leap = (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+  const dm = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  const mo = m[2] === undefined ? 7 : +m[2];
+  const da = m[3] === undefined ? 1 : +m[3];
+  if (mo < 1 || mo > 12 || da < 1 || da > dm[mo - 1]) return null;
+  let doy = da;
+  for (let i = 0; i < mo - 1; i++) doy += dm[i];
+  return y + (doy - 1) / (leap ? 366 : 365);
+}
+
+/* L'époque des coefficients : la plus grande de 1985, 1990 … 2025 qui soit ≤ y ; 1985 avant 1985 */
+function magEpoch(y) {
+  let e = MAG_EPOCHS[0];
+  for (let i = 0; i < MAG_EPOCHS.length; i++) if (MAG_EPOCHS[i] <= y) e = MAG_EPOCHS[i];
+  return e;
+}
+
+/* La déclinaison magnétique en degrés (+ vers l'Est) au niveau de la mer, à la position géodésique (lat, lon) et à l'année décimale y.
+   Coefficients de l'époque : g + ġ·dt, dt = y − époque borné à [0, 5] ; synthèse en harmoniques sphériques de degré 12 (Schmidt,
+   rayon de référence 6 371,2 km) ; WGS84 → géocentrique, puis X et Z ramenés au repère géodésique avant l'angle (NOAA, WMM). */
+function magVar(lat, lon, y) {
+  if (typeof lat !== 'number' || typeof lon !== 'number' || typeof y !== 'number' || !isFinite(lat + lon + y) || Math.abs(lat) > 90) return null;
+  const R = Math.PI / 180, N = 12;
+  const ep = magEpoch(y), dt = Math.min(5, Math.max(0, y - ep)), C = magCoef(ep);
+  const la = Math.max(-89.9999, Math.min(89.9999, lat));
+  const A = 6378.137, F = 1 / 298.257223563, E2 = F * (2 - F), RE = 6371.2;
+  const sg = Math.sin(la * R);
+  const rc = A / Math.sqrt(1 - E2 * sg * sg);
+  const px = rc * Math.cos(la * R), pz = rc * (1 - E2) * sg;
+  const rr = Math.sqrt(px * px + pz * pz);
+  const x = pz / rr, z = px / rr;                       /* sin et cos de la latitude géocentrique */
+  const psi = Math.asin(x) - la * R;
+  /* Legendre (Gauss) et dérivée par rapport à la latitude, puis passage à la semi-normalisation de Schmidt */
+  const P = [1], D = [0];
+  for (let n = 1; n <= N; n++) {
+    for (let m = 0; m <= n; m++) {
+      const i = n * (n + 1) / 2 + m;
+      if (n === m) {
+        const j = (n - 1) * n / 2 + m - 1;
+        P[i] = z * P[j]; D[i] = z * D[j] + x * P[j];
+      } else if (n === 1 && m === 0) {
+        P[i] = x * P[0]; D[i] = x * D[0] - z * P[0];
+      } else {
+        const j1 = (n - 2) * (n - 1) / 2 + m, j2 = (n - 1) * n / 2 + m;
+        if (m > n - 2) { P[i] = x * P[j2]; D[i] = x * D[j2] - z * P[j2]; }
+        else {
+          const k = ((n - 1) * (n - 1) - m * m) / ((2 * n - 1) * (2 * n - 3));
+          P[i] = x * P[j2] - k * P[j1]; D[i] = x * D[j2] - z * P[j2] - k * D[j1];
+        }
+      }
+    }
+  }
+  const Q = [1];
+  for (let n = 1; n <= N; n++) {
+    const i0 = n * (n + 1) / 2;
+    Q[i0] = Q[(n - 1) * n / 2] * (2 * n - 1) / n;
+    for (let m = 1; m <= n; m++) Q[i0 + m] = Q[i0 + m - 1] * Math.sqrt((n - m + 1) * (m === 1 ? 2 : 1) / (n + m));
+  }
+  const lm = lon * R;
+  let bx = 0, by = 0, bz = 0;
+  for (let n = 1; n <= N; n++) {
+    const rn = Math.pow(RE / rr, n + 2);
+    for (let m = 0; m <= n; m++) {
+      const i = n * (n + 1) / 2 + m, k = 4 * (i - 1);
+      const g = C[k] + C[k + 2] * dt, h = C[k + 1] + C[k + 3] * dt;
+      const cm = Math.cos(m * lm), sm = Math.sin(m * lm), pq = P[i] * Q[i], dq = -D[i] * Q[i];
+      bz -= rn * (g * cm + h * sm) * (n + 1) * pq;
+      by += rn * (g * sm - h * cm) * m * pq;
+      bx -= rn * (g * cm + h * sm) * dq;
+    }
+  }
+  by /= z;
+  const bxg = bx * Math.cos(psi) - bz * Math.sin(psi);
+  return Math.atan2(by, bxg) / R;
+}
+
+/* L'année d'une route et sa source : { src: 'mission' | 'forced' | 'typed' | 'default', y (décimale), year (AAAA, texte),
+   file, date } ; la mission est celle de HQ (mission_snapshot_v1), prise si son théâtre est celui de la route et sa date se lit,
+   sauf si « Forcer » est enfoncé avec une année saisie valide (quatre chiffres, de 1900 à 2099) ; sinon la saisie, sinon 1985. */
+function magYearSource(theatre, yearStr, force) {
+  let mis = null;
+  try {
+    const o = JSON.parse(localStorage.getItem('mission_snapshot_v1'));
+    const sm = o && o.sourceMission;
+    if (sm && typeof sm === 'object' && sm.theatre === theatre && typeof sm.missionDate === 'string' && magDecYear(sm.missionDate) != null) {
+      mis = { file: typeof sm.filename === 'string' ? sm.filename : '', date: sm.missionDate.trim(), y: magDecYear(sm.missionDate) };
+    }
+  } catch (e) { /* aucune mission lisible */ }
+  const ys = (typeof yearStr === 'string' && /^\d{4}$/.test(yearStr) && +yearStr >= 1900 && +yearStr <= 2099) ? yearStr : '';
+  if (mis && !(force === true && ys)) return { src: 'mission', y: mis.y, year: String(Math.floor(mis.y)), file: mis.file, date: mis.date };
+  if (ys) return { src: mis ? 'forced' : 'typed', y: magDecYear(ys), year: ys, file: mis ? mis.file : '', date: '' };
+  return { src: 'default', y: magDecYear('1985'), year: '1985', file: '', date: '' };
+}
+/* ===== FIN DE LA DÉCLINAISON MAGNÉTIQUE ===== */
+/* La déclinaison des caps d'une datacard : null (cap vrai, ou saisie illisible) ; { decl } saisie ; { calc: true, y } calculée,
+   y étant l'année décimale du champ Date (1985, le 1er juillet, s'il est vide ou illisible) */
+function navVar(c) {
+  const nd = c.navDisplay;
+  if (nd.ref !== 'mag') return null;
+  if (nd.vmode === 'manual') { const d = parseDecl(nd.decl); return d == null ? null : { decl: d }; }
+  const y = magDecYear(c.meta.date);
+  return { calc: true, y: y == null ? magDecYear('1985') : y, dated: y != null };
+}
+/* La déclinaison (°, + vers l'Est) au point pt */
+function varAt(nv, pt) { return nv.calc ? magVar(pt.lat, pt.lon, nv.y) : nv.decl; }
+/* Une déclinaison au dixième : signe − (U+2212) ou +, virgule en FR, aucun signe pour 0,0 */
+function fmtVar(v) {
+  const r = Math.round(v * 10) / 10;
+  const x = Math.abs(r).toFixed(1);
+  const d = CURRENT_LANG === 'fr' ? x.replace('.', ',') : x;
+  return r === 0 ? d : (r < 0 ? '\u2212' : '+') + d;
+}
+
 /* Pour chaque point de c.nav (même indice) : { pt, est, estDir, calc, blank } — pt : coordonnée saisie lue (ou null) ;
    est : coordonnées estimées par le cap et la distance saisis (ou null), estDir 'prev' (vers l'avant) ou 'next' (à rebours) ;
    calc : { cap, dist } (chaînes) quand la branche (point précédent non vide → ce point) est calculable, sinon null. */
 function navLegs(c) {
-  const nd = c.navDisplay;
-  const decl = nd.ref === 'mag' ? parseDecl(nd.decl) : null;
-  const useMag = decl != null;
+  const nv = navVar(c);
   const nm = c.units.distance === 'nm';
   const out = [];
   let prev = null;
@@ -2739,23 +2898,24 @@ function navLegs(c) {
     if (!blank) {
       if (prev && prev.pt && pt) {
         const L = legCalc(prev.pt, pt);
-        let brg = L.brg;
-        if (useMag) brg = ((brg - decl) % 360 + 360) % 360;
+        let brg = L.brg, dv = null;
+        if (nv) { dv = varAt(nv, prev.pt); brg = ((brg - dv) % 360 + 360) % 360; }    /* la déclinaison du point de départ de la branche */
         const d = nm ? L.km / NAV_NM_KM : L.km;
-        calc = { cap: fmtHdg(brg), dist: String(Math.round(d)) };
+        calc = { cap: fmtHdg(brg), dist: String(Math.round(d)), v: dv };
       }
     }
     const o = { pt: pt, est: null, estDir: '', calc: calc, blank: blank };
     out.push(o);
     if (!blank) prev = o;
   });
-  /* Cap et distance saisis d'un point, lus : { brg (vrai), km } ou null */
-  const leg = i => {
+  /* Cap et distance saisis d'un point, lus : { brg (vrai), km } ou null ; le cap saisi est magnétique : cap vrai = cap + la déclinaison
+     de base, le point connu dont on part (le précédent, ou à rebours le suivant) */
+  const leg = (i, base) => {
     const r = c.nav[i];
     const cap = readNum(r.course), dist = readNum(r.distance);
     if (cap == null || dist == null || cap > 360 || !(dist > 0)) return null;
     let brg = cap;
-    if (useMag) brg = (cap + decl) % 360;
+    if (nv) brg = (cap + varAt(nv, base)) % 360;
     return { brg: brg, km: nm ? dist * NAV_NM_KM : dist };
   };
   const live = out.map((o, i) => i).filter(i => !out[i].blank);
@@ -2763,27 +2923,20 @@ function navLegs(c) {
   live.forEach((i, k) => {
     const o = out[i];
     if (o.pt || k === 0) return;
-    const p = out[live[k - 1]], base = p.pt || p.est, L = leg(i);
+    const p = out[live[k - 1]], base = p.pt || p.est, L = base ? leg(i, base) : null;
     if (base && L) { o.est = legDest(base, L.brg, L.km); o.estDir = 'prev'; }
   });
   /* à rebours : le point suivant est placé et la branche saisie sur lui est lisible */
   for (let k = live.length - 2; k >= 0; k--) {
     const o = out[live[k]], n = out[live[k + 1]];
     if (o.pt || o.est) continue;
-    const base = n.pt || n.est, L = leg(live[k + 1]);
+    const base = n.pt || n.est, L = base ? leg(live[k + 1], base) : null;
     if (base && L) {
       const x = legOrigin(base, L.brg, L.km);
       if (x) { o.est = x; o.estDir = 'next'; }
     }
   }
   return out;
-}
-
-/* Valeur de l'en-tête du bloc : { mag, decl } selon le réglage et la déclinaison lisible */
-function navHeadingRef(c) {
-  const nd = c.navDisplay;
-  const decl = nd.ref === 'mag' ? parseDecl(nd.decl) : null;
-  return { mag: decl != null, decl: decl };
 }
 
 /* ============= MODÈLE ============= */
@@ -2800,7 +2953,7 @@ function newCard() {
     times: defaultTimes(),
     crew: [],
     nav: [],
-    navDisplay: { mode: 'course', ref: 'true', decl: '' },
+    navDisplay: { mode: 'course', ref: 'true', decl: '', vmode: 'calc' },
     refs: [],
     radios: [],
     fields: [],
@@ -2831,6 +2984,12 @@ function normCount(v) {
 
 function normStrList(arr, max) {
   return arr.slice(0, max).map(str);
+}
+
+/* Le mode de la déclinaison lu : gardé s'il est connu ; sinon « Saisie » quand une valeur saisie se lit (une carte d'avant ce mode
+   ne change pas), « Calculée » sinon */
+function readVMode(v, decl) {
+  return (v === 'calc' || v === 'manual') ? v : (parseDecl(decl) != null ? 'manual' : 'calc');
 }
 
 /* Fusion d'une carte lue sur une carte neuve : champ absent → valeur neuve ; champ inconnu → ignoré. */
@@ -2874,6 +3033,7 @@ function normalizeCard(src) {
     if (NAV_MODES.indexOf(nd.mode) !== -1) c.navDisplay.mode = nd.mode;
     if (NAV_REFS.indexOf(nd.ref) !== -1) c.navDisplay.ref = nd.ref;
     if ('decl' in nd) c.navDisplay.decl = str(nd.decl);
+    c.navDisplay.vmode = readVMode(nd.vmode, c.navDisplay.decl);
   }
   if (Array.isArray(src.refs)) {
     c.refs = src.refs.slice(0, LIMITS.refs).map(o => ({
@@ -3265,9 +3425,17 @@ function blkNav(c) {
   let title = t('dc.b.nav'), head, body;
   if (mode === 'course') {
     const calcAny = shown.some(x => x.g.calc);
-    const ref = navHeadingRef(c);
-    if (calcAny) title = ref.mag ? t('dc.b.nav.mag', { d: fmtDecl(ref.decl), h: ref.decl >= 0 ? 'E' : 'W' }) : t('dc.b.nav.true');
-    const hc = calcAny ? t(ref.mag ? 'dc.h.course.m' : 'dc.h.course.t') : t('dc.h.course');
+    const nv = navVar(c);
+    if (calcAny) {
+      if (!nv) title = t('dc.b.nav.true');
+      else if (!nv.calc) title = t('dc.b.nav.mag', { d: fmtDecl(nv.decl), h: nv.decl >= 0 ? 'E' : 'W' });
+      else {
+        const vs = shown.filter(x => x.g.calc).map(x => x.g.calc.v);
+        const a = fmtVar(Math.min.apply(null, vs)), b = fmtVar(Math.max.apply(null, vs)), yr = String(Math.floor(nv.y));
+        title = a === b ? t('dc.b.nav.calc1', { a: yr, v: a }) : t('dc.b.nav.calc', { a: yr, min: a, max: b });
+      }
+    }
+    const hc = calcAny ? t(nv ? 'dc.h.course.m' : 'dc.h.course.t') : t('dc.h.course');
     head = '<th>#</th><th>' + esc(t('dc.h.point')) + '</th>' +
       '<th class="r">' + esc(hc) + '</th>' +
       '<th class="r">' + esc(t('dc.h.dist', { u: du })) + '</th>' +
@@ -3615,15 +3783,26 @@ function listHtml(path, items, renderItem, addKey) {
 function unitOptions(kind) { return UNIT_CHOICES[kind].map(k => [k, t('u.' + k)]); }
 
 /* Réglages d'affichage de la navigation (en tête de la section) et état d'une coordonnée saisie */
-function navDeclMissing(c) { return c.navDisplay.ref === 'mag' && parseDecl(c.navDisplay.decl) == null; }
+function navDeclMissing(c) { return c.navDisplay.ref === 'mag' && c.navDisplay.vmode === 'manual' && parseDecl(c.navDisplay.decl) == null; }
+
+/* Les deux lignes d'aide de la déclinaison calculée : l'année (le champ Date) et le modèle de DCS */
+function navVarHelp(c) {
+  const nv = navVar(c) || { calc: true, y: magDecYear('1985'), dated: false };
+  const y = nv.y;
+  let l1 = nv.dated ? t('nav.vy.date', { a: Math.floor(y) }) : t('nav.vy.def');
+  if (nv.dated && y < 1985) l1 += t('nav.vy.pre');
+  return esc(l1) + '<br>' + esc(t('nav.vy.model', { e: magEpoch(y) }));
+}
 
 function navSettingsHtml(c) {
-  const nd = c.navDisplay;
+  const nd = c.navDisplay, mag = nd.ref === 'mag', calc = nd.vmode === 'calc';
   return '<div class="ed-field-row three ed-navset">' +
     fSelect('f.nav.display', 'navDisplay.mode', nd.mode, [['course', t('nav.mode.course')], ['mgrs', t('nav.mode.mgrs')], ['dms', t('nav.mode.dms')]]) +
     fSelect('f.nav.ref', 'navDisplay.ref', nd.ref, [['true', t('nav.ref.true')], ['mag', t('nav.ref.mag')]]) +
-    fInput('f.nav.decl', 'navDisplay.decl', nd.decl, ' inputmode="decimal" autocomplete="off"') + '</div>' +
-    '<div class="ed-help">' + esc(t('nav.decl.help')) + '</div>' +
+    (mag ? fSelect('f.nav.vmode', 'navDisplay.vmode', nd.vmode, [['calc', t('nav.vmode.calc')], ['manual', t('nav.vmode.manual')]]) : '<div class="ed-field"></div>') + '</div>' +
+    (mag && !calc ? '<div class="ed-field-row">' + fInput('f.nav.decl', 'navDisplay.decl', nd.decl, ' inputmode="decimal" autocomplete="off"') + '</div>' +
+      '<div class="ed-help">' + esc(t('nav.decl.help')) + '</div>' : '') +
+    (mag && calc ? '<div class="ed-help" data-nav-vhelp>' + navVarHelp(c) + '</div>' : '') +
     '<div class="ed-help">' + esc(t('f.nav.coord')) + (CURRENT_LANG === 'fr' ? ' : ' : ': ') + esc(t('nav.coord.help')) + '</div>' +
     '<div class="ed-warn" data-nav-warn' + (navDeclMissing(c) ? '' : ' hidden') + '>' + esc(t('nav.decl.warn')) + '</div>';
 }
@@ -3657,6 +3836,8 @@ function syncNavEditor() {
   });
   const w = document.querySelector('#editor [data-nav-warn]');
   if (w) w.hidden = !navDeclMissing(c);
+  const vh = document.querySelector('#editor [data-nav-vhelp]');
+  if (vh) vh.innerHTML = navVarHelp(c);
 }
 
 /* Points de référence : la ligne d'état de chaque coordonnée, sans refaire l'éditeur */
@@ -3840,7 +4021,8 @@ function onEditorInput(e) {
   else setPath(c, path, el.value);
   if (path === 'weather.metar') syncMetar(c);
   if (path === 'flight.callsign') updatePackTitle();
-  if (/^nav(Display)?\./.test(path) || path === 'units.distance') syncNavEditor();
+  if (path === 'navDisplay.ref' || path === 'navDisplay.vmode') renderEditor();        /* la troisième liste et la rangée de la saisie changent */
+  else if (/^nav(Display)?\./.test(path) || path === 'units.distance' || path === 'meta.date') syncNavEditor();
   if (/^refs\./.test(path)) syncRefsEditor();
   touch();
 }
@@ -4049,7 +4231,7 @@ function isRouteObject(o) {
   return !!(o && typeof o === 'object' && !Array.isArray(o) && o.format === ROUTE_FORMAT && Array.isArray(o.points));
 }
 
-/* Route lue : { name, units, navDisplay, points, refs } (points valides, 30 au plus ; références valides, 12 au plus),
+/* Route lue : { name, theatre, units, navDisplay { ref, decl, mode, year, force }, points, refs } (points valides, 30 au plus ; références valides, 12 au plus),
    ou null si ce n'est pas une route */
 function routeFromObject(o) {
   if (!isRouteObject(o)) return null;
@@ -4074,7 +4256,11 @@ function routeFromObject(o) {
   return {
     name: str(o.name),
     units: { distance: un.distance === 'nm' ? 'nm' : 'km', altitude: un.altitude === 'ft' ? 'ft' : 'm' },
-    navDisplay: { ref: nd.ref === 'mag' ? 'mag' : 'true', decl: str(nd.decl) },
+    theatre: str(o.theatre),
+    navDisplay: {
+      ref: nd.ref === 'mag' ? 'mag' : 'true', decl: str(nd.decl), mode: readVMode(nd.mode, str(nd.decl)),
+      year: (typeof nd.year === 'string' && /^\d{1,4}$/.test(nd.year)) ? nd.year : '', force: nd.force === true
+    },
     points: points.slice(0, LIMITS.nav),
     refs: refs.slice(0, LIMITS.refs)
   };
@@ -4105,6 +4291,14 @@ function applyRouteToCard(c, r) {
   c.units.altitude = r.units.altitude;
   c.navDisplay.ref = r.navDisplay.ref;
   c.navDisplay.decl = r.navDisplay.decl;
+  c.navDisplay.vmode = r.navDisplay.mode;
+  /* Route en cap magnétique calculé et champ Date vide : il prend l'année de la route (la mission, la saisie ou l'année forcée) ;
+     un champ Date déjà rempli ne change jamais */
+  if (r.navDisplay.ref === 'mag' && r.navDisplay.mode === 'calc' && !hasText(c.meta.date)) {
+    const ys = magYearSource(r.theatre, r.navDisplay.year, r.navDisplay.force);
+    if (ys.src === 'mission') c.meta.date = ys.date;
+    else if (ys.src === 'forced' || ys.src === 'typed') c.meta.date = ys.year;
+  }
 }
 
 function impRefresh() {

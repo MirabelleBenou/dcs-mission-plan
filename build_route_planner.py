@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""Build — DCS Route Planner v1.7.1.
+"""Build — DCS Route Planner v1.8.0.
 
 Produit dist/dcs_route_planner.html : un fichier unique, hors ligne, sans serveur ;
 seules les tuiles de carte (DCS Olympus, OpenTopoMap, Esri) viennent du réseau, et le
 module retombe de lui-même sur la grille seule quand elles sont injoignables.
 Les polices et les bibliothèques (Leaflet 1.9.4, BSD-2) viennent d'assets.json, à la
 racine du dépôt ; les aérodromes DCS (noms et positions, pydcs, LGPL-3.0) viennent d'airfields.json ;
-les villes DCS (noms et positions) viennent de towns.json.
+les villes DCS (noms et positions) viennent de towns.json ; la déclinaison magnétique (coefficients WMM 1985–2025, comme DCS) vient du dossier wmm/
+via magvar_block.py.
 
 Usage : python3 build_route_planner.py
 """
@@ -18,8 +19,10 @@ import shutil
 import subprocess
 import sys
 
+from magvar_block import build_block as build_magvar_block
+
 HERE = os.path.dirname(os.path.abspath(__file__))
-APP_VERSION = "1.7.1"
+APP_VERSION = "1.8.0"
 OUT_PATH = os.path.join(HERE, 'dist', 'dcs_route_planner.html')
 ASSETS_PATH = os.path.join(HERE, 'assets.json')
 AIRFIELDS_PATH = os.path.join(HERE, 'airfields.json')
@@ -433,6 +436,15 @@ select.in { appearance: none; -webkit-appearance: none; padding-right: 22px;
 .nav-set .gs { width: 132px; }
 .nav-set .gs .lbl { white-space: nowrap; }
 .nav-set .lbl { margin-bottom: 6px; }
+/* lot mp-rp-declinaison : maquette_declinaison.css (valeur pour valeur) — la déclinaison calculée */
+.hdg.dv-row { margin-bottom: 8px; }
+.dv-year { width: 92px; }
+.dv-year .in:disabled { opacity: .55; }
+.dv-nolbl::before { content: none; }          /* le libellé vide au-dessus de « Forcer » : sans son ► */
+.dv-src { font-size: 11.5px; letter-spacing: .3px; color: var(--khaki-light); line-height: 1.45; margin: 0 0 12px; }
+.dv-src b { color: var(--amber); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; font-size: 10.5px; margin-right: 6px; }
+.dv-src .dv-file { color: #f0e8d6; }
+#nav-body .dv-leg { color: var(--red-stamp); letter-spacing: .5px; }   /* la ligne « VAR −2,1° » d'un point : .co.alt.dv-leg */
 
 /* fiche papier */
 .sheet { background: var(--paper-light); color: #1f1c16; box-shadow: 0 2px 0 var(--paper-edge), 0 8px 18px rgba(0,0,0,.35); }
@@ -1074,10 +1086,18 @@ __CSS__
         </div>
         <div class="hdg">
           <div><div class="lbl" data-i18n="f.ref">Cap</div><span class="tb-group" role="group"><button type="button" class="tb-btn" data-ref="true" aria-pressed="true" data-i18n="ref.true">Vrai</button><button type="button" class="tb-btn" data-ref="mag" aria-pressed="false" data-i18n="ref.mag">Magnétique</button></span></div>
-          <div class="decl"><label class="lbl" for="decl" data-i18n="f.decl">Déclinaison (°)</label><input class="in" id="decl" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" data-i18n-placeholder="f.decl.ph" placeholder="+4,5"></div>
         </div>
-        <p class="hint" data-i18n="nav.decl.help"></p>
-        <div class="ed-warn" id="decl-warn" role="alert" hidden data-i18n="nav.decl.warn"></div>
+        <div id="dv-wrap" hidden>
+          <div class="hdg dv-row">
+            <div><div class="lbl" data-i18n="f.dv">Déclinaison</div><span class="tb-group" role="group" data-i18n-aria-label="f.dv" aria-label="Déclinaison"><button type="button" class="tb-btn" data-dvm="calc" aria-pressed="true" data-i18n="dv.calc">Calculée</button><button type="button" class="tb-btn" data-dvm="manual" aria-pressed="false" data-i18n="dv.manual">Saisie</button></span></div>
+            <div class="dv-year" id="dv-year-w"><label class="lbl" for="dv-year" data-i18n="f.dvy">Année</label><input class="in" id="dv-year" type="text" inputmode="numeric" maxlength="4" autocomplete="off" spellcheck="false" placeholder="1985"></div>
+            <div id="dv-force-w"><div class="lbl dv-nolbl" aria-hidden="true"></div><button type="button" class="tb-btn" id="dv-force" aria-pressed="false" data-i18n="dv.force">Forcer</button></div>
+            <div class="decl" id="dv-decl-w"><label class="lbl" for="decl" data-i18n="f.decl">Déclinaison (°)</label><input class="in" id="decl" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" data-i18n-placeholder="f.decl.ph" placeholder="+4,5"></div>
+          </div>
+          <p class="hint" id="dv-help" data-i18n="nav.decl.help"></p>
+          <div class="ed-warn" id="decl-warn" role="alert" hidden data-i18n="nav.decl.warn"></div>
+          <p class="dv-src" id="dv-src"></p>
+        </div>
         <div class="sheet">
           <div class="sheet-top"><span id="nav-title"></span></div>
           <table class="nav">
@@ -1484,7 +1504,7 @@ JS = r"""
 'use strict';
 
 /* =====================================================
-   ROUTE PLANNER v1.7.1
+   ROUTE PLANNER v1.8.0
    Une route sur une carte (points posés, saisis par coordonnées
    ou par cap et distance), des points de référence, les noms de lieux,
    les villes et les aérodromes DCS, une recherche sur la carte : caps, distances, vitesse sol et minutage,
@@ -1723,6 +1743,25 @@ const I18N = {
     'nav.decl.warn': 'Déclinaison manquante\u202f: cap vrai affiché',
     'nav.title.true': 'NAVIGATION — CAP VRAI',
     'nav.title.mag': 'NAVIGATION — CAP MAGNÉTIQUE (DÉCL. {d}°)',
+    'nav.title.calc': 'NAVIGATION — CAP MAGNÉTIQUE · VAR {a} ({min} à {max}°)',
+    'nav.title.calc1': 'NAVIGATION — CAP MAGNÉTIQUE · VAR {a} ({v}°)',
+    'nav.title.calc0': 'NAVIGATION — CAP MAGNÉTIQUE · VAR {a}',
+    'nav.var': 'VAR {v}°',
+    'f.dv': 'Déclinaison',
+    'f.dvy': 'Année',
+    'dv.calc': 'Calculée',
+    'dv.manual': 'Saisie',
+    'dv.force': 'Forcer',
+    'dv.tag.mission': 'MISSION',
+    'dv.tag.forced': 'FORCÉE',
+    'dv.tag.typed': 'SAISIE',
+    'dv.tag.default': 'PAR DÉFAUT',
+    'dv.src.mission': '{file} · {date}',
+    'dv.src.forced': 'la mission chargée ({file}) est ignorée',
+    'dv.src.typed': 'année tapée, aucune mission de ce théâtre',
+    'dv.src.default': '1985, aucune mission de ce théâtre ni année saisie',
+    'dv.src.pre': ' · avant 1985 : modèle de 1985',
+    'dv.src.model': 'Modèle de DCS (WMM {e}) · par branche, au point de départ',
     'nav.th.no': 'N°',
     'nav.th.pt': 'Point · alt.',
     'nav.th.co': 'MGRS · DMS / cap · distance',
@@ -2057,6 +2096,25 @@ const I18N = {
     'nav.decl.warn': 'Variation missing: true heading shown',
     'nav.title.true': 'NAVIGATION — TRUE HEADING',
     'nav.title.mag': 'NAVIGATION — MAGNETIC HEADING (VAR {d}°)',
+    'nav.title.calc': 'NAVIGATION — MAGNETIC HEADING · VAR {a} ({min} to {max}°)',
+    'nav.title.calc1': 'NAVIGATION — MAGNETIC HEADING · VAR {a} ({v}°)',
+    'nav.title.calc0': 'NAVIGATION — MAGNETIC HEADING · VAR {a}',
+    'nav.var': 'VAR {v}°',
+    'f.dv': 'Variation',
+    'f.dvy': 'Year',
+    'dv.calc': 'Computed',
+    'dv.manual': 'Entered',
+    'dv.force': 'Override',
+    'dv.tag.mission': 'MISSION',
+    'dv.tag.forced': 'OVERRIDDEN',
+    'dv.tag.typed': 'ENTERED',
+    'dv.tag.default': 'DEFAULT',
+    'dv.src.mission': '{file} · {date}',
+    'dv.src.forced': 'the loaded mission ({file}) is ignored',
+    'dv.src.typed': 'typed year, no mission for this theatre',
+    'dv.src.default': '1985, no mission for this theatre nor typed year',
+    'dv.src.pre': ' · before 1985: 1985 model',
+    'dv.src.model': 'DCS model (WMM {e}) · per leg, at its start point',
     'nav.th.no': 'No.',
     'nav.th.pt': 'Waypoint · alt.',
     'nav.th.co': 'MGRS · DMS / heading · distance',
@@ -2333,12 +2391,14 @@ function showToast(msg, ms) {
 /* Recopié à l'identique du Datacard Generator : constantes WGS84, UTM, MGRS, lectures, DMS, cap et distance. */
 @@GEO_BLOCK@@
 @@READNUM_BLOCK@@
+
+@@MAGVAR_BLOCK@@
 /* ============= MODÈLE ============= */
 function defaultState() {
   return {
     format: FORMAT_ID, name: '', theatre: 'Caucasus',
     units: { distance: 'km', altitude: 'm' },
-    navDisplay: { ref: 'true', decl: '' },
+    navDisplay: { ref: 'true', decl: '', mode: 'calc', year: '', force: false },
     groundSpeed: GS_DEFAULT, legBoxes: 'full',
     points: [],
     refs: [],
@@ -2387,6 +2447,19 @@ function readBox(b) {
   return { along: b.along, side: b.side };
 }
 
+/* Les réglages de cap lus : le mode de déclinaison est gardé s'il est connu ; sinon « Saisie » quand une valeur saisie se lit
+   (une route d'avant ce mode ne change pas), « Calculée » sinon. L'année : les chiffres tapés (quatre au plus) ; Forcer : true seulement si true. */
+function readNavDisplay(nd) {
+  const decl = str(nd.decl);
+  return {
+    ref: nd.ref === 'mag' ? 'mag' : 'true',
+    decl: decl,
+    mode: (nd.mode === 'calc' || nd.mode === 'manual') ? nd.mode : (parseDecl(decl) != null ? 'manual' : 'calc'),
+    year: (typeof nd.year === 'string' && /^\d{1,4}$/.test(nd.year)) ? nd.year : '',
+    force: nd.force === true
+  };
+}
+
 /* Un objet lu (fichier ou stockage) → { route, dropped, droppedRefs } ; null si ce n'est pas une route dcs-route-v1.
    Un point (ou une référence) dont lat ou lon n'est pas un nombre dans les bornes est écarté ; au-delà de 30 points
    (12 références), le reste est écarté (dropped, droppedRefs les comptent) ; les champs absents prennent leurs défauts. */
@@ -2400,7 +2473,7 @@ function parseRoute(src) {
     name: str(src.name),
     theatre: THEATRE_IDS.indexOf(src.theatre) !== -1 ? src.theatre : d.theatre,
     units: { distance: un.distance === 'nm' ? 'nm' : 'km', altitude: un.altitude === 'ft' ? 'ft' : 'm' },
-    navDisplay: { ref: nd.ref === 'mag' ? 'mag' : 'true', decl: str(nd.decl) },
+    navDisplay: readNavDisplay(nd),
     groundSpeed: (typeof src.groundSpeed === 'number' && isFinite(src.groundSpeed) && src.groundSpeed > 0) ? src.groundSpeed : GS_DEFAULT,
     legBoxes: LEGBOX_IDS.indexOf(src.legBoxes) !== -1 ? src.legBoxes : 'full',
     points: [],
@@ -2463,7 +2536,7 @@ function exportObject() {
   return {
     format: FORMAT_ID, name: S.name, theatre: S.theatre,
     units: { distance: S.units.distance, altitude: S.units.altitude },
-    navDisplay: { ref: S.navDisplay.ref, decl: S.navDisplay.decl },
+    navDisplay: { ref: S.navDisplay.ref, decl: S.navDisplay.decl, mode: S.navDisplay.mode, year: S.navDisplay.year, force: S.navDisplay.force },
     groundSpeed: S.groundSpeed, legBoxes: S.legBoxes,
     points: S.points.map((p, i) => {
       const o = { name: p.name, lat: p.lat, lon: p.lon, alt: p.alt, altRef: p.altRef };
@@ -2495,7 +2568,23 @@ function setTheatre(id) {
 }
 
 /* ============= UNITÉS, DISTANCES, CAPS ============= */
-function declValue() { return S.navDisplay.ref === 'mag' ? parseDecl(S.navDisplay.decl) : null; }
+/* La déclinaison : calculée (le modèle de DCS, à l'année de la route) ou saisie ; seul le cap magnétique en a besoin */
+function navIsMag() { return S.navDisplay.ref === 'mag' && (S.navDisplay.mode === 'calc' || parseDecl(S.navDisplay.decl) != null); }
+function navIsCalc() { return S.navDisplay.ref === 'mag' && S.navDisplay.mode === 'calc'; }
+/* L'année de la route et sa source : la mission de HQ (même théâtre), la saisie, ou 1985 */
+function navYear() { return magYearSource(S.theatre, S.navDisplay.year, S.navDisplay.force); }
+/* La déclinaison (°, + vers l'Est) au point p, ou null en cap vrai ; ys : l'année déjà lue, sinon elle se lit ici */
+function declAt(p, ys) {
+  if (S.navDisplay.ref !== 'mag') return null;
+  if (S.navDisplay.mode === 'calc') return magVar(p.lat, p.lon, (ys || navYear()).y);
+  return parseDecl(S.navDisplay.decl);
+}
+/* Une déclinaison au dixième : signe − (U+2212) ou +, virgule en FR, aucun signe pour 0,0 */
+function fmtVar(v) {
+  const r = Math.round(v * 10) / 10;
+  if (r === 0) return decimal('0.0');
+  return (r < 0 ? '\u2212' : '+') + decimal(Math.abs(r).toFixed(1));
+}
 
 function decimal(s) { return CURRENT_LANG === 'fr' ? s.replace('.', ',') : s; }
 
@@ -2512,10 +2601,10 @@ function fmtDist(km) {
 function altValue(m) { return Math.round(S.units.altitude === 'ft' ? m / FT_M : m); }
 function altText(p) { return altValue(p.alt) + ' ' + t(S.units.altitude === 'ft' ? 'u.ft' : 'u.m') + ' ' + t('refl.' + p.altRef); }
 
-/* Cap (vrai, ou magnétique = vrai − déclinaison) et distance d'une branche */
-function legInfo(a, b) {
+/* Cap (vrai, ou magnétique = vrai − déclinaison du point de départ) et distance d'une branche */
+function legInfo(a, b, ys) {
   const L = legCalc(a, b);
-  const d = declValue();
+  const d = declAt(a, ys);
   const brg = d == null ? L.brg : (((L.brg - d) % 360) + 360) % 360;
   return { cap: fmtHdg(brg), km: L.km };
 }
@@ -2551,9 +2640,10 @@ function readSpeed(s) {
    (somme non arrondie des durées qui précèdent) */
 function timing() {
   const pts = S.points, legs = [null], el = [0];
+  const ys = navIsCalc() ? navYear() : null;
   let km = 0, sec = 0;
   for (let i = 1; i < pts.length; i++) {
-    const l = legInfo(pts[i - 1], pts[i]);
+    const l = legInfo(pts[i - 1], pts[i], ys);
     const v = legSpeed(i);
     const sc = l.km / v * 3600;
     legs.push({ cap: l.cap, km: l.km, v: v, sec: sc });
@@ -3601,7 +3691,7 @@ function drawTicks(i, pa, ux, uy, len, leg) {
 /* Le contenu d'une boîte : [cap, distance, vitesse, altitude d'arrivée, ETE] ; la minimale ne garde que les deux premières */
 function boxLines(i, leg, mode) {
   const p = S.points[i];
-  const lines = [leg.cap + t(declValue() == null ? 'lb.true' : 'lb.mag'), fmtDist(leg.km)];
+  const lines = [leg.cap + t(navIsMag() ? 'lb.mag' : 'lb.true'), fmtDist(leg.km)];
   if (mode === 'full') { lines.push(speedText(leg.v)); lines.push(altText(p)); lines.push(t('lb.ete') + ' ' + fmtEte(leg.sec)); }
   return lines;
 }
@@ -5557,20 +5647,38 @@ function syncRows() {
 }
 
 function navTitle() {
-  const d = declValue();
-  return d == null ? t('nav.title.true') : t('nav.title.mag', { d: decimal(String(d)) });
+  if (!navIsMag()) return t('nav.title.true');
+  if (!navIsCalc()) return t('nav.title.mag', { d: decimal(String(parseDecl(S.navDisplay.decl))) });
+  const ys = navYear(), n = S.points.length;
+  if (n < 2) return t('nav.title.calc0', { a: ys.year });
+  let lo = Infinity, hi = -Infinity;
+  for (let i = 0; i < n - 1; i++) { const v = declAt(S.points[i], ys); if (v < lo) lo = v; if (v > hi) hi = v; }
+  const a = fmtVar(lo), b = fmtVar(hi);
+  return a === b ? t('nav.title.calc1', { a: ys.year, v: a }) : t('nav.title.calc', { a: ys.year, min: a, max: b });
+}
+
+/* La ligne de source de l'année (deux lignes) : le mot en gras, le nom du fichier en .dv-file */
+function dvFill(key, file, date) {
+  return esc(t(key)).split('{date}').join(esc(date)).split('{file}').join('<span class="dv-file">' + esc(file) + '</span>');
+}
+function dvSrcHtml(ys) {
+  let h = '<b>' + esc(t('dv.tag.' + ys.src)) + '</b> ' + dvFill('dv.src.' + ys.src, ys.file, ys.date);
+  if (ys.y < 1985) h += esc(t('dv.src.pre'));
+  return h + '<br>' + esc(t('dv.src.model', { e: magEpoch(ys.y) }));
 }
 
 function renderNav() {
   $('nav-title').textContent = navTitle();
   const tm = timing();
+  const calc = navIsCalc(), ys = calc ? navYear() : null;
   let rows = '';
   S.points.forEach((p, i) => {
     if (i > 0) {
       const lg = tm.legs[i];
       rows += '<tr class="leg"><td></td><td colspan="2">' + esc(t('nav.leg', { cap: lg.cap, spd: speedText(lg.v), ete: fmtEte(lg.sec) })) + '</td><td class="r">' + esc(fmtDist(lg.km)) + '</td></tr>';
     }
-    rows += '<tr><td class="n">' + i + '</td><td class="nm">' + esc(p.name) + '<span class="co alt">' + esc(altText(p)) + '</span><span class="co alt tm">' + esc(t('nav.t', { t: fmtElapsed(tm.el[i]) })) + '</span></td>' +
+    rows += '<tr><td class="n">' + i + '</td><td class="nm">' + esc(p.name) + '<span class="co alt">' + esc(altText(p)) + '</span><span class="co alt tm">' + esc(t('nav.t', { t: fmtElapsed(tm.el[i]) })) + '</span>' +
+      (calc ? '<span class="co alt dv-leg">' + esc(t('nav.var', { v: fmtVar(declAt(p, ys)) })) + '</span>' : '') + '</td>' +
       '<td colspan="2"><span class="co">' + esc(toMGRS(p.lat, p.lon)) + '</span><span class="co dms">' + esc(toDMS(p.lat, p.lon)) + '</span></td></tr>';
   });
   $('nav-body').innerHTML = rows;
@@ -5620,7 +5728,7 @@ function syncControls() {
   const gsIn = $('gs-def');
   if (document.activeElement !== gsIn) gsIn.value = speedDisp(S.groundSpeed);
   syncSpeedPlaceholders();
-  $('decl-warn').hidden = !(S.navDisplay.ref === 'mag' && parseDecl(S.navDisplay.decl) == null);
+  syncDecl();
   $('btn-handoff').disabled = S.points.length === 0;
   const rtb = $('btn-export-rt');
   const hasRt = hasRouteTool(S.theatre);
@@ -5643,6 +5751,35 @@ function syncControls() {
   af.setAttribute('aria-pressed', hasAf && S.ui.airfields ? 'true' : 'false');
   af.title = t(hasAf ? 'tb.airfields.tip' : 'tb.airfields.off');
   syncAdd();
+}
+
+/* La rangée Déclinaison (en cap magnétique seulement) : Calculée ou Saisie ; en Calculée l'année, Forcer et la ligne de source */
+function syncDecl() {
+  const mag = S.navDisplay.ref === 'mag', calc = S.navDisplay.mode === 'calc';
+  $('dv-wrap').hidden = !mag;
+  const bar = $('dv-wrap').querySelectorAll('[data-dvm]');
+  bar.forEach(b => {
+    const on = b.dataset.dvm === S.navDisplay.mode;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+  $('dv-year-w').hidden = !calc;
+  $('dv-force-w').hidden = !calc;
+  $('dv-decl-w').hidden = calc;
+  $('dv-help').hidden = calc;
+  $('dv-src').hidden = !calc;
+  $('decl-warn').hidden = calc || !(mag && parseDecl(S.navDisplay.decl) == null);
+  if (!mag || !calc) return;
+  const ys = navYear(), mis = ys.src === 'mission' || ys.src === 'forced';
+  const yin = $('dv-year'), fb = $('dv-force');
+  const lock = ys.src === 'mission' && !S.navDisplay.force;     /* la mission fait foi : le champ montre son année, sans la laisser modifier */
+  yin.disabled = lock;
+  if (document.activeElement !== yin) yin.value = lock ? ys.year : S.navDisplay.year;
+  fb.parentNode.style.visibility = mis ? '' : 'hidden';
+  fb.disabled = !mis;
+  fb.classList.toggle('on', !!S.navDisplay.force);
+  fb.setAttribute('aria-pressed', S.navDisplay.force ? 'true' : 'false');
+  $('dv-src').innerHTML = dvSrcHtml(ys);
 }
 
 function renderAll() {
@@ -5695,8 +5832,9 @@ function readAddPosition() {
   if (!last) return null;
   const cap = readNum($('add-hdg').value), dist = readNum($('add-dist').value);
   if (cap == null || cap > 360 || dist == null || !(dist > 0)) { showToast(t('toast.badHd')); return null; }
-  /* cap magnétique (navigation en cap magnétique et déclinaison lisible) : le point se calcule au cap vrai cap + déclinaison */
-  const d = declValue();
+  /* cap magnétique (navigation en cap magnétique et déclinaison lisible) : le point se calcule au cap vrai cap + déclinaison
+     du point dont on part (calculée au point, ou saisie) */
+  const d = declAt(last);
   const brg = d == null ? cap : (((cap + d) % 360) + 360) % 360;
   const km = S.units.distance === 'nm' ? dist * NM_KM : dist;
   const p = legDest(last, brg, km);
@@ -6858,6 +6996,24 @@ function bindEvents() {
     S.navDisplay.decl = e.target.value;
     persistState(); renderNav(); drawRoute(); syncControls();
   });
+  document.querySelectorAll('[data-dvm]').forEach(b => b.addEventListener('click', () => {
+    S.navDisplay.mode = b.dataset.dvm === 'manual' ? 'manual' : 'calc';
+    persistState(); renderNav(); drawRoute(); syncControls();
+  }));
+  $('dv-force').addEventListener('click', () => {
+    S.navDisplay.force = !S.navDisplay.force;
+    persistState(); renderNav(); drawRoute(); syncControls();
+  });
+  $('dv-year').addEventListener('input', e => {
+    const v = e.target.value.replace(/\D/g, '').slice(0, 4);
+    if (e.target.value !== v) e.target.value = v;
+    S.navDisplay.year = v;
+    persistState(); renderNav(); drawRoute(); syncControls();
+  });
+  /* HQ charge une autre mission pendant que le Route Planner est ouvert : l'année se relit */
+  window.addEventListener('storage', e => {
+    if (e.key === 'mission_snapshot_v1' && navIsCalc()) { renderNav(); drawRoute(); syncControls(); }
+  });
   $('route-name').addEventListener('input', e => { S.name = e.target.value; persistState(); });
   $('panel').addEventListener('focusin', ev => {
     const el = ev.target;
@@ -7351,7 +7507,7 @@ def build():
     airfields_js = json.dumps(AF['theatres'], ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
     towns_js = json.dumps(TW['theatres'], ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
     js = JS.replace('__EXAMPLE_ROUTE__', example_js).replace('__AIRFIELDS__', airfields_js).replace('__TOWNS__', towns_js)
-    js = js.replace('@@GEO_BLOCK@@\n', GEO_BLOCK).replace('@@READNUM_BLOCK@@\n', READNUM_BLOCK)
+    js = js.replace('@@GEO_BLOCK@@\n', GEO_BLOCK).replace('@@READNUM_BLOCK@@\n', READNUM_BLOCK).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block())
     if '@@' in js:
         raise SystemExit("[ERREUR] Marqueur @@ non remplacé dans le script")
     lib = A['lib_leaflet']

@@ -40,8 +40,8 @@ The landing page presents each tool as a **pinned print** on the board. Active t
 | **Briefing Generator** | Mission briefings, full or quick — SITAC, radio plan, airfields, charts, recon photos — PDF & PNG export | ✅ `v2.4.6` |
 | **Recon Station** | Turn a screenshot into a reconnaissance analysis photo — sensor looks, annotations drawn by touch, lossless PNG | ✅ `v1.1.1` |
 | **Field Manual** | In-app documentation for the suite — one illustrated chapter per tool, diagrams, FR/EN, offline | ✅ `v1.2.3` |
-| **Route Planner** | Lay a route on a map — DCS map (by DCS Olympus), topographic or satellite, MGRS grid, place names, DCS towns and airfields, map search — type coordinates or heading & distance, reference points, headings, distances, MGRS & DMS, sent to the datacard; DCS Route Tool import & export; leg boxes, ground speed and minute marks; CombatFlite layers (.cf); draw your own layers by touch — circles, zones and curves, lines, FLOT and corridors, points, text, orbits, kill boxes with their grid | ✅ `v1.7.1` |
-| **Datacard Generator** | One-page flight datacards for the kneeboard — from scratch, from a briefing or from a route — reference points, day & night, PNG & PDF export | ✅ `v1.4.2` |
+| **Route Planner** | Lay a route on a map — DCS map (by DCS Olympus), topographic or satellite, MGRS grid, place names, DCS towns and airfields, map search — type coordinates or heading & distance, reference points, headings, distances, MGRS & DMS, sent to the datacard; DCS Route Tool import & export; leg boxes, ground speed and minute marks; CombatFlite layers (.cf); draw your own layers by touch — circles, zones and curves, lines, FLOT and corridors, points, text, orbits, kill boxes with their grid; magnetic headings with the variation computed like DCS, leg by leg | ✅ `v1.8.0` |
+| **Datacard Generator** | One-page flight datacards for the kneeboard — from scratch, from a briefing or from a route — reference points, day & night, PNG & PDF export; magnetic headings computed like DCS | ✅ `v1.5.0` |
 
 > Each tool is a standalone HTML file with its own build; the landing page embeds the live tools and stages them all on one board.
 
@@ -182,6 +182,7 @@ The output `dist/dcs_mission_plan.html` is the distributable (and the file publi
 ├── assets.json                    # Embedded fonts, libraries, kraft texture (base64)
 ├── airfields.json                 # DCS airfield & helipad positions (from pydcs)
 ├── towns.json                     # DCS town names & positions (from the DCS World maps)
+├── wmm/                          # World Magnetic Model coefficients 1985–2025 (NOAA, public domain)
 ├── tiles/                         # Board tiles (512² WebP): hq, bg, rs, fm, rp, kg
 ├── docs/screenshots/              # README images
 ├── CHANGELOG.md
@@ -226,6 +227,7 @@ For code contributions: fork, branch, study the build scripts to understand the 
 - Map engine [Leaflet](https://leafletjs.com) (BSD-2-Clause); topographic tiles © OpenStreetMap contributors, SRTM, style © OpenTopoMap (CC-BY-SA); satellite imagery © Esri, Maxar, Earthstar Geographics
 - DCS airfield & helipad names and positions, and the DCS map projections, from **[pydcs](https://github.com/pydcs/dcs)** (LGPL-3.0); place-name overlay © Esri, HERE, Garmin, OpenStreetMap contributors
 - DCS town names and positions from the DCS World maps, © Eagle Dynamics
+- World Magnetic Model coefficients (epochs 1985–2025, the ones DCS World ships) by NOAA NCEI and the British Geological Survey, public domain
 - Initial version developed for the **4th VEAW** virtual wing — distributed as a generic wing config example
 - Cold War kraft SVG file provided by Flappie, thanks to him !
 
