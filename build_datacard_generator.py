@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build — DCS Datacard Generator v1.5.0.
+"""Build — DCS Datacard Generator v1.5.1.
 
 Produit dist/dcs_datacard_generator.html : un fichier unique, hors ligne, sans
 serveur et sans ressource externe. Les polices et les bibliothèques (html2canvas,
@@ -19,7 +19,7 @@ import sys
 from magvar_block import build_block as build_magvar_block
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-APP_VERSION = "1.5.0"
+APP_VERSION = "1.5.1"
 OUT_PATH = os.path.join(HERE, 'dist', 'dcs_datacard_generator.html')
 ASSETS_PATH = os.path.join(HERE, 'assets.json')
 
@@ -1983,7 +1983,6 @@ const I18N = {
     'nav.vmode.manual': 'Saisie',
     'nav.vy.date': 'Année {a} · champ Date',
     'nav.vy.def': 'Année 1985 par défaut · champ Date vide',
-    'nav.vy.pre': ' · avant 1985 : modèle de 1985',
     'nav.vy.model': 'Modèle de DCS (WMM {e}), par branche au point de départ',
     'f.nav.coord': 'Coordonnées',
     'ph.nav.*.coord': '36S VD 47535 77241',
@@ -2278,7 +2277,6 @@ const I18N = {
     'nav.vmode.manual': 'Entered',
     'nav.vy.date': 'Year {a} · Date field',
     'nav.vy.def': 'Year 1985 by default · Date field empty',
-    'nav.vy.pre': ' · before 1985: 1985 model',
     'nav.vy.model': 'DCS model (WMM {e}), per leg at its start point',
     'f.nav.coord': 'Coordinates',
     'ph.nav.*.coord': '36S VD 47535 77241',
@@ -3680,7 +3678,6 @@ function navVarHelp(c) {
   const nv = navVar(c) || { calc: true, y: magDecYear('1985'), dated: false };
   const y = nv.y;
   let l1 = nv.dated ? t('nav.vy.date', { a: Math.floor(y) }) : t('nav.vy.def');
-  if (nv.dated && y < 1985) l1 += t('nav.vy.pre');
   return esc(l1) + '<br>' + esc(t('nav.vy.model', { e: magEpoch(y) }));
 }
 

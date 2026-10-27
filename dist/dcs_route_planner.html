@@ -1707,7 +1707,7 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 'use strict';
 
 /* =====================================================
-   ROUTE PLANNER v1.8.0
+   ROUTE PLANNER v1.8.1
    Une route sur une carte (points posés, saisis par coordonnées
    ou par cap et distance), des points de référence, les noms de lieux,
    les villes et les aérodromes DCS, une recherche sur la carte : caps, distances, vitesse sol et minutage,
@@ -2035,7 +2035,6 @@ const I18N = {
     'dv.src.forced': 'la mission chargée ({file}) est ignorée',
     'dv.src.typed': 'année tapée, aucune mission de ce théâtre',
     'dv.src.default': '1985, aucune mission de ce théâtre ni année saisie',
-    'dv.src.pre': ' · avant 1985 : modèle de 1985',
     'dv.src.model': 'Modèle de DCS (WMM {e}) · par branche, au point de départ',
     'nav.th.no': 'N°',
     'nav.th.pt': 'Point · alt.',
@@ -2388,7 +2387,6 @@ const I18N = {
     'dv.src.forced': 'the loaded mission ({file}) is ignored',
     'dv.src.typed': 'typed year, no mission for this theatre',
     'dv.src.default': '1985, no mission for this theatre nor typed year',
-    'dv.src.pre': ' · before 1985: 1985 model',
     'dv.src.model': 'DCS model (WMM {e}) · per leg, at its start point',
     'nav.th.no': 'No.',
     'nav.th.pt': 'Waypoint · alt.',
@@ -2995,7 +2993,7 @@ function magDecYear(s) {
   return y + (doy - 1) / (leap ? 366 : 365);
 }
 
-/* L'époque des coefficients : la plus grande de 1985, 1990 … 2025 qui soit ≤ y ; 1985 avant 1985 */
+/* L'époque des coefficients : la plus grande de 1985, 1990 … 2025 qui soit ≤ y ; 1985 avant 1985 (le modèle de 1985 est alors prolongé vers le passé, voir magVar) */
 function magEpoch(y) {
   let e = MAG_EPOCHS[0];
   for (let i = 0; i < MAG_EPOCHS.length; i++) if (MAG_EPOCHS[i] <= y) e = MAG_EPOCHS[i];
@@ -3003,12 +3001,12 @@ function magEpoch(y) {
 }
 
 /* La déclinaison magnétique en degrés (+ vers l'Est) au niveau de la mer, à la position géodésique (lat, lon) et à l'année décimale y.
-   Coefficients de l'époque : g + ġ·dt, dt = y − époque borné à [0, 5] ; synthèse en harmoniques sphériques de degré 12 (Schmidt,
+   Coefficients de l'époque : g + ġ·dt, dt = y − époque, borné à 5 au plus et sans borne basse (avant 1985, les coefficients de 1985 sont prolongés vers le passé par leur variation séculaire, comme DCS) ; synthèse en harmoniques sphériques de degré 12 (Schmidt,
    rayon de référence 6 371,2 km) ; WGS84 → géocentrique, puis X et Z ramenés au repère géodésique avant l'angle (NOAA, WMM). */
 function magVar(lat, lon, y) {
   if (typeof lat !== 'number' || typeof lon !== 'number' || typeof y !== 'number' || !isFinite(lat + lon + y) || Math.abs(lat) > 90) return null;
   const R = Math.PI / 180, N = 12;
-  const ep = magEpoch(y), dt = Math.min(5, Math.max(0, y - ep)), C = magCoef(ep);
+  const ep = magEpoch(y), dt = Math.min(5, y - ep), C = magCoef(ep);
   const la = Math.max(-89.9999, Math.min(89.9999, lat));
   const A = 6378.137, F = 1 / 298.257223563, E2 = F * (2 - F), RE = 6371.2;
   const sg = Math.sin(la * R);
@@ -6349,7 +6347,6 @@ function dvFill(key, file, date) {
 }
 function dvSrcHtml(ys) {
   let h = '<b>' + esc(t('dv.tag.' + ys.src)) + '</b> ' + dvFill('dv.src.' + ys.src, ys.file, ys.date);
-  if (ys.y < 1985) h += esc(t('dv.src.pre'));
   return h + '<br>' + esc(t('dv.src.model', { e: magEpoch(ys.y) }));
 }
 

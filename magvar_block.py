@@ -123,7 +123,7 @@ function magDecYear(s) {
   return y + (doy - 1) / (leap ? 366 : 365);
 }
 
-/* L'époque des coefficients : la plus grande de 1985, 1990 … 2025 qui soit ≤ y ; 1985 avant 1985 */
+/* L'époque des coefficients : la plus grande de 1985, 1990 … 2025 qui soit ≤ y ; 1985 avant 1985 (le modèle de 1985 est alors prolongé vers le passé, voir magVar) */
 function magEpoch(y) {
   let e = MAG_EPOCHS[0];
   for (let i = 0; i < MAG_EPOCHS.length; i++) if (MAG_EPOCHS[i] <= y) e = MAG_EPOCHS[i];
@@ -131,12 +131,12 @@ function magEpoch(y) {
 }
 
 /* La déclinaison magnétique en degrés (+ vers l'Est) au niveau de la mer, à la position géodésique (lat, lon) et à l'année décimale y.
-   Coefficients de l'époque : g + ġ·dt, dt = y − époque borné à [0, 5] ; synthèse en harmoniques sphériques de degré 12 (Schmidt,
+   Coefficients de l'époque : g + ġ·dt, dt = y − époque, borné à 5 au plus et sans borne basse (avant 1985, les coefficients de 1985 sont prolongés vers le passé par leur variation séculaire, comme DCS) ; synthèse en harmoniques sphériques de degré 12 (Schmidt,
    rayon de référence 6 371,2 km) ; WGS84 → géocentrique, puis X et Z ramenés au repère géodésique avant l'angle (NOAA, WMM). */
 function magVar(lat, lon, y) {
   if (typeof lat !== 'number' || typeof lon !== 'number' || typeof y !== 'number' || !isFinite(lat + lon + y) || Math.abs(lat) > 90) return null;
   const R = Math.PI / 180, N = 12;
-  const ep = magEpoch(y), dt = Math.min(5, Math.max(0, y - ep)), C = magCoef(ep);
+  const ep = magEpoch(y), dt = Math.min(5, y - ep), C = magCoef(ep);
   const la = Math.max(-89.9999, Math.min(89.9999, lat));
   const A = 6378.137, F = 1 / 298.257223563, E2 = F * (2 - F), RE = 6371.2;
   const sg = Math.sin(la * R);

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build — DCS Route Planner v1.8.0.
+"""Build — DCS Route Planner v1.8.1.
 
 Produit dist/dcs_route_planner.html : un fichier unique, hors ligne, sans serveur ;
 seules les tuiles de carte (DCS Olympus, OpenTopoMap, Esri) viennent du réseau, et le
@@ -22,7 +22,7 @@ import sys
 from magvar_block import build_block as build_magvar_block
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-APP_VERSION = "1.8.0"
+APP_VERSION = "1.8.1"
 OUT_PATH = os.path.join(HERE, 'dist', 'dcs_route_planner.html')
 ASSETS_PATH = os.path.join(HERE, 'assets.json')
 AIRFIELDS_PATH = os.path.join(HERE, 'airfields.json')
@@ -1504,7 +1504,7 @@ JS = r"""
 'use strict';
 
 /* =====================================================
-   ROUTE PLANNER v1.8.0
+   ROUTE PLANNER v1.8.1
    Une route sur une carte (points posés, saisis par coordonnées
    ou par cap et distance), des points de référence, les noms de lieux,
    les villes et les aérodromes DCS, une recherche sur la carte : caps, distances, vitesse sol et minutage,
@@ -1760,7 +1760,6 @@ const I18N = {
     'dv.src.forced': 'la mission chargée ({file}) est ignorée',
     'dv.src.typed': 'année tapée, aucune mission de ce théâtre',
     'dv.src.default': '1985, aucune mission de ce théâtre ni année saisie',
-    'dv.src.pre': ' · avant 1985 : modèle de 1985',
     'dv.src.model': 'Modèle de DCS (WMM {e}) · par branche, au point de départ',
     'nav.th.no': 'N°',
     'nav.th.pt': 'Point · alt.',
@@ -2113,7 +2112,6 @@ const I18N = {
     'dv.src.forced': 'the loaded mission ({file}) is ignored',
     'dv.src.typed': 'typed year, no mission for this theatre',
     'dv.src.default': '1985, no mission for this theatre nor typed year',
-    'dv.src.pre': ' · before 1985: 1985 model',
     'dv.src.model': 'DCS model (WMM {e}) · per leg, at its start point',
     'nav.th.no': 'No.',
     'nav.th.pt': 'Waypoint · alt.',
@@ -5663,7 +5661,6 @@ function dvFill(key, file, date) {
 }
 function dvSrcHtml(ys) {
   let h = '<b>' + esc(t('dv.tag.' + ys.src)) + '</b> ' + dvFill('dv.src.' + ys.src, ys.file, ys.date);
-  if (ys.y < 1985) h += esc(t('dv.src.pre'));
   return h + '<br>' + esc(t('dv.src.model', { e: magEpoch(ys.y) }));
 }
 

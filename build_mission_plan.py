@@ -456,7 +456,7 @@ select[data-tbm-src] {{ display: none !important; }}
             <div class="cap-row">
               <span class="logo" style="background:var(--a-dg)">D·G</span>
               <span class="ptitle">Datacard Generator</span>
-              <span class="pver">v1.5.0</span>
+              <span class="pver">v1.5.1</span>
             </div>
             <div class="pdesc" data-i18n="dg.desc">Datacards de vol d'une page pour le kneeboard — saisie ou depuis un briefing, day et night, export PNG et PDF.</div>
             <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
@@ -470,7 +470,7 @@ select[data-tbm-src] {{ display: none !important; }}
             <div class="cap-row">
               <span class="logo" style="background:var(--a-rp)">R·P</span>
               <span class="ptitle">Route Planner</span>
-              <span class="pver">v1.8.0</span>
+              <span class="pver">v1.8.1</span>
             </div>
             <div class="pdesc" data-i18n="rp.desc">Tracé de route sur carte — carte DCS, topographique ou satellite, grille MGRS, villes et aérodromes, recherche ; points de référence ; caps, distances, vitesse sol et minutage ; calques CombatFlite et dessin au doigt (zones, FLOT, couloirs, orbites, boîtes) ; MGRS et DMS, envoyés à la datacard ; import et export du Route Tool de DCS.</div>
             <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
@@ -528,7 +528,7 @@ select[data-tbm-src] {{ display: none !important; }}
   /* ── Données ──────────────────────────────────────────────── */
   {module_html_js}
 
-  var APP_VERSION = '1.17.0';
+  var APP_VERSION = '1.17.1';
   var KEY_LANG  = 'lang_v1';
   var KEY_THEME = 'theme_v1';
 
