@@ -14,6 +14,10 @@ The suite bundles several **independently-versioned tools**, so entries are grou
 - **Tablet & mobile** first-class target (touch, drag, rotation-safe).
 - Wing configuration shared automatically across embedded tools.
 
+### `v1.17.1`
+#### Fixed
+- Embeds **Route Planner v1.8.1** and **Datacard Generator v1.5.1** — magnetic variation before 1985 like DCS (see below).
+
 ### `v1.17.0`
 #### Added
 - Embeds **Route Planner v1.8.0** and **Datacard Generator v1.5.0** — magnetic headings computed like DCS (see below).
@@ -252,6 +256,10 @@ Initial release. Command post for the suite.
 
 ## Datacard Generator
 
+### `v1.5.1`
+#### Fixed
+- Before 1985, the magnetic variation extends the 1985 model back in time with its secular variation, like DCS, instead of staying at its 1985 values (Cold War Germany, 1961: about −4° instead of −1°). From 1985 on, nothing changes.
+
 ### `v1.5.0`
 #### Added
 - **Magnetic variation computed like DCS**: with the magnetic heading, a new *Variation* setting — *Computed* or *Entered*. Computed uses the World Magnetic Models DCS World ships (epochs 1985–2025), leg by leg at each leg's start point, for the year of the card's *Date* field (1985 when empty).
@@ -321,6 +329,10 @@ Initial release. One-page flight datacards for the cockpit kneeboard.
 ---
 
 ## Route Planner
+
+### `v1.8.1`
+#### Fixed
+- Before 1985, the magnetic variation extends the 1985 model back in time with its secular variation, like DCS, instead of staying at its 1985 values (Bitburg, June 1965: −4.9° instead of −2.2°). From 1985 on, nothing changes.
 
 ### `v1.8.0`
 #### Added
