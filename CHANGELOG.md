@@ -14,6 +14,10 @@ The suite bundles several **independently-versioned tools**, so entries are grou
 - **Tablet & mobile** first-class target (touch, drag, rotation-safe).
 - Wing configuration shared automatically across embedded tools.
 
+### `v1.17.0`
+#### Added
+- Embeds **Route Planner v1.8.0** and **Datacard Generator v1.5.0** — magnetic headings computed like DCS (see below).
+
 ### `v1.16.1`
 #### Changed
 - Drop-down lists in the tools' forms follow the UI theme too — no more white system menus on tablets (see below).
@@ -248,6 +252,14 @@ Initial release. Command post for the suite.
 
 ## Datacard Generator
 
+### `v1.5.0`
+#### Added
+- **Magnetic variation computed like DCS**: with the magnetic heading, a new *Variation* setting — *Computed* or *Entered*. Computed uses the World Magnetic Models DCS World ships (epochs 1985–2025), leg by leg at each leg's start point, for the year of the card's *Date* field (1985 when empty).
+- The printed navigation header shows the year and the range: *NAVIGATION · MAGNETIC HEADING · VAR 1989 (−1.6 to −0.2°)*.
+- A route sent from the Route Planner brings its variation mode, and its year when the card's *Date* is empty.
+#### Changed
+- A card saved with a typed variation opens in *Entered* mode, unchanged.
+
 ### `v1.4.2`
 #### Changed
 - Form drop-down lists (classification, threat, units, radio items, airfield role, imagery, altitude reference…) open as a themed list instead of the system menu, in the field's own font — touch and keyboard; a list near the bottom of the screen opens upwards.
@@ -309,6 +321,14 @@ Initial release. One-page flight datacards for the cockpit kneeboard.
 ---
 
 ## Route Planner
+
+### `v1.8.0`
+#### Added
+- **Magnetic variation computed like DCS**: in the Navigation panel, *Variation — Computed · Entered*. Computed uses the World Magnetic Models DCS World ships (epochs 1985–2025), leg by leg at each leg's start point — matching the mission editor's readings to 0.1°.
+- The year comes from the mission loaded in HQ when it is on the same theatre, otherwise from the *Year* field; *Override* puts the typed year first; 1985 by default. The panel says where the year comes from.
+- Each point of the navigation table shows its variation; the title shows the year and the range: *NAVIGATION — MAGNETIC HEADING · VAR 1985 (−2.1 to −0.7°)*.
+#### Changed
+- A route saved with a typed variation opens in *Entered* mode, unchanged. Headings typed for *+ Point* by heading & distance use the variation of the point you start from.
 
 ### `v1.7.1`
 #### Changed
