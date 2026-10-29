@@ -13,6 +13,8 @@
 🌐 **[Use it online »](https://mirabellebenou.github.io/dcs-mission-plan/)** &nbsp;·&nbsp; 💾 **[Download the offline file »](../../releases)**
 
 > 🗺️ **Thanks to the [DCS Olympus](https://github.com/Pax1601/DCSOlympus) team!** The Route Planner's **DCS map** layer uses the DCS map tiles they kindly share with the community — come and say hi on their **[Discord](https://discord.gg/kNAQkhUHnQ)**.
+>
+> 🧭 **Thanks to Flappie!** The Route Planner's **navigation chart** on the Caucasus is his accurate DCS map — see it on **[his website](http://dcsmaps.com/caucasus/openlayers)** or get the **[GeoTIFF on DCS User Files](https://digitalcombatsimulator.com/en/files/3305623/)**.
 
 A single-page **"situation board"** that brings together a suite of mission-prep tools for DCS World virtual pilots and wings — staged like a Cold War operations table. Open the board, pick a tool, prepare your mission. It runs entirely in your browser: **online for those who don't want to download**, or as **one offline HTML file** you can keep, share, and use without internet.
 
@@ -224,7 +226,7 @@ For code contributions: fork, branch, study the build scripts to understand the 
 
 - Built for the DCS World virtual aviation community
 - DCS map tiles by the **[DCS Olympus](https://github.com/Pax1601/DCSOlympus)** team — [Discord](https://discord.gg/kNAQkhUHnQ)
-- Caucasus navigation chart by **Flappie** — [ED User Files](https://digitalcombatsimulator.com/en/files/3305623/), thanks to him!
+- Caucasus navigation chart by **Flappie** — [his website](http://dcsmaps.com/caucasus/openlayers) and the [GeoTIFF on DCS User Files](https://digitalcombatsimulator.com/en/files/3305623/), many thanks to him!
 - Map engine [Leaflet](https://leafletjs.com) (BSD-2-Clause); topographic tiles © OpenStreetMap contributors, SRTM, style © OpenTopoMap (CC-BY-SA); satellite imagery © Esri, Maxar, Earthstar Geographics
 - DCS airfield & helipad names and positions, and the DCS map projections, from **[pydcs](https://github.com/pydcs/dcs)** (LGPL-3.0); place-name overlay © Esri, HERE, Garmin, OpenStreetMap contributors
 - DCS town names and positions from the DCS World maps, © Eagle Dynamics
