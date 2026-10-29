@@ -14,6 +14,10 @@ The suite bundles several **independently-versioned tools**, so entries are grou
 - **Tablet & mobile** first-class target (touch, drag, rotation-safe).
 - Wing configuration shared automatically across embedded tools.
 
+### `v1.18.1`
+#### Changed
+- Embeds **Route Planner v1.9.1** — the map/panel divider also in short landscape windows (see below).
+
 ### `v1.18.0`
 #### Added
 - Embeds **Route Planner v1.9.0** — the DCS map can come from a tile mirror on the hosting server, with DCS Olympus as fallback (see below).
@@ -333,6 +337,10 @@ Initial release. One-page flight datacards for the cockpit kneeboard.
 ---
 
 ## Route Planner
+
+### `v1.9.1`
+#### Changed
+- **The map/panel divider in short landscape windows too** (under 1,100 px wide and under 600 px high — a foldable phone unfolded and turned, for instance): the page still scrolls, and the divider sets the map height between 220 px and 85% of the window below the top bar. Its height is remembered apart from the portrait one (`rp_split_land_v1`), so turning the device keeps both; a double tap restores the original height. Portrait and wide layouts are unchanged.
 
 ### `v1.9.0`
 #### Added
