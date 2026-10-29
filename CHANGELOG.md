@@ -14,6 +14,10 @@ The suite bundles several **independently-versioned tools**, so entries are grou
 - **Tablet & mobile** first-class target (touch, drag, rotation-safe).
 - Wing configuration shared automatically across embedded tools.
 
+### `v1.19.0`
+#### Added
+- Embeds **Route Planner v1.10.0** — Flappie's navigation chart as a background on the Caucasus, and DCS map tiles served from a public host before DCS Olympus (see below).
+
 ### `v1.18.1`
 #### Changed
 - Embeds **Route Planner v1.9.1** — the map/panel divider also in short landscape windows (see below).
@@ -337,6 +341,13 @@ Initial release. One-page flight datacards for the cockpit kneeboard.
 ---
 
 ## Route Planner
+
+### `v1.10.0`
+#### Added
+- **Flappie's navigation chart on the Caucasus** — a new *Background* choice, *Navigation chart (Flappie)*, offered on the Caucasus only: roads, railways, rivers, towns, forests, airfields and navaids drawn like an aeronautical chart, sharp up to zoom 12 and enlarged beyond. Credit *Map © Flappie* at the bottom of the map — many thanks to him. The chart already prints town names, so the *Towns* button is greyed out under it; your setting comes back on any other background.
+
+#### Changed
+- **DCS map tiles from a public host first** — opened outside a hosting page (the hosted page on GitHub, or the offline file), the *DCS map* now asks a public copy of the DCS Olympus tiles first (with their agreement), then DCS Olympus tile by tile; Germany Cold War gains zoom 16 there too. Inside a hosting page that provides its own tile mirror, nothing changes.
 
 ### `v1.9.1`
 #### Changed
