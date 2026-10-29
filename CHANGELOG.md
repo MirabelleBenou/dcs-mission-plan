@@ -14,6 +14,10 @@ The suite bundles several **independently-versioned tools**, so entries are grou
 - **Tablet & mobile** first-class target (touch, drag, rotation-safe).
 - Wing configuration shared automatically across embedded tools.
 
+### `v1.18.0`
+#### Added
+- Embeds **Route Planner v1.9.0** — the DCS map can come from a tile mirror on the hosting server, with DCS Olympus as fallback (see below).
+
 ### `v1.17.1`
 #### Fixed
 - Embeds **Route Planner v1.8.1** and **Datacard Generator v1.5.1** — magnetic variation before 1985 like DCS (see below).
@@ -329,6 +333,11 @@ Initial release. One-page flight datacards for the cockpit kneeboard.
 ---
 
 ## Route Planner
+
+### `v1.9.0`
+#### Added
+- **DCS map tiles from a mirror on the hosting server.** When the page that hosts the suite provides a same-site tile mirror (`localStorage` key `map_layers_v1`, `{"configSchemaVersion":1,"dcs":{"url":"/…/{key}/{z}/{x}/{y}.png"}}`), the *DCS map* layer asks the mirror for each tile and falls back to DCS Olympus tile by tile when the mirror does not have it. If the mirror fails repeatedly without a single success (an expired session, say), the page goes straight to Olympus until it is reloaded. Without that key — the hosted page, or the file opened locally — tiles come from DCS Olympus as before.
+- **Cold War Germany at level 16** through the mirror only: one more layer, sharper from zoom 16; where a level-16 tile is missing, level 15 shows underneath.
 
 ### `v1.8.1`
 #### Fixed
