@@ -2984,15 +2984,20 @@ const DcsTileLayer = L.TileLayer.extend({
       setTimeout(() => done(new Error('mirror cut'), img), 0);
       return img;
     }
-    img.addEventListener('load', () => { if (stage === 'mirror') mirrorNote(true); done(null, img); });
+    /* Une tuile abandonnée par Leaflet (changement de zoom) voit son src remplacé par l'image vide de Leaflet : cette image
+       se charge, mais ne compte ni comme réussite ni comme échec du miroir, n'est pas redemandée à Olympus et n'appelle pas done */
+    let cur = stage === 'mirror' ? mirrorUrl : olympusUrl;
+    const aborted = () => img.getAttribute('src') !== cur;
+    img.addEventListener('load', () => { if (aborted()) return; if (stage === 'mirror') mirrorNote(true); done(null, img); });
     img.addEventListener('error', e => {
+      if (aborted()) return;
       if (stage === 'mirror') {
         mirrorNote(false);
-        if (olympusUrl) { stage = 'olympus'; img.src = olympusUrl; return; }
+        if (olympusUrl) { stage = 'olympus'; cur = olympusUrl; img.src = olympusUrl; return; }
       }
       done(e, img);
     });
-    img.src = stage === 'mirror' ? mirrorUrl : olympusUrl;
+    img.src = cur;
     return img;
   }
 });
