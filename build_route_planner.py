@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build — DCS Route Planner v1.9.1.
+"""Build — DCS Route Planner v1.10.0.
 
 Produit dist/dcs_route_planner.html : un fichier unique, hors ligne, sans serveur ;
 seules les tuiles de carte (DCS Olympus, OpenTopoMap, Esri) viennent du réseau, et le
@@ -22,7 +22,7 @@ import sys
 from magvar_block import build_block as build_magvar_block
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-APP_VERSION = "1.9.1"
+APP_VERSION = "1.10.0"
 OUT_PATH = os.path.join(HERE, 'dist', 'dcs_route_planner.html')
 ASSETS_PATH = os.path.join(HERE, 'assets.json')
 AIRFIELDS_PATH = os.path.join(HERE, 'airfields.json')
@@ -1506,7 +1506,7 @@ JS = r"""
 'use strict';
 
 /* =====================================================
-   ROUTE PLANNER v1.9.1
+   ROUTE PLANNER v1.10.0
    Une route sur une carte (points posés, saisis par coordonnées
    ou par cap et distance), des points de référence, les noms de lieux,
    les villes et les aérodromes DCS, une recherche sur la carte : caps, distances, vitesse sol et minutage,
@@ -1521,7 +1521,7 @@ const KEY_THEME = 'theme_v1';
 const KEY_LANG = 'lang_v1';
 const FORMAT_ID = 'dcs-route-v1';
 const THEME_IDS = ['cw-nato', 'cw-soviet', 'modern-nato', 'modern-east'];
-const LAYER_IDS = ['dcs', 'topo', 'sat', 'grid'];
+const LAYER_IDS = ['dcs', 'flappie', 'topo', 'sat', 'grid'];
 const MAX_POINTS = 30;
 const MAX_REFS = 12;
 const NM_KM = 1.852;
@@ -1608,6 +1608,14 @@ const DCS_LEVELS = {
   'alt-Normandy':              [[1, 11, 1], [12, 13, 12], [13, 14, 13], [14, 15, 14], [15, 17, 15]]
 };
 const DCS_URL = 'https://maps.dcsolympus.com/maps/{key}/{z}/{x}/{y}.png';
+/* Adresse publique des tuiles servies par l'hôte de la suite : nos couches, et une copie des tuiles de DCS Olympus avec leur accord */
+const PUBLIC_TILES = 'https://dcs-tools-4thveaw.tail777510.ts.net/tuiles/';
+/* Nos couches, proposées en plus de « Carte DCS » sur le théâtre qu'elles couvrent : identifiant du fond, théâtre, chemin sous l'adresse
+   publique, niveau natif, emprise [[sud, ouest], [nord, est]] (aucune tuile demandée hors de l'emprise). Couche ordinaire : ni miroir ni Olympus. */
+const OUR_LAYERS = {
+  flappie: { theatre: 'Caucasus', path: 'flappie-caucasus/{z}/{x}/{y}.webp', maxNativeZoom: 12, maxZoom: 18,
+             bounds: [[40.6442, 36.2470], [45.6131, 45.4817]] }
+};
 /* Couches en plus, par le miroir seul : [minNativeZoom, maxNativeZoom, minZoom], posées au-dessus des couches de DCS_LEVELS.
    Le miroir de la page hôte porte ces niveaux, qu'Olympus ne sert pas : pas de repli sur Olympus pour elles. */
 const DCS_EXTRA = {
@@ -1631,6 +1639,7 @@ const I18N = {
     'layer.sat': 'Satellite',
     'layer.grid': 'Grille seule',
     'layer.dcsOff': 'Carte DCS — absente de ce théâtre',
+    'layer.flappie': 'Carte de navigation (Flappie)',
     'tb.grid': 'Grille MGRS',
     'tb.places': 'Lieux',
     'tb.places.tip': 'Noms de lieux (Esri)',
@@ -1640,6 +1649,7 @@ const I18N = {
     'tb.towns': 'Villes',
     'tb.towns.tip': 'Villes DCS (à partir du zoom 10)',
     'tb.towns.off': 'Villes — absentes de ce théâtre',
+    'tb.towns.offChart': 'Villes — déjà écrites sur cette carte',
     'sr.title': 'Rechercher sur la carte',
     'sr.ph': 'Ville, aérodrome, point…',
     'sr.close': 'Fermer',
@@ -1683,6 +1693,7 @@ const I18N = {
     'th.Afghanistan': 'Afghanistan',
     'th.Falklands': 'Atlantique Sud',
     'attr.dcs': 'Carte DCS © <a href="https://github.com/Pax1601/DCSOlympus">DCS Olympus</a>',
+    'attr.flappie': 'Carte © <a href="https://digitalcombatsimulator.com/en/files/3305623/">Flappie</a>',
     'attr.topo': 'Données © <a href="https://www.openstreetmap.org/copyright">contributeurs OpenStreetMap</a>, SRTM · style © <a href="https://opentopomap.org">OpenTopoMap</a> (CC-BY-SA)',
     'attr.sat': 'Esri, Maxar, Earthstar Geographics, and the GIS User Community',
     'attr.places': 'Lieux © Esri, HERE, Garmin, OpenStreetMap contributors',
@@ -1983,6 +1994,7 @@ const I18N = {
     'layer.sat': 'Satellite',
     'layer.grid': 'Grid only',
     'layer.dcsOff': 'DCS map — not available for this theatre',
+    'layer.flappie': 'Navigation chart (Flappie)',
     'tb.grid': 'MGRS grid',
     'tb.places': 'Places',
     'tb.places.tip': 'Place names (Esri)',
@@ -1992,6 +2004,7 @@ const I18N = {
     'tb.towns': 'Towns',
     'tb.towns.tip': 'DCS towns (from zoom 10)',
     'tb.towns.off': 'Towns — not available for this theatre',
+    'tb.towns.offChart': 'Towns — already printed on this chart',
     'sr.title': 'Search the map',
     'sr.ph': 'Town, airfield, waypoint…',
     'sr.close': 'Close',
@@ -2035,6 +2048,7 @@ const I18N = {
     'th.Afghanistan': 'Afghanistan',
     'th.Falklands': 'South Atlantic',
     'attr.dcs': 'DCS map © <a href="https://github.com/Pax1601/DCSOlympus">DCS Olympus</a>',
+    'attr.flappie': 'Map © <a href="https://digitalcombatsimulator.com/en/files/3305623/">Flappie</a>',
     'attr.topo': 'Map data © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>, SRTM · style © <a href="https://opentopomap.org">OpenTopoMap</a> (CC-BY-SA)',
     'attr.sat': 'Esri, Maxar, Earthstar Geographics, and the GIS User Community',
     'attr.places': 'Places © Esri, HERE, Garmin, OpenStreetMap contributors',
@@ -2556,18 +2570,25 @@ function exportObject() {
 function theatreOf(id) { return THEATRES.find(x => x.id === id) || THEATRES[0]; }
 function dcsKey() { return theatreOf(S.theatre).dcs; }
 
-/* « Carte DCS » choisie sur un théâtre qui n'en a pas : la couche passe en Topographique */
+/* Nos couches (OUR_LAYERS) : la couche d'un fond, ou null ; les fonds qu'un théâtre propose en plus de « Carte DCS » */
+function ourLayer(id) { return Object.prototype.hasOwnProperty.call(OUR_LAYERS, id) ? OUR_LAYERS[id] : null; }
+function ourLayerIds(theatre) { return Object.keys(OUR_LAYERS).filter(id => OUR_LAYERS[id].theatre === theatre); }
+
+/* « Carte DCS » choisie sur un théâtre qui n'en a pas : la couche passe en Topographique. Un de nos fonds sur un théâtre qui ne
+   l'a pas : « Carte DCS » si le théâtre en a une, sinon Topographique. */
 function resolveLayer() {
-  if (S.ui.layer === 'dcs' && !dcsKey()) S.ui.layer = 'topo';
+  const o = ourLayer(S.ui.layer);
+  if (o && o.theatre !== S.theatre) S.ui.layer = dcsKey() ? 'dcs' : 'topo';
+  else if (S.ui.layer === 'dcs' && !dcsKey()) S.ui.layer = 'topo';
 }
 
 /* Le théâtre change (la route est gardée) : la liste de la barre, ou un fichier CombatFlite qui nomme le sien */
 function setTheatre(id) {
-  const wasDcs = S.ui.layer === 'dcs';
+  const wasDcs = S.ui.layer === 'dcs' || !!ourLayer(S.ui.layer);
   S.theatre = theatreOf(id).id;
   persistState();
   setTheatreView();
-  if (wasDcs) setBase();        /* la couche DCS change avec le théâtre (ou passe en Topographique) */
+  if (wasDcs) setBase();        /* la couche DCS ou la nôtre change avec le théâtre (ou passe en Carte DCS, ou en Topographique) */
   syncAirfields();
   syncControls();
 }
@@ -2944,8 +2965,9 @@ function frameRoute() {
 function attrText(id) { return id === 'grid' ? '' : t('attr.' + id); }
 
 /* Le miroir des tuiles DCS. La page hôte peut écrire localStorage['map_layers_v1'] (même origine que ce module ; le module ne
-   l'écrit jamais) : {"configSchemaVersion":1,"dcs":{"url":"/chemin/{key}/{z}/{x}/{y}.png"}}. Sans cette clé, ou si elle n'est
-   pas valide, les tuiles viennent d'Olympus directement. Lu à chaque setBase(). */
+   l'écrit jamais) : {"configSchemaVersion":1,"dcs":{"url":"/chemin/{key}/{z}/{x}/{y}.png"}}. Deux cas : avec cette clé valide,
+   chaque tuile vient d'abord du miroir de la page hôte, puis d'Olympus ; sans cette clé, ou si elle n'est pas valide, chaque tuile
+   vient d'abord de la copie publique (PUBLIC_TILES + « {key}/{z}/{x}/{y}.png »), puis d'Olympus. Lu à chaque setBase(). */
 const KEY_MAP_LAYERS = 'map_layers_v1';
 const MIRROR_FAIL_MAX = 8;
 function readMirrorUrl() {
@@ -3008,14 +3030,15 @@ function tileLayersFor(id) {
   const attribution = attrText(id);
   if (id === 'topo') return [L.tileLayer(TOPO_URL, { subdomains: 'abc', maxNativeZoom: 17, maxZoom: 18, attribution: attribution })];
   if (id === 'sat') return [L.tileLayer(SAT_URL, { maxNativeZoom: 19, maxZoom: 18, attribution: attribution })];
+  const ours = ourLayer(id);
+  if (ours) {
+    return [L.tileLayer(PUBLIC_TILES + ours.path,
+      { maxNativeZoom: ours.maxNativeZoom, maxZoom: ours.maxZoom, bounds: ours.bounds, attribution: attribution })];
+  }
   if (id === 'dcs') {
     const key = dcsKey();
     const levels = DCS_LEVELS[key] || [];
-    const mirror = readMirrorUrl();
-    if (!mirror) {
-      return levels.map(lv => L.tileLayer(DCS_URL.replace('{key}', key),
-        { minNativeZoom: lv[0], maxNativeZoom: lv[1], minZoom: lv[2], maxZoom: 18, attribution: attribution }));
-    }
+    const mirror = readMirrorUrl() || PUBLIC_TILES + '{key}/{z}/{x}/{y}.png';
     const mirrorUrl = mirror.split('{key}').join(key), olympusUrl = DCS_URL.replace('{key}', key);
     const mk = (lv, mirrorOnly) => new DcsTileLayer(mirrorUrl,
       { minNativeZoom: lv[0], maxNativeZoom: lv[1], minZoom: lv[2], maxZoom: 18, attribution: attribution,
@@ -3055,6 +3078,8 @@ function setFallback(on) {
   if (on) fallbackLayout();
   updateMapClass();
   syncPlaces();
+  syncTowns();
+  syncTownsButton();
   scheduleGrid();
 }
 
@@ -3286,11 +3311,15 @@ function twIcon(e, side, w) {
   });
 }
 
+/* Sous le fond « Carte de navigation (Flappie) » affiché (pas en repli), la carte porte déjà les noms de villes : la surcouche ne se
+   dessine pas et le bouton « Villes » est grisé ; S.ui.towns ne change pas */
+function townsOnChart() { return displayLayer() === 'flappie'; }
+
 /* Recalculé au zoom et au déplacement, à toute modification de la route, des références ou d'une boîte de branche, au changement
    de théâtre et à l'interrupteur — jamais pendant un glisser */
 function syncTowns() {
   if (!mapCreated || !twLayer || twHold) return;
-  const list = S.ui.towns ? twList(S.theatre) : null;
+  const list = S.ui.towns && !townsOnChart() ? twList(S.theatre) : null;
   if (!list || map.getZoom() < TOWNS_ZOOM || !mapSized()) {
     if (twSig !== '') { twLayer.clearLayers(); twSig = ''; }
     twInfo = null;
@@ -3378,6 +3407,8 @@ function setBase() {
   });
   tileTimer = setTimeout(() => { if (gen !== baseGen) return; timerElapsed = true; checkFallback(); }, FALLBACK_MS);
   updateMapClass();
+  syncTowns();
+  syncTownsButton();
   scheduleGrid();
 }
 
@@ -5793,7 +5824,30 @@ function syncLayerSelect() {
   const has = !!dcsKey();
   opt.disabled = !has;
   opt.textContent = t(has ? 'layer.dcs' : 'layer.dcsOff');
+  /* Nos fonds : présents (juste après « Carte DCS ») sur le théâtre qui les a, absents du <select> ailleurs */
+  const want = ourLayerIds(S.theatre);
+  Object.keys(OUR_LAYERS).forEach(id => {
+    const cur = sl.querySelector('option[value="' + id + '"]');
+    if (want.indexOf(id) < 0) { if (cur) cur.remove(); return; }
+    if (cur) { cur.textContent = t('layer.' + id); return; }
+    const o = document.createElement('option');
+    o.value = id;
+    o.setAttribute('data-i18n', 'layer.' + id);
+    o.textContent = t('layer.' + id);
+    const prev = want.indexOf(id) > 0 ? sl.querySelector('option[value="' + want[want.indexOf(id) - 1] + '"]') : opt;
+    prev.after(o);
+  });
   sl.value = S.ui.layer;
+}
+
+/* Le bouton « Villes » : grisé sur un théâtre sans villes, ou sous un fond qui les porte déjà (townsOnChart) */
+function syncTownsButton() {
+  const tw = $('btn-towns');
+  const hasTw = !!townsOf(S.theatre), off = townsOnChart();
+  tw.disabled = !hasTw || off;
+  tw.classList.toggle('on', hasTw && !off && !!S.ui.towns);
+  tw.setAttribute('aria-pressed', hasTw && !off && S.ui.towns ? 'true' : 'false');
+  tw.title = t(off ? 'tb.towns.offChart' : hasTw ? 'tb.towns.tip' : 'tb.towns.off');
 }
 
 /* Les contrôles de la barre et du panneau reflètent l'état */
@@ -5828,12 +5882,7 @@ function syncControls() {
   const pl = $('btn-places');
   pl.classList.toggle('on', !!S.ui.places);
   pl.setAttribute('aria-pressed', S.ui.places ? 'true' : 'false');
-  const tw = $('btn-towns');
-  const hasTw = !!townsOf(S.theatre);
-  tw.disabled = !hasTw;
-  tw.classList.toggle('on', hasTw && !!S.ui.towns);
-  tw.setAttribute('aria-pressed', hasTw && S.ui.towns ? 'true' : 'false');
-  tw.title = t(hasTw ? 'tb.towns.tip' : 'tb.towns.off');
+  syncTownsButton();
   const af = $('btn-airfields');
   const hasAf = !!airfieldsOf(S.theatre);
   af.disabled = !hasAf;
@@ -7036,7 +7085,7 @@ function bindEvents() {
     syncControls();
   });
   $('btn-towns').addEventListener('click', () => {
-    if (!townsOf(S.theatre)) return;
+    if (!townsOf(S.theatre) || townsOnChart()) return;
     S.ui.towns = !S.ui.towns;
     persistState();
     syncTowns();
