@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build — DCS Route Planner v1.9.0.
+"""Build — DCS Route Planner v1.9.1.
 
 Produit dist/dcs_route_planner.html : un fichier unique, hors ligne, sans serveur ;
 seules les tuiles de carte (DCS Olympus, OpenTopoMap, Esri) viennent du réseau, et le
@@ -22,7 +22,7 @@ import sys
 from magvar_block import build_block as build_magvar_block
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-APP_VERSION = "1.9.0"
+APP_VERSION = "1.9.1"
 OUT_PATH = os.path.join(HERE, 'dist', 'dcs_route_planner.html')
 ASSETS_PATH = os.path.join(HERE, 'assets.json')
 AIRFIELDS_PATH = os.path.join(HERE, 'airfields.json')
@@ -829,10 +829,12 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 }
 .rp-drawing .leaflet-layers-pane, .rp-drawing .leaflet-layers-pane * { pointer-events: none !important; }
 
-/* la séparation carte / panneau : en portrait seulement */
+/* la séparation carte / panneau : sous 1 100 px de large, en portrait (carte fixe) comme en paysage bas (la page défile) */
 .rp-split { display: none; }
 @media (max-width: 1099px) and ((min-height: 600px) or (orientation: portrait)) {
   .app { grid-template-rows: auto 26px minmax(0, 1fr) !important; }
+}
+@media (max-width: 1099px) {
   .mapwrap { border-bottom: none !important; }
   .rp-split { display: flex; align-items: center; justify-content: center; height: 26px; cursor: row-resize; touch-action: none; user-select: none;
     background: var(--olive-deep); border-top: 2px solid var(--amber-dark); border-bottom: 1px solid var(--khaki); position: relative; z-index: 2; }
@@ -1504,7 +1506,7 @@ JS = r"""
 'use strict';
 
 /* =====================================================
-   ROUTE PLANNER v1.9.0
+   ROUTE PLANNER v1.9.1
    Une route sur une carte (points posés, saisis par coordonnées
    ou par cap et distance), des points de référence, les noms de lieux,
    les villes et les aérodromes DCS, une recherche sur la carte : caps, distances, vitesse sol et minutage,
@@ -5574,13 +5576,19 @@ function drInit() {
   });
 }
 
-/* ============= LA SÉPARATION CARTE / PANNEAU (portrait) ============= */
+/* ============= LA SÉPARATION CARTE / PANNEAU (sous 1 100 px de large) =============
+   Deux mises en page, deux mémoires : en carte fixe (portrait) la clé rp_split_v1, hauteur bornée sur celle de la zone .app ;
+   en paysage bas (la page défile) la clé rp_split_land_v1, hauteur bornée sur celle de la fenêtre moins la barre du haut (56 px). */
 const KEY_SPLIT = 'rp_split_v1';
-const SP_MIN = 220, SP_MIN_F = 0.25, SP_MAX_F = 0.85, SP_STEP = 40, SP_DBL_MS = 350;
-const SP = { el: null, wrap: null, mq: null, h: null, drag: null, raf: 0, want: 0, last: 0 };
+const KEY_SPLIT_LAND = 'rp_split_land_v1';
+const SP_MIN = 220, SP_MIN_F = 0.25, SP_MAX_F = 0.85, SP_STEP = 40, SP_DBL_MS = 350, SP_TOPBAR = 56;
+const SP = { el: null, wrap: null, mq: null, fixed: null, h: null, hl: null, drag: null, raf: 0, want: 0, last: 0 };
 
+function spLand() { return !SP.fixed.matches; }
+function spGet() { return spLand() ? SP.hl : SP.h; }
+function spPut(h) { if (spLand()) SP.hl = h; else SP.h = h; }
 function spBounds() {
-  const H = $('app').getBoundingClientRect().height;
+  const H = spLand() ? window.innerHeight - SP_TOPBAR : $('app').getBoundingClientRect().height;
   return [Math.max(SP_MIN, SP_MIN_F * H), SP_MAX_F * H];
 }
 function spClamp(h) { const b = spBounds(); return Math.max(b[0], Math.min(b[1], h)); }
@@ -5601,24 +5609,34 @@ function spClear() {
   spResize();
 }
 
-function spSave() { try { localStorage.setItem(KEY_SPLIT, String(Math.round(SP.h))); } catch (e) { /* stockage indisponible */ } }
-function spForget() { try { localStorage.removeItem(KEY_SPLIT); } catch (e) { /* stockage indisponible */ } }
+function spKey() { return spLand() ? KEY_SPLIT_LAND : KEY_SPLIT; }
+function spSave() { try { localStorage.setItem(spKey(), String(Math.round(spGet()))); } catch (e) { /* stockage indisponible */ } }
+function spForget() { try { localStorage.removeItem(spKey()); } catch (e) { /* stockage indisponible */ } }
+function spLoad(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    const n = raw == null ? NaN : Number(raw);
+    if (isFinite(n) && n > 0) return n;
+  } catch (e) { /* stockage indisponible */ }
+  return null;
+}
 
-/* En portrait : la hauteur retenue, bornée ; en paysage : celle de la base */
+/* Sous 1 100 px de large : la hauteur retenue de la mise en page courante, bornée, ou sa hauteur d'origine ; au-dessus : celle de la base */
 function spSync() {
   if (!SP.el) return;
-  if (SP.mq.matches && SP.h != null) spApply(spClamp(SP.h));
+  const h = spGet();
+  if (SP.mq.matches && h != null) spApply(spClamp(h));
   else spClear();
 }
 
 function spSet(h) {
-  SP.h = Math.round(spClamp(h));
-  spApply(SP.h);
+  spPut(Math.round(spClamp(h)));
+  spApply(spGet());
   spSave();
 }
 
 function spReset() {
-  SP.h = null;
+  spPut(null);
   spClear();
   spForget();
 }
@@ -5627,12 +5645,10 @@ function spInit() {
   SP.el = $('rp-split');
   SP.wrap = document.querySelector('.mapwrap');
   if (!SP.el || !SP.wrap) return;
-  SP.mq = window.matchMedia(PORTRAIT_FIXED_MQ);
-  try {
-    const raw = localStorage.getItem(KEY_SPLIT);
-    const n = raw == null ? NaN : Number(raw);
-    if (isFinite(n) && n > 0) SP.h = n;
-  } catch (e) { /* stockage indisponible */ }
+  SP.mq = window.matchMedia('(max-width: 1099px)');
+  SP.fixed = window.matchMedia(PORTRAIT_FIXED_MQ);
+  SP.h = spLoad(KEY_SPLIT);
+  SP.hl = spLoad(KEY_SPLIT_LAND);
   const flush = () => {
     if (SP.raf) { cancelAnimationFrame(SP.raf); SP.raf = 0; }
     if (SP.drag) spApply(SP.want);
@@ -5660,7 +5676,7 @@ function spInit() {
     SP.drag = null;
     SP.el.classList.remove('on');
     try { SP.el.releasePointerCapture(e.pointerId); } catch (x) { /* ignore */ }
-    if (d.moved) { SP.h = SP.want; spSave(); SP.last = 0; return; }
+    if (d.moved) { spPut(SP.want); spSave(); SP.last = 0; return; }
     if (e.type !== 'pointerup') return;
     const now = performance.now();
     if (SP.last && now - SP.last <= SP_DBL_MS) { SP.last = 0; spReset(); }      /* deux touchers sans glisser : la hauteur d'origine */
@@ -5674,7 +5690,7 @@ function spInit() {
     spSet(spHeight() + (e.key === 'ArrowDown' ? SP_STEP : -SP_STEP));
   });
   const onChange = () => spSync();
-  if (SP.mq.addEventListener) SP.mq.addEventListener('change', onChange); else if (SP.mq.addListener) SP.mq.addListener(onChange);
+  [SP.mq, SP.fixed].forEach(m => { if (m.addEventListener) m.addEventListener('change', onChange); else if (m.addListener) m.addListener(onChange); });
   window.addEventListener('resize', onChange);
   spSync();
 }
