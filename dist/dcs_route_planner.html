@@ -1707,7 +1707,7 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 'use strict';
 
 /* =====================================================
-   ROUTE PLANNER v1.8.1
+   ROUTE PLANNER v1.9.0
    Une route sur une carte (points posés, saisis par coordonnées
    ou par cap et distance), des points de référence, les noms de lieux,
    les villes et les aérodromes DCS, une recherche sur la carte : caps, distances, vitesse sol et minutage,
@@ -1809,6 +1809,11 @@ const DCS_LEVELS = {
   'alt-Normandy':              [[1, 11, 1], [12, 13, 12], [13, 14, 13], [14, 15, 14], [15, 17, 15]]
 };
 const DCS_URL = 'https://maps.dcsolympus.com/maps/{key}/{z}/{x}/{y}.png';
+/* Couches en plus, par le miroir seul : [minNativeZoom, maxNativeZoom, minZoom], posées au-dessus des couches de DCS_LEVELS.
+   Le miroir de la page hôte porte ces niveaux, qu'Olympus ne sert pas : pas de repli sur Olympus pour elles. */
+const DCS_EXTRA = {
+  'alt-GermanyCW': [[16, 16, 16]]
+};
 const TOPO_URL = 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png';
 const SAT_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
 const PLACES_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}';
@@ -3622,14 +3627,81 @@ function frameRoute() {
 
 function attrText(id) { return id === 'grid' ? '' : t('attr.' + id); }
 
+/* Le miroir des tuiles DCS. La page hôte peut écrire localStorage['map_layers_v1'] (même origine que ce module ; le module ne
+   l'écrit jamais) : {"configSchemaVersion":1,"dcs":{"url":"/chemin/{key}/{z}/{x}/{y}.png"}}. Sans cette clé, ou si elle n'est
+   pas valide, les tuiles viennent d'Olympus directement. Lu à chaque setBase(). */
+const KEY_MAP_LAYERS = 'map_layers_v1';
+const MIRROR_FAIL_MAX = 8;
+function readMirrorUrl() {
+  try {
+    const raw = localStorage.getItem(KEY_MAP_LAYERS);
+    if (!raw) return null;
+    const c = JSON.parse(raw);
+    if (!c || typeof c !== 'object' || Array.isArray(c) || c.configSchemaVersion !== 1) return null;
+    const d = c.dcs;
+    if (!d || typeof d !== 'object') return null;
+    const u = d.url;
+    if (typeof u !== 'string' || u.length > 300 || u.charAt(0) !== '/' || u.charAt(1) === '/' || u.indexOf('\\') >= 0) return null;
+    if (['{key}', '{z}', '{x}', '{y}'].some(p => u.indexOf(p) < 0)) return null;
+    return u;
+  } catch (e) { return null; }
+}
+
+/* Disjoncteur du miroir, pour la vie de la page : coupé dès 8 échecs sans une seule réussite, puis jusqu'au rechargement */
+let mirrorOk = 0, mirrorFail = 0, mirrorCut = false;
+function mirrorNote(ok) {
+  if (ok) { mirrorOk++; return; }
+  mirrorFail++;
+  if (mirrorOk === 0 && mirrorFail >= MIRROR_FAIL_MAX) mirrorCut = true;
+}
+
+/* Couche de tuiles DCS : chaque tuile est d'abord demandée au miroir ; si son image échoue, elle est redemandée une fois à
+   Olympus (sauf couche « mirrorOnly »). La tuile n'est en erreur que si le dernier essai échoue. Miroir coupé : Olympus direct. */
+function fillTile(tpl, z, x, y) { return tpl.split('{z}').join(z).split('{x}').join(x).split('{y}').join(y); }
+const DcsTileLayer = L.TileLayer.extend({
+  createTile: function (coords, done) {
+    const img = document.createElement('img');
+    img.alt = '';
+    const z = this._getZoomForUrl(), o = this.options;
+    const mirrorUrl = fillTile(o.mirrorUrl, z, coords.x, coords.y);
+    const olympusUrl = o.mirrorOnly ? null : fillTile(o.olympusUrl, z, coords.x, coords.y);
+    let stage = mirrorCut ? 'olympus' : 'mirror';
+    if (stage === 'olympus' && !olympusUrl) {
+      setTimeout(() => done(new Error('mirror cut'), img), 0);
+      return img;
+    }
+    img.addEventListener('load', () => { if (stage === 'mirror') mirrorNote(true); done(null, img); });
+    img.addEventListener('error', e => {
+      if (stage === 'mirror') {
+        mirrorNote(false);
+        if (olympusUrl) { stage = 'olympus'; img.src = olympusUrl; return; }
+      }
+      done(e, img);
+    });
+    img.src = stage === 'mirror' ? mirrorUrl : olympusUrl;
+    return img;
+  }
+});
+
 function tileLayersFor(id) {
   const attribution = attrText(id);
   if (id === 'topo') return [L.tileLayer(TOPO_URL, { subdomains: 'abc', maxNativeZoom: 17, maxZoom: 18, attribution: attribution })];
   if (id === 'sat') return [L.tileLayer(SAT_URL, { maxNativeZoom: 19, maxZoom: 18, attribution: attribution })];
   if (id === 'dcs') {
     const key = dcsKey();
-    return (DCS_LEVELS[key] || []).map(lv => L.tileLayer(DCS_URL.replace('{key}', key),
-      { minNativeZoom: lv[0], maxNativeZoom: lv[1], minZoom: lv[2], maxZoom: 18, attribution: attribution }));
+    const levels = DCS_LEVELS[key] || [];
+    const mirror = readMirrorUrl();
+    if (!mirror) {
+      return levels.map(lv => L.tileLayer(DCS_URL.replace('{key}', key),
+        { minNativeZoom: lv[0], maxNativeZoom: lv[1], minZoom: lv[2], maxZoom: 18, attribution: attribution }));
+    }
+    const mirrorUrl = mirror.split('{key}').join(key), olympusUrl = DCS_URL.replace('{key}', key);
+    const mk = (lv, mirrorOnly) => new DcsTileLayer(mirrorUrl,
+      { minNativeZoom: lv[0], maxNativeZoom: lv[1], minZoom: lv[2], maxZoom: 18, attribution: attribution,
+        mirrorUrl: mirrorUrl, olympusUrl: olympusUrl, mirrorOnly: mirrorOnly });
+    const layers = levels.map(lv => mk(lv, false));
+    if (!mirrorCut) (DCS_EXTRA[key] || []).forEach(lv => layers.push(mk(lv, true)));
+    return layers;
   }
   return [];
 }
