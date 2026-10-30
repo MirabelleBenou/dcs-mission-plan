@@ -14,6 +14,15 @@ The suite bundles several **independently-versioned tools**, so entries are grou
 - **Tablet & mobile** first-class target (touch, drag, rotation-safe).
 - Wing configuration shared automatically across embedded tools.
 
+### `v1.21.1`
+#### Changed
+- Embeds **Route Planner v1.12.1** — a *Display* menu, and the map stays fixed below 1,100 px wide in every orientation (see below).
+
+### `v1.21.0`
+#### Added
+- Embeds **Route Planner v1.12.0**, **Briefing Generator v2.5.0** and **Field Manual v1.2.4** — send the framed map view from the Route Planner to the briefing (see below).
+- The board relays the map image from the Route Planner to the Briefing Generator, in memory only.
+
 ### `v1.20.0`
 #### Added
 - Embeds **Route Planner v1.11.0** — NATO military symbols (APP-6) in drawn layers (see below).
@@ -171,6 +180,12 @@ Initial release. Command post for the suite.
 ---
 
 ## Briefing Generator
+
+### `v2.5.0`
+#### Added
+- **Receive a map from the Route Planner**: a window asks where to place it — in the quick brief, the map · threats · targets page or a photo page; in the full brief, the SITAC map, the cover map, a mission's documents or a new annex page. A map already in place is replaced only after confirmation.
+#### Fixed
+- A full browser storage is now reported (a toast) instead of failing silently to save the briefing.
 
 ### `v2.4.7`
 #### Fixed
@@ -355,6 +370,16 @@ Initial release. One-page flight datacards for the cockpit kneeboard.
 
 ## Route Planner
 
+### `v1.12.1`
+#### Added
+- **Display menu** in the top bar: show or hide the route, reference points, drawings, NATO symbols, imported layers, MGRS grid, towns, airfields and places — it replaces the four toggle buttons; a dot marks the button when something is hidden. A hidden element comes back when you switch to the mode that edits it, and the choices are remembered.
+#### Changed
+- Below 1,100 px wide, **the map stays fixed in every orientation** (short landscape windows included — e.g. unfolded phones) and only the panel scrolls; the divider sets the map height (140 px minimum in short landscape). While typing in the panel with the on-screen keyboard up, the map shrinks to its minimum and comes back afterwards.
+
+### `v1.12.0`
+#### Added
+- **→ To the briefing**: frame the map (3:2 landscape or 2:3 portrait, pan and zoom under the frame) and export what the screen shows — background, grid, route, leg boxes, minute ticks, layers and NATO symbols — as a 1,600 px JPEG with a caption band (route name, theatre, scale bar in the route's distance unit), a north arrow and the background's attribution. In the suite it goes straight to the Briefing Generator; standalone, the image is downloaded.
+
 ### `v1.11.0`
 #### Added
 - **NATO military symbols (APP-6)** in drawn layers — a ninth drawing tool, *Symbol*: tap the map to place it, then set it in its sheet: side (friend, hostile, neutral, unknown), style (filled in APP-6 colours, or outlined in the side's colour), size (S, M, L, fixed on screen), the symbol itself from a catalogue — units (infantry, mechanised infantry, armour, recon, artillery, air defence, helicopters, engineers, logistics) with their echelon (platoon to division) and higher formation, equipment (tank, IFV, SAM, AAA, radar), aircraft (fixed-wing, fighter, attack, bomber, transport, helicopter, attack helicopter) and the FARP — and its designation.
@@ -466,6 +491,10 @@ Initial release. Lay a route on a map, read it, send it to the datacard.
 - **JSON** save and open, an example route, 14 theatres, 4 themes, FR/EN, tablet and phone layouts.
 
 ## Field Manual
+
+### `v1.2.4`
+#### Changed
+- Briefing Generator chapter: the map can come from the Route Planner.
 
 ### `v1.2.3`
 #### Changed
