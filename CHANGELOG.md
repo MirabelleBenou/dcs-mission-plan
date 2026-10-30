@@ -14,6 +14,12 @@ The suite bundles several **independently-versioned tools**, so entries are grou
 - **Tablet & mobile** first-class target (touch, drag, rotation-safe).
 - Wing configuration shared automatically across embedded tools.
 
+### `v1.22.0`
+#### Added
+- Embeds **Briefing Generator v2.6.0** — an optional radio name and channel on each frequency of the quick brief (see below).
+#### Changed
+- The board shows its tools in a new order: HQ, Route Planner, Briefing Generator, Datacard Generator, Recon Station, Field Manual.
+
 ### `v1.21.1`
 #### Changed
 - Embeds **Route Planner v1.12.1** — a *Display* menu, and the map stays fixed below 1,100 px wide in every orientation (see below).
@@ -180,6 +186,10 @@ Initial release. Command post for the suite.
 ---
 
 ## Briefing Generator
+
+### `v2.6.0`
+#### Added
+- **Radio name and channel on each frequency of the quick brief**, both optional: under each frequency line of the editor, then in a column between the label and the frequency on the mission page (`R-863 · CH 3`; a channel made of digits only is shown as `CH 3`). The column appears only when at least one line has a radio or a channel — otherwise the page is unchanged. The full brief keeps both fields without showing them.
 
 ### `v2.5.0`
 #### Added
