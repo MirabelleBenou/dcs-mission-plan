@@ -14,6 +14,10 @@ The suite bundles several **independently-versioned tools**, so entries are grou
 - **Tablet & mobile** first-class target (touch, drag, rotation-safe).
 - Wing configuration shared automatically across embedded tools.
 
+### `v1.19.1`
+#### Fixed
+- Embeds **Briefing Generator v2.4.7** — neutral example reference, and remove buttons that stay inside editor rows (see below).
+
 ### `v1.19.0`
 #### Added
 - Embeds **Route Planner v1.10.0** — Flappie's navigation chart as a background on the Caucasus, and DCS map tiles served from a public host before DCS Olympus (see below).
@@ -163,6 +167,11 @@ Initial release. Command post for the suite.
 ---
 
 ## Briefing Generator
+
+### `v2.4.7`
+#### Fixed
+- The example placeholder of the document reference field and the reference of the loaded example are now neutral (`FH-M3-1989`); the example's phases no longer carry a squadron that the default wing config does not have.
+- The × remove button no longer overflows the right edge of airfield and radio-item rows in the editor — airfields on tablets and desktops, radio items on phones — in both the full and the quick format; the button keeps its 44 px touch size.
 
 ### `v2.4.6`
 #### Changed
