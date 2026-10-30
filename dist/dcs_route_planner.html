@@ -1401,9 +1401,10 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 }
 .rp-drawing .leaflet-layers-pane, .rp-drawing .leaflet-layers-pane * { pointer-events: none !important; }
 
-/* la séparation carte / panneau : sous 1 100 px de large, en portrait comme en paysage (la page défile) */
+/* la séparation carte / panneau : sous 1 100 px de large, dans toutes les orientations (la carte reste fixe, seul le panneau défile) */
 .rp-split { display: none; }
 @media (max-width: 1099px) {
+  .app { grid-template-rows: auto 26px minmax(0, 1fr) !important; }
   .mapwrap { border-bottom: none !important; }
   .rp-split { display: flex; align-items: center; justify-content: center; height: 26px; cursor: row-resize; touch-action: none; user-select: none;
     background: var(--olive-deep); border-top: 2px solid var(--amber-dark); border-bottom: 1px solid var(--khaki); position: relative; z-index: 2; }
@@ -1488,12 +1489,13 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .toolbar::after { right: 0; margin-left: calc(-1 * (var(--fade-w) + var(--fade-gap))); background: inherit; mask-image: linear-gradient(270deg, #000, transparent); -webkit-mask-image: linear-gradient(270deg, #000, transparent); }
 .toolbar.fade-l::before, .toolbar.fade-r::after { opacity: 1; }
 
-/* ---------- tablette portrait, téléphone : sous 1 100 px de large, toute la page défile (la carte en haut sort de l'écran, le panneau dessous) ---------- */
+/* ---------- tablette, téléphone : sous 1 100 px de large, dans toutes les orientations, la page ne défile jamais : la carte reste en haut,
+   à sa hauteur, et seul le panneau, dessous, défile ---------- */
 @media (max-width: 1099px) {
-  .app { position: static; display: block; padding-top: 56px; }
-  .mapwrap { height: 58vh; min-height: 340px; border-left: none; border-bottom: 2px solid var(--amber-dark); }
+  .app { position: fixed; top: 56px; bottom: 0; left: 0; right: 0; padding-top: 0; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+  .mapwrap { height: 58vh; min-height: 340px; min-width: 0; border-left: none; border-bottom: 2px solid var(--amber-dark); }
   .app > .panel { order: 0; }
-  .panel { overflow: visible; }
+  .panel { overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; min-height: 0; }
 }
 @media (max-width: 520px) {
   .pt-row, .pt-head { grid-template-columns: 28px 1fr 62px 80px 30px; gap: 4px; }
@@ -4504,6 +4506,19 @@ function createMap() {
   window.addEventListener('resize', onSize);
 }
 
+/* Sous 1 100 px de large (la page ne défile jamais), un champ du panneau qui prend le focus est amené en vue dans le panneau, y compris
+   après le redimensionnement du viewport visuel (clavier virtuel) ; la hauteur de la carte pendant le clavier : voir spKbCheck */
+function revealPanelField(el) {
+  if (!window.matchMedia || !window.matchMedia('(max-width: 1099px)').matches) return;
+  const go = () => { try { el.scrollIntoView({ block: 'center', inline: 'nearest' }); } catch (e) { /* ignore */ } };
+  go();
+  const vv = window.visualViewport;
+  if (!vv) return;
+  const again = () => { vv.removeEventListener('resize', again); if (document.activeElement === el) go(); };
+  vv.addEventListener('resize', again);
+  setTimeout(() => vv.removeEventListener('resize', again), 1000);
+}
+
 /* ============= GRILLE MGRS ============= */
 function scheduleGrid() {
   if (gridQueued || !mapCreated) return;
@@ -6676,21 +6691,23 @@ function drInit() {
 }
 
 /* ============= LA SÉPARATION CARTE / PANNEAU (sous 1 100 px de large) =============
-   La page défile dans les deux orientations ; deux mémoires : en portrait (sous 1 100 px de large, à partir de 600 px de haut ou toute fenêtre plus haute
-   que large : le clavier virtuel ne la fait pas changer de mémoire) la clé rp_split_v1, en paysage la clé rp_split_land_v1 ; la hauteur est
-   bornée, dans les deux cas, sur celle de la fenêtre moins la barre du haut (56 px). */
+   La carte reste fixe dans toutes les orientations (la page ne défile jamais, le panneau défile seul) ; deux mémoires : en portrait (sous 1 100 px
+   de large, à partir de 600 px de haut ou toute fenêtre plus haute que large : le clavier virtuel ne la fait pas changer de mémoire) la clé
+   rp_split_v1, bornée à partir de 220 px ; en paysage bas la clé rp_split_land_v1, bornée à partir de 140 px ; dans les deux cas la borne haute
+   est 85 % de la hauteur de la fenêtre moins la barre du haut (56 px). Pendant le clavier virtuel (un champ du panneau a le focus et la fenêtre
+   a perdu plus de 120 px), la carte passe à sa borne basse, sans rien écrire en mémoire. */
 const KEY_SPLIT = 'rp_split_v1';
 const KEY_SPLIT_LAND = 'rp_split_land_v1';
-const SP_MIN = 220, SP_MIN_F = 0.25, SP_MAX_F = 0.85, SP_STEP = 40, SP_DBL_MS = 350, SP_TOPBAR = 56;
+const SP_MIN = 220, SP_MIN_LAND = 140, SP_MIN_F = 0.25, SP_MAX_F = 0.85, SP_STEP = 40, SP_DBL_MS = 350, SP_TOPBAR = 56, SP_KB_DROP = 120;
 const SP_PORTRAIT_MQ = '(max-width: 1099px) and ((min-height: 600px) or (orientation: portrait))';
-const SP = { el: null, wrap: null, mq: null, port: null, h: null, hl: null, drag: null, raf: 0, want: 0, last: 0 };
+const SP = { el: null, wrap: null, mq: null, port: null, h: null, hl: null, drag: null, raf: 0, want: 0, last: 0, kb: false, vh: 0 };
 
 function spLand() { return !SP.port.matches; }
 function spGet() { return spLand() ? SP.hl : SP.h; }
 function spPut(h) { if (spLand()) SP.hl = h; else SP.h = h; }
 function spBounds() {
   const H = window.innerHeight - SP_TOPBAR;
-  return [Math.max(SP_MIN, SP_MIN_F * H), SP_MAX_F * H];
+  return [Math.max(spLand() ? SP_MIN_LAND : SP_MIN, SP_MIN_F * H), SP_MAX_F * H];
 }
 function spClamp(h) { const b = spBounds(); return Math.max(b[0], Math.min(b[1], h)); }
 function spHeight() { return SP.wrap.getBoundingClientRect().height; }
@@ -6726,8 +6743,24 @@ function spLoad(key) {
 function spSync() {
   if (!SP.el) return;
   const h = spGet();
-  if (SP.mq.matches && h != null) spApply(spClamp(h));
+  if (SP.mq.matches && SP.kb) spApply(spBounds()[0]);      /* clavier virtuel : la borne basse, rien en mémoire */
+  else if (SP.mq.matches && h != null) spApply(spClamp(h));
   else spClear();
+}
+
+/* Le clavier virtuel : un champ du panneau a le focus et la fenêtre a perdu plus de 120 px depuis le dernier repos ; la carte passe à sa borne
+   basse, le champ est amené dans la partie visible du panneau ; la hauteur gardée revient dès que le champ est quitté ou que la hauteur revient */
+function spKbCheck() {
+  if (!SP.el) return;
+  const a = document.activeElement;
+  const field = !!(a && a.closest && a.closest('#panel') && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName));
+  const on = SP.mq.matches && field && SP.vh - window.innerHeight > SP_KB_DROP;
+  if (!on && !SP.kb) { if (!field || window.innerHeight > SP.vh) SP.vh = window.innerHeight; return; }      /* au repos : la hauteur de référence suit la fenêtre */
+  if (on === SP.kb) return;
+  SP.kb = on;
+  if (!on && window.innerHeight > SP.vh - SP_KB_DROP) SP.vh = window.innerHeight;
+  spSync();
+  if (on) { const go = () => { try { a.scrollIntoView({ block: 'center', inline: 'nearest' }); } catch (e) { /* ignore */ } }; go(); setTimeout(go, 60); }
 }
 
 function spSet(h) {
@@ -6790,7 +6823,8 @@ function spInit() {
     e.preventDefault();
     spSet(spHeight() + (e.key === 'ArrowDown' ? SP_STEP : -SP_STEP));
   });
-  const onChange = () => spSync();
+  SP.vh = window.innerHeight;
+  const onChange = () => { spKbCheck(); spSync(); };
   [SP.mq, SP.port].forEach(m => { if (m.addEventListener) m.addEventListener('change', onChange); else if (m.addListener) m.addListener(onChange); });
   window.addEventListener('resize', onChange);
   spSync();
@@ -8767,6 +8801,11 @@ function bindEvents() {
     if (e.key === 'mission_snapshot_v1' && navIsCalc()) { renderNav(); drawRoute(); syncControls(); }
   });
   $('route-name').addEventListener('input', e => { S.name = e.target.value; persistState(); });
+  $('panel').addEventListener('focusin', ev => {
+    const el = ev.target;
+    if (el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) { spKbCheck(); revealPanelField(el); }
+  });
+  $('panel').addEventListener('focusout', () => setTimeout(spKbCheck, 0));
   const pts = $('pts');
   pts.addEventListener('input', ev => onRowInput(ev, 'wp'));
   pts.addEventListener('change', ev => onRowChange(ev, 'wp'));
