@@ -1067,7 +1067,6 @@ table.nav td.r { text-align: right; white-space: nowrap; }
 /* ce que pose un toucher sur la carte : Point · Réf. */
 .tapmode { background: var(--olive-deep); border: 2px solid var(--amber-dark); box-shadow: 0 2px 8px rgba(0,0,0,.4); }
 .tapmode .tb-btn { height: 36px; min-width: 0; padding: 0 10px; font-size: 11px; letter-spacing: 1px; }
-#btn-airfields:disabled, #btn-towns:disabled { pointer-events: auto; cursor: not-allowed; }
 /* villes DCS (lot rp-v1.5.0) : un point de 5 px et le nom à côté, posés sans chevauchement (pane « towns », z-index 370) ;
    le rectangle de l'étiquette est celui du bloc .tw, calculé en pixels (voir syncTowns) */
 .tw-icon { width: 0; height: 0; }
@@ -1220,6 +1219,28 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .cf-modal .rt-btn.go { background: transparent; color: var(--amber); border-color: var(--amber); }
 .cf-modal .rt-btn.go:hover, .cf-modal .rt-btn.go:focus-visible { background: var(--olive); color: var(--paper-light); }
 .cf-modal .rt-btn:disabled { opacity: .35; }
+
+/* ---------- le menu « Affichage » (lot rp-v1.12.1) : le bouton de la barre et son panneau, au style des listes de la barre (tbm-*) ---------- */
+#btn-display { position: relative; color: var(--amber); border-color: var(--amber-dark); padding-right: 12px; }
+#btn-display:hover, #btn-display:focus-visible, #btn-display.dsp-open { border-color: var(--amber); }
+#btn-display .dsp-chev { width: 10px; height: 6px; }
+#btn-display.dsp-open .dsp-chev { transform: rotate(180deg); }
+.dsp-dot { position: absolute; top: -3px; right: -3px; width: 7px; height: 7px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 0 2px var(--olive-deep); pointer-events: none; }
+.dsp-dot[hidden] { display: none; }
+.dsp-panel { max-height: min(80vh, 600px); min-width: 240px; padding-bottom: 6px; }
+.dsp-sub { font-family: var(--f-ui); font-weight: 500; font-size: 10px; letter-spacing: 1.8px; text-transform: uppercase; color: var(--khaki); padding: 10px 18px 4px; }
+.dsp-sub:not(:first-of-type) { border-top: 1px solid rgba(168,154,114,.25); margin-top: 4px; }
+.dsp-opt { outline: none; color: var(--khaki-light); }
+.dsp-opt[aria-checked="true"] { color: var(--paper); }
+.dsp-opt:focus-visible { background: var(--olive); color: var(--amber); }
+.dsp-box { position: relative; width: 15px; height: 15px; flex: none; box-sizing: border-box; border: 1.5px solid var(--khaki); }
+.dsp-opt[aria-checked="true"] .dsp-box { background: var(--amber); border-color: var(--amber); }
+.dsp-opt[aria-checked="true"] .dsp-box::after { content: ''; position: absolute; left: 3.5px; top: 0.5px; width: 4px; height: 8px; box-sizing: border-box;
+  border-right: 2px solid var(--olive-deep); border-bottom: 2px solid var(--olive-deep); transform: rotate(45deg); }
+.dsp-opt:hover .dsp-box { border-color: var(--amber); }
+.dsp-opt[aria-disabled="true"] .dsp-box { border-style: dashed; border-color: var(--khaki); background: none; }
+.dsp-opt[aria-disabled="true"] .dsp-box::after { display: none; }
+.dsp-n { margin-left: auto; padding-left: 14px; font-family: var(--f-mono); font-weight: 400; font-size: 11px; letter-spacing: 0; text-transform: none; color: var(--khaki); }
 
 /* ---------- export de la vue vers le briefing (lot rp-v1.12.0) : le cadre 3:2 / 2:3 posé sur la carte et sa barre ---------- */
 .export-layer { position: absolute; inset: 0; z-index: 800; overflow: hidden; pointer-events: none; }
@@ -1380,11 +1401,8 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 }
 .rp-drawing .leaflet-layers-pane, .rp-drawing .leaflet-layers-pane * { pointer-events: none !important; }
 
-/* la séparation carte / panneau : sous 1 100 px de large, en portrait (carte fixe) comme en paysage bas (la page défile) */
+/* la séparation carte / panneau : sous 1 100 px de large, en portrait comme en paysage (la page défile) */
 .rp-split { display: none; }
-@media (max-width: 1099px) and ((min-height: 600px) or (orientation: portrait)) {
-  .app { grid-template-rows: auto 26px minmax(0, 1fr) !important; }
-}
 @media (max-width: 1099px) {
   .mapwrap { border-bottom: none !important; }
   .rp-split { display: flex; align-items: center; justify-content: center; height: 26px; cursor: row-resize; touch-action: none; user-select: none;
@@ -1470,20 +1488,12 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .toolbar::after { right: 0; margin-left: calc(-1 * (var(--fade-w) + var(--fade-gap))); background: inherit; mask-image: linear-gradient(270deg, #000, transparent); -webkit-mask-image: linear-gradient(270deg, #000, transparent); }
 .toolbar.fade-l::before, .toolbar.fade-r::after { opacity: 1; }
 
-/* ---------- tablette portrait, téléphone ---------- */
+/* ---------- tablette portrait, téléphone : sous 1 100 px de large, toute la page défile (la carte en haut sort de l'écran, le panneau dessous) ---------- */
 @media (max-width: 1099px) {
   .app { position: static; display: block; padding-top: 56px; }
   .mapwrap { height: 58vh; min-height: 340px; border-left: none; border-bottom: 2px solid var(--amber-dark); }
   .app > .panel { order: 0; }
   .panel { overflow: visible; }
-}
-/* En portrait (sous 1 100 px de large, à partir de 600 px de haut, ou toute fenêtre plus haute que large : le clavier virtuel ne la fait pas
-   changer de mise en page) la page ne défile plus : la carte reste en haut, à sa hauteur, et seul le panneau, dessous, défile.
-   Sous 600 px de haut en paysage, la page défile comme ci-dessus. */
-@media (max-width: 1099px) and ((min-height: 600px) or (orientation: portrait)) {
-  .app { position: fixed; top: 56px; bottom: 0; left: 0; right: 0; padding-top: 0; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
-  .mapwrap { min-width: 0; }
-  .panel { overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; min-height: 0; }
 }
 @media (max-width: 520px) {
   .pt-row, .pt-head { grid-template-columns: 28px 1fr 62px 80px 30px; gap: 4px; }
@@ -1560,10 +1570,12 @@ SOFTWARE.
     <option value="sat" data-i18n="layer.sat">Satellite</option>
     <option value="grid" data-i18n="layer.grid">Grille seule</option>
   </select>
-  <button type="button" class="tb-btn" id="btn-grid" aria-pressed="true" data-i18n="tb.grid" data-i18n-title="tb.grid" title="Grille MGRS">Grille MGRS</button>
-  <button type="button" class="tb-btn" id="btn-places" aria-pressed="false" data-i18n="tb.places" data-i18n-title="tb.places.tip" title="Noms de lieux (Esri)">Lieux</button>
-  <button type="button" class="tb-btn" id="btn-towns" aria-pressed="true" data-i18n="tb.towns" data-i18n-title="tb.towns.tip" title="Villes DCS (à partir du zoom 10)">Villes</button>
-  <button type="button" class="tb-btn" id="btn-airfields" aria-pressed="true" data-i18n="tb.airfields" data-i18n-title="tb.airfields.tip" title="Aérodromes et hélistations DCS">Aérodromes</button>
+  <button type="button" class="tb-btn" id="btn-display" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.display.tip" title="Ce qui s'affiche sur la carte">
+    <svg class="dsp-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/></svg>
+    <span data-i18n="tb.display">Affichage</span>
+    <svg class="dsp-chev" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg>
+    <i class="dsp-dot" id="dsp-dot" hidden></i>
+  </button>
   <span class="tb-sep"></span>
   <span class="tb-label" data-i18n="tb.theatre">Théâtre</span>
   <select class="tb-sel" id="theatre" data-i18n-aria-label="tb.theatre" aria-label="Théâtre"></select>
@@ -1796,7 +1808,7 @@ SOFTWARE.
 'use strict';
 
 /* =====================================================
-   ROUTE PLANNER v1.12.0
+   ROUTE PLANNER v1.12.1
    Une route sur une carte (points posés, saisis par coordonnées
    ou par cap et distance), des points de référence, les noms de lieux,
    les villes et les aérodromes DCS, une recherche sur la carte : caps, distances, vitesse sol et minutage,
@@ -2127,8 +2139,20 @@ const I18N = {
     'layer.grid': 'Grille seule',
     'layer.dcsOff': 'Carte DCS — absente de ce théâtre',
     'layer.flappie': 'Carte de navigation (Flappie)',
+    'tb.display': 'Affichage',
+    'tb.display.tip': 'Ce qui s\'affiche sur la carte',
+    'dsp.head': 'Afficher sur la carte',
+    'dsp.g.mission': 'Mission',
+    'dsp.g.layers': 'Calques',
+    'dsp.g.base': 'Fond',
+    'dsp.route': 'Route',
+    'dsp.refs': 'Points de réf.',
+    'dsp.draw': 'Dessins',
+    'dsp.sym': 'Symboles OTAN',
+    'dsp.cf': 'Calques importés',
+    'dsp.pts': '{n} pts',
     'tb.grid': 'Grille MGRS',
-    'tb.places': 'Lieux',
+    'tb.places': 'Lieux (Esri)',
     'tb.places.tip': 'Noms de lieux (Esri)',
     'tb.airfields': 'Aérodromes',
     'tb.airfields.tip': 'Aérodromes et hélistations DCS',
@@ -2509,8 +2533,20 @@ const I18N = {
     'layer.grid': 'Grid only',
     'layer.dcsOff': 'DCS map — not available for this theatre',
     'layer.flappie': 'Navigation chart (Flappie)',
+    'tb.display': 'Display',
+    'tb.display.tip': 'What the map shows',
+    'dsp.head': 'Show on the map',
+    'dsp.g.mission': 'Mission',
+    'dsp.g.layers': 'Layers',
+    'dsp.g.base': 'Base map',
+    'dsp.route': 'Route',
+    'dsp.refs': 'Ref. points',
+    'dsp.draw': 'Drawings',
+    'dsp.sym': 'NATO symbols',
+    'dsp.cf': 'Imported layers',
+    'dsp.pts': '{n} pts',
     'tb.grid': 'MGRS grid',
-    'tb.places': 'Places',
+    'tb.places': 'Places (Esri)',
     'tb.places.tip': 'Place names (Esri)',
     'tb.airfields': 'Airfields',
     'tb.airfields.tip': 'DCS airfields and helipads',
@@ -3380,6 +3416,8 @@ function defaultState() {
 let S = defaultState();
 let sel = -1;                 /* point sélectionné (non enregistré) */
 let selR = -1;                /* point de référence sélectionné (non enregistré) */
+const KEY_DISPLAY = 'rp_display_v1';
+const DISP = { route: true, refs: true, draw: true, sym: true, cf: true };     /* ce que le menu « Affichage » montre ; gardé dans rp_display_v1, jamais dans route_state_v1 */
 let tapMode = 'wp';           /* ce que fait un toucher sur la carte : 'wp' (pose un point), 'ref' (pose une référence), 'read' (ouvre les fiches des calques, ne pose rien) ou 'draw' (dessine dans un calque) — non enregistré */
 let addMode = 'coord';        /* bloc Ajouter : 'coord' ou 'hd' (cap et distance) — non enregistré */
 
@@ -4036,7 +4074,7 @@ function setFallback(on) {
   updateMapClass();
   syncPlaces();
   syncTowns();
-  syncTownsButton();
+  dspSync();
   scheduleGrid();
 }
 
@@ -4365,7 +4403,7 @@ function setBase() {
   tileTimer = setTimeout(() => { if (gen !== baseGen) return; timerElapsed = true; checkFallback(); }, FALLBACK_MS);
   updateMapClass();
   syncTowns();
-  syncTownsButton();
+  dspSync();
   scheduleGrid();
 }
 
@@ -4464,20 +4502,6 @@ function createMap() {
   };
   if (window.ResizeObserver) new ResizeObserver(onSize).observe(wrap);
   window.addEventListener('resize', onSize);
-}
-
-/* En portrait (la page ne défile pas), un champ du panneau qui prend le focus est amené en vue dans le panneau, y compris
-   après le redimensionnement du viewport visuel (clavier virtuel) ; la carte ne bouge pas */
-const PORTRAIT_FIXED_MQ = '(max-width: 1099px) and ((min-height: 600px) or (orientation: portrait))';
-function revealPanelField(el) {
-  if (!window.matchMedia || !window.matchMedia(PORTRAIT_FIXED_MQ).matches) return;
-  const go = () => { try { el.scrollIntoView({ block: 'center', inline: 'nearest' }); } catch (e) { /* ignore */ } };
-  go();
-  const vv = window.visualViewport;
-  if (!vv) return;
-  const again = () => { vv.removeEventListener('resize', again); if (document.activeElement === el) go(); };
-  vv.addEventListener('resize', again);
-  setTimeout(() => vv.removeEventListener('resize', again), 1000);
 }
 
 /* ============= GRILLE MGRS ============= */
@@ -4658,6 +4682,7 @@ function drawRoute() {
   routeGroup.clearLayers();
   linePair = null;
   ptMarkers = [];
+  if (!DISP.route) { drawDecor(); return; }      /* Route masquée : ni tracé, ni points, ni « + », ni traits, boîtes et étiquettes */
   const pts = S.points;
   const tm = timing();
   const ll = pts.map(p => [p.lat, p.lon]);
@@ -4828,6 +4853,7 @@ function drawBox(i, pa, pb, len, leg) {
 function drawDecorNow() {
   if (!decorGroup) return;
   decorGroup.clearLayers();
+  if (!DISP.route) return;
   const pts = S.points;
   if (pts.length < 2) return;
   const tm = timing();
@@ -4868,7 +4894,7 @@ function rfIcon(p, i) {
 function drawRefs() {
   if (!refGroup) return;
   refGroup.clearLayers();
-  S.refs.forEach((p, i) => {
+  (DISP.refs ? S.refs : []).forEach((p, i) => {
     const mk = L.marker([p.lat, p.lon], { pane: 'refs', draggable: true, autoPan: true, zIndexOffset: i === selR ? 1000 : 0, icon: rfIcon(p, i), title: p.name });
     mk.on('dragstart', twDragStart);
     mk.on('drag', ev => {
@@ -5258,12 +5284,19 @@ function cfSyncPointNames() {
   });
 }
 
+/* Le menu « Affichage » : un symbole OTAN (quel que soit son calque), un objet d'un calque dessiné, un objet d'un calque importé ; un objet masqué n'est pas dessiné :
+   ni vu, ni touchable, sans rien changer à la visibilité du calque */
+function cfItemShown(l, it) {
+  if (it.type === 'symbol') return DISP.sym;
+  return l.source.kind === 'drawn' ? DISP.draw : DISP.cf;
+}
+
 /* Les calques visibles, dans l'ordre de la section (le premier dessous) */
 function drawLayers() {
   if (!cfGroup) return;
   cfGroup.clearLayers();
   cfPointMarks = [];
-  CF_LAYERS.forEach(l => { if (l.visible) l.items.forEach(cfDrawItem); });
+  CF_LAYERS.forEach(l => { if (l.visible) l.items.forEach(it => { if (cfItemShown(l, it)) cfDrawItem(it); }); });
   cfSyncPointNames();
 }
 
@@ -6643,18 +6676,20 @@ function drInit() {
 }
 
 /* ============= LA SÉPARATION CARTE / PANNEAU (sous 1 100 px de large) =============
-   Deux mises en page, deux mémoires : en carte fixe (portrait) la clé rp_split_v1, hauteur bornée sur celle de la zone .app ;
-   en paysage bas (la page défile) la clé rp_split_land_v1, hauteur bornée sur celle de la fenêtre moins la barre du haut (56 px). */
+   La page défile dans les deux orientations ; deux mémoires : en portrait (sous 1 100 px de large, à partir de 600 px de haut ou toute fenêtre plus haute
+   que large : le clavier virtuel ne la fait pas changer de mémoire) la clé rp_split_v1, en paysage la clé rp_split_land_v1 ; la hauteur est
+   bornée, dans les deux cas, sur celle de la fenêtre moins la barre du haut (56 px). */
 const KEY_SPLIT = 'rp_split_v1';
 const KEY_SPLIT_LAND = 'rp_split_land_v1';
 const SP_MIN = 220, SP_MIN_F = 0.25, SP_MAX_F = 0.85, SP_STEP = 40, SP_DBL_MS = 350, SP_TOPBAR = 56;
-const SP = { el: null, wrap: null, mq: null, fixed: null, h: null, hl: null, drag: null, raf: 0, want: 0, last: 0 };
+const SP_PORTRAIT_MQ = '(max-width: 1099px) and ((min-height: 600px) or (orientation: portrait))';
+const SP = { el: null, wrap: null, mq: null, port: null, h: null, hl: null, drag: null, raf: 0, want: 0, last: 0 };
 
-function spLand() { return !SP.fixed.matches; }
+function spLand() { return !SP.port.matches; }
 function spGet() { return spLand() ? SP.hl : SP.h; }
 function spPut(h) { if (spLand()) SP.hl = h; else SP.h = h; }
 function spBounds() {
-  const H = spLand() ? window.innerHeight - SP_TOPBAR : $('app').getBoundingClientRect().height;
+  const H = window.innerHeight - SP_TOPBAR;
   return [Math.max(SP_MIN, SP_MIN_F * H), SP_MAX_F * H];
 }
 function spClamp(h) { const b = spBounds(); return Math.max(b[0], Math.min(b[1], h)); }
@@ -6712,7 +6747,7 @@ function spInit() {
   SP.wrap = document.querySelector('.mapwrap');
   if (!SP.el || !SP.wrap) return;
   SP.mq = window.matchMedia('(max-width: 1099px)');
-  SP.fixed = window.matchMedia(PORTRAIT_FIXED_MQ);
+  SP.port = window.matchMedia(SP_PORTRAIT_MQ);
   SP.h = spLoad(KEY_SPLIT);
   SP.hl = spLoad(KEY_SPLIT_LAND);
   const flush = () => {
@@ -6756,7 +6791,7 @@ function spInit() {
     spSet(spHeight() + (e.key === 'ArrowDown' ? SP_STEP : -SP_STEP));
   });
   const onChange = () => spSync();
-  [SP.mq, SP.fixed].forEach(m => { if (m.addEventListener) m.addEventListener('change', onChange); else if (m.addListener) m.addListener(onChange); });
+  [SP.mq, SP.port].forEach(m => { if (m.addEventListener) m.addEventListener('change', onChange); else if (m.addListener) m.addListener(onChange); });
   window.addEventListener('resize', onChange);
   spSync();
 }
@@ -6776,6 +6811,7 @@ function renderPts() {
   $('alt-unit').textContent = t('th.alt', { u: t(S.units.altitude === 'ft' ? 'u.ft' : 'u.m') });
   $('spd-unit').textContent = t(S.units.distance === 'nm' ? 'th.spd.kt' : 'th.spd.kmh');
   $('pt-count').textContent = t('sec.points', { n: S.points.length });
+  dspSync();
 }
 
 /* Les rangées des points de référence : le gabarit des rangées de points, la lettre à la place du numéro */
@@ -6790,6 +6826,7 @@ function renderRefs() {
   $('ref-head').hidden = !S.refs.length;
   $('alt-unit2').textContent = t('th.alt', { u: t(S.units.altitude === 'ft' ? 'u.ft' : 'u.m') });
   $('ref-count').textContent = String(S.refs.length);
+  dspSync();
 }
 
 /* La vitesse par défaut, en exemple grisé dans les champs vides de la colonne */
@@ -6875,23 +6912,10 @@ function syncLayerSelect() {
   sl.value = S.ui.layer;
 }
 
-/* Le bouton « Villes » : grisé sur un théâtre sans villes, ou sous un fond qui les porte déjà (townsOnChart) */
-function syncTownsButton() {
-  const tw = $('btn-towns');
-  const hasTw = !!townsOf(S.theatre), off = townsOnChart();
-  tw.disabled = !hasTw || off;
-  tw.classList.toggle('on', hasTw && !off && !!S.ui.towns);
-  tw.setAttribute('aria-pressed', hasTw && !off && S.ui.towns ? 'true' : 'false');
-  tw.title = t(off ? 'tb.towns.offChart' : hasTw ? 'tb.towns.tip' : 'tb.towns.off');
-}
-
 /* Les contrôles de la barre et du panneau reflètent l'état */
 function syncControls() {
   syncLayerSelect();
   $('theatre').value = S.theatre;
-  const grid = $('btn-grid');
-  grid.classList.toggle('on', !!S.ui.grid);
-  grid.setAttribute('aria-pressed', S.ui.grid ? 'true' : 'false');
   const mark = (attr, val) => document.querySelectorAll('[' + attr + ']').forEach(b => {
     const on = b.getAttribute(attr) === val;
     b.classList.toggle('on', on);
@@ -6914,16 +6938,7 @@ function syncControls() {
   rtb.disabled = !S.points.length || !hasRt;
   if (hasRt) rtb.removeAttribute('title'); else rtb.title = t('tb.rt.off');
   $('theme').value = document.body.dataset.theme;
-  const pl = $('btn-places');
-  pl.classList.toggle('on', !!S.ui.places);
-  pl.setAttribute('aria-pressed', S.ui.places ? 'true' : 'false');
-  syncTownsButton();
-  const af = $('btn-airfields');
-  const hasAf = !!airfieldsOf(S.theatre);
-  af.disabled = !hasAf;
-  af.classList.toggle('on', hasAf && !!S.ui.airfields);
-  af.setAttribute('aria-pressed', hasAf && S.ui.airfields ? 'true' : 'false');
-  af.title = t(hasAf ? 'tb.airfields.tip' : 'tb.airfields.off');
+  dspSync();
   syncAdd();
 }
 
@@ -7055,17 +7070,22 @@ function createTapControl() {
   window.addEventListener('resize', fallbackLayout);
 }
 
-function setTapMode(m) {
+/* keep : le mode revient sans rendre ce que le menu « Affichage » masque (la fin du mode cadre) */
+function setTapMode(m, keep) {
   if (EXP.on && m !== 'read') return;      /* le mode cadre garde la carte en lecture : un toucher ne pose rien */
   const was = tapMode;
   tapMode = m === 'ref' ? 'ref' : m === 'read' ? 'read' : m === 'draw' ? 'draw' : 'wp';
   syncTapControl();
-  if (tapMode !== was) {
+  const shown = keep ? [] : dspReveal(tapMode);   /* le mode qui édite rend ce qu'il édite */
+  if (tapMode !== was || shown.length) {
     if (map) map.closePopup();
-    if (was === 'draw') drExit();
-    if (tapMode === 'draw') drEnter();
+    if (tapMode !== was) {
+      if (was === 'draw') drExit();
+      if (tapMode === 'draw') drEnter();
+    }
     drawLayers();   /* les objets ne sont touchables qu'en mode Lire ; une cible agit comme un aérodrome dans les deux autres */
     drawRoute();    /* les « + » d'insertion ne s'affichent pas en mode Lire */
+    if (shown.indexOf('refs') !== -1) drawRefs();
   }
 }
 
@@ -8032,6 +8052,247 @@ function sendToDatacard() {
 }
 
 
+/* ============= LE MENU « AFFICHAGE » (lot rp-v1.12.1) ============= */
+/* Ce qu'on masque ou montre sur la carte : la route, les points de référence, les dessins, les symboles OTAN, les calques importés, puis les quatre
+   lignes de fond (grille, villes, aérodromes, lieux) qui reprennent le rôle des anciennes bascules de la barre. Masqué = non dessiné (ni vu ni touchable) ;
+   les cinq premières lignes vivent dans rp_display_v1, les quatre autres dans S.ui (route_state_v1, comme avant). */
+const DSP = { open: false, panel: null, x0: 0, y0: 0 };
+const DSP_ROWS = [
+  { g: 'mission', k: 'route', l: 'dsp.route', n: () => t('dsp.pts', { n: S.points.length }) },
+  { g: 'mission', k: 'refs', l: 'dsp.refs', n: () => String(S.refs.length) },
+  { g: 'layers', k: 'draw', l: 'dsp.draw' },
+  { g: 'layers', k: 'sym', l: 'dsp.sym' },
+  { g: 'layers', k: 'cf', l: 'dsp.cf' },
+  { g: 'base', k: 'grid', l: 'tb.grid' },
+  { g: 'base', k: 'towns', l: 'tb.towns' },
+  { g: 'base', k: 'airfields', l: 'tb.airfields' },
+  { g: 'base', k: 'places', l: 'tb.places' }
+];
+
+function loadDisplay() {
+  try {
+    const raw = localStorage.getItem(KEY_DISPLAY);
+    const o = raw ? JSON.parse(raw) : null;
+    if (o && typeof o === 'object' && !Array.isArray(o)) Object.keys(DISP).forEach(k => { if (typeof o[k] === 'boolean') DISP[k] = o[k]; });
+  } catch (e) { /* valeurs par défaut */ }
+}
+function saveDisplay() {
+  try { localStorage.setItem(KEY_DISPLAY, JSON.stringify({ route: DISP.route, refs: DISP.refs, draw: DISP.draw, sym: DISP.sym, cf: DISP.cf })); } catch (e) { /* stockage indisponible */ }
+}
+
+/* L'état d'une ligne : cochée, grisée, info-bulle */
+function dspState(k) {
+  if (k === 'grid') return { on: !!S.ui.grid, off: false, tip: t('tb.grid') };
+  if (k === 'places') return { on: !!S.ui.places, off: false, tip: t('tb.places.tip') };
+  if (k === 'towns') {
+    const has = !!townsOf(S.theatre), chart = townsOnChart();
+    return { on: has && !chart && !!S.ui.towns, off: !has || chart, tip: t(chart ? 'tb.towns.offChart' : has ? 'tb.towns.tip' : 'tb.towns.off') };
+  }
+  if (k === 'airfields') {
+    const has = !!airfieldsOf(S.theatre);
+    return { on: has && !!S.ui.airfields, off: !has, tip: t(has ? 'tb.airfields.tip' : 'tb.airfields.off') };
+  }
+  return { on: !!DISP[k], off: false, tip: '' };
+}
+
+/* Le point ambre : au moins une ligne n'est pas à sa valeur par défaut (tout affiché, sauf Lieux masqué) */
+function dspChanged() {
+  return !(DISP.route && DISP.refs && DISP.draw && DISP.sym && DISP.cf && S.ui.grid && S.ui.towns && S.ui.airfields) || !!S.ui.places;
+}
+
+function dspSync() {
+  if (!S) return;
+  const dot = $('dsp-dot');
+  if (dot) dot.hidden = !dspChanged();
+  if (!DSP.open || !DSP.panel) return;
+  DSP_ROWS.forEach(r => {
+    const row = DSP.panel.querySelector('[data-k="' + r.k + '"]');
+    if (!row) return;
+    const st = dspState(r.k);
+    row.setAttribute('aria-checked', st.on ? 'true' : 'false');
+    if (st.off) row.setAttribute('aria-disabled', 'true'); else row.removeAttribute('aria-disabled');
+    if (st.tip) row.title = st.tip;
+    if (r.n) row.querySelector('.dsp-n').textContent = r.n();
+  });
+}
+
+function dspBuild() {
+  const ul = DSP.panel;
+  ul.textContent = '';
+  const head = document.createElement('div');
+  head.className = 'tbm-head';
+  head.setAttribute('role', 'presentation');
+  head.textContent = t('dsp.head');
+  ul.appendChild(head);
+  let g = '';
+  DSP_ROWS.forEach(r => {
+    if (r.g !== g) {
+      g = r.g;
+      const sub = document.createElement('div');
+      sub.className = 'dsp-sub';
+      sub.setAttribute('role', 'presentation');
+      sub.textContent = t('dsp.g.' + g);
+      ul.appendChild(sub);
+    }
+    const row = document.createElement('div');
+    row.className = 'tbm-opt dsp-opt';
+    row.setAttribute('role', 'menuitemcheckbox');
+    row.setAttribute('aria-checked', 'false');
+    row.tabIndex = -1;
+    row.setAttribute('data-k', r.k);
+    const box = document.createElement('span');
+    box.className = 'dsp-box';
+    box.setAttribute('aria-hidden', 'true');
+    const txt = document.createElement('span');
+    txt.className = 'tbm-txt';
+    txt.textContent = t(r.l);
+    row.appendChild(box);
+    row.appendChild(txt);
+    if (r.n) {
+      const n = document.createElement('span');
+      n.className = 'dsp-n';
+      row.appendChild(n);
+    }
+    ul.appendChild(row);
+  });
+  dspSync();
+}
+
+function dspPlace() {
+  const btn = $('btn-display'), p = DSP.panel;
+  const r = btn.getBoundingClientRect();
+  const vw = document.documentElement.clientWidth, vh = window.innerHeight;
+  const top = r.bottom + 4;
+  DSP.x0 = r.left; DSP.y0 = r.top;
+  p.style.minWidth = Math.max(240, r.width) + 'px';
+  p.style.top = top + 'px';
+  p.style.maxHeight = Math.max(60, Math.min(0.8 * vh, 600, vh - top - 8)) + 'px';
+  const w = p.getBoundingClientRect().width;
+  let left = r.left;
+  if (left + w > vw - 8) left = vw - 8 - w;
+  if (left < 8) left = 8;
+  p.style.left = left + 'px';
+}
+
+function dspOpen() {
+  if (DSP.open) return;
+  if (TBM.cur) tbmClose(false);
+  const ul = document.createElement('div');
+  ul.className = 'tbm-panel dsp-panel';
+  ul.id = 'dsp-panel';
+  ul.setAttribute('role', 'menu');
+  ul.setAttribute('aria-label', t('tb.display'));
+  ul.tabIndex = -1;
+  document.body.appendChild(ul);
+  DSP.panel = ul;
+  DSP.open = true;
+  dspBuild();
+  ul.addEventListener('click', e => {
+    const row = e.target.closest ? e.target.closest('.dsp-opt') : null;
+    if (!row || row.getAttribute('aria-disabled') === 'true') return;
+    dspToggle(row.getAttribute('data-k'));
+  });
+  ul.addEventListener('keydown', dspKey);
+  $('btn-display').classList.add('dsp-open');
+  $('btn-display').setAttribute('aria-expanded', 'true');
+  $('btn-display').setAttribute('aria-controls', 'dsp-panel');
+  dspPlace();
+  ul.focus({ preventScroll: true });
+}
+
+function dspClose(refocus) {
+  if (!DSP.open) return;
+  DSP.open = false;
+  if (DSP.panel) DSP.panel.remove();
+  DSP.panel = null;
+  const b = $('btn-display');
+  b.classList.remove('dsp-open');
+  b.setAttribute('aria-expanded', 'false');
+  if (refocus) b.focus({ preventScroll: true });
+}
+
+function dspKey(e) {
+  const rows = Array.prototype.slice.call(DSP.panel.querySelectorAll('.dsp-opt:not([aria-disabled="true"])'));
+  const cur = rows.indexOf(document.activeElement);
+  const go = k => { if (rows[k]) { rows[k].focus({ preventScroll: true }); rows[k].scrollIntoView({ block: 'nearest' }); } };
+  const k = e.key;
+  if (k === 'ArrowDown') { e.preventDefault(); go(cur < 0 ? 0 : Math.min(rows.length - 1, cur + 1)); }
+  else if (k === 'ArrowUp') { e.preventDefault(); go(cur < 0 ? rows.length - 1 : Math.max(0, cur - 1)); }
+  else if (k === 'Home') { e.preventDefault(); go(0); }
+  else if (k === 'End') { e.preventDefault(); go(rows.length - 1); }
+  else if ((k === 'Enter' || k === ' ') && cur >= 0) { e.preventDefault(); dspToggle(rows[cur].getAttribute('data-k')); }
+  else if (k === 'Escape') { e.preventDefault(); e.stopPropagation(); dspClose(true); }
+  else if (k === 'Tab') dspClose(true);
+}
+
+/* Un toucher ou un clic hors du panneau et du bouton le ferme, sans agir ailleurs (le clic qui suit est avalé) */
+function dspOutside(e) {
+  if (!DSP.open) return;
+  const t = e.target;
+  if (DSP.panel.contains(t) || $('btn-display').contains(t)) return;
+  const other = t && t.closest ? t.closest('.tbm-trigger') : null;
+  dspClose(false);
+  if (other) return;
+  tbmSwallowNext();
+}
+
+/* Une ligne bascule ; le panneau reste ouvert */
+function dspToggle(k) {
+  if (k === 'route' || k === 'refs' || k === 'draw' || k === 'sym' || k === 'cf') {
+    DISP[k] = !DISP[k];
+    saveDisplay();
+    if (k === 'route') drawRoute();
+    else if (k === 'refs') drawRefs();
+    else drawLayers();
+  } else if (k === 'grid') {
+    S.ui.grid = !S.ui.grid;
+    persistState();
+    scheduleGrid();
+  } else if (k === 'places') {
+    S.ui.places = !S.ui.places;
+    persistState();
+    syncPlaces();
+  } else if (k === 'towns') {
+    if (!townsOf(S.theatre) || townsOnChart()) return;
+    S.ui.towns = !S.ui.towns;
+    persistState();
+    syncTowns();
+  } else if (k === 'airfields') {
+    if (!airfieldsOf(S.theatre)) return;
+    S.ui.airfields = !S.ui.airfields;
+    persistState();
+    syncAirfields();
+  } else return;
+  dspSync();
+}
+
+/* Le mode qui édite rend ce qu'il édite : Point la route, Réf. les points de référence, Dessin les dessins et les symboles ; rend la liste des lignes rendues */
+function dspReveal(mode) {
+  const need = mode === 'wp' ? ['route'] : mode === 'ref' ? ['refs'] : mode === 'draw' ? ['draw', 'sym'] : [];
+  const shown = need.filter(k => !DISP[k]);
+  if (!shown.length) return shown;
+  shown.forEach(k => { DISP[k] = true; });
+  saveDisplay();
+  dspSync();
+  return shown;
+}
+
+function dspBind() {
+  $('btn-display').addEventListener('click', () => { if (DSP.open) dspClose(false); else dspOpen(); });
+  $('btn-display').addEventListener('keydown', e => {
+    if (e.key === 'ArrowDown' && !DSP.open) { e.preventDefault(); dspOpen(); }
+  });
+  document.addEventListener('pointerdown', dspOutside, true);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && DSP.open) { e.preventDefault(); dspClose(true); } });
+  window.addEventListener('resize', () => dspClose(false));
+  window.addEventListener('blur', () => dspClose(false));
+  window.addEventListener('scroll', e => {
+    if (!DSP.open || (e.target && e.target.nodeType && DSP.panel.contains(e.target))) return;
+    const r = $('btn-display').getBoundingClientRect();
+    if (Math.abs(r.left - DSP.x0) > 0.5 || Math.abs(r.top - DSP.y0) > 0.5) dspClose(false);
+  }, true);
+}
+
 /* ============= VERS LE BRIEFING : LA VUE DE LA CARTE, CADRÉE (lot rp-v1.12.0) ============= */
 /* Le mode cadre pose un cadre 3:2 (ou 2:3) sur la carte ; « Exporter » compose une image JPEG : la zone du cadre rendue par html2canvas
    (les tracés passent en canevas le temps du rendu, html2canvas rend faux les tracés SVG de Leaflet), puis le cartouche (nom, théâtre,
@@ -8075,7 +8336,7 @@ function expOpen() {
   EXP.on = true;
   EXP.prevTap = tapMode;
   map.closePopup();
-  setTapMode('read');
+  setTapMode('read', true);
   $('export-layer').hidden = false;
   expSyncTexts();
   expLayout();
@@ -8088,7 +8349,7 @@ function expClose() {
   $('export-layer').hidden = true;
   $('export-layer').classList.remove('busy');
   $('exp-go').disabled = false;
-  setTapMode(EXP.prevTap);
+  setTapMode(EXP.prevTap, true);
 }
 
 function expSetOrient(o) {
@@ -8437,6 +8698,7 @@ function setLang(lang) {
   if (rtVisible('cf-import-modal')) cfImportRender();
   if (rtVisible('cf-export-modal')) cfExportRender();
   expSyncTexts();
+  if (DSP.open) dspBuild();
   map.closePopup();
   if (drOn()) { DR.sheetKey = ''; drRlab(); drSyncUi(); }
 }
@@ -8448,32 +8710,7 @@ function bindEvents() {
     persistState();
     setBase();
   });
-  $('btn-grid').addEventListener('click', () => {
-    S.ui.grid = !S.ui.grid;
-    persistState();
-    syncControls();
-    scheduleGrid();
-  });
-  $('btn-places').addEventListener('click', () => {
-    S.ui.places = !S.ui.places;
-    persistState();
-    syncPlaces();
-    syncControls();
-  });
-  $('btn-towns').addEventListener('click', () => {
-    if (!townsOf(S.theatre) || townsOnChart()) return;
-    S.ui.towns = !S.ui.towns;
-    persistState();
-    syncTowns();
-    syncControls();
-  });
-  $('btn-airfields').addEventListener('click', () => {
-    if (!airfieldsOf(S.theatre)) return;
-    S.ui.airfields = !S.ui.airfields;
-    persistState();
-    syncAirfields();
-    syncControls();
-  });
+  dspBind();
   $('theatre').addEventListener('change', e => setTheatre(e.target.value));
   document.querySelectorAll('[data-dist]').forEach(b => b.addEventListener('click', () => {
     S.units.distance = b.dataset.dist === 'nm' ? 'nm' : 'km';
@@ -8530,10 +8767,6 @@ function bindEvents() {
     if (e.key === 'mission_snapshot_v1' && navIsCalc()) { renderNav(); drawRoute(); syncControls(); }
   });
   $('route-name').addEventListener('input', e => { S.name = e.target.value; persistState(); });
-  $('panel').addEventListener('focusin', ev => {
-    const el = ev.target;
-    if (el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) revealPanelField(el);
-  });
   const pts = $('pts');
   pts.addEventListener('input', ev => onRowInput(ev, 'wp'));
   pts.addEventListener('change', ev => onRowChange(ev, 'wp'));
@@ -8943,9 +9176,14 @@ function tbmOutside(e) {
   if (!m) return;
   const t = e.target;
   if (m.panel.contains(t) || m.btn.contains(t)) return;
-  const other = t && t.closest ? t.closest('.tbm-trigger') : null;
+  const other = t && t.closest ? t.closest('.tbm-trigger, #btn-display') : null;
   tbmClose(false);
   if (other) return;
+  tbmSwallowNext();
+}
+
+/* Le clic qui suit le toucher hors de la liste est avalé (aussi pour le panneau « Affichage ») */
+function tbmSwallowNext() {
   TBM.swallow = true;
   const rel = () => { document.removeEventListener('pointerup', rel, true); document.removeEventListener('pointercancel', rel, true); setTimeout(() => { TBM.swallow = false; }, 350); };
   document.addEventListener('pointerup', rel, true);
@@ -8977,6 +9215,7 @@ function init() {
   initFormMenus(sel => (sel.dataset.k === 'altRef' ? t('th.ref') : ''));   /* les listes des formulaires */
   loadState();
   loadLayers();
+  loadDisplay();
   createMap();
   bindEvents();
   drInit();
