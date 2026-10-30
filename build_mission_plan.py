@@ -441,7 +441,7 @@ select[data-tbm-src] {{ display: none !important; }}
             <div class="cap-row">
               <span class="logo" style="background:var(--a-bg)">B·G</span>
               <span class="ptitle">Briefing Generator</span>
-              <span class="pver">v2.4.6</span>
+              <span class="pver">v2.4.7</span>
             </div>
             <div class="pdesc" data-i18n="bg.desc">Briefings complets — SITAC, plan radio, aérodromes, charts, annexes — export PDF prêt à partager.</div>
             <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
@@ -528,7 +528,7 @@ select[data-tbm-src] {{ display: none !important; }}
   /* ── Données ──────────────────────────────────────────────── */
   {module_html_js}
 
-  var APP_VERSION = '1.19.0';
+  var APP_VERSION = '1.19.1';
   var KEY_LANG  = 'lang_v1';
   var KEY_THEME = 'theme_v1';
 

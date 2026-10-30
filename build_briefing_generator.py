@@ -3,7 +3,7 @@
 Produit dist/dcs_briefing_generator.html (fusion build_css.py + build_html.py).
 Usage : python3 build_briefing_generator.py
 """
-"""Build the v2 KHR-26 Cold War briefing generator with tablet support."""
+"""Build the v2 Cold War briefing generator with tablet support."""
 
 import json
 import os
@@ -18,7 +18,7 @@ with open(ASSETS_PATH) as f:
 
 CSS = r"""
 /* ============================================
-   COLD WAR BRIEFING GENERATOR v2 — KHR-26
+   COLD WAR BRIEFING GENERATOR v2
    Tablet-ready, fonts embedded, offline-first
    ============================================ */
 
@@ -1812,7 +1812,7 @@ select[data-tbm-src] { display: none !important; }
 /* Ligne aérodrome structuré (Partie 1 — 10B-lite) */
 .ed-airfield-row {
   display: grid;
-  grid-template-columns: 56px auto 1fr 52px auto 36px;
+  grid-template-columns: 56px auto 1fr 52px auto 44px;
   gap: 6px;
   margin-bottom: 6px;
   align-items: center;
@@ -1920,7 +1920,7 @@ select[data-tbm-src] { display: none !important; }
 /* Mobile: tighter rows */
 @media (max-width: 600px) {
   .ed-radio-item-row {
-    grid-template-columns: 1fr 80px 60px 40px;
+    grid-template-columns: 1fr 80px 60px 44px;
   }
 }
 .menace-grid {
@@ -2514,7 +2514,7 @@ body[data-format="full"] [data-fmt="simple"] { display: none !important; }
 .ed-btn-icon:disabled { opacity: .35; cursor: not-allowed; }
 .ed-radio-item-row.s-row { grid-template-columns: 1.5fr 1fr 70px 44px; }
 @media (max-width: 600px) {
-  .ed-radio-item-row.s-row { grid-template-columns: 1fr 80px 60px 40px; }
+  .ed-radio-item-row.s-row { grid-template-columns: 1fr 80px 60px 44px; }
 }
 
 /* Pages du brief simplifié : tableau des vols, photos */
@@ -3071,7 +3071,7 @@ import os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
-APP_VERSION = "2.4.6"
+APP_VERSION = "2.4.7"
 
 ASSETS_PATH = os.path.join(HERE, 'assets.json')
 if not os.path.isfile(ASSETS_PATH):
@@ -3206,7 +3206,7 @@ __CSS__
           </div>
         </div>
         <div class="ed-field" data-fmt="simple"><label data-i18n="editor.meta.time">Heure (Z)</label><input data-bind="meta.time" type="text" placeholder="1000Z"></div>
-        <div class="ed-field"><label data-i18n="editor.meta.docRef">Référence document</label><input data-bind="meta.docRef" type="text" placeholder="KHR26-FH-M3-1989"></div>
+        <div class="ed-field"><label data-i18n="editor.meta.docRef">Référence document</label><input data-bind="meta.docRef" type="text" placeholder="FH-M3-1989"></div>
         <div class="ed-help" data-i18n="editor.meta.help">Métadonnées présentes dans tous les pieds de page.</div>
       </div>
     </details>
@@ -4444,7 +4444,7 @@ const EXAMPLE_BRIEFING = {
     date: '1989-03-22',
     format: 'full',
     classification: 'confidential',
-    docRef: 'VEAW-FH-M3-1989'
+    docRef: 'FH-M3-1989'
   },
   cover: {
     title: 'OPERATION FOOTHOLD',
@@ -4544,7 +4544,7 @@ const EXAMPLE_BRIEFING = {
       ],
       flightPlan: 'CAP 352° / Distance 34 Km',
       threatLevel: 'low', notes: '', images: [],
-      squadron: 'KHR-26', aircraft: 'Mi-8', subgroup: 'ANTON'
+      squadron: '', aircraft: 'Mi-8', subgroup: 'ANTON'
     },
     {
       title: 'Défense POLIS — Mi-24P',
@@ -4555,7 +4555,7 @@ const EXAMPLE_BRIEFING = {
       ],
       flightPlan: "Chemin côtier jusqu'à l'IP Mission #3",
       threatLevel: 'high', notes: 'Route estimée du convoi : voir carte phase 2', images: [],
-      squadron: 'KHR-26', aircraft: 'Mi-24P', subgroup: 'CAESAR'
+      squadron: '', aircraft: 'Mi-24P', subgroup: 'CAESAR'
     },
     {
       title: 'RECO + ASSAUT KARAVOSTASI',
@@ -4568,7 +4568,7 @@ const EXAMPLE_BRIEFING = {
       ],
       flightPlan: 'IP : 59° / 32 Km — TGT : 118° / 9 Km',
       threatLevel: 'high', notes: "Repère : petite île + rivière à 8/9 Km de KARAVOSTASI. Axe d'assaut le long de la côte.",
-      images: [], squadron: 'KHR-26', aircraft: 'Mi-24P', subgroup: ''
+      images: [], squadron: '', aircraft: 'Mi-24P', subgroup: ''
     }
   ],
   charts: [
@@ -4577,7 +4577,7 @@ const EXAMPLE_BRIEFING = {
   ],
   annexes: [],
   roster: {
-    groups: []   // { missionKey: 'KHR-26||CAESAR||Mi-24P', pilots: [{name,aircraft,callsign}] }
+    groups: []   // { missionKey: 'SQN-01||CAESAR||Mi-8', pilots: [{name,aircraft,callsign}] }
   }
 };
 
@@ -4937,8 +4937,8 @@ function getMissionGroups() {
 
 /* Compute human-readable label from a missionGroup object or missionKey string.
    - shortLabel : for callsign prefix   (e.g. "Anton", "Duff", "Wolf")
-   - label      : group name            (e.g. "KHR-26 ░ ANTON", "WOLF ░ WOLF 1")
-   - fullLabel  : with aircraft         (e.g. "KHR-26 ░ ANTON — Mi-8")
+   - label      : group name            (e.g. "SQN-01 ░ ANTON", "WOLF ░ WOLF 1")
+   - fullLabel  : with aircraft         (e.g. "SQN-01 ░ ANTON — Mi-8")
    
    Both standard and guest use the same logic:
      label = id [░ subgroup_or_callsign]
