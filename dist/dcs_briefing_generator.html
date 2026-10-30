@@ -1557,6 +1557,17 @@ select[data-tbm-src] { display: none !important; }
   padding: 4px 4px;
   text-align: right;
 }
+.radio-summary .radio-cr {
+  font-family: var(--f-condensed);
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  text-align: center;
+  white-space: nowrap;
+  color: var(--olive);
+  padding: 4px 6px;
+}
 .radio-summary .radio-freq {
   font-family: var(--f-mono);
   font-weight: 700;
@@ -2504,10 +2515,25 @@ body[data-format="full"] [data-fmt="simple"] { display: none !important; }
 .ed-btn-icon.neutral { background: var(--olive); border-color: var(--khaki); }
 .ed-btn-icon.neutral:hover { background: var(--olive-dark); }
 .ed-btn-icon:disabled { opacity: .35; cursor: not-allowed; }
-.ed-radio-item-row.s-row { grid-template-columns: 1.5fr 1fr 70px 44px; }
+.ed-radio-item-row.s-row { grid-template-columns: 1.5fr 1fr 70px 44px; row-gap: 6px; margin-bottom: 12px; }
 @media (max-width: 600px) {
   .ed-radio-item-row.s-row { grid-template-columns: 1fr 80px 60px 44px; }
 }
+/* Sous-rang radio / canal (v2.6.0) : sur toute la largeur de la ligne, sous le ×. */
+.ed-radio-item-row.s-row .s-sub {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) 96px 44px;
+  gap: 6px;
+  align-items: center;
+}
+.ed-radio-item-row.s-row .s-sub-mark {
+  color: var(--amber);
+  font-size: 18px;
+  line-height: 1;
+  text-align: center;
+}
+.ed-radio-item-row.s-row .s-sub input { min-width: 0; width: 100%; }
 
 /* Pages du brief simplifié : tableau des vols, photos */
 .p-flights {
@@ -3154,7 +3180,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   <button class="tb-lang-btn" id="btn-lang" data-i18n-title="toolbar.lang.tooltip" title="Switch language / Changer de langue">🇬🇧</button>
   <div class="tb-spacer"></div>
   <div class="tb-classif">CLASSIFIED // FOR EYES ONLY</div>
-  <span class="tb-version">v2.5.0</span>
+  <span class="tb-version">v2.6.0</span>
 </header>
 
 <!-- ===== EXPORT MODAL ===== -->
@@ -7287,11 +7313,20 @@ function buildSimplePages() {
   }
 
   if (radioItems.length || airfields) {
+    // v2.6.0 — radio et canal facultatifs : une colonne entre le libellé et la fréquence,
+    // seulement si au moins une ligne affichée en porte un.
+    const crText = it => {
+      const radio = String(it.radio == null ? '' : it.radio).trim();
+      const ch = String(it.channel == null ? '' : it.channel).trim();
+      return [radio, /^\d+$/.test(ch) ? 'CH ' + ch : ch].filter(Boolean).join(' \u00B7 ');
+    };
+    const hasCr = radioItems.some(it => crText(it));
+    const crCell = it => hasCr ? `<td class="radio-cr">${escapeHtml(crText(it))}</td>` : '';
     const freqHtml = radioItems.length
       ? `<div class="p-subsection">${t('simple.freq')}</div>
          <table class="radio-summary">${radioItems.map(it => `
            <tr>
-             <th>${escapeHtml(it.label || '—')}</th>
+             <th>${escapeHtml(it.label || '—')}</th>${crCell(it)}
              <td><span class="radio-freq">${escapeHtml(it.frequency || '—')}</span><span class="radio-mod">${escapeHtml(it.modulation || '')}</span></td>
            </tr>`).join('')}
          </table>`
@@ -8558,10 +8593,19 @@ function renderSimpleRadioItems() {
         <option value="FM">FM</option>
       </select>
       <button type="button" class="ed-btn-icon" data-ri-rm aria-label="${escapeAttr(t('editor.imgCard.remove'))}">×</button>
+      <div class="s-sub">
+        <span class="s-sub-mark" aria-hidden="true">↳</span>
+        <input type="text" data-ri-radio placeholder="${escapeAttr(t('editor.radio.radioName'))}" aria-label="${escapeAttr(t('editor.radio.radioName'))}">
+        <input type="text" data-ri-ch placeholder="${escapeAttr(t('editor.radio.chLabel'))}" aria-label="${escapeAttr(t('editor.radio.chLabel'))}">
+      </div>
     `;
     row.querySelector('[data-ri-label]').value = it.label || '';
     row.querySelector('[data-ri-freq]').value = it.frequency || '';
     row.querySelector('[data-ri-mod]').value = it.modulation || 'AM';
+    row.querySelector('[data-ri-radio]').value = it.radio || '';
+    row.querySelector('[data-ri-ch]').value = it.channel || '';
+    row.querySelector('[data-ri-radio]').addEventListener('input', e => { items[i].radio = e.target.value; schedulePreview(); });
+    row.querySelector('[data-ri-ch]').addEventListener('input', e => { items[i].channel = e.target.value; schedulePreview(); });
     row.querySelector('[data-ri-label]').addEventListener('input', e => { items[i].label = e.target.value; schedulePreview(); });
     row.querySelector('[data-ri-freq]').addEventListener('input', e => { items[i].frequency = e.target.value; schedulePreview(); });
     row.querySelector('[data-ri-mod]').addEventListener('change', e => { items[i].modulation = e.target.value; schedulePreview(); });

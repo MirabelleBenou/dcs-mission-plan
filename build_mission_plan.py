@@ -30,9 +30,9 @@ OUT_FILE = 'dist/dcs_mission_plan.html'
 # module actif ; tout module activé plus tard s'insère avant lui.
 MODULES = [
     {'id': 'hq', 'status': 'active', 'src': 'dist/dcs_hq.html',                        'tile': 'tiles/hq.webp'},
+    {'id': 'rp', 'status': 'active', 'src': 'dist/dcs_route_planner.html',             'tile': 'tiles/rp.webp'},
     {'id': 'bg', 'status': 'active', 'src': 'dist/dcs_briefing_generator.html',       'tile': 'tiles/bg.webp'},
     {'id': 'dg', 'status': 'active', 'src': 'dist/dcs_datacard_generator.html',        'tile': 'tiles/kg.webp'},
-    {'id': 'rp', 'status': 'active', 'src': 'dist/dcs_route_planner.html',             'tile': 'tiles/rp.webp'},
     {'id': 'rs', 'status': 'active', 'src': 'dist/dcs_recon_station.html',             'tile': 'tiles/rs.webp'},
     {'id': 'fm', 'status': 'active', 'src': 'dist/dcs_field_manual.html',              'tile': 'tiles/fm.webp'},
 ]
@@ -416,7 +416,7 @@ select[data-tbm-src] {{ display: none !important; }}
     <div class="wall-stage">
 
       <!-- Modules actifs : dossiers ouverts, traitement identique.
-           Ordre : HQ · Briefing Generator · Datacard Generator · Route Planner · Recon Station · Field Manual.
+           Ordre : HQ · Route Planner · Briefing Generator · Datacard Generator · Recon Station · Field Manual.
            RÈGLE : Field Manual reste TOUJOURS la dernière carte active ; un module activé plus tard s'insère avant. -->
       <div class="active-row">
         <div class="print active reveal d1" id="card-hq" style="--card-accent:var(--a-hq)" tabindex="0" role="button" aria-label="HQ">
@@ -434,36 +434,7 @@ select[data-tbm-src] {{ display: none !important; }}
           <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>
         </div>
 
-        <div class="print active reveal d2" id="card-bg" style="--card-accent:var(--a-bg)" tabindex="0" role="button" aria-label="Briefing Generator">
-          <span class="tape"></span><span class="pin tl"></span><span class="pin tr"></span>
-          <div class="shot"></div>
-          <div class="caption">
-            <div class="cap-row">
-              <span class="logo" style="background:var(--a-bg)">B·G</span>
-              <span class="ptitle">Briefing Generator</span>
-              <span class="pver">v2.5.0</span>
-            </div>
-            <div class="pdesc" data-i18n="bg.desc">Briefings complets — SITAC, plan radio, aérodromes, charts, annexes — export PDF prêt à partager.</div>
-            <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
-          </div>
-          <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>
-        </div>
-
-        <div class="print active reveal d3" id="card-dg" style="--card-accent:var(--a-dg)" tabindex="0" role="button" aria-label="Datacard Generator">
-          <span class="tape"></span><span class="pin tl"></span><span class="pin tr"></span>
-          <div class="shot"></div>
-          <div class="caption">
-            <div class="cap-row">
-              <span class="logo" style="background:var(--a-dg)">D·G</span>
-              <span class="ptitle">Datacard Generator</span>
-              <span class="pver">v1.5.1</span>
-            </div>
-            <div class="pdesc" data-i18n="dg.desc">Datacards de vol d'une page pour le kneeboard — saisie ou depuis un briefing, day et night, export PNG et PDF.</div>
-            <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
-          </div>
-          <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>
-        </div>
-        <div class="print active reveal d4" id="card-rp" style="--card-accent:var(--a-rp)" tabindex="0" role="button" aria-label="Route Planner">
+        <div class="print active reveal d2" id="card-rp" style="--card-accent:var(--a-rp)" tabindex="0" role="button" aria-label="Route Planner">
           <span class="tape"></span><span class="pin tl"></span><span class="pin tr"></span>
           <div class="shot"></div>
           <div class="caption">
@@ -473,6 +444,35 @@ select[data-tbm-src] {{ display: none !important; }}
               <span class="pver">v1.12.1</span>
             </div>
             <div class="pdesc" data-i18n="rp.desc">Tracé de route sur carte — carte DCS, topographique ou satellite, grille MGRS, villes et aérodromes, recherche ; points de référence ; caps, distances, vitesse sol et minutage ; calques CombatFlite et dessin au doigt (zones, FLOT, couloirs, orbites, boîtes) ; MGRS et DMS, envoyés à la datacard ; import et export du Route Tool de DCS.</div>
+            <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
+          </div>
+          <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>
+        </div>
+        <div class="print active reveal d3" id="card-bg" style="--card-accent:var(--a-bg)" tabindex="0" role="button" aria-label="Briefing Generator">
+          <span class="tape"></span><span class="pin tl"></span><span class="pin tr"></span>
+          <div class="shot"></div>
+          <div class="caption">
+            <div class="cap-row">
+              <span class="logo" style="background:var(--a-bg)">B·G</span>
+              <span class="ptitle">Briefing Generator</span>
+              <span class="pver">v2.6.0</span>
+            </div>
+            <div class="pdesc" data-i18n="bg.desc">Briefings complets — SITAC, plan radio, aérodromes, charts, annexes — export PDF prêt à partager.</div>
+            <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
+          </div>
+          <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>
+        </div>
+
+        <div class="print active reveal d4" id="card-dg" style="--card-accent:var(--a-dg)" tabindex="0" role="button" aria-label="Datacard Generator">
+          <span class="tape"></span><span class="pin tl"></span><span class="pin tr"></span>
+          <div class="shot"></div>
+          <div class="caption">
+            <div class="cap-row">
+              <span class="logo" style="background:var(--a-dg)">D·G</span>
+              <span class="ptitle">Datacard Generator</span>
+              <span class="pver">v1.5.1</span>
+            </div>
+            <div class="pdesc" data-i18n="dg.desc">Datacards de vol d'une page pour le kneeboard — saisie ou depuis un briefing, day et night, export PNG et PDF.</div>
             <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
           </div>
           <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>
@@ -528,7 +528,7 @@ select[data-tbm-src] {{ display: none !important; }}
   /* ── Données ──────────────────────────────────────────────── */
   {module_html_js}
 
-  var APP_VERSION = '1.21.1';
+  var APP_VERSION = '1.22.0';
   var KEY_LANG  = 'lang_v1';
   var KEY_THEME = 'theme_v1';
 
