@@ -14,6 +14,10 @@ The suite bundles several **independently-versioned tools**, so entries are grou
 - **Tablet & mobile** first-class target (touch, drag, rotation-safe).
 - Wing configuration shared automatically across embedded tools.
 
+### `v1.23.0`
+#### Added
+- Embeds **Route Planner v1.13.0** — tap an airfield or heliport in Read mode to open its chart sheet (see below).
+
 ### `v1.22.0`
 #### Added
 - Embeds **Briefing Generator v2.6.0** — an optional radio name and channel on each frequency of the quick brief (see below).
@@ -379,6 +383,10 @@ Initial release. One-page flight datacards for the cockpit kneeboard.
 ---
 
 ## Route Planner
+
+### `v1.13.0`
+#### Added
+- **Airfield and heliport sheets**: in Read mode, tapping an airfield or a heliport opens its chart from **DCS Airfield Charts**, served by the wing's server — one tab per page (10-9, 10-9A…), pinch to zoom, double-tap to reframe; a heliport opens on its box of the heliport directory. When a field has no sheet, the viewer says so; when the server does not answer, it says the sheets are unavailable. Point and Ref. modes are unchanged.
 
 ### `v1.12.1`
 #### Added
