@@ -14,6 +14,10 @@ The suite bundles several **independently-versioned tools**, so entries are grou
 - **Tablet & mobile** first-class target (touch, drag, rotation-safe).
 - Wing configuration shared automatically across embedded tools.
 
+### `v1.20.0`
+#### Added
+- Embeds **Route Planner v1.11.0** — NATO military symbols (APP-6) in drawn layers (see below).
+
 ### `v1.19.1`
 #### Fixed
 - Embeds **Briefing Generator v2.4.7** — neutral example reference, and remove buttons that stay inside editor rows (see below).
@@ -350,6 +354,12 @@ Initial release. One-page flight datacards for the cockpit kneeboard.
 ---
 
 ## Route Planner
+
+### `v1.11.0`
+#### Added
+- **NATO military symbols (APP-6)** in drawn layers — a ninth drawing tool, *Symbol*: tap the map to place it, then set it in its sheet: side (friend, hostile, neutral, unknown), style (filled in APP-6 colours, or outlined in the side's colour), size (S, M, L, fixed on screen), the symbol itself from a catalogue — units (infantry, mechanised infantry, armour, recon, artillery, air defence, helicopters, engineers, logistics) with their echelon (platoon to division) and higher formation, equipment (tank, IFV, SAM, AAA, radar), aircraft (fixed-wing, fighter, attack, bomber, transport, helicopter, attack helicopter) and the FARP — and its designation.
+- A new symbol starts from the settings of the last one; symbols are copied, moved and deleted like the other objects, open their card in *Read* mode (with *→ Reference point*), add a route point when tapped in *Point* mode, and are saved and exported with the layers.
+- Symbols are drawn with [milsymbol](https://github.com/spatialillusions/milsymbol) (MIT), embedded in a reduced build.
 
 ### `v1.10.0`
 #### Added
