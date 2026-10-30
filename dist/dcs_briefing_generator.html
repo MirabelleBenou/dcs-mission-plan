@@ -2924,6 +2924,40 @@ body[data-format="full"] [data-fmt="simple"] { display: none !important; }
   pointer-events: none;
 }
 
+/* ============= CARTE DU ROUTE PLANNER (v2.5.0) : la fenêtre « Placer la carte » ============= */
+.rpmap-thumb {
+  display: flex;
+  justify-content: center;
+  margin: 0 0 14px;
+  padding: 6px;
+  background: rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+}
+.rpmap-thumb img { display: block; max-height: 160px; max-width: 100%; width: auto; height: auto; }
+.rpmap-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 240px;
+  overflow-y: auto;
+  margin: 0 0 12px;
+}
+.rpmap-choice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  border-radius: 2px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.rpmap-choice:hover, .rpmap-choice.on { border-color: var(--amber, #c8901f); }
+.rpmap-choice.on { background: rgba(200, 144, 31, 0.12); }
+.rpmap-choice input { accent-color: var(--amber, #c8901f); flex: none; }
+.rpmap-replace { font-size: 11px; margin: 0 0 14px; color: #a83524; letter-spacing: 0.5px; }
+.rpmap-replace[hidden] { display: none; }
+
 /* Mobile : grille 2 colonnes → 1 colonne */
 @media (max-width: 600px) {
   .export-modal-choices { grid-template-columns: 1fr; }
@@ -3120,7 +3154,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   <button class="tb-lang-btn" id="btn-lang" data-i18n-title="toolbar.lang.tooltip" title="Switch language / Changer de langue">🇬🇧</button>
   <div class="tb-spacer"></div>
   <div class="tb-classif">CLASSIFIED // FOR EYES ONLY</div>
-  <span class="tb-version">v2.4.7</span>
+  <span class="tb-version">v2.5.0</span>
 </header>
 
 <!-- ===== EXPORT MODAL ===== -->
@@ -3156,6 +3190,22 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         <button type="button" class="export-png-back" id="export-png-back" data-i18n="modal.export.png.back">← Retour</button>
         <button type="button" class="export-png-go" id="export-png-go"><span data-i18n="modal.export.png.go">Exporter</span> <span id="export-png-count"></span></button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== FENÊTRE : PLACER LA CARTE DU ROUTE PLANNER ===== -->
+<div class="export-modal" id="rpmap-modal" hidden role="dialog" aria-labelledby="rpmap-title" aria-modal="true">
+  <div class="export-modal-backdrop" id="rpmap-backdrop"></div>
+  <div class="export-modal-panel" role="document">
+    <button type="button" class="export-modal-close" id="rpmap-close" data-i18n-aria-label="modal.export.close" aria-label="Fermer">×</button>
+    <h2 id="rpmap-title" data-i18n="rpmap.title">Placer la carte du Route Planner</h2>
+    <div class="rpmap-thumb"><img id="rpmap-img" alt=""></div>
+    <div class="rpmap-choices" id="rpmap-choices" role="radiogroup" aria-labelledby="rpmap-title"></div>
+    <p class="rpmap-replace" id="rpmap-replace" role="status" hidden data-i18n="rpmap.replace">Une carte est déjà en place : elle sera remplacée.</p>
+    <div class="export-png-actions-bottom">
+      <button type="button" class="export-png-back" id="rpmap-cancel" data-i18n="rpmap.cancel">Annuler</button>
+      <button type="button" class="export-png-go" id="rpmap-place" data-i18n="rpmap.place">Placer</button>
     </div>
   </div>
 </div>
@@ -3841,6 +3891,19 @@ const I18N = {
     'toolbar.example.tooltip':    'Charger le briefing d\'exemple (remplace le briefing en cours)',
     'confirm.loadExample':        'Remplacer le briefing en cours par l\'exemple ?',
     'toast.exampleLoaded':        'Exemple chargé ✓',
+    // ── Carte du Route Planner (v2.5.0) ──
+    'rpmap.title':        'Placer la carte du Route Planner',
+    'rpmap.simpleMap':    'Carte — page carte · menaces · cibles',
+    'rpmap.simplePhoto':  'Photo — pages de photos',
+    'rpmap.fullSitac':    'Carte de SITAC',
+    'rpmap.fullCover':    'Carte de couverture',
+    'rpmap.fullPhase':    'Documents — mission {n}',
+    'rpmap.fullAnnex':    'Annexe (nouvelle page)',
+    'rpmap.replace':      'Une carte est déjà en place : elle sera remplacée.',
+    'rpmap.cancel':       'Annuler',
+    'rpmap.place':        'Placer',
+    'toast.rpmapPlaced':  'Carte placée.',
+    'toast.storageFull':  'Mémoire du navigateur pleine : le briefing n\'est plus enregistré.',
     'tab.simple.situation':       'Situation',
     'tab.simple.coord':           'Coordination',
     'tab.simple.photos':          'Photos',
@@ -4196,6 +4259,19 @@ const I18N = {
     'toolbar.example.tooltip':    'Load the example briefing (replaces the current one)',
     'confirm.loadExample':        'Replace the current briefing with the example?',
     'toast.exampleLoaded':        'Example loaded ✓',
+    // ── Route Planner map (v2.5.0) ──
+    'rpmap.title':        'Place the Route Planner map',
+    'rpmap.simpleMap':    'Map — map · threats · targets page',
+    'rpmap.simplePhoto':  'Photo — photo pages',
+    'rpmap.fullSitac':    'SITAC map',
+    'rpmap.fullCover':    'Cover map',
+    'rpmap.fullPhase':    'Documents — mission {n}',
+    'rpmap.fullAnnex':    'Annex (new page)',
+    'rpmap.replace':      'A map is already in place: it will be replaced.',
+    'rpmap.cancel':       'Cancel',
+    'rpmap.place':        'Place',
+    'toast.rpmapPlaced':  'Map placed.',
+    'toast.storageFull':  'Browser storage full: the briefing is no longer being saved.',
     'tab.simple.situation':       'Situation',
     'tab.simple.coord':           'Coordination',
     'tab.simple.photos':          'Photos',
@@ -4369,6 +4445,7 @@ function rerenderAllDynamic() {
   try { renderPhotosEditor(); }     catch(e) { console.warn('rerender photos failed:', e); }
   // v2.4.0 : listes de cibles (les deux formats) et zones d'image liées à l'état (leur texte vient de t())
   try { renderTargets(); }          catch(e) { console.warn('rerender targets failed:', e); }
+  try { if (rpMapPayload) renderRpMapChoices(); } catch(e) { console.warn('rerender rpmap failed:', e); }
   try { document.querySelectorAll('[data-img-bind]').forEach(refreshImgZone); } catch(e) { console.warn('rerender img zones failed:', e); }
   // P1.B: wing read-only panel re-rendered via renderWingReadOnly() depuis storage listener
 }
@@ -4630,7 +4707,10 @@ function normalizePhotos(s) {
 
 function persistState() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
-  catch(e) { /* localStorage may be unavailable or full */ }
+  catch(e) {
+    /* localStorage may be unavailable or full : seul le quota plein se dit (v2.5.0) */
+    if (e && (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED')) showToast(t('toast.storageFull'));
+  }
 }
 
 /* ============= WING CONFIG PERSISTENCE ============= */
@@ -9093,6 +9173,8 @@ function init() {
   setActiveTab('meta');
   renderPreview();
   initOverflowObserver();  // chatE étape A : détection débordement via MutationObserver
+  window.MP_RECEIVE_MAP = receiveRpMap;   // v2.5.0 : la carte du Route Planner, BG déjà ouvert
+  takeRpMapAtStart();                      // v2.5.0 : ou envoyée avant l'ouverture du BG
 
   // v2.1.1 : recompresse silencieusement les images héritées (briefings localStorage v2.1.0 et antérieurs)
   recompressOversizedImagesInState(state).then(recompressed => {
@@ -9388,6 +9470,134 @@ document.addEventListener('DOMContentLoaded', function bindExportModal() {
     if (e.key === 'Escape' && !document.getElementById('export-modal').hidden) {
       closeExportModal();
     }
+  });
+});
+
+/* ============= CARTE DU ROUTE PLANNER (v2.5.0) =============
+   Le Route Planner envoie sa vue cadrée par le shell (MP_SEND_MAP) : { dataUrl, name, theatre, width, height }.
+   Le BG la prend à son démarrage (parent.MP_TAKE_MAP) ou, déjà ouvert, par window.MP_RECEIVE_MAP ;
+   une fenêtre demande où la poser. Rien n'est écrit tant que « Placer » n'est pas touché. */
+const RPMAP_PREFIX = 'data:image/jpeg;base64,';
+const RPMAP_MAX_LEN = 4000000;
+let rpMapPayload = null;
+
+function receiveRpMap(payload) {
+  if (!payload || typeof payload !== 'object') return;
+  const url = payload.dataUrl;
+  if (typeof url !== 'string' || url.indexOf(RPMAP_PREFIX) !== 0 || url.length >= RPMAP_MAX_LEN) return;
+  rpMapPayload = { dataUrl: url, name: payload.name == null ? '' : String(payload.name) };
+  openRpMapModal();
+}
+
+function takeRpMapAtStart() {
+  try {
+    if (window.parent && window.parent !== window && typeof window.parent.MP_TAKE_MAP === 'function') {
+      const p = window.parent.MP_TAKE_MAP();
+      if (p) receiveRpMap(p);
+    }
+  } catch(e) { /* hors du shell, ou parent illisible : rien à prendre */ }
+}
+
+/* Les places offertes selon le format du brief ; la première est celle par défaut */
+function rpMapChoices() {
+  if (state.meta.format === 'simple') {
+    return [
+      { value: 'sitac', label: t('rpmap.simpleMap') },
+      { value: 'photo', label: t('rpmap.simplePhoto') }
+    ];
+  }
+  const list = [
+    { value: 'sitac', label: t('rpmap.fullSitac') },
+    { value: 'cover', label: t('rpmap.fullCover') }
+  ];
+  state.phases.forEach((ph, i) => {
+    list.push({ value: 'phase:' + i, label: t('rpmap.fullPhase').replace('{n}', i + 1) });
+  });
+  list.push({ value: 'annex', label: t('rpmap.fullAnnex') });
+  return list;
+}
+
+function renderRpMapChoices() {
+  const box = document.getElementById('rpmap-choices');
+  const prev = document.querySelector('input[name="rpmap-dest"]:checked');
+  const choices = rpMapChoices();
+  let cur = prev ? prev.value : choices[0].value;
+  if (!choices.some(c => c.value === cur)) cur = choices[0].value;
+  box.innerHTML = '';
+  choices.forEach(c => {
+    const row = document.createElement('label');
+    row.className = 'rpmap-choice';
+    const inp = document.createElement('input');
+    inp.type = 'radio';
+    inp.name = 'rpmap-dest';
+    inp.value = c.value;
+    inp.checked = c.value === cur;
+    const span = document.createElement('span');
+    span.textContent = c.label;
+    row.appendChild(inp);
+    row.appendChild(span);
+    box.appendChild(row);
+  });
+  syncRpMapChoice();
+}
+
+/* La ligne « une carte est déjà en place » ne vaut que pour une place à image unique déjà remplie */
+function syncRpMapChoice() {
+  const sel = document.querySelector('input[name="rpmap-dest"]:checked');
+  const v = sel ? sel.value : '';
+  document.querySelectorAll('.rpmap-choice').forEach(r => {
+    r.classList.toggle('on', r.contains(sel));
+  });
+  const filled = (v === 'sitac' && !!state.sitac.mapImage) || (v === 'cover' && !!state.cover.mapImage);
+  document.getElementById('rpmap-replace').hidden = !filled;
+}
+
+function openRpMapModal() {
+  if (!rpMapPayload) return;
+  document.getElementById('rpmap-img').src = rpMapPayload.dataUrl;
+  document.querySelectorAll('input[name="rpmap-dest"]').forEach(i => { i.checked = false; });
+  renderRpMapChoices();
+  document.getElementById('rpmap-modal').hidden = false;
+  document.getElementById('rpmap-place').focus();
+}
+
+function closeRpMapModal() {
+  document.getElementById('rpmap-modal').hidden = true;
+  rpMapPayload = null;
+  document.getElementById('rpmap-img').removeAttribute('src');
+}
+
+function placeRpMap() {
+  const p = rpMapPayload;
+  const sel = document.querySelector('input[name="rpmap-dest"]:checked');
+  if (!p || !sel) { closeRpMapModal(); return; }
+  const dest = sel.value;
+  const img = p.dataUrl;
+  if (dest === 'sitac') state.sitac.mapImage = img;
+  else if (dest === 'cover') state.cover.mapImage = img;
+  else if (dest === 'photo') state.photos.push({ title: p.name, img: img, caption: '' });
+  else if (dest === 'annex') state.annexes.push({ title: p.name, img: img, caption: '' });
+  else if (dest.indexOf('phase:') === 0) {
+    const ph = state.phases[parseInt(dest.slice(6), 10)];
+    if (ph) ph.images.push({ title: p.name, data: img, caption: '' });
+  }
+  closeRpMapModal();
+  try { document.querySelectorAll('[data-img-bind]').forEach(refreshImgZone); } catch(e) { console.warn('rpmap img zones failed:', e); }
+  try { renderPhaseEditor(); }   catch(e) { console.warn('rpmap phase failed:', e); }
+  try { renderAnnexes(); }       catch(e) { console.warn('rpmap annexes failed:', e); }
+  try { renderPhotosEditor(); }  catch(e) { console.warn('rpmap photos failed:', e); }
+  schedulePreview();
+  showToast(t('toast.rpmapPlaced'));
+}
+
+document.addEventListener('DOMContentLoaded', function bindRpMapModal() {
+  document.getElementById('rpmap-backdrop').addEventListener('click', closeRpMapModal);
+  document.getElementById('rpmap-close').addEventListener('click', closeRpMapModal);
+  document.getElementById('rpmap-cancel').addEventListener('click', closeRpMapModal);
+  document.getElementById('rpmap-place').addEventListener('click', placeRpMap);
+  document.getElementById('rpmap-choices').addEventListener('change', syncRpMapChoice);
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && !document.getElementById('rpmap-modal').hidden) closeRpMapModal();
   });
 });
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build — DCS Route Planner v1.11.0.
+"""Build — DCS Route Planner v1.12.0.
 
 Produit dist/dcs_route_planner.html : un fichier unique, hors ligne, sans serveur ;
 seules les tuiles de carte (DCS Olympus, OpenTopoMap, Esri) viennent du réseau, et le
@@ -23,13 +23,13 @@ import sys
 from magvar_block import build_block as build_magvar_block
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-APP_VERSION = "1.11.0"
+APP_VERSION = "1.12.0"
 OUT_PATH = os.path.join(HERE, 'dist', 'dcs_route_planner.html')
 ASSETS_PATH = os.path.join(HERE, 'assets.json')
 AIRFIELDS_PATH = os.path.join(HERE, 'airfields.json')
 TOWNS_PATH = os.path.join(HERE, 'towns.json')
 
-REQUIRED_ASSETS = ['STARDOS_700', 'OSWALD_500', 'OSWALD_700', 'ROBOTO_MONO_400', 'lib_leaflet', 'lib_leaflet_css', 'lib_milsymbol']
+REQUIRED_ASSETS = ['STARDOS_700', 'OSWALD_500', 'OSWALD_700', 'ROBOTO_MONO_400', 'lib_leaflet', 'lib_leaflet_css', 'lib_milsymbol', 'lib_html2canvas']
 MILSYMBOL_SHA256 = '5af6b52f8660baa432ef406e6cf7341dde26053848c6f71c52adabccf4cea9cc'   # milsymbol_rp.min.js (milsymbol 3.0.5, MIT), embarquée telle quelle
 
 if not os.path.isfile(ASSETS_PATH):
@@ -699,6 +699,20 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .cf-modal .rt-btn.go:hover, .cf-modal .rt-btn.go:focus-visible { background: var(--olive); color: var(--paper-light); }
 .cf-modal .rt-btn:disabled { opacity: .35; }
 
+/* ---------- export de la vue vers le briefing (lot rp-v1.12.0) : le cadre 3:2 / 2:3 posé sur la carte et sa barre ---------- */
+.export-layer { position: absolute; inset: 0; z-index: 800; overflow: hidden; pointer-events: none; }
+.export-layer[hidden] { display: none; }
+.export-layer.busy { pointer-events: auto; cursor: progress; }
+.export-frame { position: absolute; box-sizing: border-box; border: 2px solid #f2c14e; box-shadow: 0 0 0 9999px rgba(0,0,0,.42); pointer-events: none; }
+.ef-label { position: absolute; left: 0; top: 0; background: #f2c14e; color: #1b1d12; font-family: var(--f-ui); font-weight: 700; font-size: 11px;
+  letter-spacing: .08em; line-height: 1.3; padding: 1px 6px; white-space: nowrap; }
+.export-bar { position: absolute; left: 50%; bottom: 26px; transform: translateX(-50%); width: max-content; max-width: calc(100% - 16px); pointer-events: auto;
+  display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.eb-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; max-width: 100%; background: var(--olive-deep); border: 2px solid var(--amber-dark);
+  box-shadow: 0 2px 8px rgba(0,0,0,.4); padding: 4px; }
+.eb-row .tb-btn { height: 36px; min-width: 0; padding: 0 10px; font-size: 11px; letter-spacing: 1px; }
+.eb-hint { max-width: 100%; background: rgba(31,28,22,.88); color: var(--paper-light); font-size: 11px; letter-spacing: .5px; line-height: 1.3; padding: 4px 8px; text-align: center; }
+
 /* ---------- toast ---------- */
 .toast {
   position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px);
@@ -983,6 +997,7 @@ __CSS__
 </style>
 <script>__LIB_LEAFLET__</script>
 <script>__LIB_MILSYMBOL__</script>
+<script>__LIB_HTML2CANVAS__</script>
 </head>
 <body data-theme="cw-nato">
 
@@ -1044,6 +1059,20 @@ __CSS__
       </div>
     </div>
     <div class="dr-sheet" id="dr-sheet" role="group" hidden></div>
+    <div class="export-layer" id="export-layer" hidden>
+      <div class="export-frame" id="export-frame"><span class="ef-label" id="ef-label"></span></div>
+      <div class="export-bar" id="export-bar" role="toolbar" data-i18n-aria-label="frame.hint" aria-label="Déplacez et zoomez la carte sous le cadre.">
+        <div class="eb-row">
+          <span class="tb-group" role="group">
+            <button type="button" class="tb-btn on" data-exo="landscape" aria-pressed="true" data-i18n="frame.landscape">Paysage</button>
+            <button type="button" class="tb-btn" data-exo="portrait" aria-pressed="false" data-i18n="frame.portrait">Portrait</button>
+          </span>
+          <button type="button" class="tb-btn" id="exp-cancel" data-i18n="frame.cancel">Annuler</button>
+          <button type="button" class="tb-btn primary" id="exp-go" data-i18n="frame.export">Exporter</button>
+        </div>
+        <div class="eb-hint" data-i18n="frame.hint">Déplacez et zoomez la carte sous le cadre.</div>
+      </div>
+    </div>
   </section>
   <div class="rp-split" id="rp-split" role="separator" aria-orientation="horizontal" tabindex="0" data-i18n-title="sp.title" data-i18n-aria-label="sp.title" title="Glissez pour agrandir ou réduire la carte ; touchez deux fois pour revenir à la taille d'origine" aria-label="Glissez pour agrandir ou réduire la carte ; touchez deux fois pour revenir à la taille d'origine"><div class="grip"></div></div>
   <aside class="panel" id="panel">
@@ -1130,6 +1159,7 @@ __CSS__
         </div>
         <div class="actions">
           <button type="button" class="tb-btn primary" id="btn-handoff" data-i18n="btn.handoff">→ Vers la datacard</button>
+          <button type="button" class="tb-btn primary" id="btn-export-bg" data-i18n="btn.exportBg">→ Vers le briefing</button>
           <button type="button" class="tb-btn" id="btn-export" data-i18n="btn.export">Exporter JSON</button>
           <button type="button" class="tb-btn" id="btn-export-rt" data-i18n="btn.exportRt">Exporter vers le Route Tool</button>
         </div>
@@ -1522,7 +1552,7 @@ JS = r"""
 'use strict';
 
 /* =====================================================
-   ROUTE PLANNER v1.11.0
+   ROUTE PLANNER v1.12.0
    Une route sur une carte (points posés, saisis par coordonnées
    ou par cap et distance), des points de référence, les noms de lieux,
    les villes et les aérodromes DCS, une recherche sur la carte : caps, distances, vitesse sol et minutage,
@@ -1925,6 +1955,19 @@ const I18N = {
     'nav.th.co': 'MGRS · DMS / cap · distance',
     'nav.total': 'TOTAL',
     'btn.handoff': '→ Vers la datacard',
+    'btn.exportBg': '→ Vers le briefing',
+    'frame.label': 'CADRE D\'EXPORT · {r}',
+    'frame.landscape': 'Paysage',
+    'frame.portrait': 'Portrait',
+    'frame.cancel': 'Annuler',
+    'frame.export': 'Exporter',
+    'frame.hint': 'Déplacez et zoomez la carte sous le cadre.',
+    'cart.unnamed': 'ROUTE SANS NOM',
+    'cart.attr': 'Fond :',
+    'toast.mapSent': 'Carte envoyée au Briefing Generator.',
+    'toast.mapSaved': 'Image enregistrée : chargez-la dans le Briefing Generator (Carte).',
+    'toast.mapPartial': 'Le fond vient d\'un autre site : il peut manquer dans l\'image.',
+    'toast.mapFail': 'L\'image n\'a pas pu être produite.',
     'btn.export': 'Exporter JSON',
     'btn.exportRt': 'Exporter vers le Route Tool',
     'tb.rt.off': 'Route Tool indisponible pour ce théâtre',
@@ -2294,6 +2337,19 @@ const I18N = {
     'nav.th.co': 'MGRS · DMS / heading · distance',
     'nav.total': 'TOTAL',
     'btn.handoff': '→ To the datacard',
+    'btn.exportBg': '→ To the briefing',
+    'frame.label': 'EXPORT FRAME · {r}',
+    'frame.landscape': 'Landscape',
+    'frame.portrait': 'Portrait',
+    'frame.cancel': 'Cancel',
+    'frame.export': 'Export',
+    'frame.hint': 'Pan and zoom the map under the frame.',
+    'cart.unnamed': 'UNNAMED ROUTE',
+    'cart.attr': 'Background:',
+    'toast.mapSent': 'Map sent to the Briefing Generator.',
+    'toast.mapSaved': 'Image saved: load it into the Briefing Generator (Map).',
+    'toast.mapPartial': 'The background comes from another site: it may be missing from the image.',
+    'toast.mapFail': 'The image could not be produced.',
     'btn.export': 'Export JSON',
     'btn.exportRt': 'Export to the Route Tool',
     'tb.rt.off': 'Route Tool not available for this theatre',
@@ -3677,6 +3733,7 @@ function createMap() {
     if (pendingView) { const f = pendingView; pendingView = null; f(); }
     scheduleGrid();
     syncTowns();
+    expLayout();
   };
   if (window.ResizeObserver) new ResizeObserver(onSize).observe(wrap);
   window.addEventListener('resize', onSize);
@@ -6272,6 +6329,7 @@ function createTapControl() {
 }
 
 function setTapMode(m) {
+  if (EXP.on && m !== 'read') return;      /* le mode cadre garde la carte en lecture : un toucher ne pose rien */
   const was = tapMode;
   tapMode = m === 'ref' ? 'ref' : m === 'read' ? 'read' : m === 'draw' ? 'draw' : 'wp';
   syncTapControl();
@@ -7246,6 +7304,345 @@ function sendToDatacard() {
   open.call(window.parent, 'dg');
 }
 
+
+/* ============= VERS LE BRIEFING : LA VUE DE LA CARTE, CADRÉE (lot rp-v1.12.0) ============= */
+/* Le mode cadre pose un cadre 3:2 (ou 2:3) sur la carte ; « Exporter » compose une image JPEG : la zone du cadre rendue par html2canvas
+   (les tracés passent en canevas le temps du rendu, html2canvas rend faux les tracés SVG de Leaflet), puis le cartouche (nom, théâtre,
+   échelle, nord, attribution) sur un canevas neuf. L'image part au Briefing Generator par le shell (MP_SEND_MAP), ou se télécharge. */
+const EXP_LONG = 1600;          /* le grand côté de la carte dans l'image, en px */
+const EXP_BAND = 64;            /* la hauteur du bandeau sous la carte */
+const EXP_SCALE_STEPS = [0.5, 1, 2, 2.5, 5, 10, 15, 20, 25, 50, 100];
+const EXP_SKIP_PANES = ['drawedit', 'ring'];
+const EXP = { on: false, busy: false, orient: 'landscape', prevTap: 'wp', rect: null };
+
+function expRatioText() { return EXP.orient === 'portrait' ? '2:3' : '3:2'; }
+
+function expSyncTexts() {
+  const l = $('ef-label');
+  if (l) l.textContent = t('frame.label', { r: expRatioText() });
+  document.querySelectorAll('#export-bar [data-exo]').forEach(b => {
+    const on = b.dataset.exo === EXP.orient;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+  const bar = $('export-bar');
+  if (bar) bar.setAttribute('aria-label', t('frame.hint'));
+}
+
+/* Le cadre : au plus grand qui tient dans 92 % de la largeur et 86 % de la hauteur de la carte, centré */
+function expLayout() {
+  if (!EXP.on) return;
+  const wrap = $('map'), fr = $('export-frame');
+  const W = wrap.clientWidth, H = wrap.clientHeight;
+  if (!W || !H) { EXP.rect = null; return; }
+  const r = EXP.orient === 'portrait' ? 2 / 3 : 3 / 2;
+  const fw = Math.floor(Math.min(W * 0.92, H * 0.86 * r));
+  const fh = Math.floor(fw / r);
+  const x = Math.round((W - fw) / 2), y = Math.round((H - fh) / 2);
+  fr.style.left = x + 'px'; fr.style.top = y + 'px'; fr.style.width = fw + 'px'; fr.style.height = fh + 'px';
+  EXP.rect = { x: x, y: y, w: fw, h: fh };
+}
+
+function expOpen() {
+  if (EXP.on) return;
+  EXP.on = true;
+  EXP.prevTap = tapMode;
+  map.closePopup();
+  setTapMode('read');
+  $('export-layer').hidden = false;
+  expSyncTexts();
+  expLayout();
+}
+
+function expClose() {
+  if (!EXP.on) return;
+  EXP.on = false;
+  EXP.busy = false;
+  $('export-layer').hidden = true;
+  $('export-layer').classList.remove('busy');
+  $('exp-go').disabled = false;
+  setTapMode(EXP.prevTap);
+}
+
+function expSetOrient(o) {
+  if (!EXP.on || EXP.busy) return;
+  EXP.orient = o === 'portrait' ? 'portrait' : 'landscape';
+  expSyncTexts();
+  expLayout();
+}
+
+/* Les groupes qui possèdent des tracés : après le rendu, un tracé que son groupe a détruit entre-temps ne revient pas */
+function expOwners() { return [routeGroup, decorGroup, cfGroup, refGroup, twLayer].filter(g => !!g); }
+
+/* Chaque tracé de la carte (hors panes d'édition et de recherche) passe au rendu canevas, un rendu par pane, par retrait puis ajout ;
+   l'ordre de création est gardé, donc l'ordre de superposition aussi */
+function expCanvasPaths() {
+  const owners = expOwners();
+  const list = [];
+  map.eachLayer(l => { if (l instanceof L.Path && EXP_SKIP_PANES.indexOf(l.options.pane) === -1) list.push(l); });
+  list.sort((a, b) => L.stamp(a) - L.stamp(b));
+  const sw = { list: [], renderers: {} };
+  list.forEach(l => {
+    sw.list.push({ layer: l, had: Object.prototype.hasOwnProperty.call(l.options, 'renderer'), prev: l.options.renderer, owner: owners.find(g => g.hasLayer(l)) || null });
+  });
+  sw.list.forEach(s => { map.removeLayer(s.layer); });
+  sw.list.forEach(s => {
+    const pane = s.layer.options.pane || 'overlayPane';
+    if (!sw.renderers[pane]) sw.renderers[pane] = new L.Canvas({ pane: pane, padding: 0.1 });
+    s.layer.options.renderer = sw.renderers[pane];
+  });
+  sw.list.forEach(s => { map.addLayer(s.layer); });
+  return sw;
+}
+
+/* Le retour au rendu SVG d'avant, réussi ou non ; les repères des objets des calques (data-cf-*) sont reposés sur les nouveaux éléments */
+function expRestorePaths(sw) {
+  sw.list.forEach(s => { try { map.removeLayer(s.layer); } catch (e) { /* ignore */ } });
+  sw.list.forEach(s => { if (s.had) s.layer.options.renderer = s.prev; else delete s.layer.options.renderer; });
+  sw.list.forEach(s => {
+    if (s.owner && !s.owner.hasLayer(s.layer)) return;
+    try { map.addLayer(s.layer); } catch (e) { return; }
+    const o = s.layer.options;
+    if (o.cfId != null && !o.cfHit) cfTagEl(s.layer, { id: o.cfId, type: o.cfType, name: o.cfName });
+  });
+  Object.keys(sw.renderers).forEach(k => { try { map.removeLayer(sw.renderers[k]); } catch (e) { /* ignore */ } });
+}
+
+/* Un canevas Leaflet ne se dessine qu'à l'image suivante : on laisse passer deux images (au plus 400 ms) */
+function expSettle() {
+  return new Promise(res => {
+    let done = false;
+    const end = () => { if (!done) { done = true; res(); } };
+    setTimeout(end, 400);
+    requestAnimationFrame(() => requestAnimationFrame(end));
+  });
+}
+
+/* Une tuile visible du fond actif, d'une autre origine que la page : html2canvas ne peut pas la lire */
+function expForeignTiles(rect) {
+  if (displayLayer() === 'grid') return false;
+  const here = window.origin || location.origin;
+  const mr = map.getContainer().getBoundingClientRect();
+  const fx = mr.left + rect.x, fy = mr.top + rect.y;
+  const tiles = map.getPane('tilePane').querySelectorAll('img.leaflet-tile');
+  for (let i = 0; i < tiles.length; i++) {
+    const im = tiles[i];
+    const r = im.getBoundingClientRect();
+    if (r.right <= fx || r.left >= fx + rect.w || r.bottom <= fy || r.top >= fy + rect.h) continue;
+    let u;
+    try { u = new URL(im.currentSrc || im.src, document.baseURI); } catch (e) { continue; }
+    if (u.protocol === 'data:' || u.protocol === 'blob:') continue;
+    if (u.origin !== here) return true;
+  }
+  return false;
+}
+
+/* Le texte que montre le contrôle d'attribution de Leaflet, sans balises ni « Leaflet » */
+function expAttribution() {
+  const c = map.attributionControl && map.attributionControl.getContainer();
+  if (!c) return '';
+  const cl = c.cloneNode(true);
+  cl.querySelectorAll('a[title="Leaflet"], [aria-hidden="true"]').forEach(n => n.remove());
+  return cl.textContent.replace(/\s+/g, ' ').trim();
+}
+
+/* La plus grande longueur de la suite 0,5 · 1 · 2 · 2,5 · 5 · 10 · 15 · 20 · 25 · 50 · 100 qui tient dans maxU unités (la suite se prolonge par décades hors de cet intervalle) */
+function expScaleLength(maxU) {
+  let best = 0;
+  for (let k = -4; k <= 5; k++) {
+    EXP_SCALE_STEPS.forEach(s => { const v = s * Math.pow(10, k); if (v <= maxU * 1.0000001 && v > best) best = v; });
+  }
+  return best;
+}
+function expNum(v) { return decimal(String(parseFloat(v.toPrecision(6)))); }
+
+function expPrepFonts() {
+  if (!document.fonts || !document.fonts.load) return Promise.resolve();
+  return Promise.all([
+    document.fonts.load("700 30px 'Oswald'"), document.fonts.load("500 20px 'Oswald'"),
+    document.fonts.load("400 15px 'Roboto Mono'"), document.fonts.load("700 24px 'Stardos Stencil'")
+  ]).catch(() => {});
+}
+
+/* html2canvas : la zone du cadre, à l'échelle qui donne 1 600 px au grand côté */
+function expShoot(rect) {
+  const scale = EXP_LONG / Math.max(rect.w, rect.h);
+  return html2canvas(map.getContainer(), {
+    x: rect.x, y: rect.y, width: rect.w, height: rect.h, scale: scale,
+    useCORS: true, allowTaint: false, backgroundColor: '#e6dcc2', logging: false,
+    ignoreElements: el => {
+      if (!el || el.nodeType !== 1) return false;
+      const c = el.classList;
+      return c.contains('leaflet-control-container') || c.contains('leaflet-drawedit-pane') || c.contains('leaflet-ring-pane') ||
+        c.contains('leaflet-popup-pane') || c.contains('ins-icon') || c.contains('sr-panel') ||
+        el.id === 'export-layer' || el.id === 'export-frame' || el.id === 'export-bar';
+    }
+  });
+}
+
+/* Le cartouche, sur un canevas neuf (html2canvas laisse son échelle et son décalage sur le contexte du sien) : tailles fixes, en px de l'image */
+function expCompose(shot, rect) {
+  const portrait = EXP.orient === 'portrait';
+  const W = portrait ? Math.round(EXP_LONG * 2 / 3) : EXP_LONG;
+  const H = portrait ? EXP_LONG : Math.round(EXP_LONG * 2 / 3);
+  const cv = document.createElement('canvas');
+  cv.width = W; cv.height = H + EXP_BAND;
+  const g = cv.getContext('2d');
+  g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
+  g.fillStyle = '#11120c'; g.fillRect(0, 0, W, H + EXP_BAND);
+  g.drawImage(shot, 0, 0, shot.width, shot.height, 0, 0, W, H);
+  const scale = W / rect.w;                     /* px de l'image par px CSS */
+
+  /* l'échelle : mesurée au centre du cadre */
+  const cx = rect.x + rect.w / 2, cy = rect.y + rect.h / 2;
+  const mPerCss = map.distance(map.containerPointToLatLng([cx - 50, cy]), map.containerPointToLatLng([cx + 50, cy])) / 100;
+  const mPerPx = mPerCss / scale;
+  const nm = S.units.distance === 'nm';
+  const unitM = nm ? NM_M : 1000;
+  const unitTxt = t(nm ? 'u.nm' : 'u.km');
+  const len = mPerPx > 0 ? expScaleLength(W * 0.22 * mPerPx / unitM) : 0;
+  const barW = len > 0 ? Math.round(len * unitM / mPerPx) : 0;
+  const barR = W - 40, barL = barR - barW;
+
+  /* le bandeau */
+  const top = H;
+  g.fillStyle = '#11120c'; g.fillRect(0, top, W, EXP_BAND);
+  g.fillStyle = '#f2c14e'; g.fillRect(0, top, W, 3);
+  g.textBaseline = 'alphabetic';
+  const nameRaw = String(S.name || '').trim();
+  let name = (nameRaw ? nameRaw.toUpperCase() : t('cart.unnamed'));
+  const th = '·  ' + t('th.' + S.theatre).toUpperCase();
+  const room = (barW ? barL - 24 : W - 24) - 24;
+  g.font = "700 30px 'Oswald', 'Arial Narrow', sans-serif";
+  const fitName = () => {
+    g.font = "700 30px 'Oswald', 'Arial Narrow', sans-serif";
+    const w1 = g.measureText(name).width;
+    g.font = "500 20px 'Oswald', 'Arial Narrow', sans-serif";
+    return w1 + 14 + g.measureText(th).width;
+  };
+  while (name.length > 3 && fitName() > room) name = name.replace(/…$/, '').slice(0, -1).replace(/\s+$/, '') + '…';
+  g.font = "700 30px 'Oswald', 'Arial Narrow', sans-serif";
+  g.fillStyle = '#f4f1e4';
+  g.fillText(name, 24, top + 41);
+  const nameW = g.measureText(name).width;
+  g.font = "500 20px 'Oswald', 'Arial Narrow', sans-serif";
+  g.fillStyle = '#c9c3a3';
+  g.fillText(th, 24 + nameW + 14, top + 41);
+
+  if (barW) {
+    const by = top + 26, seg = barW / 4;
+    for (let i = 0; i < 4; i++) { g.fillStyle = i % 2 ? '#f4f1e4' : '#11120c'; g.fillRect(barL + i * seg, by, seg, 9); }
+    g.strokeStyle = '#f4f1e4'; g.lineWidth = 1.5; g.strokeRect(barL + 0.75, by + 0.75, barW - 1.5, 9 - 1.5);
+    g.font = "400 15px 'Roboto Mono', 'Courier New', monospace"; g.fillStyle = '#f4f1e4';
+    g.textAlign = 'left'; g.fillText('0', barL, top + 54);
+    g.textAlign = 'center'; g.fillText(expNum(len / 2), barL + barW / 2, top + 54);
+    g.textAlign = 'right'; g.fillText(expNum(len) + ' ' + unitTxt, barR, top + 54);
+    g.textAlign = 'left';
+  }
+
+  /* la flèche du nord : en haut à droite de la carte */
+  const nx = W - 64, ny = 64;
+  g.beginPath(); g.arc(nx, ny, 40, 0, Math.PI * 2);
+  g.fillStyle = 'rgba(17,18,12,.78)'; g.fill();
+  g.lineWidth = 2; g.strokeStyle = '#f2c14e'; g.stroke();
+  g.beginPath(); g.moveTo(nx, ny - 31); g.lineTo(nx - 11, ny + 1); g.lineTo(nx, ny - 6); g.closePath();
+  g.fillStyle = '#f2c14e'; g.fill();
+  g.beginPath(); g.moveTo(nx, ny - 31); g.lineTo(nx, ny - 6); g.lineTo(nx + 11, ny + 1); g.closePath();
+  g.fillStyle = '#8a7a3c'; g.fill();
+  g.font = "700 24px 'Stardos Stencil', 'Oswald', sans-serif"; g.fillStyle = '#f4f1e4';
+  g.textAlign = 'center'; g.fillText('N', nx, ny + 28);
+  g.textAlign = 'left';
+
+  /* l'attribution : juste au-dessus du bandeau, alignée à droite */
+  const at = expAttribution();
+  if (at) {
+    g.font = "400 12px 'Roboto Mono', 'Courier New', monospace";
+    let txt = t('cart.attr') + ' ' + at;
+    while (txt.length > 4 && g.measureText(txt).width + 18 > W) txt = txt.replace(/…$/, '').slice(0, -1).replace(/\s+$/, '') + '…';
+    const bw = Math.ceil(g.measureText(txt).width) + 18;
+    g.fillStyle = 'rgba(244,241,228,.82)'; g.fillRect(W - bw, H - 22, bw, 22);
+    g.fillStyle = '#11120c'; g.textBaseline = 'middle'; g.fillText(txt, W - bw + 9, H - 11 + 0.5);
+    g.textBaseline = 'alphabetic';
+  }
+  return { canvas: cv, width: W, height: H + EXP_BAND };
+}
+
+function expFileName() {
+  const d = new Date();
+  const ts = d.getFullYear() + pad2(d.getMonth() + 1) + pad2(d.getDate()) + '-' + pad2(d.getHours()) + pad2(d.getMinutes());
+  const sl = str(S.name).trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9-]+/g, '-').replace(/-+/g, '-').replace(/^-+|-+$/g, '');
+  return 'carte_' + (sl ? sl + '_' : '') + ts + '.jpg';
+}
+
+function expDataUrlToBlob(url) {
+  const bin = atob(url.slice(url.indexOf(',') + 1));
+  const u8 = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+  return new Blob([u8], { type: 'image/jpeg' });
+}
+
+/* L'envoi : par le shell s'il l'offre (window.parent.MP_SEND_MAP), sinon le fichier */
+function expDeliver(dataUrl, W, H, partial) {
+  let send = null;
+  try { if (window.parent && typeof window.parent.MP_SEND_MAP === 'function') send = window.parent.MP_SEND_MAP; } catch (e) { send = null; }
+  const name = S.name, theatre = S.theatre;
+  expClose();
+  let msg;
+  if (send) {
+    send.call(window.parent, { dataUrl: dataUrl, name: name, theatre: theatre, width: W, height: H });
+    msg = t('toast.mapSent');
+  } else {
+    fallbackDownload(expDataUrlToBlob(dataUrl), expFileName(), '');
+    msg = t('toast.mapSaved');
+  }
+  if (partial) msg += ' ' + t('toast.mapPartial');
+  showToast(msg, partial ? 4500 : 2200);
+}
+
+async function expRun() {
+  if (!EXP.on || EXP.busy) return;
+  expLayout();
+  const rect = EXP.rect;
+  if (!rect) { showToast(t('toast.mapFail')); return; }
+  EXP.busy = true;
+  $('export-layer').classList.add('busy');
+  $('exp-go').disabled = true;
+  let sw = null, out = null, partial = false;
+  try {
+    if (typeof html2canvas !== 'function') throw new Error('html2canvas absent');
+    map.closePopup();
+    partial = expForeignTiles(rect);
+    await expPrepFonts();
+    sw = expCanvasPaths();
+    await expSettle();
+    const shot = await expShoot(rect);
+    const cp = expCompose(shot, rect);
+    out = { dataUrl: cp.canvas.toDataURL('image/jpeg', 0.82), width: cp.width, height: cp.height };
+    if (out.dataUrl.indexOf('data:image/jpeg') !== 0) out = null;
+  } catch (e) {
+    console.warn('[export carte]', e);
+    out = null;
+  } finally {
+    if (sw) { try { expRestorePaths(sw); } catch (e) { console.warn('[export carte] retour au SVG', e); } }
+    EXP.busy = false;
+    $('export-layer').classList.remove('busy');
+    $('exp-go').disabled = false;
+  }
+  if (!out) { showToast(t('toast.mapFail')); return; }
+  expDeliver(out.dataUrl, out.width, out.height, partial);
+}
+
+function expBind() {
+  $('btn-export-bg').addEventListener('click', expOpen);
+  $('exp-cancel').addEventListener('click', () => { if (!EXP.busy) expClose(); });
+  $('exp-go').addEventListener('click', expRun);
+  $('export-bar').addEventListener('click', e => {
+    const b = e.target.closest && e.target.closest('[data-exo]');
+    if (b) expSetOrient(b.dataset.exo);
+  });
+  document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && EXP.on && !EXP.busy && !SR.open) { ev.preventDefault(); expClose(); } });
+}
+
 /* ============= BARRE ET THÈME ============= */
 function revealInScroller(bar, el) {
   if (!bar || !el || bar.scrollWidth <= bar.clientWidth) return;
@@ -7312,6 +7709,7 @@ function setLang(lang) {
   if (rtVisible('rt-export-modal')) rtExportRender();
   if (rtVisible('cf-import-modal')) cfImportRender();
   if (rtVisible('cf-export-modal')) cfExportRender();
+  expSyncTexts();
   map.closePopup();
   if (drOn()) { DR.sheetKey = ''; drRlab(); drSyncUi(); }
 }
@@ -7477,6 +7875,7 @@ function bindEvents() {
   $('btn-example').addEventListener('click', loadExample);
   $('btn-clear').addEventListener('click', clearRoute);
   $('btn-handoff').addEventListener('click', sendToDatacard);
+  expBind();
   $('theme').addEventListener('change', e => { applyTheme(e.target.value, true); drawRoute(); });
   $('btn-lang').addEventListener('click', () => setLang(CURRENT_LANG === 'fr' ? 'en' : 'fr'));
   initScrollBar(document.querySelector('.toolbar'));
@@ -7916,6 +8315,10 @@ def build():
     html = html.replace('__LIB_LEAFLET_CSS__', A['lib_leaflet_css'])
     html = html.replace('__LIB_LEAFLET__', lib)
     html = html.replace('__LIB_MILSYMBOL__', lib_ms)
+    lib_h2c = A['lib_html2canvas']
+    if '</script' in lib_h2c.lower():
+        raise SystemExit("[ERREUR] html2canvas contient </script : impossible de l'embarquer en ligne")
+    html = html.replace('__LIB_HTML2CANVAS__', lib_h2c)
     html = html.replace('__APP_JS__', js)
 
     # Contrôles de construction

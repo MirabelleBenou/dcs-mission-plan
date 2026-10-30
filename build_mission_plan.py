@@ -441,7 +441,7 @@ select[data-tbm-src] {{ display: none !important; }}
             <div class="cap-row">
               <span class="logo" style="background:var(--a-bg)">B·G</span>
               <span class="ptitle">Briefing Generator</span>
-              <span class="pver">v2.4.7</span>
+              <span class="pver">v2.5.0</span>
             </div>
             <div class="pdesc" data-i18n="bg.desc">Briefings complets — SITAC, plan radio, aérodromes, charts, annexes — export PDF prêt à partager.</div>
             <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
@@ -470,7 +470,7 @@ select[data-tbm-src] {{ display: none !important; }}
             <div class="cap-row">
               <span class="logo" style="background:var(--a-rp)">R·P</span>
               <span class="ptitle">Route Planner</span>
-              <span class="pver">v1.11.0</span>
+              <span class="pver">v1.12.0</span>
             </div>
             <div class="pdesc" data-i18n="rp.desc">Tracé de route sur carte — carte DCS, topographique ou satellite, grille MGRS, villes et aérodromes, recherche ; points de référence ; caps, distances, vitesse sol et minutage ; calques CombatFlite et dessin au doigt (zones, FLOT, couloirs, orbites, boîtes) ; MGRS et DMS, envoyés à la datacard ; import et export du Route Tool de DCS.</div>
             <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
@@ -498,7 +498,7 @@ select[data-tbm-src] {{ display: none !important; }}
             <div class="cap-row">
               <span class="logo" style="background:var(--a-fm)">F·M</span>
               <span class="ptitle">Field Manual</span>
-              <span class="pver">v1.2.3</span>
+              <span class="pver">v1.2.4</span>
             </div>
             <div class="pdesc" data-i18n="fm.desc">Le manuel d'emploi de la suite — un chapitre par module, schémas et mode d'emploi, entièrement hors-ligne.</div>
             <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
@@ -528,7 +528,7 @@ select[data-tbm-src] {{ display: none !important; }}
   /* ── Données ──────────────────────────────────────────────── */
   {module_html_js}
 
-  var APP_VERSION = '1.20.0';
+  var APP_VERSION = '1.21.0';
   var KEY_LANG  = 'lang_v1';
   var KEY_THEME = 'theme_v1';
 
@@ -758,6 +758,28 @@ select[data-tbm-src] {{ display: none !important; }}
 
   /* Point d'entrée pour les modules (le Route Planner ouvre le Datacard Generator) */
   window.MP_OPEN_MODULE = openModule;
+
+  /* Pont de la carte du Route Planner vers le Briefing Generator : le dernier payload reçu reste en mémoire du shell
+     (ni postMessage, ni stockage) jusqu'à ce que le BG le prenne — à son démarrage (MP_TAKE_MAP) ou, s'il est déjà
+     ouvert, tout de suite (MP_RECEIVE_MAP) */
+  var pendingMap = null;
+  window.MP_SEND_MAP = function(payload) {{
+    pendingMap = payload;
+    openModule('bg');
+    var f = iframes['bg'];
+    try {{
+      if (f && f.contentWindow && typeof f.contentWindow.MP_RECEIVE_MAP === 'function') {{
+        var p = pendingMap;
+        pendingMap = null;
+        f.contentWindow.MP_RECEIVE_MAP(p);
+      }}
+    }} catch(e) {{ console.warn('[M·P] MP_RECEIVE_MAP : ' + e); }}
+  }};
+  window.MP_TAKE_MAP = function() {{
+    var p = pendingMap;
+    pendingMap = null;
+    return p || null;
+  }};
 
   function goHub() {{
     Object.keys(iframes).forEach(function(iid) {{ iframes[iid].style.display = 'none'; }});
