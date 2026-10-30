@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Build — DCS Route Planner v1.10.0.
+"""Build — DCS Route Planner v1.11.0.
 
 Produit dist/dcs_route_planner.html : un fichier unique, hors ligne, sans serveur ;
 seules les tuiles de carte (DCS Olympus, OpenTopoMap, Esri) viennent du réseau, et le
 module retombe de lui-même sur la grille seule quand elles sont injoignables.
-Les polices et les bibliothèques (Leaflet 1.9.4, BSD-2) viennent d'assets.json, à la
+Les polices et les bibliothèques (Leaflet 1.9.4, BSD-2 ; milsymbol 3.0.5, MIT, construction réduite) viennent d'assets.json, à la
 racine du dépôt ; les aérodromes DCS (noms et positions, pydcs, LGPL-3.0) viennent d'airfields.json ;
 les villes DCS (noms et positions) viennent de towns.json ; la déclinaison magnétique (coefficients WMM 1985–2025, comme DCS) vient du dossier wmm/
 via magvar_block.py.
@@ -12,6 +12,7 @@ via magvar_block.py.
 Usage : python3 build_route_planner.py
 """
 
+import hashlib
 import json
 import os
 import re
@@ -22,13 +23,14 @@ import sys
 from magvar_block import build_block as build_magvar_block
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-APP_VERSION = "1.10.0"
+APP_VERSION = "1.11.0"
 OUT_PATH = os.path.join(HERE, 'dist', 'dcs_route_planner.html')
 ASSETS_PATH = os.path.join(HERE, 'assets.json')
 AIRFIELDS_PATH = os.path.join(HERE, 'airfields.json')
 TOWNS_PATH = os.path.join(HERE, 'towns.json')
 
-REQUIRED_ASSETS = ['STARDOS_700', 'OSWALD_500', 'OSWALD_700', 'ROBOTO_MONO_400', 'lib_leaflet', 'lib_leaflet_css']
+REQUIRED_ASSETS = ['STARDOS_700', 'OSWALD_500', 'OSWALD_700', 'ROBOTO_MONO_400', 'lib_leaflet', 'lib_leaflet_css', 'lib_milsymbol']
+MILSYMBOL_SHA256 = '5af6b52f8660baa432ef406e6cf7341dde26053848c6f71c52adabccf4cea9cc'   # milsymbol_rp.min.js (milsymbol 3.0.5, MIT), embarquée telle quelle
 
 if not os.path.isfile(ASSETS_PATH):
     raise SystemExit(f"[ERREUR] Entrée manquante : {ASSETS_PATH} (assets.json attendu à la racine du dépôt)")
@@ -796,6 +798,19 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .dr-seg .tb-btn svg { width: 28px; height: 10px; }
 .dr-f-in { flex: 0 0 132px !important; }
 
+/* symboles OTAN (lot rp-v1.11.0) : la grille du catalogue dans la fiche et l'icône posée sur la carte */
+.ms-cat { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+.ms-cat button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 60px; padding: 4px 2px;
+  background: var(--olive-deep); border: 1px solid var(--khaki); color: var(--paper); font-size: 10px; letter-spacing: .5px; text-transform: uppercase; cursor: pointer; }
+.ms-cat button.on { border-color: var(--amber); box-shadow: inset 0 0 0 1px var(--amber); color: var(--amber); }
+.ms-cat button svg { height: 28px; width: auto; }
+/* L'icône posée sur la carte */
+.ms-ic { background: none; border: none; }
+.ms-ic svg { display: block; overflow: visible; }
+/* ce que la maquette ne dit pas : la fiche d'une unité (la plus haute) tient sans défiler en 1 280 × 800 et en 800 × 1 280, même « à venir » */
+.ms-sh .dr-f { margin-top: 4px; }
+.ms-sh .sh-x { width: 34px; height: 34px; }
+
 /* poignées : 44 px de cible, 16 px visibles */
 .dr-h { background: none; border: none; }
 .dr-h i { position: absolute; left: 50%; top: 50%; width: 16px; height: 16px; margin: -8px 0 0 -8px; box-sizing: border-box;
@@ -967,6 +982,7 @@ HTML = r"""<!DOCTYPE html>
 __CSS__
 </style>
 <script>__LIB_LEAFLET__</script>
+<script>__LIB_MILSYMBOL__</script>
 </head>
 <body data-theme="cw-nato">
 
@@ -1506,7 +1522,7 @@ JS = r"""
 'use strict';
 
 /* =====================================================
-   ROUTE PLANNER v1.10.0
+   ROUTE PLANNER v1.11.0
    Une route sur une carte (points posés, saisis par coordonnées
    ou par cap et distance), des points de référence, les noms de lieux,
    les villes et les aérodromes DCS, une recherche sur la carte : caps, distances, vitesse sol et minutage,
@@ -1549,11 +1565,136 @@ const LAYERS_Z = 390;          /* le pane des calques : au-dessus du fond, de la
 const CF_NAMES_ZOOM = 11;      /* le nom d'un point de calque : à partir du zoom 11 */
 const CF_FILL_K = 0.4;         /* remplissages atténués à 40 % de l'opacité du fichier */
 const NM_M = 1852;
-const CF_ITEM_TYPES = ['zone', 'circle', 'orbit', 'box', 'point', 'text'];
+const CF_ITEM_TYPES = ['zone', 'circle', 'orbit', 'box', 'point', 'text', 'symbol'];
 const CF_ZONE_KINDS = ['lines', 'curve', 'flot', 'corridor'];
 const CF_POINT_KINDS = ['target', 'dmpi', 'exit', 'lz', 'other'];
 const CF_DASHES = ['solid', 'dot', 'dash'];
-const CF_COUNT_ORDER = ['zone', 'circle', 'point', 'orbit', 'box', 'text'];
+const CF_COUNT_ORDER = ['zone', 'circle', 'point', 'symbol', 'orbit', 'box', 'text'];
+
+/* ---- Symboles OTAN (APP-6, bibliothèque milsymbol) : le catalogue, le SIDC et les options de dessin (lot rp-v1.11.0) ----
+   Un SIDC de 15 caractères : préfixe « S » (« G » pour un code qui commence par « C », un point tactique), le camp, le code du symbole (8 caractères),
+   complété de « - » ; l'échelon est le 12e caractère (index 11), pour les seules unités. */
+const CF_SIDC_RE = /^[SG][FHNU][A-Z\-]{13}$/;
+const SYM = {
+  camps: [
+    {"v": "F", "fr": "Ami", "en": "Friend", "trait": "#1f4fa8"},
+    {"v": "H", "fr": "Ennemi", "en": "Hostile", "trait": "#c8102e"},
+    {"v": "N", "fr": "Neutre", "en": "Neutral", "trait": "#2e7d32"},
+    {"v": "U", "fr": "Inconnu", "en": "Unknown", "trait": "#a07800"}
+  ],
+  styles: [
+    {"v": "fill", "fr": "Rempli", "en": "Filled"},
+    {"v": "line", "fr": "Trait", "en": "Outline"}
+  ],
+  tailles: [
+    {"v": "s", "fr": "P", "en": "S", "px": 26},
+    {"v": "m", "fr": "M", "en": "M", "px": 34},
+    {"v": "l", "fr": "G", "en": "L", "px": 44}
+  ],
+  echelons: [
+    {"v": "-", "fr": "—", "en": "—", "nom_fr": "", "nom_en": ""},
+    {"v": "D", "fr": "Pel", "en": "Plt", "nom_fr": "Peloton", "nom_en": "Platoon"},
+    {"v": "E", "fr": "Cie", "en": "Coy", "nom_fr": "Compagnie", "nom_en": "Company"},
+    {"v": "F", "fr": "Bn", "en": "Bn", "nom_fr": "Bataillon", "nom_en": "Battalion"},
+    {"v": "G", "fr": "Rgt", "en": "Rgt", "nom_fr": "Régiment", "nom_en": "Regiment"},
+    {"v": "H", "fr": "Bde", "en": "Bde", "nom_fr": "Brigade", "nom_en": "Brigade"},
+    {"v": "I", "fr": "Div", "en": "Div", "nom_fr": "Division", "nom_en": "Division"}
+  ],
+  categories: [
+    { "v": "unit", "fr": "Unités", "en": "Units", "echelon": true, "formation": true, symboles: [
+      {"code": "GPUCI---", "fr": "Infanterie", "en": "Infantry"},
+      {"code": "GPUCIZ--", "fr": "Inf. méca", "en": "Mech. inf."},
+      {"code": "GPUCA---", "fr": "Blindés", "en": "Armour"},
+      {"code": "GPUCR---", "fr": "Reco", "en": "Recon"},
+      {"code": "GPUCF---", "fr": "Artillerie", "en": "Artillery"},
+      {"code": "GPUCD---", "fr": "DCA", "en": "Air defence"},
+      {"code": "GPUCVR--", "fr": "Hélicos", "en": "Helicopters"},
+      {"code": "GPUCE---", "fr": "Génie", "en": "Engineers"},
+      {"code": "GPUSS---", "fr": "Logistique", "en": "Logistics"}
+    ] },
+    { "v": "equip", "fr": "Équip.", "en": "Equip.", "echelon": false, "formation": false, symboles: [
+      {"code": "GPEVATH-", "fr": "Char", "en": "Tank"},
+      {"code": "GPEVAI--", "fr": "VCI", "en": "IFV"},
+      {"code": "GPEWMS--", "fr": "SAM", "en": "SAM"},
+      {"code": "GPEWAH--", "fr": "AAA", "en": "AAA"},
+      {"code": "GPESR---", "fr": "Radar", "en": "Radar"}
+    ] },
+    { "v": "air", "fr": "Aéronefs", "en": "Aircraft", "echelon": false, "formation": false, symboles: [
+      {"code": "APMF----", "fr": "Avion", "en": "Aircraft"},
+      {"code": "APMFF---", "fr": "Chasseur", "en": "Fighter"},
+      {"code": "APMFA---", "fr": "Attaque", "en": "Attack"},
+      {"code": "APMFB---", "fr": "Bombardier", "en": "Bomber"},
+      {"code": "APMFC---", "fr": "Transport", "en": "Transport"},
+      {"code": "APMH----", "fr": "Hélico", "en": "Helicopter"},
+      {"code": "APMHA---", "fr": "Hélico att.", "en": "Attack helo"}
+    ] },
+    { "v": "point", "fr": "Points", "en": "Points", "echelon": false, "formation": false, symboles: [
+      {"code": "CPSPR---", "fr": "FARP", "en": "FARP"}
+    ] }
+  ]
+};
+function symFind(list, v) { for (let i = 0; i < list.length; i++) if (list[i].v === v) return list[i]; return null; }
+function symCode(sidc) { return sidc.slice(2, 10); }
+function symCatOf(code) {
+  for (let i = 0; i < SYM.categories.length; i++) if (SYM.categories[i].symboles.some(x => x.code === code)) return SYM.categories[i];
+  return null;
+}
+function symIsUnit(sidc) { const c = symCatOf(symCode(sidc)); return c ? c.v === 'unit' : (sidc[0] === 'S' && sidc[2] === 'G' && sidc[4] === 'U'); }
+function symLabel(sidc) {
+  const code = symCode(sidc);
+  for (let i = 0; i < SYM.categories.length; i++) {
+    const x = SYM.categories[i].symboles.find(y => y.code === code);
+    if (x) return x[CURRENT_LANG];
+  }
+  return '';
+}
+function symSidc(side, code, ech) {
+  const a = ((code[0] === 'C' ? 'G' : 'S') + side + code + '---------------').slice(0, 15).split('');
+  if (ech && ech !== '-') a[11] = ech;
+  return a.join('');
+}
+/* Les options de milsymbol : P, M, G en pixels ; au trait, le cadre sans remplissage à la couleur du camp ; aucun halo */
+function symOpts(sidc, style, px, name, formation) {
+  const o = { size: px, uniqueDesignation: name };
+  if (symIsUnit(sidc)) o.higherFormation = formation;
+  o.colorMode = 'Medium';
+  o.infoColor = '#1a1a1a';
+  if (style === 'line') {
+    const c = symFind(SYM.camps, sidc[1]);
+    o.fill = false;
+    o.strokeWidth = 4;
+    o.monoColor = c ? c.trait : '#000000';
+  }
+  return o;
+}
+function symPx(size) { const x = symFind(SYM.tailles, size); return x ? x.px : 34; }
+/* Un réglage posé sur un symbole : le SIDC se refait en place (camp : 2e caractère ; symbole : préfixe et caractères 3 à 10 ; échelon : 12e) ;
+   d'une unité à un autre genre, l'échelon revient à « - » et la formation se vide ; false si le réglage ne le concerne pas */
+function symSet(it, f, v) {
+  const a = it.sidc.split('');
+  if (f === 'style') { if (v !== 'fill' && v !== 'line') return false; it.style = v; return true; }
+  if (f === 'size') { if (!symFind(SYM.tailles, v)) return false; it.size = v; return true; }
+  if (f === 'formation') { if (!symIsUnit(it.sidc)) return false; it.formation = v; return true; }
+  if (f === 'side') { if (!symFind(SYM.camps, v)) return false; a[1] = v; it.sidc = a.join(''); return true; }
+  if (f === 'echelon') {
+    if (!symIsUnit(it.sidc) || !symFind(SYM.echelons, v)) return false;
+    a[11] = v;
+    it.sidc = a.join('');
+    return true;
+  }
+  if (f === 'sym') {
+    const cat = symCatOf(v);
+    if (!cat) return false;
+    const was = symIsUnit(it.sidc), now = cat.v === 'unit';
+    a[0] = v[0] === 'C' ? 'G' : 'S';
+    for (let i = 0; i < 8; i++) a[2 + i] = v[i];
+    if (!(was && now)) a[11] = '-';
+    if (!now) it.formation = '';
+    it.sidc = a.join('');
+    return true;
+  }
+  return false;
+}
 
 /* Théâtres : cadrage (centre, zoom) et clé de la couche Olympus ('' : aucune) */
 const THEATRES = [
@@ -1845,6 +1986,8 @@ const I18N = {
     'cf.n.box.n': '{n} boîtes',
     'cf.n.text.1': '{n} texte',
     'cf.n.text.n': '{n} textes',
+    'cf.n.symbol.1': '{n} symbole',
+    'cf.n.symbol.n': '{n} symboles',
     'cf.empty': 'vide',
     'toast.cfShown.1': '{n} calque affiché ✓',
     'toast.cfShown.n': '{n} calques affichés ✓',
@@ -1869,6 +2012,7 @@ const I18N = {
     'cf.p.other': 'Point',
     'cf.mhz': '{f} MHz',
     'cf.toRef': '→ Point de référence',
+    'cf.formation': 'Formation {f}',
     'cf.exp.title': 'Exporter',
     'cf.exp.route': 'La route',
     'cf.exp.routeN': '{n} points · {m} réf.',
@@ -1980,6 +2124,17 @@ const I18N = {
     'dr.lt.corridor': 'Couloir',
     'dr.f.enemy': 'Côté ennemi',
     'dr.f.flip': 'Inverser',
+    'dr.tool.symbol': 'Symbole',
+    'dr.g.symbol': 'Symbole',
+    'dr.msg.symbol': 'Touchez la carte pour poser le symbole.',
+    'dr.f.side': 'Camp',
+    'dr.f.style': 'Style',
+    'dr.f.size': 'Taille',
+    'dr.f.symbol': 'Symbole',
+    'dr.f.echelon': 'Échelon',
+    'dr.f.designation': 'Désignation',
+    'dr.f.formation': 'Formation',
+    'dr.f.sym.ph': 'Sans',
     'dr.d.corr': 'Couloir {w} NM',
     'dr.step.dec': 'Moins',
     'dr.step.inc': 'Plus',
@@ -2200,6 +2355,8 @@ const I18N = {
     'cf.n.box.n': '{n} boxes',
     'cf.n.text.1': '{n} text',
     'cf.n.text.n': '{n} texts',
+    'cf.n.symbol.1': '{n} symbol',
+    'cf.n.symbol.n': '{n} symbols',
     'cf.empty': 'empty',
     'toast.cfShown.1': '{n} layer shown ✓',
     'toast.cfShown.n': '{n} layers shown ✓',
@@ -2224,6 +2381,7 @@ const I18N = {
     'cf.p.other': 'Point',
     'cf.mhz': '{f} MHz',
     'cf.toRef': '→ Reference point',
+    'cf.formation': 'Higher formation {f}',
     'cf.exp.title': 'Export',
     'cf.exp.route': 'The route',
     'cf.exp.routeN': '{n} waypoints · {m} ref.',
@@ -2335,6 +2493,17 @@ const I18N = {
     'dr.lt.corridor': 'Corridor',
     'dr.f.enemy': 'Enemy side',
     'dr.f.flip': 'Flip',
+    'dr.tool.symbol': 'Symbol',
+    'dr.g.symbol': 'Symbol',
+    'dr.msg.symbol': 'Tap the map to place the symbol.',
+    'dr.f.side': 'Side',
+    'dr.f.style': 'Style',
+    'dr.f.size': 'Size',
+    'dr.f.symbol': 'Symbol',
+    'dr.f.echelon': 'Echelon',
+    'dr.f.designation': 'Designation',
+    'dr.f.formation': 'Higher formation',
+    'dr.f.sym.ph': 'None',
     'dr.d.corr': 'Corridor {w} NM',
     'dr.step.dec': 'Less',
     'dr.step.inc': 'More',
@@ -2747,6 +2916,11 @@ function cfItem(src) {
   }
   if (type === 'point') {
     return { id: id, type: type, name: name, lat: lat, lon: lon, kind: cfPick(src.kind, CF_POINT_KINDS, 'other'), note: str(src.note), color: cfColor(src.color, '#000000') };
+  }
+  if (type === 'symbol') {
+    if (typeof src.sidc !== 'string' || !CF_SIDC_RE.test(src.sidc)) return null;
+    return { id: id, type: type, name: name, lat: lat, lon: lon, sidc: src.sidc, style: cfPick(src.style, ['fill', 'line'], 'fill'), size: cfPick(src.size, ['s', 'm', 'l'], 'm'),
+      formation: str(src.formation) };
   }
   return { id: id, type: type, name: name, lat: lat, lon: lon, text: typeof src.text === 'string' ? src.text : '', bg: cfColor(src.bg, '#ffffff'), fg: cfColor(src.fg, '#000000'),
     size: cfPos(src.size, 40, 400), bold: src.bold === true, border: src.border === true, filled: src.filled === true };
@@ -4248,6 +4422,19 @@ function cfDrawPoint(it) {
   cfPointMarks.push({ mk: mk, name: it.name });
 }
 
+/* Un symbole OTAN : un marqueur dont l'icône est le SVG de milsymbol (désignation à gauche, formation à droite, échelon au-dessus) ; il agit comme un point */
+function cfDrawSymbol(it) {
+  let sy;
+  try { sy = new ms.Symbol(it.sidc, symOpts(it.sidc, it.style, symPx(it.size), it.name, it.formation)); } catch (e) { return; }
+  const z = sy.getSize(), a = sy.getAnchor();
+  const mk = L.marker([it.lat, it.lon], { pane: 'layers', zIndexOffset: 100000, keyboard: false, title: it.name,
+    icon: L.divIcon({ className: 'ms-ic', iconSize: [z.width, z.height], iconAnchor: [a.x, a.y], popupAnchor: [0, -Math.round(a.y)], html: sy.asSVG() }) });
+  if (cfReading()) cfBindPopup(mk, it);
+  else mk.on('click', ev => { L.DomEvent.stop(ev); addFromAirfield(it.lat, it.lon, hasText(it.name) ? it.name : symLabel(it.sidc)); });   /* comme un aérodrome */
+  mk.addTo(cfGroup);
+  cfTagEl(mk, it);
+}
+
 /* Un cadre de texte centré sur son point : il ne s'ouvre pas et laisse passer le toucher */
 function cfDrawText(it) {
   const fs = Math.max(6, Math.round(it.size / 4));
@@ -4267,6 +4454,7 @@ function cfDrawItem(it) {
   else if (it.type === 'box') cfDrawBox(it);
   else if (it.type === 'point') cfDrawPoint(it);
   else if (it.type === 'text') cfDrawText(it);
+  else if (it.type === 'symbol') cfDrawSymbol(it);
 }
 
 /* Le nom d'un point : dans le DOM du symbole à partir du zoom 11, absent en dessous */
@@ -4324,10 +4512,14 @@ function cfFiche(it) {
   } else if (it.type === 'box') {
     if (it.kind) line('cf-f-l', it.kind);
     if (alts) line('cf-f-l', alts);
-  } else if (it.type === 'point') {
-    line('cf-f-l', t('cf.p.' + it.kind));
+  } else if (it.type === 'point' || it.type === 'symbol') {
+    if (it.type === 'symbol') {
+      const camp = symFind(SYM.camps, it.sidc[1]), ech = symIsUnit(it.sidc) ? symFind(SYM.echelons, it.sidc[11]) : null;
+      line('cf-f-l', [symLabel(it.sidc), ech ? ech['nom_' + CURRENT_LANG] : '', camp ? camp[CURRENT_LANG] : ''].filter(Boolean).join(' · '));
+      if (hasText(it.formation)) line('cf-f-l', t('cf.formation', { f: it.formation }));
+    } else line('cf-f-l', t('cf.p.' + it.kind));
     line('cf-f-mgrs', toMGRS(it.lat, it.lon));
-    if (it.note) line('cf-f-l', it.note);
+    if (it.type === 'point' && it.note) line('cf-f-l', it.note);
     const b = document.createElement('button');
     b.type = 'button';
     b.className = 'rt-btn go';
@@ -4362,13 +4554,14 @@ const DR_ICONS = {
   lock: "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><rect x=\"5\" y=\"11\" width=\"14\" height=\"10\"/><path d=\"M8 11V7a4 4 0 0 1 8 0v4\"/></svg>",
   vtx: "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><rect x=\"8\" y=\"8\" width=\"8\" height=\"8\"/><path d=\"M3 3l18 18\"/></svg>",
   orbit: "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M7 7h10a5 5 0 0 1 0 10H7A5 5 0 0 1 7 7z\" stroke-dasharray=\"3.2 2.2\"/><path d=\"M15 4.5l2.5 2.5L15 9.5\" stroke-dasharray=\"none\"/></svg>",
-  box: "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><rect x=\"3.5\" y=\"4.5\" width=\"17\" height=\"15\"/><path d=\"M9.2 4.5v15M14.8 4.5v15M3.5 9.5h17M3.5 14.5h17\" stroke-width=\"1\" stroke-dasharray=\"2 1.6\"/></svg>"
+  box: "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><rect x=\"3.5\" y=\"4.5\" width=\"17\" height=\"15\"/><path d=\"M9.2 4.5v15M14.8 4.5v15M3.5 9.5h17M3.5 14.5h17\" stroke-width=\"1\" stroke-dasharray=\"2 1.6\"/></svg>",
+  symbol: "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><rect x=\"3\" y=\"6\" width=\"18\" height=\"12\"/><path d=\"M3 6l18 12M21 6L3 18\"/></svg>"
 };
 
 const DR_COLORS = ['#000000', '#c8102e', '#1f4fa8', '#2e7d32', '#e07b00', '#7b2d8e', '#ffffff'];
 const DR_COLOR0 = '#c8102e';   /* la couleur d'un objet neuf, au départ de la session */
-const DR_TOOLS = ['select', 'circle', 'zone', 'line', 'point', 'text', 'orbit', 'box'];
-const DR_HIT = { circle: 22, path: 22, point: 26, text: 34 };   /* rayons de toucher, en pixels */
+const DR_TOOLS = ['select', 'circle', 'zone', 'line', 'point', 'text', 'orbit', 'box', 'symbol'];
+const DR_HIT = { circle: 22, path: 22, point: 26, text: 34, symbol: 30 };   /* rayons de toucher, en pixels */
 const DR_COPY_PX = 24;         /* une copie : 24 px à droite, 24 px en bas, au zoom courant */
 const DR_MOVE_TOL = 4;         /* un glisser de poignée commence au-delà de 4 px */
 const DR_MIN_NM = 0.5;         /* la largeur d'une orbite, les dimensions d'une boîte : au moins 0,5 NM */
@@ -4383,7 +4576,7 @@ const DR_DASH_SVG = {
 /* L'état du dessin : en mémoire seulement (ni le mode, ni le calque actif, ni la sélection, ni l'outil, ni la couleur ne s'enregistrent) */
 const DR = {
   layerId: null,        /* le calque actif (où l'on dessine) */
-  tool: 'select',       /* select · circle · zone · line · point · text · orbit · box */
+  tool: 'select',       /* select · circle · zone · line · point · text · orbit · box · symbol */
   build: null,          /* une zone, une ligne, une orbite ou une boîte en cours : { kind, pts: [[lat, lon], …] } */
   draft: null,          /* le brouillon des réglages de l'objet à venir : { n, tool, it, vals, flip } (jamais enregistré) */
   lab: null,            /* l'étiquette d'une poignée de boîte en cours de glisser : { at, text } */
@@ -4394,6 +4587,9 @@ const DR = {
   menu: false,          /* le menu des calques est ouvert */
   color: DR_COLOR0,     /* la dernière couleur choisie dans une fiche */
   hs: [],               /* les poignées : { mk, pos, tap, start, move, end } */
+  sym: { side: 'F', style: 'fill', size: 'm', code: 'GPUCI---', ech: '-' },   /* le dernier symbole créé : camp, style, taille, symbole, échelon (en mémoire seulement) */
+  symId: null,          /* l'id de ce symbole : ses réglages suivent la fiche tant que c'est lui qu'on règle */
+  symCat: null,         /* la catégorie affichée dans la fiche d'un symbole (null : celle du symbole) */
   contour: null, preview: [], rlab: null, raf: 0, sheetKey: ''
 };
 
@@ -4451,7 +4647,7 @@ function drHit(it, p) {
     const dc = p.distanceTo(c), d = Math.abs(dc - r);
     return (d <= DR_HIT.circle || (it.filled && dc <= r)) ? d : -1;
   }
-  if (it.type === 'point' || it.type === 'text') {
+  if (it.type === 'point' || it.type === 'text' || it.type === 'symbol') {
     const d = p.distanceTo(map.latLngToContainerPoint([it.lat, it.lon]));
     return d <= DR_HIT[it.type] ? d : -1;
   }
@@ -4503,6 +4699,7 @@ function drEnsureLayer() {
 function drAdd(it) {
   const l = drEnsureLayer();
   drApplyDraft(it);       /* seuls les réglages changés dans la fiche « à venir » passent à l'objet */
+  if (it.type === 'symbol') drSymRemember(it);
   l.items.push(it);
   persistLayers();
   renderLayers();
@@ -4525,6 +4722,17 @@ function drNewPoint(ll) {
   const l = drLayer();
   const n = (l ? l.items.filter(i => i.type === 'point').length : 0) + 1;
   return { id: cfRandId(), type: 'point', name: t('dr.new.pt', { n: n }), lat: r7(ll.lat), lon: r7(ll.lng), kind: 'target', note: '', color: DR.color };
+}
+
+/* Un symbole neuf : les réglages du dernier symbole créé (au départ : Ami, Rempli, M, Infanterie, sans échelon) ; désignation et formation vides */
+function drNewSymbol(ll) {
+  const m = DR.sym;
+  return { id: cfRandId(), type: 'symbol', name: '', lat: r7(ll.lat), lon: r7(ll.lng), sidc: symSidc(m.side, m.code, m.ech), style: m.style, size: m.size, formation: '' };
+}
+
+function drSymRemember(it) {
+  DR.sym = { side: it.sidc[1], style: it.style, size: it.size, code: symCode(it.sidc), ech: symIsUnit(it.sidc) ? it.sidc[11] : '-' };
+  DR.symId = it.id;
 }
 
 function drNewText(ll) {
@@ -4604,6 +4812,7 @@ function drMapClick(ev) {
   if (tool === 'select') { drPickAt(ev.containerPoint); return; }
   if (tool === 'circle') { drAdd(drNewCircle(ll)); return; }
   if (tool === 'point') { drAdd(drNewPoint(ll)); return; }
+  if (tool === 'symbol') { drAdd(drNewSymbol(ll)); return; }
   if (tool === 'text') {
     drAdd(drNewText(ll));
     DR.sheet = true;
@@ -5116,6 +5325,7 @@ function drDesc(it) {
   if (it.type === 'box') return join(cfFmtNm(it.lengthNm) + ' × ' + t('cf.nm', { w: cfFmtNm(it.widthNm) }) + ' · ' + it.gridH + ' × ' + it.gridV);
   if (it.type === 'point') return join(drKindLabel(it.kind));
   if (it.type === 'text') return it.text.replace(/\s*[\r\n]+\s*/g, ' ').trim();
+  if (it.type === 'symbol') { const lb = symLabel(it.sidc) || t('dr.g.symbol'); return nm ? lb + ' · ' + nm : lb; }
   return nm || t('dr.g.' + drGenre(it));
 }
 
@@ -5168,6 +5378,7 @@ function drRenderHint() {
   else if (tool === 'circle') m = esc(t('dr.msg.circle'));
   else if (tool === 'point') m = esc(t('dr.msg.point'));
   else if (tool === 'text') m = esc(t('dr.msg.text'));
+  else if (tool === 'symbol') m = esc(t('dr.msg.symbol'));
   else if (tool === 'orbit' || tool === 'box') m = esc(t('dr.msg.' + tool + (b && b.pts.length ? '2' : '')));
   else {
     const n = b ? b.pts.length : 0;
@@ -5203,7 +5414,36 @@ function drRenderPop() {
 }
 
 /* ---- La fiche « Réglages » : celle de l'objet choisi, ou (draft) celle de l'objet à venir, aux mêmes champs ---- */
+/* La fiche d'un symbole (choisi ou à venir) : camp, style et taille, catégorie et grille du catalogue, échelon (unités), désignation et formation (unités) */
+function drSymSheetHtml(it, draft) {
+  const lg = CURRENT_LANG;
+  const f = (label, id, body) => '<div class="dr-f"><label' + (id ? ' for="' + id + '"' : '') + '>' + esc(label) + '</label>' + body + '</div>';
+  const seg = (field, items) => '<div class="dr-seg" role="group">' + items.map(x =>
+    '<button type="button" class="tb-btn' + (x.on ? ' on' : '') + '" data-f="' + field + '" data-v="' + esc(x.v) + '" aria-pressed="' + (x.on ? 'true' : 'false') + '">' + esc(x.label) + '</button>').join('') + '</div>';
+  const txt = (id, fld, v) => '<input type="text" id="' + id + '" data-f="' + fld + '" autocomplete="off" spellcheck="false" placeholder="' + esc(t('dr.f.sym.ph')) + '" value="' + esc(v) + '">';
+  const side = it.sidc[1], code = symCode(it.sidc), unit = symIsUnit(it.sidc), cur = symCatOf(code);
+  const cat = symFind(SYM.categories, DR.symCat || (cur ? cur.v : 'unit')) || SYM.categories[0];
+  let h = '<div class="ms-sh"><div class="sh-head"><b>' + esc(t(draft ? 'dr.sheet.draft' : 'dr.sheet', { g: t('dr.g.symbol') })) + '</b><button type="button" class="sh-x" data-dr="props" title="' + esc(t('dr.f.close')) +
+    '" aria-label="' + esc(t('dr.f.close')) + '">×</button></div>';
+  h += '<div class="dr-row2">' + f(t('dr.f.side'), '', seg('side', SYM.camps.map(c => ({ v: c.v, on: side === c.v, label: c[lg] })))) + '</div>';
+  h += '<div class="dr-row2">' + f(t('dr.f.style'), '', seg('style', SYM.styles.map(x => ({ v: x.v, on: it.style === x.v, label: x[lg] })))) +
+    f(t('dr.f.size'), '', seg('size', SYM.tailles.map(x => ({ v: x.v, on: it.size === x.v, label: x[lg] })))) + '</div>';
+  const grid = '<div class="ms-cat">' + cat.symboles.map(x => {
+    const sd = symSidc(side, x.code, '-');
+    let svg = '';
+    try { svg = new ms.Symbol(sd, symOpts(sd, it.style, 26, '', '')).asSVG(); } catch (e) { svg = ''; }
+    return '<button type="button" data-f="sym" data-v="' + x.code + '"' + (x.code === code ? ' class="on"' : '') + ' aria-pressed="' + (x.code === code ? 'true' : 'false') +
+      '" title="' + esc(x[lg]) + '">' + svg + '<span>' + esc(x[lg]) + '</span></button>';
+  }).join('') + '</div>';
+  h += f(t('dr.f.symbol'), '', seg('cat', SYM.categories.map(c => ({ v: c.v, on: c.v === cat.v, label: c[lg] }))) + '<div style="height:6px"></div>' + grid);
+  if (unit) h += f(t('dr.f.echelon'), '', seg('echelon', SYM.echelons.map(e => ({ v: e.v, on: it.sidc[11] === e.v, label: e[lg] }))));
+  h += '<div class="dr-row2">' + f(t('dr.f.designation'), 'dr-f-name', txt('dr-f-name', 'name', it.name)) +
+    (unit ? f(t('dr.f.formation'), 'dr-f-formation', txt('dr-f-formation', 'formation', it.formation)) : '') + '</div></div>';
+  return h;
+}
+
 function drSheetHtml(it, draft) {
+  if (it.type === 'symbol') return drSymSheetHtml(it, draft);
   const g = drGenre(it);
   const f = (label, id, body, cls) => '<div class="dr-f' + (cls ? ' ' + cls : '') + '"><label' + (id ? ' for="' + id + '"' : '') + '>' + esc(label) + '</label>' + body + '</div>';
   const col = it.type === 'text' ? it.fg : it.color;
@@ -5318,6 +5558,7 @@ function drRenderSheet(force) {
   const key = (tg.draft ? 'draft/' + DR.draft.n : DR.sel.lid + '/' + DR.sel.id) + '/' + CURRENT_LANG;
   sh.hidden = false;
   sh.classList.toggle('mq-draft', tg.draft);
+  if (key !== DR.sheetKey) DR.symCat = null;                                  /* une autre fiche : la catégorie affichée redevient celle du symbole */
   if (key !== DR.sheetKey || force) { drSheetListClose(); DR.sheetKey = key; sh.innerHTML = drSheetHtml(tg.it, tg.draft); drSheetLists(); }
   drWatchSheet();
   drPlaceSheet();
@@ -5375,6 +5616,9 @@ function drSetField(it, f, v) {
     it.closed = false;
     it.filled = it.kind === 'corridor';
     if (it.kind === 'corridor' && !(it.widthNm > 0)) it.widthNm = 5;
+  } else if (f === 'side' || f === 'style' || f === 'size' || f === 'sym' || f === 'echelon' || f === 'formation') {
+    if (ty !== 'symbol') return false;
+    return symSet(it, f, v);
   } else return false;
   return true;
 }
@@ -5383,12 +5627,14 @@ function drSetField(it, f, v) {
 function drApply(tg, f, v) {
   const it = tg.it;
   if (f === 'flip') { drFlip(tg); return; }
+  if (f === 'cat') { DR.symCat = v; return; }                    /* la catégorie affichée dans la fiche d'un symbole : rien ne change au symbole */
   if (!drSetField(it, f, v)) return;
   if (tg.draft) {
     DR.draft.vals[f] = v;
     drBuildPreview();
     return;
   }
+  if (it.type === 'symbol' && it.id === DR.symId) drSymRemember(it);
   persistLayers();
   drawLayers();
   drContour();
@@ -5416,6 +5662,7 @@ function drNewDraft(tool) {
   else if (tool === 'point') { it = drNewPoint(z); it.name = ''; }
   else if (tool === 'text') it = drNewText(z);
   else if (tool === 'orbit') it = drNewOrbit([0, 0], [0, 0.1]);
+  else if (tool === 'symbol') it = drNewSymbol(z);
   else it = drNewBox([0, 0], [0, 0.1]);
   return { n: ++DR.draftN, tool: tool, it: it, vals: {}, flip: false };
 }
@@ -5423,6 +5670,10 @@ function drNewDraft(tool) {
 function drApplyDraft(it) {
   const d = DR.draft;
   if (!d) return;
+  if (it.type === 'symbol') {                                            /* les réglages d'un symbole se tiennent : le brouillon fait foi */
+    ['sidc', 'style', 'size', 'name', 'formation'].forEach(k => { it[k] = d.it[k]; });
+    return;
+  }
   Object.keys(d.vals).forEach(f => {
     if (f === 'length') return;                                          /* la longueur d'une boîte vient des touchers */
     if (f === 'name' && it.type === 'point' && !hasText(d.vals[f])) return;      /* un point garde « PT {n} » sauf nom saisi */
@@ -7652,11 +7903,19 @@ def build():
     lib = A['lib_leaflet']
     if '</script' in lib.lower():
         raise SystemExit("[ERREUR] Leaflet contient </script : impossible de l'embarquer en ligne")
+    lib_ms = A['lib_milsymbol']
+    if hashlib.sha256(lib_ms.encode('utf-8')).hexdigest() != MILSYMBOL_SHA256:
+        raise SystemExit("[ERREUR] lib_milsymbol : le sha256 ne correspond pas à milsymbol_rp.min.js")
+    if '</script' in lib_ms.lower():
+        raise SystemExit("[ERREUR] milsymbol contient </script : impossible de l'embarquer en ligne")
+    if not lib_ms.startswith('/*! milsymbol 3.0.5'):
+        raise SystemExit("[ERREUR] lib_milsymbol : la mention de licence MIT n'est plus en tête")
 
     html = HTML
     html = html.replace('__CSS__', CSS)
     html = html.replace('__LIB_LEAFLET_CSS__', A['lib_leaflet_css'])
     html = html.replace('__LIB_LEAFLET__', lib)
+    html = html.replace('__LIB_MILSYMBOL__', lib_ms)
     html = html.replace('__APP_JS__', js)
 
     # Contrôles de construction
