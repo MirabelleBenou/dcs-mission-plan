@@ -49,7 +49,7 @@ The landing page presents each tool as a **pinned print** on the board. Active t
 
 ### 🛡️ HQ — your wing, configured once
 
-HQ is the suite's **command post**. Its main job today is the **wing hub**: set your wing name, logo, squadrons and callsigns **once**, and Briefing Generator + Recon Station pick it up automatically. HQ also ships an **experimental `.miz` engine** (read a mission, export a mission snapshot, apply surgical patches) — the advanced flight-package UI is still in development and in-game validation is pending, so HQ is published as **beta**.
+HQ is the suite's **command post**. Its main job today is the **wing hub**: set your wing name, logo, squadrons and callsigns **once**, and Briefing Generator + Recon Station pick it up automatically. HQ also ships an **experimental `.miz` engine** (read a mission, export a mission snapshot, apply surgical patches) — the advanced flight-package UI is still in development and in-game validation is pending, so HQ is published as **beta**. Its **Example** button loads a demonstration wing; your own configuration is kept and can be restored in one tap.
 
 ### 🚀 Briefing Generator — in detail
 
@@ -72,6 +72,7 @@ Recon Station turns any screenshot into a convincing **reconnaissance analysis p
 - **Editable info block** — 9 fields, bold text, black/white
 - **Classification banner** — top/bottom bars, 4 levels, off by default
 - **Wing logos** — upload manually or pull the shared wing branding from HQ; colour / grey / white modes
+- **Example** — the top-bar button loads a demonstration photo with its markers, shapes, magnifier and info block
 
 ### 📖 Field Manual — in detail
 
@@ -115,7 +116,7 @@ The Field Manual is the suite's **built-in documentation**, opened from the boar
 
 ![recon-station](docs/screenshots/recon_station.jpg)
 
-<sub>Recon Station sample image: USDA National Agriculture Imagery Program (NAIP) aerial photograph, public domain.</sub>
+<sub>Recon Station sample image (also the tool's built-in example): USDA National Agriculture Imagery Program (NAIP) aerial photograph, public domain.</sub>
 
 ## 🚀 Quick Start
 
@@ -129,6 +130,8 @@ The Field Manual is the suite's **built-in documentation**, opened from the boar
 3. It keeps working offline; bookmark or "Add to Home Screen" on mobile
 
 No account, no internet required after the first load.
+
+Every tool has an **Example** button that fills it with a demo — the quickest way to see what it does.
 
 ## 🛡️ For wing administrators
 

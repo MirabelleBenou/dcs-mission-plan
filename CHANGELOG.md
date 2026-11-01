@@ -8,7 +8,35 @@ The suite bundles several **independently-versioned tools**, so entries are grou
 
 ## Unreleased
 
-Changes merged since the last release, grouped per tool. Nothing yet.
+Changes merged since the last release, grouped per tool.
+
+### HQ
+#### Added
+- **Example** button: loads a demonstration wing (Task Force Kestrel, three squadrons); your own wing configuration is kept and can be restored in one tap.
+
+### Recon Station
+#### Added
+- **Example** button: loads a demonstration reconnaissance photo with its markers, shapes, magnifier and info block (USDA NAIP aerial image, public domain).
+#### Changed
+- The top bar no longer overflows on narrow phones.
+
+### Briefing Generator
+#### Changed
+- The example loads in the interface language (French or English).
+
+### Datacard Generator
+#### Changed
+- The example loads in the interface language (French or English).
+
+### Route Planner
+#### Changed
+- The example loads in the interface language (French or English).
+
+### Field Manual
+#### Added
+- **Getting started** on the index page: every tool's Example button.
+#### Changed
+- HQ and Recon Station chapters: the Example button.
 
 ---
 
