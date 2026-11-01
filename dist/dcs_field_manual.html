@@ -903,6 +903,14 @@ body.zm-open #fm-root { overflow: hidden; }
         </div>
       </div>
 
+      <!-- Démarrer : le bouton Exemple de chaque outil -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Démarrer</h3>
+        <h3 class="lang-block" data-lang="en">Getting started</h3>
+        <div class="lang-block" data-lang="fr"><p>Chaque outil a un bouton <strong>Exemple</strong> (l’icône de feuille de la barre du haut) qui le remplit d’une démonstration, dans la langue de l’interface au moment du clic : le moyen le plus rapide de voir ce qu’il fait. Les exemples du Briefing Generator, du Datacard Generator, du Route Planner et de Recon Station racontent la même opération fictive, FOOTHOLD ; celui de HQ est une escadre de démonstration. <strong>HQ garde votre configuration d’escadre</strong> et propose de la restaurer en un geste ; dans les autres outils, l’exemple <strong>remplace le travail en cours, après confirmation</strong> (Recon Station ne la demande que s’il y a déjà du travail). Une fois chargé, l’exemple est à vous : changer de langue ensuite ne le retraduit pas. Pour repartir d’une page blanche, <strong>Reset</strong> (Briefing Generator, Datacard Generator) ou <strong>Effacer</strong> (Route Planner) vide l’outil.</p></div>
+        <div class="lang-block" data-lang="en"><p>Every tool has an <strong>Example</strong> button (the sheet icon in the top bar) that fills it with a demonstration, in the interface language at the moment of the click: the quickest way to see what it does. The Briefing Generator, Datacard Generator, Route Planner and Recon Station examples tell the same fictional operation, FOOTHOLD; HQ’s is a demonstration wing. <strong>HQ keeps your wing configuration</strong> and offers to restore it in one tap; in the other tools, the example <strong>replaces the current work, after confirmation</strong> (Recon Station only asks when there is already work in place). Once loaded, the example is yours: switching language afterwards does not translate it again. To start from a blank page, <strong>Reset</strong> (Briefing Generator, Datacard Generator) or <strong>Clear</strong> (Route Planner) empties the tool.</p></div>
+      </div>
+
       <!-- Index -->
       <p class="fm-section-title" data-i18n="index.title">Modules documentés</p>
 
@@ -1134,6 +1142,13 @@ body.zm-open #fm-root { overflow: hidden; }
       </div>
 
       <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Essayer l’exemple</h3>
+        <h3 class="lang-block" data-lang="en">Trying the example</h3>
+        <div class="lang-block" data-lang="fr"><p>Le bouton <strong>Exemple</strong> de la barre du haut (l’icône de feuille) charge une <strong>photo aérienne libre</strong> (USDA NAIP, domaine public) avec sa composition : trois repères de légende et leurs marqueurs, un cadre, une ellipse, une <strong>loupe</strong> et le bloc d’informations rempli (opération FOOTHOLD), dans la langue de l’interface au moment du clic. Sur un outil vide il charge directement ; s’il y a déjà du travail en place (image, annotations, champs saisis), il demande confirmation avant de le remplacer. Le <strong>crédit de l’image</strong> s’affiche sous la zone de dépôt tant que cette photo est chargée ; il n’entre pas dans l’export PNG et disparaît dès qu’une autre image est importée.</p></div>
+        <div class="lang-block" data-lang="en"><p>The <strong>Example</strong> button in the top bar (the sheet icon) loads a <strong>free aerial photograph</strong> (USDA NAIP, public domain) with its composition: three legend entries and their markers, a frame, an ellipse, a <strong>loupe</strong> and the filled-in information block (operation FOOTHOLD), in the interface language at the moment of the click. On an empty tool it loads straight away; if there is already work in place (image, annotations, typed fields), it asks for confirmation before replacing it. The <strong>image credit</strong> shows under the drop zone while that photo is loaded; it never reaches the PNG export and disappears as soon as another image is imported.</p></div>
+      </div>
+
+      <div class="fm-prose">
         <h3 class="lang-block" data-lang="fr">Exporter</h3>
         <h3 class="lang-block" data-lang="en">Export</h3>
         <div class="lang-block" data-lang="fr"><p>L'export produit un <strong>PNG sans perte à la résolution native</strong> de la source, nommé automatiquement d'après la cible et l'horodatage. L'aperçu à l'écran est en résolution réduite : seul le fichier exporté reflète la qualité finale.</p></div>
@@ -1262,6 +1277,14 @@ body.zm-open #fm-root { overflow: hidden; }
         <div class="lang-block" data-lang="en"><p>Add as many squadrons as needed. For each: <strong>name</strong>, <strong>nickname</strong> (optional), <strong>callsign</strong> (the radio identity, e.g. FRANKEN), <strong>aircraft</strong> (e.g. Mi-24P, Mi-8), and <strong>logo</strong>. The callsign seeds the pilots' automatic call signs in the Briefing Generator (e.g. "ANTON 1-1"), always editable afterwards.</p></div>
       </div>
 
+      <!-- Le bouton Exemple -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Essayer l’exemple</h3>
+        <h3 class="lang-block" data-lang="en">Trying the example</h3>
+        <div class="lang-block" data-lang="fr"><p>Le bouton <strong>Exemple</strong> de la barre du haut (l’icône de feuille) charge une <strong>escadre de démonstration</strong> : la Task Force Kestrel, avec ses trois escadrons et leurs logos, dans la langue de l’interface au moment du clic, sans confirmation. Comme la configuration d’escadre est partagée par toute la suite, <strong>la vôtre est gardée</strong> : le message « Exemple chargé » propose <strong>Restaurer ma configuration</strong> pendant douze secondes, et tant que la sauvegarde existe, le même bouton figure en tête de la section <strong>Configuration wing</strong>. Restaurer remet votre configuration telle qu’elle était et efface la sauvegarde ; un second clic sur Exemple ne remplace jamais la sauvegarde par la démonstration elle-même. La section Mission .miz et le Mission Commander ne bougent pas.</p></div>
+        <div class="lang-block" data-lang="en"><p>The <strong>Example</strong> button in the top bar (the sheet icon) loads a <strong>demonstration wing</strong>: Task Force Kestrel, with its three squadrons and their logos, in the interface language at the moment of the click, without confirmation. Because the wing configuration is shared by the whole suite, <strong>yours is kept</strong>: the “Example loaded” message offers <strong>Restore my configuration</strong> for twelve seconds, and as long as the backup exists the same button sits at the top of the <strong>Wing configuration</strong> section. Restoring puts your configuration back exactly as it was and deletes the backup; a second click on Example never overwrites the backup with the demonstration itself. The Mission .miz section and the Mission Commander are untouched.</p></div>
+      </div>
+
       <!-- Créateur de Wing : partager -->
       <div class="fm-prose">
         <h3 class="lang-block" data-lang="fr">Partager la configuration</h3>
@@ -1326,8 +1349,8 @@ body.zm-open #fm-root { overflow: hidden; }
       <div class="fm-prose">
         <h3 class="lang-block" data-lang="fr">Démarrer : page blanche ou exemple</h3>
         <h3 class="lang-block" data-lang="en">Getting started: blank page or example</h3>
-        <div class="lang-block" data-lang="fr"><p>L’outil s’ouvre sur un <strong>briefing vide</strong>, en brief simplifié. Le bouton <strong>Exemple</strong> charge un briefing de démonstration complet, pour voir ce que l’outil sait faire ; il remplace le briefing en cours, après confirmation. <strong>Reset</strong> vide tout le briefing, après confirmation, pour repartir d’une page blanche. Les champs vides montrent un <strong>exemple grisé</strong> (« FOOTHOLD », « M3 », « 1000Z »…) qui n’apparaît ni dans l’aperçu ni à l’export.</p></div>
-        <div class="lang-block" data-lang="en"><p>The tool opens on an <strong>empty briefing</strong>, as a quick brief. The <strong>Example</strong> button loads a full demonstration briefing, to show what the tool can do; it replaces the current briefing, after confirmation. <strong>Reset</strong> clears the whole briefing, after confirmation, to start from a blank page. Empty fields show a <strong>greyed-out example</strong> (“FOOTHOLD”, “M3”, “1000Z”…) that never appears in the preview or the export.</p></div>
+        <div class="lang-block" data-lang="fr"><p>L’outil s’ouvre sur un <strong>briefing vide</strong>, en brief simplifié. Le bouton <strong>Exemple</strong> charge un briefing de démonstration complet, pour voir ce que l’outil sait faire ; il remplace le briefing en cours, après confirmation. Il se charge dans la langue de l’interface au moment du clic : changer de langue ensuite ne le retraduit pas. <strong>Reset</strong> vide tout le briefing, après confirmation, pour repartir d’une page blanche. Les champs vides montrent un <strong>exemple grisé</strong> (« FOOTHOLD », « M3 », « 1000Z »…) qui n’apparaît ni dans l’aperçu ni à l’export.</p></div>
+        <div class="lang-block" data-lang="en"><p>The tool opens on an <strong>empty briefing</strong>, as a quick brief. The <strong>Example</strong> button loads a full demonstration briefing, to show what the tool can do; it replaces the current briefing, after confirmation. It loads in the interface language at the moment of the click: switching language afterwards does not translate it again. <strong>Reset</strong> clears the whole briefing, after confirmation, to start from a blank page. Empty fields show a <strong>greyed-out example</strong> (“FOOTHOLD”, “M3”, “1000Z”…) that never appears in the preview or the export.</p></div>
       </div>
 
       <!-- Schéma SVG -->
