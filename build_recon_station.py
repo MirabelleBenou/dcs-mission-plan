@@ -16,6 +16,20 @@ APP_VERSION = "1.1.1"
 with open(ASSETS_PATH) as f:
     A = json.load(f)
 
+# ---------- Photo de l'exemple (lot mp-exemples-demarrer) ----------
+# Photo aérienne libre : USDA NAIP, domaine public (recadrage 3:2, 1 200 × 800, niveaux de gris). Le build vérifie
+# son sha256 comme celui des assets, et l'embarque en data URL.
+import hashlib
+RS_EXAMPLE_IMG_PATH = os.path.join(HERE, 'samples', 'rs_example_naip.jpg')
+RS_EXAMPLE_IMG_SHA256 = 'c617233144c7092aa6f1b4063b594bc4d938fdd7a7fc16d3b89f292da933225b'
+if not os.path.isfile(RS_EXAMPLE_IMG_PATH):
+    raise SystemExit(f"[ERREUR] Entrée manquante : {RS_EXAMPLE_IMG_PATH} (samples/rs_example_naip.jpg attendu)")
+with open(RS_EXAMPLE_IMG_PATH, 'rb') as f:
+    _rs_example_bytes = f.read()
+if hashlib.sha256(_rs_example_bytes).hexdigest() != RS_EXAMPLE_IMG_SHA256:
+    raise SystemExit("[ERREUR] samples/rs_example_naip.jpg : le sha256 ne correspond pas à la photo attendue")
+RS_EXAMPLE_IMG_B64 = base64.b64encode(_rs_example_bytes).decode('ascii')
+
 # ---------- KRAFT SVG variants (same as BG) ----------
 def _kraft_variant(b64svg, bg_color, grain_color):
     svg_bytes = base64.b64decode(b64svg)
@@ -1585,6 +1599,29 @@ select[data-tbm-src] {{ display: none !important; }}
   border-color: var(--amber);
   outline: none;
 }}
+/* Exemple (lot mp-exemples-demarrer) : bouton à icône seule, comme dans les autres outils */
+.tb-btn {{
+  background: transparent;
+  border: 1px solid var(--khaki);
+  color: var(--paper);
+  height: 36px;
+  width: 40px;
+  padding: 0;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .15s;
+}}
+.tb-btn:hover, .tb-btn:focus-visible {{
+  background: var(--olive);
+  border-color: var(--amber);
+  color: var(--amber);
+  outline: none;
+}}
+.tb-btn:active {{ transform: translateY(1px); }}
+.tb-btn svg {{ width: 16px; height: 16px; flex-shrink: 0; }}
 .tb-spacer {{ flex: 1; }}
 .tb-version {{
   font-size: 11px;
@@ -1593,6 +1630,20 @@ select[data-tbm-src] {{ display: none !important; }}
   letter-spacing: .5px;
   user-select: none;
   white-space: nowrap;
+}}
+/* La barre ne déborde pas sur un téléphone étroit (lot mp-exemples-demarrer) */
+@media (max-width: 539px) {{
+  .tb-version {{ display: none; }}
+}}
+@media (max-width: 479px) {{
+  .toolbar {{ gap: 6px; padding-left: max(8px, env(safe-area-inset-left)); padding-right: max(8px, env(safe-area-inset-right)); }}
+  .tb-brand {{ min-width: 0; }}
+  .tb-brand-sub, .tb-sep {{ display: none; }}
+  .tb-brand-main {{ font-size: 14px; letter-spacing: 2px; }}
+  .tb-btn {{ width: 36px; }}
+  .tb-select {{ font-size: 11px; letter-spacing: .5px; padding: 0 22px 0 8px; background-position: right 6px center; }}
+  .tb-select.tbm-trigger {{ min-width: 0; flex: 0 1 auto; }}
+  .tb-lang-btn {{ min-width: 36px; padding: 0 4px; }}
 }}
 
 /* ======== MAIN LAYOUT ======== */
@@ -1746,6 +1797,17 @@ select[data-tbm-src] {{ display: none !important; }}
   border-color: var(--green-radar);
   color: var(--green-radar);
 }}
+/* Crédit de l'image de l'exemple : discret, hors de l'export */
+.img-credit {{
+  margin-top: 6px;
+  font-family: var(--f-ui);
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-align: center;
+  color: var(--khaki);
+  opacity: .85;
+}}
+.img-credit[hidden] {{ display: none; }}
 
 /* Cartouche editor */
 .cartouche-row {{
@@ -2292,6 +2354,9 @@ select[data-tbm-src] {{ display: none !important; }}
     <span class="tb-brand-sub">░ PHOTO INTELLIGENCE</span>
   </div>
   <div class="tb-sep"></div>
+  <button type="button" class="tb-btn" id="btn-example" data-i18n-title="toolbar.example.tooltip" title="Charger l'exemple" data-i18n-aria-label="toolbar.example.tooltip" aria-label="Charger l'exemple">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+  </button>
   <select class="tb-select" id="theme-select" data-i18n-title="toolbar.theme.tooltip" title="Thème graphique">
     <option value="cw-nato"     data-i18n="theme.cw-nato">Cold War OTAN</option>
     <option value="cw-soviet"   data-i18n="theme.cw-soviet">Cold War Soviétique</option>
@@ -2319,6 +2384,7 @@ select[data-tbm-src] {{ display: none !important; }}
           <div id="drop-zone-text" data-i18n="editor.image.drop">↓ DÉPOSER UNE IMAGE ICI</div>
           <div style="font-size:11px;margin-top:6px;opacity:.6" data-i18n="editor.image.drop.hint">PNG · JPEG — cliquer pour parcourir</div>
         </div>
+        <div class="img-credit" id="img-credit" data-i18n="editor.image.credit" hidden>Image : USDA NAIP, domaine public</div>
         <input type="file" id="file-source" accept="image/png,image/jpeg,image/webp" hidden>
         <button class="btn-replace" id="btn-replace" data-i18n="editor.image.replace">↺ REMPLACER L'IMAGE</button>
       </div>
@@ -2574,6 +2640,10 @@ const I18N = {{
   fr: {{
     'toolbar.theme.tooltip': 'Thème graphique',
     'toolbar.lang.tooltip': 'Passer en anglais',
+    'toolbar.example.tooltip': "Charger l'exemple",
+    'confirm.example': "Remplacer le travail en cours par l'exemple ?",
+    'toast.example-loaded': 'Exemple chargé ✓',
+    'editor.image.credit': 'Image : USDA NAIP, domaine public',
     'theme.cw-nato': 'Cold War OTAN',
     'theme.cw-soviet': 'Cold War Soviétique',
     'theme.modern-nato': 'OTAN moderne',
@@ -2688,6 +2758,10 @@ const I18N = {{
   en: {{
     'toolbar.theme.tooltip': 'Graphic theme',
     'toolbar.lang.tooltip': 'Switch to French',
+    'toolbar.example.tooltip': 'Load the example',
+    'confirm.example': 'Replace the current work with the example?',
+    'toast.example-loaded': 'Example loaded ✓',
+    'editor.image.credit': 'Image: USDA NAIP, public domain',
     'theme.cw-nato': 'Cold War NATO',
     'theme.cw-soviet': 'Cold War Soviet',
     'theme.modern-nato': 'Modern NATO',
@@ -3063,6 +3137,7 @@ function loadImageFile(file) {{
     img.onload = () => {{
       SOURCE_IMG   = img;
       SOURCE_READY = true;
+      document.getElementById('img-credit').hidden = true;     // le crédit n'est que celui de la photo de l'exemple
       document.getElementById('drop-zone').classList.add('has-image');
       document.getElementById('drop-zone-text').textContent =
         file.name + ' — ' + img.naturalWidth + '×' + img.naturalHeight + 'px';
@@ -3076,6 +3151,79 @@ function loadImageFile(file) {{
     img.src = e.target.result;
   }};
   reader.readAsDataURL(file);
+}}
+
+// ── Exemple : la photo, ses repères, ses formes, sa loupe et son bloc info (lot mp-exemples-demarrer) ──
+// La composition de la capture du README, en coordonnées relatives à l'image (fractions de la largeur et de la hauteur).
+// L'image est celle du dépôt (samples/rs_example_naip.jpg, USDA NAIP, domaine public) ; le modèle de recon_state_v1 ne change pas.
+const RS_EXAMPLE_IMG = 'data:image/jpeg;base64,{RS_EXAMPLE_IMG_B64}';
+const RS_EXAMPLE_TEXT = {{
+  fr: {{ target: 'DÉPÔT LOGISTIQUE 7', class_: 'CONFIDENTIEL', legend: ['STOCKAGE POL', 'PARC DE RÉSERVOIRS', 'PARC DE VÉHICULES'] }},
+  en: {{ target: 'LOGISTICS DEPOT 7', class_: 'CONFIDENTIAL', legend: ['POL STORAGE', 'TANK FARM', 'VEHICLE PARK'] }}
+}};
+
+function exampleHasWork() {{
+  collectState();
+  const f = STATE.fields;
+  return SOURCE_READY || (STATE.annotations || []).length > 0 ||
+    Object.keys(f).some(k => String(f[k] || '').trim() !== '') ||
+    (STATE.cartouche || []).some(e => String(e.label || '').trim() !== '');
+}}
+
+async function loadExample() {{
+  if (exampleHasWork() && !confirm(t('confirm.example'))) return;
+  const tx = RS_EXAMPLE_TEXT[CURRENT_LANG === 'en' ? 'en' : 'fr'];      // la langue de l'interface au moment du clic
+  const img = new Image();
+  try {{
+    await new Promise((ok, ko) => {{ img.onload = ok; img.onerror = ko; img.src = RS_EXAMPLE_IMG; }});
+  }} catch (e) {{ showToast(t('toast.logoInvalid'), 'err'); return; }}
+  SOURCE_IMG   = img;
+  SOURCE_READY = true;
+  document.getElementById('drop-zone').classList.add('has-image');
+  document.getElementById('drop-zone-text').textContent = 'rs_example_naip.jpg — ' + img.naturalWidth + '×' + img.naturalHeight + 'px';
+  document.getElementById('btn-export').disabled = false;
+  document.getElementById('preview-placeholder').hidden = true;
+  document.getElementById('preview-canvas').hidden = false;
+  document.getElementById('img-credit').hidden = false;
+
+  STATE.fields = {{
+    target: tx.target, coords: 'N35°08.6 E032°49.5', crs: '118°', alt: '1500 FT',
+    msn: 'FOOTHOLD M3', sensor: 'KS-87', dtg: '22.03.1989', crew: 'RECCE 11', class_: tx.class_
+  }};
+  STATE.cartouche = [
+    {{ label: tx.legend[0], x: 0.7805, y: 0.3995, point: true, target: {{ x: 0.7108, y: 0.4400 }} }},
+    {{ label: tx.legend[1], x: 0.0993, y: 0.2128, point: true }},
+    {{ label: tx.legend[2], x: 0.3101, y: 0.6997, point: true, target: {{ x: 0.3902, y: 0.7793 }} }}
+  ];
+  STATE.annotations = [
+    {{ id: uid(), type: 'rect', x: 0.455, y: 0.425, w: 0.255, h: 0.095, angle: 0, color: 'red' }},
+    {{ id: uid(), type: 'ellipse', cx: 0.4495, cy: 0.815, rx: 0.07, ry: 0.0587, color: 'red' }},
+    {{ id: uid(), type: 'inset', src: {{ x: 0.5, y: 0.4025, w: 0.12, h: 0.09 }}, box: {{ x: 0.02, y: 0.03, w: 0.3, h: 0.225 }}, color: 'white', label: '' }}
+  ];
+  STATE.logoId = 'none';
+  STATE.contrast = 105;
+  STATE.logoMode = 'gray';
+  STATE.textColor = '#000';
+  STATE.markerColor = 'red';
+  STATE.fxVignette = 0; STATE.fxGrain = 0; STATE.fxScanlines = 0;
+  STATE.sensorMode = 'eo';
+  STATE.classification = {{ enabled: false, level: 'UNCLASSIFIED' }};
+
+  applyStateToForm();
+  renderLogoGrid(); renderLogoMode(); renderTextColor(); renderMarkerColor();
+  renderCartoucheEditor(); renderInsetEditor(); renderShapesEditor(); renderLabelEditor();
+  const ce = document.getElementById('classif-enable'), cl = document.getElementById('classif-level');
+  if (ce) ce.checked = false;
+  if (cl) cl.value = STATE.classification.level;
+  rsdSetTool('select');
+  rsdDeselect();
+  saveState();
+  schedulePreview();
+  showToast(t('toast.example-loaded'), 'ok', 1800);
+  if (window.matchMedia('(max-width: 1100px)').matches) {{
+    const tab = document.querySelector('.tab-btn[data-tab="preview"]');   // petit écran : on montre l'aperçu
+    if (tab) tab.click();
+  }}
 }}
 
 // ── Logo loading ───────────────────────────────────────────────
@@ -4186,6 +4334,9 @@ function initEvents() {{
   document.getElementById('btn-lang').addEventListener('click', () => {{
     setLang(CURRENT_LANG === 'fr' ? 'en' : 'fr');
   }});
+
+  // Exemple
+  document.getElementById('btn-example').addEventListener('click', loadExample);
 
   // Drop zone
   const dz = document.getElementById('drop-zone');
