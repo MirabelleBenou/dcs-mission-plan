@@ -252,8 +252,9 @@ select[data-tbm-src] { display: none !important; }
   border-color: var(--amber);
   outline: none;
 }
-/* Exemple (lot mp-exemples-demarrer) : bouton à icône seule, comme dans les autres outils */
-.tb-btn {
+/* Exemple (lot mp-exemples-demarrer) : bouton à icône seule, comme dans les autres outils ;
+   borné à la barre du haut : les .tb-btn de la barre de dessin et de sa fiche ont leurs propres règles (.rsd-ui, .rsd-sheet) */
+.toolbar .tb-btn {
   background: transparent;
   border: 1px solid var(--khaki);
   color: var(--paper);
@@ -267,14 +268,14 @@ select[data-tbm-src] { display: none !important; }
   justify-content: center;
   transition: all .15s;
 }
-.tb-btn:hover, .tb-btn:focus-visible {
+.toolbar .tb-btn:hover, .toolbar .tb-btn:focus-visible {
   background: var(--olive);
   border-color: var(--amber);
   color: var(--amber);
   outline: none;
 }
-.tb-btn:active { transform: translateY(1px); }
-.tb-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+.toolbar .tb-btn:active { transform: translateY(1px); }
+.toolbar .tb-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
 .tb-spacer { flex: 1; }
 .tb-version {
   font-size: 11px;
@@ -293,7 +294,7 @@ select[data-tbm-src] { display: none !important; }
   .tb-brand { min-width: 0; }
   .tb-brand-sub, .tb-sep { display: none; }
   .tb-brand-main { font-size: 14px; letter-spacing: 2px; }
-  .tb-btn { width: 36px; }
+  .toolbar .tb-btn { width: 36px; }
   .tb-select { font-size: 11px; letter-spacing: .5px; padding: 0 22px 0 8px; background-position: right 6px center; }
   .tb-select.tbm-trigger { min-width: 0; flex: 0 1 auto; }
   .tb-lang-btn { min-width: 36px; padding: 0 4px; }
