@@ -4808,10 +4808,10 @@ const EXAMPLE_BRIEFING_EN = {
     },
     {
       title: 'RECON + ASSAULT KARAVOSTASI',
-      objective: "Prepare the capture of the area by airborne troops. Destroy SAM/AAA defences and armoured elements",
+      objective: "Prepare the area for seizure by airborne troops. Destroy SAM/AAA defences and armoured elements",
       execution: [
         {text: "TO POLIS — Return as per SITAC", subtasks: []},
-        {text: "Assemble at the IP", subtasks: []},
+        {text: "Join up at the IP", subtasks: []},
         {text: "Priority targets: SAM / AAA", subtasks: ["SA-13", "SA-9", "Manpads"]},
         {text: "Secondary targets: APC / MBT", subtasks: []}
       ],

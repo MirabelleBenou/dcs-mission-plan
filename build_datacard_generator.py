@@ -267,7 +267,7 @@ EXAMPLE_DOC_JSON_EN = r'''{
         "altitude": "m"
       },
       "mission": {
-        "objective": "An armoured convoy is leaving KARAVOSTASI to retake POLIS: intercept it before the FARP.",
+        "objective": "An armoured convoy is leaving KARAVOSTASI to retake POLIS: intercept it before it reaches the FARP.",
         "execution": [
           "Take-off POLIS",
           "Coastal route to the IP",
