@@ -2048,6 +2048,8 @@ const I18N = {
     'fiche.down.x': 'Le serveur des fiches ne répond pas. Vérifiez la connexion, puis réessayez.',
     'fiche.page.t': 'Page indisponible',
     'fiche.page.x': 'Cette page de la fiche ne se charge pas.',
+    'fiche.load.t': 'Chargement…',
+    'fiche.load.x': 'La fiche arrive du serveur.',
     'fiche.aide': 'Pincez pour zoomer · deux touchers pour recadrer',
     'rt.cancel': 'Annuler',
     'rt.open.title': 'Ouvrir une route du Route Tool',
@@ -2452,6 +2454,8 @@ const I18N = {
     'fiche.down.x': 'The sheet server does not answer. Check the connection, then try again.',
     'fiche.page.t': 'Page unavailable',
     'fiche.page.x': 'This page of the sheet does not load.',
+    'fiche.load.t': 'Loading…',
+    'fiche.load.x': 'The sheet is on its way from the server.',
     'fiche.aide': 'Pinch to zoom · double-tap to reframe',
     'rt.cancel': 'Cancel',
     'rt.open.title': 'Open a Route Tool route',
@@ -7188,7 +7192,9 @@ function rtTrap(ev) {
 /* ============= LA FICHE D'UN AÉRODROME (lot rp-fiche-aerodrome) =============
    En mode Lire, un aérodrome ou une hélistation ouvre sa fiche : les pages d'une chart de DCS Airfield Charts, en image, servies par l'hôte
    de la suite (contrat dcs-fiches-v1 : PUBLIC_TILES + « fiches/<théâtre>/index.json » et les pages à côté). Rien n'est embarqué ; rien n'est
-   demandé avant un toucher en mode Lire. L'index d'un théâtre se lit une fois par session (un échec n'est pas retenu). */
+   demandé avant un toucher en mode Lire. L'index d'un théâtre se lit une fois par session (un échec n'est pas retenu).
+   Une fois la première page affichée, les autres pages de la fiche ouverte sont demandées une à une, en arrière-plan, et gardées en mémoire
+   (URL → image) tant que la fiche reste ouverte ; la mémoire est vidée à la fermeture ou à l'ouverture d'une autre fiche. */
 const FICHES_FORMAT = 'dcs-fiches-v1';
 const FI_BASE = PUBLIC_TILES + 'fiches/';
 const FI_MARGIN = 10;          /* page entière : marge d'ouverture, en px */
@@ -7199,6 +7205,7 @@ const FI_KEEP = 48;            /* la page garde au moins 48 px visibles dans la 
 const FI_INDEX = new Map();    /* théâtre → promesse de l'index valide ; retirée en cas d'échec */
 const FI = {
   seq: 0, imgSeq: 0, name: '', heli: false, theatre: '', phase: '', edition: '', pages: [], cur: 0, pageErr: false,
+  imgLoading: false, mem: new Map(), bg: false,
   img: null, iw: 0, ih: 0, s: 1, x: 0, y: 0, dirty: false, ptrs: new Map(), g: null, tap: null, lastTap: null, bound: false
 };
 
@@ -7236,6 +7243,7 @@ function ficheOpen(name, heli) {
   const seq = ++FI.seq;
   const th = S.theatre;
   FI.name = name; FI.heli = !!heli; FI.theatre = th; FI.phase = 'load'; FI.edition = ''; FI.pages = []; FI.cur = 0; FI.pageErr = false;
+  FI.mem = new Map(); FI.bg = false;
   ficheDropImg();
   ficheRender();
   rtShow('fiche', null, 'fiche-fermer');
@@ -7244,6 +7252,7 @@ function ficheOpen(name, heli) {
     FI.edition = typeof idx.edition === 'string' ? idx.edition.trim() : '';
     FI.pages = ficheCleanPages(Object.prototype.hasOwnProperty.call(idx.fiches, name) ? idx.fiches[name] : null);
     FI.phase = FI.pages.length ? 'ok' : 'none';
+    FI.imgLoading = FI.phase === 'ok';
     ficheRender();
     if (FI.phase === 'ok') ficheShowPage(0);
   }, () => {
@@ -7256,14 +7265,16 @@ function ficheOpen(name, heli) {
 function ficheReset() {
   FI.seq++;
   FI.phase = '';
+  FI.mem = new Map(); FI.bg = false;
   ficheDropImg();
+  $('fiche-msg').hidden = true;
   FI.ptrs.clear(); FI.g = null; FI.tap = null; FI.lastTap = null;
 }
 
 function ficheDropImg() {
   FI.imgSeq++;
   if (FI.img && FI.img.parentNode) FI.img.parentNode.removeChild(FI.img);
-  FI.img = null; FI.iw = 0; FI.ih = 0; FI.dirty = false;
+  FI.img = null; FI.iw = 0; FI.ih = 0; FI.dirty = false; FI.imgLoading = false;
 }
 
 /* Les textes et ce qui se montre selon l'état : chargement, fiche, pas de fiche, serveur muet, page muette */
@@ -7280,7 +7291,8 @@ function ficheRender() {
   }
   ficheMarkTabs();
   const msg = $('fiche-msg');
-  const kind = FI.phase === 'none' ? 'none' : FI.phase === 'down' ? 'down' : (FI.phase === 'ok' && FI.pageErr) ? 'page' : '';
+  const kind = FI.phase === 'none' ? 'none' : FI.phase === 'down' ? 'down' : (FI.phase === 'ok' && FI.pageErr) ? 'page'
+    : (FI.phase === 'load' || (FI.phase === 'ok' && FI.imgLoading)) ? 'load' : '';
   msg.hidden = !kind;
   if (kind) {
     msg.querySelector('b').textContent = t('fiche.' + kind + '.t');
@@ -7291,7 +7303,7 @@ function ficheRender() {
   credit.hidden = !hasCredit;
   credit.textContent = hasCredit ? 'Airfield Charts' + (FI.edition ? ' · ' + FI.edition : '') : '';
   const aide = $('fiche-aide');
-  aide.hidden = !(FI.phase === 'ok' && !FI.pageErr);
+  aide.hidden = !(FI.phase === 'ok' && !FI.pageErr && !FI.imgLoading);
   aide.textContent = t('fiche.aide');
 }
 
@@ -7299,33 +7311,75 @@ function ficheMarkTabs() {
   Array.prototype.forEach.call($('fiche-pages').children, (b, i) => b.setAttribute('aria-pressed', i === FI.cur ? 'true' : 'false'));
 }
 
-/* Affiche la page i : une image neuve, cachée jusqu'à son chargement, puis ajustée */
+function ficheUrl(page) { return FI_BASE + encodeURIComponent(FI.theatre) + '/' + encodeURI(page.fichier); }
+
+/* La mémoire de la fiche ouverte : URL → image. Une page n'est demandée qu'une fois ; un échec n'est pas retenu.
+   cb(ok, img) est appelé tout de suite si l'image est déjà là, sinon à son arrivée (ou à son échec). */
+function ficheMemLoad(url, cb) {
+  const mem = FI.mem;
+  let e = mem.get(url);
+  if (e && e.st === 'ok') { cb(true, e.img); return; }
+  if (!e) {
+    e = { st: 'load', img: new Image(), cbs: [] };
+    mem.set(url, e);
+    const done = ok => {
+      e.img.onload = null; e.img.onerror = null;
+      e.st = ok ? 'ok' : 'err';
+      if (!ok && mem.get(url) === e) mem.delete(url);
+      const list = e.cbs; e.cbs = [];
+      list.forEach(f => f(ok, e.img));
+    };
+    e.img.onload = () => done(true);
+    e.img.onerror = () => done(false);
+    e.img.src = url;
+  }
+  e.cbs.push(cb);
+}
+
+/* Une fois la première page affichée : les autres pages, une à une, dans l'ordre des onglets ; un échec ne montre rien */
+function ficheBgStart(seq) {
+  if (FI.bg || seq !== FI.seq) return;
+  FI.bg = true;
+  const urls = FI.pages.map(ficheUrl);
+  let k = 0;
+  const next = () => {
+    if (seq !== FI.seq || k >= urls.length) return;
+    ficheMemLoad(urls[k++], () => next());
+  };
+  next();
+}
+
+/* Affiche la page i : l'image de la mémoire si elle y est, sinon demandée ; cachée jusqu'à son chargement, puis ajustée */
 function ficheShowPage(i) {
   const page = FI.pages[i];
   if (!page) return;
   ficheDropImg();
   FI.cur = i; FI.pageErr = false; FI.ptrs.clear(); FI.g = null; FI.tap = null; FI.lastTap = null;
+  const token = FI.imgSeq, seq = FI.seq;
+  const url = ficheUrl(page);
+  const have = FI.mem.get(url);
+  FI.imgLoading = !(have && have.st === 'ok');
   ficheRender();
-  const token = FI.imgSeq;
-  const img = new Image();
-  img.alt = (FI.name + ' · ' + page.titre);
-  img.draggable = false;
-  img.style.visibility = 'hidden';
-  img.onload = () => {
-    if (token !== FI.imgSeq) return;
+  ficheMemLoad(url, (ok, img) => {
+    if (token !== FI.imgSeq || seq !== FI.seq) return;
+    if (!ok) {
+      ficheDropImg();
+      FI.pageErr = true;
+      ficheRender();
+      return;
+    }
+    img.alt = (FI.name + ' · ' + page.titre);
+    img.draggable = false;
+    img.style.visibility = 'hidden';
+    FI.img = img;
+    $('fiche-scene').insertBefore(img, $('fiche-msg'));
+    FI.imgLoading = false;
     FI.iw = img.naturalWidth; FI.ih = img.naturalHeight;
     ficheFit();
     img.style.visibility = '';
-  };
-  img.onerror = () => {
-    if (token !== FI.imgSeq) return;
-    ficheDropImg();
-    FI.pageErr = true;
     ficheRender();
-  };
-  FI.img = img;
-  $('fiche-scene').insertBefore(img, $('fiche-msg'));
-  img.src = FI_BASE + encodeURIComponent(FI.theatre) + '/' + encodeURI(page.fichier);
+    ficheBgStart(seq);
+  });
 }
 
 /* L'ajustement d'ouverture : la page entière (10 px de marge) ou son cadre (6 px), centré dans la scène */

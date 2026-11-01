@@ -16,6 +16,10 @@ Changes merged since the last release, grouped per tool.
 #### Changed
 - Datacard Generator chapter: importing navigation from the Route Planner.
 
+### Route Planner
+#### Changed
+- Airfield chart sheets: a loading message while the sheet and its page arrive; the other pages are fetched in the background once the first one is shown, so switching tabs is immediate.
+
 ---
 
 ## Mission Plan — landing
