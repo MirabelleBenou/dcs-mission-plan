@@ -11,7 +11,7 @@ import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
-APP_VERSION = '1.2.4'
+APP_VERSION = '1.3.0'
 MODULE_ID   = 'fm'
 
 # ── Assets ──────────────────────────────────────────────────────────────────────

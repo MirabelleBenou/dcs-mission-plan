@@ -8,17 +8,7 @@ The suite bundles several **independently-versioned tools**, so entries are grou
 
 ## Unreleased
 
-Changes merged since the last release, grouped per tool.
-
-### Field Manual
-#### Added
-- **Route Planner chapter** — theatre and base maps, tap modes, building the route, reference points, leg boxes, navigation and magnetic variation (with the DCS editor ruler caveat), airfield chart sheets, drawing layers and NATO symbols, CombatFlite layers, hand-off to the Datacard and Briefing Generators, DCS Route Tool, tablet layout; two new diagrams.
-#### Changed
-- Datacard Generator chapter: importing navigation from the Route Planner.
-
-### Route Planner
-#### Changed
-- Airfield chart sheets: a loading message while the sheet and its page arrive; the other pages are fetched in the background once the first one is shown, so switching tabs is immediate.
+Changes merged since the last release, grouped per tool. Nothing yet.
 
 ---
 
@@ -29,6 +19,12 @@ Changes merged since the last release, grouped per tool.
 - **Online and offline** — published as a hosted page and as a single offline HTML file.
 - **Tablet & mobile** first-class target (touch, drag, rotation-safe).
 - Wing configuration shared automatically across embedded tools.
+
+### `v1.24.0`
+#### Added
+- Embeds **Field Manual v1.3.0** — a Route Planner chapter (see below).
+#### Changed
+- Embeds **Route Planner v1.13.1** — airfield chart sheets say they are loading and fetch their other pages in the background (see below).
 
 ### `v1.23.0`
 #### Added
@@ -400,6 +396,10 @@ Initial release. One-page flight datacards for the cockpit kneeboard.
 
 ## Route Planner
 
+### `v1.13.1`
+#### Changed
+- Airfield chart sheets: a loading message while the sheet and its page arrive; the other pages are fetched in the background once the first one is shown, so switching tabs is immediate.
+
 ### `v1.13.0`
 #### Added
 - **Airfield and heliport sheets**: in Read mode, tapping an airfield or a heliport opens its chart from **DCS Airfield Charts**, served by the wing's server — one tab per page (10-9, 10-9A…), pinch to zoom, double-tap to reframe; a heliport opens on its box of the heliport directory. When a field has no sheet, the viewer says so; when the server does not answer, it says the sheets are unavailable. Point and Ref. modes are unchanged.
@@ -525,6 +525,12 @@ Initial release. Lay a route on a map, read it, send it to the datacard.
 - **JSON** save and open, an example route, 14 theatres, 4 themes, FR/EN, tablet and phone layouts.
 
 ## Field Manual
+
+### `v1.3.0`
+#### Added
+- **Route Planner chapter** — theatre and base maps, tap modes, building the route, reference points, leg boxes, navigation and magnetic variation (with the DCS editor ruler caveat), airfield chart sheets, drawing layers and NATO symbols, CombatFlite layers, hand-off to the Datacard and Briefing Generators, DCS Route Tool, tablet layout; two new diagrams.
+#### Changed
+- Datacard Generator chapter: importing navigation from the Route Planner.
 
 ### `v1.2.4`
 #### Changed
