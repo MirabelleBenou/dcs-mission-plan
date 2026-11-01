@@ -1885,9 +1885,11 @@ function importWingConfig(file) {{
 
 // ── Exemple : l'escadre de démonstration (lot mp-exemples-demarrer) ──
 // La configuration d'escadre est partagée par toute la suite : celle qu'on remplace est gardée sous KEY_WING_BEFORE
-// (la chaîne lue, telle quelle) et se restaure d'un toucher.
+// (la chaîne lue, telle quelle ; WING_ABSENT quand rien n'était écrit) et se restaure d'un toucher. Une sauvegarde
+// posée n'est remplacée par aucun clic sur Exemple : seule « Restaurer » la supprime.
 const EXAMPLE_WING_CONFIGS = {_example_wing_configs_js};
 const KEY_WING_BEFORE = 'wing_config_before_example_v1';
+const WING_ABSENT = '__absent__';
 
 function flushWingPersist() {{
   if (!_wingPersistTimer) return;
@@ -1913,9 +1915,11 @@ function loadWingExample() {{
   const lang = CURRENT_LANG === 'en' ? 'en' : 'fr';             // la langue de l'interface au moment du clic
   const next = JSON.stringify(EXAMPLE_WING_CONFIGS[lang]);
   try {{
-    let cur = localStorage.getItem(KEY_WING);
-    if (cur === null) cur = JSON.stringify(wingConfig);         // rien d'écrit : la configuration par défaut en place
-    if (!wingConfigIsExample(cur)) localStorage.setItem(KEY_WING_BEFORE, cur);   // jamais la démo elle-même
+    if (localStorage.getItem(KEY_WING_BEFORE) === null) {{       // une sauvegarde déjà posée reste telle quelle
+      const cur = localStorage.getItem(KEY_WING);
+      if (cur === null) localStorage.setItem(KEY_WING_BEFORE, WING_ABSENT);             // profil neuf : rien n'était écrit
+      else if (!wingConfigIsExample(cur)) localStorage.setItem(KEY_WING_BEFORE, cur);   // jamais la démo elle-même
+    }}
     localStorage.setItem(KEY_WING, next);                       // aussitôt : la suite la relit sur l'évènement storage
   }} catch (e) {{
     showToast(t('toast.wingStorageFull'));
@@ -1936,7 +1940,8 @@ function restoreWingConfig() {{
   try {{ saved = localStorage.getItem(KEY_WING_BEFORE); }} catch (e) {{}}
   if (saved === null) {{ refreshRestoreButton(); return; }}
   try {{
-    localStorage.setItem(KEY_WING, saved);                      // la chaîne d'avant, à l'octet
+    if (saved === WING_ABSENT) localStorage.removeItem(KEY_WING);   // profil neuf : la clé disparaît, comme avant l'exemple
+    else localStorage.setItem(KEY_WING, saved);                     // la chaîne d'avant, à l'octet
     localStorage.removeItem(KEY_WING_BEFORE);
   }} catch (e) {{ return; }}
   wingConfig = loadWingConfig();
