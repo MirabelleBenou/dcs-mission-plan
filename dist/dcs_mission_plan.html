@@ -493,6 +493,7 @@ select[data-tbm-src] { display: none !important; }
   var CURRENT_LANG = 'fr';
   var iframes = {};
   var activeModule = null;
+  var barSync = {};   /* id du module -> fonction qui remet à jour sa barre (bouton retour, dégradé) */
 
   function t(key) {
     return (I18N[CURRENT_LANG] && I18N[CURRENT_LANG][key]) || key;
@@ -564,6 +565,7 @@ select[data-tbm-src] { display: none !important; }
     try { localStorage.setItem(KEY_LANG, lang); } catch(e) {}
     applyI18n();
     updateFlagBtn();
+    Object.keys(barSync).forEach(function(bid) { barSync[bid](); });
   }
 
   function toggleLang() {
@@ -583,6 +585,50 @@ select[data-tbm-src] { display: none !important; }
     var bytes = new Uint8Array(bin.length);
     for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
     return new TextDecoder('utf-8').decode(bytes);
+  }
+
+  /* ── Barre d'un outil dans le shell ────────────────────────── */
+  /* Remet à jour, dans le document de l'outil : le bouton retour (flèche seule sous 760 px, avec son nom en aria-label et
+     title ; texte entier au-delà) et le fondu du bord droit (barre qui défile et qui n'est pas au bout). Rappelée au
+     défilement de la barre, au redimensionnement, aux changements de la barre (langue de l'outil) et au changement de
+     langue du shell. */
+  function mpBindToolbar(iframe, toolbar, back) {
+    var doc = iframe.contentDocument, win = iframe.contentWindow, queued = false;
+    function sync() {
+      queued = false;
+      try {
+        var full = t('back');
+        var cut = full.indexOf(' ');
+        var arrow = cut > 0 ? full.slice(0, cut) : full;
+        var name = (cut > 0 ? full.slice(cut) : full).trim();
+        var compact = win.matchMedia('(max-width: 759px)').matches;
+        var txt = compact ? arrow : full;
+        if (back.textContent !== txt) back.textContent = txt;
+        if (back.getAttribute('aria-label') !== name) back.setAttribute('aria-label', name);
+        if (compact) { if (back.title !== name) back.title = name; }
+        else if (back.hasAttribute('title')) back.removeAttribute('title');
+        var g = win.getComputedStyle(toolbar).columnGap;
+        g = (g && g !== 'normal') ? g : '0px';
+        if (toolbar.style.getPropertyValue('--mp-fade-gap') !== g) toolbar.style.setProperty('--mp-fade-gap', g);
+        var max = toolbar.scrollWidth - toolbar.clientWidth;
+        var on = max > 1 && toolbar.scrollLeft < max - 1;
+        if (toolbar.classList.contains('mp-fade-r') !== on) toolbar.classList.toggle('mp-fade-r', on);
+      } catch(e) {}
+    }
+    function later() {
+      if (queued) return;
+      queued = true;
+      (win.requestAnimationFrame || win.setTimeout)(sync);
+    }
+    toolbar.addEventListener('scroll', later, { passive: true });
+    win.addEventListener('resize', later);
+    new win.MutationObserver(later).observe(toolbar, {
+      childList: true, subtree: true, characterData: true, attributes: true,
+      attributeFilter: ['hidden', 'class', 'style', 'disabled', 'aria-pressed']
+    });
+    try { if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(later); } catch(e) {}
+    sync();
+    return later;
   }
 
   /* ── Navigation ────────────────────────────────────────────── */
@@ -621,6 +667,26 @@ select[data-tbm-src] { display: none !important; }
             + 'margin-right:12px;letter-spacing:.03em;min-height:36px;flex-shrink:0;';
           back.addEventListener('click', goHub);
           toolbar.insertBefore(back, toolbar.firstChild);
+          /* La barre des outils dans le shell : un seul style pour tous les outils (défilement de la barre, bouton retour
+             réduit à la flèche et tampon masqué sous 760 px, fondu sur le bord droit), que le tampon existe ou non */
+          if (!doc.getElementById('mp-toolbar-style')) {
+            var tbs = doc.createElement('style');
+            tbs.id = 'mp-toolbar-style';
+            tbs.textContent =
+                '.toolbar{overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;}'
+              + '.toolbar::-webkit-scrollbar{display:none;}'
+              + '.toolbar.mp-fade-r::after{content:"";position:sticky;right:0;flex:0 0 28px;width:28px;align-self:stretch;'
+              + 'margin-left:calc(-28px - var(--mp-fade-gap,0px));pointer-events:none;opacity:1;z-index:2;background:inherit;'
+              + '-webkit-mask-image:linear-gradient(270deg,#000,transparent);mask-image:linear-gradient(270deg,#000,transparent);}'
+              + '@media (max-width:759px){'
+              + '.mp-wing-stamp{display:none !important;}'
+              + '.toolbar .mp-back-injected{box-sizing:border-box !important;width:40px !important;min-width:40px !important;'
+              + 'height:36px !important;min-height:36px !important;padding:0 !important;font-size:14px !important;'
+              + 'line-height:1 !important;overflow:hidden;white-space:nowrap;}'
+              + '}';
+            doc.head.appendChild(tbs);
+          }
+          barSync[id] = mpBindToolbar(iframe, toolbar, back);
           /* Tampon escadrille — clone du .tb-brand natif de BG (BG exclu : il l'a déjà) */
           var sn = wingShortName();
           if (id !== 'bg' && sn && !toolbar.querySelector('.mp-wing-stamp')) {
@@ -659,6 +725,7 @@ select[data-tbm-src] { display: none !important; }
       iframes[id] = iframe;
     } else {
       iframes[id].style.display = 'block';
+      if (barSync[id]) barSync[id]();
       document.getElementById('module-loading').classList.add('hidden');
       try { iframes[id].contentDocument.body.setAttribute('data-theme', document.body.getAttribute('data-theme') || 'cw-nato'); } catch(e) {}
     }
