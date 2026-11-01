@@ -239,6 +239,213 @@ EXAMPLE_DOC_JSON = r'''{
   ]
 }'''
 
+# Même document, en anglais : structure et valeurs numériques identiques à EXAMPLE_DOC_JSON (lot mp-exemples-demarrer).
+# Le bouton « Exemple » charge l'un ou l'autre selon la langue de l'interface au moment du clic.
+EXAMPLE_DOC_JSON_EN = r'''{
+  "format": "dcs-datacard-v1",
+  "mode": "day",
+  "cards": [
+    {
+      "meta": {
+        "classification": "confidential",
+        "docRef": "FH-M3-1989",
+        "operation": "FOOTHOLD",
+        "mission": "M3",
+        "date": "1989-03-22",
+        "time": "10:00 L"
+      },
+      "flight": {
+        "callsign": "CAESAR",
+        "aircraft": "Mi-24P",
+        "count": 2,
+        "task": "CAS / Area defence",
+        "threat": "high"
+      },
+      "units": {
+        "mass": "kg",
+        "distance": "km",
+        "altitude": "m"
+      },
+      "mission": {
+        "objective": "An armoured convoy is leaving KARAVOSTASI to retake POLIS: intercept it before the FARP.",
+        "execution": [
+          "Take-off POLIS",
+          "Coastal route to the IP",
+          "Priority SAM / AAA, then APC / MBT",
+          "RTB POLIS as per SITAC"
+        ]
+      },
+      "times": [
+        {
+          "label": "Start-up",
+          "value": "09:30"
+        },
+        {
+          "label": "Take-off",
+          "value": "09:45"
+        },
+        {
+          "label": "IP",
+          "value": "10:05"
+        },
+        {
+          "label": "TOT",
+          "value": "10:12"
+        },
+        {
+          "label": "RTB",
+          "value": "10:40"
+        }
+      ],
+      "crew": [
+        {
+          "callsign": "CAESAR 1-1",
+          "pilot": "VIPER",
+          "crew": "HUSKER",
+          "board": "41"
+        },
+        {
+          "callsign": "CAESAR 1-2",
+          "pilot": "FALCON",
+          "crew": "BEAR",
+          "board": "44"
+        }
+      ],
+      "nav": [
+        {
+          "name": "POLIS FARP",
+          "course": "",
+          "distance": "",
+          "altitude": "",
+          "tos": "09:45",
+          "note": "Departure"
+        },
+        {
+          "name": "COAST 1",
+          "course": "252",
+          "distance": "14",
+          "altitude": "50",
+          "tos": "09:53",
+          "note": ""
+        },
+        {
+          "name": "IP",
+          "course": "059",
+          "distance": "32",
+          "altitude": "50",
+          "tos": "10:05",
+          "note": "Island + river"
+        },
+        {
+          "name": "TGT KARAVOSTASI",
+          "course": "118",
+          "distance": "9",
+          "altitude": "30",
+          "tos": "10:12",
+          "note": "Coastal axis"
+        },
+        {
+          "name": "POLIS FARP",
+          "course": "296",
+          "distance": "28",
+          "altitude": "100",
+          "tos": "10:40",
+          "note": "RTB"
+        }
+      ],
+      "radios": [
+        {
+          "name": "R-863",
+          "channels": [
+            {
+              "channel": "0",
+              "label": "Group 1",
+              "frequency": "127.50",
+              "modulation": "AM"
+            },
+            {
+              "channel": "1",
+              "label": "Group 2",
+              "frequency": "135.00",
+              "modulation": "AM"
+            },
+            {
+              "channel": "3",
+              "label": "Mission",
+              "frequency": "265.00",
+              "modulation": "AM"
+            },
+            {
+              "channel": "7",
+              "label": "ATC",
+              "frequency": "270.00",
+              "modulation": "AM"
+            }
+          ]
+        },
+        {
+          "name": "R-828",
+          "channels": [
+            {
+              "channel": "0",
+              "label": "Tactical",
+              "frequency": "21.50",
+              "modulation": "FM"
+            }
+          ]
+        }
+      ],
+      "fields": [
+        {
+          "role": "dep",
+          "icao": "",
+          "name": "POLIS",
+          "runway": "",
+          "frequency": "127.50"
+        },
+        {
+          "role": "arr",
+          "icao": "",
+          "name": "POLIS",
+          "runway": "",
+          "frequency": "127.50"
+        },
+        {
+          "role": "alt",
+          "icao": "LCRA",
+          "name": "Akrotiri",
+          "runway": "10",
+          "frequency": "270.00"
+        }
+      ],
+      "weather": {
+        "metar": "LCRA 221000Z 18002KT 9999 SCT082 20/15 Q1013",
+        "wind": "180/02",
+        "visibility": "≥ 10 km",
+        "qnh": "1013 hPa",
+        "clouds": "SCT 8200 ft"
+      },
+      "fuel": {
+        "joker": "600",
+        "bingo": "450"
+      },
+      "loadout": [
+        "4 × 9M114 Shturm",
+        "2 × B-8V20 (S-8)",
+        "GSh-30-2 · 250 rounds"
+      ],
+      "threats": [
+        "SA-13",
+        "SA-9",
+        "MANPADS",
+        "ZSU-23-4",
+        "BMP-2"
+      ],
+      "notes": "Landmark: small island + river 8 km from the objective."
+    }
+  ]
+}'''
+
 CSS = r"""
 /* ============================================
    DATACARD GENERATOR — chrome de l'éditeur + datacard
@@ -1799,6 +2006,7 @@ const TAB_IDS = SECTION_IDS.concat(['preview']);
 
 /* Contenu du bouton « Exemple » (document dcs-datacard-v1) */
 const EXAMPLE_DOC = __EXAMPLE_DOC__;
+const EXAMPLE_DOC_EN = __EXAMPLE_DOC_EN__;
 
 /* ============= i18n FR / EN ============= */
 const I18N = {
@@ -4442,7 +4650,7 @@ function doPrint() {
 /* ============= EXEMPLE ET RESET ============= */
 function loadExample() {
   if (!confirm(t('confirm.example'))) return;
-  setDoc(normalizeDoc(clone(EXAMPLE_DOC)));
+  setDoc(normalizeDoc(clone(CURRENT_LANG === 'en' ? EXAMPLE_DOC_EN : EXAMPLE_DOC)));   // la langue de l'interface au moment du clic
   showToast(t('toast.example'));
 }
 function resetDoc() {
@@ -4915,8 +5123,15 @@ def build():
     if example.get('format') != 'dcs-datacard-v1':
         raise SystemExit("[ERREUR] Le document d'exemple n'est pas au format dcs-datacard-v1")
     example_js = json.dumps(example, ensure_ascii=False, indent=2).replace('</', '<\\/')
+    try:
+        example_en = json.loads(EXAMPLE_DOC_JSON_EN)
+    except ValueError as e:
+        raise SystemExit(f"[ERREUR] Document d'exemple anglais illisible : {e}")
+    if example_en.get('format') != 'dcs-datacard-v1':
+        raise SystemExit("[ERREUR] Le document d'exemple anglais n'est pas au format dcs-datacard-v1")
+    example_en_js = json.dumps(example_en, ensure_ascii=False, indent=2).replace('</', '<\\/')
 
-    js = JS.replace('__EXAMPLE_DOC__', example_js).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block())
+    js = JS.replace('__EXAMPLE_DOC__', example_js).replace('__EXAMPLE_DOC_EN__', example_en_js).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block())
     html = HTML
     html = html.replace('__CSS__', CSS)
     html = html.replace('__LIB_HTML2CANVAS__', A['lib_html2canvas'])

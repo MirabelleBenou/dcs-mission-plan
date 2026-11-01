@@ -4667,6 +4667,152 @@ const EXAMPLE_BRIEFING = {
   }
 };
 
+/* Même briefing d'exemple, en anglais : structure, identifiants et valeurs numériques identiques à EXAMPLE_BRIEFING
+   (lot mp-exemples-demarrer). Le bouton « Exemple » charge l'un ou l'autre selon la langue de l'interface au moment du clic. */
+const EXAMPLE_BRIEFING_EN = {
+  meta: {
+    operation: 'FOOTHOLD',
+    mission: 'M3',
+    date: '1989-03-22',
+    format: 'full',
+    classification: 'confidential',
+    docRef: 'FH-M3-1989'
+  },
+  cover: {
+    title: 'OPERATION FOOTHOLD',
+    narrative: "Soviet forces instigated the outbreak of a civil war in Syria and helped the rebel troops carry out a coup. Once the government had fallen, the dissident forces invaded the island of Cyprus and captured almost all of it, except the NATO base of AKROTIRI.\n\nNATO forces are mounting a major deployment to help the legitimate Cypriot government regain full control of the island. A major air-naval operation to “free” Syria cannot be ruled out.",
+    mapImage: ''
+  },
+  sitac: {
+    date: '22-03-1989',
+    points: [
+      "Most of the island remains in enemy hands",
+      "PAPHOS airport has been captured and its defences reinforced",
+      "POLIS FARP has been captured but its defences are weak",
+      "The enemy is using ERKAN airport for its counter-offensives (CAP/CAS/SEAD)",
+      "A SILKWORM missile site keeps the NATO fleet from moving closer",
+      "HQ has reinforced POLIS and AKROTIRI with one SAM ROLAND unit each"
+    ],
+    metar: 'LCRA 221000Z 18002KT 9999 SCT082 20/15 Q1013',
+    mapImage: ''
+  },
+  mission: {
+    objectives: [
+      "Bring supplies to POLIS",
+      "Reinforce POLIS defences — Defend the FARP",
+      "Reconnoitre and capture the KARAVOSTASI area",
+      "Possible secondary missions (CSAR, S&D)"
+    ],
+    farp: [
+      { icao:'LCRA', name:'Akrotiri', isFarp:false, rwy:'10', atc:true  },
+      { icao:'LCPH', name:'Paphos',   isFarp:false, rwy:'11', atc:true  }
+    ],
+    threats: {
+      tanks: 'T-55 to T-80',
+      apc: 'BRDM-2, BMP-1, BMP-2, BTR-80',
+      aaa: 'ZU-57, ZU-23, ZSU-24, S-60, KS-19',
+      sam: 'Manpads, SA-8, SA-9, SA-13, Avenger',
+      note: 'No long-range SAM on Cyprus'
+    }
+  },
+  radioPlan: {
+    items: [
+      { id: 'atc',     label: 'ATC',     frequency: '270.00', modulation: 'AM' },
+      { id: 'mission', label: 'MISSION', frequency: '265.00', modulation: 'AM' },
+      { id: 'grp1',    label: 'Group 1', frequency: '127.50', modulation: 'AM' },
+      { id: 'grp2',    label: 'Group 2', frequency: '135.00', modulation: 'AM' },
+      { id: 'fm1',     label: 'Tactical FM', frequency: '21.50', modulation: 'FM' }
+    ],
+    aircraftPlans: [
+      {
+        aircraft: 'Mi-24P',
+        radios: [
+          {
+            name: 'R-863',
+            channels: [
+              { channel: 0, mode: 'item', itemId: 'grp1' },
+              { channel: 1, mode: 'item', itemId: 'grp2' },
+              { channel: 3, mode: 'item', itemId: 'mission' },
+              { channel: 7, mode: 'item', itemId: 'atc' }
+            ]
+          },
+          {
+            name: 'R-828',
+            channels: [
+              { channel: 0, mode: 'item', itemId: 'fm1' }
+            ]
+          }
+        ],
+        image: ''
+      },
+      {
+        aircraft: 'Mi-8',
+        radios: [
+          {
+            name: 'R-863',
+            channels: [
+              { channel: 4, mode: 'item', itemId: 'mission' },
+              { channel: 8, mode: 'item', itemId: 'atc' }
+            ]
+          },
+          {
+            name: 'R-828',
+            channels: [
+              { channel: 1, mode: 'item', itemId: 'fm1' }
+            ]
+          }
+        ],
+        image: ''
+      }
+    ]
+  },
+  phases: [
+    {
+      title: 'Resupply POLIS',
+      objective: "Resupply POLIS with armament for the Mi-24Ps",
+      execution: [
+        {text: "TO PAPHOS — Resupply to POLIS for Mission #2", subtasks: []},
+        {text: "ATAKA crates + Rockets", subtasks: []}
+      ],
+      flightPlan: 'HDG 352° / Distance 34 Km',
+      threatLevel: 'low', notes: '', images: [],
+      squadron: '', aircraft: 'Mi-8', subgroup: 'ANTON'
+    },
+    {
+      title: 'POLIS Defence — Mi-24P',
+      objective: "Intelligence reports an armoured convoy leaving KARAVOSTASI to retake POLIS",
+      execution: [
+        {text: "TO POLIS", subtasks: []},
+        {text: "Follow the coastal route from POLIS to KARAVOSTASI", subtasks: []}
+      ],
+      flightPlan: "Coastal route to the Mission #3 IP",
+      threatLevel: 'high', notes: 'Estimated convoy route: see phase 2 map', images: [],
+      squadron: '', aircraft: 'Mi-24P', subgroup: 'CAESAR'
+    },
+    {
+      title: 'RECON + ASSAULT KARAVOSTASI',
+      objective: "Prepare the capture of the area by airborne troops. Destroy SAM/AAA defences and armoured elements",
+      execution: [
+        {text: "TO POLIS — Return as per SITAC", subtasks: []},
+        {text: "Assemble at the IP", subtasks: []},
+        {text: "Priority targets: SAM / AAA", subtasks: ["SA-13", "SA-9", "Manpads"]},
+        {text: "Secondary targets: APC / MBT", subtasks: []}
+      ],
+      flightPlan: 'IP: 59° / 32 Km — TGT: 118° / 9 Km',
+      threatLevel: 'high', notes: "Landmark: small island + river 8/9 Km from KARAVOSTASI. Assault axis along the coast.",
+      images: [], squadron: '', aircraft: 'Mi-24P', subgroup: ''
+    }
+  ],
+  charts: [
+    { name: 'AKROTIRI (LCRA) — Active runway: 10', img: '' },
+    { name: 'PAPHOS (LCPH) — Active runway: 11', img: '' }
+  ],
+  annexes: [],
+  roster: {
+    groups: []
+  }
+};
+
 let state;
 let currentPhaseIdx = 0;
 let activeTab = 'meta';
@@ -8427,7 +8573,7 @@ function setFormat(fmt) {
 
 function loadExample() {
   if (!confirm(t('confirm.loadExample'))) return;
-  state = mergeDeep(structuredClone(DEFAULTS), structuredClone(EXAMPLE_BRIEFING));
+  state = mergeDeep(structuredClone(DEFAULTS), structuredClone(CURRENT_LANG === 'en' ? EXAMPLE_BRIEFING_EN : EXAMPLE_BRIEFING));   // la langue de l'interface au moment du clic
   state.meta.format = 'full';
   currentPhaseIdx = 0;
   renderEditorBindings();

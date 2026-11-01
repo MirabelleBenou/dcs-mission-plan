@@ -146,6 +146,83 @@ EXAMPLE_ROUTE_JSON = r'''{
 }
 '''
 
+# Même route, en anglais : structure, identifiants et valeurs numériques identiques à EXAMPLE_ROUTE_JSON (lot mp-exemples-demarrer).
+# Le bouton « Exemple » charge l'une ou l'autre selon la langue de l'interface au moment du clic.
+EXAMPLE_ROUTE_JSON_EN = r'''{
+  "format": "dcs-route-v1",
+  "name": "FOOTHOLD M3",
+  "theatre": "Syria",
+  "units": {
+    "distance": "km",
+    "altitude": "m"
+  },
+  "navDisplay": {
+    "ref": "true",
+    "decl": ""
+  },
+  "points": [
+    {
+      "name": "AKROTIRI",
+      "lat": 34.5904,
+      "lon": 32.9878,
+      "alt": 0,
+      "altRef": "MSL"
+    },
+    {
+      "name": "WP1",
+      "lat": 34.662,
+      "lon": 32.67,
+      "alt": 30,
+      "altRef": "AGL"
+    },
+    {
+      "name": "POLIS",
+      "lat": 35.036,
+      "lon": 32.427,
+      "alt": 30,
+      "altRef": "AGL"
+    },
+    {
+      "name": "IP",
+      "lat": 35.12,
+      "lon": 32.605,
+      "alt": 50,
+      "altRef": "AGL"
+    },
+    {
+      "name": "KARAVOSTASI",
+      "lat": 35.142,
+      "lon": 32.822,
+      "alt": 50,
+      "altRef": "AGL"
+    }
+  ],
+  "refs": [
+    {
+      "name": "PETRA ISLAND",
+      "lat": 35.184,
+      "lon": 32.8445,
+      "alt": 0,
+      "altRef": "MSL"
+    },
+    {
+      "name": "KARAVOSTASI BRIDGE",
+      "lat": 35.1395,
+      "lon": 32.8262,
+      "alt": 15,
+      "altRef": "AGL"
+    },
+    {
+      "name": "SUSPECTED SA-9",
+      "lat": 35.121,
+      "lon": 32.87,
+      "alt": 120,
+      "altRef": "MSL"
+    }
+  ]
+}
+'''
+
 # ============================================================
 # CSS
 # ============================================================
@@ -1852,6 +1929,7 @@ const PLACES_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/Referen
 
 /* Contenu du bouton « Exemple » (document dcs-route-v1) */
 const EXAMPLE_ROUTE = __EXAMPLE_ROUTE__;
+const EXAMPLE_ROUTE_EN = __EXAMPLE_ROUTE_EN__;
 
 /* ============= i18n FR / EN ============= */
 const I18N = {
@@ -6854,7 +6932,7 @@ function openRouteFile(file) {
 
 function loadExample() {
   if (!confirm(t('confirm.example'))) return;
-  setRoute(parseRoute(JSON.parse(JSON.stringify(EXAMPLE_ROUTE))).route);
+  setRoute(parseRoute(JSON.parse(JSON.stringify(CURRENT_LANG === 'en' ? EXAMPLE_ROUTE_EN : EXAMPLE_ROUTE))).route);   // la langue de l'interface au moment du clic
 }
 
 function clearRoute() {
@@ -8970,10 +9048,17 @@ def build():
     if example.get('format') != 'dcs-route-v1':
         raise SystemExit("[ERREUR] La route d'exemple n'est pas au format dcs-route-v1")
     example_js = json.dumps(example, ensure_ascii=False, indent=2).replace('</', '<\\/')
+    try:
+        example_en = json.loads(EXAMPLE_ROUTE_JSON_EN)
+    except ValueError as e:
+        raise SystemExit(f"[ERREUR] Route d'exemple anglaise illisible : {e}")
+    if example_en.get('format') != 'dcs-route-v1':
+        raise SystemExit("[ERREUR] La route d'exemple anglaise n'est pas au format dcs-route-v1")
+    example_en_js = json.dumps(example_en, ensure_ascii=False, indent=2).replace('</', '<\\/')
 
     airfields_js = json.dumps(AF['theatres'], ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
     towns_js = json.dumps(TW['theatres'], ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
-    js = JS.replace('__EXAMPLE_ROUTE__', example_js).replace('__AIRFIELDS__', airfields_js).replace('__TOWNS__', towns_js)
+    js = JS.replace('__EXAMPLE_ROUTE__', example_js).replace('__EXAMPLE_ROUTE_EN__', example_en_js).replace('__AIRFIELDS__', airfields_js).replace('__TOWNS__', towns_js)
     js = js.replace('@@GEO_BLOCK@@\n', GEO_BLOCK).replace('@@READNUM_BLOCK@@\n', READNUM_BLOCK).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block())
     if '@@' in js:
         raise SystemExit("[ERREUR] Marqueur @@ non remplacé dans le script")

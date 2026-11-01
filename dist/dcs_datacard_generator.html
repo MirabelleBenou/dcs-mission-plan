@@ -1786,6 +1786,210 @@ const EXAMPLE_DOC = {
     }
   ]
 };
+const EXAMPLE_DOC_EN = {
+  "format": "dcs-datacard-v1",
+  "mode": "day",
+  "cards": [
+    {
+      "meta": {
+        "classification": "confidential",
+        "docRef": "FH-M3-1989",
+        "operation": "FOOTHOLD",
+        "mission": "M3",
+        "date": "1989-03-22",
+        "time": "10:00 L"
+      },
+      "flight": {
+        "callsign": "CAESAR",
+        "aircraft": "Mi-24P",
+        "count": 2,
+        "task": "CAS / Area defence",
+        "threat": "high"
+      },
+      "units": {
+        "mass": "kg",
+        "distance": "km",
+        "altitude": "m"
+      },
+      "mission": {
+        "objective": "An armoured convoy is leaving KARAVOSTASI to retake POLIS: intercept it before the FARP.",
+        "execution": [
+          "Take-off POLIS",
+          "Coastal route to the IP",
+          "Priority SAM / AAA, then APC / MBT",
+          "RTB POLIS as per SITAC"
+        ]
+      },
+      "times": [
+        {
+          "label": "Start-up",
+          "value": "09:30"
+        },
+        {
+          "label": "Take-off",
+          "value": "09:45"
+        },
+        {
+          "label": "IP",
+          "value": "10:05"
+        },
+        {
+          "label": "TOT",
+          "value": "10:12"
+        },
+        {
+          "label": "RTB",
+          "value": "10:40"
+        }
+      ],
+      "crew": [
+        {
+          "callsign": "CAESAR 1-1",
+          "pilot": "VIPER",
+          "crew": "HUSKER",
+          "board": "41"
+        },
+        {
+          "callsign": "CAESAR 1-2",
+          "pilot": "FALCON",
+          "crew": "BEAR",
+          "board": "44"
+        }
+      ],
+      "nav": [
+        {
+          "name": "POLIS FARP",
+          "course": "",
+          "distance": "",
+          "altitude": "",
+          "tos": "09:45",
+          "note": "Departure"
+        },
+        {
+          "name": "COAST 1",
+          "course": "252",
+          "distance": "14",
+          "altitude": "50",
+          "tos": "09:53",
+          "note": ""
+        },
+        {
+          "name": "IP",
+          "course": "059",
+          "distance": "32",
+          "altitude": "50",
+          "tos": "10:05",
+          "note": "Island + river"
+        },
+        {
+          "name": "TGT KARAVOSTASI",
+          "course": "118",
+          "distance": "9",
+          "altitude": "30",
+          "tos": "10:12",
+          "note": "Coastal axis"
+        },
+        {
+          "name": "POLIS FARP",
+          "course": "296",
+          "distance": "28",
+          "altitude": "100",
+          "tos": "10:40",
+          "note": "RTB"
+        }
+      ],
+      "radios": [
+        {
+          "name": "R-863",
+          "channels": [
+            {
+              "channel": "0",
+              "label": "Group 1",
+              "frequency": "127.50",
+              "modulation": "AM"
+            },
+            {
+              "channel": "1",
+              "label": "Group 2",
+              "frequency": "135.00",
+              "modulation": "AM"
+            },
+            {
+              "channel": "3",
+              "label": "Mission",
+              "frequency": "265.00",
+              "modulation": "AM"
+            },
+            {
+              "channel": "7",
+              "label": "ATC",
+              "frequency": "270.00",
+              "modulation": "AM"
+            }
+          ]
+        },
+        {
+          "name": "R-828",
+          "channels": [
+            {
+              "channel": "0",
+              "label": "Tactical",
+              "frequency": "21.50",
+              "modulation": "FM"
+            }
+          ]
+        }
+      ],
+      "fields": [
+        {
+          "role": "dep",
+          "icao": "",
+          "name": "POLIS",
+          "runway": "",
+          "frequency": "127.50"
+        },
+        {
+          "role": "arr",
+          "icao": "",
+          "name": "POLIS",
+          "runway": "",
+          "frequency": "127.50"
+        },
+        {
+          "role": "alt",
+          "icao": "LCRA",
+          "name": "Akrotiri",
+          "runway": "10",
+          "frequency": "270.00"
+        }
+      ],
+      "weather": {
+        "metar": "LCRA 221000Z 18002KT 9999 SCT082 20/15 Q1013",
+        "wind": "180/02",
+        "visibility": "≥ 10 km",
+        "qnh": "1013 hPa",
+        "clouds": "SCT 8200 ft"
+      },
+      "fuel": {
+        "joker": "600",
+        "bingo": "450"
+      },
+      "loadout": [
+        "4 × 9M114 Shturm",
+        "2 × B-8V20 (S-8)",
+        "GSh-30-2 · 250 rounds"
+      ],
+      "threats": [
+        "SA-13",
+        "SA-9",
+        "MANPADS",
+        "ZSU-23-4",
+        "BMP-2"
+      ],
+      "notes": "Landmark: small island + river 8 km from the objective."
+    }
+  ]
+};
 
 /* ============= i18n FR / EN ============= */
 const I18N = {
@@ -4552,7 +4756,7 @@ function doPrint() {
 /* ============= EXEMPLE ET RESET ============= */
 function loadExample() {
   if (!confirm(t('confirm.example'))) return;
-  setDoc(normalizeDoc(clone(EXAMPLE_DOC)));
+  setDoc(normalizeDoc(clone(CURRENT_LANG === 'en' ? EXAMPLE_DOC_EN : EXAMPLE_DOC)));   // la langue de l'interface au moment du clic
   showToast(t('toast.example'));
 }
 function resetDoc() {
