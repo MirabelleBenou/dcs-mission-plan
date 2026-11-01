@@ -6,6 +6,12 @@ The suite bundles several **independently-versioned tools**, so entries are grou
 
 ---
 
+## Unreleased
+
+Changes merged since the last release, grouped per tool. Nothing yet.
+
+---
+
 ## Mission Plan — landing
 
 - Operational **"situation board" landing page** that embeds the live tools (HQ, Briefing Generator, Recon Station) in isolated frames and stages the upcoming ones as *Coming soon*.
