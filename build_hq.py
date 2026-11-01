@@ -101,6 +101,78 @@ _default_wing_config_js = json.dumps(
     json.dumps(_default_wing_config, ensure_ascii=False)
 )
 
+# ---------- Escadre de démonstration (bouton « Exemple », lot mp-exemples-demarrer) ----------
+# Quatre écussons ronds, SVG sobres, palette olive et ambre de la suite : pour l'escadre un faucon géométrique
+# vu de dessus, pour chaque escadron le chiffre 1, 2 ou 3 (tracé, pas de texte) sur un fond de couleur propre.
+# Aucun texte posé sur un motif, aucun emblème réel.
+def _example_badge(bg, inner):
+    return (
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">'
+        '<circle cx="128" cy="128" r="122" fill="' + bg + '" stroke="#c0892a" stroke-width="8"/>'
+        '<circle cx="128" cy="128" r="104" fill="none" stroke="#a8945e" stroke-width="2"/>'
+        + inner + '</svg>'
+    )
+
+def _example_poly(pts, fill):
+    return '<polygon points="' + ' '.join('%g,%g' % p for p in pts) + '" fill="' + fill + '"/>'
+
+def _example_falcon():
+    amber, dark = '#d9a441', '#2c321e'
+    wing = [(120, 98), (78, 74), (40, 72), (22, 84), (60, 92), (26, 104), (66, 110), (36, 126), (76, 128), (46, 146), (94, 140), (120, 146)]
+    wing_mirror = [(256 - x, y) for x, y in reversed(wing)]
+    tail = [(116, 150), (108, 198), (128, 184), (148, 198), (140, 150)]
+    body = [(128, 58), (140, 84), (143, 150), (128, 176), (113, 150), (116, 84)]
+    return (_example_poly(wing, amber) + _example_poly(wing_mirror, amber) + _example_poly(tail, amber)
+            + _example_poly(body, amber) + _example_poly([(116, 64), (128, 50), (140, 64), (128, 74)], amber)
+            + _example_poly([(128, 92), (134, 110), (128, 160), (122, 110)], dark))
+
+def _example_digit(d):
+    st = 'fill="none" stroke="#efe6cc" stroke-width="18" stroke-linejoin="miter" stroke-linecap="butt"'
+    if d == 1:
+        return '<path d="M100,112 L134,84 V176" ' + st + '/><path d="M96,176 H172" ' + st + '/>'
+    path = {2: 'M92,84 H164 V130 H92 V176 H164', 3: 'M92,84 H164 V176 H92 M118,130 H164'}[d]
+    return '<path d="' + path + '" ' + st + '/>'
+
+def _example_logo_url(svg):
+    return 'data:image/svg+xml;base64,' + base64.b64encode(svg.encode('utf-8')).decode('ascii')
+
+_EXAMPLE_LOGO_WING = _example_logo_url(_example_badge('#2c321e', _example_falcon()))
+_EXAMPLE_LOGO_SQ = [
+    _example_logo_url(_example_badge('#7a3a20', _example_digit(1))),
+    _example_logo_url(_example_badge('#4f6b3a', _example_digit(2))),
+    _example_logo_url(_example_badge('#2f5470', _example_digit(3))),
+]
+
+def build_example_wing_config(lang):
+    en = (lang == 'en')
+    return {
+        "configSchemaVersion": 1,
+        "wing": {
+            "id": "TF-KESTREL",
+            "shortName": "TF KESTREL",
+            "fullName": ("Task Force Kestrel \u2014 Composite Helicopter Wing" if en
+                         else "Task Force Kestrel \u2014 Escadre composite d\u2019h\u00e9licopt\u00e8res"),
+            "appTitle": "HQ",
+            "logo": _EXAMPLE_LOGO_WING,
+            "hqStamp": "HQ \u2591 TF KESTREL",
+        },
+        "squadrons": [
+            {"id": "SQN-01",
+             "name": "1st Attack Helicopter Squadron" if en else "1er escadron d\u2019h\u00e9licopt\u00e8res d\u2019attaque",
+             "nickname": "Hammers", "callsign": "CAESAR", "aircraft": ["Mi-24P"], "logo": _EXAMPLE_LOGO_SQ[0]},
+            {"id": "SQN-02",
+             "name": "2nd Transport Helicopter Squadron" if en else "2e escadron d\u2019h\u00e9licopt\u00e8res de transport",
+             "nickname": "Pelicans", "callsign": "ANTON", "aircraft": ["Mi-8MTV2"], "logo": _EXAMPLE_LOGO_SQ[1]},
+            {"id": "SQN-03",
+             "name": "3rd Reconnaissance Flight" if en else "3e escadrille de reconnaissance",
+             "nickname": "Owls", "callsign": "RECCE", "aircraft": ["MiG-21bis"], "logo": _EXAMPLE_LOGO_SQ[2]},
+        ],
+    }
+
+_example_wing_configs_js = json.dumps(
+    {"fr": build_example_wing_config('fr'), "en": build_example_wing_config('en')}, ensure_ascii=False
+)
+
 # ---------- HTML ----------
 HTML = f"""<!DOCTYPE html>
 <html lang="fr">
@@ -324,6 +396,29 @@ select[data-tbm-src] {{ display: none !important; }}
   border-color: var(--amber);
   outline: none;
 }}
+/* Exemple (lot mp-exemples-demarrer) : bouton à icône seule, comme dans les autres outils */
+.tb-btn {{
+  background: transparent;
+  border: 1px solid var(--khaki);
+  color: var(--paper);
+  height: 36px;
+  width: 40px;
+  padding: 0;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .15s;
+}}
+.tb-btn:hover, .tb-btn:focus-visible {{
+  background: var(--olive);
+  border-color: var(--amber);
+  color: var(--amber);
+  outline: none;
+}}
+.tb-btn:active {{ transform: translateY(1px); }}
+.tb-btn svg {{ width: 16px; height: 16px; flex-shrink: 0; }}
 .tb-spacer {{ flex: 1; }}
 .tb-version {{
   font-size: 11px;
@@ -332,6 +427,20 @@ select[data-tbm-src] {{ display: none !important; }}
   letter-spacing: .5px;
   user-select: none;
   white-space: nowrap;
+}}
+/* La barre ne déborde pas sur un téléphone étroit (lot mp-exemples-demarrer) */
+@media (max-width: 539px) {{
+  .tb-version {{ display: none; }}
+}}
+@media (max-width: 479px) {{
+  .toolbar {{ gap: 6px; padding-left: max(8px, env(safe-area-inset-left)); padding-right: max(8px, env(safe-area-inset-right)); }}
+  .tb-brand {{ min-width: 0; }}
+  .tb-brand-sub, .tb-sep {{ display: none; }}
+  .tb-brand-main {{ font-size: 14px; letter-spacing: 2px; }}
+  .tb-btn {{ width: 36px; }}
+  .tb-select {{ font-size: 11px; letter-spacing: .5px; padding: 0 22px 0 8px; background-position: right 6px center; }}
+  .tb-select.tbm-trigger {{ min-width: 0; flex: 0 1 auto; }}
+  .tb-lang-btn {{ min-width: 36px; padding: 0 4px; }}
 }}
 
 /* ======== MAIN LAYOUT ======== */
@@ -582,6 +691,14 @@ select[data-tbm-src] {{ display: none !important; }}
 .wing-action-import input[type=file] {{ display: none; }}
 .wing-action-reset {{ border-color: var(--red-stamp); color: var(--red-stamp); }}
 .wing-action-reset:hover {{ background: var(--red-stamp); color: var(--paper-light); }}
+.wing-restore-btn {{
+  display: flex; align-items: center; justify-content: center; width: 100%; margin: 0 0 12px 0;
+  font-family: var(--f-stencil); font-size: 12px; letter-spacing: .05em; padding: 10px 10px;
+  border-radius: 3px; border: 1px solid var(--amber); background: rgba(192,137,42,.1); color: var(--amber);
+  cursor: pointer; text-align: center; transition: background .15s;
+}}
+.wing-restore-btn:hover, .wing-restore-btn:focus-visible {{ background: var(--amber-dark); color: var(--paper-light); outline: none; }}
+.wing-restore-btn[hidden] {{ display: none; }}
 
 /* Size counter */
 .wing-size-counter {{
@@ -620,6 +737,13 @@ select[data-tbm-src] {{ display: none !important; }}
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }}
+.toast.act {{ pointer-events: auto; width: max-content; max-width: calc(100vw - 24px); text-align: center; }}
+.toast-action {{
+  background: none; border: 0; padding: 6px 4px; margin: -6px 0; cursor: pointer;
+  font: inherit; letter-spacing: inherit; text-transform: inherit; color: var(--amber);
+  text-decoration: underline; text-underline-offset: 3px;
+}}
+.toast-action:hover, .toast-action:focus-visible {{ color: var(--paper-light); outline: none; }}
 
 /* ======== MISSION SECTION ======== */
 .drop-zone-miz {{
@@ -781,6 +905,9 @@ select[data-tbm-src] {{ display: none !important; }}
     <span class="tb-brand-sub" data-i18n="toolbar.subtitle">\u2591 WING CONFIGURATION</span>
   </div>
   <div class="tb-sep"></div>
+  <button type="button" class="tb-btn" id="btn-example" data-i18n-title="toolbar.example.tooltip" title="Charger l'exemple" aria-label="Charger l'exemple">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+  </button>
   <select class="tb-select" id="theme-select" data-i18n-title="toolbar.theme.tooltip" title="Th\u00e8me graphique">
     <option value="cw-nato"     data-i18n="theme.cw-nato">Cold War OTAN</option>
     <option value="cw-soviet"   data-i18n="theme.cw-soviet">Cold War Sovi\u00e9tique</option>
@@ -830,6 +957,8 @@ select[data-tbm-src] {{ display: none !important; }}
     <details class="ed-section">
       <summary data-i18n="editor.wing.summary">CONFIGURATION WING</summary>
       <div class="ed-content">
+
+        <button type="button" class="wing-restore-btn" id="wing-restore-btn" data-i18n="example.restore" hidden>Restaurer ma configuration</button>
 
         <!-- Identit\u00e9 du wing -->
         <fieldset class="wing-fieldset">
@@ -953,6 +1082,10 @@ const I18N = {{
     'toolbar.subtitle':         '\u2591 CONFIGURATION WING',
     'toolbar.lang.tooltip':     'Passer en anglais',
     'toolbar.theme.tooltip':    'Th\u00e8me graphique',
+    'toolbar.example.tooltip':  "Charger l'exemple",
+    'toast.exampleLoaded':      'Exemple charg\u00e9 \u2713',
+    'example.restore':          'Restaurer ma configuration',
+    'toast.configRestored':     'Configuration restaur\u00e9e \u2713',
     'theme.cw-nato':            'Cold War OTAN',
     'theme.cw-soviet':          'Cold War Sovi\u00e9tique',
     'theme.modern-nato':        'OTAN moderne',
@@ -1049,6 +1182,10 @@ const I18N = {{
     'toolbar.subtitle':         '\u2591 WING CONFIGURATION',
     'toolbar.lang.tooltip':     'Switch to French',
     'toolbar.theme.tooltip':    'Graphic theme',
+    'toolbar.example.tooltip':  'Load the example',
+    'toast.exampleLoaded':      'Example loaded \u2713',
+    'example.restore':          'Restore my configuration',
+    'toast.configRestored':     'Configuration restored \u2713',
     'theme.cw-nato':            'Cold War NATO',
     'theme.cw-soviet':          'Cold War Soviet',
     'theme.modern-nato':        'Modern NATO',
@@ -1211,9 +1348,25 @@ function escapeAttr(str) {{ return escapeHtml(str); }}
 function showToast(msg) {{
   const el = document.getElementById('toast');
   el.textContent = msg;
+  el.classList.remove('act');
   el.classList.add('show');
   clearTimeout(showToast._h);
   showToast._h = setTimeout(() => el.classList.remove('show'), 2200);
+}}
+
+// Un message avec une action (un bouton souligné), visible ms millisecondes
+function showToastAction(msg, label, fn, ms) {{
+  const el = document.getElementById('toast');
+  el.textContent = '';
+  const m = document.createElement('span');
+  m.textContent = msg + ' ';
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'toast-action'; b.textContent = label;
+  b.addEventListener('click', fn);
+  el.appendChild(m); el.appendChild(b);
+  el.classList.add('show', 'act');
+  clearTimeout(showToast._h);
+  showToast._h = setTimeout(() => el.classList.remove('show', 'act'), ms);
 }}
 
 // ── Theme ──────────────────────────────────────────────────────
@@ -1270,6 +1423,8 @@ function applyI18nStatic() {{
   document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {{
     el.placeholder = t(el.dataset.i18nPlaceholder);
   }});
+  const ex = document.getElementById('btn-example');
+  if (ex) ex.setAttribute('aria-label', t('toolbar.example.tooltip'));
 }}
 
 function rerenderDynamic() {{
@@ -1317,6 +1472,7 @@ let _wingPersistTimer = null;
 function persistWingConfig() {{
   if (_wingPersistTimer) clearTimeout(_wingPersistTimer);
   _wingPersistTimer = setTimeout(() => {{
+    _wingPersistTimer = null;
     try {{
       localStorage.setItem(KEY_WING, JSON.stringify(wingConfig));
     }} catch(e) {{
@@ -1727,6 +1883,68 @@ function importWingConfig(file) {{
   reader.readAsText(file);
 }}
 
+// ── Exemple : l'escadre de démonstration (lot mp-exemples-demarrer) ──
+// La configuration d'escadre est partagée par toute la suite : celle qu'on remplace est gardée sous KEY_WING_BEFORE
+// (la chaîne lue, telle quelle) et se restaure d'un toucher.
+const EXAMPLE_WING_CONFIGS = {_example_wing_configs_js};
+const KEY_WING_BEFORE = 'wing_config_before_example_v1';
+
+function flushWingPersist() {{
+  if (!_wingPersistTimer) return;
+  clearTimeout(_wingPersistTimer);
+  _wingPersistTimer = null;
+  try {{ localStorage.setItem(KEY_WING, JSON.stringify(wingConfig)); }} catch (e) {{}}
+}}
+
+function wingConfigIsExample(raw) {{
+  return raw === JSON.stringify(EXAMPLE_WING_CONFIGS.fr) || raw === JSON.stringify(EXAMPLE_WING_CONFIGS.en);
+}}
+
+function refreshRestoreButton() {{
+  const b = document.getElementById('wing-restore-btn');
+  if (!b) return;
+  let has = false;
+  try {{ has = localStorage.getItem(KEY_WING_BEFORE) !== null; }} catch (e) {{}}
+  b.hidden = !has;
+}}
+
+function loadWingExample() {{
+  flushWingPersist();                                           // ce qui attend d'être écrit passe d'abord
+  const lang = CURRENT_LANG === 'en' ? 'en' : 'fr';             // la langue de l'interface au moment du clic
+  const next = JSON.stringify(EXAMPLE_WING_CONFIGS[lang]);
+  try {{
+    let cur = localStorage.getItem(KEY_WING);
+    if (cur === null) cur = JSON.stringify(wingConfig);         // rien d'écrit : la configuration par défaut en place
+    if (!wingConfigIsExample(cur)) localStorage.setItem(KEY_WING_BEFORE, cur);   // jamais la démo elle-même
+    localStorage.setItem(KEY_WING, next);                       // aussitôt : la suite la relit sur l'évènement storage
+  }} catch (e) {{
+    showToast(t('toast.wingStorageFull'));
+    return;
+  }}
+  wingConfig = structuredClone(EXAMPLE_WING_CONFIGS[lang]);
+  renderWingEditor();
+  refreshRestoreButton();
+  const sec = document.getElementById('wing-restore-btn');
+  if (sec && sec.closest('details')) sec.closest('details').open = true;
+  showToastAction(t('toast.exampleLoaded'), t('example.restore'), restoreWingConfig, 12000);
+}}
+
+function restoreWingConfig() {{
+  clearTimeout(_wingPersistTimer);
+  _wingPersistTimer = null;
+  let saved = null;
+  try {{ saved = localStorage.getItem(KEY_WING_BEFORE); }} catch (e) {{}}
+  if (saved === null) {{ refreshRestoreButton(); return; }}
+  try {{
+    localStorage.setItem(KEY_WING, saved);                      // la chaîne d'avant, à l'octet
+    localStorage.removeItem(KEY_WING_BEFORE);
+  }} catch (e) {{ return; }}
+  wingConfig = loadWingConfig();
+  renderWingEditor();
+  refreshRestoreButton();
+  showToast(t('toast.configRestored'));
+}}
+
 function resetWingConfig() {{
   if (!confirm(t('editor.wing.resetConfirm'))) return;
   wingConfig = structuredClone(DEFAULT_WING_CONFIG);
@@ -1743,6 +1961,9 @@ function initToolbarEvents() {{
   document.getElementById('btn-lang').addEventListener('click', () => {{
     setLang(CURRENT_LANG === 'fr' ? 'en' : 'fr');
   }});
+  document.getElementById('btn-example').addEventListener('click', loadWingExample);
+  const btnRestore = document.getElementById('wing-restore-btn');
+  if (btnRestore) btnRestore.addEventListener('click', restoreWingConfig);
 }}
 
 
@@ -2995,6 +3216,7 @@ function init() {{
   renderWingEditor();
   bindWingEditorEvents();
   initToolbarEvents();
+  refreshRestoreButton();
   initMissionEvents();
   loadPersistedSnapshot();  // P2 — restaurer snapshot au rechargement
   initCommanderUI();        // P3 — chemin dev/test + ghost Commander
