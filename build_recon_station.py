@@ -2644,6 +2644,7 @@ const I18N = {{
     'toolbar.example.tooltip': "Charger l'exemple",
     'confirm.example': "Remplacer le travail en cours par l'exemple ?",
     'toast.example-loaded': 'Exemple chargé ✓',
+    'toast.exampleFailed': 'Exemple indisponible',
     'editor.image.credit': 'Image : USDA NAIP, domaine public',
     'theme.cw-nato': 'Cold War OTAN',
     'theme.cw-soviet': 'Cold War Soviétique',
@@ -2762,6 +2763,7 @@ const I18N = {{
     'toolbar.example.tooltip': 'Load the example',
     'confirm.example': 'Replace the current work with the example?',
     'toast.example-loaded': 'Example loaded ✓',
+    'toast.exampleFailed': 'Example unavailable',
     'editor.image.credit': 'Image: USDA NAIP, public domain',
     'theme.cw-nato': 'Cold War NATO',
     'theme.cw-soviet': 'Cold War Soviet',
@@ -3177,7 +3179,7 @@ async function loadExample() {{
   const img = new Image();
   try {{
     await new Promise((ok, ko) => {{ img.onload = ok; img.onerror = ko; img.src = RS_EXAMPLE_IMG; }});
-  }} catch (e) {{ showToast(t('toast.logoInvalid'), 'err'); return; }}
+  }} catch (e) {{ showToast(t('toast.exampleFailed'), 'err'); return; }}
   SOURCE_IMG   = img;
   SOURCE_READY = true;
   document.getElementById('drop-zone').classList.add('has-image');
@@ -3188,7 +3190,7 @@ async function loadExample() {{
   document.getElementById('img-credit').hidden = false;
 
   STATE.fields = {{
-    target: tx.target, coords: 'N35°08.6 E032°49.5', crs: '118°', alt: '1500 FT',
+    target: tx.target, coords: 'N35°08.6 E032°49.5', crs: '118°', alt: '',
     msn: 'FOOTHOLD M3', sensor: 'KS-87', dtg: '22.03.1989', crew: 'RECCE 11', class_: tx.class_
   }};
   STATE.cartouche = [
