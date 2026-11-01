@@ -10,6 +10,10 @@ The suite bundles several **independently-versioned tools**, so entries are grou
 
 Changes merged since the last release, grouped per tool.
 
+### Mission Plan — landing
+#### Changed
+- On phones (below 760 px wide), the back button shrinks to an arrow and the wing stamp is hidden, so each tool's top bar fits; a bar that is still too wide scrolls sideways, with a fade on its right edge.
+
 ### HQ
 #### Added
 - **Example** button: loads a demonstration wing (Task Force Kestrel, three squadrons); your own wing configuration is kept and can be restored in one tap.
