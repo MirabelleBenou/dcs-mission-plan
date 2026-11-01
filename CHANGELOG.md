@@ -8,7 +8,13 @@ The suite bundles several **independently-versioned tools**, so entries are grou
 
 ## Unreleased
 
-Changes merged since the last release, grouped per tool. Nothing yet.
+Changes merged since the last release, grouped per tool.
+
+### Field Manual
+#### Added
+- **Route Planner chapter** — theatre and base maps, tap modes, building the route, reference points, leg boxes, navigation and magnetic variation (with the DCS editor ruler caveat), airfield chart sheets, drawing layers and NATO symbols, CombatFlite layers, hand-off to the Datacard and Briefing Generators, DCS Route Tool, tablet layout; two new diagrams.
+#### Changed
+- Datacard Generator chapter: importing navigation from the Route Planner.
 
 ---
 

@@ -77,7 +77,7 @@ Recon Station turns any screenshot into a convincing **reconnaissance analysis p
 
 The Field Manual is the suite's **built-in documentation**, opened from the board like any other tool — **no internet, no separate guide to download**.
 
-- **One chapter per tool** — Recon Station, HQ, Briefing Generator, Datacard Generator (upcoming tools are stubbed)
+- **One chapter per tool** — Recon Station, HQ, Briefing Generator, Datacard Generator, Route Planner
 - **Diagrams, not screenshots** — each chapter has a hand-drawn-style **SVG schematic** (e.g. *what feeds what* in the Briefing Generator) that adapts to the active theme
 - **"What it's for" first** — plain explanations of each tool's purpose and workflow
 - **4 themes, FR/EN**, fully offline

@@ -46,6 +46,7 @@ FM_COVER   = encode_image('fm_cover.webp')
 HQ_TILE    = encode_image('hq.webp')
 BG_TILE    = encode_image('bg.webp')
 DG_TILE    = encode_image('kg.webp')
+RP_TILE    = encode_image('rp.webp')
 
 if RS_TILE:
     print(f'✓ rs.webp embarqué ({len(RS_TILE)//1024} Ko base64)')
@@ -66,6 +67,11 @@ if DG_TILE:
     print(f'✓ kg.webp embarqué ({len(DG_TILE)//1024} Ko base64)')
 else:
     print('⚠ kg.webp introuvable', file=sys.stderr)
+
+if RP_TILE:
+    print(f'✓ rp.webp embarqué ({len(RP_TILE)//1024} Ko base64)')
+else:
+    print('⚠ rp.webp introuvable', file=sys.stderr)
 
 if FM_COVER:
     print(f'✓ fm_cover.webp embarqué ({len(FM_COVER)//1024} Ko base64)')
@@ -157,6 +163,7 @@ RS_TILE_SRC = RS_TILE if RS_TILE else "data:image/gif;base64,R0lGODlhAQABAIAAAAA
 HQ_TILE_SRC = HQ_TILE if HQ_TILE else "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
 BG_TILE_SRC = BG_TILE if BG_TILE else "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
 DG_TILE_SRC = DG_TILE if DG_TILE else "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+RP_TILE_SRC = RP_TILE if RP_TILE else "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
 
 # ── Schémas générés (BG « Ce qui alimente quoi » ; DG figure 2) ──────────────────
 # Règle de lisibilité : la couleur d'un module marque (trait, aplat à 20 %), l'encre écrit.
@@ -369,6 +376,11 @@ def _build_dg_feed_svg():
     o.append('          ' + sv_path('M244,306 C300,306 330,262 350,230', M))
     o.append('          ' + sv_line(395, 104, 395, 166, M, dashed=True))
     o.append('          ' + T(401, 140, 8, 'à venir', 'coming', anchor='start', op=.9))
+    # Route Planner (trait plein), sous le Datacard Generator
+    o.append('          ' + sv_box(380, 282, 140, 44, 'rp'))
+    o.append('          ' + T(450, 300, 11, 'Route Planner'))
+    o.append('          ' + T(450, 315, 8, 'navigation · points de réf.', 'navigation · reference points', op=.9))
+    o.append('          ' + sv_line(450, 282, 450, 230, M))
     # sorties
     outs = [
         (112, 'PNG · kneeboard DCS', 'PNG · DCS kneeboard', '2 000 × 2 828 px', '2,000 × 2,828 px'),
@@ -391,8 +403,144 @@ def _build_dg_feed_svg():
     o.append('        </svg>')
     return '\n'.join(o)
 
+def _build_rp_screen_svg():
+    """Route Planner — figure 1 « L’écran du Route Planner » (viewBox 720 × 352) : un schéma, pas une capture."""
+    M = 'rps'
+    T = sv_text
+    A = '#7ac97a'
+    o = []
+    o.append('<svg viewBox="0 0 720 352" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="L’écran du Route Planner">')
+    o.append('          ' + sv_defs(M))
+    o.append('          ' + sv_title('L’ÉCRAN DU ROUTE PLANNER', 'THE ROUTE PLANNER SCREEN', 24, 32))
+    # la barre du haut
+    o.append('          ' + sv_box(110, 48, 500, 26))
+    o.append('          ' + T(118, 64.5, 8.5, 'R·P', anchor='start', ls=1))
+    o.append('          ' + T(146, 64.5, 8, 'Fond ▾', 'Map ▾', anchor='start'))
+    o.append('          ' + T(184, 64.5, 8, 'Affichage ▾', 'Display ▾', anchor='start'))
+    o.append('          ' + T(246, 64.5, 8, 'Théâtre ▾', 'Theatre ▾', anchor='start'))
+    o.append('          ' + T(298, 64.5, 8, 'km | NM', anchor='start', op=.9))
+    o.append('          ' + T(346, 64.5, 8, 'Ouvrir · Enregistrer · Exemple · Effacer',
+                              'Open · Save · Example · Clear', anchor='start'))
+    # le panneau et ses sections
+    o.append('          ' + sv_box(110, 80, 160, 260))
+    secs = [
+        (86, 62, 'ROUTE', 'ROUTE', 3),
+        (154, 30, 'POINTS DE RÉFÉRENCE', 'REFERENCE POINTS', 1),
+        (190, 22, 'CALQUES', 'LAYERS', 0),
+        (218, 116, 'NAVIGATION', 'NAVIGATION', 3),
+    ]
+    for (y, h, fr, en, rows) in secs:
+        o.append('          ' + f'<rect x="116" y="{y}" width="148" height="{h}" fill="none" stroke="currentColor" stroke-width="1" opacity=".75"/>')
+        o.append('          ' + T(121, y + 10, 7, fr, en, anchor='start', ls=1, op=.95))
+        for k in range(rows):
+            o.append('          ' + f'<line x1="122" y1="{y + 20 + 9 * k}" x2="258" y2="{y + 20 + 9 * k}" stroke="currentColor" stroke-width="1" opacity=".3"/>')
+    # les deux boutons de sortie, au pied de la navigation
+    o.append('          ' + sv_box(122, 298, 136, 14, 'rp'))
+    o.append('          ' + T(190, 308, 7.5, '→ Vers la datacard', '→ To the datacard'))
+    o.append('          ' + sv_box(122, 316, 136, 14, 'rp'))
+    o.append('          ' + T(190, 326, 7.5, '→ Vers le briefing', '→ To the briefing'))
+    # la carte, sa grille
+    o.append('          ' + sv_box(276, 80, 334, 260))
+    for x in (336, 396, 456, 516, 576):
+        o.append('          ' + f'<line x1="{x}" y1="81" x2="{x}" y2="339" stroke="currentColor" stroke-width=".8" opacity=".18"/>')
+    for y in (130, 180, 230, 280, 330):
+        o.append('          ' + f'<line x1="277" y1="{y}" x2="609" y2="{y}" stroke="currentColor" stroke-width=".8" opacity=".18"/>')
+    # la loupe de la recherche
+    o.append('          ' + '<rect class="sv-box" x="284" y="88" width="16" height="16" rx="2" stroke="currentColor" stroke-width="1"/>')
+    o.append('          ' + '<circle cx="291" cy="95" r="3.6" fill="none" stroke="currentColor" stroke-width="1.3"/>')
+    o.append('          ' + '<line x1="293.6" y1="97.6" x2="297" y2="101" stroke="currentColor" stroke-width="1.3"/>')
+    # les quatre modes de toucher, en haut à droite de la carte
+    modes = [('Point', 'Waypoint'), ('Réf.', 'Ref.'), ('Lire', 'Read'), ('Dessin', 'Draw')]
+    for i, (fr, en) in enumerate(modes):
+        x = 444 + 40 * i
+        o.append('          ' + sv_box(x, 88, 40, 16, 'rp' if i == 0 else None))
+        o.append('          ' + T(x + 20, 99, 7, fr, en))
+    # la route : quatre points, une référence, une boîte de branche
+    pts = [(322, 296), (380, 196), (496, 222), (566, 146)]
+    o.append('          ' + '<polyline points="' + ' '.join(f'{x},{y}' for x, y in pts) +
+             f'" fill="none" stroke="{A}" stroke-width="3" stroke-linejoin="round"/>')
+    for i, (x, y) in enumerate(pts):
+        o.append('          ' + f'<circle cx="{x}" cy="{y}" r="7" class="sv-box" stroke="currentColor" stroke-width="1.6"/>')
+        o.append('          ' + T(x, y + 2.8, 7.5, str(i)))
+    o.append('          ' + '<rect x="514.5" y="284.5" width="11" height="11" transform="rotate(45 520 290)" fill="currentColor"/>')
+    o.append('          ' + sv_text(520, 292.8, 7, 'A', cls='sv-pill-t'))
+    # la boîte de branche, en maison, sous la branche 1 → 2
+    o.append('          ' + '<path class="sv-box" d="M416,240 L438,230 L460,240 L460,276 L416,276 Z" stroke="currentColor" stroke-width="1.2"/>')
+    o.append('          ' + T(438, 250, 6.5, '094°V', '094°T'))
+    o.append('          ' + T(438, 260, 6.5, '12,4 km', '12.4 km'))
+    o.append('          ' + T(438, 270, 6.5, 'ETE 03:22'))
+    # libellés, à gauche
+    o.append('          ' + T(102, 124, 10, 'Panneau', 'Panel', anchor='end'))
+    o.append('          ' + sv_line(105, 121, 128, 121, M))
+    o.append('          ' + T(102, 318, 10, 'Sorties', 'Hand-offs', anchor='end'))
+    o.append('          ' + sv_line(105, 315, 120, 315, M))
+    # libellés, à droite
+    o.append('          ' + T(622, 64, 10, 'Barre du haut', 'Top bar', anchor='start'))
+    o.append('          ' + sv_line(618, 61, 596, 61, M))
+    o.append('          ' + T(622, 99, 10, 'Modes de toucher', 'Tap modes', anchor='start'))
+    o.append('          ' + sv_line(620, 96, 606, 96, M))
+    o.append('          ' + T(622, 152, 10, 'Route', anchor='start'))
+    o.append('          ' + sv_line(618, 149, 576, 147, M))
+    o.append('          ' + T(622, 255, 10, 'Boîte', 'Leg box', anchor='start'))
+    o.append('          ' + T(622, 267, 10, 'de branche', 'per leg', anchor='start'))
+    o.append('          ' + sv_line(618, 258, 463, 258, M))
+    o.append('          ' + T(622, 312, 10, 'Carte', 'Map', anchor='start'))
+    o.append('          ' + sv_line(618, 309, 600, 309, M))
+    o.append('        </svg>')
+    return '\n'.join(o)
+
+
+def _build_rp_feed_svg():
+    """Route Planner — figure 2 « Ce qui entre dans le Route Planner, et ce qui en sort » (viewBox 720 × 360)."""
+    M = 'rpf'
+    T = sv_text
+    o = []
+    o.append('<svg viewBox="0 0 720 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ce qui entre dans le Route Planner, et ce qui en sort">')
+    o.append('          ' + sv_defs(M))
+    o.append('          ' + sv_title('CE QUI ENTRE, CE QUI SORT', 'WHAT GOES IN, WHAT COMES OUT', 24, 32))
+    o.append('          ' + T(116, 52, 9, 'ENTRE', 'IN', op=.8, ls=2))
+    o.append('          ' + T(604, 52, 9, 'SORT', 'OUT', op=.8, ls=2))
+    ins = [
+        (62, None, 'Route JSON', 'Route JSON', 'route · réf. · calques', 'route · ref. · layers'),
+        (116, None, 'Route Tool de DCS', 'DCS Route Tool', '<théâtre>.lua', '<theatre>.lua'),
+        (170, None, 'CombatFlite (.cf)', 'CombatFlite (.cf)', 'calques', 'layers'),
+        (224, 'hq', 'HQ', 'HQ', 'année de la mission → déclinaison', 'mission year → variation'),
+        (278, None, 'Airfield Charts', 'Airfield Charts', 'fiches des terrains', 'airfield chart sheets'),
+    ]
+    for (y, mod, tfr, ten, sfr, sen) in ins:
+        o.append('          ' + sv_box(16, y, 200, 42, mod))
+        o.append('          ' + T(116, y + 18, 11, tfr, ten))
+        o.append('          ' + T(116, y + 32, 8, sfr, sen, op=.9))
+    # le Route Planner
+    o.append('          ' + sv_box(300, 140, 120, 108, 'rp'))
+    o.append('          ' + T(360, 188, 12, 'Route'))
+    o.append('          ' + T(360, 204, 12, 'Planner'))
+    # flèches d’entrée
+    for (y, ty) in ((83, 158), (137, 176), (191, 194), (245, 212), (299, 230)):
+        o.append('          ' + sv_path(f'M216,{y} C258,{y} 258,{ty} 298,{ty}', M))
+    outs = [
+        (74, 'dg', 'Datacard Generator', 'Datacard Generator', 'navigation · points de réf.', 'navigation · reference points'),
+        (138, 'bg', 'Briefing Generator', 'Briefing Generator', 'image de la carte', 'map image'),
+        (202, None, 'Route Tool de DCS', 'DCS Route Tool', '<théâtre>.lua', '<theatre>.lua'),
+        (266, None, 'JSON', 'JSON', 'route · réf. · calques', 'route · ref. · layers'),
+    ]
+    for (y, mod, tfr, ten, sfr, sen) in outs:
+        o.append('          ' + sv_box(504, y, 200, 42, mod))
+        o.append('          ' + T(604, y + 18, 11, tfr, ten))
+        o.append('          ' + T(604, y + 32, 8, sfr, sen, op=.9))
+    for (y, fy) in ((95, 164), (159, 184), (223, 204), (287, 224)):
+        o.append('          ' + sv_path(f'M420,{fy} C462,{fy} 462,{y} 502,{y}', M))
+    # note
+    o.append('          ' + T(360, 346, 9, f'Hors de la suite{_NBSP_FINE}: la route reste dans le navigateur, la carte s’enregistre en image.',
+                              'Outside the suite: the route stays in the browser, the map is saved as an image.', op=.9))
+    o.append('        </svg>')
+    return '\n'.join(o)
+
+
 BG_SVG = _build_bg_svg()
 DG_FEED_SVG = _build_dg_feed_svg()
+RP_SCREEN_SVG = _build_rp_screen_svg()
+RP_FEED_SVG = _build_rp_feed_svg()
 
 BG_LEGEND_FR = (f'Fig. 1 — Comment les saisies d’une section alimentent les autres — et la datacard. '
                 f'C{_NBSP_FINE}: saisi en brief complet{_NBSP_FINE}; S{_NBSP_FINE}: en brief simplifié.')
@@ -410,6 +558,7 @@ FM_EXTRA_CSS = r'''
 .sv-m-bg { fill: color-mix(in srgb, #c0892a 20%, var(--paper-light)); stroke: #c0892a; }
 .sv-m-rs { fill: color-mix(in srgb, #C95A9C 20%, var(--paper-light)); stroke: #C95A9C; }
 .sv-m-dg { fill: color-mix(in srgb, #4f7a8e 20%, var(--paper-light)); stroke: #4f7a8e; }
+.sv-m-rp { fill: color-mix(in srgb, #7ac97a 20%, var(--paper-light)); stroke: #7ac97a; }
 .sv-pill { fill: var(--olive-dark); }
 .sv-pill-t { fill: var(--paper-light); }
 .fm-schema.tall svg { max-height: 425px; }
@@ -1623,6 +1772,7 @@ kbd {{
 #page-hq  {{ --chapter-accent: #4FB286; --chapter-accent-rgb: 79,178,134; }}
 #page-bg  {{ --chapter-accent: #c0892a; --chapter-accent-rgb: 192,137,42; }}
 #page-dg  {{ --chapter-accent: #4f7a8e; --chapter-accent-rgb: 79,122,142; }}
+#page-rp  {{ --chapter-accent: #7ac97a; --chapter-accent-rgb: 122,201,122; }}
 
 /* Plaques accents individuels */
 .fm-plaque[data-module="rs"]  {{ --chapter-accent: #C95A9C; --chapter-accent-rgb: 201,90,156; }}
@@ -1734,14 +1884,17 @@ kbd {{
           <div class="fm-plaque-badge" data-i18n="index.badge.active">Manuel</div>
         </div>
 
-        <!-- RP — À venir -->
-        <div class="fm-plaque soon" data-module="rp" aria-hidden="true">
-          <div class="fm-plaque-monogram" style="opacity:.4;">RP</div>
+        <!-- RP -->
+        <div class="fm-plaque active" data-module="rp" tabindex="0" role="button"
+             aria-label="RP — Route Planner"
+             onclick="navigate('rp')"
+             onkeydown="if(event.key==='Enter'||event.key===' '){{event.preventDefault();navigate('rp')}}">
+          <div class="fm-plaque-monogram">RP</div>
           <div class="fm-plaque-info">
             <div class="fm-plaque-name">Route Planner</div>
             <div class="fm-plaque-desc" data-i18n="index.rp.desc">Planification d'itinéraires</div>
           </div>
-          <div class="fm-soon-stamp" data-i18n-soon><!-- rempli par JS --></div>
+          <div class="fm-plaque-badge" data-i18n="index.badge.active">Manuel</div>
         </div>
 
       </div><!-- /fm-plaque-grid -->
@@ -2397,8 +2550,16 @@ kbd {{
       <div class="fm-prose">
         <h3 class="lang-block" data-lang="fr">Ce que l’import remplit</h3>
         <h3 class="lang-block" data-lang="en">What the import fills in</h3>
-        <div class="lang-block" data-lang="fr"><p>Pour chaque vol : la méta du briefing ; l’<strong>indicatif</strong> (le sous-groupe, sinon l’indicatif de l’escadron), l’appareil, le nombre (celui du vol, sinon le nombre de pilotes de son équipage), la tâche et la menace ; l’objectif et les étapes, sous-tâches comprises ; l’<strong>équipage</strong> du vol ; la <strong>radio</strong>, depuis le plan de son appareil, ou à défaut un poste « Fréquences » qui reprend toutes les fréquences du briefing ; les <strong>terrains</strong>, le terrain de départ marqué DEP ; le <strong>METAR</strong>, décodé ; les menaces SAM et AAA ; les notes. Restent à remplir à la main : les <strong>horaires</strong>, la <strong>navigation</strong>, le <strong>carburant</strong> et l’<strong>emport</strong>. La datacard importée vit ensuite seule : modifier le briefing ne la change pas.</p></div>
-        <div class="lang-block" data-lang="en"><p>For each flight: the briefing’s meta; the <strong>callsign</strong> (the subgroup, otherwise the squadron callsign), the aircraft, the count (the flight’s own, otherwise the number of pilots in its crew), the task, and the threat; the objective and the steps, sub-tasks included; the flight’s <strong>crew</strong>; the <strong>radio</strong>, from its aircraft’s plan, or failing that a “Frequencies” radio carrying every frequency in the briefing; the <strong>airfields</strong>, with the departure field marked DEP; the <strong>METAR</strong>, decoded; the SAM and AAA threats; the notes. Left to fill in by hand: <strong>times</strong>, <strong>navigation</strong>, <strong>fuel</strong>, and <strong>loadout</strong>. Once imported, the datacard lives on its own: changing the briefing doesn’t change it.</p></div>
+        <div class="lang-block" data-lang="fr"><p>Pour chaque vol : la méta du briefing ; l’<strong>indicatif</strong> (le sous-groupe, sinon l’indicatif de l’escadron), l’appareil, le nombre (celui du vol, sinon le nombre de pilotes de son équipage), la tâche et la menace ; l’objectif et les étapes, sous-tâches comprises ; l’<strong>équipage</strong> du vol ; la <strong>radio</strong>, depuis le plan de son appareil, ou à défaut un poste « Fréquences » qui reprend toutes les fréquences du briefing ; les <strong>terrains</strong>, le terrain de départ marqué DEP ; le <strong>METAR</strong>, décodé ; les menaces SAM et AAA ; les notes. Restent à remplir à la main : les <strong>horaires</strong>, la <strong>navigation</strong> — à moins de la prendre au Route Planner —, le <strong>carburant</strong> et l’<strong>emport</strong>. La datacard importée vit ensuite seule : modifier le briefing ne la change pas.</p></div>
+        <div class="lang-block" data-lang="en"><p>For each flight: the briefing’s meta; the <strong>callsign</strong> (the subgroup, otherwise the squadron callsign), the aircraft, the count (the flight’s own, otherwise the number of pilots in its crew), the task, and the threat; the objective and the steps, sub-tasks included; the flight’s <strong>crew</strong>; the <strong>radio</strong>, from its aircraft’s plan, or failing that a “Frequencies” radio carrying every frequency in the briefing; the <strong>airfields</strong>, with the departure field marked DEP; the <strong>METAR</strong>, decoded; the SAM and AAA threats; the notes. Left to fill in by hand: <strong>times</strong>, <strong>navigation</strong> — unless you take it from the Route Planner —, <strong>fuel</strong>, and <strong>loadout</strong>. Once imported, the datacard lives on its own: changing the briefing doesn’t change it.</p></div>
+      </div>
+
+      <!-- Depuis le Route Planner -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Depuis le Route Planner</h3>
+        <h3 class="lang-block" data-lang="en">From the Route Planner</h3>
+        <div class="lang-block" data-lang="fr"><p><strong>Importer</strong> lit aussi la route du Route Planner. Sa source <strong>Route en cours</strong> est la route que le Route Planner a enregistrée dans ce navigateur ; elle est grisée s’il n’y en a pas. Une route se lit aussi d’un fichier JSON, par la source <strong>Fichier JSON (briefing ou route)</strong> ou par <strong>Importer JSON</strong>. La fenêtre montre le nom de la route et son nombre de points, puis deux choix : <strong>Remplir la navigation de la datacard affichée</strong> — sa navigation et ses points de référence sont remplacés — ou <strong>Nouvelle datacard</strong>, ajoutée au paquet. La navigation reçoit les points de la route, avec leurs coordonnées MGRS et leur altitude ; la datacard prend les unités et le cap de la route. Dans la suite, le bouton <strong>→ Vers la datacard</strong> du Route Planner ouvre directement cette fenêtre, sur <strong>Route en cours</strong>.</p></div>
+        <div class="lang-block" data-lang="en"><p><strong>Import</strong> also reads the Route Planner’s route. Its <strong>Current route</strong> source is the route the Route Planner saved in this browser; it is greyed out if there is none. A route can also come from a JSON file, through the <strong>JSON file (briefing or route)</strong> source or through <strong>Import JSON</strong>. The window shows the route’s name and its number of waypoints, then two choices: <strong>Fill the navigation of the datacard shown</strong> — its navigation and reference points are replaced — or <strong>New datacard</strong>, added to the deck. Navigation receives the route’s waypoints, with their MGRS coordinates and altitude; the datacard takes the route’s units and heading reference. Within the suite, the Route Planner’s <strong>→ To the datacard</strong> button opens this window directly, on <strong>Current route</strong>.</p></div>
       </div>
 
       <!-- Figure 2 : ce qui alimente la datacard -->
@@ -2479,6 +2640,161 @@ kbd {{
     </div><!-- /fm-chapter -->
   </section><!-- /page-dg -->
 
+  <!-- ===== PAGE RP ===== -->
+  <section id="page-rp" class="fm-page hidden">
+    <div class="fm-chapter" style="--chapter-accent:#7ac97a; --chapter-accent-rgb:122,201,122;">
+
+      <button class="fm-back-btn" onclick="navigate('index')" data-i18n="btn.back">◄ Index</button>
+
+      <div class="fm-hero">
+        <img class="fm-hero-img" src="{RP_TILE_SRC}" alt="Route Planner" draggable="false">
+        <div class="fm-hero-pin" aria-hidden="true"></div>
+        <div class="fm-hero-caption">
+          <div><div class="fm-hero-monogram">RP</div></div>
+          <div>
+            <div class="fm-hero-title" data-i18n="rp.hero.title">Route Planner</div>
+            <div class="fm-hero-sub" data-i18n="rp.hero.sub">Routes, navigation et cartes de mission</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- À quoi ça sert -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">À quoi ça sert</h3>
+        <h3 class="lang-block" data-lang="en">What it’s for</h3>
+        <div class="lang-block" data-lang="fr"><p>Le Route Planner trace la <strong>route d’un vol</strong> sur la carte d’un théâtre de DCS et en donne la <strong>navigation</strong> : caps, distances, temps. Vous y posez des <strong>points de référence</strong> et des <strong>calques</strong> tactiques, vous consultez la <strong>fiche d’un terrain</strong>, puis vous passez la route au <strong>Datacard Generator</strong>, la carte au <strong>Briefing Generator</strong>, ou la route au <strong>Route Tool</strong> de DCS.</p></div>
+        <div class="lang-block" data-lang="en"><p>The Route Planner lays a <strong>flight’s route</strong> on the map of a DCS theatre and gives you its <strong>navigation</strong>: headings, distances, times. You add <strong>reference points</strong> and tactical <strong>layers</strong>, you look up an <strong>airfield’s chart sheet</strong>, then you pass the route to the <strong>Datacard Generator</strong>, the map to the <strong>Briefing Generator</strong>, or the route to the DCS <strong>Route Tool</strong>.</p></div>
+      </div>
+
+      <!-- Figure 1 : l’écran du Route Planner -->
+      <div class="fm-schema">
+        {RP_SCREEN_SVG}
+        <div class="fm-schema-legend">
+          <span class="lang-block" data-lang="fr">Fig. 1 — L’écran du Route Planner : la carte, ses modes de toucher et le panneau.</span>
+          <span class="lang-block" data-lang="en">Fig. 1 — The Route Planner screen: the map, its tap modes, and the panel.</span>
+        </div>
+      </div>
+
+      <!-- Le théâtre et le fond de carte -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Le théâtre et le fond de carte</h3>
+        <h3 class="lang-block" data-lang="en">Theatre and base map</h3>
+        <div class="lang-block" data-lang="fr"><p>Le sélecteur <strong>Théâtre</strong> choisit la carte de DCS : Caucase, Allemagne (guerre froide), Syrie, Golfe Persique, Normandie, Manche, Nevada, Mariannes, Mariannes 1944, Kola, Sinaï, Irak, Afghanistan, Atlantique Sud. Changer de théâtre garde la route. Le <strong>Fond</strong> propose <strong>Carte DCS</strong>, <strong>Topographique</strong>, <strong>Satellite</strong> et <strong>Grille seule</strong>, et, sur le Caucase seulement, la <strong>Carte de navigation (Flappie)</strong> : elle n’apparaît pas dans la liste sur les autres théâtres. Là où DCS n’a pas de carte, la ligne se grise et devient <strong>Carte DCS — absente de ce théâtre</strong>. Les crédits de chaque fond restent affichés au pied de la carte.</p><p>Le menu <strong>Affichage</strong> dit ce que montre la carte, en trois groupes. <strong>Mission</strong> : <strong>Route</strong>, <strong>Points de réf.</strong> ; <strong>Calques</strong> : <strong>Dessins</strong>, <strong>Symboles OTAN</strong>, <strong>Calques importés</strong> ; <strong>Fond</strong> : <strong>Grille MGRS</strong>, <strong>Lieux (Esri)</strong>, <strong>Aérodromes</strong>, <strong>Villes</strong>. Les villes s’affichent à partir du zoom 10 ; elles sont grisées sur la carte de Flappie, qui les écrit déjà. Les aérodromes et les villes sont grisés sur un théâtre qui n’en a pas. Ce qui est masqué n’est ni dessiné ni touchable ; un point ambre sur le bouton signale un affichage qui n’est plus celui d’origine.</p><p>La loupe, en haut à gauche de la carte, ouvre la <strong>recherche</strong> : une ville, un aérodrome, un point de la route ou une référence. Choisir un résultat centre la carte dessus.</p></div>
+        <div class="lang-block" data-lang="en"><p>The <strong>Theatre</strong> selector picks the DCS map: Caucasus, Cold War Germany, Syria, Persian Gulf, Normandy, The Channel, Nevada, Mariana Islands, Mariana Islands WWII, Kola, Sinai, Iraq, Afghanistan, South Atlantic. Changing theatre keeps the route. The <strong>Map</strong> list offers <strong>DCS map</strong>, <strong>Topographic</strong>, <strong>Satellite</strong> and <strong>Grid only</strong>, and, on the Caucasus only, the <strong>Navigation chart (Flappie)</strong>: it does not appear in the list on other theatres. Where DCS has no map, the line is greyed out and reads <strong>DCS map — not available for this theatre</strong>. Each background’s credits stay shown at the foot of the map.</p><p>The <strong>Display</strong> menu sets what the map shows, in three groups. <strong>Mission</strong>: <strong>Route</strong>, <strong>Ref. points</strong>; <strong>Layers</strong>: <strong>Drawings</strong>, <strong>NATO symbols</strong>, <strong>Imported layers</strong>; <strong>Base map</strong>: <strong>MGRS grid</strong>, <strong>Places (Esri)</strong>, <strong>Airfields</strong>, <strong>Towns</strong>. Towns show from zoom 10; they are greyed out on Flappie’s chart, which already prints them. Airfields and towns are greyed out on a theatre that has none. What is hidden is neither drawn nor tappable; an amber dot on the button means the display is no longer the original one.</p><p>The magnifier, at the top left of the map, opens the <strong>search</strong>: a town, an airfield, a waypoint, or a reference point. Picking a result centres the map on it.</p></div>
+      </div>
+
+      <!-- Ce que fait un toucher -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Ce que fait un toucher</h3>
+        <h3 class="lang-block" data-lang="en">What a tap does</h3>
+        <div class="lang-block" data-lang="fr"><p>En haut à droite de la carte, quatre modes disent ce que fait un toucher :</p><ul><li><strong>Point</strong> — ajoute un point au bout de la route ;</li><li><strong>Réf.</strong> — pose un point de référence ;</li><li><strong>Lire</strong> — ne pose rien : un aérodrome ouvre sa fiche, un objet d’un calque montre la sienne ;</li><li><strong>Dessin</strong> — ouvre les outils de dessin de vos propres calques.</li></ul><p>En <strong>Point</strong> et en <strong>Réf.</strong>, un aérodrome touché donne un point à son nom, en capitales ; une cible d’un calque (un point ou un symbole) devient de même un point de la route ou une référence. Un mode qui modifie quelque chose le rend visible s’il était masqué dans <strong>Affichage</strong>.</p></div>
+        <div class="lang-block" data-lang="en"><p>At the top right of the map, four modes set what a tap does:</p><ul><li><strong>Waypoint</strong> — adds a waypoint at the end of the route;</li><li><strong>Ref.</strong> — places a reference point;</li><li><strong>Read</strong> — places nothing: an airfield opens its chart sheet, a layer item shows its own card;</li><li><strong>Draw</strong> — opens the tools for drawing your own layers.</li></ul><p>In <strong>Waypoint</strong> and <strong>Ref.</strong> modes, a tapped airfield gives a point named after it, in capitals; a target in a layer (a point or a symbol) likewise becomes a waypoint or a reference point. A mode that edits something makes it visible if it was hidden under <strong>Display</strong>.</p></div>
+      </div>
+
+      <!-- Construire la route -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Construire la route</h3>
+        <h3 class="lang-block" data-lang="en">Building the route</h3>
+        <div class="lang-block" data-lang="fr"><p>Touchez la carte pour ajouter un point ; glissez un point pour le déplacer ; le « + » au milieu d’une branche insère un point. La route compte <strong>30 points</strong> au plus. Sans toucher la carte, le bloc <strong>Ajouter</strong> place un point par ses <strong>Coordonnées</strong> — MGRS, DMS, DDM ou décimal — ou par <strong>Cap et distance</strong> depuis le dernier point, le cap s’entendant comme celui de la navigation, vrai ou magnétique ; <strong>+ Point</strong> l’ajoute à la route, <strong>+ Réf.</strong> en fait une référence.</p><p>Chaque point a sa ligne dans la section <strong>Route</strong> : un <strong>Nom</strong>, une altitude et sa référence, <strong>SOL</strong> ou <strong>MER</strong>, une vitesse (laissée vide, c’est la vitesse sol de la route ; le point de départ n’en a pas), et × pour le supprimer. Les unités, km ou NM, m ou ft, se choisissent dans la barre du haut. Le champ <strong>Nom de la route</strong> donne son nom à la route. <strong>Exemple</strong> charge une route de démonstration et <strong>Effacer</strong> vide la route ; tous deux demandent confirmation.</p></div>
+        <div class="lang-block" data-lang="en"><p>Tap the map to add a waypoint; drag a waypoint to move it; the “+” in the middle of a leg inserts a waypoint. The route holds <strong>30 waypoints</strong> at most. Without tapping the map, the <strong>Add</strong> block places a point by its <strong>Coordinates</strong> — MGRS, DMS, DDM or decimal — or by <strong>Heading and distance</strong> from the last waypoint, the heading being read like the navigation’s, true or magnetic; <strong>+ Waypoint</strong> adds it to the route, <strong>+ Ref.</strong> makes it a reference point.</p><p>Each waypoint has its row in the <strong>Route</strong> section: a <strong>Name</strong>, an altitude and its reference, <strong>AGL</strong> or <strong>MSL</strong>, a speed (left empty, it is the route’s ground speed; the starting point has none), and × to delete it. Units, km or NM, m or ft, are chosen in the top bar. The <strong>Route name</strong> field names the route. <strong>Example</strong> loads a demonstration route and <strong>Clear</strong> empties the route; both ask for confirmation.</p></div>
+      </div>
+
+      <!-- Les points de référence -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Les points de référence</h3>
+        <h3 class="lang-block" data-lang="en">Reference points</h3>
+        <div class="lang-block" data-lang="fr"><p>Les <strong>Points de référence</strong> marquent ce qui compte hors de la route : une cible, un repère, un terrain. Il y en a <strong>12</strong> au plus. Posez-les en mode <strong>Réf.</strong> ou par <strong>+ Réf.</strong> ; glissez-les pour les déplacer. Sur la carte, chacun est un losange à sa lettre, A, B, C…, sans trait qui les relie. Dans la navigation, ils viennent après le total, sous <strong>POINTS DE RÉFÉRENCE</strong>, avec leurs coordonnées : ils ne comptent ni dans les branches ni dans le total. Ils passent à la datacard, mais pas au Route Tool de DCS.</p></div>
+        <div class="lang-block" data-lang="en"><p><strong>Reference points</strong> mark what matters off the route: a target, a landmark, an airfield. There are <strong>12</strong> at most. Place them in <strong>Ref.</strong> mode or with <strong>+ Ref.</strong>; drag them to move them. On the map, each is a diamond with its letter, A, B, C…, with no line joining them. In the navigation, they come after the total, under <strong>REFERENCE POINTS</strong>, with their coordinates: they count neither in the legs nor in the total. They go to the datacard, but not to the DCS Route Tool.</p></div>
+      </div>
+
+      <!-- Le tracé et les boîtes de branche -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Le tracé et les boîtes de branche</h3>
+        <h3 class="lang-block" data-lang="en">The track and leg boxes</h3>
+        <div class="lang-block" data-lang="fr"><p>Les <strong>Boîtes de branche</strong> écrivent la navigation sur la carte, une boîte par branche. <strong>Aucune</strong> : une simple étiquette « cap · distance » sur les branches assez longues. <strong>Minimale</strong> : le cap et la distance. <strong>Complète</strong> : en plus, la vitesse, l’altitude d’arrivée, l’ETE et le nom du point d’arrivée. Glissez une boîte pour la déplacer ; une branche trop courte à l’écran n’en a pas.</p><p>La <strong>Vitesse sol</strong> de la route vaut pour chaque branche dont le point n’a pas sa propre vitesse ; elle fait les temps. Les <strong>Traits des minutes</strong> coupent chaque branche toutes les minutes, ou toutes les cinq minutes quand elle est trop serrée, avec leurs chiffres. <strong>Tracé</strong> et <strong>Traits des minutes</strong> se montrent en <strong>Couleur</strong> ou en <strong>Noir</strong>.</p></div>
+        <div class="lang-block" data-lang="en"><p><strong>Leg boxes</strong> write the navigation on the map, one box per leg. <strong>None</strong>: a plain “heading · distance” label on long enough legs. <strong>Minimal</strong>: heading and distance. <strong>Full</strong>: also speed, arrival altitude, ETE, and the name of the arrival waypoint. Drag a box to move it; a leg too short on screen gets none.</p><p>The route’s <strong>Ground speed</strong> applies to every leg whose waypoint has no speed of its own; it sets the times. <strong>Minute marks</strong> cut each leg every minute, or every five minutes when it is too tight, with their numbers. <strong>Route line</strong> and <strong>Minute marks</strong> show in <strong>Colour</strong> or in <strong>Black</strong>.</p></div>
+      </div>
+
+      <!-- Navigation : cap vrai ou magnétique -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Navigation : cap vrai ou magnétique</h3>
+        <h3 class="lang-block" data-lang="en">Navigation: true or magnetic heading</h3>
+        <div class="lang-block" data-lang="fr"><p>Le tableau de la section <strong>Navigation</strong> donne, pour chaque point, son <strong>N°</strong>, son nom et son altitude (<strong>Point · alt.</strong>), ses coordonnées MGRS et DMS, et entre deux points la branche : cap, vitesse, ETE et distance (<strong>MGRS · DMS / cap · distance</strong>). Le <strong>TOTAL</strong> donne la distance et le temps de la route. Le titre du tableau dit le cap employé.</p><p><strong>Cap</strong> : <strong>Vrai</strong> ou <strong>Magnétique</strong>. En magnétique, la <strong>Déclinaison</strong> est <strong>Calculée</strong> ou <strong>Saisie</strong>.</p><ul><li><strong>Calculée</strong> — le modèle magnétique de DCS lui-même, les coefficients WMM que DCS embarque, de 1985 à 2025. Elle s’applique <strong>par branche, au point de départ de la branche</strong> : chaque point montre sa VAR, et le titre en donne l’étendue. L’année est celle de la mission chargée dans HQ pour le même théâtre ; sinon l’<strong>Année</strong> saisie ; sinon 1985. Avant 1985, le modèle de 1985 est prolongé par sa variation séculaire. <strong>Forcer</strong> n’est actif que si une mission de HQ du même théâtre est chargée, et n’agit qu’avec une <strong>Année</strong> valide saisie, de 1900 à 2099 : la mission est alors ignorée. Sous les réglages, une étiquette dit la source de l’année : <strong>MISSION</strong>, <strong>FORCÉE</strong>, <strong>SAISIE</strong> ou <strong>PAR DÉFAUT</strong>.</li><li><strong>Saisie</strong> — une seule valeur, <strong>Déclinaison (°)</strong>, en degrés, + vers l’Est, lue en cabine : au CDU de l’A-10C (POSINFO), au DED du F-16 (MVAR) ou à l’HSI du F/A-18. Sans valeur, le cap reste vrai, et l’avertissement le dit : <strong>Déclinaison manquante : cap vrai affiché</strong>.</li></ul></div>
+        <div class="lang-block" data-lang="en"><p>The table in the <strong>Navigation</strong> section gives, for each waypoint, its <strong>No.</strong>, its name and altitude (<strong>Waypoint · alt.</strong>), its MGRS and DMS coordinates, and between two waypoints the leg: heading, speed, ETE, and distance (<strong>MGRS · DMS / heading · distance</strong>). The <strong>TOTAL</strong> gives the route’s distance and time. The table’s title states the heading used.</p><p><strong>Heading</strong>: <strong>True</strong> or <strong>Magnetic</strong>. In magnetic, the <strong>Variation</strong> is <strong>Computed</strong> or <strong>Entered</strong>.</p><ul><li><strong>Computed</strong> — DCS’s own magnetic model, the WMM coefficients DCS ships, from 1985 to 2025. It applies <strong>per leg, at the leg’s start point</strong>: each waypoint shows its VAR, and the title gives the range. The year is that of the mission loaded in HQ for the same theatre; otherwise the <strong>Year</strong> you type; otherwise 1985. Before 1985, the 1985 model is extended by its secular variation. <strong>Override</strong> is only active when an HQ mission for the same theatre is loaded, and only acts with a valid <strong>Year</strong> typed, from 1900 to 2099: the mission is then ignored. Below the settings, a tag states where the year comes from: <strong>MISSION</strong>, <strong>OVERRIDDEN</strong>, <strong>ENTERED</strong>, or <strong>DEFAULT</strong>.</li><li><strong>Entered</strong> — a single value, <strong>Variation (°)</strong>, in degrees, + East, read in the cockpit: on the A-10C CDU (POSINFO), the F-16 DED (MVAR) or the F/A-18 HSI. With no value, the heading stays true, and a warning says so: <strong>Variation missing: true heading shown</strong>.</li></ul></div>
+      </div>
+
+      <!-- La fiche d’un aérodrome -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">La fiche d’un aérodrome</h3>
+        <h3 class="lang-block" data-lang="en">An airfield’s chart sheet</h3>
+        <div class="lang-block" data-lang="fr"><p>En mode <strong>Lire</strong>, avec les <strong>Aérodromes</strong> affichés, touchez un aérodrome ou une hélistation : sa <strong>fiche</strong> s’ouvre. Elle montre les pages d’une chart de DCS Airfield Charts, une par onglet ; pour une <strong>Hélistation</strong>, les pages du répertoire qui la portent. Pincez pour zoomer, touchez deux fois pour recadrer ; à la souris, la molette zoome. L’édition des charts est rappelée en pied. Rien n’est téléchargé avant votre toucher. Trois replis : <strong>Pas de fiche</strong> — le terrain n’en a pas encore ; <strong>Fiches indisponibles</strong> — le serveur des fiches ne répond pas ; <strong>Page indisponible</strong> — une page ne se charge pas.</p></div>
+        <div class="lang-block" data-lang="en"><p>In <strong>Read</strong> mode, with <strong>Airfields</strong> shown, tap an airfield or a heliport: its <strong>chart sheet</strong> opens. It shows the pages of a DCS Airfield Charts chart, one per tab; for a <strong>Heliport</strong>, the directory pages that list it. Pinch to zoom, double-tap to reframe; with a mouse, the wheel zooms. The charts’ edition is shown at the foot. Nothing is downloaded before your tap. Three fallbacks: <strong>No sheet</strong> — the airfield has none yet; <strong>Sheets unavailable</strong> — the sheet server does not answer; <strong>Page unavailable</strong> — a page does not load.</p></div>
+      </div>
+
+      <!-- Dessiner ses calques -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Dessiner ses calques</h3>
+        <h3 class="lang-block" data-lang="en">Drawing your own layers</h3>
+        <div class="lang-block" data-lang="fr"><p>Le mode <strong>Dessin</strong> ouvre une barre au pied de la carte. Son bouton <strong>Calque</strong> dit où vous dessinez ; touché, il ouvre <strong>Dessiner dans</strong> : choisir un de vos calques, en créer un par <strong>+ Calque</strong>, ou faire une copie modifiable d’un calque CombatFlite par <strong>Copier pour dessiner</strong>. Sans calque, le premier objet en crée un. Les outils :</p><ul><li><strong>Choisir</strong> — touchez un objet pour le modifier ;</li><li><strong>Cercle</strong> — un toucher pour le centre, le rayon à la poignée ; rayon, altitude max., trait et intérieur ;</li><li><strong>Zone</strong> — un toucher par sommet ; <strong>Tracé</strong> <strong>Droit</strong> ou <strong>Courbe</strong> ;</li><li><strong>Ligne</strong> — un toucher par sommet ; <strong>Type</strong> <strong>Ligne</strong>, <strong>FLOT</strong> (avec son <strong>Côté ennemi</strong>, que l’on inverse) ou <strong>Couloir</strong> (avec sa largeur) ;</li><li><strong>Point</strong> — une cible, un DMPI, un point de sortie, une zone de poser ou un autre point ;</li><li><strong>Texte</strong> — <strong>Sans fond</strong> ou sur <strong>Fond blanc</strong> ;</li><li><strong>Orbite</strong> — l’entrée puis la sortie ; largeur, virage, mission, fréquence, altitudes ;</li><li><strong>Boîte</strong> — le début puis la fin de son axe ; longueur, largeur, grille, altitudes ;</li><li><strong>Symbole</strong> — un symbole militaire OTAN : <strong>Camp</strong>, <strong>Style</strong>, <strong>Taille</strong>, le symbole, et pour une unité <strong>Échelon</strong>, <strong>Désignation</strong> et <strong>Formation</strong>.</li></ul><p>Une zone ou une ligne se termine par <strong>Terminer</strong>. Le bouton <strong>Réglages</strong> règle d’avance l’objet à venir, couleur comprise. Un objet choisi se modifie à ses poignées ; sa barre propose <strong>Sommet</strong> (retirer le sommet choisi), <strong>Réglages</strong>, <strong>Copier</strong>, <strong>Suppr.</strong> (avec confirmation) et <strong>OK</strong>. La section <strong>Calques</strong> du panneau liste les calques, à cocher pour les montrer ; × retire un calque, <strong>Retirer tous les calques</strong> les retire tous. Les calques sont gardés dans le navigateur.</p></div>
+        <div class="lang-block" data-lang="en"><p><strong>Draw</strong> mode opens a bar at the foot of the map. Its <strong>Layer</strong> button tells you where you draw; tapped, it opens <strong>Draw in</strong>: pick one of your layers, create one with <strong>+ Layer</strong>, or make an editable copy of a CombatFlite layer with <strong>Copy to draw</strong>. With no layer, the first item creates one. The tools:</p><ul><li><strong>Select</strong> — tap an item to edit it;</li><li><strong>Circle</strong> — one tap for the centre, the radius by the handle; radius, max altitude, line and fill;</li><li><strong>Zone</strong> — one tap per vertex; <strong>Shape</strong> <strong>Straight</strong> or <strong>Curve</strong>;</li><li><strong>Line</strong> — one tap per vertex; <strong>Type</strong> <strong>Line</strong>, <strong>FLOT</strong> (with its <strong>Enemy side</strong>, which you flip) or <strong>Corridor</strong> (with its width);</li><li><strong>Point</strong> — a target, a DMPI, an exit point, an LZ, or another point;</li><li><strong>Text</strong> — <strong>No background</strong> or on a <strong>White background</strong>;</li><li><strong>Orbit</strong> — the entry then the exit; width, turn, mission, frequency, altitudes;</li><li><strong>Box</strong> — the start then the end of its axis; length, width, grid, altitudes;</li><li><strong>Symbol</strong> — a NATO military symbol: <strong>Side</strong>, <strong>Style</strong>, <strong>Size</strong>, the symbol, and for a unit <strong>Echelon</strong>, <strong>Designation</strong> and <strong>Higher formation</strong>.</li></ul><p>A zone or a line ends with <strong>Finish</strong>. The <strong>Settings</strong> button sets up the coming item in advance, colour included. A selected item is edited by its handles; its bar offers <strong>Vertex</strong> (remove the selected vertex), <strong>Settings</strong>, <strong>Copy</strong>, <strong>Delete</strong> (with confirmation) and <strong>OK</strong>. The panel’s <strong>Layers</strong> section lists the layers, ticked to show them; × removes a layer, <strong>Remove all layers</strong> removes them all. Layers are kept in the browser.</p></div>
+      </div>
+
+      <!-- Les calques CombatFlite -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Les calques CombatFlite</h3>
+        <h3 class="lang-block" data-lang="en">CombatFlite layers</h3>
+        <div class="lang-block" data-lang="fr"><p><strong>Ouvrir</strong> lit aussi un fichier CombatFlite <code>.cf</code>. La fenêtre <strong>Calques CombatFlite</strong> en liste les calques, avec leurs objets : cochez ceux à afficher, puis <strong>Afficher</strong>. Si le fichier nomme un théâtre connu, le Route Planner passe sur ce théâtre. Ces calques s’affichent <strong>en lecture seule</strong>. En mode <strong>Lire</strong>, un objet touché montre sa fiche : nom, rayon, altitudes, fréquence, coordonnées MGRS… ; celle d’un point ou d’un symbole propose <strong>→ Point de référence</strong>. En <strong>Point</strong> ou en <strong>Réf.</strong>, une cible touchée devient un point ou une référence. Un fichier <code>.cf</code> ne touche jamais la route ; un fichier JSON qui porte des calques sans route ajoute ses calques et laisse la route en place.</p></div>
+        <div class="lang-block" data-lang="en"><p><strong>Open</strong> also reads a CombatFlite <code>.cf</code> file. The <strong>CombatFlite layers</strong> window lists its layers, with their items: tick the ones to show, then <strong>Show</strong>. If the file names a known theatre, the Route Planner switches to it. These layers are <strong>read-only</strong>. In <strong>Read</strong> mode, a tapped item shows its card: name, radius, altitudes, frequency, MGRS coordinates…; a point’s or a symbol’s card offers <strong>→ Reference point</strong>. In <strong>Waypoint</strong> or <strong>Ref.</strong> mode, a tapped target becomes a waypoint or a reference point. A <code>.cf</code> file never touches the route; a JSON file that carries layers but no route adds its layers and leaves the route as it is.</p></div>
+      </div>
+
+      <!-- Figure 2 : ce qui entre, ce qui sort -->
+      <div class="fm-schema">
+        {RP_FEED_SVG}
+        <div class="fm-schema-legend">
+          <span class="lang-block" data-lang="fr">Fig. 2 — Ce qui entre dans le Route Planner, et ce qui en sort.</span>
+          <span class="lang-block" data-lang="en">Fig. 2 — What goes into the Route Planner, and what comes out.</span>
+        </div>
+      </div>
+
+      <!-- Vers la datacard et vers le briefing -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Vers la datacard et vers le briefing</h3>
+        <h3 class="lang-block" data-lang="en">To the datacard and to the briefing</h3>
+        <div class="lang-block" data-lang="fr"><p><strong>→ Vers la datacard</strong> ouvre le Datacard Generator sur sa fenêtre d’import, à la source <strong>Route en cours</strong> : vous y choisissez de remplir la navigation de la datacard affichée ou d’en créer une. Hors de la suite, la route est enregistrée dans le navigateur, et un message vous dit d’ouvrir le Datacard Generator, puis <strong>Importer</strong> → <strong>Route en cours</strong>.</p><p><strong>→ Vers le briefing</strong> pose sur la carte un <strong>cadre d’export</strong>, <strong>Paysage</strong> ou <strong>Portrait</strong>. Déplacez et zoomez la carte sous le cadre, puis <strong>Exporter</strong> : l’image de la carte reçoit une échelle, une flèche du nord et un cartouche — le nom de la route et son théâtre, le crédit du fond. Dans la suite, elle part au Briefing Generator ; seule, elle s’enregistre en fichier, à charger dans le Briefing Generator. <strong>Annuler</strong> ferme le cadre. Un fond venu d’un autre site peut manquer dans l’image : un message le signale.</p></div>
+        <div class="lang-block" data-lang="en"><p><strong>→ To the datacard</strong> opens the Datacard Generator on its import window, on the <strong>Current route</strong> source: there you choose to fill the navigation of the datacard shown or to create a new one. Outside the suite, the route is saved in the browser, and a message tells you to open the Datacard Generator, then <strong>Import</strong> → <strong>Current route</strong>.</p><p><strong>→ To the briefing</strong> lays an <strong>export frame</strong> on the map, <strong>Landscape</strong> or <strong>Portrait</strong>. Pan and zoom the map under the frame, then <strong>Export</strong>: the map image gets a scale, a north arrow and a title strip — the route’s name and theatre, the background’s credit. Within the suite, it goes to the Briefing Generator; on its own, it is saved as a file, to load into the Briefing Generator. <strong>Cancel</strong> closes the frame. A background from another site may be missing from the image: a message says so.</p></div>
+      </div>
+
+      <!-- Ouvrir, enregistrer, Route Tool de DCS -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Ouvrir, enregistrer, Route Tool de DCS</h3>
+        <h3 class="lang-block" data-lang="en">Open, save, DCS Route Tool</h3>
+        <div class="lang-block" data-lang="fr"><p>La route est gardée dans le navigateur : elle vous attend à la prochaine ouverture. <strong>Enregistrer</strong>, en haut, et <strong>Exporter JSON</strong>, au pied de la navigation, l’écrivent en fichier JSON, avec ses points de référence et ses réglages. Quand des calques sont présents, la fenêtre <strong>Exporter</strong> demande ce que le fichier emporte : <strong>La route</strong> et chacun des calques, à cocher. <strong>Ouvrir</strong> reconnaît ce qu’on lui donne : une route JSON, qui remplace la route en cours après confirmation ; un fichier du Route Tool de DCS ; un fichier CombatFlite.</p><p>Le <strong>Route Tool</strong> de DCS range toutes les routes d’une carte dans un seul fichier, <code>&lt;théâtre&gt;.lua</code>, dans <code>Saved Games\\DCS\\Config\\RouteToolPresets</code>. Ouvert, ce fichier donne la fenêtre <strong>Ouvrir une route du Route Tool</strong> : choisissez le théâtre, prérempli d’après le nom du fichier, et la route, puis <strong>Ouvrir la route</strong> ; elle remplace la route en cours. <strong>Exporter vers le Route Tool</strong> demande le <strong>Nom de la route dans le Route Tool</strong>, puis l’ajoute à votre fichier — ouvrez-le d’abord, pour garder vos routes — ou la met seule dans un fichier neuf, par <strong>Créer un fichier neuf</strong>. Un nom déjà pris est changé, et le message le dit. Copiez ensuite le fichier dans <code>RouteToolPresets</code> : il remplace l’ancien. Le Route Tool n’existe pas pour tous les théâtres — Irak, Afghanistan et Mariannes 1944 en sont privés — et le bouton est alors grisé.</p></div>
+        <div class="lang-block" data-lang="en"><p>The route is kept in the browser: it is waiting for you the next time you open the tool. <strong>Save</strong>, at the top, and <strong>Export JSON</strong>, at the foot of the navigation, write it to a JSON file, with its reference points and settings. When layers are present, the <strong>Export</strong> window asks what the file takes: <strong>The route</strong> and each layer, to tick. <strong>Open</strong> recognises what you give it: a JSON route, which replaces the current route after confirmation; a DCS Route Tool file; a CombatFlite file.</p><p>The DCS <strong>Route Tool</strong> keeps all routes of a map in one file, <code>&lt;theatre&gt;.lua</code>, in <code>Saved Games\\DCS\\Config\\RouteToolPresets</code>. Opened, that file brings up the <strong>Open a Route Tool route</strong> window: pick the theatre, pre-filled from the file name, and the route, then <strong>Open route</strong>; it replaces the current route. <strong>Export to the Route Tool</strong> asks for the <strong>Route name in the Route Tool</strong>, then adds the route to your file — open it first, to keep your routes — or puts it alone in a new file, with <strong>Create a new file</strong>. A name already taken is changed, and the message says so. Then copy the file into <code>RouteToolPresets</code>: it replaces the old one. The Route Tool does not exist for every theatre — Iraq, Afghanistan and Mariana Islands WWII lack it — and the button is then greyed out.</p></div>
+      </div>
+
+      <!-- Sur tablette et téléphone -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Sur tablette et téléphone</h3>
+        <h3 class="lang-block" data-lang="en">On tablets and phones</h3>
+        <div class="lang-block" data-lang="fr"><p>À partir de 1 100 px de large, le panneau est à gauche et la carte à droite. En dessous, quelle que soit l’orientation, la carte reste fixe au-dessus du panneau, et seul le panneau défile. Entre les deux, une poignée se glisse pour agrandir ou réduire la carte ; deux touchers la remettent à sa taille d’origine. La hauteur choisie est gardée, une pour le portrait, une pour le paysage. Quand le clavier de l’écran s’ouvre sur un champ du panneau, la carte se réduit le temps de la saisie.</p></div>
+        <div class="lang-block" data-lang="en"><p>From 1,100 px wide, the panel sits on the left and the map on the right. Below that, whatever the orientation, the map stays fixed above the panel, and only the panel scrolls. Between the two, a handle drags to enlarge or shrink the map; a double-tap restores its original size. The chosen height is kept, one for portrait, one for landscape. When the on-screen keyboard opens on a panel field, the map shrinks while you type.</p></div>
+      </div>
+
+      <!-- Le cap de la règle de l’éditeur -->
+      <div class="fm-callout warn">
+        <div class="lang-block" data-lang="fr">Le cap de la règle de l’éditeur — La règle de l’éditeur de mission de DCS mesure un <strong>cap grille</strong> : il se rapporte au nord de la grille de la carte, et n’est ni vrai ni magnétique. Il diffère donc du cap du Route Planner, jusqu’à une dizaine de degrés sur la carte Allemagne (guerre froide). Pour comparer, prenez le cap <strong>Vrai</strong> du Route Planner.</div>
+        <div class="lang-block" data-lang="en">The editor ruler’s heading — The DCS mission editor’s ruler measures a <strong>grid heading</strong>: it refers to the map grid’s north, and is neither true nor magnetic. It therefore differs from the Route Planner’s heading, by up to about ten degrees on the Cold War Germany map. To compare, take the Route Planner’s <strong>True</strong> heading.</div>
+      </div>
+
+      <!-- Hors ligne -->
+      <div class="fm-callout note">
+        <div class="lang-block" data-lang="fr">Hors ligne — Sans connexion, les fonds de carte et les fiches ne se chargent pas : le Route Planner passe en <strong>Grille seule</strong> et l’annonce sur la carte. La route, les références, la navigation et les calques restent utilisables.</div>
+        <div class="lang-block" data-lang="en">Offline — Without a connection, base maps and chart sheets do not load: the Route Planner falls back to <strong>Grid only</strong> and says so on the map. The route, reference points, navigation, and layers stay usable.</div>
+      </div>
+
+    </div><!-- /fm-chapter -->
+  </section><!-- /page-rp -->
+
 
 </main><!-- /fm-root -->
 
@@ -2514,6 +2830,8 @@ var I18N = {{
     'bg.hero.sub':      'Générateur de briefings multi-sections',
     'dg.hero.title':    'Datacard Generator',
     'dg.hero.sub':      'Datacards de vol pour le kneeboard',
+    'rp.hero.title':    'Route Planner',
+    'rp.hero.sub':      'Routes, navigation et cartes de mission',
     'zoom.open':        'Agrandir',
     'zoom.close':       'Fermer',
     'zoom.in':          'Zoomer',
@@ -2543,6 +2861,8 @@ var I18N = {{
     'bg.hero.sub':      'Multi-section briefing generator',
     'dg.hero.title':    'Datacard Generator',
     'dg.hero.sub':      'Flight datacards for the kneeboard',
+    'rp.hero.title':    'Route Planner',
+    'rp.hero.sub':      'Routes, navigation and mission maps',
     'zoom.open':        'Enlarge',
     'zoom.close':       'Close',
     'zoom.in':          'Zoom in',
@@ -2624,7 +2944,7 @@ function initTheme() {{
 }}
 
 // ── Routing hash ──────────────────────────────
-var PAGES = ['index', 'rs', 'hq', 'bg', 'dg'];
+var PAGES = ['index', 'rs', 'hq', 'bg', 'dg', 'rp'];
 
 function showPage(id) {{
   if (PAGES.indexOf(id) === -1) id = 'index';
