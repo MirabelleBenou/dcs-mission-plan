@@ -34,6 +34,7 @@ Changes merged since the last release, grouped per tool.
 
 ### Route Planner
 #### Changed
+- Units are chosen from a **Units** menu in the top bar, like the **Display** menu (distance km or NM, altitude m or ft); the Map and Theatre lists are as wide as the option chosen, so the top bar is about 300 px narrower.
 - The example loads in the interface language (French or English).
 
 ### Field Manual

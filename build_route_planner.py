@@ -801,10 +801,10 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .cf-modal .rt-btn:disabled { opacity: .35; }
 
 /* ---------- le menu « Affichage » (lot rp-v1.12.1) : le bouton de la barre et son panneau, au style des listes de la barre (tbm-*) ---------- */
-#btn-display { position: relative; color: var(--amber); border-color: var(--amber-dark); padding-right: 12px; }
-#btn-display:hover, #btn-display:focus-visible, #btn-display.dsp-open { border-color: var(--amber); }
-#btn-display .dsp-chev { width: 10px; height: 6px; }
-#btn-display.dsp-open .dsp-chev { transform: rotate(180deg); }
+#btn-display, #btn-units { position: relative; color: var(--amber); border-color: var(--amber-dark); padding-right: 12px; }
+#btn-display:hover, #btn-display:focus-visible, #btn-display.dsp-open, #btn-units:hover, #btn-units:focus-visible, #btn-units.dsp-open { border-color: var(--amber); }
+#btn-display .dsp-chev, #btn-units .dsp-chev { width: 10px; height: 6px; }
+#btn-display.dsp-open .dsp-chev, #btn-units.dsp-open .dsp-chev { transform: rotate(180deg); }
 .dsp-dot { position: absolute; top: -3px; right: -3px; width: 7px; height: 7px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 0 2px var(--olive-deep); pointer-events: none; }
 .dsp-dot[hidden] { display: none; }
 .dsp-panel { max-height: min(80vh, 600px); min-width: 240px; padding-bottom: 6px; }
@@ -818,6 +818,7 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .dsp-opt[aria-checked="true"] .dsp-box::after { content: ''; position: absolute; left: 3.5px; top: 0.5px; width: 4px; height: 8px; box-sizing: border-box;
   border-right: 2px solid var(--olive-deep); border-bottom: 2px solid var(--olive-deep); transform: rotate(45deg); }
 .dsp-opt:hover .dsp-box { border-color: var(--amber); }
+.dsp-opt[role="menuitemradio"] .dsp-box { border-radius: 50%; }
 .dsp-opt[aria-disabled="true"] .dsp-box { border-style: dashed; border-color: var(--khaki); background: none; }
 .dsp-opt[aria-disabled="true"] .dsp-box::after { display: none; }
 .dsp-n { margin-left: auto; padding-left: 14px; font-family: var(--f-mono); font-weight: 400; font-size: 11px; letter-spacing: 0; text-transform: none; color: var(--khaki); }
@@ -1135,8 +1136,7 @@ __CSS__
   <span class="tb-label" data-i18n="tb.theatre">Théâtre</span>
   <select class="tb-sel" id="theatre" data-i18n-aria-label="tb.theatre" aria-label="Théâtre"></select>
   <span class="tb-sep"></span>
-  <span class="tb-group" role="group"><button type="button" class="tb-btn" data-dist="km" aria-pressed="false" data-i18n="u.km">km</button><button type="button" class="tb-btn" data-dist="nm" aria-pressed="false" data-i18n="u.nm">NM</button></span>
-  <span class="tb-group" role="group"><button type="button" class="tb-btn" data-alt="m" aria-pressed="false" data-i18n="u.m">m</button><button type="button" class="tb-btn" data-alt="ft" aria-pressed="false" data-i18n="u.ft">ft</button></span>
+  <button type="button" class="tb-btn" id="btn-units" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.units" title="Unités" data-i18n-aria-label="tb.units" aria-label="Unités"><span id="units-txt"></span><svg class="dsp-chev" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg></button>
   <span class="tb-sep"></span>
   <button type="button" class="tb-btn" id="btn-open" data-i18n-title="tb.open.tip" title="Ouvrir une route (JSON) ou un fichier du Route Tool de DCS" data-i18n-aria-label="tb.open.tip" aria-label="Ouvrir une route (JSON) ou un fichier du Route Tool de DCS">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3M7 8l5-5 5 5M5 21h14"/></svg>
@@ -1946,6 +1946,9 @@ const I18N = {
     'tb.display': 'Affichage',
     'tb.display.tip': 'Ce qui s\'affiche sur la carte',
     'dsp.head': 'Afficher sur la carte',
+    'tb.units': 'Unités',
+    'un.g.dist': 'Distance',
+    'un.g.alt': 'Altitude',
     'dsp.g.mission': 'Mission',
     'dsp.g.layers': 'Calques',
     'dsp.g.base': 'Fond',
@@ -2352,6 +2355,9 @@ const I18N = {
     'tb.display': 'Display',
     'tb.display.tip': 'What the map shows',
     'dsp.head': 'Show on the map',
+    'tb.units': 'Units',
+    'un.g.dist': 'Distance',
+    'un.g.alt': 'Altitude',
     'dsp.g.mission': 'Mission',
     'dsp.g.layers': 'Layers',
     'dsp.g.base': 'Base map',
@@ -6374,8 +6380,6 @@ function syncControls() {
     b.classList.toggle('on', on);
     b.setAttribute('aria-pressed', on ? 'true' : 'false');
   });
-  mark('data-dist', S.units.distance);
-  mark('data-alt', S.units.altitude);
   mark('data-ref', S.navDisplay.ref);
   mark('data-lbx', S.legBoxes);
   mark('data-trc', S.ui.trace);
@@ -6392,6 +6396,7 @@ function syncControls() {
   if (hasRt) rtb.removeAttribute('title'); else rtb.title = t('tb.rt.off');
   $('theme').value = document.body.dataset.theme;
   dspSync();
+  unSync();
   syncAdd();
 }
 
@@ -7960,6 +7965,7 @@ function dspPlace() {
 function dspOpen() {
   if (DSP.open) return;
   if (TBM.cur) tbmClose(false);
+  unClose(false);
   const ul = document.createElement('div');
   ul.className = 'tbm-panel dsp-panel';
   ul.id = 'dsp-panel';
@@ -8013,7 +8019,7 @@ function dspOutside(e) {
   if (!DSP.open) return;
   const t = e.target;
   if (DSP.panel.contains(t) || $('btn-display').contains(t)) return;
-  const other = t && t.closest ? t.closest('.tbm-trigger') : null;
+  const other = t && t.closest ? t.closest('.tbm-trigger, #btn-units') : null;
   dspClose(false);
   if (other) return;
   tbmSwallowNext();
@@ -8073,6 +8079,181 @@ function dspBind() {
     if (!DSP.open || (e.target && e.target.nodeType && DSP.panel.contains(e.target))) return;
     const r = $('btn-display').getBoundingClientRect();
     if (Math.abs(r.left - DSP.x0) > 0.5 || Math.abs(r.top - DSP.y0) > 0.5) dspClose(false);
+  }, true);
+}
+
+/* ============= LE MENU « UNITÉS » (lot mp-rp-unites-menu) =============
+   Même composant et même aspect que le menu Affichage (tbm-panel dsp-panel, dsp-opt, dsp-box), mais des lignes « radio » :
+   une seule unité par groupe, celle de S.units. Un choix règle l'unité, redessine ce qui en dépend ; le panneau reste ouvert. */
+const UN = { open: false, panel: null, x0: 0, y0: 0 };
+const UN_ROWS = [
+  { g: 'dist', k: 'km', l: 'u.km', n: 'u.kmh' },
+  { g: 'dist', k: 'nm', l: 'u.nm', n: 'u.kt' },
+  { g: 'alt', k: 'm', l: 'u.m' },
+  { g: 'alt', k: 'ft', l: 'u.ft' }
+];
+
+function unOn(r) { return (r.g === 'dist' ? S.units.distance : S.units.altitude) === r.k; }
+
+/* Le bouton dit le réglage en cours ; les cases du panneau ouvert le suivent */
+function unSync() {
+  if (!S) return;
+  const nm = S.units.distance === 'nm', ft = S.units.altitude === 'ft';
+  const tx = $('units-txt');
+  if (tx) tx.textContent = t(nm ? 'u.nm' : 'u.km') + ' · ' + t(ft ? 'u.ft' : 'u.m');
+  if (!UN.open || !UN.panel) return;
+  UN_ROWS.forEach(r => {
+    const row = UN.panel.querySelector('[data-k="' + r.k + '"]');
+    if (row) row.setAttribute('aria-checked', unOn(r) ? 'true' : 'false');
+  });
+}
+
+function unBuild() {
+  const ul = UN.panel;
+  ul.textContent = '';
+  ul.setAttribute('aria-label', t('tb.units'));
+  const head = document.createElement('div');
+  head.className = 'tbm-head';
+  head.setAttribute('role', 'presentation');
+  head.textContent = t('tb.units');
+  ul.appendChild(head);
+  let g = '';
+  UN_ROWS.forEach(r => {
+    if (r.g !== g) {
+      g = r.g;
+      const sub = document.createElement('div');
+      sub.className = 'dsp-sub';
+      sub.setAttribute('role', 'presentation');
+      sub.textContent = t('un.g.' + g);
+      ul.appendChild(sub);
+    }
+    const row = document.createElement('div');
+    row.className = 'tbm-opt dsp-opt';
+    row.setAttribute('role', 'menuitemradio');
+    row.setAttribute('aria-checked', 'false');
+    row.tabIndex = -1;
+    row.setAttribute('data-k', r.k);
+    const box = document.createElement('span');
+    box.className = 'dsp-box';
+    box.setAttribute('aria-hidden', 'true');
+    const txt = document.createElement('span');
+    txt.className = 'tbm-txt';
+    txt.textContent = t(r.l);
+    row.appendChild(box);
+    row.appendChild(txt);
+    if (r.n) {
+      const n = document.createElement('span');
+      n.className = 'dsp-n';
+      n.textContent = t(r.n);
+      row.appendChild(n);
+    }
+    ul.appendChild(row);
+  });
+  unSync();
+}
+
+function unPlace() {
+  const btn = $('btn-units'), p = UN.panel;
+  const r = btn.getBoundingClientRect();
+  const vw = document.documentElement.clientWidth, vh = window.innerHeight;
+  const top = r.bottom + 4;
+  UN.x0 = r.left; UN.y0 = r.top;
+  p.style.minWidth = Math.max(240, r.width) + 'px';
+  p.style.top = top + 'px';
+  p.style.maxHeight = Math.max(60, Math.min(0.8 * vh, 600, vh - top - 8)) + 'px';
+  const w = p.getBoundingClientRect().width;
+  let left = r.left;
+  if (left + w > vw - 8) left = vw - 8 - w;
+  if (left < 8) left = 8;
+  p.style.left = left + 'px';
+}
+
+function unOpen() {
+  if (UN.open) return;
+  if (TBM.cur) tbmClose(false);
+  dspClose(false);
+  const ul = document.createElement('div');
+  ul.className = 'tbm-panel dsp-panel';
+  ul.id = 'un-panel';
+  ul.setAttribute('role', 'menu');
+  ul.tabIndex = -1;
+  document.body.appendChild(ul);
+  UN.panel = ul;
+  UN.open = true;
+  unBuild();
+  ul.addEventListener('click', e => {
+    const row = e.target.closest ? e.target.closest('.dsp-opt') : null;
+    if (row) unChoose(row.getAttribute('data-k'));
+  });
+  ul.addEventListener('keydown', unKey);
+  const b = $('btn-units');
+  b.classList.add('dsp-open');
+  b.setAttribute('aria-expanded', 'true');
+  b.setAttribute('aria-controls', 'un-panel');
+  unPlace();
+  ul.focus({ preventScroll: true });
+}
+
+function unClose(refocus) {
+  if (!UN.open) return;
+  UN.open = false;
+  if (UN.panel) UN.panel.remove();
+  UN.panel = null;
+  const b = $('btn-units');
+  b.classList.remove('dsp-open');
+  b.setAttribute('aria-expanded', 'false');
+  if (refocus) b.focus({ preventScroll: true });
+}
+
+function unKey(e) {
+  const rows = Array.prototype.slice.call(UN.panel.querySelectorAll('.dsp-opt'));
+  const cur = rows.indexOf(document.activeElement);
+  const go = k => { if (rows[k]) { rows[k].focus({ preventScroll: true }); rows[k].scrollIntoView({ block: 'nearest' }); } };
+  const k = e.key;
+  if (k === 'ArrowDown') { e.preventDefault(); go(cur < 0 ? 0 : Math.min(rows.length - 1, cur + 1)); }
+  else if (k === 'ArrowUp') { e.preventDefault(); go(cur < 0 ? rows.length - 1 : Math.max(0, cur - 1)); }
+  else if (k === 'Home') { e.preventDefault(); go(0); }
+  else if (k === 'End') { e.preventDefault(); go(rows.length - 1); }
+  else if ((k === 'Enter' || k === ' ') && cur >= 0) { e.preventDefault(); unChoose(rows[cur].getAttribute('data-k')); }
+  else if (k === 'Escape') { e.preventDefault(); e.stopPropagation(); unClose(true); }
+  else if (k === 'Tab') unClose(true);
+}
+
+/* Un toucher ou un clic hors du panneau et du bouton le ferme, sans agir ailleurs (le clic qui suit est avalé) */
+function unOutside(e) {
+  if (!UN.open) return;
+  const t = e.target;
+  if (UN.panel.contains(t) || $('btn-units').contains(t)) return;
+  const other = t && t.closest ? t.closest('.tbm-trigger, #btn-display') : null;
+  unClose(false);
+  if (other) return;
+  tbmSwallowNext();
+}
+
+/* Une ligne règle l'unité de son groupe, avec les effets des anciens boutons de la barre ; le panneau reste ouvert */
+function unChoose(k) {
+  if (k === 'km' || k === 'nm') {
+    S.units.distance = k;
+    persistState(); renderPts(); renderNav(); drawRoute(); syncControls();
+  } else if (k === 'm' || k === 'ft') {
+    S.units.altitude = k;
+    persistState(); renderPts(); renderRefs(); renderNav(); drawDecor(); syncControls();
+  }
+}
+
+function unBind() {
+  $('btn-units').addEventListener('click', () => { if (UN.open) unClose(false); else unOpen(); });
+  $('btn-units').addEventListener('keydown', e => {
+    if (e.key === 'ArrowDown' && !UN.open) { e.preventDefault(); unOpen(); }
+  });
+  document.addEventListener('pointerdown', unOutside, true);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && UN.open) { e.preventDefault(); unClose(true); } });
+  window.addEventListener('resize', () => unClose(false));
+  window.addEventListener('blur', () => unClose(false));
+  window.addEventListener('scroll', e => {
+    if (!UN.open || (e.target && e.target.nodeType && UN.panel.contains(e.target))) return;
+    const r = $('btn-units').getBoundingClientRect();
+    if (Math.abs(r.left - UN.x0) > 0.5 || Math.abs(r.top - UN.y0) > 0.5) unClose(false);
   }, true);
 }
 
@@ -8483,6 +8664,8 @@ function setLang(lang) {
   if (rtVisible('fiche')) ficheRender();
   expSyncTexts();
   if (DSP.open) dspBuild();
+  unSync();
+  if (UN.open) unBuild();
   map.closePopup();
   if (drOn()) { DR.sheetKey = ''; drRlab(); drSyncUi(); }
 }
@@ -8496,14 +8679,7 @@ function bindEvents() {
   });
   dspBind();
   $('theatre').addEventListener('change', e => setTheatre(e.target.value));
-  document.querySelectorAll('[data-dist]').forEach(b => b.addEventListener('click', () => {
-    S.units.distance = b.dataset.dist === 'nm' ? 'nm' : 'km';
-    persistState(); renderPts(); renderNav(); drawRoute(); syncControls();
-  }));
-  document.querySelectorAll('[data-alt]').forEach(b => b.addEventListener('click', () => {
-    S.units.altitude = b.dataset.alt === 'ft' ? 'ft' : 'm';
-    persistState(); renderPts(); renderRefs(); renderNav(); drawDecor(); syncControls();
-  }));
+  unBind();
   document.querySelectorAll('[data-ref]').forEach(b => b.addEventListener('click', () => {
     S.navDisplay.ref = b.dataset.ref === 'mag' ? 'mag' : 'true';
     persistState(); renderNav(); drawRoute(); syncControls();
@@ -8653,7 +8829,7 @@ function bindEvents() {
 const TBM = { cur: null, bound: false, swallow: false, n: 0, all: [], map: new WeakMap(), label: null, mo: null, ro: null };
 
 function initToolbarMenus(specs) {
-  specs.forEach(sp => tbmAttach(document.getElementById(sp[0]), sp[1], sp[2]));
+  specs.forEach(sp => tbmAttach(document.getElementById(sp[0]), sp[1], sp[2], sp[3]));
   if (TBM.bound) return;
   TBM.bound = true;
   document.addEventListener('pointerdown', tbmOutside, true);
@@ -8706,7 +8882,7 @@ function tbmNarrow(btn) {
 
 /* mode : rien (liste de la barre) · 'field' (liste de formulaire, bouton d'un champ) · 'sheet' (liste de formulaire,
    bouton fermé déjà habillé par le module) */
-function tbmAttach(sel, labelFn, mode) {
+function tbmAttach(sel, labelFn, mode, fit) {
   if (!sel || !sel.parentNode || TBM.map.has(sel)) return;
   const uid = sel.id || 'f' + (++TBM.n);
   const btn = document.createElement('button');
@@ -8718,7 +8894,7 @@ function tbmAttach(sel, labelFn, mode) {
   const lbl = document.createElement('span');
   lbl.className = 'tbm-lbl';
   btn.appendChild(lbl);
-  const m = { sel: sel, btn: btn, lbl: lbl, labelFn: labelFn, panel: null, active: -1, type: '', typeTimer: 0, x0: 0, y0: 0, uid: uid, form: !!mode, mo: null };
+  const m = { sel: sel, btn: btn, lbl: lbl, labelFn: labelFn, panel: null, active: -1, type: '', typeTimer: 0, x0: 0, y0: 0, uid: uid, form: !!mode, fit: !!fit, mo: null };
   sel.parentNode.insertBefore(btn, sel);
   sel.setAttribute('data-tbm-src', '');
   ['value', 'selectedIndex'].forEach(k => {
@@ -8760,7 +8936,7 @@ function tbmSync(m) {
   if (m.lbl.textContent !== txt) m.lbl.textContent = txt;
   const all = [];
   for (let k = 0; k < o.length; k++) all.push(o[k].label);
-  const w = all.join(String.fromCharCode(10));
+  const w = m.fit ? txt : all.join(String.fromCharCode(10));   /* fit : le bouton prend la largeur de l'option choisie */
   if (m.lbl.getAttribute('data-w') !== w) m.lbl.setAttribute('data-w', w);
   let name = '';
   try { name = m.labelFn(); } catch (e) { name = ''; }
@@ -8771,6 +8947,7 @@ function tbmSync(m) {
 
 function tbmOpen(m) {
   if (TBM.cur) tbmClose(false);
+  unClose(false);
   if (m.sel.disabled) return;
   tbmSync(m);
   const sel = m.sel, opts = sel.options, name = m.labelFn();
@@ -8966,7 +9143,7 @@ function tbmOutside(e) {
   if (!m) return;
   const t = e.target;
   if (m.panel.contains(t) || m.btn.contains(t)) return;
-  const other = t && t.closest ? t.closest('.tbm-trigger, #btn-display') : null;
+  const other = t && t.closest ? t.closest('.tbm-trigger, #btn-display, #btn-units') : null;
   tbmClose(false);
   if (other) return;
   tbmSwallowNext();
@@ -9001,7 +9178,7 @@ function init() {
   applyTheme(loadTheme(), false);
   applyI18nStatic();
   updateFlagButton();
-  initToolbarMenus([['layer', () => t('tb.layer')], ['theatre', () => t('tb.theatre')], ['theme', () => t('tb.theme.tip')], ['rt-theatre', () => t('tb.theatre'), 'sheet']]);   /* les listes de la barre au thème de l'interface */
+  initToolbarMenus([['layer', () => t('tb.layer'), undefined, true], ['theatre', () => t('tb.theatre'), undefined, true], ['theme', () => t('tb.theme.tip')], ['rt-theatre', () => t('tb.theatre'), 'sheet']]);   /* les listes de la barre au thème de l'interface */
   initFormMenus(sel => (sel.dataset.k === 'altRef' ? t('th.ref') : ''));   /* les listes des formulaires */
   loadState();
   loadLayers();
