@@ -7276,29 +7276,38 @@ function addFromInput(kind) {
    Rien n'est enregistré ni exporté : la règle vit ici, dans RL, et s'efface en quittant le mode. */
 const RL_Z = 660;              /* le volet de la règle : au-dessus des marqueurs (600), des boîtes (620), des calques et du mode Dessin (640), sous les fenêtres (700) */
 const RL_SNAP_PX = 20;         /* l'aimant : un toucher à 20 px à l'écran ou moins d'un point de la route, d'une référence ou d'un aérodrome en prend la position */
+const RL_DOUBLE_PX = 3;        /* un toucher à 3 px ou moins du dernier point de la règle est ignoré */
 const RL_TIE_PX = 1;           /* à égalité (à 1 px près), la route passe avant les références, puis les aérodromes */
 const RL_COLOR = '#f2c14e', RL_DARK = '#1f1c16';
 const RL = { pts: [], group: null, bar: null };     /* pts : [{ lat, lon }] */
 
 function rlOn() { return tapMode === 'ruler' && !EXP.on; }
 
-/* Le point aimanté sous un toucher (ll) : { lat, lon, d } ou null ; le plus proche à 20 px ou moins, la route d'abord, puis les références, puis les aérodromes affichés */
+/* Le point aimanté sous un toucher (ll) : { lat, lon, d } ou null ; le plus proche à 20 px ou moins du point, ou sur son nom affiché (compté à 20 px : un point touché de plus près passe avant) ;
+   la route d'abord, puis les références, puis les aérodromes affichés */
 function rlSnap(ll) {
   const c = map.latLngToContainerPoint(ll);
+  const mr = map.getContainer().getBoundingClientRect();
+  const sx = c.x + mr.left, sy = c.y + mr.top;
   let best = null;
-  const take = (lat, lon) => {
-    const d = c.distanceTo(map.latLngToContainerPoint([lat, lon]));
-    if (d <= RL_SNAP_PX && (!best || d < best.d - RL_TIE_PX)) best = { lat: lat, lon: lon, d: d };
+  const take = (q, el) => {
+    let d = c.distanceTo(map.latLngToContainerPoint(q));
+    if (el) {        /* le nom affiché du marqueur : son rectangle à l'écran, comme les villes */
+      const r = el.getBoundingClientRect();
+      if (r.width > 0 && r.height > 0 && sx >= r.left && sx <= r.right && sy >= r.top && sy <= r.bottom) d = Math.min(d, RL_SNAP_PX);
+    }
+    if (d <= RL_SNAP_PX && (!best || d < best.d - RL_TIE_PX)) best = { lat: q.lat, lon: q.lng, d: d };
   };
-  if (DISP.route) S.points.forEach(p => take(p.lat, p.lon));
-  if (DISP.refs) S.refs.forEach(p => take(p.lat, p.lon));
+  const nameOf = mk => { const e = mk.getElement && mk.getElement(); return e ? e.querySelector('.wp-name') : null; };
+  if (DISP.route) ptMarkers.forEach(mk => take(mk.getLatLng(), nameOf(mk)));
+  if (DISP.refs && refGroup) refGroup.eachLayer(mk => take(mk.getLatLng(), nameOf(mk)));
   if (afLayer) {
     const pane = map.getPane('airfields');
     afLayer.eachLayer(m => {
       const heli = (m.options.icon && m.options.icon.options.className || '').indexOf('af-h') !== -1;
       if (!pane.classList.contains(heli ? 'afz10' : 'afz7')) return;       /* le zoom décide de ce qui s'affiche (voir syncAfZoom) */
-      const q = m.getLatLng();
-      take(q.lat, q.lng);
+      const e = m.getElement();
+      take(m.getLatLng(), e ? e.querySelector('.af-name') : null);
     });
   }
   return best;
@@ -7307,7 +7316,12 @@ function rlSnap(ll) {
 function rlTap(ll) {
   if (SR.open) { srClose(); return; }       /* la recherche ouverte : le toucher ferme le panneau et ne pose rien */
   const s = rlSnap(ll);
-  RL.pts.push(s ? { lat: s.lat, lon: s.lon } : { lat: ll.lat, lon: ll.lng });
+  const p = s ? { lat: s.lat, lon: s.lon } : { lat: ll.lat, lon: ll.lng };
+  if (RL.pts.length) {          /* à 3 px ou moins du dernier point : un double toucher, ignoré (pas de segment nul) */
+    const l = RL.pts[RL.pts.length - 1];
+    if (map.latLngToContainerPoint([p.lat, p.lon]).distanceTo(map.latLngToContainerPoint([l.lat, l.lon])) <= RL_DOUBLE_PX) return;
+  }
+  RL.pts.push(p);
   rlRender();
 }
 
@@ -7453,7 +7467,7 @@ function setTapMode(m, keep) {
     if (tapMode !== was) {
       if (was === 'draw') drExit();
       if (tapMode === 'draw') drEnter();
-      if (was === 'ruler') RL.pts.length = 0;       /* quitter la règle l'efface */
+      if (was === 'ruler' && !EXP.on) RL.pts.length = 0;       /* quitter la règle l'efface ; le cadre de l'export la masque seulement (rlOn), elle revient avec lui */
     }
     drawLayers();   /* les objets ne sont touchables qu'en mode Lire ; une cible agit comme un aérodrome dans les deux autres */
     drawRoute();    /* les « + » d'insertion ne s'affichent pas en mode Lire */
@@ -7801,6 +7815,7 @@ function downloadJson(sel) {
 
 /* Met une route lue à la place de la route en cours (unités, théâtre, cap et déclinaison compris ; la couche et la grille restent) */
 function setRoute(route) {
+  if (S.theatre !== route.theatre) RL.pts.length = 0;      /* arriver sur un autre théâtre vide la règle (le mode Règle reste) */
   S.name = route.name;
   S.theatre = route.theatre;
   S.units = route.units;
