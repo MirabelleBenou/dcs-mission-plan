@@ -17,6 +17,7 @@ Changes merged since the last release, grouped per tool.
 ### HQ
 #### Added
 - **Example** button: loads a demonstration wing (Task Force Kestrel, three squadrons); your own wing configuration is kept and can be restored in one tap.
+- **Flight packages**: export one or more flights of the loaded .miz (route, radios, loadout, livery) to a package file, and apply flight packages to a mission — each flight is found by its group name and aircraft type, you choose what to apply per flight, and a report lists what was written.
 
 ### Recon Station
 #### Added

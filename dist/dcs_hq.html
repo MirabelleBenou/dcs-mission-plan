@@ -680,48 +680,61 @@ select[data-tbm-src] { display: none !important; }
   word-break: break-all;
 }
 
-/* ======== COMMANDER GHOST ======== */
-.commander-ghost {
-  text-align: center;
-  padding: 28px 20px;
-  opacity: .45;
-  pointer-events: none;
-  user-select: none;
+/* ======== PAQUETS DE VOL ======== */
+body[data-theme] {
+  --pk-warn: var(--red-faded);
+  --pk-ok: #7fa062;
 }
-.ghost-icon {
-  font-size: 32px;
-  margin-bottom: 8px;
-  color: var(--khaki-light);
+body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="modern-east"] {
+  --pk-warn: #e8b840;   /* --red-faded y est trop sombre sur le fond de la page (contraste inférieur à 3) : la couleur d'alerte de la page */
 }
-.ghost-label {
-  font-family: var(--f-stencil);
-  font-size: 14px;
-  letter-spacing: 3px;
-  color: var(--khaki-light);
-  text-transform: uppercase;
-  margin-bottom: 4px;
+.miz-btn:disabled { opacity: .4; cursor: default; }
+.miz-btn:disabled:hover { background: rgba(0,0,0,.2); border-color: var(--khaki); color: var(--paper-light); }
+.miz-btn.primary:disabled:hover { border-color: var(--amber); color: var(--amber); }
+.pk-chk {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--f-ui); font-size: 12px; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--paper); min-height: 34px; cursor: pointer;
 }
-.ghost-sub {
-  font-family: var(--f-ui);
-  font-size: 11px;
-  letter-spacing: 1px;
-  color: var(--khaki);
-  text-transform: uppercase;
+.pk-chk input { accent-color: var(--amber); width: 18px; height: 18px; margin: 0; flex: none; }
+.pk-chk.off { opacity: .4; cursor: default; }
+.pk-chk.off input { cursor: default; }
+.snap-flight-header .pk-chk { font-family: var(--f-stencil); letter-spacing: 1px; color: var(--amber); text-transform: none; }
+.pk-note { font-family: var(--f-typewriter); font-size: 11px; color: var(--khaki-light); margin: 0 0 10px; }
+.pk-pack {
+  border: 1px solid var(--khaki); border-radius: 3px;
+  padding: 8px 10px; background: rgba(0,0,0,.15); margin-top: 8px;
 }
-.dev-ta {
-  width: 100%;
-  background: rgba(0,0,0,.3);
-  border: 1px solid var(--khaki);
-  color: var(--paper);
-  font-family: var(--f-typewriter);
-  font-size: 11px;
-  padding: 8px;
-  resize: vertical;
-  margin-top: 8px;
+.pk-pack-head { display: flex; align-items: flex-start; gap: 8px; justify-content: space-between; }
+.pk-pack-name {
+  font-family: var(--f-stencil); font-size: 12px; letter-spacing: 1px;
+  color: var(--amber); word-break: break-all; min-width: 0;
 }
-.dev-ta:focus {
-  outline: none;
-  border-color: var(--amber);
+.pk-x {
+  flex: none; min-width: 36px; min-height: 36px; margin: -6px -6px 0 0;
+  background: none; border: 0; color: var(--khaki-light); font-size: 16px; cursor: pointer;
+}
+.pk-x:hover { color: var(--amber); }
+.pk-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+.pk-warn { font-family: var(--f-typewriter); font-size: 11px; color: var(--pk-warn); margin-top: 6px; word-break: break-word; }
+.pk-flight { border-top: 1px solid rgba(128,116,84,.45); margin-top: 8px; padding-top: 6px; }
+.pk-flight-head {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  font-family: var(--f-stencil); font-size: 12px; letter-spacing: 1px; color: var(--paper);
+}
+.pk-found, .pk-absent { font-family: var(--f-typewriter); font-size: 11px; letter-spacing: 0; }
+.pk-found { color: var(--pk-ok); }
+.pk-absent { color: var(--pk-warn); }
+.pk-parts { display: flex; flex-wrap: wrap; column-gap: 16px; margin-top: 2px; }
+.pk-rep {
+  font-family: var(--f-typewriter); font-size: 11px; color: var(--paper); line-height: 1.55;
+  display: flex; flex-direction: column; gap: 5px; word-break: break-word;
+}
+.pk-rep .w { color: var(--pk-warn); }
+.pk-rep .a { color: var(--khaki-light); }
+.pk-total {
+  font-family: var(--f-stencil); font-size: 12px; letter-spacing: 1px; color: var(--amber);
+  margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--khaki);
 }
 
 /* ======== RESPONSIVE ======== */
@@ -863,28 +876,26 @@ select[data-tbm-src] { display: none !important; }
       </div>
     </details>
 
-    <!-- Section Commander (ghost P3) -->
+    <!-- Section Paquets de vol (import dans la mission du Mission Commander) -->
     <details class="ed-section" id="commander-section">
-      <summary data-i18n="editor.commander.summary">MISSION COMMANDER</summary>
+      <summary data-i18n="editor.commander.summary">PAQUETS DE VOL</summary>
       <div class="ed-content">
 
-        <!-- Ghost public -->
-        <div class="commander-ghost" id="commander-ghost">
-          <div class="ghost-icon">⌂</div>
-          <div class="ghost-label" data-i18n="editor.commander.ghost">Mission Commander</div>
-          <div class="ghost-sub" data-i18n="editor.commander.ghostSub">à venir — nécessite les modules Flight Lead</div>
+        <div class="pk-note" id="pk-nomiz" data-i18n="pk.needMiz">Chargez d’abord la mission (section MISSION .MIZ)</div>
+
+        <div class="miz-btn-row" style="margin-top:0">
+          <button type="button" class="miz-btn" id="pk-load-btn" data-i18n="pk.load" disabled>Charger des paquets</button>
+        </div>
+        <input type="file" id="pk-file-input" accept=".json,.zip,application/json,application/zip" multiple hidden>
+
+        <div id="pk-refused"></div>
+        <div id="pk-list"></div>
+
+        <div class="miz-btn-row">
+          <button type="button" class="miz-btn primary" id="pk-apply-btn" data-i18n="pk.apply" disabled>Appliquer et télécharger le .miz</button>
         </div>
 
-        <!-- Zone dev/test (visible uniquement avec ?dev=1) -->
-        <div class="commander-dev-area" id="commander-dev-area" style="display:none">
-          <div class="snap-header" data-i18n="editor.commander.devTitle">DEV — FLIGHT PACKAGE JSON</div>
-          <textarea id="commander-dev-ta" class="dev-ta" rows="12" placeholder='{...}'></textarea>
-          <div class="miz-btn-row">
-            <button type="button" class="miz-btn primary" id="commander-dev-apply" data-i18n="editor.commander.devApply">
-              ▶ Appliquer le package
-            </button>
-          </div>
-        </div>
+        <div id="pk-report"></div>
 
       </div>
     </details>
@@ -1001,17 +1012,90 @@ const I18N = {
     'snap.units':               'unités',
     'snap.freq':                'fréq',
     'snap.fingerprint':        'Empreinte',
-    'editor.commander.summary':  'MISSION COMMANDER',
-    'editor.commander.ghost':    'Mission Commander',
-    'editor.commander.ghostSub': 'à venir — nécessite les modules Flight Lead',
-    'editor.commander.devTitle': 'DEV — FLIGHT PACKAGE JSON',
-    'editor.commander.devApply': '▶ Appliquer le package',
+    'editor.commander.summary': 'PAQUETS DE VOL',
+    'snap.unit': 'unité',
+    'pk.needMiz': 'Chargez d’abord la mission (section MISSION .MIZ)',
+    'pk.load': 'Charger des paquets',
+    'pk.loaded': 'Paquets chargés',
+    'pk.apply': 'Appliquer et télécharger le .miz',
+    'pk.export': '📦 Exporter les vols cochés',
+    'pk.remove': 'Retirer ce paquet',
+    'pk.found': '→ trouvé',
+    'pk.absent': 'absent de la mission',
+    'pk.replacedBy': '⚠ remplacé par {0}',
+    'pk.part.route': 'Route',
+    'pk.part.radios': 'Radios',
+    'pk.part.loadout': 'Emport',
+    'pk.part.livery': 'Livrée',
+    'pk.nFlights.one': '{0} vol',
+    'pk.nFlights.many': '{0} vols',
+    'pk.warnTheatre': 'théâtre différent ({0} ≠ {1})',
+    'pk.warnSource': 'mission source différente',
+    'pk.refused': 'refusé : {0} — {1}',
+    'pk.err.type': 'ni .json ni .zip',
+    'pk.err.parse': 'JSON illisible',
+    'pk.err.zip': 'archive illisible',
+    'pk.err.noPackageJson': 'package.json absent à la racine de l’archive',
+    'pk.err.format': 'format « {0} » (attendu : {1})',
+    'pk.err.flights': 'liste de vols absente',
+    'pk.err.flight': 'vol n° {0} invalide',
+    'pk.rep.title': 'Compte rendu',
+    'pk.rep.ok': '✓ {0} ({1}) : {2}',
+    'pk.rep.nothing': '– {0} ({1}) : rien d’écrit',
+    'pk.rep.absent': '– {0} ({1}) : absent de la mission, rien écrit',
+    'pk.rep.conflict': '⚠ {0} : visé par {1} et par {2} — le dernier chargé l’emporte, rien écrit depuis le premier',
+    'pk.rep.fail': '✗ {0} ({1}) : vérification échouée — {2}',
+    'pk.rep.failTail': 'Rien n’est téléchargé, le .miz chargé reste inchangé.',
+    'pk.rep.route.one': 'route ({0} point)',
+    'pk.rep.route.many': 'route ({0} points)',
+    'pk.rep.radios': 'radios ({0})',
+    'pk.rep.group': 'groupe {0}',
+    'pk.rep.units.one': '{0} unité',
+    'pk.rep.units.many': '{0} unités',
+    'pk.rep.chan.one': '{0} canal',
+    'pk.rep.chan.many': '{0} canaux',
+    'pk.rep.loadout.one': 'emport ({0} unité)',
+    'pk.rep.loadout.many': 'emport ({0} unités)',
+    'pk.rep.livery.one': 'livrée ({0} unité)',
+    'pk.rep.livery.many': 'livrée ({0} unités)',
+    'pk.rep.applied.one': '{0} vol appliqué',
+    'pk.rep.applied.many': '{0} vols appliqués',
+    'pk.rep.absentN.one': '{0} absent',
+    'pk.rep.absentN.many': '{0} absents',
+    'pk.rep.warnN.one': '{0} avertissement',
+    'pk.rep.warnN.many': '{0} avertissements',
+    'pk.w.theatreRoute': '{0} : route non écrite — théâtre du paquet ({1}) différent de celui du .miz ({2})',
+    'pk.w.noRoute': '{0} : le groupe n’a pas de route dans le .miz, route non écrite',
+    'pk.w.noGroupFreq': '{0} : le groupe n’a pas de fréquence dans le .miz, non écrite',
+    'pk.w.radio': '{0} : poste {1} absent de l’unité {2}, non créé',
+    'pk.w.chan': '{0} : canal {1} du poste {2} absent de l’unité {3}, non créé',
+    'pk.w.payload': '{0} : l’unité {1} n’a pas d’emport dans le .miz, non écrit',
+    'pk.w.livery': '{0} : livery_id absent de l’unité {1}, livrée non écrite',
+    'pk.w.extraUnit': '{0} : l’unité « {1} » du paquet n’a pas de correspondance dans le groupe, ignorée',
+    'pk.w.groupGone': 'groupe {0} introuvable après l’écriture précédente',
+    'pk.w.unitGone': 'unité {0} introuvable',
+    'pk.w.radioGone': 'poste {0} introuvable pour l’unité {1}',
+    'pk.w.chanGone': 'canal {0} du poste {1} introuvable pour l’unité {2}',
+    'pk.w.noFreqPos': 'position du canal {0} du poste {1} absente',
+    'pk.w.noGroupFreqPos': 'position de la fréquence du groupe absente',
+    'pk.w.noLiveryPos': 'position de la livrée absente pour l’unité {0}',
+    'pk.w.noPointsPos': 'position de route.points absente, route non écrite',
+    'pk.w.noPayloadPos': 'position de l’emport absente pour l’unité {0}',
+    'pk.w.dup': 'écriture en double au même endroit (décalage {0}), ignorée',
+    'pk.w.serialize': 'valeur impossible à écrire, ignorée',
+    'toast.pkExported.one': '📦 {0} vol exporté',
+    'toast.pkExported.many': '📦 {0} vols exportés',
+    'toast.pkOmitRoute': 'route omise (table non réécrivable) :',
+    'toast.pkOmitPayload': 'emport omis (table non réécrivable) :',
+    'toast.pkExportError': '⚠ Export impossible : ',
+    'toast.pkLoaded.one': '{0} paquet chargé',
+    'toast.pkLoaded.many': '{0} paquets chargés',
+    'toast.pkRefused.one': '{0} refusé',
+    'toast.pkRefused.many': '{0} refusés',
+    'toast.pkApplying': 'Application des paquets…',
+    'toast.pkNoChange': 'Aucun changement à écrire',
+    'toast.pkFail': '⚠ Vérification échouée : {0} — rien n’est téléchargé',
     'toast.mizNotLoaded':        '⚠ Charger un .miz d’abord',
-    'toast.patchApplying':       'Application du patch…',
-    'toast.patchDone':           'Patch appliqué ✔ — téléchargement',
-    'toast.patchNoChange':       'Aucun changement détecté',
-    'toast.patchError':          '⚠ Erreur patch : ',
-    'toast.packageJsonInvalid':  '⚠ JSON invalide : ',
   },
   en: {
     'toolbar.title':            'HQ',
@@ -1101,17 +1185,90 @@ const I18N = {
     'snap.units':               'units',
     'snap.freq':                'freq',
     'snap.fingerprint':        'Fingerprint',
-    'editor.commander.summary':  'MISSION COMMANDER',
-    'editor.commander.ghost':    'Mission Commander',
-    'editor.commander.ghostSub': 'coming soon — requires Flight Lead modules',
-    'editor.commander.devTitle': 'DEV — FLIGHT PACKAGE JSON',
-    'editor.commander.devApply': '▶ Apply package',
+    'editor.commander.summary': 'FLIGHT PACKAGES',
+    'snap.unit': 'unit',
+    'pk.needMiz': 'Load the mission first (MISSION .MIZ section)',
+    'pk.load': 'Load packages',
+    'pk.loaded': 'Loaded packages',
+    'pk.apply': 'Apply and download the .miz',
+    'pk.export': '📦 Export checked flights',
+    'pk.remove': 'Remove this package',
+    'pk.found': '→ found',
+    'pk.absent': 'not in the mission',
+    'pk.replacedBy': '⚠ replaced by {0}',
+    'pk.part.route': 'Route',
+    'pk.part.radios': 'Radios',
+    'pk.part.loadout': 'Loadout',
+    'pk.part.livery': 'Livery',
+    'pk.nFlights.one': '{0} flight',
+    'pk.nFlights.many': '{0} flights',
+    'pk.warnTheatre': 'different theatre ({0} ≠ {1})',
+    'pk.warnSource': 'different source mission',
+    'pk.refused': 'refused: {0} — {1}',
+    'pk.err.type': 'neither .json nor .zip',
+    'pk.err.parse': 'unreadable JSON',
+    'pk.err.zip': 'unreadable archive',
+    'pk.err.noPackageJson': 'no package.json at the root of the archive',
+    'pk.err.format': 'format “{0}” (expected: {1})',
+    'pk.err.flights': 'no flight list',
+    'pk.err.flight': 'flight #{0} is invalid',
+    'pk.rep.title': 'Report',
+    'pk.rep.ok': '✓ {0} ({1}): {2}',
+    'pk.rep.nothing': '– {0} ({1}): nothing written',
+    'pk.rep.absent': '– {0} ({1}): not in the mission, nothing written',
+    'pk.rep.conflict': '⚠ {0}: targeted by {1} and by {2} — the last one loaded wins, nothing written from the first',
+    'pk.rep.fail': '✗ {0} ({1}): verification failed — {2}',
+    'pk.rep.failTail': 'Nothing is downloaded, the loaded .miz is unchanged.',
+    'pk.rep.route.one': 'route ({0} point)',
+    'pk.rep.route.many': 'route ({0} points)',
+    'pk.rep.radios': 'radios ({0})',
+    'pk.rep.group': 'group {0}',
+    'pk.rep.units.one': '{0} unit',
+    'pk.rep.units.many': '{0} units',
+    'pk.rep.chan.one': '{0} channel',
+    'pk.rep.chan.many': '{0} channels',
+    'pk.rep.loadout.one': 'loadout ({0} unit)',
+    'pk.rep.loadout.many': 'loadout ({0} units)',
+    'pk.rep.livery.one': 'livery ({0} unit)',
+    'pk.rep.livery.many': 'livery ({0} units)',
+    'pk.rep.applied.one': '{0} flight applied',
+    'pk.rep.applied.many': '{0} flights applied',
+    'pk.rep.absentN.one': '{0} absent',
+    'pk.rep.absentN.many': '{0} absent',
+    'pk.rep.warnN.one': '{0} warning',
+    'pk.rep.warnN.many': '{0} warnings',
+    'pk.w.theatreRoute': '{0}: route not written — the package’s theatre ({1}) differs from the .miz’s ({2})',
+    'pk.w.noRoute': '{0}: the group has no route in the .miz, route not written',
+    'pk.w.noGroupFreq': '{0}: the group has no frequency in the .miz, not written',
+    'pk.w.radio': '{0}: radio {1} is missing on unit {2}, not created',
+    'pk.w.chan': '{0}: channel {1} of radio {2} is missing on unit {3}, not created',
+    'pk.w.payload': '{0}: unit {1} has no loadout in the .miz, not written',
+    'pk.w.livery': '{0}: no livery_id on unit {1}, livery not written',
+    'pk.w.extraUnit': '{0}: the package’s unit “{1}” has no match in the group, ignored',
+    'pk.w.groupGone': 'group {0} not found after the previous write',
+    'pk.w.unitGone': 'unit {0} not found',
+    'pk.w.radioGone': 'radio {0} not found for unit {1}',
+    'pk.w.chanGone': 'channel {0} of radio {1} not found for unit {2}',
+    'pk.w.noFreqPos': 'position of channel {0} of radio {1} missing',
+    'pk.w.noGroupFreqPos': 'position of the group frequency missing',
+    'pk.w.noLiveryPos': 'position of the livery missing for unit {0}',
+    'pk.w.noPointsPos': 'position of route.points missing, route not written',
+    'pk.w.noPayloadPos': 'position of the loadout missing for unit {0}',
+    'pk.w.dup': 'duplicate write at the same place (offset {0}), ignored',
+    'pk.w.serialize': 'value cannot be written, ignored',
+    'toast.pkExported.one': '📦 {0} flight exported',
+    'toast.pkExported.many': '📦 {0} flights exported',
+    'toast.pkOmitRoute': 'route omitted (table cannot be rewritten):',
+    'toast.pkOmitPayload': 'loadout omitted (table cannot be rewritten):',
+    'toast.pkExportError': '⚠ Export failed: ',
+    'toast.pkLoaded.one': '{0} package loaded',
+    'toast.pkLoaded.many': '{0} packages loaded',
+    'toast.pkRefused.one': '{0} refused',
+    'toast.pkRefused.many': '{0} refused',
+    'toast.pkApplying': 'Applying packages…',
+    'toast.pkNoChange': 'Nothing to write',
+    'toast.pkFail': '⚠ Verification failed: {0} — nothing downloaded',
     'toast.mizNotLoaded':        '⚠ Load a .miz first',
-    'toast.patchApplying':       'Applying patch…',
-    'toast.patchDone':           'Patch applied ✔ — downloading',
-    'toast.patchNoChange':       'No changes detected',
-    'toast.patchError':          '⚠ Patch error: ',
-    'toast.packageJsonInvalid':  '⚠ Invalid JSON: ',
   }
 };
 
@@ -1181,13 +1338,13 @@ function escapeHtml(str) {
 function escapeAttr(str) { return escapeHtml(str); }
 
 // ── Toast ──────────────────────────────────────────────────────
-function showToast(msg) {
+function showToast(msg, ms) {
   const el = document.getElementById('toast');
   el.textContent = msg;
   el.classList.remove('act');
   el.classList.add('show');
   clearTimeout(showToast._h);
-  showToast._h = setTimeout(() => el.classList.remove('show'), 2200);
+  showToast._h = setTimeout(() => el.classList.remove('show'), ms || 2200);
 }
 
 // Un message avec une action (un bouton souligné), visible ms millisecondes
@@ -1265,6 +1422,8 @@ function applyI18nStatic() {
 
 function rerenderDynamic() {
   renderWingEditor();
+  if (HQ_SNAPSHOT) renderSnapshot(HQ_SNAPSHOT);
+  pkRender();
 }
 
 // ── Wing config persistence ────────────────────────────────────
@@ -1820,7 +1979,7 @@ const DCS_TOKENIZER = (() => {
     function pos(){return{offset,line,col};}
     function readComment(s){let v='--';while(offset<len&&src[offset]!=='\n'){v+=src[offset];advance();}tokens.push({type:T.COMMENT,value:v,start:s,end:pos()});}
     function readNumber(s,f){let r=f;while(offset<len&&/[0-9]/.test(src[offset])){r+=src[offset];advance();}if(offset<len&&src[offset]==='.'){r+='.';advance();while(offset<len&&/[0-9]/.test(src[offset])){r+=src[offset];advance();}}if(offset<len&&(src[offset]==='e'||src[offset]==='E')){r+=src[offset];advance();if(offset<len&&(src[offset]==='+'||src[offset]==='-')){r+=src[offset];advance();}while(offset<len&&/[0-9]/.test(src[offset])){r+=src[offset];advance();}}tokens.push({type:T.NUMBER,value:parseFloat(r),raw:r,start:s,end:pos()});}
-    function readString(s,q){let v='';while(offset<len){const c=src[offset];if(c===q){advance();break;}if(c==='\\'){advance();const e=src[offset];if(e==='"')v+='"';else if(e==="'")v+="'";else if(e==='\\')v+='\\';else if(e==='n')v+='\n';else if(e==='t')v+='\t';else if(e==='r')v+='\r';else v+=e;advance();}else{v+=c;advance();}}tokens.push({type:T.STRING,value:v,start:s,end:pos()});}
+    function readString(s,q){let v='';while(offset<len){const c=src[offset];if(c===q){advance();break;}if(c==='\\'){advance();const e=src[offset];if(e==='"')v+='"';else if(e==="'")v+="'";else if(e==='\\')v+='\\';else if(e==='n')v+='\n';else if(e==='t')v+='\t';else if(e==='r')v+='\r';else if(/[0-9]/.test(e)){let d=e;while(d.length<3&&offset+1<len&&/[0-9]/.test(src[offset+1])){advance();d+=src[offset];}v+=String.fromCharCode(parseInt(d,10));}else v+=e;advance();}else{v+=c;advance();}}tokens.push({type:T.STRING,value:v,start:s,end:pos()});}
     function readIdent(s,f){let r=f;while(offset<len&&/[a-zA-Z0-9_]/.test(src[offset])){r+=src[offset];advance();}if(r==='true')tokens.push({type:T.BOOL,value:true,raw:r,start:s,end:pos()});else if(r==='false')tokens.push({type:T.BOOL,value:false,raw:r,start:s,end:pos()});else if(r==='nil')tokens.push({type:T.NIL,value:null,raw:r,start:s,end:pos()});else tokens.push({type:T.IDENT,value:r,start:s,end:pos()});}
     while(offset<len){skipWS();if(offset>=len)break;const s=pos(),ch=src[offset];if(ch==='-'&&offset+1<len&&src[offset+1]==='-'){advance();advance();readComment(s);continue;}if(/[0-9]/.test(ch)){advance();readNumber(s,ch);continue;}if(ch==='-'&&offset+1<len&&/[0-9]/.test(src[offset+1])){advance();readNumber(s,'-');continue;}if(ch==='"'||ch==="'"){advance();readString(s,ch);continue;}if(/[a-zA-Z_]/.test(ch)){advance();readIdent(s,ch);continue;}switch(ch){case'{':advance();tokens.push({type:T.LBRACE,value:'{',start:s,end:pos()});break;case'}':advance();tokens.push({type:T.RBRACE,value:'}',start:s,end:pos()});break;case'[':advance();tokens.push({type:T.LBRACKET,value:'[',start:s,end:pos()});break;case']':advance();tokens.push({type:T.RBRACKET,value:']',start:s,end:pos()});break;case'=':advance();tokens.push({type:T.EQ,value:'=',start:s,end:pos()});break;case',':advance();tokens.push({type:T.COMMA,value:',',start:s,end:pos()});break;case';':advance();tokens.push({type:T.SEMICOLON,value:';',start:s,end:pos()});break;default:errors.push({message:'Token inattendu: '+JSON.stringify(ch),line:s.line,col:s.col,offset:s.offset});advance();tokens.push({type:'ERROR',value:ch,start:s,end:pos()});}}
     tokens.push({type:T.EOF,value:null,start:pos(),end:pos()});
@@ -2136,10 +2295,11 @@ const DCS_EXTRACTOR = (() => {
 function extractGroup(groupNode, coalition, category) {
   const g = extractGroup_ORIG(groupNode, coalition, category);
   if (!g) return g;
-  // P4.2 — pointsPos : position du nœud route.points pour patch de remplacement
+  // P4.2 — pointsPos : position du nœud route.points pour patch de remplacement.
+  // extractGroup_ORIG renvoie { group, clientUnits } : la position se pose sur le groupe (repli sur l'objet renvoyé).
   const routeNode = get(groupNode, 'route');
   const pointsNode = routeNode ? get(routeNode, 'points') : null;
-  g.pointsPos = pointsNode ? pointsNode.pos : null;
+  (g.group || g).pointsPos = pointsNode ? pointsNode.pos : null;
   return g;
 }
 
@@ -2577,7 +2737,10 @@ async function loadMiz(file) {
     const snapshot = await buildMissionSnapshot(ast, model, missionText, file.name, theatre);
     HQ_SNAPSHOT = snapshot;
     persistSnapshot();
+    _PK_EXPORT_SEL.clear();
+    _PK_REPORT = null;
     renderSnapshot(snapshot);
+    pkRender();
     showToast(t('toast.mizLoaded'));
     console.log('[HQ P3] Snapshot:', snapshot);
   } catch(err) {
@@ -2899,13 +3062,14 @@ function renderSnapshot(snap) {
   for (const fl of snap.flights) {
     html += '<div class="snap-flight">';
     html += '<div class="snap-flight-header">';
-    html += h(fl.groupName || '—');
+    html += '<label class="pk-chk"><input type="checkbox" data-pk-export="' + h(String(fl.groupId)) + '"' +
+      (_PK_EXPORT_SEL.has(fl.groupId) ? ' checked' : '') + (_HQ_MIZ_CONTEXT ? '' : ' disabled') + '>' + h(fl.groupName || '—') + '</label>';
     html += ' <span class="snap-flight-tag">' + h(fl.aircraftType || fl.category || '') + '</span>';
     html += ' <span class="snap-flight-tag">' + h(fl.coalition || '') + '</span>';
     if (fl.groupFrequency && fl.groupFrequency.value) {
       html += ' <span class="snap-flight-tag">' + h(String(fl.groupFrequency.value)) + ' MHz</span>';
     }
-    html += ' <span class="snap-flight-tag">' + h(String(fl.units.length)) + ' ' + h(t('snap.units')) + '</span>';
+    html += ' <span class="snap-flight-tag">' + h(String(fl.units.length)) + ' ' + h(fl.units.length === 1 ? t('snap.unit') : t('snap.units')) + '</span>';
     html += '</div>';
     html += '<div class="snap-unit-list">';
     for (const u of fl.units) {
@@ -2924,10 +3088,12 @@ function renderSnapshot(snap) {
     html += '</div></div>';
   }
   html += '</div>';
+  html += '<div class="miz-btn-row"><button type="button" class="miz-btn primary" id="pk-export-btn" disabled>' + h(t('pk.export')) + '</button></div>';
   // Fingerprint
   html += '<div class="snap-fingerprint">' + h(t('snap.fingerprint')) + ': ' + h(sm.fingerprint || '') + '</div>';
   el.innerHTML = html;
   el.style.display = 'block';
+  pkRefreshExportBtn();
   // Afficher boutons actions
   const actionsEl = document.getElementById('miz-actions');
   if (actionsEl) actionsEl.style.display = 'flex';
@@ -2967,7 +3133,9 @@ function initMissionEvents() {
   const reloadBtn = document.getElementById('miz-reload-btn');
   if (reloadBtn) {
     reloadBtn.addEventListener('click', () => {
-      HQ_SNAPSHOT = null; _mizFilename = null;
+      HQ_SNAPSHOT = null; _mizFilename = null; _HQ_MIZ_CONTEXT = null;
+      _PK_EXPORT_SEL.clear(); _PK_REPORT = null;
+      pkRender();
       const dz = document.getElementById('miz-drop-zone');
       if (dz) { dz.classList.remove('has-file'); }
       const dropText = document.getElementById('miz-drop-text');
@@ -3002,11 +3170,18 @@ function astToValue(node) {
   return undefined;
 }
 
-// formatLuaNumber : nombre → chaîne décimale sans notation exponentielle (P4)
+// formatLuaNumber : nombre → chaîne décimale, sans notation exponentielle
+//   entier        → String(n)
+//   autre nombre  → String(n) (le plus court qui redonne le même double) quand ce texte n'a pas d'exposant
+//   sinon         → écriture décimale pleine
 function formatLuaNumber(n) {
   if (!isFinite(n)) return String(n);
-  if (Number.isInteger(n)) return String(n);
-  // toPrecision(17) pour précision double complète
+  if (Number.isInteger(n)) {
+    const si = String(n);
+    return /e/i.test(si) ? BigInt(n).toString() : si;
+  }
+  const sh = String(n);
+  if (!/e/i.test(sh)) return sh;
   let s = n.toPrecision(17);
   if (s.includes('e') || s.includes('E')) {
     // Reformater en décimal plein
@@ -3020,18 +3195,37 @@ function formatLuaNumber(n) {
   return s;
 }
 
+// luaEscape : texte → contenu d'une chaîne Lua entre guillemets
+//   \\  "  \n  \r  et tout caractère sous U+0020 en \ddd (décimal, 3 chiffres) ; le reste tel quel (UTF-8)
+function luaEscape(str) {
+  let out = '';
+  for (const ch of String(str)) {
+    const c = ch.codePointAt(0);
+    if (ch === '\\') out += '\\\\';
+    else if (ch === '"') out += '\\"';
+    else if (ch === '\n') out += '\\n';
+    else if (ch === '\r') out += '\\r';
+    else if (c < 32) out += '\\' + String(c).padStart(3, '0');
+    else out += ch;
+  }
+  return out;
+}
+
+// luaKey : clé uniquement de chiffres → [n] ; toute autre → ["…"] échappée
+function luaKey(k) {
+  const ks = String(k);
+  return /^\d+$/.test(ks) ? '[' + ks + ']' : '["' + luaEscape(ks) + '"]';
+}
+
 // serializeLua : valeur JS → texte Lua DCS-valide (P4)
 function serializeLua(val, indent) {
   indent = (indent === undefined) ? 0 : indent;
-  const tab  = '	'.repeat(indent);
-  const tab1 = '	'.repeat(indent + 1);
+  const tab  = '\t'.repeat(indent);
+  const tab1 = '\t'.repeat(indent + 1);
   if (val === null || val === undefined) return null;
   if (typeof val === 'boolean') return val ? 'true' : 'false';
-  if (typeof val === 'number') return formatLuaNumber(val);
-  if (typeof val === 'string') {
-    const esc = val.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n');
-    return '"' + esc + '"';
-  }
+  if (typeof val === 'number') return isFinite(val) ? formatLuaNumber(val) : null;
+  if (typeof val === 'string') return '"' + luaEscape(val) + '"';
   if (typeof val !== 'object') return null;
   const entries = Object.entries(val);
   if (entries.length === 0) return '{}';
@@ -3039,11 +3233,40 @@ function serializeLua(val, indent) {
   for (const [k, v] of entries) {
     const vs = serializeLua(v, indent + 1);
     if (vs === null) continue;
-    const ks = (/^\d+$/.test(String(k))) ? '[' + k + ']' : '["' + k + '"]';
+    const ks = luaKey(k);
     out += tab1 + ks + ' = ' + vs + ', -- end of ' + ks + '\n';
   }
   out += tab + '}';
   return out;
+}
+
+// luaTableReproducible : true si serializeLua(astToValue(node)) redonne la même table, en valeur.
+// Faux dès qu'à une profondeur quelconque : une entrée sans clé, une clé texte faite uniquement de chiffres,
+// une clé ni texte ni nombre (ou un nombre qui n'est pas un entier ≥ 0), une clé en double, ou une valeur
+// que astToValue ne sait pas rendre (identifiant nu, nil).
+function luaTableReproducible(node) {
+  if (!node) return false;
+  if (node.kind === 'table') {
+    const seen = new Set();
+    for (const e of node.entries) {
+      if (!e.key) return false;
+      let ks;
+      if (e.key.kind === 'string') {
+        ks = String(e.key.value);
+        if (/^\d+$/.test(ks) || ks === '__proto__') return false;
+      } else if (e.key.kind === 'int') {
+        ks = String(e.key.value);
+        if (typeof e.key.value !== 'number' || !/^\d+$/.test(ks)) return false;
+      } else {
+        return false;
+      }
+      if (seen.has(ks)) return false;
+      seen.add(ks);
+      if (!luaTableReproducible(e.value)) return false;
+    }
+    return true;
+  }
+  return node.kind === 'number' || node.kind === 'string' || node.kind === 'bool';
 }
 
 // deepEqValues : comparaison structurelle de valeurs (P4 round-trip + verifyPatch)
@@ -3099,31 +3322,54 @@ async function rebuildMizHQ(patchedSrc) {
   newZip.file('mission', patchedSrc);
   const otherFiles = _HQ_MIZ_CONTEXT.otherFilesMap;
   if (otherFiles) {
-    Object.entries(otherFiles).forEach(function([name, data]) { newZip.file(name, data); });
+    Object.entries(otherFiles).forEach(function([name, data]) { newZip.file(name, data, { createFolders: false }); });
   }
   return newZip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
 }
 
-// P3.2 — Helper de recherche dans le modèle
-function findGroupById(groupId) {
-  if (!_HQ_MIZ_CONTEXT) return null;
-  const cg = _HQ_MIZ_CONTEXT.model.clientGroups || [];
+// P3.2 — Helpers de recherche dans le modèle (ctx : contexte .miz ; par défaut le contexte chargé)
+function findGroupById(groupId, ctx) {
+  ctx = ctx || _HQ_MIZ_CONTEXT;
+  if (!ctx) return null;
+  const cg = ctx.model.clientGroups || [];
   return cg.find(slot => slot.group.groupId === groupId) || null;
 }
 
-function findUnitById(unitId) {
-  if (!_HQ_MIZ_CONTEXT) return null;
-  const cg = _HQ_MIZ_CONTEXT.model.clientGroups || [];
+function findUnitById(unitId, ctx) {
+  ctx = ctx || _HQ_MIZ_CONTEXT;
+  if (!ctx) return null;
+  const cg = ctx.model.clientGroups || [];
   for (const slot of cg) {
     if (slot.unit && slot.unit.unitId === unitId) return { unit: slot.unit, group: slot.group };
   }
   return null;
 }
 
-// P3.3 — Construire les patches depuis un Flight Package
-function buildPatchesFromPackage(pkg) {
-  if (!_HQ_MIZ_CONTEXT) throw new Error('Aucun .miz chargé');
-  const src = _HQ_MIZ_CONTEXT.missionText;
+// Les groupes Client d'un contexte, dans l'ordre du .miz : { group, units[], aircraftType }
+function pkClientGroups(ctx) {
+  const out = [];
+  const byId = new Map();
+  for (const slot of (ctx.model.clientGroups || [])) {
+    if (!slot.unit) continue;
+    const gid = slot.group.groupId;
+    let g = byId.get(gid);
+    if (!g) { g = { group: slot.group, units: [], aircraftType: '' }; byId.set(gid, g); out.push(g); }
+    g.units.push(slot.unit);
+  }
+  for (const g of out) g.aircraftType = g.units.length ? (g.units[0].type || g.units[0].name || '') : '';
+  return out;
+}
+
+// Règle 6 : le groupe Client de même groupName (à l'identique) et de même aircraftType ; jamais le groupId
+function pkFindTarget(ctx, groupName, aircraftType) {
+  return pkClientGroups(ctx).find(g => g.group.name === groupName && g.aircraftType === aircraftType) || null;
+}
+
+// P3.3 — Construire les patches d'un vol (pkg : { flight:{groupId}, overrides, replacements }) sur un contexte
+// Les avertissements sont des { key, args } (textes par t())
+function buildPatchesFromPackage(pkg, ctx) {
+  ctx = ctx || _HQ_MIZ_CONTEXT;
+  if (!ctx) throw new Error('Aucun .miz chargé');
   const warnings = [];
   const patches = [];
   const seenOffsets = new Set();
@@ -3131,21 +3377,10 @@ function buildPatchesFromPackage(pkg) {
   const fl = pkg.flight;
   const ov = pkg.overrides || {};
 
-  // Fingerprint check (§6) — avertir si mismatch, ne pas bloquer
-  const loadedFp = HQ_SNAPSHOT && HQ_SNAPSHOT.sourceMission && HQ_SNAPSHOT.sourceMission.fingerprint;
-  const pkgFp = pkg.sourceMission && pkg.sourceMission.fingerprint;
-  if (pkgFp && loadedFp && pkgFp !== loadedFp) {
-    warnings.push('Fingerprint mismatch: package=' + pkgFp.slice(0,20) + '… loaded=' + loadedFp.slice(0,20) + '…');
-  }
-
-  // Matching groupe
-  const slot = findGroupById(fl.groupId);
+  const slot = findGroupById(fl.groupId, ctx);
   if (!slot) {
-    warnings.push('Groupe groupId=' + fl.groupId + ' introuvable dans le modèle');
+    warnings.push({ key: 'pk.w.groupGone', args: [fl.groupId] });
     return { patches: [], warnings };
-  }
-  if (slot.group.name !== fl.groupName) {
-    warnings.push('groupName mismatch: package="' + fl.groupName + '" modèle="' + slot.group.name + '" — patch continué');
   }
 
   // overrides.groupFrequency
@@ -3153,50 +3388,48 @@ function buildPatchesFromPackage(pkg) {
     const gfPos = slot.group.frequency && slot.group.frequency.valuePos;
     if (gfPos) {
       if (seenOffsets.has(gfPos.start.offset)) {
-        warnings.push('Conflit doublon groupFrequency offset=' + gfPos.start.offset);
+        warnings.push({ key: 'pk.w.dup', args: [gfPos.start.offset] });
       } else {
         seenOffsets.add(gfPos.start.offset);
-        patches.push({ pos: gfPos, newValueStr: String(ov.groupFrequency.value) });
+        patches.push({ pos: gfPos, newValueStr: formatLuaNumber(ov.groupFrequency.value) });
       }
     } else {
-      warnings.push('groupFrequency.valuePos absent pour le groupe');
+      warnings.push({ key: 'pk.w.noGroupFreqPos', args: [] });
     }
   }
 
   // overrides.radios[]
   for (const rOv of (ov.radios || [])) {
-    const found = findUnitById(rOv.unitId);
-    if (!found) { warnings.push('unitId=' + rOv.unitId + ' introuvable'); continue; }
+    const found = findUnitById(rOv.unitId, ctx);
+    if (!found) { warnings.push({ key: 'pk.w.unitGone', args: [rOv.unitId] }); continue; }
     const u = found.unit;
     const radio = (u.radios || []).find(r => r.index === rOv.radioIndex);
-    if (!radio) { warnings.push('Radio index=' + rOv.radioIndex + ' introuvable pour unitId=' + rOv.unitId); continue; }
+    if (!radio) { warnings.push({ key: 'pk.w.radioGone', args: [rOv.radioIndex, rOv.unitId] }); continue; }
     const ch = radio.channels && radio.channels[rOv.channel];
-    if (!ch) { warnings.push('Canal ' + rOv.channel + ' introuvable pour radio ' + rOv.radioIndex + ' unitId=' + rOv.unitId); continue; }
+    if (!ch) { warnings.push({ key: 'pk.w.chanGone', args: [rOv.channel, rOv.radioIndex, rOv.unitId] }); continue; }
     const fPos = ch.frequencyPos;
-    if (!fPos) { warnings.push('frequencyPos absent canal ' + rOv.channel + ' radio ' + rOv.radioIndex); continue; }
+    if (!fPos) { warnings.push({ key: 'pk.w.noFreqPos', args: [rOv.channel, rOv.radioIndex] }); continue; }
     if (seenOffsets.has(fPos.start.offset)) {
-      warnings.push('Conflit doublon fréquence offset=' + fPos.start.offset);
+      warnings.push({ key: 'pk.w.dup', args: [fPos.start.offset] });
       continue;
     }
     seenOffsets.add(fPos.start.offset);
-    patches.push({ pos: fPos, newValueStr: String(rOv.frequency) });
+    patches.push({ pos: fPos, newValueStr: formatLuaNumber(rOv.frequency) });
   }
 
   // overrides.liveries[]
   for (const lOv of (ov.liveries || [])) {
-    const found = findUnitById(lOv.unitId);
-    if (!found) { warnings.push('unitId=' + lOv.unitId + ' introuvable (livrée)'); continue; }
+    const found = findUnitById(lOv.unitId, ctx);
+    if (!found) { warnings.push({ key: 'pk.w.unitGone', args: [lOv.unitId] }); continue; }
     const u = found.unit;
-    if (!u.liveryPos) { warnings.push('liveryPos absent pour unitId=' + lOv.unitId + ' (livrée vide dans .miz ?)'); continue; }
+    if (!u.liveryPos) { warnings.push({ key: 'pk.w.noLiveryPos', args: [lOv.unitId] }); continue; }
     const lPos = u.liveryPos;
     if (seenOffsets.has(lPos.start.offset)) {
-      warnings.push('Conflit doublon livrée offset=' + lPos.start.offset);
+      warnings.push({ key: 'pk.w.dup', args: [lPos.start.offset] });
       continue;
     }
     seenOffsets.add(lPos.start.offset);
-    // Livrée = string Lua → newValueStr inclut les guillemets
-    const escaped = lOv.liveryId.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-    patches.push({ pos: lPos, newValueStr: '"' + escaped + '"' });
+    patches.push({ pos: lPos, newValueStr: serializeLua(String(lOv.liveryId)) });
   }
 
   // P4.3 — replacements.route et replacements.payloads[]
@@ -3206,47 +3439,35 @@ function buildPatchesFromPackage(pkg) {
   if (repl.route && repl.route.points !== undefined) {
     const pPos = slot.group.pointsPos;
     if (!pPos) {
-      warnings.push('pointsPos absent pour groupe ' + fl.groupId + ' — route non patchable');
+      warnings.push({ key: 'pk.w.noPointsPos', args: [] });
+    } else if (seenOffsets.has(pPos.start.offset)) {
+      warnings.push({ key: 'pk.w.dup', args: [pPos.start.offset] });
     } else {
-      // Conflit logique : un override radio sur le même groupe tomberait dans la tranche remplacée
-      const conflictingOverride = patches.find(p => p._groupId === fl.groupId);
-      if (conflictingOverride) {
-        warnings.push('Conflit replacements.route + override scalaire sur groupe ' + fl.groupId + ' — override ignoré');
-        // Retirer les patches conflictuels
-        for (let i = patches.length - 1; i >= 0; i--) {
-          if (patches[i]._groupId === fl.groupId) patches.splice(i, 1);
-        }
-        seenOffsets.delete(conflictingOverride.pos.start.offset);
-      }
-      if (seenOffsets.has(pPos.start.offset)) {
-        warnings.push('Conflit doublon route offset=' + pPos.start.offset);
+      const lua = serializeLua(repl.route.points);
+      if (lua === null) {
+        warnings.push({ key: 'pk.w.serialize', args: [] });
       } else {
-        const lua = serializeLua(repl.route.points);
-        if (lua === null) {
-          warnings.push('serializeLua route.points retourne null — route ignorée');
-        } else {
-          seenOffsets.add(pPos.start.offset);
-          patches.push({ pos: pPos, newValueStr: lua, _groupId: fl.groupId });
-        }
+        seenOffsets.add(pPos.start.offset);
+        patches.push({ pos: pPos, newValueStr: lua });
       }
     }
   }
 
   // replacements.payloads[] → par unité
   for (const pOv of (repl.payloads || [])) {
-    const found = findUnitById(pOv.unitId);
-    if (!found) { warnings.push('unitId=' + pOv.unitId + ' introuvable (payload replacement)'); continue; }
+    const found = findUnitById(pOv.unitId, ctx);
+    if (!found) { warnings.push({ key: 'pk.w.unitGone', args: [pOv.unitId] }); continue; }
     const u = found.unit;
-    if (!u.payloadPos) { warnings.push('payloadPos absent pour unitId=' + pOv.unitId); continue; }
+    if (!u.payloadPos) { warnings.push({ key: 'pk.w.noPayloadPos', args: [pOv.unitId] }); continue; }
     const pp = u.payloadPos;
     if (seenOffsets.has(pp.start.offset)) {
-      warnings.push('Conflit doublon payload offset=' + pp.start.offset);
+      warnings.push({ key: 'pk.w.dup', args: [pp.start.offset] });
       continue;
     }
     const lua = serializeLua(pOv.payload);
-    if (lua === null) { warnings.push('serializeLua payload retourne null — payload ignoré'); continue; }
+    if (lua === null) { warnings.push({ key: 'pk.w.serialize', args: [] }); continue; }
     seenOffsets.add(pp.start.offset);
-    patches.push({ pos: pp, newValueStr: lua, _unitId: pOv.unitId });
+    patches.push({ pos: pp, newValueStr: lua });
   }
 
   // Tri offset décroissant (obligatoire pour splice sans décalage)
@@ -3255,7 +3476,7 @@ function buildPatchesFromPackage(pkg) {
   return { patches, warnings };
 }
 
-// P3.3 — Auto-vérif post-patch (§ mémoire #21 : re-extraction → assert valeurs)
+// P3.3 — Auto-vérif post-patch (re-extraction du texte écrit → chaque valeur écrite est relue et comparée en valeur)
 function verifyPatch(patchedSrc, pkg) {
   const ov = pkg.overrides || {};
   try {
@@ -3263,6 +3484,15 @@ function verifyPatch(patchedSrc, pkg) {
     const vAst = DCS_PARSER.parse(vTk);
     const vModel = DCS_EXTRACTOR.extract(vAst, patchedSrc, _mizFilename || '', {}, patchedSrc.split('\n'));
     const errors = [];
+
+    // Fréquence du groupe
+    if (ov.groupFrequency && ov.groupFrequency.value !== undefined) {
+      const gslot = (vModel.clientGroups || []).find(s => s.group.groupId === pkg.flight.groupId);
+      const gv = gslot && gslot.group.frequency ? gslot.group.frequency.value : undefined;
+      if (gv === undefined || !deepEqValues(Number(gv), Number(ov.groupFrequency.value))) {
+        errors.push('Fréquence du groupe attendue ' + ov.groupFrequency.value + ' obtenu ' + gv);
+      }
+    }
 
     // Vérifier chaque radio patchée
     for (const rOv of (ov.radios || [])) {
@@ -3272,7 +3502,7 @@ function verifyPatch(patchedSrc, pkg) {
       const radio = (u.radios || []).find(r => r.index === rOv.radioIndex);
       const ch = radio && radio.channels && radio.channels[rOv.channel];
       if (!ch) { errors.push('Canal ' + rOv.channel + ' absent post-patch'); continue; }
-      if (Math.abs(Number(ch.frequency) - Number(rOv.frequency)) > 0.01) {
+      if (!deepEqValues(Number(ch.frequency), Number(rOv.frequency))) {
         errors.push('Fréquence attendue ' + rOv.frequency + ' obtenu ' + ch.frequency + ' canal ' + rOv.channel);
       }
     }
@@ -3287,33 +3517,31 @@ function verifyPatch(patchedSrc, pkg) {
       }
     }
 
-    // P4.3 — Vérifier replacements.route + replacements.payloads
+    // P4.3 — Vérifier replacements.route + replacements.payloads, en valeur
     const repl = pkg.replacements || {};
+    const rpCheck = _extractRouteAndPayloads(vAst, pkg.flight.groupId);
     if (repl.route && repl.route.points !== undefined) {
-      // Re-extraire le groupe patché
-      const rpCheck = _extractRouteAndPayloads(vAst, pkg.flight.groupId);
       if (rpCheck && rpCheck.pointsNode) {
         const newVal = astToValue(rpCheck.pointsNode);
         if (!deepEqValues(repl.route.points, newVal)) {
-          errors.push('route.points post-patch diverge du package');
+          errors.push('route.points post-patch diverge du paquet');
         }
       } else {
         errors.push('pointsNode introuvable après patch route');
       }
     }
     for (const pOv of (repl.payloads || [])) {
-      const rpCheck = _extractRouteAndPayloads(vAst, pkg.flight.groupId);
       if (!rpCheck || !rpCheck.unitPayloads[pOv.unitId]) {
         errors.push('payload introuvable après patch pour unitId=' + pOv.unitId);
         continue;
       }
       const newVal = astToValue(rpCheck.unitPayloads[pOv.unitId].payloadNode);
       if (!deepEqValues(pOv.payload, newVal)) {
-        errors.push('payload post-patch diverge du package pour unitId=' + pOv.unitId);
+        errors.push('payload post-patch diverge du paquet pour unitId=' + pOv.unitId);
       }
     }
 
-    const totalChecked = (ov.radios||[]).length + (ov.liveries||[]).length +
+    const totalChecked = (ov.groupFrequency ? 1 : 0) + (ov.radios||[]).length + (ov.liveries||[]).length +
       (repl.route ? 1 : 0) + (repl.payloads||[]).length;
     if (errors.length > 0) throw new Error('Auto-vérif post-patch échouée: ' + errors.join('; '));
     console.log('[HQ P4] Auto-vérif OK — ' + totalChecked + ' champ(s) validé(s)');
@@ -3322,83 +3550,528 @@ function verifyPatch(patchedSrc, pkg) {
   }
 }
 
-// P3.1 — Pipeline complet : package → _patched.miz
-async function applyPackageAndDownload(pkg) {
-  if (!_HQ_MIZ_CONTEXT) { showToast(t('toast.mizNotLoaded')); return; }
-  try {
-    showToast(t('toast.patchApplying'));
-    const { patches, warnings } = buildPatchesFromPackage(pkg);
-    if (warnings.length) console.warn('[HQ P3] Warnings:', warnings);
+// =============================================================
+//  PAQUETS DE VOL — export d'un vol, import dans la mission du MC
+// =============================================================
+const PK_FORMAT = 'dcs-flight-package-v1';
+const PK_PARTS  = ['route', 'radios', 'loadout', 'livery'];
+let _PK_LIST    = [];            // paquets chargés, dans l'ordre de chargement
+let _PK_SEQ     = 0;
+let _PK_REFUSED = [];            // [{ name, reason }] du dernier chargement
+let _PK_REPORT  = null;          // compte rendu de la dernière application
+let _PK_BUSY    = false;
+const _PK_EXPORT_SEL = new Set();   // groupId des vols cochés pour l'export
 
-    if (patches.length === 0) {
-      showToast(t('toast.patchNoChange'));
-      return;
+// tf : t() avec {0} {1}… ; tn : pluriel (clé.one / clé.many ; français < 2, anglais = 1), {0} = n
+function tf(key) {
+  let s = t(key);
+  for (let i = 1; i < arguments.length; i++) s = s.split('{' + (i - 1) + '}').join(String(arguments[i]));
+  return s;
+}
+function tn(key, n) {
+  const one = CURRENT_LANG === 'fr' ? n < 2 : n === 1;
+  const args = [key + (one ? '.one' : '.many')].concat(Array.prototype.slice.call(arguments, 1));
+  return tf.apply(null, args);
+}
+
+function pkStamp(d) {
+  d = d || new Date();
+  const p = n => String(n).padStart(2, '0');
+  return d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + '-' + p(d.getHours()) + p(d.getMinutes()) + p(d.getSeconds());
+}
+function pkCleanName(s) { return String(s).replace(/[^A-Za-z0-9_-]/g, '_').slice(0, 40); }
+
+function pkDownload(blob, fname) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = fname;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+// ---------- EXPORT ----------
+function pkBuildExport(groupIds) {
+  const snap = HQ_SNAPSHOT, ctx = _HQ_MIZ_CONTEXT;
+  const omit = { routes: [], payloads: [] };
+  const flights = [];
+  for (const fl of snap.flights) {
+    if (!groupIds.has(fl.groupId)) continue;
+    const rp = _extractRouteAndPayloads(ctx.ast, fl.groupId);
+    let route = null;
+    if (rp && rp.pointsNode) {
+      if (luaTableReproducible(rp.pointsNode)) route = { points: astToValue(rp.pointsNode) };
+      else omit.routes.push(fl.groupName);
     }
+    const slots = (ctx.model.clientGroups || []).filter(s => s.group.groupId === fl.groupId);
+    const units = fl.units.map(u => {
+      const slot = slots.find(s => s.unit.unitId === u.unitId);
+      const rawCs = slot && slot.unit.callsign !== null && slot.unit.callsign !== undefined ? slot.unit.callsign : u.callsign;
+      let payload = null;
+      const pn = rp && rp.unitPayloads[u.unitId];
+      if (pn) {
+        if (luaTableReproducible(pn.payloadNode)) payload = astToValue(pn.payloadNode);
+        else omit.payloads.push(fl.groupName + ' / ' + (u.name || u.unitId));
+      }
+      return {
+        name:     u.name || '',
+        callsign: rawCs,
+        liveryId: u.liveryId ? u.liveryId : null,
+        radios:   (u.radios || []).map(r => ({ radioIndex: r.radioIndex, channels: Object.assign({}, r.channels) })),
+        payload:  payload,
+      };
+    });
+    flights.push({
+      groupName:      fl.groupName,
+      aircraftType:   fl.aircraftType,
+      coalition:      fl.coalition,
+      groupFrequency: fl.groupFrequency ? { value: fl.groupFrequency.value, modulation: fl.groupFrequency.modulation } : null,
+      route:          route,
+      units:          units,
+    });
+  }
+  const pkg = {
+    format:        PK_FORMAT,
+    createdAt:     new Date().toISOString(),
+    createdBy:     'HQ',
+    theatre:       snap.sourceMission.theatre,
+    sourceMission: { filename: snap.sourceMission.filename, fingerprint: snap.sourceMission.fingerprint },
+    flights:       flights,
+  };
+  return { pkg, omit };
+}
 
-    const patchedSrc = applyPatches(_HQ_MIZ_CONTEXT.missionText, patches);
-    console.log('[HQ P3] ' + patches.length + ' patch(es), Δ=' + (patchedSrc.length - _HQ_MIZ_CONTEXT.missionText.length) + ' chars');
-
-    // Retokenize de sécurité (abort si échec)
-    retokenizeSafety(patchedSrc);
-
-    // Auto-vérif post-patch
-    verifyPatch(patchedSrc, pkg);
-
-    // Rezip
-    const blob = await rebuildMizHQ(patchedSrc);
-    const ts = Date.now();
-    const outName = (_mizFilename || 'mission').replace(/\.miz$/i, '') + '_patched_' + ts + '.miz';
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = outName;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 2000);
-
-    const warnMsg = warnings.length ? ' (' + warnings.length + ' avertissement(s))' : '';
-    showToast(t('toast.patchDone') + warnMsg);
-    if (warnings.length) console.warn('[HQ P3] Warnings détaillés:', warnings.join('\n'));
-
-    // Recharger le contexte depuis le texte patché
-    const { tokens: rTk } = DCS_TOKENIZER.tokenize(patchedSrc);
-    const rAst = DCS_PARSER.parse(rTk);
-    const rModel = DCS_EXTRACTOR.extract(rAst, patchedSrc, _mizFilename || '', _HQ_MIZ_CONTEXT.otherFilesMap, patchedSrc.split('\n'));
-    _HQ_MIZ_CONTEXT.missionText = patchedSrc;
-    _HQ_MIZ_CONTEXT.ast = rAst;
-    _HQ_MIZ_CONTEXT.model = rModel;
-    _mizFilename = outName;
-    console.log('[HQ P3] Contexte mis à jour avec le texte patché');
-
-  } catch(err) {
-    showToast(t('toast.patchError') + err.message);
-    console.error('[HQ P3] Patch error:', err);
+function pkExport() {
+  if (!HQ_SNAPSHOT || !_HQ_MIZ_CONTEXT) { showToast(t('toast.mizNotLoaded')); return; }
+  const ids = new Set(HQ_SNAPSHOT.flights.filter(f => _PK_EXPORT_SEL.has(f.groupId)).map(f => f.groupId));
+  if (ids.size === 0) return;
+  try {
+    const { pkg, omit } = pkBuildExport(ids);
+    const first = pkg.flights[0].groupName;
+    const fname = 'paquet_' + pkCleanName(first) + (pkg.flights.length > 1 ? '_+' + (pkg.flights.length - 1) : '') + '_' + pkStamp() + '.json';
+    pkDownload(new Blob([JSON.stringify(pkg, null, 2)], { type: 'application/json' }), fname);
+    let msg = tn('toast.pkExported', pkg.flights.length);
+    if (omit.routes.length)   msg += ' · ' + t('toast.pkOmitRoute') + ' ' + omit.routes.join(', ');
+    if (omit.payloads.length) msg += ' · ' + t('toast.pkOmitPayload') + ' ' + omit.payloads.join(', ');
+    showToast(msg, (omit.routes.length || omit.payloads.length) ? 6000 : 3000);
+  } catch (err) {
+    showToast(t('toast.pkExportError') + err.message);
+    console.error('[HQ] export paquet:', err);
   }
 }
 
-// P3.4 — Chemin dev/test (masqué derrière ?dev=1)
-const _IS_DEV = window.location.search.includes('dev=1');
+function pkRefreshExportBtn() {
+  const btn = document.getElementById('pk-export-btn');
+  if (!btn) return;
+  const any = !!_HQ_MIZ_CONTEXT && !!HQ_SNAPSHOT && HQ_SNAPSHOT.flights.some(f => _PK_EXPORT_SEL.has(f.groupId));
+  btn.disabled = !any;
+}
 
-function initCommanderUI() {
-  const cmdSection = document.getElementById('commander-section');
-  if (!cmdSection) return;
+// ---------- LECTURE D'UN PAQUET ----------
+function pkNum(v) { return (typeof v === 'number' && isFinite(v)) ? v : null; }
 
-  if (_IS_DEV) {
-    // Mode dev : textarea pour coller un Flight Package JSON
-    const devArea = document.getElementById('commander-dev-area');
-    if (devArea) devArea.style.display = 'block';
-    const btnApply = document.getElementById('commander-dev-apply');
-    if (btnApply) {
-      btnApply.addEventListener('click', () => {
-        const ta = document.getElementById('commander-dev-ta');
-        if (!ta || !ta.value.trim()) return;
-        try {
-          const pkg = JSON.parse(ta.value.trim());
-          applyPackageAndDownload(pkg);
-        } catch(e) {
-          showToast(t('toast.packageJsonInvalid') + e.message);
-        }
-      });
+function pkNormalize(obj, filename) {
+  if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return { reason: t('pk.err.parse') };
+  if (obj.format !== PK_FORMAT) {
+    return { reason: tf('pk.err.format', typeof obj.format === 'string' ? obj.format : String(obj.format), PK_FORMAT) };
+  }
+  if (!Array.isArray(obj.flights)) return { reason: t('pk.err.flights') };
+  const flights = [];
+  for (let i = 0; i < obj.flights.length; i++) {
+    const f = obj.flights[i];
+    if (!f || typeof f !== 'object' || typeof f.groupName !== 'string' || typeof f.aircraftType !== 'string') {
+      return { reason: tf('pk.err.flight', i + 1) };
+    }
+    const gf = f.groupFrequency && pkNum(f.groupFrequency.value) !== null ? { value: f.groupFrequency.value } : null;
+    const route = (f.route && f.route.points && typeof f.route.points === 'object') ? f.route.points : null;
+    const units = (Array.isArray(f.units) ? f.units : []).filter(u => u && typeof u === 'object').map(u => ({
+      name:     typeof u.name === 'string' ? u.name : '',
+      liveryId: (typeof u.liveryId === 'string' && u.liveryId !== '') ? u.liveryId : null,
+      radios:   (Array.isArray(u.radios) ? u.radios : [])
+        .filter(r => r && pkNum(r.radioIndex) !== null && r.channels && typeof r.channels === 'object')
+        .map(r => {
+          const channels = {};
+          for (const [c, fr] of Object.entries(r.channels)) if (pkNum(fr) !== null) channels[c] = fr;
+          return { radioIndex: r.radioIndex, channels };
+        }),
+      payload:  (u.payload && typeof u.payload === 'object') ? u.payload : null,
+    }));
+    flights.push({
+      groupName: f.groupName, aircraftType: f.aircraftType,
+      groupFrequency: gf, route: route, units: units,
+      chk: { route: true, radios: true, loadout: true, livery: true },
+    });
+  }
+  const sm = obj.sourceMission && typeof obj.sourceMission === 'object' ? obj.sourceMission : {};
+  return { pk: {
+    id: ++_PK_SEQ, filename: filename,
+    theatre: typeof obj.theatre === 'string' ? obj.theatre : '',
+    fingerprint: typeof sm.fingerprint === 'string' ? sm.fingerprint : '',
+    flights: flights,
+  } };
+}
+
+async function pkReadFile(file) {
+  const name = file.name;
+  const low = name.toLowerCase();
+  let text;
+  if (low.endsWith('.zip')) {
+    let zip;
+    try { zip = await JSZip.loadAsync(await file.arrayBuffer()); }
+    catch (e) { return { reason: t('pk.err.zip') }; }
+    const entry = zip.file('package.json');
+    if (!entry) return { reason: t('pk.err.noPackageJson') };
+    text = await entry.async('string');
+  } else if (low.endsWith('.json')) {
+    text = await file.text();
+  } else {
+    return { reason: t('pk.err.type') };
+  }
+  if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+  let obj;
+  try { obj = JSON.parse(text); } catch (e) { return { reason: t('pk.err.parse') }; }
+  return pkNormalize(obj, name);
+}
+
+async function pkLoadFiles(files) {
+  if (!_HQ_MIZ_CONTEXT) { showToast(t('toast.mizNotLoaded')); return; }
+  _PK_REFUSED = [];
+  let ok = 0;
+  for (const file of files) {
+    let r;
+    try { r = await pkReadFile(file); } catch (e) { r = { reason: e.message }; }
+    if (r.pk) { _PK_LIST.push(r.pk); ok++; }
+    else _PK_REFUSED.push({ name: file.name, reason: r.reason });
+  }
+  pkRender();
+  let msg = tn('toast.pkLoaded', ok);
+  if (_PK_REFUSED.length) msg += ' · ' + tn('toast.pkRefused', _PK_REFUSED.length) + ' : ' + _PK_REFUSED.map(r => r.name).join(', ');
+  showToast(msg, _PK_REFUSED.length ? 6000 : 3000);
+}
+
+// ---------- ÉTAT : recherche des vols, conflits, parties disponibles ----------
+function pkComputeState() {
+  const ctx = _HQ_MIZ_CONTEXT;
+  const seq = [];
+  for (const pk of _PK_LIST) {
+    for (const fl of pk.flights) {
+      const tg = ctx ? pkFindTarget(ctx, fl.groupName, fl.aircraftType) : null;
+      fl.found = !!tg;
+      fl.gid = tg ? tg.group.groupId : null;
+      fl.supBy = null;
+      fl.avail = {
+        route:   !!fl.route,
+        radios:  !!fl.groupFrequency || fl.units.some(u => u.radios.length > 0),
+        loadout: fl.units.some(u => !!u.payload),
+        livery:  fl.units.some(u => !!u.liveryId),
+      };
+      seq.push({ pk, fl });
     }
   }
+  // Le dernier chargé gagne : un vol est supplanté par le dernier vol qui vise le même groupe
+  const last = new Map();
+  for (const s of seq) if (s.fl.found) last.set(s.fl.gid, s);
+  for (const s of seq) {
+    if (!s.fl.found) continue;
+    const w = last.get(s.fl.gid);
+    if (w !== s) { s.fl.supBy = w.pk; }
+  }
+  return seq;
+}
+
+// ---------- RENDU ----------
+function pkRender() {
+  const seq = pkComputeState();
+  const ctx = _HQ_MIZ_CONTEXT;
+  const h = escapeHtml;
+  const note = document.getElementById('pk-nomiz');
+  if (note) note.style.display = ctx ? 'none' : 'block';
+  const loadBtn = document.getElementById('pk-load-btn');
+  if (loadBtn) loadBtn.disabled = !ctx;
+
+  const refEl = document.getElementById('pk-refused');
+  if (refEl) {
+    refEl.innerHTML = _PK_REFUSED.map(r =>
+      '<div class="pk-warn">⚠ ' + h(tf('pk.refused', r.name, r.reason)) + '</div>').join('');
+  }
+
+  const listEl = document.getElementById('pk-list');
+  if (listEl) {
+    let html = '';
+    if (_PK_LIST.length) html += '<div class="snap-header">' + h(t('pk.loaded')) + ' (' + _PK_LIST.length + ')</div>';
+    _PK_LIST.forEach((pk, pi) => {
+      html += '<div class="pk-pack">';
+      html += '<div class="pk-pack-head"><div><div class="pk-pack-name">' + h(pk.filename) + '</div>';
+      html += '<div class="pk-tags"><span class="snap-flight-tag">' + h(pk.theatre || '?') + '</span>';
+      html += '<span class="snap-flight-tag">' + h(tn('pk.nFlights', pk.flights.length)) + '</span></div></div>';
+      html += '<button class="pk-x" type="button" data-pk-remove="' + pk.id + '" aria-label="' + h(t('pk.remove')) + '">✕</button></div>';
+      if (ctx && pk.theatre !== ctx.theatre) {
+        html += '<div class="pk-warn">⚠ ' + h(tf('pk.warnTheatre', pk.theatre || '?', ctx.theatre)) + '</div>';
+      }
+      const loadedFp = HQ_SNAPSHOT && HQ_SNAPSHOT.sourceMission ? HQ_SNAPSHOT.sourceMission.fingerprint : '';
+      if (ctx && pk.fingerprint && loadedFp && pk.fingerprint !== loadedFp) {
+        html += '<div class="pk-warn">⚠ ' + h(t('pk.warnSource')) + '</div>';
+      }
+      pk.flights.forEach((fl, fi) => {
+        html += '<div class="pk-flight"><div class="pk-flight-head">' + h(fl.groupName) +
+          ' <span class="snap-flight-tag">' + h(fl.aircraftType) + '</span> ' +
+          (!ctx ? '' : fl.found ? '<span class="pk-found">' + h(t('pk.found')) + '</span>' : '<span class="pk-absent">' + h(t('pk.absent')) + '</span>') +
+          '</div>';
+        if (fl.supBy) html += '<div class="pk-warn">' + h(tf('pk.replacedBy', fl.supBy.filename)) + '</div>';
+        html += '<div class="pk-parts">';
+        for (const part of PK_PARTS) {
+          const on = !!ctx && fl.found && !fl.supBy && fl.avail[part];
+          html += '<label class="pk-chk' + (on ? '' : ' off') + '"><input type="checkbox" data-pk="' + pk.id + '" data-fi="' + fi + '" data-part="' + part + '"' +
+            ((on && fl.chk[part]) ? ' checked' : '') + (on ? '' : ' disabled') + '>' + h(t('pk.part.' + part)) + '</label>';
+        }
+        html += '</div></div>';
+      });
+      html += '</div>';
+    });
+    listEl.innerHTML = html;
+  }
+
+  const applyBtn = document.getElementById('pk-apply-btn');
+  if (applyBtn) applyBtn.disabled = _PK_BUSY || !(ctx && seq.some(s => s.fl.found && !s.fl.supBy));
+
+  const repEl = document.getElementById('pk-report');
+  if (repEl) {
+    if (!_PK_REPORT) { repEl.innerHTML = ''; }
+    else {
+      let html = '<div class="snap-header" style="margin-top:14px">' + h(t('pk.rep.title')) + '</div><div class="pk-rep">';
+      for (const L of _PK_REPORT.lines) html += '<div class="' + L.cls + '">' + h(L.text()) + '</div>';
+      html += '</div>';
+      if (_PK_REPORT.total) html += '<div class="pk-total">' + h(_PK_REPORT.total()) + '</div>';
+      repEl.innerHTML = html;
+    }
+  }
+}
+
+// ---------- APPLICATION ----------
+function pkTheatreOf(ctx) { return String(ctx.theatre || '').trim(); }
+
+// Plan d'écriture d'un vol trouvé : le « paquet » interne que buildPatchesFromPackage sait lire (identifiants de la mission du MC)
+function pkPlanFlight(ctx, pk, fl, tg) {
+  const warns = [];                       // { key, args }
+  const done = { route: 0, groupFreq: null, chan: 0, radioUnits: 0, payload: 0, livery: 0 };
+  const name = fl.groupName;
+  const plan = { flight: { groupId: tg.group.groupId }, overrides: { radios: [], liveries: [] }, replacements: { payloads: [] } };
+
+  // Les unités : par name exact, sinon par rang
+  const used = new Set();
+  const map = new Array(fl.units.length).fill(null);
+  fl.units.forEach((u, i) => {
+    const j = tg.units.findIndex((tu, k) => !used.has(k) && tu.name === u.name);
+    if (j >= 0) { used.add(j); map[i] = tg.units[j]; }
+  });
+  fl.units.forEach((u, i) => {
+    if (map[i]) return;
+    const j = tg.units.findIndex((tu, k) => !used.has(k));
+    if (j >= 0) { used.add(j); map[i] = tg.units[j]; }
+    else warns.push({ key: 'pk.w.extraUnit', args: [name, u.name] });
+  });
+
+  if (fl.chk.route && fl.avail.route) {
+    if (pk.theatre !== pkTheatreOf(ctx)) warns.push({ key: 'pk.w.theatreRoute', args: [name, pk.theatre || '?', pkTheatreOf(ctx)] });
+    else if (!tg.group.pointsPos) warns.push({ key: 'pk.w.noRoute', args: [name] });
+    else { plan.replacements.route = { points: fl.route }; done.route = Object.keys(fl.route).length; }
+  }
+  if (fl.chk.radios && fl.avail.radios) {
+    if (fl.groupFrequency) {
+      if (tg.group.frequency && tg.group.frequency.valuePos) {
+        plan.overrides.groupFrequency = { value: fl.groupFrequency.value };
+        done.groupFreq = fl.groupFrequency.value;
+      } else warns.push({ key: 'pk.w.noGroupFreq', args: [name] });
+    }
+    fl.units.forEach((u, i) => {
+      const tu = map[i];
+      if (!tu) return;
+      let wrote = false;
+      for (const r of u.radios) {
+        const tr = (tu.radios || []).find(x => x.index === r.radioIndex);
+        if (!tr) { warns.push({ key: 'pk.w.radio', args: [name, r.radioIndex, tu.name] }); continue; }
+        for (const [c, fr] of Object.entries(r.channels)) {
+          if (tr.channels && tr.channels[c]) {
+            plan.overrides.radios.push({ unitId: tu.unitId, radioIndex: r.radioIndex, channel: c, frequency: fr });
+            done.chan++; wrote = true;
+          } else warns.push({ key: 'pk.w.chan', args: [name, c, r.radioIndex, tu.name] });
+        }
+      }
+      if (wrote) done.radioUnits++;
+    });
+  }
+  if (fl.chk.loadout && fl.avail.loadout) {
+    fl.units.forEach((u, i) => {
+      const tu = map[i];
+      if (!tu || !u.payload) return;
+      if (tu.payloadPos) { plan.replacements.payloads.push({ unitId: tu.unitId, payload: u.payload }); done.payload++; }
+      else warns.push({ key: 'pk.w.payload', args: [name, tu.name] });
+    });
+  }
+  if (fl.chk.livery && fl.avail.livery) {
+    fl.units.forEach((u, i) => {
+      const tu = map[i];
+      if (!tu || !u.liveryId) return;
+      if (tu.liveryPos) { plan.overrides.liveries.push({ unitId: tu.unitId, liveryId: u.liveryId }); done.livery++; }
+      else warns.push({ key: 'pk.w.livery', args: [name, tu.name] });
+    });
+  }
+  return { plan, warns, done };
+}
+
+function pkDoneText(done) {
+  const parts = [];
+  if (done.route) parts.push(tn('pk.rep.route', done.route));
+  if (done.groupFreq !== null || done.chan) {
+    const bits = [];
+    if (done.groupFreq !== null) bits.push(tf('pk.rep.group', done.groupFreq));
+    if (done.radioUnits) bits.push(tn('pk.rep.units', done.radioUnits));
+    if (done.chan) bits.push(tn('pk.rep.chan', done.chan));
+    parts.push(tf('pk.rep.radios', bits.join(' ; ')));
+  }
+  if (done.payload) parts.push(tn('pk.rep.loadout', done.payload));
+  if (done.livery) parts.push(tn('pk.rep.livery', done.livery));
+  return parts.join(' · ');
+}
+
+async function pkApply() {
+  if (_PK_BUSY) return;
+  if (!_HQ_MIZ_CONTEXT) { showToast(t('toast.mizNotLoaded')); return; }
+  _PK_BUSY = true;
+  pkRender();
+  try {
+    showToast(t('toast.pkApplying'));
+    const seq = pkComputeState();
+    const base = _HQ_MIZ_CONTEXT;
+    // Copie de travail : le contexte chargé n'est touché qu'après le dernier vol vérifié
+    let work = { missionText: base.missionText, ast: base.ast, model: base.model, otherFilesMap: base.otherFilesMap, theatre: base.theatre };
+    const lines = [];
+    let applied = 0, absent = 0, warnN = 0, patchesN = 0;
+    for (const s of seq) {
+      const { pk, fl } = s;
+      const label = fl.groupName;
+      if (!fl.found) {
+        absent++;
+        lines.push({ cls: 'a', text: () => tf('pk.rep.absent', label, pk.filename) });
+        continue;
+      }
+      if (fl.supBy) {
+        warnN++;
+        const win = fl.supBy;
+        lines.push({ cls: 'w', text: () => tf('pk.rep.conflict', label, pk.filename, win.filename) });
+        continue;
+      }
+      const tg = pkFindTarget(work, fl.groupName, fl.aircraftType);
+      if (!tg) throw Object.assign(new Error(label + ': groupe introuvable'), { pkFlight: label, pkFile: pk.filename });
+      const { plan, warns, done } = pkPlanFlight(work, pk, fl, tg);
+      let built;
+      try {
+        built = buildPatchesFromPackage(plan, work);
+        if (built.patches.length === 0) {
+          lines.push({ cls: 'a', text: () => tf('pk.rep.nothing', label, pk.filename) });
+        } else {
+          const patchedSrc = applyPatches(work.missionText, built.patches);
+          retokenizeSafety(patchedSrc);
+          verifyPatch(patchedSrc, plan);
+          // Contexte réextrait après chaque vol
+          const { tokens: rTk } = DCS_TOKENIZER.tokenize(patchedSrc);
+          const rAst = DCS_PARSER.parse(rTk);
+          const rModel = DCS_EXTRACTOR.extract(rAst, patchedSrc, _mizFilename || '', work.otherFilesMap, patchedSrc.split('\n'));
+          work = { missionText: patchedSrc, ast: rAst, model: rModel, otherFilesMap: work.otherFilesMap, theatre: work.theatre };
+          applied++; patchesN += built.patches.length;
+          lines.push({ cls: 'ok', text: () => tf('pk.rep.ok', label, pk.filename, pkDoneText(done)) });
+        }
+        for (const w of warns) {
+          warnN++;
+          lines.push({ cls: 'w', text: () => '⚠ ' + tf.apply(null, [w.key].concat(w.args)) });
+        }
+        for (const w of built.warnings) {
+          warnN++;
+          lines.push({ cls: 'w', text: () => '⚠ ' + label + (CURRENT_LANG === 'fr' ? ' : ' : ': ') + tf.apply(null, [w.key].concat(w.args)) });
+        }
+      } catch (err) {
+        throw Object.assign(err, { pkFlight: label, pkFile: pk.filename });
+      }
+    }
+    if (patchesN === 0) {
+      _PK_REPORT = { lines, total: () => pkTotalText(applied, absent, warnN) };
+      showToast(t('toast.pkNoChange'));
+      return;
+    }
+    // Rien n'a échoué : l'archive est refaite (rebuildMizHQ) et le snapshot recalculé, puis seulement on télécharge et on change d'état
+    const blob = await rebuildMizHQ(work.missionText);
+    const snap = await buildMissionSnapshot(work.ast, work.model, work.missionText, _mizFilename || 'mission.miz', work.theatre);
+    const outName = (_mizFilename || 'mission').replace(/\.miz$/i, '') + '_paquets_' + pkStamp() + '.miz';
+    pkDownload(blob, outName);
+    _HQ_MIZ_CONTEXT = { missionText: work.missionText, ast: work.ast, model: work.model, otherFilesMap: work.otherFilesMap, theatre: work.theatre };
+    HQ_SNAPSHOT = snap;
+    persistSnapshot();
+    renderSnapshot(HQ_SNAPSHOT);
+    _PK_REPORT = { lines, total: () => pkTotalText(applied, absent, warnN) };
+    showToast(tn('pk.rep.applied', applied) + ' ✔');
+  } catch (err) {
+    console.error('[HQ] application des paquets:', err);
+    const msg = err && err.message ? err.message : String(err);
+    _PK_REPORT = { lines: [
+      { cls: 'w', text: () => tf('pk.rep.fail', err.pkFlight || '?', err.pkFile || '?', msg) },
+      { cls: 'a', text: () => t('pk.rep.failTail') },
+    ], total: null };
+    showToast(tf('toast.pkFail', err.pkFlight || '?'), 5000);
+  } finally {
+    _PK_BUSY = false;
+    pkRender();
+  }
+}
+
+function pkTotalText(applied, absent, warnN) {
+  return tn('pk.rep.applied', applied) + ' · ' + tn('pk.rep.absentN', absent) + ' · ' + tn('pk.rep.warnN', warnN);
+}
+
+// ---------- ÉVÉNEMENTS ----------
+function initPackagesUI() {
+  const loadBtn = document.getElementById('pk-load-btn');
+  const fileInput = document.getElementById('pk-file-input');
+  if (loadBtn && fileInput) {
+    loadBtn.addEventListener('click', () => { if (!loadBtn.disabled) fileInput.click(); });
+    fileInput.addEventListener('change', e => {
+      const files = Array.from(e.target.files || []);
+      e.target.value = '';
+      if (files.length) pkLoadFiles(files);
+    });
+  }
+  const applyBtn = document.getElementById('pk-apply-btn');
+  if (applyBtn) applyBtn.addEventListener('click', pkApply);
+  const listEl = document.getElementById('pk-list');
+  if (listEl) {
+    listEl.addEventListener('click', e => {
+      const b = e.target.closest ? e.target.closest('[data-pk-remove]') : null;
+      if (!b) return;
+      const id = Number(b.getAttribute('data-pk-remove'));
+      _PK_LIST = _PK_LIST.filter(p => p.id !== id);
+      pkRender();
+    });
+    listEl.addEventListener('change', e => {
+      const cb = e.target;
+      if (!cb || !cb.getAttribute || !cb.hasAttribute('data-part')) return;
+      const pk = _PK_LIST.find(p => p.id === Number(cb.getAttribute('data-pk')));
+      const fl = pk && pk.flights[Number(cb.getAttribute('data-fi'))];
+      if (fl) fl.chk[cb.getAttribute('data-part')] = cb.checked;
+    });
+  }
+  const snapEl = document.getElementById('snapshot-display');
+  if (snapEl) {
+    snapEl.addEventListener('change', e => {
+      const cb = e.target;
+      if (!cb || !cb.hasAttribute || !cb.hasAttribute('data-pk-export')) return;
+      const gid = Number(cb.getAttribute('data-pk-export'));
+      if (cb.checked) _PK_EXPORT_SEL.add(gid); else _PK_EXPORT_SEL.delete(gid);
+      pkRefreshExportBtn();
+    });
+    snapEl.addEventListener('click', e => {
+      const b = e.target.closest ? e.target.closest('#pk-export-btn') : null;
+      if (b && !b.disabled) pkExport();
+    });
+  }
+  pkRender();
 }
 
 /* ============= LISTES DE LA BARRE — thème de l'interface (lot mp-ui-listes) =============
@@ -3682,7 +4355,7 @@ function init() {
   refreshRestoreButton();
   initMissionEvents();
   loadPersistedSnapshot();  // P2 — restaurer snapshot au rechargement
-  initCommanderUI();        // P3 — chemin dev/test + ghost Commander
+  initPackagesUI();         // paquets de vol (export / import)
 }
 
 init();
