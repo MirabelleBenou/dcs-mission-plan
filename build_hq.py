@@ -863,6 +863,7 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
 .pk-chk input {{ accent-color: var(--amber); width: 18px; height: 18px; margin: 0; flex: none; }}
 .pk-chk.off {{ opacity: .4; cursor: default; }}
 .pk-chk.off input {{ cursor: default; }}
+.drop-zone-miz.pk-busy {{ opacity: .4; pointer-events: none; }}
 .snap-flight-header .pk-chk {{ font-family: var(--f-stencil); letter-spacing: 1px; color: var(--amber); text-transform: none; }}
 .pk-note {{ font-family: var(--f-typewriter); font-size: 11px; color: var(--khaki-light); margin: 0 0 10px; }}
 .pk-pack {{
@@ -1259,6 +1260,25 @@ const I18N = {{
     'toast.pkApplying': 'Application des paquets…',
     'toast.pkNoChange': 'Aucun changement à écrire',
     'toast.pkFail': '⚠ Vérification échouée : {{0}} — rien n’est téléchargé',
+    'pk.join': '{{0}} : {{1}}',
+    'pk.w.prefix': '{{0}} : {{1}}',
+    'pk.w.departure': '{{0}} : départ de la mission conservé — le paquet part d’ailleurs',
+    'pk.w.pointRef': '{{0}} : point {{1}} : référence à une unité de la mission du paquet ({{2}} = {{3}}) — à vérifier',
+    'pk.w.routeEmpty': '{{0}} : la route du groupe n’a pas de point dans le .miz, route du paquet écrite en entier',
+    'pk.w.p1Fixed': '{{0}} : le point 1 de la mission ne peut pas être réécrit tel quel, route non écrite',
+    'pk.e.reparse': 'texte écrit illisible ({{0}})',
+    'pk.e.groupFreq': 'fréquence du groupe : attendu {{0}}, relu {{1}}',
+    'pk.e.unitGone': 'unité {{0}} absente après l’écriture',
+    'pk.e.chanGone': 'canal {{0}} du poste {{1}} absent après l’écriture',
+    'pk.e.chanVal': 'canal {{0}} du poste {{1}} : attendu {{2}}, relu {{3}}',
+    'pk.e.livery': 'livrée : attendu « {{0}} », relu « {{1}} »',
+    'pk.e.route': 'route.points relu différent du paquet',
+    'pk.e.routeGone': 'route.points introuvable après l’écriture',
+    'pk.e.payloadGone': 'emport introuvable après l’écriture (unité {{0}})',
+    'pk.e.payload': 'emport relu différent du paquet (unité {{0}})',
+    'pk.e.targetGone': 'groupe introuvable dans la mission',
+    'pk.e.retok': 'texte écrit illisible ({{0}})',
+    'toast.pkApplyingN': 'Application des paquets… ({{0}}/{{1}})',
     'toast.mizNotLoaded':        '\u26a0 Charger un .miz d\u2019abord',
   }},
   en: {{
@@ -1432,6 +1452,25 @@ const I18N = {{
     'toast.pkApplying': 'Applying packages…',
     'toast.pkNoChange': 'Nothing to write',
     'toast.pkFail': '⚠ Verification failed: {{0}} — nothing downloaded',
+    'pk.join': '{{0}}: {{1}}',
+    'pk.w.prefix': '{{0}}: {{1}}',
+    'pk.w.departure': '{{0}}: mission departure kept — the package starts elsewhere',
+    'pk.w.pointRef': '{{0}}: point {{1}}: refers to a unit of the package’s mission ({{2}} = {{3}}) — check it',
+    'pk.w.routeEmpty': '{{0}}: the group’s route has no point in the .miz, the package’s route is written in full',
+    'pk.w.p1Fixed': '{{0}}: the mission’s point 1 cannot be rewritten as it is, route not written',
+    'pk.e.reparse': 'written text unreadable ({{0}})',
+    'pk.e.groupFreq': 'group frequency: expected {{0}}, read back {{1}}',
+    'pk.e.unitGone': 'unit {{0}} missing after the write',
+    'pk.e.chanGone': 'channel {{0}} of radio {{1}} missing after the write',
+    'pk.e.chanVal': 'channel {{0}} of radio {{1}}: expected {{2}}, read back {{3}}',
+    'pk.e.livery': 'livery: expected “{{0}}”, read back “{{1}}”',
+    'pk.e.route': 'route.points read back differs from the package',
+    'pk.e.routeGone': 'route.points not found after the write',
+    'pk.e.payloadGone': 'loadout not found after the write (unit {{0}})',
+    'pk.e.payload': 'loadout read back differs from the package (unit {{0}})',
+    'pk.e.targetGone': 'group not found in the mission',
+    'pk.e.retok': 'written text unreadable ({{0}})',
+    'toast.pkApplyingN': 'Applying packages… ({{0}}/{{1}})',
     'toast.mizNotLoaded':        '\u26a0 Load a .miz first',
   }}
 }};
@@ -2262,7 +2301,9 @@ function mizWeatherToMetar(wx, dateObj, startTime, theatre) {{
 // =============================================================
 //  P2.1 — PIPELINE DE CHARGEMENT .MIZ
 // =============================================================
+let _mizLoading = false;   // un chargement de .miz est en cours
 function handleFile(file) {{
+  if (_PK_BUSY) return;   // pas de nouveau .miz pendant l'application des paquets
   if (!file || !file.name.toLowerCase().endsWith('.miz')) {{
     showToast(t('toast.mizNotMiz'));
     return;
@@ -2271,8 +2312,9 @@ function handleFile(file) {{
 }}
 
 async function loadMiz(file) {{
+  if (_PK_BUSY || _mizLoading) return;
+  _mizLoading = true;
   showToast(t('toast.mizLoading'));
-  _mizFilename = file.name;
   try {{
     const arrayBuffer = await file.arrayBuffer();
     const zip = await JSZip.loadAsync(arrayBuffer);
@@ -2294,10 +2336,11 @@ async function loadMiz(file) {{
     const ast          = DCS_PARSER.parse(tokens);
     // Extraction via DCS_EXTRACTOR HQ (avec liveryPos P3)
     const model = DCS_EXTRACTOR.extract(ast, missionText, file.name, otherFilesMap, missionText.split('\\n'));
-    // P3 — stocker contexte complet pour le pipeline de patch
-    _HQ_MIZ_CONTEXT = {{ missionText, ast, model, otherFilesMap, theatre }};
     // Construire le Mission JSON
     const snapshot = await buildMissionSnapshot(ast, model, missionText, file.name, theatre);
+    // Tout a réussi : le nom, le contexte complet (pipeline de patch) et le snapshot changent ensemble
+    _mizFilename = file.name;
+    _HQ_MIZ_CONTEXT = {{ missionText, ast, model, otherFilesMap, theatre }};
     HQ_SNAPSHOT = snapshot;
     persistSnapshot();
     _PK_EXPORT_SEL.clear();
@@ -2309,6 +2352,8 @@ async function loadMiz(file) {{
   }} catch(err) {{
     showToast(t('toast.mizError') + err.message);
     console.error('[HQ P3] loadMiz error:', err);
+  }} finally {{
+    _mizLoading = false;
   }}
 }}
 
@@ -2675,8 +2720,8 @@ function initMissionEvents() {{
   const dropZone = document.getElementById('miz-drop-zone');
   const fileInput = document.getElementById('miz-file-input');
   if (dropZone) {{
-    dropZone.addEventListener('click', () => fileInput && fileInput.click());
-    dropZone.addEventListener('keydown', e => {{ if (e.key === 'Enter' || e.key === ' ') {{ e.preventDefault(); fileInput && fileInput.click(); }} }});
+    dropZone.addEventListener('click', () => {{ if (!_PK_BUSY && fileInput) fileInput.click(); }});
+    dropZone.addEventListener('keydown', e => {{ if (e.key === 'Enter' || e.key === ' ') {{ e.preventDefault(); if (!_PK_BUSY && fileInput) fileInput.click(); }} }});
     dropZone.addEventListener('dragover', e => {{ e.preventDefault(); dropZone.classList.add('dragover'); }});
     dropZone.addEventListener('dragleave', () => {{ dropZone.classList.remove('dragover'); }});
     dropZone.addEventListener('drop', e => {{
@@ -2696,6 +2741,7 @@ function initMissionEvents() {{
   const reloadBtn = document.getElementById('miz-reload-btn');
   if (reloadBtn) {{
     reloadBtn.addEventListener('click', () => {{
+      if (_PK_BUSY) return;
       HQ_SNAPSHOT = null; _mizFilename = null; _HQ_MIZ_CONTEXT = null;
       _PK_EXPORT_SEL.clear(); _PK_REPORT = null;
       pkRender();
@@ -2733,29 +2779,10 @@ function astToValue(node) {{
   return undefined;
 }}
 
-// formatLuaNumber : nombre → chaîne décimale, sans notation exponentielle
-//   entier        → String(n)
-//   autre nombre  → String(n) (le plus court qui redonne le même double) quand ce texte n'a pas d'exposant
-//   sinon         → écriture décimale pleine
+// formatLuaNumber : nombre fini → String(n), exposant compris (le plus court qui redonne le même double ;
+// Lua et le tokeniseur d'HQ lisent « 2.7755575615629e-17 » et « 1e+21 »)
 function formatLuaNumber(n) {{
-  if (!isFinite(n)) return String(n);
-  if (Number.isInteger(n)) {{
-    const si = String(n);
-    return /e/i.test(si) ? BigInt(n).toString() : si;
-  }}
-  const sh = String(n);
-  if (!/e/i.test(sh)) return sh;
-  let s = n.toPrecision(17);
-  if (s.includes('e') || s.includes('E')) {{
-    // Reformater en décimal plein
-    s = n.toFixed(15).replace(/\\.?0+$/, '');
-    if (!s.includes('.')) s = s + '.0';
-  }} else {{
-    // Supprimer les zéros trailing
-    s = s.replace(/\\.?0+$/, '');
-    if (s.endsWith('.')) s = s.slice(0, -1);
-  }}
-  return s;
+  return String(n);
 }}
 
 // luaEscape : texte → contenu d'une chaîne Lua entre guillemets
@@ -2901,9 +2928,11 @@ function pkClientGroups(ctx) {{
   return out;
 }}
 
-// Règle 6 : le groupe Client de même groupName (à l'identique) et de même aircraftType ; jamais le groupId
-function pkFindTarget(ctx, groupName, aircraftType) {{
-  return pkClientGroups(ctx).find(g => g.group.name === groupName && g.aircraftType === aircraftType) || null;
+// Règle 6 : le groupe Client de même groupName (à l'identique), de même aircraftType et — quand le paquet en porte une —
+// de même coalition ; jamais le groupId
+function pkFindTarget(ctx, groupName, aircraftType, coalition) {{
+  return pkClientGroups(ctx).find(g => g.group.name === groupName && g.aircraftType === aircraftType &&
+    (!coalition || g.group.coalition === coalition)) || null;
 }}
 
 // P3.3 — Construire les patches d'un vol (pkg : {{ flight:{{groupId}}, overrides, replacements }}) sur un contexte
@@ -3018,77 +3047,76 @@ function buildPatchesFromPackage(pkg, ctx) {{
 }}
 
 // P3.3 — Auto-vérif post-patch (re-extraction du texte écrit → chaque valeur écrite est relue et comparée en valeur)
+// En cas d'écart : Error portant pkErrors = [{{ key, args }}] (textes par t())
 function verifyPatch(patchedSrc, pkg) {{
   const ov = pkg.overrides || {{}};
+  const errors = [];
+  let vAst, vModel;
   try {{
     const {{ tokens: vTk }} = DCS_TOKENIZER.tokenize(patchedSrc);
-    const vAst = DCS_PARSER.parse(vTk);
-    const vModel = DCS_EXTRACTOR.extract(vAst, patchedSrc, _mizFilename || '', {{}}, patchedSrc.split('\\n'));
-    const errors = [];
-
-    // Fréquence du groupe
-    if (ov.groupFrequency && ov.groupFrequency.value !== undefined) {{
-      const gslot = (vModel.clientGroups || []).find(s => s.group.groupId === pkg.flight.groupId);
-      const gv = gslot && gslot.group.frequency ? gslot.group.frequency.value : undefined;
-      if (gv === undefined || !deepEqValues(Number(gv), Number(ov.groupFrequency.value))) {{
-        errors.push('Fréquence du groupe attendue ' + ov.groupFrequency.value + ' obtenu ' + gv);
-      }}
-    }}
-
-    // Vérifier chaque radio patchée
-    for (const rOv of (ov.radios || [])) {{
-      const slot = (vModel.clientGroups || []).find(s => s.unit && s.unit.unitId === rOv.unitId);
-      if (!slot) {{ errors.push('unitId=' + rOv.unitId + ' absent post-patch'); continue; }}
-      const u = slot.unit;
-      const radio = (u.radios || []).find(r => r.index === rOv.radioIndex);
-      const ch = radio && radio.channels && radio.channels[rOv.channel];
-      if (!ch) {{ errors.push('Canal ' + rOv.channel + ' absent post-patch'); continue; }}
-      if (!deepEqValues(Number(ch.frequency), Number(rOv.frequency))) {{
-        errors.push('Fréquence attendue ' + rOv.frequency + ' obtenu ' + ch.frequency + ' canal ' + rOv.channel);
-      }}
-    }}
-
-    // Vérifier chaque livrée patchée
-    for (const lOv of (ov.liveries || [])) {{
-      const slot = (vModel.clientGroups || []).find(s => s.unit && s.unit.unitId === lOv.unitId);
-      if (!slot) {{ errors.push('unitId=' + lOv.unitId + ' absent post-patch (livrée)'); continue; }}
-      const u = slot.unit;
-      if (u.livery_id !== lOv.liveryId) {{
-        errors.push('Livrée attendue "' + lOv.liveryId + '" obtenu "' + (u.livery_id||'') + '"');
-      }}
-    }}
-
-    // P4.3 — Vérifier replacements.route + replacements.payloads, en valeur
-    const repl = pkg.replacements || {{}};
-    const rpCheck = _extractRouteAndPayloads(vAst, pkg.flight.groupId);
-    if (repl.route && repl.route.points !== undefined) {{
-      if (rpCheck && rpCheck.pointsNode) {{
-        const newVal = astToValue(rpCheck.pointsNode);
-        if (!deepEqValues(repl.route.points, newVal)) {{
-          errors.push('route.points post-patch diverge du paquet');
-        }}
-      }} else {{
-        errors.push('pointsNode introuvable après patch route');
-      }}
-    }}
-    for (const pOv of (repl.payloads || [])) {{
-      if (!rpCheck || !rpCheck.unitPayloads[pOv.unitId]) {{
-        errors.push('payload introuvable après patch pour unitId=' + pOv.unitId);
-        continue;
-      }}
-      const newVal = astToValue(rpCheck.unitPayloads[pOv.unitId].payloadNode);
-      if (!deepEqValues(pOv.payload, newVal)) {{
-        errors.push('payload post-patch diverge du paquet pour unitId=' + pOv.unitId);
-      }}
-    }}
-
-    const totalChecked = (ov.groupFrequency ? 1 : 0) + (ov.radios||[]).length + (ov.liveries||[]).length +
-      (repl.route ? 1 : 0) + (repl.payloads||[]).length;
-    if (errors.length > 0) throw new Error('Auto-vérif post-patch échouée: ' + errors.join('; '));
-    console.log('[HQ P4] Auto-vérif OK — ' + totalChecked + ' champ(s) validé(s)');
-  }} catch(e) {{
-    throw new Error('Vérif post-patch: ' + e.message);
+    vAst = DCS_PARSER.parse(vTk);
+    vModel = DCS_EXTRACTOR.extract(vAst, patchedSrc, _mizFilename || '', {{}}, patchedSrc.split('\\n'));
+  }} catch (e) {{
+    throw Object.assign(new Error('Vérif post-patch: ' + e.message), {{ pkErrors: [{{ key: 'pk.e.reparse', args: [e.message] }}] }});
   }}
+
+  // Fréquence du groupe
+  if (ov.groupFrequency && ov.groupFrequency.value !== undefined) {{
+    const gslot = (vModel.clientGroups || []).find(s => s.group.groupId === pkg.flight.groupId);
+    const gv = gslot && gslot.group.frequency ? gslot.group.frequency.value : undefined;
+    if (gv === undefined || !deepEqValues(Number(gv), Number(ov.groupFrequency.value))) {{
+      errors.push({{ key: 'pk.e.groupFreq', args: [ov.groupFrequency.value, gv] }});
+    }}
+  }}
+
+  // Vérifier chaque radio patchée
+  for (const rOv of (ov.radios || [])) {{
+    const slot = (vModel.clientGroups || []).find(s => s.unit && s.unit.unitId === rOv.unitId);
+    if (!slot) {{ errors.push({{ key: 'pk.e.unitGone', args: [rOv.unitId] }}); continue; }}
+    const u = slot.unit;
+    const radio = (u.radios || []).find(r => r.index === rOv.radioIndex);
+    const ch = radio && radio.channels && radio.channels[rOv.channel];
+    if (!ch) {{ errors.push({{ key: 'pk.e.chanGone', args: [rOv.channel, rOv.radioIndex] }}); continue; }}
+    if (!deepEqValues(Number(ch.frequency), Number(rOv.frequency))) {{
+      errors.push({{ key: 'pk.e.chanVal', args: [rOv.channel, rOv.radioIndex, rOv.frequency, ch.frequency] }});
+    }}
+  }}
+
+  // Vérifier chaque livrée patchée
+  for (const lOv of (ov.liveries || [])) {{
+    const slot = (vModel.clientGroups || []).find(s => s.unit && s.unit.unitId === lOv.unitId);
+    if (!slot) {{ errors.push({{ key: 'pk.e.unitGone', args: [lOv.unitId] }}); continue; }}
+    if (slot.unit.livery_id !== lOv.liveryId) {{
+      errors.push({{ key: 'pk.e.livery', args: [lOv.liveryId, slot.unit.livery_id || ''] }});
+    }}
+  }}
+
+  // P4.3 — Vérifier replacements.route + replacements.payloads, en valeur
+  const repl = pkg.replacements || {{}};
+  const rpCheck = _extractRouteAndPayloads(vAst, pkg.flight.groupId);
+  if (repl.route && repl.route.points !== undefined) {{
+    if (rpCheck && rpCheck.pointsNode) {{
+      if (!deepEqValues(repl.route.points, astToValue(rpCheck.pointsNode))) errors.push({{ key: 'pk.e.route', args: [] }});
+    }} else {{
+      errors.push({{ key: 'pk.e.routeGone', args: [] }});
+    }}
+  }}
+  for (const pOv of (repl.payloads || [])) {{
+    if (!rpCheck || !rpCheck.unitPayloads[pOv.unitId]) {{
+      errors.push({{ key: 'pk.e.payloadGone', args: [pOv.unitId] }});
+      continue;
+    }}
+    if (!deepEqValues(pOv.payload, astToValue(rpCheck.unitPayloads[pOv.unitId].payloadNode))) {{
+      errors.push({{ key: 'pk.e.payload', args: [pOv.unitId] }});
+    }}
+  }}
+
+  if (errors.length > 0) {{
+    throw Object.assign(new Error('Auto-vérif post-patch échouée: ' + errors.map(e => e.key + '(' + e.args.join(',') + ')').join('; ')), {{ pkErrors: errors }});
+  }}
+  const totalChecked = (ov.groupFrequency ? 1 : 0) + (ov.radios||[]).length + (ov.liveries||[]).length +
+    (repl.route ? 1 : 0) + (repl.payloads||[]).length;
+  console.log('[HQ P4] Auto-vérif OK — ' + totalChecked + ' champ(s) validé(s)');
 }}
 
 // =============================================================
@@ -3207,20 +3235,36 @@ function pkRefreshExportBtn() {{
   btn.disabled = !any;
 }}
 
+// Textes d'erreur : traduits à l'affichage, jamais au moment où l'erreur survient
+function pkReasonText(r) {{ return r.key ? tf.apply(null, [r.key].concat(r.args)) : String(r.raw); }}
+function pkErrText(err) {{
+  if (err && err.pkErrors) return err.pkErrors.map(e => tf.apply(null, [e.key].concat(e.args))).join(' ; ');
+  return err && err.message ? err.message : String(err);
+}}
+// Rend la main au navigateur pour qu'il peigne (repli à 50 ms si les images ne sont pas peintes, onglet caché)
+function pkYield() {{
+  return new Promise(resolve => {{
+    let done = false;
+    const fin = () => {{ if (!done) {{ done = true; resolve(); }} }};
+    if (typeof requestAnimationFrame === 'function') requestAnimationFrame(() => setTimeout(fin, 0));
+    setTimeout(fin, 50);
+  }});
+}}
+
 // ---------- LECTURE D'UN PAQUET ----------
 function pkNum(v) {{ return (typeof v === 'number' && isFinite(v)) ? v : null; }}
 
 function pkNormalize(obj, filename) {{
-  if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return {{ reason: t('pk.err.parse') }};
+  if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return {{ reason: {{ key: 'pk.err.parse', args: [] }} }};
   if (obj.format !== PK_FORMAT) {{
-    return {{ reason: tf('pk.err.format', typeof obj.format === 'string' ? obj.format : String(obj.format), PK_FORMAT) }};
+    return {{ reason: {{ key: 'pk.err.format', args: [typeof obj.format === 'string' ? obj.format : String(obj.format), PK_FORMAT] }} }};
   }}
-  if (!Array.isArray(obj.flights)) return {{ reason: t('pk.err.flights') }};
+  if (!Array.isArray(obj.flights)) return {{ reason: {{ key: 'pk.err.flights', args: [] }} }};
   const flights = [];
   for (let i = 0; i < obj.flights.length; i++) {{
     const f = obj.flights[i];
     if (!f || typeof f !== 'object' || typeof f.groupName !== 'string' || typeof f.aircraftType !== 'string') {{
-      return {{ reason: tf('pk.err.flight', i + 1) }};
+      return {{ reason: {{ key: 'pk.err.flight', args: [i + 1] }} }};
     }}
     const gf = f.groupFrequency && pkNum(f.groupFrequency.value) !== null ? {{ value: f.groupFrequency.value }} : null;
     const route = (f.route && f.route.points && typeof f.route.points === 'object') ? f.route.points : null;
@@ -3238,6 +3282,7 @@ function pkNormalize(obj, filename) {{
     }}));
     flights.push({{
       groupName: f.groupName, aircraftType: f.aircraftType,
+      coalition: typeof f.coalition === 'string' ? f.coalition : '',
       groupFrequency: gf, route: route, units: units,
       chk: {{ route: true, radios: true, loadout: true, livery: true }},
     }});
@@ -3258,34 +3303,35 @@ async function pkReadFile(file) {{
   if (low.endsWith('.zip')) {{
     let zip;
     try {{ zip = await JSZip.loadAsync(await file.arrayBuffer()); }}
-    catch (e) {{ return {{ reason: t('pk.err.zip') }}; }}
+    catch (e) {{ return {{ reason: {{ key: 'pk.err.zip', args: [] }} }}; }}
     const entry = zip.file('package.json');
-    if (!entry) return {{ reason: t('pk.err.noPackageJson') }};
+    if (!entry) return {{ reason: {{ key: 'pk.err.noPackageJson', args: [] }} }};
     text = await entry.async('string');
   }} else if (low.endsWith('.json')) {{
     text = await file.text();
   }} else {{
-    return {{ reason: t('pk.err.type') }};
+    return {{ reason: {{ key: 'pk.err.type', args: [] }} }};
   }}
   if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
   let obj;
-  try {{ obj = JSON.parse(text); }} catch (e) {{ return {{ reason: t('pk.err.parse') }}; }}
+  try {{ obj = JSON.parse(text); }} catch (e) {{ return {{ reason: {{ key: 'pk.err.parse', args: [] }} }}; }}
   return pkNormalize(obj, name);
 }}
 
 async function pkLoadFiles(files) {{
   if (!_HQ_MIZ_CONTEXT) {{ showToast(t('toast.mizNotLoaded')); return; }}
+  if (_PK_BUSY) return;
   _PK_REFUSED = [];
   let ok = 0;
   for (const file of files) {{
     let r;
-    try {{ r = await pkReadFile(file); }} catch (e) {{ r = {{ reason: e.message }}; }}
+    try {{ r = await pkReadFile(file); }} catch (e) {{ r = {{ reason: {{ key: null, raw: e.message }} }}; }}
     if (r.pk) {{ _PK_LIST.push(r.pk); ok++; }}
     else _PK_REFUSED.push({{ name: file.name, reason: r.reason }});
   }}
   pkRender();
   let msg = tn('toast.pkLoaded', ok);
-  if (_PK_REFUSED.length) msg += ' · ' + tn('toast.pkRefused', _PK_REFUSED.length) + ' : ' + _PK_REFUSED.map(r => r.name).join(', ');
+  if (_PK_REFUSED.length) msg += ' · ' + tf('pk.join', tn('toast.pkRefused', _PK_REFUSED.length), _PK_REFUSED.map(r => r.name).join(', '));
   showToast(msg, _PK_REFUSED.length ? 6000 : 3000);
 }}
 
@@ -3295,7 +3341,7 @@ function pkComputeState() {{
   const seq = [];
   for (const pk of _PK_LIST) {{
     for (const fl of pk.flights) {{
-      const tg = ctx ? pkFindTarget(ctx, fl.groupName, fl.aircraftType) : null;
+      const tg = ctx ? pkFindTarget(ctx, fl.groupName, fl.aircraftType, fl.coalition) : null;
       fl.found = !!tg;
       fl.gid = tg ? tg.group.groupId : null;
       fl.supBy = null;
@@ -3326,13 +3372,21 @@ function pkRender() {{
   const h = escapeHtml;
   const note = document.getElementById('pk-nomiz');
   if (note) note.style.display = ctx ? 'none' : 'block';
+  const busy = _PK_BUSY;
   const loadBtn = document.getElementById('pk-load-btn');
-  if (loadBtn) loadBtn.disabled = !ctx;
+  if (loadBtn) loadBtn.disabled = !ctx || busy;
+  // Pendant l'application, on ne charge pas d'autre .miz
+  const mizIn = document.getElementById('miz-file-input');
+  if (mizIn) mizIn.disabled = busy;
+  const mizDz = document.getElementById('miz-drop-zone');
+  if (mizDz) {{ mizDz.classList.toggle('pk-busy', busy); mizDz.setAttribute('aria-disabled', busy ? 'true' : 'false'); }}
+  const mizRl = document.getElementById('miz-reload-btn');
+  if (mizRl) mizRl.disabled = busy;
 
   const refEl = document.getElementById('pk-refused');
   if (refEl) {{
     refEl.innerHTML = _PK_REFUSED.map(r =>
-      '<div class="pk-warn">⚠ ' + h(tf('pk.refused', r.name, r.reason)) + '</div>').join('');
+      '<div class="pk-warn">⚠ ' + h(tf('pk.refused', r.name, pkReasonText(r.reason))) + '</div>').join('');
   }}
 
   const listEl = document.getElementById('pk-list');
@@ -3344,7 +3398,7 @@ function pkRender() {{
       html += '<div class="pk-pack-head"><div><div class="pk-pack-name">' + h(pk.filename) + '</div>';
       html += '<div class="pk-tags"><span class="snap-flight-tag">' + h(pk.theatre || '?') + '</span>';
       html += '<span class="snap-flight-tag">' + h(tn('pk.nFlights', pk.flights.length)) + '</span></div></div>';
-      html += '<button class="pk-x" type="button" data-pk-remove="' + pk.id + '" aria-label="' + h(t('pk.remove')) + '">✕</button></div>';
+      html += '<button class="pk-x" type="button" data-pk-remove="' + pk.id + '"' + (busy ? ' disabled' : '') + ' aria-label="' + h(t('pk.remove')) + '">✕</button></div>';
       if (ctx && pk.theatre !== ctx.theatre) {{
         html += '<div class="pk-warn">⚠ ' + h(tf('pk.warnTheatre', pk.theatre || '?', ctx.theatre)) + '</div>';
       }}
@@ -3362,7 +3416,7 @@ function pkRender() {{
         for (const part of PK_PARTS) {{
           const on = !!ctx && fl.found && !fl.supBy && fl.avail[part];
           html += '<label class="pk-chk' + (on ? '' : ' off') + '"><input type="checkbox" data-pk="' + pk.id + '" data-fi="' + fi + '" data-part="' + part + '"' +
-            ((on && fl.chk[part]) ? ' checked' : '') + (on ? '' : ' disabled') + '>' + h(t('pk.part.' + part)) + '</label>';
+            ((on && fl.chk[part]) ? ' checked' : '') + ((on && !busy) ? '' : ' disabled') + '>' + h(t('pk.part.' + part)) + '</label>';
         }}
         html += '</div></div>';
       }});
@@ -3390,6 +3444,18 @@ function pkRender() {{
 // ---------- APPLICATION ----------
 function pkTheatreOf(ctx) {{ return String(ctx.theatre || '').trim(); }}
 
+// Le point 1 du paquet part-il d'ailleurs que celui de la mission ? (type, airdromeId, helipadId, linkUnit, ou x/y à plus d'un mètre)
+function pkStartsElsewhere(q, p) {{
+  for (const k of ['type', 'airdromeId', 'helipadId', 'linkUnit']) {{
+    if (JSON.stringify(q[k]) !== JSON.stringify(p[k])) return true;
+  }}
+  for (const k of ['x', 'y']) {{
+    const a = Number(q[k]), b = Number(p[k]);
+    if (!(Math.abs(a - b) <= 1)) return true;
+  }}
+  return false;
+}}
+
 // Plan d'écriture d'un vol trouvé : le « paquet » interne que buildPatchesFromPackage sait lire (identifiants de la mission du MC)
 function pkPlanFlight(ctx, pk, fl, tg) {{
   const warns = [];                       // {{ key, args }}
@@ -3414,7 +3480,36 @@ function pkPlanFlight(ctx, pk, fl, tg) {{
   if (fl.chk.route && fl.avail.route) {{
     if (pk.theatre !== pkTheatreOf(ctx)) warns.push({{ key: 'pk.w.theatreRoute', args: [name, pk.theatre || '?', pkTheatreOf(ctx)] }});
     else if (!tg.group.pointsPos) warns.push({{ key: 'pk.w.noRoute', args: [name] }});
-    else {{ plan.replacements.route = {{ points: fl.route }}; done.route = Object.keys(fl.route).length; }}
+    else {{
+      // Le point 1 est celui de la mission : les points du paquet remplacent la route à partir du point 2
+      const rp = _extractRouteAndPayloads(ctx.ast, tg.group.groupId);
+      const pn = rp && rp.pointsNode;
+      const e1 = pn && pn.kind === 'table' ? pn.entries.find(e => e.key && e.key.kind === 'int' && e.key.value === 1) : null;
+      const pkgPts = fl.route;
+      if (!e1) {{
+        // la route du groupe visé n'a pas de point : celle du paquet, en entier
+        plan.replacements.route = {{ points: pkgPts }};
+        done.route = Object.keys(pkgPts).length;
+        warns.push({{ key: 'pk.w.routeEmpty', args: [name] }});
+      }} else if (!luaTableReproducible(e1.value)) {{
+        warns.push({{ key: 'pk.w.p1Fixed', args: [name] }});
+      }} else {{
+        const p1 = astToValue(e1.value);
+        const pts = {{ 1: p1 }};
+        for (const [k, v] of Object.entries(pkgPts)) if (k !== '1') pts[k] = v;
+        if (pkgPts['1'] && typeof pkgPts['1'] === 'object' && pkStartsElsewhere(pkgPts['1'], p1)) {{
+          warns.push({{ key: 'pk.w.departure', args: [name] }});
+        }}
+        for (const [k, v] of Object.entries(pkgPts)) {{
+          if (k === '1' || !v || typeof v !== 'object') continue;
+          for (const f of ['linkUnit', 'helipadId']) {{
+            if (v[f] !== undefined && v[f] !== null) warns.push({{ key: 'pk.w.pointRef', args: [name, k, f, v[f]] }});
+          }}
+        }}
+        plan.replacements.route = {{ points: pts }};
+        done.route = Object.keys(pts).length;
+      }}
+    }}
   }}
   if (fl.chk.radios && fl.avail.radios) {{
     if (fl.groupFrequency) {{
@@ -3475,18 +3570,20 @@ function pkDoneText(done) {{
 }}
 
 async function pkApply() {{
-  if (_PK_BUSY) return;
+  if (_PK_BUSY || _mizLoading) return;
   if (!_HQ_MIZ_CONTEXT) {{ showToast(t('toast.mizNotLoaded')); return; }}
   _PK_BUSY = true;
   pkRender();
   try {{
-    showToast(t('toast.pkApplying'));
+    showToast(t('toast.pkApplying'), 120000);
+    await pkYield();      // l'état occupé et le toast sont peints avant le premier vol
     const seq = pkComputeState();
+    const total = seq.filter(s => s.fl.found && !s.fl.supBy).length;
     const base = _HQ_MIZ_CONTEXT;
     // Copie de travail : le contexte chargé n'est touché qu'après le dernier vol vérifié
     let work = {{ missionText: base.missionText, ast: base.ast, model: base.model, otherFilesMap: base.otherFilesMap, theatre: base.theatre }};
     const lines = [];
-    let applied = 0, absent = 0, warnN = 0, patchesN = 0;
+    let applied = 0, absent = 0, warnN = 0, patchesN = 0, started = 0;
     for (const s of seq) {{
       const {{ pk, fl }} = s;
       const label = fl.groupName;
@@ -3501,17 +3598,21 @@ async function pkApply() {{
         lines.push({{ cls: 'w', text: () => tf('pk.rep.conflict', label, pk.filename, win.filename) }});
         continue;
       }}
-      const tg = pkFindTarget(work, fl.groupName, fl.aircraftType);
-      if (!tg) throw Object.assign(new Error(label + ': groupe introuvable'), {{ pkFlight: label, pkFile: pk.filename }});
-      const {{ plan, warns, done }} = pkPlanFlight(work, pk, fl, tg);
-      let built;
+      if (started++ > 0) {{
+        showToast(tf('toast.pkApplyingN', started, total), 120000);
+        await pkYield();  // et de nouveau entre deux vols
+      }}
       try {{
-        built = buildPatchesFromPackage(plan, work);
+        const tg = pkFindTarget(work, fl.groupName, fl.aircraftType, fl.coalition);
+        if (!tg) throw Object.assign(new Error('target group not found'), {{ pkErrors: [{{ key: 'pk.e.targetGone', args: [] }}] }});
+        const {{ plan, warns, done }} = pkPlanFlight(work, pk, fl, tg);
+        const built = buildPatchesFromPackage(plan, work);
         if (built.patches.length === 0) {{
           lines.push({{ cls: 'a', text: () => tf('pk.rep.nothing', label, pk.filename) }});
         }} else {{
           const patchedSrc = applyPatches(work.missionText, built.patches);
-          retokenizeSafety(patchedSrc);
+          try {{ retokenizeSafety(patchedSrc); }}
+          catch (e) {{ throw Object.assign(e, {{ pkErrors: [{{ key: 'pk.e.retok', args: [e.message] }}] }}); }}
           verifyPatch(patchedSrc, plan);
           // Contexte réextrait après chaque vol
           const {{ tokens: rTk }} = DCS_TOKENIZER.tokenize(patchedSrc);
@@ -3527,7 +3628,7 @@ async function pkApply() {{
         }}
         for (const w of built.warnings) {{
           warnN++;
-          lines.push({{ cls: 'w', text: () => '⚠ ' + label + (CURRENT_LANG === 'fr' ? ' : ' : ': ') + tf.apply(null, [w.key].concat(w.args)) }});
+          lines.push({{ cls: 'w', text: () => '⚠ ' + tf('pk.w.prefix', label, tf.apply(null, [w.key].concat(w.args))) }});
         }}
       }} catch (err) {{
         throw Object.assign(err, {{ pkFlight: label, pkFile: pk.filename }});
@@ -3551,12 +3652,12 @@ async function pkApply() {{
     showToast(tn('pk.rep.applied', applied) + ' ✔');
   }} catch (err) {{
     console.error('[HQ] application des paquets:', err);
-    const msg = err && err.message ? err.message : String(err);
+    const fe = err || {{}};
     _PK_REPORT = {{ lines: [
-      {{ cls: 'w', text: () => tf('pk.rep.fail', err.pkFlight || '?', err.pkFile || '?', msg) }},
+      {{ cls: 'w', text: () => tf('pk.rep.fail', fe.pkFlight || '?', fe.pkFile || '?', pkErrText(fe)) }},
       {{ cls: 'a', text: () => t('pk.rep.failTail') }},
     ], total: null }};
-    showToast(tf('toast.pkFail', err.pkFlight || '?'), 5000);
+    showToast(tf('toast.pkFail', fe.pkFlight || '?'), 5000);
   }} finally {{
     _PK_BUSY = false;
     pkRender();
@@ -3586,13 +3687,14 @@ function initPackagesUI() {{
     listEl.addEventListener('click', e => {{
       const b = e.target.closest ? e.target.closest('[data-pk-remove]') : null;
       if (!b) return;
+      if (_PK_BUSY) return;
       const id = Number(b.getAttribute('data-pk-remove'));
       _PK_LIST = _PK_LIST.filter(p => p.id !== id);
       pkRender();
     }});
     listEl.addEventListener('change', e => {{
       const cb = e.target;
-      if (!cb || !cb.getAttribute || !cb.hasAttribute('data-part')) return;
+      if (_PK_BUSY || !cb || !cb.getAttribute || !cb.hasAttribute('data-part')) return;
       const pk = _PK_LIST.find(p => p.id === Number(cb.getAttribute('data-pk')));
       const fl = pk && pk.flights[Number(cb.getAttribute('data-fi'))];
       if (fl) fl.chk[cb.getAttribute('data-part')] = cb.checked;
@@ -3942,6 +4044,12 @@ _DCS_EXTRACTOR_HQ = _DCS_EXTRACTOR_HQ.replace(
 )
 assert 'pointsPos' in _DCS_EXTRACTOR_HQ, 'MISSING pointsPos in extractor'
 
+# Une unité skill = "Player" compte comme une unité Client (extraction, snapshot, export, recherche, repli par rang)
+_SKILL_OLD = "if (skillNode && skillNode.value==='Client') clientUnits.push(extractUnit(ue.value));"
+_SKILL_NEW = "if (skillNode && (skillNode.value==='Client' || skillNode.value==='Player')) clientUnits.push(extractUnit(ue.value));"
+assert _DCS_EXTRACTOR_HQ.count(_SKILL_OLD) == 1, 'MISSING skill anchor in extractor'
+_DCS_EXTRACTOR_HQ = _DCS_EXTRACTOR_HQ.replace(_SKILL_OLD, _SKILL_NEW)
+
 # Paquets de vol — le tokenizer lit les échappements décimaux \ddd (un à trois chiffres) que serializeLua écrit pour
 # les caractères sous U+0020 ; sans cela, un texte écrit avec \001 serait relu « 001 » et la vérification échouerait.
 _TOK_OLD = "else if(e==='r')v+='\\r';else v+=e;"
@@ -4061,7 +4169,6 @@ grep_present('pointsPos',           'pointsPos présent (P4.2)')
 grep_present('payloadPos',          'payloadPos présent (P4.2)')
 grep_present("replacements.route",  'replacements.route géré (P4.3)')
 grep_present("repl.payloads",       'replacements.payloads géré (P4.3)')
-grep_present('toPrecision(17)',     'précision double toPrecision(17) (P4.1)')
 
 # I18N parity check
 import ast
