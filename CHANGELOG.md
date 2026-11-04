@@ -36,6 +36,7 @@ Changes merged since the last release, grouped per tool.
 ### Route Planner
 #### Added
 - **Ruler** mode on the map: tap to measure, segment by segment, each with its heading (true or magnetic, like the navigation) and distance in the chosen unit, and the total; taps snap to waypoints, reference points and airfields; nothing is saved.
+- **Several routes**, one per flight: a route list in the Route section, the other routes drawn faintly on the map; **From HQ** turns flights of the mission loaded in HQ into routes, and **Flight package** exports linked routes to a package that HQ applies to the mission (untouched waypoints keep their original data).
 #### Changed
 - Units are chosen from a **Units** menu in the top bar, like the **Display** menu (distance km or NM, altitude m or ft); the Map and Theatre lists are as wide as the option chosen, so the top bar is about 300 px narrower.
 - The example loads in the interface language (French or English).
