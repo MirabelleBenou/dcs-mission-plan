@@ -20,6 +20,7 @@ Changes merged since the last release, grouped per tool.
 - **Flight packages**: export one or more flights of the loaded .miz (route, radios, loadout, livery) to a package file, and apply flight packages to a mission — each flight is found by its group name and aircraft type, you choose what to apply per flight, and a report lists what was written.
 #### Changed
 - Radios are named and numbered as in the cockpit in the mission summary and in the package messages (the Mi-24P's R-863 and R-828 start at channel 0). The .miz keeps its own numbering.
+- Flight packages are recognised by their content, not their file name; unreadable flights are skipped and counted, an empty package or one without theatre is refused, with the same messages as the Route Planner and the Datacard Generator. *Load another .miz* also clears the mission offered to the Route Planner and the Datacard Generator.
 
 ### Recon Station
 #### Added
@@ -30,6 +31,7 @@ Changes merged since the last release, grouped per tool.
 ### Briefing Generator
 #### Changed
 - The example loads in the interface language (French or English).
+- **Load** only accepts a briefing: any other file (flight package, route, datacard) is refused with a message and the current briefing is kept.
 
 ### Datacard Generator
 #### Added
@@ -37,6 +39,7 @@ Changes merged since the last release, grouped per tool.
 #### Changed
 - The example loads in the interface language (French or English).
 - Radios imported from HQ or a flight package are named and numbered as in the cockpit (the Mi-24P's R-863 and R-828 start at channel 0); an aircraft type the suite does not know keeps "Radio n" and the mission's channel numbers. With several aircraft types, the channels are chosen per type.
+- **Import JSON** and the import window's **JSON file** both recognise a briefing, a route, a route set (all routes at once) and a flight package; a refused file says why.
 
 ### Route Planner
 #### Added
@@ -45,6 +48,7 @@ Changes merged since the last release, grouped per tool.
 #### Changed
 - Units are chosen from a **Units** menu in the top bar, like the **Display** menu (distance km or NM, altitude m or ft); the Map and Theatre lists are as wide as the option chosen, so the top bar is about 300 px narrower.
 - The example loads in the interface language (French or English).
+- **Open** and **Flight package** also read a flight package in a .zip; a flight without route says *no route*; a refused file says why.
 
 ### Field Manual
 #### Added

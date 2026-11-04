@@ -709,7 +709,7 @@ select[data-tbm-src] { display: none !important; }
   transition: all .3s ease;
   pointer-events: none;
   box-shadow: 0 4px 16px rgba(0,0,0,.6);
-  max-width: 92vw;
+  width: max-content; max-width: 92vw;
   text-align: center;
 }
 .toast.show {
@@ -1514,7 +1514,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         <span class="imp-filename" id="imp-pkg-name"></span>
         <input type="file" id="file-package" accept=".json,.zip,application/json,application/zip" hidden>
       </div>
-      <label class="imp-src" id="imp-src-file-row"><input type="radio" name="imp-src" id="imp-src-file" value="file"><span data-i18n="imp.src.file">Fichier JSON (briefing ou route)</span></label>
+      <label class="imp-src" id="imp-src-file-row"><input type="radio" name="imp-src" id="imp-src-file" value="file"><span data-i18n="imp.src.file">Fichier JSON (briefing, route ou paquet)</span></label>
       <div class="imp-file" id="imp-file-zone" hidden>
         <button type="button" class="imp-filebtn" id="imp-file-btn" data-i18n="imp.choose">Choisir un fichier…</button>
         <span class="imp-filename" id="imp-file-name"></span>
