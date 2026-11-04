@@ -1251,7 +1251,6 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .rs-btns { display: flex; gap: 6px; margin-top: 8px; }
 .rs-btns .tb-btn { flex: 1 1 0; min-width: 0; padding: 0 6px; font-size: 11px; letter-spacing: 1px; white-space: nowrap; }
 .rs-btns .tb-btn[hidden] { display: none; }
-.rs-hq { width: 100%; margin-top: 6px; }
 .rs-set { margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px dashed var(--khaki); }
 .rs-flight { margin: 8px 0 0; font-size: 11.5px; letter-spacing: .3px; line-height: 1.45; color: var(--khaki-light); overflow-wrap: anywhere; }
 .rs-flight b { font-family: var(--f-ui); font-weight: 700; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--amber); margin-right: 6px; }
@@ -1262,16 +1261,24 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .tbm-opt .tbm-note { margin-left: auto; padding-left: 14px; flex: 0 1 auto; min-width: 0; max-width: 48%; overflow: hidden; text-overflow: ellipsis;
   font-family: var(--f-mono); font-weight: 400; font-size: 11px; letter-spacing: 0; text-transform: none; color: var(--khaki-light); }
 .rt-filters { display: flex; gap: 8px; margin: 0 0 10px; flex-wrap: wrap; }
-.rt-filters > div { flex: 1 1 120px; min-width: 0; }
-.rt-filters > div.nm { flex: 2 1 170px; }
+.rt-filters > div { flex: 1 1 100px; min-width: 0; }
+.rt-filters > div.nm { flex: 2 1 140px; }
 .rt-filters .lbl { margin-bottom: 4px; }
+.rt-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin: 0 0 8px; }
+.cf-modal .rt-tools .rt-btn { min-height: 36px; padding: 4px 10px; font-size: 11px; letter-spacing: 1px; }
+.rt-tools .rt-cnt { margin-left: auto; font-size: 11px; letter-spacing: .3px; color: var(--khaki-light); }
+.rt-tools[hidden] { display: none; }
+.fn-field { margin: 0 0 12px; }
+.fn-field .lbl { margin-bottom: 4px; }
+.fn-row { display: flex; align-items: center; gap: 8px; }
+.fn-row .in { flex: 1 1 auto; min-width: 0; }
+.fn-ext { flex: none; font-family: var(--f-mono); font-size: 13px; color: var(--khaki-light); }
 .rt-row .rt-two { display: flex; flex-direction: column; min-width: 0; flex: 1 1 auto; }
 .rt-row .rt-two small { font-size: 11px; color: var(--khaki-light); overflow-wrap: anywhere; }
 .rt-row.off { opacity: .45; cursor: not-allowed; }
 .rt-row.off input { cursor: not-allowed; }
 .rt-row .rt-n { display: flex; flex-direction: column; align-items: flex-end; }
 .rt-row .rt-n .rt-dup { color: var(--amber); }
-.rt-fname { font-size: 11.5px; color: var(--khaki-light); margin: 0 0 8px; overflow-wrap: anywhere; font-family: var(--f-mono); letter-spacing: 0; }
 .cf-modal .rt-warn { color: var(--paper); border-left: 3px solid var(--amber); padding: 4px 0 4px 10px; background: rgba(0,0,0,.18); }
 .cf-modal .rt-filters .in { font-size: 13px; }
 .cf-modal .rt-empty { font-size: 12px; color: var(--khaki-light); margin: 4px 0 12px; }
@@ -1284,10 +1291,10 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .dsp-seg .tb-btn + .tb-btn { border-left: none; }
 
 /* ---------- le menu « Affichage » (lot rp-v1.12.1) : le bouton de la barre et son panneau, au style des listes de la barre (tbm-*) ---------- */
-#btn-display, #btn-units { position: relative; color: var(--amber); border-color: var(--amber-dark); padding-right: 12px; }
-#btn-display:hover, #btn-display:focus-visible, #btn-display.dsp-open, #btn-units:hover, #btn-units:focus-visible, #btn-units.dsp-open { border-color: var(--amber); }
-#btn-display .dsp-chev, #btn-units .dsp-chev { width: 10px; height: 6px; }
-#btn-display.dsp-open .dsp-chev, #btn-units.dsp-open .dsp-chev { transform: rotate(180deg); }
+#btn-display, #btn-units, #btn-save { position: relative; color: var(--amber); border-color: var(--amber-dark); padding-right: 12px; }
+#btn-display:hover, #btn-display:focus-visible, #btn-display.dsp-open, #btn-units:hover, #btn-units:focus-visible, #btn-units.dsp-open, #btn-save:hover, #btn-save:focus-visible, #btn-save.dsp-open { border-color: var(--amber); }
+#btn-display .dsp-chev, #btn-units .dsp-chev, #btn-save .dsp-chev { width: 10px; height: 6px; }
+#btn-display.dsp-open .dsp-chev, #btn-units.dsp-open .dsp-chev, #btn-save.dsp-open .dsp-chev { transform: rotate(180deg); }
 .dsp-dot { position: absolute; top: -3px; right: -3px; width: 7px; height: 7px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 0 2px var(--olive-deep); pointer-events: none; }
 .dsp-dot[hidden] { display: none; }
 .dsp-panel { max-height: min(80vh, 600px); min-width: 240px; padding-bottom: 6px; }
@@ -1681,12 +1688,10 @@ SOFTWARE.
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3M7 8l5-5 5 5M5 21h14"/></svg>
     <span class="tb-btn-label solo" data-i18n="tb.open">Ouvrir</span></button>
   <input type="file" id="file-open" hidden>
-  <button type="button" class="tb-btn" id="btn-save" data-i18n-title="tb.save.tip" title="Enregistrer la route (JSON)" data-i18n-aria-label="tb.save.tip" aria-label="Enregistrer la route (JSON)">
+  <button type="button" class="tb-btn" id="btn-save" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.save.tip" title="Enregistrer" data-i18n-aria-label="tb.save.tip" aria-label="Enregistrer">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3h11l3 3v15H5zM8 3v6h8V3M8 21v-7h8v7"/></svg>
-    <span class="tb-btn-label solo" data-i18n="tb.save">Enregistrer</span></button>
-  <button type="button" class="tb-btn" id="btn-save-all" data-i18n-title="tb.saveAll.tip" title="Enregistrer toutes les routes (JSON)" data-i18n-aria-label="tb.saveAll.tip" aria-label="Enregistrer toutes les routes (JSON)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10l3 3v10H3zM5 8V2h8M6 8v4h6V8M6 21v-5h6v5"/><path d="M16 5h5v14h-3"/></svg>
-    <span class="tb-btn-label solo" data-i18n="tb.saveAll">Enregistrer tout</span></button>
+    <span class="tb-btn-label solo" data-i18n="tb.save">Enregistrer</span>
+    <svg class="dsp-chev" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg></button>
   <button type="button" class="tb-btn" id="btn-example" data-i18n-title="tb.example.tip" title="Charger l'exemple" data-i18n-aria-label="tb.example.tip" aria-label="Charger l'exemple">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
     <span class="tb-btn-label solo" data-i18n="tb.example">Exemple</span></button>
@@ -1745,7 +1750,11 @@ SOFTWARE.
             <button type="button" class="tb-btn" id="rs-dup" data-i18n="rs.dup">Dupliquer</button>
             <button type="button" class="tb-btn danger" id="rs-del" data-i18n="rs.del">Supprimer</button>
           </div>
-          <button type="button" class="tb-btn primary rs-hq" id="rs-hq" data-i18n="rs.hq">⇣ Depuis HQ</button>
+          <div class="rs-btns">
+            <button type="button" class="tb-btn primary" id="rs-hq" data-i18n="rs.hq">⇣ Depuis HQ</button>
+            <button type="button" class="tb-btn primary" id="rs-pkg" data-i18n="rs.pkg">⇣ Paquet de vol</button>
+          </div>
+          <input type="file" id="file-pkg" accept=".json,application/json" hidden>
         </div>
         <div class="rn">
           <label class="lbl" for="route-name" data-i18n="f.name">Nom de la route</label>
@@ -1904,11 +1913,12 @@ SOFTWARE.
   <div class="rt-backdrop" id="cf-export-backdrop"></div>
   <div class="rt-panel" role="document">
     <button type="button" class="rt-close" id="cf-export-close" data-i18n-aria-label="modal.close" aria-label="Fermer">&times;</button>
-    <h2 id="cf-export-title" data-i18n="cf.exp.title">Exporter</h2>
+    <h2 id="cf-export-title"></h2>
+    <div class="fn-field"><label class="lbl" for="cf-fname" data-i18n="fn.label">Nom du fichier</label><div class="fn-row"><input class="in" id="cf-fname" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="100"><span class="fn-ext">.json</span></div></div>
     <div class="rt-list" id="cf-export-list"></div>
     <div class="rt-actions">
       <button type="button" class="rt-btn" id="cf-export-cancel" data-i18n="rt.cancel">Annuler</button>
-      <button type="button" class="rt-btn go" id="cf-export-go" data-i18n="cf.exp.go">Exporter</button>
+      <button type="button" class="rt-btn go" id="cf-export-go" data-i18n="tb.save">Enregistrer</button>
     </div>
   </div>
 </div>
@@ -1923,7 +1933,13 @@ SOFTWARE.
     <p class="rt-note rt-warn" id="hq-warn" hidden></p>
     <div class="rt-filters">
       <div><label class="lbl" for="hq-side" data-i18n="hq.side">Camp</label><select class="in" id="hq-side" data-lbl="hq.side"></select></div>
+      <div><label class="lbl" for="hq-type" data-i18n="hq.type">Type</label><select class="in" id="hq-type" data-lbl="hq.type"></select></div>
       <div class="nm"><label class="lbl" for="hq-name" data-i18n="hq.name">Nom</label><input class="in" id="hq-name" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+    </div>
+    <div class="rt-tools" id="hq-tools">
+      <button type="button" class="rt-btn" id="hq-check" data-i18n="hq.checkShown">Cocher les vols affichés</button>
+      <button type="button" class="rt-btn" id="hq-uncheck" data-i18n="hq.uncheck">Tout décocher</button>
+      <span class="rt-cnt" id="hq-cnt" aria-live="polite"></span>
     </div>
     <div class="rt-list" id="hq-list"></div>
     <p class="rt-note rt-warn" id="hq-limit" hidden></p>
@@ -1940,9 +1956,9 @@ SOFTWARE.
   <div class="rt-panel" role="document">
     <button type="button" class="rt-close" id="pk-close" data-i18n-aria-label="modal.close" aria-label="Fermer">&times;</button>
     <h2 id="pk-title" data-i18n="pk.title">Paquet de vol</h2>
+    <div class="fn-field"><label class="lbl" for="pk-fname" data-i18n="fn.label">Nom du fichier</label><div class="fn-row"><input class="in" id="pk-fname" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="100"><span class="fn-ext">.json</span></div></div>
     <p class="rt-note" data-i18n="pk.note">Cochez les routes à exporter : chacune devient un vol du paquet, que HQ applique à la mission.</p>
     <div class="rt-list" id="pk-list"></div>
-    <p class="rt-fname" id="pk-fname"></p>
     <div class="rt-actions">
       <button type="button" class="rt-btn" id="pk-cancel" data-i18n="rt.cancel">Annuler</button>
       <button type="button" class="rt-btn go" id="pk-go"></button>
@@ -2398,6 +2414,7 @@ const I18N = {
     'dsp.sym': 'Symboles OTAN',
     'dsp.cf': 'Calques importés',
     'dsp.pts': '{n} pts',
+    'dsp.pts.1': '{n} pt',
     'tb.grid': 'Grille MGRS',
     'tb.places': 'Lieux (Esri)',
     'tb.places.tip': 'Noms de lieux (Esri)',
@@ -2423,9 +2440,12 @@ const I18N = {
     'u.m': 'm',
     'u.ft': 'ft',
     'tb.open': 'Ouvrir',
-    'tb.open.tip': 'Ouvrir une route (JSON) ou un fichier du Route Tool de DCS',
+    'tb.open.tip': 'Ouvrir une route, des routes, un paquet de vol (JSON) ou un fichier du Route Tool',
     'tb.save': 'Enregistrer',
-    'tb.save.tip': 'Enregistrer la route (JSON)',
+    'tb.save.tip': 'Enregistrer',
+    'sv.one': 'Enregistrer la route sélectionnée',
+    'sv.all': 'Enregistrer toutes les routes',
+    'fn.label': 'Nom du fichier',
     'tb.example': 'Exemple',
     'tb.example.tip': 'Charger l\'exemple',
     'tb.clear': 'Effacer',
@@ -2585,8 +2605,21 @@ const I18N = {
     'hq.blue': 'Bleu',
     'hq.neutral': 'Neutre',
     'hq.none': 'Aucun vol ne correspond.',
+    'hq.pkg.noFlights': 'Le paquet ne contient aucun vol.',
     'hq.noFlights': 'La mission ne contient aucun vol.',
     'hq.pts': '{n} pts',
+    'hq.pts.1': '{n} pt',
+    'hq.type': 'Type',
+    'hq.checkShown': 'Cocher les vols affichés',
+    'hq.uncheck': 'Tout décocher',
+    'hq.shown': '{n} / {total} vols affichés',
+    'hq.pkg.title': 'Depuis un paquet de vol',
+    'hq.pkg.file': 'Paquet : {f} · {th}',
+    'hq.pkg.noroute': 'pas de route dans le paquet',
+    'hq.warn.pkg': 'Ce paquet est sur {th}, le Route Planner sur {cur} : importer passe au théâtre {th} et supprime les routes existantes.',
+    'rs.pkg': '⇣ Paquet de vol',
+    'err.pk': 'Ce fichier n\'est pas un paquet de vol lisible.',
+    'err.pkTheatre': 'Le théâtre du paquet ({th}) n\'a pas de projection.',
     'hq.in': 'déjà en route {n}',
     'hq.go.1': 'Importer {n} vol',
     'hq.go.n': 'Importer {n} vols',
@@ -2599,7 +2632,6 @@ const I18N = {
     'pk.off.empty': 'route vide',
     'pk.off.theatre': 'Le théâtre {th} n\'a pas de projection.',
     'pk.same': 'même vol que la route {n}',
-    'pk.file': 'Fichier : {f}',
     'pk.go.1': 'Exporter {n} route',
     'pk.go.n': 'Exporter {n} routes',
     'confirm.routeDel': 'Supprimer la route « {name} » et ses points ?',
@@ -2616,8 +2648,6 @@ const I18N = {
     'toast.pkExported.1': '📦 {n} vol exporté ✓',
     'toast.pkExported.n': '📦 {n} vols exportés ✓',
     'toast.savedAll': 'Routes enregistrées ✓',
-    'tb.saveAll': 'Enregistrer tout',
-    'tb.saveAll.tip': 'Enregistrer toutes les routes (JSON)',
     'cf.exp.routes': 'Les routes',
     'cf.exp.routesN': '{n} routes · {p} points · {m} réf.',
     'fiche.type.a': 'Aérodrome',
@@ -2715,10 +2745,8 @@ const I18N = {
     'cf.mhz': '{f} MHz',
     'cf.toRef': '→ Point de référence',
     'cf.formation': 'Formation {f}',
-    'cf.exp.title': 'Exporter',
     'cf.exp.route': 'La route',
     'cf.exp.routeN': '{n} points · {m} réf.',
-    'cf.exp.go': 'Exporter',
     'toast.layersAdded.1': '{n} calque ajouté ✓ (fichier sans route : la route n\'est pas touchée)',
     'toast.layersAdded.n': '{n} calques ajoutés ✓ (fichier sans route : la route n\'est pas touchée)',
     'tap.draw': 'Dessin',
@@ -2876,6 +2904,7 @@ const I18N = {
     'dsp.sym': 'NATO symbols',
     'dsp.cf': 'Imported layers',
     'dsp.pts': '{n} pts',
+    'dsp.pts.1': '{n} pt',
     'tb.grid': 'MGRS grid',
     'tb.places': 'Places (Esri)',
     'tb.places.tip': 'Place names (Esri)',
@@ -2901,9 +2930,12 @@ const I18N = {
     'u.m': 'm',
     'u.ft': 'ft',
     'tb.open': 'Open',
-    'tb.open.tip': 'Open a route (JSON) or a DCS Route Tool file',
+    'tb.open.tip': 'Open a route, routes, a flight package (JSON) or a Route Tool file',
     'tb.save': 'Save',
-    'tb.save.tip': 'Save the route (JSON)',
+    'tb.save.tip': 'Save',
+    'sv.one': 'Save the selected route',
+    'sv.all': 'Save all routes',
+    'fn.label': 'File name',
     'tb.example': 'Example',
     'tb.example.tip': 'Load the example',
     'tb.clear': 'Clear',
@@ -3063,8 +3095,21 @@ const I18N = {
     'hq.blue': 'Blue',
     'hq.neutral': 'Neutral',
     'hq.none': 'No flight matches.',
+    'hq.pkg.noFlights': 'The package has no flights.',
     'hq.noFlights': 'The mission has no flights.',
     'hq.pts': '{n} pts',
+    'hq.pts.1': '{n} pt',
+    'hq.type': 'Type',
+    'hq.checkShown': 'Check shown flights',
+    'hq.uncheck': 'Uncheck all',
+    'hq.shown': '{n} / {total} flights shown',
+    'hq.pkg.title': 'From a flight package',
+    'hq.pkg.file': 'Package: {f} · {th}',
+    'hq.pkg.noroute': 'no route in the package',
+    'hq.warn.pkg': 'This package is on {th}, the Route Planner on {cur}: importing switches to the {th} theatre and deletes the existing routes.',
+    'rs.pkg': '⇣ Flight package',
+    'err.pk': 'This file is not a readable flight package.',
+    'err.pkTheatre': 'The package theatre ({th}) has no projection.',
     'hq.in': 'already in route {n}',
     'hq.go.1': 'Import {n} flight',
     'hq.go.n': 'Import {n} flights',
@@ -3077,7 +3122,6 @@ const I18N = {
     'pk.off.empty': 'empty route',
     'pk.off.theatre': 'The {th} theatre has no projection.',
     'pk.same': 'same flight as route {n}',
-    'pk.file': 'File: {f}',
     'pk.go.1': 'Export {n} route',
     'pk.go.n': 'Export {n} routes',
     'confirm.routeDel': 'Delete the route "{name}" and its points?',
@@ -3094,8 +3138,6 @@ const I18N = {
     'toast.pkExported.1': '📦 {n} flight exported ✓',
     'toast.pkExported.n': '📦 {n} flights exported ✓',
     'toast.savedAll': 'Routes saved ✓',
-    'tb.saveAll': 'Save all',
-    'tb.saveAll.tip': 'Save all routes (JSON)',
     'cf.exp.routes': 'The routes',
     'cf.exp.routesN': '{n} routes · {p} waypoints · {m} ref.',
     'fiche.type.a': 'Airfield',
@@ -3193,10 +3235,8 @@ const I18N = {
     'cf.mhz': '{f} MHz',
     'cf.toRef': '→ Reference point',
     'cf.formation': 'Higher formation {f}',
-    'cf.exp.title': 'Export',
     'cf.exp.route': 'The route',
     'cf.exp.routeN': '{n} waypoints · {m} ref.',
-    'cf.exp.go': 'Export',
     'toast.layersAdded.1': '{n} layer added ✓ (no route in the file: the route is unchanged)',
     'toast.layersAdded.n': '{n} layers added ✓ (no route in the file: the route is unchanged)',
     'tap.draw': 'Draw',
@@ -4009,9 +4049,28 @@ function exportPoint(p, i) {
    Le nom et les points de la route active sont ceux de S ; syncActive() les recopie dans RSET avant toute écriture ou lecture de l'ensemble. */
 let RSET = { active: 0, routes: [{ name: '', points: [], flight: null }] };
 
+/* La source d'un lien (la mission d'où vient le vol) : { filename, fingerprint } si les deux se lisent, sinon null */
+function readSource(o) {
+  if (!o || typeof o !== 'object' || Array.isArray(o)) return null;
+  if (typeof o.filename !== 'string' || o.filename === '' || typeof o.fingerprint !== 'string' || o.fingerprint === '') return null;
+  return { filename: o.filename, fingerprint: o.fingerprint };
+}
+/* Le lien d'une route avec son vol : { groupName, aircraftType, coalition, source? } */
+function makeLink(f, source) {
+  const o = { groupName: f.groupName, aircraftType: f.aircraftType, coalition: f.coalition };
+  const sc = readSource(source);
+  if (sc) o.source = sc;
+  return o;
+}
 function readFlight(f) {
   if (!f || typeof f !== 'object' || Array.isArray(f) || typeof f.groupName !== 'string' || typeof f.aircraftType !== 'string') return null;
-  return { groupName: f.groupName, aircraftType: f.aircraftType, coalition: typeof f.coalition === 'string' ? f.coalition : '' };
+  return makeLink({ groupName: f.groupName, aircraftType: f.aircraftType, coalition: typeof f.coalition === 'string' ? f.coalition : '' }, f.source);
+}
+/* « 1 pt », « n pts » */
+function ptsText(n) { return t(n === 1 ? 'hq.pts.1' : 'hq.pts', { n: n }); }
+/* Le nom d'un fichier choisi : sans « .json », accents ôtés, tout ce qui n'est pas lettre, chiffre, _ + - devient « _ » ; vide si rien ne reste */
+function cleanFname(v) {
+  return str(v).trim().replace(/\.json$/i, '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9_+-]+/g, '_').replace(/_{2,}/g, '_').replace(/^_+|_+$/g, '').slice(0, 100);
 }
 function sameFlight(a, b) { return !!a && !!b && a.groupName === b.groupName && a.aircraftType === b.aircraftType && a.coalition === b.coalition; }
 
@@ -8116,14 +8175,14 @@ function fallbackDownload(blob, fname, toastMsg) {
 
 /* sel (avec des calques) : { route, layers: [id…] } — la route décochée laisse points et refs vides ; les calques cochés, dans l'ordre de la section,
    forment le champ « layers » ; sans sel : le fichier d'avant les calques, à l'octet */
-function downloadJson(sel) {
+function downloadJson(sel, name) {
   const obj = exportObject();
   if (sel) {
     if (!sel.route) { obj.points = []; obj.refs = []; }
     const chosen = CF_LAYERS.filter(l => sel.layers.indexOf(l.id) !== -1);
     if (chosen.length) obj.layers = chosen;
   }
-  deliverJsonFile(obj, 'route_' + (slug(S.name) || 'route') + '_' + stamp() + '.json', t('toast.saved'));
+  deliverJsonFile(obj, (name || defaultRouteName()) + '.json', t('toast.saved'));
 }
 
 /* Un fichier JSON remis à la personne : le partage du système quand il le permet, sinon un téléchargement */
@@ -8181,6 +8240,7 @@ function openRouteFile(file) {
     let parsed;
     try { parsed = JSON.parse(text); } catch (e) { showToast(t('err.json')); return; }
     if (parsed && typeof parsed === 'object' && parsed.format === SET_FORMAT) { openRouteSet(parsed); return; }
+    if (parsed && typeof parsed === 'object' && parsed.format === PACKAGE_FORMAT) { openPackage(parsed, file.name, $('btn-open')); return; }
     const res = parseRoute(parsed);
     if (!res) { showToast(t('err.json')); return; }
     /* « layers » : des calques qui s'ajoutent aux calques présents (un même id remplace le sien) ; sans route dans le fichier, la route n'est pas touchée */
@@ -8399,7 +8459,7 @@ function setFileObject(sel) {
   const obj = {
     format: SET_FORMAT, theatre: S.theatre, units: ex.units, navDisplay: ex.navDisplay, groundSpeed: S.groundSpeed, legBoxes: S.legBoxes,
     refs: ex.refs, active: RSET.active,
-    routes: RSET.routes.map(r => ({ name: r.name, points: r.points.map(exportPoint), flight: r.flight ? { groupName: r.flight.groupName, aircraftType: r.flight.aircraftType, coalition: r.flight.coalition } : null }))
+    routes: RSET.routes.map(r => ({ name: r.name, points: r.points.map(exportPoint), flight: r.flight ? makeLink(r.flight, r.flight.source) : null }))
   };
   if (sel) {
     if (!sel.route) { obj.routes = obj.routes.map(r => ({ name: r.name, points: [], flight: r.flight })); obj.refs = []; }
@@ -8409,14 +8469,13 @@ function setFileObject(sel) {
   return obj;
 }
 
-function downloadSet(sel) {
-  deliverJsonFile(setFileObject(sel), 'routes_' + stamp() + '.json', t('toast.savedAll'));
+function downloadSet(sel, name) {
+  deliverJsonFile(setFileObject(sel), (name || defaultSetName()) + '.json', t('toast.savedAll'));
 }
 
-function onSaveAllClick(ev) {
-  if (!CF_LAYERS.length) { downloadSet(); return; }
-  openCfExport(ev && ev.currentTarget, true);
-}
+/* Les noms proposés (sans l'extension) */
+function defaultRouteName() { return 'route_' + (slug(S.name) || 'route') + '_' + stamp(); }
+function defaultSetName() { return 'routes_' + stamp(); }
 
 /* ============= DEPUIS HQ · LIER À UN VOL ============= */
 /* Le snapshot de la mission chargée dans HQ (mission_snapshot_v1) : ses vols, le théâtre de la mission */
@@ -8475,8 +8534,8 @@ function pointFromRaw(raw, k, idx, theatre) {
   return p;
 }
 
-/* Un vol du snapshot → une route neuve (nommée d'après le groupe, liée au vol) ; trunc : le nombre de points au-delà de 30 */
-function routeFromFlight(fl, theatre) {
+/* Un vol du snapshot ou d'un paquet → une route neuve (nommée d'après le groupe, liée au vol et à sa source) ; trunc : le nombre de points au-delà de 30 */
+function routeFromFlight(fl, theatre, source) {
   const pts = [];
   let trunc = 0;
   snapKeys(fl.points).forEach(k => {
@@ -8486,7 +8545,7 @@ function routeFromFlight(fl, theatre) {
     pts.push(p);
   });
   const nodcs = pts.filter(p => !p.dcs).length;      /* sources de mission retirées (plus de 20 Kio) */
-  return { route: { name: cut60(fl.groupName), points: pts, flight: { groupName: fl.groupName, aircraftType: fl.aircraftType, coalition: fl.coalition } }, trunc: trunc, nodcs: nodcs };
+  return { route: { name: cut60(fl.groupName), points: pts, flight: makeLink(fl, source) }, trunc: trunc, nodcs: nodcs };
 }
 
 /* Les numéros (à partir de 1) des routes liées à ce vol */
@@ -8496,35 +8555,43 @@ function routesOfFlight(f) {
   return out;
 }
 
-const HM = { mode: 'import', snap: null, flights: [], checked: new Set(), side: 'all', name: '' };
+/* La fenêtre d'import : la source est la mission chargée dans HQ (kind 'hq') ou un paquet de vol ouvert (kind 'pkg') ; elle n'est pas gardée après l'import */
+const HM = { mode: 'import', kind: 'hq', theatre: '', file: '', source: null, flights: [], checked: new Set(), side: 'all', type: 'all', name: '' };
 
 function hqVisible() {
-  const side = HM.side, q = srNorm(HM.name);
+  const side = HM.side, type = HM.type, q = srNorm(HM.name);
   return HM.flights.map((f, i) => ({ f: f, i: i })).filter(x =>
-    (side === 'all' || x.f.coalition === side) && (q === '' || srNorm(x.f.groupName).indexOf(q) >= 0));
+    (side === 'all' || x.f.coalition === side) && (type === 'all' || x.f.aircraftType === type) && (q === '' || srNorm(x.f.groupName).indexOf(q) >= 0));
 }
 
 /* Les routes que l'import ajouterait : la route active vide et sans lien prend la première (comme un fichier de route) */
 function hqImportPlan(n) {
-  const th = HM.snap.sourceMission.theatre, other = th !== S.theatre;
+  const th = HM.theatre, other = th !== S.theatre;
   const replace = !other && routeIsEmpty(RSET.routes[RSET.active]);
   const total = (other ? 0 : RSET.routes.length - (replace ? 1 : 0)) + n;
   return { other: other, replace: replace, over: Math.max(0, total - MAX_ROUTES) };
 }
 
 function hqRender() {
-  const link = HM.mode === 'link', th = HM.snap.sourceMission.theatre, other = th !== S.theatre;
-  $('hq-title').textContent = t(link ? 'hq.link.title' : 'hq.title');
-  $('hq-file').textContent = t('hq.file', { f: HM.snap.sourceMission.filename || '', th: theatreText(th) });
+  const link = HM.mode === 'link', pkg = HM.kind === 'pkg', th = HM.theatre, other = th !== S.theatre;
+  $('hq-title').textContent = t(pkg ? 'hq.pkg.title' : link ? 'hq.link.title' : 'hq.title');
+  $('hq-file').textContent = t(pkg ? 'hq.pkg.file' : 'hq.file', { f: HM.file, th: theatreText(th) });
   const w = $('hq-warn');
   w.hidden = !other;
-  if (other) w.textContent = t(link ? 'hq.warn.link' : 'hq.warn', { th: theatreText(th), cur: theatreText(S.theatre) });
+  if (other) w.textContent = t(pkg ? 'hq.warn.pkg' : link ? 'hq.warn.link' : 'hq.warn', { th: theatreText(th), cur: theatreText(S.theatre) });
   /* le filtre de camp : Tous, Rouge, Bleu (et Neutre si la mission en a) */
   const sides = [['all', t('hq.all')], ['red', t('hq.red')], ['blue', t('hq.blue')]];
   if (HM.flights.some(f => f.coalition === 'neutrals')) sides.push(['neutrals', t('hq.neutral')]);
   const sd = $('hq-side');
   sd.innerHTML = sides.map(x => '<option value="' + x[0] + '">' + esc(x[1]) + '</option>').join('');
   sd.value = HM.side;
+  /* le filtre de type : Tous, puis les types d'appareil de la source, triés, sans doublon */
+  const types = HM.flights.map(f => f.aircraftType).filter((v, i, a) => a.indexOf(v) === i).sort();
+  if (types.indexOf(HM.type) === -1) HM.type = 'all';
+  const td = $('hq-type');
+  td.innerHTML = '<option value="all">' + esc(t('hq.all')) + '</option>' + types.map(x => '<option value="' + esc(x) + '">' + esc(x) + '</option>').join('');
+  td.value = HM.type;
+  $('hq-tools').hidden = link;
   hqRenderList();
 }
 
@@ -8532,10 +8599,11 @@ function hqRenderList() {
   const link = HM.mode === 'link', vis = hqVisible();
   $('hq-list').innerHTML = vis.length ? vis.map(x => {
     const f = x.f, used = routesOfFlight(f), n = f.points ? snapKeys(f.points).length : 0;
-    return '<label class="rt-row"><input type="' + (link ? 'radio' : 'checkbox') + '" name="hq-flight" data-i="' + x.i + '"' + (HM.checked.has(x.i) ? ' checked' : '') + '>' +
-      '<span class="rt-nm">' + esc(f.groupName) + '</span><span class="rt-n"><span>' + esc(f.aircraftType + (f.coalition ? ' · ' + sideText(f.coalition).toLowerCase() : '') + ' · ' + t('hq.pts', { n: n })) + '</span>' +
+    return '<label class="rt-row' + (f.off ? ' off' : '') + '"><input type="' + (link ? 'radio' : 'checkbox') + '" name="hq-flight" data-i="' + x.i + '"' + (HM.checked.has(x.i) ? ' checked' : '') + (f.off ? ' disabled' : '') + '>' +
+      '<span class="rt-nm">' + esc(f.groupName) + '</span><span class="rt-n"><span>' + esc(f.aircraftType + (f.coalition ? ' · ' + sideText(f.coalition).toLowerCase() : '') + ' · ' + (f.off ? t('hq.pkg.noroute') : ptsText(n))) + '</span>' +
       (used.length ? '<span class="rt-dup">' + esc(t('hq.in', { n: used.join(', ') })) + '</span>' : '') + '</span></label>';
-  }).join('') : '<p class="rt-empty">' + esc(t(HM.flights.length ? 'hq.none' : 'hq.noFlights')) + '</p>';
+  }).join('') : '<p class="rt-empty">' + esc(t(HM.flights.length ? 'hq.none' : (HM.kind === 'pkg' ? 'hq.pkg.noFlights' : 'hq.noFlights'))) + '</p>';
+  $('hq-cnt').textContent = t('hq.shown', { n: vis.length, total: HM.flights.length });
   hqSync();
 }
 
@@ -8556,26 +8624,63 @@ function hqSync() {
   if (plan.over > 0) lim.textContent = t('hq.limit', { n: plan.over });
 }
 
-function openHqModal(mode, opener) {
-  const hq = hqState();
-  if (!hq.ok) { showToast(hq.tip); return; }
+/* Ouvre la fenêtre sur une source { kind, theatre, file, source, flights } ; en import, les vols qui ne sont pas encore en route sont cochés */
+function openFlightsModal(src, mode, opener) {
   syncActive();
   HM.mode = mode;
-  HM.snap = hq.snap;
-  HM.flights = snapFlights(hq.snap);
+  HM.kind = src.kind;
+  HM.theatre = src.theatre;
+  HM.file = src.file;
+  HM.source = src.source;
+  HM.flights = src.flights;
   HM.side = 'all';
+  HM.type = 'all';
   HM.name = '';
   $('hq-name').value = '';
   HM.checked = new Set();
   const cur = RSET.routes[RSET.active].flight;
   HM.flights.forEach((f, i) => {
-    if (mode === 'import') { if (!routesOfFlight(f).length) HM.checked.add(i); }       /* un vol déjà en route est décoché par défaut, il reste cochable */
+    if (mode === 'import') { if (!f.off && !routesOfFlight(f).length) HM.checked.add(i); }       /* un vol déjà en route est décoché par défaut, il reste cochable */
     else if (cur && sameFlight(cur, f) && !HM.checked.size) HM.checked.add(i);
   });
   hqRender();
   rtShow('hq-modal', opener, 'hq-go');
-  const first = $('hq-list').querySelector('input');
+  const first = $('hq-list').querySelector('input:not(:disabled)');
   if (first) first.focus({ preventScroll: true });
+}
+
+function openHqModal(mode, opener) {
+  const hq = hqState();
+  if (!hq.ok) { showToast(hq.tip); return; }
+  const sm = hq.snap.sourceMission;
+  openFlightsModal({ kind: 'hq', theatre: sm.theatre, file: sm.filename || '', source: readSource(sm), flights: snapFlights(hq.snap) }, mode, opener);
+}
+
+/* Un paquet de vol (dcs-flight-package-v1) lu : la même fenêtre, en mode paquet ; un paquet illisible, d'un autre format ou d'un théâtre sans projection : un message, rien ne change.
+   Un vol sans point lisible est inactif. Le paquet n'est pas gardé. */
+function openPackage(parsed, fname, opener) {
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed) || parsed.format !== PACKAGE_FORMAT || !Array.isArray(parsed.flights)) { showToast(t('err.pk')); return; }
+  const th = typeof parsed.theatre === 'string' ? parsed.theatre : '';
+  if (th === '') { showToast(t('err.pk')); return; }
+  if (!hasRouteTool(th)) { showToast(t('err.pkTheatre', { th: theatreText(th) })); return; }
+  const flights = [];
+  parsed.flights.forEach(f => {
+    if (!f || typeof f !== 'object' || Array.isArray(f) || typeof f.groupName !== 'string' || typeof f.aircraftType !== 'string') return;
+    const points = (f.route && f.route.points && typeof f.route.points === 'object' && !Array.isArray(f.route.points)) ? f.route.points : null;
+    const off = !snapKeys(points).some(k => pointFromRaw(points[k], k, 0, th));
+    flights.push({ groupName: f.groupName, aircraftType: f.aircraftType, coalition: typeof f.coalition === 'string' ? f.coalition : '', points: points, off: off });
+  });
+  if (!flights.length) { showToast(t('err.pk')); return; }
+  openFlightsModal({ kind: 'pkg', theatre: th, file: fname || '', source: readSource(parsed.sourceMission), flights: flights }, 'import', opener);
+}
+
+/* « ⇣ Paquet de vol » : le sélecteur de fichier, puis la fenêtre */
+function openPackageFile(file) {
+  readFileBytes(file, bytes => {
+    let parsed;
+    try { parsed = JSON.parse(bytesToText(bytes)); } catch (e) { showToast(t('err.pk')); return; }
+    openPackage(parsed, file.name, $('rs-pkg'));
+  }, () => showToast(t('err.pk')));
 }
 
 /* Changer de théâtre supprime les routes : la confirmation, s'il y a quelque chose à perdre */
@@ -8609,12 +8714,12 @@ function frameRoutes(list) {
 function hqGo() {
   const picks = hqVisible().filter(x => HM.checked.has(x.i));
   if (!picks.length) return;
-  const th = HM.snap.sourceMission.theatre;
+  const th = HM.theatre;
   if (!hasRouteTool(th)) return;
   syncActive();
   if (HM.mode === 'link') {
     const f = HM.flights[picks[0].i];
-    const link = { groupName: f.groupName, aircraftType: f.aircraftType, coalition: f.coalition };
+    const link = makeLink(f, HM.source);
     if (th !== S.theatre) {
       if (!confirmTheatreReset(th)) return;
       rtHide('hq-modal');
@@ -8631,7 +8736,7 @@ function hqGo() {
   if (plan.other && !confirmTheatreReset(th)) return;
   let trunc = [], nodcs = 0;
   const made = picks.map(x => {
-    const r = routeFromFlight(HM.flights[x.i], th);
+    const r = routeFromFlight(HM.flights[x.i], th, HM.source);
     nodcs += r.nodcs;
     if (r.trunc) trunc.push(r.route.name);
     return r.route;
@@ -8657,7 +8762,7 @@ function hqGo() {
 }
 
 /* ============= PAQUET DE VOL ============= */
-const PM = { checked: new Set() };
+const PM = { checked: new Set(), name: '', edited: false, stamp: '' };
 
 /* Les routes de la fenêtre : { i, ok (liée et non vide), why (raison de l'inactivité) } ; deux routes d'un même vol ne se cochent pas ensemble :
    la première cochée garde le vol, les suivantes sont inactives tant qu'elle l'est */
@@ -8690,13 +8795,14 @@ function pkRender() {
     const ok = x.why === '';
     return '<label class="rt-row' + (ok ? '' : ' off') + '"><input type="checkbox" data-i="' + x.i + '"' + (ok && PM.checked.has(x.i) ? ' checked' : '') + (ok ? '' : ' disabled') + '>' +
       '<span class="rt-two"><span class="rt-nm">' + esc((x.i + 1) + ' · ' + (x.r.name !== '' ? x.r.name : t('rs.unnamed'))) + '</span>' +
-      '<small>' + esc(ok ? flightText(x.r.flight) + ' — ' + t('hq.pts', { n: x.r.points.length }) : x.why) + '</small></span></label>';
+      '<small>' + esc(ok ? flightText(x.r.flight) + ' — ' + ptsText(x.r.points.length) : x.why) + '</small></span></label>';
   }).join('');
   const idxs = rows.filter(x => x.why === '' && PM.checked.has(x.i)).map(x => x.i);
-  $('pk-fname').textContent = idxs.length ? t('pk.file', { f: pkName(idxs) + '_' + pkStamp() + '.json' }) : '';
+  /* le nom suit les routes cochées tant qu'on ne l'a pas changé */
+  if (!PM.edited && idxs.length) { PM.name = pkName(idxs) + '_' + PM.stamp; $('pk-fname').value = PM.name; }
   const go = $('pk-go');
   go.textContent = t(CURRENT_LANG === 'fr' ? (idxs.length < 2 ? 'pk.go.1' : 'pk.go.n') : (idxs.length === 1 ? 'pk.go.1' : 'pk.go.n'), { n: idxs.length });
-  go.disabled = idxs.length === 0;
+  go.disabled = idxs.length === 0 || cleanFname(PM.name) === '';
 }
 
 function pkStamp() {
@@ -8709,13 +8815,16 @@ function openPackageModal(opener) {
   if (!pk.ok) { showToast(pk.tip); return; }
   syncActive();
   PM.checked = new Set();
+  PM.edited = false;
+  PM.stamp = pkStamp();
   RSET.routes.forEach((r, i) => {
     if (!r.flight || !r.points.length) return;
     if (RSET.routes.some((q, j) => j < i && PM.checked.has(j) && sameFlight(q.flight, r.flight))) return;
     PM.checked.add(i);
   });
   pkRender();
-  rtShow('pk-modal', opener, 'pk-go');
+  rtShow('pk-modal', opener, 'pk-fname');
+  $('pk-fname').select();
 }
 
 /* Le point <k> d'un paquet : avec sa source de mission, une copie de la table brute où seul ce qui a changé depuis l'import est réécrit ; sans, un point neuf */
@@ -8746,7 +8855,7 @@ function packPoint(p, i, th) {
   };
 }
 
-/* Le paquet (dcs-flight-package-v1) des routes idxs ; la mission source est celle du snapshot si tous ces vols en viennent */
+/* Le paquet (dcs-flight-package-v1) des routes idxs ; sourceMission : la source commune de leurs liens, sinon nul */
 function buildPackage(idxs) {
   syncActive();
   const th = S.theatre;
@@ -8755,23 +8864,20 @@ function buildPackage(idxs) {
     r.points.forEach((p, k) => { pts[String(k + 1)] = packPoint(p, k, th); });
     return { groupName: r.flight.groupName, aircraftType: r.flight.aircraftType, coalition: r.flight.coalition, groupFrequency: null, route: { points: pts }, units: [] };
   });
+  /* la mission source : celle des liens, si toutes les routes cochées ont la même */
   let src = null;
-  const snap = readSnapshot();
-  if (snap && snap.sourceMission.theatre === th) {
-    const sf = snapFlights(snap);
-    if (idxs.every(i => sf.some(f => sameFlight(f, RSET.routes[i].flight)))) {
-      src = { filename: snap.sourceMission.filename, fingerprint: snap.sourceMission.fingerprint };
-    }
-  }
+  const ss = idxs.map(i => RSET.routes[i].flight.source || null);
+  if (ss[0] && ss.every(x => x && x.filename === ss[0].filename && x.fingerprint === ss[0].fingerprint)) src = { filename: ss[0].filename, fingerprint: ss[0].fingerprint };
   return { format: PACKAGE_FORMAT, createdAt: new Date().toISOString(), createdBy: 'Route Planner', theatre: th, sourceMission: src, flights: flights };
 }
 
 function pkGo() {
   const idxs = pkRows().filter(x => x.why === '' && PM.checked.has(x.i)).map(x => x.i);
-  if (!idxs.length || !packageState().ok) return;
+  const fname = cleanFname(PM.name);
+  if (!idxs.length || fname === '' || !packageState().ok) return;
   const pkg = buildPackage(idxs);
   rtHide('pk-modal');
-  deliverJsonFile(pkg, pkName(idxs) + '_' + pkStamp() + '.json', t(idxs.length === 1 ? 'toast.pkExported.1' : 'toast.pkExported.n', { n: idxs.length }));
+  deliverJsonFile(pkg, fname + '.json', t(idxs.length === 1 ? 'toast.pkExported.1' : 'toast.pkExported.n', { n: idxs.length }));
 }
 
 /* ---------- le câblage ---------- */
@@ -8784,12 +8890,17 @@ function routesBind() {
   $('rs-link').addEventListener('click', ev => openHqModal('link', ev.currentTarget));
   $('rs-unlink').addEventListener('click', () => setActiveFlight(null));
   $('btn-package').addEventListener('click', ev => openPackageModal(ev.currentTarget));
-  $('btn-save-all').addEventListener('click', onSaveAllClick);
+  $('rs-pkg').addEventListener('click', () => { const f = $('file-pkg'); f.value = ''; f.click(); });
+  $('file-pkg').addEventListener('change', () => { const f = $('file-pkg'); if (f.files && f.files[0]) openPackageFile(f.files[0]); });
+  $('pk-fname').addEventListener('input', e => { PM.name = e.target.value; PM.edited = true; pkRender(); });
   ['hq-backdrop', 'hq-close', 'hq-cancel'].forEach(id => $(id).addEventListener('click', () => rtHide('hq-modal')));
   ['pk-backdrop', 'pk-close', 'pk-cancel'].forEach(id => $(id).addEventListener('click', () => rtHide('pk-modal')));
   $('hq-go').addEventListener('click', hqGo);
   $('pk-go').addEventListener('click', pkGo);
   $('hq-side').addEventListener('change', e => { HM.side = e.target.value; hqRenderList(); });
+  $('hq-type').addEventListener('change', e => { HM.type = e.target.value; hqRenderList(); });
+  $('hq-check').addEventListener('click', () => { hqVisible().forEach(x => { if (!x.f.off) HM.checked.add(x.i); }); hqRenderList(); });
+  $('hq-uncheck').addEventListener('click', () => { HM.checked = new Set(); hqRenderList(); });
   $('hq-name').addEventListener('input', e => { HM.name = e.target.value; hqRenderList(); });
   $('hq-list').addEventListener('change', e => {
     const i = parseInt(e.target.dataset.i, 10);
@@ -9649,10 +9760,16 @@ function cfImportGo() {
 }
 
 /* ---- Fenêtre « Exporter » : la route et les calques que le fichier emporte ---- */
-const CFE = { route: true, checked: [], all: false };
+/* La fenêtre d'enregistrement d'une route (all faux) ou de toutes les routes (all vrai) : le nom du fichier, puis les calques s'il y en a */
+const CFE = { route: true, checked: [], all: false, name: '' };
 
 function cfExportRender() {
-  $('cf-export-list').innerHTML =
+  $('cf-export-title').textContent = t(CFE.all ? 'sv.all' : 'sv.one');
+  const f = $('cf-fname');
+  if (f.value !== CFE.name) f.value = CFE.name;
+  const list = $('cf-export-list');
+  list.hidden = !CF_LAYERS.length;
+  list.innerHTML = !CF_LAYERS.length ? '' :
     '<label class="rt-row"><input type="checkbox" data-k="route"' + (CFE.route ? ' checked' : '') + '><span class="rt-nm">' + esc(t(CFE.all ? 'cf.exp.routes' : 'cf.exp.route')) + '</span>' +
     '<span class="rt-n">' + esc(CFE.all ? t('cf.exp.routesN', { n: RSET.routes.length, p: RSET.routes.reduce((a, r) => a + r.points.length, 0), m: S.refs.length }) : t('cf.exp.routeN', { n: S.points.length, m: S.refs.length })) + '</span></label>' +
     CF_LAYERS.map((l, i) =>
@@ -9661,27 +9778,30 @@ function cfExportRender() {
   cfExportSync();
 }
 
-/* Exporter sans rien de coché est désactivé */
-function cfExportSync() { $('cf-export-go').disabled = !(CFE.route || CFE.checked.some(Boolean)); }
+/* Enregistrer est désactivé sans nom, ou, avec des calques, sans rien de coché */
+function cfExportSync() { $('cf-export-go').disabled = cleanFname(CFE.name) === '' || (CF_LAYERS.length > 0 && !(CFE.route || CFE.checked.some(Boolean))); }
 
 function openCfExport(opener, all) {
   CFE.all = !!all;
   CFE.route = true;
   CFE.checked = CF_LAYERS.map(l => l.visible);
+  CFE.name = CFE.all ? defaultSetName() : defaultRouteName();
   cfExportRender();
-  rtShow('cf-export-modal', opener, 'cf-export-go');
+  rtShow('cf-export-modal', opener, 'cf-fname');
+  $('cf-fname').select();
 }
 
 function cfExportGo() {
-  const sel = { route: CFE.route, layers: CF_LAYERS.filter((l, i) => CFE.checked[i]).map(l => l.id) };
+  const name = cleanFname(CFE.name);
+  if (name === '') return;
+  const sel = CF_LAYERS.length ? { route: CFE.route, layers: CF_LAYERS.filter((l, i) => CFE.checked[i]).map(l => l.id) } : undefined;
   rtHide('cf-export-modal');
-  if (CFE.all) downloadSet(sel); else downloadJson(sel);
+  if (CFE.all) downloadSet(sel, name); else downloadJson(sel, name);
 }
 
-/* « Enregistrer » et « Exporter JSON » : sans calque, le fichier d'aujourd'hui, sans fenêtre ; avec des calques, la fenêtre « Exporter » */
+/* « Exporter JSON » de la section Navigation : la route sélectionnée, par la même fenêtre que « Enregistrer la route sélectionnée » */
 function onSaveClick(ev) {
-  if (!CF_LAYERS.length) { downloadJson(); return; }
-  openCfExport(ev && ev.currentTarget);
+  openCfExport(ev && ev.currentTarget, false);
 }
 
 /* ============= VERS LA DATACARD ============= */
@@ -9873,6 +9993,7 @@ function dspOpen() {
   if (DSP.open) return;
   if (TBM.cur) tbmClose(false);
   unClose(false);
+  svClose(false);
   const ul = document.createElement('div');
   ul.className = 'tbm-panel dsp-panel';
   ul.id = 'dsp-panel';
@@ -9932,7 +10053,7 @@ function dspOutside(e) {
   if (!DSP.open) return;
   const t = e.target;
   if (DSP.panel.contains(t) || $('btn-display').contains(t)) return;
-  const other = t && t.closest ? t.closest('.tbm-trigger, #btn-units') : null;
+  const other = t && t.closest ? t.closest('.tbm-trigger, #btn-units, #btn-save') : null;
   dspClose(false);
   if (other) return;
   tbmSwallowNext();
@@ -10092,6 +10213,7 @@ function unOpen() {
   if (UN.open) return;
   if (TBM.cur) tbmClose(false);
   dspClose(false);
+  svClose(false);
   const ul = document.createElement('div');
   ul.className = 'tbm-panel dsp-panel';
   ul.id = 'un-panel';
@@ -10144,7 +10266,7 @@ function unOutside(e) {
   if (!UN.open) return;
   const t = e.target;
   if (UN.panel.contains(t) || $('btn-units').contains(t)) return;
-  const other = t && t.closest ? t.closest('.tbm-trigger, #btn-display') : null;
+  const other = t && t.closest ? t.closest('.tbm-trigger, #btn-display, #btn-save') : null;
   unClose(false);
   if (other) return;
   tbmSwallowNext();
@@ -10174,6 +10296,132 @@ function unBind() {
     if (!UN.open || (e.target && e.target.nodeType && UN.panel.contains(e.target))) return;
     const r = $('btn-units').getBoundingClientRect();
     if (Math.abs(r.left - UN.x0) > 0.5 || Math.abs(r.top - UN.y0) > 0.5) unClose(false);
+  }, true);
+}
+
+/* ============= LE MENU « ENREGISTRER » : la route sélectionnée, toutes les routes ============= */
+const SV = { open: false, panel: null, x0: 0, y0: 0 };
+const SV_ROWS = [{ k: 'one', l: 'sv.one' }, { k: 'all', l: 'sv.all' }];
+
+function svBuild() {
+  const ul = SV.panel;
+  ul.textContent = '';
+  ul.setAttribute('aria-label', t('tb.save'));
+  const head = document.createElement('div');
+  head.className = 'tbm-head';
+  head.setAttribute('role', 'presentation');
+  head.textContent = t('tb.save');
+  ul.appendChild(head);
+  SV_ROWS.forEach(r => {
+    const row = document.createElement('div');
+    row.className = 'tbm-opt dsp-opt';
+    row.setAttribute('role', 'menuitem');
+    row.tabIndex = -1;
+    row.setAttribute('data-k', r.k);
+    const txt = document.createElement('span');
+    txt.className = 'tbm-txt';
+    txt.textContent = t(r.l);
+    row.appendChild(txt);
+    ul.appendChild(row);
+  });
+}
+
+function svPlace() {
+  const btn = $('btn-save'), p = SV.panel;
+  const r = btn.getBoundingClientRect();
+  const vw = document.documentElement.clientWidth, vh = window.innerHeight;
+  const top = r.bottom + 4;
+  SV.x0 = r.left; SV.y0 = r.top;
+  p.style.minWidth = Math.max(240, r.width) + 'px';
+  p.style.top = top + 'px';
+  p.style.maxHeight = Math.max(60, Math.min(0.8 * vh, 600, vh - top - 8)) + 'px';
+  const w = p.getBoundingClientRect().width;
+  let left = r.left;
+  if (left + w > vw - 8) left = vw - 8 - w;
+  if (left < 8) left = 8;
+  p.style.left = left + 'px';
+}
+
+function svOpen() {
+  if (SV.open) return;
+  if (TBM.cur) tbmClose(false);
+  dspClose(false);
+  unClose(false);
+  const ul = document.createElement('div');
+  ul.className = 'tbm-panel dsp-panel';
+  ul.id = 'sv-panel';
+  ul.setAttribute('role', 'menu');
+  ul.tabIndex = -1;
+  document.body.appendChild(ul);
+  SV.panel = ul;
+  SV.open = true;
+  svBuild();
+  ul.addEventListener('click', e => {
+    const row = e.target.closest ? e.target.closest('.dsp-opt') : null;
+    if (row) svChoose(row.getAttribute('data-k'));
+  });
+  ul.addEventListener('keydown', svKey);
+  const b = $('btn-save');
+  b.classList.add('dsp-open');
+  b.setAttribute('aria-expanded', 'true');
+  b.setAttribute('aria-controls', 'sv-panel');
+  svPlace();
+  ul.focus({ preventScroll: true });
+}
+
+function svClose(refocus) {
+  if (!SV.open) return;
+  SV.open = false;
+  if (SV.panel) SV.panel.remove();
+  SV.panel = null;
+  const b = $('btn-save');
+  b.classList.remove('dsp-open');
+  b.setAttribute('aria-expanded', 'false');
+  if (refocus) b.focus({ preventScroll: true });
+}
+
+function svKey(e) {
+  const rows = Array.prototype.slice.call(SV.panel.querySelectorAll('.dsp-opt'));
+  const cur = rows.indexOf(document.activeElement);
+  const go = k => { if (rows[k]) rows[k].focus({ preventScroll: true }); };
+  const k = e.key;
+  if (k === 'ArrowDown') { e.preventDefault(); go(cur < 0 ? 0 : Math.min(rows.length - 1, cur + 1)); }
+  else if (k === 'ArrowUp') { e.preventDefault(); go(cur < 0 ? rows.length - 1 : Math.max(0, cur - 1)); }
+  else if (k === 'Home') { e.preventDefault(); go(0); }
+  else if (k === 'End') { e.preventDefault(); go(rows.length - 1); }
+  else if ((k === 'Enter' || k === ' ') && cur >= 0) { e.preventDefault(); svChoose(rows[cur].getAttribute('data-k')); }
+  else if (k === 'Escape') { e.preventDefault(); e.stopPropagation(); svClose(true); }
+  else if (k === 'Tab') svClose(true);
+}
+
+function svOutside(e) {
+  if (!SV.open) return;
+  const t = e.target;
+  if (SV.panel.contains(t) || $('btn-save').contains(t)) return;
+  const other = t && t.closest ? t.closest('.tbm-trigger, #btn-display, #btn-units, #btn-save') : null;
+  svClose(false);
+  if (other) return;
+  tbmSwallowNext();
+}
+
+/* Une ligne ferme le menu et ouvre la fenêtre du nom du fichier */
+function svChoose(k) {
+  svClose(false);
+  openCfExport($('btn-save'), k === 'all');
+}
+
+function svBind() {
+  $('btn-save').addEventListener('click', () => { if (SV.open) svClose(false); else svOpen(); });
+  $('btn-save').addEventListener('keydown', e => {
+    if (e.key === 'ArrowDown' && !SV.open) { e.preventDefault(); svOpen(); }
+  });
+  document.addEventListener('pointerdown', svOutside, true);
+  window.addEventListener('resize', () => svClose(false));
+  window.addEventListener('blur', () => svClose(false));
+  window.addEventListener('scroll', e => {
+    if (!SV.open || (e.target && e.target.nodeType && SV.panel.contains(e.target))) return;
+    const r = $('btn-save').getBoundingClientRect();
+    if (Math.abs(r.left - SV.x0) > 0.5 || Math.abs(r.top - SV.y0) > 0.5) svClose(false);
   }, true);
 }
 
@@ -10588,6 +10836,7 @@ function setLang(lang) {
   if (DSP.open) dspBuild();
   unSync();
   if (UN.open) unBuild();
+  if (SV.open) svBuild();
   map.closePopup();
   if (drOn()) { DR.sheetKey = ''; drRlab(); drSyncUi(); }
 }
@@ -10676,7 +10925,7 @@ function bindEvents() {
   $('btn-open').addEventListener('click', () => { fileOpen.value = ''; fileOpen.click(); });
   /* la sélection est remise à zéro après lecture : choisir deux fois le même fichier le relit */
   fileOpen.addEventListener('change', () => { const f = fileOpen.files && fileOpen.files[0]; if (f) openRouteFile(f); fileOpen.value = ''; });
-  $('btn-save').addEventListener('click', onSaveClick);
+  svBind();
   $('btn-export').addEventListener('click', onSaveClick);
   $('btn-export-rt').addEventListener('click', openExportRouteTool);
   ['rt-open-backdrop', 'rt-open-close', 'rt-open-cancel'].forEach(id => $(id).addEventListener('click', () => rtHide('rt-open-modal')));
@@ -10707,6 +10956,7 @@ function bindEvents() {
     if (i >= 0 && i < CFI.checked.length) CFI.checked[i] = ev.target.checked;
   });
   $('cf-export-go').addEventListener('click', cfExportGo);
+  $('cf-fname').addEventListener('input', ev => { CFE.name = ev.target.value; cfExportSync(); });
   ficheBind();
   $('cf-export-list').addEventListener('change', ev => {
     if (ev.target.dataset.k === 'route') CFE.route = ev.target.checked;
@@ -10871,6 +11121,7 @@ function tbmSync(m) {
 function tbmOpen(m) {
   if (TBM.cur) tbmClose(false);
   unClose(false);
+  svClose(false);
   if (m.sel.disabled) return;
   tbmSync(m);
   const sel = m.sel, opts = sel.options, name = m.labelFn();
@@ -11067,7 +11318,7 @@ function tbmOutside(e) {
   if (!m) return;
   const t = e.target;
   if (m.panel.contains(t) || m.btn.contains(t)) return;
-  const other = t && t.closest ? t.closest('.tbm-trigger, #btn-display, #btn-units') : null;
+  const other = t && t.closest ? t.closest('.tbm-trigger, #btn-display, #btn-units, #btn-save') : null;
   tbmClose(false);
   if (other) return;
   tbmSwallowNext();
