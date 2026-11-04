@@ -902,8 +902,33 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
   margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--khaki);
 }}
 
-/* ======== RESPONSIVE ======== */
-@media (max-width: 600px) {{
+/* Filtres de la liste des vols (barre collante dans le défilement de la page) */
+.pk-fwrap {{ margin-top: 0; }}
+.pk-flt {{
+  position: sticky; top: 0; z-index: 5;
+  background: var(--olive-deep);
+  border-bottom: 1px solid var(--khaki);
+  padding: 6px 0 8px; margin-top: 4px;
+  display: flex; flex-direction: column; gap: 6px;
+}}
+.pk-flt-row {{ display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }}
+.pk-flt-f {{ display: flex; align-items: center; gap: 6px; flex: 1 1 120px; min-width: 0; }}
+.pk-flt-f > span {{ flex: none; font-family: var(--f-ui); font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--amber); }}
+.pk-flt-f select, .pk-flt-f input {{
+  box-sizing: border-box; flex: 1 1 0; width: 0; min-width: 0; height: 34px; padding: 0 6px;
+  font-family: var(--f-typewriter); font-size: 12px;
+  background: rgba(216,201,165,.92); color: var(--ink);
+  border: 1px solid var(--khaki); border-left: 3px solid var(--amber-dark); border-radius: 0;
+}}
+.pk-flt-f input:focus, .pk-flt-f select:focus {{ outline: none; border-left-color: var(--red-stamp); box-shadow: 0 0 0 1px var(--amber); }}
+.pk-flt-name {{ flex: 2 1 170px; }}
+.pk-flt .miz-btn {{ margin: 0; min-height: 34px; padding: 4px 9px; font-size: 11px; flex: 0 1 auto; text-align: left; text-transform: none; letter-spacing: 0; }}
+@media (max-height: 480px) {{ .pk-flt {{ position: static; }} }}   /* téléphone à l'horizontale : la barre mangerait l'écran */
+.pk-count {{ font-family: var(--f-typewriter); font-size: 11px; color: var(--khaki-light); margin-left: auto; align-self: center; }}
+.snap-flight.pk-hide {{ display: none; }}
+.pk-info {{ font-family: var(--f-typewriter); font-size: 11px; color: var(--khaki-light); margin-top: 6px; word-break: break-word; cursor: help; }}
+
+
   .ed-field-row {{ grid-template-columns: 1fr; }}
   .wing-actions {{ flex-direction: column; }}
   .wing-action-btn {{ min-width: unset; }}
@@ -953,9 +978,6 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
 
         <!-- Boutons action -->
         <div class="miz-btn-row" id="miz-actions" style="display:none">
-          <button type="button" class="miz-btn primary" id="miz-export-btn" data-i18n="editor.mission.export">
-            📤 Exporter snapshot JSON
-          </button>
           <button type="button" class="miz-btn" id="miz-reload-btn" data-i18n="editor.mission.reload">
             ↺ Charger un autre .miz
           </button>
@@ -1161,13 +1183,11 @@ const I18N = {{
     'editor.mission.drop':      '\u21d3 D\u00c9POSER UN FICHIER .MIZ ICI',
     'editor.mission.drop.hint': 'ou cliquer pour parcourir',
     'editor.mission.dropzone.aria': 'Zone de chargement .miz',
-    'editor.mission.export':    '\U0001f4e4 Exporter snapshot JSON',
     'editor.mission.reload':    '\u21ba Charger un autre .miz',
     'toast.mizLoading':         'Chargement .miz\u2026',
     'toast.mizLoaded':          '.miz charg\u00e9 \u2713',
     'toast.mizError':           '\u26a0 Erreur .miz : ',
     'toast.mizNotMiz':          '\u26a0 S\u00e9lectionnez un fichier .miz',
-    'toast.snapshotExported':   'Snapshot JSON export\u00e9 \u2713',
     'snap.sourceMission':       'Mission source',
     'snap.theatre':             'Th\u00e9\u00e2tre',
     'snap.date':                'Date',
@@ -1183,7 +1203,20 @@ const I18N = {{
     'pk.load': 'Charger des paquets',
     'pk.loaded': 'Paquets chargés',
     'pk.apply': 'Appliquer et télécharger le .miz',
-    'pk.export': '📦 Exporter les vols cochés',
+    'pk.exportN': '📦 Exporter les vols cochés ({{0}})',
+    'pk.flt.side': 'Camp',
+    'pk.flt.all': 'Tous',
+    'pk.flt.red': 'Rouge',
+    'pk.flt.blue': 'Bleu',
+    'pk.flt.neutrals': 'Neutre',
+    'pk.flt.type': 'Type',
+    'pk.flt.name': 'Nom',
+    'pk.flt.checkShown': 'Cocher les vols affichés',
+    'pk.flt.uncheck': 'Tout décocher',
+    'pk.flt.shown': '{{0}} / {{1}} vols affichés',
+    'pk.flt.aria': 'Filtres de la liste des vols',
+    'snap.radio.one': 'Poste {{1}} : {{0}} canal',
+    'snap.radio.many': 'Poste {{1}} : {{0}} canaux',
     'pk.remove': 'Retirer ce paquet',
     'pk.found': '→ trouvé',
     'pk.absent': 'absent de la mission',
@@ -1195,7 +1228,8 @@ const I18N = {{
     'pk.nFlights.one': '{{0}} vol',
     'pk.nFlights.many': '{{0}} vols',
     'pk.warnTheatre': 'théâtre différent ({{0}} ≠ {{1}})',
-    'pk.warnSource': 'mission source différente',
+    'pk.infoSource': 'ⓘ exporté d’une autre version de la mission',
+    'pk.infoSource.tip': 'Normal si la mission a changé depuis l’export : les vols sont retrouvés par leur nom.',
     'pk.refused': 'refusé : {{0}} — {{1}}',
     'pk.err.type': 'ni .json ni .zip',
     'pk.err.parse': 'JSON illisible',
@@ -1214,7 +1248,6 @@ const I18N = {{
     'pk.rep.route.one': 'route ({{0}} point)',
     'pk.rep.route.many': 'route ({{0}} points)',
     'pk.rep.radios': 'radios ({{0}})',
-    'pk.rep.group': 'groupe {{0}}',
     'pk.rep.units.one': '{{0}} unité',
     'pk.rep.units.many': '{{0}} unités',
     'pk.rep.chan.one': '{{0}} canal',
@@ -1231,7 +1264,6 @@ const I18N = {{
     'pk.rep.warnN.many': '{{0}} avertissements',
     'pk.w.theatreRoute': '{{0}} : route non écrite — théâtre du paquet ({{1}}) différent de celui du .miz ({{2}})',
     'pk.w.noRoute': '{{0}} : le groupe n’a pas de route dans le .miz, route non écrite',
-    'pk.w.noGroupFreq': '{{0}} : le groupe n’a pas de fréquence dans le .miz, non écrite',
     'pk.w.radio': '{{0}} : poste {{1}} absent de l’unité {{2}}, non créé',
     'pk.w.chan': '{{0}} : canal {{1}} du poste {{2}} absent de l’unité {{3}}, non créé',
     'pk.w.payload': '{{0}} : l’unité {{1}} n’a pas d’emport dans le .miz, non écrit',
@@ -1242,7 +1274,6 @@ const I18N = {{
     'pk.w.radioGone': 'poste {{0}} introuvable pour l’unité {{1}}',
     'pk.w.chanGone': 'canal {{0}} du poste {{1}} introuvable pour l’unité {{2}}',
     'pk.w.noFreqPos': 'position du canal {{0}} du poste {{1}} absente',
-    'pk.w.noGroupFreqPos': 'position de la fréquence du groupe absente',
     'pk.w.noLiveryPos': 'position de la livrée absente pour l’unité {{0}}',
     'pk.w.noPointsPos': 'position de route.points absente, route non écrite',
     'pk.w.noPayloadPos': 'position de l’emport absente pour l’unité {{0}}',
@@ -1267,7 +1298,6 @@ const I18N = {{
     'pk.w.routeEmpty': '{{0}} : la route du groupe n’a pas de point dans le .miz, route du paquet écrite en entier',
     'pk.w.p1Fixed': '{{0}} : le point 1 de la mission ne peut pas être réécrit tel quel, route non écrite',
     'pk.e.reparse': 'texte écrit illisible ({{0}})',
-    'pk.e.groupFreq': 'fréquence du groupe : attendu {{0}}, relu {{1}}',
     'pk.e.unitGone': 'unité {{0}} absente après l’écriture',
     'pk.e.chanGone': 'canal {{0}} du poste {{1}} absent après l’écriture',
     'pk.e.chanVal': 'canal {{0}} du poste {{1}} : attendu {{2}}, relu {{3}}',
@@ -1353,13 +1383,11 @@ const I18N = {{
     'editor.mission.drop':      '\u21d3 DROP A .MIZ FILE HERE',
     'editor.mission.drop.hint': 'or click to browse',
     'editor.mission.dropzone.aria': '.miz drop zone',
-    'editor.mission.export':    '\U0001f4e4 Export snapshot JSON',
     'editor.mission.reload':    '\u21ba Load another .miz',
     'toast.mizLoading':         'Loading .miz\u2026',
     'toast.mizLoaded':          '.miz loaded \u2713',
     'toast.mizError':           '\u26a0 .miz error: ',
     'toast.mizNotMiz':          '\u26a0 Please select a .miz file',
-    'toast.snapshotExported':   'Snapshot JSON exported \u2713',
     'snap.sourceMission':       'Source mission',
     'snap.theatre':             'Theatre',
     'snap.date':                'Date',
@@ -1375,7 +1403,20 @@ const I18N = {{
     'pk.load': 'Load packages',
     'pk.loaded': 'Loaded packages',
     'pk.apply': 'Apply and download the .miz',
-    'pk.export': '📦 Export checked flights',
+    'pk.exportN': '📦 Export checked flights ({{0}})',
+    'pk.flt.side': 'Side',
+    'pk.flt.all': 'All',
+    'pk.flt.red': 'Red',
+    'pk.flt.blue': 'Blue',
+    'pk.flt.neutrals': 'Neutral',
+    'pk.flt.type': 'Type',
+    'pk.flt.name': 'Name',
+    'pk.flt.checkShown': 'Check shown flights',
+    'pk.flt.uncheck': 'Uncheck all',
+    'pk.flt.shown': '{{0}} / {{1}} flights shown',
+    'pk.flt.aria': 'Flight list filters',
+    'snap.radio.one': 'Radio {{1}}: {{0}} channel',
+    'snap.radio.many': 'Radio {{1}}: {{0}} channels',
     'pk.remove': 'Remove this package',
     'pk.found': '→ found',
     'pk.absent': 'not in the mission',
@@ -1387,7 +1428,8 @@ const I18N = {{
     'pk.nFlights.one': '{{0}} flight',
     'pk.nFlights.many': '{{0}} flights',
     'pk.warnTheatre': 'different theatre ({{0}} ≠ {{1}})',
-    'pk.warnSource': 'different source mission',
+    'pk.infoSource': 'ⓘ exported from another version of the mission',
+    'pk.infoSource.tip': 'Expected if the mission changed since the export: flights are matched by name.',
     'pk.refused': 'refused: {{0}} — {{1}}',
     'pk.err.type': 'neither .json nor .zip',
     'pk.err.parse': 'unreadable JSON',
@@ -1406,7 +1448,6 @@ const I18N = {{
     'pk.rep.route.one': 'route ({{0}} point)',
     'pk.rep.route.many': 'route ({{0}} points)',
     'pk.rep.radios': 'radios ({{0}})',
-    'pk.rep.group': 'group {{0}}',
     'pk.rep.units.one': '{{0}} unit',
     'pk.rep.units.many': '{{0}} units',
     'pk.rep.chan.one': '{{0}} channel',
@@ -1423,7 +1464,6 @@ const I18N = {{
     'pk.rep.warnN.many': '{{0}} warnings',
     'pk.w.theatreRoute': '{{0}}: route not written — the package’s theatre ({{1}}) differs from the .miz’s ({{2}})',
     'pk.w.noRoute': '{{0}}: the group has no route in the .miz, route not written',
-    'pk.w.noGroupFreq': '{{0}}: the group has no frequency in the .miz, not written',
     'pk.w.radio': '{{0}}: radio {{1}} is missing on unit {{2}}, not created',
     'pk.w.chan': '{{0}}: channel {{1}} of radio {{2}} is missing on unit {{3}}, not created',
     'pk.w.payload': '{{0}}: unit {{1}} has no loadout in the .miz, not written',
@@ -1434,7 +1474,6 @@ const I18N = {{
     'pk.w.radioGone': 'radio {{0}} not found for unit {{1}}',
     'pk.w.chanGone': 'channel {{0}} of radio {{1}} not found for unit {{2}}',
     'pk.w.noFreqPos': 'position of channel {{0}} of radio {{1}} missing',
-    'pk.w.noGroupFreqPos': 'position of the group frequency missing',
     'pk.w.noLiveryPos': 'position of the livery missing for unit {{0}}',
     'pk.w.noPointsPos': 'position of route.points missing, route not written',
     'pk.w.noPayloadPos': 'position of the loadout missing for unit {{0}}',
@@ -1459,7 +1498,6 @@ const I18N = {{
     'pk.w.routeEmpty': '{{0}}: the group’s route has no point in the .miz, the package’s route is written in full',
     'pk.w.p1Fixed': '{{0}}: the mission’s point 1 cannot be rewritten as it is, route not written',
     'pk.e.reparse': 'written text unreadable ({{0}})',
-    'pk.e.groupFreq': 'group frequency: expected {{0}}, read back {{1}}',
     'pk.e.unitGone': 'unit {{0}} missing after the write',
     'pk.e.chanGone': 'channel {{0}} of radio {{1}} missing after the write',
     'pk.e.chanVal': 'channel {{0}} of radio {{1}}: expected {{2}}, read back {{3}}',
@@ -2345,6 +2383,8 @@ async function loadMiz(file) {{
     persistSnapshot();
     _PK_EXPORT_SEL.clear();
     _PK_REPORT = null;
+    _MIZ_LOAD_FP = snapshot.sourceMission.fingerprint || '';
+    pkResetFilters();
     renderSnapshot(snapshot);
     pkRender();
     showToast(t('toast.mizLoaded'));
@@ -2609,35 +2649,6 @@ function loadPersistedSnapshot() {{
 }}
 
 // =============================================================
-//  P2.3 — EXPORT SNAPSHOT JSON
-// =============================================================
-function exportSnapshot() {{
-  if (!HQ_SNAPSHOT) return;
-  const fname = (_mizFilename || 'mission').replace(/\\.miz$/i,'') + '_snapshot.json';
-  const blob = new Blob([JSON.stringify(HQ_SNAPSHOT, null, 2)], {{ type: 'application/json' }});
-  if (navigator.share && navigator.canShare) {{
-    try {{
-      const f = new File([blob], fname, {{ type: 'application/json' }});
-      if (navigator.canShare({{ files: [f] }})) {{
-        navigator.share({{ files: [f], title: fname, text: fname }})
-          .catch(() => fallbackDownloadSnap(blob, fname));
-        return;
-      }}
-    }} catch(e) {{}}
-  }}
-  fallbackDownloadSnap(blob, fname);
-}}
-
-function fallbackDownloadSnap(blob, fname) {{
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = fname;
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-  showToast(t('toast.snapshotExported'));
-}}
-
-// =============================================================
 //  P2.3 — AFFICHAGE SNAPSHOT (read-only)
 // =============================================================
 function renderSnapshot(snap) {{
@@ -2664,19 +2675,39 @@ function renderSnapshot(snap) {{
   html += ' &nbsp;·&nbsp; T°: ' + wx.tempC + '°C';
   html += ' &nbsp;·&nbsp; Vis: ' + (wx.visM >= 9999 ? 'CAVOK' : wx.visM + 'm');
   html += '</div>';
-  // Vols
+  // Vols : en-tête, barre de filtres collante, liste
+  html += '<div class="pk-fwrap">';
   html += '<div class="snap-header">' + h(t('snap.flights')) + ' (' + snap.flights.length + ')</div>';
+  const fKey = (f) => f.aircraftType || f.category || '';
+  const hasNeutral = snap.flights.some(f => f.coalition === 'neutrals');
+  const types = Array.from(new Set(snap.flights.map(fKey).filter(x => x !== ''))).sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
+  if (_PK_FLT.type !== 'all' && types.indexOf(_PK_FLT.type) < 0) _PK_FLT.type = 'all';
+  if (_PK_FLT.side === 'neutrals' && !hasNeutral) _PK_FLT.side = 'all';
+  const opt = (v, label, cur) => '<option value="' + h(v) + '"' + (v === cur ? ' selected' : '') + '>' + h(label) + '</option>';
+  html += '<div class="pk-flt" id="pk-flt" role="group" aria-label="' + h(t('pk.flt.aria')) + '">';
+  html += '<div class="pk-flt-row">';
+  html += '<label class="pk-flt-f"><span>' + h(t('pk.flt.side')) + '</span><select id="pk-f-side">' +
+    opt('all', t('pk.flt.all'), _PK_FLT.side) + opt('red', t('pk.flt.red'), _PK_FLT.side) + opt('blue', t('pk.flt.blue'), _PK_FLT.side) +
+    (hasNeutral ? opt('neutrals', t('pk.flt.neutrals'), _PK_FLT.side) : '') + '</select></label>';
+  html += '<label class="pk-flt-f"><span>' + h(t('pk.flt.type')) + '</span><select id="pk-f-type">' +
+    opt('all', t('pk.flt.all'), _PK_FLT.type) + types.map(x => opt(x, x, _PK_FLT.type)).join('') + '</select></label>';
+  html += '<label class="pk-flt-f pk-flt-name"><span>' + h(t('pk.flt.name')) + '</span><input type="text" id="pk-f-name" autocomplete="off" autocapitalize="off" spellcheck="false" value="' + h(_PK_FLT.name) + '"></label>';
+  html += '</div>';
+  html += '<div class="pk-flt-row">';
+  html += '<button type="button" class="miz-btn" id="pk-check-shown">' + h(t('pk.flt.checkShown')) + '</button>';
+  html += '<button type="button" class="miz-btn" id="pk-uncheck">' + h(t('pk.flt.uncheck')) + '</button>';
+  html += '<button type="button" class="miz-btn primary" id="pk-export-btn" disabled>' + h(tf('pk.exportN', 0)) + '</button>';
+  html += '<span class="pk-count" id="pk-count"></span>';
+  html += '</div>';
+  html += '</div>';
   html += '<div class="snap-flight-list">';
   for (const fl of snap.flights) {{
-    html += '<div class="snap-flight">';
+    html += '<div class="snap-flight" data-gid="' + h(String(fl.groupId)) + '" data-side="' + h(fl.coalition || '') + '" data-type="' + h(fKey(fl)) + '" data-name="' + h(pkNorm(fl.groupName)) + '">';
     html += '<div class="snap-flight-header">';
     html += '<label class="pk-chk"><input type="checkbox" data-pk-export="' + h(String(fl.groupId)) + '"' +
       (_PK_EXPORT_SEL.has(fl.groupId) ? ' checked' : '') + (_HQ_MIZ_CONTEXT ? '' : ' disabled') + '>' + h(fl.groupName || '—') + '</label>';
-    html += ' <span class="snap-flight-tag">' + h(fl.aircraftType || fl.category || '') + '</span>';
+    html += ' <span class="snap-flight-tag">' + h(fKey(fl)) + '</span>';
     html += ' <span class="snap-flight-tag">' + h(fl.coalition || '') + '</span>';
-    if (fl.groupFrequency && fl.groupFrequency.value) {{
-      html += ' <span class="snap-flight-tag">' + h(String(fl.groupFrequency.value)) + ' MHz</span>';
-    }}
     html += ' <span class="snap-flight-tag">' + h(String(fl.units.length)) + ' ' + h(fl.units.length === 1 ? t('snap.unit') : t('snap.units')) + '</span>';
     html += '</div>';
     html += '<div class="snap-unit-list">';
@@ -2685,22 +2716,25 @@ function renderSnapshot(snap) {{
       html += '<span class="snap-unit-cs">' + h(u.callsign || u.name || '—') + '</span>';
       if (u.liveryId) html += ' <span class="snap-unit-livery">' + h(u.liveryId) + '</span>';
       for (const r of (u.radios || [])) {{
-        const ch1 = r.channels && r.channels[1] ? r.channels[1] : null;
-        const ch2 = r.channels && r.channels[2] ? r.channels[2] : null;
-        const fmtCh = (v) => (typeof v === 'number' && v >= 1e6) ? (Math.round(v/1e3)/1e3 + ' MHz') : String(v);
-        if (ch1) html += ' <span class="snap-unit-radio">R' + h(String(r.radioIndex)) + ' CH1:' + h(fmtCh(ch1)) + '</span>';
-        if (ch2) html += ' <span class="snap-unit-radio">CH2:' + h(fmtCh(ch2)) + '</span>';
+        const chs = r.channels || {{}};
+        const nCh = Object.keys(chs).length;
+        const fmtCh = (v) => (typeof v === 'number' && v >= 1e6) ? String(Math.round(v / 1e3) / 1e3) : String(v);
+        let txt = tn('snap.radio', nCh, r.radioIndex);
+        if (chs[1] !== undefined && chs[1] !== null) txt += ' · C1 ' + fmtCh(chs[1]);
+        if (chs[2] !== undefined && chs[2] !== null) txt += ' · C2 ' + fmtCh(chs[2]);
+        html += ' <span class="snap-unit-radio">' + h(txt) + '</span>';
       }}
       html += '</div>';
     }}
     html += '</div></div>';
   }}
   html += '</div>';
-  html += '<div class="miz-btn-row"><button type="button" class="miz-btn primary" id="pk-export-btn" disabled>' + h(t('pk.export')) + '</button></div>';
+  html += '</div>';
   // Fingerprint
   html += '<div class="snap-fingerprint">' + h(t('snap.fingerprint')) + ': ' + h(sm.fingerprint || '') + '</div>';
   el.innerHTML = html;
   el.style.display = 'block';
+  pkApplyFilter();
   pkRefreshExportBtn();
   // Afficher boutons actions
   const actionsEl = document.getElementById('miz-actions');
@@ -2736,14 +2770,12 @@ function initMissionEvents() {{
       e.target.value = '';
     }});
   }}
-  const exportBtn = document.getElementById('miz-export-btn');
-  if (exportBtn) exportBtn.addEventListener('click', exportSnapshot);
   const reloadBtn = document.getElementById('miz-reload-btn');
   if (reloadBtn) {{
     reloadBtn.addEventListener('click', () => {{
       if (_PK_BUSY) return;
       HQ_SNAPSHOT = null; _mizFilename = null; _HQ_MIZ_CONTEXT = null;
-      _PK_EXPORT_SEL.clear(); _PK_REPORT = null;
+      _PK_EXPORT_SEL.clear(); _PK_REPORT = null; _MIZ_LOAD_FP = ''; pkResetFilters();
       pkRender();
       const dz = document.getElementById('miz-drop-zone');
       if (dz) {{ dz.classList.remove('has-file'); }}
@@ -2953,21 +2985,6 @@ function buildPatchesFromPackage(pkg, ctx) {{
     return {{ patches: [], warnings }};
   }}
 
-  // overrides.groupFrequency
-  if (ov.groupFrequency && ov.groupFrequency.value !== undefined) {{
-    const gfPos = slot.group.frequency && slot.group.frequency.valuePos;
-    if (gfPos) {{
-      if (seenOffsets.has(gfPos.start.offset)) {{
-        warnings.push({{ key: 'pk.w.dup', args: [gfPos.start.offset] }});
-      }} else {{
-        seenOffsets.add(gfPos.start.offset);
-        patches.push({{ pos: gfPos, newValueStr: formatLuaNumber(ov.groupFrequency.value) }});
-      }}
-    }} else {{
-      warnings.push({{ key: 'pk.w.noGroupFreqPos', args: [] }});
-    }}
-  }}
-
   // overrides.radios[]
   for (const rOv of (ov.radios || [])) {{
     const found = findUnitById(rOv.unitId, ctx);
@@ -3060,15 +3077,6 @@ function verifyPatch(patchedSrc, pkg) {{
     throw Object.assign(new Error('Vérif post-patch: ' + e.message), {{ pkErrors: [{{ key: 'pk.e.reparse', args: [e.message] }}] }});
   }}
 
-  // Fréquence du groupe
-  if (ov.groupFrequency && ov.groupFrequency.value !== undefined) {{
-    const gslot = (vModel.clientGroups || []).find(s => s.group.groupId === pkg.flight.groupId);
-    const gv = gslot && gslot.group.frequency ? gslot.group.frequency.value : undefined;
-    if (gv === undefined || !deepEqValues(Number(gv), Number(ov.groupFrequency.value))) {{
-      errors.push({{ key: 'pk.e.groupFreq', args: [ov.groupFrequency.value, gv] }});
-    }}
-  }}
-
   // Vérifier chaque radio patchée
   for (const rOv of (ov.radios || [])) {{
     const slot = (vModel.clientGroups || []).find(s => s.unit && s.unit.unitId === rOv.unitId);
@@ -3114,7 +3122,7 @@ function verifyPatch(patchedSrc, pkg) {{
   if (errors.length > 0) {{
     throw Object.assign(new Error('Auto-vérif post-patch échouée: ' + errors.map(e => e.key + '(' + e.args.join(',') + ')').join('; ')), {{ pkErrors: errors }});
   }}
-  const totalChecked = (ov.groupFrequency ? 1 : 0) + (ov.radios||[]).length + (ov.liveries||[]).length +
+  const totalChecked = (ov.radios||[]).length + (ov.liveries||[]).length +
     (repl.route ? 1 : 0) + (repl.payloads||[]).length;
   console.log('[HQ P4] Auto-vérif OK — ' + totalChecked + ' champ(s) validé(s)');
 }}
@@ -3231,8 +3239,42 @@ function pkExport() {{
 function pkRefreshExportBtn() {{
   const btn = document.getElementById('pk-export-btn');
   if (!btn) return;
-  const any = !!_HQ_MIZ_CONTEXT && !!HQ_SNAPSHOT && HQ_SNAPSHOT.flights.some(f => _PK_EXPORT_SEL.has(f.groupId));
-  btn.disabled = !any;
+  const n = (_HQ_MIZ_CONTEXT && HQ_SNAPSHOT) ? HQ_SNAPSHOT.flights.filter(f => _PK_EXPORT_SEL.has(f.groupId)).length : 0;
+  btn.disabled = n === 0;
+  btn.textContent = tf('pk.exportN', n);
+  const ck = document.getElementById('pk-check-shown'), un = document.getElementById('pk-uncheck');
+  if (ck) ck.disabled = !_HQ_MIZ_CONTEXT;
+  if (un) un.disabled = !_HQ_MIZ_CONTEXT;
+}}
+
+// ---------- FILTRES DE LA LISTE DES VOLS (n'ont d'effet que sur l'affichage : un vol coché puis masqué reste coché) ----------
+let _PK_FLT = {{ side: 'all', type: 'all', name: '' }};   // en mémoire seulement : rien ne survit au rechargement de la page
+let _MIZ_LOAD_FP = '';   // empreinte du .miz tel qu'il a été chargé depuis le fichier (le snapshot, lui, suit les applications)
+function pkResetFilters() {{ _PK_FLT = {{ side: 'all', type: 'all', name: '' }}; }}
+function pkNorm(s) {{ return String(s === undefined || s === null ? '' : s).normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase(); }}
+function pkApplyFilter() {{
+  const root = document.getElementById('snapshot-display');
+  if (!root) return;
+  const q = pkNorm(_PK_FLT.name);
+  const rows = root.querySelectorAll('.snap-flight');
+  let shown = 0;
+  rows.forEach(r => {{
+    const ok = (_PK_FLT.side === 'all' || r.getAttribute('data-side') === _PK_FLT.side) &&
+      (_PK_FLT.type === 'all' || r.getAttribute('data-type') === _PK_FLT.type) &&
+      (q === '' || (r.getAttribute('data-name') || '').indexOf(q) >= 0);
+    r.classList.toggle('pk-hide', !ok);
+    if (ok) shown++;
+  }});
+  const c = document.getElementById('pk-count');
+  if (c) c.textContent = tf('pk.flt.shown', shown, rows.length);
+}}
+function pkSetChecked(gid, on) {{
+  if (on) _PK_EXPORT_SEL.add(gid); else _PK_EXPORT_SEL.delete(gid);
+}}
+function pkSyncCheckboxes() {{
+  document.querySelectorAll('#snapshot-display [data-pk-export]').forEach(cb => {{
+    cb.checked = _PK_EXPORT_SEL.has(Number(cb.getAttribute('data-pk-export')));
+  }});
 }}
 
 // Textes d'erreur : traduits à l'affichage, jamais au moment où l'erreur survient
@@ -3266,7 +3308,6 @@ function pkNormalize(obj, filename) {{
     if (!f || typeof f !== 'object' || typeof f.groupName !== 'string' || typeof f.aircraftType !== 'string') {{
       return {{ reason: {{ key: 'pk.err.flight', args: [i + 1] }} }};
     }}
-    const gf = f.groupFrequency && pkNum(f.groupFrequency.value) !== null ? {{ value: f.groupFrequency.value }} : null;
     const route = (f.route && f.route.points && typeof f.route.points === 'object') ? f.route.points : null;
     const units = (Array.isArray(f.units) ? f.units : []).filter(u => u && typeof u === 'object').map(u => ({{
       name:     typeof u.name === 'string' ? u.name : '',
@@ -3283,7 +3324,7 @@ function pkNormalize(obj, filename) {{
     flights.push({{
       groupName: f.groupName, aircraftType: f.aircraftType,
       coalition: typeof f.coalition === 'string' ? f.coalition : '',
-      groupFrequency: gf, route: route, units: units,
+      route: route, units: units,
       chk: {{ route: true, radios: true, loadout: true, livery: true }},
     }});
   }}
@@ -3347,7 +3388,7 @@ function pkComputeState() {{
       fl.supBy = null;
       fl.avail = {{
         route:   !!fl.route,
-        radios:  !!fl.groupFrequency || fl.units.some(u => u.radios.length > 0),
+        radios:  fl.units.some(u => u.radios.length > 0),
         loadout: fl.units.some(u => !!u.payload),
         livery:  fl.units.some(u => !!u.liveryId),
       }};
@@ -3402,9 +3443,8 @@ function pkRender() {{
       if (ctx && pk.theatre !== ctx.theatre) {{
         html += '<div class="pk-warn">⚠ ' + h(tf('pk.warnTheatre', pk.theatre || '?', ctx.theatre)) + '</div>';
       }}
-      const loadedFp = HQ_SNAPSHOT && HQ_SNAPSHOT.sourceMission ? HQ_SNAPSHOT.sourceMission.fingerprint : '';
-      if (ctx && pk.fingerprint && loadedFp && pk.fingerprint !== loadedFp) {{
-        html += '<div class="pk-warn">⚠ ' + h(t('pk.warnSource')) + '</div>';
+      if (ctx && pk.fingerprint && _MIZ_LOAD_FP && pk.fingerprint !== _MIZ_LOAD_FP) {{
+        html += '<div class="pk-info" title="' + h(t('pk.infoSource.tip')) + '">' + h(t('pk.infoSource')) + '</div>';
       }}
       pk.flights.forEach((fl, fi) => {{
         html += '<div class="pk-flight"><div class="pk-flight-head">' + h(fl.groupName) +
@@ -3459,7 +3499,7 @@ function pkStartsElsewhere(q, p) {{
 // Plan d'écriture d'un vol trouvé : le « paquet » interne que buildPatchesFromPackage sait lire (identifiants de la mission du MC)
 function pkPlanFlight(ctx, pk, fl, tg) {{
   const warns = [];                       // {{ key, args }}
-  const done = {{ route: 0, groupFreq: null, chan: 0, radioUnits: 0, payload: 0, livery: 0 }};
+  const done = {{ route: 0, chan: 0, radioUnits: 0, payload: 0, livery: 0 }};
   const name = fl.groupName;
   const plan = {{ flight: {{ groupId: tg.group.groupId }}, overrides: {{ radios: [], liveries: [] }}, replacements: {{ payloads: [] }} }};
 
@@ -3512,12 +3552,6 @@ function pkPlanFlight(ctx, pk, fl, tg) {{
     }}
   }}
   if (fl.chk.radios && fl.avail.radios) {{
-    if (fl.groupFrequency) {{
-      if (tg.group.frequency && tg.group.frequency.valuePos) {{
-        plan.overrides.groupFrequency = {{ value: fl.groupFrequency.value }};
-        done.groupFreq = fl.groupFrequency.value;
-      }} else warns.push({{ key: 'pk.w.noGroupFreq', args: [name] }});
-    }}
     fl.units.forEach((u, i) => {{
       const tu = map[i];
       if (!tu) return;
@@ -3557,9 +3591,8 @@ function pkPlanFlight(ctx, pk, fl, tg) {{
 function pkDoneText(done) {{
   const parts = [];
   if (done.route) parts.push(tn('pk.rep.route', done.route));
-  if (done.groupFreq !== null || done.chan) {{
+  if (done.chan) {{
     const bits = [];
-    if (done.groupFreq !== null) bits.push(tf('pk.rep.group', done.groupFreq));
     if (done.radioUnits) bits.push(tn('pk.rep.units', done.radioUnits));
     if (done.chan) bits.push(tn('pk.rep.chan', done.chan));
     parts.push(tf('pk.rep.radios', bits.join(' ; ')));
@@ -3704,14 +3737,34 @@ function initPackagesUI() {{
   if (snapEl) {{
     snapEl.addEventListener('change', e => {{
       const cb = e.target;
-      if (!cb || !cb.hasAttribute || !cb.hasAttribute('data-pk-export')) return;
-      const gid = Number(cb.getAttribute('data-pk-export'));
-      if (cb.checked) _PK_EXPORT_SEL.add(gid); else _PK_EXPORT_SEL.delete(gid);
+      if (!cb || !cb.getAttribute) return;
+      if (cb.id === 'pk-f-side') {{ _PK_FLT.side = cb.value; pkApplyFilter(); return; }}
+      if (cb.id === 'pk-f-type') {{ _PK_FLT.type = cb.value; pkApplyFilter(); return; }}
+      if (!cb.hasAttribute('data-pk-export')) return;
+      pkSetChecked(Number(cb.getAttribute('data-pk-export')), cb.checked);
       pkRefreshExportBtn();
     }});
+    snapEl.addEventListener('input', e => {{
+      const el = e.target;
+      if (el && el.id === 'pk-f-name') {{ _PK_FLT.name = el.value; pkApplyFilter(); }}
+    }});
     snapEl.addEventListener('click', e => {{
-      const b = e.target.closest ? e.target.closest('#pk-export-btn') : null;
-      if (b && !b.disabled) pkExport();
+      const q = (sel) => e.target.closest ? e.target.closest(sel) : null;
+      const ex = q('#pk-export-btn');
+      if (ex) {{ if (!ex.disabled) pkExport(); return; }}
+      const ck = q('#pk-check-shown');
+      if (ck) {{
+        if (ck.disabled || !_HQ_MIZ_CONTEXT) return;
+        snapEl.querySelectorAll('.snap-flight:not(.pk-hide)').forEach(r => pkSetChecked(Number(r.getAttribute('data-gid')), true));
+        pkSyncCheckboxes(); pkRefreshExportBtn();
+        return;
+      }}
+      const un = q('#pk-uncheck');
+      if (un) {{
+        if (un.disabled) return;
+        _PK_EXPORT_SEL.clear();
+        pkSyncCheckboxes(); pkRefreshExportBtn();
+      }}
     }});
   }}
   pkRender();
@@ -4136,7 +4189,15 @@ grep_present('computeFingerprint',  'computeFingerprint présent')
 grep_present('mizWeatherToMetar',   'mizWeatherToMetar présent')
 grep_present('miz-file-input',      'input .miz présent')
 grep_present('miz-drop-zone',       'drop-zone .miz présente')
-grep_present('exportSnapshot',      'exportSnapshot présent')
+grep_absent('exportSnapshot',       'exportSnapshot absent')
+grep_absent('fallbackDownloadSnap', 'fallbackDownloadSnap absent')
+grep_absent('miz-export-btn',       'bouton Exporter snapshot JSON absent')
+grep_absent('pk.warnSource',        'avertissement de source d\'ancienne forme absent')
+grep_absent('noGroupFreq',          'fréquence de groupe non écrite')
+grep_present('pk-f-side',           'filtre Camp présent')
+grep_present('pk-f-name',           'filtre Nom présent')
+grep_present('pk-check-shown',      'bouton Cocher les vols affichés présent')
+grep_present('_MIZ_LOAD_FP',        'empreinte du .miz chargé gardée à part')
 grep_present('loadPersistedSnapshot','loadPersistedSnapshot présent')
 grep_present('sha256',              'fingerprint sha256 présent')
 grep_present('cyrb53',              'fingerprint cyrb53 repli présent')
@@ -4182,8 +4243,8 @@ else:
     if diff_fr: print(f"  [FAIL] Cl\u00e9s fr manquantes en en: {{diff_fr}}")
     if diff_en: print(f"  [FAIL] Cl\u00e9s en manquantes en fr: {{diff_en}}")
 
-fr_pk = set(_re.findall(r"'((?:pk|toast\\.pk|snap\\.unit)[^']*)':", src.split("fr: {")[1].split("en: {")[0]))
-en_pk = set(_re.findall(r"'((?:pk|toast\\.pk|snap\\.unit)[^']*)':", src.split("en: {")[1].split("}};")[0]))
+fr_pk = set(_re.findall(r"'((?:pk|toast\\.pk|snap\\.unit|snap\\.radio)[^']*)':", src.split("fr: {")[1].split("en: {")[0]))
+en_pk = set(_re.findall(r"'((?:pk|toast\\.pk|snap\\.unit|snap\\.radio)[^']*)':", src.split("en: {")[1].split("}};")[0]))
 if fr_pk and fr_pk == en_pk:
     print("  [OK] I18N parit\u00e9 pk.* fr/en (%d cl\u00e9s)" % len(fr_pk))
 else:
