@@ -1282,7 +1282,7 @@ __CSS__
             <button type="button" class="tb-btn primary" id="rs-hq" data-i18n="rs.hq">⇣ Depuis HQ</button>
             <button type="button" class="tb-btn primary" id="rs-pkg" data-i18n="rs.pkg">⇣ Paquet de vol</button>
           </div>
-          <input type="file" id="file-pkg" accept=".json,application/json" hidden>
+          <input type="file" id="file-pkg" accept=".json,.zip,application/json,application/zip" hidden>
         </div>
         <div class="rn">
           <label class="lbl" for="route-name" data-i18n="f.name">Nom de la route</label>
@@ -1847,6 +1847,7 @@ const KEY_STATE = 'route_state_v1';
 const KEY_HANDOFF = 'route_handoff_v1';
 const KEY_SET = 'route_set_v1';
 const KEY_SNAPSHOT = 'mission_snapshot_v1';
+const SNAPSHOT_SCHEMA = 'dcs-mission-snapshot-v1';        /* un snapshot d'un autre schéma (ou sans schéma) est tenu pour absent */
 const KEY_THEME = 'theme_v1';
 const KEY_LANG = 'lang_v1';
 const FORMAT_ID = 'dcs-route-v1';
@@ -2330,10 +2331,22 @@ const I18N = {
     'hq.shown': '{n} / {total} vols affichés',
     'hq.pkg.title': 'Depuis un paquet de vol',
     'hq.pkg.file': 'Paquet : {f} · {th}',
-    'hq.pkg.noroute': 'pas de route dans le paquet',
+    'hq.noroute': 'sans route',
     'hq.warn.pkg': 'Ce paquet est sur {th}, le Route Planner sur {cur} : importer passe au théâtre {th} et supprime les routes existantes.',
     'rs.pkg': '⇣ Paquet de vol',
-    'err.pk': 'Ce fichier n\'est pas un paquet de vol lisible.',
+    'rej.json': 'JSON illisible.',
+    'rej.zip': 'Archive illisible : pas de package.json à la racine.',
+    'rej.format': 'Format « {x} » non pris en charge ici (attendu : {list}).',
+    'rej.unknown': 'inconnu',
+    'rej.noTheatre': 'Le paquet n\'a pas de théâtre.',
+    'rej.noFlight': 'Le paquet ne contient aucun vol.',
+    'rej.skip.1': '{n} vol illisible ignoré.',
+    'rej.skip.n': '{n} vols illisibles ignorés.',
+    'fmt.route': 'route',
+    'fmt.set': 'jeu de routes',
+    'fmt.pkg': 'paquet de vol',
+    'fmt.cf': 'CombatFlite',
+    'fmt.rt': 'Route Tool',
     'err.pkTheatre': 'Le théâtre du paquet ({th}) n\'a pas de projection.',
     'hq.in': 'déjà en route {n}',
     'hq.go.1': 'Importer {n} vol',
@@ -2410,7 +2423,6 @@ const I18N = {
     'zoom.in': 'Zoom avant',
     'zoom.out': 'Zoom arrière',
     'toast.saved': 'Route enregistrée ✓',
-    'err.json': 'Fichier non reconnu.',
     'confirm.open': 'Remplacer la route en cours ?',
     'confirm.example': 'Charger l\'exemple à la place de la route en cours ?',
     'err.cf': 'Fichier CombatFlite non reconnu.',
@@ -2820,7 +2832,7 @@ const I18N = {
     'hq.blue': 'Blue',
     'hq.neutral': 'Neutral',
     'hq.none': 'No flight matches.',
-    'hq.pkg.noFlights': 'The package has no flights.',
+    'hq.pkg.noFlights': 'The package contains no flight.',
     'hq.noFlights': 'The mission has no flights.',
     'hq.pts': '{n} pts',
     'hq.pts.1': '{n} pt',
@@ -2830,10 +2842,22 @@ const I18N = {
     'hq.shown': '{n} / {total} flights shown',
     'hq.pkg.title': 'From a flight package',
     'hq.pkg.file': 'Package: {f} · {th}',
-    'hq.pkg.noroute': 'no route in the package',
+    'hq.noroute': 'no route',
     'hq.warn.pkg': 'This package is on {th}, the Route Planner on {cur}: importing switches to the {th} theatre and deletes the existing routes.',
     'rs.pkg': '⇣ Flight package',
-    'err.pk': 'This file is not a readable flight package.',
+    'rej.json': 'Unreadable JSON.',
+    'rej.zip': 'Unreadable archive: no package.json at the root.',
+    'rej.format': 'Format "{x}" not supported here (expected: {list}).',
+    'rej.unknown': 'unknown',
+    'rej.noTheatre': 'The package has no theatre.',
+    'rej.noFlight': 'The package contains no flight.',
+    'rej.skip.1': '{n} unreadable flight skipped.',
+    'rej.skip.n': '{n} unreadable flights skipped.',
+    'fmt.route': 'route',
+    'fmt.set': 'route set',
+    'fmt.pkg': 'flight package',
+    'fmt.cf': 'CombatFlite',
+    'fmt.rt': 'Route Tool',
     'err.pkTheatre': 'The package theatre ({th}) has no projection.',
     'hq.in': 'already in route {n}',
     'hq.go.1': 'Import {n} flight',
@@ -2910,7 +2934,6 @@ const I18N = {
     'zoom.in': 'Zoom in',
     'zoom.out': 'Zoom out',
     'toast.saved': 'Route saved ✓',
-    'err.json': 'Unrecognised file.',
     'confirm.open': 'Replace the current route?',
     'confirm.example': 'Load the example instead of the current route?',
     'err.cf': 'Unrecognised CombatFlite file.',
@@ -3660,8 +3683,8 @@ function loadLayers() {
 /* ---- Le zip d'un .cf : répertoire central, entrée « mission.xml » (sans casse), méthode 0 (stockée) ou 8 (deflate) ---- */
 function zipIsZip(bytes) { return bytes.length >= 2 && bytes[0] === 0x50 && bytes[1] === 0x4B; }
 
-/* → { method, data, size } ; null si le zip est tronqué, chiffré, sans mission.xml */
-function zipFindEntry(b) {
+/* → { method, data, size } ; null si le zip est tronqué, chiffré, sans l'entrée voulue : « mission.xml » (sans casse) par défaut, ou le nom exact donné (« package.json » à la racine) */
+function zipFindEntry(b, want) {
   const n = b.length;
   if (n < 22) return null;
   const dv = new DataView(b.buffer, b.byteOffset, b.byteLength);
@@ -3677,7 +3700,7 @@ function zipFindEntry(b) {
     const nl = dv.getUint16(p + 28, true), xl = dv.getUint16(p + 30, true), cl = dv.getUint16(p + 32, true), lho = dv.getUint32(p + 42, true);
     if (p + 46 + nl > n) return null;
     const name = new TextDecoder('utf-8').decode(b.subarray(p + 46, p + 46 + nl));
-    if (name.toLowerCase() === 'mission.xml') {
+    if (want ? name === want : name.toLowerCase() === 'mission.xml') {
       if ((flags & 1) || lho + 30 > n || dv.getUint32(lho, true) !== 0x04034b50) return null;
       const start = lho + 30 + dv.getUint16(lho + 26, true) + dv.getUint16(lho + 28, true);
       if (start + csz > n || usz > 64 * 1048576) return null;
@@ -7534,13 +7557,48 @@ function setRoute(route) {
   frameRoute();
 }
 
-/* « Ouvrir » : le contenu décide — un texte qui commence par « presets » est un fichier du Route Tool (fenêtre de choix),
-   sinon une route JSON dcs-route-v1 */
+/* Les refus d'un fichier, communs à la suite (mêmes textes au Route Planner, au Datacard Generator, à HQ et au Briefing Generator) :
+   la valeur de « format » du fichier (« inconnu » sans format), puis la liste de ce que l'entrée lit */
+function rejectFormat(parsed, kinds) {
+  const f = (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) ? parsed.format : undefined;
+  const x = ((typeof f === 'string' && f !== '') || typeof f === 'number') ? String(f) : t('rej.unknown');
+  showToast(t('rej.format', { x: x, list: kinds.map(k => t('fmt.' + k)).join(', ') }), 5000);
+}
+function rejectMsg(key) { showToast(t(key), 5000); }
+function isPlainObj(o) { return !!o && typeof o === 'object' && !Array.isArray(o); }
+
+/* Les octets d'un paquet → JSON lu : un .json, ou un .zip (« PK ») qui porte package.json à sa racine ; un refus commun sinon (null).
+   Un .zip qui porte mission.xml et pas de package.json n'est pas un refus ici : { cf: true } (c'est « Ouvrir » qui le lit comme un .cf) */
+async function packageJsonOf(bytes, allowCf) {
+  let text;
+  if (zipIsZip(bytes)) {
+    const ent = zipFindEntry(bytes, 'package.json');
+    if (!ent) {
+      if (allowCf && zipFindEntry(bytes)) return { cf: true };
+      rejectMsg('rej.zip');
+      return null;
+    }
+    try { text = bytesToText(await zipInflate(ent)); } catch (e) { rejectMsg('rej.zip'); return null; }
+  } else {
+    text = bytesToText(bytes);
+  }
+  try { return { parsed: JSON.parse(text) }; } catch (e) { rejectMsg('rej.json'); return null; }
+}
+
+/* « Ouvrir » : le contenu décide — un zip qui porte package.json est un paquet de vol, sinon un .cf (zip de CombatFlite) ; un texte qui commence par « presets »
+   est un fichier du Route Tool (fenêtre de choix), sinon un JSON : jeu de routes, paquet de vol ou route dcs-route-v1 */
 function openRouteFile(file) {
-  readFileBytes(file, bytes => {
-    if (zipIsZip(bytes)) {          /* un .cf (zip de CombatFlite) se reconnaît à ses deux premiers octets, « PK » */
-      cfRead(bytes, file.name).then(res => openCfImport(file.name, res))
-        .catch(e => showToast(t(e && e.message === 'nods' ? 'err.cfBrowser' : 'err.cf')));
+  readFileBytes(file, async bytes => {
+    if (zipIsZip(bytes)) {          /* un .cf (zip de CombatFlite) se reconnaît à ses deux premiers octets, « PK » ; un paquet en .zip, à son package.json */
+      const pj = await packageJsonOf(bytes, true);
+      if (!pj) return;
+      if (pj.cf) {
+        cfRead(bytes, file.name).then(res => openCfImport(file.name, res))
+          .catch(e => showToast(t(e && e.message === 'nods' ? 'err.cfBrowser' : 'err.cf')));
+        return;
+      }
+      if (!isPlainObj(pj.parsed) || pj.parsed.format !== PACKAGE_FORMAT) { rejectFormat(pj.parsed, ['route', 'set', 'pkg', 'cf', 'rt']); return; }
+      openPackage(pj.parsed, file.name, $('btn-open'));
       return;
     }
     const text = bytesToText(bytes);
@@ -7551,11 +7609,15 @@ function openRouteFile(file) {
       return;
     }
     let parsed;
-    try { parsed = JSON.parse(text); } catch (e) { showToast(t('err.json')); return; }
-    if (parsed && typeof parsed === 'object' && parsed.format === SET_FORMAT) { openRouteSet(parsed); return; }
-    if (parsed && typeof parsed === 'object' && parsed.format === PACKAGE_FORMAT) { openPackage(parsed, file.name, $('btn-open')); return; }
+    try { parsed = JSON.parse(text); } catch (e) { rejectMsg('rej.json'); return; }
+    if (isPlainObj(parsed) && parsed.format === SET_FORMAT) { openRouteSet(parsed); return; }
+    if (isPlainObj(parsed) && parsed.format === PACKAGE_FORMAT) { openPackage(parsed, file.name, $('btn-open')); return; }
     const res = parseRoute(parsed);
-    if (!res) { showToast(t('err.json')); return; }
+    if (!res) {
+      if (isPlainObj(parsed) && parsed.format === FORMAT_ID) rejectMsg('rej.json');      /* une route dcs-route-v1 sans liste de points */
+      else rejectFormat(parsed, ['route', 'set', 'pkg', 'cf', 'rt']);
+      return;
+    }
     /* « layers » : des calques qui s'ajoutent aux calques présents (un même id remplace le sien) ; sans route dans le fichier, la route n'est pas touchée */
     const lays = Array.isArray(parsed.layers) ? parsed.layers.map(cfLayer).filter(Boolean) : [];
     if (!res.route.points.length && lays.length) {
@@ -7568,7 +7630,7 @@ function openRouteFile(file) {
       (res.droppedRefs ? ' · ' + t('toast.refsDropped', { n: res.droppedRefs }) : '');
     if (lays.length) { cfMerge(lays); if (layersChanged()) msg += ' · ' + t(cfOne(lays.length) ? 'toast.cfShown.1' : 'toast.cfShown.n', { n: lays.length }); }
     showToast(msg);
-  }, () => showToast(t('err.json')));
+  }, () => rejectMsg('rej.json'));
 }
 
 /* « Exemple » remplace toutes les routes par la route d'exemple */
@@ -7827,7 +7889,7 @@ function openAsRoute(route) {
 function openRouteSet(parsed) {
   const rr = readRoutes(parsed.routes);
   const sh = parseRoute(Object.assign({}, parsed, { format: FORMAT_ID, points: [], name: '' }));
-  if (!rr || !sh) { showToast(t('err.json')); return; }
+  if (!rr || !sh) { rejectMsg('rej.json'); return; }      /* un jeu de routes sans liste de routes */
   const lays = Array.isArray(parsed.layers) ? parsed.layers.map(cfLayer).filter(Boolean) : [];
   /* sans point dans aucune route et avec des calques (« Enregistrer tout », route décochée) : comme un fichier de calques seuls, les routes ne sont pas touchées */
   if (!rr.routes.some(r => r.points.length) && lays.length) {
@@ -7880,16 +7942,19 @@ function defaultSetName() { return 'routes_' + stamp(); }
 function readSnapshot() {
   try {
     const o = JSON.parse(localStorage.getItem(KEY_SNAPSHOT));
-    if (o && typeof o === 'object' && o.sourceMission && typeof o.sourceMission.theatre === 'string' && Array.isArray(o.flights)) return o;
+    if (o && typeof o === 'object' && o.schema === SNAPSHOT_SCHEMA && o.sourceMission && typeof o.sourceMission.theatre === 'string' && Array.isArray(o.flights)) return o;
   } catch (e) { /* pas de snapshot */ }
   return null;
 }
 
 function snapFlights(snap) {
-  return snap.flights.filter(f => f && typeof f === 'object' && typeof f.groupName === 'string' && typeof f.aircraftType === 'string').map(f => ({
-    groupName: f.groupName, aircraftType: f.aircraftType, coalition: typeof f.coalition === 'string' ? f.coalition : '',
-    points: (f.route && f.route.points && typeof f.route.points === 'object' && !Array.isArray(f.route.points)) ? f.route.points : null
-  }));
+  const th = snap.sourceMission.theatre;
+  return snap.flights.filter(f => f && typeof f === 'object' && typeof f.groupName === 'string' && typeof f.aircraftType === 'string').map(f => {
+    const points = (f.route && f.route.points && typeof f.route.points === 'object' && !Array.isArray(f.route.points)) ? f.route.points : null;
+    /* nr : aucun point lisible, la liste dit « sans route » (le vol reste coché ou non comme avant : seul le texte change) */
+    return { groupName: f.groupName, aircraftType: f.aircraftType, coalition: typeof f.coalition === 'string' ? f.coalition : '', points: points,
+      nr: !snapKeys(points).some(k => pointFromRaw(points[k], k, 0, th)) };
+  });
 }
 
 /* Les clés numériques de la table des points d'un vol, dans l'ordre */
@@ -7998,7 +8063,7 @@ function hqRenderList() {
   $('hq-list').innerHTML = vis.length ? vis.map(x => {
     const f = x.f, used = routesOfFlight(f), n = f.points ? snapKeys(f.points).length : 0;
     return '<label class="rt-row' + (f.off ? ' off' : '') + '"><input type="' + (link ? 'radio' : 'checkbox') + '" name="hq-flight" data-i="' + x.i + '"' + (HM.checked.has(x.i) ? ' checked' : '') + (f.off ? ' disabled' : '') + '>' +
-      '<span class="rt-nm">' + esc(f.groupName) + '</span><span class="rt-n"><span>' + esc(f.aircraftType + (f.coalition ? ' · ' + sideText(f.coalition).toLowerCase() : '') + ' · ' + (f.off ? t('hq.pkg.noroute') : ptsText(n))) + '</span>' +
+      '<span class="rt-nm">' + esc(f.groupName) + '</span><span class="rt-n"><span>' + esc(f.aircraftType + (f.coalition ? ' · ' + sideText(f.coalition).toLowerCase() : '') + ' · ' + (f.nr ? t('hq.noroute') : ptsText(n))) + '</span>' +
       (used.length ? '<span class="rt-dup">' + esc(t('hq.in', { n: used.join(', ') })) + '</span>' : '') + '</span></label>';
   }).join('') : '<p class="rt-empty">' + esc(t(HM.flights.length ? 'hq.none' : (HM.kind === 'pkg' ? 'hq.pkg.noFlights' : 'hq.noFlights'))) + '</p>';
   $('hq-cnt').textContent = t('hq.shown', { n: vis.length, total: HM.flights.length });
@@ -8054,32 +8119,34 @@ function openHqModal(mode, opener) {
   openFlightsModal({ kind: 'hq', theatre: sm.theatre, file: sm.filename || '', source: readSource(sm), flights: snapFlights(hq.snap) }, mode, opener);
 }
 
-/* Un paquet de vol (dcs-flight-package-v1) lu : la même fenêtre, en mode paquet ; un paquet illisible, d'un autre format ou d'un théâtre sans projection : un message, rien ne change.
-   Un vol sans point lisible est inactif. Le paquet n'est pas gardé. */
+/* Un paquet de vol (dcs-flight-package-v1) lu : la même fenêtre, en mode paquet. Sans théâtre, d'un théâtre sans projection ou sans aucun vol lisible : un message, rien ne s'ouvre ;
+   un vol illisible est ignoré et compté dans un message. Un vol sans point lisible est inactif. Le paquet n'est pas gardé. */
 function openPackage(parsed, fname, opener) {
-  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed) || parsed.format !== PACKAGE_FORMAT || !Array.isArray(parsed.flights)) { showToast(t('err.pk')); return; }
   const th = typeof parsed.theatre === 'string' ? parsed.theatre : '';
-  if (th === '') { showToast(t('err.pk')); return; }
-  if (!hasRouteTool(th)) { showToast(t('err.pkTheatre', { th: theatreText(th) })); return; }
-  if (!parsed.flights.length) { showToast(t('hq.pkg.noFlights')); return; }
+  if (th === '') { rejectMsg('rej.noTheatre'); return; }
+  if (!hasRouteTool(th)) { showToast(t('err.pkTheatre', { th: theatreText(th) }), 5000); return; }
+  const list = Array.isArray(parsed.flights) ? parsed.flights : [];
   const flights = [];
-  parsed.flights.forEach(f => {
+  list.forEach(f => {
     if (!f || typeof f !== 'object' || Array.isArray(f) || typeof f.groupName !== 'string' || typeof f.aircraftType !== 'string') return;
     const points = (f.route && f.route.points && typeof f.route.points === 'object' && !Array.isArray(f.route.points)) ? f.route.points : null;
     const off = !snapKeys(points).some(k => pointFromRaw(points[k], k, 0, th));
-    flights.push({ groupName: f.groupName, aircraftType: f.aircraftType, coalition: typeof f.coalition === 'string' ? f.coalition : '', points: points, off: off });
+    flights.push({ groupName: f.groupName, aircraftType: f.aircraftType, coalition: typeof f.coalition === 'string' ? f.coalition : '', points: points, off: off, nr: off });
   });
-  if (!flights.length) { showToast(t('err.pk')); return; }
+  if (!flights.length) { rejectMsg('rej.noFlight'); return; }
   openFlightsModal({ kind: 'pkg', theatre: th, file: fname || '', source: readSource(parsed.sourceMission), flights: flights }, 'import', opener);
+  const skipped = list.length - flights.length;
+  if (skipped) showToast(t(cfOne(skipped) ? 'rej.skip.1' : 'rej.skip.n', { n: skipped }), 5000);
 }
 
-/* « ⇣ Paquet de vol » : le sélecteur de fichier, puis la fenêtre */
+/* « ⇣ Paquet de vol » : le sélecteur de fichier (.json ou .zip), puis la fenêtre */
 function openPackageFile(file) {
-  readFileBytes(file, bytes => {
-    let parsed;
-    try { parsed = JSON.parse(bytesToText(bytes)); } catch (e) { showToast(t('err.pk')); return; }
-    openPackage(parsed, file.name, $('rs-pkg'));
-  }, () => showToast(t('err.pk')));
+  readFileBytes(file, async bytes => {
+    const pj = await packageJsonOf(bytes, false);
+    if (!pj) return;
+    if (!isPlainObj(pj.parsed) || pj.parsed.format !== PACKAGE_FORMAT) { rejectFormat(pj.parsed, ['pkg']); return; }
+    openPackage(pj.parsed, file.name, $('rs-pkg'));
+  }, () => rejectMsg('rej.json'));
 }
 
 /* Changer de théâtre supprime les routes : la confirmation, s'il y a quelque chose à perdre */

@@ -2498,6 +2498,7 @@ body[data-theme="modern-east"] .stamp-classif::after {
   transition: all .3s ease;
   pointer-events: none;
   box-shadow: 0 4px 16px rgba(0,0,0,.6);
+  width: max-content; max-width: calc(100vw - 24px); text-align: center;
 }
 .toast.show {
   opacity: 1;
@@ -3866,6 +3867,11 @@ const I18N = {
     'toast.imageError':        'Erreur : ',
     'toast.jsonInvalid':       '⚠ Fichier JSON invalide : ',
     'toast.fileUnreadable':    '⚠ Lecture impossible',
+    'rej.json':                'JSON illisible.',
+    'rej.format':              'Format « {x} » non pris en charge ici (attendu : {list}).',
+    'rej.unknown':             'inconnu',
+    'rej.notBriefing':         'Ce fichier n\'est pas un briefing.',
+    'fmt.briefing':            'briefing',
     'toast.exportError':       '⚠ Erreur export PNG : ',
     'toast.exportGenProgress': 'Génération ',
     // ── Confirmations ──
@@ -4234,6 +4240,11 @@ const I18N = {
     'toast.imageError':        'Error: ',
     'toast.jsonInvalid':       '⚠ Invalid JSON file: ',
     'toast.fileUnreadable':    '⚠ Cannot read file',
+    'rej.json':                'Unreadable JSON.',
+    'rej.format':              'Format "{x}" not supported here (expected: {list}).',
+    'rej.unknown':             'unknown',
+    'rej.notBriefing':         'This file is not a briefing.',
+    'fmt.briefing':            'briefing',
     'toast.exportError':       '⚠ PNG export error: ',
     'toast.exportGenProgress': 'Generating ',
     // ── Confirmations ──
@@ -8149,12 +8160,12 @@ function escapeHtml(str) {
 }
 function escapeAttr(str) { return escapeHtml(str); }
 
-function showToast(msg) {
+function showToast(msg, ms) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
   clearTimeout(showToast._h);
-  showToast._h = setTimeout(() => t.classList.remove('show'), 2200);
+  showToast._h = setTimeout(() => t.classList.remove('show'), ms || 2200);
 }
 
 /* ============= ACTIONS ============= */
@@ -8191,11 +8202,29 @@ function fallbackDownload(blob, fname, toastMsg) {
   showToast(toastMsg || t('toast.briefingSaved'));
 }
 
+/* Un briefing se reconnaît à sa forme : un objet « meta », une liste « phases », pas de clé « format » (le format des autres fichiers de la suite) */
+function isBriefingObject(o) {
+  return !!(o && typeof o === 'object' && !Array.isArray(o) && o.meta && typeof o.meta === 'object' && Array.isArray(o.phases) && !('format' in o));
+}
+
+/* « Charger » : un briefing seulement. Tout autre fichier est refusé avec sa raison (les mêmes textes que dans les autres outils de la suite) et le briefing
+   en cours, en mémoire comme dans le navigateur, n'est pas touché. */
+function rejectNotBriefing(parsed) {
+  const f = (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) ? parsed.format : undefined;
+  if ((typeof f === 'string' && f !== '') || typeof f === 'number') {
+    showToast(t('rej.format').split('{x}').join(String(f)).split('{list}').join(t('fmt.briefing')), 5000);
+  } else {
+    showToast(t('rej.notBriefing'), 5000);
+  }
+}
+
 function loadJsonFile(file) {
   const reader = new FileReader();
   reader.onload = async () => {
+    let parsed;
+    try { parsed = JSON.parse(reader.result); } catch (e) { showToast(t('rej.json'), 5000); return; }
+    if (!isBriefingObject(parsed)) { rejectNotBriefing(parsed); return; }
     try {
-      const parsed = JSON.parse(reader.result);
       state = mergeDeep(structuredClone(DEFAULTS), parsed);
       // Migration classification : legacy texte → clé canonique (v2.2.0)
       if (state.meta && state.meta.classification) {

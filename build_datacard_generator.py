@@ -1852,7 +1852,7 @@ __CSS__
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
     <span class="tb-btn-label solo" data-i18n="tb.json.import">Importer JSON</span>
   </button>
-  <input type="file" id="file-load" accept=".json,application/json" hidden>
+  <input type="file" id="file-load" accept=".json,.zip,application/json,application/zip" hidden>
   <button class="tb-btn" id="btn-json-export" data-i18n-title="tb.json.export" title="Exporter JSON">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
     <span class="tb-btn-label solo" data-i18n="tb.json.export">Exporter JSON</span>
@@ -1936,7 +1936,7 @@ __CSS__
       <div class="imp-file" id="imp-file-zone" hidden>
         <button type="button" class="imp-filebtn" id="imp-file-btn" data-i18n="imp.choose">Choisir un fichier…</button>
         <span class="imp-filename" id="imp-file-name"></span>
-        <input type="file" id="file-briefing" accept=".json,application/json" hidden>
+        <input type="file" id="file-briefing" accept=".json,.zip,application/json,application/zip" hidden>
       </div>
     </div>
     <div class="imp-block" id="imp-flights-block">
@@ -2116,7 +2116,7 @@ const I18N = {
     'imp.src.hqOff': 'Chargez d\'abord la mission dans HQ',
     'imp.src.hqNote': '{f} · {th}',
     'imp.src.pkg': 'Paquet de vol',
-    'imp.src.file': 'Fichier JSON (briefing ou route)',
+    'imp.src.file': 'Fichier JSON (briefing, route ou paquet)',
     'imp.route.title': 'Route à importer',
     'imp.route.line': '« {name} » — {n} points',
     'imp.route.noname': 'Route sans nom',
@@ -2142,7 +2142,8 @@ const I18N = {
     'imp.noroute': 'sans route',
     'imp.none': 'Aucun vol ne correspond.',
     'imp.empty': 'Aucun vol dans cette source.',
-    'imp.go.n': 'Importer {n} vol(s)',
+    'imp.go.1': 'Importer {n} vol',
+    'imp.go.n': 'Importer {n} vols',
     'imp.radio': 'Poste {n}',
     'imp.ch.title': 'Canaux radio à importer',
     'imp.ch.note': 'Touchez les canaux utilisés en mission\u00a0; aucun canal coché = pas de radios sur la datacard.',
@@ -2151,14 +2152,26 @@ const I18N = {
     'imp.ch.tip': '{r}, canal {c}',
     'imp.cut': '{k} vol(s) : 30 points de navigation au plus',
     'imp.route.all': 'Toutes les routes ({n}), une datacard par route',
-    'err.pk': 'Ce fichier n\'est pas un paquet de vol lisible.',
+    'rej.json': 'JSON illisible.',
+    'rej.zip': 'Archive illisible : pas de package.json à la racine.',
+    'rej.format': 'Format « {x} » non pris en charge ici (attendu : {list}).',
+    'rej.unknown': 'inconnu',
+    'rej.noTheatre': 'Le paquet n\'a pas de théâtre.',
+    'rej.noFlight': 'Le paquet ne contient aucun vol.',
+    'rej.skip.1': '{n} vol illisible ignoré.',
+    'rej.skip.n': '{n} vols illisibles ignorés.',
+    'rej.isDatacard': 'C\'est une datacard : ouvrez-la par « Importer JSON ».',
+    'fmt.briefing': 'briefing',
+    'fmt.route': 'route',
+    'fmt.set': 'jeu de routes',
+    'fmt.pkg': 'paquet de vol',
+    'fmt.datacard': 'datacard',
     'imp.general': 'Données générales (sans vol)',
     'imp.go': 'Importer',
     'imp.cancel': 'Annuler',
     'toast.imported': '{n} datacard(s) importée(s) ✓',
     'toast.jsonSaved': 'Datacards enregistrées ✓',
     'toast.jsonLoaded': 'Datacards chargées ✓',
-    'err.json': 'Fichier non reconnu.',
     'confirm.json': 'Remplacer les datacards en cours ?',
     'confirm.example': 'Remplacer le document en cours par l\'exemple ?',
     'toast.example': 'Exemple chargé ✓',
@@ -2441,7 +2454,7 @@ const I18N = {
     'imp.src.hqOff': 'Load the mission in HQ first',
     'imp.src.hqNote': '{f} · {th}',
     'imp.src.pkg': 'Flight package',
-    'imp.src.file': 'JSON file (briefing or route)',
+    'imp.src.file': 'JSON file (briefing, route or package)',
     'imp.route.title': 'Route to import',
     'imp.route.line': '“{name}” — {n} waypoints',
     'imp.route.noname': 'Untitled route',
@@ -2467,7 +2480,8 @@ const I18N = {
     'imp.noroute': 'no route',
     'imp.none': 'No flight matches.',
     'imp.empty': 'No flights in this source.',
-    'imp.go.n': 'Import {n} flight(s)',
+    'imp.go.1': 'Import {n} flight',
+    'imp.go.n': 'Import {n} flights',
     'imp.radio': 'Radio {n}',
     'imp.ch.title': 'Radio channels to import',
     'imp.ch.note': 'Tap the channels used in the mission; none ticked = no radios on the datacard.',
@@ -2476,14 +2490,26 @@ const I18N = {
     'imp.ch.tip': '{r}, channel {c}',
     'imp.cut': '{k} flight(s): navigation limited to 30 points',
     'imp.route.all': 'All routes ({n}), one datacard per route',
-    'err.pk': 'This file is not a readable flight package.',
+    'rej.json': 'Unreadable JSON.',
+    'rej.zip': 'Unreadable archive: no package.json at the root.',
+    'rej.format': 'Format "{x}" not supported here (expected: {list}).',
+    'rej.unknown': 'unknown',
+    'rej.noTheatre': 'The package has no theatre.',
+    'rej.noFlight': 'The package contains no flight.',
+    'rej.skip.1': '{n} unreadable flight skipped.',
+    'rej.skip.n': '{n} unreadable flights skipped.',
+    'rej.isDatacard': 'This is a datacard: open it with "Import JSON".',
+    'fmt.briefing': 'briefing',
+    'fmt.route': 'route',
+    'fmt.set': 'route set',
+    'fmt.pkg': 'flight package',
+    'fmt.datacard': 'datacard',
     'imp.general': 'General data (no flight)',
     'imp.go': 'Import',
     'imp.cancel': 'Cancel',
     'toast.imported': '{n} datacard(s) imported ✓',
     'toast.jsonSaved': 'Datacards saved ✓',
     'toast.jsonLoaded': 'Datacards loaded ✓',
-    'err.json': 'Unrecognised file.',
     'confirm.json': 'Replace the current datacards?',
     'confirm.example': 'Replace the current document with the example?',
     'toast.example': 'Example loaded ✓',
@@ -2781,12 +2807,12 @@ function str(v) {
 function clone(o) { return JSON.parse(JSON.stringify(o)); }
 function pad2(n) { return String(n).padStart(2, '0'); }
 
-function showToast(msg) {
+function showToast(msg, ms) {
   const el = document.getElementById('toast');
   el.textContent = msg;
   el.classList.add('show');
   clearTimeout(showToast._h);
-  showToast._h = setTimeout(() => el.classList.remove('show'), 2200);
+  showToast._h = setTimeout(() => el.classList.remove('show'), ms || 2200);
 }
 
 /* ============= COORDONNÉES DE NAVIGATION ============= */
@@ -4475,24 +4501,26 @@ function downloadJson() {
 }
 
 /* ============= IMPORT JSON ============= */
+/* « Importer JSON » : une datacard remplace le document (avec confirmation s'il n'est pas vide) ; un briefing, une route, un jeu de routes ou un paquet de vol
+   ouvrent la fenêtre d'import sur la bonne source ; le reste est refusé avec sa raison, sans rien ouvrir. */
 function loadJsonFile(file) {
-  const reader = new FileReader();
-  reader.onload = () => {
-    let parsed;
-    try { parsed = JSON.parse(reader.result); } catch (e) { showToast(t('err.json')); return; }
-    if (isBriefingObject(parsed)) { openImportModal(parsed, file.name); return; }
-    if (isRouteObject(parsed)) { openImportModal(null, file.name, routeFromObject(parsed)); return; }
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed) || parsed.format !== FORMAT_ID) { showToast(t('err.json')); return; }
-    if (!isBlankDoc(doc) && !confirm(t('confirm.json'))) return;
-    setDoc(normalizeDoc(parsed));
-    showToast(t('toast.jsonLoaded'));
-  };
-  reader.onerror = () => showToast(t('err.json'));
-  reader.readAsText(file);
+  readImportFile(file, r => {
+    if (r.reject) { rejectMsg(r.reject); return; }
+    const k = impRecognise(r.parsed, file.name, true);
+    if (!k) return;
+    if (k.kind === 'datacard') {
+      if (!isBlankDoc(doc) && !confirm(t('confirm.json'))) return;
+      setDoc(normalizeDoc(r.parsed));
+      showToast(t('toast.jsonLoaded'));
+      return;
+    }
+    openImportModal(null);
+    impUseFile(k, file.name);
+  });
 }
 
 /* ============= IMPORT DEPUIS UN BRIEFING OU UNE ROUTE ============= */
-const imp = { src: 'current', fileBriefing: null, fileRoute: null, fileName: '', current: null, currentRoute: null,
+const imp = { src: 'current', fileBriefing: null, fileRoute: null, fileSet: [], fileName: '', current: null, currentRoute: null,
   hq: null, pkg: null, pkgName: '', routeSet: [] };
 
 function impBriefing() {
@@ -4502,6 +4530,10 @@ function impBriefing() {
 function impRoute() {
   if (imp.src === 'file') return imp.fileRoute;
   return imp.src === 'route' ? imp.currentRoute : null;
+}
+/* Les routes que « Toutes les routes » importerait : celles du Route Planner (« Route en cours ») ou celles du jeu de routes d'un fichier */
+function impSetList() {
+  return imp.src === 'route' ? imp.routeSet : (imp.src === 'file' ? imp.fileSet : []);
 }
 
 /* ----- Route du Route Planner ----- */
@@ -4581,6 +4613,7 @@ function applyRouteToCard(c, r) {
 
 /* ----- Vols d'une mission de HQ ou d'un paquet de vol ----- */
 const KEY_SNAPSHOT = 'mission_snapshot_v1';          /* écrit par HQ ; ici en lecture seule */
+const SNAPSHOT_SCHEMA = 'dcs-mission-snapshot-v1';   /* un snapshot d'un autre schéma (ou sans schéma) est tenu pour absent */
 const KEY_ROUTESET = 'route_set_v1';                  /* écrit par le Route Planner ; ici en lecture seule */
 const SET_FORMAT = 'dcs-route-set-v1';
 const PACKAGE_FORMAT = 'dcs-flight-package-v1';
@@ -4634,7 +4667,7 @@ function impMakeSource(kind, theatre, file, flights, mission) {
 /* La mission chargée dans HQ (mission_snapshot_v1), ou null */
 function impReadHq() {
   const o = readJsonKey(KEY_SNAPSHOT);
-  if (!o || !isPlainObject(o.sourceMission) || typeof o.sourceMission.theatre !== 'string' || !Array.isArray(o.flights)) return null;
+  if (!o || o.schema !== SNAPSHOT_SCHEMA || !isPlainObject(o.sourceMission) || typeof o.sourceMission.theatre !== 'string' || !Array.isArray(o.flights)) return null;
   const sm = o.sourceMission, th = sm.theatre;
   const st = (typeof sm.startTime === 'number' && isFinite(sm.startTime) && sm.startTime >= 0) ? sm.startTime : null;
   const mission = {
@@ -4645,41 +4678,115 @@ function impReadHq() {
   return impMakeSource('hq', th, str(sm.filename), o.flights.map(f => impFlight(f, th)).filter(Boolean), mission);
 }
 
-function isPackageObject(o) {
-  return isPlainObject(o) && o.format === PACKAGE_FORMAT && Array.isArray(o.flights);
-}
-
-/* Un paquet de vol (dcs-flight-package-v1) lu → une source ; null s'il est illisible, d'un autre format ou sans théâtre */
+/* Un paquet de vol (dcs-flight-package-v1) lu → { src, skipped } : une source, et le nombre de vols illisibles ignorés ; { reject } (la clé du message) sans théâtre
+   ou sans aucun vol lisible */
 function impReadPackage(o, fname) {
-  if (!isPackageObject(o) || typeof o.theatre !== 'string' || o.theatre === '') return null;
-  return impMakeSource('pkg', o.theatre, fname || '', o.flights.map(f => impFlight(f, o.theatre)).filter(Boolean), null);
+  if (typeof o.theatre !== 'string' || o.theatre === '') return { reject: 'rej.noTheatre' };
+  const list = Array.isArray(o.flights) ? o.flights : [];
+  const flights = list.map(f => impFlight(f, o.theatre)).filter(Boolean);
+  if (!flights.length) return { reject: 'rej.noFlight' };
+  return { src: impMakeSource('pkg', o.theatre, fname || '', flights, null), skipped: list.length - flights.length };
 }
 
-/* Le texte JSON d'un paquet : un .json, ou un .zip qui porte package.json à sa racine ; null si le fichier ne se lit pas */
-function readPackageText(file, done) {
+/* Les refus d'un fichier, communs à la suite (mêmes textes au Route Planner, au Datacard Generator, à HQ et au Briefing Generator) :
+   la valeur de « format » du fichier (« inconnu » sans format), puis la liste de ce que l'entrée lit */
+function rejectFormat(parsed, kinds) {
+  const f = isPlainObject(parsed) ? parsed.format : undefined;
+  const x = ((typeof f === 'string' && f !== '') || typeof f === 'number') ? String(f) : t('rej.unknown');
+  showToast(t('rej.format', { x: x, list: kinds.map(k => t('fmt.' + k)).join(', ') }), 5000);
+}
+function rejectMsg(key) { showToast(t(key), 5000); }
+function skippedMsg(n) { showToast(t((CURRENT_LANG === 'fr' ? n < 2 : n === 1) ? 'rej.skip.1' : 'rej.skip.n', { n: n }), 5000); }
+
+/* Un fichier d'import lu : { parsed } (le JSON d'un .json, ou le package.json à la racine d'un .zip, « PK » en tête) ou { reject } (la clé du message) */
+function readImportFile(file, done) {
   const reader = new FileReader();
   reader.onload = () => {
     const bytes = new Uint8Array(reader.result);
-    const zip = bytes.length > 3 && bytes[0] === 0x50 && bytes[1] === 0x4B && bytes[2] === 0x03 && bytes[3] === 0x04;
-    if (!zip) { done(new TextDecoder('utf-8').decode(bytes)); return; }
-    if (typeof JSZip === 'undefined') { done(null); return; }
-    JSZip.loadAsync(bytes).then(z => { const e = z.file('package.json'); return e ? e.async('string') : null; }).then(done, () => done(null));
+    const parse = text => {
+      if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+      let parsed;
+      try { parsed = JSON.parse(text); } catch (e) { done({ reject: 'rej.json' }); return; }
+      done({ parsed: parsed });
+    };
+    if (!(bytes.length >= 2 && bytes[0] === 0x50 && bytes[1] === 0x4B)) { parse(new TextDecoder('utf-8').decode(bytes)); return; }
+    if (typeof JSZip === 'undefined') { done({ reject: 'rej.zip' }); return; }
+    JSZip.loadAsync(bytes).then(z => { const e = z.file('package.json'); return e ? e.async('string') : null; })
+      .then(txt => { if (txt === null) done({ reject: 'rej.zip' }); else parse(txt); }, () => done({ reject: 'rej.zip' }));
   };
-  reader.onerror = () => done(null);
+  reader.onerror = () => done({ reject: 'rej.json' });
   reader.readAsArrayBuffer(file);
 }
 
+/* Un jeu de routes (dcs-route-set-v1) lu d'un fichier → { routes, route } : routes, celles qui portent au moins un point, dans l'ordre, chacune lue comme « Route en cours »
+   avec les réglages que porte le fichier ; route, la route active (à défaut la première qui a des points) ; null s'il n'y a pas de liste de routes */
+function impSetFromFile(o) {
+  if (!Array.isArray(o.routes)) return null;
+  const list = o.routes.filter(r => isPlainObject(r) && Array.isArray(r.points));
+  if (!list.length) return null;
+  const active = (Number.isInteger(o.active) && o.active >= 0 && o.active < list.length) ? o.active : 0;
+  const shared = Object.assign({}, o, { format: ROUTE_FORMAT });
+  const all = list.map(r => {
+    const f = r.flight;
+    return { route: routeFromObject(Object.assign({}, shared, { name: r.name, points: r.points })),
+      flight: (isPlainObject(f) && typeof f.groupName === 'string' && typeof f.aircraftType === 'string') ? f : null };
+  });
+  const routes = all.filter(e => e.route && e.route.points.length);
+  const chosen = (all[active].route && all[active].route.points.length) ? all[active] : (routes[0] || all[active]);
+  return { routes: routes, route: chosen.route };
+}
+
+/* Un fichier lu → ce qu'il est : { kind: 'datacard' | 'briefing' | 'route' | 'set' | 'pkg', … } ; null après avoir dit pourquoi il est refusé.
+   withDatacard : l'entrée lit aussi la datacard (« Importer JSON » de la barre) ; la fenêtre d'import renvoie vers la barre */
+function impRecognise(parsed, fname, withDatacard) {
+  const fmt = isPlainObject(parsed) ? parsed.format : undefined;
+  if (fmt === FORMAT_ID) {
+    if (!withDatacard) { rejectMsg('rej.isDatacard'); return null; }
+    return { kind: 'datacard' };
+  }
+  if (isBriefingObject(parsed)) return { kind: 'briefing', briefing: parsed };
+  if (fmt === ROUTE_FORMAT) {
+    if (!isRouteObject(parsed)) { rejectMsg('rej.json'); return null; }
+    return { kind: 'route', route: routeFromObject(parsed) };
+  }
+  if (fmt === SET_FORMAT) {
+    const set = impSetFromFile(parsed);
+    if (!set) { rejectMsg('rej.json'); return null; }
+    return { kind: 'set', routes: set.routes, route: set.route };
+  }
+  if (fmt === PACKAGE_FORMAT) {
+    const res = impReadPackage(parsed, fname);
+    if (res.reject) { rejectMsg(res.reject); return null; }
+    return { kind: 'pkg', src: res.src, skipped: res.skipped };
+  }
+  rejectFormat(parsed, ['briefing', 'route', 'set', 'pkg'].concat(withDatacard ? ['datacard'] : []));
+  return null;
+}
+
+/* Un fichier reconnu, mis dans la fenêtre d'import ouverte : un paquet passe sur « Paquet de vol », le reste sur « Fichier JSON » */
+function impUseFile(k, fname) {
+  imp.fileBriefing = null; imp.fileRoute = null; imp.fileSet = []; imp.fileName = '';
+  if (k.kind === 'pkg') {
+    imp.pkg = k.src; imp.pkgName = fname; imp.src = 'pkg';
+  } else {
+    if (k.kind === 'briefing') imp.fileBriefing = k.briefing;
+    else { imp.fileRoute = k.route; if (k.kind === 'set') imp.fileSet = k.routes; }
+    imp.fileName = fname; imp.src = 'file';
+  }
+  impRefresh();
+  if (k.skipped) skippedMsg(k.skipped);
+}
+
+/* « Choisir un fichier… » de la source « Paquet de vol » : un paquet, en .json ou en .zip */
 function loadPackageFile(file) {
-  readPackageText(file, text => {
-    let parsed = null;
-    if (typeof text === 'string') {
-      if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
-      try { parsed = JSON.parse(text); } catch (e) { parsed = null; }
-    }
-    const src = impReadPackage(parsed, file.name);
-    if (!src) { showToast(t('err.pk')); return; }
-    imp.pkg = src; imp.pkgName = file.name; imp.src = 'pkg';
+  readImportFile(file, r => {
+    if (r.reject) { rejectMsg(r.reject); return; }
+    if (!isPlainObject(r.parsed) || r.parsed.format !== PACKAGE_FORMAT) { rejectFormat(r.parsed, ['pkg']); return; }
+    const res = impReadPackage(r.parsed, file.name);
+    if (res.reject) { rejectMsg(res.reject); return; }
+    imp.pkg = res.src; imp.pkgName = file.name; imp.src = 'pkg';
     impRefresh();
+    if (res.skipped) skippedMsg(res.skipped);
   });
 }
 
@@ -4843,7 +4950,7 @@ function impReadRouteSet() {
 }
 
 function runAllRoutesImport() {
-  const list = imp.routeSet;
+  const list = impSetList();
   if (list.length < 2) return;
   const cards = list.map(e => {
     const c = newCard();
@@ -4959,8 +5066,8 @@ function impRefresh() {
     const nm = hasText(r.name) ? r.name.trim() : t('imp.route.noname');
     document.getElementById('imp-route-line').textContent = t('imp.route.line', { name: nm, n: r.points.length }) +
       (r.refs.length ? t('imp.route.refs', { k: r.refs.length }) : '');
-    /* « Toutes les routes » : seulement sur la route en cours, quand le Route Planner en garde au moins deux */
-    const nAll = imp.src === 'route' ? imp.routeSet.length : 0;
+    /* « Toutes les routes » : sur la route en cours quand le Route Planner en garde au moins deux, ou sur un jeu de routes d'un fichier qui en porte au moins deux */
+    const nAll = impSetList().length;
     const allRow = document.getElementById('imp-route-all-row');
     allRow.hidden = nAll < 2;
     document.getElementById('imp-route-all-lbl').textContent = t('imp.route.all', { n: nAll });
@@ -4994,7 +5101,7 @@ function impUpdateGo() {
   const r = impRoute(), s = impFlSrc(), go = document.getElementById('imp-go');
   if (s) {
     const n = impVisible(s).filter(x => s.checked.has(x.i)).length;
-    go.textContent = t('imp.go.n', { n: n });
+    go.textContent = t(CURRENT_LANG === 'fr' ? (n < 2 ? 'imp.go.1' : 'imp.go.n') : (n === 1 ? 'imp.go.1' : 'imp.go.n'), { n: n });
     go.disabled = n === 0;
     return;
   }
@@ -5008,13 +5115,13 @@ function openImportModal(fileBriefing, fileName, fileRoute, forceSrc) {
   imp.currentRoute = readCurrentRoute();
   imp.routeSet = impReadRouteSet();
   imp.hq = impReadHq();
-  imp.pkg = null; imp.pkgName = '';
+  imp.pkg = null; imp.pkgName = ''; imp.fileSet = [];
   if (fileBriefing) { imp.fileBriefing = fileBriefing; imp.fileRoute = null; imp.fileName = fileName || ''; imp.src = 'file'; }
   else if (fileRoute) { imp.fileRoute = fileRoute; imp.fileBriefing = null; imp.fileName = fileName || ''; imp.src = 'file'; }
   else if (forceSrc === 'route' && imp.currentRoute) { imp.src = 'route'; }
   else {
     imp.src = imp.current ? 'current' : (imp.currentRoute ? 'route' : (imp.hq ? 'hq' : 'file'));
-    if (imp.src === 'file') { imp.fileBriefing = null; imp.fileRoute = null; imp.fileName = ''; }
+    if (imp.src === 'file') { imp.fileBriefing = null; imp.fileRoute = null; imp.fileSet = []; imp.fileName = ''; }
   }
   document.getElementById('imp-route-fill').checked = true;
   impRefresh();
@@ -5037,7 +5144,7 @@ function checkRouteHandoff() {
 function runRouteImport() {
   const r = impRoute();
   if (!r || !r.points.length) return;
-  if (imp.src === 'route' && imp.routeSet.length >= 2 && document.getElementById('imp-route-all').checked) { runAllRoutesImport(); return; }
+  if (impSetList().length >= 2 && document.getElementById('imp-route-all').checked) { runAllRoutesImport(); return; }
   if (document.getElementById('imp-route-new').checked) {
     const c = newCard();
     applyRouteToCard(c, r);
@@ -5075,27 +5182,13 @@ function runImport() {
   showToast(t('toast.imported', { n: cards.length }));
 }
 
+/* « Choisir un fichier… » de la source « Fichier JSON » : un briefing, une route, un jeu de routes ou un paquet de vol ; une datacard renvoie vers « Importer JSON » */
 function loadBriefingFile(file) {
-  const reader = new FileReader();
-  reader.onload = () => {
-    let parsed;
-    try { parsed = JSON.parse(reader.result); } catch (e) { showToast(t('err.json')); return; }
-    if (isPackageObject(parsed)) {
-      /* un paquet de vol ouvert par « Fichier JSON » : la source passe sur « Paquet de vol » */
-      const src = impReadPackage(parsed, file.name);
-      if (!src) { showToast(t('err.pk')); return; }
-      imp.pkg = src; imp.pkgName = file.name; imp.fileBriefing = null; imp.fileRoute = null; imp.fileName = ''; imp.src = 'pkg';
-      impRefresh();
-      return;
-    }
-    if (isBriefingObject(parsed)) { imp.fileBriefing = parsed; imp.fileRoute = null; }
-    else if (isRouteObject(parsed)) { imp.fileRoute = routeFromObject(parsed); imp.fileBriefing = null; }
-    else { showToast(t('err.json')); return; }
-    imp.fileName = file.name; imp.src = 'file';
-    impRefresh();
-  };
-  reader.onerror = () => showToast(t('err.json'));
-  reader.readAsText(file);
+  readImportFile(file, r => {
+    if (r.reject) { rejectMsg(r.reject); return; }
+    const k = impRecognise(r.parsed, file.name, false);
+    if (k) impUseFile(k, file.name);
+  });
 }
 
 /* ============= EXPORT : fenêtre ============= */

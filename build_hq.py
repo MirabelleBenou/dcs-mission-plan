@@ -734,6 +734,7 @@ select[data-tbm-src] {{ display: none !important; }}
   transition: all .3s ease;
   pointer-events: none;
   box-shadow: 0 4px 16px rgba(0,0,0,.6);
+  width: max-content; max-width: calc(100vw - 24px); text-align: center;
 }}
 .toast.show {{
   opacity: 1;
@@ -1234,13 +1235,15 @@ const I18N = {{
     'pk.infoSource': 'ⓘ exporté d’une autre version de la mission',
     'pk.infoSource.tip': 'Normal si la mission a changé depuis l’export : les vols sont retrouvés par leur nom.',
     'pk.refused': 'refusé : {{0}} — {{1}}',
-    'pk.err.type': 'ni .json ni .zip',
-    'pk.err.parse': 'JSON illisible',
-    'pk.err.zip': 'archive illisible',
-    'pk.err.noPackageJson': 'package.json absent à la racine de l’archive',
-    'pk.err.format': 'format « {{0}} » (attendu : {{1}})',
-    'pk.err.flights': 'liste de vols absente',
-    'pk.err.flight': 'vol n° {{0}} invalide',
+    'pk.err.parse': 'JSON illisible.',
+    'pk.err.zip': 'Archive illisible : pas de package.json à la racine.',
+    'pk.err.format': 'Format « {{0}} » non pris en charge ici (attendu : {{1}}).',
+    'pk.err.noTheatre': 'Le paquet n\\'a pas de théâtre.',
+    'pk.err.noFlight': 'Le paquet ne contient aucun vol.',
+    'pk.skip.one': '{{0}} vol illisible ignoré.',
+    'pk.skip.many': '{{0}} vols illisibles ignorés.',
+    'pk.fmt.unknown': 'inconnu',
+    'pk.fmt.pkg': 'paquet de vol',
     'pk.rep.title': 'Compte rendu',
     'pk.rep.ok': '✓ {{0}} ({{1}}) : {{2}}',
     'pk.rep.nothing': '– {{0}} ({{1}}) : rien d’écrit',
@@ -1435,13 +1438,15 @@ const I18N = {{
     'pk.infoSource': 'ⓘ exported from another version of the mission',
     'pk.infoSource.tip': 'Expected if the mission changed since the export: flights are matched by name.',
     'pk.refused': 'refused: {{0}} — {{1}}',
-    'pk.err.type': 'neither .json nor .zip',
-    'pk.err.parse': 'unreadable JSON',
-    'pk.err.zip': 'unreadable archive',
-    'pk.err.noPackageJson': 'no package.json at the root of the archive',
-    'pk.err.format': 'format “{{0}}” (expected: {{1}})',
-    'pk.err.flights': 'no flight list',
-    'pk.err.flight': 'flight #{{0}} is invalid',
+    'pk.err.parse': 'Unreadable JSON.',
+    'pk.err.zip': 'Unreadable archive: no package.json at the root.',
+    'pk.err.format': 'Format "{{0}}" not supported here (expected: {{1}}).',
+    'pk.err.noTheatre': 'The package has no theatre.',
+    'pk.err.noFlight': 'The package contains no flight.',
+    'pk.skip.one': '{{0}} unreadable flight skipped.',
+    'pk.skip.many': '{{0}} unreadable flights skipped.',
+    'pk.fmt.unknown': 'unknown',
+    'pk.fmt.pkg': 'flight package',
     'pk.rep.title': 'Report',
     'pk.rep.ok': '✓ {{0}} ({{1}}): {{2}}',
     'pk.rep.nothing': '– {{0}} ({{1}}): nothing written',
@@ -2779,6 +2784,7 @@ function initMissionEvents() {{
     reloadBtn.addEventListener('click', () => {{
       if (_PK_BUSY) return;
       HQ_SNAPSHOT = null; _mizFilename = null; _HQ_MIZ_CONTEXT = null;
+      try {{ localStorage.removeItem(KEY_SNAPSHOT); }} catch (e) {{ /* la mission offerte au Route Planner et au Datacard Generator reste */ }}
       _PK_EXPORT_SEL.clear(); _PK_REPORT = null; _MIZ_LOAD_FP = ''; pkResetFilters();
       pkRender();
       const dz = document.getElementById('miz-drop-zone');
@@ -3148,6 +3154,7 @@ const _PK_EXPORT_SEL = new Set();   // groupId des vols cochés pour l'export
 // (nom du poste, à défaut « Poste n » ; numéro de canal du cockpit) ; le reste des messages garde le numéro du .miz
 function pkRadioLabel(type, n) {{ return radioPosteName(type, n) || tf('snap.radio.name', n); }}
 function pkArgText(a) {{
+  if (a && typeof a === 'object' && typeof a.pkKey === 'string') return t(a.pkKey);
   if (a && typeof a === 'object' && Array.isArray(a.pkRadio)) return pkRadioLabel(a.pkRadio[0], a.pkRadio[1]);
   if (a && typeof a === 'object' && Array.isArray(a.pkChan)) return radioCockpitChannel(a.pkChan[0], a.pkChan[1], a.pkChan[2]);
   return String(a);
@@ -3312,18 +3319,20 @@ function pkYield() {{
 // ---------- LECTURE D'UN PAQUET ----------
 function pkNum(v) {{ return (typeof v === 'number' && isFinite(v)) ? v : null; }}
 
+// Un fichier refusé dit pourquoi, avec les mêmes textes que le Route Planner, le Datacard Generator et le Briefing Generator.
+// Un vol illisible (sans groupName ni aircraftType en chaînes) est ignoré et compté (skipped) ; sans théâtre ou sans aucun vol lisible, le paquet est refusé.
 function pkNormalize(obj, filename) {{
-  if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return {{ reason: {{ key: 'pk.err.parse', args: [] }} }};
-  if (obj.format !== PK_FORMAT) {{
-    return {{ reason: {{ key: 'pk.err.format', args: [typeof obj.format === 'string' ? obj.format : String(obj.format), PK_FORMAT] }} }};
+  if (!obj || typeof obj !== 'object' || Array.isArray(obj) || obj.format !== PK_FORMAT) {{
+    const f = (obj && typeof obj === 'object' && !Array.isArray(obj)) ? obj.format : undefined;
+    const x = ((typeof f === 'string' && f !== '') || typeof f === 'number') ? String(f) : {{ pkKey: 'pk.fmt.unknown' }};
+    return {{ reason: {{ key: 'pk.err.format', args: [x, {{ pkKey: 'pk.fmt.pkg' }}] }} }};
   }}
-  if (!Array.isArray(obj.flights)) return {{ reason: {{ key: 'pk.err.flights', args: [] }} }};
+  if (typeof obj.theatre !== 'string' || obj.theatre === '') return {{ reason: {{ key: 'pk.err.noTheatre', args: [] }} }};
+  const list = Array.isArray(obj.flights) ? obj.flights : [];
   const flights = [];
-  for (let i = 0; i < obj.flights.length; i++) {{
-    const f = obj.flights[i];
-    if (!f || typeof f !== 'object' || typeof f.groupName !== 'string' || typeof f.aircraftType !== 'string') {{
-      return {{ reason: {{ key: 'pk.err.flight', args: [i + 1] }} }};
-    }}
+  for (let i = 0; i < list.length; i++) {{
+    const f = list[i];
+    if (!f || typeof f !== 'object' || typeof f.groupName !== 'string' || typeof f.aircraftType !== 'string') continue;
     const route = (f.route && f.route.points && typeof f.route.points === 'object') ? f.route.points : null;
     const units = (Array.isArray(f.units) ? f.units : []).filter(u => u && typeof u === 'object').map(u => ({{
       name:     typeof u.name === 'string' ? u.name : '',
@@ -3344,30 +3353,31 @@ function pkNormalize(obj, filename) {{
       chk: {{ route: true, radios: true, loadout: true, livery: true }},
     }});
   }}
+  if (!flights.length) return {{ reason: {{ key: 'pk.err.noFlight', args: [] }} }};
   const sm = obj.sourceMission && typeof obj.sourceMission === 'object' ? obj.sourceMission : {{}};
   return {{ pk: {{
     id: ++_PK_SEQ, filename: filename,
-    theatre: typeof obj.theatre === 'string' ? obj.theatre : '',
+    theatre: obj.theatre,
     fingerprint: typeof sm.fingerprint === 'string' ? sm.fingerprint : '',
     flights: flights,
+    skipped: list.length - flights.length,
   }} }};
 }}
 
+// Une archive se reconnaît à ses deux premiers octets « PK » (ou à l'extension .zip) ; tout le reste est lu comme du JSON, quel que soit le nom
 async function pkReadFile(file) {{
   const name = file.name;
-  const low = name.toLowerCase();
+  const head = new Uint8Array(await file.slice(0, 2).arrayBuffer());
   let text;
-  if (low.endsWith('.zip')) {{
-    let zip;
-    try {{ zip = await JSZip.loadAsync(await file.arrayBuffer()); }}
+  if ((head.length === 2 && head[0] === 0x50 && head[1] === 0x4B) || name.toLowerCase().endsWith('.zip')) {{
+    let entry;
+    try {{ entry = (await JSZip.loadAsync(await file.arrayBuffer())).file('package.json'); }}
     catch (e) {{ return {{ reason: {{ key: 'pk.err.zip', args: [] }} }}; }}
-    const entry = zip.file('package.json');
-    if (!entry) return {{ reason: {{ key: 'pk.err.noPackageJson', args: [] }} }};
-    text = await entry.async('string');
-  }} else if (low.endsWith('.json')) {{
-    text = await file.text();
+    if (!entry) return {{ reason: {{ key: 'pk.err.zip', args: [] }} }};
+    try {{ text = await entry.async('string'); }}
+    catch (e) {{ return {{ reason: {{ key: 'pk.err.zip', args: [] }} }}; }}
   }} else {{
-    return {{ reason: {{ key: 'pk.err.type', args: [] }} }};
+    text = await file.text();
   }}
   if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
   let obj;
@@ -3379,17 +3389,18 @@ async function pkLoadFiles(files) {{
   if (!_HQ_MIZ_CONTEXT) {{ showToast(t('toast.mizNotLoaded')); return; }}
   if (_PK_BUSY) return;
   _PK_REFUSED = [];
-  let ok = 0;
+  let ok = 0, skipped = 0;
   for (const file of files) {{
     let r;
     try {{ r = await pkReadFile(file); }} catch (e) {{ r = {{ reason: {{ key: null, raw: e.message }} }}; }}
-    if (r.pk) {{ _PK_LIST.push(r.pk); ok++; }}
+    if (r.pk) {{ _PK_LIST.push(r.pk); ok++; skipped += r.pk.skipped; }}
     else _PK_REFUSED.push({{ name: file.name, reason: r.reason }});
   }}
   pkRender();
   let msg = tn('toast.pkLoaded', ok);
   if (_PK_REFUSED.length) msg += ' · ' + tf('pk.join', tn('toast.pkRefused', _PK_REFUSED.length), _PK_REFUSED.map(r => r.name).join(', '));
-  showToast(msg, _PK_REFUSED.length ? 6000 : 3000);
+  if (skipped) msg += ' · ' + tn('pk.skip', skipped);
+  showToast(msg, (_PK_REFUSED.length || skipped) ? 6000 : 3000);
 }}
 
 // ---------- ÉTAT : recherche des vols, conflits, parties disponibles ----------
@@ -3456,6 +3467,7 @@ function pkRender() {{
       html += '<div class="pk-tags"><span class="snap-flight-tag">' + h(pk.theatre || '?') + '</span>';
       html += '<span class="snap-flight-tag">' + h(tn('pk.nFlights', pk.flights.length)) + '</span></div></div>';
       html += '<button class="pk-x" type="button" data-pk-remove="' + pk.id + '"' + (busy ? ' disabled' : '') + ' aria-label="' + h(t('pk.remove')) + '">✕</button></div>';
+      if (pk.skipped) html += '<div class="pk-warn">⚠ ' + h(tn('pk.skip', pk.skipped)) + '</div>';
       if (ctx && pk.theatre !== ctx.theatre) {{
         html += '<div class="pk-warn">⚠ ' + h(tf('pk.warnTheatre', pk.theatre || '?', ctx.theatre)) + '</div>';
       }}
@@ -4237,6 +4249,9 @@ grep_present('luaTableReproducible', 'luaTableReproducible présent')
 grep_present('pk-export-btn',       'bouton d\'export présent')
 grep_present('pk-apply-btn',        'bouton d\'application présent')
 grep_present('pk-file-input',       'sélecteur de paquets présent')
+grep_present('pk.err.noTheatre',    'refus : paquet sans théâtre')
+grep_present("removeItem(KEY_SNAPSHOT)", 'Charger un autre .miz efface le snapshot')
+grep_absent('pk.err.type',          'refus « ni .json ni .zip » absent (le contenu décide)')
 # P4 vérifications
 grep_present('serializeLua',        'serializeLua présent (P4.1)')
 grep_present('astToValue',          'astToValue présent (P4.1)')
