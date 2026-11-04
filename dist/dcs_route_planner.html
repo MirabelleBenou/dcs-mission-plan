@@ -2429,7 +2429,6 @@ const I18N = {
     'dsp.sym': 'Symboles OTAN',
     'dsp.cf': 'Calques importés',
     'dsp.pts': '{n} pts',
-    'dsp.pts.1': '{n} pt',
     'tb.grid': 'Grille MGRS',
     'tb.places': 'Lieux (Esri)',
     'tb.places.tip': 'Noms de lieux (Esri)',
@@ -2930,7 +2929,6 @@ const I18N = {
     'dsp.sym': 'NATO symbols',
     'dsp.cf': 'Imported layers',
     'dsp.pts': '{n} pts',
-    'dsp.pts.1': '{n} pt',
     'tb.grid': 'MGRS grid',
     'tb.places': 'Places (Esri)',
     'tb.places.tip': 'Place names (Esri)',
@@ -4104,7 +4102,7 @@ function readFlight(f) {
   return makeLink({ groupName: f.groupName, aircraftType: f.aircraftType, coalition: typeof f.coalition === 'string' ? f.coalition : '' }, f.source);
 }
 /* « 1 pt », « n pts » */
-function ptsText(n) { return t(n === 1 ? 'hq.pts.1' : 'hq.pts', { n: n }); }
+function ptsText(n) { return t((CURRENT_LANG === 'fr' ? n <= 1 : n === 1) ? 'hq.pts.1' : 'hq.pts', { n: n }); }
 /* Le nom d'un fichier choisi : sans « .json », accents ôtés, tout ce qui n'est pas lettre, chiffre, _ + - devient « _ » ; vide si rien ne reste */
 function cleanFname(v) {
   return str(v).trim().replace(/\.json$/i, '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9_+-]+/g, '_').replace(/_{2,}/g, '_').replace(/^_+|_+$/g, '').slice(0, 100);
@@ -8326,31 +8324,37 @@ function clrCounts() {
   };
 }
 
+/* Un ensemble a de quoi s'effacer : la route sélectionnée, si elle a des points ou un nom */
+function clrHas(c, k) { return k === 'one' ? (c.one > 0 || S.name !== '') : c[k] > 0; }
+
 function clrRender() {
   const c = clrCounts();
-  if (c.routes > 0 && CLR.checked.has('routes')) CLR.checked.delete('one');
-  CLR_SETS.forEach(k => { if (c[k] === 0) CLR.checked.delete(k); });
+  CLR_SETS.forEach(k => { if (!clrHas(c, k)) CLR.checked.delete(k); });
   $('clr-list').innerHTML = CLR_SETS.map(k => {
-    const off = c[k] === 0 || (k === 'one' && CLR.checked.has('routes'));
+    /* « Toutes les routes » cochée : la route sélectionnée reste cochée, mais inactive (elle part avec les autres) */
+    const off = !clrHas(c, k) || (k === 'one' && CLR.checked.has('routes'));
     const right = k === 'one' ? (S.name !== '' ? S.name : t('rs.unnamed')) + ' · ' + ptsText(c.one) : k === 'routes' ? t(c.routes === 1 ? 'clr.routes.1' : 'clr.routes.n', { n: c.routes }) : String(c[k]);
-    return '<label class="rt-row' + (off ? ' off' : '') + '"><input type="checkbox" data-k="' + k + '"' + (CLR.checked.has(k) && !off ? ' checked' : '') + (off ? ' disabled' : '') + '>' +
+    return '<label class="rt-row' + (off ? ' off' : '') + '"><input type="checkbox" data-k="' + k + '"' + (CLR.checked.has(k) ? ' checked' : '') + (off ? ' disabled' : '') + '>' +
       '<span class="rt-nm">' + esc(t('clr.' + k)) + '</span><span class="rt-n">' + esc(right) + '</span></label>';
   }).join('');
-  $('clr-go').disabled = !CLR_SETS.some(k => CLR.checked.has(k) && c[k] > 0);
-  $('clr-all').disabled = !CLR_SETS.some(k => c[k] > 0);
+  $('clr-go').disabled = !CLR_SETS.some(k => CLR.checked.has(k) && clrHas(c, k));
+  $('clr-all').disabled = !CLR_SETS.some(k => clrHas(c, k));
 }
 
 function openClearModal(opener) {
   const c = clrCounts();
-  CLR.checked = new Set(c.one > 0 ? ['one'] : []);
+  CLR.checked = new Set(clrHas(c, 'one') ? ['one'] : []);
   clrRender();
-  rtShow('clr-modal', opener, 'clr-go');
+  rtShow('clr-modal', opener, 'clr-cancel');
+  /* le focus va à la première case active, sinon à « Annuler » */
+  const first = $('clr-list').querySelector('input:not(:disabled)');
+  if (first) first.focus({ preventScroll: true });
 }
 
 /* Efface ces ensembles (liste de clés) ; le théâtre, les unités, les réglages et le fond ne bougent pas */
 function clrRun(keys) {
   const c = clrCounts();
-  const what = CLR_SETS.filter(k => keys.indexOf(k) !== -1 && c[k] > 0);
+  const what = CLR_SETS.filter(k => keys.indexOf(k) !== -1 && clrHas(c, k));
   if (!what.length) return;
   const has = k => what.indexOf(k) !== -1;
   if (has('routes')) {
@@ -8370,15 +8374,14 @@ function clrRun(keys) {
       l.items = l.items.filter(it => it.type === 'symbol' ? !has('sym') : !has('draw'));
       if (l.items.length !== before) layers = true;
     });
-    /* un calque dessiné que cet effacement a vidé s'en va avec ses objets */
-    CF_LAYERS = CF_LAYERS.filter(l => l.source.kind !== 'drawn' || l.items.length > 0);
+    /* les calques dessinés restent, même vides, avec leur nom */
   }
   if (has('layers')) { CF_LAYERS = CF_LAYERS.filter(l => l.source.kind === 'drawn'); layers = true; }
   persistState();
   if (layers) { drDeselect(); layersChanged(); }
   renderAll();
   if (has('one') || has('routes')) setTheatreView();
-  showToast(t('toast.cleared', { list: what.map(k => t('clr.' + k)).join(' · ') }), 4000);
+  showToast(t('toast.cleared', { list: what.filter(k => !(k === 'one' && has('routes'))).map(k => t('clr.' + k)).join(' · ') }), 4000);
 }
 
 function clrBind() {
@@ -8780,6 +8783,7 @@ function openPackage(parsed, fname, opener) {
   const th = typeof parsed.theatre === 'string' ? parsed.theatre : '';
   if (th === '') { showToast(t('err.pk')); return; }
   if (!hasRouteTool(th)) { showToast(t('err.pkTheatre', { th: theatreText(th) })); return; }
+  if (!parsed.flights.length) { showToast(t('hq.pkg.noFlights')); return; }
   const flights = [];
   parsed.flights.forEach(f => {
     if (!f || typeof f !== 'object' || Array.isArray(f) || typeof f.groupName !== 'string' || typeof f.aircraftType !== 'string') return;
@@ -8903,7 +8907,7 @@ function pkRows() {
 function pkName(idxs) {
   const r = RSET.routes[idxs[0]];
   const base = r.name !== '' ? r.name : r.flight.groupName;
-  return 'paquet_rp_' + String(base).replace(/[^A-Za-z0-9_-]/g, '_').slice(0, 40) + (idxs.length > 1 ? '_+' + (idxs.length - 1) : '');
+  return 'paquet_rp_' + (cleanFname(base).slice(0, 40) || 'vol') + (idxs.length > 1 ? '_+' + (idxs.length - 1) : '');
 }
 
 function pkRender() {
@@ -8916,7 +8920,7 @@ function pkRender() {
   }).join('');
   const idxs = rows.filter(x => x.why === '' && PM.checked.has(x.i)).map(x => x.i);
   /* le nom suit les routes cochées tant qu'on ne l'a pas changé */
-  if (!PM.edited && idxs.length) { PM.name = pkName(idxs) + '_' + PM.stamp; $('pk-fname').value = PM.name; }
+  if (!PM.edited && idxs.length) { PM.name = cleanFname(pkName(idxs) + '_' + PM.stamp); $('pk-fname').value = PM.name; }
   const go = $('pk-go');
   go.textContent = t(CURRENT_LANG === 'fr' ? (idxs.length < 2 ? 'pk.go.1' : 'pk.go.n') : (idxs.length === 1 ? 'pk.go.1' : 'pk.go.n'), { n: idxs.length });
   go.disabled = idxs.length === 0 || cleanFname(PM.name) === '';
@@ -9902,7 +9906,7 @@ function openCfExport(opener, all) {
   CFE.all = !!all;
   CFE.route = true;
   CFE.checked = CF_LAYERS.map(l => l.visible);
-  CFE.name = CFE.all ? defaultSetName() : defaultRouteName();
+  CFE.name = cleanFname(CFE.all ? defaultSetName() : defaultRouteName());
   cfExportRender();
   rtShow('cf-export-modal', opener, 'cf-fname');
   $('cf-fname').select();
@@ -10532,6 +10536,7 @@ function svBind() {
   $('btn-save').addEventListener('keydown', e => {
     if (e.key === 'ArrowDown' && !SV.open) { e.preventDefault(); svOpen(); }
   });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && SV.open) { e.preventDefault(); svClose(true); } });
   document.addEventListener('pointerdown', svOutside, true);
   window.addEventListener('resize', () => svClose(false));
   window.addEventListener('blur', () => svClose(false));
