@@ -18,6 +18,8 @@ Changes merged since the last release, grouped per tool.
 #### Added
 - **Example** button: loads a demonstration wing (Task Force Kestrel, three squadrons); your own wing configuration is kept and can be restored in one tap.
 - **Flight packages**: export one or more flights of the loaded .miz (route, radios, loadout, livery) to a package file, and apply flight packages to a mission — each flight is found by its group name and aircraft type, you choose what to apply per flight, and a report lists what was written.
+#### Changed
+- Radios are named and numbered as in the cockpit in the mission summary and in the package messages (the Mi-24P's R-863 and R-828 start at channel 0). The .miz keeps its own numbering.
 
 ### Recon Station
 #### Added
@@ -34,6 +36,7 @@ Changes merged since the last release, grouped per tool.
 - **Mission loaded in HQ** and **Flight package** in the import window: one datacard per flight (navigation, callsign, type, radios; mission date, time and weather from HQ), filtered by side, type and name; from the Route Planner, **all routes** at once, one datacard per route. You pick the radio channels to import. A radio now holds up to 20 channels.
 #### Changed
 - The example loads in the interface language (French or English).
+- Radios imported from HQ or a flight package are named and numbered as in the cockpit (the Mi-24P's R-863 and R-828 start at channel 0); an aircraft type the suite does not know keeps "Radio n" and the mission's channel numbers. With several aircraft types, the channels are chosen per type.
 
 ### Route Planner
 #### Added
