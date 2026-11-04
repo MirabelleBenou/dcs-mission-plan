@@ -1361,7 +1361,7 @@ select[data-tbm-src] { display: none !important; }
   font-family: inherit; min-width: 32px; min-height: 32px; padding: 2px 8px; font-size: 12px; line-height: 1;
 }
 .imp-chip:hover, .imp-chbtn:hover { background: rgba(0, 0, 0, 0.06); border-color: var(--amber, #c8901f); }
-.imp-chip.on, .imp-chip.on:hover { background: var(--amber, #c8901f); border-color: var(--amber, #c8901f); color: #f6efdc; font-weight: 700; }
+.imp-chip.on, .imp-chip.on:hover { background: var(--amber, #c8901f); border-color: var(--amber, #c8901f); color: #f6efdc; }
 .imp-chbtns { flex: 0 0 auto; display: flex; gap: 6px; margin-left: auto; }
 .imp-chbtn { font-size: 11px; letter-spacing: .5px; }
 
@@ -4586,7 +4586,7 @@ const PACKAGE_FORMAT = 'dcs-flight-package-v1';
 function hasProjection(id) { return Object.prototype.hasOwnProperty.call(TM_PARAMS, id); }
 function isPlainObject(o) { return !!o && typeof o === 'object' && !Array.isArray(o); }
 function r7(v) { return Math.round(v * 1e7) / 1e7; }
-function impNorm(s) { return String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
+function impNorm(s) { return String(s).normalize('NFD').replace(/\p{M}/gu, '').toLowerCase(); }
 function impPtsText(n) { return t((CURRENT_LANG === 'fr' ? n <= 1 : n === 1) ? 'imp.pts.1' : 'imp.pts', { n: n }); }
 function impSideText(c) { return c === 'red' ? t('imp.red') : c === 'blue' ? t('imp.blue') : c === 'neutrals' ? t('imp.neutral') : String(c || ''); }
 
@@ -4735,7 +4735,9 @@ function impChanAvail(s) {
       r.channels.forEach(c => set.add(c.channel));
     });
   });
-  return Object.keys(map).map(Number).sort((a, b) => a - b).map(i => ({ index: i, channels: Array.from(map[i]).sort((a, b) => Number(a) - Number(b)) }));
+  /* 4 postes au plus et 20 canaux au plus par poste : tout ce qui est proposé est repris à l'import */
+  return Object.keys(map).map(Number).sort((a, b) => a - b).slice(0, LIMITS.radios)
+    .map(i => ({ index: i, channels: Array.from(map[i]).sort((a, b) => Number(a) - Number(b)).slice(0, LIMITS.channels) }));
 }
 
 /* Le bloc « Canaux radio à importer » : une ligne par poste, une pastille par canal (pleine = cochée), Tous / Aucun ; rien n'est coché à l'ouverture */
@@ -4786,7 +4788,7 @@ function cardFromFlight(fl, src) {
   if (m) {
     c.meta.date = m.date;
     c.meta.time = m.time;
-    c.weather.metar = m.metar;
+    /* le METAR du snapshot ne sert qu'à décoder vent, visibilité, QNH et nuages : il n'est pas recopié sur la carte */
     const dm = decodeMetar(m.metar);
     c.weather.wind = dm.wind; c.weather.visibility = dm.visibility; c.weather.qnh = dm.qnh; c.weather.clouds = dm.clouds;
   }
