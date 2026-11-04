@@ -2156,6 +2156,7 @@ const I18N = {
     'rej.zip': 'Archive illisible : pas de package.json à la racine.',
     'rej.format': 'Format « {x} » non pris en charge ici (attendu : {list}).',
     'rej.unknown': 'inconnu',
+    'rej.incomplete': 'Fichier « {x} » incomplet : aucune route à points.',
     'rej.noTheatre': 'Le paquet n\'a pas de théâtre.',
     'rej.noFlight': 'Le paquet ne contient aucun vol.',
     'rej.skip.1': '{n} vol illisible ignoré.',
@@ -2494,6 +2495,7 @@ const I18N = {
     'rej.zip': 'Unreadable archive: no package.json at the root.',
     'rej.format': 'Format "{x}" not supported here (expected: {list}).',
     'rej.unknown': 'unknown',
+    'rej.incomplete': 'Incomplete "{x}" file: no route with points.',
     'rej.noTheatre': 'The package has no theatre.',
     'rej.noFlight': 'The package contains no flight.',
     'rej.skip.1': '{n} unreadable flight skipped.',
@@ -4506,7 +4508,7 @@ function downloadJson() {
 function loadJsonFile(file) {
   readImportFile(file, r => {
     if (r.reject) { rejectMsg(r.reject); return; }
-    const k = impRecognise(r.parsed, file.name, true);
+    const k = impRecognise(r.parsed, file.name, true, r.zip);
     if (!k) return;
     if (k.kind === 'datacard') {
       if (!isBlankDoc(doc) && !confirm(t('confirm.json'))) return;
@@ -4696,23 +4698,30 @@ function rejectFormat(parsed, kinds) {
   showToast(t('rej.format', { x: x, list: kinds.map(k => t('fmt.' + k)).join(', ') }), 5000);
 }
 function rejectMsg(key) { showToast(t(key), 5000); }
+/* un format reconnu dont le contenu est inutilisable : une route sans liste de points, un jeu sans liste de routes ou sans aucune route à points */
+function rejectIncomplete(fmt) { showToast(t('rej.incomplete', { x: fmt }), 5000); }
 function skippedMsg(n) { showToast(t((CURRENT_LANG === 'fr' ? n < 2 : n === 1) ? 'rej.skip.1' : 'rej.skip.n', { n: n }), 5000); }
 
-/* Un fichier d'import lu : { parsed } (le JSON d'un .json, ou le package.json à la racine d'un .zip, « PK » en tête) ou { reject } (la clé du message) */
+/* Un fichier d'import lu : { parsed, zip } (le JSON d'un .json, ou le package.json à la racine d'un .zip, « PK » en tête ; zip dit d'où il vient) ou { reject } (la clé du message).
+   Le texte se décode comme readAsText : une marque UTF-16 (LE ou BE) en tête, UTF-16 ; sinon UTF-8 (la marque UTF-8 est ôtée). */
 function readImportFile(file, done) {
   const reader = new FileReader();
   reader.onload = () => {
     const bytes = new Uint8Array(reader.result);
-    const parse = text => {
+    const parse = (text, zip) => {
       if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
       let parsed;
       try { parsed = JSON.parse(text); } catch (e) { done({ reject: 'rej.json' }); return; }
-      done({ parsed: parsed });
+      done({ parsed: parsed, zip: zip });
     };
-    if (!(bytes.length >= 2 && bytes[0] === 0x50 && bytes[1] === 0x4B)) { parse(new TextDecoder('utf-8').decode(bytes)); return; }
+    if (!(bytes.length >= 2 && bytes[0] === 0x50 && bytes[1] === 0x4B)) {
+      const enc = (bytes[0] === 0xFF && bytes[1] === 0xFE) ? 'utf-16le' : ((bytes[0] === 0xFE && bytes[1] === 0xFF) ? 'utf-16be' : 'utf-8');
+      parse(new TextDecoder(enc).decode(bytes), false);
+      return;
+    }
     if (typeof JSZip === 'undefined') { done({ reject: 'rej.zip' }); return; }
     JSZip.loadAsync(bytes).then(z => { const e = z.file('package.json'); return e ? e.async('string') : null; })
-      .then(txt => { if (txt === null) done({ reject: 'rej.zip' }); else parse(txt); }, () => done({ reject: 'rej.zip' }));
+      .then(txt => { if (txt === null) done({ reject: 'rej.zip' }); else parse(txt, true); }, () => done({ reject: 'rej.zip' }));
   };
   reader.onerror = () => done({ reject: 'rej.json' });
   reader.readAsArrayBuffer(file);
@@ -4732,26 +4741,28 @@ function impSetFromFile(o) {
       flight: (isPlainObject(f) && typeof f.groupName === 'string' && typeof f.aircraftType === 'string') ? f : null };
   });
   const routes = all.filter(e => e.route && e.route.points.length);
-  const chosen = (all[active].route && all[active].route.points.length) ? all[active] : (routes[0] || all[active]);
+  if (!routes.length) return null;      /* aucune route à points */
+  const chosen = (all[active].route && all[active].route.points.length) ? all[active] : routes[0];
   return { routes: routes, route: chosen.route };
 }
 
 /* Un fichier lu → ce qu'il est : { kind: 'datacard' | 'briefing' | 'route' | 'set' | 'pkg', … } ; null après avoir dit pourquoi il est refusé.
    withDatacard : l'entrée lit aussi la datacard (« Importer JSON » de la barre) ; la fenêtre d'import renvoie vers la barre */
-function impRecognise(parsed, fname, withDatacard) {
+function impRecognise(parsed, fname, withDatacard, fromZip) {
   const fmt = isPlainObject(parsed) ? parsed.format : undefined;
+  if (fromZip && fmt !== PACKAGE_FORMAT) { rejectFormat(parsed, ['pkg']); return null; }      /* un .zip ne porte qu'un paquet de vol */
   if (fmt === FORMAT_ID) {
     if (!withDatacard) { rejectMsg('rej.isDatacard'); return null; }
     return { kind: 'datacard' };
   }
   if (isBriefingObject(parsed)) return { kind: 'briefing', briefing: parsed };
   if (fmt === ROUTE_FORMAT) {
-    if (!isRouteObject(parsed)) { rejectMsg('rej.json'); return null; }
+    if (!isRouteObject(parsed)) { rejectIncomplete(ROUTE_FORMAT); return null; }
     return { kind: 'route', route: routeFromObject(parsed) };
   }
   if (fmt === SET_FORMAT) {
     const set = impSetFromFile(parsed);
-    if (!set) { rejectMsg('rej.json'); return null; }
+    if (!set) { rejectIncomplete(SET_FORMAT); return null; }
     return { kind: 'set', routes: set.routes, route: set.route };
   }
   if (fmt === PACKAGE_FORMAT) {
@@ -5115,7 +5126,8 @@ function openImportModal(fileBriefing, fileName, fileRoute, forceSrc) {
   imp.currentRoute = readCurrentRoute();
   imp.routeSet = impReadRouteSet();
   imp.hq = impReadHq();
-  imp.pkg = null; imp.pkgName = ''; imp.fileSet = [];
+  imp.pkg = null; imp.pkgName = '';
+  imp.fileBriefing = null; imp.fileRoute = null; imp.fileSet = []; imp.fileName = '';      /* rouvrir la fenêtre oublie le fichier, comme un paquet */
   if (fileBriefing) { imp.fileBriefing = fileBriefing; imp.fileRoute = null; imp.fileName = fileName || ''; imp.src = 'file'; }
   else if (fileRoute) { imp.fileRoute = fileRoute; imp.fileBriefing = null; imp.fileName = fileName || ''; imp.src = 'file'; }
   else if (forceSrc === 'route' && imp.currentRoute) { imp.src = 'route'; }
@@ -5186,7 +5198,7 @@ function runImport() {
 function loadBriefingFile(file) {
   readImportFile(file, r => {
     if (r.reject) { rejectMsg(r.reject); return; }
-    const k = impRecognise(r.parsed, file.name, false);
+    const k = impRecognise(r.parsed, file.name, false, r.zip);
     if (k) impUseFile(k, file.name);
   });
 }

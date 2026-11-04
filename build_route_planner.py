@@ -2144,7 +2144,7 @@ const I18N = {
     'u.m': 'm',
     'u.ft': 'ft',
     'tb.open': 'Ouvrir',
-    'tb.open.tip': 'Ouvrir une route, des routes, un paquet de vol (JSON) ou un fichier du Route Tool',
+    'tb.open.tip': 'Ouvrir une route, des routes, un paquet de vol (JSON ou ZIP) ou un fichier du Route Tool',
     'tb.save': 'Enregistrer',
     'tb.save.tip': 'Enregistrer',
     'sv.one': 'Enregistrer la route sélectionnée',
@@ -2338,6 +2338,7 @@ const I18N = {
     'rej.zip': 'Archive illisible : pas de package.json à la racine.',
     'rej.format': 'Format « {x} » non pris en charge ici (attendu : {list}).',
     'rej.unknown': 'inconnu',
+    'rej.incomplete': 'Fichier « {x} » incomplet : aucune route à points.',
     'rej.noTheatre': 'Le paquet n\'a pas de théâtre.',
     'rej.noFlight': 'Le paquet ne contient aucun vol.',
     'rej.skip.1': '{n} vol illisible ignoré.',
@@ -2655,7 +2656,7 @@ const I18N = {
     'u.m': 'm',
     'u.ft': 'ft',
     'tb.open': 'Open',
-    'tb.open.tip': 'Open a route, routes, a flight package (JSON) or a Route Tool file',
+    'tb.open.tip': 'Open a route, routes, a flight package (JSON or ZIP) or a Route Tool file',
     'tb.save': 'Save',
     'tb.save.tip': 'Save',
     'sv.one': 'Save the selected route',
@@ -2849,6 +2850,7 @@ const I18N = {
     'rej.zip': 'Unreadable archive: no package.json at the root.',
     'rej.format': 'Format "{x}" not supported here (expected: {list}).',
     'rej.unknown': 'unknown',
+    'rej.incomplete': 'Incomplete "{x}" file: no route with points.',
     'rej.noTheatre': 'The package has no theatre.',
     'rej.noFlight': 'The package contains no flight.',
     'rej.skip.1': '{n} unreadable flight skipped.',
@@ -7565,16 +7567,18 @@ function rejectFormat(parsed, kinds) {
   showToast(t('rej.format', { x: x, list: kinds.map(k => t('fmt.' + k)).join(', ') }), 5000);
 }
 function rejectMsg(key) { showToast(t(key), 5000); }
+/* un format reconnu dont le contenu est inutilisable : une route sans liste de points, un jeu sans liste de routes ou sans aucune route à points */
+function rejectIncomplete(fmt) { showToast(t('rej.incomplete', { x: fmt }), 5000); }
 function isPlainObj(o) { return !!o && typeof o === 'object' && !Array.isArray(o); }
 
 /* Les octets d'un paquet → JSON lu : un .json, ou un .zip (« PK ») qui porte package.json à sa racine ; un refus commun sinon (null).
    Un .zip qui porte mission.xml et pas de package.json n'est pas un refus ici : { cf: true } (c'est « Ouvrir » qui le lit comme un .cf) */
-async function packageJsonOf(bytes, allowCf) {
+async function packageJsonOf(bytes, allowCf, fname) {
   let text;
   if (zipIsZip(bytes)) {
     const ent = zipFindEntry(bytes, 'package.json');
     if (!ent) {
-      if (allowCf && zipFindEntry(bytes)) return { cf: true };
+      if (allowCf && (/\.cf$/i.test(fname || '') || zipFindEntry(bytes))) return { cf: true };      /* un .cf (par son nom ou son mission.xml) garde les messages de CombatFlite */
       rejectMsg('rej.zip');
       return null;
     }
@@ -7590,14 +7594,14 @@ async function packageJsonOf(bytes, allowCf) {
 function openRouteFile(file) {
   readFileBytes(file, async bytes => {
     if (zipIsZip(bytes)) {          /* un .cf (zip de CombatFlite) se reconnaît à ses deux premiers octets, « PK » ; un paquet en .zip, à son package.json */
-      const pj = await packageJsonOf(bytes, true);
+      const pj = await packageJsonOf(bytes, true, file.name);
       if (!pj) return;
       if (pj.cf) {
         cfRead(bytes, file.name).then(res => openCfImport(file.name, res))
           .catch(e => showToast(t(e && e.message === 'nods' ? 'err.cfBrowser' : 'err.cf')));
         return;
       }
-      if (!isPlainObj(pj.parsed) || pj.parsed.format !== PACKAGE_FORMAT) { rejectFormat(pj.parsed, ['route', 'set', 'pkg', 'cf', 'rt']); return; }
+      if (!isPlainObj(pj.parsed) || pj.parsed.format !== PACKAGE_FORMAT) { rejectFormat(pj.parsed, ['pkg']); return; }      /* un zip ne porte qu'un paquet (ou un .cf) */
       openPackage(pj.parsed, file.name, $('btn-open'));
       return;
     }
@@ -7614,7 +7618,7 @@ function openRouteFile(file) {
     if (isPlainObj(parsed) && parsed.format === PACKAGE_FORMAT) { openPackage(parsed, file.name, $('btn-open')); return; }
     const res = parseRoute(parsed);
     if (!res) {
-      if (isPlainObj(parsed) && parsed.format === FORMAT_ID) rejectMsg('rej.json');      /* une route dcs-route-v1 sans liste de points */
+      if (isPlainObj(parsed) && parsed.format === FORMAT_ID) rejectIncomplete(FORMAT_ID);      /* une route dcs-route-v1 sans liste de points */
       else rejectFormat(parsed, ['route', 'set', 'pkg', 'cf', 'rt']);
       return;
     }
@@ -7889,8 +7893,9 @@ function openAsRoute(route) {
 function openRouteSet(parsed) {
   const rr = readRoutes(parsed.routes);
   const sh = parseRoute(Object.assign({}, parsed, { format: FORMAT_ID, points: [], name: '' }));
-  if (!rr || !sh) { rejectMsg('rej.json'); return; }      /* un jeu de routes sans liste de routes */
   const lays = Array.isArray(parsed.layers) ? parsed.layers.map(cfLayer).filter(Boolean) : [];
+  /* sans liste de routes, ou sans aucun point (et sans calque à ajouter) : rien ne s'ouvre, rien ne change */
+  if (!rr || !sh || (!rr.routes.some(r => r.points.length) && !lays.length)) { rejectIncomplete(SET_FORMAT); return; }
   /* sans point dans aucune route et avec des calques (« Enregistrer tout », route décochée) : comme un fichier de calques seuls, les routes ne sont pas touchées */
   if (!rr.routes.some(r => r.points.length) && lays.length) {
     cfMerge(lays);
