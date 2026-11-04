@@ -1223,7 +1223,7 @@ __CSS__
   <button type="button" class="tb-btn" id="btn-example" data-i18n-title="tb.example.tip" title="Charger l'exemple" data-i18n-aria-label="tb.example.tip" aria-label="Charger l'exemple">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
     <span class="tb-btn-label solo" data-i18n="tb.example">Exemple</span></button>
-  <button type="button" class="tb-btn danger" id="btn-clear" data-i18n-title="tb.clear.tip" title="Effacer la route" data-i18n-aria-label="tb.clear.tip" aria-label="Effacer la route">
+  <button type="button" class="tb-btn danger" id="btn-clear" data-i18n-title="tb.clear.tip" title="Effacer…" data-i18n-aria-label="tb.clear.tip" aria-label="Effacer…">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14"/></svg>
     <span class="tb-btn-label solo" data-i18n="tb.clear">Effacer</span></button>
   <select class="tb-sel" id="theme" data-i18n-title="tb.theme.tip" title="Thème graphique" data-i18n-aria-label="tb.theme.tip" aria-label="Thème graphique">
@@ -1447,6 +1447,21 @@ __CSS__
     <div class="rt-actions">
       <button type="button" class="rt-btn" id="cf-export-cancel" data-i18n="rt.cancel">Annuler</button>
       <button type="button" class="rt-btn go" id="cf-export-go" data-i18n="tb.save">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== FENÊTRE : EFFACER — CHOISIR CE QUI S'EFFACE ===== -->
+<div class="rt-modal cf-modal" id="clr-modal" hidden role="dialog" aria-modal="true" aria-labelledby="clr-title">
+  <div class="rt-backdrop" id="clr-backdrop"></div>
+  <div class="rt-panel" role="document">
+    <button type="button" class="rt-close" id="clr-close" data-i18n-aria-label="modal.close" aria-label="Fermer">&times;</button>
+    <h2 id="clr-title" data-i18n="clr.title">Effacer</h2>
+    <div class="rt-list" id="clr-list"></div>
+    <div class="rt-actions">
+      <button type="button" class="rt-btn" id="clr-cancel" data-i18n="rt.cancel">Annuler</button>
+      <button type="button" class="rt-btn" id="clr-all" data-i18n="clr.all">Tout effacer</button>
+      <button type="button" class="rt-btn go" id="clr-go" data-i18n="clr.go">Effacer la sélection</button>
     </div>
   </div>
 </div>
@@ -2138,7 +2153,19 @@ const I18N = {
     'tb.example': 'Exemple',
     'tb.example.tip': 'Charger l\'exemple',
     'tb.clear': 'Effacer',
-    'tb.clear.tip': 'Effacer la route',
+    'tb.clear.tip': 'Effacer…',
+    'clr.title': 'Effacer',
+    'clr.one': 'La route sélectionnée',
+    'clr.routes': 'Toutes les routes',
+    'clr.refs': 'Les points de référence',
+    'clr.draw': 'Les dessins',
+    'clr.sym': 'Les symboles OTAN',
+    'clr.layers': 'Les calques importés',
+    'clr.routes.1': '{n} route',
+    'clr.routes.n': '{n} routes',
+    'clr.all': 'Tout effacer',
+    'clr.go': 'Effacer la sélection',
+    'toast.cleared': 'Effacé : {list}',
     'tb.theme.tip': 'Thème graphique',
     'tb.lang.tip': 'Switch language / Changer de langue',
     'theme.cw-nato': 'Cold War OTAN',
@@ -2387,7 +2414,6 @@ const I18N = {
     'err.json': 'Fichier non reconnu.',
     'confirm.open': 'Remplacer la route en cours ?',
     'confirm.example': 'Charger l\'exemple à la place de la route en cours ?',
-    'confirm.clear': 'Effacer la route ?',
     'err.cf': 'Fichier CombatFlite non reconnu.',
     'err.cfBrowser': 'Ce navigateur ne sait pas lire les fichiers CombatFlite.',
     'err.layersQuota': 'Calques trop lourds pour le navigateur : ils ne seront pas gardés après rechargement.',
@@ -2628,7 +2654,19 @@ const I18N = {
     'tb.example': 'Example',
     'tb.example.tip': 'Load the example',
     'tb.clear': 'Clear',
-    'tb.clear.tip': 'Clear the route',
+    'tb.clear.tip': 'Clear…',
+    'clr.title': 'Clear',
+    'clr.one': 'The selected route',
+    'clr.routes': 'All routes',
+    'clr.refs': 'Reference points',
+    'clr.draw': 'Drawings',
+    'clr.sym': 'NATO symbols',
+    'clr.layers': 'Imported layers',
+    'clr.routes.1': '{n} route',
+    'clr.routes.n': '{n} routes',
+    'clr.all': 'Clear all',
+    'clr.go': 'Clear selected',
+    'toast.cleared': 'Cleared: {list}',
     'tb.theme.tip': 'Graphic theme',
     'tb.lang.tip': 'Switch language / Changer de langue',
     'theme.cw-nato': 'Cold War NATO',
@@ -2877,7 +2915,6 @@ const I18N = {
     'err.json': 'Unrecognised file.',
     'confirm.open': 'Replace the current route?',
     'confirm.example': 'Load the example instead of the current route?',
-    'confirm.clear': 'Clear the route?',
     'err.cf': 'Unrecognised CombatFlite file.',
     'err.cfBrowser': 'This browser cannot read CombatFlite files.',
     'err.layersQuota': 'Layers too large for the browser: they will not be kept after reload.',
@@ -7543,15 +7580,95 @@ function loadExample() {
   setRoute(parseRoute(JSON.parse(JSON.stringify(CURRENT_LANG === 'en' ? EXAMPLE_ROUTE_EN : EXAMPLE_ROUTE))).route);   // la langue de l'interface au moment du clic
 }
 
-/* « Effacer » vide la route active (son lien à un vol reste) et les références */
-function clearRoute() {
-  if (!confirm(t('confirm.clear'))) return;
-  S.name = '';
-  S.points = [];
-  sel = -1; selR = -1;
+/* ============= « EFFACER » : CHOISIR CE QUI S'EFFACE ============= */
+/* Six ensembles, dans cet ordre. Les dessins et les symboles OTAN sont les objets des calques dessinés (source « drawn ») ; les calques importés sont ceux d'un
+   fichier CombatFlite. Les routes : la sélectionnée (nom et points, le lien reste) ou toutes (il reste une route vide, sans lien, active). */
+const CLR_SETS = ['one', 'routes', 'refs', 'draw', 'sym', 'layers'];
+const CLR = { checked: new Set() };
+
+function clrItems(sym) {
+  let n = 0;
+  drDrawn().forEach(l => l.items.forEach(it => { if ((it.type === 'symbol') === sym) n++; }));
+  return n;
+}
+
+function clrCounts() {
+  syncActive();
+  return {
+    one: S.points.length,
+    routes: (RSET.routes.length === 1 && routeIsEmpty(RSET.routes[0]) && !RSET.routes[0].name) ? 0 : RSET.routes.length,
+    refs: S.refs.length,
+    draw: clrItems(false),
+    sym: clrItems(true),
+    layers: CF_LAYERS.filter(l => l.source.kind !== 'drawn').length
+  };
+}
+
+function clrRender() {
+  const c = clrCounts();
+  if (c.routes > 0 && CLR.checked.has('routes')) CLR.checked.delete('one');
+  CLR_SETS.forEach(k => { if (c[k] === 0) CLR.checked.delete(k); });
+  $('clr-list').innerHTML = CLR_SETS.map(k => {
+    const off = c[k] === 0 || (k === 'one' && CLR.checked.has('routes'));
+    const right = k === 'one' ? (S.name !== '' ? S.name : t('rs.unnamed')) + ' · ' + ptsText(c.one) : k === 'routes' ? t(c.routes === 1 ? 'clr.routes.1' : 'clr.routes.n', { n: c.routes }) : String(c[k]);
+    return '<label class="rt-row' + (off ? ' off' : '') + '"><input type="checkbox" data-k="' + k + '"' + (CLR.checked.has(k) && !off ? ' checked' : '') + (off ? ' disabled' : '') + '>' +
+      '<span class="rt-nm">' + esc(t('clr.' + k)) + '</span><span class="rt-n">' + esc(right) + '</span></label>';
+  }).join('');
+  $('clr-go').disabled = !CLR_SETS.some(k => CLR.checked.has(k) && c[k] > 0);
+  $('clr-all').disabled = !CLR_SETS.some(k => c[k] > 0);
+}
+
+function openClearModal(opener) {
+  const c = clrCounts();
+  CLR.checked = new Set(c.one > 0 ? ['one'] : []);
+  clrRender();
+  rtShow('clr-modal', opener, 'clr-go');
+}
+
+/* Efface ces ensembles (liste de clés) ; le théâtre, les unités, les réglages et le fond ne bougent pas */
+function clrRun(keys) {
+  const c = clrCounts();
+  const what = CLR_SETS.filter(k => keys.indexOf(k) !== -1 && c[k] > 0);
+  if (!what.length) return;
+  const has = k => what.indexOf(k) !== -1;
+  if (has('routes')) {
+    RSET = { active: 0, routes: [{ name: '', points: [], flight: null }] };
+    S.name = ''; S.points = RSET.routes[0].points;
+  } else if (has('one')) {
+    S.name = '';
+    S.points = [];
+  }
+  if (has('refs')) S.refs = [];
+  if (has('one') || has('routes')) sel = -1;
+  if (has('refs')) selR = -1;
+  let layers = false;
+  if (has('draw') || has('sym')) {
+    drDrawn().forEach(l => {
+      const before = l.items.length;
+      l.items = l.items.filter(it => it.type === 'symbol' ? !has('sym') : !has('draw'));
+      if (l.items.length !== before) layers = true;
+    });
+    /* un calque dessiné que cet effacement a vidé s'en va avec ses objets */
+    CF_LAYERS = CF_LAYERS.filter(l => l.source.kind !== 'drawn' || l.items.length > 0);
+  }
+  if (has('layers')) { CF_LAYERS = CF_LAYERS.filter(l => l.source.kind === 'drawn'); layers = true; }
   persistState();
+  if (layers) { drDeselect(); layersChanged(); }
   renderAll();
-  setTheatreView();
+  if (has('one') || has('routes')) setTheatreView();
+  showToast(t('toast.cleared', { list: what.map(k => t('clr.' + k)).join(' · ') }), 4000);
+}
+
+function clrBind() {
+  ['clr-backdrop', 'clr-close', 'clr-cancel'].forEach(id => $(id).addEventListener('click', () => rtHide('clr-modal')));
+  $('clr-list').addEventListener('change', e => {
+    const k = e.target.dataset.k;
+    if (!k) return;
+    if (e.target.checked) CLR.checked.add(k); else CLR.checked.delete(k);
+    clrRender();
+  });
+  $('clr-go').addEventListener('click', () => { const keys = CLR_SETS.filter(k => CLR.checked.has(k)); rtHide('clr-modal'); clrRun(keys); });
+  $('clr-all').addEventListener('click', () => { rtHide('clr-modal'); clrRun(CLR_SETS); });
 }
 
 /* ============= PLUSIEURS ROUTES : LA LISTE, LES AUTRES ROUTES, LES FICHIERS ============= */
@@ -8485,7 +8602,7 @@ function bytesToText(bytes) {
 /* ---- Fenêtres : « Ouvrir une route du Route Tool » et « Exporter vers le Route Tool » ---- */
 const RT = { fileName: '', routes: [], theatre: 'Caucasus', sel: 0, opener: null };
 
-const RT_MODALS = ['rt-open-modal', 'rt-export-modal', 'cf-import-modal', 'cf-export-modal', 'hq-modal', 'pk-modal', 'fiche'];
+const RT_MODALS = ['rt-open-modal', 'rt-export-modal', 'cf-import-modal', 'cf-export-modal', 'clr-modal', 'hq-modal', 'pk-modal', 'fiche'];
 function rtVisible(id) { return !$(id).hidden; }
 function rtShow(id, opener, focusId) {
   RT.opener = opener || null;
@@ -10107,6 +10224,7 @@ function setLang(lang) {
   if (rtVisible('rt-export-modal')) rtExportRender();
   if (rtVisible('cf-import-modal')) cfImportRender();
   if (rtVisible('cf-export-modal')) cfExportRender();
+  if (rtVisible('clr-modal')) clrRender();
   if (rtVisible('hq-modal')) hqRender();
   if (rtVisible('pk-modal')) pkRender();
   if (rtVisible('fiche')) ficheRender();
@@ -10250,7 +10368,8 @@ function bindEvents() {
     else rtTrap(ev);
   });
   $('btn-example').addEventListener('click', loadExample);
-  $('btn-clear').addEventListener('click', clearRoute);
+  $('btn-clear').addEventListener('click', ev => openClearModal(ev.currentTarget));
+  clrBind();
   $('btn-handoff').addEventListener('click', sendToDatacard);
   expBind();
   $('theme').addEventListener('change', e => { applyTheme(e.target.value, true); drawRoute(); });
