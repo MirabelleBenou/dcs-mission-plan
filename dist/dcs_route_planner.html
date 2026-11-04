@@ -1245,6 +1245,44 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .cf-modal .rt-btn.go:hover, .cf-modal .rt-btn.go:focus-visible { background: var(--olive); color: var(--paper-light); }
 .cf-modal .rt-btn:disabled { opacity: .35; }
 
+/* ---------- plusieurs routes (lot rp-route-du-vol) : la liste, les fenêtres « Depuis HQ » et « Paquet de vol », la ligne « Routes » du menu Affichage ---------- */
+.rs-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.rs-head small { font-family: var(--f-ui); font-weight: 500; font-size: 11px; letter-spacing: 1px; color: var(--khaki-light); }
+.rs-btns { display: flex; gap: 6px; margin-top: 8px; }
+.rs-btns .tb-btn { flex: 1 1 0; min-width: 0; padding: 0 6px; font-size: 11px; letter-spacing: 1px; white-space: nowrap; }
+.rs-btns .tb-btn[hidden] { display: none; }
+.rs-hq { width: 100%; margin-top: 6px; }
+.rs-set { margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px dashed var(--khaki); }
+.rs-flight { margin: 8px 0 0; font-size: 11.5px; letter-spacing: .3px; line-height: 1.45; color: var(--khaki-light); overflow-wrap: anywhere; }
+.rs-flight b { font-family: var(--f-ui); font-weight: 700; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--amber); margin-right: 6px; }
+.rs-flight em { font-style: normal; color: var(--paper); }
+.rs-flight.none { opacity: .8; }
+/* une option de liste qui porte un texte à droite (le vol lié d'une route) */
+.tbm-opt .tbm-txt { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.tbm-opt .tbm-note { margin-left: auto; padding-left: 14px; flex: 0 1 auto; min-width: 0; max-width: 48%; overflow: hidden; text-overflow: ellipsis;
+  font-family: var(--f-mono); font-weight: 400; font-size: 11px; letter-spacing: 0; text-transform: none; color: var(--khaki-light); }
+.rt-filters { display: flex; gap: 8px; margin: 0 0 10px; flex-wrap: wrap; }
+.rt-filters > div { flex: 1 1 120px; min-width: 0; }
+.rt-filters > div.nm { flex: 2 1 170px; }
+.rt-filters .lbl { margin-bottom: 4px; }
+.rt-row .rt-two { display: flex; flex-direction: column; min-width: 0; flex: 1 1 auto; }
+.rt-row .rt-two small { font-size: 11px; color: var(--khaki-light); overflow-wrap: anywhere; }
+.rt-row.off { opacity: .45; cursor: not-allowed; }
+.rt-row.off input { cursor: not-allowed; }
+.rt-row .rt-n { display: flex; flex-direction: column; align-items: flex-end; }
+.rt-row .rt-n .rt-dup { color: var(--amber); }
+.rt-fname { font-size: 11.5px; color: var(--khaki-light); margin: 0 0 8px; overflow-wrap: anywhere; font-family: var(--f-mono); letter-spacing: 0; }
+.cf-modal .rt-warn { color: var(--paper); border-left: 3px solid var(--amber); padding: 4px 0 4px 10px; background: rgba(0,0,0,.18); }
+.cf-modal .rt-filters .in { font-size: 13px; }
+.cf-modal .rt-empty { font-size: 12px; color: var(--khaki-light); margin: 4px 0 12px; }
+/* la ligne « Routes » du menu Affichage : le titre et son compte, puis un sélecteur à trois positions */
+.dsp-routes { padding: 8px 18px 10px; border-top: 1px solid rgba(168,154,114,.14); }
+.dsp-routes-h { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 6px; font-family: var(--f-ui); font-weight: 500; font-size: 13px;
+  letter-spacing: 1.3px; text-transform: uppercase; color: var(--paper); }
+.dsp-seg { display: flex; width: 100%; }
+.dsp-seg .tb-btn { flex: 1 1 0; min-width: 0; height: 36px; padding: 0 2px; font-size: 11px; letter-spacing: .6px; white-space: nowrap; }
+.dsp-seg .tb-btn + .tb-btn { border-left: none; }
+
 /* ---------- le menu « Affichage » (lot rp-v1.12.1) : le bouton de la barre et son panneau, au style des listes de la barre (tbm-*) ---------- */
 #btn-display, #btn-units { position: relative; color: var(--amber); border-color: var(--amber-dark); padding-right: 12px; }
 #btn-display:hover, #btn-display:focus-visible, #btn-display.dsp-open, #btn-units:hover, #btn-units:focus-visible, #btn-units.dsp-open { border-color: var(--amber); }
@@ -1646,6 +1684,9 @@ SOFTWARE.
   <button type="button" class="tb-btn" id="btn-save" data-i18n-title="tb.save.tip" title="Enregistrer la route (JSON)" data-i18n-aria-label="tb.save.tip" aria-label="Enregistrer la route (JSON)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3h11l3 3v15H5zM8 3v6h8V3M8 21v-7h8v7"/></svg>
     <span class="tb-btn-label solo" data-i18n="tb.save">Enregistrer</span></button>
+  <button type="button" class="tb-btn" id="btn-save-all" data-i18n-title="tb.saveAll.tip" title="Enregistrer toutes les routes (JSON)" data-i18n-aria-label="tb.saveAll.tip" aria-label="Enregistrer toutes les routes (JSON)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10l3 3v10H3zM5 8V2h8M6 8v4h6V8M6 21v-5h6v5"/><path d="M16 5h5v14h-3"/></svg>
+    <span class="tb-btn-label solo" data-i18n="tb.saveAll">Enregistrer tout</span></button>
   <button type="button" class="tb-btn" id="btn-example" data-i18n-title="tb.example.tip" title="Charger l'exemple" data-i18n-aria-label="tb.example.tip" aria-label="Charger l'exemple">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
     <span class="tb-btn-label solo" data-i18n="tb.example">Exemple</span></button>
@@ -1696,9 +1737,21 @@ SOFTWARE.
     <div class="ed-section" data-section="route">
       <div class="ed-head"><span class="ed-title" data-i18n="sec.route">Route</span><small id="pt-count"></small></div>
       <div class="ed-body">
+        <div class="rs-set">
+          <div class="rs-head"><label class="lbl" for="route-list" data-i18n="rs.list">Routes</label><small id="rs-count"></small></div>
+          <select class="in" id="route-list" data-lbl="rs.list"></select>
+          <div class="rs-btns">
+            <button type="button" class="tb-btn" id="rs-add" data-i18n="rs.add">+ Route</button>
+            <button type="button" class="tb-btn" id="rs-dup" data-i18n="rs.dup">Dupliquer</button>
+            <button type="button" class="tb-btn danger" id="rs-del" data-i18n="rs.del">Supprimer</button>
+          </div>
+          <button type="button" class="tb-btn primary rs-hq" id="rs-hq" data-i18n="rs.hq">⇣ Depuis HQ</button>
+        </div>
         <div class="rn">
           <label class="lbl" for="route-name" data-i18n="f.name">Nom de la route</label>
           <input class="in" id="route-name" type="text" maxlength="60" autocomplete="off" spellcheck="false">
+          <p class="rs-flight" id="rs-flight"></p>
+          <div class="rs-btns"><button type="button" class="tb-btn" id="rs-link" data-i18n="rs.link">Lier à un vol…</button><button type="button" class="tb-btn" id="rs-unlink" data-i18n="rs.unlink">Délier</button></div>
         </div>
         <div class="pt-head pts"><span data-i18n="th.no">N°</span><span data-i18n="th.name">Nom</span><span id="alt-unit"></span><span id="spd-unit"></span><span data-i18n="th.ref">Réf.</span><span></span></div>
         <div id="pts"></div>
@@ -1777,6 +1830,7 @@ SOFTWARE.
         <div class="actions">
           <button type="button" class="tb-btn primary" id="btn-handoff" data-i18n="btn.handoff">→ Vers la datacard</button>
           <button type="button" class="tb-btn primary" id="btn-export-bg" data-i18n="btn.exportBg">→ Vers le briefing</button>
+          <button type="button" class="tb-btn primary" id="btn-package" data-i18n="pk.btn">📦 Paquet de vol</button>
           <button type="button" class="tb-btn" id="btn-export" data-i18n="btn.export">Exporter JSON</button>
           <button type="button" class="tb-btn" id="btn-export-rt" data-i18n="btn.exportRt">Exporter vers le Route Tool</button>
         </div>
@@ -1859,6 +1913,43 @@ SOFTWARE.
   </div>
 </div>
 
+<!-- ===== FENÊTRE : DEPUIS HQ (importer des vols) · LIER À UN VOL ===== -->
+<div class="rt-modal cf-modal" id="hq-modal" hidden role="dialog" aria-modal="true" aria-labelledby="hq-title">
+  <div class="rt-backdrop" id="hq-backdrop"></div>
+  <div class="rt-panel" role="document">
+    <button type="button" class="rt-close" id="hq-close" data-i18n-aria-label="modal.close" aria-label="Fermer">&times;</button>
+    <h2 id="hq-title"></h2>
+    <p class="rt-file" id="hq-file"></p>
+    <p class="rt-note rt-warn" id="hq-warn" hidden></p>
+    <div class="rt-filters">
+      <div><label class="lbl" for="hq-side" data-i18n="hq.side">Camp</label><select class="in" id="hq-side" data-lbl="hq.side"></select></div>
+      <div class="nm"><label class="lbl" for="hq-name" data-i18n="hq.name">Nom</label><input class="in" id="hq-name" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+    </div>
+    <div class="rt-list" id="hq-list"></div>
+    <p class="rt-note rt-warn" id="hq-limit" hidden></p>
+    <div class="rt-actions">
+      <button type="button" class="rt-btn" id="hq-cancel" data-i18n="rt.cancel">Annuler</button>
+      <button type="button" class="rt-btn go" id="hq-go"></button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== FENÊTRE : PAQUET DE VOL ===== -->
+<div class="rt-modal cf-modal" id="pk-modal" hidden role="dialog" aria-modal="true" aria-labelledby="pk-title">
+  <div class="rt-backdrop" id="pk-backdrop"></div>
+  <div class="rt-panel" role="document">
+    <button type="button" class="rt-close" id="pk-close" data-i18n-aria-label="modal.close" aria-label="Fermer">&times;</button>
+    <h2 id="pk-title" data-i18n="pk.title">Paquet de vol</h2>
+    <p class="rt-note" data-i18n="pk.note">Cochez les routes à exporter : chacune devient un vol du paquet, que HQ applique à la mission.</p>
+    <div class="rt-list" id="pk-list"></div>
+    <p class="rt-fname" id="pk-fname"></p>
+    <div class="rt-actions">
+      <button type="button" class="rt-btn" id="pk-cancel" data-i18n="rt.cancel">Annuler</button>
+      <button type="button" class="rt-btn go" id="pk-go"></button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== FENÊTRE : LA FICHE D'UN AÉRODROME ===== -->
 <div class="rt-modal" id="fiche" hidden role="dialog" aria-modal="true" aria-labelledby="fiche-titre">
   <div class="rt-backdrop" id="fiche-fond"></div>
@@ -1890,13 +1981,19 @@ SOFTWARE.
 
 const KEY_STATE = 'route_state_v1';
 const KEY_HANDOFF = 'route_handoff_v1';
+const KEY_SET = 'route_set_v1';
+const KEY_SNAPSHOT = 'mission_snapshot_v1';
 const KEY_THEME = 'theme_v1';
 const KEY_LANG = 'lang_v1';
 const FORMAT_ID = 'dcs-route-v1';
+const SET_FORMAT = 'dcs-route-set-v1';
+const PACKAGE_FORMAT = 'dcs-flight-package-v1';
 const THEME_IDS = ['cw-nato', 'cw-soviet', 'modern-nato', 'modern-east'];
 const LAYER_IDS = ['dcs', 'flappie', 'topo', 'sat', 'grid'];
 const MAX_POINTS = 30;
 const MAX_REFS = 12;
+const MAX_ROUTES = 12;
+const DCS_MAX_JSON = 20480;     /* la source d'un point venu d'une mission (p.dcs) : 20 Kio de JSON au plus, sinon elle est retirée */
 const NM_KM = 1.852;
 const FT_M = 0.3048;
 const FALLBACK_MS = 4000;      /* délai avant le repli en grille seule */
@@ -2292,7 +2389,10 @@ const I18N = {
     'dsp.g.mission': 'Mission',
     'dsp.g.layers': 'Calques',
     'dsp.g.base': 'Fond',
-    'dsp.route': 'Route',
+    'dsp.routes': 'Routes',
+    'dsp.routes.none': 'Aucune',
+    'dsp.routes.active': 'Sélectionnée',
+    'dsp.routes.all': 'Toutes',
     'dsp.refs': 'Points de réf.',
     'dsp.draw': 'Dessins',
     'dsp.sym': 'Symboles OTAN',
@@ -2460,6 +2560,64 @@ const I18N = {
     'tb.rt.off': 'Route Tool indisponible pour ce théâtre',
     'err.rt': 'Fichier du Route Tool non reconnu.',
     'modal.close': 'Fermer',
+    'rs.list': 'Routes',
+    'rs.add': '+ Route',
+    'rs.dup': 'Dupliquer',
+    'rs.del': 'Supprimer',
+    'rs.hq': '⇣ Depuis HQ',
+    'rs.link': 'Lier à un vol…',
+    'rs.unlink': 'Délier',
+    'rs.flight': 'Vol lié',
+    'rs.noflight': 'Aucun vol lié',
+    'rs.unnamed': 'Sans nom',
+    'rs.copy': '{name} (copie)',
+    'rs.hq.off.none': 'Aucune mission n\'est chargée dans HQ.',
+    'rs.hq.off.theatre': 'Le théâtre de la mission de HQ ({th}) n\'a pas de projection.',
+    'hq.title': 'Depuis HQ',
+    'hq.link.title': 'Lier à un vol',
+    'hq.file': 'Mission chargée dans HQ : {f} · {th}',
+    'hq.warn': 'Cette mission est sur {th}, le Route Planner sur {cur} : importer passe au théâtre {th} et supprime les routes existantes.',
+    'hq.warn.link': 'Cette mission est sur {th}, le Route Planner sur {cur} : lier passe au théâtre {th} et supprime les routes existantes.',
+    'hq.side': 'Camp',
+    'hq.name': 'Nom',
+    'hq.all': 'Tous',
+    'hq.red': 'Rouge',
+    'hq.blue': 'Bleu',
+    'hq.neutral': 'Neutre',
+    'hq.none': 'Aucun vol ne correspond.',
+    'hq.noFlights': 'La mission ne contient aucun vol.',
+    'hq.pts': '{n} pts',
+    'hq.in': 'déjà en route {n}',
+    'hq.go.1': 'Importer {n} vol',
+    'hq.go.n': 'Importer {n} vols',
+    'hq.go.link': 'Lier',
+    'hq.limit': '12 routes au plus : retirez {n} vol(s) de la sélection.',
+    'pk.btn': '📦 Paquet de vol',
+    'pk.title': 'Paquet de vol',
+    'pk.note': 'Cochez les routes à exporter : chacune devient un vol du paquet, que HQ applique à la mission.',
+    'pk.off.unlinked': 'liez-la d\'abord à un vol',
+    'pk.off.empty': 'route vide',
+    'pk.off.theatre': 'Le théâtre {th} n\'a pas de projection.',
+    'pk.same': 'même vol que la route {n}',
+    'pk.file': 'Fichier : {f}',
+    'pk.go.1': 'Exporter {n} route',
+    'pk.go.n': 'Exporter {n} routes',
+    'confirm.routeDel': 'Supprimer la route « {name} » et ses points ?',
+    'confirm.openSet': 'Remplacer toutes les routes par celles du fichier ?',
+    'confirm.theatre': 'Passer au théâtre {th} ? Les {n} routes existantes seront supprimées.',
+    'confirm.theatre.1': 'Passer au théâtre {th} ? La route existante sera supprimée.',
+    'toast.routesMax': '12 routes au plus.',
+    'toast.linked': 'Route liée à {name} ✓',
+    'toast.hqImported.1': '{n} route importée ✓',
+    'toast.hqImported.n': '{n} routes importées ✓',
+    'toast.hqTrunc': '{name} : tronquée à 30 points',
+    'toast.pkExported.1': '📦 {n} vol exporté ✓',
+    'toast.pkExported.n': '📦 {n} vols exportés ✓',
+    'toast.savedAll': 'Routes enregistrées ✓',
+    'tb.saveAll': 'Enregistrer tout',
+    'tb.saveAll.tip': 'Enregistrer toutes les routes (JSON)',
+    'cf.exp.routes': 'Les routes',
+    'cf.exp.routesN': '{n} routes · {p} points · {m} réf.',
     'fiche.type.a': 'Aérodrome',
     'fiche.type.h': 'Hélistation',
     'fiche.dir': 'Répertoire · p. {n}',
@@ -2707,7 +2865,10 @@ const I18N = {
     'dsp.g.mission': 'Mission',
     'dsp.g.layers': 'Layers',
     'dsp.g.base': 'Base map',
-    'dsp.route': 'Route',
+    'dsp.routes': 'Routes',
+    'dsp.routes.none': 'None',
+    'dsp.routes.active': 'Selected',
+    'dsp.routes.all': 'All',
     'dsp.refs': 'Ref. points',
     'dsp.draw': 'Drawings',
     'dsp.sym': 'NATO symbols',
@@ -2875,6 +3036,64 @@ const I18N = {
     'tb.rt.off': 'Route Tool not available for this theatre',
     'err.rt': 'Unrecognised Route Tool file.',
     'modal.close': 'Close',
+    'rs.list': 'Routes',
+    'rs.add': '+ Route',
+    'rs.dup': 'Duplicate',
+    'rs.del': 'Delete',
+    'rs.hq': '⇣ From HQ',
+    'rs.link': 'Link to a flight…',
+    'rs.unlink': 'Unlink',
+    'rs.flight': 'Linked flight',
+    'rs.noflight': 'No linked flight',
+    'rs.unnamed': 'Unnamed',
+    'rs.copy': '{name} (copy)',
+    'rs.hq.off.none': 'No mission is loaded in HQ.',
+    'rs.hq.off.theatre': 'The theatre of the HQ mission ({th}) has no projection.',
+    'hq.title': 'From HQ',
+    'hq.link.title': 'Link to a flight',
+    'hq.file': 'Mission loaded in HQ: {f} · {th}',
+    'hq.warn': 'This mission is on {th}, the Route Planner on {cur}: importing switches to the {th} theatre and deletes the existing routes.',
+    'hq.warn.link': 'This mission is on {th}, the Route Planner on {cur}: linking switches to the {th} theatre and deletes the existing routes.',
+    'hq.side': 'Side',
+    'hq.name': 'Name',
+    'hq.all': 'All',
+    'hq.red': 'Red',
+    'hq.blue': 'Blue',
+    'hq.neutral': 'Neutral',
+    'hq.none': 'No flight matches.',
+    'hq.noFlights': 'The mission has no flights.',
+    'hq.pts': '{n} pts',
+    'hq.in': 'already in route {n}',
+    'hq.go.1': 'Import {n} flight',
+    'hq.go.n': 'Import {n} flights',
+    'hq.go.link': 'Link',
+    'hq.limit': 'At most 12 routes: remove {n} flight(s) from the selection.',
+    'pk.btn': '📦 Flight package',
+    'pk.title': 'Flight package',
+    'pk.note': 'Check the routes to export: each becomes a flight of the package, which HQ applies to the mission.',
+    'pk.off.unlinked': 'link it to a flight first',
+    'pk.off.empty': 'empty route',
+    'pk.off.theatre': 'The {th} theatre has no projection.',
+    'pk.same': 'same flight as route {n}',
+    'pk.file': 'File: {f}',
+    'pk.go.1': 'Export {n} route',
+    'pk.go.n': 'Export {n} routes',
+    'confirm.routeDel': 'Delete the route "{name}" and its points?',
+    'confirm.openSet': 'Replace all routes with those in the file?',
+    'confirm.theatre': 'Switch to the {th} theatre? The {n} existing routes will be deleted.',
+    'confirm.theatre.1': 'Switch to the {th} theatre? The existing route will be deleted.',
+    'toast.routesMax': 'At most 12 routes.',
+    'toast.linked': 'Route linked to {name} ✓',
+    'toast.hqImported.1': '{n} route imported ✓',
+    'toast.hqImported.n': '{n} routes imported ✓',
+    'toast.hqTrunc': '{name}: cut to 30 points',
+    'toast.pkExported.1': '📦 {n} flight exported ✓',
+    'toast.pkExported.n': '📦 {n} flights exported ✓',
+    'toast.savedAll': 'Routes saved ✓',
+    'tb.saveAll': 'Save all',
+    'tb.saveAll.tip': 'Save all routes (JSON)',
+    'cf.exp.routes': 'The routes',
+    'cf.exp.routesN': '{n} routes · {p} waypoints · {m} ref.',
     'fiche.type.a': 'Airfield',
     'fiche.type.h': 'Heliport',
     'fiche.dir': 'Directory · p. {n}',
@@ -3603,7 +3822,9 @@ let S = defaultState();
 let sel = -1;                 /* point sélectionné (non enregistré) */
 let selR = -1;                /* point de référence sélectionné (non enregistré) */
 const KEY_DISPLAY = 'rp_display_v1';
-const DISP = { route: true, refs: true, draw: true, sym: true, cf: true };     /* ce que le menu « Affichage » montre ; gardé dans rp_display_v1, jamais dans route_state_v1 */
+const DISP = { routes: 'all', refs: true, draw: true, sym: true, cf: true };     /* ce que le menu « Affichage » montre ; gardé dans rp_display_v1, jamais dans route_state_v1 ; routes : 'none' | 'active' | 'all' */
+const ROUTES_SHOW = ['none', 'active', 'all'];
+function routeShown() { return DISP.routes !== 'none'; }
 let tapMode = 'wp';           /* ce que fait un toucher sur la carte : 'wp' (pose un point), 'ref' (pose une référence), 'read' (ouvre les fiches des calques, ne pose rien) ou 'draw' (dessine dans un calque) ou 'ruler' (mesure sur la carte, ne pose rien) — non enregistré */
 let addMode = 'coord';        /* bloc Ajouter : 'coord' ou 'hd' (cap et distance) — non enregistré */
 
@@ -3655,6 +3876,38 @@ function readNavDisplay(nd) {
   };
 }
 
+/* La source d'un point venu d'une mission (p.dcs = { raw, orig }) : gardée si c'est un objet d'au plus 20 Kio de JSON, sinon retirée */
+function readDcs(d) {
+  if (!d || typeof d !== 'object' || Array.isArray(d)) return null;
+  try {
+    const j = JSON.stringify(d);
+    return j.length <= DCS_MAX_JSON ? JSON.parse(j) : null;
+  } catch (e) { return null; }
+}
+
+/* Les points d'une liste lue : un point dont lat ou lon n'est pas un nombre dans les bornes est écarté ; au-delà de 30, le reste est écarté (dropped) */
+function readPoints(list) {
+  const pts = [];
+  let dropped = 0;
+  list.forEach(p => {
+    if (!p || typeof p !== 'object' || !validCoord(p.lat, p.lon)) return;
+    if (pts.length >= MAX_POINTS) { dropped++; return; }
+    const q = {
+      name: typeof p.name === 'string' ? p.name : nextName(pts, pts.length),
+      lat: r7(p.lat), lon: r7(p.lon),
+      alt: (typeof p.alt === 'number' && isFinite(p.alt)) ? p.alt : 0,
+      altRef: p.altRef === 'MSL' ? 'MSL' : 'AGL'
+    };
+    /* gs : la vitesse de la branche qui arrive au point, jamais sur le point 0 ; box : la place de sa boîte */
+    if (pts.length > 0 && typeof p.gs === 'number' && isFinite(p.gs) && p.gs > 0) q.gs = p.gs;
+    if (pts.length > 0) { const bx = readBox(p.box); if (bx) q.box = bx; }
+    const dc = readDcs(p.dcs);
+    if (dc) q.dcs = dc;
+    pts.push(q);
+  });
+  return { points: pts, dropped: dropped };
+}
+
 /* Un objet lu (fichier ou stockage) → { route, dropped, droppedRefs } ; null si ce n'est pas une route dcs-route-v1.
    Un point (ou une référence) dont lat ou lon n'est pas un nombre dans les bornes est écarté ; au-delà de 30 points
    (12 références), le reste est écarté (dropped, droppedRefs les comptent) ; les champs absents prennent leurs défauts. */
@@ -3674,21 +3927,10 @@ function parseRoute(src) {
     points: [],
     refs: []
   };
-  let dropped = 0, droppedRefs = 0;
-  src.points.forEach(p => {
-    if (!p || typeof p !== 'object' || !validCoord(p.lat, p.lon)) return;
-    if (route.points.length >= MAX_POINTS) { dropped++; return; }
-    const q = {
-      name: typeof p.name === 'string' ? p.name : nextName(route.points, route.points.length),
-      lat: r7(p.lat), lon: r7(p.lon),
-      alt: (typeof p.alt === 'number' && isFinite(p.alt)) ? p.alt : 0,
-      altRef: p.altRef === 'MSL' ? 'MSL' : 'AGL'
-    };
-    /* gs : la vitesse de la branche qui arrive au point, jamais sur le point 0 ; box : la place de sa boîte */
-    if (route.points.length > 0 && typeof p.gs === 'number' && isFinite(p.gs) && p.gs > 0) q.gs = p.gs;
-    if (route.points.length > 0) { const bx = readBox(p.box); if (bx) q.box = bx; }
-    route.points.push(q);
-  });
+  let droppedRefs = 0;
+  const rp = readPoints(src.points);
+  route.points = rp.points;
+  const dropped = rp.dropped;
   if (Array.isArray(src.refs)) src.refs.forEach(p => {
     if (!p || typeof p !== 'object' || !validCoord(p.lat, p.lon)) return;
     if (route.refs.length >= MAX_REFS) { droppedRefs++; return; }
@@ -3703,10 +3945,13 @@ function parseRoute(src) {
 }
 
 function persistState() {
+  syncActive();
   try { localStorage.setItem(KEY_STATE, JSON.stringify(S)); } catch (e) { /* quota ou stockage indisponible */ }
+  try { localStorage.setItem(KEY_SET, JSON.stringify(setObject())); } catch (e) { /* quota ou stockage indisponible */ }
 }
 
 function loadState() {
+  let ok = false;
   try {
     const raw = localStorage.getItem(KEY_STATE);
     if (raw) {
@@ -3719,11 +3964,12 @@ function loadState() {
           places: typeof ui.places === 'boolean' ? ui.places : false, towns: typeof ui.towns === 'boolean' ? ui.towns : true,
           airfields: typeof ui.airfields === 'boolean' ? ui.airfields : true,
           trace: ui.trace === 'black' ? 'black' : 'route', ticks: ui.ticks === 'black' ? 'black' : 'route' } });
-        return;
+        ok = true;
       }
     }
   } catch (e) { /* état illisible : route neuve */ }
-  S = defaultState();
+  if (!ok) S = defaultState();
+  loadSet(ok);
 }
 
 /* Le fichier exporté : l'état sans « ui » */
@@ -3733,14 +3979,76 @@ function exportObject() {
     units: { distance: S.units.distance, altitude: S.units.altitude },
     navDisplay: { ref: S.navDisplay.ref, decl: S.navDisplay.decl, mode: S.navDisplay.mode, year: S.navDisplay.year, force: S.navDisplay.force },
     groundSpeed: S.groundSpeed, legBoxes: S.legBoxes,
-    points: S.points.map((p, i) => {
-      const o = { name: p.name, lat: p.lat, lon: p.lon, alt: p.alt, altRef: p.altRef };
-      if (i > 0 && typeof p.gs === 'number') o.gs = p.gs;
-      if (i > 0 && p.box) o.box = { along: p.box.along, side: p.box.side };
-      return o;
-    }),
+    points: S.points.map(exportPoint),
     refs: S.refs.map(p => ({ name: p.name, lat: p.lat, lon: p.lon, alt: p.alt, altRef: p.altRef }))
   };
+}
+
+/* Un point du fichier : sa source de mission (p.dcs) est gardée */
+function exportPoint(p, i) {
+  const o = { name: p.name, lat: p.lat, lon: p.lon, alt: p.alt, altRef: p.altRef };
+  if (i > 0 && typeof p.gs === 'number') o.gs = p.gs;
+  if (i > 0 && p.box) o.box = { along: p.box.along, side: p.box.side };
+  if (p.dcs) o.dcs = JSON.parse(JSON.stringify(p.dcs));
+  return o;
+}
+
+/* ============= PLUSIEURS ROUTES =============
+   S reste la route active avec les réglages partagés (route_state_v1 garde sa forme, le Datacard Generator le lit tel quel). Toutes les routes,
+   la route active comprise, vivent dans RSET (route_set_v1) : { name, points, flight } ; flight : { groupName, aircraftType, coalition } ou null.
+   Le nom et les points de la route active sont ceux de S ; syncActive() les recopie dans RSET avant toute écriture ou lecture de l'ensemble. */
+let RSET = { active: 0, routes: [{ name: '', points: [], flight: null }] };
+
+function readFlight(f) {
+  if (!f || typeof f !== 'object' || Array.isArray(f) || typeof f.groupName !== 'string' || typeof f.aircraftType !== 'string') return null;
+  return { groupName: f.groupName, aircraftType: f.aircraftType, coalition: typeof f.coalition === 'string' ? f.coalition : '' };
+}
+function sameFlight(a, b) { return !!a && !!b && a.groupName === b.groupName && a.aircraftType === b.aircraftType && a.coalition === b.coalition; }
+
+function syncActive() {
+  const r = RSET.routes[RSET.active];
+  if (r && S) { r.name = S.name; r.points = S.points; }
+}
+
+function setObject() {
+  syncActive();
+  return { format: SET_FORMAT, active: RSET.active, routes: RSET.routes.map(r => ({ name: r.name, points: r.points, flight: r.flight })) };
+}
+
+/* Une liste de routes lue (stockage ou fichier) : { name, points, flight } au plus 12 ; null si ce n'est pas une liste */
+function readRoutes(list) {
+  if (!Array.isArray(list)) return null;
+  const out = [];
+  let dropped = 0;
+  list.forEach(r => {
+    if (!r || typeof r !== 'object' || Array.isArray(r) || !Array.isArray(r.points)) return;
+    if (out.length >= MAX_ROUTES) { dropped++; return; }
+    const rp = readPoints(r.points);
+    dropped += rp.dropped;
+    out.push({ name: str(r.name).slice(0, 60), points: rp.points, flight: readFlight(r.flight) });
+  });
+  return out.length ? { routes: out, dropped: dropped } : null;
+}
+
+function readActiveIndex(a, n) { return (Number.isInteger(a) && a >= 0 && a < n) ? a : 0; }
+
+/* Au chargement : les routes de route_set_v1 ; la route active est celle de route_state_v1 (qui fait foi pour elle) ; sans route_set_v1, la route de
+   route_state_v1 devient la route 1 */
+function loadSet(stateOk) {
+  let set = null;
+  try {
+    const raw = localStorage.getItem(KEY_SET);
+    const o = raw ? JSON.parse(raw) : null;
+    if (o && o.format === SET_FORMAT) {
+      const rr = readRoutes(o.routes);
+      if (rr) set = { active: readActiveIndex(o.active, rr.routes.length), routes: rr.routes };
+    }
+  } catch (e) { set = null; }
+  if (!set) { RSET = { active: 0, routes: [{ name: S.name, points: S.points, flight: null }] }; return; }
+  RSET = set;
+  const r = RSET.routes[RSET.active];
+  if (stateOk) { r.name = S.name; r.points = S.points; }
+  else { S.name = r.name; S.points = r.points; }
 }
 
 function theatreOf(id) { return THEATRES.find(x => x.id === id) || THEATRES[0]; }
@@ -4102,6 +4410,7 @@ function cfCounts(items) {
 /* ============= CARTE ============= */
 let map = null;
 let routeGroup = null;
+let othersGroup = null;        /* les autres routes, en gris, sous la route active */
 let decorGroup = null;        /* traits des minutes, chiffres, boîtes de branche, étiquettes « cap · distance » */
 let ptMarkers = [];           /* les marqueurs des points de la route, dans l'ordre */
 let refGroup = null;
@@ -4656,6 +4965,9 @@ function createMap() {
   ringPane.style.zIndex = 650;
   ringPane.style.pointerEvents = 'none';
   map.createPane('refs').style.zIndex = 450;
+  /* Les autres routes : le liseré clair sous le tracé gris (volet des tracés, 400), la zone de toucher au-dessus (les marqueurs sont à 600) */
+  map.createPane('otherhalo').style.zIndex = 399;
+  map.createPane('otherhit').style.zIndex = 401;
   /* Les chiffres des minutes : au-dessus des références, sous les points ; les boîtes de branche : au-dessus des points */
   map.createPane('legticks').style.zIndex = 420;        /* les traits des minutes : au-dessus de la route, sous les références */
   map.createPane('legnums').style.zIndex = 455;
@@ -4672,6 +4984,7 @@ function createMap() {
   twLayer = L.layerGroup().addTo(map);
   cfGroup = L.layerGroup().addTo(map);
   refGroup = L.layerGroup().addTo(map);
+  othersGroup = L.layerGroup().addTo(map);
   routeGroup = L.layerGroup().addTo(map);
   decorGroup = L.layerGroup().addTo(map);
   RL.group = L.layerGroup().addTo(map);
@@ -4888,9 +5201,10 @@ function updateTimes() {
 function drawRoute() {
   if (!routeGroup) return;
   routeGroup.clearLayers();
+  drawOthers();
   linePair = null;
   ptMarkers = [];
-  if (!DISP.route) { drawDecor(); return; }      /* Route masquée : ni tracé, ni points, ni « + », ni traits, boîtes et étiquettes */
+  if (!routeShown()) { drawDecor(); return; }      /* Routes sur « Aucune » : ni tracé, ni points, ni « + », ni traits, boîtes et étiquettes */
   const pts = S.points;
   const tm = timing();
   const ll = pts.map(p => [p.lat, p.lon]);
@@ -5061,7 +5375,7 @@ function drawBox(i, pa, pb, len, leg) {
 function drawDecorNow() {
   if (!decorGroup) return;
   decorGroup.clearLayers();
-  if (!DISP.route) return;
+  if (!routeShown()) return;
   const pts = S.points;
   if (pts.length < 2) return;
   const tm = timing();
@@ -7168,6 +7482,7 @@ function syncControls() {
   dspSync();
   unSync();
   syncAdd();
+  routesRender();
   rlRender();       /* unités, référence de cap, déclinaison, langue : les étiquettes et le bandeau de la règle suivent */
 }
 
@@ -7299,7 +7614,7 @@ function rlSnap(ll) {
     if (d <= RL_SNAP_PX && (!best || d < best.d - RL_TIE_PX)) best = { lat: q.lat, lon: q.lng, d: d };
   };
   const nameOf = mk => { const e = mk.getElement && mk.getElement(); return e ? e.querySelector('.wp-name') : null; };
-  if (DISP.route) ptMarkers.forEach(mk => take(mk.getLatLng(), nameOf(mk)));
+  if (routeShown()) ptMarkers.forEach(mk => take(mk.getLatLng(), nameOf(mk)));
   if (DISP.refs && refGroup) refGroup.eachLayer(mk => take(mk.getLatLng(), nameOf(mk)));
   if (afLayer) {
     const pane = map.getPane('airfields');
@@ -7797,20 +8112,24 @@ function downloadJson(sel) {
     const chosen = CF_LAYERS.filter(l => sel.layers.indexOf(l.id) !== -1);
     if (chosen.length) obj.layers = chosen;
   }
+  deliverJsonFile(obj, 'route_' + (slug(S.name) || 'route') + '_' + stamp() + '.json', t('toast.saved'));
+}
+
+/* Un fichier JSON remis à la personne : le partage du système quand il le permet, sinon un téléchargement */
+function deliverJsonFile(obj, fname, msg) {
   const blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' });
-  const fname = 'route_' + (slug(S.name) || 'route') + '_' + stamp() + '.json';
   if (navigator.share && navigator.canShare) {
     try {
       const file = new File([blob], fname, { type: 'application/json' });
       if (navigator.canShare({ files: [file] })) {
         navigator.share({ files: [file], title: t('app.title'), text: fname }).catch(() => {
-          fallbackDownload(blob, fname, t('toast.saved'));
+          fallbackDownload(blob, fname, msg);
         });
         return;
       }
     } catch (e) { /* repli ci-dessous */ }
   }
-  fallbackDownload(blob, fname, t('toast.saved'));
+  fallbackDownload(blob, fname, msg);
 }
 
 /* Met une route lue à la place de la route en cours (unités, théâtre, cap et déclinaison compris ; la couche et la grille restent) */
@@ -7850,6 +8169,7 @@ function openRouteFile(file) {
     }
     let parsed;
     try { parsed = JSON.parse(text); } catch (e) { showToast(t('err.json')); return; }
+    if (parsed && typeof parsed === 'object' && parsed.format === SET_FORMAT) { openRouteSet(parsed); return; }
     const res = parseRoute(parsed);
     if (!res) { showToast(t('err.json')); return; }
     /* « layers » : des calques qui s'ajoutent aux calques présents (un même id remplace le sien) ; sans route dans le fichier, la route n'est pas touchée */
@@ -7859,8 +8179,7 @@ function openRouteFile(file) {
       if (layersChanged()) showToast(t(cfOne(lays.length) ? 'toast.layersAdded.1' : 'toast.layersAdded.n', { n: lays.length }), 4500);
       return;
     }
-    if (S.points.length && !confirm(t('confirm.open'))) return;
-    setRoute(res.route);
+    if (!openAsRoute(res.route)) return;
     let msg = (res.dropped ? t('toast.openedDropped', { n: res.dropped }) : t('toast.opened')) +
       (res.droppedRefs ? ' · ' + t('toast.refsDropped', { n: res.droppedRefs }) : '');
     if (lays.length) { cfMerge(lays); if (layersChanged()) msg += ' · ' + t(cfOne(lays.length) ? 'toast.cfShown.1' : 'toast.cfShown.n', { n: lays.length }); }
@@ -7868,11 +8187,14 @@ function openRouteFile(file) {
   }, () => showToast(t('err.json')));
 }
 
+/* « Exemple » remplace toutes les routes par la route d'exemple */
 function loadExample() {
   if (!confirm(t('confirm.example'))) return;
+  RSET = { active: 0, routes: [{ name: '', points: [], flight: null }] };
   setRoute(parseRoute(JSON.parse(JSON.stringify(CURRENT_LANG === 'en' ? EXAMPLE_ROUTE_EN : EXAMPLE_ROUTE))).route);   // la langue de l'interface au moment du clic
 }
 
+/* « Effacer » vide la route active (son lien à un vol reste) et les références */
 function clearRoute() {
   if (!confirm(t('confirm.clear'))) return;
   S.name = '';
@@ -7882,6 +8204,578 @@ function clearRoute() {
   persistState();
   renderAll();
   setTheatreView();
+}
+
+/* ============= PLUSIEURS ROUTES : LA LISTE, LES AUTRES ROUTES, LES FICHIERS ============= */
+/* Une route de plus (la route active : celle de S) ; null au plafond de 12 routes */
+function routeIsEmpty(r) { return !r.points.length && !r.flight; }
+
+function cut60(s) { return String(s).slice(0, 60); }
+
+/* La route i devient la route active : S prend son nom et ses points, la sélection se vide, route_state_v1 est réécrit */
+function activateRoute(i, frame) {
+  if (!(i >= 0 && i < RSET.routes.length)) return;
+  syncActive();
+  if (i === RSET.active) return;
+  RSET.active = i;
+  const r = RSET.routes[i];
+  S.name = r.name;
+  S.points = r.points;
+  sel = -1; selR = -1;
+  persistState();
+  renderAll();
+  if (frame && S.points.length) frameRoute();
+}
+
+function addRoute() {
+  syncActive();
+  if (RSET.routes.length >= MAX_ROUTES) { showToast(t('toast.routesMax')); return; }
+  RSET.routes.push({ name: '', points: [], flight: null });
+  activateRoute(RSET.routes.length - 1);
+}
+
+/* « Dupliquer » : « ‹nom› (copie) », les points (p.dcs compris), pas le lien ; la copie devient la route active */
+function duplicateRoute() {
+  syncActive();
+  if (RSET.routes.length >= MAX_ROUTES) { showToast(t('toast.routesMax')); return; }
+  const src = RSET.routes[RSET.active];
+  RSET.routes.push({
+    name: cut60(t('rs.copy', { name: src.name !== '' ? src.name : t('rs.unnamed') })),
+    points: JSON.parse(JSON.stringify(src.points)),
+    flight: null
+  });
+  activateRoute(RSET.routes.length - 1);
+}
+
+/* « Supprimer » : une confirmation s'il y a des points ; la dernière route ne se supprime pas, elle se vide */
+function deleteRoute() {
+  syncActive();
+  const r = RSET.routes[RSET.active];
+  if (r.points.length && !confirm(t('confirm.routeDel', { name: r.name !== '' ? r.name : t('rs.unnamed') }))) return;
+  if (RSET.routes.length === 1) {
+    r.name = ''; r.points = []; r.flight = null;
+    S.name = ''; S.points = [];
+    sel = -1; selR = -1;
+    persistState();
+    renderAll();
+    return;
+  }
+  RSET.routes.splice(RSET.active, 1);
+  RSET.active = Math.min(RSET.active, RSET.routes.length - 1);
+  const a = RSET.routes[RSET.active];
+  S.name = a.name; S.points = a.points;
+  sel = -1; selR = -1;
+  persistState();
+  renderAll();
+}
+
+/* Le vol lié de la route active ; null le délie */
+function setActiveFlight(f) {
+  syncActive();
+  RSET.routes[RSET.active].flight = f;
+  persistState();
+  routesRender();
+}
+
+/* La liste, ses boutons, le vol lié, « Depuis HQ » et « Paquet de vol » reflètent les routes */
+function routesRender() {
+  if (!S) return;
+  syncActive();
+  const n = RSET.routes.length, r = RSET.routes[RSET.active];
+  const list = $('route-list');
+  const html = RSET.routes.map((x, i) =>
+    '<option value="' + i + '"' + (x.flight ? ' data-right="' + esc(x.flight.groupName) + '"' : '') + '>' + esc((i + 1) + ' · ' + (x.name !== '' ? x.name : t('rs.unnamed'))) + '</option>').join('');
+  if (list.getAttribute('data-sig') !== html) { list.innerHTML = html; list.setAttribute('data-sig', html); }
+  list.value = String(RSET.active);
+  $('rs-count').textContent = n + ' / ' + MAX_ROUTES;
+  $('rs-add').disabled = n >= MAX_ROUTES;
+  $('rs-dup').disabled = n >= MAX_ROUTES;
+  const fl = $('rs-flight');
+  fl.className = 'rs-flight' + (r.flight ? '' : ' none');
+  fl.innerHTML = r.flight ? '<b>' + esc(t('rs.flight')) + '</b><em>' + esc(flightText(r.flight)) + '</em>' : esc(t('rs.noflight'));
+  $('rs-unlink').hidden = !r.flight;
+  const hq = hqState();
+  $('rs-hq').disabled = !hq.ok;
+  if (hq.ok) $('rs-hq').removeAttribute('title'); else $('rs-hq').title = hq.tip;
+  $('rs-link').disabled = !hq.ok;
+  if (hq.ok) $('rs-link').removeAttribute('title'); else $('rs-link').title = hq.tip;
+  const pk = packageState();
+  $('btn-package').disabled = !pk.ok;
+  if (pk.ok) $('btn-package').removeAttribute('title'); else $('btn-package').title = pk.tip;
+  dspSync();
+}
+
+function sideText(c) { return c === 'red' ? t('hq.red') : c === 'blue' ? t('hq.blue') : c === 'neutrals' ? t('hq.neutral') : String(c || ''); }
+function flightText(f) { return f.groupName + ' · ' + f.aircraftType + (f.coalition ? ' · ' + sideText(f.coalition).toLowerCase() : ''); }
+function theatreText(id) { return THEATRE_IDS.indexOf(id) !== -1 ? t('th.' + id) : String(id); }
+
+/* ---------- les autres routes, sur la carte ---------- */
+/* Sous la route active : trait fin gris à tiret-point (un tracé par route, dans le volet des tracés) sur un liseré clair (volet « otherhalo », dessous), sans
+   marqueur ni boîte ; un toucher en mode Point la rend active (une zone de toucher invisible, plus large que le trait, volet « otherhit »).
+   « Sélectionnée » et « Aucune » ne les montrent pas. */
+function drawOthers() {
+  if (!othersGroup) return;
+  othersGroup.clearLayers();
+  if (DISP.routes !== 'all') return;
+  RSET.routes.forEach((r, i) => {
+    if (i === RSET.active || r.points.length < 2) return;
+    const ll = r.points.map(p => [p.lat, p.lon]);
+    L.polyline(ll, { pane: 'otherhalo', color: '#f0e8d6', weight: 6, opacity: 0.6, lineCap: 'butt', lineJoin: 'round', interactive: false, className: 'rp-other-halo' }).addTo(othersGroup);
+    L.polyline(ll, { color: '#5d5a4c', weight: 2.5, opacity: 0.95, dashArray: '12 5 2 5', lineCap: 'butt', lineJoin: 'round', interactive: false, className: 'rp-other' }).addTo(othersGroup);
+    if (tapMode === 'wp') {
+      const hit = L.polyline(ll, { pane: 'otherhit', color: '#000', weight: 18, opacity: 0, lineCap: 'round', lineJoin: 'round', interactive: true, className: 'rp-other-hit' }).addTo(othersGroup);
+      hit.on('click', ev => { L.DomEvent.stop(ev); if (tapMode === 'wp') activateRoute(i); });
+    }
+  });
+}
+
+/* ---------- l'ensemble de routes : lecture, enregistrement ---------- */
+/* Ouvrir une route (dcs-route-v1) : sur une route active vide, elle y entre ; sinon elle s'ajoute comme route neuve ; au plafond de 12, rien */
+function openAsRoute(route) {
+  syncActive();
+  if (S.points.length) {
+    if (RSET.routes.length >= MAX_ROUTES) { showToast(t('toast.routesMax')); return false; }
+    RSET.routes.push({ name: '', points: [], flight: null });
+    RSET.active = RSET.routes.length - 1;
+    S.name = ''; S.points = [];
+  }
+  setRoute(route);
+  return true;
+}
+
+/* Ouvrir un dcs-route-set-v1 : toutes les routes sont remplacées (confirmation s'il y a des points) ; les réglages partagés et les références, comme une route */
+function openRouteSet(parsed) {
+  const rr = readRoutes(parsed.routes);
+  const sh = parseRoute(Object.assign({}, parsed, { format: FORMAT_ID, points: [], name: '' }));
+  if (!rr || !sh) { showToast(t('err.json')); return; }
+  const lays = Array.isArray(parsed.layers) ? parsed.layers.map(cfLayer).filter(Boolean) : [];
+  syncActive();
+  if (RSET.routes.some(r => r.points.length) && !confirm(t('confirm.openSet'))) return;
+  const act = readActiveIndex(parsed.active, rr.routes.length);
+  RSET = { active: act, routes: rr.routes };
+  const a = rr.routes[act];
+  const route = sh.route;
+  route.name = a.name;
+  route.points = a.points;
+  setRoute(route);
+  let msg = rr.dropped ? t('toast.openedDropped', { n: rr.dropped }) : t('toast.opened');
+  if (sh.droppedRefs) msg += ' · ' + t('toast.refsDropped', { n: sh.droppedRefs });
+  if (lays.length) { cfMerge(lays); if (layersChanged()) msg += ' · ' + t(cfOne(lays.length) ? 'toast.cfShown.1' : 'toast.cfShown.n', { n: lays.length }); }
+  showToast(msg);
+}
+
+/* « Enregistrer tout » : routes_<horodatage>.json */
+function setFileObject(sel) {
+  syncActive();
+  const ex = exportObject();
+  const obj = {
+    format: SET_FORMAT, theatre: S.theatre, units: ex.units, navDisplay: ex.navDisplay, groundSpeed: S.groundSpeed, legBoxes: S.legBoxes,
+    refs: ex.refs, active: RSET.active,
+    routes: RSET.routes.map(r => ({ name: r.name, points: r.points.map(exportPoint), flight: r.flight ? { groupName: r.flight.groupName, aircraftType: r.flight.aircraftType, coalition: r.flight.coalition } : null }))
+  };
+  if (sel) {
+    if (!sel.route) { obj.routes = obj.routes.map(r => ({ name: r.name, points: [], flight: r.flight })); obj.refs = []; }
+    const chosen = CF_LAYERS.filter(l => sel.layers.indexOf(l.id) !== -1);
+    if (chosen.length) obj.layers = chosen;
+  }
+  return obj;
+}
+
+function downloadSet(sel) {
+  deliverJsonFile(setFileObject(sel), 'routes_' + stamp() + '.json', t('toast.savedAll'));
+}
+
+function onSaveAllClick(ev) {
+  if (!CF_LAYERS.length) { downloadSet(); return; }
+  openCfExport(ev && ev.currentTarget, true);
+}
+
+/* ============= DEPUIS HQ · LIER À UN VOL ============= */
+/* Le snapshot de la mission chargée dans HQ (mission_snapshot_v1) : ses vols, le théâtre de la mission */
+function readSnapshot() {
+  try {
+    const o = JSON.parse(localStorage.getItem(KEY_SNAPSHOT));
+    if (o && typeof o === 'object' && o.sourceMission && typeof o.sourceMission.theatre === 'string' && Array.isArray(o.flights)) return o;
+  } catch (e) { /* pas de snapshot */ }
+  return null;
+}
+
+function snapFlights(snap) {
+  return snap.flights.filter(f => f && typeof f === 'object' && typeof f.groupName === 'string' && typeof f.aircraftType === 'string').map(f => ({
+    groupName: f.groupName, aircraftType: f.aircraftType, coalition: typeof f.coalition === 'string' ? f.coalition : '',
+    points: (f.route && f.route.points && typeof f.route.points === 'object' && !Array.isArray(f.route.points)) ? f.route.points : null
+  }));
+}
+
+/* Les clés numériques de la table des points d'un vol, dans l'ordre */
+function snapKeys(points) {
+  return points ? Object.keys(points).filter(k => /^\d+$/.test(k)).sort((a, b) => Number(a) - Number(b)) : [];
+}
+
+/* « Depuis HQ » et « Lier à un vol… » : actifs avec un snapshot dont le théâtre a une projection */
+function hqState() {
+  const snap = readSnapshot();
+  if (!snap) return { ok: false, tip: t('rs.hq.off.none'), snap: null };
+  if (!hasRouteTool(snap.sourceMission.theatre)) return { ok: false, tip: t('rs.hq.off.theatre', { th: theatreText(snap.sourceMission.theatre) }), snap: snap };
+  return { ok: true, tip: '', snap: snap };
+}
+
+/* « Paquet de vol » : actif si le théâtre de la route (et celui de la mission de HQ, quand il y en a une) a une projection */
+function packageState() {
+  if (!hasRouteTool(S.theatre)) return { ok: false, tip: t('pk.off.theatre', { th: theatreText(S.theatre) }) };
+  const snap = readSnapshot();
+  if (snap && !hasRouteTool(snap.sourceMission.theatre)) return { ok: false, tip: t('rs.hq.off.theatre', { th: theatreText(snap.sourceMission.theatre) }) };
+  return { ok: true, tip: '' };
+}
+
+/* Le point d'une table brute du .miz → un point du RP (avec sa source p.dcs) ; null si x, y ne se lisent pas */
+function pointFromRaw(raw, k, idx, theatre) {
+  if (!raw || typeof raw !== 'object' || typeof raw.x !== 'number' || typeof raw.y !== 'number' || !isFinite(raw.x) || !isFinite(raw.y)) return null;
+  const ll = dcsToLl(theatre, raw.x, raw.y);
+  if (!validCoord(ll.lat, ll.lon)) return null;
+  const p = {
+    name: (typeof raw.name === 'string' && raw.name !== '') ? raw.name : 'WP' + k,
+    lat: r7(ll.lat), lon: r7(ll.lon),
+    alt: (typeof raw.alt === 'number' && isFinite(raw.alt)) ? raw.alt : 0,
+    altRef: raw.alt_type === 'RADIO' ? 'AGL' : 'MSL'
+  };
+  if (idx >= 1 && typeof raw.speed === 'number' && isFinite(raw.speed) && Math.round(raw.speed * 3.6) > 0) p.gs = Math.round(raw.speed * 3.6);
+  const orig = { lat: p.lat, lon: p.lon, alt: p.alt, altRef: p.altRef, name: p.name };
+  if (p.gs !== undefined) orig.gs = p.gs;
+  const dc = readDcs({ raw: raw, orig: orig });
+  if (dc) p.dcs = dc;
+  return p;
+}
+
+/* Un vol du snapshot → une route neuve (nommée d'après le groupe, liée au vol) ; trunc : le nombre de points au-delà de 30 */
+function routeFromFlight(fl, theatre) {
+  const pts = [];
+  let trunc = 0;
+  snapKeys(fl.points).forEach(k => {
+    const p = pointFromRaw(fl.points[k], k, pts.length, theatre);
+    if (!p) return;
+    if (pts.length >= MAX_POINTS) { trunc++; return; }
+    pts.push(p);
+  });
+  return { route: { name: cut60(fl.groupName), points: pts, flight: { groupName: fl.groupName, aircraftType: fl.aircraftType, coalition: fl.coalition } }, trunc: trunc };
+}
+
+/* Les numéros (à partir de 1) des routes liées à ce vol */
+function routesOfFlight(f) {
+  const out = [];
+  RSET.routes.forEach((r, i) => { if (sameFlight(r.flight, f)) out.push(i + 1); });
+  return out;
+}
+
+const HM = { mode: 'import', snap: null, flights: [], checked: new Set(), side: 'all', name: '' };
+
+function hqVisible() {
+  const side = HM.side, q = srNorm(HM.name);
+  return HM.flights.map((f, i) => ({ f: f, i: i })).filter(x =>
+    (side === 'all' || x.f.coalition === side) && (q === '' || srNorm(x.f.groupName).indexOf(q) >= 0));
+}
+
+/* Les routes que l'import ajouterait : la route active vide et sans lien prend la première (comme un fichier de route) */
+function hqImportPlan(n) {
+  const th = HM.snap.sourceMission.theatre, other = th !== S.theatre;
+  const replace = !other && routeIsEmpty(RSET.routes[RSET.active]);
+  const total = (other ? 0 : RSET.routes.length - (replace ? 1 : 0)) + n;
+  return { other: other, replace: replace, over: Math.max(0, total - MAX_ROUTES) };
+}
+
+function hqRender() {
+  const link = HM.mode === 'link', th = HM.snap.sourceMission.theatre, other = th !== S.theatre;
+  $('hq-title').textContent = t(link ? 'hq.link.title' : 'hq.title');
+  $('hq-file').textContent = t('hq.file', { f: HM.snap.sourceMission.filename || '', th: theatreText(th) });
+  const w = $('hq-warn');
+  w.hidden = !other;
+  if (other) w.textContent = t(link ? 'hq.warn.link' : 'hq.warn', { th: theatreText(th), cur: theatreText(S.theatre) });
+  /* le filtre de camp : Tous, Rouge, Bleu (et Neutre si la mission en a) */
+  const sides = [['all', t('hq.all')], ['red', t('hq.red')], ['blue', t('hq.blue')]];
+  if (HM.flights.some(f => f.coalition === 'neutrals')) sides.push(['neutrals', t('hq.neutral')]);
+  const sd = $('hq-side');
+  sd.innerHTML = sides.map(x => '<option value="' + x[0] + '">' + esc(x[1]) + '</option>').join('');
+  sd.value = HM.side;
+  hqRenderList();
+}
+
+function hqRenderList() {
+  const link = HM.mode === 'link', vis = hqVisible();
+  $('hq-list').innerHTML = vis.length ? vis.map(x => {
+    const f = x.f, used = routesOfFlight(f), n = f.points ? snapKeys(f.points).length : 0;
+    return '<label class="rt-row"><input type="' + (link ? 'radio' : 'checkbox') + '" name="hq-flight" data-i="' + x.i + '"' + (HM.checked.has(x.i) ? ' checked' : '') + '>' +
+      '<span class="rt-nm">' + esc(f.groupName) + '</span><span class="rt-n"><span>' + esc(f.aircraftType + (f.coalition ? ' · ' + sideText(f.coalition).toLowerCase() : '') + ' · ' + t('hq.pts', { n: n })) + '</span>' +
+      (used.length ? '<span class="rt-dup">' + esc(t('hq.in', { n: used.join(', ') })) + '</span>' : '') + '</span></label>';
+  }).join('') : '<p class="rt-empty">' + esc(t(HM.flights.length ? 'hq.none' : 'hq.noFlights')) + '</p>';
+  hqSync();
+}
+
+/* Le bouton : « Importer n vol(s) » (les vols cochés qu'on voit) ou « Lier » ; la limite de 12 routes */
+function hqSync() {
+  const go = $('hq-go'), lim = $('hq-limit');
+  if (HM.mode === 'link') {
+    go.textContent = t('hq.go.link');
+    go.disabled = !hqVisible().some(x => HM.checked.has(x.i));
+    lim.hidden = true;
+    return;
+  }
+  const n = hqVisible().filter(x => HM.checked.has(x.i)).length;
+  const plan = hqImportPlan(n);
+  go.textContent = t(CURRENT_LANG === 'fr' ? (n < 2 ? 'hq.go.1' : 'hq.go.n') : (n === 1 ? 'hq.go.1' : 'hq.go.n'), { n: n });
+  go.disabled = n === 0 || plan.over > 0;
+  lim.hidden = plan.over === 0;
+  if (plan.over > 0) lim.textContent = t('hq.limit', { n: plan.over });
+}
+
+function openHqModal(mode, opener) {
+  const hq = hqState();
+  if (!hq.ok) { showToast(hq.tip); return; }
+  syncActive();
+  HM.mode = mode;
+  HM.snap = hq.snap;
+  HM.flights = snapFlights(hq.snap);
+  HM.side = 'all';
+  HM.name = '';
+  $('hq-name').value = '';
+  HM.checked = new Set();
+  const cur = RSET.routes[RSET.active].flight;
+  HM.flights.forEach((f, i) => {
+    if (mode === 'import') { if (!routesOfFlight(f).length) HM.checked.add(i); }       /* un vol déjà en route est décoché par défaut, il reste cochable */
+    else if (cur && sameFlight(cur, f) && !HM.checked.size) HM.checked.add(i);
+  });
+  hqRender();
+  rtShow('hq-modal', opener, 'hq-go');
+  const first = $('hq-list').querySelector('input');
+  if (first) first.focus({ preventScroll: true });
+}
+
+/* Changer de théâtre supprime les routes : la confirmation, s'il y a quelque chose à perdre */
+function confirmTheatreReset(th) {
+  const n = RSET.routes.length;
+  if (!RSET.routes.some(r => r.points.length || r.flight)) return true;
+  return confirm(t(n === 1 ? 'confirm.theatre.1' : 'confirm.theatre', { th: theatreText(th), n: n }));
+}
+
+/* Le théâtre change comme aujourd'hui (setTheatre : références, calques et réglages partagés suivent), puis toutes les routes sont supprimées */
+function resetRoutesForTheatre(th, routes) {
+  RSET = { active: 0, routes: routes && routes.length ? routes : [{ name: '', points: [], flight: null }] };
+  const a = RSET.routes[0];
+  S.name = a.name; S.points = a.points;
+  sel = -1; selR = -1;
+  setTheatre(th);
+  persistState();
+  renderAll();
+}
+
+function frameRoutes(list) {
+  const pts = [];
+  list.forEach(r => r.points.forEach(p => pts.push(p)));
+  if (!pts.length) { if (map) setTheatreView(); return; }
+  applyView(() => {
+    if (pts.length === 1) { map.setView([pts[0].lat, pts[0].lon], 11, { animate: false }); return; }
+    map.fitBounds(L.latLngBounds(pts.map(p => [p.lat, p.lon])).pad(0.25), { animate: false, maxZoom: 15 });
+  });
+}
+
+function hqGo() {
+  const picks = hqVisible().filter(x => HM.checked.has(x.i));
+  if (!picks.length) return;
+  const th = HM.snap.sourceMission.theatre;
+  if (!hasRouteTool(th)) return;
+  syncActive();
+  if (HM.mode === 'link') {
+    const f = HM.flights[picks[0].i];
+    const link = { groupName: f.groupName, aircraftType: f.aircraftType, coalition: f.coalition };
+    if (th !== S.theatre) {
+      if (!confirmTheatreReset(th)) return;
+      rtHide('hq-modal');
+      resetRoutesForTheatre(th, [{ name: '', points: [], flight: link }]);
+    } else {
+      rtHide('hq-modal');
+      setActiveFlight(link);
+    }
+    showToast(t('toast.linked', { name: f.groupName }));
+    return;
+  }
+  const plan = hqImportPlan(picks.length);
+  if (plan.over > 0) return;
+  if (plan.other && !confirmTheatreReset(th)) return;
+  let trunc = [];
+  const made = picks.map(x => {
+    const r = routeFromFlight(HM.flights[x.i], th);
+    if (r.trunc) trunc.push(r.route.name);
+    return r.route;
+  });
+  rtHide('hq-modal');
+  if (plan.other) {
+    resetRoutesForTheatre(th, made);
+  } else {
+    const list = RSET.routes.slice();
+    let act;
+    if (plan.replace) { list[RSET.active] = made[0]; act = RSET.active; list.push.apply(list, made.slice(1)); }
+    else { act = list.length; list.push.apply(list, made); }
+    RSET.routes = list;
+    RSET.active = act;
+    const a = list[act];
+    S.name = a.name; S.points = a.points;
+    sel = -1; selR = -1;
+    persistState();
+    renderAll();
+  }
+  frameRoutes(made);
+  showToast(t(made.length === 1 ? 'toast.hqImported.1' : 'toast.hqImported.n', { n: made.length }) + (trunc.length ? ' · ' + t('toast.hqTrunc', { name: trunc.join(', ') }) : ''), trunc.length ? 6000 : 3000);
+}
+
+/* ============= PAQUET DE VOL ============= */
+const PM = { checked: new Set() };
+
+/* Les routes de la fenêtre : { i, ok (liée et non vide), why (raison de l'inactivité) } ; deux routes d'un même vol ne se cochent pas ensemble :
+   la première cochée garde le vol, les suivantes sont inactives tant qu'elle l'est */
+function pkRows() {
+  syncActive();
+  const rows = [];
+  RSET.routes.forEach((r, i) => {
+    let why = '';
+    if (!r.flight) why = t('pk.off.unlinked');
+    else if (!r.points.length) why = t('pk.off.empty');
+    else {
+      for (let j = 0; j < i; j++) {
+        if (PM.checked.has(j) && sameFlight(RSET.routes[j].flight, r.flight)) { why = t('pk.same', { n: j + 1 }); PM.checked.delete(i); break; }
+      }
+    }
+    rows.push({ i: i, r: r, why: why });
+  });
+  return rows;
+}
+
+function pkName(idxs) {
+  const r = RSET.routes[idxs[0]];
+  const base = r.name !== '' ? r.name : r.flight.groupName;
+  return 'paquet_rp_' + String(base).replace(/[^A-Za-z0-9_-]/g, '_').slice(0, 40) + (idxs.length > 1 ? '_+' + (idxs.length - 1) : '');
+}
+
+function pkRender() {
+  const rows = pkRows();
+  $('pk-list').innerHTML = rows.map(x => {
+    const ok = x.why === '';
+    return '<label class="rt-row' + (ok ? '' : ' off') + '"><input type="checkbox" data-i="' + x.i + '"' + (ok && PM.checked.has(x.i) ? ' checked' : '') + (ok ? '' : ' disabled') + '>' +
+      '<span class="rt-two"><span class="rt-nm">' + esc((x.i + 1) + ' · ' + (x.r.name !== '' ? x.r.name : t('rs.unnamed'))) + '</span>' +
+      '<small>' + esc(ok ? flightText(x.r.flight) + ' — ' + t('hq.pts', { n: x.r.points.length }) : x.why) + '</small></span></label>';
+  }).join('');
+  const idxs = rows.filter(x => x.why === '' && PM.checked.has(x.i)).map(x => x.i);
+  $('pk-fname').textContent = idxs.length ? t('pk.file', { f: pkName(idxs) + '_' + pkStamp() + '.json' }) : '';
+  const go = $('pk-go');
+  go.textContent = t(CURRENT_LANG === 'fr' ? (idxs.length < 2 ? 'pk.go.1' : 'pk.go.n') : (idxs.length === 1 ? 'pk.go.1' : 'pk.go.n'), { n: idxs.length });
+  go.disabled = idxs.length === 0;
+}
+
+function pkStamp() {
+  const d = new Date();
+  return d.getFullYear() + pad2(d.getMonth() + 1) + pad2(d.getDate()) + '-' + pad2(d.getHours()) + pad2(d.getMinutes()) + pad2(d.getSeconds());
+}
+
+function openPackageModal(opener) {
+  const pk = packageState();
+  if (!pk.ok) { showToast(pk.tip); return; }
+  syncActive();
+  PM.checked = new Set();
+  RSET.routes.forEach((r, i) => {
+    if (!r.flight || !r.points.length) return;
+    if (RSET.routes.some((q, j) => j < i && PM.checked.has(j) && sameFlight(q.flight, r.flight))) return;
+    PM.checked.add(i);
+  });
+  pkRender();
+  rtShow('pk-modal', opener, 'pk-go');
+}
+
+/* Le point <k> d'un paquet : avec sa source de mission, une copie de la table brute où seul ce qui a changé depuis l'import est réécrit ; sans, un point neuf */
+function packPoint(p, i, th) {
+  const xy = llToDcs(th, p.lat, p.lon);
+  const d = p.dcs;
+  if (d && d.raw && typeof d.raw === 'object' && !Array.isArray(d.raw) && d.orig && typeof d.orig === 'object') {
+    const o = JSON.parse(JSON.stringify(d.raw)), og = d.orig;
+    let moved = true;
+    if (validCoord(og.lat, og.lon)) {
+      const was = llToDcs(th, og.lat, og.lon);
+      moved = Math.hypot(xy.x - was.x, xy.y - was.y) > 1;
+    }
+    if (moved) {
+      o.x = xy.x; o.y = xy.y;
+      o.type = 'Turning Point'; o.action = 'Turning Point';
+      delete o.airdromeId; delete o.helipadId; delete o.linkUnit;
+    }
+    if (p.alt !== og.alt || p.altRef !== og.altRef) { o.alt = p.alt; o.alt_type = p.altRef === 'MSL' ? 'BARO' : 'RADIO'; }
+    if (i > 0 && p.gs !== og.gs) o.speed = ((typeof p.gs === 'number' && p.gs > 0) ? p.gs : S.groundSpeed) / 3.6;
+    if (p.name !== og.name) o.name = p.name;
+    return o;
+  }
+  const gs = (i > 0 && typeof p.gs === 'number' && p.gs > 0) ? p.gs : S.groundSpeed;
+  return {
+    type: 'Turning Point', action: 'Turning Point', x: xy.x, y: xy.y, alt: p.alt, alt_type: p.altRef === 'MSL' ? 'BARO' : 'RADIO', speed: gs / 3.6, name: p.name,
+    ETA: 0, ETA_locked: false, speed_locked: true, formation_template: '', task: { id: 'ComboTask', params: { tasks: {} } }
+  };
+}
+
+/* Le paquet (dcs-flight-package-v1) des routes idxs ; la mission source est celle du snapshot si tous ces vols en viennent */
+function buildPackage(idxs) {
+  syncActive();
+  const th = S.theatre;
+  const flights = idxs.map(i => {
+    const r = RSET.routes[i], pts = {};
+    r.points.forEach((p, k) => { pts[String(k + 1)] = packPoint(p, k, th); });
+    return { groupName: r.flight.groupName, aircraftType: r.flight.aircraftType, coalition: r.flight.coalition, groupFrequency: null, route: { points: pts }, units: [] };
+  });
+  let src = null;
+  const snap = readSnapshot();
+  if (snap && snap.sourceMission.theatre === th) {
+    const sf = snapFlights(snap);
+    if (idxs.every(i => sf.some(f => sameFlight(f, RSET.routes[i].flight)))) {
+      src = { filename: snap.sourceMission.filename, fingerprint: snap.sourceMission.fingerprint };
+    }
+  }
+  return { format: PACKAGE_FORMAT, createdAt: new Date().toISOString(), createdBy: 'Route Planner', theatre: th, sourceMission: src, flights: flights };
+}
+
+function pkGo() {
+  const idxs = pkRows().filter(x => x.why === '' && PM.checked.has(x.i)).map(x => x.i);
+  if (!idxs.length || !packageState().ok) return;
+  const pkg = buildPackage(idxs);
+  rtHide('pk-modal');
+  deliverJsonFile(pkg, pkName(idxs) + '_' + pkStamp() + '.json', t(idxs.length === 1 ? 'toast.pkExported.1' : 'toast.pkExported.n', { n: idxs.length }));
+}
+
+/* ---------- le câblage ---------- */
+function routesBind() {
+  $('route-list').addEventListener('change', e => activateRoute(parseInt(e.target.value, 10), true));
+  $('rs-add').addEventListener('click', addRoute);
+  $('rs-dup').addEventListener('click', duplicateRoute);
+  $('rs-del').addEventListener('click', deleteRoute);
+  $('rs-hq').addEventListener('click', ev => openHqModal('import', ev.currentTarget));
+  $('rs-link').addEventListener('click', ev => openHqModal('link', ev.currentTarget));
+  $('rs-unlink').addEventListener('click', () => setActiveFlight(null));
+  $('btn-package').addEventListener('click', ev => openPackageModal(ev.currentTarget));
+  $('btn-save-all').addEventListener('click', onSaveAllClick);
+  ['hq-backdrop', 'hq-close', 'hq-cancel'].forEach(id => $(id).addEventListener('click', () => rtHide('hq-modal')));
+  ['pk-backdrop', 'pk-close', 'pk-cancel'].forEach(id => $(id).addEventListener('click', () => rtHide('pk-modal')));
+  $('hq-go').addEventListener('click', hqGo);
+  $('pk-go').addEventListener('click', pkGo);
+  $('hq-side').addEventListener('change', e => { HM.side = e.target.value; hqRenderList(); });
+  $('hq-name').addEventListener('input', e => { HM.name = e.target.value; hqRenderList(); });
+  $('hq-list').addEventListener('change', e => {
+    const i = parseInt(e.target.dataset.i, 10);
+    if (!(i >= 0)) return;
+    if (HM.mode === 'link') HM.checked = new Set([i]);
+    else if (e.target.checked) HM.checked.add(i); else HM.checked.delete(i);
+    hqSync();
+  });
+  $('pk-list').addEventListener('change', e => {
+    const i = parseInt(e.target.dataset.i, 10);
+    if (!(i >= 0)) return;
+    if (e.target.checked) PM.checked.add(i); else PM.checked.delete(i);
+    pkRender();
+  });
+  window.addEventListener('storage', e => { if (e.key === KEY_SNAPSHOT) routesRender(); });
+  window.addEventListener('focus', routesRender);
 }
 
 /* ============= LE ROUTE TOOL DE DCS : PROJECTIONS, LECTURE, ÉCRITURE ============= */
@@ -8172,7 +9066,7 @@ function bytesToText(bytes) {
 /* ---- Fenêtres : « Ouvrir une route du Route Tool » et « Exporter vers le Route Tool » ---- */
 const RT = { fileName: '', routes: [], theatre: 'Caucasus', sel: 0, opener: null };
 
-const RT_MODALS = ['rt-open-modal', 'rt-export-modal', 'cf-import-modal', 'cf-export-modal', 'fiche'];
+const RT_MODALS = ['rt-open-modal', 'rt-export-modal', 'cf-import-modal', 'cf-export-modal', 'hq-modal', 'pk-modal', 'fiche'];
 function rtVisible(id) { return !$(id).hidden; }
 function rtShow(id, opener, focusId) {
   RT.opener = opener || null;
@@ -8571,7 +9465,8 @@ function rtOpenGo() {
     pts.push({ name: p.name !== '' ? p.name : nextName(pts, pts.length), lat: r7(ll.lat), lon: r7(ll.lon), alt: p.alt, altRef: p.altRef });
   });
   rtHide('rt-open-modal');
-  setRoute({ name: r.name, theatre: th, units: S.units, navDisplay: S.navDisplay, groundSpeed: S.groundSpeed, legBoxes: S.legBoxes, points: pts, refs: [] });
+  const keep = S.points.length > 0 || RSET.routes.length > 1;       /* une route de plus : les références partagées restent */
+  if (!openAsRoute({ name: r.name, theatre: th, units: S.units, navDisplay: S.navDisplay, groundSpeed: S.groundSpeed, legBoxes: S.legBoxes, points: pts, refs: keep ? S.refs : [] })) return;
   showToast(t('toast.rtOpened') + (dropped ? ' · ' + t('toast.dropped', { n: dropped }) : ''));
 }
 
@@ -8725,12 +9620,12 @@ function cfImportGo() {
 }
 
 /* ---- Fenêtre « Exporter » : la route et les calques que le fichier emporte ---- */
-const CFE = { route: true, checked: [] };
+const CFE = { route: true, checked: [], all: false };
 
 function cfExportRender() {
   $('cf-export-list').innerHTML =
-    '<label class="rt-row"><input type="checkbox" data-k="route"' + (CFE.route ? ' checked' : '') + '><span class="rt-nm">' + esc(t('cf.exp.route')) + '</span>' +
-    '<span class="rt-n">' + esc(t('cf.exp.routeN', { n: S.points.length, m: S.refs.length })) + '</span></label>' +
+    '<label class="rt-row"><input type="checkbox" data-k="route"' + (CFE.route ? ' checked' : '') + '><span class="rt-nm">' + esc(t(CFE.all ? 'cf.exp.routes' : 'cf.exp.route')) + '</span>' +
+    '<span class="rt-n">' + esc(CFE.all ? t('cf.exp.routesN', { n: RSET.routes.length, p: RSET.routes.reduce((a, r) => a + r.points.length, 0), m: S.refs.length }) : t('cf.exp.routeN', { n: S.points.length, m: S.refs.length })) + '</span></label>' +
     CF_LAYERS.map((l, i) =>
       '<label class="rt-row"><input type="checkbox" data-i="' + i + '"' + (CFE.checked[i] ? ' checked' : '') + '>' +
       '<span class="rt-nm">' + esc(l.name) + '</span><span class="rt-n">' + esc(cfCounts(l.items)) + '</span></label>').join('');
@@ -8740,7 +9635,8 @@ function cfExportRender() {
 /* Exporter sans rien de coché est désactivé */
 function cfExportSync() { $('cf-export-go').disabled = !(CFE.route || CFE.checked.some(Boolean)); }
 
-function openCfExport(opener) {
+function openCfExport(opener, all) {
+  CFE.all = !!all;
   CFE.route = true;
   CFE.checked = CF_LAYERS.map(l => l.visible);
   cfExportRender();
@@ -8750,7 +9646,7 @@ function openCfExport(opener) {
 function cfExportGo() {
   const sel = { route: CFE.route, layers: CF_LAYERS.filter((l, i) => CFE.checked[i]).map(l => l.id) };
   rtHide('cf-export-modal');
-  downloadJson(sel);
+  if (CFE.all) downloadSet(sel); else downloadJson(sel);
 }
 
 /* « Enregistrer » et « Exporter JSON » : sans calque, le fichier d'aujourd'hui, sans fenêtre ; avec des calques, la fenêtre « Exporter » */
@@ -8779,7 +9675,7 @@ function sendToDatacard() {
    les cinq premières lignes vivent dans rp_display_v1, les quatre autres dans S.ui (route_state_v1, comme avant). */
 const DSP = { open: false, panel: null, x0: 0, y0: 0 };
 const DSP_ROWS = [
-  { g: 'mission', k: 'route', l: 'dsp.route', n: () => t('dsp.pts', { n: S.points.length }) },
+  { g: 'mission', k: 'routes', l: 'dsp.routes', seg: true, n: () => String(RSET.routes.length) },
   { g: 'mission', k: 'refs', l: 'dsp.refs', n: () => String(S.refs.length) },
   { g: 'layers', k: 'draw', l: 'dsp.draw' },
   { g: 'layers', k: 'sym', l: 'dsp.sym' },
@@ -8794,11 +9690,17 @@ function loadDisplay() {
   try {
     const raw = localStorage.getItem(KEY_DISPLAY);
     const o = raw ? JSON.parse(raw) : null;
-    if (o && typeof o === 'object' && !Array.isArray(o)) Object.keys(DISP).forEach(k => { if (typeof o[k] === 'boolean') DISP[k] = o[k]; });
+    if (o && typeof o === 'object' && !Array.isArray(o)) {
+      Object.keys(DISP).forEach(k => { if (k !== 'routes' && typeof o[k] === 'boolean') DISP[k] = o[k]; });
+      /* « routes » remplace « route » : un profil d'avant (route: false) s'ouvre sur « Aucune », (route: true) sur « Toutes » */
+      if (ROUTES_SHOW.indexOf(o.routes) !== -1) DISP.routes = o.routes;
+      else if (o.route === false) DISP.routes = 'none';
+      else if (o.route === true) DISP.routes = 'all';
+    }
   } catch (e) { /* valeurs par défaut */ }
 }
 function saveDisplay() {
-  try { localStorage.setItem(KEY_DISPLAY, JSON.stringify({ route: DISP.route, refs: DISP.refs, draw: DISP.draw, sym: DISP.sym, cf: DISP.cf })); } catch (e) { /* stockage indisponible */ }
+  try { localStorage.setItem(KEY_DISPLAY, JSON.stringify({ routes: DISP.routes, refs: DISP.refs, draw: DISP.draw, sym: DISP.sym, cf: DISP.cf })); } catch (e) { /* stockage indisponible */ }
 }
 
 /* L'état d'une ligne : cochée, grisée, info-bulle */
@@ -8818,7 +9720,7 @@ function dspState(k) {
 
 /* Le point ambre : au moins une ligne n'est pas à sa valeur par défaut (tout affiché, sauf Lieux masqué) */
 function dspChanged() {
-  return !(DISP.route && DISP.refs && DISP.draw && DISP.sym && DISP.cf && S.ui.grid && S.ui.towns && S.ui.airfields) || !!S.ui.places;
+  return !(DISP.routes === 'all' && DISP.refs && DISP.draw && DISP.sym && DISP.cf && S.ui.grid && S.ui.towns && S.ui.airfields) || !!S.ui.places;
 }
 
 function dspSync() {
@@ -8829,6 +9731,16 @@ function dspSync() {
   DSP_ROWS.forEach(r => {
     const row = DSP.panel.querySelector('[data-k="' + r.k + '"]');
     if (!row) return;
+    if (r.seg) {
+      row.querySelectorAll('[data-routes]').forEach(b => {
+        const on = b.getAttribute('data-routes') === DISP.routes;
+        b.classList.toggle('on', on);
+        b.setAttribute('aria-checked', on ? 'true' : 'false');
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+      if (r.n) row.querySelector('.dsp-n').textContent = r.n();
+      return;
+    }
     const st = dspState(r.k);
     row.setAttribute('aria-checked', st.on ? 'true' : 'false');
     if (st.off) row.setAttribute('aria-disabled', 'true'); else row.removeAttribute('aria-disabled');
@@ -8854,6 +9766,39 @@ function dspBuild() {
       sub.setAttribute('role', 'presentation');
       sub.textContent = t('dsp.g.' + g);
       ul.appendChild(sub);
+    }
+    if (r.seg) {
+      /* « Routes » : le titre et son compte, puis un sélecteur à trois positions (Aucune · Sélectionnée · Toutes) */
+      const box = document.createElement('div');
+      box.className = 'dsp-routes';
+      box.setAttribute('role', 'group');
+      box.setAttribute('aria-label', t(r.l));
+      box.setAttribute('data-k', r.k);
+      const h = document.createElement('div');
+      h.className = 'dsp-routes-h';
+      const hl = document.createElement('span');
+      hl.textContent = t(r.l);
+      const hn = document.createElement('span');
+      hn.className = 'dsp-n';
+      h.appendChild(hl);
+      h.appendChild(hn);
+      box.appendChild(h);
+      const seg = document.createElement('span');
+      seg.className = 'tb-group dsp-seg';
+      seg.setAttribute('role', 'radiogroup');
+      ROUTES_SHOW.forEach(v => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'tb-btn';
+        b.setAttribute('role', 'radio');
+        b.setAttribute('data-routes', v);
+        b.tabIndex = -1;
+        b.textContent = t('dsp.routes.' + v);
+        seg.appendChild(b);
+      });
+      box.appendChild(seg);
+      ul.appendChild(box);
+      return;
     }
     const row = document.createElement('div');
     row.className = 'tbm-opt dsp-opt';
@@ -8910,6 +9855,8 @@ function dspOpen() {
   DSP.open = true;
   dspBuild();
   ul.addEventListener('click', e => {
+    const sg = e.target.closest ? e.target.closest('[data-routes]') : null;
+    if (sg) { dspSetRoutes(sg.getAttribute('data-routes')); return; }
     const row = e.target.closest ? e.target.closest('.dsp-opt') : null;
     if (!row || row.getAttribute('aria-disabled') === 'true') return;
     dspToggle(row.getAttribute('data-k'));
@@ -8934,7 +9881,7 @@ function dspClose(refocus) {
 }
 
 function dspKey(e) {
-  const rows = Array.prototype.slice.call(DSP.panel.querySelectorAll('.dsp-opt:not([aria-disabled="true"])'));
+  const rows = Array.prototype.slice.call(DSP.panel.querySelectorAll('.dsp-opt:not([aria-disabled="true"]), [data-routes]'));
   const cur = rows.indexOf(document.activeElement);
   const go = k => { if (rows[k]) { rows[k].focus({ preventScroll: true }); rows[k].scrollIntoView({ block: 'nearest' }); } };
   const k = e.key;
@@ -8942,7 +9889,11 @@ function dspKey(e) {
   else if (k === 'ArrowUp') { e.preventDefault(); go(cur < 0 ? rows.length - 1 : Math.max(0, cur - 1)); }
   else if (k === 'Home') { e.preventDefault(); go(0); }
   else if (k === 'End') { e.preventDefault(); go(rows.length - 1); }
-  else if ((k === 'Enter' || k === ' ') && cur >= 0) { e.preventDefault(); dspToggle(rows[cur].getAttribute('data-k')); }
+  else if ((k === 'Enter' || k === ' ') && cur >= 0) {
+    e.preventDefault();
+    if (rows[cur].hasAttribute('data-routes')) dspSetRoutes(rows[cur].getAttribute('data-routes')); else dspToggle(rows[cur].getAttribute('data-k'));
+  }
+  else if ((k === 'ArrowRight' || k === 'ArrowLeft') && cur >= 0 && rows[cur].hasAttribute('data-routes')) { e.preventDefault(); go(Math.max(0, Math.min(rows.length - 1, cur + (k === 'ArrowRight' ? 1 : -1)))); }
   else if (k === 'Escape') { e.preventDefault(); e.stopPropagation(); dspClose(true); }
   else if (k === 'Tab') dspClose(true);
 }
@@ -8959,12 +9910,19 @@ function dspOutside(e) {
 }
 
 /* Une ligne bascule ; le panneau reste ouvert */
+function dspSetRoutes(v) {
+  if (ROUTES_SHOW.indexOf(v) === -1 || DISP.routes === v) return;
+  DISP.routes = v;
+  saveDisplay();
+  drawRoute();
+  dspSync();
+}
+
 function dspToggle(k) {
-  if (k === 'route' || k === 'refs' || k === 'draw' || k === 'sym' || k === 'cf') {
+  if (k === 'refs' || k === 'draw' || k === 'sym' || k === 'cf') {
     DISP[k] = !DISP[k];
     saveDisplay();
-    if (k === 'route') drawRoute();
-    else if (k === 'refs') drawRefs();
+    if (k === 'refs') drawRefs();
     else drawLayers();
   } else if (k === 'grid') {
     S.ui.grid = !S.ui.grid;
@@ -8991,9 +9949,9 @@ function dspToggle(k) {
 /* Le mode qui édite rend ce qu'il édite : Point la route, Réf. les points de référence, Dessin les dessins et les symboles ; rend la liste des lignes rendues */
 function dspReveal(mode) {
   const need = mode === 'wp' ? ['route'] : mode === 'ref' ? ['refs'] : mode === 'draw' ? ['draw', 'sym'] : [];
-  const shown = need.filter(k => !DISP[k]);
+  const shown = need.filter(k => k === 'route' ? DISP.routes === 'none' : !DISP[k]);
   if (!shown.length) return shown;
-  shown.forEach(k => { DISP[k] = true; });
+  shown.forEach(k => { if (k === 'route') DISP.routes = 'active'; else DISP[k] = true; });
   saveDisplay();
   dspSync();
   return shown;
@@ -9594,6 +10552,8 @@ function setLang(lang) {
   if (rtVisible('rt-export-modal')) rtExportRender();
   if (rtVisible('cf-import-modal')) cfImportRender();
   if (rtVisible('cf-export-modal')) cfExportRender();
+  if (rtVisible('hq-modal')) hqRender();
+  if (rtVisible('pk-modal')) pkRender();
   if (rtVisible('fiche')) ficheRender();
   expSyncTexts();
   if (DSP.open) dspBuild();
@@ -9659,7 +10619,8 @@ function bindEvents() {
   window.addEventListener('storage', e => {
     if (e.key === 'mission_snapshot_v1' && navIsCalc()) { renderNav(); drawRoute(); syncControls(); }
   });
-  $('route-name').addEventListener('input', e => { S.name = e.target.value; persistState(); });
+  $('route-name').addEventListener('input', e => { S.name = e.target.value; persistState(); routesRender(); });
+  routesBind();
   $('panel').addEventListener('focusin', ev => {
     const el = ev.target;
     if (el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) { spKbCheck(); revealPanelField(el); }
@@ -9912,6 +10873,7 @@ function tbmOpen(m) {
       const j = label.indexOf(' — ');
       if (j >= 0) { note = label.slice(j + 3); label = label.slice(0, j); }
     }
+    if (o.hasAttribute('data-right')) note = o.getAttribute('data-right');      /* une option qui porte son texte de droite (le vol lié d'une route) */
     txt.textContent = label;
     li.appendChild(mark);
     li.appendChild(txt);
@@ -10112,7 +11074,7 @@ function init() {
   applyI18nStatic();
   updateFlagButton();
   initToolbarMenus([['layer', () => t('tb.layer'), undefined, true], ['theatre', () => t('tb.theatre'), undefined, true], ['theme', () => t('tb.theme.tip')], ['rt-theatre', () => t('tb.theatre'), 'sheet']]);   /* les listes de la barre au thème de l'interface */
-  initFormMenus(sel => (sel.dataset.k === 'altRef' ? t('th.ref') : ''));   /* les listes des formulaires */
+  initFormMenus(sel => (sel.dataset.k === 'altRef' ? t('th.ref') : sel.dataset.lbl ? t(sel.dataset.lbl) : ''));   /* les listes des formulaires */
   loadState();
   loadLayers();
   loadDisplay();
@@ -10139,7 +11101,7 @@ function init() {
   window.__RP = { map: map, get decorGroup() { return decorGroup; }, timing: timing, get S() { return S; }, drawGrid: drawGrid, setBase: setBase, get baseLayers() { return baseLayers; }, get inFallback() { return inFallback; },
     get placesLayer() { return placesLayer; }, get airfieldLayer() { return afLayer; }, get tapMode() { return tapMode; },
     get townsLayer() { return twLayer; }, townsReport: townsReport, get search() { return SR; },
-    get layers() { return CF_LAYERS; }, get layersGroup() { return cfGroup; }, get draw() { return DR; }, get split() { return SP; }, get ruler() { return RL; } };
+    get layers() { return CF_LAYERS; }, get layersGroup() { return cfGroup; }, get routes() { syncActive(); return RSET; }, get othersGroup() { return othersGroup; }, get draw() { return DR; }, get split() { return SP; }, get ruler() { return RL; } };
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
