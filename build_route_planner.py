@@ -2300,6 +2300,8 @@ const I18N = {
     'toast.hqImported.1': '{n} route importée ✓',
     'toast.hqImported.n': '{n} routes importées ✓',
     'toast.hqTrunc': '{name} : tronquée à 30 points',
+    'toast.dcsKept': 'source DCS non gardée : {n} point(s)',
+    'toast.saveFail': 'Enregistrement local impossible (espace plein)',
     'toast.pkExported.1': '📦 {n} vol exporté ✓',
     'toast.pkExported.n': '📦 {n} vols exportés ✓',
     'toast.savedAll': 'Routes enregistrées ✓',
@@ -2776,6 +2778,8 @@ const I18N = {
     'toast.hqImported.1': '{n} route imported ✓',
     'toast.hqImported.n': '{n} routes imported ✓',
     'toast.hqTrunc': '{name}: cut to 30 points',
+    'toast.dcsKept': 'DCS source not kept: {n} point(s)',
+    'toast.saveFail': 'Cannot save locally (storage full)',
     'toast.pkExported.1': '📦 {n} flight exported ✓',
     'toast.pkExported.n': '📦 {n} flights exported ✓',
     'toast.savedAll': 'Routes saved ✓',
@@ -3154,12 +3158,13 @@ function readNavDisplay(nd) {
   };
 }
 
-/* La source d'un point venu d'une mission (p.dcs = { raw, orig }) : gardée si c'est un objet d'au plus 20 Kio de JSON, sinon retirée */
+/* La source d'un point venu d'une mission (p.dcs = { raw, orig }) : gardée si c'est un objet d'au plus 20 Kio (octets UTF-8) de JSON, sinon retirée */
 function readDcs(d) {
   if (!d || typeof d !== 'object' || Array.isArray(d)) return null;
   try {
     const j = JSON.stringify(d);
-    return j.length <= DCS_MAX_JSON ? JSON.parse(j) : null;
+    const n = typeof TextEncoder === 'function' ? new TextEncoder().encode(j).length : j.length;      /* des octets UTF-8, pas des caractères */
+    return n <= DCS_MAX_JSON ? JSON.parse(j) : null;
   } catch (e) { return null; }
 }
 
@@ -3222,10 +3227,15 @@ function parseRoute(src) {
   return { route: route, dropped: dropped, droppedRefs: droppedRefs };
 }
 
+let SAVE_FAILED = false;
 function persistState() {
   syncActive();
-  try { localStorage.setItem(KEY_STATE, JSON.stringify(S)); } catch (e) { /* quota ou stockage indisponible */ }
-  try { localStorage.setItem(KEY_SET, JSON.stringify(setObject())); } catch (e) { /* quota ou stockage indisponible */ }
+  let ok = true;
+  /* route_set_v1 d'abord, route_state_v1 (lu par le DG) ensuite ; un échec (quota ou stockage indisponible) est dit une fois par série */
+  try { localStorage.setItem(KEY_SET, JSON.stringify(setObject())); } catch (e) { ok = false; }
+  try { localStorage.setItem(KEY_STATE, JSON.stringify(S)); } catch (e) { ok = false; }
+  if (!ok && !SAVE_FAILED) { try { showToast(t('toast.saveFail'), 5000); } catch (e) { /* page pas encore prête */ } }
+  SAVE_FAILED = !ok;
 }
 
 function loadState() {
@@ -4243,9 +4253,10 @@ function createMap() {
   ringPane.style.zIndex = 650;
   ringPane.style.pointerEvents = 'none';
   map.createPane('refs').style.zIndex = 450;
-  /* Les autres routes : le liseré clair sous le tracé gris (volet des tracés, 400), la zone de toucher au-dessus (les marqueurs sont à 600) */
-  map.createPane('otherhalo').style.zIndex = 399;
-  map.createPane('otherhit').style.zIndex = 401;
+  /* Les autres routes : le liseré clair (355) et la zone de toucher (360) entre la grille (350) et les villes (370), donc sous les aérodromes, les calques et les points ;
+     le tracé gris lui-même est dans le volet des tracés (400), sous la route active */
+  map.createPane('otherhalo').style.zIndex = 355;
+  map.createPane('otherhit').style.zIndex = 360;
   /* Les chiffres des minutes : au-dessus des références, sous les points ; les boîtes de branche : au-dessus des points */
   map.createPane('legticks').style.zIndex = 420;        /* les traits des minutes : au-dessus de la route, sous les références */
   map.createPane('legnums').style.zIndex = 455;
@@ -7477,7 +7488,6 @@ function clearRoute() {
   if (!confirm(t('confirm.clear'))) return;
   S.name = '';
   S.points = [];
-  S.refs = [];
   sel = -1; selR = -1;
   persistState();
   renderAll();
@@ -7572,12 +7582,13 @@ function routesRender() {
   fl.className = 'rs-flight' + (r.flight ? '' : ' none');
   fl.innerHTML = r.flight ? '<b>' + esc(t('rs.flight')) + '</b><em>' + esc(flightText(r.flight)) + '</em>' : esc(t('rs.noflight'));
   $('rs-unlink').hidden = !r.flight;
-  const hq = hqState();
+  const snap = readSnapshot();      /* une lecture par rendu */
+  const hq = hqState(snap);
   $('rs-hq').disabled = !hq.ok;
   if (hq.ok) $('rs-hq').removeAttribute('title'); else $('rs-hq').title = hq.tip;
   $('rs-link').disabled = !hq.ok;
   if (hq.ok) $('rs-link').removeAttribute('title'); else $('rs-link').title = hq.tip;
-  const pk = packageState();
+  const pk = packageState(snap);
   $('btn-package').disabled = !pk.ok;
   if (pk.ok) $('btn-package').removeAttribute('title'); else $('btn-package').title = pk.tip;
   dspSync();
@@ -7588,8 +7599,8 @@ function flightText(f) { return f.groupName + ' · ' + f.aircraftType + (f.coali
 function theatreText(id) { return THEATRE_IDS.indexOf(id) !== -1 ? t('th.' + id) : String(id); }
 
 /* ---------- les autres routes, sur la carte ---------- */
-/* Sous la route active : trait fin gris à tiret-point (un tracé par route, dans le volet des tracés) sur un liseré clair (volet « otherhalo », dessous), sans
-   marqueur ni boîte ; un toucher en mode Point la rend active (une zone de toucher invisible, plus large que le trait, volet « otherhit »).
+/* Sous la route active : trait fin gris à tiret-point (un tracé par route, dans le volet des tracés) sur un liseré clair (volet « otherhalo », sous les villes), sans
+   marqueur ni boîte ; un toucher en mode Point la rend active (une zone de toucher invisible, plus large que le trait, volet « otherhit », sous les villes aussi).
    « Sélectionnée » et « Aucune » ne les montrent pas. */
 function drawOthers() {
   if (!othersGroup) return;
@@ -7611,13 +7622,24 @@ function drawOthers() {
 /* Ouvrir une route (dcs-route-v1) : sur une route active vide, elle y entre ; sinon elle s'ajoute comme route neuve ; au plafond de 12, rien */
 function openAsRoute(route) {
   syncActive();
-  if (S.points.length) {
-    if (RSET.routes.length >= MAX_ROUTES) { showToast(t('toast.routesMax')); return false; }
+  const empty = !S.points.length, act = RSET.active;
+  if (!empty && RSET.routes.length >= MAX_ROUTES) { showToast(t('toast.routesMax')); return false; }
+  /* un autre théâtre : la confirmation de la règle B s'il y a quelque chose à perdre dans une autre route (une route active vide, remplacée, garde son lien) */
+  const lost = RSET.routes.filter((r, i) => (r.points.length || r.flight) && !(empty && i === act)).length;
+  const reset = route.theatre !== S.theatre && lost > 0;
+  if (reset && !confirm(t(lost === 1 ? 'confirm.theatre.1' : 'confirm.theatre', { th: theatreText(route.theatre), n: lost }))) return false;
+  /* les références du RP que le fichier ne redonne pas seraient perdues : la confirmation d'aujourd'hui */
+  if (S.refs.length && JSON.stringify(S.refs) !== JSON.stringify(route.refs) && !confirm(t('confirm.open'))) return false;
+  if (reset) {
+    RSET = { active: 0, routes: [empty ? RSET.routes[act] : { name: '', points: [], flight: null }] };
+    S.name = RSET.routes[0].name; S.points = RSET.routes[0].points;
+  } else if (!empty) {
     RSET.routes.push({ name: '', points: [], flight: null });
     RSET.active = RSET.routes.length - 1;
     S.name = ''; S.points = [];
   }
-  setRoute(route);
+  /* route de plus : son nom, ses points et ses références viennent du fichier, les unités et les réglages restent ceux du RP ; route active vide remplacée : tout le fichier, comme avant */
+  setRoute(empty ? route : Object.assign({}, route, { units: S.units, navDisplay: S.navDisplay, groundSpeed: S.groundSpeed, legBoxes: S.legBoxes }));
   return true;
 }
 
@@ -7627,6 +7649,12 @@ function openRouteSet(parsed) {
   const sh = parseRoute(Object.assign({}, parsed, { format: FORMAT_ID, points: [], name: '' }));
   if (!rr || !sh) { showToast(t('err.json')); return; }
   const lays = Array.isArray(parsed.layers) ? parsed.layers.map(cfLayer).filter(Boolean) : [];
+  /* sans point dans aucune route et avec des calques (« Enregistrer tout », route décochée) : comme un fichier de calques seuls, les routes ne sont pas touchées */
+  if (!rr.routes.some(r => r.points.length) && lays.length) {
+    cfMerge(lays);
+    if (layersChanged()) showToast(t(cfOne(lays.length) ? 'toast.layersAdded.1' : 'toast.layersAdded.n', { n: lays.length }), 4500);
+    return;
+  }
   syncActive();
   if (RSET.routes.some(r => r.points.length) && !confirm(t('confirm.openSet'))) return;
   const act = readActiveIndex(parsed.active, rr.routes.length);
@@ -7691,17 +7719,17 @@ function snapKeys(points) {
 }
 
 /* « Depuis HQ » et « Lier à un vol… » : actifs avec un snapshot dont le théâtre a une projection */
-function hqState() {
-  const snap = readSnapshot();
+function hqState(known) {
+  const snap = known === undefined ? readSnapshot() : known;
   if (!snap) return { ok: false, tip: t('rs.hq.off.none'), snap: null };
   if (!hasRouteTool(snap.sourceMission.theatre)) return { ok: false, tip: t('rs.hq.off.theatre', { th: theatreText(snap.sourceMission.theatre) }), snap: snap };
   return { ok: true, tip: '', snap: snap };
 }
 
 /* « Paquet de vol » : actif si le théâtre de la route (et celui de la mission de HQ, quand il y en a une) a une projection */
-function packageState() {
+function packageState(known) {
   if (!hasRouteTool(S.theatre)) return { ok: false, tip: t('pk.off.theatre', { th: theatreText(S.theatre) }) };
-  const snap = readSnapshot();
+  const snap = known === undefined ? readSnapshot() : known;
   if (snap && !hasRouteTool(snap.sourceMission.theatre)) return { ok: false, tip: t('rs.hq.off.theatre', { th: theatreText(snap.sourceMission.theatre) }) };
   return { ok: true, tip: '' };
 }
@@ -7735,7 +7763,8 @@ function routeFromFlight(fl, theatre) {
     if (pts.length >= MAX_POINTS) { trunc++; return; }
     pts.push(p);
   });
-  return { route: { name: cut60(fl.groupName), points: pts, flight: { groupName: fl.groupName, aircraftType: fl.aircraftType, coalition: fl.coalition } }, trunc: trunc };
+  const nodcs = pts.filter(p => !p.dcs).length;      /* sources de mission retirées (plus de 20 Kio) */
+  return { route: { name: cut60(fl.groupName), points: pts, flight: { groupName: fl.groupName, aircraftType: fl.aircraftType, coalition: fl.coalition } }, trunc: trunc, nodcs: nodcs };
 }
 
 /* Les numéros (à partir de 1) des routes liées à ce vol */
@@ -7878,9 +7907,10 @@ function hqGo() {
   const plan = hqImportPlan(picks.length);
   if (plan.over > 0) return;
   if (plan.other && !confirmTheatreReset(th)) return;
-  let trunc = [];
+  let trunc = [], nodcs = 0;
   const made = picks.map(x => {
     const r = routeFromFlight(HM.flights[x.i], th);
+    nodcs += r.nodcs;
     if (r.trunc) trunc.push(r.route.name);
     return r.route;
   });
@@ -7901,7 +7931,7 @@ function hqGo() {
     renderAll();
   }
   frameRoutes(made);
-  showToast(t(made.length === 1 ? 'toast.hqImported.1' : 'toast.hqImported.n', { n: made.length }) + (trunc.length ? ' · ' + t('toast.hqTrunc', { name: trunc.join(', ') }) : ''), trunc.length ? 6000 : 3000);
+  showToast(t(made.length === 1 ? 'toast.hqImported.1' : 'toast.hqImported.n', { n: made.length }) + (trunc.length ? ' · ' + t('toast.hqTrunc', { name: trunc.join(', ') }) : '') + (nodcs ? ' · ' + t('toast.dcsKept', { n: nodcs }) : ''), (trunc.length || nodcs) ? 6000 : 3000);
 }
 
 /* ============= PAQUET DE VOL ============= */
@@ -8743,8 +8773,7 @@ function rtOpenGo() {
     pts.push({ name: p.name !== '' ? p.name : nextName(pts, pts.length), lat: r7(ll.lat), lon: r7(ll.lon), alt: p.alt, altRef: p.altRef });
   });
   rtHide('rt-open-modal');
-  const keep = S.points.length > 0 || RSET.routes.length > 1;       /* une route de plus : les références partagées restent */
-  if (!openAsRoute({ name: r.name, theatre: th, units: S.units, navDisplay: S.navDisplay, groundSpeed: S.groundSpeed, legBoxes: S.legBoxes, points: pts, refs: keep ? S.refs : [] })) return;
+  if (!openAsRoute({ name: r.name, theatre: th, units: S.units, navDisplay: S.navDisplay, groundSpeed: S.groundSpeed, legBoxes: S.legBoxes, points: pts, refs: [] })) return;
   showToast(t('toast.rtOpened') + (dropped ? ' · ' + t('toast.dropped', { n: dropped }) : ''));
 }
 
@@ -9229,7 +9258,7 @@ function dspReveal(mode) {
   const need = mode === 'wp' ? ['route'] : mode === 'ref' ? ['refs'] : mode === 'draw' ? ['draw', 'sym'] : [];
   const shown = need.filter(k => k === 'route' ? DISP.routes === 'none' : !DISP[k]);
   if (!shown.length) return shown;
-  shown.forEach(k => { if (k === 'route') DISP.routes = 'active'; else DISP[k] = true; });
+  shown.forEach(k => { if (k === 'route') DISP.routes = 'all'; else DISP[k] = true; });
   saveDisplay();
   dspSync();
   return shown;
@@ -9493,7 +9522,7 @@ function expSetOrient(o) {
 }
 
 /* Les groupes qui possèdent des tracés : après le rendu, un tracé que son groupe a détruit entre-temps ne revient pas */
-function expOwners() { return [routeGroup, decorGroup, cfGroup, refGroup, twLayer].filter(g => !!g); }
+function expOwners() { return [routeGroup, decorGroup, cfGroup, refGroup, twLayer, othersGroup].filter(g => !!g); }
 
 /* Chaque tracé de la carte (hors panes d'édition et de recherche) passe au rendu canevas, un rendu par pane, par retrait puis ajout ;
    l'ordre de création est gardé, donc l'ordre de superposition aussi */
