@@ -6,6 +6,8 @@ import os
 import base64
 import re
 
+from radio_block import build_block as build_radio_block
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 ASSETS_PATH = os.path.join(HERE, 'assets.json')
 if not os.path.isfile(ASSETS_PATH):
@@ -1215,8 +1217,9 @@ const I18N = {{
     'pk.flt.uncheck': 'Tout décocher',
     'pk.flt.shown': '{{0}} / {{1}} vols affichés',
     'pk.flt.aria': 'Filtres de la liste des vols',
-    'snap.radio.one': 'Poste {{1}} : {{0}} canal',
-    'snap.radio.many': 'Poste {{1}} : {{0}} canaux',
+    'snap.radio.name': 'Poste {{0}}',
+    'snap.radio.one': '{{1}} : {{0}} canal',
+    'snap.radio.many': '{{1}} : {{0}} canaux',
     'pk.remove': 'Retirer ce paquet',
     'pk.found': '→ trouvé',
     'pk.absent': 'absent de la mission',
@@ -1264,16 +1267,16 @@ const I18N = {{
     'pk.rep.warnN.many': '{{0}} avertissements',
     'pk.w.theatreRoute': '{{0}} : route non écrite — théâtre du paquet ({{1}}) différent de celui du .miz ({{2}})',
     'pk.w.noRoute': '{{0}} : le groupe n’a pas de route dans le .miz, route non écrite',
-    'pk.w.radio': '{{0}} : poste {{1}} absent de l’unité {{2}}, non créé',
-    'pk.w.chan': '{{0}} : canal {{1}} du poste {{2}} absent de l’unité {{3}}, non créé',
+    'pk.w.radio': '{{0}} : {{1}} absent de l’unité {{2}}, non créé',
+    'pk.w.chan': '{{0}} : canal {{1}} de {{2}} absent de l’unité {{3}}, non créé',
     'pk.w.payload': '{{0}} : l’unité {{1}} n’a pas d’emport dans le .miz, non écrit',
     'pk.w.livery': '{{0}} : livery_id absent de l’unité {{1}}, livrée non écrite',
     'pk.w.extraUnit': '{{0}} : l’unité « {{1}} » du paquet n’a pas de correspondance dans le groupe, ignorée',
     'pk.w.groupGone': 'groupe {{0}} introuvable après l’écriture précédente',
     'pk.w.unitGone': 'unité {{0}} introuvable',
-    'pk.w.radioGone': 'poste {{0}} introuvable pour l’unité {{1}}',
-    'pk.w.chanGone': 'canal {{0}} du poste {{1}} introuvable pour l’unité {{2}}',
-    'pk.w.noFreqPos': 'position du canal {{0}} du poste {{1}} absente',
+    'pk.w.radioGone': '{{0}} introuvable pour l’unité {{1}}',
+    'pk.w.chanGone': 'canal {{0}} de {{1}} introuvable pour l’unité {{2}}',
+    'pk.w.noFreqPos': 'position du canal {{0}} de {{1}} absente',
     'pk.w.noLiveryPos': 'position de la livrée absente pour l’unité {{0}}',
     'pk.w.noPointsPos': 'position de route.points absente, route non écrite',
     'pk.w.noPayloadPos': 'position de l’emport absente pour l’unité {{0}}',
@@ -1299,8 +1302,8 @@ const I18N = {{
     'pk.w.p1Fixed': '{{0}} : le point 1 de la mission ne peut pas être réécrit tel quel, route non écrite',
     'pk.e.reparse': 'texte écrit illisible ({{0}})',
     'pk.e.unitGone': 'unité {{0}} absente après l’écriture',
-    'pk.e.chanGone': 'canal {{0}} du poste {{1}} absent après l’écriture',
-    'pk.e.chanVal': 'canal {{0}} du poste {{1}} : attendu {{2}}, relu {{3}}',
+    'pk.e.chanGone': 'canal {{0}} de {{1}} absent après l’écriture',
+    'pk.e.chanVal': 'canal {{0}} de {{1}} : attendu {{2}}, relu {{3}}',
     'pk.e.livery': 'livrée : attendu « {{0}} », relu « {{1}} »',
     'pk.e.route': 'route.points relu différent du paquet',
     'pk.e.routeGone': 'route.points introuvable après l’écriture',
@@ -1415,8 +1418,9 @@ const I18N = {{
     'pk.flt.uncheck': 'Uncheck all',
     'pk.flt.shown': '{{0}} / {{1}} flights shown',
     'pk.flt.aria': 'Flight list filters',
-    'snap.radio.one': 'Radio {{1}}: {{0}} channel',
-    'snap.radio.many': 'Radio {{1}}: {{0}} channels',
+    'snap.radio.name': 'Radio {{0}}',
+    'snap.radio.one': '{{1}}: {{0}} channel',
+    'snap.radio.many': '{{1}}: {{0}} channels',
     'pk.remove': 'Remove this package',
     'pk.found': '→ found',
     'pk.absent': 'not in the mission',
@@ -1464,16 +1468,16 @@ const I18N = {{
     'pk.rep.warnN.many': '{{0}} warnings',
     'pk.w.theatreRoute': '{{0}}: route not written — the package’s theatre ({{1}}) differs from the .miz’s ({{2}})',
     'pk.w.noRoute': '{{0}}: the group has no route in the .miz, route not written',
-    'pk.w.radio': '{{0}}: radio {{1}} is missing on unit {{2}}, not created',
-    'pk.w.chan': '{{0}}: channel {{1}} of radio {{2}} is missing on unit {{3}}, not created',
+    'pk.w.radio': '{{0}}: {{1}} is missing on unit {{2}}, not created',
+    'pk.w.chan': '{{0}}: channel {{1}} of {{2}} is missing on unit {{3}}, not created',
     'pk.w.payload': '{{0}}: unit {{1}} has no loadout in the .miz, not written',
     'pk.w.livery': '{{0}}: no livery_id on unit {{1}}, livery not written',
     'pk.w.extraUnit': '{{0}}: the package’s unit “{{1}}” has no match in the group, ignored',
     'pk.w.groupGone': 'group {{0}} not found after the previous write',
     'pk.w.unitGone': 'unit {{0}} not found',
-    'pk.w.radioGone': 'radio {{0}} not found for unit {{1}}',
-    'pk.w.chanGone': 'channel {{0}} of radio {{1}} not found for unit {{2}}',
-    'pk.w.noFreqPos': 'position of channel {{0}} of radio {{1}} missing',
+    'pk.w.radioGone': '{{0}} not found for unit {{1}}',
+    'pk.w.chanGone': 'channel {{0}} of {{1}} not found for unit {{2}}',
+    'pk.w.noFreqPos': 'position of channel {{0}} of {{1}} missing',
     'pk.w.noLiveryPos': 'position of the livery missing for unit {{0}}',
     'pk.w.noPointsPos': 'position of route.points missing, route not written',
     'pk.w.noPayloadPos': 'position of the loadout missing for unit {{0}}',
@@ -1499,8 +1503,8 @@ const I18N = {{
     'pk.w.p1Fixed': '{{0}}: the mission’s point 1 cannot be rewritten as it is, route not written',
     'pk.e.reparse': 'written text unreadable ({{0}})',
     'pk.e.unitGone': 'unit {{0}} missing after the write',
-    'pk.e.chanGone': 'channel {{0}} of radio {{1}} missing after the write',
-    'pk.e.chanVal': 'channel {{0}} of radio {{1}}: expected {{2}}, read back {{3}}',
+    'pk.e.chanGone': 'channel {{0}} of {{1}} missing after the write',
+    'pk.e.chanVal': 'channel {{0}} of {{1}}: expected {{2}}, read back {{3}}',
     'pk.e.livery': 'livery: expected “{{0}}”, read back “{{1}}”',
     'pk.e.route': 'route.points read back differs from the package',
     'pk.e.routeGone': 'route.points not found after the write',
@@ -2719,9 +2723,9 @@ function renderSnapshot(snap) {{
         const chs = r.channels || {{}};
         const nCh = Object.keys(chs).length;
         const fmtCh = (v) => (typeof v === 'number' && v >= 1e6) ? String(Math.round(v / 1e3) / 1e3) : String(v);
-        let txt = tn('snap.radio', nCh, r.radioIndex);
-        if (chs[1] !== undefined && chs[1] !== null) txt += ' · C1 ' + fmtCh(chs[1]);
-        if (chs[2] !== undefined && chs[2] !== null) txt += ' · C2 ' + fmtCh(chs[2]);
+        let txt = tn('snap.radio', nCh, pkRadioLabel(u.type || fl.aircraftType, r.radioIndex));
+        if (chs[1] !== undefined && chs[1] !== null) txt += ' · C' + radioCockpitChannel(u.type || fl.aircraftType, r.radioIndex, 1) + ' ' + fmtCh(chs[1]);
+        if (chs[2] !== undefined && chs[2] !== null) txt += ' · C' + radioCockpitChannel(u.type || fl.aircraftType, r.radioIndex, 2) + ' ' + fmtCh(chs[2]);
         html += ' <span class="snap-unit-radio">' + h(txt) + '</span>';
       }}
       html += '</div>';
@@ -2991,11 +2995,11 @@ function buildPatchesFromPackage(pkg, ctx) {{
     if (!found) {{ warnings.push({{ key: 'pk.w.unitGone', args: [rOv.unitId] }}); continue; }}
     const u = found.unit;
     const radio = (u.radios || []).find(r => r.index === rOv.radioIndex);
-    if (!radio) {{ warnings.push({{ key: 'pk.w.radioGone', args: [rOv.radioIndex, rOv.unitId] }}); continue; }}
+    if (!radio) {{ warnings.push({{ key: 'pk.w.radioGone', args: [pkRadioArg(u.type, rOv.radioIndex), rOv.unitId] }}); continue; }}
     const ch = radio.channels && radio.channels[rOv.channel];
-    if (!ch) {{ warnings.push({{ key: 'pk.w.chanGone', args: [rOv.channel, rOv.radioIndex, rOv.unitId] }}); continue; }}
+    if (!ch) {{ warnings.push({{ key: 'pk.w.chanGone', args: [pkChanArg(u.type, rOv.radioIndex, rOv.channel), pkRadioArg(u.type, rOv.radioIndex), rOv.unitId] }}); continue; }}
     const fPos = ch.frequencyPos;
-    if (!fPos) {{ warnings.push({{ key: 'pk.w.noFreqPos', args: [rOv.channel, rOv.radioIndex] }}); continue; }}
+    if (!fPos) {{ warnings.push({{ key: 'pk.w.noFreqPos', args: [pkChanArg(u.type, rOv.radioIndex, rOv.channel), pkRadioArg(u.type, rOv.radioIndex)] }}); continue; }}
     if (seenOffsets.has(fPos.start.offset)) {{
       warnings.push({{ key: 'pk.w.dup', args: [fPos.start.offset] }});
       continue;
@@ -3084,9 +3088,9 @@ function verifyPatch(patchedSrc, pkg) {{
     const u = slot.unit;
     const radio = (u.radios || []).find(r => r.index === rOv.radioIndex);
     const ch = radio && radio.channels && radio.channels[rOv.channel];
-    if (!ch) {{ errors.push({{ key: 'pk.e.chanGone', args: [rOv.channel, rOv.radioIndex] }}); continue; }}
+    if (!ch) {{ errors.push({{ key: 'pk.e.chanGone', args: [pkChanArg(u.type, rOv.radioIndex, rOv.channel), pkRadioArg(u.type, rOv.radioIndex)] }}); continue; }}
     if (!deepEqValues(Number(ch.frequency), Number(rOv.frequency))) {{
-      errors.push({{ key: 'pk.e.chanVal', args: [rOv.channel, rOv.radioIndex, rOv.frequency, ch.frequency] }});
+      errors.push({{ key: 'pk.e.chanVal', args: [pkChanArg(u.type, rOv.radioIndex, rOv.channel), pkRadioArg(u.type, rOv.radioIndex), rOv.frequency, ch.frequency] }});
     }}
   }}
 
@@ -3120,7 +3124,7 @@ function verifyPatch(patchedSrc, pkg) {{
   }}
 
   if (errors.length > 0) {{
-    throw Object.assign(new Error('Auto-vérif post-patch échouée: ' + errors.map(e => e.key + '(' + e.args.join(',') + ')').join('; ')), {{ pkErrors: errors }});
+    throw Object.assign(new Error('Auto-vérif post-patch échouée: ' + errors.map(e => e.key + '(' + e.args.map(pkArgText).join(',') + ')').join('; ')), {{ pkErrors: errors }});
   }}
   const totalChecked = (ov.radios||[]).length + (ov.liveries||[]).length +
     (repl.route ? 1 : 0) + (repl.payloads||[]).length;
@@ -3139,10 +3143,22 @@ let _PK_REPORT  = null;          // compte rendu de la dernière application
 let _PK_BUSY    = false;
 const _PK_EXPORT_SEL = new Set();   // groupId des vols cochés pour l'export
 
+@@RADIO_BLOCK@@
+// Poste et canal comme au cockpit : un argument pkRadio (type, poste) ou pkChan (type, poste, canal du .miz) se lit à l'affichage
+// (nom du poste, à défaut « Poste n » ; numéro de canal du cockpit) ; le reste des messages garde le numéro du .miz
+function pkRadioLabel(type, n) {{ return radioPosteName(type, n) || tf('snap.radio.name', n); }}
+function pkArgText(a) {{
+  if (a && typeof a === 'object' && Array.isArray(a.pkRadio)) return pkRadioLabel(a.pkRadio[0], a.pkRadio[1]);
+  if (a && typeof a === 'object' && Array.isArray(a.pkChan)) return radioCockpitChannel(a.pkChan[0], a.pkChan[1], a.pkChan[2]);
+  return String(a);
+}}
+function pkRadioArg(type, n) {{ return {{ pkRadio: [type || '', n] }}; }}
+function pkChanArg(type, n, c) {{ return {{ pkChan: [type || '', n, c] }}; }}
+
 // tf : t() avec {{0}} {{1}}… ; tn : pluriel (clé.one / clé.many ; français < 2, anglais = 1), {{0}} = n
 function tf(key) {{
   let s = t(key);
-  for (let i = 1; i < arguments.length; i++) s = s.split('{{' + (i - 1) + '}}').join(String(arguments[i]));
+  for (let i = 1; i < arguments.length; i++) s = s.split('{{' + (i - 1) + '}}').join(pkArgText(arguments[i]));
   return s;
 }}
 function tn(key, n) {{
@@ -3558,12 +3574,12 @@ function pkPlanFlight(ctx, pk, fl, tg) {{
       let wrote = false;
       for (const r of u.radios) {{
         const tr = (tu.radios || []).find(x => x.index === r.radioIndex);
-        if (!tr) {{ warns.push({{ key: 'pk.w.radio', args: [name, r.radioIndex, tu.name] }}); continue; }}
+        if (!tr) {{ warns.push({{ key: 'pk.w.radio', args: [name, pkRadioArg(fl.aircraftType, r.radioIndex), tu.name] }}); continue; }}
         for (const [c, fr] of Object.entries(r.channels)) {{
           if (tr.channels && tr.channels[c]) {{
             plan.overrides.radios.push({{ unitId: tu.unitId, radioIndex: r.radioIndex, channel: c, frequency: fr }});
             done.chan++; wrote = true;
-          }} else warns.push({{ key: 'pk.w.chan', args: [name, c, r.radioIndex, tu.name] }});
+          }} else warns.push({{ key: 'pk.w.chan', args: [name, pkChanArg(fl.aircraftType, r.radioIndex, c), pkRadioArg(fl.aircraftType, r.radioIndex), tu.name] }});
         }}
       }}
       if (wrote) done.radioUnits++;
@@ -4118,6 +4134,7 @@ HTML_FINAL = (HTML
     .replace('__APPLY_PATCHES__', _APPLY_PATCHES)
     .replace('__RETOKENIZE__', _RETOKENIZE)
     .replace('__REBUILD_MIZ__', _REBUILD_MIZ)
+    .replace('@@RADIO_BLOCK@@\n', build_radio_block())
 )
 
 os.makedirs(os.path.join(HERE, 'dist'), exist_ok=True)

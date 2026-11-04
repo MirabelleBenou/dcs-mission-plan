@@ -3189,6 +3189,85 @@ function magYearSource(theatre, yearStr, force) {
   return { src: 'default', y: magDecYear('1985'), year: '1985', file: '', date: '' };
 }
 /* ===== FIN DE LA DÉCLINAISON MAGNÉTIQUE ===== */
+/* ===== POSTES RADIO (COMME AU COCKPIT) ===== */
+// Noms des postes par type d'appareil : table du Comm Plan Editor de Mission Tools (clé = unit.type, sensible à la casse).
+const RADIO_POSTES = {
+  // ─── Soviétiques / Russes ─────────────────────────────────────────────
+  "Mi-24P":      { 1: "R-863 (VHF/UHF)",   2: "R-828 (VHF FM)",      3: "Jadro-1I (HF)" },
+  "Mi-8MT":      { 1: "R-863 (VHF/UHF)",   2: "R-828 (VHF FM)",      3: "Jadro-1A (HF)" },
+  "Ka-50_3":     { 1: "R-800L1 (VHF/UHF)", 2: "R-828 (VHF FM)" },
+  "MiG-29A":     { 1: "R-862 (VHF/UHF)" },
+  "MiG-29S":     { 1: "R-862 (VHF/UHF)" },
+  "MiG-29G":     { 1: "R-862 (VHF/UHF)" },
+  "MiG-29 Fulcrum": { 1: "R-862 (VHF/UHF)" },
+  "MiG-21Bis":   { 1: "R-832M (VHF/UHF)" },
+  "MiG-15bis":   { 1: "RSI-6K (HF)" },
+  "Su-25T":      { 1: "R-862 (VHF/UHF)" },
+  "Su-27":       { 1: "R-862 (VHF/UHF)" },
+  "Su-33":       { 1: "R-862 (VHF/UHF)" },
+  // ─── OTAN — chasseurs ─────────────────────────────────────────────────
+  "F-5E-3":      { 1: "AN/ARC-164 (UHF)" },
+  "F-4E-45MC":   { 1: "AN/ARC-164(V) (UHF COMM)",     2: "AN/ARC-164 (UHF AUX)" },
+  "F-14B":       { 1: "AN/ARC-159 (UHF - COMM 1)",    2: "AN/ARC-182 (V/UHF - COMM 2)" },
+  "F-14A-135-GR":{ 1: "AN/ARC-159 (UHF - COMM 1)",    2: "AN/ARC-182 (V/UHF - COMM 2)" },
+  "F-14A-135-GR-Early": { 1: "AN/ARC-159 (UHF - COMM 1)", 2: "AN/ARC-182 (V/UHF - COMM 2)" },
+  "F-15C":       { 1: "AN/ARC-164 (UHF)" },
+  "F-15ESE":     { 1: "AN/ARC-164 (UHF - COMM 1)",    2: "AN/ARC-186 (V/UHF - COMM 2)" },
+  "F-16C_50":    { 1: "AN/ARC-164 (UHF - COMM 1)",    2: "AN/ARC-222 (V/UHF - COMM 2)" },
+  "FA-18C_hornet":{ 1: "AN/ARC-210 (V/UHF - COMM 1)", 2: "AN/ARC-210 (V/UHF - COMM 2)" },
+  "JF-17":       { 1: "R&S M3AR (V/UHF - COMM 1)",    2: "R&S M3AR (V/UHF - COMM 2)" },
+  // ─── OTAN — Mirage F1 ─────────────────────────────────────────────────
+  "Mirage-F1CE": { 1: "TRAP 138 (UHF - Principale)",  2: "TRAP 139 (V/UHF - Auxiliaire)" },
+  "Mirage-F1BE": { 1: "TRAP 138 (UHF - Principale)",  2: "TRAP 139 (V/UHF - Auxiliaire)" },
+  "Mirage-F1CR": { 1: "TRAP 138 (UHF - Principale)",  2: "TRAP 139 (V/UHF - Auxiliaire)" },
+  "Mirage-F1EE": { 1: "TRAP 136 (V/UHF - Verte)",     2: "TRAP 137B (UHF - Rouge)" },
+  "Mirage-F1M":  { 1: "TRAP 136 (V/UHF - Verte)",     2: "TRAP 137B (UHF - Rouge)" },
+  "M-2000C":     { 1: "TRT ERA 7000 (V/UHF)",          2: "TRT ERA 7200 (UHF Auxiliaire)" },
+  // ─── Attaque / CAS ────────────────────────────────────────────────────
+  "A-10C":       { 1: "AN/ARC-186 (VHF AM)", 2: "AN/ARC-164 (UHF)",  3: "AN/ARC-186 (VHF FM)" },
+  "A-10C_2":     { 1: "AN/ARC-186 (VHF AM)", 2: "AN/ARC-164 (UHF)",  3: "AN/ARC-186 (VHF FM)" },
+  "AV8BNA":      { 1: "AN/ARC-210 (V/UHF - COMM 1)", 2: "AN/ARC-210 (V/UHF - COMM 2)" },
+  // ─── Hélicoptères OTAN ────────────────────────────────────────────────
+  "AH-64D_BLK_II": {
+    1: "AN/ARC-186 (VHF - COMM 1)", 2: "AN/ARC-164 (UHF - COMM 2)",
+    3: "AN/ARC-201D (FM1 - COMM 3)", 4: "AN/ARC-201D (FM2 - COMM 4)",
+    5: "AN/ARC-220 (HF - COMM 5)"
+  },
+  "CH-47Fbl1": {
+    1: "AN/ARC-186 (VHF AM/FM)", 2: "AN/ARC-164 (UHF AM)",
+    3: "AN/ARC-201D (VHF FM1)", 4: "AN/ARC-201D (VHF FM2)", 5: "AN/ARC-220 (HF)"
+  },
+  "UH-1H":       { 1: "AN/ARC-134 (VHF AM)", 2: "AN/ARC-131 (VHF FM)", 3: "AN/ARC-51BX (UHF)" },
+  "OH58D":       { 1: "AN/ARC-186 (VHF AM/FM)", 2: "AN/ARC-164 (UHF)", 3: "AN/ARC-201 (VHF FM)" },
+  // ─── Hélicoptères français — Gazelles ─────────────────────────────────
+  "SA342L":      { 1: "Manta TRAP 138 (V/UHF)", 2: "Manta TRAP 139 (V/UHF)" },
+  "SA342M":      { 1: "Manta TRAP 138 (V/UHF)", 2: "Manta TRAP 139 (V/UHF)" },
+  "SA342Minigun":{ 1: "Manta TRAP 138 (V/UHF)", 2: "Manta TRAP 139 (V/UHF)" },
+  "SA342Mistral":{ 1: "Manta TRAP 138 (V/UHF)", 2: "Manta TRAP 139 (V/UHF)" },
+  // ─── Transport ────────────────────────────────────────────────────────
+  "C-130J-30":   { 1: "AN/ARC-210 (V/UHF - COMM 1)", 2: "AN/ARC-210 (V/UHF - COMM 2)" },
+  "Hercules":    { 1: "AN/ARC-164 (UHF)", 2: "AN/ARC-186 (VHF)" },
+};
+
+// Premier numéro de canal du cockpit, par type et par poste. Tout type ou poste absent : 1 (le numéro du .miz).
+const RADIO_FIRST_CHANNEL = { "Mi-24P": { 1: 0, 2: 0 }, "Mi-8MT": { 1: 1, 2: 1 } };
+
+// Nom du poste pour un type et un numéro de poste ; '' si le type ou le poste est inconnu.
+function radioPosteName(type, radioIndex) {
+  const map = Object.prototype.hasOwnProperty.call(RADIO_POSTES, type) ? RADIO_POSTES[type] : null;
+  return map && Object.prototype.hasOwnProperty.call(map, radioIndex) ? map[radioIndex] : '';
+}
+
+// Numéro de canal tel que le cockpit le montre, depuis le numéro du .miz ; une entrée qui n'est pas un entier >= 1 est rendue telle quelle.
+function radioCockpitChannel(type, radioIndex, mizChannel) {
+  const s = String(mizChannel);
+  const n = Number(s);
+  if (!/^\s*\d+\s*$/.test(s) || !(n >= 1)) return s;
+  const fm = Object.prototype.hasOwnProperty.call(RADIO_FIRST_CHANNEL, type) ? RADIO_FIRST_CHANNEL[type] : null;
+  const first = fm && Object.prototype.hasOwnProperty.call(fm, radioIndex) ? fm[radioIndex] : 1;
+  return String(n - 1 + first);
+}
+/* ===== FIN DES POSTES RADIO ===== */
 /* ===== PROJECTIONS DE DCS (Mercator transverse, un jeu de paramètres par théâtre) ===== */
 /* Les projections de DCS, une par théâtre (pydcs, LGPL-3.0) : Mercator transverse WGS84, échelle 0,9996, latitude d'origine 0 ;
    [ méridien central (°), faux est (m), faux nord (m) ]. DCS pose x au nord, y à l'est. Ni MarianaIslandsWWII, ni Iraq, ni Afghanistan. */
@@ -4874,48 +4953,69 @@ function impUnitRadios(u) {
   return out;
 }
 
-/* Les postes de la datacard : ceux de la première unité, restreints aux canaux choisis (sel : radioIndex → ensemble de numéros) ; un poste sans canal
-   choisi n'est pas repris ; 4 postes et 20 canaux au plus ; label et modulation vides */
-function impRadios(u, sel) {
+/* La clé d'une ligne de canaux : le type et le numéro de poste (le choix se garde par type et par poste) */
+function impChanKey(type, index) { return type + '\u001f' + index; }
+/* Le nom d'un poste comme au cockpit ; à défaut, « Poste n » / « Radio n » */
+function impPosteName(type, index) { return radioPosteName(type, index) || t('imp.radio', { n: index }); }
+
+/* Les postes de la datacard : ceux de la première unité, restreints aux canaux choisis pour son type (sel : clé type + poste → ensemble de numéros du .miz) ; un poste
+   sans canal choisi n'est pas repris ; nom du poste et numéros de canal comme au cockpit ; 4 postes et 20 canaux au plus ; label et modulation vides */
+function impRadios(u, sel, type) {
   const out = [];
   impUnitRadios(u).forEach(r => {
-    const keep = sel && sel[r.index];
-    const chs = r.channels.filter(x => keep && keep.has(x.channel)).map(x => ({ channel: x.channel, label: '', frequency: x.frequency, modulation: '' }));
-    if (chs.length) out.push({ name: t('imp.radio', { n: r.index }), channels: chs.slice(0, LIMITS.channels) });
+    const keep = sel && sel[impChanKey(type, r.index)];
+    const chs = r.channels.filter(x => keep && keep.has(x.channel)).map(x => ({ channel: radioCockpitChannel(type, r.index, x.channel), label: '', frequency: x.frequency, modulation: '' }));
+    if (chs.length) out.push({ name: impPosteName(type, r.index), channels: chs.slice(0, LIMITS.channels) });
   });
   return out.slice(0, LIMITS.radios);
 }
 
-/* Les canaux qu'on peut choisir : pour chaque poste de la première unité des vols cochés (ceux qu'on voit et qu'on importerait), la réunion des numéros */
+/* Les canaux qu'on peut choisir : pour chaque poste de la première unité des vols cochés (ceux qu'on voit et qu'on importerait), par type et par poste,
+   la réunion des numéros du .miz ; les types dans l'ordre de première apparition, les postes par numéro croissant */
 function impChanAvail(s) {
-  const map = {};
+  const types = [], maps = {};
   impVisible(s).filter(x => s.checked.has(x.i)).forEach(x => {
-    const u = s.flights[x.i].units.length ? s.flights[x.i].units[0] : null;
-    impUnitRadios(u).forEach(r => {
+    const f = s.flights[x.i];
+    const rs = impUnitRadios(f.units.length ? f.units[0] : null);
+    if (!rs.length) return;
+    if (types.indexOf(f.aircraftType) === -1) { types.push(f.aircraftType); maps[f.aircraftType] = {}; }
+    const map = maps[f.aircraftType];
+    rs.forEach(r => {
       const set = map[r.index] || (map[r.index] = new Set());
       r.channels.forEach(c => set.add(c.channel));
     });
   });
-  /* 4 postes au plus et 20 canaux au plus par poste : tout ce qui est proposé est repris à l'import */
-  return Object.keys(map).map(Number).sort((a, b) => a - b).slice(0, LIMITS.radios)
-    .map(i => ({ index: i, channels: Array.from(map[i]).sort((a, b) => Number(a) - Number(b)).slice(0, LIMITS.channels) }));
+  /* 4 postes au plus par type et 20 canaux au plus par poste : tout ce qui est proposé est repris à l'import */
+  const out = [];
+  types.forEach(ty => {
+    Object.keys(maps[ty]).map(Number).sort((a, b) => a - b).slice(0, LIMITS.radios).forEach(i => {
+      out.push({ type: ty, index: i, multi: types.length > 1, channels: Array.from(maps[ty][i]).sort((a, b) => Number(a) - Number(b)).slice(0, LIMITS.channels) });
+    });
+  });
+  return out;
 }
 
-/* Le bloc « Canaux radio à importer » : une ligne par poste, une pastille par canal (pleine = cochée), Tous / Aucun ; rien n'est coché à l'ouverture */
+/* Le bloc « Canaux radio à importer » : une ligne par type et par poste (préfixée du type quand les vols cochés sont de plusieurs types), une pastille par
+   canal sous son numéro du cockpit (pleine = cochée), Tous / Aucun ; rien n'est coché à l'ouverture */
 function impRenderChans(s) {
   const av = impChanAvail(s);
   document.getElementById('imp-ch-block').hidden = !av.length;
-  document.getElementById('imp-ch-list').innerHTML = av.map(r =>
-    '<div class="imp-chrow" data-r="' + r.index + '"><span class="imp-chname">' + esc(t('imp.radio', { n: r.index })) + '</span>' +
-    '<div class="imp-chips">' + r.channels.map(c =>
-      '<button type="button" class="imp-chip" data-r="' + r.index + '" data-c="' + c + '" aria-pressed="false" title="' + esc(t('imp.ch.tip', { r: t('imp.radio', { n: r.index }), c: c })) + '">' + c + '</button>').join('') + '</div>' +
-    '<div class="imp-chbtns"><button type="button" class="imp-chbtn" data-chall="' + r.index + '">' + esc(t('imp.ch.all')) + '</button>' +
-    '<button type="button" class="imp-chbtn" data-chnone="' + r.index + '">' + esc(t('imp.ch.none')) + '</button></div></div>').join('');
+  document.getElementById('imp-ch-list').innerHTML = av.map(r => {
+    const k = esc(impChanKey(r.type, r.index));
+    const nm = (r.multi ? r.type + ' \u00b7 ' : '') + impPosteName(r.type, r.index);
+    return '<div class="imp-chrow" data-k="' + k + '"><span class="imp-chname">' + esc(nm) + '</span>' +
+    '<div class="imp-chips">' + r.channels.map(c => {
+      const cc = radioCockpitChannel(r.type, r.index, c);
+      return '<button type="button" class="imp-chip" data-k="' + k + '" data-c="' + c + '" aria-pressed="false" title="' + esc(t('imp.ch.tip', { r: nm, c: cc })) + '">' + esc(cc) + '</button>';
+    }).join('') + '</div>' +
+    '<div class="imp-chbtns"><button type="button" class="imp-chbtn" data-chall="' + k + '">' + esc(t('imp.ch.all')) + '</button>' +
+    '<button type="button" class="imp-chbtn" data-chnone="' + k + '">' + esc(t('imp.ch.none')) + '</button></div></div>';
+  }).join('');
   impSyncChips(s);
 }
 function impSyncChips(s) {
   document.querySelectorAll('#imp-ch-list .imp-chip').forEach(b => {
-    const on = !!(s.chan[b.dataset.r] && s.chan[b.dataset.r].has(b.dataset.c));
+    const on = !!(s.chan[b.dataset.k] && s.chan[b.dataset.k].has(b.dataset.c));
     b.classList.toggle('on', on);
     b.setAttribute('aria-pressed', on ? 'true' : 'false');
   });
@@ -4925,12 +5025,12 @@ function onImpChanClick(e) {
   const b = e.target && e.target.closest ? e.target.closest('button') : null;
   if (!s || !b) return;
   if (b.classList.contains('imp-chip')) {
-    const set = s.chan[b.dataset.r] || (s.chan[b.dataset.r] = new Set());
+    const set = s.chan[b.dataset.k] || (s.chan[b.dataset.k] = new Set());
     if (set.has(b.dataset.c)) set.delete(b.dataset.c); else set.add(b.dataset.c);
   } else if (b.dataset.chall !== undefined || b.dataset.chnone !== undefined) {
-    const r = b.dataset.chall !== undefined ? b.dataset.chall : b.dataset.chnone;
-    const set = s.chan[r] = new Set();
-    if (b.dataset.chall !== undefined) document.querySelectorAll('#imp-ch-list .imp-chip[data-r="' + r + '"]').forEach(x => set.add(x.dataset.c));
+    const k = b.dataset.chall !== undefined ? b.dataset.chall : b.dataset.chnone;
+    const set = s.chan[k] = new Set();
+    if (b.dataset.chall !== undefined) document.querySelectorAll('#imp-ch-list .imp-chip').forEach(x => { if (x.dataset.k === k) set.add(x.dataset.c); });
   } else return;
   impSyncChips(s);
 }
@@ -4944,7 +5044,7 @@ function cardFromFlight(fl, src) {
   c.flight.aircraft = fl.aircraftType;
   c.flight.count = fl.units.length ? fl.units.length : null;
   if (fl.pts.length) applyRouteToCard(c, routeFromObject({ format: ROUTE_FORMAT, theatre: src.theatre, points: fl.pts }));
-  c.radios = impRadios(u, src.chan);
+  c.radios = impRadios(u, src.chan, fl.aircraftType);
   const m = src.mission;
   if (m) {
     c.meta.date = m.date;

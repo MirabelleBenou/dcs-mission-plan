@@ -17,6 +17,7 @@ import subprocess
 import sys
 
 from magvar_block import build_block as build_magvar_block
+from radio_block import build_block as build_radio_block
 from projection_block import build_block as build_projection_block
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -3084,6 +3085,7 @@ function readNum(s) {
 }
 
 @@MAGVAR_BLOCK@@
+@@RADIO_BLOCK@@
 @@PROJECTION_BLOCK@@
 /* La déclinaison des caps d'une datacard : null (cap vrai, ou saisie illisible) ; { decl } saisie ; { calc: true, y } calculée,
    y étant l'année décimale du champ Date (1985, le 1er juillet, s'il est vide ou illisible) */
@@ -4713,48 +4715,69 @@ function impUnitRadios(u) {
   return out;
 }
 
-/* Les postes de la datacard : ceux de la première unité, restreints aux canaux choisis (sel : radioIndex → ensemble de numéros) ; un poste sans canal
-   choisi n'est pas repris ; 4 postes et 20 canaux au plus ; label et modulation vides */
-function impRadios(u, sel) {
+/* La clé d'une ligne de canaux : le type et le numéro de poste (le choix se garde par type et par poste) */
+function impChanKey(type, index) { return type + '\u001f' + index; }
+/* Le nom d'un poste comme au cockpit ; à défaut, « Poste n » / « Radio n » */
+function impPosteName(type, index) { return radioPosteName(type, index) || t('imp.radio', { n: index }); }
+
+/* Les postes de la datacard : ceux de la première unité, restreints aux canaux choisis pour son type (sel : clé type + poste → ensemble de numéros du .miz) ; un poste
+   sans canal choisi n'est pas repris ; nom du poste et numéros de canal comme au cockpit ; 4 postes et 20 canaux au plus ; label et modulation vides */
+function impRadios(u, sel, type) {
   const out = [];
   impUnitRadios(u).forEach(r => {
-    const keep = sel && sel[r.index];
-    const chs = r.channels.filter(x => keep && keep.has(x.channel)).map(x => ({ channel: x.channel, label: '', frequency: x.frequency, modulation: '' }));
-    if (chs.length) out.push({ name: t('imp.radio', { n: r.index }), channels: chs.slice(0, LIMITS.channels) });
+    const keep = sel && sel[impChanKey(type, r.index)];
+    const chs = r.channels.filter(x => keep && keep.has(x.channel)).map(x => ({ channel: radioCockpitChannel(type, r.index, x.channel), label: '', frequency: x.frequency, modulation: '' }));
+    if (chs.length) out.push({ name: impPosteName(type, r.index), channels: chs.slice(0, LIMITS.channels) });
   });
   return out.slice(0, LIMITS.radios);
 }
 
-/* Les canaux qu'on peut choisir : pour chaque poste de la première unité des vols cochés (ceux qu'on voit et qu'on importerait), la réunion des numéros */
+/* Les canaux qu'on peut choisir : pour chaque poste de la première unité des vols cochés (ceux qu'on voit et qu'on importerait), par type et par poste,
+   la réunion des numéros du .miz ; les types dans l'ordre de première apparition, les postes par numéro croissant */
 function impChanAvail(s) {
-  const map = {};
+  const types = [], maps = {};
   impVisible(s).filter(x => s.checked.has(x.i)).forEach(x => {
-    const u = s.flights[x.i].units.length ? s.flights[x.i].units[0] : null;
-    impUnitRadios(u).forEach(r => {
+    const f = s.flights[x.i];
+    const rs = impUnitRadios(f.units.length ? f.units[0] : null);
+    if (!rs.length) return;
+    if (types.indexOf(f.aircraftType) === -1) { types.push(f.aircraftType); maps[f.aircraftType] = {}; }
+    const map = maps[f.aircraftType];
+    rs.forEach(r => {
       const set = map[r.index] || (map[r.index] = new Set());
       r.channels.forEach(c => set.add(c.channel));
     });
   });
-  /* 4 postes au plus et 20 canaux au plus par poste : tout ce qui est proposé est repris à l'import */
-  return Object.keys(map).map(Number).sort((a, b) => a - b).slice(0, LIMITS.radios)
-    .map(i => ({ index: i, channels: Array.from(map[i]).sort((a, b) => Number(a) - Number(b)).slice(0, LIMITS.channels) }));
+  /* 4 postes au plus par type et 20 canaux au plus par poste : tout ce qui est proposé est repris à l'import */
+  const out = [];
+  types.forEach(ty => {
+    Object.keys(maps[ty]).map(Number).sort((a, b) => a - b).slice(0, LIMITS.radios).forEach(i => {
+      out.push({ type: ty, index: i, multi: types.length > 1, channels: Array.from(maps[ty][i]).sort((a, b) => Number(a) - Number(b)).slice(0, LIMITS.channels) });
+    });
+  });
+  return out;
 }
 
-/* Le bloc « Canaux radio à importer » : une ligne par poste, une pastille par canal (pleine = cochée), Tous / Aucun ; rien n'est coché à l'ouverture */
+/* Le bloc « Canaux radio à importer » : une ligne par type et par poste (préfixée du type quand les vols cochés sont de plusieurs types), une pastille par
+   canal sous son numéro du cockpit (pleine = cochée), Tous / Aucun ; rien n'est coché à l'ouverture */
 function impRenderChans(s) {
   const av = impChanAvail(s);
   document.getElementById('imp-ch-block').hidden = !av.length;
-  document.getElementById('imp-ch-list').innerHTML = av.map(r =>
-    '<div class="imp-chrow" data-r="' + r.index + '"><span class="imp-chname">' + esc(t('imp.radio', { n: r.index })) + '</span>' +
-    '<div class="imp-chips">' + r.channels.map(c =>
-      '<button type="button" class="imp-chip" data-r="' + r.index + '" data-c="' + c + '" aria-pressed="false" title="' + esc(t('imp.ch.tip', { r: t('imp.radio', { n: r.index }), c: c })) + '">' + c + '</button>').join('') + '</div>' +
-    '<div class="imp-chbtns"><button type="button" class="imp-chbtn" data-chall="' + r.index + '">' + esc(t('imp.ch.all')) + '</button>' +
-    '<button type="button" class="imp-chbtn" data-chnone="' + r.index + '">' + esc(t('imp.ch.none')) + '</button></div></div>').join('');
+  document.getElementById('imp-ch-list').innerHTML = av.map(r => {
+    const k = esc(impChanKey(r.type, r.index));
+    const nm = (r.multi ? r.type + ' \u00b7 ' : '') + impPosteName(r.type, r.index);
+    return '<div class="imp-chrow" data-k="' + k + '"><span class="imp-chname">' + esc(nm) + '</span>' +
+    '<div class="imp-chips">' + r.channels.map(c => {
+      const cc = radioCockpitChannel(r.type, r.index, c);
+      return '<button type="button" class="imp-chip" data-k="' + k + '" data-c="' + c + '" aria-pressed="false" title="' + esc(t('imp.ch.tip', { r: nm, c: cc })) + '">' + esc(cc) + '</button>';
+    }).join('') + '</div>' +
+    '<div class="imp-chbtns"><button type="button" class="imp-chbtn" data-chall="' + k + '">' + esc(t('imp.ch.all')) + '</button>' +
+    '<button type="button" class="imp-chbtn" data-chnone="' + k + '">' + esc(t('imp.ch.none')) + '</button></div></div>';
+  }).join('');
   impSyncChips(s);
 }
 function impSyncChips(s) {
   document.querySelectorAll('#imp-ch-list .imp-chip').forEach(b => {
-    const on = !!(s.chan[b.dataset.r] && s.chan[b.dataset.r].has(b.dataset.c));
+    const on = !!(s.chan[b.dataset.k] && s.chan[b.dataset.k].has(b.dataset.c));
     b.classList.toggle('on', on);
     b.setAttribute('aria-pressed', on ? 'true' : 'false');
   });
@@ -4764,12 +4787,12 @@ function onImpChanClick(e) {
   const b = e.target && e.target.closest ? e.target.closest('button') : null;
   if (!s || !b) return;
   if (b.classList.contains('imp-chip')) {
-    const set = s.chan[b.dataset.r] || (s.chan[b.dataset.r] = new Set());
+    const set = s.chan[b.dataset.k] || (s.chan[b.dataset.k] = new Set());
     if (set.has(b.dataset.c)) set.delete(b.dataset.c); else set.add(b.dataset.c);
   } else if (b.dataset.chall !== undefined || b.dataset.chnone !== undefined) {
-    const r = b.dataset.chall !== undefined ? b.dataset.chall : b.dataset.chnone;
-    const set = s.chan[r] = new Set();
-    if (b.dataset.chall !== undefined) document.querySelectorAll('#imp-ch-list .imp-chip[data-r="' + r + '"]').forEach(x => set.add(x.dataset.c));
+    const k = b.dataset.chall !== undefined ? b.dataset.chall : b.dataset.chnone;
+    const set = s.chan[k] = new Set();
+    if (b.dataset.chall !== undefined) document.querySelectorAll('#imp-ch-list .imp-chip').forEach(x => { if (x.dataset.k === k) set.add(x.dataset.c); });
   } else return;
   impSyncChips(s);
 }
@@ -4783,7 +4806,7 @@ function cardFromFlight(fl, src) {
   c.flight.aircraft = fl.aircraftType;
   c.flight.count = fl.units.length ? fl.units.length : null;
   if (fl.pts.length) applyRouteToCard(c, routeFromObject({ format: ROUTE_FORMAT, theatre: src.theatre, points: fl.pts }));
-  c.radios = impRadios(u, src.chan);
+  c.radios = impRadios(u, src.chan, fl.aircraftType);
   const m = src.mission;
   if (m) {
     c.meta.date = m.date;
@@ -5690,7 +5713,7 @@ def build():
         raise SystemExit("[ERREUR] Le document d'exemple anglais n'est pas au format dcs-datacard-v1")
     example_en_js = json.dumps(example_en, ensure_ascii=False, indent=2).replace('</', '<\\/')
 
-    js = JS.replace('__EXAMPLE_DOC__', example_js).replace('__EXAMPLE_DOC_EN__', example_en_js).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@PROJECTION_BLOCK@@\n', build_projection_block())
+    js = JS.replace('__EXAMPLE_DOC__', example_js).replace('__EXAMPLE_DOC_EN__', example_en_js).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@RADIO_BLOCK@@\n', build_radio_block()).replace('@@PROJECTION_BLOCK@@\n', build_projection_block())
     html = HTML
     html = html.replace('__CSS__', CSS)
     html = html.replace('__LIB_HTML2CANVAS__', A['lib_html2canvas'])
