@@ -1151,6 +1151,16 @@ select[data-tbm-src] { display: none !important; }
 .dc-radio tbody tr.z td { background: var(--dc-alt); }
 .dc-radio tr.rsep-n td, .dc-radio tr.pn td { border-top: 1px solid var(--dc-dot); padding-top: 10px; }
 
+/* Page Radios : chaque poste, ses canaux sur 3 colonnes */
+.dc-rposte-n { margin-top: 12px; padding-top: 4px; border-top: 1px solid var(--dc-dot); }
+.dc-rname { font: 500 15px/1 var(--dc-fo); letter-spacing: .12em; color: var(--dc-acc); padding: 8px 0 4px 0; }
+.dc-rcols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 14px; align-items: start; }
+.dc-rcols > div { min-width: 0; }
+.dc-radio3 th, .dc-radio3 td { padding-left: 4px; padding-right: 4px; }
+.dc-radio3 td { padding-top: 2px; padding-bottom: 2px; }
+.dc-rheads { margin-bottom: 2px; }
+.dc-radio3 td.fq { text-overflow: clip; }
+
 /* Terrains */
 .dc-fields td.ro { font-family: var(--dc-fo); font-weight: 500; color: var(--dc-acc); text-transform: uppercase; }
 .dc-fields td.nm { font-family: var(--dc-fo); font-weight: 500; font-size: 18px; }
@@ -2124,6 +2134,7 @@ const I18N = {
     'li.del': 'Supprimer',
     'warn.overflow': 'Contenu tronqué : la page 1 déborde même sans la navigation.',
     'warn.overflow2': 'Contenu tronqué\u202f: la page 2 déborde.',
+    'warn.overflowR': 'Contenu tronqué\u202f: la page Radios déborde.',
     'sec.meta': 'Méta',
     'sec.flight': 'Vol',
     'sec.mission': 'Mission',
@@ -2310,6 +2321,7 @@ const I18N = {
     'dc.b.threats': 'MENACES',
     'dc.b.notes': 'NOTES',
     'dc.page2': 'DATACARD · NAVIGATION',
+    'dc.pageR': 'DATACARD · RADIOS',
     'dc.flightOf': 'VOL DE {n}',
     'dc.operation': 'OPÉRATION {op}',
     'dc.thr.low': 'MENACE FAIBLE',
@@ -2442,6 +2454,7 @@ const I18N = {
     'li.del': 'Delete',
     'warn.overflow': 'Content truncated: page 1 overflows even without navigation.',
     'warn.overflow2': 'Content truncated: page 2 overflows.',
+    'warn.overflowR': 'Content truncated: the Radios page overflows.',
     'sec.meta': 'Meta',
     'sec.flight': 'Flight',
     'sec.mission': 'Mission',
@@ -2628,6 +2641,7 @@ const I18N = {
     'dc.b.threats': 'THREATS',
     'dc.b.notes': 'NOTES',
     'dc.page2': 'DATACARD · NAVIGATION',
+    'dc.pageR': 'DATACARD · RADIOS',
     'dc.flightOf': 'FLIGHT OF {n}',
     'dc.operation': 'OPERATION {op}',
     'dc.thr.low': 'THREAT LOW',
@@ -3864,6 +3878,33 @@ function blkRadio(c) {
     '<tbody>' + rows + '</tbody></table>', 'dc-bbt');
 }
 
+/* Les postes de la page Radios : chacun avec son en-tête, ses canaux sur 3 colonnes (lecture colonne par colonne : 1-7, 8-14, 15-20) */
+function blkRadioPage(c) {
+  const radios = c.radios.map(r => ({
+    name: r.name,
+    ch: r.channels.filter(x => anyText(x, ['channel', 'label', 'frequency', 'modulation']))
+  })).filter(r => hasText(r.name) || r.ch.length);
+  if (!radios.length) return '';
+  const head = '<thead><tr><th>' + esc(t('dc.h.ch')) + '</th><th>' + esc(t('dc.h.use')) + '</th><th>' + esc(t('dc.h.freq')) + '</th><th></th></tr></thead>';
+  const colg = '<colgroup><col style="width:46px"><col><col style="width:118px"><col style="width:40px"></colgroup>';
+  const body = radios.map((r, ri) => {
+    const per = Math.max(1, Math.ceil(r.ch.length / 3));
+    let cols = '';
+    for (let k = 0; k < 3; k++) {
+      const part = r.ch.slice(k * per, (k + 1) * per);
+      if (!part.length) { cols += '<div></div>'; continue; }
+      cols += '<table class="dc-tab dc-radio dc-radio3">' + colg + '<tbody>' + part.map((x, j) =>
+        '<tr' + (j % 2 === 0 ? ' class="z"' : '') + '><td>' + dash(x.channel) + '</td><td class="us">' + esc(x.label) + '</td>' +
+        '<td class="fq">' + dash(x.frequency) + '</td><td class="md">' + esc(x.modulation) + '</td></tr>').join('') + '</tbody></table>';
+    }
+    return '<div class="dc-rposte' + (ri ? ' dc-rposte-n' : '') + '">' + (hasText(r.name) ? '<div class="dc-rname">' + esc(r.name) + '</div>' : '') +
+      '<div class="dc-rcols">' + cols + '</div></div>';
+  }).join('');
+  /* une seule ligne d'en-têtes pour toute la page, au-dessus des trois colonnes */
+  const heads = '<div class="dc-rcols dc-rheads">' + [0, 1, 2].map(() => '<table class="dc-tab dc-radio dc-radio3">' + colg + head + '</table>').join('') + '</div>';
+  return blockHtml('radio', t('dc.b.radio'), heads + body, 'dc-bbt');
+}
+
 function blkFields(c) {
   const rows = c.fields.filter(f => anyText(f, ['icao', 'name', 'runway', 'frequency']));
   if (!rows.length) return '';
@@ -3953,9 +3994,14 @@ function headNav(c) {
     '<div class="dc-hr"><div class="dc-ttl">' + esc(t('dc.page2')) + '</div></div></div>';
 }
 
-/* Une page de datacard. kind : 'main' (page 1) ou 'nav' (page de navigation).
+function headRadios(c) {
+  return '<div class="dc-head dc-head2"><div class="dc-hl"><div class="dc-cs">' + esc(c.flight.callsign.trim()) + '</div></div>' +
+    '<div class="dc-hr"><div class="dc-ttl">' + esc(t('dc.pageR')) + '</div></div></div>';
+}
+
+/* Une page de datacard. kind : 'main' (page 1), 'nav' (page de navigation) ou 'radios' (page Radios, la dernière) ; noRadio : la page 1 sans le bloc Radio.
    withNav : la navigation est sur cette page ; withRefs : les points de référence aussi (après la navigation). */
-function pageHtml(c, mode, p, N, kind, withNav, withRefs) {
+function pageHtml(c, mode, p, N, kind, withNav, withRefs, noRadio) {
   const cls = esc(classifLabel(c));
   const pg = p + ' / ' + N;
   const top = '<div class="dc-top"><span>' + cls + '</span><span>' + esc(c.meta.docRef.trim()) + '</span><span>' + pg + '</span></div>';
@@ -3963,7 +4009,10 @@ function pageHtml(c, mode, p, N, kind, withNav, withRefs) {
   const footL = [t('dc.title'), c.flight.callsign.trim(), opm].filter(hasText).join(' · ');
   const foot = '<div class="dc-foot"><span>' + esc(footL) + '</span><span>' + cls + '</span><span>' + pg + '</span></div>';
   let head, body;
-  if (kind === 'nav') {
+  if (kind === 'radios') {
+    head = headRadios(c);
+    body = rowHtml('dc-r3', [blkRadioPage(c)]);
+  } else if (kind === 'nav') {
     head = headNav(c);
     body = (withNav ? rowHtml('dc-r3', [blkNav(c)]) : '') + (withRefs ? rowHtml('dc-r3', [blkRefs(c)]) : '');
   } else {
@@ -3974,7 +4023,7 @@ function pageHtml(c, mode, p, N, kind, withNav, withRefs) {
       rowHtml('dc-r2', [blkCrew(c)]) +
       (withNav ? rowHtml('dc-r3', [blkNav(c)]) : '') +
       (withRefs ? rowHtml('dc-r3', [blkRefs(c)]) : '') +
-      rowHtml('dc-r4', [blkRadio(c), col]) +
+      rowHtml('dc-r4', [noRadio ? '' : blkRadio(c), col]) +
       rowHtml('dc-r5', [blkFuel(c), blkThreats(c)]);
   }
   return '<article class="dc-page" data-mode="' + mode + '">' + top + head + '<div class="dc-body">' + body + '</div>' + foot + '</article>';
@@ -3999,30 +4048,47 @@ function overflowsHtml(html) {
 }
 
 /* Découpage d'une carte, toujours décidé à la mesure du rendu. plan.split : deux pages ; plan.p2 : ce que porte la page 2
-   (« refs » : les seules références ; « navrefs » : la navigation puis les références, ou la navigation seule sans référence). */
-function planCard(c) {
-  const key = CURRENT_LANG + '|' + JSON.stringify(c);
-  if (layoutCache.has(key)) return layoutCache.get(key);
+   (« refs » : les seules références ; « navrefs » : la navigation puis les références, ou la navigation seule sans référence).
+   nr : la page 1 sans le bloc Radio. */
+function planBase(c, nr) {
   const plan = { split: false, overflow: false, overflow2: false, p2: 'navrefs' };
   const hasNav = navRows(c).length > 0, hasRefs = refRows(c).length > 0;
   if (hasRefs) {
     /* 1 · tout tient en page 1 (navigation puis références) ; 2 · la page 1 avec la navigation seule tient : les références
        passent seules en page 2 ; 3 · page 1 sans navigation ni références, page 2 avec la navigation puis les références */
-    if (overflowsHtml(pageHtml(c, 'day', 1, 1, 'main', true, true))) {
+    if (overflowsHtml(pageHtml(c, 'day', 1, 1, 'main', true, true, nr))) {
       plan.split = true;
-      if (hasNav && !overflowsHtml(pageHtml(c, 'day', 1, 2, 'main', true, false))) plan.p2 = 'refs';
+      if (hasNav && !overflowsHtml(pageHtml(c, 'day', 1, 2, 'main', true, false, nr))) plan.p2 = 'refs';
       else {
-        plan.overflow = overflowsHtml(pageHtml(c, 'day', 1, 2, 'main', false, false));
+        plan.overflow = overflowsHtml(pageHtml(c, 'day', 1, 2, 'main', false, false, nr));
         plan.overflow2 = overflowsHtml(pageHtml(c, 'day', 2, 2, 'nav', hasNav, true));   /* page 2 : la navigation puis les références */
       }
     }
   } else if (hasNav) {
-    if (overflowsHtml(pageHtml(c, 'day', 1, 1, 'main', true, false))) {
+    if (overflowsHtml(pageHtml(c, 'day', 1, 1, 'main', true, false, nr))) {
       plan.split = true;
-      plan.overflow = overflowsHtml(pageHtml(c, 'day', 1, 2, 'main', false, false));
+      plan.overflow = overflowsHtml(pageHtml(c, 'day', 1, 2, 'main', false, false, nr));
     }
   } else {
-    plan.overflow = overflowsHtml(pageHtml(c, 'day', 1, 1, 'main', false, false));
+    plan.overflow = overflowsHtml(pageHtml(c, 'day', 1, 1, 'main', false, false, nr));
+  }
+  return plan;
+}
+
+/* Tant que le bloc Radio tient en page 1, rien ne change. Sinon (la page 1 déborde même sans la navigation, et elle ne déborde plus sans le bloc Radio),
+   le bloc Radio forme une page à lui, la dernière : plan.radioPage ; plan.overflowR : cette page déborde. */
+function planCard(c) {
+  const key = CURRENT_LANG + '|' + JSON.stringify(c);
+  if (layoutCache.has(key)) return layoutCache.get(key);
+  let plan = planBase(c, false);
+  plan.radioPage = false; plan.overflowR = false;
+  if (plan.overflow && blkRadio(c) !== '') {
+    const alt = planBase(c, true);
+    if (!alt.overflow) {
+      plan = alt;
+      plan.radioPage = true;
+      plan.overflowR = overflowsHtml(pageHtml(c, 'day', plan.split ? 3 : 2, plan.split ? 3 : 2, 'radios', false, false));
+    }
   }
   if (layoutCache.size > 80) layoutCache.clear();
   layoutCache.set(key, plan);
@@ -4032,12 +4098,14 @@ function planCard(c) {
 /* Les pages d'une carte, dans un mode donné */
 function cardPages(c, mode) {
   const plan = planCard(c);
-  const hasRefs = refRows(c).length > 0;
+  const hasRefs = refRows(c).length > 0, rp = plan.radioPage, nr = rp;
+  const N = (plan.split ? 2 : 1) + (rp ? 1 : 0);
   const pages = plan.split
     ? (plan.p2 === 'refs'
-      ? [pageHtml(c, mode, 1, 2, 'main', true, false), pageHtml(c, mode, 2, 2, 'nav', false, true)]
-      : [pageHtml(c, mode, 1, 2, 'main', false, false), pageHtml(c, mode, 2, 2, 'nav', true, hasRefs)])
-    : [pageHtml(c, mode, 1, 1, 'main', true, hasRefs)];
+      ? [pageHtml(c, mode, 1, N, 'main', true, false, nr), pageHtml(c, mode, 2, N, 'nav', false, true)]
+      : [pageHtml(c, mode, 1, N, 'main', false, false, nr), pageHtml(c, mode, 2, N, 'nav', true, hasRefs)])
+    : [pageHtml(c, mode, 1, N, 'main', true, hasRefs, nr)];
+  if (rp) pages.push(pageHtml(c, mode, N, N, 'radios', false, false));
   return { plan, pages };
 }
 
@@ -4049,6 +4117,7 @@ function renderPreview() {
   const warn = document.getElementById('dc-warn');
   if (res.plan.overflow) { warn.textContent = t('warn.overflow'); warn.hidden = false; }
   else if (res.plan.overflow2) { warn.textContent = t('warn.overflow2'); warn.hidden = false; }
+  else if (res.plan.overflowR) { warn.textContent = t('warn.overflowR'); warn.hidden = false; }
   else { warn.textContent = ''; warn.hidden = true; }
   applyPreviewScale();
 }
@@ -4749,6 +4818,7 @@ function loadPackageFile(file) {
 function impCallsign(u, group) {
   const cs = u ? u.callsign : null;
   if (hasText(cs)) return cs;
+  if (typeof cs === 'number' && isFinite(cs)) return String(cs);
   if (isPlainObject(cs) && hasText(cs.name)) return cs.name;
   return group;
 }
