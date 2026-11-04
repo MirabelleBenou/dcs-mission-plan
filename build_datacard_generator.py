@@ -4,7 +4,7 @@
 Produit dist/dcs_datacard_generator.html : un fichier unique, hors ligne, sans
 serveur et sans ressource externe. Les polices et les bibliothèques (html2canvas,
 JSZip) viennent d'assets.json, à la racine du dépôt ; la déclinaison magnétique (coefficients WMM 1985–2025, comme DCS)
-vient du dossier wmm/ via magvar_block.py.
+vient du dossier wmm/ via magvar_block.py ; les projections des théâtres de DCS viennent de projection_block.py.
 
 Usage : python3 build_datacard_generator.py
 """
@@ -17,6 +17,7 @@ import subprocess
 import sys
 
 from magvar_block import build_block as build_magvar_block
+from projection_block import build_block as build_projection_block
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 APP_VERSION = "1.5.1"
@@ -690,7 +691,7 @@ select[data-tbm-src] { display: none !important; }
 @supports (width: calc-size(max-content, round(up, size, 1px))) { .tbm-lbl::after { width: calc-size(max-content, round(up, size, 1px)); } }
 .tbm-trigger-open { border-color: var(--amber) !important; }
 .tbm-panel {
-  position: fixed; z-index: 5000; min-width: 180px; max-width: min(340px, calc(100vw - 16px));
+  position: fixed; z-index: 10500; min-width: 180px; max-width: min(340px, calc(100vw - 16px));
   max-height: min(62vh, 440px); overflow-y: auto; overscroll-behavior: contain;
   background: linear-gradient(180deg, var(--olive-dark) 0%, var(--olive-deep) 100%);
   border: 1px solid var(--amber-dark); border-top: 3px solid var(--amber);
@@ -1338,6 +1339,18 @@ select[data-tbm-src] { display: none !important; }
 }
 .imp-filebtn:hover { background: rgba(0, 0, 0, 0.06); border-color: var(--amber, #c8901f); }
 .imp-filename { opacity: .75; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.imp-src[hidden] { display: none; }
+/* Vols d'une mission de HQ ou d'un paquet : filtres, boutons, compte, liste */
+.imp-filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 10px; }
+.imp-filters > .ed-field { flex: 1 1 100px; min-width: 0; }
+.imp-filters > .ed-field.imp-nm { flex: 2 1 140px; }
+.imp-filters .ed-field label { color: #1f1c16; }
+.imp-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin: 0 0 8px; }
+.imp-tools .export-png-toggle { min-height: 36px; }
+.imp-cnt { margin-left: auto; font-size: 11px; opacity: .75; }
+.imp-row .imp-nm { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.imp-row .imp-n { flex: none; max-width: 55%; text-align: right; font-size: 11px; opacity: .75; }
+.imp-empty { margin: 6px 0; font-size: 12px; opacity: .75; }
 
 /* ============ DATACARD ============ */
 .dc-sheet {
@@ -1887,6 +1900,14 @@ __CSS__
       <div class="imp-note" id="imp-current-note" hidden></div>
       <label class="imp-src" id="imp-src-route-row"><input type="radio" name="imp-src" id="imp-src-route" value="route"><span data-i18n="imp.src.route">Route en cours</span></label>
       <div class="imp-note" id="imp-route-note" hidden></div>
+      <label class="imp-src" id="imp-src-hq-row"><input type="radio" name="imp-src" id="imp-src-hq" value="hq"><span data-i18n="imp.src.hq">Mission chargée dans HQ</span></label>
+      <div class="imp-note" id="imp-hq-note"></div>
+      <label class="imp-src" id="imp-src-pkg-row"><input type="radio" name="imp-src" id="imp-src-pkg" value="pkg"><span data-i18n="imp.src.pkg">Paquet de vol</span></label>
+      <div class="imp-file" id="imp-pkg-zone" hidden>
+        <button type="button" class="imp-filebtn" id="imp-pkg-btn" data-i18n="imp.choose">Choisir un fichier…</button>
+        <span class="imp-filename" id="imp-pkg-name"></span>
+        <input type="file" id="file-package" accept=".json,.zip,application/json,application/zip" hidden>
+      </div>
       <label class="imp-src" id="imp-src-file-row"><input type="radio" name="imp-src" id="imp-src-file" value="file"><span data-i18n="imp.src.file">Fichier JSON (briefing ou route)</span></label>
       <div class="imp-file" id="imp-file-zone" hidden>
         <button type="button" class="imp-filebtn" id="imp-file-btn" data-i18n="imp.choose">Choisir un fichier…</button>
@@ -1896,6 +1917,18 @@ __CSS__
     </div>
     <div class="imp-block" id="imp-flights-block">
       <h3 data-i18n="imp.flights">Vols à importer</h3>
+      <div id="imp-fl-head" hidden>
+        <div class="imp-filters">
+          <div class="ed-field"><label for="imp-side" data-i18n="imp.side">Camp</label><select id="imp-side"></select></div>
+          <div class="ed-field"><label for="imp-type" data-i18n="imp.type">Type</label><select id="imp-type"></select></div>
+          <div class="ed-field imp-nm"><label for="imp-name" data-i18n="imp.name">Nom</label><input type="text" id="imp-name" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+        </div>
+        <div class="imp-tools">
+          <button type="button" class="export-png-toggle" id="imp-check" data-i18n="imp.checkShown">Cocher les vols affichés</button>
+          <button type="button" class="export-png-toggle" id="imp-uncheck" data-i18n="imp.uncheck">Tout décocher</button>
+          <span class="imp-cnt" id="imp-cnt" aria-live="polite"></span>
+        </div>
+      </div>
       <div class="export-png-list" id="imp-list"></div>
     </div>
     <div class="imp-block" id="imp-route-block" hidden>
@@ -1904,6 +1937,7 @@ __CSS__
       <label class="imp-src"><input type="radio" name="imp-route-mode" id="imp-route-fill" value="fill" checked><span data-i18n="imp.route.fill">Remplir la navigation de la datacard affichée</span></label>
       <div class="imp-note" data-i18n="imp.route.fillNote">Sa navigation et ses points de référence sont remplacés.</div>
       <label class="imp-src"><input type="radio" name="imp-route-mode" id="imp-route-new" value="new"><span data-i18n="imp.route.new">Nouvelle datacard</span></label>
+      <label class="imp-src" id="imp-route-all-row" hidden><input type="radio" name="imp-route-mode" id="imp-route-all" value="all"><span id="imp-route-all-lbl"></span></label>
     </div>
     <div class="export-png-actions-bottom">
       <button type="button" class="export-png-back" id="imp-cancel" data-i18n="imp.cancel">Annuler</button>
@@ -1979,7 +2013,7 @@ const MOBILE_BREAKPOINT = 1100;
 const PAGE_W = 1000;
 const PAGE_H = 1414;
 
-const LIMITS = { steps: 8, times: 8, crew: 6, nav: 30, refs: 12, radios: 4, channels: 12, fields: 5, loadout: 8, threats: 12 };
+const LIMITS = { steps: 8, times: 8, crew: 6, nav: 30, refs: 12, radios: 4, channels: 20, fields: 5, loadout: 8, threats: 12 };
 
 const CLASSIF_KEYS = ['confidential', 'secret', 'top-secret', 'unclassified', 'nato-restricted', 'nato-secret'];
 const CLASSIF_LEGACY_MAP = {
@@ -2049,6 +2083,10 @@ const I18N = {
     'imp.src.currentOff': 'Aucun briefing enregistré dans ce navigateur.',
     'imp.src.route': 'Route en cours',
     'imp.src.routeOff': 'Aucune route enregistrée dans ce navigateur.',
+    'imp.src.hq': 'Mission chargée dans HQ',
+    'imp.src.hqOff': 'Chargez d\'abord la mission dans HQ',
+    'imp.src.hqNote': '{f} · {th}',
+    'imp.src.pkg': 'Paquet de vol',
     'imp.src.file': 'Fichier JSON (briefing ou route)',
     'imp.route.title': 'Route à importer',
     'imp.route.line': '« {name} » — {n} points',
@@ -2060,6 +2098,26 @@ const I18N = {
     'toast.routeImported': 'Route importée\u202f: {n} points ✓',
     'imp.choose': 'Choisir un fichier…',
     'imp.flights': 'Vols à importer',
+    'imp.side': 'Camp',
+    'imp.type': 'Type',
+    'imp.name': 'Nom',
+    'imp.all': 'Tous',
+    'imp.red': 'Rouge',
+    'imp.blue': 'Bleu',
+    'imp.neutral': 'Neutre',
+    'imp.checkShown': 'Cocher les vols affichés',
+    'imp.uncheck': 'Tout décocher',
+    'imp.shown': '{n} / {total} vols affichés',
+    'imp.pts': '{n} pts',
+    'imp.pts.1': '{n} pt',
+    'imp.noroute': 'sans route',
+    'imp.none': 'Aucun vol ne correspond.',
+    'imp.empty': 'Aucun vol dans cette source.',
+    'imp.go.n': 'Importer {n} vol(s)',
+    'imp.radio': 'Poste {n}',
+    'imp.cut': '{k} vol(s) : 30 points de navigation au plus',
+    'imp.route.all': 'Toutes les routes ({n}), une datacard par route',
+    'err.pk': 'Ce fichier n\'est pas un paquet de vol lisible.',
     'imp.general': 'Données générales (sans vol)',
     'imp.go': 'Importer',
     'imp.cancel': 'Annuler',
@@ -2343,6 +2401,10 @@ const I18N = {
     'imp.src.currentOff': 'No briefing saved in this browser.',
     'imp.src.route': 'Current route',
     'imp.src.routeOff': 'No route saved in this browser.',
+    'imp.src.hq': 'Mission loaded in HQ',
+    'imp.src.hqOff': 'Load the mission in HQ first',
+    'imp.src.hqNote': '{f} · {th}',
+    'imp.src.pkg': 'Flight package',
     'imp.src.file': 'JSON file (briefing or route)',
     'imp.route.title': 'Route to import',
     'imp.route.line': '“{name}” — {n} waypoints',
@@ -2354,6 +2416,26 @@ const I18N = {
     'toast.routeImported': 'Route imported: {n} waypoints ✓',
     'imp.choose': 'Choose a file…',
     'imp.flights': 'Flights to import',
+    'imp.side': 'Side',
+    'imp.type': 'Type',
+    'imp.name': 'Name',
+    'imp.all': 'All',
+    'imp.red': 'Red',
+    'imp.blue': 'Blue',
+    'imp.neutral': 'Neutral',
+    'imp.checkShown': 'Check shown flights',
+    'imp.uncheck': 'Uncheck all',
+    'imp.shown': '{n} / {total} flights shown',
+    'imp.pts': '{n} pts',
+    'imp.pts.1': '{n} pt',
+    'imp.noroute': 'no route',
+    'imp.none': 'No flight matches.',
+    'imp.empty': 'No flights in this source.',
+    'imp.go.n': 'Import {n} flight(s)',
+    'imp.radio': 'Radio {n}',
+    'imp.cut': '{k} flight(s): navigation limited to 30 points',
+    'imp.route.all': 'All routes ({n}), one datacard per route',
+    'err.pk': 'This file is not a readable flight package.',
     'imp.general': 'General data (no flight)',
     'imp.go': 'Import',
     'imp.cancel': 'Cancel',
@@ -2960,6 +3042,7 @@ function readNum(s) {
 }
 
 @@MAGVAR_BLOCK@@
+@@PROJECTION_BLOCK@@
 /* La déclinaison des caps d'une datacard : null (cap vrai, ou saisie illisible) ; { decl } saisie ; { calc: true, y } calculée,
    y étant l'année décimale du champ Date (1985, le 1er juillet, s'il est vide ou illisible) */
 function navVar(c) {
@@ -4310,7 +4393,8 @@ function loadJsonFile(file) {
 }
 
 /* ============= IMPORT DEPUIS UN BRIEFING OU UNE ROUTE ============= */
-const imp = { src: 'current', fileBriefing: null, fileRoute: null, fileName: '', current: null, currentRoute: null };
+const imp = { src: 'current', fileBriefing: null, fileRoute: null, fileName: '', current: null, currentRoute: null,
+  hq: null, pkg: null, pkgName: '', routeSet: [] };
 
 function impBriefing() {
   if (imp.src === 'file') return imp.fileBriefing;
@@ -4396,6 +4480,263 @@ function applyRouteToCard(c, r) {
   }
 }
 
+/* ----- Vols d'une mission de HQ ou d'un paquet de vol ----- */
+const KEY_SNAPSHOT = 'mission_snapshot_v1';          /* écrit par HQ ; ici en lecture seule */
+const KEY_ROUTESET = 'route_set_v1';                  /* écrit par le Route Planner ; ici en lecture seule */
+const SET_FORMAT = 'dcs-route-set-v1';
+const PACKAGE_FORMAT = 'dcs-flight-package-v1';
+
+function hasProjection(id) { return Object.prototype.hasOwnProperty.call(TM_PARAMS, id); }
+function isPlainObject(o) { return !!o && typeof o === 'object' && !Array.isArray(o); }
+function r7(v) { return Math.round(v * 1e7) / 1e7; }
+function impNorm(s) { return String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
+function impPtsText(n) { return t((CURRENT_LANG === 'fr' ? n <= 1 : n === 1) ? 'imp.pts.1' : 'imp.pts', { n: n }); }
+function impSideText(c) { return c === 'red' ? t('imp.red') : c === 'blue' ? t('imp.blue') : c === 'neutrals' ? t('imp.neutral') : String(c || ''); }
+
+/* Les clés numériques d'une table de points du .miz, dans l'ordre */
+function impKeys(points) {
+  return isPlainObject(points) ? Object.keys(points).filter(k => /^\d+$/.test(k)).sort((a, b) => Number(a) - Number(b)) : [];
+}
+
+/* Un point d'une table brute du .miz → un point de route, comme le Route Planner le lit (lat, lon au 1e-7 près ; RADIO = AGL, le reste MSL ;
+   nom WP‹k› à défaut) ; null si x, y ne se lisent pas */
+function impPointFromRaw(raw, k, theatre) {
+  if (!isPlainObject(raw) || typeof raw.x !== 'number' || typeof raw.y !== 'number' || !isFinite(raw.x) || !isFinite(raw.y)) return null;
+  const ll = dcsToLl(theatre, raw.x, raw.y);
+  if (!isFinite(ll.lat) || !isFinite(ll.lon) || Math.abs(ll.lat) > 90 || Math.abs(ll.lon) > 180) return null;
+  return {
+    name: (typeof raw.name === 'string' && raw.name !== '') ? raw.name : 'WP' + k,
+    lat: r7(ll.lat), lon: r7(ll.lon),
+    alt: (typeof raw.alt === 'number' && isFinite(raw.alt)) ? raw.alt : 0,
+    altRef: raw.alt_type === 'RADIO' ? 'AGL' : 'MSL'
+  };
+}
+
+/* Un vol d'un snapshot ou d'un paquet → { groupName, aircraftType, coalition, units, pts } ; null sans nom de groupe ni type.
+   pts : les points lisibles de sa route, dans l'ordre, convertis au théâtre (aucun sans projection ou sans route) */
+function impFlight(f, theatre) {
+  if (!isPlainObject(f) || typeof f.groupName !== 'string' || typeof f.aircraftType !== 'string') return null;
+  const table = (isPlainObject(f.route) && isPlainObject(f.route.points)) ? f.route.points : null;
+  const pts = [];
+  if (table && hasProjection(theatre)) impKeys(table).forEach(k => { const p = impPointFromRaw(table[k], k, theatre); if (p) pts.push(p); });
+  return {
+    groupName: f.groupName, aircraftType: f.aircraftType, coalition: typeof f.coalition === 'string' ? f.coalition : '',
+    units: Array.isArray(f.units) ? f.units.filter(isPlainObject) : [], pts: pts
+  };
+}
+
+/* Une source de vols : { kind 'hq' | 'pkg', theatre, file, flights, mission, side, type, name, checked } ; tous les vols sont cochés */
+function impMakeSource(kind, theatre, file, flights, mission) {
+  const checked = new Set();
+  flights.forEach((f, i) => checked.add(i));
+  return { kind: kind, theatre: theatre, file: file, flights: flights, mission: mission, side: 'all', type: 'all', name: '', checked: checked };
+}
+
+/* La mission chargée dans HQ (mission_snapshot_v1), ou null */
+function impReadHq() {
+  const o = readJsonKey(KEY_SNAPSHOT);
+  if (!o || !isPlainObject(o.sourceMission) || typeof o.sourceMission.theatre !== 'string' || !Array.isArray(o.flights)) return null;
+  const sm = o.sourceMission, th = sm.theatre;
+  const st = (typeof sm.startTime === 'number' && isFinite(sm.startTime) && sm.startTime >= 0) ? sm.startTime : null;
+  const mission = {
+    date: str(sm.missionDate),
+    time: st === null ? '' : pad2(Math.floor(st / 3600) % 24) + ':' + pad2(Math.floor((st % 3600) / 60)),
+    metar: isPlainObject(o.weather) ? str(o.weather.metar) : ''
+  };
+  return impMakeSource('hq', th, str(sm.filename), o.flights.map(f => impFlight(f, th)).filter(Boolean), mission);
+}
+
+function isPackageObject(o) {
+  return isPlainObject(o) && o.format === PACKAGE_FORMAT && Array.isArray(o.flights);
+}
+
+/* Un paquet de vol (dcs-flight-package-v1) lu → une source ; null s'il est illisible, d'un autre format ou sans théâtre */
+function impReadPackage(o, fname) {
+  if (!isPackageObject(o) || typeof o.theatre !== 'string' || o.theatre === '') return null;
+  return impMakeSource('pkg', o.theatre, fname || '', o.flights.map(f => impFlight(f, o.theatre)).filter(Boolean), null);
+}
+
+/* Le texte JSON d'un paquet : un .json, ou un .zip qui porte package.json à sa racine ; null si le fichier ne se lit pas */
+function readPackageText(file, done) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    const bytes = new Uint8Array(reader.result);
+    const zip = bytes.length > 3 && bytes[0] === 0x50 && bytes[1] === 0x4B && bytes[2] === 0x03 && bytes[3] === 0x04;
+    if (!zip) { done(new TextDecoder('utf-8').decode(bytes)); return; }
+    if (typeof JSZip === 'undefined') { done(null); return; }
+    JSZip.loadAsync(bytes).then(z => { const e = z.file('package.json'); return e ? e.async('string') : null; }).then(done, () => done(null));
+  };
+  reader.onerror = () => done(null);
+  reader.readAsArrayBuffer(file);
+}
+
+function loadPackageFile(file) {
+  readPackageText(file, text => {
+    let parsed = null;
+    if (typeof text === 'string') {
+      if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+      try { parsed = JSON.parse(text); } catch (e) { parsed = null; }
+    }
+    const src = impReadPackage(parsed, file.name);
+    if (!src) { showToast(t('err.pk')); return; }
+    imp.pkg = src; imp.pkgName = file.name; imp.src = 'pkg';
+    impRefresh();
+  });
+}
+
+/* L'indicatif d'une unité : une chaîne, ou le champ name d'une table du .miz ; sinon le nom du groupe */
+function impCallsign(u, group) {
+  const cs = u ? u.callsign : null;
+  if (hasText(cs)) return cs;
+  if (isPlainObject(cs) && hasText(cs.name)) return cs.name;
+  return group;
+}
+
+/* Une fréquence en MHz (nombre, texte, ou { frequency }) → 3 décimales, sans zéro inutile au-delà de 2 ; '' si elle ne se lit pas */
+function impFreq(v) {
+  if (isPlainObject(v)) v = v.frequency;
+  const f = typeof v === 'number' ? v : (typeof v === 'string' && v.trim() !== '' ? Number(v) : NaN);
+  if (!isFinite(f) || f <= 0) return '';
+  const s = f.toFixed(3);
+  return s.charAt(s.length - 1) === '0' ? s.slice(0, -1) : s;
+}
+
+/* Les postes d'une unité, par radioIndex croissant, 4 au plus ; un poste sans canal lisible n'est pas repris ; 20 canaux au plus, par numéro croissant */
+function impRadios(u) {
+  if (!u || !Array.isArray(u.radios)) return [];
+  const list = u.radios.filter(r => isPlainObject(r) && typeof r.radioIndex === 'number' && isFinite(r.radioIndex) && isPlainObject(r.channels));
+  list.sort((a, b) => a.radioIndex - b.radioIndex);
+  const out = [];
+  list.forEach(r => {
+    const chs = Object.keys(r.channels).filter(k => /^\d+$/.test(k)).sort((a, b) => Number(a) - Number(b))
+      .map(k => ({ channel: k, label: '', frequency: impFreq(r.channels[k]), modulation: '' })).filter(x => x.frequency !== '');
+    if (chs.length) out.push({ name: t('imp.radio', { n: r.radioIndex }), channels: chs.slice(0, LIMITS.channels) });
+  });
+  return out.slice(0, LIMITS.radios);
+}
+
+/* La datacard d'un vol : indicatif, type, nombre d'unités, navigation (par le chemin d'une route du Route Planner), radios de la première unité ;
+   avec la mission de HQ : date, heure et météo. Ni emport, ni terrains, ni équipage. */
+function cardFromFlight(fl, src) {
+  const c = newCard();
+  const u = fl.units.length ? fl.units[0] : null;
+  c.flight.callsign = impCallsign(u, fl.groupName);
+  c.flight.aircraft = fl.aircraftType;
+  c.flight.count = fl.units.length ? fl.units.length : null;
+  if (fl.pts.length) applyRouteToCard(c, routeFromObject({ format: ROUTE_FORMAT, theatre: src.theatre, points: fl.pts }));
+  c.radios = impRadios(u);
+  const m = src.mission;
+  if (m) {
+    c.meta.date = m.date;
+    c.meta.time = m.time;
+    c.weather.metar = m.metar;
+    const dm = decodeMetar(m.metar);
+    c.weather.wind = dm.wind; c.weather.visibility = dm.visibility; c.weather.qnh = dm.qnh; c.weather.clouds = dm.clouds;
+  }
+  return c;
+}
+
+/* Les cartes neuves s'ajoutent à la suite (ou prennent la place d'un document vide) et la première est affichée */
+function impAddCards(cards) {
+  if (isBlankDoc(doc)) { doc.cards = cards; curIdx = 0; }
+  else { const first = doc.cards.length; doc.cards = doc.cards.concat(cards); curIdx = first; }
+}
+
+/* Les routes du Route Planner qui portent au moins un point : [{ route (lue comme « Route en cours », avec les réglages partagés), flight }],
+   dans l'ordre des routes ; la route active est celle de route_state_v1 (qui fait foi pour elle, comme au Route Planner) */
+function impReadRouteSet() {
+  const st = readJsonKey(KEY_ROUTE), set = readJsonKey(KEY_ROUTESET);
+  if (!isPlainObject(st) || !isPlainObject(set) || set.format !== SET_FORMAT || !Array.isArray(set.routes)) return [];
+  const list = set.routes.filter(r => isPlainObject(r) && Array.isArray(r.points));
+  const active = (Number.isInteger(set.active) && set.active >= 0 && set.active < list.length) ? set.active : 0;
+  const out = [];
+  list.forEach((r, i) => {
+    const o = i === active ? { name: st.name, points: st.points } : { name: r.name, points: r.points };
+    const route = routeFromObject(Object.assign({}, st, o));
+    if (!route || !route.points.length) return;
+    const f = r.flight;
+    out.push({ route: route, flight: (isPlainObject(f) && typeof f.groupName === 'string' && typeof f.aircraftType === 'string') ? f : null });
+  });
+  return out;
+}
+
+function runAllRoutesImport() {
+  const list = imp.routeSet;
+  if (list.length < 2) return;
+  const cards = list.map(e => {
+    const c = newCard();
+    applyRouteToCard(c, e.route);
+    c.flight.callsign = e.flight ? e.flight.groupName : e.route.name;
+    c.flight.aircraft = e.flight ? e.flight.aircraftType : '';
+    return c;
+  });
+  impAddCards(cards);
+  persistState();
+  renderAll();
+  closeImportModal();
+  showToast(t('toast.imported', { n: cards.length }));
+}
+
+function impFlSrc() { return imp.src === 'hq' ? imp.hq : (imp.src === 'pkg' ? imp.pkg : null); }
+
+/* Les vols qu'on voit : filtres cumulés (camp, type, nom sans casse ni accents) */
+function impVisible(s) {
+  const q = impNorm(s.name);
+  return s.flights.map((f, i) => ({ f: f, i: i })).filter(x =>
+    (s.side === 'all' || x.f.coalition === s.side) && (s.type === 'all' || x.f.aircraftType === s.type) && (q === '' || impNorm(x.f.groupName).indexOf(q) >= 0));
+}
+
+/* Les filtres : le camp (Tous, Rouge, Bleu, et Neutre si un vol l'est) et le type (Tous, puis ceux de la source, triés, sans doublon) */
+function impRenderFlHead(s) {
+  const sides = [['all', t('imp.all')], ['red', t('imp.red')], ['blue', t('imp.blue')]];
+  if (s.flights.some(f => f.coalition === 'neutrals')) sides.push(['neutrals', t('imp.neutral')]);
+  const sd = document.getElementById('imp-side');
+  sd.innerHTML = sides.map(x => '<option value="' + x[0] + '">' + esc(x[1]) + '</option>').join('');
+  sd.value = s.side;
+  const types = s.flights.map(f => f.aircraftType).filter((v, i, a) => a.indexOf(v) === i).sort();
+  if (types.indexOf(s.type) === -1) s.type = 'all';
+  const td = document.getElementById('imp-type');
+  td.innerHTML = '<option value="all">' + esc(t('imp.all')) + '</option>' + types.map(x => '<option value="' + esc(x) + '">' + esc(x) + '</option>').join('');
+  td.value = s.type;
+  document.getElementById('imp-name').value = s.name;
+}
+
+/* La liste : une ligne par vol, « type · camp · n pts » à droite ; le compte des vols affichés */
+function impRenderFlList(s) {
+  const vis = impVisible(s);
+  document.getElementById('imp-list').innerHTML = vis.length ? vis.map(x => {
+    const f = x.f;
+    return '<label class="export-png-page-row imp-row"><input type="checkbox" class="export-png-page-cb imp-fcb" data-i="' + x.i + '"' + (s.checked.has(x.i) ? ' checked' : '') + '>' +
+      '<span class="imp-nm">' + esc(f.groupName) + '</span><span class="imp-n">' +
+      esc(f.aircraftType + (f.coalition ? ' · ' + impSideText(f.coalition).toLowerCase() : '') + ' · ' + (f.pts.length ? impPtsText(f.pts.length) : t('imp.noroute'))) + '</span></label>';
+  }).join('') : '<p class="imp-empty">' + esc(t(s.flights.length ? 'imp.none' : 'imp.empty')) + '</p>';
+  document.getElementById('imp-cnt').textContent = t('imp.shown', { n: vis.length, total: s.flights.length });
+  impUpdateGo();
+}
+
+function runFlightsImport() {
+  const s = impFlSrc();
+  if (!s) return;
+  const picks = impVisible(s).filter(x => s.checked.has(x.i));
+  if (!picks.length) return;
+  const cards = picks.map(x => cardFromFlight(s.flights[x.i], s));
+  const cut = picks.filter(x => s.flights[x.i].pts.length > LIMITS.nav).length;
+  impAddCards(cards);
+  persistState();
+  renderAll();
+  closeImportModal();
+  showToast(t('toast.imported', { n: cards.length }) + (cut ? ' · ' + t('imp.cut', { k: cut }) : ''));
+}
+
+function onImpListChange(e) {
+  const s = impFlSrc();
+  if (s && e.target && e.target.classList && e.target.classList.contains('imp-fcb')) {
+    const i = parseInt(e.target.dataset.i, 10);
+    if (i >= 0) { if (e.target.checked) s.checked.add(i); else s.checked.delete(i); }
+  }
+  impUpdateGo();
+}
+
 function impRefresh() {
   const curRow = document.getElementById('imp-src-current-row');
   const curRadio = document.getElementById('imp-src-current');
@@ -4413,9 +4754,18 @@ function impRefresh() {
   rtRadio.disabled = rtOff;
   rtNote.hidden = !rtOff;
   rtNote.textContent = rtOff ? t('imp.src.routeOff') : '';
+  const hqRow = document.getElementById('imp-src-hq-row');
+  const hqOff = !imp.hq;
+  hqRow.classList.toggle('off', hqOff);
+  document.getElementById('imp-src-hq').disabled = hqOff;
+  document.getElementById('imp-hq-note').textContent = hqOff ? t('imp.src.hqOff') : t('imp.src.hqNote', { f: imp.hq.file, th: imp.hq.theatre });
   document.getElementById('imp-src-current').checked = imp.src === 'current';
   document.getElementById('imp-src-route').checked = imp.src === 'route';
+  document.getElementById('imp-src-hq').checked = imp.src === 'hq';
+  document.getElementById('imp-src-pkg').checked = imp.src === 'pkg';
   document.getElementById('imp-src-file').checked = imp.src === 'file';
+  document.getElementById('imp-pkg-zone').hidden = imp.src !== 'pkg';
+  document.getElementById('imp-pkg-name').textContent = imp.pkgName;
   document.getElementById('imp-file-zone').hidden = imp.src !== 'file';
   document.getElementById('imp-file-name').textContent = imp.fileName;
   const r = impRoute();
@@ -4425,6 +4775,19 @@ function impRefresh() {
     const nm = hasText(r.name) ? r.name.trim() : t('imp.route.noname');
     document.getElementById('imp-route-line').textContent = t('imp.route.line', { name: nm, n: r.points.length }) +
       (r.refs.length ? t('imp.route.refs', { k: r.refs.length }) : '');
+    /* « Toutes les routes » : seulement sur la route en cours, quand le Route Planner en garde au moins deux */
+    const nAll = imp.src === 'route' ? imp.routeSet.length : 0;
+    const allRow = document.getElementById('imp-route-all-row');
+    allRow.hidden = nAll < 2;
+    document.getElementById('imp-route-all-lbl').textContent = t('imp.route.all', { n: nAll });
+    if (nAll < 2 && document.getElementById('imp-route-all').checked) document.getElementById('imp-route-fill').checked = true;
+  }
+  const fs = impFlSrc();
+  document.getElementById('imp-fl-head').hidden = !fs;
+  if (fs) {
+    impRenderFlHead(fs);
+    impRenderFlList(fs);
+    return;
   }
   const b = impBriefing();
   const list = document.getElementById('imp-list');
@@ -4443,26 +4806,39 @@ function impRefresh() {
 }
 
 function impUpdateGo() {
-  const r = impRoute();
-  document.getElementById('imp-go').disabled = r ? !r.points.length : !document.querySelector('#imp-list .imp-cb:checked');
+  const r = impRoute(), s = impFlSrc(), go = document.getElementById('imp-go');
+  if (s) {
+    const n = impVisible(s).filter(x => s.checked.has(x.i)).length;
+    go.textContent = t('imp.go.n', { n: n });
+    go.disabled = n === 0;
+    return;
+  }
+  go.textContent = t('imp.go');
+  go.disabled = r ? !r.points.length : !document.querySelector('#imp-list .imp-cb:checked');
 }
 
 /* fileBriefing / fileRoute : un fichier déjà lu ; forceSrc 'route' : ouvrir sur « Route en cours » (passage depuis le Route Planner) */
 function openImportModal(fileBriefing, fileName, fileRoute, forceSrc) {
   imp.current = readCurrentBriefing();
   imp.currentRoute = readCurrentRoute();
+  imp.routeSet = impReadRouteSet();
+  imp.hq = impReadHq();
+  imp.pkg = null; imp.pkgName = '';
   if (fileBriefing) { imp.fileBriefing = fileBriefing; imp.fileRoute = null; imp.fileName = fileName || ''; imp.src = 'file'; }
   else if (fileRoute) { imp.fileRoute = fileRoute; imp.fileBriefing = null; imp.fileName = fileName || ''; imp.src = 'file'; }
   else if (forceSrc === 'route' && imp.currentRoute) { imp.src = 'route'; }
   else {
-    imp.src = imp.current ? 'current' : (imp.currentRoute ? 'route' : 'file');
+    imp.src = imp.current ? 'current' : (imp.currentRoute ? 'route' : (imp.hq ? 'hq' : 'file'));
     if (imp.src === 'file') { imp.fileBriefing = null; imp.fileRoute = null; imp.fileName = ''; }
   }
   document.getElementById('imp-route-fill').checked = true;
   impRefresh();
   document.getElementById('import-modal').hidden = false;
 }
-function closeImportModal() { document.getElementById('import-modal').hidden = true; }
+function closeImportModal() {
+  if (TBM.cur) tbmClose(false);      /* la liste ouverte se ferme avec la fenêtre */
+  document.getElementById('import-modal').hidden = true;
+}
 
 /* Passage depuis le Route Planner : la clé est lue puis supprimée, la fenêtre s'ouvre sur « Route en cours ». */
 function checkRouteHandoff() {
@@ -4476,6 +4852,7 @@ function checkRouteHandoff() {
 function runRouteImport() {
   const r = impRoute();
   if (!r || !r.points.length) return;
+  if (imp.src === 'route' && imp.routeSet.length >= 2 && document.getElementById('imp-route-all').checked) { runAllRoutesImport(); return; }
   if (document.getElementById('imp-route-new').checked) {
     const c = newCard();
     applyRouteToCard(c, r);
@@ -4491,6 +4868,7 @@ function runRouteImport() {
 }
 
 function runImport() {
+  if (impFlSrc()) { runFlightsImport(); return; }
   if (impRoute()) { runRouteImport(); return; }
   const b = impBriefing();
   if (!b) return;
@@ -4517,6 +4895,14 @@ function loadBriefingFile(file) {
   reader.onload = () => {
     let parsed;
     try { parsed = JSON.parse(reader.result); } catch (e) { showToast(t('err.json')); return; }
+    if (isPackageObject(parsed)) {
+      /* un paquet de vol ouvert par « Fichier JSON » : la source passe sur « Paquet de vol » */
+      const src = impReadPackage(parsed, file.name);
+      if (!src) { showToast(t('err.pk')); return; }
+      imp.pkg = src; imp.pkgName = file.name; imp.fileBriefing = null; imp.fileRoute = null; imp.fileName = ''; imp.src = 'pkg';
+      impRefresh();
+      return;
+    }
     if (isBriefingObject(parsed)) { imp.fileBriefing = parsed; imp.fileRoute = null; }
     else if (isRouteObject(parsed)) { imp.fileRoute = routeFromObject(parsed); imp.fileBriefing = null; }
     else { showToast(t('err.json')); return; }
@@ -4702,7 +5088,17 @@ function bindEvents() {
   document.getElementById('import-modal-close').addEventListener('click', closeImportModal);
   document.getElementById('imp-cancel').addEventListener('click', closeImportModal);
   document.getElementById('imp-go').addEventListener('click', runImport);
-  document.getElementById('imp-list').addEventListener('change', impUpdateGo);
+  document.getElementById('imp-list').addEventListener('change', onImpListChange);
+  document.getElementById('imp-src-hq').addEventListener('change', () => { imp.src = 'hq'; impRefresh(); });
+  document.getElementById('imp-src-pkg').addEventListener('change', () => { imp.src = 'pkg'; impRefresh(); });
+  const pb = document.getElementById('file-package');
+  document.getElementById('imp-pkg-btn').addEventListener('click', () => { pb.value = ''; pb.click(); });
+  pb.addEventListener('change', () => { if (pb.files && pb.files[0]) loadPackageFile(pb.files[0]); });
+  document.getElementById('imp-side').addEventListener('change', e => { const s = impFlSrc(); if (s) { s.side = e.target.value; impRenderFlList(s); } });
+  document.getElementById('imp-type').addEventListener('change', e => { const s = impFlSrc(); if (s) { s.type = e.target.value; impRenderFlList(s); } });
+  document.getElementById('imp-name').addEventListener('input', e => { const s = impFlSrc(); if (s) { s.name = e.target.value; impRenderFlList(s); } });
+  document.getElementById('imp-check').addEventListener('click', () => { const s = impFlSrc(); if (s) { impVisible(s).forEach(x => s.checked.add(x.i)); impRenderFlList(s); } });
+  document.getElementById('imp-uncheck').addEventListener('click', () => { const s = impFlSrc(); if (s) { s.checked = new Set(); impRenderFlList(s); } });
   document.getElementById('imp-src-current').addEventListener('change', () => { imp.src = 'current'; impRefresh(); });
   document.getElementById('imp-src-route').addEventListener('change', () => { imp.src = 'route'; impRefresh(); });
   document.getElementById('imp-src-file').addEventListener('change', () => { imp.src = 'file'; impRefresh(); });
@@ -5131,7 +5527,7 @@ def build():
         raise SystemExit("[ERREUR] Le document d'exemple anglais n'est pas au format dcs-datacard-v1")
     example_en_js = json.dumps(example_en, ensure_ascii=False, indent=2).replace('</', '<\\/')
 
-    js = JS.replace('__EXAMPLE_DOC__', example_js).replace('__EXAMPLE_DOC_EN__', example_en_js).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block())
+    js = JS.replace('__EXAMPLE_DOC__', example_js).replace('__EXAMPLE_DOC_EN__', example_en_js).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@PROJECTION_BLOCK@@\n', build_projection_block())
     html = HTML
     html = html.replace('__CSS__', CSS)
     html = html.replace('__LIB_HTML2CANVAS__', A['lib_html2canvas'])
