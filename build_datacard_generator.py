@@ -1351,6 +1351,19 @@ select[data-tbm-src] { display: none !important; }
 .imp-row .imp-nm { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
 .imp-row .imp-n { flex: none; max-width: 55%; text-align: right; font-size: 11px; opacity: .75; }
 .imp-empty { margin: 6px 0; font-size: 12px; opacity: .75; }
+.imp-ch-note { margin-left: 0; margin-bottom: 8px; }
+.imp-chrow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; padding: 6px 0; }
+.imp-chrow + .imp-chrow { border-top: 1px dashed rgba(0, 0, 0, 0.2); }
+.imp-chname { flex: 0 0 auto; min-width: 58px; font-family: var(--f-stencil); font-weight: 700; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; }
+.imp-chips { flex: 1 1 150px; min-width: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.imp-chip, .imp-chbtn {
+  background: transparent; border: 1px solid #1f1c16; border-radius: 2px; color: inherit; cursor: pointer;
+  font-family: inherit; min-width: 32px; min-height: 32px; padding: 2px 8px; font-size: 12px; line-height: 1;
+}
+.imp-chip:hover, .imp-chbtn:hover { background: rgba(0, 0, 0, 0.06); border-color: var(--amber, #c8901f); }
+.imp-chip.on, .imp-chip.on:hover { background: var(--amber, #c8901f); border-color: var(--amber, #c8901f); color: #f6efdc; font-weight: 700; }
+.imp-chbtns { flex: 0 0 auto; display: flex; gap: 6px; margin-left: auto; }
+.imp-chbtn { font-size: 11px; letter-spacing: .5px; }
 
 /* ============ DATACARD ============ */
 .dc-sheet {
@@ -1940,6 +1953,11 @@ __CSS__
         </div>
       </div>
       <div class="export-png-list" id="imp-list"></div>
+      <div id="imp-ch-block" hidden>
+        <h3 data-i18n="imp.ch.title">Canaux radio à importer</h3>
+        <div class="imp-note imp-ch-note" data-i18n="imp.ch.note">Touchez les canaux utilisés en mission ; aucun canal coché = pas de radios sur la datacard.</div>
+        <div id="imp-ch-list"></div>
+      </div>
     </div>
     <div class="imp-block" id="imp-route-block" hidden>
       <h3 data-i18n="imp.route.title">Route à importer</h3>
@@ -2125,6 +2143,11 @@ const I18N = {
     'imp.empty': 'Aucun vol dans cette source.',
     'imp.go.n': 'Importer {n} vol(s)',
     'imp.radio': 'Poste {n}',
+    'imp.ch.title': 'Canaux radio à importer',
+    'imp.ch.note': 'Touchez les canaux utilisés en mission\u00a0; aucun canal coché = pas de radios sur la datacard.',
+    'imp.ch.all': 'Tous',
+    'imp.ch.none': 'Aucun',
+    'imp.ch.tip': '{r}, canal {c}',
     'imp.cut': '{k} vol(s) : 30 points de navigation au plus',
     'imp.route.all': 'Toutes les routes ({n}), une datacard par route',
     'err.pk': 'Ce fichier n\'est pas un paquet de vol lisible.',
@@ -2445,6 +2468,11 @@ const I18N = {
     'imp.empty': 'No flights in this source.',
     'imp.go.n': 'Import {n} flight(s)',
     'imp.radio': 'Radio {n}',
+    'imp.ch.title': 'Radio channels to import',
+    'imp.ch.note': 'Tap the channels used in the mission; none ticked = no radios on the datacard.',
+    'imp.ch.all': 'All',
+    'imp.ch.none': 'None',
+    'imp.ch.tip': '{r}, channel {c}',
     'imp.cut': '{k} flight(s): navigation limited to 30 points',
     'imp.route.all': 'All routes ({n}), one datacard per route',
     'err.pk': 'This file is not a readable flight package.',
@@ -4598,7 +4626,7 @@ function impFlight(f, theatre) {
 function impMakeSource(kind, theatre, file, flights, mission) {
   const checked = new Set();
   flights.forEach((f, i) => checked.add(i));
-  return { kind: kind, theatre: theatre, file: file, flights: flights, mission: mission, side: 'all', type: 'all', name: '', checked: checked };
+  return { kind: kind, theatre: theatre, file: file, flights: flights, mission: mission, side: 'all', type: 'all', name: '', checked: checked, chan: {} };
 }
 
 /* La mission chargée dans HQ (mission_snapshot_v1), ou null */
@@ -4671,18 +4699,77 @@ function impFreq(v) {
   return s.charAt(s.length - 1) === '0' ? s.slice(0, -1) : s;
 }
 
-/* Les postes d'une unité, par radioIndex croissant, 4 au plus ; un poste sans canal lisible n'est pas repris ; 20 canaux au plus, par numéro croissant */
-function impRadios(u) {
+/* Les postes lisibles d'une unité : [{ index, channels: [{ channel, frequency }] par numéro croissant }], par radioIndex croissant ; un canal sans fréquence lisible est écarté */
+function impUnitRadios(u) {
   if (!u || !Array.isArray(u.radios)) return [];
   const list = u.radios.filter(r => isPlainObject(r) && typeof r.radioIndex === 'number' && isFinite(r.radioIndex) && isPlainObject(r.channels));
   list.sort((a, b) => a.radioIndex - b.radioIndex);
   const out = [];
   list.forEach(r => {
     const chs = Object.keys(r.channels).filter(k => /^\d+$/.test(k)).sort((a, b) => Number(a) - Number(b))
-      .map(k => ({ channel: k, label: '', frequency: impFreq(r.channels[k]), modulation: '' })).filter(x => x.frequency !== '');
-    if (chs.length) out.push({ name: t('imp.radio', { n: r.radioIndex }), channels: chs.slice(0, LIMITS.channels) });
+      .map(k => ({ channel: k, frequency: impFreq(r.channels[k]) })).filter(x => x.frequency !== '');
+    if (chs.length) out.push({ index: r.radioIndex, channels: chs });
+  });
+  return out;
+}
+
+/* Les postes de la datacard : ceux de la première unité, restreints aux canaux choisis (sel : radioIndex → ensemble de numéros) ; un poste sans canal
+   choisi n'est pas repris ; 4 postes et 20 canaux au plus ; label et modulation vides */
+function impRadios(u, sel) {
+  const out = [];
+  impUnitRadios(u).forEach(r => {
+    const keep = sel && sel[r.index];
+    const chs = r.channels.filter(x => keep && keep.has(x.channel)).map(x => ({ channel: x.channel, label: '', frequency: x.frequency, modulation: '' }));
+    if (chs.length) out.push({ name: t('imp.radio', { n: r.index }), channels: chs.slice(0, LIMITS.channels) });
   });
   return out.slice(0, LIMITS.radios);
+}
+
+/* Les canaux qu'on peut choisir : pour chaque poste de la première unité des vols cochés (ceux qu'on voit et qu'on importerait), la réunion des numéros */
+function impChanAvail(s) {
+  const map = {};
+  impVisible(s).filter(x => s.checked.has(x.i)).forEach(x => {
+    const u = s.flights[x.i].units.length ? s.flights[x.i].units[0] : null;
+    impUnitRadios(u).forEach(r => {
+      const set = map[r.index] || (map[r.index] = new Set());
+      r.channels.forEach(c => set.add(c.channel));
+    });
+  });
+  return Object.keys(map).map(Number).sort((a, b) => a - b).map(i => ({ index: i, channels: Array.from(map[i]).sort((a, b) => Number(a) - Number(b)) }));
+}
+
+/* Le bloc « Canaux radio à importer » : une ligne par poste, une pastille par canal (pleine = cochée), Tous / Aucun ; rien n'est coché à l'ouverture */
+function impRenderChans(s) {
+  const av = impChanAvail(s);
+  document.getElementById('imp-ch-block').hidden = !av.length;
+  document.getElementById('imp-ch-list').innerHTML = av.map(r =>
+    '<div class="imp-chrow" data-r="' + r.index + '"><span class="imp-chname">' + esc(t('imp.radio', { n: r.index })) + '</span>' +
+    '<div class="imp-chips">' + r.channels.map(c =>
+      '<button type="button" class="imp-chip" data-r="' + r.index + '" data-c="' + c + '" aria-pressed="false" title="' + esc(t('imp.ch.tip', { r: t('imp.radio', { n: r.index }), c: c })) + '">' + c + '</button>').join('') + '</div>' +
+    '<div class="imp-chbtns"><button type="button" class="imp-chbtn" data-chall="' + r.index + '">' + esc(t('imp.ch.all')) + '</button>' +
+    '<button type="button" class="imp-chbtn" data-chnone="' + r.index + '">' + esc(t('imp.ch.none')) + '</button></div></div>').join('');
+  impSyncChips(s);
+}
+function impSyncChips(s) {
+  document.querySelectorAll('#imp-ch-list .imp-chip').forEach(b => {
+    const on = !!(s.chan[b.dataset.r] && s.chan[b.dataset.r].has(b.dataset.c));
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+}
+function onImpChanClick(e) {
+  const s = impFlSrc();
+  const b = e.target && e.target.closest ? e.target.closest('button') : null;
+  if (!s || !b) return;
+  if (b.classList.contains('imp-chip')) {
+    const set = s.chan[b.dataset.r] || (s.chan[b.dataset.r] = new Set());
+    if (set.has(b.dataset.c)) set.delete(b.dataset.c); else set.add(b.dataset.c);
+  } else if (b.dataset.chall !== undefined || b.dataset.chnone !== undefined) {
+    const r = b.dataset.chall !== undefined ? b.dataset.chall : b.dataset.chnone;
+    const set = s.chan[r] = new Set();
+    if (b.dataset.chall !== undefined) document.querySelectorAll('#imp-ch-list .imp-chip[data-r="' + r + '"]').forEach(x => set.add(x.dataset.c));
+  } else return;
+  impSyncChips(s);
 }
 
 /* La datacard d'un vol : indicatif, type, nombre d'unités, navigation (par le chemin d'une route du Route Planner), radios de la première unité ;
@@ -4694,7 +4781,7 @@ function cardFromFlight(fl, src) {
   c.flight.aircraft = fl.aircraftType;
   c.flight.count = fl.units.length ? fl.units.length : null;
   if (fl.pts.length) applyRouteToCard(c, routeFromObject({ format: ROUTE_FORMAT, theatre: src.theatre, points: fl.pts }));
-  c.radios = impRadios(u);
+  c.radios = impRadios(u, src.chan);
   const m = src.mission;
   if (m) {
     c.meta.date = m.date;
@@ -4780,6 +4867,7 @@ function impRenderFlList(s) {
       '<span class="imp-nm">' + esc(f.groupName) + '</span><span class="imp-n">' +
       esc(f.aircraftType + (f.coalition ? ' · ' + impSideText(f.coalition).toLowerCase() : '') + ' · ' + (f.pts.length ? impPtsText(f.pts.length) : t('imp.noroute'))) + '</span></label>';
   }).join('') : '<p class="imp-empty">' + esc(t(s.flights.length ? 'imp.none' : 'imp.empty')) + '</p>';
+  impRenderChans(s);
   document.getElementById('imp-cnt').textContent = t('imp.shown', { n: vis.length, total: s.flights.length });
   impUpdateGo();
 }
@@ -4803,6 +4891,7 @@ function onImpListChange(e) {
   if (s && e.target && e.target.classList && e.target.classList.contains('imp-fcb')) {
     const i = parseInt(e.target.dataset.i, 10);
     if (i >= 0) { if (e.target.checked) s.checked.add(i); else s.checked.delete(i); }
+    impRenderChans(s);
   }
   impUpdateGo();
 }
@@ -4854,6 +4943,7 @@ function impRefresh() {
   }
   const fs = impFlSrc();
   document.getElementById('imp-fl-head').hidden = !fs;
+  if (!fs) document.getElementById('imp-ch-block').hidden = true;
   if (fs) {
     impRenderFlHead(fs);
     impRenderFlList(fs);
@@ -5159,6 +5249,7 @@ function bindEvents() {
   document.getElementById('imp-cancel').addEventListener('click', closeImportModal);
   document.getElementById('imp-go').addEventListener('click', runImport);
   document.getElementById('imp-list').addEventListener('change', onImpListChange);
+  document.getElementById('imp-ch-list').addEventListener('click', onImpChanClick);
   document.getElementById('imp-src-hq').addEventListener('change', () => { imp.src = 'hq'; impRefresh(); });
   document.getElementById('imp-src-pkg').addEventListener('change', () => { imp.src = 'pkg'; impRefresh(); });
   const pb = document.getElementById('file-package');

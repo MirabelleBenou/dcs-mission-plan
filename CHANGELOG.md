@@ -30,6 +30,8 @@ Changes merged since the last release, grouped per tool.
 - The example loads in the interface language (French or English).
 
 ### Datacard Generator
+#### Added
+- **Mission loaded in HQ** and **Flight package** in the import window: one datacard per flight (navigation, callsign, type, radios; mission date, time and weather from HQ), filtered by side, type and name; from the Route Planner, **all routes** at once, one datacard per route. You pick the radio channels to import. A radio now holds up to 20 channels.
 #### Changed
 - The example loads in the interface language (French or English).
 
