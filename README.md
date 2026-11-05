@@ -186,6 +186,7 @@ The output `dist/dcs_mission_plan.html` is the distributable (and the file publi
 ├── build_route_planner.py         # Route Planner builder
 ├── assets.json                    # Embedded fonts, libraries, kraft texture (base64)
 ├── airfields.json                 # DCS airfield & helipad positions (from pydcs)
+├── airdromes.json                 # DCS airfield names and ids per theatre (from pydcs, via DCS Airfield Charts)
 ├── towns.json                     # DCS town names & positions (from the DCS World maps)
 ├── wmm/                          # World Magnetic Model coefficients 1985–2025 (NOAA, public domain)
 ├── igrf/                         # IGRF-12 coefficients 1900–2015 (IAGA, as shipped by DCS World)
@@ -234,6 +235,7 @@ For code contributions: fork, branch, study the build scripts to understand the 
 - Map engine [Leaflet](https://leafletjs.com) (BSD-2-Clause); topographic tiles © OpenStreetMap contributors, SRTM, style © OpenTopoMap (CC-BY-SA); satellite imagery © Esri, Maxar, Earthstar Geographics
 - NATO military symbols drawn with **[milsymbol](https://github.com/spatialillusions/milsymbol)** by Måns Beckman (MIT)
 - DCS airfield & helipad names and positions, and the DCS map projections, from **[pydcs](https://github.com/pydcs/dcs)** (LGPL-3.0); place-name overlay © Esri, HERE, Garmin, OpenStreetMap contributors
+- Airfield names and ids: pydcs, via DCS Airfield Charts
 - DCS town names and positions from the DCS World maps, © Eagle Dynamics
 - World Magnetic Model coefficients (epochs 1985–2025, the ones DCS World ships) by NOAA NCEI and the British Geological Survey, public domain
 - International Geomagnetic Reference Field, 12th generation (IAGA), in the NOAA geomag70 file DCS World ships, used for years up to 1985

@@ -825,7 +825,7 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
 .dyn-panel[open] > summary::after { transform: rotate(-90deg); }
 .dyn-row { border: 1px solid var(--khaki); border-radius: 3px; padding: 8px 10px; background: rgba(0,0,0,.15); margin-bottom: 6px; }
 .dyn-name { font-family: var(--f-stencil); font-size: 12px; color: var(--amber); letter-spacing: 1px; word-break: break-word; }
-.dyn-links { margin-top: 6px; font-family: var(--f-typewriter); font-size: 11px; color: var(--khaki-light); display: flex; flex-direction: column; gap: 3px; word-break: break-word; }
+.dyn-links { margin-top: 6px; font-family: var(--f-typewriter); font-size: 11px; line-height: 1.6; color: var(--khaki-light); word-break: break-word; }
 .dyn-where { margin-top: 4px; word-break: break-word; }
 
 
@@ -1158,9 +1158,7 @@ const I18N = {
     'dyn.tmpl': 'Template',
     'dyn.servedBy': 'Sert à : {0}',
     'dyn.noLink': 'aucun lien',
-    'dyn.hot': 'moteur tournant : {0}',
-    'dyn.yes': 'oui',
-    'dyn.no': 'non',
+    'dyn.hot': 'moteur tournant',
     'dyn.unlinked': 'Sans template (appareils par défaut de DCS) : {0}',
     'dyn.nothing': 'Aucun aérodrome ni FARP n’offre le Dynamic Spawn.',
     'dyn.airfield': 'Aérodrome {0}',
@@ -1385,9 +1383,7 @@ const I18N = {
     'dyn.tmpl': 'Template',
     'dyn.servedBy': 'Used at: {0}',
     'dyn.noLink': 'no link',
-    'dyn.hot': 'hot start: {0}',
-    'dyn.yes': 'yes',
-    'dyn.no': 'no',
+    'dyn.hot': 'hot start',
     'dyn.unlinked': 'No template (DCS default aircraft): {0}',
     'dyn.nothing': 'No airfield or FARP offers Dynamic Spawn.',
     'dyn.airfield': 'Airfield {0}',
@@ -3118,21 +3114,25 @@ function dynWhereHtml(gid) {
 function dynPanelHtml() {
   if (!_HQ_DYN || !_HQ_MIZ_CONTEXT) return '';
   const h = escapeHtml;
-  if (_HQ_DYN.warn) return '<div class="pk-warn" id="dyn-warn">' + h(t('dyn.warn.' + _HQ_DYN.warn)) + '</div>';
+  if (_HQ_DYN.warn) return _HQ_DYN.templates.length ? '<div class="pk-warn" id="dyn-warn">' + h(t('dyn.warn.' + _HQ_DYN.warn)) + '</div>' : '';
   if (!dynActive()) return '';
-  const linked = _HQ_DYN.whs.filter(w => w.links.length).map(w => ({ w: w, name: dynWhName(w) })).sort((a, b) => dynCmp(a.name, b.name));
+  // Les aérodromes d'abord, puis les FARP et navires, chacun par ordre alphabétique
+  const linked = _HQ_DYN.whs.filter(w => w.links.length).map(w => ({ w: w, name: dynWhName(w) }))
+    .sort((a, b) => ((a.w.kind === 'airport' ? 0 : 1) - (b.w.kind === 'airport' ? 0 : 1)) || dynCmp(a.name, b.name));
   const free = _HQ_DYN.whs.filter(w => !w.links.length).map(dynWhName).sort(dynCmp);
   let html = '<details class="dyn-panel" id="dyn-panel"' + (_DYN_OPEN ? ' open' : '') + '><summary class="snap-header">' + h(t('dyn.title')) + '</summary>';
   for (const r of linked) {
     html += '<div class="dyn-row" data-dyn-wh="' + h(String(r.w.id)) + '"><div class="snap-flight-header"><span class="dyn-name">' + h(r.name) + '</span>';
-    html += ' <span class="snap-flight-tag">' + h(t('pk.flt.' + r.w.side, r.w.side)) + '</span></div>';
-    html += '<div class="snap-meta dyn-where">' + h(tf('dyn.hot', t(r.w.hot ? 'dyn.yes' : 'dyn.no'))) + '</div><div class="dyn-links">';
+    html += ' <span class="snap-flight-tag">' + h(t('pk.flt.' + r.w.side, r.w.side)) + '</span>';
+    if (r.w.hot) html += ' <span class="snap-meta">· ' + h(t('dyn.hot')) + '</span>';
+    html += '</div><div class="dyn-links">';
+    const parts = [];
     for (const l of r.w.links) {
-      let txt = l.type + ' → ' + (l.status === 'absent' ? String(l.groupId) : l.gname);
-      html += '<div class="dyn-link">' + h(txt);
-      if (l.status !== 'ok') html += ' <span class="pk-warn">⚠ ' + h(t(l.status === 'absent' ? 'dyn.groupGone' : 'dyn.notTemplate')) + '</span>';
-      html += '</div>';
+      let txt = h(l.type + ' → ' + (l.status === 'absent' ? String(l.groupId) : l.gname));
+      if (l.status !== 'ok') txt += ' <span class="pk-warn">⚠ ' + h(t(l.status === 'absent' ? 'dyn.groupGone' : 'dyn.notTemplate')) + '</span>';
+      parts.push('<span class="dyn-link">' + txt + '</span>');
     }
+    html += parts.join(' · ');
     html += '</div></div>';
   }
   if (free.length) html += '<div class="snap-meta" id="dyn-free">' + h(tf('dyn.unlinked', free.join(', '))) + '</div>';
