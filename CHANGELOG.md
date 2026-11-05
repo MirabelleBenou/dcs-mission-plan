@@ -13,6 +13,7 @@ Changes merged since the last release, grouped per tool.
 ### All tools
 #### Changed
 - File buttons use the same words everywhere: **Open** and **Save** for the tool's own file, **Import** and **Export** to exchange with another tool or produce the final document, **Clear** to empty the tool. The Datacard Generator's four file buttons become Open, Import, Save and Export.
+- Every file you save or export asks for its name first, with the usual name filled in; names use one date format everywhere. On tablets, HQ's flight packages and modified .miz now open the share menu, like the other files.
 
 ### Mission Plan — landing
 #### Changed
