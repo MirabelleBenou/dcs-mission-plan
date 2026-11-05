@@ -983,6 +983,17 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
 .snap-flight.pk-hide {{ display: none; }}
 .pk-info {{ font-family: var(--f-typewriter); font-size: 11px; color: var(--khaki-light); margin-top: 6px; word-break: break-word; cursor: help; }}
 
+/* Dynamic Spawn (lecture) : le panneau reprend les styles de la liste des vols ; seule la flèche de repli reprend celle des sections */
+.dyn-panel {{ margin-top: 4px; }}
+.dyn-panel > summary {{ cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; min-height: 36px; user-select: none; }}
+.dyn-panel > summary::-webkit-details-marker {{ display: none; }}
+.dyn-panel > summary::after {{ content: '\u25c4'; font-size: 10px; color: var(--paper); transition: transform .2s; }}
+.dyn-panel[open] > summary::after {{ transform: rotate(-90deg); }}
+.dyn-row {{ border: 1px solid var(--khaki); border-radius: 3px; padding: 8px 10px; background: rgba(0,0,0,.15); margin-bottom: 6px; }}
+.dyn-name {{ font-family: var(--f-stencil); font-size: 12px; color: var(--amber); letter-spacing: 1px; word-break: break-word; }}
+.dyn-links {{ margin-top: 6px; font-family: var(--f-typewriter); font-size: 11px; color: var(--khaki-light); display: flex; flex-direction: column; gap: 3px; word-break: break-word; }}
+.dyn-where {{ margin-top: 4px; word-break: break-word; }}
+
 
   .ed-field-row {{ grid-template-columns: 1fr; }}
   .wing-actions {{ flex-direction: column; }}
@@ -1309,6 +1320,21 @@ const I18N = {{
     'pk.warnTheatre': 'théâtre différent ({{0}} ≠ {{1}})',
     'pk.infoSource': 'ⓘ exporté d’une autre version de la mission',
     'pk.infoSource.tip': 'Normal si la mission a changé depuis l’export : les vols sont retrouvés par leur nom.',
+    'dyn.title': 'Dynamic Spawn',
+    'dyn.tmpl': 'Template',
+    'dyn.servedBy': 'Sert à : {{0}}',
+    'dyn.noLink': 'aucun lien',
+    'dyn.hot': 'moteur tournant : {{0}}',
+    'dyn.yes': 'oui',
+    'dyn.no': 'non',
+    'dyn.unlinked': 'Sans template (appareils par défaut de DCS) : {{0}}',
+    'dyn.nothing': 'Aucun aérodrome ni FARP n’offre le Dynamic Spawn.',
+    'dyn.airfield': 'Aérodrome {{0}}',
+    'dyn.warehouse': 'Entrepôt {{0}}',
+    'dyn.groupGone': 'groupe absent',
+    'dyn.notTemplate': 'pas un template',
+    'dyn.warn.absent': '⚠ Dynamic Spawn non lu : ce .miz n’a pas de fichier warehouses.',
+    'dyn.warn.unreadable': '⚠ Dynamic Spawn non lu : le fichier warehouses est illisible.',
     'pk.refused': 'refusé : {{0}} — {{1}}',
     'pk.err.parse': 'JSON illisible.',
     'pk.err.zip': 'Archive illisible : pas de package.json à la racine.',
@@ -1521,6 +1547,21 @@ const I18N = {{
     'pk.warnTheatre': 'different theatre ({{0}} ≠ {{1}})',
     'pk.infoSource': 'ⓘ exported from another version of the mission',
     'pk.infoSource.tip': 'Expected if the mission changed since the export: flights are matched by name.',
+    'dyn.title': 'Dynamic Spawn',
+    'dyn.tmpl': 'Template',
+    'dyn.servedBy': 'Used at: {{0}}',
+    'dyn.noLink': 'no link',
+    'dyn.hot': 'hot start: {{0}}',
+    'dyn.yes': 'yes',
+    'dyn.no': 'no',
+    'dyn.unlinked': 'No template (DCS default aircraft): {{0}}',
+    'dyn.nothing': 'No airfield or FARP offers Dynamic Spawn.',
+    'dyn.airfield': 'Airfield {{0}}',
+    'dyn.warehouse': 'Warehouse {{0}}',
+    'dyn.groupGone': 'group missing',
+    'dyn.notTemplate': 'not a template',
+    'dyn.warn.absent': '⚠ Dynamic Spawn not read: this .miz has no warehouses file.',
+    'dyn.warn.unreadable': '⚠ Dynamic Spawn not read: the warehouses file is unreadable.',
     'pk.refused': 'refused: {{0}} — {{1}}',
     'pk.err.parse': 'Unreadable JSON.',
     'pk.err.zip': 'Unreadable archive: no package.json at the root.',
@@ -2513,6 +2554,158 @@ function mizWeatherToMetar(wx, dateObj, startTime, theatre) {{
 }}
 
 // =============================================================
+//  DYNAMIC SPAWN — lecture seule : `mission` (dynSpawnTemplate) + `warehouses` (dynamicSpawn, linkDynTempl)
+//  Rien ici n'écrit : `warehouses` reste dans otherFilesMap, à l'octet, et le snapshot n'en sait rien.
+// =============================================================
+const DYN_AIRDROMES = @@DYN_AIRDROMES@@;   // théâtre -> airdromeId -> nom (DCS Airfield Charts, d'après pydcs)
+let _HQ_DYN = null;     // lu au chargement du .miz : {{ warn, templates, whs }} ; remis à zéro avec le .miz
+let _DYN_OPEN = true;   // le panneau est déplié (en mémoire seulement)
+
+function dynNum(n) {{ return (n && n.kind === 'number') ? n.value : null; }}
+function dynStr(n) {{ return (n && n.kind === 'string') ? n.value : null; }}
+function dynCmp(a, b) {{
+  const x = pkNorm(a), y = pkNorm(b);
+  return x < y ? -1 : x > y ? 1 : (a < b ? -1 : a > b ? 1 : 0);
+}}
+
+function dynBuild(ast, otherFilesMap, theatre) {{
+  const dyn = {{ warn: null, templates: [], whs: [] }};
+  try {{
+    const mt = ast.kind === 'assignment' ? ast.value : ast;
+    const groups = {{}};   // groupId -> {{ template, name }}   (avions et hélicoptères)
+    const unitNames = {{}};  // unitId -> nom de l'unité (toutes catégories : FARP, navires…)
+    const coal = _astGetKey(mt, 'coalition');
+    for (const ck of ['blue', 'red', 'neutrals']) {{
+      const side = coal ? _astGetKey(coal, ck) : null;
+      const countries = side ? _astGetKey(side, 'country') : null;
+      if (!countries || countries.kind !== 'table') continue;
+      for (const ce of countries.entries) {{
+        for (const cat of ['helicopter', 'plane', 'vehicle', 'static', 'ship']) {{
+          const catNode = _astGetKey(ce.value, cat);
+          const gl = catNode ? _astGetKey(catNode, 'group') : null;
+          if (!gl || gl.kind !== 'table') continue;
+          for (const ge of gl.entries) {{
+            const g = ge.value;
+            const us = _astGetKey(g, 'units');
+            const ul = (us && us.kind === 'table') ? us.entries : [];
+            for (const ue of ul) {{
+              const uid = dynNum(_astGetKey(ue.value, 'unitId')), un = dynStr(_astGetKey(ue.value, 'name'));
+              if (uid !== null && un !== null) unitNames[uid] = un;
+            }}
+            if (cat !== 'plane' && cat !== 'helicopter') continue;
+            const gid = dynNum(_astGetKey(g, 'groupId'));
+            if (gid === null) continue;
+            const tmN = _astGetKey(g, 'dynSpawnTemplate');
+            const isT = !!tmN && tmN.value === true;
+            const gname = dynStr(_astGetKey(g, 'name')) || '';
+            groups[gid] = {{ template: isT, name: gname }};
+            if (isT) dyn.templates.push({{
+              groupId: gid, name: gname, coalition: ck, category: cat,
+              type: ul.length ? (dynStr(_astGetKey(ul[0].value, 'type')) || '') : '',
+            }});
+          }}
+        }}
+      }}
+    }}
+    const wf = otherFilesMap ? otherFilesMap['warehouses'] : null;
+    if (!wf) {{ dyn.warn = 'absent'; return dyn; }}
+    let wroot;
+    try {{
+      const tk = DCS_TOKENIZER.tokenize(new TextDecoder('utf-8').decode(wf));
+      if (tk.errors && tk.errors.length) throw new Error('warehouses');
+      const wa = DCS_PARSER.parse(tk.tokens);
+      wroot = wa.kind === 'assignment' ? wa.value : wa;
+      if (!wroot || wroot.kind !== 'table') throw new Error('warehouses');
+    }} catch (e) {{ dyn.warn = 'unreadable'; return dyn; }}
+    const afNames = DYN_AIRDROMES[String(theatre || '').trim()] || {{}};
+    for (const sec of ['airports', 'warehouses']) {{
+      const sn = _astGetKey(wroot, sec);
+      if (!sn || sn.kind !== 'table') continue;
+      for (const we of sn.entries) {{
+        const w = we.value;
+        if (!we.key || !w || w.kind !== 'table') continue;
+        const id = we.key.value;
+        const dsN = _astGetKey(w, 'dynamicSpawn');
+        const links = [];
+        const ac = _astGetKey(w, 'aircrafts');
+        for (const cat of ['planes', 'helicopters']) {{
+          const cn = ac ? _astGetKey(ac, cat) : null;
+          if (!cn || cn.kind !== 'table') continue;
+          for (const te of cn.entries) {{
+            if (!te.key) continue;
+            const l = dynNum(_astGetKey(te.value, 'linkDynTempl'));
+            if (l) links.push({{ type: String(te.key.value), groupId: l, gname: groups[l] ? groups[l].name : '', status: groups[l] ? (groups[l].template ? 'ok' : 'notTemplate') : 'absent' }});
+          }}
+        }}
+        const dynSp = !!dsN && dsN.value === true;
+        if (!dynSp && !links.length) continue;
+        links.sort((a, b) => dynCmp(a.type, b.type));
+        const c = String(dynStr(_astGetKey(w, 'coalition')) || '').toLowerCase();
+        const hn = _astGetKey(w, 'allowHotStart');
+        const airport = sec === 'airports';
+        dyn.whs.push({{
+          kind: airport ? 'airport' : 'unit', id: id,
+          name: airport ? (afNames[String(id)] || null) : (unitNames[id] || null),
+          side: c === 'neutral' ? 'neutrals' : c,
+          hot: !!hn && hn.value === true,
+          links: links,
+        }});
+      }}
+    }}
+  }} catch (e) {{
+    console.warn('[HQ] Dynamic Spawn illisible:', e);
+    dyn.warn = 'unreadable'; dyn.templates = []; dyn.whs = [];
+  }}
+  return dyn;
+}}
+
+function dynActive() {{
+  return !!(_HQ_DYN && _HQ_MIZ_CONTEXT && !_HQ_DYN.warn && (_HQ_DYN.templates.length || _HQ_DYN.whs.length));
+}}
+function dynWhName(w) {{ return w.name || tf(w.kind === 'airport' ? 'dyn.airfield' : 'dyn.warehouse', String(w.id)); }}
+function dynTemplateIds() {{
+  const m = {{}};
+  for (const tp of _HQ_DYN.templates) m[tp.groupId] = tp;
+  return m;
+}}
+// Les aérodromes, FARP et navires dont un lien vise ce template, par ordre alphabétique
+function dynWhere(gid) {{
+  const names = [];
+  for (const w of _HQ_DYN.whs) if (w.links.some(l => l.groupId === gid)) names.push(dynWhName(w));
+  return names.sort(dynCmp);
+}}
+function dynWhereHtml(gid) {{
+  const names = dynWhere(gid);
+  return '<div class="snap-meta dyn-where">' + escapeHtml(names.length ? tf('dyn.servedBy', names.join(' · ')) : t('dyn.noLink')) + '</div>';
+}}
+
+// Le panneau (sous la météo) ; à défaut, l'avertissement discret quand `warehouses` manque ou ne se lit pas
+function dynPanelHtml() {{
+  if (!_HQ_DYN || !_HQ_MIZ_CONTEXT) return '';
+  const h = escapeHtml;
+  if (_HQ_DYN.warn) return '<div class="pk-warn" id="dyn-warn">' + h(t('dyn.warn.' + _HQ_DYN.warn)) + '</div>';
+  if (!dynActive()) return '';
+  const linked = _HQ_DYN.whs.filter(w => w.links.length).map(w => ({{ w: w, name: dynWhName(w) }})).sort((a, b) => dynCmp(a.name, b.name));
+  const free = _HQ_DYN.whs.filter(w => !w.links.length).map(dynWhName).sort(dynCmp);
+  let html = '<details class="dyn-panel" id="dyn-panel"' + (_DYN_OPEN ? ' open' : '') + '><summary class="snap-header">' + h(t('dyn.title')) + '</summary>';
+  for (const r of linked) {{
+    html += '<div class="dyn-row" data-dyn-wh="' + h(String(r.w.id)) + '"><div class="snap-flight-header"><span class="dyn-name">' + h(r.name) + '</span>';
+    html += ' <span class="snap-flight-tag">' + h(t('pk.flt.' + r.w.side, r.w.side)) + '</span></div>';
+    html += '<div class="snap-meta dyn-where">' + h(tf('dyn.hot', t(r.w.hot ? 'dyn.yes' : 'dyn.no'))) + '</div><div class="dyn-links">';
+    for (const l of r.w.links) {{
+      let txt = l.type + ' → ' + (l.status === 'absent' ? String(l.groupId) : l.gname);
+      html += '<div class="dyn-link">' + h(txt);
+      if (l.status !== 'ok') html += ' <span class="pk-warn">⚠ ' + h(t(l.status === 'absent' ? 'dyn.groupGone' : 'dyn.notTemplate')) + '</span>';
+      html += '</div>';
+    }}
+    html += '</div></div>';
+  }}
+  if (free.length) html += '<div class="snap-meta" id="dyn-free">' + h(tf('dyn.unlinked', free.join(', '))) + '</div>';
+  if (!linked.length && !free.length) html += '<div class="snap-meta">' + h(t('dyn.nothing')) + '</div>';
+  return html + '</details>';
+}}
+
+// =============================================================
 //  P2.1 — PIPELINE DE CHARGEMENT .MIZ
 // =============================================================
 let _mizLoading = false;   // un chargement de .miz est en cours
@@ -2550,11 +2743,14 @@ async function loadMiz(file) {{
     const ast          = DCS_PARSER.parse(tokens);
     // Extraction via DCS_EXTRACTOR HQ (avec liveryPos P3)
     const model = DCS_EXTRACTOR.extract(ast, missionText, file.name, otherFilesMap, missionText.split('\\n'));
+    // Dynamic Spawn (lecture seule ; ne change ni le snapshot ni le .miz)
+    const dyn = dynBuild(ast, otherFilesMap, theatre);
     // Construire le Mission JSON
     const snapshot = await buildMissionSnapshot(ast, model, missionText, file.name, theatre);
     // Tout a réussi : le nom, le contexte complet (pipeline de patch) et le snapshot changent ensemble
     _mizFilename = file.name;
     _HQ_MIZ_CONTEXT = {{ missionText, ast, model, otherFilesMap, theatre }};
+    _HQ_DYN = dyn;
     HQ_SNAPSHOT = snapshot;
     persistSnapshot();
     _PK_EXPORT_SEL.clear();
@@ -2851,6 +3047,9 @@ function renderSnapshot(snap) {{
   html += ' &nbsp;·&nbsp; T°: ' + wx.tempC + '°C';
   html += ' &nbsp;·&nbsp; Vis: ' + (wx.visM >= 9999 ? 'CAVOK' : wx.visM + 'm');
   html += '</div>';
+  // Dynamic Spawn : panneau (ou avertissement) sous la météo ; rien si la mission n'en a pas
+  html += dynPanelHtml();
+  const dynT = dynActive() ? dynTemplateIds() : null;
   // Vols : en-tête, barre de filtres collante, liste
   html += '<div class="pk-fwrap">';
   html += '<div class="snap-header">' + h(t('snap.flights')) + ' (' + snap.flights.length + ')</div>';
@@ -2882,10 +3081,12 @@ function renderSnapshot(snap) {{
     html += '<div class="snap-flight-header">';
     html += '<label class="pk-chk"><input type="checkbox" data-pk-export="' + h(String(fl.groupId)) + '"' +
       (_PK_EXPORT_SEL.has(fl.groupId) ? ' checked' : '') + (_HQ_MIZ_CONTEXT ? '' : ' disabled') + '>' + h(fl.groupName || '—') + '</label>';
+    if (dynT && dynT[fl.groupId]) html += ' <span class="snap-flight-tag" data-dyn-template="1">' + h(t('dyn.tmpl')) + '</span>';
     html += ' <span class="snap-flight-tag">' + h(fKey(fl)) + '</span>';
     html += ' <span class="snap-flight-tag">' + h(fl.coalition || '') + '</span>';
     html += ' <span class="snap-flight-tag">' + h(String(fl.units.length)) + ' ' + h(fl.units.length === 1 ? t('snap.unit') : t('snap.units')) + '</span>';
     html += '</div>';
+    if (dynT && dynT[fl.groupId]) html += dynWhereHtml(fl.groupId);
     html += '<div class="snap-unit-list">';
     for (const u of fl.units) {{
       html += '<div class="snap-unit-row">';
@@ -2950,7 +3151,7 @@ function initMissionEvents() {{
   if (reloadBtn) {{
     reloadBtn.addEventListener('click', () => {{
       if (_PK_BUSY) return;
-      HQ_SNAPSHOT = null; _mizFilename = null; _HQ_MIZ_CONTEXT = null;
+      HQ_SNAPSHOT = null; _mizFilename = null; _HQ_MIZ_CONTEXT = null; _HQ_DYN = null;
       try {{ localStorage.removeItem(KEY_SNAPSHOT); }} catch (e) {{ /* la mission offerte au Route Planner et au Datacard Generator reste */ }}
       _PK_EXPORT_SEL.clear(); _PK_REPORT = null; _MIZ_LOAD_FP = ''; pkResetFilters();
       pkRender();
@@ -3952,6 +4153,7 @@ function initPackagesUI() {{
   }}
   const snapEl = document.getElementById('snapshot-display');
   if (snapEl) {{
+    snapEl.addEventListener('toggle', e => {{ if (e.target && e.target.id === 'dyn-panel') _DYN_OPEN = e.target.open; }}, true);
     snapEl.addEventListener('change', e => {{
       const cb = e.target;
       if (!cb || !cb.getAttribute) return;
@@ -4409,6 +4611,11 @@ _TOK_NEW = ("else if(e==='r')v+='\\r';"
 assert _DCS_ENGINE.count(_TOK_OLD) == 1, 'MISSING tokenizer escape anchor'
 _DCS_ENGINE_HQ = _DCS_ENGINE.replace(_TOK_OLD, _TOK_NEW)
 
+# Noms des aérodromes (DCS Airfield Charts, d'après pydcs) : HQ n'embarque que `theatres`
+with open(os.path.join(HERE, 'airdromes.json'), encoding='utf-8') as _f:
+    _DYN_AIRDROMES_JS = json.dumps(json.load(_f)['theatres'], ensure_ascii=True, separators=(',', ':'))
+assert '</' not in _DYN_AIRDROMES_JS
+
 HTML_FINAL = (HTML
     .replace('__DCS_ENGINE__', _DCS_ENGINE_HQ)
     .replace('__DCS_EXTRACTOR__', _DCS_EXTRACTOR_HQ)
@@ -4416,6 +4623,7 @@ HTML_FINAL = (HTML
     .replace('__RETOKENIZE__', _RETOKENIZE)
     .replace('__REBUILD_MIZ__', _REBUILD_MIZ)
     .replace('@@RADIO_BLOCK@@\n', build_radio_block())
+    .replace('@@DYN_AIRDROMES@@', _DYN_AIRDROMES_JS)
 )
 
 os.makedirs(os.path.join(HERE, 'dist'), exist_ok=True)
