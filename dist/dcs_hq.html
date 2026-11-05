@@ -677,7 +677,15 @@ select[data-tbm-src] { display: none !important; }
 .fn-del .pk-flight-head, .fn-del .snap-meta { word-break: break-word; }
 .fn-panel.fn-wide { max-width: 640px; }
 .fn-wide .fn-del { max-height: 56vh; }
-.fn-wide .pk-parts { align-items: center; }
+.fn-head { margin: 0 0 10px; word-break: break-word; }
+.dsx-wh { align-items: center; }
+.dsx-off { opacity: .6; }
+.dsx-lib { word-break: break-word; }
+@media (max-width: 520px) {
+  .dsx-wh { align-items: flex-start; }
+  .dsx-lib { order: 2; flex: 0 1 auto; align-self: center; }
+  .dsx-hot { order: 3; flex: 0 0 100%; padding-left: 26px; box-sizing: border-box; }
+}
 
 /* Mission snapshot read-only display */
 .snapshot-section {
@@ -1142,6 +1150,43 @@ const I18N = {
     'dyn.w.template': 'Template',
     'dyn.w.hot': 'moteur tournant',
     'dyn.w.replaces': 'remplace {0}',
+    'dyn.w.linked': 'lié à {0}',
+    'dyn.w.wh.absent': 'Ce .miz n’a pas de fichier warehouses : HQ ne peut pas poser de lien Dynamic Spawn. Marquer ou démarquer un template reste possible.',
+    'dyn.w.wh.unreadable': 'Le fichier warehouses de ce .miz ne se lit pas : HQ ne peut pas poser de lien Dynamic Spawn. Marquer un template reste possible.',
+    'dyn.w.unmarkBad': 'Démarquer ce template demande de remettre ses liens à zéro dans warehouses, qui ne se lit pas. Rien n’a été écrit.',
+    'dyn.w.nochange': 'Aucun changement à écrire.',
+    'dyn.w.rep.n.one': '{0} template marqué',
+    'dyn.w.rep.n.many': '{0} templates marqués',
+    'dyn.w.rep.m.one': '{0} lien posé',
+    'dyn.w.rep.m.many': '{0} liens posés',
+    'dyn.w.rep.k.one': '{0} remplacé',
+    'dyn.w.rep.k.many': '{0} remplacés',
+    'dyn.w.rep.l.one': '{0} délié',
+    'dyn.w.rep.l.many': '{0} déliés',
+    'dyn.w.rep.h.one': '{0} moteur changé',
+    'dyn.w.rep.h.many': '{0} moteurs changés',
+    'dyn.w.rep.mark': '✓ {0} ({1}) : template marqué',
+    'dyn.w.rep.unmark': '✓ {0} ({1}) : template démarqué',
+    'dyn.w.rep.link': '✓ {1} ({2}) : lié à {0}',
+    'dyn.w.rep.repl': '✓ {1} ({2}) : lié à {0}, remplace {3}',
+    'dyn.w.rep.unlink': '✓ {1} ({2}) : lien vers {0} remis à zéro',
+    'dyn.w.rep.hotOn': '✓ {0} : moteur tournant activé',
+    'dyn.w.rep.hotOff': '✓ {0} : moteur tournant désactivé',
+    'dyn.w.warn.multi': '{0} : ce template compte {1} appareils — à confirmer sur le PC.',
+    'dyn.w.warn.side': '{0} lié à {1} : camps différents ({2} / {3}) — à confirmer sur le PC.',
+    'dyn.w.fail': '✗ Dynamic Spawn : vérification échouée — {0}',
+    'dyn.w.e.indent': 'indentation ou ligne de l’insertion introuvable',
+    'dyn.w.e.init': 'type d’appareil sans initialAmount',
+    'dyn.w.e.missing': 'vol {0} introuvable dans la mission',
+    'dyn.w.e.reparse': 'texte écrit illisible ({0})',
+    'dyn.w.e.mission': 'le fichier mission relu diffère de l’attendu ({0})',
+    'dyn.w.e.template': 'les templates relus diffèrent de l’attendu',
+    'dyn.w.e.wh': 'le fichier warehouses relu diffère de l’attendu ({0})',
+    'dyn.w.e.links': 'lien relu différent de l’attendu : {0} ({1})',
+    'dyn.w.e.clients': 'les vols relus diffèrent de l’attendu',
+    'dyn.w.e.clash': 'deux templates du même type sur un même entrepôt',
+    'toast.dsxWriting': 'Écriture du Dynamic Spawn…',
+    'toast.dsxFail': '⚠ Dynamic Spawn : écriture échouée — rien n’est téléchargé',
     'dyn.w.none': 'Aucun aérodrome ni FARP ne peut recevoir ce template.',
     'dyn.w.off': 'Non offerts — Dynamic Spawn non activé dans l’éditeur de mission : {0}',
     'dyn.w.offMore': ' et {0} autres sans ce type',
@@ -1411,6 +1456,43 @@ const I18N = {
     'dyn.w.template': 'Template',
     'dyn.w.hot': 'hot start',
     'dyn.w.replaces': 'replaces {0}',
+    'dyn.w.linked': 'linked to {0}',
+    'dyn.w.wh.absent': 'This .miz has no warehouses file: HQ cannot set a Dynamic Spawn link. Marking or unmarking a template is still possible.',
+    'dyn.w.wh.unreadable': 'This .miz’s warehouses file cannot be read: HQ cannot set a Dynamic Spawn link. Marking a template is still possible.',
+    'dyn.w.unmarkBad': 'Unmarking this template requires resetting its links to zero in warehouses, which cannot be read. Nothing has been written.',
+    'dyn.w.nochange': 'Nothing to write.',
+    'dyn.w.rep.n.one': '{0} template marked',
+    'dyn.w.rep.n.many': '{0} templates marked',
+    'dyn.w.rep.m.one': '{0} link set',
+    'dyn.w.rep.m.many': '{0} links set',
+    'dyn.w.rep.k.one': '{0} replaced',
+    'dyn.w.rep.k.many': '{0} replaced',
+    'dyn.w.rep.l.one': '{0} unlinked',
+    'dyn.w.rep.l.many': '{0} unlinked',
+    'dyn.w.rep.h.one': '{0} hot start changed',
+    'dyn.w.rep.h.many': '{0} hot starts changed',
+    'dyn.w.rep.mark': '✓ {0} ({1}): template marked',
+    'dyn.w.rep.unmark': '✓ {0} ({1}): template unmarked',
+    'dyn.w.rep.link': '✓ {1} ({2}): linked to {0}',
+    'dyn.w.rep.repl': '✓ {1} ({2}): linked to {0}, replaces {3}',
+    'dyn.w.rep.unlink': '✓ {1} ({2}): link to {0} reset to zero',
+    'dyn.w.rep.hotOn': '✓ {0}: hot start enabled',
+    'dyn.w.rep.hotOff': '✓ {0}: hot start disabled',
+    'dyn.w.warn.multi': '{0}: this template has {1} aircraft — to be confirmed on the PC.',
+    'dyn.w.warn.side': '{0} linked to {1}: different coalitions ({2} / {3}) — to be confirmed on the PC.',
+    'dyn.w.fail': '✗ Dynamic Spawn: verification failed — {0}',
+    'dyn.w.e.indent': 'indentation or line of the insertion not found',
+    'dyn.w.e.init': 'aircraft type without initialAmount',
+    'dyn.w.e.missing': 'flight {0} not found in the mission',
+    'dyn.w.e.reparse': 'written text unreadable ({0})',
+    'dyn.w.e.mission': 'the re-read mission file differs from what was expected ({0})',
+    'dyn.w.e.template': 'the re-read templates differ from what was expected',
+    'dyn.w.e.wh': 'the re-read warehouses file differs from what was expected ({0})',
+    'dyn.w.e.links': 're-read link differs from what was expected: {0} ({1})',
+    'dyn.w.e.clients': 'the re-read flights differ from what was expected',
+    'dyn.w.e.clash': 'two templates of the same type on one warehouse',
+    'toast.dsxWriting': 'Writing Dynamic Spawn…',
+    'toast.dsxFail': '⚠ Dynamic Spawn: write failed — nothing downloaded',
     'dyn.w.none': 'No airfield or FARP can receive this template.',
     'dyn.w.off': 'Not offered — Dynamic Spawn not enabled in the mission editor: {0}',
     'dyn.w.offMore': ' and {0} others without this type',
@@ -2138,7 +2220,7 @@ function str(v) {
 function cleanFname(v) {
   return str(v).trim().replace(/\.json$/i, '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9_+-]+/g, '_').replace(/_{2,}/g, '_').replace(/^_+|_+$/g, '').slice(0, 100);
 }
-const FN = { name: '', opener: null, run: null, titleKey: '', goKey: '', at: 0, bodyFn: null, bodyEl: null, blocked: false };
+const FN = { name: '', opener: null, run: null, titleKey: '', goKey: '', at: 0, bodyFn: null, bodyEl: null, headFn: null, headEl: null, wide: false, blocked: false };
 // Un nom par défaut : la partie variable est nettoyée et coupée à 40 caractères ; l'horodatage s'ajoute ensuite, en fin de nom
 function fnPart(v, fallback) { return cleanFname(v).slice(0, 40) || fallback; }
 function fnOpen() { return !document.getElementById('fn-modal').hidden; }
@@ -2154,11 +2236,19 @@ function fnRender() {
 /* Un corps facultatif (liste de ce que l'écriture touche) entre le titre et le champ du nom ; absent, le DOM de la fenêtre ne change pas */
 function fnBodyMount() {
   if (FN.bodyEl) { FN.bodyEl.remove(); FN.bodyEl = null; }
+  if (FN.headEl) { FN.headEl.remove(); FN.headEl = null; }
   if (!FN.bodyFn) return;
   const el = document.createElement('div');
   el.className = 'fn-del';
   el.innerHTML = FN.bodyFn();
   const panel = document.querySelector('#fn-modal .fn-panel');
+  if (FN.headFn) {
+    const hd = document.createElement('div');   // un texte en tête, hors du corps qui défile
+    hd.className = 'snap-meta fn-head';
+    hd.textContent = FN.headFn();
+    panel.insertBefore(hd, panel.querySelector('.fn-field'));
+    FN.headEl = hd;
+  }
   panel.insertBefore(el, panel.querySelector('.fn-field'));
   FN.bodyEl = el;
 }
@@ -2170,6 +2260,9 @@ function fnAsk(o) {
   FN.at = performance.now();
   FN.titleKey = o.titleKey; FN.goKey = o.goKey;
   FN.bodyFn = o.body || null;
+  FN.headFn = o.head || null;
+  FN.wide = !!o.wide;
+  document.querySelector('#fn-modal .fn-panel').classList.toggle('fn-wide', FN.wide);
   FN.blocked = !!o.blocked;
   const inp = document.getElementById('fn-name');
   inp.value = FN.name;
@@ -2183,10 +2276,10 @@ function fnAsk(o) {
 function fnClose() {
   document.getElementById('fn-modal').hidden = true;
   const o = FN.opener;
-  FN.opener = null; FN.run = null; FN.bodyFn = null; FN.blocked = false;
+  FN.opener = null; FN.run = null; FN.bodyFn = null; FN.headFn = null; FN.blocked = false;
   document.querySelector('#fn-modal .fn-panel').classList.remove('fn-wide');
-  { const pr = document.getElementById('dsx-prereq'); if (pr) pr.remove(); }
   if (FN.bodyEl) { FN.bodyEl.remove(); FN.bodyEl = null; }
+  if (FN.headEl) { FN.headEl.remove(); FN.headEl = null; }
   if (o && o.focus && !o.disabled) { try { o.focus({ preventScroll: true }); } catch (e) {} }
 }
 function fnGo() {
@@ -3631,7 +3724,7 @@ function renderSnapshot(snap) {
   html += '<button type="button" class="miz-btn" id="pk-uncheck">' + h(t('pk.flt.uncheck')) + '</button>';
   html += '<button type="button" class="miz-btn primary" id="pk-export-btn" disabled>' + h(tf('pk.exportN', 0)) + '</button>';
   if (_HQ_MIZ_CONTEXT) html += '<button type="button" class="miz-btn primary" id="pk-delete-btn" disabled>' + h(tf('pk.deleteN', 0)) + '</button>';
-  html += '<button type="button" class="miz-btn primary" id="pk-dyn-btn" disabled>' + h(tf('pk.dynN', 0)) + '</button>';
+  if (_HQ_MIZ_CONTEXT) html += '<button type="button" class="miz-btn primary" id="pk-dyn-btn" disabled>' + h(tf('pk.dynN', 0)) + '</button>';
   html += '<span class="pk-count" id="pk-count"></span>';
   html += '</div>';
   html += '</div>';
@@ -5099,126 +5192,380 @@ function pkDeleteAsk(opener) {
 }
 
 // =============================================================
-//  MAQUETTE (greffe jetable) — Dynamic Spawn écrit : la fenêtre. Rien ne s'écrit : « Valider » ferme.
+//  DYNAMIC SPAWN — écriture : un vol devient template (`mission`, dynSpawnTemplate) et se lie, par type d'appareil, aux aérodromes et FARP
+//  (`warehouses`, linkDynTempl ; départ moteur tournant : allowHotStart). Éditions ciblées sur le texte ; tout le reste est recopié à l'octet.
 // =============================================================
-const DSX = { st: null, flights: [], whs: [], bound: false };
-function dsxScan(ctx) {
-  const root = delWhParse(new TextDecoder('utf-8').decode(ctx.otherFilesMap['warehouses']));
-  const out = [];
-  const unitNames = {};   // unitId -> nom, toutes catégories (maquette : le vrai code réutilisera la table de dynBuild)
-  {
-    const mt = ctx.ast.kind === 'assignment' ? ctx.ast.value : ctx.ast, coal = _astGetKey(mt, 'coalition');
-    for (const ck of ['blue', 'red', 'neutrals']) {
-      const side = coal ? _astGetKey(coal, ck) : null, cs = side ? _astGetKey(side, 'country') : null;
-      if (!cs || cs.kind !== 'table') continue;
-      for (const ce of cs.entries) for (const cat of ['helicopter', 'plane', 'vehicle', 'static', 'ship']) {
-        const cn = _astGetKey(ce.value, cat), gl = cn ? _astGetKey(cn, 'group') : null;
-        if (!gl || gl.kind !== 'table') continue;
-        for (const ge of gl.entries) {
-          const us = _astGetKey(ge.value, 'units');
-          if (us && us.kind === 'table') for (const ue of us.entries) {
-            const uid = dynNum(_astGetKey(ue.value, 'unitId')), un = dynStr(_astGetKey(ue.value, 'name'));
-            if (uid !== null && un !== null) unitNames[uid] = un;
-          }
+const DSX = { ctx: null, st: null, flights: [], wh: null, off: {}, was: {}, bound: false };
+
+function dsxEntry(tbl, key) {
+  if (!tbl || tbl.kind !== 'table') return null;
+  return tbl.entries.find(e => e.key && String(e.key.value) === String(key)) || null;
+}
+// unitId -> nom de l'unité, toutes catégories (le nom d'un FARP ou d'un navire est celui de son unité)
+function dsxUnitNames(ast) {
+  const out = {};
+  const coal = _astGetKey(delRoot(ast), 'coalition');
+  for (const ck of ['blue', 'red', 'neutrals']) {
+    const side = coal ? _astGetKey(coal, ck) : null, cs = side ? _astGetKey(side, 'country') : null;
+    if (!cs || cs.kind !== 'table') continue;
+    for (const ce of cs.entries) for (const cat of DEL_ALL_CATS) {
+      const cn = _astGetKey(ce.value, cat), gl = cn ? _astGetKey(cn, 'group') : null;
+      if (!gl || gl.kind !== 'table') continue;
+      for (const ge of gl.entries) {
+        const us = _astGetKey(ge.value, 'units');
+        if (us && us.kind === 'table') for (const ue of us.entries) {
+          const uid = dynNum(_astGetKey(ue.value, 'unitId')), un = dynStr(_astGetKey(ue.value, 'name'));
+          if (uid !== null && un !== null) out[uid] = un;
         }
       }
     }
   }
+  return out;
+}
+
+// Lit `warehouses` (lecture seule) : tous les entrepôts, avec leurs types d'appareils et les nœuds à écrire
+function dsxScan(ctx) {
+  const out = { state: 'ok', text: '', root: null, whs: [] };
+  const wf = ctx.otherFilesMap ? ctx.otherFilesMap['warehouses'] : null;
+  if (!wf) { out.state = 'absent'; return out; }
+  try {
+    out.text = new TextDecoder('utf-8').decode(wf);
+    const back = new TextEncoder().encode(out.text);
+    if (back.length !== wf.length || back.some((b, i) => b !== wf[i])) throw new Error('warehouses');
+    out.root = delWhParse(out.text);
+  } catch (e) { out.state = 'unreadable'; out.text = ''; out.root = null; return out; }
+  const unitNames = dsxUnitNames(ctx.ast);
+  const afNames = DYN_AIRDROMES[String(ctx.theatre || '').trim()] || {};
   for (const sec of ['airports', 'warehouses']) {
-    const sn = _astGetKey(root, sec);
+    const sn = _astGetKey(out.root, sec);
     if (!sn || sn.kind !== 'table') continue;
     for (const we of sn.entries) {
       const w = we.value;
       if (!we.key || !w || w.kind !== 'table') continue;
+      const id = we.key.value, airport = sec === 'airports';
       const ds = _astGetKey(w, 'dynamicSpawn'), hn = _astGetKey(w, 'allowHotStart');
       const c = String(dynStr(_astGetKey(w, 'coalition')) || '').toLowerCase();
-      const types = {};
+      const rec = { key: sec + '|' + id, sec: sec, id: id, kind: airport ? 'airport' : 'unit',
+        name: airport ? (afNames[String(id)] || null) : (unitNames[id] || null),
+        side: c === 'neutral' ? 'neutrals' : c, dyn: !!ds && ds.value === true,
+        hot: !!hn && hn.value === true, hotNode: (hn && hn.kind === 'bool') ? hn : null, types: {}, anyLink: false };
       const ac = _astGetKey(w, 'aircrafts');
       for (const cat of ['planes', 'helicopters']) {
         const cn = ac ? _astGetKey(ac, cat) : null;
         if (!cn || cn.kind !== 'table') continue;
-        for (const te of cn.entries) if (te.key) types[cat + '|' + te.key.value] = dynNum(_astGetKey(te.value, 'linkDynTempl')) || 0;
+        for (const te of cn.entries) {
+          if (!te.key || te.value.kind !== 'table') continue;
+          const ln = _astGetKey(te.value, 'linkDynTempl');
+          const nd = { tk: cat + '|' + te.key.value, type: String(te.key.value), tbl: te.value,
+            linkNode: (ln && ln.kind === 'number') ? ln : null, gid: (ln && ln.kind === 'number') ? ln.value : 0, init: dsxEntry(te.value, 'initialAmount') };
+          if (nd.gid) rec.anyLink = true;
+          rec.types[nd.tk] = nd;
+        }
       }
-      const airport = sec === 'airports';
-      const known = airport ? null : { name: unitNames[we.key.value] || null };
-      const afN = (DYN_AIRDROMES[String((ctx.theatre || '')).trim()] || {})[String(we.key.value)] || null;
-      out.push({ key: sec + '|' + we.key.value, kind: airport ? 'airport' : 'unit', id: we.key.value,
-        name: airport ? afN : (known ? known.name : null), side: c === 'neutral' ? 'neutrals' : c,
-        dyn: !!ds && ds.value === true, hot: !!hn && hn.value === true, types: types });
+      out.whs.push(rec);
     }
   }
   return out;
 }
+
 function dsxFlightInfo(f) {
   const type = (f.units && f.units[0] && f.units[0].type) || f.aircraftType || '';
-  return { gid: f.groupId, name: f.groupName || '—', type: type, cat: f.category === 'helicopter' ? 'helicopters' : 'planes', side: f.coalition || '' };
+  return { gid: f.groupId, name: f.groupName || '—', type: type, cat: f.category === 'helicopter' ? 'helicopters' : 'planes',
+    tk: (f.category === 'helicopter' ? 'helicopters' : 'planes') + '|' + type, side: f.coalition || '', units: (f.units || []).length };
 }
 function dsxTplName(gid) { const f = HQ_SNAPSHOT.flights.find(x => x.groupId === gid); return f ? (f.groupName || String(gid)) : String(gid); }
+function dsxWhSort(a, b) { return ((a.kind === 'airport' ? 0 : 1) - (b.kind === 'airport' ? 0 : 1)) || dynCmp(dynWhName(a), dynWhName(b)); }
+
+// Les patches d'insertion : une ligne, avec l'indentation et la fin de ligne du fichier
+function dsxInsertFirst(text, g) {
+  const ks = g.entries[0].keyPos.start.offset, ls = text.lastIndexOf('\n', ks - 1) + 1, pre = text.slice(ls, ks), nl = text.indexOf('\n', ks);
+  if (!/^[ \t]*$/.test(pre) || nl < 0) throw delErr('dyn.w.e.indent');
+  const eol = text.charAt(nl - 1) === '\r' ? '\r\n' : '\n';
+  return { pos: delSpan(ks, ks), newValueStr: '["dynSpawnTemplate"] = true,' + eol + pre };
+}
+function dsxInsertLink(text, nd, gid) {
+  const ie = nd.init;
+  if (!ie) throw delErr('dyn.w.e.init');
+  const ks = ie.keyPos.start.offset, end = ie.valuePos.end.offset, ls = text.lastIndexOf('\n', ks - 1) + 1, pre = text.slice(ls, ks), nl = text.indexOf('\n', end);
+  if (!/^[ \t]*$/.test(pre) || nl < 0 || !/^\s*[,;]?\s*(--[^\n]*)?$/.test(text.slice(end, nl))) throw delErr('dyn.w.e.indent');
+  const eol = text.charAt(nl - 1) === '\r' ? '\r\n' : '\n';
+  return { pos: delSpan(nl + 1, nl + 1), newValueStr: pre + '["linkDynTempl"] = ' + gid + ',' + eol };
+}
+
+// Quel vol montre la case « moteur tournant » d'un entrepôt : le premier qui coche son lien, à défaut le premier dont la liste le montre
+// quand l'entrepôt porte déjà un lien. Une seule case par entrepôt.
+function dsxOwners(DS) {
+  const own = {}, tm = DS.flights.filter(f => DS.st.tmpl[f.gid]);
+  if (DS.wh.state !== 'ok') return own;
+  for (const f of tm) for (const w of DS.off[f.gid]) if (w.hotNode && DS.st.link[f.gid][w.key] && !(w.key in own)) own[w.key] = f.gid;
+  for (const f of tm) for (const w of DS.off[f.gid]) if (w.hotNode && w.anyLink && !(w.key in own)) own[w.key] = f.gid;
+  return own;
+}
+// Deux templates de même type cochés sur un même entrepôt : { f, w, others[] }
+function dsxClashes(DS) {
+  const claims = {};
+  if (DS.wh.state !== 'ok') return [];
+  for (const f of DS.flights) if (DS.st.tmpl[f.gid]) for (const w of DS.off[f.gid]) if (DS.st.link[f.gid][w.key]) (claims[w.key + '|' + f.tk] = claims[w.key + '|' + f.tk] || []).push({ f: f, w: w });
+  const out = [];
+  for (const k of Object.keys(claims)) if (claims[k].length > 1) out.push(claims[k]);
+  return out;
+}
+
+// Le plan d'écriture : patches de `mission` et de `warehouses`, compteurs, lignes du compte rendu, valeurs attendues à la relecture
+function dsxPlan(ctx, DS) {
+  const st = DS.st, tids = dynTemplateIds();
+  const plan = { mp: [], wp: [], N: 0, M: 0, K: 0, L: 0, H: 0, marks: [], links: [], hots: [], warns: [], clash: dsxClashes(DS), badUnmark: false,
+    expT: {}, expLink: {}, expHot: {} };
+  const win = new Map(DS.flights.map(f => [f.gid, f]));
+  // mission
+  const groups = {};
+  delEachList(ctx.ast, DEL_FLIGHT_CATS, L => { for (const e of L.list.entries) { const g = dynNum(_astGetKey(e.value, 'groupId')); if (g !== null) groups[g] = e.value; } });
+  for (const f of DS.flights) {
+    const cur = !!tids[f.gid], want = !!st.tmpl[f.gid];
+    plan.expT[f.gid] = want;
+    if (cur === want) continue;
+    const g = groups[f.gid];
+    if (!g) throw delErr('dyn.w.e.missing', f.name);
+    const kn = _astGetKey(g, 'dynSpawnTemplate');
+    if (kn) plan.mp.push({ pos: kn.pos, newValueStr: want ? 'true' : 'false' });
+    else plan.mp.push(dsxInsertFirst(ctx.missionText, g));
+    plan.marks.push({ f: f, on: want });
+    if (want) plan.N++;
+    if (!want && DS.wh.state === 'unreadable') plan.badUnmark = true;
+  }
+  // warehouses
+  if (DS.wh.state === 'ok') {
+    const claims = {};
+    for (const f of DS.flights) if (st.tmpl[f.gid]) for (const w of DS.off[f.gid]) if (st.link[f.gid][w.key]) claims[w.key + '|' + f.tk] = f;
+    const text = DS.wh.text;
+    for (const w of DS.wh.whs) {
+      for (const tk of Object.keys(w.types)) {
+        const nd = w.types[tk], nk = w.key + '|' + tk, cur = nd.gid;
+        let fin = cur, why = '';
+        if (claims[nk]) { fin = claims[nk].gid; }
+        else if (cur && win.has(cur)) {
+          const f = win.get(cur);
+          if (tids[cur] && !st.tmpl[cur]) { fin = 0; why = 'unmark'; }
+          else if (st.tmpl[cur] && f.tk === tk && w.dyn) { fin = 0; why = 'uncheck'; }
+        }
+        plan.expLink[nk] = fin;
+        if (fin === cur) continue;
+        if (nd.linkNode) plan.wp.push({ pos: nd.linkNode.pos, newValueStr: String(fin) });
+        else plan.wp.push(dsxInsertLink(text, nd, fin));
+        const ch = { w: w, type: nd.type, from: cur, to: fin, why: why };
+        plan.links.push(ch);
+        if (fin === 0) plan.L++; else if (cur === 0) plan.M++; else plan.K++;
+        if (fin !== 0) {
+          const f = win.get(fin);
+          if (f && f.side && w.side && f.side !== w.side) plan.warns.push({ k: 'side', f: f, w: w });
+        }
+      }
+    }
+    const own = dsxOwners(DS);
+    for (const w of DS.wh.whs) {
+      plan.expHot[w.key] = w.hot;
+      if (!(w.key in own)) continue;
+      const want = !!st.hot[w.key];
+      if (want === w.hot) continue;
+      plan.wp.push({ pos: w.hotNode.pos, newValueStr: want ? 'true' : 'false' });
+      plan.expHot[w.key] = want;
+      plan.hots.push({ w: w, on: want });
+      plan.H++;
+    }
+  }
+  // signalement : un template de plus d'un appareil (sans bloquer)
+  const touched = new Set(plan.marks.filter(m => m.on).map(m => m.f.gid));
+  for (const l of plan.links) if (l.to) touched.add(l.to);
+  for (const f of DS.flights) if (st.tmpl[f.gid] && f.units > 1 && touched.has(f.gid)) plan.warns.unshift({ k: 'multi', f: f });
+  plan.mp = delSortPatches(plan.mp);
+  plan.wp = delSortPatches(plan.wp);
+  plan.empty = !plan.mp.length && !plan.wp.length;
+  return plan;
+}
+
+// ----- la relecture : deux arbres comparés valeur par valeur, sauf aux nœuds que l'écriture visait -----
+function dsxEq(a, b, special, path, diffs) {
+  if (diffs.length > 4) return;
+  const sp = special.get(a);
+  if (sp) { for (const d of sp(b, path)) diffs.push(d); return; }
+  if (!a || !b || a.kind !== b.kind) { diffs.push(path.join('/')); return; }
+  if (a.kind === 'table') {
+    if (a.entries.length !== b.entries.length) { diffs.push(path.join('/') + ' (n)'); return; }
+    for (let i = 0; i < a.entries.length; i++) {
+      const x = a.entries[i], y = b.entries[i];
+      const kx = x.key ? x.key.kind + ':' + x.key.value : '', ky = y.key ? y.key.kind + ':' + y.key.value : '';
+      if (kx !== ky) { diffs.push(path.join('/') + ' (clé)'); return; }
+      dsxEq(x.value, y.value, special, path.concat(kx), diffs);
+    }
+    return;
+  }
+  if (a.value !== b.value) diffs.push(path.join('/'));
+}
+// Une table dont une clé est visée : le reste égal, entrée par entrée ; check(valeur de la clé dans le nouveau, position dans le nouveau) -> écart ou ''
+function dsxEqWithout(a, b, special, path, key, check) {
+  const fa = a.entries.filter(e => !(e.key && e.key.value === key)), fb = b.entries.filter(e => !(e.key && e.key.value === key));
+  const diffs = [];
+  if (fa.length !== fb.length) return [path.join('/') + ' (n)'];
+  for (let i = 0; i < fa.length; i++) {
+    const kx = fa[i].key ? fa[i].key.kind + ':' + fa[i].key.value : '', ky = fb[i].key ? fb[i].key.kind + ':' + fb[i].key.value : '';
+    if (kx !== ky) return [path.join('/') + ' (clé)'];
+    dsxEq(fa[i].value, fb[i].value, special, path.concat(kx), diffs);
+  }
+  const n = b.entries.filter(e => e.key && e.key.value === key);
+  const bad = check(n.length === 1 ? n[0] : null, b);
+  if (bad) diffs.push(path.join('/') + ' ' + bad);
+  return diffs;
+}
+
+function dsxVerify(base, DS, plan, mAst, wText, wRootNew, work) {
+  const diffs = [];
+  // mission : les marques attendues, puis tout le reste égal
+  const special = new Map();
+  const oldGroups = {};
+  delEachList(base.ast, DEL_FLIGHT_CATS, L => { for (const e of L.list.entries) { const g = dynNum(_astGetKey(e.value, 'groupId')); if (g !== null) oldGroups[g] = e.value; } });
+  const tids = dynTemplateIds();
+  for (const f of DS.flights) {
+    if (!!tids[f.gid] === !!DS.st.tmpl[f.gid]) continue;
+    const want = !!DS.st.tmpl[f.gid];
+    special.set(oldGroups[f.gid], (nb, path) => dsxEqWithout(oldGroups[f.gid], nb, special, path, 'dynSpawnTemplate', (ent, tbl) => {
+      if (!ent || ent.value.kind !== 'bool' || ent.value.value !== want) return 'dynSpawnTemplate';
+      if (!dsxEntry(oldGroups[f.gid], 'dynSpawnTemplate') && tbl.entries[0] !== ent) return 'dynSpawnTemplate (rang)';
+      return '';
+    }));
+  }
+  dsxEq(delRoot(base.ast), delRoot(mAst), special, ['mission'], diffs);
+  if (diffs.length) throw delErr('dyn.w.e.mission', diffs.slice(0, 3).join(' ; '));
+  const want = {};
+  for (const g of Object.keys(tids)) want[g] = true;
+  for (const f of DS.flights) { if (DS.st.tmpl[f.gid]) want[f.gid] = true; else delete want[f.gid]; }
+  const got = {};
+  delEachList(mAst, DEL_FLIGHT_CATS, L => { for (const e of L.list.entries) { const g = dynNum(_astGetKey(e.value, 'groupId')); const k = _astGetKey(e.value, 'dynSpawnTemplate'); if (g !== null && k && k.value === true) got[g] = true; } });
+  if (JSON.stringify(Object.keys(want).sort()) !== JSON.stringify(Object.keys(got).sort())) throw delErr('dyn.w.e.template');
+  // warehouses
+  if (wRootNew) {
+    const sp2 = new Map();
+    for (const w of DS.wh.whs) {
+      if (w.hotNode && plan.expHot[w.key] !== w.hot) sp2.set(w.hotNode, (nb, path) => (nb && nb.kind === 'bool' && nb.value === plan.expHot[w.key]) ? [] : [path.join('/')]);
+      for (const tk of Object.keys(w.types)) {
+        const nd = w.types[tk], fin = plan.expLink[w.key + '|' + tk];
+        if (fin === undefined || fin === nd.gid) continue;
+        sp2.set(nd.tbl, (nb, path) => dsxEqWithout(nd.tbl, nb, sp2, path, 'linkDynTempl', (ent, tbl) => {
+          if (!ent || ent.value.kind !== 'number' || ent.value.value !== fin) return 'linkDynTempl';
+          if (!nd.linkNode) { const i = tbl.entries.indexOf(ent); if (i < 1 || !tbl.entries[i - 1].key || tbl.entries[i - 1].key.value !== 'initialAmount') return 'linkDynTempl (rang)'; }
+          return '';
+        }));
+      }
+    }
+    const d2 = [];
+    dsxEq(DS.wh.root, wRootNew, sp2, ['warehouses'], d2);
+    if (d2.length) throw delErr('dyn.w.e.wh', d2.slice(0, 3).join(' ; '));
+    // les liens relus par le lecteur de HQ
+    const after = {};
+    for (const l of delWhLinks(wRootNew)) after[l.sec + '|' + l.id + '|' + l.type] = l.gid;
+    for (const w of DS.wh.whs) for (const tk of Object.keys(w.types)) {
+      const nd = w.types[tk], fin = plan.expLink[w.key + '|' + tk];
+      const exp = fin === undefined ? nd.gid : fin, k = w.key + '|' + nd.type;
+      if ((after[k] || 0) !== exp) throw delErr('dyn.w.e.links', dynWhName(w), nd.type);
+    }
+  }
+  const keep = pkClientGroups(base).map(g => g.group.groupId);
+  if (JSON.stringify(pkClientGroups(work).map(g => g.group.groupId)) !== JSON.stringify(keep)) throw delErr('dyn.w.e.clients');
+}
+
+// ----- la fenêtre -----
+function dsxSafePlan() {
+  try { return { plan: dsxPlan(DSX.ctx, DSX), err: null }; }
+  catch (e) { return { plan: null, err: e }; }
+}
 function dsxBody() {
-  const h = escapeHtml, st = DSX.st;
+  const h = escapeHtml, st = DSX.st, own = dsxOwners(DSX), sp = dsxSafePlan();
   let html = '';
-  const wname = w => dynWhName(w);
-  const sorted = DSX.whs.slice().sort((a, b) => ((a.kind === 'airport' ? 0 : 1) - (b.kind === 'airport' ? 0 : 1)) || dynCmp(wname(a), wname(b)));
+  if (DSX.wh.state !== 'ok') html += '<div class="pk-warn" data-dsx-whwarn="' + DSX.wh.state + '">⚠ ' + h(t('dyn.w.wh.' + DSX.wh.state)) + '</div>';
+  if (sp.err) html += '<div class="pk-warn" data-dsx-error="1">⚠ ' + h(pkErrText(sp.err)) + '</div>';
+  const clash = dsxClashes(DSX);
   for (const f of DSX.flights) {
     html += '<div class="pk-flight" data-dsx-gid="' + h(String(f.gid)) + '"><div class="pk-flight-head">' + h(f.name) +
       ' <span class="snap-flight-tag">' + h(f.type) + '</span> <span class="snap-flight-tag">' + h(t('pk.flt.' + f.side, f.side)) + '</span></div>';
     html += '<label class="pk-chk"><input type="checkbox" data-dsx-tmpl="' + h(String(f.gid)) + '"' + (st.tmpl[f.gid] ? ' checked' : '') + '>' + h(t('dyn.w.template')) + '</label>';
     if (st.tmpl[f.gid]) {
-      const tk = f.cat + '|' + f.type;
-      const off = DSX.whs.filter(w => !w.dyn), offT = off.filter(w => tk in w.types), noType = DSX.whs.filter(w => w.dyn && !(tk in w.types));
-      if (off.length) {
-        let who = offT.map(wname).sort(dynCmp).join(', ');
-        const rest = off.length - offT.length;
-        if (rest) who += (who ? tf('dyn.w.offMore', String(rest)) : tf('dyn.w.offOnly', String(rest)));
-        html += '<div class="snap-meta" style="opacity:.6" data-dsx-off="1">' + h(tf('dyn.w.off', who)) + '</div>';
+      if (DSX.wh.state === 'ok') {
+        const all = DSX.wh.whs;
+        const off = all.filter(w => !w.dyn), offT = off.filter(w => f.tk in w.types), noType = all.filter(w => w.dyn && !(f.tk in w.types));
+        if (off.length) {
+          let who = offT.map(dynWhName).sort(dynCmp).join(', ');
+          const rest = off.length - offT.length;
+          if (rest) who += (who ? tf('dyn.w.offMore', String(rest)) : tf('dyn.w.offOnly', String(rest)));
+          html += '<div class="snap-meta dsx-off" data-dsx-off="1">' + h(tf('dyn.w.off', who)) + '</div>';
+        }
+        if (noType.length) html += '<div class="snap-meta dsx-off" data-dsx-off="1">' + h(tf('dyn.w.notype', f.type, noType.map(dynWhName).sort(dynCmp).join(', '))) + '</div>';
+        if (!DSX.off[f.gid].length) html += '<div class="pk-warn">' + h(t('dyn.w.none')) + '</div>';
+        for (const w of DSX.off[f.gid]) {
+          const cur = w.types[f.tk].gid, on = !!st.link[f.gid][w.key];
+          html += '<div class="pk-parts dsx-wh" data-dsx-wh="' + h(w.key) + '"><label class="pk-chk"><input type="checkbox" data-dsx-link="' + h(f.gid + '#' + w.key) + '"' + (on ? ' checked' : '') + '>' +
+            h(dynWhName(w)) + ' <span class="snap-flight-tag">' + h(t('pk.flt.' + w.side, w.side)) + '</span></label>';
+          if (own[w.key] === f.gid) html += '<label class="pk-chk dsx-hot"><input type="checkbox" data-dsx-hot="' + h(w.key) + '"' + (st.hot[w.key] ? ' checked' : '') + '>' + h(t('dyn.w.hot')) + '</label>';
+          if (cur && cur !== f.gid) html += '<span class="snap-meta dsx-lib" data-dsx-lib="1">' + h(tf(on ? 'dyn.w.replaces' : 'dyn.w.linked', dsxTplName(cur))) + '</span>';
+          html += '</div>';
+          for (const grp of clash) if (grp.length > 1 && grp.some(x => x.f === f && x.w === w)) html += '<div class="pk-warn" data-dsx-clash="1">' + h(tf('dyn.w.clash', dynWhName(w), f.type)) + '</div>';
+        }
       }
-      if (noType.length) html += '<div class="snap-meta" style="opacity:.6" data-dsx-off="1">' + h(tf('dyn.w.notype', f.type, noType.map(wname).sort(dynCmp).join(', '))) + '</div>';
-      const rank = w => { const c = w.types[f.cat + '|' + f.type]; return c === f.gid ? 0 : (c ? 1 : 2); };
-      const offered = sorted.filter(w => w.dyn && (f.cat + '|' + f.type) in w.types).sort((x, y) => rank(x) - rank(y));
-      if (!offered.length) html += '<div class="pk-warn">' + h(t('dyn.w.none')) + '</div>';
-      for (const w of offered) {
-        const cur = w.types[f.cat + '|' + f.type];
-        const on = !!st.link[f.gid][w.key];
-        html += '<div class="pk-parts" data-dsx-wh="' + h(w.key) + '"><label class="pk-chk"><input type="checkbox" data-dsx-link="' + h(f.gid + '#' + w.key) + '"' + (on ? ' checked' : '') + '>' +
-          h(wname(w)) + ' <span class="snap-flight-tag">' + h(t('pk.flt.' + w.side, w.side)) + '</span></label>';
-        html += '<label class="pk-chk"><input type="checkbox" data-dsx-hot="' + h(w.key) + '"' + (st.hot[w.key] ? ' checked' : '') + '>' + h(t('dyn.w.hot')) + '</label>';
-        if (cur && cur !== f.gid) html += '<span class="snap-meta" data-dsx-replaces="1">' + h(tf('dyn.w.replaces', dsxTplName(cur))) + '</span>';
-        html += '</div>';
-      }
-    } else if (DSX.was[f.gid]) {
-      html += '<div class="pk-warn" data-dsx-unlink="1">' + h(tf('dyn.w.unlink', DSX.was[f.gid].join(', '))) + '</div>';
+    } else if (DSX.was[f.gid] && DSX.was[f.gid].length) {
+      html += '<div class="pk-warn" data-dsx-unlink="1">' + h(tf('dyn.w.unlink', DSX.was[f.gid].map(x => x.name + ' (' + x.type + ')').join(', '))) + '</div>';
+      if (DSX.wh.state === 'unreadable') html += '<div class="pk-warn" data-dsx-error="1">⚠ ' + h(t('dyn.w.unmarkBad')) + '</div>';
+    } else if (DSX.wasT[f.gid] && DSX.wh.state === 'unreadable') {
+      html += '<div class="pk-warn" data-dsx-error="1">⚠ ' + h(t('dyn.w.unmarkBad')) + '</div>';
     }
     html += '</div>';
   }
+  if (sp.plan && sp.plan.empty && !sp.err) html += '<div class="snap-meta" data-dsx-nochange="1">' + h(t('dyn.w.nochange')) + '</div>';
   return html;
 }
+function dsxBlocked() {
+  const sp = dsxSafePlan();
+  return !!(sp.err || !sp.plan || sp.plan.clash.length || sp.plan.badUnmark || sp.plan.empty);
+}
 function dsxRefresh() {
-  const el = FN.bodyEl, keep = el ? el.scrollTop : 0;
+  const el = FN.bodyEl, keep = el ? el.scrollTop : 0, a = document.activeElement;
+  let sel = null;
+  if (a && a.getAttribute) for (const at of ['data-dsx-tmpl', 'data-dsx-link', 'data-dsx-hot']) if (a.hasAttribute(at)) sel = '[' + at + '="' + a.getAttribute(at).replace(/"/g, '\\"') + '"]';
+  FN.blocked = dsxBlocked();
   fnRender();
-  if (FN.bodyEl) FN.bodyEl.scrollTop = keep;
+  fnSync();
+  if (FN.bodyEl) {
+    FN.bodyEl.scrollTop = keep;
+    if (sel) { const n = FN.bodyEl.querySelector(sel); if (n) { try { n.focus({ preventScroll: true }); } catch (e) {} } }
+  }
 }
 function dsxAsk(opener) {
-  if (_PK_BUSY || _mizLoading || !HQ_SNAPSHOT || !_HQ_MIZ_CONTEXT) return;
-  if (!_HQ_DYN || _HQ_DYN.warn === 'absent') { showToast(t('toast.mizNotLoaded')); return; }
+  if (_PK_BUSY || _mizLoading || !HQ_SNAPSHOT || !_HQ_MIZ_CONTEXT || !_HQ_DYN) return;
   const ids = HQ_SNAPSHOT.flights.filter(f => _PK_EXPORT_SEL.has(f.groupId)).map(f => f.groupId);
   if (!ids.length) return;
-  DSX.whs = dsxScan(_HQ_MIZ_CONTEXT);
+  const ctx = _HQ_MIZ_CONTEXT;
+  DSX.ctx = ctx;
+  DSX.wh = dsxScan(ctx);
   DSX.flights = HQ_SNAPSHOT.flights.filter(f => _PK_EXPORT_SEL.has(f.groupId)).map(dsxFlightInfo);
   const tids = dynTemplateIds();
   DSX.st = { tmpl: {}, link: {}, hot: {} };
-  DSX.was = {};
-  for (const w of DSX.whs) DSX.st.hot[w.key] = w.hot;
+  DSX.off = {}; DSX.was = {}; DSX.wasT = {};
+  for (const w of DSX.wh.whs) DSX.st.hot[w.key] = w.hot;
   for (const f of DSX.flights) {
     DSX.st.tmpl[f.gid] = !!tids[f.gid];
+    DSX.wasT[f.gid] = !!tids[f.gid];
     DSX.st.link[f.gid] = {};
-    for (const w of DSX.whs) if (w.types[f.cat + '|' + f.type] === f.gid) DSX.st.link[f.gid][w.key] = true;
-    const where = DSX.whs.filter(w => DSX.st.link[f.gid][w.key]).map(dynWhName).sort(dynCmp);
-    if (where.length) DSX.was[f.gid] = where;
+    const rank = w => { const c = w.types[f.tk].gid; return c === f.gid ? 0 : (c ? 1 : 2); };
+    DSX.off[f.gid] = DSX.wh.whs.filter(w => w.dyn && f.tk in w.types).sort((x, y) => rank(x) - rank(y) || dsxWhSort(x, y));
+    for (const w of DSX.off[f.gid]) if (w.types[f.tk].gid === f.gid) DSX.st.link[f.gid][w.key] = true;
+    // tous les liens qui visent ce vol, quel que soit le type : ce que « démarquer » remet à zéro
+    const was = [];
+    for (const w of DSX.wh.whs) for (const tk of Object.keys(w.types)) if (w.types[tk].gid === f.gid) was.push({ name: dynWhName(w), type: w.types[tk].type, w: w });
+    was.sort((a, b) => dynCmp(a.name, b.name) || dynCmp(a.type, b.type));
+    if (was.length) DSX.was[f.gid] = was;
   }
   if (!DSX.bound) {
     DSX.bound = true;
     document.getElementById('fn-modal').addEventListener('change', e => {
-      const c = e.target; if (!c || !c.hasAttribute || !FN.bodyEl || !FN.bodyEl.contains(c)) return;
+      const c = e.target;
+      if (!c || !c.hasAttribute || FN.titleKey !== 'fn.dyn.title' || !FN.bodyEl || !FN.bodyEl.contains(c)) return;
       if (c.hasAttribute('data-dsx-tmpl')) DSX.st.tmpl[Number(c.getAttribute('data-dsx-tmpl'))] = c.checked;
       else if (c.hasAttribute('data-dsx-hot')) DSX.st.hot[c.getAttribute('data-dsx-hot')] = c.checked;
       else if (c.hasAttribute('data-dsx-link')) { const p = c.getAttribute('data-dsx-link').split('#'); DSX.st.link[Number(p[0])][p[1]] = c.checked; }
@@ -5229,18 +5576,90 @@ function dsxAsk(opener) {
   fnAsk({
     titleKey: 'fn.dyn.title', goKey: 'fn.dyn.go', ext: '.miz',
     name: fnPart((_mizFilename || 'mission').replace(/\.miz$/i, ''), 'mission') + '_' + pkStamp(),
-    opener: opener,
+    opener: opener, wide: true,
+    head: () => t('dyn.w.prereq'),
     body: dsxBody,
-    run: name => {}   // maquette : rien n'est écrit
+    blocked: dsxBlocked(),
+    run: name => dsxApply(name)
   });
-  document.querySelector('#fn-modal .fn-panel').classList.add('fn-wide');
-  {
-    const pr = document.createElement('div');   // le prérequis reste en tête, hors du corps qui défile
-    pr.className = 'snap-meta'; pr.id = 'dsx-prereq'; pr.style.margin = '0 0 10px';
-    pr.textContent = t('dyn.w.prereq');
-    FN.bodyEl.parentNode.insertBefore(pr, FN.bodyEl);
+}
+
+// ----- l'écriture -----
+async function dsxApply(name) {
+  if (_PK_BUSY || _mizLoading) return;
+  const base = _HQ_MIZ_CONTEXT;
+  if (!base || !HQ_SNAPSHOT || base !== DSX.ctx) { showToast(t('toast.mizNotLoaded')); return; }
+  _PK_BUSY = true;
+  pkRender();
+  try {
+    showToast(t('toast.dsxWriting'), 120000);
+    await pkYield();
+    const plan = dsxPlan(base, DSX);
+    if (plan.clash.length) throw delErr('dyn.w.e.clash');
+    if (plan.badUnmark) throw delErr('dyn.w.unmarkBad');
+    if (plan.empty) throw delErr('dyn.w.nochange');
+    // mission : éditions ciblées, puis relecture
+    const missionText = applyPatches(base.missionText, plan.mp);
+    let mAst;
+    try {
+      retokenizeSafety(missionText);
+      mAst = DCS_PARSER.parse(DCS_TOKENIZER.tokenize(missionText).tokens);
+    } catch (e) { throw delErr('dyn.w.e.reparse', e.message); }
+    // warehouses
+    let otherFilesMap = base.otherFilesMap, wText = DSX.wh.text, wRootNew = null;
+    if (plan.wp.length) {
+      wText = applyPatches(DSX.wh.text, plan.wp);
+      try { wRootNew = delWhParse(wText); } catch (e) { throw delErr('dyn.w.e.wh', e.message); }
+      otherFilesMap = Object.assign({}, base.otherFilesMap);
+      otherFilesMap['warehouses'] = new TextEncoder().encode(wText);
+    }
+    const model = DCS_EXTRACTOR.extract(mAst, missionText, _mizFilename || '', otherFilesMap, missionText.split('\n'));
+    const work = { missionText: missionText, ast: mAst, model: model, otherFilesMap: otherFilesMap, theatre: base.theatre };
+    dsxVerify(base, DSX, plan, mAst, wText, wRootNew, work);
+    const dyn = dynBuild(mAst, otherFilesMap, base.theatre);
+    const blob = await rebuildMizHQ(missionText, otherFilesMap);
+    const snap = await buildMissionSnapshot(mAst, model, missionText, _mizFilename || 'mission.miz', base.theatre);
+    // Rien n'a échoué : on remet le fichier, puis seulement on change d'état
+    shareOrDownload(blob, name + '.miz', 'application/octet-stream', 'HQ', pkDownload);
+    _HQ_MIZ_CONTEXT = work;
+    _HQ_DYN = dyn;
+    HQ_SNAPSHOT = snap;
+    persistSnapshot();
+    _PK_EXPORT_SEL.clear();
+    renderSnapshot(HQ_SNAPSHOT);
+    // Le compte rendu : les cinq compteurs, une ligne par changement, puis les signalements
+    const nm = f => f.name, S = s => t('pk.flt.' + s, s);
+    const lines = [{ cls: 'ok', text: () => [tn('dyn.w.rep.n', plan.N), tn('dyn.w.rep.m', plan.M), tn('dyn.w.rep.k', plan.K), tn('dyn.w.rep.l', plan.L), tn('dyn.w.rep.h', plan.H)].join(' · ') }];
+    for (const m of plan.marks) lines.push({ cls: 'a', text: () => tf(m.on ? 'dyn.w.rep.mark' : 'dyn.w.rep.unmark', nm(m.f), m.f.type) });
+    for (const l of plan.links) {
+      const wn = () => dynWhName(l.w);
+      if (l.to === 0) lines.push({ cls: 'a', text: () => tf('dyn.w.rep.unlink', dsxTplNameOf(l.from), wn(), l.type) });
+      else if (l.from === 0) lines.push({ cls: 'a', text: () => tf('dyn.w.rep.link', dsxTplNameOf(l.to), wn(), l.type) });
+      else lines.push({ cls: 'a', text: () => tf('dyn.w.rep.repl', dsxTplNameOf(l.to), wn(), l.type, dsxTplNameOf(l.from)) });
+    }
+    for (const x of plan.hots) lines.push({ cls: 'a', text: () => tf(x.on ? 'dyn.w.rep.hotOn' : 'dyn.w.rep.hotOff', dynWhName(x.w)) });
+    for (const x of plan.warns) {
+      if (x.k === 'multi') lines.push({ cls: 'w', text: () => tf('dyn.w.warn.multi', nm(x.f), x.f.units) });
+      else lines.push({ cls: 'w', text: () => tf('dyn.w.warn.side', nm(x.f), dynWhName(x.w), S(x.f.side), S(x.w.side)) });
+    }
+    _PK_REPORT = { lines: lines, total: null };
+    showToast(tn('dyn.w.rep.n', plan.N) + ' ✔');
+  } catch (err) {
+    console.error('[HQ] Dynamic Spawn écrit:', err);
+    const fe = err || {};
+    _PK_REPORT = { lines: [
+      { cls: 'w', text: () => tf('dyn.w.fail', pkErrText(fe)) },
+      { cls: 'a', text: () => t('pk.rep.failTail') },
+    ], total: null };
+    showToast(t('toast.dsxFail'), 5000);
+  } finally {
+    _PK_BUSY = false;
+    pkRender();
+    delFocusReport();
   }
 }
+// Le nom d'un template, au compte rendu : le snapshot d'avant l'écriture n'est plus là, on lit le snapshot courant (mêmes groupes)
+function dsxTplNameOf(gid) { return dsxTplName(gid); }
 
 async function pkDeleteApply(name, ids) {
   if (_PK_BUSY || _mizLoading) return;
