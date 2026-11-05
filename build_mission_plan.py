@@ -6,16 +6,17 @@ Produit dist/dcs_mission_plan.html (fichier autonome, single-file, offline).
 Usage : python3 build_mission_plan.py
 Sortie : ./dist/dcs_mission_plan.html
 
-Sources modules actifs (produits par les six autres build_*.py, dans ./dist/) :
+Sources modules actifs (produits par les sept autres build_*.py, dans ./dist/) :
   dist/dcs_hq.html
   dist/dcs_briefing_generator.html
   dist/dcs_datacard_generator.html
   dist/dcs_recon_station.html
   dist/dcs_route_planner.html
+  dist/dcs_flight_configurator.html
   dist/dcs_field_manual.html
 
 Sources images (à placer dans ./tiles/) :
-  tiles/hq.webp  tiles/bg.webp  tiles/rs.webp  tiles/fm.webp  tiles/rp.webp  tiles/kg.webp
+  tiles/hq.webp  tiles/bg.webp  tiles/rs.webp  tiles/fm.webp  tiles/rp.webp  tiles/kg.webp  tiles/fc.webp
 """
 
 import base64
@@ -34,6 +35,7 @@ MODULES = [
     {'id': 'bg', 'status': 'active', 'src': 'dist/dcs_briefing_generator.html',       'tile': 'tiles/bg.webp'},
     {'id': 'dg', 'status': 'active', 'src': 'dist/dcs_datacard_generator.html',        'tile': 'tiles/kg.webp'},
     {'id': 'rs', 'status': 'active', 'src': 'dist/dcs_recon_station.html',             'tile': 'tiles/rs.webp'},
+    {'id': 'fc', 'status': 'active', 'src': 'dist/dcs_flight_configurator.html',       'tile': 'tiles/fc.webp'},
     {'id': 'fm', 'status': 'active', 'src': 'dist/dcs_field_manual.html',              'tile': 'tiles/fm.webp'},
 ]
 
@@ -51,7 +53,7 @@ def encode_file_b64(path):
 def encode_module_b64(path):
     abs_path = os.path.join(SCRIPT_DIR, path)
     if not os.path.isfile(abs_path):
-        raise SystemExit(f"[ERREUR] Entrée manquante : {abs_path} (lancer d'abord les six builds de modules)")
+        raise SystemExit(f"[ERREUR] Entrée manquante : {abs_path} (lancer d'abord les builds de modules)")
     with open(abs_path, 'r', encoding='utf-8') as fh:
         html = fh.read()
     return base64.b64encode(html.encode('utf-8')).decode('ascii')
@@ -94,6 +96,7 @@ def build_html(module_html_js, tile_uris):
     tile_fm = tile_uris.get('fm', '')
     tile_rp = tile_uris.get('rp', '')
     tile_dg = tile_uris.get('dg', '')
+    tile_fc = tile_uris.get('fc', '')
 
     return f'''<!DOCTYPE html>
 <html lang="fr">
@@ -119,7 +122,7 @@ def build_html(module_html_js, tile_uris):
   --f-ui:'Oswald','Arial Narrow',sans-serif;
   --f-body:'Barlow Condensed',sans-serif;
   --f-mono:'JetBrains Mono',monospace;
-  --a-hq:#4FB286; --a-bg:#c0892a; --a-rp:#7ac97a; --a-dg:#8fb0c0; --a-rs:#c95a9c; --a-fm:#7E8FA6;
+  --a-hq:#4FB286; --a-bg:#c0892a; --a-rp:#7ac97a; --a-dg:#8fb0c0; --a-rs:#c95a9c; --a-fc:#d0784a; --a-fm:#7E8FA6;
 }}
 [data-theme="cw-nato"]{{ --paper:#d8c9a5; --paper-edge:#8a7a52; --ink:#1f1c16; --ink-2:#463f30;
   --accent:#a98a4e; --olive:#4a5230; --stamp:#a83524; --amber:#c0892a;
@@ -282,6 +285,8 @@ select[data-tbm-src] {{ display: none !important; }}
 #card-rs .shot{{background-image:url("{tile_rs}");}}
 #card-fm .shot{{background-image:url("{tile_fm}");}}
 #card-fm::before{{background:radial-gradient(circle at 90% 10%, rgba(96,64,30,.5), transparent 14%);}}
+#card-fc .shot{{background-image:url("{tile_fc}");}}
+#card-fc::before{{background:radial-gradient(circle at 92% 90%, rgba(96,64,30,.5), transparent 15%);}}
 #card-dg .shot{{background-image:url("{tile_dg}");}}
 #card-dg::before{{background:radial-gradient(circle at 10% 92%, rgba(96,64,30,.5), transparent 15%);}}
 #card-rp .shot{{background-image:url("{tile_rp}");}}
@@ -293,6 +298,7 @@ select[data-tbm-src] {{ display: none !important; }}
 .active-row .print[id="card-dg"]{{transform:rotate(1.6deg); transition:transform .46s cubic-bezier(.2,.75,.2,1), box-shadow .46s;}}
 .active-row .print[id="card-rp"]{{transform:rotate(-0.9deg); transition:transform .38s cubic-bezier(.2,.75,.2,1), box-shadow .38s;}}
 .active-row .print[id="card-rs"]{{transform:rotate(0.6deg); transition:transform .44s cubic-bezier(.2,.75,.2,1), box-shadow .44s;}}
+.active-row .print[id="card-fc"]{{transform:rotate(-1.2deg); transition:transform .4s cubic-bezier(.2,.75,.2,1), box-shadow .4s;}}
 .active-row .print[id="card-fm"]{{transform:rotate(-1.4deg); transition:transform .4s cubic-bezier(.2,.75,.2,1), box-shadow .4s;}}
 .print.active:hover{{transform:rotate(0) translateY(-7px); cursor:pointer; box-shadow:0 30px 64px rgba(0,0,0,.6), 0 0 0 2px var(--card-accent);}}
 .active-row .print[id="card-hq"]:hover{{transform:rotate(-0.7deg) translateY(-7px);}}
@@ -300,6 +306,7 @@ select[data-tbm-src] {{ display: none !important; }}
 .active-row .print[id="card-dg"]:hover{{transform:rotate(0.6deg) translateY(-7px);}}
 .active-row .print[id="card-rp"]:hover{{transform:rotate(-0.2deg) translateY(-7px);}}
 .active-row .print[id="card-rs"]:hover{{transform:rotate(-0.4deg) translateY(-7px);}}
+.active-row .print[id="card-fc"]:hover{{transform:rotate(-0.4deg) translateY(-7px);}}
 .active-row .print[id="card-fm"]:hover{{transform:rotate(-0.5deg) translateY(-7px);}}
 .cta{{margin:2px 8px 12px; display:inline-block; font-family:var(--f-ui); font-size:12.5px; letter-spacing:.08em; text-transform:uppercase;
   color:#15120c; background:var(--card-accent); border:1px solid var(--paper-edge); padding:9px 15px; border-radius:var(--rad);}}
@@ -491,6 +498,20 @@ select[data-tbm-src] {{ display: none !important; }}
           </div>
           <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>
         </div>
+        <div class="print active reveal d6" id="card-fc" style="--card-accent:var(--a-fc)" tabindex="0" role="button" aria-label="Flight Configurator">
+          <span class="tape"></span><span class="pin tl"></span><span class="pin tr"></span>
+          <div class="shot"></div>
+          <div class="caption">
+            <div class="cap-row">
+              <span class="logo" style="background:var(--a-fc)">F·C</span>
+              <span class="ptitle">Flight Configurator</span>
+              <span class="pver">v0.1.0</span>
+            </div>
+            <div class="pdesc" data-i18n="fc.desc">Assemble un vol — identité, radios, emport, livrée — et l'exporte en paquet que HQ applique à la mission.</div>
+            <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
+          </div>
+          <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>
+        </div>
         <div class="print active reveal d6" id="card-fm" style="--card-accent:var(--a-fm)" tabindex="0" role="button" aria-label="Field Manual">
           <span class="tape"></span><span class="pin tl"></span><span class="pin tr"></span>
           <div class="shot"></div>
@@ -547,6 +568,7 @@ select[data-tbm-src] {{ display: none !important; }}
       'rs.desc': "Transforme une capture en photo d'analyse de reconnaissance — niveaux de gris, annotations au doigt, export PNG pleine résolution.",
       'fm.desc': "Le manuel d'emploi de la suite — un chapitre par module, schémas et mode d'emploi, entièrement hors-ligne.",
       'dg.desc': "Datacards de vol d'une page pour le kneeboard — saisie ou depuis un briefing, day et night, export PNG et PDF.",
+      'fc.desc': "Assemble un vol — identité, radios, emport avec les presets de l'éditeur, livrée — et l'exporte en paquet que HQ applique à la mission.",
       'rp.desc': 'Tracé de route sur carte — carte DCS, topographique ou satellite, grille MGRS, villes et aérodromes, recherche ; points de référence ; caps, distances, vitesse sol et minutage ; calques CombatFlite et dessin au doigt (zones, FLOT, couloirs, orbites, boîtes) ; MGRS et DMS, envoyés à la datacard ; import et export du Route Tool de DCS.',
       'status.op': 'Opérationnel',
       cta: '▶ Ouvrir le dossier',
@@ -566,6 +588,7 @@ select[data-tbm-src] {{ display: none !important; }}
       'rs.desc': 'Turns a screenshot into a reconnaissance analysis photo — greyscale, touch annotations, full-resolution PNG export.',
       'fm.desc': "The suite's field manual — one chapter per module, diagrams and how-tos, fully offline.",
       'dg.desc': 'One-page flight datacards for the kneeboard — from scratch or from a briefing, day and night, PNG and PDF export.',
+      'fc.desc': "Assembles a flight — identity, radios, loadout from the editor's presets, livery — and exports it as a package that HQ applies to the mission.",
       'rp.desc': 'Lay a route on a map — DCS, topographic or satellite, MGRS grid, towns and airfields, search; reference points; headings, distances, ground speed and minute marks; CombatFlite layers and touch drawing (zones, FLOT, corridors, orbits, boxes); MGRS and DMS, sent to the datacard; DCS Route Tool import and export.',
       'status.op': 'Operational',
       cta: '▶ Open the file',
@@ -1169,6 +1192,10 @@ function tbmScrolled(e) {{
     document.getElementById('card-fm').addEventListener('click', function() {{ openModule('fm'); }});
     document.getElementById('card-fm').addEventListener('keydown', function(e) {{
       if (e.key === 'Enter' || e.key === ' ') {{ e.preventDefault(); openModule('fm'); }}
+    }});
+    document.getElementById('card-fc').addEventListener('click', function() {{ openModule('fc'); }});
+    document.getElementById('card-fc').addEventListener('keydown', function(e) {{
+      if (e.key === 'Enter' || e.key === ' ') {{ e.preventDefault(); openModule('fc'); }}
     }});
     document.getElementById('card-dg').addEventListener('click', function() {{ openModule('dg'); }});
     document.getElementById('card-dg').addEventListener('keydown', function(e) {{
