@@ -1316,6 +1316,31 @@ select[data-tbm-src] { display: none !important; }
 }
 .export-png-go:hover { background: #1f1c16; border-color: #1f1c16; }
 .export-png-go:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+/* Nom du fichier : le champ (fenêtre « Enregistrer » et panneau PNG) */
+.fn-field { margin: 0 0 14px; }
+.fn-field .lbl {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+.fn-row { display: flex; align-items: center; gap: 8px; }
+.fn-row .in {
+  flex: 1 1 auto;
+  min-width: 0;
+  box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.25);
+  border: 1px solid #1f1c16;
+  border-radius: 2px;
+  padding: 8px 10px;
+  font-family: inherit;
+  font-size: 13px;
+  color: inherit;
+}
+.fn-row .in:focus { outline: 2px solid var(--amber, #c8901f); outline-offset: 1px; }
+.fn-ext { flex: none; font-size: 13px; opacity: 0.7; }
 .imp-block { margin-bottom: 14px; }
 .imp-src {
   display: flex; align-items: center; gap: 10px;
@@ -1905,10 +1930,25 @@ __CSS__
         <button type="button" class="export-png-toggle" id="export-png-none" data-i18n="ex.none">Tout décocher</button>
       </div>
       <div class="export-png-list" id="export-png-list"></div>
+      <div class="fn-field"><label class="lbl" for="export-png-fname" data-i18n="fn.label">Nom du fichier</label><div class="fn-row"><input class="in" id="export-png-fname" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="100"><span class="fn-ext" id="export-png-ext">.png</span></div></div>
       <div class="export-png-actions-bottom">
         <button type="button" class="export-png-back" id="export-png-back" data-i18n="ex.back">← Retour</button>
         <button type="button" class="export-png-go" id="export-png-go"><span data-i18n="tb.export">Exporter</span> <span id="export-png-count"></span></button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== FENÊTRE : ENREGISTRER LA DATACARD — CHOISIR LE NOM DU FICHIER ===== -->
+<div class="export-modal" id="save-modal" hidden role="dialog" aria-labelledby="save-title" aria-modal="true">
+  <div class="export-modal-backdrop" id="save-backdrop"></div>
+  <div class="export-modal-panel" role="document">
+    <button type="button" class="export-modal-close" id="save-close" data-i18n-aria-label="modal.close" aria-label="Fermer">×</button>
+    <h2 id="save-title" data-i18n="save.title">Enregistrer la datacard</h2>
+    <div class="fn-field"><label class="lbl" for="save-fname" data-i18n="fn.label">Nom du fichier</label><div class="fn-row"><input class="in" id="save-fname" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="100"><span class="fn-ext">.json</span></div></div>
+    <div class="export-png-actions-bottom">
+      <button type="button" class="export-png-back" id="save-cancel" data-i18n="fn.cancel">Annuler</button>
+      <button type="button" class="export-png-go" id="save-go" data-i18n="tb.json.export">Enregistrer</button>
     </div>
   </div>
 </div>
@@ -2099,6 +2139,9 @@ const I18N = {
     'theme.modern-nato': 'OTAN moderne',
     'theme.modern-east': 'Bloc Est moderne',
     'modal.close': 'Fermer',
+    'fn.label': 'Nom du fichier',
+    'fn.cancel': 'Annuler',
+    'save.title': 'Enregistrer la datacard',
     'ex.pdf': 'PDF (impression)',
     'ex.png': 'PNG (kneeboard)',
     'ex.pages': 'Pages à exporter',
@@ -2441,6 +2484,9 @@ const I18N = {
     'theme.modern-nato': 'Modern NATO',
     'theme.modern-east': 'Modern East Bloc',
     'modal.close': 'Close',
+    'fn.label': 'File name',
+    'fn.cancel': 'Cancel',
+    'save.title': 'Save the datacard',
     'ex.pdf': 'PDF (print)',
     'ex.png': 'PNG (kneeboard)',
     'ex.pages': 'Pages to export',
@@ -4471,7 +4517,7 @@ function setMode(m) {
 /* ============= TÉLÉCHARGEMENT ============= */
 function stamp() {
   const d = new Date();
-  return d.getFullYear() + pad2(d.getMonth() + 1) + pad2(d.getDate()) + '_' + pad2(d.getHours()) + pad2(d.getMinutes()) + pad2(d.getSeconds());
+  return d.getFullYear() + pad2(d.getMonth() + 1) + pad2(d.getDate()) + '-' + pad2(d.getHours()) + pad2(d.getMinutes()) + pad2(d.getSeconds());
 }
 function slug(s) {
   const k = str(s).trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
@@ -4490,10 +4536,43 @@ function fallbackDownload(blob, fname, toastMsg) {
   if (toastMsg) showToast(toastMsg);
 }
 
-function downloadJson() {
-  const blob = new Blob([JSON.stringify(doc, null, 2)], { type: 'application/json' });
+/* Le nom d'un fichier choisi : sans « .json », accents ôtés, tout ce qui n'est pas lettre, chiffre, _ + - devient « _ » ; vide si rien ne reste */
+function cleanFname(v) {
+  return str(v).trim().replace(/\.json$/i, '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9_+-]+/g, '_').replace(/_{2,}/g, '_').replace(/^_+|_+$/g, '').slice(0, 100);
+}
+
+/* « Enregistrer » : la fenêtre du nom du fichier, pré-remplie du nom d'avant */
+const SAVEN = { name: '', opener: null };
+function saveModalOpen() { return !document.getElementById('save-modal').hidden; }
+function saveSync() { document.getElementById('save-go').disabled = cleanFname(SAVEN.name) === ''; }
+function openSaveModal(opener) {
   const cs = slug(curCard().flight.callsign) || 'doc';
-  const fname = 'datacard_' + cs + '_' + stamp() + '.json';
+  SAVEN.name = cleanFname('datacard_' + cs + '_' + stamp());
+  SAVEN.opener = opener || document.activeElement;
+  const f = document.getElementById('save-fname');
+  f.value = SAVEN.name;
+  saveSync();
+  document.getElementById('save-modal').hidden = false;
+  f.focus({ preventScroll: true });
+  f.select();
+}
+function closeSaveModal() {
+  document.getElementById('save-modal').hidden = true;
+  const o = SAVEN.opener;
+  SAVEN.opener = null;
+  if (o && o.focus && !o.disabled) { try { o.focus({ preventScroll: true }); } catch (e) { /* ignore */ } }
+}
+function saveGo() {
+  const name = cleanFname(SAVEN.name);
+  if (name === '') return;
+  closeSaveModal();
+  downloadJson(name);
+}
+
+/* L'écriture de la datacard sous le nom choisi (sans extension) */
+function downloadJson(name) {
+  const blob = new Blob([JSON.stringify(doc, null, 2)], { type: 'application/json' });
+  const fname = name + '.json';
   if (navigator.share && navigator.canShare) {
     try {
       const file = new File([blob], fname, { type: 'application/json' });
@@ -5229,13 +5308,28 @@ function openExportModal() {
 }
 function closeExportModal() { document.getElementById('export-modal').hidden = true; }
 
+/* Le nom du PNG (une page) ou du zip (plusieurs) : il suit les pages cochées tant qu'on ne l'a pas changé */
+const PNGN = { name: '', edited: false, stamp: '' };
+function pngDefaultName(idx) {
+  if (idx.length === 1) {
+    const p = allExportPages()[idx[0]];
+    return 'dc_' + p.cs + '_p' + p.page + '_' + PNGN.stamp;
+  }
+  return 'datacards_' + PNGN.stamp;
+}
 function updatePngCount() {
-  const n = document.querySelectorAll('.export-png-page-cb.exp-cb:checked').length;
+  const idx = Array.from(document.querySelectorAll('.export-png-page-cb.exp-cb:checked')).map(cb => parseInt(cb.dataset.idx, 10));
+  const n = idx.length;
   document.getElementById('export-png-count').textContent = '(' + n + ')';
-  document.getElementById('export-png-go').disabled = n === 0;
+  document.getElementById('export-png-ext').textContent = n > 1 ? '.zip' : '.png';
+  const fld = document.getElementById('export-png-fname');
+  if (!PNGN.edited && n) { PNGN.name = cleanFname(pngDefaultName(idx)); fld.value = PNGN.name; }
+  document.getElementById('export-png-go').disabled = n === 0 || cleanFname(PNGN.name) === '';
 }
 
 function showPngConfig() {
+  PNGN.edited = false;
+  PNGN.stamp = stamp();
   const pages = allExportPages();
   document.getElementById('export-png-list').innerHTML = pages.map((p, i) =>
     '<label class="export-png-page-row"><input type="checkbox" class="export-png-page-cb exp-cb" data-idx="' + i + '" checked>' +
@@ -5278,11 +5372,13 @@ async function executePngExport() {
   const idx = Array.from(document.querySelectorAll('.export-png-page-cb.exp-cb:checked')).map(cb => parseInt(cb.dataset.idx, 10));
   const sel = idx.map(i => all[i]).filter(Boolean);
   if (!sel.length) return;
+  const fileName = cleanFname(PNGN.name);
+  if (fileName === '') return;
   const goBtn = document.getElementById('export-png-go');
   const original = goBtn.innerHTML;
   goBtn.disabled = true;
   goBtn.setAttribute('aria-busy', 'true');
-  /* Deux cartes de même indicatif ne doivent pas écraser leurs noms de fichier */
+  /* Deux cartes de même indicatif ne doivent pas écraser leurs noms de fichier (les pages d'un zip) */
   const used = {};
   const names = sel.map(p => {
     let base = 'dc_' + p.cs + '_p' + p.page;
@@ -5294,7 +5390,7 @@ async function executePngExport() {
       goBtn.textContent = t('ex.progress', { i: 1, n: 1 });
       const blob = await renderPageToPng(sel[0].html);
       closeExportModal();
-      fallbackDownload(blob, names[0], t('toast.pngOne'));
+      fallbackDownload(blob, fileName + '.png', t('toast.pngOne'));
     } else {
       const zip = new JSZip();
       for (let i = 0; i < sel.length; i++) {
@@ -5305,7 +5401,7 @@ async function executePngExport() {
       }
       const zipBlob = await zip.generateAsync({ type: 'blob' });
       closeExportModal();
-      fallbackDownload(zipBlob, 'datacards_' + stamp() + '.zip', t('toast.pngMany', { n: sel.length }));
+      fallbackDownload(zipBlob, fileName + '.zip', t('toast.pngMany', { n: sel.length }));
     }
   } catch (err) {
     showToast(t('ex.error') + (err && err.message ? err.message : ''));
@@ -5361,7 +5457,11 @@ function bindEvents() {
   const fileLoad = document.getElementById('file-load');
   document.getElementById('btn-json-import').addEventListener('click', () => { fileLoad.value = ''; fileLoad.click(); });
   fileLoad.addEventListener('change', () => { if (fileLoad.files && fileLoad.files[0]) loadJsonFile(fileLoad.files[0]); });
-  document.getElementById('btn-json-export').addEventListener('click', downloadJson);
+  document.getElementById('btn-json-export').addEventListener('click', e => openSaveModal(e.currentTarget));
+  ['save-backdrop', 'save-close', 'save-cancel'].forEach(id => document.getElementById(id).addEventListener('click', closeSaveModal));
+  document.getElementById('save-go').addEventListener('click', saveGo);
+  document.getElementById('save-fname').addEventListener('input', e => { SAVEN.name = e.target.value; saveSync(); });
+  document.getElementById('save-fname').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); saveGo(); } });
   document.getElementById('btn-print').addEventListener('click', openExportModal);
   document.getElementById('btn-example').addEventListener('click', loadExample);
   document.getElementById('btn-reset').addEventListener('click', resetDoc);
@@ -5378,6 +5478,8 @@ function bindEvents() {
   document.getElementById('export-png-none').addEventListener('click', () => { document.querySelectorAll('.exp-cb').forEach(cb => { cb.checked = false; }); updatePngCount(); });
   document.getElementById('export-png-list').addEventListener('change', updatePngCount);
   document.getElementById('export-png-go').addEventListener('click', executePngExport);
+  document.getElementById('export-png-fname').addEventListener('input', e => { PNGN.name = e.target.value; PNGN.edited = true; updatePngCount(); });
+  document.getElementById('export-png-fname').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); const g = document.getElementById('export-png-go'); if (!g.disabled) executePngExport(); } });
 
   /* Import depuis un briefing */
   document.getElementById('import-modal-backdrop').addEventListener('click', closeImportModal);
@@ -5405,6 +5507,7 @@ function bindEvents() {
 
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
+    if (saveModalOpen()) { e.preventDefault(); closeSaveModal(); return; }
     if (!document.getElementById('export-modal').hidden) closeExportModal();
     if (!document.getElementById('import-modal').hidden) closeImportModal();
   });

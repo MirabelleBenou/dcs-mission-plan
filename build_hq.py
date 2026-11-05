@@ -813,6 +813,32 @@ select[data-tbm-src] {{ display: none !important; }}
 .miz-btn.primary:hover {{ background: var(--amber-dark); color: var(--paper-light); }}
 .miz-btn-row {{ display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }}
 
+/* ======== FENÊTRE « NOM DU FICHIER » ======== */
+.fn-modal[hidden] {{ display: none !important; }}
+.fn-modal {{ position: fixed; inset: 0; z-index: 3000; display: flex; align-items: center; justify-content: center; padding: 16px; }}
+.fn-backdrop {{ position: absolute; inset: 0; background: rgba(0,0,0,.55); }}
+.fn-panel {{
+  position: relative; width: 100%; max-width: 440px; max-height: calc(100vh - 32px); overflow: auto;
+  background: var(--olive-dark); color: var(--paper); border: 1px solid var(--amber); border-top: 3px solid var(--amber);
+  padding: 18px 18px 16px; box-shadow: 0 8px 40px rgba(0,0,0,.6);
+}}
+.fn-close {{ position: absolute; top: 4px; right: 8px; background: none; border: 0; color: var(--paper); font-size: 24px; line-height: 1; padding: 6px 8px; cursor: pointer; font-family: inherit; }}
+.fn-close:hover, .fn-close:focus-visible {{ color: var(--amber); outline: none; }}
+.fn-panel h2 {{ margin: 0 28px 14px 0; font-family: var(--f-stencil); font-weight: 400; font-size: 16px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--amber); }}
+.fn-field {{ margin: 0 0 14px; }}
+.fn-field .lbl {{
+  display: block; margin-bottom: 5px; font-family: var(--f-ui); font-weight: 700; font-size: 11px; letter-spacing: 1.8px; text-transform: uppercase; color: var(--amber);
+}}
+.fn-row {{ display: flex; align-items: center; gap: 8px; }}
+.fn-row .in {{
+  flex: 1 1 auto; min-width: 0; box-sizing: border-box; min-height: 44px; padding: 10px 11px;
+  background: rgba(216,201,165,.92); border: 1px solid var(--khaki); border-left: 3px solid var(--amber-dark);
+  font-family: var(--f-typewriter); font-size: 13px; color: var(--ink);
+}}
+.fn-row .in:focus {{ outline: none; border-left-color: var(--red-stamp); background: var(--paper-light); box-shadow: 0 0 0 1px var(--amber); }}
+.fn-ext {{ flex: none; font-family: var(--f-typewriter); font-size: 13px; color: var(--khaki-light); }}
+.fn-actions {{ display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }}
+
 /* Mission snapshot read-only display */
 .snapshot-section {{
   margin-top: 14px;
@@ -1119,6 +1145,20 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
   </div><!-- /editor -->
 </div><!-- /app -->
 
+<!-- FENÊTRE : NOM DU FICHIER (config wing, paquet de vol, .miz modifié) -->
+<div class="fn-modal" id="fn-modal" hidden role="dialog" aria-modal="true" aria-labelledby="fn-title">
+  <div class="fn-backdrop" id="fn-backdrop"></div>
+  <div class="fn-panel" role="document">
+    <button type="button" class="fn-close" id="fn-close" aria-label="Fermer">&times;</button>
+    <h2 id="fn-title"></h2>
+    <div class="fn-field"><label class="lbl" for="fn-name" data-i18n="fn.label">Nom du fichier</label><div class="fn-row"><input class="in" id="fn-name" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="100"><span class="fn-ext" id="fn-ext">.json</span></div></div>
+    <div class="fn-actions">
+      <button type="button" class="miz-btn" id="fn-cancel" data-i18n="fn.cancel">Annuler</button>
+      <button type="button" class="miz-btn primary" id="fn-go"></button>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
@@ -1232,6 +1272,15 @@ const I18N = {{
     'pk.load': 'Importer des paquets',
     'pk.loaded': 'Paquets chargés',
     'pk.apply': 'Appliquer et télécharger le .miz',
+    'fn.label': 'Nom du fichier',
+    'fn.cancel': 'Annuler',
+    'fn.close': 'Fermer',
+    'fn.cfg.title': 'Exporter la config wing',
+    'fn.cfg.go': 'Exporter',
+    'fn.pk.title': 'Exporter le paquet',
+    'fn.pk.go': 'Exporter',
+    'fn.miz.title': 'Appliquer et télécharger le .miz',
+    'fn.miz.go': 'Appliquer',
     'pk.exportN': '📦 Exporter les vols cochés ({{0}})',
     'pk.flt.side': 'Camp',
     'pk.flt.all': 'Tous',
@@ -1435,6 +1484,15 @@ const I18N = {{
     'pk.load': 'Import packages',
     'pk.loaded': 'Loaded packages',
     'pk.apply': 'Apply and download the .miz',
+    'fn.label': 'File name',
+    'fn.cancel': 'Cancel',
+    'fn.close': 'Close',
+    'fn.cfg.title': 'Export the wing config',
+    'fn.cfg.go': 'Export',
+    'fn.pk.title': 'Export the package',
+    'fn.pk.go': 'Export',
+    'fn.miz.title': 'Apply and download the .miz',
+    'fn.miz.go': 'Apply',
     'pk.exportN': '📦 Export checked flights ({{0}})',
     'pk.flt.side': 'Side',
     'pk.flt.all': 'All',
@@ -1697,6 +1755,7 @@ function applyI18nStatic() {{
 }}
 
 function rerenderDynamic() {{
+  if (fnOpen()) fnRender();
   renderWingEditor();
   if (HQ_SNAPSHOT) renderSnapshot(HQ_SNAPSHOT);
   pkRender();
@@ -2104,22 +2163,99 @@ function bindWingEditorEvents() {{
   if (btnReset) btnReset.addEventListener('click', resetWingConfig);
 }}
 
-// ── Wing actions ───────────────────────────────────────────────
-function exportWingConfig() {{
-  const blob = new Blob([JSON.stringify(wingConfig, null, 2)], {{ type: 'application/json' }});
-  const wid  = (wingConfig.wing.id || 'wing').toLowerCase().replace(/[\\s/]+/g, '_');
-  const fname = 'wing_config_' + wid + '_' + Date.now() + '.json';
+// ── Nom du fichier : la fenêtre commune des écritures de HQ (config wing, paquet de vol, .miz modifié) ──
+function str(v) {{
+  if (typeof v === 'string') return v;
+  if (typeof v === 'number' && isFinite(v)) return String(v);
+  return '';
+}}
+/* Le nom d'un fichier choisi : sans « .json », accents ôtés, tout ce qui n'est pas lettre, chiffre, _ + - devient « _ » ; vide si rien ne reste */
+function cleanFname(v) {{
+  return str(v).trim().replace(/\\.json$/i, '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').replace(/[^A-Za-z0-9_+-]+/g, '_').replace(/_{{2,}}/g, '_').replace(/^_+|_+$/g, '').slice(0, 100);
+}}
+const FN = {{ name: '', opener: null, run: null, titleKey: '', goKey: '' }};
+function fnOpen() {{ return !document.getElementById('fn-modal').hidden; }}
+function fnSync() {{
+  document.getElementById('fn-go').disabled = cleanFname(FN.name) === '';
+}}
+function fnRender() {{
+  document.getElementById('fn-title').textContent = t(FN.titleKey);
+  document.getElementById('fn-go').textContent = t(FN.goKey);
+  document.getElementById('fn-close').setAttribute('aria-label', t('fn.close'));
+}}
+/* o : titleKey, goKey, ext, name (le défaut, sans extension), opener, run(nom nettoyé) */
+function fnAsk(o) {{
+  FN.name = cleanFname(o.name);
+  FN.run = o.run;
+  FN.opener = o.opener || document.activeElement;
+  FN.titleKey = o.titleKey; FN.goKey = o.goKey;
+  const inp = document.getElementById('fn-name');
+  inp.value = FN.name;
+  document.getElementById('fn-ext').textContent = o.ext;
+  fnRender();
+  fnSync();
+  document.getElementById('fn-modal').hidden = false;
+  inp.focus({{ preventScroll: true }});
+  inp.select();
+}}
+function fnClose() {{
+  document.getElementById('fn-modal').hidden = true;
+  const o = FN.opener;
+  FN.opener = null; FN.run = null;
+  if (o && o.focus && !o.disabled) {{ try {{ o.focus({{ preventScroll: true }}); }} catch (e) {{}} }}
+}}
+function fnGo() {{
+  const name = cleanFname(FN.name), run = FN.run;
+  if (name === '' || !run) return;
+  fnClose();
+  run(name);
+}}
+function fnBind() {{
+  ['fn-backdrop', 'fn-close', 'fn-cancel'].forEach(id => document.getElementById(id).addEventListener('click', fnClose));
+  document.getElementById('fn-go').addEventListener('click', fnGo);
+  const inp = document.getElementById('fn-name');
+  inp.addEventListener('input', e => {{ FN.name = e.target.value; fnSync(); }});
+  inp.addEventListener('keydown', e => {{ if (e.key === 'Enter') {{ e.preventDefault(); fnGo(); }} }});
+  document.addEventListener('keydown', e => {{
+    if (!fnOpen()) return;
+    if (e.key === 'Escape') {{ e.preventDefault(); fnClose(); return; }}
+    if (e.key !== 'Tab') return;
+    const els = Array.prototype.filter.call(document.querySelectorAll('#fn-modal button, #fn-modal input'), x => !x.disabled && x.offsetParent !== null);
+    if (!els.length) return;
+    const first = els[0], last = els[els.length - 1];
+    if (e.shiftKey && (document.activeElement === first || !document.getElementById('fn-modal').contains(document.activeElement))) {{ e.preventDefault(); last.focus(); }}
+    else if (!e.shiftKey && (document.activeElement === last || !document.getElementById('fn-modal').contains(document.activeElement))) {{ e.preventDefault(); first.focus(); }}
+  }});
+}}
+
+/* Un fichier remis à la personne : le partage du système (un File) quand il le permet, sinon un téléchargement ; un partage rejeté conduit au téléchargement.
+   download(blob, nom) est le téléchargement de l'appelant. */
+function shareOrDownload(blob, fname, mime, title, download) {{
   if (navigator.share && navigator.canShare) {{
     try {{
-      const file = new File([blob], fname, {{ type: 'application/json' }});
+      const file = new File([blob], fname, {{ type: mime }});
       if (navigator.canShare({{ files: [file] }})) {{
-        navigator.share({{ files: [file], title: 'Config ' + wingConfig.wing.shortName, text: fname }})
-          .catch(() => fallbackDownload(blob, fname));
+        navigator.share({{ files: [file], title: title, text: fname }})
+          .catch(() => download(blob, fname));
         return;
       }}
     }} catch (e) {{}}
   }}
-  fallbackDownload(blob, fname);
+  download(blob, fname);
+}}
+
+// ── Wing actions ───────────────────────────────────────────────
+function exportWingConfig(ev) {{
+  const wid  = (wingConfig.wing.id || 'wing').toLowerCase().replace(/[\\s/]+/g, '_');
+  fnAsk({{
+    titleKey: 'fn.cfg.title', goKey: 'fn.cfg.go', ext: '.json',
+    name: 'wing_config_' + wid + '_' + pkStamp(),
+    opener: ev && ev.currentTarget,
+    run: name => {{
+      const blob = new Blob([JSON.stringify(wingConfig, null, 2)], {{ type: 'application/json' }});
+      shareOrDownload(blob, name + '.json', 'application/json', 'Config ' + wingConfig.wing.shortName, fallbackDownload);
+    }}
+  }});
 }}
 
 function fallbackDownload(blob, fname) {{
@@ -2128,7 +2264,7 @@ function fallbackDownload(blob, fname) {{
   a.href = url; a.download = fname;
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 1000);
-  showToast(t('toast.wingLoaded').replace(' \u2014 ', '') + ' \u2713');
+  showToast(t('toast.wingLoaded').replace(' — ', '') + ' ✓');
 }}
 
 function importWingConfig(file) {{
@@ -3266,15 +3402,26 @@ function pkBuildExport(groupIds) {{
   return {{ pkg, omit }};
 }}
 
-function pkExport() {{
+// La fenêtre « Exporter le paquet » : le nom par défaut est celui du Route Planner, paquet_<groupe>[_+n]_<horodatage>
+function pkExportAsk(opener) {{
+  if (!HQ_SNAPSHOT || !_HQ_MIZ_CONTEXT) {{ showToast(t('toast.mizNotLoaded')); return; }}
+  const sel = HQ_SNAPSHOT.flights.filter(f => _PK_EXPORT_SEL.has(f.groupId));
+  if (sel.length === 0) return;
+  fnAsk({{
+    titleKey: 'fn.pk.title', goKey: 'fn.pk.go', ext: '.json',
+    name: 'paquet_' + (cleanFname(sel[0].groupName).slice(0, 40) || 'vol') + (sel.length > 1 ? '_+' + (sel.length - 1) : '') + '_' + pkStamp(),
+    opener: opener,
+    run: name => pkExport(name)
+  }});
+}}
+
+function pkExport(name) {{
   if (!HQ_SNAPSHOT || !_HQ_MIZ_CONTEXT) {{ showToast(t('toast.mizNotLoaded')); return; }}
   const ids = new Set(HQ_SNAPSHOT.flights.filter(f => _PK_EXPORT_SEL.has(f.groupId)).map(f => f.groupId));
   if (ids.size === 0) return;
   try {{
     const {{ pkg, omit }} = pkBuildExport(ids);
-    const first = pkg.flights[0].groupName;
-    const fname = 'paquet_' + pkCleanName(first) + (pkg.flights.length > 1 ? '_+' + (pkg.flights.length - 1) : '') + '_' + pkStamp() + '.json';
-    pkDownload(new Blob([JSON.stringify(pkg, null, 2)], {{ type: 'application/json' }}), fname);
+    shareOrDownload(new Blob([JSON.stringify(pkg, null, 2)], {{ type: 'application/json' }}), name + '.json', 'application/json', 'HQ', pkDownload);
     let msg = tn('toast.pkExported', pkg.flights.length);
     if (omit.routes.length)   msg += ' · ' + t('toast.pkOmitRoute') + ' ' + omit.routes.join(', ');
     if (omit.payloads.length) msg += ' · ' + t('toast.pkOmitPayload') + ' ' + omit.payloads.join(', ');
@@ -3656,7 +3803,19 @@ function pkDoneText(done) {{
   return parts.join(' · ');
 }}
 
-async function pkApply() {{
+// La fenêtre « Appliquer et télécharger le .miz » : le nom du .miz ouvert (sans .miz), puis _<horodatage>
+function pkApplyAsk(opener) {{
+  if (_PK_BUSY || _mizLoading) return;
+  if (!_HQ_MIZ_CONTEXT) {{ showToast(t('toast.mizNotLoaded')); return; }}
+  fnAsk({{
+    titleKey: 'fn.miz.title', goKey: 'fn.miz.go', ext: '.miz',
+    name: (cleanFname((_mizFilename || 'mission').replace(/\\.miz$/i, '')).slice(0, 80) || 'mission') + '_' + pkStamp(),
+    opener: opener,
+    run: name => pkApply(name)
+  }});
+}}
+
+async function pkApply(name) {{
   if (_PK_BUSY || _mizLoading) return;
   if (!_HQ_MIZ_CONTEXT) {{ showToast(t('toast.mizNotLoaded')); return; }}
   _PK_BUSY = true;
@@ -3729,8 +3888,7 @@ async function pkApply() {{
     // Rien n'a échoué : l'archive est refaite (rebuildMizHQ) et le snapshot recalculé, puis seulement on télécharge et on change d'état
     const blob = await rebuildMizHQ(work.missionText);
     const snap = await buildMissionSnapshot(work.ast, work.model, work.missionText, _mizFilename || 'mission.miz', work.theatre);
-    const outName = (_mizFilename || 'mission').replace(/\\.miz$/i, '') + '_paquets_' + pkStamp() + '.miz';
-    pkDownload(blob, outName);
+    shareOrDownload(blob, name + '.miz', 'application/octet-stream', 'HQ', pkDownload);
     _HQ_MIZ_CONTEXT = {{ missionText: work.missionText, ast: work.ast, model: work.model, otherFilesMap: work.otherFilesMap, theatre: work.theatre }};
     HQ_SNAPSHOT = snap;
     persistSnapshot();
@@ -3768,7 +3926,7 @@ function initPackagesUI() {{
     }});
   }}
   const applyBtn = document.getElementById('pk-apply-btn');
-  if (applyBtn) applyBtn.addEventListener('click', pkApply);
+  if (applyBtn) applyBtn.addEventListener('click', ev => pkApplyAsk(ev.currentTarget));
   const listEl = document.getElementById('pk-list');
   if (listEl) {{
     listEl.addEventListener('click', e => {{
@@ -3805,7 +3963,7 @@ function initPackagesUI() {{
     snapEl.addEventListener('click', e => {{
       const q = (sel) => e.target.closest ? e.target.closest(sel) : null;
       const ex = q('#pk-export-btn');
-      if (ex) {{ if (!ex.disabled) pkExport(); return; }}
+      if (ex) {{ if (!ex.disabled) pkExportAsk(ex); return; }}
       const ck = q('#pk-check-shown');
       if (ck) {{
         if (ck.disabled || !_HQ_MIZ_CONTEXT) return;
@@ -4185,6 +4343,7 @@ function init() {{
   initMissionEvents();
   loadPersistedSnapshot();  // P2 — restaurer snapshot au rechargement
   initPackagesUI();         // paquets de vol (export / import)
+  fnBind();                 // la fenêtre « Nom du fichier »
 }}
 
 init();

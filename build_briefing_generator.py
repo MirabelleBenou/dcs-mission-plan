@@ -2959,6 +2959,32 @@ body[data-format="full"] [data-fmt="simple"] { display: none !important; }
   pointer-events: none;
 }
 
+/* ============= NOM DU FICHIER : le champ (fenêtre « Enregistrer » et panneau PNG) ============= */
+.fn-field { margin: 0 0 14px; }
+.fn-field .lbl {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+.fn-row { display: flex; align-items: center; gap: 8px; }
+.fn-row .in {
+  flex: 1 1 auto;
+  min-width: 0;
+  box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.25);
+  border: 1px solid var(--ink, #2a2a2a);
+  border-radius: 2px;
+  padding: 8px 10px;
+  font-family: inherit;
+  font-size: 13px;
+  color: inherit;
+}
+.fn-row .in:focus { outline: 2px solid var(--amber, #c8901f); outline-offset: 1px; }
+.fn-ext { flex: none; font-size: 13px; opacity: 0.7; }
+
 /* ============= CARTE DU ROUTE PLANNER (v2.5.0) : la fenêtre « Placer la carte » ============= */
 .rpmap-thumb {
   display: flex;
@@ -3230,10 +3256,25 @@ __CSS__
       <div class="export-png-list" id="export-png-list">
         <!-- checkboxes par page injectées dynamiquement -->
       </div>
+      <div class="fn-field"><label class="lbl" for="export-png-fname" data-i18n="fn.label">Nom du fichier</label><div class="fn-row"><input class="in" id="export-png-fname" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="100"><span class="fn-ext" id="export-png-ext">.png</span></div></div>
       <div class="export-png-actions-bottom">
         <button type="button" class="export-png-back" id="export-png-back" data-i18n="modal.export.png.back">← Retour</button>
         <button type="button" class="export-png-go" id="export-png-go"><span data-i18n="modal.export.png.go">Exporter</span> <span id="export-png-count"></span></button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== FENÊTRE : ENREGISTRER LE BRIEFING — CHOISIR LE NOM DU FICHIER ===== -->
+<div class="export-modal" id="save-modal" hidden role="dialog" aria-labelledby="save-title" aria-modal="true">
+  <div class="export-modal-backdrop" id="save-backdrop"></div>
+  <div class="export-modal-panel" role="document">
+    <button type="button" class="export-modal-close" id="save-close" data-i18n-aria-label="modal.export.close" aria-label="Fermer">×</button>
+    <h2 id="save-title" data-i18n="save.title">Enregistrer le briefing</h2>
+    <div class="fn-field"><label class="lbl" for="save-fname" data-i18n="fn.label">Nom du fichier</label><div class="fn-row"><input class="in" id="save-fname" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="100"><span class="fn-ext">.json</span></div></div>
+    <div class="export-png-actions-bottom">
+      <button type="button" class="export-png-back" id="save-cancel" data-i18n="rpmap.cancel">Annuler</button>
+      <button type="button" class="export-png-go" id="save-go" data-i18n="toolbar.save">Enregistrer</button>
     </div>
   </div>
 </div>
@@ -3671,6 +3712,8 @@ const I18N = {
     'modal.export.png.back':       '← Retour',
     'modal.export.png.go':         'Exporter',
     'modal.export.titlePng':       'Export PNG kneeboard',
+    'fn.label':                    'Nom du fichier',
+    'save.title':                  'Enregistrer le briefing',
     // ── Section 00 META ──
     'editor.meta.summary':        '00 ░ MÉTADONNÉES',
     'editor.meta.operation':      'Opération',
@@ -4044,6 +4087,8 @@ const I18N = {
     'modal.export.png.back':       '← Back',
     'modal.export.png.go':         'Export',
     'modal.export.titlePng':       'PNG kneeboard export',
+    'fn.label':                    'File name',
+    'save.title':                  'Save the briefing',
     // ── Section 00 META ──
     'editor.meta.summary':        '00 ░ METADATA',
     'editor.meta.operation':      'Operation',
@@ -8186,11 +8231,67 @@ function showToast(msg, ms) {
 }
 
 /* ============= ACTIONS ============= */
-function downloadJson() {
-  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+/* Le nom d'un fichier choisi : sans « .json », accents ôtés, tout ce qui n'est pas lettre, chiffre, _ + - devient « _ » ; vide si rien ne reste */
+function str(v) {
+  if (typeof v === 'string') return v;
+  if (typeof v === 'number' && isFinite(v)) return String(v);
+  return '';
+}
+function cleanFname(v) {
+  return str(v).trim().replace(/\.json$/i, '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9_+-]+/g, '_').replace(/_{2,}/g, '_').replace(/^_+|_+$/g, '').slice(0, 100);
+}
+/* L'horodatage unique des noms par défaut : AAAAMMJJ-HHMMSS, heure locale */
+function fnStamp() {
+  const d = new Date(), p = n => String(n).padStart(2, '0');
+  return d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + '-' + p(d.getHours()) + p(d.getMinutes()) + p(d.getSeconds());
+}
+
+/* « Enregistrer » (et Ctrl+S) : la fenêtre du nom du fichier, pré-remplie du nom d'avant */
+const SAVEN = { name: '', opener: null };
+function defaultBriefingName() {
   const op = (state.meta.operation || 'op').toLowerCase().replace(/\s+/g, '_');
   const ms = (state.meta.mission || 'm').toLowerCase().replace(/\s+/g, '_');
-  const fname = `briefing_${op}_${ms}_${Date.now()}.json`;
+  return `briefing_${op}_${ms}_${fnStamp()}`;
+}
+function saveModalOpen() { return !document.getElementById('save-modal').hidden; }
+function saveSync() { document.getElementById('save-go').disabled = cleanFname(SAVEN.name) === ''; }
+function openSaveModal(opener) {
+  SAVEN.name = cleanFname(defaultBriefingName());
+  SAVEN.opener = opener || document.activeElement;
+  const f = document.getElementById('save-fname');
+  f.value = SAVEN.name;
+  saveSync();
+  document.getElementById('save-modal').hidden = false;
+  f.focus({ preventScroll: true });
+  f.select();
+}
+function closeSaveModal() {
+  document.getElementById('save-modal').hidden = true;
+  const o = SAVEN.opener;
+  SAVEN.opener = null;
+  if (o && o.focus && !o.disabled) { try { o.focus({ preventScroll: true }); } catch (e) { /* ignore */ } }
+}
+function saveGo() {
+  const name = cleanFname(SAVEN.name);
+  if (name === '') return;
+  closeSaveModal();
+  downloadJson(name);
+}
+document.addEventListener('DOMContentLoaded', function bindSaveModal() {
+  ['save-backdrop', 'save-close', 'save-cancel'].forEach(function(id) { document.getElementById(id).addEventListener('click', closeSaveModal); });
+  document.getElementById('save-go').addEventListener('click', saveGo);
+  const f = document.getElementById('save-fname');
+  f.addEventListener('input', function(e) { SAVEN.name = e.target.value; saveSync(); });
+  f.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); saveGo(); } });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && saveModalOpen()) { e.preventDefault(); closeSaveModal(); }
+  });
+});
+
+/* L'écriture du briefing sous le nom choisi (sans extension) */
+function downloadJson(name) {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const fname = name + '.json';
 
   // Try Web Share API first (better on Android)
   if (navigator.share && navigator.canShare) {
@@ -9420,7 +9521,7 @@ function init() {
       showToast(t('toast.briefingOptimizedOnLoad').replace('{n}', recompressed));
     }
   });
-  document.getElementById('btn-save').addEventListener('click', downloadJson);
+  document.getElementById('btn-save').addEventListener('click', e => openSaveModal(e.currentTarget));
   document.getElementById('btn-load').addEventListener('click', () => document.getElementById('file-load').click());
   document.getElementById('file-load').addEventListener('change', e => {
     if (e.target.files[0]) loadJsonFile(e.target.files[0]);
@@ -9439,7 +9540,7 @@ function init() {
 
   // Keyboard shortcuts (desktop)
   document.addEventListener('keydown', e => {
-    if (e.ctrlKey && e.key === 's') { e.preventDefault(); downloadJson(); }
+    if (e.ctrlKey && e.key === 's') { e.preventDefault(); if (!saveModalOpen()) openSaveModal(document.getElementById('btn-save')); }
     if (e.ctrlKey && e.key === 'p') { /* let browser handle */ }
   });
 }
@@ -9481,13 +9582,24 @@ function pngPageHint(pageEl) {
   return '—';
 }
 
+/* Le nom du PNG (une page) ou du zip (plusieurs) : il suit les pages cochées tant qu'on ne l'a pas changé */
+const PNGN = { name: '', edited: false, stamp: '' };
+function pngDefaultName(checkedIdx) {
+  if (checkedIdx.length === 1) return 'kb_' + String(checkedIdx[0] + 1).padStart(2, '0') + '_' + PNGN.stamp;
+  return 'briefing_kneeboard_' + PNGN.stamp;
+}
 function updatePngExportCount() {
   const cbs = document.querySelectorAll('.export-png-page-cb:checked');
   const span = document.getElementById('export-png-count');
   if (!span) return;
   span.textContent = cbs.length ? '(' + cbs.length + ')' : '';
+  const idx = Array.from(cbs).map(function(cb) { return parseInt(cb.dataset.idx, 10); });
+  const ext = document.getElementById('export-png-ext');
+  if (ext) ext.textContent = idx.length > 1 ? '.zip' : '.png';
+  const fld = document.getElementById('export-png-fname');
+  if (fld && !PNGN.edited && idx.length) { PNGN.name = cleanFname(pngDefaultName(idx)); fld.value = PNGN.name; }
   const goBtn = document.getElementById('export-png-go');
-  if (goBtn) goBtn.disabled = cbs.length === 0;
+  if (goBtn) goBtn.disabled = cbs.length === 0 || cleanFname(PNGN.name) === '';
 }
 
 function handleExportPngChoice() {
@@ -9495,6 +9607,8 @@ function handleExportPngChoice() {
   // On ne force PAS le mode ici : les pages sont générées par renderPreview()
   // déjà appelé à l'init. On s'assure juste qu'elles sont dans le DOM.
   renderPreview();
+  PNGN.edited = false;
+  PNGN.stamp = fnStamp();
 
   const allPageEls = document.querySelectorAll('#preview .page');
   const list = document.getElementById('export-png-list');
@@ -9610,6 +9724,8 @@ async function executePngExport() {
     return parseInt(cb.dataset.idx, 10);
   });
   if (!checkedIdx.length) return;
+  const fileName = cleanFname(PNGN.name);
+  if (fileName === '') return;
 
   // Les .page sont toujours dans le DOM (mode édition ou aperçu),
   // querySelectorAll fonctionne indépendamment de la classe preview-only.
@@ -9636,11 +9752,9 @@ async function executePngExport() {
     if (total === 1) {
       // Une seule page : téléchargement PNG direct
       updateProgress(1);
-      const realIdx = checkedIdx[0];
-      const fname = 'kb_' + String(realIdx + 1).padStart(2, '0') + '.png';
       const blob = await renderPageToPng(toExport[0]);
       closeExportModal();
-      fallbackDownload(blob, fname, t('toast.exportSingle'));
+      fallbackDownload(blob, fileName + '.png', t('toast.exportSingle'));
 
     } else {
       // Plusieurs pages : ZIP
@@ -9654,7 +9768,7 @@ async function executePngExport() {
       }
       const zipBlob = await zip.generateAsync({ type: 'blob' });
       closeExportModal();
-      fallbackDownload(zipBlob, 'briefing_kneeboard.zip',
+      fallbackDownload(zipBlob, fileName + '.zip',
         total + ' ' + t('toast.exportMulti'));
     }
   } catch (err) {
@@ -9689,6 +9803,16 @@ document.addEventListener('DOMContentLoaded', function bindExportModal() {
   // Mise à jour compteur au changement d'une checkbox (délégation sur le container)
   document.getElementById('export-png-list').addEventListener('change', function(e) {
     if (e.target.classList.contains('export-png-page-cb')) updatePngExportCount();
+  });
+
+  // Le champ « Nom du fichier » du panneau PNG : un nom tapé n'est plus remplacé par le défaut
+  document.getElementById('export-png-fname').addEventListener('input', function(e) {
+    PNGN.name = e.target.value;
+    PNGN.edited = true;
+    updatePngExportCount();
+  });
+  document.getElementById('export-png-fname').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); const g = document.getElementById('export-png-go'); if (!g.disabled) executePngExport(); }
   });
 
   // Bouton Exporter (N) — lance l'export effectif

@@ -1981,6 +1981,20 @@ SOFTWARE.
   </div>
 </div>
 
+<!-- ===== FENÊTRE : EXPORTER LA CARTE — CHOISIR LE NOM DU FICHIER (hors shell) ===== -->
+<div class="rt-modal cf-modal" id="exn-modal" hidden role="dialog" aria-modal="true" aria-labelledby="exn-title">
+  <div class="rt-backdrop" id="exn-backdrop"></div>
+  <div class="rt-panel" role="document">
+    <button type="button" class="rt-close" id="exn-close" data-i18n-aria-label="modal.close" aria-label="Fermer">&times;</button>
+    <h2 id="exn-title" data-i18n="exn.title">Exporter la carte</h2>
+    <div class="fn-field"><label class="lbl" for="exn-fname" data-i18n="fn.label">Nom du fichier</label><div class="fn-row"><input class="in" id="exn-fname" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="100"><span class="fn-ext">.jpg</span></div></div>
+    <div class="rt-actions">
+      <button type="button" class="rt-btn" id="exn-cancel" data-i18n="rt.cancel">Annuler</button>
+      <button type="button" class="rt-btn go" id="exn-go" data-i18n="frame.export">Exporter</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== FENÊTRE : LA FICHE D'UN AÉRODROME ===== -->
 <div class="rt-modal" id="fiche" hidden role="dialog" aria-modal="true" aria-labelledby="fiche-titre">
   <div class="rt-backdrop" id="fiche-fond"></div>
@@ -2461,6 +2475,7 @@ const I18N = {
     'sv.one': 'Enregistrer la route sélectionnée',
     'sv.all': 'Enregistrer toutes les routes',
     'fn.label': 'Nom du fichier',
+    'exn.title': 'Exporter la carte',
     'tb.example': 'Exemple',
     'tb.example.tip': 'Ouvrir l\'exemple',
     'tb.clear': 'Effacer',
@@ -2973,6 +2988,7 @@ const I18N = {
     'sv.one': 'Save the selected route',
     'sv.all': 'Save all routes',
     'fn.label': 'File name',
+    'exn.title': 'Export the map',
     'tb.example': 'Example',
     'tb.example.tip': 'Open the example',
     'tb.clear': 'Clear',
@@ -8215,7 +8231,7 @@ function createSearchControl() {
 /* ============= FICHIERS ============= */
 function stamp() {
   const d = new Date();
-  return d.getFullYear() + pad2(d.getMonth() + 1) + pad2(d.getDate()) + '_' + pad2(d.getHours()) + pad2(d.getMinutes()) + pad2(d.getSeconds());
+  return d.getFullYear() + pad2(d.getMonth() + 1) + pad2(d.getDate()) + '-' + pad2(d.getHours()) + pad2(d.getMinutes()) + pad2(d.getSeconds());
 }
 function slug(s) {
   return str(s).trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
@@ -8979,7 +8995,7 @@ function pkRows() {
 function pkName(idxs) {
   const r = RSET.routes[idxs[0]];
   const base = r.name !== '' ? r.name : r.flight.groupName;
-  return 'paquet_rp_' + (cleanFname(base).slice(0, 40) || 'vol') + (idxs.length > 1 ? '_+' + (idxs.length - 1) : '');
+  return 'paquet_' + (cleanFname(base).slice(0, 40) || 'vol') + (idxs.length > 1 ? '_+' + (idxs.length - 1) : '');
 }
 
 function pkRender() {
@@ -9400,7 +9416,7 @@ function bytesToText(bytes) {
 /* ---- Fenêtres : « Ouvrir une route du Route Tool » et « Exporter vers le Route Tool » ---- */
 const RT = { fileName: '', routes: [], theatre: 'Caucasus', sel: 0, opener: null };
 
-const RT_MODALS = ['rt-open-modal', 'rt-export-modal', 'cf-import-modal', 'cf-export-modal', 'clr-modal', 'hq-modal', 'pk-modal', 'fiche'];
+const RT_MODALS = ['rt-open-modal', 'rt-export-modal', 'cf-import-modal', 'cf-export-modal', 'clr-modal', 'hq-modal', 'pk-modal', 'exn-modal', 'fiche'];
 function rtVisible(id) { return !$(id).hidden; }
 function rtShow(id, opener, focusId) {
   RT.opener = opener || null;
@@ -10881,11 +10897,10 @@ function expCompose(shot, rect) {
   return { canvas: cv, width: W, height: H + EXP_BAND };
 }
 
-function expFileName() {
-  const d = new Date();
-  const ts = d.getFullYear() + pad2(d.getMonth() + 1) + pad2(d.getDate()) + '-' + pad2(d.getHours()) + pad2(d.getMinutes());
-  const sl = str(S.name).trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9-]+/g, '-').replace(/-+/g, '-').replace(/^-+|-+$/g, '');
-  return 'carte_' + (sl ? sl + '_' : '') + ts + '.jpg';
+/* Le nom par défaut de l'image de la carte, hors shell : carte_<nom de la route>_<horodatage> */
+function expDefaultName() {
+  const sl = cleanFname(S.name).slice(0, 40);
+  return 'carte_' + (sl ? sl + '_' : '') + pkStamp();
 }
 
 function expDataUrlToBlob(url) {
@@ -10895,10 +10910,16 @@ function expDataUrlToBlob(url) {
   return new Blob([u8], { type: 'image/jpeg' });
 }
 
-/* L'envoi : par le shell s'il l'offre (window.parent.MP_SEND_MAP), sinon le fichier */
-function expDeliver(dataUrl, W, H, partial) {
+/* Le shell qui prend l'image (window.parent.MP_SEND_MAP), ou nul */
+function expShellSend() {
   let send = null;
   try { if (window.parent && typeof window.parent.MP_SEND_MAP === 'function') send = window.parent.MP_SEND_MAP; } catch (e) { send = null; }
+  return send;
+}
+
+/* L'envoi : par le shell s'il l'offre, sinon le fichier, sous le nom choisi (sans extension) */
+function expDeliver(dataUrl, W, H, partial, fname) {
+  const send = expShellSend();
   const name = S.name, theatre = S.theatre;
   expClose();
   let msg;
@@ -10906,14 +10927,33 @@ function expDeliver(dataUrl, W, H, partial) {
     send.call(window.parent, { dataUrl: dataUrl, name: name, theatre: theatre, width: W, height: H });
     msg = t('toast.mapSent');
   } else {
-    fallbackDownload(expDataUrlToBlob(dataUrl), expFileName(), '');
+    fallbackDownload(expDataUrlToBlob(dataUrl), fname + '.jpg', '');
     msg = t('toast.mapSaved');
   }
   if (partial) msg += ' ' + t('toast.mapPartial');
   showToast(msg, partial ? 4500 : 2200);
 }
 
-async function expRun() {
+/* « Exporter » du cadre : avec le shell, le rendu part tout de suite ; sans lui, la fenêtre du nom du fichier s'ouvre d'abord et le rendu suit son bouton */
+const EXPN = { name: '' };
+function expGo(ev) {
+  if (!EXP.on || EXP.busy) return;
+  if (expShellSend()) { expRun(''); return; }
+  EXPN.name = cleanFname(expDefaultName());
+  $('exn-fname').value = EXPN.name;
+  exnSync();
+  rtShow('exn-modal', ev && ev.currentTarget, 'exn-fname');
+  $('exn-fname').select();
+}
+function exnSync() { $('exn-go').disabled = cleanFname(EXPN.name) === ''; }
+function exnGo() {
+  const name = cleanFname(EXPN.name);
+  if (name === '') return;
+  rtHide('exn-modal');
+  expRun(name);
+}
+
+async function expRun(fname) {
   if (!EXP.on || EXP.busy) return;
   expLayout();
   const rect = EXP.rect;
@@ -10943,18 +10983,22 @@ async function expRun() {
     $('exp-go').disabled = false;
   }
   if (!out) { showToast(t('toast.mapFail')); return; }
-  expDeliver(out.dataUrl, out.width, out.height, partial);
+  expDeliver(out.dataUrl, out.width, out.height, partial, fname);
 }
 
 function expBind() {
   $('btn-export-bg').addEventListener('click', expOpen);
   $('exp-cancel').addEventListener('click', () => { if (!EXP.busy) expClose(); });
-  $('exp-go').addEventListener('click', expRun);
+  $('exp-go').addEventListener('click', expGo);
+  ['exn-backdrop', 'exn-close', 'exn-cancel'].forEach(id => $(id).addEventListener('click', () => rtHide('exn-modal')));
+  $('exn-go').addEventListener('click', exnGo);
+  $('exn-fname').addEventListener('input', ev => { EXPN.name = ev.target.value; exnSync(); });
+  $('exn-fname').addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); exnGo(); } });
   $('export-bar').addEventListener('click', e => {
     const b = e.target.closest && e.target.closest('[data-exo]');
     if (b) expSetOrient(b.dataset.exo);
   });
-  document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && EXP.on && !EXP.busy && !SR.open) { ev.preventDefault(); expClose(); } });
+  document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && EXP.on && !EXP.busy && !SR.open && !ev.defaultPrevented && !RT_MODALS.some(rtVisible)) { ev.preventDefault(); expClose(); } });
 }
 
 /* ============= BARRE ET THÈME ============= */
