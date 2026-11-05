@@ -2173,7 +2173,9 @@ function str(v) {{
 function cleanFname(v) {{
   return str(v).trim().replace(/\\.json$/i, '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').replace(/[^A-Za-z0-9_+-]+/g, '_').replace(/_{{2,}}/g, '_').replace(/^_+|_+$/g, '').slice(0, 100);
 }}
-const FN = {{ name: '', opener: null, run: null, titleKey: '', goKey: '' }};
+const FN = {{ name: '', opener: null, run: null, titleKey: '', goKey: '', at: 0 }};
+// Un nom par défaut : la partie variable est nettoyée et coupée à 40 caractères ; l'horodatage s'ajoute ensuite, en fin de nom
+function fnPart(v, fallback) {{ return cleanFname(v).slice(0, 40) || fallback; }}
 function fnOpen() {{ return !document.getElementById('fn-modal').hidden; }}
 function fnSync() {{
   document.getElementById('fn-go').disabled = cleanFname(FN.name) === '';
@@ -2188,6 +2190,7 @@ function fnAsk(o) {{
   FN.name = cleanFname(o.name);
   FN.run = o.run;
   FN.opener = o.opener || document.activeElement;
+  FN.at = performance.now();
   FN.titleKey = o.titleKey; FN.goKey = o.goKey;
   const inp = document.getElementById('fn-name');
   inp.value = FN.name;
@@ -2211,11 +2214,13 @@ function fnGo() {{
   run(name);
 }}
 function fnBind() {{
-  ['fn-backdrop', 'fn-close', 'fn-cancel'].forEach(id => document.getElementById(id).addEventListener('click', fnClose));
+  ['fn-close', 'fn-cancel'].forEach(id => document.getElementById(id).addEventListener('click', fnClose));
+  // le fond ignore les clics des 400 ms qui suivent l'ouverture : le 2e clic d'un double-clic sur le bouton qui ouvre ne ferme pas la fenêtre
+  document.getElementById('fn-backdrop').addEventListener('click', () => {{ if (performance.now() - FN.at > 400) fnClose(); }});
   document.getElementById('fn-go').addEventListener('click', fnGo);
   const inp = document.getElementById('fn-name');
   inp.addEventListener('input', e => {{ FN.name = e.target.value; fnSync(); }});
-  inp.addEventListener('keydown', e => {{ if (e.key === 'Enter') {{ e.preventDefault(); fnGo(); }} }});
+  inp.addEventListener('keydown', e => {{ if (e.key === 'Enter') {{ e.preventDefault(); if (!e.repeat) fnGo(); }} }});
   document.addEventListener('keydown', e => {{
     if (!fnOpen()) return;
     if (e.key === 'Escape') {{ e.preventDefault(); fnClose(); return; }}
@@ -2249,7 +2254,7 @@ function exportWingConfig(ev) {{
   const wid  = (wingConfig.wing.id || 'wing').toLowerCase().replace(/[\\s/]+/g, '_');
   fnAsk({{
     titleKey: 'fn.cfg.title', goKey: 'fn.cfg.go', ext: '.json',
-    name: 'wing_config_' + wid + '_' + pkStamp(),
+    name: 'wing_config_' + fnPart(wid, 'wing') + '_' + pkStamp(),
     opener: ev && ev.currentTarget,
     run: name => {{
       const blob = new Blob([JSON.stringify(wingConfig, null, 2)], {{ type: 'application/json' }});
@@ -3409,7 +3414,7 @@ function pkExportAsk(opener) {{
   if (sel.length === 0) return;
   fnAsk({{
     titleKey: 'fn.pk.title', goKey: 'fn.pk.go', ext: '.json',
-    name: 'paquet_' + (cleanFname(sel[0].groupName).slice(0, 40) || 'vol') + (sel.length > 1 ? '_+' + (sel.length - 1) : '') + '_' + pkStamp(),
+    name: 'paquet_' + fnPart(sel[0].groupName, 'vol') + (sel.length > 1 ? '_+' + (sel.length - 1) : '') + '_' + pkStamp(),
     opener: opener,
     run: name => pkExport(name)
   }});
@@ -3809,7 +3814,7 @@ function pkApplyAsk(opener) {{
   if (!_HQ_MIZ_CONTEXT) {{ showToast(t('toast.mizNotLoaded')); return; }}
   fnAsk({{
     titleKey: 'fn.miz.title', goKey: 'fn.miz.go', ext: '.miz',
-    name: (cleanFname((_mizFilename || 'mission').replace(/\\.miz$/i, '')).slice(0, 80) || 'mission') + '_' + pkStamp(),
+    name: fnPart((_mizFilename || 'mission').replace(/\\.miz$/i, ''), 'mission') + '_paquets_' + pkStamp(),
     opener: opener,
     run: name => pkApply(name)
   }});

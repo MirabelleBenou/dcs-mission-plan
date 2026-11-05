@@ -48,6 +48,8 @@ Changes merged since the last release, grouped per tool.
 - The example loads in the interface language (French or English).
 - Radios imported from HQ or a flight package are named and numbered as in the cockpit (the Mi-24P's R-863 and R-828 start at channel 0); an aircraft type the suite does not know keeps "Radio n" and the mission's channel numbers. With several aircraft types, the channels are chosen per type.
 - **Import JSON** and the import window's **JSON file** both recognise a briefing, a route, a route set (all routes at once) and a flight package; a refused file says why.
+#### Fixed
+- In the export window, the page list no longer shows the PDF and PNG choices above it, so it fits on phones.
 
 ### Route Planner
 #### Added

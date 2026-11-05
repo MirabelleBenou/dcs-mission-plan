@@ -8247,18 +8247,26 @@ function fnStamp() {
   return d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + '-' + p(d.getHours()) + p(d.getMinutes()) + p(d.getSeconds());
 }
 
+/* Un nom par défaut : la partie variable est nettoyée et coupée à 40 caractères, puis l'horodatage s'ajoute en fin de nom (jamais coupé) */
+function fnPart(v, fallback) { return cleanFname(v).slice(0, 40) || fallback; }
+function fnDefault(base, stamp) {
+  const b = cleanFname(base).slice(0, 84).replace(/_+$/, '');
+  return (b ? b + '_' : '') + stamp;
+}
+
 /* « Enregistrer » (et Ctrl+S) : la fenêtre du nom du fichier, pré-remplie du nom d'avant */
-const SAVEN = { name: '', opener: null };
+const SAVEN = { name: '', opener: null, at: 0 };
 function defaultBriefingName() {
-  const op = (state.meta.operation || 'op').toLowerCase().replace(/\s+/g, '_');
-  const ms = (state.meta.mission || 'm').toLowerCase().replace(/\s+/g, '_');
-  return `briefing_${op}_${ms}_${fnStamp()}`;
+  const op = fnPart((state.meta.operation || 'op').toLowerCase().replace(/\s+/g, '_'), 'op');
+  const ms = fnPart((state.meta.mission || 'm').toLowerCase().replace(/\s+/g, '_'), 'm');
+  return fnDefault(`briefing_${op}_${ms}`, fnStamp());
 }
 function saveModalOpen() { return !document.getElementById('save-modal').hidden; }
 function saveSync() { document.getElementById('save-go').disabled = cleanFname(SAVEN.name) === ''; }
 function openSaveModal(opener) {
   SAVEN.name = cleanFname(defaultBriefingName());
   SAVEN.opener = opener || document.activeElement;
+  SAVEN.at = performance.now();
   const f = document.getElementById('save-fname');
   f.value = SAVEN.name;
   saveSync();
@@ -8279,13 +8287,24 @@ function saveGo() {
   downloadJson(name);
 }
 document.addEventListener('DOMContentLoaded', function bindSaveModal() {
-  ['save-backdrop', 'save-close', 'save-cancel'].forEach(function(id) { document.getElementById(id).addEventListener('click', closeSaveModal); });
+  ['save-close', 'save-cancel'].forEach(function(id) { document.getElementById(id).addEventListener('click', closeSaveModal); });
+  /* le fond ignore les clics des 400 ms qui suivent l'ouverture : le 2e clic d'un double-clic sur « Enregistrer » ne ferme pas la fenêtre */
+  document.getElementById('save-backdrop').addEventListener('click', function() { if (performance.now() - SAVEN.at > 400) closeSaveModal(); });
   document.getElementById('save-go').addEventListener('click', saveGo);
   const f = document.getElementById('save-fname');
   f.addEventListener('input', function(e) { SAVEN.name = e.target.value; saveSync(); });
-  f.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); saveGo(); } });
+  f.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); if (!e.repeat) saveGo(); } });
   document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape' && saveModalOpen()) { e.preventDefault(); closeSaveModal(); }
+    if (!saveModalOpen()) return;
+    if (e.key === 'Escape') { e.preventDefault(); closeSaveModal(); return; }
+    if (e.key !== 'Tab') return;
+    // Tab et Maj+Tab bouclent sur les contrôles de la fenêtre
+    const m = document.getElementById('save-modal');
+    const els = Array.prototype.filter.call(m.querySelectorAll('button, input'), function(x) { return !x.disabled && x.offsetParent !== null; });
+    if (!els.length) return;
+    const first = els[0], last = els[els.length - 1];
+    if (e.shiftKey && (document.activeElement === first || !m.contains(document.activeElement))) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && (document.activeElement === last || !m.contains(document.activeElement))) { e.preventDefault(); first.focus(); }
   });
 });
 
@@ -9541,7 +9560,7 @@ function init() {
 
   // Keyboard shortcuts (desktop)
   document.addEventListener('keydown', e => {
-    if (e.ctrlKey && e.key === 's') { e.preventDefault(); if (!saveModalOpen()) openSaveModal(document.getElementById('btn-save')); }
+    if (e.ctrlKey && e.key === 's') { e.preventDefault(); if (!document.querySelector('.export-modal:not([hidden])')) openSaveModal(document.getElementById('btn-save')); }
     if (e.ctrlKey && e.key === 'p') { /* let browser handle */ }
   });
 }
@@ -9813,7 +9832,7 @@ document.addEventListener('DOMContentLoaded', function bindExportModal() {
     updatePngExportCount();
   });
   document.getElementById('export-png-fname').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') { e.preventDefault(); const g = document.getElementById('export-png-go'); if (!g.disabled) executePngExport(); }
+    if (e.key === 'Enter') { e.preventDefault(); const g = document.getElementById('export-png-go'); if (!g.disabled && !e.repeat) executePngExport(); }
   });
 
   // Bouton Exporter (N) — lance l'export effectif

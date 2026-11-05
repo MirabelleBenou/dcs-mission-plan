@@ -1341,6 +1341,7 @@ select[data-tbm-src] { display: none !important; }
 }
 .fn-row .in:focus { outline: 2px solid var(--amber, #c8901f); outline-offset: 1px; }
 .fn-ext { flex: none; font-size: 13px; opacity: 0.7; }
+.export-modal-choices[hidden] { display: none; }
 .imp-block { margin-bottom: 14px; }
 .imp-src {
   display: flex; align-items: center; gap: 10px;
@@ -4541,14 +4542,22 @@ function cleanFname(v) {
   return str(v).trim().replace(/\.json$/i, '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9_+-]+/g, '_').replace(/_{2,}/g, '_').replace(/^_+|_+$/g, '').slice(0, 100);
 }
 
+/* Un nom par défaut : la partie variable est nettoyée et coupée à 40 caractères, puis l'horodatage s'ajoute en fin de nom (jamais coupé) */
+function fnPart(v, fallback) { return cleanFname(v).slice(0, 40) || fallback; }
+function fnDefault(base, stamp) {
+  const b = cleanFname(base).slice(0, 84).replace(/_+$/, '');
+  return (b ? b + '_' : '') + stamp;
+}
+
 /* « Enregistrer » : la fenêtre du nom du fichier, pré-remplie du nom d'avant */
-const SAVEN = { name: '', opener: null };
+const SAVEN = { name: '', opener: null, at: 0 };
 function saveModalOpen() { return !document.getElementById('save-modal').hidden; }
 function saveSync() { document.getElementById('save-go').disabled = cleanFname(SAVEN.name) === ''; }
 function openSaveModal(opener) {
-  const cs = slug(curCard().flight.callsign) || 'doc';
-  SAVEN.name = cleanFname('datacard_' + cs + '_' + stamp());
+  const cs = fnPart(slug(curCard().flight.callsign), 'doc');
+  SAVEN.name = fnDefault('datacard_' + cs, stamp());
   SAVEN.opener = opener || document.activeElement;
+  SAVEN.at = performance.now();
   const f = document.getElementById('save-fname');
   f.value = SAVEN.name;
   saveSync();
@@ -5313,14 +5322,16 @@ const PNGN = { name: '', edited: false, stamp: '' };
 function pngDefaultName(idx) {
   if (idx.length === 1) {
     const p = allExportPages()[idx[0]];
-    return 'dc_' + p.cs + '_p' + p.page + '_' + PNGN.stamp;
+    return fnDefault('dc_' + fnPart(p.cs, 'carte') + '_p' + p.page, PNGN.stamp);
   }
   return 'datacards_' + PNGN.stamp;
 }
 function updatePngCount() {
   const idx = Array.from(document.querySelectorAll('.export-png-page-cb.exp-cb:checked')).map(cb => parseInt(cb.dataset.idx, 10));
   const n = idx.length;
-  document.getElementById('export-png-count').textContent = '(' + n + ')';
+  const span = document.getElementById('export-png-count');
+  if (!span) return;      /* pendant le rendu, le bouton porte « Génération i/n » : le compteur n'existe pas */
+  span.textContent = '(' + n + ')';
   document.getElementById('export-png-ext').textContent = n > 1 ? '.zip' : '.png';
   const fld = document.getElementById('export-png-fname');
   if (!PNGN.edited && n) { PNGN.name = cleanFname(pngDefaultName(idx)); fld.value = PNGN.name; }
@@ -5458,10 +5469,12 @@ function bindEvents() {
   document.getElementById('btn-json-import').addEventListener('click', () => { fileLoad.value = ''; fileLoad.click(); });
   fileLoad.addEventListener('change', () => { if (fileLoad.files && fileLoad.files[0]) loadJsonFile(fileLoad.files[0]); });
   document.getElementById('btn-json-export').addEventListener('click', e => openSaveModal(e.currentTarget));
-  ['save-backdrop', 'save-close', 'save-cancel'].forEach(id => document.getElementById(id).addEventListener('click', closeSaveModal));
+  ['save-close', 'save-cancel'].forEach(id => document.getElementById(id).addEventListener('click', closeSaveModal));
+  /* le fond ignore les clics des 400 ms qui suivent l'ouverture : le 2e clic d'un double-clic sur « Enregistrer » ne ferme pas la fenêtre */
+  document.getElementById('save-backdrop').addEventListener('click', () => { if (performance.now() - SAVEN.at > 400) closeSaveModal(); });
   document.getElementById('save-go').addEventListener('click', saveGo);
   document.getElementById('save-fname').addEventListener('input', e => { SAVEN.name = e.target.value; saveSync(); });
-  document.getElementById('save-fname').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); saveGo(); } });
+  document.getElementById('save-fname').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); if (!e.repeat) saveGo(); } });
   document.getElementById('btn-print').addEventListener('click', openExportModal);
   document.getElementById('btn-example').addEventListener('click', loadExample);
   document.getElementById('btn-reset').addEventListener('click', resetDoc);
@@ -5479,7 +5492,7 @@ function bindEvents() {
   document.getElementById('export-png-list').addEventListener('change', updatePngCount);
   document.getElementById('export-png-go').addEventListener('click', executePngExport);
   document.getElementById('export-png-fname').addEventListener('input', e => { PNGN.name = e.target.value; PNGN.edited = true; updatePngCount(); });
-  document.getElementById('export-png-fname').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); const g = document.getElementById('export-png-go'); if (!g.disabled) executePngExport(); } });
+  document.getElementById('export-png-fname').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); const g = document.getElementById('export-png-go'); if (!g.disabled && !e.repeat) executePngExport(); } });
 
   /* Import depuis un briefing */
   document.getElementById('import-modal-backdrop').addEventListener('click', closeImportModal);
@@ -5504,6 +5517,17 @@ function bindEvents() {
   const fb = document.getElementById('file-briefing');
   document.getElementById('imp-file-btn').addEventListener('click', () => { fb.value = ''; fb.click(); });
   fb.addEventListener('change', () => { if (fb.files && fb.files[0]) loadBriefingFile(fb.files[0]); });
+
+  /* Tab et Maj+Tab bouclent sur les contrôles de la fenêtre « Enregistrer » */
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Tab' || !saveModalOpen()) return;
+    const m = document.getElementById('save-modal');
+    const els = Array.prototype.filter.call(m.querySelectorAll('button, input'), x => !x.disabled && x.offsetParent !== null);
+    if (!els.length) return;
+    const first = els[0], last = els[els.length - 1];
+    if (e.shiftKey && (document.activeElement === first || !m.contains(document.activeElement))) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && (document.activeElement === last || !m.contains(document.activeElement))) { e.preventDefault(); first.focus(); }
+  });
 
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;

@@ -8677,7 +8677,7 @@ function downloadSet(sel, name) {
 }
 
 /* Les noms proposés (sans l'extension) */
-function defaultRouteName() { return 'route_' + (slug(S.name) || 'route') + '_' + stamp(); }
+function defaultRouteName() { return 'route_' + (cleanFname(slug(S.name)).slice(0, 40) || 'route') + '_' + stamp(); }
 function defaultSetName() { return 'routes_' + stamp(); }
 
 /* ============= DEPUIS HQ · LIER À UN VOL ============= */
@@ -10935,11 +10935,12 @@ function expDeliver(dataUrl, W, H, partial, fname) {
 }
 
 /* « Exporter » du cadre : avec le shell, le rendu part tout de suite ; sans lui, la fenêtre du nom du fichier s'ouvre d'abord et le rendu suit son bouton */
-const EXPN = { name: '' };
+const EXPN = { name: '', at: 0 };
 function expGo(ev) {
   if (!EXP.on || EXP.busy) return;
   if (expShellSend()) { expRun(''); return; }
   EXPN.name = cleanFname(expDefaultName());
+  EXPN.at = performance.now();
   $('exn-fname').value = EXPN.name;
   exnSync();
   rtShow('exn-modal', ev && ev.currentTarget, 'exn-fname');
@@ -10990,7 +10991,9 @@ function expBind() {
   $('btn-export-bg').addEventListener('click', expOpen);
   $('exp-cancel').addEventListener('click', () => { if (!EXP.busy) expClose(); });
   $('exp-go').addEventListener('click', expGo);
-  ['exn-backdrop', 'exn-close', 'exn-cancel'].forEach(id => $(id).addEventListener('click', () => rtHide('exn-modal')));
+  ['exn-close', 'exn-cancel'].forEach(id => $(id).addEventListener('click', () => rtHide('exn-modal')));
+  /* le fond ignore les clics des 400 ms qui suivent l'ouverture : le 2e clic d'un double-clic sur « Exporter » ne ferme pas la fenêtre */
+  $('exn-backdrop').addEventListener('click', () => { if (performance.now() - EXPN.at > 400) rtHide('exn-modal'); });
   $('exn-go').addEventListener('click', exnGo);
   $('exn-fname').addEventListener('input', ev => { EXPN.name = ev.target.value; exnSync(); });
   $('exn-fname').addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); exnGo(); } });

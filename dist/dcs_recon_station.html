@@ -3262,7 +3262,7 @@ function fnStamp() {
   const d = new Date(), p = n => String(n).padStart(2, '0');
   return d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + '-' + p(d.getHours()) + p(d.getMinutes()) + p(d.getSeconds());
 }
-const FN = { name: '', opener: null };
+const FN = { name: '', opener: null, at: 0 };
 function fnOpen() { return !document.getElementById('fn-modal').hidden; }
 function fnSync() { document.getElementById('fn-go').disabled = cleanFname(FN.name) === ''; }
 function fnAsk(opener) {
@@ -3274,6 +3274,7 @@ function fnAsk(opener) {
   const slug = (STATE.fields.target || '').replace(/[^a-zA-Z0-9-]/g, '_').replace(/_+/g, '_').slice(0, 40);
   FN.name = cleanFname((slug ? 'recon_' + slug : 'recon') + '_' + fnStamp());
   FN.opener = opener || document.activeElement;
+  FN.at = performance.now();
   const inp = document.getElementById('fn-name');
   inp.value = FN.name;
   fnSync();
@@ -3294,11 +3295,13 @@ function fnGo() {
   exportPNG(name);
 }
 function fnBind() {
-  ['fn-backdrop', 'fn-close', 'fn-cancel'].forEach(id => document.getElementById(id).addEventListener('click', fnClose));
+  ['fn-close', 'fn-cancel'].forEach(id => document.getElementById(id).addEventListener('click', fnClose));
+  /* le fond ignore les clics des 400 ms qui suivent l'ouverture : le 2e clic d'un double-clic sur « Exporter PNG » ne ferme pas la fenêtre */
+  document.getElementById('fn-backdrop').addEventListener('click', () => { if (performance.now() - FN.at > 400) fnClose(); });
   document.getElementById('fn-go').addEventListener('click', fnGo);
   const inp = document.getElementById('fn-name');
   inp.addEventListener('input', e => { FN.name = e.target.value; fnSync(); });
-  inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); fnGo(); } });
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); if (!e.repeat) fnGo(); } });
   /* en phase de capture : l'Échap de la fenêtre ne doit pas aussi défaire une annotation en cours */
   document.addEventListener('keydown', e => {
     if (!fnOpen()) return;
