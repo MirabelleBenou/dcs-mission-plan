@@ -672,6 +672,9 @@ select[data-tbm-src] { display: none !important; }
 .fn-row .in:focus { outline: none; border-left-color: var(--red-stamp); background: var(--paper-light); box-shadow: 0 0 0 1px var(--amber); }
 .fn-ext { flex: none; font-family: var(--f-typewriter); font-size: 13px; color: var(--khaki-light); }
 .fn-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.fn-del { max-height: 42vh; overflow-y: auto; margin: 0 0 14px; }
+.fn-del .pk-flight:first-child { border-top: 0; margin-top: 0; padding-top: 0; }
+.fn-del .pk-flight-head, .fn-del .snap-meta { word-break: break-word; }
 
 /* Mission snapshot read-only display */
 .snapshot-section {
@@ -1126,6 +1129,29 @@ const I18N = {
     'fn.pk.go': 'Exporter',
     'fn.miz.title': 'Appliquer et télécharger le .miz',
     'fn.miz.go': 'Appliquer',
+    'fn.del.title': 'Supprimer les vols cochés',
+    'fn.del.go': 'Supprimer et enregistrer',
+    'pk.deleteN': 'Supprimer les vols cochés ({0})',
+    'pk.del.dyn': 'Dynamic Spawn : {0} — lien remis à zéro',
+    'pk.del.trig': 'Déclencheur « {0} » ({1}) — laissé tel quel, à corriger dans l’éditeur',
+    'pk.del.task': 'Tâche {0} du groupe « {1} » — laissée telle quelle',
+    'pk.del.script': 'Nommé dans le script {0} — laissé tel quel',
+    'pk.del.rep.flights.one': '{0} vol supprimé',
+    'pk.del.rep.flights.many': '{0} vols supprimés',
+    'pk.del.rep.links.one': '{0} lien Dynamic Spawn remis à zéro',
+    'pk.del.rep.links.many': '{0} liens Dynamic Spawn remis à zéro',
+    'pk.del.rep.refs.one': '{0} référence laissée',
+    'pk.del.rep.refs.many': '{0} références laissées',
+    'pk.del.fail': '✗ Suppression : vérification échouée — {0}',
+    'pk.del.e.keys': 'tableau de groupes qui n’est pas indexé [1] … [n] sans trou',
+    'pk.del.e.missing': 'vol {0} introuvable dans la mission',
+    'pk.del.e.overlap': 'écritures qui se chevauchent',
+    'pk.del.e.reparse': 'texte écrit illisible ({0})',
+    'pk.del.e.groups': 'les tableaux de groupes relus diffèrent de l’attendu',
+    'pk.del.e.clients': 'les vols relus diffèrent de l’attendu',
+    'pk.del.e.wh': 'fichier warehouses : écriture ou relecture différente de l’attendu',
+    'toast.pkDeleting': 'Suppression des vols…',
+    'toast.pkDelFail': '⚠ Suppression échouée — rien n’est téléchargé',
     'pk.exportN': '📦 Exporter les vols cochés ({0})',
     'pk.flt.side': 'Camp',
     'pk.flt.all': 'Tous',
@@ -1351,6 +1377,29 @@ const I18N = {
     'fn.pk.go': 'Export',
     'fn.miz.title': 'Apply and download the .miz',
     'fn.miz.go': 'Apply',
+    'fn.del.title': 'Delete checked flights',
+    'fn.del.go': 'Delete and save',
+    'pk.deleteN': 'Delete checked flights ({0})',
+    'pk.del.dyn': 'Dynamic Spawn: {0} — link reset to zero',
+    'pk.del.trig': 'Trigger “{0}” ({1}) — left as is, fix it in the editor',
+    'pk.del.task': 'Task {0} of group “{1}” — left as is',
+    'pk.del.script': 'Named in script {0} — left as is',
+    'pk.del.rep.flights.one': '{0} flight deleted',
+    'pk.del.rep.flights.many': '{0} flights deleted',
+    'pk.del.rep.links.one': '{0} Dynamic Spawn link reset to zero',
+    'pk.del.rep.links.many': '{0} Dynamic Spawn links reset to zero',
+    'pk.del.rep.refs.one': '{0} reference left',
+    'pk.del.rep.refs.many': '{0} references left',
+    'pk.del.fail': '✗ Deletion: verification failed — {0}',
+    'pk.del.e.keys': 'group table not indexed [1] … [n] without a gap',
+    'pk.del.e.missing': 'flight {0} not found in the mission',
+    'pk.del.e.overlap': 'overlapping writes',
+    'pk.del.e.reparse': 'written text unreadable ({0})',
+    'pk.del.e.groups': 'the group tables read back differ from the expected ones',
+    'pk.del.e.clients': 'the flights read back differ from the expected ones',
+    'pk.del.e.wh': 'warehouses file: written or read back differently from expected',
+    'toast.pkDeleting': 'Deleting flights…',
+    'toast.pkDelFail': '⚠ Deletion failed — nothing downloaded',
     'pk.exportN': '📦 Export checked flights ({0})',
     'pk.flt.side': 'Side',
     'pk.flt.all': 'All',
@@ -2044,7 +2093,7 @@ function str(v) {
 function cleanFname(v) {
   return str(v).trim().replace(/\.json$/i, '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9_+-]+/g, '_').replace(/_{2,}/g, '_').replace(/^_+|_+$/g, '').slice(0, 100);
 }
-const FN = { name: '', opener: null, run: null, titleKey: '', goKey: '', at: 0 };
+const FN = { name: '', opener: null, run: null, titleKey: '', goKey: '', at: 0, bodyFn: null, bodyEl: null };
 // Un nom par défaut : la partie variable est nettoyée et coupée à 40 caractères ; l'horodatage s'ajoute ensuite, en fin de nom
 function fnPart(v, fallback) { return cleanFname(v).slice(0, 40) || fallback; }
 function fnOpen() { return !document.getElementById('fn-modal').hidden; }
@@ -2055,14 +2104,27 @@ function fnRender() {
   document.getElementById('fn-title').textContent = t(FN.titleKey);
   document.getElementById('fn-go').textContent = t(FN.goKey);
   document.getElementById('fn-close').setAttribute('aria-label', t('fn.close'));
+  fnBodyMount();
 }
-/* o : titleKey, goKey, ext, name (le défaut, sans extension), opener, run(nom nettoyé) */
+/* Un corps facultatif (liste de ce que l'écriture touche) entre le titre et le champ du nom ; absent, le DOM de la fenêtre ne change pas */
+function fnBodyMount() {
+  if (FN.bodyEl) { FN.bodyEl.remove(); FN.bodyEl = null; }
+  if (!FN.bodyFn) return;
+  const el = document.createElement('div');
+  el.className = 'fn-del';
+  el.innerHTML = FN.bodyFn();
+  const panel = document.querySelector('#fn-modal .fn-panel');
+  panel.insertBefore(el, panel.querySelector('.fn-field'));
+  FN.bodyEl = el;
+}
+/* o : titleKey, goKey, ext, name (le défaut, sans extension), opener, run(nom nettoyé), body (facultatif : () => HTML) */
 function fnAsk(o) {
   FN.name = cleanFname(o.name);
   FN.run = o.run;
   FN.opener = o.opener || document.activeElement;
   FN.at = performance.now();
   FN.titleKey = o.titleKey; FN.goKey = o.goKey;
+  FN.bodyFn = o.body || null;
   const inp = document.getElementById('fn-name');
   inp.value = FN.name;
   document.getElementById('fn-ext').textContent = o.ext;
@@ -2075,7 +2137,8 @@ function fnAsk(o) {
 function fnClose() {
   document.getElementById('fn-modal').hidden = true;
   const o = FN.opener;
-  FN.opener = null; FN.run = null;
+  FN.opener = null; FN.run = null; FN.bodyFn = null;
+  if (FN.bodyEl) { FN.bodyEl.remove(); FN.bodyEl = null; }
   if (o && o.focus && !o.disabled) { try { o.focus({ preventScroll: true }); } catch (e) {} }
 }
 function fnGo() {
@@ -3519,6 +3582,7 @@ function renderSnapshot(snap) {
   html += '<button type="button" class="miz-btn" id="pk-check-shown">' + h(t('pk.flt.checkShown')) + '</button>';
   html += '<button type="button" class="miz-btn" id="pk-uncheck">' + h(t('pk.flt.uncheck')) + '</button>';
   html += '<button type="button" class="miz-btn primary" id="pk-export-btn" disabled>' + h(tf('pk.exportN', 0)) + '</button>';
+  if (_HQ_MIZ_CONTEXT) html += '<button type="button" class="miz-btn primary" id="pk-delete-btn" disabled>' + h(tf('pk.deleteN', 0)) + '</button>';
   html += '<span class="pk-count" id="pk-count"></span>';
   html += '</div>';
   html += '</div>';
@@ -3763,11 +3827,11 @@ async function rebuildMiz(patchedSrc, model) {
 }
 
 // Adapter rebuildMiz pour HQ (otherFiles vient de _HQ_MIZ_CONTEXT)
-async function rebuildMizHQ(patchedSrc) {
+async function rebuildMizHQ(patchedSrc, otherFilesOverride) {
   if (!_HQ_MIZ_CONTEXT) throw new Error('Pas de contexte .miz chargé');
   const newZip = new JSZip();
   newZip.file('mission', patchedSrc);
-  const otherFiles = _HQ_MIZ_CONTEXT.otherFilesMap;
+  const otherFiles = otherFilesOverride || _HQ_MIZ_CONTEXT.otherFilesMap;
   if (otherFiles) {
     Object.entries(otherFiles).forEach(function([name, data]) { newZip.file(name, data, { createFolders: false }); });
   }
@@ -4191,6 +4255,8 @@ function pkRefreshExportBtn() {
   const n = (_HQ_MIZ_CONTEXT && HQ_SNAPSHOT) ? HQ_SNAPSHOT.flights.filter(f => _PK_EXPORT_SEL.has(f.groupId)).length : 0;
   btn.disabled = n === 0;
   btn.textContent = tf('pk.exportN', n);
+  const del = document.getElementById('pk-delete-btn');
+  if (del) { del.disabled = n === 0; del.textContent = tf('pk.deleteN', n); }
   const ck = document.getElementById('pk-check-shown'), un = document.getElementById('pk-uncheck');
   if (ck) ck.disabled = !_HQ_MIZ_CONTEXT;
   if (un) un.disabled = !_HQ_MIZ_CONTEXT;
@@ -4666,6 +4732,352 @@ function pkTotalText(applied, absent, warnN) {
   return tn('pk.rep.applied', applied) + ' · ' + tn('pk.rep.absentN', absent) + ' · ' + tn('pk.rep.warnN', warnN);
 }
 
+// ---------- SUPPRESSION DE VOLS ----------
+// Les vols cochés sortent de `mission` (groupes retirés de leur tableau, suivants renumérotés) ; les liens Dynamic Spawn de `warehouses`
+// qui les visent passent à 0. Le reste est recopié tel quel : les déclencheurs, les tâches et les scripts qui les nomment sont listés, pas modifiés.
+const DEL_FLIGHT_CATS = ['plane', 'helicopter'];
+const DEL_ALL_CATS = ['helicopter', 'plane', 'vehicle', 'static', 'ship'];
+
+function delErr(key) {
+  const args = Array.prototype.slice.call(arguments, 1);
+  return Object.assign(new Error(key + ' ' + args.join(' ')), { pkErrors: [{ key: key, args: args }] });
+}
+function delRoot(ast) { return ast.kind === 'assignment' ? ast.value : ast; }
+
+// Les tableaux de groupes (pays par pays) des catégories demandées
+function delEachList(ast, cats, fn) {
+  const coal = _astGetKey(delRoot(ast), 'coalition');
+  if (!coal) return;
+  for (const ck of ['blue', 'red', 'neutrals']) {
+    const side = _astGetKey(coal, ck);
+    const countries = side ? _astGetKey(side, 'country') : null;
+    if (!countries || countries.kind !== 'table') continue;
+    for (const ce of countries.entries) {
+      for (const cat of cats) {
+        const catNode = _astGetKey(ce.value, cat);
+        const gl = catNode ? _astGetKey(catNode, 'group') : null;
+        if (gl && gl.kind === 'table') fn({ side: ck, cat: cat, list: gl });
+      }
+    }
+  }
+}
+// Les groupId de chaque tableau de vols, dans l'ordre : sert à relire ce qui a été écrit
+function delListIds(ast) {
+  const out = [];
+  delEachList(ast, DEL_FLIGHT_CATS, L => out.push(L.list.entries.map(e => dynNum(_astGetKey(e.value, 'groupId')))));
+  return out;
+}
+
+// Un champ `group` d'un prédicat est une référence si le nom contient « group » ou finit par « _g » ; `unit` : « unit » ou « _u ».
+// Les champs hérités de l'éditeur (c_time_after, c_random_less, le `unit` de c_group_dead) n'en sont pas.
+function delPredRef(pred, field) {
+  const p = String(pred || '');
+  return field === 'group' ? (p.indexOf('group') >= 0 || /_g$/.test(p)) : (p.indexOf('unit') >= 0 || /_u$/.test(p));
+}
+
+function delSpan(a, b) { return { start: { offset: a }, end: { offset: b } }; }
+// Sans recouvrement, par offset décroissant (applyPatches)
+function delSortPatches(patches) {
+  patches.sort((a, b) => b.pos.start.offset - a.pos.start.offset || b.pos.end.offset - a.pos.end.offset);
+  for (let i = 1; i < patches.length; i++) {
+    if (patches[i].pos.end.offset > patches[i - 1].pos.start.offset) throw delErr('pk.del.e.overlap');
+  }
+  return patches;
+}
+
+// Les écritures de `mission` : par tableau touché, les groupes supprimés sortent (ligne entière), les suivants prennent [1] … [n]
+// (clé et commentaire « -- end of [k] ») ; un tableau vidé devient {}. Retourne aussi, par tableau, les groupId attendus après écriture.
+function delMissionPatches(ast, text, gset) {
+  const patches = [], found = new Set(), expect = [];
+  delEachList(ast, DEL_FLIGHT_CATS, L => {
+    const es = L.list.entries;
+    const ids = es.map(e => dynNum(_astGetKey(e.value, 'groupId')));
+    const gone = ids.map(id => id !== null && gset.has(id));
+    expect.push(ids.filter((id, i) => !gone[i]));
+    if (!gone.some(x => x)) return;
+    if (es.some((e, i) => !e.key || e.key.kind !== 'int' || e.key.value !== i + 1)) throw delErr('pk.del.e.keys');
+    ids.forEach((id, i) => { if (gone[i]) found.add(id); });
+    if (gone.every(x => x)) { patches.push({ pos: L.list.pos, newValueStr: '{}' }); return; }
+    let k = 0;
+    es.forEach((e, i) => {
+      const start = e.keyPos.start.offset, end = e.valuePos.end.offset;
+      if (gone[i]) {
+        const nl = text.indexOf('\n', end), lineEnd = nl < 0 ? text.length : nl + 1;
+        const ls = text.lastIndexOf('\n', start - 1) + 1;
+        const pre = text.slice(ls, start), rest = text.slice(end, nl < 0 ? text.length : nl);
+        if (/^[ \t]*$/.test(pre) && /^\s*[,;]?\s*(--[^\n]*)?$/.test(rest)) patches.push({ pos: delSpan(ls, lineEnd), newValueStr: '' });
+        else {
+          const m = /^\s*[,;]/.exec(text.slice(end, end + 40));
+          patches.push({ pos: delSpan(start, end + (m ? m[0].length : 0)), newValueStr: '' });
+        }
+        return;
+      }
+      k++;
+      if (k === e.key.value) return;
+      patches.push({ pos: e.keyPos, newValueStr: '[' + k + ']' });
+      const m = /^(\s*[,;]?\s*-- end of )\[(\d+)\]/.exec(text.slice(end, end + 80));
+      if (m && Number(m[2]) === e.key.value) patches.push({ pos: delSpan(end + m[1].length, end + m[1].length + m[2].length + 2), newValueStr: '[' + k + ']' });
+    });
+  });
+  for (const g of gset) if (!found.has(g)) throw delErr('pk.del.e.missing', g);
+  return { patches: delSortPatches(patches), expect: expect };
+}
+
+// Les liens Dynamic Spawn de `warehouses` : { sec, id, type, gid, node }
+function delWhLinks(wroot) {
+  const out = [];
+  for (const sec of ['airports', 'warehouses']) {
+    const sn = _astGetKey(wroot, sec);
+    if (!sn || sn.kind !== 'table') continue;
+    for (const we of sn.entries) {
+      const w = we.value;
+      if (!we.key || !w || w.kind !== 'table') continue;
+      const ac = _astGetKey(w, 'aircrafts');
+      for (const cat of ['planes', 'helicopters']) {
+        const cn = ac ? _astGetKey(ac, cat) : null;
+        if (!cn || cn.kind !== 'table') continue;
+        for (const te of cn.entries) {
+          if (!te.key) continue;
+          const nd = _astGetKey(te.value, 'linkDynTempl');
+          if (nd && nd.kind === 'number') out.push({ sec: sec, id: we.key.value, type: String(te.key.value), gid: nd.value, node: nd });
+        }
+      }
+    }
+  }
+  return out;
+}
+function delWhParse(text) {
+  const tk = DCS_TOKENIZER.tokenize(text);
+  if (tk.errors && tk.errors.length) throw new Error('warehouses');
+  const wa = DCS_PARSER.parse(tk.tokens);
+  const wroot = wa.kind === 'assignment' ? wa.value : wa;
+  if (!wroot || wroot.kind !== 'table') throw new Error('warehouses');
+  return wroot;
+}
+// Le plan d'écriture de `warehouses` : chaque lien qui vise un groupe supprimé passe à 0, par édition ciblée
+function delWhPlan(ctx, gset) {
+  const plan = { text: '', all: [], links: [], patches: [] };
+  const wf = ctx.otherFilesMap ? ctx.otherFilesMap['warehouses'] : null;
+  if (!wf) return plan;
+  try {
+    plan.text = new TextDecoder('utf-8').decode(wf);
+    plan.all = delWhLinks(delWhParse(plan.text));
+  } catch (e) { plan.text = ''; plan.all = []; return plan; }
+  plan.links = plan.all.filter(l => gset.has(l.gid));
+  plan.patches = delSortPatches(plan.links.map(l => ({ pos: l.node.pos, newValueStr: '0' })));
+  return plan;
+}
+function delWhName(l) {
+  const airport = l.sec === 'airports';
+  const w = _HQ_DYN ? _HQ_DYN.whs.find(x => x.id === l.id && (x.kind === 'airport') === airport) : null;
+  return dynWhName(w || { kind: airport ? 'airport' : 'unit', id: l.id, name: null });
+}
+
+// Tâches : toute table qui porte un `id` (texte) et des `params`
+function delWalkTasks(node, cb) {
+  if (!node || node.kind !== 'table') return;
+  const idN = _astGetKey(node, 'id'), pr = _astGetKey(node, 'params');
+  if (idN && idN.kind === 'string' && pr && pr.kind === 'table') cb(idN.value, pr);
+  for (const e of node.entries) delWalkTasks(e.value, cb);
+}
+
+// Ce qui vise encore les vols supprimés, sans y toucher : déclencheurs (trigrules), tâches des autres groupes, scripts de la mission
+function delRefs(ctx, gset) {
+  const ast = ctx.ast, root = delRoot(ast);
+  const names = new Map(), uset = new Map();   // groupId -> nom ; unitId -> groupId
+  delEachList(ast, DEL_ALL_CATS, L => {
+    for (const e of L.list.entries) {
+      const g = e.value, gid = dynNum(_astGetKey(g, 'groupId'));
+      if (gid === null || !gset.has(gid)) continue;
+      names.set(gid, dynStr(_astGetKey(g, 'name')) || '');
+      const us = _astGetKey(g, 'units');
+      if (us && us.kind === 'table') for (const ue of us.entries) {
+        const uid = dynNum(_astGetKey(ue.value, 'unitId'));
+        if (uid !== null) uset.set(uid, gid);
+      }
+    }
+  });
+  const refs = new Map();
+  gset.forEach(g => refs.set(g, { trig: [], task: [], script: [] }));
+  // Déclencheurs : `trigrules` seulement (trig.conditions / trig.actions, la copie compilée, ne se lisent pas)
+  const tr = _astGetKey(root, 'trigrules');
+  if (tr && tr.kind === 'table') tr.entries.forEach((te, ti) => {
+    const idx = (te.key && te.key.kind === 'int') ? te.key.value : ti + 1;
+    const comment = dynStr(_astGetKey(te.value, 'comment'));
+    for (const sect of ['rules', 'actions']) {
+      const sn = _astGetKey(te.value, sect);
+      if (!sn || sn.kind !== 'table') continue;
+      for (const xe of sn.entries) {
+        const x = xe.value, pred = dynStr(_astGetKey(x, 'predicate'));
+        if (pred === null) continue;
+        const hit = new Set();
+        if (delPredRef(pred, 'group')) { const v = dynNum(_astGetKey(x, 'group')); if (v !== null && gset.has(v)) hit.add(v); }
+        if (delPredRef(pred, 'unit')) { const v = dynNum(_astGetKey(x, 'unit')); if (v !== null && uset.has(v)) hit.add(uset.get(v)); }
+        hit.forEach(g => refs.get(g).trig.push({ comment: comment || ('#' + idx), pred: pred }));
+      }
+    }
+  });
+  // Tâches des autres groupes, toutes catégories ; EPLRS porte un numéro de liaison de données, pas une référence ;
+  // la route d'un groupe supprimé part avec lui
+  delEachList(ast, DEL_ALL_CATS, L => {
+    for (const e of L.list.entries) {
+      const g = e.value, gid = dynNum(_astGetKey(g, 'groupId'));
+      if (gid !== null && gset.has(gid)) continue;
+      const route = _astGetKey(g, 'route');
+      if (!route) continue;
+      const owner = dynStr(_astGetKey(g, 'name')) || '';
+      delWalkTasks(route, (id, pr) => {
+        if (id === 'EPLRS') return;
+        const hit = new Set();
+        const a = dynNum(_astGetKey(pr, 'groupId')), b = dynNum(_astGetKey(pr, 'unitId'));
+        if (a !== null && gset.has(a)) hit.add(a);
+        if (b !== null && uset.has(b)) hit.add(uset.get(b));
+        hit.forEach(t => refs.get(t).task.push({ id: id, owner: owner }));
+      });
+    }
+  });
+  // Scripts de la mission : le nom du groupe entre guillemets
+  const files = ctx.otherFilesMap || {};
+  const dec = new TextDecoder('utf-8');
+  for (const fname of Object.keys(files).sort()) {
+    if (!/^l10n\/[^/]+\/[^/]+\.lua$/i.test(fname)) continue;
+    const txt = dec.decode(files[fname]);
+    names.forEach((nm, gid) => {
+      if (nm === '') return;
+      if (txt.indexOf('"' + nm + '"') >= 0 || txt.indexOf("'" + nm + "'") >= 0) refs.get(gid).script.push(fname.split('/').pop());
+    });
+  }
+  return refs;
+}
+
+// Ce que la fenêtre montre et ce que le compte rendu rappellera
+function delAnalyze(ctx, ids) {
+  const gset = new Set(ids);
+  const refs = delRefs(ctx, gset);
+  const wh = delWhPlan(ctx, gset);
+  const flights = HQ_SNAPSHOT.flights.filter(f => gset.has(f.groupId)).map(f => {
+    const r = refs.get(f.groupId);
+    const dyn = wh.links.filter(l => l.gid === f.groupId).map(l => ({ name: delWhName(l), type: l.type }));
+    dyn.sort((a, b) => dynCmp(a.name, b.name) || dynCmp(a.type, b.type));
+    return { gid: f.groupId, name: f.groupName || '—', type: f.aircraftType || f.category || '', side: f.coalition || '', dyn: dyn, trig: r.trig, task: r.task, script: r.script };
+  });
+  let K = 0;
+  for (const f of flights) K += f.trig.length + f.task.length + f.script.length;
+  return { flights: flights, K: K, M: wh.links.length };
+}
+function delRefLines(f) {
+  const out = [];
+  for (const r of f.trig) out.push(tf('pk.del.trig', r.comment, r.pred));
+  for (const r of f.task) out.push(tf('pk.del.task', r.id, r.owner));
+  for (const s of f.script) out.push(tf('pk.del.script', s));
+  return out;
+}
+function delBodyHtml(an) {
+  const h = escapeHtml;
+  let html = '';
+  for (const f of an.flights) {
+    html += '<div class="pk-flight" data-del-gid="' + h(String(f.gid)) + '"><div class="pk-flight-head">' + h(f.name) +
+      ' <span class="snap-flight-tag">' + h(f.type) + '</span> <span class="snap-flight-tag">' + h(t('pk.flt.' + f.side, f.side)) + '</span></div>';
+    if (f.dyn.length) html += '<div class="snap-meta" data-del-dyn="1">' + h(tf('pk.del.dyn', f.dyn.map(d => d.name + ' (' + d.type + ')').join(', '))) + '</div>';
+    for (const line of delRefLines(f)) html += '<div class="pk-warn" data-del-ref="1">' + h(line) + '</div>';
+    html += '</div>';
+  }
+  return html;
+}
+
+function pkDeleteAsk(opener) {
+  if (_PK_BUSY || _mizLoading) return;
+  if (!HQ_SNAPSHOT || !_HQ_MIZ_CONTEXT) { showToast(t('toast.mizNotLoaded')); return; }
+  const ids = HQ_SNAPSHOT.flights.filter(f => _PK_EXPORT_SEL.has(f.groupId)).map(f => f.groupId);
+  if (ids.length === 0) return;
+  let an;
+  try { an = delAnalyze(_HQ_MIZ_CONTEXT, ids); }
+  catch (err) {
+    console.error('[HQ] suppression de vols:', err);
+    showToast(t('toast.pkDelFail'), 5000);
+    return;
+  }
+  fnAsk({
+    titleKey: 'fn.del.title', goKey: 'fn.del.go', ext: '.miz',
+    name: fnPart((_mizFilename || 'mission').replace(/\.miz$/i, ''), 'mission') + '_' + pkStamp(),
+    opener: opener,
+    body: () => delBodyHtml(an),
+    run: name => pkDeleteApply(name, ids)
+  });
+}
+
+async function pkDeleteApply(name, ids) {
+  if (_PK_BUSY || _mizLoading) return;
+  const base = _HQ_MIZ_CONTEXT;
+  if (!base || !HQ_SNAPSHOT) { showToast(t('toast.mizNotLoaded')); return; }
+  _PK_BUSY = true;
+  pkRender();
+  try {
+    showToast(t('toast.pkDeleting'), 120000);
+    await pkYield();
+    const gset = new Set(ids);
+    const an = delAnalyze(base, ids);
+    // mission : édition ciblée, puis relecture
+    const mp = delMissionPatches(base.ast, base.missionText, gset);
+    const missionText = applyPatches(base.missionText, mp.patches);
+    let ast;
+    try {
+      retokenizeSafety(missionText);
+      ast = DCS_PARSER.parse(DCS_TOKENIZER.tokenize(missionText).tokens);
+    } catch (e) { throw delErr('pk.del.e.reparse', e.message); }
+    if (JSON.stringify(delListIds(ast)) !== JSON.stringify(mp.expect)) throw delErr('pk.del.e.groups');
+    // warehouses : les liens visés passent à 0 ; le reste du fichier est égal à l'octet
+    let otherFilesMap = base.otherFilesMap;
+    const wh = delWhPlan(base, gset);
+    if (wh.patches.length) {
+      const wtext = applyPatches(wh.text, wh.patches);
+      const wbytes = new TextEncoder().encode(wh.text);
+      const orig = base.otherFilesMap['warehouses'];
+      if (wbytes.length !== orig.length || wbytes.some((b, i) => b !== orig[i])) throw delErr('pk.del.e.wh');
+      let after;
+      try { after = delWhLinks(delWhParse(wtext)); } catch (e) { throw delErr('pk.del.e.wh'); }
+      const want = wh.all.map(l => [l.sec, l.id, l.type, gset.has(l.gid) ? 0 : l.gid]);
+      if (JSON.stringify(after.map(l => [l.sec, l.id, l.type, l.gid])) !== JSON.stringify(want)) throw delErr('pk.del.e.wh');
+      otherFilesMap = Object.assign({}, base.otherFilesMap);
+      otherFilesMap['warehouses'] = new TextEncoder().encode(wtext);
+    }
+    const model = DCS_EXTRACTOR.extract(ast, missionText, _mizFilename || '', otherFilesMap, missionText.split('\n'));
+    const work = { missionText: missionText, ast: ast, model: model, otherFilesMap: otherFilesMap, theatre: base.theatre };
+    const keep = pkClientGroups(base).map(g => g.group.groupId).filter(g => !gset.has(g));
+    if (JSON.stringify(pkClientGroups(work).map(g => g.group.groupId)) !== JSON.stringify(keep)) throw delErr('pk.del.e.clients');
+    const dyn = dynBuild(ast, otherFilesMap, base.theatre);
+    const blob = await rebuildMizHQ(missionText, otherFilesMap);
+    const snap = await buildMissionSnapshot(ast, model, missionText, _mizFilename || 'mission.miz', base.theatre);
+    // Rien n'a échoué : on remet le fichier, puis seulement on change d'état
+    shareOrDownload(blob, name + '.miz', 'application/octet-stream', 'HQ', pkDownload);
+    _HQ_MIZ_CONTEXT = work;
+    _HQ_DYN = dyn;
+    HQ_SNAPSHOT = snap;
+    persistSnapshot();
+    _PK_EXPORT_SEL.clear();
+    renderSnapshot(HQ_SNAPSHOT);
+    const lines = [{ cls: 'ok', text: () => tn('pk.del.rep.flights', an.flights.length) + ' · ' + tn('pk.del.rep.links', an.M) + ' · ' + tn('pk.del.rep.refs', an.K) }];
+    for (const f of an.flights) {
+      for (let i = 0; i < delRefLines(f).length; i++) {
+        lines.push({ cls: 'w', text: () => '⚠ ' + tf('pk.join', f.name, delRefLines(f)[i]) });
+      }
+    }
+    _PK_REPORT = { lines: lines, total: null };
+    showToast(tn('pk.del.rep.flights', an.flights.length) + ' ✔');
+  } catch (err) {
+    console.error('[HQ] suppression de vols:', err);
+    const fe = err || {};
+    _PK_REPORT = { lines: [
+      { cls: 'w', text: () => tf('pk.del.fail', pkErrText(fe)) },
+      { cls: 'a', text: () => t('pk.rep.failTail') },
+    ], total: null };
+    showToast(t('toast.pkDelFail'), 5000);
+  } finally {
+    _PK_BUSY = false;
+    pkRender();
+  }
+}
+
 // ---------- ÉVÉNEMENTS ----------
 function initPackagesUI() {
   const loadBtn = document.getElementById('pk-load-btn');
@@ -4718,6 +5130,8 @@ function initPackagesUI() {
       const q = (sel) => e.target.closest ? e.target.closest(sel) : null;
       const ex = q('#pk-export-btn');
       if (ex) { if (!ex.disabled) pkExportAsk(ex); return; }
+      const dl = q('#pk-delete-btn');
+      if (dl) { if (!dl.disabled) pkDeleteAsk(dl); return; }
       const ck = q('#pk-check-shown');
       if (ck) {
         if (ck.disabled || !_HQ_MIZ_CONTEXT) return;
