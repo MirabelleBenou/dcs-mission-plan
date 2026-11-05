@@ -4797,7 +4797,12 @@ function delMissionPatches(ast, text, gset) {
     if (!gone.some(x => x)) return;
     if (es.some((e, i) => !e.key || e.key.kind !== 'int' || e.key.value !== i + 1)) throw delErr('pk.del.e.keys');
     ids.forEach((id, i) => { if (gone[i]) found.add(id); });
-    if (gone.every(x => x)) { patches.push({ pos: L.list.pos, newValueStr: '{}' }); return; }
+    if (gone.every(x => x)) {
+      // Un tableau vidé s'écrit {} sur la ligne de sa clé, comme DCS écrit une table vide (["tasks"] = {},)
+      const s0 = L.list.pos.start.offset, back = /=\s*$/.exec(text.slice(Math.max(0, s0 - 200), s0));
+      patches.push(back ? { pos: delSpan(s0 - back[0].length + 1, L.list.pos.end.offset), newValueStr: ' {}' } : { pos: L.list.pos, newValueStr: '{}' });
+      return;
+    }
     let k = 0;
     es.forEach((e, i) => {
       const start = e.keyPos.start.offset, end = e.valuePos.end.offset;
