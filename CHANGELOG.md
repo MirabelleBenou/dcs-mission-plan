@@ -38,6 +38,8 @@ Changes merged since the last release, grouped per tool.
 #### Changed
 - The example loads in the interface language (French or English).
 - **Load** only accepts a briefing: any other file (flight package, route, datacard) is refused with a message and the current briefing is kept.
+#### Fixed
+- In the export window, the page list no longer shows the PDF and PNG choices above it, so it fits on phones.
 
 ### Datacard Generator
 #### Added
