@@ -47,6 +47,7 @@ HQ_TILE    = encode_image('hq.webp')
 BG_TILE    = encode_image('bg.webp')
 DG_TILE    = encode_image('kg.webp')
 RP_TILE    = encode_image('rp.webp')
+FC_TILE    = encode_image('fc.webp')
 
 if RS_TILE:
     print(f'✓ rs.webp embarqué ({len(RS_TILE)//1024} Ko base64)')
@@ -164,6 +165,7 @@ HQ_TILE_SRC = HQ_TILE if HQ_TILE else "data:image/gif;base64,R0lGODlhAQABAIAAAAA
 BG_TILE_SRC = BG_TILE if BG_TILE else "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
 DG_TILE_SRC = DG_TILE if DG_TILE else "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
 RP_TILE_SRC = RP_TILE if RP_TILE else "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+FC_TILE_SRC = FC_TILE
 
 # ── Schémas générés (BG « Ce qui alimente quoi » ; DG figure 2) ──────────────────
 # Règle de lisibilité : la couleur d'un module marque (trait, aplat à 20 %), l'encre écrit.
@@ -1772,6 +1774,7 @@ kbd {{
 #page-bg  {{ --chapter-accent: #c0892a; --chapter-accent-rgb: 192,137,42; }}
 #page-dg  {{ --chapter-accent: #4f7a8e; --chapter-accent-rgb: 79,122,142; }}
 #page-rp  {{ --chapter-accent: #7ac97a; --chapter-accent-rgb: 122,201,122; }}
+#page-fc  {{ --chapter-accent: #D0784A; --chapter-accent-rgb: 208,120,74; }}
 
 /* Plaques accents individuels */
 .fm-plaque[data-module="rs"]  {{ --chapter-accent: #C95A9C; --chapter-accent-rgb: 201,90,156; }}
@@ -1779,6 +1782,7 @@ kbd {{
 .fm-plaque[data-module="bg"]  {{ --chapter-accent: #c0892a; --chapter-accent-rgb: 192,137,42; }}
 .fm-plaque[data-module="rp"]  {{ --chapter-accent: #7ac97a; --chapter-accent-rgb: 122,201,122; }}
 .fm-plaque[data-module="dg"]  {{ --chapter-accent: #4f7a8e; --chapter-accent-rgb: 79,122,142; }}
+.fm-plaque[data-module="fc"]  {{ --chapter-accent: #D0784A; --chapter-accent-rgb: 208,120,74; }}
 
 {FM_EXTRA_CSS}
 </style>
@@ -1848,6 +1852,19 @@ kbd {{
           <div class="fm-plaque-info">
             <div class="fm-plaque-name">HQ</div>
             <div class="fm-plaque-desc" data-i18n="index.hq.desc">Wing Command Center — configuration escadre</div>
+          </div>
+          <div class="fm-plaque-badge" data-i18n="index.badge.active">Manuel</div>
+        </div>
+
+        <!-- FC -->
+        <div class="fm-plaque active" data-module="fc" tabindex="0" role="button"
+             aria-label="FC — Flight Configurator"
+             onclick="navigate('fc')"
+             onkeydown="if(event.key==='Enter'||event.key===' '){{event.preventDefault();navigate('fc')}}">
+          <div class="fm-plaque-monogram">FC</div>
+          <div class="fm-plaque-info">
+            <div class="fm-plaque-name">Flight Configurator</div>
+            <div class="fm-plaque-desc" data-i18n="index.fc.desc">Un vol prêt à appliquer : radios, emport, livrée</div>
           </div>
           <div class="fm-plaque-badge" data-i18n="index.badge.active">Manuel</div>
         </div>
@@ -2240,6 +2257,154 @@ kbd {{
 
     </div><!-- /fm-chapter -->
   </section><!-- /page-hq -->
+
+
+  <!-- ===== PAGE FC ===== -->
+  <section id="page-fc" class="fm-page hidden">
+    <div class="fm-chapter" style="--chapter-accent:#D0784A; --chapter-accent-rgb:208,120,74;">
+
+      <button class="fm-back-btn" onclick="navigate('index')" data-i18n="btn.back">◄ Index</button>
+
+      <div class="fm-hero">
+        <img class="fm-hero-img" src="{FC_TILE_SRC}" alt="Flight Configurator" draggable="false">
+        <div class="fm-hero-pin" aria-hidden="true"></div>
+        <div class="fm-hero-caption">
+          <div><div class="fm-hero-monogram">F·C</div></div>
+          <div>
+            <div class="fm-hero-title" data-i18n="fc.hero.title">Flight Configurator</div>
+            <div class="fm-hero-sub" data-i18n="fc.hero.sub">Un vol prêt à appliquer : radios, emport, livrée</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- À quoi ça sert -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">À quoi ça sert</h3>
+        <h3 class="lang-block" data-lang="en">What it's for</h3>
+        <div class="lang-block" data-lang="fr"><p>Le Flight Configurator est l'outil du <strong>Flight Lead</strong> : il prépare <strong>un ou plusieurs vols</strong> — identité (nom du groupe, appareil, coalition, jusqu'à quatre unités), <strong>radios</strong>, <strong>emport</strong> composé sur la vue de face de l'appareil ou repris d'un preset, <strong>livrée</strong> — et les exporte en <strong>paquet de vol</strong> que le <strong>Mission Commander</strong> applique à sa mission avec HQ. Quatre appareils : <strong>Mi-24P</strong>, <strong>Mi-8MT</strong>, <strong>F-4E-45MC</strong> et <strong>Mirage F1EE</strong>.</p><p>Le module ne suppose rien de la mission cible : un paquet peut s'appliquer à <strong>n'importe quelle mission</strong> (aujourd'hui, HQ retrouve chaque vol par son nom de groupe et son appareil). Chaque partie est facultative ; une partie laissée vide n'est pas touchée par HQ.</p></div>
+        <div class="lang-block" data-lang="en"><p>The Flight Configurator is the <strong>Flight Lead</strong>'s tool: it prepares <strong>one or more flights</strong> — identity (group name, aircraft, coalition, up to four units), <strong>radios</strong>, <strong>loadout</strong> built on the aircraft's front view or started from a preset, <strong>livery</strong> — and exports them as a <strong>flight package</strong> that the <strong>Mission Commander</strong> applies to the mission with HQ. Four aircraft: <strong>Mi-24P</strong>, <strong>Mi-8MT</strong>, <strong>F-4E-45MC</strong> and <strong>Mirage F1EE</strong>.</p><p>The module assumes nothing about the target mission: a package can be applied to <strong>any mission</strong> (today, HQ finds each flight by its group name and aircraft). Every part is optional; a part left empty is not touched by HQ.</p></div>
+      </div>
+
+      <!-- Schéma -->
+      <div class="fm-schema">
+        <svg viewBox="0 0 720 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Flight Configurator">
+          <defs>
+            <marker id="fca" markerWidth="8" markerHeight="8" refX="6.5" refY="3.5" orient="auto"><path d="M0,0 L8,3.5 L0,7 Z" fill="currentColor" opacity=".6"/></marker>
+          </defs>
+          <text x="360" y="26" text-anchor="middle" font-size="13" letter-spacing="3" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">DU VOL AU PAQUET</text>
+          <text x="360" y="26" text-anchor="middle" font-size="13" letter-spacing="3" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">FROM FLIGHT TO PACKAGE</text>
+          <line x1="150" y1="34" x2="570" y2="34" stroke="currentColor" stroke-width=".6" opacity=".3"/>
+
+          <rect class="sv-box" x="30" y="70" width="150" height="44" rx="3" stroke="currentColor" stroke-width="1.2"/>
+          <text x="105" y="90" text-anchor="middle" font-size="10.5" fill="currentColor" class="lang-block" data-lang="fr">Mission chargée dans HQ</text>
+          <text x="105" y="90" text-anchor="middle" font-size="10.5" fill="currentColor" class="lang-block" data-lang="en">Mission loaded in HQ</text>
+          <text x="105" y="105" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">un modèle possible</text>
+          <text x="105" y="105" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">one possible model</text>
+          <rect class="sv-box" x="30" y="136" width="150" height="44" rx="3" stroke="currentColor" stroke-width="1.2"/>
+          <text x="105" y="156" text-anchor="middle" font-size="10.5" fill="currentColor" class="lang-block" data-lang="fr">Paquet de vol</text>
+          <text x="105" y="156" text-anchor="middle" font-size="10.5" fill="currentColor" class="lang-block" data-lang="en">Flight package</text>
+          <text x="105" y="171" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9">.json · .zip</text>
+          <line x1="180" y1="92" x2="268" y2="124" stroke="currentColor" stroke-width="1.2" opacity=".6" marker-end="url(#fca)"/>
+          <line x1="180" y1="158" x2="268" y2="132" stroke="currentColor" stroke-width="1.2" opacity=".6" marker-end="url(#fca)"/>
+          <text x="224" y="86" text-anchor="middle" font-size="9" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">Importer</text>
+          <text x="224" y="86" text-anchor="middle" font-size="9" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">Import</text>
+
+          <rect class="sv-box" x="270" y="92" width="180" height="76" rx="3" stroke="#D0784A" stroke-width="2"/>
+          <text x="360" y="124" text-anchor="middle" font-size="16" fill="currentColor" letter-spacing="1.5">Flight Configurator</text>
+          <text x="360" y="142" text-anchor="middle" font-size="8.5" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">identité · radios · emport · livrée</text>
+          <text x="360" y="142" text-anchor="middle" font-size="8.5" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">identity · radios · loadout · livery</text>
+          <text x="360" y="156" text-anchor="middle" font-size="8.5" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">route portée, jamais tracée</text>
+          <text x="360" y="156" text-anchor="middle" font-size="8.5" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">route carried, never drawn</text>
+
+          <line x1="450" y1="130" x2="538" y2="130" stroke="currentColor" stroke-width="1.2" opacity=".6" marker-end="url(#fca)"/>
+          <text x="494" y="122" text-anchor="middle" font-size="9" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">Exporter</text>
+          <text x="494" y="122" text-anchor="middle" font-size="9" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">Export</text>
+          <rect class="sv-box sv-m-hq" x="540" y="100" width="150" height="60" rx="3" stroke-width="2"/>
+          <text x="615" y="126" text-anchor="middle" font-size="14" fill="currentColor" letter-spacing="2">HQ</text>
+          <text x="615" y="144" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">applique le paquet à la mission</text>
+          <text x="615" y="144" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">applies the package to the mission</text>
+
+          <rect class="sv-box" x="270" y="214" width="180" height="40" rx="3" stroke="currentColor" stroke-width="1" stroke-opacity=".6" stroke-dasharray="4 3"/>
+          <text x="360" y="231" text-anchor="middle" font-size="10" fill="currentColor" class="lang-block" data-lang="fr">Mes presets</text>
+          <text x="360" y="231" text-anchor="middle" font-size="10" fill="currentColor" class="lang-block" data-lang="en">My presets</text>
+          <text x="360" y="245" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">.lua chargés, emports gardés</text>
+          <text x="360" y="245" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">loaded .lua, kept loadouts</text>
+          <line x1="360" y1="214" x2="360" y2="172" stroke="currentColor" stroke-width="1.2" opacity=".6" stroke-dasharray="4 3" marker-end="url(#fca)"/>
+        </svg>
+        <div class="fm-schema-legend">
+          <span class="lang-block" data-lang="fr">Fig. 1 — On importe, on complète, on exporte un paquet ; HQ l'applique. Les presets ne partent jamais dans le paquet : seul l'emport y est écrit.</span>
+          <span class="lang-block" data-lang="en">Fig. 1 — Import, complete, export a package; HQ applies it. Presets never leave in the package: only the loadout is written.</span>
+        </div>
+      </div>
+
+      <!-- Les vols -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Les vols et les unités</h3>
+        <h3 class="lang-block" data-lang="en">Flights and units</h3>
+        <div class="lang-block" data-lang="fr"><p>Choisissez d'abord un <strong>théâtre</strong> (l'export l'exige ; un import le renseigne), puis <strong>ajoutez un vol</strong> : nom du groupe, appareil, coalition, et pour chaque unité son nom, son indicatif, son numéro de bord et sa livrée. Un vol se <strong>replie</strong> (titre et résumé sur une ligne : « 2 × Mi-24P · route 4 pts · radios 6 canaux · emport … ») ; « Tout replier » agit sur tous les vols, et dès qu'il y a plus de deux vols, seul celui sur lequel vous travaillez reste déplié. Chaque vol garde un identifiant interne stable qui n'est jamais écrit dans le paquet.</p><p>La <strong>route</strong> d'un vol vient d'un import (paquet du Route Planner, mission de HQ) : le module la <strong>porte telle quelle</strong>, la résume sur une ligne et permet de la retirer ; <strong>le tracé reste au Route Planner</strong>.</p></div>
+        <div class="lang-block" data-lang="en"><p>First choose a <strong>theatre</strong> (the export requires one; an import fills it in), then <strong>add a flight</strong>: group name, aircraft, coalition, and for each unit its name, call sign, onboard number and livery. A flight <strong>folds</strong> (title and a one-line summary: “2 × Mi-24P · route 4 pts · radios 6 channels · loadout …”); “Fold all” acts on every flight, and as soon as there are more than two flights only the one you are working on stays open. Each flight keeps a stable internal identifier that is never written to the package.</p><p>A flight's <strong>route</strong> comes from an import (Route Planner package, HQ mission): the module <strong>carries it as is</strong>, sums it up on one line and lets you remove it; <strong>drawing stays in the Route Planner</strong>.</p></div>
+      </div>
+
+      <!-- La barre -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Ouvrir, Enregistrer, Importer, Exporter, Effacer</h3>
+        <h3 class="lang-block" data-lang="en">Open, Save, Import, Export, Clear</h3>
+        <div class="lang-block" data-lang="fr"><p><strong>Ouvrir</strong> et <strong>Enregistrer</strong> gèrent le <strong>fichier de travail</strong> du module (un <code>.json</code> qui porte vos vols et « Mes presets »). <strong>Importer</strong> ouvre une fenêtre par source : la <strong>mission chargée dans HQ</strong> (rien n'est coché au départ, les appareils non gérés sont masqués, une recherche filtre par nom de groupe, « Cocher les vols affichés » et « Tout décocher » agissent sur ce qu'on voit) ou un <strong>paquet de vol</strong> (<code>.json</code> ou <code>.zip</code>, y compris un paquet du Route Planner). Pour chaque vol, quatre cases : <strong>Route, Radios, Emport, Livrée</strong> ; un vol déjà présent est complété par les parties cochées, sinon il est créé. Le Route Planner, le Briefing Generator et le Datacard Generator figurent dans la fenêtre, inactifs : ils seront branchés plus tard. <strong>Exporter</strong> écrit le paquet pour le Mission Commander ; <strong>Effacer</strong> vide le module (vos presets restent). Sur téléphone, une source choisie se replie en une ligne pour laisser la place à la liste.</p></div>
+        <div class="lang-block" data-lang="en"><p><strong>Open</strong> and <strong>Save</strong> handle the module's <strong>working file</strong> (a <code>.json</code> that carries your flights and “My presets”). <strong>Import</strong> opens a window by source: the <strong>mission loaded in HQ</strong> (nothing is ticked at first, unsupported aircraft are hidden, a search filters by group name, “Tick the shown flights” and “Untick all” act on what you see) or a <strong>flight package</strong> (<code>.json</code> or <code>.zip</code>, including a Route Planner package). For each flight, four boxes: <strong>Route, Radios, Loadout, Livery</strong>; a flight already there is completed by the ticked parts, otherwise it is created. The Route Planner, the Briefing Generator and the Datacard Generator are listed in the window, inactive: they will be wired later. <strong>Export</strong> writes the package for the Mission Commander; <strong>Clear</strong> empties the module (your presets stay). On a phone, a chosen source folds into one line to leave room for the list.</p></div>
+      </div>
+
+      <!-- Radios -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Les radios</h3>
+        <h3 class="lang-block" data-lang="en">Radios</h3>
+        <div class="lang-block" data-lang="fr"><p>Pour chaque poste de l'appareil, un champ par canal, numéroté comme au cockpit (le R-863 et le R-828 pour les deux hélicoptères, deux postes pour le F-4E et le Mirage). Une fréquence se saisit en MHz, <strong>de 0 à 999,999</strong>, comme dans le Comm Plan Editor de Mission Tools ; une valeur hors de ces limites ou qui n'est pas un nombre est <strong>refusée avec un message</strong> et bloque l'export. « Recopier sur les autres unités du vol » écrit les mêmes canaux partout. Un canal vide n'est pas écrit ; les modulations ne le sont pas non plus.</p></div>
+        <div class="lang-block" data-lang="en"><p>For each radio of the aircraft, one field per channel, numbered as in the cockpit (the R-863 and R-828 for the two helicopters, two radios for the F-4E and the Mirage). A frequency is typed in MHz, <strong>from 0 to 999.999</strong>, as in Mission Tools' Comm Plan Editor; a value outside those limits, or that is not a number, is <strong>refused with a message</strong> and blocks the export. “Copy to the other units of the flight” writes the same channels everywhere. An empty channel is not written; modulations are not written either.</p></div>
+      </div>
+
+      <!-- Emport -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">L'emport</h3>
+        <h3 class="lang-block" data-lang="en">The loadout</h3>
+        <div class="lang-block" data-lang="fr"><p>« Composer l'emport » ouvre, à droite, la <strong>vue de face</strong> de l'appareil : une case et un trait pointillé par station, une liste d'armes permises par station, la <strong>masse totale</strong>. « Symétrique » pose le même choix sur la station jumelle (dite en clair sous la liste) ; un <strong>réglage d'arme</strong> (code laser, fusée…) suit sa station tant que l'arme n'est pas changée. À côté, le carburant, les leurres, les paillettes et le canon : une valeur hors de la table de l'appareil est <strong>ramenée à sa limite</strong>, la ligne d'état en donne le nombre. Modifier une station ne demande aucun nom de preset.</p><p><strong>Mes presets</strong> (sous l'emport) : « Garder dans mes presets… » enregistre l'emport composé sous un nom ; « Charger des presets (.lua) » reprend les fichiers de presets de l'escadre, qui deviennent des points de départ dans « Partir de » (un nom déjà pris est ignoré, et le bloc le dit). Mes presets vivent dans le navigateur et dans le fichier de travail, <strong>nulle part ailleurs</strong> ; <strong>ce qui part dans le paquet, c'est un emport, jamais un preset</strong>.</p></div>
+        <div class="lang-block" data-lang="en"><p>“Compose the loadout” opens, on the right, the aircraft's <strong>front view</strong>: a cell and a dotted leader per station, a list of permitted weapons per station, the <strong>total mass</strong>. “Symmetric” puts the same choice on the twin station (named in plain words under the list); a <strong>weapon setting</strong> (laser code, fuze…) follows its station as long as the weapon is not changed. Beside it, fuel, flares, chaff and gun: a value outside the aircraft's table is <strong>brought back to its limit</strong>, the status line gives the count. Changing a station never asks for a preset name.</p><p><strong>My presets</strong> (under the loadout): “Keep in my presets…” saves the composed loadout under a name; “Load presets (.lua)” takes the squadron's preset files, which become starting points in “Start from” (a name already taken is ignored, and the block says so). My presets live in the browser and in the working file, <strong>nowhere else</strong>; <strong>what leaves in the package is a loadout, never a preset</strong>.</p></div>
+      </div>
+
+      <!-- Livrée -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">La livrée</h3>
+        <h3 class="lang-block" data-lang="en">Livery</h3>
+        <div class="lang-block" data-lang="fr"><p>Le champ est un <strong>texte libre</strong> (l'identifiant de livrée de DCS). Il propose en suggestion les livrées <strong>déjà vues pour ce type d'appareil</strong> : dans la mission chargée dans HQ, dans les paquets importés et dans les vols du module. Aucune liste n'est écrite d'avance.</p></div>
+        <div class="lang-block" data-lang="en"><p>The field is <strong>free text</strong> (DCS's livery identifier). It suggests the liveries <strong>already seen for that aircraft type</strong>: in the mission loaded in HQ, in imported packages and in the module's flights. No list is written in advance.</p></div>
+      </div>
+
+      <!-- Paquet -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Le paquet</h3>
+        <h3 class="lang-block" data-lang="en">The package</h3>
+        <div class="lang-block" data-lang="fr"><p>Un fichier <code>.json</code> de format <code>dcs-flight-package-v1</code>, nommé <code>paquet_&lt;1er vol&gt;_&lt;horodatage&gt;.json</code> comme celui de HQ. Par vol : nom du groupe, appareil, coalition, route, et par unité nom, indicatif, livrée, radios, <code>payload</code>. Une partie non renseignée sort en <strong><code>null</code></strong> : HQ n'y touche pas. Le paquet ne nomme aucune mission source. HQ applique aujourd'hui les radios, l'emport, la livrée et la route ; l'indicatif et le numéro de bord voyagent déjà, mais HQ ne les applique pas encore.</p></div>
+        <div class="lang-block" data-lang="en"><p>A <code>.json</code> file of format <code>dcs-flight-package-v1</code>, named <code>paquet_&lt;first flight&gt;_&lt;timestamp&gt;.json</code> like HQ's. Per flight: group name, aircraft, coalition, route, and per unit name, call sign, livery, radios, <code>payload</code>. A part left blank is written as <strong><code>null</code></strong>: HQ does not touch it. The package names no source mission. HQ applies radios, loadout, livery and route today; the call sign and onboard number already travel, but HQ does not apply them yet.</p></div>
+      </div>
+
+      <!-- L'emport, réutilisable -->
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">L'emport, réutilisable</h3>
+        <h3 class="lang-block" data-lang="en">The loadout, reusable</h3>
+        <div class="lang-block" data-lang="fr"><p>La partie « emport » du module tient dans un <strong>bloc JavaScript partagé</strong>, <code>payload_block.py</code> : sans DOM, sans <code>t()</code>, sans réseau, il s'exécute seul sous <code>node</code>. Un autre module le reprend <strong>tel quel</strong> : le texte du bloc est identique à l'octet dans chaque fichier de <code>dist/</code> qui l'emploie. Il lit trois tables posées avant lui, sous ces noms : <code>WEAPON_NAMES</code> (CLSID → nom), <code>AIRCRAFT_PYLONS</code> (armes permises et masses par station) et <code>AIRCRAFT_LIMITS</code> (carburant, leurres), les mêmes que celles du Loadout Editor de Mission Tools.</p>
+          <p><strong><code>parseUnitPayloads(texte)</code></strong> lit un fichier de presets <code>.lua</code> (le sous-ensemble Lua de ces fichiers : tables, chaînes, nombres, booléens, commentaires). Elle rend <code>{{ unitType, supported, presets: [{{ name, displayName, pylons: {{ numéro: {{ CLSID, settings? }} }} }}] }}</code> ; <code>supported</code> est faux pour un type autre que les quatre gérés (le fichier se lit, il ne s'offre à aucun vol). Une erreur de lecture porte <code>.line</code> (le numéro de ligne), <code>.code</code> et <code>.detail</code>. Les <code>settings</code> d'une station sont rendus tels quels.</p>
+          <p><strong><code>buildPayload(type, pylons, {{ fuel, flare, chaff, gun }})</code></strong> rend l'objet <code>payload</code> d'un .miz : <code>pylons</code> numérotés par station (<code>{{ CLSID, settings? }}</code>), <code>fuel</code>, <code>flare</code>, <code>chaff</code>, <code>gun</code> ramenés dans les limites de la table, et les clés fixes du type (<code>ammo_type</code>, <code>restricted</code>), telles que les écrivent les missions : le carburant du Mi-8MT est un texte, celui des trois autres un nombre. Des aides lisent les tables : <code>payloadPylons(type)</code>, <code>payloadWeaponName(clsid)</code>, <code>payloadWeaponMass(clsid)</code>, <code>payloadDefaults(type)</code>. Pour reprendre le bloc : poser les trois tables, insérer le texte du bloc, appeler ces fonctions.</p></div>
+        <div class="lang-block" data-lang="en"><p>The module's “loadout” part lives in a <strong>shared JavaScript block</strong>, <code>payload_block.py</code>: no DOM, no <code>t()</code>, no network, it runs alone under <code>node</code>. Another module takes it <strong>as is</strong>: the block's text is byte-identical in every <code>dist/</code> file that uses it. It reads three tables set before it, under these names: <code>WEAPON_NAMES</code> (CLSID → name), <code>AIRCRAFT_PYLONS</code> (permitted weapons and masses per station) and <code>AIRCRAFT_LIMITS</code> (fuel, countermeasures), the same ones as Mission Tools' Loadout Editor.</p>
+          <p><strong><code>parseUnitPayloads(text)</code></strong> reads a preset <code>.lua</code> file (the Lua subset of those files: tables, strings, numbers, booleans, comments). It returns <code>{{ unitType, supported, presets: [{{ name, displayName, pylons: {{ number: {{ CLSID, settings? }} }} }}] }}</code>; <code>supported</code> is false for any type other than the four handled (the file reads, but is offered to no flight). A read error carries <code>.line</code> (the line number), <code>.code</code> and <code>.detail</code>. A station's <code>settings</code> are returned as they are.</p>
+          <p><strong><code>buildPayload(type, pylons, {{ fuel, flare, chaff, gun }})</code></strong> returns a .miz <code>payload</code> object: <code>pylons</code> numbered by station (<code>{{ CLSID, settings? }}</code>), <code>fuel</code>, <code>flare</code>, <code>chaff</code>, <code>gun</code> brought within the table's limits, and the type's fixed keys (<code>ammo_type</code>, <code>restricted</code>), as missions write them: the Mi-8MT's fuel is a string, the other three's a number. Helpers read the tables: <code>payloadPylons(type)</code>, <code>payloadWeaponName(clsid)</code>, <code>payloadWeaponMass(clsid)</code>, <code>payloadDefaults(type)</code>. To reuse the block: set the three tables, insert the block's text, call these functions.</p></div>
+      </div>
+
+      <!-- Crédits et limites -->
+      <div class="fm-callout note">
+        <div class="lang-block" data-lang="fr">Crédits : les tables d'armes viennent de <strong>pydcs</strong> (LGPL-3.0), reprises de Mission Tools ; les dessins de la vue de face sont de <strong>Goldwolf</strong> (DCS Reference Guide), utilisés avec son accord et <strong>hors de la licence MIT</strong> du dépôt (voir <code>data/views/LICENSE.md</code>). Limite : le module n'applique aucune règle d'emport — il écrit ce qu'on compose, il ne dit pas que DCS l'acceptera.</div>
+        <div class="lang-block" data-lang="en">Credits: the weapon tables come from <strong>pydcs</strong> (LGPL-3.0), taken from Mission Tools; the front-view drawings are by <strong>Goldwolf</strong> (DCS Reference Guide), used with his permission and <strong>outside the repository's MIT licence</strong> (see <code>data/views/LICENSE.md</code>). Limit: the module applies no loadout rule — it writes what you compose, it does not say that DCS will accept it.</div>
+      </div>
+
+    </div><!-- /fm-chapter -->
+  </section><!-- /page-fc -->
 
 
   <!-- ===== PAGE BG ===== -->
@@ -2843,6 +3008,7 @@ var I18N = {{
     'index.title':      'Modules documentés',
     'index.badge.active': 'Manuel',
     'index.hq.desc':    'Wing Command Center — configuration escadre',
+    'index.fc.desc':    'Un vol prêt à appliquer : radios, emport, livrée',
     'index.bg.desc':    'Générateur de briefings multi-sections',
     'index.rs.desc':    'Compositeur photo-renseignement canvas',
     'index.rp.desc':    "Planification d\u2019itin\u00e9raires",
@@ -2856,6 +3022,8 @@ var I18N = {{
     'rs.schema.legend': 'Fig. 1 — Pipeline de composition et ordre de rendu des calques',
     'hq.hero.title':    'HQ — Wing Command Center',
     'hq.hero.sub':      'Configuration escadre centralisée',
+    'fc.hero.title':    'Flight Configurator',
+    'fc.hero.sub':      'Un vol prêt à appliquer : radios, emport, livrée',
     'bg.hero.title':    'Briefing Generator',
     'bg.hero.sub':      'Générateur de briefings multi-sections',
     'dg.hero.title':    'Datacard Generator',
@@ -2874,6 +3042,7 @@ var I18N = {{
     'index.title':      'Documented Modules',
     'index.badge.active': 'Manual',
     'index.hq.desc':    'Wing Command Center — wing configuration',
+    'index.fc.desc':    'A flight ready to apply: radios, loadout, livery',
     'index.bg.desc':    'Multi-section briefing generator',
     'index.rs.desc':    'Canvas photo-intelligence composer',
     'index.rp.desc':    'Route planning',
@@ -2887,6 +3056,8 @@ var I18N = {{
     'rs.schema.legend': 'Fig. 1 — Composition pipeline and layer render order',
     'hq.hero.title':    'HQ — Wing Command Center',
     'hq.hero.sub':      'Centralised wing configuration',
+    'fc.hero.title':    'Flight Configurator',
+    'fc.hero.sub':      'A flight ready to apply: radios, loadout, livery',
     'bg.hero.title':    'Briefing Generator',
     'bg.hero.sub':      'Multi-section briefing generator',
     'dg.hero.title':    'Datacard Generator',
@@ -2974,7 +3145,7 @@ function initTheme() {{
 }}
 
 // ── Routing hash ──────────────────────────────
-var PAGES = ['index', 'rs', 'hq', 'bg', 'dg', 'rp'];
+var PAGES = ['index', 'rs', 'hq', 'fc', 'bg', 'dg', 'rp'];
 
 function showPage(id) {{
   if (PAGES.indexOf(id) === -1) id = 'index';
@@ -3060,11 +3231,16 @@ grep_ok('id="page-rs"',     'page-rs présent')
 grep_ok('id="page-hq"',     'page-hq présent')
 grep_ok('id="page-bg"',     'page-bg présent')
 grep_ok('id="page-dg"',     'page-dg présent')
+grep_ok('id="page-fc"',     'page-fc présent')
+grep_ok('L\'emport, réutilisable', 'section « L\'emport, réutilisable » (FR)')
+grep_ok('The loadout, reusable', 'section « The loadout, reusable » (EN)')
+grep_ok('Goldwolf',          'crédit de Goldwolf')
 grep_ok('--fm-accent:', '--fm-accent présent')
 grep_ok('--chapter-accent: #C95A9C', '--chapter-accent RS')
 grep_ok('--chapter-accent: #4FB286', '--chapter-accent HQ')
 grep_ok('--chapter-accent: #c0892a', '--chapter-accent BG')
 grep_ok('--chapter-accent: #4f7a8e', '--chapter-accent DG')
+grep_ok('--chapter-accent: #D0784A', '--chapter-accent FC')
 grep_ok('class="toolbar"',  'toolbar présent')
 grep_ok('id="fm-zoom"',     'fenêtre de zoom présente')
 grep_ok('role="dialog" aria-modal="true"', 'fenêtre de zoom : role=dialog, aria-modal')

@@ -8,7 +8,7 @@
 ![Platform](https://img.shields.io/badge/platform-Web-green)
 ![Offline](https://img.shields.io/badge/offline-yes-success)
 ![Tablet & mobile](https://img.shields.io/badge/tablet%20%26%20mobile-ready-orange)
-![Tools](https://img.shields.io/badge/tools-6%20live-brown)
+![Tools](https://img.shields.io/badge/tools-7%20live-brown)
 
 🌐 **[Use it online »](https://mirabellebenou.github.io/dcs-mission-plan/)** &nbsp;·&nbsp; 💾 **[Download the offline file »](../../releases)**
 
@@ -39,6 +39,7 @@ The landing page presents each tool as a **pinned print** on the board. Active t
 | Tool | What it does | Status |
 |------|--------------|--------|
 | **HQ** | Command post — configure your wing once (branding, squadrons), shared with the other tools; experimental `.miz` mission reader/patcher | 🧪 Beta `v0.1.1` |
+| **Flight Configurator** | Prepare a flight for the Mission Commander — identity, radios, loadout built on the aircraft's front view or started from your presets, livery — and export it as a flight package that HQ applies to a mission; Mi-24P, Mi-8MT, F-4E and Mirage F1EE | 🧪 Beta `v0.1.0` |
 | **Briefing Generator** | Mission briefings, full or quick — SITAC, radio plan, airfields, charts, recon photos, map from the Route Planner — PDF & PNG export | ✅ `v2.6.0` |
 | **Recon Station** | Turn a screenshot into a reconnaissance analysis photo — sensor looks, annotations drawn by touch, lossless PNG | ✅ `v1.1.1` |
 | **Field Manual** | In-app documentation for the suite — one illustrated chapter per tool, diagrams, FR/EN, offline | ✅ `v1.3.0` |
@@ -50,6 +51,19 @@ The landing page presents each tool as a **pinned print** on the board. Active t
 ### 🛡️ HQ — your wing, configured once
 
 HQ is the suite's **command post**. Its main job today is the **wing hub**: set your wing name, logo, squadrons and callsigns **once**, and Briefing Generator + Recon Station pick it up automatically. HQ also ships an **experimental `.miz` engine** (read a mission, export a mission snapshot, apply surgical patches) — the advanced flight-package UI is still in development and in-game validation is pending, so HQ is published as **beta**. HQ can also write **Dynamic Spawn** into a mission: mark flights as templates and link them to the airfields, FARPs and ships that already have Dynamic Spawn enabled in the mission editor (HQ never enables it). Its **Example** button loads a demonstration wing; your own configuration is kept and can be restored in one tap.
+
+### ✈️ Flight Configurator — in detail
+
+The Flight Configurator is the **Flight Lead's** tool: it prepares one or more flights and exports them as a **flight package** (`dcs-flight-package-v1`) that the Mission Commander applies to a mission with HQ. It runs for the **Mi-24P, Mi-8MT, F-4E-45MC and Mirage F1EE**.
+
+- **Flights** — group name, aircraft, coalition, up to four units (name, call sign, onboard number, livery); flights fold into a one-line summary
+- **Radios** — every radio of the aircraft, one field per channel, frequencies from 0 to 999.999 MHz (the Comm Plan Editor's rule); copy to the other units of the flight
+- **Loadout** — built on the aircraft's **front view**: a weapon list per station, twin stations, total mass, and fuel, flares, chaff and gun brought back to the aircraft's limits; start from **My presets** (loaded from `.lua` preset files, or kept from your own loadouts)
+- **Livery** — free text, with suggestions from the liveries already seen for that aircraft type
+- **Import** — the mission loaded in HQ or a flight package (`.json` or `.zip`, including the Route Planner's), with four boxes per flight: Route, Radios, Loadout, Livery; the route is carried as is, never drawn
+- **Open / Save** — a working file with your flights and presets; **Export** writes the package (parts left empty stay untouched in HQ)
+- **Reusable loadout engine** — `payload_block.py` reads preset files and builds a `.miz` `payload`, with no DOM and no network; other modules can take it as is
+- **4 themes, FR/EN**, touch-first, fully offline
 
 ### 🚀 Briefing Generator — in detail
 
@@ -78,7 +92,7 @@ Recon Station turns any screenshot into a convincing **reconnaissance analysis p
 
 The Field Manual is the suite's **built-in documentation**, opened from the board like any other tool — **no internet, no separate guide to download**.
 
-- **One chapter per tool** — Recon Station, HQ, Briefing Generator, Datacard Generator, Route Planner
+- **One chapter per tool** — Recon Station, HQ, Flight Configurator, Briefing Generator, Datacard Generator, Route Planner
 - **Diagrams, not screenshots** — each chapter has a hand-drawn-style **SVG schematic** (e.g. *what feeds what* in the Briefing Generator) that adapts to the active theme
 - **"What it's for" first** — plain explanations of each tool's purpose and workflow
 - **4 themes, FR/EN**, fully offline
@@ -162,6 +176,7 @@ Each tool builds to a standalone HTML, then the landing page embeds the live too
 python3 build_briefing_generator.py             # → dist/dcs_briefing_generator.html
 python3 build_recon_station.py                  # → dist/dcs_recon_station.html
 python3 build_hq.py                             # → dist/dcs_hq.html
+python3 build_flight_configurator.py            # → dist/dcs_flight_configurator.html
 python3 build_field_manual.py                   # → dist/dcs_field_manual.html
 python3 build_datacard_generator.py            # → dist/dcs_datacard_generator.html
 python3 build_route_planner.py                 # → dist/dcs_route_planner.html
@@ -170,7 +185,7 @@ python3 build_route_planner.py                 # → dist/dcs_route_planner.html
 python3 build_mission_plan.py                   # → dist/dcs_mission_plan.html
 ```
 
-Run the six tool builds first, then the landing-page build: the latter reads the six modules from `dist/` and the tiles from `tiles/`. Inputs (`assets.json`, `tiles/`) are read from the repository, and a build stops with a non-zero exit code if one is missing.
+Run the seven tool builds first, then the landing-page build: the latter reads the seven modules from `dist/` and the tiles from `tiles/`. Inputs (`assets.json`, `tiles/`) are read from the repository, and a build stops with a non-zero exit code if one is missing.
 
 The output `dist/dcs_mission_plan.html` is the distributable (and the file published online). `docs/index.html` is a byte-for-byte copy of `dist/dcs_mission_plan.html`, made at each milestone.
 
@@ -181,6 +196,8 @@ The output `dist/dcs_mission_plan.html` is the distributable (and the file publi
 ├── build_briefing_generator.py    # Briefing Generator builder (single script)
 ├── build_recon_station.py         # Recon Station builder
 ├── build_hq.py                    # HQ builder
+├── build_flight_configurator.py   # Flight Configurator builder
+├── payload_block.py               # Shared loadout block (preset files, .miz payload), no DOM
 ├── build_field_manual.py          # Field Manual builder
 ├── build_datacard_generator.py    # Datacard Generator builder
 ├── build_route_planner.py         # Route Planner builder
@@ -188,9 +205,10 @@ The output `dist/dcs_mission_plan.html` is the distributable (and the file publi
 ├── airfields.json                 # DCS airfield & helipad positions (from pydcs)
 ├── airdromes.json                 # DCS airfield names and ids per theatre (from pydcs, via DCS Airfield Charts)
 ├── towns.json                     # DCS town names & positions (from the DCS World maps)
+├── data/                          # Flight Configurator tables (weapons, pylons, limits, front views from Mission Tools) and its licences
 ├── wmm/                          # World Magnetic Model coefficients 1985–2025 (NOAA, public domain)
 ├── igrf/                         # IGRF-12 coefficients 1900–2015 (IAGA, as shipped by DCS World)
-├── tiles/                         # Board tiles (512² WebP): hq, bg, rs, fm, rp, kg
+├── tiles/                         # Board tiles (512² WebP): hq, bg, rs, fm, rp, kg, fc
 ├── docs/screenshots/              # README images
 ├── CHANGELOG.md
 ├── README.md
@@ -225,7 +243,7 @@ For code contributions: fork, branch, study the build scripts to understand the 
 
 ## 📄 License
 
-[MIT License](./LICENSE) — free to use, modify, and distribute, including commercially.
+[MIT License](./LICENSE) — free to use, modify, and distribute, including commercially. Exceptions: the Flight Configurator's front-view drawings (by Goldwolf, `data/views/LICENSE.md`) and its pydcs-derived tables (LGPL-3.0, `data/COPYING.LESSER`).
 
 ## 🙏 Acknowledgments
 
@@ -236,6 +254,7 @@ For code contributions: fork, branch, study the build scripts to understand the 
 - NATO military symbols drawn with **[milsymbol](https://github.com/spatialillusions/milsymbol)** by Måns Beckman (MIT)
 - DCS airfield & helipad names and positions, and the DCS map projections, from **[pydcs](https://github.com/pydcs/dcs)** (LGPL-3.0); place-name overlay © Esri, HERE, Garmin, OpenStreetMap contributors
 - Airfield names and ids: pydcs, via DCS Airfield Charts
+- Flight Configurator: weapon names, permitted weapons per station, masses and aircraft limits from **[pydcs](https://github.com/pydcs/dcs)** (LGPL-3.0, `data/COPYING.LESSER`), taken from Mission Tools; the front-view aircraft drawings are by **Goldwolf** (DCS Reference Guide), used with his permission and **not** under this repository's MIT licence — see `data/views/LICENSE.md`
 - DCS town names and positions from the DCS World maps, © Eagle Dynamics
 - World Magnetic Model coefficients (epochs 1985–2025, the ones DCS World ships) by NOAA NCEI and the British Geological Survey, public domain
 - International Geomagnetic Reference Field, 12th generation (IAGA), in the NOAA geomag70 file DCS World ships, used for years up to 1985

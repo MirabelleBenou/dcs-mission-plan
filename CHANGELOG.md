@@ -16,6 +16,8 @@ Changes merged since the last release, grouped per tool.
 - Every file you save or export asks for its name first, with the usual name filled in; names use one date format everywhere. On tablets, HQ's flight packages and modified .miz now open the share menu, like the other files.
 
 ### Mission Plan — landing
+#### Added
+- A card for the Flight Configurator, right after HQ.
 #### Changed
 - On phones (below 760 px wide), the back button shrinks to an arrow and the wing stamp is hidden, so each tool's top bar fits; a bar that is still too wide scrolls sideways, with a fade on its right edge.
 
@@ -30,6 +32,10 @@ Changes merged since the last release, grouped per tool.
 - Radios are named and numbered as in the cockpit in the mission summary and in the package messages (the Mi-24P's R-863 and R-828 start at channel 0). The .miz keeps its own numbering.
 - Flight packages are recognised by their content, not their file name; unreadable flights are skipped and counted, an empty package or one without theatre is refused, with the same messages as the Route Planner and the Datacard Generator. *Load another .miz* also clears the mission offered to the Route Planner and the Datacard Generator.
 - The Side and Type filters of the flight list open in the suite's own list, like every other list, instead of the system menu.
+
+### Flight Configurator
+#### Added
+- **Flight Configurator**, a new module: a Flight Lead prepares a flight (identity, radios, loadout built on the aircraft's front view or started from the squadron's presets, livery) and exports it as a flight package that HQ applies to the Mission Commander's mission.
 
 ### Recon Station
 #### Added
@@ -68,6 +74,7 @@ Changes merged since the last release, grouped per tool.
 
 ### Field Manual
 #### Added
+- A **Flight Configurator** chapter, with a "The loadout, reusable" section on the shared loadout block.
 - **Getting started** on the index page: every tool's Example button.
 #### Changed
 - HQ and Recon Station chapters: the Example button.
