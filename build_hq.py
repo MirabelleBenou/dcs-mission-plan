@@ -1309,6 +1309,13 @@ const I18N = {{
     'pk.del.rep.refs.one': '{{0}} référence laissée',
     'pk.del.rep.refs.many': '{{0}} références laissées',
     'pk.del.fail': '✗ Suppression : vérification échouée — {{0}}',
+    'pk.del.wh.bad': 'Le fichier warehouses de ce .miz ne se lit pas : les liens Dynamic Spawn ne pourraient pas être remis à zéro. Rien n’a été écrit.',
+    'pk.del.trigScript': 'Nommé dans le déclencheur « {{0}} » — laissé tel quel',
+    'pk.del.trigScriptUnit': 'Unité « {{0}} » nommée dans le déclencheur « {{1}} » — laissée telle quelle',
+    'pk.del.scriptUnit': 'Unité « {{0}} » nommée dans le script {{1}} — laissée telle quelle',
+    'pk.del.zone': 'Zone « {{0}} » attachée à l’unité « {{1}} » — laissée telle quelle',
+    'pk.del.rep.flight': '✓ {{0}} ({{1}})',
+    'pk.del.rep.flightDyn': '✓ {{0}} ({{1}}) — {{2}}',
     'pk.del.e.keys': 'tableau de groupes qui n’est pas indexé [1] … [n] sans trou',
     'pk.del.e.missing': 'vol {{0}} introuvable dans la mission',
     'pk.del.e.overlap': 'écritures qui se chevauchent',
@@ -1557,6 +1564,13 @@ const I18N = {{
     'pk.del.rep.refs.one': '{{0}} reference left',
     'pk.del.rep.refs.many': '{{0}} references left',
     'pk.del.fail': '✗ Deletion: verification failed — {{0}}',
+    'pk.del.wh.bad': 'This .miz’s warehouses file cannot be read: the Dynamic Spawn links could not be reset. Nothing has been written.',
+    'pk.del.trigScript': 'Named in trigger “{{0}}” — left as is',
+    'pk.del.trigScriptUnit': 'Unit “{{0}}” named in trigger “{{1}}” — left as is',
+    'pk.del.scriptUnit': 'Unit “{{0}}” named in script {{1}} — left as is',
+    'pk.del.zone': 'Zone “{{0}}” attached to unit “{{1}}” — left as is',
+    'pk.del.rep.flight': '✓ {{0}} ({{1}})',
+    'pk.del.rep.flightDyn': '✓ {{0}} ({{1}}) — {{2}}',
     'pk.del.e.keys': 'group table not indexed [1] … [n] without a gap',
     'pk.del.e.missing': 'flight {{0}} not found in the mission',
     'pk.del.e.overlap': 'overlapping writes',
@@ -2259,12 +2273,12 @@ function str(v) {{
 function cleanFname(v) {{
   return str(v).trim().replace(/\\.json$/i, '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').replace(/[^A-Za-z0-9_+-]+/g, '_').replace(/_{{2,}}/g, '_').replace(/^_+|_+$/g, '').slice(0, 100);
 }}
-const FN = {{ name: '', opener: null, run: null, titleKey: '', goKey: '', at: 0, bodyFn: null, bodyEl: null }};
+const FN = {{ name: '', opener: null, run: null, titleKey: '', goKey: '', at: 0, bodyFn: null, bodyEl: null, blocked: false }};
 // Un nom par défaut : la partie variable est nettoyée et coupée à 40 caractères ; l'horodatage s'ajoute ensuite, en fin de nom
 function fnPart(v, fallback) {{ return cleanFname(v).slice(0, 40) || fallback; }}
 function fnOpen() {{ return !document.getElementById('fn-modal').hidden; }}
 function fnSync() {{
-  document.getElementById('fn-go').disabled = cleanFname(FN.name) === '';
+  document.getElementById('fn-go').disabled = cleanFname(FN.name) === '' || FN.blocked;
 }}
 function fnRender() {{
   document.getElementById('fn-title').textContent = t(FN.titleKey);
@@ -2283,7 +2297,7 @@ function fnBodyMount() {{
   panel.insertBefore(el, panel.querySelector('.fn-field'));
   FN.bodyEl = el;
 }}
-/* o : titleKey, goKey, ext, name (le défaut, sans extension), opener, run(nom nettoyé), body (facultatif : () => HTML) */
+/* o : titleKey, goKey, ext, name (le défaut, sans extension), opener, run(nom nettoyé), body (facultatif : () => HTML), blocked (facultatif : le bouton qui écrit reste inactif) */
 function fnAsk(o) {{
   FN.name = cleanFname(o.name);
   FN.run = o.run;
@@ -2291,6 +2305,7 @@ function fnAsk(o) {{
   FN.at = performance.now();
   FN.titleKey = o.titleKey; FN.goKey = o.goKey;
   FN.bodyFn = o.body || null;
+  FN.blocked = !!o.blocked;
   const inp = document.getElementById('fn-name');
   inp.value = FN.name;
   document.getElementById('fn-ext').textContent = o.ext;
@@ -2303,13 +2318,13 @@ function fnAsk(o) {{
 function fnClose() {{
   document.getElementById('fn-modal').hidden = true;
   const o = FN.opener;
-  FN.opener = null; FN.run = null; FN.bodyFn = null;
+  FN.opener = null; FN.run = null; FN.bodyFn = null; FN.blocked = false;
   if (FN.bodyEl) {{ FN.bodyEl.remove(); FN.bodyEl = null; }}
   if (o && o.focus && !o.disabled) {{ try {{ o.focus({{ preventScroll: true }}); }} catch (e) {{}} }}
 }}
 function fnGo() {{
   const name = cleanFname(FN.name), run = FN.run;
-  if (name === '' || !run) return;
+  if (name === '' || !run || FN.blocked) return;
   fnClose();
   run(name);
 }}
@@ -3608,9 +3623,9 @@ function pkChanArg(type, n, c) {{ return {{ pkChan: [type || '', n, c] }}; }}
 
 // tf : t() avec {{0}} {{1}}… ; tn : pluriel (clé.one / clé.many ; français < 2, anglais = 1), {{0}} = n
 function tf(key) {{
-  let s = t(key);
-  for (let i = 1; i < arguments.length; i++) s = s.split('{{' + (i - 1) + '}}').join(pkArgText(arguments[i]));
-  return s;
+  const args = arguments;
+  // une seule passe : un {{1}} venu d'une valeur (nom du .miz) n'est pas remplacé
+  return t(key).replace(/\\{{(\\d+)\\}}/g, (m, i) => (Number(i) + 1 < args.length ? pkArgText(args[Number(i) + 1]) : m));
 }}
 function tn(key, n) {{
   const one = CURRENT_LANG === 'fr' ? n < 2 : n === 1;
@@ -4252,7 +4267,7 @@ function delSortPatches(patches) {{
 
 // Les écritures de `mission` : par tableau touché, les groupes supprimés sortent (ligne entière), les suivants prennent [1] … [n]
 // (clé et commentaire « -- end of [k] ») ; un tableau vidé devient {{}}. Retourne aussi, par tableau, les groupId attendus après écriture.
-function delMissionPatches(ast, text, gset) {{
+function delMissionPatches(ast, text, gset, nameOf) {{
   const patches = [], found = new Set(), expect = [];
   delEachList(ast, DEL_FLIGHT_CATS, L => {{
     const es = L.list.entries;
@@ -4289,7 +4304,7 @@ function delMissionPatches(ast, text, gset) {{
       if (m && Number(m[2]) === e.key.value) patches.push({{ pos: delSpan(end + m[1].length, end + m[1].length + m[2].length + 2), newValueStr: '[' + k + ']' }});
     }});
   }});
-  for (const g of gset) if (!found.has(g)) throw delErr('pk.del.e.missing', g);
+  for (const g of gset) if (!found.has(g)) throw delErr('pk.del.e.missing', nameOf(g));
   return {{ patches: delSortPatches(patches), expect: expect }};
 }}
 
@@ -4326,13 +4341,13 @@ function delWhParse(text) {{
 }}
 // Le plan d'écriture de `warehouses` : chaque lien qui vise un groupe supprimé passe à 0, par édition ciblée
 function delWhPlan(ctx, gset) {{
-  const plan = {{ text: '', all: [], links: [], patches: [] }};
+  const plan = {{ text: '', all: [], links: [], patches: [], unreadable: false }};
   const wf = ctx.otherFilesMap ? ctx.otherFilesMap['warehouses'] : null;
   if (!wf) return plan;
   try {{
     plan.text = new TextDecoder('utf-8').decode(wf);
     plan.all = delWhLinks(delWhParse(plan.text));
-  }} catch (e) {{ plan.text = ''; plan.all = []; return plan; }}
+  }} catch (e) {{ plan.text = ''; plan.all = []; plan.unreadable = true; return plan; }}
   plan.links = plan.all.filter(l => gset.has(l.gid));
   plan.patches = delSortPatches(plan.links.map(l => ({{ pos: l.node.pos, newValueStr: '0' }})));
   return plan;
@@ -4351,29 +4366,42 @@ function delWalkTasks(node, cb) {{
   for (const e of node.entries) delWalkTasks(e.value, cb);
 }}
 
-// Ce qui vise encore les vols supprimés, sans y toucher : déclencheurs (trigrules), tâches des autres groupes, scripts de la mission
+// Ce qui vise encore les vols supprimés, sans y toucher : déclencheurs (trigrules), texte des a_do_script, tâches des autres groupes,
+// zones de déclencheur mobiles, scripts de la mission (le nom du groupe et ceux de ses unités, entre guillemets)
 function delRefs(ctx, gset) {{
   const ast = ctx.ast, root = delRoot(ast);
-  const names = new Map(), uset = new Map();   // groupId -> nom ; unitId -> groupId
+  const info = new Map(), uset = new Map();   // groupId -> {{ name, units[] }} ; unitId -> {{ gid, name }}
   delEachList(ast, DEL_ALL_CATS, L => {{
     for (const e of L.list.entries) {{
       const g = e.value, gid = dynNum(_astGetKey(g, 'groupId'));
       if (gid === null || !gset.has(gid)) continue;
-      names.set(gid, dynStr(_astGetKey(g, 'name')) || '');
+      const rec = {{ name: dynStr(_astGetKey(g, 'name')) || '', units: [] }};
+      info.set(gid, rec);
       const us = _astGetKey(g, 'units');
       if (us && us.kind === 'table') for (const ue of us.entries) {{
-        const uid = dynNum(_astGetKey(ue.value, 'unitId'));
-        if (uid !== null) uset.set(uid, gid);
+        const uid = dynNum(_astGetKey(ue.value, 'unitId')), un = dynStr(_astGetKey(ue.value, 'name')) || '';
+        if (uid !== null) uset.set(uid, {{ gid: gid, name: un }});
+        if (un !== '') rec.units.push(un);
       }}
     }}
   }});
   const refs = new Map();
-  gset.forEach(g => refs.set(g, {{ trig: [], task: [], script: [] }}));
+  gset.forEach(g => refs.set(g, {{ trig: [], trigScript: [], task: [], script: [], zone: [] }}));
+  // Les noms cherchés dans un texte : celui du groupe, puis ceux de ses unités, sans doublon ; un nom qui contient un guillemet,
+  // une barre oblique inverse ou un retour à la ligne n'est pas cherché (écriture échappée dans le script)
+  const searchable = nm => nm !== '' && !/["\\\\\\n\\r]/.test(nm);
+  const namesOf = gid => {{
+    const rec = info.get(gid), out = [];
+    if (searchable(rec.name)) out.push({{ name: rec.name, unit: false }});
+    for (const un of rec.units) if (searchable(un) && !out.some(o => o.name === un)) out.push({{ name: un, unit: true }});
+    return out;
+  }};
+  const quoted = (txt, nm) => txt.indexOf('"' + nm + '"') >= 0 || txt.indexOf("'" + nm + "'") >= 0;
   // Déclencheurs : `trigrules` seulement (trig.conditions / trig.actions, la copie compilée, ne se lisent pas)
   const tr = _astGetKey(root, 'trigrules');
   if (tr && tr.kind === 'table') tr.entries.forEach((te, ti) => {{
     const idx = (te.key && te.key.kind === 'int') ? te.key.value : ti + 1;
-    const comment = dynStr(_astGetKey(te.value, 'comment'));
+    const comment = dynStr(_astGetKey(te.value, 'comment')) || ('#' + idx);
     for (const sect of ['rules', 'actions']) {{
       const sn = _astGetKey(te.value, sect);
       if (!sn || sn.kind !== 'table') continue;
@@ -4382,8 +4410,17 @@ function delRefs(ctx, gset) {{
         if (pred === null) continue;
         const hit = new Set();
         if (delPredRef(pred, 'group')) {{ const v = dynNum(_astGetKey(x, 'group')); if (v !== null && gset.has(v)) hit.add(v); }}
-        if (delPredRef(pred, 'unit')) {{ const v = dynNum(_astGetKey(x, 'unit')); if (v !== null && uset.has(v)) hit.add(uset.get(v)); }}
-        hit.forEach(g => refs.get(g).trig.push({{ comment: comment || ('#' + idx), pred: pred }}));
+        if (delPredRef(pred, 'unit')) {{ const v = dynNum(_astGetKey(x, 'unit')); if (v !== null && uset.has(v)) hit.add(uset.get(v).gid); }}
+        hit.forEach(g => refs.get(g).trig.push({{ comment: comment, pred: pred }}));
+        if (pred === 'a_do_script' || pred === 'c_do_script') {{
+          const txt = dynStr(_astGetKey(x, 'text'));
+          if (txt) gset.forEach(g => {{
+            for (const o of namesOf(g)) {{
+              const r = refs.get(g).trigScript;
+              if (quoted(txt, o.name) && !r.some(y => y.comment === comment && y.name === o.name)) r.push({{ comment: comment, name: o.name, unit: o.unit }});
+            }}
+          }});
+        }}
       }}
     }}
   }});
@@ -4401,20 +4438,28 @@ function delRefs(ctx, gset) {{
         const hit = new Set();
         const a = dynNum(_astGetKey(pr, 'groupId')), b = dynNum(_astGetKey(pr, 'unitId'));
         if (a !== null && gset.has(a)) hit.add(a);
-        if (b !== null && uset.has(b)) hit.add(uset.get(b));
+        if (b !== null && uset.has(b)) hit.add(uset.get(b).gid);
         hit.forEach(t => refs.get(t).task.push({{ id: id, owner: owner }}));
       }});
     }}
   }});
-  // Scripts de la mission : le nom du groupe entre guillemets
+  // Zones de déclencheur attachées à une unité d'un vol supprimé (linkUnit)
+  const zones = _astGetKey(_astGetKey(root, 'triggers'), 'zones');
+  if (zones && zones.kind === 'table') for (const ze of zones.entries) {{
+    const lu = dynNum(_astGetKey(ze.value, 'linkUnit'));
+    if (lu !== null && uset.has(lu)) refs.get(uset.get(lu).gid).zone.push({{ zone: dynStr(_astGetKey(ze.value, 'name')) || '', unit: uset.get(lu).name }});
+  }}
+  // Scripts de la mission : l10n/<langue>/*.lua ; un même nom court cité ne se liste qu'une fois, quel que soit le dossier de langue
   const files = ctx.otherFilesMap || {{}};
   const dec = new TextDecoder('utf-8');
   for (const fname of Object.keys(files).sort()) {{
     if (!/^l10n\\/[^/]+\\/[^/]+\\.lua$/i.test(fname)) continue;
-    const txt = dec.decode(files[fname]);
-    names.forEach((nm, gid) => {{
-      if (nm === '') return;
-      if (txt.indexOf('"' + nm + '"') >= 0 || txt.indexOf("'" + nm + "'") >= 0) refs.get(gid).script.push(fname.split('/').pop());
+    const txt = dec.decode(files[fname]), short = fname.split('/').pop();
+    gset.forEach(g => {{
+      const r = refs.get(g).script;
+      for (const o of namesOf(g)) {{
+        if (quoted(txt, o.name) && !r.some(y => y.file === short && y.name === o.name)) r.push({{ file: short, name: o.name, unit: o.unit }});
+      }}
     }});
   }}
   return refs;
@@ -4429,26 +4474,31 @@ function delAnalyze(ctx, ids) {{
     const r = refs.get(f.groupId);
     const dyn = wh.links.filter(l => l.gid === f.groupId).map(l => ({{ name: delWhName(l), type: l.type }}));
     dyn.sort((a, b) => dynCmp(a.name, b.name) || dynCmp(a.type, b.type));
-    return {{ gid: f.groupId, name: f.groupName || '—', type: f.aircraftType || f.category || '', side: f.coalition || '', dyn: dyn, trig: r.trig, task: r.task, script: r.script }};
+    return {{ gid: f.groupId, name: f.groupName || '—', type: f.aircraftType || f.category || '', side: f.coalition || '', dyn: dyn,
+      trig: r.trig, trigScript: r.trigScript, task: r.task, script: r.script, zone: r.zone }};
   }});
   let K = 0;
-  for (const f of flights) K += f.trig.length + f.task.length + f.script.length;
-  return {{ flights: flights, K: K, M: wh.links.length }};
+  for (const f of flights) K += f.trig.length + f.trigScript.length + f.task.length + f.script.length + f.zone.length;
+  return {{ flights: flights, K: K, M: wh.links.length, badWh: wh.unreadable }};
 }}
+function delDynText(f) {{ return tf('pk.del.dyn', f.dyn.map(d => d.name + ' (' + d.type + ')').join(', ')); }}
 function delRefLines(f) {{
   const out = [];
   for (const r of f.trig) out.push(tf('pk.del.trig', r.comment, r.pred));
+  for (const r of f.trigScript) out.push(r.unit ? tf('pk.del.trigScriptUnit', r.name, r.comment) : tf('pk.del.trigScript', r.comment));
   for (const r of f.task) out.push(tf('pk.del.task', r.id, r.owner));
-  for (const s of f.script) out.push(tf('pk.del.script', s));
+  for (const r of f.script) out.push(r.unit ? tf('pk.del.scriptUnit', r.name, r.file) : tf('pk.del.script', r.file));
+  for (const r of f.zone) out.push(tf('pk.del.zone', r.zone, r.unit));
   return out;
 }}
 function delBodyHtml(an) {{
   const h = escapeHtml;
   let html = '';
+  if (an.badWh) html += '<div class="pk-warn" data-del-error="1">⚠ ' + h(t('pk.del.wh.bad')) + '</div>';
   for (const f of an.flights) {{
     html += '<div class="pk-flight" data-del-gid="' + h(String(f.gid)) + '"><div class="pk-flight-head">' + h(f.name) +
       ' <span class="snap-flight-tag">' + h(f.type) + '</span> <span class="snap-flight-tag">' + h(t('pk.flt.' + f.side, f.side)) + '</span></div>';
-    if (f.dyn.length) html += '<div class="snap-meta" data-del-dyn="1">' + h(tf('pk.del.dyn', f.dyn.map(d => d.name + ' (' + d.type + ')').join(', '))) + '</div>';
+    if (f.dyn.length) html += '<div class="snap-meta" data-del-dyn="1">' + h(delDynText(f)) + '</div>';
     for (const line of delRefLines(f)) html += '<div class="pk-warn" data-del-ref="1">' + h(line) + '</div>';
     html += '</div>';
   }}
@@ -4472,6 +4522,7 @@ function pkDeleteAsk(opener) {{
     name: fnPart((_mizFilename || 'mission').replace(/\\.miz$/i, ''), 'mission') + '_' + pkStamp(),
     opener: opener,
     body: () => delBodyHtml(an),
+    blocked: an.badWh,   // warehouses présent mais illisible : rien ne s'écrit
     run: name => pkDeleteApply(name, ids)
   }});
 }}
@@ -4487,8 +4538,10 @@ async function pkDeleteApply(name, ids) {{
     await pkYield();
     const gset = new Set(ids);
     const an = delAnalyze(base, ids);
+    if (an.badWh) throw delErr('pk.del.wh.bad');
     // mission : édition ciblée, puis relecture
-    const mp = delMissionPatches(base.ast, base.missionText, gset);
+    const nameOf = g => {{ const f = HQ_SNAPSHOT.flights.find(x => x.groupId === g); return f ? (f.groupName || String(g)) : String(g); }};
+    const mp = delMissionPatches(base.ast, base.missionText, gset, nameOf);
     const missionText = applyPatches(base.missionText, mp.patches);
     let ast;
     try {{
@@ -4526,7 +4579,11 @@ async function pkDeleteApply(name, ids) {{
     persistSnapshot();
     _PK_EXPORT_SEL.clear();
     renderSnapshot(HQ_SNAPSHOT);
+    // Le compte rendu : les trois compteurs, une ligne par vol supprimé (avec ses liens remis à zéro), puis les références laissées
     const lines = [{{ cls: 'ok', text: () => tn('pk.del.rep.flights', an.flights.length) + ' · ' + tn('pk.del.rep.links', an.M) + ' · ' + tn('pk.del.rep.refs', an.K) }}];
+    for (const f of an.flights) {{
+      lines.push({{ cls: 'a', text: () => f.dyn.length ? tf('pk.del.rep.flightDyn', f.name, f.type, delDynText(f)) : tf('pk.del.rep.flight', f.name, f.type) }});
+    }}
     for (const f of an.flights) {{
       for (let i = 0; i < delRefLines(f).length; i++) {{
         lines.push({{ cls: 'w', text: () => '⚠ ' + tf('pk.join', f.name, delRefLines(f)[i]) }});
@@ -4545,7 +4602,16 @@ async function pkDeleteApply(name, ids) {{
   }} finally {{
     _PK_BUSY = false;
     pkRender();
+    delFocusReport();
   }}
+}}
+// Le focus va au compte rendu (la section Paquets de vol s'ouvre pour qu'il se voie)
+function delFocusReport() {{
+  const rep = document.getElementById('pk-report'), sec = document.getElementById('commander-section');
+  if (!rep) return;
+  if (sec) sec.open = true;
+  rep.setAttribute('tabindex', '-1');
+  try {{ rep.focus(); }} catch (e) {{}}
 }}
 
 // ---------- ÉVÉNEMENTS ----------
