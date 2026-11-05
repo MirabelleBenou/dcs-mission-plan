@@ -3,8 +3,8 @@
 
 Produit dist/dcs_datacard_generator.html : un fichier unique, hors ligne, sans
 serveur et sans ressource externe. Les polices et les bibliothèques (html2canvas,
-JSZip) viennent d'assets.json, à la racine du dépôt ; la déclinaison magnétique (coefficients WMM 1985–2025, comme DCS)
-vient du dossier wmm/ via magvar_block.py ; les projections des théâtres de DCS viennent de projection_block.py.
+JSZip) viennent d'assets.json, à la racine du dépôt ; la déclinaison magnétique (coefficients IGRF 1900–1985 et WMM 1985–2025, comme DCS)
+vient des dossiers igrf/ et wmm/ via magvar_block.py ; les projections des théâtres de DCS viennent de projection_block.py.
 
 Usage : python3 build_datacard_generator.py
 """
@@ -2345,7 +2345,7 @@ const I18N = {
     'nav.vmode.manual': 'Saisie',
     'nav.vy.date': 'Année {a} · champ Date',
     'nav.vy.def': 'Année 1985 par défaut · champ Date vide',
-    'nav.vy.model': 'Modèle de DCS (WMM {e}), par branche au point de départ',
+    'nav.vy.model': 'Modèle de DCS ({e}), par branche au point de départ',
     'f.nav.coord': 'Coordonnées',
     'ph.nav.*.coord': '36S VD 47535 77241',
     'nav.coord.bad': '✗ Format non reconnu',
@@ -2690,7 +2690,7 @@ const I18N = {
     'nav.vmode.manual': 'Entered',
     'nav.vy.date': 'Year {a} · Date field',
     'nav.vy.def': 'Year 1985 by default · Date field empty',
-    'nav.vy.model': 'DCS model (WMM {e}), per leg at its start point',
+    'nav.vy.model': 'DCS model ({e}), per leg at its start point',
     'f.nav.coord': 'Coordinates',
     'ph.nav.*.coord': '36S VD 47535 77241',
     'nav.coord.bad': '✗ Format not recognized',
@@ -4149,7 +4149,7 @@ function navVarHelp(c) {
   const nv = navVar(c) || { calc: true, y: magDecYear('1985'), dated: false };
   const y = nv.y;
   let l1 = nv.dated ? t('nav.vy.date', { a: Math.floor(y) }) : t('nav.vy.def');
-  return esc(l1) + '<br>' + esc(t('nav.vy.model', { e: magEpoch(y) }));
+  return esc(l1) + '<br>' + esc(t('nav.vy.model', { e: magModel(y) }));
 }
 
 function navSettingsHtml(c) {

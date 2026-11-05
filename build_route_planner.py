@@ -6,7 +6,7 @@ seules les tuiles de carte (DCS Olympus, OpenTopoMap, Esri) viennent du réseau,
 module retombe de lui-même sur la grille seule quand elles sont injoignables.
 Les polices et les bibliothèques (Leaflet 1.9.4, BSD-2 ; milsymbol 3.0.5, MIT, construction réduite) viennent d'assets.json, à la
 racine du dépôt ; les aérodromes DCS (noms et positions, pydcs, LGPL-3.0) viennent d'airfields.json ;
-les villes DCS (noms et positions) viennent de towns.json ; la déclinaison magnétique (coefficients WMM 1985–2025, comme DCS) vient du dossier wmm/
+les villes DCS (noms et positions) viennent de towns.json ; la déclinaison magnétique (coefficients IGRF 1900–1985 et WMM 1985–2025, comme DCS) vient des dossiers igrf/ et wmm/
 via magvar_block.py.
 
 Usage : python3 build_route_planner.py
@@ -2287,7 +2287,7 @@ const I18N = {
     'dv.src.forced': 'la mission chargée ({file}) est ignorée',
     'dv.src.typed': 'année tapée, aucune mission de ce théâtre',
     'dv.src.default': '1985, aucune mission de ce théâtre ni année saisie',
-    'dv.src.model': 'Modèle de DCS (WMM {e}) · par branche, au point de départ',
+    'dv.src.model': 'Modèle de DCS ({e}) · par branche, au point de départ',
     'nav.th.no': 'N°',
     'nav.th.pt': 'Point · alt.',
     'nav.th.co': 'MGRS · DMS / cap · distance',
@@ -2800,7 +2800,7 @@ const I18N = {
     'dv.src.forced': 'the loaded mission ({file}) is ignored',
     'dv.src.typed': 'typed year, no mission for this theatre',
     'dv.src.default': '1985, no mission for this theatre nor typed year',
-    'dv.src.model': 'DCS model (WMM {e}) · per leg, at its start point',
+    'dv.src.model': 'DCS model ({e}) · per leg, at its start point',
     'nav.th.no': 'No.',
     'nav.th.pt': 'Waypoint · alt.',
     'nav.th.co': 'MGRS · DMS / heading · distance',
@@ -6824,7 +6824,7 @@ function dvFill(key, file, date) {
 }
 function dvSrcHtml(ys) {
   let h = '<b>' + esc(t('dv.tag.' + ys.src)) + '</b> ' + dvFill('dv.src.' + ys.src, ys.file, ys.date);
-  return h + '<br>' + esc(t('dv.src.model', { e: magEpoch(ys.y) }));
+  return h + '<br>' + esc(t('dv.src.model', { e: magModel(ys.y) }));
 }
 
 function renderNav() {

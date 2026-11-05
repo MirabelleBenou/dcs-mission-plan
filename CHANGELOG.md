@@ -50,6 +50,7 @@ Changes merged since the last release, grouped per tool.
 - **Import JSON** and the import window's **JSON file** both recognise a briefing, a route, a route set (all routes at once) and a flight package; a refused file says why.
 #### Fixed
 - In the export window, the page list no longer shows the PDF and PNG choices above it, so it fits on phones.
+- Computed magnetic variation now follows DCS for every mission date: years up to 1985 use the IGRF model DCS ships (up to 1.2° closer), later years the previous five-year WMM file, as DCS does (0.2° closer in 1990, 1995 … 2025).
 
 ### Route Planner
 #### Added
@@ -59,12 +60,15 @@ Changes merged since the last release, grouped per tool.
 - Units are chosen from a **Units** menu in the top bar, like the **Display** menu (distance km or NM, altitude m or ft); the Map and Theatre lists are as wide as the option chosen, so the top bar is about 300 px narrower.
 - The example loads in the interface language (French or English).
 - **Open** and **Flight package** also read a flight package in a .zip; a flight without route says *no route*; a refused file says why.
+#### Fixed
+- Computed magnetic variation now follows DCS for every mission date: years up to 1985 use the IGRF model DCS ships (up to 1.2° closer), later years the previous five-year WMM file, as DCS does (0.2° closer in 1990, 1995 … 2025).
 
 ### Field Manual
 #### Added
 - **Getting started** on the index page: every tool's Example button.
 #### Changed
 - HQ and Recon Station chapters: the Example button.
+- The Route Planner chapter names the magnetic models DCS uses: IGRF up to 1985, then WMM.
 
 ---
 

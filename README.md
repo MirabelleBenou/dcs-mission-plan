@@ -188,6 +188,7 @@ The output `dist/dcs_mission_plan.html` is the distributable (and the file publi
 ├── airfields.json                 # DCS airfield & helipad positions (from pydcs)
 ├── towns.json                     # DCS town names & positions (from the DCS World maps)
 ├── wmm/                          # World Magnetic Model coefficients 1985–2025 (NOAA, public domain)
+├── igrf/                         # IGRF-12 coefficients 1900–2015 (IAGA, as shipped by DCS World)
 ├── tiles/                         # Board tiles (512² WebP): hq, bg, rs, fm, rp, kg
 ├── docs/screenshots/              # README images
 ├── CHANGELOG.md
@@ -235,6 +236,7 @@ For code contributions: fork, branch, study the build scripts to understand the 
 - DCS airfield & helipad names and positions, and the DCS map projections, from **[pydcs](https://github.com/pydcs/dcs)** (LGPL-3.0); place-name overlay © Esri, HERE, Garmin, OpenStreetMap contributors
 - DCS town names and positions from the DCS World maps, © Eagle Dynamics
 - World Magnetic Model coefficients (epochs 1985–2025, the ones DCS World ships) by NOAA NCEI and the British Geological Survey, public domain
+- International Geomagnetic Reference Field, 12th generation (IAGA), in the NOAA geomag70 file DCS World ships, used for years up to 1985
 - Initial version developed for the **4th VEAW** virtual wing — distributed as a generic wing config example
 - Cold War kraft SVG file provided by Flappie, thanks to him !
 

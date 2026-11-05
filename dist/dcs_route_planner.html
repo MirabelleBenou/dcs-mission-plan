@@ -2598,7 +2598,7 @@ const I18N = {
     'dv.src.forced': 'la mission chargée ({file}) est ignorée',
     'dv.src.typed': 'année tapée, aucune mission de ce théâtre',
     'dv.src.default': '1985, aucune mission de ce théâtre ni année saisie',
-    'dv.src.model': 'Modèle de DCS (WMM {e}) · par branche, au point de départ',
+    'dv.src.model': 'Modèle de DCS ({e}) · par branche, au point de départ',
     'nav.th.no': 'N°',
     'nav.th.pt': 'Point · alt.',
     'nav.th.co': 'MGRS · DMS / cap · distance',
@@ -3111,7 +3111,7 @@ const I18N = {
     'dv.src.forced': 'the loaded mission ({file}) is ignored',
     'dv.src.typed': 'typed year, no mission for this theatre',
     'dv.src.default': '1985, no mission for this theatre nor typed year',
-    'dv.src.model': 'DCS model (WMM {e}) · per leg, at its start point',
+    'dv.src.model': 'DCS model ({e}) · per leg, at its start point',
     'nav.th.no': 'No.',
     'nav.th.pt': 'Waypoint · alt.',
     'nav.th.co': 'MGRS · DMS / heading · distance',
@@ -3802,9 +3802,37 @@ function readNum(s) {
 
 
 /* ===== DÉCLINAISON MAGNÉTIQUE (WMM, comme DCS) ===== */
-/* Le modèle est celui des fichiers Data/MagVar/COF de DCS World : les World Magnetic Models de la NOAA (domaine public),
-   un jeu de coefficients tous les cinq ans, de 1985.0 à 2025.0 (degré 12). Table : par époque, 90 termes (n = 1 … 12,
-   m = 0 … n) × quatre valeurs (g, h, ġ, ḣ) en dixièmes de nT et de nT/an, en base 36. */
+/* Le modèle est celui des fichiers de DCS World, qui calcule ainsi la déclinaison d'une date de mission :
+   - une année entière Y jusqu'à MAG_IGRF_LAST (1985) : l'IGRF-12 (IAGA ; fichier COF_IGRF/IGRF12.COF), au 1er janvier de Y sans
+     la date : coefficients g, h interpolés linéairement entre les deux époques de cinq ans qui encadrent Y (1900 pour les années
+     plus anciennes), degré 10. Table MAG_IGRF_TABLE : par époque de 1900 à 1985, 65 termes (n = 1 … 10, m = 0 … n) × deux valeurs
+     (g, h) en dixièmes de nT, en base 36 ;
+   - une année entière Y après 1985 : le World Magnetic Model de la NOAA (domaine public ; fichiers Data/MagVar/COF) de l'époque la plus
+     grande strictement inférieure à Y (2020 → WMM 2015, 2025 → WMM 2020, 2026 et après → WMM 2025), à la date exacte : g + ġ·dt, dt = y − époque,
+     sans borne. Un jeu de coefficients tous les cinq ans, de 1985.0 à 2025.0 (degré 12). Table MAG_TABLE : par époque, 90 termes
+     (n = 1 … 12, m = 0 … n) × quatre valeurs (g, h, ġ, ḣ) en dixièmes de nT et de nT/an, en base 36. */
+const MAG_IGRF_LAST = 1985;
+const MAG_IGRF_TABLE = {
+  1900: '-6rdy 0 -hqc 19p0 -582 0 mey -86q 74o 8ne 7vw 0 -bc2 -2jo 9ow u 4ew 41a 6rc 0 4ug 1i6 53c -j6 -2sa -1mc 118 -ku -1f4 0 2j4 -1mc 21c eq 1e -96 -nw -yg -4g u hi 0 gy -2i -32 n2 -1oa k -g4 -9q ge a0 -p0 -j6 jg 0 -fa -ci 0 -3m 9g -2s -be -a -5u 7s 50 -3c 1o -64 32 0 28 28 -14 -3w -2i 1y a -3m k 1e -2i 4g 1e -1e 28 -50 28 0 2s -5k a 3w -32 1e 3c -u a -k -k 28 k 2s -a -k -a k -u 0 -14 k k a -1e k -k 1o 1o -14 14 0 0 -k k 14 k 0 0 -1o',
+  1905: '-6qs0 0 -hqc 19le -5m8 0 mlc -8do 816 87u 802 0 -bj0 -2r6 9k6 9g 4we 3pc 6sg 0 4ym 1ke 51e -le -2xk -1ju 14k -i2 -1hc 0 2j4 -1hm 1zy fk -a -8w -pu -yq -78 32 h8 0 go -1y -32 nw -1pe 14 -fu -8w fu 8w -pk -im jg 0 -f0 -cs 0 -3w 96 -32 -be 0 -5k 7s 50 -3c 1o -64 32 0 28 28 -14 -46 -2i 1y a -3m k 1e -28 4g 1e -1e 28 -50 28 0 2s -5k a 3w -32 1e 3c -u a -k -k 28 k 2s 0 -k -a k -u 0 -14 k k a -1e k -k 1o 1o -14 14 0 0 -k k 14 k 0 0 -1o',
+  1910: '-6pxg 0 -hq2 19ic -5xm 0 mqw -8pc 92o 7ps 85w 0 -brc -302 9fq h8 5fu 3a2 6tk 0 53c 1mm 4yw -p0 -334 -1gi 18g -fa -1ju 0 2iu -1bs 1ya fu -2i -96 -sc -z0 -ak 5u h8 0 g4 -1e -32 oq -1q8 1e -f0 -82 f0 7s -qe -i2 jq 0 -f0 -d2 a -3w 8w -3c -b4 a -5a 7s 50 -3m 1o -64 32 0 28 28 -14 -46 -2i 1o a -3m k 1e -28 4g 1e -1e 28 -50 28 0 2s -5k a 3w -32 1e 3c -u a -k -k 28 k 2s 0 -k -a k -u 0 -14 k k a -1e k -k 1o 1o -14 14 0 0 -k k 14 k 0 0 -1o',
+  1915: '-6ou0 0 -hsk 19by -66s 0 mt4 -96u a3m 72q 8d4 0 -c12 -38y 9co nc 604 2s0 6ue 0 58c 1ok 4va -ua -37k -1c2 1dg -e6 -1mm 0 2iu -154 1w2 g4 -4g -9g -uu -z0 -e6 8w gy 0 fu -k -2s pu -1rc 28 -e6 -78 dm 6e -r8 -h8 k0 0 -f0 -dc k -3w 8m -3c -ak k -50 7s 5a -46 1o -64 32 0 28 28 -14 -46 -2i 1o k -3m u 1e -28 4g 1o -1e 28 -50 28 0 2s -5k a 3w -32 1e 3c -u a -k -k 28 k 2s 0 -k -a k -u 0 -14 k k a -1e k -k 1o 1o -14 14 0 0 -k a 14 k 0 0 -1o',
+  1920: '-6nns 0 -hvm 193m -6h2 0 mty -9pq auu 6cm 8km 0 -ccg -3fm 9aq sm 6h2 29e 6uy 0 5d2 1p4 4r4 -118 -39s -16i 1ja -fu -1pe 0 2ik -xw 1tk g4 -6e -ak -x2 -yq -h8 by gy 0 fa 0 -2s qo -1sq 32 -cs -64 c8 50 -s2 -fu ka 0 -f0 -dm k -3w 82 -3m -aa 14 -4g 7s 5a -4g 1o -64 32 0 1y 28 -u -46 -2i 1o k -3w 14 1e -1y 4q 1o -1e 28 -5a 28 0 2s -5k a 3w -32 1e 3c -u a -k -k 2i k 2s 0 -k -a k -u 0 -14 k k a -1e k -k 1o 1o -14 14 0 0 -k a 14 u 0 0 -1o',
+  1925: '-6mmk 0 -hvw 18vu -6w2 0 mwq -aak bcm 5m8 8so 0 -coy -3kc 99w x2 6sq 1rm 6vi 0 5hi 1o0 4my -19a -3ac -104 1oa -jg -1rw 0 2ik -qo 1qs g4 -7s -c8 -yq -xw -j6 e6 gy 0 f0 u -2i ri -1u4 3w -b4 -50 au 3m -sm -eg ka 0 -f0 -dw u -3w 7i -3w -9q 1e -3w 82 5a -4q 1o -5u 32 0 1y 28 -u -46 -2i 1o k -3w 14 1e -1y 4q 1y -1e 28 -5a 28 0 2s -5k a 3w -32 1e 3c -u a -k -k 2i k 2s 0 -k -a k -u 0 -14 k k a -1e k -k 1o 1o -14 14 0 0 -k a 14 u 0 0 -1o',
+  1930: '-6loy 0 -hvc 18tc -7c6 0 mzs -azk bpe 4yw 91k 0 -d20 -3pc 9aq 10y 6zy 1a4 6ww 0 5ly 1ky 4i8 -1i6 -398 -ua 1t0 -p0 -1tu 0 2iu -k0 1ok go -8w -eq -10e -ws -kk g4 go 0 eq 14 -2i sc -1v8 5a -8w -4g 8w 28 -sw -cs kk 0 -f0 -e6 14 -46 6y -3w -9g 1o -3c 82 50 -50 1o -5k 32 0 1y 28 -u -46 -2i 1e k -3w 1e 1e -1o 50 28 -1e 28 -5a 28 0 2s -5k a 3w -3c 1e 3c -u a -k -k 2i u 2s 0 -k -k k -u 0 -14 k k a -1e k -k 1o 1o -14 14 0 0 -k a 14 u 0 0 -1o',
+  1935: '-6kzy 0 -hsk 18ug -7us 0 n0w -bq8 byk 4is 9b0 0 -dfc -3t8 9di 14k 730 s2 6yu 0 5qo 1g8 4cy -1qs -37a -p0 1x6 -vo -1uy 0 2je -e6 1mm hs -96 -hs -11s -vy -l4 hs ge 0 eq 14 -28 sw -1wc 6y -6y -46 6y 14 -tg -b4 kk 0 -eq -eg 14 -4q 6e -3w -96 1y -32 82 50 -5a 1o -5a 32 0 1y 28 -u -46 -2i 1e a -46 1o 1e -1o 50 28 -1e 1y -5a 28 0 2s -5k a 46 -3c 1e 32 -u a -u -k 2i u 32 0 -k -k k -u 0 -14 k k a -1e k -k 1o 1o -14 14 0 0 -a k 14 u 0 0 -1o',
+  1940: '-6kj0 0 -hoo 18wy -8j8 0 n02 -cgc c30 42o 9kg 0 -dt8 -3um 9i8 19a 72g by 71w 0 5vo 1ay 48s -1y0 -34i -k0 21m -136 -1uy 0 2ks -96 1ls jq -96 -ku -136 -ve -l4 j6 fu 0 f0 14 -1y t6 -1x6 96 -50 -46 50 0 -tq -96 kk 0 -eq -eg 14 -50 5k -3w -8m 1y -2i 82 4q -5k 1e -5a 32 0 1y 28 -u -3w -2s 1e a -46 1o 1e -1e 5a 2i -1e 1y -5a 28 0 2s -5u a 46 -3c 1e 32 -u a -u -k 2i u 32 a -k -k k -u 0 -14 k k a -1e k -k 1o 1o -14 14 0 0 -a k 14 u 0 0 -1o',
+  1945: '-6k2c 0 -hmq 18tw -9lk 0 n2k -d4s c6c 3oi 9w4 0 -e5g -3um 9om 1fo 71m -32 7a8 0 5zk 140 474 -24o -38y -fa 2cg -1dg -1ya 0 2o4 -3c 1hw qe -5k -im -13g -x2 -ms ms ge 0 fu 1o 1o rs -1wc 4g -6y -2i 5u -4g -sw -au jg 0 -b4 -ci 0 -50 0 k -82 1o -2s 7s 46 -4q 82 -64 3m 0 1y 3c -28 -5u -1e -3c 2i -1y 1y k -2s 50 1y u k -32 1e 0 -5u -7i a 4q -32 82 u -2i 4g 14 -u 2i -14 1o -u a -14 28 -u 0 32 1e a a k -5k -1e -a -a -1o 28 1o -a -14 -u -k 1e 0 -k -k',
+  1950: '-6jr8 0 -hd0 18va -aci 0 n4s -dys c5s 2xu a0a 0 -ekq -3o8 9tw 1l8 6ww -cs 7d0 0 640 11s 42o -258 -35c -aa 2c6 -1mc -1uo 0 2oy u 1mm sm -5k -o6 -14u -xw -l4 m8 f0 0 fu -a 14 ri -1wm 96 -4g -3c 3c -3c -t6 -8c i2 0 -fa -9q k -4q a 0 -b4 2s -1y a0 1e -50 5a -4g 64 0 46 1e -14 -64 -a 0 32 -5u 46 -28 -3m 4q 1e -14 -a -4q u 0 -1y -6o -a 5a -6y 3c 2s k 1e k -1e 28 -k 28 u -32 28 -1y -28 0 14 3m -a -k 3m -2s -14 k 14 -u 3c 1o u -u k 1o 2s 32 u 28',
+  1955: '-6jc8 0 -h3a 18wo -b40 0 n66 -en8 c76 28u a1o 0 -f00 -3kc 9xs 1o0 6t0 -n2 7e4 0 654 10y 3xo -244 -32a -6e 28k -1rw -1rm 0 2s0 46 1rw uk -6e -r8 -168 -xm -j6 lo d2 0 fu -2i u qo -1wm dc -28 -4g 1y -3c -tq -6o i2 0 -fk -dw k -6o 2s -14 -8w 28 -32 7s 2i -5k 50 -50 32 0 2i 2s -1o -46 -3w 1e 1o -6e 2s u -1y 6e 1o -14 2i -3m 14 0 2i -32 -14 3c -1e 1y k 1o 14 -k a 2s k 1y k -1o 1e 1e -u 0 -1e -14 -a 0 k -28 -u -k 1y -14 14 a -k -u 1o 1y -k -a 0 -u',
+  1960: '-6iqa 0 -gqi 18om -bzy 0 n5w -f6e c9o 1l8 a1o 0 -fdc -370 9y2 1q8 6rw -104 7du 0 668 11i 3w0 -258 -31g u 22q -1yu -1po 0 2sk 4g 1v8 yq -78 -wi -17c -vo -hi mi cs 0 g4 -2s a ri -1tu go -a -5k -k -32 -ve -4q im 0 -fk -fa 1e -7s 46 -1o -8w 1y -1y 6e 4q -50 28 -4q 46 0 1o 32 -14 -3w -32 1y k -50 2s 14 -1e 6e 2s a 28 -5k 14 0 1o -50 0 3c -2i k a 0 14 -u -a 2i -k 28 u 0 -a 1e a 0 -u 14 14 a 0 0 -a k 14 -1e 1o a a -a -a 1o k 0 0 -1y',
+  1965: '-6i24 0 -gcm 18kg -cto 0 n4i -fk0 cas vo a0a 0 -fq4 -348 9yw 1uo 6ls -19u 7du 0 67c 154 3p2 -22q -30c 3m 1y0 -22q -1ou 0 2rg 5a 1yk zk -8m -z0 -17m -qy -h8 mi ci 0 gy -32 28 rs -1rc iw 14 -8w a -28 -uu -1y ku 0 -fu -gy 14 -7i 3m -k -78 1o -1o 78 3m -6e a -3c 3m 0 1e 1y -14 -3c -3w 2i 0 -4g 28 14 -a 6o 32 -u 14 -4q 28 0 2s -64 k 46 -3m 1y 2s -14 -a -1e -a 2s 1e 2s a -14 -k a -k 0 -u k k a -1e k -k 1o 14 -14 14 0 0 -k k u k 0 0 -1o',
+  1970: '-6h6g 0 -fyg 189m -dqq 0 n5c -fsm cfi 6y 9xi 0 -g4u -2to 9v0 1xq 6gs -1ig 7cg 0 668 1ae 3k2 -21w -31q 78 1t0 -25i -1o0 0 2rq 78 20s 12m -bo -12m -18g -pa -fk n2 by 0 hs -3c 46 rs -1mw k0 k -aa u -1o -v4 a k0 0 -fu -jg a -7i 3w -14 -64 28 -k 6e 3m -6e -k -32 3w 0 1o 1y -k -46 -3m 1o -u -4q 1e 1o 0 5u 32 -1o u -4g 28 0 2s -5u k 4g -3c 1o 2s -14 -a -1e 0 2s u 32 a -k -a a -u 0 -u a k a -1e u -a 14 1o -14 14 0 a -a 0 u u a -a -14',
+  1975: '-6g94 0 -fj6 17se -eoc 0 n84 -fy6 clc -iw 9ug 0 -gjk -2ki 9q0 20s 6ek -1py 7as 0 63q 1h2 3do -21m -34i au 1o0 -280 -1ok 0 2qw 8m 21c 154 -ge -168 -186 -n2 -dm og ci 0 ic -3m 7s ri -1j0 ku a -be 1o -14 -uu 32 jq 0 -fk -le a -78 4g -1e -3w 2s 0 64 3c -6e -1e -3c 3w 0 1o 1o -a -4g -3c 14 -28 -5a 14 1o 0 50 2s -2s a -4q 1y 0 2s -5u k 4g -3c 1y 2s -14 -a -1e -a 2s 14 32 a -u -k a -u 0 -u a k a -1e u -k 14 1e -14 14 -a a -a 0 u u a -a -1e',
+  1980: '-6ff4 0 -f3c 178o -feq 0 ncu -gfe cty -1jk 9vu 0 -gtk -2lc 9ni 23a 6fe -1y0 78k 0 618 1mw 32k -1ze -38e eq 1ja -2ai -1ok 0 2r6 cs 20i 15o -kk -15y -190 -lo -dc pk dc 0 ic -46 bo pu -1hc jq 14 -by 3w -k -u0 4q k0 0 -ge -ms k -7i 5u -1e -3c 4g a 50 32 -6e -k -2s 50 0 1o 1y 0 -50 -32 14 -1y -64 14 2i u 4g 1o -3m -a -46 1e 0 2s -5u a 4g -3c 2i 2i -1e -u -1o -a 2i 1y 2s k -1o -1e k -14 0 -14 a k 0 -1e u -k 1o 1e -14 u 0 a -a k 14 u 0 0 -1o',
+  1985: '-6ei2 0 -ep6 16fs -fzk 0 nhk -gya d0m -2d0 a00 0 -h1c -2e4 9me 26w 6ea -2ai 780 0 60o 1sg 2sa -1x6 -39s j6 1b8 -2ai -1ng 0 2qm d2 1ya 15o -pu -16s -19k -ku -cs qe eq 0 i2 -4g e6 og -1fe j6 14 -dc 4g -a -sc 5u kk 0 -h8 -n2 u -7i 6o -k -1o 5k 14 4q 2s -6e 0 -1y 5u 0 1o 28 0 -5a -32 1e -2i -6e 14 32 14 3w 14 -46 -14 -32 1e 0 2s -5u a 46 -3c 2i 2i -1o -u -1o -a 2i 1y 2i a -1y -1e k -14 0 -14 a u 0 -1e u -k 1o 1e -14 u 0 a -a k 14 u 0 0 -1o'
+};
+const MAG_IGRF_COEF = {};
 const MAG_EPOCHS = [1985, 1990, 1995, 2000, 2005, 2010, 2015, 2020, 2025];
 const MAG_TABLE = {
   1985: '-6ejy 0 63 0 -eop 16d5 2y -8r -fz6 0 -34 0 ngo -gw3 i -2p d3b -2eo 2l -5j a27 0 2b 0 -gzy -2e7 -k 1p 9kx 26i -6 d 6h6 -2b4 o -3m 77e 0 -c 0 616 1r4 1 d 2rq -1wj -2p 10 -39x k5 -h p 19p -2b3 -2l 6 -1o4 0 e 0 2q2 c2 -5 -9 1yn 156 -c 6 -q1 -170 -m 3 -17r -jy 9 o -ck pf 0 -e es 0 v 0 hq -3f 0 7 e9 of i -l -1gc iu -2 -e x -e7 -4 -17 5n -14 o -7 -s9 5s i 0 ld 0 -1 0 -gv -m9 -8 0 7 -77 -c c 72 -9 b k -29 60 0 q 1x 55 6 9 1y -5k -i 8 -18 -25 -c 4 54 0 2 0 1f 12 0 -6 c -5m 7 -f -3c 1e 1 1 -2j -6q 2 -b 1 3e -3 4 1b 24 -1 -k 1t -4j 2 9 -2n -31 -m f 1l 0 0 0 31 -5s 0 0 9 4e 0 0 -3e 2i 0 0 2n -1e 0 0 -x -1s 0 0 -a 2j 0 0 1t 2r 0 0 f -1m 0 0 -1c n 0 0 -y 0 0 0 -1b c 0 0 p 4 0 0 -1j p 0 0 -l 1k 0 0 1a -18 0 0 w -5 0 0 6 -g 0 0 j 11 0 0 s -5 0 0 -2 -1p 0 0 n 0 0 0 -8 d 0 0 -k k 0 0 l -b 0 0 2 -s 0 0 -4 7 0 0 -4 -1 0 0 g -o 0 0 f -4 0 0 -7 -f 0 0 n -f 0 0 z 7 0 0 -i 0 0 0 0 3 0 0 1 6 0 0 -3 p 0 0 5 -h 0 0 5 3 0 0 -6 2 0 0 -4 -1 0 0 0 1 0 0 -5 1 0 0 0 -e 0 0 7 4 0 0 -2 7 0 0',
@@ -3825,6 +3853,29 @@ function magCoef(ep) {
   return MAG_COEF[ep];
 }
 
+/* Les 130 valeurs (g, h) d'une époque IGRF, décodées */
+function magIgrfEpoch(ep) {
+  return MAG_IGRF_TABLE[ep].split(' ').map(s => parseInt(s, 36) / 10);
+}
+
+/* Les 360 coefficients de l'IGRF à l'année entière Y (au plus MAG_IGRF_LAST), au 1er janvier : t = max(1900, Y), e l'époque ≤ t,
+   g(t) = g(e) + (g(e + 5) − g(e))·(t − e)/5, de même pour h ; même disposition que ceux du WMM (g, h, ġ, ḣ), ġ et ḣ à zéro, les termes
+   de degré 11 et 12 à zéro ; calculés une fois par année */
+function magIgrfCoef(Y) {
+  const t = Math.max(1900, Y);
+  if (!MAG_IGRF_COEF[t]) {
+    const e = 1900 + 5 * Math.floor((t - 1900) / 5);
+    const a = magIgrfEpoch(e), b = t === e ? a : magIgrfEpoch(e + 5);
+    const C = new Array(360).fill(0);
+    for (let j = 0; j < 65; j++) {
+      C[4 * j] = a[2 * j] + (b[2 * j] - a[2 * j]) * (t - e) / 5;
+      C[4 * j + 1] = a[2 * j + 1] + (b[2 * j + 1] - a[2 * j + 1]) * (t - e) / 5;
+    }
+    MAG_IGRF_COEF[t] = C;
+  }
+  return MAG_IGRF_COEF[t];
+}
+
 /* L'année décimale d'une date texte : AAAA-MM-JJ, AAAA-MM (le 1er du mois) ou AAAA (le 1er juillet) ; null si elle ne se lit pas */
 function magDecYear(s) {
   if (typeof s !== 'string') return null;
@@ -3841,20 +3892,29 @@ function magDecYear(s) {
   return y + (doy - 1) / (leap ? 366 : 365);
 }
 
-/* L'époque des coefficients : la plus grande de 1985, 1990 … 2025 qui soit ≤ y ; 1985 avant 1985 (le modèle de 1985 est alors prolongé vers le passé, voir magVar) */
-function magEpoch(y) {
+/* L'époque WMM d'une année entière Y : la plus grande de 1985, 1990 … 2025 strictement inférieure à Y (1985 si aucune) */
+function magWmmEpoch(Y) {
   let e = MAG_EPOCHS[0];
-  for (let i = 0; i < MAG_EPOCHS.length; i++) if (MAG_EPOCHS[i] <= y) e = MAG_EPOCHS[i];
+  for (let i = 0; i < MAG_EPOCHS.length; i++) if (MAG_EPOCHS[i] < Y) e = MAG_EPOCHS[i];
   return e;
 }
 
+/* Le modèle de DCS pour l'année décimale y, tel qu'on le nomme à l'écran : 'IGRF <Y>' (Y entière de y, 1900 au plus tôt) jusqu'à
+   MAG_IGRF_LAST, 'WMM <époque>' ensuite */
+function magModel(y) {
+  const Y = Math.floor(y);
+  return Y <= MAG_IGRF_LAST ? 'IGRF ' + Math.max(1900, Y) : 'WMM ' + magWmmEpoch(Y);
+}
+
 /* La déclinaison magnétique en degrés (+ vers l'Est) au niveau de la mer, à la position géodésique (lat, lon) et à l'année décimale y.
-   Coefficients de l'époque : g + ġ·dt, dt = y − époque, borné à 5 au plus et sans borne basse (avant 1985, les coefficients de 1985 sont prolongés vers le passé par leur variation séculaire, comme DCS) ; synthèse en harmoniques sphériques de degré 12 (Schmidt,
-   rayon de référence 6 371,2 km) ; WGS84 → géocentrique, puis X et Z ramenés au repère géodésique avant l'angle (NOAA, WMM). */
+   Coefficients : ceux de l'IGRF au 1er janvier de l'année entière de y jusqu'à MAG_IGRF_LAST, sinon ceux du WMM de l'époque précédente, g + ġ·dt,
+   dt = y − époque, sans borne (voir plus haut) ; synthèse en harmoniques sphériques de degré 12 (Schmidt,
+   rayon de référence 6 371,2 km ; les termes absents de l'IGRF, de degré 11 et 12, sont à zéro) ; WGS84 → géocentrique, puis X et Z ramenés au repère géodésique avant l'angle (NOAA, WMM). */
 function magVar(lat, lon, y) {
   if (typeof lat !== 'number' || typeof lon !== 'number' || typeof y !== 'number' || !isFinite(lat + lon + y) || Math.abs(lat) > 90) return null;
   const R = Math.PI / 180, N = 12;
-  const ep = magEpoch(y), dt = Math.min(5, y - ep), C = magCoef(ep);
+  const Y = Math.floor(y), igrf = Y <= MAG_IGRF_LAST;
+  const ep = igrf ? 0 : magWmmEpoch(Y), dt = igrf ? 0 : y - ep, C = igrf ? magIgrfCoef(Y) : magCoef(ep);
   const la = Math.max(-89.9999, Math.min(89.9999, lat));
   const A = 6378.137, F = 1 / 298.257223563, E2 = F * (2 - F), RE = 6371.2;
   const sg = Math.sin(la * R);
@@ -7546,7 +7606,7 @@ function dvFill(key, file, date) {
 }
 function dvSrcHtml(ys) {
   let h = '<b>' + esc(t('dv.tag.' + ys.src)) + '</b> ' + dvFill('dv.src.' + ys.src, ys.file, ys.date);
-  return h + '<br>' + esc(t('dv.src.model', { e: magEpoch(ys.y) }));
+  return h + '<br>' + esc(t('dv.src.model', { e: magModel(ys.y) }));
 }
 
 function renderNav() {
