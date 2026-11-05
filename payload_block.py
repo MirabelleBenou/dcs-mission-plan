@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
-"""Bloc « EMPORT » — lecture et écriture des presets d'emport de l'éditeur de DCS (UnitPayloads\\<type>.lua), catalogue des
-armes par pylône, et construction du `payload` d'un .miz. Une seule source pour le Flight Configurator et, plus tard, le
-Loadout Editor de Mission Tools.
+"""Bloc « EMPORT » — lecture d'un fichier .lua d'exemple (pour en tirer des emports de départ), armes permises par pylône, et
+construction du `payload` d'un .miz. Une seule source pour le Flight Configurator et, plus tard, le Loadout Editor de Mission Tools.
 
 Rend le texte JavaScript du bloc. Aucune dépendance au reste de la page : ni DOM, ni t(), ni réseau ; le bloc s'exécute seul
 sous node. Les tables d'armes (data/*.json de Mission Tools, d'après pydcs, LGPL-3.0) sont des constantes de la page, lues par le bloc.
@@ -34,15 +33,6 @@ const PAYLOAD_SHAPE = {
   'F-4E-45MC':   { ammo_type: 1 },
   'Mirage-F1EE': {}
 };
-
-// Nom du type dans l'en-tête d'un fichier UnitPayloads (clé « name »), quand aucun fichier chargé ne le donne.
-const PAYLOAD_FILE_NAME = { 'Mi-24P': 'Mi-24P', 'Mi-8MT': 'Mi-8MT', 'F-4E-45MC': 'F-4E-45MC', 'Mirage-F1EE': 'Mirage F1EE' };
-
-// Les fichiers d'hélicoptère (Mi-24P) portent une clé « tasks » vide en tête ; celui d'un avion (A-10C_2) n'en a pas. Un fichier neuf suit cet usage.
-const PAYLOAD_TOP_TASKS = { 'Mi-24P': true, 'Mi-8MT': true };
-
-// Tâche (numéro DCS) d'un preset créé ici : celle par défaut du type dans pydcs (31 = CAS, 35 = transport, 11 = CAP).
-const TASK_DEFAULT = { 'Mi-24P': 31, 'Mi-8MT': 35, 'F-4E-45MC': 11, 'Mirage-F1EE': 11 };
 
 // Ajouts à la table de pylônes, d'après la mesure des .miz d'exemple : le F-4E porte « <CLEAN> » (dessous d'aile propre) sur ces pylônes,
 // valeur que pydcs ne connaît pas. Masse 0.
@@ -246,9 +236,8 @@ function payloadLuaToJs(node) {
   return node.v;
 }
 
-// Lit un fichier UnitPayloads. Rend { unitType, name, supported, tasks (absent si le fichier n'a pas la clé), presets: [{ name, displayName, pylons: { num: { CLSID, settings? } }, order: [num…], tasks }] }.
-// `order` garde l'ordre des pylônes du fichier (un objet JS trie ses clés numériques : sans lui, la réécriture à l'octet serait impossible).
-// Les clés que ces fichiers n'ont pas aujourd'hui et que le module ne connaît pas sont gardées dans `extra`, à chaque niveau, et réécrites.
+// Lit un fichier .lua d'exemple (un par appareil). Rend { unitType, supported, presets: [{ name, displayName, pylons: { num: { CLSID, settings? } } }] }.
+// Seul ce que le module emploie est gardé : le nom, et pour chaque station l'arme et son réglage éventuel.
 function parseUnitPayloads(text) {
   const root = payloadLuaParse(String(text));
   const top = payloadLuaEntries(root);
@@ -258,23 +247,8 @@ function parseUnitPayloads(text) {
     if (!e || e.val.k !== kind) throw payloadLuaError(e ? e.line : parentLine, 'bad-structure', key);
     return e;
   };
-  const known = (list, names) => {
-    const x = {};
-    list.forEach(e => { if (names.indexOf(e.key) < 0) x[String(e.key)] = payloadLuaToJs(e.val); });
-    return Object.keys(x).length ? x : null;
-  };
   const unitType = need(top, 'unitType', 'str', root.line).val.v;
-  const nameE = get(top, 'name');
-  const out = {
-    unitType: unitType,
-    name: nameE && nameE.val.k === 'str' ? nameE.val.v : unitType,
-    supported: PAYLOAD_TYPES.indexOf(unitType) >= 0,
-    presets: []
-  };
-  const tk = get(top, 'tasks');                       // la clé « tasks » du fichier n'existe pas toujours (le Mi-24P l'a, le A-10C_2 non)
-  if (tk && tk.val.k === 'tbl') out.tasks = payloadLuaToJs(tk.val);
-  const px = known(top, ['unitType', 'name', 'tasks', 'payloads']);
-  if (px) out.extra = px;
+  const out = { unitType: unitType, supported: PAYLOAD_TYPES.indexOf(unitType) >= 0, presets: [] };
   const pay = need(top, 'payloads', 'tbl', root.line);
   payloadLuaEntries(pay.val).forEach(pe => {
     if (pe.val.k !== 'tbl') throw payloadLuaError(pe.line, 'bad-structure', 'payloads');
@@ -282,12 +256,8 @@ function parseUnitPayloads(text) {
     const preset = {
       name: need(pl, 'name', 'str', pe.line).val.v,
       displayName: need(pl, 'displayName', 'str', pe.line).val.v,
-      pylons: {}, order: [], tasks: []
+      pylons: {}
     };
-    const t2 = get(pl, 'tasks');
-    if (t2 && t2.val.k === 'tbl') preset.tasks = payloadLuaToJs(t2.val);
-    const x2 = known(pl, ['name', 'displayName', 'pylons', 'tasks']);
-    if (x2) preset.extra = x2;
     payloadLuaEntries(need(pl, 'pylons', 'tbl', pe.line).val).forEach(ye => {
       if (ye.val.k !== 'tbl') throw payloadLuaError(ye.line, 'bad-structure', 'pylons');
       const yl = payloadLuaEntries(ye.val);
@@ -298,78 +268,12 @@ function parseUnitPayloads(text) {
         if (st.val.k !== 'tbl') throw payloadLuaError(st.line, 'bad-structure', 'settings');
         py.settings = payloadLuaToJs(st.val);
       }
-      const x3 = known(yl, ['CLSID', 'num', 'settings']);
-      if (x3) py.extra = x3;
       if (Object.prototype.hasOwnProperty.call(preset.pylons, num)) throw payloadLuaError(ye.line, 'bad-structure', 'num ' + num);
       preset.pylons[num] = py;
-      preset.order.push(num);
     });
     out.presets.push(preset);
   });
   return out;
-}
-
-// ---------------------------------------------------------------------------------------------------------------
-//  ÉCRITURE — au format de l'éditeur : LF, tabulations, clés triées (ordre des fichiers d'exemple), un pylône = { CLSID, num, settings? }.
-// ---------------------------------------------------------------------------------------------------------------
-function payloadLuaString(s) {
-  let out = '';
-  for (const ch of String(s)) {
-    const c = ch.codePointAt(0);
-    if (ch === '\\') out += '\\\\';
-    else if (ch === '"') out += '\\"';
-    else if (ch === '\n') out += '\\n';
-    else if (ch === '\r') out += '\\r';
-    else if (c < 32) out += '\\' + String(c).padStart(3, '0');
-    else out += ch;
-  }
-  return '"' + out + '"';
-}
-
-// valeur JS → texte Lua ; tableau = [1] = …, objet = ["clé"] = … triées ; table vide = « {\n<tabs>} » comme l'éditeur
-function payloadLuaEmit(v, depth) {
-  if (typeof v === 'string') return payloadLuaString(v);
-  if (typeof v === 'boolean') return v ? 'true' : 'false';
-  if (typeof v === 'number') return String(v);
-  const tabs = '\t'.repeat(depth), tabs1 = '\t'.repeat(depth + 1);
-  let body = '';
-  if (Array.isArray(v)) {
-    v.forEach((x, i) => { body += tabs1 + '[' + (i + 1) + '] = ' + payloadLuaEmit(x, depth + 1) + ',\n'; });
-  } else {
-    Object.keys(v).sort().forEach(k => {
-      if (v[k] === undefined || v[k] === null) return;
-      body += tabs1 + (/^\d+$/.test(k) ? '[' + k + ']' : '["' + payloadLuaString(k).slice(1, -1) + '"]') + ' = ' + payloadLuaEmit(v[k], depth + 1) + ',\n';
-    });
-  }
-  return '{\n' + body + tabs + '}';
-}
-
-// Réécrit un objet rendu par parseUnitPayloads (ou construit à la main : { unitType, name?, tasks?, presets: [{ name, displayName?, pylons, order?, tasks? }] }).
-function serializeUnitPayloads(obj) {
-  const top = Object.assign({}, obj.extra || {});
-  top.name = obj.name !== undefined && obj.name !== null ? obj.name : (PAYLOAD_FILE_NAME[obj.unitType] || obj.unitType);
-  top.unitType = obj.unitType;
-  if (obj.tasks) top.tasks = obj.tasks.slice();
-  else if (PAYLOAD_TOP_TASKS[obj.unitType]) top.tasks = [];
-  top.payloads = (obj.presets || []).map(pr => {
-    const nums = pr.order ? pr.order.filter(n => Object.prototype.hasOwnProperty.call(pr.pylons, n))
-                          : Object.keys(pr.pylons).map(Number).sort((a, b) => a - b);
-    Object.keys(pr.pylons).map(Number).sort((a, b) => a - b).forEach(n => { if (nums.indexOf(n) < 0) nums.push(n); });
-    const e = Object.assign({}, pr.extra || {});
-    e.name = pr.name;
-    e.displayName = pr.displayName !== undefined && pr.displayName !== null ? pr.displayName : pr.name;
-    e.tasks = pr.tasks ? pr.tasks.slice() : [];
-    e.pylons = nums.map(n => {
-      const py = pr.pylons[n];
-      const o = Object.assign({}, py.extra || {});
-      o.CLSID = py.CLSID;
-      o.num = Number(n);
-      if (py.settings !== undefined && py.settings !== null) o.settings = py.settings;
-      return o;
-    });
-    return e;
-  });
-  return 'local unitPayloads = ' + payloadLuaEmit(top, 0) + '\nreturn unitPayloads\n';
 }
 
 // ---------------------------------------------------------------------------------------------------------------
