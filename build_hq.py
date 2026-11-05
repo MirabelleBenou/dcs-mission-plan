@@ -847,9 +847,9 @@ select[data-tbm-src] {{ display: none !important; }}
 .dsx-wh {{ align-items: center; }}
 .dsx-off {{ opacity: .6; }}
 .dsx-lib {{ word-break: break-word; }}
-@media (max-width: 520px) {{
+@media (max-width: 439px) {{
   .dsx-wh {{ align-items: flex-start; }}
-  .dsx-lib {{ order: 2; flex: 0 1 auto; align-self: center; }}
+  .dsx-lib {{ order: 2; flex: 0 0 100%; padding-left: 26px; box-sizing: border-box; }}
   .dsx-hot {{ order: 3; flex: 0 0 100%; padding-left: 26px; box-sizing: border-box; }}
 }}
 
@@ -1312,7 +1312,7 @@ const I18N = {{
     'pk.dynN': 'Dynamic Spawn… ({{0}})',
     'fn.dyn.title': 'Dynamic Spawn',
     'fn.dyn.go': 'Valider',
-    'dyn.w.prereq': 'Seuls les aérodromes et FARP dont le Dynamic Spawn est activé dans l’éditeur de mission, et dont la liste d’appareils contient le type du template, peuvent recevoir un template. HQ n’active jamais le Dynamic Spawn et ne crée jamais un type d’appareil.',
+    'dyn.w.prereq': 'Seuls les aérodromes, FARP et navires dont le Dynamic Spawn est activé dans l’éditeur de mission, et dont la liste d’appareils contient le type du template, sont proposés pour un template. HQ n’active jamais le Dynamic Spawn et ne crée jamais un type d’appareil.',
     'dyn.w.template': 'Template',
     'dyn.w.hot': 'moteur tournant',
     'dyn.w.replaces': 'remplace {{0}}',
@@ -1341,8 +1341,9 @@ const I18N = {{
     'dyn.w.warn.multi': '{{0}} : ce template compte {{1}} appareils — à confirmer sur le PC.',
     'dyn.w.warn.side': '{{0}} lié à {{1}} : camps différents ({{2}} / {{3}}) — à confirmer sur le PC.',
     'dyn.w.fail': '✗ Dynamic Spawn : vérification échouée — {{0}}',
-    'dyn.w.e.indent': 'indentation ou ligne de l’insertion introuvable',
-    'dyn.w.e.init': 'type d’appareil sans initialAmount',
+    'dyn.w.e.indentFlight': 'vol {{0}} : indentation ou ligne de l’insertion introuvable',
+    'dyn.w.e.indentWh': 'entrepôt {{0}} : indentation ou ligne de l’insertion introuvable',
+    'dyn.w.e.init': 'entrepôt {{0}} : le type {{1}} n’a pas d’initialAmount, lien impossible',
     'dyn.w.e.missing': 'vol {{0}} introuvable dans la mission',
     'dyn.w.e.reparse': 'texte écrit illisible ({{0}})',
     'dyn.w.e.mission': 'le fichier mission relu diffère de l’attendu ({{0}})',
@@ -1618,7 +1619,7 @@ const I18N = {{
     'pk.dynN': 'Dynamic Spawn… ({{0}})',
     'fn.dyn.title': 'Dynamic Spawn',
     'fn.dyn.go': 'Confirm',
-    'dyn.w.prereq': 'Only airfields and FARPs that have Dynamic Spawn enabled in the mission editor, and whose aircraft list contains the template’s type, can receive a template. HQ never enables Dynamic Spawn and never creates an aircraft type.',
+    'dyn.w.prereq': 'Only airfields, FARPs and ships that have Dynamic Spawn enabled in the mission editor, and whose aircraft list contains the template’s type, are offered for a template. HQ never enables Dynamic Spawn and never creates an aircraft type.',
     'dyn.w.template': 'Template',
     'dyn.w.hot': 'hot start',
     'dyn.w.replaces': 'replaces {{0}}',
@@ -1647,8 +1648,9 @@ const I18N = {{
     'dyn.w.warn.multi': '{{0}}: this template has {{1}} aircraft — to be confirmed on the PC.',
     'dyn.w.warn.side': '{{0}} linked to {{1}}: different coalitions ({{2}} / {{3}}) — to be confirmed on the PC.',
     'dyn.w.fail': '✗ Dynamic Spawn: verification failed — {{0}}',
-    'dyn.w.e.indent': 'indentation or line of the insertion not found',
-    'dyn.w.e.init': 'aircraft type without initialAmount',
+    'dyn.w.e.indentFlight': 'flight {{0}}: indentation or line of the insertion not found',
+    'dyn.w.e.indentWh': 'warehouse {{0}}: indentation or line of the insertion not found',
+    'dyn.w.e.init': 'warehouse {{0}}: type {{1}} has no initialAmount, link impossible',
     'dyn.w.e.missing': 'flight {{0}} not found in the mission',
     'dyn.w.e.reparse': 'written text unreadable ({{0}})',
     'dyn.w.e.mission': 'the re-read mission file differs from what was expected ({{0}})',
@@ -4453,7 +4455,7 @@ function delWhLinks(wroot) {{
         for (const te of cn.entries) {{
           if (!te.key) continue;
           const nd = _astGetKey(te.value, 'linkDynTempl');
-          if (nd && nd.kind === 'number') out.push({{ sec: sec, id: we.key.value, type: String(te.key.value), gid: nd.value, node: nd }});
+          if (nd && nd.kind === 'number') out.push({{ sec: sec, id: we.key.value, cat: cat, type: String(te.key.value), gid: nd.value, node: nd }});
         }}
       }}
     }}
@@ -4733,26 +4735,39 @@ function dsxScan(ctx) {{
   return out;
 }}
 
-function dsxFlightInfo(f) {{
-  const type = (f.units && f.units[0] && f.units[0].type) || f.aircraftType || '';
+// groupId -> {{ n, type }} : toutes les unités du groupe, dans l'ordre du fichier (le snapshot ne garde que les unités Client ou Player)
+function dsxGroupUnits(ast) {{
+  const out = {{}};
+  delEachList(ast, DEL_FLIGHT_CATS, L => {{
+    for (const e of L.list.entries) {{
+      const gid = dynNum(_astGetKey(e.value, 'groupId')), us = _astGetKey(e.value, 'units');
+      if (gid === null || !us || us.kind !== 'table') continue;
+      out[gid] = {{ n: us.entries.length, type: us.entries.length ? (dynStr(_astGetKey(us.entries[0].value, 'type')) || '') : '' }};
+    }}
+  }});
+  return out;
+}}
+function dsxFlightInfo(f, gu) {{
+  const g = gu && gu[f.groupId];
+  const type = (g && g.type) || f.aircraftType || '';
   return {{ gid: f.groupId, name: f.groupName || '—', type: type, cat: f.category === 'helicopter' ? 'helicopters' : 'planes',
-    tk: (f.category === 'helicopter' ? 'helicopters' : 'planes') + '|' + type, side: f.coalition || '', units: (f.units || []).length }};
+    tk: (f.category === 'helicopter' ? 'helicopters' : 'planes') + '|' + type, side: f.coalition || '', units: g ? g.n : (f.units || []).length }};
 }}
 function dsxTplName(gid) {{ const f = HQ_SNAPSHOT.flights.find(x => x.groupId === gid); return f ? (f.groupName || String(gid)) : String(gid); }}
 function dsxWhSort(a, b) {{ return ((a.kind === 'airport' ? 0 : 1) - (b.kind === 'airport' ? 0 : 1)) || dynCmp(dynWhName(a), dynWhName(b)); }}
 
 // Les patches d'insertion : une ligne, avec l'indentation et la fin de ligne du fichier
-function dsxInsertFirst(text, g) {{
+function dsxInsertFirst(text, g, fname) {{
   const ks = g.entries[0].keyPos.start.offset, ls = text.lastIndexOf('\\n', ks - 1) + 1, pre = text.slice(ls, ks), nl = text.indexOf('\\n', ks);
-  if (!/^[ \\t]*$/.test(pre) || nl < 0) throw delErr('dyn.w.e.indent');
+  if (!/^[ \\t]*$/.test(pre) || nl < 0) throw delErr('dyn.w.e.indentFlight', fname);
   const eol = text.charAt(nl - 1) === '\\r' ? '\\r\\n' : '\\n';
   return {{ pos: delSpan(ks, ks), newValueStr: '["dynSpawnTemplate"] = true,' + eol + pre }};
 }}
-function dsxInsertLink(text, nd, gid) {{
+function dsxInsertLink(text, nd, gid, wname) {{
   const ie = nd.init;
-  if (!ie) throw delErr('dyn.w.e.init');
+  if (!ie) throw delErr('dyn.w.e.init', wname, nd.type);
   const ks = ie.keyPos.start.offset, end = ie.valuePos.end.offset, ls = text.lastIndexOf('\\n', ks - 1) + 1, pre = text.slice(ls, ks), nl = text.indexOf('\\n', end);
-  if (!/^[ \\t]*$/.test(pre) || nl < 0 || !/^\\s*[,;]?\\s*(--[^\\n]*)?$/.test(text.slice(end, nl))) throw delErr('dyn.w.e.indent');
+  if (!/^[ \\t]*$/.test(pre) || nl < 0 || !/^\\s*[,;]?\\s*(--[^\\n]*)?$/.test(text.slice(end, nl))) throw delErr('dyn.w.e.indentWh', wname);
   const eol = text.charAt(nl - 1) === '\\r' ? '\\r\\n' : '\\n';
   return {{ pos: delSpan(nl + 1, nl + 1), newValueStr: pre + '["linkDynTempl"] = ' + gid + ',' + eol }};
 }}
@@ -4793,7 +4808,7 @@ function dsxPlan(ctx, DS) {{
     if (!g) throw delErr('dyn.w.e.missing', f.name);
     const kn = _astGetKey(g, 'dynSpawnTemplate');
     if (kn) plan.mp.push({{ pos: kn.pos, newValueStr: want ? 'true' : 'false' }});
-    else plan.mp.push(dsxInsertFirst(ctx.missionText, g));
+    else plan.mp.push(dsxInsertFirst(ctx.missionText, g, f.name));
     plan.marks.push({{ f: f, on: want }});
     if (want) plan.N++;
     if (!want && DS.wh.state === 'unreadable') plan.badUnmark = true;
@@ -4816,7 +4831,7 @@ function dsxPlan(ctx, DS) {{
         plan.expLink[nk] = fin;
         if (fin === cur) continue;
         if (nd.linkNode) plan.wp.push({{ pos: nd.linkNode.pos, newValueStr: String(fin) }});
-        else plan.wp.push(dsxInsertLink(text, nd, fin));
+        else plan.wp.push(dsxInsertLink(text, nd, fin, dynWhName(w)));
         const ch = {{ w: w, type: nd.type, from: cur, to: fin, why: why }};
         plan.links.push(ch);
         if (fin === 0) plan.L++; else if (cur === 0) plan.M++; else plan.K++;
@@ -4926,10 +4941,10 @@ function dsxVerify(base, DS, plan, mAst, wText, wRootNew, work) {{
     if (d2.length) throw delErr('dyn.w.e.wh', d2.slice(0, 3).join(' ; '));
     // les liens relus par le lecteur de HQ
     const after = {{}};
-    for (const l of delWhLinks(wRootNew)) after[l.sec + '|' + l.id + '|' + l.type] = l.gid;
+    for (const l of delWhLinks(wRootNew)) after[l.sec + '|' + l.id + '|' + l.cat + '|' + l.type] = l.gid;
     for (const w of DS.wh.whs) for (const tk of Object.keys(w.types)) {{
       const nd = w.types[tk], fin = plan.expLink[w.key + '|' + tk];
-      const exp = fin === undefined ? nd.gid : fin, k = w.key + '|' + nd.type;
+      const exp = fin === undefined ? nd.gid : fin, k = w.key + '|' + tk;
       if ((after[k] || 0) !== exp) throw delErr('dyn.w.e.links', dynWhName(w), nd.type);
     }}
   }}
@@ -5008,7 +5023,7 @@ function dsxAsk(opener) {{
   const ctx = _HQ_MIZ_CONTEXT;
   DSX.ctx = ctx;
   DSX.wh = dsxScan(ctx);
-  DSX.flights = HQ_SNAPSHOT.flights.filter(f => _PK_EXPORT_SEL.has(f.groupId)).map(dsxFlightInfo);
+  DSX.flights = HQ_SNAPSHOT.flights.filter(f => _PK_EXPORT_SEL.has(f.groupId)).map(f => dsxFlightInfo(f, dsxGroupUnits(ctx.ast)));
   const tids = dynTemplateIds();
   DSX.st = {{ tmpl: {{}}, link: {{}}, hot: {{}} }};
   DSX.off = {{}}; DSX.was = {{}}; DSX.wasT = {{}};
