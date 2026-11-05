@@ -807,7 +807,7 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
     <span class="tb-brand-sub" data-i18n="toolbar.subtitle">░ WING CONFIGURATION</span>
   </div>
   <div class="tb-sep"></div>
-  <button type="button" class="tb-btn" id="btn-example" data-i18n-title="toolbar.example.tooltip" title="Charger l'exemple" aria-label="Charger l'exemple">
+  <button type="button" class="tb-btn" id="btn-example" data-i18n-title="toolbar.example.tooltip" title="Ouvrir l'exemple" aria-label="Ouvrir l'exemple">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
   </button>
   <select class="tb-select" id="theme-select" data-i18n-title="toolbar.theme.tooltip" title="Thème graphique">
@@ -842,7 +842,7 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
         <!-- Boutons action -->
         <div class="miz-btn-row" id="miz-actions" style="display:none">
           <button type="button" class="miz-btn" id="miz-reload-btn" data-i18n="editor.mission.reload">
-            ↺ Charger un autre .miz
+            ↺ Ouvrir un autre .miz
           </button>
         </div>
 
@@ -894,7 +894,7 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
             <label data-i18n="editor.wing.logo">Logo wing principal</label>
             <label class="ed-img-zone wing-logo-zone" id="wing-logo-zone">
               <input type="file" accept="image/*" id="wing-logo-input">
-              <span class="img-text" data-i18n="editor.imgZone.tapLogo">▲ TOUCHER POUR CHARGER UN LOGO ▲</span>
+              <span class="img-text" data-i18n="editor.imgZone.tapLogo">▲ TOUCHER POUR IMPORTER UN LOGO ▲</span>
             </label>
           </div>
         </fieldset>
@@ -931,10 +931,10 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
       <summary data-i18n="editor.commander.summary">PAQUETS DE VOL</summary>
       <div class="ed-content">
 
-        <div class="pk-note" id="pk-nomiz" data-i18n="pk.needMiz">Chargez d’abord la mission (section MISSION .MIZ)</div>
+        <div class="pk-note" id="pk-nomiz" data-i18n="pk.needMiz">Ouvrez d’abord la mission (section MISSION .MIZ)</div>
 
         <div class="miz-btn-row" style="margin-top:0">
-          <button type="button" class="miz-btn" id="pk-load-btn" data-i18n="pk.load" disabled>Charger des paquets</button>
+          <button type="button" class="miz-btn" id="pk-load-btn" data-i18n="pk.load" disabled>Importer des paquets</button>
         </div>
         <input type="file" id="pk-file-input" accept=".json,.zip,application/json,application/zip" multiple hidden>
 
@@ -979,7 +979,7 @@ const I18N = {
     'toolbar.subtitle':         '░ CONFIGURATION WING',
     'toolbar.lang.tooltip':     'Passer en anglais',
     'toolbar.theme.tooltip':    'Thème graphique',
-    'toolbar.example.tooltip':  "Charger l'exemple",
+    'toolbar.example.tooltip':  "Ouvrir l'exemple",
     'toast.exampleLoaded':      'Exemple chargé ✓',
     'example.restore':          'Restaurer ma configuration',
     'toast.configRestored':     'Configuration restaurée ✓',
@@ -1013,7 +1013,7 @@ const I18N = {
     'editor.wing.removeLogoAria':  'Retirer le logo',
     'editor.wing.resetLogoAria':   'Réinitialiser le logo',
     'editor.wing.clickToReplace':  'Cliquer pour remplacer',
-    'editor.imgZone.tapLogo':   '▲ TOUCHER POUR CHARGER UN LOGO ▲',
+    'editor.imgZone.tapLogo':   '▲ TOUCHER POUR IMPORTER UN LOGO ▲',
     'editor.phases.aircraft':   'Appareil utilisé',
     'editor.phases.moveUp':     'Monter',
     'editor.phases.moveDown':   'Descendre',
@@ -1046,7 +1046,7 @@ const I18N = {
     'editor.mission.drop':      '⇓ DÉPOSER UN FICHIER .MIZ ICI',
     'editor.mission.drop.hint': 'ou cliquer pour parcourir',
     'editor.mission.dropzone.aria': 'Zone de chargement .miz',
-    'editor.mission.reload':    '↺ Charger un autre .miz',
+    'editor.mission.reload':    '↺ Ouvrir un autre .miz',
     'toast.mizLoading':         'Chargement .miz…',
     'toast.mizLoaded':          '.miz chargé ✓',
     'toast.mizError':           '⚠ Erreur .miz : ',
@@ -1062,8 +1062,8 @@ const I18N = {
     'snap.fingerprint':        'Empreinte',
     'editor.commander.summary': 'PAQUETS DE VOL',
     'snap.unit': 'unité',
-    'pk.needMiz': 'Chargez d’abord la mission (section MISSION .MIZ)',
-    'pk.load': 'Charger des paquets',
+    'pk.needMiz': 'Ouvrez d’abord la mission (section MISSION .MIZ)',
+    'pk.load': 'Importer des paquets',
     'pk.loaded': 'Paquets chargés',
     'pk.apply': 'Appliquer et télécharger le .miz',
     'pk.exportN': '📦 Exporter les vols cochés ({0})',
@@ -1175,14 +1175,14 @@ const I18N = {
     'pk.e.targetGone': 'groupe introuvable dans la mission',
     'pk.e.retok': 'texte écrit illisible ({0})',
     'toast.pkApplyingN': 'Application des paquets… ({0}/{1})',
-    'toast.mizNotLoaded':        '⚠ Charger un .miz d’abord',
+    'toast.mizNotLoaded':        '⚠ Ouvrez un .miz d’abord',
   },
   en: {
     'toolbar.title':            'HQ',
     'toolbar.subtitle':         '░ WING CONFIGURATION',
     'toolbar.lang.tooltip':     'Switch to French',
     'toolbar.theme.tooltip':    'Graphic theme',
-    'toolbar.example.tooltip':  'Load the example',
+    'toolbar.example.tooltip':  'Open the example',
     'toast.exampleLoaded':      'Example loaded ✓',
     'example.restore':          'Restore my configuration',
     'toast.configRestored':     'Configuration restored ✓',
@@ -1216,7 +1216,7 @@ const I18N = {
     'editor.wing.removeLogoAria':  'Remove logo',
     'editor.wing.resetLogoAria':   'Reset logo',
     'editor.wing.clickToReplace':  'Click to replace',
-    'editor.imgZone.tapLogo':   '▲ TAP TO LOAD A LOGO ▲',
+    'editor.imgZone.tapLogo':   '▲ TAP TO IMPORT A LOGO ▲',
     'editor.phases.aircraft':   'Aircraft type',
     'editor.phases.moveUp':     'Move up',
     'editor.phases.moveDown':   'Move down',
@@ -1249,7 +1249,7 @@ const I18N = {
     'editor.mission.drop':      '⇓ DROP A .MIZ FILE HERE',
     'editor.mission.drop.hint': 'or click to browse',
     'editor.mission.dropzone.aria': '.miz drop zone',
-    'editor.mission.reload':    '↺ Load another .miz',
+    'editor.mission.reload':    '↺ Open another .miz',
     'toast.mizLoading':         'Loading .miz…',
     'toast.mizLoaded':          '.miz loaded ✓',
     'toast.mizError':           '⚠ .miz error: ',
@@ -1265,8 +1265,8 @@ const I18N = {
     'snap.fingerprint':        'Fingerprint',
     'editor.commander.summary': 'FLIGHT PACKAGES',
     'snap.unit': 'unit',
-    'pk.needMiz': 'Load the mission first (MISSION .MIZ section)',
-    'pk.load': 'Load packages',
+    'pk.needMiz': 'Open the mission first (MISSION .MIZ section)',
+    'pk.load': 'Import packages',
     'pk.loaded': 'Loaded packages',
     'pk.apply': 'Apply and download the .miz',
     'pk.exportN': '📦 Export checked flights ({0})',
@@ -1378,7 +1378,7 @@ const I18N = {
     'pk.e.targetGone': 'group not found in the mission',
     'pk.e.retok': 'written text unreadable ({0})',
     'toast.pkApplyingN': 'Applying packages… ({0}/{1})',
-    'toast.mizNotLoaded':        '⚠ Load a .miz first',
+    'toast.mizNotLoaded':        '⚠ Open a .miz first',
   }
 };
 

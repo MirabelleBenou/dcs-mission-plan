@@ -1685,18 +1685,18 @@ SOFTWARE.
   <button type="button" class="tb-btn" id="btn-units" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.units" title="Unités" data-i18n-aria-label="tb.units" aria-label="Unités"><span id="units-txt"></span><svg class="dsp-chev" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg></button>
   <span class="tb-sep"></span>
   <button type="button" class="tb-btn" id="btn-open" data-i18n-title="tb.open.tip" title="Ouvrir une route (JSON) ou un fichier du Route Tool de DCS" data-i18n-aria-label="tb.open.tip" aria-label="Ouvrir une route (JSON) ou un fichier du Route Tool de DCS">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3M7 8l5-5 5 5M5 21h14"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
     <span class="tb-btn-label solo" data-i18n="tb.open">Ouvrir</span></button>
   <input type="file" id="file-open" hidden>
   <button type="button" class="tb-btn" id="btn-save" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.save.tip" title="Enregistrer" data-i18n-aria-label="tb.save.tip" aria-label="Enregistrer">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3h11l3 3v15H5zM8 3v6h8V3M8 21v-7h8v7"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
     <span class="tb-btn-label solo" data-i18n="tb.save">Enregistrer</span>
     <svg class="dsp-chev" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg></button>
-  <button type="button" class="tb-btn" id="btn-example" data-i18n-title="tb.example.tip" title="Charger l'exemple" data-i18n-aria-label="tb.example.tip" aria-label="Charger l'exemple">
+  <button type="button" class="tb-btn" id="btn-example" data-i18n-title="tb.example.tip" title="Ouvrir l'exemple" data-i18n-aria-label="tb.example.tip" aria-label="Ouvrir l'exemple">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
     <span class="tb-btn-label solo" data-i18n="tb.example">Exemple</span></button>
   <button type="button" class="tb-btn danger" id="btn-clear" data-i18n-title="tb.clear.tip" title="Effacer…" data-i18n-aria-label="tb.clear.tip" aria-label="Effacer…">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
     <span class="tb-btn-label solo" data-i18n="tb.clear">Effacer</span></button>
   <select class="tb-sel" id="theme" data-i18n-title="tb.theme.tip" title="Thème graphique" data-i18n-aria-label="tb.theme.tip" aria-label="Thème graphique">
     <option value="cw-nato" data-i18n="theme.cw-nato">Cold War OTAN</option>
@@ -1840,7 +1840,7 @@ SOFTWARE.
           <button type="button" class="tb-btn primary" id="btn-handoff" data-i18n="btn.handoff">→ Vers la datacard</button>
           <button type="button" class="tb-btn primary" id="btn-export-bg" data-i18n="btn.exportBg">→ Vers le briefing</button>
           <button type="button" class="tb-btn primary" id="btn-package" data-i18n="pk.btn">📦 Paquet de vol</button>
-          <button type="button" class="tb-btn" id="btn-export" data-i18n="btn.export">Exporter JSON</button>
+          <button type="button" class="tb-btn" id="btn-export" data-i18n="btn.export">Enregistrer</button>
           <button type="button" class="tb-btn" id="btn-export-rt" data-i18n="btn.exportRt">Exporter vers le Route Tool</button>
         </div>
       </div>
@@ -2462,7 +2462,7 @@ const I18N = {
     'sv.all': 'Enregistrer toutes les routes',
     'fn.label': 'Nom du fichier',
     'tb.example': 'Exemple',
-    'tb.example.tip': 'Charger l\'exemple',
+    'tb.example.tip': 'Ouvrir l\'exemple',
     'tb.clear': 'Effacer',
     'tb.clear.tip': 'Effacer…',
     'clr.title': 'Effacer',
@@ -2599,10 +2599,10 @@ const I18N = {
     'cart.unnamed': 'ROUTE SANS NOM',
     'cart.attr': 'Fond :',
     'toast.mapSent': 'Carte envoyée au Briefing Generator.',
-    'toast.mapSaved': 'Image enregistrée : chargez-la dans le Briefing Generator (Carte).',
+    'toast.mapSaved': 'Image enregistrée : importez-la dans le Briefing Generator (Carte).',
     'toast.mapPartial': 'Le fond vient d\'un autre site : il peut manquer dans l\'image.',
     'toast.mapFail': 'L\'image n\'a pas pu être produite.',
-    'btn.export': 'Exporter JSON',
+    'btn.export': 'Enregistrer',
     'btn.exportRt': 'Exporter vers le Route Tool',
     'tb.rt.off': 'Route Tool indisponible pour ce théâtre',
     'err.rt': 'Fichier du Route Tool non reconnu.',
@@ -2736,7 +2736,7 @@ const I18N = {
     'zoom.out': 'Zoom arrière',
     'toast.saved': 'Route enregistrée ✓',
     'confirm.open': 'Remplacer la route en cours ?',
-    'confirm.example': 'Charger l\'exemple à la place de la route en cours ?',
+    'confirm.example': 'Ouvrir l\'exemple à la place de la route en cours ?',
     'err.cf': 'Fichier CombatFlite non reconnu.',
     'err.cfBrowser': 'Ce navigateur ne sait pas lire les fichiers CombatFlite.',
     'err.layersQuota': 'Calques trop lourds pour le navigateur : ils ne seront pas gardés après rechargement.',
@@ -2974,7 +2974,7 @@ const I18N = {
     'sv.all': 'Save all routes',
     'fn.label': 'File name',
     'tb.example': 'Example',
-    'tb.example.tip': 'Load the example',
+    'tb.example.tip': 'Open the example',
     'tb.clear': 'Clear',
     'tb.clear.tip': 'Clear…',
     'clr.title': 'Clear',
@@ -3111,10 +3111,10 @@ const I18N = {
     'cart.unnamed': 'UNNAMED ROUTE',
     'cart.attr': 'Background:',
     'toast.mapSent': 'Map sent to the Briefing Generator.',
-    'toast.mapSaved': 'Image saved: load it into the Briefing Generator (Map).',
+    'toast.mapSaved': 'Image saved: import it into the Briefing Generator (Map).',
     'toast.mapPartial': 'The background comes from another site: it may be missing from the image.',
     'toast.mapFail': 'The image could not be produced.',
-    'btn.export': 'Export JSON',
+    'btn.export': 'Save',
     'btn.exportRt': 'Export to the Route Tool',
     'tb.rt.off': 'Route Tool not available for this theatre',
     'err.rt': 'Unrecognised Route Tool file.',
@@ -3248,7 +3248,7 @@ const I18N = {
     'zoom.out': 'Zoom out',
     'toast.saved': 'Route saved ✓',
     'confirm.open': 'Replace the current route?',
-    'confirm.example': 'Load the example instead of the current route?',
+    'confirm.example': 'Open the example instead of the current route?',
     'err.cf': 'Unrecognised CombatFlite file.',
     'err.cfBrowser': 'This browser cannot read CombatFlite files.',
     'err.layersQuota': 'Layers too large for the browser: they will not be kept after reload.',

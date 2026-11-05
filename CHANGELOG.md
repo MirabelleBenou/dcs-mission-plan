@@ -10,6 +10,10 @@ The suite bundles several **independently-versioned tools**, so entries are grou
 
 Changes merged since the last release, grouped per tool.
 
+### All tools
+#### Changed
+- File buttons use the same words everywhere: **Open** and **Save** for the tool's own file, **Import** and **Export** to exchange with another tool or produce the final document, **Clear** to empty the tool. The Datacard Generator's four file buttons become Open, Import, Save and Export.
+
 ### Mission Plan — landing
 #### Changed
 - On phones (below 760 px wide), the back button shrinks to an arrow and the wing stamp is hidden, so each tool's top bar fits; a bar that is still too wide scrolls sideways, with a fade on its right edge.

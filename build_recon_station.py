@@ -2355,7 +2355,7 @@ select[data-tbm-src] {{ display: none !important; }}
     <span class="tb-brand-sub">░ PHOTO INTELLIGENCE</span>
   </div>
   <div class="tb-sep"></div>
-  <button type="button" class="tb-btn" id="btn-example" data-i18n-title="toolbar.example.tooltip" title="Charger l'exemple" data-i18n-aria-label="toolbar.example.tooltip" aria-label="Charger l'exemple">
+  <button type="button" class="tb-btn" id="btn-example" data-i18n-title="toolbar.example.tooltip" title="Ouvrir l'exemple" data-i18n-aria-label="toolbar.example.tooltip" aria-label="Ouvrir l'exemple">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
   </button>
   <select class="tb-select" id="theme-select" data-i18n-title="toolbar.theme.tooltip" title="Thème graphique">
@@ -2641,7 +2641,7 @@ const I18N = {{
   fr: {{
     'toolbar.theme.tooltip': 'Thème graphique',
     'toolbar.lang.tooltip': 'Passer en anglais',
-    'toolbar.example.tooltip': "Charger l'exemple",
+    'toolbar.example.tooltip': "Ouvrir l'exemple",
     'confirm.example': "Remplacer le travail en cours par l'exemple ?",
     'toast.example-loaded': 'Exemple chargé ✓',
     'toast.exampleFailed': 'Exemple indisponible',
@@ -2760,7 +2760,7 @@ const I18N = {{
   en: {{
     'toolbar.theme.tooltip': 'Graphic theme',
     'toolbar.lang.tooltip': 'Switch to French',
-    'toolbar.example.tooltip': 'Load the example',
+    'toolbar.example.tooltip': 'Open the example',
     'confirm.example': 'Replace the current work with the example?',
     'toast.example-loaded': 'Example loaded ✓',
     'toast.exampleFailed': 'Example unavailable',

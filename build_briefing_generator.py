@@ -3168,24 +3168,24 @@ __CSS__
     <button type="button" class="seg-btn" data-format="full" aria-pressed="false"><span class="seg-long" data-i18n="toolbar.format.full">Brief complet</span><span class="seg-short" data-i18n="toolbar.format.fullShort">Complet</span></button>
     <button type="button" class="seg-btn" data-format="simple" aria-pressed="true"><span class="seg-long" data-i18n="toolbar.format.simple">Brief simplifié</span><span class="seg-short" data-i18n="toolbar.format.simpleShort">Simplifié</span></button>
   </div>
-  <button class="tb-btn" id="btn-save" data-i18n-title="toolbar.save.tooltip" title="Exporter le briefing en JSON">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-    <span class="tb-btn-label" data-i18n="toolbar.save">Sauver</span>
-  </button>
-  <button class="tb-btn" id="btn-load" data-i18n-title="toolbar.load.tooltip" title="Charger un briefing JSON">
+  <button class="tb-btn" id="btn-load" data-i18n-title="toolbar.load.tooltip" title="Ouvrir un briefing (JSON)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-    <span class="tb-btn-label" data-i18n="toolbar.load">Charger</span>
+    <span class="tb-btn-label" data-i18n="toolbar.load">Ouvrir</span>
   </button>
   <input type="file" id="file-load" accept=".json,application/json" hidden>
+  <button class="tb-btn" id="btn-save" data-i18n-title="toolbar.save.tooltip" title="Enregistrer le briefing (JSON)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+    <span class="tb-btn-label" data-i18n="toolbar.save">Enregistrer</span>
+  </button>
   <button class="tb-btn" id="btn-print" data-i18n-title="toolbar.export.tooltip" title="Exporter en PDF ou PNG (kneeboard DCS)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
     <span class="tb-btn-label" data-i18n="toolbar.export">Exporter</span>
   </button>
   <button class="tb-btn danger" id="btn-reset" data-i18n-title="toolbar.reset.tooltip" title="Vider le briefing (repartir d'une page blanche)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-    <span class="tb-btn-label" data-i18n="toolbar.reset">Reset</span>
+    <span class="tb-btn-label" data-i18n="toolbar.reset">Effacer</span>
   </button>
-  <button class="tb-btn" id="btn-example" data-i18n-title="toolbar.example.tooltip" title="Charger le briefing d'exemple (remplace le briefing en cours)">
+  <button class="tb-btn" id="btn-example" data-i18n-title="toolbar.example.tooltip" title="Ouvrir le briefing d'exemple (remplace le briefing en cours)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
     <span class="tb-btn-label" data-i18n="toolbar.example">Exemple</span>
   </button>
@@ -3302,7 +3302,7 @@ __CSS__
           <label data-i18n="editor.simple.map">Carte (image)</label>
           <label class="ed-img-zone" data-img-bind="sitac.mapImage">
             <input type="file" accept="image/*">
-            <span class="img-text" data-i18n="editor.imgZone.tap">▲ TOUCHER POUR CHARGER UNE CARTE ▲</span>
+            <span class="img-text" data-i18n="editor.imgZone.tap">▲ TOUCHER POUR IMPORTER UNE CARTE ▲</span>
           </label>
         </div>
         <div class="ed-field-row">
@@ -3387,7 +3387,7 @@ __CSS__
           <label data-i18n="editor.cover.map">Carte d'opération (image)</label>
           <label class="ed-img-zone" data-img-bind="cover.mapImage">
             <input type="file" accept="image/*">
-            <span class="img-text" data-i18n="editor.imgZone.tap">▲ TOUCHER POUR CHARGER UNE CARTE ▲</span>
+            <span class="img-text" data-i18n="editor.imgZone.tap">▲ TOUCHER POUR IMPORTER UNE CARTE ▲</span>
           </label>
         </div>
       </div>
@@ -3422,7 +3422,7 @@ __CSS__
           <label data-i18n="editor.sitac.map">Carte SITAC (image)</label>
           <label class="ed-img-zone" data-img-bind="sitac.mapImage">
             <input type="file" accept="image/*">
-            <span class="img-text" data-i18n="editor.imgZone.tap">▲ TOUCHER POUR CHARGER UNE CARTE ▲</span>
+            <span class="img-text" data-i18n="editor.imgZone.tap">▲ TOUCHER POUR IMPORTER UNE CARTE ▲</span>
           </label>
         </div>
       </div>
@@ -3560,7 +3560,7 @@ __CSS__
     <div class="ed-help" data-wing-label style="text-align:center; padding:12px 4px;">
       ◆ MY WING ◆<br>
       <span data-i18n="editor.autoSave">Sauvegarde locale automatique</span><br>
-      <span data-i18n="editor.exportTip">Export JSON pour conserver vos templates</span>
+      <span data-i18n="editor.exportTip">Enregistrez le briefing pour conserver vos templates</span>
     </div>
   </aside>
 
@@ -3635,12 +3635,12 @@ const IMG_RECOMPRESS_THRESHOLD = 800 * 1024;  // 800 Ko base64 : seuil de décle
 const I18N = {
   fr: {
     // ── Toolbar ──
-    'toolbar.save':           'Sauver',
-    'toolbar.load':           'Charger',
+    'toolbar.save':           'Enregistrer',
+    'toolbar.load':           'Ouvrir',
     'toolbar.export':         'Exporter',
-    'toolbar.reset':          'Reset',
-    'toolbar.save.tooltip':   'Exporter le briefing en JSON',
-    'toolbar.load.tooltip':   'Charger un briefing JSON',
+    'toolbar.reset':          'Effacer',
+    'toolbar.save.tooltip':   'Enregistrer le briefing (JSON)',
+    'toolbar.load.tooltip':   'Ouvrir un briefing (JSON)',
     'toolbar.export.tooltip': 'Exporter en PDF ou PNG (kneeboard DCS)',
     'toolbar.reset.tooltip':  'Vider le briefing (repartir d\'une page blanche)',
     'toolbar.theme.tooltip':  'Thème graphique',
@@ -3807,10 +3807,10 @@ const I18N = {
     'editor.wing.importTooltip':'Importer un fichier wing_config.json',
     'editor.wing.reset':        '♻ Réinitialiser',
     // ── Shared editor strings ──
-    'editor.imgZone.tap':     '▲ TOUCHER POUR CHARGER UNE CARTE ▲',
-    'editor.imgZone.tapLogo': '▲ TOUCHER POUR CHARGER UN LOGO ▲',
+    'editor.imgZone.tap':     '▲ TOUCHER POUR IMPORTER UNE CARTE ▲',
+    'editor.imgZone.tapLogo': '▲ TOUCHER POUR IMPORTER UN LOGO ▲',
     'editor.autoSave':        'Sauvegarde locale automatique',
-    'editor.exportTip':       'Export JSON pour conserver vos templates',
+    'editor.exportTip':       'Enregistrez le briefing pour conserver vos templates',
     // ── Strings résiduelles externalisées (Étape C) ──
     'select.noSquadron':           '— Aucun escadron —',
     'select.noGroup':              '— Sélectionner un groupe —',
@@ -3827,7 +3827,7 @@ const I18N = {
     'placeholder.chartName':       'Ex : AKROTIRI (LCRA) — Piste 10',
     'placeholder.annexeTitle':     'Ex : Notes additionnelles',
     'editor.image.label':         'Image',
-    'editor.imgZone.tapShort':    '▲ TOUCHER POUR CHARGER ▲',
+    'editor.imgZone.tapShort':    '▲ TOUCHER POUR IMPORTER ▲',
     'editor.imgCard.remove':      'Suppr.',
     'editor.phases.moveUp':       'Monter',
     'editor.phases.moveDown':     'Descendre',
@@ -3937,7 +3937,7 @@ const I18N = {
     'toolbar.format.simpleShort': 'Simplifié',
     'toolbar.format.tooltip':     'Choisir le format du briefing',
     'toolbar.example':            'Exemple',
-    'toolbar.example.tooltip':    'Charger le briefing d\'exemple (remplace le briefing en cours)',
+    'toolbar.example.tooltip':    'Ouvrir le briefing d\'exemple (remplace le briefing en cours)',
     'confirm.loadExample':        'Remplacer le briefing en cours par l\'exemple ?',
     'toast.exampleLoaded':        'Exemple chargé ✓',
     // ── Carte du Route Planner (v2.5.0) ──
@@ -4009,11 +4009,11 @@ const I18N = {
   en: {
     // ── Toolbar ──
     'toolbar.save':           'Save',
-    'toolbar.load':           'Load',
+    'toolbar.load':           'Open',
     'toolbar.export':         'Export',
-    'toolbar.reset':          'Reset',
-    'toolbar.save.tooltip':   'Export briefing as JSON',
-    'toolbar.load.tooltip':   'Load a JSON briefing',
+    'toolbar.reset':          'Clear',
+    'toolbar.save.tooltip':   'Save the briefing (JSON)',
+    'toolbar.load.tooltip':   'Open a briefing (JSON)',
     'toolbar.export.tooltip': 'Export to PDF or PNG (DCS kneeboard)',
     'toolbar.reset.tooltip':  'Clear the briefing (start from a blank page)',
     'toolbar.theme.tooltip':  'Graphic theme',
@@ -4180,10 +4180,10 @@ const I18N = {
     'editor.wing.importTooltip':'Import a wing_config.json file',
     'editor.wing.reset':        '♻ Reset',
     // ── Shared editor strings ──
-    'editor.imgZone.tap':     '▲ TAP TO LOAD A MAP ▲',
-    'editor.imgZone.tapLogo': '▲ TAP TO LOAD A LOGO ▲',
+    'editor.imgZone.tap':     '▲ TAP TO IMPORT A MAP ▲',
+    'editor.imgZone.tapLogo': '▲ TAP TO IMPORT A LOGO ▲',
     'editor.autoSave':        'Automatic local save',
-    'editor.exportTip':       'Export JSON to keep your templates',
+    'editor.exportTip':       'Save the briefing to keep your templates',
     // ── Residual strings externalized (Step C) ──
     'select.noSquadron':           '— No squadron —',
     'select.noGroup':              '— Select a group —',
@@ -4200,7 +4200,7 @@ const I18N = {
     'placeholder.chartName':       'e.g. AKROTIRI (LCRA) — RWY 10',
     'placeholder.annexeTitle':     'e.g. Additional notes',
     'editor.image.label':         'Image',
-    'editor.imgZone.tapShort':    '▲ TAP TO LOAD ▲',
+    'editor.imgZone.tapShort':    '▲ TAP TO IMPORT ▲',
     'editor.imgCard.remove':      'Remove',
     'editor.phases.moveUp':       'Move up',
     'editor.phases.moveDown':     'Move down',
@@ -4250,7 +4250,7 @@ const I18N = {
     'toast.briefingLoaded':    'Briefing loaded ✓',
     'toast.briefingReset':     'Briefing cleared ✓',
     'toast.briefingOptimized': 'Briefing optimized — {n} image(s) recompressed ✓',
-    'toast.briefingOptimizedOnLoad': 'Briefing optimized on load — {n} image(s) ✓',
+    'toast.briefingOptimizedOnLoad': 'Briefing optimized on opening — {n} image(s) ✓',
     'toast.imageCompressing':  'Compressing image…',
     'toast.imageLoaded':       'Image loaded ✓',
     'toast.logoInvalid':       '⚠ Invalid logo: ',
@@ -4310,7 +4310,7 @@ const I18N = {
     'toolbar.format.simpleShort': 'Quick',
     'toolbar.format.tooltip':     'Choose the briefing format',
     'toolbar.example':            'Example',
-    'toolbar.example.tooltip':    'Load the example briefing (replaces the current one)',
+    'toolbar.example.tooltip':    'Open the example briefing (replaces the current one)',
     'confirm.loadExample':        'Replace the current briefing with the example?',
     'toast.exampleLoaded':        'Example loaded ✓',
     // ── Route Planner map (v2.5.0) ──
@@ -5680,7 +5680,7 @@ function renderRadioAircrafts() {
         <label>${t('editor.radio.helpAircraft').substring(0, 35)}...</label>
         <label class="ed-img-zone" data-img-bind="radioPlan.aircraftPlans.${ai}.image">
           <input type="file" accept="image/*">
-          <span class="img-text" data-i18n="editor.imgZone.tap">▲ CHARGER IMAGE ▲</span>
+          <span class="img-text" data-i18n="editor.imgZone.tap">▲ IMPORTER IMAGE ▲</span>
         </label>
       </div>
       <div class="ed-field" data-radios-wrap="${ai}">

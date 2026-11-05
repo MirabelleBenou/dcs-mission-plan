@@ -1844,30 +1844,30 @@ __CSS__
     <button type="button" class="seg-btn" id="mode-day" data-mode="day" aria-pressed="true" data-i18n="tb.mode.day">Day</button>
     <button type="button" class="seg-btn" id="mode-night" data-mode="night" aria-pressed="false" data-i18n="tb.mode.night">Night</button>
   </div>
-  <button class="tb-btn" id="btn-briefing" data-i18n-title="tb.briefing.tip" title="Importer un briefing ou une route" data-i18n-aria-label="tb.briefing.tip" aria-label="Importer un briefing ou une route">
+  <button class="tb-btn" id="btn-json-import" data-i18n-title="tb.json.import.tip" title="Ouvrir une datacard (JSON)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    <span class="tb-btn-label solo" data-i18n="tb.json.import">Ouvrir</span>
+  </button>
+  <input type="file" id="file-load" accept=".json,.zip,application/json,application/zip" hidden>
+  <button class="tb-btn" id="btn-briefing" data-i18n-title="tb.briefing.tip" title="Importer un briefing, une route, la mission d'HQ ou un paquet de vol" data-i18n-aria-label="tb.briefing.tip" aria-label="Importer un briefing, une route, la mission d'HQ ou un paquet de vol">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="9 15 12 18 15 15"/><line x1="12" y1="11" x2="12" y2="18"/></svg>
     <span class="tb-btn-label"><span class="tb-long" data-i18n="tb.briefing">Importer</span><span class="tb-short" data-i18n="tb.briefing.short">Importer</span></span>
   </button>
-  <button class="tb-btn" id="btn-json-import" data-i18n-title="tb.json.import" title="Importer JSON">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-    <span class="tb-btn-label solo" data-i18n="tb.json.import">Importer JSON</span>
-  </button>
-  <input type="file" id="file-load" accept=".json,.zip,application/json,application/zip" hidden>
-  <button class="tb-btn" id="btn-json-export" data-i18n-title="tb.json.export" title="Exporter JSON">
+  <button class="tb-btn" id="btn-json-export" data-i18n-title="tb.json.export.tip" title="Enregistrer la datacard (JSON)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-    <span class="tb-btn-label solo" data-i18n="tb.json.export">Exporter JSON</span>
+    <span class="tb-btn-label solo" data-i18n="tb.json.export">Enregistrer</span>
   </button>
-  <button class="tb-btn" id="btn-print" data-i18n-title="tb.export" title="Exporter">
+  <button class="tb-btn" id="btn-print" data-i18n-title="tb.export.tip" title="Exporter en PDF ou PNG">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
     <span class="tb-btn-label solo" data-i18n="tb.export">Exporter</span>
   </button>
-  <button class="tb-btn" id="btn-example" data-i18n-title="tb.example.tip" title="Charger la datacard d'exemple (remplace le document en cours)">
+  <button class="tb-btn" id="btn-example" data-i18n-title="tb.example.tip" title="Ouvrir la datacard d'exemple (remplace le document en cours)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
     <span class="tb-btn-label solo" data-i18n="tb.example">Exemple</span>
   </button>
   <button class="tb-btn danger" id="btn-reset" data-i18n-title="tb.reset.tip" title="Vider le document (repartir d'une carte blanche)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-    <span class="tb-btn-label solo" data-i18n="tb.reset">Reset</span>
+    <span class="tb-btn-label solo" data-i18n="tb.reset">Effacer</span>
   </button>
   <select class="tb-select" id="theme-select" data-i18n-title="tb.theme.tip" title="Thème graphique" data-i18n-aria-label="tb.theme.tip" aria-label="Thème graphique">
     <option value="cw-nato"     data-i18n="theme.cw-nato">Cold War OTAN</option>
@@ -2079,15 +2079,18 @@ const I18N = {
     'tb.mode.night': 'Night',
     'tb.mode.tip': 'Version de jour ou de nuit de la datacard',
     'tb.briefing': 'Importer',
-    'tb.briefing.tip': 'Importer un briefing ou une route',
+    'tb.briefing.tip': 'Importer un briefing, une route, la mission d\'HQ ou un paquet de vol',
     'app.short': 'D·G',
     'tb.briefing.short': 'Importer',
-    'tb.json.import': 'Importer JSON',
-    'tb.json.export': 'Exporter JSON',
+    'tb.json.import': 'Ouvrir',
+    'tb.json.import.tip': 'Ouvrir une datacard (JSON)',
+    'tb.json.export': 'Enregistrer',
+    'tb.json.export.tip': 'Enregistrer la datacard (JSON)',
     'tb.export': 'Exporter',
+    'tb.export.tip': 'Exporter en PDF ou PNG',
     'tb.example': 'Exemple',
-    'tb.example.tip': 'Charger la datacard d\'exemple (remplace le document en cours)',
-    'tb.reset': 'Reset',
+    'tb.example.tip': 'Ouvrir la datacard d\'exemple (remplace le document en cours)',
+    'tb.reset': 'Effacer',
     'tb.reset.tip': 'Vider le document (repartir d\'une carte blanche)',
     'tb.theme.tip': 'Thème graphique',
     'tb.lang.tip': 'Switch language / Changer de langue',
@@ -2113,7 +2116,7 @@ const I18N = {
     'imp.src.route': 'Route en cours',
     'imp.src.routeOff': 'Aucune route enregistrée dans ce navigateur.',
     'imp.src.hq': 'Mission chargée dans HQ',
-    'imp.src.hqOff': 'Chargez d\'abord la mission dans HQ',
+    'imp.src.hqOff': 'Ouvrez d\'abord la mission dans HQ',
     'imp.src.hqNote': '{f} · {th}',
     'imp.src.pkg': 'Paquet de vol',
     'imp.src.file': 'Fichier JSON (briefing, route ou paquet)',
@@ -2161,7 +2164,7 @@ const I18N = {
     'rej.noFlight': 'Le paquet ne contient aucun vol.',
     'rej.skip.1': '{n} vol illisible ignoré.',
     'rej.skip.n': '{n} vols illisibles ignorés.',
-    'rej.isDatacard': 'C\'est une datacard : ouvrez-la par « Importer JSON ».',
+    'rej.isDatacard': 'C\'est une datacard : ouvrez-la par « Ouvrir ».',
     'fmt.briefing': 'briefing',
     'fmt.route': 'route',
     'fmt.set': 'jeu de routes',
@@ -2418,15 +2421,18 @@ const I18N = {
     'tb.mode.night': 'Night',
     'tb.mode.tip': 'Day or night version of the datacard',
     'tb.briefing': 'Import',
-    'tb.briefing.tip': 'Import a briefing or a route',
+    'tb.briefing.tip': 'Import a briefing, a route, the HQ mission or a flight package',
     'app.short': 'D·G',
     'tb.briefing.short': 'Import',
-    'tb.json.import': 'Import JSON',
-    'tb.json.export': 'Export JSON',
+    'tb.json.import': 'Open',
+    'tb.json.import.tip': 'Open a datacard (JSON)',
+    'tb.json.export': 'Save',
+    'tb.json.export.tip': 'Save the datacard (JSON)',
     'tb.export': 'Export',
+    'tb.export.tip': 'Export to PDF or PNG',
     'tb.example': 'Example',
-    'tb.example.tip': 'Load the example datacard (replaces the current document)',
-    'tb.reset': 'Reset',
+    'tb.example.tip': 'Open the example datacard (replaces the current document)',
+    'tb.reset': 'Clear',
     'tb.reset.tip': 'Clear the document (start from a blank card)',
     'tb.theme.tip': 'Graphic theme',
     'tb.lang.tip': 'Switch language / Changer de langue',
@@ -2452,7 +2458,7 @@ const I18N = {
     'imp.src.route': 'Current route',
     'imp.src.routeOff': 'No route saved in this browser.',
     'imp.src.hq': 'Mission loaded in HQ',
-    'imp.src.hqOff': 'Load the mission in HQ first',
+    'imp.src.hqOff': 'Open the mission in HQ first',
     'imp.src.hqNote': '{f} · {th}',
     'imp.src.pkg': 'Flight package',
     'imp.src.file': 'JSON file (briefing, route or package)',
@@ -2500,7 +2506,7 @@ const I18N = {
     'rej.noFlight': 'The package contains no flight.',
     'rej.skip.1': '{n} unreadable flight skipped.',
     'rej.skip.n': '{n} unreadable flights skipped.',
-    'rej.isDatacard': 'This is a datacard: open it with "Import JSON".',
+    'rej.isDatacard': 'This is a datacard: open it with "Open".',
     'fmt.briefing': 'briefing',
     'fmt.route': 'route',
     'fmt.set': 'route set',
@@ -4503,7 +4509,7 @@ function downloadJson() {
 }
 
 /* ============= IMPORT JSON ============= */
-/* « Importer JSON » : une datacard remplace le document (avec confirmation s'il n'est pas vide) ; un briefing, une route, un jeu de routes ou un paquet de vol
+/* « Ouvrir » : une datacard remplace le document (avec confirmation s'il n'est pas vide) ; un briefing, une route, un jeu de routes ou un paquet de vol
    ouvrent la fenêtre d'import sur la bonne source ; le reste est refusé avec sa raison, sans rien ouvrir. */
 function loadJsonFile(file) {
   readImportFile(file, r => {
@@ -4747,7 +4753,7 @@ function impSetFromFile(o) {
 }
 
 /* Un fichier lu → ce qu'il est : { kind: 'datacard' | 'briefing' | 'route' | 'set' | 'pkg', … } ; null après avoir dit pourquoi il est refusé.
-   withDatacard : l'entrée lit aussi la datacard (« Importer JSON » de la barre) ; la fenêtre d'import renvoie vers la barre */
+   withDatacard : l'entrée lit aussi la datacard (« Ouvrir » de la barre) ; la fenêtre d'import renvoie vers la barre */
 function impRecognise(parsed, fname, withDatacard, fromZip) {
   const fmt = isPlainObject(parsed) ? parsed.format : undefined;
   if (fromZip && fmt !== PACKAGE_FORMAT) { rejectFormat(parsed, ['pkg']); return null; }      /* un .zip ne porte qu'un paquet de vol */
@@ -5194,7 +5200,7 @@ function runImport() {
   showToast(t('toast.imported', { n: cards.length }));
 }
 
-/* « Choisir un fichier… » de la source « Fichier JSON » : un briefing, une route, un jeu de routes ou un paquet de vol ; une datacard renvoie vers « Importer JSON » */
+/* « Choisir un fichier… » de la source « Fichier JSON » : un briefing, une route, un jeu de routes ou un paquet de vol ; une datacard renvoie vers « Ouvrir » */
 function loadBriefingFile(file) {
   readImportFile(file, r => {
     if (r.reject) { rejectMsg(r.reject); return; }
