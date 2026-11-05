@@ -31,11 +31,11 @@ OUT_FILE = 'dist/dcs_mission_plan.html'
 # module actif ; tout module activé plus tard s'insère avant lui.
 MODULES = [
     {'id': 'hq', 'status': 'active', 'src': 'dist/dcs_hq.html',                        'tile': 'tiles/hq.webp'},
+    {'id': 'fc', 'status': 'active', 'src': 'dist/dcs_flight_configurator.html',       'tile': 'tiles/fc.webp'},
     {'id': 'rp', 'status': 'active', 'src': 'dist/dcs_route_planner.html',             'tile': 'tiles/rp.webp'},
     {'id': 'bg', 'status': 'active', 'src': 'dist/dcs_briefing_generator.html',       'tile': 'tiles/bg.webp'},
     {'id': 'dg', 'status': 'active', 'src': 'dist/dcs_datacard_generator.html',        'tile': 'tiles/kg.webp'},
     {'id': 'rs', 'status': 'active', 'src': 'dist/dcs_recon_station.html',             'tile': 'tiles/rs.webp'},
-    {'id': 'fc', 'status': 'active', 'src': 'dist/dcs_flight_configurator.html',       'tile': 'tiles/fc.webp'},
     {'id': 'fm', 'status': 'active', 'src': 'dist/dcs_field_manual.html',              'tile': 'tiles/fm.webp'},
 ]
 
@@ -441,7 +441,22 @@ select[data-tbm-src] {{ display: none !important; }}
           <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>
         </div>
 
-        <div class="print active reveal d2" id="card-rp" style="--card-accent:var(--a-rp)" tabindex="0" role="button" aria-label="Route Planner">
+        <div class="print active reveal d2" id="card-fc" style="--card-accent:var(--a-fc)" tabindex="0" role="button" aria-label="Flight Configurator">
+          <span class="tape"></span><span class="pin tl"></span><span class="pin tr"></span>
+          <div class="shot"></div>
+          <div class="caption">
+            <div class="cap-row">
+              <span class="logo" style="background:var(--a-fc)">F·C</span>
+              <span class="ptitle">Flight Configurator</span>
+              <span class="pver">v0.1.0</span>
+            </div>
+            <div class="pdesc" data-i18n="fc.desc">Assemble un vol — identité, radios, emport, livrée — et l'exporte en paquet que HQ applique à la mission.</div>
+            <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
+          </div>
+          <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>
+        </div>
+
+        <div class="print active reveal d3" id="card-rp" style="--card-accent:var(--a-rp)" tabindex="0" role="button" aria-label="Route Planner">
           <span class="tape"></span><span class="pin tl"></span><span class="pin tr"></span>
           <div class="shot"></div>
           <div class="caption">
@@ -455,7 +470,7 @@ select[data-tbm-src] {{ display: none !important; }}
           </div>
           <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>
         </div>
-        <div class="print active reveal d3" id="card-bg" style="--card-accent:var(--a-bg)" tabindex="0" role="button" aria-label="Briefing Generator">
+        <div class="print active reveal d4" id="card-bg" style="--card-accent:var(--a-bg)" tabindex="0" role="button" aria-label="Briefing Generator">
           <span class="tape"></span><span class="pin tl"></span><span class="pin tr"></span>
           <div class="shot"></div>
           <div class="caption">
@@ -470,7 +485,7 @@ select[data-tbm-src] {{ display: none !important; }}
           <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>
         </div>
 
-        <div class="print active reveal d4" id="card-dg" style="--card-accent:var(--a-dg)" tabindex="0" role="button" aria-label="Datacard Generator">
+        <div class="print active reveal d5" id="card-dg" style="--card-accent:var(--a-dg)" tabindex="0" role="button" aria-label="Datacard Generator">
           <span class="tape"></span><span class="pin tl"></span><span class="pin tr"></span>
           <div class="shot"></div>
           <div class="caption">
@@ -484,7 +499,7 @@ select[data-tbm-src] {{ display: none !important; }}
           </div>
           <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>
         </div>
-        <div class="print active reveal d5" id="card-rs" style="--card-accent:var(--a-rs)" tabindex="0" role="button" aria-label="Recon Station">
+        <div class="print active reveal d6" id="card-rs" style="--card-accent:var(--a-rs)" tabindex="0" role="button" aria-label="Recon Station">
           <span class="tape"></span><span class="pin tl"></span><span class="pin tr"></span>
           <div class="shot"></div>
           <div class="caption">
@@ -494,20 +509,6 @@ select[data-tbm-src] {{ display: none !important; }}
               <span class="pver">v1.1.1</span>
             </div>
             <div class="pdesc" data-i18n="rs.desc">Transforme une capture en photo d'analyse de reconnaissance — niveaux de gris, annotations au doigt, export PNG pleine résolution.</div>
-            <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
-          </div>
-          <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>
-        </div>
-        <div class="print active reveal d6" id="card-fc" style="--card-accent:var(--a-fc)" tabindex="0" role="button" aria-label="Flight Configurator">
-          <span class="tape"></span><span class="pin tl"></span><span class="pin tr"></span>
-          <div class="shot"></div>
-          <div class="caption">
-            <div class="cap-row">
-              <span class="logo" style="background:var(--a-fc)">F·C</span>
-              <span class="ptitle">Flight Configurator</span>
-              <span class="pver">v0.1.0</span>
-            </div>
-            <div class="pdesc" data-i18n="fc.desc">Assemble un vol — identité, radios, emport, livrée — et l'exporte en paquet que HQ applique à la mission.</div>
             <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
           </div>
           <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>

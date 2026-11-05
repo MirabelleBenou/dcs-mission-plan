@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
-"""Build the Flight Configurator HTML module : un vol (identité, radios, emport, livrée) et son paquet `dcs-flight-package-v1`.
+"""Build the Flight Configurator HTML module : un vol (identité, radios, emport, livrée, route portée) et son paquet `dcs-flight-package-v1`.
 
 Produit dist/dcs_flight_configurator.html (fichier autonome, hors-ligne, aucune requête réseau).
 Usage : python3 -B build_flight_configurator.py
 
 Blocs partagés insérés tels quels (identiques à l'octet dans les modules qui les utilisent) :
   radio_block.py    — noms des postes radio et numéros de canal du cockpit
-  payload_block.py  — presets d'emport (UnitPayloads), catalogue des armes (weapons_catalogue.json), `payload` d'un .miz
+  payload_block.py  — presets d'emport (UnitPayloads), pylônes et armes permis, `payload` d'un .miz ; il lit les constantes WEAPON_NAMES,
+                      AIRCRAFT_PYLONS et AIRCRAFT_LIMITS, qui sont celles du Loadout Editor de Mission Tools
+
+Tables (data/, copiées à l'octet de Mission Tools ; pydcs 1.0.0, LGPL-3.0 ; les dessins de views/ sont de Goldwolf, hors licence du dépôt) :
+elles sont recopiées dans la page entre des marqueurs `/* NOM:BEGIN */` et `/* NOM:END */`, et le build s'arrête si une copie diffère de son fichier.
 """
 
-import base64
 import json
 import os
 import re
@@ -24,6 +27,10 @@ APP_VERSION = "0.1.0"
 
 with open(os.path.join(HERE, 'assets.json')) as _f:
     A = json.load(_f)
+
+# Les quatre tables : (nom de la constante, fichier de data/)
+TABLES = [('WEAPON_NAMES', 'weapon_names.json'), ('AIRCRAFT_LIMITS', 'aircraft_limits.json'),
+          ('AIRCRAFT_PYLONS', 'aircraft_pylons.json'), ('AIRCRAFT_VIEWS', 'aircraft_views.json')]
 
 # ---------- CSS : socle commun à la suite (copié de HQ : thèmes, barre, sections, boutons, listes du thème, toast) ----------
 CSS_COMMON = """
@@ -447,24 +454,50 @@ select[data-tbm-src] { display: none !important; }
 # ---------- CSS propre au module ----------
 CSS_FC = r"""
 /* ======== FLIGHT CONFIGURATOR ======== */
-body[data-theme] { --pk-warn: var(--red-faded); --pk-ok: #7fa062; }
+/* L'accent du module : UNE variable (--fc, #D0784A, provisoire ; au shell, --a-fc). Il colore le bandeau, le bouton principal, le focus, les puces actives et le logo F·C. */
+:root { --fc: #D0784A; }
+body[data-theme] { --fc-dark: color-mix(in srgb, var(--fc) 62%, #000); --fc-dim: color-mix(in srgb, var(--fc) 26%, transparent); --pk-warn: var(--red-faded); --pk-ok: #7fa062; --cmp-frame: #1f1f1f; --cmp-strip: #151a1f; --amber-dim: rgba(192,137,42,.28); }
 body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="modern-east"] { --pk-warn: #e8b840; }  /* --red-faded y est trop sombre sur le fond de la page */
 
-.editor { max-width: 980px; }
+/* barre du haut : même méthode que HQ et le Datacard Generator (.tb-btn : icône, libellé long, libellé court, icône seule) */
+.tb-btn { width: auto; height: 38px; min-width: 38px; padding: 0 12px; gap: 6px; font-family: var(--f-ui); font-weight: 500; letter-spacing: 1.5px; font-size: 12px; text-transform: uppercase; white-space: nowrap; }
+.tb-btn .tb-short { display: none; }
+.tb-btn:disabled { opacity: .4; cursor: default; }
+.tb-btn:disabled:hover { background: transparent; border-color: var(--khaki); color: var(--paper); }
+.tb-btn.danger:hover { background: var(--rust); border-color: var(--red-faded); color: var(--paper-light); }
+.tb-brand-short { display: none; font-family: var(--f-stencil); font-size: 16px; font-weight: 700; letter-spacing: 3px; color: var(--amber); }
+/* Seuils mesurés dans le shell (qui ajoute à la barre un bouton de retour de 40 ou 119 px) : libellé long dès 1040 px (le français est le plus large),
+   libellé court de 900 à 1039 px, icône seule en dessous ; le titre complet seulement dès 1360 px */
+@media (max-width: 1359px) { .tb-brand-main, .tb-brand-sub, .tb-sep { display: none; } .tb-brand-short { display: inline; } .tb-version { display: none; } }
+@media (max-width: 1039px) { .tb-btn .tb-long { display: none; } .tb-btn .tb-short { display: inline; } .tb-btn { padding: 0 9px; letter-spacing: 1px; } .tb-select { max-width: 130px; } }
+@media (max-width: 899px) { .tb-btn .tb-btn-label { display: none; } .tb-btn { padding: 0; width: 38px; } .tb-select { max-width: 110px; } }
+@media (max-width: 539px) { .tb-brand-short { display: none; } .tb-select { max-width: 96px; } }
+@media (max-width: 479px) { .toolbar { gap: 3px; } .tb-btn { width: 34px; min-width: 34px; } .tb-select { max-width: 64px; padding: 0 18px 0 6px; } .tb-lang-btn { min-width: 34px; padding: 0 2px; } }
+
+/* l'état de l'export */
+.fc-status { position: sticky; top: 0; z-index: 5; margin: 0 0 12px; padding: 7px 12px; font-family: var(--f-typewriter); font-size: 12px; line-height: 1.4; color: var(--paper-light); background: var(--olive-dark); border: 1px solid var(--khaki); border-left: 3px solid var(--pk-warn); word-break: break-word; }
+.fc-status.ok { border-left-color: var(--pk-ok); color: var(--paper); }
+
+.editor { max-width: 1840px; }
 .ed-field input[type=text] { min-width: 0; }
 .ed-field input[type=text].bad { border-color: var(--pk-warn); border-left-color: var(--pk-warn); }
+.fc-cols { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (min-width: 1100px) { .fc-cols { grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr); } }
+.fc-cols > * { min-width: 0; }
+.fc-block { border: 1px solid var(--khaki); background: rgba(20,24,12,.5); }
+#col-presets > .fc-block, #col-right > .fc-block + .fc-block { margin-top: 16px; }
+.fc-bh { padding: 11px 14px; background: linear-gradient(90deg, var(--olive) 0%, var(--olive-dark) 100%); font-family: var(--f-stencil); font-size: 13px; letter-spacing: 2px; color: var(--amber); border-bottom: 1px solid var(--amber-dark); min-height: 44px; display: flex; align-items: center; gap: 6px; }
+.fc-bh .fc-count { font-family: var(--f-typewriter); font-size: 12px; letter-spacing: 0; color: var(--paper); }
+.fc-bc { padding: 14px; display: flex; flex-direction: column; gap: 12px; }
 .fc-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; align-items: end; }
 .fc-row > * { min-width: 0; }
+.fc-row3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+.fc-row3 > * { min-width: 0; }
 .fc-fname { font-family: var(--f-typewriter); font-size: 12px; color: var(--paper); min-height: 44px; display: flex; align-items: center; word-break: break-all; padding: 0 2px; }
 .pk-note { font-family: var(--f-typewriter); font-size: 11px; color: var(--khaki-light); margin: 0; }
 .pk-warn { font-family: var(--f-typewriter); font-size: 11px; color: var(--pk-warn); margin-top: 6px; word-break: break-word; }
-.snap-flight-tag {
-  font-family: var(--f-ui); font-size: 10px; padding: 2px 6px; border-radius: 2px;
-  background: var(--olive); color: var(--paper-light); text-transform: uppercase; letter-spacing: 1px; white-space: nowrap;
-}
-.pk-x {
-  flex: none; min-width: 36px; min-height: 36px; background: none; border: 0; color: var(--khaki-light); font-size: 16px; cursor: pointer;
-}
+.snap-flight-tag { font-family: var(--f-ui); font-size: 10px; padding: 2px 6px; border-radius: 2px; background: var(--olive); color: var(--paper-light); text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; }
+.pk-x { flex: none; min-width: 36px; min-height: 36px; background: none; border: 0; color: var(--khaki-light); font-size: 16px; cursor: pointer; }
 .pk-x:hover, .pk-x:focus-visible { color: var(--amber); outline: none; }
 
 /* listes des formulaires au thème de l'interface (même composant que la barre) */
@@ -482,8 +515,8 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
 .fc-sel.tbm-trigger.tbm-field .tbm-lbl { margin: 0; padding: 0; line-height: 42px; }
 .fc-sel.tbm-trigger.tbm-field .tbm-lbl::after { display: none; }
 /* une arme au nom long passe sur deux lignes au lieu d'être coupée ; dans la liste ouverte, elle passe à la ligne */
-.fc-ed-py .fc-sel.tbm-trigger.tbm-field { display: flex; align-items: center; line-height: 1.25; padding-top: 6px; padding-bottom: 6px; }
-.fc-ed-py .fc-sel.tbm-trigger.tbm-field .tbm-lbl { line-height: 1.25; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; text-overflow: clip; }
+.cmp-row .fc-sel.tbm-trigger.tbm-field { display: flex; align-items: center; line-height: 1.25; padding-top: 5px; padding-bottom: 5px; min-height: 40px; }
+.cmp-row .fc-sel.tbm-trigger.tbm-field .tbm-lbl { line-height: 1.25; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; text-overflow: clip; }
 .tbm-panel.tbm-p-field .tbm-opt { white-space: normal; line-height: 1.3; padding-top: 8px; padding-bottom: 8px; word-break: break-word; }
 .fc-sel.tbm-trigger.tbm-field:focus { outline: none; border-left-color: var(--red-stamp); box-shadow: 0 0 0 1px var(--amber); }
 .fc-sel.tbm-trigger.tbm-field:disabled { opacity: .5; cursor: default; }
@@ -493,67 +526,94 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
 .fc-flight { border: 1px solid var(--khaki); border-radius: 3px; padding: 10px 12px 12px; background: rgba(0,0,0,.15); }
 .fc-fhead, .fc-uhead { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
 .fc-fhead .pk-x, .fc-uhead .pk-x { margin-left: auto; margin-right: -8px; }
-.fc-ftitle { font-family: var(--f-stencil); font-size: 13px; letter-spacing: 1.5px; color: var(--amber); text-transform: uppercase; }
-.fc-units { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+.fc-ftitle { font-family: var(--f-stencil); font-size: 13px; letter-spacing: 1.5px; color: var(--amber); text-transform: uppercase; word-break: break-word; min-width: 0; }
+.fc-route { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; margin-top: 10px; padding: 6px 10px; border: 1px dashed rgba(128,116,84,.6); font-family: var(--f-typewriter); font-size: 12px; color: var(--paper); }
+.fc-route.none { color: var(--khaki-light); border-color: rgba(128,116,84,.35); }
+.fc-route-t { min-width: 0; word-break: break-word; flex: 1 1 200px; }
+.fc-small { min-height: 36px; padding: 6px 12px; font-size: 11px; }
+.fc-units { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; margin-top: 12px; }
 .fc-unit { border: 1px solid rgba(128,116,84,.55); border-left: 3px solid var(--amber-dark); padding: 8px 10px 10px; background: rgba(0,0,0,.12); }
+.fc-unit.sel { border-left-color: var(--amber); background: rgba(192,137,42,.1); box-shadow: 0 0 0 1px rgba(192,137,42,.5); }
 .fc-uhead { margin-bottom: 6px; }
 .fc-utitle { font-family: var(--f-stencil); font-size: 12px; letter-spacing: 1px; color: var(--paper); text-transform: uppercase; }
-.fc-row4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+.fc-row4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
 .fc-row4 > * { min-width: 0; }
 .fc-sub { margin-top: 10px; border-top: 1px solid rgba(128,116,84,.45); }
-.fc-sub > summary {
-  cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px; min-height: 40px; user-select: none;
-  font-family: var(--f-stencil); font-size: 12px; letter-spacing: 1.5px; color: var(--amber); text-transform: uppercase;
-}
+.fc-sub > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px; min-height: 40px; user-select: none; font-family: var(--f-stencil); font-size: 12px; letter-spacing: 1.5px; color: var(--amber); text-transform: uppercase; }
 .fc-sub > summary::-webkit-details-marker { display: none; }
 .fc-sub > summary::before { content: '\25ba'; font-size: 8px; color: var(--rust); transition: transform .2s; }
 .fc-sub[open] > summary::before { transform: rotate(90deg); }
 .fc-sub > summary .fc-sum { font-family: var(--f-typewriter); font-size: 11px; letter-spacing: 0; text-transform: none; color: var(--khaki-light); min-width: 0; word-break: break-word; }
 .fc-sub > .fc-subc { padding: 2px 0 6px; display: flex; flex-direction: column; gap: 10px; }
+.fc-posts { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
 .fc-post { border: 1px solid rgba(128,116,84,.4); background: rgba(0,0,0,.12); }
-.fc-post > summary {
-  cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 10px; user-select: none;
-  font-family: var(--f-ui); font-weight: 500; font-size: 12px; letter-spacing: 1px; color: var(--paper); text-transform: uppercase;
-}
+.fc-post > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 10px; user-select: none; font-family: var(--f-ui); font-weight: 500; font-size: 12px; letter-spacing: 1px; color: var(--paper); text-transform: uppercase; }
 .fc-post > summary::-webkit-details-marker { display: none; }
 .fc-post > summary::after { content: '\25c4'; margin-left: auto; font-size: 10px; color: var(--paper); transition: transform .2s; }
 .fc-post[open] > summary::after { transform: rotate(-90deg); }
 .fc-post > summary .fc-sum { font-family: var(--f-typewriter); font-size: 11px; letter-spacing: 0; text-transform: none; color: var(--khaki-light); }
 .fc-post > .fc-postc { padding: 4px 10px 10px; }
-.fc-chans { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 6px 8px; }
+.fc-chans { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 6px 8px; }
 .fc-ch { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .fc-ch > label { font-family: var(--f-ui); font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--khaki-light); }
-.fc-ch input {
-  background: rgba(216,201,165,.92); border: 1px solid var(--khaki); border-left: 3px solid var(--amber-dark);
-  font-family: var(--f-typewriter); font-size: 13px; color: var(--ink); padding: 6px 8px; min-height: 40px; width: 100%; min-width: 0; border-radius: 0;
-}
+.fc-ch input { background: rgba(216,201,165,.92); border: 1px solid var(--khaki); border-left: 3px solid var(--amber-dark); font-family: var(--f-typewriter); font-size: 13px; color: var(--ink); padding: 6px 8px; min-height: 40px; width: 100%; min-width: 0; border-radius: 0; }
 .fc-ch input:focus { outline: none; border-left-color: var(--red-stamp); background: var(--paper-light); box-shadow: 0 0 0 1px var(--amber); }
 .fc-ch input.bad { border-color: var(--pk-warn); border-left-color: var(--pk-warn); }
 .fc-msg { font-family: var(--f-typewriter); font-size: 11px; color: var(--pk-warn); margin-top: 6px; word-break: break-word; }
 .fc-msg:empty { display: none; }
+.fc-lo-sum { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(128,116,84,.45); }
+.fc-lo-k { font-family: var(--f-stencil); font-size: 12px; letter-spacing: 1.5px; color: var(--amber); text-transform: uppercase; }
+.fc-lo-v { font-family: var(--f-typewriter); font-size: 12px; color: var(--paper); flex: 1 1 160px; min-width: 0; word-break: break-word; }
 
-/* l'emport */
+/* l'emport : la vue de face de Mission Tools (Loadout Editor), reprise */
+.cmp-top { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; align-items: end; }
+.cmp-top > * { min-width: 0; }
+.cmp-for { font-family: var(--f-typewriter); font-size: 13px; color: var(--paper-light); word-break: break-word; display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; }
 .fc-lo-line { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-family: var(--f-typewriter); font-size: 11px; color: var(--khaki-light); }
-.fc-pylons { display: flex; flex-direction: column; border: 1px solid rgba(128,116,84,.4); }
-.fc-py { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 8px; align-items: baseline; padding: 6px 10px; }
-.fc-py + .fc-py { border-top: 1px solid rgba(128,116,84,.3); }
-.fc-py-n { font-family: var(--f-stencil); font-size: 11px; letter-spacing: 1px; color: var(--amber); text-transform: uppercase; }
-.fc-py-w { font-family: var(--f-typewriter); font-size: 12px; color: var(--paper); word-break: break-word; min-width: 0; }
-.fc-py-w small { display: block; font-size: 10px; color: var(--khaki-light); margin-top: 1px; word-break: break-all; }
-.fc-py.empty .fc-py-w { color: var(--khaki-light); opacity: .7; }
-.fc-py.unk .fc-py-w { color: var(--pk-warn); }
+#cmp-wrap { position: relative; }
+.cmp-view { position: relative; background: var(--cmp-frame); padding: 14px 14px 34px; border-radius: 4px; }
+.cmp-wrap-strip .cmp-view { border-radius: 4px 4px 0 0; }
+.cmp-svgbox { position: relative; margin: 0 auto; width: min(100%, calc(52vh * var(--r))); }
+.cmp-svgbox > svg { display: block; width: 100%; height: auto; }
+.cmp-svgbox svg [stroke]:not([stroke="none"]) { stroke: var(--paper); }
+.cmp-svgbox svg [fill="#ffffff"] { fill: var(--cmp-frame); }
+.cmp-credit { position: absolute; right: 10px; bottom: 8px; max-width: 70%; font-family: var(--f-typewriter); font-size: 10px; line-height: 1.3; color: var(--khaki-light); background: var(--cmp-frame); padding: 0 4px; text-align: right; }
+.cmp-num { position: absolute; transform: translate(-50%, 8px); min-width: 20px; text-align: center; font-family: var(--f-typewriter); font-size: 12px; line-height: 18px; color: var(--amber); background: var(--cmp-strip); border: 1px solid var(--amber); border-radius: 3px; padding: 0 3px; }
+.cmp-num.sel { background: var(--amber); color: var(--olive-deep); }
+#cmp-leads { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; overflow: visible; }
+#cmp-leads path { fill: none; stroke: var(--amber); stroke-width: 1.4; stroke-dasharray: 5 4; opacity: .9; }
+#cmp-leads path.on { stroke-width: 2.4; opacity: 1; }
+#cmp-leads circle { fill: #1b2228; stroke: var(--amber); stroke-width: 2; }
+.cmp-strip { position: relative; height: 58px; background: var(--cmp-strip); border-top: 1px solid var(--khaki); border-radius: 0 0 4px 4px; }
+.cmp-st { position: absolute; top: 6px; transform: translateX(-50%); width: calc(100% / var(--n) - 6px); min-width: 0; text-align: center; padding: 3px 2px; background: var(--cmp-frame); border: 1px solid var(--khaki); border-radius: 3px; cursor: pointer; z-index: 3; }
+.cmp-st .n { display: block; font-family: var(--f-typewriter); font-size: 11px; color: var(--khaki-light); }
+.cmp-st .w { display: block; font-family: var(--f-typewriter); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--paper-light); }
+.cmp-st.sel { border-color: var(--amber); box-shadow: 0 0 0 2px var(--amber-dim); }
+.cmp-st.sel .n { color: var(--amber); }
+.cmp-st:focus-visible { outline: 2px solid var(--amber); outline-offset: 1px; }
+.cmp-wrap-flat .cmp-view { padding-bottom: 8px; }
+.cmp-wrap-flat .cmp-svgbox { margin-bottom: 46px; }
+.cmp-wrap-flat .cmp-credit { position: static; max-width: none; padding: 0; margin-top: 6px; }
+.cmp-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 4px 20px; }
+.cmp-row { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto 62px; align-items: center; gap: 8px; padding: 3px 6px; border-radius: 4px; }
+.cmp-row.sel { background: var(--amber-dim); }
+.cmp-row .sn { font-family: var(--f-typewriter); font-size: 13px; color: var(--khaki-light); }
+.cmp-row.sel .sn { color: var(--amber); }
+.cmp-row .pair { font-family: var(--f-typewriter); font-size: 12px; color: var(--khaki-light); white-space: nowrap; }
+.cmp-row .cmp-kg { text-align: right; font-family: var(--f-typewriter); font-size: 12px; color: var(--paper); white-space: nowrap; }
+.cmp-foot { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 18px; padding-top: 4px; }
+.cmp-tot { font-family: var(--f-typewriter); font-size: 12px; color: var(--khaki-light); }
+.cmp-tot b { color: var(--paper-light); white-space: nowrap; }
+.pk-chk { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; cursor: pointer; font-family: var(--f-typewriter); font-size: 12px; }
 .fc-chip { font-family: var(--f-ui); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; padding: 1px 6px; border: 1px solid var(--khaki); color: var(--khaki-light); white-space: nowrap; }
 .fc-set { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
 .fc-set > * { min-width: 0; }
 .fc-set .ed-field label { font-size: 10px; letter-spacing: 1.2px; }
 .fc-actions .miz-btn { min-height: 44px; width: 100%; justify-content: center; }
-.fc-editor { border: 1px solid var(--amber); border-top: 3px solid var(--amber); background: var(--olive-dark); padding: 12px; display: flex; flex-direction: column; gap: 12px; }
-.fc-ed-title { font-family: var(--f-stencil); font-size: 13px; letter-spacing: 1.5px; color: var(--amber); text-transform: uppercase; }
-.fc-ed-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 8px 14px; }
-.fc-ed-py { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-.fc-ed-py > label { font-family: var(--f-ui); font-weight: 500; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--amber); display: flex; gap: 8px; align-items: baseline; }
-.fc-ed-py > small { font-family: var(--f-typewriter); font-size: 10px; color: var(--khaki-light); word-break: break-all; min-height: 14px; }
-.fc-ed-py > label .fc-chip { margin-left: auto; }
+.fc-editor { border: 1px solid var(--amber); border-top: 3px solid var(--amber); background: var(--olive-dark); padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.fc-pvfile { font-family: var(--f-typewriter); font-size: 12px; color: var(--khaki-light); word-break: break-all; }
+.fc-pvfile #pv-file { color: var(--paper); }
+.fc-pre { margin: 0; max-height: 380px; overflow: auto; padding: 10px 12px; background: var(--cmp-strip); border: 1px solid rgba(128,116,84,.5); font-family: var(--f-typewriter); font-size: 11px; line-height: 1.45; color: var(--paper); white-space: pre; tab-size: 2; }
 
 /* les presets */
 .fc-lib { display: flex; flex-direction: column; gap: 6px; }
@@ -562,17 +622,80 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
 .fc-file .pk-x { margin-left: auto; }
 .fc-h { font-family: var(--f-stencil); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--amber); padding: 8px 0 2px; border-bottom: 1px solid var(--khaki); margin-bottom: 4px; }
 .miz-btn { min-height: 44px; }
+.miz-btn.fc-small { min-height: 36px; }
+
+/* la fenêtre d'import (même gabarit que celle du Datacard Generator, aux couleurs de l'interface) */
+.export-modal[hidden] { display: none !important; }
+.export-modal { position: fixed; inset: 0; z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 16px; }
+.export-modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.6); }
+.export-modal-panel { position: relative; background: var(--olive-dark); color: var(--paper); border: 2px solid var(--khaki); border-top: 3px solid var(--amber); border-radius: 3px; padding: 22px 26px; max-width: 640px; width: 100%; max-height: 92vh; overflow-y: auto; box-shadow: 0 8px 40px rgba(0,0,0,.6); font-family: var(--f-typewriter); }
+.export-modal-close { position: absolute; top: 6px; right: 10px; min-width: 40px; min-height: 40px; background: none; border: none; color: var(--paper); font-size: 24px; line-height: 1; cursor: pointer; }
+.export-modal-close:hover { color: var(--amber); }
+.export-modal h2 { font-family: var(--f-stencil); font-weight: 700; font-size: 18px; letter-spacing: 2px; margin: 0 36px 14px 0; text-transform: uppercase; color: var(--amber); }
+.imp-block { margin-bottom: 14px; }
+.imp-block h3 { font-family: var(--f-stencil); font-weight: 700; font-size: 13px; letter-spacing: 2px; margin: 0 0 8px; color: var(--paper-light); text-transform: uppercase; }
+.imp-src { display: flex; align-items: center; gap: 10px; min-height: 40px; font-size: 13px; cursor: pointer; }
+.imp-src.off { opacity: .5; cursor: not-allowed; }
+.imp-src input { accent-color: var(--amber); width: 18px; height: 18px; flex: none; }
+.imp-note { font-size: 11px; color: var(--khaki-light); margin: 0 0 6px 28px; line-height: 1.35; word-break: break-word; }
+.imp-file { display: flex; align-items: center; gap: 10px; margin: 2px 0 4px 28px; font-size: 11px; flex-wrap: wrap; }
+.imp-filebtn { background: transparent; border: 1px solid var(--khaki); padding: 6px 12px; min-height: 36px; font-family: inherit; font-size: 11px; cursor: pointer; color: var(--paper); border-radius: 2px; }
+.imp-filebtn:hover, .imp-filebtn:focus-visible { background: var(--olive); border-color: var(--amber); outline: none; }
+.imp-filename { color: var(--khaki-light); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.imp-list { max-height: 300px; overflow-y: auto; border: 1px solid rgba(128,116,84,.5); padding: 4px 10px; background: rgba(0,0,0,.18); }
+.imp-flight { padding: 6px 0; }
+.imp-flight + .imp-flight { border-top: 1px dashed rgba(128,116,84,.5); }
+.imp-flight.off { opacity: .55; }
+.imp-fh { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-height: 36px; font-size: 13px; cursor: pointer; }
+.imp-fh input { accent-color: var(--amber); width: 18px; height: 18px; flex: none; }
+.imp-nm { font-family: var(--f-stencil); letter-spacing: 1px; min-width: 0; overflow-wrap: anywhere; }
+.imp-n { font-size: 11px; color: var(--khaki-light); margin-left: auto; text-align: right; }
+.pk-parts { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0 0 2px 26px; }
+.pk-chk input { accent-color: var(--amber); width: 18px; height: 18px; margin: 0; flex: none; }
+.pk-chk.off { opacity: .4; cursor: default; }
+.imp-actions { display: flex; justify-content: space-between; gap: 10px; margin-top: 8px; }
+.imp-btn { background: transparent; border: 2px solid var(--khaki); padding: 8px 18px; min-height: 44px; font-family: var(--f-stencil); font-weight: 700; letter-spacing: 2px; font-size: 13px; cursor: pointer; color: var(--paper); border-radius: 2px; text-transform: uppercase; }
+.imp-btn:hover { background: var(--olive); }
+.imp-btn.go { background: var(--amber-dark); border-color: var(--amber); color: var(--paper-light); }
+.imp-btn:disabled { opacity: .4; cursor: not-allowed; pointer-events: none; }
+
 @media (max-width: 539px) {
-  .editor { padding: 14px 10px 80px 10px; }
-  .ed-content { padding: 10px; }
+  .editor { padding: 10px 8px 80px 8px; }
+  .fc-bc { padding: 10px; }
   .fc-flight { padding: 8px 8px 10px; }
   .fc-unit { padding: 6px 8px 8px; }
-  .fc-py { grid-template-columns: 40px minmax(0, 1fr); }
-  .fc-py .fc-chip { grid-column: 2; justify-self: start; }
-  .fc-chans { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
-  .fc-ed-grid { grid-template-columns: 1fr; }
+  .fc-chans { grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); }
+  .cmp-list { grid-template-columns: minmax(0, 1fr); }
+  .cmp-row { grid-template-columns: 22px minmax(0, 1fr) auto 56px; gap: 6px; padding: 3px 0; }
   .miz-btn-row .miz-btn { flex: 1 1 100%; justify-content: center; }
+  .export-modal-panel { padding: 16px 14px; }
+  .imp-n { margin-left: 0; text-align: left; width: 100%; }
+  .imp-actions .imp-btn { flex: 1; padding: 8px 10px; }
 }
+
+/* L'accent (--fc) : bordure du bandeau, bouton principal, focus, puces actives, logo F·C */
+.toolbar { border-bottom-color: var(--fc); }
+.tb-brand-main, .tb-brand-short { color: var(--fc); }
+.tb-btn:hover, .tb-btn:focus-visible, .tb-lang-btn:hover, .tb-lang-btn:focus-visible { border-color: var(--fc); }
+.tb-btn:hover, .tb-btn:focus-visible { color: var(--fc); }
+.miz-btn.primary { border-color: var(--fc); color: var(--fc); }
+.miz-btn.primary:hover { background: var(--fc-dark); color: var(--paper-light); }
+.miz-btn.primary:disabled:hover { background: rgba(0,0,0,.2); border-color: var(--fc); color: var(--fc); }
+.fc-sel.tbm-trigger.tbm-field:focus, .fc-ch input:focus { box-shadow: 0 0 0 1px var(--fc); }
+.cmp-st:focus-visible { outline-color: var(--fc); }
+.fc-bh { border-bottom-color: var(--fc); }
+.fc-unit.sel { border-left-color: var(--fc); background: var(--fc-dim); box-shadow: 0 0 0 1px var(--fc); }
+.cmp-num { color: var(--fc); border-color: var(--fc); }
+.cmp-num.sel { background: var(--fc); color: var(--olive-deep); }
+#cmp-leads path, #cmp-leads circle { stroke: var(--fc); }
+.cmp-st.sel { border-color: var(--fc); box-shadow: 0 0 0 2px var(--fc-dim); }
+.cmp-st.sel .n, .cmp-row.sel .sn { color: var(--fc); }
+.cmp-row.sel { background: var(--fc-dim); }
+.fc-editor, .export-modal-panel { border-color: var(--fc); }
+.pk-chk input, .imp-src input, .imp-fh input { accent-color: var(--fc); }
+.imp-filebtn:hover, .imp-filebtn:focus-visible { border-color: var(--fc); }
+.imp-btn.go { background: var(--fc-dark); border-color: var(--fc); }
+.fc-status.ok { border-left-color: var(--fc); }
 
 /* R295 : une seule graisse par police embarquée (Oswald 500, Roboto Mono 400, Stardos Stencil 700) */
 .ed-field label, .ed-btn-icon, .ed-btn-add { font-weight: 500; }
@@ -580,6 +703,16 @@ b, strong { font-weight: 400; }
 """
 
 # ---------- Corps de la page ----------
+def _icon(d):
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>'
+
+
+def _btn(bid, key, icon, extra=''):
+    return ('<button type="button" class="tb-btn%s" id="btn-%s" data-i18n-title="tb.%s.tip" title="">%s'
+            '<span class="tb-btn-label"><span class="tb-long" data-i18n="tb.%s">.</span><span class="tb-short" data-i18n="tb.%s.s">.</span></span></button>'
+            % (extra, bid, key, _icon(icon), key, key))
+
+
 BODY = r"""
 <body data-theme="cw-nato">
 
@@ -587,8 +720,11 @@ BODY = r"""
 <header class="toolbar" role="toolbar" aria-label="Flight Configurator">
   <div class="tb-brand">
     <span class="tb-brand-main">FLIGHT CONFIGURATOR</span>
+    <span class="tb-brand-short">F·C</span>
     <span class="tb-brand-sub" data-i18n="toolbar.subtitle">░ PAQUET DE VOL</span>
   </div>
+  <div class="tb-sep"></div>
+  @@BUTTONS@@
   <div class="tb-sep"></div>
   <select class="tb-select" id="theme-select" data-i18n-title="toolbar.theme.tooltip" title="Thème graphique">
     <option value="cw-nato"     data-i18n="theme.cw-nato">Cold War OTAN</option>
@@ -604,29 +740,43 @@ BODY = r"""
 <!-- MAIN APP -->
 <div class="app" id="app">
   <div class="editor" id="editor-panel">
+    <div class="fc-status" id="fc-status" role="status" aria-live="polite"></div>
+    <div class="fc-cols">
+      <div id="col-left"><div id="col-flights"></div><div id="col-presets"></div></div>
+      <div id="col-right"></div>
+    </div>
+  </div>
+</div>
 
-    <details class="ed-section" id="sec-pkg" open>
-      <summary data-i18n="sec.pkg">PAQUET</summary>
-      <div class="ed-content" id="pkg-body"></div>
-    </details>
-
-    <details class="ed-section" id="sec-flights" open>
-      <summary><span data-i18n="sec.flights">VOLS</span>&nbsp;<span id="fl-count"></span></summary>
-      <div class="ed-content" id="fl-body"></div>
-    </details>
-
-    <details class="ed-section" id="sec-presets" open>
-      <summary data-i18n="sec.presets">PRESETS D'EMPORT</summary>
-      <div class="ed-content" id="pr-body"></div>
-    </details>
-
+<!-- FENÊTRE D'IMPORT -->
+<div class="export-modal" id="imp-modal" hidden role="dialog" aria-modal="true" aria-labelledby="imp-modal-title">
+  <div class="export-modal-backdrop" id="imp-modal-backdrop"></div>
+  <div class="export-modal-panel">
+    <button type="button" class="export-modal-close" id="imp-modal-close" data-i18n-title="imp.close" title="Fermer" aria-label="Fermer">×</button>
+    <h2 id="imp-modal-title" data-i18n="imp.title">Importer dans le module</h2>
+    <div id="imp-body"></div>
+    <div class="imp-actions">
+      <button type="button" class="imp-btn" id="imp-cancel" data-i18n="imp.cancel">Annuler</button>
+      <button type="button" class="imp-btn go" id="imp-go" data-i18n="imp.go" disabled>Importer</button>
+    </div>
   </div>
 </div>
 
 <input type="file" id="fc-in-lua" accept=".lua,text/plain" multiple hidden>
-<input type="file" id="fc-in-ctx" accept=".json,application/json" hidden>
+<input type="file" id="fc-in-open" accept=".json,application/json" hidden>
+<input type="file" id="fc-in-pkg" accept=".json,.zip,application/json,application/zip" hidden>
+<input type="file" id="fc-in-snap" accept=".json,application/json" hidden>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 """
+
+BUTTONS = '\n  '.join([
+    _btn('open', 'open', '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v1H3z"/><path d="M3 10h19l-2 8a2 2 0 0 1-2 1.5H5a2 2 0 0 1-2-2z"/>'),
+    _btn('save', 'save', '<path d="M5 3h11l4 4v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M8 3v5h7V3"/><rect x="7" y="13" width="10" height="8"/>'),
+    _btn('import', 'import', '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>'),
+    _btn('export', 'export', '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>'),
+    _btn('clear', 'clear', '<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>', ' danger'),
+])
+BODY = BODY.replace('@@BUTTONS@@', BUTTONS)
 
 # ---------- Listes au thème de l'interface (copie du composant de HQ) ----------
 JS_TBM = """
@@ -981,136 +1131,275 @@ function tbmScrolled(e) {
 # ---------- Script du module ----------
 JS_FC = r"""
 // =============================================================
-//  FLIGHT CONFIGURATOR — ébauche de maquette (lot A) : aucun paquet n'est encore écrit ni lu
+//  FLIGHT CONFIGURATOR — maquette 2 (lot A) : le module en ébauche jetable ; tout est réel sauf ce que le rapport dit
 // =============================================================
-const KEY_THEME = 'theme_v1';
-const KEY_LANG  = 'fc_lang_v1';
-const KEY_MINE  = 'fc_presets_v1';
-
 const I18N = {
   fr: {
     'toolbar.subtitle': '░ PAQUET DE VOL',
     'toolbar.theme.tooltip': 'Thème graphique',
     'toolbar.lang.tooltip': 'Changer de langue / Switch language',
     'theme.cw-nato': 'Cold War OTAN', 'theme.cw-soviet': 'Cold War Soviétique', 'theme.modern-nato': 'OTAN moderne', 'theme.modern-east': 'Bloc Est moderne',
-    'sec.pkg': 'PAQUET', 'sec.flights': 'VOLS', 'sec.presets': 'PRESETS D’EMPORT',
-    'pkg.theatre': 'Théâtre', 'pkg.theatre.none': '— non renseigné —',
+    'tb.open': 'Ouvrir', 'tb.open.s': 'Ouvrir', 'tb.open.tip': 'Ouvrir un fichier de travail (JSON) : remplace le contenu du module',
+    'tb.save': 'Enregistrer', 'tb.save.s': 'Enreg.', 'tb.save.tip': 'Enregistrer le travail en cours (JSON : le paquet et les réglages du module)',
+    'tb.import': 'Importer', 'tb.import.s': 'Import.', 'tb.import.tip': 'Importer des vols, des routes, des radios, des emports depuis la mission de HQ, un paquet de vol ou un snapshot',
+    'tb.export': 'Exporter', 'tb.export.s': 'Export.', 'tb.export.tip': 'Exporter le paquet de vol pour le Mission Commander',
+    'tb.clear': 'Effacer', 'tb.clear.s': 'Effacer', 'tb.clear.tip': 'Vider le module (les presets gardés restent)',
+    'bar.ok': 'Prêt à exporter : {0}',
+    'bar.no.theatre': 'Export impossible : choisissez un théâtre (liste « Théâtre », ou importez un paquet).',
+    'bar.no.flight': 'Export impossible : ajoutez au moins un vol.',
+    'bar.no.name': 'Export impossible : le vol {0} n’a pas de nom.',
+    'bar.bad.freq': 'Export impossible : {0} fréquence(s) à corriger dans les radios.',
+    'bar.bad.set': 'Export impossible : vol {0}, unité {1} — {2}',
+    'pkg.theatre': 'Théâtre', 'pkg.theatre.none': '— à choisir —',
     'pkg.fname': 'Fichier exporté',
-    'pkg.stamp': 'AAAAMMJJ-HHMMSS',
-    'pkg.load': '⇓ Charger un contexte ou un paquet',
-    'pkg.new': '↺ Nouveau paquet',
-    'pkg.export': '📦 Exporter le paquet',
-    'pkg.ctx.none': 'Aucun contexte chargé : tout se saisit ici. Un contexte (le _snapshot.json d’HQ ou un paquet) propose le théâtre, les vols et leurs unités.',
-    'pkg.ctx.on': 'Contexte : {0} — {1}, {2}',
-    'pkg.confirm.new': 'Vider le paquet en cours ?',
-    'toast.mock': 'Maquette : pas encore branché',
-    'fl.add': '+ Ajouter un vol',
+    'sec.flights': 'VOLS',
+    'sec.cmp': 'EMPORT',
+    'sec.presets': 'PRESETS D’EMPORT',
+    'sec.preview': 'APERÇU DU PAQUET',
     'fl.title': 'Vol {0}',
-    'fl.name': 'Nom du groupe', 'fl.name.ph': 'ex. Hind 1',
+    'fl.add': '+ Ajouter un vol',
+    'fl.remove': 'Retirer ce vol',
+    'fl.empty': 'Aucun vol. Ajoutez-en un, ou importez-en depuis la barre du haut.',
+    'fl.name': 'Nom du groupe', 'fl.name.ph': 'Hind 1',
     'fl.type': 'Appareil',
-    'fl.coalition': 'Coalition', 'fl.coalition.any': '— non précisée —', 'fl.coalition.blue': 'Bleue (blue)', 'fl.coalition.red': 'Rouge (red)',
-    'fl.freq': 'Fréquence du groupe (MHz)', 'fl.freq.ph': 'facultative',
-    'fl.remove': 'Retirer le vol',
+    'fl.coalition': 'Coalition', 'fl.coalition.any': '— non renseignée —', 'fl.coalition.blue': 'Bleue (OTAN)', 'fl.coalition.red': 'Rouge',
     'fl.units.one': '{0} unité', 'fl.units.many': '{0} unités',
-    'fl.empty': 'Aucun vol. Ajoutez-en un, ou chargez un contexte.',
-    'u.title': 'Unité {0}', 'u.remove': 'Retirer l’unité', 'u.add': '+ Ajouter une unité ({0}/4)',
-    'u.name': 'Nom de l’unité', 'u.callsign': 'Indicatif', 'u.onboard': 'N° de bord', 'u.livery': 'Livrée',
-    'u.livery.ph': 'identifiant DCS, facultatif', 'u.opt': 'facultatif',
-    'u.radios': 'Radios', 'u.loadout': 'Emport',
-    'u.radios.sum': '{0} postes', 'u.loadout.none': 'non renseigné — HQ n’y touchera pas',
-    'rad.post': '{0}', 'rad.chans': '{0} canaux', 'rad.ch': 'Canal {0}',
-    'rad.hint': 'Fréquences en MHz. Les canaux portent le numéro du cockpit. Les modulations ne s’écrivent pas.',
-    'rad.copy': '⧉ Recopier sur les autres unités du vol',
+    'route.none': 'Aucune route.',
+    'route.n': 'Route : {0} points, de « {1} » à « {2} »',
+    'route.n1': 'Route : 1 point, « {0} »',
+    'route.alt': ' (premier point à {0} m)',
+    'route.rm': 'Retirer la route',
+    'route.note': 'La route vient d’un import ; elle repart telle quelle. Le tracé se fait dans le Route Planner.',
+    'u.title': 'Unité {0}', 'u.add': '+ Ajouter une unité ({0}/4)', 'u.remove': 'Retirer cette unité',
+    'u.name': 'Nom', 'u.callsign': 'Indicatif', 'u.onboard': 'N° de bord', 'u.livery': 'Livrée', 'u.livery.ph': 'texte libre',
+    'u.opt': 'facultatif',
+    'u.radios': 'Radios', 'u.radios.sum': '{0} postes', 'u.radios.set': '{0} canaux réglés',
+    'u.loadout': 'Emport', 'u.loadout.none': 'non renseigné — HQ n’y touchera pas',
+    'u.compose': 'Composer l’emport',
+    'rad.chans': '{0} canaux', 'rad.ch': 'CH {0}',
+    'rad.hint': 'Fréquences en MHz (virgule ou point). Les modulations ne sont pas écrites. Un canal vide n’est pas écrit.',
+    'rad.copy': 'Recopier sur les autres unités du vol',
     'rad.err.nan': 'Canal {0} : « {1} » n’est pas une fréquence.',
     'rad.err.band': 'Canal {0} : {1} MHz hors de la bande du poste ({2} – {3} MHz).',
     'rad.err.more': ' (+ {0} autre(s))',
-    'lo.preset': 'Preset', 'lo.preset.none': '— aucun —', 'lo.create': '✎ Créer un preset…',
-    'lo.src.file': 'fichier {0}', 'lo.src.mine': 'mes presets',
-    'lo.nopreset': 'Aucun preset pour le {0}. Chargez un fichier UnitPayloads ou créez un preset.',
-    'lo.pylon': 'Pyl. {0}', 'lo.empty': 'vide', 'lo.unknown': 'arme absente du catalogue', 'lo.settings': 'réglages',
+    'cmp.for': '{0} · {1}',
+    'cmp.from': 'Partir de',
+    'cmp.from.none': '— non renseigné —',
+    'cmp.from.empty': 'Vide (poser des armes)',
+    'cmp.from.imp': 'Emport importé',
+    'cmp.none': '— vide —',
+    'cmp.offTable': '(hors table)',
+    'cmp.sym': 'Symétrique',
+    'cmp.mass': 'Masse des emports :',
+    'lo.pylon': 'Station {0}',
+    'cmp.credit': 'Illustration : Goldwolf, DCS Reference Guide — avec son accord',
+    'cmp.noview': 'Pas de vue de face pour ce type : la liste des stations.',
+    'cmp.pick': 'Choisissez un vol et une unité : l’emport se compose ici.',
+    'cmp.mod': 'modifié',
+    'cmp.custom': 'Emport composé',
+    'cmp.settings': 'réglages',
+    'cmp.save': 'Enregistrer comme preset…', 'cmp.save.name': 'Nom du preset', 'cmp.save.go': 'Enregistrer', 'cmp.save.cancel': 'Annuler',
+    'cmp.save.ph': 'Patrouille AT',
+    'cmp.save.err.name': 'Donnez un nom au preset.',
+    'cmp.save.err.dup': 'Un preset de ce nom existe déjà pour le {0}.',
+    'cmp.save.err.none': 'Aucune arme posée : rien à enregistrer.',
+    'cmp.save.ok': 'Preset « {0} » gardé dans « mes presets ».',
+    'cmp.clear': 'Vider l’emport',
+    'cmp.note': 'Un réglage d’arme (code laser, fusée…) suit sa station tant que l’arme n’est pas changée. Modifier une station ne demande pas de nommer un preset.',
     'lo.fuel': 'Carburant (kg)', 'lo.flare': 'Leurres', 'lo.chaff': 'Paillettes', 'lo.gun': 'Canon (%)',
-    'lo.max': 'max {0}', 'lo.err.range': '{0} : de 0 à {1}.',
-    'lo.settings.line': 'Carburant, leurres, paillettes et canon se règlent ici ; ils ne font pas partie du preset.',
-    'ed.title': 'Nouveau preset — {0}',
-    'ed.name': 'Nom du preset', 'ed.name.ph': 'ex. Patrouille AT',
-    'ed.empty': '— vide —', 'ed.clear': 'Tout vider', 'ed.save': 'Enregistrer le preset', 'ed.cancel': 'Annuler',
-    'ed.kept': 'réglages conservés',
-    'ed.err.name': 'Donnez un nom au preset.', 'ed.err.dup': 'Un preset de ce nom existe déjà pour le {0}.', 'ed.err.none': 'Choisissez au moins une arme.',
-    'ed.hint': 'Aucune règle d’emport n’est vérifiée ici : le preset est écrit comme celui de l’éditeur de DCS.',
-    'pr.load': '⇓ Charger des presets (.lua)',
-    'pr.hint': 'Un fichier UnitPayloads par appareil, au format de l’éditeur de DCS.',
+    'lo.max': 'max {0}',
+    'lo.err.range': '{0} : valeur hors plage (0 – {1}).',
+    'lo.err.lure': 'Leurres et paillettes dépassent la capacité des distributeurs ({0}).',
+    'lo.imported': 'emport importé',
+    'lo.src.file': 'fichier {0}', 'lo.src.mine': 'mes presets', 'lo.src.imp': 'import',
+    'pr.load': 'Charger des presets (.lua)',
+    'pr.hint': 'Les fichiers UnitPayloads de l’éditeur de DCS (un par appareil) : leurs presets s’offrent dans « Partir de ». Rien n’est modifié ni envoyé.',
     'pr.files': 'Fichiers chargés ({0})',
     'pr.file.ok': '{0} · {1} presets', 'pr.file.unsup': '{0} · type non géré',
     'pr.err': '{0} : illisible — ligne {1} ({2})',
-    'pr.mine': 'Mes presets ({0})', 'pr.mine.hint': 'Gardés dans ce navigateur.',
-    'pr.export': '⇑ Exporter {0}.lua', 'pr.delete': 'Supprimer',
-    'pr.export.hint': 'Le fichier réunit les presets chargés et les vôtres.',
-    'pr.none': 'Aucun preset chargé ni créé.',
-    'err.code.unterminated-string': 'chaîne non fermée', 'err.code.unexpected-eof': 'fin de fichier inattendue', 'err.code.unexpected-token': 'élément inattendu',
-    'err.code.bad-structure': 'structure inattendue', 'err.code.unexpected-character': 'caractère inattendu', 'err.code.unterminated-comment': 'commentaire non fermé'
+    'pr.mine': 'Mes presets ({0})',
+    'pr.none': 'Aucun preset. Chargez un fichier, ou composez un emport et enregistrez-le.',
+    'pr.delete': 'Retirer',
+    'pr.export': 'Exporter {0}.lua',
+    'pr.export.hint': 'Le fichier .lua réunit les presets du fichier chargé et les vôtres, au format de l’éditeur : déposez-le dans UnitPayloads (il remplace le fichier du même nom).',
+    'err.code.': 'erreur',
+    'err.code.unterminated-comment': 'commentaire non fermé', 'err.code.unterminated-string': 'chaîne non fermée',
+    'err.code.unexpected-character': 'caractère inattendu', 'err.code.unexpected-eof': 'fin de fichier inattendue',
+    'err.code.unexpected-token': 'élément inattendu', 'err.code.bad-structure': 'structure inattendue',
+    'pv.file': 'Fichier exporté :',
+    'pv.empty': 'Rien à exporter pour l’instant.',
+    'pv.points': '{0} points, repris tels quels',
+    'imp.title': 'Importer dans le module',
+    'imp.src': 'Source',
+    'imp.src.hq': 'Mission chargée dans HQ',
+    'imp.src.pkg': 'Paquet de vol',
+    'imp.src.snap': 'Fichier snapshot',
+    'imp.src.rp': 'Route Planner', 'imp.src.bg': 'Briefing Generator', 'imp.src.dg': 'Datacard Generator',
+    'imp.soon': 'Pas encore branché : prochain lot.',
+    'imp.hq.none': 'Aucune mission dans HQ : chargez-en une dans HQ (même navigateur).',
+    'imp.hq.ok': '{0} · théâtre {1}',
+    'imp.choose': 'Choisir un fichier…',
+    'imp.pkg.note': 'Un paquet .json ou .zip (exporté par HQ, le Route Planner ou ce module).',
+    'imp.snap.note': 'Le _snapshot.json écrit par HQ.',
+    'imp.flights': 'Vols à importer',
+    'imp.none': 'Choisissez une source.',
+    'imp.part.route': 'Route', 'imp.part.radios': 'Radios', 'imp.part.loadout': 'Emport', 'imp.part.livery': 'Livrée',
+    'imp.new': 'nouveau vol', 'imp.exists': 'complète le vol du module',
+    'imp.unsupported': 'appareil non géré',
+    'imp.units': '{0} unité(s)',
+    'imp.theatre.keep': 'Le théâtre du module ({0}) est conservé ; celui de la source est {1}.',
+    'imp.theatre.set': 'Le théâtre deviendra {0}.',
+    'imp.cancel': 'Annuler', 'imp.go': 'Importer', 'imp.close': 'Fermer',
+    'imp.done': '{0} vol(s) importé(s).',
+    'rej.json': 'Fichier illisible : ce n’est pas du JSON.',
+    'rej.zip': 'Archive illisible : pas de package.json à la racine.',
+    'rej.noTheatre': 'Le paquet n’a pas de théâtre.',
+    'rej.noFlight': 'Aucun vol lisible dans ce fichier.',
+    'rej.format': 'Format « {0} » non reconnu ici (attendu : {1}).',
+    'rej.unknown': 'inconnu',
+    'rej.skip': '{0} vol(s) illisible(s) ignoré(s).',
+    'fmt.pkg': 'paquet de vol', 'fmt.snap': 'snapshot de HQ', 'fmt.work': 'fichier de travail',
+    'open.bad': 'Ce fichier n’est pas un fichier de travail ni un paquet de vol.',
+    'open.done': 'Fichier ouvert : {0} vol(s).',
+    'clear.confirm': 'Vider le module ? Les vols, la route et l’emport en cours sont perdus (vos presets gardés restent).',
+    'save.done': 'Travail enregistré : {0}',
+    'export.done': 'Paquet exporté : {0}',
+    'about.credit': 'Dessins des vues de face : Goldwolf (DCS Reference Guide), avec son accord, hors licence du dépôt. Tables d’armes : pydcs, LGPL-3.0.'
   },
   en: {
     'toolbar.subtitle': '░ FLIGHT PACKAGE',
-    'toolbar.theme.tooltip': 'Visual theme',
+    'toolbar.theme.tooltip': 'Graphic theme',
     'toolbar.lang.tooltip': 'Switch language / Changer de langue',
-    'theme.cw-nato': 'Cold War NATO', 'theme.cw-soviet': 'Cold War Soviet', 'theme.modern-nato': 'Modern NATO', 'theme.modern-east': 'Modern East Bloc',
-    'sec.pkg': 'PACKAGE', 'sec.flights': 'FLIGHTS', 'sec.presets': 'LOADOUT PRESETS',
-    'pkg.theatre': 'Theatre', 'pkg.theatre.none': '— not set —',
+    'theme.cw-nato': 'Cold War NATO', 'theme.cw-soviet': 'Cold War Soviet', 'theme.modern-nato': 'Modern NATO', 'theme.modern-east': 'Modern Eastern Bloc',
+    'tb.open': 'Open', 'tb.open.s': 'Open', 'tb.open.tip': 'Open a working file (JSON): replaces the module content',
+    'tb.save': 'Save', 'tb.save.s': 'Save', 'tb.save.tip': 'Save the work in progress (JSON: the package and the module settings)',
+    'tb.import': 'Import', 'tb.import.s': 'Import', 'tb.import.tip': 'Import flights, routes, radios, loadouts from the mission loaded in HQ, a flight package or a snapshot',
+    'tb.export': 'Export', 'tb.export.s': 'Export', 'tb.export.tip': 'Export the flight package for the Mission Commander',
+    'tb.clear': 'Clear', 'tb.clear.s': 'Clear', 'tb.clear.tip': 'Empty the module (kept presets stay)',
+    'bar.ok': 'Ready to export: {0}',
+    'bar.no.theatre': 'Cannot export: choose a theatre (the “Theatre” list, or import a package).',
+    'bar.no.flight': 'Cannot export: add at least one flight.',
+    'bar.no.name': 'Cannot export: flight {0} has no name.',
+    'bar.bad.freq': 'Cannot export: {0} frequency(ies) to fix in the radios.',
+    'bar.bad.set': 'Cannot export: flight {0}, unit {1} — {2}',
+    'pkg.theatre': 'Theatre', 'pkg.theatre.none': '— to choose —',
     'pkg.fname': 'Exported file',
-    'pkg.stamp': 'YYYYMMDD-HHMMSS',
-    'pkg.load': '⇓ Load a context or a package',
-    'pkg.new': '↺ New package',
-    'pkg.export': '📦 Export the package',
-    'pkg.ctx.none': 'No context loaded: everything is entered here. A context (HQ’s _snapshot.json or a package) offers the theatre, the flights and their units.',
-    'pkg.ctx.on': 'Context: {0} — {1}, {2}',
-    'pkg.confirm.new': 'Clear the current package?',
-    'toast.mock': 'Mock-up: not wired yet',
-    'fl.add': '+ Add a flight',
+    'sec.flights': 'FLIGHTS',
+    'sec.cmp': 'LOADOUT',
+    'sec.presets': 'LOADOUT PRESETS',
+    'sec.preview': 'PACKAGE PREVIEW',
     'fl.title': 'Flight {0}',
-    'fl.name': 'Group name', 'fl.name.ph': 'e.g. Hind 1',
+    'fl.add': '+ Add a flight',
+    'fl.remove': 'Remove this flight',
+    'fl.empty': 'No flight. Add one, or import some from the top bar.',
+    'fl.name': 'Group name', 'fl.name.ph': 'Hind 1',
     'fl.type': 'Aircraft',
-    'fl.coalition': 'Coalition', 'fl.coalition.any': '— unspecified —', 'fl.coalition.blue': 'Blue', 'fl.coalition.red': 'Red',
-    'fl.freq': 'Group frequency (MHz)', 'fl.freq.ph': 'optional',
-    'fl.remove': 'Remove the flight',
+    'fl.coalition': 'Coalition', 'fl.coalition.any': '— not set —', 'fl.coalition.blue': 'Blue (NATO)', 'fl.coalition.red': 'Red',
     'fl.units.one': '{0} unit', 'fl.units.many': '{0} units',
-    'fl.empty': 'No flight. Add one, or load a context.',
-    'u.title': 'Unit {0}', 'u.remove': 'Remove the unit', 'u.add': '+ Add a unit ({0}/4)',
-    'u.name': 'Unit name', 'u.callsign': 'Callsign', 'u.onboard': 'Onboard no.', 'u.livery': 'Livery',
-    'u.livery.ph': 'DCS id, optional', 'u.opt': 'optional',
-    'u.radios': 'Radios', 'u.loadout': 'Loadout',
-    'u.radios.sum': '{0} radios', 'u.loadout.none': 'not set — HQ will leave it untouched',
-    'rad.post': '{0}', 'rad.chans': '{0} channels', 'rad.ch': 'Channel {0}',
-    'rad.hint': 'Frequencies in MHz. Channels carry the cockpit numbers. Modulations are not written.',
-    'rad.copy': '⧉ Copy to the other units of the flight',
+    'route.none': 'No route.',
+    'route.n': 'Route: {0} points, from “{1}” to “{2}”',
+    'route.n1': 'Route: 1 point, “{0}”',
+    'route.alt': ' (first point at {0} m)',
+    'route.rm': 'Remove the route',
+    'route.note': 'The route comes from an import and is written back as is. Drawing is done in the Route Planner.',
+    'u.title': 'Unit {0}', 'u.add': '+ Add a unit ({0}/4)', 'u.remove': 'Remove this unit',
+    'u.name': 'Name', 'u.callsign': 'Callsign', 'u.onboard': 'Onboard no.', 'u.livery': 'Livery', 'u.livery.ph': 'free text',
+    'u.opt': 'optional',
+    'u.radios': 'Radios', 'u.radios.sum': '{0} radios', 'u.radios.set': '{0} channels set',
+    'u.loadout': 'Loadout', 'u.loadout.none': 'not set — HQ will not touch it',
+    'u.compose': 'Compose the loadout',
+    'rad.chans': '{0} channels', 'rad.ch': 'CH {0}',
+    'rad.hint': 'Frequencies in MHz (comma or dot). Modulations are not written. An empty channel is not written.',
+    'rad.copy': 'Copy to the other units of the flight',
     'rad.err.nan': 'Channel {0}: “{1}” is not a frequency.',
-    'rad.err.band': 'Channel {0}: {1} MHz is outside the radio’s band ({2} – {3} MHz).',
+    'rad.err.band': 'Channel {0}: {1} MHz is outside the radio band ({2} – {3} MHz).',
     'rad.err.more': ' (+ {0} more)',
-    'lo.preset': 'Preset', 'lo.preset.none': '— none —', 'lo.create': '✎ Create a preset…',
-    'lo.src.file': 'file {0}', 'lo.src.mine': 'my presets',
-    'lo.nopreset': 'No preset for the {0}. Load a UnitPayloads file or create a preset.',
-    'lo.pylon': 'Pyl. {0}', 'lo.empty': 'empty', 'lo.unknown': 'weapon not in the catalogue', 'lo.settings': 'settings',
+    'cmp.for': '{0} · {1}',
+    'cmp.from': 'Start from',
+    'cmp.from.none': '— not set —',
+    'cmp.from.empty': 'Empty (place weapons)',
+    'cmp.from.imp': 'Imported loadout',
+    'cmp.none': '— empty —',
+    'cmp.offTable': '(not in table)',
+    'cmp.sym': 'Symmetric',
+    'cmp.mass': 'Loadout weight:',
+    'lo.pylon': 'Station {0}',
+    'cmp.credit': 'Illustration: Goldwolf, DCS Reference Guide — used with permission',
+    'cmp.noview': 'No front view for this type: the station list.',
+    'cmp.pick': 'Pick a flight and a unit: the loadout is composed here.',
+    'cmp.mod': 'modified',
+    'cmp.custom': 'Composed loadout',
+    'cmp.settings': 'settings',
+    'cmp.save': 'Save as a preset…', 'cmp.save.name': 'Preset name', 'cmp.save.go': 'Save', 'cmp.save.cancel': 'Cancel',
+    'cmp.save.ph': 'AT patrol',
+    'cmp.save.err.name': 'Give the preset a name.',
+    'cmp.save.err.dup': 'A preset with this name already exists for the {0}.',
+    'cmp.save.err.none': 'No weapon placed: nothing to save.',
+    'cmp.save.ok': 'Preset “{0}” kept in “my presets”.',
+    'cmp.clear': 'Empty the loadout',
+    'cmp.note': 'A weapon setting (laser code, fuze…) follows its station as long as the weapon is not changed. Changing a station does not require naming a preset.',
     'lo.fuel': 'Fuel (kg)', 'lo.flare': 'Flares', 'lo.chaff': 'Chaff', 'lo.gun': 'Gun (%)',
-    'lo.max': 'max {0}', 'lo.err.range': '{0}: 0 to {1}.',
-    'lo.settings.line': 'Fuel, flares, chaff and gun are set here; they are not part of the preset.',
-    'ed.title': 'New preset — {0}',
-    'ed.name': 'Preset name', 'ed.name.ph': 'e.g. AT patrol',
-    'ed.empty': '— empty —', 'ed.clear': 'Clear all', 'ed.save': 'Save the preset', 'ed.cancel': 'Cancel',
-    'ed.kept': 'settings kept',
-    'ed.err.name': 'Give the preset a name.', 'ed.err.dup': 'A preset with this name already exists for the {0}.', 'ed.err.none': 'Pick at least one weapon.',
-    'ed.hint': 'No loadout rule is checked here: the preset is written like the DCS editor writes it.',
-    'pr.load': '⇓ Load presets (.lua)',
-    'pr.hint': 'One UnitPayloads file per aircraft, in the DCS editor’s format.',
+    'lo.max': 'max {0}',
+    'lo.err.range': '{0}: value out of range (0 – {1}).',
+    'lo.err.lure': 'Flares and chaff exceed the dispenser capacity ({0}).',
+    'lo.imported': 'imported loadout',
+    'lo.src.file': 'file {0}', 'lo.src.mine': 'my presets', 'lo.src.imp': 'import',
+    'pr.load': 'Load presets (.lua)',
+    'pr.hint': 'The UnitPayloads files of the DCS editor (one per aircraft): their presets are offered in “Start from”. Nothing is modified or sent.',
     'pr.files': 'Loaded files ({0})',
     'pr.file.ok': '{0} · {1} presets', 'pr.file.unsup': '{0} · type not handled',
     'pr.err': '{0}: unreadable — line {1} ({2})',
-    'pr.mine': 'My presets ({0})', 'pr.mine.hint': 'Kept in this browser.',
-    'pr.export': '⇑ Export {0}.lua', 'pr.delete': 'Delete',
-    'pr.export.hint': 'The file holds the loaded presets and yours.',
-    'pr.none': 'No preset loaded or created.',
-    'err.code.unterminated-string': 'unterminated string', 'err.code.unexpected-eof': 'unexpected end of file', 'err.code.unexpected-token': 'unexpected token',
-    'err.code.bad-structure': 'unexpected structure', 'err.code.unexpected-character': 'unexpected character', 'err.code.unterminated-comment': 'unterminated comment'
+    'pr.mine': 'My presets ({0})',
+    'pr.none': 'No preset. Load a file, or compose a loadout and save it.',
+    'pr.delete': 'Remove',
+    'pr.export': 'Export {0}.lua',
+    'pr.export.hint': 'The .lua file merges the presets of the loaded file and yours, in the editor’s format: drop it into UnitPayloads (it replaces the file of the same name).',
+    'err.code.': 'error',
+    'err.code.unterminated-comment': 'unclosed comment', 'err.code.unterminated-string': 'unclosed string',
+    'err.code.unexpected-character': 'unexpected character', 'err.code.unexpected-eof': 'unexpected end of file',
+    'err.code.unexpected-token': 'unexpected token', 'err.code.bad-structure': 'unexpected structure',
+    'pv.file': 'Exported file:',
+    'pv.empty': 'Nothing to export yet.',
+    'pv.points': '{0} points, carried as is',
+    'imp.title': 'Import into the module',
+    'imp.src': 'Source',
+    'imp.src.hq': 'Mission loaded in HQ',
+    'imp.src.pkg': 'Flight package',
+    'imp.src.snap': 'Snapshot file',
+    'imp.src.rp': 'Route Planner', 'imp.src.bg': 'Briefing Generator', 'imp.src.dg': 'Datacard Generator',
+    'imp.soon': 'Not wired yet: next lot.',
+    'imp.hq.none': 'No mission in HQ: load one in HQ (same browser).',
+    'imp.hq.ok': '{0} · theatre {1}',
+    'imp.choose': 'Choose a file…',
+    'imp.pkg.note': 'A .json or .zip package (exported by HQ, the Route Planner or this module).',
+    'imp.snap.note': 'The _snapshot.json written by HQ.',
+    'imp.flights': 'Flights to import',
+    'imp.none': 'Choose a source.',
+    'imp.part.route': 'Route', 'imp.part.radios': 'Radios', 'imp.part.loadout': 'Loadout', 'imp.part.livery': 'Livery',
+    'imp.new': 'new flight', 'imp.exists': 'completes the module’s flight',
+    'imp.unsupported': 'aircraft not handled',
+    'imp.units': '{0} unit(s)',
+    'imp.theatre.keep': 'The module’s theatre ({0}) is kept; the source’s is {1}.',
+    'imp.theatre.set': 'The theatre will become {0}.',
+    'imp.cancel': 'Cancel', 'imp.go': 'Import', 'imp.close': 'Close',
+    'imp.done': '{0} flight(s) imported.',
+    'rej.json': 'Unreadable file: not JSON.',
+    'rej.zip': 'Unreadable archive: no package.json at the root.',
+    'rej.noTheatre': 'The package has no theatre.',
+    'rej.noFlight': 'No readable flight in this file.',
+    'rej.format': 'Format “{0}” not recognised here (expected: {1}).',
+    'rej.unknown': 'unknown',
+    'rej.skip': '{0} unreadable flight(s) skipped.',
+    'fmt.pkg': 'flight package', 'fmt.snap': 'HQ snapshot', 'fmt.work': 'working file',
+    'open.bad': 'This file is neither a working file nor a flight package.',
+    'open.done': 'File opened: {0} flight(s).',
+    'clear.confirm': 'Empty the module? The flights, route and loadouts in progress are lost (your kept presets stay).',
+    'save.done': 'Work saved: {0}',
+    'export.done': 'Package exported: {0}',
+    'about.credit': 'Front-view drawings: Goldwolf (DCS Reference Guide), used with permission, outside the repository licence. Weapon tables: pydcs, LGPL-3.0.'
   }
 };
+
 let CURRENT_LANG = 'fr';
 function t(key) {
   const d = I18N[CURRENT_LANG] || I18N.fr;
@@ -1125,41 +1414,47 @@ function tf(key) {
 function esc(s) {
   return String(s === undefined || s === null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
+const isObj = o => !!o && typeof o === 'object' && !Array.isArray(o);
+const str = v => (typeof v === 'string' ? v : '');
+const clone = o => JSON.parse(JSON.stringify(o));
+const has = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
 
 // ---------- données par type ----------
 const TYPE_LABEL = { 'Mi-24P': 'Mi-24P', 'Mi-8MT': 'Mi-8MT', 'F-4E-45MC': 'F-4E-45MC', 'Mirage-F1EE': 'Mirage F1EE' };
 // Nombre de canaux par poste (sonde des .miz) ; seuls les postes qui ont des canaux s'offrent.
 const RADIO_CHANNELS = { 'Mi-24P': { 1: 20, 2: 10 }, 'Mi-8MT': { 1: 20, 2: 10 }, 'F-4E-45MC': { 1: 18, 2: 20 }, 'Mirage-F1EE': { 1: 20, 2: 20 } };
-// Bande plausible par poste, en MHz (à confirmer : valeurs de DCS d'après la connaissance du jeu, bornées par les fréquences vues dans les .miz d'exemple)
+// Bande plausible par poste, en MHz (valeurs du module, bornées par les fréquences vues dans les .miz d'exemple)
 const RADIO_BANDS = {
   'Mi-24P': { 1: [100, 399.975], 2: [20, 59.975] }, 'Mi-8MT': { 1: [100, 399.975], 2: [20, 59.975] },
   'F-4E-45MC': { 1: [225, 399.975], 2: [225, 399.975] }, 'Mirage-F1EE': { 1: [118, 399.975], 2: [225, 399.975] }
 };
 const THEATRES = ['Caucasus', 'Falklands', 'GermanyCW', 'Kola', 'MarianaIslands', 'Nevada', 'Normandy', 'PersianGulf', 'SinaiMap', 'Syria', 'TheChannel'];
+const PARTS = ['route', 'radios', 'loadout', 'livery'];
+const KEY_THEME = 'theme_v1', KEY_LANG = 'lang_v1', KEY_STATE = 'fc_state_v1';
+const KEY_SNAPSHOT = 'mission_snapshot_v1', SNAPSHOT_SCHEMA = 'dcs-mission-snapshot-v1', PACKAGE_FORMAT = 'dcs-flight-package-v1';
 
 // ---------- état ----------
-const S = { theatre: '', flights: [], ctx: null };
+const S = { theatre: '', flights: [], sel: { f: 0, u: 0 } };
 const LIB = { files: [], mine: {}, errors: [] };
-const UI = { open: new Set(), editor: null };
+const UI = { open: new Set(), cmp: { sym: true, st: null, saving: false, name: '', err: '' }, imp: null };
 
-function newUnit() { return { name: '', callsign: '', onboard: '', livery: '', radios: {}, loadout: null }; }
-function newFlight() { return { name: '', type: 'Mi-24P', coalition: '', freq: '', units: [newUnit()] }; }
+function newUnit() { return { name: '', callsign: '', csRaw: undefined, onboard: '', livery: '', radios: {}, loadout: null }; }
+function newFlight() { return { name: '', type: 'Mi-24P', coalition: '', route: null, units: [newUnit()] }; }
+function RADIO_POSTS(type) { return Object.keys(RADIO_CHANNELS[type] || {}).map(Number); }
+function flightLabel(f, fi) { return f.name.trim() || tf('fl.title', fi + 1); }
+function unitDefaultName(f, fi, ui) { return (f.name.trim() || tf('fl.title', fi + 1)) + '-' + (ui + 1); }
+function unitLabel(f, fi, u, ui) { return u.name.trim() || unitDefaultName(f, fi, ui); }
 
 // ---------- stockage (jamais requis : tout accès en try/catch) ----------
-function loadMine() {
-  try {
-    const raw = localStorage.getItem(KEY_MINE);
-    const o = raw ? JSON.parse(raw) : null;
-    if (o && typeof o === 'object' && o.mine && typeof o.mine === 'object') {
-      PAYLOAD_TYPES.forEach(ty => { if (Array.isArray(o.mine[ty])) LIB.mine[ty] = o.mine[ty]; });
-    }
-  } catch (e) { /* l'écran marche sans */ }
+function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* l'écran marche sans */ } }
+// L'état propre du module tient sous une seule clé, fc_state_v1 : { v, state (le travail en cours), mine (mes presets) }
+function loadMine(o) {
+  if (isObj(o) && isObj(o.mine)) PAYLOAD_TYPES.forEach(ty => { if (Array.isArray(o.mine[ty])) LIB.mine[ty] = o.mine[ty]; });
 }
-function saveMine() {
-  try { localStorage.setItem(KEY_MINE, JSON.stringify({ mine: LIB.mine })); } catch (e) { /* idem */ }
-}
+function saveMine() { saveWork(); }
 
-// ---------- listes de presets d'un type ----------
+// ---------- presets d'un type ----------
 // Rend [{ key, label, preset, src }] : d'abord les fichiers chargés, puis « mes presets »
 function presetsFor(type) {
   const out = [];
@@ -1170,9 +1465,179 @@ function presetsFor(type) {
   (LIB.mine[type] || []).forEach((p, pi) => out.push({ key: 'm:' + pi, label: '★ ' + (p.displayName || p.name), preset: p, src: t('lo.src.mine') }));
   return out;
 }
-function clonePylons(p) { return JSON.parse(JSON.stringify(p)); }
 
-// ---------- rendu ----------
+// ---------- indicatif : un nombre s'écrit en nombre, un texte en { name } ----------
+function csText(v) {
+  if (typeof v === 'number') return String(v);
+  if (typeof v === 'string') return v;
+  if (isObj(v) && typeof v.name === 'string') return v.name;
+  return '';
+}
+function csValue(u) {
+  if (u.csRaw !== undefined && u.csRaw !== null && csText(u.csRaw) === u.callsign) return u.csRaw;
+  const x = u.callsign.trim();
+  if (x === '') return null;
+  return /^\d+$/.test(x) ? Number(x) : { name: x };
+}
+
+// ---------- fréquences ----------
+function parseFreq(s) {
+  const x = String(s).trim().replace(',', '.');
+  if (x === '') return { empty: true };
+  if (!/^\d+(\.\d+)?$/.test(x)) return { nan: true };
+  return { v: Number(x) };
+}
+function fmtMHz(v) { return String(v).replace('.', CURRENT_LANG === 'fr' ? ',' : '.'); }
+// Le premier défaut d'un poste : { msg, bad } (bad = nombre de canaux fautifs), et les canaux fautifs
+function radioIssues(f, u, r) {
+  const n = RADIO_CHANNELS[f.type][r], band = (RADIO_BANDS[f.type] || {})[r];
+  const bad = [];
+  let first = '';
+  for (let c = 1; c <= n; c++) {
+    const raw = (u.radios[r] && u.radios[r][c] !== undefined) ? u.radios[r][c] : '';
+    const p = parseFreq(raw);
+    let msg = '';
+    if (p.nan) msg = tf('rad.err.nan', radioCockpitChannel(f.type, r, c), raw);
+    else if (p.v !== undefined && band && (p.v < band[0] || p.v > band[1])) msg = tf('rad.err.band', radioCockpitChannel(f.type, r, c), fmtMHz(p.v), fmtMHz(band[0]), fmtMHz(band[1]));
+    if (msg) { bad.push(c); if (!first) first = msg; }
+  }
+  return { first: first, bad: bad };
+}
+function radioCount(f, u) {
+  let n = 0;
+  RADIO_POSTS(f.type).forEach(r => {
+    for (let c = 1; c <= RADIO_CHANNELS[f.type][r]; c++) if (u.radios[r] && String(u.radios[r][c] === undefined ? '' : u.radios[r][c]).trim() !== '') n++;
+  });
+  return n;
+}
+
+// ---------- réglages d'emport (hors preset) ----------
+function loadoutIssue(f, lo) {
+  const d = payloadDefaults(f.type), lim = payloadLureLimits(f.type);
+  const spec = { fuel: [t('lo.fuel'), d.fuel], flare: [t('lo.flare'), d.flare], chaff: [t('lo.chaff'), d.chaff], gun: [t('lo.gun'), 100] };
+  const bad = {};
+  let msg = '';
+  Object.keys(spec).forEach(k => {
+    const p = parseFreq(lo[k]);
+    if (p.nan || p.empty || p.v > spec[k][1]) { bad[k] = true; if (!msg) msg = tf('lo.err.range', spec[k][0], fmtMHz(spec[k][1])); }
+  });
+  if (!msg) {
+    const fl = Number(String(lo.flare).replace(',', '.')), ch = Number(String(lo.chaff).replace(',', '.'));
+    if (lim.total !== null && lim.total !== undefined && fl * (lim.flareSize || 0) + ch * (lim.chaffSize || 0) > lim.total) { bad.flare = true; bad.chaff = true; msg = tf('lo.err.lure', lim.total); }
+  }
+  return { msg: msg, bad: bad };
+}
+function loadoutFromPreset(type, key, label, src, pylons, prev) {
+  const d = payloadDefaults(type);
+  const py = {};
+  Object.keys(pylons).forEach(n => { if (pylons[n] && pylons[n].CLSID) py[n] = clone(pylons[n]); });
+  return {
+    key: key, label: label, src: src, modified: false, pylons: py,
+    fuel: prev ? prev.fuel : String(d.fuel), flare: prev ? prev.flare : String(d.flare), chaff: prev ? prev.chaff : String(d.chaff), gun: prev ? prev.gun : String(d.gun)
+  };
+}
+function loadoutFromPayload(type, p) {
+  if (!isObj(p) || !isObj(p.pylons)) return null;
+  const pyl = {};
+  Object.keys(p.pylons).forEach(k => {
+    const e = p.pylons[k];
+    if (isObj(e) && typeof e.CLSID === 'string' && e.CLSID !== '' && /^\d+$/.test(k)) {
+      pyl[k] = { CLSID: e.CLSID };
+      if (e.settings !== undefined && e.settings !== null) pyl[k].settings = clone(e.settings);
+    }
+  });
+  const d = payloadDefaults(type);
+  const num = (v, dflt) => ((typeof v === 'number' && isFinite(v)) || (typeof v === 'string' && v.trim() !== '' && isFinite(Number(v)))) ? String(v) : String(dflt);
+  return { key: 'imp', label: t('lo.imported'), src: t('lo.src.imp'), modified: false, pylons: pyl,
+    fuel: num(p.fuel, d.fuel), flare: num(p.flare, d.flare), chaff: num(p.chaff, d.chaff), gun: num(p.gun, d.gun) };
+}
+function loadoutName(lo) { return lo ? lo.label + (lo.modified ? ' · ' + t('cmp.mod') : '') : t('u.loadout.none'); }
+
+// ---------- le paquet ----------
+function cleanName(s) { return String(s).replace(/[^A-Za-z0-9_-]/g, '_').slice(0, 40); }
+function stamp() {
+  const d = new Date(), p = n => String(n).padStart(2, '0');
+  return d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + '_' + p(d.getHours()) + p(d.getMinutes()) + p(d.getSeconds());
+}
+function packageFileName(prefix) {
+  const first = S.flights.length ? (S.flights[0].name.trim() || 'vol') : 'vol';
+  return (prefix || 'paquet') + '_' + cleanName(first) + (S.flights.length > 1 ? '_+' + (S.flights.length - 1) : '') + '_' + stamp() + '.json';
+}
+// Ce qui empêche l'export : [{ key, args }] ; la liste vide = prêt
+function exportIssues() {
+  const out = [];
+  if (!S.theatre) out.push({ key: 'bar.no.theatre', args: [] });
+  if (!S.flights.length) out.push({ key: 'bar.no.flight', args: [] });
+  let nf = 0;
+  S.flights.forEach((f, fi) => {
+    if (!f.name.trim()) out.push({ key: 'bar.no.name', args: [fi + 1] });
+    f.units.forEach(u => RADIO_POSTS(f.type).forEach(r => { nf += radioIssues(f, u, r).bad.length; }));
+    f.units.forEach((u, ui) => { const li = u.loadout ? loadoutIssue(f, u.loadout) : null; if (li && li.msg) out.push({ key: 'bar.bad.set', args: [fi + 1, ui + 1, li.msg] }); });
+  });
+  if (nf) out.push({ key: 'bar.bad.freq', args: [nf] });
+  return out;
+}
+function unitRadiosOut(f, u) {
+  const out = [];
+  RADIO_POSTS(f.type).forEach(r => {
+    const ch = {};
+    for (let c = 1; c <= RADIO_CHANNELS[f.type][r]; c++) {
+      const p = parseFreq(u.radios[r] && u.radios[r][c] !== undefined ? u.radios[r][c] : '');
+      if (p.v !== undefined) ch[String(c)] = p.v;
+    }
+    if (Object.keys(ch).length) out.push({ radioIndex: r, channels: ch });
+  });
+  return out.length ? out : null;
+}
+function unitPayloadOut(f, u) {
+  const lo = u.loadout;
+  if (!lo) return null;
+  const num = v => { const p = parseFreq(v); return p.v; };
+  return buildPayload(f.type, lo.pylons, { fuel: num(lo.fuel), flare: num(lo.flare), chaff: num(lo.chaff), gun: num(lo.gun) });
+}
+// Le paquet dcs-flight-package-v1 : une partie non renseignée sort en null (HQ n'y touche pas) ; la fréquence du groupe n'est plus portée.
+function buildPackage() {
+  return {
+    format: PACKAGE_FORMAT, createdAt: new Date().toISOString(), createdBy: 'Flight Configurator', theatre: S.theatre,
+    flights: S.flights.map((f, fi) => ({
+      groupName: f.name.trim(), aircraftType: f.type, coalition: f.coalition || null, groupFrequency: null,
+      route: f.route ? { points: clone(f.route.points) } : null,
+      units: f.units.map((u, ui) => {
+        const o = { name: unitLabel(f, fi, u, ui), callsign: csValue(u), liveryId: u.livery.trim() || null, radios: unitRadiosOut(f, u), payload: unitPayloadOut(f, u) };
+        if (u.onboard.trim()) o.onboardNum = u.onboard.trim();
+        return o;
+      })
+    }))
+  };
+}
+// Le fichier de travail : le paquet tel qu'il se lit, plus la clé « fc » (état de l'écran, presets) que HQ ignore.
+function buildWorkFile() {
+  const pkg = buildPackage();
+  if (!S.theatre) delete pkg.theatre;
+  pkg.createdBy = 'Flight Configurator';
+  pkg.fc = { v: 1, state: clone(S), mine: clone(LIB.mine) };
+  return pkg;
+}
+function previewJson() {
+  return JSON.stringify(buildPackage(), (k, v) => {
+    if (k === 'route' && isObj(v) && isObj(v.points)) return { points: tf('pv.points', routePoints(v.points).length) };
+    return v;
+  }, 2);
+}
+
+// ---------- la route : portée telle quelle ----------
+function routeKeys(points) { return isObj(points) ? Object.keys(points).filter(k => /^\d+$/.test(k)).sort((a, b) => Number(a) - Number(b)) : []; }
+function routePoints(points) { return routeKeys(points).map(k => ({ k: k, name: (isObj(points[k]) && typeof points[k].name === 'string' && points[k].name !== '') ? points[k].name.replace(/\s+/g, ' ') : 'WP' + k, alt: isObj(points[k]) ? points[k].alt : undefined })); }
+function routeLine(f) {
+  if (!f.route) return t('route.none');
+  const pts = routePoints(f.route.points);
+  if (!pts.length) return t('route.none');
+  let s = pts.length === 1 ? tf('route.n1', pts[0].name) : tf('route.n', pts.length, pts[0].name, pts[pts.length - 1].name);
+  if (typeof pts[0].alt === 'number' && isFinite(pts[0].alt)) s += tf('route.alt', Math.round(pts[0].alt));
+  return s;
+}
+
+// ---------- rendu : éléments ----------
 function selectHtml(attrs, label, options, value) {
   let h = '<select class="fc-sel" aria-label="' + esc(label) + '" ' + attrs + '>';
   options.forEach(o => { h += '<option value="' + esc(o.v) + '"' + (String(o.v) === String(value) ? ' selected' : '') + '>' + esc(o.l) + '</option>'; });
@@ -1183,54 +1648,38 @@ function inputHtml(attrs, value, ph, cls) {
   return '<input type="text" autocomplete="off" spellcheck="false" ' + attrs + ' value="' + esc(value) + '"' + (ph ? ' placeholder="' + esc(ph) + '"' : '') + (cls ? ' class="' + cls + '"' : '') + '>';
 }
 function openAttr(key, dflt) { return (UI.open.has(key) || (dflt && !UI.open.has('~' + key))) ? ' open' : ''; }
-
-function cleanName(s) { return String(s).replace(/[^A-Za-z0-9_-]/g, '_').slice(0, 40); }
-function packageFileName() {
-  const first = S.flights.length ? (S.flights[0].name || 'vol') : 'vol';
-  return 'paquet_' + cleanName(first) + (S.flights.length > 1 ? '_+' + (S.flights.length - 1) : '') + '_' + t('pkg.stamp') + '.json';
-}
-
-function renderPackage() {
-  const opts = [{ v: '', l: t('pkg.theatre.none') }].concat(THEATRES.map(x => ({ v: x, l: x })));
-  let h = '<div class="fc-row">';
-  h += fieldHtml(t('pkg.theatre'), selectHtml('id="pkg-theatre" data-k="theatre"', t('pkg.theatre'), opts, S.theatre));
-  h += fieldHtml(t('pkg.fname'), '<div class="fc-fname" id="pkg-fname">' + esc(packageFileName()) + '</div>');
-  h += '</div>';
-  h += '<div class="miz-btn-row" style="margin-top:0">';
-  h += '<button type="button" class="miz-btn" data-act="load-ctx">' + esc(t('pkg.load')) + '</button>';
-  h += '<button type="button" class="miz-btn" data-act="new-pkg">' + esc(t('pkg.new')) + '</button>';
-  h += '<button type="button" class="miz-btn primary" data-act="export-pkg"' + (S.flights.length ? '' : ' disabled') + '>' + esc(t('pkg.export')) + '</button>';
-  h += '</div>';
-  h += '<p class="pk-note">' + esc(S.ctx ? tf('pkg.ctx.on', S.ctx.file, S.ctx.theatre, S.ctx.n) : t('pkg.ctx.none')) + '</p>';
-  document.getElementById('pkg-body').innerHTML = h;
-}
-
 function unitsLabel(n) { return tf(n < 2 ? 'fl.units.one' : 'fl.units.many', n); }
+function selUnit() { const f = S.flights[S.sel.f]; return f && f.units[S.sel.u] ? { f: f, fi: S.sel.f, u: f.units[S.sel.u], ui: S.sel.u } : null; }
 
-function renderFlights() {
-  document.getElementById('fl-count').textContent = '(' + S.flights.length + ')';
-  let h = '';
+// ---------- rendu : colonne de gauche ----------
+function renderLeft() {
+  const opts = [{ v: '', l: t('pkg.theatre.none') }].concat(THEATRES.concat(S.theatre && THEATRES.indexOf(S.theatre) < 0 ? [S.theatre] : []).map(x => ({ v: x, l: x })));
+  let h = '<section class="fc-block"><div class="fc-bh">' + esc(t('sec.flights')) + ' <span class="fc-count">(' + S.flights.length + ')</span></div><div class="fc-bc">';
+  h += '<div class="fc-row fc-top">' + fieldHtml(t('pkg.theatre'), selectHtml('id="pkg-theatre" data-k="theatre"', t('pkg.theatre'), opts, S.theatre))
+    + fieldHtml(t('pkg.fname'), '<div class="fc-fname" id="pkg-fname"></div>') + '</div>';
   if (!S.flights.length) h += '<p class="pk-note">' + esc(t('fl.empty')) + '</p>';
   h += '<div class="fc-list" id="fc-list">';
   S.flights.forEach((f, fi) => { h += flightHtml(f, fi); });
-  h += '</div>';
-  h += '<div class="miz-btn-row" style="margin-top:0"><button type="button" class="miz-btn primary" data-act="add-flight">' + esc(t('fl.add')) + '</button></div>';
-  document.getElementById('fl-body').innerHTML = h;
-  S.flights.forEach((f, fi) => f.units.forEach((u, ui) => { RADIO_POSTS(f.type).forEach(r => validateRadios(fi, ui, r)); }));
+  h += '</div><div class="miz-btn-row" style="margin-top:0"><button type="button" class="miz-btn primary" data-act="add-flight">' + esc(t('fl.add')) + '</button></div></div></section>';
+  document.getElementById('col-flights').innerHTML = h;
+  S.flights.forEach((f, fi) => f.units.forEach((u, ui) => { RADIO_POSTS(f.type).forEach(r => paintRadioMsg(fi, ui, r)); }));
+  refreshFileName();
 }
 
 function flightHtml(f, fi) {
   const typeOpts = PAYLOAD_TYPES.map(x => ({ v: x, l: TYPE_LABEL[x] }));
   const coOpts = [{ v: '', l: t('fl.coalition.any') }, { v: 'blue', l: t('fl.coalition.blue') }, { v: 'red', l: t('fl.coalition.red') }];
   let h = '<div class="fc-flight" data-f="' + fi + '">';
-  h += '<div class="fc-fhead"><span class="fc-ftitle">' + esc(tf('fl.title', fi + 1)) + '</span><span class="snap-flight-tag">' + esc(TYPE_LABEL[f.type]) + '</span>'
+  h += '<div class="fc-fhead"><span class="fc-ftitle">' + esc(flightLabel(f, fi)) + '</span><span class="snap-flight-tag">' + esc(TYPE_LABEL[f.type]) + '</span>'
     + '<span class="snap-flight-tag">' + esc(unitsLabel(f.units.length)) + '</span>'
     + '<button type="button" class="pk-x" data-act="rm-flight" aria-label="' + esc(t('fl.remove')) + '" title="' + esc(t('fl.remove')) + '">✕</button></div>';
-  h += '<div class="fc-row">';
+  h += '<div class="fc-row3">';
   h += fieldHtml(t('fl.name'), inputHtml('data-k="name"', f.name, t('fl.name.ph')));
   h += fieldHtml(t('fl.type'), selectHtml('data-k="type"', t('fl.type'), typeOpts, f.type));
   h += fieldHtml(t('fl.coalition'), selectHtml('data-k="coalition"', t('fl.coalition'), coOpts, f.coalition));
-  h += fieldHtml(t('fl.freq'), inputHtml('data-k="freq" inputmode="decimal"', f.freq, t('fl.freq.ph')));
+  h += '</div>';
+  h += '<div class="fc-route' + (f.route && routePoints(f.route.points).length ? '' : ' none') + '"><span class="fc-route-t">' + esc(routeLine(f)) + '</span>';
+  if (f.route && routePoints(f.route.points).length) h += '<button type="button" class="miz-btn fc-small" data-act="rm-route">' + esc(t('route.rm')) + '</button>';
   h += '</div>';
   h += '<div class="fc-units">';
   f.units.forEach((u, ui) => { h += unitHtml(f, fi, u, ui); });
@@ -1239,36 +1688,31 @@ function flightHtml(f, fi) {
   return h + '</div>';
 }
 
-function RADIO_POSTS(type) { return Object.keys(RADIO_CHANNELS[type] || {}).map(Number); }
-
 function unitHtml(f, fi, u, ui) {
   const at = 'data-u="' + ui + '"';
-  let h = '<div class="fc-unit" data-u="' + ui + '">';
+  const sel = S.sel.f === fi && S.sel.u === ui;
+  let h = '<div class="fc-unit' + (sel ? ' sel' : '') + '" data-u="' + ui + '">';
   h += '<div class="fc-uhead"><span class="fc-utitle">' + esc(tf('u.title', ui + 1)) + '</span>';
   if (f.units.length > 1) h += '<button type="button" class="pk-x" data-act="rm-unit" aria-label="' + esc(t('u.remove')) + '" title="' + esc(t('u.remove')) + '">✕</button>';
   h += '</div>';
   h += '<div class="fc-row4">';
-  h += fieldHtml(t('u.name'), inputHtml(at + ' data-k="uname"', u.name, (f.name || 'Hind 1') + '-' + (ui + 1)));
+  h += fieldHtml(t('u.name'), inputHtml(at + ' data-k="uname"', u.name, unitDefaultName(f, fi, ui)));
   h += fieldHtml(t('u.callsign'), inputHtml(at + ' data-k="callsign"', u.callsign, t('u.opt')));
   h += fieldHtml(t('u.onboard'), inputHtml(at + ' data-k="onboard"', u.onboard, t('u.opt')));
   h += fieldHtml(t('u.livery'), inputHtml(at + ' data-k="livery"', u.livery, t('u.livery.ph')));
   h += '</div>';
-  // radios
   const rk = 'f' + fi + 'u' + ui + 'r';
-  h += '<details class="fc-sub" data-key="' + rk + '"' + openAttr(rk, false) + '><summary>' + esc(t('u.radios')) + ' <span class="fc-sum">' + esc(tf('u.radios.sum', RADIO_POSTS(f.type).length)) + '</span></summary><div class="fc-subc">';
+  const n = radioCount(f, u);
+  h += '<details class="fc-sub" data-key="' + rk + '"' + openAttr(rk, false) + '><summary>' + esc(t('u.radios')) + ' <span class="fc-sum" data-sum="radios">' + esc(n ? tf('u.radios.set', n) : tf('u.radios.sum', RADIO_POSTS(f.type).length)) + '</span></summary><div class="fc-subc">';
   h += radiosHtml(f, fi, u, ui);
   h += '</div></details>';
-  // emport
-  const lk = 'f' + fi + 'u' + ui + 'l';
-  const lo = u.loadout;
-  h += '<details class="fc-sub" data-key="' + lk + '"' + openAttr(lk, false) + '><summary>' + esc(t('u.loadout')) + ' <span class="fc-sum">' + esc(lo ? lo.presetName : t('u.loadout.none')) + '</span></summary><div class="fc-subc">';
-  h += loadoutHtml(f, fi, u, ui);
-  h += '</div></details>';
+  h += '<div class="fc-lo-sum"><span class="fc-lo-k">' + esc(t('u.loadout')) + '</span><span class="fc-lo-v" data-sum="loadout">' + esc(loadoutName(u.loadout)) + '</span>'
+    + '<button type="button" class="miz-btn fc-small" ' + at + ' data-act="sel-unit">' + esc(t('u.compose')) + '</button></div>';
   return h + '</div>';
 }
 
 function radiosHtml(f, fi, u, ui) {
-  let h = '';
+  let h = '<div class="fc-posts">';
   RADIO_POSTS(f.type).forEach(r => {
     const n = RADIO_CHANNELS[f.type][r];
     const pk = 'f' + fi + 'u' + ui + 'p' + r;
@@ -1281,105 +1725,349 @@ function radiosHtml(f, fi, u, ui) {
     }
     h += '</div><div class="fc-msg" id="rm-' + fi + '-' + ui + '-' + r + '"></div></div></details>';
   });
-  h += '<p class="pk-note">' + esc(t('rad.hint')) + '</p>';
+  h += '</div><p class="pk-note">' + esc(t('rad.hint')) + '</p>';
   if (f.units.length > 1) h += '<div class="miz-btn-row" style="margin-top:0"><button type="button" class="miz-btn" data-u="' + ui + '" data-act="copy-radios">' + esc(t('rad.copy')) + '</button></div>';
   return h;
 }
 
-function parseFreq(s) {
-  const x = String(s).trim().replace(',', '.');
-  if (x === '') return { empty: true };
-  if (!/^\d+(\.\d+)?$/.test(x)) return { nan: true };
-  return { v: Number(x) };
-}
-function fmtMHz(v) { return String(v).replace('.', CURRENT_LANG === 'fr' ? ',' : '.'); }
-function validateRadios(fi, ui, r) {
+function paintRadioMsg(fi, ui, r) {
   const f = S.flights[fi], u = f && f.units[ui];
   if (!u) return;
-  const band = (RADIO_BANDS[f.type] || {})[r];
-  const n = RADIO_CHANNELS[f.type][r];
-  let first = '', bad = 0;
-  for (let c = 1; c <= n; c++) {
-    const inp = document.querySelector('#fl-body .fc-flight[data-f="' + fi + '"] .fc-unit[data-u="' + ui + '"] input[data-r="' + r + '"][data-c="' + c + '"]');
-    const raw = (u.radios[r] && u.radios[r][c] !== undefined) ? u.radios[r][c] : '';
-    const p = parseFreq(raw);
-    let msg = '';
-    if (p.nan) msg = tf('rad.err.nan', radioCockpitChannel(f.type, r, c), raw);
-    else if (p.v !== undefined && band && (p.v < band[0] || p.v > band[1])) msg = tf('rad.err.band', radioCockpitChannel(f.type, r, c), fmtMHz(p.v), fmtMHz(band[0]), fmtMHz(band[1]));
-    if (inp) inp.classList.toggle('bad', !!msg);
-    if (msg) { bad++; if (!first) first = msg; }
-  }
+  const iss = radioIssues(f, u, r);
+  const root = document.querySelector('#col-left .fc-flight[data-f="' + fi + '"] .fc-unit[data-u="' + ui + '"]');
+  if (root) root.querySelectorAll('input[data-r="' + r + '"]').forEach(inp => inp.classList.toggle('bad', iss.bad.indexOf(Number(inp.getAttribute('data-c'))) >= 0));
   const el = document.getElementById('rm-' + fi + '-' + ui + '-' + r);
-  if (el) el.textContent = first ? first + (bad > 1 ? tf('rad.err.more', bad - 1) : '') : '';
+  if (el) el.textContent = iss.first ? iss.first + (iss.bad.length > 1 ? tf('rad.err.more', iss.bad.length - 1) : '') : '';
 }
 
-function loadoutHtml(f, fi, u, ui) {
-  const list = presetsFor(f.type);
-  const lo = u.loadout;
-  const at = 'data-u="' + ui + '"';
-  let h = '';
-  const opts = [{ v: '', l: t('lo.preset.none') }].concat(list.map(p => ({ v: p.key, l: p.label })));
-  h += '<div class="fc-row">';
-  h += fieldHtml(t('lo.preset'), selectHtml(at + ' data-k="preset"', t('lo.preset'), opts, lo ? lo.key : ''));
-  h += '<div class="ed-field fc-actions"><button type="button" class="miz-btn" ' + at + ' data-act="open-editor">' + esc(t('lo.create')) + '</button></div>';
-  h += '</div>';
-  if (!list.length && !lo) h += '<p class="pk-note">' + esc(tf('lo.nopreset', TYPE_LABEL[f.type])) + '</p>';
-  if (lo) {
-    h += '<div class="fc-lo-line"><span class="snap-flight-tag">' + esc(lo.src || '') + '</span></div>';
-    h += '<div class="fc-pylons">';
-    const nums = payloadPylonNumbers(f.type);
-    Object.keys(lo.pylons).map(Number).forEach(n => { if (nums.indexOf(n) < 0) nums.push(n); });
-    nums.forEach(n => {
-      const py = lo.pylons[n];
-      const clsid = py ? py.CLSID : '';
-      const name = payloadWeaponName(f.type, n, clsid);
-      let cls = 'fc-py', w;
-      if (!clsid) { cls += ' empty'; w = esc(t('lo.empty')); }
-      else if (name === null) { cls += ' unk'; w = esc(t('lo.unknown')) + '<small>' + esc(clsid) + '</small>'; }
-      else w = esc(name) + '<small>' + esc(clsid) + '</small>';
-      h += '<div class="' + cls + '"><span class="fc-py-n">' + esc(tf('lo.pylon', n)) + '</span><span class="fc-py-w">' + w + '</span>'
-        + (py && py.settings ? '<span class="fc-chip">' + esc(t('lo.settings')) + '</span>' : '') + '</div>';
+function refreshFileName() { const e = document.getElementById('pkg-fname'); if (e) e.textContent = packageFileName(); }
+function refreshUnitSummaries() {
+  S.flights.forEach((f, fi) => f.units.forEach((u, ui) => {
+    const root = document.querySelector('#col-left .fc-flight[data-f="' + fi + '"] .fc-unit[data-u="' + ui + '"]');
+    if (!root) return;
+    const lv = root.querySelector('[data-sum="loadout"]'); if (lv) lv.textContent = loadoutName(u.loadout);
+    const rv = root.querySelector('[data-sum="radios"]'); if (rv) { const n = radioCount(f, u); rv.textContent = n ? tf('u.radios.set', n) : tf('u.radios.sum', RADIO_POSTS(f.type).length); }
+  }));
+}
+
+// ---------- barre : état de l'export ----------
+function refreshBar() {
+  const iss = exportIssues();
+  const b = document.getElementById('btn-export');
+  if (b) { b.disabled = iss.length > 0; b.setAttribute('aria-disabled', iss.length ? 'true' : 'false'); }
+  const st = document.getElementById('fc-status');
+  if (st) {
+    st.classList.toggle('ok', iss.length === 0);
+    st.textContent = iss.length ? iss.map(i => tf.apply(null, [i.key].concat(i.args))).join(' ') : tf('bar.ok', packageFileName());
+  }
+}
+function refreshPreview() {
+  const pre = document.getElementById('fc-preview'), nm = document.getElementById('pv-file');
+  if (!pre) return;
+  pre.textContent = S.flights.length ? previewJson() : t('pv.empty');
+  if (nm) nm.textContent = packageFileName();
+}
+function refreshAll() { refreshBar(); refreshPreview(); refreshFileName(); saveWork(); }
+
+// ---------- le travail en cours (rule 8) ----------
+let _saveTimer = 0;
+function saveWork() {
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(() => lsSet(KEY_STATE, JSON.stringify({ v: 1, state: S, mine: LIB.mine })), 400);
+}
+function restoreState(st) {
+  if (!isObj(st) || !Array.isArray(st.flights)) return false;
+  const fl = [];
+  st.flights.forEach(f => {
+    if (!isObj(f) || PAYLOAD_TYPES.indexOf(f.type) < 0) return;
+    const nf = newFlight();
+    nf.name = str(f.name); nf.type = f.type; nf.coalition = (f.coalition === 'blue' || f.coalition === 'red') ? f.coalition : '';
+    nf.route = (isObj(f.route) && isObj(f.route.points)) ? { points: f.route.points } : null;
+    nf.units = (Array.isArray(f.units) ? f.units : []).slice(0, 4).filter(isObj).map(u => {
+      const nu = newUnit();
+      nu.name = str(u.name); nu.callsign = str(u.callsign); nu.csRaw = u.csRaw; nu.onboard = str(u.onboard); nu.livery = str(u.livery);
+      nu.radios = isObj(u.radios) ? u.radios : {};
+      nu.loadout = (isObj(u.loadout) && isObj(u.loadout.pylons)) ? u.loadout : null;
+      return nu;
     });
+    if (!nf.units.length) nf.units.push(newUnit());
+    fl.push(nf);
+  });
+  S.theatre = str(st.theatre); S.flights = fl;
+  S.sel = (isObj(st.sel) && Number.isInteger(st.sel.f) && Number.isInteger(st.sel.u)) ? st.sel : { f: 0, u: 0 };
+  if (!selUnit()) S.sel = { f: 0, u: 0 };
+  return true;
+}
+
+// =============================================================
+//  L'EMPORT — la vue de face de Mission Tools (Loadout Editor), reprise et adaptée : un panneau dans la page, sur l'unité choisie
+// =============================================================
+const CMP = { view: null, pairs: {}, pyl: [], small: false, ro: null, type: null };
+
+// Paires : deux stations dont les points d'attache sont symétriques par rapport au milieu du viewBox
+// (écart ≤ 2 % de la largeur, même hauteur à 2 % près de la hauteur).
+function cmpPairs(view) {
+  const W = view.viewBox[0], H = view.viewBox[1], ks = Object.keys(view.stations), out = {};
+  for (const a of ks) {
+    let best = null, bd = Infinity;
+    for (const b of ks) {
+      if (a === b) continue;
+      const A = view.stations[a], B = view.stations[b];
+      const dx = Math.abs(W - A.x - B.x), dy = Math.abs(A.y - B.y);
+      if (dx <= 0.02 * W && dy <= 0.02 * H && dx < bd) { best = b; bd = dx; }
+    }
+    if (best !== null) out[a] = best;
+  }
+  for (const a of Object.keys(out)) if (out[out[a]] !== a) delete out[a];
+  return out;
+}
+// Nom court : jusqu'au premier « - », sans les parenthèses ; « UnGd Rkts » : on ajoute « · » et le mot après « mm ».
+function cmpShort(clsid) {
+  if (!clsid) return '—';
+  const full = payloadWeaponName(clsid) || clsid;
+  let head = full.split(' - ')[0].replace(/\s*\([^)]*\)/g, '').replace(/\s+/g, ' ').trim();
+  const k = full.indexOf('UnGd Rkts');
+  if (k >= 0) { const m = /\bmm\s+(\S+)/.exec(full.slice(k)); if (m) head += ' · ' + m[1]; }
+  return head || full;
+}
+function cmpNum(n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, CURRENT_LANG === 'fr' ? ' ' : ','); }
+function cmpClsid(lo, n) { return lo && lo.pylons[n] && lo.pylons[n].CLSID ? String(lo.pylons[n].CLSID) : ''; }
+
+function renderRight() {
+  const col = document.getElementById('col-right');
+  const su = selUnit();
+  CMP.small = col.clientWidth < 900;
+  let h = '<section class="fc-block" id="blk-cmp"><div class="fc-bh">' + esc(t('sec.cmp')) + '</div><div class="fc-bc">' + (su ? cmpHtml(su) : '<p class="pk-note">' + esc(t('cmp.pick')) + '</p>') + '</div></section>';
+  h += '<section class="fc-block" id="blk-pv"><div class="fc-bh">' + esc(t('sec.preview')) + '</div><div class="fc-bc"><div class="fc-pvfile"><span>' + esc(t('pv.file')) + '</span> <span id="pv-file"></span></div><pre class="fc-pre" id="fc-preview" tabindex="0"></pre></div></section>';
+  col.innerHTML = h;
+  if (CMP.ro) { CMP.ro.disconnect(); CMP.ro = null; }
+  const wrap = document.getElementById('cmp-wrap');
+  if (su && wrap && !CMP.small && typeof ResizeObserver === 'function') { CMP.ro = new ResizeObserver(cmpDraw); CMP.ro.observe(wrap); }
+  if (su && CMP.small) cmpStaggerNums();
+  cmpUpdate();
+  refreshPreview();
+  renderPresets();
+}
+function renderPresets() { document.getElementById('col-presets').innerHTML = presetsHtml(); }
+
+function cmpFromOptions(f, lo) {
+  const list = presetsFor(f.type);
+  const o = [{ v: '', l: t('cmp.from.none') }];
+  if (lo && lo.key === 'imp') o.push({ v: 'imp', l: t('cmp.from.imp') });
+  list.forEach(p => o.push({ v: p.key, l: p.label }));
+  o.push({ v: '~empty', l: t('cmp.from.empty') });
+  return o;
+}
+
+function cmpHtml(su) {
+  const f = su.f, lo = su.u.loadout;
+  const pyl = payloadPylons(f.type);
+  CMP.type = f.type; CMP.pyl = pyl || [];
+  CMP.view = has(AIRCRAFT_VIEWS, f.type) ? AIRCRAFT_VIEWS[f.type] : null;
+  CMP.pairs = CMP.view ? cmpPairs(CMP.view) : {};
+  const view = CMP.view, small = CMP.small, C = UI.cmp;
+  let h = '<div class="cmp-top"><div class="cmp-for">' + esc(tf('cmp.for', flightLabel(f, su.fi), unitLabel(f, su.fi, su.u, su.ui))) + ' <span class="snap-flight-tag">' + esc(TYPE_LABEL[f.type]) + '</span></div>';
+  h += fieldHtml(t('cmp.from'), selectHtml('id="cmp-from"', t('cmp.from'), cmpFromOptions(f, lo), lo ? (lo.key || '') : '')) + '</div>';
+  if (lo) h += '<div class="fc-lo-line"><span class="snap-flight-tag">' + esc(lo.src || '') + '</span>' + (lo.modified ? '<span class="snap-flight-tag">' + esc(t('cmp.mod')) + '</span>' : '') + '</div>';
+  if (view) {
+    const W = view.viewBox[0], H = view.viewBox[1];
+    const ks = Object.keys(view.stations).sort((a, b) => view.stations[a].x - view.stations[b].x);
+    h += '<div id="cmp-wrap" class="' + (small ? 'cmp-wrap-flat' : 'cmp-wrap-strip') + '"><div class="cmp-view"><div class="cmp-svgbox" style="--r:' + (W / H) + '">' + view.svg;
+    if (small) ks.forEach(k => {
+      const s = view.stations[k];
+      h += '<span class="cmp-num" data-st="' + esc(k) + '" style="left:' + (s.x / W * 100).toFixed(2) + '%;top:' + (s.y / H * 100).toFixed(2) + '%">' + esc(k) + '</span>';
+    });
+    h += '</div><div class="cmp-credit">' + esc(t('cmp.credit')) + '</div></div>';
+    if (!small) {
+      h += '<svg id="cmp-leads" aria-hidden="true"></svg><div class="cmp-strip" style="--n:' + ks.length + '">';
+      ks.forEach((k, i) => { h += '<div class="cmp-st" data-st="' + esc(k) + '" role="button" tabindex="0" style="left:' + ((i + 0.5) / ks.length * 100).toFixed(3) + '%"><span class="n">' + esc(k) + '</span><span class="w"></span></div>'; });
+      h += '</div>';
+    }
     h += '</div>';
-    const d = payloadDefaults(f.type);
+  } else h += '<p class="pk-note">' + esc(t('cmp.noview')) + '</p>';
+  h += '<div class="cmp-list" id="cmp-list">';
+  CMP.pyl.forEach(({ n, allowed }) => {
+    const s0 = cmpClsid(lo, n);
+    let opts = '';
+    if (s0 !== '' && allowed.indexOf(s0) < 0) opts += '<option value="' + esc(s0) + '">' + esc((payloadWeaponName(s0) || s0) + ' ' + t('cmp.offTable')) + '</option>';
+    opts += '<option value="">' + esc(t('cmp.none')) + '</option>';
+    allowed.forEach(c => { opts += '<option value="' + esc(c) + '">' + esc(payloadWeaponName(c) || c) + '</option>'; });
+    const p = (view && has(CMP.pairs, n)) ? CMP.pairs[n] : null;
+    h += '<div class="cmp-row" data-st="' + esc(n) + '"><span class="sn">' + esc(n) + '</span><select class="fc-sel cmp-sel" data-st="' + esc(n) + '" aria-label="' + esc(tf('lo.pylon', n)) + '">' + opts + '</select>'
+      + '<span class="pair">' + (p !== null ? '↔ ' + esc(p) : '') + '</span><span class="cmp-kg"></span></div>';
+  });
+  h += '</div><div class="cmp-foot">' + (view ? '<label class="pk-chk"><input type="checkbox" id="cmp-sym"' + (C.sym ? ' checked' : '') + '> ' + esc(t('cmp.sym')) + '</label>' : '')
+    + '<span class="cmp-tot" id="cmp-total"></span></div>';
+  if (lo) {
+    const d = payloadDefaults(f.type), at = 'data-u="' + su.ui + '"';
     h += '<div class="fc-set">';
     h += fieldHtml(t('lo.fuel') + ' · ' + tf('lo.max', d.fuel), inputHtml(at + ' data-k="fuel" inputmode="decimal"', lo.fuel));
     h += fieldHtml(t('lo.flare') + ' · ' + tf('lo.max', d.flare), inputHtml(at + ' data-k="flare" inputmode="numeric"', lo.flare));
     h += fieldHtml(t('lo.chaff') + ' · ' + tf('lo.max', d.chaff), inputHtml(at + ' data-k="chaff" inputmode="numeric"' + (d.chaff === 0 ? ' disabled' : ''), lo.chaff));
     h += fieldHtml(t('lo.gun') + ' · ' + tf('lo.max', 100), inputHtml(at + ' data-k="gun" inputmode="numeric"', lo.gun));
-    h += '</div><div class="fc-msg" id="lm-' + fi + '-' + ui + '"></div>';
-    h += '<p class="pk-note">' + esc(t('lo.settings.line')) + '</p>';
+    h += '</div><div class="fc-msg" id="lm-msg"></div>';
   }
-  if (UI.editor && UI.editor.f === fi && UI.editor.u === ui) h += editorHtml(f);
+  h += '<div class="miz-btn-row" style="margin-top:0"><button type="button" class="miz-btn primary" data-act="cmp-save"' + (lo ? '' : ' disabled') + '>' + esc(t('cmp.save')) + '</button>'
+    + '<button type="button" class="miz-btn" data-act="cmp-clear"' + (lo ? '' : ' disabled') + '>' + esc(t('cmp.clear')) + '</button></div>';
+  if (C.saving && lo) {
+    h += '<div class="fc-editor"><div class="fc-row">' + fieldHtml(t('cmp.save.name'), inputHtml('data-k="cmp-name"', C.name, t('cmp.save.ph')))
+      + '<div class="ed-field fc-actions"><button type="button" class="miz-btn primary" data-act="cmp-save-go">' + esc(t('cmp.save.go')) + '</button></div>'
+      + '<div class="ed-field fc-actions"><button type="button" class="miz-btn" data-act="cmp-save-cancel">' + esc(t('cmp.save.cancel')) + '</button></div></div>'
+      + '<div class="fc-msg" id="cmp-save-msg">' + esc(C.err) + '</div></div>';
+  }
+  h += '<p class="pk-note">' + esc(t('cmp.note')) + '</p>';
   return h;
 }
 
-function editorHtml(f) {
-  const E = UI.editor;
-  let h = '<div class="fc-editor" id="fc-editor">';
-  h += '<div class="fc-ed-title">' + esc(tf('ed.title', TYPE_LABEL[f.type])) + '</div>';
-  h += '<div class="fc-row">' + fieldHtml(t('ed.name'), inputHtml('data-k="ed-name"', E.name, t('ed.name.ph')))
-    + '<div class="ed-field fc-actions"><button type="button" class="miz-btn" data-act="ed-clear">' + esc(t('ed.clear')) + '</button></div></div>';
-  h += '<div class="fc-ed-grid">';
-  payloadPylonNumbers(f.type).forEach(n => {
-    const cur = E.pylons[n] ? E.pylons[n].CLSID : '';
-    const list = WEAPONS[f.type][n];
-    const opts = [{ v: '', l: t('ed.empty') }];
-    let known = !cur;
-    list.forEach(w => { opts.push({ v: w.clsid, l: w.name }); if (w.clsid === cur) known = true; });
-    if (!known) opts.push({ v: cur, l: '⚠ ' + cur });
-    h += '<div class="fc-ed-py"><label>' + esc(tf('lo.pylon', n)) + (E.pylons[n] && E.pylons[n].settings ? '<span class="fc-chip">' + esc(t('ed.kept')) + '</span>' : '') + '</label>'
-      + selectHtml('data-k="ed-py" data-n="' + n + '"', tf('lo.pylon', n), opts, cur) + '<small>' + esc(cur) + '</small></div>';
+// Sous 900 px de colonne, les pastilles qui se chevauchent sont étagées sur deux ou trois niveaux
+function cmpStaggerNums() {
+  const els = Array.prototype.slice.call(document.querySelectorAll('#blk-cmp .cmp-num'));
+  els.forEach(e => { e.style.marginTop = '0'; });
+  const rs = els.map(e => ({ e: e, r: e.getBoundingClientRect() })).sort((a, b) => a.r.left - b.r.left);
+  const placed = [];
+  rs.forEach(({ e, r }) => {
+    let l = 0;
+    const hit = o => r.left < o.right + 1 && o.left < r.right + 1 && r.top + l * 18 < o.bottom + 1 && o.top < r.bottom + l * 18 + 1;
+    while (placed.some(hit)) l++;
+    placed.push({ left: r.left, right: r.right, top: r.top + l * 18, bottom: r.bottom + l * 18 });
+    e.style.marginTop = (l * 18) + 'px';
   });
-  h += '</div><div class="fc-msg" id="ed-msg">' + esc(E.error || '') + '</div>';
-  h += '<p class="pk-note">' + esc(t('ed.hint')) + '</p>';
-  h += '<div class="miz-btn-row" style="margin-top:0"><button type="button" class="miz-btn primary" data-act="ed-save">' + esc(t('ed.save')) + '</button>'
-    + '<button type="button" class="miz-btn" data-act="ed-cancel">' + esc(t('ed.cancel')) + '</button></div>';
-  return h + '</div>';
+  const box = document.querySelector('#blk-cmp .cmp-svgbox');
+  if (box && placed.length) {
+    box.style.marginBottom = '';
+    const need = Math.max.apply(null, placed.map(o => o.bottom)) - box.getBoundingClientRect().bottom + 8;
+    if (need > parseFloat(getComputedStyle(box).marginBottom)) box.style.marginBottom = Math.ceil(need) + 'px';
+  }
 }
 
-function renderPresets() {
-  let h = '<div class="miz-btn-row" style="margin-top:0"><button type="button" class="miz-btn primary" data-act="load-lua">' + esc(t('pr.load')) + '</button></div>';
+// Valeurs affichées : listes, masses, pastilles, total
+function cmpUpdate() {
+  const su = selUnit(), blk = document.getElementById('blk-cmp');
+  if (!su || !blk) return;
+  const lo = su.u.loadout, C = UI.cmp;
+  let total = 0, unknown = false;
+  CMP.pyl.forEach(({ n }) => {
+    const c = cmpClsid(lo, n);
+    const row = blk.querySelector('.cmp-row[data-st="' + n + '"]');
+    if (!row) return;
+    const sel = row.querySelector('select');
+    if (sel.value !== c) sel.value = c;
+    let w = 0;
+    if (c !== '') { w = payloadWeaponMass(c); if (w === null) unknown = true; else total += w; }
+    row.querySelector('.cmp-kg').textContent = c === '' ? '' : (w === null ? '—' : cmpNum(w) + ' kg');
+    row.classList.toggle('sel', C.st === n);
+    const hasSet = !!(lo && lo.pylons[n] && lo.pylons[n].settings !== undefined);
+    let chip = row.querySelector('.fc-chip');
+    if (hasSet && !chip) { chip = document.createElement('span'); chip.className = 'fc-chip'; chip.textContent = t('cmp.settings'); row.insertBefore(chip, row.querySelector('.cmp-kg')); }
+    else if (!hasSet && chip) chip.remove();
+    const cell = blk.querySelector('.cmp-st[data-st="' + n + '"]');
+    if (cell) {
+      cell.querySelector('.w').textContent = cmpShort(c);
+      cell.title = c ? (payloadWeaponName(c) || c) : '';
+      cell.classList.toggle('sel', C.st === n);
+      cell.setAttribute('aria-pressed', C.st === n ? 'true' : 'false');
+    }
+    const num = blk.querySelector('.cmp-num[data-st="' + n + '"]');
+    if (num) num.classList.toggle('sel', C.st === n);
+  });
+  const tot = document.getElementById('cmp-total');
+  if (tot) tot.innerHTML = esc(t('cmp.mass')) + ' <b>' + esc(cmpNum(total) + ' kg' + (unknown ? ' + ?' : '')) + '</b>';
+  cmpDraw();
+  paintLoadoutMsg();
+}
+function paintLoadoutMsg() {
+  const su = selUnit();
+  if (!su || !su.u.loadout) return;
+  const iss = loadoutIssue(su.f, su.u.loadout);
+  ['fuel', 'flare', 'chaff', 'gun'].forEach(k => { const i = document.querySelector('#blk-cmp input[data-k="' + k + '"]'); if (i) i.classList.toggle('bad', !!iss.bad[k]); });
+  const m = document.getElementById('lm-msg'); if (m) m.textContent = iss.msg;
+}
+
+// Un trait pointillé par station : du point d'attache (petit rond) vers le bas, puis jusqu'à sa case
+function cmpDraw() {
+  const svg = document.getElementById('cmp-leads');
+  if (!svg || !CMP.view) return;
+  const wrap = document.getElementById('cmp-wrap');
+  const box = wrap.querySelector('.cmp-svgbox'), view = wrap.querySelector('.cmp-view');
+  const wr = wrap.getBoundingClientRect(), br = box.getBoundingClientRect(), vr = view.getBoundingClientRect();
+  const W = CMP.view.viewBox[0], H = CMP.view.viewBox[1];
+  svg.setAttribute('viewBox', '0 0 ' + wr.width + ' ' + wr.height);
+  let out = '';
+  Object.keys(CMP.view.stations).forEach(k => {
+    const s = CMP.view.stations[k];
+    const cell = wrap.querySelector('.cmp-st[data-st="' + k + '"]');
+    if (!cell) return;
+    const cr = cell.getBoundingClientRect();
+    const x = br.left - wr.left + s.x / W * br.width, y = br.top - wr.top + s.y / H * br.height;
+    const ky = Math.max(vr.bottom - wr.top - 22, y + 4);
+    const cx = cr.left - wr.left + cr.width / 2, cy = cr.top - wr.top;
+    out += '<path data-st="' + k + '"' + (UI.cmp.st === k ? ' class="on"' : '') + ' d="M' + x.toFixed(1) + ' ' + y.toFixed(1) + ' L' + x.toFixed(1) + ' ' + ky.toFixed(1) + ' L' + cx.toFixed(1) + ' ' + cy.toFixed(1) + '"/><circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="5"/>';
+  });
+  svg.innerHTML = out;
+}
+
+// Un choix sur une station ; « Symétrique » le pose aussi sur sa paire quand la paire le permet.
+// « Vide » ne se pose sur la paire que si elle portait le même CLSID que la station juste avant ce choix.
+// Un `settings` suit sa station tant que l'arme ne change pas.
+function cmpChoose(n, c) {
+  const su = selUnit();
+  if (!su) return;
+  if (!su.u.loadout) su.u.loadout = loadoutFromPreset(su.f.type, '~empty', t('cmp.custom'), '', {}, null);
+  const lo = su.u.loadout;
+  const prev = cmpClsid(lo, n);
+  const put = (k, v) => {
+    if (v === '') delete lo.pylons[k];
+    else if (cmpClsid(lo, k) !== v) lo.pylons[k] = { CLSID: v };
+  };
+  put(n, c);
+  UI.cmp.st = n;
+  if (UI.cmp.sym && CMP.view && has(CMP.pairs, n)) {
+    const pp = CMP.pyl.filter(x => x.n === CMP.pairs[n])[0];
+    if (pp && (c === '' ? (prev !== '' && cmpClsid(lo, pp.n) === prev) : pp.allowed.indexOf(c) >= 0)) put(pp.n, c);
+  }
+  lo.modified = lo.key !== '~empty';
+  cmpUpdate();
+  refreshUnitSummaries();
+  refreshAll();
+}
+function cmpBase(key) {
+  const su = selUnit();
+  if (!su) return;
+  const f = su.f, prev = su.u.loadout;
+  if (key === '') su.u.loadout = null;
+  else if (key === '~empty') su.u.loadout = loadoutFromPreset(f.type, '~empty', t('cmp.custom'), '', {}, prev);
+  else if (key === 'imp') { /* déjà l'emport importé */ }
+  else {
+    const hit = presetsFor(f.type).filter(p => p.key === key)[0];
+    if (hit) su.u.loadout = loadoutFromPreset(f.type, key, hit.label, hit.src, hit.preset.pylons, prev);
+  }
+  UI.cmp.saving = false; UI.cmp.err = '';
+  renderRight(); refreshUnitSummaries(); refreshAll();
+}
+function cmpSaveGo() {
+  const su = selUnit(), C = UI.cmp;
+  if (!su || !su.u.loadout) return;
+  const name = C.name.trim(), type = su.f.type;
+  const fail = m => { C.err = m; const e = document.getElementById('cmp-save-msg'); if (e) e.textContent = m; };
+  if (!name) return fail(t('cmp.save.err.name'));
+  if ((LIB.mine[type] || []).some(p => p.name === name) || presetsFor(type).some(p => p.preset.name === name || p.preset.displayName === name)) return fail(tf('cmp.save.err.dup', TYPE_LABEL[type]));
+  const pylons = {};
+  Object.keys(su.u.loadout.pylons).forEach(n => { const p = su.u.loadout.pylons[n]; if (p && p.CLSID) pylons[n] = clone(p); });
+  if (!Object.keys(pylons).length) return fail(t('cmp.save.err.none'));
+  const order = Object.keys(pylons).map(Number).sort((a, b) => a - b);
+  (LIB.mine[type] = LIB.mine[type] || []).push({ name: name, displayName: name, pylons: pylons, order: order, tasks: [TASK_DEFAULT[type]] });
+  saveMine();
+  const lo = su.u.loadout;
+  lo.key = 'm:' + (LIB.mine[type].length - 1); lo.label = '★ ' + name; lo.src = t('lo.src.mine'); lo.modified = false;
+  C.saving = false; C.err = ''; C.name = '';
+  renderRight(); refreshUnitSummaries(); refreshAll();
+  showToast(tf('cmp.save.ok', name));
+}
+
+// ---------- les presets (.lua) ----------
+function presetsHtml() {
+  let h = '<section class="fc-block" id="blk-pr"><div class="fc-bh">' + esc(t('sec.presets')) + '</div><div class="fc-bc">';
+  h += '<div class="miz-btn-row" style="margin-top:0"><button type="button" class="miz-btn primary" data-act="load-lua">' + esc(t('pr.load')) + '</button></div>';
   h += '<p class="pk-note">' + esc(t('pr.hint')) + '</p>';
   LIB.errors.forEach(e => { h += '<div class="pk-warn">⚠ ' + esc(e) + '</div>'; });
   h += '<div class="fc-h">' + esc(tf('pr.files', LIB.files.length)) + '</div><div class="fc-lib">';
@@ -1393,73 +2081,18 @@ function renderPresets() {
   PAYLOAD_TYPES.forEach(ty => { nMine += (LIB.mine[ty] || []).length; });
   h += '<div class="fc-h">' + esc(tf('pr.mine', nMine)) + '</div><div class="fc-lib">';
   if (!nMine && !LIB.files.length) h += '<p class="pk-note">' + esc(t('pr.none')) + '</p>';
-  PAYLOAD_TYPES.forEach(ty => {
-    (LIB.mine[ty] || []).forEach((p, i) => {
-      h += '<div class="fc-file"><span class="fc-file-n">★ ' + esc(p.displayName || p.name) + '</span><span class="snap-flight-tag">' + esc(TYPE_LABEL[ty]) + '</span>'
-        + '<button type="button" class="pk-x" data-act="rm-mine" data-ty="' + esc(ty) + '" data-i="' + i + '" aria-label="' + esc(t('pr.delete')) + '" title="' + esc(t('pr.delete')) + '">✕</button></div>';
-    });
-  });
+  PAYLOAD_TYPES.forEach(ty => (LIB.mine[ty] || []).forEach((p, i) => {
+    h += '<div class="fc-file"><span class="fc-file-n">★ ' + esc(p.displayName || p.name) + '</span><span class="snap-flight-tag">' + esc(TYPE_LABEL[ty]) + '</span>'
+      + '<button type="button" class="pk-x" data-act="rm-mine" data-ty="' + esc(ty) + '" data-i="' + i + '" aria-label="' + esc(t('pr.delete')) + '" title="' + esc(t('pr.delete')) + '">✕</button></div>';
+  }));
   h += '</div>';
   if (nMine) {
-    h += '<p class="pk-note">' + esc(t('pr.mine.hint')) + ' ' + esc(t('pr.export.hint')) + '</p><div class="miz-btn-row" style="margin-top:0">';
+    h += '<p class="pk-note">' + esc(t('pr.export.hint')) + '</p><div class="miz-btn-row" style="margin-top:0">';
     PAYLOAD_TYPES.forEach(ty => { if ((LIB.mine[ty] || []).length) h += '<button type="button" class="miz-btn" data-act="export-lua" data-ty="' + esc(ty) + '">' + esc(tf('pr.export', ty)) + '</button>'; });
     h += '</div>';
   }
-  document.getElementById('pr-body').innerHTML = h;
+  return h + '</div></section>';
 }
-
-function renderAll() { renderPackage(); renderFlights(); renderPresets(); applyI18nStatic(); }
-
-// ---------- actions ----------
-function applyPreset(f, u, key) {
-  if (!key) { u.loadout = null; return; }
-  const hit = presetsFor(f.type).filter(p => p.key === key)[0];
-  if (!hit) { u.loadout = null; return; }
-  const d = payloadDefaults(f.type);
-  u.loadout = {
-    key: key, presetName: hit.label, src: hit.src, pylons: clonePylons(hit.preset.pylons),
-    fuel: String(d.fuel), flare: String(d.flare), chaff: String(d.chaff), gun: String(d.gun)
-  };
-}
-
-function openEditor(fi, ui) {
-  const f = S.flights[fi], u = f.units[ui];
-  const src = u.loadout ? clonePylons(u.loadout.pylons) : {};
-  UI.editor = { f: fi, u: ui, name: '', pylons: src, error: '', tasks: [TASK_DEFAULT[f.type]] };
-  UI.open.add('f' + fi + 'u' + ui + 'l');
-  renderFlights();
-  const el = document.getElementById('fc-editor');
-  if (el && el.scrollIntoView) el.scrollIntoView({ block: 'nearest' });
-}
-
-function saveEditor() {
-  const E = UI.editor, f = S.flights[E.f], u = f.units[E.u];
-  const name = E.name.trim();
-  const fail = key => { E.error = key; const m = document.getElementById('ed-msg'); if (m) m.textContent = key; };
-  if (!name) return fail(t('ed.err.name'));
-  if ((LIB.mine[f.type] || []).some(p => p.name === name)) return fail(tf('ed.err.dup', TYPE_LABEL[f.type]));
-  const pylons = {};
-  Object.keys(E.pylons).forEach(n => { if (E.pylons[n] && E.pylons[n].CLSID) pylons[n] = E.pylons[n]; });
-  if (!Object.keys(pylons).length) return fail(t('ed.err.none'));
-  const order = Object.keys(pylons).map(Number).sort((a, b) => a - b);
-  const preset = { name: name, displayName: name, pylons: pylons, order: order, tasks: E.tasks.slice() };
-  (LIB.mine[f.type] = LIB.mine[f.type] || []).push(preset);
-  saveMine();
-  const idx = LIB.mine[f.type].length - 1;
-  UI.editor = null;
-  applyPreset(f, u, 'm:' + idx);
-  renderFlights(); renderPresets();
-}
-
-function download(text, fname, mime) {
-  const blob = new Blob([text], { type: mime || 'text/plain' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = fname;
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 2000);
-}
-
 function exportLua(ty) {
   const obj = { unitType: ty, name: PAYLOAD_FILE_NAME[ty], presets: [] };
   LIB.files.forEach(fl => {
@@ -1471,7 +2104,6 @@ function exportLua(ty) {
   (LIB.mine[ty] || []).forEach(p => obj.presets.push(p));
   download(serializeUnitPayloads(obj), ty + '.lua', 'text/plain');
 }
-
 async function loadLuaFiles(files) {
   LIB.errors = [];
   for (const file of files) {
@@ -1480,7 +2112,263 @@ async function loadLuaFiles(files) {
     try { LIB.files.push({ name: file.name, parsed: parseUnitPayloads(txt) }); }
     catch (e) { LIB.errors.push(tf('pr.err', file.name, e.line || '?', t('err.code.' + (e.code || '')))); }
   }
-  renderFlights(); renderPresets();
+  renderRight();
+}
+
+// ---------- fichiers ----------
+function download(text, fname, mime) {
+  const blob = new Blob([text], { type: mime || 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = fname;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+// Un fichier JSON : { parsed, zip } ou { reject } (la clé du message). Un .zip porte un package.json à la racine (« PK » en tête).
+function readJsonFile(file, done) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    const bytes = new Uint8Array(reader.result);
+    const parse = (text, zip) => {
+      if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+      let parsed;
+      try { parsed = JSON.parse(text); } catch (e) { done({ reject: 'rej.json' }); return; }
+      done({ parsed: parsed, zip: zip });
+    };
+    if (!(bytes.length >= 2 && bytes[0] === 0x50 && bytes[1] === 0x4B)) {
+      const enc = (bytes[0] === 0xFF && bytes[1] === 0xFE) ? 'utf-16le' : ((bytes[0] === 0xFE && bytes[1] === 0xFF) ? 'utf-16be' : 'utf-8');
+      parse(new TextDecoder(enc).decode(bytes), false);
+      return;
+    }
+    if (typeof JSZip === 'undefined') { done({ reject: 'rej.zip' }); return; }
+    JSZip.loadAsync(bytes).then(z => { const e = z.file('package.json'); return e ? e.async('string') : null; })
+      .then(txt => { if (txt === null) done({ reject: 'rej.zip' }); else parse(txt, true); }, () => done({ reject: 'rej.zip' }));
+  };
+  reader.onerror = () => done({ reject: 'rej.json' });
+  reader.readAsArrayBuffer(file);
+}
+function rejectFormat(parsed, kinds) {
+  const f = isObj(parsed) ? (parsed.format || parsed.schema) : undefined;
+  const x = ((typeof f === 'string' && f !== '') || typeof f === 'number') ? String(f) : t('rej.unknown');
+  showToast(tf('rej.format', x, kinds.map(k => t('fmt.' + k)).join(', ')), 5000);
+}
+
+// « Ouvrir » : un fichier de travail (clé fc) ou un paquet de vol ; il remplace le contenu du module
+function openFile(file) {
+  readJsonFile(file, r => {
+    if (r.reject) { showToast(t(r.reject), 5000); return; }
+    const o = r.parsed;
+    if (isObj(o) && isObj(o.fc) && isObj(o.fc.state) && restoreState(o.fc.state)) {
+      if (isObj(o.fc.mine)) PAYLOAD_TYPES.forEach(ty => {
+        (Array.isArray(o.fc.mine[ty]) ? o.fc.mine[ty] : []).forEach(p => {
+          if (isObj(p) && isObj(p.pylons) && !(LIB.mine[ty] || []).some(q => q.name === p.name)) (LIB.mine[ty] = LIB.mine[ty] || []).push(p);
+        });
+      });
+      saveMine();
+    } else if (isObj(o) && o.format === PACKAGE_FORMAT) {
+      const res = impReadPackage(o, file.name);
+      if (res.reject) { showToast(t(res.reject), 5000); return; }
+      S.flights = []; S.theatre = res.src.theatre; S.sel = { f: 0, u: 0 };
+      impMerge(res.src.flights.filter(f => f.supported).map(f => ({ f: f, chk: { route: true, radios: true, loadout: true, livery: true } })));
+    } else { showToast(t('open.bad'), 5000); return; }
+    UI.cmp.saving = false;
+    renderAll();
+    showToast(tf('open.done', S.flights.length));
+  });
+}
+function saveFile() {
+  const name = packageFileName('fc');
+  download(JSON.stringify(buildWorkFile(), null, 1), name, 'application/json');
+  showToast(tf('save.done', name));
+}
+function exportFile() {
+  if (exportIssues().length) { refreshBar(); return; }
+  const name = packageFileName();
+  download(JSON.stringify(buildPackage(), null, 1), name, 'application/json');
+  showToast(tf('export.done', name));
+}
+function clearAll() {
+  if (!confirm(t('clear.confirm'))) return;
+  S.theatre = ''; S.flights = []; S.sel = { f: 0, u: 0 };
+  UI.cmp.saving = false;
+  renderAll();
+}
+
+// =============================================================
+//  IMPORT — par source (comme au Datacard Generator) ; par vol, quatre cases comme HQ : Route, Radios, Emport, Livrée
+// =============================================================
+function impFlight(f) {
+  if (!isObj(f) || typeof f.groupName !== 'string' || typeof f.aircraftType !== 'string') return null;
+  const points = (isObj(f.route) && isObj(f.route.points) && routeKeys(f.route.points).length) ? f.route.points : null;
+  const units = (Array.isArray(f.units) ? f.units : []).filter(isObj);
+  const supported = PAYLOAD_TYPES.indexOf(f.aircraftType) >= 0;
+  const out = { groupName: f.groupName, aircraftType: f.aircraftType, coalition: (f.coalition === 'blue' || f.coalition === 'red') ? f.coalition : '', supported: supported, points: points, units: units };
+  const hasRadios = units.some(u => Array.isArray(u.radios) && u.radios.some(r => isObj(r) && isObj(r.channels) && Object.keys(r.channels).length));
+  out.avail = {
+    route: !!points && supported,
+    radios: hasRadios && supported,
+    loadout: supported && units.some(u => isObj(u.payload) && isObj(u.payload.pylons)),
+    livery: units.some(u => typeof u.liveryId === 'string' && u.liveryId !== '') && supported
+  };
+  return out;
+}
+function impSource(kind, theatre, file, list) {
+  const flights = list.map(impFlight).filter(Boolean);
+  flights.forEach(f => { f.on = f.supported; f.chk = { route: f.avail.route, radios: f.avail.radios, loadout: f.avail.loadout, livery: f.avail.livery }; });
+  return { kind: kind, theatre: theatre, file: file, flights: flights, skipped: list.length - flights.length };
+}
+function impReadPackage(o, fname) {
+  if (typeof o.theatre !== 'string' || o.theatre === '') return { reject: 'rej.noTheatre' };
+  const src = impSource('pkg', o.theatre, fname || '', Array.isArray(o.flights) ? o.flights : []);
+  if (!src.flights.length) return { reject: 'rej.noFlight' };
+  return { src: src };
+}
+function impReadSnapshot(o, fname) {
+  if (!isObj(o) || o.schema !== SNAPSHOT_SCHEMA || !isObj(o.sourceMission) || typeof o.sourceMission.theatre !== 'string' || !Array.isArray(o.flights)) return { reject: 'fmt' };
+  const src = impSource('snap', o.sourceMission.theatre, str(o.sourceMission.filename) || fname || '', o.flights);
+  if (!src.flights.length) return { reject: 'rej.noFlight' };
+  return { src: src };
+}
+function impReadHq() {
+  let o = null;
+  try { o = JSON.parse(lsGet(KEY_SNAPSHOT) || 'null'); } catch (e) { o = null; }
+  const r = impReadSnapshot(o, '');
+  return r.src || null;
+}
+function impOpen() {
+  UI.imp = { src: '', hq: impReadHq(), pkg: null, snap: null };
+  UI.imp.src = UI.imp.hq ? 'hq' : '';
+  renderImport();
+  const m = document.getElementById('imp-modal');
+  m.hidden = false;
+  const first = m.querySelector('input[type=radio]:not(:disabled)');
+  if (first) first.focus();
+}
+function impClose() { document.getElementById('imp-modal').hidden = true; UI.imp = null; }
+function impCur() { const I = UI.imp; return I && I.src ? I[I.src] : null; }
+
+function renderImport() {
+  const I = UI.imp;
+  if (!I) return;
+  const row = (id, label, extra, off) => '<label class="imp-src' + (off ? ' off' : '') + '"><input type="radio" name="imp-src" value="' + id + '"' + (I.src === id ? ' checked' : '') + (off ? ' disabled' : '') + '><span>' + esc(label) + '</span></label>' + (extra || '');
+  let h = '<div class="imp-block"><h3>' + esc(t('imp.src')) + '</h3>';
+  h += row('hq', t('imp.src.hq'), '<div class="imp-note">' + esc(I.hq ? tf('imp.hq.ok', I.hq.file, I.hq.theatre) : t('imp.hq.none')) + '</div>', !I.hq);
+  h += row('pkg', t('imp.src.pkg'), '<div class="imp-file"><button type="button" class="imp-filebtn" data-act="imp-pick-pkg">' + esc(t('imp.choose')) + '</button><span class="imp-filename">' + esc(I.pkg ? I.pkg.file : '') + '</span></div><div class="imp-note">' + esc(t('imp.pkg.note')) + '</div>');
+  h += row('snap', t('imp.src.snap'), '<div class="imp-file"><button type="button" class="imp-filebtn" data-act="imp-pick-snap">' + esc(t('imp.choose')) + '</button><span class="imp-filename">' + esc(I.snap ? I.snap.file : '') + '</span></div><div class="imp-note">' + esc(t('imp.snap.note')) + '</div>');
+  [['rp', 'imp.src.rp'], ['bg', 'imp.src.bg'], ['dg', 'imp.src.dg']].forEach(s => { h += row(s[0], t(s[1]), '<div class="imp-note">' + esc(t('imp.soon')) + '</div>', true); });
+  h += '</div>';
+  const cur = impCur();
+  h += '<div class="imp-block"><h3>' + esc(t('imp.flights')) + '</h3>';
+  if (!cur) h += '<p class="imp-note" style="margin-left:0">' + esc(t('imp.none')) + '</p>';
+  else {
+    if (cur.skipped) h += '<div class="imp-note" style="margin-left:0">⚠ ' + esc(tf('rej.skip', cur.skipped)) + '</div>';
+    h += '<div class="imp-list" id="imp-list">';
+    cur.flights.forEach((f, i) => {
+      const ex = S.flights.some(x => x.name.trim() === f.groupName && x.type === f.aircraftType && x.coalition === f.coalition);
+      h += '<div class="imp-flight' + (f.supported ? '' : ' off') + '"><label class="imp-fh"><input type="checkbox" data-imp-flight="' + i + '"' + (f.on && f.supported ? ' checked' : '') + (f.supported ? '' : ' disabled') + '>'
+        + '<span class="imp-nm">' + esc(f.groupName) + '</span><span class="snap-flight-tag">' + esc(f.aircraftType) + '</span>'
+        + '<span class="imp-n">' + esc(f.supported ? (ex ? t('imp.exists') : t('imp.new')) : t('imp.unsupported')) + ' · ' + esc(tf('imp.units', f.units.length)) + '</span></label><div class="pk-parts">';
+      PARTS.forEach(p => {
+        const on = f.supported && f.avail[p];
+        h += '<label class="pk-chk' + (on ? '' : ' off') + '"><input type="checkbox" data-imp-part="' + p + '" data-imp-i="' + i + '"' + ((on && f.chk[p]) ? ' checked' : '') + (on ? '' : ' disabled') + '>' + esc(t('imp.part.' + p)) + '</label>';
+      });
+      h += '</div></div>';
+    });
+    h += '</div>';
+    if (S.flights.length && S.theatre && S.theatre !== cur.theatre) h += '<div class="imp-note" style="margin-left:0">' + esc(tf('imp.theatre.keep', S.theatre, cur.theatre)) + '</div>';
+    else if (!S.theatre || !S.flights.length) h += '<div class="imp-note" style="margin-left:0">' + esc(tf('imp.theatre.set', cur.theatre)) + '</div>';
+  }
+  h += '</div>';
+  document.getElementById('imp-body').innerHTML = h;
+  const go = document.getElementById('imp-go');
+  go.disabled = !(cur && cur.flights.some(f => f.on && f.supported));
+}
+// Applique les vols choisis : [{ f, chk }] ; un vol du module de même (nom, appareil, coalition) est complété par les parties cochées, sinon il est créé.
+function impMerge(list) {
+  let n = 0;
+  list.forEach(({ f, chk }) => {
+    let tg = S.flights.filter(x => x.name.trim() === f.groupName && x.type === f.aircraftType && x.coalition === f.coalition)[0];
+    const created = !tg;
+    if (created) { tg = newFlight(); tg.name = f.groupName; tg.type = f.aircraftType; tg.coalition = f.coalition; tg.units = []; S.flights.push(tg); }
+    if (chk.route && f.points) tg.route = { points: clone(f.points) };
+    f.units.slice(0, 4).forEach((iu, k) => {
+      let u = tg.units[k];
+      if (!u) {
+        u = newUnit(); tg.units.push(u);
+        u.name = str(iu.name);
+        u.csRaw = iu.callsign; u.callsign = csText(iu.callsign);
+        u.onboard = (typeof iu.onboardNum === 'string' || typeof iu.onboardNum === 'number') ? String(iu.onboardNum) : '';
+      }
+      if (chk.livery && typeof iu.liveryId === 'string') u.livery = iu.liveryId;
+      if (chk.radios && Array.isArray(iu.radios)) {
+        iu.radios.forEach(r => {
+          if (!isObj(r) || !isObj(r.channels) || !has(RADIO_CHANNELS[tg.type], r.radioIndex)) return;
+          const post = {};
+          Object.keys(r.channels).forEach(c => { const v = r.channels[c]; if (/^\d+$/.test(c) && Number(c) >= 1 && Number(c) <= RADIO_CHANNELS[tg.type][r.radioIndex] && typeof v === 'number' && isFinite(v)) post[c] = String(v); });
+          if (Object.keys(post).length) u.radios[r.radioIndex] = post;
+        });
+      }
+      if (chk.loadout) { const lo = loadoutFromPayload(tg.type, iu.payload); if (lo) u.loadout = lo; }
+    });
+    if (!tg.units.length) tg.units.push(newUnit());
+    n++;
+  });
+  return n;
+}
+function impGo() {
+  const cur = impCur();
+  if (!cur) return;
+  const picked = cur.flights.filter(f => f.on && f.supported).map(f => ({ f: f, chk: f.chk }));
+  if (!picked.length) return;
+  if (!S.theatre || !S.flights.length) S.theatre = cur.theatre;
+  const n = impMerge(picked);
+  const firstNew = S.flights.length - 1;
+  S.sel = { f: Math.max(0, Math.min(firstNew, S.sel.f)), u: 0 };
+  if (!selUnit()) S.sel = { f: 0, u: 0 };
+  impClose();
+  renderAll();
+  showToast(tf('imp.done', n));
+}
+function impFile(file, kind) {
+  readJsonFile(file, r => {
+    if (r.reject) { showToast(t(r.reject), 5000); return; }
+    const o = r.parsed;
+    if (kind === 'pkg') {
+      if (!isObj(o) || o.format !== PACKAGE_FORMAT) { rejectFormat(o, ['pkg']); return; }
+      const res = impReadPackage(o, file.name);
+      if (res.reject) { showToast(t(res.reject), 5000); return; }
+      UI.imp.pkg = res.src; UI.imp.src = 'pkg';
+    } else {
+      const res = impReadSnapshot(o, file.name);
+      if (res.reject === 'fmt') { rejectFormat(o, ['snap']); return; }
+      if (res.reject) { showToast(t(res.reject), 5000); return; }
+      UI.imp.snap = res.src; UI.imp.src = 'snap';
+    }
+    renderImport();
+  });
+}
+
+// =============================================================
+//  actions et événements
+// =============================================================
+function showToast(msg, ms) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(showToast._h);
+  showToast._h = setTimeout(() => el.classList.remove('show'), ms || 2400);
+}
+function renderAll() { renderLeft(); renderRight(); refreshBar(); applyI18nStatic(); saveWork(); }
+function selectUnit(fi, ui, scroll) {
+  if (S.sel.f === fi && S.sel.u === ui && !scroll) return;
+  const changed = !(S.sel.f === fi && S.sel.u === ui);
+  S.sel = { f: fi, u: ui };
+  document.querySelectorAll('#col-left .fc-unit').forEach(e => {
+    const fe = e.closest('.fc-flight');
+    e.classList.toggle('sel', Number(fe.getAttribute('data-f')) === fi && Number(e.getAttribute('data-u')) === ui);
+  });
+  if (changed) { UI.cmp.saving = false; UI.cmp.err = ''; UI.cmp.st = null; renderRight(); saveWork(); }
+  if (scroll) { const b = document.getElementById('blk-cmp'); if (b && b.scrollIntoView && window.innerWidth < 1100) b.scrollIntoView({ block: 'start', behavior: 'smooth' }); }
 }
 
 function onClick(e) {
@@ -1489,37 +2377,38 @@ function onClick(e) {
   const act = b.getAttribute('data-act');
   const fEl = b.closest('.fc-flight'), fi = fEl ? Number(fEl.getAttribute('data-f')) : -1;
   const uEl = b.closest('.fc-unit'), ui = uEl ? Number(uEl.getAttribute('data-u')) : (b.hasAttribute('data-u') ? Number(b.getAttribute('data-u')) : -1);
-  if (act === 'add-flight') { S.flights.push(newFlight()); renderFlights(); renderPackage(); }
-  else if (act === 'rm-flight') { S.flights.splice(fi, 1); UI.editor = null; renderFlights(); renderPackage(); }
-  else if (act === 'add-unit') { S.flights[fi].units.push(newUnit()); renderFlights(); }
-  else if (act === 'rm-unit') { S.flights[fi].units.splice(ui, 1); UI.editor = null; renderFlights(); }
+  if (act === 'add-flight') { S.flights.push(newFlight()); S.sel = { f: S.flights.length - 1, u: 0 }; renderAll(); }
+  else if (act === 'rm-flight') { S.flights.splice(fi, 1); if (!selUnit()) S.sel = { f: 0, u: 0 }; renderAll(); }
+  else if (act === 'add-unit') { S.flights[fi].units.push(newUnit()); renderLeft(); refreshAll(); }
+  else if (act === 'rm-unit') { S.flights[fi].units.splice(ui, 1); if (!selUnit()) S.sel = { f: Math.min(S.sel.f, S.flights.length - 1), u: 0 }; renderAll(); }
+  else if (act === 'rm-route') { S.flights[fi].route = null; renderLeft(); refreshAll(); }
   else if (act === 'copy-radios') {
     const f = S.flights[fi], src = f.units[ui].radios;
-    f.units.forEach((u, k) => { if (k !== ui) u.radios = JSON.parse(JSON.stringify(src)); });
-    renderFlights();
+    f.units.forEach((u, k) => { if (k !== ui) u.radios = clone(src); });
+    renderLeft(); refreshAll();
   }
-  else if (act === 'open-editor') openEditor(fi, ui);
-  else if (act === 'ed-cancel') { UI.editor = null; renderFlights(); }
-  else if (act === 'ed-clear') { UI.editor.pylons = {}; renderFlights(); }
-  else if (act === 'ed-save') saveEditor();
+  else if (act === 'sel-unit') selectUnit(fi, ui, true);
+  else if (act === 'cmp-save') { UI.cmp.saving = true; UI.cmp.err = ''; UI.cmp.name = ''; renderRight(); const i = document.querySelector('#blk-cmp input[data-k="cmp-name"]'); if (i) i.focus(); }
+  else if (act === 'cmp-save-cancel') { UI.cmp.saving = false; renderRight(); }
+  else if (act === 'cmp-save-go') cmpSaveGo();
+  else if (act === 'cmp-clear') { const su = selUnit(); if (su) { su.u.loadout = null; UI.cmp.saving = false; renderRight(); refreshUnitSummaries(); refreshAll(); } }
   else if (act === 'load-lua') document.getElementById('fc-in-lua').click();
-  else if (act === 'load-ctx') document.getElementById('fc-in-ctx').click();
-  else if (act === 'new-pkg') { if (confirm(t('pkg.confirm.new'))) { S.flights = []; S.theatre = ''; S.ctx = null; UI.editor = null; renderAll(); } }
-  else if (act === 'export-pkg') showToast(t('toast.mock'));
-  else if (act === 'rm-file') { LIB.files.splice(Number(b.getAttribute('data-i')), 1); renderFlights(); renderPresets(); }
-  else if (act === 'rm-mine') { (LIB.mine[b.getAttribute('data-ty')] || []).splice(Number(b.getAttribute('data-i')), 1); saveMine(); renderFlights(); renderPresets(); }
+  else if (act === 'rm-file') { LIB.files.splice(Number(b.getAttribute('data-i')), 1); renderRight(); }
+  else if (act === 'rm-mine') { (LIB.mine[b.getAttribute('data-ty')] || []).splice(Number(b.getAttribute('data-i')), 1); saveMine(); renderRight(); }
   else if (act === 'export-lua') exportLua(b.getAttribute('data-ty'));
+  else if (act === 'imp-pick-pkg') document.getElementById('fc-in-pkg').click();
+  else if (act === 'imp-pick-snap') document.getElementById('fc-in-snap').click();
 }
 
 function onInput(e) {
   const el = e.target, k = el.getAttribute && el.getAttribute('data-k');
   if (!k) return;
+  if (k === 'cmp-name') { UI.cmp.name = el.value; return; }
   const fEl = el.closest('.fc-flight'), fi = fEl ? Number(fEl.getAttribute('data-f')) : -1;
   const f = S.flights[fi];
   const ui = el.hasAttribute('data-u') ? Number(el.getAttribute('data-u')) : -1;
   const u = f && ui >= 0 ? f.units[ui] : null;
-  if (k === 'name') { f.name = el.value; const p = document.getElementById('pkg-fname'); if (p) p.textContent = packageFileName(); }
-  else if (k === 'freq') f.freq = el.value;
+  if (k === 'name') { f.name = el.value; const ft = fEl.querySelector('.fc-ftitle'); if (ft) ft.textContent = flightLabel(f, fi); }
   else if (k === 'uname') u.name = el.value;
   else if (k === 'callsign') u.callsign = el.value;
   else if (k === 'onboard') u.onboard = el.value;
@@ -1527,46 +2416,30 @@ function onInput(e) {
   else if (k === 'chan') {
     const r = Number(el.getAttribute('data-r')), c = Number(el.getAttribute('data-c'));
     (u.radios[r] = u.radios[r] || {})[c] = el.value;
-    validateRadios(fi, ui, r);
+    paintRadioMsg(fi, ui, r); refreshUnitSummaries();
   }
-  else if (u && u.loadout && (k === 'fuel' || k === 'flare' || k === 'chaff' || k === 'gun')) { u.loadout[k] = el.value; validateLoadout(fi, ui); }
-  else if (k === 'ed-name' && UI.editor) UI.editor.name = el.value;
-}
-
-function validateLoadout(fi, ui) {
-  const f = S.flights[fi], lo = f.units[ui].loadout, d = payloadDefaults(f.type);
-  const spec = { fuel: [t('lo.fuel'), d.fuel], flare: [t('lo.flare'), d.flare], chaff: [t('lo.chaff'), d.chaff], gun: [t('lo.gun'), 100] };
-  let msg = '';
-  Object.keys(spec).forEach(k => {
-    const inp = document.querySelector('#fl-body .fc-flight[data-f="' + fi + '"] .fc-unit[data-u="' + ui + '"] input[data-k="' + k + '"]');
-    const p = parseFreq(lo[k]);
-    const bad = p.nan || p.empty || p.v > spec[k][1];
-    if (inp) inp.classList.toggle('bad', !!bad);
-    if (bad && !msg) msg = tf('lo.err.range', spec[k][0], fmtMHz(spec[k][1]));
-  });
-  const el = document.getElementById('lm-' + fi + '-' + ui);
-  if (el) el.textContent = msg;
+  else if (k === 'fuel' || k === 'flare' || k === 'chaff' || k === 'gun') {
+    const su = selUnit();
+    if (su && su.u.loadout) { su.u.loadout[k] = el.value; paintLoadoutMsg(); }
+  }
+  refreshAll();
 }
 
 function onChange(e) {
   const el = e.target, k = el.getAttribute && el.getAttribute('data-k');
+  if (el.id === 'cmp-from') { cmpBase(el.value); return; }
+  if (el.id === 'cmp-sym') { UI.cmp.sym = el.checked; return; }
+  if (el.classList && el.classList.contains('cmp-sel')) { cmpChoose(el.getAttribute('data-st'), el.value); return; }
   if (!k) return;
-  if (k === 'theatre') { S.theatre = el.value; return; }
+  if (k === 'theatre') { S.theatre = el.value; refreshAll(); return; }
   const fEl = el.closest('.fc-flight'), fi = fEl ? Number(fEl.getAttribute('data-f')) : -1;
   const f = S.flights[fi];
   if (k === 'type') {
     f.type = el.value;
     f.units.forEach(u => { u.radios = {}; u.loadout = null; });
-    UI.editor = null; renderFlights();
+    renderAll();
   }
-  else if (k === 'coalition') f.coalition = el.value;
-  else if (k === 'preset') { const ui = Number(el.getAttribute('data-u')); applyPreset(f, f.units[ui], el.value); renderFlights(); }
-  else if (k === 'ed-py' && UI.editor) {
-    const n = Number(el.getAttribute('data-n')), old = UI.editor.pylons[n];
-    if (!el.value) delete UI.editor.pylons[n];
-    else UI.editor.pylons[n] = (old && old.CLSID === el.value) ? old : { CLSID: el.value };   // un `settings` suit le pylône tant que l'arme ne change pas
-    renderFlights();
-  }
+  else if (k === 'coalition') { f.coalition = el.value; refreshAll(); }
 }
 
 function onToggle(e) {
@@ -1577,24 +2450,26 @@ function onToggle(e) {
   if (d.open) { UI.open.add(key); UI.open.delete('~' + key); } else { UI.open.delete(key); UI.open.add('~' + key); }
 }
 
-// ---------- barre, langue, thème ----------
-function showToast(msg, ms) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  clearTimeout(showToast._h);
-  showToast._h = setTimeout(() => el.classList.remove('show'), ms || 2200);
+function onFocusIn(e) {
+  const ue = e.target.closest ? e.target.closest('.fc-unit') : null;
+  if (!ue) return;
+  const fe = ue.closest('.fc-flight');
+  selectUnit(Number(fe.getAttribute('data-f')), Number(ue.getAttribute('data-u')), false);
 }
+function onRightClick(e) {
+  const cell = e.target.closest ? e.target.closest('.cmp-st') : null;
+  if (cell) { UI.cmp.st = cell.getAttribute('data-st'); cmpUpdate(); }
+}
+
+// ---------- barre, langue, thème ----------
 function loadTheme() {
-  let saved = 'cw-nato';
-  try { saved = localStorage.getItem(KEY_THEME) || 'cw-nato'; } catch (e) { /* idem */ }
+  const saved = lsGet(KEY_THEME) || 'cw-nato';
   document.body.setAttribute('data-theme', saved);
   const sel = document.getElementById('theme-select');
   if (sel) sel.value = saved;
 }
 function loadLang() {
-  let saved = null;
-  try { saved = localStorage.getItem(KEY_LANG); } catch (e) { /* idem */ }
+  const saved = lsGet(KEY_LANG);
   CURRENT_LANG = (saved === 'fr' || saved === 'en') ? saved : ((navigator.language || 'fr').startsWith('fr') ? 'fr' : 'en');
   document.documentElement.lang = CURRENT_LANG;
 }
@@ -1603,32 +2478,67 @@ function applyI18nStatic() {
   document.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = t(el.getAttribute('data-i18n-title')); });
   const b = document.getElementById('btn-lang');
   if (b) { b.textContent = CURRENT_LANG === 'fr' ? '🇬🇧' : '🇫🇷'; b.title = t('toolbar.lang.tooltip'); }
+  ['open', 'save', 'import', 'export', 'clear'].forEach(k => { const e = document.getElementById('btn-' + k); if (e) e.setAttribute('aria-label', t('tb.' + k)); });
 }
 
 function initEvents() {
-  const root = document.getElementById('editor-panel');
-  root.addEventListener('click', onClick);
-  root.addEventListener('input', onInput);
-  root.addEventListener('change', onChange);
-  root.addEventListener('toggle', onToggle, true);
+  const left = document.getElementById('col-left'), right = document.getElementById('col-right');
+  [left, right].forEach(root => {
+    root.addEventListener('click', onClick);
+    root.addEventListener('input', onInput);
+    root.addEventListener('change', onChange);
+    root.addEventListener('toggle', onToggle, true);
+  });
+  left.addEventListener('focusin', onFocusIn);
+  right.addEventListener('click', onRightClick);
+  right.addEventListener('focusin', e => {
+    const row = e.target.closest ? e.target.closest('.cmp-row') : null;
+    if (row && UI.cmp.st !== row.getAttribute('data-st')) { UI.cmp.st = row.getAttribute('data-st'); cmpUpdate(); }
+  });
   document.getElementById('theme-select').addEventListener('change', e => {
     document.body.setAttribute('data-theme', e.target.value);
-    try { localStorage.setItem(KEY_THEME, e.target.value); } catch (x) { /* idem */ }
+    lsSet(KEY_THEME, e.target.value);
   });
   document.getElementById('btn-lang').addEventListener('click', () => {
     CURRENT_LANG = CURRENT_LANG === 'fr' ? 'en' : 'fr';
-    try { localStorage.setItem(KEY_LANG, CURRENT_LANG); } catch (x) { /* idem */ }
+    lsSet(KEY_LANG, CURRENT_LANG);
     document.documentElement.lang = CURRENT_LANG;
+    if (UI.imp) renderImport();
     renderAll();
   });
-  document.getElementById('fc-in-lua').addEventListener('change', e => { const fl = Array.prototype.slice.call(e.target.files); e.target.value = ''; loadLuaFiles(fl); });
-  document.getElementById('fc-in-ctx').addEventListener('change', e => { e.target.value = ''; showToast(t('toast.mock')); });
+  document.getElementById('btn-open').addEventListener('click', () => document.getElementById('fc-in-open').click());
+  document.getElementById('btn-save').addEventListener('click', saveFile);
+  document.getElementById('btn-import').addEventListener('click', impOpen);
+  document.getElementById('btn-export').addEventListener('click', exportFile);
+  document.getElementById('btn-clear').addEventListener('click', clearAll);
+  const fileIn = (id, fn) => document.getElementById(id).addEventListener('change', e => { const fl = Array.prototype.slice.call(e.target.files); e.target.value = ''; fn(fl); });
+  fileIn('fc-in-lua', loadLuaFiles);
+  fileIn('fc-in-open', fl => { if (fl[0]) openFile(fl[0]); });
+  fileIn('fc-in-pkg', fl => { if (fl[0]) impFile(fl[0], 'pkg'); });
+  fileIn('fc-in-snap', fl => { if (fl[0]) impFile(fl[0], 'snap'); });
+  // fenêtre d'import
+  const m = document.getElementById('imp-modal');
+  document.getElementById('imp-modal-backdrop').addEventListener('click', impClose);
+  document.getElementById('imp-modal-close').addEventListener('click', impClose);
+  document.getElementById('imp-cancel').addEventListener('click', impClose);
+  document.getElementById('imp-go').addEventListener('click', impGo);
+  m.addEventListener('click', onClick);
+  m.addEventListener('change', e => {
+    const el = e.target, I = UI.imp;
+    if (!I) return;
+    if (el.name === 'imp-src') { I.src = el.value; renderImport(); return; }
+    const cur = impCur();
+    if (!cur) return;
+    if (el.hasAttribute('data-imp-flight')) { cur.flights[Number(el.getAttribute('data-imp-flight'))].on = el.checked; renderImport(); }
+    else if (el.hasAttribute('data-imp-part')) { cur.flights[Number(el.getAttribute('data-imp-i'))].chk[el.getAttribute('data-imp-part')] = el.checked; }
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && UI.imp) impClose(); });
 }
 
 function init() {
   loadTheme();
   loadLang();
-  loadMine();
+  try { const w = JSON.parse(lsGet(KEY_STATE) || 'null'); if (isObj(w) && w.v === 1) { loadMine(w); restoreState(w.state); } } catch (e) { /* l'écran marche sans */ }
   initToolbarMenus([['theme-select', () => t('toolbar.theme.tooltip')]]);
   initFormMenus(sel => sel.getAttribute('aria-label') || '');
   initEvents();
@@ -1644,15 +2554,27 @@ FONTS = """
 """
 
 
+def tables_js():
+    """Les quatre tables de data/, recopiées telles quelles entre leurs marqueurs : `const NOM = <fichier>;`."""
+    out = ''
+    for name, fn in TABLES:
+        with open(os.path.join(HERE, 'data', fn), encoding='utf-8', newline='') as f:
+            txt = f.read()
+        assert '</script' not in txt.lower()
+        out += '/* %s:BEGIN */\nconst %s = %s;\n/* %s:END */\n' % (name, name, txt.rstrip('\n'), name)
+    return out
+
+
 def build_html():
     fonts = (FONTS.replace('@@ROBOTO_MONO_400@@', A['ROBOTO_MONO_400'])
                   .replace('@@STARDOS_700@@', A['STARDOS_700'])
                   .replace('@@OSWALD_500@@', A['OSWALD_500']))
-    js = build_radio_block() + '\n' + build_payload_block() + '\n' + JS_TBM + '\n' + JS_FC
+    js = build_radio_block() + '\n' + tables_js() + '\n' + build_payload_block() + '\n' + JS_TBM + '\n' + JS_FC
     return ('<!DOCTYPE html>\n<html lang="fr">\n<head>\n<meta charset="UTF-8">\n'
             '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">\n'
             '<meta name="theme-color" content="#1a1e10">\n<title>Flight Configurator</title>\n<style>\n'
-            + fonts + CSS_COMMON + CSS_FC + '\n</style>\n</head>\n'
+            + fonts + CSS_COMMON + CSS_FC + '\n</style>\n'
+            '<!-- JSZip v3.10.1 — embarqué pour lire un paquet .zip -->\n<script>' + A['lib_jszip'] + '</script>\n</head>\n'
             + BODY.replace('@@VERSION@@', APP_VERSION) + '\n<script>\n' + js + '\n</script>\n</body>\n</html>\n')
 
 
@@ -1667,7 +2589,7 @@ def main():
 
 
 def check(html):
-    """Vérifications du build : parité FR/EN, clés de texte, syntaxe des scripts, aucune requête réseau, graisses."""
+    """Vérifications du build : parité FR/EN, clés de texte, tables égales à leurs fichiers, syntaxe des scripts, aucune requête réseau, graisses."""
     bad = 0
 
     def ok(cond, label):
@@ -1684,8 +2606,16 @@ def check(html):
         ken = {a or b for a, b in keys(m.group(2))}
         ok(kfr == ken, 'parité FR/EN : %d clés, écart %s' % (len(kfr), sorted(kfr ^ ken)))
         used = set(re.findall(r"\bt(?:f)?\('([a-zA-Z0-9_.\-]+)'", html)) | set(re.findall(r'data-i18n(?:-title)?="([^"]+)"', html))
-        used = {k for k in used if not k.startswith('err.code.')}
+        used |= set(re.findall(r"key: '([a-z]+\.[a-zA-Z0-9_.]+)'", html))
+        used = {k for k in used if not k.startswith('err.code.') and not k.endswith('.')}
+        used |= {'tb.' + k + s for k in ('open', 'save', 'import', 'export', 'clear') for s in ('', '.s', '.tip')}
         ok(used <= kfr, 'toute clé de texte utilisée existe : manque %s' % sorted(used - kfr))
+    # les quatre tables : la copie de la page égale le fichier de data/
+    for name, fn in TABLES:
+        mm = re.search(r'/\* %s:BEGIN \*/\nconst %s = (.*);\n/\* %s:END \*/' % (name, name, name), html, re.S)
+        with open(os.path.join(HERE, 'data', fn), encoding='utf-8', newline='') as f:
+            txt = f.read().rstrip('\n')
+        ok(bool(mm) and mm.group(1) == txt, 'table %s égale à data/%s' % (name, fn))
     scripts = re.findall(r'<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>', html, re.S)
     for i, s in enumerate(scripts):
         tmp = os.path.join(HERE, '.fc_check_%d.js' % i)
@@ -1694,8 +2624,9 @@ def check(html):
         r = subprocess.run(['node', '--check', tmp], capture_output=True, text=True)
         os.remove(tmp)
         ok(r.returncode == 0, 'node --check du script %d%s' % (i + 1, '' if r.returncode == 0 else ' : ' + r.stderr[:300]))
-    ok(not re.search(r'fetch\(|XMLHttpRequest|WebSocket|sendBeacon|<script[^>]*\bsrc=|<link[^>]*href=["\']http', html), 'aucune requête réseau')
-    ok(not re.search(r'font-weight:\s*(600|800|900|bold)', html), 'aucune graisse sans sa face (R295)')
+    own = html.replace(A['lib_jszip'], '')
+    ok(not re.search(r'fetch\(|XMLHttpRequest|WebSocket|sendBeacon|<script[^>]*\bsrc=|<link[^>]*href=["\']http', own), 'aucune requête réseau (hors JSZip, qui n\'en fait pas)')
+    ok(not re.search(r'font-weight:\s*(600|800|900|bold)|font:\s*(600|800|900|bold)\b', own), 'aucune graisse sans sa face (R295)')
     ok('/* ===== POSTES RADIO (COMME AU COCKPIT) ===== */' in html and '/* ===== EMPORT (PRESETS ET PAYLOAD) ===== */' in html, 'blocs partagés présents')
     if bad:
         sys.exit(1)

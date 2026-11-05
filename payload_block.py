@@ -4,14 +4,13 @@ armes par pylône, et construction du `payload` d'un .miz. Une seule source pour
 Loadout Editor de Mission Tools.
 
 Rend le texte JavaScript du bloc. Aucune dépendance au reste de la page : ni DOM, ni t(), ni réseau ; le bloc s'exécute seul
-sous node. Le catalogue (weapons_catalogue.json, produit une fois par generer_catalogue_armes.py d'après pydcs, LGPL-3.0) y est recopié.
+sous node. Les tables d'armes (data/*.json de Mission Tools, d'après pydcs, LGPL-3.0) sont des constantes de la page, lues par le bloc.
 
 Les modules qui l'utilisent insèrent ce texte tel quel : le bloc est identique à l'octet dans chaque fichier de dist/.
 
 Usage (par les builds) : from payload_block import build_block ; texte = build_block()
 """
 
-import json
 import os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -19,8 +18,10 @@ BLOCK_BEGIN = '/* ===== EMPORT (PRESETS ET PAYLOAD) ===== */'
 BLOCK_END = '/* ===== FIN DE L\'EMPORT ===== */'
 
 _JS = r"""
-// Catalogue des armes (pydcs) : { source, weapons: { CLSID: nom }, types: { type: { fuelMax, flare, chaff, gun, task, pylons: { n: [CLSID…] } } } }
-const PAYLOAD_CATALOGUE = @@CATALOGUE@@;
+// Les trois tables de Mission Tools (data/*.json, d'après pydcs 1.0.0, LGPL-3.0) doivent exister avant ce bloc, sous ces noms :
+//   WEAPON_NAMES { CLSID: nom } · AIRCRAFT_PYLONS { clsids: [...], weights: [...], types: { type: { pylône: [indices dans clsids] } } }
+//   AIRCRAFT_LIMITS { type: { fuel_max, flare, chaff, charge_total, flare_charge_size, chaff_charge_size } }
+// Le bloc ne les contient pas : ce sont les mêmes constantes que celles du Loadout Editor, qui peut donc le reprendre tel quel.
 
 // Les quatre types gérés (liste fermée). Tout autre type d'un fichier UnitPayloads se lit mais ne s'offre à aucun vol.
 const PAYLOAD_TYPES = ['Mi-24P', 'Mi-8MT', 'F-4E-45MC', 'Mirage-F1EE'];
@@ -40,36 +41,59 @@ const PAYLOAD_FILE_NAME = { 'Mi-24P': 'Mi-24P', 'Mi-8MT': 'Mi-8MT', 'F-4E-45MC':
 // Les fichiers d'hélicoptère (Mi-24P) portent une clé « tasks » vide en tête ; celui d'un avion (A-10C_2) n'en a pas. Un fichier neuf suit cet usage.
 const PAYLOAD_TOP_TASKS = { 'Mi-24P': true, 'Mi-8MT': true };
 
-// WEAPONS[type][pylône] = [{ clsid, name }] · FUEL_MAX[type] · LURE_DEFAULTS[type] = { flare, chaff } · TASK_DEFAULT[type]
-const WEAPONS = {}, FUEL_MAX = {}, LURE_DEFAULTS = {}, TASK_DEFAULT = {};
-PAYLOAD_TYPES.forEach(ty => {
-  const c = PAYLOAD_CATALOGUE.types[ty];
-  WEAPONS[ty] = {};
-  Object.keys(c.pylons).forEach(n => {
-    WEAPONS[ty][Number(n)] = c.pylons[n].map(id => ({ clsid: id, name: PAYLOAD_CATALOGUE.weapons[id] }));
+// Tâche (numéro DCS) d'un preset créé ici : celle par défaut du type dans pydcs (31 = CAS, 35 = transport, 11 = CAP).
+const TASK_DEFAULT = { 'Mi-24P': 31, 'Mi-8MT': 35, 'F-4E-45MC': 11, 'Mirage-F1EE': 11 };
+
+// Ajouts à la table de pylônes, d'après la mesure des .miz d'exemple : le F-4E porte « <CLEAN> » (dessous d'aile propre) sur ces pylônes,
+// valeur que pydcs ne connaît pas. Masse 0.
+const PAYLOAD_EXTRA = { 'F-4E-45MC': { clsid: '<CLEAN>', name: '<CLEAN> (clean pylon)', pylons: [2, 3, 4, 10, 11, 12] } };
+
+const payloadHas = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+const payloadIdx = new Map(AIRCRAFT_PYLONS.clsids.map((c, i) => [c, i]));
+
+// Pylônes d'un type : [{ n, allowed: [CLSID…] }] dans l'ordre numérique ; null si la table ne connaît pas le type.
+function payloadPylons(type) {
+  if (PAYLOAD_TYPES.indexOf(type) < 0 || !payloadHas(AIRCRAFT_PYLONS.types, type)) return null;
+  const tp = AIRCRAFT_PYLONS.types[type], ex = PAYLOAD_EXTRA[type];
+  return Object.keys(tp).sort((a, b) => Number(a) - Number(b)).map(n => {
+    const allowed = tp[n].map(i => AIRCRAFT_PYLONS.clsids[i]);
+    if (ex && ex.pylons.indexOf(Number(n)) >= 0) allowed.unshift(ex.clsid);
+    return { n: n, allowed: allowed };
   });
-  FUEL_MAX[ty] = c.fuelMax;
-  LURE_DEFAULTS[ty] = { flare: c.flare, chaff: c.chaff };
-  TASK_DEFAULT[ty] = c.task;
-});
+}
 
 // Numéros de pylône d'un type, dans l'ordre croissant.
 function payloadPylonNumbers(type) {
-  return WEAPONS[type] ? Object.keys(WEAPONS[type]).map(Number).sort((a, b) => a - b) : [];
+  const p = payloadPylons(type);
+  return p ? p.map(x => Number(x.n)) : [];
 }
 
-// Nom lisible d'une arme sur un pylône ; '' si le CLSID est vide, null s'il n'est pas dans le catalogue de ce pylône.
-function payloadWeaponName(type, pylon, clsid) {
+// Nom lisible d'une arme ; '' si le CLSID est vide, null s'il est inconnu des tables.
+function payloadWeaponName(clsid) {
   if (clsid === '' || clsid === undefined || clsid === null) return '';
-  const list = WEAPONS[type] && WEAPONS[type][pylon];
-  if (!list) return null;
-  for (let i = 0; i < list.length; i++) if (list[i].clsid === clsid) return list[i].name;
+  if (payloadHas(WEAPON_NAMES, clsid)) return WEAPON_NAMES[clsid];
+  for (const ty of Object.keys(PAYLOAD_EXTRA)) if (PAYLOAD_EXTRA[ty].clsid === clsid) return PAYLOAD_EXTRA[ty].name;
   return null;
 }
 
-// Réglages par défaut hors pylônes : carburant maximum, leurres et paillettes du catalogue, canon plein.
+// Masse d'une arme en kg ; null si les tables ne la donnent pas (« <CLEAN> » : 0).
+function payloadWeaponMass(clsid) {
+  for (const ty of Object.keys(PAYLOAD_EXTRA)) if (PAYLOAD_EXTRA[ty].clsid === clsid) return 0;
+  const i = payloadIdx.get(clsid);
+  const w = i === undefined ? null : AIRCRAFT_PYLONS.weights[i];
+  return (w === null || w === undefined) ? null : w;
+}
+
+// Réglages par défaut hors pylônes : carburant maximum, leurres et paillettes de AIRCRAFT_LIMITS, canon plein.
 function payloadDefaults(type) {
-  return { fuel: FUEL_MAX[type], flare: LURE_DEFAULTS[type].flare, chaff: LURE_DEFAULTS[type].chaff, gun: 100 };
+  const l = AIRCRAFT_LIMITS[type];
+  return { fuel: l.fuel_max, flare: l.flare, chaff: l.chaff, gun: 100 };
+}
+
+// Limites des leurres : flares × flare_charge_size + chaff × chaff_charge_size ≤ charge_total
+function payloadLureLimits(type) {
+  const l = AIRCRAFT_LIMITS[type];
+  return { total: l.charge_total, flareSize: l.flare_charge_size, chaffSize: l.chaff_charge_size };
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -386,11 +410,7 @@ function buildPayload(type, pylons, opts) {
 
 def build_block():
     """Le texte du bloc, délimité par ses deux commentaires, avec un saut de ligne final."""
-    with open(os.path.join(HERE, 'weapons_catalogue.json'), encoding='utf-8') as f:
-        cat = json.load(f)
-    js_cat = json.dumps(cat, ensure_ascii=True, sort_keys=True, separators=(',', ':'))
-    assert '</' not in js_cat
-    return BLOCK_BEGIN + _JS.replace('@@CATALOGUE@@', js_cat) + BLOCK_END + '\n'
+    return BLOCK_BEGIN + _JS + BLOCK_END + '\n'
 
 
 if __name__ == '__main__':
