@@ -231,6 +231,7 @@ I18N_FR = {
     'rej.zip': 'Archive illisible : pas de package.json à la racine.',
     'rej.noTheatre': 'Le paquet n’a pas de théâtre.',
     'rej.noFlight': 'Aucun vol lisible dans ce fichier.',
+    'rej.noManaged': 'Aucun vol d’un appareil géré ici (Mi-24P, Mi-8MT, F-4E, Mirage F1) dans ce paquet : rien n’a changé.',
     'rej.format': 'Format « {0} » non reconnu ici (attendu : {1}).',
     'rej.unknown': 'inconnu',
     'rej.skip': '{0} vol(s) illisible(s) ignoré(s).',
@@ -239,6 +240,7 @@ I18N_FR = {
 
     'open.bad': 'Ce fichier n’est pas un fichier de travail ni un paquet de vol.',
     'open.done': 'Fichier ouvert : {0} vol(s).',
+    'open.ignored': '{0} vol(s) non géré(s) ignoré(s).',
 
     'clear.confirm': 'Vider le module ? Les vols, la route et l’emport en cours sont perdus (mes presets restent).',
 
@@ -445,6 +447,7 @@ I18N_EN = {
     'rej.zip': 'Unreadable archive: no package.json at the root.',
     'rej.noTheatre': 'The package has no theatre.',
     'rej.noFlight': 'No readable flight in this file.',
+    'rej.noManaged': 'No flight of an aircraft handled here (Mi-24P, Mi-8MT, F-4E, Mirage F1) in this package: nothing has changed.',
     'rej.format': 'Format “{0}” not recognised here (expected: {1}).',
     'rej.unknown': 'unknown',
     'rej.skip': '{0} unreadable flight(s) skipped.',
@@ -453,6 +456,7 @@ I18N_EN = {
 
     'open.bad': 'This file is neither a working file nor a flight package.',
     'open.done': 'File opened: {0} flight(s).',
+    'open.ignored': '{0} unhandled flight(s) ignored.',
 
     'clear.confirm': 'Empty the module? The flights, route and loadouts in progress are lost (my presets stay).',
 
@@ -1552,10 +1556,20 @@ const UI = {
 function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
 function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* l'écran marche sans */ } }
 
+// La frappe est regroupée (400 ms) ; mais l'état part aussi sans attendre dès que la page se masque ou se ferme (flushWork, branché dans init).
 let _saveTimer = 0;
+function writeState() {
+  _saveTimer = 0;
+  try { lsSet(KEY_STATE, JSON.stringify({ v: 1, state: S, mine: LIB.mine })); } catch (e) { /* l'écran marche sans */ }
+}
 function saveWork() {
   clearTimeout(_saveTimer);
-  _saveTimer = setTimeout(() => lsSet(KEY_STATE, JSON.stringify({ v: 1, state: S, mine: LIB.mine })), 400);
+  _saveTimer = setTimeout(writeState, 400);
+}
+function flushWork() {
+  if (!_saveTimer) return;       // rien en attente : un onglet resté inactif n'écrase pas le travail d'un autre
+  clearTimeout(_saveTimer);
+  writeState();
 }
 function restoreFlight(f) {
   if (!isObj(f) || PAYLOAD_TYPES.indexOf(f.type) < 0) return null;
@@ -1681,6 +1695,11 @@ function loadoutFromPayload(type, p) {
   return lo;
 }
 function loadoutName(lo) { return lo ? lo.label + (lo.modified ? ' · ' + t('cmp.mod') : '') : t('u.loadout.none'); }
+// Dans le résumé du vol replié seulement : « emport importé », « emport <nom> », suivis de « (modifié) » s'il l'est (le mot « emport » est déjà dans l'étiquette de l'emport importé).
+function loadoutSummary(lo) {
+  const name = lo.key === 'imp' ? lo.label : tf('sum.loadout', lo.label);
+  return lo.modified ? name + ' (' + t('cmp.mod') + ')' : name;
+}
 
 // ----- Mes presets : un nom et des stations -----
 function presetName(p) { return str(p.displayName) || str(p.name); }
@@ -1731,8 +1750,8 @@ function flightSummary(f) {
   if (points) parts.push(tf('sum.route', points));
   const radios = f.units.map(u => radioCount(f, u));
   if (radios.some(n => n > 0)) parts.push(commonOrVaried(radios, n => tf('sum.radios', n), t('sum.radios.var')));
-  const loadouts = f.units.map(u => (u.loadout ? loadoutName(u.loadout) : ''));
-  if (loadouts.some(x => x !== '')) parts.push(commonOrVaried(loadouts, x => (x === t('lo.imported') ? x : tf('sum.loadout', x)), t('sum.loadout.var')));
+  const loadouts = f.units.map(u => (u.loadout ? loadoutSummary(u.loadout) : ''));
+  if (loadouts.some(x => x !== '')) parts.push(commonOrVaried(loadouts, x => x, t('sum.loadout.var')));
   const liveries = f.units.map(u => u.livery.trim());
   if (liveries.some(x => x !== '')) parts.push(commonOrVaried(liveries, x => tf('sum.livery', clipText(x, SUMMARY_LIVERY_MAX)), t('sum.livery.var')));
   return parts.join(' · ');
@@ -2270,12 +2289,14 @@ function impReadHq() {
 function impReadPackage(o, fname) {
   if (typeof o.theatre !== 'string' || o.theatre === '') return { reject: 'rej.noTheatre' };
   const src = impSource('pkg', o.theatre, fname || '', Array.isArray(o.flights) ? o.flights : []);
-  return src.flights.length ? { src: src } : { reject: 'rej.noFlight' };
+  if (!src.flights.length) return { reject: 'rej.noFlight' };
+  if (!src.flights.some(f => f.supported)) return { reject: 'rej.noManaged' };       // aucun vol des quatre types : refusé, le travail en cours ne bouge pas
+  return { src: src, ignored: src.flights.filter(f => !f.supported).length };
 }
 
 function impOpen() {
   const hq = impReadHq();
-  UI.imp = { src: hq ? 'hq' : '', hq: hq, pkg: null, q: '', showOff: false, srcOpen: false };
+  UI.imp = { src: hq ? 'hq' : '', hq: hq, pkg: null, q: '', showOff: false, srcOpen: false, msg: '' };
   renderImport();
   const m = document.getElementById('imp-modal');
   m.hidden = false;
@@ -2285,8 +2306,9 @@ function impOpen() {
 function impClose() { document.getElementById('imp-modal').hidden = true; UI.imp = null; }
 function impCur() { const I = UI.imp; return I && (I.src === 'hq' || I.src === 'pkg') ? I[I.src] : null; }
 function impNorm(x) { return String(x).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
-// Sur un écran étroit ou bas, une source choisie se replie en une ligne : la liste prend la place.
-function impSourcesFolded(I) { return !!I.src && !I.srcOpen && (window.innerWidth < 540 || window.innerHeight < 800); }
+// Dès qu'une source est chargée (un paquet lu, ou la mission de HQ présente), elle se replie en une ligne : la liste prend la place.
+// Avant, rien ne se replie : « Choisir un fichier… » reste visible.
+function impSourcesFolded(I) { return !!impCur() && !I.srcOpen; }
 
 // Les vols affichés : appareils gérés (sauf case cochée), dont le nom de groupe contient la recherche, casse et accents ignorés.
 function impShown(cur) {
@@ -2326,7 +2348,8 @@ function impSourcesHtml(I) {
     return `<div class="imp-block imp-srcline">${esc(tf('imp.srcline', name))} · <button type="button" class="imp-link" data-act="imp-change-src">${esc(t('imp.change'))}</button></div>`;
   }
   const hqNote = `<div class="imp-note">${esc(I.hq ? tf('imp.hq.ok', I.hq.file, I.hq.theatre) : t('imp.hq.none'))}</div>`;
-  const pkgPick = `<div class="imp-file"><button type="button" class="imp-filebtn" data-act="imp-pick-pkg">${esc(t('imp.choose'))}</button><span class="imp-filename">${esc(I.pkg ? I.pkg.file : '')}</span></div><div class="imp-note">${esc(t('imp.pkg.note'))}</div>`;
+  const pkgPick = `<div class="imp-file"><button type="button" class="imp-filebtn" data-act="imp-pick-pkg">${esc(t('imp.choose'))}</button><span class="imp-filename">${esc(I.pkg ? I.pkg.file : '')}</span></div><div class="imp-note">${esc(t('imp.pkg.note'))}</div>`
+    + (I.msg ? `<div class="imp-note pk-warn imp-msg" role="alert">⚠ ${esc(t(I.msg))}</div>` : '');
   const inactive = ['rp', 'bg', 'dg'].map(id => impSourceRow(I, id, t('imp.src.' + id), '', true, t('imp.soon'))).join('');
   return `<div class="imp-block imp-srcs"><h3>${esc(t('imp.src'))}</h3>${impSourceRow(I, 'hq', t('imp.src.hq'), hqNote, !I.hq)}${impSourceRow(I, 'pkg', t('imp.src.pkg'), pkgPick)}${inactive}</div>`;
 }
@@ -2480,17 +2503,19 @@ function openFile(file) {
   readJsonFile(file, r => {
     if (r.reject) { showToast(t(r.reject), 5000); return; }
     const o = r.parsed;
-    UI.clamped = 0;
-    if (isObj(o) && isObj(o.fc) && isObj(o.fc.state) && restoreState(o.fc.state)) mergeMine(o.fc.mine);
+    let ignored = 0;
+    if (isObj(o) && isObj(o.fc) && isObj(o.fc.state) && restoreState(o.fc.state)) { UI.clamped = 0; mergeMine(o.fc.mine); }
     else if (isObj(o) && o.format === PACKAGE_FORMAT) {
       const res = impReadPackage(o, file.name);
       if (res.reject) { showToast(t(res.reject), 5000); return; }
+      UI.clamped = 0;
+      ignored = res.ignored;
       Object.assign(S, { theatre: res.src.theatre, flights: [], sel: { f: 0, u: 0 } });
       impMerge(res.src.flights.filter(f => f.supported).map(f => ({ f: f, chk: f.chk })));
     } else { showToast(t('open.bad'), 5000); return; }
     UI.cmp.saving = false;
     renderAll();
-    showToast(tf('open.done', S.flights.length));
+    showToast(tf('open.done', S.flights.length) + (ignored ? ' ' + tf('open.ignored', ignored) : ''), ignored ? 5000 : undefined);
   });
 }
 function saveFile() {
@@ -2516,8 +2541,13 @@ function impFile(file) {
     if (r.reject) { showToast(t(r.reject), 5000); return; }
     if (!isObj(r.parsed) || r.parsed.format !== PACKAGE_FORMAT) { rejectPackageFormat(r.parsed); return; }
     const res = impReadPackage(r.parsed, file.name);
+    if (res.reject === 'rej.noManaged') {       // refusé dans la fenêtre même : le module et la source déjà lue ne bougent pas
+      Object.assign(UI.imp, { src: 'pkg', srcOpen: true, msg: res.reject });
+      renderImport();
+      return;
+    }
     if (res.reject) { showToast(t(res.reject), 5000); return; }
-    Object.assign(UI.imp, { pkg: res.src, src: 'pkg', srcOpen: false });
+    Object.assign(UI.imp, { pkg: res.src, src: 'pkg', srcOpen: false, msg: '' });
     renderImport();
   });
 }
@@ -2718,7 +2748,7 @@ function bindImportWindow() {
   modal.addEventListener('change', e => {
     const el = e.target, I = UI.imp, cur = impCur();
     if (!I) return;
-    if (el.name === 'imp-src') { Object.assign(I, { src: el.value, srcOpen: false }); renderImport(); }
+    if (el.name === 'imp-src') { Object.assign(I, { src: el.value, srcOpen: false, msg: '' }); renderImport(); }
     else if (el.id === 'imp-showoff') { I.showOff = el.checked; renderImpList(); }
     else if (cur && el.hasAttribute('data-imp-flight')) { cur.flights[Number(el.getAttribute('data-imp-flight'))].on = el.checked; impUpdateGo(); }
     else if (cur && el.hasAttribute('data-imp-part')) cur.flights[Number(el.getAttribute('data-imp-i'))].chk[el.getAttribute('data-imp-part')] = el.checked;
@@ -2738,6 +2768,8 @@ function init() {
   bindToolbar();
   bindImportWindow();
   renderAll();
+  window.addEventListener('pagehide', flushWork);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushWork(); });
 }
 init();
 """
