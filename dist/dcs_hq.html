@@ -675,6 +675,9 @@ select[data-tbm-src] { display: none !important; }
 .fn-del { max-height: 42vh; overflow-y: auto; margin: 0 0 14px; }
 .fn-del .pk-flight:first-child { border-top: 0; margin-top: 0; padding-top: 0; }
 .fn-del .pk-flight-head, .fn-del .snap-meta { word-break: break-word; }
+.fn-panel.fn-wide { max-width: 640px; }
+.fn-wide .fn-del { max-height: 56vh; }
+.fn-wide .pk-parts { align-items: center; }
 
 /* Mission snapshot read-only display */
 .snapshot-section {
@@ -1132,6 +1135,20 @@ const I18N = {
     'fn.del.title': 'Supprimer les vols cochés',
     'fn.del.go': 'Supprimer et enregistrer',
     'pk.deleteN': 'Supprimer les vols cochés ({0})',
+    'pk.dynN': 'Dynamic Spawn… ({0})',
+    'fn.dyn.title': 'Dynamic Spawn',
+    'fn.dyn.go': 'Valider',
+    'dyn.w.prereq': 'Seuls les aérodromes et FARP dont le Dynamic Spawn est activé dans l’éditeur de mission, et dont la liste d’appareils contient le type du template, peuvent recevoir un template. HQ n’active jamais le Dynamic Spawn et ne crée jamais un type d’appareil.',
+    'dyn.w.template': 'Template',
+    'dyn.w.hot': 'moteur tournant',
+    'dyn.w.replaces': 'remplace {0}',
+    'dyn.w.none': 'Aucun aérodrome ni FARP ne peut recevoir ce template.',
+    'dyn.w.off': 'Non offerts — Dynamic Spawn non activé dans l’éditeur de mission : {0}',
+    'dyn.w.offMore': ' et {0} autres sans ce type',
+    'dyn.w.offOnly': '{0} aérodromes et FARP, sans ce type',
+    'dyn.w.notype': 'Non offerts — type {0} absent : {1}',
+    'dyn.w.clash': '⚠ {0} : deux templates {1} cochés — un seul par type',
+    'dyn.w.unlink': 'Démarquer ce template remet à zéro ses liens : {0}',
     'pk.del.dyn': 'Dynamic Spawn : {0} — lien remis à zéro',
     'pk.del.trig': 'Déclencheur « {0} » ({1}) — laissé tel quel, à corriger dans l’éditeur',
     'pk.del.task': 'Tâche {0} du groupe « {1} » — laissée telle quelle',
@@ -1387,6 +1404,20 @@ const I18N = {
     'fn.del.title': 'Delete checked flights',
     'fn.del.go': 'Delete and save',
     'pk.deleteN': 'Delete checked flights ({0})',
+    'pk.dynN': 'Dynamic Spawn… ({0})',
+    'fn.dyn.title': 'Dynamic Spawn',
+    'fn.dyn.go': 'Confirm',
+    'dyn.w.prereq': 'Only airfields and FARPs that have Dynamic Spawn enabled in the mission editor, and whose aircraft list contains the template’s type, can receive a template. HQ never enables Dynamic Spawn and never creates an aircraft type.',
+    'dyn.w.template': 'Template',
+    'dyn.w.hot': 'hot start',
+    'dyn.w.replaces': 'replaces {0}',
+    'dyn.w.none': 'No airfield or FARP can receive this template.',
+    'dyn.w.off': 'Not offered — Dynamic Spawn not enabled in the mission editor: {0}',
+    'dyn.w.offMore': ' and {0} others without this type',
+    'dyn.w.offOnly': '{0} airfields and FARPs, without this type',
+    'dyn.w.notype': 'Not offered — type {0} missing: {1}',
+    'dyn.w.clash': '⚠ {0}: two {1} templates checked — only one per type',
+    'dyn.w.unlink': 'Unmarking this template resets its links to zero: {0}',
     'pk.del.dyn': 'Dynamic Spawn: {0} — link reset to zero',
     'pk.del.trig': 'Trigger “{0}” ({1}) — left as is, fix it in the editor',
     'pk.del.task': 'Task {0} of group “{1}” — left as is',
@@ -2153,6 +2184,8 @@ function fnClose() {
   document.getElementById('fn-modal').hidden = true;
   const o = FN.opener;
   FN.opener = null; FN.run = null; FN.bodyFn = null; FN.blocked = false;
+  document.querySelector('#fn-modal .fn-panel').classList.remove('fn-wide');
+  { const pr = document.getElementById('dsx-prereq'); if (pr) pr.remove(); }
   if (FN.bodyEl) { FN.bodyEl.remove(); FN.bodyEl = null; }
   if (o && o.focus && !o.disabled) { try { o.focus({ preventScroll: true }); } catch (e) {} }
 }
@@ -3598,6 +3631,7 @@ function renderSnapshot(snap) {
   html += '<button type="button" class="miz-btn" id="pk-uncheck">' + h(t('pk.flt.uncheck')) + '</button>';
   html += '<button type="button" class="miz-btn primary" id="pk-export-btn" disabled>' + h(tf('pk.exportN', 0)) + '</button>';
   if (_HQ_MIZ_CONTEXT) html += '<button type="button" class="miz-btn primary" id="pk-delete-btn" disabled>' + h(tf('pk.deleteN', 0)) + '</button>';
+  html += '<button type="button" class="miz-btn primary" id="pk-dyn-btn" disabled>' + h(tf('pk.dynN', 0)) + '</button>';
   html += '<span class="pk-count" id="pk-count"></span>';
   html += '</div>';
   html += '</div>';
@@ -4272,6 +4306,8 @@ function pkRefreshExportBtn() {
   btn.textContent = tf('pk.exportN', n);
   const del = document.getElementById('pk-delete-btn');
   if (del) { del.disabled = n === 0; del.textContent = tf('pk.deleteN', n); }
+  const dsb = document.getElementById('pk-dyn-btn');
+  if (dsb) { dsb.disabled = n === 0; dsb.textContent = tf('pk.dynN', n); }
   const ck = document.getElementById('pk-check-shown'), un = document.getElementById('pk-uncheck');
   if (ck) ck.disabled = !_HQ_MIZ_CONTEXT;
   if (un) un.disabled = !_HQ_MIZ_CONTEXT;
@@ -5062,6 +5098,150 @@ function pkDeleteAsk(opener) {
   });
 }
 
+// =============================================================
+//  MAQUETTE (greffe jetable) — Dynamic Spawn écrit : la fenêtre. Rien ne s'écrit : « Valider » ferme.
+// =============================================================
+const DSX = { st: null, flights: [], whs: [], bound: false };
+function dsxScan(ctx) {
+  const root = delWhParse(new TextDecoder('utf-8').decode(ctx.otherFilesMap['warehouses']));
+  const out = [];
+  const unitNames = {};   // unitId -> nom, toutes catégories (maquette : le vrai code réutilisera la table de dynBuild)
+  {
+    const mt = ctx.ast.kind === 'assignment' ? ctx.ast.value : ctx.ast, coal = _astGetKey(mt, 'coalition');
+    for (const ck of ['blue', 'red', 'neutrals']) {
+      const side = coal ? _astGetKey(coal, ck) : null, cs = side ? _astGetKey(side, 'country') : null;
+      if (!cs || cs.kind !== 'table') continue;
+      for (const ce of cs.entries) for (const cat of ['helicopter', 'plane', 'vehicle', 'static', 'ship']) {
+        const cn = _astGetKey(ce.value, cat), gl = cn ? _astGetKey(cn, 'group') : null;
+        if (!gl || gl.kind !== 'table') continue;
+        for (const ge of gl.entries) {
+          const us = _astGetKey(ge.value, 'units');
+          if (us && us.kind === 'table') for (const ue of us.entries) {
+            const uid = dynNum(_astGetKey(ue.value, 'unitId')), un = dynStr(_astGetKey(ue.value, 'name'));
+            if (uid !== null && un !== null) unitNames[uid] = un;
+          }
+        }
+      }
+    }
+  }
+  for (const sec of ['airports', 'warehouses']) {
+    const sn = _astGetKey(root, sec);
+    if (!sn || sn.kind !== 'table') continue;
+    for (const we of sn.entries) {
+      const w = we.value;
+      if (!we.key || !w || w.kind !== 'table') continue;
+      const ds = _astGetKey(w, 'dynamicSpawn'), hn = _astGetKey(w, 'allowHotStart');
+      const c = String(dynStr(_astGetKey(w, 'coalition')) || '').toLowerCase();
+      const types = {};
+      const ac = _astGetKey(w, 'aircrafts');
+      for (const cat of ['planes', 'helicopters']) {
+        const cn = ac ? _astGetKey(ac, cat) : null;
+        if (!cn || cn.kind !== 'table') continue;
+        for (const te of cn.entries) if (te.key) types[cat + '|' + te.key.value] = dynNum(_astGetKey(te.value, 'linkDynTempl')) || 0;
+      }
+      const airport = sec === 'airports';
+      const known = airport ? null : { name: unitNames[we.key.value] || null };
+      const afN = (DYN_AIRDROMES[String((ctx.theatre || '')).trim()] || {})[String(we.key.value)] || null;
+      out.push({ key: sec + '|' + we.key.value, kind: airport ? 'airport' : 'unit', id: we.key.value,
+        name: airport ? afN : (known ? known.name : null), side: c === 'neutral' ? 'neutrals' : c,
+        dyn: !!ds && ds.value === true, hot: !!hn && hn.value === true, types: types });
+    }
+  }
+  return out;
+}
+function dsxFlightInfo(f) {
+  const type = (f.units && f.units[0] && f.units[0].type) || f.aircraftType || '';
+  return { gid: f.groupId, name: f.groupName || '—', type: type, cat: f.category === 'helicopter' ? 'helicopters' : 'planes', side: f.coalition || '' };
+}
+function dsxTplName(gid) { const f = HQ_SNAPSHOT.flights.find(x => x.groupId === gid); return f ? (f.groupName || String(gid)) : String(gid); }
+function dsxBody() {
+  const h = escapeHtml, st = DSX.st;
+  let html = '';
+  const wname = w => dynWhName(w);
+  const sorted = DSX.whs.slice().sort((a, b) => ((a.kind === 'airport' ? 0 : 1) - (b.kind === 'airport' ? 0 : 1)) || dynCmp(wname(a), wname(b)));
+  for (const f of DSX.flights) {
+    html += '<div class="pk-flight" data-dsx-gid="' + h(String(f.gid)) + '"><div class="pk-flight-head">' + h(f.name) +
+      ' <span class="snap-flight-tag">' + h(f.type) + '</span> <span class="snap-flight-tag">' + h(t('pk.flt.' + f.side, f.side)) + '</span></div>';
+    html += '<label class="pk-chk"><input type="checkbox" data-dsx-tmpl="' + h(String(f.gid)) + '"' + (st.tmpl[f.gid] ? ' checked' : '') + '>' + h(t('dyn.w.template')) + '</label>';
+    if (st.tmpl[f.gid]) {
+      const tk = f.cat + '|' + f.type;
+      const off = DSX.whs.filter(w => !w.dyn), offT = off.filter(w => tk in w.types), noType = DSX.whs.filter(w => w.dyn && !(tk in w.types));
+      if (off.length) {
+        let who = offT.map(wname).sort(dynCmp).join(', ');
+        const rest = off.length - offT.length;
+        if (rest) who += (who ? tf('dyn.w.offMore', String(rest)) : tf('dyn.w.offOnly', String(rest)));
+        html += '<div class="snap-meta" style="opacity:.6" data-dsx-off="1">' + h(tf('dyn.w.off', who)) + '</div>';
+      }
+      if (noType.length) html += '<div class="snap-meta" style="opacity:.6" data-dsx-off="1">' + h(tf('dyn.w.notype', f.type, noType.map(wname).sort(dynCmp).join(', '))) + '</div>';
+      const rank = w => { const c = w.types[f.cat + '|' + f.type]; return c === f.gid ? 0 : (c ? 1 : 2); };
+      const offered = sorted.filter(w => w.dyn && (f.cat + '|' + f.type) in w.types).sort((x, y) => rank(x) - rank(y));
+      if (!offered.length) html += '<div class="pk-warn">' + h(t('dyn.w.none')) + '</div>';
+      for (const w of offered) {
+        const cur = w.types[f.cat + '|' + f.type];
+        const on = !!st.link[f.gid][w.key];
+        html += '<div class="pk-parts" data-dsx-wh="' + h(w.key) + '"><label class="pk-chk"><input type="checkbox" data-dsx-link="' + h(f.gid + '#' + w.key) + '"' + (on ? ' checked' : '') + '>' +
+          h(wname(w)) + ' <span class="snap-flight-tag">' + h(t('pk.flt.' + w.side, w.side)) + '</span></label>';
+        html += '<label class="pk-chk"><input type="checkbox" data-dsx-hot="' + h(w.key) + '"' + (st.hot[w.key] ? ' checked' : '') + '>' + h(t('dyn.w.hot')) + '</label>';
+        if (cur && cur !== f.gid) html += '<span class="snap-meta" data-dsx-replaces="1">' + h(tf('dyn.w.replaces', dsxTplName(cur))) + '</span>';
+        html += '</div>';
+      }
+    } else if (DSX.was[f.gid]) {
+      html += '<div class="pk-warn" data-dsx-unlink="1">' + h(tf('dyn.w.unlink', DSX.was[f.gid].join(', '))) + '</div>';
+    }
+    html += '</div>';
+  }
+  return html;
+}
+function dsxRefresh() {
+  const el = FN.bodyEl, keep = el ? el.scrollTop : 0;
+  fnRender();
+  if (FN.bodyEl) FN.bodyEl.scrollTop = keep;
+}
+function dsxAsk(opener) {
+  if (_PK_BUSY || _mizLoading || !HQ_SNAPSHOT || !_HQ_MIZ_CONTEXT) return;
+  if (!_HQ_DYN || _HQ_DYN.warn === 'absent') { showToast(t('toast.mizNotLoaded')); return; }
+  const ids = HQ_SNAPSHOT.flights.filter(f => _PK_EXPORT_SEL.has(f.groupId)).map(f => f.groupId);
+  if (!ids.length) return;
+  DSX.whs = dsxScan(_HQ_MIZ_CONTEXT);
+  DSX.flights = HQ_SNAPSHOT.flights.filter(f => _PK_EXPORT_SEL.has(f.groupId)).map(dsxFlightInfo);
+  const tids = dynTemplateIds();
+  DSX.st = { tmpl: {}, link: {}, hot: {} };
+  DSX.was = {};
+  for (const w of DSX.whs) DSX.st.hot[w.key] = w.hot;
+  for (const f of DSX.flights) {
+    DSX.st.tmpl[f.gid] = !!tids[f.gid];
+    DSX.st.link[f.gid] = {};
+    for (const w of DSX.whs) if (w.types[f.cat + '|' + f.type] === f.gid) DSX.st.link[f.gid][w.key] = true;
+    const where = DSX.whs.filter(w => DSX.st.link[f.gid][w.key]).map(dynWhName).sort(dynCmp);
+    if (where.length) DSX.was[f.gid] = where;
+  }
+  if (!DSX.bound) {
+    DSX.bound = true;
+    document.getElementById('fn-modal').addEventListener('change', e => {
+      const c = e.target; if (!c || !c.hasAttribute || !FN.bodyEl || !FN.bodyEl.contains(c)) return;
+      if (c.hasAttribute('data-dsx-tmpl')) DSX.st.tmpl[Number(c.getAttribute('data-dsx-tmpl'))] = c.checked;
+      else if (c.hasAttribute('data-dsx-hot')) DSX.st.hot[c.getAttribute('data-dsx-hot')] = c.checked;
+      else if (c.hasAttribute('data-dsx-link')) { const p = c.getAttribute('data-dsx-link').split('#'); DSX.st.link[Number(p[0])][p[1]] = c.checked; }
+      else return;
+      dsxRefresh();
+    });
+  }
+  fnAsk({
+    titleKey: 'fn.dyn.title', goKey: 'fn.dyn.go', ext: '.miz',
+    name: fnPart((_mizFilename || 'mission').replace(/\.miz$/i, ''), 'mission') + '_' + pkStamp(),
+    opener: opener,
+    body: dsxBody,
+    run: name => {}   // maquette : rien n'est écrit
+  });
+  document.querySelector('#fn-modal .fn-panel').classList.add('fn-wide');
+  {
+    const pr = document.createElement('div');   // le prérequis reste en tête, hors du corps qui défile
+    pr.className = 'snap-meta'; pr.id = 'dsx-prereq'; pr.style.margin = '0 0 10px';
+    pr.textContent = t('dyn.w.prereq');
+    FN.bodyEl.parentNode.insertBefore(pr, FN.bodyEl);
+  }
+}
+
 async function pkDeleteApply(name, ids) {
   if (_PK_BUSY || _mizLoading) return;
   const base = _HQ_MIZ_CONTEXT;
@@ -5203,6 +5383,8 @@ function initPackagesUI() {
       if (ex) { if (!ex.disabled) pkExportAsk(ex); return; }
       const dl = q('#pk-delete-btn');
       if (dl) { if (!dl.disabled) pkDeleteAsk(dl); return; }
+      const dsb = q('#pk-dyn-btn');
+      if (dsb) { if (!dsb.disabled) dsxAsk(dsb); return; }
       const ck = q('#pk-check-shown');
       if (ck) {
         if (ck.disabled || !_HQ_MIZ_CONTEXT) return;
