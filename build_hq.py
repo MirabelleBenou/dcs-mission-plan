@@ -2566,10 +2566,11 @@ function dynCmp(a, b) {{
 
 function dynBuild(ast, otherFilesMap, theatre) {{
   const dyn = {{ warn: null, templates: [], whs: [] }};
+  const groups = {{}};     // groupId -> {{ template, name }}   (groupes de toutes les catégories : un lien vers un groupe sol, statique ou navire est « pas un template »)
+  const unitNames = {{}};  // unitId -> nom de l'unité (toutes catégories : FARP, navires…)
+  // 1. les templates (`mission`) : leur propre try, pour que les marques survivent à une erreur de lecture des entrepôts
   try {{
     const mt = ast.kind === 'assignment' ? ast.value : ast;
-    const groups = {{}};   // groupId -> {{ template, name }}   (avions et hélicoptères)
-    const unitNames = {{}};  // unitId -> nom de l'unité (toutes catégories : FARP, navires…)
     const coal = _astGetKey(mt, 'coalition');
     for (const ck of ['blue', 'red', 'neutrals']) {{
       const side = coal ? _astGetKey(coal, ck) : null;
@@ -2588,10 +2589,10 @@ function dynBuild(ast, otherFilesMap, theatre) {{
               const uid = dynNum(_astGetKey(ue.value, 'unitId')), un = dynStr(_astGetKey(ue.value, 'name'));
               if (uid !== null && un !== null) unitNames[uid] = un;
             }}
-            if (cat !== 'plane' && cat !== 'helicopter') continue;
             const gid = dynNum(_astGetKey(g, 'groupId'));
             if (gid === null) continue;
-            const tmN = _astGetKey(g, 'dynSpawnTemplate');
+            const flight = cat === 'plane' || cat === 'helicopter';
+            const tmN = flight ? _astGetKey(g, 'dynSpawnTemplate') : null;
             const isT = !!tmN && tmN.value === true;
             const gname = dynStr(_astGetKey(g, 'name')) || '';
             groups[gid] = {{ template: isT, name: gname }};
@@ -2603,6 +2604,13 @@ function dynBuild(ast, otherFilesMap, theatre) {{
         }}
       }}
     }}
+  }} catch (e) {{
+    console.warn('[HQ] Dynamic Spawn : mission illisible:', e);
+    dyn.warn = 'unreadable'; dyn.templates = [];
+    return dyn;
+  }}
+  // 2. les entrepôts (`warehouses`) : une erreur ici ne vide que les entrepôts et pose l'avertissement
+  try {{
     const wf = otherFilesMap ? otherFilesMap['warehouses'] : null;
     if (!wf) {{ dyn.warn = 'absent'; return dyn; }}
     let wroot;
@@ -2649,12 +2657,16 @@ function dynBuild(ast, otherFilesMap, theatre) {{
       }}
     }}
   }} catch (e) {{
-    console.warn('[HQ] Dynamic Spawn illisible:', e);
-    dyn.warn = 'unreadable'; dyn.templates = []; dyn.whs = [];
+    console.warn('[HQ] Dynamic Spawn : warehouses illisible:', e);
+    dyn.warn = 'unreadable'; dyn.whs = [];
   }}
   return dyn;
 }}
 
+// Les marques « Template » : tant que les templates sont lus, sauf sans fichier warehouses (rien n'est alors affiché)
+function dynMarks() {{
+  return !!(_HQ_DYN && _HQ_MIZ_CONTEXT && _HQ_DYN.templates.length && (!_HQ_DYN.warn || _HQ_DYN.warn === 'unreadable'));
+}}
 function dynActive() {{
   return !!(_HQ_DYN && _HQ_MIZ_CONTEXT && !_HQ_DYN.warn && (_HQ_DYN.templates.length || _HQ_DYN.whs.length));
 }}
@@ -3049,7 +3061,7 @@ function renderSnapshot(snap) {{
   html += '</div>';
   // Dynamic Spawn : panneau (ou avertissement) sous la météo ; rien si la mission n'en a pas
   html += dynPanelHtml();
-  const dynT = dynActive() ? dynTemplateIds() : null;
+  const dynT = dynMarks() ? dynTemplateIds() : null;
   // Vols : en-tête, barre de filtres collante, liste
   html += '<div class="pk-fwrap">';
   html += '<div class="snap-header">' + h(t('snap.flights')) + ' (' + snap.flights.length + ')</div>';
