@@ -252,7 +252,7 @@ select[data-tbm-src] { display: none !important; }
   border-color: var(--amber);
   outline: none;
 }
-/* Exemple (lot mp-exemples-demarrer) : bouton à icône seule, comme dans les autres outils ;
+/* Exemple (lot mp-exemples-demarrer) : bouton de la barre, avec son texte quand elle a la place (lot mp-imports-suite) ;
    borné à la barre du haut : les .tb-btn de la barre de dessin et de sa fiche ont leurs propres règles (.rsd-ui, .rsd-sheet) */
 .toolbar .tb-btn {
   background: transparent;
@@ -285,20 +285,29 @@ select[data-tbm-src] { display: none !important; }
   user-select: none;
   white-space: nowrap;
 }
-/* La barre ne déborde pas sur un téléphone étroit (lot mp-exemples-demarrer) */
-@media (max-width: 539px) {
-  .tb-version { display: none; }
-}
 @media (max-width: 479px) {
   .toolbar { gap: 6px; padding-left: max(8px, env(safe-area-inset-left)); padding-right: max(8px, env(safe-area-inset-right)); }
   .tb-brand { min-width: 0; }
   .tb-brand-sub, .tb-sep { display: none; }
   .tb-brand-main { font-size: 14px; letter-spacing: 2px; }
-  .toolbar .tb-btn { width: 36px; }
   .tb-select { font-size: 11px; letter-spacing: .5px; padding: 0 22px 0 8px; background-position: right 6px center; }
   .tb-select.tbm-trigger { min-width: 0; flex: 0 1 auto; }
   .tb-lang-btn { min-width: 36px; padding: 0 4px; }
 }
+
+
+/* ---------- Barre du haut commune aux sept modules (lot mp-imports-suite) ----------
+   La marque du Flight Configurator : le titre et son sous-titre à l'accent du module dès 1360 px, le sigle seul en dessous (à toutes les largeurs) ;
+   la version avec le titre ; le tampon de décor dès 1101 px. Seuils mesurés dans le shell avec un tampon d'escadre « TEST WING », en français et en anglais. */
+.tb-brand-main, .tb-brand-short { color: #c95a9c; }
+.tb-brand-short { display: none; font-family: var(--f-stencil); font-size: 16px; font-weight: 700; letter-spacing: 3px; white-space: nowrap; }
+.tb-classif { font-family: var(--f-stencil); font-size: 11px; letter-spacing: 3px; color: var(--red-faded); border: 1px solid var(--red-faded); padding: 4px 10px; white-space: nowrap; flex-shrink: 0; }
+.tb-lang-btn svg { display: block; }
+@media (max-width: 1359px) { .tb-brand-main, .tb-brand-sub, .tb-brand + .tb-sep, .tb-version { display: none; } .tb-brand-short { display: inline; } }
+@media (max-width: 1100px) { .tb-classif { display: none; } }
+.toolbar .tb-btn { width: auto; height: 38px; min-width: 38px; padding: 0 12px; gap: 6px; font-family: var(--f-ui); font-weight: 500; letter-spacing: 1.5px; font-size: 12px; text-transform: uppercase; white-space: nowrap; }
+@media (max-width: 899px) { .toolbar .tb-btn .tb-btn-label { display: none; } .toolbar .tb-btn { padding: 0; width: 38px; } }
+@media (max-width: 479px) { .toolbar .tb-btn { width: 34px; min-width: 34px; } }
 
 /* ======== MAIN LAYOUT ======== */
 .app {
@@ -1165,11 +1174,13 @@ select[data-tbm-src] { display: none !important; }
 <header class="toolbar" role="toolbar" aria-label="Recon Station">
   <div class="tb-brand">
     <span class="tb-brand-main">RECON STATION</span>
-    <span class="tb-brand-sub">░ PHOTO INTELLIGENCE</span>
+    <span class="tb-brand-short">R·S</span>
+    <span class="tb-brand-sub" data-i18n="toolbar.subtitle">░ RENSEIGNEMENT</span>
   </div>
   <div class="tb-sep"></div>
   <button type="button" class="tb-btn" id="btn-example" data-i18n-title="toolbar.example.tooltip" title="Ouvrir l'exemple" data-i18n-aria-label="toolbar.example.tooltip" aria-label="Ouvrir l'exemple">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+    <span class="tb-btn-label" data-i18n="toolbar.example">Exemple</span>
   </button>
   <select class="tb-select" id="theme-select" data-i18n-title="toolbar.theme.tooltip" title="Thème graphique">
     <option value="cw-nato"     data-i18n="theme.cw-nato">Cold War OTAN</option>
@@ -1177,9 +1188,10 @@ select[data-tbm-src] { display: none !important; }
     <option value="modern-nato" data-i18n="theme.modern-nato">OTAN moderne</option>
     <option value="modern-east" data-i18n="theme.modern-east">Bloc Est moderne</option>
   </select>
-  <button class="tb-lang-btn" id="btn-lang" title="Switch language / Changer de langue">🇬🇧</button>
   <div class="tb-spacer"></div>
+  <div class="tb-classif">IMINT // CONFIDENTIAL</div>
   <span class="tb-version">v1.1.1</span>
+  <button class="tb-lang-btn" id="btn-lang" title="Switch language / Changer de langue"><svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="14" fill="#012169"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#fff" stroke-width="2.8"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#C8102E" stroke-width="1.6"/><rect x="8" width="4" height="14" fill="#fff"/><rect y="5" width="20" height="4" fill="#fff"/><rect x="9" width="2" height="14" fill="#C8102E"/><rect y="6" width="20" height="2" fill="#C8102E"/></svg></button>
 </header>
 
 <!-- MAIN APP -->
@@ -1468,6 +1480,8 @@ const I18N = {
   fr: {
     'toolbar.theme.tooltip': 'Thème graphique',
     'toolbar.lang.tooltip': 'Passer en anglais',
+    'toolbar.subtitle': '░ RENSEIGNEMENT',
+    'toolbar.example': 'Exemple',
     'toolbar.example.tooltip': "Ouvrir l'exemple",
     'confirm.example': "Remplacer le travail en cours par l'exemple ?",
     'toast.example-loaded': 'Exemple chargé ✓',
@@ -1538,6 +1552,16 @@ const I18N = {
     'editor.logo.importWing': 'Importer config wing (BG)',
     'toast.jsonInvalid': 'JSON illisible',
     'toast.noLogoInJson': 'Aucun logo dans ce fichier',
+    'validate.schemaMissing': 'configSchemaVersion doit être 1',
+    'validate.wingMissing': 'Champ wing manquant',
+    'validate.shortNameMissing': 'wing.shortName manquant',
+    'validate.logoInvalid': 'wing.logo doit être une data URL image valide (data:image/…)',
+    'validate.squadronsNotArray': 'squadrons doit être un tableau',
+    'validate.sqIdMissing': '.id manquant',
+    'validate.sqCallsignMissing': '.callsign manquant',
+    'validate.sqAircraftNotArray': '.aircraft doit être un tableau',
+    'toast.wingInvalid': '⚠ Config invalide : ',
+    'toast.wingJsonInvalid': '⚠ JSON invalide : ',
     'toast.logosImported': '{n} logo(s) importé(s) ✓',
     'editor.fx.title': 'EFFETS',
     'editor.fx.vignette': 'Vignette',
@@ -1651,6 +1675,8 @@ const I18N = {
   en: {
     'toolbar.theme.tooltip': 'Graphic theme',
     'toolbar.lang.tooltip': 'Switch to French',
+    'toolbar.subtitle': '░ INTELLIGENCE',
+    'toolbar.example': 'Example',
     'toolbar.example.tooltip': 'Open the example',
     'confirm.example': 'Replace the current work with the example?',
     'toast.example-loaded': 'Example loaded ✓',
@@ -1721,6 +1747,16 @@ const I18N = {
     'editor.logo.importWing': 'Import wing config (BG)',
     'toast.jsonInvalid': 'Invalid JSON',
     'toast.noLogoInJson': 'No logo in this file',
+    'validate.schemaMissing': 'configSchemaVersion must be 1',
+    'validate.wingMissing': 'Missing wing field',
+    'validate.shortNameMissing': 'wing.shortName missing',
+    'validate.logoInvalid': 'wing.logo must be a valid image data URL (data:image/…)',
+    'validate.squadronsNotArray': 'squadrons must be an array',
+    'validate.sqIdMissing': '.id missing',
+    'validate.sqCallsignMissing': '.callsign missing',
+    'validate.sqAircraftNotArray': '.aircraft must be an array',
+    'toast.wingInvalid': '⚠ Invalid config: ',
+    'toast.wingJsonInvalid': '⚠ Invalid JSON: ',
     'toast.logosImported': '{n} logo(s) imported ✓',
     'editor.fx.title': 'EFFECTS',
     'editor.fx.vignette': 'Vignette',
@@ -1965,10 +2001,14 @@ function setLang(lang) {
   showToast(t('toast.lang'), 'ok', 1800);
 }
 
+/* Drapeaux dessinés (ils ne s'affichent pas en lettres sous Windows) ; le bouton montre la langue vers laquelle il bascule */
+const FLAG_FR = '<svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="7" height="14" fill="#002395"/><rect x="7" width="6" height="14" fill="#fff"/><rect x="13" width="7" height="14" fill="#ED2939"/></svg>';
+const FLAG_EN = '<svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="14" fill="#012169"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#fff" stroke-width="2.8"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#C8102E" stroke-width="1.6"/><rect x="8" width="4" height="14" fill="#fff"/><rect y="5" width="20" height="4" fill="#fff"/><rect x="9" width="2" height="14" fill="#C8102E"/><rect y="6" width="20" height="2" fill="#C8102E"/></svg>';
+
 function updateFlagButton() {
   const btn = document.getElementById('btn-lang');
   if (!btn) return;
-  btn.textContent = CURRENT_LANG === 'fr' ? '🇬🇧' : '🇫🇷';
+  btn.innerHTML = CURRENT_LANG === 'fr' ? FLAG_EN : FLAG_FR;
   btn.title = t('toolbar.lang.tooltip');
 }
 
@@ -2217,13 +2257,43 @@ function loadLogoFile(file) {
   reader.readAsDataURL(file);
 }
 
+// ── Validation d'une config d'escadre : celle d'HQ (mêmes règles, mêmes textes) ───────────
+function validateWingConfig(obj) {
+  const errors = [];
+  if (!obj || typeof obj !== 'object') return { ok: false, errors: [t('validate.schemaMissing')] };
+  if (obj.configSchemaVersion !== 1) errors.push(t('validate.schemaMissing'));
+  if (!obj.wing || typeof obj.wing !== 'object') {
+    errors.push(t('validate.wingMissing'));
+  } else {
+    if (!obj.wing.shortName) errors.push(t('validate.shortNameMissing'));
+    if (!obj.wing.logo || !String(obj.wing.logo).startsWith('data:image/'))
+      errors.push(t('validate.logoInvalid'));
+  }
+  if (!Array.isArray(obj.squadrons)) {
+    errors.push(t('validate.squadronsNotArray'));
+  } else {
+    obj.squadrons.forEach((sq, i) => {
+      if (!sq.id)                      errors.push('squadrons[' + i + ']' + t('validate.sqIdMissing'));
+      if (!sq.callsign)                errors.push('squadrons[' + i + ']' + t('validate.sqCallsignMissing'));
+      if (!Array.isArray(sq.aircraft)) errors.push('squadrons[' + i + ']' + t('validate.sqAircraftNotArray'));
+    });
+  }
+  return errors.length === 0 ? { ok: true } : { ok: false, errors };
+}
+
 // ── Import config wing BG (G2) ────────────────────────────────
 function importWingLogos(file) {
   const r = new FileReader();
   r.onload = e => {
     let cfg;
     try { cfg = JSON.parse(e.target.result); }
-    catch (_) { showToast(t('toast.jsonInvalid'), 'err'); return; }
+    catch (err) { showToast(t('toast.wingJsonInvalid') + err.message, 'err'); return; }
+    const check = validateWingConfig(cfg);
+    if (!check.ok) {
+      showToast(t('toast.wingInvalid') + check.errors.slice(0, 2).join(' · ') +
+        (check.errors.length > 2 ? ' (+' + (check.errors.length - 2) + ')' : ''), 'err');
+      return;
+    }
     const added = [];
     const push = (name, b64) => {
       if (typeof b64 === 'string' && b64.startsWith('data:image/'))
