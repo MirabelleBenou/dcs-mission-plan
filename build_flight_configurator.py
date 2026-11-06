@@ -916,7 +916,7 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
 .fc-set input:disabled { opacity: .5; }
 /* la barre du carburant : piste et curseur aux couleurs du thème (--khaki, --paper-light), la part pleine à l'accent du module (--fc) ; l'élément fait 34 px de haut pour se prendre au doigt */
 .fc-bar { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
-.fc-pct { flex: none; min-width: 4.2em; text-align: right; font-family: var(--f-typewriter); font-size: 12px; color: var(--paper-light); font-variant-numeric: tabular-nums; }
+.fc-pct { flex: none; min-width: 3.6em; text-align: right; font-family: var(--f-typewriter); font-size: 12px; color: var(--paper-light); font-variant-numeric: tabular-nums; }
 .fc-range { -webkit-appearance: none; appearance: none; flex: 1 1 auto; min-width: 0; width: 100%; height: 34px; margin: 0; padding: 0; background: transparent; cursor: pointer; touch-action: pan-y; }
 .fc-range:focus { outline: none; }
 .fc-range:focus-visible { outline: 2px solid var(--fc); outline-offset: 1px; }
@@ -1608,7 +1608,7 @@ const UI = {
   open: new Set(),          // volets <details> ouverts ou fermés à la main
   fold: new WeakMap(),      // vol → 'open' | 'closed'
   clamped: 0,               // réglages d'emport ramenés à la limite (ligne d'état)
-  seenLiv: {},              // type → liveryId vus dans les paquets importés
+  seenLiv: {},              // type → [liveryId vus dans les paquets importés, une entrée par occurrence]
   cmp: { sym: true, st: null, saving: false, name: '', err: '' },
   imp: null                 // la fenêtre d'import, quand elle est ouverte
 };
@@ -1820,7 +1820,7 @@ function liveriesFor(type, skip) {
   return out.sort((a, b) => { const x = a.toLowerCase(), y = b.toLowerCase(); return x < y ? -1 : (x > y ? 1 : (a < b ? -1 : (a > b ? 1 : 0))); });
 }
 
-// ----- Livrée : un champ texte libre et un panneau de suggestions au thème de l'interface (le <datalist> natif ouvrait un menu blanc du système) -----
+// ----- Livrée : un champ texte libre et un panneau de suggestions au thème de l'interface (la liste native du navigateur ouvrait un menu blanc du système) -----
 // Le panneau est celui des listes (.tbm-panel, posé par tbmPlace) ; le focus reste dans le champ : flèches, Entrée (choisit la suggestion marquée), Échap, Tab.
 // Il se filtre par ce qui est tapé, sans casse ni accents (impNorm), et se ferme quand le champ perd le focus.
 const LV = { btn: null, form: true, panel: null, items: [], active: -1, quiet: false, x0: 0, y0: 0 };
