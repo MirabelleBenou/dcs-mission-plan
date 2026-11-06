@@ -335,7 +335,7 @@ I18N_EN = {
     'u.fold': 'Fold the unit',
     'u.unfold': 'Unfold the unit',
     'u.add': '+ Add a unit ({0}/4)',
-    'u.type.confirm': 'Changing {0}’s type clears its radios and loadout. Continue?',
+    'u.type.confirm': 'Changing {0}\'s type clears its radios and loadout. Continue?',
     'u.remove': 'Remove this unit',
     'u.name': 'Name',
     'u.callsign': 'Callsign',

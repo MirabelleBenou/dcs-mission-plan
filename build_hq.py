@@ -1486,7 +1486,7 @@ const I18N = {{
     'pk.rep.warnN.many': '{{0}} avertissements',
     'pk.w.theatreRoute': '{{0}} : route non écrite — théâtre du paquet ({{1}}) différent de celui du .miz ({{2}})',
     'pk.w.noRoute': '{{0}} : le groupe n’a pas de route dans le .miz, route non écrite',
-    'pk.w.multi': '{{0}} : plusieurs groupes de la mission portent ce nom ({{1}}), rien n’est appliqué',
+    'pk.w.multi': '{{0}} : plusieurs groupes de la mission portent ce nom ({{1}}), rien n\\'est appliqué',
     'pk.w.type': '{{0}} : {{1}} est un {{2}} dans la mission, un {{3}} dans le paquet : radios, emport et livrée non appliqués',
     'pk.w.radio': '{{0}} : {{1}} absent de l’unité {{2}}, non créé',
     'pk.w.chan': '{{0}} : canal {{1}} de {{2}} absent de l’unité {{3}}, non créé',
