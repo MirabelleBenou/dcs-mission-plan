@@ -17,6 +17,7 @@ Changes merged since the last release, grouped per tool.
 - Every tool's top bar follows one layout: the tool's name and what it is for (only its initials on narrow screens) in the tool's colour, the file buttons in one order (Open, Save, Import, Export, Example, Clear) with one icon per action, then the version and a drawn language flag (it no longer shows as letters on Windows). The back button uses the same type in every tool, and the dot of the wing stamp takes the tool's colour.
 - On wide screens, each tool shows its own decorative stamp in the top bar, as the Briefing Generator did; it never makes the bar scroll.
 - Flight packages and the mission HQ shares with the other tools now give each aircraft its own type instead of one type per group (formats `dcs-flight-package-v2` and `dcs-mission-snapshot-v2`); files in the previous format still open, their group type applying to every aircraft. The Datacard Generator and the Route Planner show a mixed flight with all its types.
+- A DCS group is now called a group, not a flight, in HQ, the Route Planner, the Datacard Generator, the Flight Configurator, the Briefing Generator's quick brief and the Field Manual (“Link to a group…”, “Check shown groups”…). Format names do not change: a flight package is still a flight package.
 
 ### Mission Plan — landing
 #### Added
@@ -65,6 +66,7 @@ Changes merged since the last release, grouped per tool.
 - Radios imported from HQ or a flight package are named and numbered as in the cockpit (the Mi-24P's R-863 and R-828 start at channel 0); an aircraft type the suite does not know keeps "Radio n" and the mission's channel numbers. With several aircraft types, the channels are chosen per type.
 - **Import JSON** and the import window's **JSON file** both recognise a briefing, a route, a route set (all routes at once) and a flight package; a refused file says why.
 - Day / Night reads Jour / Nuit in French.
+- The **Flight** section is now **Group**, and in **Crew** the **Crew** column becomes **Aircraft**: one line per aircraft (callsign, pilot, type, board number), filled from HQ or a flight package. When every line has a type, the group's aircraft and count follow the lines; the card's header reads “2 × Mi-24P · CAS” (or “1 × Mi-24P + 1 × Mi-8MT”) instead of “Mi-24P · FLIGHT OF 2”. A crew member saved in an older datacard is kept after the pilot's name.
 #### Fixed
 - In the export window, the page list no longer shows the PDF and PNG choices above it, so it fits on phones.
 - Computed magnetic variation now follows DCS for every mission date: years up to 1985 use the IGRF model DCS ships (up to 1.2° closer), later years the previous five-year WMM file, as DCS does (0.2° closer in 1990, 1995 … 2025).
