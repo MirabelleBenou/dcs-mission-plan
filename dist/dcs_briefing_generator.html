@@ -248,31 +248,40 @@ body {
 }
 .toolbar.fade-l::before, .toolbar.fade-r::after { opacity: 1; }
 
-.tb-brand {
-  display: flex; align-items: center; gap: 10px;
-  color: var(--paper);
+/* Le tampon de l'escadre (« ● nom ») : le BG l'écrit lui-même, à la même place et au même aspect que celui que le shell ajoute aux autres outils */
+.mp-wing-stamp {
+  display: inline-flex; align-items: center; gap: 10px;
+  margin-right: 12px; padding-right: 12px; border-right: 1px solid #807454;
+  font-family: 'Stardos Stencil', 'Impact', 'Arial Narrow Bold', sans-serif;
+  font-weight: 700; letter-spacing: 2px; font-size: 15px; color: var(--paper, #e8e3d8);
+  white-space: nowrap; flex-shrink: 0;
+}
+.mp-wing-stamp::before {
+  content: ''; display: inline-block; width: 8px; height: 8px;
+  border-radius: 50%; background: #c0892a; box-shadow: 0 0 8px #c0892a;
+  animation: mp-pulse 2s ease-in-out infinite; flex-shrink: 0;
+}
+@keyframes mp-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .4; } }
+
+.tb-brand { display: flex; flex-direction: column; line-height: 1.1; gap: 1px; flex-shrink: 0; }
+.tb-brand-main {
   font-family: var(--f-stencil);
+  font-size: 16px;
   font-weight: 700;
-  letter-spacing: 2px;
-  font-size: 15px;
-  border-right: 1px solid var(--khaki);
-  padding-right: 12px;
-  margin-right: 4px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
   white-space: nowrap;
 }
-.tb-brand::before {
-  content: '';
-  display: inline-block;
-  width: 8px; height: 8px;
-  background: var(--amber);
-  border-radius: 50%;
-  box-shadow: 0 0 8px var(--amber);
-  animation: pulse 2s ease-in-out infinite;
+.tb-brand-sub {
+  font-family: var(--f-ui);
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--khaki-light);
+  text-transform: uppercase;
+  white-space: nowrap;
 }
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50%      { opacity: .4; }
-}
+.tb-sep { width: 1px; height: 28px; background: var(--khaki); opacity: .4; flex-shrink: 0; }
+.toolbar > * { flex-shrink: 0; }
 
 .tb-btn {
   font-family: var(--f-ui);
@@ -435,24 +444,14 @@ select[data-tbm-src] { display: none !important; }
 
 .tb-spacer { flex: 1; }
 
-.tb-classif {
-  font-family: var(--f-stencil);
-  font-size: 11px;
-  letter-spacing: 3px;
-  color: var(--red-faded);
-  border: 1px solid var(--red-faded);
-  padding: 4px 10px;
-  white-space: nowrap;
-}
-
 .tb-version {
+  font-family: var(--f-typewriter);
   font-size: 11px;
-  opacity: 0.5;
+  opacity: .45;
   color: var(--amber);
-  letter-spacing: 0.5px;
-  align-self: center;
-  margin-left: 8px;
+  letter-spacing: .5px;
   user-select: none;
+  white-space: nowrap;
 }
 
 /* i18n — bouton drapeau langue (Phase 9 — v2.2.0)
@@ -2656,14 +2655,22 @@ body[data-format="full"] [data-fmt="simple"] { display: none !important; }
   line-height: 1.4;
 }
 
+
+/* ---------- Barre du haut commune aux sept modules (lot mp-imports-suite) ----------
+   La marque du Flight Configurator : le titre et son sous-titre à l'accent du module dès 1386 px, le sigle seul en dessous (à toutes les largeurs) ;
+   la version avec le titre ; le tampon de décor dès 1650 px. Seuils mesurés dans le shell avec un tampon d'escadre « TEST WING », en français et en anglais. */
+.tb-brand-main, .tb-brand-short { color: #c0892a; }
+.tb-brand-short { display: none; font-family: var(--f-stencil); font-size: 16px; font-weight: 700; letter-spacing: 3px; white-space: nowrap; }
+.tb-classif { font-family: var(--f-stencil); font-size: 11px; letter-spacing: 3px; color: var(--red-faded); border: 1px solid var(--red-faded); padding: 4px 10px; white-space: nowrap; flex-shrink: 0; }
+.tb-lang-btn svg { display: block; }
+@media (max-width: 1385px) { .tb-brand-main, .tb-brand-sub, .tb-brand + .tb-sep, .tb-version { display: none; } .tb-brand-short { display: inline; } }
+@media (max-width: 1649px) { .tb-classif { display: none; } }
+/* Les boutons portent leur texte au-dessus de 1978 px ; en dessous, l'icône seule (seuil mesuré : avec le tampon d'escadre, la barre défilerait sinon) */
+@media (max-width: 1977px) { .tb-btn .tb-btn-label { display: none; } .tb-btn { padding: 0 10px; } }
+
 /* ============ RESPONSIVE — TABLET / MOBILE ============ */
 @media (max-width: 1100px) {
-  /* Hide some toolbar buttons text */
-  .tb-btn .tb-btn-label { display: none; }
   .tb-btn { padding: 0 10px; }
-  .tb-classif { display: none; }
-  .tb-brand { font-size: 13px; padding-right: 10px; }
-  .tb-brand-sub { display: none; }
 
   .app {
     grid-template-columns: 1fr;
@@ -2734,11 +2741,8 @@ body[data-format="full"] [data-fmt="simple"] { display: none !important; }
 /* Mode desktop sur tablette paysage / petits écrans (Xiaomi Pad 6, iPad Pro, etc.)
    Comprime la toolbar pour qu'elle tienne sur les viewports 1100-1366px
    sans changer la bascule UX desktop ↔ tablette.
-   Reproduit le mode icon-only des boutons (déjà actif sous 1100px) et
-   conserve le badge .tb-classif pour préserver le flavor visuel. */
+   Les boutons y sont en icône seule (seuil du texte plus haut). */
 @media (min-width: 1101px) and (max-width: 1366px) {
-  /* Boutons en mode icon-only — comme sous 1100px */
-  .tb-btn .tb-btn-label { display: none; }
   .tb-btn { padding: 0 10px; }
 
   /* Sélecteur de thème compressé (la liste déroulante reste lisible au clic) */
@@ -2752,8 +2756,6 @@ body[data-format="full"] [data-fmt="simple"] { display: none !important; }
 
 /* PHONE */
 @media (max-width: 600px) {
-  .tb-brand { font-size: 11px; letter-spacing: 1px; padding-right: 8px; margin-right: 2px; }
-  .tb-brand::before { width: 6px; height: 6px; }
   .tb-btn { padding: 0 8px; min-width: 40px; height: 38px; }
   .tb-btn svg { width: 14px; height: 14px; }
   .tab-bar button { font-size: 9px; min-height: 50px; }
@@ -2761,7 +2763,6 @@ body[data-format="full"] [data-fmt="simple"] { display: none !important; }
   .editor { padding: 12px 12px 24px 12px; }
   .ed-field-row { grid-template-columns: 1fr; }
   .phase-bar { grid-template-columns: 40px 1fr 40px 40px 40px 40px; }
-  .tb-version { display: none; }
 }
 
 /* ============= EXPORT MODAL ============= */
@@ -3173,31 +3174,37 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
 <!-- ===== TOOLBAR ===== -->
 <header class="toolbar" role="toolbar" aria-label="Actions principales">
-  <div class="tb-brand"><span class="tb-brand-main">MY WING</span> <span class="tb-brand-sub">░ BRIEFING</span></div>
+  <span class="mp-wing-stamp"><span class="mp-wing-stamp-label">MY WING</span></span>
+  <div class="tb-brand">
+    <span class="tb-brand-main">BRIEFING GENERATOR</span>
+    <span class="tb-brand-short">B·G</span>
+    <span class="tb-brand-sub" data-i18n="toolbar.subtitle">░ BRIEFING DE MISSION</span>
+  </div>
+  <div class="tb-sep"></div>
   <div class="tb-seg" id="format-seg" role="group" data-i18n-title="toolbar.format.tooltip" title="Choisir le format du briefing" data-i18n-aria-label="toolbar.format.tooltip" aria-label="Choisir le format du briefing">
     <button type="button" class="seg-btn" data-format="full" aria-pressed="false"><span class="seg-long" data-i18n="toolbar.format.full">Brief complet</span><span class="seg-short" data-i18n="toolbar.format.fullShort">Complet</span></button>
     <button type="button" class="seg-btn" data-format="simple" aria-pressed="true"><span class="seg-long" data-i18n="toolbar.format.simple">Brief simplifié</span><span class="seg-short" data-i18n="toolbar.format.simpleShort">Simplifié</span></button>
   </div>
   <button class="tb-btn" id="btn-load" data-i18n-title="toolbar.load.tooltip" title="Ouvrir un briefing (JSON)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v1H3z"/><path d="M3 10h19l-2 8a2 2 0 0 1-2 1.5H5a2 2 0 0 1-2-2z"/></svg>
     <span class="tb-btn-label" data-i18n="toolbar.load">Ouvrir</span>
   </button>
   <input type="file" id="file-load" accept=".json,application/json" hidden>
   <button class="tb-btn" id="btn-save" data-i18n-title="toolbar.save.tooltip" title="Enregistrer le briefing (JSON)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h11l4 4v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M8 3v5h7V3"/><rect x="7" y="13" width="10" height="8"/></svg>
     <span class="tb-btn-label" data-i18n="toolbar.save">Enregistrer</span>
   </button>
   <button class="tb-btn" id="btn-print" data-i18n-title="toolbar.export.tooltip" title="Exporter en PDF ou PNG (kneeboard DCS)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
     <span class="tb-btn-label" data-i18n="toolbar.export">Exporter</span>
-  </button>
-  <button class="tb-btn danger" id="btn-reset" data-i18n-title="toolbar.reset.tooltip" title="Vider le briefing (repartir d'une page blanche)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-    <span class="tb-btn-label" data-i18n="toolbar.reset">Effacer</span>
   </button>
   <button class="tb-btn" id="btn-example" data-i18n-title="toolbar.example.tooltip" title="Ouvrir le briefing d'exemple (remplace le briefing en cours)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
     <span class="tb-btn-label" data-i18n="toolbar.example">Exemple</span>
+  </button>
+  <button class="tb-btn danger" id="btn-reset" data-i18n-title="toolbar.reset.tooltip" title="Vider le briefing (repartir d'une page blanche)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+    <span class="tb-btn-label" data-i18n="toolbar.reset">Effacer</span>
   </button>
   <select class="tb-select" id="theme-select" data-i18n-title="toolbar.theme.tooltip" title="Thème graphique">
     <option value="cw-nato"     data-i18n="theme.cw-nato">Cold War OTAN</option>
@@ -3205,10 +3212,10 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <option value="modern-nato" data-i18n="theme.modern-nato">OTAN moderne</option>
     <option value="modern-east" data-i18n="theme.modern-east">Bloc Est moderne</option>
   </select>
-  <button class="tb-lang-btn" id="btn-lang" data-i18n-title="toolbar.lang.tooltip" title="Switch language / Changer de langue">🇬🇧</button>
   <div class="tb-spacer"></div>
   <div class="tb-classif">CLASSIFIED // FOR EYES ONLY</div>
   <span class="tb-version">v2.6.0</span>
+  <button class="tb-lang-btn" id="btn-lang" data-i18n-title="toolbar.lang.tooltip" title="Switch language / Changer de langue"><svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="14" fill="#012169"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#fff" stroke-width="2.8"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#C8102E" stroke-width="1.6"/><rect x="8" width="4" height="14" fill="#fff"/><rect y="5" width="20" height="4" fill="#fff"/><rect x="9" width="2" height="14" fill="#C8102E"/><rect y="6" width="20" height="2" fill="#C8102E"/></svg></button>
 </header>
 
 <!-- ===== EXPORT MODAL ===== -->
@@ -3964,6 +3971,8 @@ const I18N = {
     'toolbar.format.simpleShort': 'Simplifié',
     'toolbar.format.tooltip':     'Choisir le format du briefing',
     'toolbar.example':            'Exemple',
+    'toolbar.subtitle':           '░ BRIEFING DE MISSION',
+    'toast.mizReadError':         'Lecture du .miz impossible : ',
     'toolbar.example.tooltip':    'Ouvrir le briefing d\'exemple (remplace le briefing en cours)',
     'confirm.loadExample':        'Remplacer le briefing en cours par l\'exemple ?',
     'toast.exampleLoaded':        'Exemple chargé ✓',
@@ -4339,6 +4348,8 @@ const I18N = {
     'toolbar.format.simpleShort': 'Quick',
     'toolbar.format.tooltip':     'Choose the briefing format',
     'toolbar.example':            'Example',
+    'toolbar.subtitle':           '░ MISSION BRIEFING',
+    'toast.mizReadError':         'Could not read the .miz: ',
     'toolbar.example.tooltip':    'Open the example briefing (replaces the current one)',
     'confirm.loadExample':        'Replace the current briefing with the example?',
     'toast.exampleLoaded':        'Example loaded ✓',
@@ -4482,11 +4493,15 @@ function applyI18nStatic() {
   });
 }
 
+/* Drapeaux dessinés (ils ne s'affichent pas en lettres sous Windows) ; le bouton montre la langue vers laquelle il bascule */
+const FLAG_FR = '<svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="7" height="14" fill="#002395"/><rect x="7" width="6" height="14" fill="#fff"/><rect x="13" width="7" height="14" fill="#ED2939"/></svg>';
+const FLAG_EN = '<svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="14" fill="#012169"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#fff" stroke-width="2.8"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#C8102E" stroke-width="1.6"/><rect x="8" width="4" height="14" fill="#fff"/><rect y="5" width="20" height="4" fill="#fff"/><rect x="9" width="2" height="14" fill="#C8102E"/><rect y="6" width="20" height="2" fill="#C8102E"/></svg>';
+
 function updateFlagButton() {
   const btn = document.getElementById('btn-lang');
   if (!btn) return;
   // Afficher le drapeau de la langue CIBLE (vers laquelle on basculerait)
-  btn.textContent = CURRENT_LANG === 'fr' ? '\uD83C\uDDEC\uD83C\uDDE7' : '\uD83C\uDDEB\uD83C\uDDF7';
+  btn.innerHTML = CURRENT_LANG === 'fr' ? FLAG_EN : FLAG_FR;
 }
 
 function updateDocTitle() {
@@ -6743,7 +6758,7 @@ function renderMetarAssistant(p) {
     try {
       await _importMizToMetar(file);
     } catch(err) {
-      alert('Erreur lecture .miz : ' + err.message);
+      showToast(t('toast.mizReadError') + err.message);
     }
     e.target.value = '';
   });
@@ -8567,9 +8582,9 @@ function applyWingBranding() {
   const w = wingConfig.wing;
   // <title> — délégué à updateDocTitle() pour intégrer l'i18n (Phase 9)
   updateDocTitle();
-  // Toolbar brand
-  const brandEl = document.querySelector('.tb-brand-main');
-  if (brandEl) brandEl.textContent = w.shortName;
+  // Tampon de l'escadre dans la barre (le BG l'écrit lui-même ; le titre de la barre est fixe)
+  const stampEl = document.querySelector('.mp-wing-stamp-label');
+  if (stampEl) stampEl.textContent = w.shortName;
   // Lateral help block (◆ MY WING ◆)
   const helpEl = document.querySelector('.ed-help[data-wing-label]');
   if (helpEl) helpEl.firstChild.textContent = '◆ ' + w.shortName + ' ◆';
