@@ -825,6 +825,7 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .rs-btns { display: flex; gap: 6px; margin-top: 8px; }
 .rs-btns .tb-btn { flex: 1 1 0; min-width: 0; padding: 0 6px; font-size: 11px; letter-spacing: 1px; white-space: nowrap; }
 .rs-btns .tb-btn[hidden] { display: none; }
+#rs-assign { height: 44px; }
 .rs-set { margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px dashed var(--khaki); }
 .rs-groups { margin: 8px 0 0; font-size: 11.5px; letter-spacing: .3px; line-height: 1.45; color: var(--khaki-light); overflow-wrap: anywhere; }
 .rs-groups b { font-family: var(--f-ui); font-weight: 700; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--amber); margin-right: 6px; }
@@ -1530,7 +1531,7 @@ __CSS__
       <div class="lbl" data-i18n="ga.new">Nouveau groupe</div>
       <div class="ga-new-row">
         <input class="in" id="ga-new-name" type="text" maxlength="60" autocomplete="off" autocapitalize="off" spellcheck="false" data-i18n-aria-label="ga.new.name" data-i18n-placeholder="ga.new.ph" aria-label="Nom du nouveau groupe" placeholder="Hind 1">
-        <div class="ga-side"><select class="in" id="ga-new-side" data-lbl="ga.side"></select></div>
+        <div class="ga-side"><select class="in" id="ga-new-side" data-lbl="hq.side"></select></div>
       </div>
       <p class="rt-note rt-warn" id="ga-new-msg" hidden></p>
     </div>

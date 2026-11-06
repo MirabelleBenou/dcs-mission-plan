@@ -1377,6 +1377,7 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
 .fc-flight { border: 1px solid var(--khaki); border-radius: 3px; padding: 10px 12px 12px; background: rgba(0,0,0,.15); }
 .fc-fhead, .fc-uhead { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
 .fc-fhead .pk-x, .fc-uhead .pk-x { margin-left: auto; margin-right: -8px; }
+.fc-fhead .pk-x { min-width: 44px; min-height: 44px; }
 .fc-flight.folded .fc-fhead { margin-bottom: 0; }
 .fc-fold { display: flex; align-items: center; gap: 8px; min-height: 40px; min-width: 0; flex: 0 1 auto; padding: 0 4px 0 0; background: none; border: 0; cursor: pointer; text-align: left; color: inherit; }
 .fc-fold:focus-visible { outline: 2px solid var(--fc); outline-offset: 2px; }

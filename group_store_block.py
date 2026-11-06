@@ -112,7 +112,7 @@ function gsMigrate(packFn) {
   const set = gsJson(GS_KEY_ROUTES);
   if (theatre !== '' && theatre === rsTheatre && gsIsObj(set) && Array.isArray(set.routes) && typeof packFn === 'function') {
     set.routes.forEach(r => {
-      if (!gsIsObj(r) || !gsIsObj(r.flight) || !/^[a-z0-9]{6,32}$/.test(String(r.rid))) return;
+      if (!gsIsObj(r) || !gsIsObj(r.flight) || typeof r.rid !== 'string' || !/^[a-z0-9]{6,32}$/.test(r.rid)) return;
       const name = gsNameKey(r.flight.groupName), side = gsSide(r.flight.coalition);
       if (name === '') return;
       const hits = flights.filter(f => gsNameKey(f.name) === name && gsSide(f.coalition) === side);
