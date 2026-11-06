@@ -1320,6 +1320,8 @@ const I18N = {
     'pk.rep.warnN.many': '{0} avertissements',
     'pk.w.theatreRoute': '{0} : route non écrite — théâtre du paquet ({1}) différent de celui du .miz ({2})',
     'pk.w.noRoute': '{0} : le groupe n’a pas de route dans le .miz, route non écrite',
+    'pk.w.multi': '{0} : plusieurs groupes de la mission portent ce nom ({1}), rien n’est appliqué',
+    'pk.w.type': '{0} : {1} est un {2} dans la mission, un {3} dans le paquet : radios, emport et livrée non appliqués',
     'pk.w.radio': '{0} : {1} absent de l’unité {2}, non créé',
     'pk.w.chan': '{0} : canal {1} de {2} absent de l’unité {3}, non créé',
     'pk.w.payload': '{0} : l’unité {1} n’a pas d’emport dans le .miz, non écrit',
@@ -1628,6 +1630,8 @@ const I18N = {
     'pk.rep.warnN.many': '{0} warnings',
     'pk.w.theatreRoute': '{0}: route not written — the package’s theatre ({1}) differs from the .miz’s ({2})',
     'pk.w.noRoute': '{0}: the group has no route in the .miz, route not written',
+    'pk.w.multi': '{0}: {1} groups in the mission have this name, nothing was applied',
+    'pk.w.type': '{0}: {1} is a {2} in the mission and a {3} in the package: radios, loadout and livery not applied',
     'pk.w.radio': '{0}: {1} is missing on unit {2}, not created',
     'pk.w.chan': '{0}: channel {1} of {2} is missing on unit {3}, not created',
     'pk.w.payload': '{0}: unit {1} has no loadout in the .miz, not written',
@@ -3671,14 +3675,13 @@ async function buildMissionSnapshot(ast, model, missionText, filename, theatre) 
       groupName:      g.name || '',
       coalition:      g.coalition || '',
       category:       g.category || '',
-      aircraftType:   units.length ? (units[0].type || units[0].name || '') : '',
       groupFrequency: g.frequency ? { value: g.frequency.value, modulation: g.frequency.modulation } : null,
       route:          { pointCount: routeCounts[g.groupId] || 0, points: routePoints },
       units:          unitsFull,
     };
   });
   return {
-    schema: 'dcs-mission-snapshot-v1',
+    schema: 'dcs-mission-snapshot-v2',
     sourceMission: {
       filename:    filename,
       theatre:     theatre,
@@ -3744,9 +3747,9 @@ function renderSnapshot(snap) {
   // Vols : en-tête, barre de filtres collante, liste
   html += '<div class="pk-fwrap">';
   html += '<div class="snap-header">' + h(t('snap.flights')) + ' (' + snap.flights.length + ')</div>';
-  const fKey = (f) => f.aircraftType || f.category || '';
+  const fKey = (f) => flightTypeKeys(f).join(' + ');
   const hasNeutral = snap.flights.some(f => f.coalition === 'neutrals');
-  const types = Array.from(new Set(snap.flights.map(fKey).filter(x => x !== ''))).sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
+  const types = Array.from(new Set(snap.flights.reduce((acc, f) => acc.concat(flightTypeKeys(f)), []))).sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
   if (_PK_FLT.type !== 'all' && types.indexOf(_PK_FLT.type) < 0) _PK_FLT.type = 'all';
   if (_PK_FLT.side === 'neutrals' && !hasNeutral) _PK_FLT.side = 'all';
   const opt = (v, label, cur) => '<option value="' + h(v) + '"' + (v === cur ? ' selected' : '') + '>' + h(label) + '</option>';
@@ -3770,7 +3773,7 @@ function renderSnapshot(snap) {
   html += '</div>';
   html += '<div class="snap-flight-list">';
   for (const fl of snap.flights) {
-    html += '<div class="snap-flight" data-gid="' + h(String(fl.groupId)) + '" data-side="' + h(fl.coalition || '') + '" data-type="' + h(fKey(fl)) + '" data-name="' + h(pkNorm(fl.groupName)) + '">';
+    html += '<div class="snap-flight" data-gid="' + h(String(fl.groupId)) + '" data-side="' + h(fl.coalition || '') + '" data-type="' + h('|' + flightTypeKeys(fl).join('|') + '|') + '" data-name="' + h(pkNorm(fl.groupName)) + '">';
     html += '<div class="snap-flight-header">';
     html += '<label class="pk-chk"><input type="checkbox" data-pk-export="' + h(String(fl.groupId)) + '"' +
       (_PK_EXPORT_SEL.has(fl.groupId) ? ' checked' : '') + (_HQ_MIZ_CONTEXT ? '' : ' disabled') + '>' + h(fl.groupName || '—') + '</label>';
@@ -3789,9 +3792,9 @@ function renderSnapshot(snap) {
         const chs = r.channels || {};
         const nCh = Object.keys(chs).length;
         const fmtCh = (v) => (typeof v === 'number' && v >= 1e6) ? String(Math.round(v / 1e3) / 1e3) : String(v);
-        let txt = tn('snap.radio', nCh, pkRadioLabel(u.type || fl.aircraftType, r.radioIndex));
-        if (chs[1] !== undefined && chs[1] !== null) txt += ' · C' + radioCockpitChannel(u.type || fl.aircraftType, r.radioIndex, 1) + ' ' + fmtCh(chs[1]);
-        if (chs[2] !== undefined && chs[2] !== null) txt += ' · C' + radioCockpitChannel(u.type || fl.aircraftType, r.radioIndex, 2) + ' ' + fmtCh(chs[2]);
+        let txt = tn('snap.radio', nCh, pkRadioLabel(unitTypeOf(fl, u), r.radioIndex));
+        if (chs[1] !== undefined && chs[1] !== null) txt += ' · C' + radioCockpitChannel(unitTypeOf(fl, u), r.radioIndex, 1) + ' ' + fmtCh(chs[1]);
+        if (chs[2] !== undefined && chs[2] !== null) txt += ' · C' + radioCockpitChannel(unitTypeOf(fl, u), r.radioIndex, 2) + ' ' + fmtCh(chs[2]);
         html += ' <span class="snap-unit-radio">' + h(txt) + '</span>';
       }
       html += '</div>';
@@ -4038,7 +4041,7 @@ function findUnitById(unitId, ctx) {
   return null;
 }
 
-// Les groupes Client d'un contexte, dans l'ordre du .miz : { group, units[], aircraftType }
+// Les groupes Client d'un contexte, dans l'ordre du .miz : { group, units[] }
 function pkClientGroups(ctx) {
   const out = [];
   const byId = new Map();
@@ -4046,18 +4049,21 @@ function pkClientGroups(ctx) {
     if (!slot.unit) continue;
     const gid = slot.group.groupId;
     let g = byId.get(gid);
-    if (!g) { g = { group: slot.group, units: [], aircraftType: '' }; byId.set(gid, g); out.push(g); }
+    if (!g) { g = { group: slot.group, units: [] }; byId.set(gid, g); out.push(g); }
     g.units.push(slot.unit);
   }
-  for (const g of out) g.aircraftType = g.units.length ? (g.units[0].type || g.units[0].name || '') : '';
   return out;
 }
 
-// Règle 6 : le groupe Client de même groupName (à l'identique), de même aircraftType et — quand le paquet en porte une —
-// de même coalition ; jamais le groupId
-function pkFindTarget(ctx, groupName, aircraftType, coalition) {
-  return pkClientGroups(ctx).find(g => g.group.name === groupName && g.aircraftType === aircraftType &&
-    (!coalition || g.group.coalition === coalition)) || null;
+// Le groupe visé : les groupes Client dont le nom rogné (casse ignorée) égale celui du paquet et — quand le paquet en porte une — de même coalition ;
+// jamais le groupId, ni le type. pkMatchGroups les rend tous ; pkFindTarget le groupe seulement s'il est le seul (plusieurs : rien n'est deviné).
+function pkMatchGroups(ctx, groupName, coalition) {
+  const k = pkNameKey(groupName);
+  return pkClientGroups(ctx).filter(g => pkNameKey(g.group.name) === k && (!coalition || g.group.coalition === coalition));
+}
+function pkFindTarget(ctx, groupName, coalition) {
+  const m = pkMatchGroups(ctx, groupName, coalition);
+  return m.length === 1 ? m[0] : null;
 }
 
 // P3.3 — Construire les patches d'un vol (pkg : { flight:{groupId}, overrides, replacements }) sur un contexte
@@ -4223,7 +4229,22 @@ function verifyPatch(patchedSrc, pkg) {
 // =============================================================
 //  PAQUETS DE VOL — export d'un vol, import dans la mission du MC
 // =============================================================
-const PK_FORMAT = 'dcs-flight-package-v1';
+const PK_FORMAT = 'dcs-flight-package-v2';
+const PK_FORMATS = ['dcs-flight-package-v1', 'dcs-flight-package-v2'];     // la v1 ne reste qu'en lecture
+// Un nom de vol se compare rogné, à la casse près.
+function pkNameKey(s) { return String(s === undefined || s === null ? '' : s).trim().toLowerCase(); }
+// Le type d'une unité d'un vol lu (mission partagée ou paquet, v1 ou v2) : le sien, sinon, en v1, celui du vol (aircraftType) ; '' si aucun.
+function unitTypeOf(f, u) { return u && typeof u.type === 'string' && u.type !== '' ? u.type : (f && typeof f.aircraftType === 'string' ? f.aircraftType : ''); }
+// Les types d'un vol, distincts, dans l'ordre de ses unités ; leur texte : « Mi-24P + Mi-8MT » (vide si aucune unité n'a de type).
+function flightTypes(f) {
+  const out = [], us = (f && Array.isArray(f.units) ? f.units : []).filter(u => u && typeof u === 'object');
+  us.forEach(u => { const x = unitTypeOf(f, u); if (x !== '' && out.indexOf(x) < 0) out.push(x); });
+  if (!us.length && f && typeof f.aircraftType === 'string' && f.aircraftType !== '') out.push(f.aircraftType);      // un vol v1 sans unité garde son aircraftType
+  return out;
+}
+function flightTypesLabel(f) { return flightTypes(f).join(' + '); }
+// Dans la liste des vols : les types, et à défaut la catégorie (hélicoptère, avion).
+function flightTypeKeys(f) { const x = flightTypes(f); return x.length ? x : (f.category ? [f.category] : []); }
 const PK_PARTS  = ['route', 'radios', 'loadout', 'livery'];
 let _PK_LIST    = [];            // paquets chargés, dans l'ordre de chargement
 let _PK_SEQ     = 0;
@@ -4375,6 +4396,7 @@ function pkBuildExport(groupIds) {
       }
       return {
         name:     u.name || '',
+        type:     unitTypeOf(fl, u),
         callsign: rawCs,
         liveryId: u.liveryId ? u.liveryId : null,
         radios:   (u.radios || []).map(r => ({ radioIndex: r.radioIndex, channels: Object.assign({}, r.channels) })),
@@ -4383,7 +4405,6 @@ function pkBuildExport(groupIds) {
     });
     flights.push({
       groupName:      fl.groupName,
-      aircraftType:   fl.aircraftType,
       coalition:      fl.coalition,
       groupFrequency: fl.groupFrequency ? { value: fl.groupFrequency.value, modulation: fl.groupFrequency.modulation } : null,
       route:          route,
@@ -4459,7 +4480,7 @@ function pkApplyFilter() {
   let shown = 0;
   rows.forEach(r => {
     const ok = (_PK_FLT.side === 'all' || r.getAttribute('data-side') === _PK_FLT.side) &&
-      (_PK_FLT.type === 'all' || r.getAttribute('data-type') === _PK_FLT.type) &&
+      (_PK_FLT.type === 'all' || (r.getAttribute('data-type') || '').indexOf('|' + _PK_FLT.type + '|') >= 0) &&
       (q === '' || (r.getAttribute('data-name') || '').indexOf(q) >= 0);
     r.classList.toggle('pk-hide', !ok);
     if (ok) shown++;
@@ -4496,22 +4517,24 @@ function pkYield() {
 function pkNum(v) { return (typeof v === 'number' && isFinite(v)) ? v : null; }
 
 // Un fichier refusé dit pourquoi, avec les mêmes textes que le Route Planner, le Datacard Generator et le Briefing Generator.
-// Un vol illisible (sans groupName ni aircraftType en chaînes) est ignoré et compté (skipped) ; sans théâtre ou sans aucun vol lisible, le paquet est refusé.
+// Un vol illisible (sans groupName en chaîne, et en v1 sans aircraftType en chaîne) est ignoré et compté (skipped) ; sans théâtre ou sans aucun vol lisible, le paquet est refusé.
 function pkNormalize(obj, filename) {
-  if (!obj || typeof obj !== 'object' || Array.isArray(obj) || obj.format !== PK_FORMAT) {
+  if (!obj || typeof obj !== 'object' || Array.isArray(obj) || PK_FORMATS.indexOf(obj.format) < 0) {
     const f = (obj && typeof obj === 'object' && !Array.isArray(obj)) ? obj.format : undefined;
     const x = ((typeof f === 'string' && f !== '') || typeof f === 'number') ? String(f) : { pkKey: 'pk.fmt.unknown' };
     return { reason: { key: 'pk.err.format', args: [x, { pkKey: 'pk.fmt.pkg' }] } };
   }
   if (typeof obj.theatre !== 'string' || obj.theatre === '') return { reason: { key: 'pk.err.noTheatre', args: [] } };
   const list = Array.isArray(obj.flights) ? obj.flights : [];
+  const v1 = obj.format === 'dcs-flight-package-v1';
   const flights = [];
   for (let i = 0; i < list.length; i++) {
     const f = list[i];
-    if (!f || typeof f !== 'object' || typeof f.groupName !== 'string' || typeof f.aircraftType !== 'string') continue;
+    if (!f || typeof f !== 'object' || typeof f.groupName !== 'string' || (v1 && typeof f.aircraftType !== 'string')) continue;
     const route = (f.route && f.route.points && typeof f.route.points === 'object') ? f.route.points : null;
     const units = (Array.isArray(f.units) ? f.units : []).filter(u => u && typeof u === 'object').map(u => ({
       name:     typeof u.name === 'string' ? u.name : '',
+      type:     unitTypeOf(v1 ? f : null, u),      // v1 : le type du vol, pour les unités qui n'ont pas le leur
       liveryId: (typeof u.liveryId === 'string' && u.liveryId !== '') ? u.liveryId : null,
       radios:   (Array.isArray(u.radios) ? u.radios : [])
         .filter(r => r && pkNum(r.radioIndex) !== null && r.channels && typeof r.channels === 'object')
@@ -4522,8 +4545,11 @@ function pkNormalize(obj, filename) {
         }),
       payload:  (u.payload && typeof u.payload === 'object') ? u.payload : null,
     }));
+    const types = [];
+    units.forEach(u => { if (u.type !== '' && types.indexOf(u.type) < 0) types.push(u.type); });
+    if (!units.length && v1 && f.aircraftType !== '') types.push(f.aircraftType);      // un vol v1 sans unité garde son type
     flights.push({
-      groupName: f.groupName, aircraftType: f.aircraftType,
+      groupName: f.groupName, types: types,
       coalition: typeof f.coalition === 'string' ? f.coalition : '',
       route: route, units: units,
       chk: { route: true, radios: true, loadout: true, livery: true },
@@ -4585,7 +4611,9 @@ function pkComputeState() {
   const seq = [];
   for (const pk of _PK_LIST) {
     for (const fl of pk.flights) {
-      const tg = ctx ? pkFindTarget(ctx, fl.groupName, fl.aircraftType, fl.coalition) : null;
+      const ms = ctx ? pkMatchGroups(ctx, fl.groupName, fl.coalition) : [];
+      const tg = ms.length === 1 ? ms[0] : null;
+      fl.multi = ms.length > 1 ? ms.length : 0;      // plusieurs groupes de même nom : rien n'est appliqué
       fl.found = !!tg;
       fl.gid = tg ? tg.group.groupId : null;
       fl.supBy = null;
@@ -4652,9 +4680,10 @@ function pkRender() {
       }
       pk.flights.forEach((fl, fi) => {
         html += '<div class="pk-flight"><div class="pk-flight-head">' + h(fl.groupName) +
-          ' <span class="snap-flight-tag">' + h(fl.aircraftType) + '</span> ' +
-          (!ctx ? '' : fl.found ? '<span class="pk-found">' + h(t('pk.found')) + '</span>' : '<span class="pk-absent">' + h(t('pk.absent')) + '</span>') +
+          (fl.types.length ? ' <span class="snap-flight-tag">' + h(fl.types.join(' + ')) + '</span> ' : ' ') +
+          (!ctx ? '' : fl.found ? '<span class="pk-found">' + h(t('pk.found')) + '</span>' : fl.multi ? '' : '<span class="pk-absent">' + h(t('pk.absent')) + '</span>') +
           '</div>';
+        if (fl.multi) html += '<div class="pk-warn">⚠ ' + h(tf('pk.w.multi', fl.groupName, fl.multi)) + '</div>';
         if (fl.supBy) html += '<div class="pk-warn">' + h(tf('pk.replacedBy', fl.supBy.filename)) + '</div>';
         html += '<div class="pk-parts">';
         for (const part of PK_PARTS) {
@@ -4755,19 +4784,30 @@ function pkPlanFlight(ctx, pk, fl, tg) {
       }
     }
   }
+  // Radios, emport et livrée ne s'écrivent sur une unité que si son type dans la mission est celui de l'unité du paquet ; sinon rien sur elle, et un avertissement.
+  // (La route, qui est celle du groupe, s'applique comme avant.)
+  const okType = new Array(fl.units.length).fill(true);
+  fl.units.forEach((u, i) => {
+    const tu = map[i];
+    if (!tu || (tu.type || '') === u.type) return;
+    const wants = (fl.chk.radios && fl.avail.radios && u.radios.length > 0) || (fl.chk.loadout && fl.avail.loadout && !!u.payload) || (fl.chk.livery && fl.avail.livery && !!u.liveryId);
+    if (!wants) return;
+    okType[i] = false;
+    warns.push({ key: 'pk.w.type', args: [name, tu.name, tu.type || '?', u.type || '?'] });
+  });
   if (fl.chk.radios && fl.avail.radios) {
     fl.units.forEach((u, i) => {
       const tu = map[i];
-      if (!tu) return;
+      if (!tu || !okType[i]) return;
       let wrote = false;
       for (const r of u.radios) {
         const tr = (tu.radios || []).find(x => x.index === r.radioIndex);
-        if (!tr) { warns.push({ key: 'pk.w.radio', args: [name, pkRadioArg(fl.aircraftType, r.radioIndex), tu.name] }); continue; }
+        if (!tr) { warns.push({ key: 'pk.w.radio', args: [name, pkRadioArg(tu.type, r.radioIndex), tu.name] }); continue; }
         for (const [c, fr] of Object.entries(r.channels)) {
           if (tr.channels && tr.channels[c]) {
             plan.overrides.radios.push({ unitId: tu.unitId, radioIndex: r.radioIndex, channel: c, frequency: fr });
             done.chan++; wrote = true;
-          } else warns.push({ key: 'pk.w.chan', args: [name, pkChanArg(fl.aircraftType, r.radioIndex, c), pkRadioArg(fl.aircraftType, r.radioIndex), tu.name] });
+          } else warns.push({ key: 'pk.w.chan', args: [name, pkChanArg(tu.type, r.radioIndex, c), pkRadioArg(tu.type, r.radioIndex), tu.name] });
         }
       }
       if (wrote) done.radioUnits++;
@@ -4776,7 +4816,7 @@ function pkPlanFlight(ctx, pk, fl, tg) {
   if (fl.chk.loadout && fl.avail.loadout) {
     fl.units.forEach((u, i) => {
       const tu = map[i];
-      if (!tu || !u.payload) return;
+      if (!tu || !okType[i] || !u.payload) return;
       if (tu.payloadPos) { plan.replacements.payloads.push({ unitId: tu.unitId, payload: u.payload }); done.payload++; }
       else warns.push({ key: 'pk.w.payload', args: [name, tu.name] });
     });
@@ -4784,7 +4824,7 @@ function pkPlanFlight(ctx, pk, fl, tg) {
   if (fl.chk.livery && fl.avail.livery) {
     fl.units.forEach((u, i) => {
       const tu = map[i];
-      if (!tu || !u.liveryId) return;
+      if (!tu || !okType[i] || !u.liveryId) return;
       if (tu.liveryPos) { plan.overrides.liveries.push({ unitId: tu.unitId, liveryId: u.liveryId }); done.livery++; }
       else warns.push({ key: 'pk.w.livery', args: [name, tu.name] });
     });
@@ -4837,8 +4877,14 @@ async function pkApply(name) {
       const { pk, fl } = s;
       const label = fl.groupName;
       if (!fl.found) {
-        absent++;
-        lines.push({ cls: 'a', text: () => tf('pk.rep.absent', label, pk.filename) });
+        if (fl.multi) {
+          warnN++;
+          const n = fl.multi;
+          lines.push({ cls: 'w', text: () => '⚠ ' + tf('pk.w.multi', label, n) });
+        } else {
+          absent++;
+          lines.push({ cls: 'a', text: () => tf('pk.rep.absent', label, pk.filename) });
+        }
         continue;
       }
       if (fl.supBy) {
@@ -4852,7 +4898,7 @@ async function pkApply(name) {
         await pkYield();  // et de nouveau entre deux vols
       }
       try {
-        const tg = pkFindTarget(work, fl.groupName, fl.aircraftType, fl.coalition);
+        const tg = pkFindTarget(work, fl.groupName, fl.coalition);
         if (!tg) throw Object.assign(new Error('target group not found'), { pkErrors: [{ key: 'pk.e.targetGone', args: [] }] });
         const { plan, warns, done } = pkPlanFlight(work, pk, fl, tg);
         const built = buildPatchesFromPackage(plan, work);
@@ -5178,7 +5224,7 @@ function delAnalyze(ctx, ids) {
     const r = refs.get(f.groupId);
     const dyn = wh.links.filter(l => l.gid === f.groupId).map(l => ({ name: delWhName(l), type: l.type }));
     dyn.sort((a, b) => dynCmp(a.name, b.name) || dynCmp(a.type, b.type));
-    return { gid: f.groupId, name: f.groupName || '—', type: f.aircraftType || f.category || '', side: f.coalition || '', dyn: dyn,
+    return { gid: f.groupId, name: f.groupName || '—', type: flightTypesLabel(f) || f.category || '', side: f.coalition || '', dyn: dyn,
       trig: r.trig, trigScript: r.trigScript, task: r.task, script: r.script, zone: r.zone };
   });
   let K = 0;
@@ -5322,7 +5368,7 @@ function dsxGroupUnits(ast) {
 }
 function dsxFlightInfo(f, gu) {
   const g = gu && gu[f.groupId];
-  const type = (g && g.type) || f.aircraftType || '';
+  const type = (g && g.type) || unitTypeOf(f, (f.units || [])[0]) || '';
   return { gid: f.groupId, name: f.groupName || '—', type: type, cat: f.category === 'helicopter' ? 'helicopters' : 'planes',
     tk: (f.category === 'helicopter' ? 'helicopters' : 'planes') + '|' + type, side: f.coalition || '', units: g ? g.n : (f.units || []).length };
 }

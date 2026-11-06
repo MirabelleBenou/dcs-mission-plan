@@ -16,6 +16,7 @@ Changes merged since the last release, grouped per tool.
 - Every file you save or export asks for its name first, with the usual name filled in; names use one date format everywhere. On tablets, HQ's flight packages and modified .miz now open the share menu, like the other files.
 - Every tool's top bar follows one layout: the tool's name and what it is for (only its initials on narrow screens) in the tool's colour, the file buttons in one order (Open, Save, Import, Export, Example, Clear) with one icon per action, then the version and a drawn language flag (it no longer shows as letters on Windows). The back button uses the same type in every tool, and the dot of the wing stamp takes the tool's colour.
 - On wide screens, each tool shows its own decorative stamp in the top bar, as the Briefing Generator did; it never makes the bar scroll.
+- Flight packages and the mission HQ shares with the other tools now give each aircraft its own type instead of one type per group (formats `dcs-flight-package-v2` and `dcs-mission-snapshot-v2`); files in the previous format still open, their group type applying to every aircraft. The Datacard Generator and the Route Planner show a mixed flight with all its types.
 
 ### Mission Plan — landing
 #### Added
@@ -26,7 +27,7 @@ Changes merged since the last release, grouped per tool.
 ### HQ
 #### Added
 - **Example** button: loads a demonstration wing (Task Force Kestrel, three squadrons); your own wing configuration is kept and can be restored in one tap.
-- **Flight packages**: export one or more flights of the loaded .miz (route, radios, loadout, livery) to a package file, and apply flight packages to a mission — each flight is found by its group name and aircraft type, you choose what to apply per flight, and a report lists what was written.
+- **Flight packages**: export one or more flights of the loaded .miz (route, radios, loadout, livery) to a package file, and apply flight packages to a mission — each flight is found by its group name (spaces at either end ignored) and side, you choose what to apply per flight, and a report lists what was written. A flight may mix aircraft types: radios, loadout and livery go to an aircraft only when its type in the mission matches the package, and two groups with the same name are reported rather than guessed.
 - **Dynamic Spawn**, read from the mission: templates are marked in the flight list with the airfields and FARPs they serve, and a panel lists each airfield and FARP offering Dynamic Spawn, with its template per aircraft type.
 - **Delete flights** from the loaded mission: check them in the flight list, review what still points to them, and save the mission without them. Dynamic Spawn links to a deleted flight are reset; triggers, tasks and scripts that name it are listed, not changed.
 - **Dynamic Spawn**, written to the mission: a flight can be made a template and linked, per aircraft type, to the airfields and FARPs that already have Dynamic Spawn enabled in the mission editor.
@@ -39,7 +40,7 @@ Changes merged since the last release, grouped per tool.
 
 ### Flight Configurator
 #### Added
-- **Flight Configurator**, a new module: a Flight Lead prepares a flight (identity, radios, loadout built on the aircraft's front view or started from the squadron's presets, livery) and exports it as a flight package that HQ applies to the Mission Commander's mission.
+- **Flight Configurator**, a new module: a Flight Lead prepares a flight (identity, radios, loadout built on the aircraft's front view or started from the squadron's presets, livery) and exports it as a flight package that HQ applies to the Mission Commander's mission. Each aircraft of a flight has its own type, so a flight can mix types; flight names must be unique per side before export.
 
 ### Recon Station
 #### Added

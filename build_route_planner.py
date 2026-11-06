@@ -1900,12 +1900,13 @@ const KEY_STATE = 'route_state_v1';
 const KEY_HANDOFF = 'route_handoff_v1';
 const KEY_SET = 'route_set_v1';
 const KEY_SNAPSHOT = 'mission_snapshot_v1';
-const SNAPSHOT_SCHEMA = 'dcs-mission-snapshot-v1';        /* un snapshot d'un autre schéma (ou sans schéma) est tenu pour absent */
+const SNAPSHOT_SCHEMAS = ['dcs-mission-snapshot-v1', 'dcs-mission-snapshot-v2'];        /* un snapshot d'un autre schéma (ou sans schéma) est tenu pour absent ; la v1 ne reste qu'en lecture */
 const KEY_THEME = 'theme_v1';
 const KEY_LANG = 'lang_v1';
 const FORMAT_ID = 'dcs-route-v1';
 const SET_FORMAT = 'dcs-route-set-v1';
-const PACKAGE_FORMAT = 'dcs-flight-package-v1';
+const PACKAGE_FORMAT = 'dcs-flight-package-v2';
+const PACKAGE_FORMATS = ['dcs-flight-package-v1', 'dcs-flight-package-v2'];     /* la v1 ne reste qu'en lecture */
 const THEME_IDS = ['cw-nato', 'cw-soviet', 'modern-nato', 'modern-east'];
 const LAYER_IDS = ['dcs', 'flappie', 'topo', 'sat', 'grid'];
 const MAX_POINTS = 30;
@@ -3444,7 +3445,7 @@ function exportPoint(p, i) {
 
 /* ============= PLUSIEURS ROUTES =============
    S reste la route active avec les réglages partagés (route_state_v1 garde sa forme, le Datacard Generator le lit tel quel). Toutes les routes,
-   la route active comprise, vivent dans RSET (route_set_v1) : { name, points, flight } ; flight : { groupName, aircraftType, coalition } ou null.
+   la route active comprise, vivent dans RSET (route_set_v1) : { name, points, flight } ; flight : { groupName, coalition } ou null (un lien ancien porte aussi aircraftType : il se lit, la clé n'est plus écrite).
    Le nom et les points de la route active sont ceux de S ; syncActive() les recopie dans RSET avant toute écriture ou lecture de l'ensemble. */
 let RSET = { active: 0, routes: [{ name: '', points: [], flight: null }] };
 
@@ -3454,24 +3455,35 @@ function readSource(o) {
   if (typeof o.filename !== 'string' || o.filename === '' || typeof o.fingerprint !== 'string' || o.fingerprint === '') return null;
   return { filename: o.filename, fingerprint: o.fingerprint };
 }
-/* Le lien d'une route avec son vol : { groupName, aircraftType, coalition, source? } */
+/* Le lien d'une route avec son vol : { groupName, coalition, source? } ; le type n'en fait plus partie */
 function makeLink(f, source) {
-  const o = { groupName: f.groupName, aircraftType: f.aircraftType, coalition: f.coalition };
+  const o = { groupName: f.groupName, coalition: f.coalition };
   const sc = readSource(source);
   if (sc) o.source = sc;
   return o;
 }
 function readFlight(f) {
-  if (!f || typeof f !== 'object' || Array.isArray(f) || typeof f.groupName !== 'string' || typeof f.aircraftType !== 'string') return null;
-  return makeLink({ groupName: f.groupName, aircraftType: f.aircraftType, coalition: typeof f.coalition === 'string' ? f.coalition : '' }, f.source);
+  if (!f || typeof f !== 'object' || Array.isArray(f) || typeof f.groupName !== 'string') return null;
+  return makeLink({ groupName: f.groupName, coalition: typeof f.coalition === 'string' ? f.coalition : '' }, f.source);
 }
+/* Le type d'une unité d'un vol lu (mission de HQ ou paquet, v1 ou v2) : le sien, sinon, en v1, celui du vol (aircraftType) ; '' si aucun */
+function unitTypeOf(f, u) { return u && typeof u === 'object' && typeof u.type === 'string' && u.type !== '' ? u.type : (f && typeof f.aircraftType === 'string' ? f.aircraftType : ''); }
+/* Les types d'un vol lu : distincts, dans l'ordre de ses unités ; un vol v1 sans unité garde son aircraftType. Leur texte : « Mi-24P + Mi-8MT » (vide sans type) */
+function flightTypes(f) {
+  const out = [], us = (f && Array.isArray(f.units) ? f.units : []).filter(u => u && typeof u === 'object');
+  us.forEach(u => { const x = unitTypeOf(f, u); if (x !== '' && out.indexOf(x) < 0) out.push(x); });
+  if (!us.length && f && typeof f.aircraftType === 'string' && f.aircraftType !== '') out.push(f.aircraftType);
+  return out;
+}
+function flightTypesLabel(f) { return flightTypes(f).join(' + '); }
 /* « 1 pt », « n pts » */
 function ptsText(n) { return t((CURRENT_LANG === 'fr' ? n <= 1 : n === 1) ? 'hq.pts.1' : 'hq.pts', { n: n }); }
 /* Le nom d'un fichier choisi : sans « .json », accents ôtés, tout ce qui n'est pas lettre, chiffre, _ + - devient « _ » ; vide si rien ne reste */
 function cleanFname(v) {
   return str(v).trim().replace(/\.json$/i, '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9_+-]+/g, '_').replace(/_{2,}/g, '_').replace(/^_+|_+$/g, '').slice(0, 100);
 }
-function sameFlight(a, b) { return !!a && !!b && a.groupName === b.groupName && a.aircraftType === b.aircraftType && a.coalition === b.coalition; }
+/* Le même vol : le même nom (rogné, casse ignorée) et le même camp */
+function sameFlight(a, b) { return !!a && !!b && String(a.groupName).trim().toLowerCase() === String(b.groupName).trim().toLowerCase() && a.coalition === b.coalition; }
 
 function syncActive() {
   const r = RSET.routes[RSET.active];
@@ -7662,7 +7674,7 @@ function openRouteFile(file) {
           .catch(e => showToast(t(e && e.message === 'nods' ? 'err.cfBrowser' : 'err.cf')));
         return;
       }
-      if (!isPlainObj(pj.parsed) || pj.parsed.format !== PACKAGE_FORMAT) { rejectFormat(pj.parsed, ['pkg']); return; }      /* un zip ne porte qu'un paquet (ou un .cf) */
+      if (!isPlainObj(pj.parsed) || PACKAGE_FORMATS.indexOf(pj.parsed.format) < 0) { rejectFormat(pj.parsed, ['pkg']); return; }      /* un zip ne porte qu'un paquet (ou un .cf) */
       openPackage(pj.parsed, file.name, $('btn-open'));
       return;
     }
@@ -7676,7 +7688,7 @@ function openRouteFile(file) {
     let parsed;
     try { parsed = JSON.parse(text); } catch (e) { rejectMsg('rej.json'); return; }
     if (isPlainObj(parsed) && parsed.format === SET_FORMAT) { openRouteSet(parsed); return; }
-    if (isPlainObj(parsed) && parsed.format === PACKAGE_FORMAT) { openPackage(parsed, file.name, $('btn-open')); return; }
+    if (isPlainObj(parsed) && PACKAGE_FORMATS.indexOf(parsed.format) >= 0) { openPackage(parsed, file.name, $('btn-open')); return; }
     const res = parseRoute(parsed);
     if (!res) {
       if (isPlainObj(parsed) && parsed.format === FORMAT_ID) rejectIncomplete(FORMAT_ID);      /* une route dcs-route-v1 sans liste de points */
@@ -7902,7 +7914,7 @@ function routesRender() {
 }
 
 function sideText(c) { return c === 'red' ? t('hq.red') : c === 'blue' ? t('hq.blue') : c === 'neutrals' ? t('hq.neutral') : String(c || ''); }
-function flightText(f) { return f.groupName + ' · ' + f.aircraftType + (f.coalition ? ' · ' + sideText(f.coalition).toLowerCase() : ''); }
+function flightText(f) { return f.groupName + (f.coalition ? ' · ' + sideText(f.coalition).toLowerCase() : ''); }
 function theatreText(id) { return THEATRE_IDS.indexOf(id) !== -1 ? t('th.' + id) : String(id); }
 
 /* ---------- les autres routes, sur la carte ---------- */
@@ -8008,17 +8020,19 @@ function defaultSetName() { return 'routes_' + stamp(); }
 function readSnapshot() {
   try {
     const o = JSON.parse(localStorage.getItem(KEY_SNAPSHOT));
-    if (o && typeof o === 'object' && o.schema === SNAPSHOT_SCHEMA && o.sourceMission && typeof o.sourceMission.theatre === 'string' && Array.isArray(o.flights)) return o;
+    if (o && typeof o === 'object' && SNAPSHOT_SCHEMAS.indexOf(o.schema) >= 0 && o.sourceMission && typeof o.sourceMission.theatre === 'string' && Array.isArray(o.flights)) return o;
   } catch (e) { /* pas de snapshot */ }
   return null;
 }
 
 function snapFlights(snap) {
   const th = snap.sourceMission.theatre;
-  return snap.flights.filter(f => f && typeof f === 'object' && typeof f.groupName === 'string' && typeof f.aircraftType === 'string').map(f => {
+  const v1 = snap.schema === 'dcs-mission-snapshot-v1';
+  return snap.flights.filter(f => f && typeof f === 'object' && typeof f.groupName === 'string' && (!v1 || typeof f.aircraftType === 'string')).map(f => {
     const points = (f.route && f.route.points && typeof f.route.points === 'object' && !Array.isArray(f.route.points)) ? f.route.points : null;
     /* nr : aucun point lisible, la liste dit « sans route » (le vol reste coché ou non comme avant : seul le texte change) */
-    return { groupName: f.groupName, aircraftType: f.aircraftType, coalition: typeof f.coalition === 'string' ? f.coalition : '', points: points,
+    const g = v1 ? f : { units: f.units };      /* en v2 le vol n'a pas de type : seules ses unités parlent */
+    return { groupName: f.groupName, types: flightTypes(g), coalition: typeof f.coalition === 'string' ? f.coalition : '', points: points,
       nr: !snapKeys(points).some(k => pointFromRaw(points[k], k, 0, th)) };
   });
 }
@@ -8090,7 +8104,7 @@ const HM = { mode: 'import', kind: 'hq', theatre: '', file: '', source: null, fl
 function hqVisible() {
   const side = HM.side, type = HM.type, q = srNorm(HM.name);
   return HM.flights.map((f, i) => ({ f: f, i: i })).filter(x =>
-    (side === 'all' || x.f.coalition === side) && (type === 'all' || x.f.aircraftType === type) && (q === '' || srNorm(x.f.groupName).indexOf(q) >= 0));
+    (side === 'all' || x.f.coalition === side) && (type === 'all' || x.f.types.indexOf(type) >= 0) && (q === '' || srNorm(x.f.groupName).indexOf(q) >= 0));
 }
 
 /* Les routes que l'import ajouterait : la route active vide et sans lien prend la première (comme un fichier de route) */
@@ -8115,7 +8129,7 @@ function hqRender() {
   sd.innerHTML = sides.map(x => '<option value="' + x[0] + '">' + esc(x[1]) + '</option>').join('');
   sd.value = HM.side;
   /* le filtre de type : Tous, puis les types d'appareil de la source, triés, sans doublon */
-  const types = HM.flights.map(f => f.aircraftType).filter((v, i, a) => a.indexOf(v) === i).sort();
+  const types = HM.flights.reduce((acc, f) => acc.concat(f.types), []).filter((v, i, a) => a.indexOf(v) === i).sort();
   if (types.indexOf(HM.type) === -1) HM.type = 'all';
   const td = $('hq-type');
   td.innerHTML = '<option value="all">' + esc(t('hq.all')) + '</option>' + types.map(x => '<option value="' + esc(x) + '">' + esc(x) + '</option>').join('');
@@ -8129,7 +8143,7 @@ function hqRenderList() {
   $('hq-list').innerHTML = vis.length ? vis.map(x => {
     const f = x.f, used = routesOfFlight(f), n = f.points ? snapKeys(f.points).length : 0;
     return '<label class="rt-row' + (f.off ? ' off' : '') + '"><input type="' + (link ? 'radio' : 'checkbox') + '" name="hq-flight" data-i="' + x.i + '"' + (HM.checked.has(x.i) ? ' checked' : '') + (f.off ? ' disabled' : '') + '>' +
-      '<span class="rt-nm">' + esc(f.groupName) + '</span><span class="rt-n"><span>' + esc(f.aircraftType + (f.coalition ? ' · ' + sideText(f.coalition).toLowerCase() : '') + ' · ' + (f.nr ? t('hq.noroute') : ptsText(n))) + '</span>' +
+      '<span class="rt-nm">' + esc(f.groupName) + '</span><span class="rt-n"><span>' + esc([f.types.join(' + '), f.coalition ? sideText(f.coalition).toLowerCase() : '', f.nr ? t('hq.noroute') : ptsText(n)].filter(x => x !== '').join(' · ')) + '</span>' +
       (used.length ? '<span class="rt-dup">' + esc(t('hq.in', { n: used.join(', ') })) + '</span>' : '') + '</span></label>';
   }).join('') : '<p class="rt-empty">' + esc(t(HM.flights.length ? 'hq.none' : (HM.kind === 'pkg' ? 'hq.pkg.noFlights' : 'hq.noFlights'))) + '</p>';
   $('hq-cnt').textContent = t('hq.shown', { n: vis.length, total: HM.flights.length });
@@ -8185,7 +8199,7 @@ function openHqModal(mode, opener) {
   openFlightsModal({ kind: 'hq', theatre: sm.theatre, file: sm.filename || '', source: readSource(sm), flights: snapFlights(hq.snap) }, mode, opener);
 }
 
-/* Un paquet de vol (dcs-flight-package-v1) lu : la même fenêtre, en mode paquet. Sans théâtre, d'un théâtre sans projection ou sans aucun vol lisible : un message, rien ne s'ouvre ;
+/* Un paquet de vol (dcs-flight-package-v1 ou v2) lu : la même fenêtre, en mode paquet. Sans théâtre, d'un théâtre sans projection ou sans aucun vol lisible : un message, rien ne s'ouvre ;
    un vol illisible est ignoré et compté dans un message. Un vol sans point lisible est inactif. Le paquet n'est pas gardé. */
 function openPackage(parsed, fname, opener) {
   const th = typeof parsed.theatre === 'string' ? parsed.theatre : '';
@@ -8193,11 +8207,12 @@ function openPackage(parsed, fname, opener) {
   if (!hasRouteTool(th)) { showToast(t('err.pkTheatre', { th: theatreText(th) }), 5000); return; }
   const list = Array.isArray(parsed.flights) ? parsed.flights : [];
   const flights = [];
+  const v1 = parsed.format === 'dcs-flight-package-v1';
   list.forEach(f => {
-    if (!f || typeof f !== 'object' || Array.isArray(f) || typeof f.groupName !== 'string' || typeof f.aircraftType !== 'string') return;
+    if (!f || typeof f !== 'object' || Array.isArray(f) || typeof f.groupName !== 'string' || (v1 && typeof f.aircraftType !== 'string')) return;
     const points = (f.route && f.route.points && typeof f.route.points === 'object' && !Array.isArray(f.route.points)) ? f.route.points : null;
     const off = !snapKeys(points).some(k => pointFromRaw(points[k], k, 0, th));
-    flights.push({ groupName: f.groupName, aircraftType: f.aircraftType, coalition: typeof f.coalition === 'string' ? f.coalition : '', points: points, off: off, nr: off });
+    flights.push({ groupName: f.groupName, types: flightTypes(v1 ? f : { units: f.units }), coalition: typeof f.coalition === 'string' ? f.coalition : '', points: points, off: off, nr: off });
   });
   if (!flights.length) { rejectMsg('rej.noFlight'); return; }
   openFlightsModal({ kind: 'pkg', theatre: th, file: fname || '', source: readSource(parsed.sourceMission), flights: flights }, 'import', opener);
@@ -8210,7 +8225,7 @@ function openPackageFile(file) {
   readFileBytes(file, async bytes => {
     const pj = await packageJsonOf(bytes, false);
     if (!pj) return;
-    if (!isPlainObj(pj.parsed) || pj.parsed.format !== PACKAGE_FORMAT) { rejectFormat(pj.parsed, ['pkg']); return; }
+    if (!isPlainObj(pj.parsed) || PACKAGE_FORMATS.indexOf(pj.parsed.format) < 0) { rejectFormat(pj.parsed, ['pkg']); return; }
     openPackage(pj.parsed, file.name, $('rs-pkg'));
   }, () => rejectMsg('rej.json'));
 }
@@ -8387,14 +8402,14 @@ function packPoint(p, i, th) {
   };
 }
 
-/* Le paquet (dcs-flight-package-v1) des routes idxs ; sourceMission : la source commune de leurs liens, sinon nul */
+/* Le paquet (dcs-flight-package-v2) des routes idxs ; ses vols n'ont pas d'unités, donc pas de type ; sourceMission : la source commune de leurs liens, sinon nul */
 function buildPackage(idxs) {
   syncActive();
   const th = S.theatre;
   const flights = idxs.map(i => {
     const r = RSET.routes[i], pts = {};
     r.points.forEach((p, k) => { pts[String(k + 1)] = packPoint(p, k, th); });
-    return { groupName: r.flight.groupName, aircraftType: r.flight.aircraftType, coalition: r.flight.coalition, groupFrequency: null, route: { points: pts }, units: [] };
+    return { groupName: r.flight.groupName, coalition: r.flight.coalition, groupFrequency: null, route: { points: pts }, units: [] };
   });
   /* la mission source : celle des liens, si toutes les routes cochées ont la même */
   let src = null;

@@ -4712,10 +4712,21 @@ function applyRouteToCard(c, r) {
 
 /* ----- Vols d'une mission de HQ ou d'un paquet de vol ----- */
 const KEY_SNAPSHOT = 'mission_snapshot_v1';          /* écrit par HQ ; ici en lecture seule */
-const SNAPSHOT_SCHEMA = 'dcs-mission-snapshot-v1';   /* un snapshot d'un autre schéma (ou sans schéma) est tenu pour absent */
+const SNAPSHOT_SCHEMAS = ['dcs-mission-snapshot-v1', 'dcs-mission-snapshot-v2'];   /* un snapshot d'un autre schéma (ou sans schéma) est tenu pour absent ; la v1 ne reste qu'en lecture */
 const KEY_ROUTESET = 'route_set_v1';                  /* écrit par le Route Planner ; ici en lecture seule */
 const SET_FORMAT = 'dcs-route-set-v1';
-const PACKAGE_FORMAT = 'dcs-flight-package-v1';
+const PACKAGE_FORMATS = ['dcs-flight-package-v1', 'dcs-flight-package-v2'];     /* la suite écrit la v2 ; la v1 ne reste qu'en lecture */
+
+/* Le type d'une unité d'un vol lu (mission de HQ ou paquet, v1 ou v2) : le sien, sinon, en v1, celui du vol (aircraftType) ; '' si aucun */
+function unitTypeOf(f, u) { return isPlainObject(u) && typeof u.type === 'string' && u.type !== '' ? u.type : (isPlainObject(f) && typeof f.aircraftType === 'string' ? f.aircraftType : ''); }
+/* Les types d'un vol lu : distincts, dans l'ordre de ses unités ; un vol v1 sans unité garde son aircraftType. Leur texte : « Mi-24P + Mi-8MT » (vide sans type) */
+function flightTypes(f) {
+  const out = [], us = isPlainObject(f) && Array.isArray(f.units) ? f.units.filter(isPlainObject) : [];
+  us.forEach(u => { const x = unitTypeOf(f, u); if (x !== '' && out.indexOf(x) < 0) out.push(x); });
+  if (!us.length && isPlainObject(f) && typeof f.aircraftType === 'string' && f.aircraftType !== '') out.push(f.aircraftType);
+  return out;
+}
+function flightTypesLabel(f) { return flightTypes(f).join(' + '); }
 
 function hasProjection(id) { return Object.prototype.hasOwnProperty.call(TM_PARAMS, id); }
 function isPlainObject(o) { return !!o && typeof o === 'object' && !Array.isArray(o); }
@@ -4743,16 +4754,19 @@ function impPointFromRaw(raw, k, theatre) {
   };
 }
 
-/* Un vol d'un snapshot ou d'un paquet → { groupName, aircraftType, coalition, units, pts } ; null sans nom de groupe ni type.
+/* Un vol d'un snapshot ou d'un paquet → { groupName, types, aircraft, type1, coalition, units, pts } ; null sans nom de groupe (et, en v1, sans type).
+   types : ses types (leur texte : aircraft) ; type1 : le type de l'unité 1, dont on lit les radios.
    pts : les points lisibles de sa route, dans l'ordre, convertis au théâtre (aucun sans projection ou sans route) */
-function impFlight(f, theatre) {
-  if (!isPlainObject(f) || typeof f.groupName !== 'string' || typeof f.aircraftType !== 'string') return null;
+function impFlight(f, theatre, v1) {
+  if (!isPlainObject(f) || typeof f.groupName !== 'string' || (v1 && typeof f.aircraftType !== 'string')) return null;
   const table = (isPlainObject(f.route) && isPlainObject(f.route.points)) ? f.route.points : null;
   const pts = [];
   if (table && hasProjection(theatre)) impKeys(table).forEach(k => { const p = impPointFromRaw(table[k], k, theatre); if (p) pts.push(p); });
+  const units = Array.isArray(f.units) ? f.units.filter(isPlainObject) : [];
+  const g = v1 ? f : { units: f.units };      /* en v2 le vol n'a pas de type : seules ses unités parlent */
   return {
-    groupName: f.groupName, aircraftType: f.aircraftType, coalition: typeof f.coalition === 'string' ? f.coalition : '',
-    units: Array.isArray(f.units) ? f.units.filter(isPlainObject) : [], pts: pts
+    groupName: f.groupName, types: flightTypes(g), aircraft: flightTypesLabel(g), type1: units.length ? unitTypeOf(g, units[0]) : '',
+    coalition: typeof f.coalition === 'string' ? f.coalition : '', units: units, pts: pts
   };
 }
 
@@ -4763,10 +4777,10 @@ function impMakeSource(kind, theatre, file, flights, mission) {
   return { kind: kind, theatre: theatre, file: file, flights: flights, mission: mission, side: 'all', type: 'all', name: '', checked: checked, chan: {} };
 }
 
-/* La mission chargée dans HQ (mission_snapshot_v1), ou null */
+/* La mission chargée dans HQ (mission_snapshot_v1, schéma v1 ou v2), ou null */
 function impReadHq() {
   const o = readJsonKey(KEY_SNAPSHOT);
-  if (!o || o.schema !== SNAPSHOT_SCHEMA || !isPlainObject(o.sourceMission) || typeof o.sourceMission.theatre !== 'string' || !Array.isArray(o.flights)) return null;
+  if (!o || SNAPSHOT_SCHEMAS.indexOf(o.schema) < 0 || !isPlainObject(o.sourceMission) || typeof o.sourceMission.theatre !== 'string' || !Array.isArray(o.flights)) return null;
   const sm = o.sourceMission, th = sm.theatre;
   const st = (typeof sm.startTime === 'number' && isFinite(sm.startTime) && sm.startTime >= 0) ? sm.startTime : null;
   const mission = {
@@ -4774,15 +4788,15 @@ function impReadHq() {
     time: st === null ? '' : pad2(Math.floor(st / 3600) % 24) + ':' + pad2(Math.floor((st % 3600) / 60)),
     metar: isPlainObject(o.weather) ? str(o.weather.metar) : ''
   };
-  return impMakeSource('hq', th, str(sm.filename), o.flights.map(f => impFlight(f, th)).filter(Boolean), mission);
+  return impMakeSource('hq', th, str(sm.filename), o.flights.map(f => impFlight(f, th, o.schema === 'dcs-mission-snapshot-v1')).filter(Boolean), mission);
 }
 
-/* Un paquet de vol (dcs-flight-package-v1) lu → { src, skipped } : une source, et le nombre de vols illisibles ignorés ; { reject } (la clé du message) sans théâtre
+/* Un paquet de vol (dcs-flight-package-v1 ou v2) lu → { src, skipped } : une source, et le nombre de vols illisibles ignorés ; { reject } (la clé du message) sans théâtre
    ou sans aucun vol lisible */
 function impReadPackage(o, fname) {
   if (typeof o.theatre !== 'string' || o.theatre === '') return { reject: 'rej.noTheatre' };
   const list = Array.isArray(o.flights) ? o.flights : [];
-  const flights = list.map(f => impFlight(f, o.theatre)).filter(Boolean);
+  const flights = list.map(f => impFlight(f, o.theatre, o.format === 'dcs-flight-package-v1')).filter(Boolean);
   if (!flights.length) return { reject: 'rej.noFlight' };
   return { src: impMakeSource('pkg', o.theatre, fname || '', flights, null), skipped: list.length - flights.length };
 }
@@ -4835,7 +4849,7 @@ function impSetFromFile(o) {
   const all = list.map(r => {
     const f = r.flight;
     return { route: routeFromObject(Object.assign({}, shared, { name: r.name, points: r.points })),
-      flight: (isPlainObject(f) && typeof f.groupName === 'string' && typeof f.aircraftType === 'string') ? f : null };
+      flight: (isPlainObject(f) && typeof f.groupName === 'string') ? f : null };
   });
   const routes = all.filter(e => e.route && e.route.points.length);
   if (!routes.length) return null;      /* aucune route à points */
@@ -4847,7 +4861,7 @@ function impSetFromFile(o) {
    withDatacard : l'entrée lit aussi la datacard (« Ouvrir » de la barre) ; la fenêtre d'import renvoie vers la barre */
 function impRecognise(parsed, fname, withDatacard, fromZip) {
   const fmt = isPlainObject(parsed) ? parsed.format : undefined;
-  if (fromZip && fmt !== PACKAGE_FORMAT) { rejectFormat(parsed, ['pkg']); return null; }      /* un .zip ne porte qu'un paquet de vol */
+  if (fromZip && PACKAGE_FORMATS.indexOf(fmt) < 0) { rejectFormat(parsed, ['pkg']); return null; }      /* un .zip ne porte qu'un paquet de vol */
   if (fmt === FORMAT_ID) {
     if (!withDatacard) { rejectMsg('rej.isDatacard'); return null; }
     return { kind: 'datacard' };
@@ -4862,7 +4876,7 @@ function impRecognise(parsed, fname, withDatacard, fromZip) {
     if (!set) { rejectIncomplete(SET_FORMAT); return null; }
     return { kind: 'set', routes: set.routes, route: set.route };
   }
-  if (fmt === PACKAGE_FORMAT) {
+  if (PACKAGE_FORMATS.indexOf(fmt) >= 0) {
     const res = impReadPackage(parsed, fname);
     if (res.reject) { rejectMsg(res.reject); return null; }
     return { kind: 'pkg', src: res.src, skipped: res.skipped };
@@ -4889,7 +4903,7 @@ function impUseFile(k, fname) {
 function loadPackageFile(file) {
   readImportFile(file, r => {
     if (r.reject) { rejectMsg(r.reject); return; }
-    if (!isPlainObject(r.parsed) || r.parsed.format !== PACKAGE_FORMAT) { rejectFormat(r.parsed, ['pkg']); return; }
+    if (!isPlainObject(r.parsed) || PACKAGE_FORMATS.indexOf(r.parsed.format) < 0) { rejectFormat(r.parsed, ['pkg']); return; }
     const res = impReadPackage(r.parsed, file.name);
     if (res.reject) { rejectMsg(res.reject); return; }
     imp.pkg = res.src; imp.pkgName = file.name; imp.src = 'pkg';
@@ -4947,7 +4961,7 @@ function impRadios(u, sel, type) {
   return out.slice(0, LIMITS.radios);
 }
 
-/* Les canaux qu'on peut choisir : pour chaque poste de la première unité des vols cochés (ceux qu'on voit et qu'on importerait), par type et par poste,
+/* Les canaux qu'on peut choisir : pour chaque poste de la première unité des vols cochés (ceux qu'on voit et qu'on importerait), par type de cette unité et par poste,
    la réunion des numéros du .miz ; les types dans l'ordre de première apparition, les postes par numéro croissant */
 function impChanAvail(s) {
   const types = [], maps = {};
@@ -4955,8 +4969,8 @@ function impChanAvail(s) {
     const f = s.flights[x.i];
     const rs = impUnitRadios(f.units.length ? f.units[0] : null);
     if (!rs.length) return;
-    if (types.indexOf(f.aircraftType) === -1) { types.push(f.aircraftType); maps[f.aircraftType] = {}; }
-    const map = maps[f.aircraftType];
+    if (types.indexOf(f.type1) === -1) { types.push(f.type1); maps[f.type1] = {}; }
+    const map = maps[f.type1];
     rs.forEach(r => {
       const set = map[r.index] || (map[r.index] = new Set());
       r.channels.forEach(c => set.add(c.channel));
@@ -5018,10 +5032,10 @@ function cardFromFlight(fl, src) {
   const c = newCard();
   const u = fl.units.length ? fl.units[0] : null;
   c.flight.callsign = impCallsign(u, fl.groupName);
-  c.flight.aircraft = fl.aircraftType;
+  c.flight.aircraft = fl.aircraft;      /* les types du vol, « Mi-24P + Mi-8MT » s'il est mixte */
   c.flight.count = fl.units.length ? fl.units.length : null;
   if (fl.pts.length) applyRouteToCard(c, routeFromObject({ format: ROUTE_FORMAT, theatre: src.theatre, points: fl.pts }));
-  c.radios = impRadios(u, src.chan, fl.aircraftType);
+  c.radios = impRadios(u, src.chan, fl.type1);      /* les radios de l'unité 1, lues avec le type de l'unité 1 */
   const m = src.mission;
   if (m) {
     c.meta.date = m.date;
@@ -5052,7 +5066,7 @@ function impReadRouteSet() {
     const route = routeFromObject(Object.assign({}, st, o));
     if (!route || !route.points.length) return;
     const f = r.flight;
-    out.push({ route: route, flight: (isPlainObject(f) && typeof f.groupName === 'string' && typeof f.aircraftType === 'string') ? f : null });
+    out.push({ route: route, flight: (isPlainObject(f) && typeof f.groupName === 'string') ? f : null });
   });
   return out;
 }
@@ -5064,7 +5078,7 @@ function runAllRoutesImport() {
     const c = newCard();
     applyRouteToCard(c, e.route);
     c.flight.callsign = e.flight ? e.flight.groupName : e.route.name;
-    c.flight.aircraft = e.flight ? e.flight.aircraftType : '';
+    c.flight.aircraft = (e.flight && typeof e.flight.aircraftType === 'string') ? e.flight.aircraftType : '';      /* un lien sans type laisse l'appareil vide ; un lien ancien garde le sien */
     return c;
   });
   impAddCards(cards);
@@ -5080,7 +5094,7 @@ function impFlSrc() { return imp.src === 'hq' ? imp.hq : (imp.src === 'pkg' ? im
 function impVisible(s) {
   const q = impNorm(s.name);
   return s.flights.map((f, i) => ({ f: f, i: i })).filter(x =>
-    (s.side === 'all' || x.f.coalition === s.side) && (s.type === 'all' || x.f.aircraftType === s.type) && (q === '' || impNorm(x.f.groupName).indexOf(q) >= 0));
+    (s.side === 'all' || x.f.coalition === s.side) && (s.type === 'all' || x.f.types.indexOf(s.type) >= 0) && (q === '' || impNorm(x.f.groupName).indexOf(q) >= 0));
 }
 
 /* Les filtres : le camp (Tous, Rouge, Bleu, et Neutre si un vol l'est) et le type (Tous, puis ceux de la source, triés, sans doublon) */
@@ -5090,7 +5104,7 @@ function impRenderFlHead(s) {
   const sd = document.getElementById('imp-side');
   sd.innerHTML = sides.map(x => '<option value="' + x[0] + '">' + esc(x[1]) + '</option>').join('');
   sd.value = s.side;
-  const types = s.flights.map(f => f.aircraftType).filter((v, i, a) => a.indexOf(v) === i).sort();
+  const types = s.flights.reduce((acc, f) => acc.concat(f.types), []).filter((v, i, a) => a.indexOf(v) === i).sort();
   if (types.indexOf(s.type) === -1) s.type = 'all';
   const td = document.getElementById('imp-type');
   td.innerHTML = '<option value="all">' + esc(t('imp.all')) + '</option>' + types.map(x => '<option value="' + esc(x) + '">' + esc(x) + '</option>').join('');
@@ -5105,7 +5119,7 @@ function impRenderFlList(s) {
     const f = x.f;
     return '<label class="export-png-page-row imp-row"><input type="checkbox" class="export-png-page-cb imp-fcb" data-i="' + x.i + '"' + (s.checked.has(x.i) ? ' checked' : '') + '>' +
       '<span class="imp-nm">' + esc(f.groupName) + '</span><span class="imp-n">' +
-      esc(f.aircraftType + (f.coalition ? ' · ' + impSideText(f.coalition).toLowerCase() : '') + ' · ' + (f.pts.length ? impPtsText(f.pts.length) : t('imp.noroute'))) + '</span></label>';
+      esc([f.aircraft, f.coalition ? impSideText(f.coalition).toLowerCase() : '', f.pts.length ? impPtsText(f.pts.length) : t('imp.noroute')].filter(x => x !== '').join(' · ')) + '</span></label>';
   }).join('') : '<p class="imp-empty">' + esc(t(s.flights.length ? 'imp.none' : 'imp.empty')) + '</p>';
   impRenderChans(s);
   document.getElementById('imp-cnt').textContent = t('imp.shown', { n: vis.length, total: s.flights.length });
