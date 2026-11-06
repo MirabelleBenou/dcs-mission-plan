@@ -3482,8 +3482,8 @@ function ptsText(n) { return t((CURRENT_LANG === 'fr' ? n <= 1 : n === 1) ? 'hq.
 function cleanFname(v) {
   return str(v).trim().replace(/\.json$/i, '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9_+-]+/g, '_').replace(/_{2,}/g, '_').replace(/^_+|_+$/g, '').slice(0, 100);
 }
-/* Le même vol : le même nom (rogné, casse ignorée) et le même camp */
-function sameFlight(a, b) { return !!a && !!b && String(a.groupName).trim().toLowerCase() === String(b.groupName).trim().toLowerCase() && a.coalition === b.coalition; }
+/* Le même vol : le même nom (rogné des deux côtés, la casse compte) et le même camp */
+function sameFlight(a, b) { return !!a && !!b && String(a.groupName).trim() === String(b.groupName).trim() && a.coalition === b.coalition; }
 
 function syncActive() {
   const r = RSET.routes[RSET.active];

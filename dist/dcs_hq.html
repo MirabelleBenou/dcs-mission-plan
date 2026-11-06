@@ -1320,7 +1320,7 @@ const I18N = {
     'pk.rep.warnN.many': '{0} avertissements',
     'pk.w.theatreRoute': '{0} : route non écrite — théâtre du paquet ({1}) différent de celui du .miz ({2})',
     'pk.w.noRoute': '{0} : le groupe n’a pas de route dans le .miz, route non écrite',
-    'pk.w.multi': '{0} : plusieurs groupes de la mission portent ce nom ({1}), rien n\'est appliqué',
+    'pk.w.multi': '{0} : plusieurs groupes de la mission portent ce nom ({1}), rien n’est appliqué',
     'pk.w.type': '{0} : {1} est un {2} dans la mission, un {3} dans le paquet : radios, emport et livrée non appliqués',
     'pk.w.radio': '{0} : {1} absent de l’unité {2}, non créé',
     'pk.w.chan': '{0} : canal {1} de {2} absent de l’unité {3}, non créé',
@@ -4055,7 +4055,7 @@ function pkClientGroups(ctx) {
   return out;
 }
 
-// Le groupe visé : les groupes Client dont le nom rogné (casse ignorée) égale celui du paquet et — quand le paquet en porte une — de même coalition ;
+// Le groupe visé : les groupes Client dont le nom rogné égale celui du paquet et — quand le paquet en porte une — de même coalition ;
 // jamais le groupId, ni le type. pkMatchGroups les rend tous ; pkFindTarget le groupe seulement s'il est le seul (plusieurs : rien n'est deviné).
 function pkMatchGroups(ctx, groupName, coalition) {
   const k = pkNameKey(groupName);
@@ -4231,8 +4231,8 @@ function verifyPatch(patchedSrc, pkg) {
 // =============================================================
 const PK_FORMAT = 'dcs-flight-package-v2';
 const PK_FORMATS = ['dcs-flight-package-v1', 'dcs-flight-package-v2'];     // la v1 ne reste qu'en lecture
-// Un nom de vol se compare rogné, à la casse près.
-function pkNameKey(s) { return String(s === undefined || s === null ? '' : s).trim().toLowerCase(); }
+// Un nom de vol se compare rogné des deux côtés ; la casse compte.
+function pkNameKey(s) { return String(s === undefined || s === null ? '' : s).trim(); }
 // Le type d'une unité d'un vol lu (mission partagée ou paquet, v1 ou v2) : le sien, sinon, en v1, celui du vol (aircraftType) ; '' si aucun.
 function unitTypeOf(f, u) { return u && typeof u.type === 'string' && u.type !== '' ? u.type : (f && typeof f.aircraftType === 'string' ? f.aircraftType : ''); }
 // Les types d'un vol, distincts, dans l'ordre de ses unités ; leur texte : « Mi-24P + Mi-8MT » (vide si aucune unité n'a de type).

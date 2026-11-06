@@ -7976,6 +7976,8 @@ const I18N = {
   "imp.close": "Fermer",
   "imp.done": "{0} groupe(s) importé(s).",
   "imp.multi": "{0} : plusieurs vols du module portent ce nom, un vol neuf est créé",
+  "imp.nounit": "aucune unité : il complète un vol du module",
+  "imp.retype": "{0} : {1} passe de {2} à {3}, ses radios et son emport sont effacés",
   "rej.json": "Fichier illisible : ce n’est pas du JSON.",
   "rej.zip": "Archive illisible : pas de package.json à la racine.",
   "rej.noTheatre": "Le paquet n’a pas de théâtre.",
@@ -8053,7 +8055,7 @@ const I18N = {
   "u.fold": "Fold the unit",
   "u.unfold": "Unfold the unit",
   "u.add": "+ Add a unit ({0}/4)",
-  "u.type.confirm": "Changing {0}'s type clears its radios and loadout. Continue?",
+  "u.type.confirm": "Changing {0}’s type clears its radios and loadout. Continue?",
   "u.remove": "Remove this unit",
   "u.name": "Name",
   "u.callsign": "Callsign",
@@ -8183,6 +8185,8 @@ const I18N = {
   "imp.close": "Close",
   "imp.done": "{0} group(s) imported.",
   "imp.multi": "{0}: several flights in the module have this name, a new flight was created",
+  "imp.nounit": "no aircraft: it can only complete a flight in the module",
+  "imp.retype": "{0}: {1} changes from {2} to {3}, its radios and loadout are cleared",
   "rej.json": "Unreadable file: not JSON.",
   "rej.zip": "Unreadable archive: no package.json at the root.",
   "rej.noTheatre": "The package has no theatre.",
@@ -8280,7 +8284,7 @@ function restoreFlight(f) {
   if (!isObj(f)) return null;
   const rawUnits = (Array.isArray(f.units) ? f.units : []).filter(isObj).slice(0, MAX_UNITS);
   const types = rawUnits.map(u => (typeof u.type === 'string' ? u.type : (typeof f.type === 'string' ? f.type : '')));
-  if (!rawUnits.length && f.type !== undefined && PAYLOAD_TYPES.indexOf(f.type) < 0) return null;
+  if (!rawUnits.length && PAYLOAD_TYPES.indexOf(f.type) < 0) return null;       // sans unité ni type géré : écarté, comme à la base
   if (types.some(x => PAYLOAD_TYPES.indexOf(x) < 0)) return null;
   const nf = newFlight();
   Object.keys(f).forEach(k => { if (['name', 'type', 'coalition', 'route', 'units'].indexOf(k) < 0) nf[k] = f[k]; });
@@ -8294,7 +8298,8 @@ function restoreFlight(f) {
     nu.folded = u.folded === true;          // carte repliée : un état d'écran, gardé avec le travail, jamais dans le paquet
     nu.radios = isObj(u.radios) ? u.radios : {};
     nu.loadout = (isObj(u.loadout) && isObj(u.loadout.pylons)) ? u.loadout : null;
-    if (nu.loadout) LO_FIELDS.forEach(k => { const c = clampNum(nu.loadout[k], 0, loLimit(nu.type, k), k !== 'fuel'); if (c.v !== null) nu.loadout[k] = c.v; });     // un fichier de travail édité : jamais de valeur négative
+    if (nu.loadout) LO_FIELDS.forEach(k => { const c = clampNum(nu.loadout[k], 0, loLimit(nu.type, k), k !== 'fuel'); if (c.v !== null) nu.loadout[k] = c.v; });
+    if (nu.loadout && !nu.loadout.base && !nu.loadout.modified && nu.loadout.key !== '~empty') nu.loadout.base = loSnap(nu.loadout);      // un emport d'avant le lot, non modifié : son contenu présent est sa source     // un fichier de travail édité : jamais de valeur négative
     return nu;
   });
   if (!nf.units.length) nf.units.push(newUnit(typeof f.type === 'string' ? f.type : DEFAULT_TYPE));
@@ -8337,8 +8342,8 @@ function flightTypesLabel(f) { return flightTypes(f).join(' + '); }
 // Les types d'un vol du module, dans l'ordre des unités, distincts, avec le nom d'affichage de chacun.
 function modTypes(f) { const out = []; f.units.forEach(u => { if (out.indexOf(u.type) < 0) out.push(u.type); }); return out; }
 function modTypesLabel(f) { return modTypes(f).map(x => TYPE_LABEL[x] || x).join(' + '); }
-// Un nom de vol se compare rogné, à la casse près.
-function nameKey(s) { return String(s).trim().toLowerCase(); }
+// Un nom de vol se compare rogné des deux côtés ; la casse compte (« Hind 1 » et « HIND 1 » sont deux vols).
+function nameKey(s) { return String(s).trim(); }
 function unitDefaultName(f, fi, ui) { return flightLabel(f, fi) + '-' + (ui + 1); }
 function unitLabel(f, fi, u, ui) { return u.name.trim() || unitDefaultName(f, fi, ui); }
 function selUnit() {
@@ -9274,23 +9279,27 @@ function impFlight(f, v1) {
   const points = (isObj(f.route) && isObj(f.route.points) && routeKeys(f.route.points).length) ? f.route.points : null;
   const units = (Array.isArray(f.units) ? f.units : []).filter(isObj);
   const g = v1 ? f : { units: f.units };      // en v2 le vol n'a pas de type : seules ses unités parlent
-  const supported = (units.length ? units.map(u => unitTypeOf(g, u)) : flightTypes(g)).every(x => PAYLOAD_TYPES.indexOf(x) >= 0);
+  const eff = units.length ? units.map(u => unitTypeOf(g, u)) : flightTypes(g);
+  const noUnit = eff.length === 0;      // un vol sans unité ni type (paquet v2 du Route Planner) : il ne fait que compléter un vol du module
+  const supported = !noUnit && eff.every(x => PAYLOAD_TYPES.indexOf(x) >= 0);
   const hasRadios = units.some(u => Array.isArray(u.radios) && u.radios.some(r => isObj(r) && isObj(r.channels) && Object.keys(r.channels).length));
   const avail = {
     route: !!points, radios: hasRadios,
     loadout: units.some(u => isObj(u.payload) && isObj(u.payload.pylons)),
     livery: units.some(u => typeof u.liveryId === 'string' && u.liveryId !== '')
   };
-  PARTS.forEach(p => { avail[p] = avail[p] && supported; });
-  return { groupName: f.groupName, aircraftType: v1 ? f.aircraftType : undefined, types: flightTypes(g), coalition: (f.coalition === 'blue' || f.coalition === 'red') ? f.coalition : '', supported: supported, points: points, units: units, avail: avail };
+  PARTS.forEach(p => { avail[p] = avail[p] && (supported || noUnit); });
+  return { groupName: f.groupName, aircraftType: v1 ? f.aircraftType : undefined, types: flightTypes(g), coalition: (f.coalition === 'blue' || f.coalition === 'red') ? f.coalition : '', supported: supported, noUnit: noUnit, points: points, units: units, avail: avail };
 }
 // Une source : ses vols lisibles ; ceux d'un appareil géré sont cochés par défaut, sauf pour la mission de HQ (on y choisit parmi beaucoup).
 function impSource(kind, theatre, file, list, v1) {
   list.forEach(f => { if (isObj(f)) noteLiveries(v1 ? f : { units: f.units }); });
   const flights = list.map(f => impFlight(f, v1)).filter(Boolean);
-  flights.forEach(f => { f.on = kind !== 'hq' && f.supported; f.chk = Object.assign({}, f.avail); });
+  flights.forEach(f => { f.on = kind !== 'hq' && impOk(f); f.chk = Object.assign({}, f.avail); });
   return { kind: kind, theatre: theatre, file: file, flights: flights, skipped: list.length - flights.length };
 }
+// Un vol sans unité n'est pris en charge que s'il complète un vol du module (même nom rogné, même camp, un seul candidat) ; sa route seule est alors cochable.
+function impOk(f) { return f.supported || (f.noUnit && findFlights(f).length === 1); }
 function impReadHq(o) {
   if (!o) return null;
   const src = impSource('hq', o.sourceMission.theatre, str(o.sourceMission.filename), o.flights, o.schema === 'dcs-mission-snapshot-v1');
@@ -9300,8 +9309,8 @@ function impReadPackage(o, fname) {
   if (typeof o.theatre !== 'string' || o.theatre === '') return { reject: 'rej.noTheatre' };
   const src = impSource('pkg', o.theatre, fname || '', Array.isArray(o.flights) ? o.flights : [], o.format === 'dcs-flight-package-v1');
   if (!src.flights.length) return { reject: 'rej.noFlight' };
-  if (!src.flights.some(f => f.supported)) return { reject: 'rej.noManaged' };       // aucun vol des quatre types : refusé, le travail en cours ne bouge pas
-  return { src: src, ignored: src.flights.filter(f => !f.supported).length };
+  if (!src.flights.some(f => f.supported || f.noUnit)) return { reject: 'rej.noManaged' };       // aucun vol des quatre types : refusé, le travail en cours ne bouge pas
+  return { src: src, ignored: src.flights.filter(f => !impOk(f)).length };
 }
 
 function impOpen() {
@@ -9324,24 +9333,25 @@ function impSourcesFolded(I) { return !!impCur() && !I.srcOpen; }
 // Les vols affichés : appareils gérés (sauf case cochée), dont le nom de groupe contient la recherche, casse et accents ignorés.
 function impShown(cur) {
   const I = UI.imp, q = impNorm(I.q.trim()), out = [];
-  cur.flights.forEach((f, i) => { if ((f.supported || I.showOff) && (q === '' || impNorm(f.groupName).indexOf(q) >= 0)) out.push(i); });
+  cur.flights.forEach((f, i) => { if ((f.supported || f.noUnit || I.showOff) && (q === '' || impNorm(f.groupName).indexOf(q) >= 0)) out.push(i); });
   return out;
 }
 function impCountText(cur) {
   const I = UI.imp;
-  let s = tf('imp.count', cur.flights.filter(f => f.supported).length, cur.flights.length);
+  let s = tf('imp.count', cur.flights.filter(impOk).length, cur.flights.length);
   if (I.q.trim() !== '' || I.showOff) s += ' · ' + tf('imp.count.shown', impShown(cur).length);
   return s;
 }
 function impFlightHtml(cur, i) {
   const f = cur.flights[i];
   const exists = findFlights(f).length === 1;
-  const state = f.supported ? t(exists ? 'imp.exists' : 'imp.new') : t('imp.unsupported');
+  const ok = impOk(f);
+  const state = ok ? t(exists ? 'imp.exists' : 'imp.new') : t(f.noUnit ? 'imp.nounit' : 'imp.unsupported');
   const parts = PARTS.map(p => {
-    const on = f.avail[p];
+    const on = f.avail[p] && ok;
     return `<label class="pk-chk${on ? '' : ' off'}"><input type="checkbox" data-imp-part="${p}" data-imp-i="${i}"${on && f.chk[p] ? ' checked' : ''}${on ? '' : ' disabled'}>${esc(t('imp.part.' + p))}</label>`;
   }).join('');
-  return `<div class="imp-flight${f.supported ? '' : ' off'}"><label class="imp-fh"><input type="checkbox" data-imp-flight="${i}"${f.on && f.supported ? ' checked' : ''}${f.supported ? '' : ' disabled'}>
+  return `<div class="imp-flight${ok ? '' : ' off'}"><label class="imp-fh"><input type="checkbox" data-imp-flight="${i}"${f.on && ok ? ' checked' : ''}${ok ? '' : ' disabled'}>
     <span class="imp-nm">${esc(f.groupName)}</span>${f.types.length ? `<span class="snap-flight-tag">${esc(f.types.join(' + '))}</span>` : ''}
     <span class="imp-n">${esc(state)} · ${esc(tf('imp.units', f.units.length))}</span></label><div class="pk-parts">${parts}</div></div>`;
 }
@@ -9393,13 +9403,13 @@ function renderImpList() {
 }
 function impUpdateGo() {
   const cur = impCur(), go = document.getElementById('imp-go');
-  if (go) go.disabled = !(cur && cur.flights.some(f => f.on && f.supported));
+  if (go) go.disabled = !(cur && cur.flights.some(f => f.on && impOk(f)));
 }
 // « Cocher les vols affichés » et « Tout décocher » agissent sur les vols visibles après filtre et recherche.
 function impSetShown(on) {
   const cur = impCur();
   if (!cur) return;
-  impShown(cur).forEach(i => { if (cur.flights[i].supported) cur.flights[i].on = on; });
+  impShown(cur).forEach(i => { if (impOk(cur.flights[i])) cur.flights[i].on = on; });
   renderImpList();
 }
 
@@ -9417,8 +9427,8 @@ function mergeRadios(unit, type, radios) {
     if (Object.keys(post).length) unit.radios[r.radioIndex] = post;
   });
 }
-// Les unités se complètent par rang. Une unité neuve prend le type de celle de la source ; une unité du module d'un autre type la prend aussi,
-// quand on importe ses radios ou son emport (ils se lisent selon le type : les siens, d'avant, sont vidés).
+// Les unités se complètent par rang. Une unité neuve prend le type de celle de la source ; une unité du module d'un autre type le prend toujours aussi,
+// quelles que soient les parties cochées : ses radios et son emport (qui se lisent selon le type) sont vidés, et un avertissement le dit s'il y en avait.
 function mergeUnit(target, k, iu, chk, src) {
   let u = target.units[k];
   const ty = unitTypeOf(src, iu);
@@ -9429,25 +9439,34 @@ function mergeUnit(target, k, iu, chk, src) {
     u.csRaw = iu.callsign; u.callsign = csText(iu.callsign);
     u.onboard = (typeof iu.onboardNum === 'string' || isNum(iu.onboardNum)) ? String(iu.onboardNum) : '';
   }
-  else if (PAYLOAD_TYPES.indexOf(ty) >= 0 && ty !== u.type && (chk.radios || chk.loadout)) { u.type = ty; u.radios = {}; u.loadout = null; }
+  else if (PAYLOAD_TYPES.indexOf(ty) >= 0 && ty !== u.type) {
+    if (radioCount(target, u) > 0 || u.loadout) {
+      const fi = S.flights.indexOf(target);
+      IMP_WARN.push(tf('imp.retype', flightLabel(target, fi), unitLabel(target, fi, u, k), TYPE_LABEL[u.type] || u.type, TYPE_LABEL[ty] || ty));
+    }
+    u.type = ty; u.radios = {}; u.loadout = null;
+  }
   if (chk.livery && typeof iu.liveryId === 'string') u.livery = iu.liveryId;
   if (chk.radios && Array.isArray(iu.radios)) mergeRadios(u, u.type, iu.radios);
   if (chk.loadout) { const lo = loadoutFromPayload(u.type, iu.payload); if (lo) u.loadout = lo; }
 }
 // Un vol du module de même (nom rogné, camp) est complété par les parties cochées, sinon il est créé ; si plusieurs vols du module sont candidats,
 // un vol neuf est créé et IMP_WARN le dit. Les unités se complètent par rang, 4 au plus.
+// Un vol créé par cet import n'est jamais retrouvé par un vol suivant du même import : le second crée un vol neuf (et l'avertissement).
 let IMP_FIRST = null, IMP_WARN = [];
 function impMerge(list) {
   IMP_FIRST = null;
   IMP_WARN = [];
+  const created = new Set();
   list.forEach(({ f, chk }) => {
     const hits = findFlights(f);
-    let target = hits.length === 1 ? hits[0] : null;
-    if (hits.length > 1) IMP_WARN.push(tf('imp.multi', f.groupName.trim()));
+    let target = (hits.length === 1 && !created.has(hits[0])) ? hits[0] : null;
+    if (!target && hits.length > 0) IMP_WARN.push(tf('imp.multi', f.groupName.trim()));
     if (!target) {
       target = newFlight();
       Object.assign(target, { name: f.groupName.trim(), coalition: f.coalition, units: [] });
       S.flights.push(target);
+      created.add(target);
     }
     if (!IMP_FIRST) IMP_FIRST = target;
     if (chk.route && f.points) target.route = { points: clone(f.points) };
@@ -9458,7 +9477,7 @@ function impMerge(list) {
 }
 function impGo() {
   const cur = impCur();
-  const picked = cur ? cur.flights.filter(f => f.on && f.supported).map(f => ({ f: f, chk: f.chk })) : [];
+  const picked = cur ? cur.flights.filter(f => f.on && impOk(f)).map(f => ({ f: f, chk: f.chk })) : [];
   if (!picked.length) return;
   if (!S.theatre || !S.flights.length) S.theatre = cur.theatre;
   UI.clamped = 0;          // le compte des réglages ramenés à la limite est celui de cet import
@@ -9467,7 +9486,7 @@ function impGo() {
   Object.assign(UI.cmp, { saving: false, err: '', st: null });
   impClose();
   renderAll();
-  showToast([tf('imp.done', n)].concat(IMP_WARN).join(' '), IMP_WARN.length ? 7000 : undefined);
+  showToast([tf('imp.done', n)].concat(IMP_WARN).join(' · '), IMP_WARN.length ? 7000 : undefined);
 }
 
 
@@ -9545,17 +9564,18 @@ function openFile(file) {
     if (isObj(o) && isObj(o.fc) && isObj(o.fc.state) && restoreState(o.fc.state)) { UI.clamped = 0; mergeMine(o.fc.mine); remapPresetKeys(o.fc.mine); }
     else if (isObj(o) && PACKAGE_FORMATS.indexOf(o.format) >= 0) {
       const res = impReadPackage(o, file.name);
+      if (!res.reject && !res.src.flights.some(f => f.supported)) res.reject = 'rej.noManaged';
       if (res.reject) { showToast(t(res.reject), 5000); return; }
       UI.clamped = 0;
-      ignored = res.ignored;
+      ignored = res.src.flights.filter(f => !f.supported).length;
       Object.assign(S, { theatre: res.src.theatre, flights: [], sel: { f: 0, u: 0 } });
       impMerge(res.src.flights.filter(f => f.supported).map(f => ({ f: f, chk: f.chk })));
-      warn = IMP_WARN.join(' ');
+      warn = IMP_WARN.join(' · ');
     } else { showToast(t('open.bad'), 5000); return; }
     S.sel = { f: 0, u: 0 };                    // la première unité du premier groupe ouvert
     Object.assign(UI.cmp, { saving: false, err: '', st: null });
     renderAll();
-    showToast(tf('open.done', S.flights.length) + (ignored ? ' ' + tf('open.ignored', ignored) : '') + (warn ? ' ' + warn : ''), (ignored || warn) ? 6000 : undefined);
+    showToast(tf('open.done', S.flights.length) + (ignored ? ' · ' + tf('open.ignored', ignored) : '') + (warn ? ' · ' + warn : ''), (ignored || warn) ? 6000 : undefined);
   });
 }
 function saveFile() {
