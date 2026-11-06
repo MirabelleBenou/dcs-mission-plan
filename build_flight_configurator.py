@@ -1466,7 +1466,7 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
 .rt-hd { font-size: 11px; fill: var(--red-stamp); stroke: var(--paper-light); stroke-width: 3px; stroke-linejoin: round; paint-order: stroke; text-anchor: middle; }
 .rt-num circle { fill: var(--paper-light); stroke: var(--red-stamp); stroke-width: 1.2; }
 .rt-num text { font-size: 10px; fill: var(--red-stamp); text-anchor: middle; }
-.rt-svg .rt-gn { font-family: var(--f-stencil); font-weight: 400; font-size: 14px; letter-spacing: 2px; fill: var(--ink-faded); }
+.rt-svg .rt-gn { font-family: var(--f-stencil); font-weight: 400; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; fill: var(--ink-faded); }
 .rt-north line, .rt-north path, .rt-scale path { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .rt-svg .rt-nn { font-family: var(--f-stencil); font-weight: 400; font-size: 15px; fill: var(--ink); text-anchor: middle; }
 .rt-scale text { font-size: 12px; fill: var(--ink); }
@@ -2658,7 +2658,7 @@ function rtSketch(pts, o) {
     // le titre de la feuille, le nord et l'échelle
     const title = o.title || '';
     extra += '<text class="rt-gn" x="16" y="30">' + esc(title) + '</text>';
-    res.push({ x0: 8, y0: 12, x1: 22 + title.length * 11, y1: 38 });
+    res.push({ x0: 8, y0: 12, x1: 22 + title.length * 13, y1: 38 });
     extra += '<g class="rt-north"><line x1="' + (W - 32) + '" y1="64" x2="' + (W - 32) + '" y2="28"/><path d="M' + (W - 38) + ' 36L' + (W - 32) + ' 28L' + (W - 26) + ' 36"/></g><text class="rt-nn" x="' + (W - 32) + '" y="86">N</text>';
     res.push({ x0: W - 48, y0: 18, x1: W - 14, y1: 94 });
     const pxNm = s / RT_NM_PER_DEG, sizes = [1, 2, 5, 10, 20, 50, 100, 200, 500];
