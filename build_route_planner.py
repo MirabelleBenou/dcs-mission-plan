@@ -21,6 +21,7 @@ import subprocess
 import sys
 
 from magvar_block import build_block as build_magvar_block
+from route_pack_block import build_block as build_route_pack_block
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 APP_VERSION = "1.13.1"
@@ -3447,7 +3448,27 @@ function exportPoint(p, i) {
    S reste la route active avec les réglages partagés (route_state_v1 garde sa forme, le Datacard Generator le lit tel quel). Toutes les routes,
    la route active comprise, vivent dans RSET (route_set_v1) : { name, points, flight } ; flight : { groupName, coalition } ou null (un lien ancien porte aussi aircraftType : il se lit, la clé n'est plus écrite).
    Le nom et les points de la route active sont ceux de S ; syncActive() les recopie dans RSET avant toute écriture ou lecture de l'ensemble. */
-let RSET = { active: 0, routes: [{ name: '', points: [], flight: null }] };
+/* L'identifiant stable d'une route (rid) : 12 caractères [a-z0-9] tirés par crypto.getRandomValues (repli Math.random), unique dans l'ensemble. Il suit la route
+   quand on la renomme, la déplace ou la modifie ; les autres modules (le Flight Configurator) s'en servent pour la retrouver. Il vit dans route_set_v1 et dans « Enregistrer tout ». */
+const RID_CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789';
+function ridValid(s) { return typeof s === 'string' && /^[a-z0-9]{6,32}$/.test(s); }
+function ridsInUse() { return new Set(RSET.routes.map(r => r.rid)); }
+function newRid(taken) {
+  const used = taken || ridsInUse();
+  for (;;) {
+    let out = '';
+    try {
+      const a = new Uint8Array(48);
+      crypto.getRandomValues(a);
+      for (let i = 0; i < a.length && out.length < 12; i++) if (a[i] < 252) out += RID_CHARS[a[i] % 36];      /* 252 = 7 × 36 : pas de biais */
+    } catch (e) { out = ''; }
+    while (out.length < 12) out += RID_CHARS[Math.floor(Math.random() * 36)];
+    if (!used.has(out)) return out;
+  }
+}
+/* Une route neuve : vide, sans lien, avec son rid */
+function blankRoute(taken) { return { rid: newRid(taken), name: '', points: [], flight: null }; }
+let RSET = { active: 0, routes: [blankRoute(new Set())] };
 
 /* La source d'un lien (la mission d'où vient le vol) : { filename, fingerprint } si les deux se lisent, sinon null */
 function readSource(o) {
@@ -3488,26 +3509,38 @@ function sameFlight(a, b) { return !!a && !!b && String(a.groupName).trim() === 
 function syncActive() {
   const r = RSET.routes[RSET.active];
   if (r && S) { r.name = S.name; r.points = S.points; }
+  ensureRids();
+}
+
+/* Toute route de l'ensemble porte un rid valide et distinct (filet : une route entrée par un chemin qui n'en a pas tiré reçoit le sien) */
+function ensureRids() {
+  const seen = new Set();
+  RSET.routes.forEach(r => { if (ridValid(r.rid) && !seen.has(r.rid)) seen.add(r.rid); else r.rid = null; });
+  RSET.routes.forEach(r => { if (!r.rid) { r.rid = newRid(seen); seen.add(r.rid); } });
 }
 
 function setObject() {
   syncActive();
-  return { format: SET_FORMAT, active: RSET.active, routes: RSET.routes.map(r => ({ name: r.name, points: r.points, flight: r.flight })) };
+  return { format: SET_FORMAT, active: RSET.active, routes: RSET.routes.map(r => ({ rid: r.rid, name: r.name, points: r.points, flight: r.flight })) };
 }
 
-/* Une liste de routes lue (stockage ou fichier) : { name, points, flight } au plus 12 ; null si ce n'est pas une liste */
+/* Une liste de routes lue (stockage ou fichier) : { rid, name, points, flight } au plus 12 ; null si ce n'est pas une liste.
+   Un rid valide ([a-z0-9]{6,32}) et pas encore pris dans la liste est gardé ; sinon un neuf est tiré (drawn le dit). */
 function readRoutes(list) {
   if (!Array.isArray(list)) return null;
-  const out = [];
-  let dropped = 0;
+  const out = [], seen = new Set();
+  let dropped = 0, drawn = false;
   list.forEach(r => {
     if (!r || typeof r !== 'object' || Array.isArray(r) || !Array.isArray(r.points)) return;
     if (out.length >= MAX_ROUTES) { dropped++; return; }
     const rp = readPoints(r.points);
     dropped += rp.dropped;
-    out.push({ name: str(r.name).slice(0, 60), points: rp.points, flight: readFlight(r.flight) });
+    let rid = null;
+    if (ridValid(r.rid) && !seen.has(r.rid)) { rid = r.rid; seen.add(rid); }
+    out.push({ rid: rid, name: str(r.name).slice(0, 60), points: rp.points, flight: readFlight(r.flight) });
   });
-  return out.length ? { routes: out, dropped: dropped } : null;
+  out.forEach(r => { if (!r.rid) { r.rid = newRid(seen); seen.add(r.rid); drawn = true; } });
+  return out.length ? { routes: out, dropped: dropped, drawn: drawn } : null;
 }
 
 function readActiveIndex(a, n) { return (Number.isInteger(a) && a >= 0 && a < n) ? a : 0; }
@@ -3515,20 +3548,26 @@ function readActiveIndex(a, n) { return (Number.isInteger(a) && a >= 0 && a < n)
 /* Au chargement : les routes de route_set_v1 ; la route active est celle de route_state_v1 (qui fait foi pour elle) ; sans route_set_v1, la route de
    route_state_v1 devient la route 1 */
 function loadSet(stateOk) {
-  let set = null;
+  let set = null, drawn = false;
   try {
     const raw = localStorage.getItem(KEY_SET);
     const o = raw ? JSON.parse(raw) : null;
     if (o && o.format === SET_FORMAT) {
       const rr = readRoutes(o.routes);
-      if (rr) set = { active: readActiveIndex(o.active, rr.routes.length), routes: rr.routes };
+      if (rr) { set = { active: readActiveIndex(o.active, rr.routes.length), routes: rr.routes }; drawn = rr.drawn; }
     }
   } catch (e) { set = null; }
-  if (!set) { RSET = { active: 0, routes: [{ name: S.name, points: S.points, flight: null }] }; return; }
+  if (!set) {
+    RSET = { active: 0, routes: [{ rid: newRid(new Set()), name: S.name, points: S.points, flight: null }] };
+    try { localStorage.setItem(KEY_SET, JSON.stringify(setObject())); } catch (e) { /* le stockage manque : le rid se tire à chaque ouverture */ }
+    return;
+  }
   RSET = set;
   const r = RSET.routes[RSET.active];
   if (stateOk) { r.name = S.name; r.points = S.points; }
   else { S.name = r.name; S.points = r.points; }
+  /* un rid tiré est écrit aussitôt : les autres modules voient le même identifiant que le Route Planner */
+  if (drawn) { try { localStorage.setItem(KEY_SET, JSON.stringify(setObject())); } catch (e) { /* idem */ } }
 }
 
 function theatreOf(id) { return THEATRES.find(x => x.id === id) || THEATRES[0]; }
@@ -7713,7 +7752,7 @@ function openRouteFile(file) {
 /* « Exemple » remplace toutes les routes par la route d'exemple */
 function loadExample() {
   if (!confirm(t('confirm.example'))) return;
-  RSET = { active: 0, routes: [{ name: '', points: [], flight: null }] };
+  RSET = { active: 0, routes: [blankRoute()] };
   setRoute(parseRoute(JSON.parse(JSON.stringify(CURRENT_LANG === 'en' ? EXAMPLE_ROUTE_EN : EXAMPLE_ROUTE))).route);   // la langue de l'interface au moment du clic
 }
 
@@ -7775,7 +7814,7 @@ function clrRun(keys) {
   if (!what.length) return;
   const has = k => what.indexOf(k) !== -1;
   if (has('routes')) {
-    RSET = { active: 0, routes: [{ name: '', points: [], flight: null }] };
+    RSET = { active: 0, routes: [blankRoute()] };
     S.name = ''; S.points = RSET.routes[0].points;
   } else if (has('one')) {
     S.name = '';
@@ -7837,7 +7876,7 @@ function activateRoute(i, frame) {
 function addRoute() {
   syncActive();
   if (RSET.routes.length >= MAX_ROUTES) { showToast(t('toast.routesMax')); return; }
-  RSET.routes.push({ name: '', points: [], flight: null });
+  RSET.routes.push(blankRoute());
   activateRoute(RSET.routes.length - 1);
 }
 
@@ -7847,6 +7886,7 @@ function duplicateRoute() {
   if (RSET.routes.length >= MAX_ROUTES) { showToast(t('toast.routesMax')); return; }
   const src = RSET.routes[RSET.active];
   RSET.routes.push({
+    rid: newRid(),
     name: cut60(t('rs.copy', { name: src.name !== '' ? src.name : t('rs.unnamed') })),
     points: JSON.parse(JSON.stringify(src.points)),
     flight: null
@@ -7860,7 +7900,7 @@ function deleteRoute() {
   const r = RSET.routes[RSET.active];
   if (r.points.length && !confirm(t('confirm.routeDel', { name: r.name !== '' ? r.name : t('rs.unnamed') }))) return;
   if (RSET.routes.length === 1) {
-    r.name = ''; r.points = []; r.flight = null;
+    r.rid = newRid(); r.name = ''; r.points = []; r.flight = null;      /* la dernière route vidée est une route neuve : un rid neuf */
     S.name = ''; S.points = [];
     sel = -1; selR = -1;
     persistState();
@@ -7950,10 +7990,10 @@ function openAsRoute(route) {
   /* les références du RP que le fichier ne redonne pas seraient perdues : la confirmation d'aujourd'hui */
   if (S.refs.length && JSON.stringify(S.refs) !== JSON.stringify(route.refs) && !confirm(t('confirm.open'))) return false;
   if (reset) {
-    RSET = { active: 0, routes: [empty ? RSET.routes[act] : { name: '', points: [], flight: null }] };
+    RSET = { active: 0, routes: [empty ? RSET.routes[act] : blankRoute()] };
     S.name = RSET.routes[0].name; S.points = RSET.routes[0].points;
   } else if (!empty) {
-    RSET.routes.push({ name: '', points: [], flight: null });
+    RSET.routes.push(blankRoute());
     RSET.active = RSET.routes.length - 1;
     S.name = ''; S.points = [];
   }
@@ -7997,10 +8037,10 @@ function setFileObject(sel) {
   const obj = {
     format: SET_FORMAT, theatre: S.theatre, units: ex.units, navDisplay: ex.navDisplay, groundSpeed: S.groundSpeed, legBoxes: S.legBoxes,
     refs: ex.refs, active: RSET.active,
-    routes: RSET.routes.map(r => ({ name: r.name, points: r.points.map(exportPoint), flight: r.flight ? makeLink(r.flight, r.flight.source) : null }))
+    routes: RSET.routes.map(r => ({ rid: r.rid, name: r.name, points: r.points.map(exportPoint), flight: r.flight ? makeLink(r.flight, r.flight.source) : null }))
   };
   if (sel) {
-    if (!sel.route) { obj.routes = obj.routes.map(r => ({ name: r.name, points: [], flight: r.flight })); obj.refs = []; }
+    if (!sel.route) { obj.routes = obj.routes.map(r => ({ rid: r.rid, name: r.name, points: [], flight: r.flight })); obj.refs = []; }
     const chosen = CF_LAYERS.filter(l => sel.layers.indexOf(l.id) !== -1);
     if (chosen.length) obj.layers = chosen;
   }
@@ -8088,7 +8128,7 @@ function routeFromFlight(fl, theatre, source) {
     pts.push(p);
   });
   const nodcs = pts.filter(p => !p.dcs).length;      /* sources de mission retirées (plus de 20 Kio) */
-  return { route: { name: cut60(fl.groupName), points: pts, flight: makeLink(fl, source) }, trunc: trunc, nodcs: nodcs };
+  return { route: { rid: newRid(), name: cut60(fl.groupName), points: pts, flight: makeLink(fl, source) }, trunc: trunc, nodcs: nodcs };
 }
 
 /* Les numéros (à partir de 1) des routes liées à ce vol */
@@ -8239,7 +8279,7 @@ function confirmTheatreReset(th) {
 
 /* Le théâtre change comme aujourd'hui (setTheatre : références, calques et réglages partagés suivent), puis toutes les routes sont supprimées */
 function resetRoutesForTheatre(th, routes) {
-  RSET = { active: 0, routes: routes && routes.length ? routes : [{ name: '', points: [], flight: null }] };
+  RSET = { active: 0, routes: routes && routes.length ? routes : [blankRoute(new Set())] };
   const a = RSET.routes[0];
   S.name = a.name; S.points = a.points;
   sel = -1; selR = -1;
@@ -8270,7 +8310,7 @@ function hqGo() {
     if (th !== S.theatre) {
       if (!confirmTheatreReset(th)) return;
       rtHide('hq-modal');
-      resetRoutesForTheatre(th, [{ name: '', points: [], flight: link }]);
+      resetRoutesForTheatre(th, [{ rid: newRid(new Set()), name: '', points: [], flight: link }]);
     } else {
       rtHide('hq-modal');
       setActiveFlight(link);
@@ -8374,33 +8414,7 @@ function openPackageModal(opener) {
   $('pk-fname').select();
 }
 
-/* Le point <k> d'un paquet : avec sa source de mission, une copie de la table brute où seul ce qui a changé depuis l'import est réécrit ; sans, un point neuf */
-function packPoint(p, i, th) {
-  const xy = llToDcs(th, p.lat, p.lon);
-  const d = p.dcs;
-  if (d && d.raw && typeof d.raw === 'object' && !Array.isArray(d.raw) && d.orig && typeof d.orig === 'object') {
-    const o = JSON.parse(JSON.stringify(d.raw)), og = d.orig;
-    let moved = true;
-    if (validCoord(og.lat, og.lon)) {
-      const was = llToDcs(th, og.lat, og.lon);
-      moved = Math.hypot(xy.x - was.x, xy.y - was.y) > 1;
-    }
-    if (moved) {
-      o.x = xy.x; o.y = xy.y;
-      o.type = 'Turning Point'; o.action = 'Turning Point';
-      delete o.airdromeId; delete o.helipadId; delete o.linkUnit;
-    }
-    if (p.alt !== og.alt || p.altRef !== og.altRef) { o.alt = p.alt; o.alt_type = p.altRef === 'MSL' ? 'BARO' : 'RADIO'; }
-    if (i > 0 && p.gs !== og.gs) o.speed = ((typeof p.gs === 'number' && p.gs > 0) ? p.gs : S.groundSpeed) / 3.6;
-    if (p.name !== og.name) o.name = p.name;
-    return o;
-  }
-  const gs = (i > 0 && typeof p.gs === 'number' && p.gs > 0) ? p.gs : S.groundSpeed;
-  return {
-    type: 'Turning Point', action: 'Turning Point', x: xy.x, y: xy.y, alt: p.alt, alt_type: p.altRef === 'MSL' ? 'BARO' : 'RADIO', speed: gs / 3.6, name: p.name,
-    ETA: 0, ETA_locked: false, speed_locked: true, formation_template: '', task: { id: 'ComboTask', params: { tasks: {} } }
-  };
-}
+@@ROUTE_PACK_BLOCK@@
 
 /* Le paquet (dcs-flight-package-v2) des routes idxs ; ses vols n'ont pas d'unités, donc pas de type ; sourceMission : la source commune de leurs liens, sinon nul */
 function buildPackage(idxs) {
@@ -8408,7 +8422,7 @@ function buildPackage(idxs) {
   const th = S.theatre;
   const flights = idxs.map(i => {
     const r = RSET.routes[i], pts = {};
-    r.points.forEach((p, k) => { pts[String(k + 1)] = packPoint(p, k, th); });
+    r.points.forEach((p, k) => { pts[String(k + 1)] = packPoint(p, k, th, S.groundSpeed); });
     return { groupName: r.flight.groupName, coalition: r.flight.coalition, groupFrequency: null, route: { points: pts }, units: [] };
   });
   /* la mission source : celle des liens, si toutes les routes cochées ont la même */
@@ -10992,7 +11006,7 @@ def build():
     airfields_js = json.dumps(AF['theatres'], ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
     towns_js = json.dumps(TW['theatres'], ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
     js = JS.replace('__EXAMPLE_ROUTE__', example_js).replace('__EXAMPLE_ROUTE_EN__', example_en_js).replace('__AIRFIELDS__', airfields_js).replace('__TOWNS__', towns_js)
-    js = js.replace('@@GEO_BLOCK@@\n', GEO_BLOCK).replace('@@READNUM_BLOCK@@\n', READNUM_BLOCK).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block())
+    js = js.replace('@@GEO_BLOCK@@\n', GEO_BLOCK).replace('@@READNUM_BLOCK@@\n', READNUM_BLOCK).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@ROUTE_PACK_BLOCK@@\n', build_route_pack_block())
     if '@@' in js:
         raise SystemExit("[ERREUR] Marqueur @@ non remplacé dans le script")
     lib = A['lib_leaflet']
