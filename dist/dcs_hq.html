@@ -258,7 +258,7 @@ select[data-tbm-src] { display: none !important; }
   border-color: var(--amber);
   outline: none;
 }
-/* Exemple (lot mp-exemples-demarrer) : bouton à icône seule, comme dans les autres outils */
+/* Exemple (lot mp-exemples-demarrer) : le bouton de la barre, avec son texte quand la barre a la place (lot mp-imports-suite) */
 .tb-btn {
   background: transparent;
   border: 1px solid var(--khaki);
@@ -290,20 +290,29 @@ select[data-tbm-src] { display: none !important; }
   user-select: none;
   white-space: nowrap;
 }
-/* La barre ne déborde pas sur un téléphone étroit (lot mp-exemples-demarrer) */
-@media (max-width: 539px) {
-  .tb-version { display: none; }
-}
 @media (max-width: 479px) {
   .toolbar { gap: 6px; padding-left: max(8px, env(safe-area-inset-left)); padding-right: max(8px, env(safe-area-inset-right)); }
   .tb-brand { min-width: 0; }
   .tb-brand-sub, .tb-sep { display: none; }
   .tb-brand-main { font-size: 14px; letter-spacing: 2px; }
-  .tb-btn { width: 36px; }
   .tb-select { font-size: 11px; letter-spacing: .5px; padding: 0 22px 0 8px; background-position: right 6px center; }
   .tb-select.tbm-trigger { min-width: 0; flex: 0 1 auto; }
   .tb-lang-btn { min-width: 36px; padding: 0 4px; }
 }
+
+
+/* ---------- Barre du haut commune aux sept modules (lot mp-imports-suite) ----------
+   La marque du Flight Configurator : le titre et son sous-titre à l'accent du module dès 1360 px, le sigle seul en dessous (à toutes les largeurs) ;
+   la version avec le titre ; le tampon de décor dès 1101 px. Seuils mesurés dans le shell avec un tampon d'escadre « TEST WING », en français et en anglais. */
+.tb-brand-main, .tb-brand-short { color: #4FB286; }
+.tb-brand-short { display: none; font-family: var(--f-stencil); font-size: 16px; font-weight: 700; letter-spacing: 3px; white-space: nowrap; }
+.tb-classif { font-family: var(--f-stencil); font-size: 11px; letter-spacing: 3px; color: var(--red-faded); border: 1px solid var(--red-faded); padding: 4px 10px; white-space: nowrap; flex-shrink: 0; }
+.tb-lang-btn svg { display: block; }
+@media (max-width: 1359px) { .tb-brand-main, .tb-brand-sub, .tb-brand + .tb-sep, .tb-version { display: none; } .tb-brand-short { display: inline; } }
+@media (max-width: 1100px) { .tb-classif { display: none; } }
+.tb-btn { width: auto; height: 38px; min-width: 38px; padding: 0 12px; gap: 6px; font-family: var(--f-ui); font-weight: 500; letter-spacing: 1.5px; font-size: 12px; text-transform: uppercase; white-space: nowrap; }
+@media (max-width: 899px) { .tb-btn .tb-btn-label { display: none; } .tb-btn { padding: 0; width: 38px; } }
+@media (max-width: 479px) { .tb-btn { width: 34px; min-width: 34px; } }
 
 /* ======== MAIN LAYOUT ======== */
 .app {
@@ -855,11 +864,13 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
 <header class="toolbar" role="toolbar" aria-label="HQ">
   <div class="tb-brand">
     <span class="tb-brand-main" data-i18n="toolbar.title">HQ</span>
-    <span class="tb-brand-sub" data-i18n="toolbar.subtitle">░ WING CONFIGURATION</span>
+    <span class="tb-brand-short">H·Q</span>
+    <span class="tb-brand-sub" data-i18n="toolbar.subtitle">░ POSTE DE COMMANDEMENT</span>
   </div>
   <div class="tb-sep"></div>
   <button type="button" class="tb-btn" id="btn-example" data-i18n-title="toolbar.example.tooltip" title="Ouvrir l'exemple" aria-label="Ouvrir l'exemple">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+    <span class="tb-btn-label" data-i18n="toolbar.example">Exemple</span>
   </button>
   <select class="tb-select" id="theme-select" data-i18n-title="toolbar.theme.tooltip" title="Thème graphique">
     <option value="cw-nato"     data-i18n="theme.cw-nato">Cold War OTAN</option>
@@ -867,9 +878,10 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
     <option value="modern-nato" data-i18n="theme.modern-nato">OTAN moderne</option>
     <option value="modern-east" data-i18n="theme.modern-east">Bloc Est moderne</option>
   </select>
-  <button class="tb-lang-btn" id="btn-lang" title="Switch language / Changer de langue">🇬🇧</button>
   <div class="tb-spacer"></div>
+  <div class="tb-classif">OPERATIONS // NEED TO KNOW</div>
   <span class="tb-version">v0.1.1</span>
+  <button class="tb-lang-btn" id="btn-lang" title="Switch language / Changer de langue"><svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="14" fill="#012169"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#fff" stroke-width="2.8"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#C8102E" stroke-width="1.6"/><rect x="8" width="4" height="14" fill="#fff"/><rect y="5" width="20" height="4" fill="#fff"/><rect x="9" width="2" height="14" fill="#C8102E"/><rect y="6" width="20" height="2" fill="#C8102E"/></svg></button>
 </header>
 
 <!-- MAIN APP -->
@@ -1041,9 +1053,10 @@ const APP_VERSION = '0.1.1';
 const I18N = {
   fr: {
     'toolbar.title':            'HQ',
-    'toolbar.subtitle':         '░ CONFIGURATION WING',
+    'toolbar.subtitle':         '░ POSTE DE COMMANDEMENT',
     'toolbar.lang.tooltip':     'Passer en anglais',
     'toolbar.theme.tooltip':    'Thème graphique',
+    'toolbar.example':          'Exemple',
     'toolbar.example.tooltip':  "Ouvrir l'exemple",
     'toast.exampleLoaded':      'Exemple chargé ✓',
     'example.restore':          'Restaurer ma configuration',
@@ -1348,9 +1361,10 @@ const I18N = {
   },
   en: {
     'toolbar.title':            'HQ',
-    'toolbar.subtitle':         '░ WING CONFIGURATION',
+    'toolbar.subtitle':         '░ COMMAND POST',
     'toolbar.lang.tooltip':     'Switch to French',
     'toolbar.theme.tooltip':    'Graphic theme',
+    'toolbar.example':          'Example',
     'toolbar.example.tooltip':  'Open the example',
     'toast.exampleLoaded':      'Example loaded ✓',
     'example.restore':          'Restore my configuration',
@@ -1669,7 +1683,8 @@ function t(key, fallback) {
 // ── Keys ───────────────────────────────────────────────────────
 const KEY_WING  = 'wing_config_v1';
 const KEY_THEME = 'theme_v1';
-const KEY_LANG  = 'hq_lang_v1';
+const KEY_LANG  = 'lang_v1';
+const KEY_LANG_OLD = 'hq_lang_v1';   // ancienne clé de HQ : migrée une fois vers lang_v1, puis supprimée
 
 // ── Wing config state ──────────────────────────────────────────
 let wingConfig = null;
@@ -1760,7 +1775,18 @@ function applyTheme(val) {
 }
 
 // ── Lang ───────────────────────────────────────────────────────
+function migrateLangKey() {
+  try {
+    const old = localStorage.getItem(KEY_LANG_OLD);
+    if (localStorage.getItem(KEY_LANG) === null && (old === 'fr' || old === 'en')) {
+      localStorage.setItem(KEY_LANG, old);
+      localStorage.removeItem(KEY_LANG_OLD);
+    }
+  } catch (e) { /* stockage indisponible */ }
+}
+
 function loadLang() {
+  migrateLangKey();
   const saved = localStorage.getItem(KEY_LANG);
   if (saved === 'fr' || saved === 'en') {
     CURRENT_LANG = saved;
@@ -1782,10 +1808,14 @@ function setLang(lang) {
   showToast(t('toast.lang'));
 }
 
+/* Drapeaux dessinés (ils ne s'affichent pas en lettres sous Windows) ; le bouton montre la langue vers laquelle il bascule */
+const FLAG_FR = '<svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="7" height="14" fill="#002395"/><rect x="7" width="6" height="14" fill="#fff"/><rect x="13" width="7" height="14" fill="#ED2939"/></svg>';
+const FLAG_EN = '<svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="14" fill="#012169"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#fff" stroke-width="2.8"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#C8102E" stroke-width="1.6"/><rect x="8" width="4" height="14" fill="#fff"/><rect y="5" width="20" height="4" fill="#fff"/><rect x="9" width="2" height="14" fill="#C8102E"/><rect y="6" width="20" height="2" fill="#C8102E"/></svg>';
+
 function updateFlagButton() {
   const btn = document.getElementById('btn-lang');
   if (!btn) return;
-  btn.textContent = CURRENT_LANG === 'fr' ? '🇬🇧' : '🇫🇷';
+  btn.innerHTML = CURRENT_LANG === 'fr' ? FLAG_EN : FLAG_FR;
   btn.title = t('toolbar.lang.tooltip');
 }
 
