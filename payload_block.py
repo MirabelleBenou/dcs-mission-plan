@@ -90,6 +90,35 @@ function payloadMirrorClsid(clsid, allowedOnTwin) {
   return same.length === 1 ? same[0] : '';
 }
 
+// Côté d'une arme, pour l'afficher dans son nom : 'L', 'R' ou ''. Un côté n'est rendu que si le nom de l'arme (payloadWeaponName) est porté par
+// plusieurs CLSID du même appareil (stations permises de `type`, plus l'ajout PAYLOAD_EXTRA) ET que ce CLSID porte un côté : « Left » / « Right »,
+// « LEFT » / « RIGHT » n'importe où, ou « _L » / « _R » en fin de CLSID (avant une accolade fermante éventuelle). Sinon ''.
+// Fonction pure : elle ne lit que les tables ; le texte « gauche » / « droite » est à la charge de l'appelant. Le nom des tables ne change pas.
+const payloadSideCache = {};
+function payloadClsidSide(clsid) {
+  const s = String(clsid);
+  if (/Left|LEFT/.test(s)) return 'L';
+  if (/Right|RIGHT/.test(s)) return 'R';
+  const m = /_([LR])\}?$/.exec(s);
+  return m ? m[1] : '';
+}
+function payloadWeaponSide(type, clsid) {
+  if (typeof clsid !== 'string' || clsid === '') return '';
+  const side = payloadClsidSide(clsid);
+  if (side === '') return '';
+  const name = payloadWeaponName(clsid);
+  if (name === null || name === '') return '';
+  if (!payloadHas(payloadSideCache, type)) {
+    const count = {};
+    const add = c => { const nm = payloadWeaponName(c); if (nm) count[nm] = (payloadHas(count, nm) ? count[nm] : 0) + 1; };
+    const seen = new Set();
+    (payloadPylons(type) || []).forEach(p => p.allowed.forEach(c => { if (!seen.has(c)) { seen.add(c); add(c); } }));
+    payloadSideCache[type] = count;
+  }
+  const c = payloadSideCache[type];
+  return payloadHas(c, name) && c[name] > 1 ? side : '';
+}
+
 // Réglages par défaut hors pylônes : carburant maximum, leurres et paillettes de AIRCRAFT_LIMITS, canon plein.
 function payloadDefaults(type) {
   const l = AIRCRAFT_LIMITS[type];

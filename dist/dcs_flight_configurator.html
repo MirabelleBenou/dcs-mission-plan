@@ -179,6 +179,8 @@ select[data-tbm-src] { display: none !important; }
   font-family: var(--f-typewriter); font-weight: 400; font-size: 14px; letter-spacing: .2px; text-transform: none;
 }
 .tbm-panel.tbm-p-field .tbm-opt[aria-selected="true"] { font-weight: 400; }
+.tbm-panel .tbm-group { margin-top: 2px; border-top: 1px solid rgba(168,154,114,.25); }
+.fc-lo-line:empty { display: none; }
 .tbm-panel.tbm-up { border-top: 1px solid var(--amber-dark); border-bottom: 3px solid var(--amber); transform-origin: bottom left; }
 .tb-lang-btn {
   background: transparent;
@@ -432,6 +434,18 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
 .fc-ch input:focus, .fc-set input[type=number]:focus { outline: none; border-left-color: var(--red-stamp); background: var(--paper-light); box-shadow: 0 0 0 1px var(--fc); }
 .fc-ch input::-webkit-outer-spin-button, .fc-ch input::-webkit-inner-spin-button, .fc-set input::-webkit-outer-spin-button, .fc-set input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .fc-set input:disabled { opacity: .5; }
+/* la barre du carburant : piste et curseur aux couleurs du thème (--khaki, --paper-light), la part pleine à l'accent du module (--fc) ; l'élément fait 34 px de haut pour se prendre au doigt */
+.fc-bar { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+.fc-pct { flex: none; min-width: 4.2em; text-align: right; font-family: var(--f-typewriter); font-size: 12px; color: var(--paper-light); font-variant-numeric: tabular-nums; }
+.fc-range { -webkit-appearance: none; appearance: none; flex: 1 1 auto; min-width: 0; width: 100%; height: 34px; margin: 0; padding: 0; background: transparent; cursor: pointer; touch-action: pan-y; }
+.fc-range:focus { outline: none; }
+.fc-range:focus-visible { outline: 2px solid var(--fc); outline-offset: 1px; }
+.fc-range::-webkit-slider-runnable-track { height: 8px; border: 1px solid var(--khaki); border-radius: 0; background: linear-gradient(to right, var(--fc) 0, var(--fc) var(--p, 100%), var(--olive-dark) var(--p, 100%), var(--olive-dark) 100%); }
+.fc-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 24px; height: 24px; margin-top: -9px; border-radius: 50%; background: var(--paper-light); border: 3px solid var(--fc); box-shadow: 0 1px 3px rgba(0,0,0,.6); }
+.fc-range::-moz-range-track { height: 8px; border: 1px solid var(--khaki); border-radius: 0; background: var(--olive-dark); }
+.fc-range::-moz-range-progress { height: 8px; background: var(--fc); }
+.fc-range::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: var(--paper-light); border: 3px solid var(--fc); box-shadow: 0 1px 3px rgba(0,0,0,.6); }
+.fc-range:disabled { opacity: .4; }
 
 /* ---------- Un vol ---------- */
 .fc-list { display: flex; flex-direction: column; gap: 12px; }
@@ -467,8 +481,12 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
 .fc-sub > .fc-subc { padding: 2px 0 6px; display: flex; flex-direction: column; gap: 10px; }
 .fc-posts { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
 .fc-post { border: 1px solid rgba(128,116,84,.4); background: rgba(0,0,0,.12); }
-.fc-post > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 10px; user-select: none; font-family: var(--f-ui); font-weight: 500; font-size: 12px; letter-spacing: 1px; color: var(--paper); text-transform: uppercase; }
-.fc-post > summary::after { content: '\25c4'; margin-left: auto; font-size: 10px; color: var(--paper); transition: transform .2s; }
+.fc-post > summary { cursor: pointer; list-style: none; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 8px; min-height: 40px; padding: 3px 10px; user-select: none; font-family: var(--f-ui); font-weight: 500; font-size: 12px; letter-spacing: 1px; color: var(--paper); text-transform: uppercase; }
+.fc-post > summary::after { content: '\25c4'; grid-column: 2; grid-row: 1 / span 2; font-size: 10px; color: var(--paper); transition: transform .2s; }
+.fc-ptop { grid-column: 1; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; min-width: 0; word-break: break-word; }
+.fc-band { grid-column: 1; font-family: var(--f-typewriter); font-weight: 400; font-size: 11px; letter-spacing: 0; text-transform: none; color: var(--khaki-light); min-width: 0; word-break: break-word; }
+.fc-flag { color: var(--pk-warn) !important; }
+.fc-flag:empty { display: none; }
 .fc-post[open] > summary::after { transform: rotate(-90deg); }
 .fc-post > .fc-postc { padding: 4px 10px 10px; }
 .fc-chans { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 6px 8px; }
@@ -495,7 +513,8 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
 .cmp-svgbox > svg { display: block; width: 100%; height: auto; }
 .cmp-svgbox svg [stroke]:not([stroke="none"]) { stroke: var(--paper); }
 .cmp-svgbox svg [fill="#ffffff"] { fill: var(--cmp-frame); }
-.cmp-credit { position: absolute; right: 10px; bottom: 8px; max-width: 70%; font-family: var(--f-typewriter); font-size: 10px; line-height: 1.3; color: var(--khaki-light); background: var(--cmp-frame); padding: 0 4px; text-align: right; }
+/* le crédit est sous la rangée des cases, hors de la vue : aucun trait pointillé ne le traverse */
+.cmp-credit { margin-top: 6px; font-family: var(--f-typewriter); font-size: 10px; line-height: 1.3; color: var(--khaki-light); text-align: right; }
 #cmp-leads { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; overflow: visible; }
 #cmp-leads path { fill: none; stroke: var(--fc); stroke-width: 1.4; stroke-dasharray: 5 4; opacity: .9; }
 #cmp-leads path.on { stroke-width: 2.4; opacity: 1; }
@@ -515,7 +534,6 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
 .cmp-wrap-flat .cmp-st .w { display: none; }
 .cmp-wrap-flat .cmp-st .n { font-size: 12px; line-height: 20px; }
 .cmp-wrap-flat .cmp-st.has .n { color: var(--paper-light); }
-.cmp-wrap-flat .cmp-credit { position: static; max-width: none; padding: 0; margin-top: 6px; text-align: right; background: none; }
 .cmp-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 4px 20px; }
 .cmp-row { display: grid; grid-template-columns: 26px minmax(0, 1fr) 74px; align-items: center; gap: 2px 8px; padding: 3px 6px; border-radius: 4px; }
 .cmp-row.sel { background: var(--fc-dim); }
@@ -654,7 +672,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   </select>
   <button class="tb-lang-btn" id="btn-lang" title="Switch language / Changer de langue">🇬🇧</button>
   <div class="tb-spacer"></div>
-  <span class="tb-version">v0.1.1</span>
+  <span class="tb-version">v0.1.2</span>
 </header>
 
 <!-- MAIN APP -->
@@ -7121,6 +7139,35 @@ function payloadMirrorClsid(clsid, allowedOnTwin) {
   return same.length === 1 ? same[0] : '';
 }
 
+// Côté d'une arme, pour l'afficher dans son nom : 'L', 'R' ou ''. Un côté n'est rendu que si le nom de l'arme (payloadWeaponName) est porté par
+// plusieurs CLSID du même appareil (stations permises de `type`, plus l'ajout PAYLOAD_EXTRA) ET que ce CLSID porte un côté : « Left » / « Right »,
+// « LEFT » / « RIGHT » n'importe où, ou « _L » / « _R » en fin de CLSID (avant une accolade fermante éventuelle). Sinon ''.
+// Fonction pure : elle ne lit que les tables ; le texte « gauche » / « droite » est à la charge de l'appelant. Le nom des tables ne change pas.
+const payloadSideCache = {};
+function payloadClsidSide(clsid) {
+  const s = String(clsid);
+  if (/Left|LEFT/.test(s)) return 'L';
+  if (/Right|RIGHT/.test(s)) return 'R';
+  const m = /_([LR])\}?$/.exec(s);
+  return m ? m[1] : '';
+}
+function payloadWeaponSide(type, clsid) {
+  if (typeof clsid !== 'string' || clsid === '') return '';
+  const side = payloadClsidSide(clsid);
+  if (side === '') return '';
+  const name = payloadWeaponName(clsid);
+  if (name === null || name === '') return '';
+  if (!payloadHas(payloadSideCache, type)) {
+    const count = {};
+    const add = c => { const nm = payloadWeaponName(c); if (nm) count[nm] = (payloadHas(count, nm) ? count[nm] : 0) + 1; };
+    const seen = new Set();
+    (payloadPylons(type) || []).forEach(p => p.allowed.forEach(c => { if (!seen.has(c)) { seen.add(c); add(c); } }));
+    payloadSideCache[type] = count;
+  }
+  const c = payloadSideCache[type];
+  return payloadHas(c, name) && c[name] > 1 ? side : '';
+}
+
 // Réglages par défaut hors pylônes : carburant maximum, leurres et paillettes de AIRCRAFT_LIMITS, canon plein.
 function payloadDefaults(type) {
   const l = AIRCRAFT_LIMITS[type];
@@ -7500,8 +7547,20 @@ function tbmOpen(m) {
   head.setAttribute('role', 'presentation');
   head.textContent = name;
   ul.appendChild(head);
+  let grp = null;
   for (let k = 0; k < opts.length; k++) {
     const o = opts[k], li = document.createElement('li');
+    const og = o.parentNode && o.parentNode.tagName === 'OPTGROUP' ? o.parentNode : null;      /* un groupe d'options : son titre, une fois, avant la première */
+    if (og !== grp) {
+      grp = og;
+      if (og) {
+        const gh = document.createElement('li');
+        gh.className = 'tbm-head tbm-group';
+        gh.setAttribute('role', 'presentation');
+        gh.textContent = og.label;
+        ul.appendChild(gh);
+      }
+    }
     li.className = 'tbm-opt';
     li.id = 'tbm-' + m.uid + '-' + k;
     li.setAttribute('role', 'option');
@@ -7777,7 +7836,7 @@ const I18N = {
   "u.callsign": "Indicatif",
   "u.onboard": "N° de bord",
   "u.livery": "Livrée",
-  "u.livery.ph": "texte libre, suggestions",
+  "u.livery.ph": "texte libre",
   "u.opt": "facultatif",
   "u.radios": "Radios",
   "u.radios.sum": "{0} postes",
@@ -7787,9 +7846,10 @@ const I18N = {
   "u.see": "Voir l’emport ↓",
   "rad.chans": "{0} canaux",
   "rad.ch": "CH {0}",
-  "rad.hint": "Fréquences en MHz, de 0 à 999,999 (virgule ou point). Les modulations ne sont pas écrites. Un canal vide n’est pas écrit.",
+  "rad.hint": "Fréquences en MHz, dans la bande de chaque poste (virgule ou point). Les modulations ne sont pas écrites. Un canal vide n’est pas écrit.",
   "rad.err.nan": "Canal {0} : « {1} » n’est pas une fréquence.",
-  "rad.err.range": "Canal {0} : {1} MHz hors de la plage ({2} à {3} MHz).",
+  "rad.err.range": "Canal {0} : {1} MHz hors de la bande du poste ({2}).",
+  "rad.bad.n": "{0} hors bande",
   "rad.err.more": " (+ {0} autre(s))",
   "rad.copy": "Recopier sur les autres unités du groupe",
   "cmp.for": "{0} · {1}",
@@ -7797,6 +7857,10 @@ const I18N = {
   "cmp.from.none": "— non renseigné —",
   "cmp.from.empty": "Vide (poser des armes)",
   "cmp.from.imp": "Emport importé",
+  "cmp.from.units": "Unités du module",
+  "cmp.from.copy": "Copier : {0} · {1}",
+  "cmp.copied": "copié de {0}",
+  "cmp.emptyNote": "Emport vide créé : HQ posera ces réglages sans arme",
   "cmp.none": "— vide —",
   "cmp.offTable": "(hors table)",
   "cmp.sym": "Symétrique",
@@ -7806,7 +7870,7 @@ const I18N = {
   "cmp.mirror": "↔ station jumelle : {0}",
   "cmp.noMirror": "↔ pas d'équivalent sur la station jumelle {0}",
   "cmp.back": "↑ Retour à l’unité",
-  "cmp.note": "Un réglage d’arme (code laser, fusée…) suit sa station tant que l’arme n’est pas changée. Une valeur hors limites est ramenée au maximum de l’appareil.",
+  "cmp.note": "Un réglage d’arme (code laser, fusée…) suit sa station tant que l’arme n’est pas changée. Une valeur hors limites est ramenée à la limite de l’appareil (0 ou son maximum).",
   "cmp.noview": "Pas de vue de face pour ce type : la liste des stations.",
   "cmp.pick": "Choisissez un groupe et une unité : l’emport se compose ici.",
   "cmp.mod": "modifié",
@@ -7827,9 +7891,14 @@ const I18N = {
   "lo.chaff": "Paillettes",
   "lo.gun": "Canon (%)",
   "lo.max": "max {0}",
+  "lo.pct": "{0} %",
+  "lo.fuelbar": "Carburant (%)",
   "lo.imported": "emport importé",
   "lo.src.mine": "mes presets",
   "lo.src.imp": "import",
+  "lo.src.copy": "copie",
+  "w.left": "(gauche)",
+  "w.right": "(droite)",
   "pr.err": "{0} : illisible — ligne {1} ({2})",
   "pr.mine": "Mes presets ({0})",
   "pr.load": "Charger des presets (.lua)",
@@ -7968,7 +8037,7 @@ const I18N = {
   "u.callsign": "Callsign",
   "u.onboard": "Onboard no.",
   "u.livery": "Livery",
-  "u.livery.ph": "free text, suggestions",
+  "u.livery.ph": "free text",
   "u.opt": "optional",
   "u.radios": "Radios",
   "u.radios.sum": "{0} radios",
@@ -7978,9 +8047,10 @@ const I18N = {
   "u.see": "See the loadout ↓",
   "rad.chans": "{0} channels",
   "rad.ch": "CH {0}",
-  "rad.hint": "Frequencies in MHz, from 0 to 999.999 (comma or dot). Modulations are not written. An empty channel is not written.",
+  "rad.hint": "Frequencies in MHz, within each radio’s band (comma or dot). Modulations are not written. An empty channel is not written.",
   "rad.err.nan": "Channel {0}: “{1}” is not a frequency.",
-  "rad.err.range": "Channel {0}: {1} MHz is outside the range ({2} to {3} MHz).",
+  "rad.err.range": "Channel {0}: {1} MHz is outside the radio’s band ({2}).",
+  "rad.bad.n": "{0} out of band",
   "rad.err.more": " (+ {0} more)",
   "rad.copy": "Copy to the other units of the group",
   "cmp.for": "{0} · {1}",
@@ -7988,6 +8058,10 @@ const I18N = {
   "cmp.from.none": "— not set —",
   "cmp.from.empty": "Empty (place weapons)",
   "cmp.from.imp": "Imported loadout",
+  "cmp.from.units": "Module units",
+  "cmp.from.copy": "Copy: {0} · {1}",
+  "cmp.copied": "copied from {0}",
+  "cmp.emptyNote": "Empty loadout created: HQ will set these values with no weapon",
   "cmp.none": "— empty —",
   "cmp.offTable": "(not in table)",
   "cmp.sym": "Symmetric",
@@ -7997,7 +8071,7 @@ const I18N = {
   "cmp.mirror": "↔ twin station: {0}",
   "cmp.noMirror": "↔ no equivalent on twin station {0}",
   "cmp.back": "↑ Back to the unit",
-  "cmp.note": "A weapon setting (laser code, fuze…) follows its station as long as the weapon is not changed. A loadout setting out of range is brought back to the aircraft maximum.",
+  "cmp.note": "A weapon setting (laser code, fuze…) follows its station as long as the weapon is not changed. A loadout setting out of range is brought back to the aircraft limit (0 or its maximum).",
   "cmp.noview": "No front view for this type: the station list.",
   "cmp.pick": "Pick a group and a unit: the loadout is composed here.",
   "cmp.mod": "modified",
@@ -8018,9 +8092,14 @@ const I18N = {
   "lo.chaff": "Chaff",
   "lo.gun": "Gun (%)",
   "lo.max": "max {0}",
+  "lo.pct": "{0}%",
+  "lo.fuelbar": "Fuel (%)",
   "lo.imported": "imported loadout",
   "lo.src.mine": "my presets",
   "lo.src.imp": "import",
+  "lo.src.copy": "copy",
+  "w.left": "(left)",
+  "w.right": "(right)",
   "pr.err": "{0}: unreadable — line {1} ({2})",
   "pr.mine": "My presets ({0})",
   "pr.load": "Load presets (.lua)",
@@ -8119,8 +8198,16 @@ const has = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
 const TYPE_LABEL = { 'Mi-24P': 'Mi-24P', 'Mi-8MT': 'Mi-8MT', 'F-4E-45MC': 'F-4E-45MC', 'Mirage-F1EE': 'Mirage F1EE' };
 // Canaux par poste (sonde des .miz). Postes offerts : ceux de la table de radio_block.py, sauf le poste HF des deux hélicoptères (seuls R-863 et R-828 servent en com).
 const RADIO_CHANNELS = { 'Mi-24P': { 1: 20, 2: 10 }, 'Mi-8MT': { 1: 20, 2: 10 }, 'F-4E-45MC': { 1: 18, 2: 20 }, 'Mirage-F1EE': { 1: 20, 2: 20 } };
-// Fréquences : la règle du Comm Plan Editor de Mission Tools (type="number" min="0" max="999.999" step="0.001"), la même pour tous les postes.
-const FREQ_MIN = 0, FREQ_MAX = 999.999;
+// Fréquences : les bandes de chaque poste, en MHz, [bas, haut] bornes comprises, sans contrôle de pas. Table du module : radio_block.py, que BG et DG partagent, ne les porte pas.
+//   Mi-24P, Mi-8MT : R-863 (100 à 149,975 et 220 à 399,975) et R-828 (20 à 59,975) · guide du Mi-24P, partie 15, p. 423.
+//   F-4E-45MC : AN/ARC-164 et AN/ARC-164 AUX (225 à 399,975) · spécification de l'ARC-164.
+//   Mirage-F1EE : TRAP 136 (118 à 143,975 et 225 à 399,975) et TRAP 137B (225 à 399,975) · manuel du Mirage F1 (3.13).
+const HELI_BANDS = { 1: [[100, 149.975], [220, 399.975]], 2: [[20, 59.975]] };
+const RADIO_BANDS = {
+  'Mi-24P': HELI_BANDS, 'Mi-8MT': HELI_BANDS,
+  'F-4E-45MC': { 1: [[225, 399.975]], 2: [[225, 399.975]] },
+  'Mirage-F1EE': { 1: [[118, 143.975], [225, 399.975]], 2: [[225, 399.975]] }
+};
 const THEATRES = ['Caucasus', 'Falklands', 'GermanyCW', 'Kola', 'MarianaIslands', 'Nevada', 'Normandy', 'PersianGulf', 'SinaiMap', 'Syria', 'TheChannel'];
 const PARTS = ['route', 'radios', 'loadout', 'livery'];
 const LO_FIELDS = ['fuel', 'flare', 'chaff', 'gun'];
@@ -8175,6 +8262,7 @@ function restoreFlight(f) {
     nu.name = str(u.name); nu.callsign = str(u.callsign); nu.csRaw = u.csRaw; nu.onboard = str(u.onboard); nu.livery = str(u.livery);
     nu.radios = isObj(u.radios) ? u.radios : {};
     nu.loadout = (isObj(u.loadout) && isObj(u.loadout.pylons)) ? u.loadout : null;
+    if (nu.loadout) LO_FIELDS.forEach(k => { const c = clampNum(nu.loadout[k], 0, loLimit(nf.type, k), k !== 'fuel'); if (c.v !== null) nu.loadout[k] = c.v; });     // un fichier de travail édité : jamais de valeur négative
     return nu;
   });
   if (!nf.units.length) nf.units.push(newUnit());
@@ -8232,7 +8320,17 @@ function parseFreq(s) {
   return /^\d+(\.\d+)?$/.test(x) ? { v: Number(x) } : { nan: true };
 }
 function fmtMHz(v) { return String(v).replace('.', CURRENT_LANG === 'fr' ? ',' : '.'); }
-// Défauts d'un poste : { first (le premier message), bad (les canaux fautifs) }. Une fréquence hors de 0 à 999,999 ou non numérique est refusée.
+// La bande d'un poste : [[bas, haut], …] ; dans la bande = dans l'un de ses intervalles (bornes comprises).
+function radioBand(type, r) { return has(RADIO_BANDS, type) && has(RADIO_BANDS[type], r) ? RADIO_BANDS[type][r] : []; }
+function inBand(band, v) { return band.some(b => v >= b[0] - 1e-9 && v <= b[1] + 1e-9); }
+// La bande en clair, comme sous le titre du poste : « 100–149,975 · 220–399,975 MHz ».
+function bandText(type, r) { return radioBand(type, r).map(b => fmtMHz(b[0]) + '–' + fmtMHz(b[1])).join(' · ') + ' MHz'; }
+// Les attributs min et max d'un champ : la bande la plus large du poste.
+function bandHull(type, r) {
+  const b = radioBand(type, r);
+  return [Math.min.apply(null, b.map(x => x[0])), Math.max.apply(null, b.map(x => x[1]))];
+}
+// Défauts d'un poste : { first (le premier message), bad (les canaux fautifs) }. Une fréquence hors de la bande du poste ou non numérique est refusée.
 function radioIssues(f, u, r) {
   const bad = [];
   let first = '';
@@ -8240,7 +8338,7 @@ function radioIssues(f, u, r) {
     const raw = chanValue(u, r, c), p = parseFreq(raw), ch = radioCockpitChannel(f.type, r, c);
     let msg = '';
     if (p.nan) msg = tf('rad.err.nan', ch, raw);
-    else if (p.v !== undefined && (p.v < FREQ_MIN || p.v > FREQ_MAX)) msg = tf('rad.err.range', ch, fmtMHz(p.v), fmtMHz(FREQ_MIN), fmtMHz(FREQ_MAX));
+    else if (p.v !== undefined && !inBand(radioBand(f.type, r), p.v)) msg = tf('rad.err.range', ch, fmtMHz(p.v), bandText(f.type, r));
     if (msg) { bad.push(c); first = first || msg; }
   }
   return { first: first, bad: bad };
@@ -8284,10 +8382,13 @@ function loadoutFromPayload(type, p) {
   });
   return lo;
 }
-function loadoutName(lo) { return lo ? lo.label + (lo.modified ? ' · ' + t('cmp.mod') : '') : t('u.loadout.none'); }
+// L'étiquette d'un emport copié suit la langue (« copié de Franken 1-1 ») ; les autres gardent celle qu'ils ont reçue.
+function loLabel(lo) { return lo.key === 'copy' && typeof lo.from === 'string' ? tf('cmp.copied', lo.from) : lo.label; }
+function loSrc(lo) { return lo.key === 'copy' ? t('lo.src.copy') : (lo.src || ''); }
+function loadoutName(lo) { return lo ? loLabel(lo) + (lo.modified ? ' · ' + t('cmp.mod') : '') : t('u.loadout.none'); }
 // Dans le résumé du vol replié seulement : « emport importé », « emport <nom> », suivis de « (modifié) » s'il l'est (le mot « emport » est déjà dans l'étiquette de l'emport importé).
 function loadoutSummary(lo) {
-  const name = lo.key === 'imp' ? lo.label : tf('sum.loadout', lo.label);
+  const name = lo.key === 'imp' ? lo.label : tf('sum.loadout', loLabel(lo));
   return lo.modified ? name + ' (' + t('cmp.mod') + ')' : name;
 }
 
@@ -8296,22 +8397,145 @@ function presetName(p) { return str(p.displayName) || str(p.name); }
 function presetsFor(type) {
   return (LIB.mine[type] || []).map((p, i) => ({ key: 'm:' + i, label: presetName(p), preset: p, src: t('lo.src.mine') }));
 }
+// Le nom d'une arme tel qu'affiché : celui des tables, suivi de son côté quand payloadWeaponSide en donne un (« Kord 12.7mm HMG (gauche) »).
+function weaponLabel(type, clsid) {
+  const nm = payloadWeaponName(clsid);
+  if (!nm) return nm;
+  const side = payloadWeaponSide(type, clsid);
+  return side ? nm + ' ' + t(side === 'L' ? 'w.left' : 'w.right') : nm;
+}
 function mineCount() { return PAYLOAD_TYPES.reduce((n, ty) => n + (LIB.mine[ty] || []).length, 0); }
 
 // ----- Livrée : suggestions = les liveryId déjà vus pour ce type (mission chargée dans HQ, paquets importés, vols du module) ; aucune liste écrite à la main -----
+// UI.seenLiv[type] garde chaque occurrence vue dans un paquet importé, dans l'ordre : de quoi compter les graphies.
 function noteLiveries(type, units) {
   (Array.isArray(units) ? units : []).forEach(u => {
-    if (isObj(u) && typeof u.liveryId === 'string' && u.liveryId !== '') (UI.seenLiv[type] = UI.seenLiv[type] || new Set()).add(u.liveryId);
+    if (isObj(u) && typeof u.liveryId === 'string' && u.liveryId !== '') (UI.seenLiv[type] = UI.seenLiv[type] || []).push(u.liveryId);
   });
 }
-function liveriesFor(type) {
-  const seen = new Set(UI.seenLiv[type] || []);
+// Les suggestions d'un type, sans doublon à la casse près : une seule par livrée, dans la graphie la plus fréquente (à égalité, la première vue).
+// `skip` : l'unité dont on tape le champ (sa propre frappe ne se propose pas). Triées sans tenir compte de la casse.
+function liveriesFor(type, skip) {
+  const all = (UI.seenLiv[type] || []).slice();
   const hq = readHqMission();
-  if (hq) hq.flights.forEach(f => { if (isObj(f) && f.aircraftType === type && Array.isArray(f.units)) f.units.forEach(u => { if (isObj(u) && typeof u.liveryId === 'string' && u.liveryId !== '') seen.add(u.liveryId); }); });
-  S.flights.forEach(f => { if (f.type === type) f.units.forEach(u => { if (u.livery.trim() !== '') seen.add(u.livery.trim()); }); });
-  return Array.from(seen).sort();
+  if (hq) hq.flights.forEach(f => { if (isObj(f) && f.aircraftType === type && Array.isArray(f.units)) f.units.forEach(u => { if (isObj(u) && typeof u.liveryId === 'string' && u.liveryId !== '') all.push(u.liveryId); }); });
+  S.flights.forEach(f => { if (f.type === type) f.units.forEach(u => { if (u !== skip && u.livery.trim() !== '') all.push(u.livery.trim()); }); });
+  const groups = new Map();
+  all.forEach(v => {
+    const k = v.toLowerCase();
+    if (!groups.has(k)) groups.set(k, new Map());
+    const g = groups.get(k);
+    g.set(v, (g.get(v) || 0) + 1);
+  });
+  const out = [];
+  groups.forEach(g => {
+    let best = null, n = 0;
+    g.forEach((c, v) => { if (c > n) { best = v; n = c; } });      // l'ordre d'insertion d'une Map est l'ordre de première vue
+    out.push(best);
+  });
+  return out.sort((a, b) => { const x = a.toLowerCase(), y = b.toLowerCase(); return x < y ? -1 : (x > y ? 1 : (a < b ? -1 : (a > b ? 1 : 0))); });
 }
-function liveryOptionsHtml(type) { return liveriesFor(type).map(v => `<option value="${esc(v)}"></option>`).join(''); }
+
+// ----- Livrée : un champ texte libre et un panneau de suggestions au thème de l'interface (le <datalist> natif ouvrait un menu blanc du système) -----
+// Le panneau est celui des listes (.tbm-panel, posé par tbmPlace) ; le focus reste dans le champ : flèches, Entrée (choisit la suggestion marquée), Échap, Tab.
+// Il se filtre par ce qui est tapé, sans casse ni accents (impNorm), et se ferme quand le champ perd le focus.
+const LV = { btn: null, form: true, panel: null, items: [], active: -1, quiet: false, x0: 0, y0: 0 };
+function lvUnit(inp) {
+  const fe = inp.closest ? inp.closest('.fc-flight') : null, f = fe && S.flights[Number(fe.getAttribute('data-f'))];
+  return f ? { f: f, u: f.units[Number(inp.getAttribute('data-u'))] } : null;
+}
+function lvItems(inp) {
+  const x = lvUnit(inp);
+  if (!x) return [];
+  const q = impNorm(inp.value.trim());
+  return liveriesFor(x.f.type, x.u).filter(v => v !== inp.value && (q === '' || impNorm(v).indexOf(q) >= 0));
+}
+function lvClose() {
+  if (!LV.panel) return;
+  LV.panel.remove();
+  LV.panel = null;
+  LV.active = -1;
+  if (LV.btn) { LV.btn.setAttribute('aria-expanded', 'false'); LV.btn.removeAttribute('aria-activedescendant'); }
+}
+function lvOpen(inp) {
+  const items = lvItems(inp);
+  if (!items.length) { lvClose(); return; }
+  if (LV.panel && LV.btn !== inp) lvClose();
+  let ul = LV.panel;
+  if (!ul) {
+    ul = document.createElement('ul');
+    ul.className = 'tbm-panel tbm-p-field';
+    ul.id = 'lv-list';
+    ul.setAttribute('role', 'listbox');
+    ul.setAttribute('aria-label', t('u.livery'));
+    ul.tabIndex = -1;
+    ul.addEventListener('mousedown', e => e.preventDefault());          // le champ garde le focus (la souris, le doigt)
+    ul.addEventListener('click', e => {
+      const li = e.target.closest ? e.target.closest('.tbm-opt') : null;
+      if (li) lvChoose(LV.items[Number(li.getAttribute('data-i'))]);
+    });
+    ul.addEventListener('mousemove', e => {
+      const li = e.target.closest ? e.target.closest('.tbm-opt') : null;
+      if (li && Number(li.getAttribute('data-i')) !== LV.active) lvActive(Number(li.getAttribute('data-i')), false);
+    });
+    document.body.appendChild(ul);
+    LV.panel = ul;
+    LV.btn = inp;
+    inp.setAttribute('aria-expanded', 'true');
+  }
+  LV.items = items;
+  ul.innerHTML = items.map((v, i) => `<li class="tbm-opt" role="option" id="lv-opt-${i}" data-i="${i}" aria-selected="false"><span class="tbm-mark"></span><span class="tbm-txt">${esc(v)}</span></li>`).join('');
+  LV.active = -1;
+  inp.removeAttribute('aria-activedescendant');
+  tbmPlace(LV);
+}
+function lvActive(k, reveal) {
+  const ul = LV.panel;
+  if (!ul) return;
+  const prev = ul.querySelector('.tbm-opt.active');
+  if (prev) { prev.classList.remove('active'); prev.setAttribute('aria-selected', 'false'); }
+  LV.active = k;
+  const li = k >= 0 ? ul.querySelector('.tbm-opt[data-i="' + k + '"]') : null;
+  if (!li) { LV.btn.removeAttribute('aria-activedescendant'); return; }
+  li.classList.add('active');
+  li.setAttribute('aria-selected', 'true');
+  LV.btn.setAttribute('aria-activedescendant', li.id);
+  if (reveal === false) return;
+  const top = li.offsetTop, h = li.offsetHeight;
+  if (top < ul.scrollTop) ul.scrollTop = top;
+  else if (top + h > ul.scrollTop + ul.clientHeight) ul.scrollTop = top + h - ul.clientHeight;
+}
+// Choisir : le champ prend la valeur (évènement input, comme une frappe), le panneau se ferme, le focus reste au champ.
+function lvChoose(v) {
+  const inp = LV.btn;
+  if (!inp || typeof v !== 'string') return;
+  inp.value = v;
+  lvClose();
+  LV.quiet = true;
+  inp.dispatchEvent(new Event('input', { bubbles: true }));
+  inp.focus({ preventScroll: true });
+  LV.quiet = false;
+}
+function lvKey(e) {
+  const inp = e.target, k = e.key;
+  if (k === 'ArrowDown' || k === 'ArrowUp') {
+    if (!LV.panel || LV.btn !== inp) { lvOpen(inp); if (!LV.panel) return; e.preventDefault(); lvActive(k === 'ArrowDown' ? 0 : LV.items.length - 1, true); return; }
+    e.preventDefault();
+    const n = LV.items.length;
+    lvActive(k === 'ArrowDown' ? Math.min(n - 1, LV.active + 1) : (LV.active < 0 ? n - 1 : Math.max(0, LV.active - 1)), true);
+  } else if (k === 'Enter') {
+    if (LV.panel && LV.active >= 0) { e.preventDefault(); lvChoose(LV.items[LV.active]); }
+  } else if (k === 'Escape') {
+    if (LV.panel) { e.preventDefault(); e.stopPropagation(); lvClose(); }
+  } else if (k === 'Tab') lvClose();
+}
+function lvOutside(e) { if (LV.panel && !LV.panel.contains(e.target) && e.target !== LV.btn) lvClose(); }
+function lvScrolled(e) {
+  if (!LV.panel || (e.target.nodeType && LV.panel.contains(e.target))) return;
+  const r = LV.btn.getBoundingClientRect();
+  if (Math.abs(r.left - LV.x0) > 0.5 || Math.abs(r.top - LV.y0) > 0.5) lvClose();
+}
+const isLiveryField = el => !!el && !!el.matches && el.matches('input[data-k="livery"]');
 
 // ----- La route : portée telle quelle, jamais tracée ici -----
 function routeKeys(points) { return isObj(points) ? Object.keys(points).filter(k => /^\d+$/.test(k)).sort((a, b) => a - b) : []; }
@@ -8382,11 +8606,16 @@ function unitRadiosOut(f, u) {
   });
   return out.length ? out : null;
 }
+// Un réglage d'emport pour le paquet : un nombre, négatif compris (buildPayload le ramène à 0) ; undefined si ce n'en est pas un (valeur par défaut de la table).
+function loNumber(raw) {
+  const x = String(raw).trim().replace(',', '.');
+  return /^-?\d+(\.\d+)?$/.test(x) ? Number(x) : undefined;
+}
 function unitPayloadOut(f, u) {
   const lo = u.loadout;
   if (!lo) return null;
   const settings = {};
-  LO_FIELDS.forEach(k => { settings[k] = parseFreq(lo[k]).v; });
+  LO_FIELDS.forEach(k => { settings[k] = loNumber(lo[k]); });
   return buildPayload(f.type, lo.pylons, settings);     // buildPayload ramène chaque valeur dans la table de l'appareil
 }
 // Le paquet dcs-flight-package-v1 : une partie non renseignée sort en null (HQ n'y touche pas). Ni fcId, ni sourceMission.
@@ -8426,9 +8655,18 @@ function anyFlightOpen() { return S.flights.some((f, fi) => flightOpen(f, fi)); 
 
 
 // ---------- 3. Colonne des vols ----------
+// Une option peut porter `g` (le titre de son groupe) : les options consécutives de même `g` sont rendues dans un <optgroup>.
+function optionsHtml(options, value) {
+  let out = '', open = null;
+  options.forEach(o => {
+    const g = o.g || null;
+    if (g !== open) { if (open !== null) out += '</optgroup>'; if (g !== null) out += `<optgroup label="${esc(g)}">`; open = g; }
+    out += `<option value="${esc(o.v)}"${String(o.v) === String(value) ? ' selected' : ''}>${esc(o.l)}</option>`;
+  });
+  return out + (open !== null ? '</optgroup>' : '');
+}
 function selectHtml(attrs, label, options, value) {
-  const opts = options.map(o => `<option value="${esc(o.v)}"${String(o.v) === String(value) ? ' selected' : ''}>${esc(o.l)}</option>`).join('');
-  return `<select class="fc-sel" aria-label="${esc(label)}" ${attrs}>${opts}</select>`;
+  return `<select class="fc-sel" aria-label="${esc(label)}" ${attrs}>${optionsHtml(options, value)}</select>`;
 }
 function fieldHtml(label, inner) { return `<div class="ed-field"><label>${esc(label)}</label>${inner}</div>`; }
 function inputHtml(attrs, value, placeholder) {
@@ -8443,6 +8681,7 @@ function flightEl(fi) { return document.querySelector(`#col-left .fc-flight[data
 function unitEl(fi, ui) { return document.querySelector(`#col-left .fc-flight[data-f="${fi}"] .fc-unit[data-u="${ui}"]`); }
 
 function renderLeft() {
+  lvClose();
   const theatres = THEATRES.concat(S.theatre && THEATRES.indexOf(S.theatre) < 0 ? [S.theatre] : []);
   const opts = [{ v: '', l: t('pkg.theatre.none') }].concat(theatres.map(x => ({ v: x, l: x })));
   const foldAll = S.flights.length > 1 ? `<button type="button" class="miz-btn fc-small fc-foldall" id="fc-foldall" data-act="fold-all">${esc(foldAllLabel())}</button>` : '';
@@ -8468,7 +8707,7 @@ function flightHtml(f, fi) {
       <button type="button" class="pk-x" data-act="rm-flight" aria-label="${esc(t('fl.remove'))}" title="${esc(t('fl.remove'))}">✕</button>
       <div class="fc-fsum">${esc(flightSummary(f))}</div>
     </div>
-    <div class="fc-fbody"${open ? '' : ' hidden'}><datalist id="dl-liv-${fi}">${liveryOptionsHtml(f.type)}</datalist>
+    <div class="fc-fbody"${open ? '' : ' hidden'}>
       ${flightFieldsHtml(f)}${routeHtml(f)}
       <div class="fc-units">${f.units.map((u, ui) => unitHtml(f, fi, u, ui)).join('')}</div>
       ${f.units.length < MAX_UNITS ? `<div class="miz-btn-row"><button type="button" class="miz-btn" data-act="add-unit">${esc(tf('u.add', f.units.length))}</button></div>` : ''}
@@ -8495,7 +8734,7 @@ function unitHtml(f, fi, u, ui) {
       ${fieldHtml(t('u.name'), inputHtml(`${at} data-k="uname"`, u.name, unitDefaultName(f, fi, ui)))}
       ${fieldHtml(t('u.callsign'), inputHtml(`${at} data-k="callsign"`, u.callsign, t('u.opt')))}
       ${fieldHtml(t('u.onboard'), inputHtml(`${at} data-k="onboard"`, u.onboard, t('u.opt')))}
-      ${fieldHtml(t('u.livery'), inputHtml(`${at} data-k="livery" list="dl-liv-${fi}"`, u.livery, t('u.livery.ph')))}
+      ${fieldHtml(t('u.livery'), inputHtml(`${at} data-k="livery" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="lv-list"`, u.livery, t('u.livery.ph')))}
     </div>
     <details class="fc-sub" data-key="${rk}"${openAttr(rk)}><summary>${esc(t('u.radios'))} <span class="fc-sum" data-sum="radios">${esc(radiosSummary(f, u))}</span></summary>
       <div class="fc-subc">${radiosHtml(f, fi, u, ui)}</div></details>
@@ -8509,13 +8748,13 @@ function radiosSummary(f, u) {
 }
 function radiosHtml(f, fi, u, ui) {
   const posts = radioPosts(f.type).map(r => {
-    const pk = `f${fi}u${ui}p${r}`, n = RADIO_CHANNELS[f.type][r];
+    const pk = `f${fi}u${ui}p${r}`, n = RADIO_CHANNELS[f.type][r], hull = bandHull(f.type, r);
     let chans = '';
     for (let c = 1; c <= n; c++) {
       chans += `<div class="fc-ch"><label>${esc(tf('rad.ch', radioCockpitChannel(f.type, r, c)))}</label>`
-        + numberInputHtml(`data-u="${ui}" data-r="${r}" data-c="${c}" data-k="chan" placeholder="—"`, chanValue(u, r, c), FREQ_MIN, FREQ_MAX, '0.001') + '</div>';
+        + numberInputHtml(`data-u="${ui}" data-r="${r}" data-c="${c}" data-k="chan" placeholder="—"`, chanValue(u, r, c), hull[0], hull[1], '0.001') + '</div>';
     }
-    return `<details class="fc-post" data-key="${pk}"${openAttr(pk)}><summary>${esc(radioPosteName(f.type, r) || 'R' + r)} <span class="fc-sum">${esc(tf('rad.chans', n))}</span></summary>
+    return `<details class="fc-post" data-key="${pk}"${openAttr(pk)}><summary><span class="fc-ptop">${esc(radioPosteName(f.type, r) || 'R' + r)} <span class="fc-sum">${esc(tf('rad.chans', n))}</span><span class="fc-sum fc-flag" data-flag="${r}"></span></span><span class="fc-band" data-band="${r}">${esc(bandText(f.type, r))}</span></summary>
       <div class="fc-postc"><div class="fc-chans">${chans}</div><div class="fc-msg" id="rm-${fi}-${ui}-${r}"></div></div></details>`;
   }).join('');
   const copy = f.units.length > 1 ? `<div class="miz-btn-row" style="margin-top:0"><button type="button" class="miz-btn" data-u="${ui}" data-act="copy-radios">${esc(t('rad.copy'))}</button></div>` : '';
@@ -8530,6 +8769,8 @@ function paintRadioMsg(fi, ui, r) {
   root.querySelectorAll(`input[data-r="${r}"]`).forEach(inp => inp.classList.toggle('bad', iss.bad.indexOf(Number(inp.getAttribute('data-c'))) >= 0));
   const el = document.getElementById(`rm-${fi}-${ui}-${r}`);
   if (el) el.textContent = iss.first ? iss.first + (iss.bad.length > 1 ? tf('rad.err.more', iss.bad.length - 1) : '') : '';
+  const flag = root.querySelector(`[data-flag="${r}"]`);      // le poste replié le dit aussi : « ⚠ 2 hors bande »
+  if (flag) flag.textContent = iss.bad.length ? '⚠ ' + tf('rad.bad.n', iss.bad.length) : '';
 }
 function paintFold() {
   S.flights.forEach((f, fi) => {
@@ -8583,7 +8824,7 @@ function selectUnit(fi, ui) {
 // ---------- 4. Emport (la vue de face de Mission Tools) et mes presets ----------
 // Le composeur reprend celui du Loadout Editor : un panneau dans la page, sur l'unité choisie. Large : une case par station (numéro et arme)
 // sous le dessin ; étroit (colonne de moins de 900 px) : la même rangée, de numéros seuls. Un trait pointillé relie chaque case à son point d'attache.
-const CMP = { view: null, pairs: {}, pyl: [], small: false, ro: null };
+const CMP = { type: '', view: null, pairs: {}, pyl: [], small: false, ro: null };
 
 // Deux stations sont jumelles quand leurs points d'attache sont symétriques par rapport au milieu du dessin (à 2 % près).
 function cmpPairs(view) {
@@ -8607,7 +8848,8 @@ function cmpShort(clsid) {
   let head = full.split(' - ')[0].replace(/\s*\([^)]*\)/g, '').replace(/\s+/g, ' ').trim();
   const k = full.indexOf('UnGd Rkts'), m = k >= 0 ? /\bmm\s+(\S+)/.exec(full.slice(k)) : null;
   if (m) head += ' · ' + m[1];
-  return head || full;
+  const side = payloadWeaponSide(CMP.type, clsid);       // le côté vient après le nom court, que les parenthèses de la table n'effacent pas
+  return (head || full) + (side ? ' ' + t(side === 'L' ? 'w.left' : 'w.right') : '');
 }
 function cmpNum(n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, CURRENT_LANG === 'fr' ? ' ' : ','); }
 // Une station dont l'arme en place n'a pas de miroir sur la jumelle (calculé de l'état : choix, preset ou import) ; la ligne ne paraît que case cochée.
@@ -8633,54 +8875,92 @@ function renderRight() {
   document.getElementById('col-presets').innerHTML = presetsHtml();
 }
 
+// Un emport est « armé » dès qu'une station porte une arme : « Garder dans mes presets » et « Vider l'emport » n'agissent qu'alors.
+function cmpArmed(lo) { return !!lo && Object.keys(cleanPylons(lo.pylons)).length > 0; }
+function cmpLineHtml(lo) {
+  if (!lo) return '';
+  const src = loSrc(lo);
+  return (src ? `<span class="snap-flight-tag">${esc(src)}</span>` : '') + (lo.modified ? `<span class="snap-flight-tag">${esc(t('cmp.mod'))}</span>` : '');
+}
 function cmpHtml(su) {
   const f = su.f, lo = su.u.loadout;
+  CMP.type = f.type;
   CMP.pyl = payloadPylons(f.type) || [];
   CMP.view = has(AIRCRAFT_VIEWS, f.type) ? AIRCRAFT_VIEWS[f.type] : null;
   CMP.pairs = CMP.view ? cmpPairs(CMP.view) : {};
+  const armed = cmpArmed(lo);
   return `<button type="button" class="fc-back" data-act="back-unit">${esc(t('cmp.back'))}</button>
-    <div class="cmp-top"><div class="cmp-for">${esc(tf('cmp.for', flightLabel(f, su.fi), unitLabel(f, su.fi, su.u, su.ui)))} <span class="snap-flight-tag">${esc(TYPE_LABEL[f.type])}</span></div>
-      ${fieldHtml(t('cmp.from'), selectHtml('id="cmp-from"', t('cmp.from'), cmpFromOptions(f, lo), lo ? lo.key : ''))}</div>
-    ${lo ? `<div class="fc-lo-line"><span class="snap-flight-tag">${esc(lo.src || '')}</span>${lo.modified ? `<span class="snap-flight-tag">${esc(t('cmp.mod'))}</span>` : ''}</div>` : ''}
+    <div class="cmp-top"><div class="cmp-for"><span id="cmp-for-t">${esc(tf('cmp.for', flightLabel(f, su.fi), unitLabel(f, su.fi, su.u, su.ui)))}</span> <span class="snap-flight-tag">${esc(TYPE_LABEL[f.type])}</span></div>
+      ${fieldHtml(t('cmp.from'), selectHtml('id="cmp-from"', t('cmp.from'), cmpFromOptions(f, lo, su.u), lo ? lo.key : ''))}</div>
+    <div class="fc-lo-line" id="cmp-lo-line">${cmpLineHtml(lo)}</div>
     ${CMP.view ? cmpDrawingHtml() : `<p class="pk-note">${esc(t('cmp.noview'))}</p>`}
     <div class="cmp-list" id="cmp-list">${CMP.pyl.map(p => cmpRowHtml(p, lo)).join('')}</div>
     <div class="cmp-foot">${CMP.view ? `<label class="pk-chk"><input type="checkbox" id="cmp-sym"${UI.cmp.sym ? ' checked' : ''}> ${esc(t('cmp.sym'))}</label>` : ''}<span class="cmp-tot" id="cmp-total"></span></div>
-    ${lo ? cmpSettingsHtml(f, su.ui, lo) : ''}
-    <div class="miz-btn-row" style="margin-top:0"><button type="button" class="miz-btn primary" data-act="cmp-save"${lo ? '' : ' disabled'}>${esc(t('cmp.save'))}</button>
-      <button type="button" class="miz-btn" data-act="cmp-clear"${lo ? '' : ' disabled'}>${esc(t('cmp.clear'))}</button></div>
+    ${cmpSettingsHtml(f, su.ui, lo)}
+    <p class="pk-note" id="cmp-empty-note"${lo && lo.key === '~empty' && !armed ? '' : ' hidden'}>${esc(t('cmp.emptyNote'))}</p>
+    <div class="miz-btn-row" style="margin-top:0"><button type="button" class="miz-btn primary" data-act="cmp-save"${armed ? '' : ' disabled'}>${esc(t('cmp.save'))}</button>
+      <button type="button" class="miz-btn" data-act="cmp-clear"${armed ? '' : ' disabled'}>${esc(t('cmp.clear'))}</button></div>
     ${UI.cmp.saving && lo ? cmpSaveHtml() : ''}
     <p class="pk-note">${esc(t('cmp.note'))}</p>`;
 }
-function cmpFromOptions(f, lo) {
+// « Partir de » : rien, l'emport importé ou copié en place, mes presets, « Vide », puis le groupe « Unités du module » :
+// chaque autre unité du même appareil qui a un emport (clé « u:groupe:unité »).
+function cmpFromOptions(f, lo, unit) {
   const opts = [{ v: '', l: t('cmp.from.none') }];
   if (lo && lo.key === 'imp') opts.push({ v: 'imp', l: t('cmp.from.imp') });
+  if (lo && lo.key === 'copy') opts.push({ v: 'copy', l: loLabel(lo) });
   presetsFor(f.type).forEach(p => opts.push({ v: p.key, l: p.label }));
   opts.push({ v: '~empty', l: t('cmp.from.empty') });
+  S.flights.forEach((g, gi) => {
+    if (g.type !== f.type) return;
+    g.units.forEach((x, xi) => {
+      if (x !== unit && x.loadout) opts.push({ g: t('cmp.from.units'), v: 'u:' + gi + ':' + xi, l: tf('cmp.from.copy', flightLabel(g, gi), unitLabel(g, gi, x, xi)) });
+    });
+  });
   return opts;
+}
+// Les noms ont changé (frappe dans un nom de groupe ou d'unité) : l'en-tête du panneau et les libellés de « Partir de » les suivent sans autre geste.
+function paintCmpNames() {
+  const su = selUnit();
+  if (!su) return;
+  const el = document.getElementById('cmp-for-t');
+  if (el) el.textContent = tf('cmp.for', flightLabel(su.f, su.fi), unitLabel(su.f, su.fi, su.u, su.ui));
+  const sel = document.getElementById('cmp-from');
+  if (sel) sel.innerHTML = optionsHtml(cmpFromOptions(su.f, su.u.loadout, su.u), su.u.loadout ? su.u.loadout.key : '');
 }
 function cmpDrawingHtml() {
   const view = CMP.view, W = view.viewBox[0], H = view.viewBox[1], small = CMP.small;
   const ids = Object.keys(view.stations).sort((a, b) => view.stations[a].x - view.stations[b].x);
   const credit = `<div class="cmp-credit">${esc(t('cmp.credit'))}</div>`;
   const cells = ids.map((k, i) => `<div class="cmp-st" data-st="${esc(k)}"${small ? '' : ' role="button" tabindex="0"'} style="left:${((i + 0.5) / ids.length * 100).toFixed(3)}%"><span class="n">${esc(k)}</span><span class="w"></span></div>`).join('');
-  return `<div id="cmp-wrap" class="${small ? 'cmp-wrap-flat' : 'cmp-wrap-strip'}"><div class="cmp-view"><div class="cmp-svgbox" style="--r:${W / H}">${view.svg}</div>${small ? '' : credit}</div>
-    <svg id="cmp-leads" aria-hidden="true"></svg><div class="cmp-strip" style="--n:${ids.length}">${cells}</div>${small ? credit : ''}</div>`;
+  return `<div id="cmp-wrap" class="${small ? 'cmp-wrap-flat' : 'cmp-wrap-strip'}"><div class="cmp-view"><div class="cmp-svgbox" style="--r:${W / H}">${view.svg}</div></div>
+    <svg id="cmp-leads" aria-hidden="true"></svg><div class="cmp-strip" style="--n:${ids.length}">${cells}</div>${credit}</div>`;
 }
 // Une ligne : numéro de la station, liste d'armes (pleine largeur), masse (colonne fixe, à droite) ; dessous, la station jumelle en clair et les réglages.
 function cmpRowHtml(p, lo) {
   const current = cmpClsid(lo, p.n), pair = has(CMP.pairs, p.n) ? CMP.pairs[p.n] : null;
   let opts = '';
-  if (current !== '' && p.allowed.indexOf(current) < 0) opts += `<option value="${esc(current)}">${esc((payloadWeaponName(current) || current) + ' ' + t('cmp.offTable'))}</option>`;
+  if (current !== '' && p.allowed.indexOf(current) < 0) opts += `<option value="${esc(current)}">${esc((weaponLabel(CMP.type, current) || current) + ' ' + t('cmp.offTable'))}</option>`;
   opts += `<option value="">${esc(t('cmp.none'))}</option>`;
-  opts += p.allowed.map(c => `<option value="${esc(c)}">${esc(payloadWeaponName(c) || c)}</option>`).join('');
+  opts += p.allowed.map(c => `<option value="${esc(c)}">${esc(weaponLabel(CMP.type, c) || c)}</option>`).join('');
   return `<div class="cmp-row" data-st="${esc(p.n)}"><span class="sn">${esc(p.n)}</span>
     <select class="fc-sel cmp-sel" data-st="${esc(p.n)}" aria-label="${esc(tf('lo.pylon', p.n))}">${opts}</select>
     <span class="cmp-kg"></span><div class="cmp-sub">${pair !== null ? `<span class="cmp-mirror">${esc(tf('cmp.mirror', pair))}</span><span class="cmp-nomirror" hidden>${esc(tf('cmp.noMirror', pair))}</span>` : ''}</div></div>`;
 }
+// Carburant, leurres, paillettes, canon : toujours montrés dès qu'une unité est choisie — aux valeurs de son emport, sinon aux défauts de la table.
+// Sous le champ en kg, la barre du carburant (0 à 100 %) et sa valeur.
+function fuelPct(raw, max) {
+  const x = String(raw).trim().replace(',', '.');
+  if (!/^-?\d+(\.\d+)?$/.test(x) || !(max > 0)) return null;
+  return Math.max(0, Math.min(100, Math.round(Number(x) / max * 100)));
+}
+function fuelKg(pct, max) { return pct >= 100 ? String(max) : String(Math.round(max * pct / 100)); }
 function cmpSettingsHtml(f, ui, lo) {
-  const d = payloadDefaults(f.type), at = `data-u="${ui}"`;
+  const d = payloadDefaults(f.type), at = `data-u="${ui}"`, val = k => (lo ? lo[k] : String(d[k]));
+  const pct = fuelPct(val('fuel'), d.fuel);
+  const bar = `<div class="fc-bar"><input type="range" class="fc-range" min="0" max="100" step="1" value="${pct === null ? 0 : pct}" style="--p:${pct === null ? 0 : pct}%" data-k="fuel-bar" ${at} aria-label="${esc(t('lo.fuelbar'))}" aria-valuetext="${esc(tf('lo.pct', pct === null ? 0 : pct))}"><span class="fc-pct" id="fuel-pct">${esc(tf('lo.pct', pct === null ? 0 : pct))}</span></div>`;
   const field = (k, step, disabled) => fieldHtml(`${t('lo.' + k)} · ${tf('lo.max', k === 'fuel' ? fmtMHz(d.fuel) : d[k])}`,
-    numberInputHtml(`${at} data-k="${k}"${disabled ? ' disabled' : ''}`, lo[k], 0, d[k], step));
+    numberInputHtml(`${at} data-k="${k}"${disabled ? ' disabled' : ''}`, val(k), 0, d[k], step) + (k === 'fuel' ? bar : ''));
   return `<div class="fc-set">${field('fuel', 'any')}${field('flare', '1')}${field('chaff', '1', d.chaff === 0)}${field('gun', '1')}</div>`;
 }
 function cmpSaveHtml() {
@@ -8710,6 +8990,13 @@ function cmpUpdate() {
     cmpUpdateCell(blk.querySelector(`.cmp-st[data-st="${n}"]`), clsid, C.st === n);
   });
   document.getElementById('cmp-total').innerHTML = `${esc(t('cmp.mass'))} <b>${esc(cmpNum(total) + ' kg' + (unknown ? ' + ?' : ''))}</b>`;
+  // l'étiquette de l'emport, « Partir de », la ligne « emport vide » et les deux boutons suivent l'état (un emport créé par un réglage, un « modifié » qui paraît)
+  const armed = cmpArmed(lo), line = document.getElementById('cmp-lo-line'), from = document.getElementById('cmp-from'), note = document.getElementById('cmp-empty-note');
+  const want = lo ? lo.key : '';
+  if (line) line.innerHTML = cmpLineHtml(lo);
+  if (from && from.value !== want && Array.prototype.some.call(from.options, o => o.value === want)) from.value = want;
+  if (note) note.hidden = !(lo && lo.key === '~empty' && !armed);
+  blk.querySelectorAll('[data-act="cmp-save"], [data-act="cmp-clear"]').forEach(b => { b.disabled = !armed; });
   cmpDraw();
 }
 // La ligne sous la liste : la station jumelle n'y figure que si « Symétrique » est cochée ; la puce « réglages » quand l'arme en porte.
@@ -8725,7 +9012,7 @@ function cmpUpdateSub(row, hasSettings, noMirror) {
 function cmpUpdateCell(cell, clsid, selected) {
   if (!cell) return;
   cell.querySelector('.w').textContent = cmpShort(clsid);
-  cell.title = clsid ? (payloadWeaponName(clsid) || clsid) : '';
+  cell.title = clsid ? (weaponLabel(CMP.type, clsid) || clsid) : '';
   cell.classList.toggle('sel', selected);
   cell.classList.toggle('has', clsid !== '');
   if (cell.hasAttribute('role')) cell.setAttribute('aria-pressed', String(selected));
@@ -8781,13 +9068,23 @@ function cmpChoose(n, clsid) {
   } else cmpUpdate();
   refreshAll();
 }
+// Copie l'emport d'une autre unité : stations (avec leurs settings), carburant, leurres, paillettes, canon. `from` : le nom de l'unité source.
+function copyLoadout(type, src, from) {
+  const lo = { key: 'copy', label: tf('cmp.copied', from), from: from, src: t('lo.src.copy'), modified: false, pylons: cleanPylons(src.pylons) };
+  LO_FIELDS.forEach(k => { lo[k] = src[k] !== undefined && src[k] !== null ? String(src[k]) : String(loLimit(type, k)); });
+  return lo;
+}
 function cmpBase(key) {
   const su = selUnit();
   if (!su) return;
   const type = su.f.type, prev = su.u.loadout;
   if (key === '') su.u.loadout = null;
   else if (key === '~empty') su.u.loadout = makeLoadout(type, { key: key, label: t('cmp.custom'), src: '' }, {}, prev);
-  else if (key !== 'imp') {                      // 'imp' : déjà l'emport importé
+  else if (key.indexOf('u:') === 0) {            // « Copier : groupe · unité » : une copie, plus aucun lien avec l'unité source
+    const a = key.split(':'), gi = Number(a[1]), xi = Number(a[2]), g = S.flights[gi], x = g && g.units[xi];
+    if (x && x !== su.u && x.loadout && g.type === type) su.u.loadout = copyLoadout(type, x.loadout, unitLabel(g, gi, x, xi));
+  }
+  else if (key !== 'imp' && key !== 'copy') {    // 'imp', 'copy' : déjà l'emport importé, déjà la copie
     const hit = presetsFor(type).filter(p => p.key === key)[0];
     if (hit) su.u.loadout = makeLoadout(type, { key: key, label: hit.label, src: hit.src }, hit.preset.pylons, prev);
   }
@@ -9240,29 +9537,75 @@ function onInput(e) {
   if (k === 'cmp-name') { UI.cmp.name = el.value; return; }
   const fe = el.closest('.fc-flight'), fi = fe ? Number(fe.getAttribute('data-f')) : -1, f = S.flights[fi];
   const u = f && el.hasAttribute('data-u') ? f.units[Number(el.getAttribute('data-u'))] : null;
-  if (k === 'name') { f.name = el.value; fe.querySelector('.fc-ftitle').textContent = flightLabel(f, fi); }
-  else if (k === 'uname') u.name = el.value;
+  if (k === 'name') { f.name = el.value; paintFlightName(f, fi, fe); paintCmpNames(); }
+  else if (k === 'uname') { u.name = el.value; paintCmpNames(); }
   else if (k === 'callsign') u.callsign = el.value;
   else if (k === 'onboard') u.onboard = el.value;
-  else if (k === 'livery') u.livery = el.value;
+  else if (k === 'livery') { u.livery = el.value; if (!LV.quiet) lvOpen(el); }
   else if (k === 'chan') {
     const r = Number(el.getAttribute('data-r'));
     (u.radios[r] = u.radios[r] || {})[Number(el.getAttribute('data-c'))] = el.value;
     paintRadioMsg(fi, Number(el.getAttribute('data-u')), r);
   } else if (LO_FIELDS.indexOf(k) >= 0) {
     const su = selUnit();
-    if (su && su.u.loadout) su.u.loadout[k] = el.value;
-  }
+    loSetting(k, el.value);
+    if (k === 'fuel' && su) paintFuelBar(fuelPct(el.value, loLimit(su.f.type, 'fuel')), true);
+  } else if (k === 'fuel-bar') onFuelBar(el);
   refreshAll();
 }
-// Validation d'un champ : un réglage d'emport hors limites est ramené à la limite de l'appareil, et compté à la ligne d'état.
+// Le nom d'un groupe change : son titre, l'étiquette de son bouton de repli et les noms par défaut de ses unités (affichés en grisé) suivent la frappe.
+function paintFlightName(f, fi, fe) {
+  fe.querySelector('.fc-ftitle').textContent = flightLabel(f, fi);
+  const btn = fe.querySelector('.fc-fold');
+  if (btn) btn.setAttribute('aria-label', foldLabel(f, fi, flightOpen(f, fi)));
+  f.units.forEach((x, ui) => {
+    const inp = fe.querySelector(`.fc-unit[data-u="${ui}"] input[data-k="uname"]`);
+    if (inp) inp.placeholder = unitDefaultName(f, fi, ui);
+  });
+}
+// Un réglage (carburant, leurres, paillettes, canon) de l'unité choisie. Une unité « non renseigné » qu'on règle reçoit un emport « Vide » qui porte ces
+// réglages (HQ les posera sans arme) ; tant que la valeur est celle de la table, rien n'est créé. Rend l'emport, ou null.
+function loSetting(k, raw) {
+  const su = selUnit();
+  if (!su) return null;
+  if (!su.u.loadout) {
+    const c = clampNum(raw, 0, loLimit(su.f.type, k), k !== 'fuel');
+    if (c.v === null || Number(c.v) === loLimit(su.f.type, k)) return null;
+    su.u.loadout = makeLoadout(su.f.type, { key: '~empty', label: t('cmp.custom'), src: '' }, {}, null);
+    cmpUpdate();       // « Partir de », la ligne et les boutons ; le panneau n'est pas redessiné : le champ garde le focus
+  }
+  su.u.loadout[k] = raw;
+  return su.u.loadout;
+}
+// La barre du carburant et sa valeur en % (sans toucher à la position de la barre quand c'est elle qu'on déplace).
+function paintFuelBar(pct, moveBar) {
+  const bar = document.querySelector('#blk-cmp input[data-k="fuel-bar"]'), out = document.getElementById('fuel-pct');
+  if (!bar || pct === null) return;
+  if (moveBar) bar.value = String(pct);
+  bar.style.setProperty('--p', pct + '%');
+  bar.setAttribute('aria-valuetext', tf('lo.pct', pct));
+  if (out) out.textContent = tf('lo.pct', pct);
+}
+// La barre bouge : elle écrit les kg (arrondis au kg, le maximum de la table à 100 %) dans le champ et dans l'emport.
+function onFuelBar(el) {
+  const su = selUnit();
+  if (!su) return;
+  const pct = Number(el.value), kg = fuelKg(pct, loLimit(su.f.type, 'fuel'));
+  loSetting('fuel', kg);
+  const num = document.querySelector('#blk-cmp input[data-k="fuel"]');
+  if (num) num.value = kg;
+  paintFuelBar(pct, false);
+}
+// Validation d'un champ : un réglage d'emport hors limites est ramené à la limite de l'appareil (0 pour une valeur négative), et compté à la ligne d'état.
 function commitLoadoutField(k, el) {
   const su = selUnit();
-  if (!su || !su.u.loadout) return;
-  const q = clampNum(el.value, 0, loLimit(su.f.type, k), k !== 'fuel');
-  if (q.v === null) su.u.loadout[k] = String(loLimit(su.f.type, k));
-  else { su.u.loadout[k] = q.v; UI.clamped += q.n; }
-  el.value = su.u.loadout[k];
+  if (!su) return;
+  const lim = loLimit(su.f.type, k), q = clampNum(el.value, 0, lim, k !== 'fuel');
+  const v = q.v === null ? String(lim) : q.v;
+  if (q.v !== null) UI.clamped += q.n;
+  loSetting(k, v);
+  el.value = v;
+  if (k === 'fuel') paintFuelBar(fuelPct(v, lim), true);
   refreshAll();
 }
 function onChange(e) {
@@ -9272,6 +9615,7 @@ function onChange(e) {
   if (el.classList && el.classList.contains('cmp-sel')) { cmpChoose(el.getAttribute('data-st'), el.value); return; }
   if (!k) return;
   if (k === 'theatre') { S.theatre = el.value; refreshAll(); return; }
+  if (k === 'fuel-bar') return;
   if (LO_FIELDS.indexOf(k) >= 0) { commitLoadoutField(k, el); return; }
   const fe = el.closest('.fc-flight'), f = fe && S.flights[Number(fe.getAttribute('data-f'))];
   if (k === 'type') { f.type = el.value; f.units.forEach(u => { u.radios = {}; u.loadout = null; }); renderAll(); }
@@ -9283,10 +9627,7 @@ function onToggle(e) {
   if (d.open) UI.open.add(key); else UI.open.delete(key);
 }
 function onFocusIn(e) {
-  if (e.target.matches && e.target.matches('input[data-k="livery"]')) {       // les suggestions de livrée se mettent à jour à l'entrée dans le champ
-    const fe = e.target.closest('.fc-flight'), f = fe && S.flights[Number(fe.getAttribute('data-f'))];
-    if (f) fe.querySelector('datalist').innerHTML = liveryOptionsHtml(f.type);
-  }
+  if (isLiveryField(e.target) && !LV.quiet) lvOpen(e.target);       // les suggestions de livrée se calculent à l'entrée dans le champ
   const ue = e.target.closest ? e.target.closest('.fc-unit') : null;
   if (ue && !(e.target.matches && e.target.matches('[data-act="rm-unit"]'))) selectUnit(Number(ue.closest('.fc-flight').getAttribute('data-f')), Number(ue.getAttribute('data-u')));
 }
@@ -9319,6 +9660,12 @@ function bindColumns() {
     root.addEventListener('toggle', onToggle, true);
   });
   left.addEventListener('focusin', onFocusIn);
+  left.addEventListener('keydown', e => { if (isLiveryField(e.target)) lvKey(e); });
+  left.addEventListener('click', e => { if (isLiveryField(e.target)) lvOpen(e.target); });
+  left.addEventListener('focusout', e => { if (isLiveryField(e.target)) lvClose(); });
+  document.addEventListener('pointerdown', lvOutside, true);
+  window.addEventListener('resize', lvClose);
+  window.addEventListener('scroll', lvScrolled, true);
   right.addEventListener('click', e => {      // une case du dessin désigne sa station
     const cell = e.target.closest ? e.target.closest('.cmp-st') : null;
     if (cell) { UI.cmp.st = cell.getAttribute('data-st'); cmpUpdate(); }
