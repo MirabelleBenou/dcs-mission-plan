@@ -98,6 +98,7 @@ KRAFT_MEAST = _kraft_variant(KRAFT_RAW, '#c8c1b2', '#bcb5a6')
 # ── Polices ──────────────────────────────────────────────────────────────────────
 
 SPECIAL_ELITE_B64 = b64_font('SPECIAL_ELITE')
+STARDOS_400_B64   = b64_font('STARDOS_400')
 STARDOS_700_B64   = b64_font('STARDOS_700')
 OSWALD_500_B64    = b64_font('OSWALD_500')
 ROBOTO_MONO_400_B64 = b64_font('ROBOTO_MONO_400')
@@ -114,6 +115,15 @@ def font_face_css():
 }}""")
     else:
         parts.append("/* Special Elite : fallback CDN */")
+
+    # Stardos Stencil 400 : le tampon de décor de la barre
+    if STARDOS_400_B64:
+        parts.append(f"""@font-face {{
+  font-family: 'Stardos Stencil';
+  font-weight: 400;
+  font-display: swap;
+  src: url('data:font/woff2;base64,{STARDOS_400_B64}') format('woff2');
+}}""")
 
     if STARDOS_700_B64:
         parts.append(f"""@font-face {{
@@ -1245,8 +1255,10 @@ body {{
    la version avec le titre ; le tampon de décor dès 1101 px. Seuils mesurés dans le shell avec un tampon d'escadre « TEST WING », en français et en anglais. */
 .tb-brand-main, .tb-brand-short {{ color: #7E8FA6; }}
 .tb-brand-short {{ display: none; font-family: var(--f-stencil); font-size: 16px; font-weight: 700; letter-spacing: 3px; white-space: nowrap; }}
-.tb-classif {{ font-family: var(--f-stencil); font-size: 11px; letter-spacing: 3px; color: var(--red-faded); border: 1px solid var(--red-faded); padding: 4px 10px; white-space: nowrap; flex-shrink: 0; }}
+.tb-classif {{ font-family: var(--f-stencil); font-weight: 400; font-size: 11px; letter-spacing: 3px; color: var(--red-faded); border: 1px solid var(--red-faded); padding: 4px 10px; white-space: nowrap; flex-shrink: 0; }}
 #btn-lang svg {{ display: block; }}
+.tb-brand-sub {{ font-weight: 500; }}
+.tb-version {{ font-family: 'Roboto Mono', monospace; }}
 @media (max-width: 1359px) {{ .tb-brand-main, .tb-brand-sub, .tb-brand + .tb-sep, .tb-version {{ display: none; }} .tb-brand-short {{ display: inline; }} }}
 @media (max-width: 1100px) {{ .tb-classif {{ display: none; }} }}
 

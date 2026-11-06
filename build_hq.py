@@ -205,6 +205,12 @@ HTML = f"""<!DOCTYPE html>
 }}
 @font-face {{
   font-family: 'Stardos Stencil';
+  font-weight: 400;
+  font-display: swap;
+  src: url('data:font/woff2;base64,{A["STARDOS_400"]}') format('woff2');
+}}
+@font-face {{
+  font-family: 'Stardos Stencil';
   font-weight: 700;
   font-display: swap;
   src: url('data:font/woff2;base64,{A["STARDOS_700"]}') format('woff2');
@@ -472,8 +478,10 @@ select[data-tbm-src] {{ display: none !important; }}
    la version avec le titre ; le tampon de décor dès 1101 px. Seuils mesurés dans le shell avec un tampon d'escadre « TEST WING », en français et en anglais. */
 .tb-brand-main, .tb-brand-short {{ color: #4FB286; }}
 .tb-brand-short {{ display: none; font-family: var(--f-stencil); font-size: 16px; font-weight: 700; letter-spacing: 3px; white-space: nowrap; }}
-.tb-classif {{ font-family: var(--f-stencil); font-size: 11px; letter-spacing: 3px; color: var(--red-faded); border: 1px solid var(--red-faded); padding: 4px 10px; white-space: nowrap; flex-shrink: 0; }}
+.tb-classif {{ font-family: var(--f-stencil); font-weight: 400; font-size: 11px; letter-spacing: 3px; color: var(--red-faded); border: 1px solid var(--red-faded); padding: 4px 10px; white-space: nowrap; flex-shrink: 0; }}
 .tb-lang-btn svg {{ display: block; }}
+.tb-brand-sub {{ font-weight: 500; }}
+.tb-version {{ font-family: 'Roboto Mono', monospace; }}
 @media (max-width: 1359px) {{ .tb-brand-main, .tb-brand-sub, .tb-brand + .tb-sep, .tb-version {{ display: none; }} .tb-brand-short {{ display: inline; }} }}
 @media (max-width: 1100px) {{ .tb-classif {{ display: none; }} }}
 .tb-btn {{ width: auto; height: 38px; min-width: 38px; padding: 0 12px; gap: 6px; font-family: var(--f-ui); font-weight: 500; letter-spacing: 1.5px; font-size: 12px; text-transform: uppercase; white-space: nowrap; }}

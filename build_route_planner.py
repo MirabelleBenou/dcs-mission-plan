@@ -29,7 +29,7 @@ ASSETS_PATH = os.path.join(HERE, 'assets.json')
 AIRFIELDS_PATH = os.path.join(HERE, 'airfields.json')
 TOWNS_PATH = os.path.join(HERE, 'towns.json')
 
-REQUIRED_ASSETS = ['STARDOS_700', 'OSWALD_500', 'OSWALD_700', 'ROBOTO_MONO_400', 'lib_leaflet', 'lib_leaflet_css', 'lib_milsymbol', 'lib_html2canvas']
+REQUIRED_ASSETS = ['STARDOS_400', 'STARDOS_700', 'OSWALD_500', 'OSWALD_700', 'ROBOTO_MONO_400', 'lib_leaflet', 'lib_leaflet_css', 'lib_milsymbol', 'lib_html2canvas']
 MILSYMBOL_SHA256 = '5af6b52f8660baa432ef406e6cf7341dde26053848c6f71c52adabccf4cea9cc'   # milsymbol_rp.min.js (milsymbol 3.0.5, MIT), embarquée telle quelle
 
 if not os.path.isfile(ASSETS_PATH):
@@ -232,6 +232,12 @@ CSS = r"""
    Monofichier ; polices embarquées ; Leaflet 1.9.4 (BSD-2)
    ============================================ */
 
+@font-face {
+  font-family: 'Stardos Stencil';
+  font-weight: 400;
+  font-display: swap;
+  src: url('data:font/woff2;base64,__STARDOS_400__') format('woff2');
+}
 @font-face {
   font-family: 'Stardos Stencil';
   font-weight: 700;
@@ -1138,13 +1144,15 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 
 /* ---------- Barre du haut commune aux sept modules (lot mp-imports-suite) ----------
    La marque du Flight Configurator : le titre et son sous-titre à l'accent du module dès 1653 px, le sigle seul en dessous (à toutes les largeurs) ;
-   la version avec le titre ; le tampon de décor dès 2128 px. Seuils mesurés dans le shell avec un tampon d'escadre « TEST WING », en français et en anglais. */
+   la version avec le titre ; le tampon de décor dès 2121 px. Seuils mesurés dans le shell avec un tampon d'escadre « TEST WING », en français et en anglais. */
 .tb-brand-main, .tb-brand-short { color: #7ac97a; }
 .tb-brand-short { display: none; font-family: var(--f-stencil); font-size: 16px; font-weight: 700; letter-spacing: 3px; white-space: nowrap; }
-.tb-classif { font-family: var(--f-stencil); font-size: 11px; letter-spacing: 3px; color: var(--red-faded); border: 1px solid var(--red-faded); padding: 4px 10px; white-space: nowrap; flex-shrink: 0; }
+.tb-classif { font-family: var(--f-stencil); font-weight: 400; font-size: 11px; letter-spacing: 3px; color: var(--red-faded); border: 1px solid var(--red-faded); padding: 4px 10px; white-space: nowrap; flex-shrink: 0; }
 .tb-lang-btn svg { display: block; }
+.tb-brand-sub { font-weight: 500; }
+.tb-version { font-family: 'Roboto Mono', monospace; }
 @media (max-width: 1652px) { .tb-brand-main, .tb-brand-sub, .tb-brand + .tb-sep, .tb-version { display: none; } .tb-brand-short { display: inline; } }
-@media (max-width: 2127px) { .tb-classif { display: none; } }
+@media (max-width: 2120px) { .tb-classif { display: none; } }
 
 /* ---------- étiquettes des boutons de fichier : à partir de 1907 px (seuil mesuré : avec le tampon d'escadre, la barre défilerait sinon) ---------- */
 @media (min-width: 1907px) {
@@ -1184,6 +1192,7 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
   .tb-btn { padding: 0 8px; min-width: 40px; }
 }
 """
+CSS = CSS.replace('__STARDOS_400__', A['STARDOS_400'])
 CSS = CSS.replace('__STARDOS_700__', A['STARDOS_700'])
 CSS = CSS.replace('__OSWALD_500__', A['OSWALD_500'])
 CSS = CSS.replace('__OSWALD_700__', A['OSWALD_700'])

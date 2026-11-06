@@ -843,7 +843,7 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
 .tb-btn:disabled:hover { background: transparent; border-color: var(--khaki); color: var(--paper); }
 .tb-btn.danger:hover { background: var(--rust); border-color: var(--red-faded); color: var(--paper-light); }
 /* Seuils mesurés dans le shell (il ajoute à la barre un bouton de retour de 40 ou 119 px, et le tampon de l'escadre) : libellé long dès 1040 px (le français est le plus large),
-   libellé court de 900 à 1039 px, icône seule en dessous ; le titre et la version dès 1436 px, le tampon de décor dès 1651 px ; le sigle reste visible à toutes les largeurs. */
+   libellé court de 900 à 1039 px, icône seule en dessous ; le titre et la version dès 1436 px, le tampon de décor dès 1645 px ; le sigle reste visible à toutes les largeurs. */
 @media (max-width: 1435px) { .tb-brand-main, .tb-brand-sub, .tb-sep, .tb-version { display: none; } .tb-brand-short { display: inline; } }
 @media (max-width: 1039px) { .tb-btn .tb-long { display: none; } .tb-btn .tb-short { display: inline; } .tb-btn { padding: 0 9px; letter-spacing: 1px; } .tb-select { max-width: 130px; } }
 @media (max-width: 899px) { .tb-btn .tb-btn-label { display: none; } .tb-btn { padding: 0; width: 38px; } .tb-select { max-width: 110px; } }
@@ -851,8 +851,10 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
 @media (max-width: 479px) { .toolbar { gap: 3px; } .tb-btn { width: 34px; min-width: 34px; } .tb-select { max-width: 64px; padding: 0 18px 0 6px; } .tb-lang-btn { min-width: 34px; padding: 0 2px; } }
 
 /* Tampon de décor : le style de celui du Briefing Generator, en anglais dans les deux langues ; il ne s'affiche que quand la barre a la place. */
-.tb-classif { font-family: var(--f-stencil); font-size: 11px; letter-spacing: 3px; color: var(--red-faded); border: 1px solid var(--red-faded); padding: 4px 10px; white-space: nowrap; flex-shrink: 0; }
-@media (max-width: 1650px) { .tb-classif { display: none; } }
+.tb-brand-sub { font-weight: 500; }
+.tb-version { font-family: 'Roboto Mono', monospace; }
+.tb-classif { font-family: var(--f-stencil); font-weight: 400; font-size: 11px; letter-spacing: 3px; color: var(--red-faded); border: 1px solid var(--red-faded); padding: 4px 10px; white-space: nowrap; flex-shrink: 0; }
+@media (max-width: 1644px) { .tb-classif { display: none; } }
 
 /* ---------- Page : état de l'export, deux colonnes, blocs ---------- */
 .editor { max-width: 1840px; }
@@ -3157,6 +3159,7 @@ init();
 
 FONTS = """
 @font-face { font-family: 'Roboto Mono'; font-weight: 400; font-display: swap; src: url('data:font/woff2;base64,@@ROBOTO_MONO_400@@') format('woff2'); }
+@font-face { font-family: 'Stardos Stencil'; font-weight: 400; font-display: swap; src: url('data:font/woff2;base64,@@STARDOS_400@@') format('woff2'); }
 @font-face { font-family: 'Stardos Stencil'; font-weight: 700; font-display: swap; src: url('data:font/woff2;base64,@@STARDOS_700@@') format('woff2'); }
 @font-face { font-family: 'Oswald'; font-weight: 500; font-display: swap; src: url('data:font/woff2;base64,@@OSWALD_500@@') format('woff2'); }
 """
@@ -3180,6 +3183,7 @@ def app_js():
 
 def build_html():
     fonts = (FONTS.replace('@@ROBOTO_MONO_400@@', A['ROBOTO_MONO_400'])
+                  .replace('@@STARDOS_400@@', A['STARDOS_400'])
                   .replace('@@STARDOS_700@@', A['STARDOS_700'])
                   .replace('@@OSWALD_500@@', A['OSWALD_500']))
     js = build_radio_block() + '\n' + tables_js() + '\n' + build_payload_block() + '\n' + JS_TBM + '\n' + app_js()

@@ -25,7 +25,7 @@ APP_VERSION = "1.5.1"
 OUT_PATH = os.path.join(HERE, 'dist', 'dcs_datacard_generator.html')
 ASSETS_PATH = os.path.join(HERE, 'assets.json')
 
-REQUIRED_ASSETS = ['STARDOS_700', 'OSWALD_500', 'OSWALD_700', 'ROBOTO_MONO_400', 'lib_html2canvas', 'lib_jszip']
+REQUIRED_ASSETS = ['STARDOS_400', 'STARDOS_700', 'OSWALD_500', 'OSWALD_700', 'ROBOTO_MONO_400', 'lib_html2canvas', 'lib_jszip']
 
 if not os.path.isfile(ASSETS_PATH):
     raise SystemExit(f"[ERREUR] Entrée manquante : {ASSETS_PATH} (assets.json attendu à la racine du dépôt)")
@@ -454,6 +454,12 @@ CSS = r"""
    Monofichier, hors ligne, polices embarquées
    ============================================ */
 
+@font-face {
+  font-family: 'Stardos Stencil';
+  font-weight: 400;
+  font-display: swap;
+  src: url('data:font/woff2;base64,__STARDOS_400__') format('woff2');
+}
 @font-face {
   font-family: 'Stardos Stencil';
   font-weight: 700;
@@ -1679,13 +1685,15 @@ select[data-tbm-src] { display: none !important; }
 
 /* ---------- Barre du haut commune aux sept modules (lot mp-imports-suite) ----------
    La marque du Flight Configurator : le titre et son sous-titre à l'accent du module dès 1360 px, le sigle seul en dessous (à toutes les largeurs) ;
-   la version avec le titre ; le tampon de décor dès 2021 px. Seuils mesurés dans le shell avec un tampon d'escadre « TEST WING », en français et en anglais. */
+   la version avec le titre ; le tampon de décor dès 2014 px. Seuils mesurés dans le shell avec un tampon d'escadre « TEST WING », en français et en anglais. */
 .tb-brand-main, .tb-brand-short { color: #8fb0c0; }
 .tb-brand-short { display: none; font-family: var(--f-stencil); font-size: 16px; font-weight: 700; letter-spacing: 3px; white-space: nowrap; }
-.tb-classif { font-family: var(--f-stencil); font-size: 11px; letter-spacing: 3px; color: var(--red-faded); border: 1px solid var(--red-faded); padding: 4px 10px; white-space: nowrap; flex-shrink: 0; }
+.tb-classif { font-family: var(--f-stencil); font-weight: 400; font-size: 11px; letter-spacing: 3px; color: var(--red-faded); border: 1px solid var(--red-faded); padding: 4px 10px; white-space: nowrap; flex-shrink: 0; }
 .tb-lang-btn svg { display: block; }
+.tb-brand-sub { font-weight: 500; }
+.tb-version { font-family: 'Roboto Mono', monospace; }
 @media (max-width: 1359px) { .tb-brand-main, .tb-brand-sub, .tb-brand + .tb-sep, .tb-version { display: none; } .tb-brand-short { display: inline; } }
-@media (max-width: 2020px) { .tb-classif { display: none; } }
+@media (max-width: 2013px) { .tb-classif { display: none; } }
 /* Les boutons portent leur texte au-dessus de 1722 px ; en dessous, l'icône seule (seuil mesuré : avec le tampon d'escadre, la barre défilerait sinon) */
 @media (max-width: 1721px) { .tb-btn .tb-btn-label { display: none; } .tb-btn { padding: 0 10px; } }
 @media (max-width: 1250px) {
@@ -1821,6 +1829,7 @@ _tab_rules = ',\n'.join(
     f'  body[data-active-tab="{s}"] .ed-section[data-section="{s}"]' for s in SECTION_IDS
 ) + ' {\n    display: block;\n    border: none;\n  }'
 CSS = CSS.replace('__TAB_SECTION_RULES__', _tab_rules)
+CSS = CSS.replace('__STARDOS_400__', A['STARDOS_400'])
 CSS = CSS.replace('__STARDOS_700__', A['STARDOS_700'])
 CSS = CSS.replace('__OSWALD_500__', A['OSWALD_500'])
 CSS = CSS.replace('__OSWALD_700__', A['OSWALD_700'])

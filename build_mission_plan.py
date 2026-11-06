@@ -625,6 +625,7 @@ select[data-tbm-src] {{ display: none !important; }}
   function refreshWingStamps() {{
     var name = wingShortName();
     Object.keys(iframes).forEach(function(iid) {{
+      if (iid === 'bg') return;   /* le BG remplit seul son tampon (applyWingBranding) */
       try {{
         var lbl = iframes[iid].contentDocument.querySelector('.mp-wing-stamp-label');
         if (lbl) lbl.textContent = name;
