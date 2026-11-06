@@ -233,10 +233,6 @@ select[data-tbm-src] { display: none !important; }
   user-select: none;
   white-space: nowrap;
 }
-/* La barre ne déborde pas sur un téléphone étroit (lot mp-exemples-demarrer) */
-@media (max-width: 539px) {
-  .tb-version { display: none; }
-}
 @media (max-width: 479px) {
   .toolbar { gap: 6px; padding-left: max(8px, env(safe-area-inset-left)); padding-right: max(8px, env(safe-area-inset-right)); }
   .tb-brand { min-width: 0; }
@@ -362,13 +358,17 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
 .tb-btn:disabled { opacity: .4; cursor: default; }
 .tb-btn:disabled:hover { background: transparent; border-color: var(--khaki); color: var(--paper); }
 .tb-btn.danger:hover { background: var(--rust); border-color: var(--red-faded); color: var(--paper-light); }
-/* Seuils mesurés dans le shell (il ajoute à la barre un bouton de retour de 40 ou 119 px) : libellé long dès 1040 px (le français est le plus large),
-   libellé court de 900 à 1039 px, icône seule en dessous ; le titre complet dès 1360 px. */
-@media (max-width: 1359px) { .tb-brand-main, .tb-brand-sub, .tb-sep, .tb-version { display: none; } .tb-brand-short { display: inline; } }
+/* Seuils mesurés dans le shell (il ajoute à la barre un bouton de retour de 40 ou 119 px, et le tampon de l'escadre) : libellé long dès 1040 px (le français est le plus large),
+   libellé court de 900 à 1039 px, icône seule en dessous ; le titre et la version dès 1436 px, le tampon de décor dès 1651 px ; le sigle reste visible à toutes les largeurs. */
+@media (max-width: 1435px) { .tb-brand-main, .tb-brand-sub, .tb-sep, .tb-version { display: none; } .tb-brand-short { display: inline; } }
 @media (max-width: 1039px) { .tb-btn .tb-long { display: none; } .tb-btn .tb-short { display: inline; } .tb-btn { padding: 0 9px; letter-spacing: 1px; } .tb-select { max-width: 130px; } }
 @media (max-width: 899px) { .tb-btn .tb-btn-label { display: none; } .tb-btn { padding: 0; width: 38px; } .tb-select { max-width: 110px; } }
-@media (max-width: 539px) { .tb-brand-short { display: none; } .tb-select { max-width: 96px; } }
+@media (max-width: 539px) { .tb-select { max-width: 96px; } }
 @media (max-width: 479px) { .toolbar { gap: 3px; } .tb-btn { width: 34px; min-width: 34px; } .tb-select { max-width: 64px; padding: 0 18px 0 6px; } .tb-lang-btn { min-width: 34px; padding: 0 2px; } }
+
+/* Tampon de décor : le style de celui du Briefing Generator, en anglais dans les deux langues ; il ne s'affiche que quand la barre a la place. */
+.tb-classif { font-family: var(--f-stencil); font-size: 11px; letter-spacing: 3px; color: var(--red-faded); border: 1px solid var(--red-faded); padding: 4px 10px; white-space: nowrap; flex-shrink: 0; }
+@media (max-width: 1650px) { .tb-classif { display: none; } }
 
 /* ---------- Page : état de l'export, deux colonnes, blocs ---------- */
 .editor { max-width: 1840px; }
@@ -678,9 +678,10 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <option value="modern-nato" data-i18n="theme.modern-nato">OTAN moderne</option>
     <option value="modern-east" data-i18n="theme.modern-east">Bloc Est moderne</option>
   </select>
-  <button class="tb-lang-btn" id="btn-lang" title="Switch language / Changer de langue">🇬🇧</button>
   <div class="tb-spacer"></div>
+  <div class="tb-classif">FLIGHT LEAD // COPY 1</div>
   <span class="tb-version">v0.1.2</span>
+  <button class="tb-lang-btn" id="btn-lang" title="Switch language / Changer de langue"><svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="14" fill="#012169"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#fff" stroke-width="2.8"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#C8102E" stroke-width="1.6"/><rect x="8" width="4" height="14" fill="#fff"/><rect y="5" width="20" height="4" fill="#fff"/><rect x="9" width="2" height="14" fill="#C8102E"/><rect y="6" width="20" height="2" fill="#C8102E"/></svg></button>
 </header>
 
 <!-- MAIN APP -->
@@ -9680,11 +9681,14 @@ function loadLang() {
   CURRENT_LANG = (saved === 'fr' || saved === 'en') ? saved : ((navigator.language || 'fr').startsWith('fr') ? 'fr' : 'en');
   document.documentElement.lang = CURRENT_LANG;
 }
+/* Drapeaux dessinés (ils ne s'affichent pas en lettres sous Windows) ; le bouton montre la langue vers laquelle il bascule */
+const FLAG_FR = '<svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="7" height="14" fill="#002395"/><rect x="7" width="6" height="14" fill="#fff"/><rect x="13" width="7" height="14" fill="#ED2939"/></svg>';
+const FLAG_EN = '<svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="14" fill="#012169"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#fff" stroke-width="2.8"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#C8102E" stroke-width="1.6"/><rect x="8" width="4" height="14" fill="#fff"/><rect y="5" width="20" height="4" fill="#fff"/><rect x="9" width="2" height="14" fill="#C8102E"/><rect y="6" width="20" height="2" fill="#C8102E"/></svg>';
 function applyI18nStatic() {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.getAttribute('data-i18n')); });
   document.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = t(el.getAttribute('data-i18n-title')); });
   const lang = document.getElementById('btn-lang');
-  lang.textContent = CURRENT_LANG === 'fr' ? '🇬🇧' : '🇫🇷';
+  lang.innerHTML = CURRENT_LANG === 'fr' ? FLAG_EN : FLAG_FR;
   lang.title = t('toolbar.lang.tooltip');
   ['open', 'save', 'import', 'export', 'clear'].forEach(k => document.getElementById('btn-' + k).setAttribute('aria-label', t('tb.' + k)));
 }
