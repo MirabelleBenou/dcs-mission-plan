@@ -588,32 +588,24 @@ body {
   padding-left: max(14px, env(safe-area-inset-left));
   padding-right: max(14px, env(safe-area-inset-right));
 }
-.tb-brand {
-  display: flex; align-items: center; gap: 10px;
-  color: var(--paper);
+.tb-brand { display: flex; flex-direction: column; line-height: 1.1; gap: 1px; flex-shrink: 0; }
+.tb-brand-main {
   font-family: var(--f-stencil);
+  font-size: 16px;
   font-weight: 700;
-  letter-spacing: 2px;
-  font-size: 15px;
-  border-right: 1px solid var(--khaki);
-  padding-right: 12px;
-  margin-right: 4px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
   white-space: nowrap;
-  flex-shrink: 0;
 }
-.tb-brand::before {
-  content: '';
-  display: inline-block;
-  width: 8px; height: 8px;
-  background: var(--amber);
-  border-radius: 50%;
-  box-shadow: 0 0 8px var(--amber);
-  animation: pulse 2s ease-in-out infinite;
+.tb-brand-sub {
+  font-family: var(--f-ui);
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--khaki-light);
+  text-transform: uppercase;
+  white-space: nowrap;
 }
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50%      { opacity: .4; }
-}
+.tb-sep { width: 1px; height: 28px; background: var(--khaki); opacity: .4; flex-shrink: 0; }
 .tb-btn {
   font-family: var(--f-ui);
   font-weight: 700;
@@ -648,7 +640,6 @@ body {
   color: var(--paper-light);
 }
 .tb-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
-.tb-btn .tb-short { display: none; }
 
 .tb-select {
   font-family: var(--f-ui);
@@ -751,13 +742,14 @@ select[data-tbm-src] { display: none !important; }
 .tbm-panel.tbm-up { border-top: 1px solid var(--amber-dark); border-bottom: 3px solid var(--amber); transform-origin: bottom left; }
 .tb-spacer { flex: 1; min-width: 0; }
 .tb-version {
+  font-family: var(--f-typewriter);
   font-size: 11px;
-  opacity: 0.5;
+  opacity: .45;
   color: var(--amber);
-  letter-spacing: 0.5px;
-  align-self: center;
-  margin-left: 8px;
+  letter-spacing: .5px;
   user-select: none;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 .tb-lang-btn {
   background: transparent;
@@ -1684,37 +1676,27 @@ select[data-tbm-src] { display: none !important; }
 }
 .dc-notes { margin-top: 9px; font: 500 17px/1.35 var(--dc-fo); letter-spacing: .02em; white-space: pre-line; overflow-wrap: anywhere; }
 
-/* ============ ADAPTATION < 1800 px : libellés courts ============ */
-@media (max-width: 1800px) {
-  .tb-btn .tb-long { display: none; }
-  .tb-btn .tb-short { display: inline; }
-  .tb-btn .tb-btn-label.solo { display: none; }
-  .tb-btn { padding: 0 10px; }
-}
-.tb-brand-short { display: none; }
-@media (max-width: 1400px) {
-  /* Le tampon du shell dit déjà où l'on est : le titre se réduit à « D·G » */
-  .tb-brand-main { display: none; }
-  .tb-brand-short { display: inline; }
-}
-@media (max-width: 1350px) {
-  .tb-brand { font-size: 13px; }
-  .tb-version { display: none; }
-}
+
+/* ---------- Barre du haut commune aux sept modules (lot mp-imports-suite) ----------
+   La marque du Flight Configurator : le titre et son sous-titre à l'accent du module dès 1360 px, le sigle seul en dessous (à toutes les largeurs) ;
+   la version avec le titre ; le tampon de décor dès 1624 px. Seuils mesurés dans le shell avec un tampon d'escadre « TEST WING », en français et en anglais. */
+.tb-brand-main, .tb-brand-short { color: #8fb0c0; }
+.tb-brand-short { display: none; font-family: var(--f-stencil); font-size: 16px; font-weight: 700; letter-spacing: 3px; white-space: nowrap; }
+.tb-classif { font-family: var(--f-stencil); font-size: 11px; letter-spacing: 3px; color: var(--red-faded); border: 1px solid var(--red-faded); padding: 4px 10px; white-space: nowrap; flex-shrink: 0; }
+.tb-lang-btn svg { display: block; }
+@media (max-width: 1359px) { .tb-brand-main, .tb-brand-sub, .tb-brand + .tb-sep, .tb-version { display: none; } .tb-brand-short { display: inline; } }
+@media (max-width: 1623px) { .tb-classif { display: none; } }
+/* Les boutons portent leur texte au-dessus de 2021 px ; en dessous, l'icône seule (seuil mesuré : avec le tampon d'escadre, la barre défilerait sinon) */
+@media (max-width: 2020px) { .tb-btn .tb-btn-label { display: none; } .tb-btn { padding: 0 10px; } }
 @media (max-width: 1250px) {
-  /* « Depuis le briefing » ne garde que son icône (infobulle conservée) ; le sélecteur de thème se resserre */
-  #btn-briefing .tb-btn-label { display: none; }
-  #btn-briefing { padding: 0 8px; }
+  /* le sélecteur de thème se resserre */
   .tb-select { max-width: 124px; padding: 0 26px 0 8px; text-overflow: ellipsis; overflow: hidden; }
 }
 
 /* ============ TABLETTE ≤ 1100 px ============ */
 @media (max-width: 1100px) {
-  .tb-btn .tb-btn-label { display: none; }
   .tb-btn { padding: 0 8px; }
-  .tb-brand { display: none; }
   .tb-select { max-width: 120px; padding: 0 26px 0 8px; text-overflow: ellipsis; overflow: hidden; }
-  .tb-version { display: none; }
   .tb-seg .seg-btn { padding: 0 10px; }
 
   .app { grid-template-columns: 1fr; bottom: 68px; }
@@ -1865,35 +1847,40 @@ __CSS__
 
 <!-- ===== TOOLBAR ===== -->
 <header class="toolbar" role="toolbar" aria-label="Datacard Generator" data-i18n-aria-label="app.title">
-  <div class="tb-brand"><span class="tb-brand-main" data-i18n="app.title">Datacard Generator</span><span class="tb-brand-short" data-i18n="app.short">D·G</span></div>
+  <div class="tb-brand">
+    <span class="tb-brand-main">DATACARD GENERATOR</span>
+    <span class="tb-brand-short" data-i18n="app.short">D·G</span>
+    <span class="tb-brand-sub" data-i18n="tb.subtitle">░ CARTES DE BORD</span>
+  </div>
+  <div class="tb-sep"></div>
   <div class="tb-seg" id="mode-seg" role="group" data-i18n-title="tb.mode.tip" title="Version de jour ou de nuit de la datacard" data-i18n-aria-label="tb.mode.tip" aria-label="Version de jour ou de nuit de la datacard">
     <button type="button" class="seg-btn" id="mode-day" data-mode="day" aria-pressed="true" data-i18n="tb.mode.day">Day</button>
     <button type="button" class="seg-btn" id="mode-night" data-mode="night" aria-pressed="false" data-i18n="tb.mode.night">Night</button>
   </div>
   <button class="tb-btn" id="btn-json-import" data-i18n-title="tb.json.import.tip" title="Ouvrir une datacard (JSON)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-    <span class="tb-btn-label solo" data-i18n="tb.json.import">Ouvrir</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v1H3z"/><path d="M3 10h19l-2 8a2 2 0 0 1-2 1.5H5a2 2 0 0 1-2-2z"/></svg>
+    <span class="tb-btn-label" data-i18n="tb.json.import">Ouvrir</span>
   </button>
   <input type="file" id="file-load" accept=".json,.zip,application/json,application/zip" hidden>
-  <button class="tb-btn" id="btn-briefing" data-i18n-title="tb.briefing.tip" title="Importer un briefing, une route, la mission d'HQ ou un paquet de vol" data-i18n-aria-label="tb.briefing.tip" aria-label="Importer un briefing, une route, la mission d'HQ ou un paquet de vol">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="9 15 12 18 15 15"/><line x1="12" y1="11" x2="12" y2="18"/></svg>
-    <span class="tb-btn-label"><span class="tb-long" data-i18n="tb.briefing">Importer</span><span class="tb-short" data-i18n="tb.briefing.short">Importer</span></span>
-  </button>
   <button class="tb-btn" id="btn-json-export" data-i18n-title="tb.json.export.tip" title="Enregistrer la datacard (JSON)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-    <span class="tb-btn-label solo" data-i18n="tb.json.export">Enregistrer</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h11l4 4v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M8 3v5h7V3"/><rect x="7" y="13" width="10" height="8"/></svg>
+    <span class="tb-btn-label" data-i18n="tb.json.export">Enregistrer</span>
+  </button>
+  <button class="tb-btn" id="btn-briefing" data-i18n-title="tb.briefing.tip" title="Importer un briefing, une route, la mission d'HQ ou un paquet de vol" data-i18n-aria-label="tb.briefing.tip" aria-label="Importer un briefing, une route, la mission d'HQ ou un paquet de vol">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    <span class="tb-btn-label" data-i18n="tb.briefing">Importer</span>
   </button>
   <button class="tb-btn" id="btn-print" data-i18n-title="tb.export.tip" title="Exporter en PDF ou PNG">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-    <span class="tb-btn-label solo" data-i18n="tb.export">Exporter</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    <span class="tb-btn-label" data-i18n="tb.export">Exporter</span>
   </button>
   <button class="tb-btn" id="btn-example" data-i18n-title="tb.example.tip" title="Ouvrir la datacard d'exemple (remplace le document en cours)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
-    <span class="tb-btn-label solo" data-i18n="tb.example">Exemple</span>
+    <span class="tb-btn-label" data-i18n="tb.example">Exemple</span>
   </button>
   <button class="tb-btn danger" id="btn-reset" data-i18n-title="tb.reset.tip" title="Vider le document (repartir d'une carte blanche)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-    <span class="tb-btn-label solo" data-i18n="tb.reset">Effacer</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+    <span class="tb-btn-label" data-i18n="tb.reset">Effacer</span>
   </button>
   <select class="tb-select" id="theme-select" data-i18n-title="tb.theme.tip" title="Thème graphique" data-i18n-aria-label="tb.theme.tip" aria-label="Thème graphique">
     <option value="cw-nato"     data-i18n="theme.cw-nato">Cold War OTAN</option>
@@ -1902,8 +1889,9 @@ __CSS__
     <option value="modern-east" data-i18n="theme.modern-east">Bloc Est moderne</option>
   </select>
   <div class="tb-spacer"></div>
+  <div class="tb-classif">COCKPIT COPY // DO NOT REMOVE</div>
   <span class="tb-version">v__APP_VERSION__</span>
-  <button class="tb-lang-btn" id="btn-lang" data-i18n-title="tb.lang.tip" title="Switch language / Changer de langue">🇬🇧</button>
+  <button class="tb-lang-btn" id="btn-lang" data-i18n-title="tb.lang.tip" title="Switch language / Changer de langue"><svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="14" fill="#012169"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#fff" stroke-width="2.8"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#C8102E" stroke-width="1.6"/><rect x="8" width="4" height="14" fill="#fff"/><rect y="5" width="20" height="4" fill="#fff"/><rect x="9" width="2" height="14" fill="#C8102E"/><rect y="6" width="20" height="2" fill="#C8102E"/></svg></button>
 </header>
 
 <!-- ===== FENÊTRE D'EXPORT ===== -->
@@ -2116,8 +2104,9 @@ const EXAMPLE_DOC_EN = __EXAMPLE_DOC_EN__;
 const I18N = {
   fr: {
     'app.title': 'Datacard Generator',
-    'tb.mode.day': 'Day',
-    'tb.mode.night': 'Night',
+    'tb.subtitle': '░ CARTES DE BORD',
+    'tb.mode.day': 'Jour',
+    'tb.mode.night': 'Nuit',
     'tb.mode.tip': 'Version de jour ou de nuit de la datacard',
     'tb.briefing': 'Importer',
     'tb.briefing.tip': 'Importer un briefing, une route, la mission d\'HQ ou un paquet de vol',
@@ -2461,6 +2450,7 @@ const I18N = {
   },
   en: {
     'app.title': 'Datacard Generator',
+    'tb.subtitle': '░ DATACARDS',
     'tb.mode.day': 'Day',
     'tb.mode.night': 'Night',
     'tb.mode.tip': 'Day or night version of the datacard',
@@ -2836,10 +2826,14 @@ function applyI18nStatic() {
   document.title = t('app.title');
 }
 
+/* Drapeaux dessinés (ils ne s'affichent pas en lettres sous Windows) ; le bouton montre la langue vers laquelle il bascule */
+const FLAG_FR = '<svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="7" height="14" fill="#002395"/><rect x="7" width="6" height="14" fill="#fff"/><rect x="13" width="7" height="14" fill="#ED2939"/></svg>';
+const FLAG_EN = '<svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="14" fill="#012169"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#fff" stroke-width="2.8"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#C8102E" stroke-width="1.6"/><rect x="8" width="4" height="14" fill="#fff"/><rect y="5" width="20" height="4" fill="#fff"/><rect x="9" width="2" height="14" fill="#C8102E"/><rect y="6" width="20" height="2" fill="#C8102E"/></svg>';
+
 function updateFlagButton() {
   const btn = document.getElementById('btn-lang');
   if (!btn) return;
-  btn.textContent = CURRENT_LANG === 'fr' ? '🇬🇧' : '🇫🇷';
+  btn.innerHTML = CURRENT_LANG === 'fr' ? FLAG_EN : FLAG_FR;
 }
 
 /* ============= UTILITAIRES ============= */
