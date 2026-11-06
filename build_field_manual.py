@@ -100,6 +100,7 @@ KRAFT_MEAST = _kraft_variant(KRAFT_RAW, '#c8c1b2', '#bcb5a6')
 SPECIAL_ELITE_B64 = b64_font('SPECIAL_ELITE')
 STARDOS_700_B64   = b64_font('STARDOS_700')
 OSWALD_500_B64    = b64_font('OSWALD_500')
+ROBOTO_MONO_400_B64 = b64_font('ROBOTO_MONO_400')
 
 def font_face_css():
     """Génère les @font-face. Fallback CDN si base64 absent."""
@@ -130,6 +131,15 @@ def font_face_css():
   font-weight: 500;
   font-display: swap;
   src: url('data:font/woff2;base64,{OSWALD_500_B64}') format('woff2');
+}}""")
+
+    # Roboto Mono 400 : le bouton retour que le shell ajoute à la barre l'emploie ; une police n'apparaît jamais sans sa face embarquée (R295)
+    if ROBOTO_MONO_400_B64:
+        parts.append(f"""@font-face {{
+  font-family: 'Roboto Mono';
+  font-weight: 400;
+  font-display: swap;
+  src: url('data:font/woff2;base64,{ROBOTO_MONO_400_B64}') format('woff2');
 }}""")
     return '\n'.join(parts)
 
@@ -1177,28 +1187,20 @@ body {{
   padding-right: max(14px, env(safe-area-inset-right));
 }}
 
-.fm-brand {{
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  flex-shrink: 0;
-}}
-.fm-brand-logo {{
+.tb-brand {{ display: flex; flex-direction: column; line-height: 1.1; gap: 1px; flex-shrink: 0; }}
+.tb-brand-main {{
   font-family: var(--f-stencil);
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
-  letter-spacing: 2px;
+  letter-spacing: 3px;
   color: var(--fm-accent);
   text-transform: uppercase;
   white-space: nowrap;
-  border: 1px solid var(--fm-accent);
-  padding: 2px 8px;
-  line-height: 1;
 }}
-.fm-brand-name {{
+.tb-brand-sub {{
   font-family: var(--f-ui);
-  font-size: 11px;
-  letter-spacing: 3px;
+  font-size: 10px;
+  letter-spacing: 2px;
   color: var(--khaki-light);
   text-transform: uppercase;
   white-space: nowrap;
@@ -1207,12 +1209,12 @@ body {{
 .tb-sep {{ width: 1px; height: 28px; background: var(--khaki); opacity: .4; flex-shrink: 0; }}
 .tb-spacer {{ flex: 1; }}
 .tb-version {{
-  font-family: var(--f-ui);
-  font-size: 10px;
-  letter-spacing: 1.5px;
-  color: var(--fm-accent);
-  opacity: .7;
-  text-transform: uppercase;
+  font-family: var(--f-typewriter);
+  font-size: 11px;
+  opacity: .45;
+  color: var(--amber);
+  letter-spacing: .5px;
+  user-select: none;
   white-space: nowrap;
 }}
 
@@ -1236,6 +1238,17 @@ body {{
   border-color: var(--fm-accent);
   outline: none;
 }}
+
+
+/* ---------- Barre du haut commune aux sept modules (lot mp-imports-suite) ----------
+   La marque du Flight Configurator : le titre et son sous-titre à l'accent du module dès 1360 px, le sigle seul en dessous (à toutes les largeurs) ;
+   la version avec le titre ; le tampon de décor dès 1101 px. Seuils mesurés dans le shell avec un tampon d'escadre « TEST WING », en français et en anglais. */
+.tb-brand-main, .tb-brand-short {{ color: #7E8FA6; }}
+.tb-brand-short {{ display: none; font-family: var(--f-stencil); font-size: 16px; font-weight: 700; letter-spacing: 3px; white-space: nowrap; }}
+.tb-classif {{ font-family: var(--f-stencil); font-size: 11px; letter-spacing: 3px; color: var(--red-faded); border: 1px solid var(--red-faded); padding: 4px 10px; white-space: nowrap; flex-shrink: 0; }}
+#btn-lang svg {{ display: block; }}
+@media (max-width: 1359px) {{ .tb-brand-main, .tb-brand-sub, .tb-brand + .tb-sep, .tb-version {{ display: none; }} .tb-brand-short {{ display: inline; }} }}
+@media (max-width: 1100px) {{ .tb-classif {{ display: none; }} }}
 
 /* ── ROOT SCROLL ── */
 #fm-root {{
@@ -1791,12 +1804,14 @@ kbd {{
 
 <!-- ======== TOOLBAR ======== -->
 <header class="toolbar">
-  <div class="fm-brand">
-    <span class="fm-brand-logo" aria-label="Field Manual">F·M</span>
-    <span class="fm-brand-name" data-i18n="brand.name">Field Manual</span>
+  <div class="tb-brand">
+    <span class="tb-brand-main">FIELD MANUAL</span>
+    <span class="tb-brand-short">F·M</span>
+    <span class="tb-brand-sub" data-i18n="brand.sub">░ MANUEL OPÉRATIONNEL</span>
   </div>
   <div class="tb-sep" aria-hidden="true"></div>
   <div class="tb-spacer"></div>
+  <div class="tb-classif">TRAINING // UNCLASSIFIED</div>
   <span class="tb-version">v{APP_VERSION}</span>
   <button id="btn-lang" aria-label="Changer de langue" title="Switch language">
     <svg id="flag-svg" viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg">
@@ -2768,9 +2783,9 @@ kbd {{
 
       <!-- Day ou Night -->
       <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Day ou Night</h3>
+        <h3 class="lang-block" data-lang="fr">Jour ou Nuit</h3>
         <h3 class="lang-block" data-lang="en">Day or Night</h3>
-        <div class="lang-block" data-lang="fr"><p>Le sélecteur <strong>Day | Night</strong> donne à tout le paquet sa version de <strong>jour</strong> — encre sombre sur papier clair — ou de <strong>nuit</strong> — tons sourds sur fond sombre, sans aucun blanc pur, pour ne pas éblouir dans un cockpit de nuit. Les thèmes de l’outil ne changent rien à la datacard : seule cette bascule compte.</p></div>
+        <div class="lang-block" data-lang="fr"><p>Le sélecteur <strong>Jour | Nuit</strong> donne à tout le paquet sa version de <strong>jour</strong> — encre sombre sur papier clair — ou de <strong>nuit</strong> — tons sourds sur fond sombre, sans aucun blanc pur, pour ne pas éblouir dans un cockpit de nuit. Les thèmes de l’outil ne changent rien à la datacard : seule cette bascule compte.</p></div>
         <div class="lang-block" data-lang="en"><p>The <strong>Day | Night</strong> selector gives the whole deck its <strong>day</strong> version — dark ink on light paper — or its <strong>night</strong> version — muted tones on a dark background, with no pure white, so as not to dazzle in a night cockpit. The tool’s themes change nothing on the datacard: only this switch counts.</p></div>
       </div>
 
@@ -3005,6 +3020,7 @@ kbd {{
 var I18N = {{
   fr: {{
     'brand.name':       'Field Manual',
+    'brand.sub':        '░ MANUEL OPÉRATIONNEL',
     'index.title':      'Modules documentés',
     'index.badge.active': 'Manuel',
     'index.hq.desc':    'Wing Command Center — configuration escadre',
@@ -3039,6 +3055,7 @@ var I18N = {{
   }},
   en: {{
     'brand.name':       'Field Manual',
+    'brand.sub':        '░ OPERATIONAL MANUAL',
     'index.title':      'Documented Modules',
     'index.badge.active': 'Manual',
     'index.hq.desc':    'Wing Command Center — wing configuration',
