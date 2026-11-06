@@ -3333,7 +3333,7 @@ function normalizeCard(src) {
     c.crew = src.crew.slice(0, LIMITS.crew).map(o => {
       let pilot = str(o && o.pilot);
       const old = str(o && o.crew).trim();
-      if (old !== '') pilot = hasText(pilot) ? pilot + ' / ' + old : old;
+      if (old !== '') { pilot = pilot.trim(); pilot = pilot !== '' ? pilot + ' / ' + old : old; }
       return { callsign: str(o && o.callsign), pilot: pilot, type: str(o && o.type), board: str(o && o.board) };
     });
   }
@@ -3958,7 +3958,7 @@ function groupText(c) {
   const d = deduceGroup(c);
   if (d) return d.types.map(x => x[1] + ' \u00d7 ' + x[0]).join(' + ');
   const a = c.flight.aircraft.trim(), n = c.flight.count;
-  if (hasText(a)) return n != null ? n + ' \u00d7 ' + a : a;
+  if (hasText(a)) return (n != null && a.indexOf('+') < 0) ? n + ' \u00d7 ' + a : a;
   return n != null ? t('dc.flightOf', { n: n }) : '';
 }
 
@@ -5079,7 +5079,7 @@ function onImpChanClick(e) {
 }
 
 /* La datacard d'un vol : indicatif, type, nombre d'unités, navigation (par le chemin d'une route du Route Planner), radios de la première unité ;
-   avec la mission de HQ : date, heure et météo. Ni emport, ni terrains, ni équipage. */
+   avec la mission de HQ : date, heure et météo. Ni emport ni terrains ; une ligne d'équipage par unité (indicatif, type, n° de bord). */
 function cardFromFlight(fl, src) {
   const c = newCard();
   const u = fl.units.length ? fl.units[0] : null;
