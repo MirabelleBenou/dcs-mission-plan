@@ -8,6 +8,7 @@ Blocs partagés insérés tels quels (identiques à l'octet dans les modules qui
   radio_block.py    — noms des postes radio et numéros de canal du cockpit
   payload_block.py  — lecture d'un .lua de presets, pylônes et armes permis, `payload` d'un .miz ; il lit les constantes WEAPON_NAMES,
                       AIRCRAFT_PYLONS et AIRCRAFT_LIMITS, qui sont celles du Loadout Editor de Mission Tools
+  group_store_block.py — la fiche des groupes partagée avec le Route Planner (flight_set_v1) : lecture, écriture groupe par groupe, migration
   magvar_block.py, projection_block.py, route_pack_block.py — la déclinaison magnétique, les projections des théâtres de DCS (llToDcs, dcsToLl) et
                       packPoint (le point d'un paquet, le même texte qu'au Route Planner) : le bloc Route en tire les caps magnétiques, le croquis et les points
   bloc de coordonnées de navigation (COORD_BLOCK ci-dessous) — recopié octet pour octet du Route Planner et du Datacard Generator (empreinte COORD_SHA16) : legCalc, fmtHdg, parseDecl
@@ -23,6 +24,7 @@ import re
 import subprocess
 import sys
 
+from group_store_block import build_block as build_group_store_block
 from magvar_block import build_block as build_magvar_block
 from payload_block import build_block as build_payload_block
 from projection_block import build_block as build_projection_block
@@ -387,6 +389,8 @@ I18N_FR = {
     'fl.unfoldall': 'Tout déplier',
     'fl.remove': 'Retirer ce groupe',
     'fl.empty': 'Aucun groupe. Ajoutez-en un, ou importez-en depuis la barre du haut.',
+    'fl.nounit': 'Aucune unité',
+    'cmp.nounit': 'Ajoutez une unité à ce groupe : ses radios, son emport et sa route se règlent ici.',
     'fl.name': 'Nom du groupe',
     'fl.name.ph': 'Hind 1',
     'u.type': 'Type',
@@ -667,6 +671,8 @@ I18N_EN = {
     'fl.unfoldall': 'Unfold all',
     'fl.remove': 'Remove this group',
     'fl.empty': 'No group. Add one, or import some from the top bar.',
+    'fl.nounit': 'No unit',
+    'cmp.nounit': 'Add a unit to this group: its radios, loadout and route are set here.',
     'fl.name': 'Group name',
     'fl.name.ph': 'Hind 1',
     'u.type': 'Type',
@@ -1389,6 +1395,8 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
 .fc-units { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; margin-top: 12px; }
 .fc-unit { border: 1px solid rgba(128,116,84,.55); border-left: 3px solid var(--amber-dark); padding: 8px 10px 10px; background: rgba(0,0,0,.12); }
 .fc-unit.sel { border-left-color: var(--fc); background: var(--fc-dim); box-shadow: 0 0 0 1px var(--fc); }
+.fc-nounit { display: flex; align-items: center; min-height: 44px; box-sizing: border-box; border: 1px dashed rgba(128,116,84,.6); border-left: 3px solid var(--amber-dark); padding: 6px 10px; font-family: var(--f-typewriter); font-size: 12px; color: var(--khaki-light); cursor: pointer; }
+.fc-nounit.sel { border-left-color: var(--fc); background: var(--fc-dim); box-shadow: 0 0 0 1px var(--fc); color: var(--paper); }
 .fc-uhead { margin-bottom: 6px; }
 /* la flèche de l'unité : le dessin de celle du groupe (.fc-chev), une cible de 34 px ; repliée, la carte garde son en-tête et une ligne de résumé */
 .fc-ufold { display: flex; align-items: center; justify-content: center; flex: none; min-width: 34px; min-height: 34px; margin: -4px 0 -4px -8px; padding: 0; background: none; border: 0; cursor: pointer; color: inherit; }
@@ -2120,8 +2128,9 @@ const KEY_THEME = 'theme_v1', KEY_LANG = 'lang_v1', KEY_STATE = 'fc_state_v1', K
 const HQ_MISSION_SCHEMAS = ['dcs-mission-snapshot-v1', 'dcs-mission-snapshot-v2'];       // la v1 ne reste qu'en lecture
 const PACKAGE_FORMAT = 'dcs-flight-package-v2', PACKAGE_FORMATS = ['dcs-flight-package-v1', 'dcs-flight-package-v2'];
 
-// L'état. S est le travail en cours : fc_state_v1 et le fichier de travail le gardent en entier, une clé de plus sur un vol y survit
-// (le bloc « Départ » du lot suivant). LIB.mine : mes presets par type. UI : ce qui ne se garde pas.
+// L'état. S est le travail en cours : les groupes et le théâtre vivent dans flight_set_v1 (partagée avec le Route Planner, bloc group_store_block.py), le fichier de travail
+// les garde en entier ; une clé de plus sur un groupe ou une unité y survit (le bloc « Départ » du lot suivant). fc_state_v1 ne garde que { v: 2, sel, mine }.
+// LIB.mine : mes presets par type. UI : ce qui ne se garde pas.
 const S = { theatre: '', flights: [], sel: { f: 0, u: 0 } };
 const LIB = { mine: {}, report: null };
 const UI = {
@@ -2143,7 +2152,8 @@ function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* l'écr
 let _saveTimer = 0;
 function writeState() {
   _saveTimer = 0;
-  try { lsSet(KEY_STATE, JSON.stringify({ v: 1, state: S, mine: LIB.mine })); } catch (e) { /* l'écran marche sans */ }
+  try { gsPush(); } catch (e) { /* l'écran marche sans */ }
+  try { lsSet(KEY_STATE, JSON.stringify({ v: 2, sel: S.sel, mine: LIB.mine })); } catch (e) { /* l'écran marche sans */ }
 }
 function saveWork() {
   clearTimeout(_saveTimer);
@@ -2154,13 +2164,86 @@ function flushWork() {
   clearTimeout(_saveTimer);
   writeState();
 }
+// Un geste qui compte pour l'autre module (route choisie ou retirée, groupe ajouté ou retiré) s'écrit sans attendre.
+function commitNow() {
+  clearTimeout(_saveTimer);
+  writeState();
+}
+
+// ----- La fiche partagée (flight_set_v1) -----
+// GS.seen : fcId → texte stable (gsStable) du groupe tel qu'on l'a lu ou écrit la dernière fois. writeState n'écrit que les groupes qui diffèrent (gsPutFlight relit la clé, ne remplace que ce groupe),
+// retire ceux que le module a supprimés (gsRemoveFlight) et pose le théâtre s'il a changé. Un groupe que le module ne montre pas (une unité d'un type hors de PAYLOAD_TYPES) n'y figure jamais : il n'est jamais touché.
+const GS = { seen: {}, theatre: '' };
+function gsMarkAll() {
+  GS.seen = {};
+  S.flights.forEach(f => { GS.seen[f.fcId] = gsStable(f); });
+  GS.theatre = S.theatre;
+}
+function gsPush() {
+  S.flights.forEach(f => {
+    const j = gsStable(f);
+    if (GS.seen[f.fcId] !== j && gsPutFlight(JSON.parse(JSON.stringify(f)))) GS.seen[f.fcId] = j;
+  });
+  Object.keys(GS.seen).forEach(id => {
+    if (!S.flights.some(f => f.fcId === id) && gsRemoveFlight(id)) delete GS.seen[id];
+  });
+  if (S.theatre !== GS.theatre && gsSetTheatre(S.theatre)) GS.theatre = S.theatre;
+}
+// Ce que les autres ont écrit : les groupes changés sont remplacés, les nouveaux ajoutés (à leur place dans la fiche), ceux qui ont disparu retirés ; la sélection reste sur le même groupe (sinon le premier).
+// Un groupe en cours d'écriture locale s'écrit d'abord. Rend vrai si l'écran a changé (il est redessiné).
+function gsPull() {
+  flushWork();
+  const gs = gsRead();
+  if (!gs) return false;
+  const selId = S.flights[S.sel.f] ? S.flights[S.sel.f].fcId : null, byId = {}, inSet = {}, out = [];
+  S.flights.forEach(f => { byId[f.fcId] = f; });
+  let changed = false;
+  gs.flights.forEach(raw => {
+    inSet[raw.fcId] = true;
+    const nf = restoreFlight(raw);
+    if (!nf) return;
+    const cur = byId[raw.fcId], j = gsStable(nf);
+    if (cur && (GS.seen[raw.fcId] === j || gsStable(cur) !== GS.seen[raw.fcId])) { out.push(cur); return; }
+    if (cur && UI.fold.has(cur)) UI.fold.set(nf, UI.fold.get(cur));
+    GS.seen[raw.fcId] = j;
+    out.push(nf);
+    changed = true;
+  });
+  S.flights.forEach(f => {
+    if (out.indexOf(f) >= 0) return;
+    if (!has(GS.seen, f.fcId)) { out.push(f); return; }       // jamais écrit (le stockage a refusé) : gardé
+    delete GS.seen[f.fcId];
+    changed = true;
+  });
+  if (out.some((f, i) => f !== S.flights[i]) || out.length !== S.flights.length) changed = true;
+  if (S.theatre !== gs.theatre) { S.theatre = gs.theatre; changed = true; }
+  GS.theatre = gs.theatre;
+  if (!changed) return false;
+  S.flights = out;
+  const k = selId === null ? -1 : out.findIndex(f => f.fcId === selId);
+  S.sel = k >= 0 ? { f: k, u: S.sel.u } : { f: 0, u: 0 };
+  if (!S.flights[S.sel.f] || !S.flights[S.sel.f].units[S.sel.u]) S.sel.u = 0;
+  if (UI.rtChoose !== null && !S.flights.some(f => f.fcId === UI.rtChoose)) UI.rtChoose = null;
+  Object.assign(UI.cmp, { saving: false, err: '', st: null });
+  renderAll();
+  return true;
+}
+function gsStorage(e) {
+  if (e.key !== null && e.key !== KEY_FLIGHT_SET) return;
+  gsPull();
+}
+// Les points d'une route du Route Planner (lue brute dans route_set_v1) au format du paquet, pour la migration ; null sans projection du théâtre
+function gsPackRoute(r, th) {
+  if (!has(TM_PARAMS, th)) return null;
+  return rpPack({ points: (Array.isArray(r.points) ? r.points : []).filter(p => isObj(p) && packValidCoord(p.lat, p.lon)) }, th, rpRead().state.gs);
+}
+const UNIT_KEYS = ['type', 'name', 'callsign', 'csRaw', 'onboard', 'livery', 'folded', 'radios', 'loadout'];
 // Un vol de l'état : en v1 (fc_state_v1, fichier de travail d'avant) le type est au vol et chaque unité le prend ; en v2 chaque unité porte le sien.
-// Un vol dont une unité n'a pas un type de PAYLOAD_TYPES est écarté.
+// Un vol dont une unité n'a pas un type de PAYLOAD_TYPES est écarté ; un groupe sans unité est valide (né au Route Planner).
 function restoreFlight(f) {
   if (!isObj(f)) return null;
   const rawUnits = (Array.isArray(f.units) ? f.units : []).filter(isObj).slice(0, MAX_UNITS);
   const types = rawUnits.map(u => (typeof u.type === 'string' ? u.type : (typeof f.type === 'string' ? f.type : '')));
-  if (!rawUnits.length && PAYLOAD_TYPES.indexOf(f.type) < 0) return null;       // sans unité ni type géré : écarté, comme à la base
   if (types.some(x => PAYLOAD_TYPES.indexOf(x) < 0)) return null;
   const nf = newFlight();
   Object.keys(f).forEach(k => { if (['name', 'type', 'coalition', 'route', 'routeLink', 'units'].indexOf(k) < 0) nf[k] = f[k]; });
@@ -2174,32 +2257,30 @@ function restoreFlight(f) {
     nu.name = str(u.name); nu.callsign = str(u.callsign); nu.csRaw = u.csRaw; nu.onboard = str(u.onboard); nu.livery = str(u.livery);
     nu.folded = u.folded === true;          // carte repliée : un état d'écran, gardé avec le travail, jamais dans le paquet
     nu.radios = isObj(u.radios) ? u.radios : {};
+    Object.keys(u).forEach(k => { if (UNIT_KEYS.indexOf(k) < 0) nu[k] = u[k]; });       // une clé inconnue d'une unité est gardée telle quelle
     nu.loadout = (isObj(u.loadout) && isObj(u.loadout.pylons)) ? u.loadout : null;
     if (nu.loadout) LO_FIELDS.forEach(k => { const c = clampNum(nu.loadout[k], 0, loLimit(nu.type, k), k !== 'fuel'); if (c.v !== null) nu.loadout[k] = c.v; });
     if (nu.loadout && !nu.loadout.base && !nu.loadout.modified && nu.loadout.key !== '~empty') nu.loadout.base = loSnap(nu.loadout);      // un emport d'avant le lot, non modifié : son contenu présent est sa source     // un fichier de travail édité : jamais de valeur négative
     return nu;
   });
-  if (!nf.units.length) nf.units.push(newUnit(typeof f.type === 'string' ? f.type : DEFAULT_TYPE));
+  if (!nf.units.length && PAYLOAD_TYPES.indexOf(f.type) >= 0) nf.units.push(newUnit(f.type));       // un vol d'avant (le type au vol, sans unité) reprend une unité ; un groupe sans unité en reste sans
   return nf;
 }
 function restoreState(st) {
   if (!isObj(st) || !Array.isArray(st.flights)) return false;
   S.theatre = str(st.theatre);
   S.flights = st.flights.map(restoreFlight).filter(Boolean);
+  const ids = new Set();
+  S.flights.forEach(f => { if (ids.has(f.fcId)) f.fcId = newId(); ids.add(f.fcId); });       // un fichier édité à la main : un fcId se retrouve une seule fois
   const sel = st.sel;
   S.sel = (isObj(sel) && Number.isInteger(sel.f) && Number.isInteger(sel.u)) ? { f: sel.f, u: sel.u } : { f: 0, u: 0 };
-  if (!selUnit()) S.sel = { f: 0, u: 0 };
+  const sf = S.flights[S.sel.f];
+  if (!sf) S.sel = { f: 0, u: 0 }; else if (!sf.units[S.sel.u]) S.sel.u = 0;
   return true;
 }
 
 // ---------- 2. Modèle : vols, unités, radios, emport, livrée, résumé ----------
-function newId() {
-  try {
-    const a = new Uint32Array(3);
-    crypto.getRandomValues(a);
-    return 'f' + Array.prototype.map.call(a, x => x.toString(36)).join('');
-  } catch (e) { return 'f' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36); }
-}
+function newId() { return gsNewId(); }       // l'identifiant d'un groupe est celui du bloc partagé
 // Chaque vol porte un fcId stable, jamais écrit dans le paquet : un vol renommé reste le même vol pour les liens avec le Route Planner et le Datacard Generator.
 const DEFAULT_TYPE = 'Mi-24P';      // la première unité d'un vol neuf ; une unité ajoutée prend le type de la dernière de son vol
 function newUnit(type) { return { type: type || DEFAULT_TYPE, name: '', callsign: '', csRaw: undefined, onboard: '', livery: '', radios: {}, loadout: null, folded: false }; }
@@ -2824,11 +2905,12 @@ function renderRouteBlock() {
 }
 // La ligne de la carte du groupe : sans route « Aucune route. » et un lien ; avec route un mini-croquis, « Route : nom — n points, d NM » et le lien « Voir la route ↓ »
 function routeHtml(f) {
-  if (!hasRoute(f)) return `<div class="fc-route none"><span class="fc-route-t">${esc(t('route.none'))}</span><button type="button" class="fc-see" data-act="see-route">${esc(t('route.pick'))}</button></div>`;
+  const see = key => f.units.length ? `<button type="button" class="fc-see" data-act="see-route">${esc(t(key))}</button>` : '';       // le bloc Route de la colonne de droite attend une unité
+  if (!hasRoute(f)) return `<div class="fc-route none"><span class="fc-route-t">${esc(t('route.none'))}</span>${see('route.pick')}</div>`;
   const geo = routeGeo(f), n = routeKeys(f.route.points).length;
   const text = geo ? tf('route.line', routeTitle(f), ptsLabel(n), fmtNm(routeNm(geo)) + ' NM') : tf('route.line.nod', routeTitle(f), ptsLabel(n));
   const thumb = geo ? `<span class="rt-thumb">${rtSketch(geo, { mini: true, W: 64, H: 40, mx: 7, my: 7 })}</span>` : '';
-  return `<div class="fc-route">${thumb}<span class="fc-route-t">${esc(text)}</span><button type="button" class="fc-see" data-act="see-route">${esc(t('route.see'))}</button></div>`;
+  return `<div class="fc-route">${thumb}<span class="fc-route-t">${esc(text)}</span>${see('route.see')}</div>`;
 }
 function paintRouteLines() {
   S.flights.forEach((f, fi) => {
@@ -2837,7 +2919,7 @@ function paintRouteLines() {
   });
 }
 // Un geste sur la route (choisir, retirer, changer…) ou un nom, un camp, un théâtre qui change : le bloc, les lignes des cartes, les résumés et l'état suivent
-function routeChanged() { renderRouteBlock(); paintRouteLines(); refreshAll(); }
+function routeChanged() { renderRouteBlock(); paintRouteLines(); refreshAll(); commitNow(); }
 
 function routePick(rid) {
   const su = selUnit(), rp = rpRead(), rt = ridOk(rid) ? rp.routes.filter(r => r.rid === rid)[0] : null;
@@ -2848,7 +2930,7 @@ function routePick(rid) {
   f.route = { points: rpPack(rt, S.theatre, rp.state.gs) };
   f.routeLink = { rid: rt.rid, name: rt.name };
   UI.rtChoose = null;
-  if (setTheatre) renderAll(); else routeChanged();
+  if (setTheatre) { renderAll(); commitNow(); } else routeChanged();
 }
 // La reprise : chaque groupe lié dont la route du Route Planner existe (deux points au moins, même théâtre) reprend ses points s'ils diffèrent et le nom de la route
 // Rend { toast, changed } sans rien dessiner ; une route absente, trop courte ou sur un autre théâtre ne touche pas la copie du groupe.
@@ -2892,7 +2974,7 @@ function clipText(s, max) { return s.length > max ? s.slice(0, max) + '…' : s;
 function flightSummary(f) {
   const counts = [];       // [type, nombre], dans l'ordre des unités
   f.units.forEach(u => { const c = counts.filter(x => x[0] === u.type)[0]; if (c) c[1]++; else counts.push([u.type, 1]); });
-  const parts = [counts.map(c => c[1] + ' × ' + (TYPE_LABEL[c[0]] || c[0])).join(' + ')];
+  const parts = [counts.length ? counts.map(c => c[1] + ' × ' + (TYPE_LABEL[c[0]] || c[0])).join(' + ') : t('fl.nounit')];
   const points = f.route ? routePoints(f.route.points).length : 0;
   if (points) parts.push(tf('sum.route', points));
   const radios = f.units.map(u => radioCount(f, u));
@@ -3062,13 +3144,13 @@ function flightHtml(f, fi) {
   return `<div class="fc-flight${open ? '' : ' folded'}" data-f="${fi}">
     <div class="fc-fhead">
       <button type="button" class="fc-fold" data-act="fold" aria-expanded="${open}" aria-label="${esc(foldLabel(f, fi, open))}"><span class="fc-chev" aria-hidden="true"></span><span class="fc-ftitle">${esc(flightLabel(f, fi))}</span></button>
-      <span class="snap-flight-tag">${esc(modTypesLabel(f))}</span><span class="snap-flight-tag">${esc(unitsLabel(f.units.length))}</span>
+      ${f.units.length ? `<span class="snap-flight-tag">${esc(modTypesLabel(f))}</span>` : ''}<span class="snap-flight-tag">${esc(f.units.length ? unitsLabel(f.units.length) : t('fl.nounit'))}</span>
       <button type="button" class="pk-x" data-act="rm-flight" aria-label="${esc(t('fl.remove'))}" title="${esc(t('fl.remove'))}">✕</button>
       <div class="fc-fsum">${esc(flightSummary(f))}</div>
     </div>
     <div class="fc-fbody"${open ? '' : ' hidden'}>
       ${flightFieldsHtml(f)}<div class="fc-depart" hidden></div>${routeHtml(f)}
-      <div class="fc-units">${f.units.map((u, ui) => unitHtml(f, fi, u, ui)).join('')}</div>
+      <div class="fc-units">${f.units.length ? f.units.map((u, ui) => unitHtml(f, fi, u, ui)).join('') : `<div class="fc-nounit${S.sel.f === fi ? ' sel' : ''}" data-nounit="1">${esc(t('fl.nounit'))}</div>`}</div>
       ${f.units.length < MAX_UNITS ? `<div class="miz-btn-row"><button type="button" class="miz-btn" data-act="add-unit">${esc(tf('u.add', f.units.length))}</button></div>` : ''}
     </div></div>`;
 }
@@ -3185,6 +3267,7 @@ function selectUnit(fi, ui) {
   S.sel = { f: fi, u: ui };
   document.querySelectorAll('#col-left .fc-flight').forEach(fe => {
     fe.querySelectorAll('.fc-unit').forEach(ue => ue.classList.toggle('sel', Number(fe.getAttribute('data-f')) === fi && Number(ue.getAttribute('data-u')) === ui));
+    fe.querySelectorAll('.fc-nounit').forEach(ue => ue.classList.toggle('sel', Number(fe.getAttribute('data-f')) === fi));
   });
   if (changed) { Object.assign(UI.cmp, { saving: false, err: '', st: null }); renderRight(); saveWork(); }
 }
@@ -3233,7 +3316,7 @@ function renderRight() {
   const col = document.getElementById('col-right'), su = selUnit();
   CMP.small = col.clientWidth < 900;
   col.innerHTML = `<div id="col-route"></div><section class="fc-block" id="blk-cmp"><div class="fc-bh">${esc(t('sec.cmp'))}</div>
-    <div class="fc-bc">${su ? cmpHtml(su) : `<p class="pk-note">${esc(t('cmp.pick'))}</p>`}</div></section><div id="col-presets"></div>`;
+    <div class="fc-bc">${su ? cmpHtml(su) : `<p class="pk-note">${esc(t(S.flights[S.sel.f] && !S.flights[S.sel.f].units.length ? 'cmp.nounit' : 'cmp.pick'))}</p>`}</div></section><div id="col-presets"></div>`;
   if (CMP.ro) { CMP.ro.disconnect(); CMP.ro = null; }
   const wrap = document.getElementById('cmp-wrap');
   if (su && wrap && typeof ResizeObserver === 'function') {      // si la colonne passe de part et d'autre de 900 px (rotation d'une tablette), l'emport se redessine dans l'autre mode
@@ -3926,8 +4009,8 @@ function openFile(file) {
   readJsonFile(file, r => {
     if (r.reject) { showToast(t(r.reject), 5000); return; }
     const o = r.parsed;
-    let ignored = 0, warn = '';
-    if (isObj(o) && isObj(o.fc) && isObj(o.fc.state) && restoreState(o.fc.state)) { UI.clamped = 0; mergeMine(o.fc.mine); remapPresetKeys(o.fc.mine); }
+    let ignored = 0, warn = '', work = false;
+    if (isObj(o) && isObj(o.fc) && isObj(o.fc.state) && restoreState(o.fc.state)) { UI.clamped = 0; mergeMine(o.fc.mine); remapPresetKeys(o.fc.mine); work = true; }
     else if (isObj(o) && PACKAGE_FORMATS.indexOf(o.format) >= 0) {
       const res = impReadPackage(o, file.name);
       if (!res.reject && !res.src.flights.some(f => f.supported)) res.reject = 'rej.noManaged';
@@ -3941,6 +4024,7 @@ function openFile(file) {
     S.sel = { f: 0, u: 0 };                    // la première unité du premier groupe ouvert
     Object.assign(UI.cmp, { saving: false, err: '', st: null });
     renderAll();
+    if (work) { clearTimeout(_saveTimer); if (gsReplaceAll(S.theatre, JSON.parse(JSON.stringify(S.flights)))) gsMarkAll(); writeState(); }       // un fichier de travail remplace la fiche entière
     showToast(tf('open.done', S.flights.length) + (ignored ? ' · ' + tf('open.ignored', ignored) : '') + (warn ? ' · ' + warn : ''), (ignored || warn) ? 6000 : undefined);
   });
 }
@@ -3975,6 +4059,7 @@ function clearAll() {
   UI.clamped = 0;
   UI.cmp.saving = false;
   renderAll();
+  commitNow();
 }
 function impFile(file) {
   readJsonFile(file, r => {
@@ -4002,6 +4087,7 @@ function addFlight() {
   UI.fold.set(nf, 'open');
   S.sel = { f: S.flights.length - 1, u: 0 };
   renderAll();
+  commitNow();
 }
 function removeFlight(fi) {
   const was = S.sel.f === fi;
@@ -4009,6 +4095,7 @@ function removeFlight(fi) {
   if (was) { S.sel = { f: 0, u: 0 }; Object.assign(UI.cmp, { saving: false, err: '', st: null }); }
   else if (S.sel.f > fi) S.sel.f--;
   renderAll();
+  commitNow();
 }
 function removeUnit(fi, ui) {
   S.flights[fi].units.splice(ui, 1);
@@ -4039,7 +4126,11 @@ const ACTIONS = {
   'rm-flight': c => removeFlight(c.fi),
   'fold': c => { setFold(S.flights[c.fi], !flightOpen(S.flights[c.fi], c.fi)); paintFold(); },
   'fold-all': () => { const open = !anyFlightOpen(); foldFreeze(); S.flights.forEach(f => UI.fold.set(f, open ? 'open' : 'closed')); paintFold(); },
-  'add-unit': c => { const us = S.flights[c.fi].units; us.push(newUnit(us[us.length - 1].type)); renderLeft(); refreshAll(); },
+  'add-unit': c => {
+    const us = S.flights[c.fi].units, first = !us.length;
+    us.push(newUnit(first ? DEFAULT_TYPE : us[us.length - 1].type));
+    if (first && S.sel.f === c.fi) { S.sel.u = 0; renderAll(); } else { renderLeft(); refreshAll(); }       // la première unité d'un groupe choisi : la colonne de droite change aussi
+  },
   'rm-unit': c => removeUnit(c.fi, c.ui),
   'fold-unit': c => { const u = S.flights[c.fi].units[c.ui]; u.folded = !u.folded; paintUnitFold(c.fi, c.ui); saveWork(); },
   'route-pick': c => routePick(c.b.getAttribute('data-rid')),
@@ -4068,6 +4159,8 @@ const ACTIONS = {
 function onClick(e) {
   const b = e.target.closest ? e.target.closest('[data-act]') : null;
   const card = e.target.closest ? e.target.closest('#col-left .fc-unit') : null;
+  const empty = e.target.closest ? e.target.closest('#col-left .fc-nounit') : null;
+  if (empty) selectUnit(Number(empty.closest('.fc-flight').getAttribute('data-f')), 0);
   if (card && !(b && ['rm-unit', 'rm-flight', 'fold-unit'].indexOf(b.getAttribute('data-act')) >= 0)) selectUnit(Number(card.closest('.fc-flight').getAttribute('data-f')), Number(card.getAttribute('data-u')));
   if (!b || b.disabled || !has(ACTIONS, b.getAttribute('data-act'))) return;
   const fe = b.closest('.fc-flight'), ue = b.closest('.fc-unit');
@@ -4277,10 +4370,19 @@ function bindImportWindow() {
 function init() {
   loadTheme();
   loadLang();
+  let saved = null;
+  try { saved = JSON.parse(lsGet(KEY_STATE) || 'null'); } catch (e) { saved = null; }
+  const ok = isObj(saved) && (saved.v === 1 || saved.v === 2);
+  const sel0 = ok ? (saved.v === 2 ? saved.sel : (isObj(saved.state) ? saved.state.sel : undefined)) : undefined;
   try {
-    const saved = JSON.parse(lsGet(KEY_STATE) || 'null');
-    if (isObj(saved) && saved.v === 1) { mergeMine(saved.mine); restoreState(saved.state); remapPresetKeys(saved.mine); }
+    if (ok) mergeMine(saved.mine);
+    gsMigrate(gsPackRoute);       // la fiche naît ici si le Route Planner ne l'a pas fait avant : les groupes de l'état d'avant, puis les routes liées par nom
+    const gs = gsRead();
+    if (gs) restoreState({ theatre: gs.theatre, flights: gs.flights, sel: sel0 });
+    else if (ok && saved.v === 1) restoreState(saved.state);       // le stockage a refusé la fiche : l'état d'avant, tel qu'il est
+    if (ok) remapPresetKeys(saved.mine);
   } catch (e) { /* l'écran marche sans */ }
+  gsMarkAll();
   initToolbarMenus([['theme-select', () => t('toolbar.theme.tooltip')]]);
   initFormMenus(sel => sel.getAttribute('aria-label') || '');
   bindColumns();
@@ -4292,8 +4394,8 @@ function init() {
   renderAll();
   if (taken.changed) showToast(taken.toast, 4500);
   window.addEventListener('pagehide', flushWork);
-  window.addEventListener('storage', routeStorage);
-  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushWork(); else { UI.hq = undefined; routeTakeover(); } });
+  window.addEventListener('storage', e => { routeStorage(e); gsStorage(e); });
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushWork(); else { UI.hq = undefined; gsPull(); routeTakeover(); } });
 }
 init();
 """
@@ -4328,7 +4430,7 @@ def build_html():
                   .replace('@@STARDOS_700@@', A['STARDOS_700'])
                   .replace('@@OSWALD_500@@', A['OSWALD_500']))
     js = (build_radio_block() + '\n' + tables_js() + '\n' + build_payload_block() + '\n' + PAD2_JS + '\n' + COORD_BLOCK + READNUM_BLOCK + build_magvar_block() + '\n' + build_projection_block() + '\n'
-          + build_route_pack_block() + '\n' + JS_TBM + '\n' + app_js())
+          + build_route_pack_block() + '\n' + build_group_store_block() + '\n' + JS_TBM + '\n' + app_js())
     return ('<!DOCTYPE html>\n<html lang="fr">\n<head>\n<meta charset="UTF-8">\n'
             '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">\n'
             '<meta name="theme-color" content="#1a1e10">\n<title>Flight Configurator</title>\n<style>\n'
@@ -4388,7 +4490,7 @@ def check(html):
     ok(not re.search(r'fetch\(|XMLHttpRequest|WebSocket|sendBeacon|<script[^>]*\bsrc=|<link[^>]*href=["\']http', own), 'aucune requête réseau (hors JSZip, qui n\'en fait pas)')
     ok(not re.search(r'font-weight:\s*(600|800|900|bold)|font:\s*(600|800|900|bold)\b', own), 'aucune graisse sans sa face (R295)')
     ok('/* ===== POSTES RADIO (COMME AU COCKPIT) ===== */' in html and '/* ===== EMPORT (PRESETS ET PAYLOAD) ===== */' in html, 'blocs partagés présents')
-    for label, blk in (('déclinaison', build_magvar_block()), ('projections', build_projection_block()), ('points de paquet', build_route_pack_block())):
+    for label, blk in (('déclinaison', build_magvar_block()), ('projections', build_projection_block()), ('points de paquet', build_route_pack_block()), ('groupes partagés', build_group_store_block())):
         ok(blk in html, 'bloc %s inséré tel quel' % label)
     ok(COORD_BLOCK + READNUM_BLOCK in html and hashlib.sha256(COORD_BLOCK.encode('utf-8')).hexdigest()[:16] == COORD_SHA16, 'bloc de coordonnées inséré tel quel, empreinte %s' % COORD_SHA16)
     if bad:
