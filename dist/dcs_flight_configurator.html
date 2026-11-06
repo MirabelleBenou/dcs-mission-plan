@@ -471,6 +471,14 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
 .fc-unit { border: 1px solid rgba(128,116,84,.55); border-left: 3px solid var(--amber-dark); padding: 8px 10px 10px; background: rgba(0,0,0,.12); }
 .fc-unit.sel { border-left-color: var(--fc); background: var(--fc-dim); box-shadow: 0 0 0 1px var(--fc); }
 .fc-uhead { margin-bottom: 6px; }
+/* la flèche de l'unité : le dessin de celle du groupe (.fc-chev), une cible de 34 px ; repliée, la carte garde son en-tête et une ligne de résumé */
+.fc-ufold { display: flex; align-items: center; justify-content: center; flex: none; min-width: 34px; min-height: 34px; margin: -4px 0 -4px -8px; padding: 0; background: none; border: 0; cursor: pointer; color: inherit; }
+.fc-ufold:focus-visible { outline: 2px solid var(--fc); outline-offset: 1px; }
+.fc-ufold[aria-expanded="true"] .fc-chev { transform: rotate(90deg); }
+.fc-usum { display: none; margin: 0 0 2px 26px; font-family: var(--f-typewriter); font-size: 12px; line-height: 1.4; color: var(--khaki-light); overflow-wrap: anywhere; min-width: 0; }
+.fc-unit.folded .fc-usum { display: block; }
+.fc-unit.folded .fc-uhead { margin-bottom: 2px; }
+.fc-ubody[hidden] { display: none; }
 .fc-utitle { font-family: var(--f-stencil); font-size: 12px; letter-spacing: 1px; color: var(--paper); text-transform: uppercase; }
 .fc-sub { margin-top: 10px; border-top: 1px solid rgba(128,116,84,.45); }
 .fc-sub > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px; min-height: 40px; user-select: none; font-family: var(--f-stencil); font-size: 12px; letter-spacing: 1.5px; color: var(--amber); text-transform: uppercase; }
@@ -507,14 +515,14 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
 .cmp-for { font-family: var(--f-typewriter); font-size: 13px; color: var(--paper-light); word-break: break-word; display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; }
 .fc-lo-line { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-family: var(--f-typewriter); font-size: 11px; color: var(--khaki-light); }
 #cmp-wrap { position: relative; }
-.cmp-view { position: relative; background: var(--cmp-frame); padding: 14px 14px 34px; border-radius: 4px; }
+.cmp-view { position: relative; background: var(--cmp-frame); padding: 26px 14px 30px; border-radius: 4px; }
 .cmp-wrap-strip .cmp-view { border-radius: 4px 4px 0 0; }
 .cmp-svgbox { position: relative; margin: 0 auto; width: min(100%, calc(52vh * var(--r))); }
 .cmp-svgbox > svg { display: block; width: 100%; height: auto; }
 .cmp-svgbox svg [stroke]:not([stroke="none"]) { stroke: var(--paper); }
 .cmp-svgbox svg [fill="#ffffff"] { fill: var(--cmp-frame); }
-/* le crédit est sous la rangée des cases, hors de la vue : aucun trait pointillé ne le traverse */
-.cmp-credit { margin-top: 6px; font-family: var(--f-typewriter); font-size: 10px; line-height: 1.3; color: var(--khaki-light); text-align: right; }
+/* le crédit est en haut à droite de la vue, comme au Loadout Editor de Mission Tools : la vue lui laisse sa marge haute, aucun trait ne le traverse */
+.cmp-credit { position: absolute; right: 10px; top: 6px; z-index: 4; max-width: calc(100% - 20px); font-family: var(--f-typewriter); font-size: 10px; line-height: 1.3; color: var(--khaki-light); background: var(--cmp-frame); padding: 0 4px; text-align: right; }
 #cmp-leads { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; overflow: visible; }
 #cmp-leads path { fill: none; stroke: var(--fc); stroke-width: 1.4; stroke-dasharray: 5 4; opacity: .9; }
 #cmp-leads path.on { stroke-width: 2.4; opacity: 1; }
@@ -528,7 +536,7 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
 .cmp-st.sel .n { color: var(--fc); }
 .cmp-st:focus-visible { outline: 2px solid var(--fc); outline-offset: 1px; }
 /* étroit : la rangée ne porte que les numéros (les armes sont dans la liste), régulièrement espacés */
-.cmp-wrap-flat .cmp-view { padding: 10px 10px 12px; border-radius: 4px 4px 0 0; }
+.cmp-wrap-flat .cmp-view { padding: 34px 10px 12px; border-radius: 4px 4px 0 0; }      /* étroit : le crédit tient sur deux lignes, en haut */
 .cmp-wrap-flat .cmp-strip { height: 34px; }
 .cmp-wrap-flat .cmp-st { top: 6px; width: calc(100% / var(--n) - 2px); max-width: 30px; padding: 1px 0; cursor: default; }
 .cmp-wrap-flat .cmp-st .w { display: none; }
@@ -7830,6 +7838,8 @@ const I18N = {
   "route.alt": " (premier point à {0} m)",
   "route.rm": "Retirer la route",
   "u.title": "Unité {0}",
+  "u.fold": "Replier l’unité",
+  "u.unfold": "Déplier l’unité",
   "u.add": "+ Ajouter une unité ({0}/4)",
   "u.remove": "Retirer cette unité",
   "u.name": "Nom",
@@ -8031,6 +8041,8 @@ const I18N = {
   "route.alt": " (first point at {0} m)",
   "route.rm": "Remove the route",
   "u.title": "Unit {0}",
+  "u.fold": "Fold the unit",
+  "u.unfold": "Unfold the unit",
   "u.add": "+ Add a unit ({0}/4)",
   "u.remove": "Remove this unit",
   "u.name": "Name",
@@ -8200,12 +8212,12 @@ const TYPE_LABEL = { 'Mi-24P': 'Mi-24P', 'Mi-8MT': 'Mi-8MT', 'F-4E-45MC': 'F-4E-
 const RADIO_CHANNELS = { 'Mi-24P': { 1: 20, 2: 10 }, 'Mi-8MT': { 1: 20, 2: 10 }, 'F-4E-45MC': { 1: 18, 2: 20 }, 'Mirage-F1EE': { 1: 20, 2: 20 } };
 // Fréquences : les bandes de chaque poste, en MHz, [bas, haut] bornes comprises, sans contrôle de pas. Table du module : radio_block.py, que BG et DG partagent, ne les porte pas.
 //   Mi-24P, Mi-8MT : R-863 (100 à 149,975 et 220 à 399,975) et R-828 (20 à 59,975) · guide du Mi-24P, partie 15, p. 423.
-//   F-4E-45MC : AN/ARC-164 et AN/ARC-164 AUX (225 à 399,975) · spécification de l'ARC-164.
+//   F-4E-45MC : poste 1 COMM (225 à 399,95) et poste 2 AUX, réception seule (265 à 284,9) · manuel du F-4E, chapitre « UHF Radio ».
 //   Mirage-F1EE : TRAP 136 (118 à 143,975 et 225 à 399,975) et TRAP 137B (225 à 399,975) · manuel du Mirage F1 (3.13).
 const HELI_BANDS = { 1: [[100, 149.975], [220, 399.975]], 2: [[20, 59.975]] };
 const RADIO_BANDS = {
   'Mi-24P': HELI_BANDS, 'Mi-8MT': HELI_BANDS,
-  'F-4E-45MC': { 1: [[225, 399.975]], 2: [[225, 399.975]] },
+  'F-4E-45MC': { 1: [[225, 399.95]], 2: [[265, 284.9]] },
   'Mirage-F1EE': { 1: [[118, 143.975], [225, 399.975]], 2: [[225, 399.975]] }
 };
 const THEATRES = ['Caucasus', 'Falklands', 'GermanyCW', 'Kola', 'MarianaIslands', 'Nevada', 'Normandy', 'PersianGulf', 'SinaiMap', 'Syria', 'TheChannel'];
@@ -8260,6 +8272,7 @@ function restoreFlight(f) {
   nf.units = (Array.isArray(f.units) ? f.units : []).filter(isObj).slice(0, MAX_UNITS).map(u => {
     const nu = newUnit();
     nu.name = str(u.name); nu.callsign = str(u.callsign); nu.csRaw = u.csRaw; nu.onboard = str(u.onboard); nu.livery = str(u.livery);
+    nu.folded = u.folded === true;          // carte repliée : un état d'écran, gardé avec le travail, jamais dans le paquet
     nu.radios = isObj(u.radios) ? u.radios : {};
     nu.loadout = (isObj(u.loadout) && isObj(u.loadout.pylons)) ? u.loadout : null;
     if (nu.loadout) LO_FIELDS.forEach(k => { const c = clampNum(nu.loadout[k], 0, loLimit(nf.type, k), k !== 'fuel'); if (c.v !== null) nu.loadout[k] = c.v; });     // un fichier de travail édité : jamais de valeur négative
@@ -8287,7 +8300,7 @@ function newId() {
   } catch (e) { return 'f' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36); }
 }
 // Chaque vol porte un fcId stable, jamais écrit dans le paquet : un vol renommé reste le même vol pour les liens avec le Route Planner et le Datacard Generator.
-function newUnit() { return { name: '', callsign: '', csRaw: undefined, onboard: '', livery: '', radios: {}, loadout: null }; }
+function newUnit() { return { name: '', callsign: '', csRaw: undefined, onboard: '', livery: '', radios: {}, loadout: null, folded: false }; }
 function newFlight() { return { fcId: newId(), name: '', type: 'Mi-24P', coalition: '', route: null, units: [newUnit()] }; }
 
 function flightLabel(f, fi) { return f.name.trim() || tf('fl.title', fi + 1); }
@@ -8571,6 +8584,16 @@ function flightSummary(f) {
   return parts.join(' · ');
 }
 
+// Le résumé d'une unité repliée : nom (ou son défaut), indicatif, livrée (coupée comme au résumé du groupe), emport ; une partie vide se tait.
+function unitSummary(f, fi, u, ui) {
+  const parts = [unitLabel(f, fi, u, ui)];
+  if (u.callsign.trim() !== '') parts.push(u.callsign.trim());
+  if (u.livery.trim() !== '') parts.push(tf('sum.livery', clipText(u.livery.trim(), SUMMARY_LIVERY_MAX)));
+  if (u.loadout) parts.push(loadoutSummary(u.loadout));
+  return parts.join(' · ');
+}
+function unitFoldLabel(f, fi, u, ui) { return `${t(u.folded ? 'u.unfold' : 'u.fold')} : ${unitLabel(f, fi, u, ui)}`; }
+
 // ----- Le paquet -----
 function cleanName(s) { return String(s).replace(/[^A-Za-z0-9_-]/g, '_').slice(0, 40); }
 function stamp() {
@@ -8727,10 +8750,11 @@ function routeHtml(f) {
 
 function unitHtml(f, fi, u, ui) {
   const at = `data-u="${ui}"`, rk = `f${fi}u${ui}r`, n = radioCount(f, u);
-  return `<div class="fc-unit${S.sel.f === fi && S.sel.u === ui ? ' sel' : ''}" data-u="${ui}">
-    <div class="fc-uhead"><span class="fc-utitle">${esc(tf('u.title', ui + 1))}</span>
+  return `<div class="fc-unit${S.sel.f === fi && S.sel.u === ui ? ' sel' : ''}${u.folded ? ' folded' : ''}" data-u="${ui}">
+    <div class="fc-uhead"><button type="button" class="fc-ufold" data-act="fold-unit" aria-expanded="${!u.folded}" aria-label="${esc(unitFoldLabel(f, fi, u, ui))}"><span class="fc-chev" aria-hidden="true"></span></button><span class="fc-utitle">${esc(tf('u.title', ui + 1))}</span>
       ${f.units.length > 1 ? `<button type="button" class="pk-x" data-act="rm-unit" aria-label="${esc(t('u.remove'))}" title="${esc(t('u.remove'))}">✕</button>` : ''}</div>
-    <div class="fc-row4">
+    <div class="fc-usum" data-sum="unit">${esc(unitSummary(f, fi, u, ui))}</div>
+    <div class="fc-ubody"${u.folded ? ' hidden' : ''}><div class="fc-row4">
       ${fieldHtml(t('u.name'), inputHtml(`${at} data-k="uname"`, u.name, unitDefaultName(f, fi, ui)))}
       ${fieldHtml(t('u.callsign'), inputHtml(`${at} data-k="callsign"`, u.callsign, t('u.opt')))}
       ${fieldHtml(t('u.onboard'), inputHtml(`${at} data-k="onboard"`, u.onboard, t('u.opt')))}
@@ -8740,7 +8764,7 @@ function unitHtml(f, fi, u, ui) {
       <div class="fc-subc">${radiosHtml(f, fi, u, ui)}</div></details>
     <div class="fc-lo-sum"><span class="fc-lo-k">${esc(t('u.loadout'))}</span><span class="fc-lo-v" data-sum="loadout">${esc(loadoutName(u.loadout))}</span>
       <button type="button" class="fc-see" ${at} data-act="see-cmp">${esc(t('u.see'))}</button></div>
-  </div>`;
+  </div></div>`;
 }
 function radiosSummary(f, u) {
   const n = radioCount(f, u);
@@ -8785,6 +8809,16 @@ function paintFold() {
   const all = document.getElementById('fc-foldall');
   if (all) all.textContent = foldAllLabel();
 }
+// Replier ou déplier une carte d'unité : sans redessiner (la frappe et les volets ouverts restent), l'emport affiché ne change pas.
+function paintUnitFold(fi, ui) {
+  const f = S.flights[fi], u = f && f.units[ui], el = unitEl(fi, ui);
+  if (!u || !el) return;
+  el.classList.toggle('folded', u.folded);
+  el.querySelector('.fc-ubody').hidden = u.folded;
+  const btn = el.querySelector('.fc-ufold');
+  btn.setAttribute('aria-expanded', String(!u.folded));
+  btn.setAttribute('aria-label', unitFoldLabel(f, fi, u, ui));
+}
 function refreshSummaries() {
   S.flights.forEach((f, fi) => {
     const head = flightEl(fi);
@@ -8794,6 +8828,7 @@ function refreshSummaries() {
       const root = unitEl(fi, ui);
       if (!root) return;
       root.querySelector('[data-sum="loadout"]').textContent = loadoutName(u.loadout);
+      root.querySelector('[data-sum="unit"]').textContent = unitSummary(f, fi, u, ui);
       root.querySelector('[data-sum="radios"]').textContent = radiosSummary(f, u);
     });
   });
@@ -8933,8 +8968,8 @@ function cmpDrawingHtml() {
   const ids = Object.keys(view.stations).sort((a, b) => view.stations[a].x - view.stations[b].x);
   const credit = `<div class="cmp-credit">${esc(t('cmp.credit'))}</div>`;
   const cells = ids.map((k, i) => `<div class="cmp-st" data-st="${esc(k)}"${small ? '' : ' role="button" tabindex="0"'} style="left:${((i + 0.5) / ids.length * 100).toFixed(3)}%"><span class="n">${esc(k)}</span><span class="w"></span></div>`).join('');
-  return `<div id="cmp-wrap" class="${small ? 'cmp-wrap-flat' : 'cmp-wrap-strip'}"><div class="cmp-view"><div class="cmp-svgbox" style="--r:${W / H}">${view.svg}</div></div>
-    <svg id="cmp-leads" aria-hidden="true"></svg><div class="cmp-strip" style="--n:${ids.length}">${cells}</div>${credit}</div>`;
+  return `<div id="cmp-wrap" class="${small ? 'cmp-wrap-flat' : 'cmp-wrap-strip'}"><div class="cmp-view"><div class="cmp-svgbox" style="--r:${W / H}">${view.svg}</div>${credit}</div>
+    <svg id="cmp-leads" aria-hidden="true"></svg><div class="cmp-strip" style="--n:${ids.length}">${cells}</div></div>`;
 }
 // Une ligne : numéro de la station, liste d'armes (pleine largeur), masse (colonne fixe, à droite) ; dessous, la station jumelle en clair et les réglages.
 function cmpRowHtml(p, lo) {
@@ -9488,6 +9523,7 @@ function backToUnit() {
   const su = selUnit();
   if (!su) return;
   if (!flightOpen(su.f, su.fi)) { setFold(su.f, true); paintFold(); }
+  if (su.u.folded) { su.u.folded = false; paintUnitFold(su.fi, su.ui); saveWork(); }      // une unité repliée se déplie pour y revenir
   const el = unitEl(su.fi, su.ui);
   if (!el) return;
   el.scrollIntoView({ block: 'start', behavior: 'smooth' });
@@ -9502,6 +9538,7 @@ const ACTIONS = {
   'fold-all': () => { const open = !anyFlightOpen(); foldFreeze(); S.flights.forEach(f => UI.fold.set(f, open ? 'open' : 'closed')); paintFold(); },
   'add-unit': c => { S.flights[c.fi].units.push(newUnit()); renderLeft(); refreshAll(); },
   'rm-unit': c => removeUnit(c.fi, c.ui),
+  'fold-unit': c => { const u = S.flights[c.fi].units[c.ui]; u.folded = !u.folded; paintUnitFold(c.fi, c.ui); saveWork(); },
   'rm-route': c => { S.flights[c.fi].route = null; renderLeft(); refreshAll(); },
   'copy-radios': c => { const f = S.flights[c.fi]; f.units.forEach((u, k) => { if (k !== c.ui) u.radios = clone(f.units[c.ui].radios); }); renderLeft(); refreshAll(); },
   'see-cmp': c => { selectUnit(c.fi, c.ui); const b = document.getElementById('blk-cmp'); if (b && window.innerWidth < 1100) b.scrollIntoView({ block: 'start', behavior: 'smooth' }); },
@@ -9520,7 +9557,7 @@ const ACTIONS = {
 function onClick(e) {
   const b = e.target.closest ? e.target.closest('[data-act]') : null;
   const card = e.target.closest ? e.target.closest('#col-left .fc-unit') : null;
-  if (card && !(b && (b.getAttribute('data-act') === 'rm-unit' || b.getAttribute('data-act') === 'rm-flight'))) selectUnit(Number(card.closest('.fc-flight').getAttribute('data-f')), Number(card.getAttribute('data-u')));
+  if (card && !(b && ['rm-unit', 'rm-flight', 'fold-unit'].indexOf(b.getAttribute('data-act')) >= 0)) selectUnit(Number(card.closest('.fc-flight').getAttribute('data-f')), Number(card.getAttribute('data-u')));
   if (!b || b.disabled || !has(ACTIONS, b.getAttribute('data-act'))) return;
   const fe = b.closest('.fc-flight'), ue = b.closest('.fc-unit');
   ACTIONS[b.getAttribute('data-act')]({
@@ -9629,7 +9666,7 @@ function onToggle(e) {
 function onFocusIn(e) {
   if (isLiveryField(e.target) && !LV.quiet) lvOpen(e.target);       // les suggestions de livrée se calculent à l'entrée dans le champ
   const ue = e.target.closest ? e.target.closest('.fc-unit') : null;
-  if (ue && !(e.target.matches && e.target.matches('[data-act="rm-unit"]'))) selectUnit(Number(ue.closest('.fc-flight').getAttribute('data-f')), Number(ue.getAttribute('data-u')));
+  if (ue && !(e.target.matches && e.target.matches('[data-act="rm-unit"], [data-act="fold-unit"]'))) selectUnit(Number(ue.closest('.fc-flight').getAttribute('data-f')), Number(ue.getAttribute('data-u')));
 }
 
 // ----- Barre, langue, thème -----
