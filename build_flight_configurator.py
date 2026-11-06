@@ -435,7 +435,9 @@ I18N_FR = {
     'route.src.manual': 'saisie au Route Planner',
     'route.gone': 'Cette route n’est plus au Route Planner : la dernière copie est gardée.',
     'route.few': 'Cette route n’a plus de points au Route Planner : la dernière copie est gardée.',
-    'route.theatre': 'Le Route Planner est passé sur {0} : la route n’est pas reprise.',
+    'route.theatre': 'Le Route Planner est sur {0}, ce paquet sur {1} : la route n’est pas reprise.',
+    'route.norp': 'Le Route Planner n’a pas encore été ouvert ici : la route n’est pas reprise.',
+    'route.noid': 'Ouvre le Route Planner une fois pour pouvoir choisir ces routes (il leur donne un identifiant).',
     'route.toast.one': 'Route « {0} » reprise du Route Planner pour {1}.',
     'route.toast.many': 'Routes reprises du Route Planner : {0}.',
 
@@ -713,7 +715,9 @@ I18N_EN = {
     'route.src.manual': 'typed in the Route Planner',
     'route.gone': 'This route is no longer in the Route Planner: the last copy is kept.',
     'route.few': 'This route no longer has points in the Route Planner: the last copy is kept.',
-    'route.theatre': 'The Route Planner has moved to {0}: the route is not taken over.',
+    'route.theatre': 'The Route Planner is on {0}, this package on {1}: the route is not followed.',
+    'route.norp': 'The Route Planner has not been opened here yet: the route is not followed.',
+    'route.noid': 'Open the Route Planner once to be able to pick these routes (it gives them an identifier).',
     'route.toast.one': 'Route “{0}” updated from the Route Planner for {1}.',
     'route.toast.many': 'Routes updated from the Route Planner: {0}.',
 
@@ -2501,19 +2505,19 @@ function ptsLabel(n) { return tf(n < 2 ? 'route.pts.one' : 'route.pts.many', n);
 function fmtNm(v) { const s = (Math.round(v * 10) / 10).toFixed(1); return CURRENT_LANG === 'fr' ? s.replace('.', ',') : s; }
 function routeTitle(f) { return f.routeLink ? (f.routeLink.name.trim() !== '' ? f.routeLink.name : t('route.unnamed')) : t('route.imported'); }
 
-// Ce que le Route Planner a rangé : ses routes (celles qui portent un rid) et ses réglages (théâtre, vitesse sol, affichage des caps)
+// Ce que le Route Planner a rangé : ses routes (rid vide quand elle n'en a pas encore : le Route Planner en donne un à la prochaine ouverture) et ses réglages (théâtre, vitesse sol, affichage des caps)
 function rpRead() {
   const st = lsJson(KEY_RP_STATE), set = lsJson(KEY_RP_SET), nd = isObj(st) && isObj(st.navDisplay) ? st.navDisplay : {};
   const state = {
-    theatre: isObj(st) && typeof st.theatre === 'string' && st.theatre !== '' ? st.theatre : 'Caucasus',
+    theatre: isObj(st) && typeof st.theatre === 'string' ? st.theatre : '',       // aucun théâtre par défaut : '' = le Route Planner n'a pas encore été ouvert ici
     gs: isObj(st) && isNum(st.groundSpeed) && st.groundSpeed > 0 ? st.groundSpeed : RP_GS_DEFAULT,
     nav: { mode: (nd.mode === 'calc' || nd.mode === 'manual') ? nd.mode : (parseDecl(str(nd.decl)) !== null ? 'manual' : 'calc'), decl: str(nd.decl), year: (typeof nd.year === 'string' && /^\d{1,4}$/.test(nd.year)) ? nd.year : '', force: nd.force === true }
   };
   const routes = [];
   if (isObj(set) && (set.format === undefined || set.format === RP_SET_FORMAT) && Array.isArray(set.routes)) {
     set.routes.forEach(r => {
-      if (!isObj(r) || !Array.isArray(r.points) || !ridOk(r.rid)) return;
-      routes.push({ rid: r.rid, name: str(r.name), points: r.points.filter(p => isObj(p) && packValidCoord(p.lat, p.lon)), flight: (isObj(r.flight) && typeof r.flight.groupName === 'string') ? r.flight : null });
+      if (!isObj(r) || !Array.isArray(r.points)) return;
+      routes.push({ rid: ridOk(r.rid) ? r.rid : '', name: str(r.name), points: r.points.filter(p => isObj(p) && packValidCoord(p.lat, p.lon)), flight: (isObj(r.flight) && typeof r.flight.groupName === 'string') ? r.flight : null });
     });
   }
   return { state: state, routes: routes };
@@ -2739,6 +2743,7 @@ function rtSketch(pts, o) {
 // L'état d'une route liée (copie gardée, théâtre) se calcule au rendu : rien de plus à garder.
 function routeStatus(f, rp) {
   if (!f.routeLink || !S.theatre) return null;
+  if (rp.state.theatre === '') return { k: 'norp' };
   if (rp.state.theatre !== S.theatre) return { k: 'theatre', th: rp.state.theatre };
   const rt = rp.routes.filter(r => r.rid === f.routeLink.rid)[0];
   if (!rt) return { k: 'gone' };
@@ -2746,7 +2751,8 @@ function routeStatus(f, rp) {
 }
 function rpGeo(rt) { return rt.points.map((p, i) => ({ name: (p.name || '').replace(/\s+/g, ' ').trim() || 'WP' + (i + 1), lat: p.lat, lon: p.lon })); }
 function routeCardHtml(rt, f, off) {
-  const geo = rpGeo(rt), on = f.routeLink && f.routeLink.rid === rt.rid, linked = rtMatches(rt, f);
+  const geo = rpGeo(rt), on = f.routeLink && f.routeLink.rid === rt.rid && ridOk(rt.rid), linked = rtMatches(rt, f);
+  off = off || !ridOk(rt.rid);
   const tag = rt.flight ? tf('route.tag.linked', rt.flight.groupName.trim()) : t('route.tag.free');
   const name = rt.name.trim() !== '' ? rt.name.trim() : t('route.unnamed');
   return `<button type="button" class="rt-card${on ? ' on' : ''}" data-act="route-pick" data-rid="${esc(rt.rid)}"${off ? ' disabled' : ''}>
@@ -2758,11 +2764,13 @@ function routeCardHtml(rt, f, off) {
 function routeChooseHtml(f, rp) {
   const usable = rpUsable(rp), th = rp.state.theatre;
   let msg = '';
+  if (th === '') return `<p class="rt-note">${esc(t('route.norp'))}</p>` + (hasRoute(f) ? `<div class="miz-btn-row" style="margin-top:0"><button type="button" class="miz-btn fc-small" data-act="route-keep">${esc(t('route.keep'))}</button></div>` : '');
   if (!has(TM_PARAMS, th)) msg = tf('route.th.nosupport', th);
   else if (S.theatre && S.theatre !== th) msg = tf('route.th.mismatch', th, S.theatre);
   const off = msg !== '';
   let h = usable.length ? `<p class="rt-note">${esc(t(hasRoute(f) ? 'route.choose.other' : 'route.choose.none'))}</p>` : `<p class="rt-note">${esc(t('route.empty'))}</p>`;
   if (msg) h += `<p class="rt-note">${esc(msg)}</p>`;
+  if (usable.some(r => !ridOk(r.rid))) h += `<p class="rt-note">${esc(t('route.noid'))}</p>`;
   const linked = usable.filter(r => rtMatches(r, f)), other = usable.filter(r => !rtMatches(r, f));
   [['route.list.linked', linked], ['route.list.other', other]].forEach(g => {
     if (g[1].length) h += `<div class="rt-h">${esc(t(g[0]))}</div><div class="rt-grid">${g[1].map(r => routeCardHtml(r, f, off)).join('')}</div>`;
@@ -2781,7 +2789,7 @@ function routeViewHtml(f, fi, rp) {
     table = `<table class="rt-tab"><thead><tr><th class="rt-n"></th><th>${esc(t('route.col.leg'))}</th><th class="rt-r">${esc(t('route.col.hdg'))}</th><th class="rt-r">${esc(t('route.col.dist'))}</th></tr></thead><tbody>${rows}<tr class="rt-tot"><td></td><td>${esc(t('route.total'))}</td><td></td><td class="rt-r">${esc(fmtNm(L.total))} NM</td></tr></tbody></table><p class="rt-note">${esc(declNote(ds, geo))}</p>`;
   }
   let note = '';
-  if (st) note = `<p class="rt-note rt-warn">${esc(st.k === 'theatre' ? tf('route.theatre', st.th) : t(st.k === 'gone' ? 'route.gone' : 'route.few'))}</p>`;
+  if (st) note = `<p class="rt-note rt-warn">${esc(st.k === 'theatre' ? tf('route.theatre', st.th, S.theatre) : t(st.k === 'norp' ? 'route.norp' : (st.k === 'gone' ? 'route.gone' : 'route.few')))}</p>`;
   return `<div class="rt-head"><div class="rt-hl"><span class="rt-name">${esc(routeTitle(f))}</span><span class="rt-sub">${esc(sub)}</span></div>
       <div class="rt-hb"><button type="button" class="miz-btn fc-small" data-act="route-change">${esc(t('route.change'))}</button><button type="button" class="miz-btn fc-small" data-act="route-remove">${esc(t('route.remove'))}</button></div></div>
     ${note}${geo ? '<div class="rt-paper" id="rt-paper"></div>' + table : `<p class="rt-note">${esc(t('route.nosketch'))}</p>`}`;
@@ -2832,7 +2840,7 @@ function paintRouteLines() {
 function routeChanged() { renderRouteBlock(); paintRouteLines(); refreshAll(); }
 
 function routePick(rid) {
-  const su = selUnit(), rp = rpRead(), rt = rp.routes.filter(r => r.rid === rid)[0];
+  const su = selUnit(), rp = rpRead(), rt = ridOk(rid) ? rp.routes.filter(r => r.rid === rid)[0] : null;
   if (!su || !rt || rt.points.length < 2 || !has(TM_PARAMS, rp.state.theatre)) return;
   const f = su.f, setTheatre = !S.theatre;
   if (S.theatre && S.theatre !== rp.state.theatre) return;
@@ -2863,6 +2871,7 @@ function routeSync() {
   return out;
 }
 function routeTakeover() {
+  if (document.visibilityState !== 'visible') return;       // un onglet resté en arrière-plan n'écrit rien : à son retour (visibilitychange), il reprend
   const r = routeSync();
   if (r.changed) { clearTimeout(_saveTimer); writeState(); }
   renderRouteBlock();
