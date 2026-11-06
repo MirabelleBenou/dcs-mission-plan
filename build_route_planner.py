@@ -354,9 +354,20 @@ button, input, select { font: inherit; }
   overflow-x: auto; overflow-y: hidden; scrollbar-width: none; white-space: nowrap;
 }
 .toolbar::-webkit-scrollbar { display: none; }
-.tb-mark { font-family: var(--f-stencil); font-weight: 700; letter-spacing: 2px; color: var(--paper-light); font-size: 15px;
-  display: inline-flex; align-items: center; gap: 8px; padding-right: 12px; border-right: 1px solid var(--khaki); height: 28px; flex: none; }
-.tb-mark::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--amber-dark); }
+.tb-brand { display: flex; flex-direction: column; line-height: 1.1; gap: 1px; flex: none; }
+.tb-brand-main {
+  font-family: var(--f-stencil); font-size: 16px; font-weight: 700; letter-spacing: 3px;
+  text-transform: uppercase; white-space: nowrap;
+}
+.tb-brand-sub {
+  font-family: var(--f-ui); font-size: 10px; letter-spacing: 2px; color: var(--khaki-light);
+  text-transform: uppercase; white-space: nowrap;
+}
+.tb-spacer { flex: 1 0 0; min-width: 0; margin-left: -10px; }   /* le ressort ne coûte rien à la barre qui défile : entre le thème et le drapeau, l'écart est de 6 px au lieu de 8 */
+.tb-version {
+  font-family: var(--f-typewriter); font-size: 11px; opacity: .45; color: var(--amber); letter-spacing: .5px;
+  user-select: none; white-space: nowrap; flex: none;
+}
 .tb-group { display: inline-flex; flex: none; }
 .tb-btn, .tb-sel {
   font-family: var(--f-ui); font-weight: 700; letter-spacing: 1.5px; font-size: 12px; text-transform: uppercase;
@@ -1124,8 +1135,19 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .dr-f .tbm-trigger.tbm-trigger-open::after { transform: rotate(-135deg); margin-top: -2px; }
 .dr-f .tbm-trigger:focus-visible { outline: none; border-left-color: var(--red-stamp); box-shadow: 0 0 0 1px var(--amber); }
 
-/* ---------- étiquettes des boutons : seulement en très grand écran ---------- */
-@media (min-width: 1801px) {
+
+/* ---------- Barre du haut commune aux sept modules (lot mp-imports-suite) ----------
+   La marque du Flight Configurator : le titre et son sous-titre à l'accent du module dès 1653 px, le sigle seul en dessous (à toutes les largeurs) ;
+   la version avec le titre ; le tampon de décor dès 1874 px. Seuils mesurés dans le shell avec un tampon d'escadre « TEST WING », en français et en anglais. */
+.tb-brand-main, .tb-brand-short { color: #7ac97a; }
+.tb-brand-short { display: none; font-family: var(--f-stencil); font-size: 16px; font-weight: 700; letter-spacing: 3px; white-space: nowrap; }
+.tb-classif { font-family: var(--f-stencil); font-size: 11px; letter-spacing: 3px; color: var(--red-faded); border: 1px solid var(--red-faded); padding: 4px 10px; white-space: nowrap; flex-shrink: 0; }
+.tb-lang-btn svg { display: block; }
+@media (max-width: 1652px) { .tb-brand-main, .tb-brand-sub, .tb-brand + .tb-sep, .tb-version { display: none; } .tb-brand-short { display: inline; } }
+@media (max-width: 1873px) { .tb-classif { display: none; } }
+
+/* ---------- étiquettes des boutons de fichier : à partir de 2128 px (seuil mesuré : avec le tampon d'escadre, la barre défilerait sinon) ---------- */
+@media (min-width: 2128px) {
   .tb-btn .tb-btn-label.solo { display: inline; }
 }
 
@@ -1192,7 +1214,12 @@ __CSS__
 
 <!-- ===== BARRE ===== -->
 <header class="toolbar" role="toolbar" aria-label="Route Planner" data-i18n-aria-label="app.title">
-  <span class="tb-mark" data-i18n="app.short">R·P</span>
+  <div class="tb-brand">
+    <span class="tb-brand-main">ROUTE PLANNER</span>
+    <span class="tb-brand-short" data-i18n="app.short">R·P</span>
+    <span class="tb-brand-sub" data-i18n="tb.subtitle">░ NAVIGATION</span>
+  </div>
+  <span class="tb-sep"></span>
   <span class="tb-label" data-i18n="tb.layer">Fond</span>
   <select class="tb-sel" id="layer" data-i18n-aria-label="tb.layer" aria-label="Fond">
     <option value="dcs" data-i18n="layer.dcs">Carte DCS</option>
@@ -1213,18 +1240,18 @@ __CSS__
   <button type="button" class="tb-btn" id="btn-units" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.units" title="Unités" data-i18n-aria-label="tb.units" aria-label="Unités"><span id="units-txt"></span><svg class="dsp-chev" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg></button>
   <span class="tb-sep"></span>
   <button type="button" class="tb-btn" id="btn-open" data-i18n-title="tb.open.tip" title="Ouvrir une route (JSON) ou un fichier du Route Tool de DCS" data-i18n-aria-label="tb.open.tip" aria-label="Ouvrir une route (JSON) ou un fichier du Route Tool de DCS">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v1H3z"/><path d="M3 10h19l-2 8a2 2 0 0 1-2 1.5H5a2 2 0 0 1-2-2z"/></svg>
     <span class="tb-btn-label solo" data-i18n="tb.open">Ouvrir</span></button>
   <input type="file" id="file-open" hidden>
   <button type="button" class="tb-btn" id="btn-save" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.save.tip" title="Enregistrer" data-i18n-aria-label="tb.save.tip" aria-label="Enregistrer">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h11l4 4v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M8 3v5h7V3"/><rect x="7" y="13" width="10" height="8"/></svg>
     <span class="tb-btn-label solo" data-i18n="tb.save">Enregistrer</span>
     <svg class="dsp-chev" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg></button>
   <button type="button" class="tb-btn" id="btn-example" data-i18n-title="tb.example.tip" title="Ouvrir l'exemple" data-i18n-aria-label="tb.example.tip" aria-label="Ouvrir l'exemple">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
     <span class="tb-btn-label solo" data-i18n="tb.example">Exemple</span></button>
   <button type="button" class="tb-btn danger" id="btn-clear" data-i18n-title="tb.clear.tip" title="Effacer…" data-i18n-aria-label="tb.clear.tip" aria-label="Effacer…">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
     <span class="tb-btn-label solo" data-i18n="tb.clear">Effacer</span></button>
   <select class="tb-sel" id="theme" data-i18n-title="tb.theme.tip" title="Thème graphique" data-i18n-aria-label="tb.theme.tip" aria-label="Thème graphique">
     <option value="cw-nato" data-i18n="theme.cw-nato">Cold War OTAN</option>
@@ -1232,7 +1259,10 @@ __CSS__
     <option value="modern-nato" data-i18n="theme.modern-nato">OTAN moderne</option>
     <option value="modern-east" data-i18n="theme.modern-east">Bloc Est moderne</option>
   </select>
-  <button type="button" class="tb-lang-btn" id="btn-lang" data-i18n-title="tb.lang.tip" title="Switch language / Changer de langue">🇬🇧</button>
+  <div class="tb-spacer"></div>
+  <div class="tb-classif">NAV LOG // RESTRICTED</div>
+  <span class="tb-version">v__APP_VERSION__</span>
+  <button type="button" class="tb-lang-btn" id="btn-lang" data-i18n-title="tb.lang.tip" title="Switch language / Changer de langue"><svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="14" fill="#012169"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#fff" stroke-width="2.8"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#C8102E" stroke-width="1.6"/><rect x="8" width="4" height="14" fill="#fff"/><rect y="5" width="20" height="4" fill="#fff"/><rect x="9" width="2" height="14" fill="#C8102E"/><rect y="6" width="20" height="2" fill="#C8102E"/></svg></button>
 </header>
 
 <!-- ===== APP ===== -->
@@ -2108,6 +2138,7 @@ const I18N = {
   fr: {
     'app.title': 'Route Planner',
     'app.short': 'R·P',
+    'tb.subtitle': '░ NAVIGATION',
     'tb.layer': 'Fond',
     'layer.dcs': 'Carte DCS',
     'layer.topo': 'Topographique',
@@ -2621,6 +2652,7 @@ const I18N = {
   en: {
     'app.title': 'Route Planner',
     'app.short': 'R·P',
+    'tb.subtitle': '░ NAVIGATION',
     'tb.layer': 'Map',
     'layer.dcs': 'DCS map',
     'layer.topo': 'Topographic',
@@ -3164,9 +3196,13 @@ function applyI18nStatic() {
   document.title = t('app.title');
 }
 
+/* Drapeaux dessinés (ils ne s'affichent pas en lettres sous Windows) ; le bouton montre la langue vers laquelle il bascule */
+const FLAG_FR = '<svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="7" height="14" fill="#002395"/><rect x="7" width="6" height="14" fill="#fff"/><rect x="13" width="7" height="14" fill="#ED2939"/></svg>';
+const FLAG_EN = '<svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="14" fill="#012169"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#fff" stroke-width="2.8"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#C8102E" stroke-width="1.6"/><rect x="8" width="4" height="14" fill="#fff"/><rect y="5" width="20" height="4" fill="#fff"/><rect x="9" width="2" height="14" fill="#C8102E"/><rect y="6" width="20" height="2" fill="#C8102E"/></svg>';
+
 function updateFlagButton() {
   const btn = document.getElementById('btn-lang');
-  if (btn) btn.textContent = CURRENT_LANG === 'fr' ? '🇬🇧' : '🇫🇷';
+  if (btn) btn.innerHTML = CURRENT_LANG === 'fr' ? FLAG_EN : FLAG_FR;
 }
 
 /* ============= UTILITAIRES ============= */
@@ -10956,6 +10992,7 @@ def build():
         raise SystemExit("[ERREUR] html2canvas contient </script : impossible de l'embarquer en ligne")
     html = html.replace('__LIB_HTML2CANVAS__', lib_h2c)
     html = html.replace('__APP_JS__', js)
+    html = html.replace('__APP_VERSION__', APP_VERSION)
 
     # Contrôles de construction
     left = re.findall(r'__[A-Z0-9_]{4,}__', re.sub(r'<script>.*?</script>', '', html, flags=re.S)[:])
