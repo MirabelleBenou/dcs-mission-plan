@@ -535,6 +535,63 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
 .fc-lo-k { font-family: var(--f-stencil); font-size: 12px; letter-spacing: 1.5px; color: var(--amber); text-transform: uppercase; }
 .fc-lo-v { font-family: var(--f-typewriter); font-size: 12px; color: var(--paper); flex: 1 1 160px; min-width: 0; word-break: break-word; }
 
+/* ---------- Le bloc ROUTE : choisir une route du Route Planner, la voir en croquis sur papier, caps magnétiques et distances ----------
+   La feuille garde ses variables de thème (--paper-light, --ink, --red-stamp…) ; rien en dur hors des rgba du quadrillage et de l'ombre. */
+#blk-route { margin-bottom: 16px; }
+#blk-route[hidden] { display: none; }
+#blk-route .miz-btn.fc-small { min-height: 44px; }
+.rt-note { margin: 0; font-family: var(--f-typewriter); font-size: 13px; line-height: 1.5; color: var(--paper); }
+.rt-note.rt-warn { color: var(--amber); }
+.rt-h { margin: 4px 0 -2px; font-family: var(--f-ui); font-weight: 500; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--amber); }
+.rt-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; }
+.rt-grid > * { min-width: 0; }
+.rt-card { display: flex; flex-direction: column; align-items: stretch; gap: 6px; min-height: 44px; padding: 6px; text-align: left; background: rgba(0,0,0,.25); border: 1px solid var(--khaki); border-radius: 0; color: var(--paper); cursor: pointer; }
+.rt-card:hover, .rt-card:focus-visible { border-color: var(--amber); outline: none; }
+.rt-card.on { border-color: var(--fc); box-shadow: 0 0 0 1px var(--fc); }
+.rt-card:disabled { opacity: .5; cursor: default; }
+.rt-card:disabled:hover { border-color: var(--khaki); }
+.rt-cn { font-family: var(--f-ui); font-weight: 500; font-size: 16px; letter-spacing: 1px; line-height: 1.25; text-transform: uppercase; color: var(--paper-light); overflow-wrap: anywhere; }
+.rt-cm { font-family: var(--f-typewriter); font-size: 12px; color: var(--khaki-light); }
+.rt-card .rt-tag { align-self: flex-start; max-width: 100%; overflow-wrap: anywhere; white-space: normal; }
+.rt-tag.full { background: var(--olive); border-color: var(--olive); color: var(--paper-light); }
+.rt-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 14px; }
+.rt-hl { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; min-width: 0; flex: 1 1 240px; }
+.rt-name { font-family: var(--f-ui); font-weight: 500; font-size: 22px; letter-spacing: 1px; line-height: 1.2; text-transform: uppercase; color: var(--paper-light); overflow-wrap: anywhere; }
+.rt-sub { font-family: var(--f-typewriter); font-size: 12px; color: var(--khaki-light); }
+.rt-hb { display: flex; flex-wrap: wrap; gap: 8px; }
+.rt-mini, .rt-thumb { display: block; background-color: var(--paper-light); background-image: linear-gradient(rgba(70,63,48,.09) 1px, transparent 1px), linear-gradient(90deg, rgba(70,63,48,.09) 1px, transparent 1px); background-size: 12px 12px; border: 1px solid var(--paper-dark); }
+.rt-mini > svg, .rt-thumb > svg { display: block; width: 100%; height: auto; }
+.rt-thumb { flex: none; width: 64px; height: 40px; background-size: 8px 8px; overflow: hidden; }
+.fc-route .fc-see { min-height: 44px; }
+.rt-paper { position: relative; background-color: var(--paper-light); background-image: linear-gradient(rgba(70,63,48,.09) 1px, transparent 1px), linear-gradient(90deg, rgba(70,63,48,.09) 1px, transparent 1px); background-size: 22px 22px; border: 1px solid var(--paper-dark); box-shadow: 2px 3px 0 rgba(0,0,0,.45); transform: rotate(-0.4deg); margin: 4px 0 6px; }
+.rt-paper > svg { display: block; max-width: 100%; }
+.rt-svg text { font-family: var(--f-typewriter); }
+.rt-leg { fill: none; stroke: var(--ink); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.rt-leg2 { fill: none; stroke: var(--ink-faded); stroke-width: 1; stroke-linecap: round; opacity: .45; }
+.rt-arr { fill: none; stroke: var(--ink); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.rt-pt { fill: none; stroke: var(--ink); stroke-width: 1.8; }
+.rt-start { fill: var(--red-stamp); }
+.rt-m .rt-leg { stroke-width: 1.5; }
+.rt-m .rt-leg2 { stroke-width: .8; }
+.rt-m .rt-arr { stroke-width: 1.2; }
+.rt-m .rt-pt { stroke-width: 1.2; }
+.rt-lbl { font-size: 12px; fill: var(--ink); stroke: var(--paper-light); stroke-width: 4px; stroke-linejoin: round; paint-order: stroke; }
+.rt-con { fill: none; stroke: var(--ink-faded); stroke-width: 1; }
+.rt-hd { font-size: 11px; fill: var(--red-stamp); stroke: var(--paper-light); stroke-width: 3px; stroke-linejoin: round; paint-order: stroke; text-anchor: middle; }
+.rt-num circle { fill: var(--paper-light); stroke: var(--red-stamp); stroke-width: 1.2; }
+.rt-num text { font-size: 10px; fill: var(--red-stamp); text-anchor: middle; }
+.rt-svg .rt-gn { font-family: var(--f-stencil); font-weight: 400; font-size: 14px; letter-spacing: 2px; fill: var(--ink-faded); }
+.rt-north line, .rt-north path, .rt-scale path { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.rt-svg .rt-nn { font-family: var(--f-stencil); font-weight: 400; font-size: 15px; fill: var(--ink); text-anchor: middle; }
+.rt-scale text { font-size: 12px; fill: var(--ink); }
+.rt-tab { width: 100%; border-collapse: collapse; font-family: var(--f-typewriter); font-size: 13px; color: var(--paper); }
+.rt-tab th { padding: 8px 6px; text-align: left; font-family: var(--f-ui); font-weight: 500; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--amber); border-bottom: 1px solid var(--khaki-light); }
+.rt-tab td { padding: 7px 6px; border-bottom: 1px dashed rgba(128,116,84,.55); overflow-wrap: anywhere; }
+.rt-tab .rt-n { width: 2.2em; color: var(--khaki-light); }
+.rt-tab .rt-r { text-align: right; white-space: nowrap; }
+.rt-tab .rt-tot td { border-bottom: 0; }
+@media (max-width: 539px) { .rt-name { font-size: 20px; } .rt-tab { font-size: 12px; } }
+
 /* ---------- L'emport : la vue de face de Mission Tools (Loadout Editor), reprise ---------- */
 .fc-back { display: none; align-self: flex-start; min-height: 40px; padding: 0 4px; background: none; border: 0; font-family: var(--f-typewriter); font-size: 13px; color: var(--fc); text-decoration: underline; cursor: pointer; }
 .fc-back:focus-visible { outline: 2px solid var(--fc); outline-offset: 2px; }
@@ -7457,6 +7514,575 @@ function buildPayload(type, pylons, opts) {
 }
 /* ===== FIN DE L'EMPORT ===== */
 
+function pad2(n) { return String(n).padStart(2, '0'); }
+
+const NAV_R_KM = 6371.0088;
+const NAV_NM_KM = 1.852;
+
+const WGS_A = 6378137;
+const WGS_F = 1 / 298.257223563;
+const UTM_K0 = 0.9996;
+const UTM_N = WGS_F / (2 - WGS_F);
+const UTM_A = WGS_A / (1 + UTM_N) * (1 + UTM_N * UTM_N / 4 + Math.pow(UTM_N, 4) / 64);
+const UTM_ALPHA = (function (n) {
+  const n2 = n * n, n3 = n2 * n, n4 = n3 * n;
+  return [
+    n / 2 - 2 * n2 / 3 + 5 * n3 / 16 + 41 * n4 / 180,
+    13 * n2 / 48 - 3 * n3 / 5 + 557 * n4 / 1440,
+    61 * n3 / 240 - 103 * n4 / 140,
+    49561 * n4 / 161280
+  ];
+})(UTM_N);
+const UTM_BETA = (function (n) {
+  const n2 = n * n, n3 = n2 * n, n4 = n3 * n;
+  return [
+    n / 2 - 2 * n2 / 3 + 37 * n3 / 96 - n4 / 360,
+    n2 / 48 + n3 / 15 - 437 * n4 / 1440,
+    17 * n3 / 480 - 37 * n4 / 840,
+    4397 * n4 / 161280
+  ];
+})(UTM_N);
+const UTM_DELTA = (function (n) {
+  const n2 = n * n, n3 = n2 * n, n4 = n3 * n;
+  return [
+    2 * n - 2 * n2 / 3 - 2 * n3 + 116 * n4 / 45,
+    7 * n2 / 3 - 8 * n3 / 5 - 227 * n4 / 45,
+    56 * n3 / 15 - 136 * n4 / 35,
+    4279 * n4 / 630
+  ];
+})(UTM_N);
+
+const MGRS_BANDS = 'CDEFGHJKLMNPQRSTUVWX';
+const MGRS_BAND_MIN_N = [1100000, 2000000, 2800000, 3700000, 4600000, 5500000, 6400000, 7300000, 8200000, 9100000,
+  0, 800000, 1700000, 2600000, 3500000, 4400000, 5300000, 6200000, 7000000, 7900000];
+const MGRS_COLS = 'ABCDEFGHJKLMNPQRSTUVWXYZ';   /* 24 lettres, sans I ni O */
+const MGRS_ROWS = 'ABCDEFGHJKLMNPQRSTUV';       /* 20 lettres, sans I ni O */
+
+function utmZoneFor(lat, lon) {
+  let z = Math.floor((lon + 180) / 6) + 1;
+  if (z < 1) z = 1;
+  if (z > 60) z = 60;
+  if (lat >= 56 && lat < 64 && lon >= 3 && lon < 12) z = 32;
+  if (lat >= 72 && lat < 84) {
+    if (lon >= 0 && lon < 9) z = 31;
+    else if (lon >= 9 && lon < 21) z = 33;
+    else if (lon >= 21 && lon < 33) z = 35;
+    else if (lon >= 33 && lon < 42) z = 37;
+  }
+  return z;
+}
+
+/* lat/lon (degrés) → { zone, north, e, n } ; zone imposée facultative */
+function llToUtm(lat, lon, zone) {
+  const z = zone || utmZoneFor(lat, lon);
+  const lon0 = ((z - 1) * 6 - 180 + 3) * Math.PI / 180;
+  const phi = lat * Math.PI / 180;
+  const dl = lon * Math.PI / 180 - lon0;
+  const n = UTM_N, s = Math.sin(phi);
+  const q = 2 * Math.sqrt(n) / (1 + n);
+  const tt = Math.sinh(Math.atanh(s) - q * Math.atanh(q * s));
+  const xi0 = Math.atan2(tt, Math.cos(dl));
+  const eta0 = Math.atanh(Math.sin(dl) / Math.sqrt(1 + tt * tt));
+  let xi = xi0, eta = eta0;
+  for (let j = 1; j <= 4; j++) {
+    xi += UTM_ALPHA[j - 1] * Math.sin(2 * j * xi0) * Math.cosh(2 * j * eta0);
+    eta += UTM_ALPHA[j - 1] * Math.cos(2 * j * xi0) * Math.sinh(2 * j * eta0);
+  }
+  const north = lat >= 0;
+  return { zone: z, north: north, e: 500000 + UTM_K0 * UTM_A * eta, n: (north ? 0 : 10000000) + UTM_K0 * UTM_A * xi };
+}
+
+/* UTM → { lat, lon } */
+function utmToLl(zone, north, e, nn) {
+  const lon0 = ((zone - 1) * 6 - 180 + 3) * Math.PI / 180;
+  const xi = (nn - (north ? 0 : 10000000)) / (UTM_K0 * UTM_A);
+  const eta = (e - 500000) / (UTM_K0 * UTM_A);
+  let xi1 = xi, eta1 = eta;
+  for (let j = 1; j <= 4; j++) {
+    xi1 -= UTM_BETA[j - 1] * Math.sin(2 * j * xi) * Math.cosh(2 * j * eta);
+    eta1 -= UTM_BETA[j - 1] * Math.cos(2 * j * xi) * Math.sinh(2 * j * eta);
+  }
+  const chi = Math.asin(Math.sin(xi1) / Math.cosh(eta1));
+  let phi = chi;
+  for (let j = 1; j <= 4; j++) phi += UTM_DELTA[j - 1] * Math.sin(2 * j * chi);
+  const lam = lon0 + Math.atan2(Math.sinh(eta1), Math.cos(xi1));
+  return { lat: phi * 180 / Math.PI, lon: lam * 180 / Math.PI };
+}
+
+function mgrsBandFor(lat) {
+  if (lat < -80 || lat > 84) return '';
+  let i = Math.floor((lat + 80) / 8);
+  if (i > 19) i = 19;
+  return MGRS_BANDS.charAt(i);
+}
+
+function mgrsSet(zone) { const s = zone % 6; return s === 0 ? 6 : s; }
+function mgrsColOrigin(zone) { return 'AJSAJS'.charAt(mgrsSet(zone) - 1); }
+function mgrsRowOrigin(zone) { return 'AFAFAF'.charAt(mgrsSet(zone) - 1); }
+
+/* lat/lon → « 36S VD 47535 77241 » (10 chiffres, troncature au mètre ; 10 µm de tolérance pour les mètres entiers) ;
+   '' hors de la zone UTM (80°S – 84°N) */
+function toMGRS(lat, lon) {
+  const band = mgrsBandFor(lat);
+  if (!band) return '';
+  const u = llToUtm(lat, lon);
+  const e = Math.floor(u.e + 1e-5), nn = Math.floor(u.n + 1e-5);
+  const col = MGRS_COLS.charAt((MGRS_COLS.indexOf(mgrsColOrigin(u.zone)) + Math.floor(e / 100000) - 1) % 24);
+  const row = MGRS_ROWS.charAt((MGRS_ROWS.indexOf(mgrsRowOrigin(u.zone)) + Math.floor(nn / 100000)) % 20);
+  const p5 = v => String(v % 100000).padStart(5, '0');
+  return pad2(u.zone) + band + ' ' + col + row + ' ' + p5(e) + ' ' + p5(nn);
+}
+
+/* Chaîne MGRS → { lat, lon } (centre de la case, y compris celle de 1 m à 10 chiffres) ou null */
+function parseMGRS(s) {
+  const m = /^\s*(\d{1,2})\s*([C-HJ-NP-X])\s*([A-HJ-NP-Z])\s*([A-HJ-NP-V])\s*((?:\d\s*)*)$/i.exec(s);
+  if (!m) return null;
+  const zone = parseInt(m[1], 10);
+  if (zone < 1 || zone > 60) return null;
+  const band = m[2].toUpperCase(), colL = m[3].toUpperCase(), rowL = m[4].toUpperCase();
+  if (band === 'X' && (zone === 32 || zone === 34 || zone === 36)) return null;
+  const groups = m[5].trim() ? m[5].trim().split(/\s+/) : [];
+  if (groups.length > 2 || (groups.length === 2 && groups[0].length !== groups[1].length)) return null;
+  const digits = groups.join('');
+  const k = digits.length;
+  if (k < 2 || k > 10 || k % 2 !== 0) return null;
+  const half = k / 2;
+  const cell = Math.pow(10, 5 - half);
+  const de = parseInt(digits.slice(0, half), 10) * cell + cell / 2;   /* centre de la case (1 m : demi-mètre) */
+  const dn = parseInt(digits.slice(half), 10) * cell + cell / 2;
+  const ci = (MGRS_COLS.indexOf(colL) - MGRS_COLS.indexOf(mgrsColOrigin(zone)) + 24) % 24;
+  if (ci > 7) return null;                         /* colonne absente de cette zone */
+  const e100 = (ci + 1) * 100000;
+  const ri = (MGRS_ROWS.indexOf(rowL) - MGRS_ROWS.indexOf(mgrsRowOrigin(zone)) + 20) % 20;
+  let n100 = ri * 100000;
+  const bi = MGRS_BANDS.indexOf(band);
+  while (n100 < MGRS_BAND_MIN_N[bi]) n100 += 2000000;
+  const ll = utmToLl(zone, band >= 'N', e100 + de, n100 + dn);
+  const south = -80 + bi * 8, north = bi === 19 ? 84 : south + 8;
+  if (ll.lat < south - 0.15 || ll.lat > north + 0.15) return null;   /* la case n'est pas dans la bande annoncée */
+  return ll;
+}
+
+/* Un nombre de lat/lon : degrés [minutes [secondes]] → valeur absolue en degrés, ou null */
+function parseDegPart(s, maxDeg) {
+  const m = /^\s*(\d+(?:\.\d+)?)\s*°?\s*(?:(\d+(?:\.\d+)?)\s*'?\s*(?:(\d+(?:\.\d+)?)\s*"?)?)?\s*$/.exec(s);
+  if (!m) return null;
+  const d = parseFloat(m[1]);
+  const mi = m[2] != null ? parseFloat(m[2]) : null;
+  const se = m[3] != null ? parseFloat(m[3]) : null;
+  if (mi != null && m[1].indexOf('.') !== -1) return null;          /* degrés décimaux : ni minutes ni secondes */
+  if (se != null && m[2].indexOf('.') !== -1) return null;          /* minutes décimales : pas de secondes */
+  if (mi != null && mi >= 60) return null;
+  if (se != null && se >= 60) return null;
+  const v = d + (mi || 0) / 60 + (se || 0) / 3600;
+  if (v > maxDeg) return null;
+  return v;
+}
+
+/* DMS pointé : « 36.49.30N/34.44.29E », « 36.49.30N 34.44.29E », « N36.49.30/E034.44.29 » (x en majuscules) */
+function parseDottedDms(x) {
+  const C = '(?:([NSEW])\\s*)?(\\d{1,3})\\.(\\d{2})\\.(\\d{2})(?:\\s*([NSEW]))?';
+  const m = new RegExp('^' + C + '(?:\\s*[\\/,;]\\s*|\\s+)' + C + '$').exec(x);
+  if (!m) return null;
+  const one = (a, b, c, d, e, maxDeg, pos, neg) => {
+    if ((a ? 1 : 0) + (e ? 1 : 0) !== 1) return null;
+    const h = a || e;
+    if (h !== pos && h !== neg) return null;
+    const dg = parseInt(b, 10), mi = parseInt(c, 10), se = parseInt(d, 10);
+    if (mi >= 60 || se >= 60) return null;
+    const v = dg + mi / 60 + se / 3600;
+    if (v > maxDeg) return null;
+    return h === neg ? -v : v;
+  };
+  const lat = one(m[1], m[2], m[3], m[4], m[5], 90, 'N', 'S');
+  const lon = one(m[6], m[7], m[8], m[9], m[10], 180, 'E', 'W');
+  return (lat == null || lon == null) ? null : { lat: lat, lon: lon };
+}
+
+function parseLatLon(s) {
+  let x = s.toUpperCase().replace(/[′’´‘]/g, "'").replace(/[″”“]/g, '"').replace(/''/g, '"').replace(/[º˚]/g, '°');
+  x = x.trim();
+  if (!x) return null;
+  const dm = parseDottedDms(x);
+  if (dm) return dm;
+  const letters = [];
+  const re = /[NSEW]/g;
+  let mm;
+  while ((mm = re.exec(x)) !== null) letters.push({ ch: mm[0], i: mm.index });
+  if (letters.length === 0) {
+    const m = /^([+-]?\d+(?:\.\d+)?)\s*°?\s*[,;\/\s]\s*([+-]?\d+(?:\.\d+)?)\s*°?$/.exec(x);
+    if (!m) return null;
+    const lat = parseFloat(m[1]), lon = parseFloat(m[2]);
+    if (Math.abs(lat) > 90 || Math.abs(lon) > 180) return null;
+    return { lat: lat, lon: lon };
+  }
+  if (letters.length !== 2) return null;
+  const a = letters[0], b = letters[1];
+  if ('NS'.indexOf(a.ch) === -1 || 'EW'.indexOf(b.ch) === -1) return null;
+  let latS, lonS;
+  if (a.i === 0 && b.i < x.length - 1) { latS = x.slice(1, b.i); lonS = x.slice(b.i + 1); }          /* N35… E032… */
+  else if (a.i > 0 && b.i === x.length - 1) { latS = x.slice(0, a.i); lonS = x.slice(a.i + 1, b.i); } /* 35…N 032…E */
+  else return null;
+  latS = latS.replace(/^[\s,;\/]+|[\s,;\/]+$/g, '');
+  lonS = lonS.replace(/^[\s,;\/]+|[\s,;\/]+$/g, '');
+  const la = parseDegPart(latS, 90), lo = parseDegPart(lonS, 180);
+  if (la == null || lo == null) return null;
+  return { lat: a.ch === 'S' ? -la : la, lon: b.ch === 'W' ? -lo : lo };
+}
+
+/* Chaîne saisie → { lat, lon } ou null (MGRS d'abord, puis latitude / longitude) */
+function parseCoord(s) {
+  if (typeof s !== 'string' || !s.trim()) return null;
+  const g = parseMGRS(s);
+  if (g) return g;
+  return parseLatLon(s);
+}
+
+function fmtDms(v, pos, neg, w) {
+  const h = v < 0 ? neg : pos;
+  const tot = Math.round(Math.abs(v) * 3600);
+  const d = Math.floor(tot / 3600), mi = Math.floor((tot % 3600) / 60), se = tot % 60;
+  return h + String(d).padStart(w, '0') + '°' + pad2(mi) + "'" + pad2(se) + '"';
+}
+/* « N35°02'11" E032°25'29" » */
+function toDMS(lat, lon) { return fmtDms(lat, 'N', 'S', 2) + ' ' + fmtDms(lon, 'E', 'W', 3); }
+
+/* Cap initial du grand cercle (vrai, 0–360) et distance (km) entre deux points */
+function legCalc(a, b) {
+  const r = Math.PI / 180;
+  const p1 = a.lat * r, p2 = b.lat * r, dl = (b.lon - a.lon) * r;
+  const y = Math.sin(dl) * Math.cos(p2);
+  const x = Math.cos(p1) * Math.sin(p2) - Math.sin(p1) * Math.cos(p2) * Math.cos(dl);
+  const brg = (Math.atan2(y, x) / r + 360) % 360;
+  const h = Math.sin((p2 - p1) / 2) * Math.sin((p2 - p1) / 2) + Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) * Math.sin(dl / 2);
+  const km = 2 * NAV_R_KM * Math.asin(Math.min(1, Math.sqrt(h)));
+  return { brg: brg, km: km };
+}
+
+function fmtHdg(deg) {
+  const n = Math.round(deg) % 360;
+  return n === 0 ? '360' : String(n).padStart(3, '0');
+}
+
+/* Déclinaison saisie (« 3,5 », « -2.5 », « 3° ») → nombre, ou null si illisible */
+function parseDecl(s) {
+  if (typeof s !== 'string') return null;
+  const m = /^\s*([+-]?\d+(?:[.,]\d+)?)\s*°?\s*$/.exec(s);
+  if (!m) return null;
+  const v = parseFloat(m[1].replace(',', '.'));
+  return (isFinite(v) && Math.abs(v) <= 90) ? v : null;
+}
+
+/* Les lignes de la datacard qui comptent : une rangée dont aucun champ n'est rempli n'existe pas pour la navigation. */
+const NAV_KEYS = ['name', 'coord', 'course', 'distance', 'altitude', 'tos', 'note'];
+
+/* Point d'arrivée du grand cercle depuis a, au cap initial brg (vrai, °) sur km kilomètres */
+function legDest(a, brg, km) {
+  const r = Math.PI / 180;
+  const d = km / NAV_R_KM, th = brg * r, p1 = a.lat * r, l1 = a.lon * r;
+  const p2 = Math.asin(Math.sin(p1) * Math.cos(d) + Math.cos(p1) * Math.sin(d) * Math.cos(th));
+  const l2 = l1 + Math.atan2(Math.sin(th) * Math.sin(d) * Math.cos(p1), Math.cos(d) - Math.sin(p1) * Math.sin(p2));
+  return { lat: p2 / r, lon: ((l2 / r + 540) % 360) - 180 };
+}
+
+/* Point X tel que le cap initial de X vers b vaut brg (vrai) et la distance de X à b vaut km ; null si non convergent */
+function legOrigin(b, brg, km) {
+  let th = (brg + 180) % 360;
+  for (let it = 0; it < 200; it++) {
+    const x = legDest(b, th, km);
+    const L = legCalc(x, b);
+    let e = brg - L.brg;
+    e = ((e + 540) % 360) - 180;
+    if (Math.abs(e) < 0.00001) return x;
+    th = ((th + e) % 360 + 360) % 360;
+  }
+  return null;
+}
+
+/* Nombre lisible d'un champ Cap / Distance (virgule ou point décimal), sinon null */
+function readNum(s) {
+  if (typeof s !== 'string') return null;
+  const m = /^\s*(\d+(?:[.,]\d+)?)\s*$/.exec(s);
+  return m ? parseFloat(m[1].replace(',', '.')) : null;
+}
+
+/* ===== DÉCLINAISON MAGNÉTIQUE (WMM, comme DCS) ===== */
+/* Le modèle est celui des fichiers de DCS World, qui calcule ainsi la déclinaison d'une date de mission :
+   - une année entière Y jusqu'à MAG_IGRF_LAST (1985) : l'IGRF-12 (IAGA ; fichier COF_IGRF/IGRF12.COF), au 1er janvier de Y sans
+     la date : coefficients g, h interpolés linéairement entre les deux époques de cinq ans qui encadrent Y (1900 pour les années
+     plus anciennes), degré 10. Table MAG_IGRF_TABLE : par époque de 1900 à 1985, 65 termes (n = 1 … 10, m = 0 … n) × deux valeurs
+     (g, h) en dixièmes de nT, en base 36 ;
+   - une année entière Y après 1985 : le World Magnetic Model de la NOAA (domaine public ; fichiers Data/MagVar/COF) de l'époque la plus
+     grande strictement inférieure à Y (2020 → WMM 2015, 2025 → WMM 2020, 2026 et après → WMM 2025), à la date exacte : g + ġ·dt, dt = y − époque,
+     sans borne. Un jeu de coefficients tous les cinq ans, de 1985.0 à 2025.0 (degré 12). Table MAG_TABLE : par époque, 90 termes
+     (n = 1 … 12, m = 0 … n) × quatre valeurs (g, h, ġ, ḣ) en dixièmes de nT et de nT/an, en base 36. */
+const MAG_IGRF_LAST = 1985;
+const MAG_IGRF_TABLE = {
+  1900: '-6rdy 0 -hqc 19p0 -582 0 mey -86q 74o 8ne 7vw 0 -bc2 -2jo 9ow u 4ew 41a 6rc 0 4ug 1i6 53c -j6 -2sa -1mc 118 -ku -1f4 0 2j4 -1mc 21c eq 1e -96 -nw -yg -4g u hi 0 gy -2i -32 n2 -1oa k -g4 -9q ge a0 -p0 -j6 jg 0 -fa -ci 0 -3m 9g -2s -be -a -5u 7s 50 -3c 1o -64 32 0 28 28 -14 -3w -2i 1y a -3m k 1e -2i 4g 1e -1e 28 -50 28 0 2s -5k a 3w -32 1e 3c -u a -k -k 28 k 2s -a -k -a k -u 0 -14 k k a -1e k -k 1o 1o -14 14 0 0 -k k 14 k 0 0 -1o',
+  1905: '-6qs0 0 -hqc 19le -5m8 0 mlc -8do 816 87u 802 0 -bj0 -2r6 9k6 9g 4we 3pc 6sg 0 4ym 1ke 51e -le -2xk -1ju 14k -i2 -1hc 0 2j4 -1hm 1zy fk -a -8w -pu -yq -78 32 h8 0 go -1y -32 nw -1pe 14 -fu -8w fu 8w -pk -im jg 0 -f0 -cs 0 -3w 96 -32 -be 0 -5k 7s 50 -3c 1o -64 32 0 28 28 -14 -46 -2i 1y a -3m k 1e -28 4g 1e -1e 28 -50 28 0 2s -5k a 3w -32 1e 3c -u a -k -k 28 k 2s 0 -k -a k -u 0 -14 k k a -1e k -k 1o 1o -14 14 0 0 -k k 14 k 0 0 -1o',
+  1910: '-6pxg 0 -hq2 19ic -5xm 0 mqw -8pc 92o 7ps 85w 0 -brc -302 9fq h8 5fu 3a2 6tk 0 53c 1mm 4yw -p0 -334 -1gi 18g -fa -1ju 0 2iu -1bs 1ya fu -2i -96 -sc -z0 -ak 5u h8 0 g4 -1e -32 oq -1q8 1e -f0 -82 f0 7s -qe -i2 jq 0 -f0 -d2 a -3w 8w -3c -b4 a -5a 7s 50 -3m 1o -64 32 0 28 28 -14 -46 -2i 1o a -3m k 1e -28 4g 1e -1e 28 -50 28 0 2s -5k a 3w -32 1e 3c -u a -k -k 28 k 2s 0 -k -a k -u 0 -14 k k a -1e k -k 1o 1o -14 14 0 0 -k k 14 k 0 0 -1o',
+  1915: '-6ou0 0 -hsk 19by -66s 0 mt4 -96u a3m 72q 8d4 0 -c12 -38y 9co nc 604 2s0 6ue 0 58c 1ok 4va -ua -37k -1c2 1dg -e6 -1mm 0 2iu -154 1w2 g4 -4g -9g -uu -z0 -e6 8w gy 0 fu -k -2s pu -1rc 28 -e6 -78 dm 6e -r8 -h8 k0 0 -f0 -dc k -3w 8m -3c -ak k -50 7s 5a -46 1o -64 32 0 28 28 -14 -46 -2i 1o k -3m u 1e -28 4g 1o -1e 28 -50 28 0 2s -5k a 3w -32 1e 3c -u a -k -k 28 k 2s 0 -k -a k -u 0 -14 k k a -1e k -k 1o 1o -14 14 0 0 -k a 14 k 0 0 -1o',
+  1920: '-6nns 0 -hvm 193m -6h2 0 mty -9pq auu 6cm 8km 0 -ccg -3fm 9aq sm 6h2 29e 6uy 0 5d2 1p4 4r4 -118 -39s -16i 1ja -fu -1pe 0 2ik -xw 1tk g4 -6e -ak -x2 -yq -h8 by gy 0 fa 0 -2s qo -1sq 32 -cs -64 c8 50 -s2 -fu ka 0 -f0 -dm k -3w 82 -3m -aa 14 -4g 7s 5a -4g 1o -64 32 0 1y 28 -u -46 -2i 1o k -3w 14 1e -1y 4q 1o -1e 28 -5a 28 0 2s -5k a 3w -32 1e 3c -u a -k -k 2i k 2s 0 -k -a k -u 0 -14 k k a -1e k -k 1o 1o -14 14 0 0 -k a 14 u 0 0 -1o',
+  1925: '-6mmk 0 -hvw 18vu -6w2 0 mwq -aak bcm 5m8 8so 0 -coy -3kc 99w x2 6sq 1rm 6vi 0 5hi 1o0 4my -19a -3ac -104 1oa -jg -1rw 0 2ik -qo 1qs g4 -7s -c8 -yq -xw -j6 e6 gy 0 f0 u -2i ri -1u4 3w -b4 -50 au 3m -sm -eg ka 0 -f0 -dw u -3w 7i -3w -9q 1e -3w 82 5a -4q 1o -5u 32 0 1y 28 -u -46 -2i 1o k -3w 14 1e -1y 4q 1y -1e 28 -5a 28 0 2s -5k a 3w -32 1e 3c -u a -k -k 2i k 2s 0 -k -a k -u 0 -14 k k a -1e k -k 1o 1o -14 14 0 0 -k a 14 u 0 0 -1o',
+  1930: '-6loy 0 -hvc 18tc -7c6 0 mzs -azk bpe 4yw 91k 0 -d20 -3pc 9aq 10y 6zy 1a4 6ww 0 5ly 1ky 4i8 -1i6 -398 -ua 1t0 -p0 -1tu 0 2iu -k0 1ok go -8w -eq -10e -ws -kk g4 go 0 eq 14 -2i sc -1v8 5a -8w -4g 8w 28 -sw -cs kk 0 -f0 -e6 14 -46 6y -3w -9g 1o -3c 82 50 -50 1o -5k 32 0 1y 28 -u -46 -2i 1e k -3w 1e 1e -1o 50 28 -1e 28 -5a 28 0 2s -5k a 3w -3c 1e 3c -u a -k -k 2i u 2s 0 -k -k k -u 0 -14 k k a -1e k -k 1o 1o -14 14 0 0 -k a 14 u 0 0 -1o',
+  1935: '-6kzy 0 -hsk 18ug -7us 0 n0w -bq8 byk 4is 9b0 0 -dfc -3t8 9di 14k 730 s2 6yu 0 5qo 1g8 4cy -1qs -37a -p0 1x6 -vo -1uy 0 2je -e6 1mm hs -96 -hs -11s -vy -l4 hs ge 0 eq 14 -28 sw -1wc 6y -6y -46 6y 14 -tg -b4 kk 0 -eq -eg 14 -4q 6e -3w -96 1y -32 82 50 -5a 1o -5a 32 0 1y 28 -u -46 -2i 1e a -46 1o 1e -1o 50 28 -1e 1y -5a 28 0 2s -5k a 46 -3c 1e 32 -u a -u -k 2i u 32 0 -k -k k -u 0 -14 k k a -1e k -k 1o 1o -14 14 0 0 -a k 14 u 0 0 -1o',
+  1940: '-6kj0 0 -hoo 18wy -8j8 0 n02 -cgc c30 42o 9kg 0 -dt8 -3um 9i8 19a 72g by 71w 0 5vo 1ay 48s -1y0 -34i -k0 21m -136 -1uy 0 2ks -96 1ls jq -96 -ku -136 -ve -l4 j6 fu 0 f0 14 -1y t6 -1x6 96 -50 -46 50 0 -tq -96 kk 0 -eq -eg 14 -50 5k -3w -8m 1y -2i 82 4q -5k 1e -5a 32 0 1y 28 -u -3w -2s 1e a -46 1o 1e -1e 5a 2i -1e 1y -5a 28 0 2s -5u a 46 -3c 1e 32 -u a -u -k 2i u 32 a -k -k k -u 0 -14 k k a -1e k -k 1o 1o -14 14 0 0 -a k 14 u 0 0 -1o',
+  1945: '-6k2c 0 -hmq 18tw -9lk 0 n2k -d4s c6c 3oi 9w4 0 -e5g -3um 9om 1fo 71m -32 7a8 0 5zk 140 474 -24o -38y -fa 2cg -1dg -1ya 0 2o4 -3c 1hw qe -5k -im -13g -x2 -ms ms ge 0 fu 1o 1o rs -1wc 4g -6y -2i 5u -4g -sw -au jg 0 -b4 -ci 0 -50 0 k -82 1o -2s 7s 46 -4q 82 -64 3m 0 1y 3c -28 -5u -1e -3c 2i -1y 1y k -2s 50 1y u k -32 1e 0 -5u -7i a 4q -32 82 u -2i 4g 14 -u 2i -14 1o -u a -14 28 -u 0 32 1e a a k -5k -1e -a -a -1o 28 1o -a -14 -u -k 1e 0 -k -k',
+  1950: '-6jr8 0 -hd0 18va -aci 0 n4s -dys c5s 2xu a0a 0 -ekq -3o8 9tw 1l8 6ww -cs 7d0 0 640 11s 42o -258 -35c -aa 2c6 -1mc -1uo 0 2oy u 1mm sm -5k -o6 -14u -xw -l4 m8 f0 0 fu -a 14 ri -1wm 96 -4g -3c 3c -3c -t6 -8c i2 0 -fa -9q k -4q a 0 -b4 2s -1y a0 1e -50 5a -4g 64 0 46 1e -14 -64 -a 0 32 -5u 46 -28 -3m 4q 1e -14 -a -4q u 0 -1y -6o -a 5a -6y 3c 2s k 1e k -1e 28 -k 28 u -32 28 -1y -28 0 14 3m -a -k 3m -2s -14 k 14 -u 3c 1o u -u k 1o 2s 32 u 28',
+  1955: '-6jc8 0 -h3a 18wo -b40 0 n66 -en8 c76 28u a1o 0 -f00 -3kc 9xs 1o0 6t0 -n2 7e4 0 654 10y 3xo -244 -32a -6e 28k -1rw -1rm 0 2s0 46 1rw uk -6e -r8 -168 -xm -j6 lo d2 0 fu -2i u qo -1wm dc -28 -4g 1y -3c -tq -6o i2 0 -fk -dw k -6o 2s -14 -8w 28 -32 7s 2i -5k 50 -50 32 0 2i 2s -1o -46 -3w 1e 1o -6e 2s u -1y 6e 1o -14 2i -3m 14 0 2i -32 -14 3c -1e 1y k 1o 14 -k a 2s k 1y k -1o 1e 1e -u 0 -1e -14 -a 0 k -28 -u -k 1y -14 14 a -k -u 1o 1y -k -a 0 -u',
+  1960: '-6iqa 0 -gqi 18om -bzy 0 n5w -f6e c9o 1l8 a1o 0 -fdc -370 9y2 1q8 6rw -104 7du 0 668 11i 3w0 -258 -31g u 22q -1yu -1po 0 2sk 4g 1v8 yq -78 -wi -17c -vo -hi mi cs 0 g4 -2s a ri -1tu go -a -5k -k -32 -ve -4q im 0 -fk -fa 1e -7s 46 -1o -8w 1y -1y 6e 4q -50 28 -4q 46 0 1o 32 -14 -3w -32 1y k -50 2s 14 -1e 6e 2s a 28 -5k 14 0 1o -50 0 3c -2i k a 0 14 -u -a 2i -k 28 u 0 -a 1e a 0 -u 14 14 a 0 0 -a k 14 -1e 1o a a -a -a 1o k 0 0 -1y',
+  1965: '-6i24 0 -gcm 18kg -cto 0 n4i -fk0 cas vo a0a 0 -fq4 -348 9yw 1uo 6ls -19u 7du 0 67c 154 3p2 -22q -30c 3m 1y0 -22q -1ou 0 2rg 5a 1yk zk -8m -z0 -17m -qy -h8 mi ci 0 gy -32 28 rs -1rc iw 14 -8w a -28 -uu -1y ku 0 -fu -gy 14 -7i 3m -k -78 1o -1o 78 3m -6e a -3c 3m 0 1e 1y -14 -3c -3w 2i 0 -4g 28 14 -a 6o 32 -u 14 -4q 28 0 2s -64 k 46 -3m 1y 2s -14 -a -1e -a 2s 1e 2s a -14 -k a -k 0 -u k k a -1e k -k 1o 14 -14 14 0 0 -k k u k 0 0 -1o',
+  1970: '-6h6g 0 -fyg 189m -dqq 0 n5c -fsm cfi 6y 9xi 0 -g4u -2to 9v0 1xq 6gs -1ig 7cg 0 668 1ae 3k2 -21w -31q 78 1t0 -25i -1o0 0 2rq 78 20s 12m -bo -12m -18g -pa -fk n2 by 0 hs -3c 46 rs -1mw k0 k -aa u -1o -v4 a k0 0 -fu -jg a -7i 3w -14 -64 28 -k 6e 3m -6e -k -32 3w 0 1o 1y -k -46 -3m 1o -u -4q 1e 1o 0 5u 32 -1o u -4g 28 0 2s -5u k 4g -3c 1o 2s -14 -a -1e 0 2s u 32 a -k -a a -u 0 -u a k a -1e u -a 14 1o -14 14 0 a -a 0 u u a -a -14',
+  1975: '-6g94 0 -fj6 17se -eoc 0 n84 -fy6 clc -iw 9ug 0 -gjk -2ki 9q0 20s 6ek -1py 7as 0 63q 1h2 3do -21m -34i au 1o0 -280 -1ok 0 2qw 8m 21c 154 -ge -168 -186 -n2 -dm og ci 0 ic -3m 7s ri -1j0 ku a -be 1o -14 -uu 32 jq 0 -fk -le a -78 4g -1e -3w 2s 0 64 3c -6e -1e -3c 3w 0 1o 1o -a -4g -3c 14 -28 -5a 14 1o 0 50 2s -2s a -4q 1y 0 2s -5u k 4g -3c 1y 2s -14 -a -1e -a 2s 14 32 a -u -k a -u 0 -u a k a -1e u -k 14 1e -14 14 -a a -a 0 u u a -a -1e',
+  1980: '-6ff4 0 -f3c 178o -feq 0 ncu -gfe cty -1jk 9vu 0 -gtk -2lc 9ni 23a 6fe -1y0 78k 0 618 1mw 32k -1ze -38e eq 1ja -2ai -1ok 0 2r6 cs 20i 15o -kk -15y -190 -lo -dc pk dc 0 ic -46 bo pu -1hc jq 14 -by 3w -k -u0 4q k0 0 -ge -ms k -7i 5u -1e -3c 4g a 50 32 -6e -k -2s 50 0 1o 1y 0 -50 -32 14 -1y -64 14 2i u 4g 1o -3m -a -46 1e 0 2s -5u a 4g -3c 2i 2i -1e -u -1o -a 2i 1y 2s k -1o -1e k -14 0 -14 a k 0 -1e u -k 1o 1e -14 u 0 a -a k 14 u 0 0 -1o',
+  1985: '-6ei2 0 -ep6 16fs -fzk 0 nhk -gya d0m -2d0 a00 0 -h1c -2e4 9me 26w 6ea -2ai 780 0 60o 1sg 2sa -1x6 -39s j6 1b8 -2ai -1ng 0 2qm d2 1ya 15o -pu -16s -19k -ku -cs qe eq 0 i2 -4g e6 og -1fe j6 14 -dc 4g -a -sc 5u kk 0 -h8 -n2 u -7i 6o -k -1o 5k 14 4q 2s -6e 0 -1y 5u 0 1o 28 0 -5a -32 1e -2i -6e 14 32 14 3w 14 -46 -14 -32 1e 0 2s -5u a 46 -3c 2i 2i -1o -u -1o -a 2i 1y 2i a -1y -1e k -14 0 -14 a u 0 -1e u -k 1o 1e -14 u 0 a -a k 14 u 0 0 -1o'
+};
+const MAG_IGRF_COEF = {};
+const MAG_EPOCHS = [1985, 1990, 1995, 2000, 2005, 2010, 2015, 2020, 2025];
+const MAG_TABLE = {
+  1985: '-6ejy 0 63 0 -eop 16d5 2y -8r -fz6 0 -34 0 ngo -gw3 i -2p d3b -2eo 2l -5j a27 0 2b 0 -gzy -2e7 -k 1p 9kx 26i -6 d 6h6 -2b4 o -3m 77e 0 -c 0 616 1r4 1 d 2rq -1wj -2p 10 -39x k5 -h p 19p -2b3 -2l 6 -1o4 0 e 0 2q2 c2 -5 -9 1yn 156 -c 6 -q1 -170 -m 3 -17r -jy 9 o -ck pf 0 -e es 0 v 0 hq -3f 0 7 e9 of i -l -1gc iu -2 -e x -e7 -4 -17 5n -14 o -7 -s9 5s i 0 ld 0 -1 0 -gv -m9 -8 0 7 -77 -c c 72 -9 b k -29 60 0 q 1x 55 6 9 1y -5k -i 8 -18 -25 -c 4 54 0 2 0 1f 12 0 -6 c -5m 7 -f -3c 1e 1 1 -2j -6q 2 -b 1 3e -3 4 1b 24 -1 -k 1t -4j 2 9 -2n -31 -m f 1l 0 0 0 31 -5s 0 0 9 4e 0 0 -3e 2i 0 0 2n -1e 0 0 -x -1s 0 0 -a 2j 0 0 1t 2r 0 0 f -1m 0 0 -1c n 0 0 -y 0 0 0 -1b c 0 0 p 4 0 0 -1j p 0 0 -l 1k 0 0 1a -18 0 0 w -5 0 0 6 -g 0 0 j 11 0 0 s -5 0 0 -2 -1p 0 0 n 0 0 0 -8 d 0 0 -k k 0 0 l -b 0 0 2 -s 0 0 -4 7 0 0 -4 -1 0 0 g -o 0 0 f -4 0 0 -7 -f 0 0 n -f 0 0 z 7 0 0 -i 0 0 0 0 3 0 0 1 6 0 0 -3 p 0 0 5 -h 0 0 5 3 0 0 -6 2 0 0 -4 -1 0 0 0 1 0 0 -5 1 0 0 0 -e 0 0 7 4 0 0 -2 7 0 0',
+  1990: '-6d65 0 4g 0 -ead 15q0 2l -3u -ggv 0 -39 0 nmm -hkv 11 -3k d1z -2yr i -45 a4p 0 l 0 -hbj -275 -24 v 9mc 291 0 8 68m -2pw -1m -35 77b 0 -8 0 621 1xa a x 2hv -1sn -22 11 -395 pd 8 s 12o -2ad -1s 0 -1lv 0 h 0 2pu bc 0 0 1wh 15b 0 -l -us -16y -r c -193 -is 0 c -ac r2 u 6 ge 0 8 0 hp -43 0 -6 go mu f -6 -1ed jg 0 0 4 -fm 0 -n 4a -e 0 0 -qo 6u 0 0 l5 0 5 0 -h9 -lu 0 6 d -7f -9 8 8e 1 f 0 1b 5j r 0 27 4z -a 0 2t -5z 0 4 j -1w 0 0 6d 0 0 0 n 2p -b 4 -c -5d 0 -8 -39 1u 0 5 -4v -5l -l 3 m 3q 0 5 1l 2q a 0 u -5a 0 -7 -1y -2j 0 0 10 0 0 0 2n -63 0 0 -9 3z 0 0 -2z 2n 0 0 2z -1v 0 0 -w -1s 0 0 -e 2j 0 0 1r 2h 0 0 8 -28 0 0 -1j l 0 0 -x 0 0 0 -q q 0 0 19 c 0 0 -1k q 0 0 -10 1l 0 0 13 -14 0 0 w -4 0 0 h -h 0 0 u 12 0 0 11 -8 0 0 7 -1t 0 0 d 0 0 0 -e 0 0 0 -p a 0 0 w -g 0 0 2 -m 0 0 -b b 0 0 3 -7 0 0 -3 -h 0 0 9 -f 0 0 -b -d 0 0 o -b 0 0 u 6 0 0 -d 0 0 0 1 7 0 0 5 1y 0 0 7 d 0 0 4 -f 0 0 -2 3 0 0 -b 2 0 0 9 -b 0 0 -6 c 0 0 8 -2 0 0 2 -d 0 0 4 6 0 0 2 1o 0 0',
+  1995: '-6d11 0 4w 0 -dr2 150k 3o -50 -gxn 0 -3t 0 nr6 -i7b 14 -42 d09 -38a -3 -20 a6c 0 8 0 -hjk -20j -1u 14 9md 2bm -5 m 5wv -37p -2d -3i 794 0 c 0 61h 202 b d 28t -1s5 -1w a -38d rq 3 p vm -2d1 -19 -c -1m7 0 9 0 2qc c5 5 5 1u6 17s -e f -xx -15p -h 6 -198 -gg 0 h -6h t0 l 6 j1 0 4 0 i8 -48 -3 7 ht kn 3 -f -1az ja l -5 -5 -fd 0 -7 4l u -4 b -pa 99 -4 q lo 0 -3 0 -ix -l5 -b 3 1 -6t -5 0 88 g 5 7 1o 5k d -6 2f 4l 1 1 2k -6k 0 -6 -o -1w -9 -4 6v 0 1 0 y 45 0 4 -f -5f 4 -3 -2o 1r 3 1 -4l -5o -d 8 q 3e 5 -1 10 1y 4 -d -1d -5a -9 -9 -2d -2g 1 -b t 0 0 0 23 -5i 0 0 4 42 0 0 -2v 31 0 0 2p -23 0 0 -n -1w 0 0 -o 2l 0 0 1w 25 0 0 -5 -29 0 0 -1t q 0 0 -t 0 0 0 -x w 0 0 s h 0 0 -17 t 0 0 -v 1k 0 0 o -y 0 0 s -7 0 0 7 -t 0 0 15 n 0 0 10 -g 0 0 6 -1u 0 0 h 0 0 0 -g 3 0 0 -10 a 0 0 c -10 0 0 -6 -e 0 0 1 j 0 0 -7 2 0 0 -8 -d 0 0 d -o 0 0 -3 -6 0 0 m -m 0 0 16 d 0 0 -i 0 0 0 9 3 0 0 -1 e 0 0 -5 8 0 0 8 -u 0 0 2 7 0 0 5 5 0 0 4 -8 0 0 -4 6 0 0 3 1 0 0 2 -d 0 0 4 -4 0 0 6 9 0 0',
+  2000: '-6cio 0 43 0 -daj 142x 33 -5o -hhn 0 -3s 0 nou -j68 -7 -5z cy0 -3lz -i -2o a7c 0 3 0 -hoj -1qf -17 1s 9ov 29e 9 -d 5lc -3r5 -2c -3p 76x 0 -g 0 62f 23x 9 n 1xm -1rb -24 7 -33j xl m 11 ti -2c3 -w -5 -1mv 0 -9 0 2po bo -2 0 1pc 1ca -p l -11d -11i -r n -1aw -aq -9 v -3p t8 h 0 ki 0 c 0 iy -4u 2 -3 kl h0 h -h -19f hk g -9 -12 -hh -1 -a 4r 2 -3 -1 -nn by 8 j li 0 -4 0 -kj -hb -8 e m -6t -2 2 9x 2h b 7 21 6i 4 4 1g 46 0 -3 2c -7o -2 -8 -f -26 -2 -1 6h 0 -3 0 21 3g 6 -5 -2d -5s -8 1 -1u 2c 3 -2 -4p -5w -2 0 2e 4b 5 1 1d 2j 0 -1 -26 -4b -6 3 -24 -1i 1 2 1l 0 0 0 2d -5o 0 0 k 3v 0 0 -2q 3c 0 0 24 -1q 0 0 -1y -2e 0 0 -k 2m 0 0 2k 1e 0 0 -m -2c 0 0 -1u w 0 0 -m 0 0 0 -1l 9 0 0 g -7 0 0 -11 13 0 0 -6 1c 0 0 15 -1h 0 0 m -a 0 0 m -o 0 0 1a d 0 0 n -n 0 0 1 -1s 0 0 x 0 0 0 -b -f 0 0 -o 7 0 0 q -b 0 0 -d -n 0 0 -h d 0 0 -6 -6 0 0 4 -s 0 0 7 -g 0 0 -3 -1 0 0 n -j 0 0 16 e 0 0 -f 0 0 0 -2 -a 0 0 -3 7 0 0 5 m 0 0 2 -p 0 0 9 -2 0 0 -e 0 0 0 6 -2 0 0 -6 0 0 0 -a 2 0 0 -3 -9 0 0 3 -2 0 0 4 a 0 0',
+  2005: '-6c28 0 28 0 -cwd 1372 2y -5t -i26 0 -47 0 nid -k0r -26 -6g csa -3zj -8 -42 aay 0 4 0 -hsb -1jj -q 1e 9mb 22t -c -1y 578 -41m -1t -6 73i 0 -p 0 65p 267 s m 1mp -1qs -1y g -2xe 14i 1q 1m rs -2cn -12 1 -1r6 0 -s 0 2qi bs 7 0 1lz 1dy -w h -11x -y6 -b l -1ar -5f 1 1c -3x ss -8 -b kc 0 -7 0 jd -5n 4 -6 lb f7 -3 -j -160 ho n -4 -45 -hm -l -5 42 -1 -6 -3 -nz e0 e 7 m9 0 2 0 -kp -h3 -1 6 -e -68 -3 4 ap 20 b 2 3g 72 6 3 2n 32 5 -8 1l -7c -4 -2 i -1f 6 1 6x 0 1 0 25 34 3 -2 -38 -5u -4 1 -1x 2o 3 3 -52 -5i -3 4 2s 4h 2 1 2k 25 4 -2 -38 -3l -7 4 -1g -2 4 4 1k 0 0 0 2r -5l 0 0 z 3l 0 0 -1y 3i 0 0 1f -1v 0 0 -30 -29 0 0 -d 28 0 0 2g t 0 0 -1v -27 0 0 -2j 1o 0 0 -n 0 0 0 -1r o 0 0 g 2 0 0 -q 18 0 0 0 1c 0 0 v -1t 0 0 4 -b 0 0 l -y 0 0 13 -8 0 0 -1 -n 0 0 -n -27 0 0 s 0 0 0 -g 3 0 0 -h c 0 0 h -8 0 0 -1 -p 0 0 1 9 0 0 -7 -6 0 0 7 -r 0 0 i -9 0 0 0 -d 0 0 b -k 0 0 15 -c 0 0 -o 0 0 0 -4 -4 0 0 2 3 0 0 8 o 0 0 -3 -q 0 0 b 6 0 0 -5 3 0 0 4 0 0 0 -3 0 0 0 -3 3 0 0 -1 -9 0 0 -3 -4 0 0 -1 8 0 0',
+  2010: '-6bli 0 38 0 -c8n 125g 4l -77 -ihq 0 -3d 0 ncl -kw5 -18 -69 cvi -4g1 j -3a ac9 0 4 0 -hy6 -18i -15 21 9i7 1xz -t -13 4w4 -452 -25 -q 71i 0 -i 0 68p 27k n b 1ab -1mo -2f r -2r7 19n 1a 13 ou -2dv -l -8 -1s5 0 -a 0 2r8 ce 6 4 1jn 1gh -i i -137 -wu -a c -19a 0 9 14 -26 s1 a -6 k8 0 -2 0 j2 -5s -2 -2 l4 c9 -1 -l -13a h3 k -4 -6c -if -h -6 3o v -3 5 -ln fa h 9 md 0 1 0 -kv -g3 -1 7 -1b -5v -6 3 cl 1t d -1 3v 6x 4 -1 2w 1y 3 -8 h -7p -7 -3 1d -x 6 3 6s 0 -1 0 29 32 1 -1 -41 -5k -6 2 -1k 3b 2 4 -5d -4u -2 4 37 4n 3 1 31 1y 3 -1 -3x -30 -6 4 -11 h 2 3 1i 0 0 0 2m -5p -1 0 y 37 0 -2 -1g 3k 3 0 v -20 -4 -1 -3g -22 -3 1 -7 28 1 0 2c l -1 -2 -2d -1p -4 3 -2t 1y -2 2 -k 0 0 0 -1r s 0 1 9 -1 -1 -1 -b 1b 2 0 -2 18 0 -1 p -20 -1 -1 -3 -a -2 0 m -13 0 -1 v -k -1 -2 -a -k -2 0 -s -2b -2 -1 u 0 0 0 -f 2 0 0 -l h 0 1 h -6 1 0 -5 -i 0 1 5 9 0 0 -8 -4 0 1 4 -p 0 0 i -d 0 -1 1 -l 0 -1 7 -j -1 0 12 -i 0 -1 -m 0 0 0 -2 -9 0 0 3 3 1 0 a l 1 0 -6 -p -1 0 9 5 0 0 -1 6 0 1 5 0 0 0 -4 1 0 0 -4 3 0 0 2 -9 0 0 -8 -2 -1 0 0 9 1 0',
+  2015: '-6b5d 0 2z 0 -bkz 110a 4z -7g -iv9 0 -2e 0 n8t -lyg -x -7j cxq -4yc o -3p afb 0 v 0 -i5f -w1 -1q 2c 9gg 1w2 -4 -4 4hn -45j -2w n 700 0 -4 0 6a1 26q 8 -6 xf -1ge -2k 1h -2l2 1e9 14 u jj -2jj -16 -1h -1sm 0 -2 0 2s1 d6 1 4 1hg 1ip -e g -136 -x6 0 -b -17q 4h d x 17 rt 12 1 jb 0 -5 0 iq -5r -2 0 k8 98 -6 -m -102 gc o -7 -82 -ih -b 1 3o 21 3 a -jp hd f d mo 0 2 0 -l5 -f1 -2 7 -1w -5e -4 5 ef 1k d -2 46 6s 2 -1 2l x -4 -7 -s -7n -9 1 1v -n 3 1 6o 0 0 0 2e 2u 1 -3 -4p -51 -5 3 -w 3o 5 3 -5q -42 -2 6 3p 4i 4 -1 39 1l 2 -2 -4g -2j -4 3 -k m 3 0 1i 0 0 0 2g -60 -1 -2 v 30 -1 -1 -v 39 4 -2 6 -1w -5 1 -3p -1x -2 1 -1 26 1 0 2f a 0 -2 -2j -13 -2 4 -2x 2d -1 3 -j 0 0 0 -1t x 0 1 2 -3 -1 -1 6 1a 3 0 -6 18 -1 0 h -27 -1 -2 -7 -6 -1 1 l -15 0 -1 n -s -2 -2 -i -b -1 1 -10 -2f -2 -1 v 0 0 0 -f -1 0 0 -n l -1 1 l -7 1 0 -9 -b 0 1 6 7 0 0 -7 -2 0 0 2 -l 0 1 h -f 0 0 -2 -p 0 -1 4 -k -1 0 z -n -1 -1 -k 0 1 0 -3 -a 0 0 4 5 0 0 d i 1 -1 -9 -m -1 0 9 3 0 0 1 7 1 0 5 -1 0 0 -4 3 0 0 -4 2 0 0 2 -9 0 0 -9 -2 0 0 0 7 0 0',
+  2020: '-6avx 0 1v 0 -b6z zwh 25 -6z -jag 0 -37 0 n0c -n30 -1z -8e cxs -5o4 -m -6n aiv 0 s 0 -ide -mu -1q 1l 9je 1v6 y -a 421 -46t -3e b 6yv 0 -b 0 68u 26c -g 2 ny -180 -1o 1x -2dy 1ji 1i 11 db -2p9 -1j -1k -1t4 0 -3 0 2sv d9 6 1 1g6 1lw -7 p -133 -xp 1 -9 -160 8y c u 3t rj a 5 ib 0 -6 0 i8 -5b -4 1 ka 6y 5 -i -xr en e -e -a2 -hw -e 9 3r 2i 0 1 -hz ix 8 a me 0 -1 0 -lc -ea -3 5 -2b -4o -1 6 fp n 7 -7 4e 6j 2 -2 1s -m -5 -c -20 -7k -8 2 2q -j a 3 6k 0 -1 0 2q 2c 1 -3 -4v -49 -1 7 -4 3k 5 -2 -5v -3a -1 5 49 45 4 -3 3t 10 5 -5 -4l -1x 0 4 -3 s 4 1 1e 0 -1 0 2a -6h -2 -3 t 33 0 2 -e 2q 4 -4 -b -1f -3 4 -3p -1q 0 1 b 26 3 0 2h 4 0 -2 -2l -f 0 5 -3b 2p -4 2 -j 0 0 0 -1q y 0 0 -1 -2 0 1 h z 2 -3 -9 1c -1 1 6 -2e -2 -2 -9 -1 0 1 j -16 -1 0 e -y -2 -1 -o -1 -1 2 -13 -2g 0 0 u 0 0 0 -e 0 -1 0 -p q 0 1 o -5 0 0 -9 -4 0 2 3 6 -1 0 -7 -2 0 0 -1 -h 0 1 e -g -1 0 -6 -u -1 -1 2 -k -1 0 v -q -1 0 -k 0 0 0 -1 -c 0 0 5 5 0 0 d d 0 -1 -c -i 0 1 7 1 0 0 3 7 0 0 5 -1 0 0 -2 6 0 1 -5 2 0 0 1 -9 0 0 -b 0 0 0 -3 5 -1 -1',
+  2025: '-6aha 0 3c 0 -avw z2m 2p -5z -jq6 0 -38 0 mrr -o6g -1g -7p cq5 -6af -28 -3d ai2 0 -d 0 -ijt -fq -16 14 9li 1tz 4 -3 3i0 -48n -4c -15 6wm 0 -g 0 663 25e -o -b fh -117 -1o 15 -263 1mw 1k g 3d -2wc -1y -18 -1ss 0 6 0 2uh cm e -5 1g0 1p6 0 m -12j -y5 6 4 -13g by m h 5t th 9 j hw 0 -2 0 hq -54 -4 3 ld 4o 9 -g -w5 dk c -4 -bd -gm -9 9 45 31 3 7 -gv k7 9 9 m3 0 0 0 -le -dl -1 6 -2g -40 -1 5 gh -a 5 -8 4e 6i -1 0 p -22 -8 -a -33 -6z -8 6 3y -n 8 -2 6g 0 -1 0 30 1z 2 -2 -4v -3i 0 5 k 36 5 -4 -61 -2p -1 4 4p 3j 3 -5 46 7 2 -6 -4o -1g 0 3 9 13 2 2 1a 0 0 0 26 -6w -1 -3 u 3e 1 3 -2 2b 3 -3 -p -x -3 3 -3n -1g 0 2 o 20 3 -1 2e -6 -1 -2 -2f 8 1 4 -3l 2s -1 1 -d 0 1 0 -1s x 0 0 2 0 1 0 k o 1 -2 -a 1h 0 1 -6 -2j -3 -1 -9 4 0 1 f -16 -1 0 9 -12 -1 -1 -r 9 0 2 -13 -2j 0 0 t 0 0 0 -f 0 0 0 -p t 0 1 o -6 0 0 -6 2 0 1 -1 5 -1 0 -6 -3 0 0 -1 -c 0 1 b -h -1 0 -a -t -1 0 -2 -i -1 0 q -n -1 0 -k 0 0 0 -2 -d 0 0 3 7 0 0 c a 0 -1 -d -e 0 1 6 0 0 0 6 6 1 0 5 -1 0 0 -1 8 0 0 -4 1 0 0 -2 -a -1 0 -d 1 0 0 -7 2 -1 -1'
+};
+const MAG_COEF = {};
+
+/* Les 360 coefficients d'une époque, décodés une fois */
+function magCoef(ep) {
+  if (!MAG_COEF[ep]) MAG_COEF[ep] = MAG_TABLE[ep].split(' ').map(s => parseInt(s, 36) / 10);
+  return MAG_COEF[ep];
+}
+
+/* Les 130 valeurs (g, h) d'une époque IGRF, décodées */
+function magIgrfEpoch(ep) {
+  return MAG_IGRF_TABLE[ep].split(' ').map(s => parseInt(s, 36) / 10);
+}
+
+/* Les 360 coefficients de l'IGRF à l'année entière Y (au plus MAG_IGRF_LAST), au 1er janvier : t = max(1900, Y), e l'époque ≤ t,
+   g(t) = g(e) + (g(e + 5) − g(e))·(t − e)/5, de même pour h ; même disposition que ceux du WMM (g, h, ġ, ḣ), ġ et ḣ à zéro, les termes
+   de degré 11 et 12 à zéro ; calculés une fois par année */
+function magIgrfCoef(Y) {
+  const t = Math.max(1900, Y);
+  if (!MAG_IGRF_COEF[t]) {
+    const e = 1900 + 5 * Math.floor((t - 1900) / 5);
+    const a = magIgrfEpoch(e), b = t === e ? a : magIgrfEpoch(e + 5);
+    const C = new Array(360).fill(0);
+    for (let j = 0; j < 65; j++) {
+      C[4 * j] = a[2 * j] + (b[2 * j] - a[2 * j]) * (t - e) / 5;
+      C[4 * j + 1] = a[2 * j + 1] + (b[2 * j + 1] - a[2 * j + 1]) * (t - e) / 5;
+    }
+    MAG_IGRF_COEF[t] = C;
+  }
+  return MAG_IGRF_COEF[t];
+}
+
+/* L'année décimale d'une date texte : AAAA-MM-JJ, AAAA-MM (le 1er du mois) ou AAAA (le 1er juillet) ; null si elle ne se lit pas */
+function magDecYear(s) {
+  if (typeof s !== 'string') return null;
+  const m = /^\s*(\d{4})(?:-(\d{2})(?:-(\d{2}))?)?\s*$/.exec(s);
+  if (!m) return null;
+  const y = +m[1];
+  const leap = (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+  const dm = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  const mo = m[2] === undefined ? 7 : +m[2];
+  const da = m[3] === undefined ? 1 : +m[3];
+  if (mo < 1 || mo > 12 || da < 1 || da > dm[mo - 1]) return null;
+  let doy = da;
+  for (let i = 0; i < mo - 1; i++) doy += dm[i];
+  return y + (doy - 1) / (leap ? 366 : 365);
+}
+
+/* L'époque WMM d'une année entière Y : la plus grande de 1985, 1990 … 2025 strictement inférieure à Y (1985 si aucune) */
+function magWmmEpoch(Y) {
+  let e = MAG_EPOCHS[0];
+  for (let i = 0; i < MAG_EPOCHS.length; i++) if (MAG_EPOCHS[i] < Y) e = MAG_EPOCHS[i];
+  return e;
+}
+
+/* Le modèle de DCS pour l'année décimale y, tel qu'on le nomme à l'écran : 'IGRF <Y>' (Y entière de y, 1900 au plus tôt) jusqu'à
+   MAG_IGRF_LAST, 'WMM <époque>' ensuite */
+function magModel(y) {
+  const Y = Math.floor(y);
+  return Y <= MAG_IGRF_LAST ? 'IGRF ' + Math.max(1900, Y) : 'WMM ' + magWmmEpoch(Y);
+}
+
+/* La déclinaison magnétique en degrés (+ vers l'Est) au niveau de la mer, à la position géodésique (lat, lon) et à l'année décimale y.
+   Coefficients : ceux de l'IGRF au 1er janvier de l'année entière de y jusqu'à MAG_IGRF_LAST, sinon ceux du WMM de l'époque précédente, g + ġ·dt,
+   dt = y − époque, sans borne (voir plus haut) ; synthèse en harmoniques sphériques de degré 12 (Schmidt,
+   rayon de référence 6 371,2 km ; les termes absents de l'IGRF, de degré 11 et 12, sont à zéro) ; WGS84 → géocentrique, puis X et Z ramenés au repère géodésique avant l'angle (NOAA, WMM). */
+function magVar(lat, lon, y) {
+  if (typeof lat !== 'number' || typeof lon !== 'number' || typeof y !== 'number' || !isFinite(lat + lon + y) || Math.abs(lat) > 90) return null;
+  const R = Math.PI / 180, N = 12;
+  const Y = Math.floor(y), igrf = Y <= MAG_IGRF_LAST;
+  const ep = igrf ? 0 : magWmmEpoch(Y), dt = igrf ? 0 : y - ep, C = igrf ? magIgrfCoef(Y) : magCoef(ep);
+  const la = Math.max(-89.9999, Math.min(89.9999, lat));
+  const A = 6378.137, F = 1 / 298.257223563, E2 = F * (2 - F), RE = 6371.2;
+  const sg = Math.sin(la * R);
+  const rc = A / Math.sqrt(1 - E2 * sg * sg);
+  const px = rc * Math.cos(la * R), pz = rc * (1 - E2) * sg;
+  const rr = Math.sqrt(px * px + pz * pz);
+  const x = pz / rr, z = px / rr;                       /* sin et cos de la latitude géocentrique */
+  const psi = Math.asin(x) - la * R;
+  /* Legendre (Gauss) et dérivée par rapport à la latitude, puis passage à la semi-normalisation de Schmidt */
+  const P = [1], D = [0];
+  for (let n = 1; n <= N; n++) {
+    for (let m = 0; m <= n; m++) {
+      const i = n * (n + 1) / 2 + m;
+      if (n === m) {
+        const j = (n - 1) * n / 2 + m - 1;
+        P[i] = z * P[j]; D[i] = z * D[j] + x * P[j];
+      } else if (n === 1 && m === 0) {
+        P[i] = x * P[0]; D[i] = x * D[0] - z * P[0];
+      } else {
+        const j1 = (n - 2) * (n - 1) / 2 + m, j2 = (n - 1) * n / 2 + m;
+        if (m > n - 2) { P[i] = x * P[j2]; D[i] = x * D[j2] - z * P[j2]; }
+        else {
+          const k = ((n - 1) * (n - 1) - m * m) / ((2 * n - 1) * (2 * n - 3));
+          P[i] = x * P[j2] - k * P[j1]; D[i] = x * D[j2] - z * P[j2] - k * D[j1];
+        }
+      }
+    }
+  }
+  const Q = [1];
+  for (let n = 1; n <= N; n++) {
+    const i0 = n * (n + 1) / 2;
+    Q[i0] = Q[(n - 1) * n / 2] * (2 * n - 1) / n;
+    for (let m = 1; m <= n; m++) Q[i0 + m] = Q[i0 + m - 1] * Math.sqrt((n - m + 1) * (m === 1 ? 2 : 1) / (n + m));
+  }
+  const lm = lon * R;
+  let bx = 0, by = 0, bz = 0;
+  for (let n = 1; n <= N; n++) {
+    const rn = Math.pow(RE / rr, n + 2);
+    for (let m = 0; m <= n; m++) {
+      const i = n * (n + 1) / 2 + m, k = 4 * (i - 1);
+      const g = C[k] + C[k + 2] * dt, h = C[k + 1] + C[k + 3] * dt;
+      const cm = Math.cos(m * lm), sm = Math.sin(m * lm), pq = P[i] * Q[i], dq = -D[i] * Q[i];
+      bz -= rn * (g * cm + h * sm) * (n + 1) * pq;
+      by += rn * (g * sm - h * cm) * m * pq;
+      bx -= rn * (g * cm + h * sm) * dq;
+    }
+  }
+  by /= z;
+  const bxg = bx * Math.cos(psi) - bz * Math.sin(psi);
+  return Math.atan2(by, bxg) / R;
+}
+
+/* L'année d'une route et sa source : { src: 'mission' | 'forced' | 'typed' | 'default', y (décimale), year (AAAA, texte),
+   file, date } ; la mission est celle de HQ (mission_snapshot_v1), prise si son théâtre est celui de la route et sa date se lit,
+   sauf si « Forcer » est enfoncé avec une année saisie valide (quatre chiffres, de 1900 à 2099) ; sinon la saisie, sinon 1985. */
+function magYearSource(theatre, yearStr, force) {
+  let mis = null;
+  try {
+    const o = JSON.parse(localStorage.getItem('mission_snapshot_v1'));
+    const sm = o && o.sourceMission;
+    if (sm && typeof sm === 'object' && sm.theatre === theatre && typeof sm.missionDate === 'string' && magDecYear(sm.missionDate) != null) {
+      mis = { file: typeof sm.filename === 'string' ? sm.filename : '', date: sm.missionDate.trim(), y: magDecYear(sm.missionDate) };
+    }
+  } catch (e) { /* aucune mission lisible */ }
+  const ys = (typeof yearStr === 'string' && /^\d{4}$/.test(yearStr) && +yearStr >= 1900 && +yearStr <= 2099) ? yearStr : '';
+  if (mis && !(force === true && ys)) return { src: 'mission', y: mis.y, year: String(Math.floor(mis.y)), file: mis.file, date: mis.date };
+  if (ys) return { src: mis ? 'forced' : 'typed', y: magDecYear(ys), year: ys, file: mis ? mis.file : '', date: '' };
+  return { src: 'default', y: magDecYear('1985'), year: '1985', file: '', date: '' };
+}
+/* ===== FIN DE LA DÉCLINAISON MAGNÉTIQUE ===== */
+
+/* ===== PROJECTIONS DE DCS (Mercator transverse, un jeu de paramètres par théâtre) ===== */
+/* Les projections de DCS, une par théâtre (pydcs, LGPL-3.0) : Mercator transverse WGS84, échelle 0,9996, latitude d'origine 0 ;
+   [ méridien central (°), faux est (m), faux nord (m) ]. DCS pose x au nord, y à l'est. Ni MarianaIslandsWWII, ni Iraq, ni Afghanistan. */
+const TM_PARAMS = {
+  Caucasus:       [33,   -99516.9999999732,     -4998114.999999984],
+  Falklands:      [-57,  147639.99999997593,    5815417.000000032],
+  GermanyCW:      [21,   35427.619999985734,    -6061633.128000011],
+  Kola:           [21,   -62702.00000000087,    -7543624.999999979],
+  MarianaIslands: [147,  238417.99999989968,    -1491840.000000048],
+  Nevada:         [-117, -193996.80999964548,   -4410028.063999966],
+  Normandy:       [-3,   -195526.00000000204,   -5484812.999999951],
+  PersianGulf:    [57,   75755.99999999645,     -2894933.0000000377],
+  SinaiMap:       [33,   169221.9999999585,     -3325312.9999999693],
+  Syria:          [39,   282801.00000003993,    -3879865.9999999935],
+  TheChannel:     [3,    99376.00000000288,     -5636889.00000001]
+};
+
+/* Mercator transverse du théâtre (série de Krüger du bloc de coordonnées) : x est le nord, y l'est, avec les faux de pydcs.
+   lat/lon (degrés) → { x, y } (mètres) */
+function llToDcs(theatre, lat, lon) {
+  const p = TM_PARAMS[theatre];
+  let d = lon - p[0];
+  while (d > 180) d -= 360;
+  while (d < -180) d += 360;
+  const phi = lat * Math.PI / 180, dl = d * Math.PI / 180;
+  const n = UTM_N, s = Math.sin(phi);
+  const q = 2 * Math.sqrt(n) / (1 + n);
+  const tt = Math.sinh(Math.atanh(s) - q * Math.atanh(q * s));
+  const xi0 = Math.atan2(tt, Math.cos(dl));
+  const eta0 = Math.atanh(Math.sin(dl) / Math.sqrt(1 + tt * tt));
+  let xi = xi0, eta = eta0;
+  for (let j = 1; j <= 4; j++) {
+    xi += UTM_ALPHA[j - 1] * Math.sin(2 * j * xi0) * Math.cosh(2 * j * eta0);
+    eta += UTM_ALPHA[j - 1] * Math.cos(2 * j * xi0) * Math.sinh(2 * j * eta0);
+  }
+  return { x: UTM_K0 * UTM_A * xi + p[2], y: UTM_K0 * UTM_A * eta + p[1] };
+}
+
+/* { x, y } (mètres DCS) → lat/lon (degrés) */
+function dcsToLl(theatre, x, y) {
+  const p = TM_PARAMS[theatre];
+  const xi = (x - p[2]) / (UTM_K0 * UTM_A);
+  const eta = (y - p[1]) / (UTM_K0 * UTM_A);
+  let xi1 = xi, eta1 = eta;
+  for (let j = 1; j <= 4; j++) {
+    xi1 -= UTM_BETA[j - 1] * Math.sin(2 * j * xi) * Math.cosh(2 * j * eta);
+    eta1 -= UTM_BETA[j - 1] * Math.cos(2 * j * xi) * Math.sinh(2 * j * eta);
+  }
+  const chi = Math.asin(Math.sin(xi1) / Math.cosh(eta1));
+  let phi = chi;
+  for (let j = 1; j <= 4; j++) phi += UTM_DELTA[j - 1] * Math.sin(2 * j * chi);
+  let lon = p[0] + Math.atan2(Math.sinh(eta1), Math.cos(xi1)) * 180 / Math.PI;
+  while (lon > 180) lon -= 360;
+  while (lon < -180) lon += 360;
+  return { lat: phi * 180 / Math.PI, lon: lon };
+}
+/* ===== FIN DES PROJECTIONS DE DCS ===== */
+
+/* ===== POINTS DE PAQUET (route → mission DCS) ===== */
+function packValidCoord(lat, lon) {
+  return typeof lat === 'number' && typeof lon === 'number' && isFinite(lat) && isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180;
+}
+
+/* Le point <k> d'un paquet : avec sa source de mission, une copie de la table brute où seul ce qui a changé depuis l'import est réécrit ; sans, un point neuf */
+function packPoint(p, i, th, gsDefault) {
+  const xy = llToDcs(th, p.lat, p.lon);
+  const d = p.dcs;
+  if (d && d.raw && typeof d.raw === 'object' && !Array.isArray(d.raw) && d.orig && typeof d.orig === 'object') {
+    const o = JSON.parse(JSON.stringify(d.raw)), og = d.orig;
+    let moved = true;
+    if (packValidCoord(og.lat, og.lon)) {
+      const was = llToDcs(th, og.lat, og.lon);
+      moved = Math.hypot(xy.x - was.x, xy.y - was.y) > 1;
+    }
+    if (moved) {
+      o.x = xy.x; o.y = xy.y;
+      o.type = 'Turning Point'; o.action = 'Turning Point';
+      delete o.airdromeId; delete o.helipadId; delete o.linkUnit;
+    }
+    if (p.alt !== og.alt || p.altRef !== og.altRef) { o.alt = p.alt; o.alt_type = p.altRef === 'MSL' ? 'BARO' : 'RADIO'; }
+    if (i > 0 && p.gs !== og.gs) o.speed = ((typeof p.gs === 'number' && p.gs > 0) ? p.gs : gsDefault) / 3.6;
+    if (p.name !== og.name) o.name = p.name;
+    return o;
+  }
+  const gs = (i > 0 && typeof p.gs === 'number' && p.gs > 0) ? p.gs : gsDefault;
+  return {
+    type: 'Turning Point', action: 'Turning Point', x: xy.x, y: xy.y, alt: p.alt, alt_type: p.altRef === 'MSL' ? 'BARO' : 'RADIO', speed: gs / 3.6, name: p.name,
+    ETA: 0, ETA_locked: false, speed_locked: true, formation_template: '', task: { id: 'ComboTask', params: { tasks: {} } }
+  };
+}
+/* ===== FIN DES POINTS DE PAQUET ===== */
+
 
 /* ============= LISTES DE LA BARRE — thème de l'interface (lot mp-ui-listes) =============
    Le <select> reste dans la page (id, options, écouteurs) : il garde la valeur, mais il est masqué.
@@ -7877,11 +8503,47 @@ const I18N = {
   "fl.coalition.red": "Rouge",
   "fl.units.one": "{0} unité",
   "fl.units.many": "{0} unités",
+  "sec.route": "ROUTE",
   "route.none": "Aucune route.",
-  "route.n": "Route : {0} points, de « {1} » à « {2} »",
-  "route.n1": "Route : 1 point, « {0} »",
-  "route.alt": " (premier point à {0} m)",
-  "route.rm": "Retirer la route",
+  "route.line": "Route : {0} — {1}, {2}",
+  "route.line.nod": "Route : {0} — {1}",
+  "route.pts.one": "{0} point",
+  "route.pts.many": "{0} points",
+  "route.imported": "Route importée",
+  "route.unnamed": "Route sans nom",
+  "route.from.rp": "du Route Planner",
+  "route.from.pkg": "importée avec le groupe",
+  "route.change": "Changer de route",
+  "route.remove": "Retirer",
+  "route.see": "Voir la route ↓",
+  "route.pick": "Choisir la route ↓",
+  "route.choose.none": "Aucune route pour ce groupe. Touche une route du Route Planner pour la donner au groupe.",
+  "route.choose.other": "Choisir une autre route pour ce groupe.",
+  "route.keep": "Garder la route actuelle",
+  "route.list.linked": "Liées à ce groupe",
+  "route.list.other": "Autres routes",
+  "route.tag.linked": "liée à {0}",
+  "route.tag.free": "sans groupe",
+  "route.empty": "Le Route Planner n’a aucune route : trace-la d’abord là-bas.",
+  "route.th.mismatch": "Les routes du Route Planner sont sur {0} ; ce paquet est sur {1}.",
+  "route.th.nosupport": "Les routes du Route Planner sont sur {0}, un théâtre que ce module ne gère pas.",
+  "route.nosketch": "Choisissez un théâtre pour voir la route.",
+  "route.sketch": "Croquis de la route {0}",
+  "route.col.leg": "Branche",
+  "route.col.hdg": "Cap M",
+  "route.col.dist": "Distance",
+  "route.total": "Total",
+  "route.note": "Cap magnétique : déclinaison {0} ({1}) — le même calcul que le Route Planner et le Datacard Generator. Le croquis n’est qu’un rappel : la route se trace au Route Planner.",
+  "route.decl.to": " à ",
+  "route.src.mission": "date de la mission",
+  "route.src.rp": "année du Route Planner",
+  "route.src.default": "année par défaut",
+  "route.src.manual": "saisie au Route Planner",
+  "route.gone": "Cette route n’est plus au Route Planner : la dernière copie est gardée.",
+  "route.few": "Cette route n’a plus de points au Route Planner : la dernière copie est gardée.",
+  "route.theatre": "Le Route Planner est passé sur {0} : la route n’est pas reprise.",
+  "route.toast.one": "Route « {0} » reprise du Route Planner pour {1}.",
+  "route.toast.many": "Routes reprises du Route Planner : {0}.",
   "u.title": "Unité {0}",
   "u.fold": "Replier l’unité",
   "u.unfold": "Déplier l’unité",
@@ -8093,11 +8755,47 @@ const I18N = {
   "fl.coalition.red": "Red",
   "fl.units.one": "{0} unit",
   "fl.units.many": "{0} units",
+  "sec.route": "ROUTE",
   "route.none": "No route.",
-  "route.n": "Route: {0} points, from “{1}” to “{2}”",
-  "route.n1": "Route: 1 point, “{0}”",
-  "route.alt": " (first point at {0} m)",
-  "route.rm": "Remove the route",
+  "route.line": "Route: {0} — {1}, {2}",
+  "route.line.nod": "Route: {0} — {1}",
+  "route.pts.one": "{0} point",
+  "route.pts.many": "{0} points",
+  "route.imported": "Imported route",
+  "route.unnamed": "Unnamed route",
+  "route.from.rp": "from the Route Planner",
+  "route.from.pkg": "imported with the group",
+  "route.change": "Change route",
+  "route.remove": "Remove",
+  "route.see": "See the route ↓",
+  "route.pick": "Choose the route ↓",
+  "route.choose.none": "No route for this group. Tap a Route Planner route to give it to the group.",
+  "route.choose.other": "Choose another route for this group.",
+  "route.keep": "Keep the current route",
+  "route.list.linked": "Linked to this group",
+  "route.list.other": "Other routes",
+  "route.tag.linked": "linked to {0}",
+  "route.tag.free": "no group",
+  "route.empty": "The Route Planner has no route: draw it there first.",
+  "route.th.mismatch": "The Route Planner routes are on {0}; this package is on {1}.",
+  "route.th.nosupport": "The Route Planner routes are on {0}, a theatre this module does not handle.",
+  "route.nosketch": "Choose a theatre to see the route.",
+  "route.sketch": "Sketch of route {0}",
+  "route.col.leg": "Leg",
+  "route.col.hdg": "Mag hdg",
+  "route.col.dist": "Distance",
+  "route.total": "Total",
+  "route.note": "Magnetic heading: variation {0} ({1}) — the same calculation as the Route Planner and the Datacard Generator. The sketch is only a reminder: the route is drawn in the Route Planner.",
+  "route.decl.to": " to ",
+  "route.src.mission": "mission date",
+  "route.src.rp": "Route Planner year",
+  "route.src.default": "default year",
+  "route.src.manual": "typed in the Route Planner",
+  "route.gone": "This route is no longer in the Route Planner: the last copy is kept.",
+  "route.few": "This route no longer has points in the Route Planner: the last copy is kept.",
+  "route.theatre": "The Route Planner has moved to {0}: the route is not taken over.",
+  "route.toast.one": "Route “{0}” updated from the Route Planner for {1}.",
+  "route.toast.many": "Routes updated from the Route Planner: {0}.",
   "u.title": "Unit {0}",
   "u.fold": "Fold the unit",
   "u.unfold": "Unfold the unit",
@@ -8309,6 +9007,7 @@ const UI = {
   clamped: 0,               // réglages d'emport ramenés à la limite (ligne d'état)
   seenLiv: {},              // type → [liveryId vus dans les paquets importés, une entrée par occurrence]
   cmp: { sym: true, st: null, saving: false, name: '', err: '' },
+  rtChoose: null,           // le fcId du groupe dont on choisit la route (« Changer de route ») ; un groupe sans route est toujours au choix
   imp: null,                // la fenêtre d'import, quand elle est ouverte
   hq: undefined             // la mission de HQ lue dans le stockage : une lecture par ouverture de la fenêtre d'import (undefined = à relire)
 };
@@ -8341,11 +9040,12 @@ function restoreFlight(f) {
   if (!rawUnits.length && PAYLOAD_TYPES.indexOf(f.type) < 0) return null;       // sans unité ni type géré : écarté, comme à la base
   if (types.some(x => PAYLOAD_TYPES.indexOf(x) < 0)) return null;
   const nf = newFlight();
-  Object.keys(f).forEach(k => { if (['name', 'type', 'coalition', 'route', 'units'].indexOf(k) < 0) nf[k] = f[k]; });
+  Object.keys(f).forEach(k => { if (['name', 'type', 'coalition', 'route', 'routeLink', 'units'].indexOf(k) < 0) nf[k] = f[k]; });
   if (typeof nf.fcId !== 'string' || nf.fcId === '') nf.fcId = newId();
   nf.name = str(f.name);
   nf.coalition = (f.coalition === 'blue' || f.coalition === 'red') ? f.coalition : '';
   nf.route = (isObj(f.route) && isObj(f.route.points)) ? { points: f.route.points } : null;
+  if (nf.route && isObj(f.routeLink) && ridOk(f.routeLink.rid)) nf.routeLink = { rid: f.routeLink.rid, name: str(f.routeLink.name) };       // le lien avec le Route Planner ne se garde que s'il y a une route
   nf.units = rawUnits.map((u, i) => {
     const nu = newUnit(types[i]);
     nu.name = str(u.name); nu.callsign = str(u.callsign); nu.csRaw = u.csRaw; nu.onboard = str(u.onboard); nu.livery = str(u.livery);
@@ -8663,7 +9363,7 @@ function lvScrolled(e) {
 }
 const isLiveryField = el => !!el && !!el.matches && el.matches('input[data-k="livery"]');
 
-// ----- La route : portée telle quelle, jamais tracée ici -----
+// ----- Les points d'une route du groupe (le paquet les porte tels quels) -----
 function routeKeys(points) { return isObj(points) ? Object.keys(points).filter(k => /^\d+$/.test(k)).sort((a, b) => a - b) : []; }
 function routePoints(points) {
   return routeKeys(points).map(k => {
@@ -8671,12 +9371,389 @@ function routePoints(points) {
     return { name: (typeof p.name === 'string' && p.name !== '') ? p.name.replace(/\s+/g, ' ') : 'WP' + k, alt: p.alt };
   });
 }
-function routeLine(f) {
-  const pts = f.route ? routePoints(f.route.points) : [];
-  if (!pts.length) return t('route.none');
-  let s = pts.length === 1 ? tf('route.n1', pts[0].name) : tf('route.n', pts.length, pts[0].name, pts[pts.length - 1].name);
-  if (isNum(pts[0].alt)) s += tf('route.alt', Math.round(pts[0].alt));
-  return s;
+// ----- La route : choisie parmi celles du Route Planner, dessinée en croquis, suivie quand elle change là-bas -----
+// Un groupe garde sa route (route: { points }, les points d'un paquet, inchangés) et, si elle vient du Route Planner, routeLink: { rid, name } (le nom au dernier passage).
+// routeLink vit dans fc_state_v1 et le fichier de travail, jamais dans le paquet. Un groupe n'a qu'une route ; une même route du Route Planner peut servir à plusieurs groupes.
+const KEY_RP_SET = 'route_set_v1', KEY_RP_STATE = 'route_state_v1', RP_SET_FORMAT = 'dcs-route-set-v1', RP_GS_DEFAULT = 220;
+const ridOk = v => typeof v === 'string' && /^[a-z0-9]{6,32}$/.test(v);
+function lsJson(k) { try { return JSON.parse(lsGet(k) || 'null'); } catch (e) { return null; } }
+function hasRoute(f) { return !!(f && f.route && routePoints(f.route.points).length > 0); }
+function ptsLabel(n) { return tf(n < 2 ? 'route.pts.one' : 'route.pts.many', n); }
+function fmtNm(v) { const s = (Math.round(v * 10) / 10).toFixed(1); return CURRENT_LANG === 'fr' ? s.replace('.', ',') : s; }
+function routeTitle(f) { return f.routeLink ? (f.routeLink.name.trim() !== '' ? f.routeLink.name : t('route.unnamed')) : t('route.imported'); }
+
+// Ce que le Route Planner a rangé : ses routes (celles qui portent un rid) et ses réglages (théâtre, vitesse sol, affichage des caps)
+function rpRead() {
+  const st = lsJson(KEY_RP_STATE), set = lsJson(KEY_RP_SET), nd = isObj(st) && isObj(st.navDisplay) ? st.navDisplay : {};
+  const state = {
+    theatre: isObj(st) && typeof st.theatre === 'string' && st.theatre !== '' ? st.theatre : 'Caucasus',
+    gs: isObj(st) && isNum(st.groundSpeed) && st.groundSpeed > 0 ? st.groundSpeed : RP_GS_DEFAULT,
+    nav: { mode: (nd.mode === 'calc' || nd.mode === 'manual') ? nd.mode : (parseDecl(str(nd.decl)) !== null ? 'manual' : 'calc'), decl: str(nd.decl), year: (typeof nd.year === 'string' && /^\d{1,4}$/.test(nd.year)) ? nd.year : '', force: nd.force === true }
+  };
+  const routes = [];
+  if (isObj(set) && (set.format === undefined || set.format === RP_SET_FORMAT) && Array.isArray(set.routes)) {
+    set.routes.forEach(r => {
+      if (!isObj(r) || !Array.isArray(r.points) || !ridOk(r.rid)) return;
+      routes.push({ rid: r.rid, name: str(r.name), points: r.points.filter(p => isObj(p) && packValidCoord(p.lat, p.lon)), flight: (isObj(r.flight) && typeof r.flight.groupName === 'string') ? r.flight : null });
+    });
+  }
+  return { state: state, routes: routes };
+}
+// Les points d'un paquet pour une route du Route Planner : ceux que son paquet écrirait (même bloc packPoint)
+function rpPack(rt, theatre, gs) {
+  const o = {};
+  rt.points.forEach((p, k) => { o[String(k + 1)] = packPoint(p, k, theatre, gs); });
+  return o;
+}
+function rpUsable(rp) { return rp.routes.filter(r => r.points.length >= 2); }
+// Une route du Route Planner est « liée à ce groupe » : même nom (rogné, sans casse) et, si le groupe a un camp, le même
+function rtMatches(rt, f) {
+  const fl = rt.flight, name = f.name.trim().toLowerCase();
+  return !!fl && name !== '' && fl.groupName.trim().toLowerCase() === name && (f.coalition === '' || fl.coalition === f.coalition);
+}
+
+// Les points du groupe en latitude / longitude (ils se lisent de la route du groupe, jamais de route_set_v1) ; null sans théâtre lisible
+function routeGeo(f) {
+  if (!f || !f.route || !has(TM_PARAMS, S.theatre)) return null;
+  const pts = [];
+  routeKeys(f.route.points).forEach(k => {
+    const p = f.route.points[k];
+    if (!isObj(p) || !isNum(p.x) || !isNum(p.y)) return;
+    const ll = dcsToLl(S.theatre, p.x, p.y);
+    pts.push({ name: (typeof p.name === 'string' && p.name.trim() !== '') ? p.name.replace(/\s+/g, ' ').trim() : 'WP' + k, lat: ll.lat, lon: ll.lon });
+  });
+  return pts.length ? pts : null;
+}
+function routeNm(pts) { let km = 0; for (let i = 0; i + 1 < pts.length; i++) km += legCalc(pts[i], pts[i + 1]).km; return km / NAV_NM_KM; }
+// La déclinaison : la valeur saisie au Route Planner (mode « manual », lisible), sinon le calcul de WMM et d'IGRF à la date de la mission ou à l'année du Route Planner
+function declSource(nav) {
+  if (nav.mode === 'manual') { const v = parseDecl(nav.decl); if (v !== null) return { manual: true, v: v }; }
+  return { manual: false, ys: magYearSource(S.theatre, nav.year, nav.force) };
+}
+function declAt(ds, lat, lon) { if (ds.manual) return ds.v; const d = magVar(lat, lon, ds.ys.y); return d === null ? 0 : d; }
+// Les branches : cap initial vrai et distance par legCalc, cap magnétique = cap vrai − déclinaison au départ de la branche (toujours magnétique ici)
+function routeLegs(pts, ds) {
+  const legs = [];
+  let total = 0;
+  for (let i = 0; i + 1 < pts.length; i++) {
+    const L = legCalc(pts[i], pts[i + 1]), d = declAt(ds, pts[i].lat, pts[i].lon), nm = L.km / NAV_NM_KM;
+    total += nm;
+    legs.push({ from: pts[i].name, to: pts[i + 1].name, hdg: fmtHdg(((L.brg - d) % 360 + 360) % 360), nm: nm });
+  }
+  return { legs: legs, total: total };
+}
+function declText(v) { return fmtNm(Math.abs(v)) + '° ' + (v < 0 ? 'W' : 'E'); }
+function declNote(ds, pts) {
+  let v;
+  if (ds.manual) v = declText(ds.v);
+  else {
+    const all = pts.map(p => declAt(ds, p.lat, p.lon)), lo = Math.min.apply(null, all), hi = Math.max.apply(null, all);
+    if (hi - lo < 0.2) v = declText(all[0]);
+    else if ((lo < 0) === (hi < 0)) v = fmtNm(Math.min(Math.abs(lo), Math.abs(hi))) + '°' + t('route.decl.to') + declText(Math.abs(lo) > Math.abs(hi) ? lo : hi);
+    else v = declText(lo) + t('route.decl.to') + declText(hi);
+  }
+  const src = ds.manual ? t('route.src.manual') : ds.ys.year + ', ' + t(ds.ys.src === 'mission' ? 'route.src.mission' : (ds.ys.src === 'default' ? 'route.src.default' : 'route.src.rp'));
+  return tf('route.note', v, src);
+}
+
+// ----- Le croquis : une feuille de papier, un trait à main levée (graine fixe : le même croquis à chaque rendu) -----
+const RT = { w: 0, ro: null, timer: 0 };
+const RT_SEED = 20261106, RT_LBL_W = 7.2, RT_LBL_H = 14, RT_HD_W = 6.6, RT_HD_H = 13, RT_NM_PER_DEG = 60.04;
+function rtRng(seed) {
+  let a = seed >>> 0;
+  return () => { a = (a + 0x6D2B79F5) >>> 0; let x = a; x = Math.imul(x ^ (x >>> 15), x | 1); x ^= x + Math.imul(x ^ (x >>> 7), x | 61); return ((x ^ (x >>> 14)) >>> 0) / 4294967296; };
+}
+const rn = v => String(Math.round(v * 10) / 10);
+function rtCircle(x, y, r, rnd) {
+  const n = 8, pts = [], ctl = [];
+  for (let i = 0; i < n; i++) {
+    const a = i * 2 * Math.PI / n, b = (i + 0.5) * 2 * Math.PI / n, ra = r * (1 + (rnd() * 2 - 1) * 0.08), rb = r / Math.cos(Math.PI / n) * (1 + (rnd() * 2 - 1) * 0.08);
+    pts.push([x + ra * Math.cos(a), y + ra * Math.sin(a)]);
+    ctl.push([x + rb * Math.cos(b), y + rb * Math.sin(b)]);
+  }
+  let d = 'M' + rn(pts[0][0]) + ' ' + rn(pts[0][1]);
+  for (let i = 0; i < n; i++) { const q = pts[(i + 1) % n]; d += 'Q' + rn(ctl[i][0]) + ' ' + rn(ctl[i][1]) + ' ' + rn(q[0]) + ' ' + rn(q[1]); }
+  return d + 'Z';
+}
+// Une branche à main levée : 4 courbes quadratiques, écarts perpendiculaires de ± amp px
+function rtHand(a, b, rnd, amp) {
+  const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1, nx = -dy / len, ny = dx / len;
+  const off = () => (rnd() * 2 - 1) * amp, knot = [];
+  for (let i = 1; i <= 4; i++) { const e = i === 4 ? 0 : off(); knot.push([a.x + dx * i / 4 + nx * e, a.y + dy * i / 4 + ny * e]); }
+  let d = 'M' + rn(a.x) + ' ' + rn(a.y);
+  for (let i = 1; i <= 4; i++) { const e = off(), tt = (i - 0.5) / 4; d += 'Q' + rn(a.x + dx * tt + nx * e) + ' ' + rn(a.y + dy * tt + ny * e) + ' ' + rn(knot[i - 1][0]) + ' ' + rn(knot[i - 1][1]); }
+  return d;
+}
+const rtHit = (a, b) => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
+function rtBoxAround(x, y, r) { return { x0: x - r, y0: y - r, x1: x + r, y1: y + r }; }
+function rtFree(box, res, W, H) {
+  if (box.x0 < 3 || box.y0 < 3 || box.x1 > W - 3 || box.y1 > H - 3) return false;
+  const g = { x0: box.x0 - 1, y0: box.y0 - 1, x1: box.x1 + 1, y1: box.y1 + 1 };
+  return !res.some(r => rtHit(g, r));
+}
+// Le croquis d'une route (pts : { name, lat, lon }) en <svg> ; mini : sans texte (vignette, carte du groupe) ; sinon la feuille entière.
+// o : W (largeur, 1 unité = 1 px), title, phone, texts (« 044° · 10,9 » par branche) ; en mini aussi H, mx, my.
+function rtSketch(pts, o) {
+  const mini = !!o.mini, W = o.W, rnd = rtRng(RT_SEED), phone = !!o.phone;
+  const mx = mini ? o.mx : (phone ? 60 : 100), my = mini ? o.my : 56, EPS = 1e-7;
+  const lm = pts.reduce((a, p) => a + p.lat, 0) / pts.length, ck = Math.cos(lm * Math.PI / 180);
+  const xs = pts.map(p => p.lon * ck), ys = pts.map(p => -p.lat);
+  const x0 = Math.min.apply(null, xs), x1 = Math.max.apply(null, xs), y0 = Math.min.apply(null, ys), y1 = Math.max.apply(null, ys), dx = x1 - x0, dy = y1 - y0;
+  let H, s;
+  if (mini) { H = o.H; s = Math.min(dx > EPS ? (W - 2 * mx) / dx : Infinity, dy > EPS ? (H - 2 * my) / dy : Infinity); }
+  else {
+    const sw = dx > EPS ? (W - 2 * mx) / dx : Infinity, hMin = phone ? 230 : 300, hMax = phone ? 420 : 440;
+    H = (dy > EPS && isFinite(sw)) ? Math.max(hMin, Math.min(hMax, dy * sw + 2 * my)) : hMin;
+    s = Math.min(sw, dy > EPS ? (H - 2 * my) / dy : Infinity);
+  }
+  if (!isFinite(s)) s = 0;
+  const ox = (W - dx * s) / 2 - x0 * s, oy = (H - dy * s) / 2 - y0 * s;
+  const P = pts.map((p, i) => ({ x: xs[i] * s + ox, y: ys[i] * s + oy }));
+  const amp = mini ? 0.7 : 1.5, rPt = mini ? 2.6 : 5.5, rStart = mini ? 3.4 : 7;
+  // les branches, puis une flèche de sens aux 72 % de chacune
+  let legs = '', arrows = '';
+  for (let i = 0; i + 1 < P.length; i++) {
+    const a = P[i], b = P[i + 1], d = rtHand(a, b, rnd, amp);
+    legs += '<path class="rt-leg2" transform="translate(1.2 1)" d="' + d + '"/><path class="rt-leg" d="' + d + '"/>';
+    const len = Math.hypot(b.x - a.x, b.y - a.y);
+    if (len > (mini ? 6 : 24)) {
+      const th = Math.atan2(b.y - a.y, b.x - a.x), tx = a.x + (b.x - a.x) * 0.72, ty = a.y + (b.y - a.y) * 0.72, al = mini ? 3 : 8, k = 25 * Math.PI / 180;
+      arrows += '<path class="rt-arr" d="M' + rn(tx - al * Math.cos(th - k)) + ' ' + rn(ty - al * Math.sin(th - k)) + 'L' + rn(tx) + ' ' + rn(ty) + 'L' + rn(tx - al * Math.cos(th + k)) + ' ' + rn(ty - al * Math.sin(th + k)) + '"/>';
+    }
+  }
+  // les points : un point qui retombe à moins de 4 px d'un point déjà dessiné ne se redessine pas, son nom s'ajoute à l'étiquette
+  const drawn = [];
+  P.forEach((p, i) => {
+    const hit = drawn.filter(q => Math.hypot(q.x - p.x, q.y - p.y) < 4)[0];
+    if (hit) { if (hit.names.indexOf(pts[i].name) < 0) hit.names.push(pts[i].name); }
+    else drawn.push({ x: p.x, y: p.y, start: i === 0, names: [pts[i].name] });
+  });
+  let dots = '';
+  drawn.forEach(q => {
+    dots += '<path class="rt-pt" d="' + rtCircle(q.x, q.y, q.start ? rStart : rPt, rnd) + '"/>';
+    if (q.start) dots += '<circle class="rt-start" cx="' + rn(q.x) + '" cy="' + rn(q.y) + '" r="' + (mini ? 1.3 : 2.6) + '"/>';
+  });
+  let extra = '', labels = '', numbers = '', heads = '';
+  if (!mini) {
+    const res = [];
+    // le titre de la feuille, le nord et l'échelle
+    const title = o.title || '';
+    extra += '<text class="rt-gn" x="16" y="30">' + esc(title) + '</text>';
+    res.push({ x0: 8, y0: 12, x1: 22 + title.length * 11, y1: 38 });
+    extra += '<g class="rt-north"><line x1="' + (W - 32) + '" y1="64" x2="' + (W - 32) + '" y2="28"/><path d="M' + (W - 38) + ' 36L' + (W - 32) + ' 28L' + (W - 26) + ' 36"/></g><text class="rt-nn" x="' + (W - 32) + '" y="86">N</text>';
+    res.push({ x0: W - 48, y0: 18, x1: W - 14, y1: 94 });
+    const pxNm = s / RT_NM_PER_DEG, sizes = [1, 2, 5, 10, 20, 50, 100, 200, 500];
+    let nm = 0;
+    if (pxNm > 0) for (let i = 0; i < sizes.length; i++) if (sizes[i] * pxNm > 50) { nm = sizes[i]; break; }
+    if (nm) {
+      const L = nm * pxNm, yb = H - 20;
+      extra += '<g class="rt-scale"><path d="M16 ' + (yb - 6) + 'V' + yb + 'H' + rn(16 + L) + 'V' + (yb - 6) + '"/><text x="' + rn(16 + L + 8) + '" y="' + (yb + 4) + '">' + nm + ' NM</text></g>';
+      res.push({ x0: 10, y0: yb - 14, x1: 16 + L + 16 + String(nm).length * 7.2 + 24, y1: yb + 10 });
+    }
+    drawn.forEach(q => res.push(rtBoxAround(q.x, q.y, (q.start ? rStart : rPt) + 1.5)));
+    // les numéros de branche (tablette) : au milieu de chaque branche, avant les étiquettes pour qu'elles les évitent
+    const mids = [];
+    for (let i = 0; i + 1 < P.length; i++) mids.push({ x: (P[i].x + P[i + 1].x) / 2, y: (P[i].y + P[i + 1].y) / 2 });
+    if (!phone) mids.forEach((m, i) => {
+      numbers += '<g class="rt-num"><circle cx="' + rn(m.x) + '" cy="' + rn(m.y) + '" r="8"/><text x="' + rn(m.x) + '" y="' + rn(m.y + 3.5) + '">' + (i + 1) + '</text></g>';
+      res.push(rtBoxAround(m.x, m.y, 9));
+    });
+    // les noms : à l'opposé du centre de la route, à 14, 24 puis 36 px, dix directions ; un nom sans place libre se pose quand même
+    const cx = drawn.reduce((a, q) => a + q.x, 0) / drawn.length, cy = drawn.reduce((a, q) => a + q.y, 0) / drawn.length;
+    const offs = [0, 36, -36, 72, -72, 108, -108, 144, -144, 180].map(d => d * Math.PI / 180);
+    const place = (q, ang, dist, w) => {
+      const c = Math.cos(ang), sn = Math.sin(ang), ax = q.x + c * dist, ay = q.y + sn * dist;
+      const bx = c > 0.35 ? ax : (c < -0.35 ? ax - w : ax - w / 2), by = sn > 0.35 ? ay : (sn < -0.35 ? ay - RT_LBL_H : ay - RT_LBL_H / 2);
+      return { box: { x0: bx, y0: by, x1: bx + w, y1: by + RT_LBL_H }, anchor: c > 0.35 ? 'start' : (c < -0.35 ? 'end' : 'middle'), ax: ax, ay: ay };
+    };
+    const labelBoxes = [];
+    drawn.forEach(q => {
+      const text = q.names.join(' / ').toUpperCase(), w = text.length * RT_LBL_W + 2;
+      const base = Math.hypot(q.x - cx, q.y - cy) < 1 ? -Math.PI / 2 : Math.atan2(q.y - cy, q.x - cx);
+      let best = null, bd = 0;
+      for (let di = 0; di < 3 && !best; di++) for (let oi = 0; oi < offs.length && !best; oi++) {
+        const c = place(q, base + offs[oi], [14, 24, 36][di], w);
+        if (rtFree(c.box, res, W, H)) { best = c; bd = [14, 24, 36][di]; }
+      }
+      if (!best) {
+        best = place(q, base, 14, w); bd = 14;
+        const b = best.box, shx = Math.max(3 - b.x0, Math.min(0, W - 3 - b.x1)), shy = Math.max(3 - b.y0, Math.min(0, H - 3 - b.y1));
+        best.box = { x0: b.x0 + shx, y0: b.y0 + shy, x1: b.x1 + shx, y1: b.y1 + shy };
+      }
+      const b = best.box, tx = best.anchor === 'start' ? b.x0 : (best.anchor === 'end' ? b.x1 : (b.x0 + b.x1) / 2);
+      if (bd >= 24) { const ang = Math.atan2(best.ay - q.y, best.ax - q.x), r = q.start ? rStart : rPt; labels += '<line class="rt-con" x1="' + rn(q.x + Math.cos(ang) * r) + '" y1="' + rn(q.y + Math.sin(ang) * r) + '" x2="' + rn(best.ax) + '" y2="' + rn(best.ay) + '"/>'; }
+      labels += '<text class="rt-lbl" text-anchor="' + best.anchor + '" x="' + rn(tx) + '" y="' + rn(b.y0 + 11) + '">' + esc(text) + '</text>';
+      res.push(b);
+      labelBoxes.push(b);
+    });
+    // cap et distance au long de la branche (tablette), s'il y a une place libre à 12 ou 20 px ; sinon rien : la table le dit
+    if (!phone && o.texts) {
+      const samples = [];
+      for (let i = 0; i + 1 < P.length; i++) {
+        const a = P[i], b = P[i + 1], n = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / 5));
+        for (let k = 0; k <= n; k++) samples.push({ x: a.x + (b.x - a.x) * k / n, y: a.y + (b.y - a.y) * k / n });
+      }
+      mids.forEach((m, i) => {
+        const a = P[i], b = P[i + 1], len = Math.hypot(b.x - a.x, b.y - a.y) || 1, text = o.texts[i] || '';
+        if (!text) return;
+        const w = text.length * RT_HD_W + 4, nx = -(b.y - a.y) / len, ny = (b.x - a.x) / len, out = ((m.x - cx) * nx + (m.y - cy) * ny) >= 0 ? 1 : -1;
+        const tries = [[12, out], [12, -out], [20, out], [20, -out]];
+        for (let k = 0; k < tries.length; k++) {
+          const d = tries[k][0], sd = tries[k][1], px = m.x + nx * sd * d, py = m.y + ny * sd * d;
+          const cxx = px + nx * sd * w / 2 * Math.abs(nx), cyy = py + ny * sd * RT_HD_H / 2 * Math.abs(ny) + (Math.abs(ny) < 0.35 ? 0 : 0);
+          const box = { x0: cxx - w / 2, y0: cyy - RT_HD_H / 2, x1: cxx + w / 2, y1: cyy + RT_HD_H / 2 };
+          if (!rtFree(box, res, W, H)) continue;
+          if (samples.some(sp => sp.x > box.x0 - 1 && sp.x < box.x1 + 1 && sp.y > box.y0 - 1 && sp.y < box.y1 + 1)) continue;
+          heads += '<text class="rt-hd" x="' + rn(cxx) + '" y="' + rn(cyy + 4) + '">' + esc(text) + '</text>';
+          res.push(box);
+          break;
+        }
+      });
+    }
+  }
+  return '<svg class="rt-svg' + (mini ? ' rt-m' : '') + '" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + rn(W) + ' ' + rn(H) + '" width="' + rn(W) + '" height="' + rn(H) + '"' + (o.label ? ' role="img" aria-label="' + esc(o.label) + '"' : ' aria-hidden="true"') + '>'
+    + extra + legs + arrows + dots + numbers + labels + heads + '</svg>';
+}
+
+// ----- Le bloc ROUTE de la colonne droite : le choix, ou la route (en-tête, croquis, table, note) -----
+// Le groupe sans route est toujours au choix ; « Changer de route » ouvre le choix pour un groupe (UI.rtChoose = son fcId).
+// L'état d'une route liée (copie gardée, théâtre) se calcule au rendu : rien de plus à garder.
+function routeStatus(f, rp) {
+  if (!f.routeLink || !S.theatre) return null;
+  if (rp.state.theatre !== S.theatre) return { k: 'theatre', th: rp.state.theatre };
+  const rt = rp.routes.filter(r => r.rid === f.routeLink.rid)[0];
+  if (!rt) return { k: 'gone' };
+  return rt.points.length < 2 ? { k: 'few' } : null;
+}
+function rpGeo(rt) { return rt.points.map((p, i) => ({ name: (p.name || '').replace(/\s+/g, ' ').trim() || 'WP' + (i + 1), lat: p.lat, lon: p.lon })); }
+function routeCardHtml(rt, f, off) {
+  const geo = rpGeo(rt), on = f.routeLink && f.routeLink.rid === rt.rid, linked = rtMatches(rt, f);
+  const tag = rt.flight ? tf('route.tag.linked', rt.flight.groupName.trim()) : t('route.tag.free');
+  const name = rt.name.trim() !== '' ? rt.name.trim() : t('route.unnamed');
+  return `<button type="button" class="rt-card${on ? ' on' : ''}" data-act="route-pick" data-rid="${esc(rt.rid)}"${off ? ' disabled' : ''}>
+    <span class="rt-mini">${rtSketch(geo, { mini: true, W: 160, H: 100, mx: 10, my: 10 })}</span>
+    <span class="rt-cn">${esc(name)}</span>
+    <span class="rt-cm">${esc(ptsLabel(geo.length) + ' · ' + fmtNm(routeNm(geo)) + ' NM')}</span>
+    <span class="snap-flight-tag rt-tag${linked ? ' full' : ''}">${esc(tag)}</span></button>`;
+}
+function routeChooseHtml(f, rp) {
+  const usable = rpUsable(rp), th = rp.state.theatre;
+  let msg = '';
+  if (!has(TM_PARAMS, th)) msg = tf('route.th.nosupport', th);
+  else if (S.theatre && S.theatre !== th) msg = tf('route.th.mismatch', th, S.theatre);
+  const off = msg !== '';
+  let h = usable.length ? `<p class="rt-note">${esc(t(hasRoute(f) ? 'route.choose.other' : 'route.choose.none'))}</p>` : `<p class="rt-note">${esc(t('route.empty'))}</p>`;
+  if (msg) h += `<p class="rt-note">${esc(msg)}</p>`;
+  const linked = usable.filter(r => rtMatches(r, f)), other = usable.filter(r => !rtMatches(r, f));
+  [['route.list.linked', linked], ['route.list.other', other]].forEach(g => {
+    if (g[1].length) h += `<div class="rt-h">${esc(t(g[0]))}</div><div class="rt-grid">${g[1].map(r => routeCardHtml(r, f, off)).join('')}</div>`;
+  });
+  if (hasRoute(f)) h += `<div class="miz-btn-row" style="margin-top:0"><button type="button" class="miz-btn fc-small" data-act="route-keep">${esc(t('route.keep'))}</button></div>`;
+  return h;
+}
+function routeViewHtml(f, fi, rp) {
+  const geo = routeGeo(f), pts = routeKeys(f.route.points).length, st = routeStatus(f, rp);
+  let sub = t(f.routeLink ? 'route.from.rp' : 'route.from.pkg') + ' · ' + ptsLabel(pts);
+  let table = '';
+  if (geo) {
+    const ds = declSource(rp.state.nav), L = routeLegs(geo, ds);
+    sub += ' · ' + fmtNm(L.total) + ' NM';
+    const rows = L.legs.map((l, i) => `<tr><td class="rt-n">${i + 1}</td><td>${esc(l.from)} → ${esc(l.to)}</td><td class="rt-r">${esc(l.hdg)}°</td><td class="rt-r">${esc(fmtNm(l.nm))} NM</td></tr>`).join('');
+    table = `<table class="rt-tab"><thead><tr><th class="rt-n"></th><th>${esc(t('route.col.leg'))}</th><th class="rt-r">${esc(t('route.col.hdg'))}</th><th class="rt-r">${esc(t('route.col.dist'))}</th></tr></thead><tbody>${rows}<tr class="rt-tot"><td></td><td>${esc(t('route.total'))}</td><td></td><td class="rt-r">${esc(fmtNm(L.total))} NM</td></tr></tbody></table><p class="rt-note">${esc(declNote(ds, geo))}</p>`;
+  }
+  let note = '';
+  if (st) note = `<p class="rt-note rt-warn">${esc(st.k === 'theatre' ? tf('route.theatre', st.th) : t(st.k === 'gone' ? 'route.gone' : 'route.few'))}</p>`;
+  return `<div class="rt-head"><div class="rt-hl"><span class="rt-name">${esc(routeTitle(f))}</span><span class="rt-sub">${esc(sub)}</span></div>
+      <div class="rt-hb"><button type="button" class="miz-btn fc-small" data-act="route-change">${esc(t('route.change'))}</button><button type="button" class="miz-btn fc-small" data-act="route-remove">${esc(t('route.remove'))}</button></div></div>
+    ${note}${geo ? '<div class="rt-paper" id="rt-paper"></div>' + table : `<p class="rt-note">${esc(t('route.nosketch'))}</p>`}`;
+}
+function routeBlockHtml(su) {
+  const f = su.f, rp = rpRead(), choosing = !hasRoute(f) || UI.rtChoose === f.fcId;
+  return `<section class="fc-block" id="blk-route"><div class="fc-bh">${esc(t('sec.route'))} <span class="fc-count">· ${esc(flightLabel(f, su.fi))}</span></div>
+    <div class="fc-bc">${choosing ? routeChooseHtml(f, rp) : routeViewHtml(f, su.fi, rp)}</div></section>`;
+}
+// Le croquis se dessine à la largeur de la feuille ; la feuille masquée (module caché du shell) a 0 px : le ResizeObserver redessine à son retour.
+function rtDraw() {
+  const paper = document.getElementById('rt-paper'), su = selUnit();
+  if (!paper || !su) return;
+  const geo = routeGeo(su.f), w = Math.floor(paper.clientWidth), col = document.getElementById('col-right');
+  RT.w = w;
+  if (!geo || w < 120) { paper.innerHTML = ''; return; }
+  const rp = rpRead(), L = routeLegs(geo, declSource(rp.state.nav));
+  paper.innerHTML = rtSketch(geo, { W: w, phone: col.clientWidth <= 520, title: flightLabel(su.f, su.fi), label: tf('route.sketch', routeTitle(su.f)), texts: L.legs.map(l => l.hdg + '° · ' + fmtNm(l.nm)) });
+}
+function renderRouteBlock() {
+  const host = document.getElementById('col-route'), su = selUnit();
+  if (!host) return;
+  if (RT.ro) { RT.ro.disconnect(); RT.ro = null; }
+  host.innerHTML = su ? routeBlockHtml(su) : '';
+  const paper = document.getElementById('rt-paper');
+  if (!paper) return;
+  rtDraw();
+  if (typeof ResizeObserver === 'function') {
+    RT.ro = new ResizeObserver(() => { if (Math.floor(paper.clientWidth) !== RT.w) rtDraw(); });
+    RT.ro.observe(paper);
+  }
+}
+// La ligne de la carte du groupe : sans route « Aucune route. » et un lien ; avec route un mini-croquis, « Route : nom — n points, d NM » et le lien « Voir la route ↓ »
+function routeHtml(f) {
+  if (!hasRoute(f)) return `<div class="fc-route none"><span class="fc-route-t">${esc(t('route.none'))}</span><button type="button" class="fc-see" data-act="see-route">${esc(t('route.pick'))}</button></div>`;
+  const geo = routeGeo(f), n = routeKeys(f.route.points).length;
+  const text = geo ? tf('route.line', routeTitle(f), ptsLabel(n), fmtNm(routeNm(geo)) + ' NM') : tf('route.line.nod', routeTitle(f), ptsLabel(n));
+  const thumb = geo ? `<span class="rt-thumb">${rtSketch(geo, { mini: true, W: 64, H: 40, mx: 7, my: 7 })}</span>` : '';
+  return `<div class="fc-route">${thumb}<span class="fc-route-t">${esc(text)}</span><button type="button" class="fc-see" data-act="see-route">${esc(t('route.see'))}</button></div>`;
+}
+function paintRouteLines() {
+  S.flights.forEach((f, fi) => {
+    const el = flightEl(fi), line = el && el.querySelector('.fc-route');
+    if (line) line.outerHTML = routeHtml(f);
+  });
+}
+// Un geste sur la route (choisir, retirer, changer…) ou un nom, un camp, un théâtre qui change : le bloc, les lignes des cartes, les résumés et l'état suivent
+function routeChanged() { renderRouteBlock(); paintRouteLines(); refreshAll(); }
+
+function routePick(rid) {
+  const su = selUnit(), rp = rpRead(), rt = rp.routes.filter(r => r.rid === rid)[0];
+  if (!su || !rt || rt.points.length < 2 || !has(TM_PARAMS, rp.state.theatre)) return;
+  const f = su.f, setTheatre = !S.theatre;
+  if (S.theatre && S.theatre !== rp.state.theatre) return;
+  if (setTheatre) S.theatre = rp.state.theatre;
+  f.route = { points: rpPack(rt, S.theatre, rp.state.gs) };
+  f.routeLink = { rid: rt.rid, name: rt.name };
+  UI.rtChoose = null;
+  if (setTheatre) renderAll(); else routeChanged();
+}
+// La reprise : chaque groupe lié dont la route du Route Planner existe (deux points au moins, même théâtre) reprend ses points s'ils diffèrent et le nom de la route
+// Rend { toast, changed } sans rien dessiner ; une route absente, trop courte ou sur un autre théâtre ne touche pas la copie du groupe.
+function routeSync() {
+  const out = { toast: '', changed: false };
+  if (!S.theatre || !S.flights.some(f => f.routeLink)) return out;
+  const rp = rpRead(), done = [];
+  S.flights.forEach((f, fi) => {
+    if (!f.routeLink || routeStatus(f, rp)) return;
+    const rt = rp.routes.filter(r => r.rid === f.routeLink.rid)[0], pts = rpPack(rt, S.theatre, rp.state.gs);
+    if (JSON.stringify(pts) === JSON.stringify(f.route ? f.route.points : null) && rt.name === f.routeLink.name) return;
+    f.route = { points: pts };
+    f.routeLink = { rid: rt.rid, name: rt.name };
+    done.push({ label: flightLabel(f, fi), name: rt.name.trim() !== '' ? rt.name : t('route.unnamed') });
+  });
+  if (done.length) {
+    out.changed = true;
+    out.toast = done.length === 1 ? tf('route.toast.one', done[0].name, done[0].label) : tf('route.toast.many', done.map(d => d.label).join(', '));
+  }
+  return out;
+}
+function routeTakeover() {
+  const r = routeSync();
+  if (r.changed) { clearTimeout(_saveTimer); writeState(); }
+  renderRouteBlock();
+  paintRouteLines();
+  if (r.changed) { refreshSummaries(); showToast(r.toast, 4500); }
+}
+function routeStorage(e) {
+  if (e.key !== null && e.key !== KEY_RP_SET && e.key !== KEY_RP_STATE && e.key !== KEY_HQ_MISSION) return;
+  clearTimeout(RT.timer);
+  RT.timer = setTimeout(routeTakeover, 80);      // le Route Planner écrit route_set_v1 puis route_state_v1 : un seul passage pour les deux
 }
 
 // ----- Le résumé d'un vol, sur une ligne, pour son en-tête replié : une partie absente se tait -----
@@ -8872,10 +9949,6 @@ function flightFieldsHtml(f) {
   return `<div class="fc-row3">${fieldHtml(t('fl.name'), inputHtml('data-k="name"', f.name, t('fl.name.ph')))}
     ${fieldHtml(t('fl.coalition'), selectHtml('data-k="coalition"', t('fl.coalition'), coalitions, f.coalition))}</div>`;
 }
-function routeHtml(f) {
-  const has = f.route && routePoints(f.route.points).length > 0;
-  return `<div class="fc-route${has ? '' : ' none'}"><span class="fc-route-t">${esc(routeLine(f))}</span>${has ? `<button type="button" class="miz-btn fc-small" data-act="rm-route">${esc(t('route.rm'))}</button>` : ''}</div>`;
-}
 
 function unitHtml(f, fi, u, ui) {
   const at = `data-u="${ui}"`, rk = `f${fi}u${ui}r`, n = radioCount(f, u);
@@ -8980,6 +10053,7 @@ function renderAll() { renderLeft(); renderRight(); refreshBar(); applyI18nStati
 function selectUnit(fi, ui) {
   const changed = !(S.sel.f === fi && S.sel.u === ui);
   if (!changed) return;
+  if (S.sel.f !== fi) UI.rtChoose = null;
   S.sel = { f: fi, u: ui };
   document.querySelectorAll('#col-left .fc-flight').forEach(fe => {
     fe.querySelectorAll('.fc-unit').forEach(ue => ue.classList.toggle('sel', Number(fe.getAttribute('data-f')) === fi && Number(ue.getAttribute('data-u')) === ui));
@@ -9030,7 +10104,7 @@ function cmpClsid(lo, n) { return lo && lo.pylons[n] && lo.pylons[n].CLSID ? Str
 function renderRight() {
   const col = document.getElementById('col-right'), su = selUnit();
   CMP.small = col.clientWidth < 900;
-  col.innerHTML = `<section class="fc-block" id="blk-cmp"><div class="fc-bh">${esc(t('sec.cmp'))}</div>
+  col.innerHTML = `<div id="col-route"></div><section class="fc-block" id="blk-cmp"><div class="fc-bh">${esc(t('sec.cmp'))}</div>
     <div class="fc-bc">${su ? cmpHtml(su) : `<p class="pk-note">${esc(t('cmp.pick'))}</p>`}</div></section><div id="col-presets"></div>`;
   if (CMP.ro) { CMP.ro.disconnect(); CMP.ro = null; }
   const wrap = document.getElementById('cmp-wrap');
@@ -9040,6 +10114,7 @@ function renderRight() {
   }
   cmpUpdate();
   document.getElementById('col-presets').innerHTML = presetsHtml();
+  renderRouteBlock();
 }
 
 // Un emport est « armé » dès qu'une station porte une arme : « Garder dans mes presets » et « Vider l'emport » n'agissent qu'alors.
@@ -9524,7 +10599,7 @@ function impMerge(list) {
       created.add(target);
     }
     if (!IMP_FIRST) IMP_FIRST = target;
-    if (chk.route && f.points) target.route = { points: clone(f.points) };
+    if (chk.route && f.points) { target.route = { points: clone(f.points) }; delete target.routeLink; }       // une route importée est un autre plan de vol : le lien avec le Route Planner tombe
     f.units.slice(0, MAX_UNITS).forEach((iu, k) => mergeUnit(target, k, iu, chk, f));
     if (!target.units.length) target.units.push(newUnit(PAYLOAD_TYPES.indexOf(f.types[0]) >= 0 ? f.types[0] : DEFAULT_TYPE));      // un vol sans unité : une unité, du type du vol s'il en a un
   });
@@ -9839,7 +10914,15 @@ const ACTIONS = {
   'add-unit': c => { const us = S.flights[c.fi].units; us.push(newUnit(us[us.length - 1].type)); renderLeft(); refreshAll(); },
   'rm-unit': c => removeUnit(c.fi, c.ui),
   'fold-unit': c => { const u = S.flights[c.fi].units[c.ui]; u.folded = !u.folded; paintUnitFold(c.fi, c.ui); saveWork(); },
-  'rm-route': c => { S.flights[c.fi].route = null; renderLeft(); refreshAll(); },
+  'route-pick': c => routePick(c.b.getAttribute('data-rid')),
+  'route-change': () => { const su = selUnit(); if (su) { UI.rtChoose = su.f.fcId; renderRouteBlock(); } },
+  'route-keep': () => { UI.rtChoose = null; renderRouteBlock(); },
+  'route-remove': () => { const su = selUnit(); if (su) { su.f.route = null; delete su.f.routeLink; UI.rtChoose = null; routeChanged(); } },
+  'see-route': c => {
+    if (S.sel.f !== c.fi) selectUnit(c.fi, 0);
+    const b = document.getElementById('blk-route');
+    if (b) b.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  },
   'copy-radios': c => { const f = S.flights[c.fi], src = f.units[c.ui]; f.units.forEach((u, k) => { if (k !== c.ui && u.type === src.type) u.radios = clone(src.radios); }); renderLeft(); refreshAll(); },
   'see-cmp': c => { selectUnit(c.fi, c.ui); const b = document.getElementById('blk-cmp'); if (b && window.innerWidth < 1100) b.scrollIntoView({ block: 'start', behavior: 'smooth' }); },
   'back-unit': () => backToUnit(),
@@ -9874,7 +10957,7 @@ function onInput(e) {
   if (k === 'cmp-name') { UI.cmp.name = el.value; return; }
   const fe = el.closest('.fc-flight'), fi = fe ? Number(fe.getAttribute('data-f')) : -1, f = S.flights[fi];
   const u = f && el.hasAttribute('data-u') ? f.units[Number(el.getAttribute('data-u'))] : null;
-  if (k === 'name') { f.name = el.value; paintFlightName(f, fi, fe); paintCmpNames(); }
+  if (k === 'name') { f.name = el.value; paintFlightName(f, fi, fe); paintCmpNames(); if (fi === S.sel.f) renderRouteBlock(); }
   else if (k === 'uname') { u.name = el.value; paintCmpNames(); }
   else if (k === 'callsign') u.callsign = el.value;
   else if (k === 'onboard') u.onboard = el.value;
@@ -9963,12 +11046,12 @@ function onChange(e) {
   if (el.id === 'cmp-sym') { UI.cmp.sym = el.checked; cmpUpdate(); return; }
   if (el.classList && el.classList.contains('cmp-sel')) { cmpChoose(el.getAttribute('data-st'), el.value); return; }
   if (!k) return;
-  if (k === 'theatre') { S.theatre = el.value; refreshAll(); return; }
+  if (k === 'theatre') { S.theatre = el.value; renderRouteBlock(); paintRouteLines(); refreshAll(); return; }
   if (k === 'fuel-bar') return;
   if (LO_FIELDS.indexOf(k) >= 0) { commitLoadoutField(k, el); return; }
   const fe = el.closest('.fc-flight'), f = fe && S.flights[Number(fe.getAttribute('data-f'))];
   if (k === 'utype') changeUnitType(f, Number(fe.getAttribute('data-f')), Number(el.getAttribute('data-u')), el);
-  else if (k === 'coalition') { f.coalition = el.value; refreshAll(); }
+  else if (k === 'coalition') { f.coalition = el.value; if (S.flights.indexOf(f) === S.sel.f) renderRouteBlock(); refreshAll(); }
 }
 function onToggle(e) {
   const d = e.target, key = d && d.getAttribute && d.tagName === 'DETAILS' ? d.getAttribute('data-key') : null;
@@ -10076,9 +11159,13 @@ function init() {
   bindToolbar();
   bindImportWindow();
   fnBind();                 // la fenêtre « Nom du fichier »
+  const taken = routeSync();      // à l'ouverture : les routes liées reprennent ce que le Route Planner a changé depuis
+  if (taken.changed) writeState();
   renderAll();
+  if (taken.changed) showToast(taken.toast, 4500);
   window.addEventListener('pagehide', flushWork);
-  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushWork(); else UI.hq = undefined; });
+  window.addEventListener('storage', routeStorage);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushWork(); else { UI.hq = undefined; routeTakeover(); } });
 }
 init();
 

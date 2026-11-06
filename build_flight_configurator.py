@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the Flight Configurator HTML module : un vol (identité, radios, emport, livrée, route portée ; un type par unité) exporté en paquet `dcs-flight-package-v2`.
+"""Build the Flight Configurator HTML module : un vol (identité, radios, emport, livrée, route choisie au Route Planner ; un type par unité) exporté en paquet `dcs-flight-package-v2`.
 
 Produit dist/dcs_flight_configurator.html (fichier autonome, hors-ligne, aucune requête réseau).
 Usage : python3 -B build_flight_configurator.py
@@ -8,25 +8,330 @@ Blocs partagés insérés tels quels (identiques à l'octet dans les modules qui
   radio_block.py    — noms des postes radio et numéros de canal du cockpit
   payload_block.py  — lecture d'un .lua de presets, pylônes et armes permis, `payload` d'un .miz ; il lit les constantes WEAPON_NAMES,
                       AIRCRAFT_PYLONS et AIRCRAFT_LIMITS, qui sont celles du Loadout Editor de Mission Tools
+  magvar_block.py, projection_block.py, route_pack_block.py — la déclinaison magnétique, les projections des théâtres de DCS (llToDcs, dcsToLl) et
+                      packPoint (le point d'un paquet, le même texte qu'au Route Planner) : le bloc Route en tire les caps magnétiques, le croquis et les points
+  bloc de coordonnées de navigation (COORD_BLOCK ci-dessous) — recopié octet pour octet du Route Planner et du Datacard Generator (empreinte COORD_SHA16) : legCalc, fmtHdg, parseDecl
 
 Tables (data/, copiées à l'octet de Mission Tools ; pydcs 1.0.0, LGPL-3.0 ; les dessins de views/ sont de Goldwolf, hors licence du dépôt) :
 elles sont recopiées dans la page entre des marqueurs `/* NOM:BEGIN */` et `/* NOM:END */`, et le build s'arrête si une copie diffère de son fichier.
 """
 
+import hashlib
 import json
 import os
 import re
 import subprocess
 import sys
 
+from magvar_block import build_block as build_magvar_block
 from payload_block import build_block as build_payload_block
+from projection_block import build_block as build_projection_block
 from radio_block import build_block as build_radio_block
+from route_pack_block import build_block as build_route_pack_block
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 APP_VERSION = "0.1.2"
 
 with open(os.path.join(HERE, 'assets.json')) as _f:
     A = json.load(_f)
+
+# Le bloc de coordonnées de navigation, recopié OCTET POUR OCTET du Route Planner (qui le tient du Datacard Generator) : de « const NAV_R_KM » à « /* Nombre lisible d'un champ Cap » exclu,
+# puis la fonction readNum. Le module n'en emploie que legCalc, fmtHdg et parseDecl ; l'empreinte (sha256, 16) est celle des trois pages, vérifiée par check().
+# Il lit pad2, qui n'est pas dans le bloc : la page la pose avant lui, au même texte que le Route Planner et le Datacard Generator.
+COORD_SHA16 = 'd7a32324179cee24'
+PAD2_JS = "function pad2(n) { return String(n).padStart(2, '0'); }\n"
+COORD_BLOCK = r"""const NAV_R_KM = 6371.0088;
+const NAV_NM_KM = 1.852;
+
+const WGS_A = 6378137;
+const WGS_F = 1 / 298.257223563;
+const UTM_K0 = 0.9996;
+const UTM_N = WGS_F / (2 - WGS_F);
+const UTM_A = WGS_A / (1 + UTM_N) * (1 + UTM_N * UTM_N / 4 + Math.pow(UTM_N, 4) / 64);
+const UTM_ALPHA = (function (n) {
+  const n2 = n * n, n3 = n2 * n, n4 = n3 * n;
+  return [
+    n / 2 - 2 * n2 / 3 + 5 * n3 / 16 + 41 * n4 / 180,
+    13 * n2 / 48 - 3 * n3 / 5 + 557 * n4 / 1440,
+    61 * n3 / 240 - 103 * n4 / 140,
+    49561 * n4 / 161280
+  ];
+})(UTM_N);
+const UTM_BETA = (function (n) {
+  const n2 = n * n, n3 = n2 * n, n4 = n3 * n;
+  return [
+    n / 2 - 2 * n2 / 3 + 37 * n3 / 96 - n4 / 360,
+    n2 / 48 + n3 / 15 - 437 * n4 / 1440,
+    17 * n3 / 480 - 37 * n4 / 840,
+    4397 * n4 / 161280
+  ];
+})(UTM_N);
+const UTM_DELTA = (function (n) {
+  const n2 = n * n, n3 = n2 * n, n4 = n3 * n;
+  return [
+    2 * n - 2 * n2 / 3 - 2 * n3 + 116 * n4 / 45,
+    7 * n2 / 3 - 8 * n3 / 5 - 227 * n4 / 45,
+    56 * n3 / 15 - 136 * n4 / 35,
+    4279 * n4 / 630
+  ];
+})(UTM_N);
+
+const MGRS_BANDS = 'CDEFGHJKLMNPQRSTUVWX';
+const MGRS_BAND_MIN_N = [1100000, 2000000, 2800000, 3700000, 4600000, 5500000, 6400000, 7300000, 8200000, 9100000,
+  0, 800000, 1700000, 2600000, 3500000, 4400000, 5300000, 6200000, 7000000, 7900000];
+const MGRS_COLS = 'ABCDEFGHJKLMNPQRSTUVWXYZ';   /* 24 lettres, sans I ni O */
+const MGRS_ROWS = 'ABCDEFGHJKLMNPQRSTUV';       /* 20 lettres, sans I ni O */
+
+function utmZoneFor(lat, lon) {
+  let z = Math.floor((lon + 180) / 6) + 1;
+  if (z < 1) z = 1;
+  if (z > 60) z = 60;
+  if (lat >= 56 && lat < 64 && lon >= 3 && lon < 12) z = 32;
+  if (lat >= 72 && lat < 84) {
+    if (lon >= 0 && lon < 9) z = 31;
+    else if (lon >= 9 && lon < 21) z = 33;
+    else if (lon >= 21 && lon < 33) z = 35;
+    else if (lon >= 33 && lon < 42) z = 37;
+  }
+  return z;
+}
+
+/* lat/lon (degrés) → { zone, north, e, n } ; zone imposée facultative */
+function llToUtm(lat, lon, zone) {
+  const z = zone || utmZoneFor(lat, lon);
+  const lon0 = ((z - 1) * 6 - 180 + 3) * Math.PI / 180;
+  const phi = lat * Math.PI / 180;
+  const dl = lon * Math.PI / 180 - lon0;
+  const n = UTM_N, s = Math.sin(phi);
+  const q = 2 * Math.sqrt(n) / (1 + n);
+  const tt = Math.sinh(Math.atanh(s) - q * Math.atanh(q * s));
+  const xi0 = Math.atan2(tt, Math.cos(dl));
+  const eta0 = Math.atanh(Math.sin(dl) / Math.sqrt(1 + tt * tt));
+  let xi = xi0, eta = eta0;
+  for (let j = 1; j <= 4; j++) {
+    xi += UTM_ALPHA[j - 1] * Math.sin(2 * j * xi0) * Math.cosh(2 * j * eta0);
+    eta += UTM_ALPHA[j - 1] * Math.cos(2 * j * xi0) * Math.sinh(2 * j * eta0);
+  }
+  const north = lat >= 0;
+  return { zone: z, north: north, e: 500000 + UTM_K0 * UTM_A * eta, n: (north ? 0 : 10000000) + UTM_K0 * UTM_A * xi };
+}
+
+/* UTM → { lat, lon } */
+function utmToLl(zone, north, e, nn) {
+  const lon0 = ((zone - 1) * 6 - 180 + 3) * Math.PI / 180;
+  const xi = (nn - (north ? 0 : 10000000)) / (UTM_K0 * UTM_A);
+  const eta = (e - 500000) / (UTM_K0 * UTM_A);
+  let xi1 = xi, eta1 = eta;
+  for (let j = 1; j <= 4; j++) {
+    xi1 -= UTM_BETA[j - 1] * Math.sin(2 * j * xi) * Math.cosh(2 * j * eta);
+    eta1 -= UTM_BETA[j - 1] * Math.cos(2 * j * xi) * Math.sinh(2 * j * eta);
+  }
+  const chi = Math.asin(Math.sin(xi1) / Math.cosh(eta1));
+  let phi = chi;
+  for (let j = 1; j <= 4; j++) phi += UTM_DELTA[j - 1] * Math.sin(2 * j * chi);
+  const lam = lon0 + Math.atan2(Math.sinh(eta1), Math.cos(xi1));
+  return { lat: phi * 180 / Math.PI, lon: lam * 180 / Math.PI };
+}
+
+function mgrsBandFor(lat) {
+  if (lat < -80 || lat > 84) return '';
+  let i = Math.floor((lat + 80) / 8);
+  if (i > 19) i = 19;
+  return MGRS_BANDS.charAt(i);
+}
+
+function mgrsSet(zone) { const s = zone % 6; return s === 0 ? 6 : s; }
+function mgrsColOrigin(zone) { return 'AJSAJS'.charAt(mgrsSet(zone) - 1); }
+function mgrsRowOrigin(zone) { return 'AFAFAF'.charAt(mgrsSet(zone) - 1); }
+
+/* lat/lon → « 36S VD 47535 77241 » (10 chiffres, troncature au mètre ; 10 µm de tolérance pour les mètres entiers) ;
+   '' hors de la zone UTM (80°S – 84°N) */
+function toMGRS(lat, lon) {
+  const band = mgrsBandFor(lat);
+  if (!band) return '';
+  const u = llToUtm(lat, lon);
+  const e = Math.floor(u.e + 1e-5), nn = Math.floor(u.n + 1e-5);
+  const col = MGRS_COLS.charAt((MGRS_COLS.indexOf(mgrsColOrigin(u.zone)) + Math.floor(e / 100000) - 1) % 24);
+  const row = MGRS_ROWS.charAt((MGRS_ROWS.indexOf(mgrsRowOrigin(u.zone)) + Math.floor(nn / 100000)) % 20);
+  const p5 = v => String(v % 100000).padStart(5, '0');
+  return pad2(u.zone) + band + ' ' + col + row + ' ' + p5(e) + ' ' + p5(nn);
+}
+
+/* Chaîne MGRS → { lat, lon } (centre de la case, y compris celle de 1 m à 10 chiffres) ou null */
+function parseMGRS(s) {
+  const m = /^\s*(\d{1,2})\s*([C-HJ-NP-X])\s*([A-HJ-NP-Z])\s*([A-HJ-NP-V])\s*((?:\d\s*)*)$/i.exec(s);
+  if (!m) return null;
+  const zone = parseInt(m[1], 10);
+  if (zone < 1 || zone > 60) return null;
+  const band = m[2].toUpperCase(), colL = m[3].toUpperCase(), rowL = m[4].toUpperCase();
+  if (band === 'X' && (zone === 32 || zone === 34 || zone === 36)) return null;
+  const groups = m[5].trim() ? m[5].trim().split(/\s+/) : [];
+  if (groups.length > 2 || (groups.length === 2 && groups[0].length !== groups[1].length)) return null;
+  const digits = groups.join('');
+  const k = digits.length;
+  if (k < 2 || k > 10 || k % 2 !== 0) return null;
+  const half = k / 2;
+  const cell = Math.pow(10, 5 - half);
+  const de = parseInt(digits.slice(0, half), 10) * cell + cell / 2;   /* centre de la case (1 m : demi-mètre) */
+  const dn = parseInt(digits.slice(half), 10) * cell + cell / 2;
+  const ci = (MGRS_COLS.indexOf(colL) - MGRS_COLS.indexOf(mgrsColOrigin(zone)) + 24) % 24;
+  if (ci > 7) return null;                         /* colonne absente de cette zone */
+  const e100 = (ci + 1) * 100000;
+  const ri = (MGRS_ROWS.indexOf(rowL) - MGRS_ROWS.indexOf(mgrsRowOrigin(zone)) + 20) % 20;
+  let n100 = ri * 100000;
+  const bi = MGRS_BANDS.indexOf(band);
+  while (n100 < MGRS_BAND_MIN_N[bi]) n100 += 2000000;
+  const ll = utmToLl(zone, band >= 'N', e100 + de, n100 + dn);
+  const south = -80 + bi * 8, north = bi === 19 ? 84 : south + 8;
+  if (ll.lat < south - 0.15 || ll.lat > north + 0.15) return null;   /* la case n'est pas dans la bande annoncée */
+  return ll;
+}
+
+/* Un nombre de lat/lon : degrés [minutes [secondes]] → valeur absolue en degrés, ou null */
+function parseDegPart(s, maxDeg) {
+  const m = /^\s*(\d+(?:\.\d+)?)\s*°?\s*(?:(\d+(?:\.\d+)?)\s*'?\s*(?:(\d+(?:\.\d+)?)\s*"?)?)?\s*$/.exec(s);
+  if (!m) return null;
+  const d = parseFloat(m[1]);
+  const mi = m[2] != null ? parseFloat(m[2]) : null;
+  const se = m[3] != null ? parseFloat(m[3]) : null;
+  if (mi != null && m[1].indexOf('.') !== -1) return null;          /* degrés décimaux : ni minutes ni secondes */
+  if (se != null && m[2].indexOf('.') !== -1) return null;          /* minutes décimales : pas de secondes */
+  if (mi != null && mi >= 60) return null;
+  if (se != null && se >= 60) return null;
+  const v = d + (mi || 0) / 60 + (se || 0) / 3600;
+  if (v > maxDeg) return null;
+  return v;
+}
+
+/* DMS pointé : « 36.49.30N/34.44.29E », « 36.49.30N 34.44.29E », « N36.49.30/E034.44.29 » (x en majuscules) */
+function parseDottedDms(x) {
+  const C = '(?:([NSEW])\\s*)?(\\d{1,3})\\.(\\d{2})\\.(\\d{2})(?:\\s*([NSEW]))?';
+  const m = new RegExp('^' + C + '(?:\\s*[\\/,;]\\s*|\\s+)' + C + '$').exec(x);
+  if (!m) return null;
+  const one = (a, b, c, d, e, maxDeg, pos, neg) => {
+    if ((a ? 1 : 0) + (e ? 1 : 0) !== 1) return null;
+    const h = a || e;
+    if (h !== pos && h !== neg) return null;
+    const dg = parseInt(b, 10), mi = parseInt(c, 10), se = parseInt(d, 10);
+    if (mi >= 60 || se >= 60) return null;
+    const v = dg + mi / 60 + se / 3600;
+    if (v > maxDeg) return null;
+    return h === neg ? -v : v;
+  };
+  const lat = one(m[1], m[2], m[3], m[4], m[5], 90, 'N', 'S');
+  const lon = one(m[6], m[7], m[8], m[9], m[10], 180, 'E', 'W');
+  return (lat == null || lon == null) ? null : { lat: lat, lon: lon };
+}
+
+function parseLatLon(s) {
+  let x = s.toUpperCase().replace(/[′’´‘]/g, "'").replace(/[″”“]/g, '"').replace(/''/g, '"').replace(/[º˚]/g, '°');
+  x = x.trim();
+  if (!x) return null;
+  const dm = parseDottedDms(x);
+  if (dm) return dm;
+  const letters = [];
+  const re = /[NSEW]/g;
+  let mm;
+  while ((mm = re.exec(x)) !== null) letters.push({ ch: mm[0], i: mm.index });
+  if (letters.length === 0) {
+    const m = /^([+-]?\d+(?:\.\d+)?)\s*°?\s*[,;\/\s]\s*([+-]?\d+(?:\.\d+)?)\s*°?$/.exec(x);
+    if (!m) return null;
+    const lat = parseFloat(m[1]), lon = parseFloat(m[2]);
+    if (Math.abs(lat) > 90 || Math.abs(lon) > 180) return null;
+    return { lat: lat, lon: lon };
+  }
+  if (letters.length !== 2) return null;
+  const a = letters[0], b = letters[1];
+  if ('NS'.indexOf(a.ch) === -1 || 'EW'.indexOf(b.ch) === -1) return null;
+  let latS, lonS;
+  if (a.i === 0 && b.i < x.length - 1) { latS = x.slice(1, b.i); lonS = x.slice(b.i + 1); }          /* N35… E032… */
+  else if (a.i > 0 && b.i === x.length - 1) { latS = x.slice(0, a.i); lonS = x.slice(a.i + 1, b.i); } /* 35…N 032…E */
+  else return null;
+  latS = latS.replace(/^[\s,;\/]+|[\s,;\/]+$/g, '');
+  lonS = lonS.replace(/^[\s,;\/]+|[\s,;\/]+$/g, '');
+  const la = parseDegPart(latS, 90), lo = parseDegPart(lonS, 180);
+  if (la == null || lo == null) return null;
+  return { lat: a.ch === 'S' ? -la : la, lon: b.ch === 'W' ? -lo : lo };
+}
+
+/* Chaîne saisie → { lat, lon } ou null (MGRS d'abord, puis latitude / longitude) */
+function parseCoord(s) {
+  if (typeof s !== 'string' || !s.trim()) return null;
+  const g = parseMGRS(s);
+  if (g) return g;
+  return parseLatLon(s);
+}
+
+function fmtDms(v, pos, neg, w) {
+  const h = v < 0 ? neg : pos;
+  const tot = Math.round(Math.abs(v) * 3600);
+  const d = Math.floor(tot / 3600), mi = Math.floor((tot % 3600) / 60), se = tot % 60;
+  return h + String(d).padStart(w, '0') + '°' + pad2(mi) + "'" + pad2(se) + '"';
+}
+/* « N35°02'11" E032°25'29" » */
+function toDMS(lat, lon) { return fmtDms(lat, 'N', 'S', 2) + ' ' + fmtDms(lon, 'E', 'W', 3); }
+
+/* Cap initial du grand cercle (vrai, 0–360) et distance (km) entre deux points */
+function legCalc(a, b) {
+  const r = Math.PI / 180;
+  const p1 = a.lat * r, p2 = b.lat * r, dl = (b.lon - a.lon) * r;
+  const y = Math.sin(dl) * Math.cos(p2);
+  const x = Math.cos(p1) * Math.sin(p2) - Math.sin(p1) * Math.cos(p2) * Math.cos(dl);
+  const brg = (Math.atan2(y, x) / r + 360) % 360;
+  const h = Math.sin((p2 - p1) / 2) * Math.sin((p2 - p1) / 2) + Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) * Math.sin(dl / 2);
+  const km = 2 * NAV_R_KM * Math.asin(Math.min(1, Math.sqrt(h)));
+  return { brg: brg, km: km };
+}
+
+function fmtHdg(deg) {
+  const n = Math.round(deg) % 360;
+  return n === 0 ? '360' : String(n).padStart(3, '0');
+}
+
+/* Déclinaison saisie (« 3,5 », « -2.5 », « 3° ») → nombre, ou null si illisible */
+function parseDecl(s) {
+  if (typeof s !== 'string') return null;
+  const m = /^\s*([+-]?\d+(?:[.,]\d+)?)\s*°?\s*$/.exec(s);
+  if (!m) return null;
+  const v = parseFloat(m[1].replace(',', '.'));
+  return (isFinite(v) && Math.abs(v) <= 90) ? v : null;
+}
+
+/* Les lignes de la datacard qui comptent : une rangée dont aucun champ n'est rempli n'existe pas pour la navigation. */
+const NAV_KEYS = ['name', 'coord', 'course', 'distance', 'altitude', 'tos', 'note'];
+
+/* Point d'arrivée du grand cercle depuis a, au cap initial brg (vrai, °) sur km kilomètres */
+function legDest(a, brg, km) {
+  const r = Math.PI / 180;
+  const d = km / NAV_R_KM, th = brg * r, p1 = a.lat * r, l1 = a.lon * r;
+  const p2 = Math.asin(Math.sin(p1) * Math.cos(d) + Math.cos(p1) * Math.sin(d) * Math.cos(th));
+  const l2 = l1 + Math.atan2(Math.sin(th) * Math.sin(d) * Math.cos(p1), Math.cos(d) - Math.sin(p1) * Math.sin(p2));
+  return { lat: p2 / r, lon: ((l2 / r + 540) % 360) - 180 };
+}
+
+/* Point X tel que le cap initial de X vers b vaut brg (vrai) et la distance de X à b vaut km ; null si non convergent */
+function legOrigin(b, brg, km) {
+  let th = (brg + 180) % 360;
+  for (let it = 0; it < 200; it++) {
+    const x = legDest(b, th, km);
+    const L = legCalc(x, b);
+    let e = brg - L.brg;
+    e = ((e + 540) % 360) - 180;
+    if (Math.abs(e) < 0.00001) return x;
+    th = ((th + e) % 360 + 360) % 360;
+  }
+  return null;
+}
+
+"""
+READNUM_BLOCK = r"""/* Nombre lisible d'un champ Cap / Distance (virgule ou point décimal), sinon null */
+function readNum(s) {
+  if (typeof s !== 'string') return null;
+  const m = /^\s*(\d+(?:[.,]\d+)?)\s*$/.exec(s);
+  return m ? parseFloat(m[1].replace(',', '.')) : null;
+}
+
+"""
 
 # Les quatre tables : (nom de la constante, fichier de data/)
 TABLES = [('WEAPON_NAMES', 'weapon_names.json'), ('AIRCRAFT_LIMITS', 'aircraft_limits.json'),
@@ -92,11 +397,47 @@ I18N_FR = {
     'fl.units.one': '{0} unité',
     'fl.units.many': '{0} unités',
 
+    'sec.route': 'ROUTE',
     'route.none': 'Aucune route.',
-    'route.n': 'Route : {0} points, de « {1} » à « {2} »',
-    'route.n1': 'Route : 1 point, « {0} »',
-    'route.alt': ' (premier point à {0} m)',
-    'route.rm': 'Retirer la route',
+    'route.line': 'Route : {0} — {1}, {2}',
+    'route.line.nod': 'Route : {0} — {1}',
+    'route.pts.one': '{0} point',
+    'route.pts.many': '{0} points',
+    'route.imported': 'Route importée',
+    'route.unnamed': 'Route sans nom',
+    'route.from.rp': 'du Route Planner',
+    'route.from.pkg': 'importée avec le groupe',
+    'route.change': 'Changer de route',
+    'route.remove': 'Retirer',
+    'route.see': 'Voir la route ↓',
+    'route.pick': 'Choisir la route ↓',
+    'route.choose.none': 'Aucune route pour ce groupe. Touche une route du Route Planner pour la donner au groupe.',
+    'route.choose.other': 'Choisir une autre route pour ce groupe.',
+    'route.keep': 'Garder la route actuelle',
+    'route.list.linked': 'Liées à ce groupe',
+    'route.list.other': 'Autres routes',
+    'route.tag.linked': 'liée à {0}',
+    'route.tag.free': 'sans groupe',
+    'route.empty': 'Le Route Planner n’a aucune route : trace-la d’abord là-bas.',
+    'route.th.mismatch': 'Les routes du Route Planner sont sur {0} ; ce paquet est sur {1}.',
+    'route.th.nosupport': 'Les routes du Route Planner sont sur {0}, un théâtre que ce module ne gère pas.',
+    'route.nosketch': 'Choisissez un théâtre pour voir la route.',
+    'route.sketch': 'Croquis de la route {0}',
+    'route.col.leg': 'Branche',
+    'route.col.hdg': 'Cap M',
+    'route.col.dist': 'Distance',
+    'route.total': 'Total',
+    'route.note': 'Cap magnétique : déclinaison {0} ({1}) — le même calcul que le Route Planner et le Datacard Generator. Le croquis n’est qu’un rappel : la route se trace au Route Planner.',
+    'route.decl.to': ' à ',
+    'route.src.mission': 'date de la mission',
+    'route.src.rp': 'année du Route Planner',
+    'route.src.default': 'année par défaut',
+    'route.src.manual': 'saisie au Route Planner',
+    'route.gone': 'Cette route n’est plus au Route Planner : la dernière copie est gardée.',
+    'route.few': 'Cette route n’a plus de points au Route Planner : la dernière copie est gardée.',
+    'route.theatre': 'Le Route Planner est passé sur {0} : la route n’est pas reprise.',
+    'route.toast.one': 'Route « {0} » reprise du Route Planner pour {1}.',
+    'route.toast.many': 'Routes reprises du Route Planner : {0}.',
 
     'u.title': 'Unité {0}',
     'u.fold': 'Replier l’unité',
@@ -334,11 +675,47 @@ I18N_EN = {
     'fl.units.one': '{0} unit',
     'fl.units.many': '{0} units',
 
+    'sec.route': 'ROUTE',
     'route.none': 'No route.',
-    'route.n': 'Route: {0} points, from “{1}” to “{2}”',
-    'route.n1': 'Route: 1 point, “{0}”',
-    'route.alt': ' (first point at {0} m)',
-    'route.rm': 'Remove the route',
+    'route.line': 'Route: {0} — {1}, {2}',
+    'route.line.nod': 'Route: {0} — {1}',
+    'route.pts.one': '{0} point',
+    'route.pts.many': '{0} points',
+    'route.imported': 'Imported route',
+    'route.unnamed': 'Unnamed route',
+    'route.from.rp': 'from the Route Planner',
+    'route.from.pkg': 'imported with the group',
+    'route.change': 'Change route',
+    'route.remove': 'Remove',
+    'route.see': 'See the route ↓',
+    'route.pick': 'Choose the route ↓',
+    'route.choose.none': 'No route for this group. Tap a Route Planner route to give it to the group.',
+    'route.choose.other': 'Choose another route for this group.',
+    'route.keep': 'Keep the current route',
+    'route.list.linked': 'Linked to this group',
+    'route.list.other': 'Other routes',
+    'route.tag.linked': 'linked to {0}',
+    'route.tag.free': 'no group',
+    'route.empty': 'The Route Planner has no route: draw it there first.',
+    'route.th.mismatch': 'The Route Planner routes are on {0}; this package is on {1}.',
+    'route.th.nosupport': 'The Route Planner routes are on {0}, a theatre this module does not handle.',
+    'route.nosketch': 'Choose a theatre to see the route.',
+    'route.sketch': 'Sketch of route {0}',
+    'route.col.leg': 'Leg',
+    'route.col.hdg': 'Mag hdg',
+    'route.col.dist': 'Distance',
+    'route.total': 'Total',
+    'route.note': 'Magnetic heading: variation {0} ({1}) — the same calculation as the Route Planner and the Datacard Generator. The sketch is only a reminder: the route is drawn in the Route Planner.',
+    'route.decl.to': ' to ',
+    'route.src.mission': 'mission date',
+    'route.src.rp': 'Route Planner year',
+    'route.src.default': 'default year',
+    'route.src.manual': 'typed in the Route Planner',
+    'route.gone': 'This route is no longer in the Route Planner: the last copy is kept.',
+    'route.few': 'This route no longer has points in the Route Planner: the last copy is kept.',
+    'route.theatre': 'The Route Planner has moved to {0}: the route is not taken over.',
+    'route.toast.one': 'Route “{0}” updated from the Route Planner for {1}.',
+    'route.toast.many': 'Routes updated from the Route Planner: {0}.',
 
     'u.title': 'Unit {0}',
     'u.fold': 'Fold the unit',
@@ -1044,6 +1421,63 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
 .fc-lo-k { font-family: var(--f-stencil); font-size: 12px; letter-spacing: 1.5px; color: var(--amber); text-transform: uppercase; }
 .fc-lo-v { font-family: var(--f-typewriter); font-size: 12px; color: var(--paper); flex: 1 1 160px; min-width: 0; word-break: break-word; }
 
+/* ---------- Le bloc ROUTE : choisir une route du Route Planner, la voir en croquis sur papier, caps magnétiques et distances ----------
+   La feuille garde ses variables de thème (--paper-light, --ink, --red-stamp…) ; rien en dur hors des rgba du quadrillage et de l'ombre. */
+#blk-route { margin-bottom: 16px; }
+#blk-route[hidden] { display: none; }
+#blk-route .miz-btn.fc-small { min-height: 44px; }
+.rt-note { margin: 0; font-family: var(--f-typewriter); font-size: 13px; line-height: 1.5; color: var(--paper); }
+.rt-note.rt-warn { color: var(--amber); }
+.rt-h { margin: 4px 0 -2px; font-family: var(--f-ui); font-weight: 500; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--amber); }
+.rt-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; }
+.rt-grid > * { min-width: 0; }
+.rt-card { display: flex; flex-direction: column; align-items: stretch; gap: 6px; min-height: 44px; padding: 6px; text-align: left; background: rgba(0,0,0,.25); border: 1px solid var(--khaki); border-radius: 0; color: var(--paper); cursor: pointer; }
+.rt-card:hover, .rt-card:focus-visible { border-color: var(--amber); outline: none; }
+.rt-card.on { border-color: var(--fc); box-shadow: 0 0 0 1px var(--fc); }
+.rt-card:disabled { opacity: .5; cursor: default; }
+.rt-card:disabled:hover { border-color: var(--khaki); }
+.rt-cn { font-family: var(--f-ui); font-weight: 500; font-size: 16px; letter-spacing: 1px; line-height: 1.25; text-transform: uppercase; color: var(--paper-light); overflow-wrap: anywhere; }
+.rt-cm { font-family: var(--f-typewriter); font-size: 12px; color: var(--khaki-light); }
+.rt-card .rt-tag { align-self: flex-start; max-width: 100%; overflow-wrap: anywhere; white-space: normal; }
+.rt-tag.full { background: var(--olive); border-color: var(--olive); color: var(--paper-light); }
+.rt-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 14px; }
+.rt-hl { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; min-width: 0; flex: 1 1 240px; }
+.rt-name { font-family: var(--f-ui); font-weight: 500; font-size: 22px; letter-spacing: 1px; line-height: 1.2; text-transform: uppercase; color: var(--paper-light); overflow-wrap: anywhere; }
+.rt-sub { font-family: var(--f-typewriter); font-size: 12px; color: var(--khaki-light); }
+.rt-hb { display: flex; flex-wrap: wrap; gap: 8px; }
+.rt-mini, .rt-thumb { display: block; background-color: var(--paper-light); background-image: linear-gradient(rgba(70,63,48,.09) 1px, transparent 1px), linear-gradient(90deg, rgba(70,63,48,.09) 1px, transparent 1px); background-size: 12px 12px; border: 1px solid var(--paper-dark); }
+.rt-mini > svg, .rt-thumb > svg { display: block; width: 100%; height: auto; }
+.rt-thumb { flex: none; width: 64px; height: 40px; background-size: 8px 8px; overflow: hidden; }
+.fc-route .fc-see { min-height: 44px; }
+.rt-paper { position: relative; background-color: var(--paper-light); background-image: linear-gradient(rgba(70,63,48,.09) 1px, transparent 1px), linear-gradient(90deg, rgba(70,63,48,.09) 1px, transparent 1px); background-size: 22px 22px; border: 1px solid var(--paper-dark); box-shadow: 2px 3px 0 rgba(0,0,0,.45); transform: rotate(-0.4deg); margin: 4px 0 6px; }
+.rt-paper > svg { display: block; max-width: 100%; }
+.rt-svg text { font-family: var(--f-typewriter); }
+.rt-leg { fill: none; stroke: var(--ink); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.rt-leg2 { fill: none; stroke: var(--ink-faded); stroke-width: 1; stroke-linecap: round; opacity: .45; }
+.rt-arr { fill: none; stroke: var(--ink); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.rt-pt { fill: none; stroke: var(--ink); stroke-width: 1.8; }
+.rt-start { fill: var(--red-stamp); }
+.rt-m .rt-leg { stroke-width: 1.5; }
+.rt-m .rt-leg2 { stroke-width: .8; }
+.rt-m .rt-arr { stroke-width: 1.2; }
+.rt-m .rt-pt { stroke-width: 1.2; }
+.rt-lbl { font-size: 12px; fill: var(--ink); stroke: var(--paper-light); stroke-width: 4px; stroke-linejoin: round; paint-order: stroke; }
+.rt-con { fill: none; stroke: var(--ink-faded); stroke-width: 1; }
+.rt-hd { font-size: 11px; fill: var(--red-stamp); stroke: var(--paper-light); stroke-width: 3px; stroke-linejoin: round; paint-order: stroke; text-anchor: middle; }
+.rt-num circle { fill: var(--paper-light); stroke: var(--red-stamp); stroke-width: 1.2; }
+.rt-num text { font-size: 10px; fill: var(--red-stamp); text-anchor: middle; }
+.rt-svg .rt-gn { font-family: var(--f-stencil); font-weight: 400; font-size: 14px; letter-spacing: 2px; fill: var(--ink-faded); }
+.rt-north line, .rt-north path, .rt-scale path { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.rt-svg .rt-nn { font-family: var(--f-stencil); font-weight: 400; font-size: 15px; fill: var(--ink); text-anchor: middle; }
+.rt-scale text { font-size: 12px; fill: var(--ink); }
+.rt-tab { width: 100%; border-collapse: collapse; font-family: var(--f-typewriter); font-size: 13px; color: var(--paper); }
+.rt-tab th { padding: 8px 6px; text-align: left; font-family: var(--f-ui); font-weight: 500; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--amber); border-bottom: 1px solid var(--khaki-light); }
+.rt-tab td { padding: 7px 6px; border-bottom: 1px dashed rgba(128,116,84,.55); overflow-wrap: anywhere; }
+.rt-tab .rt-n { width: 2.2em; color: var(--khaki-light); }
+.rt-tab .rt-r { text-align: right; white-space: nowrap; }
+.rt-tab .rt-tot td { border-bottom: 0; }
+@media (max-width: 539px) { .rt-name { font-size: 20px; } .rt-tab { font-size: 12px; } }
+
 /* ---------- L'emport : la vue de face de Mission Tools (Loadout Editor), reprise ---------- */
 .fc-back { display: none; align-self: flex-start; min-height: 40px; padding: 0 4px; background: none; border: 0; font-family: var(--f-typewriter); font-size: 13px; color: var(--fc); text-decoration: underline; cursor: pointer; }
 .fc-back:focus-visible { outline: 2px solid var(--fc); outline-offset: 2px; }
@@ -1692,6 +2126,7 @@ const UI = {
   clamped: 0,               // réglages d'emport ramenés à la limite (ligne d'état)
   seenLiv: {},              // type → [liveryId vus dans les paquets importés, une entrée par occurrence]
   cmp: { sym: true, st: null, saving: false, name: '', err: '' },
+  rtChoose: null,           // le fcId du groupe dont on choisit la route (« Changer de route ») ; un groupe sans route est toujours au choix
   imp: null,                // la fenêtre d'import, quand elle est ouverte
   hq: undefined             // la mission de HQ lue dans le stockage : une lecture par ouverture de la fenêtre d'import (undefined = à relire)
 };
@@ -1724,11 +2159,12 @@ function restoreFlight(f) {
   if (!rawUnits.length && PAYLOAD_TYPES.indexOf(f.type) < 0) return null;       // sans unité ni type géré : écarté, comme à la base
   if (types.some(x => PAYLOAD_TYPES.indexOf(x) < 0)) return null;
   const nf = newFlight();
-  Object.keys(f).forEach(k => { if (['name', 'type', 'coalition', 'route', 'units'].indexOf(k) < 0) nf[k] = f[k]; });
+  Object.keys(f).forEach(k => { if (['name', 'type', 'coalition', 'route', 'routeLink', 'units'].indexOf(k) < 0) nf[k] = f[k]; });
   if (typeof nf.fcId !== 'string' || nf.fcId === '') nf.fcId = newId();
   nf.name = str(f.name);
   nf.coalition = (f.coalition === 'blue' || f.coalition === 'red') ? f.coalition : '';
   nf.route = (isObj(f.route) && isObj(f.route.points)) ? { points: f.route.points } : null;
+  if (nf.route && isObj(f.routeLink) && ridOk(f.routeLink.rid)) nf.routeLink = { rid: f.routeLink.rid, name: str(f.routeLink.name) };       // le lien avec le Route Planner ne se garde que s'il y a une route
   nf.units = rawUnits.map((u, i) => {
     const nu = newUnit(types[i]);
     nu.name = str(u.name); nu.callsign = str(u.callsign); nu.csRaw = u.csRaw; nu.onboard = str(u.onboard); nu.livery = str(u.livery);
@@ -2046,7 +2482,7 @@ function lvScrolled(e) {
 }
 const isLiveryField = el => !!el && !!el.matches && el.matches('input[data-k="livery"]');
 
-// ----- La route : portée telle quelle, jamais tracée ici -----
+// ----- Les points d'une route du groupe (le paquet les porte tels quels) -----
 function routeKeys(points) { return isObj(points) ? Object.keys(points).filter(k => /^\d+$/.test(k)).sort((a, b) => a - b) : []; }
 function routePoints(points) {
   return routeKeys(points).map(k => {
@@ -2054,12 +2490,389 @@ function routePoints(points) {
     return { name: (typeof p.name === 'string' && p.name !== '') ? p.name.replace(/\s+/g, ' ') : 'WP' + k, alt: p.alt };
   });
 }
-function routeLine(f) {
-  const pts = f.route ? routePoints(f.route.points) : [];
-  if (!pts.length) return t('route.none');
-  let s = pts.length === 1 ? tf('route.n1', pts[0].name) : tf('route.n', pts.length, pts[0].name, pts[pts.length - 1].name);
-  if (isNum(pts[0].alt)) s += tf('route.alt', Math.round(pts[0].alt));
-  return s;
+// ----- La route : choisie parmi celles du Route Planner, dessinée en croquis, suivie quand elle change là-bas -----
+// Un groupe garde sa route (route: { points }, les points d'un paquet, inchangés) et, si elle vient du Route Planner, routeLink: { rid, name } (le nom au dernier passage).
+// routeLink vit dans fc_state_v1 et le fichier de travail, jamais dans le paquet. Un groupe n'a qu'une route ; une même route du Route Planner peut servir à plusieurs groupes.
+const KEY_RP_SET = 'route_set_v1', KEY_RP_STATE = 'route_state_v1', RP_SET_FORMAT = 'dcs-route-set-v1', RP_GS_DEFAULT = 220;
+const ridOk = v => typeof v === 'string' && /^[a-z0-9]{6,32}$/.test(v);
+function lsJson(k) { try { return JSON.parse(lsGet(k) || 'null'); } catch (e) { return null; } }
+function hasRoute(f) { return !!(f && f.route && routePoints(f.route.points).length > 0); }
+function ptsLabel(n) { return tf(n < 2 ? 'route.pts.one' : 'route.pts.many', n); }
+function fmtNm(v) { const s = (Math.round(v * 10) / 10).toFixed(1); return CURRENT_LANG === 'fr' ? s.replace('.', ',') : s; }
+function routeTitle(f) { return f.routeLink ? (f.routeLink.name.trim() !== '' ? f.routeLink.name : t('route.unnamed')) : t('route.imported'); }
+
+// Ce que le Route Planner a rangé : ses routes (celles qui portent un rid) et ses réglages (théâtre, vitesse sol, affichage des caps)
+function rpRead() {
+  const st = lsJson(KEY_RP_STATE), set = lsJson(KEY_RP_SET), nd = isObj(st) && isObj(st.navDisplay) ? st.navDisplay : {};
+  const state = {
+    theatre: isObj(st) && typeof st.theatre === 'string' && st.theatre !== '' ? st.theatre : 'Caucasus',
+    gs: isObj(st) && isNum(st.groundSpeed) && st.groundSpeed > 0 ? st.groundSpeed : RP_GS_DEFAULT,
+    nav: { mode: (nd.mode === 'calc' || nd.mode === 'manual') ? nd.mode : (parseDecl(str(nd.decl)) !== null ? 'manual' : 'calc'), decl: str(nd.decl), year: (typeof nd.year === 'string' && /^\d{1,4}$/.test(nd.year)) ? nd.year : '', force: nd.force === true }
+  };
+  const routes = [];
+  if (isObj(set) && (set.format === undefined || set.format === RP_SET_FORMAT) && Array.isArray(set.routes)) {
+    set.routes.forEach(r => {
+      if (!isObj(r) || !Array.isArray(r.points) || !ridOk(r.rid)) return;
+      routes.push({ rid: r.rid, name: str(r.name), points: r.points.filter(p => isObj(p) && packValidCoord(p.lat, p.lon)), flight: (isObj(r.flight) && typeof r.flight.groupName === 'string') ? r.flight : null });
+    });
+  }
+  return { state: state, routes: routes };
+}
+// Les points d'un paquet pour une route du Route Planner : ceux que son paquet écrirait (même bloc packPoint)
+function rpPack(rt, theatre, gs) {
+  const o = {};
+  rt.points.forEach((p, k) => { o[String(k + 1)] = packPoint(p, k, theatre, gs); });
+  return o;
+}
+function rpUsable(rp) { return rp.routes.filter(r => r.points.length >= 2); }
+// Une route du Route Planner est « liée à ce groupe » : même nom (rogné, sans casse) et, si le groupe a un camp, le même
+function rtMatches(rt, f) {
+  const fl = rt.flight, name = f.name.trim().toLowerCase();
+  return !!fl && name !== '' && fl.groupName.trim().toLowerCase() === name && (f.coalition === '' || fl.coalition === f.coalition);
+}
+
+// Les points du groupe en latitude / longitude (ils se lisent de la route du groupe, jamais de route_set_v1) ; null sans théâtre lisible
+function routeGeo(f) {
+  if (!f || !f.route || !has(TM_PARAMS, S.theatre)) return null;
+  const pts = [];
+  routeKeys(f.route.points).forEach(k => {
+    const p = f.route.points[k];
+    if (!isObj(p) || !isNum(p.x) || !isNum(p.y)) return;
+    const ll = dcsToLl(S.theatre, p.x, p.y);
+    pts.push({ name: (typeof p.name === 'string' && p.name.trim() !== '') ? p.name.replace(/\s+/g, ' ').trim() : 'WP' + k, lat: ll.lat, lon: ll.lon });
+  });
+  return pts.length ? pts : null;
+}
+function routeNm(pts) { let km = 0; for (let i = 0; i + 1 < pts.length; i++) km += legCalc(pts[i], pts[i + 1]).km; return km / NAV_NM_KM; }
+// La déclinaison : la valeur saisie au Route Planner (mode « manual », lisible), sinon le calcul de WMM et d'IGRF à la date de la mission ou à l'année du Route Planner
+function declSource(nav) {
+  if (nav.mode === 'manual') { const v = parseDecl(nav.decl); if (v !== null) return { manual: true, v: v }; }
+  return { manual: false, ys: magYearSource(S.theatre, nav.year, nav.force) };
+}
+function declAt(ds, lat, lon) { if (ds.manual) return ds.v; const d = magVar(lat, lon, ds.ys.y); return d === null ? 0 : d; }
+// Les branches : cap initial vrai et distance par legCalc, cap magnétique = cap vrai − déclinaison au départ de la branche (toujours magnétique ici)
+function routeLegs(pts, ds) {
+  const legs = [];
+  let total = 0;
+  for (let i = 0; i + 1 < pts.length; i++) {
+    const L = legCalc(pts[i], pts[i + 1]), d = declAt(ds, pts[i].lat, pts[i].lon), nm = L.km / NAV_NM_KM;
+    total += nm;
+    legs.push({ from: pts[i].name, to: pts[i + 1].name, hdg: fmtHdg(((L.brg - d) % 360 + 360) % 360), nm: nm });
+  }
+  return { legs: legs, total: total };
+}
+function declText(v) { return fmtNm(Math.abs(v)) + '° ' + (v < 0 ? 'W' : 'E'); }
+function declNote(ds, pts) {
+  let v;
+  if (ds.manual) v = declText(ds.v);
+  else {
+    const all = pts.map(p => declAt(ds, p.lat, p.lon)), lo = Math.min.apply(null, all), hi = Math.max.apply(null, all);
+    if (hi - lo < 0.2) v = declText(all[0]);
+    else if ((lo < 0) === (hi < 0)) v = fmtNm(Math.min(Math.abs(lo), Math.abs(hi))) + '°' + t('route.decl.to') + declText(Math.abs(lo) > Math.abs(hi) ? lo : hi);
+    else v = declText(lo) + t('route.decl.to') + declText(hi);
+  }
+  const src = ds.manual ? t('route.src.manual') : ds.ys.year + ', ' + t(ds.ys.src === 'mission' ? 'route.src.mission' : (ds.ys.src === 'default' ? 'route.src.default' : 'route.src.rp'));
+  return tf('route.note', v, src);
+}
+
+// ----- Le croquis : une feuille de papier, un trait à main levée (graine fixe : le même croquis à chaque rendu) -----
+const RT = { w: 0, ro: null, timer: 0 };
+const RT_SEED = 20261106, RT_LBL_W = 7.2, RT_LBL_H = 14, RT_HD_W = 6.6, RT_HD_H = 13, RT_NM_PER_DEG = 60.04;
+function rtRng(seed) {
+  let a = seed >>> 0;
+  return () => { a = (a + 0x6D2B79F5) >>> 0; let x = a; x = Math.imul(x ^ (x >>> 15), x | 1); x ^= x + Math.imul(x ^ (x >>> 7), x | 61); return ((x ^ (x >>> 14)) >>> 0) / 4294967296; };
+}
+const rn = v => String(Math.round(v * 10) / 10);
+function rtCircle(x, y, r, rnd) {
+  const n = 8, pts = [], ctl = [];
+  for (let i = 0; i < n; i++) {
+    const a = i * 2 * Math.PI / n, b = (i + 0.5) * 2 * Math.PI / n, ra = r * (1 + (rnd() * 2 - 1) * 0.08), rb = r / Math.cos(Math.PI / n) * (1 + (rnd() * 2 - 1) * 0.08);
+    pts.push([x + ra * Math.cos(a), y + ra * Math.sin(a)]);
+    ctl.push([x + rb * Math.cos(b), y + rb * Math.sin(b)]);
+  }
+  let d = 'M' + rn(pts[0][0]) + ' ' + rn(pts[0][1]);
+  for (let i = 0; i < n; i++) { const q = pts[(i + 1) % n]; d += 'Q' + rn(ctl[i][0]) + ' ' + rn(ctl[i][1]) + ' ' + rn(q[0]) + ' ' + rn(q[1]); }
+  return d + 'Z';
+}
+// Une branche à main levée : 4 courbes quadratiques, écarts perpendiculaires de ± amp px
+function rtHand(a, b, rnd, amp) {
+  const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1, nx = -dy / len, ny = dx / len;
+  const off = () => (rnd() * 2 - 1) * amp, knot = [];
+  for (let i = 1; i <= 4; i++) { const e = i === 4 ? 0 : off(); knot.push([a.x + dx * i / 4 + nx * e, a.y + dy * i / 4 + ny * e]); }
+  let d = 'M' + rn(a.x) + ' ' + rn(a.y);
+  for (let i = 1; i <= 4; i++) { const e = off(), tt = (i - 0.5) / 4; d += 'Q' + rn(a.x + dx * tt + nx * e) + ' ' + rn(a.y + dy * tt + ny * e) + ' ' + rn(knot[i - 1][0]) + ' ' + rn(knot[i - 1][1]); }
+  return d;
+}
+const rtHit = (a, b) => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
+function rtBoxAround(x, y, r) { return { x0: x - r, y0: y - r, x1: x + r, y1: y + r }; }
+function rtFree(box, res, W, H) {
+  if (box.x0 < 3 || box.y0 < 3 || box.x1 > W - 3 || box.y1 > H - 3) return false;
+  const g = { x0: box.x0 - 1, y0: box.y0 - 1, x1: box.x1 + 1, y1: box.y1 + 1 };
+  return !res.some(r => rtHit(g, r));
+}
+// Le croquis d'une route (pts : { name, lat, lon }) en <svg> ; mini : sans texte (vignette, carte du groupe) ; sinon la feuille entière.
+// o : W (largeur, 1 unité = 1 px), title, phone, texts (« 044° · 10,9 » par branche) ; en mini aussi H, mx, my.
+function rtSketch(pts, o) {
+  const mini = !!o.mini, W = o.W, rnd = rtRng(RT_SEED), phone = !!o.phone;
+  const mx = mini ? o.mx : (phone ? 60 : 100), my = mini ? o.my : 56, EPS = 1e-7;
+  const lm = pts.reduce((a, p) => a + p.lat, 0) / pts.length, ck = Math.cos(lm * Math.PI / 180);
+  const xs = pts.map(p => p.lon * ck), ys = pts.map(p => -p.lat);
+  const x0 = Math.min.apply(null, xs), x1 = Math.max.apply(null, xs), y0 = Math.min.apply(null, ys), y1 = Math.max.apply(null, ys), dx = x1 - x0, dy = y1 - y0;
+  let H, s;
+  if (mini) { H = o.H; s = Math.min(dx > EPS ? (W - 2 * mx) / dx : Infinity, dy > EPS ? (H - 2 * my) / dy : Infinity); }
+  else {
+    const sw = dx > EPS ? (W - 2 * mx) / dx : Infinity, hMin = phone ? 230 : 300, hMax = phone ? 420 : 440;
+    H = (dy > EPS && isFinite(sw)) ? Math.max(hMin, Math.min(hMax, dy * sw + 2 * my)) : hMin;
+    s = Math.min(sw, dy > EPS ? (H - 2 * my) / dy : Infinity);
+  }
+  if (!isFinite(s)) s = 0;
+  const ox = (W - dx * s) / 2 - x0 * s, oy = (H - dy * s) / 2 - y0 * s;
+  const P = pts.map((p, i) => ({ x: xs[i] * s + ox, y: ys[i] * s + oy }));
+  const amp = mini ? 0.7 : 1.5, rPt = mini ? 2.6 : 5.5, rStart = mini ? 3.4 : 7;
+  // les branches, puis une flèche de sens aux 72 % de chacune
+  let legs = '', arrows = '';
+  for (let i = 0; i + 1 < P.length; i++) {
+    const a = P[i], b = P[i + 1], d = rtHand(a, b, rnd, amp);
+    legs += '<path class="rt-leg2" transform="translate(1.2 1)" d="' + d + '"/><path class="rt-leg" d="' + d + '"/>';
+    const len = Math.hypot(b.x - a.x, b.y - a.y);
+    if (len > (mini ? 6 : 24)) {
+      const th = Math.atan2(b.y - a.y, b.x - a.x), tx = a.x + (b.x - a.x) * 0.72, ty = a.y + (b.y - a.y) * 0.72, al = mini ? 3 : 8, k = 25 * Math.PI / 180;
+      arrows += '<path class="rt-arr" d="M' + rn(tx - al * Math.cos(th - k)) + ' ' + rn(ty - al * Math.sin(th - k)) + 'L' + rn(tx) + ' ' + rn(ty) + 'L' + rn(tx - al * Math.cos(th + k)) + ' ' + rn(ty - al * Math.sin(th + k)) + '"/>';
+    }
+  }
+  // les points : un point qui retombe à moins de 4 px d'un point déjà dessiné ne se redessine pas, son nom s'ajoute à l'étiquette
+  const drawn = [];
+  P.forEach((p, i) => {
+    const hit = drawn.filter(q => Math.hypot(q.x - p.x, q.y - p.y) < 4)[0];
+    if (hit) { if (hit.names.indexOf(pts[i].name) < 0) hit.names.push(pts[i].name); }
+    else drawn.push({ x: p.x, y: p.y, start: i === 0, names: [pts[i].name] });
+  });
+  let dots = '';
+  drawn.forEach(q => {
+    dots += '<path class="rt-pt" d="' + rtCircle(q.x, q.y, q.start ? rStart : rPt, rnd) + '"/>';
+    if (q.start) dots += '<circle class="rt-start" cx="' + rn(q.x) + '" cy="' + rn(q.y) + '" r="' + (mini ? 1.3 : 2.6) + '"/>';
+  });
+  let extra = '', labels = '', numbers = '', heads = '';
+  if (!mini) {
+    const res = [];
+    // le titre de la feuille, le nord et l'échelle
+    const title = o.title || '';
+    extra += '<text class="rt-gn" x="16" y="30">' + esc(title) + '</text>';
+    res.push({ x0: 8, y0: 12, x1: 22 + title.length * 11, y1: 38 });
+    extra += '<g class="rt-north"><line x1="' + (W - 32) + '" y1="64" x2="' + (W - 32) + '" y2="28"/><path d="M' + (W - 38) + ' 36L' + (W - 32) + ' 28L' + (W - 26) + ' 36"/></g><text class="rt-nn" x="' + (W - 32) + '" y="86">N</text>';
+    res.push({ x0: W - 48, y0: 18, x1: W - 14, y1: 94 });
+    const pxNm = s / RT_NM_PER_DEG, sizes = [1, 2, 5, 10, 20, 50, 100, 200, 500];
+    let nm = 0;
+    if (pxNm > 0) for (let i = 0; i < sizes.length; i++) if (sizes[i] * pxNm > 50) { nm = sizes[i]; break; }
+    if (nm) {
+      const L = nm * pxNm, yb = H - 20;
+      extra += '<g class="rt-scale"><path d="M16 ' + (yb - 6) + 'V' + yb + 'H' + rn(16 + L) + 'V' + (yb - 6) + '"/><text x="' + rn(16 + L + 8) + '" y="' + (yb + 4) + '">' + nm + ' NM</text></g>';
+      res.push({ x0: 10, y0: yb - 14, x1: 16 + L + 16 + String(nm).length * 7.2 + 24, y1: yb + 10 });
+    }
+    drawn.forEach(q => res.push(rtBoxAround(q.x, q.y, (q.start ? rStart : rPt) + 1.5)));
+    // les numéros de branche (tablette) : au milieu de chaque branche, avant les étiquettes pour qu'elles les évitent
+    const mids = [];
+    for (let i = 0; i + 1 < P.length; i++) mids.push({ x: (P[i].x + P[i + 1].x) / 2, y: (P[i].y + P[i + 1].y) / 2 });
+    if (!phone) mids.forEach((m, i) => {
+      numbers += '<g class="rt-num"><circle cx="' + rn(m.x) + '" cy="' + rn(m.y) + '" r="8"/><text x="' + rn(m.x) + '" y="' + rn(m.y + 3.5) + '">' + (i + 1) + '</text></g>';
+      res.push(rtBoxAround(m.x, m.y, 9));
+    });
+    // les noms : à l'opposé du centre de la route, à 14, 24 puis 36 px, dix directions ; un nom sans place libre se pose quand même
+    const cx = drawn.reduce((a, q) => a + q.x, 0) / drawn.length, cy = drawn.reduce((a, q) => a + q.y, 0) / drawn.length;
+    const offs = [0, 36, -36, 72, -72, 108, -108, 144, -144, 180].map(d => d * Math.PI / 180);
+    const place = (q, ang, dist, w) => {
+      const c = Math.cos(ang), sn = Math.sin(ang), ax = q.x + c * dist, ay = q.y + sn * dist;
+      const bx = c > 0.35 ? ax : (c < -0.35 ? ax - w : ax - w / 2), by = sn > 0.35 ? ay : (sn < -0.35 ? ay - RT_LBL_H : ay - RT_LBL_H / 2);
+      return { box: { x0: bx, y0: by, x1: bx + w, y1: by + RT_LBL_H }, anchor: c > 0.35 ? 'start' : (c < -0.35 ? 'end' : 'middle'), ax: ax, ay: ay };
+    };
+    const labelBoxes = [];
+    drawn.forEach(q => {
+      const text = q.names.join(' / ').toUpperCase(), w = text.length * RT_LBL_W + 2;
+      const base = Math.hypot(q.x - cx, q.y - cy) < 1 ? -Math.PI / 2 : Math.atan2(q.y - cy, q.x - cx);
+      let best = null, bd = 0;
+      for (let di = 0; di < 3 && !best; di++) for (let oi = 0; oi < offs.length && !best; oi++) {
+        const c = place(q, base + offs[oi], [14, 24, 36][di], w);
+        if (rtFree(c.box, res, W, H)) { best = c; bd = [14, 24, 36][di]; }
+      }
+      if (!best) {
+        best = place(q, base, 14, w); bd = 14;
+        const b = best.box, shx = Math.max(3 - b.x0, Math.min(0, W - 3 - b.x1)), shy = Math.max(3 - b.y0, Math.min(0, H - 3 - b.y1));
+        best.box = { x0: b.x0 + shx, y0: b.y0 + shy, x1: b.x1 + shx, y1: b.y1 + shy };
+      }
+      const b = best.box, tx = best.anchor === 'start' ? b.x0 : (best.anchor === 'end' ? b.x1 : (b.x0 + b.x1) / 2);
+      if (bd >= 24) { const ang = Math.atan2(best.ay - q.y, best.ax - q.x), r = q.start ? rStart : rPt; labels += '<line class="rt-con" x1="' + rn(q.x + Math.cos(ang) * r) + '" y1="' + rn(q.y + Math.sin(ang) * r) + '" x2="' + rn(best.ax) + '" y2="' + rn(best.ay) + '"/>'; }
+      labels += '<text class="rt-lbl" text-anchor="' + best.anchor + '" x="' + rn(tx) + '" y="' + rn(b.y0 + 11) + '">' + esc(text) + '</text>';
+      res.push(b);
+      labelBoxes.push(b);
+    });
+    // cap et distance au long de la branche (tablette), s'il y a une place libre à 12 ou 20 px ; sinon rien : la table le dit
+    if (!phone && o.texts) {
+      const samples = [];
+      for (let i = 0; i + 1 < P.length; i++) {
+        const a = P[i], b = P[i + 1], n = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / 5));
+        for (let k = 0; k <= n; k++) samples.push({ x: a.x + (b.x - a.x) * k / n, y: a.y + (b.y - a.y) * k / n });
+      }
+      mids.forEach((m, i) => {
+        const a = P[i], b = P[i + 1], len = Math.hypot(b.x - a.x, b.y - a.y) || 1, text = o.texts[i] || '';
+        if (!text) return;
+        const w = text.length * RT_HD_W + 4, nx = -(b.y - a.y) / len, ny = (b.x - a.x) / len, out = ((m.x - cx) * nx + (m.y - cy) * ny) >= 0 ? 1 : -1;
+        const tries = [[12, out], [12, -out], [20, out], [20, -out]];
+        for (let k = 0; k < tries.length; k++) {
+          const d = tries[k][0], sd = tries[k][1], px = m.x + nx * sd * d, py = m.y + ny * sd * d;
+          const cxx = px + nx * sd * w / 2 * Math.abs(nx), cyy = py + ny * sd * RT_HD_H / 2 * Math.abs(ny) + (Math.abs(ny) < 0.35 ? 0 : 0);
+          const box = { x0: cxx - w / 2, y0: cyy - RT_HD_H / 2, x1: cxx + w / 2, y1: cyy + RT_HD_H / 2 };
+          if (!rtFree(box, res, W, H)) continue;
+          if (samples.some(sp => sp.x > box.x0 - 1 && sp.x < box.x1 + 1 && sp.y > box.y0 - 1 && sp.y < box.y1 + 1)) continue;
+          heads += '<text class="rt-hd" x="' + rn(cxx) + '" y="' + rn(cyy + 4) + '">' + esc(text) + '</text>';
+          res.push(box);
+          break;
+        }
+      });
+    }
+  }
+  return '<svg class="rt-svg' + (mini ? ' rt-m' : '') + '" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + rn(W) + ' ' + rn(H) + '" width="' + rn(W) + '" height="' + rn(H) + '"' + (o.label ? ' role="img" aria-label="' + esc(o.label) + '"' : ' aria-hidden="true"') + '>'
+    + extra + legs + arrows + dots + numbers + labels + heads + '</svg>';
+}
+
+// ----- Le bloc ROUTE de la colonne droite : le choix, ou la route (en-tête, croquis, table, note) -----
+// Le groupe sans route est toujours au choix ; « Changer de route » ouvre le choix pour un groupe (UI.rtChoose = son fcId).
+// L'état d'une route liée (copie gardée, théâtre) se calcule au rendu : rien de plus à garder.
+function routeStatus(f, rp) {
+  if (!f.routeLink || !S.theatre) return null;
+  if (rp.state.theatre !== S.theatre) return { k: 'theatre', th: rp.state.theatre };
+  const rt = rp.routes.filter(r => r.rid === f.routeLink.rid)[0];
+  if (!rt) return { k: 'gone' };
+  return rt.points.length < 2 ? { k: 'few' } : null;
+}
+function rpGeo(rt) { return rt.points.map((p, i) => ({ name: (p.name || '').replace(/\s+/g, ' ').trim() || 'WP' + (i + 1), lat: p.lat, lon: p.lon })); }
+function routeCardHtml(rt, f, off) {
+  const geo = rpGeo(rt), on = f.routeLink && f.routeLink.rid === rt.rid, linked = rtMatches(rt, f);
+  const tag = rt.flight ? tf('route.tag.linked', rt.flight.groupName.trim()) : t('route.tag.free');
+  const name = rt.name.trim() !== '' ? rt.name.trim() : t('route.unnamed');
+  return `<button type="button" class="rt-card${on ? ' on' : ''}" data-act="route-pick" data-rid="${esc(rt.rid)}"${off ? ' disabled' : ''}>
+    <span class="rt-mini">${rtSketch(geo, { mini: true, W: 160, H: 100, mx: 10, my: 10 })}</span>
+    <span class="rt-cn">${esc(name)}</span>
+    <span class="rt-cm">${esc(ptsLabel(geo.length) + ' · ' + fmtNm(routeNm(geo)) + ' NM')}</span>
+    <span class="snap-flight-tag rt-tag${linked ? ' full' : ''}">${esc(tag)}</span></button>`;
+}
+function routeChooseHtml(f, rp) {
+  const usable = rpUsable(rp), th = rp.state.theatre;
+  let msg = '';
+  if (!has(TM_PARAMS, th)) msg = tf('route.th.nosupport', th);
+  else if (S.theatre && S.theatre !== th) msg = tf('route.th.mismatch', th, S.theatre);
+  const off = msg !== '';
+  let h = usable.length ? `<p class="rt-note">${esc(t(hasRoute(f) ? 'route.choose.other' : 'route.choose.none'))}</p>` : `<p class="rt-note">${esc(t('route.empty'))}</p>`;
+  if (msg) h += `<p class="rt-note">${esc(msg)}</p>`;
+  const linked = usable.filter(r => rtMatches(r, f)), other = usable.filter(r => !rtMatches(r, f));
+  [['route.list.linked', linked], ['route.list.other', other]].forEach(g => {
+    if (g[1].length) h += `<div class="rt-h">${esc(t(g[0]))}</div><div class="rt-grid">${g[1].map(r => routeCardHtml(r, f, off)).join('')}</div>`;
+  });
+  if (hasRoute(f)) h += `<div class="miz-btn-row" style="margin-top:0"><button type="button" class="miz-btn fc-small" data-act="route-keep">${esc(t('route.keep'))}</button></div>`;
+  return h;
+}
+function routeViewHtml(f, fi, rp) {
+  const geo = routeGeo(f), pts = routeKeys(f.route.points).length, st = routeStatus(f, rp);
+  let sub = t(f.routeLink ? 'route.from.rp' : 'route.from.pkg') + ' · ' + ptsLabel(pts);
+  let table = '';
+  if (geo) {
+    const ds = declSource(rp.state.nav), L = routeLegs(geo, ds);
+    sub += ' · ' + fmtNm(L.total) + ' NM';
+    const rows = L.legs.map((l, i) => `<tr><td class="rt-n">${i + 1}</td><td>${esc(l.from)} → ${esc(l.to)}</td><td class="rt-r">${esc(l.hdg)}°</td><td class="rt-r">${esc(fmtNm(l.nm))} NM</td></tr>`).join('');
+    table = `<table class="rt-tab"><thead><tr><th class="rt-n"></th><th>${esc(t('route.col.leg'))}</th><th class="rt-r">${esc(t('route.col.hdg'))}</th><th class="rt-r">${esc(t('route.col.dist'))}</th></tr></thead><tbody>${rows}<tr class="rt-tot"><td></td><td>${esc(t('route.total'))}</td><td></td><td class="rt-r">${esc(fmtNm(L.total))} NM</td></tr></tbody></table><p class="rt-note">${esc(declNote(ds, geo))}</p>`;
+  }
+  let note = '';
+  if (st) note = `<p class="rt-note rt-warn">${esc(st.k === 'theatre' ? tf('route.theatre', st.th) : t(st.k === 'gone' ? 'route.gone' : 'route.few'))}</p>`;
+  return `<div class="rt-head"><div class="rt-hl"><span class="rt-name">${esc(routeTitle(f))}</span><span class="rt-sub">${esc(sub)}</span></div>
+      <div class="rt-hb"><button type="button" class="miz-btn fc-small" data-act="route-change">${esc(t('route.change'))}</button><button type="button" class="miz-btn fc-small" data-act="route-remove">${esc(t('route.remove'))}</button></div></div>
+    ${note}${geo ? '<div class="rt-paper" id="rt-paper"></div>' + table : `<p class="rt-note">${esc(t('route.nosketch'))}</p>`}`;
+}
+function routeBlockHtml(su) {
+  const f = su.f, rp = rpRead(), choosing = !hasRoute(f) || UI.rtChoose === f.fcId;
+  return `<section class="fc-block" id="blk-route"><div class="fc-bh">${esc(t('sec.route'))} <span class="fc-count">· ${esc(flightLabel(f, su.fi))}</span></div>
+    <div class="fc-bc">${choosing ? routeChooseHtml(f, rp) : routeViewHtml(f, su.fi, rp)}</div></section>`;
+}
+// Le croquis se dessine à la largeur de la feuille ; la feuille masquée (module caché du shell) a 0 px : le ResizeObserver redessine à son retour.
+function rtDraw() {
+  const paper = document.getElementById('rt-paper'), su = selUnit();
+  if (!paper || !su) return;
+  const geo = routeGeo(su.f), w = Math.floor(paper.clientWidth), col = document.getElementById('col-right');
+  RT.w = w;
+  if (!geo || w < 120) { paper.innerHTML = ''; return; }
+  const rp = rpRead(), L = routeLegs(geo, declSource(rp.state.nav));
+  paper.innerHTML = rtSketch(geo, { W: w, phone: col.clientWidth <= 520, title: flightLabel(su.f, su.fi), label: tf('route.sketch', routeTitle(su.f)), texts: L.legs.map(l => l.hdg + '° · ' + fmtNm(l.nm)) });
+}
+function renderRouteBlock() {
+  const host = document.getElementById('col-route'), su = selUnit();
+  if (!host) return;
+  if (RT.ro) { RT.ro.disconnect(); RT.ro = null; }
+  host.innerHTML = su ? routeBlockHtml(su) : '';
+  const paper = document.getElementById('rt-paper');
+  if (!paper) return;
+  rtDraw();
+  if (typeof ResizeObserver === 'function') {
+    RT.ro = new ResizeObserver(() => { if (Math.floor(paper.clientWidth) !== RT.w) rtDraw(); });
+    RT.ro.observe(paper);
+  }
+}
+// La ligne de la carte du groupe : sans route « Aucune route. » et un lien ; avec route un mini-croquis, « Route : nom — n points, d NM » et le lien « Voir la route ↓ »
+function routeHtml(f) {
+  if (!hasRoute(f)) return `<div class="fc-route none"><span class="fc-route-t">${esc(t('route.none'))}</span><button type="button" class="fc-see" data-act="see-route">${esc(t('route.pick'))}</button></div>`;
+  const geo = routeGeo(f), n = routeKeys(f.route.points).length;
+  const text = geo ? tf('route.line', routeTitle(f), ptsLabel(n), fmtNm(routeNm(geo)) + ' NM') : tf('route.line.nod', routeTitle(f), ptsLabel(n));
+  const thumb = geo ? `<span class="rt-thumb">${rtSketch(geo, { mini: true, W: 64, H: 40, mx: 7, my: 7 })}</span>` : '';
+  return `<div class="fc-route">${thumb}<span class="fc-route-t">${esc(text)}</span><button type="button" class="fc-see" data-act="see-route">${esc(t('route.see'))}</button></div>`;
+}
+function paintRouteLines() {
+  S.flights.forEach((f, fi) => {
+    const el = flightEl(fi), line = el && el.querySelector('.fc-route');
+    if (line) line.outerHTML = routeHtml(f);
+  });
+}
+// Un geste sur la route (choisir, retirer, changer…) ou un nom, un camp, un théâtre qui change : le bloc, les lignes des cartes, les résumés et l'état suivent
+function routeChanged() { renderRouteBlock(); paintRouteLines(); refreshAll(); }
+
+function routePick(rid) {
+  const su = selUnit(), rp = rpRead(), rt = rp.routes.filter(r => r.rid === rid)[0];
+  if (!su || !rt || rt.points.length < 2 || !has(TM_PARAMS, rp.state.theatre)) return;
+  const f = su.f, setTheatre = !S.theatre;
+  if (S.theatre && S.theatre !== rp.state.theatre) return;
+  if (setTheatre) S.theatre = rp.state.theatre;
+  f.route = { points: rpPack(rt, S.theatre, rp.state.gs) };
+  f.routeLink = { rid: rt.rid, name: rt.name };
+  UI.rtChoose = null;
+  if (setTheatre) renderAll(); else routeChanged();
+}
+// La reprise : chaque groupe lié dont la route du Route Planner existe (deux points au moins, même théâtre) reprend ses points s'ils diffèrent et le nom de la route
+// Rend { toast, changed } sans rien dessiner ; une route absente, trop courte ou sur un autre théâtre ne touche pas la copie du groupe.
+function routeSync() {
+  const out = { toast: '', changed: false };
+  if (!S.theatre || !S.flights.some(f => f.routeLink)) return out;
+  const rp = rpRead(), done = [];
+  S.flights.forEach((f, fi) => {
+    if (!f.routeLink || routeStatus(f, rp)) return;
+    const rt = rp.routes.filter(r => r.rid === f.routeLink.rid)[0], pts = rpPack(rt, S.theatre, rp.state.gs);
+    if (JSON.stringify(pts) === JSON.stringify(f.route ? f.route.points : null) && rt.name === f.routeLink.name) return;
+    f.route = { points: pts };
+    f.routeLink = { rid: rt.rid, name: rt.name };
+    done.push({ label: flightLabel(f, fi), name: rt.name.trim() !== '' ? rt.name : t('route.unnamed') });
+  });
+  if (done.length) {
+    out.changed = true;
+    out.toast = done.length === 1 ? tf('route.toast.one', done[0].name, done[0].label) : tf('route.toast.many', done.map(d => d.label).join(', '));
+  }
+  return out;
+}
+function routeTakeover() {
+  const r = routeSync();
+  if (r.changed) { clearTimeout(_saveTimer); writeState(); }
+  renderRouteBlock();
+  paintRouteLines();
+  if (r.changed) { refreshSummaries(); showToast(r.toast, 4500); }
+}
+function routeStorage(e) {
+  if (e.key !== null && e.key !== KEY_RP_SET && e.key !== KEY_RP_STATE && e.key !== KEY_HQ_MISSION) return;
+  clearTimeout(RT.timer);
+  RT.timer = setTimeout(routeTakeover, 80);      // le Route Planner écrit route_set_v1 puis route_state_v1 : un seul passage pour les deux
 }
 
 // ----- Le résumé d'un vol, sur une ligne, pour son en-tête replié : une partie absente se tait -----
@@ -2255,10 +3068,6 @@ function flightFieldsHtml(f) {
   return `<div class="fc-row3">${fieldHtml(t('fl.name'), inputHtml('data-k="name"', f.name, t('fl.name.ph')))}
     ${fieldHtml(t('fl.coalition'), selectHtml('data-k="coalition"', t('fl.coalition'), coalitions, f.coalition))}</div>`;
 }
-function routeHtml(f) {
-  const has = f.route && routePoints(f.route.points).length > 0;
-  return `<div class="fc-route${has ? '' : ' none'}"><span class="fc-route-t">${esc(routeLine(f))}</span>${has ? `<button type="button" class="miz-btn fc-small" data-act="rm-route">${esc(t('route.rm'))}</button>` : ''}</div>`;
-}
 
 function unitHtml(f, fi, u, ui) {
   const at = `data-u="${ui}"`, rk = `f${fi}u${ui}r`, n = radioCount(f, u);
@@ -2363,6 +3172,7 @@ function renderAll() { renderLeft(); renderRight(); refreshBar(); applyI18nStati
 function selectUnit(fi, ui) {
   const changed = !(S.sel.f === fi && S.sel.u === ui);
   if (!changed) return;
+  if (S.sel.f !== fi) UI.rtChoose = null;
   S.sel = { f: fi, u: ui };
   document.querySelectorAll('#col-left .fc-flight').forEach(fe => {
     fe.querySelectorAll('.fc-unit').forEach(ue => ue.classList.toggle('sel', Number(fe.getAttribute('data-f')) === fi && Number(ue.getAttribute('data-u')) === ui));
@@ -2413,7 +3223,7 @@ function cmpClsid(lo, n) { return lo && lo.pylons[n] && lo.pylons[n].CLSID ? Str
 function renderRight() {
   const col = document.getElementById('col-right'), su = selUnit();
   CMP.small = col.clientWidth < 900;
-  col.innerHTML = `<section class="fc-block" id="blk-cmp"><div class="fc-bh">${esc(t('sec.cmp'))}</div>
+  col.innerHTML = `<div id="col-route"></div><section class="fc-block" id="blk-cmp"><div class="fc-bh">${esc(t('sec.cmp'))}</div>
     <div class="fc-bc">${su ? cmpHtml(su) : `<p class="pk-note">${esc(t('cmp.pick'))}</p>`}</div></section><div id="col-presets"></div>`;
   if (CMP.ro) { CMP.ro.disconnect(); CMP.ro = null; }
   const wrap = document.getElementById('cmp-wrap');
@@ -2423,6 +3233,7 @@ function renderRight() {
   }
   cmpUpdate();
   document.getElementById('col-presets').innerHTML = presetsHtml();
+  renderRouteBlock();
 }
 
 // Un emport est « armé » dès qu'une station porte une arme : « Garder dans mes presets » et « Vider l'emport » n'agissent qu'alors.
@@ -2907,7 +3718,7 @@ function impMerge(list) {
       created.add(target);
     }
     if (!IMP_FIRST) IMP_FIRST = target;
-    if (chk.route && f.points) target.route = { points: clone(f.points) };
+    if (chk.route && f.points) { target.route = { points: clone(f.points) }; delete target.routeLink; }       // une route importée est un autre plan de vol : le lien avec le Route Planner tombe
     f.units.slice(0, MAX_UNITS).forEach((iu, k) => mergeUnit(target, k, iu, chk, f));
     if (!target.units.length) target.units.push(newUnit(PAYLOAD_TYPES.indexOf(f.types[0]) >= 0 ? f.types[0] : DEFAULT_TYPE));      // un vol sans unité : une unité, du type du vol s'il en a un
   });
@@ -3222,7 +4033,15 @@ const ACTIONS = {
   'add-unit': c => { const us = S.flights[c.fi].units; us.push(newUnit(us[us.length - 1].type)); renderLeft(); refreshAll(); },
   'rm-unit': c => removeUnit(c.fi, c.ui),
   'fold-unit': c => { const u = S.flights[c.fi].units[c.ui]; u.folded = !u.folded; paintUnitFold(c.fi, c.ui); saveWork(); },
-  'rm-route': c => { S.flights[c.fi].route = null; renderLeft(); refreshAll(); },
+  'route-pick': c => routePick(c.b.getAttribute('data-rid')),
+  'route-change': () => { const su = selUnit(); if (su) { UI.rtChoose = su.f.fcId; renderRouteBlock(); } },
+  'route-keep': () => { UI.rtChoose = null; renderRouteBlock(); },
+  'route-remove': () => { const su = selUnit(); if (su) { su.f.route = null; delete su.f.routeLink; UI.rtChoose = null; routeChanged(); } },
+  'see-route': c => {
+    if (S.sel.f !== c.fi) selectUnit(c.fi, 0);
+    const b = document.getElementById('blk-route');
+    if (b) b.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  },
   'copy-radios': c => { const f = S.flights[c.fi], src = f.units[c.ui]; f.units.forEach((u, k) => { if (k !== c.ui && u.type === src.type) u.radios = clone(src.radios); }); renderLeft(); refreshAll(); },
   'see-cmp': c => { selectUnit(c.fi, c.ui); const b = document.getElementById('blk-cmp'); if (b && window.innerWidth < 1100) b.scrollIntoView({ block: 'start', behavior: 'smooth' }); },
   'back-unit': () => backToUnit(),
@@ -3257,7 +4076,7 @@ function onInput(e) {
   if (k === 'cmp-name') { UI.cmp.name = el.value; return; }
   const fe = el.closest('.fc-flight'), fi = fe ? Number(fe.getAttribute('data-f')) : -1, f = S.flights[fi];
   const u = f && el.hasAttribute('data-u') ? f.units[Number(el.getAttribute('data-u'))] : null;
-  if (k === 'name') { f.name = el.value; paintFlightName(f, fi, fe); paintCmpNames(); }
+  if (k === 'name') { f.name = el.value; paintFlightName(f, fi, fe); paintCmpNames(); if (fi === S.sel.f) renderRouteBlock(); }
   else if (k === 'uname') { u.name = el.value; paintCmpNames(); }
   else if (k === 'callsign') u.callsign = el.value;
   else if (k === 'onboard') u.onboard = el.value;
@@ -3346,12 +4165,12 @@ function onChange(e) {
   if (el.id === 'cmp-sym') { UI.cmp.sym = el.checked; cmpUpdate(); return; }
   if (el.classList && el.classList.contains('cmp-sel')) { cmpChoose(el.getAttribute('data-st'), el.value); return; }
   if (!k) return;
-  if (k === 'theatre') { S.theatre = el.value; refreshAll(); return; }
+  if (k === 'theatre') { S.theatre = el.value; renderRouteBlock(); paintRouteLines(); refreshAll(); return; }
   if (k === 'fuel-bar') return;
   if (LO_FIELDS.indexOf(k) >= 0) { commitLoadoutField(k, el); return; }
   const fe = el.closest('.fc-flight'), f = fe && S.flights[Number(fe.getAttribute('data-f'))];
   if (k === 'utype') changeUnitType(f, Number(fe.getAttribute('data-f')), Number(el.getAttribute('data-u')), el);
-  else if (k === 'coalition') { f.coalition = el.value; refreshAll(); }
+  else if (k === 'coalition') { f.coalition = el.value; if (S.flights.indexOf(f) === S.sel.f) renderRouteBlock(); refreshAll(); }
 }
 function onToggle(e) {
   const d = e.target, key = d && d.getAttribute && d.tagName === 'DETAILS' ? d.getAttribute('data-key') : null;
@@ -3459,9 +4278,13 @@ function init() {
   bindToolbar();
   bindImportWindow();
   fnBind();                 // la fenêtre « Nom du fichier »
+  const taken = routeSync();      // à l'ouverture : les routes liées reprennent ce que le Route Planner a changé depuis
+  if (taken.changed) writeState();
   renderAll();
+  if (taken.changed) showToast(taken.toast, 4500);
   window.addEventListener('pagehide', flushWork);
-  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushWork(); else UI.hq = undefined; });
+  window.addEventListener('storage', routeStorage);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushWork(); else { UI.hq = undefined; routeTakeover(); } });
 }
 init();
 """
@@ -3495,7 +4318,8 @@ def build_html():
                   .replace('@@STARDOS_400@@', A['STARDOS_400'])
                   .replace('@@STARDOS_700@@', A['STARDOS_700'])
                   .replace('@@OSWALD_500@@', A['OSWALD_500']))
-    js = build_radio_block() + '\n' + tables_js() + '\n' + build_payload_block() + '\n' + JS_TBM + '\n' + app_js()
+    js = (build_radio_block() + '\n' + tables_js() + '\n' + build_payload_block() + '\n' + PAD2_JS + '\n' + COORD_BLOCK + READNUM_BLOCK + build_magvar_block() + '\n' + build_projection_block() + '\n'
+          + build_route_pack_block() + '\n' + JS_TBM + '\n' + app_js())
     return ('<!DOCTYPE html>\n<html lang="fr">\n<head>\n<meta charset="UTF-8">\n'
             '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">\n'
             '<meta name="theme-color" content="#1a1e10">\n<title>Flight Configurator</title>\n<style>\n'
@@ -3555,6 +4379,9 @@ def check(html):
     ok(not re.search(r'fetch\(|XMLHttpRequest|WebSocket|sendBeacon|<script[^>]*\bsrc=|<link[^>]*href=["\']http', own), 'aucune requête réseau (hors JSZip, qui n\'en fait pas)')
     ok(not re.search(r'font-weight:\s*(600|800|900|bold)|font:\s*(600|800|900|bold)\b', own), 'aucune graisse sans sa face (R295)')
     ok('/* ===== POSTES RADIO (COMME AU COCKPIT) ===== */' in html and '/* ===== EMPORT (PRESETS ET PAYLOAD) ===== */' in html, 'blocs partagés présents')
+    for label, blk in (('déclinaison', build_magvar_block()), ('projections', build_projection_block()), ('points de paquet', build_route_pack_block())):
+        ok(blk in html, 'bloc %s inséré tel quel' % label)
+    ok(COORD_BLOCK + READNUM_BLOCK in html and hashlib.sha256(COORD_BLOCK.encode('utf-8')).hexdigest()[:16] == COORD_SHA16, 'bloc de coordonnées inséré tel quel, empreinte %s' % COORD_SHA16)
     if bad:
         sys.exit(1)
 

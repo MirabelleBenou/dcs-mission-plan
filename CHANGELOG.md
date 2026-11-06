@@ -42,6 +42,7 @@ Changes merged since the last release, grouped per tool.
 ### Flight Configurator
 #### Added
 - **Flight Configurator**, a new module: a Flight Lead prepares a flight (identity, radios, loadout built on the aircraft's front view or started from the squadron's presets, livery) and exports it as a flight package that HQ applies to the Mission Commander's mission. Each aircraft of a flight has its own type, so a flight can mix types; flight names must be unique per side before export.
+- A **Route** block above the loadout: pick one of the Route Planner's routes for the group (one route per group), then see it as a paper sketch — waypoints, names, numbered legs — with each leg's magnetic heading and distance in NM. When the route changes in the Route Planner, the group follows it; if it is deleted there, the last copy is kept.
 
 ### Recon Station
 #### Added
@@ -79,6 +80,7 @@ Changes merged since the last release, grouped per tool.
 - Units are chosen from a **Units** menu in the top bar, like the **Display** menu (distance km or NM, altitude m or ft); the Map and Theatre lists are as wide as the option chosen, so the top bar is about 300 px narrower.
 - The example loads in the interface language (French or English).
 - **Open** and **Flight package** also read a flight package in a .zip; a flight without route says *no route*; a refused file says why.
+- Each route now has a stable identifier in the route set (saved files included), so other tools can follow it.
 #### Fixed
 - Computed magnetic variation now follows DCS for every mission date: years up to 1985 use the IGRF model DCS ships (up to 1.2° closer), later years the previous five-year WMM file, as DCS does (0.2° closer in 1990, 1995 … 2025).
 
