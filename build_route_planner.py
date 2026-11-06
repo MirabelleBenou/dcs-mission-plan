@@ -1327,7 +1327,7 @@ __CSS__
           <label class="lbl" for="route-name" data-i18n="f.name">Nom de la route</label>
           <input class="in" id="route-name" type="text" maxlength="60" autocomplete="off" spellcheck="false">
           <p class="rs-flight" id="rs-flight"></p>
-          <div class="rs-btns"><button type="button" class="tb-btn" id="rs-link" data-i18n="rs.link">Lier à un vol…</button><button type="button" class="tb-btn" id="rs-unlink" data-i18n="rs.unlink">Délier</button></div>
+          <div class="rs-btns"><button type="button" class="tb-btn" id="rs-link" data-i18n="rs.link">Lier à un groupe…</button><button type="button" class="tb-btn" id="rs-unlink" data-i18n="rs.unlink">Délier</button></div>
         </div>
         <div class="pt-head pts"><span data-i18n="th.no">N°</span><span data-i18n="th.name">Nom</span><span id="alt-unit"></span><span id="spd-unit"></span><span data-i18n="th.ref">Réf.</span><span></span></div>
         <div id="pts"></div>
@@ -1519,7 +1519,7 @@ __CSS__
       <div class="nm"><label class="lbl" for="hq-name" data-i18n="hq.name">Nom</label><input class="in" id="hq-name" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
     </div>
     <div class="rt-tools" id="hq-tools">
-      <button type="button" class="rt-btn" id="hq-check" data-i18n="hq.checkShown">Cocher les vols affichés</button>
+      <button type="button" class="rt-btn" id="hq-check" data-i18n="hq.checkShown">Cocher les groupes affichés</button>
       <button type="button" class="rt-btn" id="hq-uncheck" data-i18n="hq.uncheck">Tout décocher</button>
       <span class="rt-cnt" id="hq-cnt" aria-live="polite"></span>
     </div>
@@ -1539,7 +1539,7 @@ __CSS__
     <button type="button" class="rt-close" id="pk-close" data-i18n-aria-label="modal.close" aria-label="Fermer">&times;</button>
     <h2 id="pk-title" data-i18n="pk.title">Paquet de vol</h2>
     <div class="fn-field"><label class="lbl" for="pk-fname" data-i18n="fn.label">Nom du fichier</label><div class="fn-row"><input class="in" id="pk-fname" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="100"><span class="fn-ext">.json</span></div></div>
-    <p class="rt-note" data-i18n="pk.note">Cochez les routes à exporter : chacune devient un vol du paquet, que HQ applique à la mission.</p>
+    <p class="rt-note" data-i18n="pk.note">Cochez les routes à exporter : chacune devient un groupe du paquet, que HQ applique à la mission.</p>
     <div class="rt-list" id="pk-list"></div>
     <div class="rt-actions">
       <button type="button" class="rt-btn" id="pk-cancel" data-i18n="rt.cancel">Annuler</button>
@@ -2357,16 +2357,16 @@ const I18N = {
     'rs.dup': 'Dupliquer',
     'rs.del': 'Supprimer',
     'rs.hq': '⇣ Depuis HQ',
-    'rs.link': 'Lier à un vol…',
+    'rs.link': 'Lier à un groupe…',
     'rs.unlink': 'Délier',
-    'rs.flight': 'Vol lié',
-    'rs.noflight': 'Aucun vol lié',
+    'rs.flight': 'Groupe lié',
+    'rs.noflight': 'Aucun groupe lié',
     'rs.unnamed': 'Sans nom',
     'rs.copy': '{name} (copie)',
     'rs.hq.off.none': 'Aucune mission n\'est chargée dans HQ.',
     'rs.hq.off.theatre': 'Le théâtre de la mission de HQ ({th}) n\'a pas de projection.',
     'hq.title': 'Depuis HQ',
-    'hq.link.title': 'Lier à un vol',
+    'hq.link.title': 'Lier à un groupe',
     'hq.file': 'Mission chargée dans HQ : {f} · {th}',
     'hq.warn': 'Cette mission est sur {th}, le Route Planner sur {cur} : importer passe au théâtre {th} et supprime les routes existantes.',
     'hq.warn.link': 'Cette mission est sur {th}, le Route Planner sur {cur} : lier passe au théâtre {th} et supprime les routes existantes.',
@@ -2376,15 +2376,15 @@ const I18N = {
     'hq.red': 'Rouge',
     'hq.blue': 'Bleu',
     'hq.neutral': 'Neutre',
-    'hq.none': 'Aucun vol ne correspond.',
-    'hq.pkg.noFlights': 'Le paquet ne contient aucun vol.',
-    'hq.noFlights': 'La mission ne contient aucun vol.',
+    'hq.none': 'Aucun groupe ne correspond.',
+    'hq.pkg.noFlights': 'Le paquet ne contient aucun groupe.',
+    'hq.noFlights': 'La mission ne contient aucun groupe.',
     'hq.pts': '{n} pts',
     'hq.pts.1': '{n} pt',
     'hq.type': 'Type',
-    'hq.checkShown': 'Cocher les vols affichés',
+    'hq.checkShown': 'Cocher les groupes affichés',
     'hq.uncheck': 'Tout décocher',
-    'hq.shown': '{n} / {total} vols affichés',
+    'hq.shown': '{n} / {total} groupes affichés',
     'hq.pkg.title': 'Depuis un paquet de vol',
     'hq.pkg.file': 'Paquet : {f} · {th}',
     'hq.noroute': 'sans route',
@@ -2396,9 +2396,9 @@ const I18N = {
     'rej.unknown': 'inconnu',
     'rej.incomplete': 'Fichier « {x} » incomplet : aucune route à points.',
     'rej.noTheatre': 'Le paquet n\'a pas de théâtre.',
-    'rej.noFlight': 'Le paquet ne contient aucun vol.',
-    'rej.skip.1': '{n} vol illisible ignoré.',
-    'rej.skip.n': '{n} vols illisibles ignorés.',
+    'rej.noFlight': 'Le paquet ne contient aucun groupe.',
+    'rej.skip.1': '{n} groupe illisible ignoré.',
+    'rej.skip.n': '{n} groupes illisibles ignorés.',
     'fmt.route': 'route',
     'fmt.set': 'jeu de routes',
     'fmt.pkg': 'paquet de vol',
@@ -2406,17 +2406,17 @@ const I18N = {
     'fmt.rt': 'Route Tool',
     'err.pkTheatre': 'Le théâtre du paquet ({th}) n\'a pas de projection.',
     'hq.in': 'déjà en route {n}',
-    'hq.go.1': 'Importer {n} vol',
-    'hq.go.n': 'Importer {n} vols',
+    'hq.go.1': 'Importer {n} groupe',
+    'hq.go.n': 'Importer {n} groupes',
     'hq.go.link': 'Lier',
-    'hq.limit': '12 routes au plus : retirez {n} vol(s) de la sélection.',
+    'hq.limit': '12 routes au plus : retirez {n} groupe(s) de la sélection.',
     'pk.btn': '📦 Paquet de vol',
     'pk.title': 'Paquet de vol',
-    'pk.note': 'Cochez les routes à exporter : chacune devient un vol du paquet, que HQ applique à la mission.',
-    'pk.off.unlinked': 'liez-la d\'abord à un vol',
+    'pk.note': 'Cochez les routes à exporter : chacune devient un groupe du paquet, que HQ applique à la mission.',
+    'pk.off.unlinked': 'liez-la d\'abord à un groupe',
     'pk.off.empty': 'route vide',
     'pk.off.theatre': 'Le théâtre {th} n\'a pas de projection.',
-    'pk.same': 'même vol que la route {n}',
+    'pk.same': 'même groupe que la route {n}',
     'pk.go.1': 'Exporter {n} route',
     'pk.go.n': 'Exporter {n} routes',
     'confirm.routeDel': 'Supprimer la route « {name} » et ses points ?',
@@ -2430,8 +2430,8 @@ const I18N = {
     'toast.hqTrunc': '{name} : tronquée à 30 points',
     'toast.dcsKept': 'source DCS non gardée : {n} point(s)',
     'toast.saveFail': 'Enregistrement local impossible (espace plein)',
-    'toast.pkExported.1': '📦 {n} vol exporté ✓',
-    'toast.pkExported.n': '📦 {n} vols exportés ✓',
+    'toast.pkExported.1': '📦 {n} groupe exporté ✓',
+    'toast.pkExported.n': '📦 {n} groupes exportés ✓',
     'toast.savedAll': 'Routes enregistrées ✓',
     'cf.exp.routes': 'Les routes',
     'cf.exp.routesN': '{n} routes · {p} points · {m} réf.',
@@ -2871,16 +2871,16 @@ const I18N = {
     'rs.dup': 'Duplicate',
     'rs.del': 'Delete',
     'rs.hq': '⇣ From HQ',
-    'rs.link': 'Link to a flight…',
+    'rs.link': 'Link to a group…',
     'rs.unlink': 'Unlink',
-    'rs.flight': 'Linked flight',
-    'rs.noflight': 'No linked flight',
+    'rs.flight': 'Linked group',
+    'rs.noflight': 'No linked group',
     'rs.unnamed': 'Unnamed',
     'rs.copy': '{name} (copy)',
     'rs.hq.off.none': 'No mission is loaded in HQ.',
     'rs.hq.off.theatre': 'The theatre of the HQ mission ({th}) has no projection.',
     'hq.title': 'From HQ',
-    'hq.link.title': 'Link to a flight',
+    'hq.link.title': 'Link to a group',
     'hq.file': 'Mission loaded in HQ: {f} · {th}',
     'hq.warn': 'This mission is on {th}, the Route Planner on {cur}: importing switches to the {th} theatre and deletes the existing routes.',
     'hq.warn.link': 'This mission is on {th}, the Route Planner on {cur}: linking switches to the {th} theatre and deletes the existing routes.',
@@ -2890,15 +2890,15 @@ const I18N = {
     'hq.red': 'Red',
     'hq.blue': 'Blue',
     'hq.neutral': 'Neutral',
-    'hq.none': 'No flight matches.',
-    'hq.pkg.noFlights': 'The package contains no flight.',
-    'hq.noFlights': 'The mission has no flights.',
+    'hq.none': 'No group matches.',
+    'hq.pkg.noFlights': 'The package contains no group.',
+    'hq.noFlights': 'The mission has no groups.',
     'hq.pts': '{n} pts',
     'hq.pts.1': '{n} pt',
     'hq.type': 'Type',
-    'hq.checkShown': 'Check shown flights',
+    'hq.checkShown': 'Check shown groups',
     'hq.uncheck': 'Uncheck all',
-    'hq.shown': '{n} / {total} flights shown',
+    'hq.shown': '{n} / {total} groups shown',
     'hq.pkg.title': 'From a flight package',
     'hq.pkg.file': 'Package: {f} · {th}',
     'hq.noroute': 'no route',
@@ -2910,9 +2910,9 @@ const I18N = {
     'rej.unknown': 'unknown',
     'rej.incomplete': 'Incomplete "{x}" file: no route with points.',
     'rej.noTheatre': 'The package has no theatre.',
-    'rej.noFlight': 'The package contains no flight.',
-    'rej.skip.1': '{n} unreadable flight skipped.',
-    'rej.skip.n': '{n} unreadable flights skipped.',
+    'rej.noFlight': 'The package contains no group.',
+    'rej.skip.1': '{n} unreadable group skipped.',
+    'rej.skip.n': '{n} unreadable groups skipped.',
     'fmt.route': 'route',
     'fmt.set': 'route set',
     'fmt.pkg': 'flight package',
@@ -2920,17 +2920,17 @@ const I18N = {
     'fmt.rt': 'Route Tool',
     'err.pkTheatre': 'The package theatre ({th}) has no projection.',
     'hq.in': 'already in route {n}',
-    'hq.go.1': 'Import {n} flight',
-    'hq.go.n': 'Import {n} flights',
+    'hq.go.1': 'Import {n} group',
+    'hq.go.n': 'Import {n} groups',
     'hq.go.link': 'Link',
-    'hq.limit': 'At most 12 routes: remove {n} flight(s) from the selection.',
+    'hq.limit': 'At most 12 routes: remove {n} group(s) from the selection.',
     'pk.btn': '📦 Flight package',
     'pk.title': 'Flight package',
-    'pk.note': 'Check the routes to export: each becomes a flight of the package, which HQ applies to the mission.',
-    'pk.off.unlinked': 'link it to a flight first',
+    'pk.note': 'Check the routes to export: each becomes a group of the package, which HQ applies to the mission.',
+    'pk.off.unlinked': 'link it to a group first',
     'pk.off.empty': 'empty route',
     'pk.off.theatre': 'The {th} theatre has no projection.',
-    'pk.same': 'same flight as route {n}',
+    'pk.same': 'same group as route {n}',
     'pk.go.1': 'Export {n} route',
     'pk.go.n': 'Export {n} routes',
     'confirm.routeDel': 'Delete the route "{name}" and its points?',
@@ -2944,8 +2944,8 @@ const I18N = {
     'toast.hqTrunc': '{name}: cut to 30 points',
     'toast.dcsKept': 'DCS source not kept: {n} point(s)',
     'toast.saveFail': 'Cannot save locally (storage full)',
-    'toast.pkExported.1': '📦 {n} flight exported ✓',
-    'toast.pkExported.n': '📦 {n} flights exported ✓',
+    'toast.pkExported.1': '📦 {n} group exported ✓',
+    'toast.pkExported.n': '📦 {n} groups exported ✓',
     'toast.savedAll': 'Routes saved ✓',
     'cf.exp.routes': 'The routes',
     'cf.exp.routesN': '{n} routes · {p} waypoints · {m} ref.',
@@ -8333,7 +8333,7 @@ function pkRows() {
 function pkName(idxs) {
   const r = RSET.routes[idxs[0]];
   const base = r.name !== '' ? r.name : r.flight.groupName;
-  return 'paquet_' + (cleanFname(base).slice(0, 40) || 'vol') + (idxs.length > 1 ? '_+' + (idxs.length - 1) : '');
+  return 'paquet_' + (cleanFname(base).slice(0, 40) || 'groupe') + (idxs.length > 1 ? '_+' + (idxs.length - 1) : '');
 }
 
 function pkRender() {
