@@ -23,7 +23,7 @@ from payload_block import build_block as build_payload_block
 from radio_block import build_block as build_radio_block
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-APP_VERSION = "0.1.0"
+APP_VERSION = "0.1.1"
 
 with open(os.path.join(HERE, 'assets.json')) as _f:
     A = json.load(_f)
@@ -136,6 +136,7 @@ I18N_FR = {
 
     'cmp.credit': 'Illustration : Goldwolf, DCS Reference Guide — avec son accord',
     'cmp.mirror': '↔ station jumelle : {0}',
+    'cmp.noMirror': '↔ pas d\'équivalent sur la station jumelle {0}',
     'cmp.back': '↑ Retour à l’unité',
     'cmp.note': 'Un réglage d’arme (code laser, fusée…) suit sa station tant que l’arme n’est pas changée. Une valeur hors limites est ramenée au maximum de l’appareil.',
     'cmp.noview': 'Pas de vue de face pour ce type : la liste des stations.',
@@ -352,6 +353,7 @@ I18N_EN = {
 
     'cmp.credit': 'Illustration: Goldwolf, DCS Reference Guide — used with permission',
     'cmp.mirror': '↔ twin station: {0}',
+    'cmp.noMirror': '↔ no equivalent on twin station {0}',
     'cmp.back': '↑ Back to the unit',
     'cmp.note': 'A weapon setting (laser code, fuze…) follows its station as long as the weapon is not changed. A loadout setting out of range is brought back to the aircraft maximum.',
     'cmp.noview': 'No front view for this type: the station list.',
@@ -982,7 +984,7 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
 .cmp-row > .cmp-kg { grid-column: 3; grid-row: 1; text-align: right; font-family: var(--f-typewriter); font-size: 12px; color: var(--paper); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .cmp-row > .cmp-sub { grid-column: 2 / 4; grid-row: 2; }
 .cmp-sub { display: flex; align-items: center; flex-wrap: wrap; gap: 2px 10px; font-family: var(--f-typewriter); font-size: 11px; color: var(--khaki-light); }
-.cmp-sub[hidden], .cmp-mirror[hidden] { display: none; }
+.cmp-sub[hidden], .cmp-mirror[hidden], .cmp-nomirror[hidden] { display: none; }
 /* une arme au nom long passe sur deux lignes au lieu d'être coupée */
 .cmp-row .fc-sel.tbm-trigger.tbm-field { display: flex; align-items: center; line-height: 1.25; padding-top: 5px; padding-bottom: 5px; min-height: 40px; }
 .cmp-row .fc-sel.tbm-trigger.tbm-field .tbm-lbl { line-height: 1.25; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; text-overflow: clip; }
@@ -2024,6 +2026,9 @@ function cmpShort(clsid) {
   return head || full;
 }
 function cmpNum(n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, CURRENT_LANG === 'fr' ? ' ' : ','); }
+// Les stations dont le dernier choix n'a pas d'équivalent sur la jumelle : { station: CLSID choisi }, par emport (non gardé, non exporté).
+const CMP_NOMIRROR = new WeakMap();
+function cmpNoMirror(lo, n, clsid) { const m = CMP_NOMIRROR.get(lo); return !!m && clsid !== '' && m[n] === clsid; }
 function cmpClsid(lo, n) { return lo && lo.pylons[n] && lo.pylons[n].CLSID ? String(lo.pylons[n].CLSID) : ''; }
 
 function renderRight() {
@@ -2083,7 +2088,7 @@ function cmpRowHtml(p, lo) {
   opts += p.allowed.map(c => `<option value="${esc(c)}">${esc(payloadWeaponName(c) || c)}</option>`).join('');
   return `<div class="cmp-row" data-st="${esc(p.n)}"><span class="sn">${esc(p.n)}</span>
     <select class="fc-sel cmp-sel" data-st="${esc(p.n)}" aria-label="${esc(tf('lo.pylon', p.n))}">${opts}</select>
-    <span class="cmp-kg"></span><div class="cmp-sub">${pair !== null ? `<span class="cmp-mirror">${esc(tf('cmp.mirror', pair))}</span>` : ''}</div></div>`;
+    <span class="cmp-kg"></span><div class="cmp-sub">${pair !== null ? `<span class="cmp-mirror">${esc(tf('cmp.mirror', pair))}</span><span class="cmp-nomirror" hidden>${esc(tf('cmp.noMirror', pair))}</span>` : ''}</div></div>`;
 }
 function cmpSettingsHtml(f, ui, lo) {
   const d = payloadDefaults(f.type), at = `data-u="${ui}"`;
@@ -2114,17 +2119,18 @@ function cmpUpdate() {
     if (mass === null) unknown = true; else total += mass;
     row.querySelector('.cmp-kg').textContent = clsid === '' ? '' : (mass === null ? '—' : cmpNum(mass) + ' kg');
     row.classList.toggle('sel', C.st === n);
-    cmpUpdateSub(row, lo && lo.pylons[n] && lo.pylons[n].settings !== undefined);
+    cmpUpdateSub(row, lo && lo.pylons[n] && lo.pylons[n].settings !== undefined, !!lo && cmpNoMirror(lo, n, clsid));
     cmpUpdateCell(blk.querySelector(`.cmp-st[data-st="${n}"]`), clsid, C.st === n);
   });
   document.getElementById('cmp-total').innerHTML = `${esc(t('cmp.mass'))} <b>${esc(cmpNum(total) + ' kg' + (unknown ? ' + ?' : ''))}</b>`;
   cmpDraw();
 }
 // La ligne sous la liste : la station jumelle n'y figure que si « Symétrique » est cochée ; la puce « réglages » quand l'arme en porte.
-function cmpUpdateSub(row, hasSettings) {
-  const mirror = row.querySelector('.cmp-mirror'), sub = row.querySelector('.cmp-sub');
+function cmpUpdateSub(row, hasSettings, noMirror) {
+  const mirror = row.querySelector('.cmp-mirror'), none = row.querySelector('.cmp-nomirror'), sub = row.querySelector('.cmp-sub');
   let chip = row.querySelector('.fc-chip');
-  if (mirror) mirror.hidden = !UI.cmp.sym;
+  if (mirror) mirror.hidden = !UI.cmp.sym || !!noMirror;
+  if (none) none.hidden = !UI.cmp.sym || !noMirror;
   if (hasSettings && !chip) { chip = document.createElement('span'); chip.className = 'fc-chip'; chip.textContent = t('cmp.settings'); sub.appendChild(chip); }
   else if (!hasSettings && chip) chip.remove();
   sub.hidden = !Array.prototype.some.call(sub.children, e => !e.hidden);
@@ -2156,8 +2162,8 @@ function cmpDraw() {
 }
 
 // ----- Choisir une arme, partir d'un preset, garder un preset -----
-// Un choix sur une station ; « Symétrique » le pose aussi sur sa jumelle quand elle le permet. « Vide » ne se pose sur la jumelle que si elle portait,
-// juste avant ce choix, la même arme. Un `settings` suit sa station tant que l'arme ne change pas.
+// Un choix sur une station ; « Symétrique » pose aussi sur sa jumelle l'arme miroir (payloadMirrorClsid : même CLSID, Left↔Right, même nom), et dit quand il n'y en a pas.
+// « Vide » ne se pose sur la jumelle que si elle portait, juste avant ce choix, le miroir de l'arme d'avant. Un `settings` suit sa station tant que l'arme ne change pas.
 function cmpChoose(n, clsid) {
   const su = selUnit();
   if (!su) return;
@@ -2171,7 +2177,18 @@ function cmpChoose(n, clsid) {
   put(n, clsid);
   UI.cmp.st = n;
   const twin = (UI.cmp.sym && CMP.view && has(CMP.pairs, n)) ? CMP.pyl.filter(x => x.n === CMP.pairs[n])[0] : null;
-  if (twin && (clsid === '' ? (before !== '' && cmpClsid(lo, twin.n) === before) : twin.allowed.indexOf(clsid) >= 0)) put(twin.n, clsid);
+  const nm = CMP_NOMIRROR.get(lo) || {};
+  delete nm[n];
+  if (twin) {
+    if (clsid === '') {
+      const was = payloadMirrorClsid(before, twin.allowed);
+      if (was !== '' && cmpClsid(lo, twin.n) === was) put(twin.n, '');
+    } else {
+      const m = payloadMirrorClsid(clsid, twin.allowed);
+      if (m !== '') put(twin.n, m); else nm[n] = clsid;
+    }
+  }
+  CMP_NOMIRROR.set(lo, nm);
   lo.modified = lo.key !== '~empty';
   if (created) {
     renderRight();

@@ -74,6 +74,22 @@ function payloadWeaponMass(clsid) {
   return (w === null || w === undefined) ? null : w;
 }
 
+// Symétrie : le CLSID à poser sur la station jumelle pour le choix `clsid` ; '' s'il n'y a rien à poser. allowedOnTwin : les CLSID permis sur la jumelle.
+// Dans l'ordre : le même CLSID, s'il est permis ; sinon celui où Left↔Right (LEFT↔RIGHT, _L↔_R en fin de mot) sont échangés, s'il est permis ;
+// sinon l'unique arme permise de même nom (payloadWeaponName) ; sinon ''. Fonction pure : ni DOM, ni t(), ni stockage.
+function payloadMirrorClsid(clsid, allowedOnTwin) {
+  if (clsid === '' || clsid === undefined || clsid === null) return '';
+  const allowed = Array.isArray(allowedOnTwin) ? allowedOnTwin : [];
+  if (allowed.indexOf(clsid) >= 0) return clsid;
+  const swap = { Left: 'Right', Right: 'Left', LEFT: 'RIGHT', RIGHT: 'LEFT' };
+  const swapped = String(clsid).replace(/Left|Right|LEFT|RIGHT/g, m => swap[m]).replace(/_([LR])(?![A-Za-z0-9])/g, (m, c) => '_' + (c === 'L' ? 'R' : 'L'));
+  if (swapped !== clsid && allowed.indexOf(swapped) >= 0) return swapped;
+  const name = payloadWeaponName(clsid);
+  if (name === null || name === '') return '';
+  const same = allowed.filter(c => payloadWeaponName(c) === name);
+  return same.length === 1 ? same[0] : '';
+}
+
 // Réglages par défaut hors pylônes : carburant maximum, leurres et paillettes de AIRCRAFT_LIMITS, canon plein.
 function payloadDefaults(type) {
   const l = AIRCRAFT_LIMITS[type];
