@@ -384,7 +384,6 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
 .fc-row3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
 .fc-row4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
 .fc-row > *, .fc-row3 > *, .fc-row4 > *, .fc-set > * { min-width: 0; }
-.fc-fname { font-family: var(--f-typewriter); font-size: 12px; color: var(--paper); min-height: 44px; display: flex; align-items: center; word-break: break-all; padding: 0 2px; }
 .pk-note { font-family: var(--f-typewriter); font-size: 11px; color: var(--khaki-light); margin: 0; }
 .pk-warn { font-family: var(--f-typewriter); font-size: 11px; color: var(--pk-warn); margin-top: 6px; word-break: break-word; }
 .snap-flight-tag { font-family: var(--f-ui); font-size: 10px; padding: 2px 6px; border-radius: 2px; background: var(--olive); color: var(--paper-light); text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; }
@@ -476,6 +475,8 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
 .fc-ch { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .fc-ch > label { font-family: var(--f-ui); font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--khaki-light); }
 .fc-lo-sum { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(128,116,84,.45); }
+.fc-see { background: none; border: 0; padding: 6px 2px; min-height: 34px; font-family: var(--f-typewriter); font-size: 12px; color: var(--fc); text-decoration: underline; cursor: pointer; }
+@media (min-width: 1100px) { .fc-see { display: none; } }
 .fc-lo-k { font-family: var(--f-stencil); font-size: 12px; letter-spacing: 1.5px; color: var(--amber); text-transform: uppercase; }
 .fc-lo-v { font-family: var(--f-typewriter); font-size: 12px; color: var(--paper); flex: 1 1 160px; min-width: 0; word-break: break-word; }
 
@@ -7729,7 +7730,7 @@ const I18N = {
   "tb.save.tip": "Enregistrer le travail en cours (JSON : le paquet et les réglages du module)",
   "tb.import": "Importer",
   "tb.import.s": "Import.",
-  "tb.import.tip": "Importer des vols, des routes, des radios, des emports depuis la mission chargée dans HQ ou un paquet de vol",
+  "tb.import.tip": "Importer des groupes, des routes, des radios, des emports depuis la mission chargée dans HQ ou un paquet de vol",
   "tb.export": "Exporter",
   "tb.export.s": "Export.",
   "tb.export.tip": "Exporter le paquet de vol pour le Mission Commander",
@@ -7740,22 +7741,21 @@ const I18N = {
   "bar.clamped": "{0} réglage(s) d’emport ramené(s) à la limite de l’appareil.",
   "bar.bad.freq": "Export impossible : {0} fréquence(s) à corriger dans les radios.",
   "bar.no.theatre": "Export impossible : choisissez un théâtre (liste « Théâtre », ou importez un paquet).",
-  "bar.no.flight": "Export impossible : ajoutez au moins un vol.",
-  "bar.no.name": "Export impossible : le vol {0} n’a pas de nom.",
+  "bar.no.flight": "Export impossible : ajoutez au moins un groupe.",
+  "bar.no.name": "Export impossible : le groupe {0} n’a pas de nom.",
   "pkg.theatre": "Théâtre",
   "pkg.theatre.none": "— à choisir —",
-  "pkg.fname": "Fichier exporté",
-  "sec.flights": "VOLS",
+  "sec.flights": "GROUPES",
   "sec.cmp": "EMPORT",
   "sec.presets": "MES PRESETS",
-  "fl.title": "Vol {0}",
-  "fl.add": "+ Ajouter un vol",
-  "fl.fold": "Replier le vol",
-  "fl.unfold": "Déplier le vol",
+  "fl.title": "Groupe {0}",
+  "fl.add": "+ Ajouter un groupe",
+  "fl.fold": "Replier le groupe",
+  "fl.unfold": "Déplier le groupe",
   "fl.foldall": "Tout replier",
   "fl.unfoldall": "Tout déplier",
-  "fl.remove": "Retirer ce vol",
-  "fl.empty": "Aucun vol. Ajoutez-en un, ou importez-en depuis la barre du haut.",
+  "fl.remove": "Retirer ce groupe",
+  "fl.empty": "Aucun groupe. Ajoutez-en un, ou importez-en depuis la barre du haut.",
   "fl.name": "Nom du groupe",
   "fl.name.ph": "Hind 1",
   "fl.type": "Appareil",
@@ -7784,14 +7784,14 @@ const I18N = {
   "u.radios.set": "{0} canaux réglés",
   "u.loadout": "Emport",
   "u.loadout.none": "non renseigné — HQ n’y touchera pas",
-  "u.compose": "Composer l’emport",
+  "u.see": "Voir l’emport ↓",
   "rad.chans": "{0} canaux",
   "rad.ch": "CH {0}",
   "rad.hint": "Fréquences en MHz, de 0 à 999,999 (virgule ou point). Les modulations ne sont pas écrites. Un canal vide n’est pas écrit.",
   "rad.err.nan": "Canal {0} : « {1} » n’est pas une fréquence.",
   "rad.err.range": "Canal {0} : {1} MHz hors de la plage ({2} à {3} MHz).",
   "rad.err.more": " (+ {0} autre(s))",
-  "rad.copy": "Recopier sur les autres unités du vol",
+  "rad.copy": "Recopier sur les autres unités du groupe",
   "cmp.for": "{0} · {1}",
   "cmp.from": "Partir de",
   "cmp.from.none": "— non renseigné —",
@@ -7808,7 +7808,7 @@ const I18N = {
   "cmp.back": "↑ Retour à l’unité",
   "cmp.note": "Un réglage d’arme (code laser, fusée…) suit sa station tant que l’arme n’est pas changée. Une valeur hors limites est ramenée au maximum de l’appareil.",
   "cmp.noview": "Pas de vue de face pour ce type : la liste des stations.",
-  "cmp.pick": "Choisissez un vol et une unité : l’emport se compose ici.",
+  "cmp.pick": "Choisissez un groupe et une unité : l’emport se compose ici.",
   "cmp.mod": "modifié",
   "cmp.custom": "Emport composé",
   "cmp.settings": "réglages",
@@ -7856,11 +7856,11 @@ const I18N = {
   "imp.src.dg": "Datacard Generator",
   "imp.search": "Rechercher un groupe…",
   "imp.showoff": "Afficher les appareils non gérés",
-  "imp.checkshown": "Cocher les vols affichés",
+  "imp.checkshown": "Cocher les groupes affichés",
   "imp.uncheckall": "Tout décocher",
-  "imp.count": "{0} vols gérés sur {1}",
+  "imp.count": "{0} groupes gérés sur {1}",
   "imp.count.shown": "{0} affichés",
-  "imp.nomatch": "Aucun vol ne correspond.",
+  "imp.nomatch": "Aucun groupe ne correspond.",
   "sum.route": "route {0} pts",
   "sum.radios": "radios {0} canaux",
   "sum.radios.var": "radios variées",
@@ -7873,14 +7873,14 @@ const I18N = {
   "imp.hq.ok": "{0} · théâtre {1}",
   "imp.choose": "Choisir un fichier…",
   "imp.pkg.note": "Un paquet .json ou .zip (exporté par HQ, le Route Planner ou ce module).",
-  "imp.flights": "Vols à importer",
+  "imp.flights": "Groupes à importer",
   "imp.none": "Choisissez une source.",
   "imp.part.route": "Route",
   "imp.part.radios": "Radios",
   "imp.part.loadout": "Emport",
   "imp.part.livery": "Livrée",
-  "imp.new": "nouveau vol",
-  "imp.exists": "complète le vol du module",
+  "imp.new": "nouveau groupe",
+  "imp.exists": "complète le groupe du module",
   "imp.unsupported": "appareil non géré",
   "imp.units": "{0} unité(s)",
   "imp.theatre.keep": "Le théâtre du module ({0}) est conservé ; celui de la source est {1}.",
@@ -7888,20 +7888,20 @@ const I18N = {
   "imp.cancel": "Annuler",
   "imp.go": "Importer",
   "imp.close": "Fermer",
-  "imp.done": "{0} vol(s) importé(s).",
+  "imp.done": "{0} groupe(s) importé(s).",
   "rej.json": "Fichier illisible : ce n’est pas du JSON.",
   "rej.zip": "Archive illisible : pas de package.json à la racine.",
   "rej.noTheatre": "Le paquet n’a pas de théâtre.",
-  "rej.noFlight": "Aucun vol lisible dans ce fichier.",
-  "rej.noManaged": "Aucun vol d’un appareil géré ici (Mi-24P, Mi-8MT, F-4E, Mirage F1) dans ce paquet : rien n’a changé.",
+  "rej.noFlight": "Aucun groupe lisible dans ce fichier.",
+  "rej.noManaged": "Aucun groupe d’un appareil géré ici (Mi-24P, Mi-8MT, F-4E, Mirage F1) dans ce paquet : rien n’a changé.",
   "rej.format": "Format « {0} » non reconnu ici (attendu : {1}).",
   "rej.unknown": "inconnu",
-  "rej.skip": "{0} vol(s) illisible(s) ignoré(s).",
+  "rej.skip": "{0} groupe(s) illisible(s) ignoré(s).",
   "fmt.pkg": "paquet de vol",
   "open.bad": "Ce fichier n’est pas un fichier de travail ni un paquet de vol.",
-  "open.done": "Fichier ouvert : {0} vol(s).",
-  "open.ignored": "{0} vol(s) non géré(s) ignoré(s).",
-  "clear.confirm": "Vider le module ? Les vols, la route et l’emport en cours sont perdus (mes presets restent).",
+  "open.done": "Fichier ouvert : {0} groupe(s).",
+  "open.ignored": "{0} groupe(s) non géré(s) ignoré(s).",
+  "clear.confirm": "Vider le module ? Les groupes, la route et l’emport en cours sont perdus (mes presets restent).",
   "save.done": "Travail enregistré : {0}",
   "export.done": "Paquet exporté : {0}"
  },
@@ -7921,7 +7921,7 @@ const I18N = {
   "tb.save.tip": "Save the work in progress (JSON: the package and the module settings)",
   "tb.import": "Import",
   "tb.import.s": "Import",
-  "tb.import.tip": "Import flights, routes, radios, loadouts from the mission loaded in HQ or a flight package",
+  "tb.import.tip": "Import groups, routes, radios, loadouts from the mission loaded in HQ or a flight package",
   "tb.export": "Export",
   "tb.export.s": "Export",
   "tb.export.tip": "Export the flight package for the Mission Commander",
@@ -7932,22 +7932,21 @@ const I18N = {
   "bar.clamped": "{0} loadout setting(s) brought back to the aircraft limit.",
   "bar.bad.freq": "Cannot export: {0} frequency(ies) to fix in the radios.",
   "bar.no.theatre": "Cannot export: choose a theatre (the “Theatre” list, or import a package).",
-  "bar.no.flight": "Cannot export: add at least one flight.",
-  "bar.no.name": "Cannot export: flight {0} has no name.",
+  "bar.no.flight": "Cannot export: add at least one group.",
+  "bar.no.name": "Cannot export: group {0} has no name.",
   "pkg.theatre": "Theatre",
   "pkg.theatre.none": "— to choose —",
-  "pkg.fname": "Exported file",
-  "sec.flights": "FLIGHTS",
+  "sec.flights": "GROUPS",
   "sec.cmp": "LOADOUT",
   "sec.presets": "MY PRESETS",
-  "fl.title": "Flight {0}",
-  "fl.add": "+ Add a flight",
-  "fl.fold": "Fold the flight",
-  "fl.unfold": "Unfold the flight",
+  "fl.title": "Group {0}",
+  "fl.add": "+ Add a group",
+  "fl.fold": "Fold the group",
+  "fl.unfold": "Unfold the group",
   "fl.foldall": "Fold all",
   "fl.unfoldall": "Unfold all",
-  "fl.remove": "Remove this flight",
-  "fl.empty": "No flight. Add one, or import some from the top bar.",
+  "fl.remove": "Remove this group",
+  "fl.empty": "No group. Add one, or import some from the top bar.",
   "fl.name": "Group name",
   "fl.name.ph": "Hind 1",
   "fl.type": "Aircraft",
@@ -7976,14 +7975,14 @@ const I18N = {
   "u.radios.set": "{0} channels set",
   "u.loadout": "Loadout",
   "u.loadout.none": "not set — HQ will not touch it",
-  "u.compose": "Compose the loadout",
+  "u.see": "See the loadout ↓",
   "rad.chans": "{0} channels",
   "rad.ch": "CH {0}",
   "rad.hint": "Frequencies in MHz, from 0 to 999.999 (comma or dot). Modulations are not written. An empty channel is not written.",
   "rad.err.nan": "Channel {0}: “{1}” is not a frequency.",
   "rad.err.range": "Channel {0}: {1} MHz is outside the range ({2} to {3} MHz).",
   "rad.err.more": " (+ {0} more)",
-  "rad.copy": "Copy to the other units of the flight",
+  "rad.copy": "Copy to the other units of the group",
   "cmp.for": "{0} · {1}",
   "cmp.from": "Start from",
   "cmp.from.none": "— not set —",
@@ -8000,7 +7999,7 @@ const I18N = {
   "cmp.back": "↑ Back to the unit",
   "cmp.note": "A weapon setting (laser code, fuze…) follows its station as long as the weapon is not changed. A loadout setting out of range is brought back to the aircraft maximum.",
   "cmp.noview": "No front view for this type: the station list.",
-  "cmp.pick": "Pick a flight and a unit: the loadout is composed here.",
+  "cmp.pick": "Pick a group and a unit: the loadout is composed here.",
   "cmp.mod": "modified",
   "cmp.custom": "Composed loadout",
   "cmp.settings": "settings",
@@ -8048,11 +8047,11 @@ const I18N = {
   "imp.src.dg": "Datacard Generator",
   "imp.search": "Search a group…",
   "imp.showoff": "Show unsupported aircraft",
-  "imp.checkshown": "Tick the shown flights",
+  "imp.checkshown": "Tick the shown groups",
   "imp.uncheckall": "Untick all",
-  "imp.count": "{0} supported flights out of {1}",
+  "imp.count": "{0} supported groups out of {1}",
   "imp.count.shown": "{0} shown",
-  "imp.nomatch": "No flight matches.",
+  "imp.nomatch": "No group matches.",
   "sum.route": "route {0} pts",
   "sum.radios": "radios {0} channels",
   "sum.radios.var": "radios vary",
@@ -8065,14 +8064,14 @@ const I18N = {
   "imp.hq.ok": "{0} · theatre {1}",
   "imp.choose": "Choose a file…",
   "imp.pkg.note": "A .json or .zip package (exported by HQ, the Route Planner or this module).",
-  "imp.flights": "Flights to import",
+  "imp.flights": "Groups to import",
   "imp.none": "Choose a source.",
   "imp.part.route": "Route",
   "imp.part.radios": "Radios",
   "imp.part.loadout": "Loadout",
   "imp.part.livery": "Livery",
-  "imp.new": "new flight",
-  "imp.exists": "completes the module’s flight",
+  "imp.new": "new group",
+  "imp.exists": "completes the module’s group",
   "imp.unsupported": "aircraft not handled",
   "imp.units": "{0} unit(s)",
   "imp.theatre.keep": "The module’s theatre ({0}) is kept; the source’s is {1}.",
@@ -8080,20 +8079,20 @@ const I18N = {
   "imp.cancel": "Cancel",
   "imp.go": "Import",
   "imp.close": "Close",
-  "imp.done": "{0} flight(s) imported.",
+  "imp.done": "{0} group(s) imported.",
   "rej.json": "Unreadable file: not JSON.",
   "rej.zip": "Unreadable archive: no package.json at the root.",
   "rej.noTheatre": "The package has no theatre.",
-  "rej.noFlight": "No readable flight in this file.",
-  "rej.noManaged": "No flight of an aircraft handled here (Mi-24P, Mi-8MT, F-4E, Mirage F1) in this package: nothing has changed.",
+  "rej.noFlight": "No readable group in this file.",
+  "rej.noManaged": "No group of an aircraft handled here (Mi-24P, Mi-8MT, F-4E, Mirage F1) in this package: nothing has changed.",
   "rej.format": "Format “{0}” not recognised here (expected: {1}).",
   "rej.unknown": "unknown",
-  "rej.skip": "{0} unreadable flight(s) skipped.",
+  "rej.skip": "{0} unreadable group(s) skipped.",
   "fmt.pkg": "flight package",
   "open.bad": "This file is neither a working file nor a flight package.",
-  "open.done": "File opened: {0} flight(s).",
-  "open.ignored": "{0} unhandled flight(s) ignored.",
-  "clear.confirm": "Empty the module? The flights, route and loadouts in progress are lost (my presets stay).",
+  "open.done": "File opened: {0} group(s).",
+  "open.ignored": "{0} unhandled group(s) ignored.",
+  "clear.confirm": "Empty the module? The groups, route and loadouts in progress are lost (my presets stay).",
   "save.done": "Work saved: {0}",
   "export.done": "Package exported: {0}"
  }
@@ -8355,7 +8354,7 @@ function stamp() {
   return d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + '_' + p(d.getHours()) + p(d.getMinutes()) + p(d.getSeconds());
 }
 function packageFileName(prefix) {
-  const first = S.flights.length ? (S.flights[0].name.trim() || 'vol') : 'vol';
+  const first = S.flights.length ? (S.flights[0].name.trim() || 'groupe') : 'groupe';
   return (prefix || 'paquet') + '_' + cleanName(first) + (S.flights.length > 1 ? '_+' + (S.flights.length - 1) : '') + '_' + stamp() + '.json';
 }
 // Ce qui empêche l'export : [{ key, args }] ; la liste vide = prêt. Une fréquence refusée bloque ; un réglage d'emport hors limites est ramené, il ne bloque rien.
@@ -8450,14 +8449,12 @@ function renderLeft() {
   document.getElementById('col-flights').innerHTML = `<section class="fc-block">
     <div class="fc-bh">${esc(t('sec.flights'))} <span class="fc-count">(${S.flights.length})</span>${foldAll}</div>
     <div class="fc-bc">
-      <div class="fc-row fc-top">${fieldHtml(t('pkg.theatre'), selectHtml('id="pkg-theatre" data-k="theatre"', t('pkg.theatre'), opts, S.theatre))}
-        ${fieldHtml(t('pkg.fname'), '<div class="fc-fname" id="pkg-fname"></div>')}</div>
+      <div class="fc-row fc-top">${fieldHtml(t('pkg.theatre'), selectHtml('id="pkg-theatre" data-k="theatre"', t('pkg.theatre'), opts, S.theatre))}</div>
       ${S.flights.length ? '' : `<p class="pk-note">${esc(t('fl.empty'))}</p>`}
       <div class="fc-list" id="fc-list">${S.flights.map(flightHtml).join('')}</div>
       <div class="miz-btn-row" style="margin-top:0"><button type="button" class="miz-btn primary" data-act="add-flight">${esc(t('fl.add'))}</button></div>
     </div></section>`;
   S.flights.forEach((f, fi) => f.units.forEach((u, ui) => radioPosts(f.type).forEach(r => paintRadioMsg(fi, ui, r))));
-  refreshFileName();
 }
 function foldAllLabel() { return t(anyFlightOpen() ? 'fl.foldall' : 'fl.unfoldall'); }
 function foldLabel(f, fi, open) { return `${t(open ? 'fl.fold' : 'fl.unfold')} : ${flightLabel(f, fi)}`; }
@@ -8503,7 +8500,7 @@ function unitHtml(f, fi, u, ui) {
     <details class="fc-sub" data-key="${rk}"${openAttr(rk)}><summary>${esc(t('u.radios'))} <span class="fc-sum" data-sum="radios">${esc(radiosSummary(f, u))}</span></summary>
       <div class="fc-subc">${radiosHtml(f, fi, u, ui)}</div></details>
     <div class="fc-lo-sum"><span class="fc-lo-k">${esc(t('u.loadout'))}</span><span class="fc-lo-v" data-sum="loadout">${esc(loadoutName(u.loadout))}</span>
-      <button type="button" class="miz-btn fc-small" ${at} data-act="sel-unit">${esc(t('u.compose'))}</button></div>
+      <button type="button" class="fc-see" ${at} data-act="see-cmp">${esc(t('u.see'))}</button></div>
   </div>`;
 }
 function radiosSummary(f, u) {
@@ -8560,7 +8557,6 @@ function refreshSummaries() {
     });
   });
 }
-function refreshFileName() { const e = document.getElementById('pkg-fname'); if (e) e.textContent = packageFileName(); }
 function refreshBar() {
   const issues = exportIssues(), btn = document.getElementById('btn-export'), bar = document.getElementById('fc-status');
   if (btn) { btn.disabled = issues.length > 0; btn.setAttribute('aria-disabled', String(issues.length > 0)); }
@@ -8570,18 +8566,17 @@ function refreshBar() {
   if (UI.clamped > 0) msg += ' · ' + tf('bar.clamped', UI.clamped);
   bar.textContent = msg;
 }
-function refreshAll() { refreshBar(); refreshFileName(); refreshSummaries(); saveWork(); }
+function refreshAll() { refreshBar(); refreshSummaries(); saveWork(); }
 function renderAll() { renderLeft(); renderRight(); refreshBar(); applyI18nStatic(); saveWork(); }
 
-function selectUnit(fi, ui, scroll) {
+function selectUnit(fi, ui) {
   const changed = !(S.sel.f === fi && S.sel.u === ui);
-  if (!changed && !scroll) return;
+  if (!changed) return;
   S.sel = { f: fi, u: ui };
   document.querySelectorAll('#col-left .fc-flight').forEach(fe => {
     fe.querySelectorAll('.fc-unit').forEach(ue => ue.classList.toggle('sel', Number(fe.getAttribute('data-f')) === fi && Number(ue.getAttribute('data-u')) === ui));
   });
   if (changed) { Object.assign(UI.cmp, { saving: false, err: '', st: null }); renderRight(); saveWork(); }
-  if (scroll && window.innerWidth < 1100) document.getElementById('blk-cmp').scrollIntoView({ block: 'start', behavior: 'smooth' });
 }
 
 
@@ -8615,9 +8610,12 @@ function cmpShort(clsid) {
   return head || full;
 }
 function cmpNum(n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, CURRENT_LANG === 'fr' ? ' ' : ','); }
-// Les stations dont le dernier choix n'a pas d'équivalent sur la jumelle : { station: CLSID choisi }, par emport (non gardé, non exporté).
-const CMP_NOMIRROR = new WeakMap();
-function cmpNoMirror(lo, n, clsid) { const m = CMP_NOMIRROR.get(lo); return !!m && clsid !== '' && m[n] === clsid; }
+// Une station dont l'arme en place n'a pas de miroir sur la jumelle (calculé de l'état : choix, preset ou import) ; la ligne ne paraît que case cochée.
+function cmpNoMirror(lo, n, clsid) {
+  if (clsid === '' || !CMP.view || !has(CMP.pairs, n)) return false;
+  const twin = CMP.pyl.filter(x => x.n === CMP.pairs[n])[0];
+  return !!twin && payloadMirrorClsid(clsid, twin.allowed) === '';
+}
 function cmpClsid(lo, n) { return lo && lo.pylons[n] && lo.pylons[n].CLSID ? String(lo.pylons[n].CLSID) : ''; }
 
 function renderRight() {
@@ -8708,7 +8706,7 @@ function cmpUpdate() {
     if (mass === null) unknown = true; else total += mass;
     row.querySelector('.cmp-kg').textContent = clsid === '' ? '' : (mass === null ? '—' : cmpNum(mass) + ' kg');
     row.classList.toggle('sel', C.st === n);
-    cmpUpdateSub(row, lo && lo.pylons[n] && lo.pylons[n].settings !== undefined, !!lo && cmpNoMirror(lo, n, clsid));
+    cmpUpdateSub(row, lo && lo.pylons[n] && lo.pylons[n].settings !== undefined, cmpNoMirror(lo, n, clsid));
     cmpUpdateCell(blk.querySelector(`.cmp-st[data-st="${n}"]`), clsid, C.st === n);
   });
   document.getElementById('cmp-total').innerHTML = `${esc(t('cmp.mass'))} <b>${esc(cmpNum(total) + ' kg' + (unknown ? ' + ?' : ''))}</b>`;
@@ -8766,18 +8764,15 @@ function cmpChoose(n, clsid) {
   put(n, clsid);
   UI.cmp.st = n;
   const twin = (UI.cmp.sym && CMP.view && has(CMP.pairs, n)) ? CMP.pyl.filter(x => x.n === CMP.pairs[n])[0] : null;
-  const nm = CMP_NOMIRROR.get(lo) || {};
-  delete nm[n];
   if (twin) {
     if (clsid === '') {
       const was = payloadMirrorClsid(before, twin.allowed);
       if (was !== '' && cmpClsid(lo, twin.n) === was) put(twin.n, '');
     } else {
       const m = payloadMirrorClsid(clsid, twin.allowed);
-      if (m !== '') put(twin.n, m); else nm[n] = clsid;
+      if (m !== '') put(twin.n, m);
     }
   }
-  CMP_NOMIRROR.set(lo, nm);
   lo.modified = lo.key !== '~empty';
   if (created) {
     renderRight();
@@ -9025,7 +9020,9 @@ function mergeUnit(target, k, iu, chk) {
   if (chk.loadout) { const lo = loadoutFromPayload(target.type, iu.payload); if (lo) u.loadout = lo; }
 }
 // Un vol du module de même (nom, appareil, coalition) est complété par les parties cochées, sinon il est créé. Les unités se complètent par rang, 4 au plus.
+let IMP_FIRST = null;
 function impMerge(list) {
+  IMP_FIRST = null;
   list.forEach(({ f, chk }) => {
     let target = findFlight(f);
     if (!target) {
@@ -9033,6 +9030,7 @@ function impMerge(list) {
       Object.assign(target, { name: f.groupName, type: f.aircraftType, coalition: f.coalition, units: [] });
       S.flights.push(target);
     }
+    if (!IMP_FIRST) IMP_FIRST = target;
     if (chk.route && f.points) target.route = { points: clone(f.points) };
     f.units.slice(0, MAX_UNITS).forEach((iu, k) => mergeUnit(target, k, iu, chk));
     if (!target.units.length) target.units.push(newUnit());
@@ -9045,8 +9043,8 @@ function impGo() {
   if (!picked.length) return;
   if (!S.theatre || !S.flights.length) S.theatre = cur.theatre;
   const n = impMerge(picked);
-  S.sel = { f: Math.min(S.flights.length - 1, S.sel.f), u: 0 };
-  if (!selUnit()) S.sel = { f: 0, u: 0 };
+  S.sel = { f: Math.max(0, S.flights.indexOf(IMP_FIRST)), u: 0 };       // la première unité du premier groupe importé
+  Object.assign(UI.cmp, { saving: false, err: '', st: null });
   impClose();
   renderAll();
   showToast(tf('imp.done', n));
@@ -9119,7 +9117,8 @@ function openFile(file) {
       Object.assign(S, { theatre: res.src.theatre, flights: [], sel: { f: 0, u: 0 } });
       impMerge(res.src.flights.filter(f => f.supported).map(f => ({ f: f, chk: f.chk })));
     } else { showToast(t('open.bad'), 5000); return; }
-    UI.cmp.saving = false;
+    S.sel = { f: 0, u: 0 };                    // la première unité du premier groupe ouvert
+    Object.assign(UI.cmp, { saving: false, err: '', st: null });
     renderAll();
     showToast(tf('open.done', S.flights.length) + (ignored ? ' ' + tf('open.ignored', ignored) : ''), ignored ? 5000 : undefined);
   });
@@ -9170,14 +9169,16 @@ function addFlight() {
   renderAll();
 }
 function removeFlight(fi) {
+  const was = S.sel.f === fi;
   S.flights.splice(fi, 1);
-  if (S.sel.f > fi) S.sel.f--;
-  if (!selUnit()) S.sel = { f: 0, u: 0 };
+  if (was) { S.sel = { f: 0, u: 0 }; Object.assign(UI.cmp, { saving: false, err: '', st: null }); }
+  else if (S.sel.f > fi) S.sel.f--;
   renderAll();
 }
 function removeUnit(fi, ui) {
   S.flights[fi].units.splice(ui, 1);
-  if (!selUnit()) S.sel = { f: Math.min(S.sel.f, S.flights.length - 1), u: 0 };
+  if (S.sel.f === fi && S.sel.u === ui) { S.sel = { f: fi, u: 0 }; Object.assign(UI.cmp, { saving: false, err: '', st: null }); }
+  else if (S.sel.f === fi && S.sel.u > ui) S.sel.u--;
   renderAll();
 }
 function startSavePreset() {
@@ -9193,7 +9194,7 @@ function backToUnit() {
   const el = unitEl(su.fi, su.ui);
   if (!el) return;
   el.scrollIntoView({ block: 'start', behavior: 'smooth' });
-  const btn = el.querySelector('[data-act="sel-unit"]');
+  const btn = el.querySelector('[data-act="see-cmp"]');
   if (btn) btn.focus({ preventScroll: true });
 }
 // Les actions des boutons, par data-act ; c = { b (le bouton), fi (vol), ui (unité) }.
@@ -9206,7 +9207,7 @@ const ACTIONS = {
   'rm-unit': c => removeUnit(c.fi, c.ui),
   'rm-route': c => { S.flights[c.fi].route = null; renderLeft(); refreshAll(); },
   'copy-radios': c => { const f = S.flights[c.fi]; f.units.forEach((u, k) => { if (k !== c.ui) u.radios = clone(f.units[c.ui].radios); }); renderLeft(); refreshAll(); },
-  'sel-unit': c => selectUnit(c.fi, c.ui, true),
+  'see-cmp': c => { selectUnit(c.fi, c.ui); const b = document.getElementById('blk-cmp'); if (b && window.innerWidth < 1100) b.scrollIntoView({ block: 'start', behavior: 'smooth' }); },
   'back-unit': () => backToUnit(),
   'cmp-save': () => startSavePreset(),
   'cmp-save-cancel': () => { UI.cmp.saving = false; renderRight(); },
@@ -9221,6 +9222,8 @@ const ACTIONS = {
 };
 function onClick(e) {
   const b = e.target.closest ? e.target.closest('[data-act]') : null;
+  const card = e.target.closest ? e.target.closest('#col-left .fc-unit') : null;
+  if (card && !(b && (b.getAttribute('data-act') === 'rm-unit' || b.getAttribute('data-act') === 'rm-flight'))) selectUnit(Number(card.closest('.fc-flight').getAttribute('data-f')), Number(card.getAttribute('data-u')));
   if (!b || b.disabled || !has(ACTIONS, b.getAttribute('data-act'))) return;
   const fe = b.closest('.fc-flight'), ue = b.closest('.fc-unit');
   ACTIONS[b.getAttribute('data-act')]({
@@ -9285,7 +9288,7 @@ function onFocusIn(e) {
     if (f) fe.querySelector('datalist').innerHTML = liveryOptionsHtml(f.type);
   }
   const ue = e.target.closest ? e.target.closest('.fc-unit') : null;
-  if (ue) selectUnit(Number(ue.closest('.fc-flight').getAttribute('data-f')), Number(ue.getAttribute('data-u')), false);
+  if (ue && !(e.target.matches && e.target.matches('[data-act="rm-unit"]'))) selectUnit(Number(ue.closest('.fc-flight').getAttribute('data-f')), Number(ue.getAttribute('data-u')));
 }
 
 // ----- Barre, langue, thème -----

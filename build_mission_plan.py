@@ -448,7 +448,7 @@ select[data-tbm-src] {{ display: none !important; }}
             <div class="cap-row">
               <span class="logo" style="background:var(--a-fc)">F·C</span>
               <span class="ptitle">Flight Configurator</span>
-              <span class="pver">v0.1.0</span>
+              <span class="pver">v0.1.1</span>
             </div>
             <div class="pdesc" data-i18n="fc.desc">Assemble un vol — identité, radios, emport composé sur la vue de face ou tiré de mes presets, livrée — et l'exporte en paquet de vol que HQ applique à une mission.</div>
             <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
