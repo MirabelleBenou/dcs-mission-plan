@@ -1679,15 +1679,15 @@ select[data-tbm-src] { display: none !important; }
 
 /* ---------- Barre du haut commune aux sept modules (lot mp-imports-suite) ----------
    La marque du Flight Configurator : le titre et son sous-titre à l'accent du module dès 1360 px, le sigle seul en dessous (à toutes les largeurs) ;
-   la version avec le titre ; le tampon de décor dès 1624 px. Seuils mesurés dans le shell avec un tampon d'escadre « TEST WING », en français et en anglais. */
+   la version avec le titre ; le tampon de décor dès 2021 px. Seuils mesurés dans le shell avec un tampon d'escadre « TEST WING », en français et en anglais. */
 .tb-brand-main, .tb-brand-short { color: #8fb0c0; }
 .tb-brand-short { display: none; font-family: var(--f-stencil); font-size: 16px; font-weight: 700; letter-spacing: 3px; white-space: nowrap; }
 .tb-classif { font-family: var(--f-stencil); font-size: 11px; letter-spacing: 3px; color: var(--red-faded); border: 1px solid var(--red-faded); padding: 4px 10px; white-space: nowrap; flex-shrink: 0; }
 .tb-lang-btn svg { display: block; }
 @media (max-width: 1359px) { .tb-brand-main, .tb-brand-sub, .tb-brand + .tb-sep, .tb-version { display: none; } .tb-brand-short { display: inline; } }
-@media (max-width: 1623px) { .tb-classif { display: none; } }
-/* Les boutons portent leur texte au-dessus de 2021 px ; en dessous, l'icône seule (seuil mesuré : avec le tampon d'escadre, la barre défilerait sinon) */
-@media (max-width: 2020px) { .tb-btn .tb-btn-label { display: none; } .tb-btn { padding: 0 10px; } }
+@media (max-width: 2020px) { .tb-classif { display: none; } }
+/* Les boutons portent leur texte au-dessus de 1722 px ; en dessous, l'icône seule (seuil mesuré : avec le tampon d'escadre, la barre défilerait sinon) */
+@media (max-width: 1721px) { .tb-btn .tb-btn-label { display: none; } .tb-btn { padding: 0 10px; } }
 @media (max-width: 1250px) {
   /* le sélecteur de thème se resserre */
   .tb-select { max-width: 124px; padding: 0 26px 0 8px; text-overflow: ellipsis; overflow: hidden; }

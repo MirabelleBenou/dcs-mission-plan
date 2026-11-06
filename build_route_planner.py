@@ -1138,16 +1138,16 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 
 /* ---------- Barre du haut commune aux sept modules (lot mp-imports-suite) ----------
    La marque du Flight Configurator : le titre et son sous-titre à l'accent du module dès 1653 px, le sigle seul en dessous (à toutes les largeurs) ;
-   la version avec le titre ; le tampon de décor dès 1874 px. Seuils mesurés dans le shell avec un tampon d'escadre « TEST WING », en français et en anglais. */
+   la version avec le titre ; le tampon de décor dès 2128 px. Seuils mesurés dans le shell avec un tampon d'escadre « TEST WING », en français et en anglais. */
 .tb-brand-main, .tb-brand-short { color: #7ac97a; }
 .tb-brand-short { display: none; font-family: var(--f-stencil); font-size: 16px; font-weight: 700; letter-spacing: 3px; white-space: nowrap; }
 .tb-classif { font-family: var(--f-stencil); font-size: 11px; letter-spacing: 3px; color: var(--red-faded); border: 1px solid var(--red-faded); padding: 4px 10px; white-space: nowrap; flex-shrink: 0; }
 .tb-lang-btn svg { display: block; }
 @media (max-width: 1652px) { .tb-brand-main, .tb-brand-sub, .tb-brand + .tb-sep, .tb-version { display: none; } .tb-brand-short { display: inline; } }
-@media (max-width: 1873px) { .tb-classif { display: none; } }
+@media (max-width: 2127px) { .tb-classif { display: none; } }
 
-/* ---------- étiquettes des boutons de fichier : à partir de 2128 px (seuil mesuré : avec le tampon d'escadre, la barre défilerait sinon) ---------- */
-@media (min-width: 2128px) {
+/* ---------- étiquettes des boutons de fichier : à partir de 1907 px (seuil mesuré : avec le tampon d'escadre, la barre défilerait sinon) ---------- */
+@media (min-width: 1907px) {
   .tb-btn .tb-btn-label.solo { display: inline; }
 }
 

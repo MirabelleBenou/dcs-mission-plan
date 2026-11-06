@@ -1850,7 +1850,7 @@ function t(key, fallback) {{
 const KEY_WING  = 'wing_config_v1';
 const KEY_THEME = 'theme_v1';
 const KEY_LANG  = 'lang_v1';
-const KEY_LANG_OLD = 'hq_lang_v1';   // ancienne clé de HQ : migrée une fois vers lang_v1, puis supprimée
+const KEY_LANG_OLD = 'hq_lang_v1';   // ancienne clé de HQ : reprise une fois si lang_v1 manque, puis toujours supprimée
 
 // ── Wing config state ──────────────────────────────────────────
 let wingConfig = null;
@@ -1944,9 +1944,9 @@ function applyTheme(val) {{
 function migrateLangKey() {{
   try {{
     const old = localStorage.getItem(KEY_LANG_OLD);
-    if (localStorage.getItem(KEY_LANG) === null && (old === 'fr' || old === 'en')) {{
-      localStorage.setItem(KEY_LANG, old);
-      localStorage.removeItem(KEY_LANG_OLD);
+    if (old !== null) {{
+      if (localStorage.getItem(KEY_LANG) === null && (old === 'fr' || old === 'en')) localStorage.setItem(KEY_LANG, old);
+      localStorage.removeItem(KEY_LANG_OLD);   // jamais de clé orpheline
     }}
   }} catch (e) {{ /* stockage indisponible */ }}
 }}
