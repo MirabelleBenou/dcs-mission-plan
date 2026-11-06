@@ -7106,7 +7106,7 @@ function payloadWeaponMass(clsid) {
 
 // Symétrie : le CLSID à poser sur la station jumelle pour le choix `clsid` ; '' s'il n'y a rien à poser. allowedOnTwin : les CLSID permis sur la jumelle.
 // Dans l'ordre : le même CLSID, s'il est permis ; sinon celui où Left↔Right (LEFT↔RIGHT, _L↔_R en fin de mot) sont échangés, s'il est permis ;
-// sinon l'unique arme permise de même nom (payloadWeaponName) ; sinon ''. Fonction pure : ni DOM, ni t(), ni stockage.
+// sinon l'unique arme permise de même nom (payloadWeaponName) ; sinon ''. Fonction pure : elle ne lit ni la page, ni le stockage, ni les textes affichés.
 function payloadMirrorClsid(clsid, allowedOnTwin) {
   if (clsid === '' || clsid === undefined || clsid === null) return '';
   const allowed = Array.isArray(allowedOnTwin) ? allowedOnTwin : [];
