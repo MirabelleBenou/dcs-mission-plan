@@ -1559,7 +1559,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       </div>
     </div>
     <div class="imp-block" id="imp-flights-block">
-      <h3 data-i18n="imp.flights">Vols à importer</h3>
+      <h3 data-i18n="imp.flights">Groupes à importer</h3>
       <div id="imp-fl-head" hidden>
         <div class="imp-filters">
           <div class="ed-field"><label for="imp-side" data-i18n="imp.side">Camp</label><select id="imp-side"></select></div>
@@ -1567,7 +1567,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
           <div class="ed-field imp-nm"><label for="imp-name" data-i18n="imp.name">Nom</label><input type="text" id="imp-name" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
         </div>
         <div class="imp-tools">
-          <button type="button" class="export-png-toggle" id="imp-check" data-i18n="imp.checkShown">Cocher les vols affichés</button>
+          <button type="button" class="export-png-toggle" id="imp-check" data-i18n="imp.checkShown">Cocher les groupes affichés</button>
           <button type="button" class="export-png-toggle" id="imp-uncheck" data-i18n="imp.uncheck">Tout décocher</button>
           <span class="imp-cnt" id="imp-cnt" aria-live="polite"></span>
         </div>
@@ -1609,7 +1609,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 <!-- ===== ONGLETS (tablette) ===== -->
 <nav class="tab-bar" id="tab-bar" role="tablist" aria-label="Datacard Generator" data-i18n-aria-label="app.title">
   <button type="button" data-tab="meta" role="tab"><span class="tab-ico">⚙</span><span data-i18n="sec.meta">Méta</span></button>
-  <button type="button" data-tab="flight" role="tab"><span class="tab-ico">✈</span><span data-i18n="sec.flight">Vol</span></button>
+  <button type="button" data-tab="flight" role="tab"><span class="tab-ico">✈</span><span data-i18n="sec.flight">Groupe</span></button>
   <button type="button" data-tab="mission" role="tab"><span class="tab-ico">▣</span><span data-i18n="sec.mission">Mission</span></button>
   <button type="button" data-tab="times" role="tab"><span class="tab-ico">⏱</span><span data-i18n="sec.times">Horaires</span></button>
   <button type="button" data-tab="crew" role="tab"><span class="tab-ico">👤</span><span data-i18n="sec.crew">Équipages</span></button>
@@ -1740,13 +1740,13 @@ const EXAMPLE_DOC = {
         {
           "callsign": "CAESAR 1-1",
           "pilot": "VIPER",
-          "crew": "HUSKER",
+          "type": "Mi-24P",
           "board": "41"
         },
         {
           "callsign": "CAESAR 1-2",
           "pilot": "FALCON",
-          "crew": "BEAR",
+          "type": "Mi-24P",
           "board": "44"
         }
       ],
@@ -1944,13 +1944,13 @@ const EXAMPLE_DOC_EN = {
         {
           "callsign": "CAESAR 1-1",
           "pilot": "VIPER",
-          "crew": "HUSKER",
+          "type": "Mi-24P",
           "board": "41"
         },
         {
           "callsign": "CAESAR 1-2",
           "pilot": "FALCON",
-          "crew": "BEAR",
+          "type": "Mi-24P",
           "board": "44"
         }
       ],
@@ -2151,7 +2151,7 @@ const I18N = {
     'imp.route.new': 'Nouvelle datacard',
     'toast.routeImported': 'Route importée\u202f: {n} points ✓',
     'imp.choose': 'Choisir un fichier…',
-    'imp.flights': 'Vols à importer',
+    'imp.flights': 'Groupes à importer',
     'imp.side': 'Camp',
     'imp.type': 'Type',
     'imp.name': 'Nom',
@@ -2159,23 +2159,23 @@ const I18N = {
     'imp.red': 'Rouge',
     'imp.blue': 'Bleu',
     'imp.neutral': 'Neutre',
-    'imp.checkShown': 'Cocher les vols affichés',
+    'imp.checkShown': 'Cocher les groupes affichés',
     'imp.uncheck': 'Tout décocher',
-    'imp.shown': '{n} / {total} vols affichés',
+    'imp.shown': '{n} / {total} groupes affichés',
     'imp.pts': '{n} pts',
     'imp.pts.1': '{n} pt',
     'imp.noroute': 'sans route',
-    'imp.none': 'Aucun vol ne correspond.',
-    'imp.empty': 'Aucun vol dans cette source.',
-    'imp.go.1': 'Importer {n} vol',
-    'imp.go.n': 'Importer {n} vols',
+    'imp.none': 'Aucun groupe ne correspond.',
+    'imp.empty': 'Aucun groupe dans cette source.',
+    'imp.go.1': 'Importer {n} groupe',
+    'imp.go.n': 'Importer {n} groupes',
     'imp.radio': 'Poste {n}',
     'imp.ch.title': 'Canaux radio à importer',
     'imp.ch.note': 'Touchez les canaux utilisés en mission\u00a0; aucun canal coché = pas de radios sur la datacard.',
     'imp.ch.all': 'Tous',
     'imp.ch.none': 'Aucun',
     'imp.ch.tip': '{r}, canal {c}',
-    'imp.cut': '{k} vol(s) : 30 points de navigation au plus',
+    'imp.cut': '{k} groupe(s) : 30 points de navigation au plus',
     'imp.route.all': 'Toutes les routes ({n}), une datacard par route',
     'rej.json': 'JSON illisible.',
     'rej.zip': 'Archive illisible : pas de package.json à la racine.',
@@ -2183,16 +2183,16 @@ const I18N = {
     'rej.unknown': 'inconnu',
     'rej.incomplete': 'Fichier « {x} » incomplet : aucune route à points.',
     'rej.noTheatre': 'Le paquet n\'a pas de théâtre.',
-    'rej.noFlight': 'Le paquet ne contient aucun vol.',
-    'rej.skip.1': '{n} vol illisible ignoré.',
-    'rej.skip.n': '{n} vols illisibles ignorés.',
+    'rej.noFlight': 'Le paquet ne contient aucun groupe.',
+    'rej.skip.1': '{n} groupe illisible ignoré.',
+    'rej.skip.n': '{n} groupes illisibles ignorés.',
     'rej.isDatacard': 'C\'est une datacard : ouvrez-la par « Ouvrir ».',
     'fmt.briefing': 'briefing',
     'fmt.route': 'route',
     'fmt.set': 'jeu de routes',
     'fmt.pkg': 'paquet de vol',
     'fmt.datacard': 'datacard',
-    'imp.general': 'Données générales (sans vol)',
+    'imp.general': 'Données générales (sans groupe)',
     'imp.go': 'Importer',
     'imp.cancel': 'Annuler',
     'toast.imported': '{n} datacard(s) importée(s) ✓',
@@ -2217,7 +2217,7 @@ const I18N = {
     'warn.overflow2': 'Contenu tronqué\u202f: la page 2 déborde.',
     'warn.overflowR': 'Contenu tronqué\u202f: la page Radios déborde.',
     'sec.meta': 'Méta',
-    'sec.flight': 'Vol',
+    'sec.flight': 'Groupe',
     'sec.mission': 'Mission',
     'sec.times': 'Horaires',
     'sec.crew': 'Équipages',
@@ -2246,7 +2246,7 @@ const I18N = {
     'ph.times.*.value': '09:45',
     'ph.crew.*.callsign': 'CAESAR 1-1',
     'ph.crew.*.pilot': 'VIPER',
-    'ph.crew.*.crew': 'HUSKER',
+    'ph.crew.*.type': 'Mi-24P',
     'ph.crew.*.board': '41',
     'ph.nav.*.name': 'IP',
     'ph.nav.*.course': '059',
@@ -2285,6 +2285,7 @@ const I18N = {
     'f.time': 'Heure',
     'f.callsign': 'Indicatif',
     'f.aircraft': 'Appareil',
+    'f.group.deduced': 'Déduit des équipages',
     'f.count': 'Nombre',
     'f.task': 'Tâche',
     'f.threat': 'Menace',
@@ -2299,7 +2300,7 @@ const I18N = {
     'f.steps': 'Étapes',
     'f.crew.callsign': 'Indicatif',
     'f.crew.pilot': 'Pilote',
-    'f.crew.crew': 'Équipier',
+    'f.crew.crew': 'Appareil',
     'f.crew.board': 'N° de bord',
     'f.nav.name': 'Point',
     'f.nav.course': 'Cap',
@@ -2362,7 +2363,7 @@ const I18N = {
     'f.notes': 'Notes',
     'add.step': '+ Ajouter une étape',
     'add.time': '+ Ajouter un horaire',
-    'add.crew': '+ Ajouter un équipage',
+    'add.crew': '+ Ajouter un appareil',
     'add.point': '+ Ajouter un point',
     'add.ref': '+ Point de référence',
     'add.radio': '+ Ajouter un poste',
@@ -2403,14 +2404,14 @@ const I18N = {
     'dc.b.notes': 'NOTES',
     'dc.page2': 'DATACARD · NAVIGATION',
     'dc.pageR': 'DATACARD · RADIOS',
-    'dc.flightOf': 'VOL DE {n}',
+    'dc.flightOf': 'GROUPE DE {n}',
     'dc.operation': 'OPÉRATION {op}',
     'dc.thr.low': 'MENACE FAIBLE',
     'dc.thr.moderate': 'MENACE MODÉRÉE',
     'dc.thr.high': 'MENACE ÉLEVÉE',
     'dc.h.callsign': 'INDICATIF',
     'dc.h.pilot': 'PILOTE',
-    'dc.h.crew': 'ÉQUIPIER',
+    'dc.h.crew': 'APPAREIL',
     'dc.h.board': 'N°',
     'dc.h.point': 'POINT',
     'dc.h.course': 'CAP °',
@@ -2497,7 +2498,7 @@ const I18N = {
     'imp.route.new': 'New datacard',
     'toast.routeImported': 'Route imported: {n} waypoints ✓',
     'imp.choose': 'Choose a file…',
-    'imp.flights': 'Flights to import',
+    'imp.flights': 'Groups to import',
     'imp.side': 'Side',
     'imp.type': 'Type',
     'imp.name': 'Name',
@@ -2505,23 +2506,23 @@ const I18N = {
     'imp.red': 'Red',
     'imp.blue': 'Blue',
     'imp.neutral': 'Neutral',
-    'imp.checkShown': 'Check shown flights',
+    'imp.checkShown': 'Check shown groups',
     'imp.uncheck': 'Uncheck all',
-    'imp.shown': '{n} / {total} flights shown',
+    'imp.shown': '{n} / {total} groups shown',
     'imp.pts': '{n} pts',
     'imp.pts.1': '{n} pt',
     'imp.noroute': 'no route',
-    'imp.none': 'No flight matches.',
-    'imp.empty': 'No flights in this source.',
-    'imp.go.1': 'Import {n} flight',
-    'imp.go.n': 'Import {n} flights',
+    'imp.none': 'No group matches.',
+    'imp.empty': 'No groups in this source.',
+    'imp.go.1': 'Import {n} group',
+    'imp.go.n': 'Import {n} groups',
     'imp.radio': 'Radio {n}',
     'imp.ch.title': 'Radio channels to import',
     'imp.ch.note': 'Tap the channels used in the mission; none ticked = no radios on the datacard.',
     'imp.ch.all': 'All',
     'imp.ch.none': 'None',
     'imp.ch.tip': '{r}, channel {c}',
-    'imp.cut': '{k} flight(s): navigation limited to 30 points',
+    'imp.cut': '{k} group(s): navigation limited to 30 points',
     'imp.route.all': 'All routes ({n}), one datacard per route',
     'rej.json': 'Unreadable JSON.',
     'rej.zip': 'Unreadable archive: no package.json at the root.',
@@ -2529,16 +2530,16 @@ const I18N = {
     'rej.unknown': 'unknown',
     'rej.incomplete': 'Incomplete "{x}" file: no route with points.',
     'rej.noTheatre': 'The package has no theatre.',
-    'rej.noFlight': 'The package contains no flight.',
-    'rej.skip.1': '{n} unreadable flight skipped.',
-    'rej.skip.n': '{n} unreadable flights skipped.',
+    'rej.noFlight': 'The package contains no group.',
+    'rej.skip.1': '{n} unreadable group skipped.',
+    'rej.skip.n': '{n} unreadable groups skipped.',
     'rej.isDatacard': 'This is a datacard: open it with "Open".',
     'fmt.briefing': 'briefing',
     'fmt.route': 'route',
     'fmt.set': 'route set',
     'fmt.pkg': 'flight package',
     'fmt.datacard': 'datacard',
-    'imp.general': 'General data (no flight)',
+    'imp.general': 'General data (no group)',
     'imp.go': 'Import',
     'imp.cancel': 'Cancel',
     'toast.imported': '{n} datacard(s) imported ✓',
@@ -2563,7 +2564,7 @@ const I18N = {
     'warn.overflow2': 'Content truncated: page 2 overflows.',
     'warn.overflowR': 'Content truncated: the Radios page overflows.',
     'sec.meta': 'Meta',
-    'sec.flight': 'Flight',
+    'sec.flight': 'Group',
     'sec.mission': 'Mission',
     'sec.times': 'Times',
     'sec.crew': 'Crew',
@@ -2592,7 +2593,7 @@ const I18N = {
     'ph.times.*.value': '09:45',
     'ph.crew.*.callsign': 'CAESAR 1-1',
     'ph.crew.*.pilot': 'VIPER',
-    'ph.crew.*.crew': 'HUSKER',
+    'ph.crew.*.type': 'Mi-24P',
     'ph.crew.*.board': '41',
     'ph.nav.*.name': 'IP',
     'ph.nav.*.course': '059',
@@ -2631,6 +2632,7 @@ const I18N = {
     'f.time': 'Time',
     'f.callsign': 'Callsign',
     'f.aircraft': 'Aircraft',
+    'f.group.deduced': 'Deduced from the crew list',
     'f.count': 'Count',
     'f.task': 'Task',
     'f.threat': 'Threat',
@@ -2645,7 +2647,7 @@ const I18N = {
     'f.steps': 'Steps',
     'f.crew.callsign': 'Callsign',
     'f.crew.pilot': 'Pilot',
-    'f.crew.crew': 'Crew',
+    'f.crew.crew': 'Aircraft',
     'f.crew.board': 'Board no.',
     'f.nav.name': 'Point',
     'f.nav.course': 'Heading',
@@ -2708,7 +2710,7 @@ const I18N = {
     'f.notes': 'Notes',
     'add.step': '+ Add step',
     'add.time': '+ Add time',
-    'add.crew': '+ Add crew member',
+    'add.crew': '+ Add aircraft',
     'add.point': '+ Add point',
     'add.ref': '+ Reference point',
     'add.radio': '+ Add radio',
@@ -2749,14 +2751,14 @@ const I18N = {
     'dc.b.notes': 'NOTES',
     'dc.page2': 'DATACARD · NAVIGATION',
     'dc.pageR': 'DATACARD · RADIOS',
-    'dc.flightOf': 'FLIGHT OF {n}',
+    'dc.flightOf': 'GROUP OF {n}',
     'dc.operation': 'OPERATION {op}',
     'dc.thr.low': 'THREAT LOW',
     'dc.thr.moderate': 'THREAT MODERATE',
     'dc.thr.high': 'THREAT HIGH',
     'dc.h.callsign': 'CALLSIGN',
     'dc.h.pilot': 'PILOT',
-    'dc.h.crew': 'CREW',
+    'dc.h.crew': 'AIRCRAFT',
     'dc.h.board': 'NO.',
     'dc.h.point': 'POINT',
     'dc.h.course': 'HDG °',
@@ -3624,7 +3626,13 @@ function normalizeCard(src) {
     c.times = src.times.slice(0, LIMITS.times).map(o => ({ label: str(o && o.label), value: str(o && o.value) }));
   }
   if (Array.isArray(src.crew)) {
-    c.crew = src.crew.slice(0, LIMITS.crew).map(o => ({ callsign: str(o && o.callsign), pilot: str(o && o.pilot), crew: str(o && o.crew), board: str(o && o.board) }));
+    /* une ligne d'une carte ancienne porte « crew » (l'équipier) : il est gardé après le pilote, « VIPER / HUSKER », et la clé disparaît */
+    c.crew = src.crew.slice(0, LIMITS.crew).map(o => {
+      let pilot = str(o && o.pilot);
+      const old = str(o && o.crew).trim();
+      if (old !== '') pilot = hasText(pilot) ? pilot + ' / ' + old : old;
+      return { callsign: str(o && o.callsign), pilot: pilot, type: str(o && o.type), board: str(o && o.board) };
+    });
   }
   if (Array.isArray(src.nav)) {
     c.nav = src.nav.slice(0, LIMITS.nav).map(o => ({
@@ -3672,6 +3680,7 @@ function normalizeCard(src) {
   if (Array.isArray(src.loadout)) c.loadout = normStrList(src.loadout, LIMITS.loadout);
   if (Array.isArray(src.threats)) c.threats = normStrList(src.threats, LIMITS.threats);
   if ('notes' in src) c.notes = str(src.notes);
+  syncGroup(c);
   return c;
 }
 
@@ -3897,7 +3906,7 @@ function cardFromPhase(b, ph) {
     return subs.length ? text + ' — ' + subs.join(' · ') : text;
   }).filter(hasText).slice(0, LIMITS.steps);
 
-  c.crew = pilots.slice(0, LIMITS.crew).map(p => ({ callsign: str(p && p.callsign), pilot: str(p && p.name), crew: '', board: '' }));
+  c.crew = pilots.slice(0, LIMITS.crew).map(p => ({ callsign: str(p && p.callsign), pilot: str(p && p.name), type: '', board: '' }));
   c.radios = radiosFromBriefing(b, idn.aircraft);
 
   const mi = (b.mission && typeof b.mission === 'object') ? b.mission : {};
@@ -3956,6 +3965,26 @@ function classifLabel(c) { return t('classif.' + c.meta.classification); }
 function unitLabel(c, kind) { return t('u.' + c.units[kind]); }
 
 function anyText(o, keys) { return keys.some(k => hasText(o[k])); }
+const CREW_KEYS = ['callsign', 'pilot', 'type', 'board'];
+/* Le groupe déduit des lignes d'équipage : au moins une ligne non vide et un type sur chacune ; sinon null.
+   types : [[type, nombre]] dans l'ordre des lignes ; aircraft : les types joints par « + » ; count : le nombre de lignes */
+function deduceGroup(c) {
+  const rows = c.crew.filter(r => anyText(r, CREW_KEYS));
+  if (!rows.length || rows.some(r => !hasText(r.type))) return null;
+  const types = [];
+  rows.forEach(r => {
+    const ty = r.type.trim();
+    const e = types.find(x => x[0] === ty);
+    if (e) e[1]++; else types.push([ty, 1]);
+  });
+  return { types: types, aircraft: types.map(x => x[0]).join(' + '), count: rows.length };
+}
+/* Quand le groupe se déduit, la carte enregistre l'appareil et le nombre déduits */
+function syncGroup(c) {
+  const d = deduceGroup(c);
+  if (d) { c.flight.aircraft = d.aircraft; c.flight.count = d.count; }
+  return !!d;
+}
 function navRows(c) { return c.nav.filter(r => anyText(r, NAV_KEYS)); }
 /* Points de référence : une rangée dont aucun champ n'est rempli n'existe pas pour le bloc. */
 const REF_KEYS = ['name', 'coord', 'altitude', 'note'];
@@ -3988,9 +4017,9 @@ function blkTimes(c) {
 }
 
 function blkCrew(c) {
-  const rows = c.crew.filter(r => anyText(r, ['callsign', 'pilot', 'crew', 'board']));
+  const rows = c.crew.filter(r => anyText(r, CREW_KEYS));
   if (!rows.length) return '';
-  const withCrew = rows.some(r => hasText(r.crew));
+  const withCrew = rows.some(r => hasText(r.type));
   const cols = withCrew
     ? '<col style="width:36%"><col style="width:26%"><col style="width:26%"><col>'
     : '<col style="width:42%"><col style="width:42%"><col>';
@@ -3999,7 +4028,7 @@ function blkCrew(c) {
   h += '<th>' + esc(t('dc.h.board')) + '</th>';
   const body = rows.map(r =>
     '<tr><td class="nm">' + esc(r.callsign) + '</td><td class="m">' + esc(r.pilot) + '</td>' +
-    (withCrew ? '<td class="m">' + esc(r.crew) + '</td>' : '') +
+    (withCrew ? '<td class="m">' + esc(r.type) + '</td>' : '') +
     '<td class="m">' + esc(r.board) + '</td></tr>').join('');
   return blockHtml('crew', t('dc.b.crew'),
     '<table class="dc-tab dc-crew"><colgroup>' + cols + '</colgroup><thead><tr>' + h + '</tr></thead><tbody>' + body + '</tbody></table>', 'dc-bbt');
@@ -4221,12 +4250,19 @@ function rowHtml(cls, cells) {
   return '<div class="dc-row ' + cls + (live.length > 1 ? ' dc-two' : '') + '">' + live.join('') + '</div>';
 }
 
+/* Le groupe de l'en-tête : déduit des lignes, chaque type avec son nombre (« 1 × Mi-24P + 1 × Mi-8MT ») ; sinon « n × A », « A » seul, « GROUPE DE n », ou rien */
+function groupText(c) {
+  const d = deduceGroup(c);
+  if (d) return d.types.map(x => x[1] + ' \u00d7 ' + x[0]).join(' + ');
+  const a = c.flight.aircraft.trim(), n = c.flight.count;
+  if (hasText(a)) return n != null ? n + ' \u00d7 ' + a : a;
+  return n != null ? t('dc.flightOf', { n: n }) : '';
+}
+
 function headMain(c) {
   const f = c.flight, m = c.meta;
-  const n = f.count;
   const sub = [
-    f.aircraft.trim(),
-    n != null ? t('dc.flightOf', { n: n }) : '',
+    groupText(c),
     f.task.trim().toUpperCase()
   ].filter(hasText).join(' · ');
   const op = [hasText(m.operation) ? t('dc.operation', { op: m.operation.trim() }) : '', m.mission.trim()].filter(hasText).join(' · ');
@@ -4396,7 +4432,7 @@ function setPath(obj, path, val) {
 const LIST_SPECS = {
   'mission.execution': { max: LIMITS.steps, make: () => '' },
   'times': { max: LIMITS.times, make: () => ({ label: '', value: '' }) },
-  'crew': { max: LIMITS.crew, make: () => ({ callsign: '', pilot: '', crew: '', board: '' }) },
+  'crew': { max: LIMITS.crew, make: () => ({ callsign: '', pilot: '', type: '', board: '' }) },
   'nav': { max: LIMITS.nav, make: () => ({ name: '', course: '', distance: '', altitude: '', tos: '', note: '', coord: '' }) },
   'refs': { max: LIMITS.refs, make: () => ({ name: '', coord: '', altitude: '', note: '' }) },
   'radios': { max: LIMITS.radios, make: () => ({ name: '', channels: [] }) },
@@ -4517,15 +4553,17 @@ const SECTION_BUILDERS = {
     '<div class="ed-field-row">' + fInput('f.operation', 'meta.operation', c.meta.operation) + fInput('f.mission', 'meta.mission', c.meta.mission) + '</div>' +
     '<div class="ed-field-row">' + fInput('f.date', 'meta.date', c.meta.date) + fInput('f.time', 'meta.time', c.meta.time) + '</div>',
 
-  flight: c =>
-    '<div class="ed-field-row">' + fInput('f.callsign', 'flight.callsign', c.flight.callsign) + fInput('f.aircraft', 'flight.aircraft', c.flight.aircraft) + '</div>' +
-    '<div class="ed-field-row">' + fInput('f.count', 'flight.count', c.flight.count == null ? '' : String(c.flight.count), ' inputmode="numeric"') +
+  flight: c => {
+    const ro = deduceGroup(c) ? ' readonly title="' + esc(t('f.group.deduced')) + '"' : '';
+    return '<div class="ed-field-row">' + fInput('f.callsign', 'flight.callsign', c.flight.callsign) + fInput('f.aircraft', 'flight.aircraft', c.flight.aircraft, ro) + '</div>' +
+    '<div class="ed-field-row">' + fInput('f.count', 'flight.count', c.flight.count == null ? '' : String(c.flight.count), ' inputmode="numeric"' + ro) +
     fSelect('f.threat', 'flight.threat', c.flight.threat, [['', t('thr.none')], ['low', t('thr.low')], ['moderate', t('thr.moderate')], ['high', t('thr.high')]]) + '</div>' +
     fInput('f.task', 'flight.task', c.flight.task) +
     '<div class="ed-field-row three">' +
     fSelect('f.mass', 'units.mass', c.units.mass, unitOptions('mass')) +
     fSelect('f.distance', 'units.distance', c.units.distance, unitOptions('distance')) +
-    fSelect('f.altitude', 'units.altitude', c.units.altitude, unitOptions('altitude')) + '</div>',
+    fSelect('f.altitude', 'units.altitude', c.units.altitude, unitOptions('altitude')) + '</div>';
+  },
 
   mission: c =>
     fArea('f.objective', 'mission.objective', c.mission.objective) +
@@ -4537,7 +4575,7 @@ const SECTION_BUILDERS = {
 
   crew: c => listHtml('crew', c.crew, (x, i) =>
     '<div class="li-grid g2">' + fInput('f.crew.callsign', 'crew.' + i + '.callsign', x.callsign) + fInput('f.crew.pilot', 'crew.' + i + '.pilot', x.pilot) + '</div>' +
-    '<div class="li-grid g2">' + fInput('f.crew.crew', 'crew.' + i + '.crew', x.crew) + fInput('f.crew.board', 'crew.' + i + '.board', x.board) + '</div>', 'add.crew'),
+    '<div class="li-grid g2">' + fInput('f.crew.crew', 'crew.' + i + '.type', x.type) + fInput('f.crew.board', 'crew.' + i + '.board', x.board) + '</div>', 'add.crew'),
 
   nav: c => navSettingsHtml(c) + (() => {
     const legs = navLegs(c), cm = c.navDisplay.mode === 'course';
@@ -4669,6 +4707,18 @@ function syncMetar(c) {
   });
 }
 
+/* Les champs Appareil et Nombre du groupe suivent les lignes d'équipage, sans refaire l'éditeur (le curseur reste en place) */
+function syncGroupEditor(c) {
+  const lock = !!deduceGroup(c);
+  [['aircraft', c.flight.aircraft], ['count', c.flight.count == null ? '' : String(c.flight.count)]].forEach(p => {
+    const el = document.querySelector('#editor [data-path="flight.' + p[0] + '"]');
+    if (!el) return;
+    if (lock && el.value !== p[1]) el.value = p[1];
+    el.readOnly = lock;
+    if (lock) el.title = t('f.group.deduced'); else el.removeAttribute('title');
+  });
+}
+
 function onEditorInput(e) {
   const el = e.target;
   const path = el && el.dataset ? el.dataset.path : '';
@@ -4679,6 +4729,7 @@ function onEditorInput(e) {
   else setPath(c, path, el.value);
   if (path === 'weather.metar') syncMetar(c);
   if (path === 'flight.callsign') updatePackTitle();
+  if (/^crew\./.test(path)) { syncGroup(c); syncGroupEditor(c); }
   if (path === 'navDisplay.ref' || path === 'navDisplay.vmode') renderEditor();        /* la troisième liste et la rangée de la saisie changent */
   else if (/^nav(Display)?\./.test(path) || path === 'units.distance' || path === 'meta.date') syncNavEditor();
   if (/^refs\./.test(path)) syncRefsEditor();
@@ -4705,6 +4756,7 @@ function onEditorClick(e) {
   } else if (act === 'down' && i < arr.length - 1) {
     const tmp = arr[i + 1]; arr[i + 1] = arr[i]; arr[i] = tmp;
   } else return;
+  if (path === 'crew') syncGroup(c);
   renderEditor();
   touch();
   if (focusIdx >= 0) {
@@ -5062,7 +5114,7 @@ function impFlight(f, theatre, v1) {
   const units = Array.isArray(f.units) ? f.units.filter(isPlainObject) : [];
   const g = v1 ? f : { units: f.units };      /* en v2 le vol n'a pas de type : seules ses unités parlent */
   return {
-    groupName: f.groupName, types: flightTypes(g), aircraft: flightTypesLabel(g), type1: units.length ? unitTypeOf(g, units[0]) : '',
+    groupName: f.groupName, types: flightTypes(g), aircraft: flightTypesLabel(g), type1: units.length ? unitTypeOf(g, units[0]) : '', utypes: units.map(u => unitTypeOf(g, u)),
     coalition: typeof f.coalition === 'string' ? f.coalition : '', units: units, pts: pts
   };
 }
@@ -5331,6 +5383,12 @@ function cardFromFlight(fl, src) {
   c.flight.callsign = impCallsign(u, fl.groupName);
   c.flight.aircraft = fl.aircraft;      /* les types du vol, « Mi-24P + Mi-8MT » s'il est mixte */
   c.flight.count = fl.units.length ? fl.units.length : null;
+  /* une ligne par unité, dans l'ordre : indicatif de l'unité (à défaut son nom), pilote vide, type de l'unité, n° de bord */
+  c.crew = fl.units.slice(0, LIMITS.crew).map((u, i) => ({
+    callsign: str(impCallsign(u, u.name)), pilot: '', type: str(fl.utypes[i]),
+    board: (typeof u.onboardNum === 'string' || (typeof u.onboardNum === 'number' && isFinite(u.onboardNum))) ? String(u.onboardNum) : ''
+  }));
+  syncGroup(c);
   if (fl.pts.length) applyRouteToCard(c, routeFromObject({ format: ROUTE_FORMAT, theatre: src.theatre, points: fl.pts }));
   c.radios = impRadios(u, src.chan, fl.type1);      /* les radios de l'unité 1, lues avec le type de l'unité 1 */
   const m = src.mission;
