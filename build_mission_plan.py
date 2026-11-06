@@ -207,7 +207,8 @@ select[data-tbm-src] {{ display: none !important; }}
 @media (prefers-reduced-motion: reduce) {{ .tbm-panel {{ animation: none; }} }}
 @media print {{ .tbm-panel {{ display: none; }} }}
 
-.flag{{font-size:15px; background:rgba(0,0,0,.45); border:1px solid var(--line); width:38px; height:34px; border-radius:var(--rad); cursor:pointer; color:var(--amber);}}
+.flag{{font-size:15px; background:rgba(0,0,0,.45); border:1px solid var(--line); width:38px; height:34px; border-radius:var(--rad); cursor:pointer; color:var(--amber); display:inline-flex; align-items:center; justify-content:center; padding:0;}}
+.flag svg{{display:block;}}
 .classif{{font-family:var(--f-mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--stamp);
   border:1px solid var(--stamp); padding:5px 9px; border-radius:var(--rad); opacity:.85;}}
 
@@ -394,7 +395,7 @@ select[data-tbm-src] {{ display: none !important; }}
         <option value="modern-nato" data-i18n="theme.modernnato">OTAN moderne</option>
         <option value="modern-east" data-i18n="theme.moderneast">Bloc Est moderne</option>
       </select>
-      <button class="flag" id="flag-btn" title="Langue / Language">🇬🇧</button>
+      <button class="flag" id="flag-btn" title="Langue / Language"><svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="14" fill="#012169"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#fff" stroke-width="2.8"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#C8102E" stroke-width="1.6"/><rect x="8" width="4" height="14" fill="#fff"/><rect y="5" width="20" height="4" fill="#fff"/><rect x="9" width="2" height="14" fill="#C8102E"/><rect y="6" width="20" height="2" fill="#C8102E"/></svg></button>
       <span class="classif" id="classif">Classified // Eyes Only</span>
     </div>
   </div>
@@ -668,9 +669,13 @@ select[data-tbm-src] {{ display: none !important; }}
     if (loadEl) loadEl.textContent = t('loading') + '…';
   }}
 
+  /* Les drapeaux sont dessinés (ils ne s'affichent pas en lettres sous Windows) ; le bouton montre la langue vers laquelle il bascule */
+  var FLAG_FR = '<svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="7" height="14" fill="#002395"/><rect x="7" width="6" height="14" fill="#fff"/><rect x="13" width="7" height="14" fill="#ED2939"/></svg>';
+  var FLAG_EN = '<svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="14" fill="#012169"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#fff" stroke-width="2.8"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#C8102E" stroke-width="1.6"/><rect x="8" width="4" height="14" fill="#fff"/><rect y="5" width="20" height="4" fill="#fff"/><rect x="9" width="2" height="14" fill="#C8102E"/><rect y="6" width="20" height="2" fill="#C8102E"/></svg>';
+
   function updateFlagBtn() {{
     var btn = document.getElementById('flag-btn');
-    if (btn) btn.textContent = CURRENT_LANG === 'fr' ? '🇬🇧' : '🇫🇷';
+    if (btn) btn.innerHTML = CURRENT_LANG === 'fr' ? FLAG_EN : FLAG_FR;
   }}
 
   function setLang(lang) {{
@@ -776,7 +781,7 @@ select[data-tbm-src] {{ display: none !important; }}
           var back = doc.createElement('button');
           back.className = 'mp-back-injected';
           back.textContent = t('back');
-          back.style.cssText = 'font-family:inherit;font-size:11px;cursor:pointer;color:#c0892a;'
+          back.style.cssText = 'font-family:"Roboto Mono",monospace;font-weight:400;font-size:11px;cursor:pointer;color:#c0892a;'
             + 'background:transparent;border:1px solid #c0892a;border-radius:3px;padding:4px 10px;'
             + 'margin-right:12px;letter-spacing:.03em;min-height:36px;flex-shrink:0;';
           back.addEventListener('click', goHub);
@@ -803,6 +808,7 @@ select[data-tbm-src] {{ display: none !important; }}
           barSync[id] = mpBindToolbar(iframe, toolbar, back);
           /* Tampon escadrille — clone du .tb-brand natif de BG (BG exclu : il l'a déjà) */
           var sn = wingShortName();
+          var acc = (getComputedStyle(document.documentElement).getPropertyValue('--a-' + id) || '').trim() || '#c0892a';
           if (id !== 'bg' && sn && !toolbar.querySelector('.mp-wing-stamp')) {{
             if (!doc.getElementById('mp-stamp-style')) {{
               var st = doc.createElement('style');
@@ -814,7 +820,7 @@ select[data-tbm-src] {{ display: none !important; }}
               + 'font-weight:700;letter-spacing:2px;font-size:15px;color:var(--paper,#e8e3d8);'
               + 'white-space:nowrap;flex-shrink:0;}}'
               + '.mp-wing-stamp::before{{content:"";display:inline-block;width:8px;height:8px;'
-              + 'border-radius:50%;background:#c0892a;box-shadow:0 0 8px #c0892a;'
+              + 'border-radius:50%;background:' + acc + ';box-shadow:0 0 8px ' + acc + ';'
               + 'animation:mp-pulse 2s ease-in-out infinite;flex-shrink:0;}}'
               + '@keyframes mp-pulse{{0%,100%{{opacity:1;}}50%{{opacity:.4;}}}}';
               doc.head.appendChild(st);

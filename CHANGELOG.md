@@ -14,6 +14,8 @@ Changes merged since the last release, grouped per tool.
 #### Changed
 - File buttons use the same words everywhere: **Open** and **Save** for the tool's own file, **Import** and **Export** to exchange with another tool or produce the final document, **Clear** to empty the tool. The Datacard Generator's four file buttons become Open, Import, Save and Export.
 - Every file you save or export asks for its name first, with the usual name filled in; names use one date format everywhere. On tablets, HQ's flight packages and modified .miz now open the share menu, like the other files.
+- Every tool's top bar follows one layout: the tool's name and what it is for (only its initials on narrow screens) in the tool's colour, the file buttons in one order (Open, Save, Import, Export, Example, Clear) with one icon per action, then the version and a drawn language flag (it no longer shows as letters on Windows). The back button uses the same type in every tool, and the dot of the wing stamp takes the tool's colour.
+- On wide screens, each tool shows its own decorative stamp in the top bar, as the Briefing Generator did; it never makes the bar scroll.
 
 ### Mission Plan — landing
 #### Added
@@ -32,6 +34,8 @@ Changes merged since the last release, grouped per tool.
 - Radios are named and numbered as in the cockpit in the mission summary and in the package messages (the Mi-24P's R-863 and R-828 start at channel 0). The .miz keeps its own numbering.
 - Flight packages are recognised by their content, not their file name; unreadable flights are skipped and counted, an empty package or one without theatre is refused, with the same messages as the Route Planner and the Datacard Generator. *Load another .miz* also clears the mission offered to the Route Planner and the Datacard Generator.
 - The Side and Type filters of the flight list open in the suite's own list, like every other list, instead of the system menu.
+#### Fixed
+- The interface language is shared with the other tools (HQ kept its own); the language already chosen in HQ is kept.
 
 ### Flight Configurator
 #### Added
@@ -42,6 +46,7 @@ Changes merged since the last release, grouped per tool.
 - **Example** button: loads a demonstration reconnaissance photo with its markers, shapes, magnifier and info block (USDA NAIP aerial image, public domain).
 #### Changed
 - The top bar no longer overflows on narrow phones.
+- Importing a wing configuration checks the file like HQ and the Briefing Generator, with the same messages.
 
 ### Briefing Generator
 #### Changed
@@ -49,6 +54,7 @@ Changes merged since the last release, grouped per tool.
 - **Load** only accepts a briefing: any other file (flight package, route, datacard) is refused with a message and the current briefing is kept.
 #### Fixed
 - In the export window, the page list no longer shows the PDF and PNG choices above it, so it fits on phones.
+- A .miz the METAR assistant cannot read shows a message in the interface language instead of a French-only alert.
 
 ### Datacard Generator
 #### Added
@@ -57,6 +63,7 @@ Changes merged since the last release, grouped per tool.
 - The example loads in the interface language (French or English).
 - Radios imported from HQ or a flight package are named and numbered as in the cockpit (the Mi-24P's R-863 and R-828 start at channel 0); an aircraft type the suite does not know keeps "Radio n" and the mission's channel numbers. With several aircraft types, the channels are chosen per type.
 - **Import JSON** and the import window's **JSON file** both recognise a briefing, a route, a route set (all routes at once) and a flight package; a refused file says why.
+- Day / Night reads Jour / Nuit in French.
 #### Fixed
 - In the export window, the page list no longer shows the PDF and PNG choices above it, so it fits on phones.
 - Computed magnetic variation now follows DCS for every mission date: years up to 1985 use the IGRF model DCS ships (up to 1.2° closer), later years the previous five-year WMM file, as DCS does (0.2° closer in 1990, 1995 … 2025).
