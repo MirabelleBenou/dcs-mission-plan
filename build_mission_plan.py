@@ -450,7 +450,7 @@ select[data-tbm-src] {{ display: none !important; }}
               <span class="ptitle">Flight Configurator</span>
               <span class="pver">v0.1.1</span>
             </div>
-            <div class="pdesc" data-i18n="fc.desc">Assemble un vol — identité, radios, emport composé sur la vue de face ou tiré de mes presets, livrée — et l'exporte en paquet de vol que HQ applique à une mission.</div>
+            <div class="pdesc" data-i18n="fc.desc">Assemble un groupe — identité, radios, emport composé sur la vue de face ou tiré de mes presets, livrée — et l'exporte en paquet de vol que HQ applique à une mission.</div>
             <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
           </div>
           <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>
@@ -569,7 +569,7 @@ select[data-tbm-src] {{ display: none !important; }}
       'rs.desc': "Transforme une capture en photo d'analyse de reconnaissance — niveaux de gris, annotations au doigt, export PNG pleine résolution.",
       'fm.desc': "Le manuel d'emploi de la suite — un chapitre par module, schémas et mode d'emploi, entièrement hors-ligne.",
       'dg.desc': "Datacards de vol d'une page pour le kneeboard — saisie ou depuis un briefing, day et night, export PNG et PDF.",
-      'fc.desc': "Assemble un vol — identité, radios, emport composé sur la vue de face ou tiré de mes presets, livrée — et l'exporte en paquet de vol que HQ applique à une mission.",
+      'fc.desc': "Assemble un groupe — identité, radios, emport composé sur la vue de face ou tiré de mes presets, livrée — et l'exporte en paquet de vol que HQ applique à une mission.",
       'rp.desc': 'Tracé de route sur carte — carte DCS, topographique ou satellite, grille MGRS, villes et aérodromes, recherche ; points de référence ; caps, distances, vitesse sol et minutage ; calques CombatFlite et dessin au doigt (zones, FLOT, couloirs, orbites, boîtes) ; MGRS et DMS, envoyés à la datacard ; import et export du Route Tool de DCS.',
       'status.op': 'Opérationnel',
       cta: '▶ Ouvrir le dossier',
@@ -589,7 +589,7 @@ select[data-tbm-src] {{ display: none !important; }}
       'rs.desc': 'Turns a screenshot into a reconnaissance analysis photo — greyscale, touch annotations, full-resolution PNG export.',
       'fm.desc': "The suite's field manual — one chapter per module, diagrams and how-tos, fully offline.",
       'dg.desc': 'One-page flight datacards for the kneeboard — from scratch or from a briefing, day and night, PNG and PDF export.',
-      'fc.desc': "Assembles a flight — identity, radios, loadout built on the front view or started from my presets, livery — and exports it as a flight package that HQ applies to a mission.",
+      'fc.desc': "Assembles a group — identity, radios, loadout built on the front view or started from my presets, livery — and exports it as a flight package that HQ applies to a mission.",
       'rp.desc': 'Lay a route on a map — DCS, topographic or satellite, MGRS grid, towns and airfields, search; reference points; headings, distances, ground speed and minute marks; CombatFlite layers and touch drawing (zones, FLOT, corridors, orbits, boxes); MGRS and DMS, sent to the datacard; DCS Route Tool import and export.',
       'status.op': 'Operational',
       cta: '▶ Open the file',
