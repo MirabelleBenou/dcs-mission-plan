@@ -264,6 +264,13 @@ I18N_FR = {
     'clear.confirm': 'Vider le module ? Les groupes, la route et l’emport en cours sont perdus (mes presets restent).',
 
     'save.done': 'Travail enregistré : {0}',
+    'fn.label': 'Nom du fichier',
+    'fn.cancel': 'Annuler',
+    'fn.close': 'Fermer',
+    'fn.save.title': 'Enregistrer le travail',
+    'fn.save.go': 'Enregistrer',
+    'fn.export.title': 'Exporter le paquet',
+    'fn.export.go': 'Exporter',
 
     'export.done': 'Paquet exporté : {0}',
 }
@@ -499,6 +506,13 @@ I18N_EN = {
     'clear.confirm': 'Empty the module? The groups, route and loadouts in progress are lost (my presets stay).',
 
     'save.done': 'Work saved: {0}',
+    'fn.label': 'File name',
+    'fn.cancel': 'Cancel',
+    'fn.close': 'Close',
+    'fn.save.title': 'Save the work',
+    'fn.save.go': 'Save',
+    'fn.export.title': 'Export the package',
+    'fn.export.go': 'Export',
 
     'export.done': 'Package exported: {0}',
 }
@@ -831,6 +845,32 @@ select[data-tbm-src] { display: none !important; }
 
 # ---------- CSS propre au module ----------
 CSS_FC = r"""
+/* ======== FENÊTRE « NOM DU FICHIER » ======== */
+.fn-modal[hidden] { display: none !important; }
+.fn-modal { position: fixed; inset: 0; z-index: 3000; display: flex; align-items: center; justify-content: center; padding: 16px; }
+.fn-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.55); }
+.fn-panel {
+  position: relative; width: 100%; max-width: 440px; max-height: calc(100vh - 32px); overflow: auto;
+  background: var(--olive-dark); color: var(--paper); border: 1px solid var(--amber); border-top: 3px solid var(--amber);
+  padding: 18px 18px 16px; box-shadow: 0 8px 40px rgba(0,0,0,.6);
+}
+.fn-close { position: absolute; top: 4px; right: 8px; background: none; border: 0; color: var(--paper); font-size: 24px; line-height: 1; padding: 6px 8px; cursor: pointer; font-family: inherit; }
+.fn-close:hover, .fn-close:focus-visible { color: var(--amber); outline: none; }
+.fn-panel h2 { margin: 0 28px 14px 0; font-family: var(--f-stencil); font-weight: 400; font-size: 16px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--amber); }
+.fn-field { margin: 0 0 14px; }
+.fn-field .lbl {
+  display: block; margin-bottom: 5px; font-family: var(--f-ui); font-weight: 700; font-size: 11px; letter-spacing: 1.8px; text-transform: uppercase; color: var(--amber);
+}
+.fn-row { display: flex; align-items: center; gap: 8px; }
+.fn-row .in {
+  flex: 1 1 auto; min-width: 0; box-sizing: border-box; min-height: 44px; padding: 10px 11px;
+  background: rgba(216,201,165,.92); border: 1px solid var(--khaki); border-left: 3px solid var(--amber-dark);
+  font-family: var(--f-typewriter); font-size: 13px; color: var(--ink);
+}
+.fn-row .in:focus { outline: none; border-left-color: var(--red-stamp); background: var(--paper-light); box-shadow: 0 0 0 1px var(--amber); }
+.fn-ext { flex: none; font-family: var(--f-typewriter); font-size: 13px; color: var(--khaki-light); }
+.fn-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+
 /* ======== FLIGHT CONFIGURATOR ======== */
 /* L'accent du module : UNE variable, --fc (au shell, --a-fc). Il colore le bandeau, le bouton principal, le focus, les puces actives et le logo F·C. */
 :root { --fc: #D0784A; }
@@ -1202,6 +1242,20 @@ BODY = r"""
 <input type="file" id="fc-in-lua" accept=".lua,text/plain" multiple hidden>
 <input type="file" id="fc-in-open" accept=".json,application/json" hidden>
 <input type="file" id="fc-in-pkg" accept=".json,.zip,application/json,application/zip" hidden>
+<!-- FENÊTRE : NOM DU FICHIER (enregistrement, paquet) -->
+<div class="fn-modal" id="fn-modal" hidden role="dialog" aria-modal="true" aria-labelledby="fn-title">
+  <div class="fn-backdrop" id="fn-backdrop"></div>
+  <div class="fn-panel" role="document">
+    <button type="button" class="fn-close" id="fn-close" aria-label="Fermer">&times;</button>
+    <h2 id="fn-title"></h2>
+    <div class="fn-field"><label class="lbl" for="fn-name" data-i18n="fn.label">Nom du fichier</label><div class="fn-row"><input class="in" id="fn-name" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="100"><span class="fn-ext" id="fn-ext">.json</span></div></div>
+    <div class="fn-actions">
+      <button type="button" class="miz-btn" id="fn-cancel" data-i18n="fn.cancel">Annuler</button>
+      <button type="button" class="miz-btn primary" id="fn-go"></button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 """
 
@@ -2039,16 +2093,17 @@ function unitSummary(f, fi, u, ui) {
 function unitFoldLabel(f, fi, u, ui) { return `${t(u.folded ? 'u.unfold' : 'u.fold')} : ${unitLabel(f, fi, u, ui)}`; }
 
 // ----- Le paquet -----
-function cleanName(s) { return String(s).replace(/[^A-Za-z0-9_-]/g, '_').slice(0, 40); }
-function stamp() {
-  const d = new Date(), p = n => String(n).padStart(2, '0');
-  return d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + '_' + p(d.getHours()) + p(d.getMinutes()) + p(d.getSeconds());
+function pkStamp(d) {
+  d = d || new Date();
+  const p = n => String(n).padStart(2, '0');
+  return d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + '-' + p(d.getHours()) + p(d.getMinutes()) + p(d.getSeconds());
 }
+// Le nom par défaut, sans extension : préfixe, premier groupe, « _+n » pour les autres, horodatage
 function packageFileName(prefix) {
-  const first = S.flights.length ? (S.flights[0].name.trim() || 'groupe') : 'groupe';
-  return (prefix || 'paquet') + '_' + cleanName(first) + (S.flights.length > 1 ? '_+' + (S.flights.length - 1) : '') + '_' + stamp() + '.json';
+  const first = S.flights.length ? fnPart(S.flights[0].name, 'groupe') : 'groupe';
+  return (prefix || 'paquet') + '_' + first + (S.flights.length > 1 ? '_+' + (S.flights.length - 1) : '') + '_' + pkStamp();
 }
-// Les noms de vol en double : deux vols de même nom rogné (casse ignorée) et de même camp, ou dont l'un n'a pas de camp ; chaque nom une fois.
+// Les noms de vol en double : deux vols de même nom rogné (casse exacte) et de même camp, ou dont l'un n'a pas de camp ; chaque nom une fois.
 function duplicateNames() {
   const out = [], seen = new Set();
   S.flights.forEach((f, i) => {
@@ -2298,7 +2353,7 @@ function refreshBar() {
   if (btn) { btn.disabled = issues.length > 0; btn.setAttribute('aria-disabled', String(issues.length > 0)); }
   if (!bar) return;
   bar.classList.toggle('ok', issues.length === 0);
-  let msg = issues.length ? issues.map(i => tf(i.key, ...i.args)).join(' ') : tf('bar.ok', packageFileName());
+  let msg = issues.length ? issues.map(i => tf(i.key, ...i.args)).join(' ') : tf('bar.ok', packageFileName() + '.json');
   if (UI.clamped > 0) msg += ' · ' + tf('bar.clamped', UI.clamped);
   bar.textContent = msg;
 }
@@ -2881,13 +2936,121 @@ function showToast(msg, ms) {
   clearTimeout(showToast._h);
   showToast._h = setTimeout(() => el.classList.remove('show'), ms || 2400);
 }
-function download(text, name, mime) {
-  const url = URL.createObjectURL(new Blob([text], { type: mime || 'text/plain' }));
+function fcDownload(blob, name) {
+  const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url; a.download = name;
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
+/* Le nom d'un fichier choisi : sans « .json », accents ôtés, tout ce qui n'est pas lettre, chiffre, _ + - devient « _ » ; vide si rien ne reste */
+function cleanFname(v) {
+  return str(v).trim().replace(/\.json$/i, '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9_+-]+/g, '_').replace(/_{2,}/g, '_').replace(/^_+|_+$/g, '').slice(0, 100);
+}
+const FN = { name: '', opener: null, run: null, titleKey: '', goKey: '', at: 0, bodyFn: null, bodyEl: null, headFn: null, headEl: null, wide: false, blocked: false };
+// Un nom par défaut : la partie variable est nettoyée et coupée à 40 caractères ; l'horodatage s'ajoute ensuite, en fin de nom
+function fnPart(v, fallback) { return cleanFname(v).slice(0, 40) || fallback; }
+function fnOpen() { return !document.getElementById('fn-modal').hidden; }
+function fnSync() {
+  document.getElementById('fn-go').disabled = cleanFname(FN.name) === '' || FN.blocked;
+}
+function fnRender() {
+  document.getElementById('fn-title').textContent = t(FN.titleKey);
+  document.getElementById('fn-go').textContent = t(FN.goKey);
+  document.getElementById('fn-close').setAttribute('aria-label', t('fn.close'));
+  fnBodyMount();
+}
+/* Un corps facultatif (liste de ce que l'écriture touche) entre le titre et le champ du nom ; absent, le DOM de la fenêtre ne change pas */
+function fnBodyMount() {
+  if (FN.bodyEl) { FN.bodyEl.remove(); FN.bodyEl = null; }
+  if (FN.headEl) { FN.headEl.remove(); FN.headEl = null; }
+  if (!FN.bodyFn) return;
+  const el = document.createElement('div');
+  el.className = 'fn-del';
+  el.innerHTML = FN.bodyFn();
+  const panel = document.querySelector('#fn-modal .fn-panel');
+  if (FN.headFn) {
+    const hd = document.createElement('div');   // un texte en tête, hors du corps qui défile
+    hd.className = 'snap-meta fn-head';
+    hd.textContent = FN.headFn();
+    panel.insertBefore(hd, panel.querySelector('.fn-field'));
+    FN.headEl = hd;
+  }
+  panel.insertBefore(el, panel.querySelector('.fn-field'));
+  FN.bodyEl = el;
+}
+/* o : titleKey, goKey, ext, name (le défaut, sans extension), opener, run(nom nettoyé), body (facultatif : () => HTML), blocked (facultatif : le bouton qui écrit reste inactif) */
+function fnAsk(o) {
+  FN.name = cleanFname(o.name);
+  FN.run = o.run;
+  FN.opener = o.opener || document.activeElement;
+  FN.at = performance.now();
+  FN.titleKey = o.titleKey; FN.goKey = o.goKey;
+  FN.bodyFn = o.body || null;
+  FN.headFn = o.head || null;
+  FN.wide = !!o.wide;
+  document.querySelector('#fn-modal .fn-panel').classList.toggle('fn-wide', FN.wide);
+  FN.blocked = !!o.blocked;
+  const inp = document.getElementById('fn-name');
+  inp.value = FN.name;
+  document.getElementById('fn-ext').textContent = o.ext;
+  fnRender();
+  fnSync();
+  document.getElementById('fn-modal').hidden = false;
+  inp.focus({ preventScroll: true });
+  inp.select();
+}
+function fnClose() {
+  document.getElementById('fn-modal').hidden = true;
+  const o = FN.opener;
+  FN.opener = null; FN.run = null; FN.bodyFn = null; FN.headFn = null; FN.blocked = false;
+  document.querySelector('#fn-modal .fn-panel').classList.remove('fn-wide');
+  if (FN.bodyEl) { FN.bodyEl.remove(); FN.bodyEl = null; }
+  if (FN.headEl) { FN.headEl.remove(); FN.headEl = null; }
+  if (o && o.focus && !o.disabled) { try { o.focus({ preventScroll: true }); } catch (e) {} }
+}
+function fnGo() {
+  const name = cleanFname(FN.name), run = FN.run;
+  if (name === '' || !run || FN.blocked) return;
+  fnClose();
+  run(name);
+}
+function fnBind() {
+  ['fn-close', 'fn-cancel'].forEach(id => document.getElementById(id).addEventListener('click', fnClose));
+  // le fond ignore les clics des 400 ms qui suivent l'ouverture : le 2e clic d'un double-clic sur le bouton qui ouvre ne ferme pas la fenêtre
+  document.getElementById('fn-backdrop').addEventListener('click', () => { if (performance.now() - FN.at > 400) fnClose(); });
+  document.getElementById('fn-go').addEventListener('click', fnGo);
+  const inp = document.getElementById('fn-name');
+  inp.addEventListener('input', e => { FN.name = e.target.value; fnSync(); });
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); if (!e.repeat) fnGo(); } });
+  document.addEventListener('keydown', e => {
+    if (!fnOpen()) return;
+    if (e.key === 'Escape') { e.preventDefault(); fnClose(); return; }
+    if (e.key !== 'Tab') return;
+    const els = Array.prototype.filter.call(document.querySelectorAll('#fn-modal button, #fn-modal input'), x => !x.disabled && x.offsetParent !== null);
+    if (!els.length) return;
+    const first = els[0], last = els[els.length - 1];
+    if (e.shiftKey && (document.activeElement === first || !document.getElementById('fn-modal').contains(document.activeElement))) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && (document.activeElement === last || !document.getElementById('fn-modal').contains(document.activeElement))) { e.preventDefault(); first.focus(); }
+  });
+}
+
+/* Un fichier remis à la personne : le partage du système (un File) quand il le permet, sinon un téléchargement ; un partage rejeté conduit au téléchargement.
+   download(blob, nom) est le téléchargement de l'appelant. */
+function shareOrDownload(blob, fname, mime, title, download) {
+  if (navigator.share && navigator.canShare) {
+    try {
+      const file = new File([blob], fname, { type: mime });
+      if (navigator.canShare({ files: [file] })) {
+        navigator.share({ files: [file], title: title, text: fname })
+          .catch(() => download(blob, fname));
+        return;
+      }
+    } catch (e) {}
+  }
+  download(blob, fname);
+}
+
 // Un fichier JSON, ou un .zip qui porte un package.json à la racine : done({ parsed }) ou done({ reject: clé du message }).
 function readJsonFile(file, done) {
   const parse = text => {
@@ -2962,15 +3125,29 @@ function openFile(file) {
   });
 }
 function saveFile() {
-  const name = packageFileName('fc');
-  download(JSON.stringify(buildWorkFile(), null, 1), name, 'application/json');
-  showToast(tf('save.done', name));
+  fnAsk({
+    titleKey: 'fn.save.title', goKey: 'fn.save.go', ext: '.json',
+    name: packageFileName('fc'),
+    opener: document.getElementById('btn-save'),
+    run: name => {
+      const text = JSON.stringify(buildWorkFile(), null, 1);
+      shareOrDownload(new Blob([text], { type: 'application/json' }), name + '.json', 'application/json', 'Flight Configurator', fcDownload);
+      showToast(tf('save.done', name + '.json'));
+    }
+  });
 }
 function exportFile() {
   if (exportIssues().length) { refreshBar(); return; }
-  const name = packageFileName();
-  download(JSON.stringify(buildPackage(), null, 1), name, 'application/json');
-  showToast(tf('export.done', name));
+  fnAsk({
+    titleKey: 'fn.export.title', goKey: 'fn.export.go', ext: '.json',
+    name: packageFileName(),
+    opener: document.getElementById('btn-export'),
+    run: name => {
+      const text = JSON.stringify(buildPackage(), null, 1);
+      shareOrDownload(new Blob([text], { type: 'application/json' }), name + '.json', 'application/json', 'Flight Configurator', fcDownload);
+      showToast(tf('export.done', name + '.json'));
+    }
+  });
 }
 function clearAll() {
   if (!confirm(t('clear.confirm'))) return;
@@ -3281,6 +3458,7 @@ function init() {
   bindColumns();
   bindToolbar();
   bindImportWindow();
+  fnBind();                 // la fenêtre « Nom du fichier »
   renderAll();
   window.addEventListener('pagehide', flushWork);
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushWork(); else UI.hq = undefined; });
