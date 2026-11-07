@@ -6,6 +6,7 @@ Un groupe est le vol du Flight Configurator tel qu'il est dans son état (fcId, 
 ou d'une unité est gardée telle quelle. Un groupe peut n'avoir aucune unité (units: []).
 
 Une seule façon d'écrire : relire la clé, changer le seul groupe touché, écrire (gsPutFlight, gsRemoveFlight, gsSetTheatre). Seule gsReplaceAll écrit toute la liste.
+Un échec d'écriture (stockage plein) appelle une fois par série d'échecs gsOnSaveFail() si le module la définit (son toast).
 Rien ici ne touche au DOM, à t() ni au réseau ; tout accès au stockage est en try/catch : sans stockage, l'écran marche.
 
 gsMigrate(packFn) : au premier chargement de l'un des deux modules, la fiche est bâtie des groupes de fc_state_v1 puis des routes de route_set_v1 qui portent un lien
@@ -18,7 +19,7 @@ BLOCK_BEGIN = '/* ===== GROUPES PARTAGÉS (flight_set_v1) ===== */'
 BLOCK_END = '/* ===== FIN DES GROUPES PARTAGÉS ===== */'
 
 _JS = r"""
-const KEY_FLIGHT_SET = 'flight_set_v1', FLIGHT_SET_FORMAT = 'dcs-flight-set-v1';
+const KEY_FLIGHT_SET = 'flight_set_v1', KEY_FLIGHT_SET_BAD = 'flight_set_v1_illisible', FLIGHT_SET_FORMAT = 'dcs-flight-set-v1';
 const GS_KEY_FC = 'fc_state_v1', GS_KEY_ROUTES = 'route_set_v1', GS_KEY_ROUTE = 'route_state_v1';
 
 function gsIsObj(v) { return !!v && typeof v === 'object' && !Array.isArray(v); }
@@ -58,8 +59,24 @@ function gsRead() {
   });
   return { theatre: typeof o.theatre === 'string' ? o.theatre : '', flights: flights };
 }
+let GS_FAILED = false;
+function gsNoteWrite(ok) {
+  if (ok) { GS_FAILED = false; return; }
+  if (GS_FAILED) return;
+  GS_FAILED = true;
+  try { if (typeof gsOnSaveFail === 'function') gsOnSaveFail(); } catch (e) { /* le toast est facultatif */ }
+}
 function gsWrite(theatre, flights) {
-  return gsLsSet(KEY_FLIGHT_SET, JSON.stringify({ format: FLIGHT_SET_FORMAT, theatre: typeof theatre === 'string' ? theatre : '', flights: flights }));
+  const ok = gsLsSet(KEY_FLIGHT_SET, JSON.stringify({ format: FLIGHT_SET_FORMAT, theatre: typeof theatre === 'string' ? theatre : '', flights: flights }));
+  gsNoteWrite(ok);
+  return ok;
+}
+/* Les points d'une route lue brute (route_set_v1) au format du paquet, à la vitesse sol gs (km/h) ; null sans projection du théâtre. Un point sans coordonnées valides est écarté. */
+function gsPackRoute(r, th, gs) {
+  if (!Object.prototype.hasOwnProperty.call(TM_PARAMS, th)) return null;
+  const o = {};
+  (Array.isArray(r.points) ? r.points : []).filter(p => gsIsObj(p) && packValidCoord(p.lat, p.lon)).forEach((p, k) => { o[String(k + 1)] = packPoint(p, k, th, gs); });
+  return o;
 }
 /* Remplace le groupe de même fcId (à sa place) ou ajoute f à la fin ; relit d'abord. Vrai si la fiche porte f à la fin (écrite, ou déjà identique). */
 function gsPutFlight(f) {
@@ -94,10 +111,13 @@ function gsReplaceAll(theatre, flights) {
    2. dans l'ordre de route_set_v1, chaque route qui porte un lien par nom (flight) : les groupes de même nom rogné (casse exacte) et même camp :
       un seul, sans route : il la prend ; un seul qui a déjà une route : rien ; aucun : un groupe neuf sans unité ; plusieurs : rien.
       Pas de route retenue sans théâtre commun : le théâtre de la fiche et celui de route_state_v1 doivent être le même ;
-   3. écrit la fiche (même vide), puis réécrit fc_state_v1 en { v: 2, sel, mine }. route_set_v1 n'est pas touché.
+   3. écrit la fiche (même vide), puis, seulement si elle est écrite, réécrit fc_state_v1 en { v: 2, sel, mine } : un stockage plein laisse fc_state_v1 tel qu'il est. route_set_v1 n'est pas touché.
+   Une fiche qui existe sans se lire est recopiée sous flight_set_v1_illisible (une seule fois) avant d'être remplacée.
    Rend vrai si la fiche a été écrite. */
 function gsMigrate(packFn) {
   if (gsRead() !== null) return false;
+  const bad = gsLsGet(KEY_FLIGHT_SET);       // une fiche qui existe mais ne se lit pas : sa valeur est gardée telle quelle, une seule fois, avant d'être remplacée
+  if (bad !== null && gsLsGet(KEY_FLIGHT_SET_BAD) === null) gsLsSet(KEY_FLIGHT_SET_BAD, bad);
   const fc = gsJson(GS_KEY_FC), st = gsIsObj(fc) && gsIsObj(fc.state) ? fc.state : null;
   const rs = gsJson(GS_KEY_ROUTE), rsTheatre = gsIsObj(rs) && typeof rs.theatre === 'string' ? rs.theatre : '';
   const flights = [], seen = new Set();

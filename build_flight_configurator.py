@@ -443,6 +443,7 @@ I18N_FR = {
     'route.norp': 'Le Route Planner n’a pas encore été ouvert ici : la route n’est pas reprise.',
     'route.noid': 'Ouvre le Route Planner une fois pour pouvoir choisir ces routes (il leur donne un identifiant).',
     'route.toast.one': 'Route « {0} » reprise du Route Planner pour {1}.',
+    'toast.gsFull': 'Stockage du navigateur plein : vos groupes ne sont pas enregistrés. Enregistrez un fichier de travail.',
     'route.toast.many': 'Routes reprises du Route Planner : {0}.',
 
     'u.title': 'Unité {0}',
@@ -725,6 +726,7 @@ I18N_EN = {
     'route.norp': 'The Route Planner has not been opened here yet: the route is not followed.',
     'route.noid': 'Open the Route Planner once to be able to pick these routes (it gives them an identifier).',
     'route.toast.one': 'Route “{0}” updated from the Route Planner for {1}.',
+    'toast.gsFull': 'Browser storage full: your groups are not saved. Save a work file.',
     'route.toast.many': 'Routes updated from the Route Planner: {0}.',
 
     'u.title': 'Unit {0}',
@@ -2153,8 +2155,10 @@ function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* l'écr
 let _saveTimer = 0;
 function writeState() {
   _saveTimer = 0;
-  try { gsPush(); } catch (e) { /* l'écran marche sans */ }
-  try { lsSet(KEY_STATE, JSON.stringify({ v: 2, sel: S.sel, mine: LIB.mine })); } catch (e) { /* l'écran marche sans */ }
+  let ok = false;
+  try { ok = gsPush(); } catch (e) { ok = false; }
+  // fc_state_v1 ne perd ses groupes qu'une fois la fiche écrite avec eux : sinon il reste à l'état d'avant (v1, state.flights) et la fiche est retentée à la prochaine écriture
+  try { lsSet(KEY_STATE, JSON.stringify(ok ? { v: 2, sel: S.sel, mine: LIB.mine } : { v: 1, state: S, mine: LIB.mine })); } catch (e) { /* l'écran marche sans */ }
 }
 function saveWork() {
   clearTimeout(_saveTimer);
@@ -2174,29 +2178,69 @@ function commitNow() {
 // ----- La fiche partagée (flight_set_v1) -----
 // GS.seen : fcId → texte stable (gsStable) du groupe tel qu'on l'a lu ou écrit la dernière fois. writeState n'écrit que les groupes qui diffèrent (gsPutFlight relit la clé, ne remplace que ce groupe),
 // retire ceux que le module a supprimés (gsRemoveFlight) et pose le théâtre s'il a changé. Un groupe que le module ne montre pas (une unité d'un type hors de PAYLOAD_TYPES) n'y figure jamais : il n'est jamais touché.
-const GS = { seen: {}, theatre: '' };
+const GS = { seen: {}, theatre: '', live: false };       // live : la fiche existe et le module la suit (sinon fc_state_v1 v1 porte les groupes)
 function gsMarkAll() {
   GS.seen = {};
   S.flights.forEach(f => { GS.seen[f.fcId] = gsStable(f); });
   GS.theatre = S.theatre;
+  GS.live = true;
 }
+// Un groupe de la fiche que le module a changé : fusion à trois. base = ce qu'on a lu ou écrit la dernière fois (GS.seen), mien = la copie du module, leur = la fiche relue ;
+// pour chaque clé de premier niveau, mien si elle a changé depuis base, sinon leur ; route et routeLink vont ensemble. Rien n'a changé : on n'écrit pas.
+function gsMerge(f) {
+  const mine = clone(f), g = gsRead();
+  const theirs = g ? g.flights.filter(x => x.fcId === f.fcId)[0] : null;
+  if (!theirs || !has(GS.seen, f.fcId)) return gsPutFlight(mine);
+  const base = JSON.parse(GS.seen[f.fcId]), out = clone(theirs);
+  const changed = k => gsStable(has(mine, k) ? mine[k] : undefined) !== gsStable(has(base, k) ? base[k] : undefined);
+  const routeSide = changed('route') || changed('routeLink');
+  Object.keys(mine).concat(Object.keys(base)).forEach(k => {
+    if (!(k === 'route' || k === 'routeLink' ? routeSide : changed(k))) return;
+    if (has(mine, k)) out[k] = mine[k]; else delete out[k];
+  });
+  return gsPutFlight(out);
+}
+// La fiche n'existe pas (le stockage l'a refusée, ou le Route Planner ne l'a pas encore créée) : l'état d'avant (v1) est remis à jour, la migration retentée ; si la fiche est là, le module la reprend telle quelle.
+// Rend vrai si le module suit la fiche.
+function gsAdopt() {
+  if (gsRead() === null) {
+    try { lsSet(KEY_STATE, JSON.stringify({ v: 1, state: S, mine: LIB.mine })); } catch (e) { /* l'écran marche sans */ }
+    gsMigrate(gsPackFn);
+  }
+  const gs = gsRead();
+  if (!gs) return false;
+  const folds = {};
+  S.flights.forEach(f => { if (UI.fold.has(f)) folds[f.fcId] = UI.fold.get(f); });
+  restoreState({ theatre: gs.theatre, flights: gs.flights, sel: S.sel });
+  S.flights.forEach(f => { if (has(folds, f.fcId)) UI.fold.set(f, folds[f.fcId]); });
+  gsMarkAll();
+  renderAll();
+  return true;
+}
+// Rend vrai si tout ce que le module a changé est dans la fiche.
 function gsPush() {
+  if (!GS.live) return gsAdopt();
+  let ok = true;
   S.flights.forEach(f => {
     const j = gsStable(f);
-    if (GS.seen[f.fcId] !== j && gsPutFlight(JSON.parse(JSON.stringify(f)))) GS.seen[f.fcId] = j;
+    if (GS.seen[f.fcId] === j) return;
+    if (gsMerge(f)) GS.seen[f.fcId] = j; else ok = false;
   });
   Object.keys(GS.seen).forEach(id => {
-    if (!S.flights.some(f => f.fcId === id) && gsRemoveFlight(id)) delete GS.seen[id];
+    if (S.flights.some(f => f.fcId === id)) return;
+    if (gsRemoveFlight(id)) delete GS.seen[id]; else ok = false;
   });
-  if (S.theatre !== GS.theatre && gsSetTheatre(S.theatre)) GS.theatre = S.theatre;
+  if (S.theatre !== GS.theatre) { if (gsSetTheatre(S.theatre)) GS.theatre = S.theatre; else ok = false; }
+  return ok;
 }
 // Ce que les autres ont écrit : les groupes changés sont remplacés, les nouveaux ajoutés (à leur place dans la fiche), ceux qui ont disparu retirés ; la sélection reste sur le même groupe (sinon le premier).
 // Un groupe en cours d'écriture locale s'écrit d'abord. Rend vrai si l'écran a changé (il est redessiné).
 function gsPull() {
   flushWork();
+  if (!GS.live) return gsRead() !== null && gsAdopt();
   const gs = gsRead();
   if (!gs) return false;
-  const selId = S.flights[S.sel.f] ? S.flights[S.sel.f].fcId : null, byId = {}, inSet = {}, out = [];
+  const selId = S.flights[S.sel.f] ? S.flights[S.sel.f].fcId : null, byId = {}, inSet = {}, out = [], taken = [];
   S.flights.forEach(f => { byId[f.fcId] = f; });
   let changed = false;
   gs.flights.forEach(raw => {
@@ -2206,12 +2250,13 @@ function gsPull() {
     const cur = byId[raw.fcId], j = gsStable(nf);
     if (cur && (GS.seen[raw.fcId] === j || gsStable(cur) !== GS.seen[raw.fcId])) { out.push(cur); return; }
     if (cur && UI.fold.has(cur)) UI.fold.set(nf, UI.fold.get(cur));
+    if (cur && cur.routeLink && nf.routeLink && cur.routeLink.rid === nf.routeLink.rid && (cur.routeLink.name !== nf.routeLink.name || JSON.stringify(cur.route ? cur.route.points : null) !== JSON.stringify(nf.route ? nf.route.points : null))) taken.push({ nf: nf, name: nf.routeLink.name });      // le Route Planner a repris la route de ce groupe
     GS.seen[raw.fcId] = j;
     out.push(nf);
     changed = true;
   });
   S.flights.forEach(f => {
-    if (out.indexOf(f) >= 0) return;
+    if (out.indexOf(f) >= 0 || inSet[f.fcId]) return;         // gardé, ou remplacé par sa version de la fiche : son état lu reste
     if (!has(GS.seen, f.fcId)) { out.push(f); return; }       // jamais écrit (le stockage a refusé) : gardé
     delete GS.seen[f.fcId];
     changed = true;
@@ -2225,19 +2270,22 @@ function gsPull() {
   S.sel = k >= 0 ? { f: k, u: S.sel.u } : { f: 0, u: 0 };
   if (!S.flights[S.sel.f] || !S.flights[S.sel.f].units[S.sel.u]) S.sel.u = 0;
   if (UI.rtChoose !== null && !S.flights.some(f => f.fcId === UI.rtChoose)) UI.rtChoose = null;
-  Object.assign(UI.cmp, { saving: false, err: '', st: null });
+  if (k < 0) Object.assign(UI.cmp, { saving: false, err: '', st: null });       // une saisie en cours (nom de preset) ne se perd que si le groupe choisi a disparu
   renderAll();
+  if (taken.length && document.visibilityState === 'visible') {
+    const lab = taken.map(x => flightLabel(x.nf, S.flights.indexOf(x.nf)));
+    showToast(taken.length === 1 ? tf('route.toast.one', taken[0].name.trim() !== '' ? taken[0].name : t('route.unnamed'), lab[0]) : tf('route.toast.many', lab.join(', ')), 4500);
+  }
   return true;
 }
 function gsStorage(e) {
   if (e.key !== null && e.key !== KEY_FLIGHT_SET) return;
   gsPull();
 }
-// Les points d'une route du Route Planner (lue brute dans route_set_v1) au format du paquet, pour la migration ; null sans projection du théâtre
-function gsPackRoute(r, th) {
-  if (!has(TM_PARAMS, th)) return null;
-  return rpPack({ points: (Array.isArray(r.points) ? r.points : []).filter(p => isObj(p) && packValidCoord(p.lat, p.lon)) }, th, rpRead().state.gs);
-}
+// La migration prend les points d'une route lue brute au format du paquet (gsPackRoute du bloc partagé), à la vitesse sol du Route Planner
+function gsPackFn(r, th) { return gsPackRoute(r, th, rpRead().state.gs); }
+// Un échec d'écriture de la fiche (stockage plein), dit une fois par série d'échecs
+function gsOnSaveFail() { showToast(tf('toast.gsFull'), 6000); }
 const UNIT_KEYS = ['type', 'name', 'callsign', 'csRaw', 'onboard', 'livery', 'folded', 'radios', 'loadout'];
 // Un vol de l'état : en v1 (fc_state_v1, fichier de travail d'avant) le type est au vol et chaque unité le prend ; en v2 chaque unité porte le sien.
 // Un vol dont une unité n'a pas un type de PAYLOAD_TYPES est écarté ; un groupe sans unité est valide (né au Route Planner).
@@ -2955,6 +3003,7 @@ function routeSync() {
 }
 function routeTakeover() {
   if (document.visibilityState !== 'visible') return;       // un onglet resté en arrière-plan n'écrit rien : à son retour (visibilitychange), il reprend
+  gsPull();       // la copie que le Route Planner tient à jour dans la fiche d'abord : s'il n'y a plus rien à reprendre, rien ne s'écrit
   const r = routeSync();
   if (r.changed) { clearTimeout(_saveTimer); writeState(); }
   renderRouteBlock();
@@ -4377,13 +4426,13 @@ function init() {
   const sel0 = ok ? (saved.v === 2 ? saved.sel : (isObj(saved.state) ? saved.state.sel : undefined)) : undefined;
   try {
     if (ok) mergeMine(saved.mine);
-    gsMigrate(gsPackRoute);       // la fiche naît ici si le Route Planner ne l'a pas fait avant : les groupes de l'état d'avant, puis les routes liées par nom
+    gsMigrate(gsPackFn);       // la fiche naît ici si le Route Planner ne l'a pas fait avant : les groupes de l'état d'avant, puis les routes liées par nom
     const gs = gsRead();
     if (gs) restoreState({ theatre: gs.theatre, flights: gs.flights, sel: sel0 });
     else if (ok && saved.v === 1) restoreState(saved.state);       // le stockage a refusé la fiche : l'état d'avant, tel qu'il est
     if (ok) remapPresetKeys(saved.mine);
   } catch (e) { /* l'écran marche sans */ }
-  gsMarkAll();
+  if (gsRead() !== null) gsMarkAll(); else { GS.seen = {}; GS.theatre = ''; GS.live = false; }       // sans fiche (stockage plein), les groupes restent dans fc_state_v1 jusqu'à ce qu'elle puisse être écrite
   initToolbarMenus([['theme-select', () => t('toolbar.theme.tooltip')]]);
   initFormMenus(sel => sel.getAttribute('aria-label') || '');
   bindColumns();

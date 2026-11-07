@@ -44,7 +44,7 @@ Changes merged since the last release, grouped per tool.
 - **Flight Configurator**, a new module: a Flight Lead prepares a flight (identity, radios, loadout built on the aircraft's front view or started from the squadron's presets, livery) and exports it as a flight package that HQ applies to the Mission Commander's mission. Each aircraft of a flight has its own type, so a flight can mix types; flight names must be unique per side before export.
 - A **Route** block above the loadout: pick one of the Route Planner's routes for the group (one route per group), then see it as a paper sketch — waypoints, names, numbered legs — with each leg's magnetic heading and distance in NM. When the route changes in the Route Planner, the group follows it; if it is deleted there, the last copy is kept.
 #### Changed
-- Groups are now shared with the Route Planner: create, rename or re-route a group in either tool and the other follows at once. A group may have no unit yet.
+- Groups are now shared with the Route Planner: create, rename or re-route a group in either tool and the other follows at once. A group may have no unit yet. A group with no unit is exported route only.
 
 ### Recon Station
 #### Added
