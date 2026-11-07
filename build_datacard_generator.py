@@ -19,11 +19,34 @@ import sys
 from magvar_block import build_block as build_magvar_block
 from radio_block import build_block as build_radio_block
 from projection_block import build_block as build_projection_block
+from group_store_block import build_block as build_group_store_block
+from route_pack_block import build_block as build_route_pack_block
+from payload_block import build_block as build_payload_block
+from import_block import build_block as build_import_block
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 APP_VERSION = "1.5.1"
 OUT_PATH = os.path.join(HERE, 'dist', 'dcs_datacard_generator.html')
 ASSETS_PATH = os.path.join(HERE, 'assets.json')
+
+
+def groups_tables():
+    """Maquette du lot mp-dg-groupes : les types du Flight Configurator (payload_block.py), les canaux par poste (import_block.py) et les noms
+    des armes des quatre types (data/*.json, réduits aux CLSID que leurs pylônes permettent). Rien n'est recopié à la main."""
+    types = re.search(r"const PAYLOAD_TYPES = (\[.*?\]);", build_payload_block()).group(1)
+    chans = re.search(r"const RADIO_CHANNELS = (\{.*?\});", build_import_block()).group(1)
+    with open(os.path.join(HERE, 'data', 'aircraft_pylons.json'), encoding='utf-8') as f:
+        pyl = json.load(f)
+    with open(os.path.join(HERE, 'data', 'weapon_names.json'), encoding='utf-8') as f:
+        names = json.load(f)
+    ids = set()
+    for ty in json.loads(types.replace("'", '"')):
+        for idx in pyl['types'][ty].values():
+            ids.update(pyl['clsids'][i] for i in idx)
+    table = {k: names[k] for k in sorted(ids) if k in names}
+    wn = json.dumps(table, ensure_ascii=False, separators=(',', ':'))
+    assert '</script' not in wn.lower()
+    return types, chans, wn
 
 REQUIRED_ASSETS = ['STARDOS_400', 'STARDOS_700', 'OSWALD_500', 'OSWALD_700', 'ROBOTO_MONO_400', 'lib_html2canvas', 'lib_jszip']
 
@@ -1701,6 +1724,97 @@ select[data-tbm-src] { display: none !important; }
   .tb-select { max-width: 124px; padding: 0 26px 0 8px; text-overflow: ellipsis; overflow: hidden; }
 }
 
+/* ============ GROUPES PARTAGÉS (maquette) : liste des cartes, groupe, équipage, radios par type, emport ============ */
+.pack-btn.main { background: var(--olive); border-color: var(--amber); color: var(--amber); }
+.pack-btn.main:hover:not(:disabled), .pack-btn.main:focus-visible { background: var(--olive-dark); color: var(--paper-light); }
+.pack-sub { font-family: var(--f-ui); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--khaki-light); }
+.cards-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.card-row {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 8px; align-items: center;
+  width: 100%; min-height: 48px; padding: 7px 10px; text-align: left;
+  background: rgba(0, 0, 0, .18); border: 1px solid var(--khaki); border-left: 3px solid var(--khaki); color: var(--paper);
+  font-family: var(--f-ui);
+}
+.card-row:hover, .card-row:focus-visible { border-color: var(--amber); outline: none; }
+.card-row.cur { background: var(--olive); border-color: var(--amber); border-left-color: var(--amber); }
+.card-row.free { border-left-style: dashed; }
+.cr-name { font-family: var(--f-stencil); font-weight: 700; font-size: 14px; letter-spacing: 2px; color: var(--amber); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.cr-tag { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 2px 7px; border: 1px solid; white-space: nowrap; }
+.cr-tag.linked { color: var(--amber); border-color: var(--amber-dark); }
+.cr-tag.free { color: var(--khaki-light); border-color: var(--khaki); border-style: dashed; }
+.cr-tag.gone { color: #e8806a; border-color: var(--red-faded); }
+.cr-sum { grid-column: 1 / -1; font-size: 11px; letter-spacing: .6px; color: var(--khaki-light); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card-row.cur .cr-sum { color: var(--paper); opacity: .85; }
+
+/* Le groupe, en tête de l'éditeur : champs partagés avec le Flight Configurator */
+.ed-grp { margin-bottom: 14px; border: 1px solid var(--amber-dark); background: rgba(20, 24, 12, .6); padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.ed-grp-h { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
+.ed-grp-t { font-family: var(--f-stencil); font-weight: 700; font-size: 14px; letter-spacing: 2px; color: var(--amber); }
+.ed-grp-s { font-family: var(--f-ui); font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--khaki-light); }
+.ed-grp-sum { font-family: var(--f-ui); font-size: 11px; letter-spacing: .8px; color: var(--khaki-light); }
+.sh {
+  display: inline-block; padding: 0 4px; margin-left: 2px; font-size: 9px; line-height: 14px; letter-spacing: 1px;
+  color: var(--olive-deep); background: var(--amber); border-radius: 2px;
+}
+.ed-field label .sh { align-self: center; }
+.ed-field-row.grp3 { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.05fr) minmax(0, .62fr); gap: 8px; }
+.ed-field-row.grp3 .ed-field label::before { display: none; }
+.li-u { padding: 6px 8px; }
+.li-u .li-main { gap: 6px; }
+.li-u .li-grid { gap: 6px; }
+.li-u .ed-field { gap: 3px; }
+.li-uh { display: flex; align-items: center; gap: 8px; }
+.li-ut { font-family: var(--f-stencil); font-weight: 700; font-size: 12px; letter-spacing: 2px; color: var(--amber); }
+.snap-tag { font-family: var(--f-ui); font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; padding: 1px 6px; border: 1px solid var(--khaki); color: var(--khaki-light); }
+
+/* Radios : un encadré par type */
+.rt-box { border: 1px solid var(--khaki); background: rgba(0, 0, 0, .14); padding: 10px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.rt-h { display: flex; flex-direction: column; gap: 2px; font-weight: 400; }
+.rt-t { font-family: var(--f-stencil); font-weight: 700; font-size: 14px; letter-spacing: 2px; color: var(--amber); }
+.rt-u { font-family: var(--f-ui); font-size: 11px; letter-spacing: .8px; color: var(--khaki-light); }
+.rt-post { display: flex; flex-direction: column; gap: 6px; padding-top: 8px; border-top: 1px dashed var(--khaki); }
+.rt-ph { font-family: var(--f-ui); font-weight: 700; font-size: 11px; letter-spacing: 1.8px; text-transform: uppercase; color: var(--paper); }
+.rc-row { display: flex; flex-direction: column; gap: 4px; padding: 6px 8px; border: 1px solid transparent; border-left: 3px solid var(--khaki); background: rgba(0, 0, 0, .12); min-width: 0; }
+.rc-row.on { border-color: var(--amber-dark); border-left-color: var(--amber); background: rgba(192, 137, 42, .10); }
+.rc-top { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.rc-ch { flex: 0 0 auto; min-width: 46px; font-family: var(--f-stencil); font-weight: 700; font-size: 13px; letter-spacing: 1.5px; color: var(--amber); }
+.rc-freq { flex: 1 1 110px; min-width: 96px; }
+.rc-freq input[type=text] { min-height: 44px; }
+.rc-on { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 4px; cursor: pointer; font-family: var(--f-ui); font-size: 11px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; color: var(--paper); }
+.rc-on input { width: 22px; height: 22px; accent-color: var(--amber); margin: 0; }
+.rc-var { font-family: var(--f-ui); font-size: 11px; letter-spacing: 1px; color: var(--amber); margin-left: 56px; }
+.rc-var::before { content: '⚠ '; }
+.rc-extra { display: none; grid-template-columns: 1fr 1fr; gap: 8px; }
+.rc-row.on .rc-extra { display: grid; }
+
+/* Emport du Flight Configurator : tableaux sans dessin */
+.ed-chk { display: flex; align-items: center; gap: 10px; min-height: 44px; cursor: pointer; font-family: var(--f-ui); font-weight: 700; font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--amber); }
+.ed-chk input { width: 22px; height: 22px; accent-color: var(--amber); margin: 0; flex: 0 0 auto; }
+.lo-grp { border: 1px solid var(--khaki); background: rgba(0, 0, 0, .14); padding: 8px 10px; min-width: 0; }
+.lo-t { font-family: var(--f-stencil); font-weight: 700; font-size: 13px; letter-spacing: 2px; color: var(--amber); margin-bottom: 6px; overflow-wrap: anywhere; }
+.lo-tab { width: 100%; border-collapse: collapse; table-layout: fixed; font-family: var(--f-typewriter); font-size: 12px; color: var(--paper); }
+.lo-tab th { font-family: var(--f-ui); font-size: 10px; letter-spacing: 1.5px; text-align: left; color: var(--khaki-light); padding: 3px 6px; border-bottom: 1px solid var(--khaki); }
+.lo-tab td { padding: 4px 6px; vertical-align: top; overflow-wrap: anywhere; border-bottom: 1px dotted rgba(168, 154, 114, .35); }
+.lo-tab td.n, .lo-tab td.q, .lo-tab th:first-child, .lo-tab th:last-child { text-align: center; }
+
+/* Fenêtres (nouvelle datacard, rattacher, supprimer) */
+.grp-p { font-size: 13px; line-height: 1.45; margin: 0 0 12px; }
+.grp-p.grp-empty { font-weight: 700; }
+.grp-opt { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 6px 8px; border: 1px solid #8a7a52; margin-bottom: 6px; cursor: pointer; font-size: 13px; }
+.grp-opt input { width: 20px; height: 20px; accent-color: #3d4a22; }
+.grp-opt.off { opacity: .55; cursor: not-allowed; }
+.grp-sub { margin-left: auto; font-size: 11px; opacity: .75; }
+#grp-actions { flex-wrap: wrap; margin-top: 14px; }
+.grp-danger { background: #a83524; border-color: #a83524; }
+
+/* La carte : emport en tableaux */
+.dc-lo { min-width: 0; }
+.dc-lo + .dc-lo { margin-top: 10px; }
+.dc-lo-t { font: 500 15px/1 var(--dc-fo); letter-spacing: .12em; color: var(--dc-acc); padding: 2px 0 6px 0; overflow-wrap: anywhere; }
+.dc-lot td { font: 400 17px/1.25 var(--dc-fm); white-space: normal; overflow-wrap: anywhere; vertical-align: top; text-overflow: clip; }
+.dc-lot td.n, .dc-lot td.q, .dc-lot th:first-child, .dc-lot th:last-child { text-align: center; }
+.dc-lo-n { font: 400 15px/1.3 var(--dc-fm); color: var(--dc-hi); margin-top: 6px; }
+
 /* ============ TABLETTE ≤ 1100 px ============ */
 @media (max-width: 1100px) {
   .tb-btn { padding: 0 8px; }
@@ -1731,6 +1845,9 @@ __TAB_SECTION_RULES__
     border-bottom: 1px solid var(--amber-dark);
     margin: -2px 0 6px 0;
   }
+  /* groupe (champs partagés) : dans l'onglet « Groupe » seulement */
+  .ed-grp { display: none; }
+  body[data-active-tab="flight"] .ed-grp { display: flex; }
   .tab-bar { display: flex; }
   .preview-wrap { padding: 16px 8px 30px 8px; }
 
@@ -1784,6 +1901,8 @@ __TAB_SECTION_RULES__
   .export-modal-choices { grid-template-columns: 1fr; }
   .export-modal-panel { padding: 18px 20px; }
   .editor { padding: 12px 12px 24px 12px; }
+  .rc-extra { grid-template-columns: 1fr; }
+  .card-row { min-height: 52px; }
 }
 
 /* ============ IMPRESSION : une feuille A4 portrait par page de datacard ============ */
@@ -2042,6 +2161,16 @@ __CSS__
   <button type="button" data-tab="preview" role="tab"><span class="tab-ico">◈</span><span data-i18n="sec.preview">Aperçu</span></button>
 </nav>
 
+<!-- ===== FENÊTRE : GROUPES (nouvelle datacard, rattacher, supprimer) ===== -->
+<div class="export-modal" id="grp-modal" hidden role="dialog" aria-labelledby="grp-title" aria-modal="true">
+  <div class="export-modal-backdrop" id="grp-backdrop"></div>
+  <div class="export-modal-panel" role="document">
+    <h2 id="grp-title"></h2>
+    <div id="grp-body"></div>
+    <div class="export-png-actions-bottom" id="grp-actions"></div>
+  </div>
+</div>
+
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div id="print-root" aria-hidden="true"></div>
 <div id="measure-root" aria-hidden="true"></div>
@@ -2230,6 +2359,68 @@ const I18N = {
     'pack.del': 'Supprimer',
     'pack.prev': 'Datacard précédente',
     'pack.next': 'Datacard suivante',
+    'pack.list': 'Datacards ({n})',
+    'pack.newlinked': 'Nouvelle datacard',
+    'pack.newfree': 'Carte libre',
+    'pack.attach': 'Rattacher à un groupe',
+    'pack.dup.linked': 'Une carte liée ne se duplique pas',
+    'pack.tag.linked': 'liée',
+    'pack.tag.free': 'libre',
+    'pack.tag.gone': 'groupe supprimé',
+    'pack.unnamed': 'Datacard {n}',
+    'sum.unit': '{n} unités',
+    'sum.unit.1': '{n} unité',
+    'sum.free': 'Carte libre, hors des groupes',
+    'sum.gone': 'Le groupe n\'existe plus : carte libre',
+    'fl.untitled': 'Groupe {n}',
+    'fl.name.ph': 'Hind 1',
+    'grp.title': 'GROUPE',
+    'grp.sub': 'Partagé avec le Flight Configurator',
+    'grp.gone': 'Le groupe de cette carte n\'existe plus ailleurs : la carte est libre et garde la dernière copie de ses champs de groupe.',
+    'sh.tip': 'Champ partagé avec le Flight Configurator et le Route Planner',
+    'f.group.name': 'Nom du groupe',
+    'f.coalition': 'Coalition',
+    'coal.none': '— non renseignée —',
+    'coal.blue': 'Bleue (OTAN)',
+    'coal.red': 'Rouge',
+    'f.crew.type': 'Type',
+    'cr.unit': 'Unité {n}',
+    'cr.legend': 'Indicatif, type et n° de bord sont ceux du groupe (partagés). Le pilote est propre à cette carte.',
+    'cr.add': '+ Ajouter une unité ({n}/{max})',
+    'cr.remove': 'Retirer cette unité',
+    'rt.title': 'RADIO — {type}',
+    'rt.units': '{n} unités : {names}',
+    'rt.units.1': '{n} unité : {names}',
+    'rt.ch': 'CH {n}',
+    'rt.on': 'sur la carte',
+    'rt.varies': 'varie selon l\'unité',
+    'rt.name': 'Nom du canal',
+    'rt.mod': 'Modulation',
+    'rt.free': 'Canaux libres ({n})',
+    'rt.free.hide': 'Masquer les canaux libres',
+    'rt.nofreq': 'Aucune fréquence dans la fiche pour ce poste.',
+    'rt.none': 'Ce groupe n\'a pas d\'unité : aucune radio à montrer.',
+    'rt.legend': 'Les fréquences sont celles de la fiche. Cochez les canaux à porter sur la carte ; leur nom et leur modulation sont propres à cette carte.',
+    'lo.fc': 'Emport du Flight Configurator',
+    'lo.fc.hint': 'Lecture seule : l\'emport se modifie au Flight Configurator.',
+    'lo.h.n': 'N°',
+    'lo.h.load': 'CHARGE',
+    'lo.h.qty': 'QTÉ',
+    'lo.none': 'Sans emport : {names}',
+    'lo.empty': 'Aucun emport dans ce groupe.',
+    'lo.raw': '{names} : emport à ouvrir au Flight Configurator',
+    'm.cancel': 'Annuler',
+    'm.new.title': 'Nouvelle datacard',
+    'm.new.go': 'Créer',
+    'm.att.title': 'Rattacher à un groupe',
+    'm.att.text': 'Les champs de groupe de cette carte seront remplacés par ceux du groupe choisi.',
+    'm.att.empty': 'Aucun groupe sans carte.',
+    'm.att.has': 'déjà liée à une carte',
+    'm.att.go': 'Rattacher',
+    'm.del.title': 'Supprimer la datacard « {n} »',
+    'm.del.text': 'Cette datacard est liée à un groupe, partagé avec les autres modules. Supprimer aussi le groupe l\'enlève pour tous.',
+    'm.del.card': 'Supprimer la carte seulement',
+    'm.del.both': 'Supprimer aussi le groupe',
     'li.up': 'Monter',
     'li.down': 'Descendre',
     'li.del': 'Supprimer',
@@ -2577,6 +2768,68 @@ const I18N = {
     'pack.del': 'Delete',
     'pack.prev': 'Previous datacard',
     'pack.next': 'Next datacard',
+    'pack.list': 'Datacards ({n})',
+    'pack.newlinked': 'New datacard',
+    'pack.newfree': 'Free card',
+    'pack.attach': 'Attach to a group',
+    'pack.dup.linked': 'A linked card cannot be duplicated',
+    'pack.tag.linked': 'linked',
+    'pack.tag.free': 'free',
+    'pack.tag.gone': 'group deleted',
+    'pack.unnamed': 'Datacard {n}',
+    'sum.unit': '{n} units',
+    'sum.unit.1': '{n} unit',
+    'sum.free': 'Free card, outside the groups',
+    'sum.gone': 'The group no longer exists: free card',
+    'fl.untitled': 'Group {n}',
+    'fl.name.ph': 'Hind 1',
+    'grp.title': 'GROUP',
+    'grp.sub': 'Shared with the Flight Configurator',
+    'grp.gone': 'This card\'s group no longer exists elsewhere: the card is free and keeps the last copy of its group fields.',
+    'sh.tip': 'Field shared with the Flight Configurator and the Route Planner',
+    'f.group.name': 'Group name',
+    'f.coalition': 'Coalition',
+    'coal.none': '— not set —',
+    'coal.blue': 'Blue (NATO)',
+    'coal.red': 'Red',
+    'f.crew.type': 'Type',
+    'cr.unit': 'Unit {n}',
+    'cr.legend': 'Callsign, type and onboard no. belong to the group (shared). The pilot belongs to this card only.',
+    'cr.add': '+ Add a unit ({n}/{max})',
+    'cr.remove': 'Remove this unit',
+    'rt.title': 'RADIO — {type}',
+    'rt.units': '{n} units: {names}',
+    'rt.units.1': '{n} unit: {names}',
+    'rt.ch': 'CH {n}',
+    'rt.on': 'on the card',
+    'rt.varies': 'varies by unit',
+    'rt.name': 'Channel name',
+    'rt.mod': 'Modulation',
+    'rt.free': 'Empty channels ({n})',
+    'rt.free.hide': 'Hide empty channels',
+    'rt.nofreq': 'No frequency in the group sheet for this radio.',
+    'rt.none': 'This group has no unit: no radio to show.',
+    'rt.legend': 'Frequencies are those of the group sheet. Tick the channels to print on the card; their name and modulation belong to this card only.',
+    'lo.fc': 'Loadout from the Flight Configurator',
+    'lo.fc.hint': 'Read only: the loadout is edited in the Flight Configurator.',
+    'lo.h.n': 'NO.',
+    'lo.h.load': 'STORE',
+    'lo.h.qty': 'QTY',
+    'lo.none': 'No loadout: {names}',
+    'lo.empty': 'No loadout in this group.',
+    'lo.raw': '{names}: loadout to open in the Flight Configurator',
+    'm.cancel': 'Cancel',
+    'm.new.title': 'New datacard',
+    'm.new.go': 'Create',
+    'm.att.title': 'Attach to a group',
+    'm.att.text': 'This card\'s group fields will be replaced by those of the chosen group.',
+    'm.att.empty': 'No group without a card.',
+    'm.att.has': 'already linked to a card',
+    'm.att.go': 'Attach',
+    'm.del.title': 'Delete the datacard "{n}"',
+    'm.del.text': 'This datacard is linked to a group shared with the other modules. Deleting the group too removes it for everyone.',
+    'm.del.card': 'Delete the card only',
+    'm.del.both': 'Delete the group too',
     'li.up': 'Move up',
     'li.down': 'Move down',
     'li.del': 'Delete',
@@ -3334,7 +3587,9 @@ function normalizeCard(src) {
       let pilot = str(o && o.pilot);
       const old = str(o && o.crew).trim();
       if (old !== '') { pilot = pilot.trim(); pilot = pilot !== '' ? pilot + ' / ' + old : old; }
-      return { callsign: str(o && o.callsign), pilot: pilot, type: str(o && o.type), board: str(o && o.board) };
+      const row = { callsign: str(o && o.callsign), pilot: pilot, type: str(o && o.type), board: str(o && o.board) };
+      if (o && typeof o.dflt === 'string' && o.dflt !== '') row.dflt = o.dflt;       /* l'étiquette par défaut d'une unité d'une carte liée (le FC : groupe-rang) */
+      return row;
     });
   }
   if (Array.isArray(src.nav)) {
@@ -3383,7 +3638,18 @@ function normalizeCard(src) {
   if (Array.isArray(src.loadout)) c.loadout = normStrList(src.loadout, LIMITS.loadout);
   if (Array.isArray(src.threats)) c.threats = normStrList(src.threats, LIMITS.threats);
   if ('notes' in src) c.notes = str(src.notes);
-  syncGroup(c);
+  if (typeof src.gsId === 'string' && src.gsId !== '') {       /* carte liée à un groupe de la fiche (flight_set_v1) : son fcId, les canaux affichés, le choix de l'emport */
+    c.gsId = src.gsId;
+    c.gsSide = gsSide(src.gsSide);
+    c.loadoutFc = src.loadoutFc === true;
+    c.radioSel = {};
+    if (src.radioSel && typeof src.radioSel === 'object' && !Array.isArray(src.radioSel)) Object.keys(src.radioSel).forEach(k => {
+      const o = src.radioSel[k];
+      if (o && typeof o === 'object') c.radioSel[k] = { on: o.on === true, label: str(o.label), mod: str(o.mod) };
+    });
+  }
+  if (src.gsGone === true) c.gsGone = true;
+  if (!c.gsId) syncGroup(c);
   return c;
 }
 
@@ -3429,6 +3695,310 @@ function loadState() {
 function setDoc(next) {
   doc = next;
   curIdx = 0;
+  gsApplyAll();
+  persistState();
+  renderAll();
+}
+
+@@ROUTE_PACK_BLOCK@@
+@@GROUP_STORE_BLOCK@@
+/* ============= GROUPES PARTAGÉS — MAQUETTE (lot mp-dg-groupes) =============
+   Lecture de la fiche des groupes (flight_set_v1, bloc partagé) : une carte liée porte gsId (le fcId de son groupe) ; ses champs de groupe (nom, unités :
+   indicatif, type, n° de bord ; fréquences ; emport) viennent de la fiche. Rien n'est écrit dans la fiche par les champs partagés : la maquette montre,
+   elle ne se recette pas. Restent à la carte : le pilote (par rang d'unité), les temps, la météo, le carburant, les notes, les canaux affichés (radioSel :
+   « type|poste|canal » → { on, label, mod }) et le choix de l'emport (loadoutFc). */
+const DG_UNIT_TYPES = @@PAYLOAD_TYPES@@;
+const DG_TYPE_LABEL = { 'Mi-24P': 'Mi-24P', 'Mi-8MT': 'Mi-8MT', 'F-4E-45MC': 'F-4E-45MC', 'Mirage-F1EE': 'Mirage F1EE' };
+const DG_RADIO_CHANNELS = @@RADIO_CHANNELS@@;
+const DG_WEAPON_NAMES = @@WEAPON_NAMES@@;
+const DG_MAX_UNITS = 4;
+const DG_UI = { free: {} };       /* état d'écran : les canaux libres montrés, par « type|poste » */
+let DGG = { flights: [], theatre: '' };
+
+function dgStr(v) { return typeof v === 'string' ? v : (typeof v === 'number' ? String(v) : ''); }
+function dgCs(v) { if (typeof v === 'number') return String(v); if (typeof v === 'string') return v; return (gsIsObj(v) && typeof v.name === 'string') ? v.name : ''; }
+function dgFlightLabel(f, fi) { return dgStr(f.name).trim() || t('fl.untitled', { n: fi + 1 }); }
+function dgUnits(f) { return (Array.isArray(f.units) ? f.units : []).filter(gsIsObj); }
+function dgUnitDefault(f, fi, ui) { return dgFlightLabel(f, fi) + '-' + (ui + 1); }
+function dgUnitLabel(f, fi, ui) { const u = dgUnits(f)[ui]; return dgCs(u.callsign).trim() || dgStr(u.name).trim() || dgUnitDefault(f, fi, ui); }
+function dgTypeLabel(ty) { return Object.prototype.hasOwnProperty.call(DG_TYPE_LABEL, ty) ? DG_TYPE_LABEL[ty] : ty; }
+function dgFlightPos(id) { return DGG.flights.findIndex(f => f.fcId === id); }
+function dgFlightOf(c) { return c && c.gsId ? (DGG.flights.find(f => f.fcId === c.gsId) || null) : null; }
+function dgPackFn(r, th) {
+  let gs = 220;
+  try { const st = JSON.parse(localStorage.getItem(KEY_ROUTE)); if (gsIsObj(st) && typeof st.groundSpeed === 'number' && st.groundSpeed > 0) gs = st.groundSpeed; } catch (e) { /* vitesse par défaut */ }
+  return gsPackRoute(r, th, gs);
+}
+
+/* Les champs de groupe d'une carte liée, lus dans la groupe de la fiche ; le pilote reste à la carte (rang de l'unité) */
+function dgApplyGroup(c, f, fi) {
+  const units = dgUnits(f), old = Array.isArray(c.crew) ? c.crew : [];
+  c.gsId = f.fcId;
+  delete c.gsGone;
+  c.gsSide = gsSide(f.coalition);
+  c.flight.callsign = dgStr(f.name);
+  c.crew = units.map((u, i) => ({ callsign: dgCs(u.callsign).trim(), dflt: dgUnitLabel(f, fi, i), pilot: old[i] ? str(old[i].pilot) : '', type: dgStr(u.type), board: dgStr(u.onboard) }));
+  const types = [];
+  units.forEach(u => { const ty = dgStr(u.type); if (ty && types.indexOf(ty) < 0) types.push(ty); });
+  c.flight.count = units.length || null;
+  c.flight.aircraft = types.join(' / ');
+  if (!gsIsObj(c.radioSel)) c.radioSel = {};
+  if (typeof c.loadoutFc !== 'boolean') c.loadoutFc = false;
+}
+
+/* La liste des cartes suit la fiche : les cartes liées dans l'ordre de la fiche, puis les cartes libres ; un groupe sans carte reçoit la sienne ;
+   une carte dont le groupe a disparu devient libre (elle garde sa dernière copie) */
+function gsApplyAll() {
+  const g = gsRead();
+  if (g === null) return false;
+  DGG = { flights: g.flights, theatre: g.theatre };
+  const cur = doc.cards[curIdx] || null;
+  const pos = new Map(g.flights.map((f, i) => [f.fcId, i]));
+  const linked = [], free = [], seen = new Set();
+  doc.cards.forEach(c => {
+    if (c.gsId && pos.has(c.gsId) && !seen.has(c.gsId)) { seen.add(c.gsId); dgApplyGroup(c, g.flights[pos.get(c.gsId)], pos.get(c.gsId)); linked.push(c); }
+    else if (c.gsId) { delete c.gsId; c.gsGone = true; free.push(c); }
+    else free.push(c);
+  });
+  g.flights.forEach((f, i) => { if (!seen.has(f.fcId)) { const c = newCard(); dgApplyGroup(c, f, i); linked.push(c); } });
+  linked.sort((a, b) => pos.get(a.gsId) - pos.get(b.gsId));
+  doc.cards = linked.concat(linked.length ? free.filter(c => !isBlankCard(c)) : free);       /* une carte vierge intacte ne reste pas à côté des cartes liées */
+  if (!doc.cards.length) doc.cards = [newCard()];
+  const k = cur ? doc.cards.indexOf(cur) : -1;
+  curIdx = k >= 0 ? k : 0;
+  return true;
+}
+function dgStorage(e) {
+  if (e.key !== null && e.key !== KEY_FLIGHT_SET) return;
+  clearTimeout(dgStorage._h);
+  dgStorage._h = setTimeout(() => { if (gsApplyAll()) { persistState(); renderAll(); } }, 300);
+}
+
+/* ----- Radios : un encadré par type d'appareil du groupe ----- */
+function dgFreq(u, r, c) { return gsIsObj(u.radios) && gsIsObj(u.radios[r]) && u.radios[r][c] !== undefined ? dgStr(u.radios[r][c]).trim() : ''; }
+/* [{ type, units: [rang], posts: [{ r, name, rows: [{ c, cock, freq, varies, vals }] }] }] ; la fréquence d'un canal est celle de la première unité du type */
+function dgRadioModel(f) {
+  const us = dgUnits(f), types = [];
+  us.forEach(u => { const ty = dgStr(u.type); if (ty && types.indexOf(ty) < 0) types.push(ty); });
+  return types.map(ty => {
+    const idx = [];
+    us.forEach((u, i) => { if (u.type === ty) idx.push(i); });
+    const chans = Object.prototype.hasOwnProperty.call(DG_RADIO_CHANNELS, ty) ? DG_RADIO_CHANNELS[ty] : {};
+    const posts = Object.keys(chans).map(Number).map(r => {
+      const rows = [];
+      for (let c = 1; c <= chans[r]; c++) {
+        const vals = idx.map(i => dgFreq(us[i], r, c)), first = vals[0] || '';
+        rows.push({ c: c, cock: radioCockpitChannel(ty, r, c), freq: first, varies: vals.some(v => v !== first), vals: vals });
+      }
+      return { r: r, name: radioPosteName(ty, r) || 'R' + r, rows: rows };
+    });
+    return { type: ty, units: idx, posts: posts };
+  });
+}
+function dgRsKey(ty, r, c) { return ty + '|' + r + '|' + c; }
+function dgRs(c, key) { const o = gsIsObj(c.radioSel) && gsIsObj(c.radioSel[key]) ? c.radioSel[key] : null; return { on: !!(o && o.on), label: o ? str(o.label) : '', mod: o ? str(o.mod) : '' }; }
+function dgRowShown(row) { return row.vals.some(v => v !== ''); }
+/* Les encadrés de la carte : les types qui ont au moins un canal coché ; [{ title, posts: [{ name, ch: [{ channel, label, frequency, modulation }] }] }] */
+function dgRadioBoxes(c) {
+  const f = dgFlightOf(c);
+  if (!f) return [];
+  const out = [];
+  dgRadioModel(f).forEach(m => {
+    const posts = [];
+    m.posts.forEach(p => {
+      const ch = [];
+      p.rows.forEach(row => {
+        const s = dgRs(c, dgRsKey(m.type, p.r, row.c));
+        if (s.on) ch.push({ channel: row.cock, label: s.label, frequency: row.freq, modulation: s.mod });
+      });
+      if (ch.length) posts.push({ name: p.name, ch: ch });
+    });
+    if (posts.length) out.push({ title: t('rt.title', { type: dgTypeLabel(m.type).toUpperCase() }), posts: posts });
+  });
+  return out;
+}
+
+/* ----- Emport : un tableau par emport distinct, sans dessin ----- */
+function dgWeaponName(clsid) {
+  if (Object.prototype.hasOwnProperty.call(DG_WEAPON_NAMES, clsid)) return DG_WEAPON_NAMES[clsid];
+  return clsid === '<CLEAN>' ? '<CLEAN> (clean pylon)' : clsid;
+}
+/* La quantité d'un point : le nombre écrit en tête du nom de la charge (« 2 x 9M114 Shturm … »), sinon 1 */
+function dgQty(name) { const m = /^(\d+) x /.exec(name); return m ? parseInt(m[1], 10) : 1; }
+function dgLoadRows(lo) {
+  const py = gsIsObj(lo.pylons) ? lo.pylons : {};
+  return Object.keys(py).filter(k => /^\d+$/.test(k) && gsIsObj(py[k]) && typeof py[k].CLSID === 'string' && py[k].CLSID !== '').sort((a, b) => Number(a) - Number(b)).map(k => {
+    const name = dgWeaponName(py[k].CLSID);
+    return { n: k, name: name, qty: dgQty(name) };
+  });
+}
+/* { groups: [{ idx: [rang d'unité], rows }], none: [rang], raw: [rang] } : les unités au même emport (mêmes points chargés) partagent un tableau */
+function dgLoadGroups(f) {
+  const us = dgUnits(f), groups = [], none = [], raw = [];
+  us.forEach((u, i) => {
+    const lo = gsIsObj(u.loadout) && gsIsObj(u.loadout.pylons) ? u.loadout : null;
+    const rows = lo ? dgLoadRows(lo) : [];
+    if (!rows.length) { (gsIsObj(u.payloadIn) && !lo ? raw : none).push(i); return; }
+    const key = JSON.stringify(rows.map(r => [r.n, r.name]));
+    const g = groups.find(x => x.key === key);
+    if (g) g.idx.push(i); else groups.push({ key: key, idx: [i], rows: rows });
+  });
+  return { groups: groups, none: none, raw: raw };
+}
+function dgNames(f, idx) { const fi = dgFlightPos(f.fcId); return idx.map(i => dgUnitLabel(f, fi, i)); }
+function dgLoadTable(rows, cls, head) {
+  return '<table class="' + cls + '"><colgroup><col style="width:' + (head ? '40px' : '12%') + '"><col><col style="width:' + (head ? '46px' : '14%') + '"></colgroup><thead><tr><th>' + esc(t('lo.h.n')) + '</th><th>' + esc(t('lo.h.load')) + '</th><th>' + esc(t('lo.h.qty')) + '</th></tr></thead><tbody>' +
+    rows.map(r => '<tr><td class="n">' + esc(r.n) + '</td><td class="w">' + esc(r.name) + '</td><td class="q">' + r.qty + '</td></tr>').join('') + '</tbody></table>';
+}
+function dgLoadEditorHtml(c) {
+  const f = dgFlightOf(c);
+  if (!f) return '';
+  const g = dgLoadGroups(f);
+  let h = '';
+  g.groups.forEach(x => { h += '<div class="lo-grp"><div class="lo-t">' + esc(dgNames(f, x.idx).join(' · ')) + '</div>' + dgLoadTable(x.rows, 'lo-tab', true) + '</div>'; });
+  if (!g.groups.length) h += '<div class="ed-help">' + esc(t('lo.empty')) + '</div>';
+  if (g.groups.length && g.none.length) h += '<div class="ed-help">' + esc(t('lo.none', { names: dgNames(f, g.none).join(', ') })) + '</div>';
+  if (g.raw.length) h += '<div class="ed-warn">' + esc(t('lo.raw', { names: dgNames(f, g.raw).join(', ') })) + '</div>';
+  return h + '<div class="ed-help">' + esc(t('lo.fc.hint')) + '</div>';
+}
+function dgLoadCardHtml(c) {
+  const f = dgFlightOf(c);
+  if (!f) return '';
+  const g = dgLoadGroups(f);
+  let h = g.groups.map(x => '<div class="dc-lo"><div class="dc-lo-t">' + esc(dgNames(f, x.idx).join(' · ').toUpperCase()) + '</div>' + dgLoadTable(x.rows, 'dc-tab dc-lot', false) + '</div>').join('');
+  if (g.raw.length) h += '<div class="dc-lo-n">' + esc(t('lo.raw', { names: dgNames(f, g.raw).join(', ') })) + '</div>';
+  return h;
+}
+
+/* ----- Éditeur d'une carte liée ----- */
+function shLabel(key) { return esc(t(key)) + ' <span class="sh" title="' + esc(t('sh.tip')) + '">FC</span>'; }
+function fShared(labelKey, inner) { return '<div class="ed-field"><label>' + shLabel(labelKey) + '</label>' + inner + '</div>'; }
+function selShared(gsKey, value, options) {
+  return '<select data-gs="' + gsKey + '">' + options.map(o => '<option value="' + esc(o[0]) + '"' + (o[0] === value ? ' selected' : '') + '>' + esc(o[1]) + '</option>').join('') + '</select>';
+}
+function grpBoxHtml(c) {
+  const f = dgFlightOf(c);
+  if (!f) return '';
+  const coal = [['', t('coal.none')], ['blue', t('coal.blue')], ['red', t('coal.red')]];
+  const ro = ' readonly title="' + esc(t('f.group.deduced')) + '"';
+  return '<section class="ed-grp" data-grp="1"><div class="ed-grp-h"><span class="ed-grp-t">' + esc(t('grp.title')) + '</span><span class="ed-grp-s">' + esc(t('grp.sub')) + '</span></div>' +
+    '<div class="ed-field-row grp3">' +
+    fShared('f.group.name', '<input type="text" data-gs="name" value="' + esc(dgStr(f.name)) + '" placeholder="' + esc(t('fl.name.ph')) + '" autocomplete="off" spellcheck="false">') +
+    fShared('f.coalition', selShared('coalition', gsSide(f.coalition), coal)) +
+    fInput('f.count', 'flight.count', c.flight.count == null ? '' : String(c.flight.count), ' inputmode="numeric"' + ro) + '</div></section>';
+}
+function crewLinkedHtml(c) {
+  const f = dgFlightOf(c);
+  if (!f) return '';
+  const units = dgUnits(f), fi = dgFlightPos(f.fcId);
+  const opts = DG_UNIT_TYPES.map(ty => [ty, dgTypeLabel(ty)]);
+  const rows = c.crew.map((x, i) => {
+    const u = units[i] || {};
+    return '<div class="li li-u" data-unit="' + i + '"><div class="li-main">' +
+      '<div class="li-uh"><span class="li-ut">' + esc(t('cr.unit', { n: i + 1 })) + '</span><span class="snap-tag">' + esc(dgTypeLabel(dgStr(u.type))) + '</span></div>' +
+      '<div class="li-grid g2">' +
+      fShared('f.crew.callsign', '<input type="text" data-gs="u.' + i + '.callsign" value="' + esc(dgCs(u.callsign)) + '" placeholder="' + esc(dgUnitDefault(f, fi, i)) + '" autocomplete="off" spellcheck="false">') +
+      fShared('f.crew.type', selShared('u.' + i + '.type', dgStr(u.type), opts)) + '</div>' +
+      '<div class="li-grid g2">' +
+      fShared('f.crew.board', '<input type="text" data-gs="u.' + i + '.onboard" value="' + esc(dgStr(u.onboard)) + '" autocomplete="off" spellcheck="false">') +
+      fInput('f.crew.pilot', 'crew.' + i + '.pilot', x.pilot) + '</div></div>' +
+      '<div class="li-ctl"><button type="button" class="ed-btn-icon" data-gs-act="rm-unit" data-i="' + i + '"' + (units.length > 1 ? '' : ' disabled') + ' title="' + esc(t('cr.remove')) + '" aria-label="' + esc(t('cr.remove')) + '">✕</button></div></div>';
+  }).join('');
+  return '<div class="ed-list">' + rows + '</div>' +
+    '<button type="button" class="ed-btn-add" data-gs-act="add-unit"' + (units.length >= DG_MAX_UNITS ? ' disabled' : '') + '>' + esc(t('cr.add', { n: units.length, max: DG_MAX_UNITS })) + '</button>' +
+    '<div class="ed-help">' + esc(t('cr.legend')) + '</div>';
+}
+function radioLinkedHtml(c) {
+  const f = dgFlightOf(c);
+  if (!f) return '';
+  const model = dgRadioModel(f), fi = dgFlightPos(f.fcId);
+  if (!model.length) return '<div class="ed-help">' + esc(t('rt.none')) + '</div>';
+  return '<div class="ed-help">' + esc(t('rt.legend')) + '</div>' + model.map(m => {
+    const names = m.units.map(i => dgUnitLabel(f, fi, i)).join(', ');
+    const posts = m.posts.map(p => {
+      const fk = m.type + '|' + p.r, all = !!DG_UI.free[fk];
+      const nFree = p.rows.filter(r => !dgRowShown(r)).length;
+      const rows = p.rows.filter(r => all || dgRowShown(r)).map(row => {
+        const key = dgRsKey(m.type, p.r, row.c), s = dgRs(c, key);
+        const tip = row.varies ? row.vals.map((v, k) => dgUnitLabel(f, fi, m.units[k]) + ' : ' + (v || '—')).join(' · ') : '';
+        return '<div class="rc-row' + (s.on ? ' on' : '') + '" data-rc="' + esc(key) + '"><div class="rc-top"><span class="rc-ch">' + esc(t('rt.ch', { n: row.cock })) + '</span>' +
+          '<div class="ed-field rc-freq"><input type="text" inputmode="decimal" data-gs="f.' + esc(key) + '" value="' + esc(row.freq) + '" placeholder="—" autocomplete="off" spellcheck="false" aria-label="' + esc(t('f.radio.frequency') + ' — ' + t('rt.ch', { n: row.cock })) + '"></div>' +
+          '<label class="rc-on"><input type="checkbox" data-rs="' + esc(key) + '" data-rk="on"' + (s.on ? ' checked' : '') + '><span>' + esc(t('rt.on')) + '</span></label></div>' +
+          (row.varies ? '<div class="rc-var" title="' + esc(tip) + '">' + esc(t('rt.varies')) + '</div>' : '') +
+          '<div class="rc-extra">' +
+          '<div class="ed-field"><label>' + esc(t('rt.name')) + '</label><input type="text" data-rs="' + esc(key) + '" data-rk="label" value="' + esc(s.label) + '" placeholder="' + esc(t('ph.radios.*.channels.*.label')) + '" autocomplete="off"></div>' +
+          '<div class="ed-field"><label>' + esc(t('rt.mod')) + '</label><input type="text" data-rs="' + esc(key) + '" data-rk="mod" value="' + esc(s.mod) + '" placeholder="' + esc(t('ph.radios.*.channels.*.modulation')) + '" autocomplete="off"></div></div></div>';
+      }).join('');
+      const more = nFree ? '<button type="button" class="ed-btn-add sm" data-rsfree="' + esc(fk) + '">' + esc(all ? t('rt.free.hide') : t('rt.free', { n: nFree })) + '</button>' : '';
+      return '<div class="rt-post"><div class="rt-ph">' + esc(p.name) + '</div>' + (rows || '<div class="ed-help">' + esc(t('rt.nofreq')) + '</div>') + more + '</div>';
+    }).join('');
+    return '<section class="rt-box" data-rtype="' + esc(m.type) + '"><h4 class="rt-h"><span class="rt-t">' + esc(t('rt.title', { type: dgTypeLabel(m.type).toUpperCase() })) + '</span>' +
+      '<span class="rt-u">' + esc(t(m.units.length < 2 ? 'rt.units.1' : 'rt.units', { n: m.units.length, names: names })) + '</span></h4>' + posts + '</section>';
+  }).join('');
+}
+function cardSummary(x) {
+  if (x.gsId) {
+    const types = [];
+    x.crew.forEach(r => { if (r.type && types.indexOf(r.type) < 0) types.push(r.type); });
+    return [t(x.crew.length < 2 ? 'sum.unit.1' : 'sum.unit', { n: x.crew.length }), types.map(dgTypeLabel).join(', '), x.gsSide ? t('coal.' + x.gsSide) : ''].filter(hasText).join(' · ');
+  }
+  return x.gsGone ? t('sum.gone') : (x.meta.operation.trim() || x.meta.mission.trim() || t('sum.free'));
+}
+
+/* ----- Fenêtres : nouvelle datacard, rattacher, supprimer ----- */
+function grpModal(title, bodyHtml, buttons) {
+  const m = document.getElementById('grp-modal');
+  m.querySelector('#grp-title').textContent = title;
+  m.querySelector('#grp-body').innerHTML = bodyHtml;
+  m.querySelector('#grp-actions').innerHTML = buttons.map(b => '<button type="button" class="' + b.cls + '" data-grp-act="' + b.act + '">' + esc(b.label) + '</button>').join('');
+  m.hidden = false;
+  const first = m.querySelector('input:not([disabled]), button');
+  if (first) first.focus();
+}
+function grpClose() { document.getElementById('grp-modal').hidden = true; }
+function grpAskNew() {
+  grpModal(t('m.new.title'), '<div class="fn-field"><label class="lbl" for="grp-name">' + esc(t('f.group.name')) + '</label><div class="fn-row"><input class="in" id="grp-name" type="text" autocomplete="off" spellcheck="false" placeholder="' + esc(t('fl.name.ph')) + '"></div></div>',
+    [{ cls: 'export-png-back', act: 'cancel', label: t('m.cancel') }, { cls: 'export-png-go', act: 'new', label: t('m.new.go') }]);
+}
+function grpAskAttach() {
+  const taken = new Set(doc.cards.map(x => x.gsId).filter(Boolean));
+  const free = DGG.flights.filter(f => !taken.has(f.fcId));
+  const rows = DGG.flights.map((f, i) => '<label class="grp-opt' + (taken.has(f.fcId) ? ' off' : '') + '"><input type="radio" name="grp-pick" value="' + esc(f.fcId) + '"' + (taken.has(f.fcId) ? ' disabled' : '') + '><span>' + esc(dgFlightLabel(f, i)) + '</span><span class="grp-sub">' + esc(taken.has(f.fcId) ? t('m.att.has') : t('sum.unit', { n: dgUnits(f).length })) + '</span></label>').join('');
+  grpModal(t('m.att.title'), '<p class="grp-p">' + esc(t('m.att.text')) + '</p>' + rows + (free.length ? '' : '<p class="grp-p grp-empty">' + esc(t('m.att.empty')) + '</p>'),
+    [{ cls: 'export-png-back', act: 'cancel', label: t('m.cancel') }, { cls: 'export-png-go', act: 'attach', label: t('m.att.go') }]);
+  document.querySelector('#grp-actions [data-grp-act="attach"]').disabled = !free.length;
+}
+function grpAskDelete() {
+  const c = curCard();
+  grpModal(t('m.del.title', { n: c.flight.callsign.trim() || '—' }), '<p class="grp-p">' + esc(t('m.del.text')) + '</p>',
+    [{ cls: 'export-png-back', act: 'cancel', label: t('m.cancel') }, { cls: 'export-png-back', act: 'del-card', label: t('m.del.card') }, { cls: 'export-png-go grp-danger', act: 'del-both', label: t('m.del.both') }]);
+}
+function grpAct(act) {
+  const c = curCard();
+  if (act === 'cancel') { grpClose(); return; }
+  if (act === 'new') {
+    const name = (document.getElementById('grp-name').value || '').trim(), before = new Set(DGG.flights.map(f => f.fcId));
+    grpClose();
+    if (!gsPutFlight({ fcId: gsNewId(), name: name, coalition: '', units: [{ type: 'Mi-24P', name: '', callsign: '', onboard: '', livery: '', radios: {}, loadout: null, folded: false }] })) return;
+    gsApplyAll();
+    curIdx = Math.max(0, doc.cards.findIndex(x => x.gsId && !before.has(x.gsId)));
+  } else if (act === 'attach') {
+    const pick = document.querySelector('#grp-body input[name="grp-pick"]:checked');
+    grpClose();
+    const f = pick ? DGG.flights.find(x => x.fcId === pick.value) : null;
+    if (!f) return;
+    c.gsId = f.fcId;
+    gsApplyAll();
+  } else if (act === 'del-card' || act === 'del-both') {
+    const id = c.gsId;
+    grpClose();
+    doc.cards.splice(curIdx, 1);
+    if (act === 'del-both') gsRemoveFlight(id);
+    else { const k = newCard(); k.flight.callsign = c.flight.callsign; k.crew = c.crew; k.flight.aircraft = c.flight.aircraft; k.flight.count = c.flight.count; doc.cards.push(k); }
+    if (!doc.cards.length) doc.cards = [newCard()];
+    gsApplyAll();
+    curIdx = Math.min(curIdx, doc.cards.length - 1);
+  }
   persistState();
   renderAll();
 }
@@ -3730,7 +4300,7 @@ function blkCrew(c) {
   if (withCrew) h += '<th>' + esc(t('dc.h.crew')) + '</th>';
   h += '<th>' + esc(t('dc.h.board')) + '</th>';
   const body = rows.map(r =>
-    '<tr><td class="nm">' + esc(r.callsign) + '</td><td class="m">' + esc(r.pilot) + '</td>' +
+    '<tr><td class="nm">' + esc(r.callsign || r.dflt || '') + '</td><td class="m">' + esc(r.pilot) + '</td>' +
     (withCrew ? '<td class="m">' + esc(r.type) + '</td>' : '') +
     '<td class="m">' + esc(r.board) + '</td></tr>').join('');
   return blockHtml('crew', t('dc.b.crew'),
@@ -3836,14 +4406,9 @@ function blkRefs(c) {
     '<thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody></table>', 'dc-bbt');
 }
 
-function blkRadio(c) {
-  const radios = c.radios.map(r => ({
-    name: r.name,
-    ch: r.channels.filter(x => anyText(x, ['channel', 'label', 'frequency', 'modulation']))
-  })).filter(r => hasText(r.name) || r.ch.length);
-  if (!radios.length) return '';
-  /* Un seul tableau : une ligne de nom par poste ; rangées alternées recommencées à chaque poste (la 1re surlignée) ;
-     filet plein au-dessus du nom de chaque poste sauf le premier (ou de sa 1re rangée s'il n'a pas de nom). */
+/* Le tableau d'un encadré Radio : une ligne de nom par poste ; rangées alternées recommencées à chaque poste (la 1re surlignée) ;
+   filet plein au-dessus du nom de chaque poste sauf le premier (ou de sa 1re rangée s'il n'a pas de nom). */
+function radioTable(radios) {
   const rows = radios.map((r, ri) => {
     let s = '';
     if (hasText(r.name)) s += '<tr class="rsep' + (ri ? ' rsep-n' : '') + '"><td class="dc-rname" colspan="4">' + esc(r.name) + '</td></tr>';
@@ -3854,18 +4419,29 @@ function blkRadio(c) {
     }).join('');
     return s;
   }).join('');
-  return blockHtml('radio', t('dc.b.radio'),
-    '<table class="dc-tab dc-radio"><colgroup><col style="width:58px"><col style="width:178px"><col style="width:195px"><col></colgroup>' +
+  return '<table class="dc-tab dc-radio"><colgroup><col style="width:58px"><col style="width:178px"><col style="width:195px"><col></colgroup>' +
     '<thead><tr><th>' + esc(t('dc.h.ch')) + '</th><th>' + esc(t('dc.h.use')) + '</th><th>' + esc(t('dc.h.freq')) + '</th><th></th></tr></thead>' +
-    '<tbody>' + rows + '</tbody></table>', 'dc-bbt');
+    '<tbody>' + rows + '</tbody></table>';
 }
-
-/* Les postes de la page Radios : chacun avec son en-tête, ses canaux sur 3 colonnes (lecture colonne par colonne : 1-7, 8-14, 15-20) */
-function blkRadioPage(c) {
+function blkRadio(c) {
+  if (c.gsId) {       /* carte liée : un encadré « RADIO — <TYPE> » par type qui a au moins un canal coché */
+    const boxes = dgRadioBoxes(c).map(b => blockHtml('radio', b.title, radioTable(b.posts), 'dc-bbt'));
+    return boxes.length > 1 ? '<div class="dc-col">' + boxes.join('') + '</div>' : (boxes[0] || '');
+  }
   const radios = c.radios.map(r => ({
     name: r.name,
     ch: r.channels.filter(x => anyText(x, ['channel', 'label', 'frequency', 'modulation']))
   })).filter(r => hasText(r.name) || r.ch.length);
+  if (!radios.length) return '';
+  return blockHtml('radio', t('dc.b.radio'), radioTable(radios), 'dc-bbt');
+}
+
+/* Les postes de la page Radios : chacun avec son en-tête, ses canaux sur 3 colonnes (lecture colonne par colonne : 1-7, 8-14, 15-20) */
+function blkRadioPage(c) {
+  const radios = (c.gsId ? dgRadioBoxes(c).reduce((a, b) => a.concat(b.posts.map(p => ({ name: b.title + ' · ' + p.name, ch: p.ch }))), []) : c.radios.map(r => ({
+    name: r.name,
+    ch: r.channels.filter(x => anyText(x, ['channel', 'label', 'frequency', 'modulation']))
+  }))).filter(r => hasText(r.name) || r.ch.length);
   if (!radios.length) return '';
   const head = '<thead><tr><th>' + esc(t('dc.h.ch')) + '</th><th>' + esc(t('dc.h.use')) + '</th><th>' + esc(t('dc.h.freq')) + '</th><th></th></tr></thead>';
   const colg = '<colgroup><col style="width:46px"><col><col style="width:118px"><col style="width:40px"></colgroup>';
@@ -3920,7 +4496,8 @@ function blkWeather(c) {
 
 function blkFuel(c) {
   const fuelRows = [['dc.joker', c.fuel.joker], ['dc.bingo', c.fuel.bingo]].filter(r => hasText(r[1]));
-  const load = c.loadout.filter(hasText);
+  const fcLoad = c.gsId && c.loadoutFc ? dgLoadCardHtml(c) : '';
+  const load = fcLoad ? [''] : c.loadout.filter(hasText);
   if (!fuelRows.length && !load.length) return '';
   const mu = unitLabel(c, 'mass');
   let b = '<div class="dc-fuelwrap' + (fuelRows.length && load.length ? '' : ' dc-solo') + '">';
@@ -3929,7 +4506,7 @@ function blkFuel(c) {
       '<div class="dc-fp"><span class="fl">' + esc(t(r[0])) + '</span><span class="fv">' + esc(r[1].trim() + ' ' + mu) + '</span></div>').join('') + '</div>';
   }
   if (load.length) {
-    b += '<ul class="dc-load">' + load.map(l => '<li><span class="bl">▪</span><span class="lx">' + esc(l) + '</span></li>').join('') + '</ul>';
+    b += fcLoad || '<ul class="dc-load">' + load.map(l => '<li><span class="bl">▪</span><span class="lx">' + esc(l) + '</span></li>').join('') + '</ul>';
   }
   b += '</div>';
   const title = [fuelRows.length ? t('dc.b.fuel') : '', load.length ? t('dc.b.loadout') : ''].filter(Boolean).join(' · ');
@@ -4339,6 +4916,31 @@ const SECTION_BUILDERS = {
     fArea('f.notes', 'notes', c.notes)
 };
 
+/* Une carte liée : le groupe, l'équipage = les unités, les radios par type, l'emport du FC */
+const LINKED_BUILDERS = {
+  flight: c => {
+    return '<div class="ed-field-row">' + fInput('f.aircraft', 'flight.aircraft', c.flight.aircraft, ' readonly title="' + esc(t('f.group.deduced')) + '"') + fInput('f.task', 'flight.task', c.flight.task) + '</div>' +
+    '<div class="ed-field-row">' + fSelect('f.threat', 'flight.threat', c.flight.threat, [['', t('thr.none')], ['low', t('thr.low')], ['moderate', t('thr.moderate')], ['high', t('thr.high')]]) + '<div class="ed-field"></div></div>' +
+    '<div class="ed-field-row three">' +
+    fSelect('f.mass', 'units.mass', c.units.mass, unitOptions('mass')) +
+    fSelect('f.distance', 'units.distance', c.units.distance, unitOptions('distance')) +
+    fSelect('f.altitude', 'units.altitude', c.units.altitude, unitOptions('altitude')) + '</div>';
+  },
+  crew: crewLinkedHtml,
+  radio: radioLinkedHtml,
+  fuel: c =>
+    '<div class="ed-field-row">' + fInput('f.joker', 'fuel.joker', c.fuel.joker) + fInput('f.bingo', 'fuel.bingo', c.fuel.bingo) + '</div>' +
+    '<label class="ed-chk"><input type="checkbox" data-lofc="1"' + (c.loadoutFc ? ' checked' : '') + '><span>' + esc(t('lo.fc')) + '</span></label>' +
+    (c.loadoutFc ? dgLoadEditorHtml(c) :
+      '<div class="ed-field"><label>' + esc(t('f.loadout')) + '</label></div>' + listHtml('loadout', c.loadout, (s, i) => fInputBare('loadout.' + i, s), 'add.line'))
+};
+Object.keys(LINKED_BUILDERS).forEach(id => {
+  const base = SECTION_BUILDERS[id];
+  SECTION_BUILDERS[id] = c => c.gsId ? LINKED_BUILDERS[id](c) : (id === 'flight' && c.gsGone ? '<div class="ed-warn">' + esc(t('grp.gone')) + '</div>' : '') + base(c);
+});
+
+/* Une carte liée : les sections du groupe passent en tête */
+const LINKED_ORDER = ['crew', 'radio', 'fuel', 'flight', 'meta', 'mission', 'times', 'nav', 'refs', 'fields', 'weather', 'threats'];
 const openState = {};
 
 function sectionHtml(id, idx, c) {
@@ -4352,30 +4954,33 @@ function renderEditor() {
   const ed = document.getElementById('editor');
   const top = ed.scrollTop;
   const c = curCard();
-  document.getElementById('ed-sections').innerHTML = SECTION_IDS.map((id, i) => sectionHtml(id, i, c)).join('');
+  document.getElementById('ed-sections').innerHTML = (c.gsId ? grpBoxHtml(c) : '') + (c.gsId ? LINKED_ORDER : SECTION_IDS).map((id, i) => sectionHtml(id, i, c)).join('');
   ed.scrollTop = top;
 }
 
 function packTitle() {
-  const cs = curCard().flight.callsign.trim();
-  return t('pack.title', { n: curIdx + 1, N: doc.cards.length }) + (cs ? ' — ' + cs : '');
+  return t('pack.list', { n: doc.cards.length });
 }
-function updatePackTitle() {
-  const el = document.getElementById('pack-title');
-  if (el) el.textContent = packTitle();
-}
+function updatePackTitle() { renderPack(); }
 
+/* La liste des cartes : les cartes liées (dans l'ordre de la fiche), puis les cartes libres */
 function renderPack() {
-  const N = doc.cards.length;
-  const b = (act, label, extra, disabled) =>
-    '<button type="button" class="pack-btn' + (extra || '') + '" data-pack="' + act + '"' + (disabled ? ' disabled' : '') + '>' + esc(label) + '</button>';
-  const ico = (act, glyph, key, disabled) =>
-    '<button type="button" class="pack-btn" data-pack="' + act + '"' + (disabled ? ' disabled' : '') + ' title="' + esc(t(key)) + '" aria-label="' + esc(t(key)) + '">' + glyph + '</button>';
+  const c = curCard(), linked = !!c.gsId;
+  const b = (act, label, extra, disabled, tip) =>
+    '<button type="button" class="pack-btn' + (extra || '') + '" data-pack="' + act + '"' + (disabled ? ' disabled' : '') + (tip ? ' title="' + esc(tip) + '"' : '') + '>' + esc(label) + '</button>';
+  const rows = doc.cards.map((x, i) => {
+    const name = x.flight.callsign.trim() || t('pack.unnamed', { n: i + 1 });
+    const tag = x.gsId ? ['linked', 'pack.tag.linked'] : (x.gsGone ? ['gone', 'pack.tag.gone'] : ['free', 'pack.tag.free']);
+    return '<li><button type="button" class="card-row' + (x.gsId ? '' : ' free') + (i === curIdx ? ' cur' : '') + '" data-card="' + i + '"' + (i === curIdx ? ' aria-current="true"' : '') + '>' +
+      '<span class="cr-name">' + esc(name) + '</span><span class="cr-tag ' + tag[0] + '">' + esc(t(tag[1])) + '</span><span class="cr-sum">' + esc(cardSummary(x)) + '</span></button></li>';
+  }).join('');
   document.getElementById('pack-bar').innerHTML =
     '<div class="pack-title" id="pack-title">' + esc(packTitle()) + '</div>' +
+    '<ul class="cards-list">' + rows + '</ul>' +
     '<div class="pack-btns">' +
-    ico('prev', '◄', 'pack.prev', curIdx === 0) + ico('next', '►', 'pack.next', curIdx === N - 1) +
-    b('add', t('pack.add')) + b('dup', t('pack.dup')) + b('del', t('pack.del'), ' danger') +
+    b('newlinked', t('pack.newlinked'), ' main') + b('newfree', t('pack.newfree')) +
+    (linked ? '' : b('attach', t('pack.attach'))) +
+    b('dup', t('pack.dup'), '', linked, linked ? t('pack.dup.linked') : '') + b('del', t('pack.del'), ' danger') +
     '</div>';
 }
 
@@ -4424,6 +5029,19 @@ function syncGroupEditor(c) {
 
 function onEditorInput(e) {
   const el = e.target;
+  if (el && el.dataset && el.dataset.rs) {        /* un canal affiché : la case, le nom, la modulation (propres à la carte) */
+    const c = curCard(), key = el.dataset.rs, k = el.dataset.rk;
+    if (k !== 'on' && e.type === 'change') return;
+    if (!gsIsObj(c.radioSel)) c.radioSel = {};
+    const cur = gsIsObj(c.radioSel[key]) ? c.radioSel[key] : { on: false, label: '', mod: '' };
+    if (k === 'on') { cur.on = el.checked; const row = el.closest('.rc-row'); if (row) row.classList.toggle('on', el.checked); }
+    else cur[k] = el.value;
+    c.radioSel[key] = cur;
+    touch();
+    return;
+  }
+  if (el && el.dataset && el.dataset.lofc) { curCard().loadoutFc = el.checked; renderEditor(); touch(); return; }
+  if (el && el.dataset && el.dataset.gs) return;        /* champ partagé avec la fiche : la maquette ne l'écrit pas */
   const path = el && el.dataset ? el.dataset.path : '';
   if (!path) return;
   if (e.type === 'change' && el.tagName !== 'SELECT') return;
@@ -4432,7 +5050,7 @@ function onEditorInput(e) {
   else setPath(c, path, el.value);
   if (path === 'weather.metar') syncMetar(c);
   if (path === 'flight.callsign') updatePackTitle();
-  if (/^crew\./.test(path)) { syncGroup(c); syncGroupEditor(c); }
+  if (/^crew\./.test(path) && !c.gsId) { syncGroup(c); syncGroupEditor(c); }
   if (path === 'navDisplay.ref' || path === 'navDisplay.vmode') renderEditor();        /* la troisième liste et la rangée de la saisie changent */
   else if (/^nav(Display)?\./.test(path) || path === 'units.distance' || path === 'meta.date') syncNavEditor();
   if (/^refs\./.test(path)) syncRefsEditor();
@@ -4440,6 +5058,8 @@ function onEditorInput(e) {
 }
 
 function onEditorClick(e) {
+  const fr = e.target.closest('[data-rsfree]');
+  if (fr) { DG_UI.free[fr.dataset.rsfree] = !DG_UI.free[fr.dataset.rsfree]; renderEditor(); return; }
   const btn = e.target.closest('[data-act]');
   if (!btn || btn.disabled) return;
   const act = btn.dataset.act, path = btn.dataset.list, i = parseInt(btn.dataset.i, 10);
@@ -4468,20 +5088,23 @@ function onEditorClick(e) {
   }
 }
 
-/* ----- Paquet de datacards ----- */
+/* ----- Liste des cartes ----- */
 function onPackClick(e) {
+  const row = e.target.closest('[data-card]');
+  if (row) { curIdx = parseInt(row.dataset.card, 10); renderAll(); return; }
   const btn = e.target.closest('[data-pack]');
   if (!btn || btn.disabled) return;
   const act = btn.dataset.pack;
-  const N = doc.cards.length;
-  if (act === 'prev' && curIdx > 0) curIdx--;
-  else if (act === 'next' && curIdx < N - 1) curIdx++;
-  else if (act === 'add') { doc.cards.push(newCard()); curIdx = doc.cards.length - 1; }
+  if (act === 'newlinked') { grpAskNew(); return; }
+  if (act === 'attach') { grpAskAttach(); return; }
+  if (act === 'newfree') { doc.cards.push(newCard()); curIdx = doc.cards.length - 1; }
   else if (act === 'dup') { doc.cards.splice(curIdx + 1, 0, clone(curCard())); curIdx++; }
   else if (act === 'del') {
+    if (curCard().gsId) { grpAskDelete(); return; }
     if (!confirm(t('confirm.delete'))) return;
-    if (N > 1) { doc.cards.splice(curIdx, 1); if (curIdx >= doc.cards.length) curIdx = doc.cards.length - 1; }
-    else doc.cards[0] = newCard();
+    doc.cards.splice(curIdx, 1);
+    if (!doc.cards.length) doc.cards = [newCard()];
+    if (curIdx >= doc.cards.length) curIdx = doc.cards.length - 1;
   } else return;
   persistState();
   renderAll();
@@ -5534,6 +6157,8 @@ function bindEvents() {
     if (d && d.matches && d.matches('details.ed-section')) openState[d.dataset.section] = d.open;
   }, true);
   document.getElementById('pack-bar').addEventListener('click', onPackClick);
+  document.getElementById('grp-backdrop').addEventListener('click', grpClose);
+  document.getElementById('grp-modal').addEventListener('click', e => { const b = e.target.closest('[data-grp-act]'); if (b && !b.disabled) grpAct(b.dataset.grpAct); });
 
   document.getElementById('mode-seg').addEventListener('click', e => {
     const b = e.target.closest('[data-mode]');
@@ -5607,6 +6232,7 @@ function bindEvents() {
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
     if (saveModalOpen()) { e.preventDefault(); closeSaveModal(); return; }
+    if (!document.getElementById('grp-modal').hidden) { grpClose(); return; }
     if (!document.getElementById('export-modal').hidden) closeExportModal();
     if (!document.getElementById('import-modal').hidden) closeImportModal();
   });
@@ -5616,7 +6242,7 @@ function bindEvents() {
   initScrollBar(document.getElementById('tab-bar'));
 
   /* Passage depuis le Route Planner (même origine : l'évènement vient d'un autre document) */
-  window.addEventListener('storage', e => { if (e.key === KEY_HANDOFF) checkRouteHandoff(); });
+  window.addEventListener('storage', e => { if (e.key === KEY_HANDOFF) checkRouteHandoff(); dgStorage(e); });
 
   window.addEventListener('beforeprint', fillPrintRoot);
   window.addEventListener('afterprint', clearPrintRoot);
@@ -5986,7 +6612,9 @@ function init() {
   updateFlagButton();
   initToolbarMenus([['theme-select', () => t('tb.theme.tip')]]);   /* les listes de la barre au thème de l'interface */
   initFormMenus(sel => { const f = sel.closest('.ed-field'), l = f && f.querySelector('label'); return l ? l.textContent.trim() : ''; });   /* les listes des formulaires */
+  gsMigrate(dgPackFn);
   loadState();
+  gsApplyAll();
   bindEvents();
   setActiveTab('meta');
   renderAll();
@@ -6026,7 +6654,10 @@ def build():
         raise SystemExit("[ERREUR] Le document d'exemple anglais n'est pas au format dcs-datacard-v1")
     example_en_js = json.dumps(example_en, ensure_ascii=False, indent=2).replace('</', '<\\/')
 
-    js = JS.replace('__EXAMPLE_DOC__', example_js).replace('__EXAMPLE_DOC_EN__', example_en_js).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@RADIO_BLOCK@@\n', build_radio_block()).replace('@@PROJECTION_BLOCK@@\n', build_projection_block())
+    _types, _chans, _wn = groups_tables()
+    js = JS.replace('@@PAYLOAD_TYPES@@', _types).replace('@@RADIO_CHANNELS@@', _chans).replace('@@WEAPON_NAMES@@', _wn)
+    js = js.replace('@@ROUTE_PACK_BLOCK@@\n', build_route_pack_block()).replace('@@GROUP_STORE_BLOCK@@\n', build_group_store_block())
+    js = js.replace('__EXAMPLE_DOC__', example_js).replace('__EXAMPLE_DOC_EN__', example_en_js).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@RADIO_BLOCK@@\n', build_radio_block()).replace('@@PROJECTION_BLOCK@@\n', build_projection_block())
     html = HTML
     html = html.replace('__CSS__', CSS)
     html = html.replace('__LIB_HTML2CANVAS__', A['lib_html2canvas'])
