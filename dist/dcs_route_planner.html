@@ -1677,6 +1677,7 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .imp-srcline .imp-bgside { margin: 0; }
 .imp-lbl { display: block; font-family: var(--f-stencil); font-weight: 700; font-size: 11px; letter-spacing: 1.8px; text-transform: uppercase; color: var(--amber); margin: 0 0 4px; }
 .imp-bgside .imp-lbl { margin: 0; }
+.imp-bgsel { display: block; flex: 0 1 auto; max-width: 100%; min-width: 0; }
 .imp-fls { flex: 1 1 auto; min-height: 150px; display: flex; flex-direction: column; margin-bottom: 8px; }
 .imp-filters { display: flex; gap: 8px; margin: 0 0 8px; flex-wrap: wrap; }
 .imp-filters > div { flex: 1 1 110px; min-width: 0; }
@@ -1698,7 +1699,7 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .imp-sel.tbm-trigger.tbm-field .tbm-lbl::after { display: none; }
 .imp-sel.tbm-trigger.tbm-field:focus { outline: none; border-left-color: var(--red-stamp); box-shadow: 0 0 0 1px var(--imp-acc); }
 .imp-sel.tbm-trigger.tbm-field:disabled { opacity: .5; cursor: default; }
-.tbm-panel { z-index: 10500; }
+.tbm-panel.tbm-imp { z-index: 10500; }
 .imp-in { display: block; box-sizing: border-box; width: 100%; min-width: 0; min-height: 44px; padding: 0 10px; background: rgba(216,201,165,.92); color: var(--ink); border: 1px solid var(--khaki); border-left: 3px solid var(--amber-dark); border-radius: 0; font-family: var(--f-typewriter); font-size: 13px; cursor: text; }
 .imp-in:focus { outline: none; border-left-color: var(--red-stamp); box-shadow: 0 0 0 1px var(--imp-acc); }
 .imp-bulk { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 4px; }
@@ -2834,8 +2835,6 @@ const I18N = {
     'confirm.theatre.1': 'Passer au théâtre {th} ? La route existante sera supprimée.',
     'toast.routesMax': '12 routes au plus.',
     'toast.groupsDone': 'Groupes de la route mis à jour ✓',
-    'toast.groupsMade.1': '{n} groupe créé',
-    'toast.groupsMade.n': '{n} groupes créés',
     'toast.groupsOther': 'groupes non rattachés : ils sont sur {th}',
     'rs.import': '⇣ Importer',
     'toast.routesMade.1': '{n} route créée',
@@ -3341,8 +3340,6 @@ const I18N = {
     'confirm.theatre.1': 'Switch to the {th} theatre? The existing route will be deleted.',
     'toast.routesMax': 'At most 12 routes.',
     'toast.groupsDone': 'Route groups updated ✓',
-    'toast.groupsMade.1': '{n} group created',
-    'toast.groupsMade.n': '{n} groups created',
     'toast.groupsOther': 'groups not attached: they are on {th}',
     'rs.import': '⇣ Import',
     'toast.routesMade.1': '{n} route created',
@@ -8987,22 +8984,28 @@ function frameRoutes(list) {
    La fenêtre écrit dans la fiche des groupes ; le Route Planner reprend ensuite les routes que des groupes y portent (gsAdoptRoutes). */
 function rpImportBefore() { syncActive(); }
 /* Le texte de la reprise : « n route(s) créée(s) », « n route(s) non reprise(s) : 12 routes au plus », puis, à l'import, les groupes d'un autre théâtre, les routes tronquées, les sources non gardées */
-function adoptText(a, say) {
+function adoptText(a, say, skip) {
   const parts = [];
   if (a.made) parts.push(t(a.made === 1 ? 'toast.routesMade.1' : 'toast.routesMade.n', { n: a.made }));
-  if (a.skipped) parts.push(t(a.skipped === 1 ? 'toast.routesSkip.1' : 'toast.routesSkip.n', { n: a.skipped }));
+  if (a.skipped && skip !== false) parts.push(t(a.skipped === 1 ? 'toast.routesSkip.1' : 'toast.routesSkip.n', { n: a.skipped }));
   if (say && a.other) parts.push(t('toast.groupsOther', { th: theatreText(a.other) }));
   if (a.trunc.length) parts.push(t('toast.hqTrunc', { name: a.trunc.join(', ') }));
   if (a.nodcs) parts.push(t('toast.dcsKept', { n: a.nodcs }));
   return parts.join(' · ');
 }
+/* ADOPT.skipped : le nombre de groupes laissés de côté au dernier passage. Hors import, « route(s) non reprise(s) » ne paraît que si ce nombre augmente : jamais à chaque retour sur l'onglet ni à chaque écriture de la fiche. */
+const ADOPT = { skipped: 0, timer: 0 };
 function adoptNotice(a) {
-  const txt = adoptText(a, false);
-  if (txt !== '') showToast(txt, (a.skipped || a.trunc.length || a.nodcs) ? 6000 : 3500);
+  const more = a.skipped > ADOPT.skipped;
+  ADOPT.skipped = a.skipped;
+  const txt = adoptText(a, false, more);
+  if (txt !== '') showToast(txt, ((more && a.skipped) || a.trunc.length || a.nodcs) ? 6000 : 3500);
 }
 /* Après l'import : les routes des groupes importés, cadrées, la première active ; le toast du bloc, puis celui de la reprise */
 function rpImported(res) {
+  if (ADOPT.timer) { clearTimeout(ADOPT.timer); ADOPT.timer = 0; }
   const a = gsAdoptRoutes({ activate: true });
+  ADOPT.skipped = a.skipped;
   if (a.routes.length) frameRoutes(a.routes);
   const extra = adoptText(a, true);
   const failed = !!(res && res.failed);      /* un stockage qui n'écrit pas : le texte d'échec du module, pas « 0 groupe importé » */
@@ -9386,7 +9389,7 @@ const IMP_I18N = {
     'imp.choose': 'Choisir un fichier…',
     'imp.file.note': 'Un paquet de vol (.json ou .zip) ou un briefing (.json).',
     'imp.side': 'Camp',
-    'imp.side.bg': 'Camp des groupes du briefing',
+    'imp.side.groups': 'Camp des groupes',
     'imp.type': 'Type',
     'imp.name': 'Nom',
     'imp.all': 'Tous',
@@ -9451,7 +9454,7 @@ const IMP_I18N = {
     'imp.choose': 'Choose a file…',
     'imp.file.note': 'A flight package (.json or .zip) or a briefing (.json).',
     'imp.side': 'Side',
-    'imp.side.bg': 'Side of the briefing’s groups',
+    'imp.side.groups': 'Groups’ side',
     'imp.type': 'Type',
     'imp.name': 'Name',
     'imp.all': 'All',
@@ -9459,8 +9462,8 @@ const IMP_I18N = {
     'imp.blue': 'Blue',
     'imp.neutral': 'Neutral',
     'imp.noside': 'None',
-    'imp.checkshown': 'Tick the shown groups',
-    'imp.uncheckall': 'Untick all',
+    'imp.checkshown': 'Check shown groups',
+    'imp.uncheckall': 'Uncheck all',
     'imp.count': '{0} / {1} groups shown',
     'imp.nomatch': 'No group matches.',
     'imp.empty': 'No group in this source.',
@@ -9641,12 +9644,19 @@ function impBriefingTable(b, type) {
   const plan = (Array.isArray(rp.aircraftPlans) ? rp.aircraftPlans : []).find(p => gsIsObj(p) && impSame(p.aircraft, type));
   if (!plan) return out;
   const posts = Object.keys(RADIO_CHANNELS[type]).map(Number);
+  const shortOf = i => impPosteShort(type, i).replace(/\s+/g, '').toLowerCase();
+  const used = {};       // nom court → combien de radios du plan l'ont déjà pris
   (Array.isArray(plan.radios) ? plan.radios : []).forEach(r => {
     if (!gsIsObj(r)) return;
     const chans = (Array.isArray(r.channels) ? r.channels : []).filter(gsIsObj).filter(ch => !(ch.channel === '' || ch.channel === null || ch.channel === undefined));
     const nm = impStr(r.name).replace(/\s+/g, '').toLowerCase();
     let poste = 0;
-    for (let i = 1; i <= 9 && !poste; i++) { const s = impPosteShort(type, i).replace(/\s+/g, '').toLowerCase(); if (s !== '' && s === nm) poste = i; }
+    if (nm !== '') {
+      const same = [];       // les postes du type qui portent ce nom court, dans l'ordre de leur numéro
+      for (let i = 1; i <= 9; i++) if (shortOf(i) === nm) same.push(i);
+      if (same.length > 1) { const k = used[nm] || 0; used[nm] = k + 1; poste = same[k] || 0; }       // plusieurs postes au même nom court : les radios du plan de ce nom les prennent dans l'ordre, la suivante est ignorée
+      else poste = same.length ? same[0] : 0;
+    }
     const table = {};
     chans.forEach(ch => {
       if (!poste || posts.indexOf(poste) < 0) { out.ignored++; return; }
@@ -9810,7 +9820,11 @@ function impMergeUnit(st, target, fi, k, iu, chk, src) {
   } else if (IMP_TYPES.indexOf(ty) >= 0 && ty !== u.type) impRetype(st, target, fi, k, u, ty);
   if (chk.livery && typeof iu.liveryId === 'string') u.livery = iu.liveryId;
   if (chk.radios && Array.isArray(iu.radios)) impMergeRadios(u, u.type, iu.radios);
-  if (chk.loadout && gsIsObj(iu.payload) && gsIsObj(iu.payload.pylons)) { u.payloadIn = impClone(iu.payload); u.loadout = null; }       // brut : le Flight Configurator le convertit à la lecture de la fiche
+  if (chk.loadout && gsIsObj(iu.payload) && gsIsObj(iu.payload.pylons)) {
+    const conv = st.convert && u.type !== '' ? IMP.hooks.loadoutFrom : null;
+    if (conv) { u.loadout = conv(u.type, impClone(iu.payload)) || null; delete u.payloadIn; }       // le module convertit : l'emport s'écrit tel qu'il le garde, jamais d'état intermédiaire
+    else { u.payloadIn = impClone(iu.payload); u.loadout = null; }       // brut : le Flight Configurator le convertit à la lecture de la fiche
+  }
 }
 /* Les unités d'une ligne du briefing : le nombre voulu, du type de la ligne ('' : sans type, à choisir) ; le plan radio du type s'applique à chaque unité du groupe de ce type */
 function impBriefingUnits(st, target, fi, row, chk, src) {
@@ -9834,10 +9848,11 @@ function impBriefingUnits(st, target, fi, row, chk, src) {
 }
 /* Écrit les lignes cochées dans la fiche, une par une (relire, changer le seul groupe touché, gsPutFlight) ; rend le compte rendu pour le rappel du module */
 function impWrite(src, picks, side) {
-  const st = { created: new Set(), ids: [], warn: [], noTypeUnits: 0, noTypeGroups: [], ignored: 0, counted: {}, failed: false };
+  const st = { created: new Set(), ids: [], warn: [], noTypeUnits: 0, noTypeGroups: [], ignored: 0, counted: {}, failed: false, convert: true };
   if (!gsEnsure()) { st.failed = true; return impResult(st, 0, src); }
   const g0 = gsRead();
   const routeOff = impRouteOff(src, g0);
+  picks = picks.filter(r => r.kind === 'bg' || r.managed || (r.chk.route && r.points && !routeOff));       // un vol sans unité gérée n'importe que sa route : sans elle, rien
   if (src.theatre && (!g0.flights.length || g0.theatre === '') && !gsSetTheatre(src.theatre)) { st.failed = true; return impResult(st, 0, src); }
   for (let n = 0; n < picks.length; n++) {
     const row = picks[n], chk = Object.assign({}, row.chk);
@@ -9921,7 +9936,7 @@ function impSetup(hooks) {
     else if (el.id === 'imp-type') { I.type = el.value; impRenderList(); }
     else if (el.id === 'imp-bg-side') { I.bgSide = el.value; impRenderList(); }
     else if (cur && el.hasAttribute('data-imp-flight')) { cur.rows[Number(el.getAttribute('data-imp-flight'))].on = el.checked; impUpdateGo(); }
-    else if (cur && el.hasAttribute('data-imp-part')) cur.rows[Number(el.getAttribute('data-imp-i'))].chk[el.getAttribute('data-imp-part')] = el.checked;
+    else if (cur && el.hasAttribute('data-imp-part')) { cur.rows[Number(el.getAttribute('data-imp-i'))].chk[el.getAttribute('data-imp-part')] = el.checked; impUpdateGo(); }
   });
   document.getElementById('imp-file-in').addEventListener('change', e => { const f = e.target.files && e.target.files[0]; e.target.value = ''; if (f) impFile(f); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && impIsOpen()) impClose(); });
@@ -9970,8 +9985,12 @@ function impSideOptions(sel, withNone) {
   return (withNone ? [['red', impT('imp.red')], ['blue', impT('imp.blue')], ['', impT('imp.noside')]] : [['all', impT('imp.all')], ['red', impT('imp.red')], ['blue', impT('imp.blue')]])
     .map(x => '<option value="' + impEsc(x[0]) + '"' + (x[0] === sel ? ' selected' : '') + '>' + impEsc(x[1]) + '</option>').join('');
 }
+/* La liste « Camp des groupes » existe dès que la source chargée est un briefing (le briefing en cours, ou un fichier de briefing) */
+function impSrcIsBriefing(I) { const c = impCur(I); return !!c && c.what === 'bg'; }
+/* La liste se mesure à sa plus longue option (en caractères de sa police à chasse fixe, plus le cadre et la flèche) : le sélecteur remplacé par le module n'a pas de largeur propre */
 function impBgSideHtml(I) {
-  return '<div class="imp-bgside"><label class="imp-lbl" for="imp-bg-side">' + impEsc(impT('imp.side')) + '</label><select class="imp-sel" id="imp-bg-side" aria-label="' + impEsc(impT('imp.side.bg')) + '">' + impSideOptions(I.bgSide, true) + '</select></div>';
+  const n = ['imp.red', 'imp.blue', 'imp.noside'].reduce((m, k) => Math.max(m, impT(k).length), 0) + 2;
+  return '<div class="imp-bgside"><label class="imp-lbl" for="imp-bg-side">' + impEsc(impT('imp.side.groups')) + '</label><span class="imp-bgsel" style="width: calc(' + n + 'ch + 52px)"><select class="imp-sel" id="imp-bg-side" aria-label="' + impEsc(impT('imp.side.groups')) + '">' + impSideOptions(I.bgSide, true) + '</select></span></div>';
 }
 function impSourceLabel(I) {
   if (I.src === 'hq') return impT('imp.src.hq');
@@ -9981,13 +10000,14 @@ function impSourceLabel(I) {
 function impSourcesHtml(I) {
   if (impFolded(I)) {
     return '<div class="imp-block imp-srcline"><span>' + impEsc(impTf('imp.srcline', impSourceLabel(I))) + '</span> <button type="button" class="imp-link" data-act="imp-change-src">' + impEsc(impT('imp.change')) + '</button>'
-      + (I.src === 'bg' ? impBgSideHtml(I) : '') + '</div>';
+      + (impSrcIsBriefing(I) ? impBgSideHtml(I) : '') + '</div>';
   }
   const row = (id, label, extra, disabled) => '<label class="imp-src' + (disabled ? ' off' : '') + '"><input type="radio" name="imp-src" value="' + id + '"' + (I.src === id ? ' checked' : '') + (disabled ? ' disabled' : '') + '><span>' + impEsc(label) + '</span></label>' + (extra || '');
   const hqNote = '<div class="imp-note">' + impEsc(I.hq ? impTf('imp.hq.ok', I.hq.file, I.hq.theatre) : impT('imp.hq.none')) + '</div>';
   const bgNote = '<div class="imp-note">' + impEsc(I.bg ? impTf('imp.bg.ok', I.bg.phases) : impT('imp.bg.none')) + '</div>' + (I.src === 'bg' && I.bg ? impBgSideHtml(I) : '');
   const filePick = '<div class="imp-file"><button type="button" class="imp-filebtn" data-act="imp-pick-file">' + impEsc(impT('imp.choose')) + '</button><span class="imp-filename">' + impEsc(I.file ? I.file.file : '') + '</span></div><div class="imp-note">' + impEsc(impT('imp.file.note')) + '</div>'
-    + (I.msg ? '<div class="imp-note imp-warn" role="alert">⚠ ' + impEsc(I.msg) + '</div>' : '');
+    + (I.msg ? '<div class="imp-note imp-warn" role="alert">⚠ ' + impEsc(I.msg) + '</div>' : '')
+    + (I.src === 'file' && impSrcIsBriefing(I) ? impBgSideHtml(I) : '');
   return '<div class="imp-block imp-srcs"><h3>' + impEsc(impT('imp.src')) + '</h3>' + row('hq', impT('imp.src.hq'), hqNote, !I.hq) + row('bg', impT('imp.src.bg'), bgNote, !I.bg) + row('file', impT('imp.src.file'), filePick, false) + '</div>';
 }
 /* Les lignes affichées : camp, type, nom (casse et accents ignorés) */
@@ -10000,6 +10020,13 @@ function impShown(cur, I) {
   });
   return out;
 }
+/* Une ligne importe-t-elle quelque chose ? Un vol que le module ne gère pas (type hors liste, ou sans unité) n'apporte que sa route : sans route cochée et possible, il n'y a rien à importer */
+function impRowGoes(r, routeOff) {
+  if (!r.on || !r.ok) return false;
+  if (r.kind === 'bg' || r.managed) return true;
+  return !!(r.avail.route && r.chk.route && r.points && !routeOff);
+}
+function impRoutesOff() { const cur = impCur(); return !!(cur && impRouteOff(cur, gsRead())); }
 /* L'état d'une ligne : nouveau, complète, ou ce qui la limite */
 function impRowState(cur, r, g, I) {
   if (r.kind === 'bg') {
@@ -10066,7 +10093,7 @@ function impRenderList() {
 }
 function impUpdateGo() {
   const cur = impCur(), go = document.getElementById('imp-go');
-  if (go) go.disabled = !(cur && cur.rows.some(r => r.on && r.ok));
+  if (go) { const off = impRoutesOff(); go.disabled = !(cur && cur.rows.some(r => impRowGoes(r, off))); }
 }
 /* « Cocher les groupes affichés » et « Tout décocher » agissent sur les lignes visibles après filtre ; une ligne grisée ne se coche pas */
 function impSetShown(on) {
@@ -10078,7 +10105,8 @@ function impSetShown(on) {
 function impGo() {
   const I = IMP.I, cur = impCur(I);
   if (!I || !cur) return;
-  const picks = cur.rows.filter(r => r.on && r.ok);
+  const off = impRoutesOff();
+  const picks = cur.rows.filter(r => impRowGoes(r, off));
   if (!picks.length) return;
   try { if (IMP.hooks.before) IMP.hooks.before(); } catch (e) { /* facultatif */ }
   const res = impWrite(cur, picks, I.bgSide);
@@ -10142,34 +10170,12 @@ function gsSyncRoutes() {
   });
 }
 
-/* Une route neuve (venue de HQ ou d'un paquet) prend son groupe : la règle de la migration. Rend le nombre de groupes créés. */
-function gsAutoAssign(list, info) {
-  let made = 0;
-  try {
-    const th = S.theatre;
-    if (!hasRouteTool(th)) return 0;
-    list.forEach(r => {
-      if (!r.flight) return;
-      if (!gsEnsure()) { if (info) info.failed = true; return; }       /* la fiche ne naît que de la migration ; si elle ne peut pas écrire, rien n'est rattaché */
-      const g = gsRead();
-      const name = gsNameKey(r.flight.groupName), side = gsSide(r.flight.coalition);
-      if (name === '') return;
-      if (g.theatre !== '' && g.theatre !== th && g.flights.length) { if (info) info.other = g.theatre; return; }       /* des groupes d'un autre théâtre : rien n'est rattaché, le toast le dit */
-      if (g.theatre !== th && !gsSetTheatre(th)) return;       /* une fiche sans théâtre (ou sans groupe) prend celui du Route Planner */
-      const hits = g.flights.filter(f => gsNameKey(f.name) === name && gsSide(f.coalition) === side);
-      if (hits.length > 1 || (hits.length === 1 && hits[0].route)) return;
-      const pts = packRoutePoints(r);
-      if (hits.length === 1) gsPutFlight(groupTakes(hits[0], r, pts));
-      else if (gsPutFlight({ fcId: gsNewId(), name: r.flight.groupName, coalition: side, route: { points: pts }, routeLink: { rid: r.rid, name: r.name }, units: [] })) made++;
-    });
-  } catch (e) { /* la fiche des groupes est facultative */ }
-  return made;
-}
-
 /* La reprise des routes. Chaque groupe de la fiche (dans son ordre) qui porte des points (route.points, un point lisible au moins) et n'a pas de routeLink devient une route neuve du Route Planner :
    nommée comme le groupe, ses points comme à l'import (30 au plus), flight { groupName, coalition } de provenance ; le groupe la suit ensuite (groupTakes, la copie au format du paquet).
    Le théâtre de la fiche doit être celui du Route Planner et avoir une projection ; sinon, sans aucune route à points, le Route Planner passe au théâtre de la fiche puis reprend ; sinon rien (other).
    La route active vide et sans groupe prend la première. 12 routes au plus : au-delà le groupe garde sa copie (skipped). Un groupe dont la route a été supprimée garde son routeLink : il n'est pas repris.
+   Juste avant d'écrire un groupe, la fiche est relue : un groupe qui a entre-temps reçu un routeLink (une autre fenêtre l'a repris), ou qu'un passage de celui-ci a déjà repris, ne l'est pas deux fois ;
+   la copie écrite est celle de la fiche relue, jamais celle du début du passage (le Flight Configurator a pu convertir l'emport de ses unités entre-temps). Le groupe s'écrit avant que la route entre dans la liste.
    opts.activate : la première route créée devient active. Rend { made, skipped, other, trunc, nodcs, routes }. */
 function gsAdoptRoutes(opts) {
   opts = opts || {};
@@ -10190,13 +10196,17 @@ function gsAdoptRoutes(opts) {
     }
     const replace = routeIsEmpty(RSET.routes[RSET.active]);
     let count = RSET.routes.length - (replace ? 1 : 0);
-    const mk = [];
+    const mk = [], done = new Set();
     cand.forEach(f => {
       if (count >= MAX_ROUTES) { out.skipped++; return; }
-      const r = routeFromFlight({ groupName: f.name, coalition: gsSide(f.coalition), points: f.route.points }, th, null);
+      const cur0 = gsRead(), cur = cur0 ? cur0.flights.filter(x => x.fcId === f.fcId)[0] : null;
+      if (!cur || !carries(cur) || done.has(cur.fcId)) return;       /* relu à l'instant : repris ailleurs, ou disparu, ou plus de route */
+      const r = routeFromFlight({ groupName: cur.name, coalition: gsSide(cur.coalition), points: cur.route.points }, th, null);
+      done.add(cur.fcId);
+      if (!gsPutFlight(groupTakes(cur, r.route, packRoutePoints(r.route)))) return;       /* le groupe qui suit la route s'écrit d'abord, de la copie relue à l'instant ; pas d'écriture, pas de route */
       out.nodcs += r.nodcs;
       if (r.trunc) out.trunc.push(r.route.name);
-      mk.push({ f: f, r: r.route });
+      mk.push({ f: cur, r: r.route });
       count++;
     });
     if (!mk.length) return out;
@@ -10209,7 +10219,6 @@ function gsAdoptRoutes(opts) {
     S.name = list[act].name; S.points = list[act].points;
     sel = -1; selR = -1;
     persistState();
-    mk.forEach(x => { gsPutFlight(groupTakes(x.f, x.r, packRoutePoints(x.r))); });
     out.made = mk.length;
     out.routes = mk.map(x => x.r);
     renderAll();
@@ -10385,7 +10394,13 @@ function routesBind() {
   /* le Flight Configurator écrit la fiche des groupes (ou HQ une autre mission) : les routes que ses groupes portent sont reprises, les groupes de la route et la fenêtre ouverte se redessinent */
   window.addEventListener('storage', e => {
     if (e.key === KEY_SNAPSHOT) routesRender();
-    else if (e.key === null || e.key === KEY_FLIGHT_SET) { adoptNotice(gsAdoptRoutes({})); routesRender(); if (rtVisible('ga-modal')) { gaSync(); gaRender(); } }
+    else if (e.key === null || e.key === KEY_FLIGHT_SET) {
+      /* le Flight Configurator écrit en plusieurs temps (un groupe après l'autre, puis la conversion de l'emport brut) : la reprise attend 400 ms de calme, la minuterie repart à chaque événement */
+      if (ADOPT.timer) clearTimeout(ADOPT.timer);
+      ADOPT.timer = setTimeout(() => { ADOPT.timer = 0; adoptNotice(gsAdoptRoutes({})); routesRender(); if (rtVisible('ga-modal')) { gaSync(); gaRender(); } }, 400);
+      routesRender();
+      if (rtVisible('ga-modal')) { gaSync(); gaRender(); }
+    }
   });
   window.addEventListener('focus', () => { adoptNotice(gsAdoptRoutes({})); routesRender(); });
 }
@@ -12633,6 +12648,7 @@ function tbmOpen(m) {
   const sel = m.sel, opts = sel.options, name = m.labelFn();
   const ul = document.createElement('ul');
   ul.className = 'tbm-panel' + (m.form ? ' tbm-p-field' : '');
+  if (sel.closest && sel.closest('#imp-modal')) ul.classList.add('tbm-imp');       // les listes de la fenêtre d'import passent devant elle
   ul.id = 'tbm-list-' + m.uid;
   ul.setAttribute('role', 'listbox');
   ul.setAttribute('aria-label', name);

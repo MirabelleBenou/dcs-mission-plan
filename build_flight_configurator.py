@@ -545,7 +545,6 @@ I18N_FR = {
     'err.code.unexpected-token': 'élément inattendu',
     'err.code.bad-structure': 'structure inattendue',
 
-
     'sum.route': 'route {0} pts',
     'sum.radios': 'radios {0} canaux',
     'sum.radios.var': 'radios variées',
@@ -558,9 +557,6 @@ I18N_FR = {
     'u.type.pick': '— à choisir —',
     'u.notype': 'Choisissez le type de l’appareil pour régler ses radios, son emport et sa livrée.',
     'bar.no.type': 'Export impossible : choisissez le type de chaque appareil ({0}, unité {1}).',
-
-
-
 
     'open.bad': 'Ce fichier n’est pas un fichier de travail ni un paquet de vol.',
     'open.done': 'Fichier ouvert : {0} groupe(s).',
@@ -783,7 +779,6 @@ I18N_EN = {
     'err.code.unexpected-token': 'unexpected token',
     'err.code.bad-structure': 'unexpected structure',
 
-
     'sum.route': 'route {0} pts',
     'sum.radios': 'radios {0} channels',
     'sum.radios.var': 'radios vary',
@@ -796,9 +791,6 @@ I18N_EN = {
     'u.type.pick': '— to pick —',
     'u.notype': 'Pick the aircraft type to set its radios, loadout and livery.',
     'bar.no.type': 'Cannot export: pick each aircraft’s type ({0}, unit {1}).',
-
-
-
 
     'open.bad': 'This file is neither a working file nor a flight package.',
     'open.done': 'File opened: {0} group(s).',
@@ -1696,6 +1688,7 @@ function tbmOpen(m) {
   const sel = m.sel, opts = sel.options, name = m.labelFn();
   const ul = document.createElement('ul');
   ul.className = 'tbm-panel' + (m.form ? ' tbm-p-field' : '');
+  if (sel.closest && sel.closest('#imp-modal')) ul.classList.add('tbm-imp');       // les listes de la fenêtre d'import passent devant elle
   ul.id = 'tbm-list-' + m.uid;
   ul.setAttribute('role', 'listbox');
   ul.setAttribute('aria-label', name);
@@ -1988,7 +1981,6 @@ const UI = {
   seenLiv: {},              // type → [liveryId vus dans les paquets importés, une entrée par occurrence]
   cmp: { sym: true, st: null, saving: false, name: '', err: '' },
   rtChoose: null,           // le fcId du groupe dont on choisit la route (« Changer de route ») ; un groupe sans route est toujours au choix
-  imp: null,                // la fenêtre d'import, quand elle est ouverte
   hq: undefined             // la mission de HQ lue dans le stockage : une lecture par ouverture de la fenêtre d'import (undefined = à relire)
 };
 
@@ -2036,14 +2028,38 @@ function gsMarkAll() {
   GS.theatre = S.theatre;
   GS.live = true;
 }
-// Une unité de la fiche qui porte encore un emport brut (payloadIn, écrit par l'import commun) : restoreFlight l'a converti ; GS.seen garde alors le texte lu tel quel, et l'écart
-// fait réécrire le groupe sans payloadIn (fusion à trois : l'unité du module l'emporte). Rend vrai s'il y a eu un groupe à réécrire.
+// Une unité de la fiche qui porte encore un emport brut (payloadIn, écrit par le Route Planner à son import) : restoreFlight l'a converti ; GS.seen garde alors le texte lu tel quel.
+// Rend vrai s'il y a un groupe à réécrire : gsFixRaw le fait.
 function gsHasRawLoadout(raw) { return isObj(raw) && Array.isArray(raw.units) && raw.units.some(u => isObj(u) && isObj(u.payloadIn)); }
 function gsMarkRaw() {
   const g = gsRead();
   let any = false;
   if (g) g.flights.forEach(raw => { if (gsHasRawLoadout(raw) && has(GS.seen, raw.fcId)) { GS.seen[raw.fcId] = gsStable(raw); any = true; } });
   return any;
+}
+// Écrit la conversion : la fiche est relue à l'instant, et dans chaque groupe qui porte un emport brut seuls les champs loadout et payloadIn des unités concernées changent
+// (jamais route, routeLink ni un autre champ, qu'une copie plus ancienne du module aurait périmés). Un groupe que la fiche a changé depuis la lecture est laissé : son événement storage
+// ramènera le module. Rend faux si une écriture a échoué (GS.seen garde alors le texte brut : la prochaine écriture du module reprend la conversion).
+function gsFixRaw() {
+  const g = gsRead();
+  let ok = true;
+  if (!g) return false;
+  g.flights.forEach(raw => {
+    if (!gsHasRawLoadout(raw) || GS.seen[raw.fcId] !== gsStable(raw)) return;
+    const f = S.flights.filter(x => x.fcId === raw.fcId)[0];
+    if (!f) return;
+    const out = clone(raw);
+    let i = 0;
+    out.units.forEach(u => {
+      if (!isObj(u)) return;
+      const mu = f.units[i++];
+      if (!isObj(u.payloadIn)) return;
+      u.loadout = mu && mu.loadout ? clone(mu.loadout) : null;
+      delete u.payloadIn;
+    });
+    if (gsPutFlight(out)) GS.seen[raw.fcId] = gsStable(f); else ok = false;
+  });
+  return ok;
 }
 // Un groupe de la fiche que le module a changé : fusion à trois. base = ce qu'on a lu ou écrit la dernière fois (GS.seen), mien = la copie du module, leur = la fiche relue ;
 // pour chaque clé de premier niveau, mien si elle a changé depuis base, sinon leur ; route et routeLink vont ensemble. Rien n'a changé : on n'écrit pas.
@@ -2087,7 +2103,7 @@ function gsAdopt(quiet) {
   restoreState({ theatre: gs.theatre, flights: gs.flights, sel: S.sel });
   S.flights.forEach(f => { if (has(folds, f.fcId)) UI.fold.set(f, folds[f.fcId]); });
   gsMarkAll();
-  gsMarkRaw();
+  if (gsMarkRaw()) gsFixRaw();       // l'emport brut que la fiche portait est converti et écrit dès l'adoption
   GS.base = {};
   try { lsSet(KEY_STATE, JSON.stringify({ v: 2, sel: S.sel, mine: LIB.mine })); } catch (e) { /* l'écran marche sans */ }
   if (!quiet) renderAll();
@@ -2131,7 +2147,7 @@ function gsPull() {
     if (cur && UI.fold.has(cur)) UI.fold.set(nf, UI.fold.get(cur));
     if (cur && cur.routeLink && nf.routeLink && cur.routeLink.rid === nf.routeLink.rid && (cur.routeLink.name !== nf.routeLink.name || JSON.stringify(cur.route ? cur.route.points : null) !== JSON.stringify(nf.route ? nf.route.points : null))) taken.push({ nf: nf, name: nf.routeLink.name });      // le Route Planner a repris la route de ce groupe
     GS.seen[raw.fcId] = j;
-    if (gsHasRawLoadout(raw)) { GS.seen[raw.fcId] = gsStable(raw); rewrite = true; }       // l'emport brut est converti : le groupe est réécrit sans payloadIn
+    if (gsHasRawLoadout(raw)) { GS.seen[raw.fcId] = gsStable(raw); rewrite = true; }       // l'emport brut est converti : gsFixRaw l'écrit, sans payloadIn
     out.push(nf);
     changed = true;
   });
@@ -2152,16 +2168,19 @@ function gsPull() {
   if (UI.rtChoose !== null && !S.flights.some(f => f.fcId === UI.rtChoose)) UI.rtChoose = null;
   if (k < 0) Object.assign(UI.cmp, { saving: false, err: '', st: null });       // une saisie en cours (nom de preset) ne se perd que si le groupe choisi a disparu
   renderAll();
-  if (rewrite) commitNow();
+  if (rewrite) gsFixRaw();
   if (taken.length && document.visibilityState === 'visible') {
     const lab = taken.map(x => flightLabel(x.nf, S.flights.indexOf(x.nf)));
     showToast(taken.length === 1 ? tf('route.toast.one', taken[0].name.trim() !== '' ? taken[0].name : t('route.unnamed'), lab[0]) : tf('route.toast.many', lab.join(', ')), 4500);
   }
   return true;
 }
+// Un autre onglet écrit la fiche en plusieurs temps (un groupe, puis le lien de sa route) et le stockage met un instant à arriver d'un onglet à l'autre : le module relit après 300 ms de calme
+// (la minuterie repart à chaque événement), pour ne pas convertir ni réécrire sur un état à moitié écrit.
 function gsStorage(e) {
   if (e.key !== null && e.key !== KEY_FLIGHT_SET) return;
-  gsPull();
+  clearTimeout(gsStorage._h);
+  gsStorage._h = setTimeout(gsPull, 300);
 }
 // La migration prend les points d'une route lue brute au format du paquet (gsPackRoute du bloc partagé), à la vitesse sol du Route Planner
 function gsPackFn(r, th) { return gsPackRoute(r, th, rpRead().state.gs); }
@@ -3538,8 +3557,8 @@ async function loadLuaFiles(files) {
 
 
 // ---------- 5. Import : la fenêtre est celle du bloc commun (import_block.py) ; ici seulement ses rappels ----------
-// Le bloc lit HQ, le briefing en cours ou un fichier et écrit dans la fiche partagée (emport brut : unité.payloadIn). Le module relit la fiche à son rappel
-// (restoreFlight convertit l'emport brut en emport « importé » et réécrit l'unité sans payloadIn), puis choisit la première unité du premier groupe importé.
+// Le bloc lit HQ, le briefing en cours ou un fichier et écrit dans la fiche partagée en une fois, l'emport déjà converti (loadoutFrom : loadoutFromPayload). Le module relit la fiche à son rappel,
+// puis choisit la première unité du premier groupe importé. Un emport brut (payloadIn) ne vient que du Route Planner : gsFixRaw le convertit sans toucher au reste du groupe.
 function hqMission() { if (UI.hq === undefined) UI.hq = readHqMission(); return UI.hq; }
 function readHqMission() {
   let o = null;
@@ -4030,7 +4049,7 @@ function bindToolbar() {
   });
   on('btn-open', 'click', () => document.getElementById('fc-in-open').click());
   on('btn-save', 'click', saveFile);
-  on('btn-import', 'click', e => impOpen({ opener: e.currentTarget }));
+  on('btn-import', 'click', e => { UI.hq = readHqMission(); impOpen({ opener: e.currentTarget }); });       // le snapshot de HQ se relit à chaque ouverture (suggestions de livrée)
   on('btn-export', 'click', exportFile);
   on('btn-clear', 'click', clearAll);
   const fileIn = (id, fn) => on(id, 'change', e => { const files = Array.prototype.slice.call(e.target.files); e.target.value = ''; fn(files); });
@@ -4060,16 +4079,15 @@ function init() {
     else if (ok && saved.v === 1) { restoreState(saved.state); GS.base = {}; S.flights.forEach(f => { GS.base[f.fcId] = gsStable(f); }); }       // le stockage a refusé la fiche : l'état d'avant, tel qu'il est
     if (ok) remapPresetKeys(saved.mine);
   } catch (e) { /* l'écran marche sans */ }
-  let rawFix = false;
-  if (gsRead() !== null && !adoptFailed) { gsMarkAll(); rawFix = gsMarkRaw(); } else { GS.seen = {}; GS.theatre = ''; GS.live = false; if (gsRead() === null) GS.mf = true; }       // sans fiche (stockage plein), les groupes restent dans fc_state_v1 jusqu'à ce qu'elle puisse être écrite
+  if (gsRead() !== null && !adoptFailed) { gsMarkAll(); if (gsMarkRaw()) gsFixRaw(); } else { GS.seen = {}; GS.theatre = ''; GS.live = false; if (gsRead() === null) GS.mf = true; }       // sans fiche (stockage plein), les groupes restent dans fc_state_v1 jusqu'à ce qu'elle puisse être écrite
   initToolbarMenus([['theme-select', () => t('toolbar.theme.tooltip')]]);
   initFormMenus(sel => sel.getAttribute('aria-label') || '');
   bindColumns();
   bindToolbar();
-  impSetup({ lang: () => CURRENT_LANG, before: fcImportBefore, onImported: fcImported, toast: showToast, noteLiveries: noteLiveries });       // la fenêtre d'import du bloc commun
+  impSetup({ lang: () => CURRENT_LANG, before: fcImportBefore, onImported: fcImported, toast: showToast, noteLiveries: noteLiveries, loadoutFrom: loadoutFromPayload });       // la fenêtre d'import du bloc commun
   fnBind();                 // la fenêtre « Nom du fichier »
   const taken = routeSync();      // à l'ouverture : les routes liées reprennent ce que le Route Planner a changé depuis
-  if (taken.changed || rawFix) writeState();
+  if (taken.changed) writeState();
   renderAll();
   if (taken.changed) showToast(taken.toast, 4500);
   window.addEventListener('pagehide', flushWork);

@@ -704,6 +704,7 @@ b, strong { font-weight: 400; }
 .imp-srcline .imp-bgside { margin: 0; }
 .imp-lbl { display: block; font-family: var(--f-stencil); font-weight: 700; font-size: 11px; letter-spacing: 1.8px; text-transform: uppercase; color: var(--amber); margin: 0 0 4px; }
 .imp-bgside .imp-lbl { margin: 0; }
+.imp-bgsel { display: block; flex: 0 1 auto; max-width: 100%; min-width: 0; }
 .imp-fls { flex: 1 1 auto; min-height: 150px; display: flex; flex-direction: column; margin-bottom: 8px; }
 .imp-filters { display: flex; gap: 8px; margin: 0 0 8px; flex-wrap: wrap; }
 .imp-filters > div { flex: 1 1 110px; min-width: 0; }
@@ -725,7 +726,7 @@ b, strong { font-weight: 400; }
 .imp-sel.tbm-trigger.tbm-field .tbm-lbl::after { display: none; }
 .imp-sel.tbm-trigger.tbm-field:focus { outline: none; border-left-color: var(--red-stamp); box-shadow: 0 0 0 1px var(--imp-acc); }
 .imp-sel.tbm-trigger.tbm-field:disabled { opacity: .5; cursor: default; }
-.tbm-panel { z-index: 10500; }
+.tbm-panel.tbm-imp { z-index: 10500; }
 .imp-in { display: block; box-sizing: border-box; width: 100%; min-width: 0; min-height: 44px; padding: 0 10px; background: rgba(216,201,165,.92); color: var(--ink); border: 1px solid var(--khaki); border-left: 3px solid var(--amber-dark); border-radius: 0; font-family: var(--f-typewriter); font-size: 13px; cursor: text; }
 .imp-in:focus { outline: none; border-left-color: var(--red-stamp); box-shadow: 0 0 0 1px var(--imp-acc); }
 .imp-bulk { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 4px; }
@@ -8324,7 +8325,7 @@ const IMP_I18N = {
     'imp.choose': 'Choisir un fichier…',
     'imp.file.note': 'Un paquet de vol (.json ou .zip) ou un briefing (.json).',
     'imp.side': 'Camp',
-    'imp.side.bg': 'Camp des groupes du briefing',
+    'imp.side.groups': 'Camp des groupes',
     'imp.type': 'Type',
     'imp.name': 'Nom',
     'imp.all': 'Tous',
@@ -8389,7 +8390,7 @@ const IMP_I18N = {
     'imp.choose': 'Choose a file…',
     'imp.file.note': 'A flight package (.json or .zip) or a briefing (.json).',
     'imp.side': 'Side',
-    'imp.side.bg': 'Side of the briefing’s groups',
+    'imp.side.groups': 'Groups’ side',
     'imp.type': 'Type',
     'imp.name': 'Name',
     'imp.all': 'All',
@@ -8397,8 +8398,8 @@ const IMP_I18N = {
     'imp.blue': 'Blue',
     'imp.neutral': 'Neutral',
     'imp.noside': 'None',
-    'imp.checkshown': 'Tick the shown groups',
-    'imp.uncheckall': 'Untick all',
+    'imp.checkshown': 'Check shown groups',
+    'imp.uncheckall': 'Uncheck all',
     'imp.count': '{0} / {1} groups shown',
     'imp.nomatch': 'No group matches.',
     'imp.empty': 'No group in this source.',
@@ -8579,12 +8580,19 @@ function impBriefingTable(b, type) {
   const plan = (Array.isArray(rp.aircraftPlans) ? rp.aircraftPlans : []).find(p => gsIsObj(p) && impSame(p.aircraft, type));
   if (!plan) return out;
   const posts = Object.keys(RADIO_CHANNELS[type]).map(Number);
+  const shortOf = i => impPosteShort(type, i).replace(/\s+/g, '').toLowerCase();
+  const used = {};       // nom court → combien de radios du plan l'ont déjà pris
   (Array.isArray(plan.radios) ? plan.radios : []).forEach(r => {
     if (!gsIsObj(r)) return;
     const chans = (Array.isArray(r.channels) ? r.channels : []).filter(gsIsObj).filter(ch => !(ch.channel === '' || ch.channel === null || ch.channel === undefined));
     const nm = impStr(r.name).replace(/\s+/g, '').toLowerCase();
     let poste = 0;
-    for (let i = 1; i <= 9 && !poste; i++) { const s = impPosteShort(type, i).replace(/\s+/g, '').toLowerCase(); if (s !== '' && s === nm) poste = i; }
+    if (nm !== '') {
+      const same = [];       // les postes du type qui portent ce nom court, dans l'ordre de leur numéro
+      for (let i = 1; i <= 9; i++) if (shortOf(i) === nm) same.push(i);
+      if (same.length > 1) { const k = used[nm] || 0; used[nm] = k + 1; poste = same[k] || 0; }       // plusieurs postes au même nom court : les radios du plan de ce nom les prennent dans l'ordre, la suivante est ignorée
+      else poste = same.length ? same[0] : 0;
+    }
     const table = {};
     chans.forEach(ch => {
       if (!poste || posts.indexOf(poste) < 0) { out.ignored++; return; }
@@ -8748,7 +8756,11 @@ function impMergeUnit(st, target, fi, k, iu, chk, src) {
   } else if (IMP_TYPES.indexOf(ty) >= 0 && ty !== u.type) impRetype(st, target, fi, k, u, ty);
   if (chk.livery && typeof iu.liveryId === 'string') u.livery = iu.liveryId;
   if (chk.radios && Array.isArray(iu.radios)) impMergeRadios(u, u.type, iu.radios);
-  if (chk.loadout && gsIsObj(iu.payload) && gsIsObj(iu.payload.pylons)) { u.payloadIn = impClone(iu.payload); u.loadout = null; }       // brut : le Flight Configurator le convertit à la lecture de la fiche
+  if (chk.loadout && gsIsObj(iu.payload) && gsIsObj(iu.payload.pylons)) {
+    const conv = st.convert && u.type !== '' ? IMP.hooks.loadoutFrom : null;
+    if (conv) { u.loadout = conv(u.type, impClone(iu.payload)) || null; delete u.payloadIn; }       // le module convertit : l'emport s'écrit tel qu'il le garde, jamais d'état intermédiaire
+    else { u.payloadIn = impClone(iu.payload); u.loadout = null; }       // brut : le Flight Configurator le convertit à la lecture de la fiche
+  }
 }
 /* Les unités d'une ligne du briefing : le nombre voulu, du type de la ligne ('' : sans type, à choisir) ; le plan radio du type s'applique à chaque unité du groupe de ce type */
 function impBriefingUnits(st, target, fi, row, chk, src) {
@@ -8772,10 +8784,11 @@ function impBriefingUnits(st, target, fi, row, chk, src) {
 }
 /* Écrit les lignes cochées dans la fiche, une par une (relire, changer le seul groupe touché, gsPutFlight) ; rend le compte rendu pour le rappel du module */
 function impWrite(src, picks, side) {
-  const st = { created: new Set(), ids: [], warn: [], noTypeUnits: 0, noTypeGroups: [], ignored: 0, counted: {}, failed: false };
+  const st = { created: new Set(), ids: [], warn: [], noTypeUnits: 0, noTypeGroups: [], ignored: 0, counted: {}, failed: false, convert: true };
   if (!gsEnsure()) { st.failed = true; return impResult(st, 0, src); }
   const g0 = gsRead();
   const routeOff = impRouteOff(src, g0);
+  picks = picks.filter(r => r.kind === 'bg' || r.managed || (r.chk.route && r.points && !routeOff));       // un vol sans unité gérée n'importe que sa route : sans elle, rien
   if (src.theatre && (!g0.flights.length || g0.theatre === '') && !gsSetTheatre(src.theatre)) { st.failed = true; return impResult(st, 0, src); }
   for (let n = 0; n < picks.length; n++) {
     const row = picks[n], chk = Object.assign({}, row.chk);
@@ -8859,7 +8872,7 @@ function impSetup(hooks) {
     else if (el.id === 'imp-type') { I.type = el.value; impRenderList(); }
     else if (el.id === 'imp-bg-side') { I.bgSide = el.value; impRenderList(); }
     else if (cur && el.hasAttribute('data-imp-flight')) { cur.rows[Number(el.getAttribute('data-imp-flight'))].on = el.checked; impUpdateGo(); }
-    else if (cur && el.hasAttribute('data-imp-part')) cur.rows[Number(el.getAttribute('data-imp-i'))].chk[el.getAttribute('data-imp-part')] = el.checked;
+    else if (cur && el.hasAttribute('data-imp-part')) { cur.rows[Number(el.getAttribute('data-imp-i'))].chk[el.getAttribute('data-imp-part')] = el.checked; impUpdateGo(); }
   });
   document.getElementById('imp-file-in').addEventListener('change', e => { const f = e.target.files && e.target.files[0]; e.target.value = ''; if (f) impFile(f); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && impIsOpen()) impClose(); });
@@ -8908,8 +8921,12 @@ function impSideOptions(sel, withNone) {
   return (withNone ? [['red', impT('imp.red')], ['blue', impT('imp.blue')], ['', impT('imp.noside')]] : [['all', impT('imp.all')], ['red', impT('imp.red')], ['blue', impT('imp.blue')]])
     .map(x => '<option value="' + impEsc(x[0]) + '"' + (x[0] === sel ? ' selected' : '') + '>' + impEsc(x[1]) + '</option>').join('');
 }
+/* La liste « Camp des groupes » existe dès que la source chargée est un briefing (le briefing en cours, ou un fichier de briefing) */
+function impSrcIsBriefing(I) { const c = impCur(I); return !!c && c.what === 'bg'; }
+/* La liste se mesure à sa plus longue option (en caractères de sa police à chasse fixe, plus le cadre et la flèche) : le sélecteur remplacé par le module n'a pas de largeur propre */
 function impBgSideHtml(I) {
-  return '<div class="imp-bgside"><label class="imp-lbl" for="imp-bg-side">' + impEsc(impT('imp.side')) + '</label><select class="imp-sel" id="imp-bg-side" aria-label="' + impEsc(impT('imp.side.bg')) + '">' + impSideOptions(I.bgSide, true) + '</select></div>';
+  const n = ['imp.red', 'imp.blue', 'imp.noside'].reduce((m, k) => Math.max(m, impT(k).length), 0) + 2;
+  return '<div class="imp-bgside"><label class="imp-lbl" for="imp-bg-side">' + impEsc(impT('imp.side.groups')) + '</label><span class="imp-bgsel" style="width: calc(' + n + 'ch + 52px)"><select class="imp-sel" id="imp-bg-side" aria-label="' + impEsc(impT('imp.side.groups')) + '">' + impSideOptions(I.bgSide, true) + '</select></span></div>';
 }
 function impSourceLabel(I) {
   if (I.src === 'hq') return impT('imp.src.hq');
@@ -8919,13 +8936,14 @@ function impSourceLabel(I) {
 function impSourcesHtml(I) {
   if (impFolded(I)) {
     return '<div class="imp-block imp-srcline"><span>' + impEsc(impTf('imp.srcline', impSourceLabel(I))) + '</span> <button type="button" class="imp-link" data-act="imp-change-src">' + impEsc(impT('imp.change')) + '</button>'
-      + (I.src === 'bg' ? impBgSideHtml(I) : '') + '</div>';
+      + (impSrcIsBriefing(I) ? impBgSideHtml(I) : '') + '</div>';
   }
   const row = (id, label, extra, disabled) => '<label class="imp-src' + (disabled ? ' off' : '') + '"><input type="radio" name="imp-src" value="' + id + '"' + (I.src === id ? ' checked' : '') + (disabled ? ' disabled' : '') + '><span>' + impEsc(label) + '</span></label>' + (extra || '');
   const hqNote = '<div class="imp-note">' + impEsc(I.hq ? impTf('imp.hq.ok', I.hq.file, I.hq.theatre) : impT('imp.hq.none')) + '</div>';
   const bgNote = '<div class="imp-note">' + impEsc(I.bg ? impTf('imp.bg.ok', I.bg.phases) : impT('imp.bg.none')) + '</div>' + (I.src === 'bg' && I.bg ? impBgSideHtml(I) : '');
   const filePick = '<div class="imp-file"><button type="button" class="imp-filebtn" data-act="imp-pick-file">' + impEsc(impT('imp.choose')) + '</button><span class="imp-filename">' + impEsc(I.file ? I.file.file : '') + '</span></div><div class="imp-note">' + impEsc(impT('imp.file.note')) + '</div>'
-    + (I.msg ? '<div class="imp-note imp-warn" role="alert">⚠ ' + impEsc(I.msg) + '</div>' : '');
+    + (I.msg ? '<div class="imp-note imp-warn" role="alert">⚠ ' + impEsc(I.msg) + '</div>' : '')
+    + (I.src === 'file' && impSrcIsBriefing(I) ? impBgSideHtml(I) : '');
   return '<div class="imp-block imp-srcs"><h3>' + impEsc(impT('imp.src')) + '</h3>' + row('hq', impT('imp.src.hq'), hqNote, !I.hq) + row('bg', impT('imp.src.bg'), bgNote, !I.bg) + row('file', impT('imp.src.file'), filePick, false) + '</div>';
 }
 /* Les lignes affichées : camp, type, nom (casse et accents ignorés) */
@@ -8938,6 +8956,13 @@ function impShown(cur, I) {
   });
   return out;
 }
+/* Une ligne importe-t-elle quelque chose ? Un vol que le module ne gère pas (type hors liste, ou sans unité) n'apporte que sa route : sans route cochée et possible, il n'y a rien à importer */
+function impRowGoes(r, routeOff) {
+  if (!r.on || !r.ok) return false;
+  if (r.kind === 'bg' || r.managed) return true;
+  return !!(r.avail.route && r.chk.route && r.points && !routeOff);
+}
+function impRoutesOff() { const cur = impCur(); return !!(cur && impRouteOff(cur, gsRead())); }
 /* L'état d'une ligne : nouveau, complète, ou ce qui la limite */
 function impRowState(cur, r, g, I) {
   if (r.kind === 'bg') {
@@ -9004,7 +9029,7 @@ function impRenderList() {
 }
 function impUpdateGo() {
   const cur = impCur(), go = document.getElementById('imp-go');
-  if (go) go.disabled = !(cur && cur.rows.some(r => r.on && r.ok));
+  if (go) { const off = impRoutesOff(); go.disabled = !(cur && cur.rows.some(r => impRowGoes(r, off))); }
 }
 /* « Cocher les groupes affichés » et « Tout décocher » agissent sur les lignes visibles après filtre ; une ligne grisée ne se coche pas */
 function impSetShown(on) {
@@ -9016,7 +9041,8 @@ function impSetShown(on) {
 function impGo() {
   const I = IMP.I, cur = impCur(I);
   if (!I || !cur) return;
-  const picks = cur.rows.filter(r => r.on && r.ok);
+  const off = impRoutesOff();
+  const picks = cur.rows.filter(r => impRowGoes(r, off));
   if (!picks.length) return;
   try { if (IMP.hooks.before) IMP.hooks.before(); } catch (e) { /* facultatif */ }
   const res = impWrite(cur, picks, I.bgSide);
@@ -9158,6 +9184,7 @@ function tbmOpen(m) {
   const sel = m.sel, opts = sel.options, name = m.labelFn();
   const ul = document.createElement('ul');
   ul.className = 'tbm-panel' + (m.form ? ' tbm-p-field' : '');
+  if (sel.closest && sel.closest('#imp-modal')) ul.classList.add('tbm-imp');       // les listes de la fenêtre d'import passent devant elle
   ul.id = 'tbm-list-' + m.uid;
   ul.setAttribute('role', 'listbox');
   ul.setAttribute('aria-label', name);
@@ -9871,7 +9898,6 @@ const UI = {
   seenLiv: {},              // type → [liveryId vus dans les paquets importés, une entrée par occurrence]
   cmp: { sym: true, st: null, saving: false, name: '', err: '' },
   rtChoose: null,           // le fcId du groupe dont on choisit la route (« Changer de route ») ; un groupe sans route est toujours au choix
-  imp: null,                // la fenêtre d'import, quand elle est ouverte
   hq: undefined             // la mission de HQ lue dans le stockage : une lecture par ouverture de la fenêtre d'import (undefined = à relire)
 };
 
@@ -9919,14 +9945,38 @@ function gsMarkAll() {
   GS.theatre = S.theatre;
   GS.live = true;
 }
-// Une unité de la fiche qui porte encore un emport brut (payloadIn, écrit par l'import commun) : restoreFlight l'a converti ; GS.seen garde alors le texte lu tel quel, et l'écart
-// fait réécrire le groupe sans payloadIn (fusion à trois : l'unité du module l'emporte). Rend vrai s'il y a eu un groupe à réécrire.
+// Une unité de la fiche qui porte encore un emport brut (payloadIn, écrit par le Route Planner à son import) : restoreFlight l'a converti ; GS.seen garde alors le texte lu tel quel.
+// Rend vrai s'il y a un groupe à réécrire : gsFixRaw le fait.
 function gsHasRawLoadout(raw) { return isObj(raw) && Array.isArray(raw.units) && raw.units.some(u => isObj(u) && isObj(u.payloadIn)); }
 function gsMarkRaw() {
   const g = gsRead();
   let any = false;
   if (g) g.flights.forEach(raw => { if (gsHasRawLoadout(raw) && has(GS.seen, raw.fcId)) { GS.seen[raw.fcId] = gsStable(raw); any = true; } });
   return any;
+}
+// Écrit la conversion : la fiche est relue à l'instant, et dans chaque groupe qui porte un emport brut seuls les champs loadout et payloadIn des unités concernées changent
+// (jamais route, routeLink ni un autre champ, qu'une copie plus ancienne du module aurait périmés). Un groupe que la fiche a changé depuis la lecture est laissé : son événement storage
+// ramènera le module. Rend faux si une écriture a échoué (GS.seen garde alors le texte brut : la prochaine écriture du module reprend la conversion).
+function gsFixRaw() {
+  const g = gsRead();
+  let ok = true;
+  if (!g) return false;
+  g.flights.forEach(raw => {
+    if (!gsHasRawLoadout(raw) || GS.seen[raw.fcId] !== gsStable(raw)) return;
+    const f = S.flights.filter(x => x.fcId === raw.fcId)[0];
+    if (!f) return;
+    const out = clone(raw);
+    let i = 0;
+    out.units.forEach(u => {
+      if (!isObj(u)) return;
+      const mu = f.units[i++];
+      if (!isObj(u.payloadIn)) return;
+      u.loadout = mu && mu.loadout ? clone(mu.loadout) : null;
+      delete u.payloadIn;
+    });
+    if (gsPutFlight(out)) GS.seen[raw.fcId] = gsStable(f); else ok = false;
+  });
+  return ok;
 }
 // Un groupe de la fiche que le module a changé : fusion à trois. base = ce qu'on a lu ou écrit la dernière fois (GS.seen), mien = la copie du module, leur = la fiche relue ;
 // pour chaque clé de premier niveau, mien si elle a changé depuis base, sinon leur ; route et routeLink vont ensemble. Rien n'a changé : on n'écrit pas.
@@ -9970,7 +10020,7 @@ function gsAdopt(quiet) {
   restoreState({ theatre: gs.theatre, flights: gs.flights, sel: S.sel });
   S.flights.forEach(f => { if (has(folds, f.fcId)) UI.fold.set(f, folds[f.fcId]); });
   gsMarkAll();
-  gsMarkRaw();
+  if (gsMarkRaw()) gsFixRaw();       // l'emport brut que la fiche portait est converti et écrit dès l'adoption
   GS.base = {};
   try { lsSet(KEY_STATE, JSON.stringify({ v: 2, sel: S.sel, mine: LIB.mine })); } catch (e) { /* l'écran marche sans */ }
   if (!quiet) renderAll();
@@ -10014,7 +10064,7 @@ function gsPull() {
     if (cur && UI.fold.has(cur)) UI.fold.set(nf, UI.fold.get(cur));
     if (cur && cur.routeLink && nf.routeLink && cur.routeLink.rid === nf.routeLink.rid && (cur.routeLink.name !== nf.routeLink.name || JSON.stringify(cur.route ? cur.route.points : null) !== JSON.stringify(nf.route ? nf.route.points : null))) taken.push({ nf: nf, name: nf.routeLink.name });      // le Route Planner a repris la route de ce groupe
     GS.seen[raw.fcId] = j;
-    if (gsHasRawLoadout(raw)) { GS.seen[raw.fcId] = gsStable(raw); rewrite = true; }       // l'emport brut est converti : le groupe est réécrit sans payloadIn
+    if (gsHasRawLoadout(raw)) { GS.seen[raw.fcId] = gsStable(raw); rewrite = true; }       // l'emport brut est converti : gsFixRaw l'écrit, sans payloadIn
     out.push(nf);
     changed = true;
   });
@@ -10035,16 +10085,19 @@ function gsPull() {
   if (UI.rtChoose !== null && !S.flights.some(f => f.fcId === UI.rtChoose)) UI.rtChoose = null;
   if (k < 0) Object.assign(UI.cmp, { saving: false, err: '', st: null });       // une saisie en cours (nom de preset) ne se perd que si le groupe choisi a disparu
   renderAll();
-  if (rewrite) commitNow();
+  if (rewrite) gsFixRaw();
   if (taken.length && document.visibilityState === 'visible') {
     const lab = taken.map(x => flightLabel(x.nf, S.flights.indexOf(x.nf)));
     showToast(taken.length === 1 ? tf('route.toast.one', taken[0].name.trim() !== '' ? taken[0].name : t('route.unnamed'), lab[0]) : tf('route.toast.many', lab.join(', ')), 4500);
   }
   return true;
 }
+// Un autre onglet écrit la fiche en plusieurs temps (un groupe, puis le lien de sa route) et le stockage met un instant à arriver d'un onglet à l'autre : le module relit après 300 ms de calme
+// (la minuterie repart à chaque événement), pour ne pas convertir ni réécrire sur un état à moitié écrit.
 function gsStorage(e) {
   if (e.key !== null && e.key !== KEY_FLIGHT_SET) return;
-  gsPull();
+  clearTimeout(gsStorage._h);
+  gsStorage._h = setTimeout(gsPull, 300);
 }
 // La migration prend les points d'une route lue brute au format du paquet (gsPackRoute du bloc partagé), à la vitesse sol du Route Planner
 function gsPackFn(r, th) { return gsPackRoute(r, th, rpRead().state.gs); }
@@ -11421,8 +11474,8 @@ async function loadLuaFiles(files) {
 
 
 // ---------- 5. Import : la fenêtre est celle du bloc commun (import_block.py) ; ici seulement ses rappels ----------
-// Le bloc lit HQ, le briefing en cours ou un fichier et écrit dans la fiche partagée (emport brut : unité.payloadIn). Le module relit la fiche à son rappel
-// (restoreFlight convertit l'emport brut en emport « importé » et réécrit l'unité sans payloadIn), puis choisit la première unité du premier groupe importé.
+// Le bloc lit HQ, le briefing en cours ou un fichier et écrit dans la fiche partagée en une fois, l'emport déjà converti (loadoutFrom : loadoutFromPayload). Le module relit la fiche à son rappel,
+// puis choisit la première unité du premier groupe importé. Un emport brut (payloadIn) ne vient que du Route Planner : gsFixRaw le convertit sans toucher au reste du groupe.
 function hqMission() { if (UI.hq === undefined) UI.hq = readHqMission(); return UI.hq; }
 function readHqMission() {
   let o = null;
@@ -11913,7 +11966,7 @@ function bindToolbar() {
   });
   on('btn-open', 'click', () => document.getElementById('fc-in-open').click());
   on('btn-save', 'click', saveFile);
-  on('btn-import', 'click', e => impOpen({ opener: e.currentTarget }));
+  on('btn-import', 'click', e => { UI.hq = readHqMission(); impOpen({ opener: e.currentTarget }); });       // le snapshot de HQ se relit à chaque ouverture (suggestions de livrée)
   on('btn-export', 'click', exportFile);
   on('btn-clear', 'click', clearAll);
   const fileIn = (id, fn) => on(id, 'change', e => { const files = Array.prototype.slice.call(e.target.files); e.target.value = ''; fn(files); });
@@ -11943,16 +11996,15 @@ function init() {
     else if (ok && saved.v === 1) { restoreState(saved.state); GS.base = {}; S.flights.forEach(f => { GS.base[f.fcId] = gsStable(f); }); }       // le stockage a refusé la fiche : l'état d'avant, tel qu'il est
     if (ok) remapPresetKeys(saved.mine);
   } catch (e) { /* l'écran marche sans */ }
-  let rawFix = false;
-  if (gsRead() !== null && !adoptFailed) { gsMarkAll(); rawFix = gsMarkRaw(); } else { GS.seen = {}; GS.theatre = ''; GS.live = false; if (gsRead() === null) GS.mf = true; }       // sans fiche (stockage plein), les groupes restent dans fc_state_v1 jusqu'à ce qu'elle puisse être écrite
+  if (gsRead() !== null && !adoptFailed) { gsMarkAll(); if (gsMarkRaw()) gsFixRaw(); } else { GS.seen = {}; GS.theatre = ''; GS.live = false; if (gsRead() === null) GS.mf = true; }       // sans fiche (stockage plein), les groupes restent dans fc_state_v1 jusqu'à ce qu'elle puisse être écrite
   initToolbarMenus([['theme-select', () => t('toolbar.theme.tooltip')]]);
   initFormMenus(sel => sel.getAttribute('aria-label') || '');
   bindColumns();
   bindToolbar();
-  impSetup({ lang: () => CURRENT_LANG, before: fcImportBefore, onImported: fcImported, toast: showToast, noteLiveries: noteLiveries });       // la fenêtre d'import du bloc commun
+  impSetup({ lang: () => CURRENT_LANG, before: fcImportBefore, onImported: fcImported, toast: showToast, noteLiveries: noteLiveries, loadoutFrom: loadoutFromPayload });       // la fenêtre d'import du bloc commun
   fnBind();                 // la fenêtre « Nom du fichier »
   const taken = routeSync();      // à l'ouverture : les routes liées reprennent ce que le Route Planner a changé depuis
-  if (taken.changed || rawFix) writeState();
+  if (taken.changed) writeState();
   renderAll();
   if (taken.changed) showToast(taken.toast, 4500);
   window.addEventListener('pagehide', flushWork);

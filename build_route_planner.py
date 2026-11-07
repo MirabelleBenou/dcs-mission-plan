@@ -2424,8 +2424,6 @@ const I18N = {
     'confirm.theatre.1': 'Passer au théâtre {th} ? La route existante sera supprimée.',
     'toast.routesMax': '12 routes au plus.',
     'toast.groupsDone': 'Groupes de la route mis à jour ✓',
-    'toast.groupsMade.1': '{n} groupe créé',
-    'toast.groupsMade.n': '{n} groupes créés',
     'toast.groupsOther': 'groupes non rattachés : ils sont sur {th}',
     'rs.import': '⇣ Importer',
     'toast.routesMade.1': '{n} route créée',
@@ -2931,8 +2929,6 @@ const I18N = {
     'confirm.theatre.1': 'Switch to the {th} theatre? The existing route will be deleted.',
     'toast.routesMax': 'At most 12 routes.',
     'toast.groupsDone': 'Route groups updated ✓',
-    'toast.groupsMade.1': '{n} group created',
-    'toast.groupsMade.n': '{n} groups created',
     'toast.groupsOther': 'groups not attached: they are on {th}',
     'rs.import': '⇣ Import',
     'toast.routesMade.1': '{n} route created',
@@ -8106,22 +8102,28 @@ function frameRoutes(list) {
    La fenêtre écrit dans la fiche des groupes ; le Route Planner reprend ensuite les routes que des groupes y portent (gsAdoptRoutes). */
 function rpImportBefore() { syncActive(); }
 /* Le texte de la reprise : « n route(s) créée(s) », « n route(s) non reprise(s) : 12 routes au plus », puis, à l'import, les groupes d'un autre théâtre, les routes tronquées, les sources non gardées */
-function adoptText(a, say) {
+function adoptText(a, say, skip) {
   const parts = [];
   if (a.made) parts.push(t(a.made === 1 ? 'toast.routesMade.1' : 'toast.routesMade.n', { n: a.made }));
-  if (a.skipped) parts.push(t(a.skipped === 1 ? 'toast.routesSkip.1' : 'toast.routesSkip.n', { n: a.skipped }));
+  if (a.skipped && skip !== false) parts.push(t(a.skipped === 1 ? 'toast.routesSkip.1' : 'toast.routesSkip.n', { n: a.skipped }));
   if (say && a.other) parts.push(t('toast.groupsOther', { th: theatreText(a.other) }));
   if (a.trunc.length) parts.push(t('toast.hqTrunc', { name: a.trunc.join(', ') }));
   if (a.nodcs) parts.push(t('toast.dcsKept', { n: a.nodcs }));
   return parts.join(' · ');
 }
+/* ADOPT.skipped : le nombre de groupes laissés de côté au dernier passage. Hors import, « route(s) non reprise(s) » ne paraît que si ce nombre augmente : jamais à chaque retour sur l'onglet ni à chaque écriture de la fiche. */
+const ADOPT = { skipped: 0, timer: 0 };
 function adoptNotice(a) {
-  const txt = adoptText(a, false);
-  if (txt !== '') showToast(txt, (a.skipped || a.trunc.length || a.nodcs) ? 6000 : 3500);
+  const more = a.skipped > ADOPT.skipped;
+  ADOPT.skipped = a.skipped;
+  const txt = adoptText(a, false, more);
+  if (txt !== '') showToast(txt, ((more && a.skipped) || a.trunc.length || a.nodcs) ? 6000 : 3500);
 }
 /* Après l'import : les routes des groupes importés, cadrées, la première active ; le toast du bloc, puis celui de la reprise */
 function rpImported(res) {
+  if (ADOPT.timer) { clearTimeout(ADOPT.timer); ADOPT.timer = 0; }
   const a = gsAdoptRoutes({ activate: true });
+  ADOPT.skipped = a.skipped;
   if (a.routes.length) frameRoutes(a.routes);
   const extra = adoptText(a, true);
   const failed = !!(res && res.failed);      /* un stockage qui n'écrit pas : le texte d'échec du module, pas « 0 groupe importé » */
@@ -8253,34 +8255,12 @@ function gsSyncRoutes() {
   });
 }
 
-/* Une route neuve (venue de HQ ou d'un paquet) prend son groupe : la règle de la migration. Rend le nombre de groupes créés. */
-function gsAutoAssign(list, info) {
-  let made = 0;
-  try {
-    const th = S.theatre;
-    if (!hasRouteTool(th)) return 0;
-    list.forEach(r => {
-      if (!r.flight) return;
-      if (!gsEnsure()) { if (info) info.failed = true; return; }       /* la fiche ne naît que de la migration ; si elle ne peut pas écrire, rien n'est rattaché */
-      const g = gsRead();
-      const name = gsNameKey(r.flight.groupName), side = gsSide(r.flight.coalition);
-      if (name === '') return;
-      if (g.theatre !== '' && g.theatre !== th && g.flights.length) { if (info) info.other = g.theatre; return; }       /* des groupes d'un autre théâtre : rien n'est rattaché, le toast le dit */
-      if (g.theatre !== th && !gsSetTheatre(th)) return;       /* une fiche sans théâtre (ou sans groupe) prend celui du Route Planner */
-      const hits = g.flights.filter(f => gsNameKey(f.name) === name && gsSide(f.coalition) === side);
-      if (hits.length > 1 || (hits.length === 1 && hits[0].route)) return;
-      const pts = packRoutePoints(r);
-      if (hits.length === 1) gsPutFlight(groupTakes(hits[0], r, pts));
-      else if (gsPutFlight({ fcId: gsNewId(), name: r.flight.groupName, coalition: side, route: { points: pts }, routeLink: { rid: r.rid, name: r.name }, units: [] })) made++;
-    });
-  } catch (e) { /* la fiche des groupes est facultative */ }
-  return made;
-}
-
 /* La reprise des routes. Chaque groupe de la fiche (dans son ordre) qui porte des points (route.points, un point lisible au moins) et n'a pas de routeLink devient une route neuve du Route Planner :
    nommée comme le groupe, ses points comme à l'import (30 au plus), flight { groupName, coalition } de provenance ; le groupe la suit ensuite (groupTakes, la copie au format du paquet).
    Le théâtre de la fiche doit être celui du Route Planner et avoir une projection ; sinon, sans aucune route à points, le Route Planner passe au théâtre de la fiche puis reprend ; sinon rien (other).
    La route active vide et sans groupe prend la première. 12 routes au plus : au-delà le groupe garde sa copie (skipped). Un groupe dont la route a été supprimée garde son routeLink : il n'est pas repris.
+   Juste avant d'écrire un groupe, la fiche est relue : un groupe qui a entre-temps reçu un routeLink (une autre fenêtre l'a repris), ou qu'un passage de celui-ci a déjà repris, ne l'est pas deux fois ;
+   la copie écrite est celle de la fiche relue, jamais celle du début du passage (le Flight Configurator a pu convertir l'emport de ses unités entre-temps). Le groupe s'écrit avant que la route entre dans la liste.
    opts.activate : la première route créée devient active. Rend { made, skipped, other, trunc, nodcs, routes }. */
 function gsAdoptRoutes(opts) {
   opts = opts || {};
@@ -8301,13 +8281,17 @@ function gsAdoptRoutes(opts) {
     }
     const replace = routeIsEmpty(RSET.routes[RSET.active]);
     let count = RSET.routes.length - (replace ? 1 : 0);
-    const mk = [];
+    const mk = [], done = new Set();
     cand.forEach(f => {
       if (count >= MAX_ROUTES) { out.skipped++; return; }
-      const r = routeFromFlight({ groupName: f.name, coalition: gsSide(f.coalition), points: f.route.points }, th, null);
+      const cur0 = gsRead(), cur = cur0 ? cur0.flights.filter(x => x.fcId === f.fcId)[0] : null;
+      if (!cur || !carries(cur) || done.has(cur.fcId)) return;       /* relu à l'instant : repris ailleurs, ou disparu, ou plus de route */
+      const r = routeFromFlight({ groupName: cur.name, coalition: gsSide(cur.coalition), points: cur.route.points }, th, null);
+      done.add(cur.fcId);
+      if (!gsPutFlight(groupTakes(cur, r.route, packRoutePoints(r.route)))) return;       /* le groupe qui suit la route s'écrit d'abord, de la copie relue à l'instant ; pas d'écriture, pas de route */
       out.nodcs += r.nodcs;
       if (r.trunc) out.trunc.push(r.route.name);
-      mk.push({ f: f, r: r.route });
+      mk.push({ f: cur, r: r.route });
       count++;
     });
     if (!mk.length) return out;
@@ -8320,7 +8304,6 @@ function gsAdoptRoutes(opts) {
     S.name = list[act].name; S.points = list[act].points;
     sel = -1; selR = -1;
     persistState();
-    mk.forEach(x => { gsPutFlight(groupTakes(x.f, x.r, packRoutePoints(x.r))); });
     out.made = mk.length;
     out.routes = mk.map(x => x.r);
     renderAll();
@@ -8496,7 +8479,13 @@ function routesBind() {
   /* le Flight Configurator écrit la fiche des groupes (ou HQ une autre mission) : les routes que ses groupes portent sont reprises, les groupes de la route et la fenêtre ouverte se redessinent */
   window.addEventListener('storage', e => {
     if (e.key === KEY_SNAPSHOT) routesRender();
-    else if (e.key === null || e.key === KEY_FLIGHT_SET) { adoptNotice(gsAdoptRoutes({})); routesRender(); if (rtVisible('ga-modal')) { gaSync(); gaRender(); } }
+    else if (e.key === null || e.key === KEY_FLIGHT_SET) {
+      /* le Flight Configurator écrit en plusieurs temps (un groupe après l'autre, puis la conversion de l'emport brut) : la reprise attend 400 ms de calme, la minuterie repart à chaque événement */
+      if (ADOPT.timer) clearTimeout(ADOPT.timer);
+      ADOPT.timer = setTimeout(() => { ADOPT.timer = 0; adoptNotice(gsAdoptRoutes({})); routesRender(); if (rtVisible('ga-modal')) { gaSync(); gaRender(); } }, 400);
+      routesRender();
+      if (rtVisible('ga-modal')) { gaSync(); gaRender(); }
+    }
   });
   window.addEventListener('focus', () => { adoptNotice(gsAdoptRoutes({})); routesRender(); });
 }
@@ -10744,6 +10733,7 @@ function tbmOpen(m) {
   const sel = m.sel, opts = sel.options, name = m.labelFn();
   const ul = document.createElement('ul');
   ul.className = 'tbm-panel' + (m.form ? ' tbm-p-field' : '');
+  if (sel.closest && sel.closest('#imp-modal')) ul.classList.add('tbm-imp');       // les listes de la fenêtre d'import passent devant elle
   ul.id = 'tbm-list-' + m.uid;
   ul.setAttribute('role', 'listbox');
   ul.setAttribute('aria-label', name);
