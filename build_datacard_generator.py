@@ -3653,6 +3653,11 @@ function dgUnitLabel(f, fi, ui) { const u = dgUnits(f)[ui]; return dgCs(u.callsi
 function dgTypeLabel(ty) { return Object.prototype.hasOwnProperty.call(DG_TYPE_LABEL, ty) ? DG_TYPE_LABEL[ty] : ty; }
 function dgFlightPos(id) { return DGG.flights.findIndex(f => f.fcId === id); }
 function dgFlightOf(c) { return c && c.gsId ? (DGG.flights.find(f => f.fcId === c.gsId) || null) : null; }
+/* Le nom d'une carte dans la liste : l'indicatif ; sans lui, une carte liée prend le nom que le groupe a dans la fiche (« Groupe 4 », comme au Flight Configurator) */
+function dgCardName(x, i) {
+  const f = dgFlightOf(x);
+  return x.flight.callsign.trim() || (f ? dgFlightLabel(f, dgFlightPos(f.fcId)) : t('pack.unnamed', { n: i + 1 }));
+}
 function dgPackFn(r, th) {
   let gs = 220;
   try { const st = JSON.parse(localStorage.getItem(KEY_ROUTE)); if (gsIsObj(st) && typeof st.groundSpeed === 'number' && st.groundSpeed > 0) gs = st.groundSpeed; } catch (e) { /* vitesse par défaut */ }
@@ -3996,7 +4001,7 @@ function grpAskAttach() {
   const cardOf = new Map();
   doc.cards.forEach(x => { if (x.gsId) cardOf.set(x.gsId, x); });
   const rows = DGG.flights.map((f, i) => {
-    const k = cardOf.get(f.fcId), sub = t(dgUnits(f).length < 2 ? 'sum.unit.1' : 'sum.unit', { n: dgUnits(f).length }) + (k ? ' · ' + t('m.att.hascard', { n: k.flight.callsign.trim() || dgFlightLabel(f, i) }) : '');
+    const k = cardOf.get(f.fcId), sub = t(dgUnits(f).length < 2 ? 'sum.unit.1' : 'sum.unit', { n: dgUnits(f).length }) + (k ? ' · ' + t('m.att.hascard', { n: dgCardName(k, doc.cards.indexOf(k)) }) : '');
     return '<label class="grp-opt"><input type="radio" name="grp-pick" value="' + esc(f.fcId) + '"><span class="grp-nm">' + esc(dgFlightLabel(f, i)) + '</span><span class="grp-sub">' + esc(sub) + '</span></label>';
   }).join('');
   grpModal(t('m.att.title'), '<p class="grp-p">' + esc(t('m.att.text')) + '</p>' + rows + (DGG.flights.length ? '' : '<p class="grp-p grp-empty">' + esc(t('m.att.empty')) + '</p>'),
@@ -4006,7 +4011,8 @@ function grpAskAttach() {
 /* Supprimer une carte liée supprime le groupe pour tous les modules : une seule voie, après confirmation */
 function grpAskDelete() {
   const c = curCard();
-  grpModal(t('m.del.title', { n: c.flight.callsign.trim() || '—' }), '<p class="grp-p">' + esc(t('m.del.text', { n: c.flight.callsign.trim() || '—' })) + '</p>',
+  const nm = dgCardName(c, curIdx);
+  grpModal(t('m.del.title', { n: nm }), '<p class="grp-p">' + esc(t('m.del.text', { n: nm })) + '</p>',
     [{ cls: 'export-png-back', act: 'cancel', label: t('m.cancel') }, { cls: 'export-png-go grp-danger', act: 'del-both', label: t('m.del.both') }]);
 }
 function grpAct(act) {
@@ -5006,7 +5012,7 @@ function renderPack() {
   const b = (act, label, extra, disabled, tip) =>
     '<button type="button" class="pack-btn' + (extra || '') + '" data-pack="' + act + '"' + (disabled ? ' disabled' : '') + (tip ? ' title="' + esc(tip) + '"' : '') + '>' + esc(label) + '</button>';
   const rows = doc.cards.map((x, i) => {
-    const name = x.flight.callsign.trim() || t('pack.unnamed', { n: i + 1 });
+    const name = dgCardName(x, i);
     const tag = x.gsId ? ['linked', 'pack.tag.linked'] : (x.gsGone ? ['gone', 'pack.tag.gone'] : ['free', 'pack.tag.free']);
     return '<li><button type="button" class="card-row' + (x.gsId ? '' : ' free') + (i === curIdx ? ' cur' : '') + '" data-card="' + i + '"' + (i === curIdx ? ' aria-current="true"' : '') + '>' +
       '<span class="cr-name">' + esc(name) + '</span><span class="cr-tag ' + tag[0] + '">' + esc(t(tag[1])) + '</span><span class="cr-sum">' + esc(cardSummary(x)) + '</span></button></li>';
