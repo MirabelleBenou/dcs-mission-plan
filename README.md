@@ -198,6 +198,7 @@ The output `dist/dcs_mission_plan.html` is the distributable (and the file publi
 ├── build_hq.py                    # HQ builder
 ├── build_flight_configurator.py   # Flight Configurator builder
 ├── payload_block.py               # Shared loadout block (preset files, .miz payload), no DOM
+├── aircraft_types_block.py        # HQ's game aircraft types block (reads data/aircraft_types.json), no DOM
 ├── build_field_manual.py          # Field Manual builder
 ├── build_datacard_generator.py    # Datacard Generator builder
 ├── build_route_planner.py         # Route Planner builder
@@ -243,7 +244,7 @@ For code contributions: fork, branch, study the build scripts to understand the 
 
 ## 📄 License
 
-[MIT License](./LICENSE) — free to use, modify, and distribute, including commercially. Exceptions: the Flight Configurator's front-view drawings (by Goldwolf, `data/views/LICENSE.md`) and its pydcs-derived tables (LGPL-3.0, `data/COPYING.LESSER`).
+[MIT License](./LICENSE) — free to use, modify, and distribute, including commercially. Exceptions: the Flight Configurator's front-view drawings (by Goldwolf, `data/views/LICENSE.md`) and the pydcs-derived tables of the Flight Configurator and of HQ (LGPL-3.0, `data/COPYING.LESSER`).
 
 ## 🙏 Acknowledgments
 
@@ -255,6 +256,7 @@ For code contributions: fork, branch, study the build scripts to understand the 
 - DCS airfield & helipad names and positions, and the DCS map projections, from **[pydcs](https://github.com/pydcs/dcs)** (LGPL-3.0); place-name overlay © Esri, HERE, Garmin, OpenStreetMap contributors
 - Airfield names and ids: pydcs, via DCS Airfield Charts
 - Flight Configurator: weapon names, permitted weapons per station, masses and aircraft limits from **[pydcs](https://github.com/pydcs/dcs)** (LGPL-3.0, `data/COPYING.LESSER`), taken from Mission Tools; the front-view aircraft drawings are by **Goldwolf** (DCS Reference Guide), used with his permission and **not** under this repository's MIT licence — see `data/views/LICENSE.md`
+- HQ: the game's flyable aircraft types offered for a squadron, from **[pydcs](https://github.com/pydcs/dcs)** 1.0.0 (LGPL-3.0, `data/aircraft_types.json`)
 - DCS town names and positions from the DCS World maps, © Eagle Dynamics
 - World Magnetic Model coefficients (epochs 1985–2025, the ones DCS World ships) by NOAA NCEI and the British Geological Survey, public domain
 - International Geomagnetic Reference Field, 12th generation (IAGA), in the NOAA geomag70 file DCS World ships, used for years up to 1985

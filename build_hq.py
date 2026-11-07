@@ -7,6 +7,7 @@ import base64
 import re
 
 from radio_block import build_block as build_radio_block
+from aircraft_types_block import build_block as build_aircraft_types_block
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ASSETS_PATH = os.path.join(HERE, 'assets.json')
@@ -164,10 +165,10 @@ def build_example_wing_config(lang):
              "nickname": "Hammers", "callsign": "CAESAR", "aircraft": ["Mi-24P"], "logo": _EXAMPLE_LOGO_SQ[0]},
             {"id": "SQN-02",
              "name": "2nd Transport Helicopter Squadron" if en else "2e escadron d\u2019h\u00e9licopt\u00e8res de transport",
-             "nickname": "Pelicans", "callsign": "ANTON", "aircraft": ["Mi-8MTV2"], "logo": _EXAMPLE_LOGO_SQ[1]},
+             "nickname": "Pelicans", "callsign": "ANTON", "aircraft": ["Mi-8MT"], "logo": _EXAMPLE_LOGO_SQ[1]},
             {"id": "SQN-03",
              "name": "3rd Reconnaissance Flight" if en else "3e escadrille de reconnaissance",
-             "nickname": "Owls", "callsign": "RECCE", "aircraft": ["MiG-21bis"], "logo": _EXAMPLE_LOGO_SQ[2]},
+             "nickname": "Owls", "callsign": "RECCE", "aircraft": ["MiG-21Bis"], "logo": _EXAMPLE_LOGO_SQ[2]},
         ],
     }
 
@@ -410,6 +411,7 @@ select[data-tbm-src] {{ display: none !important; }}
   font-family: var(--f-typewriter); font-weight: 400; font-size: 14px; letter-spacing: .2px; text-transform: none;
 }}
 .tbm-panel.tbm-p-field .tbm-opt[aria-selected="true"] {{ font-weight: 400; }}
+.tbm-panel .tbm-group {{ margin-top: 2px; border-top: 1px solid rgba(168,154,114,.25); }}
 .tbm-panel.tbm-up {{ border-top: 1px solid var(--amber-dark); border-bottom: 3px solid var(--amber); transform-origin: bottom left; }}
 .tb-lang-btn {{
   background: transparent;
@@ -706,17 +708,41 @@ select[data-tbm-src] {{ display: none !important; }}
 .wing-ac-tag {{
   background: var(--olive); color: var(--paper-light);
   font-family: var(--f-typewriter); font-size: 11px;
-  padding: 2px 6px; border-radius: 3px;
-  display: flex; align-items: center; gap: 4px;
+  padding: 2px 0 2px 8px; border-radius: 3px; min-height: 44px; max-width: 100%;
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap; row-gap: 0;
 }}
+.wing-ac-tag > span:first-child {{ min-width: 0; overflow-wrap: anywhere; }}
 .wing-ac-tag button {{
-  background: none; border: none; color: var(--paper-light);
-  cursor: pointer; padding: 0; font-size: 12px; line-height: 1; opacity: .7;
+  background: none; border: none; color: var(--paper-light); flex: none;
+  cursor: pointer; padding: 0; min-width: 44px; min-height: 44px; margin: -2px 0; font-size: 16px; line-height: 1; opacity: .7;
 }}
 .wing-ac-tag button:hover {{ opacity: 1; }}
-.wing-ac-add-row {{ display: flex; gap: 6px; margin-top: 4px; }}
-.wing-ac-add-row input {{ flex: 1; }}
-.wing-ac-add-row button {{ white-space: nowrap; }}
+.wing-ac-flag {{ font-size: 10px; letter-spacing: .3px; color: #e8b840; cursor: help; }}
+.wing-ac-add-row {{ display: flex; gap: 6px; margin-top: 4px; width: 100%; }}
+.wing-ac-add-row[hidden] {{ display: none; }}
+.wing-ac-add-row input {{ flex: 1; min-width: 0; }}
+.wing-ac-add-row button {{ white-space: nowrap; min-height: 44px; min-width: 44px; }}
+.wing-aircraft-tags {{ min-width: 0; }}
+/* Les listes du thème de l'éditeur du Wing (types d'appareils) : le bouton garde la boîte d'un champ texte */
+.wing-ac-sel.tbm-trigger.tbm-field {{
+  display: block; position: relative; contain: inline-size; text-align: left; letter-spacing: normal; text-transform: none; font-weight: 400;
+  box-sizing: border-box; flex: 1 1 180px; width: 0; min-width: 0; max-width: 100%; min-height: 44px; padding: 0 34px 0 11px; margin: 0; cursor: pointer;
+  font-family: var(--f-typewriter); font-size: 13px; line-height: normal;
+  background: rgba(216,201,165,.92); color: var(--ink);
+  border: 1px solid var(--khaki); border-left: 3px solid var(--amber-dark); border-radius: 0;
+}}
+.wing-ac-sel.tbm-trigger.tbm-field::after {{
+  content: ''; position: absolute; right: 12px; top: 50%; width: 12px; height: 8px; margin-top: -4px; pointer-events: none;
+  background: currentColor; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23000' stroke-width='1.6'/%3E%3C/svg%3E") center / 12px 8px no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23000' stroke-width='1.6'/%3E%3C/svg%3E") center / 12px 8px no-repeat;
+}}
+.wing-ac-sel.tbm-trigger.tbm-field .tbm-lbl {{ display: block; margin: 0; padding: 0; line-height: 44px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }}
+.wing-ac-sel.tbm-trigger.tbm-field .tbm-lbl::after {{ display: none; }}
+.wing-ac-sel.tbm-trigger.tbm-field:focus {{ outline: none; border-left-color: var(--red-stamp); box-shadow: 0 0 0 1px var(--amber); }}
+.wing-ac-sel.wing-ac-add-sel.tbm-trigger.tbm-field {{ flex: 1 1 100%; }}
+.wing-ac-sel.wing-ac-rep.tbm-trigger.tbm-field {{ flex: 0 1 220px; }}
+@media (max-width: 520px) {{
+  .wing-ac-sel.wing-ac-rep.tbm-trigger.tbm-field {{ flex: 1 1 100%; }}
+}}
 
 /* Action buttons */
 .wing-actions {{
@@ -1271,6 +1297,16 @@ const I18N = {{
     'editor.phases.moveDown':   'Descendre',
     'editor.roster.callsignPlaceholder': 'Callsign',
     'editor.radio.delAircraftAriaLabel': 'Supprimer appareil',
+    'editor.wing.ac.add':       'Ajouter un type\u2026',
+    'editor.wing.ac.helis':     'H\u00e9licopt\u00e8res',
+    'editor.wing.ac.planes':    'Avions',
+    'editor.wing.ac.mods':      'Hors jeu de base',
+    'editor.wing.ac.other':     'Autre type (mod)\u2026',
+    'editor.wing.ac.modPh':     'Type dans le .miz (ex. A-4E-C)',
+    'editor.wing.ac.modAdd':    'Ajouter ce type',
+    'editor.wing.ac.flag':      'hors jeu de base',
+    'editor.wing.ac.flagTip':   "Ce nom n'est pas un type jouable du jeu de base (pydcs 1.0.0). Un mod garde son nom ; sinon, remplacez-le par le type du jeu.",
+    'editor.wing.ac.replace':   'Remplacer par\u2026',
     'delSquadron.lastWarning':  '\\n\\n\u26a0 Il s\u2019agit du dernier escadron du wing.',
     'delSquadron.refWarning':   '',
     'validate.schemaMissing':   'configSchemaVersion doit \u00eatre 1',
@@ -1581,6 +1617,16 @@ const I18N = {{
     'editor.phases.moveDown':   'Move down',
     'editor.roster.callsignPlaceholder': 'Callsign',
     'editor.radio.delAircraftAriaLabel': 'Delete aircraft',
+    'editor.wing.ac.add':       'Add a type\u2026',
+    'editor.wing.ac.helis':     'Helicopters',
+    'editor.wing.ac.planes':    'Airplanes',
+    'editor.wing.ac.mods':      'Not in the base game',
+    'editor.wing.ac.other':     'Other type (mod)\u2026',
+    'editor.wing.ac.modPh':     'Type in the .miz (e.g. A-4E-C)',
+    'editor.wing.ac.modAdd':    'Add this type',
+    'editor.wing.ac.flag':      'not in the base game',
+    'editor.wing.ac.flagTip':   "This name is not a flyable type of the base game (pydcs 1.0.0). A mod keeps its name; otherwise, replace it with the game's type.",
+    'editor.wing.ac.replace':   'Replace with\u2026',
     'delSquadron.lastWarning':  '\\n\\n\u26a0 This is the last squadron in the wing.',
     'delSquadron.refWarning':   '',
     'validate.schemaMissing':   'configSchemaVersion must be 1',
@@ -2179,46 +2225,113 @@ function refreshSqLogoZone(zone, sqIdx) {{
 }}
 
 // ── Aircraft tags ──────────────────────────────────────────────
+// Les appareils d'une escadrille se choisissent dans la liste des types du jeu (GAME_AIRCRAFT_TYPES) ; « Autre type (mod)… »
+// ouvre la saisie libre ; un nom hors table est marqué et propose ses types proches. Rien n'est bloqué : le format ne change pas.
+function acMakeSelect(cls, label) {{
+  const sel = document.createElement('select');
+  sel.className = 'wing-ac-sel ' + cls;
+  sel.setAttribute('aria-label', label);
+  return sel;
+}}
+
+function acMakeOption(value, label, disabled) {{
+  const o = document.createElement('option');
+  o.value = value; o.textContent = label;
+  if (disabled) o.disabled = true;
+  return o;
+}}
+
 function renderSqAircraftTags(container, sqIdx) {{
   if (!container || !wingConfig.squadrons[sqIdx]) return;
   container.innerHTML = '';
+  const names = wingConfig.squadrons[sqIdx].aircraft;
+  const has = ty => names.indexOf(ty) >= 0;
 
-  wingConfig.squadrons[sqIdx].aircraft.forEach((_, acIdx) => {{
+  names.forEach((_, acIdx) => {{
+    const cur = names[acIdx];
     const tag = document.createElement('span');
     tag.className = 'wing-ac-tag';
     const label = document.createElement('span');
-    label.textContent = wingConfig.squadrons[sqIdx].aircraft[acIdx];
+    label.textContent = cur;
+    tag.appendChild(label);
+    const known = gameAircraftIsType(cur);
+    if (!known) {{
+      const flag = document.createElement('span');
+      flag.className = 'wing-ac-flag';
+      flag.textContent = t('editor.wing.ac.flag');
+      flag.title = t('editor.wing.ac.flagTip');
+      tag.appendChild(flag);
+    }}
     const rmBtn = document.createElement('button');
     rmBtn.type = 'button';
     rmBtn.setAttribute('aria-label', t('editor.radio.delAircraftAriaLabel'));
-    rmBtn.textContent = '\u00d7';
+    rmBtn.textContent = '×';
     rmBtn.addEventListener('click', () => {{
       if (!wingConfig.squadrons[sqIdx]) return;
       wingConfig.squadrons[sqIdx].aircraft.splice(acIdx, 1);
       persistWingConfig(); updateWingSizeCounter();
       renderSqAircraftTags(container, sqIdx);
     }});
-    tag.appendChild(label); tag.appendChild(rmBtn);
+    tag.appendChild(rmBtn);
     container.appendChild(tag);
+
+    const close = known ? [] : gameAircraftClose(cur);
+    if (close.length) {{
+      const rep = acMakeSelect('wing-ac-rep', t('editor.wing.ac.replace'));
+      rep.appendChild(acMakeOption('', t('editor.wing.ac.replace'), false));
+      close.forEach(ty => rep.appendChild(acMakeOption(ty, ty, has(ty))));
+      rep.addEventListener('change', () => {{
+        const v = rep.value;
+        if (!v || !wingConfig.squadrons[sqIdx] || wingConfig.squadrons[sqIdx].aircraft[acIdx] !== cur) return;
+        wingConfig.squadrons[sqIdx].aircraft[acIdx] = v;
+        persistWingConfig(); updateWingSizeCounter();
+        renderSqAircraftTags(container, sqIdx);
+      }});
+      container.appendChild(rep);
+    }}
   }});
+
+  const addSel = acMakeSelect('wing-ac-add-sel', t('editor.phases.aircraft'));
+  addSel.appendChild(acMakeOption('', t('editor.wing.ac.add'), false));
+  [['editor.wing.ac.helis', GAME_AIRCRAFT_TYPES.helicopters], ['editor.wing.ac.planes', GAME_AIRCRAFT_TYPES.planes]].forEach(g => {{
+    const og = document.createElement('optgroup');
+    og.label = t(g[0]);
+    g[1].forEach(ty => og.appendChild(acMakeOption(ty, ty, has(ty))));
+    addSel.appendChild(og);
+  }});
+  const ogMod = document.createElement('optgroup');
+  ogMod.label = t('editor.wing.ac.mods');
+  ogMod.appendChild(acMakeOption('__other__', t('editor.wing.ac.other'), false));
+  addSel.appendChild(ogMod);
+  container.appendChild(addSel);
 
   const addRow = document.createElement('div');
   addRow.className = 'wing-ac-add-row';
+  addRow.hidden = true;
   const addInp = document.createElement('input');
-  addInp.type = 'text'; addInp.placeholder = 'F-4E Phantom II'; addInp.maxLength = 60;
+  addInp.type = 'text'; addInp.placeholder = t('editor.wing.ac.modPh'); addInp.maxLength = 60;
   const addBtn = document.createElement('button');
   addBtn.type = 'button'; addBtn.className = 'ed-btn-add ed-btn-add-sm';
+  addBtn.setAttribute('aria-label', t('editor.wing.ac.modAdd'));
   addBtn.textContent = '+';
-  const doAdd = () => {{
-    const val = addInp.value.trim(); if (!val) return;
-    if (!wingConfig.squadrons[sqIdx]) return;
-    wingConfig.squadrons[sqIdx].aircraft.push(val);
-    addInp.value = '';
+  const addName = val => {{
+    if (!wingConfig.squadrons[sqIdx]) return false;
+    const list = wingConfig.squadrons[sqIdx].aircraft;
+    if (!val || list.indexOf(val) >= 0) return false;
+    list.push(val);
     persistWingConfig(); updateWingSizeCounter();
     renderSqAircraftTags(container, sqIdx);
+    return true;
   }};
+  const doAdd = () => {{ addName(addInp.value.trim()); }};
   addBtn.addEventListener('click', doAdd);
   addInp.addEventListener('keydown', e => {{ if (e.key === 'Enter') {{ e.preventDefault(); doAdd(); }} }});
+  addSel.addEventListener('change', () => {{
+    const v = addSel.value;
+    if (!v) return;
+    if (v === '__other__') {{ addRow.hidden = false; addInp.focus(); return; }}
+    addName(v);
+  }});
   addRow.appendChild(addInp); addRow.appendChild(addBtn);
   container.appendChild(addRow);
 }}
@@ -3797,6 +3910,7 @@ let _PK_BUSY    = false;
 const _PK_EXPORT_SEL = new Set();   // groupId des vols cochés pour l'export
 
 @@RADIO_BLOCK@@
+@@AIRCRAFT_TYPES_BLOCK@@
 // Poste et canal comme au cockpit : un argument pkRadio (type, poste) ou pkChan (type, poste, canal du .miz) se lit à l'affichage
 // (nom du poste, à défaut « Poste n » ; numéro de canal du cockpit) ; le reste des messages garde le numéro du .miz
 function pkRadioLabel(type, n) {{ return radioPosteName(type, n) || tf('snap.radio.name', n); }}
@@ -5527,8 +5641,20 @@ function tbmOpen(m) {{
   head.setAttribute('role', 'presentation');
   head.textContent = name;
   ul.appendChild(head);
+  let grp = null;
   for (let k = 0; k < opts.length; k++) {{
     const o = opts[k], li = document.createElement('li');
+    const og = o.parentNode && o.parentNode.tagName === 'OPTGROUP' ? o.parentNode : null;      /* un groupe d'options : son titre, une fois, avant la première */
+    if (og !== grp) {{
+      grp = og;
+      if (og) {{
+        const gh = document.createElement('li');
+        gh.className = 'tbm-head tbm-group';
+        gh.setAttribute('role', 'presentation');
+        gh.textContent = og.label;
+        ul.appendChild(gh);
+      }}
+    }}
     li.className = 'tbm-opt';
     li.id = 'tbm-' + m.uid + '-' + k;
     li.setAttribute('role', 'option');
@@ -5738,7 +5864,7 @@ function init() {{
   loadTheme();
   loadLang();
   initToolbarMenus([['theme-select', () => t('toolbar.theme.tooltip')]]);   // les listes de la barre au thème de l'interface
-  initFormMenus(sel => {{ const f = sel.closest ? sel.closest('.pk-flt-f') : null; const l = f ? f.querySelector('span') : null; return l ? l.textContent.trim() : ''; }});   // les filtres de la liste des vols
+  initFormMenus(sel => {{ const f = sel.closest ? sel.closest('.pk-flt-f') : null; const l = f ? f.querySelector('span') : null; return l ? l.textContent.trim() : (sel.getAttribute('aria-label') || ''); }});   // les filtres de la liste des vols, les types d'appareils du Wing
   wingConfig = loadWingConfig();
   renderWingEditor();
   bindWingEditorEvents();
@@ -5820,6 +5946,7 @@ HTML_FINAL = (HTML
     .replace('__RETOKENIZE__', _RETOKENIZE)
     .replace('__REBUILD_MIZ__', _REBUILD_MIZ)
     .replace('@@RADIO_BLOCK@@\n', build_radio_block())
+    .replace('@@AIRCRAFT_TYPES_BLOCK@@\n', build_aircraft_types_block())
     .replace('@@DYN_AIRDROMES@@', _DYN_AIRDROMES_JS)
 )
 
@@ -5944,6 +6071,12 @@ grep_present('pointsPos',           'pointsPos présent (P4.2)')
 grep_present('payloadPos',          'payloadPos présent (P4.2)')
 grep_present("replacements.route",  'replacements.route géré (P4.3)')
 grep_present("repl.payloads",       'replacements.payloads géré (P4.3)')
+
+# Types d'appareils du jeu (lot mp-wing-types-jeu)
+grep_present('const GAME_AIRCRAFT_TYPES','table des types du jeu embarquée')
+grep_present('function gameAircraftClose','types proches (gameAircraftClose) présents')
+grep_present('wing-ac-add-sel',     'liste d\'ajout d\'un type présente')
+grep_absent('@@AIRCRAFT_TYPES_BLOCK@@', 'repère du bloc des types remplacé')
 
 # I18N parity check
 import ast

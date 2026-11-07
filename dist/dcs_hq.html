@@ -244,6 +244,7 @@ select[data-tbm-src] { display: none !important; }
   font-family: var(--f-typewriter); font-weight: 400; font-size: 14px; letter-spacing: .2px; text-transform: none;
 }
 .tbm-panel.tbm-p-field .tbm-opt[aria-selected="true"] { font-weight: 400; }
+.tbm-panel .tbm-group { margin-top: 2px; border-top: 1px solid rgba(168,154,114,.25); }
 .tbm-panel.tbm-up { border-top: 1px solid var(--amber-dark); border-bottom: 3px solid var(--amber); transform-origin: bottom left; }
 .tb-lang-btn {
   background: transparent;
@@ -540,17 +541,41 @@ select[data-tbm-src] { display: none !important; }
 .wing-ac-tag {
   background: var(--olive); color: var(--paper-light);
   font-family: var(--f-typewriter); font-size: 11px;
-  padding: 2px 6px; border-radius: 3px;
-  display: flex; align-items: center; gap: 4px;
+  padding: 2px 0 2px 8px; border-radius: 3px; min-height: 44px; max-width: 100%;
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap; row-gap: 0;
 }
+.wing-ac-tag > span:first-child { min-width: 0; overflow-wrap: anywhere; }
 .wing-ac-tag button {
-  background: none; border: none; color: var(--paper-light);
-  cursor: pointer; padding: 0; font-size: 12px; line-height: 1; opacity: .7;
+  background: none; border: none; color: var(--paper-light); flex: none;
+  cursor: pointer; padding: 0; min-width: 44px; min-height: 44px; margin: -2px 0; font-size: 16px; line-height: 1; opacity: .7;
 }
 .wing-ac-tag button:hover { opacity: 1; }
-.wing-ac-add-row { display: flex; gap: 6px; margin-top: 4px; }
-.wing-ac-add-row input { flex: 1; }
-.wing-ac-add-row button { white-space: nowrap; }
+.wing-ac-flag { font-size: 10px; letter-spacing: .3px; color: #e8b840; cursor: help; }
+.wing-ac-add-row { display: flex; gap: 6px; margin-top: 4px; width: 100%; }
+.wing-ac-add-row[hidden] { display: none; }
+.wing-ac-add-row input { flex: 1; min-width: 0; }
+.wing-ac-add-row button { white-space: nowrap; min-height: 44px; min-width: 44px; }
+.wing-aircraft-tags { min-width: 0; }
+/* Les listes du thème de l'éditeur du Wing (types d'appareils) : le bouton garde la boîte d'un champ texte */
+.wing-ac-sel.tbm-trigger.tbm-field {
+  display: block; position: relative; contain: inline-size; text-align: left; letter-spacing: normal; text-transform: none; font-weight: 400;
+  box-sizing: border-box; flex: 1 1 180px; width: 0; min-width: 0; max-width: 100%; min-height: 44px; padding: 0 34px 0 11px; margin: 0; cursor: pointer;
+  font-family: var(--f-typewriter); font-size: 13px; line-height: normal;
+  background: rgba(216,201,165,.92); color: var(--ink);
+  border: 1px solid var(--khaki); border-left: 3px solid var(--amber-dark); border-radius: 0;
+}
+.wing-ac-sel.tbm-trigger.tbm-field::after {
+  content: ''; position: absolute; right: 12px; top: 50%; width: 12px; height: 8px; margin-top: -4px; pointer-events: none;
+  background: currentColor; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23000' stroke-width='1.6'/%3E%3C/svg%3E") center / 12px 8px no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23000' stroke-width='1.6'/%3E%3C/svg%3E") center / 12px 8px no-repeat;
+}
+.wing-ac-sel.tbm-trigger.tbm-field .tbm-lbl { display: block; margin: 0; padding: 0; line-height: 44px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wing-ac-sel.tbm-trigger.tbm-field .tbm-lbl::after { display: none; }
+.wing-ac-sel.tbm-trigger.tbm-field:focus { outline: none; border-left-color: var(--red-stamp); box-shadow: 0 0 0 1px var(--amber); }
+.wing-ac-sel.wing-ac-add-sel.tbm-trigger.tbm-field { flex: 1 1 100%; }
+.wing-ac-sel.wing-ac-rep.tbm-trigger.tbm-field { flex: 0 1 220px; }
+@media (max-width: 520px) {
+  .wing-ac-sel.wing-ac-rep.tbm-trigger.tbm-field { flex: 1 1 100%; }
+}
 
 /* Action buttons */
 .wing-actions {
@@ -1105,6 +1130,16 @@ const I18N = {
     'editor.phases.moveDown':   'Descendre',
     'editor.roster.callsignPlaceholder': 'Callsign',
     'editor.radio.delAircraftAriaLabel': 'Supprimer appareil',
+    'editor.wing.ac.add':       'Ajouter un type…',
+    'editor.wing.ac.helis':     'Hélicoptères',
+    'editor.wing.ac.planes':    'Avions',
+    'editor.wing.ac.mods':      'Hors jeu de base',
+    'editor.wing.ac.other':     'Autre type (mod)…',
+    'editor.wing.ac.modPh':     'Type dans le .miz (ex. A-4E-C)',
+    'editor.wing.ac.modAdd':    'Ajouter ce type',
+    'editor.wing.ac.flag':      'hors jeu de base',
+    'editor.wing.ac.flagTip':   "Ce nom n'est pas un type jouable du jeu de base (pydcs 1.0.0). Un mod garde son nom ; sinon, remplacez-le par le type du jeu.",
+    'editor.wing.ac.replace':   'Remplacer par…',
     'delSquadron.lastWarning':  '\n\n⚠ Il s’agit du dernier escadron du wing.',
     'delSquadron.refWarning':   '',
     'validate.schemaMissing':   'configSchemaVersion doit être 1',
@@ -1415,6 +1450,16 @@ const I18N = {
     'editor.phases.moveDown':   'Move down',
     'editor.roster.callsignPlaceholder': 'Callsign',
     'editor.radio.delAircraftAriaLabel': 'Delete aircraft',
+    'editor.wing.ac.add':       'Add a type…',
+    'editor.wing.ac.helis':     'Helicopters',
+    'editor.wing.ac.planes':    'Airplanes',
+    'editor.wing.ac.mods':      'Not in the base game',
+    'editor.wing.ac.other':     'Other type (mod)…',
+    'editor.wing.ac.modPh':     'Type in the .miz (e.g. A-4E-C)',
+    'editor.wing.ac.modAdd':    'Add this type',
+    'editor.wing.ac.flag':      'not in the base game',
+    'editor.wing.ac.flagTip':   "This name is not a flyable type of the base game (pydcs 1.0.0). A mod keeps its name; otherwise, replace it with the game's type.",
+    'editor.wing.ac.replace':   'Replace with…',
     'delSquadron.lastWarning':  '\n\n⚠ This is the last squadron in the wing.',
     'delSquadron.refWarning':   '',
     'validate.schemaMissing':   'configSchemaVersion must be 1',
@@ -2013,15 +2058,43 @@ function refreshSqLogoZone(zone, sqIdx) {
 }
 
 // ── Aircraft tags ──────────────────────────────────────────────
+// Les appareils d'une escadrille se choisissent dans la liste des types du jeu (GAME_AIRCRAFT_TYPES) ; « Autre type (mod)… »
+// ouvre la saisie libre ; un nom hors table est marqué et propose ses types proches. Rien n'est bloqué : le format ne change pas.
+function acMakeSelect(cls, label) {
+  const sel = document.createElement('select');
+  sel.className = 'wing-ac-sel ' + cls;
+  sel.setAttribute('aria-label', label);
+  return sel;
+}
+
+function acMakeOption(value, label, disabled) {
+  const o = document.createElement('option');
+  o.value = value; o.textContent = label;
+  if (disabled) o.disabled = true;
+  return o;
+}
+
 function renderSqAircraftTags(container, sqIdx) {
   if (!container || !wingConfig.squadrons[sqIdx]) return;
   container.innerHTML = '';
+  const names = wingConfig.squadrons[sqIdx].aircraft;
+  const has = ty => names.indexOf(ty) >= 0;
 
-  wingConfig.squadrons[sqIdx].aircraft.forEach((_, acIdx) => {
+  names.forEach((_, acIdx) => {
+    const cur = names[acIdx];
     const tag = document.createElement('span');
     tag.className = 'wing-ac-tag';
     const label = document.createElement('span');
-    label.textContent = wingConfig.squadrons[sqIdx].aircraft[acIdx];
+    label.textContent = cur;
+    tag.appendChild(label);
+    const known = gameAircraftIsType(cur);
+    if (!known) {
+      const flag = document.createElement('span');
+      flag.className = 'wing-ac-flag';
+      flag.textContent = t('editor.wing.ac.flag');
+      flag.title = t('editor.wing.ac.flagTip');
+      tag.appendChild(flag);
+    }
     const rmBtn = document.createElement('button');
     rmBtn.type = 'button';
     rmBtn.setAttribute('aria-label', t('editor.radio.delAircraftAriaLabel'));
@@ -2032,27 +2105,66 @@ function renderSqAircraftTags(container, sqIdx) {
       persistWingConfig(); updateWingSizeCounter();
       renderSqAircraftTags(container, sqIdx);
     });
-    tag.appendChild(label); tag.appendChild(rmBtn);
+    tag.appendChild(rmBtn);
     container.appendChild(tag);
+
+    const close = known ? [] : gameAircraftClose(cur);
+    if (close.length) {
+      const rep = acMakeSelect('wing-ac-rep', t('editor.wing.ac.replace'));
+      rep.appendChild(acMakeOption('', t('editor.wing.ac.replace'), false));
+      close.forEach(ty => rep.appendChild(acMakeOption(ty, ty, has(ty))));
+      rep.addEventListener('change', () => {
+        const v = rep.value;
+        if (!v || !wingConfig.squadrons[sqIdx] || wingConfig.squadrons[sqIdx].aircraft[acIdx] !== cur) return;
+        wingConfig.squadrons[sqIdx].aircraft[acIdx] = v;
+        persistWingConfig(); updateWingSizeCounter();
+        renderSqAircraftTags(container, sqIdx);
+      });
+      container.appendChild(rep);
+    }
   });
+
+  const addSel = acMakeSelect('wing-ac-add-sel', t('editor.phases.aircraft'));
+  addSel.appendChild(acMakeOption('', t('editor.wing.ac.add'), false));
+  [['editor.wing.ac.helis', GAME_AIRCRAFT_TYPES.helicopters], ['editor.wing.ac.planes', GAME_AIRCRAFT_TYPES.planes]].forEach(g => {
+    const og = document.createElement('optgroup');
+    og.label = t(g[0]);
+    g[1].forEach(ty => og.appendChild(acMakeOption(ty, ty, has(ty))));
+    addSel.appendChild(og);
+  });
+  const ogMod = document.createElement('optgroup');
+  ogMod.label = t('editor.wing.ac.mods');
+  ogMod.appendChild(acMakeOption('__other__', t('editor.wing.ac.other'), false));
+  addSel.appendChild(ogMod);
+  container.appendChild(addSel);
 
   const addRow = document.createElement('div');
   addRow.className = 'wing-ac-add-row';
+  addRow.hidden = true;
   const addInp = document.createElement('input');
-  addInp.type = 'text'; addInp.placeholder = 'F-4E Phantom II'; addInp.maxLength = 60;
+  addInp.type = 'text'; addInp.placeholder = t('editor.wing.ac.modPh'); addInp.maxLength = 60;
   const addBtn = document.createElement('button');
   addBtn.type = 'button'; addBtn.className = 'ed-btn-add ed-btn-add-sm';
+  addBtn.setAttribute('aria-label', t('editor.wing.ac.modAdd'));
   addBtn.textContent = '+';
-  const doAdd = () => {
-    const val = addInp.value.trim(); if (!val) return;
-    if (!wingConfig.squadrons[sqIdx]) return;
-    wingConfig.squadrons[sqIdx].aircraft.push(val);
-    addInp.value = '';
+  const addName = val => {
+    if (!wingConfig.squadrons[sqIdx]) return false;
+    const list = wingConfig.squadrons[sqIdx].aircraft;
+    if (!val || list.indexOf(val) >= 0) return false;
+    list.push(val);
     persistWingConfig(); updateWingSizeCounter();
     renderSqAircraftTags(container, sqIdx);
+    return true;
   };
+  const doAdd = () => { addName(addInp.value.trim()); };
   addBtn.addEventListener('click', doAdd);
   addInp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); doAdd(); } });
+  addSel.addEventListener('change', () => {
+    const v = addSel.value;
+    if (!v) return;
+    if (v === '__other__') { addRow.hidden = false; addInp.focus(); return; }
+    addName(v);
+  });
   addRow.appendChild(addInp); addRow.appendChild(addBtn);
   container.appendChild(addRow);
 }
@@ -2418,7 +2530,7 @@ function importWingConfig(file) {
 // La configuration d'escadre est partagée par toute la suite : celle qu'on remplace est gardée sous KEY_WING_BEFORE
 // (la chaîne lue, telle quelle ; WING_ABSENT quand rien n'était écrit) et se restaure d'un toucher. Une sauvegarde
 // posée n'est remplacée par aucun clic sur Exemple : seule « Restaurer » la supprime.
-const EXAMPLE_WING_CONFIGS = {"fr": {"configSchemaVersion": 1, "wing": {"id": "TF-KESTREL", "shortName": "TF KESTREL", "fullName": "Task Force Kestrel — Escadre composite d’hélicoptères", "appTitle": "HQ", "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiI+PGNpcmNsZSBjeD0iMTI4IiBjeT0iMTI4IiByPSIxMjIiIGZpbGw9IiMyYzMyMWUiIHN0cm9rZT0iI2MwODkyYSIgc3Ryb2tlLXdpZHRoPSI4Ii8+PGNpcmNsZSBjeD0iMTI4IiBjeT0iMTI4IiByPSIxMDQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2E4OTQ1ZSIgc3Ryb2tlLXdpZHRoPSIyIi8+PHBvbHlnb24gcG9pbnRzPSIxMjAsOTggNzgsNzQgNDAsNzIgMjIsODQgNjAsOTIgMjYsMTA0IDY2LDExMCAzNiwxMjYgNzYsMTI4IDQ2LDE0NiA5NCwxNDAgMTIwLDE0NiIgZmlsbD0iI2Q5YTQ0MSIvPjxwb2x5Z29uIHBvaW50cz0iMTM2LDE0NiAxNjIsMTQwIDIxMCwxNDYgMTgwLDEyOCAyMjAsMTI2IDE5MCwxMTAgMjMwLDEwNCAxOTYsOTIgMjM0LDg0IDIxNiw3MiAxNzgsNzQgMTM2LDk4IiBmaWxsPSIjZDlhNDQxIi8+PHBvbHlnb24gcG9pbnRzPSIxMTYsMTUwIDEwOCwxOTggMTI4LDE4NCAxNDgsMTk4IDE0MCwxNTAiIGZpbGw9IiNkOWE0NDEiLz48cG9seWdvbiBwb2ludHM9IjEyOCw1OCAxNDAsODQgMTQzLDE1MCAxMjgsMTc2IDExMywxNTAgMTE2LDg0IiBmaWxsPSIjZDlhNDQxIi8+PHBvbHlnb24gcG9pbnRzPSIxMTYsNjQgMTI4LDUwIDE0MCw2NCAxMjgsNzQiIGZpbGw9IiNkOWE0NDEiLz48cG9seWdvbiBwb2ludHM9IjEyOCw5MiAxMzQsMTEwIDEyOCwxNjAgMTIyLDExMCIgZmlsbD0iIzJjMzIxZSIvPjwvc3ZnPg==", "hqStamp": "HQ ░ TF KESTREL"}, "squadrons": [{"id": "SQN-01", "name": "1er escadron d’hélicoptères d’attaque", "nickname": "Hammers", "callsign": "CAESAR", "aircraft": ["Mi-24P"], "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiI+PGNpcmNsZSBjeD0iMTI4IiBjeT0iMTI4IiByPSIxMjIiIGZpbGw9IiM3YTNhMjAiIHN0cm9rZT0iI2MwODkyYSIgc3Ryb2tlLXdpZHRoPSI4Ii8+PGNpcmNsZSBjeD0iMTI4IiBjeT0iMTI4IiByPSIxMDQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2E4OTQ1ZSIgc3Ryb2tlLXdpZHRoPSIyIi8+PHBhdGggZD0iTTEwMCwxMTIgTDEzNCw4NCBWMTc2IiBmaWxsPSJub25lIiBzdHJva2U9IiNlZmU2Y2MiIHN0cm9rZS13aWR0aD0iMTgiIHN0cm9rZS1saW5lam9pbj0ibWl0ZXIiIHN0cm9rZS1saW5lY2FwPSJidXR0Ii8+PHBhdGggZD0iTTk2LDE3NiBIMTcyIiBmaWxsPSJub25lIiBzdHJva2U9IiNlZmU2Y2MiIHN0cm9rZS13aWR0aD0iMTgiIHN0cm9rZS1saW5lam9pbj0ibWl0ZXIiIHN0cm9rZS1saW5lY2FwPSJidXR0Ii8+PC9zdmc+"}, {"id": "SQN-02", "name": "2e escadron d’hélicoptères de transport", "nickname": "Pelicans", "callsign": "ANTON", "aircraft": ["Mi-8MTV2"], "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiI+PGNpcmNsZSBjeD0iMTI4IiBjeT0iMTI4IiByPSIxMjIiIGZpbGw9IiM0ZjZiM2EiIHN0cm9rZT0iI2MwODkyYSIgc3Ryb2tlLXdpZHRoPSI4Ii8+PGNpcmNsZSBjeD0iMTI4IiBjeT0iMTI4IiByPSIxMDQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2E4OTQ1ZSIgc3Ryb2tlLXdpZHRoPSIyIi8+PHBhdGggZD0iTTkyLDg0IEgxNjQgVjEzMCBIOTIgVjE3NiBIMTY0IiBmaWxsPSJub25lIiBzdHJva2U9IiNlZmU2Y2MiIHN0cm9rZS13aWR0aD0iMTgiIHN0cm9rZS1saW5lam9pbj0ibWl0ZXIiIHN0cm9rZS1saW5lY2FwPSJidXR0Ii8+PC9zdmc+"}, {"id": "SQN-03", "name": "3e escadrille de reconnaissance", "nickname": "Owls", "callsign": "RECCE", "aircraft": ["MiG-21bis"], "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiI+PGNpcmNsZSBjeD0iMTI4IiBjeT0iMTI4IiByPSIxMjIiIGZpbGw9IiMyZjU0NzAiIHN0cm9rZT0iI2MwODkyYSIgc3Ryb2tlLXdpZHRoPSI4Ii8+PGNpcmNsZSBjeD0iMTI4IiBjeT0iMTI4IiByPSIxMDQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2E4OTQ1ZSIgc3Ryb2tlLXdpZHRoPSIyIi8+PHBhdGggZD0iTTkyLDg0IEgxNjQgVjE3NiBIOTIgTTExOCwxMzAgSDE2NCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZWZlNmNjIiBzdHJva2Utd2lkdGg9IjE4IiBzdHJva2UtbGluZWpvaW49Im1pdGVyIiBzdHJva2UtbGluZWNhcD0iYnV0dCIvPjwvc3ZnPg=="}]}, "en": {"configSchemaVersion": 1, "wing": {"id": "TF-KESTREL", "shortName": "TF KESTREL", "fullName": "Task Force Kestrel — Composite Helicopter Wing", "appTitle": "HQ", "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiI+PGNpcmNsZSBjeD0iMTI4IiBjeT0iMTI4IiByPSIxMjIiIGZpbGw9IiMyYzMyMWUiIHN0cm9rZT0iI2MwODkyYSIgc3Ryb2tlLXdpZHRoPSI4Ii8+PGNpcmNsZSBjeD0iMTI4IiBjeT0iMTI4IiByPSIxMDQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2E4OTQ1ZSIgc3Ryb2tlLXdpZHRoPSIyIi8+PHBvbHlnb24gcG9pbnRzPSIxMjAsOTggNzgsNzQgNDAsNzIgMjIsODQgNjAsOTIgMjYsMTA0IDY2LDExMCAzNiwxMjYgNzYsMTI4IDQ2LDE0NiA5NCwxNDAgMTIwLDE0NiIgZmlsbD0iI2Q5YTQ0MSIvPjxwb2x5Z29uIHBvaW50cz0iMTM2LDE0NiAxNjIsMTQwIDIxMCwxNDYgMTgwLDEyOCAyMjAsMTI2IDE5MCwxMTAgMjMwLDEwNCAxOTYsOTIgMjM0LDg0IDIxNiw3MiAxNzgsNzQgMTM2LDk4IiBmaWxsPSIjZDlhNDQxIi8+PHBvbHlnb24gcG9pbnRzPSIxMTYsMTUwIDEwOCwxOTggMTI4LDE4NCAxNDgsMTk4IDE0MCwxNTAiIGZpbGw9IiNkOWE0NDEiLz48cG9seWdvbiBwb2ludHM9IjEyOCw1OCAxNDAsODQgMTQzLDE1MCAxMjgsMTc2IDExMywxNTAgMTE2LDg0IiBmaWxsPSIjZDlhNDQxIi8+PHBvbHlnb24gcG9pbnRzPSIxMTYsNjQgMTI4LDUwIDE0MCw2NCAxMjgsNzQiIGZpbGw9IiNkOWE0NDEiLz48cG9seWdvbiBwb2ludHM9IjEyOCw5MiAxMzQsMTEwIDEyOCwxNjAgMTIyLDExMCIgZmlsbD0iIzJjMzIxZSIvPjwvc3ZnPg==", "hqStamp": "HQ ░ TF KESTREL"}, "squadrons": [{"id": "SQN-01", "name": "1st Attack Helicopter Squadron", "nickname": "Hammers", "callsign": "CAESAR", "aircraft": ["Mi-24P"], "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiI+PGNpcmNsZSBjeD0iMTI4IiBjeT0iMTI4IiByPSIxMjIiIGZpbGw9IiM3YTNhMjAiIHN0cm9rZT0iI2MwODkyYSIgc3Ryb2tlLXdpZHRoPSI4Ii8+PGNpcmNsZSBjeD0iMTI4IiBjeT0iMTI4IiByPSIxMDQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2E4OTQ1ZSIgc3Ryb2tlLXdpZHRoPSIyIi8+PHBhdGggZD0iTTEwMCwxMTIgTDEzNCw4NCBWMTc2IiBmaWxsPSJub25lIiBzdHJva2U9IiNlZmU2Y2MiIHN0cm9rZS13aWR0aD0iMTgiIHN0cm9rZS1saW5lam9pbj0ibWl0ZXIiIHN0cm9rZS1saW5lY2FwPSJidXR0Ii8+PHBhdGggZD0iTTk2LDE3NiBIMTcyIiBmaWxsPSJub25lIiBzdHJva2U9IiNlZmU2Y2MiIHN0cm9rZS13aWR0aD0iMTgiIHN0cm9rZS1saW5lam9pbj0ibWl0ZXIiIHN0cm9rZS1saW5lY2FwPSJidXR0Ii8+PC9zdmc+"}, {"id": "SQN-02", "name": "2nd Transport Helicopter Squadron", "nickname": "Pelicans", "callsign": "ANTON", "aircraft": ["Mi-8MTV2"], "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiI+PGNpcmNsZSBjeD0iMTI4IiBjeT0iMTI4IiByPSIxMjIiIGZpbGw9IiM0ZjZiM2EiIHN0cm9rZT0iI2MwODkyYSIgc3Ryb2tlLXdpZHRoPSI4Ii8+PGNpcmNsZSBjeD0iMTI4IiBjeT0iMTI4IiByPSIxMDQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2E4OTQ1ZSIgc3Ryb2tlLXdpZHRoPSIyIi8+PHBhdGggZD0iTTkyLDg0IEgxNjQgVjEzMCBIOTIgVjE3NiBIMTY0IiBmaWxsPSJub25lIiBzdHJva2U9IiNlZmU2Y2MiIHN0cm9rZS13aWR0aD0iMTgiIHN0cm9rZS1saW5lam9pbj0ibWl0ZXIiIHN0cm9rZS1saW5lY2FwPSJidXR0Ii8+PC9zdmc+"}, {"id": "SQN-03", "name": "3rd Reconnaissance Flight", "nickname": "Owls", "callsign": "RECCE", "aircraft": ["MiG-21bis"], "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiI+PGNpcmNsZSBjeD0iMTI4IiBjeT0iMTI4IiByPSIxMjIiIGZpbGw9IiMyZjU0NzAiIHN0cm9rZT0iI2MwODkyYSIgc3Ryb2tlLXdpZHRoPSI4Ii8+PGNpcmNsZSBjeD0iMTI4IiBjeT0iMTI4IiByPSIxMDQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2E4OTQ1ZSIgc3Ryb2tlLXdpZHRoPSIyIi8+PHBhdGggZD0iTTkyLDg0IEgxNjQgVjE3NiBIOTIgTTExOCwxMzAgSDE2NCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZWZlNmNjIiBzdHJva2Utd2lkdGg9IjE4IiBzdHJva2UtbGluZWpvaW49Im1pdGVyIiBzdHJva2UtbGluZWNhcD0iYnV0dCIvPjwvc3ZnPg=="}]}};
+const EXAMPLE_WING_CONFIGS = {"fr": {"configSchemaVersion": 1, "wing": {"id": "TF-KESTREL", "shortName": "TF KESTREL", "fullName": "Task Force Kestrel — Escadre composite d’hélicoptères", "appTitle": "HQ", "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiI+PGNpcmNsZSBjeD0iMTI4IiBjeT0iMTI4IiByPSIxMjIiIGZpbGw9IiMyYzMyMWUiIHN0cm9rZT0iI2MwODkyYSIgc3Ryb2tlLXdpZHRoPSI4Ii8+PGNpcmNsZSBjeD0iMTI4IiBjeT0iMTI4IiByPSIxMDQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2E4OTQ1ZSIgc3Ryb2tlLXdpZHRoPSIyIi8+PHBvbHlnb24gcG9pbnRzPSIxMjAsOTggNzgsNzQgNDAsNzIgMjIsODQgNjAsOTIgMjYsMTA0IDY2LDExMCAzNiwxMjYgNzYsMTI4IDQ2LDE0NiA5NCwxNDAgMTIwLDE0NiIgZmlsbD0iI2Q5YTQ0MSIvPjxwb2x5Z29uIHBvaW50cz0iMTM2LDE0NiAxNjIsMTQwIDIxMCwxNDYgMTgwLDEyOCAyMjAsMTI2IDE5MCwxMTAgMjMwLDEwNCAxOTYsOTIgMjM0LDg0IDIxNiw3MiAxNzgsNzQgMTM2LDk4IiBmaWxsPSIjZDlhNDQxIi8+PHBvbHlnb24gcG9pbnRzPSIxMTYsMTUwIDEwOCwxOTggMTI4LDE4NCAxNDgsMTk4IDE0MCwxNTAiIGZpbGw9IiNkOWE0NDEiLz48cG9seWdvbiBwb2ludHM9IjEyOCw1OCAxNDAsODQgMTQzLDE1MCAxMjgsMTc2IDExMywxNTAgMTE2LDg0IiBmaWxsPSIjZDlhNDQxIi8+PHBvbHlnb24gcG9pbnRzPSIxMTYsNjQgMTI4LDUwIDE0MCw2NCAxMjgsNzQiIGZpbGw9IiNkOWE0NDEiLz48cG9seWdvbiBwb2ludHM9IjEyOCw5MiAxMzQsMTEwIDEyOCwxNjAgMTIyLDExMCIgZmlsbD0iIzJjMzIxZSIvPjwvc3ZnPg==", "hqStamp": "HQ ░ TF KESTREL"}, "squadrons": [{"id": "SQN-01", "name": "1er escadron d’hélicoptères d’attaque", "nickname": "Hammers", "callsign": "CAESAR", "aircraft": ["Mi-24P"], "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiI+PGNpcmNsZSBjeD0iMTI4IiBjeT0iMTI4IiByPSIxMjIiIGZpbGw9IiM3YTNhMjAiIHN0cm9rZT0iI2MwODkyYSIgc3Ryb2tlLXdpZHRoPSI4Ii8+PGNpcmNsZSBjeD0iMTI4IiBjeT0iMTI4IiByPSIxMDQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2E4OTQ1ZSIgc3Ryb2tlLXdpZHRoPSIyIi8+PHBhdGggZD0iTTEwMCwxMTIgTDEzNCw4NCBWMTc2IiBmaWxsPSJub25lIiBzdHJva2U9IiNlZmU2Y2MiIHN0cm9rZS13aWR0aD0iMTgiIHN0cm9rZS1saW5lam9pbj0ibWl0ZXIiIHN0cm9rZS1saW5lY2FwPSJidXR0Ii8+PHBhdGggZD0iTTk2LDE3NiBIMTcyIiBmaWxsPSJub25lIiBzdHJva2U9IiNlZmU2Y2MiIHN0cm9rZS13aWR0aD0iMTgiIHN0cm9rZS1saW5lam9pbj0ibWl0ZXIiIHN0cm9rZS1saW5lY2FwPSJidXR0Ii8+PC9zdmc+"}, {"id": "SQN-02", "name": "2e escadron d’hélicoptères de transport", "nickname": "Pelicans", "callsign": "ANTON", "aircraft": ["Mi-8MT"], "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiI+PGNpcmNsZSBjeD0iMTI4IiBjeT0iMTI4IiByPSIxMjIiIGZpbGw9IiM0ZjZiM2EiIHN0cm9rZT0iI2MwODkyYSIgc3Ryb2tlLXdpZHRoPSI4Ii8+PGNpcmNsZSBjeD0iMTI4IiBjeT0iMTI4IiByPSIxMDQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2E4OTQ1ZSIgc3Ryb2tlLXdpZHRoPSIyIi8+PHBhdGggZD0iTTkyLDg0IEgxNjQgVjEzMCBIOTIgVjE3NiBIMTY0IiBmaWxsPSJub25lIiBzdHJva2U9IiNlZmU2Y2MiIHN0cm9rZS13aWR0aD0iMTgiIHN0cm9rZS1saW5lam9pbj0ibWl0ZXIiIHN0cm9rZS1saW5lY2FwPSJidXR0Ii8+PC9zdmc+"}, {"id": "SQN-03", "name": "3e escadrille de reconnaissance", "nickname": "Owls", "callsign": "RECCE", "aircraft": ["MiG-21Bis"], "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiI+PGNpcmNsZSBjeD0iMTI4IiBjeT0iMTI4IiByPSIxMjIiIGZpbGw9IiMyZjU0NzAiIHN0cm9rZT0iI2MwODkyYSIgc3Ryb2tlLXdpZHRoPSI4Ii8+PGNpcmNsZSBjeD0iMTI4IiBjeT0iMTI4IiByPSIxMDQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2E4OTQ1ZSIgc3Ryb2tlLXdpZHRoPSIyIi8+PHBhdGggZD0iTTkyLDg0IEgxNjQgVjE3NiBIOTIgTTExOCwxMzAgSDE2NCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZWZlNmNjIiBzdHJva2Utd2lkdGg9IjE4IiBzdHJva2UtbGluZWpvaW49Im1pdGVyIiBzdHJva2UtbGluZWNhcD0iYnV0dCIvPjwvc3ZnPg=="}]}, "en": {"configSchemaVersion": 1, "wing": {"id": "TF-KESTREL", "shortName": "TF KESTREL", "fullName": "Task Force Kestrel — Composite Helicopter Wing", "appTitle": "HQ", "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiI+PGNpcmNsZSBjeD0iMTI4IiBjeT0iMTI4IiByPSIxMjIiIGZpbGw9IiMyYzMyMWUiIHN0cm9rZT0iI2MwODkyYSIgc3Ryb2tlLXdpZHRoPSI4Ii8+PGNpcmNsZSBjeD0iMTI4IiBjeT0iMTI4IiByPSIxMDQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2E4OTQ1ZSIgc3Ryb2tlLXdpZHRoPSIyIi8+PHBvbHlnb24gcG9pbnRzPSIxMjAsOTggNzgsNzQgNDAsNzIgMjIsODQgNjAsOTIgMjYsMTA0IDY2LDExMCAzNiwxMjYgNzYsMTI4IDQ2LDE0NiA5NCwxNDAgMTIwLDE0NiIgZmlsbD0iI2Q5YTQ0MSIvPjxwb2x5Z29uIHBvaW50cz0iMTM2LDE0NiAxNjIsMTQwIDIxMCwxNDYgMTgwLDEyOCAyMjAsMTI2IDE5MCwxMTAgMjMwLDEwNCAxOTYsOTIgMjM0LDg0IDIxNiw3MiAxNzgsNzQgMTM2LDk4IiBmaWxsPSIjZDlhNDQxIi8+PHBvbHlnb24gcG9pbnRzPSIxMTYsMTUwIDEwOCwxOTggMTI4LDE4NCAxNDgsMTk4IDE0MCwxNTAiIGZpbGw9IiNkOWE0NDEiLz48cG9seWdvbiBwb2ludHM9IjEyOCw1OCAxNDAsODQgMTQzLDE1MCAxMjgsMTc2IDExMywxNTAgMTE2LDg0IiBmaWxsPSIjZDlhNDQxIi8+PHBvbHlnb24gcG9pbnRzPSIxMTYsNjQgMTI4LDUwIDE0MCw2NCAxMjgsNzQiIGZpbGw9IiNkOWE0NDEiLz48cG9seWdvbiBwb2ludHM9IjEyOCw5MiAxMzQsMTEwIDEyOCwxNjAgMTIyLDExMCIgZmlsbD0iIzJjMzIxZSIvPjwvc3ZnPg==", "hqStamp": "HQ ░ TF KESTREL"}, "squadrons": [{"id": "SQN-01", "name": "1st Attack Helicopter Squadron", "nickname": "Hammers", "callsign": "CAESAR", "aircraft": ["Mi-24P"], "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiI+PGNpcmNsZSBjeD0iMTI4IiBjeT0iMTI4IiByPSIxMjIiIGZpbGw9IiM3YTNhMjAiIHN0cm9rZT0iI2MwODkyYSIgc3Ryb2tlLXdpZHRoPSI4Ii8+PGNpcmNsZSBjeD0iMTI4IiBjeT0iMTI4IiByPSIxMDQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2E4OTQ1ZSIgc3Ryb2tlLXdpZHRoPSIyIi8+PHBhdGggZD0iTTEwMCwxMTIgTDEzNCw4NCBWMTc2IiBmaWxsPSJub25lIiBzdHJva2U9IiNlZmU2Y2MiIHN0cm9rZS13aWR0aD0iMTgiIHN0cm9rZS1saW5lam9pbj0ibWl0ZXIiIHN0cm9rZS1saW5lY2FwPSJidXR0Ii8+PHBhdGggZD0iTTk2LDE3NiBIMTcyIiBmaWxsPSJub25lIiBzdHJva2U9IiNlZmU2Y2MiIHN0cm9rZS13aWR0aD0iMTgiIHN0cm9rZS1saW5lam9pbj0ibWl0ZXIiIHN0cm9rZS1saW5lY2FwPSJidXR0Ii8+PC9zdmc+"}, {"id": "SQN-02", "name": "2nd Transport Helicopter Squadron", "nickname": "Pelicans", "callsign": "ANTON", "aircraft": ["Mi-8MT"], "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiI+PGNpcmNsZSBjeD0iMTI4IiBjeT0iMTI4IiByPSIxMjIiIGZpbGw9IiM0ZjZiM2EiIHN0cm9rZT0iI2MwODkyYSIgc3Ryb2tlLXdpZHRoPSI4Ii8+PGNpcmNsZSBjeD0iMTI4IiBjeT0iMTI4IiByPSIxMDQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2E4OTQ1ZSIgc3Ryb2tlLXdpZHRoPSIyIi8+PHBhdGggZD0iTTkyLDg0IEgxNjQgVjEzMCBIOTIgVjE3NiBIMTY0IiBmaWxsPSJub25lIiBzdHJva2U9IiNlZmU2Y2MiIHN0cm9rZS13aWR0aD0iMTgiIHN0cm9rZS1saW5lam9pbj0ibWl0ZXIiIHN0cm9rZS1saW5lY2FwPSJidXR0Ii8+PC9zdmc+"}, {"id": "SQN-03", "name": "3rd Reconnaissance Flight", "nickname": "Owls", "callsign": "RECCE", "aircraft": ["MiG-21Bis"], "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiI+PGNpcmNsZSBjeD0iMTI4IiBjeT0iMTI4IiByPSIxMjIiIGZpbGw9IiMyZjU0NzAiIHN0cm9rZT0iI2MwODkyYSIgc3Ryb2tlLXdpZHRoPSI4Ii8+PGNpcmNsZSBjeD0iMTI4IiBjeT0iMTI4IiByPSIxMDQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2E4OTQ1ZSIgc3Ryb2tlLXdpZHRoPSIyIi8+PHBhdGggZD0iTTkyLDg0IEgxNjQgVjE3NiBIOTIgTTExOCwxMzAgSDE2NCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZWZlNmNjIiBzdHJva2Utd2lkdGg9IjE4IiBzdHJva2UtbGluZWpvaW49Im1pdGVyIiBzdHJva2UtbGluZWNhcD0iYnV0dCIvPjwvc3ZnPg=="}]}};
 const KEY_WING_BEFORE = 'wing_config_before_example_v1';
 const WING_ABSENT = '__absent__';
 
@@ -4332,6 +4444,120 @@ function radioCockpitChannel(type, radioIndex, mizChannel) {
   return String(n - 1 + first);
 }
 /* ===== FIN DES POSTES RADIO ===== */
+/* ===== TYPES D'APPAREILS DU JEU ===== */
+// Types jouables du jeu de base (pydcs 1.0.0), par leur nom dans un .miz ; l'ordre est celui de la table.
+const GAME_AIRCRAFT_TYPES = {
+  "helicopters": [
+    "AH-64D_BLK_II",
+    "CH-47Fbl1",
+    "Ka-50",
+    "Ka-50_3",
+    "Mi-24P",
+    "Mi-8MT",
+    "OH58D",
+    "SA342L",
+    "SA342M",
+    "SA342Minigun",
+    "SA342Mistral",
+    "UH-1H"
+  ],
+  "planes": [
+    "A-10A",
+    "A-10C",
+    "A-10C_2",
+    "AJS37",
+    "AV8BNA",
+    "Bf-109K-4",
+    "C-101CC",
+    "C-101EB",
+    "C-130J-30",
+    "Christen Eagle II",
+    "F-100D",
+    "F-14A-135-GR",
+    "F-14A-135-GR-Early",
+    "F-14A-95-GR",
+    "F-14B",
+    "F-14BU",
+    "F-15C",
+    "F-15ESE",
+    "F-16C_50",
+    "F-4E-45MC",
+    "F-5E-3",
+    "F-5E-3_FC",
+    "F-86F Sabre",
+    "F-86F_FC",
+    "F4U-1D",
+    "FA-18C_hornet",
+    "FW-190A8",
+    "FW-190D9",
+    "Hawk",
+    "I-16",
+    "J-11A",
+    "JF-17",
+    "L-39C",
+    "L-39ZA",
+    "La-7",
+    "M-2000C",
+    "MB-339A",
+    "MB-339APAN",
+    "MiG-15bis",
+    "MiG-15bis_FC",
+    "MiG-19P",
+    "MiG-21Bis",
+    "MiG-29 Fulcrum",
+    "MiG-29A",
+    "MiG-29G",
+    "MiG-29S",
+    "Mirage-F1BE",
+    "Mirage-F1CE",
+    "Mirage-F1EE",
+    "MosquitoFBMkVI",
+    "P-47D-30",
+    "P-47D-30bl1",
+    "P-47D-40",
+    "P-51D",
+    "P-51D-30-NA",
+    "SpitfireLFMkIX",
+    "SpitfireLFMkIXCW",
+    "Su-25",
+    "Su-25T",
+    "Su-27",
+    "Su-33",
+    "TF-51D",
+    "Yak-52"
+  ]
+};
+
+// Nom exactement dans la table (casse comprise).
+function gameAircraftIsType(name) {
+  return GAME_AIRCRAFT_TYPES.helicopters.indexOf(name) >= 0 || GAME_AIRCRAFT_TYPES.planes.indexOf(name) >= 0;
+}
+
+// Nom réduit : minuscules, rien d'autre que les lettres a-z et les chiffres.
+function gameAircraftReduce(name) {
+  return String(name).toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+// Types proches d'un nom, dans l'ordre de la table (hélicoptères, puis avions) ; [] si le nom est dans la table.
+// 1. même nom réduit ; 2. sinon le plus long début commun des noms réduits, au moins 3 caractères (tous les types qui l'atteignent).
+function gameAircraftClose(name) {
+  if (gameAircraftIsType(name)) return [];
+  const all = GAME_AIRCRAFT_TYPES.helicopters.concat(GAME_AIRCRAFT_TYPES.planes);
+  const r = gameAircraftReduce(name);
+  const same = all.filter(ty => gameAircraftReduce(ty) === r);
+  if (same.length) return same;
+  let best = 0;
+  const lens = all.map(ty => {
+    const q = gameAircraftReduce(ty);
+    let n = 0;
+    while (n < r.length && n < q.length && r.charAt(n) === q.charAt(n)) n++;
+    if (n > best) best = n;
+    return n;
+  });
+  if (best < 3) return [];
+  return all.filter((ty, i) => lens[i] === best);
+}
+/* ===== FIN DES TYPES D'APPAREILS DU JEU ===== */
 // Poste et canal comme au cockpit : un argument pkRadio (type, poste) ou pkChan (type, poste, canal du .miz) se lit à l'affichage
 // (nom du poste, à défaut « Poste n » ; numéro de canal du cockpit) ; le reste des messages garde le numéro du .miz
 function pkRadioLabel(type, n) { return radioPosteName(type, n) || tf('snap.radio.name', n); }
@@ -6062,8 +6288,20 @@ function tbmOpen(m) {
   head.setAttribute('role', 'presentation');
   head.textContent = name;
   ul.appendChild(head);
+  let grp = null;
   for (let k = 0; k < opts.length; k++) {
     const o = opts[k], li = document.createElement('li');
+    const og = o.parentNode && o.parentNode.tagName === 'OPTGROUP' ? o.parentNode : null;      /* un groupe d'options : son titre, une fois, avant la première */
+    if (og !== grp) {
+      grp = og;
+      if (og) {
+        const gh = document.createElement('li');
+        gh.className = 'tbm-head tbm-group';
+        gh.setAttribute('role', 'presentation');
+        gh.textContent = og.label;
+        ul.appendChild(gh);
+      }
+    }
     li.className = 'tbm-opt';
     li.id = 'tbm-' + m.uid + '-' + k;
     li.setAttribute('role', 'option');
@@ -6273,7 +6511,7 @@ function init() {
   loadTheme();
   loadLang();
   initToolbarMenus([['theme-select', () => t('toolbar.theme.tooltip')]]);   // les listes de la barre au thème de l'interface
-  initFormMenus(sel => { const f = sel.closest ? sel.closest('.pk-flt-f') : null; const l = f ? f.querySelector('span') : null; return l ? l.textContent.trim() : ''; });   // les filtres de la liste des vols
+  initFormMenus(sel => { const f = sel.closest ? sel.closest('.pk-flt-f') : null; const l = f ? f.querySelector('span') : null; return l ? l.textContent.trim() : (sel.getAttribute('aria-label') || ''); });   // les filtres de la liste des vols, les types d'appareils du Wing
   wingConfig = loadWingConfig();
   renderWingEditor();
   bindWingEditorEvents();

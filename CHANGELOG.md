@@ -36,6 +36,7 @@ Changes merged since the last release, grouped per tool.
 - Radios are named and numbered as in the cockpit in the mission summary and in the package messages (the Mi-24P's R-863 and R-828 start at channel 0). The .miz keeps its own numbering.
 - Flight packages are recognised by their content, not their file name; unreadable flights are skipped and counted, an empty package or one without theatre is refused, with the same messages as the Route Planner and the Datacard Generator. *Load another .miz* also clears the mission offered to the Route Planner and the Datacard Generator.
 - The Side and Type filters of the flight list open in the suite's own list, like every other list, instead of the system menu.
+- **Wing configuration**: a squadron's aircraft are now picked from the game's flyable types (75, by their name in a .miz, from pydcs 1.0.0), grouped into helicopters and airplanes, with “Other type (mod)…” for a community mod. A name that is not a game type is marked “not in the base game”, with a “Replace with…” list of close types; nothing is blocked. The example uses the game's names (Mi-8MT, MiG-21Bis).
 #### Fixed
 - The interface language is shared with the other tools (HQ kept its own); the language already chosen in HQ is kept.
 
