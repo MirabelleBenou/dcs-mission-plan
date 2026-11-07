@@ -1753,7 +1753,8 @@ select[data-tbm-src] { display: none !important; }
   color: var(--olive-deep); background: var(--amber); border-radius: 2px;
 }
 .ed-field label .sh { align-self: center; }
-.li-u { padding: 6px 8px; }
+.li-u { padding: 6px 8px; grid-template-columns: minmax(0, 1fr) 44px; }
+.li-u .ed-btn-icon { min-width: 44px; min-height: 44px; }
 .li-u .li-main { gap: 6px; }
 .li-u .li-grid { gap: 6px; }
 .li-u .ed-field { gap: 3px; }
@@ -2445,7 +2446,6 @@ const I18N = {
     'f.mission': 'Mission',
     'f.date': 'Date',
     'f.time': 'Heure',
-    'f.callsign': 'Indicatif',
     'f.aircraft': 'Appareil',
     'f.group.deduced': 'Déduit des équipages',
     'f.count': 'Nombre',
@@ -2831,7 +2831,6 @@ const I18N = {
     'f.mission': 'Mission',
     'f.date': 'Date',
     'f.time': 'Time',
-    'f.callsign': 'Callsign',
     'f.aircraft': 'Aircraft',
     'f.group.deduced': 'Deduced from the crew list',
     'f.count': 'Count',
@@ -3859,12 +3858,12 @@ function dgSameFreq(a, b) {
 function dgSetFreq(c, key, el) {
   const g = gsRead(), f = g ? g.flights.find(x => x.fcId === c.gsId) : null, parts = key.split('|');
   if (!f || parts.length !== 3) return;
-  /* la valeur est revenue à celle qu'avait le champ à l'entrée : rien ne s'écrit, aucune confirmation (que le canal diffère ou non) */
-  if (el._dgBase !== undefined && dgSameFreq(el.value, el._dgBase)) { el.value = el._dgBase; dgFreqMsg(el, ''); return; }
   const ty = parts[0], r = parts[1], ch = parts[2], us = dgUnits(f), idx = [];
   us.forEach((u, i) => { if (u.type === ty) idx.push(i); });
   if (!idx.length) return;
   const olds = idx.map(i => dgFreq(us[i], r, ch)), cock = radioCockpitChannel(ty, Number(r), Number(ch));
+  /* la valeur est revenue à celle qu'avait le champ à l'entrée : rien ne s'écrit, aucune confirmation (que le canal diffère ou non) ; le champ montre ce que la fiche porte à cet instant (changée entre-temps ailleurs comprise) et sa base suit */
+  if (el._dgBase !== undefined && dgSameFreq(el.value, el._dgBase)) { el.value = olds[0]; el._dgBase = olds[0]; dgFreqMsg(el, ''); return; }
   const p = dgParseFreq(el.value);
   let msg = '';
   if (p.nan) msg = t('rad.err.nan', { 0: cock, 1: el.value.trim() });
@@ -4029,16 +4028,22 @@ function groupBoxHtml(c) {
   const head = (!lk && c.gsGone ? '<div class="ed-warn">' + esc(t('grp.gone')) + '</div>' : '') +
     '<div class="ed-field-row">' +
     (lk ? fShared('f.group.name', '<input type="text" data-gs="name" value="' + esc(dgStr(f.name)) + '" placeholder="' + esc(t('fl.name.ph')) + '" autocomplete="off" spellcheck="false">') + fShared('f.coalition', selShared('coalition', gsSide(f.coalition), coal))
-      : fInput('f.group.name', 'flight.callsign', c.flight.callsign) + '<div class="ed-field"></div>') + '</div>' +
+      : fInput('f.group.name', 'flight.callsign', c.flight.callsign) + (c.gsGone && c.gsSide ? '<div class="ed-field"><label>' + esc(t('f.coalition')) + '</label><input type="text" value="' + esc(t('coal.' + c.gsSide)) + '" readonly tabindex="-1"></div>' : '<div class="ed-field"></div>')) + '</div>' +
     '<div class="ed-field-row">' + fInput('f.aircraft', 'flight.aircraft', c.flight.aircraft, ro) +
     fInput('f.count', 'flight.count', c.flight.count == null ? '' : String(c.flight.count), ' inputmode="numeric"' + ro) + '</div>' +
     '<div class="ed-field-row">' + fInput('f.task', 'flight.task', c.flight.task) + thr + '</div>';
   if (!lk) {
-    return head + listHtml('crew', c.crew, (x, i) =>
+    /* même ligne que celle d'une carte liée : le ✕ en tête de ses boutons (même place, même taille, même infobulle), ▲ et ▼ en dessous */
+    const frows = c.crew.map((x, i) =>
+      '<div class="li li-u" data-list="crew" data-i="' + i + '"><div class="li-main">' +
       '<div class="li-uh"><span class="li-ut">' + esc(t('cr.unit', { n: i + 1 })) + '</span></div>' +
       '<div class="li-grid g2">' + fInput('f.crew.callsign', 'crew.' + i + '.callsign', x.callsign) + fInput('f.crew.type', 'crew.' + i + '.type', x.type) + '</div>' +
-      '<div class="li-grid g2">' + fInput('f.crew.board', 'crew.' + i + '.board', x.board) + fInput('f.crew.pilot', 'crew.' + i + '.pilot', x.pilot) + '</div>',
-      ['cr.add', { n: c.crew.length, max: LIMITS.crew }]);
+      '<div class="li-grid g2">' + fInput('f.crew.board', 'crew.' + i + '.board', x.board) + fInput('f.crew.pilot', 'crew.' + i + '.pilot', x.pilot) + '</div></div>' +
+      '<div class="li-ctl"><button type="button" class="ed-btn-icon unit-x" data-act="remove" data-list="crew" data-i="' + i + '" title="' + esc(t('cr.remove')) + '" aria-label="' + esc(t('cr.remove')) + '">✕</button>' +
+      '<button type="button" class="ed-btn-icon neutral" data-act="up" data-list="crew" data-i="' + i + '"' + (i === 0 ? ' disabled' : '') + ' title="' + esc(t('li.up')) + '" aria-label="' + esc(t('li.up')) + '">▲</button>' +
+      '<button type="button" class="ed-btn-icon neutral" data-act="down" data-list="crew" data-i="' + i + '"' + (i === c.crew.length - 1 ? ' disabled' : '') + ' title="' + esc(t('li.down')) + '" aria-label="' + esc(t('li.down')) + '">▼</button></div></div>').join('');
+    return head + '<div class="ed-list">' + frows + '</div>' +
+      '<button type="button" class="ed-btn-add" data-act="add" data-list="crew"' + (c.crew.length >= LIMITS.crew ? ' disabled' : '') + '>' + esc(t('cr.add', { n: c.crew.length, max: LIMITS.crew })) + '</button>';
   }
   const units = dgUnits(f), fi = dgFlightPos(f.fcId);
   const opts = DG_UNIT_TYPES.map(ty => [ty, dgTypeLabel(ty)]);
@@ -5151,7 +5156,8 @@ function renderEditor(keep) {
   const cand = keep && act && ed.contains(act) && (act.tagName === 'TEXTAREA' || (act.tagName === 'INPUT' && /^(text|search|tel|url|number)$/.test(act.type))) ? act : null;
   /* Un champ de fréquence n'est gardé que si une saisie y est en cours (non validée, ou une valeur différente de celle de l'entrée) ; sinon le champ neuf prend sa place, avec la valeur à jour, et reçoit le focus */
   const isFreq = !!(cand && cand.dataset && cand.dataset.gs && cand.dataset.gs.indexOf('f.') === 0);
-  const pending = !isFreq || !!cand._dgPend || (cand._dgBase !== undefined && !dgSameFreq(cand.value, cand._dgBase));
+  const isGs = !!(cand && cand.dataset && cand.dataset.gs);
+  const pending = !isGs || !!cand._dgPend || (cand._dgBase !== undefined && !(isFreq ? dgSameFreq(cand.value, cand._dgBase) : cand.value === cand._dgBase));
   const kept = cand && pending ? cand : null;
   const refocus = cand && !pending ? cand : null;
   const sel = cand ? dgFocusSel(cand) : '';
@@ -5281,7 +5287,7 @@ function onEditorInput(e) {
 function onEditorFocusIn(e) {
   const el = e.target;
   if (DG_UI.rendering) return;       /* le focus rendu par un redessin ne change pas la référence */
-  if (el && el.dataset && el.dataset.gs && el.dataset.gs.indexOf('f.') === 0) el._dgBase = el.value;       /* la valeur du champ à l'entrée : la référence de « rien n'a changé » */
+  if (el && el.dataset && el.dataset.gs && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')) el._dgBase = el.value;       /* la valeur du champ à l'entrée : la référence de « rien n'a changé » */
 }
 function onEditorFocusOut(e) {
   const el = e.target;
@@ -5421,7 +5427,7 @@ function setLang(lang) {
   applyI18nStatic();
   updateFlagButton();
   renderAll();
-  if (!document.getElementById('import-modal').hidden) biRefresh();
+  if (!document.getElementById('import-modal').hidden) biRefresh(true);
   if (impIsOpen()) impRender();       /* la fenêtre d'import commune ouverte se traduit, comme au Flight Configurator et au Route Planner */
   grpRetranslate();
 }
@@ -5785,7 +5791,8 @@ function runAllRoutesImport() {
 }
 
 
-function biRefresh() {
+/* lang : la liste se refait pour un changement de langue : les choix de l'utilisateur sont relevés avant et remis ; à toute autre appel (ouverture, source, fichier) elle repart de la présélection */
+function biRefresh(lang) {
   const curRow = document.getElementById('bi-src-current-row');
   const curRadio = document.getElementById('bi-src-current');
   const note = document.getElementById('bi-current-note');
@@ -5833,7 +5840,7 @@ function biRefresh() {
       /* Une carte liée est affichée : un seul choix (une phase, ou les données générales) ; la phase dont l'indicatif est le nom du groupe est présélectionnée, sinon aucune */
       const gn = dgStr(dgFlightOf(cur).name).trim().toLowerCase();
       /* La phase déjà choisie (la fenêtre est ouverte, la langue change) est relevée avant de refaire la liste ; la présélection ne joue que s'il n'y en avait pas */
-      const picked = list.querySelector('input[name="bi-pick"]:checked'), pv = picked ? picked.dataset.i : '';
+      const picked = lang ? list.querySelector('input[name="bi-pick"]:checked') : null, pv = picked ? picked.dataset.i : '';
       const keepIdx = pv === 'general' ? -2 : (pv !== '' && phases[parseInt(pv, 10)] ? parseInt(pv, 10) : -1);
       const pre0 = gn === '' ? -1 : phases.findIndex(ph => phaseIdentity(ph).callsign.trim().toLowerCase() === gn);
       const pre = keepIdx === -1 ? pre0 : keepIdx;
@@ -5842,11 +5849,17 @@ function biRefresh() {
         '<span class="export-png-page-num">' + pad2(i + 1) + '</span><span>' + esc(phaseLabel(ph) || '—') + '</span></label>').join('') +
         '<label class="export-png-page-row"><input type="radio" name="bi-pick" class="export-png-page-cb bi-cb" data-i="general"' + (pre === -2 ? ' checked' : '') + '>' +
         '<span class="export-png-page-num"></span><span>' + esc(t('imp.general')) + '</span></label>';
-    } else list.innerHTML = phases.map((ph, i) =>
-      '<label class="export-png-page-row"><input type="checkbox" class="export-png-page-cb bi-cb" data-i="' + i + '" checked>' +
+    } else {
+      /* changement de langue : les phases cochées et décochées restent comme l'utilisateur les a laissées */
+      const old = lang ? Array.prototype.slice.call(list.querySelectorAll('input[type="checkbox"].bi-cb')) : [];
+      const was = old.length ? new Set(old.filter(x => x.checked).map(x => x.dataset.i)) : null;
+      const on = k => was ? was.has(String(k)) : (k === 'general' ? !phases.length : true);
+      list.innerHTML = phases.map((ph, i) =>
+      '<label class="export-png-page-row"><input type="checkbox" class="export-png-page-cb bi-cb" data-i="' + i + '"' + (on(i) ? ' checked' : '') + '>' +
       '<span class="export-png-page-num">' + pad2(i + 1) + '</span><span>' + esc(phaseLabel(ph) || '—') + '</span></label>').join('') +
-      '<label class="export-png-page-row"><input type="checkbox" class="export-png-page-cb bi-cb" data-i="general"' + (phases.length ? '' : ' checked') + '>' +
+      '<label class="export-png-page-row"><input type="checkbox" class="export-png-page-cb bi-cb" data-i="general"' + (on('general') ? ' checked' : '') + '>' +
       '<span class="export-png-page-num"></span><span>' + esc(t('imp.general')) + '</span></label>';
+    }
   }
   biUpdateGo();
 }
