@@ -3691,7 +3691,7 @@ function dgApplyGroup(c, f, fi) {
   const types = [];
   units.forEach(u => { const ty = dgStr(u.type); if (ty && types.indexOf(ty) < 0) types.push(ty); });
   c.flight.count = units.length || null;
-  c.flight.aircraft = types.join(' / ');
+  c.flight.aircraft = types.join(' + ');
   if (!gsIsObj(c.radioSel)) c.radioSel = {};
   if (typeof c.loadoutFc !== 'boolean') c.loadoutFc = false;
   const z = dgFreeze(f);
@@ -5148,9 +5148,14 @@ function renderEditor(keep) {
   const top = ed.scrollTop;
   const c = curCard();
   const act = document.activeElement;
-  const kept = keep && act && ed.contains(act) && (act.tagName === 'TEXTAREA' || (act.tagName === 'INPUT' && /^(text|search|tel|url|number)$/.test(act.type))) ? act : null;
-  const sel = kept ? dgFocusSel(kept) : '';
-  const caret = kept ? [kept.selectionStart, kept.selectionEnd, kept.selectionDirection] : null;
+  const cand = keep && act && ed.contains(act) && (act.tagName === 'TEXTAREA' || (act.tagName === 'INPUT' && /^(text|search|tel|url|number)$/.test(act.type))) ? act : null;
+  /* Un champ de fréquence n'est gardé que si une saisie y est en cours (non validée, ou une valeur différente de celle de l'entrée) ; sinon le champ neuf prend sa place, avec la valeur à jour, et reçoit le focus */
+  const isFreq = !!(cand && cand.dataset && cand.dataset.gs && cand.dataset.gs.indexOf('f.') === 0);
+  const pending = !isFreq || !!cand._dgPend || (cand._dgBase !== undefined && !dgSameFreq(cand.value, cand._dgBase));
+  const kept = cand && pending ? cand : null;
+  const refocus = cand && !pending ? cand : null;
+  const sel = cand ? dgFocusSel(cand) : '';
+  const caret = cand ? [cand.selectionStart, cand.selectionEnd, cand.selectionDirection] : null;
   DG_UI.rendering = true;
   try {
     document.getElementById('ed-sections').innerHTML = SECTION_IDS.map((id, i) => sectionHtml(id, i, c)).join('');
@@ -5159,6 +5164,13 @@ function renderEditor(keep) {
       nw.replaceWith(kept);
       kept.focus({ preventScroll: true });
       try { kept.setSelectionRange(caret[0], caret[1], caret[2] || 'none'); } catch (err) { /* un champ sans curseur */ }
+    } else if (refocus && sel) {
+      const fresh = ed.querySelector(sel);
+      if (fresh) {
+        fresh._dgBase = fresh.value;
+        fresh.focus({ preventScroll: true });
+        try { fresh.setSelectionRange(caret[0], caret[1], caret[2] || 'none'); } catch (err) { /* un champ sans curseur */ }
+      }
     }
   } finally { DG_UI.rendering = false; }
   ed.scrollTop = top;
@@ -5820,11 +5832,15 @@ function biRefresh() {
     if (one) {
       /* Une carte liée est affichée : un seul choix (une phase, ou les données générales) ; la phase dont l'indicatif est le nom du groupe est présélectionnée, sinon aucune */
       const gn = dgStr(dgFlightOf(cur).name).trim().toLowerCase();
-      const pre = gn === '' ? -1 : phases.findIndex(ph => phaseIdentity(ph).callsign.trim().toLowerCase() === gn);
+      /* La phase déjà choisie (la fenêtre est ouverte, la langue change) est relevée avant de refaire la liste ; la présélection ne joue que s'il n'y en avait pas */
+      const picked = list.querySelector('input[name="bi-pick"]:checked'), pv = picked ? picked.dataset.i : '';
+      const keepIdx = pv === 'general' ? -2 : (pv !== '' && phases[parseInt(pv, 10)] ? parseInt(pv, 10) : -1);
+      const pre0 = gn === '' ? -1 : phases.findIndex(ph => phaseIdentity(ph).callsign.trim().toLowerCase() === gn);
+      const pre = keepIdx === -1 ? pre0 : keepIdx;
       list.innerHTML = phases.map((ph, i) =>
         '<label class="export-png-page-row"><input type="radio" name="bi-pick" class="export-png-page-cb bi-cb" data-i="' + i + '"' + (i === pre ? ' checked' : '') + '>' +
         '<span class="export-png-page-num">' + pad2(i + 1) + '</span><span>' + esc(phaseLabel(ph) || '—') + '</span></label>').join('') +
-        '<label class="export-png-page-row"><input type="radio" name="bi-pick" class="export-png-page-cb bi-cb" data-i="general">' +
+        '<label class="export-png-page-row"><input type="radio" name="bi-pick" class="export-png-page-cb bi-cb" data-i="general"' + (pre === -2 ? ' checked' : '') + '>' +
         '<span class="export-png-page-num"></span><span>' + esc(t('imp.general')) + '</span></label>';
     } else list.innerHTML = phases.map((ph, i) =>
       '<label class="export-png-page-row"><input type="checkbox" class="export-png-page-cb bi-cb" data-i="' + i + '" checked>' +
