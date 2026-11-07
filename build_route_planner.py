@@ -8124,8 +8124,9 @@ function rpImported(res) {
   const a = gsAdoptRoutes({ activate: true });
   if (a.routes.length) frameRoutes(a.routes);
   const extra = adoptText(a, true);
-  const msg = [res && res.text ? res.text : '', extra].filter(x => x !== '').join(' · ');
-  const long = !!(a.skipped || a.other || a.trunc.length || a.nodcs);
+  const failed = !!(res && res.failed);      /* un stockage qui n'écrit pas : le texte d'échec du module, pas « 0 groupe importé » */
+  const msg = [res && res.text && (!failed || res.fcIds.length) ? res.text : '', failed ? t('toast.saveFail') : '', extra].filter(x => x !== '').join(' · ');
+  const long = failed || !!(a.skipped || a.other || a.trunc.length || a.nodcs);
   showToast(msg, Math.max(res && res.ms ? res.ms : 3000, long ? 6000 : 0));
   routesRender();
 }
@@ -8276,10 +8277,10 @@ function gsAutoAssign(list, info) {
   return made;
 }
 
-/* A1 — la reprise des routes. Chaque groupe de la fiche (dans son ordre) qui porte des points (route.points, un point lisible au moins) et n'a pas de routeLink devient une route neuve du Route Planner :
+/* La reprise des routes. Chaque groupe de la fiche (dans son ordre) qui porte des points (route.points, un point lisible au moins) et n'a pas de routeLink devient une route neuve du Route Planner :
    nommée comme le groupe, ses points comme à l'import (30 au plus), flight { groupName, coalition } de provenance ; le groupe la suit ensuite (groupTakes, la copie au format du paquet).
    Le théâtre de la fiche doit être celui du Route Planner et avoir une projection ; sinon, sans aucune route à points, le Route Planner passe au théâtre de la fiche puis reprend ; sinon rien (other).
-   La route active vide et sans groupe prend la première. 12 routes au plus : au-delà le groupe garde sa copie (skipped). Un groupe dont la route a été supprimée garde son routeLink : il n'est pas repris (R469).
+   La route active vide et sans groupe prend la première. 12 routes au plus : au-delà le groupe garde sa copie (skipped). Un groupe dont la route a été supprimée garde son routeLink : il n'est pas repris.
    opts.activate : la première route créée devient active. Rend { made, skipped, other, trunc, nodcs, routes }. */
 function gsAdoptRoutes(opts) {
   opts = opts || {};
@@ -8492,7 +8493,7 @@ function routesBind() {
     if (e.target.checked) PM.checked.add(i); else PM.checked.delete(i);
     pkRender();
   });
-  /* le Flight Configurator écrit la fiche des groupes (ou HQ une autre mission) : les routes que ses groupes portent sont reprises (A1), les groupes de la route et la fenêtre ouverte se redessinent */
+  /* le Flight Configurator écrit la fiche des groupes (ou HQ une autre mission) : les routes que ses groupes portent sont reprises, les groupes de la route et la fenêtre ouverte se redessinent */
   window.addEventListener('storage', e => {
     if (e.key === KEY_SNAPSHOT) routesRender();
     else if (e.key === null || e.key === KEY_FLIGHT_SET) { adoptNotice(gsAdoptRoutes({})); routesRender(); if (rtVisible('ga-modal')) { gaSync(); gaRender(); } }
@@ -10981,7 +10982,7 @@ function init() {
   drInit();
   spInit();
   renderAll();
-  adoptNotice(gsAdoptRoutes({}));      /* les routes que des groupes de la fiche portent déjà (A1), avant le cadrage */
+  adoptNotice(gsAdoptRoutes({}));      /* les routes que des groupes de la fiche portent déjà, avant le cadrage */
   drawLayers();
   frameRoute();
   setBase();

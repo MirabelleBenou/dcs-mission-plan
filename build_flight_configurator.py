@@ -3559,7 +3559,7 @@ function fcImported(res) {
   Object.assign(UI.cmp, { saving: false, err: '', st: null });
   renderAll();
   commitNow();
-  showToast(res.text, res.ms);
+  showToast(res.failed ? res.text + ' · ' + t('toast.gsFull') : res.text, res.failed ? 6000 : res.ms);
 }
 
 

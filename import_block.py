@@ -314,7 +314,7 @@ function impFlightTypes(f) {
 }
 
 /* Un vol lu → une ligne de la liste. En v1 il faut un aircraftType (chaîne) que ses unités sans type prennent ; en v2 chaque unité porte le sien.
-   « géré » : au moins une unité (ou son type de vol) et tous les types dans IMP_TYPES. Sinon (D1) : un groupe sans unité, sa route seule. */
+   « géré » : au moins une unité (ou son type de vol) et tous les types dans IMP_TYPES. Sinon : un groupe sans unité, sa route seule. */
 function impFlightRow(f, v1) {
   if (!gsIsObj(f) || typeof f.groupName !== 'string' || (v1 && typeof f.aircraftType !== 'string')) return null;
   const points = (gsIsObj(f.route) && gsIsObj(f.route.points) && impRouteKeys(f.route.points).length) ? f.route.points : null;
