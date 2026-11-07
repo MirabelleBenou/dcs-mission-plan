@@ -45,6 +45,7 @@ Changes merged since the last release, grouped per tool.
 - A **Route** block above the loadout: pick one of the Route Planner's routes for the group (one route per group), then see it as a paper sketch — waypoints, names, numbered legs — with each leg's magnetic heading and distance in NM. When the route changes in the Route Planner, the group follows it; if it is deleted there, the last copy is kept.
 #### Changed
 - Groups are now shared with the Route Planner: create, rename or re-route a group in either tool and the other follows at once. A group may have no unit yet. A group with no unit is exported route only.
+- **Import** now also reads the Briefing Generator — its groups, their number of aircraft and the radio plan of each aircraft type, cockpit channel numbers converted — with Side, Type and Name filters. A group is completed when its name, case included, and side match; a flight of an aircraft the suite does not handle comes in as a group with its route only. An aircraft the suite does not know by the briefing's name is left for you to pick; the package exports once every type is picked. An imported route now shows in the Route Planner as the group's route.
 
 ### Recon Station
 #### Added
@@ -84,6 +85,7 @@ Changes merged since the last release, grouped per tool.
 - **Open** and **Flight package** also read a flight package in a .zip; a flight without route says *no route*; a refused file says why.
 - Each route now has a stable identifier in the route set (saved files included), so other tools can follow it.
 - **Groups…** replaces “Link to a group”: tick the groups that follow the route, or create one. Imports from HQ or a flight package attach each route to its group, creating it if needed; the flight package exports one flight per group.
+- **Import** replaces “From HQ” and “Flight package”: the same window as the Flight Configurator (mission loaded in HQ, current briefing, flight package .json or .zip, briefing file), bringing the group's aircraft, radios, loadouts and liveries along with its route. A route imported in the Flight Configurator is added here as its group's route.
 #### Fixed
 - Computed magnetic variation now follows DCS for every mission date: years up to 1985 use the IGRF model DCS ships (up to 1.2° closer), later years the previous five-year WMM file, as DCS does (0.2° closer in 1990, 1995 … 2025).
 
