@@ -67,11 +67,14 @@ Changes merged since the last release, grouped per tool.
 #### Added
 - **Mission loaded in HQ** and **Flight package** in the import window: one datacard per flight (navigation, callsign, type, radios; mission date, time and weather from HQ), filtered by side, type and name; from the Route Planner, **all routes** at once, one datacard per route. You pick the radio channels to import. A radio now holds up to 20 channels.
 #### Changed
+- **One datacard per group**: the Datacard Generator now shares the groups of the Flight Configurator and the Route Planner. Each group has its datacard, listed in the new card list; a group's name, side, aircraft (callsign, type, board number) and radio frequencies are edited on either side and follow at once. Radios are shown in one box per aircraft type (“RADIO — MI-24P”), a channel that differs between two aircraft of a type is marked “varies by unit”, and you pick the channels shown on the card, with their name and modulation. The loadout can be taken from the Flight Configurator as a table. Pilots, times, weather, fuel, navigation and notes stay with the datacard. **New datacard** creates a group; **Free card** keeps a datacard outside the groups, and earlier datacards open as free cards.
 - The example loads in the interface language (French or English).
 - Radios imported from HQ or a flight package are named and numbered as in the cockpit (the Mi-24P's R-863 and R-828 start at channel 0); an aircraft type the suite does not know keeps "Radio n" and the mission's channel numbers. With several aircraft types, the channels are chosen per type.
 - **Import JSON** and the import window's **JSON file** both recognise a briefing, a route, a route set (all routes at once) and a flight package; a refused file says why.
 - Day / Night reads Jour / Nuit in French.
 - The **Flight** section is now **Group**, and in **Crew** the **Crew** column becomes **Aircraft**: one line per aircraft (callsign, pilot, type, board number), filled from HQ or a flight package. When every line has a type, the group's aircraft and count follow the lines; the card's header reads “2 × Mi-24P · CAS” (or “1 × Mi-24P + 1 × Mi-8MT”) instead of “Mi-24P · FLIGHT OF 2”. A crew member saved in an older datacard is kept after the pilot's name.
+#### Removed
+- The Datacard Generator's own HQ and flight package imports, replaced by the common import window of the Flight Configurator and the Route Planner.
 #### Fixed
 - In the export window, the page list no longer shows the PDF and PNG choices above it, so it fits on phones.
 - Computed magnetic variation now follows DCS for every mission date: years up to 1985 use the IGRF model DCS ships (up to 1.2° closer), later years the previous five-year WMM file, as DCS does (0.2° closer in 1990, 1995 … 2025).
