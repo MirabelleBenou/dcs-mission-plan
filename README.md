@@ -216,6 +216,13 @@ The output `dist/dcs_mission_plan.html` is the distributable (and the file publi
 └── LICENSE
 ```
 
+### Shared loadout block (`payload_block.py`)
+
+The module's “loadout” part lives in a **shared JavaScript block**, `payload_block.py`: no DOM, no `t()`, no network, it runs alone under `node`. Another module takes it **as is**: the block's text is byte-identical in every `dist/` file that uses it. It reads three tables set before it, under these names: `WEAPON_NAMES` (CLSID → name), `AIRCRAFT_PYLONS` (permitted weapons and masses per station) and `AIRCRAFT_LIMITS` (fuel, countermeasures), the same ones as Mission Tools' Loadout Editor.
+
+- **`parseUnitPayloads(text)`** reads a preset `.lua` file (the Lua subset of those files: tables, strings, numbers, booleans, comments). It returns `{ unitType, supported, presets: [{ name, displayName, pylons: { number: { CLSID, settings? } } }] }`; `supported` is false for any type other than the four handled (the file reads, but is offered to no group). A read error carries `.line` (the line number), `.code` and `.detail`. A station's `settings` are returned as they are.
+- **`buildPayload(type, pylons, { fuel, flare, chaff, gun })`** returns a .miz `payload` object: `pylons` numbered by station (`{ CLSID, settings? }`), `fuel`, `flare`, `chaff`, `gun` brought within the table's limits, and the type's fixed keys (`ammo_type`, `restricted`), as missions write them: the Mi-8MT's fuel is a string, the other three's a number. Helpers read the tables: `payloadPylons(type)`, `payloadWeaponName(clsid)`, `payloadWeaponMass(clsid)`, `payloadDefaults(type)`. `payloadMirrorClsid(clsid, allowedOnTwin)` returns the mirror weapon to put on the twin station (same CLSID, else Left↔Right, else the only weapon with the same name) or an empty string. `payloadWeaponSide(type, clsid)` returns `'L'`, `'R'` or `''`: the side of a weapon whose name is carried by several CLSIDs of the same aircraft, when its CLSID carries one (`Left`/`Right`, `LEFT`/`RIGHT`, `_L`/`_R` at the end); the “left” / “right” text is the caller's. To reuse the block: set the three tables, insert the block's text, call these functions.
+
 ## 🗺️ Roadmap
 
 ### ⏳ Work in Progress

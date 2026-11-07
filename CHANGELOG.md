@@ -98,7 +98,7 @@ Changes merged since the last release, grouped per tool.
 
 ### Field Manual
 #### Added
-- A **Flight Configurator** chapter, with a "The loadout, reusable" section on the shared loadout block.
+- A **Flight Configurator** chapter.
 - **Getting started** on the index page: every tool's Example button.
 #### Changed
 - HQ and Recon Station chapters: the Example button.
