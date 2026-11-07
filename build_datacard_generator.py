@@ -2262,6 +2262,7 @@ const I18N = {
     'ex.page': 'Page',
     'ex.progress': 'Génération {i}/{n}…',
     'ex.error': 'Erreur d\'export : ',
+    'toast.noMeasure': 'Mise en page non mesurée (le module n\'est pas affiché) : rien n\'est exporté.',
     'toast.pngOne': 'PNG exporté ✓',
     'toast.pngMany': '{n} PNG exportés ✓',
     'imp.title': 'Importer dans la datacard',
@@ -2651,6 +2652,7 @@ const I18N = {
     'ex.page': 'Page',
     'ex.progress': 'Generating {i}/{n}…',
     'ex.error': 'Export error: ',
+    'toast.noMeasure': 'Layout not measured (the module is not displayed): nothing was exported.',
     'toast.pngOne': 'PNG exported ✓',
     'toast.pngMany': '{n} PNGs exported ✓',
     'imp.title': 'Import into the datacard',
@@ -3868,9 +3870,16 @@ function dgFreqMsg(el, msg) {
 /* Une fréquence saisie s'écrit dans toutes les unités de ce type, selon la règle du Flight Configurator : la virgule vaut un point, une valeur non numérique ou hors de la bande
    du poste n'est pas écrite (le champ le dit et revient à la fiche), un champ vidé efface la fréquence. Si elle efface une différence entre les unités, une confirmation le dit avant (D9).
    La fiche est relue ici : ni les unités ni les valeurs comparées ne viennent d'un état périmé. */
+function dgSameFreq(a, b) {
+  const x = dgParseFreq(a), y = dgParseFreq(b);
+  if (x.empty || y.empty) return !!x.empty && !!y.empty;
+  return x.v !== undefined && y.v !== undefined && Math.abs(x.v - y.v) < 1e-9;
+}
 function dgSetFreq(c, key, el) {
   const g = gsRead(), f = g ? g.flights.find(x => x.fcId === c.gsId) : null, parts = key.split('|');
   if (!f || parts.length !== 3) return;
+  /* la valeur est revenue à celle qu'avait le champ à l'entrée : rien ne s'écrit, aucune confirmation (que le canal diffère ou non) */
+  if (el._dgBase !== undefined && dgSameFreq(el.value, el._dgBase)) { el.value = el._dgBase; dgFreqMsg(el, ''); return; }
   const ty = parts[0], r = parts[1], ch = parts[2], us = dgUnits(f), idx = [];
   us.forEach((u, i) => { if (u.type === ty) idx.push(i); });
   if (!idx.length) return;
@@ -3879,15 +3888,15 @@ function dgSetFreq(c, key, el) {
   let msg = '';
   if (p.nan) msg = t('rad.err.nan', { 0: cock, 1: el.value.trim() });
   else if (p.v !== undefined && !dgInBand(dgBand(ty, r), p.v)) msg = t('rad.err.range', { 0: cock, 1: dgFmtMHz(p.v), 2: dgBandText(ty, r) });
-  if (msg) { el.value = olds[0]; dgFreqMsg(el, msg); return; }       /* refusée : rien n'est écrit, le champ revient à la fiche */
+  if (msg) { el.value = olds[0]; el._dgBase = olds[0]; dgFreqMsg(el, msg); return; }       /* refusée : rien n'est écrit, le champ revient à la fiche */
   const val = p.empty ? '' : (/\.\d{4,}$/.test(p.x) ? p.x : p.v.toFixed(3));
   dgFreqMsg(el, '');
   if (olds.some(v => v !== olds[0])) {
     const fi = dgFlightPos(f.fcId);
     const list = idx.map((i, k) => dgUnitLabel(f, fi, i) + ' : ' + (olds[k] || '—')).join(' · ');
-    if (!confirm(t('rt.align.confirm', { list: list, freq: val || '—', n: idx.length, type: dgTypeLabel(ty) }))) { el.value = olds[0]; return; }       /* refusé : le champ revient à ce que la fiche porte, rien n'est écrit */
+    if (!confirm(t('rt.align.confirm', { list: list, freq: val || '—', n: idx.length, type: dgTypeLabel(ty) }))) { el.value = olds[0]; el._dgBase = olds[0]; return; }       /* refusé : le champ revient à ce que la fiche porte, rien n'est écrit */
   }
-  el.value = val;
+  el.value = val; el._dgBase = val;
   dgPut(c.gsId, nf => { const nus = dgUnitsOf(nf); idx.forEach(i => { const u = nus[i]; if (!u) return; if (!gsIsObj(u.radios)) u.radios = {}; if (!gsIsObj(u.radios[r])) u.radios[r] = {}; u.radios[r][ch] = val; }); });
   const row = document.querySelector('#editor [data-rc="' + key.replace(/"/g, '') + '"]'), v = row ? row.querySelector('.rc-var') : null;
   if (v) v.remove();
@@ -4012,7 +4021,7 @@ function dgLoadEditorHtml(c) {
   if (!g.groups.length) h += '<div class="ed-help">' + esc(t('lo.empty')) + '</div>';
   if (g.groups.length && g.none.length) h += '<div class="ed-help">' + esc(t('lo.none', { names: g.none.join(', ') })) + '</div>';
   if (g.raw.length) h += '<div class="ed-warn">' + esc(t('lo.raw', { names: g.raw.join(', ') })) + '</div>';
-  return h + (c.gsId ? '<div class="ed-help">' + esc(t('lo.fc.hint')) + '</div>' : '');
+  return (c.gsId ? '' : '<div class="ed-help">' + esc(t('frz.note')) + '</div>') + h + (c.gsId ? '<div class="ed-help">' + esc(t('lo.fc.hint')) + '</div>' : '');
 }
 function dgLoadCardHtml(c) {
   const g = dgLoadView(c);
@@ -4817,7 +4826,10 @@ function planBase(c, nr) {
 
 /* Tant que le bloc Radio tient en page 1, rien ne change. Sinon (la page 1 déborde même sans la navigation, et elle ne déborde plus sans le bloc Radio),
    le bloc Radio forme une page à lui, la dernière : plan.radioPage ; plan.overflowR : cette page déborde. */
+/* La zone de mesure a-t-elle une taille ? Dans un cadre caché (module du shell passé au second plan) elle n'en a pas : rien n'y est mesuré, rien n'est mis en cache */
+function dgMeasurable() { return document.getElementById('measure-root').getBoundingClientRect().width > 0; }
 function planCard(c) {
+  if (!dgMeasurable()) return { split: false, overflow: false, overflow2: false, p2: 'navrefs', radioPage: false, overflowR: false, unmeasured: true };       /* plan provisoire : ni alerte ni cache ; l'aperçu se refait quand le cadre redevient visible */
   const key = CURRENT_LANG + '|' + JSON.stringify(c);
   if (layoutCache.has(key)) return layoutCache.get(key);
   let plan = planBase(c, false);
@@ -4853,6 +4865,7 @@ function cardPages(c, mode) {
 function renderPreview() {
   const c = curCard();
   const res = cardPages(c, doc.mode);
+  DG_UI.needLayout = !!res.plan.unmeasured;
   document.getElementById('preview').innerHTML = res.pages.map(h => '<div class="dc-sheet">' + h + '</div>').join('');
   const warn = document.getElementById('dc-warn');
   if (res.plan.overflow) { warn.textContent = t('warn.overflow'); warn.hidden = false; }
@@ -4861,6 +4874,8 @@ function renderPreview() {
   else { warn.textContent = ''; warn.hidden = true; }
   applyPreviewScale();
 }
+
+function dgRelayout() { if (DG_UI.needLayout && dgMeasurable()) renderPreview(); }
 
 function applyPreviewScale() {
   const wrap = document.getElementById('preview-wrap');
@@ -5128,12 +5143,13 @@ function dgFrozenRadioHtml(c) {
 function dgFrozenSection(id, c) {
   if (!dgFrozen(c)) return '';
   if (id === 'radio') return dgFrozenRadioHtml(c);
-  if (id === 'fuel' && c.loadoutFc) { const h = dgLoadEditorHtml(c); return h ? '<div class="ed-help">' + esc(t('frz.note')) + '</div>' + h : ''; }
   return '';
 }
+/* Une carte libre née d'une carte liée qui portait un emport du FC : la section Carburant et emport garde la case « Emport du Flight Configurator » : cochée, le tableau figé (la liste manuelle est masquée) ; décochée, la saisie à la main, qui s'imprime */
+function dgFrozenLoad(c) { return !c.gsId && gsIsObj(c.frz) && ((Array.isArray(c.frz.loads) && c.frz.loads.length) || (Array.isArray(c.frz.raw) && c.frz.raw.length)); }
 Object.keys(LINKED_BUILDERS).forEach(id => {
   const base = SECTION_BUILDERS[id];
-  SECTION_BUILDERS[id] = c => c.gsId ? LINKED_BUILDERS[id](c) : (id === 'flight' && c.gsGone ? '<div class="ed-warn">' + esc(t('grp.gone')) + '</div>' : '') + dgFrozenSection(id, c) + base(c);
+  SECTION_BUILDERS[id] = c => c.gsId ? LINKED_BUILDERS[id](c) : (id === 'flight' && c.gsGone ? '<div class="ed-warn">' + esc(t('grp.gone')) + '</div>' : '') + (id === 'fuel' && dgFrozenLoad(c) ? LINKED_BUILDERS.fuel(c) : dgFrozenSection(id, c) + base(c));
 });
 
 /* Une carte liée : les sections du groupe passent en tête */
@@ -5280,6 +5296,11 @@ function onEditorInput(e) {
 }
 
 /* La sortie d'un champ de fréquence dont la saisie n'a pas été validée par un « change » (le champ a été gardé à travers un redessin) l'écrit maintenant */
+function onEditorFocusIn(e) {
+  const el = e.target;
+  if (DG_UI.rendering) return;       /* le focus rendu par un redessin ne change pas la référence */
+  if (el && el.dataset && el.dataset.gs && el.dataset.gs.indexOf('f.') === 0) el._dgBase = el.value;       /* la valeur du champ à l'entrée : la référence de « rien n'a changé » */
+}
 function onEditorFocusOut(e) {
   const el = e.target;
   if (DG_UI.rendering || !el || !el._dgPend || !el.dataset || !el.dataset.gs) return;
@@ -5825,7 +5846,17 @@ function biRefresh() {
     list.innerHTML = '';
   } else {
     /* Après les vols, toujours la ligne des données générales : cochée d'office quand le briefing n'a aucun vol. */
-    list.innerHTML = phases.map((ph, i) =>
+    const cur = curCard(), one = !!(cur.gsId && dgFlightOf(cur));
+    if (one) {
+      /* Une carte liée est affichée : un seul choix (une phase, ou les données générales) ; la phase dont l'indicatif est le nom du groupe est présélectionnée, sinon aucune */
+      const gn = dgStr(dgFlightOf(cur).name).trim().toLowerCase();
+      const pre = gn === '' ? -1 : phases.findIndex(ph => phaseIdentity(ph).callsign.trim().toLowerCase() === gn);
+      list.innerHTML = phases.map((ph, i) =>
+        '<label class="export-png-page-row"><input type="radio" name="bi-pick" class="export-png-page-cb bi-cb" data-i="' + i + '"' + (i === pre ? ' checked' : '') + '>' +
+        '<span class="export-png-page-num">' + pad2(i + 1) + '</span><span>' + esc(phaseLabel(ph) || '—') + '</span></label>').join('') +
+        '<label class="export-png-page-row"><input type="radio" name="bi-pick" class="export-png-page-cb bi-cb" data-i="general">' +
+        '<span class="export-png-page-num"></span><span>' + esc(t('imp.general')) + '</span></label>';
+    } else list.innerHTML = phases.map((ph, i) =>
       '<label class="export-png-page-row"><input type="checkbox" class="export-png-page-cb bi-cb" data-i="' + i + '" checked>' +
       '<span class="export-png-page-num">' + pad2(i + 1) + '</span><span>' + esc(phaseLabel(ph) || '—') + '</span></label>').join('') +
       '<label class="export-png-page-row"><input type="checkbox" class="export-png-page-cb bi-cb" data-i="general"' + (phases.length ? '' : ' checked') + '>' +
@@ -5945,8 +5976,9 @@ function dgImported(res) {
 
 /* ============= EXPORT : fenêtre ============= */
 function allExportPages() {
-  /* Toutes les pages de toutes les cartes, dans le mode affiché. */
+  /* Toutes les pages de toutes les cartes, dans le mode affiché. Rien ne part d'un plan non mesuré : cadre caché, aucune page. */
   const out = [];
+  if (!dgMeasurable()) return out;
   doc.cards.forEach((c, ci) => {
     const res = cardPages(c, doc.mode);
     const cs = slug(c.flight.callsign) || ('carte' + (ci + 1));
@@ -6025,6 +6057,7 @@ async function renderPageToPng(html) {
 }
 
 async function executePngExport() {
+  if (!dgMeasurable()) { showToast(t('toast.noMeasure')); return; }       /* jamais d'image d'un plan non mesuré */
   const all = allExportPages();
   const idx = Array.from(document.querySelectorAll('.export-png-page-cb.exp-cb:checked')).map(cb => parseInt(cb.dataset.idx, 10));
   const sel = idx.map(i => all[i]).filter(Boolean);
@@ -6104,6 +6137,7 @@ function bindEvents() {
   const ed = document.getElementById('editor');
   ed.addEventListener('input', onEditorInput);
   ed.addEventListener('change', onEditorInput);
+  ed.addEventListener('focusin', onEditorFocusIn);
   ed.addEventListener('focusout', onEditorFocusOut);
   ed.addEventListener('click', onEditorClick);
   ed.addEventListener('toggle', e => {
@@ -6192,7 +6226,8 @@ function bindEvents() {
   window.addEventListener('beforeprint', fillPrintRoot);
   window.addEventListener('afterprint', clearPrintRoot);
   let rz = null;
-  window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(applyPreviewScale, 60); });
+  window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(applyPreviewScale, 60); dgRelayout(); });
+  if (window.ResizeObserver) new ResizeObserver(dgRelayout).observe(document.getElementById('measure-root'));       /* le cadre redevient visible dans le shell : l'aperçu se refait avec un plan mesuré */
 
   /* Le shell règle le thème en posant body[data-theme] : suivre sans réécrire la clé */
   new MutationObserver(() => {
