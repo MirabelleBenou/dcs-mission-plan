@@ -9,6 +9,7 @@ Blocs partagés insérés tels quels (identiques à l'octet dans les modules qui
   payload_block.py  — lecture d'un .lua de presets, pylônes et armes permis, `payload` d'un .miz ; il lit les constantes WEAPON_NAMES,
                       AIRCRAFT_PYLONS et AIRCRAFT_LIMITS, qui sont celles du Loadout Editor de Mission Tools
   group_store_block.py — la fiche des groupes partagée avec le Route Planner (flight_set_v1) : lecture, écriture groupe par groupe, migration
+  import_block.py   — la fenêtre d'import commune au Route Planner (HQ, briefing en cours, fichier) : lit les sources et écrit dans la fiche ; le module en reçoit un rappel
   magvar_block.py, projection_block.py, route_pack_block.py — la déclinaison magnétique, les projections des théâtres de DCS (llToDcs, dcsToLl) et
                       packPoint (le point d'un paquet, le même texte qu'au Route Planner) : le bloc Route en tire les caps magnétiques, le croquis et les points
   bloc de coordonnées de navigation (COORD_BLOCK ci-dessous) — recopié octet pour octet du Route Planner et du Datacard Generator (empreinte COORD_SHA16) : legCalc, fmtHdg, parseDecl
@@ -25,6 +26,7 @@ import subprocess
 import sys
 
 from group_store_block import build_block as build_group_store_block
+from import_block import build_block as build_import_block, build_css as build_import_css, build_html as build_import_html
 from magvar_block import build_block as build_magvar_block
 from payload_block import build_block as build_payload_block
 from projection_block import build_block as build_projection_block
@@ -543,22 +545,6 @@ I18N_FR = {
     'err.code.unexpected-token': 'élément inattendu',
     'err.code.bad-structure': 'structure inattendue',
 
-    'imp.title': 'Importer dans le module',
-    'imp.src': 'Source',
-    'imp.srcline': 'Source : {0}',
-    'imp.change': 'changer',
-    'imp.src.hq': 'Mission chargée dans HQ',
-    'imp.src.pkg': 'Paquet de vol',
-    'imp.src.rp': 'Route Planner',
-    'imp.src.bg': 'Briefing Generator',
-    'imp.src.dg': 'Datacard Generator',
-    'imp.search': 'Rechercher un groupe…',
-    'imp.showoff': 'Afficher les appareils non gérés',
-    'imp.checkshown': 'Cocher les groupes affichés',
-    'imp.uncheckall': 'Tout décocher',
-    'imp.count': '{0} groupes gérés sur {1}',
-    'imp.count.shown': '{0} affichés',
-    'imp.nomatch': 'Aucun groupe ne correspond.',
 
     'sum.route': 'route {0} pts',
     'sum.radios': 'radios {0} canaux',
@@ -568,42 +554,13 @@ I18N_FR = {
     'sum.loadout.var': 'emports variés',
     'sum.livery': 'livrée {0}',
     'sum.livery.var': 'livrées variées',
+    'sum.type.pick': 'type à choisir',
+    'u.type.pick': '— à choisir —',
+    'u.notype': 'Choisissez le type de l’appareil pour régler ses radios, son emport et sa livrée.',
+    'bar.no.type': 'Export impossible : choisissez le type de chaque appareil ({0}, unité {1}).',
 
-    'imp.soon': 'Pas encore branché : prochain lot.',
-    'imp.hq.none': 'Aucune mission dans HQ : chargez-en une dans HQ (même navigateur).',
-    'imp.hq.ok': '{0} · théâtre {1}',
-    'imp.choose': 'Choisir un fichier…',
-    'imp.pkg.note': 'Un paquet .json ou .zip (exporté par HQ, le Route Planner ou ce module).',
-    'imp.flights': 'Groupes à importer',
-    'imp.none': 'Choisissez une source.',
-    'imp.part.route': 'Route',
-    'imp.part.radios': 'Radios',
-    'imp.part.loadout': 'Emport',
-    'imp.part.livery': 'Livrée',
-    'imp.new': 'nouveau groupe',
-    'imp.exists': 'complète le groupe du module',
-    'imp.unsupported': 'appareil non géré',
-    'imp.units': '{0} unité(s)',
-    'imp.theatre.keep': 'Le théâtre du module ({0}) est conservé ; celui de la source est {1}.',
-    'imp.theatre.set': 'Le théâtre deviendra {0}.',
-    'imp.cancel': 'Annuler',
-    'imp.go': 'Importer',
-    'imp.close': 'Fermer',
-    'imp.done': '{0} groupe(s) importé(s).',
-    'imp.multi': '{0} : plusieurs groupes du module portent ce nom, un nouveau groupe est créé',
-    'imp.nounit': 'aucune unité : il complète un groupe du module',
-    'imp.retype': '{0} : {1} passe de {2} à {3}, ses radios et son emport sont effacés',
 
-    'rej.json': 'Fichier illisible : ce n’est pas du JSON.',
-    'rej.zip': 'Archive illisible : pas de package.json à la racine.',
-    'rej.noTheatre': 'Le paquet n’a pas de théâtre.',
-    'rej.noFlight': 'Aucun groupe lisible dans ce fichier.',
-    'rej.noManaged': 'Aucun groupe d’un appareil géré ici (Mi-24P, Mi-8MT, F-4E, Mirage F1) dans ce paquet : rien n’a changé.',
-    'rej.format': 'Format « {0} » non reconnu ici (attendu : {1}).',
-    'rej.unknown': 'inconnu',
-    'rej.skip': '{0} groupe(s) illisible(s) ignoré(s).',
 
-    'fmt.pkg': 'paquet de vol',
 
     'open.bad': 'Ce fichier n’est pas un fichier de travail ni un paquet de vol.',
     'open.done': 'Fichier ouvert : {0} groupe(s).',
@@ -826,22 +783,6 @@ I18N_EN = {
     'err.code.unexpected-token': 'unexpected token',
     'err.code.bad-structure': 'unexpected structure',
 
-    'imp.title': 'Import into the module',
-    'imp.src': 'Source',
-    'imp.srcline': 'Source: {0}',
-    'imp.change': 'change',
-    'imp.src.hq': 'Mission loaded in HQ',
-    'imp.src.pkg': 'Flight package',
-    'imp.src.rp': 'Route Planner',
-    'imp.src.bg': 'Briefing Generator',
-    'imp.src.dg': 'Datacard Generator',
-    'imp.search': 'Search a group…',
-    'imp.showoff': 'Show unsupported aircraft',
-    'imp.checkshown': 'Tick the shown groups',
-    'imp.uncheckall': 'Untick all',
-    'imp.count': '{0} supported groups out of {1}',
-    'imp.count.shown': '{0} shown',
-    'imp.nomatch': 'No group matches.',
 
     'sum.route': 'route {0} pts',
     'sum.radios': 'radios {0} channels',
@@ -851,42 +792,13 @@ I18N_EN = {
     'sum.loadout.var': 'loadouts vary',
     'sum.livery': 'livery {0}',
     'sum.livery.var': 'liveries vary',
+    'sum.type.pick': 'type to pick',
+    'u.type.pick': '— to pick —',
+    'u.notype': 'Pick the aircraft type to set its radios, loadout and livery.',
+    'bar.no.type': 'Cannot export: pick each aircraft’s type ({0}, unit {1}).',
 
-    'imp.soon': 'Not wired yet: next lot.',
-    'imp.hq.none': 'No mission in HQ: load one in HQ (same browser).',
-    'imp.hq.ok': '{0} · theatre {1}',
-    'imp.choose': 'Choose a file…',
-    'imp.pkg.note': 'A .json or .zip package (exported by HQ, the Route Planner or this module).',
-    'imp.flights': 'Groups to import',
-    'imp.none': 'Choose a source.',
-    'imp.part.route': 'Route',
-    'imp.part.radios': 'Radios',
-    'imp.part.loadout': 'Loadout',
-    'imp.part.livery': 'Livery',
-    'imp.new': 'new group',
-    'imp.exists': 'completes the module’s group',
-    'imp.unsupported': 'aircraft not handled',
-    'imp.units': '{0} unit(s)',
-    'imp.theatre.keep': 'The module’s theatre ({0}) is kept; the source’s is {1}.',
-    'imp.theatre.set': 'The theatre will become {0}.',
-    'imp.cancel': 'Cancel',
-    'imp.go': 'Import',
-    'imp.close': 'Close',
-    'imp.done': '{0} group(s) imported.',
-    'imp.multi': '{0}: several groups in the module have this name, a new group was created',
-    'imp.nounit': 'no aircraft: it can only complete a group in the module',
-    'imp.retype': '{0}: {1} changes from {2} to {3}, its radios and loadout are cleared',
 
-    'rej.json': 'Unreadable file: not JSON.',
-    'rej.zip': 'Unreadable archive: no package.json at the root.',
-    'rej.noTheatre': 'The package has no theatre.',
-    'rej.noFlight': 'No readable group in this file.',
-    'rej.noManaged': 'No group of an aircraft handled here (Mi-24P, Mi-8MT, F-4E, Mirage F1) in this package: nothing has changed.',
-    'rej.format': 'Format “{0}” not recognised here (expected: {1}).',
-    'rej.unknown': 'unknown',
-    'rej.skip': '{0} unreadable group(s) skipped.',
 
-    'fmt.pkg': 'flight package',
 
     'open.bad': 'This file is neither a working file nor a flight package.',
     'open.done': 'File opened: {0} group(s).',
@@ -1558,50 +1470,6 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
 .fc-file .pk-x { margin-left: auto; }
 .fc-h { font-family: var(--f-stencil); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--amber); padding: 8px 0 2px; border-bottom: 1px solid var(--khaki); margin-bottom: 4px; }
 
-/* ---------- La fenêtre d'import (gabarit de celle du Datacard Generator) : l'en-tête et le pied restent visibles, seule la liste défile ---------- */
-.export-modal[hidden] { display: none !important; }
-.export-modal { position: fixed; inset: 0; z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 16px; }
-.export-modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.6); }
-.export-modal-panel { position: relative; background: var(--olive-dark); color: var(--paper); border: 2px solid var(--fc); border-top: 3px solid var(--fc); border-radius: 3px; padding: 22px 26px; max-width: 640px; width: 100%; max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 8px 40px rgba(0,0,0,.6); font-family: var(--f-typewriter); }
-.export-modal-close { position: absolute; top: 6px; right: 10px; min-width: 40px; min-height: 40px; background: none; border: none; color: var(--paper); font-size: 24px; line-height: 1; cursor: pointer; }
-.export-modal-close:hover { color: var(--amber); }
-.export-modal h2 { flex: none; font-family: var(--f-stencil); font-weight: 700; font-size: 18px; letter-spacing: 2px; margin: 0 36px 14px 0; text-transform: uppercase; color: var(--amber); }
-#imp-body { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; overflow-y: auto; }
-.imp-block { margin-bottom: 14px; }
-.imp-block h3 { font-family: var(--f-stencil); font-weight: 700; font-size: 13px; letter-spacing: 2px; margin: 0 0 8px; color: var(--paper-light); text-transform: uppercase; }
-.imp-srcs { flex: none; }
-.imp-srcline { flex: none; margin-bottom: 8px; font-size: 12px; }
-.imp-link { background: none; border: 0; padding: 0 2px; min-height: 36px; font: inherit; color: var(--fc); text-decoration: underline; cursor: pointer; }
-.imp-link:focus-visible { outline: 2px solid var(--fc); outline-offset: 2px; }
-.imp-src { display: flex; align-items: center; gap: 10px; min-height: 36px; font-size: 13px; cursor: pointer; }
-.imp-src.off { opacity: .5; cursor: not-allowed; }
-.imp-src input, .imp-fh input { accent-color: var(--fc); width: 18px; height: 18px; flex: none; }
-.imp-soon { font-style: normal; font-size: 11px; color: var(--khaki-light); }
-.imp-note { font-size: 11px; color: var(--khaki-light); margin: 0 0 6px 28px; line-height: 1.35; word-break: break-word; }
-.imp-file { display: flex; align-items: center; gap: 10px; margin: 2px 0 4px 28px; font-size: 11px; flex-wrap: wrap; }
-.imp-filebtn { background: transparent; border: 1px solid var(--khaki); padding: 6px 12px; min-height: 36px; font-family: inherit; font-size: 11px; cursor: pointer; color: var(--paper); border-radius: 2px; }
-.imp-filebtn:hover, .imp-filebtn:focus-visible { background: var(--olive); border-color: var(--fc); outline: none; }
-.imp-filename { color: var(--khaki-light); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
-.imp-fls { flex: 1 1 auto; min-height: 150px; display: flex; flex-direction: column; margin-bottom: 8px; }
-.imp-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin-bottom: 4px; }
-.imp-tools input[type=search] { flex: 1 1 200px; min-width: 0; min-height: 40px; padding: 0 10px; background: rgba(216,201,165,.92); border: 1px solid var(--khaki); border-left: 3px solid var(--amber-dark); border-radius: 0; font-family: var(--f-typewriter); font-size: 13px; color: var(--ink); }
-.imp-tools input[type=search]:focus { outline: none; border-left-color: var(--red-stamp); box-shadow: 0 0 0 1px var(--fc); }
-.imp-bulk { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
-.imp-list { flex: 1 1 auto; min-height: 90px; overflow-y: auto; border: 1px solid rgba(128,116,84,.5); padding: 4px 10px; background: rgba(0,0,0,.18); }
-.imp-flight { padding: 6px 0; }
-.imp-flight + .imp-flight { border-top: 1px dashed rgba(128,116,84,.5); }
-.imp-flight.off { opacity: .55; }
-.imp-fh { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-height: 36px; font-size: 13px; cursor: pointer; }
-.imp-nm { font-family: var(--f-stencil); letter-spacing: 1px; min-width: 0; overflow-wrap: anywhere; }
-.imp-n { font-size: 11px; color: var(--khaki-light); margin-left: auto; text-align: right; }
-.pk-parts { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0 0 2px 26px; }
-.imp-actions { flex: none; display: flex; justify-content: space-between; gap: 10px; padding-top: 10px; border-top: 1px solid rgba(128,116,84,.5); }
-.imp-btn { background: transparent; border: 2px solid var(--khaki); padding: 8px 18px; min-height: 44px; font-family: var(--f-stencil); font-weight: 700; letter-spacing: 2px; font-size: 13px; cursor: pointer; color: var(--paper); border-radius: 2px; text-transform: uppercase; }
-.imp-btn:hover { background: var(--olive); }
-.imp-btn.go { background: var(--fc-dark); border-color: var(--fc); color: var(--paper-light); }
-.imp-btn:disabled { opacity: .4; cursor: not-allowed; pointer-events: none; }
-@media (max-height: 800px) { .imp-file + .imp-note { display: none; } }
-
 /* ---------- Téléphone ---------- */
 @media (max-width: 539px) {
   .editor { padding: 10px 8px 80px 8px; }
@@ -1612,15 +1480,6 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
   .cmp-list { grid-template-columns: minmax(0, 1fr); }
   .cmp-row { grid-template-columns: 24px minmax(0, 1fr) 70px; gap: 2px 6px; padding: 3px 0; }
   .miz-btn-row .miz-btn { flex: 1 1 100%; justify-content: center; }
-  .export-modal-panel { padding: 12px 12px 10px; }
-  .export-modal h2 { margin-bottom: 8px; font-size: 16px; }
-  .imp-block { margin-bottom: 8px; }
-  .imp-fls { margin-bottom: 4px; }
-  .imp-srcline { margin-bottom: 2px; }
-  .imp-link, .imp-bulk .imp-filebtn, .imp-tools .pk-chk { min-height: 34px; }
-  .imp-tools input[type=search] { min-height: 38px; }
-  .imp-n { margin-left: 0; text-align: left; width: 100%; }
-  .imp-actions .imp-btn { flex: 1; padding: 8px 10px; }
 }
 
 /* R295 : une seule graisse par police embarquée (Oswald 500, Roboto Mono 400, Stardos Stencil 700) */
@@ -1674,23 +1533,9 @@ BODY = r"""
   </div>
 </div>
 
-<!-- FENÊTRE D'IMPORT -->
-<div class="export-modal" id="imp-modal" hidden role="dialog" aria-modal="true" aria-labelledby="imp-modal-title">
-  <div class="export-modal-backdrop" id="imp-modal-backdrop"></div>
-  <div class="export-modal-panel">
-    <button type="button" class="export-modal-close" id="imp-modal-close" data-i18n-title="imp.close" title="Fermer" aria-label="Fermer">×</button>
-    <h2 id="imp-modal-title" data-i18n="imp.title">Importer dans le module</h2>
-    <div id="imp-body"></div>
-    <div class="imp-actions">
-      <button type="button" class="imp-btn" id="imp-cancel" data-i18n="imp.cancel">Annuler</button>
-      <button type="button" class="imp-btn go" id="imp-go" data-i18n="imp.go" disabled>Importer</button>
-    </div>
-  </div>
-</div>
-
+@@IMPORT_HTML@@
 <input type="file" id="fc-in-lua" accept=".lua,text/plain" multiple hidden>
 <input type="file" id="fc-in-open" accept=".json,application/json" hidden>
-<input type="file" id="fc-in-pkg" accept=".json,.zip,application/json,application/zip" hidden>
 <!-- FENÊTRE : NOM DU FICHIER (enregistrement, paquet) -->
 <div class="fn-modal" id="fn-modal" hidden role="dialog" aria-modal="true" aria-labelledby="fn-title">
   <div class="fn-backdrop" id="fn-backdrop"></div>
@@ -1715,7 +1560,7 @@ BUTTONS = '\n  '.join([
     _btn('export', 'export', '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>'),
     _btn('clear', 'clear', '<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>', ' danger'),
 ])
-BODY = BODY.replace('@@BUTTONS@@', BUTTONS)
+BODY = BODY.replace('@@BUTTONS@@', BUTTONS).replace('@@IMPORT_HTML@@\n', build_import_html())
 
 # ---------- Listes au thème de l'interface (copie du composant de HQ) ----------
 JS_TBM = """
@@ -2111,7 +1956,7 @@ const has = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
 
 const TYPE_LABEL = { 'Mi-24P': 'Mi-24P', 'Mi-8MT': 'Mi-8MT', 'F-4E-45MC': 'F-4E-45MC', 'Mirage-F1EE': 'Mirage F1EE' };
 // Canaux par poste (sonde des .miz). Postes offerts : ceux de la table de radio_block.py, sauf le poste HF des deux hélicoptères (seuls R-863 et R-828 servent en com).
-const RADIO_CHANNELS = { 'Mi-24P': { 1: 20, 2: 10 }, 'Mi-8MT': { 1: 20, 2: 10 }, 'F-4E-45MC': { 1: 18, 2: 20 }, 'Mirage-F1EE': { 1: 20, 2: 20 } };
+// RADIO_CHANNELS (les canaux par poste) est défini par le bloc d'import commun.
 // Fréquences : les bandes de chaque poste, en MHz, [bas, haut] bornes comprises, sans contrôle de pas. Table du module : radio_block.py, que BG et DG partagent, ne les porte pas.
 //   Mi-24P, Mi-8MT : R-863 (100 à 149,975 et 220 à 399,975) et R-828 (20 à 59,975) · guide du Mi-24P, partie 15, p. 423.
 //   F-4E-45MC : poste 1 COMM (225 à 399,95) et poste 2 AUX, réception seule (265 à 284,9) · manuel du F-4E, chapitre « UHF Radio ».
@@ -2191,6 +2036,15 @@ function gsMarkAll() {
   GS.theatre = S.theatre;
   GS.live = true;
 }
+// Une unité de la fiche qui porte encore un emport brut (payloadIn, écrit par l'import commun) : restoreFlight l'a converti ; GS.seen garde alors le texte lu tel quel, et l'écart
+// fait réécrire le groupe sans payloadIn (fusion à trois : l'unité du module l'emporte). Rend vrai s'il y a eu un groupe à réécrire.
+function gsHasRawLoadout(raw) { return isObj(raw) && Array.isArray(raw.units) && raw.units.some(u => isObj(u) && isObj(u.payloadIn)); }
+function gsMarkRaw() {
+  const g = gsRead();
+  let any = false;
+  if (g) g.flights.forEach(raw => { if (gsHasRawLoadout(raw) && has(GS.seen, raw.fcId)) { GS.seen[raw.fcId] = gsStable(raw); any = true; } });
+  return any;
+}
 // Un groupe de la fiche que le module a changé : fusion à trois. base = ce qu'on a lu ou écrit la dernière fois (GS.seen), mien = la copie du module, leur = la fiche relue ;
 // pour chaque clé de premier niveau, mien si elle a changé depuis base, sinon leur ; route et routeLink vont ensemble. Rien n'a changé : on n'écrit pas.
 function gsMerge(f) {       // GS.seen[fcId] doit porter la base
@@ -2233,6 +2087,7 @@ function gsAdopt(quiet) {
   restoreState({ theatre: gs.theatre, flights: gs.flights, sel: S.sel });
   S.flights.forEach(f => { if (has(folds, f.fcId)) UI.fold.set(f, folds[f.fcId]); });
   gsMarkAll();
+  gsMarkRaw();
   GS.base = {};
   try { lsSet(KEY_STATE, JSON.stringify({ v: 2, sel: S.sel, mine: LIB.mine })); } catch (e) { /* l'écran marche sans */ }
   if (!quiet) renderAll();
@@ -2266,7 +2121,7 @@ function gsPull() {
   if (!gs) return false;
   const selId = S.flights[S.sel.f] ? S.flights[S.sel.f].fcId : null, byId = {}, inSet = {}, out = [], taken = [];
   S.flights.forEach(f => { byId[f.fcId] = f; });
-  let changed = false;
+  let changed = false, rewrite = false;
   gs.flights.forEach(raw => {
     inSet[raw.fcId] = true;
     const nf = restoreFlight(raw);
@@ -2276,6 +2131,7 @@ function gsPull() {
     if (cur && UI.fold.has(cur)) UI.fold.set(nf, UI.fold.get(cur));
     if (cur && cur.routeLink && nf.routeLink && cur.routeLink.rid === nf.routeLink.rid && (cur.routeLink.name !== nf.routeLink.name || JSON.stringify(cur.route ? cur.route.points : null) !== JSON.stringify(nf.route ? nf.route.points : null))) taken.push({ nf: nf, name: nf.routeLink.name });      // le Route Planner a repris la route de ce groupe
     GS.seen[raw.fcId] = j;
+    if (gsHasRawLoadout(raw)) { GS.seen[raw.fcId] = gsStable(raw); rewrite = true; }       // l'emport brut est converti : le groupe est réécrit sans payloadIn
     out.push(nf);
     changed = true;
   });
@@ -2296,6 +2152,7 @@ function gsPull() {
   if (UI.rtChoose !== null && !S.flights.some(f => f.fcId === UI.rtChoose)) UI.rtChoose = null;
   if (k < 0) Object.assign(UI.cmp, { saving: false, err: '', st: null });       // une saisie en cours (nom de preset) ne se perd que si le groupe choisi a disparu
   renderAll();
+  if (rewrite) commitNow();
   if (taken.length && document.visibilityState === 'visible') {
     const lab = taken.map(x => flightLabel(x.nf, S.flights.indexOf(x.nf)));
     showToast(taken.length === 1 ? tf('route.toast.one', taken[0].name.trim() !== '' ? taken[0].name : t('route.unnamed'), lab[0]) : tf('route.toast.many', lab.join(', ')), 4500);
@@ -2310,14 +2167,14 @@ function gsStorage(e) {
 function gsPackFn(r, th) { return gsPackRoute(r, th, rpRead().state.gs); }
 // Un échec d'écriture de la fiche (stockage plein), dit une fois par série d'échecs
 function gsOnSaveFail() { showToast(tf('toast.gsFull'), 6000); }
-const UNIT_KEYS = ['type', 'name', 'callsign', 'csRaw', 'onboard', 'livery', 'folded', 'radios', 'loadout'];
+const UNIT_KEYS = ['type', 'name', 'callsign', 'csRaw', 'onboard', 'livery', 'folded', 'radios', 'loadout', 'payloadIn'];       // payloadIn : l'emport brut d'un import, converti ici et jamais gardé
 // Un vol de l'état : en v1 (fc_state_v1, fichier de travail d'avant) le type est au vol et chaque unité le prend ; en v2 chaque unité porte le sien.
-// Un vol dont une unité n'a pas un type de PAYLOAD_TYPES est écarté ; un groupe sans unité est valide (né au Route Planner).
+// Un vol dont une unité a un type non vide hors de PAYLOAD_TYPES est écarté ; une unité sans type ('' : à choisir) et un groupe sans unité (né au Route Planner) sont valides.
 function restoreFlight(f) {       // un groupe sans fcId en reçoit un par restoreState (gsLegacyIds) ; ici un identifiant au hasard seulement en dernier recours
   if (!isObj(f)) return null;
   const rawUnits = (Array.isArray(f.units) ? f.units : []).filter(isObj).slice(0, MAX_UNITS);
   const types = rawUnits.map(u => (typeof u.type === 'string' ? u.type : (typeof f.type === 'string' ? f.type : '')));
-  if (types.some(x => PAYLOAD_TYPES.indexOf(x) < 0)) return null;
+  if (types.some(x => x !== '' && PAYLOAD_TYPES.indexOf(x) < 0)) return null;
   const nf = newFlight();
   Object.keys(f).forEach(k => { if (['name', 'type', 'coalition', 'route', 'routeLink', 'units'].indexOf(k) < 0) nf[k] = f[k]; });
   if (typeof nf.fcId !== 'string' || nf.fcId === '') nf.fcId = newId();
@@ -2334,6 +2191,7 @@ function restoreFlight(f) {       // un groupe sans fcId en reçoit un par resto
     nu.loadout = (isObj(u.loadout) && isObj(u.loadout.pylons)) ? u.loadout : null;
     if (nu.loadout) LO_FIELDS.forEach(k => { const c = clampNum(nu.loadout[k], 0, loLimit(nu.type, k), k !== 'fuel'); if (c.v !== null) nu.loadout[k] = c.v; });
     if (nu.loadout && !nu.loadout.base && !nu.loadout.modified && nu.loadout.key !== '~empty') nu.loadout.base = loSnap(nu.loadout);      // un emport d'avant le lot, non modifié : son contenu présent est sa source     // un fichier de travail édité : jamais de valeur négative
+    if (isObj(u.payloadIn) && nu.type !== '') { const lo = loadoutFromPayload(nu.type, u.payloadIn); if (lo) nu.loadout = lo; }       // l'emport brut d'un import (bloc d'import commun) devient l'emport « importé », limites comprises
     return nu;
   });
   if (!nf.units.length && PAYLOAD_TYPES.indexOf(f.type) >= 0) nf.units.push(newUnit(f.type));       // un vol d'avant (le type au vol, sans unité) reprend une unité ; un groupe sans unité en reste sans
@@ -2354,7 +2212,7 @@ function restoreState(st) {
 function newId() { return gsNewId(); }       // l'identifiant d'un groupe est celui du bloc partagé
 // Chaque vol porte un fcId stable, jamais écrit dans le paquet : un vol renommé reste le même vol pour les liens avec le Route Planner et le Datacard Generator.
 const DEFAULT_TYPE = 'Mi-24P';      // la première unité d'un vol neuf ; une unité ajoutée prend le type de la dernière de son vol
-function newUnit(type) { return { type: type || DEFAULT_TYPE, name: '', callsign: '', csRaw: undefined, onboard: '', livery: '', radios: {}, loadout: null, folded: false }; }
+// newUnit(type) et csText(v) sont définis par le bloc d'import commun ; sans type donné, le type par défaut (Mi-24P) ; '' : une unité sans type.
 function newFlight() { return { fcId: newId(), name: '', coalition: '', route: null, units: [newUnit()] }; }
 
 function flightLabel(f, fi) { return f.name.trim() || tf('fl.title', fi + 1); }
@@ -2370,7 +2228,9 @@ function flightTypes(f) {
 function flightTypesLabel(f) { return flightTypes(f).join(' + '); }
 // Les types d'un vol du module, dans l'ordre des unités, distincts, avec le nom d'affichage de chacun.
 function modTypes(f) { const out = []; f.units.forEach(u => { if (out.indexOf(u.type) < 0) out.push(u.type); }); return out; }
-function modTypesLabel(f) { return modTypes(f).map(x => TYPE_LABEL[x] || x).join(' + '); }
+// Le nom d'un type ; '' (une unité sans type, à choisir) se dit « type à choisir ».
+function typeLabel(x) { return x === '' ? t('sum.type.pick') : (TYPE_LABEL[x] || x); }
+function modTypesLabel(f) { return modTypes(f).map(typeLabel).join(' + '); }
 // Un nom de vol se compare rogné des deux côtés ; la casse compte (« Hind 1 » et « HIND 1 » sont deux vols).
 function nameKey(s) { return String(s).trim(); }
 function unitDefaultName(f, fi, ui) { return flightLabel(f, fi) + '-' + (ui + 1); }
@@ -2380,12 +2240,7 @@ function selUnit() {
   return u ? { f: f, fi: S.sel.f, u: u, ui: S.sel.u } : null;
 }
 
-// Indicatif : un nombre s'écrit en nombre, un texte en { name } ; une table importée est gardée telle quelle tant que le champ ne change pas.
-function csText(v) {
-  if (typeof v === 'number') return String(v);
-  if (typeof v === 'string') return v;
-  return (isObj(v) && typeof v.name === 'string') ? v.name : '';
-}
+// Indicatif (csText est celui du bloc d'import) : un nombre s'écrit en nombre, un texte en { name } ; une table importée est gardée telle quelle tant que le champ ne change pas.
 function csValue(u) {
   if (u.csRaw !== undefined && u.csRaw !== null && csText(u.csRaw) === u.callsign) return u.csRaw;
   const x = u.callsign.trim();
@@ -3046,7 +2901,7 @@ function clipText(s, max) { return s.length > max ? s.slice(0, max) + '…' : s;
 function flightSummary(f) {
   const counts = [];       // [type, nombre], dans l'ordre des unités
   f.units.forEach(u => { const c = counts.filter(x => x[0] === u.type)[0]; if (c) c[1]++; else counts.push([u.type, 1]); });
-  const parts = [counts.length ? counts.map(c => c[1] + ' × ' + (TYPE_LABEL[c[0]] || c[0])).join(' + ') : t('fl.nounit')];
+  const parts = [counts.length ? counts.map(c => c[1] + ' × ' + typeLabel(c[0])).join(' + ') : t('fl.nounit')];
   const points = f.route ? routePoints(f.route.points).length : 0;
   if (points) parts.push(tf('sum.route', points));
   const radios = f.units.map(u => radioCount(f, u));
@@ -3060,7 +2915,7 @@ function flightSummary(f) {
 
 // Le résumé d'une unité repliée : nom (ou son défaut), indicatif, livrée (coupée comme au résumé du groupe), emport ; une partie vide se tait.
 function unitSummary(f, fi, u, ui) {
-  const parts = [unitLabel(f, fi, u, ui), TYPE_LABEL[u.type] || u.type];
+  const parts = [unitLabel(f, fi, u, ui), typeLabel(u.type)];
   if (u.callsign.trim() !== '') parts.push(u.callsign.trim());
   if (u.livery.trim() !== '') parts.push(tf('sum.livery', clipText(u.livery.trim(), SUMMARY_LIVERY_MAX)));
   if (u.loadout) parts.push(loadoutSummary(u.loadout));
@@ -3097,11 +2952,13 @@ function exportIssues() {
   const out = [];
   if (!S.theatre) out.push({ key: 'bar.no.theatre', args: [] });
   if (!S.flights.length) out.push({ key: 'bar.no.flight', args: [] });
-  let badFreq = 0;
+  let badFreq = 0, noType = null;
   S.flights.forEach((f, fi) => {
     if (!f.name.trim()) out.push({ key: 'bar.no.name', args: [fi + 1] });
     f.units.forEach(u => radioPosts(u.type).forEach(r => { badFreq += radioIssues(f, u, r).bad.length; }));
+    if (!noType) { const k = f.units.findIndex(u => u.type === ''); if (k >= 0) noType = { key: 'bar.no.type', args: [flightLabel(f, fi), k + 1] }; }       // une unité sans type : le paquet ne s'exporte pas
   });
+  if (noType) out.push(noType);
   const dups = duplicateNames();
   if (dups.length) out.push({ key: 'bar.dup', args: [dups.join(', ')] });
   if (badFreq) out.push({ key: 'bar.bad.freq', args: [badFreq] });
@@ -3239,17 +3096,20 @@ function unitHtml(f, fi, u, ui) {
       ${f.units.length > 1 ? `<button type="button" class="pk-x" data-act="rm-unit" aria-label="${esc(t('u.remove'))}" title="${esc(t('u.remove'))}">✕</button>` : ''}</div>
     <div class="fc-usum" data-sum="unit">${esc(unitSummary(f, fi, u, ui))}</div>
     <div class="fc-ubody"${u.folded ? ' hidden' : ''}><div class="fc-row4">
-      ${fieldHtml(t('u.type'), selectHtml(`${at} data-k="utype"`, t('u.type'), PAYLOAD_TYPES.map(x => ({ v: x, l: TYPE_LABEL[x] || x })), u.type))}
+      ${fieldHtml(t('u.type'), selectHtml(`${at} data-k="utype"`, t('u.type'), (u.type === '' ? [{ v: '', l: t('u.type.pick') }] : []).concat(PAYLOAD_TYPES.map(x => ({ v: x, l: TYPE_LABEL[x] || x }))), u.type))}
       ${fieldHtml(t('u.name'), inputHtml(`${at} data-k="uname"`, u.name, unitDefaultName(f, fi, ui)))}
       ${fieldHtml(t('u.callsign'), inputHtml(`${at} data-k="callsign"`, u.callsign, t('u.opt')))}
       ${fieldHtml(t('u.onboard'), inputHtml(`${at} data-k="onboard"`, u.onboard, t('u.opt')))}
-      ${fieldHtml(t('u.livery'), inputHtml(`${at} data-k="livery" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="lv-list"`, u.livery, t('u.livery.ph')))}
+      ${u.type === '' ? '' : fieldHtml(t('u.livery'), inputHtml(`${at} data-k="livery" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="lv-list"`, u.livery, t('u.livery.ph')))}
     </div>
-    <details class="fc-sub" data-key="${rk}"${openAttr(rk)}><summary>${esc(t('u.radios'))} <span class="fc-sum" data-sum="radios">${esc(radiosSummary(f, u))}</span></summary>
+    ${u.type === '' ? `<p class="pk-note fc-notype">${esc(t('u.notype'))}</p>` : unitSettingsHtml(f, fi, u, ui, rk, at)}
+  </div></div>`;
+}
+function unitSettingsHtml(f, fi, u, ui, rk, at) {
+  return `<details class="fc-sub" data-key="${rk}"${openAttr(rk)}><summary>${esc(t('u.radios'))} <span class="fc-sum" data-sum="radios">${esc(radiosSummary(f, u))}</span></summary>
       <div class="fc-subc">${radiosHtml(f, fi, u, ui)}</div></details>
     <div class="fc-lo-sum"><span class="fc-lo-k">${esc(t('u.loadout'))}</span><span class="fc-lo-v" data-sum="loadout">${esc(loadoutName(u.loadout))}</span>
-      <button type="button" class="fc-see" ${at} data-act="see-cmp">${esc(t('u.see'))}</button></div>
-  </div></div>`;
+      <button type="button" class="fc-see" ${at} data-act="see-cmp">${esc(t('u.see'))}</button></div>`;
 }
 function radiosSummary(f, u) {
   const n = radioCount(f, u);
@@ -3314,9 +3174,10 @@ function refreshSummaries() {
     f.units.forEach((u, ui) => {
       const root = unitEl(fi, ui);
       if (!root) return;
-      root.querySelector('[data-sum="loadout"]').textContent = loadoutName(u.loadout);
+      const lo = root.querySelector('[data-sum="loadout"]'), rd = root.querySelector('[data-sum="radios"]');
+      if (lo) lo.textContent = loadoutName(u.loadout);
       root.querySelector('[data-sum="unit"]').textContent = unitSummary(f, fi, u, ui);
-      root.querySelector('[data-sum="radios"]').textContent = radiosSummary(f, u);
+      if (rd) rd.textContent = radiosSummary(f, u);
     });
   });
 }
@@ -3388,10 +3249,10 @@ function renderRight() {
   const col = document.getElementById('col-right'), su = selUnit();
   CMP.small = col.clientWidth < 900;
   col.innerHTML = `<div id="col-route"></div><section class="fc-block" id="blk-cmp"><div class="fc-bh">${esc(t('sec.cmp'))}</div>
-    <div class="fc-bc">${su ? cmpHtml(su) : `<p class="pk-note">${esc(t(S.flights[S.sel.f] && !S.flights[S.sel.f].units.length ? 'cmp.nounit' : 'cmp.pick'))}</p>`}</div></section><div id="col-presets"></div>`;
+    <div class="fc-bc">${su && su.u.type === '' ? `<p class="pk-note fc-notype">${esc(t('u.notype'))}</p>` : su ? cmpHtml(su) : `<p class="pk-note">${esc(t(S.flights[S.sel.f] && !S.flights[S.sel.f].units.length ? 'cmp.nounit' : 'cmp.pick'))}</p>`}</div></section><div id="col-presets"></div>`;
   if (CMP.ro) { CMP.ro.disconnect(); CMP.ro = null; }
   const wrap = document.getElementById('cmp-wrap');
-  if (su && wrap && typeof ResizeObserver === 'function') {      // si la colonne passe de part et d'autre de 900 px (rotation d'une tablette), l'emport se redessine dans l'autre mode
+  if (su && su.u.type !== '' && wrap && typeof ResizeObserver === 'function') {      // si la colonne passe de part et d'autre de 900 px (rotation d'une tablette), l'emport se redessine dans l'autre mode
     CMP.ro = new ResizeObserver(() => { if ((col.clientWidth < 900) !== CMP.small) renderRight(); else cmpDraw(); });
     CMP.ro.observe(wrap);
   }
@@ -3498,7 +3359,7 @@ function cmpSaveHtml() {
 // ----- Valeurs affichées : listes, masses, cases, total, station jumelle -----
 function cmpUpdate() {
   const su = selUnit(), blk = document.getElementById('blk-cmp');
-  if (!su || !blk) return;
+  if (!su || !blk || su.u.type === '') return;
   const lo = su.u.loadout, C = UI.cmp;
   let total = 0, unknown = false;
   CMP.pyl.forEach(({ n }) => {
@@ -3676,9 +3537,9 @@ async function loadLuaFiles(files) {
 }
 
 
-// ---------- 5. Fenêtre d'import : par source ; par vol, quatre cases comme HQ (Route, Radios, Emport, Livrée) ----------
-// Sources : la mission que HQ garde dans le navigateur, un paquet de vol (.json ou .zip), et trois sources inactives (lot suivant).
-// La mission de HQ (v1 ou v2) ; hqMission() la garde : une lecture à l'ouverture de la fenêtre d'import (et au retour sur l'onglet), pas une par rendu.
+// ---------- 5. Import : la fenêtre est celle du bloc commun (import_block.py) ; ici seulement ses rappels ----------
+// Le bloc lit HQ, le briefing en cours ou un fichier et écrit dans la fiche partagée (emport brut : unité.payloadIn). Le module relit la fiche à son rappel
+// (restoreFlight convertit l'emport brut en emport « importé » et réécrit l'unité sans payloadIn), puis choisit la première unité du premier groupe importé.
 function hqMission() { if (UI.hq === undefined) UI.hq = readHqMission(); return UI.hq; }
 function readHqMission() {
   let o = null;
@@ -3686,220 +3547,19 @@ function readHqMission() {
   const ok = isObj(o) && HQ_MISSION_SCHEMAS.indexOf(o.schema) >= 0 && isObj(o.sourceMission) && typeof o.sourceMission.theatre === 'string' && Array.isArray(o.flights);
   return ok ? o : null;
 }
-// Un vol lu : en v1 il faut un aircraftType (chaîne), que ses unités sans type prennent ; en v2 chaque unité porte le sien. Pris en charge si toutes ses unités ont un type géré.
-function impFlight(f, v1) {
-  if (!isObj(f) || typeof f.groupName !== 'string' || (v1 && typeof f.aircraftType !== 'string')) return null;
-  const points = (isObj(f.route) && isObj(f.route.points) && routeKeys(f.route.points).length) ? f.route.points : null;
-  const units = (Array.isArray(f.units) ? f.units : []).filter(isObj);
-  const g = v1 ? f : { units: f.units };      // en v2 le vol n'a pas de type : seules ses unités parlent
-  const eff = units.length ? units.map(u => unitTypeOf(g, u)) : flightTypes(g);
-  const noUnit = eff.length === 0;      // un vol sans unité ni type (paquet v2 du Route Planner) : il ne fait que compléter un vol du module
-  const supported = !noUnit && eff.every(x => PAYLOAD_TYPES.indexOf(x) >= 0);
-  const hasRadios = units.some(u => Array.isArray(u.radios) && u.radios.some(r => isObj(r) && isObj(r.channels) && Object.keys(r.channels).length));
-  const avail = {
-    route: !!points, radios: hasRadios,
-    loadout: units.some(u => isObj(u.payload) && isObj(u.payload.pylons)),
-    livery: units.some(u => typeof u.liveryId === 'string' && u.liveryId !== '')
-  };
-  PARTS.forEach(p => { avail[p] = avail[p] && (supported || noUnit); });
-  return { groupName: f.groupName, aircraftType: v1 ? f.aircraftType : undefined, types: flightTypes(g), coalition: (f.coalition === 'blue' || f.coalition === 'red') ? f.coalition : '', supported: supported, noUnit: noUnit, points: points, units: units, avail: avail };
+function fcImportBefore() {
+  flushWork();         // ce que l'on a tapé part dans la fiche avant que le bloc la lise
+  UI.clamped = 0;      // le compte des réglages ramenés à la limite est celui de cet import
 }
-// Une source : ses vols lisibles ; ceux d'un appareil géré sont cochés par défaut, sauf pour la mission de HQ (on y choisit parmi beaucoup).
-function impSource(kind, theatre, file, list, v1) {
-  list.forEach(f => { if (isObj(f)) noteLiveries(v1 ? f : { units: f.units }); });
-  const flights = list.map(f => impFlight(f, v1)).filter(Boolean);
-  flights.forEach(f => { f.on = kind !== 'hq' && impOk(f); f.chk = Object.assign({}, f.avail); });
-  return { kind: kind, theatre: theatre, file: file, flights: flights, skipped: list.length - flights.length };
-}
-// Un vol sans unité n'est pris en charge que s'il complète un vol du module (même nom rogné, même camp, un seul candidat) ; sa route seule est alors cochable.
-function impOk(f) { return f.supported || (f.noUnit && findFlights(f).length === 1); }
-function impReadHq(o) {
-  if (!o) return null;
-  const src = impSource('hq', o.sourceMission.theatre, str(o.sourceMission.filename), o.flights, o.schema === 'dcs-mission-snapshot-v1');
-  return src.flights.length ? src : null;
-}
-function impReadPackage(o, fname) {
-  if (typeof o.theatre !== 'string' || o.theatre === '') return { reject: 'rej.noTheatre' };
-  const src = impSource('pkg', o.theatre, fname || '', Array.isArray(o.flights) ? o.flights : [], o.format === 'dcs-flight-package-v1');
-  if (!src.flights.length) return { reject: 'rej.noFlight' };
-  if (!src.flights.some(f => f.supported || f.noUnit)) return { reject: 'rej.noManaged' };       // aucun vol des quatre types : refusé, le travail en cours ne bouge pas
-  return { src: src, ignored: src.flights.filter(f => !impOk(f)).length };
-}
-
-function impOpen() {
-  UI.hq = readHqMission();
-  const hq = impReadHq(UI.hq);
-  UI.imp = { src: hq ? 'hq' : '', hq: hq, pkg: null, q: '', showOff: false, srcOpen: false, msg: '' };
-  renderImport();
-  const m = document.getElementById('imp-modal');
-  m.hidden = false;
-  const first = m.querySelector('input[type=radio]:not(:disabled)');
-  if (first) first.focus();
-}
-function impClose() { document.getElementById('imp-modal').hidden = true; UI.imp = null; }
-function impCur() { const I = UI.imp; return I && (I.src === 'hq' || I.src === 'pkg') ? I[I.src] : null; }
-function impNorm(x) { return String(x).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
-// Dès qu'une source est chargée (un paquet lu, ou la mission de HQ présente), elle se replie en une ligne : la liste prend la place.
-// Avant, rien ne se replie : « Choisir un fichier… » reste visible.
-function impSourcesFolded(I) { return !!impCur() && !I.srcOpen; }
-
-// Les vols affichés : appareils gérés (sauf case cochée), dont le nom de groupe contient la recherche, casse et accents ignorés.
-function impShown(cur) {
-  const I = UI.imp, q = impNorm(I.q.trim()), out = [];
-  cur.flights.forEach((f, i) => { if ((f.supported || f.noUnit || I.showOff) && (q === '' || impNorm(f.groupName).indexOf(q) >= 0)) out.push(i); });
-  return out;
-}
-function impCountText(cur) {
-  const I = UI.imp;
-  let s = tf('imp.count', cur.flights.filter(impOk).length, cur.flights.length);
-  if (I.q.trim() !== '' || I.showOff) s += ' · ' + tf('imp.count.shown', impShown(cur).length);
-  return s;
-}
-function impFlightHtml(cur, i) {
-  const f = cur.flights[i];
-  const exists = findFlights(f).length === 1;
-  const ok = impOk(f);
-  const state = ok ? t(exists ? 'imp.exists' : 'imp.new') : t(f.noUnit ? 'imp.nounit' : 'imp.unsupported');
-  const parts = PARTS.map(p => {
-    const on = f.avail[p] && ok;
-    return `<label class="pk-chk${on ? '' : ' off'}"><input type="checkbox" data-imp-part="${p}" data-imp-i="${i}"${on && f.chk[p] ? ' checked' : ''}${on ? '' : ' disabled'}>${esc(t('imp.part.' + p))}</label>`;
-  }).join('');
-  return `<div class="imp-flight${ok ? '' : ' off'}"><label class="imp-fh"><input type="checkbox" data-imp-flight="${i}"${f.on && ok ? ' checked' : ''}${ok ? '' : ' disabled'}>
-    <span class="imp-nm">${esc(f.groupName)}</span>${f.types.length ? `<span class="snap-flight-tag">${esc(f.types.join(' + '))}</span>` : ''}
-    <span class="imp-n">${esc(state)} · ${esc(tf('imp.units', f.units.length))}</span></label><div class="pk-parts">${parts}</div></div>`;
-}
-function impListHtml(cur) {
-  const shown = impShown(cur);
-  return shown.length ? shown.map(i => impFlightHtml(cur, i)).join('') : `<p class="imp-note" style="margin:6px 0">${esc(t('imp.nomatch'))}</p>`;
-}
-function impSourceRow(I, id, label, extra, disabled, soon) {
-  return `<label class="imp-src${disabled ? ' off' : ''}"><input type="radio" name="imp-src" value="${id}"${I.src === id ? ' checked' : ''}${disabled ? ' disabled' : ''}>
-    <span>${esc(label)}${soon ? ` <em class="imp-soon">· ${esc(soon)}</em>` : ''}</span></label>${extra || ''}`;
-}
-function impSourcesHtml(I) {
-  if (impSourcesFolded(I)) {
-    const name = t(I.src === 'hq' ? 'imp.src.hq' : 'imp.src.pkg');
-    return `<div class="imp-block imp-srcline">${esc(tf('imp.srcline', name))} · <button type="button" class="imp-link" data-act="imp-change-src">${esc(t('imp.change'))}</button></div>`;
-  }
-  const hqNote = `<div class="imp-note">${esc(I.hq ? tf('imp.hq.ok', I.hq.file, I.hq.theatre) : t('imp.hq.none'))}</div>`;
-  const pkgPick = `<div class="imp-file"><button type="button" class="imp-filebtn" data-act="imp-pick-pkg">${esc(t('imp.choose'))}</button><span class="imp-filename">${esc(I.pkg ? I.pkg.file : '')}</span></div><div class="imp-note">${esc(t('imp.pkg.note'))}</div>`
-    + (I.msg ? `<div class="imp-note pk-warn imp-msg" role="alert">⚠ ${esc(t(I.msg))}</div>` : '');
-  const inactive = ['rp', 'bg', 'dg'].map(id => impSourceRow(I, id, t('imp.src.' + id), '', true, t('imp.soon'))).join('');
-  return `<div class="imp-block imp-srcs"><h3>${esc(t('imp.src'))}</h3>${impSourceRow(I, 'hq', t('imp.src.hq'), hqNote, !I.hq)}${impSourceRow(I, 'pkg', t('imp.src.pkg'), pkgPick)}${inactive}</div>`;
-}
-function impFlightsHtml(I, cur) {
-  const theatre = (S.flights.length && S.theatre && S.theatre !== cur.theatre) ? tf('imp.theatre.keep', S.theatre, cur.theatre)
-    : ((!S.theatre || !S.flights.length) ? tf('imp.theatre.set', cur.theatre) : '');
-  return `${cur.skipped ? `<div class="imp-note" style="margin-left:0">⚠ ${esc(tf('rej.skip', cur.skipped))}</div>` : ''}
-    <div class="imp-tools"><input type="search" id="imp-search" autocomplete="off" spellcheck="false" placeholder="${esc(t('imp.search'))}" aria-label="${esc(t('imp.search'))}" value="${esc(I.q)}">
-      <label class="pk-chk"><input type="checkbox" id="imp-showoff"${I.showOff ? ' checked' : ''}>${esc(t('imp.showoff'))}</label></div>
-    <div class="imp-bulk"><button type="button" class="imp-filebtn" data-act="imp-check-shown">${esc(t('imp.checkshown'))}</button><button type="button" class="imp-filebtn" data-act="imp-uncheck-all">${esc(t('imp.uncheckall'))}</button></div>
-    <div class="imp-note" id="imp-count" style="margin:0 0 6px">${esc(impCountText(cur))}</div>
-    <div class="imp-list" id="imp-list">${impListHtml(cur)}</div>
-    ${theatre ? `<div class="imp-note" style="margin-left:0">${esc(theatre)}</div>` : ''}`;
-}
-function renderImport() {
-  const I = UI.imp;
-  if (!I) return;
-  const cur = impCur();
-  document.getElementById('imp-body').innerHTML = impSourcesHtml(I)
-    + `<div class="imp-block imp-fls">${impSourcesFolded(I) ? '' : `<h3>${esc(t('imp.flights'))}</h3>`}${cur ? impFlightsHtml(I, cur) : `<p class="imp-note" style="margin-left:0">${esc(t('imp.none'))}</p>`}</div>`;
-  impUpdateGo();
-}
-// La liste et son compteur seuls : la recherche garde le focus, la liste garde sa position.
-function renderImpList() {
-  const cur = impCur(), list = document.getElementById('imp-list');
-  if (!cur || !list) return;
-  list.innerHTML = impListHtml(cur);
-  document.getElementById('imp-count').textContent = impCountText(cur);
-  impUpdateGo();
-}
-function impUpdateGo() {
-  const cur = impCur(), go = document.getElementById('imp-go');
-  if (go) go.disabled = !(cur && cur.flights.some(f => f.on && impOk(f)));
-}
-// « Cocher les vols affichés » et « Tout décocher » agissent sur les vols visibles après filtre et recherche.
-function impSetShown(on) {
-  const cur = impCur();
-  if (!cur) return;
-  impShown(cur).forEach(i => { if (impOk(cur.flights[i])) cur.flights[i].on = on; });
-  renderImpList();
-}
-
-// ----- Appliquer l'import -----
-// Un vol se retrouve par son nom rogné (casse ignorée) et son camp ; le type n'y entre pas.
-function findFlights(f) { return S.flights.filter(x => nameKey(x.name) === nameKey(f.groupName) && x.coalition === f.coalition); }
-function mergeRadios(unit, type, radios) {
-  radios.forEach(r => {
-    if (!isObj(r) || !isObj(r.channels) || !has(RADIO_CHANNELS[type], r.radioIndex)) return;
-    const post = {};
-    Object.keys(r.channels).forEach(c => {
-      const v = r.channels[c];
-      if (/^\d+$/.test(c) && c >= 1 && c <= RADIO_CHANNELS[type][r.radioIndex] && isNum(v)) post[c] = String(v);
-    });
-    if (Object.keys(post).length) unit.radios[r.radioIndex] = post;
-  });
-}
-// Les unités se complètent par rang. Une unité neuve prend le type de celle de la source ; une unité du module d'un autre type le prend toujours aussi,
-// quelles que soient les parties cochées : ses radios et son emport (qui se lisent selon le type) sont vidés, et un avertissement le dit s'il y en avait.
-function mergeUnit(target, k, iu, chk, src) {
-  let u = target.units[k];
-  const ty = unitTypeOf(src, iu);
-  if (!u) {      // une unité neuve prend l'identité de celle de la source
-    u = newUnit(PAYLOAD_TYPES.indexOf(ty) >= 0 ? ty : (target.units.length ? target.units[target.units.length - 1].type : DEFAULT_TYPE));
-    target.units.push(u);
-    u.name = str(iu.name) === target.name.trim() + '-' + (k + 1) ? '' : str(iu.name);      // le nom par défaut reste un nom par défaut
-    u.csRaw = iu.callsign; u.callsign = csText(iu.callsign);
-    u.onboard = (typeof iu.onboardNum === 'string' || isNum(iu.onboardNum)) ? String(iu.onboardNum) : '';
-  }
-  else if (PAYLOAD_TYPES.indexOf(ty) >= 0 && ty !== u.type) {
-    if (radioCount(target, u) > 0 || u.loadout) {
-      const fi = S.flights.indexOf(target);
-      IMP_WARN.push(tf('imp.retype', flightLabel(target, fi), unitLabel(target, fi, u, k), TYPE_LABEL[u.type] || u.type, TYPE_LABEL[ty] || ty));
-    }
-    u.type = ty; u.radios = {}; u.loadout = null;
-  }
-  if (chk.livery && typeof iu.liveryId === 'string') u.livery = iu.liveryId;
-  if (chk.radios && Array.isArray(iu.radios)) mergeRadios(u, u.type, iu.radios);
-  if (chk.loadout) { const lo = loadoutFromPayload(u.type, iu.payload); if (lo) u.loadout = lo; }
-}
-// Un vol du module de même (nom rogné, camp) est complété par les parties cochées, sinon il est créé ; si plusieurs vols du module sont candidats,
-// un vol neuf est créé et IMP_WARN le dit. Les unités se complètent par rang, 4 au plus.
-// Un vol créé par cet import n'est jamais retrouvé par un vol suivant du même import : le second crée un vol neuf (et l'avertissement).
-let IMP_FIRST = null, IMP_WARN = [];
-function impMerge(list) {
-  IMP_FIRST = null;
-  IMP_WARN = [];
-  const created = new Set();
-  list.forEach(({ f, chk }) => {
-    const hits = findFlights(f);
-    let target = (hits.length === 1 && !created.has(hits[0])) ? hits[0] : null;
-    if (!target && hits.length > 0) IMP_WARN.push(tf('imp.multi', f.groupName.trim()));
-    if (!target) {
-      target = newFlight();
-      Object.assign(target, { name: f.groupName.trim(), coalition: f.coalition, units: [] });
-      S.flights.push(target);
-      created.add(target);
-    }
-    if (!IMP_FIRST) IMP_FIRST = target;
-    if (chk.route && f.points) { target.route = { points: clone(f.points) }; delete target.routeLink; }       // une route importée est un autre plan de vol : le lien avec le Route Planner tombe
-    f.units.slice(0, MAX_UNITS).forEach((iu, k) => mergeUnit(target, k, iu, chk, f));
-    if (!target.units.length) target.units.push(newUnit(PAYLOAD_TYPES.indexOf(f.types[0]) >= 0 ? f.types[0] : DEFAULT_TYPE));      // un vol sans unité : une unité, du type du vol s'il en a un
-  });
-  return list.length;
-}
-function impGo() {
-  const cur = impCur();
-  const picked = cur ? cur.flights.filter(f => f.on && impOk(f)).map(f => ({ f: f, chk: f.chk })) : [];
-  if (!picked.length) return;
-  if (!S.theatre || !S.flights.length) S.theatre = cur.theatre;
-  UI.clamped = 0;          // le compte des réglages ramenés à la limite est celui de cet import
-  const n = impMerge(picked);
-  S.sel = { f: Math.max(0, S.flights.indexOf(IMP_FIRST)), u: 0 };       // la première unité du premier groupe importé
+function fcImported(res) {
+  if (res.failed && !res.fcIds.length) { renderAll(); return; }
+  gsPull();
+  const k = S.flights.findIndex(f => f.fcId === res.fcIds[0]);
+  S.sel = { f: Math.max(0, k), u: 0 };       // la première unité du premier groupe importé
   Object.assign(UI.cmp, { saving: false, err: '', st: null });
-  impClose();
   renderAll();
-  showToast([tf('imp.done', n)].concat(IMP_WARN).join(' · '), IMP_WARN.length ? 7000 : undefined);
+  commitNow();
+  showToast(res.text, res.ms);
 }
 
 
@@ -4026,32 +3686,6 @@ function shareOrDownload(blob, fname, mime, title, download) {
   download(blob, fname);
 }
 
-// Un fichier JSON, ou un .zip qui porte un package.json à la racine : done({ parsed }) ou done({ reject: clé du message }).
-function readJsonFile(file, done) {
-  const parse = text => {
-    try { done({ parsed: JSON.parse(text.charCodeAt(0) === 0xFEFF ? text.slice(1) : text) }); } catch (e) { done({ reject: 'rej.json' }); }
-  };
-  const reader = new FileReader();
-  reader.onerror = () => done({ reject: 'rej.json' });
-  reader.onload = () => {
-    const bytes = new Uint8Array(reader.result);
-    if (!(bytes.length >= 2 && bytes[0] === 0x50 && bytes[1] === 0x4B)) {       // pas de « PK » en tête : un JSON, en UTF-8 ou UTF-16
-      const enc = (bytes[0] === 0xFF && bytes[1] === 0xFE) ? 'utf-16le' : ((bytes[0] === 0xFE && bytes[1] === 0xFF) ? 'utf-16be' : 'utf-8');
-      parse(new TextDecoder(enc).decode(bytes));
-      return;
-    }
-    if (typeof JSZip === 'undefined') { done({ reject: 'rej.zip' }); return; }
-    JSZip.loadAsync(bytes).then(z => { const e = z.file('package.json'); return e ? e.async('string') : null; })
-      .then(text => { if (text === null) done({ reject: 'rej.zip' }); else parse(text); }, () => done({ reject: 'rej.zip' }));
-  };
-  reader.readAsArrayBuffer(file);
-}
-function rejectPackageFormat(parsed) {
-  const f = isObj(parsed) ? (parsed.format || parsed.schema) : undefined;
-  const found = ((typeof f === 'string' && f !== '') || typeof f === 'number') ? String(f) : t('rej.unknown');
-  showToast(tf('rej.format', found, t('fmt.pkg')), 5000);
-}
-
 // Mes presets d'un fichier de travail rejoignent les miens ; un nom déjà pris est ignoré. Un preset garde son identifiant, ou en reçoit un.
 function mergeMine(mine) {
   if (!isObj(mine)) return;
@@ -4078,20 +3712,20 @@ function remapPresetKeys(mine) {
 }
 // Ouvrir : un fichier de travail (clé fc) ou un paquet de vol ; il remplace le contenu du module.
 function openFile(file) {
-  readJsonFile(file, r => {
-    if (r.reject) { showToast(t(r.reject), 5000); return; }
+  impReadJsonFile(file, r => {
+    if (r.reject) { showToast(impT(r.reject), 5000); return; }
     const o = r.parsed;
     let ignored = 0, warn = '', work = false;
     if (isObj(o) && isObj(o.fc) && isObj(o.fc.state) && restoreState(o.fc.state)) { UI.clamped = 0; mergeMine(o.fc.mine); remapPresetKeys(o.fc.mine); work = true; }
     else if (isObj(o) && PACKAGE_FORMATS.indexOf(o.format) >= 0) {
       const res = impReadPackage(o, file.name);
-      if (!res.reject && !res.src.flights.some(f => f.supported)) res.reject = 'rej.noManaged';
-      if (res.reject) { showToast(t(res.reject), 5000); return; }
+      if (!res.reject && !res.src.rows.some(f => f.managed)) res.reject = 'rej.noManaged';
+      if (res.reject) { showToast(impT(res.reject), 5000); return; }
       UI.clamped = 0;
-      ignored = res.src.flights.filter(f => !f.supported).length;
-      Object.assign(S, { theatre: res.src.theatre, flights: [], sel: { f: 0, u: 0 } });
-      impMerge(res.src.flights.filter(f => f.supported).map(f => ({ f: f, chk: f.chk })));
-      warn = IMP_WARN.join(' · ');
+      ignored = res.src.rows.filter(f => !f.managed).length;
+      const built = impBuildGroups(res.src.rows.filter(f => f.managed));
+      restoreState({ theatre: res.src.theatre, flights: built.flights, sel: { f: 0, u: 0 } });       // l'emport brut (payloadIn) est converti par restoreFlight
+      warn = built.warn.join(' · ');
     } else { showToast(t('open.bad'), 5000); return; }
     S.sel = { f: 0, u: 0 };                    // la première unité du premier groupe ouvert
     Object.assign(UI.cmp, { saving: false, err: '', st: null });
@@ -4133,22 +3767,6 @@ function clearAll() {
   renderAll();
   commitNow();
 }
-function impFile(file) {
-  readJsonFile(file, r => {
-    if (r.reject) { showToast(t(r.reject), 5000); return; }
-    if (!isObj(r.parsed) || PACKAGE_FORMATS.indexOf(r.parsed.format) < 0) { rejectPackageFormat(r.parsed); return; }
-    const res = impReadPackage(r.parsed, file.name);
-    if (res.reject === 'rej.noManaged') {       // refusé dans la fenêtre même : le module et la source déjà lue ne bougent pas
-      Object.assign(UI.imp, { src: 'pkg', srcOpen: true, msg: res.reject });
-      renderImport();
-      return;
-    }
-    if (res.reject) { showToast(t(res.reject), 5000); return; }
-    Object.assign(UI.imp, { pkg: res.src, src: 'pkg', srcOpen: false, msg: '' });
-    renderImport();
-  });
-}
-
 // ---------- 7. Événements ----------
 function addFlight() {
   // le vol sur lequel on travaille garde son état, les autres se replient dès qu'il y a plus de deux vols, le nouveau est déplié
@@ -4223,11 +3841,7 @@ const ACTIONS = {
   'cmp-save-go': () => cmpSaveGo(),
   'cmp-clear': () => { const su = selUnit(); if (su) { su.u.loadout = null; UI.cmp.saving = false; renderRight(); refreshAll(); } },
   'load-lua': () => document.getElementById('fc-in-lua').click(),
-  'rm-mine': c => { (LIB.mine[c.b.getAttribute('data-ty')] || []).splice(Number(c.b.getAttribute('data-i')), 1); saveWork(); renderRight(); },
-  'imp-pick-pkg': () => document.getElementById('fc-in-pkg').click(),
-  'imp-change-src': () => { UI.imp.srcOpen = true; renderImport(); },
-  'imp-check-shown': () => impSetShown(true),
-  'imp-uncheck-all': () => impSetShown(false)
+  'rm-mine': c => { (LIB.mine[c.b.getAttribute('data-ty')] || []).splice(Number(c.b.getAttribute('data-i')), 1); saveWork(); renderRight(); }
 };
 function onClick(e) {
   const b = e.target.closest ? e.target.closest('[data-act]') : null;
@@ -4411,34 +4025,17 @@ function bindToolbar() {
     CURRENT_LANG = CURRENT_LANG === 'fr' ? 'en' : 'fr';
     lsSet(KEY_LANG, CURRENT_LANG);
     document.documentElement.lang = CURRENT_LANG;
-    if (UI.imp) renderImport();
+    if (impIsOpen()) impRender();
     renderAll();
   });
   on('btn-open', 'click', () => document.getElementById('fc-in-open').click());
   on('btn-save', 'click', saveFile);
-  on('btn-import', 'click', impOpen);
+  on('btn-import', 'click', e => impOpen({ opener: e.currentTarget }));
   on('btn-export', 'click', exportFile);
   on('btn-clear', 'click', clearAll);
   const fileIn = (id, fn) => on(id, 'change', e => { const files = Array.prototype.slice.call(e.target.files); e.target.value = ''; fn(files); });
   fileIn('fc-in-lua', loadLuaFiles);
   fileIn('fc-in-open', files => { if (files[0]) openFile(files[0]); });
-  fileIn('fc-in-pkg', files => { if (files[0]) impFile(files[0]); });
-}
-function bindImportWindow() {
-  const modal = document.getElementById('imp-modal');
-  ['imp-modal-backdrop', 'imp-modal-close', 'imp-cancel'].forEach(id => document.getElementById(id).addEventListener('click', impClose));
-  document.getElementById('imp-go').addEventListener('click', impGo);
-  modal.addEventListener('click', onClick);
-  modal.addEventListener('input', e => { if (e.target.id === 'imp-search' && UI.imp) { UI.imp.q = e.target.value; renderImpList(); } });
-  modal.addEventListener('change', e => {
-    const el = e.target, I = UI.imp, cur = impCur();
-    if (!I) return;
-    if (el.name === 'imp-src') { Object.assign(I, { src: el.value, srcOpen: false, msg: '' }); renderImport(); }
-    else if (el.id === 'imp-showoff') { I.showOff = el.checked; renderImpList(); }
-    else if (cur && el.hasAttribute('data-imp-flight')) { cur.flights[Number(el.getAttribute('data-imp-flight'))].on = el.checked; impUpdateGo(); }
-    else if (cur && el.hasAttribute('data-imp-part')) cur.flights[Number(el.getAttribute('data-imp-i'))].chk[el.getAttribute('data-imp-part')] = el.checked;
-  });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && UI.imp) impClose(); });
 }
 function init() {
   loadTheme();
@@ -4463,15 +4060,16 @@ function init() {
     else if (ok && saved.v === 1) { restoreState(saved.state); GS.base = {}; S.flights.forEach(f => { GS.base[f.fcId] = gsStable(f); }); }       // le stockage a refusé la fiche : l'état d'avant, tel qu'il est
     if (ok) remapPresetKeys(saved.mine);
   } catch (e) { /* l'écran marche sans */ }
-  if (gsRead() !== null && !adoptFailed) gsMarkAll(); else { GS.seen = {}; GS.theatre = ''; GS.live = false; if (gsRead() === null) GS.mf = true; }       // sans fiche (stockage plein), les groupes restent dans fc_state_v1 jusqu'à ce qu'elle puisse être écrite
+  let rawFix = false;
+  if (gsRead() !== null && !adoptFailed) { gsMarkAll(); rawFix = gsMarkRaw(); } else { GS.seen = {}; GS.theatre = ''; GS.live = false; if (gsRead() === null) GS.mf = true; }       // sans fiche (stockage plein), les groupes restent dans fc_state_v1 jusqu'à ce qu'elle puisse être écrite
   initToolbarMenus([['theme-select', () => t('toolbar.theme.tooltip')]]);
   initFormMenus(sel => sel.getAttribute('aria-label') || '');
   bindColumns();
   bindToolbar();
-  bindImportWindow();
+  impSetup({ lang: () => CURRENT_LANG, before: fcImportBefore, onImported: fcImported, toast: showToast, noteLiveries: noteLiveries });       // la fenêtre d'import du bloc commun
   fnBind();                 // la fenêtre « Nom du fichier »
   const taken = routeSync();      // à l'ouverture : les routes liées reprennent ce que le Route Planner a changé depuis
-  if (taken.changed) writeState();
+  if (taken.changed || rawFix) writeState();
   renderAll();
   if (taken.changed) showToast(taken.toast, 4500);
   window.addEventListener('pagehide', flushWork);
@@ -4511,11 +4109,11 @@ def build_html():
                   .replace('@@STARDOS_700@@', A['STARDOS_700'])
                   .replace('@@OSWALD_500@@', A['OSWALD_500']))
     js = (build_radio_block() + '\n' + tables_js() + '\n' + build_payload_block() + '\n' + PAD2_JS + '\n' + COORD_BLOCK + READNUM_BLOCK + build_magvar_block() + '\n' + build_projection_block() + '\n'
-          + build_route_pack_block() + '\n' + build_group_store_block() + '\n' + JS_TBM + '\n' + app_js())
+          + build_route_pack_block() + '\n' + build_group_store_block() + '\n' + build_import_block() + '\n' + JS_TBM + '\n' + app_js())
     return ('<!DOCTYPE html>\n<html lang="fr">\n<head>\n<meta charset="UTF-8">\n'
             '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">\n'
             '<meta name="theme-color" content="#1a1e10">\n<title>Flight Configurator</title>\n<style>\n'
-            + fonts + CSS_COMMON + CSS_FC + '\n</style>\n'
+            + fonts + CSS_COMMON + CSS_FC + build_import_css() + '\n</style>\n'
             '<!-- JSZip v3.10.1 — embarqué pour lire un paquet .zip -->\n<script>' + A['lib_jszip'] + '</script>\n</head>\n'
             + BODY.replace('@@VERSION@@', APP_VERSION) + '\n<script>\n' + js + '\n</script>\n</body>\n</html>\n')
 
@@ -4530,8 +4128,8 @@ def main():
     check(html)
 
 
-# Familles de textes choisies par programme : « imp.part.* », « imp.src.* », « lo.* », « tb.* », « theme.* », « err.code.* »
-DYNAMIC_KEY_PREFIXES = ('imp.part.', 'imp.src.', 'lo.', 'tb.', 'theme.', 'err.code.')
+# Familles de textes choisies par programme : « lo.* », « tb.* », « theme.* », « err.code.* »
+DYNAMIC_KEY_PREFIXES = ('lo.', 'tb.', 'theme.', 'err.code.')
 
 
 def check(html):
@@ -4571,8 +4169,11 @@ def check(html):
     ok(not re.search(r'fetch\(|XMLHttpRequest|WebSocket|sendBeacon|<script[^>]*\bsrc=|<link[^>]*href=["\']http', own), 'aucune requête réseau (hors JSZip, qui n\'en fait pas)')
     ok(not re.search(r'font-weight:\s*(600|800|900|bold)|font:\s*(600|800|900|bold)\b', own), 'aucune graisse sans sa face (R295)')
     ok('/* ===== POSTES RADIO (COMME AU COCKPIT) ===== */' in html and '/* ===== EMPORT (PRESETS ET PAYLOAD) ===== */' in html, 'blocs partagés présents')
-    for label, blk in (('déclinaison', build_magvar_block()), ('projections', build_projection_block()), ('points de paquet', build_route_pack_block()), ('groupes partagés', build_group_store_block())):
+    for label, blk in (('déclinaison', build_magvar_block()), ('projections', build_projection_block()), ('points de paquet', build_route_pack_block()), ('groupes partagés', build_group_store_block()),
+                       ('import commun (script)', build_import_block()), ('import commun (feuille)', build_import_css()), ('import commun (fenêtre)', build_import_html())):
         ok(blk in html, 'bloc %s inséré tel quel' % label)
+    pt, it = re.search(r"const PAYLOAD_TYPES = \[(.*?)\];", build_payload_block()), re.search(r"const IMP_TYPES = \[(.*?)\];", build_import_block())
+    ok(bool(pt) and bool(it) and pt.group(1) == it.group(1), 'les types du bloc d\'import sont ceux de PAYLOAD_TYPES')
     ok(COORD_BLOCK + READNUM_BLOCK in html and hashlib.sha256(COORD_BLOCK.encode('utf-8')).hexdigest()[:16] == COORD_SHA16, 'bloc de coordonnées inséré tel quel, empreinte %s' % COORD_SHA16)
     if bad:
         sys.exit(1)

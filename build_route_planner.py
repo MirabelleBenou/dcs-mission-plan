@@ -23,6 +23,8 @@ import sys
 from magvar_block import build_block as build_magvar_block
 from route_pack_block import build_block as build_route_pack_block
 from group_store_block import build_block as build_group_store_block
+from radio_block import build_block as build_radio_block
+from import_block import build_block as build_import_block, build_css as build_import_css, build_html as build_import_html
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 APP_VERSION = "1.13.1"
@@ -1331,10 +1333,8 @@ __CSS__
             <button type="button" class="tb-btn danger" id="rs-del" data-i18n="rs.del">Supprimer</button>
           </div>
           <div class="rs-btns">
-            <button type="button" class="tb-btn primary" id="rs-hq" data-i18n="rs.hq">⇣ Depuis HQ</button>
-            <button type="button" class="tb-btn primary" id="rs-pkg" data-i18n="rs.pkg">⇣ Paquet de vol</button>
+            <button type="button" class="tb-btn primary" id="rs-import" data-i18n="rs.import">⇣ Importer</button>
           </div>
-          <input type="file" id="file-pkg" accept=".json,.zip,application/json,application/zip" hidden>
         </div>
         <div class="rn">
           <label class="lbl" for="route-name" data-i18n="f.name">Nom de la route</label>
@@ -1542,32 +1542,7 @@ __CSS__
   </div>
 </div>
 
-<!-- ===== FENÊTRE : DEPUIS HQ (importer des vols) ===== -->
-<div class="rt-modal cf-modal" id="hq-modal" hidden role="dialog" aria-modal="true" aria-labelledby="hq-title">
-  <div class="rt-backdrop" id="hq-backdrop"></div>
-  <div class="rt-panel" role="document">
-    <button type="button" class="rt-close" id="hq-close" data-i18n-aria-label="modal.close" aria-label="Fermer">&times;</button>
-    <h2 id="hq-title"></h2>
-    <p class="rt-file" id="hq-file"></p>
-    <p class="rt-note rt-warn" id="hq-warn" hidden></p>
-    <div class="rt-filters">
-      <div><label class="lbl" for="hq-side" data-i18n="hq.side">Camp</label><select class="in" id="hq-side" data-lbl="hq.side"></select></div>
-      <div><label class="lbl" for="hq-type" data-i18n="hq.type">Type</label><select class="in" id="hq-type" data-lbl="hq.type"></select></div>
-      <div class="nm"><label class="lbl" for="hq-name" data-i18n="hq.name">Nom</label><input class="in" id="hq-name" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
-    </div>
-    <div class="rt-tools" id="hq-tools">
-      <button type="button" class="rt-btn" id="hq-check" data-i18n="hq.checkShown">Cocher les groupes affichés</button>
-      <button type="button" class="rt-btn" id="hq-uncheck" data-i18n="hq.uncheck">Tout décocher</button>
-      <span class="rt-cnt" id="hq-cnt" aria-live="polite"></span>
-    </div>
-    <div class="rt-list" id="hq-list"></div>
-    <p class="rt-note rt-warn" id="hq-limit" hidden></p>
-    <div class="rt-actions">
-      <button type="button" class="rt-btn" id="hq-cancel" data-i18n="rt.cancel">Annuler</button>
-      <button type="button" class="rt-btn go" id="hq-go"></button>
-    </div>
-  </div>
-</div>
+__IMPORT_HTML__
 
 <!-- ===== FENÊTRE : PAQUET DE VOL ===== -->
 <div class="rt-modal cf-modal" id="pk-modal" hidden role="dialog" aria-modal="true" aria-labelledby="pk-title">
@@ -2393,7 +2368,6 @@ const I18N = {
     'rs.add': '+ Route',
     'rs.dup': 'Dupliquer',
     'rs.del': 'Supprimer',
-    'rs.hq': '⇣ Depuis HQ',
     'rs.assign': 'Groupes…',
     'rs.groups': 'Groupes',
     'rs.nogroup': 'Aucun groupe',
@@ -2417,50 +2391,23 @@ const I18N = {
     'ga.warn.proj': 'Le théâtre {th} n\'a pas de projection : les groupes ne peuvent pas suivre cette route.',
     'rs.unnamed': 'Sans nom',
     'rs.copy': '{name} (copie)',
-    'rs.hq.off.none': 'Aucune mission n\'est chargée dans HQ.',
     'rs.hq.off.theatre': 'Le théâtre de la mission de HQ ({th}) n\'a pas de projection.',
-    'hq.title': 'Depuis HQ',
-    'hq.file': 'Mission chargée dans HQ : {f} · {th}',
-    'hq.warn': 'Cette mission est sur {th}, le Route Planner sur {cur} : importer passe au théâtre {th} et supprime les routes existantes.',
     'hq.side': 'Camp',
-    'hq.name': 'Nom',
-    'hq.all': 'Tous',
     'hq.red': 'Rouge',
     'hq.blue': 'Bleu',
     'hq.neutral': 'Neutre',
-    'hq.none': 'Aucun groupe ne correspond.',
-    'hq.pkg.noFlights': 'Le paquet ne contient aucun groupe.',
-    'hq.noFlights': 'La mission ne contient aucun groupe.',
     'hq.pts': '{n} pts',
     'hq.pts.1': '{n} pt',
-    'hq.type': 'Type',
-    'hq.checkShown': 'Cocher les groupes affichés',
-    'hq.uncheck': 'Tout décocher',
-    'hq.shown': '{n} / {total} groupes affichés',
-    'hq.pkg.title': 'Depuis un paquet de vol',
-    'hq.pkg.file': 'Paquet : {f} · {th}',
-    'hq.noroute': 'sans route',
-    'hq.warn.pkg': 'Ce paquet est sur {th}, le Route Planner sur {cur} : importer passe au théâtre {th} et supprime les routes existantes.',
-    'rs.pkg': '⇣ Paquet de vol',
     'rej.json': 'JSON illisible.',
     'rej.zip': 'Archive illisible : pas de package.json à la racine.',
     'rej.format': 'Format « {x} » non pris en charge ici (attendu : {list}).',
     'rej.unknown': 'inconnu',
     'rej.incomplete': 'Fichier « {x} » incomplet : aucune route à points.',
-    'rej.noTheatre': 'Le paquet n\'a pas de théâtre.',
-    'rej.noFlight': 'Le paquet ne contient aucun groupe.',
-    'rej.skip.1': '{n} groupe illisible ignoré.',
-    'rej.skip.n': '{n} groupes illisibles ignorés.',
     'fmt.route': 'route',
     'fmt.set': 'jeu de routes',
     'fmt.pkg': 'paquet de vol',
     'fmt.cf': 'CombatFlite',
     'fmt.rt': 'Route Tool',
-    'err.pkTheatre': 'Le théâtre du paquet ({th}) n\'a pas de projection.',
-    'hq.in': 'déjà en route {n}',
-    'hq.go.1': 'Importer {n} groupe',
-    'hq.go.n': 'Importer {n} groupes',
-    'hq.limit': '12 routes au plus : retirez {n} groupe(s) de la sélection.',
     'pk.btn': '📦 Paquet de vol',
     'pk.title': 'Paquet de vol',
     'pk.note': 'Cochez les routes à exporter : chaque groupe qui en suit une devient un groupe du paquet, que HQ applique à la mission.',
@@ -2480,8 +2427,11 @@ const I18N = {
     'toast.groupsMade.1': '{n} groupe créé',
     'toast.groupsMade.n': '{n} groupes créés',
     'toast.groupsOther': 'groupes non rattachés : ils sont sur {th}',
-    'toast.hqImported.1': '{n} route importée ✓',
-    'toast.hqImported.n': '{n} routes importées ✓',
+    'rs.import': '⇣ Importer',
+    'toast.routesMade.1': '{n} route créée',
+    'toast.routesMade.n': '{n} routes créées',
+    'toast.routesSkip.1': '{n} route non reprise : 12 routes au plus',
+    'toast.routesSkip.n': '{n} routes non reprises : 12 routes au plus',
     'toast.hqTrunc': '{name} : tronquée à 30 points',
     'toast.dcsKept': 'source DCS non gardée : {n} point(s)',
     'toast.saveFail': 'Enregistrement local impossible (espace plein)',
@@ -2925,7 +2875,6 @@ const I18N = {
     'rs.add': '+ Route',
     'rs.dup': 'Duplicate',
     'rs.del': 'Delete',
-    'rs.hq': '⇣ From HQ',
     'rs.assign': 'Groups…',
     'rs.groups': 'Groups',
     'rs.nogroup': 'No group',
@@ -2949,50 +2898,23 @@ const I18N = {
     'ga.warn.proj': 'The {th} theatre has no projection: groups cannot follow this route.',
     'rs.unnamed': 'Unnamed',
     'rs.copy': '{name} (copy)',
-    'rs.hq.off.none': 'No mission is loaded in HQ.',
     'rs.hq.off.theatre': 'The theatre of the HQ mission ({th}) has no projection.',
-    'hq.title': 'From HQ',
-    'hq.file': 'Mission loaded in HQ: {f} · {th}',
-    'hq.warn': 'This mission is on {th}, the Route Planner on {cur}: importing switches to the {th} theatre and deletes the existing routes.',
     'hq.side': 'Side',
-    'hq.name': 'Name',
-    'hq.all': 'All',
     'hq.red': 'Red',
     'hq.blue': 'Blue',
     'hq.neutral': 'Neutral',
-    'hq.none': 'No group matches.',
-    'hq.pkg.noFlights': 'The package contains no group.',
-    'hq.noFlights': 'The mission has no groups.',
     'hq.pts': '{n} pts',
     'hq.pts.1': '{n} pt',
-    'hq.type': 'Type',
-    'hq.checkShown': 'Check shown groups',
-    'hq.uncheck': 'Uncheck all',
-    'hq.shown': '{n} / {total} groups shown',
-    'hq.pkg.title': 'From a flight package',
-    'hq.pkg.file': 'Package: {f} · {th}',
-    'hq.noroute': 'no route',
-    'hq.warn.pkg': 'This package is on {th}, the Route Planner on {cur}: importing switches to the {th} theatre and deletes the existing routes.',
-    'rs.pkg': '⇣ Flight package',
     'rej.json': 'Unreadable JSON.',
     'rej.zip': 'Unreadable archive: no package.json at the root.',
     'rej.format': 'Format "{x}" not supported here (expected: {list}).',
     'rej.unknown': 'unknown',
     'rej.incomplete': 'Incomplete "{x}" file: no route with points.',
-    'rej.noTheatre': 'The package has no theatre.',
-    'rej.noFlight': 'The package contains no group.',
-    'rej.skip.1': '{n} unreadable group skipped.',
-    'rej.skip.n': '{n} unreadable groups skipped.',
     'fmt.route': 'route',
     'fmt.set': 'route set',
     'fmt.pkg': 'flight package',
     'fmt.cf': 'CombatFlite',
     'fmt.rt': 'Route Tool',
-    'err.pkTheatre': 'The package theatre ({th}) has no projection.',
-    'hq.in': 'already in route {n}',
-    'hq.go.1': 'Import {n} group',
-    'hq.go.n': 'Import {n} groups',
-    'hq.limit': 'At most 12 routes: remove {n} group(s) from the selection.',
     'pk.btn': '📦 Flight package',
     'pk.title': 'Flight package',
     'pk.note': 'Check the routes to export: each group that follows one becomes a group of the package, which HQ applies to the mission.',
@@ -3012,8 +2934,11 @@ const I18N = {
     'toast.groupsMade.1': '{n} group created',
     'toast.groupsMade.n': '{n} groups created',
     'toast.groupsOther': 'groups not attached: they are on {th}',
-    'toast.hqImported.1': '{n} route imported ✓',
-    'toast.hqImported.n': '{n} routes imported ✓',
+    'rs.import': '⇣ Import',
+    'toast.routesMade.1': '{n} route created',
+    'toast.routesMade.n': '{n} routes created',
+    'toast.routesSkip.1': '{n} route not taken: 12 routes at most',
+    'toast.routesSkip.n': '{n} routes not taken: 12 routes at most',
     'toast.hqTrunc': '{name}: cut to 30 points',
     'toast.dcsKept': 'DCS source not kept: {n} point(s)',
     'toast.saveFail': 'Cannot save locally (storage full)',
@@ -7756,38 +7681,26 @@ function rejectMsg(key) { showToast(t(key), 5000); }
 function rejectIncomplete(fmt) { showToast(t('rej.incomplete', { x: fmt }), 5000); }
 function isPlainObj(o) { return !!o && typeof o === 'object' && !Array.isArray(o); }
 
-/* Les octets d'un paquet → JSON lu : un .json, ou un .zip (« PK ») qui porte package.json à sa racine ; un refus commun sinon (null).
-   Un .zip qui porte mission.xml et pas de package.json n'est pas un refus ici : { cf: true } (c'est « Ouvrir » qui le lit comme un .cf) */
-async function packageJsonOf(bytes, allowCf, fname) {
-  let text;
-  if (zipIsZip(bytes)) {
-    const ent = zipFindEntry(bytes, 'package.json');
-    if (!ent) {
-      if (allowCf && (/\.cf$/i.test(fname || '') || zipFindEntry(bytes))) return { cf: true };      /* un .cf (par son nom ou son mission.xml) garde les messages de CombatFlite */
-      rejectMsg('rej.zip');
-      return null;
-    }
-    try { text = bytesToText(await zipInflate(ent)); } catch (e) { rejectMsg('rej.zip'); return null; }
-  } else {
-    text = bytesToText(bytes);
-  }
-  try { return { parsed: JSON.parse(text) }; } catch (e) { rejectMsg('rej.json'); return null; }
-}
-
 /* « Ouvrir » : le contenu décide — un zip qui porte package.json est un paquet de vol, sinon un .cf (zip de CombatFlite) ; un texte qui commence par « presets »
    est un fichier du Route Tool (fenêtre de choix), sinon un JSON : jeu de routes, paquet de vol ou route dcs-route-v1 */
 function openRouteFile(file) {
   readFileBytes(file, async bytes => {
-    if (zipIsZip(bytes)) {          /* un .cf (zip de CombatFlite) se reconnaît à ses deux premiers octets, « PK » ; un paquet en .zip, à son package.json */
-      const pj = await packageJsonOf(bytes, true, file.name);
-      if (!pj) return;
-      if (pj.cf) {
-        cfRead(bytes, file.name).then(res => openCfImport(file.name, res))
-          .catch(e => showToast(t(e && e.message === 'nods' ? 'err.cfBrowser' : 'err.cf')));
+    if (zipIsZip(bytes)) {          /* un .cf (zip de CombatFlite) se reconnaît à ses deux premiers octets, « PK » ; un paquet en .zip, à son package.json (lu par le lecteur de la fenêtre d'import) */
+      let ptext = null;
+      try { ptext = await impZipText(bytes); } catch (e) { rejectMsg('rej.zip'); return; }
+      if (ptext === null) {
+        if (/\.cf$/i.test(file.name || '') || zipFindEntry(bytes)) {      /* un .cf (par son nom ou son mission.xml) garde les messages de CombatFlite */
+          cfRead(bytes, file.name).then(res => openCfImport(file.name, res))
+            .catch(e => showToast(t(e && e.message === 'nods' ? 'err.cfBrowser' : 'err.cf')));
+          return;
+        }
+        rejectMsg('rej.zip');
         return;
       }
-      if (!isPlainObj(pj.parsed) || PACKAGE_FORMATS.indexOf(pj.parsed.format) < 0) { rejectFormat(pj.parsed, ['pkg']); return; }      /* un zip ne porte qu'un paquet (ou un .cf) */
-      openPackage(pj.parsed, file.name, $('btn-open'));
+      let pparsed;
+      try { pparsed = JSON.parse(ptext.charCodeAt(0) === 0xFEFF ? ptext.slice(1) : ptext); } catch (e) { rejectMsg('rej.json'); return; }
+      if (!isPlainObj(pparsed) || PACKAGE_FORMATS.indexOf(pparsed.format) < 0) { rejectFormat(pparsed, ['pkg']); return; }      /* un zip ne porte qu'un paquet (ou un .cf) */
+      impOpen({ opener: $('btn-open'), parsed: pparsed, name: file.name });
       return;
     }
     const text = bytesToText(bytes);
@@ -7800,7 +7713,7 @@ function openRouteFile(file) {
     let parsed;
     try { parsed = JSON.parse(text); } catch (e) { rejectMsg('rej.json'); return; }
     if (isPlainObj(parsed) && parsed.format === SET_FORMAT) { openRouteSet(parsed); return; }
-    if (isPlainObj(parsed) && PACKAGE_FORMATS.indexOf(parsed.format) >= 0) { openPackage(parsed, file.name, $('btn-open')); return; }
+    if (isPlainObj(parsed) && PACKAGE_FORMATS.indexOf(parsed.format) >= 0) { impOpen({ opener: $('btn-open'), parsed: parsed, name: file.name }); return; }
     const res = parseRoute(parsed);
     if (!res) {
       if (isPlainObj(parsed) && parsed.format === FORMAT_ID) rejectIncomplete(FORMAT_ID);      /* une route dcs-route-v1 sans liste de points */
@@ -7989,7 +7902,7 @@ function deleteRoute() {
   renderAll();
 }
 
-/* La liste, ses boutons, les groupes de la route, « Depuis HQ » et « Paquet de vol » reflètent les routes */
+/* La liste, ses boutons, les groupes de la route et « Paquet de vol » reflètent les routes */
 function routesRender() {
   if (!S) return;
   syncActive();
@@ -8005,11 +7918,7 @@ function routesRender() {
   const fl = $('rs-groups'), names = groupLabels(r.rid);
   fl.className = 'rs-groups' + (names.length ? '' : ' none');
   fl.innerHTML = names.length ? '<b>' + esc(t('rs.groups')) + '</b><em>' + esc(names.join(' · ')) + '</em>' : esc(t('rs.nogroup'));
-  const snap = readSnapshot();      /* une lecture par rendu */
-  const hq = hqState(snap);
-  $('rs-hq').disabled = !hq.ok;
-  if (hq.ok) $('rs-hq').removeAttribute('title'); else $('rs-hq').title = hq.tip;
-  const pk = packageState(snap);
+  const pk = packageState(readSnapshot());      /* une lecture par rendu */
   $('btn-package').disabled = !pk.ok;
   if (pk.ok) $('btn-package').removeAttribute('title'); else $('btn-package').title = pk.tip;
   dspSync();
@@ -8116,7 +8025,7 @@ function downloadSet(sel, name) {
 function defaultRouteName() { return 'route_' + (cleanFname(slug(S.name)).slice(0, 40) || 'route') + '_' + stamp(); }
 function defaultSetName() { return 'routes_' + stamp(); }
 
-/* ============= DEPUIS HQ ============= */
+/* ============= LECTURE DES VOLS (snapshot de HQ, fiche des groupes) ============= */
 /* Le snapshot de la mission chargée dans HQ (mission_snapshot_v1) : ses vols, le théâtre de la mission */
 function readSnapshot() {
   try {
@@ -8126,29 +8035,9 @@ function readSnapshot() {
   return null;
 }
 
-function snapFlights(snap) {
-  const th = snap.sourceMission.theatre;
-  const v1 = snap.schema === 'dcs-mission-snapshot-v1';
-  return snap.flights.filter(f => f && typeof f === 'object' && typeof f.groupName === 'string' && (!v1 || typeof f.aircraftType === 'string')).map(f => {
-    const points = (f.route && f.route.points && typeof f.route.points === 'object' && !Array.isArray(f.route.points)) ? f.route.points : null;
-    /* nr : aucun point lisible, la liste dit « sans route » (le vol reste coché ou non comme avant : seul le texte change) */
-    const g = v1 ? f : { units: f.units };      /* en v2 le vol n'a pas de type : seules ses unités parlent */
-    return { groupName: f.groupName, types: flightTypes(g), coalition: typeof f.coalition === 'string' ? f.coalition : '', points: points,
-      nr: !snapKeys(points).some(k => pointFromRaw(points[k], k, 0, th)) };
-  });
-}
-
 /* Les clés numériques de la table des points d'un vol, dans l'ordre */
 function snapKeys(points) {
   return points ? Object.keys(points).filter(k => /^\d+$/.test(k)).sort((a, b) => Number(a) - Number(b)) : [];
-}
-
-/* « Depuis HQ » : actif avec un snapshot dont le théâtre a une projection */
-function hqState(known) {
-  const snap = known === undefined ? readSnapshot() : known;
-  if (!snap) return { ok: false, tip: t('rs.hq.off.none'), snap: null };
-  if (!hasRouteTool(snap.sourceMission.theatre)) return { ok: false, tip: t('rs.hq.off.theatre', { th: theatreText(snap.sourceMission.theatre) }), snap: snap };
-  return { ok: true, tip: '', snap: snap };
 }
 
 /* « Paquet de vol » : actif si le théâtre de la route (et celui de la mission de HQ, quand il y en a une) a une projection */
@@ -8192,142 +8081,6 @@ function routeFromFlight(fl, theatre, source) {
   return { route: { rid: newRid(), name: cut60(fl.groupName), points: pts, flight: makeLink(fl, source) }, trunc: trunc, nodcs: nodcs };
 }
 
-/* Les numéros (à partir de 1) des routes liées à ce vol */
-function routesOfFlight(f) {
-  const out = [];
-  RSET.routes.forEach((r, i) => { if (sameFlight(r.flight, f)) out.push(i + 1); });
-  return out;
-}
-
-/* La fenêtre d'import : la source est la mission chargée dans HQ (kind 'hq') ou un paquet de vol ouvert (kind 'pkg') ; elle n'est pas gardée après l'import */
-const HM = { kind: 'hq', theatre: '', file: '', source: null, flights: [], checked: new Set(), side: 'all', type: 'all', name: '' };
-
-function hqVisible() {
-  const side = HM.side, type = HM.type, q = srNorm(HM.name);
-  return HM.flights.map((f, i) => ({ f: f, i: i })).filter(x =>
-    (side === 'all' || x.f.coalition === side) && (type === 'all' || x.f.types.indexOf(type) >= 0) && (q === '' || srNorm(x.f.groupName).indexOf(q) >= 0));
-}
-
-/* Les routes que l'import ajouterait : la route active vide et sans lien prend la première (comme un fichier de route) */
-function hqImportPlan(n) {
-  const th = HM.theatre, other = th !== S.theatre;
-  const replace = !other && routeIsEmpty(RSET.routes[RSET.active]);
-  const total = (other ? 0 : RSET.routes.length - (replace ? 1 : 0)) + n;
-  return { other: other, replace: replace, over: Math.max(0, total - MAX_ROUTES) };
-}
-
-function hqRender() {
-  const pkg = HM.kind === 'pkg', th = HM.theatre, other = th !== S.theatre;
-  $('hq-title').textContent = t(pkg ? 'hq.pkg.title' : 'hq.title');
-  $('hq-file').textContent = t(pkg ? 'hq.pkg.file' : 'hq.file', { f: HM.file, th: theatreText(th) });
-  const w = $('hq-warn');
-  w.hidden = !other;
-  if (other) w.textContent = t(pkg ? 'hq.warn.pkg' : 'hq.warn', { th: theatreText(th), cur: theatreText(S.theatre) });
-  /* le filtre de camp : Tous, Rouge, Bleu (et Neutre si la mission en a) */
-  const sides = [['all', t('hq.all')], ['red', t('hq.red')], ['blue', t('hq.blue')]];
-  if (HM.flights.some(f => f.coalition === 'neutrals')) sides.push(['neutrals', t('hq.neutral')]);
-  const sd = $('hq-side');
-  sd.innerHTML = sides.map(x => '<option value="' + x[0] + '">' + esc(x[1]) + '</option>').join('');
-  sd.value = HM.side;
-  /* le filtre de type : Tous, puis les types d'appareil de la source, triés, sans doublon */
-  const types = HM.flights.reduce((acc, f) => acc.concat(f.types), []).filter((v, i, a) => a.indexOf(v) === i).sort();
-  if (types.indexOf(HM.type) === -1) HM.type = 'all';
-  const td = $('hq-type');
-  td.innerHTML = '<option value="all">' + esc(t('hq.all')) + '</option>' + types.map(x => '<option value="' + esc(x) + '">' + esc(x) + '</option>').join('');
-  td.value = HM.type;
-  hqRenderList();
-}
-
-function hqRenderList() {
-  const vis = hqVisible();
-  $('hq-list').innerHTML = vis.length ? vis.map(x => {
-    const f = x.f, used = routesOfFlight(f), n = f.points ? snapKeys(f.points).length : 0;
-    return '<label class="rt-row' + (f.off ? ' off' : '') + '"><input type="checkbox" name="hq-flight" data-i="' + x.i + '"' + (HM.checked.has(x.i) ? ' checked' : '') + (f.off ? ' disabled' : '') + '>' +
-      '<span class="rt-nm">' + esc(f.groupName) + '</span><span class="rt-n"><span>' + esc([f.types.join(' + '), f.coalition ? sideText(f.coalition).toLowerCase() : '', f.nr ? t('hq.noroute') : ptsText(n)].filter(x => x !== '').join(' · ')) + '</span>' +
-      (used.length ? '<span class="rt-dup">' + esc(t('hq.in', { n: used.join(', ') })) + '</span>' : '') + '</span></label>';
-  }).join('') : '<p class="rt-empty">' + esc(t(HM.flights.length ? 'hq.none' : (HM.kind === 'pkg' ? 'hq.pkg.noFlights' : 'hq.noFlights'))) + '</p>';
-  $('hq-cnt').textContent = t('hq.shown', { n: vis.length, total: HM.flights.length });
-  hqSync();
-}
-
-/* Le bouton : « Importer n vol(s) » (les vols cochés qu'on voit) ; la limite de 12 routes */
-function hqSync() {
-  const go = $('hq-go'), lim = $('hq-limit');
-  const n = hqVisible().filter(x => HM.checked.has(x.i)).length;
-  const plan = hqImportPlan(n);
-  go.textContent = t(CURRENT_LANG === 'fr' ? (n < 2 ? 'hq.go.1' : 'hq.go.n') : (n === 1 ? 'hq.go.1' : 'hq.go.n'), { n: n });
-  go.disabled = n === 0 || plan.over > 0;
-  lim.hidden = plan.over === 0;
-  if (plan.over > 0) lim.textContent = t('hq.limit', { n: plan.over });
-}
-
-/* Ouvre la fenêtre sur une source { kind, theatre, file, source, flights } ; les vols qui ne sont pas encore en route sont cochés */
-function openFlightsModal(src, opener) {
-  syncActive();
-  HM.kind = src.kind;
-  HM.theatre = src.theatre;
-  HM.file = src.file;
-  HM.source = src.source;
-  HM.flights = src.flights;
-  HM.side = 'all';
-  HM.type = 'all';
-  HM.name = '';
-  $('hq-name').value = '';
-  HM.checked = new Set();
-  HM.flights.forEach((f, i) => {
-    if (!f.off && !routesOfFlight(f).length) HM.checked.add(i);       /* un vol déjà en route est décoché par défaut, il reste cochable */
-  });
-  hqRender();
-  rtShow('hq-modal', opener, 'hq-go');
-  const first = $('hq-list').querySelector('input:not(:disabled)');
-  if (first) first.focus({ preventScroll: true });
-}
-
-function openHqModal(opener) {
-  const hq = hqState();
-  if (!hq.ok) { showToast(hq.tip); return; }
-  const sm = hq.snap.sourceMission;
-  openFlightsModal({ kind: 'hq', theatre: sm.theatre, file: sm.filename || '', source: readSource(sm), flights: snapFlights(hq.snap) }, opener);
-}
-
-/* Un paquet de vol (dcs-flight-package-v1 ou v2) lu : la même fenêtre, en mode paquet. Sans théâtre, d'un théâtre sans projection ou sans aucun vol lisible : un message, rien ne s'ouvre ;
-   un vol illisible est ignoré et compté dans un message. Un vol sans point lisible est inactif. Le paquet n'est pas gardé. */
-function openPackage(parsed, fname, opener) {
-  const th = typeof parsed.theatre === 'string' ? parsed.theatre : '';
-  if (th === '') { rejectMsg('rej.noTheatre'); return; }
-  if (!hasRouteTool(th)) { showToast(t('err.pkTheatre', { th: theatreText(th) }), 5000); return; }
-  const list = Array.isArray(parsed.flights) ? parsed.flights : [];
-  const flights = [];
-  const v1 = parsed.format === 'dcs-flight-package-v1';
-  list.forEach(f => {
-    if (!f || typeof f !== 'object' || Array.isArray(f) || typeof f.groupName !== 'string' || (v1 && typeof f.aircraftType !== 'string')) return;
-    const points = (f.route && f.route.points && typeof f.route.points === 'object' && !Array.isArray(f.route.points)) ? f.route.points : null;
-    const off = !snapKeys(points).some(k => pointFromRaw(points[k], k, 0, th));
-    flights.push({ groupName: f.groupName, types: flightTypes(v1 ? f : { units: f.units }), coalition: typeof f.coalition === 'string' ? f.coalition : '', points: points, off: off, nr: off });
-  });
-  if (!flights.length) { rejectMsg('rej.noFlight'); return; }
-  openFlightsModal({ kind: 'pkg', theatre: th, file: fname || '', source: readSource(parsed.sourceMission), flights: flights }, opener);
-  const skipped = list.length - flights.length;
-  if (skipped) showToast(t(cfOne(skipped) ? 'rej.skip.1' : 'rej.skip.n', { n: skipped }), 5000);
-}
-
-/* « ⇣ Paquet de vol » : le sélecteur de fichier (.json ou .zip), puis la fenêtre */
-function openPackageFile(file) {
-  readFileBytes(file, async bytes => {
-    const pj = await packageJsonOf(bytes, false);
-    if (!pj) return;
-    if (!isPlainObj(pj.parsed) || PACKAGE_FORMATS.indexOf(pj.parsed.format) < 0) { rejectFormat(pj.parsed, ['pkg']); return; }
-    openPackage(pj.parsed, file.name, $('rs-pkg'));
-  }, () => rejectMsg('rej.json'));
-}
-
-/* Changer de théâtre supprime les routes : la confirmation, s'il y a quelque chose à perdre */
-function confirmTheatreReset(th) {
-  const n = RSET.routes.length;
-  if (!RSET.routes.some(r => r.points.length || r.flight)) return true;
-  return confirm(t(n === 1 ? 'confirm.theatre.1' : 'confirm.theatre', { th: theatreText(th), n: n }));
-}
-
 /* Le théâtre change comme aujourd'hui (setTheatre : références, calques et réglages partagés suivent), puis toutes les routes sont supprimées */
 function resetRoutesForTheatre(th, routes) {
   RSET = { active: 0, routes: routes && routes.length ? routes : [blankRoute(new Set())] };
@@ -8349,43 +8102,32 @@ function frameRoutes(list) {
   });
 }
 
-function hqGo() {
-  const picks = hqVisible().filter(x => HM.checked.has(x.i));
-  if (!picks.length) return;
-  const th = HM.theatre;
-  if (!hasRouteTool(th)) return;
-  syncActive();
-  const plan = hqImportPlan(picks.length);
-  if (plan.over > 0) return;
-  if (plan.other && !confirmTheatreReset(th)) return;
-  let trunc = [], nodcs = 0;
-  const made = picks.map(x => {
-    const r = routeFromFlight(HM.flights[x.i], th, HM.source);
-    nodcs += r.nodcs;
-    if (r.trunc) trunc.push(r.route.name);
-    return r.route;
-  });
-  rtHide('hq-modal');
-  if (plan.other) {
-    resetRoutesForTheatre(th, made);
-  } else {
-    const list = RSET.routes.slice();
-    let act;
-    if (plan.replace) { list[RSET.active] = made[0]; act = RSET.active; list.push.apply(list, made.slice(1)); }
-    else { act = list.length; list.push.apply(list, made); }
-    RSET.routes = list;
-    RSET.active = act;
-    const a = list[act];
-    S.name = a.name; S.points = a.points;
-    sel = -1; selR = -1;
-    persistState();
-    renderAll();
-  }
-  frameRoutes(made);
-  const info = {};
-  const groups = gsAutoAssign(made, info);      /* chaque route neuve prend son groupe, ou en crée un */
+/* ============= IMPORT COMMUN : ce que le Route Planner donne à la fenêtre (import_block.py) =============
+   La fenêtre écrit dans la fiche des groupes ; le Route Planner reprend ensuite les routes que des groupes y portent (gsAdoptRoutes). */
+function rpImportBefore() { syncActive(); }
+/* Le texte de la reprise : « n route(s) créée(s) », « n route(s) non reprise(s) : 12 routes au plus », puis, à l'import, les groupes d'un autre théâtre, les routes tronquées, les sources non gardées */
+function adoptText(a, say) {
+  const parts = [];
+  if (a.made) parts.push(t(a.made === 1 ? 'toast.routesMade.1' : 'toast.routesMade.n', { n: a.made }));
+  if (a.skipped) parts.push(t(a.skipped === 1 ? 'toast.routesSkip.1' : 'toast.routesSkip.n', { n: a.skipped }));
+  if (say && a.other) parts.push(t('toast.groupsOther', { th: theatreText(a.other) }));
+  if (a.trunc.length) parts.push(t('toast.hqTrunc', { name: a.trunc.join(', ') }));
+  if (a.nodcs) parts.push(t('toast.dcsKept', { n: a.nodcs }));
+  return parts.join(' · ');
+}
+function adoptNotice(a) {
+  const txt = adoptText(a, false);
+  if (txt !== '') showToast(txt, (a.skipped || a.trunc.length || a.nodcs) ? 6000 : 3500);
+}
+/* Après l'import : les routes des groupes importés, cadrées, la première active ; le toast du bloc, puis celui de la reprise */
+function rpImported(res) {
+  const a = gsAdoptRoutes({ activate: true });
+  if (a.routes.length) frameRoutes(a.routes);
+  const extra = adoptText(a, true);
+  const msg = [res && res.text ? res.text : '', extra].filter(x => x !== '').join(' · ');
+  const long = !!(a.skipped || a.other || a.trunc.length || a.nodcs);
+  showToast(msg, Math.max(res && res.ms ? res.ms : 3000, long ? 6000 : 0));
   routesRender();
-  showToast(t(made.length === 1 ? 'toast.hqImported.1' : 'toast.hqImported.n', { n: made.length }) + (groups ? ' · ' + t(groups === 1 ? 'toast.groupsMade.1' : 'toast.groupsMade.n', { n: groups }) : '') + (info.other ? ' · ' + t('toast.groupsOther', { th: theatreText(info.other) }) : '') + (info.failed ? ' · ' + t('toast.saveFail') : '') + (trunc.length ? ' · ' + t('toast.hqTrunc', { name: trunc.join(', ') }) : '') + (nodcs ? ' · ' + t('toast.dcsKept', { n: nodcs }) : ''), (trunc.length || nodcs || info.other || info.failed) ? 6000 : 3000);
 }
 
 /* ============= PAQUET DE VOL ============= */
@@ -8450,6 +8192,10 @@ function openPackageModal(opener) {
 @@ROUTE_PACK_BLOCK@@
 
 @@GROUP_STORE_BLOCK@@
+
+@@RADIO_BLOCK@@
+
+@@IMPORT_BLOCK@@
 
 /* ============= GROUPES DE LA ROUTE (la fiche partagée flight_set_v1) =============
    Un groupe suit une route (routeLink: { rid, name }, route: { points }) ; l'affectation se fait ici ou au Flight Configurator, c'est la même donnée.
@@ -8528,6 +8274,57 @@ function gsAutoAssign(list, info) {
     });
   } catch (e) { /* la fiche des groupes est facultative */ }
   return made;
+}
+
+/* A1 — la reprise des routes. Chaque groupe de la fiche (dans son ordre) qui porte des points (route.points, un point lisible au moins) et n'a pas de routeLink devient une route neuve du Route Planner :
+   nommée comme le groupe, ses points comme à l'import (30 au plus), flight { groupName, coalition } de provenance ; le groupe la suit ensuite (groupTakes, la copie au format du paquet).
+   Le théâtre de la fiche doit être celui du Route Planner et avoir une projection ; sinon, sans aucune route à points, le Route Planner passe au théâtre de la fiche puis reprend ; sinon rien (other).
+   La route active vide et sans groupe prend la première. 12 routes au plus : au-delà le groupe garde sa copie (skipped). Un groupe dont la route a été supprimée garde son routeLink : il n'est pas repris (R469).
+   opts.activate : la première route créée devient active. Rend { made, skipped, other, trunc, nodcs, routes }. */
+function gsAdoptRoutes(opts) {
+  opts = opts || {};
+  const out = { made: 0, skipped: 0, other: '', trunc: [], nodcs: 0, routes: [] };
+  try {
+    if (!RSET || !S) return out;
+    const g = gsRead();
+    if (!g || !g.flights.length || g.theatre === '') return out;
+    const th = g.theatre;
+    const carries = f => gsIsObj(f.route) && gsIsObj(f.route.points) && !gsIsObj(f.routeLink);
+    if (!hasRouteTool(th)) { if (g.flights.some(f => carries(f) && Object.keys(f.route.points).length)) out.other = th; return out; }
+    const cand = g.flights.filter(f => carries(f) && snapKeys(f.route.points).some(k => pointFromRaw(f.route.points[k], k, 0, th)));
+    if (!cand.length) return out;
+    syncActive();
+    if (th !== S.theatre) {
+      if (RSET.routes.some(r => r.points.length)) { out.other = th; return out; }
+      resetRoutesForTheatre(th, null);
+    }
+    const replace = routeIsEmpty(RSET.routes[RSET.active]);
+    let count = RSET.routes.length - (replace ? 1 : 0);
+    const mk = [];
+    cand.forEach(f => {
+      if (count >= MAX_ROUTES) { out.skipped++; return; }
+      const r = routeFromFlight({ groupName: f.name, coalition: gsSide(f.coalition), points: f.route.points }, th, null);
+      out.nodcs += r.nodcs;
+      if (r.trunc) out.trunc.push(r.route.name);
+      mk.push({ f: f, r: r.route });
+      count++;
+    });
+    if (!mk.length) return out;
+    const list = RSET.routes.slice();
+    let act = RSET.active;
+    if (replace) { list[act] = mk[0].r; list.push.apply(list, mk.slice(1).map(x => x.r)); }
+    else { if (opts.activate) act = list.length; list.push.apply(list, mk.map(x => x.r)); }
+    RSET.routes = list;
+    RSET.active = act;
+    S.name = list[act].name; S.points = list[act].points;
+    sel = -1; selR = -1;
+    persistState();
+    mk.forEach(x => { gsPutFlight(groupTakes(x.f, x.r, packRoutePoints(x.r))); });
+    out.made = mk.length;
+    out.routes = mk.map(x => x.r);
+    renderAll();
+  } catch (e) { /* la fiche des groupes est facultative */ }
+  return out;
 }
 
 /* La fenêtre « Groupes de la route » : une case par groupe de la fiche, « Nouveau groupe » en bas. GA.checked : les fcId cochés ; rien n'est écrit avant « Appliquer ».
@@ -8672,7 +8469,7 @@ function routesBind() {
   $('rs-add').addEventListener('click', addRoute);
   $('rs-dup').addEventListener('click', duplicateRoute);
   $('rs-del').addEventListener('click', deleteRoute);
-  $('rs-hq').addEventListener('click', ev => openHqModal(ev.currentTarget));
+  $('rs-import').addEventListener('click', ev => impOpen({ opener: ev.currentTarget }));
   $('rs-assign').addEventListener('click', ev => gaOpen(ev.currentTarget));
   ['ga-backdrop', 'ga-close', 'ga-cancel'].forEach(id => $(id).addEventListener('click', () => rtHide('ga-modal')));
   $('ga-go').addEventListener('click', gaApply);
@@ -8686,36 +8483,21 @@ function routesBind() {
   $('ga-new-name').addEventListener('input', e => { GA.name = e.target.value; gaRender(); });
   $('ga-new-side').addEventListener('change', e => { GA.side = e.target.value; gaRender(); });
   $('btn-package').addEventListener('click', ev => openPackageModal(ev.currentTarget));
-  $('rs-pkg').addEventListener('click', () => { const f = $('file-pkg'); f.value = ''; f.click(); });
-  $('file-pkg').addEventListener('change', () => { const f = $('file-pkg'); if (f.files && f.files[0]) openPackageFile(f.files[0]); });
   $('pk-fname').addEventListener('input', e => { PM.name = e.target.value; PM.edited = true; pkRender(); });
-  ['hq-backdrop', 'hq-close', 'hq-cancel'].forEach(id => $(id).addEventListener('click', () => rtHide('hq-modal')));
   ['pk-backdrop', 'pk-close', 'pk-cancel'].forEach(id => $(id).addEventListener('click', () => rtHide('pk-modal')));
-  $('hq-go').addEventListener('click', hqGo);
   $('pk-go').addEventListener('click', pkGo);
-  $('hq-side').addEventListener('change', e => { HM.side = e.target.value; hqRenderList(); });
-  $('hq-type').addEventListener('change', e => { HM.type = e.target.value; hqRenderList(); });
-  $('hq-check').addEventListener('click', () => { hqVisible().forEach(x => { if (!x.f.off) HM.checked.add(x.i); }); hqRenderList(); });
-  $('hq-uncheck').addEventListener('click', () => { HM.checked = new Set(); hqRenderList(); });
-  $('hq-name').addEventListener('input', e => { HM.name = e.target.value; hqRenderList(); });
-  $('hq-list').addEventListener('change', e => {
-    const i = parseInt(e.target.dataset.i, 10);
-    if (!(i >= 0)) return;
-    if (e.target.checked) HM.checked.add(i); else HM.checked.delete(i);
-    hqSync();
-  });
   $('pk-list').addEventListener('change', e => {
     const i = parseInt(e.target.dataset.i, 10);
     if (!(i >= 0)) return;
     if (e.target.checked) PM.checked.add(i); else PM.checked.delete(i);
     pkRender();
   });
-  /* le Flight Configurator écrit la fiche des groupes (ou HQ une autre mission) : les groupes de la route et la fenêtre ouverte se redessinent */
+  /* le Flight Configurator écrit la fiche des groupes (ou HQ une autre mission) : les routes que ses groupes portent sont reprises (A1), les groupes de la route et la fenêtre ouverte se redessinent */
   window.addEventListener('storage', e => {
     if (e.key === KEY_SNAPSHOT) routesRender();
-    else if (e.key === null || e.key === KEY_FLIGHT_SET) { routesRender(); if (rtVisible('ga-modal')) { gaSync(); gaRender(); } }
+    else if (e.key === null || e.key === KEY_FLIGHT_SET) { adoptNotice(gsAdoptRoutes({})); routesRender(); if (rtVisible('ga-modal')) { gaSync(); gaRender(); } }
   });
-  window.addEventListener('focus', routesRender);
+  window.addEventListener('focus', () => { adoptNotice(gsAdoptRoutes({})); routesRender(); });
 }
 
 /* ============= LE ROUTE TOOL DE DCS : PROJECTIONS, LECTURE, ÉCRITURE ============= */
@@ -9006,7 +8788,7 @@ function bytesToText(bytes) {
 /* ---- Fenêtres : « Ouvrir une route du Route Tool » et « Exporter vers le Route Tool » ---- */
 const RT = { fileName: '', routes: [], theatre: 'Caucasus', sel: 0, opener: null };
 
-const RT_MODALS = ['rt-open-modal', 'rt-export-modal', 'cf-import-modal', 'cf-export-modal', 'clr-modal', 'ga-modal', 'hq-modal', 'pk-modal', 'exn-modal', 'fiche'];
+const RT_MODALS = ['rt-open-modal', 'rt-export-modal', 'cf-import-modal', 'cf-export-modal', 'clr-modal', 'ga-modal', 'imp-modal', 'pk-modal', 'exn-modal', 'fiche'];
 function rtVisible(id) { return !$(id).hidden; }
 function rtShow(id, opener, focusId) {
   RT.opener = opener || null;
@@ -9017,6 +8799,7 @@ function rtShow(id, opener, focusId) {
 }
 function rtHide(id) {
   if (TBM.cur) tbmClose(false);      /* la liste ouverte se ferme avec la fenêtre */
+  if (id === 'imp-modal') { impClose(); return; }      /* la fenêtre d'import (import_block.py) se ferme elle-même et rend le focus */
   if (id === 'fiche') ficheReset();
   $(id).hidden = true;
   const o = RT.opener;
@@ -10661,7 +10444,7 @@ function setLang(lang) {
   if (rtVisible('cf-import-modal')) cfImportRender();
   if (rtVisible('cf-export-modal')) cfExportRender();
   if (rtVisible('clr-modal')) clrRender();
-  if (rtVisible('hq-modal')) hqRender();
+  if (impIsOpen()) impRender();
   if (rtVisible('pk-modal')) pkRender();
   if (rtVisible('fiche')) ficheRender();
   expSyncTexts();
@@ -11187,7 +10970,8 @@ function init() {
   applyI18nStatic();
   updateFlagButton();
   initToolbarMenus([['layer', () => t('tb.layer'), undefined, true], ['theatre', () => t('tb.theatre'), undefined, true], ['theme', () => t('tb.theme.tip')], ['rt-theatre', () => t('tb.theatre'), 'sheet']]);   /* les listes de la barre au thème de l'interface */
-  initFormMenus(sel => (sel.dataset.k === 'altRef' ? t('th.ref') : sel.dataset.lbl ? t(sel.dataset.lbl) : ''));   /* les listes des formulaires */
+  initFormMenus(sel => (sel.dataset.k === 'altRef' ? t('th.ref') : sel.dataset.lbl ? t(sel.dataset.lbl) : (sel.getAttribute('aria-label') || '')));   /* les listes des formulaires */
+  impSetup({ lang: () => CURRENT_LANG, before: rpImportBefore, onImported: rpImported, toast: showToast });      /* la fenêtre d'import commune */
   loadState();
   try { gsMigrate((r, th) => gsPackRoute(r, th, S.groundSpeed)); } catch (e) { /* la fiche des groupes est facultative */ }      /* la fiche naît ici si le Flight Configurator ne l'a pas fait avant */
   loadLayers();
@@ -11197,6 +10981,7 @@ function init() {
   drInit();
   spInit();
   renderAll();
+  adoptNotice(gsAdoptRoutes({}));      /* les routes que des groupes de la fiche portent déjà (A1), avant le cadrage */
   drawLayers();
   frameRoute();
   setBase();
@@ -11245,7 +11030,7 @@ def build():
     airfields_js = json.dumps(AF['theatres'], ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
     towns_js = json.dumps(TW['theatres'], ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
     js = JS.replace('__EXAMPLE_ROUTE__', example_js).replace('__EXAMPLE_ROUTE_EN__', example_en_js).replace('__AIRFIELDS__', airfields_js).replace('__TOWNS__', towns_js)
-    js = js.replace('@@GEO_BLOCK@@\n', GEO_BLOCK).replace('@@READNUM_BLOCK@@\n', READNUM_BLOCK).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@ROUTE_PACK_BLOCK@@\n', build_route_pack_block()).replace('@@GROUP_STORE_BLOCK@@\n', build_group_store_block())
+    js = js.replace('@@GEO_BLOCK@@\n', GEO_BLOCK).replace('@@READNUM_BLOCK@@\n', READNUM_BLOCK).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@ROUTE_PACK_BLOCK@@\n', build_route_pack_block()).replace('@@GROUP_STORE_BLOCK@@\n', build_group_store_block()).replace('@@RADIO_BLOCK@@\n', build_radio_block()).replace('@@IMPORT_BLOCK@@\n', build_import_block())
     if '@@' in js:
         raise SystemExit("[ERREUR] Marqueur @@ non remplacé dans le script")
     lib = A['lib_leaflet']
@@ -11260,7 +11045,8 @@ def build():
         raise SystemExit("[ERREUR] lib_milsymbol : la mention de licence MIT n'est plus en tête")
 
     html = HTML
-    html = html.replace('__CSS__', CSS)
+    html = html.replace('__CSS__', CSS + build_import_css())
+    html = html.replace('__IMPORT_HTML__\n', build_import_html())
     html = html.replace('__LIB_LEAFLET_CSS__', A['lib_leaflet_css'])
     html = html.replace('__LIB_LEAFLET__', lib)
     html = html.replace('__LIB_MILSYMBOL__', lib_ms)
