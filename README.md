@@ -206,7 +206,7 @@ The output `dist/dcs_mission_plan.html` is the distributable (and the file publi
 ├── airfields.json                 # DCS airfield & helipad positions (from pydcs)
 ├── airdromes.json                 # DCS airfield names and ids per theatre (from pydcs, via DCS Airfield Charts)
 ├── towns.json                     # DCS town names & positions (from the DCS World maps)
-├── data/                          # Flight Configurator tables (weapons, pylons, limits, front views from Mission Tools) and its licences
+├── data/                          # Flight Configurator tables (weapons, pylons, limits, front views from Mission Tools), HQ's aircraft types, and their licences
 ├── wmm/                          # World Magnetic Model coefficients 1985–2025 (NOAA, public domain)
 ├── igrf/                         # IGRF-12 coefficients 1900–2015 (IAGA, as shipped by DCS World)
 ├── tiles/                         # Board tiles (512² WebP): hq, bg, rs, fm, rp, kg, fc

@@ -93,7 +93,7 @@ def build_default_wing_config():
                 "name": "1st Squadron",
                 "nickname": "Demo",
                 "callsign": "ALPHA",
-                "aircraft": ["F-16C Viper"],
+                "aircraft": ["F-16C_50"],
                 "logo": _GENERIC_SQN_LOGO_DATAURL,
             },
         ],
@@ -717,7 +717,10 @@ select[data-tbm-src] {{ display: none !important; }}
   cursor: pointer; padding: 0; min-width: 44px; min-height: 44px; margin: -2px 0; font-size: 16px; line-height: 1; opacity: .7;
 }}
 .wing-ac-tag button:hover {{ opacity: 1; }}
-.wing-ac-flag {{ font-size: 10px; letter-spacing: .3px; color: #e8b840; cursor: help; }}
+.wing-ac-flag {{ font-size: 10px; letter-spacing: .3px; color: #e8b840; cursor: pointer; text-decoration: underline dotted; }}
+.wing-ac-flag:focus-visible {{ outline: 1px solid #e8b840; outline-offset: 2px; }}
+.wing-ac-item {{ display: flex; flex-wrap: wrap; align-items: center; gap: 5px; max-width: 100%; min-width: 0; }}
+.wing-ac-item.wing-ac-item-rep {{ flex: 1 1 100%; }}   /* l'étiquette et sa liste de types proches ont leur ligne : aucune autre étiquette ne passe entre elles */
 .wing-ac-add-row {{ display: flex; gap: 6px; margin-top: 4px; width: 100%; }}
 .wing-ac-add-row[hidden] {{ display: none; }}
 .wing-ac-add-row input {{ flex: 1; min-width: 0; }}
@@ -1307,6 +1310,7 @@ const I18N = {{
     'editor.wing.ac.flag':      'hors jeu de base',
     'editor.wing.ac.flagTip':   "Ce nom n'est pas un type jouable du jeu de base (pydcs 1.0.0). Un mod garde son nom ; sinon, remplacez-le par le type du jeu.",
     'editor.wing.ac.replace':   'Remplacer par\u2026',
+    'editor.wing.ac.replaceNamed': 'Remplacer \u00ab {{0}} \u00bb par\u2026',
     'delSquadron.lastWarning':  '\\n\\n\u26a0 Il s\u2019agit du dernier escadron du wing.',
     'delSquadron.refWarning':   '',
     'validate.schemaMissing':   'configSchemaVersion doit \u00eatre 1',
@@ -1627,6 +1631,7 @@ const I18N = {{
     'editor.wing.ac.flag':      'not in the base game',
     'editor.wing.ac.flagTip':   "This name is not a flyable type of the base game (pydcs 1.0.0). A mod keeps its name; otherwise, replace it with the game's type.",
     'editor.wing.ac.replace':   'Replace with\u2026',
+    'editor.wing.ac.replaceNamed': 'Replace \u201c{{0}}\u201d with\u2026',
     'delSquadron.lastWarning':  '\\n\\n\u26a0 This is the last squadron in the wing.',
     'delSquadron.refWarning':   '',
     'validate.schemaMissing':   'configSchemaVersion must be 1',
@@ -2241,6 +2246,14 @@ function acMakeOption(value, label, disabled) {{
   return o;
 }}
 
+// Après un ajout ou un remplacement : le focus revient au bouton de la liste d'ajout (il se branche en microtâche, après le redessin).
+function acFocusAdd(container) {{
+  setTimeout(() => {{
+    const b = container.querySelector('button.wing-ac-add-sel');
+    if (b) b.focus({{ preventScroll: true }});
+  }}, 0);
+}}
+
 function renderSqAircraftTags(container, sqIdx) {{
   if (!container || !wingConfig.squadrons[sqIdx]) return;
   container.innerHTML = '';
@@ -2249,6 +2262,8 @@ function renderSqAircraftTags(container, sqIdx) {{
 
   names.forEach((_, acIdx) => {{
     const cur = names[acIdx];
+    const item = document.createElement('span');
+    item.className = 'wing-ac-item';
     const tag = document.createElement('span');
     tag.className = 'wing-ac-tag';
     const label = document.createElement('span');
@@ -2260,12 +2275,17 @@ function renderSqAircraftTags(container, sqIdx) {{
       flag.className = 'wing-ac-flag';
       flag.textContent = t('editor.wing.ac.flag');
       flag.title = t('editor.wing.ac.flagTip');
+      flag.tabIndex = 0;
+      flag.setAttribute('role', 'button');
+      const explain = () => showToast(t('editor.wing.ac.flagTip'), 6000);
+      flag.addEventListener('click', explain);
+      flag.addEventListener('keydown', e => {{ if (e.key === 'Enter') {{ e.preventDefault(); explain(); }} }});
       tag.appendChild(flag);
     }}
     const rmBtn = document.createElement('button');
     rmBtn.type = 'button';
     rmBtn.setAttribute('aria-label', t('editor.radio.delAircraftAriaLabel'));
-    rmBtn.textContent = '×';
+    rmBtn.textContent = '\u00d7';
     rmBtn.addEventListener('click', () => {{
       if (!wingConfig.squadrons[sqIdx]) return;
       wingConfig.squadrons[sqIdx].aircraft.splice(acIdx, 1);
@@ -2273,11 +2293,13 @@ function renderSqAircraftTags(container, sqIdx) {{
       renderSqAircraftTags(container, sqIdx);
     }});
     tag.appendChild(rmBtn);
-    container.appendChild(tag);
+    item.appendChild(tag);
+    container.appendChild(item);
 
     const close = known ? [] : gameAircraftClose(cur);
     if (close.length) {{
-      const rep = acMakeSelect('wing-ac-rep', t('editor.wing.ac.replace'));
+      const rep = acMakeSelect('wing-ac-rep', t('editor.wing.ac.replaceNamed').replace('{{0}}', String(cur)));
+      item.classList.add('wing-ac-item-rep');
       rep.appendChild(acMakeOption('', t('editor.wing.ac.replace'), false));
       close.forEach(ty => rep.appendChild(acMakeOption(ty, ty, has(ty))));
       rep.addEventListener('change', () => {{
@@ -2286,8 +2308,9 @@ function renderSqAircraftTags(container, sqIdx) {{
         wingConfig.squadrons[sqIdx].aircraft[acIdx] = v;
         persistWingConfig(); updateWingSizeCounter();
         renderSqAircraftTags(container, sqIdx);
+        acFocusAdd(container);
       }});
-      container.appendChild(rep);
+      item.appendChild(rep);
     }}
   }});
 
@@ -2321,6 +2344,7 @@ function renderSqAircraftTags(container, sqIdx) {{
     list.push(val);
     persistWingConfig(); updateWingSizeCounter();
     renderSqAircraftTags(container, sqIdx);
+    acFocusAdd(container);
     return true;
   }};
   const doAdd = () => {{ addName(addInp.value.trim()); }};
