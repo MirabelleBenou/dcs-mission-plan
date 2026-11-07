@@ -2774,6 +2774,7 @@ const I18N = {
     'pk.note': 'Cochez les routes à exporter : chaque groupe qui en suit une devient un groupe du paquet, que HQ applique à la mission.',
     'pk.off.nogroup': 'aucun groupe ne la suit',
     'pk.off.empty': 'route vide',
+    'pk.off.short': 'route trop courte',
     'pk.off.unnamed': 'groupe sans nom — nommez-le au Flight Configurator',
     'pk.off.theatre': 'Le théâtre {th} n\'a pas de projection.',
     'pk.go.1': 'Exporter {n} route',
@@ -3305,6 +3306,7 @@ const I18N = {
     'pk.note': 'Check the routes to export: each group that follows one becomes a group of the package, which HQ applies to the mission.',
     'pk.off.nogroup': 'no group follows it',
     'pk.off.empty': 'empty route',
+    'pk.off.short': 'route too short',
     'pk.off.unnamed': 'unnamed group — name it in the Flight Configurator',
     'pk.off.theatre': 'The {th} theatre has no projection.',
     'pk.go.1': 'Export {n} route',
@@ -9162,7 +9164,7 @@ function hqGo() {
   const info = {};
   const groups = gsAutoAssign(made, info);      /* chaque route neuve prend son groupe, ou en crée un */
   routesRender();
-  showToast(t(made.length === 1 ? 'toast.hqImported.1' : 'toast.hqImported.n', { n: made.length }) + (groups ? ' · ' + t(groups === 1 ? 'toast.groupsMade.1' : 'toast.groupsMade.n', { n: groups }) : '') + (info.other ? ' · ' + t('toast.groupsOther', { th: theatreText(info.other) }) : '') + (trunc.length ? ' · ' + t('toast.hqTrunc', { name: trunc.join(', ') }) : '') + (nodcs ? ' · ' + t('toast.dcsKept', { n: nodcs }) : ''), (trunc.length || nodcs || info.other) ? 6000 : 3000);
+  showToast(t(made.length === 1 ? 'toast.hqImported.1' : 'toast.hqImported.n', { n: made.length }) + (groups ? ' · ' + t(groups === 1 ? 'toast.groupsMade.1' : 'toast.groupsMade.n', { n: groups }) : '') + (info.other ? ' · ' + t('toast.groupsOther', { th: theatreText(info.other) }) : '') + (info.failed ? ' · ' + t('toast.saveFail') : '') + (trunc.length ? ' · ' + t('toast.hqTrunc', { name: trunc.join(', ') }) : '') + (nodcs ? ' · ' + t('toast.dcsKept', { n: nodcs }) : ''), (trunc.length || nodcs || info.other || info.failed) ? 6000 : 3000);
 }
 
 /* ============= PAQUET DE VOL ============= */
@@ -9177,7 +9179,7 @@ function pkRows() {
     let why = '';
     if (!all.length) why = t('pk.off.nogroup');
     else if (!names.length) why = t('pk.off.unnamed');
-    else if (!r.points.length) why = t('pk.off.empty');
+    else if (r.points.length < 2 && !groupsOfRoute(r.rid).some(f => gsNameKey(f.name) !== '' && groupCopyCount(f) >= 2)) why = t(r.points.length ? 'pk.off.short' : 'pk.off.empty');
     if (why !== '') PM.checked.delete(i);
     rows.push({ i: i, r: r, why: why, names: names });
   });
@@ -9318,10 +9320,18 @@ function gsPackRoute(r, th, gs) {
   (Array.isArray(r.points) ? r.points : []).filter(p => gsIsObj(p) && packValidCoord(p.lat, p.lon)).forEach((p, k) => { o[String(k + 1)] = packPoint(p, k, th, gs); });
   return o;
 }
+/* Seule la migration fait naître la fiche : une écriture sur une fiche absente la fait d'abord ; si la migration ne peut pas écrire, l'écriture rend faux et rien n'est écrit. */
+let GS_PACKER = null;
+function gsEnsure() {
+  if (gsRead() !== null) return true;
+  gsMigrate(GS_PACKER);
+  return gsRead() !== null;
+}
 /* Remplace le groupe de même fcId (à sa place) ou ajoute f à la fin ; relit d'abord. Vrai si la fiche porte f à la fin (écrite, ou déjà identique). */
 function gsPutFlight(f) {
   if (!gsIsObj(f) || typeof f.fcId !== 'string' || f.fcId === '') return false;
-  const g = gsRead() || { theatre: '', flights: [] };
+  if (!gsEnsure()) return false;
+  const g = gsRead();
   const i = g.flights.findIndex(x => x.fcId === f.fcId);
   if (i >= 0) {
     if (gsStable(g.flights[i]) === gsStable(f)) return true;
@@ -9330,16 +9340,17 @@ function gsPutFlight(f) {
   return gsWrite(g.theatre, g.flights);
 }
 function gsRemoveFlight(fcId) {
+  if (!gsEnsure()) return false;
   const g = gsRead();
-  if (!g) return true;
   const n = g.flights.filter(x => x.fcId !== fcId);
   if (n.length === g.flights.length) return true;
   return gsWrite(g.theatre, n);
 }
 function gsSetTheatre(th) {
+  if (!gsEnsure()) return false;
   const g = gsRead();
-  if (g && g.theatre === th) return true;
-  return gsWrite(th, g ? g.flights : []);
+  if (g.theatre === th) return true;
+  return gsWrite(th, g.flights);
 }
 /* Écrit tout : l'ouverture d'un fichier de travail du Flight Configurator */
 function gsReplaceAll(theatre, flights) {
@@ -9352,13 +9363,22 @@ function gsReplaceAll(theatre, flights) {
       un seul, sans route : il la prend ; un seul qui a déjà une route : rien ; aucun : un groupe neuf sans unité ; plusieurs : rien.
       Pas de route retenue sans théâtre commun : le théâtre de la fiche et celui de route_state_v1 doivent être le même ;
    3. écrit la fiche (même vide), puis, seulement si elle est écrite, réécrit fc_state_v1 en { v: 2, sel, mine } : un stockage plein laisse fc_state_v1 tel qu'il est. route_set_v1 n'est pas touché.
-   Une fiche qui existe sans se lire est recopiée sous flight_set_v1_illisible (une seule fois) avant d'être remplacée.
+   Une fiche qui existe sans se lire est recopiée sous flight_set_v1_illisible (une seule fois) avant d'être remplacée ; si la copie échoue, rien n'est remplacé.
+   Un échec pose gsMigrateFailed dans fc_state_v1 ; une migration retentée ne fait alors que l'étape 1 (les liens par nom ne sont posés qu'au premier essai réussi d'un module qui n'a jamais échoué).
    Rend vrai si la fiche a été écrite. */
+function gsMigrateFail() {
+  /* le premier échec est noté dans fc_state_v1 : une migration retentée ne refait pas l'étape 2 */
+  const fc = gsJson(GS_KEY_FC);
+  if (gsIsObj(fc) && fc.gsMigrateFailed !== true) gsLsSet(GS_KEY_FC, JSON.stringify(Object.assign({}, fc, { gsMigrateFailed: true })));
+  return false;
+}
 function gsMigrate(packFn) {
+  if (typeof packFn === 'function') GS_PACKER = packFn;
   if (gsRead() !== null) return false;
-  const bad = gsLsGet(KEY_FLIGHT_SET);       // une fiche qui existe mais ne se lit pas : sa valeur est gardée telle quelle, une seule fois, avant d'être remplacée
-  if (bad !== null && gsLsGet(KEY_FLIGHT_SET_BAD) === null) gsLsSet(KEY_FLIGHT_SET_BAD, bad);
+  const bad = gsLsGet(KEY_FLIGHT_SET);       // une fiche qui existe mais ne se lit pas : sa valeur est gardée telle quelle, une seule fois, avant d'être remplacée ; sans copie, pas de remplacement
+  if (bad !== null && gsLsGet(KEY_FLIGHT_SET_BAD) === null && !gsLsSet(KEY_FLIGHT_SET_BAD, bad)) { gsNoteWrite(false); return gsMigrateFail(); }
   const fc = gsJson(GS_KEY_FC), st = gsIsObj(fc) && gsIsObj(fc.state) ? fc.state : null;
+  const retry = gsIsObj(fc) && fc.gsMigrateFailed === true;       // un premier essai a échoué : seulement l'étape 1
   const rs = gsJson(GS_KEY_ROUTE), rsTheatre = gsIsObj(rs) && typeof rs.theatre === 'string' ? rs.theatre : '';
   const flights = [], seen = new Set();
   if (st && Array.isArray(st.flights)) st.flights.forEach(f => {
@@ -9370,7 +9390,7 @@ function gsMigrate(packFn) {
   });
   const theatre = st && typeof st.theatre === 'string' && st.theatre !== '' ? st.theatre : rsTheatre;
   const set = gsJson(GS_KEY_ROUTES);
-  if (theatre !== '' && theatre === rsTheatre && gsIsObj(set) && Array.isArray(set.routes) && typeof packFn === 'function') {
+  if (!retry && theatre !== '' && theatre === rsTheatre && gsIsObj(set) && Array.isArray(set.routes) && typeof packFn === 'function') {
     set.routes.forEach(r => {
       if (!gsIsObj(r) || !gsIsObj(r.flight) || typeof r.rid !== 'string' || !/^[a-z0-9]{6,32}$/.test(r.rid)) return;
       const name = gsNameKey(r.flight.groupName), side = gsSide(r.flight.coalition);
@@ -9385,7 +9405,7 @@ function gsMigrate(packFn) {
       else flights.push({ fcId: gsNewId(), name: r.flight.groupName, coalition: side, route: { points: pts }, routeLink: link, units: [] });
     });
   }
-  if (!gsWrite(theatre, flights)) return false;
+  if (!gsWrite(theatre, flights)) return gsMigrateFail();
   if (gsIsObj(fc)) {
     const sel = st && gsIsObj(st.sel) ? st.sel : (gsIsObj(fc.sel) ? fc.sel : { f: 0, u: 0 });
     gsLsSet(GS_KEY_FC, JSON.stringify({ v: 2, sel: sel, mine: gsIsObj(fc.mine) ? fc.mine : {} }));
@@ -9457,11 +9477,12 @@ function gsAutoAssign(list, info) {
     if (!hasRouteTool(th)) return 0;
     list.forEach(r => {
       if (!r.flight) return;
-      const g = gsRead() || { theatre: '', flights: [] };
+      if (!gsEnsure()) { if (info) info.failed = true; return; }       /* la fiche ne naît que de la migration ; si elle ne peut pas écrire, rien n'est rattaché */
+      const g = gsRead();
       const name = gsNameKey(r.flight.groupName), side = gsSide(r.flight.coalition);
       if (name === '') return;
       if (g.theatre !== '' && g.theatre !== th && g.flights.length) { if (info) info.other = g.theatre; return; }       /* des groupes d'un autre théâtre : rien n'est rattaché, le toast le dit */
-      if (g.theatre !== th) gsSetTheatre(th);       /* une fiche sans théâtre (ou sans groupe) prend celui du Route Planner */
+      if (g.theatre !== th && !gsSetTheatre(th)) return;       /* une fiche sans théâtre (ou sans groupe) prend celui du Route Planner */
       const hits = g.flights.filter(f => gsNameKey(f.name) === name && gsSide(f.coalition) === side);
       if (hits.length > 1 || (hits.length === 1 && hits[0].route)) return;
       const pts = packRoutePoints(r);
@@ -9552,10 +9573,11 @@ function gaOpen(opener) {
 function gaApply() {
   const r = gaRoute();
   if (!r || $('ga-go').disabled) return;
-  const g = gsRead() || { theatre: '', flights: [] };
+  if (!gsEnsure()) { showToast(t('toast.saveFail'), 5000); gaRender(); return; }       /* pas de fiche et la migration ne peut pas écrire : rien n'est appliqué (le toast d'échec est déjà montré) */
+  const g = gsRead();
   /* la fiche est relue : le doublon du nom et le théâtre se recontrôlent, et seules les cases changées par l'utilisateur s'appliquent */
   if (gaWarn(g) !== '' || (GA.name.trim() !== '' && g.flights.some(f => gsNameKey(f.name) === GA.name.trim() && gsSide(f.coalition) === GA.side))) { gaRender(); return; }
-  if (g.theatre !== S.theatre) gsSetTheatre(S.theatre);      /* une fiche sans groupe, ou sans théâtre, prend celui du Route Planner */
+  if (g.theatre !== S.theatre && !gsSetTheatre(S.theatre)) { showToast(t('toast.saveFail'), 5000); gaRender(); return; }      /* une fiche sans groupe, ou sans théâtre, prend celui du Route Planner */
   const pts = packRoutePoints(r);
   g.flights.forEach(f => {
     const follows = gsIsObj(f.routeLink) && f.routeLink.rid === r.rid, want = GA.checked.has(f.fcId);
@@ -9572,15 +9594,24 @@ function gaApply() {
 
 /* Le paquet (dcs-flight-package-v2) des routes idxs : un vol par groupe de la fiche qui suit l'une d'elles, dans l'ordre de la fiche (nom et camp du groupe, la route en points) ;
    ses vols n'ont pas d'unités, donc pas de type ; sourceMission : la source commune des liens des routes, sinon nul */
+/* Les points qu'un groupe donne au paquet : sa copie (route.points de la fiche) si elle a deux points au moins, sinon la route vivante si elle en a deux ; sinon rien */
+function groupCopyCount(f) { return gsIsObj(f.route) && gsIsObj(f.route.points) ? Object.keys(f.route.points).length : 0; }
+function groupPackPoints(f, r) {
+  if (groupCopyCount(f) >= 2) return JSON.parse(JSON.stringify(f.route.points));
+  return r.points.length >= 2 ? packRoutePoints(r) : null;
+}
 function buildPackage(idxs) {
   syncActive();
+  try { gsSyncRoutes(); } catch (e) { /* la fiche est facultative */ }       /* les copies des groupes sont à jour de la route vivante (d'au moins deux points) avant d'être exportées */
   const th = S.theatre, byRid = {};
   idxs.forEach(i => { byRid[RSET.routes[i].rid] = RSET.routes[i]; });
   const g = gsRead(), flights = [];
   (g ? g.flights : []).forEach((f, k) => {
     const r = gsIsObj(f.routeLink) && Object.prototype.hasOwnProperty.call(byRid, f.routeLink.rid) ? byRid[f.routeLink.rid] : null;
     if (!r || gsNameKey(f.name) === '') return;       /* un groupe sans nom ne s'exporte pas (comme au Flight Configurator) */
-    flights.push({ groupName: groupLabel(f, k), coalition: f.coalition || null, groupFrequency: null, route: { points: packRoutePoints(r) }, units: [] });
+    const pts = groupPackPoints(f, r);
+    if (pts === null) return;
+    flights.push({ groupName: groupLabel(f, k), coalition: f.coalition || null, groupFrequency: null, route: { points: pts }, units: [] });
   });
   /* la mission source : celle des liens, si toutes les routes cochées ont la même */
   let src = null;

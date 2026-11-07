@@ -2158,7 +2158,13 @@ function writeState() {
   let ok = false;
   try { ok = gsPush(); } catch (e) { ok = false; }
   // fc_state_v1 ne perd ses groupes qu'une fois la fiche écrite avec eux : sinon il reste à l'état d'avant (v1, state.flights) et la fiche est retentée à la prochaine écriture
-  try { lsSet(KEY_STATE, JSON.stringify(ok ? { v: 2, sel: S.sel, mine: LIB.mine } : { v: 1, state: S, mine: LIB.mine })); } catch (e) { /* l'écran marche sans */ }
+  try { lsSet(KEY_STATE, JSON.stringify(ok ? { v: 2, sel: S.sel, mine: LIB.mine } : fcV1Doc())); } catch (e) { /* l'écran marche sans */ }
+}
+// L'état d'avant (v1, groupes compris) ; gsMigrateFailed (une migration a déjà échoué) est gardé : la migration retentée ne refait que l'étape 1
+function fcV1Doc() {
+  const d = { v: 1, state: S, mine: LIB.mine };
+  if (GS.mf) d.gsMigrateFailed = true;
+  return d;
 }
 function saveWork() {
   clearTimeout(_saveTimer);
@@ -2178,7 +2184,7 @@ function commitNow() {
 // ----- La fiche partagée (flight_set_v1) -----
 // GS.seen : fcId → texte stable (gsStable) du groupe tel qu'on l'a lu ou écrit la dernière fois. writeState n'écrit que les groupes qui diffèrent (gsPutFlight relit la clé, ne remplace que ce groupe),
 // retire ceux que le module a supprimés (gsRemoveFlight) et pose le théâtre s'il a changé. Un groupe que le module ne montre pas (une unité d'un type hors de PAYLOAD_TYPES) n'y figure jamais : il n'est jamais touché.
-const GS = { seen: {}, theatre: '', live: false };       // live : la fiche existe et le module la suit (sinon fc_state_v1 v1 porte les groupes)
+const GS = { seen: {}, theatre: '', live: false, removed: [], mf: false };       // live : la fiche existe et le module la suit (sinon fc_state_v1 v1 porte les groupes)
 function gsMarkAll() {
   GS.seen = {};
   S.flights.forEach(f => { GS.seen[f.fcId] = gsStable(f); });
@@ -2202,19 +2208,28 @@ function gsMerge(f) {
 }
 // La fiche n'existe pas (le stockage l'a refusée, ou le Route Planner ne l'a pas encore créée) : l'état d'avant (v1) est remis à jour, la migration retentée ; si la fiche est là, le module la reprend telle quelle.
 // Rend vrai si le module suit la fiche.
-function gsAdopt() {
+function gsAdopt(quiet) {
   if (gsRead() === null) {
-    try { lsSet(KEY_STATE, JSON.stringify({ v: 1, state: S, mine: LIB.mine })); } catch (e) { /* l'écran marche sans */ }
+    try { lsSet(KEY_STATE, JSON.stringify(fcV1Doc())); } catch (e) { /* l'écran marche sans */ }
     gsMigrate(gsPackFn);
   }
-  const gs = gsRead();
-  if (!gs) return false;
+  let gs = gsRead();
+  if (!gs) { GS.mf = true; return false; }
+  // le module n'adopte une fiche qu'avec ses groupes : ceux de l'état d'avant (v1) qui n'y sont pas y sont versés d'abord ; sinon l'adoption est retentée
+  if (!GS.live) {
+    let all = true;
+    S.flights.forEach(f => { if (!gs.flights.some(x => x.fcId === f.fcId) && !gsPutFlight(clone(f))) all = false; });
+    if (!all) return false;
+    gs = gsRead();
+    if (!gs) return false;
+  }
   const folds = {};
   S.flights.forEach(f => { if (UI.fold.has(f)) folds[f.fcId] = UI.fold.get(f); });
   restoreState({ theatre: gs.theatre, flights: gs.flights, sel: S.sel });
   S.flights.forEach(f => { if (has(folds, f.fcId)) UI.fold.set(f, folds[f.fcId]); });
   gsMarkAll();
-  renderAll();
+  try { lsSet(KEY_STATE, JSON.stringify({ v: 2, sel: S.sel, mine: LIB.mine })); } catch (e) { /* l'écran marche sans */ }
+  if (!quiet) renderAll();
   return true;
 }
 // Rend vrai si tout ce que le module a changé est dans la fiche.
@@ -2226,9 +2241,12 @@ function gsPush() {
     if (GS.seen[f.fcId] === j) return;
     if (gsMerge(f)) GS.seen[f.fcId] = j; else ok = false;
   });
-  Object.keys(GS.seen).forEach(id => {
-    if (S.flights.some(f => f.fcId === id)) return;
-    if (gsRemoveFlight(id)) delete GS.seen[id]; else ok = false;
+  // seuls les groupes que l'utilisateur a supprimés (removeFlight) sont retirés de la fiche
+  GS.removed = GS.removed.filter(id => {
+    if (S.flights.some(f => f.fcId === id)) return false;
+    if (gsRemoveFlight(id)) { delete GS.seen[id]; return false; }
+    ok = false;
+    return true;
   });
   if (S.theatre !== GS.theatre) { if (gsSetTheatre(S.theatre)) GS.theatre = S.theatre; else ok = false; }
   return ok;
@@ -2246,7 +2264,7 @@ function gsPull() {
   gs.flights.forEach(raw => {
     inSet[raw.fcId] = true;
     const nf = restoreFlight(raw);
-    if (!nf) return;
+    if (!nf) { if (has(GS.seen, raw.fcId)) { delete GS.seen[raw.fcId]; changed = true; } return; }       // un groupe que le module ne sait pas lire : ni montré ni touché
     const cur = byId[raw.fcId], j = gsStable(nf);
     if (cur && (GS.seen[raw.fcId] === j || gsStable(cur) !== GS.seen[raw.fcId])) { out.push(cur); return; }
     if (cur && UI.fold.has(cur)) UI.fold.set(nf, UI.fold.get(cur));
@@ -4140,6 +4158,7 @@ function addFlight() {
   commitNow();
 }
 function removeFlight(fi) {
+  if (S.flights[fi] && GS.removed.indexOf(S.flights[fi].fcId) < 0) GS.removed.push(S.flights[fi].fcId);
   const was = S.sel.f === fi;
   S.flights.splice(fi, 1);
   if (was) { S.sel = { f: 0, u: 0 }; Object.assign(UI.cmp, { saving: false, err: '', st: null }); }
@@ -4420,19 +4439,25 @@ function bindImportWindow() {
 function init() {
   loadTheme();
   loadLang();
-  let saved = null;
+  let saved = null, adoptFailed = false;
   try { saved = JSON.parse(lsGet(KEY_STATE) || 'null'); } catch (e) { saved = null; }
   const ok = isObj(saved) && (saved.v === 1 || saved.v === 2);
   const sel0 = ok ? (saved.v === 2 ? saved.sel : (isObj(saved.state) ? saved.state.sel : undefined)) : undefined;
   try {
     if (ok) mergeMine(saved.mine);
+    if (ok && saved.gsMigrateFailed === true) GS.mf = true;
     gsMigrate(gsPackFn);       // la fiche naît ici si le Route Planner ne l'a pas fait avant : les groupes de l'état d'avant, puis les routes liées par nom
     const gs = gsRead();
-    if (gs) restoreState({ theatre: gs.theatre, flights: gs.flights, sel: sel0 });
+    if (gs && ok && saved.v === 1 && isObj(saved.state)) {
+      // l'état d'avant porte encore ses groupes : la fiche n'est adoptée qu'avec eux
+      restoreState(saved.state);
+      GS.live = false;
+      adoptFailed = !gsAdopt(true);
+    } else if (gs) restoreState({ theatre: gs.theatre, flights: gs.flights, sel: sel0 });
     else if (ok && saved.v === 1) restoreState(saved.state);       // le stockage a refusé la fiche : l'état d'avant, tel qu'il est
     if (ok) remapPresetKeys(saved.mine);
   } catch (e) { /* l'écran marche sans */ }
-  if (gsRead() !== null) gsMarkAll(); else { GS.seen = {}; GS.theatre = ''; GS.live = false; }       // sans fiche (stockage plein), les groupes restent dans fc_state_v1 jusqu'à ce qu'elle puisse être écrite
+  if (gsRead() !== null && !adoptFailed) gsMarkAll(); else { GS.seen = {}; GS.theatre = ''; GS.live = false; if (gsRead() === null) GS.mf = true; }       // sans fiche (stockage plein), les groupes restent dans fc_state_v1 jusqu'à ce qu'elle puisse être écrite
   initToolbarMenus([['theme-select', () => t('toolbar.theme.tooltip')]]);
   initFormMenus(sel => sel.getAttribute('aria-label') || '');
   bindColumns();

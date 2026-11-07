@@ -78,10 +78,18 @@ function gsPackRoute(r, th, gs) {
   (Array.isArray(r.points) ? r.points : []).filter(p => gsIsObj(p) && packValidCoord(p.lat, p.lon)).forEach((p, k) => { o[String(k + 1)] = packPoint(p, k, th, gs); });
   return o;
 }
+/* Seule la migration fait naître la fiche : une écriture sur une fiche absente la fait d'abord ; si la migration ne peut pas écrire, l'écriture rend faux et rien n'est écrit. */
+let GS_PACKER = null;
+function gsEnsure() {
+  if (gsRead() !== null) return true;
+  gsMigrate(GS_PACKER);
+  return gsRead() !== null;
+}
 /* Remplace le groupe de même fcId (à sa place) ou ajoute f à la fin ; relit d'abord. Vrai si la fiche porte f à la fin (écrite, ou déjà identique). */
 function gsPutFlight(f) {
   if (!gsIsObj(f) || typeof f.fcId !== 'string' || f.fcId === '') return false;
-  const g = gsRead() || { theatre: '', flights: [] };
+  if (!gsEnsure()) return false;
+  const g = gsRead();
   const i = g.flights.findIndex(x => x.fcId === f.fcId);
   if (i >= 0) {
     if (gsStable(g.flights[i]) === gsStable(f)) return true;
@@ -90,16 +98,17 @@ function gsPutFlight(f) {
   return gsWrite(g.theatre, g.flights);
 }
 function gsRemoveFlight(fcId) {
+  if (!gsEnsure()) return false;
   const g = gsRead();
-  if (!g) return true;
   const n = g.flights.filter(x => x.fcId !== fcId);
   if (n.length === g.flights.length) return true;
   return gsWrite(g.theatre, n);
 }
 function gsSetTheatre(th) {
+  if (!gsEnsure()) return false;
   const g = gsRead();
-  if (g && g.theatre === th) return true;
-  return gsWrite(th, g ? g.flights : []);
+  if (g.theatre === th) return true;
+  return gsWrite(th, g.flights);
 }
 /* Écrit tout : l'ouverture d'un fichier de travail du Flight Configurator */
 function gsReplaceAll(theatre, flights) {
@@ -112,13 +121,22 @@ function gsReplaceAll(theatre, flights) {
       un seul, sans route : il la prend ; un seul qui a déjà une route : rien ; aucun : un groupe neuf sans unité ; plusieurs : rien.
       Pas de route retenue sans théâtre commun : le théâtre de la fiche et celui de route_state_v1 doivent être le même ;
    3. écrit la fiche (même vide), puis, seulement si elle est écrite, réécrit fc_state_v1 en { v: 2, sel, mine } : un stockage plein laisse fc_state_v1 tel qu'il est. route_set_v1 n'est pas touché.
-   Une fiche qui existe sans se lire est recopiée sous flight_set_v1_illisible (une seule fois) avant d'être remplacée.
+   Une fiche qui existe sans se lire est recopiée sous flight_set_v1_illisible (une seule fois) avant d'être remplacée ; si la copie échoue, rien n'est remplacé.
+   Un échec pose gsMigrateFailed dans fc_state_v1 ; une migration retentée ne fait alors que l'étape 1 (les liens par nom ne sont posés qu'au premier essai réussi d'un module qui n'a jamais échoué).
    Rend vrai si la fiche a été écrite. */
+function gsMigrateFail() {
+  /* le premier échec est noté dans fc_state_v1 : une migration retentée ne refait pas l'étape 2 */
+  const fc = gsJson(GS_KEY_FC);
+  if (gsIsObj(fc) && fc.gsMigrateFailed !== true) gsLsSet(GS_KEY_FC, JSON.stringify(Object.assign({}, fc, { gsMigrateFailed: true })));
+  return false;
+}
 function gsMigrate(packFn) {
+  if (typeof packFn === 'function') GS_PACKER = packFn;
   if (gsRead() !== null) return false;
-  const bad = gsLsGet(KEY_FLIGHT_SET);       // une fiche qui existe mais ne se lit pas : sa valeur est gardée telle quelle, une seule fois, avant d'être remplacée
-  if (bad !== null && gsLsGet(KEY_FLIGHT_SET_BAD) === null) gsLsSet(KEY_FLIGHT_SET_BAD, bad);
+  const bad = gsLsGet(KEY_FLIGHT_SET);       // une fiche qui existe mais ne se lit pas : sa valeur est gardée telle quelle, une seule fois, avant d'être remplacée ; sans copie, pas de remplacement
+  if (bad !== null && gsLsGet(KEY_FLIGHT_SET_BAD) === null && !gsLsSet(KEY_FLIGHT_SET_BAD, bad)) { gsNoteWrite(false); return gsMigrateFail(); }
   const fc = gsJson(GS_KEY_FC), st = gsIsObj(fc) && gsIsObj(fc.state) ? fc.state : null;
+  const retry = gsIsObj(fc) && fc.gsMigrateFailed === true;       // un premier essai a échoué : seulement l'étape 1
   const rs = gsJson(GS_KEY_ROUTE), rsTheatre = gsIsObj(rs) && typeof rs.theatre === 'string' ? rs.theatre : '';
   const flights = [], seen = new Set();
   if (st && Array.isArray(st.flights)) st.flights.forEach(f => {
@@ -130,7 +148,7 @@ function gsMigrate(packFn) {
   });
   const theatre = st && typeof st.theatre === 'string' && st.theatre !== '' ? st.theatre : rsTheatre;
   const set = gsJson(GS_KEY_ROUTES);
-  if (theatre !== '' && theatre === rsTheatre && gsIsObj(set) && Array.isArray(set.routes) && typeof packFn === 'function') {
+  if (!retry && theatre !== '' && theatre === rsTheatre && gsIsObj(set) && Array.isArray(set.routes) && typeof packFn === 'function') {
     set.routes.forEach(r => {
       if (!gsIsObj(r) || !gsIsObj(r.flight) || typeof r.rid !== 'string' || !/^[a-z0-9]{6,32}$/.test(r.rid)) return;
       const name = gsNameKey(r.flight.groupName), side = gsSide(r.flight.coalition);
@@ -145,7 +163,7 @@ function gsMigrate(packFn) {
       else flights.push({ fcId: gsNewId(), name: r.flight.groupName, coalition: side, route: { points: pts }, routeLink: link, units: [] });
     });
   }
-  if (!gsWrite(theatre, flights)) return false;
+  if (!gsWrite(theatre, flights)) return gsMigrateFail();
   if (gsIsObj(fc)) {
     const sel = st && gsIsObj(st.sel) ? st.sel : (gsIsObj(fc.sel) ? fc.sel : { f: 0, u: 0 });
     gsLsSet(GS_KEY_FC, JSON.stringify({ v: 2, sel: sel, mine: gsIsObj(fc.mine) ? fc.mine : {} }));
