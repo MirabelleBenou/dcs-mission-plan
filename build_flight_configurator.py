@@ -2184,7 +2184,7 @@ function commitNow() {
 // ----- La fiche partagée (flight_set_v1) -----
 // GS.seen : fcId → texte stable (gsStable) du groupe tel qu'on l'a lu ou écrit la dernière fois. writeState n'écrit que les groupes qui diffèrent (gsPutFlight relit la clé, ne remplace que ce groupe),
 // retire ceux que le module a supprimés (gsRemoveFlight) et pose le théâtre s'il a changé. Un groupe que le module ne montre pas (une unité d'un type hors de PAYLOAD_TYPES) n'y figure jamais : il n'est jamais touché.
-const GS = { seen: {}, theatre: '', live: false, removed: [], mf: false };       // live : la fiche existe et le module la suit (sinon fc_state_v1 v1 porte les groupes)
+const GS = { seen: {}, theatre: '', live: false, removed: [], mf: false, base: {} };       // base : sans fiche, chaque groupe tel que le module l'a lu sur le disque à son chargement       // live : la fiche existe et le module la suit (sinon fc_state_v1 v1 porte les groupes)
 function gsMarkAll() {
   GS.seen = {};
   S.flights.forEach(f => { GS.seen[f.fcId] = gsStable(f); });
@@ -2193,7 +2193,7 @@ function gsMarkAll() {
 }
 // Un groupe de la fiche que le module a changé : fusion à trois. base = ce qu'on a lu ou écrit la dernière fois (GS.seen), mien = la copie du module, leur = la fiche relue ;
 // pour chaque clé de premier niveau, mien si elle a changé depuis base, sinon leur ; route et routeLink vont ensemble. Rien n'a changé : on n'écrit pas.
-function gsMerge(f) {
+function gsMerge(f) {       // GS.seen[fcId] doit porter la base
   const mine = clone(f), g = gsRead();
   const theirs = g ? g.flights.filter(x => x.fcId === f.fcId)[0] : null;
   if (!theirs || !has(GS.seen, f.fcId)) return gsPutFlight(mine);
@@ -2218,7 +2218,12 @@ function gsAdopt(quiet) {
   // le module n'adopte une fiche qu'avec ses groupes : ceux de l'état d'avant (v1) qui n'y sont pas y sont versés d'abord ; sinon l'adoption est retentée
   if (!GS.live) {
     let all = true;
-    S.flights.forEach(f => { if (!gs.flights.some(x => x.fcId === f.fcId) && !gsPutFlight(clone(f))) all = false; });
+    S.flights.forEach(f => {
+      if (!gs.flights.some(x => x.fcId === f.fcId)) { if (!gsPutFlight(clone(f))) all = false; return; }
+      if (!has(GS.base, f.fcId)) return;       // groupe présent des deux côtés : fusion à trois, ce que le module a changé depuis sa lecture l'emporte
+      GS.seen[f.fcId] = GS.base[f.fcId];
+      if (!gsMerge(f)) all = false;
+    });
     if (!all) return false;
     gs = gsRead();
     if (!gs) return false;
@@ -2228,6 +2233,7 @@ function gsAdopt(quiet) {
   restoreState({ theatre: gs.theatre, flights: gs.flights, sel: S.sel });
   S.flights.forEach(f => { if (has(folds, f.fcId)) UI.fold.set(f, folds[f.fcId]); });
   gsMarkAll();
+  GS.base = {};
   try { lsSet(KEY_STATE, JSON.stringify({ v: 2, sel: S.sel, mine: LIB.mine })); } catch (e) { /* l'écran marche sans */ }
   if (!quiet) renderAll();
   return true;
@@ -2307,7 +2313,7 @@ function gsOnSaveFail() { showToast(tf('toast.gsFull'), 6000); }
 const UNIT_KEYS = ['type', 'name', 'callsign', 'csRaw', 'onboard', 'livery', 'folded', 'radios', 'loadout'];
 // Un vol de l'état : en v1 (fc_state_v1, fichier de travail d'avant) le type est au vol et chaque unité le prend ; en v2 chaque unité porte le sien.
 // Un vol dont une unité n'a pas un type de PAYLOAD_TYPES est écarté ; un groupe sans unité est valide (né au Route Planner).
-function restoreFlight(f) {
+function restoreFlight(f) {       // un groupe sans fcId en reçoit un par restoreState (gsLegacyIds) ; ici un identifiant au hasard seulement en dernier recours
   if (!isObj(f)) return null;
   const rawUnits = (Array.isArray(f.units) ? f.units : []).filter(isObj).slice(0, MAX_UNITS);
   const types = rawUnits.map(u => (typeof u.type === 'string' ? u.type : (typeof f.type === 'string' ? f.type : '')));
@@ -2336,9 +2342,7 @@ function restoreFlight(f) {
 function restoreState(st) {
   if (!isObj(st) || !Array.isArray(st.flights)) return false;
   S.theatre = str(st.theatre);
-  S.flights = st.flights.map(restoreFlight).filter(Boolean);
-  const ids = new Set();
-  S.flights.forEach(f => { if (ids.has(f.fcId)) f.fcId = newId(); ids.add(f.fcId); });       // un fichier édité à la main : un fcId se retrouve une seule fois
+  S.flights = gsLegacyIds(st.flights).map(restoreFlight).filter(Boolean);       // un groupe sans fcId, ou au fcId déjà pris, reçoit le même identifiant ('fv1' + rang) qu'à la migration : aucun groupe n'est écarté
   const sel = st.sel;
   S.sel = (isObj(sel) && Number.isInteger(sel.f) && Number.isInteger(sel.u)) ? { f: sel.f, u: sel.u } : { f: 0, u: 0 };
   const sf = S.flights[S.sel.f];
@@ -4452,10 +4456,11 @@ function init() {
     if (gs && had && ok && saved.v === 1 && isObj(saved.state)) {
       // l'état d'avant porte encore ses groupes : la fiche n'est adoptée qu'avec eux
       restoreState(saved.state);
+      GS.base = {}; S.flights.forEach(f => { GS.base[f.fcId] = gsStable(f); });
       GS.live = false;
       adoptFailed = !gsAdopt(true);
     } else if (gs) restoreState({ theatre: gs.theatre, flights: gs.flights, sel: sel0 });
-    else if (ok && saved.v === 1) restoreState(saved.state);       // le stockage a refusé la fiche : l'état d'avant, tel qu'il est
+    else if (ok && saved.v === 1) { restoreState(saved.state); GS.base = {}; S.flights.forEach(f => { GS.base[f.fcId] = gsStable(f); }); }       // le stockage a refusé la fiche : l'état d'avant, tel qu'il est
     if (ok) remapPresetKeys(saved.mine);
   } catch (e) { /* l'écran marche sans */ }
   if (gsRead() !== null && !adoptFailed) gsMarkAll(); else { GS.seen = {}; GS.theatre = ''; GS.live = false; if (gsRead() === null) GS.mf = true; }       // sans fiche (stockage plein), les groupes restent dans fc_state_v1 jusqu'à ce qu'elle puisse être écrite

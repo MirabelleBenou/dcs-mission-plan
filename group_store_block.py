@@ -47,6 +47,25 @@ function gsNewId() {
 function gsSide(c) { return c === 'red' || c === 'blue' ? c : ''; }
 function gsNameKey(s) { return typeof s === 'string' ? s.trim() : ''; }
 
+/* Les groupes d'un état v1 (fc_state_v1, fichier de travail) avec un fcId chacun, le même partout : un groupe sans fcId (ou dont le fcId est déjà pris) reçoit 'fv1' + son rang dans la liste ;
+   une seule fonction, pour la migration (RP ou FC) et pour le FC qui lit l'état. Rend une copie de la liste (les groupes changés sont des copies), les entrées qui ne sont pas des objets sont gardées. */
+function gsLegacyIds(list) {
+  const seen = new Set();
+  list.forEach(f => { if (gsIsObj(f) && typeof f.fcId === 'string' && f.fcId !== '') seen.add(f.fcId); });
+  const used = new Set();
+  return list.map((f, i) => {
+    if (!gsIsObj(f)) return f;
+    let id = typeof f.fcId === 'string' ? f.fcId : '';
+    if (id === '' || used.has(id)) {
+      id = 'fv1' + i;
+      while (used.has(id) || (seen.has(id) && id !== f.fcId)) id += 'x';
+      f = Object.assign({}, f, { fcId: id });
+    }
+    used.add(id);
+    return f;
+  });
+}
+
 /* La fiche lue et vérifiée : { theatre, flights } ; clé absente ou illisible : null. Un groupe sans fcId, ou dont le fcId est déjà pris, est écarté. */
 function gsRead() {
   const o = gsJson(KEY_FLIGHT_SET);
@@ -139,10 +158,8 @@ function gsMigrate(packFn) {
   const retry = gsIsObj(fc) && fc.gsMigrateFailed === true;       // un premier essai a échoué : seulement l'étape 1
   const rs = gsJson(GS_KEY_ROUTE), rsTheatre = gsIsObj(rs) && typeof rs.theatre === 'string' ? rs.theatre : '';
   const flights = [], seen = new Set();
-  if (st && Array.isArray(st.flights)) st.flights.forEach(f => {
+  if (st && Array.isArray(st.flights)) gsLegacyIds(st.flights).forEach(f => {
     if (!gsIsObj(f)) return;
-    if (typeof f.fcId !== 'string' || f.fcId === '') f.fcId = gsNewId();
-    if (seen.has(f.fcId)) return;
     seen.add(f.fcId);
     flights.push(f);
   });
