@@ -11479,9 +11479,10 @@ function init() {
   try {
     if (ok) mergeMine(saved.mine);
     if (ok && saved.gsMigrateFailed === true) GS.mf = true;
+    const had = gsRead() !== null;       // la fiche existait avant ce chargement (sinon la migration vient de la bâtir avec les groupes de l'état d'avant)
     gsMigrate(gsPackFn);       // la fiche naît ici si le Route Planner ne l'a pas fait avant : les groupes de l'état d'avant, puis les routes liées par nom
     const gs = gsRead();
-    if (gs && ok && saved.v === 1 && isObj(saved.state)) {
+    if (gs && had && ok && saved.v === 1 && isObj(saved.state)) {
       // l'état d'avant porte encore ses groupes : la fiche n'est adoptée qu'avec eux
       restoreState(saved.state);
       GS.live = false;
