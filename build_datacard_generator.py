@@ -1747,19 +1747,12 @@ select[data-tbm-src] { display: none !important; }
 .cr-sum { grid-column: 1 / -1; font-size: 11px; letter-spacing: .6px; color: var(--khaki-light); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .card-row.cur .cr-sum { color: var(--paper); opacity: .85; }
 
-/* Le groupe, en tête de l'éditeur : champs partagés avec le Flight Configurator */
-.ed-grp { margin-bottom: 14px; border: 1px solid var(--amber-dark); background: rgba(20, 24, 12, .6); padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
-.ed-grp-h { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
-.ed-grp-t { font-family: var(--f-stencil); font-weight: 700; font-size: 14px; letter-spacing: 2px; color: var(--amber); }
-.ed-grp-s { font-family: var(--f-ui); font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--khaki-light); }
-.ed-grp-sum { font-family: var(--f-ui); font-size: 11px; letter-spacing: .8px; color: var(--khaki-light); }
+/* La boîte « Groupe et équipage » : champs partagés avec le Flight Configurator (pastille FC) sur une carte liée */
 .sh {
   display: inline-block; padding: 0 4px; margin-left: 2px; font-size: 9px; line-height: 14px; letter-spacing: 1px;
   color: var(--olive-deep); background: var(--amber); border-radius: 2px;
 }
 .ed-field label .sh { align-self: center; }
-.ed-field-row.grp3 { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.05fr) minmax(0, .62fr); gap: 8px; }
-.ed-field-row.grp3 .ed-field label::before { display: none; }
 .li-u { padding: 6px 8px; }
 .li-u .li-main { gap: 6px; }
 .li-u .li-grid { gap: 6px; }
@@ -1846,9 +1839,6 @@ __TAB_SECTION_RULES__
     border-bottom: 1px solid var(--amber-dark);
     margin: -2px 0 6px 0;
   }
-  /* groupe (champs partagés) : dans l'onglet « Groupe » seulement */
-  .ed-grp { display: none; }
-  body[data-active-tab="flight"] .ed-grp { display: flex; }
   .tab-bar { display: flex; }
   .preview-wrap { padding: 16px 8px 30px 8px; }
 
@@ -1943,8 +1933,8 @@ __TAB_SECTION_RULES__
 }
 """
 
-# Règles « un onglet = une section » sous 1 100 px, générées pour les douze sections.
-SECTION_IDS = ['meta', 'flight', 'mission', 'times', 'crew', 'nav', 'refs', 'radio', 'fields', 'weather', 'fuel', 'threats']
+# Règles « un onglet = une section » sous 1 100 px, générées pour les onze sections (l'ordre de l'aperçu imprimé : méta, mission, horaires, groupe et équipage, navigation, références, radio, terrains, météo, carburant et emport, menaces et notes).
+SECTION_IDS = ['meta', 'mission', 'times', 'group', 'nav', 'refs', 'radio', 'fields', 'weather', 'fuel', 'threats']
 _tab_rules = ',\n'.join(
     f'  body[data-active-tab="{s}"] .ed-section[data-section="{s}"]' for s in SECTION_IDS
 ) + ' {\n    display: block;\n    border: none;\n  }'
@@ -2130,10 +2120,9 @@ __CSS__
 <!-- ===== ONGLETS (tablette) ===== -->
 <nav class="tab-bar" id="tab-bar" role="tablist" aria-label="Datacard Generator" data-i18n-aria-label="app.title">
   <button type="button" data-tab="meta" role="tab"><span class="tab-ico">⚙</span><span data-i18n="sec.meta">Méta</span></button>
-  <button type="button" data-tab="flight" role="tab"><span class="tab-ico">✈</span><span data-i18n="sec.flight">Groupe</span></button>
   <button type="button" data-tab="mission" role="tab"><span class="tab-ico">▣</span><span data-i18n="sec.mission">Mission</span></button>
   <button type="button" data-tab="times" role="tab"><span class="tab-ico">⏱</span><span data-i18n="sec.times">Horaires</span></button>
-  <button type="button" data-tab="crew" role="tab"><span class="tab-ico">👤</span><span data-i18n="sec.crew">Équipages</span></button>
+  <button type="button" data-tab="group" role="tab"><span class="tab-ico">✈</span><span data-i18n="tab.group">Groupe</span></button>
   <button type="button" data-tab="nav" role="tab"><span class="tab-ico">🧭</span><span data-i18n="sec.nav">Navigation</span></button>
   <button type="button" data-tab="refs" role="tab"><span class="tab-ico">◆</span><span data-i18n="sec.refs">Points de référence</span></button>
   <button type="button" data-tab="radio" role="tab"><span class="tab-ico">📻</span><span data-i18n="sec.radio">Radio</span></button>
@@ -2214,7 +2203,7 @@ const THREAT_LEGACY_MAP = {
 };
 const THREAT_KEYS = ['', 'low', 'moderate', 'high'];
 const UNIT_CHOICES = { mass: ['kg', 'lb'], distance: ['km', 'nm'], altitude: ['m', 'ft'] };
-const SECTION_IDS = ['meta', 'flight', 'mission', 'times', 'crew', 'nav', 'refs', 'radio', 'fields', 'weather', 'fuel', 'threats'];
+const SECTION_IDS = ['meta', 'mission', 'times', 'group', 'nav', 'refs', 'radio', 'fields', 'weather', 'fuel', 'threats'];
 const TAB_IDS = SECTION_IDS.concat(['preview']);
 
 /* Contenu du bouton « Exemple » (document dcs-datacard-v1) */
@@ -2331,8 +2320,6 @@ const I18N = {
     'sum.gone': 'Le groupe n\'existe plus : carte libre',
     'fl.untitled': 'Groupe {n}',
     'fl.name.ph': 'Hind 1',
-    'grp.title': 'GROUPE',
-    'grp.sub': 'Partagé avec le Flight Configurator',
     'grp.gone': 'Le groupe de cette carte n\'existe plus ailleurs : la carte est libre et garde la dernière copie de ses champs de groupe.',
     'sh.tip': 'Champ partagé avec le Flight Configurator et le Route Planner',
     'f.group.name': 'Nom du groupe',
@@ -2392,10 +2379,9 @@ const I18N = {
     'warn.overflow2': 'Contenu tronqué\u202f: la page 2 déborde.',
     'warn.overflowR': 'Contenu tronqué\u202f: la page Radios déborde.',
     'sec.meta': 'Méta',
-    'sec.flight': 'Groupe',
+    'sec.group': 'Groupe et équipage',
     'sec.mission': 'Mission',
     'sec.times': 'Horaires',
-    'sec.crew': 'Équipages',
     'sec.nav': 'Navigation',
     'sec.refs': 'Points de référence',
     'sec.radio': 'Radio',
@@ -2405,6 +2391,7 @@ const I18N = {
     'sec.threats': 'Menaces et notes',
     'sec.preview': 'Aperçu',
     'tab.fuel': 'Carburant',
+    'tab.group': 'Groupe',
     'tab.threats': 'Menaces',
     'ph.meta.docRef': 'OPS-M3-1989',
     'ph.meta.operation': 'FOOTHOLD',
@@ -2475,7 +2462,6 @@ const I18N = {
     'f.steps': 'Étapes',
     'f.crew.callsign': 'Indicatif',
     'f.crew.pilot': 'Pilote',
-    'f.crew.crew': 'Appareil',
     'f.crew.board': 'N° de bord',
     'f.nav.name': 'Point',
     'f.nav.course': 'Cap',
@@ -2538,7 +2524,6 @@ const I18N = {
     'f.notes': 'Notes',
     'add.step': '+ Ajouter une étape',
     'add.time': '+ Ajouter un horaire',
-    'add.crew': '+ Ajouter un appareil',
     'add.point': '+ Ajouter un point',
     'add.ref': '+ Point de référence',
     'add.radio': '+ Ajouter un poste',
@@ -2721,8 +2706,6 @@ const I18N = {
     'sum.gone': 'The group no longer exists: free card',
     'fl.untitled': 'Group {n}',
     'fl.name.ph': 'Hind 1',
-    'grp.title': 'GROUP',
-    'grp.sub': 'Shared with the Flight Configurator',
     'grp.gone': 'This card\'s group no longer exists elsewhere: the card is free and keeps the last copy of its group fields.',
     'sh.tip': 'Field shared with the Flight Configurator and the Route Planner',
     'f.group.name': 'Group name',
@@ -2782,10 +2765,9 @@ const I18N = {
     'warn.overflow2': 'Content truncated: page 2 overflows.',
     'warn.overflowR': 'Content truncated: the Radios page overflows.',
     'sec.meta': 'Meta',
-    'sec.flight': 'Group',
+    'sec.group': 'Group and crew',
     'sec.mission': 'Mission',
     'sec.times': 'Times',
-    'sec.crew': 'Crew',
     'sec.nav': 'Navigation',
     'sec.refs': 'Reference points',
     'sec.radio': 'Radio',
@@ -2795,6 +2777,7 @@ const I18N = {
     'sec.threats': 'Threats and notes',
     'sec.preview': 'Preview',
     'tab.fuel': 'Fuel',
+    'tab.group': 'Group',
     'tab.threats': 'Threats',
     'ph.meta.docRef': 'OPS-M3-1989',
     'ph.meta.operation': 'FOOTHOLD',
@@ -2865,7 +2848,6 @@ const I18N = {
     'f.steps': 'Steps',
     'f.crew.callsign': 'Callsign',
     'f.crew.pilot': 'Pilot',
-    'f.crew.crew': 'Aircraft',
     'f.crew.board': 'Board no.',
     'f.nav.name': 'Point',
     'f.nav.course': 'Heading',
@@ -2928,7 +2910,6 @@ const I18N = {
     'f.notes': 'Notes',
     'add.step': '+ Add step',
     'add.time': '+ Add time',
-    'add.crew': '+ Add aircraft',
     'add.point': '+ Add point',
     'add.ref': '+ Reference point',
     'add.radio': '+ Add radio',
@@ -4036,20 +4017,29 @@ function fShared(labelKey, inner) { return '<div class="ed-field"><label>' + shL
 function selShared(gsKey, value, options) {
   return '<select data-gs="' + gsKey + '">' + options.map(o => '<option value="' + esc(o[0]) + '"' + (o[0] === value ? ' selected' : '') + '>' + esc(o[1]) + '</option>').join('') + '</select>';
 }
-function grpBoxHtml(c) {
-  const f = dgFlightOf(c);
-  if (!f) return '';
+/* La boîte « Groupe et équipage », la même pour une carte liée et une carte libre : le groupe (nom, coalition, appareil, nombre, tâche, menace), puis une ligne par unité
+   (indicatif, type, n° de bord, pilote). Carte liée : nom, coalition, indicatif, type et n° de bord sont écrits dans le groupe de la fiche (pastille FC), appareil et nombre sont déduits ;
+   carte libre : tout est saisi sur la carte, et la coalition n'existe pas (l'état d'une carte libre n'en porte pas). */
+function groupBoxHtml(c) {
+  const lk = !!c.gsId, f = lk ? dgFlightOf(c) : null;
+  if (lk && !f) return '';
+  const ro = (lk || deduceGroup(c)) ? ' readonly title="' + esc(t('f.group.deduced')) + '"' : '';
   const coal = [['', t('coal.none')], ['blue', t('coal.blue')], ['red', t('coal.red')]];
-  const ro = ' readonly title="' + esc(t('f.group.deduced')) + '"';
-  return '<section class="ed-grp" data-grp="1"><div class="ed-grp-h"><span class="ed-grp-t">' + esc(t('grp.title')) + '</span><span class="ed-grp-s">' + esc(t('grp.sub')) + '</span></div>' +
-    '<div class="ed-field-row grp3">' +
-    fShared('f.group.name', '<input type="text" data-gs="name" value="' + esc(dgStr(f.name)) + '" placeholder="' + esc(t('fl.name.ph')) + '" autocomplete="off" spellcheck="false">') +
-    fShared('f.coalition', selShared('coalition', gsSide(f.coalition), coal)) +
-    fInput('f.count', 'flight.count', c.flight.count == null ? '' : String(c.flight.count), ' inputmode="numeric"' + ro) + '</div></section>';
-}
-function crewLinkedHtml(c) {
-  const f = dgFlightOf(c);
-  if (!f) return '';
+  const thr = fSelect('f.threat', 'flight.threat', c.flight.threat, [['', t('thr.none')], ['low', t('thr.low')], ['moderate', t('thr.moderate')], ['high', t('thr.high')]]);
+  const head = (!lk && c.gsGone ? '<div class="ed-warn">' + esc(t('grp.gone')) + '</div>' : '') +
+    '<div class="ed-field-row">' +
+    (lk ? fShared('f.group.name', '<input type="text" data-gs="name" value="' + esc(dgStr(f.name)) + '" placeholder="' + esc(t('fl.name.ph')) + '" autocomplete="off" spellcheck="false">') + fShared('f.coalition', selShared('coalition', gsSide(f.coalition), coal))
+      : fInput('f.group.name', 'flight.callsign', c.flight.callsign) + '<div class="ed-field"></div>') + '</div>' +
+    '<div class="ed-field-row">' + fInput('f.aircraft', 'flight.aircraft', c.flight.aircraft, ro) +
+    fInput('f.count', 'flight.count', c.flight.count == null ? '' : String(c.flight.count), ' inputmode="numeric"' + ro) + '</div>' +
+    '<div class="ed-field-row">' + fInput('f.task', 'flight.task', c.flight.task) + thr + '</div>';
+  if (!lk) {
+    return head + listHtml('crew', c.crew, (x, i) =>
+      '<div class="li-uh"><span class="li-ut">' + esc(t('cr.unit', { n: i + 1 })) + '</span></div>' +
+      '<div class="li-grid g2">' + fInput('f.crew.callsign', 'crew.' + i + '.callsign', x.callsign) + fInput('f.crew.type', 'crew.' + i + '.type', x.type) + '</div>' +
+      '<div class="li-grid g2">' + fInput('f.crew.board', 'crew.' + i + '.board', x.board) + fInput('f.crew.pilot', 'crew.' + i + '.pilot', x.pilot) + '</div>',
+      ['cr.add', { n: c.crew.length, max: LIMITS.crew }]);
+  }
   const units = dgUnits(f), fi = dgFlightPos(f.fcId);
   const opts = DG_UNIT_TYPES.map(ty => [ty, dgTypeLabel(ty)]);
   const rows = c.crew.map((x, i) => {
@@ -4065,7 +4055,7 @@ function crewLinkedHtml(c) {
       fInput('f.crew.pilot', 'crew.' + i + '.pilot', x.pilot) + '</div></div>' +
       '<div class="li-ctl"><button type="button" class="ed-btn-icon unit-x" data-gs-act="rm-unit" data-i="' + i + '"' + (units.length > 1 ? '' : ' disabled') + ' title="' + esc(t('cr.remove')) + '" aria-label="' + esc(t('cr.remove')) + '">✕</button></div></div>';
   }).join('');
-  return '<div class="ed-list">' + rows + '</div>' +
+  return head + '<div class="ed-list">' + rows + '</div>' +
     '<button type="button" class="ed-btn-add" data-gs-act="add-unit"' + (units.length >= DG_MAX_UNITS ? ' disabled' : '') + '>' + esc(t('cr.add', { n: units.length, max: DG_MAX_UNITS })) + '</button>' +
     '<div class="ed-help">' + esc(t('cr.legend')) + '</div>';
 }
@@ -4941,7 +4931,7 @@ function listHtml(path, items, renderItem, addKey) {
     '<button type="button" class="ed-btn-icon" data-act="remove" data-list="' + path + '" data-i="' + i + '" title="' + esc(t('li.del')) + '" aria-label="' + esc(t('li.del')) + '">✕</button>' +
     '</div></div>').join('');
   return '<div class="ed-list">' + rows + '</div>' +
-    '<button type="button" class="ed-btn-add" data-act="add" data-list="' + path + '"' + (items.length >= spec.max ? ' disabled' : '') + '>' + esc(t(addKey)) + '</button>';
+    '<button type="button" class="ed-btn-add" data-act="add" data-list="' + path + '"' + (items.length >= spec.max ? ' disabled' : '') + '>' + esc(Array.isArray(addKey) ? t(addKey[0], addKey[1]) : t(addKey)) + '</button>';
 }
 
 function unitOptions(kind) { return UNIT_CHOICES[kind].map(k => [k, t('u.' + k)]); }
@@ -5020,19 +5010,11 @@ const SECTION_BUILDERS = {
     fSelect('f.classification', 'meta.classification', c.meta.classification, CLASSIF_KEYS.map(k => [k, t('classif.' + k)])) +
     fInput('f.docRef', 'meta.docRef', c.meta.docRef) +
     '<div class="ed-field-row">' + fInput('f.operation', 'meta.operation', c.meta.operation) + fInput('f.mission', 'meta.mission', c.meta.mission) + '</div>' +
-    '<div class="ed-field-row">' + fInput('f.date', 'meta.date', c.meta.date) + fInput('f.time', 'meta.time', c.meta.time) + '</div>',
-
-  flight: c => {
-    const ro = deduceGroup(c) ? ' readonly title="' + esc(t('f.group.deduced')) + '"' : '';
-    return '<div class="ed-field-row">' + fInput('f.callsign', 'flight.callsign', c.flight.callsign) + fInput('f.aircraft', 'flight.aircraft', c.flight.aircraft, ro) + '</div>' +
-    '<div class="ed-field-row">' + fInput('f.count', 'flight.count', c.flight.count == null ? '' : String(c.flight.count), ' inputmode="numeric"' + ro) +
-    fSelect('f.threat', 'flight.threat', c.flight.threat, [['', t('thr.none')], ['low', t('thr.low')], ['moderate', t('thr.moderate')], ['high', t('thr.high')]]) + '</div>' +
-    fInput('f.task', 'flight.task', c.flight.task) +
+    '<div class="ed-field-row">' + fInput('f.date', 'meta.date', c.meta.date) + fInput('f.time', 'meta.time', c.meta.time) + '</div>' +
     '<div class="ed-field-row three">' +
     fSelect('f.mass', 'units.mass', c.units.mass, unitOptions('mass')) +
     fSelect('f.distance', 'units.distance', c.units.distance, unitOptions('distance')) +
-    fSelect('f.altitude', 'units.altitude', c.units.altitude, unitOptions('altitude')) + '</div>';
-  },
+    fSelect('f.altitude', 'units.altitude', c.units.altitude, unitOptions('altitude')) + '</div>',
 
   mission: c =>
     fArea('f.objective', 'mission.objective', c.mission.objective) +
@@ -5042,9 +5024,7 @@ const SECTION_BUILDERS = {
   times: c => listHtml('times', c.times, (x, i) =>
     '<div class="li-grid g2">' + fInputBare('times.' + i + '.label', x.label) + fInputBare('times.' + i + '.value', x.value) + '</div>', 'add.time'),
 
-  crew: c => listHtml('crew', c.crew, (x, i) =>
-    '<div class="li-grid g2">' + fInput('f.crew.callsign', 'crew.' + i + '.callsign', x.callsign) + fInput('f.crew.pilot', 'crew.' + i + '.pilot', x.pilot) + '</div>' +
-    '<div class="li-grid g2">' + fInput('f.crew.crew', 'crew.' + i + '.type', x.type) + fInput('f.crew.board', 'crew.' + i + '.board', x.board) + '</div>', 'add.crew'),
+  group: c => groupBoxHtml(c),
 
   nav: c => navSettingsHtml(c) + (() => {
     const legs = navLegs(c), cm = c.navDisplay.mode === 'course';
@@ -5107,15 +5087,6 @@ const SECTION_BUILDERS = {
 
 /* Une carte liée : le groupe, l'équipage = les unités, les radios par type, l'emport du FC */
 const LINKED_BUILDERS = {
-  flight: c => {
-    return '<div class="ed-field-row">' + fInput('f.aircraft', 'flight.aircraft', c.flight.aircraft, ' readonly title="' + esc(t('f.group.deduced')) + '"') + fInput('f.task', 'flight.task', c.flight.task) + '</div>' +
-    '<div class="ed-field-row">' + fSelect('f.threat', 'flight.threat', c.flight.threat, [['', t('thr.none')], ['low', t('thr.low')], ['moderate', t('thr.moderate')], ['high', t('thr.high')]]) + '<div class="ed-field"></div></div>' +
-    '<div class="ed-field-row three">' +
-    fSelect('f.mass', 'units.mass', c.units.mass, unitOptions('mass')) +
-    fSelect('f.distance', 'units.distance', c.units.distance, unitOptions('distance')) +
-    fSelect('f.altitude', 'units.altitude', c.units.altitude, unitOptions('altitude')) + '</div>';
-  },
-  crew: crewLinkedHtml,
   radio: radioLinkedHtml,
   fuel: c =>
     '<div class="ed-field-row">' + fInput('f.joker', 'fuel.joker', c.fuel.joker) + fInput('f.bingo', 'fuel.bingo', c.fuel.bingo) + '</div>' +
@@ -5149,11 +5120,10 @@ function dgFrozenSection(id, c) {
 function dgFrozenLoad(c) { return !c.gsId && gsIsObj(c.frz) && ((Array.isArray(c.frz.loads) && c.frz.loads.length) || (Array.isArray(c.frz.raw) && c.frz.raw.length)); }
 Object.keys(LINKED_BUILDERS).forEach(id => {
   const base = SECTION_BUILDERS[id];
-  SECTION_BUILDERS[id] = c => c.gsId ? LINKED_BUILDERS[id](c) : (id === 'flight' && c.gsGone ? '<div class="ed-warn">' + esc(t('grp.gone')) + '</div>' : '') + (id === 'fuel' && dgFrozenLoad(c) ? LINKED_BUILDERS.fuel(c) : dgFrozenSection(id, c) + base(c));
+  SECTION_BUILDERS[id] = c => c.gsId ? LINKED_BUILDERS[id](c) : (id === 'fuel' && dgFrozenLoad(c) ? LINKED_BUILDERS.fuel(c) : dgFrozenSection(id, c) + base(c));
 });
 
-/* Une carte liée : les sections du groupe passent en tête */
-const LINKED_ORDER = ['crew', 'radio', 'fuel', 'flight', 'meta', 'mission', 'times', 'nav', 'refs', 'fields', 'weather', 'threats'];
+/* L'éditeur suit l'ordre des blocs de l'aperçu imprimé, pour une carte liée comme pour une carte libre (SECTION_IDS) */
 const openState = {};
 
 function sectionHtml(id, idx, c) {
@@ -5183,7 +5153,7 @@ function renderEditor(keep) {
   const caret = kept ? [kept.selectionStart, kept.selectionEnd, kept.selectionDirection] : null;
   DG_UI.rendering = true;
   try {
-    document.getElementById('ed-sections').innerHTML = (c.gsId ? grpBoxHtml(c) : '') + (c.gsId ? LINKED_ORDER : SECTION_IDS).map((id, i) => sectionHtml(id, i, c)).join('');
+    document.getElementById('ed-sections').innerHTML = SECTION_IDS.map((id, i) => sectionHtml(id, i, c)).join('');
     const nw = kept && sel ? ed.querySelector(sel) : null;
     if (nw && nw !== kept && nw.tagName === kept.tagName) {
       nw.replaceWith(kept);
