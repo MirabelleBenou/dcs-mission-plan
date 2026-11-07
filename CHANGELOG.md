@@ -73,7 +73,7 @@ Changes merged since the last release, grouped per tool.
 - **Import JSON** and the import window's **JSON file** both recognise a briefing, a route, a route set (all routes at once) and a flight package; a refused file says why.
 - Day / Night reads Jour / Nuit in French.
 - The **Flight** section is now **Group**, and in **Crew** the **Crew** column becomes **Aircraft**: one line per aircraft (callsign, pilot, type, board number), filled from HQ or a flight package. When every line has a type, the group's aircraft and count follow the lines; the card's header reads “2 × Mi-24P · CAS” (or “1 × Mi-24P + 1 × Mi-8MT”) instead of “Mi-24P · FLIGHT OF 2”. A crew member saved in an older datacard is kept after the pilot's name.
-- The editor has one **Group and crew** box, as in the Flight Configurator: the group (name, side for a group's datacard, aircraft, count, task, threat), then one card per aircraft (callsign, type, board number, pilot). A group's datacard and a free card now show the same boxes in the same order — the order of the printed datacard — on desktop and in the phone's tabs; the units move to **Meta**. A mixed group's aircraft read "Mi-24P + Mi-8MT" on both.
+- The editor has one **Group and crew** box, as in the Flight Configurator: the group (name, coalition for a group's datacard, aircraft, count, task, threat), then one card per aircraft (callsign, type, board number, pilot). A group's datacard and a free card now show the same boxes in the same order — the order of the printed datacard — on desktop and in the phone's tabs; the units move to **Meta**. A mixed group's aircraft read "Mi-24P + Mi-8MT" on both.
 #### Removed
 - The Datacard Generator's own HQ and flight package imports, replaced by the common import window of the Flight Configurator and the Route Planner.
 #### Fixed
@@ -103,6 +103,7 @@ Changes merged since the last release, grouped per tool.
 #### Changed
 - HQ and Recon Station chapters: the Example button.
 - The Route Planner chapter names the magnetic models DCS uses: IGRF up to 1985, then WMM.
+- The Datacard Generator chapter lists the editor's boxes in their new order, with **Group and crew**.
 
 ---
 
