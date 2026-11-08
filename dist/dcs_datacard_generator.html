@@ -1203,16 +1203,16 @@ select[data-tbm-src] { display: none !important; }
 
 /* Terrains : aucun texte coupé (lot mp-dg-terrains-liste). Les colonnes suivent leur contenu (tableau en largeur automatique) : le rôle, l'OACI et la fréquence ne se coupent jamais et prennent leur largeur ;
    la piste a une largeur de « 17/35, » (88 px) et se coupe après chaque virgule et chaque barre (<wbr> au rendu) ; le nom prend le reste, passe à la ligne et, en dernier recours seulement, se coupe entre deux lettres ;
-   la rangée grandit. Les largeurs de <col> du balisage sont des repères : celles-ci priment. Valable pour le tableau plein comme pour les lignes à remplir (.dc-bl, qui gardent leur hauteur). */
+   la rangée grandit. Les largeurs de <col> du balisage sont des repères : celles-ci priment. Le tableau des lignes à remplir (classe dc-blank, posée au rendu) garde ses colonnes fixes et ses marges. */
 .dc-fields td.ro { font-family: var(--dc-fo); font-weight: 500; color: var(--dc-acc); text-transform: uppercase; }
 .dc-fields td.nm { font-family: var(--dc-fo); font-weight: 500; font-size: 18px; }
-.dc-tab.dc-fields { table-layout: auto; }
-.dc-fields col:nth-child(1), .dc-fields col:nth-child(2), .dc-fields col:nth-child(5) { width: 1px !important; }
-.dc-fields col:nth-child(4) { width: 88px !important; }
-.dc-fields th, .dc-fields td { padding-left: 4px; padding-right: 4px; padding-top: 2px; padding-bottom: 2px; }       /* serré : trois pistes sur trois lignes ne font pas déborder la page */
-.dc-fields td { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }
-.dc-fields td.ro, .dc-fields td:nth-child(2), .dc-fields td:last-child { white-space: nowrap; overflow-wrap: normal; }
-.dc-fields td:nth-child(4) { line-height: 1; }
+.dc-tab.dc-fields:not(.dc-blank) { table-layout: auto; }
+.dc-fields:not(.dc-blank) col:nth-child(1), .dc-fields:not(.dc-blank) col:nth-child(2), .dc-fields:not(.dc-blank) col:nth-child(5) { width: 1px !important; }
+.dc-fields:not(.dc-blank) col:nth-child(4) { width: 88px !important; }
+.dc-fields:not(.dc-blank) th, .dc-fields:not(.dc-blank) td { padding-left: 4px; padding-right: 4px; padding-top: 2px; padding-bottom: 2px; }       /* serré : trois pistes sur trois lignes ne font pas déborder la page */
+.dc-fields:not(.dc-blank) td { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }
+.dc-fields:not(.dc-blank) td.ro, .dc-fields:not(.dc-blank) td:nth-child(2), .dc-fields:not(.dc-blank) td:last-child { white-space: nowrap; overflow-wrap: normal; }
+.dc-fields:not(.dc-blank) td:nth-child(4) { line-height: 1; }
 
 /* Météo : quatre paires sur deux colonnes, valeur calée à droite, filet pointillé dessous */
 .dc-metar {
@@ -6827,7 +6827,7 @@ function blkFieldsBlank(c) {
   const body = ['dep', 'arr', 'alt'].map(r =>
     '<tr class="dc-bl"><td class="ro">' + esc(t('dc.role.' + r)) + '</td><td class="m"></td><td class="nm"></td><td class="m"></td><td class="m"></td></tr>').join('');
   return blockHtml('fields', t('dc.b.fields'),
-    '<table class="dc-tab dc-fields"><colgroup><col style="width:56px"><col style="width:76px"><col><col style="width:54px"><col style="width:104px"></colgroup>' +
+    '<table class="dc-tab dc-fields dc-blank"><colgroup><col style="width:56px"><col style="width:76px"><col><col style="width:54px"><col style="width:104px"></colgroup>' +
     '<thead><tr><th></th><th>' + esc(t('dc.h.icao')) + '</th><th>' + esc(t('dc.h.name')) + '</th><th>' + esc(t('dc.h.rwy')) + '</th><th>' + esc(t('dc.h.freq')) + '</th></tr></thead>' +
     '<tbody>' + body + '</tbody></table>', 'dc-bbt');
 }
