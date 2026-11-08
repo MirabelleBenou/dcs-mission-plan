@@ -1708,14 +1708,13 @@ select[data-tbm-src] { display: none !important; }
 }
 .dc-notes { margin-top: 9px; font: 500 17px/1.35 var(--dc-fo); letter-spacing: .02em; white-space: pre-line; overflow-wrap: anywhere; }
 
-/* Boîtes vides : titres et lignes à compléter à la main. Une ligne vide a la hauteur d'une ligne remplie de la même boîte (le filet pointillé de 1 px
-   est repris sur la marge ou le remplissage du bas) ; le filet est de l'encre de la page, en mode jour comme en mode nuit. */
-.dc-bl td::before, .dc-bl > span:empty::before, p.dc-bl::before, .dc-notes.dc-bl::before { content: '\200b'; }
-tr.dc-bl td { border-bottom: 1px dotted var(--dc-ink); padding-bottom: 2px; }
-.dc-trow.dc-bl, .wp.dc-bl, .dc-fp.dc-bl { border-bottom-color: var(--dc-ink); }
-p.dc-bl, li.dc-bl, .dc-notes.dc-bl { border-bottom: 1px dotted var(--dc-ink); margin-bottom: -1px; }
-p.dc-obj.dc-bl { margin-bottom: 5px; }
-.dc-notes.dc-bl { margin-top: 0; }
+/* Boîtes vides : titres et lignes à compléter à la main. Toute ligne ou rangée vide mesure 24 px de haut, filet pointillé de 1 px compris ; le filet
+   est de l'encre de la page, en mode jour comme en mode nuit ; les rangées alternées des tableaux gardent leur fond. */
+tr.dc-bl td { height: 24px; padding-top: 0; padding-bottom: 0; line-height: 22px; border-bottom: 1px dotted var(--dc-ink); }
+div.dc-bl, li.dc-bl, p.dc-bl { height: 24px; border-bottom: 1px dotted var(--dc-ink); margin: 0; overflow: hidden; }
+div.dc-notes.dc-bl { margin-top: 0; }
+.dc-wgrid .wp.dc-bl { border-bottom-color: var(--dc-ink); }
+.dc-trow.dc-bl, .dc-fp.dc-bl { border-bottom-color: var(--dc-ink); }
 .dc-fblank { grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); }
 .dc-fblank > .dc-load { grid-column: 1; grid-row: 2; margin-top: 8px; }
 

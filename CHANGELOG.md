@@ -79,6 +79,7 @@ Changes merged since the last release, grouped per tool.
 - Day / Night reads Jour / Nuit in French.
 - The crew has one line per aircraft (callsign, pilot, type, board number), filled from HQ or a flight package. When every line has a type, the group's aircraft and count follow the lines; the card's header reads “2 × Mi-24P · CAS” (or “1 × Mi-24P + 1 × Mi-8MT”) instead of “Mi-24P · FLIGHT OF 2”. A crew member saved in an older datacard is kept after the pilot's name.
 - The editor has one **Group and crew** box, as in the Flight Configurator: the group (name, coalition for a group's datacard, aircraft, count, task, threat), then one card per aircraft (callsign, type, board number, pilot). A group's datacard and a free card now show the same boxes in the same order — the order of the printed datacard — on desktop and in the phone's tabs; the units move to **Meta**. A mixed group's aircraft read "Mi-24P + Mi-8MT" on both.
+- The datacard always keeps all its blocks, even empty ones, so it can be printed and filled in by hand: an empty block shows its headings and a few blank lines (three mission steps, four crew rows, five navigation points, two reference points, four radio channels, the departure, arrival and alternate airfields, the weather labels, Joker and Bingo, two lines for the loadout and two for notes). A block with data is unchanged; a full datacard may now take two pages.
 #### Removed
 - The Datacard Generator's own HQ and flight package imports, replaced by the common import window of the Flight Configurator and the Route Planner.
 #### Fixed
@@ -111,6 +112,7 @@ Changes merged since the last release, grouped per tool.
 - The Route Planner chapter names the magnetic models DCS uses: IGRF up to 1985, then WMM.
 - The Datacard Generator chapter lists the editor's boxes in their new order, with **Group and crew**.
 - The Flight Configurator chapter: the helicopters' HF radio and the bands.
+- The Datacard Generator chapter: empty blocks are kept.
 
 ---
 
