@@ -2354,6 +2354,7 @@ const I18N = {
     'rt.freq': 'Fréquence {n}',
     'rt.nofreq': 'Aucune fréquence dans la fiche pour ce poste.',
     'rt.align.confirm': 'Ce canal diffère selon l\'unité : {list}.\nÉcrire « {freq} » dans les {n} unités {type} ?',
+    'rt.align.confirm.f': 'Cette fréquence diffère selon l\'unité : {list}.\nÉcrire « {freq} » dans les {n} unités {type} ?',
     'rt.none': 'Ce groupe n\'a pas d\'unité : aucune radio à montrer.',
     'rt.legend': 'Les fréquences sont celles de la fiche. Cochez les canaux à porter sur la carte ; leur nom et leur modulation sont propres à cette carte.',
     'lo.fc': 'Emport du Flight Configurator',
@@ -2744,6 +2745,7 @@ const I18N = {
     'rt.freq': 'Frequency {n}',
     'rt.nofreq': 'No frequency in the group sheet for this radio.',
     'rt.align.confirm': 'This channel differs between units: {list}.\nWrite “{freq}” to all {n} {type} units?',
+    'rt.align.confirm.f': 'This frequency differs between units: {list}.\nWrite “{freq}” to all {n} {type} units?',
     'rt.none': 'This group has no unit: no radio to show.',
     'rt.legend': 'Frequencies are those of the group sheet. Tick the channels to print on the card; their name and modulation belong to this card only.',
     'lo.fc': 'Loadout from the Flight Configurator',
@@ -3887,7 +3889,7 @@ function dgSetFreq(c, key, el) {
   if (olds.some(v => v !== olds[0])) {
     const fi = dgFlightPos(f.fcId);
     const list = idx.map((i, k) => dgUnitLabel(f, fi, i) + ' : ' + (olds[k] || '—')).join(' · ');
-    if (!confirm(t('rt.align.confirm', { list: list, freq: val || '—', n: idx.length, type: dgTypeLabel(ty) }))) { el.value = olds[0]; el._dgBase = olds[0]; return; }       /* refusé : le champ revient à ce que la fiche porte, rien n'est écrit */
+    if (!confirm(t(free ? 'rt.align.confirm.f' : 'rt.align.confirm', { list: list, freq: val || '—', n: idx.length, type: dgTypeLabel(ty) }))) { el.value = olds[0]; el._dgBase = olds[0]; return; }       /* refusé : le champ revient à ce que la fiche porte, rien n'est écrit */
   }
   el.value = val; el._dgBase = val;
   dgPut(c.gsId, nf => { const nus = dgUnitsOf(nf); idx.forEach(i => { const u = nus[i]; if (!u) return; if (!gsIsObj(u.radios)) u.radios = {}; if (!gsIsObj(u.radios[r])) u.radios[r] = {}; u.radios[r][ch] = val; }); });

@@ -2144,6 +2144,7 @@ function gsPull() {
     const cur = byId[raw.fcId], j = gsStable(nf);
     if (cur && (GS.seen[raw.fcId] === j || gsStable(cur) !== GS.seen[raw.fcId])) { out.push(cur); return; }
     if (cur && UI.fold.has(cur)) UI.fold.set(nf, UI.fold.get(cur));
+    if (cur) refusedCarry(cur, nf);
     if (cur && cur.routeLink && nf.routeLink && cur.routeLink.rid === nf.routeLink.rid && (cur.routeLink.name !== nf.routeLink.name || JSON.stringify(cur.route ? cur.route.points : null) !== JSON.stringify(nf.route ? nf.route.points : null))) taken.push({ nf: nf, name: nf.routeLink.name });      // le Route Planner a repris la route de ce groupe
     GS.seen[raw.fcId] = j;
     if (gsHasRawLoadout(raw)) { GS.seen[raw.fcId] = gsStable(raw); rewrite = true; }       // l'emport brut est converti : gsFixRaw l'écrit, sans payloadIn
@@ -2270,10 +2271,24 @@ function csValue(u) {
 function radioPosts(type) { return radioPostsOf(type); }
 // Un poste que la mission ne pré-règle pas : ses entrées sont des fréquences, sans numéro de canal.
 function radioIsFree(type, r) { return radioFreeCount(type, r) > 0; }
-// Les fréquences hors bande saisies à la main dans cette session : fcId|rang de l'unité|poste|canal → texte saisi. Une fréquence hors bande qui n'y est pas (importée, ou saisie avant un changement de bande)
-// est gardée et signalée, sans bloquer l'export ; celle qu'on vient de saisir reste refusée tant qu'elle n'est pas corrigée.
-const TYPED = {};
-function typedKey(f, ui, r, c) { return f.fcId + '|' + ui + '|' + r + '|' + c; }
+// Une saisie refusée (hors de la bande du poste, ou qui n'est pas un nombre) n'est jamais écrite dans la fiche : la fiche garde la valeur d'avant. Le texte refusé ne vit qu'ici, dans la page ouverte,
+// attaché à l'objet de l'unité (jamais à un rang) : « poste|canal » → texte tapé. Le champ le montre, marqué, et l'export reste bloqué tant qu'il en montre un ; il disparaît avec l'unité, au rechargement,
+// au changement de type, à « Recopier » (qui copie la fiche) et quand la fiche change ce canal ailleurs (import, Datacard Generator). Une fréquence hors bande déjà dans la fiche n'a rien à voir avec lui.
+const REFUSED = new WeakMap();
+function refusedGet(u, r, c) { const m = REFUSED.get(u); return m && has(m, r + '|' + c) ? m[r + '|' + c] : undefined; }
+function refusedSet(u, r, c, text) { let m = REFUSED.get(u); if (!m) { m = {}; REFUSED.set(u, m); } m[r + '|' + c] = text; }
+function refusedClear(u, r, c) { const m = REFUSED.get(u); if (m) { delete m[r + '|' + c]; if (!Object.keys(m).length) REFUSED.delete(u); } }
+// Ce que le champ montre : le texte refusé s'il y en a un, sinon la valeur de la fiche.
+function chanShown(u, r, c) { const t = refusedGet(u, r, c); return t !== undefined ? t : chanValue(u, r, c); }
+// La fiche a été relue (un autre module l'a écrite) : les textes refusés d'une unité ne suivent que si le groupe a les mêmes unités, du même type, et que le canal n'a pas changé dans la fiche.
+function refusedCarry(cur, nf) {
+  if (cur.units.length !== nf.units.length) return;
+  cur.units.forEach((cu, i) => {
+    const m = REFUSED.get(cu), nu = nf.units[i];
+    if (!m || cu.type !== nu.type) return;
+    Object.keys(m).forEach(k => { const p = k.split('|'); if (chanValue(cu, p[0], p[1]) === chanValue(nu, p[0], p[1])) refusedSet(nu, p[0], p[1], m[k]); });
+  });
+}
 function chanValue(u, r, c) { return (u.radios[r] && u.radios[r][c] !== undefined) ? String(u.radios[r][c]) : ''; }
 function parseFreq(s) {
   const x = String(s).trim().replace(',', '.');
@@ -2290,20 +2305,21 @@ function bandHull(type, r) {
   const b = radioBand(type, r);
   return [Math.min.apply(null, b.map(x => x[0])), Math.max.apply(null, b.map(x => x[1]))];
 }
-// Défauts d'un poste : { first (le premier message), bad (les canaux fautifs), block (ceux qui bloquent l'export : saisis à la main dans cette session) }. Une fréquence hors de la bande du poste ou non numérique est signalée.
+// Défauts d'un poste : { first (le premier message), bad (les canaux fautifs), block (ceux dont le champ montre un texte refusé : ils bloquent l'export) }. Une fréquence hors de la bande du poste ou non numérique est signalée ;
+// celle de la fiche ne bloque pas, le texte refusé (jamais écrit) bloque.
 // Un poste non pré-réglé nomme ses entrées « Fréquence n », jamais « Canal n ».
 function radioIssues(f, u, r) {
-  const ty = u.type, free = radioIsFree(ty, r), ui = f.units.indexOf(u);
+  const ty = u.type, free = radioIsFree(ty, r);
   const bad = [], block = [];
   let first = '';
   for (let c = 1; c <= radioSlotsOf(ty, r); c++) {
-    const raw = chanValue(u, r, c), p = parseFreq(raw), ch = free ? c : radioCockpitChannel(ty, r, c);
+    const ref = refusedGet(u, r, c), raw = ref !== undefined ? ref : chanValue(u, r, c), p = parseFreq(raw), ch = free ? c : radioCockpitChannel(ty, r, c);
     let msg = '';
     if (p.nan) msg = tf(free ? 'rad.err.nan.f' : 'rad.err.nan', ch, raw);
     else if (p.v !== undefined && !inBand(radioBand(ty, r), p.v)) msg = tf(free ? 'rad.err.range.f' : 'rad.err.range', ch, fmtMHz(p.v), bandText(ty, r));
     if (msg) {
       bad.push(c); first = first || msg;
-      if (has(TYPED, typedKey(f, ui, r, c)) && TYPED[typedKey(f, ui, r, c)] === raw) block.push(c);
+      if (ref !== undefined) block.push(c);
     }
   }
   return { first: first, bad: bad, block: block };
@@ -3149,7 +3165,7 @@ function radiosHtml(f, fi, u, ui) {
     let chans = '';
     for (let c = 1; c <= n; c++) {
       chans += `<div class="fc-ch"><label>${esc(free ? tf('rad.freq', c) : tf('rad.ch', radioCockpitChannel(ty, r, c)))}</label>`
-        + numberInputHtml(`data-u="${ui}" data-r="${r}" data-c="${c}" data-k="chan" placeholder="—"`, chanValue(u, r, c), hull[0], hull[1], '0.001') + '</div>';
+        + numberInputHtml(`data-u="${ui}" data-r="${r}" data-c="${c}" data-k="chan" placeholder="—"`, chanShown(u, r, c), hull[0], hull[1], '0.001') + '</div>';
     }
     return `<details class="fc-post" data-key="${pk}"${openAttr(pk)}><summary><span class="fc-ptop">${esc(radioPosteName(ty, r) || 'R' + r)} ${free ? '' : `<span class="fc-sum">${esc(tf('rad.chans', n))}</span>`}<span class="fc-sum fc-flag" data-flag="${r}"></span></span><span class="fc-band" data-band="${r}">${esc(bandText(ty, r))}</span></summary>
       <div class="fc-postc"><div class="fc-chans">${chans}</div><div class="fc-msg" id="rm-${fi}-${ui}-${r}"></div></div></details>`;
@@ -3862,11 +3878,7 @@ const ACTIONS = {
   },
   'copy-radios': c => {
     const f = S.flights[c.fi], src = f.units[c.ui];
-    f.units.forEach((u, k) => {
-      if (k === c.ui || u.type !== src.type) return;
-      u.radios = clone(src.radios);
-      radioPosts(src.type).forEach(r => { for (let n = 1; n <= radioSlotsOf(src.type, r); n++) { const sk = typedKey(f, c.ui, r, n), dk = typedKey(f, k, r, n); if (has(TYPED, sk)) TYPED[dk] = TYPED[sk]; else delete TYPED[dk]; } });       // une saisie hors bande recopiée reste une saisie
-    });
+    f.units.forEach((u, k) => { if (k !== c.ui && u.type === src.type) { u.radios = clone(src.radios); REFUSED.delete(u); } });       // « Recopier » copie la fiche : jamais un texte refusé, et celui des autres unités s'efface avec leurs valeurs
     renderLeft(); refreshAll();
   },
   'see-cmp': c => { selectUnit(c.fi, c.ui); const b = document.getElementById('blk-cmp'); if (b && window.innerWidth < 1100) b.scrollIntoView({ block: 'start', behavior: 'smooth' }); },
@@ -3907,8 +3919,9 @@ function onInput(e) {
   else if (k === 'livery') { u.livery = el.value; if (!LV.quiet) lvOpen(el); }
   else if (k === 'chan') {
     const r = Number(el.getAttribute('data-r'));
-    (u.radios[r] = u.radios[r] || {})[Number(el.getAttribute('data-c'))] = el.value;
-    TYPED[typedKey(f, Number(el.getAttribute('data-u')), r, Number(el.getAttribute('data-c')))] = el.value;       // saisi à la main : s'il est hors bande, il bloque l'export
+    const c = Number(el.getAttribute('data-c')), p = parseFreq(el.value);
+    if (p.empty || (p.v !== undefined && inBand(radioBand(u.type, r), p.v))) { (u.radios[r] = u.radios[r] || {})[c] = el.value; refusedClear(u, r, c); }       // une saisie valide (un champ vidé aussi) s'écrit
+    else refusedSet(u, r, c, el.value);       // refusée : jamais écrite, la fiche garde la valeur d'avant ; le champ garde le texte tapé, marqué, et l'export est bloqué
     paintRadioMsg(fi, Number(el.getAttribute('data-u')), r);
   } else if (LO_FIELDS.indexOf(k) >= 0) {
     const su = selUnit();
@@ -3980,7 +3993,7 @@ function changeUnitType(f, fi, ui, el) {
   const u = f.units[ui], nt = el.value;
   if (!u || nt === u.type || PAYLOAD_TYPES.indexOf(nt) < 0) return;
   if ((radioCount(f, u) > 0 || !!u.loadout) && !confirm(tf('u.type.confirm', unitLabel(f, fi, u, ui)))) { el.value = u.type; return; }
-  u.type = nt; u.radios = {}; u.loadout = null;
+  u.type = nt; u.radios = {}; u.loadout = null; REFUSED.delete(u);
   Object.assign(UI.cmp, { saving: false, err: '', st: null });
   renderAll();
 }

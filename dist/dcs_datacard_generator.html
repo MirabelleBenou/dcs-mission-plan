@@ -2399,6 +2399,7 @@ const I18N = {
     'rt.freq': 'Fréquence {n}',
     'rt.nofreq': 'Aucune fréquence dans la fiche pour ce poste.',
     'rt.align.confirm': 'Ce canal diffère selon l\'unité : {list}.\nÉcrire « {freq} » dans les {n} unités {type} ?',
+    'rt.align.confirm.f': 'Cette fréquence diffère selon l\'unité : {list}.\nÉcrire « {freq} » dans les {n} unités {type} ?',
     'rt.none': 'Ce groupe n\'a pas d\'unité : aucune radio à montrer.',
     'rt.legend': 'Les fréquences sont celles de la fiche. Cochez les canaux à porter sur la carte ; leur nom et leur modulation sont propres à cette carte.',
     'lo.fc': 'Emport du Flight Configurator',
@@ -2789,6 +2790,7 @@ const I18N = {
     'rt.freq': 'Frequency {n}',
     'rt.nofreq': 'No frequency in the group sheet for this radio.',
     'rt.align.confirm': 'This channel differs between units: {list}.\nWrite “{freq}” to all {n} {type} units?',
+    'rt.align.confirm.f': 'This frequency differs between units: {list}.\nWrite “{freq}” to all {n} {type} units?',
     'rt.none': 'This group has no unit: no radio to show.',
     'rt.legend': 'Frequencies are those of the group sheet. Tick the channels to print on the card; their name and modulation belong to this card only.',
     'lo.fc': 'Loadout from the Flight Configurator',
@@ -4685,9 +4687,10 @@ function impBgSideDefault() {
 function impRouteOff(src, g) {
   return !!(src.theatre && g && g.flights.length && g.theatre !== '' && g.theatre !== src.theatre);
 }
-function impMergeRadios(unit, type, radios) {
+function impMergeRadios(unit, type, radios, fromHq) {
   radios.forEach(r => {
     if (!gsIsObj(r) || !gsIsObj(r.channels) || !radioSlotsOf(type, r.radioIndex)) return;
+    if (fromHq && radioFreeCount(type, r.radioIndex) > 0) return;       /* la mission chargée dans HQ ne pré-règle pas ce poste (le poste HF des hélicoptères) : rien à verser */
     const post = {};
     Object.keys(r.channels).forEach(c => {
       const v = r.channels[c];
@@ -4703,7 +4706,7 @@ function impRetype(st, target, fi, k, u, ty) {
   delete u.payloadIn;
 }
 /* Les unités d'un vol de HQ ou d'un paquet se complètent par rang. Une unité neuve prend l'identité de celle de la source ; une unité du groupe d'un autre type prend toujours le type de la source. */
-function impMergeUnit(st, target, fi, k, iu, chk, src) {
+function impMergeUnit(st, target, fi, k, iu, chk, src, fromHq) {
   let u = target.units[k];
   const ty = impUnitType(src, iu);
   if (!u) {
@@ -4714,7 +4717,7 @@ function impMergeUnit(st, target, fi, k, iu, chk, src) {
     u.onboard = (typeof iu.onboardNum === 'string' || impNum(iu.onboardNum)) ? String(iu.onboardNum) : '';
   } else if (IMP_TYPES.indexOf(ty) >= 0 && ty !== u.type) impRetype(st, target, fi, k, u, ty);
   if (chk.livery && typeof iu.liveryId === 'string') u.livery = iu.liveryId;
-  if (chk.radios && Array.isArray(iu.radios)) impMergeRadios(u, u.type, iu.radios);
+  if (chk.radios && Array.isArray(iu.radios)) impMergeRadios(u, u.type, iu.radios, fromHq);
   if (chk.loadout && gsIsObj(iu.payload) && gsIsObj(iu.payload.pylons)) {
     const conv = st.convert && u.type !== '' ? IMP.hooks.loadoutFrom : null;
     if (conv) { u.loadout = conv(u.type, impClone(iu.payload)) || null; delete u.payloadIn; }       // le module convertit : l'emport s'écrit tel qu'il le garde, jamais d'état intermédiaire
@@ -4766,7 +4769,7 @@ function impWrite(src, picks, side) {
     if (chk.route && row.points) { target.route = { points: impClone(row.points) }; delete target.routeLink; }       // une route importée est un autre plan de vol : le lien avec le Route Planner tombe, le Route Planner la reprend
     if (row.kind === 'bg') impBriefingUnits(st, target, fi, row, chk, src);
     else if (row.managed) {
-      row.units.slice(0, IMP_MAX_UNITS).forEach((iu, k) => impMergeUnit(st, target, fi, k, iu, chk, row.aircraftType !== undefined ? row : { units: row.units }));
+      row.units.slice(0, IMP_MAX_UNITS).forEach((iu, k) => impMergeUnit(st, target, fi, k, iu, chk, row.aircraftType !== undefined ? row : { units: row.units }, !!src && src.kind === 'hq'));
       if (!target.units.length) target.units.push(newUnit(IMP_TYPES.indexOf(row.types[0]) >= 0 ? row.types[0] : IMP_DEFAULT_TYPE));      // un vol sans unité : une unité, du type du vol
     }
     if (!gsPutFlight(target)) { st.failed = true; break; }
@@ -5580,7 +5583,7 @@ function dgSetFreq(c, key, el) {
   if (olds.some(v => v !== olds[0])) {
     const fi = dgFlightPos(f.fcId);
     const list = idx.map((i, k) => dgUnitLabel(f, fi, i) + ' : ' + (olds[k] || '—')).join(' · ');
-    if (!confirm(t('rt.align.confirm', { list: list, freq: val || '—', n: idx.length, type: dgTypeLabel(ty) }))) { el.value = olds[0]; el._dgBase = olds[0]; return; }       /* refusé : le champ revient à ce que la fiche porte, rien n'est écrit */
+    if (!confirm(t(free ? 'rt.align.confirm.f' : 'rt.align.confirm', { list: list, freq: val || '—', n: idx.length, type: dgTypeLabel(ty) }))) { el.value = olds[0]; el._dgBase = olds[0]; return; }       /* refusé : le champ revient à ce que la fiche porte, rien n'est écrit */
   }
   el.value = val; el._dgBase = val;
   dgPut(c.gsId, nf => { const nus = dgUnitsOf(nf); idx.forEach(i => { const u = nus[i]; if (!u) return; if (!gsIsObj(u.radios)) u.radios = {}; if (!gsIsObj(u.radios[r])) u.radios[r] = {}; u.radios[r][ch] = val; }); });
