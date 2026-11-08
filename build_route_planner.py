@@ -26,6 +26,7 @@ from group_store_block import build_block as build_group_store_block
 from radio_bands_block import build_block as build_radio_bands_block
 from radio_block import build_block as build_radio_block
 from import_block import build_block as build_import_block, build_css as build_import_css, build_html as build_import_html
+from messages_block import build_block as build_messages_block, build_css as build_messages_css
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 APP_VERSION = "1.13.1"
@@ -915,15 +916,7 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .eb-row .tb-btn { height: 36px; min-width: 0; padding: 0 10px; font-size: 11px; letter-spacing: 1px; }
 .eb-hint { max-width: 100%; background: rgba(31,28,22,.88); color: var(--paper-light); font-size: 11px; letter-spacing: .5px; line-height: 1.3; padding: 4px 8px; text-align: center; }
 
-/* ---------- toast ---------- */
-.toast {
-  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px);
-  background: var(--olive-dark); border: 1px solid var(--amber); color: var(--paper);
-  font-family: var(--f-ui); font-weight: 700; letter-spacing: 2px; text-transform: uppercase; font-size: 12px;
-  padding: 10px 20px; z-index: 20000; opacity: 0; transition: all .3s ease; pointer-events: none;
-  box-shadow: 0 4px 16px rgba(0,0,0,.6); width: max-content; max-width: 92vw; text-align: center;
-}
-.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
+@@MESSAGES_CSS@@
 
 /* ---------- le mode Dessin et la séparation carte / panneau (lot rp-v1.6.0) : les valeurs de la maquette, une pour une ---------- */
 .rp-drawing .leaflet-overlay-pane, .rp-drawing .leaflet-marker-pane, .rp-drawing .leaflet-refs-pane,
@@ -1428,8 +1421,6 @@ __CSS__
     </div>
   </aside>
 </main>
-
-<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <!-- ===== FENÊTRE : OUVRIR UNE ROUTE DU ROUTE TOOL ===== -->
 <div class="rt-modal" id="rt-open-modal" hidden role="dialog" aria-modal="true" aria-labelledby="rt-open-title">
@@ -3230,13 +3221,7 @@ function str(v) {
 function pad2(n) { return String(n).padStart(2, '0'); }
 const $ = id => document.getElementById(id);
 
-function showToast(msg, ms) {
-  const el = $('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  clearTimeout(showToast._h);
-  showToast._h = setTimeout(() => el.classList.remove('show'), ms || 2200);
-}
+@@MESSAGES_BLOCK@@
 
 /* ============= COORDONNÉES DE NAVIGATION ============= */
 /* Recopié à l'identique du Datacard Generator : constantes WGS84, UTM, MGRS, lectures, DMS, cap et distance. */
@@ -11024,7 +11009,7 @@ def build():
     airfields_js = json.dumps(AF['theatres'], ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
     towns_js = json.dumps(TW['theatres'], ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
     js = JS.replace('__EXAMPLE_ROUTE__', example_js).replace('__EXAMPLE_ROUTE_EN__', example_en_js).replace('__AIRFIELDS__', airfields_js).replace('__TOWNS__', towns_js)
-    js = js.replace('@@GEO_BLOCK@@\n', GEO_BLOCK).replace('@@READNUM_BLOCK@@\n', READNUM_BLOCK).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@ROUTE_PACK_BLOCK@@\n', build_route_pack_block()).replace('@@GROUP_STORE_BLOCK@@\n', build_group_store_block()).replace('@@RADIO_BLOCK@@\n', build_radio_block()).replace('@@RADIO_BANDS_BLOCK@@\n', build_radio_bands_block()).replace('@@IMPORT_BLOCK@@\n', build_import_block())
+    js = js.replace('@@GEO_BLOCK@@\n', GEO_BLOCK).replace('@@READNUM_BLOCK@@\n', READNUM_BLOCK).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@ROUTE_PACK_BLOCK@@\n', build_route_pack_block()).replace('@@GROUP_STORE_BLOCK@@\n', build_group_store_block()).replace('@@RADIO_BLOCK@@\n', build_radio_block()).replace('@@RADIO_BANDS_BLOCK@@\n', build_radio_bands_block()).replace('@@IMPORT_BLOCK@@\n', build_import_block()).replace('@@MESSAGES_BLOCK@@\n', build_messages_block())
     if '@@' in js:
         raise SystemExit("[ERREUR] Marqueur @@ non remplacé dans le script")
     lib = A['lib_leaflet']
@@ -11039,7 +11024,7 @@ def build():
         raise SystemExit("[ERREUR] lib_milsymbol : la mention de licence MIT n'est plus en tête")
 
     html = HTML
-    html = html.replace('__CSS__', CSS + build_import_css())
+    html = html.replace('__CSS__', CSS.replace('@@MESSAGES_CSS@@\n', build_messages_css()) + build_import_css())
     html = html.replace('__IMPORT_HTML__\n', build_import_html())
     html = html.replace('__LIB_LEAFLET_CSS__', A['lib_leaflet_css'])
     html = html.replace('__LIB_LEAFLET__', lib)

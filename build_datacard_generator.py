@@ -24,6 +24,7 @@ from group_store_block import build_block as build_group_store_block
 from route_pack_block import build_block as build_route_pack_block
 from payload_block import build_block as build_payload_block
 from import_block import build_block as build_import_block, build_css as build_import_css, build_html as build_import_html
+from messages_block import build_block as build_messages_block, build_css as build_messages_css
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 APP_VERSION = "1.5.1"
@@ -1175,33 +1176,7 @@ select[data-tbm-src] { display: none !important; }
 }
 .tab-bar button:active { transform: translateY(1px); }
 
-/* ============ TOAST ============ */
-.toast {
-  position: fixed;
-  bottom: 20px; left: 50%;
-  transform: translateX(-50%) translateY(100px);
-  background: var(--olive-dark);
-  border: 1px solid var(--amber);
-  color: var(--paper);
-  font-family: var(--f-ui);
-  font-weight: 700;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  font-size: 12px;
-  padding: 10px 20px;
-  z-index: 20000;
-  opacity: 0;
-  transition: all .3s ease;
-  pointer-events: none;
-  box-shadow: 0 4px 16px rgba(0,0,0,.6);
-  width: max-content; max-width: 92vw;
-  text-align: center;
-}
-.toast.show {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-  pointer-events: auto;
-}
+@@MESSAGES_CSS@@
 
 /* ============ FENÊTRES (export, import du briefing) ============ */
 .export-modal[hidden] { display: none !important; }
@@ -1921,7 +1896,7 @@ __TAB_SECTION_RULES__
 @page { size: A4 portrait; margin: 0; }
 @media print {
   html, body { height: auto; overflow: visible; background: #ffffff; }
-  .toolbar, .app, .tab-bar, .toast, .export-modal, #measure-root { display: none !important; }
+  .toolbar, .app, .tab-bar, .export-modal, #measure-root { display: none !important; }
   #print-root { display: block; }
   .dc-psheet {
     width: 210mm;
@@ -2154,7 +2129,6 @@ __CSS__
   </div>
 </div>
 
-<div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div id="print-root" aria-hidden="true"></div>
 <div id="measure-root" aria-hidden="true"></div>
 
@@ -3067,13 +3041,7 @@ function str(v) {
 function clone(o) { return JSON.parse(JSON.stringify(o)); }
 function pad2(n) { return String(n).padStart(2, '0'); }
 
-function showToast(msg, ms) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  clearTimeout(showToast._h);
-  showToast._h = setTimeout(() => el.classList.remove('show'), ms || 2200);
-}
+@@MESSAGES_BLOCK@@
 
 /* ============= COORDONNÉES DE NAVIGATION ============= */
 /* Datum WGS84. Lecture : MGRS, degrés-minutes-secondes, degrés-minutes décimales, degrés décimaux.
@@ -6749,11 +6717,11 @@ def build():
 
     _wn, _pyl, _lim = dg_tables()
     js = JS.replace('@@WEAPON_NAMES@@', _wn).replace('@@AIRCRAFT_PYLONS@@', _pyl).replace('@@AIRCRAFT_LIMITS@@', _lim)
-    js = js.replace('@@PAYLOAD_BLOCK@@\n', build_payload_block()).replace('@@IMPORT_BLOCK@@\n', build_import_block())
+    js = js.replace('@@PAYLOAD_BLOCK@@\n', build_payload_block()).replace('@@IMPORT_BLOCK@@\n', build_import_block()).replace('@@MESSAGES_BLOCK@@\n', build_messages_block())
     js = js.replace('@@ROUTE_PACK_BLOCK@@\n', build_route_pack_block()).replace('@@GROUP_STORE_BLOCK@@\n', build_group_store_block())
     js = js.replace('__EXAMPLE_DOC__', example_js).replace('__EXAMPLE_DOC_EN__', example_en_js).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@RADIO_BLOCK@@\n', build_radio_block()).replace('@@RADIO_BANDS_BLOCK@@\n', build_radio_bands_block()).replace('@@PROJECTION_BLOCK@@\n', build_projection_block())
     html = HTML
-    html = html.replace('__CSS__', CSS + build_import_css())
+    html = html.replace('__CSS__', CSS.replace('@@MESSAGES_CSS@@\n', build_messages_css()) + build_import_css())
     html = html.replace('@@IMPORT_HTML@@\n', build_import_html())
     html = html.replace('__LIB_HTML2CANVAS__', A['lib_html2canvas'])
     html = html.replace('__LIB_JSZIP__', A['lib_jszip'])

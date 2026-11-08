@@ -6,6 +6,8 @@ import os
 import base64
 import re
 
+from messages_block import build_block as build_messages_block, build_css as build_messages_css
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 ASSETS_PATH = os.path.join(HERE, 'assets.json')
 if not os.path.isfile(ASSETS_PATH):
@@ -2303,36 +2305,7 @@ select[data-tbm-src] {{ display: none !important; }}
 .fn-btn.go {{ border: 2px solid var(--amber); color: var(--amber); }}
 .fn-btn:disabled {{ opacity: .35; cursor: not-allowed; }}
 
-/* ======== TOAST ======== */
-.toast-container {{
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 9999;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  pointer-events: none;
-}}
-.toast {{
-  background: var(--olive-dark);
-  border: 1px solid var(--amber-dark);
-  color: var(--paper);
-  padding: 10px 18px;
-  font-family: var(--f-ui);
-  font-size: 12px;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity .3s;
-  white-space: nowrap;
-  box-shadow: 0 4px 16px rgba(0,0,0,.5);
-}}
-.toast.show {{ opacity: 1; }}
-.toast.ok {{ border-color: var(--green-radar); }}
-.toast.err {{ border-color: var(--red-faded); color: var(--red-faded); }}
+@@MESSAGES_CSS@@
 
 /* ======== RESPONSIVE — tablette <1100px ======== */
 @media (max-width: 1100px) {{
@@ -2686,7 +2659,6 @@ select[data-tbm-src] {{ display: none !important; }}
 </div>
 
 <!-- TOAST -->
-<div class="toast-container" id="toast-container" aria-live="polite"></div>
 
 <!-- HIDDEN CANVAS (export full-res) -->
 <canvas id="export-canvas" hidden></canvas>
@@ -3055,21 +3027,7 @@ async function ensureFonts() {{
   return fontsReadyPromise;
 }}
 
-// ── Toast ──────────────────────────────────────────────────────
-function showToast(msg, type='', duration=2800) {{
-  const tc = document.getElementById('toast-container');
-  const el = document.createElement('div');
-  el.className = 'toast' + (type ? ' ' + type : '');
-  el.textContent = msg;
-  tc.appendChild(el);
-  requestAnimationFrame(() => {{
-    requestAnimationFrame(() => {{ el.classList.add('show'); }});
-  }});
-  setTimeout(() => {{
-    el.classList.remove('show');
-    setTimeout(() => el.remove(), 400);
-  }}, duration);
-}}
+@@MESSAGES_BLOCK@@
 
 // ── Theme ──────────────────────────────────────────────────────
 function loadTheme() {{
@@ -5138,6 +5096,8 @@ init();
 # ---------- Build output ----------
 os.makedirs(os.path.join(HERE, 'dist'), exist_ok=True)
 OUTPUT_PATH = os.path.join(HERE, 'dist', 'dcs_recon_station.html')
+
+HTML = HTML.replace('@@MESSAGES_CSS@@\n', build_messages_css()).replace('@@MESSAGES_BLOCK@@\n', build_messages_block())
 
 with open(OUTPUT_PATH, 'w', encoding='utf-8') as f:
     f.write(HTML)

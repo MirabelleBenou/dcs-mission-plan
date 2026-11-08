@@ -28,6 +28,7 @@ import sys
 
 from group_store_block import build_block as build_group_store_block
 from import_block import build_block as build_import_block, build_css as build_import_css, build_html as build_import_html
+from messages_block import build_block as build_messages_block, build_css as build_messages_css
 from magvar_block import build_block as build_magvar_block
 from payload_block import build_block as build_payload_block
 from projection_block import build_block as build_projection_block
@@ -1118,31 +1119,7 @@ select[data-tbm-src] { display: none !important; }
 .miz-btn:disabled { opacity: .4; cursor: default; }
 .miz-btn:disabled:hover { background: rgba(0,0,0,.2); border-color: var(--khaki); color: var(--paper-light); }
 .miz-btn.primary:disabled:hover { border-color: var(--amber); color: var(--amber); }
-/* ======== TOAST ======== */
-.toast {
-  position: fixed;
-  bottom: 20px; left: 50%;
-  transform: translateX(-50%) translateY(100px);
-  background: var(--olive-dark);
-  border: 1px solid var(--amber);
-  color: var(--paper);
-  font-family: var(--f-ui);
-  font-weight: 500;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  font-size: 12px;
-  padding: 10px 20px;
-  z-index: 2000;
-  opacity: 0;
-  transition: all .3s ease;
-  pointer-events: none;
-  box-shadow: 0 4px 16px rgba(0,0,0,.6);
-  width: max-content; max-width: calc(100vw - 24px); text-align: center;
-}
-.toast.show {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}"""
+"""
 
 # ---------- CSS propre au module ----------
 CSS_FC = r"""
@@ -1549,8 +1526,6 @@ BODY = r"""
     </div>
   </div>
 </div>
-
-<div class="toast" id="toast" role="status" aria-live="polite"></div>
 """
 
 BUTTONS = '\n  '.join([
@@ -3607,13 +3582,6 @@ function fcImported(res) {
 
 
 // ---------- 6. Fichiers : Ouvrir, Enregistrer, Exporter, Effacer ----------
-function showToast(msg, ms) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  clearTimeout(showToast._h);
-  showToast._h = setTimeout(() => el.classList.remove('show'), ms || 2400);
-}
 function fcDownload(blob, name) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -4157,11 +4125,11 @@ def build_html():
                   .replace('@@STARDOS_700@@', A['STARDOS_700'])
                   .replace('@@OSWALD_500@@', A['OSWALD_500']))
     js = (build_radio_block() + '\n' + build_radio_bands_block() + '\n' + tables_js() + '\n' + build_payload_block() + '\n' + PAD2_JS + '\n' + COORD_BLOCK + READNUM_BLOCK + build_magvar_block() + '\n' + build_projection_block() + '\n'
-          + build_route_pack_block() + '\n' + build_group_store_block() + '\n' + build_import_block() + '\n' + JS_TBM + '\n' + app_js())
+          + build_route_pack_block() + '\n' + build_group_store_block() + '\n' + build_import_block() + '\n' + build_messages_block() + '\n' + JS_TBM + '\n' + app_js())
     return ('<!DOCTYPE html>\n<html lang="fr">\n<head>\n<meta charset="UTF-8">\n'
             '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">\n'
             '<meta name="theme-color" content="#1a1e10">\n<title>Flight Configurator</title>\n<style>\n'
-            + fonts + CSS_COMMON + CSS_FC + build_import_css() + '\n</style>\n'
+            + fonts + CSS_COMMON + CSS_FC + build_messages_css() + build_import_css() + '\n</style>\n'
             '<!-- JSZip v3.10.1 — embarqué pour lire un paquet .zip -->\n<script>' + A['lib_jszip'] + '</script>\n</head>\n'
             + BODY.replace('@@VERSION@@', APP_VERSION) + '\n<script>\n' + js + '\n</script>\n</body>\n</html>\n')
 
@@ -4218,7 +4186,8 @@ def check(html):
     ok(not re.search(r'font-weight:\s*(600|800|900|bold)|font:\s*(600|800|900|bold)\b', own), 'aucune graisse sans sa face (R295)')
     ok('/* ===== POSTES RADIO (COMME AU COCKPIT) ===== */' in html and '/* ===== EMPORT (PRESETS ET PAYLOAD) ===== */' in html, 'blocs partagés présents')
     for label, blk in (('bandes et postes non pré-réglés', build_radio_bands_block()), ('déclinaison', build_magvar_block()), ('projections', build_projection_block()), ('points de paquet', build_route_pack_block()), ('groupes partagés', build_group_store_block()),
-                       ('import commun (script)', build_import_block()), ('import commun (feuille)', build_import_css()), ('import commun (fenêtre)', build_import_html())):
+                       ('import commun (script)', build_import_block()), ('import commun (feuille)', build_import_css()), ('import commun (fenêtre)', build_import_html()),
+                       ('messages communs (script)', build_messages_block()), ('messages communs (feuille)', build_messages_css())):
         ok(blk in html, 'bloc %s inséré tel quel' % label)
     pt, it = re.search(r"const PAYLOAD_TYPES = \[(.*?)\];", build_payload_block()), re.search(r"const IMP_TYPES = \[(.*?)\];", build_import_block())
     ok(bool(pt) and bool(it) and pt.group(1) == it.group(1), 'les types du bloc d\'import sont ceux de PAYLOAD_TYPES')

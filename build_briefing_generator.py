@@ -8,6 +8,8 @@ Usage : python3 build_briefing_generator.py
 import json
 import os
 
+from messages_block import build_block as build_messages_block, build_css as build_messages_css
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 ASSETS_PATH = os.path.join(HERE, 'assets.json')
@@ -2486,32 +2488,7 @@ body[data-theme="modern-east"] .stamp-classif::after {
 }
 .tab-bar button:active { transform: translateY(1px); }
 
-/* ============ TOAST ============ */
-.toast {
-  position: fixed;
-  bottom: 20px; left: 50%;
-  transform: translateX(-50%) translateY(100px);
-  background: var(--olive-dark);
-  border: 1px solid var(--amber);
-  color: var(--paper);
-  font-family: var(--f-condensed);
-  font-weight: 600;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  font-size: 12px;
-  padding: 10px 20px;
-  z-index: 2000;
-  opacity: 0;
-  transition: all .3s ease;
-  pointer-events: none;
-  box-shadow: 0 4px 16px rgba(0,0,0,.6);
-  width: max-content; max-width: calc(100vw - 24px); text-align: center;
-}
-.toast.show {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-  pointer-events: auto;
-}
+@@MESSAGES_CSS@@
 
 /* ============ BRIEF COMPLET / SIMPLIFIÉ (v2.3.0) ============ */
 /* Un élément marqué data-fmt n'existe que dans le mode indiqué. */
@@ -3640,8 +3617,6 @@ __CSS__
   <button type="button" data-tab="wing" data-fmt="full" role="tab"><span class="tab-ico">🛡</span><span data-i18n="tab.wing">Wing</span></button>
   <button type="button" data-tab="preview" role="tab"><span class="tab-ico">◈</span><span data-i18n="tab.preview">Aperçu</span></button>
 </nav>
-
-<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <!-- ============ EMBEDDED WING CONFIG (generic default) ============ -->
 <script>
@@ -8240,13 +8215,7 @@ function escapeHtml(str) {
 }
 function escapeAttr(str) { return escapeHtml(str); }
 
-function showToast(msg, ms) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  clearTimeout(showToast._h);
-  showToast._h = setTimeout(() => t.classList.remove('show'), ms || 2200);
-}
+@@MESSAGES_BLOCK@@
 
 /* ============= ACTIONS ============= */
 /* Le nom d'un fichier choisi : sans « .json », accents ôtés, tout ce qui n'est pas lettre, chiffre, _ + - devient « _ » ; vide si rien ne reste */
@@ -10102,7 +10071,8 @@ _default_wing_config_js = json.dumps(
     json.dumps(_default_wing_config, ensure_ascii=False)
 )
 
-HTML = HTML.replace('__CSS__', CSS)
+HTML = HTML.replace('__CSS__', CSS.replace('@@MESSAGES_CSS@@\n', build_messages_css()))
+HTML = HTML.replace('@@MESSAGES_BLOCK@@\n', build_messages_block())
 HTML = HTML.replace('__LIB_HTML2CANVAS__', A['lib_html2canvas'])
 HTML = HTML.replace('__LIB_JSZIP__', A['lib_jszip'])
 

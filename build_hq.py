@@ -8,6 +8,7 @@ import re
 
 from radio_bands_block import build_block as build_radio_bands_block
 from radio_block import build_block as build_radio_block
+from messages_block import build_block as build_messages_block, build_css as build_messages_css
 from aircraft_types_block import build_block as build_aircraft_types_block
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -788,38 +789,7 @@ select[data-tbm-src] {{ display: none !important; }}
 }}
 .wing-logo-loading {{ opacity: .45; cursor: wait !important; pointer-events: none; }}
 
-/* ======== TOAST ======== */
-.toast {{
-  position: fixed;
-  bottom: 20px; left: 50%;
-  transform: translateX(-50%) translateY(100px);
-  background: var(--olive-dark);
-  border: 1px solid var(--amber);
-  color: var(--paper);
-  font-family: var(--f-ui);
-  font-weight: 600;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  font-size: 12px;
-  padding: 10px 20px;
-  z-index: 2000;
-  opacity: 0;
-  transition: all .3s ease;
-  pointer-events: none;
-  box-shadow: 0 4px 16px rgba(0,0,0,.6);
-  width: max-content; max-width: calc(100vw - 24px); text-align: center;
-}}
-.toast.show {{
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}}
-.toast.act {{ pointer-events: auto; width: max-content; max-width: calc(100vw - 24px); text-align: center; }}
-.toast-action {{
-  background: none; border: 0; padding: 6px 4px; margin: -6px 0; cursor: pointer;
-  font: inherit; letter-spacing: inherit; text-transform: inherit; color: var(--amber);
-  text-decoration: underline; text-underline-offset: 3px;
-}}
-.toast-action:hover, .toast-action:focus-visible {{ color: var(--paper-light); outline: none; }}
+@@MESSAGES_CSS@@
 
 /* ======== MISSION SECTION ======== */
 .drop-zone-miz {{
@@ -1085,7 +1055,7 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
   <div class="tb-spacer"></div>
   <div class="tb-classif">OPERATIONS // NEED TO KNOW</div>
   <span class="tb-version">v{APP_VERSION}</span>
-  <button class="tb-lang-btn" id="btn-lang" title="Switch language / Changer de langue"><svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="14" fill="#012169"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#fff" stroke-width="2.8"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#C8102E" stroke-width="1.6"/><rect x="8" width="4" height="14" fill="#fff"/><rect y="5" width="20" height="4" fill="#fff"/><rect x="9" width="2" height="14" fill="#C8102E"/><rect y="6" width="20" height="2" fill="#C8102E"/></svg></button>
+  <button class="tb-lang-btn" id="btn-lang" title="Passer en anglais" aria-label="Passer en anglais"><svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="14" fill="#012169"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#fff" stroke-width="2.8"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#C8102E" stroke-width="1.6"/><rect x="8" width="4" height="14" fill="#fff"/><rect y="5" width="20" height="4" fill="#fff"/><rect x="9" width="2" height="14" fill="#C8102E"/><rect y="6" width="20" height="2" fill="#C8102E"/></svg></button>
 </header>
 
 <!-- MAIN APP -->
@@ -1234,9 +1204,6 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
   </div>
 </div>
 
-<!-- TOAST -->
-<div class="toast" id="toast" role="status" aria-live="polite"></div>
-
 <!-- DEFAULT WING CONFIG -->
 <script>
 const DEFAULT_WING_CONFIG = JSON.parse({_default_wing_config_js});
@@ -1322,7 +1289,6 @@ const I18N = {{
     'validate.sqIdMissing':     '.id manquant',
     'validate.sqCallsignMissing':'.callsign manquant',
     'validate.sqAircraftNotArray':'.aircraft doit \u00eatre un tableau',
-    'toast.lang':               'Langue : Fran\u00e7ais',
     'toast.theme':              'Th\u00e8me appliqu\u00e9',
     'toast.logoCompressing':    'Compression logo...',
     'toast.logoWingLoaded':     'Logo wing charg\u00e9 \u2713',
@@ -1330,11 +1296,15 @@ const I18N = {{
     'toast.logoReset':          'Logo r\u00e9initialis\u00e9 \u2713',
     'toast.wingLoaded':         'Config wing charg\u00e9e \u2713 \u2014 ',
     'toast.wingReset':          'Wing r\u00e9initialis\u00e9 \u2713',
-    'toast.wingInvalid':        '\u26a0 Config invalide : ',
-    'toast.wingJsonInvalid':    '\u26a0 JSON invalide : ',
     'toast.wingFileError':      '\u26a0 Lecture du fichier impossible',
     'toast.wingStorageFull':    '\u26a0 Espace de stockage satur\u00e9 \u2014 exportez votre wing puis r\u00e9initialisez',
-    'toast.fileMustBeImage':    'Le fichier doit \u00eatre une image.',
+    'msg.jsonUnreadable':       '\u26a0 Fichier illisible : ce n\u2019est pas du JSON.',
+    'msg.notWingConfig':        '\u26a0 Ce fichier n\u2019est pas une configuration wing.',
+    'msg.wingIncomplete':       '\u26a0 Configuration wing incompl\u00e8te : {{0}} champ(s) manquant(s) ou invalide(s).',
+    'msg.notMiz':               '\u26a0 Fichier illisible : ce n\u2019est pas un .miz.',
+    'msg.notImage':             '\u26a0 Le fichier doit \u00eatre une image.',
+    'msg.imageUnreadable':      '\u26a0 Image illisible.',
+    'msg.exportFailed':         '\u26a0 Export impossible.',
     'editor.mission.summary':   'MISSION .MIZ',
     'editor.mission.drop':      '\u21d3 D\u00c9POSER UN FICHIER .MIZ ICI',
     'editor.mission.drop.hint': 'ou cliquer pour parcourir',
@@ -1342,7 +1312,6 @@ const I18N = {{
     'editor.mission.reload':    '\u21ba Ouvrir un autre .miz',
     'toast.mizLoading':         'Chargement .miz\u2026',
     'toast.mizLoaded':          '.miz charg\u00e9 \u2713',
-    'toast.mizError':           '\u26a0 Erreur .miz : ',
     'toast.mizNotMiz':          '\u26a0 S\u00e9lectionnez un fichier .miz',
     'snap.sourceMission':       'Mission source',
     'snap.theatre':             'Th\u00e9\u00e2tre',
@@ -1407,7 +1376,8 @@ const I18N = {{
     'dyn.w.e.indentWh': 'entrepôt {{0}} : indentation ou ligne de l’insertion introuvable',
     'dyn.w.e.init': 'entrepôt {{0}} : le type {{1}} n’a pas d’initialAmount, lien impossible',
     'dyn.w.e.missing': 'groupe {{0}} introuvable dans la mission',
-    'dyn.w.e.reparse': 'texte écrit illisible ({{0}})',
+    'dyn.w.e.reparse': 'texte écrit illisible',
+    'dyn.w.e.whparse': 'fichier warehouses illisible',
     'dyn.w.e.mission': 'le fichier mission relu diffère de l’attendu ({{0}})',
     'dyn.w.e.template': 'les templates relus diffèrent de l’attendu',
     'dyn.w.e.wh': 'le fichier warehouses relu diffère de l’attendu ({{0}})',
@@ -1444,7 +1414,7 @@ const I18N = {{
     'pk.del.e.keys': 'tableau de groupes qui n’est pas indexé [1] … [n] sans trou',
     'pk.del.e.missing': 'groupe {{0}} introuvable dans la mission',
     'pk.del.e.overlap': 'écritures qui se chevauchent',
-    'pk.del.e.reparse': 'texte écrit illisible ({{0}})',
+    'pk.del.e.reparse': 'texte écrit illisible',
     'pk.del.e.groups': 'les tableaux de groupes relus diffèrent de l’attendu',
     'pk.del.e.clients': 'les groupes relus diffèrent de l’attendu',
     'pk.del.e.wh': 'fichier warehouses : écriture ou relecture différente de l’attendu',
@@ -1548,7 +1518,6 @@ const I18N = {{
     'toast.pkExported.many': '📦 {{0}} groupes exportés',
     'toast.pkOmitRoute': 'route omise (table non réécrivable) :',
     'toast.pkOmitPayload': 'emport omis (table non réécrivable) :',
-    'toast.pkExportError': '⚠ Export impossible : ',
     'toast.pkLoaded.one': '{{0}} paquet chargé',
     'toast.pkLoaded.many': '{{0}} paquets chargés',
     'toast.pkRefused.one': '{{0}} refusé',
@@ -1562,7 +1531,7 @@ const I18N = {{
     'pk.w.pointRef': '{{0}} : point {{1}} : référence à une unité de la mission du paquet ({{2}} = {{3}}) — à vérifier',
     'pk.w.routeEmpty': '{{0}} : la route du groupe n’a pas de point dans le .miz, route du paquet écrite en entier',
     'pk.w.p1Fixed': '{{0}} : le point 1 de la mission ne peut pas être réécrit tel quel, route non écrite',
-    'pk.e.reparse': 'texte écrit illisible ({{0}})',
+    'pk.e.reparse': 'texte écrit illisible',
     'pk.e.unitGone': 'unité {{0}} absente après l’écriture',
     'pk.e.chanGone': 'canal {{0}} de {{1}} absent après l’écriture',
     'pk.e.chanVal': 'canal {{0}} de {{1}} : attendu {{2}}, relu {{3}}',
@@ -1572,7 +1541,7 @@ const I18N = {{
     'pk.e.payloadGone': 'emport introuvable après l’écriture (unité {{0}})',
     'pk.e.payload': 'emport relu différent du paquet (unité {{0}})',
     'pk.e.targetGone': 'groupe introuvable dans la mission',
-    'pk.e.retok': 'texte écrit illisible ({{0}})',
+    'pk.e.retok': 'texte écrit illisible',
     'toast.pkApplyingN': 'Application des paquets… ({{0}}/{{1}})',
     'toast.mizNotLoaded':        '\u26a0 Ouvrez un .miz d\u2019abord',
   }},
@@ -1643,7 +1612,6 @@ const I18N = {{
     'validate.sqIdMissing':     '.id missing',
     'validate.sqCallsignMissing':'.callsign missing',
     'validate.sqAircraftNotArray':'.aircraft must be an array',
-    'toast.lang':               'Language: English',
     'toast.theme':              'Theme applied',
     'toast.logoCompressing':    'Compressing logo\u2026',
     'toast.logoWingLoaded':     'Wing logo loaded \u2713',
@@ -1651,11 +1619,15 @@ const I18N = {{
     'toast.logoReset':          'Logo reset \u2713',
     'toast.wingLoaded':         'Wing config loaded \u2713 \u2014 ',
     'toast.wingReset':          'Wing reset \u2713',
-    'toast.wingInvalid':        '\u26a0 Invalid config: ',
-    'toast.wingJsonInvalid':    '\u26a0 Invalid JSON: ',
     'toast.wingFileError':      '\u26a0 Cannot read file',
     'toast.wingStorageFull':    '\u26a0 Storage full \u2014 export your wing then reset',
-    'toast.fileMustBeImage':    'File must be an image.',
+    'msg.jsonUnreadable':       '\u26a0 Unreadable file: this is not JSON.',
+    'msg.notWingConfig':        '\u26a0 This file is not a wing configuration.',
+    'msg.wingIncomplete':       '\u26a0 Incomplete wing configuration: {{0}} missing or invalid field(s).',
+    'msg.notMiz':               '\u26a0 Unreadable file: this is not a .miz.',
+    'msg.notImage':             '\u26a0 The file must be an image.',
+    'msg.imageUnreadable':      '\u26a0 Unreadable image.',
+    'msg.exportFailed':         '\u26a0 Export failed.',
     'editor.mission.summary':   'MISSION .MIZ',
     'editor.mission.drop':      '\u21d3 DROP A .MIZ FILE HERE',
     'editor.mission.drop.hint': 'or click to browse',
@@ -1663,7 +1635,6 @@ const I18N = {{
     'editor.mission.reload':    '\u21ba Open another .miz',
     'toast.mizLoading':         'Loading .miz\u2026',
     'toast.mizLoaded':          '.miz loaded \u2713',
-    'toast.mizError':           '\u26a0 .miz error: ',
     'toast.mizNotMiz':          '\u26a0 Please select a .miz file',
     'snap.sourceMission':       'Source mission',
     'snap.theatre':             'Theatre',
@@ -1728,7 +1699,8 @@ const I18N = {{
     'dyn.w.e.indentWh': 'warehouse {{0}}: indentation or line of the insertion not found',
     'dyn.w.e.init': 'warehouse {{0}}: type {{1}} has no initialAmount, link impossible',
     'dyn.w.e.missing': 'group {{0}} not found in the mission',
-    'dyn.w.e.reparse': 'written text unreadable ({{0}})',
+    'dyn.w.e.reparse': 'written text unreadable',
+    'dyn.w.e.whparse': 'warehouses file unreadable',
     'dyn.w.e.mission': 'the re-read mission file differs from what was expected ({{0}})',
     'dyn.w.e.template': 'the re-read templates differ from what was expected',
     'dyn.w.e.wh': 'the re-read warehouses file differs from what was expected ({{0}})',
@@ -1765,7 +1737,7 @@ const I18N = {{
     'pk.del.e.keys': 'group table not indexed [1] … [n] without a gap',
     'pk.del.e.missing': 'group {{0}} not found in the mission',
     'pk.del.e.overlap': 'overlapping writes',
-    'pk.del.e.reparse': 'written text unreadable ({{0}})',
+    'pk.del.e.reparse': 'written text unreadable',
     'pk.del.e.groups': 'the group tables read back differ from the expected ones',
     'pk.del.e.clients': 'the groups read back differ from the expected ones',
     'pk.del.e.wh': 'warehouses file: written or read back differently from expected',
@@ -1869,7 +1841,6 @@ const I18N = {{
     'toast.pkExported.many': '📦 {{0}} groups exported',
     'toast.pkOmitRoute': 'route omitted (table cannot be rewritten):',
     'toast.pkOmitPayload': 'loadout omitted (table cannot be rewritten):',
-    'toast.pkExportError': '⚠ Export failed: ',
     'toast.pkLoaded.one': '{{0}} package loaded',
     'toast.pkLoaded.many': '{{0}} packages loaded',
     'toast.pkRefused.one': '{{0}} refused',
@@ -1883,7 +1854,7 @@ const I18N = {{
     'pk.w.pointRef': '{{0}}: point {{1}}: refers to a unit of the package’s mission ({{2}} = {{3}}) — check it',
     'pk.w.routeEmpty': '{{0}}: the group’s route has no point in the .miz, the package’s route is written in full',
     'pk.w.p1Fixed': '{{0}}: the mission’s point 1 cannot be rewritten as it is, route not written',
-    'pk.e.reparse': 'written text unreadable ({{0}})',
+    'pk.e.reparse': 'written text unreadable',
     'pk.e.unitGone': 'unit {{0}} missing after the write',
     'pk.e.chanGone': 'channel {{0}} of {{1}} missing after the write',
     'pk.e.chanVal': 'channel {{0}} of {{1}}: expected {{2}}, read back {{3}}',
@@ -1893,7 +1864,7 @@ const I18N = {{
     'pk.e.payloadGone': 'loadout not found after the write (unit {{0}})',
     'pk.e.payload': 'loadout read back differs from the package (unit {{0}})',
     'pk.e.targetGone': 'group not found in the mission',
-    'pk.e.retok': 'written text unreadable ({{0}})',
+    'pk.e.retok': 'written text unreadable',
     'toast.pkApplyingN': 'Applying packages… ({{0}}/{{1}})',
     'toast.mizNotLoaded':        '\u26a0 Open a .miz first',
   }}
@@ -1925,7 +1896,7 @@ const LOGO_MAX_SIZE = 256;
 function compressLogoFile(file) {{
   return new Promise((resolve, reject) => {{
     if (!file.type.startsWith('image/')) {{
-      reject(new Error(t('toast.fileMustBeImage'))); return;
+      reject(new Error('notImage')); return;
     }}
     const reader = new FileReader();
     reader.onload = () => {{
@@ -1949,10 +1920,10 @@ function compressLogoFile(file) {{
           resolve({{ dataUrl: canvas.toDataURL('image/png'), width, height }});
         }} catch (e) {{ reject(e); }}
       }};
-      img.onerror = () => reject(new Error('Image illisible.'));
+      img.onerror = () => reject(new Error('imageUnreadable'));
       img.src = reader.result;
     }};
-    reader.onerror = () => reject(new Error('Lecture du fichier impossible.'));
+    reader.onerror = () => reject(new Error('imageUnreadable'));
     reader.readAsDataURL(file);
   }});
 }}
@@ -1965,30 +1936,7 @@ function escapeHtml(str) {{
 }}
 function escapeAttr(str) {{ return escapeHtml(str); }}
 
-// ── Toast ──────────────────────────────────────────────────────
-function showToast(msg, ms) {{
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.remove('act');
-  el.classList.add('show');
-  clearTimeout(showToast._h);
-  showToast._h = setTimeout(() => el.classList.remove('show'), ms || 2200);
-}}
-
-// Un message avec une action (un bouton souligné), visible ms millisecondes
-function showToastAction(msg, label, fn, ms) {{
-  const el = document.getElementById('toast');
-  el.textContent = '';
-  const m = document.createElement('span');
-  m.textContent = msg + ' ';
-  const b = document.createElement('button');
-  b.type = 'button'; b.className = 'toast-action'; b.textContent = label;
-  b.addEventListener('click', fn);
-  el.appendChild(m); el.appendChild(b);
-  el.classList.add('show', 'act');
-  clearTimeout(showToast._h);
-  showToast._h = setTimeout(() => el.classList.remove('show', 'act'), ms);
-}}
+@@MESSAGES_BLOCK@@
 
 // ── Theme ──────────────────────────────────────────────────────
 function loadTheme() {{
@@ -2035,7 +1983,6 @@ function setLang(lang) {{
   applyI18nStatic();
   rerenderDynamic();
   updateFlagButton();
-  showToast(t('toast.lang'));
 }}
 
 /* Drapeaux dessinés (ils ne s'affichent pas en lettres sous Windows) ; le bouton montre la langue vers laquelle il bascule */
@@ -2047,6 +1994,7 @@ function updateFlagButton() {{
   if (!btn) return;
   btn.innerHTML = CURRENT_LANG === 'fr' ? FLAG_EN : FLAG_FR;
   btn.title = t('toolbar.lang.tooltip');
+  btn.setAttribute('aria-label', t('toolbar.lang.tooltip'));
 }}
 
 function applyI18nStatic() {{
@@ -2116,7 +2064,7 @@ function persistWingConfig() {{
       localStorage.setItem(KEY_WING, JSON.stringify(wingConfig));
     }} catch(e) {{
       if (e.name === 'QuotaExceededError') {{
-        showToast(t('toast.wingStorageFull'));
+        showToast(t('toast.wingStorageFull'), {{ type: 'err' }});
       }} else {{
         console.warn('[Wing] Erreur persistance :', e);
       }}
@@ -2162,10 +2110,11 @@ function refreshWingLogoZone() {{
       wingConfig.wing.logo = dataUrl;
       persistWingConfig();
       refreshWingLogoZone(); updateWingSizeCounter();
-      showToast(t('toast.logoWingLoaded'));
+      showToast(t('toast.logoWingLoaded'), {{ type: 'ok' }});
     }} catch (err) {{
       zone.classList.remove('wing-logo-loading');
-      showToast('\u26a0 Logo invalide : ' + err.message);
+      console.warn('[HQ] logo illisible :', err);
+      showToast(t(err && err.message === 'notImage' ? 'msg.notImage' : 'msg.imageUnreadable'), {{ type: 'err' }});
     }}
     e.target.value = '';
   }});
@@ -2177,7 +2126,7 @@ function refreshWingLogoZone() {{
       wingConfig.wing.logo = DEFAULT_WING_CONFIG.wing.logo;
       persistWingConfig();
       refreshWingLogoZone(); updateWingSizeCounter();
-      showToast(t('toast.logoReset'));
+      showToast(t('toast.logoReset'), {{ type: 'ok' }});
     }});
   }}
 }}
@@ -2210,10 +2159,11 @@ function refreshSqLogoZone(zone, sqIdx) {{
       wingConfig.squadrons[sqIdx].logo = dataUrl;
       persistWingConfig();
       refreshSqLogoZone(zone, sqIdx); updateWingSizeCounter();
-      showToast(t('toast.logoSqLoaded'));
+      showToast(t('toast.logoSqLoaded'), {{ type: 'ok' }});
     }} catch (err) {{
       zone.classList.remove('wing-logo-loading');
-      showToast('\u26a0 Logo invalide : ' + err.message);
+      console.warn('[HQ] logo illisible :', err);
+      showToast(t(err && err.message === 'notImage' ? 'msg.notImage' : 'msg.imageUnreadable'), {{ type: 'err' }});
     }}
     e.target.value = '';
   }});
@@ -2539,7 +2489,7 @@ function bindWingEditorEvents() {{
       wingConfig.squadrons.push({{ id: '', name: '', nickname: '', callsign: '', aircraft: [], logo: '' }});
       persistWingConfig();
       renderWingSquadrons(true);
-      showToast(t('editor.wing.addedSquadron'));
+      showToast(t('editor.wing.addedSquadron'), {{ type: 'ok' }});
     }});
   }}
 
@@ -2692,29 +2642,33 @@ function fallbackDownload(blob, fname) {{
   a.href = url; a.download = fname;
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 1000);
-  showToast(t('toast.wingLoaded').replace(' — ', '') + ' ✓');
+  showToast(t('toast.wingLoaded').replace(' — ', '') + ' ✓', {{ type: 'ok' }});
 }}
 
 function importWingConfig(file) {{
   const reader = new FileReader();
   reader.onload = () => {{
+    let parsed;
+    try {{ parsed = JSON.parse(reader.result); }}
+    catch (e) {{ console.warn('[HQ] configuration wing : JSON illisible', e); showToast(t('msg.jsonUnreadable'), {{ type: 'err' }}); return; }}
+    if (!parsed || typeof parsed !== 'object' || parsed.configSchemaVersion !== 1) {{ showToast(t('msg.notWingConfig'), {{ type: 'err' }}); return; }}
     try {{
-      const parsed = JSON.parse(reader.result);
       const check  = validateWingConfig(parsed);
       if (!check.ok) {{
-        showToast(t('toast.wingInvalid') + check.errors.slice(0, 2).join(' \u00b7 ') +
-          (check.errors.length > 2 ? ' (+' + (check.errors.length - 2) + ')' : ''));
+        console.warn('[HQ] configuration wing incomplète :', check.errors);
+        showToast(tf('msg.wingIncomplete', check.errors.length), {{ type: 'err' }});
         return;
       }}
       wingConfig = parsed;
       persistWingConfig();
       renderWingEditor();
-      showToast(t('toast.wingLoaded') + escapeHtml(wingConfig.wing.shortName));
+      showToast(t('toast.wingLoaded') + escapeHtml(wingConfig.wing.shortName), {{ type: 'ok' }});
     }} catch (e) {{
-      showToast(t('toast.wingJsonInvalid') + e.message);
+      console.warn('[HQ] configuration wing : lecture impossible', e);
+      showToast(t('msg.notWingConfig'), {{ type: 'err' }});
     }}
   }};
-  reader.onerror = () => showToast(t('toast.wingFileError'));
+  reader.onerror = () => showToast(t('toast.wingFileError'), {{ type: 'err' }});
   reader.readAsText(file);
 }}
 
@@ -2757,7 +2711,7 @@ function loadWingExample() {{
     }}
     localStorage.setItem(KEY_WING, next);                       // aussitôt : la suite la relit sur l'évènement storage
   }} catch (e) {{
-    showToast(t('toast.wingStorageFull'));
+    showToast(t('toast.wingStorageFull'), {{ type: 'err' }});
     return;
   }}
   wingConfig = structuredClone(EXAMPLE_WING_CONFIGS[lang]);
@@ -2765,7 +2719,7 @@ function loadWingExample() {{
   refreshRestoreButton();
   const sec = document.getElementById('wing-restore-btn');
   if (sec && sec.closest('details')) sec.closest('details').open = true;
-  showToastAction(t('toast.exampleLoaded'), t('example.restore'), restoreWingConfig, 12000);
+  showToastAction(t('toast.exampleLoaded') + ' \u00b7', t('example.restore'), restoreWingConfig, 12000);
 }}
 
 function restoreWingConfig() {{
@@ -2782,7 +2736,7 @@ function restoreWingConfig() {{
   wingConfig = loadWingConfig();
   renderWingEditor();
   refreshRestoreButton();
-  showToast(t('toast.configRestored'));
+  showToast(t('toast.configRestored'), {{ type: 'ok' }});
 }}
 
 function resetWingConfig() {{
@@ -2790,7 +2744,7 @@ function resetWingConfig() {{
   wingConfig = structuredClone(DEFAULT_WING_CONFIG);
   localStorage.removeItem(KEY_WING);
   renderWingEditor();
-  showToast(t('toast.wingReset'));
+  showToast(t('toast.wingReset'), {{ type: 'ok' }});
 }}
 
 // ── Toolbar events ─────────────────────────────────────────────
@@ -3110,7 +3064,7 @@ let _mizLoading = false;   // un chargement de .miz est en cours
 function handleFile(file) {{
   if (_PK_BUSY) return;   // pas de nouveau .miz pendant l'application des paquets
   if (!file || !file.name.toLowerCase().endsWith('.miz')) {{
-    showToast(t('toast.mizNotMiz'));
+    showToast(t('toast.mizNotMiz'), {{ type: 'err' }});
     return;
   }}
   loadMiz(file);
@@ -3157,11 +3111,11 @@ async function loadMiz(file) {{
     pkResetFilters();
     renderSnapshot(snapshot);
     pkRender();
-    showToast(t('toast.mizLoaded'));
+    showToast(t('toast.mizLoaded'), {{ type: 'ok' }});
     console.log('[HQ P3] Snapshot:', snapshot);
   }} catch(err) {{
-    showToast(t('toast.mizError') + err.message);
     console.error('[HQ P3] loadMiz error:', err);
+    showToast(t('msg.notMiz'), {{ type: 'err' }});
   }} finally {{
     _mizLoading = false;
   }}
@@ -3854,7 +3808,8 @@ function verifyPatch(patchedSrc, pkg) {{
     vAst = DCS_PARSER.parse(vTk);
     vModel = DCS_EXTRACTOR.extract(vAst, patchedSrc, _mizFilename || '', {{}}, patchedSrc.split('\\n'));
   }} catch (e) {{
-    throw Object.assign(new Error('Vérif post-patch: ' + e.message), {{ pkErrors: [{{ key: 'pk.e.reparse', args: [e.message] }}] }});
+    console.warn('[HQ] relecture du texte écrit :', e);
+    throw Object.assign(new Error('Vérif post-patch'), {{ pkErrors: [{{ key: 'pk.e.reparse', args: [] }}] }});
   }}
 
   // Vérifier chaque radio patchée
@@ -4029,7 +3984,7 @@ function pkBuildExport(groupIds) {{
 
 // La fenêtre « Exporter le paquet » : le nom par défaut est celui du Route Planner, paquet_<groupe>[_+n]_<horodatage>
 function pkExportAsk(opener) {{
-  if (!HQ_SNAPSHOT || !_HQ_MIZ_CONTEXT) {{ showToast(t('toast.mizNotLoaded')); return; }}
+  if (!HQ_SNAPSHOT || !_HQ_MIZ_CONTEXT) {{ showToast(t('toast.mizNotLoaded'), {{ type: 'err' }}); return; }}
   const sel = HQ_SNAPSHOT.flights.filter(f => _PK_EXPORT_SEL.has(f.groupId));
   if (sel.length === 0) return;
   fnAsk({{
@@ -4041,7 +3996,7 @@ function pkExportAsk(opener) {{
 }}
 
 function pkExport(name) {{
-  if (!HQ_SNAPSHOT || !_HQ_MIZ_CONTEXT) {{ showToast(t('toast.mizNotLoaded')); return; }}
+  if (!HQ_SNAPSHOT || !_HQ_MIZ_CONTEXT) {{ showToast(t('toast.mizNotLoaded'), {{ type: 'err' }}); return; }}
   const ids = new Set(HQ_SNAPSHOT.flights.filter(f => _PK_EXPORT_SEL.has(f.groupId)).map(f => f.groupId));
   if (ids.size === 0) return;
   try {{
@@ -4050,9 +4005,10 @@ function pkExport(name) {{
     let msg = tn('toast.pkExported', pkg.flights.length);
     if (omit.routes.length)   msg += ' · ' + t('toast.pkOmitRoute') + ' ' + omit.routes.join(', ');
     if (omit.payloads.length) msg += ' · ' + t('toast.pkOmitPayload') + ' ' + omit.payloads.join(', ');
-    showToast(msg, (omit.routes.length || omit.payloads.length) ? 6000 : 3000);
+    showToast(msg, {{ type: 'ok', ms: (omit.routes.length || omit.payloads.length) ? 6000 : 3000 }});
   }} catch (err) {{
-    showToast(t('toast.pkExportError') + err.message);
+    console.warn('[HQ] export des paquets :', err);
+    showToast(t('msg.exportFailed'), {{ type: 'err' }});
     console.error('[HQ] export paquet:', err);
   }}
 }}
@@ -4106,7 +4062,8 @@ function pkSyncCheckboxes() {{
 function pkReasonText(r) {{ return r.key ? tf.apply(null, [r.key].concat(r.args)) : String(r.raw); }}
 function pkErrText(err) {{
   if (err && err.pkErrors) return err.pkErrors.map(e => tf.apply(null, [e.key].concat(e.args))).join(' ; ');
-  return err && err.message ? err.message : String(err);
+  console.warn('[HQ] échec :', err);
+  return t('msg.exportFailed').replace(/^\u26a0\s*/, '');
 }}
 // Rend la main au navigateur pour qu'il peigne (repli à 50 ms si les images ne sont pas peintes, onglet caché)
 function pkYield() {{
@@ -4194,13 +4151,13 @@ async function pkReadFile(file) {{
 }}
 
 async function pkLoadFiles(files) {{
-  if (!_HQ_MIZ_CONTEXT) {{ showToast(t('toast.mizNotLoaded')); return; }}
+  if (!_HQ_MIZ_CONTEXT) {{ showToast(t('toast.mizNotLoaded'), {{ type: 'err' }}); return; }}
   if (_PK_BUSY) return;
   _PK_REFUSED = [];
   let ok = 0, skipped = 0;
   for (const file of files) {{
     let r;
-    try {{ r = await pkReadFile(file); }} catch (e) {{ r = {{ reason: {{ key: null, raw: e.message }} }}; }}
+    try {{ r = await pkReadFile(file); }} catch (e) {{ console.warn('[HQ] paquet illisible :', e); r = {{ reason: {{ key: 'pk.err.parse', args: [] }} }}; }}
     if (r.pk) {{ _PK_LIST.push(r.pk); ok++; skipped += r.pk.skipped; }}
     else _PK_REFUSED.push({{ name: file.name, reason: r.reason }});
   }}
@@ -4208,7 +4165,8 @@ async function pkLoadFiles(files) {{
   let msg = tn('toast.pkLoaded', ok);
   if (_PK_REFUSED.length) msg += ' · ' + tf('pk.join', tn('toast.pkRefused', _PK_REFUSED.length), _PK_REFUSED.map(r => r.name).join(', '));
   if (skipped) msg += ' · ' + tn('pk.skip', skipped);
-  showToast(msg, (_PK_REFUSED.length || skipped) ? 6000 : 3000);
+  const bad = _PK_REFUSED.length > 0;
+  showToast((bad ? '\u26a0 ' : '') + msg, {{ type: bad ? 'err' : 'ok', ms: (bad || skipped) ? 6000 : 3000 }});
 }}
 
 // ---------- ÉTAT : recherche des vols, conflits, parties disponibles ----------
@@ -4455,7 +4413,7 @@ function pkDoneText(done) {{
 // La fenêtre « Appliquer et télécharger le .miz » : le nom du .miz ouvert (sans .miz), puis _<horodatage>
 function pkApplyAsk(opener) {{
   if (_PK_BUSY || _mizLoading) return;
-  if (!_HQ_MIZ_CONTEXT) {{ showToast(t('toast.mizNotLoaded')); return; }}
+  if (!_HQ_MIZ_CONTEXT) {{ showToast(t('toast.mizNotLoaded'), {{ type: 'err' }}); return; }}
   fnAsk({{
     titleKey: 'fn.miz.title', goKey: 'fn.miz.go', ext: '.miz',
     name: fnPart((_mizFilename || 'mission').replace(/\\.miz$/i, ''), 'mission') + '_paquets_' + pkStamp(),
@@ -4466,7 +4424,7 @@ function pkApplyAsk(opener) {{
 
 async function pkApply(name) {{
   if (_PK_BUSY || _mizLoading) return;
-  if (!_HQ_MIZ_CONTEXT) {{ showToast(t('toast.mizNotLoaded')); return; }}
+  if (!_HQ_MIZ_CONTEXT) {{ showToast(t('toast.mizNotLoaded'), {{ type: 'err' }}); return; }}
   _PK_BUSY = true;
   pkRender();
   try {{
@@ -4513,7 +4471,7 @@ async function pkApply(name) {{
         }} else {{
           const patchedSrc = applyPatches(work.missionText, built.patches);
           try {{ retokenizeSafety(patchedSrc); }}
-          catch (e) {{ throw Object.assign(e, {{ pkErrors: [{{ key: 'pk.e.retok', args: [e.message] }}] }}); }}
+          catch (e) {{ console.warn('[HQ] relecture du texte écrit :', e); throw Object.assign(e, {{ pkErrors: [{{ key: 'pk.e.retok', args: [] }}] }}); }}
           verifyPatch(patchedSrc, plan);
           // Contexte réextrait après chaque vol
           const {{ tokens: rTk }} = DCS_TOKENIZER.tokenize(patchedSrc);
@@ -4549,7 +4507,7 @@ async function pkApply(name) {{
     persistSnapshot();
     renderSnapshot(HQ_SNAPSHOT);
     _PK_REPORT = {{ lines, total: () => pkTotalText(applied, absent, warnN) }};
-    showToast(tn('pk.rep.applied', applied) + ' ✔');
+    showToast(tn('pk.rep.applied', applied) + ' ✔', {{ type: 'ok' }});
   }} catch (err) {{
     console.error('[HQ] application des paquets:', err);
     const fe = err || {{}};
@@ -4557,7 +4515,7 @@ async function pkApply(name) {{
       {{ cls: 'w', text: () => tf('pk.rep.fail', fe.pkFlight || '?', fe.pkFile || '?', pkErrText(fe)) }},
       {{ cls: 'a', text: () => t('pk.rep.failTail') }},
     ], total: null }};
-    showToast(tf('toast.pkFail', fe.pkFlight || '?'), 5000);
+    showToast(tf('toast.pkFail', fe.pkFlight || '?'), {{ type: 'err' }});
   }} finally {{
     _PK_BUSY = false;
     pkRender();
@@ -4863,14 +4821,14 @@ function delBodyHtml(an) {{
 
 function pkDeleteAsk(opener) {{
   if (_PK_BUSY || _mizLoading) return;
-  if (!HQ_SNAPSHOT || !_HQ_MIZ_CONTEXT) {{ showToast(t('toast.mizNotLoaded')); return; }}
+  if (!HQ_SNAPSHOT || !_HQ_MIZ_CONTEXT) {{ showToast(t('toast.mizNotLoaded'), {{ type: 'err' }}); return; }}
   const ids = HQ_SNAPSHOT.flights.filter(f => _PK_EXPORT_SEL.has(f.groupId)).map(f => f.groupId);
   if (ids.length === 0) return;
   let an;
   try {{ an = delAnalyze(_HQ_MIZ_CONTEXT, ids); }}
   catch (err) {{
     console.error('[HQ] suppression de groupes:', err);
-    showToast(t('toast.pkDelFail'), 5000);
+    showToast(t('toast.pkDelFail'), {{ type: 'err' }});
     return;
   }}
   fnAsk({{
@@ -5293,7 +5251,7 @@ function dsxAsk(opener) {{
 async function dsxApply(name) {{
   if (_PK_BUSY || _mizLoading) return;
   const base = _HQ_MIZ_CONTEXT;
-  if (!base || !HQ_SNAPSHOT || base !== DSX.ctx) {{ showToast(t('toast.mizNotLoaded')); return; }}
+  if (!base || !HQ_SNAPSHOT || base !== DSX.ctx) {{ showToast(t('toast.mizNotLoaded'), {{ type: 'err' }}); return; }}
   _PK_BUSY = true;
   pkRender();
   try {{
@@ -5309,12 +5267,12 @@ async function dsxApply(name) {{
     try {{
       retokenizeSafety(missionText);
       mAst = DCS_PARSER.parse(DCS_TOKENIZER.tokenize(missionText).tokens);
-    }} catch (e) {{ throw delErr('dyn.w.e.reparse', e.message); }}
+    }} catch (e) {{ console.warn('[HQ] relecture du texte écrit :', e); throw delErr('dyn.w.e.reparse'); }}
     // warehouses
     let otherFilesMap = base.otherFilesMap, wText = DSX.wh.text, wRootNew = null;
     if (plan.wp.length) {{
       wText = applyPatches(DSX.wh.text, plan.wp);
-      try {{ wRootNew = delWhParse(wText); }} catch (e) {{ throw delErr('dyn.w.e.wh', e.message); }}
+      try {{ wRootNew = delWhParse(wText); }} catch (e) {{ console.warn('[HQ] relecture du fichier warehouses :', e); throw delErr('dyn.w.e.whparse'); }}
       otherFilesMap = Object.assign({{}}, base.otherFilesMap);
       otherFilesMap['warehouses'] = new TextEncoder().encode(wText);
     }}
@@ -5348,7 +5306,7 @@ async function dsxApply(name) {{
       else lines.push({{ cls: 'w', text: () => tf('dyn.w.warn.side', nm(x.f), dynWhName(x.w), S(x.f.side), S(x.w.side)) }});
     }}
     _PK_REPORT = {{ lines: lines, total: null }};
-    showToast(tn('dyn.w.rep.n', plan.N) + ' ✔');
+    showToast(tn('dyn.w.rep.n', plan.N) + ' ✔', {{ type: 'ok' }});
   }} catch (err) {{
     console.error('[HQ] Dynamic Spawn écrit:', err);
     const fe = err || {{}};
@@ -5356,7 +5314,7 @@ async function dsxApply(name) {{
       {{ cls: 'w', text: () => tf('dyn.w.fail', pkErrText(fe)) }},
       {{ cls: 'a', text: () => t('pk.rep.failTail') }},
     ], total: null }};
-    showToast(t('toast.dsxFail'), 5000);
+    showToast(t('toast.dsxFail'), {{ type: 'err' }});
   }} finally {{
     _PK_BUSY = false;
     pkRender();
@@ -5369,7 +5327,7 @@ function dsxTplNameOf(gid) {{ return dsxTplName(gid); }}
 async function pkDeleteApply(name, ids) {{
   if (_PK_BUSY || _mizLoading) return;
   const base = _HQ_MIZ_CONTEXT;
-  if (!base || !HQ_SNAPSHOT) {{ showToast(t('toast.mizNotLoaded')); return; }}
+  if (!base || !HQ_SNAPSHOT) {{ showToast(t('toast.mizNotLoaded'), {{ type: 'err' }}); return; }}
   _PK_BUSY = true;
   pkRender();
   try {{
@@ -5386,7 +5344,7 @@ async function pkDeleteApply(name, ids) {{
     try {{
       retokenizeSafety(missionText);
       ast = DCS_PARSER.parse(DCS_TOKENIZER.tokenize(missionText).tokens);
-    }} catch (e) {{ throw delErr('pk.del.e.reparse', e.message); }}
+    }} catch (e) {{ console.warn('[HQ] relecture du texte écrit :', e); throw delErr('pk.del.e.reparse'); }}
     if (JSON.stringify(delListIds(ast)) !== JSON.stringify(mp.expect)) throw delErr('pk.del.e.groups');
     // warehouses : les liens visés passent à 0 ; le reste du fichier est égal à l'octet
     let otherFilesMap = base.otherFilesMap;
@@ -5429,7 +5387,7 @@ async function pkDeleteApply(name, ids) {{
       }}
     }}
     _PK_REPORT = {{ lines: lines, total: null }};
-    showToast(tn('pk.del.rep.flights', an.flights.length) + ' ✔');
+    showToast(tn('pk.del.rep.flights', an.flights.length) + ' ✔', {{ type: 'ok' }});
   }} catch (err) {{
     console.error('[HQ] suppression de groupes:', err);
     const fe = err || {{}};
@@ -5437,7 +5395,7 @@ async function pkDeleteApply(name, ids) {{
       {{ cls: 'w', text: () => tf('pk.del.fail', pkErrText(fe)) }},
       {{ cls: 'a', text: () => t('pk.rep.failTail') }},
     ], total: null }};
-    showToast(t('toast.pkDelFail'), 5000);
+    showToast(t('toast.pkDelFail'), {{ type: 'err' }});
   }} finally {{
     _PK_BUSY = false;
     pkRender();
@@ -5972,6 +5930,8 @@ HTML_FINAL = (HTML
     .replace('__APPLY_PATCHES__', _APPLY_PATCHES)
     .replace('__RETOKENIZE__', _RETOKENIZE)
     .replace('__REBUILD_MIZ__', _REBUILD_MIZ)
+    .replace('@@MESSAGES_CSS@@\n', build_messages_css())
+    .replace('@@MESSAGES_BLOCK@@\n', build_messages_block())
     .replace('@@RADIO_BLOCK@@\n', build_radio_block())
     .replace('@@RADIO_BANDS_BLOCK@@\n', build_radio_bands_block())
     .replace('@@AIRCRAFT_TYPES_BLOCK@@\n', build_aircraft_types_block())
