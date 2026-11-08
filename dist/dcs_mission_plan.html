@@ -796,7 +796,7 @@ select[data-tbm-src] { display: none !important; }
   function fitModuleView() {
     var mv = document.getElementById('module-view'), vv = window.visualViewport;
     if (!mv) return;
-    if (vv && vv.height > 0 && vv.height < window.innerHeight - 1) {
+    if (vv && vv.height > 0 && vv.height < window.innerHeight - 1 && Math.abs(vv.scale - 1) < 0.01) {       /* le clavier ne change pas l'échelle : un zoom à deux doigts, si */
       mv.style.top = vv.offsetTop + 'px';
       mv.style.bottom = 'auto';
       mv.style.height = vv.height + 'px';
