@@ -297,7 +297,9 @@ select[data-tbm-src] { display: none !important; }
 .tbm-q { display: block; width: 100%; min-height: 36px; box-sizing: border-box; padding: 6px 10px; font-family: var(--f-typewriter); font-size: 14px; letter-spacing: .2px; color: #1f1c16; background: rgba(216, 201, 165, .92); border: 1px solid var(--khaki); border-left: 3px solid var(--amber-dark); border-radius: 0; outline: none; }
 .tbm-q:focus { border-left-color: var(--red-stamp); box-shadow: 0 0 0 1px var(--amber); }
 .tbm-q::placeholder { color: #6b6450; opacity: 1; }
-.tbm-none { padding: 12px 18px; font-family: var(--f-typewriter); font-size: 14px; color: var(--khaki-light); cursor: default; }
+.tbm-none { margin: 0; padding: 0; list-style: none; cursor: default; }
+.tbm-msg { font-family: var(--f-typewriter); font-size: 14px; color: var(--khaki-light); }
+.tbm-msg:not(:empty) { padding: 12px 18px; }
 @media (prefers-reduced-motion: reduce) { .tbm-panel { animation: none; } }
 @media print { .tbm-panel { display: none; } }
 
@@ -1201,18 +1203,20 @@ select[data-tbm-src] { display: none !important; }
 .dc-rheads { margin-bottom: 2px; }
 .dc-radio3 td.fq { text-overflow: clip; }
 
-/* Terrains : aucun texte coupé (lot mp-dg-terrains-liste). Les colonnes suivent leur contenu (tableau en largeur automatique) : le rôle, l'OACI et la fréquence ne se coupent jamais et prennent leur largeur ;
-   la piste a une largeur de « 17/35, » (88 px) et se coupe après chaque virgule et chaque barre (<wbr> au rendu) ; le nom prend le reste, passe à la ligne et, en dernier recours seulement, se coupe entre deux lettres ;
-   la rangée grandit. Les largeurs de <col> du balisage sont des repères : celles-ci priment. Le tableau des lignes à remplir (classe dc-blank, posée au rendu) garde ses colonnes fixes et ses marges. */
+/* Terrains : aucun texte coupé (lot mp-dg-terrains-liste). Les colonnes suivent leur contenu (tableau en largeur automatique, aucune largeur fixée : les largeurs de <col> du balisage sont des repères, celles-ci priment) :
+   le rôle ne se coupe jamais ; le nom et l'OACI passent à la ligne aux espaces et aux tirets et, en dernier recours seulement, se coupent entre deux lettres ; la piste se coupe après les virgules seulement
+   (« 23L/05R » reste sur une ligne) ; la fréquence se coupe aux espaces seulement, jamais dans un nombre ; la rangée grandit. Le tableau des lignes à remplir (classe dc-blank, posée au rendu) garde ses colonnes fixes et ses marges. */
 .dc-fields td.ro { font-family: var(--dc-fo); font-weight: 500; color: var(--dc-acc); text-transform: uppercase; }
 .dc-fields td.nm { font-family: var(--dc-fo); font-weight: 500; font-size: 18px; }
 .dc-tab.dc-fields:not(.dc-blank) { table-layout: auto; }
-.dc-fields:not(.dc-blank) col:nth-child(1), .dc-fields:not(.dc-blank) col:nth-child(2), .dc-fields:not(.dc-blank) col:nth-child(5) { width: 1px !important; }
-.dc-fields:not(.dc-blank) col:nth-child(4) { width: 88px !important; }
-.dc-fields:not(.dc-blank) th, .dc-fields:not(.dc-blank) td { padding-left: 4px; padding-right: 4px; padding-top: 2px; padding-bottom: 2px; }       /* serré : trois pistes sur trois lignes ne font pas déborder la page */
+.dc-fields:not(.dc-blank) col { width: auto !important; }
+.dc-fields:not(.dc-blank) col:nth-child(1), .dc-fields:not(.dc-blank) col:nth-child(4), .dc-fields:not(.dc-blank) col:nth-child(5) { width: 1px !important; }       /* la largeur de leur plus long élément insécable ; le nom et l'OACI se partagent le reste */
+.dc-fields:not(.dc-blank) th, .dc-fields:not(.dc-blank) td { padding-left: 2px; padding-right: 2px; padding-top: 2px; padding-bottom: 2px; }       /* serré : trois pistes sur trois lignes ne font pas déborder la page */
 .dc-fields:not(.dc-blank) td { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }
-.dc-fields:not(.dc-blank) td.ro, .dc-fields:not(.dc-blank) td:nth-child(2), .dc-fields:not(.dc-blank) td:last-child { white-space: nowrap; overflow-wrap: normal; }
+.dc-fields:not(.dc-blank) td.ro { white-space: nowrap; overflow-wrap: normal; }
+.dc-fields:not(.dc-blank) td:nth-child(4), .dc-fields:not(.dc-blank) td:last-child { overflow-wrap: normal; word-break: normal; }
 .dc-fields:not(.dc-blank) td:nth-child(4) { line-height: 1; }
+.dc-fields:not(.dc-blank) td:nth-child(2) { min-width: calc(4ch + 4px); }       /* un code OACI de quatre lettres ne se coupe jamais */
 
 /* Météo : quatre paires sur deux colonnes, valeur calée à droite, filet pointillé dessous */
 .dc-metar {
@@ -6713,8 +6717,8 @@ function blkRadioPage(c) {
   return blockHtml('radio', t('dc.b.radio'), heads + body, 'dc-bbt');
 }
 
-/* La piste au rendu : une coupure possible après chaque virgule et chaque barre (<wbr>, jamais dans la valeur gardée) */
-function rwyHtml(v) { return hasText(v) ? esc(v).replace(/([,\/])/g, '$1<wbr>') : '\u2014'; }
+/* La piste au rendu : une coupure possible après chaque virgule (<wbr>, jamais dans la valeur gardée), jamais dans « 23L/05R » */
+function rwyHtml(v) { return hasText(v) ? esc(v).replace(/,/g, ',<wbr>') : '\u2014'; }
 function blkFields(c) {
   const rows = c.fields.filter(f => anyText(f, ['icao', 'name', 'runway', 'frequency']));
   if (!rows.length) return '';
@@ -8401,6 +8405,7 @@ function initToolbarMenus(specs) {
   window.addEventListener('resize', tbmResized);
   window.addEventListener('blur', () => tbmClose(false));
   window.addEventListener('scroll', tbmScrolled, true);
+  if (window.visualViewport) { window.visualViewport.addEventListener('resize', tbmVvChanged); window.visualViewport.addEventListener('scroll', tbmVvChanged); }
 }
 
 /* ----- Listes des formulaires (lot mp-ui-listes-formulaires) -----
@@ -8459,7 +8464,7 @@ function tbmAttach(sel, labelFn, mode, fit) {
   const lbl = document.createElement('span');
   lbl.className = 'tbm-lbl';
   btn.appendChild(lbl);
-  const m = { sel: sel, btn: btn, lbl: lbl, labelFn: labelFn, panel: null, active: -1, type: '', typeTimer: 0, x0: 0, y0: 0, uid: uid, form: !!mode, fit: !!fit, search: sel.hasAttribute('data-search'), q: null, lis: [], list: null, none: null, bar: null, empty: '', up: undefined, mo: null };
+  const m = { sel: sel, btn: btn, lbl: lbl, labelFn: labelFn, panel: null, active: -1, type: '', typeTimer: 0, x0: 0, y0: 0, uid: uid, form: !!mode, fit: !!fit, search: sel.hasAttribute('data-search'), q: null, lis: [], list: null, none: null, noneLi: null, bar: null, empty: '', up: undefined, mo: null };
   sel.parentNode.insertBefore(btn, sel);
   sel.setAttribute('data-tbm-src', '');
   ['value', 'selectedIndex'].forEach(k => {
@@ -8531,7 +8536,7 @@ function tbmOpen(m) {
   ul.tabIndex = -1;
   let real = 0;
   for (let k = 0; k < opts.length; k++) if (opts[k].value !== '' && !opts[k].hasAttribute('data-keep')) real++;
-  m.q = null; m.none = null; m.bar = null; m.list = ul; m.lis = [];
+  m.q = null; m.none = null; m.noneLi = null; m.bar = null; m.list = ul; m.lis = [];
   if (m.search) {
     /* le champ de recherche est un combobox hors de la listbox (modèle ARIA) ; sans aucune option à chercher, pas de champ : seule la ligne neutre le dit */
     if (real > 0) {
@@ -8555,13 +8560,18 @@ function tbmOpen(m) {
       panel.appendChild(bar);
       m.q = q; m.bar = bar;
     }
-    const none = document.createElement('div');
-    none.className = 'tbm-none' + (real > 0 ? ' tbm-off' : '');
-    none.setAttribute('aria-live', 'polite');
+    /* la ligne neutre (L4) : dans la liste, entre « Choisir… » ou les aérodromes et « Autre… » ; elle est transparente pour la listbox (role presentation) et son texte est dans une zone aria-live qui existe toujours, vide tant qu'il y a des résultats */
+    const none = document.createElement('li');
+    none.className = 'tbm-none';
+    none.setAttribute('role', 'presentation');
+    const msg = document.createElement('div');
+    msg.className = 'tbm-msg';
+    msg.setAttribute('aria-live', 'polite');
     m.empty = sel.getAttribute('data-search-empty') || '';
-    if (real === 0) none.textContent = m.empty;
-    panel.appendChild(none);
-    m.none = none;
+    if (real === 0) msg.textContent = m.empty;
+    none.appendChild(msg);
+    m.none = msg;
+    m.noneLi = none;
   }
   for (let k = 0; k < opts.length; k++) {
     const o = opts[k], li = document.createElement('li');
@@ -8593,6 +8603,7 @@ function tbmOpen(m) {
     ul.appendChild(li);
     m.lis.push(li);
   }
+  if (m.noneLi) ul.insertBefore(m.noneLi, m.lis.find(x => x.hasAttribute('data-keep')) || null);
   panel.appendChild(ul);
   panel.addEventListener('keydown', e => tbmKey(m, e));
   panel.addEventListener('click', e => {
@@ -8633,8 +8644,7 @@ function tbmFilter(m) {
     if (q !== '' && !keep && show) { n++; if (first < 0) first = k; }
   });
   const none = q !== '' && n === 0;
-  m.none.textContent = none ? m.empty : '';       /* la ligne sans résultat est annoncée (aria-live) quand elle apparaît */
-  m.none.classList.toggle('tbm-off', !none);
+  m.none.textContent = none ? m.empty : '';       /* la ligne sans résultat est annoncée (aria-live) quand son texte apparaît */
   if (m.form) tbmPlace(m, true);       /* la liste a changé de hauteur : ouverte vers le haut, elle reste accrochée au bouton */
   if (q === '') { m.panel.scrollTop = 0; tbmSetActive(m, m.sel.selectedIndex >= 0 ? m.sel.selectedIndex : tbmFirst(m, 1), true); return; }
   if (first < 0) first = m.lis.findIndex(li => li.hasAttribute('data-keep'));
@@ -8647,44 +8657,67 @@ function tbmOff(m, k) { return !!(m.lis[k] && m.lis[k].classList.contains('tbm-o
    Liste de formulaire : la place utile va du bas de la barre du haut au haut de la barre d'onglets fixée en bas (portrait),
    sinon au bas de la fenêtre ; dessous si elle y tient entière, sinon dessus si la place y est plus grande (classe tbm-up). Appelée à l'ouverture, après chaque filtrage (sens gardé : keepDir)
    et quand la fenêtre est redimensionnée ou défilée pendant que la recherche a le focus (le clavier de l'écran). */
+/* La zone visible, en coordonnées de la fenêtre : le visualViewport quand il existe (sur Chrome Android et iOS, le clavier de l'écran ne réduit que lui), sinon la fenêtre */
+function tbmVis() {
+  const v = window.visualViewport;
+  if (v && v.height > 0 && v.width > 0) return { top: v.offsetTop, bottom: v.offsetTop + v.height, left: v.offsetLeft, right: v.offsetLeft + v.width };
+  return { top: 0, bottom: window.innerHeight, left: 0, right: document.documentElement.clientWidth };
+}
+function tbmScroller(el) {
+  for (let e = el.parentElement; e && e !== document.documentElement; e = e.parentElement) {
+    const o = getComputedStyle(e).overflowY;
+    if ((o === 'auto' || o === 'scroll') && e.scrollHeight > e.clientHeight + 1) return e;
+  }
+  return null;
+}
+/* Pendant la recherche : le bouton sorti de la zone visible (clavier, défilement) est ramené au centre de celle-ci, puis la liste se replace */
+function tbmReveal(m) {
+  const r = m.btn.getBoundingClientRect(), vis = tbmVis(), tb = document.querySelector('header.toolbar');
+  const lo = Math.max(vis.top, tb ? tb.getBoundingClientRect().bottom : 0);
+  if (r.bottom <= vis.bottom - 8 && r.top >= lo) return;
+  const d = (r.top + r.height / 2) - (lo + (vis.bottom - lo) / 2), sc = tbmScroller(m.btn);
+  if (sc) sc.scrollTop += d; else window.scrollBy(0, d);
+}
 function tbmPlace(m, keepDir) {
   const r = m.btn.getBoundingClientRect(), p = m.panel;
-  const vw = document.documentElement.clientWidth, vh = window.innerHeight;
+  const vis = tbmVis(), vw = vis.right, vh = vis.bottom;       /* la zone visible (visualViewport) : le clavier de l'écran ne réduit parfois que celle-ci */
   let top = r.bottom + 4;
   m.x0 = r.left; m.y0 = r.top;
   if (m.form) {
     const tb = document.querySelector('header.toolbar'), bar = document.querySelector('.tab-bar');
-    const lo = tb ? tb.getBoundingClientRect().bottom : 0;
+    const lo = Math.max(vis.top, tb ? tb.getBoundingClientRect().bottom : 0);
     let hi = vh;
     if (bar) {
       const bs = getComputedStyle(bar), br = bar.getBoundingClientRect();
       if (bs.position === 'fixed' && bs.display !== 'none' && br.height > 0 && br.top > lo) hi = Math.min(hi, br.top);
     }
-    const cap = Math.min(0.62 * vh, 440);
+    const cap = Math.min(0.62 * (vh - vis.top), 440);
     const below = hi - (r.bottom + 4) - 12, above = (r.top - 4) - lo - 12;
     p.style.minWidth = Math.min(Math.max(180, r.width), vw - 16) + 'px';
     p.style.maxHeight = 'none';
     const up = keepDir && m.up !== undefined ? m.up : Math.min(p.offsetHeight, cap) > below && above > below;       /* keepDir : le sens choisi à l'ouverture ne change pas pendant la frappe */
     m.up = up;
-    p.style.maxHeight = Math.max(60, Math.min(cap, up ? above : below)) + 'px';
+    p.style.maxHeight = Math.max(60, Math.min(cap, up ? above : below, vh - lo - 8)) + 'px';
     p.classList.toggle('tbm-up', up);
-    p.style.top = (up ? r.top - 4 - p.offsetHeight : r.bottom + 4) + 'px';
+    let ty = up ? r.top - 4 - p.offsetHeight : r.bottom + 4;
+    ty = Math.max(lo, Math.min(ty, vh - 4 - p.offsetHeight));       /* le bouton hors de la zone visible et sans rien à défiler : la liste reste dans la zone visible */
+    p.style.top = ty + 'px';
     p.style.left = r.left + 'px';
     const fw = p.getBoundingClientRect().width;
     let fl = r.left;
     if (fl + fw > vw - 8) fl = vw - 8 - fw;
-    if (fl < 8) fl = 8;
+    if (fl < vis.left + 8) fl = vis.left + 8;
     p.style.left = fl + 'px';
     return;
   }
   p.style.minWidth = Math.max(180, r.width) + 'px';
   p.style.top = top + 'px';
   p.style.left = r.left + 'px';
-  p.style.maxHeight = Math.max(60, Math.min(0.62 * vh, 440, vh - top - 12)) + 'px';
+  p.style.maxHeight = Math.max(60, Math.min(0.62 * (vh - vis.top), 440, vh - top - 12)) + 'px';
   const w = p.getBoundingClientRect().width;
   let left = r.left;
   if (left + w > vw - 8) left = vw - 8 - w;
-  if (left < 8) left = 8;
+  if (left < vis.left + 8) left = vis.left + 8;
   p.style.left = left + 'px';
 }
 
@@ -8781,7 +8814,7 @@ function tbmClose(refocus) {
   m.type = '';
   if (m.panel) m.panel.remove();
   m.panel = null;
-  m.q = null; m.bar = null; m.none = null; m.list = null; m.lis = [];
+  m.q = null; m.bar = null; m.none = null; m.noneLi = null; m.list = null; m.lis = [];
   m.active = -1;
   m.btn.classList.remove('tbm-trigger-open');
   m.btn.setAttribute('aria-expanded', 'false');
@@ -8814,28 +8847,31 @@ function tbmSwallowClick(e) {
 /* Le champ de recherche a le focus : le clavier de l'écran redimensionne la fenêtre ou fait défiler la page ; la liste ne se ferme pas, elle se replace */
 function tbmSearching(m) { return !!(m && m.panel && m.q && document.activeElement === m.q); }
 
-/* Le redimensionnement de la fenêtre ferme la liste, sauf pendant la recherche (elle se replace) */
+/* Le redimensionnement de la fenêtre ferme la liste, sauf pendant la recherche (elle se replace, le bouton ramené à l'écran) */
 function tbmResized() {
   const m = TBM.cur;
-  if (tbmSearching(m)) {
-    if (m.form) {
-      const r = m.btn.getBoundingClientRect(), tb = document.querySelector('header.toolbar'), lo = tb ? tb.getBoundingClientRect().bottom : 0;
-      if (r.bottom > window.innerHeight - 8 || r.top < lo) m.btn.scrollIntoView({ block: 'center', inline: 'nearest' });       /* le clavier a réduit la fenêtre : le bouton, donc la liste, reste à l'écran */
-      tbmPlace(m);
-    }
-    return;
-  }
+  if (tbmSearching(m)) { tbmFollow(m); return; }
   tbmClose(false);
 }
+function tbmFollow(m) {
+  if (!m.form) return;
+  tbmReveal(m);
+  tbmPlace(m);
+}
+/* Le visualViewport (zone visible) change — clavier de l'écran, zoom : sans effet hors recherche ; pendant la recherche la liste se replace dans la zone visible */
+function tbmVvChanged() {
+  const m = TBM.cur;
+  if (tbmSearching(m)) tbmFollow(m);
+}
 
-/* Le défilement de la barre (ou de la page) déplace le bouton : la liste se ferme, sauf pendant la recherche (elle se replace) */
+/* Le défilement de la barre (ou de la page) déplace le bouton : la liste se ferme, sauf pendant la recherche (le bouton sorti de la zone visible est ramené, la liste se replace) */
 function tbmScrolled(e) {
   const m = TBM.cur;
   if (!m || !m.panel) return;
   if (e.target === m.panel || (e.target.nodeType && m.panel.contains(e.target))) return;
   const r = m.btn.getBoundingClientRect();
   if (Math.abs(r.left - m.x0) > 0.5 || Math.abs(r.top - m.y0) > 0.5) {
-    if (tbmSearching(m)) { if (m.form) tbmPlace(m); return; }
+    if (tbmSearching(m)) { tbmFollow(m); return; }
     tbmClose(false);
   }
 }
