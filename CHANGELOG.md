@@ -19,6 +19,7 @@ Changes merged since the last release, grouped per tool.
 - Flight packages and the mission HQ shares with the other tools now give each aircraft its own type instead of one type per group (formats `dcs-flight-package-v2` and `dcs-mission-snapshot-v2`); files in the previous format still open, their group type applying to every aircraft. The Datacard Generator and the Route Planner show a mixed flight with all its types.
 - A DCS group is now called a group, not a flight, in HQ, the Route Planner, the Datacard Generator, the Flight Configurator, the Briefing Generator's quick brief and the Field Manual (“Link to a group…”, “Check shown groups”…). Format names do not change: a flight package is still a flight package.
 - In HQ and the Datacard Generator, radios are named and ordered as DCS does (A-10C II, C-130J, M-2000C, OH-58D, Gazelles, F-15E, AV-8B), as in Mission Tools; for the Gazelles, only the FM radio, the one missions preset.
+- One message style across the suite: a single toast at the bottom of the screen, with a coloured edge for success (green) and errors (red); errors stay on screen at least five seconds. Errors are told in plain words (“Unreadable file: this is not a .miz.”) instead of the browser's technical message. Switching language no longer shows a message; the flag's tooltip says what it does (“Switch to French”). Labels read by screen readers follow the tool's language.
 
 ### Mission Plan — landing
 #### Added
@@ -51,6 +52,7 @@ Changes merged since the last release, grouped per tool.
 - Groups are now shared with the Route Planner: create, rename or re-route a group in either tool and the other follows at once. A group may have no unit yet. A group with no unit is exported route only.
 - **Import** now also reads the Briefing Generator — its groups, their number of aircraft and the radio plan of each aircraft type, cockpit channel numbers converted — with Side, Type and Name filters. A group is completed when its name, case included, and side match; a flight of an aircraft the suite does not handle comes in as a group with its route only. An aircraft the suite does not know by the briefing's name is left for you to pick; the package exports once every type is picked. An imported route now shows in the Route Planner as the group's route.
 - Radio bands follow the Mission Tools rule, keeping only what both DCS and the reference guide accept: the Mi-24P's R-863 now ends at 399.9 MHz and its R-828 at 59.9 MHz. An out-of-band frequency already in a group (imported, or typed before a band changed) is flagged but no longer blocks the export.
+- Theatres are listed by their name (“Cold War Germany”), as in the Route Planner. The status bar no longer opens in red: it says what to do first, and turns red only when you try to export something incomplete.
 
 ### Recon Station
 #### Added
@@ -58,6 +60,7 @@ Changes merged since the last release, grouped per tool.
 #### Changed
 - The top bar no longer overflows on narrow phones.
 - Importing a wing configuration checks the file like HQ and the Briefing Generator, with the same messages.
+- Messages no longer cover the drawing bar, and choosing a file that is not an image now says so.
 
 ### Briefing Generator
 #### Changed
