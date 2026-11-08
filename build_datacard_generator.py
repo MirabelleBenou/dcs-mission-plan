@@ -1684,12 +1684,14 @@ select[data-tbm-src] { display: none !important; }
 .dc-radio3 td.fq { text-overflow: clip; }
 
 /* Terrains : aucun texte coupé (lot mp-dg-terrains-liste). Les colonnes suivent leur contenu : le nom passe à la ligne, la liste des pistes aussi (à la virgule), le rôle, l'OACI et la fréquence ne se coupent jamais ;
-   la rangée grandit. Le tableau des lignes à remplir (rangées .dc-bl) garde ses colonnes fixes. */
+   la rangée grandit ; la carte neuve (trois pistes, un nom à deux lignes) tient toujours sur une page. Le tableau des lignes à remplir (rangées .dc-bl) garde ses colonnes fixes. */
 .dc-fields td.ro { font-family: var(--dc-fo); font-weight: 500; color: var(--dc-acc); text-transform: uppercase; }
 .dc-fields td.nm { font-family: var(--dc-fo); font-weight: 500; font-size: 18px; }
 .dc-fields td { text-overflow: clip; }
 .dc-fields:not(:has(.dc-bl)) { table-layout: auto; }
-.dc-fields:not(:has(.dc-bl)) td { white-space: normal; overflow: visible; overflow-wrap: anywhere; }
+.dc-fields:not(:has(.dc-bl)) th, .dc-fields:not(:has(.dc-bl)) td { padding-left: 4px; padding-right: 4px; padding-top: 2px; padding-bottom: 2px; }       /* serré : trois pistes sur trois lignes ne font pas déborder la page */
+.dc-fields:not(:has(.dc-bl)) td:nth-child(4) { line-height: 1; }
+.dc-fields:not(:has(.dc-bl)) td { white-space: normal; overflow: visible; overflow-wrap: break-word; }
 .dc-fields:not(:has(.dc-bl)) td.ro, .dc-fields:not(:has(.dc-bl)) td:nth-child(2), .dc-fields:not(:has(.dc-bl)) td:last-child { white-space: nowrap; overflow-wrap: normal; }
 
 /* Météo : quatre paires sur deux colonnes, valeur calée à droite, filet pointillé dessous */
@@ -1742,18 +1744,19 @@ div.dc-bl, li.dc-bl, p.dc-bl { height: 24px; border-bottom: 1px dotted var(--dc-
 
 
 /* ---------- Barre du haut commune aux sept modules (lot mp-imports-suite) ----------
-   La marque du Flight Configurator : le titre et son sous-titre à l'accent du module dès 1360 px, le sigle seul en dessous (à toutes les largeurs) ;
-   la version avec le titre ; le tampon de décor dès 2014 px. Seuils mesurés dans le shell avec un tampon d'escadre « TEST WING », en français et en anglais. */
+   La marque du Flight Configurator : le titre et son sous-titre à l'accent du module dès 1503 px, le sigle seul en dessous (à toutes les largeurs) ;
+   la version avec le titre ; le tampon de décor dès 2204 px. Seuils mesurés dans le shell avec un tampon d'escadre « TEST WING », en français et en anglais,
+   la liste du théâtre comprise (lot mp-dg-terrains-liste : +142 px au titre, +171 px aux textes des boutons, +183 px au tampon de décor, au pire des deux langues). */
 .tb-brand-main, .tb-brand-short { color: #8fb0c0; }
 .tb-brand-short { display: none; font-family: var(--f-stencil); font-size: 16px; font-weight: 700; letter-spacing: 3px; white-space: nowrap; }
 .tb-classif { font-family: var(--f-stencil); font-weight: 400; font-size: 11px; letter-spacing: 3px; color: var(--red-faded); border: 1px solid var(--red-faded); padding: 4px 10px; white-space: nowrap; flex-shrink: 0; }
 .tb-lang-btn svg { display: block; }
 .tb-brand-sub { font-weight: 500; }
 .tb-version { font-family: 'Roboto Mono', monospace; }
-@media (max-width: 1359px) { .tb-brand-main, .tb-brand-sub, .tb-brand + .tb-sep, .tb-version { display: none; } .tb-brand-short { display: inline; } }
-@media (max-width: 2013px) { .tb-classif { display: none; } }
-/* Les boutons portent leur texte au-dessus de 1722 px ; en dessous, l'icône seule (seuil mesuré : avec le tampon d'escadre, la barre défilerait sinon) */
-@media (max-width: 1721px) { .tb-btn .tb-btn-label { display: none; } .tb-btn { padding: 0 10px; } }
+@media (max-width: 1502px) { .tb-brand-main, .tb-brand-sub, .tb-brand + .tb-sep, .tb-version { display: none; } .tb-brand-short { display: inline; } }
+@media (max-width: 2203px) { .tb-classif { display: none; } }
+/* Les boutons portent leur texte au-dessus de 1912 px ; en dessous, l'icône seule (seuil mesuré : avec le tampon d'escadre, la barre défilerait sinon) */
+@media (max-width: 1911px) { .tb-btn .tb-btn-label { display: none; } .tb-btn { padding: 0 10px; } }
 @media (max-width: 1250px) {
   /* le sélecteur de thème se resserre */
   .tb-select { max-width: 124px; padding: 0 26px 0 8px; text-overflow: ellipsis; overflow: hidden; }
@@ -3766,6 +3769,8 @@ function setDoc(next) {
   if (doc.theatre) next.theatre = doc.theatre;       /* ouvrir un fichier, l'exemple ou une carte blanche ne change pas le théâtre choisi ; un fichier n'en pose un que si le document n'en a pas */
   doc = next;
   curIdx = 0;
+  const ts = document.getElementById('theatre');
+  if (ts && ts.value !== dgTheatre()) ts.value = dgTheatre();       /* un fichier a pu poser le théâtre d'un document qui n'en avait pas */
   gsApplyAll(true);
   persistState();
   renderAll();
@@ -4065,6 +4070,17 @@ function afRouteFill(c, f) {
       c.fields.splice(role === 'arr' ? c.fields.map(x => x.role).lastIndexOf('dep') + 1 : 0, 0, row);       /* DEP en tête, ARR juste après DEP */
     }
     afSetName(c, row, r[0]);
+  });
+}
+
+/* Après l'import d'un briefing : les rangées dont le nom est dans la liste du théâtre prennent la piste et la fréquence du jeu si leur case est vide ; une piste venue du briefing reste */
+function afFillRows(c) {
+  c.fields.forEach(f => {
+    const row = afFind(f.name);
+    if (!row) return;
+    const g = afGame(row, c);
+    if (!hasText(f.runway)) f.runway = g.rwy;
+    if (!hasText(f.frequency)) f.frequency = g.freq;
   });
 }
 
@@ -6292,6 +6308,7 @@ function runImport() {
     ['classification', 'docRef', 'operation', 'mission', 'date', 'time'].forEach(k => { cur.meta[k] = src.meta[k]; });
     cur.mission = clone(src.mission);
     cur.fields = clone(src.fields);
+    afFillRows(cur);
     cur.weather = clone(src.weather);
     persistState();
     renderAll();
@@ -6307,6 +6324,7 @@ function runImport() {
   });
   if (boxes.some(cb => cb.dataset.i === 'general')) cards.push(cardFromGeneral(b));
   if (!cards.length) return;
+  cards.forEach(afFillRows);
   biAddCards(cards);
   persistState();
   renderAll();
