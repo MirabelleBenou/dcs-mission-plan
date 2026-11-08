@@ -291,11 +291,13 @@ select[data-tbm-src] { display: none !important; }
 .tbm-opt[aria-disabled="true"] .tbm-note { color: var(--khaki); font-size: 10px; letter-spacing: 1px; margin-left: auto; padding-left: 14px; }
 .tbm-off { display: none !important; }
 /* La recherche en tête d'une liste (option data-search du <select>) : collée en haut du panneau qui défile */
-.tbm-search { position: sticky; top: 0; z-index: 2; padding: 6px 10px; background: var(--olive-dark); border-bottom: 1px solid rgba(168,154,114,.25); list-style: none; }
+.tbm-list { margin: 0; padding: 0; list-style: none; outline: none; }
+.tbm-list:focus, .tbm-list:focus-visible { outline: none; }
+.tbm-search { position: sticky; top: 0; z-index: 2; padding: 6px 10px; background: var(--olive-dark); border-bottom: 1px solid rgba(168,154,114,.25); }
 .tbm-q { display: block; width: 100%; min-height: 36px; box-sizing: border-box; padding: 6px 10px; font-family: var(--f-typewriter); font-size: 14px; letter-spacing: .2px; color: #1f1c16; background: rgba(216, 201, 165, .92); border: 1px solid var(--khaki); border-left: 3px solid var(--amber-dark); border-radius: 0; outline: none; }
 .tbm-q:focus { border-left-color: var(--red-stamp); box-shadow: 0 0 0 1px var(--amber); }
 .tbm-q::placeholder { color: #6b6450; opacity: 1; }
-.tbm-none { padding: 12px 18px; font-family: var(--f-typewriter); font-size: 14px; color: var(--khaki-light); cursor: default; list-style: none; }
+.tbm-none { padding: 12px 18px; font-family: var(--f-typewriter); font-size: 14px; color: var(--khaki-light); cursor: default; }
 @media (prefers-reduced-motion: reduce) { .tbm-panel { animation: none; } }
 @media print { .tbm-panel { display: none; } }
 
@@ -1199,16 +1201,18 @@ select[data-tbm-src] { display: none !important; }
 .dc-rheads { margin-bottom: 2px; }
 .dc-radio3 td.fq { text-overflow: clip; }
 
-/* Terrains : aucun texte coupé (lot mp-dg-terrains-liste). Les colonnes suivent leur contenu : le nom passe à la ligne, la liste des pistes aussi (à la virgule), le rôle, l'OACI et la fréquence ne se coupent jamais ;
-   la rangée grandit ; la carte neuve (trois pistes, un nom à deux lignes) tient toujours sur une page. Le tableau des lignes à remplir (rangées .dc-bl) garde ses colonnes fixes. */
+/* Terrains : aucun texte coupé (lot mp-dg-terrains-liste). Les colonnes suivent leur contenu (tableau en largeur automatique) : le rôle, l'OACI et la fréquence ne se coupent jamais et prennent leur largeur ;
+   la piste a une largeur de « 17/35, » (88 px) et se coupe après chaque virgule et chaque barre (<wbr> au rendu) ; le nom prend le reste, passe à la ligne et, en dernier recours seulement, se coupe entre deux lettres ;
+   la rangée grandit. Les largeurs de <col> du balisage sont des repères : celles-ci priment. Valable pour le tableau plein comme pour les lignes à remplir (.dc-bl, qui gardent leur hauteur). */
 .dc-fields td.ro { font-family: var(--dc-fo); font-weight: 500; color: var(--dc-acc); text-transform: uppercase; }
 .dc-fields td.nm { font-family: var(--dc-fo); font-weight: 500; font-size: 18px; }
-.dc-fields td { text-overflow: clip; }
-.dc-fields:not(:has(.dc-bl)) { table-layout: auto; }
-.dc-fields:not(:has(.dc-bl)) th, .dc-fields:not(:has(.dc-bl)) td { padding-left: 4px; padding-right: 4px; padding-top: 2px; padding-bottom: 2px; }       /* serré : trois pistes sur trois lignes ne font pas déborder la page */
-.dc-fields:not(:has(.dc-bl)) td:nth-child(4) { line-height: 1; }
-.dc-fields:not(:has(.dc-bl)) td { white-space: normal; overflow: visible; overflow-wrap: break-word; }
-.dc-fields:not(:has(.dc-bl)) td.ro, .dc-fields:not(:has(.dc-bl)) td:nth-child(2), .dc-fields:not(:has(.dc-bl)) td:last-child { white-space: nowrap; overflow-wrap: normal; }
+.dc-tab.dc-fields { table-layout: auto; }
+.dc-fields col:nth-child(1), .dc-fields col:nth-child(2), .dc-fields col:nth-child(5) { width: 1px !important; }
+.dc-fields col:nth-child(4) { width: 88px !important; }
+.dc-fields th, .dc-fields td { padding-left: 4px; padding-right: 4px; padding-top: 2px; padding-bottom: 2px; }       /* serré : trois pistes sur trois lignes ne font pas déborder la page */
+.dc-fields td { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }
+.dc-fields td.ro, .dc-fields td:nth-child(2), .dc-fields td:last-child { white-space: nowrap; overflow-wrap: normal; }
+.dc-fields td:nth-child(4) { line-height: 1; }
 
 /* Météo : quatre paires sur deux colonnes, valeur calée à droite, filet pointillé dessous */
 .dc-metar {
@@ -2600,11 +2604,14 @@ const I18N = {
     'f.field.name': 'Nom',
     'f.field.pick': 'Choisir…',
     'f.field.other': 'Autre…',
+    'th.Afghanistan': 'Afghanistan',
     'th.Caucasus': 'Caucase',
     'th.Falklands': 'Atlantique Sud',
     'th.GermanyCW': 'Allemagne (guerre froide)',
+    'th.Iraq': 'Irak',
     'th.Kola': 'Kola',
     'th.MarianaIslands': 'Mariannes',
+    'th.MarianaIslandsWWII': 'Mariannes 1944',
     'th.Nevada': 'Nevada',
     'th.Normandy': 'Normandie',
     'th.PersianGulf': 'Golfe Persique',
@@ -3007,11 +3014,14 @@ const I18N = {
     'f.field.name': 'Name',
     'f.field.pick': 'Pick…',
     'f.field.other': 'Other…',
+    'th.Afghanistan': 'Afghanistan',
     'th.Caucasus': 'Caucasus',
     'th.Falklands': 'South Atlantic',
     'th.GermanyCW': 'Cold War Germany',
+    'th.Iraq': 'Iraq',
     'th.Kola': 'Kola',
     'th.MarianaIslands': 'Mariana Islands',
+    'th.MarianaIslandsWWII': 'Mariana Islands WWII',
     'th.Nevada': 'Nevada',
     'th.Normandy': 'Normandy',
     'th.PersianGulf': 'Persian Gulf',
@@ -4119,10 +4129,10 @@ function isBlankCard(c) {
 function isBlankDoc(d) { return d.cards.length === 1 && isBlankCard(d.cards[0]); }
 
 /* ============= LE THÉÂTRE DU DOCUMENT (lot mp-dg-terrains-liste) =============
-   Une clé de plus dans datacard_state_v1 : theatre, un des onze théâtres de DG_THEATRES (la liste de la barre, comme au Route Planner) ; absente tant qu'aucun théâtre n'a été choisi ou pris :
+   Une clé de plus dans datacard_state_v1 : theatre, un des quatorze théâtres de DG_THEATRES (la liste de la barre, comme au Route Planner) ; absente tant qu'aucun théâtre n'a été choisi ou pris :
    le document est alors au théâtre par défaut du Route Planner. Le théâtre est partagé avec le Route Planner par la clé mp_theatre_v1 = { theatre } (sans horodatage : réécrire la même valeur ne déclenche aucun
    évènement « storage »), dans les deux sens : le dernier changement gagne. À vide, le document prend celui de la fiche des groupes, puis celui de la route enregistrée. */
-const DG_THEATRES = ['Caucasus', 'GermanyCW', 'Syria', 'PersianGulf', 'Normandy', 'TheChannel', 'Nevada', 'MarianaIslands', 'Kola', 'SinaiMap', 'Falklands'];       /* l'ordre de la liste du Route Planner */
+const DG_THEATRES = ['Caucasus', 'GermanyCW', 'Syria', 'PersianGulf', 'Normandy', 'TheChannel', 'Nevada', 'MarianaIslands', 'MarianaIslandsWWII', 'Kola', 'SinaiMap', 'Iraq', 'Afghanistan', 'Falklands'];       /* les quatorze théâtres du Route Planner, dans son ordre ; les faits du jeu n'existent que pour onze d'entre eux */
 const DG_THEATRE_DEFAULT = 'Caucasus';       /* le théâtre d'un profil neuf au Route Planner */
 const KEY_THEATRE = 'mp_theatre_v1';
 function dgTheatreOk(id) { return typeof id === 'string' && DG_THEATRES.indexOf(id) !== -1; }
@@ -4137,7 +4147,7 @@ function dgWriteTheatreKey(id) {
   if (dgReadTheatreKey() === id) return;       /* déjà là : aucune écriture */
   try { localStorage.setItem(KEY_THEATRE, JSON.stringify({ theatre: id })); } catch (e) { /* stockage indisponible : comme les autres écritures du module */ }
 }
-/* La liste de la barre : les onze théâtres, dans la langue de l'interface, au théâtre du document */
+/* La liste de la barre : les quatorze théâtres, dans la langue de l'interface, au théâtre du document */
 function dgFillTheatre() {
   const s = document.getElementById('theatre');
   if (!s) return;
@@ -5753,11 +5763,30 @@ function afTowerHz(radios, c) {
 }
 /* Ce que le jeu donne pour un aérodrome : la piste (les pistes jointes par « , ») et la fréquence (MHz, comme la boîte Radio) ; '' quand le jeu n'a rien */
 function afGame(row, c) { return { rwy: row[3].join(', '), freq: row[4] ? dgFreqStr(afTowerHz(row[4], c) / 1e6) : '' }; }
+/* Les valeurs du jeu de l'aérodrome actuel de la rangée (ceux de ce nom, dans tous les théâtres) : la piste, et la fréquence de n'importe laquelle des quatre radios de la tour
+   (pas seulement celle de la bande du type actuel : un type changé ne fige pas la fréquence posée pour l'ancien) */
+function afGameSet(f) {
+  const rows = afFindAny(f.name), set = { rwy: [], freq: [] };
+  rows.forEach(r => {
+    if (r[3].length) set.rwy.push(r[3].join(', '));
+    if (r[4]) r[4].forEach(hz => set.freq.push(dgFreqStr(hz / 1e6)));
+  });
+  return set;
+}
+/* Vrai si la case est vide ou porte encore la valeur du jeu de l'aérodrome actuel de la rangée : une valeur saisie, importée ou posée par le MC n'en est pas une */
+function afIsGame(f, key) {
+  const cur = f[key === 'rwy' ? 'runway' : 'frequency'];
+  return !hasText(cur) || afGameSet(f)[key].indexOf(cur.trim()) !== -1;
+}
+/* Le nom se vide ou passe en champ libre : la piste et la fréquence qui portent encore la valeur du jeu de l'ancien nom se vident ; une valeur saisie reste */
+function afClearGame(f) {
+  const own = { rwy: afIsGame(f, 'rwy'), freq: afIsGame(f, 'freq') };
+  if (own.rwy) f.runway = '';
+  if (own.freq) f.frequency = '';
+}
 /* Pose le nom de la rangée ; la piste et la fréquence prennent la valeur du jeu si leur case est vide ou porte encore celle de l'aérodrome précédent. Rend vrai si le nom est dans la liste. */
 function afSetName(c, f, name) {
-  const before = afFindAny(f.name).map(r => afGame(r, c));
-  const mine = (cur, k) => !hasText(cur) || before.some(v => v[k] !== '' && v[k] === cur.trim());
-  const keep = { rwy: !mine(f.runway, 'rwy'), freq: !mine(f.frequency, 'freq') };
+  const keep = { rwy: !afIsGame(f, 'rwy'), freq: !afIsGame(f, 'freq') };
   f.name = name;
   const row = afFind(name);
   if (!row) return false;
@@ -5828,7 +5857,7 @@ function afNameHtml(f, i) {
   let o = opt('', t('f.field.pick'));
   afRows(dgTheatre()).forEach(r => { o += opt(r[0], r[0]); });
   o += opt('@other', t('f.field.other'), ' data-keep');
-  return '<div class="ed-field"><label>' + esc(t('f.field.name')) + '</label><select data-af="' + i + '" data-search>' + o + '</select>' + (other ? afFreeInput(i, f) : '') + '</div>';
+  return '<div class="ed-field"><label>' + esc(t('f.field.name')) + '</label><select data-af="' + i + '" data-search data-search-empty="' + esc(t('f.noaf')) + '">' + o + '</select>' + (other ? afFreeInput(i, f) : '') + '</div>';
 }
 /* Un choix dans la liste (le <select> reçoit input puis change : le second ne change plus rien) */
 function onAfName(el) {
@@ -5837,15 +5866,18 @@ function onAfName(el) {
   const li = el.closest('.li'), v = el.value;
   if (v === '@other') {
     AF_UI.other.add(f);
+    afClearGame(f);       /* le champ libre ne garde pas la piste ni la fréquence de l'aérodrome qu'on quitte (la valeur saisie reste) */
+    if (li) ['runway', 'frequency'].forEach(key => { const x = li.querySelector('[data-path="fields.' + i + '.' + key + '"]'); if (x && x.value !== f[key]) x.value = f[key]; });
     if (li && !li.querySelector('.af-free')) {
       el.parentNode.insertAdjacentHTML('beforeend', afFreeInput(i, f));
       const fr = li.querySelector('.af-free');
       if (fr) fr.focus();
     }
+    touch();
     return;
   }
   AF_UI.other.delete(f);
-  if (v === '') f.name = '';
+  if (v === '') { afClearGame(f); f.name = ''; }
   else afSetName(c, f, v);
   if (li) {
     const fr = li.querySelector('.af-free');
@@ -6681,12 +6713,14 @@ function blkRadioPage(c) {
   return blockHtml('radio', t('dc.b.radio'), heads + body, 'dc-bbt');
 }
 
+/* La piste au rendu : une coupure possible après chaque virgule et chaque barre (<wbr>, jamais dans la valeur gardée) */
+function rwyHtml(v) { return hasText(v) ? esc(v).replace(/([,\/])/g, '$1<wbr>') : '\u2014'; }
 function blkFields(c) {
   const rows = c.fields.filter(f => anyText(f, ['icao', 'name', 'runway', 'frequency']));
   if (!rows.length) return '';
   const body = rows.map(f =>
     '<tr><td class="ro">' + (f.role ? esc(t('dc.role.' + f.role)) : '') + '</td><td class="m">' + dash(f.icao) + '</td>' +
-    '<td class="nm">' + esc(f.name) + '</td><td class="m">' + dash(f.runway) + '</td><td class="m">' + dash(f.frequency) + '</td></tr>').join('');
+    '<td class="nm">' + esc(f.name) + '</td><td class="m">' + rwyHtml(f.runway) + '</td><td class="m">' + dash(f.frequency) + '</td></tr>').join('');
   return blockHtml('fields', t('dc.b.fields'),
     '<table class="dc-tab dc-fields"><colgroup><col style="width:56px"><col style="width:76px"><col><col style="width:54px"><col style="width:104px"></colgroup>' +
     '<thead><tr><th></th><th>' + esc(t('dc.h.icao')) + '</th><th>' + esc(t('dc.h.name')) + '</th><th>' + esc(t('dc.h.rwy')) + '</th><th>' + esc(t('dc.h.freq')) + '</th></tr></thead>' +
@@ -8364,7 +8398,7 @@ function initToolbarMenus(specs) {
   TBM.bound = true;
   document.addEventListener('pointerdown', tbmOutside, true);
   window.addEventListener('click', tbmSwallowClick, true);
-  window.addEventListener('resize', () => tbmClose(false));
+  window.addEventListener('resize', tbmResized);
   window.addEventListener('blur', () => tbmClose(false));
   window.addEventListener('scroll', tbmScrolled, true);
 }
@@ -8425,7 +8459,7 @@ function tbmAttach(sel, labelFn, mode, fit) {
   const lbl = document.createElement('span');
   lbl.className = 'tbm-lbl';
   btn.appendChild(lbl);
-  const m = { sel: sel, btn: btn, lbl: lbl, labelFn: labelFn, panel: null, active: -1, type: '', typeTimer: 0, x0: 0, y0: 0, uid: uid, form: !!mode, fit: !!fit, search: sel.hasAttribute('data-search'), q: null, lis: [], none: null, bar: null, mo: null };
+  const m = { sel: sel, btn: btn, lbl: lbl, labelFn: labelFn, panel: null, active: -1, type: '', typeTimer: 0, x0: 0, y0: 0, uid: uid, form: !!mode, fit: !!fit, search: sel.hasAttribute('data-search'), q: null, lis: [], list: null, none: null, bar: null, empty: '', up: undefined, mo: null };
   sel.parentNode.insertBefore(btn, sel);
   sel.setAttribute('data-tbm-src', '');
   ['value', 'selectedIndex'].forEach(k => {
@@ -8481,37 +8515,53 @@ function tbmOpen(m) {
   if (m.sel.disabled) return;
   tbmSync(m);
   const sel = m.sel, opts = sel.options, name = m.labelFn();
+  const panel = document.createElement('div');
+  panel.className = 'tbm-panel' + (m.form ? ' tbm-p-field' : '');
+  panel.id = 'tbm-panel-' + m.uid;
+  const head = document.createElement('div');
+  head.className = 'tbm-head';
+  head.setAttribute('aria-hidden', 'true');
+  head.textContent = name;
+  panel.appendChild(head);
   const ul = document.createElement('ul');
-  ul.className = 'tbm-panel' + (m.form ? ' tbm-p-field' : '');
+  ul.className = 'tbm-list';
   ul.id = 'tbm-list-' + m.uid;
   ul.setAttribute('role', 'listbox');
   ul.setAttribute('aria-label', name);
   ul.tabIndex = -1;
-  const head = document.createElement('li');
-  head.className = 'tbm-head';
-  head.setAttribute('role', 'presentation');
-  head.textContent = name;
-  ul.appendChild(head);
-  m.lis = [];
-  m.q = null; m.none = null; m.bar = null;
+  let real = 0;
+  for (let k = 0; k < opts.length; k++) if (opts[k].value !== '' && !opts[k].hasAttribute('data-keep')) real++;
+  m.q = null; m.none = null; m.bar = null; m.list = ul; m.lis = [];
   if (m.search) {
-    const bar = document.createElement('li');
-    bar.className = 'tbm-search';
-    bar.setAttribute('role', 'presentation');
-    const q = document.createElement('input');
-    q.type = 'text';
-    q.className = 'tbm-q';
-    q.setAttribute('role', 'searchbox');
-    q.setAttribute('placeholder', t('f.search'));
-    q.setAttribute('aria-label', t('f.search'));
-    q.setAttribute('autocomplete', 'off');
-    q.setAttribute('autocapitalize', 'off');
-    q.setAttribute('spellcheck', 'false');
-    q.setAttribute('enterkeyhint', 'search');
-    q.addEventListener('input', () => tbmFilter(m));
-    bar.appendChild(q);
-    ul.appendChild(bar);
-    m.q = q; m.bar = bar;
+    /* le champ de recherche est un combobox hors de la listbox (modèle ARIA) ; sans aucune option à chercher, pas de champ : seule la ligne neutre le dit */
+    if (real > 0) {
+      const bar = document.createElement('div');
+      bar.className = 'tbm-search';
+      const q = document.createElement('input');
+      q.type = 'text';
+      q.className = 'tbm-q';
+      q.setAttribute('role', 'combobox');
+      q.setAttribute('aria-controls', ul.id);
+      q.setAttribute('aria-expanded', 'true');
+      q.setAttribute('aria-autocomplete', 'list');
+      q.setAttribute('placeholder', t('f.search'));
+      q.setAttribute('aria-label', t('f.search'));
+      q.setAttribute('autocomplete', 'off');
+      q.setAttribute('autocapitalize', 'off');
+      q.setAttribute('spellcheck', 'false');
+      q.setAttribute('enterkeyhint', 'search');
+      q.addEventListener('input', () => tbmFilter(m));
+      bar.appendChild(q);
+      panel.appendChild(bar);
+      m.q = q; m.bar = bar;
+    }
+    const none = document.createElement('div');
+    none.className = 'tbm-none' + (real > 0 ? ' tbm-off' : '');
+    none.setAttribute('aria-live', 'polite');
+    m.empty = sel.getAttribute('data-search-empty') || '';
+    if (real === 0) none.textContent = m.empty;
+    panel.appendChild(none);
+    m.none = none;
   }
   for (let k = 0; k < opts.length; k++) {
     const o = opts[k], li = document.createElement('li');
@@ -8543,32 +8593,25 @@ function tbmOpen(m) {
     ul.appendChild(li);
     m.lis.push(li);
   }
-  if (m.search) {
-    const none = document.createElement('li');
-    none.className = 'tbm-none tbm-off';
-    none.setAttribute('role', 'presentation');
-    none.textContent = t('f.noaf');
-    const keep = m.lis.find(x => x.hasAttribute('data-keep'));
-    ul.insertBefore(none, keep || null);
-    m.none = none;
-  }
-  ul.addEventListener('keydown', e => tbmKey(m, e));
-  ul.addEventListener('click', e => {
+  panel.appendChild(ul);
+  panel.addEventListener('keydown', e => tbmKey(m, e));
+  panel.addEventListener('click', e => {
     const li = e.target.closest ? e.target.closest('.tbm-opt') : null;
     if (!li || li.getAttribute('aria-disabled') === 'true') return;
     tbmChoose(m, Number(li.getAttribute('data-i')));
   });
-  ul.addEventListener('mousemove', e => {
+  panel.addEventListener('mousemove', e => {
     const li = e.target.closest ? e.target.closest('.tbm-opt') : null;
     if (!li || li.getAttribute('aria-disabled') === 'true') return;
     const k = Number(li.getAttribute('data-i'));
     if (k !== m.active) tbmSetActive(m, k, false);
   });
-  document.body.appendChild(ul);
-  m.panel = ul;
+  document.body.appendChild(panel);
+  m.panel = panel;
   TBM.cur = m;
   m.btn.classList.add('tbm-trigger-open');
   m.btn.setAttribute('aria-expanded', 'true');
+  m.up = undefined;
   tbmPlace(m);
   let k0 = sel.selectedIndex;
   if (k0 < 0 || (opts[k0] && opts[k0].disabled)) k0 = tbmFirst(m, 1);
@@ -8589,7 +8632,10 @@ function tbmFilter(m) {
     li.classList.toggle('tbm-off', !show);
     if (q !== '' && !keep && show) { n++; if (first < 0) first = k; }
   });
-  m.none.classList.toggle('tbm-off', !(q !== '' && n === 0));
+  const none = q !== '' && n === 0;
+  m.none.textContent = none ? m.empty : '';       /* la ligne sans résultat est annoncée (aria-live) quand elle apparaît */
+  m.none.classList.toggle('tbm-off', !none);
+  if (m.form) tbmPlace(m, true);       /* la liste a changé de hauteur : ouverte vers le haut, elle reste accrochée au bouton */
   if (q === '') { m.panel.scrollTop = 0; tbmSetActive(m, m.sel.selectedIndex >= 0 ? m.sel.selectedIndex : tbmFirst(m, 1), true); return; }
   if (first < 0) first = m.lis.findIndex(li => li.hasAttribute('data-keep'));
   m.panel.scrollTop = 0;
@@ -8599,8 +8645,9 @@ function tbmOff(m, k) { return !!(m.lis[k] && m.lis[k].classList.contains('tbm-o
 
 /* Sous le bouton (4 px), bord gauche aligné, au moins aussi large, à 8 px au moins des bords de la fenêtre.
    Liste de formulaire : la place utile va du bas de la barre du haut au haut de la barre d'onglets fixée en bas (portrait),
-   sinon au bas de la fenêtre ; dessous si elle y tient entière, sinon dessus si la place y est plus grande (classe tbm-up). */
-function tbmPlace(m) {
+   sinon au bas de la fenêtre ; dessous si elle y tient entière, sinon dessus si la place y est plus grande (classe tbm-up). Appelée à l'ouverture, après chaque filtrage (sens gardé : keepDir)
+   et quand la fenêtre est redimensionnée ou défilée pendant que la recherche a le focus (le clavier de l'écran). */
+function tbmPlace(m, keepDir) {
   const r = m.btn.getBoundingClientRect(), p = m.panel;
   const vw = document.documentElement.clientWidth, vh = window.innerHeight;
   let top = r.bottom + 4;
@@ -8617,7 +8664,8 @@ function tbmPlace(m) {
     const below = hi - (r.bottom + 4) - 12, above = (r.top - 4) - lo - 12;
     p.style.minWidth = Math.min(Math.max(180, r.width), vw - 16) + 'px';
     p.style.maxHeight = 'none';
-    const up = Math.min(p.offsetHeight, cap) > below && above > below;
+    const up = keepDir && m.up !== undefined ? m.up : Math.min(p.offsetHeight, cap) > below && above > below;       /* keepDir : le sens choisi à l'ouverture ne change pas pendant la frappe */
+    m.up = up;
     p.style.maxHeight = Math.max(60, Math.min(cap, up ? above : below)) + 'px';
     p.classList.toggle('tbm-up', up);
     p.style.top = (up ? r.top - 4 - p.offsetHeight : r.bottom + 4) + 'px';
@@ -8654,9 +8702,10 @@ function tbmSetActive(m, k, reveal) {
   if (prev) prev.classList.remove('active');
   m.active = k;
   const li = k >= 0 ? p.querySelector('.tbm-opt[data-i="' + k + '"]') : null;
-  if (!li) { p.removeAttribute('aria-activedescendant'); return; }
+  const holders = [m.list, m.q].filter(Boolean);       /* la listbox, et le champ de recherche quand il y en a un */
+  if (!li) { holders.forEach(h => h.removeAttribute('aria-activedescendant')); return; }
   li.classList.add('active');
-  p.setAttribute('aria-activedescendant', li.id);
+  holders.forEach(h => h.setAttribute('aria-activedescendant', li.id));
   if (!reveal) return;
   const t = li.offsetTop, h = li.offsetHeight, sh = m.bar ? m.bar.offsetHeight : 0;       /* la recherche collée en haut cache les sh premiers pixels */
   if (k === tbmFirst(m, 1)) p.scrollTop = 0;
@@ -8685,7 +8734,7 @@ function tbmType(m, ch) {
 /* Les touches dans le champ de recherche : ↓ passe à la première option, Entrée choisit l'option active, Échap ferme ; le reste est de la frappe */
 function tbmQKey(m, e) {
   const k = e.key;
-  if (k === 'ArrowDown') { e.preventDefault(); tbmSetActive(m, tbmFirst(m, 1), true); m.panel.focus({ preventScroll: true }); }
+  if (k === 'ArrowDown') { e.preventDefault(); tbmSetActive(m, tbmFirst(m, 1), true); m.list.focus({ preventScroll: true }); }
   else if (k === 'ArrowUp') e.preventDefault();
   else if (k === 'Enter') { e.preventDefault(); if (m.active >= 0 && !tbmOff(m, m.active)) tbmChoose(m, m.active); }
   else if (k === 'Escape') { e.preventDefault(); e.stopPropagation(); tbmClose(true); }
@@ -8695,7 +8744,8 @@ function tbmQKey(m, e) {
 function tbmKey(m, e) {
   const k = e.key;
   if (m.q && e.target === m.q) { tbmQKey(m, e); return; }
-  if (m.q && k.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {       /* une lettre tapée sur la liste va à la recherche */
+  if (m.q && k === 'ArrowUp' && m.active === tbmFirst(m, 1) && e.target !== m.q) { e.preventDefault(); m.q.focus({ preventScroll: true }); return; }       /* ↑ sur la première option : le focus revient au champ */
+  if (m.q && k.length === 1 && k !== ' ' && !e.ctrlKey && !e.metaKey && !e.altKey) {       /* une lettre tapée sur la liste va à la recherche ; Espace, non : il choisit l'option active (dans le champ, il se tape) */
     e.preventDefault();
     m.q.focus({ preventScroll: true });
     m.q.value += k;
@@ -8731,7 +8781,7 @@ function tbmClose(refocus) {
   m.type = '';
   if (m.panel) m.panel.remove();
   m.panel = null;
-  m.q = null; m.bar = null; m.none = null; m.lis = [];
+  m.q = null; m.bar = null; m.none = null; m.list = null; m.lis = [];
   m.active = -1;
   m.btn.classList.remove('tbm-trigger-open');
   m.btn.setAttribute('aria-expanded', 'false');
@@ -8761,13 +8811,33 @@ function tbmSwallowClick(e) {
   e.preventDefault();
 }
 
-/* Le défilement de la barre (ou de la page) déplace le bouton : la liste se ferme */
+/* Le champ de recherche a le focus : le clavier de l'écran redimensionne la fenêtre ou fait défiler la page ; la liste ne se ferme pas, elle se replace */
+function tbmSearching(m) { return !!(m && m.panel && m.q && document.activeElement === m.q); }
+
+/* Le redimensionnement de la fenêtre ferme la liste, sauf pendant la recherche (elle se replace) */
+function tbmResized() {
+  const m = TBM.cur;
+  if (tbmSearching(m)) {
+    if (m.form) {
+      const r = m.btn.getBoundingClientRect(), tb = document.querySelector('header.toolbar'), lo = tb ? tb.getBoundingClientRect().bottom : 0;
+      if (r.bottom > window.innerHeight - 8 || r.top < lo) m.btn.scrollIntoView({ block: 'center', inline: 'nearest' });       /* le clavier a réduit la fenêtre : le bouton, donc la liste, reste à l'écran */
+      tbmPlace(m);
+    }
+    return;
+  }
+  tbmClose(false);
+}
+
+/* Le défilement de la barre (ou de la page) déplace le bouton : la liste se ferme, sauf pendant la recherche (elle se replace) */
 function tbmScrolled(e) {
   const m = TBM.cur;
   if (!m || !m.panel) return;
   if (e.target === m.panel || (e.target.nodeType && m.panel.contains(e.target))) return;
   const r = m.btn.getBoundingClientRect();
-  if (Math.abs(r.left - m.x0) > 0.5 || Math.abs(r.top - m.y0) > 0.5) tbmClose(false);
+  if (Math.abs(r.left - m.x0) > 0.5 || Math.abs(r.top - m.y0) > 0.5) {
+    if (tbmSearching(m)) { if (m.form) tbmPlace(m); return; }
+    tbmClose(false);
+  }
 }
 
 function init() {
