@@ -862,11 +862,21 @@ function rsdRenderSheet(force) {
 }
 
 /* Tout ce que montre le mode, remis d'aplomb */
+/* Le toast commun (messages_block.py) se pose à 12 px au-dessus de la plus haute des deux commandes du bas, le message de dessin ou la barre de dessin :
+   il ne recouvre jamais une commande. Sans l'une ni l'autre (pas d'image), la variable est ôtée et le toast reste à 20 px du bas. */
+const RSD_TOAST_GAP = 12;
+function rsdToastPlace() {
+  const root = document.documentElement;
+  const tops = ['rsd-hint', 'rsd-bar'].map(rsd$).filter(el => el && el.getClientRects().length).map(el => el.getBoundingClientRect().top);
+  if (!tops.length) { root.style.removeProperty('--mp-toast-bottom'); return; }
+  const px = Math.round(root.clientHeight - Math.min.apply(null, tops) + RSD_TOAST_GAP) + 'px';
+  if (root.style.getPropertyValue('--mp-toast-bottom') !== px) root.style.setProperty('--mp-toast-bottom', px);
+}
 function rsdSyncUi() {
   const ui = rsd$('rsd-ui');
   if (!ui) return;
   ui.hidden = !SOURCE_READY;
-  if (!SOURCE_READY) { rsd$('rsd-sheet').hidden = true; return; }
+  if (!SOURCE_READY) { rsd$('rsd-sheet').hidden = true; rsdToastPlace(); return; }
   const a = rsdSel();
   if (RSD.sel && !a) { RSD.sel = null; RSD.vtx = -1; RSD.sheet = false; }
   if (RSD.sheet && !rsdSheetTarget()) RSD.sheet = false;
@@ -876,6 +886,7 @@ function rsdSyncUi() {
   rsdRenderSheet(false);
   rsdBand();
   rsdPlaceSheet();
+  rsdToastPlace();
 }
 
 /* ---------- le choix, la création ---------- */
@@ -966,7 +977,7 @@ function rsdAdd(a, skip) {
 function rsdFinish(quiet) {
   const b = RSD.build;
   if (!b || b.kind !== 'poly') return false;
-  if (b.pts.length < 2) { if (!quiet) showToast(t('rsd.t.min')); return false; }
+  if (b.pts.length < 2) { if (!quiet) showToast(t('rsd.t.min'), { type: 'err' }); return false; }
   rsdAdd({ id: uid(), type: 'poly', pts: b.pts.map(p => ({ x: p.x, y: p.y })), closed: false, color: RSD.color });
   return true;
 }
@@ -1114,7 +1125,7 @@ function rsdDelete() {
 function rsdRemoveVertex() {
   const a = rsdSel();
   if (!a || a.type !== 'poly' || RSD.vtx < 0) return;
-  if (a.pts.length <= 2) { showToast(t('rsd.t.min')); return; }
+  if (a.pts.length <= 2) { showToast(t('rsd.t.min'), { type: 'err' }); return; }
   a.pts.splice(RSD.vtx, 1);
   RSD.vtx = -1;
   rsdChanged();
@@ -1216,10 +1227,10 @@ function rsdInit() {
     else if (rsdSel()) rsdDeselect();
   });
   if (window.ResizeObserver) {
-    RSD.ro = new ResizeObserver(() => { rsdBand(); rsdPlace(); rsdPlaceSheet(); });
+    RSD.ro = new ResizeObserver(() => { rsdBand(); rsdPlace(); rsdPlaceSheet(); rsdToastPlace(); });
     [rsd$('preview-panel'), rsd$('preview-canvas'), rsd$('rsd-hint'), rsd$('rsd-bar'), sh].forEach(el => RSD.ro.observe(el));
   }
-  window.addEventListener('resize', () => { rsdBand(); rsdPlace(); rsdPlaceSheet(); });
+  window.addEventListener('resize', () => { rsdBand(); rsdPlace(); rsdPlaceSheet(); rsdToastPlace(); });
   rsdSyncUi();
 }
 '''.replace('__RSD_ICONS__', json.dumps(RSD_ICONS, ensure_ascii=False))
@@ -1282,7 +1293,7 @@ RSD_I18N_FR = r'''    // Annoter au doigt (lot mp-rs-v1.1.0)
     'rsd.f.caption.ph': 'Agrandissement',
     'rsd.f.close': 'Fermer',
     'rsd.new.text': 'CIBLE',
-    'rsd.t.min': 'Un tracé a au moins deux points.',
+    'rsd.t.min': '⚠ Un tracé a au moins deux points.',
 '''
 
 RSD_I18N_EN = r'''    // Touch annotations (lot mp-rs-v1.1.0)
@@ -1343,7 +1354,7 @@ RSD_I18N_EN = r'''    // Touch annotations (lot mp-rs-v1.1.0)
     'rsd.f.caption.ph': 'Close-up',
     'rsd.f.close': 'Close',
     'rsd.new.text': 'TARGET',
-    'rsd.t.min': 'A polyline needs at least two points.',
+    'rsd.t.min': '⚠ A polyline needs at least two points.',
 '''
 
 # ---------- HTML ----------
@@ -2390,7 +2401,7 @@ select[data-tbm-src] {{ display: none !important; }}
   <div class="tb-spacer"></div>
   <div class="tb-classif">IMINT // CONFIDENTIAL</div>
   <span class="tb-version">v{APP_VERSION}</span>
-  <button class="tb-lang-btn" id="btn-lang" title="Switch language / Changer de langue"><svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="14" fill="#012169"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#fff" stroke-width="2.8"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#C8102E" stroke-width="1.6"/><rect x="8" width="4" height="14" fill="#fff"/><rect y="5" width="20" height="4" fill="#fff"/><rect x="9" width="2" height="14" fill="#C8102E"/><rect y="6" width="20" height="2" fill="#C8102E"/></svg></button>
+  <button class="tb-lang-btn" id="btn-lang" title="Passer en anglais" aria-label="Passer en anglais"><svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="14" fill="#012169"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#fff" stroke-width="2.8"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#C8102E" stroke-width="1.6"/><rect x="8" width="4" height="14" fill="#fff"/><rect y="5" width="20" height="4" fill="#fff"/><rect x="9" width="2" height="14" fill="#C8102E"/><rect y="6" width="20" height="2" fill="#C8102E"/></svg></button>
 </header>
 
 <!-- MAIN APP -->
@@ -2431,7 +2442,7 @@ select[data-tbm-src] {{ display: none !important; }}
     <details class="ed-section" open>
       <summary data-i18n="editor.text.title">COULEUR DU TEXTE</summary>
       <div class="ed-body">
-        <div class="logo-mode" id="text-color-group" role="group" aria-label="Couleur du texte">
+        <div class="logo-mode" id="text-color-group" role="group" data-i18n-aria-label="aria.textColor" aria-label="Couleur du texte">
           <button type="button" data-text-color="#fff" data-i18n="editor.text.white">Blanc</button>
           <button type="button" data-text-color="#000" data-i18n="editor.text.black">Noir</button>
         </div>
@@ -2520,7 +2531,7 @@ select[data-tbm-src] {{ display: none !important; }}
         <label class="btn-upload-logo" for="file-wing" data-i18n="editor.logo.importWing" style="margin-top:4px">↑ IMPORTER CONFIG WING (BG)</label>
         <input type="file" id="file-wing" accept=".json,application/json" hidden>
         <div class="logo-mode-label" data-i18n="editor.logo.mode.title">RENDU DU LOGO</div>
-        <div class="logo-mode" id="logo-mode" role="group" aria-label="Rendu du logo">
+        <div class="logo-mode" id="logo-mode" role="group" data-i18n-aria-label="aria.logoMode" aria-label="Rendu du logo">
           <button type="button" data-logo-mode="color" data-i18n="editor.logo.mode.color">COULEUR</button>
           <button type="button" data-logo-mode="gray"  data-i18n="editor.logo.mode.gray">GRIS</button>
           <button type="button" data-logo-mode="white" data-i18n="editor.logo.mode.white">BLANC</button>
@@ -2560,7 +2571,7 @@ select[data-tbm-src] {{ display: none !important; }}
     <details class="ed-section" open>
       <summary data-i18n="editor.marker.color">COULEUR DES MARQUAGES</summary>
       <div class="ed-body">
-        <div class="logo-mode" id="marker-color-group" role="group" aria-label="Couleur des marquages">
+        <div class="logo-mode" id="marker-color-group" role="group" data-i18n-aria-label="aria.markerColor" aria-label="Couleur des marquages">
           <button type="button" data-marker-color="red"   data-i18n="editor.marker.red">Rouge</button>
           <button type="button" data-marker-color="black" data-i18n="editor.marker.black">Noir</button>
           <button type="button" data-marker-color="white" data-i18n="editor.marker.white">Blanc</button>
@@ -2683,7 +2694,7 @@ const I18N = {{
     'toolbar.example.tooltip': "Ouvrir l'exemple",
     'confirm.example': "Remplacer le travail en cours par l'exemple ?",
     'toast.example-loaded': 'Exemple chargé ✓',
-    'toast.exampleFailed': 'Exemple indisponible',
+    'msg.exampleUnavailable': '⚠ Exemple indisponible.',
     'editor.image.credit': 'Image : USDA NAIP, domaine public',
     'theme.cw-nato': 'Cold War OTAN',
     'theme.cw-soviet': 'Cold War Soviétique',
@@ -2725,9 +2736,8 @@ const I18N = {{
     'tab.preview': 'APERÇU',
     'tab.editor.aria': 'Onglet éditeur',
     'tab.preview.aria': 'Onglet aperçu',
-    'toast.lang': 'Langue : Français',
     'toast.theme': 'Thème appliqué',
-    'toast.no-image': 'Aucune image source — veuillez en importer une',
+    'toast.no-image': '⚠ Aucune image source — veuillez en importer une',
     'toast.export.start': 'Export en cours…',
     'toast.export.done': 'Image exportée',
     'fn.label': 'Nom du fichier',
@@ -2744,12 +2754,19 @@ const I18N = {{
     'editor.marker.red': 'Rouge',
     'editor.marker.black': 'Noir',
     'editor.marker.white': 'Blanc',
-    'toast.fileMustBeImage': 'Le fichier doit être une image',
-    'toast.logoInvalid': 'Logo invalide',
+    'msg.notImage': '⚠ Le fichier doit être une image.',
+    'msg.imageUnreadable': '⚠ Image illisible.',
+    'msg.exportFailed': '⚠ Export impossible.',
+    'msg.jsonUnreadable': '⚠ Fichier illisible : ce n’est pas du JSON.',
+    'msg.notWingConfig': '⚠ Ce fichier n’est pas une configuration wing.',
+    'msg.wingIncomplete': '⚠ Configuration wing incomplète : {{0}} champ(s) manquant(s) ou invalide(s).',
     'editor.logo.removeCustom': 'Supprimer le logo importé',
+    'editor.logo.none': 'Aucun logo',
+    'aria.textColor': 'Couleur du texte',
+    'aria.logoMode': 'Rendu du logo',
+    'aria.markerColor': 'Couleur des marquages',
     'editor.logo.importWing': 'Importer config wing (BG)',
-    'toast.jsonInvalid': 'JSON illisible',
-    'toast.noLogoInJson': 'Aucun logo dans ce fichier',
+    'toast.noLogoInJson': '⚠ Aucun logo dans ce fichier',
     'validate.schemaMissing': 'configSchemaVersion doit être 1',
     'validate.wingMissing': 'Champ wing manquant',
     'validate.shortNameMissing': 'wing.shortName manquant',
@@ -2758,8 +2775,6 @@ const I18N = {{
     'validate.sqIdMissing': '.id manquant',
     'validate.sqCallsignMissing': '.callsign manquant',
     'validate.sqAircraftNotArray': '.aircraft doit être un tableau',
-    'toast.wingInvalid': '⚠ Config invalide : ',
-    'toast.wingJsonInvalid': '⚠ JSON invalide : ',
     'toast.logosImported': '{{n}} logo(s) importé(s) ✓',
     'editor.fx.title': 'EFFETS',
     'editor.fx.vignette': 'Vignette',
@@ -2819,7 +2834,7 @@ const I18N = {{
     'toolbar.example.tooltip': 'Open the example',
     'confirm.example': 'Replace the current work with the example?',
     'toast.example-loaded': 'Example loaded ✓',
-    'toast.exampleFailed': 'Example unavailable',
+    'msg.exampleUnavailable': '⚠ Example unavailable.',
     'editor.image.credit': 'Image: USDA NAIP, public domain',
     'theme.cw-nato': 'Cold War NATO',
     'theme.cw-soviet': 'Cold War Soviet',
@@ -2861,9 +2876,8 @@ const I18N = {{
     'tab.preview': 'PREVIEW',
     'tab.editor.aria': 'Editor tab',
     'tab.preview.aria': 'Preview tab',
-    'toast.lang': 'Language: English',
     'toast.theme': 'Theme applied',
-    'toast.no-image': 'No source image — please import one',
+    'toast.no-image': '⚠ No source image — please import one',
     'toast.export.start': 'Exporting…',
     'toast.export.done': 'Image exported',
     'fn.label': 'File name',
@@ -2880,12 +2894,19 @@ const I18N = {{
     'editor.marker.red': 'Red',
     'editor.marker.black': 'Black',
     'editor.marker.white': 'White',
-    'toast.fileMustBeImage': 'File must be an image',
-    'toast.logoInvalid': 'Invalid logo',
+    'msg.notImage': '⚠ The file must be an image.',
+    'msg.imageUnreadable': '⚠ Unreadable image.',
+    'msg.exportFailed': '⚠ Export failed.',
+    'msg.jsonUnreadable': '⚠ Unreadable file: this is not JSON.',
+    'msg.notWingConfig': '⚠ This file is not a wing configuration.',
+    'msg.wingIncomplete': '⚠ Incomplete wing configuration: {{0}} missing or invalid field(s).',
     'editor.logo.removeCustom': 'Remove imported logo',
+    'editor.logo.none': 'No logo',
+    'aria.textColor': 'Text color',
+    'aria.logoMode': 'Logo rendering',
+    'aria.markerColor': 'Marker color',
     'editor.logo.importWing': 'Import wing config (BG)',
-    'toast.jsonInvalid': 'Invalid JSON',
-    'toast.noLogoInJson': 'No logo in this file',
+    'toast.noLogoInJson': '⚠ No logo in this file',
     'validate.schemaMissing': 'configSchemaVersion must be 1',
     'validate.wingMissing': 'Missing wing field',
     'validate.shortNameMissing': 'wing.shortName missing',
@@ -2894,8 +2915,6 @@ const I18N = {{
     'validate.sqIdMissing': '.id missing',
     'validate.sqCallsignMissing': '.callsign missing',
     'validate.sqAircraftNotArray': '.aircraft must be an array',
-    'toast.wingInvalid': '⚠ Invalid config: ',
-    'toast.wingJsonInvalid': '⚠ Invalid JSON: ',
     'toast.logosImported': '{{n}} logo(s) imported ✓',
     'editor.fx.title': 'EFFECTS',
     'editor.fx.vignette': 'Vignette',
@@ -3040,7 +3059,7 @@ function loadTheme() {{
 function applyTheme(val) {{
   document.body.setAttribute('data-theme', val);
   localStorage.setItem(KEY_THEME, val);
-  showToast(t('toast.theme'), 'ok', 1600);
+  showToast(t('toast.theme'));
 }}
 
 // ── Lang ───────────────────────────────────────────────────────
@@ -3064,7 +3083,6 @@ function setLang(lang) {{
   rerenderDynamic();
   updateFlagButton();
   schedulePreview();
-  showToast(t('toast.lang'), 'ok', 1800);
 }}
 
 /* Drapeaux dessinés (ils ne s'affichent pas en lettres sous Windows) ; le bouton montre la langue vers laquelle il bascule */
@@ -3076,6 +3094,7 @@ function updateFlagButton() {{
   if (!btn) return;
   btn.innerHTML = CURRENT_LANG === 'fr' ? FLAG_EN : FLAG_FR;
   btn.title = t('toolbar.lang.tooltip');
+  btn.setAttribute('aria-label', t('toolbar.lang.tooltip'));
 }}
 
 function applyI18nStatic() {{
@@ -3098,11 +3117,11 @@ function rerenderDynamic() {{
   renderInsetEditor();
   renderShapesEditor();
   renderLabelEditor();
+  renderLogoGrid();      // le titre de la vignette « Aucun logo »
   renderLogoMode();
   renderTextColor();
   renderMarkerColor();
   rsdSyncUi();
-  // Le logo grid n'a pas de texte i18n (logos visuels)
 }}
 
 // ── State persistence ──────────────────────────────────────────
@@ -3194,7 +3213,8 @@ function applyStateToForm() {{
 
 // ── Source image loading ───────────────────────────────────────
 function loadImageFile(file) {{
-  if (!file || !file.type.startsWith('image/')) return;
+  if (!file) return;
+  if (!file.type.startsWith('image/')) {{ showToast(t('msg.notImage'), {{ type: 'err' }}); return; }}
   const reader = new FileReader();
   reader.onload = async e => {{
     const img = new Image();
@@ -3208,10 +3228,11 @@ function loadImageFile(file) {{
       document.getElementById('btn-export').disabled = false;
       document.getElementById('preview-placeholder').hidden = true;
       document.getElementById('preview-canvas').hidden = false;
-      showToast(t('toast.image-loaded'), 'ok', 1800);
+      showToast(t('toast.image-loaded'), {{ type: 'ok' }});
       rsdSyncUi();
       schedulePreview();
     }};
+    img.onerror = () => {{ console.warn('[RS] image illisible'); showToast(t('msg.imageUnreadable'), {{ type: 'err' }}); }};
     img.src = e.target.result;
   }};
   reader.readAsDataURL(file);
@@ -3240,7 +3261,7 @@ async function loadExample() {{
   const img = new Image();
   try {{
     await new Promise((ok, ko) => {{ img.onload = ok; img.onerror = ko; img.src = RS_EXAMPLE_IMG; }});
-  }} catch (e) {{ showToast(t('toast.exampleFailed'), 'err'); return; }}
+  }} catch (e) {{ console.warn('[RS] exemple indisponible', e); showToast(t('msg.exampleUnavailable'), {{ type: 'err' }}); return; }}
   SOURCE_IMG   = img;
   SOURCE_READY = true;
   document.getElementById('drop-zone').classList.add('has-image');
@@ -3283,7 +3304,7 @@ async function loadExample() {{
   rsdDeselect();
   saveState();
   schedulePreview();
-  showToast(t('toast.example-loaded'), 'ok', 1800);
+  showToast(t('toast.example-loaded'), {{ type: 'ok' }});
   if (window.matchMedia('(max-width: 1100px)').matches) {{
     const tab = document.querySelector('.tab-btn[data-tab="preview"]');   // petit écran : on montre l'aperçu
     if (tab) tab.click();
@@ -3295,7 +3316,7 @@ const LOGO_MAX_SIZE = 512;   // côté long — préserve les exports haute rés
 
 function loadLogoFile(file) {{
   if (!file) return;
-  if (!file.type.startsWith('image/')) {{ showToast(t('toast.fileMustBeImage'), 'err'); return; }}
+  if (!file.type.startsWith('image/')) {{ showToast(t('msg.notImage'), {{ type: 'err' }}); return; }}
   const reader = new FileReader();
   reader.onload = e => {{
     const img = new Image();
@@ -3317,7 +3338,7 @@ function loadLogoFile(file) {{
       renderLogoGrid();
       schedulePreview();
     }};
-    img.onerror = () => showToast(t('toast.logoInvalid'), 'err');
+    img.onerror = () => {{ console.warn('[RS] logo illisible'); showToast(t('msg.imageUnreadable'), {{ type: 'err' }}); }};
     img.src = e.target.result;
   }};
   reader.readAsDataURL(file);
@@ -3351,12 +3372,15 @@ function validateWingConfig(obj) {{
 function importWingLogos(file) {{
   const r = new FileReader();
   r.onload = e => {{
+    let cfg;
+    try {{ cfg = JSON.parse(e.target.result); }}
+    catch (err) {{ console.warn('[RS] configuration wing : JSON illisible', err); showToast(t('msg.jsonUnreadable'), {{ type: 'err' }}); return; }}
+    if (!cfg || typeof cfg !== 'object' || cfg.configSchemaVersion !== 1) {{ showToast(t('msg.notWingConfig'), {{ type: 'err' }}); return; }}
     try {{
-      const cfg = JSON.parse(e.target.result);
       const check = validateWingConfig(cfg);
       if (!check.ok) {{
-        showToast(t('toast.wingInvalid') + check.errors.slice(0, 2).join(' \u00b7 ') +
-          (check.errors.length > 2 ? ' (+' + (check.errors.length - 2) + ')' : ''), 'err');
+        console.warn('[RS] configuration wing incomplète :', check.errors);
+        showToast(t('msg.wingIncomplete').replace('{{0}}', check.errors.length), {{ type: 'err' }});
         return;
       }}
       const added = [];
@@ -3366,13 +3390,14 @@ function importWingLogos(file) {{
       }};
       if (cfg.wing) push(cfg.wing.shortName || 'WING', cfg.wing.logo);
       (cfg.squadrons || []).forEach(sq => push(sq.id, sq.logo));
-      if (!added.length) {{ showToast(t('toast.noLogoInJson'), 'err'); return; }}
+      if (!added.length) {{ showToast(t('toast.noLogoInJson'), {{ type: 'err' }}); return; }}
       STATE.logos.push(...added);
       STATE.logoId = added[0].id;
       saveState(); renderLogoGrid(); schedulePreview();
-      showToast(t('toast.logosImported').replace('{{n}}', added.length), 'ok');
+      showToast(t('toast.logosImported').replace('{{n}}', added.length), {{ type: 'ok' }});
     }} catch (err) {{
-      showToast(t('toast.wingJsonInvalid') + err.message, 'err');
+      console.warn('[RS] configuration wing : lecture impossible', err);
+      showToast(t('msg.notWingConfig'), {{ type: 'err' }});
     }}
   }};
   r.readAsText(file);
@@ -3388,7 +3413,7 @@ function renderLogoGrid() {{
   grid.innerHTML = allLogos.map(lg => {{
     const active = STATE.logoId === lg.id ? 'active' : '';
     if (lg.id === 'none') {{
-      return `<div class="logo-thumb ${{active}}" data-logo-id="none" tabindex="0" title="Aucun logo">
+      return `<div class="logo-thumb ${{active}}" data-logo-id="none" tabindex="0" title="${{t('editor.logo.none')}}">
         <div class="logo-thumb-none">∅</div>
       </div>`;
     }}
@@ -4405,7 +4430,7 @@ function fnOpen() {{ return !document.getElementById('fn-modal').hidden; }}
 function fnSync() {{ document.getElementById('fn-go').disabled = cleanFname(FN.name) === ''; }}
 function fnAsk(opener) {{
   if (!SOURCE_READY || !SOURCE_IMG) {{
-    showToast(t('toast.no-image'), 'err');
+    showToast(t('toast.no-image'), {{ type: 'err' }});
     return;
   }}
   collectState();
@@ -4457,10 +4482,10 @@ function fnBind() {{
 // ── Export PNG ─────────────────────────────────────────────────
 async function exportPNG(name) {{
   if (!SOURCE_READY || !SOURCE_IMG) {{
-    showToast(t('toast.no-image'), 'err');
+    showToast(t('toast.no-image'), {{ type: 'err' }});
     return;
   }}
-  showToast(t('toast.export.start'), '', 1500);
+  showToast(t('toast.export.start'), 1500);
   await ensureFonts();
 
   const W = SOURCE_IMG.naturalWidth;
@@ -4475,7 +4500,7 @@ async function exportPNG(name) {{
   composeRecon(ctx, W, H, STATE, logoImg);
 
   canvas.toBlob(blob => {{
-    if (!blob) {{ showToast('Export failed', 'err'); return; }}
+    if (!blob) {{ showToast(t('msg.exportFailed'), {{ type: 'err' }}); return; }}
     const fname   = name + '.png';
     const url     = URL.createObjectURL(blob);
     const a       = document.createElement('a');
@@ -4483,7 +4508,7 @@ async function exportPNG(name) {{
     a.download    = fname;
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 5000);
-    showToast(t('toast.export.done'), 'ok');
+    showToast(t('toast.export.done'), {{ type: 'ok' }});
   }}, 'image/png');
 }}
 
@@ -5081,7 +5106,7 @@ async function init() {{
   rsdInit();
 
   if (hasState) {{
-    showToast(t('toast.state-restored'), '', 3500);
+    showToast(t('toast.state-restored'), 3500);
   }}
 
   await ensureFonts();

@@ -269,7 +269,7 @@ def _build_bg_svg():
     M = 'bm'
     T = sv_text
     o = []
-    o.append('<svg viewBox="0 0 720 425" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ce qui alimente quoi">')
+    o.append('<svg viewBox="0 0 720 425" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ce qui alimente quoi" data-aria-fr="Ce qui alimente quoi" data-aria-en="What feeds what">')
     o.append('          ' + sv_defs(M))
     o.append('          ' + sv_title('CE QUI ALIMENTE QUOI', 'WHAT FEEDS WHAT', 24, 32))
     # rangée du haut
@@ -360,7 +360,7 @@ def _build_dg_feed_svg():
     M = 'dgf'
     T = sv_text
     o = []
-    o.append('<svg viewBox="0 0 720 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ce qui alimente la datacard">')
+    o.append('<svg viewBox="0 0 720 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ce qui alimente la datacard" data-aria-fr="Ce qui alimente la datacard" data-aria-en="What feeds the datacard">')
     o.append('          ' + sv_defs(M))
     o.append('          ' + sv_title('CE QUI ALIMENTE LA DATACARD', 'WHAT FEEDS THE DATACARD', 26, 34))
     # Briefing Generator et ses huit lignes
@@ -431,7 +431,7 @@ def _build_rp_screen_svg():
     T = sv_text
     A = '#7ac97a'
     o = []
-    o.append('<svg viewBox="0 0 720 352" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="L’écran du Route Planner">')
+    o.append('<svg viewBox="0 0 720 352" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="L’écran du Route Planner" data-aria-fr="L’écran du Route Planner" data-aria-en="The Route Planner screen">')
     o.append('          ' + sv_defs(M))
     o.append('          ' + sv_title('L’ÉCRAN DU ROUTE PLANNER', 'THE ROUTE PLANNER SCREEN', 24, 32))
     # la barre du haut
@@ -516,7 +516,7 @@ def _build_rp_feed_svg():
     M = 'rpf'
     T = sv_text
     o = []
-    o.append('<svg viewBox="0 0 720 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ce qui entre dans le Route Planner, et ce qui en sort">')
+    o.append('<svg viewBox="0 0 720 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ce qui entre dans le Route Planner, et ce qui en sort" data-aria-fr="Ce qui entre dans le Route Planner, et ce qui en sort" data-aria-en="What goes into the Route Planner, and what comes out">')
     o.append('          ' + sv_defs(M))
     o.append('          ' + sv_title('CE QUI ENTRE, CE QUI SORT', 'WHAT GOES IN, WHAT COMES OUT', 24, 32))
     o.append('          ' + T(116, 52, 9, 'ENTRE', 'IN', op=.8, ls=2))
@@ -1825,7 +1825,7 @@ kbd {{
   <div class="tb-spacer"></div>
   <div class="tb-classif">TRAINING // UNCLASSIFIED</div>
   <span class="tb-version">v{APP_VERSION}</span>
-  <button id="btn-lang" aria-label="Changer de langue" title="Switch language">
+  <button id="btn-lang" aria-label="Passer en anglais" title="Passer en anglais">
     <svg id="flag-svg" viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg">
       <!-- flag FR par défaut -->
       <rect width="7" height="14" fill="#002395"/>
@@ -1989,7 +1989,7 @@ kbd {{
       <!-- Schéma SVG — anatomie d'une photo recon (où se place chaque élément) -->
       <div class="fm-schema">
         <svg viewBox="0 0 720 380" xmlns="http://www.w3.org/2000/svg" role="img"
-             aria-label="Anatomie d'une photo recon">
+             aria-label="Anatomie d'une photo recon" data-aria-fr="Anatomie d'une photo recon" data-aria-en="Anatomy of a recon photo">
           <defs>
             <marker id="lead" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
               <path d="M0,0 L7,3.5 L0,7 Z" fill="currentColor" opacity=".55"/>
@@ -2172,7 +2172,7 @@ kbd {{
 
       <!-- Schéma SVG — flux du hub -->
       <div class="fm-schema">
-        <svg viewBox="0 0 720 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="HQ — le hub de la suite">
+        <svg viewBox="0 0 720 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="HQ — le hub de la suite" data-aria-fr="HQ — le hub de la suite" data-aria-en="HQ — the suite’s hub">
           <defs>
             <marker id="ha" markerWidth="8" markerHeight="8" refX="6.5" refY="3.5" orient="auto"><path d="M0,0 L8,3.5 L0,7 Z" fill="currentColor" opacity=".6"/></marker>
             <marker id="haf" markerWidth="8" markerHeight="8" refX="6.5" refY="3.5" orient="auto"><path d="M0,0 L8,3.5 L0,7 Z" fill="currentColor" opacity=".35"/></marker>
@@ -2628,7 +2628,7 @@ kbd {{
 
       <!-- Schéma SVG : anatomie d’une datacard -->
       <div class="fm-schema">
-        <svg viewBox="0 0 720 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Anatomie d’une datacard">
+        <svg viewBox="0 0 720 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Anatomie d’une datacard" data-aria-fr="Anatomie d’une datacard" data-aria-en="Anatomy of a datacard">
           <defs>
             <marker id="dgl" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="currentColor" opacity=".55"/></marker>
           </defs>
@@ -3115,6 +3115,10 @@ function applyI18n() {{
   document.querySelectorAll('[data-i18n-title]').forEach(function(el) {{
     el.title = t(el.getAttribute('data-i18n-title'));
   }});
+  // Les titres des schémas (aria-label) suivent la langue
+  document.querySelectorAll('svg[data-aria-fr]').forEach(function(el) {{
+    el.setAttribute('aria-label', el.getAttribute(CURRENT_LANG === 'en' ? 'data-aria-en' : 'data-aria-fr'));
+  }});
   // Tampons "À VENIR / COMING" sur les plaques soon
   document.querySelectorAll('.fm-soon-stamp').forEach(function(el) {{
     el.textContent = t('index.soon');
@@ -3137,7 +3141,9 @@ function updateFlag() {{
   if (!btn) return;
   // On montre le drapeau de la langue VERS laquelle on bascule
   btn.innerHTML = CURRENT_LANG === 'fr' ? FLAG_EN : FLAG_FR;
-  btn.setAttribute('aria-label', CURRENT_LANG === 'fr' ? 'Switch to English' : 'Passer en français');
+  var tip = CURRENT_LANG === 'fr' ? 'Passer en anglais' : 'Switch to French';
+  btn.title = tip;
+  btn.setAttribute('aria-label', tip);
 }}
 
 function setLang(lang) {{

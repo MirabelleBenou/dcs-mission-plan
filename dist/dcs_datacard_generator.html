@@ -1648,7 +1648,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   <div class="tb-spacer"></div>
   <div class="tb-classif">COCKPIT COPY // DO NOT REMOVE</div>
   <span class="tb-version">v1.5.1</span>
-  <button class="tb-lang-btn" id="btn-lang" data-i18n-title="tb.lang.tip" title="Switch language / Changer de langue"><svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="14" fill="#012169"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#fff" stroke-width="2.8"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#C8102E" stroke-width="1.6"/><rect x="8" width="4" height="14" fill="#fff"/><rect y="5" width="20" height="4" fill="#fff"/><rect x="9" width="2" height="14" fill="#C8102E"/><rect y="6" width="20" height="2" fill="#C8102E"/></svg></button>
+  <button class="tb-lang-btn" id="btn-lang" data-i18n-title="tb.lang.tip" title="Passer en anglais" data-i18n-aria-label="tb.lang.tip" aria-label="Passer en anglais"><svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="14" fill="#012169"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#fff" stroke-width="2.8"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#C8102E" stroke-width="1.6"/><rect x="8" width="4" height="14" fill="#fff"/><rect y="5" width="20" height="4" fill="#fff"/><rect x="9" width="2" height="14" fill="#C8102E"/><rect y="6" width="20" height="2" fill="#C8102E"/></svg></button>
 </header>
 
 <!-- ===== FENÊTRE D'EXPORT ===== -->
@@ -2283,7 +2283,7 @@ const I18N = {
     'tb.reset': 'Effacer',
     'tb.reset.tip': 'Vider le document (repartir d\'une carte blanche)',
     'tb.theme.tip': 'Thème graphique',
-    'tb.lang.tip': 'Switch language / Changer de langue',
+    'tb.lang.tip': 'Passer en anglais',
     'theme.cw-nato': 'Cold War OTAN',
     'theme.cw-soviet': 'Cold War Soviétique',
     'theme.modern-nato': 'OTAN moderne',
@@ -2300,8 +2300,8 @@ const I18N = {
     'ex.back': '← Retour',
     'ex.page': 'Page',
     'ex.progress': 'Génération {i}/{n}…',
-    'ex.error': 'Erreur d\'export : ',
-    'toast.noMeasure': 'Mise en page non mesurée (le module n\'est pas affiché) : rien n\'est exporté.',
+    'msg.exportFailed': '⚠ Export impossible.',
+    'toast.noMeasure': '⚠ Mise en page non mesurée (le module n\'est pas affiché) : rien n\'est exporté.',
     'toast.pngOne': 'PNG exporté ✓',
     'toast.pngMany': '{n} PNG exportés ✓',
     'imp.title': 'Importer dans la datacard',
@@ -2321,12 +2321,12 @@ const I18N = {
     'imp.choose': 'Choisir un fichier…',
     'imp.flights': 'Groupes à importer',
     'imp.route.all': 'Toutes les routes ({n}), une datacard par route',
-    'rej.json': 'JSON illisible.',
-    'rej.zip': 'Archive illisible : pas de package.json à la racine.',
-    'rej.format': 'Format « {x} » non pris en charge ici (attendu : {list}).',
+    'rej.json': '⚠ Fichier illisible : ce n’est pas du JSON.',
+    'rej.zip': '⚠ Archive illisible : pas de package.json à la racine.',
+    'rej.format': '⚠ Format « {x} » non pris en charge ici (attendu : {list}).',
     'rej.unknown': 'inconnu',
-    'rej.incomplete': 'Fichier « {x} » incomplet : aucune route à points.',
-    'rej.isDatacard': 'C\'est une datacard : ouvrez-la par « Ouvrir ».',
+    'rej.incomplete': '⚠ Fichier « {x} » incomplet : aucune route à points.',
+    'rej.isDatacard': '⚠ C\'est une datacard : ouvrez-la par « Ouvrir ».',
     'fmt.briefing': 'briefing',
     'fmt.route': 'route',
     'fmt.set': 'jeu de routes',
@@ -2416,7 +2416,7 @@ const I18N = {
     'cmp.offTable': '(hors table)',
     'cmp.mod': 'modifié',
     'cmp.copied': 'copié de {n}',
-    'toast.gsFull': 'Stockage du navigateur plein : vos groupes ne sont pas enregistrés. Enregistrez un fichier de travail.',
+    'toast.gsFull': '⚠ Stockage du navigateur plein : vos groupes ne sont pas enregistrés. Enregistrez un fichier de travail.',
     'm.cancel': 'Annuler',
     'm.new.title': 'Nouvelle datacard',
     'm.new.go': 'Créer',
@@ -2674,7 +2674,7 @@ const I18N = {
     'tb.reset': 'Clear',
     'tb.reset.tip': 'Clear the document (start from a blank card)',
     'tb.theme.tip': 'Graphic theme',
-    'tb.lang.tip': 'Switch language / Changer de langue',
+    'tb.lang.tip': 'Switch to French',
     'theme.cw-nato': 'Cold War NATO',
     'theme.cw-soviet': 'Cold War Soviet',
     'theme.modern-nato': 'Modern NATO',
@@ -2691,8 +2691,8 @@ const I18N = {
     'ex.back': '← Back',
     'ex.page': 'Page',
     'ex.progress': 'Generating {i}/{n}…',
-    'ex.error': 'Export error: ',
-    'toast.noMeasure': 'Layout not measured (the module is not displayed): nothing was exported.',
+    'msg.exportFailed': '⚠ Export failed.',
+    'toast.noMeasure': '⚠ Layout not measured (the module is not displayed): nothing was exported.',
     'toast.pngOne': 'PNG exported ✓',
     'toast.pngMany': '{n} PNGs exported ✓',
     'imp.title': 'Import into the datacard',
@@ -2712,12 +2712,12 @@ const I18N = {
     'imp.choose': 'Choose a file…',
     'imp.flights': 'Groups to import',
     'imp.route.all': 'All routes ({n}), one datacard per route',
-    'rej.json': 'Unreadable JSON.',
-    'rej.zip': 'Unreadable archive: no package.json at the root.',
-    'rej.format': 'Format "{x}" not supported here (expected: {list}).',
+    'rej.json': '⚠ Unreadable file: this is not JSON.',
+    'rej.zip': '⚠ Unreadable archive: no package.json at the root.',
+    'rej.format': '⚠ Format “{x}” is not supported here (expected: {list}).',
     'rej.unknown': 'unknown',
-    'rej.incomplete': 'Incomplete "{x}" file: no route with points.',
-    'rej.isDatacard': 'This is a datacard: open it with "Open".',
+    'rej.incomplete': '⚠ Incomplete "{x}" file: no route with points.',
+    'rej.isDatacard': '⚠ This is a datacard: open it with "Open".',
     'fmt.briefing': 'briefing',
     'fmt.route': 'route',
     'fmt.set': 'route set',
@@ -2807,7 +2807,7 @@ const I18N = {
     'cmp.offTable': '(not in table)',
     'cmp.mod': 'modified',
     'cmp.copied': 'copied from {n}',
-    'toast.gsFull': 'Browser storage full: your groups are not saved. Save a work file.',
+    'toast.gsFull': '⚠ Browser storage full: your groups are not saved. Save a work file.',
     'm.cancel': 'Cancel',
     'm.new.title': 'New datacard',
     'm.new.go': 'Create',
@@ -5425,7 +5425,7 @@ function dgPackFn(r, th) {
   return gsPackRoute(r, th, gs);
 }
 /* Un échec d'écriture de la fiche (stockage plein), dit une fois par série d'échecs */
-function gsOnSaveFail() { showToast(t('toast.gsFull'), 6000); }
+function gsOnSaveFail() { showToast(t('toast.gsFull'), { type: 'err', ms: 6000 }); }
 
 /* Les champs de groupe d'une carte liée, lus dans le groupe de la fiche ; le pilote reste à la carte (rang de l'unité) */
 function dgApplyGroup(c, f, fi) {
@@ -7297,7 +7297,7 @@ function fallbackDownload(blob, fname, toastMsg) {
   a.click();
   document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 1000);
-  if (toastMsg) showToast(toastMsg);
+  if (toastMsg) showToast(toastMsg, { type: 'ok' });
 }
 
 /* Le nom d'un fichier choisi : sans « .json », accents ôtés, tout ce qui n'est pas lettre, chiffre, _ + - devient « _ » ; vide si rien ne reste */
@@ -7391,7 +7391,7 @@ function loadJsonFile(file) {
       const hasGroups = doc.cards.some(x => x.gsId);
       if (!isBlankDoc(doc) && !confirm(t(hasGroups ? 'confirm.json.groups' : 'confirm.json'))) return;
       openDatacards(normalizeDoc(r.parsed));
-      showToast(t('toast.jsonLoaded'));
+      showToast(t('toast.jsonLoaded'), { type: 'ok' });
       return;
     }
     if (k.kind === 'pkg') { impOpen({ opener: document.getElementById('btn-json-import'), parsed: r.parsed, name: file.name }); return; }
@@ -7504,11 +7504,11 @@ function isPlainObject(o) { return !!o && typeof o === 'object' && !Array.isArra
 function rejectFormat(parsed, kinds) {
   const f = isPlainObject(parsed) ? parsed.format : undefined;
   const x = ((typeof f === 'string' && f !== '') || typeof f === 'number') ? String(f) : t('rej.unknown');
-  showToast(t('rej.format', { x: x, list: kinds.map(k => t('fmt.' + k)).join(', ') }), 5000);
+  showToast(t('rej.format', { x: x, list: kinds.map(k => t('fmt.' + k)).join(', ') }), { type: 'err' });
 }
-function rejectMsg(key) { showToast(t(key), 5000); }
+function rejectMsg(key) { showToast(t(key), { type: 'err' }); }
 /* un format reconnu dont le contenu est inutilisable : une route sans liste de points, un jeu sans liste de routes ou sans aucune route à points */
-function rejectIncomplete(fmt) { showToast(t('rej.incomplete', { x: fmt }), 5000); }
+function rejectIncomplete(fmt) { showToast(t('rej.incomplete', { x: fmt }), { type: 'err' }); }
 
 /* Un fichier d'import lu : { parsed, zip } (le JSON d'un .json, ou le package.json à la racine d'un .zip, « PK » en tête ; zip dit d'où il vient) ou { reject } (la clé du message).
    Le texte se décode comme readAsText : une marque UTF-16 (LE ou BE) en tête, UTF-16 ; sinon UTF-8 (la marque UTF-8 est ôtée). */
@@ -7519,7 +7519,7 @@ function readImportFile(file, done) {
     const parse = (text, zip) => {
       if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
       let parsed;
-      try { parsed = JSON.parse(text); } catch (e) { done({ reject: 'rej.json' }); return; }
+      try { parsed = JSON.parse(text); } catch (e) { console.warn('[DG] import : JSON illisible', e); done({ reject: 'rej.json' }); return; }
       done({ parsed: parsed, zip: zip });
     };
     if (!(bytes.length >= 2 && bytes[0] === 0x50 && bytes[1] === 0x4B)) {
@@ -7625,7 +7625,7 @@ function runAllRoutesImport() {
   persistState();
   renderAll();
   closeImportModal();
-  showToast(t('toast.imported', { n: cards.length }));
+  showToast(t('toast.imported', { n: cards.length }), { type: 'ok' });
 }
 
 
@@ -7751,7 +7751,7 @@ function runRouteImport() {
   persistState();
   renderAll();
   closeImportModal();
-  showToast(t('toast.routeImported', { n: r.points.length }));
+  showToast(t('toast.routeImported', { n: r.points.length }), { type: 'ok' });
 }
 
 function runImport() {
@@ -7772,7 +7772,7 @@ function runImport() {
     persistState();
     renderAll();
     closeImportModal();
-    showToast(t('toast.briefFilled', { n: dgCardName(cur, curIdx) }));
+    showToast(t('toast.briefFilled', { n: dgCardName(cur, curIdx) }), { type: 'ok' });
     return;
   }
   const cards = [];
@@ -7787,7 +7787,7 @@ function runImport() {
   persistState();
   renderAll();
   closeImportModal();
-  showToast(t('toast.imported', { n: cards.length }));
+  showToast(t('toast.imported', { n: cards.length }), { type: 'ok' });
 }
 
 /* « Choisir un fichier… » de la source « Fichier JSON » : un briefing, une route ou un jeu de routes ; un paquet de vol passe à la fenêtre d'import commune ; une datacard renvoie vers « Ouvrir » */
@@ -7808,7 +7808,7 @@ function dgImported(res) {
   if (k >= 0) curIdx = k;
   persistState();
   renderAll();
-  showToast(res.failed ? res.text + ' · ' + t('toast.gsFull') : res.text, res.failed ? 6000 : res.ms);
+  showToast(res.failed ? '⚠ ' + res.text + ' · ' + t('toast.gsFull').replace(/^⚠\s*/, '') : res.text, { type: res.failed ? 'err' : 'ok', ms: res.failed ? 6000 : res.ms });
 }
 
 /* ============= EXPORT : fenêtre ============= */
@@ -7894,7 +7894,7 @@ async function renderPageToPng(html) {
 }
 
 async function executePngExport() {
-  if (!dgMeasurable()) { showToast(t('toast.noMeasure')); return; }       /* jamais d'image d'un plan non mesuré */
+  if (!dgMeasurable()) { showToast(t('toast.noMeasure'), { type: 'err' }); return; }       /* jamais d'image d'un plan non mesuré */
   const all = allExportPages();
   const idx = Array.from(document.querySelectorAll('.export-png-page-cb.exp-cb:checked')).map(cb => parseInt(cb.dataset.idx, 10));
   const sel = idx.map(i => all[i]).filter(Boolean);
@@ -7931,8 +7931,8 @@ async function executePngExport() {
       fallbackDownload(zipBlob, fileName + '.zip', t('toast.pngMany', { n: sel.length }));
     }
   } catch (err) {
-    showToast(t('ex.error') + (err && err.message ? err.message : ''));
     console.error('[Export PNG]', err);
+    showToast(t('msg.exportFailed'), { type: 'err' });
   } finally {
     goBtn.innerHTML = original;
     goBtn.removeAttribute('aria-busy');
@@ -7961,12 +7961,12 @@ function loadExample() {
   setDoc(ex);
   curIdx = linked.length;
   renderAll();
-  showToast(t('toast.example'));
+  showToast(t('toast.example'), { type: 'ok' });
 }
 function resetDoc() {
   if (!confirm(t('confirm.reset'))) return;
   setDoc(newDoc());
-  showToast(t('toast.reset'));
+  showToast(t('toast.reset'), { type: 'ok' });
 }
 
 /* ============= CÂBLAGE ============= */

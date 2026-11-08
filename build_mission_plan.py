@@ -395,7 +395,7 @@ select[data-tbm-src] {{ display: none !important; }}
         <option value="modern-nato" data-i18n="theme.modernnato">OTAN moderne</option>
         <option value="modern-east" data-i18n="theme.moderneast">Bloc Est moderne</option>
       </select>
-      <button class="flag" id="flag-btn" title="Langue / Language"><svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="14" fill="#012169"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#fff" stroke-width="2.8"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#C8102E" stroke-width="1.6"/><rect x="8" width="4" height="14" fill="#fff"/><rect y="5" width="20" height="4" fill="#fff"/><rect x="9" width="2" height="14" fill="#C8102E"/><rect y="6" width="20" height="2" fill="#C8102E"/></svg></button>
+      <button class="flag" id="flag-btn" title="Passer en anglais" aria-label="Passer en anglais"><svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="14" fill="#012169"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#fff" stroke-width="2.8"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#C8102E" stroke-width="1.6"/><rect x="8" width="4" height="14" fill="#fff"/><rect y="5" width="20" height="4" fill="#fff"/><rect x="9" width="2" height="14" fill="#C8102E"/><rect y="6" width="20" height="2" fill="#C8102E"/></svg></button>
       <span class="classif" id="classif">Classified // Eyes Only</span>
     </div>
   </div>
@@ -676,7 +676,11 @@ select[data-tbm-src] {{ display: none !important; }}
 
   function updateFlagBtn() {{
     var btn = document.getElementById('flag-btn');
-    if (btn) btn.innerHTML = CURRENT_LANG === 'fr' ? FLAG_EN : FLAG_FR;
+    if (!btn) return;
+    btn.innerHTML = CURRENT_LANG === 'fr' ? FLAG_EN : FLAG_FR;
+    var tip = CURRENT_LANG === 'fr' ? 'Passer en anglais' : 'Switch to French';
+    btn.title = tip;
+    btn.setAttribute('aria-label', tip);
   }}
 
   function setLang(lang) {{

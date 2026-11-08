@@ -3213,7 +3213,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   <div class="tb-spacer"></div>
   <div class="tb-classif">CLASSIFIED // FOR EYES ONLY</div>
   <span class="tb-version">v2.6.0</span>
-  <button class="tb-lang-btn" id="btn-lang" data-i18n-title="toolbar.lang.tooltip" title="Switch language / Changer de langue"><svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="14" fill="#012169"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#fff" stroke-width="2.8"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#C8102E" stroke-width="1.6"/><rect x="8" width="4" height="14" fill="#fff"/><rect y="5" width="20" height="4" fill="#fff"/><rect x="9" width="2" height="14" fill="#C8102E"/><rect y="6" width="20" height="2" fill="#C8102E"/></svg></button>
+  <button class="tb-lang-btn" id="btn-lang" data-i18n-title="toolbar.lang.tooltip" title="Passer en anglais" data-i18n-aria-label="toolbar.lang.tooltip" aria-label="Passer en anglais"><svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="14" fill="#012169"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#fff" stroke-width="2.8"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#C8102E" stroke-width="1.6"/><rect x="8" width="4" height="14" fill="#fff"/><rect y="5" width="20" height="4" fill="#fff"/><rect x="9" width="2" height="14" fill="#C8102E"/><rect y="6" width="20" height="2" fill="#C8102E"/></svg></button>
 </header>
 
 <!-- ===== EXPORT MODAL ===== -->
@@ -3602,7 +3602,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 </div>
 
 <!-- ============ MOBILE TAB BAR ============ -->
-<nav class="tab-bar" id="tab-bar" role="tablist" aria-label="Sections du briefing">
+<nav class="tab-bar" id="tab-bar" role="tablist" data-i18n-aria-label="tab.bar.aria" aria-label="Sections du briefing">
   <button type="button" data-tab="meta" role="tab"><span class="tab-ico">⚙</span><span data-i18n="tab.meta">Méta</span></button>
   <button type="button" data-tab="s-situation" data-fmt="simple" role="tab"><span class="tab-ico">▣</span><span data-i18n="tab.simple.situation">Situation</span></button>
   <button type="button" data-tab="s-mission" data-fmt="simple" role="tab"><span class="tab-ico">✈</span><span data-i18n="tab.mission">Mission</span></button>
@@ -3672,7 +3672,10 @@ const I18N = {
     'toolbar.export.tooltip': 'Exporter en PDF ou PNG (kneeboard DCS)',
     'toolbar.reset.tooltip':  'Vider le briefing (repartir d\'une page blanche)',
     'toolbar.theme.tooltip':  'Thème graphique',
-    'toolbar.lang.tooltip':   'Switch language / Changer de langue',
+    'toolbar.lang.tooltip':   'Passer en anglais',
+    'tab.bar.aria':           'Sections du briefing',
+    'preview.overflowWarning': '⚠ Contenu tronqué',
+    'toast.missingSquadrons': '⚠ Ce briefing référence {0} escadron(s) absent(s) du wing courant : {1}. Importez le wing correspondant.',
     // ── Document ──
     'doc.title.suffix': 'GÉNÉRATEUR DE BRIEFING',
     // ── Tab bar ──
@@ -3831,8 +3834,13 @@ const I18N = {
     'editor.wing.roSquadrons':   'Escadrons enregistrés',
     'toast.wingLoaded':          'Config wing chargée ✓',
     'toast.wingReset':           'Wing réinitialisé ✓',
-    'toast.wingInvalid':         '⚠ Config invalide : ',
-    'toast.wingJsonInvalid':     '⚠ JSON invalide : ',
+    'msg.jsonUnreadable':        '⚠ Fichier illisible : ce n’est pas du JSON.',
+    'msg.notWingConfig':         '⚠ Ce fichier n’est pas une configuration wing.',
+    'msg.wingIncomplete':        '⚠ Configuration wing incomplète : {0} champ(s) manquant(s) ou invalide(s).',
+    'msg.notMiz':                '⚠ Fichier illisible : ce n’est pas un .miz.',
+    'msg.notImage':              '⚠ Le fichier doit être une image.',
+    'msg.imageUnreadable':       '⚠ Image illisible.',
+    'msg.exportFailed':          '⚠ Export impossible.',
     'toast.wingFileError':       '⚠ Lecture du fichier impossible',
     'editor.wing.importTooltip':'Importer un fichier wing_config.json',
     'editor.wing.reset':        '♻ Réinitialiser',
@@ -3895,14 +3903,12 @@ const I18N = {
     'preview.guestFallback':             'INVITÉ',
     // Misc strings dynamiques
     'editor.phases.subtaskPlaceholder':  'Sous-tâche',
-    'toast.fileMustBeImage':             'Le fichier doit être une image.',
     'toast.exportSingle':                '1 page exportée ✓',
     'toast.exportMulti':                 'pages exportées ✓',
     'error.canvasToBlob':                'Conversion canvas → blob PNG échouée',
     'editor.imgZone.removeImageAria': 'Retirer l\'image',
     'editor.annexes.numSigle':        'ANNEXE',
     // ── Toasts ──
-    'toast.langSwitched':      'Interface en français',
     'toast.briefingSaved':     'Briefing exporté ✓',
     'toast.briefingLoaded':    'Briefing chargé ✓',
     'toast.briefingReset':     'Briefing vidé ✓',
@@ -3911,15 +3917,12 @@ const I18N = {
     'toast.imageCompressing':  'Compression image...',
     'toast.imageLoaded':       'Image chargée ✓',
     'toast.logoInvalid':       '⚠ Logo invalide : ',
-    'toast.imageError':        'Erreur : ',
-    'toast.jsonInvalid':       '⚠ Fichier JSON invalide : ',
     'toast.fileUnreadable':    '⚠ Lecture impossible',
-    'rej.json':                'JSON illisible.',
-    'rej.format':              'Format « {x} » non pris en charge ici (attendu : {list}).',
+    'rej.json':                '⚠ Fichier illisible : ce n’est pas du JSON.',
+    'rej.format':              '⚠ Format « {x} » non pris en charge ici (attendu : {list}).',
     'rej.unknown':             'inconnu',
-    'rej.notBriefing':         'Ce fichier n\'est pas un briefing.',
+    'rej.notBriefing':         '⚠ Ce fichier n\'est pas un briefing.',
     'fmt.briefing':            'briefing',
-    'toast.exportError':       '⚠ Erreur export PNG : ',
     'toast.exportGenProgress': 'Génération ',
     // ── Confirmations ──
     'confirm.resetBriefing': 'Vider tout le briefing ?',
@@ -3968,7 +3971,6 @@ const I18N = {
     'toolbar.format.tooltip':     'Choisir le format du briefing',
     'toolbar.example':            'Exemple',
     'toolbar.subtitle':           '░ BRIEFING DE MISSION',
-    'toast.mizReadError':         'Lecture du .miz impossible : ',
     'toolbar.example.tooltip':    'Ouvrir le briefing d\'exemple (remplace le briefing en cours)',
     'confirm.loadExample':        'Remplacer le briefing en cours par l\'exemple ?',
     'toast.exampleLoaded':        'Exemple chargé ✓',
@@ -3984,7 +3986,8 @@ const I18N = {
     'rpmap.cancel':       'Annuler',
     'rpmap.place':        'Placer',
     'toast.rpmapPlaced':  'Carte placée.',
-    'toast.storageFull':  'Mémoire du navigateur pleine : le briefing n\'est plus enregistré.',
+    'toast.storageFull':  '⚠ Mémoire du navigateur pleine : le briefing n\'est plus enregistré.',
+    'toast.wingStorageFull': '⚠ Mémoire du navigateur pleine : la configuration wing n’est pas enregistrée.',
     'tab.simple.situation':       'Situation',
     'tab.simple.coord':           'Coordination',
     'tab.simple.photos':          'Photos',
@@ -4049,7 +4052,10 @@ const I18N = {
     'toolbar.export.tooltip': 'Export to PDF or PNG (DCS kneeboard)',
     'toolbar.reset.tooltip':  'Clear the briefing (start from a blank page)',
     'toolbar.theme.tooltip':  'Graphic theme',
-    'toolbar.lang.tooltip':   'Switch language / Changer de langue',
+    'toolbar.lang.tooltip':   'Switch to French',
+    'tab.bar.aria':           'Briefing sections',
+    'preview.overflowWarning': '⚠ Content cut off',
+    'toast.missingSquadrons': '⚠ This briefing references {0} squadron(s) missing from the current wing: {1}. Import the matching wing.',
     // ── Document ──
     'doc.title.suffix': 'BRIEFING GENERATOR',
     // ── Tab bar ──
@@ -4208,8 +4214,13 @@ const I18N = {
     'editor.wing.roSquadrons':   'Registered squadrons',
     'toast.wingLoaded':          'Wing config loaded ✓',
     'toast.wingReset':           'Wing reset ✓',
-    'toast.wingInvalid':         '⚠ Invalid config: ',
-    'toast.wingJsonInvalid':     '⚠ Invalid JSON: ',
+    'msg.jsonUnreadable':        '⚠ Unreadable file: this is not JSON.',
+    'msg.notWingConfig':         '⚠ This file is not a wing configuration.',
+    'msg.wingIncomplete':        '⚠ Incomplete wing configuration: {0} missing or invalid field(s).',
+    'msg.notMiz':                '⚠ Unreadable file: this is not a .miz.',
+    'msg.notImage':              '⚠ The file must be an image.',
+    'msg.imageUnreadable':       '⚠ Unreadable image.',
+    'msg.exportFailed':          '⚠ Export failed.',
     'toast.wingFileError':       '⚠ Cannot read file',
     'editor.wing.importTooltip':'Import a wing_config.json file',
     'editor.wing.reset':        '♻ Reset',
@@ -4272,14 +4283,12 @@ const I18N = {
     'preview.guestFallback':             'GUEST',
     // Misc
     'editor.phases.subtaskPlaceholder':  'Subtask',
-    'toast.fileMustBeImage':             'File must be an image.',
     'toast.exportSingle':                '1 page exported ✓',
     'toast.exportMulti':                 'pages exported ✓',
     'error.canvasToBlob':                'Canvas → PNG blob conversion failed',
     'editor.imgZone.removeImageAria': 'Remove image',
     'editor.annexes.numSigle':        'ANNEX',
     // ── Toasts ──
-    'toast.langSwitched':      'Interface in English',
     'toast.briefingSaved':     'Briefing exported ✓',
     'toast.briefingLoaded':    'Briefing loaded ✓',
     'toast.briefingReset':     'Briefing cleared ✓',
@@ -4288,15 +4297,12 @@ const I18N = {
     'toast.imageCompressing':  'Compressing image…',
     'toast.imageLoaded':       'Image loaded ✓',
     'toast.logoInvalid':       '⚠ Invalid logo: ',
-    'toast.imageError':        'Error: ',
-    'toast.jsonInvalid':       '⚠ Invalid JSON file: ',
     'toast.fileUnreadable':    '⚠ Cannot read file',
-    'rej.json':                'Unreadable JSON.',
-    'rej.format':              'Format "{x}" not supported here (expected: {list}).',
+    'rej.json':                '⚠ Unreadable file: this is not JSON.',
+    'rej.format':              '⚠ Format “{x}” is not supported here (expected: {list}).',
     'rej.unknown':             'unknown',
-    'rej.notBriefing':         'This file is not a briefing.',
+    'rej.notBriefing':         '⚠ This file is not a briefing.',
     'fmt.briefing':            'briefing',
-    'toast.exportError':       '⚠ PNG export error: ',
     'toast.exportGenProgress': 'Generating ',
     // ── Confirmations ──
     'confirm.resetBriefing': 'Clear the entire briefing?',
@@ -4345,7 +4351,6 @@ const I18N = {
     'toolbar.format.tooltip':     'Choose the briefing format',
     'toolbar.example':            'Example',
     'toolbar.subtitle':           '░ MISSION BRIEFING',
-    'toast.mizReadError':         'Could not read the .miz: ',
     'toolbar.example.tooltip':    'Open the example briefing (replaces the current one)',
     'confirm.loadExample':        'Replace the current briefing with the example?',
     'toast.exampleLoaded':        'Example loaded ✓',
@@ -4361,7 +4366,8 @@ const I18N = {
     'rpmap.cancel':       'Cancel',
     'rpmap.place':        'Place',
     'toast.rpmapPlaced':  'Map placed.',
-    'toast.storageFull':  'Browser storage full: the briefing is no longer being saved.',
+    'toast.storageFull':  '⚠ Browser storage full: the briefing is no longer being saved.',
+    'toast.wingStorageFull': '⚠ Browser storage full: the wing configuration is not saved.',
     'tab.simple.situation':       'Situation',
     'tab.simple.coord':           'Coordination',
     'tab.simple.photos':          'Photos',
@@ -4517,7 +4523,6 @@ function setLang(lang) {
   updateFlagButton();
   updateDocTitle();
   schedulePreview();
-  showToast(t('toast.langSwitched'), 'success');
 }
 
 /* rerenderAllDynamic — Phase 9 : rejoue toutes les fonctions de rendu dynamique
@@ -4949,7 +4954,7 @@ function persistState() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
   catch(e) {
     /* localStorage may be unavailable or full : seul le quota plein se dit (v2.5.0) */
-    if (e && (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED')) showToast(t('toast.storageFull'));
+    if (e && (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED')) showToast(t('toast.storageFull'), { type: 'err' });
   }
 }
 
@@ -5008,7 +5013,7 @@ function persistWingConfig() {
       localStorage.setItem(KEY_WING, JSON.stringify(wingConfig));
     } catch(e) {
       if (e.name === 'QuotaExceededError') {
-        showToast(t('toast.wingStorageFull'));
+        showToast(t('toast.wingStorageFull'), { type: 'err' });
       } else {
         console.warn('[Wing] Erreur persistance :', e);
       }
@@ -5041,10 +5046,16 @@ function setByPath(obj, path, val) {
 }
 
 /* ============= IMAGE COMPRESSION ============= */
+/* Un échec d'image se dit par une phrase de la suite, jamais par le message de l'exception (le détail part en console) */
+function imageFailToast(err) {
+  console.warn('[BG] image :', err);
+  showToast(t(err && err.message === 'notImage' ? 'msg.notImage' : 'msg.imageUnreadable'), { type: 'err' });
+}
+
 function compressImageFile(file) {
   return new Promise((resolve, reject) => {
     if (!file.type.startsWith('image/')) {
-      reject(new Error(t('toast.fileMustBeImage')));
+      reject(new Error('notImage'));
       return;
     }
     const reader = new FileReader();
@@ -5068,10 +5079,10 @@ function compressImageFile(file) {
           resolve({ dataUrl, width, height });
         } catch (e) { reject(e); }
       };
-      img.onerror = () => reject(new Error('Image illisible.'));
+      img.onerror = () => reject(new Error('imageUnreadable'));
       img.src = reader.result;
     };
-    reader.onerror = () => reject(new Error('Lecture du fichier impossible.'));
+    reader.onerror = () => reject(new Error('imageUnreadable'));
     reader.readAsDataURL(file);
   });
 }
@@ -6230,7 +6241,7 @@ function renderPhaseImages(listEl, phaseIdx) {
         renderPhaseImages(listEl, phaseIdx);
         schedulePreview();
       } catch (err) {
-        showToast(t('toast.imageError') + err.message);
+        imageFailToast(err);
       }
       e.target.value = '';
     });
@@ -6383,9 +6394,9 @@ function renderCharts() {
         state.charts[k].img = dataUrl;
         renderCharts();
         schedulePreview();
-        showToast(t('toast.imageLoaded'));
+        showToast(t('toast.imageLoaded'), { type: 'ok' });
       } catch (err) {
-        showToast(t('toast.imageError') + err.message);
+        imageFailToast(err);
       }
       e.target.value = '';
     });
@@ -6480,9 +6491,9 @@ function renderAnnexes() {
         state.annexes[k].img = dataUrl;
         renderAnnexes();
         schedulePreview();
-        showToast(t('toast.imageLoaded'));
+        showToast(t('toast.imageLoaded'), { type: 'ok' });
       } catch (err) {
-        showToast(t('toast.imageError') + err.message);
+        imageFailToast(err);
       }
       e.target.value = '';
     });
@@ -6754,7 +6765,8 @@ function renderMetarAssistant(p) {
     try {
       await _importMizToMetar(file);
     } catch(err) {
-      showToast(t('toast.mizReadError') + err.message);
+      console.warn('[BG] .miz :', err);
+      showToast(t('msg.notMiz'), { type: 'err' });
     }
     e.target.value = '';
   });
@@ -7089,9 +7101,9 @@ function bindImgZoneEvents(zone) {
       setByPath(state, path, dataUrl);
       refreshImgZone(zone);
       schedulePreview();
-      showToast(t('toast.imageLoaded'));
+      showToast(t('toast.imageLoaded'), { type: 'ok' });
     } catch (err) {
-      showToast(t('toast.imageError') + err.message);
+      imageFailToast(err);
     }
     e.target.value = '';
   });
@@ -8368,7 +8380,7 @@ function fallbackDownload(blob, fname, toastMsg) {
   a.click();
   document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 1000);
-  showToast(toastMsg || t('toast.briefingSaved'));
+  showToast(toastMsg || t('toast.briefingSaved'), { type: 'ok' });
 }
 
 /* Un briefing se reconnaît à sa forme : un objet « meta », une liste « phases », pas de clé « format » (le format des autres fichiers de la suite) */
@@ -8381,9 +8393,9 @@ function isBriefingObject(o) {
 function rejectNotBriefing(parsed) {
   const f = (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) ? parsed.format : undefined;
   if ((typeof f === 'string' && f !== '') || typeof f === 'number') {
-    showToast(t('rej.format').split('{x}').join(String(f)).split('{list}').join(t('fmt.briefing')), 5000);
+    showToast(t('rej.format').split('{x}').join(String(f)).split('{list}').join(t('fmt.briefing')), { type: 'err' });
   } else {
-    showToast(t('rej.notBriefing'), 5000);
+    showToast(t('rej.notBriefing'), { type: 'err' });
   }
 }
 
@@ -8391,7 +8403,7 @@ function loadJsonFile(file) {
   const reader = new FileReader();
   reader.onload = async () => {
     let parsed;
-    try { parsed = JSON.parse(reader.result); } catch (e) { showToast(t('rej.json'), 5000); return; }
+    try { parsed = JSON.parse(reader.result); } catch (e) { console.warn('[BG] briefing : JSON illisible', e); showToast(t('rej.json'), { type: 'err' }); return; }
     if (!isBriefingObject(parsed)) { rejectNotBriefing(parsed); return; }
     try {
       state = mergeDeep(structuredClone(DEFAULTS), parsed);
@@ -8431,28 +8443,26 @@ function loadJsonFile(file) {
         if (missingIds.length > 0) {
           const MAX_SHOWN = 3;
           const shown = missingIds.slice(0, MAX_SHOWN).join(', ');
-          const extra = missingIds.length > MAX_SHOWN ? ` (+${missingIds.length - MAX_SHOWN} autres)` : '';
-          showToast(
-            `⚠ Ce briefing référence ${missingIds.length} escadron(s) absent(s) du wing courant : ${shown}${extra}. ` +
-            t('toast.wingIncompatibleHint')
-          );
+          const extra = missingIds.length > MAX_SHOWN ? ` (+${missingIds.length - MAX_SHOWN})` : '';
+          showToast(t('toast.missingSquadrons').replace('{0}', missingIds.length).replace('{1}', shown + extra), { type: 'err' });
         } else {
-          showToast(t('toast.briefingLoaded'));
+          showToast(t('toast.briefingLoaded'), { type: 'ok' });
         }
       } else {
-        showToast(t('toast.briefingLoaded'));
+        showToast(t('toast.briefingLoaded'), { type: 'ok' });
       }
       // Toast supplémentaire si recompression effectuée
       if (recompressed > 0) {
         setTimeout(() => {
-          showToast(t('toast.briefingOptimized').replace('{n}', recompressed));
+          showToast(t('toast.briefingOptimized').replace('{n}', recompressed), { type: 'ok' });
         }, 1500);
       }
     } catch (e) {
-      showToast(t('toast.jsonInvalid') + e.message);
+      console.warn('[BG] chargement du briefing :', e);
+      showToast(t('rej.notBriefing'), { type: 'err' });
     }
   };
-  reader.onerror = () => showToast(t('toast.fileUnreadable'));
+  reader.onerror = () => showToast(t('toast.fileUnreadable'), { type: 'err' });
   reader.readAsText(file);
 }
 
@@ -8463,7 +8473,7 @@ function resetAll() {
   renderEditorBindings();
   schedulePreview();
   persistState();
-  showToast(t('toast.briefingReset'));
+  showToast(t('toast.briefingReset'), { type: 'ok' });
 }
 
 /* ============= WING EDITOR ============= */
@@ -8497,12 +8507,15 @@ const LOGO_MAX_SIZE = 256;
 function importWingConfig(file) {
   const reader = new FileReader();
   reader.onload = () => {
+    let parsed;
+    try { parsed = JSON.parse(reader.result); }
+    catch (e) { console.warn('[BG] configuration wing : JSON illisible', e); showToast(t('msg.jsonUnreadable'), { type: 'err' }); return; }
+    if (!parsed || typeof parsed !== 'object' || parsed.configSchemaVersion !== 1) { showToast(t('msg.notWingConfig'), { type: 'err' }); return; }
     try {
-      const parsed = JSON.parse(reader.result);
       const check  = validateWingConfig(parsed);
       if (!check.ok) {
-        showToast(t('toast.wingInvalid') + check.errors.slice(0, 2).join(' · ') +
-          (check.errors.length > 2 ? ' (+' + (check.errors.length - 2) + ')' : ''));
+        console.warn('[BG] configuration wing incomplète :', check.errors);
+        showToast(t('msg.wingIncomplete').replace('{0}', check.errors.length), { type: 'err' });
         return;
       }
       wingConfig = parsed;
@@ -8510,12 +8523,13 @@ function importWingConfig(file) {
       applyWingBranding();
       renderWingReadOnly();
       schedulePreview();
-      showToast(t('toast.wingLoaded'));
+      showToast(t('toast.wingLoaded'), { type: 'ok' });
     } catch (e) {
-      showToast(t('toast.wingJsonInvalid') + e.message);
+      console.warn('[BG] configuration wing : lecture impossible', e);
+      showToast(t('msg.notWingConfig'), { type: 'err' });
     }
   };
-  reader.onerror = () => showToast(t('toast.wingFileError'));
+  reader.onerror = () => showToast(t('toast.wingFileError'), { type: 'err' });
   reader.readAsText(file);
 }
 
@@ -8527,7 +8541,7 @@ function resetWingConfig() {
   applyWingBranding();
   renderWingReadOnly();
   schedulePreview();
-  showToast(t('toast.wingReset'));
+  showToast(t('toast.wingReset'), { type: 'ok' });
 }
 
 
@@ -8669,7 +8683,7 @@ function detectPageOverflows() {
       if (!warn) {
         warn = document.createElement('div');
         warn.className = 'p-overflow-warning';
-        warn.textContent = '⚠ Contenu tronqué';
+        warn.textContent = t('preview.overflowWarning');
         page.appendChild(warn);
       }
     } else {
@@ -8777,7 +8791,7 @@ function loadExample() {
   renderEditorBindings();
   schedulePreview();
   persistState();
-  showToast(t('toast.exampleLoaded'));
+  showToast(t('toast.exampleLoaded'), { type: 'ok' });
 }
 
 function newBlankFlight() {
@@ -9043,9 +9057,9 @@ function renderPhotosEditor() {
         state.photos[k].img = dataUrl;
         renderPhotosEditor();
         schedulePreview();
-        showToast(t('toast.imageLoaded'));
+        showToast(t('toast.imageLoaded'), { type: 'ok' });
       } catch (err) {
-        showToast(t('toast.imageError') + err.message);
+        imageFailToast(err);
       }
       e.target.value = '';
     });
@@ -9569,7 +9583,7 @@ function init() {
     if (recompressed > 0) {
       persistState();
       schedulePreview();
-      showToast(t('toast.briefingOptimizedOnLoad').replace('{n}', recompressed));
+      showToast(t('toast.briefingOptimizedOnLoad').replace('{n}', recompressed), { type: 'ok' });
     }
   });
   document.getElementById('btn-save').addEventListener('click', e => openSaveModal(e.currentTarget));
@@ -9823,8 +9837,8 @@ async function executePngExport() {
         total + ' ' + t('toast.exportMulti'));
     }
   } catch (err) {
-    showToast(t('toast.exportError') + err.message);
     console.error('[Export PNG]', err);
+    showToast(t('msg.exportFailed'), { type: 'err' });
   } finally {
     // Restauration systématique du bouton, même en cas d'erreur
     goBtn.innerHTML = originalBtnHtml;

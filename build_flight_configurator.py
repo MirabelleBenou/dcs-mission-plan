@@ -348,7 +348,7 @@ TABLES = [('WEAPON_NAMES', 'weapon_names.json'), ('AIRCRAFT_LIMITS', 'aircraft_l
 I18N_FR = {
     'toolbar.subtitle': '░ PAQUET DE VOL',
     'toolbar.theme.tooltip': 'Thème graphique',
-    'toolbar.lang.tooltip': 'Changer de langue / Switch language',
+    'toolbar.lang.tooltip': 'Passer en anglais',
 
     'theme.cw-nato': 'Cold War OTAN',
     'theme.cw-soviet': 'Cold War Soviétique',
@@ -448,7 +448,7 @@ I18N_FR = {
     'route.norp': 'Le Route Planner n’a pas encore été ouvert ici : la route n’est pas reprise.',
     'route.noid': 'Ouvre le Route Planner une fois pour pouvoir choisir ces routes (il leur donne un identifiant).',
     'route.toast.one': 'Route « {0} » reprise du Route Planner pour {1}.',
-    'toast.gsFull': 'Stockage du navigateur plein : vos groupes ne sont pas enregistrés. Enregistrez un fichier de travail.',
+    'toast.gsFull': '⚠ Stockage du navigateur plein : vos groupes ne sont pas enregistrés. Enregistrez un fichier de travail.',
     'route.toast.many': 'Routes reprises du Route Planner : {0}.',
 
     'u.title': 'Unité {0}',
@@ -564,7 +564,23 @@ I18N_FR = {
     'u.notype': 'Choisissez le type de l’appareil pour régler ses radios, son emport et sa livrée.',
     'bar.no.type': 'Export impossible : choisissez le type de chaque appareil ({0}, unité {1}).',
 
-    'open.bad': 'Ce fichier n’est pas un fichier de travail ni un paquet de vol.',
+    'msg.jsonUnreadable': '⚠ Fichier illisible : ce n’est pas du JSON.',
+    'msg.formatUnsupported': '⚠ Format « {0} » non pris en charge ici (attendu : {1}).',
+    'fmt.work': 'fichier de travail',
+    'fmt.pkg': 'paquet de vol',
+    'rej.unknown': 'inconnu',
+    'bar.start': 'Pour commencer : choisissez un théâtre, puis ajoutez un groupe.',
+    'th.Caucasus': 'Caucase',
+    'th.Falklands': 'Atlantique Sud',
+    'th.GermanyCW': 'Allemagne (guerre froide)',
+    'th.Kola': 'Kola',
+    'th.MarianaIslands': 'Mariannes',
+    'th.Nevada': 'Nevada',
+    'th.Normandy': 'Normandie',
+    'th.PersianGulf': 'Golfe Persique',
+    'th.SinaiMap': 'Sinaï',
+    'th.Syria': 'Syrie',
+    'th.TheChannel': 'Manche',
     'open.done': 'Fichier ouvert : {0} groupe(s).',
     'open.ignored': '{0} groupe(s) non géré(s) ignoré(s).',
 
@@ -585,7 +601,7 @@ I18N_FR = {
 I18N_EN = {
     'toolbar.subtitle': '░ FLIGHT PACKAGE',
     'toolbar.theme.tooltip': 'Graphic theme',
-    'toolbar.lang.tooltip': 'Switch language / Changer de langue',
+    'toolbar.lang.tooltip': 'Switch to French',
 
     'theme.cw-nato': 'Cold War NATO',
     'theme.cw-soviet': 'Cold War Soviet',
@@ -685,7 +701,7 @@ I18N_EN = {
     'route.norp': 'The Route Planner has not been opened here yet: the route is not followed.',
     'route.noid': 'Open the Route Planner once to be able to pick these routes (it gives them an identifier).',
     'route.toast.one': 'Route “{0}” updated from the Route Planner for {1}.',
-    'toast.gsFull': 'Browser storage full: your groups are not saved. Save a work file.',
+    'toast.gsFull': '⚠ Browser storage full: your groups are not saved. Save a work file.',
     'route.toast.many': 'Routes updated from the Route Planner: {0}.',
 
     'u.title': 'Unit {0}',
@@ -801,7 +817,23 @@ I18N_EN = {
     'u.notype': 'Pick the aircraft type to set its radios, loadout and livery.',
     'bar.no.type': 'Cannot export: pick each aircraft’s type ({0}, unit {1}).',
 
-    'open.bad': 'This file is neither a working file nor a flight package.',
+    'msg.jsonUnreadable': '⚠ Unreadable file: this is not JSON.',
+    'msg.formatUnsupported': '⚠ Format “{0}” is not supported here (expected: {1}).',
+    'fmt.work': 'work file',
+    'fmt.pkg': 'flight package',
+    'rej.unknown': 'unknown',
+    'bar.start': 'To start: choose a theatre, then add a group.',
+    'th.Caucasus': 'Caucasus',
+    'th.Falklands': 'South Atlantic',
+    'th.GermanyCW': 'Cold War Germany',
+    'th.Kola': 'Kola',
+    'th.MarianaIslands': 'Mariana Islands',
+    'th.Nevada': 'Nevada',
+    'th.Normandy': 'Normandy',
+    'th.PersianGulf': 'Persian Gulf',
+    'th.SinaiMap': 'Sinai',
+    'th.Syria': 'Syria',
+    'th.TheChannel': 'The Channel',
     'open.done': 'File opened: {0} group(s).',
     'open.ignored': '{0} unhandled group(s) ignored.',
 
@@ -1188,8 +1220,9 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
 
 /* ---------- Page : état de l'export, deux colonnes, blocs ---------- */
 .editor { max-width: 1840px; }
-.fc-status { position: sticky; top: 0; z-index: 5; margin: 0 0 12px; padding: 7px 12px; font-family: var(--f-typewriter); font-size: 12px; line-height: 1.4; color: var(--paper-light); background: var(--olive-dark); border: 1px solid var(--khaki); border-left: 3px solid var(--pk-warn); word-break: break-word; }
+.fc-status { position: sticky; top: 0; z-index: 5; margin: 0 0 12px; padding: 7px 12px; font-family: var(--f-typewriter); font-size: 12px; line-height: 1.4; color: var(--paper-light); background: var(--olive-dark); border: 1px solid var(--khaki); border-left: 3px solid var(--khaki); word-break: break-word; }
 .fc-status.ok { border-left-color: var(--pk-ok); color: var(--paper); }
+.fc-status.err { border-left-color: var(--pk-warn); color: var(--paper); }
 .fc-cols { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
 .fc-cols > * { min-width: 0; }
 @media (min-width: 1100px) { .fc-cols { grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr); } }
@@ -1496,7 +1529,7 @@ BODY = r"""
   <div class="tb-spacer"></div>
   <div class="tb-classif">FLIGHT LEAD // COPY 1</div>
   <span class="tb-version">v@@VERSION@@</span>
-  <button class="tb-lang-btn" id="btn-lang" title="Switch language / Changer de langue"><svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="14" fill="#012169"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#fff" stroke-width="2.8"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#C8102E" stroke-width="1.6"/><rect x="8" width="4" height="14" fill="#fff"/><rect y="5" width="20" height="4" fill="#fff"/><rect x="9" width="2" height="14" fill="#C8102E"/><rect y="6" width="20" height="2" fill="#C8102E"/></svg></button>
+  <button class="tb-lang-btn" id="btn-lang" title="Passer en anglais" aria-label="Passer en anglais"><svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="14" fill="#012169"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#fff" stroke-width="2.8"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#C8102E" stroke-width="1.6"/><rect x="8" width="4" height="14" fill="#fff"/><rect y="5" width="20" height="4" fill="#fff"/><rect x="9" width="2" height="14" fill="#C8102E"/><rect y="6" width="20" height="2" fill="#C8102E"/></svg></button>
 </header>
 
 <!-- MAIN APP -->
@@ -1935,6 +1968,8 @@ const TYPE_LABEL = { 'Mi-24P': 'Mi-24P', 'Mi-8MT': 'Mi-8MT', 'F-4E-45MC': 'F-4E-
 // que la mission ne pré-règle pas : cinq fréquences, sans numéro de canal). Les bandes de chaque poste (RADIO_BANDS) et ces postes non pré-réglés (RADIO_FREE) sont ceux de radio_bands_block.py,
 // que le Datacard Generator partage ; les noms des postes sont ceux de radio_block.py.
 const THEATRES = ['Caucasus', 'Falklands', 'GermanyCW', 'Kola', 'MarianaIslands', 'Nevada', 'Normandy', 'PersianGulf', 'SinaiMap', 'Syria', 'TheChannel'];
+// Le nom lisible d'un théâtre, le même qu'au Route Planner (clés th.*) ; un théâtre hors liste garde son identifiant. La valeur enregistrée reste l'identifiant.
+function theatreName(id) { return THEATRES.indexOf(id) >= 0 ? t('th.' + id) : String(id); }
 const PARTS = ['route', 'radios', 'loadout', 'livery'];
 const LO_FIELDS = ['fuel', 'flare', 'chaff', 'gun'];
 const MAX_UNITS = 4;
@@ -1952,6 +1987,7 @@ const UI = {
   open: new Set(),          // volets <details> ouverts ou fermés à la main
   fold: new WeakMap(),      // vol → 'open' | 'closed'
   clamped: 0,               // réglages d'emport ramenés à la limite (ligne d'état)
+  exportTried: false,       // un clic sur Exporter avec des manques : le bandeau passe en rouge, jusqu'à ce que les manques soient levés (jamais enregistré)
   seenLiv: {},              // type → [liveryId vus dans les paquets importés, une entrée par occurrence]
   cmp: { sym: true, st: null, saving: false, name: '', err: '' },
   rtChoose: null,           // le fcId du groupe dont on choisit la route (« Changer de route ») ; un groupe sans route est toujours au choix
@@ -2160,7 +2196,7 @@ function gsStorage(e) {
 // La migration prend les points d'une route lue brute au format du paquet (gsPackRoute du bloc partagé), à la vitesse sol du Route Planner
 function gsPackFn(r, th) { return gsPackRoute(r, th, rpRead().state.gs); }
 // Un échec d'écriture de la fiche (stockage plein), dit une fois par série d'échecs
-function gsOnSaveFail() { showToast(tf('toast.gsFull'), 6000); }
+function gsOnSaveFail() { showToast(tf('toast.gsFull'), { type: 'err', ms: 6000 }); }
 const UNIT_KEYS = ['type', 'name', 'callsign', 'csRaw', 'onboard', 'livery', 'folded', 'radios', 'loadout', 'payloadIn'];       // payloadIn : l'emport brut d'un import, converti ici et jamais gardé
 // Un vol de l'état : en v1 (fc_state_v1, fichier de travail d'avant) le type est au vol et chaque unité le prend ; en v2 chaque unité porte le sien.
 // Un vol dont une unité a un type non vide hors de PAYLOAD_TYPES est écarté ; une unité sans type ('' : à choisir) et un groupe sans unité (né au Route Planner) sont valides.
@@ -2790,8 +2826,8 @@ function routeChooseHtml(f, rp) {
   const usable = rpUsable(rp), th = rp.state.theatre;
   let msg = '';
   if (th === '') return `<p class="rt-note">${esc(t('route.norp'))}</p>` + (hasRoute(f) ? `<div class="miz-btn-row" style="margin-top:0"><button type="button" class="miz-btn fc-small" data-act="route-keep">${esc(t('route.keep'))}</button></div>` : '');
-  if (!has(TM_PARAMS, th)) msg = tf('route.th.nosupport', th);
-  else if (S.theatre && S.theatre !== th) msg = tf('route.th.mismatch', th, S.theatre);
+  if (!has(TM_PARAMS, th)) msg = tf('route.th.nosupport', theatreName(th));
+  else if (S.theatre && S.theatre !== th) msg = tf('route.th.mismatch', theatreName(th), theatreName(S.theatre));
   const off = msg !== '';
   let h = usable.length ? `<p class="rt-note">${esc(t(hasRoute(f) ? 'route.choose.other' : 'route.choose.none'))}</p>` : `<p class="rt-note">${esc(t('route.empty'))}</p>`;
   if (msg) h += `<p class="rt-note">${esc(msg)}</p>`;
@@ -3071,7 +3107,7 @@ function unitEl(fi, ui) { return document.querySelector(`#col-left .fc-flight[da
 function renderLeft() {
   lvClose();
   const theatres = THEATRES.concat(S.theatre && THEATRES.indexOf(S.theatre) < 0 ? [S.theatre] : []);
-  const opts = [{ v: '', l: t('pkg.theatre.none') }].concat(theatres.map(x => ({ v: x, l: x })));
+  const opts = [{ v: '', l: t('pkg.theatre.none') }].concat(theatres.map(x => ({ v: x, l: theatreName(x) })));
   const foldAll = S.flights.length > 1 ? `<button type="button" class="miz-btn fc-small fc-foldall" id="fc-foldall" data-act="fold-all">${esc(foldAllLabel())}</button>` : '';
   document.getElementById('col-flights').innerHTML = `<section class="fc-block">
     <div class="fc-bh">${esc(t('sec.flights'))} <span class="fc-count">(${S.flights.length})</span>${foldAll}</div>
@@ -3201,10 +3237,13 @@ function refreshSummaries() {
 }
 function refreshBar() {
   const issues = exportIssues(), btn = document.getElementById('btn-export'), bar = document.getElementById('fc-status');
-  if (btn) { btn.disabled = issues.length > 0; btn.setAttribute('aria-disabled', String(issues.length > 0)); }
+  if (issues.length === 0) UI.exportTried = false;
+  if (btn) { btn.disabled = false; btn.setAttribute('aria-disabled', 'false'); }       // Exporter reste actif : un clic avec des manques n'exporte rien, il dit ce qui manque
   if (!bar) return;
   bar.classList.toggle('ok', issues.length === 0);
-  let msg = issues.length ? issues.map(i => tf(i.key, ...i.args)).join(' ') : tf('bar.ok', packageFileName() + '.json');
+  bar.classList.toggle('err', issues.length > 0 && UI.exportTried);
+  const empty = !S.theatre && !S.flights.length;
+  let msg = issues.length ? (empty && !UI.exportTried ? t('bar.start') : issues.map(i => tf(i.key, ...i.args)).join(' ')) : tf('bar.ok', packageFileName() + '.json');
   if (UI.clamped > 0) msg += ' · ' + tf('bar.clamped', UI.clamped);
   bar.textContent = msg;
 }
@@ -3512,7 +3551,7 @@ function cmpSaveGo() {
   Object.assign(C, { saving: false, err: '', name: '' });
   renderRight();
   refreshAll();
-  showToast(tf('cmp.save.ok', name));
+  showToast(tf('cmp.save.ok', name), { type: 'ok' });
 }
 
 // ----- Mes presets : la liste (on en supprime, on ne les renomme pas) et le bouton qui charge des .lua -----
@@ -3551,7 +3590,7 @@ async function loadLuaFiles(files) {
   LIB.report = report;
   saveWork();
   renderRight();
-  showToast(tf('pr.added', report.added));
+  showToast(tf('pr.added', report.added), { type: 'ok' });
 }
 
 
@@ -3577,7 +3616,7 @@ function fcImported(res) {
   Object.assign(UI.cmp, { saving: false, err: '', st: null });
   renderAll();
   commitNow();
-  showToast(res.failed ? res.text + ' · ' + t('toast.gsFull') : res.text, res.failed ? 6000 : res.ms);
+  showToast(res.failed ? '\u26a0 ' + res.text + ' · ' + t('toast.gsFull').replace(/^\u26a0\s*/, '') : res.text, { type: res.failed ? 'err' : 'ok', ms: res.failed ? 6000 : res.ms });
 }
 
 
@@ -3721,28 +3760,38 @@ function remapPresetKeys(mine) {
     if (hit) lo.key = 'm:' + hit.id;
   }));
 }
+// Le texte d'un refus de la fenêtre d'import commune : la phrase de la suite pour un JSON illisible, sinon la phrase du bloc précédée de « ⚠ »
+function fcRejectText(key, args) {
+  if (key === 'rej.json') return t('msg.jsonUnreadable');
+  return '\u26a0 ' + impTf.apply(null, [key].concat(args || []));
+}
 // Ouvrir : un fichier de travail (clé fc) ou un paquet de vol ; il remplace le contenu du module.
 function openFile(file) {
   impReadJsonFile(file, r => {
-    if (r.reject) { showToast(impT(r.reject), 5000); return; }
+    if (r.reject) { showToast(fcRejectText(r.reject), { type: 'err' }); return; }
     const o = r.parsed;
     let ignored = 0, warn = '', work = false;
     if (isObj(o) && isObj(o.fc) && isObj(o.fc.state) && restoreState(o.fc.state)) { UI.clamped = 0; mergeMine(o.fc.mine); remapPresetKeys(o.fc.mine); work = true; }
     else if (isObj(o) && PACKAGE_FORMATS.indexOf(o.format) >= 0) {
       const res = impReadPackage(o, file.name);
       if (!res.reject && !res.src.rows.some(f => f.managed)) res.reject = 'rej.noManaged';
-      if (res.reject) { showToast(impT(res.reject), 5000); return; }
+      if (res.reject) { showToast(fcRejectText(res.reject, res.args), { type: 'err' }); return; }
       UI.clamped = 0;
       ignored = res.src.rows.filter(f => !f.managed).length;
       const built = impBuildGroups(res.src.rows.filter(f => f.managed));
       restoreState({ theatre: res.src.theatre, flights: built.flights, sel: { f: 0, u: 0 } });       // l'emport brut (payloadIn) est converti par restoreFlight
       warn = built.warn.join(' · ');
-    } else { showToast(t('open.bad'), 5000); return; }
+    } else {
+      const f = isObj(o) ? o.format : undefined;
+      const x = ((typeof f === 'string' && f !== '') || typeof f === 'number') ? String(f) : t('rej.unknown');
+      showToast(tf('msg.formatUnsupported', x, t('fmt.work') + ', ' + t('fmt.pkg')), { type: 'err' });
+      return;
+    }
     S.sel = { f: 0, u: 0 };                    // la première unité du premier groupe ouvert
     Object.assign(UI.cmp, { saving: false, err: '', st: null });
     renderAll();
     if (work) { clearTimeout(_saveTimer); if (gsReplaceAll(S.theatre, JSON.parse(JSON.stringify(S.flights)))) gsMarkAll(); writeState(); }       // un fichier de travail remplace la fiche entière
-    showToast(tf('open.done', S.flights.length) + (ignored ? ' · ' + tf('open.ignored', ignored) : '') + (warn ? ' · ' + warn : ''), (ignored || warn) ? 6000 : undefined);
+    showToast(tf('open.done', S.flights.length) + (ignored ? ' · ' + tf('open.ignored', ignored) : '') + (warn ? ' · ' + warn : ''), { type: 'ok', ms: (ignored || warn) ? 6000 : undefined });
   });
 }
 function saveFile() {
@@ -3753,12 +3802,18 @@ function saveFile() {
     run: name => {
       const text = JSON.stringify(buildWorkFile(), null, 1);
       shareOrDownload(new Blob([text], { type: 'application/json' }), name + '.json', 'application/json', 'Flight Configurator', fcDownload);
-      showToast(tf('save.done', name + '.json'));
+      showToast(tf('save.done', name + '.json'), { type: 'ok' });
     }
   });
 }
 function exportFile() {
-  if (exportIssues().length) { refreshBar(); return; }
+  if (exportIssues().length) {
+    UI.exportTried = true;
+    refreshBar();
+    const bar = document.getElementById('fc-status');
+    if (bar && bar.scrollIntoView) bar.scrollIntoView({ block: 'nearest' });
+    return;
+  }
   fnAsk({
     titleKey: 'fn.export.title', goKey: 'fn.export.go', ext: '.json',
     name: packageFileName(),
@@ -3766,7 +3821,7 @@ function exportFile() {
     run: name => {
       const text = JSON.stringify(buildPackage(), null, 1);
       shareOrDownload(new Blob([text], { type: 'application/json' }), name + '.json', 'application/json', 'Flight Configurator', fcDownload);
-      showToast(tf('export.done', name + '.json'));
+      showToast(tf('export.done', name + '.json'), { type: 'ok' });
     }
   });
 }
@@ -4009,6 +4064,7 @@ function applyI18nStatic() {
   const lang = document.getElementById('btn-lang');
   lang.innerHTML = CURRENT_LANG === 'fr' ? FLAG_EN : FLAG_FR;
   lang.title = t('toolbar.lang.tooltip');
+  lang.setAttribute('aria-label', t('toolbar.lang.tooltip'));
   ['open', 'save', 'import', 'export', 'clear'].forEach(k => document.getElementById('btn-' + k).setAttribute('aria-label', t('tb.' + k)));
 }
 function bindColumns() {
@@ -4082,7 +4138,7 @@ function init() {
   initFormMenus(sel => sel.getAttribute('aria-label') || '');
   bindColumns();
   bindToolbar();
-  impSetup({ lang: () => CURRENT_LANG, before: fcImportBefore, onImported: fcImported, toast: showToast, noteLiveries: noteLiveries, loadoutFrom: loadoutFromPayload });       // la fenêtre d'import du bloc commun
+  impSetup({ lang: () => CURRENT_LANG, before: fcImportBefore, onImported: fcImported, toast: msg => showToast('\u26a0 ' + msg, { type: 'err' }), noteLiveries: noteLiveries, loadoutFrom: loadoutFromPayload });       // la fenêtre d'import du bloc commun
   fnBind();                 // la fenêtre « Nom du fichier »
   const taken = routeSync();      // à l'ouverture : les routes liées reprennent ce que le Route Planner a changé depuis
   if (taken.changed) writeState();
@@ -4144,8 +4200,8 @@ def main():
     check(html)
 
 
-# Familles de textes choisies par programme : « lo.* », « tb.* », « theme.* », « err.code.* »
-DYNAMIC_KEY_PREFIXES = ('lo.', 'tb.', 'theme.', 'err.code.')
+# Familles de textes choisies par programme : « lo.* », « tb.* », « theme.* », « err.code.* », « th.* » (les théâtres)
+DYNAMIC_KEY_PREFIXES = ('lo.', 'tb.', 'theme.', 'err.code.', 'th.')
 
 
 def check(html):

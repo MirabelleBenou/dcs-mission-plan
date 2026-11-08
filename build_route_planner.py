@@ -1280,7 +1280,7 @@ __CSS__
   <div class="tb-spacer"></div>
   <div class="tb-classif">NAV LOG // RESTRICTED</div>
   <span class="tb-version">v__APP_VERSION__</span>
-  <button type="button" class="tb-lang-btn" id="btn-lang" data-i18n-title="tb.lang.tip" title="Switch language / Changer de langue"><svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="14" fill="#012169"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#fff" stroke-width="2.8"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#C8102E" stroke-width="1.6"/><rect x="8" width="4" height="14" fill="#fff"/><rect y="5" width="20" height="4" fill="#fff"/><rect x="9" width="2" height="14" fill="#C8102E"/><rect y="6" width="20" height="2" fill="#C8102E"/></svg></button>
+  <button type="button" class="tb-lang-btn" id="btn-lang" data-i18n-title="tb.lang.tip" title="Passer en anglais" data-i18n-aria-label="tb.lang.tip" aria-label="Passer en anglais"><svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="14" fill="#012169"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#fff" stroke-width="2.8"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#C8102E" stroke-width="1.6"/><rect x="8" width="4" height="14" fill="#fff"/><rect y="5" width="20" height="4" fill="#fff"/><rect x="9" width="2" height="14" fill="#C8102E"/><rect y="6" width="20" height="2" fill="#C8102E"/></svg></button>
 </header>
 
 <!-- ===== APP ===== -->
@@ -2227,7 +2227,7 @@ const I18N = {
     'clr.go': 'Effacer la sélection',
     'toast.cleared': 'Effacé : {list}',
     'tb.theme.tip': 'Thème graphique',
-    'tb.lang.tip': 'Switch language / Changer de langue',
+    'tb.lang.tip': 'Passer en anglais',
     'theme.cw-nato': 'Cold War OTAN',
     'theme.cw-soviet': 'Cold War Soviétique',
     'theme.modern-nato': 'OTAN moderne',
@@ -2350,11 +2350,11 @@ const I18N = {
     'toast.mapSent': 'Carte envoyée au Briefing Generator.',
     'toast.mapSaved': 'Image enregistrée : importez-la dans le Briefing Generator (Carte).',
     'toast.mapPartial': 'Le fond vient d\'un autre site : il peut manquer dans l\'image.',
-    'toast.mapFail': 'L\'image n\'a pas pu être produite.',
+    'toast.mapFail': '⚠ L\'image n\'a pas pu être produite.',
     'btn.export': 'Enregistrer',
     'btn.exportRt': 'Exporter vers le Route Tool',
     'tb.rt.off': 'Route Tool indisponible pour ce théâtre',
-    'err.rt': 'Fichier du Route Tool non reconnu.',
+    'err.rt': '⚠ Fichier du Route Tool non reconnu.',
     'modal.close': 'Fermer',
     'rs.list': 'Routes',
     'rs.add': '+ Route',
@@ -2390,11 +2390,11 @@ const I18N = {
     'hq.neutral': 'Neutre',
     'hq.pts': '{n} pts',
     'hq.pts.1': '{n} pt',
-    'rej.json': 'JSON illisible.',
-    'rej.zip': 'Archive illisible : pas de package.json à la racine.',
-    'rej.format': 'Format « {x} » non pris en charge ici (attendu : {list}).',
+    'rej.json': '⚠ Fichier illisible : ce n’est pas du JSON.',
+    'rej.zip': '⚠ Archive illisible : pas de package.json à la racine.',
+    'rej.format': '⚠ Format « {x} » non pris en charge ici (attendu : {list}).',
     'rej.unknown': 'inconnu',
-    'rej.incomplete': 'Fichier « {x} » incomplet : aucune route à points.',
+    'rej.incomplete': '⚠ Fichier « {x} » incomplet : aucune route à points.',
     'fmt.route': 'route',
     'fmt.set': 'jeu de routes',
     'fmt.pkg': 'paquet de vol',
@@ -2414,7 +2414,7 @@ const I18N = {
     'confirm.openSet': 'Remplacer toutes les routes par celles du fichier ?',
     'confirm.theatre': 'Passer au théâtre {th} ? Les {n} routes existantes seront supprimées.',
     'confirm.theatre.1': 'Passer au théâtre {th} ? La route existante sera supprimée.',
-    'toast.routesMax': '12 routes au plus.',
+    'toast.routesMax': '⚠ 12 routes au plus.',
     'toast.groupsDone': 'Groupes de la route mis à jour ✓',
     'toast.groupsOther': 'groupes non rattachés : ils sont sur {th}',
     'rs.import': '⇣ Importer',
@@ -2424,7 +2424,7 @@ const I18N = {
     'toast.routesSkip.n': '{n} routes non reprises : 12 routes au plus',
     'toast.hqTrunc': '{name} : tronquée à 30 points',
     'toast.dcsKept': 'source DCS non gardée : {n} point(s)',
-    'toast.saveFail': 'Enregistrement local impossible (espace plein)',
+    'toast.saveFail': '⚠ Enregistrement local impossible (espace plein)',
     'toast.pkExported.1': '📦 {n} groupe exporté ✓',
     'toast.pkExported.n': '📦 {n} groupes exportés ✓',
     'toast.savedAll': 'Routes enregistrées ✓',
@@ -2459,17 +2459,17 @@ const I18N = {
     'rt.exp.refs': 'Les points de référence ne passent pas au Route Tool.',
     'toast.rtOpened': 'Route ouverte depuis le Route Tool ✓',
     'toast.dropped': '{n} points écartés (30 au plus)',
-    'toast.rtOther': 'Ce fichier est celui de {theatre}\u202f: choisissez {t}.lua.',
+    'toast.rtOther': '⚠ Ce fichier est celui de {theatre}\u202f: choisissez {t}.lua.',
     'toast.rtTaken': 'Nom déjà pris\u202f: route enregistrée sous « {name} ».',
     'toast.rtReady': '{t}.lua prêt\u202f: copiez-le dans Saved Games\\DCS\\Config\\RouteToolPresets (il remplace l\'ancien).',
     'toast.standalone': 'Route enregistrée : ouvrez le Datacard Generator, puis Importer → Route en cours.',
-    'toast.max': '30 points au plus.',
-    'toast.maxRefs': '12 points de référence au plus.',
+    'toast.max': '⚠ 30 points au plus.',
+    'toast.maxRefs': '⚠ 12 points de référence au plus.',
     'toast.refsDropped': '{n} points de référence écartés (12 au plus)',
     'toast.pointAdded': 'Point ajouté\u202f: {name}',
     'toast.refAdded': 'Référence ajoutée\u202f: {name}',
-    'toast.badCoord': 'Coordonnées non reconnues.',
-    'toast.badHd': 'Cap ou distance invalide.',
+    'toast.badCoord': '⚠ Coordonnées non reconnues.',
+    'toast.badHd': '⚠ Cap ou distance invalide.',
     'toast.opened': 'Route ouverte ✓',
     'toast.openedDropped': 'Route ouverte ✓ · {n} points écartés (30 au plus)',
     'zoom.in': 'Zoom avant',
@@ -2477,9 +2477,9 @@ const I18N = {
     'toast.saved': 'Route enregistrée ✓',
     'confirm.open': 'Remplacer la route en cours ?',
     'confirm.example': 'Ouvrir l\'exemple à la place de la route en cours ?',
-    'err.cf': 'Fichier CombatFlite non reconnu.',
-    'err.cfBrowser': 'Ce navigateur ne sait pas lire les fichiers CombatFlite.',
-    'err.layersQuota': 'Calques trop lourds pour le navigateur : ils ne seront pas gardés après rechargement.',
+    'err.cf': '⚠ Fichier CombatFlite non reconnu.',
+    'err.cfBrowser': '⚠ Ce navigateur ne sait pas lire les fichiers CombatFlite.',
+    'err.layersQuota': '⚠ Calques trop lourds pour le navigateur : ils ne seront pas gardés après rechargement.',
     'cf.import.title': 'Calques CombatFlite',
     'cf.file': 'Fichier : {name} · théâtre {t}',
     'cf.import.note': 'Cochez les calques à afficher. Ils restent en lecture seule.',
@@ -2601,9 +2601,9 @@ const I18N = {
     'dr.menu.ro': 'Calque CombatFlite\u202f: lecture seule',
     'dr.cf': 'CF',
     'dr.t.created': 'Calque « {name} » créé',
-    'dr.t.zone': 'Une zone a au moins trois sommets.',
-    'dr.t.line': 'Une ligne a au moins deux sommets.',
-    'dr.t.min': 'Il faut au moins {n} sommets.',
+    'dr.t.zone': '⚠ Une zone a au moins trois sommets.',
+    'dr.t.line': '⚠ Une ligne a au moins deux sommets.',
+    'dr.t.min': '⚠ Il faut au moins {n} sommets.',
     'dr.confirmDel': 'Supprimer « {name} »\u202f?',
     'dr.tool.orbit': 'Orbite',
     'dr.tool.box': 'Boîte',
@@ -2732,7 +2732,7 @@ const I18N = {
     'clr.go': 'Clear selected',
     'toast.cleared': 'Cleared: {list}',
     'tb.theme.tip': 'Graphic theme',
-    'tb.lang.tip': 'Switch language / Changer de langue',
+    'tb.lang.tip': 'Switch to French',
     'theme.cw-nato': 'Cold War NATO',
     'theme.cw-soviet': 'Cold War Soviet',
     'theme.modern-nato': 'Modern NATO',
@@ -2855,11 +2855,11 @@ const I18N = {
     'toast.mapSent': 'Map sent to the Briefing Generator.',
     'toast.mapSaved': 'Image saved: import it into the Briefing Generator (Map).',
     'toast.mapPartial': 'The background comes from another site: it may be missing from the image.',
-    'toast.mapFail': 'The image could not be produced.',
+    'toast.mapFail': '⚠ The image could not be produced.',
     'btn.export': 'Save',
     'btn.exportRt': 'Export to the Route Tool',
     'tb.rt.off': 'Route Tool not available for this theatre',
-    'err.rt': 'Unrecognised Route Tool file.',
+    'err.rt': '⚠ Unrecognised Route Tool file.',
     'modal.close': 'Close',
     'rs.list': 'Routes',
     'rs.add': '+ Route',
@@ -2895,11 +2895,11 @@ const I18N = {
     'hq.neutral': 'Neutral',
     'hq.pts': '{n} pts',
     'hq.pts.1': '{n} pt',
-    'rej.json': 'Unreadable JSON.',
-    'rej.zip': 'Unreadable archive: no package.json at the root.',
-    'rej.format': 'Format "{x}" not supported here (expected: {list}).',
+    'rej.json': '⚠ Unreadable file: this is not JSON.',
+    'rej.zip': '⚠ Unreadable archive: no package.json at the root.',
+    'rej.format': '⚠ Format “{x}” is not supported here (expected: {list}).',
     'rej.unknown': 'unknown',
-    'rej.incomplete': 'Incomplete "{x}" file: no route with points.',
+    'rej.incomplete': '⚠ Incomplete "{x}" file: no route with points.',
     'fmt.route': 'route',
     'fmt.set': 'route set',
     'fmt.pkg': 'flight package',
@@ -2919,7 +2919,7 @@ const I18N = {
     'confirm.openSet': 'Replace all routes with those in the file?',
     'confirm.theatre': 'Switch to the {th} theatre? The {n} existing routes will be deleted.',
     'confirm.theatre.1': 'Switch to the {th} theatre? The existing route will be deleted.',
-    'toast.routesMax': 'At most 12 routes.',
+    'toast.routesMax': '⚠ At most 12 routes.',
     'toast.groupsDone': 'Route groups updated ✓',
     'toast.groupsOther': 'groups not attached: they are on {th}',
     'rs.import': '⇣ Import',
@@ -2929,7 +2929,7 @@ const I18N = {
     'toast.routesSkip.n': '{n} routes not taken: 12 routes at most',
     'toast.hqTrunc': '{name}: cut to 30 points',
     'toast.dcsKept': 'DCS source not kept: {n} point(s)',
-    'toast.saveFail': 'Cannot save locally (storage full)',
+    'toast.saveFail': '⚠ Cannot save locally (storage full)',
     'toast.pkExported.1': '📦 {n} group exported ✓',
     'toast.pkExported.n': '📦 {n} groups exported ✓',
     'toast.savedAll': 'Routes saved ✓',
@@ -2964,17 +2964,17 @@ const I18N = {
     'rt.exp.refs': 'Reference points are not exported to the Route Tool.',
     'toast.rtOpened': 'Route opened from the Route Tool ✓',
     'toast.dropped': '{n} waypoints dropped (30 at most)',
-    'toast.rtOther': 'This file belongs to {theatre}: choose {t}.lua.',
+    'toast.rtOther': '⚠ This file belongs to {theatre}: choose {t}.lua.',
     'toast.rtTaken': 'Name already taken: route saved as “{name}”.',
     'toast.rtReady': '{t}.lua ready: copy it into Saved Games\\DCS\\Config\\RouteToolPresets (it replaces the old one).',
     'toast.standalone': 'Route saved: open the Datacard Generator, then Import → Current route.',
-    'toast.max': '30 waypoints at most.',
-    'toast.maxRefs': '12 reference points at most.',
+    'toast.max': '⚠ 30 waypoints at most.',
+    'toast.maxRefs': '⚠ 12 reference points at most.',
     'toast.refsDropped': '{n} reference points dropped (12 at most)',
     'toast.pointAdded': 'Waypoint added: {name}',
     'toast.refAdded': 'Reference added: {name}',
-    'toast.badCoord': 'Coordinates not recognised.',
-    'toast.badHd': 'Invalid heading or distance.',
+    'toast.badCoord': '⚠ Coordinates not recognised.',
+    'toast.badHd': '⚠ Invalid heading or distance.',
     'toast.opened': 'Route opened ✓',
     'toast.openedDropped': 'Route opened ✓ · {n} waypoints dropped (30 at most)',
     'zoom.in': 'Zoom in',
@@ -2982,9 +2982,9 @@ const I18N = {
     'toast.saved': 'Route saved ✓',
     'confirm.open': 'Replace the current route?',
     'confirm.example': 'Open the example instead of the current route?',
-    'err.cf': 'Unrecognised CombatFlite file.',
-    'err.cfBrowser': 'This browser cannot read CombatFlite files.',
-    'err.layersQuota': 'Layers too large for the browser: they will not be kept after reload.',
+    'err.cf': '⚠ Unrecognised CombatFlite file.',
+    'err.cfBrowser': '⚠ This browser cannot read CombatFlite files.',
+    'err.layersQuota': '⚠ Layers too large for the browser: they will not be kept after reload.',
     'cf.import.title': 'CombatFlite layers',
     'cf.file': 'File: {name} · theatre {t}',
     'cf.import.note': 'Tick the layers to show. They are read-only.',
@@ -3106,9 +3106,9 @@ const I18N = {
     'dr.menu.ro': 'CombatFlite layer: read-only',
     'dr.cf': 'CF',
     'dr.t.created': 'Layer “{name}” created',
-    'dr.t.zone': 'A zone needs at least three vertices.',
-    'dr.t.line': 'A line needs at least two vertices.',
-    'dr.t.min': 'At least {n} vertices are needed.',
+    'dr.t.zone': '⚠ A zone needs at least three vertices.',
+    'dr.t.line': '⚠ A line needs at least two vertices.',
+    'dr.t.min': '⚠ At least {n} vertices are needed.',
     'dr.confirmDel': 'Delete “{name}”?',
     'dr.tool.orbit': 'Orbit',
     'dr.tool.box': 'Box',
@@ -3376,7 +3376,7 @@ function persistState() {
   /* route_set_v1 d'abord, route_state_v1 (lu par le DG) ensuite ; un échec (quota ou stockage indisponible) est dit une fois par série */
   try { localStorage.setItem(KEY_SET, JSON.stringify(setObject())); } catch (e) { ok = false; }
   try { localStorage.setItem(KEY_STATE, JSON.stringify(S)); } catch (e) { ok = false; }
-  if (!ok && !SAVE_FAILED) { try { showToast(t('toast.saveFail'), 5000); } catch (e) { /* page pas encore prête */ } }
+  if (!ok && !SAVE_FAILED) { try { showToast(t('toast.saveFail'), { type: 'err' }); } catch (e) { /* page pas encore prête */ } }
   SAVE_FAILED = !ok;
   try { gsSyncRoutes(); } catch (e) { /* la fiche des groupes est facultative */ }
 }
@@ -3761,7 +3761,7 @@ function cfMerge(list) {
 
 function persistLayers() {
   try { localStorage.setItem(KEY_LAYERS, JSON.stringify({ format: LAYERS_FORMAT, layers: CF_LAYERS })); return true; }
-  catch (e) { showToast(t('err.layersQuota'), 4500); return false; }     /* les calques restent en mémoire */
+  catch (e) { showToast(t('err.layersQuota'), { type: 'err' }); return false; }     /* les calques restent en mémoire */
 }
 
 function loadLayers() {
@@ -4961,7 +4961,7 @@ function newRefFrom(src, lat, lon, rank) {
 
 /* Ajoute un point à la fin de la route (null au plafond) ; name : le nom imposé (un aérodrome), sinon WP<k> */
 function addPoint(lat, lon, name) {
-  if (S.points.length >= MAX_POINTS) { showToast(t('toast.max')); return null; }
+  if (S.points.length >= MAX_POINTS) { showToast(t('toast.max'), { type: 'err' }); return null; }
   const last = S.points.length ? S.points[S.points.length - 1] : null;
   const p = newPointFrom(last, lat, lon, S.points.length);
   if (name) p.name = name;
@@ -4973,7 +4973,7 @@ function addPoint(lat, lon, name) {
 
 /* Ajoute un point de référence à la fin de la liste (null au plafond) */
 function addRef(lat, lon, name) {
-  if (S.refs.length >= MAX_REFS) { showToast(t('toast.maxRefs')); return null; }
+  if (S.refs.length >= MAX_REFS) { showToast(t('toast.maxRefs'), { type: 'err' }); return null; }
   const last = S.refs.length ? S.refs[S.refs.length - 1] : null;
   const p = newRefFrom(last, lat, lon, S.refs.length);
   if (name) p.name = name;
@@ -5004,7 +5004,7 @@ function addFromAirfield(lat, lon, name) {
 
 /* Insère un point dans la branche (i-1 → i), à son rang ; altitude et référence du point suivant */
 function insertPoint(i, lat, lon) {
-  if (S.points.length >= MAX_POINTS) { showToast(t('toast.max')); return; }
+  if (S.points.length >= MAX_POINTS) { showToast(t('toast.max'), { type: 'err' }); return; }
   S.points.splice(i, 0, newPointFrom(S.points[i], lat, lon, i));
   sel = i;
   afterEdit(true);
@@ -5609,7 +5609,7 @@ function drFinish(quiet) {
   const b = DR.build;
   if (!b || b.kind === 'orbit' || b.kind === 'box') return false;
   const area = b.kind === 'zone';
-  if (b.pts.length < (area ? 3 : 2)) { if (!quiet) showToast(t(area ? 'dr.t.zone' : 'dr.t.line')); return false; }
+  if (b.pts.length < (area ? 3 : 2)) { if (!quiet) showToast(t(area ? 'dr.t.zone' : 'dr.t.line'), { type: 'err' }); return false; }
   drAdd(drNewZone(b.pts, area));
   return true;
 }
@@ -6559,7 +6559,7 @@ function drRemoveVertex() {
   const s = drSel();
   if (!s || s.it.type !== 'zone' || DR.vtx < 0) return;
   const min = drIsArea(s.it) ? 3 : 2;
-  if (s.it.points.length <= min) { showToast(t('dr.t.min', { n: min })); return; }
+  if (s.it.points.length <= min) { showToast(t('dr.t.min', { n: min }), { type: 'err' }); return; }
   s.it.points.splice(DR.vtx, 1);
   DR.vtx = -1;
   drChanged();
@@ -7058,13 +7058,13 @@ function syncAdd() {
 function readAddPosition() {
   if (addMode === 'coord') {
     const g = parseCoord($('add-coord-in').value);
-    if (!g) { showToast(t('toast.badCoord')); return null; }
+    if (!g) { showToast(t('toast.badCoord'), { type: 'err' }); return null; }
     return { lat: r7(g.lat), lon: r7(g.lon) };
   }
   const last = S.points.length ? S.points[S.points.length - 1] : null;
   if (!last) return null;
   const cap = readNum($('add-hdg').value), dist = readNum($('add-dist').value);
-  if (cap == null || cap > 360 || dist == null || !(dist > 0)) { showToast(t('toast.badHd')); return null; }
+  if (cap == null || cap > 360 || dist == null || !(dist > 0)) { showToast(t('toast.badHd'), { type: 'err' }); return null; }
   /* cap magnétique (navigation en cap magnétique et déclinaison lisible) : le point se calcule au cap vrai cap + déclinaison
      du point dont on part (calculée au point, ou saisie) */
   const d = declAt(last);
@@ -7600,7 +7600,7 @@ function fallbackDownload(blob, fname, toastMsg) {
   a.click();
   document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 1000);
-  if (toastMsg) showToast(toastMsg);
+  if (toastMsg) showToast(toastMsg, { type: 'ok' });
 }
 
 /* sel (avec des calques) : { route, layers: [id…] } — la route décochée laisse points et refs vides ; les calques cochés, dans l'ordre de la section,
@@ -7656,11 +7656,11 @@ function setRoute(route) {
 function rejectFormat(parsed, kinds) {
   const f = (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) ? parsed.format : undefined;
   const x = ((typeof f === 'string' && f !== '') || typeof f === 'number') ? String(f) : t('rej.unknown');
-  showToast(t('rej.format', { x: x, list: kinds.map(k => t('fmt.' + k)).join(', ') }), 5000);
+  showToast(t('rej.format', { x: x, list: kinds.map(k => t('fmt.' + k)).join(', ') }), { type: 'err' });
 }
-function rejectMsg(key) { showToast(t(key), 5000); }
+function rejectMsg(key) { showToast(t(key), { type: 'err' }); }
 /* un format reconnu dont le contenu est inutilisable : une route sans liste de points, un jeu sans liste de routes ou sans aucune route à points */
-function rejectIncomplete(fmt) { showToast(t('rej.incomplete', { x: fmt }), 5000); }
+function rejectIncomplete(fmt) { showToast(t('rej.incomplete', { x: fmt }), { type: 'err' }); }
 function isPlainObj(o) { return !!o && typeof o === 'object' && !Array.isArray(o); }
 
 /* « Ouvrir » : le contenu décide — un zip qui porte package.json est un paquet de vol, sinon un .cf (zip de CombatFlite) ; un texte qui commence par « presets »
@@ -7669,18 +7669,18 @@ function openRouteFile(file) {
   readFileBytes(file, async bytes => {
     if (zipIsZip(bytes)) {          /* un .cf (zip de CombatFlite) se reconnaît à ses deux premiers octets, « PK » ; un paquet en .zip, à son package.json (lu par le lecteur de la fenêtre d'import) */
       let ptext = null;
-      try { ptext = await impZipText(bytes); } catch (e) { rejectMsg('rej.zip'); return; }
+      try { ptext = await impZipText(bytes); } catch (e) { console.warn('[RP] archive illisible', e); rejectMsg('rej.zip'); return; }
       if (ptext === null) {
         if (/\.cf$/i.test(file.name || '') || zipFindEntry(bytes)) {      /* un .cf (par son nom ou son mission.xml) garde les messages de CombatFlite */
           cfRead(bytes, file.name).then(res => openCfImport(file.name, res))
-            .catch(e => showToast(t(e && e.message === 'nods' ? 'err.cfBrowser' : 'err.cf')));
+            .catch(e => { console.warn('[RP] CombatFlite :', e); showToast(t(e && e.message === 'nods' ? 'err.cfBrowser' : 'err.cf'), { type: 'err' }); });
           return;
         }
         rejectMsg('rej.zip');
         return;
       }
       let pparsed;
-      try { pparsed = JSON.parse(ptext.charCodeAt(0) === 0xFEFF ? ptext.slice(1) : ptext); } catch (e) { rejectMsg('rej.json'); return; }
+      try { pparsed = JSON.parse(ptext.charCodeAt(0) === 0xFEFF ? ptext.slice(1) : ptext); } catch (e) { console.warn('[RP] paquet : JSON illisible', e); rejectMsg('rej.json'); return; }
       if (!isPlainObj(pparsed) || PACKAGE_FORMATS.indexOf(pparsed.format) < 0) { rejectFormat(pparsed, ['pkg']); return; }      /* un zip ne porte qu'un paquet (ou un .cf) */
       impOpen({ opener: $('btn-open'), parsed: pparsed, name: file.name });
       return;
@@ -7688,12 +7688,12 @@ function openRouteFile(file) {
     const text = bytesToText(bytes);
     if (/^\s*presets/.test(text)) {
       const data = parseRouteTool(text);
-      if (!data || !data.routes.length) { showToast(t('err.rt')); return; }
+      if (!data || !data.routes.length) { showToast(t('err.rt'), { type: 'err' }); return; }
       openRouteToolModal(file.name, data);
       return;
     }
     let parsed;
-    try { parsed = JSON.parse(text); } catch (e) { rejectMsg('rej.json'); return; }
+    try { parsed = JSON.parse(text); } catch (e) { console.warn('[RP] JSON illisible', e); rejectMsg('rej.json'); return; }
     if (isPlainObj(parsed) && parsed.format === SET_FORMAT) { openRouteSet(parsed); return; }
     if (isPlainObj(parsed) && PACKAGE_FORMATS.indexOf(parsed.format) >= 0) { impOpen({ opener: $('btn-open'), parsed: parsed, name: file.name }); return; }
     const res = parseRoute(parsed);
@@ -7706,14 +7706,14 @@ function openRouteFile(file) {
     const lays = Array.isArray(parsed.layers) ? parsed.layers.map(cfLayer).filter(Boolean) : [];
     if (!res.route.points.length && lays.length) {
       cfMerge(lays);
-      if (layersChanged()) showToast(t(cfOne(lays.length) ? 'toast.layersAdded.1' : 'toast.layersAdded.n', { n: lays.length }), 4500);
+      if (layersChanged()) showToast(t(cfOne(lays.length) ? 'toast.layersAdded.1' : 'toast.layersAdded.n', { n: lays.length }), { type: 'ok', ms: 4500 });
       return;
     }
     if (!openAsRoute(res.route)) return;
     let msg = (res.dropped ? t('toast.openedDropped', { n: res.dropped }) : t('toast.opened')) +
       (res.droppedRefs ? ' · ' + t('toast.refsDropped', { n: res.droppedRefs }) : '');
     if (lays.length) { cfMerge(lays); if (layersChanged()) msg += ' · ' + t(cfOne(lays.length) ? 'toast.cfShown.1' : 'toast.cfShown.n', { n: lays.length }); }
-    showToast(msg);
+    showToast(msg, { type: 'ok' });
   }, () => rejectMsg('rej.json'));
 }
 
@@ -7805,7 +7805,7 @@ function clrRun(keys) {
   if (layers) { drDeselect(); layersChanged(); }
   renderAll();
   if (has('one') || has('routes')) setTheatreView();
-  showToast(t('toast.cleared', { list: what.filter(k => !(k === 'one' && has('routes'))).map(k => t('clr.' + k)).join(' · ') }), 4000);
+  showToast(t('toast.cleared', { list: what.filter(k => !(k === 'one' && has('routes'))).map(k => t('clr.' + k)).join(' · ') }), { type: 'ok', ms: 4000 });
 }
 
 function clrBind() {
@@ -7843,7 +7843,7 @@ function activateRoute(i, frame) {
 
 function addRoute() {
   syncActive();
-  if (RSET.routes.length >= MAX_ROUTES) { showToast(t('toast.routesMax')); return; }
+  if (RSET.routes.length >= MAX_ROUTES) { showToast(t('toast.routesMax'), { type: 'err' }); return; }
   RSET.routes.push(blankRoute());
   activateRoute(RSET.routes.length - 1);
 }
@@ -7851,7 +7851,7 @@ function addRoute() {
 /* « Dupliquer » : « ‹nom› (copie) », les points (p.dcs compris), pas le lien ; la copie devient la route active */
 function duplicateRoute() {
   syncActive();
-  if (RSET.routes.length >= MAX_ROUTES) { showToast(t('toast.routesMax')); return; }
+  if (RSET.routes.length >= MAX_ROUTES) { showToast(t('toast.routesMax'), { type: 'err' }); return; }
   const src = RSET.routes[RSET.active];
   RSET.routes.push({
     rid: newRid(),
@@ -7934,7 +7934,7 @@ function drawOthers() {
 function openAsRoute(route) {
   syncActive();
   const empty = !S.points.length, act = RSET.active;
-  if (!empty && RSET.routes.length >= MAX_ROUTES) { showToast(t('toast.routesMax')); return false; }
+  if (!empty && RSET.routes.length >= MAX_ROUTES) { showToast(t('toast.routesMax'), { type: 'err' }); return false; }
   /* un autre théâtre : la confirmation de la règle B s'il y a quelque chose à perdre dans une autre route (une route active vide, remplacée, garde son lien) */
   const lost = RSET.routes.filter((r, i) => (r.points.length || r.flight) && !(empty && i === act)).length;
   const reset = route.theatre !== S.theatre && lost > 0;
@@ -7964,7 +7964,7 @@ function openRouteSet(parsed) {
   /* sans point dans aucune route et avec des calques (« Enregistrer tout », route décochée) : comme un fichier de calques seuls, les routes ne sont pas touchées */
   if (!rr.routes.some(r => r.points.length) && lays.length) {
     cfMerge(lays);
-    if (layersChanged()) showToast(t(cfOne(lays.length) ? 'toast.layersAdded.1' : 'toast.layersAdded.n', { n: lays.length }), 4500);
+    if (layersChanged()) showToast(t(cfOne(lays.length) ? 'toast.layersAdded.1' : 'toast.layersAdded.n', { n: lays.length }), { type: 'ok', ms: 4500 });
     return;
   }
   syncActive();
@@ -7979,7 +7979,7 @@ function openRouteSet(parsed) {
   let msg = rr.dropped ? t('toast.openedDropped', { n: rr.dropped }) : t('toast.opened');
   if (sh.droppedRefs) msg += ' · ' + t('toast.refsDropped', { n: sh.droppedRefs });
   if (lays.length) { cfMerge(lays); if (layersChanged()) msg += ' · ' + t(cfOne(lays.length) ? 'toast.cfShown.1' : 'toast.cfShown.n', { n: lays.length }); }
-  showToast(msg);
+  showToast(msg, { type: 'ok' });
 }
 
 /* « Enregistrer tout » : routes_<horodatage>.json */
@@ -8113,9 +8113,9 @@ function rpImported(res) {
   if (a.routes.length) frameRoutes(a.routes);
   const extra = adoptText(a, true);
   const failed = !!(res && res.failed);      /* un stockage qui n'écrit pas : le texte d'échec du module, pas « 0 groupe importé » */
-  const msg = [res && res.text && (!failed || res.fcIds.length) ? res.text : '', failed ? t('toast.saveFail') : '', extra].filter(x => x !== '').join(' · ');
+  const msg = [res && res.text && (!failed || res.fcIds.length) ? res.text : '', failed ? t('toast.saveFail').replace(/^\u26a0\s*/, '') : '', extra].filter(x => x !== '').join(' · ');
   const long = failed || !!(a.skipped || a.other || a.trunc.length || a.nodcs);
-  showToast(msg, Math.max(res && res.ms ? res.ms : 3000, long ? 6000 : 0));
+  showToast((failed ? '\u26a0 ' : '') + msg, { type: failed ? 'err' : 'ok', ms: Math.max(res && res.ms ? res.ms : 3000, long ? 6000 : 0) });
   routesRender();
 }
 
@@ -8167,7 +8167,7 @@ function pkStamp() {
 
 function openPackageModal(opener) {
   const pk = packageState();
-  if (!pk.ok) { showToast(pk.tip); return; }
+  if (!pk.ok) { showToast('\u26a0 ' + pk.tip, { type: 'err' }); return; }
   syncActive();
   PM.checked = new Set();
   PM.edited = false;
@@ -8196,7 +8196,7 @@ function packRoutePoints(r) {
   return gsPackRoute(r, S.theatre, S.groundSpeed) || {};
 }
 /* Un échec d'écriture de la fiche (stockage plein), dit une fois par série d'échecs : le toast d'enregistrement du module */
-function gsOnSaveFail() { showToast(t('toast.saveFail'), 5000); }
+function gsOnSaveFail() { showToast(t('toast.saveFail'), { type: 'err' }); }
 function groupLabel(f, i) { return gsNameKey(f.name) !== '' ? f.name.trim() : t('ga.unnamed', { n: i + 1 }); }
 /* Les noms des groupes de la fiche qui suivent la route rid, dans l'ordre de la fiche */
 function groupLabels(rid, namedOnly) {
@@ -8379,11 +8379,11 @@ function gaOpen(opener) {
 function gaApply() {
   const r = gaRoute();
   if (!r || $('ga-go').disabled) return;
-  if (!gsEnsure()) { showToast(t('toast.saveFail'), 5000); gaRender(); return; }       /* pas de fiche et la migration ne peut pas écrire : rien n'est appliqué (le toast d'échec est déjà montré) */
+  if (!gsEnsure()) { showToast(t('toast.saveFail'), { type: 'err' }); gaRender(); return; }       /* pas de fiche et la migration ne peut pas écrire : rien n'est appliqué (le toast d'échec est déjà montré) */
   const g = gsRead();
   /* la fiche est relue : le doublon du nom et le théâtre se recontrôlent, et seules les cases changées par l'utilisateur s'appliquent */
   if (gaWarn(g) !== '' || (GA.name.trim() !== '' && g.flights.some(f => gsNameKey(f.name) === GA.name.trim() && gsSide(f.coalition) === GA.side))) { gaRender(); return; }
-  if (g.theatre !== S.theatre && !gsSetTheatre(S.theatre)) { showToast(t('toast.saveFail'), 5000); gaRender(); return; }      /* une fiche sans groupe, ou sans théâtre, prend celui du Route Planner */
+  if (g.theatre !== S.theatre && !gsSetTheatre(S.theatre)) { showToast(t('toast.saveFail'), { type: 'err' }); gaRender(); return; }      /* une fiche sans groupe, ou sans théâtre, prend celui du Route Planner */
   const pts = packRoutePoints(r);
   g.flights.forEach(f => {
     const follows = gsIsObj(f.routeLink) && f.routeLink.rid === r.rid, want = GA.checked.has(f.fcId);
@@ -8395,7 +8395,7 @@ function gaApply() {
   if (nm !== '') gsPutFlight({ fcId: gsNewId(), name: nm, coalition: GA.side, route: { points: JSON.parse(JSON.stringify(pts)) }, routeLink: { rid: r.rid, name: r.name }, units: [] });
   rtHide('ga-modal');
   routesRender();
-  if (!GS_FAILED) showToast(t('toast.groupsDone'));      /* une écriture qui a échoué a déjà montré son toast : pas de succès par-dessus */
+  if (!GS_FAILED) showToast(t('toast.groupsDone'), { type: 'ok' });      /* une écriture qui a échoué a déjà montré son toast : pas de succès par-dessus */
 }
 
 /* Le paquet (dcs-flight-package-v2) des routes idxs : un vol par groupe de la fiche qui suit l'une d'elles, dans l'ordre de la fiche (nom et camp du groupe, la route en points) ;
@@ -9167,7 +9167,7 @@ function rtOpenGo() {
   });
   rtHide('rt-open-modal');
   if (!openAsRoute({ name: r.name, theatre: th, units: S.units, navDisplay: S.navDisplay, groundSpeed: S.groundSpeed, legBoxes: S.legBoxes, points: pts, refs: [] })) return;
-  showToast(t('toast.rtOpened') + (dropped ? ' · ' + t('toast.dropped', { n: dropped }) : ''));
+  showToast(t('toast.rtOpened') + (dropped ? ' · ' + t('toast.dropped', { n: dropped }) : ''), { type: 'ok' });
 }
 
 function rtExportName() {
@@ -9212,7 +9212,7 @@ function rtFinish(parts, name, finalName) {
   let msg = t('toast.rtReady', { t: S.theatre });
   if (finalName !== name) msg = t('toast.rtTaken', { name: finalName }) + ' ' + msg;
   deliverLua(parts, fname, '');
-  showToast(msg, 6500);
+  showToast(msg, { type: 'ok', ms: 6500 });
 }
 
 /* « Créer un fichier neuf » */
@@ -9227,15 +9227,15 @@ function rtExportAdd(file) {
   const th = S.theatre;
   readFileBytes(file, bytes => {
     const data = parseRouteTool(bytesToText(bytes));
-    if (!data) { showToast(t('err.rt')); return; }
+    if (!data) { showToast(t('err.rt'), { type: 'err' }); return; }
     const named = theatreOfFileName(file.name);
-    if (named && named !== th) { showToast(t('toast.rtOther', { theatre: t('th.' + named), t: th })); return; }
+    if (named && named !== th) { showToast(t('toast.rtOther', { theatre: t('th.' + named), t: th }), { type: 'err' }); return; }
     const name = rtExportName();
     const finalName = freeRouteName(name, data.routes.map(r => r.name));
     const parts = appendRouteBlock(bytes, routeToolBlock(finalName, S.points, th));
-    if (!parts) { showToast(t('err.rt')); return; }
+    if (!parts) { showToast(t('err.rt'), { type: 'err' }); return; }
     rtFinish(parts, name, finalName);
-  }, () => showToast(t('err.rt')));
+  }, () => showToast(t('err.rt'), { type: 'err' }));
 }
 
 /* ============= CALQUES : SECTION DU PANNEAU, FENÊTRES D'IMPORT ET D'EXPORT ============= */
@@ -9316,7 +9316,7 @@ function cfImportGo() {
   if (!layersChanged()) return;
   let msg = t(cfOne(picked.length) ? 'toast.cfShown.1' : 'toast.cfShown.n', { n: picked.length });
   if (!CFI.known) msg += ' · ' + cfTheatreMsg();
-  showToast(msg, CFI.known ? 2600 : 5000);
+  showToast(msg, { type: 'ok', ms: CFI.known ? 2600 : 5000 });
 }
 
 /* ---- Fenêtre « Exporter » : la route et les calques que le fichier emporte ---- */
@@ -10282,7 +10282,7 @@ function expDeliver(dataUrl, W, H, partial, fname) {
     msg = t('toast.mapSaved');
   }
   if (partial) msg += ' ' + t('toast.mapPartial');
-  showToast(msg, partial ? 4500 : 2200);
+  showToast(msg, { type: 'ok', ms: partial ? 4500 : 2200 });
 }
 
 /* « Exporter » du cadre : avec le shell, le rendu part tout de suite ; sans lui, la fenêtre du nom du fichier s'ouvre d'abord et le rendu suit son bouton */
@@ -10309,7 +10309,7 @@ async function expRun(fname) {
   if (!EXP.on || EXP.busy) return;
   expLayout();
   const rect = EXP.rect;
-  if (!rect) { showToast(t('toast.mapFail')); return; }
+  if (!rect) { showToast(t('toast.mapFail'), { type: 'err' }); return; }
   EXP.busy = true;
   $('export-layer').classList.add('busy');
   $('exp-go').disabled = true;
@@ -10334,7 +10334,7 @@ async function expRun(fname) {
     $('export-layer').classList.remove('busy');
     $('exp-go').disabled = false;
   }
-  if (!out) { showToast(t('toast.mapFail')); return; }
+  if (!out) { showToast(t('toast.mapFail'), { type: 'err' }); return; }
   expDeliver(out.dataUrl, out.width, out.height, partial, fname);
 }
 
@@ -10950,7 +10950,7 @@ function init() {
   updateFlagButton();
   initToolbarMenus([['layer', () => t('tb.layer'), undefined, true], ['theatre', () => t('tb.theatre'), undefined, true], ['theme', () => t('tb.theme.tip')], ['rt-theatre', () => t('tb.theatre'), 'sheet']]);   /* les listes de la barre au thème de l'interface */
   initFormMenus(sel => (sel.dataset.k === 'altRef' ? t('th.ref') : sel.dataset.lbl ? t(sel.dataset.lbl) : (sel.getAttribute('aria-label') || '')));   /* les listes des formulaires */
-  impSetup({ lang: () => CURRENT_LANG, before: rpImportBefore, onImported: rpImported, toast: showToast });      /* la fenêtre d'import commune */
+  impSetup({ lang: () => CURRENT_LANG, before: rpImportBefore, onImported: rpImported, toast: msg => showToast('\u26a0 ' + msg, { type: 'err' }) });      /* la fenêtre d'import commune */
   loadState();
   try { gsMigrate((r, th) => gsPackRoute(r, th, S.groundSpeed)); } catch (e) { /* la fiche des groupes est facultative */ }      /* la fiche naît ici si le Flight Configurator ne l'a pas fait avant */
   loadLayers();
