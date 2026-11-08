@@ -3788,6 +3788,7 @@ function openFile(file) {
       return;
     }
     S.sel = { f: 0, u: 0 };                    // la première unité du premier groupe ouvert
+    UI.exportTried = false;
     Object.assign(UI.cmp, { saving: false, err: '', st: null });
     renderAll();
     if (work) { clearTimeout(_saveTimer); if (gsReplaceAll(S.theatre, JSON.parse(JSON.stringify(S.flights)))) gsMarkAll(); writeState(); }       // un fichier de travail remplace la fiche entière
@@ -3829,6 +3830,7 @@ function clearAll() {
   if (!confirm(t('clear.confirm'))) return;
   Object.assign(S, { theatre: '', flights: [], sel: { f: 0, u: 0 } });
   UI.clamped = 0;
+  UI.exportTried = false;
   UI.cmp.saving = false;
   renderAll();
   commitNow();

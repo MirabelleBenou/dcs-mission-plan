@@ -6672,7 +6672,7 @@ function init() {
   updateFlagButton();
   initToolbarMenus([['theme-select', () => t('tb.theme.tip')]]);   /* les listes de la barre au thème de l'interface */
   initFormMenus(sel => { const f = sel.closest('.ed-field'), l = f && f.querySelector('label'); return l ? l.textContent.trim() : (sel.getAttribute('aria-label') || ''); });   /* les listes des formulaires */
-  impSetup({ lang: () => CURRENT_LANG, onImported: dgImported, toast: showToast });      /* la fenêtre d'import commune : elle écrit dans la fiche, les cartes suivent */
+  impSetup({ lang: () => CURRENT_LANG, onImported: dgImported, toast: msg => showToast('\u26a0 ' + msg, { type: 'err' }) });      /* la fenêtre d'import commune : elle écrit dans la fiche, les cartes suivent */
   gsMigrate(dgPackFn);
   loadState();
   gsApplyAll(true);

@@ -3836,6 +3836,7 @@ const I18N = {
     'msg.notWingConfig':         '⚠ Ce fichier n’est pas une configuration wing.',
     'msg.wingIncomplete':        '⚠ Configuration wing incomplète : {0} champ(s) manquant(s) ou invalide(s).',
     'msg.notMiz':                '⚠ Fichier illisible : ce n’est pas un .miz.',
+    'msg.failed':                '⚠ L’opération a échoué.',
     'msg.notImage':              '⚠ Le fichier doit être une image.',
     'msg.imageUnreadable':       '⚠ Image illisible.',
     'msg.exportFailed':          '⚠ Export impossible.',
@@ -4216,6 +4217,7 @@ const I18N = {
     'msg.notWingConfig':         '⚠ This file is not a wing configuration.',
     'msg.wingIncomplete':        '⚠ Incomplete wing configuration: {0} missing or invalid field(s).',
     'msg.notMiz':                '⚠ Unreadable file: this is not a .miz.',
+    'msg.failed':                '⚠ The operation failed.',
     'msg.notImage':              '⚠ The file must be an image.',
     'msg.imageUnreadable':       '⚠ Unreadable image.',
     'msg.exportFailed':          '⚠ Export failed.',
@@ -6763,8 +6765,8 @@ function renderMetarAssistant(p) {
     try {
       await _importMizToMetar(file);
     } catch(err) {
-      console.warn('[BG] .miz :', err);
-      showToast(t('msg.notMiz'), { type: 'err' });
+      console.warn('[BG] .miz : import de la météo :', err);
+      showToast(t('msg.failed'), { type: 'err' });
     }
     e.target.value = '';
   });
@@ -6799,11 +6801,18 @@ async function _importMizToMetar(file) {
     if (!confirm(t('editor.sitac.metarMizOverwrite'))) return;
   }
   // Lecture JSZip (déjà embarqué)
-  const buf = await file.arrayBuffer();
-  const zip  = await JSZip.loadAsync(buf);
-  const missionFile = zip.file('mission');
-  if (!missionFile) throw new Error('Fichier "mission" absent du .miz');
-  const lua = await missionFile.async('string');
+  let lua;
+  try {
+    const buf = await file.arrayBuffer();
+    const zip  = await JSZip.loadAsync(buf);
+    const missionFile = zip.file('mission');
+    if (!missionFile) throw new Error('Fichier "mission" absent du .miz');
+    lua = await missionFile.async('string');
+  } catch (e) {
+    console.warn('[BG] .miz illisible :', e);
+    showToast(t('msg.notMiz'), { type: 'err' });
+    return;
+  }
 
   // --- Parsing par regex tolérantes ---
   function extractNum(re, def) {
@@ -8414,7 +8423,7 @@ function loadJsonFile(file) {
       }
     } catch (e) {
       console.warn('[BG] chargement du briefing :', e);
-      showToast(t('rej.notBriefing'), { type: 'err' });
+      showToast(t('msg.failed'), { type: 'err' });
     }
   };
   reader.onerror = () => showToast(t('toast.fileUnreadable'), { type: 'err' });
@@ -8466,13 +8475,15 @@ function importWingConfig(file) {
     try { parsed = JSON.parse(reader.result); }
     catch (e) { console.warn('[BG] configuration wing : JSON illisible', e); showToast(t('msg.jsonUnreadable'), { type: 'err' }); return; }
     if (!parsed || typeof parsed !== 'object' || parsed.configSchemaVersion !== 1) { showToast(t('msg.notWingConfig'), { type: 'err' }); return; }
+    let check;
+    try { check = validateWingConfig(parsed); }
+    catch (e) { console.warn('[BG] configuration wing : validation impossible', e); showToast(t('msg.notWingConfig'), { type: 'err' }); return; }
+    if (!check.ok) {
+      console.warn('[BG] configuration wing incomplète :', check.errors);
+      showToast(t('msg.wingIncomplete').replace('{0}', check.errors.length), { type: 'err' });
+      return;
+    }
     try {
-      const check  = validateWingConfig(parsed);
-      if (!check.ok) {
-        console.warn('[BG] configuration wing incomplète :', check.errors);
-        showToast(t('msg.wingIncomplete').replace('{0}', check.errors.length), { type: 'err' });
-        return;
-      }
       wingConfig = parsed;
       persistWingConfig();
       applyWingBranding();
@@ -8480,8 +8491,8 @@ function importWingConfig(file) {
       schedulePreview();
       showToast(t('toast.wingLoaded'), { type: 'ok' });
     } catch (e) {
-      console.warn('[BG] configuration wing : lecture impossible', e);
-      showToast(t('msg.notWingConfig'), { type: 'err' });
+      console.warn('[BG] configuration wing : enregistrement ou rendu impossible', e);
+      showToast(t('msg.failed'), { type: 'err' });
     }
   };
   reader.onerror = () => showToast(t('toast.wingFileError'), { type: 'err' });

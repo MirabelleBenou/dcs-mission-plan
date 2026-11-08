@@ -1305,6 +1305,7 @@ const I18N = {{
     'msg.notImage':             '\u26a0 Le fichier doit \u00eatre une image.',
     'msg.imageUnreadable':      '\u26a0 Image illisible.',
     'msg.exportFailed':         '\u26a0 Export impossible.',
+    'msg.failed':               '\u26a0 L\u2019op\u00e9ration a \u00e9chou\u00e9.',
     'editor.mission.summary':   'MISSION .MIZ',
     'editor.mission.drop':      '\u21d3 D\u00c9POSER UN FICHIER .MIZ ICI',
     'editor.mission.drop.hint': 'ou cliquer pour parcourir',
@@ -1463,6 +1464,7 @@ const I18N = {{
     'dyn.warn.unreadable': '⚠ Dynamic Spawn non lu : le fichier warehouses est illisible.',
     'pk.refused': 'refusé : {{0}} — {{1}}',
     'pk.err.parse': 'JSON illisible.',
+    'pk.err.read': 'Lecture du fichier impossible.',
     'pk.err.zip': 'Archive illisible : pas de package.json à la racine.',
     'pk.err.format': 'Format « {{0}} » non pris en charge ici (attendu : {{1}}).',
     'pk.err.noTheatre': 'Le paquet n\\'a pas de théâtre.',
@@ -1542,6 +1544,7 @@ const I18N = {{
     'pk.e.payload': 'emport relu différent du paquet (unité {{0}})',
     'pk.e.targetGone': 'groupe introuvable dans la mission',
     'pk.e.retok': 'texte écrit illisible',
+    'pk.e.unexpected': 'erreur inattendue',
     'toast.pkApplyingN': 'Application des paquets… ({{0}}/{{1}})',
     'toast.mizNotLoaded':        '\u26a0 Ouvrez un .miz d\u2019abord',
   }},
@@ -1628,6 +1631,7 @@ const I18N = {{
     'msg.notImage':             '\u26a0 The file must be an image.',
     'msg.imageUnreadable':      '\u26a0 Unreadable image.',
     'msg.exportFailed':         '\u26a0 Export failed.',
+    'msg.failed':               '\u26a0 The operation failed.',
     'editor.mission.summary':   'MISSION .MIZ',
     'editor.mission.drop':      '\u21d3 DROP A .MIZ FILE HERE',
     'editor.mission.drop.hint': 'or click to browse',
@@ -1786,6 +1790,7 @@ const I18N = {{
     'dyn.warn.unreadable': '⚠ Dynamic Spawn not read: the warehouses file is unreadable.',
     'pk.refused': 'refused: {{0}} — {{1}}',
     'pk.err.parse': 'Unreadable JSON.',
+    'pk.err.read': 'The file could not be read.',
     'pk.err.zip': 'Unreadable archive: no package.json at the root.',
     'pk.err.format': 'Format "{{0}}" not supported here (expected: {{1}}).',
     'pk.err.noTheatre': 'The package has no theatre.',
@@ -1865,6 +1870,7 @@ const I18N = {{
     'pk.e.payload': 'loadout read back differs from the package (unit {{0}})',
     'pk.e.targetGone': 'group not found in the mission',
     'pk.e.retok': 'written text unreadable',
+    'pk.e.unexpected': 'unexpected error',
     'toast.pkApplyingN': 'Applying packages… ({{0}}/{{1}})',
     'toast.mizNotLoaded':        '\u26a0 Open a .miz first',
   }}
@@ -2652,20 +2658,22 @@ function importWingConfig(file) {{
     try {{ parsed = JSON.parse(reader.result); }}
     catch (e) {{ console.warn('[HQ] configuration wing : JSON illisible', e); showToast(t('msg.jsonUnreadable'), {{ type: 'err' }}); return; }}
     if (!parsed || typeof parsed !== 'object' || parsed.configSchemaVersion !== 1) {{ showToast(t('msg.notWingConfig'), {{ type: 'err' }}); return; }}
+    let check;
+    try {{ check = validateWingConfig(parsed); }}
+    catch (e) {{ console.warn('[HQ] configuration wing : validation impossible', e); showToast(t('msg.notWingConfig'), {{ type: 'err' }}); return; }}
+    if (!check.ok) {{
+      console.warn('[HQ] configuration wing incomplète :', check.errors);
+      showToast(tf('msg.wingIncomplete', check.errors.length), {{ type: 'err' }});
+      return;
+    }}
     try {{
-      const check  = validateWingConfig(parsed);
-      if (!check.ok) {{
-        console.warn('[HQ] configuration wing incomplète :', check.errors);
-        showToast(tf('msg.wingIncomplete', check.errors.length), {{ type: 'err' }});
-        return;
-      }}
       wingConfig = parsed;
       persistWingConfig();
       renderWingEditor();
       showToast(t('toast.wingLoaded') + escapeHtml(wingConfig.wing.shortName), {{ type: 'ok' }});
     }} catch (e) {{
-      console.warn('[HQ] configuration wing : lecture impossible', e);
-      showToast(t('msg.notWingConfig'), {{ type: 'err' }});
+      console.warn('[HQ] configuration wing : enregistrement ou rendu impossible', e);
+      showToast(t('msg.failed'), {{ type: 'err' }});
     }}
   }};
   reader.onerror = () => showToast(t('toast.wingFileError'), {{ type: 'err' }});
@@ -3099,20 +3107,25 @@ async function loadMiz(file) {{
     const dyn = dynBuild(ast, otherFilesMap, theatre);
     // Construire le Mission JSON
     const snapshot = await buildMissionSnapshot(ast, model, missionText, file.name, theatre);
-    // Tout a réussi : le nom, le contexte complet (pipeline de patch) et le snapshot changent ensemble
-    _mizFilename = file.name;
-    _HQ_MIZ_CONTEXT = {{ missionText, ast, model, otherFilesMap, theatre }};
-    _HQ_DYN = dyn;
-    HQ_SNAPSHOT = snapshot;
-    persistSnapshot();
-    _PK_EXPORT_SEL.clear();
-    _PK_REPORT = null;
-    _MIZ_LOAD_FP = snapshot.sourceMission.fingerprint || '';
-    pkResetFilters();
-    renderSnapshot(snapshot);
-    pkRender();
-    showToast(t('toast.mizLoaded'), {{ type: 'ok' }});
-    console.log('[HQ P3] Snapshot:', snapshot);
+    try {{
+      // Tout a réussi : le nom, le contexte complet (pipeline de patch) et le snapshot changent ensemble
+      _mizFilename = file.name;
+      _HQ_MIZ_CONTEXT = {{ missionText, ast, model, otherFilesMap, theatre }};
+      _HQ_DYN = dyn;
+      HQ_SNAPSHOT = snapshot;
+      persistSnapshot();
+      _PK_EXPORT_SEL.clear();
+      _PK_REPORT = null;
+      _MIZ_LOAD_FP = snapshot.sourceMission.fingerprint || '';
+      pkResetFilters();
+      renderSnapshot(snapshot);
+      pkRender();
+      showToast(t('toast.mizLoaded'), {{ type: 'ok' }});
+      console.log('[HQ P3] Snapshot:', snapshot);
+    }} catch(err) {{
+      console.warn('[HQ P3] enregistrement ou rendu du .miz :', err);
+      showToast(t('msg.failed'), {{ type: 'err' }});
+    }}
   }} catch(err) {{
     console.error('[HQ P3] loadMiz error:', err);
     showToast(t('msg.notMiz'), {{ type: 'err' }});
@@ -4009,7 +4022,6 @@ function pkExport(name) {{
   }} catch (err) {{
     console.warn('[HQ] export des paquets :', err);
     showToast(t('msg.exportFailed'), {{ type: 'err' }});
-    console.error('[HQ] export paquet:', err);
   }}
 }}
 
@@ -4062,8 +4074,7 @@ function pkSyncCheckboxes() {{
 function pkReasonText(r) {{ return r.key ? tf.apply(null, [r.key].concat(r.args)) : String(r.raw); }}
 function pkErrText(err) {{
   if (err && err.pkErrors) return err.pkErrors.map(e => tf.apply(null, [e.key].concat(e.args))).join(' ; ');
-  console.warn('[HQ] échec :', err);
-  return t('msg.exportFailed').replace(/^\u26a0\s*/, '');
+  return t('pk.e.unexpected');
 }}
 // Rend la main au navigateur pour qu'il peigne (repli à 50 ms si les images ne sont pas peintes, onglet caché)
 function pkYield() {{
@@ -4132,17 +4143,20 @@ function pkNormalize(obj, filename) {{
 // Une archive se reconnaît à ses deux premiers octets « PK » (ou à l'extension .zip) ; tout le reste est lu comme du JSON, quel que soit le nom
 async function pkReadFile(file) {{
   const name = file.name;
-  const head = new Uint8Array(await file.slice(0, 2).arrayBuffer());
+  const PK_READ = {{ reason: {{ key: 'pk.err.read', args: [] }} }};
+  let head;
+  try {{ head = new Uint8Array(await file.slice(0, 2).arrayBuffer()); }} catch (e) {{ console.warn('[HQ] lecture du paquet :', e); return PK_READ; }}
   let text;
   if ((head.length === 2 && head[0] === 0x50 && head[1] === 0x4B) || name.toLowerCase().endsWith('.zip')) {{
-    let entry;
-    try {{ entry = (await JSZip.loadAsync(await file.arrayBuffer())).file('package.json'); }}
+    let entry, buf;
+    try {{ buf = await file.arrayBuffer(); }} catch (e) {{ console.warn('[HQ] lecture du paquet :', e); return PK_READ; }}
+    try {{ entry = (await JSZip.loadAsync(buf)).file('package.json'); }}
     catch (e) {{ return {{ reason: {{ key: 'pk.err.zip', args: [] }} }}; }}
     if (!entry) return {{ reason: {{ key: 'pk.err.zip', args: [] }} }};
     try {{ text = await entry.async('string'); }}
     catch (e) {{ return {{ reason: {{ key: 'pk.err.zip', args: [] }} }}; }}
   }} else {{
-    text = await file.text();
+    try {{ text = await file.text(); }} catch (e) {{ console.warn('[HQ] lecture du paquet :', e); return PK_READ; }}
   }}
   if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
   let obj;
@@ -5138,7 +5152,7 @@ function dsxVerify(base, DS, plan, mAst, wText, wRootNew, work) {{
 // ----- la fenêtre -----
 function dsxSafePlan() {{
   try {{ return {{ plan: dsxPlan(DSX.ctx, DSX), err: null }}; }}
-  catch (e) {{ return {{ plan: null, err: e }}; }}
+  catch (e) {{ console.warn('[HQ] plan Dynamic Spawn :', e); return {{ plan: null, err: e }}; }}
 }}
 function dsxBody() {{
   const h = escapeHtml, st = DSX.st, own = dsxOwners(DSX), sp = dsxSafePlan();

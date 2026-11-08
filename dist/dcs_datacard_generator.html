@@ -4368,7 +4368,7 @@ const IMP_I18N = {
     'rej.noTheatre': 'Le paquet n’a pas de théâtre.',
     'rej.noFlight': 'Aucun groupe lisible dans ce fichier.',
     'rej.noManaged': 'Aucun groupe d’un appareil géré ici (Mi-24P, Mi-8MT, F-4E, Mirage F1) dans ce paquet : rien n’a changé.',
-    'rej.format': 'Format « {0} » non reconnu ici (attendu : {1}).',
+    'rej.format': 'Format « {0} » non pris en charge ici (attendu : {1}).',
     'rej.unknown': 'inconnu',
     'rej.skip': '{0} groupe(s) illisible(s) ignoré(s).',
     'fmt.pkg': 'paquet de vol',
@@ -4428,12 +4428,12 @@ const IMP_I18N = {
     'imp.notype': '{0} unit(s) without a type: to pick ({1})',
     'imp.skipchan': '{0} channel(s) ignored',
     'imp.group': 'Group {0}',
-    'rej.json': 'Unreadable file: not JSON.',
+    'rej.json': 'Unreadable file: this is not JSON.',
     'rej.zip': 'Unreadable archive: no package.json at the root.',
     'rej.noTheatre': 'The package has no theatre.',
     'rej.noFlight': 'No readable group in this file.',
     'rej.noManaged': 'No group of an aircraft handled here (Mi-24P, Mi-8MT, F-4E, Mirage F1) in this package: nothing has changed.',
-    'rej.format': 'Format “{0}” not recognised here (expected: {1}).',
+    'rej.format': 'Format “{0}” is not supported here (expected: {1}).',
     'rej.unknown': 'unknown',
     'rej.skip': '{0} unreadable group(s) skipped.',
     'fmt.pkg': 'flight package',
@@ -8429,7 +8429,7 @@ function init() {
   updateFlagButton();
   initToolbarMenus([['theme-select', () => t('tb.theme.tip')]]);   /* les listes de la barre au thème de l'interface */
   initFormMenus(sel => { const f = sel.closest('.ed-field'), l = f && f.querySelector('label'); return l ? l.textContent.trim() : (sel.getAttribute('aria-label') || ''); });   /* les listes des formulaires */
-  impSetup({ lang: () => CURRENT_LANG, onImported: dgImported, toast: showToast });      /* la fenêtre d'import commune : elle écrit dans la fiche, les cartes suivent */
+  impSetup({ lang: () => CURRENT_LANG, onImported: dgImported, toast: msg => showToast('\u26a0 ' + msg, { type: 'err' }) });      /* la fenêtre d'import commune : elle écrit dans la fiche, les cartes suivent */
   gsMigrate(dgPackFn);
   loadState();
   gsApplyAll(true);

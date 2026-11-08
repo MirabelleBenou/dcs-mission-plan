@@ -2669,8 +2669,6 @@ select[data-tbm-src] {{ display: none !important; }}
   </div>
 </div>
 
-<!-- TOAST -->
-
 <!-- HIDDEN CANVAS (export full-res) -->
 <canvas id="export-canvas" hidden></canvas>
 
@@ -2760,6 +2758,7 @@ const I18N = {{
     'msg.jsonUnreadable': '⚠ Fichier illisible : ce n’est pas du JSON.',
     'msg.notWingConfig': '⚠ Ce fichier n’est pas une configuration wing.',
     'msg.wingIncomplete': '⚠ Configuration wing incomplète : {{0}} champ(s) manquant(s) ou invalide(s).',
+    'msg.failed': '⚠ L’opération a échoué.',
     'editor.logo.removeCustom': 'Supprimer le logo importé',
     'editor.logo.none': 'Aucun logo',
     'aria.textColor': 'Couleur du texte',
@@ -2900,6 +2899,7 @@ const I18N = {{
     'msg.jsonUnreadable': '⚠ Unreadable file: this is not JSON.',
     'msg.notWingConfig': '⚠ This file is not a wing configuration.',
     'msg.wingIncomplete': '⚠ Incomplete wing configuration: {{0}} missing or invalid field(s).',
+    'msg.failed': '⚠ The operation failed.',
     'editor.logo.removeCustom': 'Remove imported logo',
     'editor.logo.none': 'No logo',
     'aria.textColor': 'Text color',
@@ -3376,13 +3376,15 @@ function importWingLogos(file) {{
     try {{ cfg = JSON.parse(e.target.result); }}
     catch (err) {{ console.warn('[RS] configuration wing : JSON illisible', err); showToast(t('msg.jsonUnreadable'), {{ type: 'err' }}); return; }}
     if (!cfg || typeof cfg !== 'object' || cfg.configSchemaVersion !== 1) {{ showToast(t('msg.notWingConfig'), {{ type: 'err' }}); return; }}
+    let check;
+    try {{ check = validateWingConfig(cfg); }}
+    catch (err) {{ console.warn('[RS] configuration wing : validation impossible', err); showToast(t('msg.notWingConfig'), {{ type: 'err' }}); return; }}
+    if (!check.ok) {{
+      console.warn('[RS] configuration wing incomplète :', check.errors);
+      showToast(t('msg.wingIncomplete').replace('{{0}}', check.errors.length), {{ type: 'err' }});
+      return;
+    }}
     try {{
-      const check = validateWingConfig(cfg);
-      if (!check.ok) {{
-        console.warn('[RS] configuration wing incomplète :', check.errors);
-        showToast(t('msg.wingIncomplete').replace('{{0}}', check.errors.length), {{ type: 'err' }});
-        return;
-      }}
       const added = [];
       const push = (name, b64) => {{
         if (typeof b64 === 'string' && b64.startsWith('data:image/'))
@@ -3396,8 +3398,8 @@ function importWingLogos(file) {{
       saveState(); renderLogoGrid(); schedulePreview();
       showToast(t('toast.logosImported').replace('{{n}}', added.length), {{ type: 'ok' }});
     }} catch (err) {{
-      console.warn('[RS] configuration wing : lecture impossible', err);
-      showToast(t('msg.notWingConfig'), {{ type: 'err' }});
+      console.warn('[RS] configuration wing : enregistrement ou rendu impossible', err);
+      showToast(t('msg.failed'), {{ type: 'err' }});
     }}
   }};
   r.readAsText(file);
