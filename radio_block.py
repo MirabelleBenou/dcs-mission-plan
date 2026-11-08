@@ -64,7 +64,7 @@ TABLE = r"""const RADIO_POSTES = {
   "F-14A-135-GR":{ 1: "AN/ARC-159 (UHF - COMM 1)",    2: "AN/ARC-182 (V/UHF - COMM 2)" },
   "F-14A-135-GR-Early": { 1: "AN/ARC-159 (UHF - COMM 1)", 2: "AN/ARC-182 (V/UHF - COMM 2)" },
   "F-15C":       { 1: "AN/ARC-164 (UHF)" },
-  "F-15ESE":     { 1: "AN/ARC-164 (UHF - COMM 1)",    2: "AN/ARC-186 (V/UHF - COMM 2)" },
+  "F-15ESE":     { 1: "AN/ARC-164 (UHF - COMM 1)",    2: "V/UHF (COMM 2)" },
   "F-16C_50":    { 1: "AN/ARC-164 (UHF - COMM 1)",    2: "AN/ARC-222 (V/UHF - COMM 2)" },
   "FA-18C_hornet":{ 1: "AN/ARC-210 (V/UHF - COMM 1)", 2: "AN/ARC-210 (V/UHF - COMM 2)" },
   "JF-17":       { 1: "R&S M3AR (V/UHF - COMM 1)",    2: "R&S M3AR (V/UHF - COMM 2)" },
@@ -74,11 +74,11 @@ TABLE = r"""const RADIO_POSTES = {
   "Mirage-F1CR": { 1: "TRAP 138 (UHF - Principale)",  2: "TRAP 139 (V/UHF - Auxiliaire)" },
   "Mirage-F1EE": { 1: "TRAP 136 (V/UHF - Verte)",     2: "TRAP 137B (UHF - Rouge)" },
   "Mirage-F1M":  { 1: "TRAP 136 (V/UHF - Verte)",     2: "TRAP 137B (UHF - Rouge)" },
-  "M-2000C":     { 1: "TRT ERA 7000 (V/UHF)",          2: "TRT ERA 7200 (UHF Auxiliaire)" },
+  "M-2000C":     { 1: "UHF",                            2: "V/UHF" },
   // ─── Attaque / CAS ────────────────────────────────────────────────────
   "A-10C":       { 1: "AN/ARC-186 (VHF AM)", 2: "AN/ARC-164 (UHF)",  3: "AN/ARC-186 (VHF FM)" },
-  "A-10C_2":     { 1: "AN/ARC-186 (VHF AM)", 2: "AN/ARC-164 (UHF)",  3: "AN/ARC-186 (VHF FM)" },
-  "AV8BNA":      { 1: "AN/ARC-210 (V/UHF - COMM 1)", 2: "AN/ARC-210 (V/UHF - COMM 2)" },
+  "A-10C_2":     { 1: "AN/ARC-210 (V/UHF)",    2: "AN/ARC-164 (UHF)",  3: "AN/ARC-186 (VHF FM)" },
+  "AV8BNA":      { 1: "AN/ARC-210 (V/UHF - COMM 1)", 2: "AN/ARC-210 (V/UHF - COMM 2)", 3: "V/UHF (RCS)" },
   // ─── Hélicoptères OTAN ────────────────────────────────────────────────
   "AH-64D_BLK_II": {
     1: "AN/ARC-186 (VHF - COMM 1)", 2: "AN/ARC-164 (UHF - COMM 2)",
@@ -90,14 +90,14 @@ TABLE = r"""const RADIO_POSTES = {
     3: "AN/ARC-201D (VHF FM1)", 4: "AN/ARC-201D (VHF FM2)", 5: "AN/ARC-220 (HF)"
   },
   "UH-1H":       { 1: "AN/ARC-134 (VHF AM)", 2: "AN/ARC-131 (VHF FM)", 3: "AN/ARC-51BX (UHF)" },
-  "OH58D":       { 1: "AN/ARC-186 (VHF AM/FM)", 2: "AN/ARC-164 (UHF)", 3: "AN/ARC-201 (VHF FM)" },
+  "OH58D":       { 1: "AN/ARC-164 (UHF)", 2: "AN/ARC-186 (VHF AM)", 3: "AN/ARC-201 (VHF FM1)", 4: "AN/ARC-201 (VHF FM2)" },
   // ─── Hélicoptères français — Gazelles ─────────────────────────────────
-  "SA342L":      { 1: "Manta TRAP 138 (V/UHF)", 2: "Manta TRAP 139 (V/UHF)" },
-  "SA342M":      { 1: "Manta TRAP 138 (V/UHF)", 2: "Manta TRAP 139 (V/UHF)" },
-  "SA342Minigun":{ 1: "Manta TRAP 138 (V/UHF)", 2: "Manta TRAP 139 (V/UHF)" },
-  "SA342Mistral":{ 1: "Manta TRAP 138 (V/UHF)", 2: "Manta TRAP 139 (V/UHF)" },
+  "SA342L":      { 1: "Radio FM (VHF FM)" },
+  "SA342M":      { 1: "Radio FM (VHF FM)" },
+  "SA342Minigun":{ 1: "Radio FM (VHF FM)" },
+  "SA342Mistral":{ 1: "Radio FM (VHF FM)" },
   // ─── Transport ────────────────────────────────────────────────────────
-  "C-130J-30":   { 1: "AN/ARC-210 (V/UHF - COMM 1)", 2: "AN/ARC-210 (V/UHF - COMM 2)" },
+  "C-130J-30":   { 1: "UHF 1/2 (UHF)", 2: "VHF 1/2 (VHF)" },
   "Hercules":    { 1: "AN/ARC-164 (UHF)", 2: "AN/ARC-186 (VHF)" },
 };"""
 

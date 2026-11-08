@@ -9302,7 +9302,7 @@ const RADIO_POSTES = {
   "F-14A-135-GR":{ 1: "AN/ARC-159 (UHF - COMM 1)",    2: "AN/ARC-182 (V/UHF - COMM 2)" },
   "F-14A-135-GR-Early": { 1: "AN/ARC-159 (UHF - COMM 1)", 2: "AN/ARC-182 (V/UHF - COMM 2)" },
   "F-15C":       { 1: "AN/ARC-164 (UHF)" },
-  "F-15ESE":     { 1: "AN/ARC-164 (UHF - COMM 1)",    2: "AN/ARC-186 (V/UHF - COMM 2)" },
+  "F-15ESE":     { 1: "AN/ARC-164 (UHF - COMM 1)",    2: "V/UHF (COMM 2)" },
   "F-16C_50":    { 1: "AN/ARC-164 (UHF - COMM 1)",    2: "AN/ARC-222 (V/UHF - COMM 2)" },
   "FA-18C_hornet":{ 1: "AN/ARC-210 (V/UHF - COMM 1)", 2: "AN/ARC-210 (V/UHF - COMM 2)" },
   "JF-17":       { 1: "R&S M3AR (V/UHF - COMM 1)",    2: "R&S M3AR (V/UHF - COMM 2)" },
@@ -9312,11 +9312,11 @@ const RADIO_POSTES = {
   "Mirage-F1CR": { 1: "TRAP 138 (UHF - Principale)",  2: "TRAP 139 (V/UHF - Auxiliaire)" },
   "Mirage-F1EE": { 1: "TRAP 136 (V/UHF - Verte)",     2: "TRAP 137B (UHF - Rouge)" },
   "Mirage-F1M":  { 1: "TRAP 136 (V/UHF - Verte)",     2: "TRAP 137B (UHF - Rouge)" },
-  "M-2000C":     { 1: "TRT ERA 7000 (V/UHF)",          2: "TRT ERA 7200 (UHF Auxiliaire)" },
+  "M-2000C":     { 1: "UHF",                            2: "V/UHF" },
   // ─── Attaque / CAS ────────────────────────────────────────────────────
   "A-10C":       { 1: "AN/ARC-186 (VHF AM)", 2: "AN/ARC-164 (UHF)",  3: "AN/ARC-186 (VHF FM)" },
-  "A-10C_2":     { 1: "AN/ARC-186 (VHF AM)", 2: "AN/ARC-164 (UHF)",  3: "AN/ARC-186 (VHF FM)" },
-  "AV8BNA":      { 1: "AN/ARC-210 (V/UHF - COMM 1)", 2: "AN/ARC-210 (V/UHF - COMM 2)" },
+  "A-10C_2":     { 1: "AN/ARC-210 (V/UHF)",    2: "AN/ARC-164 (UHF)",  3: "AN/ARC-186 (VHF FM)" },
+  "AV8BNA":      { 1: "AN/ARC-210 (V/UHF - COMM 1)", 2: "AN/ARC-210 (V/UHF - COMM 2)", 3: "V/UHF (RCS)" },
   // ─── Hélicoptères OTAN ────────────────────────────────────────────────
   "AH-64D_BLK_II": {
     1: "AN/ARC-186 (VHF - COMM 1)", 2: "AN/ARC-164 (UHF - COMM 2)",
@@ -9328,14 +9328,14 @@ const RADIO_POSTES = {
     3: "AN/ARC-201D (VHF FM1)", 4: "AN/ARC-201D (VHF FM2)", 5: "AN/ARC-220 (HF)"
   },
   "UH-1H":       { 1: "AN/ARC-134 (VHF AM)", 2: "AN/ARC-131 (VHF FM)", 3: "AN/ARC-51BX (UHF)" },
-  "OH58D":       { 1: "AN/ARC-186 (VHF AM/FM)", 2: "AN/ARC-164 (UHF)", 3: "AN/ARC-201 (VHF FM)" },
+  "OH58D":       { 1: "AN/ARC-164 (UHF)", 2: "AN/ARC-186 (VHF AM)", 3: "AN/ARC-201 (VHF FM1)", 4: "AN/ARC-201 (VHF FM2)" },
   // ─── Hélicoptères français — Gazelles ─────────────────────────────────
-  "SA342L":      { 1: "Manta TRAP 138 (V/UHF)", 2: "Manta TRAP 139 (V/UHF)" },
-  "SA342M":      { 1: "Manta TRAP 138 (V/UHF)", 2: "Manta TRAP 139 (V/UHF)" },
-  "SA342Minigun":{ 1: "Manta TRAP 138 (V/UHF)", 2: "Manta TRAP 139 (V/UHF)" },
-  "SA342Mistral":{ 1: "Manta TRAP 138 (V/UHF)", 2: "Manta TRAP 139 (V/UHF)" },
+  "SA342L":      { 1: "Radio FM (VHF FM)" },
+  "SA342M":      { 1: "Radio FM (VHF FM)" },
+  "SA342Minigun":{ 1: "Radio FM (VHF FM)" },
+  "SA342Mistral":{ 1: "Radio FM (VHF FM)" },
   // ─── Transport ────────────────────────────────────────────────────────
-  "C-130J-30":   { 1: "AN/ARC-210 (V/UHF - COMM 1)", 2: "AN/ARC-210 (V/UHF - COMM 2)" },
+  "C-130J-30":   { 1: "UHF 1/2 (UHF)", 2: "VHF 1/2 (VHF)" },
   "Hercules":    { 1: "AN/ARC-164 (UHF)", 2: "AN/ARC-186 (VHF)" },
 };
 
@@ -9359,12 +9359,52 @@ function radioCockpitChannel(type, radioIndex, mizChannel) {
 }
 /* ===== FIN DES POSTES RADIO ===== */
 
+/* ===== BANDES ET POSTES NON PRÉ-RÉGLÉS DES RADIOS ===== */
+// La bande de chaque poste, en MHz, [bas, haut] bornes comprises, sans contrôle de pas (clé = unit.type). Règle de Mission Tools (R477) : DCS ∩ guide de Chuck quand on a les deux.
+//   Mi-24P : R-863 (poste 1) 100 à 149,975 et 220 à 399,9 · R-828 (poste 2) 20 à 59,9 · Jadro-1I (poste 3, HF) 2 à 17,999 · guide de Chuck, Mi-24P, p. 423 (DCS ne donne pas de bande).
+//   Mi-8MT : R-863 100 à 149,975 et 220 à 399,975 · R-828 20 à 59,975 · Jadro-1A (HF) 2 à 17,999 · guide de Chuck, Mi-8MTV2, p. 169 (pas de fichier DCS).
+//   F-4E-45MC : poste 1 COMM (225 à 399,95) et poste 2 AUX, réception seule (265 à 284,9) · manuel du F-4E, chapitre « UHF Radio ».
+//   Mirage-F1EE : TRAP 136 (118 à 143,975 et 225 à 399,975) et TRAP 137B (225 à 399,975) · manuel du Mirage F1 (3.13).
+const RADIO_BANDS = {
+  'Mi-24P': { 1: [[100, 149.975], [220, 399.9]], 2: [[20, 59.9]], 3: [[2, 17.999]] },
+  'Mi-8MT': { 1: [[100, 149.975], [220, 399.975]], 2: [[20, 59.975]], 3: [[2, 17.999]] },
+  'F-4E-45MC': { 1: [[225, 399.95]], 2: [[265, 284.9]] },
+  'Mirage-F1EE': { 1: [[118, 143.975], [225, 399.975]], 2: [[225, 399.975]] }
+};
+
+// Les postes que la mission ne pré-règle pas, par type : numéro de poste → nombre de fréquences. Leurs fréquences vivent dans la fiche comme les canaux d'un poste pré-réglé
+// (radios[poste][1 à n]) mais sans numéro de canal, et HQ ne les écrit jamais dans la mission.
+const RADIO_FREE = { 'Mi-24P': { 3: 5 }, 'Mi-8MT': { 3: 5 } };
+
+// La bande d'un poste : [[bas, haut], …] ; [] si le type ou le poste n'est pas connu.
+function radioBand(type, r) {
+  return Object.prototype.hasOwnProperty.call(RADIO_BANDS, type) && Object.prototype.hasOwnProperty.call(RADIO_BANDS[type], r) ? RADIO_BANDS[type][r] : [];
+}
+// Dans la bande = dans l'un de ses intervalles, bornes comprises.
+function radioInBand(band, v) { return band.some(b => v >= b[0] - 1e-9 && v <= b[1] + 1e-9); }
+// Le nombre de fréquences d'un poste que la mission ne pré-règle pas ; 0 pour tout autre poste (pré-réglé, ou inconnu).
+function radioFreeCount(type, r) {
+  return Object.prototype.hasOwnProperty.call(RADIO_FREE, type) && Object.prototype.hasOwnProperty.call(RADIO_FREE[type], r) ? RADIO_FREE[type][r] : 0;
+}
+/* ===== FIN DES BANDES ET DES POSTES NON PRÉ-RÉGLÉS ===== */
+
 /* ===== IMPORT COMMUN (HQ, briefing, fichier) ===== */
-/* Les types que la suite gère, et les canaux par poste (sonde des .miz) : postes offerts = ceux de radio_block.py, sauf le poste HF des deux hélicoptères. */
+/* Les types que la suite gère, et les canaux par poste (sonde des .miz) : les postes que la mission pré-règle. Le poste HF des deux hélicoptères, que la mission ne pré-règle pas, est dans RADIO_FREE (radio_bands_block.py). */
 const IMP_TYPES = ['Mi-24P', 'Mi-8MT', 'F-4E-45MC', 'Mirage-F1EE'];
 const IMP_TYPE_LABEL = { 'Mi-24P': 'Mi-24P', 'Mi-8MT': 'Mi-8MT', 'F-4E-45MC': 'F-4E-45MC', 'Mirage-F1EE': 'Mirage F1EE' };
 const IMP_DEFAULT_TYPE = 'Mi-24P';
 const RADIO_CHANNELS = { 'Mi-24P': { 1: 20, 2: 10 }, 'Mi-8MT': { 1: 20, 2: 10 }, 'F-4E-45MC': { 1: 18, 2: 20 }, 'Mirage-F1EE': { 1: 20, 2: 20 } };
+/* Les postes d'un type, par numéro : ceux que la mission pré-règle (RADIO_CHANNELS, un canal par entrée) puis ceux qu'elle ne pré-règle pas (RADIO_FREE, une fréquence par entrée, sans numéro de canal).
+   radioSlotsOf donne le nombre d'entrées d'un poste (0 : le poste n'existe pas) ; radioPostsOf les numéros de poste du type, dans l'ordre. */
+function radioSlotsOf(type, r) {
+  if (Object.prototype.hasOwnProperty.call(RADIO_CHANNELS, type) && Object.prototype.hasOwnProperty.call(RADIO_CHANNELS[type], r)) return RADIO_CHANNELS[type][r];
+  return radioFreeCount(type, r);
+}
+function radioPostsOf(type) {
+  const seen = {};
+  [Object.prototype.hasOwnProperty.call(RADIO_CHANNELS, type) ? RADIO_CHANNELS[type] : {}, Object.prototype.hasOwnProperty.call(RADIO_FREE, type) ? RADIO_FREE[type] : {}].forEach(o => Object.keys(o).forEach(k => { seen[k] = true; }));
+  return Object.keys(seen).map(Number).sort((a, b) => a - b);
+}
 const IMP_MAX_UNITS = 4;
 const IMP_PARTS = ['route', 'radios', 'loadout', 'livery'];
 const IMP_KEY_HQ = 'mission_snapshot_v1', IMP_KEY_BRIEFING = 'khr26_briefing_state_v2', IMP_KEY_WING = 'wing_config_v1';
@@ -9529,7 +9569,7 @@ function csText(v) {
 }
 function impRadioCount(u) {
   let n = 0;
-  Object.keys(RADIO_CHANNELS[u.type] || {}).forEach(r => { for (let c = 1; c <= RADIO_CHANNELS[u.type][r]; c++) if (gsIsObj(u.radios) && gsIsObj(u.radios[r]) && impStr(String(u.radios[r][c] === undefined ? '' : u.radios[r][c])).trim() !== '') n++; });
+  radioPostsOf(u.type).forEach(r => { for (let c = 1; c <= radioSlotsOf(u.type, r); c++) if (gsIsObj(u.radios) && gsIsObj(u.radios[r]) && impStr(String(u.radios[r][c] === undefined ? '' : u.radios[r][c])).trim() !== '') n++; });
   return n;
 }
 function impGroupLabel(f, i) { return gsNameKey(f.name) !== '' ? f.name.trim() : impTf('imp.group', i + 1); }
@@ -9792,11 +9832,11 @@ function impRouteOff(src, g) {
 }
 function impMergeRadios(unit, type, radios) {
   radios.forEach(r => {
-    if (!gsIsObj(r) || !gsIsObj(r.channels) || !impHas(RADIO_CHANNELS[type] || {}, r.radioIndex)) return;
+    if (!gsIsObj(r) || !gsIsObj(r.channels) || !radioSlotsOf(type, r.radioIndex)) return;
     const post = {};
     Object.keys(r.channels).forEach(c => {
       const v = r.channels[c];
-      if (/^\d+$/.test(c) && c >= 1 && c <= RADIO_CHANNELS[type][r.radioIndex] && impNum(v)) post[c] = String(v);
+      if (/^\d+$/.test(c) && c >= 1 && c <= radioSlotsOf(type, r.radioIndex) && impNum(v)) post[c] = String(v);
     });
     if (Object.keys(post).length) unit.radios[r.radioIndex] = post;
   });

@@ -23,6 +23,7 @@ import sys
 from magvar_block import build_block as build_magvar_block
 from route_pack_block import build_block as build_route_pack_block
 from group_store_block import build_block as build_group_store_block
+from radio_bands_block import build_block as build_radio_bands_block
 from radio_block import build_block as build_radio_block
 from import_block import build_block as build_import_block, build_css as build_import_css, build_html as build_import_html
 
@@ -8198,6 +8199,8 @@ function openPackageModal(opener) {
 
 @@RADIO_BLOCK@@
 
+@@RADIO_BANDS_BLOCK@@
+
 @@IMPORT_BLOCK@@
 
 /* ============= GROUPES DE LA ROUTE (la fiche partagée flight_set_v1) =============
@@ -11021,7 +11024,7 @@ def build():
     airfields_js = json.dumps(AF['theatres'], ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
     towns_js = json.dumps(TW['theatres'], ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
     js = JS.replace('__EXAMPLE_ROUTE__', example_js).replace('__EXAMPLE_ROUTE_EN__', example_en_js).replace('__AIRFIELDS__', airfields_js).replace('__TOWNS__', towns_js)
-    js = js.replace('@@GEO_BLOCK@@\n', GEO_BLOCK).replace('@@READNUM_BLOCK@@\n', READNUM_BLOCK).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@ROUTE_PACK_BLOCK@@\n', build_route_pack_block()).replace('@@GROUP_STORE_BLOCK@@\n', build_group_store_block()).replace('@@RADIO_BLOCK@@\n', build_radio_block()).replace('@@IMPORT_BLOCK@@\n', build_import_block())
+    js = js.replace('@@GEO_BLOCK@@\n', GEO_BLOCK).replace('@@READNUM_BLOCK@@\n', READNUM_BLOCK).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@ROUTE_PACK_BLOCK@@\n', build_route_pack_block()).replace('@@GROUP_STORE_BLOCK@@\n', build_group_store_block()).replace('@@RADIO_BLOCK@@\n', build_radio_block()).replace('@@RADIO_BANDS_BLOCK@@\n', build_radio_bands_block()).replace('@@IMPORT_BLOCK@@\n', build_import_block())
     if '@@' in js:
         raise SystemExit("[ERREUR] Marqueur @@ non remplacé dans le script")
     lib = A['lib_leaflet']

@@ -17,6 +17,7 @@ import subprocess
 import sys
 
 from magvar_block import build_block as build_magvar_block
+from radio_bands_block import build_block as build_radio_bands_block
 from radio_block import build_block as build_radio_block
 from projection_block import build_block as build_projection_block
 from group_store_block import build_block as build_group_store_block
@@ -1075,6 +1076,7 @@ select[data-tbm-src] { display: none !important; }
 #grp-modal .export-png-back, #grp-modal .export-png-go { min-height: 44px; }
 .rc-msg { font-family: var(--f-ui); font-size: 11px; letter-spacing: .6px; color: #ff9d8a; margin-left: 56px; }
 .rc-freq input.bad { border-color: #ff9d8a; }
+.rc-row.nc .rc-msg { margin-left: 0; }
 .rc-row.frz .rc-top { gap: 4px 12px; }
 .frz-v { font-family: var(--f-typewriter); font-size: 13px; color: var(--paper); }
 .frz-on { font-family: var(--f-ui); font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--amber); overflow-wrap: anywhere; }
@@ -2296,6 +2298,8 @@ const I18N = {
     'sum.type.pick': 'type à choisir',
     'rad.err.nan': 'Canal {0} : « {1} » n’est pas une fréquence.',
     'rad.err.range': 'Canal {0} : {1} MHz hors de la bande du poste ({2}).',
+    'rad.err.nan.f': 'Fréquence {0} : « {1} » n’est pas une fréquence.',
+    'rad.err.range.f': 'Fréquence {0} : {1} MHz hors de la bande du poste ({2}).',
     'toast.briefFilled': 'Carte « {n} » remplie depuis le briefing (mission, date et heure, terrains, météo)',
     'confirm.example': 'Remplacer le document en cours par l\'exemple ?',
     'toast.example': 'Exemple chargé ✓',
@@ -2345,6 +2349,9 @@ const I18N = {
     'rt.mod': 'Modulation',
     'rt.free': 'Canaux libres ({n})',
     'rt.free.hide': 'Masquer les canaux libres',
+    'rt.free.f': 'Fréquences libres ({n})',
+    'rt.free.f.hide': 'Masquer les fréquences libres',
+    'rt.freq': 'Fréquence {n}',
     'rt.nofreq': 'Aucune fréquence dans la fiche pour ce poste.',
     'rt.align.confirm': 'Ce canal diffère selon l\'unité : {list}.\nÉcrire « {freq} » dans les {n} unités {type} ?',
     'rt.none': 'Ce groupe n\'a pas d\'unité : aucune radio à montrer.',
@@ -2681,6 +2688,8 @@ const I18N = {
     'sum.type.pick': 'type to pick',
     'rad.err.nan': 'Channel {0}: “{1}” is not a frequency.',
     'rad.err.range': 'Channel {0}: {1} MHz is outside the radio’s band ({2}).',
+    'rad.err.nan.f': 'Frequency {0}: “{1}” is not a frequency.',
+    'rad.err.range.f': 'Frequency {0}: {1} MHz is outside the radio’s band ({2}).',
     'toast.briefFilled': 'Card “{n}” filled from the briefing (mission, date and time, airfields, weather)',
     'confirm.example': 'Replace the current document with the example?',
     'toast.example': 'Example loaded ✓',
@@ -2730,6 +2739,9 @@ const I18N = {
     'rt.mod': 'Modulation',
     'rt.free': 'Empty channels ({n})',
     'rt.free.hide': 'Hide empty channels',
+    'rt.free.f': 'Empty frequencies ({n})',
+    'rt.free.f.hide': 'Hide empty frequencies',
+    'rt.freq': 'Frequency {n}',
     'rt.nofreq': 'No frequency in the group sheet for this radio.',
     'rt.align.confirm': 'This channel differs between units: {list}.\nWrite “{freq}” to all {n} {type} units?',
     'rt.none': 'This group has no unit: no radio to show.',
@@ -3350,6 +3362,7 @@ function readNum(s) {
 
 @@MAGVAR_BLOCK@@
 @@RADIO_BLOCK@@
+@@RADIO_BANDS_BLOCK@@
 @@PROJECTION_BLOCK@@
 /* La déclinaison des caps d'une datacard : null (cap vrai, ou saisie illisible) ; { decl } saisie ; { calc: true, y } calculée,
    y étant l'année décimale du champ Date (1985, le 1er juillet, s'il est vide ou illisible) */
@@ -3819,18 +3832,18 @@ function dgRemoveUnit(c, i) {
   if (!ok) c.crew.forEach((x, k) => { x.pilot = pilots[k] !== undefined ? pilots[k] : x.pilot; });
   renderEditor(); renderPack(); renderPreview();
 }
-/* La bande de chaque poste, en MHz, [bas, haut] bornes comprises, sans contrôle de pas : la table du Flight Configurator (build_flight_configurator.py, RADIO_BANDS), qui est la règle des fréquences du groupe.
-   Mi-24P, Mi-8MT : R-863 (100 à 149,975 et 220 à 399,975) et R-828 (20 à 59,975) · F-4E-45MC : COMM (225 à 399,95) et AUX (265 à 284,9) · Mirage-F1EE : TRAP 136 et TRAP 137B */
-const DG_HELI_BANDS = { 1: [[100, 149.975], [220, 399.975]], 2: [[20, 59.975]] };
-const DG_BANDS = {
-  'Mi-24P': DG_HELI_BANDS, 'Mi-8MT': DG_HELI_BANDS,
-  'F-4E-45MC': { 1: [[225, 399.95]], 2: [[265, 284.9]] },
-  'Mirage-F1EE': { 1: [[118, 143.975], [225, 399.975]], 2: [[225, 399.975]] }
-};
-function dgBand(ty, r) { return Object.prototype.hasOwnProperty.call(DG_BANDS, ty) && DG_BANDS[ty][r] ? DG_BANDS[ty][r] : []; }
-function dgInBand(band, v) { return band.some(b => v >= b[0] - 1e-9 && v <= b[1] + 1e-9); }
+/* La bande de chaque poste, en MHz, [bas, haut] bornes comprises, sans contrôle de pas : celle de radio_bands_block.py (RADIO_BANDS, radioBand, radioInBand), le bloc que le Flight Configurator
+   partage : c'est la règle des fréquences du groupe. Un poste que la mission ne pré-règle pas (RADIO_FREE : le poste HF des deux hélicoptères) n'a pas de numéro de canal. */
+function dgPostFree(ty, r) { return radioFreeCount(ty, Number(r)) > 0; }
 function dgFmtMHz(v) { return String(v).replace('.', CURRENT_LANG === 'fr' ? ',' : '.'); }
-function dgBandText(ty, r) { return dgBand(ty, r).map(b => dgFmtMHz(b[0]) + '–' + dgFmtMHz(b[1])).join(' · ') + ' MHz'; }
+function dgBandText(ty, r) { return radioBand(ty, Number(r)).map(b => dgFmtMHz(b[0]) + '–' + dgFmtMHz(b[1])).join(' · ') + ' MHz'; }
+/* Le message d'une fréquence déjà dans la fiche qui n'est pas dans la bande de son poste (ou n'est pas un nombre) ; '' si elle est bonne ou vide. Elle reste dans la fiche : le champ la signale seulement. */
+function dgFreqIssue(ty, r, c, raw) {
+  const p = dgParseFreq(raw), free = dgPostFree(ty, r), n = free ? c : radioCockpitChannel(ty, Number(r), c);
+  if (p.nan) return t(free ? 'rad.err.nan.f' : 'rad.err.nan', { 0: n, 1: String(raw).trim() });
+  if (p.v !== undefined && !radioInBand(radioBand(ty, Number(r)), p.v)) return t(free ? 'rad.err.range.f' : 'rad.err.range', { 0: n, 1: dgFmtMHz(p.v), 2: dgBandText(ty, r) });
+  return '';
+}
 /* parseFreq du Flight Configurator : la virgule devient un point ; vide, nombre, ou pas une fréquence */
 function dgParseFreq(s) {
   const x = String(s).trim().replace(',', '.');
@@ -3861,13 +3874,13 @@ function dgSetFreq(c, key, el) {
   const ty = parts[0], r = parts[1], ch = parts[2], us = dgUnits(f), idx = [];
   us.forEach((u, i) => { if (u.type === ty) idx.push(i); });
   if (!idx.length) return;
-  const olds = idx.map(i => dgFreq(us[i], r, ch)), cock = radioCockpitChannel(ty, Number(r), Number(ch));
+  const olds = idx.map(i => dgFreq(us[i], r, ch)), free = dgPostFree(ty, r), cock = free ? Number(ch) : radioCockpitChannel(ty, Number(r), Number(ch));
   /* la valeur est revenue à celle qu'avait le champ à l'entrée : rien ne s'écrit, aucune confirmation (que le canal diffère ou non) ; le champ montre ce que la fiche porte à cet instant (changée entre-temps ailleurs comprise) et sa base suit */
   if (el._dgBase !== undefined && dgSameFreq(el.value, el._dgBase)) { el.value = olds[0]; el._dgBase = olds[0]; dgFreqMsg(el, ''); return; }
   const p = dgParseFreq(el.value);
   let msg = '';
-  if (p.nan) msg = t('rad.err.nan', { 0: cock, 1: el.value.trim() });
-  else if (p.v !== undefined && !dgInBand(dgBand(ty, r), p.v)) msg = t('rad.err.range', { 0: cock, 1: dgFmtMHz(p.v), 2: dgBandText(ty, r) });
+  if (p.nan) msg = t(free ? 'rad.err.nan.f' : 'rad.err.nan', { 0: cock, 1: el.value.trim() });
+  else if (p.v !== undefined && !radioInBand(radioBand(ty, Number(r)), p.v)) msg = t(free ? 'rad.err.range.f' : 'rad.err.range', { 0: cock, 1: dgFmtMHz(p.v), 2: dgBandText(ty, r) });
   if (msg) { el.value = olds[0]; el._dgBase = olds[0]; dgFreqMsg(el, msg); return; }       /* refusée : rien n'est écrit, le champ revient à la fiche */
   const val = p.empty ? '' : (/\.\d{4,}$/.test(p.x) ? p.x : p.v.toFixed(3));
   dgFreqMsg(el, '');
@@ -3886,19 +3899,19 @@ function dgSetFreq(c, key, el) {
 
 /* ----- Radios : un encadré par type d'appareil du groupe ----- */
 function dgFreq(u, r, c) { return gsIsObj(u.radios) && gsIsObj(u.radios[r]) && u.radios[r][c] !== undefined ? dgStr(u.radios[r][c]).trim() : ''; }
-/* [{ type, units: [rang], posts: [{ r, name, rows: [{ c, cock, freq, varies, vals }] }] }] ; la fréquence d'un canal est celle de la première unité du type */
+/* [{ type, units: [rang], posts: [{ r, name, rows: [{ c, cock, freq, varies, vals }] }] }] ; la fréquence d'un canal est celle de la première unité du type ; un poste non pré-réglé (le poste HF des
+   hélicoptères) a des fréquences, sans numéro de canal : cock vaut '' */
 function dgRadioModel(f) {
   const us = dgUnits(f), types = [];
   us.forEach(u => { const ty = dgStr(u.type); if (ty && types.indexOf(ty) < 0) types.push(ty); });
   return types.map(ty => {
     const idx = [];
     us.forEach((u, i) => { if (u.type === ty) idx.push(i); });
-    const chans = Object.prototype.hasOwnProperty.call(RADIO_CHANNELS, ty) ? RADIO_CHANNELS[ty] : {};
-    const posts = Object.keys(chans).map(Number).map(r => {
-      const rows = [];
-      for (let c = 1; c <= chans[r]; c++) {
+    const posts = radioPostsOf(ty).map(r => {
+      const rows = [], free = dgPostFree(ty, r);
+      for (let c = 1; c <= radioSlotsOf(ty, r); c++) {
         const vals = idx.map(i => dgFreq(us[i], r, c)), first = vals[0] || '';
-        rows.push({ c: c, cock: radioCockpitChannel(ty, r, c), freq: first, varies: vals.some(v => v !== first), vals: vals });
+        rows.push({ c: c, cock: free ? '' : radioCockpitChannel(ty, r, c), freq: first, varies: vals.some(v => v !== first), vals: vals });
       }
       return { r: r, name: radioPosteName(ty, r) || 'R' + r, rows: rows };
     });
@@ -3921,7 +3934,7 @@ function dgBoxesOf(c, model) {
       const ch = [];
       p.rows.forEach(row => {
         const s = dgRs(c, dgRsKey(m.type, p.r, row.c));
-        if (s.on) ch.push({ channel: row.cock, label: s.label, frequency: row.freq, modulation: s.mod });
+        if (s.on) ch.push(dgPostFree(m.type, p.r) ? { channel: '', nochan: true, label: s.label, frequency: row.freq, modulation: s.mod } : { channel: row.cock, label: s.label, frequency: row.freq, modulation: s.mod });
       });
       if (ch.length) posts.push({ name: p.name, ch: ch });
     });
@@ -4077,15 +4090,17 @@ function radioLinkedHtml(c) {
       const rows = p.rows.filter(r => all || dgRowShown(r)).map(row => {
         const key = dgRsKey(m.type, p.r, row.c), s = dgRs(c, key);
         const tip = row.varies ? row.vals.map((v, k) => dgUnitLabel(f, fi, m.units[k]) + ' : ' + (v || '—')).join(' · ') : '';
-        return '<div class="rc-row' + (s.on ? ' on' : '') + '" data-rc="' + esc(key) + '"><div class="rc-top"><span class="rc-ch">' + esc(t('rt.ch', { n: row.cock })) + '</span>' +
-          '<div class="ed-field rc-freq"><input type="text" inputmode="decimal" data-gs="f.' + esc(key) + '" value="' + esc(row.freq) + '" placeholder="—" autocomplete="off" spellcheck="false" aria-label="' + esc(t('f.radio.frequency') + ' — ' + t('rt.ch', { n: row.cock })) + '"></div>' +
+        const nc = dgPostFree(m.type, p.r), bad = dgFreqIssue(m.type, p.r, row.c, row.freq);       /* une fréquence hors bande déjà dans la fiche est gardée et signalée */
+        return '<div class="rc-row' + (nc ? ' nc' : '') + (s.on ? ' on' : '') + '" data-rc="' + esc(key) + '"><div class="rc-top">' + (nc ? '' : '<span class="rc-ch">' + esc(t('rt.ch', { n: row.cock })) + '</span>') +
+          '<div class="ed-field rc-freq"><input type="text" inputmode="decimal" data-gs="f.' + esc(key) + '" value="' + esc(row.freq) + '"' + (bad ? ' class="bad"' : '') + ' placeholder="—" autocomplete="off" spellcheck="false" aria-label="' + esc(t('f.radio.frequency') + ' — ' + (nc ? t('rt.freq', { n: row.c }) : t('rt.ch', { n: row.cock }))) + '"></div>' +
           '<label class="rc-on"><input type="checkbox" data-rs="' + esc(key) + '" data-rk="on"' + (s.on ? ' checked' : '') + '><span>' + esc(t('rt.on')) + '</span></label></div>' +
+          (bad ? '<div class="rc-msg" role="alert">' + esc(bad) + '</div>' : '') +
           (row.varies ? '<div class="rc-var" title="' + esc(tip) + '">' + esc(t('rt.varies')) + '</div>' : '') +
           '<div class="rc-extra">' +
           '<div class="ed-field"><label>' + esc(t('rt.name')) + '</label><input type="text" data-rs="' + esc(key) + '" data-rk="label" value="' + esc(s.label) + '" placeholder="' + esc(t('ph.radios.*.channels.*.label')) + '" autocomplete="off"></div>' +
           '<div class="ed-field"><label>' + esc(t('rt.mod')) + '</label><input type="text" data-rs="' + esc(key) + '" data-rk="mod" value="' + esc(s.mod) + '" placeholder="' + esc(t('ph.radios.*.channels.*.modulation')) + '" autocomplete="off"></div></div></div>';
       }).join('');
-      const more = nFree ? '<button type="button" class="ed-btn-add sm" data-rsfree="' + esc(fk) + '">' + esc(all ? t('rt.free.hide') : t('rt.free', { n: nFree })) + '</button>' : '';
+      const fr = dgPostFree(m.type, p.r), more = nFree ? '<button type="button" class="ed-btn-add sm" data-rsfree="' + esc(fk) + '">' + esc(all ? t(fr ? 'rt.free.f.hide' : 'rt.free.hide') : t(fr ? 'rt.free.f' : 'rt.free', { n: nFree })) + '</button>' : '';
       return '<div class="rt-post"><div class="rt-ph">' + esc(p.name) + '</div>' + (rows || '<div class="ed-help">' + esc(t('rt.nofreq')) + '</div>') + more + '</div>';
     }).join('');
     return '<section class="rt-box" data-rtype="' + esc(m.type) + '"><h4 class="rt-h"><span class="rt-t">' + esc(t('rt.title', { type: dgTypeLabel(m.type).toUpperCase() })) + '</span>' +
@@ -4591,7 +4606,7 @@ function radioTable(radios) {
     if (hasText(r.name)) s += '<tr class="rsep' + (ri ? ' rsep-n' : '') + '"><td class="dc-rname" colspan="4">' + esc(r.name) + '</td></tr>';
     s += r.ch.map((x, k) => {
       const cl = [k % 2 === 0 ? 'z' : '', (k === 0 && ri && !hasText(r.name)) ? 'pn' : ''].filter(Boolean).join(' ');
-      return '<tr' + (cl ? ' class="' + cl + '"' : '') + '><td>' + dash(x.channel) + '</td><td class="us">' + esc(x.label) + '</td>' +
+      return '<tr' + (cl ? ' class="' + cl + '"' : '') + '><td>' + (x.nochan ? '' : dash(x.channel)) + '</td><td class="us">' + esc(x.label) + '</td>' +
         '<td class="fq">' + dash(x.frequency) + '</td><td class="md">' + esc(x.modulation) + '</td></tr>';
     }).join('');
     return s;
@@ -4630,7 +4645,7 @@ function blkRadioPage(c) {
       const part = r.ch.slice(k * per, (k + 1) * per);
       if (!part.length) { cols += '<div></div>'; continue; }
       cols += '<table class="dc-tab dc-radio dc-radio3">' + colg + '<tbody>' + part.map((x, j) =>
-        '<tr' + (j % 2 === 0 ? ' class="z"' : '') + '><td>' + dash(x.channel) + '</td><td class="us">' + esc(x.label) + '</td>' +
+        '<tr' + (j % 2 === 0 ? ' class="z"' : '') + '><td>' + (x.nochan ? '' : dash(x.channel)) + '</td><td class="us">' + esc(x.label) + '</td>' +
         '<td class="fq">' + dash(x.frequency) + '</td><td class="md">' + esc(x.modulation) + '</td></tr>').join('') + '</tbody></table>';
     }
     return '<div class="dc-rposte' + (ri ? ' dc-rposte-n' : '') + '">' + (hasText(r.name) ? '<div class="dc-rname">' + esc(r.name) + '</div>' : '') +
@@ -5108,7 +5123,7 @@ function dgFrozenRadioHtml(c) {
       if (!rows.length) return '';
       return '<div class="rt-post"><div class="rt-ph">' + esc(p.name) + '</div>' + rows.map(r => {
         const s = dgRs(c, dgRsKey(m.type, p.r, r.c)), extra = [s.label, s.mod].filter(hasText).join(' · ');
-        return '<div class="rc-row frz' + (s.on ? ' on' : '') + '"><div class="rc-top"><span class="rc-ch">' + esc(t('rt.ch', { n: r.cock })) + '</span><span class="frz-v">' + esc(r.freq || '—') + '</span>' +
+        return '<div class="rc-row frz' + (s.on ? ' on' : '') + '"><div class="rc-top">' + (dgPostFree(m.type, p.r) ? '' : '<span class="rc-ch">' + esc(t('rt.ch', { n: r.cock })) + '</span>') + '<span class="frz-v">' + esc(r.freq || '—') + '</span>' +
           (s.on ? '<span class="frz-on">' + esc(t('rt.on') + (extra ? ' · ' + extra : '')) + '</span>' : '') + '</div></div>';
       }).join('') + '</div>';
     }).join('');
@@ -6638,7 +6653,7 @@ def build():
     js = JS.replace('@@WEAPON_NAMES@@', _wn).replace('@@AIRCRAFT_PYLONS@@', _pyl).replace('@@AIRCRAFT_LIMITS@@', _lim)
     js = js.replace('@@PAYLOAD_BLOCK@@\n', build_payload_block()).replace('@@IMPORT_BLOCK@@\n', build_import_block())
     js = js.replace('@@ROUTE_PACK_BLOCK@@\n', build_route_pack_block()).replace('@@GROUP_STORE_BLOCK@@\n', build_group_store_block())
-    js = js.replace('__EXAMPLE_DOC__', example_js).replace('__EXAMPLE_DOC_EN__', example_en_js).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@RADIO_BLOCK@@\n', build_radio_block()).replace('@@PROJECTION_BLOCK@@\n', build_projection_block())
+    js = js.replace('__EXAMPLE_DOC__', example_js).replace('__EXAMPLE_DOC_EN__', example_en_js).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@RADIO_BLOCK@@\n', build_radio_block()).replace('@@RADIO_BANDS_BLOCK@@\n', build_radio_bands_block()).replace('@@PROJECTION_BLOCK@@\n', build_projection_block())
     html = HTML
     html = html.replace('__CSS__', CSS + build_import_css())
     html = html.replace('@@IMPORT_HTML@@\n', build_import_html())

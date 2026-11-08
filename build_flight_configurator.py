@@ -6,6 +6,7 @@ Usage : python3 -B build_flight_configurator.py
 
 Blocs partagés insérés tels quels (identiques à l'octet dans les modules qui les utilisent) :
   radio_block.py    — noms des postes radio et numéros de canal du cockpit
+  radio_bands_block.py — la bande de chaque poste (règle de Mission Tools) et les postes que la mission ne pré-règle pas (le poste HF des deux hélicoptères) ; le Datacard Generator, HQ et le Route Planner l'emploient aussi
   payload_block.py  — lecture d'un .lua de presets, pylônes et armes permis, `payload` d'un .miz ; il lit les constantes WEAPON_NAMES,
                       AIRCRAFT_PYLONS et AIRCRAFT_LIMITS, qui sont celles du Loadout Editor de Mission Tools
   group_store_block.py — la fiche des groupes partagée avec le Route Planner (flight_set_v1) : lecture, écriture groupe par groupe, migration
@@ -30,6 +31,7 @@ from import_block import build_block as build_import_block, build_css as build_i
 from magvar_block import build_block as build_magvar_block
 from payload_block import build_block as build_payload_block
 from projection_block import build_block as build_projection_block
+from radio_bands_block import build_block as build_radio_bands_block
 from radio_block import build_block as build_radio_block
 from route_pack_block import build_block as build_route_pack_block
 
@@ -472,6 +474,9 @@ I18N_FR = {
     'rad.hint': 'Fréquences en MHz, dans la bande de chaque poste (virgule ou point). Les modulations ne sont pas écrites. Un canal vide n’est pas écrit.',
     'rad.err.nan': 'Canal {0} : « {1} » n’est pas une fréquence.',
     'rad.err.range': 'Canal {0} : {1} MHz hors de la bande du poste ({2}).',
+    'rad.freq': 'Fréquence {0}',
+    'rad.err.nan.f': 'Fréquence {0} : « {1} » n’est pas une fréquence.',
+    'rad.err.range.f': 'Fréquence {0} : {1} MHz hors de la bande du poste ({2}).',
     'rad.bad.n': '{0} hors bande',
     'rad.err.more': ' (+ {0} autre(s))',
     'rad.copy': 'Recopier sur les autres unités du groupe',
@@ -706,6 +711,9 @@ I18N_EN = {
     'rad.hint': 'Frequencies in MHz, within each radio’s band (comma or dot). Modulations are not written. An empty channel is not written.',
     'rad.err.nan': 'Channel {0}: “{1}” is not a frequency.',
     'rad.err.range': 'Channel {0}: {1} MHz is outside the radio’s band ({2}).',
+    'rad.freq': 'Frequency {0}',
+    'rad.err.nan.f': 'Frequency {0}: “{1}” is not a frequency.',
+    'rad.err.range.f': 'Frequency {0}: {1} MHz is outside the radio’s band ({2}).',
     'rad.bad.n': '{0} out of band',
     'rad.err.more': ' (+ {0} more)',
     'rad.copy': 'Copy to the other units of the group',
@@ -1948,18 +1956,9 @@ const clone = o => JSON.parse(JSON.stringify(o));
 const has = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
 
 const TYPE_LABEL = { 'Mi-24P': 'Mi-24P', 'Mi-8MT': 'Mi-8MT', 'F-4E-45MC': 'F-4E-45MC', 'Mirage-F1EE': 'Mirage F1EE' };
-// Canaux par poste (sonde des .miz). Postes offerts : ceux de la table de radio_block.py, sauf le poste HF des deux hélicoptères (seuls R-863 et R-828 servent en com).
-// RADIO_CHANNELS (les canaux par poste) est défini par le bloc d'import commun.
-// Fréquences : les bandes de chaque poste, en MHz, [bas, haut] bornes comprises, sans contrôle de pas. Table du module : radio_block.py, que BG et DG partagent, ne les porte pas.
-//   Mi-24P, Mi-8MT : R-863 (100 à 149,975 et 220 à 399,975) et R-828 (20 à 59,975) · guide du Mi-24P, partie 15, p. 423.
-//   F-4E-45MC : poste 1 COMM (225 à 399,95) et poste 2 AUX, réception seule (265 à 284,9) · manuel du F-4E, chapitre « UHF Radio ».
-//   Mirage-F1EE : TRAP 136 (118 à 143,975 et 225 à 399,975) et TRAP 137B (225 à 399,975) · manuel du Mirage F1 (3.13).
-const HELI_BANDS = { 1: [[100, 149.975], [220, 399.975]], 2: [[20, 59.975]] };
-const RADIO_BANDS = {
-  'Mi-24P': HELI_BANDS, 'Mi-8MT': HELI_BANDS,
-  'F-4E-45MC': { 1: [[225, 399.95]], 2: [[265, 284.9]] },
-  'Mirage-F1EE': { 1: [[118, 143.975], [225, 399.975]], 2: [[225, 399.975]] }
-};
+// Canaux par poste (sonde des .miz) : RADIO_CHANNELS est défini par le bloc d'import commun, qui donne aussi radioPostsOf et radioSlotsOf (les postes pré-réglés, puis le poste HF des deux hélicoptères,
+// que la mission ne pré-règle pas : cinq fréquences, sans numéro de canal). Les bandes de chaque poste (RADIO_BANDS) et ces postes non pré-réglés (RADIO_FREE) sont ceux de radio_bands_block.py,
+// que le Datacard Generator partage ; les noms des postes sont ceux de radio_block.py.
 const THEATRES = ['Caucasus', 'Falklands', 'GermanyCW', 'Kola', 'MarianaIslands', 'Nevada', 'Normandy', 'PersianGulf', 'SinaiMap', 'Syria', 'TheChannel'];
 const PARTS = ['route', 'radios', 'loadout', 'livery'];
 const LO_FIELDS = ['fuel', 'flare', 'chaff', 'gun'];
@@ -2268,7 +2267,13 @@ function csValue(u) {
 }
 
 // ----- Radios -----
-function radioPosts(type) { return Object.keys(RADIO_CHANNELS[type] || {}).map(Number); }
+function radioPosts(type) { return radioPostsOf(type); }
+// Un poste que la mission ne pré-règle pas : ses entrées sont des fréquences, sans numéro de canal.
+function radioIsFree(type, r) { return radioFreeCount(type, r) > 0; }
+// Les fréquences hors bande saisies à la main dans cette session : fcId|rang de l'unité|poste|canal → texte saisi. Une fréquence hors bande qui n'y est pas (importée, ou saisie avant un changement de bande)
+// est gardée et signalée, sans bloquer l'export ; celle qu'on vient de saisir reste refusée tant qu'elle n'est pas corrigée.
+const TYPED = {};
+function typedKey(f, ui, r, c) { return f.fcId + '|' + ui + '|' + r + '|' + c; }
 function chanValue(u, r, c) { return (u.radios[r] && u.radios[r][c] !== undefined) ? String(u.radios[r][c]) : ''; }
 function parseFreq(s) {
   const x = String(s).trim().replace(',', '.');
@@ -2276,9 +2281,8 @@ function parseFreq(s) {
   return /^\d+(\.\d+)?$/.test(x) ? { v: Number(x) } : { nan: true };
 }
 function fmtMHz(v) { return String(v).replace('.', CURRENT_LANG === 'fr' ? ',' : '.'); }
-// La bande d'un poste : [[bas, haut], …] ; dans la bande = dans l'un de ses intervalles (bornes comprises).
-function radioBand(type, r) { return has(RADIO_BANDS, type) && has(RADIO_BANDS[type], r) ? RADIO_BANDS[type][r] : []; }
-function inBand(band, v) { return band.some(b => v >= b[0] - 1e-9 && v <= b[1] + 1e-9); }
+// La bande d'un poste : radioBand (radio_bands_block.py), [[bas, haut], …] ; dans la bande = dans l'un de ses intervalles (bornes comprises).
+function inBand(band, v) { return radioInBand(band, v); }
 // La bande en clair, comme sous le titre du poste : « 100–149,975 · 220–399,975 MHz ».
 function bandText(type, r) { return radioBand(type, r).map(b => fmtMHz(b[0]) + '–' + fmtMHz(b[1])).join(' · ') + ' MHz'; }
 // Les attributs min et max d'un champ : la bande la plus large du poste.
@@ -2286,23 +2290,27 @@ function bandHull(type, r) {
   const b = radioBand(type, r);
   return [Math.min.apply(null, b.map(x => x[0])), Math.max.apply(null, b.map(x => x[1]))];
 }
-// Défauts d'un poste : { first (le premier message), bad (les canaux fautifs) }. Une fréquence hors de la bande du poste ou non numérique est refusée.
+// Défauts d'un poste : { first (le premier message), bad (les canaux fautifs), block (ceux qui bloquent l'export : saisis à la main dans cette session) }. Une fréquence hors de la bande du poste ou non numérique est signalée.
+// Un poste non pré-réglé nomme ses entrées « Fréquence n », jamais « Canal n ».
 function radioIssues(f, u, r) {
-  const ty = u.type;
-  const bad = [];
+  const ty = u.type, free = radioIsFree(ty, r), ui = f.units.indexOf(u);
+  const bad = [], block = [];
   let first = '';
-  for (let c = 1; c <= RADIO_CHANNELS[ty][r]; c++) {
-    const raw = chanValue(u, r, c), p = parseFreq(raw), ch = radioCockpitChannel(ty, r, c);
+  for (let c = 1; c <= radioSlotsOf(ty, r); c++) {
+    const raw = chanValue(u, r, c), p = parseFreq(raw), ch = free ? c : radioCockpitChannel(ty, r, c);
     let msg = '';
-    if (p.nan) msg = tf('rad.err.nan', ch, raw);
-    else if (p.v !== undefined && !inBand(radioBand(ty, r), p.v)) msg = tf('rad.err.range', ch, fmtMHz(p.v), bandText(ty, r));
-    if (msg) { bad.push(c); first = first || msg; }
+    if (p.nan) msg = tf(free ? 'rad.err.nan.f' : 'rad.err.nan', ch, raw);
+    else if (p.v !== undefined && !inBand(radioBand(ty, r), p.v)) msg = tf(free ? 'rad.err.range.f' : 'rad.err.range', ch, fmtMHz(p.v), bandText(ty, r));
+    if (msg) {
+      bad.push(c); first = first || msg;
+      if (has(TYPED, typedKey(f, ui, r, c)) && TYPED[typedKey(f, ui, r, c)] === raw) block.push(c);
+    }
   }
-  return { first: first, bad: bad };
+  return { first: first, bad: bad, block: block };
 }
 function radioCount(f, u) {
   let n = 0;
-  radioPosts(u.type).forEach(r => { for (let c = 1; c <= RADIO_CHANNELS[u.type][r]; c++) if (chanValue(u, r, c).trim() !== '') n++; });
+  radioPosts(u.type).forEach(r => { for (let c = 1; c <= radioSlotsOf(u.type, r); c++) if (chanValue(u, r, c).trim() !== '') n++; });
   return n;
 }
 
@@ -2966,7 +2974,7 @@ function duplicateNames() {
   });
   return out;
 }
-// Ce qui empêche l'export : [{ key, args }] ; la liste vide = prêt. Une fréquence refusée bloque ; un réglage d'emport hors limites est ramené, il ne bloque rien.
+// Ce qui empêche l'export : [{ key, args }] ; la liste vide = prêt. Une fréquence qu'on vient de saisir hors bande bloque ; celle qui était déjà dans la fiche (importée, ou saisie avant un changement de bande) est signalée sans bloquer ; un réglage d'emport hors limites est ramené, il ne bloque rien.
 function exportIssues() {
   const out = [];
   if (!S.theatre) out.push({ key: 'bar.no.theatre', args: [] });
@@ -2974,7 +2982,7 @@ function exportIssues() {
   let badFreq = 0, noType = null;
   S.flights.forEach((f, fi) => {
     if (!f.name.trim()) out.push({ key: 'bar.no.name', args: [fi + 1] });
-    f.units.forEach(u => radioPosts(u.type).forEach(r => { badFreq += radioIssues(f, u, r).bad.length; }));
+    f.units.forEach(u => radioPosts(u.type).forEach(r => { badFreq += radioIssues(f, u, r).block.length; }));
     if (!noType) { const k = f.units.findIndex(u => u.type === ''); if (k >= 0) noType = { key: 'bar.no.type', args: [flightLabel(f, fi), k + 1] }; }       // une unité sans type : le paquet ne s'exporte pas
   });
   if (noType) out.push(noType);
@@ -2987,7 +2995,7 @@ function unitRadiosOut(f, u) {
   const out = [];
   radioPosts(u.type).forEach(r => {
     const channels = {};
-    for (let c = 1; c <= RADIO_CHANNELS[u.type][r]; c++) {
+    for (let c = 1; c <= radioSlotsOf(u.type, r); c++) {
       const p = parseFreq(chanValue(u, r, c));
       if (p.v !== undefined) channels[String(c)] = p.v;
     }
@@ -3137,13 +3145,13 @@ function radiosSummary(f, u) {
 function radiosHtml(f, fi, u, ui) {
   const ty = u.type;
   const posts = radioPosts(ty).map(r => {
-    const pk = `f${fi}u${ui}p${r}`, n = RADIO_CHANNELS[ty][r], hull = bandHull(ty, r);
+    const pk = `f${fi}u${ui}p${r}`, n = radioSlotsOf(ty, r), hull = bandHull(ty, r), free = radioIsFree(ty, r);
     let chans = '';
     for (let c = 1; c <= n; c++) {
-      chans += `<div class="fc-ch"><label>${esc(tf('rad.ch', radioCockpitChannel(ty, r, c)))}</label>`
+      chans += `<div class="fc-ch"><label>${esc(free ? tf('rad.freq', c) : tf('rad.ch', radioCockpitChannel(ty, r, c)))}</label>`
         + numberInputHtml(`data-u="${ui}" data-r="${r}" data-c="${c}" data-k="chan" placeholder="—"`, chanValue(u, r, c), hull[0], hull[1], '0.001') + '</div>';
     }
-    return `<details class="fc-post" data-key="${pk}"${openAttr(pk)}><summary><span class="fc-ptop">${esc(radioPosteName(ty, r) || 'R' + r)} <span class="fc-sum">${esc(tf('rad.chans', n))}</span><span class="fc-sum fc-flag" data-flag="${r}"></span></span><span class="fc-band" data-band="${r}">${esc(bandText(ty, r))}</span></summary>
+    return `<details class="fc-post" data-key="${pk}"${openAttr(pk)}><summary><span class="fc-ptop">${esc(radioPosteName(ty, r) || 'R' + r)} ${free ? '' : `<span class="fc-sum">${esc(tf('rad.chans', n))}</span>`}<span class="fc-sum fc-flag" data-flag="${r}"></span></span><span class="fc-band" data-band="${r}">${esc(bandText(ty, r))}</span></summary>
       <div class="fc-postc"><div class="fc-chans">${chans}</div><div class="fc-msg" id="rm-${fi}-${ui}-${r}"></div></div></details>`;
   }).join('');
   const sameType = f.units.some((x, k) => k !== ui && x.type === ty);       // « Recopier » ne va qu'aux unités du même type : sans elles, le bouton est inactif
@@ -3852,7 +3860,15 @@ const ACTIONS = {
     const b = document.getElementById('blk-route');
     if (b) b.scrollIntoView({ block: 'start', behavior: 'smooth' });
   },
-  'copy-radios': c => { const f = S.flights[c.fi], src = f.units[c.ui]; f.units.forEach((u, k) => { if (k !== c.ui && u.type === src.type) u.radios = clone(src.radios); }); renderLeft(); refreshAll(); },
+  'copy-radios': c => {
+    const f = S.flights[c.fi], src = f.units[c.ui];
+    f.units.forEach((u, k) => {
+      if (k === c.ui || u.type !== src.type) return;
+      u.radios = clone(src.radios);
+      radioPosts(src.type).forEach(r => { for (let n = 1; n <= radioSlotsOf(src.type, r); n++) { const sk = typedKey(f, c.ui, r, n), dk = typedKey(f, k, r, n); if (has(TYPED, sk)) TYPED[dk] = TYPED[sk]; else delete TYPED[dk]; } });       // une saisie hors bande recopiée reste une saisie
+    });
+    renderLeft(); refreshAll();
+  },
   'see-cmp': c => { selectUnit(c.fi, c.ui); const b = document.getElementById('blk-cmp'); if (b && window.innerWidth < 1100) b.scrollIntoView({ block: 'start', behavior: 'smooth' }); },
   'back-unit': () => backToUnit(),
   'cmp-save': () => startSavePreset(),
@@ -3892,6 +3908,7 @@ function onInput(e) {
   else if (k === 'chan') {
     const r = Number(el.getAttribute('data-r'));
     (u.radios[r] = u.radios[r] || {})[Number(el.getAttribute('data-c'))] = el.value;
+    TYPED[typedKey(f, Number(el.getAttribute('data-u')), r, Number(el.getAttribute('data-c')))] = el.value;       // saisi à la main : s'il est hors bande, il bloque l'export
     paintRadioMsg(fi, Number(el.getAttribute('data-u')), r);
   } else if (LO_FIELDS.indexOf(k) >= 0) {
     const su = selUnit();
@@ -4126,7 +4143,7 @@ def build_html():
                   .replace('@@STARDOS_400@@', A['STARDOS_400'])
                   .replace('@@STARDOS_700@@', A['STARDOS_700'])
                   .replace('@@OSWALD_500@@', A['OSWALD_500']))
-    js = (build_radio_block() + '\n' + tables_js() + '\n' + build_payload_block() + '\n' + PAD2_JS + '\n' + COORD_BLOCK + READNUM_BLOCK + build_magvar_block() + '\n' + build_projection_block() + '\n'
+    js = (build_radio_block() + '\n' + build_radio_bands_block() + '\n' + tables_js() + '\n' + build_payload_block() + '\n' + PAD2_JS + '\n' + COORD_BLOCK + READNUM_BLOCK + build_magvar_block() + '\n' + build_projection_block() + '\n'
           + build_route_pack_block() + '\n' + build_group_store_block() + '\n' + build_import_block() + '\n' + JS_TBM + '\n' + app_js())
     return ('<!DOCTYPE html>\n<html lang="fr">\n<head>\n<meta charset="UTF-8">\n'
             '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">\n'
@@ -4187,7 +4204,7 @@ def check(html):
     ok(not re.search(r'fetch\(|XMLHttpRequest|WebSocket|sendBeacon|<script[^>]*\bsrc=|<link[^>]*href=["\']http', own), 'aucune requête réseau (hors JSZip, qui n\'en fait pas)')
     ok(not re.search(r'font-weight:\s*(600|800|900|bold)|font:\s*(600|800|900|bold)\b', own), 'aucune graisse sans sa face (R295)')
     ok('/* ===== POSTES RADIO (COMME AU COCKPIT) ===== */' in html and '/* ===== EMPORT (PRESETS ET PAYLOAD) ===== */' in html, 'blocs partagés présents')
-    for label, blk in (('déclinaison', build_magvar_block()), ('projections', build_projection_block()), ('points de paquet', build_route_pack_block()), ('groupes partagés', build_group_store_block()),
+    for label, blk in (('bandes et postes non pré-réglés', build_radio_bands_block()), ('déclinaison', build_magvar_block()), ('projections', build_projection_block()), ('points de paquet', build_route_pack_block()), ('groupes partagés', build_group_store_block()),
                        ('import commun (script)', build_import_block()), ('import commun (feuille)', build_import_css()), ('import commun (fenêtre)', build_import_html())):
         ok(blk in html, 'bloc %s inséré tel quel' % label)
     pt, it = re.search(r"const PAYLOAD_TYPES = \[(.*?)\];", build_payload_block()), re.search(r"const IMP_TYPES = \[(.*?)\];", build_import_block())

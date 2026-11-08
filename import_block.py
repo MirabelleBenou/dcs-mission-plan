@@ -8,7 +8,7 @@ Trois textes, identiques à l'octet dans les deux dist/ :
 
 Le bloc écrit dans la fiche (group_store_block.py : relire, changer le seul groupe touché, gsPutFlight), jamais dans l'état d'un module. L'emport importé s'écrit en une fois : si le module donne un rappel loadoutFrom(type, payload) (le Flight Configurator), l'emport est écrit déjà converti ;
 sinon (le Route Planner) il est écrit brut, unité.payloadIn, avec loadout: null, et le Flight Configurator le convertit à la lecture de la fiche en ne changeant que ces champs.
-Il lit group_store_block.py (gsRead, gsPutFlight, gsNewId, gsNameKey, gsSide, gsEnsure, gsSetTheatre, gsJson, gsIsObj) et radio_block.py (RADIO_POSTES, RADIO_FIRST_CHANNEL).
+Il lit group_store_block.py (gsRead, gsPutFlight, gsNewId, gsNameKey, gsSide, gsEnsure, gsSetTheatre, gsJson, gsIsObj) radio_block.py (RADIO_POSTES, RADIO_FIRST_CHANNEL) et radio_bands_block.py (RADIO_FREE, radioFreeCount : les postes que la mission ne pré-règle pas).
 Le module lui donne sa langue et ses rappels par impSetup({ lang, before, onImported, toast, noteLiveries, loadoutFrom }) ; il ouvre la fenêtre par impOpen().
 
 Usage (par les builds) : from import_block import build_block, build_css, build_html
@@ -130,11 +130,22 @@ _HTML = r"""
 """
 
 _JS = r"""
-/* Les types que la suite gère, et les canaux par poste (sonde des .miz) : postes offerts = ceux de radio_block.py, sauf le poste HF des deux hélicoptères. */
+/* Les types que la suite gère, et les canaux par poste (sonde des .miz) : les postes que la mission pré-règle. Le poste HF des deux hélicoptères, que la mission ne pré-règle pas, est dans RADIO_FREE (radio_bands_block.py). */
 const IMP_TYPES = ['Mi-24P', 'Mi-8MT', 'F-4E-45MC', 'Mirage-F1EE'];
 const IMP_TYPE_LABEL = { 'Mi-24P': 'Mi-24P', 'Mi-8MT': 'Mi-8MT', 'F-4E-45MC': 'F-4E-45MC', 'Mirage-F1EE': 'Mirage F1EE' };
 const IMP_DEFAULT_TYPE = 'Mi-24P';
 const RADIO_CHANNELS = { 'Mi-24P': { 1: 20, 2: 10 }, 'Mi-8MT': { 1: 20, 2: 10 }, 'F-4E-45MC': { 1: 18, 2: 20 }, 'Mirage-F1EE': { 1: 20, 2: 20 } };
+/* Les postes d'un type, par numéro : ceux que la mission pré-règle (RADIO_CHANNELS, un canal par entrée) puis ceux qu'elle ne pré-règle pas (RADIO_FREE, une fréquence par entrée, sans numéro de canal).
+   radioSlotsOf donne le nombre d'entrées d'un poste (0 : le poste n'existe pas) ; radioPostsOf les numéros de poste du type, dans l'ordre. */
+function radioSlotsOf(type, r) {
+  if (Object.prototype.hasOwnProperty.call(RADIO_CHANNELS, type) && Object.prototype.hasOwnProperty.call(RADIO_CHANNELS[type], r)) return RADIO_CHANNELS[type][r];
+  return radioFreeCount(type, r);
+}
+function radioPostsOf(type) {
+  const seen = {};
+  [Object.prototype.hasOwnProperty.call(RADIO_CHANNELS, type) ? RADIO_CHANNELS[type] : {}, Object.prototype.hasOwnProperty.call(RADIO_FREE, type) ? RADIO_FREE[type] : {}].forEach(o => Object.keys(o).forEach(k => { seen[k] = true; }));
+  return Object.keys(seen).map(Number).sort((a, b) => a - b);
+}
 const IMP_MAX_UNITS = 4;
 const IMP_PARTS = ['route', 'radios', 'loadout', 'livery'];
 const IMP_KEY_HQ = 'mission_snapshot_v1', IMP_KEY_BRIEFING = 'khr26_briefing_state_v2', IMP_KEY_WING = 'wing_config_v1';
@@ -299,7 +310,7 @@ function csText(v) {
 }
 function impRadioCount(u) {
   let n = 0;
-  Object.keys(RADIO_CHANNELS[u.type] || {}).forEach(r => { for (let c = 1; c <= RADIO_CHANNELS[u.type][r]; c++) if (gsIsObj(u.radios) && gsIsObj(u.radios[r]) && impStr(String(u.radios[r][c] === undefined ? '' : u.radios[r][c])).trim() !== '') n++; });
+  radioPostsOf(u.type).forEach(r => { for (let c = 1; c <= radioSlotsOf(u.type, r); c++) if (gsIsObj(u.radios) && gsIsObj(u.radios[r]) && impStr(String(u.radios[r][c] === undefined ? '' : u.radios[r][c])).trim() !== '') n++; });
   return n;
 }
 function impGroupLabel(f, i) { return gsNameKey(f.name) !== '' ? f.name.trim() : impTf('imp.group', i + 1); }
@@ -562,11 +573,11 @@ function impRouteOff(src, g) {
 }
 function impMergeRadios(unit, type, radios) {
   radios.forEach(r => {
-    if (!gsIsObj(r) || !gsIsObj(r.channels) || !impHas(RADIO_CHANNELS[type] || {}, r.radioIndex)) return;
+    if (!gsIsObj(r) || !gsIsObj(r.channels) || !radioSlotsOf(type, r.radioIndex)) return;
     const post = {};
     Object.keys(r.channels).forEach(c => {
       const v = r.channels[c];
-      if (/^\d+$/.test(c) && c >= 1 && c <= RADIO_CHANNELS[type][r.radioIndex] && impNum(v)) post[c] = String(v);
+      if (/^\d+$/.test(c) && c >= 1 && c <= radioSlotsOf(type, r.radioIndex) && impNum(v)) post[c] = String(v);
     });
     if (Object.keys(post).length) unit.radios[r.radioIndex] = post;
   });

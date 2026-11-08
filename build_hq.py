@@ -6,6 +6,7 @@ import os
 import base64
 import re
 
+from radio_bands_block import build_block as build_radio_bands_block
 from radio_block import build_block as build_radio_block
 from aircraft_types_block import build_block as build_aircraft_types_block
 
@@ -3934,6 +3935,7 @@ let _PK_BUSY    = false;
 const _PK_EXPORT_SEL = new Set();   // groupId des vols cochés pour l'export
 
 @@RADIO_BLOCK@@
+@@RADIO_BANDS_BLOCK@@
 @@AIRCRAFT_TYPES_BLOCK@@
 // Poste et canal comme au cockpit : un argument pkRadio (type, poste) ou pkChan (type, poste, canal du .miz) se lit à l'affichage
 // (nom du poste, à défaut « Poste n » ; numéro de canal du cockpit) ; le reste des messages garde le numéro du .miz
@@ -4141,6 +4143,7 @@ function pkNormalize(obj, filename) {{
       liveryId: (typeof u.liveryId === 'string' && u.liveryId !== '') ? u.liveryId : null,
       radios:   (Array.isArray(u.radios) ? u.radios : [])
         .filter(r => r && pkNum(r.radioIndex) !== null && r.channels && typeof r.channels === 'object')
+        .filter(r => !radioFreeCount(unitTypeOf(v1 ? f : null, u), r.radioIndex))      // un poste que la mission ne pré-règle pas (le poste HF des deux hélicoptères) : ignoré, rien n'est écrit ni dit
         .map(r => {{
           const channels = {{}};
           for (const [c, fr] of Object.entries(r.channels)) if (pkNum(fr) !== null) channels[c] = fr;
@@ -5970,6 +5973,7 @@ HTML_FINAL = (HTML
     .replace('__RETOKENIZE__', _RETOKENIZE)
     .replace('__REBUILD_MIZ__', _REBUILD_MIZ)
     .replace('@@RADIO_BLOCK@@\n', build_radio_block())
+    .replace('@@RADIO_BANDS_BLOCK@@\n', build_radio_bands_block())
     .replace('@@AIRCRAFT_TYPES_BLOCK@@\n', build_aircraft_types_block())
     .replace('@@DYN_AIRDROMES@@', _DYN_AIRDROMES_JS)
 )
