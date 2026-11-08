@@ -3,7 +3,7 @@
 
 Rend le texte JavaScript du bloc :
   RADIO_BANDS — la bande de chaque poste, par type et par numéro de poste, en MHz, [bas, haut] bornes comprises, sans contrôle de pas.
-                Règle de Mission Tools : ce que DCS et le guide de Chuck acceptent tous les deux quand on a les deux.
+                Règle de Mission Tools : ce que DCS et le guide de l'appareil acceptent tous les deux quand on a les deux.
   RADIO_FREE  — les postes que la mission ne pré-règle pas, par type : numéro de poste → nombre de fréquences. Ces postes n'ont pas de numéro de canal.
   et les fonctions radioBand, radioInBand et radioFreeCount.
 Les noms des postes sont ceux de radio_block.py ; les postes pré-réglés et leurs canaux (RADIO_CHANNELS) sont dans import_block.py.
@@ -16,9 +16,9 @@ BLOCK_BEGIN = '/* ===== BANDES ET POSTES NON PRÉ-RÉGLÉS DES RADIOS ===== */'
 BLOCK_END = '/* ===== FIN DES BANDES ET DES POSTES NON PRÉ-RÉGLÉS ===== */'
 
 _JS = r"""
-// La bande de chaque poste, en MHz, [bas, haut] bornes comprises, sans contrôle de pas (clé = unit.type). Règle de Mission Tools : DCS ∩ guide de Chuck quand on a les deux.
-//   Mi-24P : R-863 (poste 1) 100 à 149,975 et 220 à 399,9 · R-828 (poste 2) 20 à 59,9 · Jadro-1I (poste 3, HF) 2 à 17,999 · guide de Chuck, Mi-24P, p. 423 (DCS ne donne pas de bande).
-//   Mi-8MT : R-863 100 à 149,975 et 220 à 399,975 · R-828 20 à 59,975 · Jadro-1A (HF) 2 à 17,999 · guide de Chuck, Mi-8MTV2, p. 169 (pas de fichier DCS).
+// La bande de chaque poste, en MHz, [bas, haut] bornes comprises, sans contrôle de pas (clé = unit.type). Règle de Mission Tools : ce que DCS et le guide de l'appareil acceptent tous les deux quand on a les deux.
+//   Mi-24P : R-863 (poste 1) 100 à 149,975 et 220 à 399,9 · R-828 (poste 2) 20 à 59,9 · Jadro-1I (poste 3, HF) 2 à 17,999 · guide du Mi-24P, p. 423 (DCS ne donne pas de bande).
+//   Mi-8MT : R-863 100 à 149,975 et 220 à 399,975 · R-828 20 à 59,975 · Jadro-1A (HF) 2 à 17,999 · guide du Mi-8MTV2, p. 169 (pas de fichier DCS).
 //   F-4E-45MC : poste 1 COMM (225 à 399,95) et poste 2 AUX, réception seule (265 à 284,9) · manuel du F-4E, chapitre « UHF Radio ».
 //   Mirage-F1EE : TRAP 136 (118 à 143,975 et 225 à 399,975) et TRAP 137B (225 à 399,975) · manuel du Mirage F1 (3.13).
 const RADIO_BANDS = {

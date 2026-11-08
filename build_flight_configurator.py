@@ -1268,7 +1268,7 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
   font-family: var(--f-typewriter); font-size: 13px; color: var(--ink); padding: 6px 8px; width: 100%; min-width: 0; border-radius: 0;
   -moz-appearance: textfield; appearance: textfield;
 }
-.fc-ch input { min-height: 40px; }
+.fc-ch input { min-height: 44px; }
 .fc-set input[type=number] { min-height: 44px; }
 .fc-ch input:focus, .fc-set input[type=number]:focus { outline: none; border-left-color: var(--red-stamp); background: var(--paper-light); box-shadow: 0 0 0 1px var(--fc); }
 .fc-ch input::-webkit-outer-spin-button, .fc-ch input::-webkit-inner-spin-button, .fc-set input::-webkit-outer-spin-button, .fc-set input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
@@ -1323,7 +1323,7 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
 .fc-ubody[hidden] { display: none; }
 .fc-utitle { font-family: var(--f-stencil); font-size: 12px; letter-spacing: 1px; color: var(--paper); text-transform: uppercase; }
 .fc-sub { margin-top: 10px; border-top: 1px solid rgba(128,116,84,.45); }
-.fc-sub > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px; min-height: 40px; user-select: none; font-family: var(--f-stencil); font-size: 12px; letter-spacing: 1.5px; color: var(--amber); text-transform: uppercase; }
+.fc-sub > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px; min-height: 44px; user-select: none; font-family: var(--f-stencil); font-size: 12px; letter-spacing: 1.5px; color: var(--amber); text-transform: uppercase; }
 .fc-sub > summary::-webkit-details-marker, .fc-post > summary::-webkit-details-marker { display: none; }
 .fc-sub > summary::before { content: '\25ba'; font-size: 8px; color: var(--rust); transition: transform .2s; }
 .fc-sub[open] > summary::before { transform: rotate(90deg); }
@@ -1331,7 +1331,7 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
 .fc-sub > .fc-subc { padding: 2px 0 6px; display: flex; flex-direction: column; gap: 10px; }
 .fc-posts { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
 .fc-post { border: 1px solid rgba(128,116,84,.4); background: rgba(0,0,0,.12); }
-.fc-post > summary { cursor: pointer; list-style: none; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 8px; min-height: 40px; padding: 3px 10px; user-select: none; font-family: var(--f-ui); font-weight: 500; font-size: 12px; letter-spacing: 1px; color: var(--paper); text-transform: uppercase; }
+.fc-post > summary { cursor: pointer; list-style: none; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 8px; min-height: 44px; padding: 3px 10px; user-select: none; font-family: var(--f-ui); font-weight: 500; font-size: 12px; letter-spacing: 1px; color: var(--paper); text-transform: uppercase; }
 .fc-post > summary::after { content: '\25c4'; grid-column: 2; grid-row: 1 / span 2; font-size: 10px; color: var(--paper); transition: transform .2s; }
 .fc-ptop { grid-column: 1; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; min-width: 0; word-break: break-word; }
 .fc-band { grid-column: 1; font-family: var(--f-typewriter); font-weight: 400; font-size: 11px; letter-spacing: 0; text-transform: none; color: var(--khaki-light); min-width: 0; word-break: break-word; }
@@ -2283,7 +2283,7 @@ function parseFreq(s) {
 function fmtMHz(v) { return String(v).replace('.', CURRENT_LANG === 'fr' ? ',' : '.'); }
 // La bande d'un poste : radioBand (radio_bands_block.py), [[bas, haut], …] ; dans la bande = dans l'un de ses intervalles (bornes comprises).
 function inBand(band, v) { return radioInBand(band, v); }
-// La bande en clair, comme sous le titre du poste : « 100–149,975 · 220–399,975 MHz ».
+// La bande en clair, comme sous le titre du poste, de la forme « bas–haut · bas–haut MHz ».
 function bandText(type, r) { return radioBand(type, r).map(b => fmtMHz(b[0]) + '–' + fmtMHz(b[1])).join(' · ') + ' MHz'; }
 // Les attributs min et max d'un champ : la bande la plus large du poste.
 function bandHull(type, r) {

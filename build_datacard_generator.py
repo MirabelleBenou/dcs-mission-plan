@@ -3706,7 +3706,7 @@ function dgApplyGroup(c, f, fi) {
   c.flight.aircraft = types.join(' + ');
   if (!gsIsObj(c.radioSel)) c.radioSel = {};
   if (typeof c.loadoutFc !== 'boolean') c.loadoutFc = false;
-  const z = dgFreeze(f);
+  const z = dgFreeze(f, c);
   if (z) c.frz = z; else delete c.frz;
 }
 
@@ -3977,8 +3977,9 @@ function dgLoadGroups(f) {
 function dgNames(f, idx) { const fi = dgFlightPos(f.fcId); return idx.map(i => dgUnitLabel(f, fi, i)); }
 /* Ce que l'aperçu tire de la fiche pour les radios et l'emport, gardé dans la carte (c.frz) à chaque lecture de la fiche : quand le groupe disparaît ou que la carte
    est détachée, la carte libre qui en naît montre la même chose, en lecture seule. Rien qui dépende de la langue n'y est écrit : les libellés se refont à l'affichage. */
-function dgFreeze(f) {
-  const radios = dgRadioModel(f).map(m => ({ type: m.type, posts: m.posts.map(p => ({ r: p.r, name: p.name, rows: p.rows.map(r => [r.c, r.cock, r.freq]) })) }));
+function dgFreeze(f, c) {
+  /* un poste non pré-réglé (le poste HF des hélicoptères) n'entre dans la copie que s'il porte une fréquence ou un canal coché : une carte qui n'en a pas garde la même copie qu'avant */
+  const radios = dgRadioModel(f).map(m => ({ type: m.type, posts: m.posts.filter(p => !dgPostFree(m.type, p.r) || p.rows.some(r => r.freq !== '' || dgRs(c, dgRsKey(m.type, p.r, r.c)).on)).map(p => ({ r: p.r, name: p.name, rows: p.rows.map(r => [r.c, r.cock, r.freq]) })) }));
   const g = dgLoadGroups(f);
   const loads = g.groups.map(x => ({ names: x.names, type: x.type, lo: { key: dgStr(x.lo.key), label: dgStr(x.lo.label), from: dgStr(x.lo.from), modified: !!x.lo.modified }, rows: x.rows.map(r => [r.n, r.clsid]) }));
   const hasFreq = radios.some(m => m.posts.some(p => p.rows.some(r => r[2] !== '')));
