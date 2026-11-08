@@ -4092,7 +4092,7 @@ function radioLinkedHtml(c) {
         const tip = row.varies ? row.vals.map((v, k) => dgUnitLabel(f, fi, m.units[k]) + ' : ' + (v || '—')).join(' · ') : '';
         const nc = dgPostFree(m.type, p.r), bad = dgFreqIssue(m.type, p.r, row.c, row.freq);       /* une fréquence hors bande déjà dans la fiche est gardée et signalée */
         return '<div class="rc-row' + (nc ? ' nc' : '') + (s.on ? ' on' : '') + '" data-rc="' + esc(key) + '"><div class="rc-top">' + (nc ? '' : '<span class="rc-ch">' + esc(t('rt.ch', { n: row.cock })) + '</span>') +
-          '<div class="ed-field rc-freq"><input type="text" inputmode="decimal" data-gs="f.' + esc(key) + '" value="' + esc(row.freq) + '"' + (bad ? ' class="bad"' : '') + ' placeholder="—" autocomplete="off" spellcheck="false" aria-label="' + esc(t('f.radio.frequency') + ' — ' + (nc ? t('rt.freq', { n: row.c }) : t('rt.ch', { n: row.cock }))) + '"></div>' +
+          '<div class="ed-field rc-freq"><input type="text" inputmode="decimal" data-gs="f.' + esc(key) + '" value="' + esc(row.freq) + '"' + (bad ? ' class="bad"' : '') + ' placeholder="—" autocomplete="off" spellcheck="false" aria-label="' + esc(nc ? t('rt.freq', { n: row.c }) : t('f.radio.frequency') + ' — ' + t('rt.ch', { n: row.cock })) + '"></div>' +
           '<label class="rc-on"><input type="checkbox" data-rs="' + esc(key) + '" data-rk="on"' + (s.on ? ' checked' : '') + '><span>' + esc(t('rt.on')) + '</span></label></div>' +
           (bad ? '<div class="rc-msg" role="alert">' + esc(bad) + '</div>' : '') +
           (row.varies ? '<div class="rc-var" title="' + esc(tip) + '">' + esc(t('rt.varies')) + '</div>' : '') +

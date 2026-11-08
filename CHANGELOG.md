@@ -18,6 +18,7 @@ Changes merged since the last release, grouped per tool.
 - On wide screens, each tool shows its own decorative stamp in the top bar, as the Briefing Generator did; it never makes the bar scroll.
 - Flight packages and the mission HQ shares with the other tools now give each aircraft its own type instead of one type per group (formats `dcs-flight-package-v2` and `dcs-mission-snapshot-v2`); files in the previous format still open, their group type applying to every aircraft. The Datacard Generator and the Route Planner show a mixed flight with all its types.
 - A DCS group is now called a group, not a flight, in HQ, the Route Planner, the Datacard Generator, the Flight Configurator, the Briefing Generator's quick brief and the Field Manual (“Link to a group…”, “Check shown groups”…). Format names do not change: a flight package is still a flight package.
+- In HQ and the Datacard Generator, radios are named and ordered as DCS does (A-10C II, C-130J, M-2000C, OH-58D, Gazelles, F-15E, AV-8B), as in Mission Tools; for the Gazelles, only the FM radio, the one missions preset.
 
 ### Mission Plan — landing
 #### Added
@@ -37,6 +38,7 @@ Changes merged since the last release, grouped per tool.
 - Flight packages are recognised by their content, not their file name; unreadable flights are skipped and counted, an empty package or one without theatre is refused, with the same messages as the Route Planner and the Datacard Generator. *Load another .miz* also clears the mission offered to the Route Planner and the Datacard Generator.
 - The Side and Type filters of the flight list open in the suite's own list, like every other list, instead of the system menu.
 - **Wing configuration**: a squadron's aircraft are now picked from the game's flyable types (75, by their name in a .miz, from pydcs 1.0.0), grouped into helicopters and airplanes, with “Other type (mod)…” for a community mod. A name that is not a game type is marked “not in the base game”, with a “Replace with…” list of close types; nothing is blocked. The example uses the game's names (Mi-8MT, MiG-21Bis).
+- Flight packages: the frequencies of a radio that missions do not preset (the Mi-24P's and Mi-8MT's HF radio) are skipped; the mission is not changed for them.
 #### Fixed
 - The interface language is shared with the other tools (HQ kept its own); the language already chosen in HQ is kept.
 
@@ -44,9 +46,11 @@ Changes merged since the last release, grouped per tool.
 #### Added
 - **Flight Configurator**, a new module: a Flight Lead prepares a flight (identity, radios, loadout built on the aircraft's front view or started from the squadron's presets, livery) and exports it as a flight package that HQ applies to the Mission Commander's mission. Each aircraft of a flight has its own type, so a flight can mix types; flight names must be unique per side before export.
 - A **Route** block above the loadout: pick one of the Route Planner's routes for the group (one route per group), then see it as a paper sketch — waypoints, names, numbered legs — with each leg's magnetic heading and distance in NM. When the route changes in the Route Planner, the group follows it; if it is deleted there, the last copy is kept.
+- The Mi-24P's and Mi-8MT's HF radio (Jadro-1I, Jadro-1A), which missions do not preset: up to five frequencies, carried in the flight package and shown on the datacard, never written to the mission by HQ.
 #### Changed
 - Groups are now shared with the Route Planner: create, rename or re-route a group in either tool and the other follows at once. A group may have no unit yet. A group with no unit is exported route only.
 - **Import** now also reads the Briefing Generator — its groups, their number of aircraft and the radio plan of each aircraft type, cockpit channel numbers converted — with Side, Type and Name filters. A group is completed when its name, case included, and side match; a flight of an aircraft the suite does not handle comes in as a group with its route only. An aircraft the suite does not know by the briefing's name is left for you to pick; the package exports once every type is picked. An imported route now shows in the Route Planner as the group's route.
+- Radio bands follow the Mission Tools rule, keeping only what both DCS and the reference guide accept: the Mi-24P's R-863 now ends at 399.9 MHz and its R-828 at 59.9 MHz. An out-of-band frequency already in a group (imported, or typed before a band changed) is flagged but no longer blocks the export.
 
 ### Recon Station
 #### Added
@@ -66,6 +70,7 @@ Changes merged since the last release, grouped per tool.
 ### Datacard Generator
 #### Added
 - **Mission loaded in HQ** and **Flight package** in the import window: one datacard per flight (navigation, callsign, type, radios; mission date, time and weather from HQ), filtered by side, type and name; from the Route Planner, **all routes** at once, one datacard per route. You pick the radio channels to import. A radio now holds up to 20 channels.
+- The HF radio of the Mi-24P and Mi-8MT, with the frequencies chosen in the Flight Configurator or typed here: pick the ones shown on the card, with their name, as for the other radios; no channel number is printed for them.
 #### Changed
 - **One datacard per group**: the Datacard Generator now shares the groups of the Flight Configurator and the Route Planner. Each group has its datacard, listed in the new card list; a group's name, side, aircraft (callsign, type, board number) and radio frequencies are edited on either side and follow at once. Radios are shown in one box per aircraft type (“RADIO — MI-24P”), a channel that differs between two aircraft of a type is marked “varies by unit”, and you pick the channels shown on the card, with their name and modulation. The loadout can be taken from the Flight Configurator as a table. Pilots, times, weather, fuel, navigation and notes stay with the datacard. **New datacard** creates a group; **Free card** keeps a datacard outside the groups, and earlier datacards open as free cards.
 - The example loads in the interface language (French or English).
@@ -105,6 +110,7 @@ Changes merged since the last release, grouped per tool.
 - HQ and Recon Station chapters: the Example button.
 - The Route Planner chapter names the magnetic models DCS uses: IGRF up to 1985, then WMM.
 - The Datacard Generator chapter lists the editor's boxes in their new order, with **Group and crew**.
+- The Flight Configurator chapter: the helicopters' HF radio and the bands.
 
 ---
 

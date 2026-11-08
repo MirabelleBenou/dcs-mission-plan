@@ -3669,7 +3669,7 @@ function radioCockpitChannel(type, radioIndex, mizChannel) {
 }
 /* ===== FIN DES POSTES RADIO ===== */
 /* ===== BANDES ET POSTES NON PRÉ-RÉGLÉS DES RADIOS ===== */
-// La bande de chaque poste, en MHz, [bas, haut] bornes comprises, sans contrôle de pas (clé = unit.type). Règle de Mission Tools (R477) : DCS ∩ guide de Chuck quand on a les deux.
+// La bande de chaque poste, en MHz, [bas, haut] bornes comprises, sans contrôle de pas (clé = unit.type). Règle de Mission Tools : DCS ∩ guide de Chuck quand on a les deux.
 //   Mi-24P : R-863 (poste 1) 100 à 149,975 et 220 à 399,9 · R-828 (poste 2) 20 à 59,9 · Jadro-1I (poste 3, HF) 2 à 17,999 · guide de Chuck, Mi-24P, p. 423 (DCS ne donne pas de bande).
 //   Mi-8MT : R-863 100 à 149,975 et 220 à 399,975 · R-828 20 à 59,975 · Jadro-1A (HF) 2 à 17,999 · guide de Chuck, Mi-8MTV2, p. 169 (pas de fichier DCS).
 //   F-4E-45MC : poste 1 COMM (225 à 399,95) et poste 2 AUX, réception seule (265 à 284,9) · manuel du F-4E, chapitre « UHF Radio ».
@@ -5785,7 +5785,7 @@ function radioLinkedHtml(c) {
         const tip = row.varies ? row.vals.map((v, k) => dgUnitLabel(f, fi, m.units[k]) + ' : ' + (v || '—')).join(' · ') : '';
         const nc = dgPostFree(m.type, p.r), bad = dgFreqIssue(m.type, p.r, row.c, row.freq);       /* une fréquence hors bande déjà dans la fiche est gardée et signalée */
         return '<div class="rc-row' + (nc ? ' nc' : '') + (s.on ? ' on' : '') + '" data-rc="' + esc(key) + '"><div class="rc-top">' + (nc ? '' : '<span class="rc-ch">' + esc(t('rt.ch', { n: row.cock })) + '</span>') +
-          '<div class="ed-field rc-freq"><input type="text" inputmode="decimal" data-gs="f.' + esc(key) + '" value="' + esc(row.freq) + '"' + (bad ? ' class="bad"' : '') + ' placeholder="—" autocomplete="off" spellcheck="false" aria-label="' + esc(t('f.radio.frequency') + ' — ' + (nc ? t('rt.freq', { n: row.c }) : t('rt.ch', { n: row.cock }))) + '"></div>' +
+          '<div class="ed-field rc-freq"><input type="text" inputmode="decimal" data-gs="f.' + esc(key) + '" value="' + esc(row.freq) + '"' + (bad ? ' class="bad"' : '') + ' placeholder="—" autocomplete="off" spellcheck="false" aria-label="' + esc(nc ? t('rt.freq', { n: row.c }) : t('f.radio.frequency') + ' — ' + t('rt.ch', { n: row.cock })) + '"></div>' +
           '<label class="rc-on"><input type="checkbox" data-rs="' + esc(key) + '" data-rk="on"' + (s.on ? ' checked' : '') + '><span>' + esc(t('rt.on')) + '</span></label></div>' +
           (bad ? '<div class="rc-msg" role="alert">' + esc(bad) + '</div>' : '') +
           (row.varies ? '<div class="rc-var" title="' + esc(tip) + '">' + esc(t('rt.varies')) + '</div>' : '') +

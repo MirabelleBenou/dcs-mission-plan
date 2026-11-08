@@ -198,6 +198,7 @@ The output `dist/dcs_mission_plan.html` is the distributable (and the file publi
 ├── build_hq.py                    # HQ builder
 ├── build_flight_configurator.py   # Flight Configurator builder
 ├── payload_block.py               # Shared loadout block (preset files, .miz payload), no DOM
+├── radio_bands_block.py           # Shared radio bands and non-preset radios block (Flight Configurator, Datacard Generator, HQ, Route Planner), no DOM
 ├── aircraft_types_block.py        # HQ's game aircraft types block (reads data/aircraft_types.json), no DOM
 ├── build_field_manual.py          # Field Manual builder
 ├── build_datacard_generator.py    # Datacard Generator builder
