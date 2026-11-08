@@ -102,7 +102,7 @@ def build_html(module_html_js, tile_uris):
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
 <title>DCS Mission Plan</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -882,6 +882,26 @@ select[data-tbm-src] {{ display: none !important; }}
     pendingMap = null;
     return p || null;
   }};
+
+  /* Le clavier de l'écran : sur les navigateurs qui ignorent interactive-widget (iOS), seul le visualViewport de cette page rétrécit ;
+     le module (cadre fixe) reçoit alors la hauteur et le haut de la zone visible, et revient à inset: 0 quand le clavier se ferme */
+  function fitModuleView() {{
+    var mv = document.getElementById('module-view'), vv = window.visualViewport;
+    if (!mv) return;
+    if (vv && vv.height > 0 && vv.height < window.innerHeight - 1) {{
+      mv.style.top = vv.offsetTop + 'px';
+      mv.style.bottom = 'auto';
+      mv.style.height = vv.height + 'px';
+    }} else {{
+      mv.style.top = '';
+      mv.style.bottom = '';
+      mv.style.height = '';
+    }}
+  }}
+  if (window.visualViewport) {{
+    window.visualViewport.addEventListener('resize', fitModuleView);
+    window.visualViewport.addEventListener('scroll', fitModuleView);
+  }}
 
   function goHub() {{
     Object.keys(iframes).forEach(function(iid) {{ iframes[iid].style.display = 'none'; }});

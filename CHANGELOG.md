@@ -26,6 +26,8 @@ Changes merged since the last release, grouped per tool.
 - A card for the Flight Configurator, right after HQ.
 #### Changed
 - On phones (below 760 px wide), the back button shrinks to an arrow and the wing stamp is hidden, so each tool's top bar fits; a bar that is still too wide scrolls sideways, with a fade on its right edge.
+#### Fixed
+- On phones and tablets, the on-screen keyboard no longer hides the bottom of the open tool.
 
 ### HQ
 #### Added
@@ -92,6 +94,7 @@ Changes merged since the last release, grouped per tool.
 - Changing the language with the briefing import window open keeps the phases you picked; opening the window again starts from the card's own group.
 - A frequency field you had only clicked into now shows a frequency changed meanwhile in the Flight Configurator.
 - A group name, callsign or board number field you had only clicked into now shows a change made meanwhile in the Flight Configurator, instead of writing the old value back.
+- Airfield search on phones and tablets: the list stays above the on-screen keyboard.
 
 ### Route Planner
 #### Added

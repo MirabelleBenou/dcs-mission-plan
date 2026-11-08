@@ -8659,10 +8659,11 @@ function tbmOff(m, k) { return !!(m.lis[k] && m.lis[k].classList.contains('tbm-o
    Liste de formulaire : la place utile va du bas de la barre du haut au haut de la barre d'onglets fixée en bas (portrait),
    sinon au bas de la fenêtre ; dessous si elle y tient entière, sinon dessus si la place y est plus grande (classe tbm-up). Appelée à l'ouverture, après chaque filtrage (sens gardé : keepDir)
    et quand la fenêtre est redimensionnée ou défilée pendant que la recherche a le focus (le clavier de l'écran). */
-/* La zone visible, en coordonnées de la fenêtre : le visualViewport quand il existe (sur Chrome Android et iOS, le clavier de l'écran ne réduit que lui), sinon la fenêtre */
+/* La zone visible, en coordonnées de la fenêtre : le visualViewport quand il existe (sur Chrome Android et iOS, le clavier de l'écran ne réduit que lui), sinon la fenêtre ;
+   dans un cadre (le shell), la fenêtre du cadre : le shell la fait suivre le clavier, et le visualViewport d'un cadre n'est pas fiable */
 function tbmVis() {
   const v = window.visualViewport;
-  if (v && v.height > 0 && v.width > 0) return { top: v.offsetTop, bottom: v.offsetTop + v.height, left: v.offsetLeft, right: v.offsetLeft + v.width };
+  if (v && v.height > 0 && v.width > 0 && window.parent === window) return { top: v.offsetTop, bottom: v.offsetTop + v.height, left: v.offsetLeft, right: v.offsetLeft + v.width };
   return { top: 0, bottom: window.innerHeight, left: 0, right: document.documentElement.clientWidth };
 }
 function tbmScroller(el) {
@@ -8693,7 +8694,7 @@ function tbmPlace(m, keepDir) {
       const bs = getComputedStyle(bar), br = bar.getBoundingClientRect();
       if (bs.position === 'fixed' && bs.display !== 'none' && br.height > 0 && br.top > lo) hi = Math.min(hi, br.top);
     }
-    const cap = Math.min(0.62 * (vh - vis.top), 440);
+    const cap = tbmKb(m) ? Math.max(60, vh - lo - 8) : Math.min(0.62 * (vh - vis.top), 440);       /* pendant la recherche au toucher (clavier de l'écran) : plus de plafond, toute la hauteur visible */
     const below = hi - (r.bottom + 4) - 12, above = (r.top - 4) - lo - 12;
     p.style.minWidth = Math.min(Math.max(180, r.width), vw - 16) + 'px';
     p.style.maxHeight = 'none';
@@ -8849,6 +8850,46 @@ function tbmSwallowClick(e) {
 /* Le champ de recherche a le focus : le clavier de l'écran redimensionne la fenêtre ou fait défiler la page ; la liste ne se ferme pas, elle se replace */
 function tbmSearching(m) { return !!(m && m.panel && m.q && document.activeElement === m.q); }
 
+/* La recherche au toucher : le clavier de l'écran est ouvert (pas de souris : sur ordinateur la recherche a le focus dès l'ouverture, sans clavier) */
+function tbmKb(m) { return tbmSearching(m) && !(window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches); }
+/* La hauteur qu'il faut pour le champ et quatre options entières (ou toutes, s'il y en a moins) */
+function tbmNeed(m) {
+  const p = m.panel, h0 = p.style.maxHeight, sy = p.scrollTop;
+  p.style.maxHeight = 'none';
+  p.scrollTop = 0;
+  const pr = p.getBoundingClientRect();
+  const opts = m.lis.filter(li => !li.classList.contains('tbm-off'));
+  let need = p.offsetHeight;
+  if (opts.length) {
+    const last = opts[Math.min(4, opts.length) - 1].getBoundingClientRect();
+    need = Math.min(need, last.bottom - pr.top + 4);
+  }
+  p.style.maxHeight = h0;
+  p.scrollTop = sy;
+  return need;
+}
+/* Si la place sous le bouton ne suffit pas, le bouton remonte en haut de la zone visible (sous la barre, 8 px) : vrai quand la place sous lui suffit ensuite */
+function tbmFit(m) {
+  const vis = tbmVis(), tb = document.querySelector('header.toolbar'), bar = document.querySelector('.tab-bar');
+  const lo = Math.max(vis.top, tb ? tb.getBoundingClientRect().bottom : 0);
+  let hi = vis.bottom;
+  if (bar) {
+    const bs = getComputedStyle(bar), br = bar.getBoundingClientRect();
+    if (bs.position === 'fixed' && bs.display !== 'none' && br.height > 0 && br.top > lo) hi = Math.min(hi, br.top);
+  }
+  const below = () => hi - (m.btn.getBoundingClientRect().bottom + 4) - 12;
+  const need = tbmNeed(m);
+  if (below() >= need) return false;
+  const d = m.btn.getBoundingClientRect().top - (lo + 8);
+  if (Math.abs(d) > 0.5) {
+    const sc = tbmScroller(m.btn);
+    if (sc) sc.scrollTop += d; else window.scrollBy(0, d);
+    const rest = m.btn.getBoundingClientRect().top - (lo + 8);
+    if (sc && Math.abs(rest) > 0.5) window.scrollBy(0, rest);
+  }
+  return below() >= need;
+}
+
 /* Le redimensionnement de la fenêtre ferme la liste, sauf pendant la recherche (elle se replace, le bouton ramené à l'écran) */
 function tbmResized() {
   const m = TBM.cur;
@@ -8858,6 +8899,7 @@ function tbmResized() {
 function tbmFollow(m) {
   if (!m.form) return;
   tbmReveal(m);
+  if (tbmKb(m) && tbmFit(m)) { m.up = false; tbmPlace(m, true); return; }
   tbmPlace(m);
 }
 /* Le visualViewport (zone visible) change — clavier de l'écran, zoom : sans effet hors recherche ; pendant la recherche la liste se replace dans la zone visible */
