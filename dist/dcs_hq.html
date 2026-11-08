@@ -5886,9 +5886,14 @@ function dsxVerify(base, DS, plan, mAst, wText, wRootNew, work) {
 }
 
 // ----- la fenêtre -----
+let _dsxWarnKey = '';       // une seule alerte console par échec du plan, pas une par rendu de la fenêtre
 function dsxSafePlan() {
   try { return { plan: dsxPlan(DSX.ctx, DSX), err: null }; }
-  catch (e) { console.warn('[HQ] plan Dynamic Spawn :', e); return { plan: null, err: e }; }
+  catch (e) {
+    const k = String(e && e.stack || e);
+    if (k !== _dsxWarnKey) { _dsxWarnKey = k; console.warn('[HQ] plan Dynamic Spawn :', e); }
+    return { plan: null, err: e };
+  }
 }
 function dsxBody() {
   const h = escapeHtml, st = DSX.st, own = dsxOwners(DSX), sp = dsxSafePlan();
