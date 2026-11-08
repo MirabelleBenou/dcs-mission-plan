@@ -1204,13 +1204,13 @@ select[data-tbm-src] { display: none !important; }
 .dc-radio3 td.fq { text-overflow: clip; }
 
 /* Terrains : aucun texte coupé (lot mp-dg-terrains-liste). Les colonnes suivent leur contenu (tableau en largeur automatique, aucune largeur fixée : les largeurs de <col> du balisage sont des repères, celles-ci priment) :
-   le rôle ne se coupe jamais ; le nom et l'OACI passent à la ligne aux espaces et aux tirets et, en dernier recours seulement, se coupent entre deux lettres ; la piste se coupe après les virgules seulement
+   le rôle ne se coupe jamais ; le nom passe à la ligne aux espaces et aux tirets et, en dernier recours seulement, se coupe entre deux lettres ; l'OACI prend sa largeur minimale (quatre caractères au moins) et se coupe entre deux lettres quand la place manque ; la piste se coupe après les virgules seulement
    (« 23L/05R » reste sur une ligne) ; la fréquence se coupe aux espaces seulement, jamais dans un nombre ; la rangée grandit. Le tableau des lignes à remplir (classe dc-blank, posée au rendu) garde ses colonnes fixes et ses marges. */
 .dc-fields td.ro { font-family: var(--dc-fo); font-weight: 500; color: var(--dc-acc); text-transform: uppercase; }
 .dc-fields td.nm { font-family: var(--dc-fo); font-weight: 500; font-size: 18px; }
 .dc-tab.dc-fields:not(.dc-blank) { table-layout: auto; }
 .dc-fields:not(.dc-blank) col { width: auto !important; }
-.dc-fields:not(.dc-blank) col:nth-child(1), .dc-fields:not(.dc-blank) col:nth-child(4), .dc-fields:not(.dc-blank) col:nth-child(5) { width: 1px !important; }       /* la largeur de leur plus long élément insécable ; le nom et l'OACI se partagent le reste */
+.dc-fields:not(.dc-blank) col:nth-child(1), .dc-fields:not(.dc-blank) col:nth-child(2), .dc-fields:not(.dc-blank) col:nth-child(4), .dc-fields:not(.dc-blank) col:nth-child(5) { width: 1px !important; }       /* la largeur de leur plus long élément insécable (l'OACI : au moins quatre caractères) ; le nom prend le reste */
 .dc-fields:not(.dc-blank) th, .dc-fields:not(.dc-blank) td { padding-left: 2px; padding-right: 2px; padding-top: 2px; padding-bottom: 2px; }       /* serré : trois pistes sur trois lignes ne font pas déborder la page */
 .dc-fields:not(.dc-blank) td { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }
 .dc-fields:not(.dc-blank) td.ro { white-space: nowrap; overflow-wrap: normal; }
@@ -6719,12 +6719,14 @@ function blkRadioPage(c) {
 
 /* La piste au rendu : une coupure possible après chaque virgule (<wbr>, jamais dans la valeur gardée), jamais dans « 23L/05R » */
 function rwyHtml(v) { return hasText(v) ? esc(v).replace(/,/g, ',<wbr>') : '\u2014'; }
+/* La fréquence au rendu : l'espace qui précède un « / » est insécable (jamais dans la valeur gardée), la barre reste au bout de la première fréquence */
+function freqHtml(v) { return hasText(v) ? esc(v).replace(/ +\//g, '&nbsp;/') : '\u2014'; }
 function blkFields(c) {
   const rows = c.fields.filter(f => anyText(f, ['icao', 'name', 'runway', 'frequency']));
   if (!rows.length) return '';
   const body = rows.map(f =>
     '<tr><td class="ro">' + (f.role ? esc(t('dc.role.' + f.role)) : '') + '</td><td class="m">' + dash(f.icao) + '</td>' +
-    '<td class="nm">' + esc(f.name) + '</td><td class="m">' + rwyHtml(f.runway) + '</td><td class="m">' + dash(f.frequency) + '</td></tr>').join('');
+    '<td class="nm">' + esc(f.name) + '</td><td class="m">' + rwyHtml(f.runway) + '</td><td class="m">' + freqHtml(f.frequency) + '</td></tr>').join('');
   return blockHtml('fields', t('dc.b.fields'),
     '<table class="dc-tab dc-fields"><colgroup><col style="width:56px"><col style="width:76px"><col><col style="width:54px"><col style="width:104px"></colgroup>' +
     '<thead><tr><th></th><th>' + esc(t('dc.h.icao')) + '</th><th>' + esc(t('dc.h.name')) + '</th><th>' + esc(t('dc.h.rwy')) + '</th><th>' + esc(t('dc.h.freq')) + '</th></tr></thead>' +
