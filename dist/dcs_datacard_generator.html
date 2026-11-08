@@ -1229,6 +1229,17 @@ select[data-tbm-src] { display: none !important; }
 }
 .dc-notes { margin-top: 9px; font: 500 17px/1.35 var(--dc-fo); letter-spacing: .02em; white-space: pre-line; overflow-wrap: anywhere; }
 
+/* Boîtes vides : titres et lignes à compléter à la main. Une ligne vide a la hauteur d'une ligne remplie de la même boîte (le filet pointillé de 1 px
+   est repris sur la marge ou le remplissage du bas) ; le filet est de l'encre de la page, en mode jour comme en mode nuit. */
+.dc-bl td::before, .dc-bl > span:empty::before, p.dc-bl::before, .dc-notes.dc-bl::before { content: '\200b'; }
+tr.dc-bl td { border-bottom: 1px dotted var(--dc-ink); padding-bottom: 2px; }
+.dc-trow.dc-bl, .wp.dc-bl, .dc-fp.dc-bl { border-bottom-color: var(--dc-ink); }
+p.dc-bl, li.dc-bl, .dc-notes.dc-bl { border-bottom: 1px dotted var(--dc-ink); margin-bottom: -1px; }
+p.dc-obj.dc-bl { margin-bottom: 5px; }
+.dc-notes.dc-bl { margin-top: 0; }
+.dc-fblank { grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); }
+.dc-fblank > .dc-load { grid-column: 1; grid-row: 2; margin-top: 8px; }
+
 
 /* ---------- Barre du haut commune aux sept modules (lot mp-imports-suite) ----------
    La marque du Flight Configurator : le titre et son sous-titre à l'accent du module dès 1360 px, le sigle seul en dessous (à toutes les largeurs) ;
@@ -6178,16 +6189,20 @@ function blkTimes(c) {
   return blockHtml('times', t('dc.b.times'), b);
 }
 
-function blkCrew(c) {
-  const rows = c.crew.filter(r => anyText(r, CREW_KEYS));
-  if (!rows.length) return '';
-  const withCrew = rows.some(r => hasText(r.type));
+function crewHead(withCrew) {
   const cols = withCrew
     ? '<col style="width:36%"><col style="width:26%"><col style="width:26%"><col>'
     : '<col style="width:42%"><col style="width:42%"><col>';
   let h = '<th>' + esc(t('dc.h.callsign')) + '</th><th>' + esc(t('dc.h.pilot')) + '</th>';
   if (withCrew) h += '<th>' + esc(t('dc.h.crew')) + '</th>';
   h += '<th>' + esc(t('dc.h.board')) + '</th>';
+  return { cols: cols, h: h };
+}
+function blkCrew(c) {
+  const rows = c.crew.filter(r => anyText(r, CREW_KEYS));
+  if (!rows.length) return '';
+  const withCrew = rows.some(r => hasText(r.type));
+  const hd = crewHead(withCrew), cols = hd.cols, h = hd.h;
   const body = rows.map(r =>
     '<tr><td class="nm">' + esc(r.callsign || r.dflt || '') + '</td><td class="m">' + esc(r.pilot) + '</td>' +
     (withCrew ? '<td class="m">' + esc(r.type) + '</td>' : '') +
@@ -6209,6 +6224,29 @@ const NAV_COLS = {
   dms:    [50, 224, 290, 84, 100]
 };
 
+/* L'en-tête du tableau de navigation selon l'affichage ; hc : l'intitulé de la colonne du cap (mode « course ») */
+function navHead(c, mode, hc) {
+  const du = unitLabel(c, 'distance'), au = unitLabel(c, 'altitude');
+  if (mode === 'course') {
+    return '<th>#</th><th>' + esc(t('dc.h.point')) + '</th>' +
+      '<th class="r">' + esc(hc) + '</th>' +
+      '<th class="r">' + esc(t('dc.h.dist', { u: du })) + '</th>' +
+      '<th class="r">' + esc(t('dc.h.alt', { u: au })) + '</th>' +
+      '<th class="r">' + esc(t('dc.h.tos')) + '</th>' +
+      '<th>' + esc(t('dc.h.note')) + '</th>';
+  }
+  return '<th>#</th><th>' + esc(t('dc.h.point')) + '</th>' +
+    '<th class="cc">' + esc(t(mode === 'mgrs' ? 'dc.h.mgrs' : 'dc.h.coord')) + '</th>' +
+    '<th class="r">' + esc(t('dc.h.alt', { u: au })) + '</th>' +
+    '<th class="r">' + esc(t('dc.h.tos')) + '</th>' +
+    '<th>' + esc(t('dc.h.note')) + '</th>';
+}
+function navTable(mode, head, body) {
+  const cols = '<colgroup>' + NAV_COLS[mode].map(w => '<col style="width:' + w + 'px">').join('') + '<col></colgroup>';
+  return '<table class="dc-tab dc-nav' + (mode === 'course' ? '' : ' dc-navc') + '">' + cols +
+    '<thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody></table>';
+}
+
 function blkNav(c) {
   const rows = navRows(c);
   if (!rows.length) return '';
@@ -6216,7 +6254,6 @@ function blkNav(c) {
   const legs = navLegs(c);
   const shown = [];
   c.nav.forEach((r, i) => { if (anyText(r, NAV_KEYS)) shown.push({ r: r, g: legs[i] }); });
-  const du = unitLabel(c, 'distance'), au = unitLabel(c, 'altitude');
   let title = t('dc.b.nav'), head, body;
   if (mode === 'course') {
     const calcAny = shown.some(x => x.g.calc);
@@ -6231,12 +6268,7 @@ function blkNav(c) {
       }
     }
     const hc = calcAny ? t(nv ? 'dc.h.course.m' : 'dc.h.course.t') : t('dc.h.course');
-    head = '<th>#</th><th>' + esc(t('dc.h.point')) + '</th>' +
-      '<th class="r">' + esc(hc) + '</th>' +
-      '<th class="r">' + esc(t('dc.h.dist', { u: du })) + '</th>' +
-      '<th class="r">' + esc(t('dc.h.alt', { u: au })) + '</th>' +
-      '<th class="r">' + esc(t('dc.h.tos')) + '</th>' +
-      '<th>' + esc(t('dc.h.note')) + '</th>';
+    head = navHead(c, mode, hc);
     body = shown.map((x, i) => {
       const r = x.r, k = x.g.calc;
       return '<tr><td class="m ix">' + i + '</td><td class="nm">' + esc(r.name) + '</td>' +
@@ -6245,11 +6277,7 @@ function blkNav(c) {
         '<td class="nt">' + esc(r.note) + '</td></tr>';
     }).join('');
   } else {
-    head = '<th>#</th><th>' + esc(t('dc.h.point')) + '</th>' +
-      '<th class="cc">' + esc(t(mode === 'mgrs' ? 'dc.h.mgrs' : 'dc.h.coord')) + '</th>' +
-      '<th class="r">' + esc(t('dc.h.alt', { u: au })) + '</th>' +
-      '<th class="r">' + esc(t('dc.h.tos')) + '</th>' +
-      '<th>' + esc(t('dc.h.note')) + '</th>';
+    head = navHead(c, mode, '');
     body = shown.map((x, i) => {
       const r = x.r, p = x.g.pt || x.g.est;
       const cc = p ? esc(mode === 'mgrs' ? (toMGRS(p.lat, p.lon) || '—') : toDMS(p.lat, p.lon)) : esc('—');
@@ -6259,10 +6287,7 @@ function blkNav(c) {
         '<td class="nt">' + esc(r.note) + '</td></tr>';
     }).join('');
   }
-  const cols = '<colgroup>' + NAV_COLS[mode].map(w => '<col style="width:' + w + 'px">').join('') + '<col></colgroup>';
-  return blockHtml('nav', title,
-    '<table class="dc-tab dc-nav' + (mode === 'course' ? '' : ' dc-navc') + '">' + cols +
-    '<thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody></table>', 'dc-bbt');
+  return blockHtml('nav', title, navTable(mode, head, body), 'dc-bbt');
 }
 
 /* Largeurs du bloc Points de référence (px ; la note, dernière colonne, prend le reste) */
@@ -6272,15 +6297,23 @@ const REF_COLS = {
 };
 
 /* Bloc « Points de référence » : le tableau de la navigation en mode coordonnées (mêmes classes), sans heure */
+function refsHead(c, mode) {
+  const au = unitLabel(c, 'altitude');
+  return '<th>#</th><th>' + esc(t('dc.h.point')) + '</th>' +
+    '<th class="cc">' + esc(t(mode === 'mgrs' ? 'dc.h.mgrs' : 'dc.h.coord')) + '</th>' +
+    '<th class="r">' + esc(t('dc.h.alt', { u: au })) + '</th>' +
+    '<th>' + esc(t('dc.h.note')) + '</th>';
+}
+function refsTable(mode, head, body) {
+  const cols = '<colgroup>' + REF_COLS[mode].map(w => '<col style="width:' + w + 'px">').join('') + '<col></colgroup>';
+  return '<table class="dc-tab dc-nav dc-navc dc-refs">' + cols +
+    '<thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody></table>';
+}
 function blkRefs(c) {
   const rows = refRows(c);
   if (!rows.length) return '';
   const mode = c.navDisplay.mode === 'dms' ? 'dms' : 'mgrs';
-  const au = unitLabel(c, 'altitude');
-  const head = '<th>#</th><th>' + esc(t('dc.h.point')) + '</th>' +
-    '<th class="cc">' + esc(t(mode === 'mgrs' ? 'dc.h.mgrs' : 'dc.h.coord')) + '</th>' +
-    '<th class="r">' + esc(t('dc.h.alt', { u: au })) + '</th>' +
-    '<th>' + esc(t('dc.h.note')) + '</th>';
+  const head = refsHead(c, mode);
   const body = rows.map((r, i) => {
     const p = parseCoord(r.coord);
     const cc = p ? esc(mode === 'mgrs' ? (toMGRS(p.lat, p.lon) || '—') : toDMS(p.lat, p.lon)) : esc('—');
@@ -6289,10 +6322,7 @@ function blkRefs(c) {
       '<td class="m r">' + dash(r.altitude) + '</td>' +
       '<td class="nt">' + esc(r.note) + '</td></tr>';
   }).join('');
-  const cols = '<colgroup>' + REF_COLS[mode].map(w => '<col style="width:' + w + 'px">').join('') + '<col></colgroup>';
-  return blockHtml('refs', t('dc.b.refs'),
-    '<table class="dc-tab dc-nav dc-navc dc-refs">' + cols +
-    '<thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody></table>', 'dc-bbt');
+  return blockHtml('refs', t('dc.b.refs'), refsTable(mode, head, body), 'dc-bbt');
 }
 
 /* Le tableau d'un encadré Radio : une ligne de nom par poste ; rangées alternées recommencées à chaque poste (la 1re surlignée) ;
@@ -6302,9 +6332,9 @@ function radioTable(radios) {
     let s = '';
     if (hasText(r.name)) s += '<tr class="rsep' + (ri ? ' rsep-n' : '') + '"><td class="dc-rname" colspan="4">' + esc(r.name) + '</td></tr>';
     s += r.ch.map((x, k) => {
-      const cl = [k % 2 === 0 ? 'z' : '', (k === 0 && ri && !hasText(r.name)) ? 'pn' : ''].filter(Boolean).join(' ');
-      return '<tr' + (cl ? ' class="' + cl + '"' : '') + '><td>' + (x.nochan ? '' : dash(x.channel)) + '</td><td class="us">' + esc(x.label) + '</td>' +
-        '<td class="fq">' + dash(x.frequency) + '</td><td class="md">' + esc(x.modulation) + '</td></tr>';
+      const cl = [k % 2 === 0 ? 'z' : '', (k === 0 && ri && !hasText(r.name)) ? 'pn' : '', x.blank ? 'dc-bl' : ''].filter(Boolean).join(' ');
+      return '<tr' + (cl ? ' class="' + cl + '"' : '') + '><td>' + (x.nochan || x.blank ? '' : dash(x.channel)) + '</td><td class="us">' + esc(x.label) + '</td>' +
+        '<td class="fq">' + (x.blank ? '' : dash(x.frequency)) + '</td><td class="md">' + esc(x.modulation) + '</td></tr>';
     }).join('');
     return s;
   }).join('');
@@ -6414,6 +6444,81 @@ function blkThreats(c) {
   return blockHtml('threats', title, b);
 }
 
+/* ----- Boîtes vides (lot mp-dg-cases-vides) : une boîte que le rendu ci-dessus ne montre pas (aucune donnée) garde ses titres et quelques
+   lignes vides, à compléter à la main ; elle n'est jamais retirée. Une boîte qui a une donnée garde le rendu ci-dessus. ----- */
+const BLANK_ROWS = { steps: 3, crew: 4, nav: 5, refs: 2, radio: 4, loadout: 2, notes: 2 };
+function blankRows(n, cells) {
+  let s = '';
+  for (let i = 0; i < n; i++) s += '<tr class="dc-bl">' + cells.map(cl => '<td' + (cl ? ' class="' + cl + '"' : '') + '></td>').join('') + '</tr>';
+  return s;
+}
+
+function blkMissionBlank(c) {
+  let b = '<p class="dc-obj dc-bl"></p><ol class="dc-steps">';
+  for (let i = 1; i <= BLANK_ROWS.steps; i++) b += '<li class="dc-bl"><span class="n">' + i + '.</span><span class="x"></span></li>';
+  return blockHtml('mission', t('dc.b.mission'), b + '</ol>');
+}
+
+function blkTimesBlank(c) {
+  const rows = c.times.filter(x => hasText(x.label));
+  const b = '<div class="dc-times">' + rows.map(x =>
+    '<div class="dc-trow dc-bl"><span class="dc-tl">' + esc(x.label) + '</span><span class="dc-tv"></span></div>').join('') + '</div>';
+  return blockHtml('times', t('dc.b.times'), b);
+}
+
+function blkCrewBlank(c) {
+  const hd = crewHead(true);
+  return blockHtml('crew', t('dc.b.crew'),
+    '<table class="dc-tab dc-crew"><colgroup>' + hd.cols + '</colgroup><thead><tr>' + hd.h + '</tr></thead><tbody>' +
+    blankRows(BLANK_ROWS.crew, ['nm', 'm', 'm', 'm']) + '</tbody></table>', 'dc-bbt');
+}
+
+function blkNavBlank(c) {
+  const mode = c.navDisplay.mode;
+  const head = navHead(c, mode, t('dc.h.course'));
+  const cells = mode === 'course' ? ['m ix', 'nm', 'm r', 'm r', 'm r', 'm r', 'nt'] : ['m ix', 'nm', 'm cc', 'm r', 'm r', 'nt'];
+  return blockHtml('nav', t('dc.b.nav'), navTable(mode, head, blankRows(BLANK_ROWS.nav, cells)), 'dc-bbt');
+}
+
+function blkRefsBlank(c) {
+  const mode = c.navDisplay.mode === 'dms' ? 'dms' : 'mgrs';
+  return blockHtml('refs', t('dc.b.refs'), refsTable(mode, refsHead(c, mode), blankRows(BLANK_ROWS.refs, ['m ix', 'nm', 'm cc', 'm r', 'nt'])), 'dc-bbt');
+}
+
+function blkRadioBlank(c) {
+  const ch = [];
+  for (let i = 0; i < BLANK_ROWS.radio; i++) ch.push({ blank: true, channel: '', label: '', frequency: '', modulation: '' });
+  return blockHtml('radio', t('dc.b.radio'), radioTable([{ name: '', ch: ch }]), 'dc-bbt');
+}
+
+function blkFieldsBlank(c) {
+  const body = ['dep', 'arr', 'alt'].map(r =>
+    '<tr class="dc-bl"><td class="ro">' + esc(t('dc.role.' + r)) + '</td><td class="m"></td><td class="nm"></td><td class="m"></td><td class="m"></td></tr>').join('');
+  return blockHtml('fields', t('dc.b.fields'),
+    '<table class="dc-tab dc-fields"><colgroup><col style="width:56px"><col style="width:76px"><col><col style="width:54px"><col style="width:104px"></colgroup>' +
+    '<thead><tr><th></th><th>' + esc(t('dc.h.icao')) + '</th><th>' + esc(t('dc.h.name')) + '</th><th>' + esc(t('dc.h.rwy')) + '</th><th>' + esc(t('dc.h.freq')) + '</th></tr></thead>' +
+    '<tbody>' + body + '</tbody></table>', 'dc-bbt');
+}
+
+function blkWeatherBlank(c) {
+  const b = '<div class="dc-wgrid">' + ['dc.w.wind', 'dc.w.vis', 'dc.w.qnh', 'dc.w.clouds'].map(k =>
+    '<div class="wp dc-bl"><span class="wl">' + esc(t(k)) + '</span><span class="wv"></span></div>').join('') + '</div>';
+  return blockHtml('weather', t('dc.b.weather'), b);
+}
+
+function blkFuelBlank(c) {
+  let b = '<div class="dc-fuelwrap dc-fblank"><div class="dc-fuel">' + ['dc.joker', 'dc.bingo'].map(k =>
+    '<div class="dc-fp dc-bl"><span class="fl">' + esc(t(k)) + '</span><span class="fv"></span></div>').join('') + '</div><ul class="dc-load">';
+  for (let i = 0; i < BLANK_ROWS.loadout; i++) b += '<li class="dc-bl"><span class="lx"></span></li>';
+  return blockHtml('fuel', t('dc.b.fuel') + ' · ' + t('dc.b.loadout'), b + '</ul></div>');
+}
+
+function blkThreatsBlank(c) {
+  let b = '';
+  for (let i = 0; i < BLANK_ROWS.notes; i++) b += '<div class="dc-notes dc-bl"></div>';
+  return blockHtml('threats', t('dc.b.threats') + ' · ' + t('dc.b.notes'), b);
+}
+
 function rowHtml(cls, cells) {
   const live = cells.filter(Boolean);
   if (!live.length) return '';
@@ -6470,17 +6575,17 @@ function pageHtml(c, mode, p, N, kind, withNav, withRefs, noRadio) {
     body = rowHtml('dc-r3', [blkRadioPage(c)]);
   } else if (kind === 'nav') {
     head = headNav(c);
-    body = (withNav ? rowHtml('dc-r3', [blkNav(c)]) : '') + (withRefs ? rowHtml('dc-r3', [blkRefs(c)]) : '');
+    body = (withNav ? rowHtml('dc-r3', [blkNav(c) || blkNavBlank(c)]) : '') + (withRefs ? rowHtml('dc-r3', [blkRefs(c) || blkRefsBlank(c)]) : '');
   } else {
     head = headMain(c);
-    const fields = blkFields(c), weather = blkWeather(c);
-    const col = (fields || weather) ? '<div class="dc-col">' + fields + weather + '</div>' : '';
-    body = rowHtml('dc-r1', [blkMission(c), blkTimes(c)]) +
-      rowHtml('dc-r2', [blkCrew(c)]) +
-      (withNav ? rowHtml('dc-r3', [blkNav(c)]) : '') +
-      (withRefs ? rowHtml('dc-r3', [blkRefs(c)]) : '') +
-      rowHtml('dc-r4', [noRadio ? '' : blkRadio(c), col]) +
-      rowHtml('dc-r5', [blkFuel(c), blkThreats(c)]);
+    const fields = blkFields(c) || blkFieldsBlank(c), weather = blkWeather(c) || blkWeatherBlank(c);
+    const col = '<div class="dc-col">' + fields + weather + '</div>';
+    body = rowHtml('dc-r1', [blkMission(c) || blkMissionBlank(c), blkTimes(c) || blkTimesBlank(c)]) +
+      rowHtml('dc-r2', [blkCrew(c) || blkCrewBlank(c)]) +
+      (withNav ? rowHtml('dc-r3', [blkNav(c) || blkNavBlank(c)]) : '') +
+      (withRefs ? rowHtml('dc-r3', [blkRefs(c) || blkRefsBlank(c)]) : '') +
+      rowHtml('dc-r4', [noRadio ? '' : (blkRadio(c) || blkRadioBlank(c)), col]) +
+      rowHtml('dc-r5', [blkFuel(c) || blkFuelBlank(c), blkThreats(c) || blkThreatsBlank(c)]);
   }
   return '<article class="dc-page" data-mode="' + mode + '">' + top + head + '<div class="dc-body">' + body + '</div>' + foot + '</article>';
 }
@@ -6508,25 +6613,18 @@ function overflowsHtml(html) {
    nr : la page 1 sans le bloc Radio. */
 function planBase(c, nr) {
   const plan = { split: false, overflow: false, overflow2: false, p2: 'navrefs' };
-  const hasNav = navRows(c).length > 0, hasRefs = refRows(c).length > 0;
-  if (hasRefs) {
-    /* 1 · tout tient en page 1 (navigation puis références) ; 2 · la page 1 avec la navigation seule tient : les références
-       passent seules en page 2 ; 3 · page 1 sans navigation ni références, page 2 avec la navigation puis les références */
-    if (overflowsHtml(pageHtml(c, 'day', 1, 1, 'main', true, true, nr))) {
-      plan.split = true;
-      if (hasNav && !overflowsHtml(pageHtml(c, 'day', 1, 2, 'main', true, false, nr))) plan.p2 = 'refs';
-      else {
-        plan.overflow = overflowsHtml(pageHtml(c, 'day', 1, 2, 'main', false, false, nr));
-        plan.overflow2 = overflowsHtml(pageHtml(c, 'day', 2, 2, 'nav', hasNav, true));   /* page 2 : la navigation puis les références */
-      }
-    }
-  } else if (hasNav) {
-    if (overflowsHtml(pageHtml(c, 'day', 1, 1, 'main', true, false, nr))) {
-      plan.split = true;
+  /* La navigation et les points de référence sont toujours présents (vides : leurs titres et leurs lignes à remplir) et vont ensemble.
+     Seule une carte qui a des données dans les deux garde le cas 2 d'avant : la page 1 avec la navigation tient, les références passent seules en page 2. */
+  const dataNav = navRows(c).length > 0, dataRefs = refRows(c).length > 0;
+  /* 1 · tout tient en page 1 (navigation puis références) ; 2 · (données dans les deux) la page 1 avec la navigation seule tient : les références
+     passent seules en page 2 ; 3 · page 1 sans navigation ni références, page 2 avec la navigation puis les références */
+  if (overflowsHtml(pageHtml(c, 'day', 1, 1, 'main', true, true, nr))) {
+    plan.split = true;
+    if (dataNav && dataRefs && !overflowsHtml(pageHtml(c, 'day', 1, 2, 'main', true, false, nr))) plan.p2 = 'refs';
+    else {
       plan.overflow = overflowsHtml(pageHtml(c, 'day', 1, 2, 'main', false, false, nr));
+      plan.overflow2 = overflowsHtml(pageHtml(c, 'day', 2, 2, 'nav', true, true));   /* page 2 : la navigation puis les références */
     }
-  } else {
-    plan.overflow = overflowsHtml(pageHtml(c, 'day', 1, 1, 'main', false, false, nr));
   }
   return plan;
 }
@@ -6557,13 +6655,13 @@ function planCard(c) {
 /* Les pages d'une carte, dans un mode donné */
 function cardPages(c, mode) {
   const plan = planCard(c);
-  const hasRefs = refRows(c).length > 0, rp = plan.radioPage, nr = rp;
+  const rp = plan.radioPage, nr = rp;
   const N = (plan.split ? 2 : 1) + (rp ? 1 : 0);
   const pages = plan.split
     ? (plan.p2 === 'refs'
       ? [pageHtml(c, mode, 1, N, 'main', true, false, nr), pageHtml(c, mode, 2, N, 'nav', false, true)]
-      : [pageHtml(c, mode, 1, N, 'main', false, false, nr), pageHtml(c, mode, 2, N, 'nav', true, hasRefs)])
-    : [pageHtml(c, mode, 1, N, 'main', true, hasRefs, nr)];
+      : [pageHtml(c, mode, 1, N, 'main', false, false, nr), pageHtml(c, mode, 2, N, 'nav', true, true)])
+    : [pageHtml(c, mode, 1, N, 'main', true, true, nr)];
   if (rp) pages.push(pageHtml(c, mode, N, N, 'radios', false, false));
   return { plan, pages };
 }
