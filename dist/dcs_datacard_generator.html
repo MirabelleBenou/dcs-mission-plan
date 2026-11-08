@@ -251,6 +251,24 @@ body {
 .tb-sel:hover, .tb-sel:focus-visible { border-color: var(--amber); outline: none; }
 .tb-sel option { background: var(--olive-dark); color: var(--paper); font-weight: 500; }
 
+/* ---------- le menu « Unités » (recopié du Route Planner, lot mp-theatre-unique) : le bouton de la barre et son panneau, au style des listes de la barre (tbm-*) ---------- */
+#btn-units { position: relative; color: var(--amber); border-color: var(--amber-dark); padding-right: 12px; }
+#btn-units:hover, #btn-units:focus-visible, #btn-units.dsp-open { border-color: var(--amber); }
+#btn-units .dsp-chev { width: 10px; height: 6px; }
+#btn-units.dsp-open .dsp-chev { transform: rotate(180deg); }
+.dsp-panel { max-height: min(80vh, 600px); min-width: 240px; padding-bottom: 6px; }
+.dsp-sub { font-family: var(--f-ui); font-weight: 500; font-size: 10px; letter-spacing: 1.8px; text-transform: uppercase; color: var(--khaki); padding: 10px 18px 4px; }
+.dsp-sub:not(:first-of-type) { border-top: 1px solid rgba(168,154,114,.25); margin-top: 4px; }
+.dsp-opt { outline: none; color: var(--khaki-light); }
+.dsp-opt[aria-checked="true"] { color: var(--paper); }
+.dsp-opt:focus-visible { background: var(--olive); color: var(--amber); }
+.dsp-box { position: relative; width: 15px; height: 15px; flex: none; box-sizing: border-box; border: 1.5px solid var(--khaki); }
+.dsp-opt[aria-checked="true"] .dsp-box { background: var(--amber); border-color: var(--amber); }
+.dsp-opt[aria-checked="true"] .dsp-box::after { content: ''; position: absolute; left: 3.5px; top: 0.5px; width: 4px; height: 8px; box-sizing: border-box;
+  border-right: 2px solid var(--olive-deep); border-bottom: 2px solid var(--olive-deep); transform: rotate(45deg); }
+.dsp-opt:hover .dsp-box { border-color: var(--amber); }
+.dsp-opt[role="menuitemradio"] .dsp-box { border-radius: 50%; }
+
 /* ---------- Listes de la barre au thème de l'interface (lot mp-ui-listes) ----------
    Le <select> reste dans la page, masqué ; un bouton de mêmes classes prend sa place (voir initToolbarMenus). */
 select[data-tbm-src] { display: none !important; }
@@ -1268,19 +1286,20 @@ div.dc-bl, li.dc-bl, p.dc-bl { height: 24px; border-bottom: 1px dotted var(--dc-
 
 
 /* ---------- Barre du haut commune aux sept modules (lot mp-imports-suite) ----------
-   La marque du Flight Configurator : le titre et son sous-titre à l'accent du module dès 1503 px, le sigle seul en dessous (à toutes les largeurs) ;
-   la version avec le titre ; le tampon de décor dès 2204 px. Seuils mesurés dans le shell avec un tampon d'escadre « TEST WING », en français et en anglais,
-   la liste du théâtre comprise (lot mp-dg-terrains-liste : +142 px au titre, +171 px aux textes des boutons, +183 px au tampon de décor, au pire des deux langues). */
+   La marque du Flight Configurator : le titre et son sous-titre à l'accent du module dès 1601 px, le sigle seul en dessous (à toutes les largeurs) ;
+   la version avec le titre ; le tampon de décor dès 2307 px. Seuils mesurés dans le shell avec un tampon d'escadre « TEST WING », en français et en anglais,
+   la liste du théâtre comprise (lot mp-dg-terrains-liste : +142 px au titre, +171 px aux textes des boutons, +183 px au tampon de décor, au pire des deux langues) et le bouton « Unités »
+   (lot mp-theatre-unique : +97 px au titre, +103 px aux textes des boutons, +103 px au tampon de décor, mesurés avant et après). */
 .tb-brand-main, .tb-brand-short { color: #8fb0c0; }
 .tb-brand-short { display: none; font-family: var(--f-stencil); font-size: 16px; font-weight: 700; letter-spacing: 3px; white-space: nowrap; }
 .tb-classif { font-family: var(--f-stencil); font-weight: 400; font-size: 11px; letter-spacing: 3px; color: var(--red-faded); border: 1px solid var(--red-faded); padding: 4px 10px; white-space: nowrap; flex-shrink: 0; }
 .tb-lang-btn svg { display: block; }
 .tb-brand-sub { font-weight: 500; }
 .tb-version { font-family: 'Roboto Mono', monospace; }
-@media (max-width: 1502px) { .tb-brand-main, .tb-brand-sub, .tb-brand + .tb-sep, .tb-version { display: none; } .tb-brand-short { display: inline; } }
-@media (max-width: 2203px) { .tb-classif { display: none; } }
-/* Les boutons portent leur texte au-dessus de 1912 px ; en dessous, l'icône seule (seuil mesuré : avec le tampon d'escadre, la barre défilerait sinon) */
-@media (max-width: 1911px) { .tb-btn .tb-btn-label { display: none; } .tb-btn { padding: 0 10px; } }
+@media (max-width: 1600px) { .tb-brand-main, .tb-brand-sub, .tb-brand + .tb-sep, .tb-version { display: none; } .tb-brand-short { display: inline; } }
+@media (max-width: 2306px) { .tb-classif { display: none; } }
+/* Les boutons portent leur texte au-dessus de 2015 px ; en dessous, l'icône seule (seuil mesuré : avec le tampon d'escadre, la barre défilerait sinon) */
+@media (max-width: 2014px) { .tb-btn .tb-btn-label { display: none; } .tb-btn { padding: 0 10px; } }
 @media (max-width: 1250px) {
   /* le sélecteur de thème se resserre */
   .tb-select { max-width: 124px; padding: 0 26px 0 8px; text-overflow: ellipsis; overflow: hidden; }
@@ -1652,6 +1671,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   <div class="tb-sep"></div>
   <span class="tb-label" data-i18n="tb.theatre">Théâtre</span>
   <select class="tb-sel" id="theatre" data-i18n-aria-label="tb.theatre" aria-label="Théâtre"></select>
+  <div class="tb-sep"></div>
+  <button type="button" class="tb-btn" id="btn-units" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.units" title="Unités" data-i18n-aria-label="tb.units" aria-label="Unités"><span id="units-txt"></span><svg class="dsp-chev" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg></button>
   <div class="tb-sep"></div>
   <button class="tb-btn" id="btn-json-import" data-i18n-title="tb.json.import.tip" title="Ouvrir une datacard (JSON)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v1H3z"/><path d="M3 10h19l-2 8a2 2 0 0 1-2 1.5H5a2 2 0 0 1-2-2z"/></svg>
@@ -2323,6 +2344,7 @@ const I18N = {
     'tb.reset.tip': 'Vider le document (repartir d\'une carte blanche)',
     'tb.theme.tip': 'Thème graphique',
     'tb.theatre': 'Théâtre',
+    'tb.units': 'Unités',
     'f.search': 'Rechercher…',
     'f.noaf': 'Aucun aérodrome',
     'tb.lang.tip': 'Passer en anglais',
@@ -2733,6 +2755,7 @@ const I18N = {
     'tb.reset.tip': 'Clear the document (start from a blank card)',
     'tb.theme.tip': 'Graphic theme',
     'tb.theatre': 'Theatre',
+    'tb.units': 'Units',
     'f.search': 'Search…',
     'f.noaf': 'No airfield',
     'tb.lang.tip': 'Switch to French',
@@ -3895,7 +3918,7 @@ function fmtVar(v) {
    calc : { cap, dist } (chaînes) quand la branche (point précédent non vide → ce point) est calculable, sinon null. */
 function navLegs(c) {
   const nv = navVar(c);
-  const nm = c.units.distance === 'nm';
+  const nm = dgU.distance === 'nm';
   const out = [];
   let prev = null;
   c.nav.forEach(r => {
@@ -3955,7 +3978,7 @@ function newCard() {
   return {
     meta: { classification: 'confidential', docRef: '', operation: '', mission: '', date: '', time: '' },
     flight: { callsign: '', aircraft: '', count: null, task: '', threat: '' },
-    units: { mass: 'kg', distance: 'km', altitude: 'm' },
+    units: { mass: dgU.mass, distance: dgU.distance, altitude: dgU.altitude },       /* toujours égal à la clé mp_units_v1 (dgUnitsSet) */
     mission: { objective: '', execution: [] },
     times: defaultTimes(),
     crew: [],
@@ -4187,6 +4210,51 @@ function dgAdoptTheatre() {
   return true;
 }
 
+/* ============= LES UNITÉS PARTAGÉES (lot mp-theatre-unique) =============
+   Une clé de stockage, mp_units_v1 = { mass, distance, altitude } (kg|lb, km|nm, m|ft), que le Route Planner (distance, altitude) et ce module lisent et écrivent ; sans horodatage,
+   écrite seulement si un champ diffère de ce qu'elle porte (réécrire la même valeur ne déclenche aucun évènement « storage » : c'est ce qui coupe la boucle), et jamais réécrite quand elle
+   vient de l'autre module. Un champ absent ou invalide vaut kg, km, m. dgU est la valeur en cours : toute carte porte la même dans c.units (datacard_state_v1 et les fichiers écrits
+   gardent leur format), et tout rendu lit dgU. Un document ouvert, importé ou lu d'une route donne sa première carte à la clé (dgUnitsAdopt) ; l'exemple suit la clé. */
+const KEY_UNITS = 'mp_units_v1';
+const UNITS_DEFAULT = { mass: 'kg', distance: 'km', altitude: 'm' };
+const dgU = { mass: 'kg', distance: 'km', altitude: 'm' };
+function dgUnitsNorm(o) {
+  const r = {};
+  Object.keys(UNITS_DEFAULT).forEach(k => { r[k] = o && typeof o === 'object' && UNIT_CHOICES[k].indexOf(o[k]) !== -1 ? o[k] : UNITS_DEFAULT[k]; });
+  return r;
+}
+/* La clé lue et normalisée ; null si elle est absente ou n'est pas un objet */
+function dgReadUnitsKey() {
+  try {
+    const o = JSON.parse(localStorage.getItem(KEY_UNITS));
+    return o && typeof o === 'object' && !Array.isArray(o) ? dgUnitsNorm(o) : null;
+  } catch (e) { return null; }
+}
+function dgWriteUnitsKey(u) {
+  let raw = null;
+  try { raw = JSON.parse(localStorage.getItem(KEY_UNITS)); } catch (e) { raw = null; }
+  if (raw && typeof raw === 'object' && Object.keys(UNITS_DEFAULT).every(k => raw[k] === u[k])) return;       /* déjà là : aucune écriture */
+  try { localStorage.setItem(KEY_UNITS, JSON.stringify({ mass: u.mass, distance: u.distance, altitude: u.altitude })); } catch (e) { /* stockage indisponible : comme les autres écritures du module */ }
+}
+/* Poser les unités : dgU, chaque carte, le menu ; la clé s'écrit sauf si elles viennent de la clé (fromKey). Rend vrai si elles ont changé. */
+function dgUnitsSet(u, fromKey) {
+  const n = dgUnitsNorm(u);
+  const changed = Object.keys(UNITS_DEFAULT).some(k => dgU[k] !== n[k]);
+  Object.assign(dgU, n);
+  doc.cards.forEach(c => { c.units = { mass: n.mass, distance: n.distance, altitude: n.altitude }; });
+  if (!fromKey) dgWriteUnitsKey(n);
+  dgUnitsSync();
+  if (changed) { persistState(); renderEditor(true); renderPreview(); }
+  return changed;
+}
+/* Un document ouvert, importé ou lu d'une route : les unités valides de sa première carte deviennent la clé */
+function dgUnitsAdopt(units) { return dgUnitsSet(units); }
+/* L'autre module a écrit mp_units_v1 */
+function dgFollowUnits() {
+  const k = dgReadUnitsKey();
+  if (k && Object.keys(UNITS_DEFAULT).some(f => dgU[f] !== k[f])) dgUnitsSet(k, true);
+}
+
 /* ============= ÉTAT ============= */
 let doc = newDoc();
 let curIdx = 0;
@@ -4209,6 +4277,7 @@ function loadState() {
 function setDoc(next) {
   if (doc.theatre) next.theatre = doc.theatre;       /* ouvrir un fichier, l'exemple ou une carte blanche ne change pas le théâtre choisi ; un fichier n'en pose un que si le document n'en a pas */
   doc = next;
+  doc.cards.forEach(c => { c.units = { mass: dgU.mass, distance: dgU.distance, altitude: dgU.altitude }; });       /* « Exemple », une carte blanche, un fichier : les cartes suivent la clé */
   curIdx = 0;
   const ts = document.getElementById('theatre');
   if (ts && ts.value !== dgTheatre()) ts.value = dgTheatre();       /* un fichier a pu poser le théâtre d'un document qui n'en avait pas */
@@ -6469,7 +6538,7 @@ function phaseLabel(ph) {
 /* ============= RENDU DE LA DATACARD ============= */
 function dash(v) { return hasText(v) ? esc(v) : '—'; }
 function classifLabel(c) { return t('classif.' + c.meta.classification); }
-function unitLabel(c, kind) { return t('u.' + c.units[kind]); }
+function unitLabel(c, kind) { return t('u.' + dgU[kind]); }       /* tout rendu lit la clé partagée */
 
 function anyText(o, keys) { return keys.some(k => hasText(o[k])); }
 const CREW_KEYS = ['callsign', 'pilot', 'type', 'board'];
@@ -7087,7 +7156,6 @@ function listHtml(path, items, renderItem, addKey) {
     '<button type="button" class="ed-btn-add" data-act="add" data-list="' + path + '"' + (items.length >= spec.max ? ' disabled' : '') + '>' + esc(Array.isArray(addKey) ? t(addKey[0], addKey[1]) : t(addKey)) + '</button>';
 }
 
-function unitOptions(kind) { return UNIT_CHOICES[kind].map(k => [k, t('u.' + k)]); }
 
 /* Réglages d'affichage de la navigation (en tête de la section) et état d'une coordonnée saisie */
 function navDeclMissing(c) { return c.navDisplay.ref === 'mag' && c.navDisplay.vmode === 'manual' && parseDecl(c.navDisplay.decl) == null; }
@@ -7163,11 +7231,7 @@ const SECTION_BUILDERS = {
     fSelect('f.classification', 'meta.classification', c.meta.classification, CLASSIF_KEYS.map(k => [k, t('classif.' + k)])) +
     fInput('f.docRef', 'meta.docRef', c.meta.docRef) +
     '<div class="ed-field-row">' + fInput('f.operation', 'meta.operation', c.meta.operation) + fInput('f.mission', 'meta.mission', c.meta.mission) + '</div>' +
-    '<div class="ed-field-row">' + fInput('f.date', 'meta.date', c.meta.date) + fInput('f.time', 'meta.time', c.meta.time) + '</div>' +
-    '<div class="ed-field-row three">' +
-    fSelect('f.mass', 'units.mass', c.units.mass, unitOptions('mass')) +
-    fSelect('f.distance', 'units.distance', c.units.distance, unitOptions('distance')) +
-    fSelect('f.altitude', 'units.altitude', c.units.altitude, unitOptions('altitude')) + '</div>',
+    '<div class="ed-field-row">' + fInput('f.date', 'meta.date', c.meta.date) + fInput('f.time', 'meta.time', c.meta.time) + '</div>',
 
   mission: c =>
     fArea('f.objective', 'mission.objective', c.mission.objective) +
@@ -7427,7 +7491,7 @@ function onEditorInput(e) {
   if (path === 'flight.callsign') updatePackTitle();
   if (/^crew\./.test(path) && !c.gsId) { syncGroup(c); syncGroupEditor(c); }
   if (path === 'navDisplay.ref' || path === 'navDisplay.vmode') renderEditor();        /* la troisième liste et la rangée de la saisie changent */
-  else if (/^nav(Display)?\./.test(path) || path === 'units.distance' || path === 'meta.date') syncNavEditor();
+  else if (/^nav(Display)?\./.test(path) || path === 'meta.date') syncNavEditor();
   if (/^refs\./.test(path)) syncRefsEditor();
   touch();
 }
@@ -7575,6 +7639,7 @@ function setLang(lang) {
   layoutCache.clear();
   applyI18nStatic();
   dgFillTheatre();
+  dgUnitsSync();
   updateFlagButton();
   renderAll();
   if (!document.getElementById('import-modal').hidden) biRefresh(true);
@@ -7675,6 +7740,7 @@ function downloadJson(name) {
    groupe (ses champs propres viennent du fichier, ses champs de groupe de la fiche) ; les autres cartes du fichier (libres, ou liées à un groupe que la fiche n'a pas) entrent comme cartes libres,
    et remplacent les cartes libres d'avant. Le mode est celui du fichier. */
 function openDatacards(next) {
+  const u0 = next.cards.length ? next.cards[0].units : null;       /* les unités de la première carte du fichier */
   const g = gsRead(), ids = new Set(g ? g.flights.map(f => f.fcId) : []);
   const mine = new Map(next.cards.filter(c => c.gsId && ids.has(c.gsId)).map(c => [c.gsId, c]));
   const kept = doc.cards.filter(x => x.gsId).map(x => mine.get(x.gsId) || x);
@@ -7685,6 +7751,7 @@ function openDatacards(next) {
   });
   next.cards = kept.concat(fresh);
   if (!next.cards.length) next.cards = [newCard()];
+  if (u0) dgUnitsAdopt(u0);
   setDoc(next);
   curIdx = Math.min(kept.length, next.cards.length - 1);
   renderAll();
@@ -7934,6 +8001,7 @@ function runAllRoutesImport() {
     return c;
   });
   biAddCards(cards);
+  dgUnitsAdopt(cards[0].units);       /* la première carte donne ses unités à la clé, toutes les cartes les prennent */
   persistState();
   renderAll();
   closeImportModal();
@@ -8060,6 +8128,7 @@ function runRouteImport() {
   } else {
     applyRouteToCard(curCard(), r);
   }
+  dgUnitsAdopt(curCard().units);       /* la route lue donne ses unités à la clé */
   persistState();
   renderAll();
   closeImportModal();
@@ -8320,6 +8389,7 @@ function bindEvents() {
   document.getElementById('btn-reset').addEventListener('click', resetDoc);
   document.getElementById('theme-select').addEventListener('change', e => applyTheme(e.target.value, true));
   document.getElementById('theatre').addEventListener('change', e => dgSetTheatre(e.target.value));
+  unBind();
   document.getElementById('btn-lang').addEventListener('click', () => setLang(CURRENT_LANG === 'fr' ? 'en' : 'fr'));
 
   /* Export */
@@ -8373,7 +8443,7 @@ function bindEvents() {
   initScrollBar(document.getElementById('tab-bar'));
 
   /* Passage depuis le Route Planner (même origine : l'évènement vient d'un autre document) */
-  window.addEventListener('storage', e => { if (e.key === KEY_HANDOFF) checkRouteHandoff(); if (e.key === KEY_THEATRE) dgFollowTheatre(); dgStorage(e); });
+  window.addEventListener('storage', e => { if (e.key === KEY_HANDOFF) checkRouteHandoff(); if (e.key === KEY_THEATRE) dgFollowTheatre(); if (e.key === KEY_UNITS) dgFollowUnits(); dgStorage(e); });
 
   window.addEventListener('beforeprint', fillPrintRoot);
   window.addEventListener('afterprint', clearPrintRoot);
@@ -8387,6 +8457,160 @@ function bindEvents() {
     const cur = document.body.dataset.theme;
     if (sel && cur && sel.value !== cur && THEME_IDS.indexOf(cur) !== -1) sel.value = cur;
   }).observe(document.body, { attributes: true, attributeFilter: ['data-theme'] });
+}
+
+/* ============= LE MENU « UNITÉS » (recopié du Route Planner, lot mp-theatre-unique) =============
+   Même composant et même aspect que le menu du Route Planner (tbm-panel dsp-panel, dsp-opt, dsp-box), des lignes « radio » : une seule unité par groupe, celle de dgU ;
+   trois groupes ici (Masse, Distance, Altitude) ; les titres des groupes sont ceux des anciens réglages par carte. Un choix règle l'unité et la clé ; le panneau reste ouvert. */
+const UN = { open: false, panel: null, x0: 0, y0: 0 };
+const UN_ROWS = [
+  { g: 'mass', k: 'kg' }, { g: 'mass', k: 'lb' },
+  { g: 'distance', k: 'km' }, { g: 'distance', k: 'nm' },
+  { g: 'altitude', k: 'm' }, { g: 'altitude', k: 'ft' }
+];
+function unOn(r) { return dgU[r.g] === r.k; }
+/* Le bouton dit le réglage en cours (distance · altitude, comme au Route Planner) ; les cases du panneau ouvert le suivent */
+function dgUnitsSync() {
+  const tx = document.getElementById('units-txt');
+  if (tx) tx.textContent = t('u.' + dgU.distance) + ' · ' + t('u.' + dgU.altitude);
+  if (!UN.open || !UN.panel) return;
+  UN_ROWS.forEach(r => {
+    const row = UN.panel.querySelector('[data-g="' + r.g + '"][data-k="' + r.k + '"]');
+    if (row) row.setAttribute('aria-checked', unOn(r) ? 'true' : 'false');
+  });
+}
+function unBuild() {
+  const ul = UN.panel;
+  ul.textContent = '';
+  ul.setAttribute('aria-label', t('tb.units'));
+  const head = document.createElement('div');
+  head.className = 'tbm-head';
+  head.setAttribute('role', 'presentation');
+  head.textContent = t('tb.units');
+  ul.appendChild(head);
+  let g = '';
+  UN_ROWS.forEach(r => {
+    if (r.g !== g) {
+      g = r.g;
+      const sub = document.createElement('div');
+      sub.className = 'dsp-sub';
+      sub.setAttribute('role', 'presentation');
+      sub.textContent = t('f.' + g);
+      ul.appendChild(sub);
+    }
+    const row = document.createElement('div');
+    row.className = 'tbm-opt dsp-opt';
+    row.setAttribute('role', 'menuitemradio');
+    row.setAttribute('aria-checked', 'false');
+    row.tabIndex = -1;
+    row.setAttribute('data-g', r.g);
+    row.setAttribute('data-k', r.k);
+    const box = document.createElement('span');
+    box.className = 'dsp-box';
+    box.setAttribute('aria-hidden', 'true');
+    const txt = document.createElement('span');
+    txt.className = 'tbm-txt';
+    txt.textContent = t('u.' + r.k);
+    row.appendChild(box);
+    row.appendChild(txt);
+    ul.appendChild(row);
+  });
+  dgUnitsSync();
+}
+function unPlace() {
+  const btn = document.getElementById('btn-units'), p = UN.panel;
+  const r = btn.getBoundingClientRect();
+  const vw = document.documentElement.clientWidth, vh = window.innerHeight;
+  const top = r.bottom + 4;
+  UN.x0 = r.left; UN.y0 = r.top;
+  p.style.minWidth = Math.max(240, r.width) + 'px';
+  p.style.top = top + 'px';
+  p.style.maxHeight = Math.max(60, Math.min(0.8 * vh, 600, vh - top - 8)) + 'px';
+  const w = p.getBoundingClientRect().width;
+  let left = r.left;
+  if (left + w > vw - 8) left = vw - 8 - w;
+  if (left < 8) left = 8;
+  p.style.left = left + 'px';
+}
+function unOpen() {
+  if (UN.open) return;
+  if (TBM.cur) tbmClose(false);
+  const ul = document.createElement('div');
+  ul.className = 'tbm-panel dsp-panel';
+  ul.id = 'un-panel';
+  ul.setAttribute('role', 'menu');
+  ul.tabIndex = -1;
+  document.body.appendChild(ul);
+  UN.panel = ul;
+  UN.open = true;
+  unBuild();
+  ul.addEventListener('click', e => {
+    const row = e.target.closest ? e.target.closest('.dsp-opt') : null;
+    if (row) unChoose(row.getAttribute('data-g'), row.getAttribute('data-k'));
+  });
+  ul.addEventListener('keydown', unKey);
+  const b = document.getElementById('btn-units');
+  b.classList.add('dsp-open');
+  b.setAttribute('aria-expanded', 'true');
+  b.setAttribute('aria-controls', 'un-panel');
+  unPlace();
+  ul.focus({ preventScroll: true });
+}
+function unClose(refocus) {
+  if (!UN.open) return;
+  UN.open = false;
+  if (UN.panel) UN.panel.remove();
+  UN.panel = null;
+  const b = document.getElementById('btn-units');
+  b.classList.remove('dsp-open');
+  b.setAttribute('aria-expanded', 'false');
+  if (refocus) b.focus({ preventScroll: true });
+}
+function unKey(e) {
+  const rows = Array.prototype.slice.call(UN.panel.querySelectorAll('.dsp-opt'));
+  const cur = rows.indexOf(document.activeElement);
+  const go = k => { if (rows[k]) { rows[k].focus({ preventScroll: true }); rows[k].scrollIntoView({ block: 'nearest' }); } };
+  const k = e.key;
+  if (k === 'ArrowDown') { e.preventDefault(); go(cur < 0 ? 0 : Math.min(rows.length - 1, cur + 1)); }
+  else if (k === 'ArrowUp') { e.preventDefault(); go(cur < 0 ? rows.length - 1 : Math.max(0, cur - 1)); }
+  else if (k === 'Home') { e.preventDefault(); go(0); }
+  else if (k === 'End') { e.preventDefault(); go(rows.length - 1); }
+  else if ((k === 'Enter' || k === ' ') && cur >= 0) { e.preventDefault(); unChoose(rows[cur].getAttribute('data-g'), rows[cur].getAttribute('data-k')); }
+  else if (k === 'Escape') { e.preventDefault(); e.stopPropagation(); unClose(true); }
+  else if (k === 'Tab') unClose(true);
+}
+/* Un toucher ou un clic hors du panneau et du bouton le ferme, sans agir ailleurs (le clic qui suit est avalé) */
+function unOutside(e) {
+  if (!UN.open) return;
+  const t = e.target;
+  if (UN.panel.contains(t) || document.getElementById('btn-units').contains(t)) return;
+  const other = t && t.closest ? t.closest('.tbm-trigger') : null;
+  unClose(false);
+  if (other) return;
+  tbmSwallowNext();
+}
+/* Une ligne règle l'unité de son groupe (le menu reste ouvert) */
+function unChoose(g, k) {
+  const u = { mass: dgU.mass, distance: dgU.distance, altitude: dgU.altitude };
+  if (!(g in u)) return;
+  u[g] = k;
+  dgUnitsSet(u);
+}
+function unBind() {
+  const b = document.getElementById('btn-units');
+  b.addEventListener('click', () => { if (UN.open) unClose(false); else unOpen(); });
+  b.addEventListener('keydown', e => {
+    if (e.key === 'ArrowDown' && !UN.open) { e.preventDefault(); unOpen(); }
+  });
+  document.addEventListener('pointerdown', unOutside, true);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && UN.open) { e.preventDefault(); unClose(true); } });
+  window.addEventListener('resize', () => unClose(false));
+  window.addEventListener('blur', () => unClose(false));
+  window.addEventListener('scroll', e => {
+    if (!UN.open || (e.target && e.target.nodeType && UN.panel.contains(e.target))) return;
+    const r = b.getBoundingClientRect();
+    if (Math.abs(r.left - UN.x0) > 0.5 || Math.abs(r.top - UN.y0) > 0.5) unClose(false);
+  }, true);
 }
 
 /* ============= DÉMARRAGE ============= */
@@ -8831,9 +9055,14 @@ function tbmOutside(e) {
   if (!m) return;
   const t = e.target;
   if (m.panel.contains(t) || m.btn.contains(t)) return;
-  const other = t && t.closest ? t.closest('.tbm-trigger') : null;
+  const other = t && t.closest ? t.closest('.tbm-trigger, #btn-units') : null;
   tbmClose(false);
   if (other) return;
+  tbmSwallowNext();
+}
+
+/* Le clic qui suit le toucher hors de la liste est avalé (aussi pour le menu « Unités ») */
+function tbmSwallowNext() {
   TBM.swallow = true;
   const rel = () => { document.removeEventListener('pointerup', rel, true); document.removeEventListener('pointercancel', rel, true); setTimeout(() => { TBM.swallow = false; }, 350); };
   document.addEventListener('pointerup', rel, true);
@@ -8930,6 +9159,7 @@ function init() {
   impSetup({ lang: () => CURRENT_LANG, onImported: dgImported, toast: msg => showToast('\u26a0 ' + msg, { type: 'err' }) });      /* la fenêtre d'import commune : elle écrit dans la fiche, les cartes suivent */
   gsMigrate(dgPackFn);
   loadState();
+  { const k = dgReadUnitsKey(); dgUnitsSet(k || doc.cards[0].units, !!k); }       /* la clé fait foi ; absente, la première carte du document la pose */
   const th0 = doc.theatre;
   { const k = dgReadTheatreKey(); if (k) doc.theatre = k; }       /* le théâtre que le Route Planner a écrit : le dernier changement gagne */
   dgFillTheatre();

@@ -130,6 +130,16 @@ body {
   outline: none;
 }
 .tb-select option { background-color: var(--olive-dark); color: var(--paper); }
+/* Le théâtre dans la barre : le libellé et la liste, mêmes règles qu'au Route Planner et au Datacard Generator (.tb-label, .tb-sel) */
+.tb-label { font-size: 10px; font-weight: 500; letter-spacing: 1.5px; color: var(--khaki-light); text-transform: uppercase; flex: none; margin-left: 4px; white-space: nowrap; }
+.tb-sel {
+  font-family: var(--f-ui); font-weight: 700; letter-spacing: 1.5px; font-size: 12px; text-transform: uppercase;
+  color: var(--amber); border: 1px solid var(--amber-dark); height: 40px; min-width: 44px;
+  padding: 0 30px 0 12px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex: none; appearance: none; -webkit-appearance: none;
+  background: var(--olive-dark) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23c0892a' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right 11px center;
+}
+.tb-sel:hover, .tb-sel:focus-visible { border-color: var(--amber); outline: none; }
+.tb-sel option { background: var(--olive-dark); color: var(--paper); font-weight: 500; }
 
 /* ---------- Listes de la barre au thème de l'interface (lot mp-ui-listes) ----------
    Le <select> reste dans la page, masqué ; un bouton de mêmes classes prend sa place (voir initToolbarMenus). */
@@ -361,25 +371,35 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
 .tb-btn:disabled { opacity: .4; cursor: default; }
 .tb-btn:disabled:hover { background: transparent; border-color: var(--khaki); color: var(--paper); }
 .tb-btn.danger:hover { background: var(--rust); border-color: var(--red-faded); color: var(--paper-light); }
-/* Seuils mesurés dans le shell (il ajoute à la barre un bouton de retour de 40 ou 119 px, et le tampon de l'escadre) : libellé long dès 1040 px (le français est le plus large),
-   libellé court de 900 à 1039 px, icône seule en dessous ; le titre et la version dès 1436 px, le tampon de décor dès 1645 px ; le sigle reste visible à toutes les largeurs. */
-@media (max-width: 1435px) { .tb-brand-main, .tb-brand-sub, .tb-sep, .tb-version { display: none; } .tb-brand-short { display: inline; } }
-@media (max-width: 1039px) { .tb-btn .tb-long { display: none; } .tb-btn .tb-short { display: inline; } .tb-btn { padding: 0 9px; letter-spacing: 1px; } .tb-select { max-width: 130px; } }
-@media (max-width: 899px) { .tb-btn .tb-btn-label { display: none; } .tb-btn { padding: 0; width: 38px; } .tb-select { max-width: 110px; } }
+/* Seuils mesurés dans le shell (il ajoute à la barre un bouton de retour de 40 ou 119 px, et le tampon de l'escadre) : libellé long dès 1330 px (le français est le plus large),
+   libellé court de 1190 à 1329 px, icône seule en dessous ; le titre et la version dès 1615 px, le tampon de décor dès 1824 px ; le sigle reste visible à toutes les largeurs.
+   La liste du théâtre (lot mp-theatre-unique) a déplacé de 179 px les seuils du titre et du tampon de décor, de 290 px ceux des libellés longs et courts (théâtre « Caucase », mesuré dans le shell, en français et en anglais, sans dépassement de 900 à 1900 px). */
+@media (max-width: 1614px) { .tb-brand-main, .tb-brand-sub, .tb-sep, .tb-version { display: none; } .tb-brand-short { display: inline; } }
+@media (max-width: 1329px) { .tb-btn .tb-long { display: none; } .tb-btn .tb-short { display: inline; } .tb-btn { padding: 0 9px; letter-spacing: 1px; } .tb-select { max-width: 130px; } }
+@media (max-width: 1189px) { .tb-btn .tb-btn-label { display: none; } .tb-btn { padding: 0; width: 38px; } .tb-select { max-width: 110px; } }
 @media (max-width: 539px) { .tb-select { max-width: 96px; } }
 @media (max-width: 479px) { .toolbar { gap: 3px; } .tb-btn { width: 34px; min-width: 34px; } .tb-select { max-width: 64px; padding: 0 18px 0 6px; } .tb-lang-btn { min-width: 34px; padding: 0 2px; } }
+/* La liste du théâtre (lot mp-theatre-unique) : jusqu'à 980 px le libellé « Théâtre » cède la place (la liste garde son nom accessible) ; sous 480 px la liste se resserre (texte entier jusqu'à 96 px, puis coupé)
+   et la liste du thème de l'interface quitte la barre (le thème se règle au tableau du shell, qui le propage) : sans cela la barre défile de 21 à 28 px à 412 px */
+@media (max-width: 980px) { .tb-label { display: none; } }
+@media (max-width: 479px) { .tb-sel { padding: 0 20px 0 6px; font-size: 11px; letter-spacing: .5px; background-position: right 6px center; flex: none; max-width: 96px; } .tb-select.tbm-trigger { display: none; } }
 
 /* Tampon de décor : le style de celui du Briefing Generator, en anglais dans les deux langues ; il ne s'affiche que quand la barre a la place. */
 .tb-brand-sub { font-weight: 500; }
 .tb-version { font-family: 'Roboto Mono', monospace; }
 .tb-classif { font-family: var(--f-stencil); font-weight: 400; font-size: 11px; letter-spacing: 3px; color: var(--red-faded); border: 1px solid var(--red-faded); padding: 4px 10px; white-space: nowrap; flex-shrink: 0; }
-@media (max-width: 1644px) { .tb-classif { display: none; } }
+@media (max-width: 1823px) { .tb-classif { display: none; } }
 
 /* ---------- Page : état de l'export, deux colonnes, blocs ---------- */
 .editor { max-width: 1840px; }
 .fc-status { position: sticky; top: 0; z-index: 5; margin: 0 0 12px; padding: 7px 12px; font-family: var(--f-typewriter); font-size: 12px; line-height: 1.4; color: var(--paper-light); background: var(--olive-dark); border: 1px solid var(--khaki); border-left: 3px solid var(--khaki); word-break: break-word; }
 .fc-status.ok { border-left-color: var(--pk-ok); color: var(--paper); }
 .fc-status.err { border-left-color: var(--pk-warn); color: var(--paper); }
+/* Le bandeau « les groupes sont sur un autre théâtre » (lot mp-theatre-unique) : le style des avertissements de la fiche (.rt-warn), deux boutons de la suite */
+.fc-tc { margin: 0 0 12px; padding: 10px 12px; background: var(--olive-dark); border: 1px solid var(--khaki); border-left: 3px solid var(--amber); }
+.fc-tc[hidden] { display: none; }
+.fc-tc .rt-note { margin: 0; }
+.fc-tc .miz-btn-row { margin-top: 10px; }
 .fc-cols { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
 .fc-cols > * { min-width: 0; }
 @media (min-width: 1100px) { .fc-cols { grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr); } }
@@ -792,6 +812,9 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <span class="tb-brand-sub" data-i18n="toolbar.subtitle">░ PAQUET DE VOL</span>
   </div>
   <div class="tb-sep"></div>
+  <span class="tb-label" data-i18n="tb.theatre">Théâtre</span>
+  <select class="tb-sel" id="theatre" aria-label="Théâtre"></select>
+  <div class="tb-sep"></div>
   <button type="button" class="tb-btn" id="btn-open" data-i18n-title="tb.open.tip" title=""><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v1H3z"/><path d="M3 10h19l-2 8a2 2 0 0 1-2 1.5H5a2 2 0 0 1-2-2z"/></svg><span class="tb-btn-label"><span class="tb-long" data-i18n="tb.open">.</span><span class="tb-short" data-i18n="tb.open.s">.</span></span></button>
   <button type="button" class="tb-btn" id="btn-save" data-i18n-title="tb.save.tip" title=""><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h11l4 4v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M8 3v5h7V3"/><rect x="7" y="13" width="10" height="8"/></svg><span class="tb-btn-label"><span class="tb-long" data-i18n="tb.save">.</span><span class="tb-short" data-i18n="tb.save.s">.</span></span></button>
   <button type="button" class="tb-btn" id="btn-import" data-i18n-title="tb.import.tip" title=""><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span class="tb-btn-label"><span class="tb-long" data-i18n="tb.import">.</span><span class="tb-short" data-i18n="tb.import.s">.</span></span></button>
@@ -813,6 +836,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 <!-- MAIN APP -->
 <div class="app" id="app">
   <div class="editor" id="editor-panel">
+    <div class="fc-tc" id="fc-tc" role="alert" hidden></div>
     <div class="fc-status" id="fc-status" role="status" aria-live="polite"></div>
     <div class="fc-cols">
       <div id="col-left"><div id="col-flights"></div></div>
@@ -9144,7 +9168,7 @@ function showToastAction(msg, label, fn, ms) { showToast(msg, { action: { label:
 const TBM = { cur: null, bound: false, swallow: false, n: 0, all: [], map: new WeakMap(), label: null, mo: null, ro: null };
 
 function initToolbarMenus(specs) {
-  specs.forEach(sp => tbmAttach(document.getElementById(sp[0]), sp[1], sp[2]));
+  specs.forEach(sp => tbmAttach(document.getElementById(sp[0]), sp[1], sp[2], sp[3]));
   if (TBM.bound) return;
   TBM.bound = true;
   document.addEventListener('pointerdown', tbmOutside, true);
@@ -9197,7 +9221,7 @@ function tbmNarrow(btn) {
 
 /* mode : rien (liste de la barre) · 'field' (liste de formulaire, bouton d'un champ) · 'sheet' (liste de formulaire,
    bouton fermé déjà habillé par le module) */
-function tbmAttach(sel, labelFn, mode) {
+function tbmAttach(sel, labelFn, mode, fit) {
   if (!sel || !sel.parentNode || TBM.map.has(sel)) return;
   const uid = sel.id || 'f' + (++TBM.n);
   const btn = document.createElement('button');
@@ -9209,7 +9233,7 @@ function tbmAttach(sel, labelFn, mode) {
   const lbl = document.createElement('span');
   lbl.className = 'tbm-lbl';
   btn.appendChild(lbl);
-  const m = { sel: sel, btn: btn, lbl: lbl, labelFn: labelFn, panel: null, active: -1, type: '', typeTimer: 0, x0: 0, y0: 0, uid: uid, form: !!mode, mo: null };
+  const m = { sel: sel, btn: btn, lbl: lbl, labelFn: labelFn, panel: null, active: -1, type: '', typeTimer: 0, x0: 0, y0: 0, uid: uid, form: !!mode, fit: !!fit, mo: null };
   sel.parentNode.insertBefore(btn, sel);
   sel.setAttribute('data-tbm-src', '');
   ['value', 'selectedIndex'].forEach(k => {
@@ -9251,7 +9275,7 @@ function tbmSync(m) {
   if (m.lbl.textContent !== txt) m.lbl.textContent = txt;
   const all = [];
   for (let k = 0; k < o.length; k++) all.push(o[k].label);
-  const w = all.join(String.fromCharCode(10));
+  const w = m.fit ? txt : all.join(String.fromCharCode(10));       /* fit : le bouton prend la largeur de l'option choisie (comme au Route Planner et au Datacard Generator) */
   if (m.lbl.getAttribute('data-w') !== w) m.lbl.setAttribute('data-w', w);
   let name = '';
   try { name = m.labelFn(); } catch (e) { name = ''; }
@@ -9529,12 +9553,14 @@ const I18N = {
   "bar.ok": "Prêt à exporter : {0}",
   "bar.clamped": "{0} réglage(s) d’emport ramené(s) à la limite de l’appareil.",
   "bar.bad.freq": "Export impossible : {0} fréquence(s) à corriger dans les radios.",
-  "bar.no.theatre": "Export impossible : choisissez un théâtre (liste « Théâtre », ou importez un paquet).",
+  "bar.theatre.conflict": "Export impossible : les groupes sont sur {0}, Mission Plan sur {1} (voir le bandeau).",
   "bar.no.flight": "Export impossible : ajoutez au moins un groupe.",
   "bar.no.name": "Export impossible : le groupe {0} n’a pas de nom.",
   "bar.dup": "Noms en double : {0}",
-  "pkg.theatre": "Théâtre",
-  "pkg.theatre.none": "— à choisir —",
+  "tb.theatre": "Théâtre",
+  "tc.banner": "Les groupes sont sur {0} ; le théâtre de Mission Plan est {1}.",
+  "tc.back": "Repasser sur {0}",
+  "tc.keep": "Garder {0}, retirer les routes des groupes",
   "sec.flights": "GROUPES",
   "sec.cmp": "EMPORT",
   "sec.presets": "MES PRESETS",
@@ -9709,12 +9735,17 @@ const I18N = {
   "fmt.work": "fichier de travail",
   "fmt.pkg": "paquet de vol",
   "rej.unknown": "inconnu",
-  "bar.start": "Pour commencer : choisissez un théâtre, puis ajoutez un groupe.",
+  "bar.start": "Pour commencer : ajoutez un groupe.",
+  "open.theatre.confirm": "Ce fichier est sur {0} : le théâtre de Mission Plan passe de {1} à {0} (le Route Planner et le Datacard Generator suivent). Continuer ?",
+  "open.theatre.unknown": "Ce fichier est sur un théâtre que Mission Plan ne connaît pas ({0}) : il n’est pas ouvert.",
+  "th.Afghanistan": "Afghanistan",
   "th.Caucasus": "Caucase",
   "th.Falklands": "Atlantique Sud",
   "th.GermanyCW": "Allemagne (guerre froide)",
+  "th.Iraq": "Irak",
   "th.Kola": "Kola",
   "th.MarianaIslands": "Mariannes",
+  "th.MarianaIslandsWWII": "Mariannes 1944",
   "th.Nevada": "Nevada",
   "th.Normandy": "Normandie",
   "th.PersianGulf": "Golfe Persique",
@@ -9760,12 +9791,14 @@ const I18N = {
   "bar.ok": "Ready to export: {0}",
   "bar.clamped": "{0} loadout setting(s) brought back to the aircraft limit.",
   "bar.bad.freq": "Cannot export: {0} frequency(ies) to fix in the radios.",
-  "bar.no.theatre": "Cannot export: choose a theatre (the “Theatre” list, or import a package).",
+  "bar.theatre.conflict": "Cannot export: the groups are on {0}, Mission Plan on {1} (see the banner).",
   "bar.no.flight": "Cannot export: add at least one group.",
   "bar.no.name": "Cannot export: group {0} has no name.",
   "bar.dup": "Duplicate names: {0}",
-  "pkg.theatre": "Theatre",
-  "pkg.theatre.none": "— to choose —",
+  "tb.theatre": "Theatre",
+  "tc.banner": "The groups are on {0}; Mission Plan's theatre is {1}.",
+  "tc.back": "Back to {0}",
+  "tc.keep": "Keep {0}, remove the groups' routes",
   "sec.flights": "GROUPS",
   "sec.cmp": "LOADOUT",
   "sec.presets": "MY PRESETS",
@@ -9940,12 +9973,17 @@ const I18N = {
   "fmt.work": "work file",
   "fmt.pkg": "flight package",
   "rej.unknown": "unknown",
-  "bar.start": "To start: choose a theatre, then add a group.",
+  "bar.start": "To start: add a group.",
+  "open.theatre.confirm": "This file is on {0}: Mission Plan's theatre changes from {1} to {0} (the Route Planner and the Datacard Generator follow). Continue?",
+  "open.theatre.unknown": "This file is on a theatre Mission Plan does not know ({0}): it is not opened.",
+  "th.Afghanistan": "Afghanistan",
   "th.Caucasus": "Caucasus",
   "th.Falklands": "South Atlantic",
   "th.GermanyCW": "Cold War Germany",
+  "th.Iraq": "Iraq",
   "th.Kola": "Kola",
   "th.MarianaIslands": "Mariana Islands",
+  "th.MarianaIslandsWWII": "Mariana Islands WWII",
   "th.Nevada": "Nevada",
   "th.Normandy": "Normandy",
   "th.PersianGulf": "Persian Gulf",
@@ -9989,7 +10027,7 @@ const TYPE_LABEL = { 'Mi-24P': 'Mi-24P', 'Mi-8MT': 'Mi-8MT', 'F-4E-45MC': 'F-4E-
 // Canaux par poste (sonde des .miz) : RADIO_CHANNELS est défini par le bloc d'import commun, qui donne aussi radioPostsOf et radioSlotsOf (les postes pré-réglés, puis le poste HF des deux hélicoptères,
 // que la mission ne pré-règle pas : cinq fréquences, sans numéro de canal). Les bandes de chaque poste (RADIO_BANDS) et ces postes non pré-réglés (RADIO_FREE) sont ceux de radio_bands_block.py,
 // que le Datacard Generator partage ; les noms des postes sont ceux de radio_block.py.
-const THEATRES = ['Caucasus', 'Falklands', 'GermanyCW', 'Kola', 'MarianaIslands', 'Nevada', 'Normandy', 'PersianGulf', 'SinaiMap', 'Syria', 'TheChannel'];
+const THEATRES = ['Caucasus', 'GermanyCW', 'Syria', 'PersianGulf', 'Normandy', 'TheChannel', 'Nevada', 'MarianaIslands', 'MarianaIslandsWWII', 'Kola', 'SinaiMap', 'Iraq', 'Afghanistan', 'Falklands'];       // les quatorze théâtres du Route Planner et du Datacard Generator (DG_THEATRES), dans leur ordre
 // Le nom lisible d'un théâtre, le même qu'au Route Planner (clés th.*) ; un théâtre hors liste garde son identifiant. La valeur enregistrée reste l'identifiant.
 function theatreName(id) { return THEATRES.indexOf(id) >= 0 ? t('th.' + id) : String(id); }
 const PARTS = ['route', 'radios', 'loadout', 'livery'];
@@ -10003,7 +10041,7 @@ const PACKAGE_FORMAT = 'dcs-flight-package-v2', PACKAGE_FORMATS = ['dcs-flight-p
 // L'état. S est le travail en cours : les groupes et le théâtre vivent dans flight_set_v1 (partagée avec le Route Planner, bloc group_store_block.py), le fichier de travail
 // les garde en entier ; une clé de plus sur un groupe ou une unité y survit (le bloc « Départ » du lot suivant). fc_state_v1 ne garde que { v: 2, sel, mine }.
 // LIB.mine : mes presets par type. UI : ce qui ne se garde pas.
-const S = { theatre: '', flights: [], sel: { f: 0, u: 0 } };
+const S = { theatre: 'Caucasus', flights: [], sel: { f: 0, u: 0 } };       // theatre : le théâtre commun de Mission Plan (mp_theatre_v1), toujours un des quatorze ; celui de la fiche des groupes est GS.theatre
 const LIB = { mine: {}, report: null };
 const UI = {
   open: new Set(),          // volets <details> ouverts ou fermés à la main
@@ -10016,6 +10054,96 @@ const UI = {
   hq: undefined             // la mission de HQ lue dans le stockage : une lecture par ouverture de la fenêtre d'import (undefined = à relire)
 };
 
+// ----- Le théâtre commun (lot mp-theatre-unique) -----
+// Un seul théâtre pour Mission Plan : celui que le Route Planner, le Datacard Generator et ce module partagent par mp_theatre_v1 = { theatre } (sans horodatage : réécrire la même valeur
+// ne déclenche aucun évènement « storage », et un théâtre venu de la clé n'est jamais réécrit : c'est ce qui coupe la boucle). S.theatre est ce théâtre, toujours un des quatorze.
+// Le théâtre de la fiche des groupes (flight_set_v1, GS.theatre) reste le sien : la fiche prend le théâtre commun sans rien dire tant que rien n'y est perdu (tcAdopt) ;
+// si un groupe porte une route sur un autre théâtre, un bandeau demande (tcConflict, tcPaint) et l'export attend.
+const KEY_THEATRE = 'mp_theatre_v1', TH_DEFAULT = 'Caucasus';
+function thOk(id) { return typeof id === 'string' && THEATRES.indexOf(id) !== -1; }
+function thReadKey() {
+  try {
+    const o = JSON.parse(localStorage.getItem(KEY_THEATRE));
+    return isObj(o) && thOk(o.theatre) ? o.theatre : '';
+  } catch (e) { return ''; }
+}
+function thWriteKey(id) {
+  if (thReadKey() === id) return;       // déjà là : aucune écriture
+  lsSet(KEY_THEATRE, JSON.stringify({ theatre: id }));
+}
+// Au chargement : la clé partagée, sinon le théâtre de la fiche des groupes, sinon celui de la route enregistrée, sinon le Caucase (le défaut du Route Planner)
+function thInitial() {
+  const k = thReadKey();
+  if (k) return k;
+  const g = gsRead();
+  if (g && thOk(g.theatre)) return g.theatre;
+  const rt = rpRead().state.theatre;
+  return thOk(rt) ? rt : TH_DEFAULT;
+}
+// La liste de la barre : les quatorze théâtres, dans la langue de l'interface, au théâtre commun
+function thFill() {
+  const s = document.getElementById('theatre');
+  if (!s) return;
+  s.setAttribute('aria-label', t('tb.theatre'));
+  s.innerHTML = THEATRES.map(id => '<option value="' + id + '">' + esc(t('th.' + id)) + '</option>').join('');
+  s.value = S.theatre;
+}
+// Un théâtre choisi dans la barre, ou venu de l'autre module (fromKey : il n'est pas réécrit) : la fiche le prend ou le bandeau se pose
+function thSet(id, fromKey) {
+  if (!thOk(id)) return;
+  const sel = document.getElementById('theatre');
+  if (sel && sel.value !== id) sel.value = id;
+  const changed = id !== S.theatre;
+  S.theatre = id;
+  if (!fromKey) thWriteKey(id);
+  if (!changed) return;
+  UI.rtChoose = null;
+  tcAdopt();
+  routeChanged();
+}
+// L'autre module a écrit mp_theatre_v1
+function thFollow() {
+  const k = thReadKey();
+  if (k && k !== S.theatre) thSet(k, true);
+}
+// Le bandeau : la fiche (F) est sur un autre théâtre que l'écran (C) et au moins un groupe porte une route (des points lisibles, ou un lien avec le Route Planner). Rend { F, C } ou null.
+function tcConflict() {
+  const F = GS.live ? GS.theatre : '', C = S.theatre;
+  if (F === '' || F === C || !S.flights.length) return null;
+  return S.flights.some(f => hasRoute(f) || f.routeLink) ? { F: F, C: C } : null;
+}
+// Rien à perdre : la fiche prend le théâtre commun, sans rien dire
+function tcAdopt() {
+  if (!GS.live || GS.theatre === S.theatre || tcConflict()) return;
+  if (gsSetTheatre(S.theatre)) GS.theatre = S.theatre;
+}
+function tcPaint() {
+  const box = document.getElementById('fc-tc'), tc = tcConflict();
+  if (!box) return;
+  if (!tc) { if (!box.hidden) { box.hidden = true; box.textContent = ''; box.removeAttribute('data-k'); } return; }
+  const html = `<p class="rt-note rt-warn">${esc(tf('tc.banner', theatreName(tc.F), theatreName(tc.C)))}</p>
+    <div class="miz-btn-row"><button type="button" class="miz-btn fc-small" data-act="tc-back">${esc(tf('tc.back', theatreName(tc.F)))}</button><button type="button" class="miz-btn fc-small" data-act="tc-keep">${esc(tf('tc.keep', theatreName(tc.C)))}</button></div>`;
+  if (box.getAttribute('data-k') !== html) { box.innerHTML = html; box.setAttribute('data-k', html); }
+  box.hidden = false;
+}
+// Bouton 1 : on repasse sur le théâtre de la fiche (le Route Planner et le Datacard Generator suivent)
+function tcBack() {
+  const tc = tcConflict();
+  if (tc) thSet(tc.F);
+}
+// Bouton 2 : on garde le théâtre commun ; chaque groupe de la fiche perd sa route et son lien (le reste du groupe ne bouge pas), la fiche prend le théâtre commun, en une seule écriture
+function tcKeep() {
+  const tc = tcConflict(), g = gsRead();
+  if (!tc || !g) return;
+  g.flights.forEach(raw => { delete raw.route; delete raw.routeLink; });
+  if (!gsWrite(S.theatre, g.flights)) return;
+  S.flights.forEach(f => { f.route = null; delete f.routeLink; GS.seen[f.fcId] = gsStable(f); });
+  GS.theatre = S.theatre;
+  UI.rtChoose = null;
+  renderAll();
+  commitNow();
+}
+
 // ---------- Stockage : jamais requis, tout accès en try/catch ----------
 function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
 function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* l'écran marche sans */ } }
@@ -10026,6 +10154,7 @@ function writeState() {
   _saveTimer = 0;
   let ok = false;
   try { ok = gsPush(); } catch (e) { ok = false; }
+  try { tcAdopt(); } catch (e) { /* l'écran marche sans */ }
   // fc_state_v1 ne perd ses groupes qu'une fois la fiche écrite avec eux : sinon il reste à l'état d'avant (v1, state.flights) et la fiche est retentée à la prochaine écriture
   try { lsSet(KEY_STATE, JSON.stringify(ok ? { v: 2, sel: S.sel, mine: LIB.mine } : fcV1Doc())); } catch (e) { /* l'écran marche sans */ }
 }
@@ -10057,7 +10186,8 @@ const GS = { seen: {}, theatre: '', live: false, removed: [], mf: false, base: {
 function gsMarkAll() {
   GS.seen = {};
   S.flights.forEach(f => { GS.seen[f.fcId] = gsStable(f); });
-  GS.theatre = S.theatre;
+  const g = gsRead();
+  GS.theatre = g ? g.theatre : '';       // le théâtre de la fiche, tel qu'on vient de la lire : il n'est plus celui de l'écran
   GS.live = true;
 }
 // Une unité de la fiche qui porte encore un emport brut (payloadIn, écrit par le Route Planner à son import) : restoreFlight l'a converti ; GS.seen garde alors le texte lu tel quel.
@@ -10157,7 +10287,6 @@ function gsPush() {
     ok = false;
     return true;
   });
-  if (S.theatre !== GS.theatre) { if (gsSetTheatre(S.theatre)) GS.theatre = S.theatre; else ok = false; }
   return ok;
 }
 // Ce que les autres ont écrit : les groupes changés sont remplacés, les nouveaux ajoutés (à leur place dans la fiche), ceux qui ont disparu retirés ; la sélection reste sur le même groupe (sinon le premier).
@@ -10191,7 +10320,7 @@ function gsPull() {
     changed = true;
   });
   if (out.some((f, i) => f !== S.flights[i]) || out.length !== S.flights.length) changed = true;
-  if (S.theatre !== gs.theatre) { S.theatre = gs.theatre; changed = true; }
+  if (GS.theatre !== gs.theatre) changed = true;       // la fiche a changé de théâtre : le bandeau se réévalue
   GS.theatre = gs.theatre;
   if (!changed) return false;
   S.flights = out;
@@ -10202,6 +10331,7 @@ function gsPull() {
   if (k < 0) Object.assign(UI.cmp, { saving: false, err: '', st: null });       // une saisie en cours (nom de preset) ne se perd que si le groupe choisi a disparu
   renderAll();
   if (rewrite) gsFixRaw();
+  tcAdopt();
   if (taken.length && document.visibilityState === 'visible') {
     const lab = taken.map(x => flightLabel(x.nf, S.flights.indexOf(x.nf)));
     showToast(taken.length === 1 ? tf('route.toast.one', taken[0].name.trim() !== '' ? taken[0].name : t('route.unnamed'), lab[0]) : tf('route.toast.many', lab.join(', ')), 4500);
@@ -10251,7 +10381,6 @@ function restoreFlight(f) {       // un groupe sans fcId en reçoit un par resto
 }
 function restoreState(st) {
   if (!isObj(st) || !Array.isArray(st.flights)) return false;
-  S.theatre = str(st.theatre);
   S.flights = gsLegacyIds(st.flights).map(restoreFlight).filter(Boolean);       // un groupe sans fcId, ou au fcId déjà pris, reçoit le même identifiant ('fv1' + rang) qu'à la migration : aucun groupe n'est écarté
   const sel = st.sel;
   S.sel = (isObj(sel) && Number.isInteger(sel.f) && Number.isInteger(sel.u)) ? { f: sel.f, u: sel.u } : { f: 0, u: 0 };
@@ -10825,7 +10954,7 @@ function rtSketch(pts, o) {
 // Le groupe sans route est toujours au choix ; « Changer de route » ouvre le choix pour un groupe (UI.rtChoose = son fcId).
 // L'état d'une route liée (copie gardée, théâtre) se calcule au rendu : rien de plus à garder.
 function routeStatus(f, rp) {
-  if (!f.routeLink || !S.theatre) return null;
+  if (!f.routeLink) return null;
   if (rp.state.theatre === '') return { k: 'norp' };
   if (rp.state.theatre !== S.theatre) return { k: 'theatre', th: rp.state.theatre };
   const rt = rp.routes.filter(r => r.rid === f.routeLink.rid)[0];
@@ -10849,7 +10978,7 @@ function routeChooseHtml(f, rp) {
   let msg = '';
   if (th === '') return `<p class="rt-note">${esc(t('route.norp'))}</p>` + (hasRoute(f) ? `<div class="miz-btn-row" style="margin-top:0"><button type="button" class="miz-btn fc-small" data-act="route-keep">${esc(t('route.keep'))}</button></div>` : '');
   if (!has(TM_PARAMS, th)) msg = tf('route.th.nosupport', theatreName(th));
-  else if (S.theatre && S.theatre !== th) msg = tf('route.th.mismatch', theatreName(th), theatreName(S.theatre));
+  else if (S.theatre !== th) msg = tf('route.th.mismatch', theatreName(th), theatreName(S.theatre));
   const off = msg !== '';
   let h = usable.length ? `<p class="rt-note">${esc(t(hasRoute(f) ? 'route.choose.other' : 'route.choose.none'))}</p>` : `<p class="rt-note">${esc(t('route.empty'))}</p>`;
   if (msg) h += `<p class="rt-note">${esc(msg)}</p>`;
@@ -10926,19 +11055,18 @@ function routeChanged() { renderRouteBlock(); paintRouteLines(); refreshAll(); c
 function routePick(rid) {
   const su = selUnit(), rp = rpRead(), rt = ridOk(rid) ? rp.routes.filter(r => r.rid === rid)[0] : null;
   if (!su || !rt || rt.points.length < 2 || !has(TM_PARAMS, rp.state.theatre)) return;
-  const f = su.f, setTheatre = !S.theatre;
-  if (S.theatre && S.theatre !== rp.state.theatre) return;
-  if (setTheatre) S.theatre = rp.state.theatre;
+  const f = su.f;
+  if (S.theatre !== rp.state.theatre) return;
   f.route = { points: rpPack(rt, S.theatre, rp.state.gs) };
   f.routeLink = { rid: rt.rid, name: rt.name };
   UI.rtChoose = null;
-  if (setTheatre) { renderAll(); commitNow(); } else routeChanged();
+  routeChanged();
 }
 // La reprise : chaque groupe lié dont la route du Route Planner existe (deux points au moins, même théâtre) reprend ses points s'ils diffèrent et le nom de la route
 // Rend { toast, changed } sans rien dessiner ; une route absente, trop courte ou sur un autre théâtre ne touche pas la copie du groupe.
 function routeSync() {
   const out = { toast: '', changed: false };
-  if (!S.theatre || !S.flights.some(f => f.routeLink)) return out;
+  if (!S.flights.some(f => f.routeLink)) return out;
   const rp = rpRead(), done = [];
   S.flights.forEach((f, fi) => {
     if (!f.routeLink || routeStatus(f, rp)) return;
@@ -11026,7 +11154,8 @@ function duplicateNames() {
 // Ce qui empêche l'export : [{ key, args }] ; la liste vide = prêt. Une fréquence qu'on vient de saisir hors bande bloque ; celle qui était déjà dans la fiche (importée, ou saisie avant un changement de bande) est signalée sans bloquer ; un réglage d'emport hors limites est ramené, il ne bloque rien.
 function exportIssues() {
   const out = [];
-  if (!S.theatre) out.push({ key: 'bar.no.theatre', args: [] });
+  const tc = tcConflict();
+  if (tc) out.push({ key: 'bar.theatre.conflict', args: [theatreName(tc.F), theatreName(tc.C)] });
   if (!S.flights.length) out.push({ key: 'bar.no.flight', args: [] });
   let badFreq = 0, noType = null;
   S.flights.forEach((f, fi) => {
@@ -11082,8 +11211,9 @@ function buildPackage() {
 // Le fichier de travail : le paquet tel qu'il se lit, plus la clé « fc » (l'état de l'écran et mes presets) que HQ ignore.
 function buildWorkFile() {
   const pkg = buildPackage();
-  if (!S.theatre) delete pkg.theatre;
+  const tc = tcConflict();
   pkg.fc = { v: 1, state: clone(S), mine: clone(LIB.mine) };
+  if (tc) { pkg.theatre = tc.F; pkg.fc.state.theatre = tc.F; }       // le bandeau est là : les routes des groupes sont sur le théâtre de la fiche, le fichier de travail le garde
   return pkg;
 }
 
@@ -11128,13 +11258,10 @@ function unitEl(fi, ui) { return document.querySelector(`#col-left .fc-flight[da
 
 function renderLeft() {
   lvClose();
-  const theatres = THEATRES.concat(S.theatre && THEATRES.indexOf(S.theatre) < 0 ? [S.theatre] : []);
-  const opts = [{ v: '', l: t('pkg.theatre.none') }].concat(theatres.map(x => ({ v: x, l: theatreName(x) })));
   const foldAll = S.flights.length > 1 ? `<button type="button" class="miz-btn fc-small fc-foldall" id="fc-foldall" data-act="fold-all">${esc(foldAllLabel())}</button>` : '';
   document.getElementById('col-flights').innerHTML = `<section class="fc-block">
     <div class="fc-bh">${esc(t('sec.flights'))} <span class="fc-count">(${S.flights.length})</span>${foldAll}</div>
     <div class="fc-bc">
-      <div class="fc-row fc-top">${fieldHtml(t('pkg.theatre'), selectHtml('id="pkg-theatre" data-k="theatre"', t('pkg.theatre'), opts, S.theatre))}</div>
       ${S.flights.length ? '' : `<p class="pk-note">${esc(t('fl.empty'))}</p>`}
       <div class="fc-list" id="fc-list">${S.flights.map(flightHtml).join('')}</div>
       <div class="miz-btn-row" style="margin-top:0"><button type="button" class="miz-btn primary" data-act="add-flight">${esc(t('fl.add'))}</button></div>
@@ -11264,10 +11391,11 @@ function refreshBar() {
   if (!bar) return;
   bar.classList.toggle('ok', issues.length === 0);
   bar.classList.toggle('err', issues.length > 0 && UI.exportTried);
-  const empty = !S.theatre && !S.flights.length;
+  const empty = !S.flights.length;
   let msg = issues.length ? (empty && !UI.exportTried ? t('bar.start') : issues.map(i => tf(i.key, ...i.args)).join(' ')) : tf('bar.ok', packageFileName() + '.json');
   if (UI.clamped > 0) msg += ' · ' + tf('bar.clamped', UI.clamped);
   bar.textContent = msg;
+  tcPaint();
 }
 function refreshAll() { refreshBar(); refreshSummaries(); saveWork(); }
 function renderAll() { renderLeft(); renderRight(); refreshBar(); applyI18nStatic(); saveWork(); }
@@ -11787,33 +11915,45 @@ function fcRejectText(key, args) {
   if (key === 'rej.json') return t('msg.jsonUnreadable');
   return '\u26a0 ' + impTf.apply(null, [key].concat(args || []));
 }
-// Ouvrir : un fichier de travail (clé fc) ou un paquet de vol ; il remplace le contenu du module.
+// Ouvrir : un fichier de travail (clé fc) ou un paquet de vol ; il remplace le contenu du module. Le fichier impose son théâtre : un théâtre hors des quatorze le refuse, un autre que le théâtre commun
+// demande d'abord (s'il y a des groupes à remplacer) ; un fichier de travail sans théâtre laisse le théâtre commun.
 function openFile(file) {
   impReadJsonFile(file, r => {
     if (r.reject) { showToast(fcRejectText(r.reject), { type: 'err' }); return; }
     const o = r.parsed;
-    let ignored = 0, warn = '', work = false;
-    if (isObj(o) && isObj(o.fc) && isObj(o.fc.state) && restoreState(o.fc.state)) { UI.clamped = 0; mergeMine(o.fc.mine); remapPresetKeys(o.fc.mine); work = true; }
-    else if (isObj(o) && PACKAGE_FORMATS.indexOf(o.format) >= 0) {
-      const res = impReadPackage(o, file.name);
+    let ignored = 0, warn = '', res = null;
+    const work = isObj(o) && isObj(o.fc) && isObj(o.fc.state) && Array.isArray(o.fc.state.flights);
+    if (!work && isObj(o) && PACKAGE_FORMATS.indexOf(o.format) >= 0) {
+      res = impReadPackage(o, file.name);
       if (!res.reject && !res.src.rows.some(f => f.managed)) res.reject = 'rej.noManaged';
       if (res.reject) { showToast(fcRejectText(res.reject, res.args), { type: 'err' }); return; }
-      UI.clamped = 0;
-      ignored = res.src.rows.filter(f => !f.managed).length;
-      const built = impBuildGroups(res.src.rows.filter(f => f.managed));
-      restoreState({ theatre: res.src.theatre, flights: built.flights, sel: { f: 0, u: 0 } });       // l'emport brut (payloadIn) est converti par restoreFlight
-      warn = built.warn.join(' · ');
-    } else {
+    } else if (!work) {
       const f = isObj(o) ? o.format : undefined;
       const x = ((typeof f === 'string' && f !== '') || typeof f === 'number') ? String(f) : t('rej.unknown');
       showToast(tf('msg.formatUnsupported', x, t('fmt.work') + ', ' + t('fmt.pkg')), { type: 'err' });
       return;
     }
+    const fth = work ? str(o.fc.state.theatre) : res.src.theatre;
+    if (fth !== '' && !thOk(fth)) { showToast(tf('open.theatre.unknown', fth), { type: 'err' }); return; }
+    if (fth !== '' && fth !== S.theatre && S.flights.length && !confirm(tf('open.theatre.confirm', theatreName(fth), theatreName(S.theatre)))) return;
+    if (work) { restoreState(o.fc.state); UI.clamped = 0; mergeMine(o.fc.mine); remapPresetKeys(o.fc.mine); }
+    else {
+      UI.clamped = 0;
+      ignored = res.src.rows.filter(f => !f.managed).length;
+      const built = impBuildGroups(res.src.rows.filter(f => f.managed));
+      restoreState({ flights: built.flights, sel: { f: 0, u: 0 } });       // l'emport brut (payloadIn) est converti par restoreFlight
+      warn = built.warn.join(' · ');
+    }
+    if (fth !== '') { S.theatre = fth; thWriteKey(fth); }
     S.sel = { f: 0, u: 0 };                    // la première unité du premier groupe ouvert
     UI.exportTried = false;
+    UI.rtChoose = null;
     Object.assign(UI.cmp, { saving: false, err: '', st: null });
+    clearTimeout(_saveTimer);
+    if (gsReplaceAll(S.theatre, JSON.parse(JSON.stringify(S.flights)))) gsMarkAll();       // le fichier remplace la fiche entière, théâtre compris
+    thFill();
     renderAll();
-    if (work) { clearTimeout(_saveTimer); if (gsReplaceAll(S.theatre, JSON.parse(JSON.stringify(S.flights)))) gsMarkAll(); writeState(); }       // un fichier de travail remplace la fiche entière
+    writeState();
     showToast(tf('open.done', S.flights.length) + (ignored ? ' · ' + tf('open.ignored', ignored) : '') + (warn ? ' · ' + warn : ''), { type: 'ok', ms: (ignored || warn) ? 6000 : undefined });
   });
 }
@@ -11850,7 +11990,7 @@ function exportFile() {
 }
 function clearAll() {
   if (!confirm(t('clear.confirm'))) return;
-  Object.assign(S, { theatre: '', flights: [], sel: { f: 0, u: 0 } });
+  Object.assign(S, { flights: [], sel: { f: 0, u: 0 } });       // le théâtre commun reste
   UI.clamped = 0;
   UI.exportTried = false;
   UI.cmp.saving = false;
@@ -12050,7 +12190,6 @@ function onChange(e) {
   if (el.id === 'cmp-sym') { UI.cmp.sym = el.checked; cmpUpdate(); return; }
   if (el.classList && el.classList.contains('cmp-sel')) { cmpChoose(el.getAttribute('data-st'), el.value); return; }
   if (!k) return;
-  if (k === 'theatre') { S.theatre = el.value; renderRouteBlock(); paintRouteLines(); refreshAll(); return; }
   if (k === 'fuel-bar') return;
   if (LO_FIELDS.indexOf(k) >= 0) { commitLoadoutField(k, el); return; }
   const fe = el.closest('.fc-flight'), f = fe && S.flights[Number(fe.getAttribute('data-f'))];
@@ -12083,6 +12222,7 @@ function loadLang() {
 const FLAG_FR = '<svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="7" height="14" fill="#002395"/><rect x="7" width="6" height="14" fill="#fff"/><rect x="13" width="7" height="14" fill="#ED2939"/></svg>';
 const FLAG_EN = '<svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="14" fill="#012169"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#fff" stroke-width="2.8"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#C8102E" stroke-width="1.6"/><rect x="8" width="4" height="14" fill="#fff"/><rect y="5" width="20" height="4" fill="#fff"/><rect x="9" width="2" height="14" fill="#C8102E"/><rect y="6" width="20" height="2" fill="#C8102E"/></svg>';
 function applyI18nStatic() {
+  thFill();
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.getAttribute('data-i18n')); });
   document.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = t(el.getAttribute('data-i18n-title')); });
   const lang = document.getElementById('btn-lang');
@@ -12098,6 +12238,10 @@ function bindColumns() {
     root.addEventListener('input', onInput);
     root.addEventListener('change', onChange);
     root.addEventListener('toggle', onToggle, true);
+  });
+  document.getElementById('fc-tc').addEventListener('click', e => {
+    const b = e.target.closest ? e.target.closest('[data-act]') : null, a = b ? b.getAttribute('data-act') : '';
+    if (a === 'tc-back') tcBack(); else if (a === 'tc-keep') tcKeep();
   });
   left.addEventListener('focusin', onFocusIn);
   left.addEventListener('keydown', e => { if (isLiveryField(e.target)) lvKey(e); });
@@ -12118,6 +12262,7 @@ function bindColumns() {
 function bindToolbar() {
   const on = (id, ev, fn) => document.getElementById(id).addEventListener(ev, fn);
   on('theme-select', 'change', e => { document.body.setAttribute('data-theme', e.target.value); lsSet(KEY_THEME, e.target.value); });
+  on('theatre', 'change', e => thSet(e.target.value));
   on('btn-lang', 'click', () => {
     CURRENT_LANG = CURRENT_LANG === 'fr' ? 'en' : 'fr';
     lsSet(KEY_LANG, CURRENT_LANG);
@@ -12158,7 +12303,10 @@ function init() {
     if (ok) remapPresetKeys(saved.mine);
   } catch (e) { /* l'écran marche sans */ }
   if (gsRead() !== null && !adoptFailed) { gsMarkAll(); if (gsMarkRaw()) gsFixRaw(); } else { GS.seen = {}; GS.theatre = ''; GS.live = false; if (gsRead() === null) GS.mf = true; }       // sans fiche (stockage plein), les groupes restent dans fc_state_v1 jusqu'à ce qu'elle puisse être écrite
-  initToolbarMenus([['theme-select', () => t('toolbar.theme.tooltip')]]);
+  S.theatre = thInitial();       // toujours un théâtre : la clé partagée, la fiche, la route enregistrée, le Caucase
+  thFill();
+  tcAdopt();
+  initToolbarMenus([['theme-select', () => t('toolbar.theme.tooltip')], ['theatre', () => t('tb.theatre'), undefined, true]]);       // la liste du théâtre : le bouton prend la largeur de l'option choisie, comme au Datacard Generator
   initFormMenus(sel => sel.getAttribute('aria-label') || '');
   bindColumns();
   bindToolbar();
@@ -12169,7 +12317,7 @@ function init() {
   renderAll();
   if (taken.changed) showToast(taken.toast, 4500);
   window.addEventListener('pagehide', flushWork);
-  window.addEventListener('storage', e => { routeStorage(e); gsStorage(e); });
+  window.addEventListener('storage', e => { routeStorage(e); gsStorage(e); if (e.key === KEY_THEATRE) thFollow(); });
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushWork(); else { UI.hq = undefined; gsPull(); routeTakeover(); } });
 }
 init();
