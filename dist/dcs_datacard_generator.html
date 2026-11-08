@@ -1231,12 +1231,10 @@ select[data-tbm-src] { display: none !important; }
 
 /* Boîtes vides : titres et lignes à compléter à la main. Toute ligne ou rangée vide mesure 24 px de haut, filet pointillé de 1 px compris ; le filet
    est de l'encre de la page, en mode jour comme en mode nuit ; les rangées alternées des tableaux gardent leur fond. */
+tr.dc-bl td.nt, tr.dc-bl td.md { opacity: 1; }
 tr.dc-bl td { height: 24px; padding-top: 0; padding-bottom: 0; line-height: 22px; border-bottom: 1px dotted var(--dc-ink); }
 div.dc-bl, li.dc-bl, p.dc-bl { height: 24px; border-bottom: 1px dotted var(--dc-ink); margin: 0; overflow: hidden; }
-div.dc-notes.dc-bl { margin-top: 0; }
 .dc-wgrid .wp.dc-bl { border-bottom-color: var(--dc-ink); }
-.dc-trow.dc-bl, .dc-fp.dc-bl { border-bottom-color: var(--dc-ink); }
-.dc-fblank { grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); }
 .dc-fblank > .dc-load { grid-column: 1; grid-row: 2; margin-top: 8px; }
 
 
@@ -6612,14 +6610,14 @@ function overflowsHtml(html) {
    nr : la page 1 sans le bloc Radio. */
 function planBase(c, nr) {
   const plan = { split: false, overflow: false, overflow2: false, p2: 'navrefs' };
-  /* La navigation et les points de référence sont toujours présents (vides : leurs titres et leurs lignes à remplir) et vont ensemble.
-     Seule une carte qui a des données dans les deux garde le cas 2 d'avant : la page 1 avec la navigation tient, les références passent seules en page 2. */
-  const dataNav = navRows(c).length > 0, dataRefs = refRows(c).length > 0;
-  /* 1 · tout tient en page 1 (navigation puis références) ; 2 · (données dans les deux) la page 1 avec la navigation seule tient : les références
-     passent seules en page 2 ; 3 · page 1 sans navigation ni références, page 2 avec la navigation puis les références */
+  /* La navigation et les points de référence sont toujours présents (vides : leurs titres et leurs lignes à remplir). Une navigation qui a une donnée
+     ne part jamais en page 2 à cause de références : le cas 2 d'avant vaut même si les références sont vides. */
+  const dataNav = navRows(c).length > 0;
+  /* 1 · tout tient en page 1 (navigation puis références) ; 2 · (navigation avec une donnée) la page 1 avec la navigation seule tient : les références,
+     vides ou non, passent seules en page 2 ; 3 · page 1 sans navigation ni références, page 2 avec la navigation puis les références */
   if (overflowsHtml(pageHtml(c, 'day', 1, 1, 'main', true, true, nr))) {
     plan.split = true;
-    if (dataNav && dataRefs && !overflowsHtml(pageHtml(c, 'day', 1, 2, 'main', true, false, nr))) plan.p2 = 'refs';
+    if (dataNav && !overflowsHtml(pageHtml(c, 'day', 1, 2, 'main', true, false, nr))) plan.p2 = 'refs';
     else {
       plan.overflow = overflowsHtml(pageHtml(c, 'day', 1, 2, 'main', false, false, nr));
       plan.overflow2 = overflowsHtml(pageHtml(c, 'day', 2, 2, 'nav', true, true));   /* page 2 : la navigation puis les références */
