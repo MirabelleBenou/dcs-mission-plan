@@ -745,6 +745,17 @@ body {
   color: var(--paper);
 }
 
+/* Le théâtre dans la barre : le libellé et la liste, mêmes règles qu'au Route Planner (.tb-label, .tb-sel) */
+.tb-label { font-size: 10px; font-weight: 500; letter-spacing: 1.5px; color: var(--khaki-light); text-transform: uppercase; flex: none; margin-left: 4px; white-space: nowrap; }
+.tb-sel {
+  font-family: var(--f-ui); font-weight: 700; letter-spacing: 1.5px; font-size: 12px; text-transform: uppercase;
+  color: var(--amber); border: 1px solid var(--amber-dark); height: 40px; min-width: 44px;
+  padding: 0 30px 0 12px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex: none; appearance: none; -webkit-appearance: none;
+  background: var(--olive-dark) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23c0892a' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right 11px center;
+}
+.tb-sel:hover, .tb-sel:focus-visible { border-color: var(--amber); outline: none; }
+.tb-sel option { background: var(--olive-dark); color: var(--paper); font-weight: 500; }
+
 /* ---------- Listes de la barre au thème de l'interface (lot mp-ui-listes) ----------
    Le <select> reste dans la page, masqué ; un bouton de mêmes classes prend sa place (voir initToolbarMenus). */
 select[data-tbm-src] { display: none !important; }
@@ -783,8 +794,13 @@ select[data-tbm-src] { display: none !important; }
 .tbm-opt[aria-disabled="true"] { color: var(--khaki); cursor: not-allowed; background: none; }
 .tbm-opt[aria-disabled="true"] .tbm-mark { border-style: dashed; border-color: var(--khaki); background: none; }
 .tbm-opt[aria-disabled="true"] .tbm-note { color: var(--khaki); font-size: 10px; letter-spacing: 1px; margin-left: auto; padding-left: 14px; }
-.tbm-opt.tbm-grp, .tbm-panel.tbm-p-field .tbm-opt.tbm-grp { min-height: 32px; color: var(--amber); font-family: var(--f-ui); font-weight: 500; font-size: 11px; letter-spacing: 1.8px; text-transform: uppercase; cursor: default; background: rgba(168,154,114,.12); }
-.tbm-opt.tbm-grp .tbm-mark { display: none; }
+.tbm-off { display: none !important; }
+/* La recherche en tête d'une liste (option data-search du <select>) : collée en haut du panneau qui défile */
+.tbm-search { position: sticky; top: 0; z-index: 2; padding: 6px 10px; background: var(--olive-dark); border-bottom: 1px solid rgba(168,154,114,.25); list-style: none; }
+.tbm-q { display: block; width: 100%; min-height: 36px; box-sizing: border-box; padding: 6px 10px; font-family: var(--f-typewriter); font-size: 14px; letter-spacing: .2px; color: #1f1c16; background: rgba(216, 201, 165, .92); border: 1px solid var(--khaki); border-left: 3px solid var(--amber-dark); border-radius: 0; outline: none; }
+.tbm-q:focus { border-left-color: var(--red-stamp); box-shadow: 0 0 0 1px var(--amber); }
+.tbm-q::placeholder { color: #6b6450; opacity: 1; }
+.tbm-none { padding: 12px 18px; font-family: var(--f-typewriter); font-size: 14px; color: var(--khaki-light); cursor: default; list-style: none; }
 @media (prefers-reduced-motion: reduce) { .tbm-panel { animation: none; } }
 @media print { .tbm-panel { display: none; } }
 
@@ -1667,9 +1683,14 @@ select[data-tbm-src] { display: none !important; }
 .dc-rheads { margin-bottom: 2px; }
 .dc-radio3 td.fq { text-overflow: clip; }
 
-/* Terrains */
+/* Terrains : aucun texte coupé (lot mp-dg-terrains-liste). Les colonnes suivent leur contenu : le nom passe à la ligne, la liste des pistes aussi (à la virgule), le rôle, l'OACI et la fréquence ne se coupent jamais ;
+   la rangée grandit. Le tableau des lignes à remplir (rangées .dc-bl) garde ses colonnes fixes. */
 .dc-fields td.ro { font-family: var(--dc-fo); font-weight: 500; color: var(--dc-acc); text-transform: uppercase; }
 .dc-fields td.nm { font-family: var(--dc-fo); font-weight: 500; font-size: 18px; }
+.dc-fields td { text-overflow: clip; }
+.dc-fields:not(:has(.dc-bl)) { table-layout: auto; }
+.dc-fields:not(:has(.dc-bl)) td { white-space: normal; overflow: visible; overflow-wrap: anywhere; }
+.dc-fields:not(:has(.dc-bl)) td.ro, .dc-fields:not(:has(.dc-bl)) td:nth-child(2), .dc-fields:not(:has(.dc-bl)) td:last-child { white-space: nowrap; overflow-wrap: normal; }
 
 /* Météo : quatre paires sur deux colonnes, valeur calée à droite, filet pointillé dessous */
 .dc-metar {
@@ -1990,6 +2011,10 @@ __CSS__
     <button type="button" class="seg-btn" id="mode-day" data-mode="day" aria-pressed="true" data-i18n="tb.mode.day">Day</button>
     <button type="button" class="seg-btn" id="mode-night" data-mode="night" aria-pressed="false" data-i18n="tb.mode.night">Night</button>
   </div>
+  <div class="tb-sep"></div>
+  <span class="tb-label" data-i18n="tb.theatre">Théâtre</span>
+  <select class="tb-sel" id="theatre" data-i18n-aria-label="tb.theatre" aria-label="Théâtre"></select>
+  <div class="tb-sep"></div>
   <button class="tb-btn" id="btn-json-import" data-i18n-title="tb.json.import.tip" title="Ouvrir une datacard (JSON)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v1H3z"/><path d="M3 10h19l-2 8a2 2 0 0 1-2 1.5H5a2 2 0 0 1-2-2z"/></svg>
     <span class="tb-btn-label" data-i18n="tb.json.import">Ouvrir</span>
@@ -2246,6 +2271,9 @@ const I18N = {
     'tb.reset': 'Effacer',
     'tb.reset.tip': 'Vider le document (repartir d\'une carte blanche)',
     'tb.theme.tip': 'Thème graphique',
+    'tb.theatre': 'Théâtre',
+    'f.search': 'Rechercher…',
+    'f.noaf': 'Aucun aérodrome',
     'tb.lang.tip': 'Passer en anglais',
     'theme.cw-nato': 'Cold War OTAN',
     'theme.cw-soviet': 'Cold War Soviétique',
@@ -2650,6 +2678,9 @@ const I18N = {
     'tb.reset': 'Clear',
     'tb.reset.tip': 'Clear the document (start from a blank card)',
     'tb.theme.tip': 'Graphic theme',
+    'tb.theatre': 'Theatre',
+    'f.search': 'Search…',
+    'f.noaf': 'No airfield',
     'tb.lang.tip': 'Switch to French',
     'theme.cw-nato': 'Cold War NATO',
     'theme.cw-soviet': 'Cold War Soviet',
@@ -3641,6 +3672,7 @@ function normalizeDoc(src) {
   if (src && typeof src === 'object') {
     if (src.mode === 'night') d.mode = 'night';
     if (Array.isArray(src.cards)) d.cards = src.cards.map(normalizeCard);
+    if (dgTheatreOk(src.theatre)) d.theatre = src.theatre;       /* le théâtre du document ; absent tant qu'aucun n'a été choisi ou pris */
   }
   if (!d.cards.length) d.cards = [newCard()];
   return d;
@@ -3655,6 +3687,61 @@ function isBlankCard(c) {
   return JSON.stringify(a) === JSON.stringify(b);
 }
 function isBlankDoc(d) { return d.cards.length === 1 && isBlankCard(d.cards[0]); }
+
+/* ============= LE THÉÂTRE DU DOCUMENT (lot mp-dg-terrains-liste) =============
+   Une clé de plus dans datacard_state_v1 : theatre, un des onze théâtres de DG_THEATRES (la liste de la barre, comme au Route Planner) ; absente tant qu'aucun théâtre n'a été choisi ou pris :
+   le document est alors au théâtre par défaut du Route Planner. Le théâtre est partagé avec le Route Planner par la clé mp_theatre_v1 = { theatre } (sans horodatage : réécrire la même valeur ne déclenche aucun
+   évènement « storage »), dans les deux sens : le dernier changement gagne. À vide, le document prend celui de la fiche des groupes, puis celui de la route enregistrée. */
+const DG_THEATRES = ['Caucasus', 'GermanyCW', 'Syria', 'PersianGulf', 'Normandy', 'TheChannel', 'Nevada', 'MarianaIslands', 'Kola', 'SinaiMap', 'Falklands'];       /* l'ordre de la liste du Route Planner */
+const DG_THEATRE_DEFAULT = 'Caucasus';       /* le théâtre d'un profil neuf au Route Planner */
+const KEY_THEATRE = 'mp_theatre_v1';
+function dgTheatreOk(id) { return typeof id === 'string' && DG_THEATRES.indexOf(id) !== -1; }
+function dgTheatre() { return dgTheatreOk(doc.theatre) ? doc.theatre : DG_THEATRE_DEFAULT; }
+function dgReadTheatreKey() {
+  try {
+    const o = JSON.parse(localStorage.getItem(KEY_THEATRE));
+    return o && typeof o === 'object' && dgTheatreOk(o.theatre) ? o.theatre : '';
+  } catch (e) { return ''; }
+}
+function dgWriteTheatreKey(id) {
+  if (dgReadTheatreKey() === id) return;       /* déjà là : aucune écriture */
+  try { localStorage.setItem(KEY_THEATRE, JSON.stringify({ theatre: id })); } catch (e) { /* stockage indisponible : comme les autres écritures du module */ }
+}
+/* La liste de la barre : les onze théâtres, dans la langue de l'interface, au théâtre du document */
+function dgFillTheatre() {
+  const s = document.getElementById('theatre');
+  if (!s) return;
+  s.innerHTML = DG_THEATRES.map(id => '<option value="' + id + '">' + esc(t('th.' + id)) + '</option>').join('');
+  s.value = dgTheatre();
+}
+/* Un théâtre choisi dans la liste de la barre, ou venu de l'autre module (fromKey) : le document le prend, la liste des terrains suit ; un choix de l'utilisateur est écrit dans mp_theatre_v1 */
+function dgSetTheatre(id, fromKey) {
+  if (!dgTheatreOk(id)) return;
+  doc.theatre = id;
+  if (!fromKey) dgWriteTheatreKey(id);
+  const s = document.getElementById('theatre');
+  if (s && s.value !== id) s.value = id;
+  doc.cards.forEach(c => { const f = dgFlightOf(c); if (f) afRouteFill(c, f); });       /* DEP et ARR de la route, si la fiche est de ce théâtre */
+  persistState();
+  renderEditor(true);
+  renderPreview();
+}
+/* L'autre module a écrit mp_theatre_v1 */
+function dgFollowTheatre() {
+  const k = dgReadTheatreKey();
+  if (k && k !== doc.theatre) dgSetTheatre(k, true);
+}
+/* À vide, le théâtre du document est celui de la fiche des groupes, sinon celui de la route enregistrée ; rend vrai s'il en a pris un */
+function dgAdoptTheatre() {
+  if (doc.theatre) return false;
+  let th = dgTheatreOk(DGG.theatre) ? DGG.theatre : '';
+  if (!th) { const r = readJsonKey(KEY_ROUTE), rt = r && !Array.isArray(r) ? str(r.theatre) : ''; if (dgTheatreOk(rt)) th = rt; }
+  if (!th) return false;
+  doc.theatre = th;
+  const s = document.getElementById('theatre');
+  if (s && s.value !== th) s.value = th;
+  return true;
+}
 
 /* ============= ÉTAT ============= */
 let doc = newDoc();
@@ -3676,6 +3763,7 @@ function loadState() {
 }
 
 function setDoc(next) {
+  if (doc.theatre) next.theatre = doc.theatre;       /* ouvrir un fichier, l'exemple ou une carte blanche ne change pas le théâtre choisi ; un fichier n'en pose un que si le document n'en a pas */
   doc = next;
   curIdx = 0;
   gsApplyAll(true);
@@ -3749,6 +3837,7 @@ function gsApplyAll(first) {
   const g = gsRead();
   if (g === null) return false;
   DGG.flights = g.flights; DGG.theatre = g.theatre; DGG.stable = gsStable(g);
+  dgAdoptTheatre();
   const cur = doc.cards[curIdx] || null;
   const pos = new Map(g.flights.map((f, i) => [f.fcId, i]));
   const linked = [], free = [], seen = new Set();
@@ -3887,26 +3976,26 @@ function dgParseFreq(s) {
 function dgFreqStr(v) { return v.toFixed(3); }
 /* ============= TERRAINS : LISTE DES AÉRODROMES (lot mp-dg-terrains-liste) =============
    Les faits du jeu (airfield_facts.json, pydcs, LGPL-3.0) : { théâtre: [ [nom, lat, lon, pistes, radios], … ] } ; radios = [VHF haute, UHF, VHF basse, HF] en Hz, ou null.
+   La liste des noms est celle du théâtre du document (la liste de la barre, comme au Route Planner).
    Rien n'est ajouté à l'état de la carte : la « valeur du jeu » d'une case se recalcule du nom de la rangée et de ces faits, et une case n'est remplie que si elle est vide ou
    porte encore cette valeur pour l'aérodrome précédent. Une valeur saisie, importée ou posée par le MC n'est jamais remplacée.
-   AF_UI (état d'écran, jamais écrit) : other = les rangées dont le champ libre est ouvert ; th = le théâtre choisi dans la liste groupée ; sig = les aérodromes de la route déjà posés, par carte. */
+   AF_UI (état d'écran, jamais écrit) : other = les rangées dont le champ libre est ouvert ; sig = les aérodromes de la route déjà posés, par carte. */
 const AIRFIELD_FACTS = __AIRFIELD_FACTS__;
-const AF_UI = { other: new WeakSet(), th: new WeakMap(), sig: new WeakMap() };
+const AF_UI = { other: new WeakSet(), sig: new WeakMap() };
 const AF_ROUTE_M = 5000;       /* l'aérodrome pris de la route : à 5 km au plus du premier (DEP) ou du dernier (ARR) point */
 
 function afRows(th) { return Object.prototype.hasOwnProperty.call(AIRFIELD_FACTS, th) ? AIRFIELD_FACTS[th] : []; }
-/* Les théâtres de la liste : celui de la fiche partagée ; sinon celui de la route enregistrée ; sinon les onze (liste groupée) */
-function afTheatreIds() {
-  if (DGG.theatre && afRows(DGG.theatre).length) return [DGG.theatre];
-  const r = readJsonKey(KEY_ROUTE), rt = r && !Array.isArray(r) ? str(r.theatre) : '';
-  if (rt && afRows(rt).length) return [rt];
-  return Object.keys(AIRFIELD_FACTS);
+/* L'aérodrome de ce nom (rogné, casse exacte) dans le théâtre du document : la rangée des faits, ou null */
+function afFind(name) {
+  const n = str(name).trim();
+  if (n === '') return null;
+  return afRows(dgTheatre()).find(r => r[0] === n) || null;
 }
-/* Les aérodromes de ce nom (rogné, casse exacte) dans ces théâtres : [{ th, row }] */
-function afFind(ths, name) {
+/* Les aérodromes de ce nom dans tous les théâtres (pour reconnaître la valeur du jeu d'un nom venu d'un autre théâtre) */
+function afFindAny(name) {
   const n = str(name).trim(), out = [];
   if (n === '') return out;
-  ths.forEach(th => afRows(th).forEach(r => { if (r[0] === n) out.push({ th: th, row: r }); }));
+  Object.keys(AIRFIELD_FACTS).forEach(th => AIRFIELD_FACTS[th].forEach(r => { if (r[0] === n) out.push(r); }));
   return out;
 }
 /* Le type du groupe d'une carte liée (celui de sa première unité) ; '' pour une carte libre */
@@ -3926,17 +4015,16 @@ function afTowerHz(radios, c) {
   return radios[0];
 }
 /* Ce que le jeu donne pour un aérodrome : la piste (les pistes jointes par « , ») et la fréquence (MHz, comme la boîte Radio) ; '' quand le jeu n'a rien */
-function afGame(h, c) { return { rwy: h.row[3].join(', '), freq: h.row[4] ? dgFreqStr(afTowerHz(h.row[4], c) / 1e6) : '' }; }
+function afGame(row, c) { return { rwy: row[3].join(', '), freq: row[4] ? dgFreqStr(afTowerHz(row[4], c) / 1e6) : '' }; }
 /* Pose le nom de la rangée ; la piste et la fréquence prennent la valeur du jeu si leur case est vide ou porte encore celle de l'aérodrome précédent. Rend vrai si le nom est dans la liste. */
-function afSetName(c, f, name, th) {
-  const before = afFind(afTheatreIds(), f.name).map(h => afGame(h, c));
+function afSetName(c, f, name) {
+  const before = afFindAny(f.name).map(r => afGame(r, c));
   const mine = (cur, k) => !hasText(cur) || before.some(v => v[k] !== '' && v[k] === cur.trim());
   const keep = { rwy: !mine(f.runway, 'rwy'), freq: !mine(f.frequency, 'freq') };
   f.name = name;
-  if (th) AF_UI.th.set(f, th); else AF_UI.th.delete(f);
-  const hits = afFind(th ? [th] : afTheatreIds(), name);
-  if (!hits.length) return false;
-  const g = afGame(hits[0], c);
+  const row = afFind(name);
+  if (!row) return false;
+  const g = afGame(row, c);
   if (!keep.rwy) f.runway = g.rwy;
   if (!keep.freq) f.frequency = g.freq;
   return true;
@@ -3947,28 +4035,28 @@ function afDist(a, b, c, d) {
   const x = Math.sin(p / 2) * Math.sin(p / 2) + Math.cos(a * r) * Math.cos(c * r) * Math.sin(q / 2) * Math.sin(q / 2);
   return 12742000 * Math.asin(Math.min(1, Math.sqrt(x)));
 }
-/* L'aérodrome le plus proche d'un point dans un théâtre, à AF_ROUTE_M au plus : { th, row } ou null */
+/* L'aérodrome le plus proche d'un point dans un théâtre, à AF_ROUTE_M au plus : sa rangée des faits, ou null */
 function afNearest(th, lat, lon) {
   let best = null, bd = Infinity;
   afRows(th).forEach(r => { const d = afDist(lat, lon, r[1], r[2]); if (d < bd) { bd = d; best = r; } });
-  return best && bd <= AF_ROUTE_M ? { th: th, row: best } : null;
+  return best && bd <= AF_ROUTE_M ? best : null;
 }
 /* DEP et ARR pris de la route du groupe (les points en coordonnées DCS dans la fiche partagée). Appelée à chaque lecture de la fiche (gsApplyAll, par dgApplyGroup) : elle ne change que la carte,
    jamais la fiche, donc l'écriture d'une carte ne relance rien. Elle agit à l'ouverture et quand les aérodromes de la route changent (la signature, par carte), pas à chaque lecture :
-   une rangée que l'utilisateur retire pendant la séance ne revient pas à la lecture suivante. */
+   une rangée que l'utilisateur retire pendant la séance ne revient pas à la lecture suivante. Elle n'agit que si la fiche est du théâtre du document (les points sont dans ses coordonnées). */
 function afRouteFill(c, f) {
   const th = DGG.theatre;
-  if (!afRows(th).length || !Object.prototype.hasOwnProperty.call(TM_PARAMS, th) || !gsIsObj(f.route)) return;
+  if (th !== dgTheatre() || !afRows(th).length || !Object.prototype.hasOwnProperty.call(TM_PARAMS, th) || !gsIsObj(f.route)) return;
   const src = f.route.points, list = Array.isArray(src) ? src : (gsIsObj(src) ? Object.keys(src).filter(k => /^\d+$/.test(k)).sort((a, b) => a - b).map(k => src[k]) : []);
   const pts = list.filter(p => gsIsObj(p) && typeof p.x === 'number' && typeof p.y === 'number' && isFinite(p.x) && isFinite(p.y));
   if (!pts.length) return;
   const ends = [pts[0], pts[pts.length - 1]].map(p => { const ll = dcsToLl(th, p.x, p.y); return afNearest(th, ll.lat, ll.lon); });
-  const sig = th + '|' + ends.map(h => h ? h.row[0] : '').join('|');
+  const sig = th + '|' + ends.map(r => r ? r[0] : '').join('|');
   if (AF_UI.sig.get(c) === sig) return;
   AF_UI.sig.set(c, sig);
   [['dep', ends[0]], ['arr', ends[1]]].forEach(e => {
-    const role = e[0], h = e[1];
-    if (!h) return;
+    const role = e[0], r = e[1];
+    if (!r) return;
     let row = c.fields.find(x => x.role === role);
     if (row) { if (hasText(row.name)) return; }
     else {
@@ -3976,28 +4064,23 @@ function afRouteFill(c, f) {
       row = { role: role, icao: '', name: '', runway: '', frequency: '' };
       c.fields.splice(role === 'arr' ? c.fields.map(x => x.role).lastIndexOf('dep') + 1 : 0, 0, row);       /* DEP en tête, ARR juste après DEP */
     }
-    afSetName(c, row, h.row[0], h.th);
+    afSetName(c, row, r[0]);
   });
 }
 
-/* Le champ Nom d'une rangée : la liste du thème (les aérodromes du théâtre, ou les onze groupés par théâtre) et « Autre… » qui ouvre un champ libre ; un nom hors liste s'affiche dans le champ libre */
+/* Le champ Nom d'une rangée : la liste du thème (les aérodromes du théâtre du document, avec une recherche) et « Autre… » qui ouvre un champ libre ; un nom hors liste s'affiche dans le champ libre */
 function afFreeInput(i, f) {
   return '<input type="text" class="af-free" data-path="fields.' + i + '.name" value="' + esc(f.name) + '"' + phAttr('fields.' + i + '.name') + ' autocomplete="off">';
 }
 function afNameHtml(f, i) {
-  const ths = afTheatreIds(), hits = afFind(ths, f.name);
-  const other = AF_UI.other.has(f) || (hasText(f.name) && !hits.length);
-  let cur = other ? '@other' : '';
-  if (!other && hits.length) { const w = AF_UI.th.get(f), h = hits.find(x => x.th === w) || hits[0]; cur = h.th + '|' + h.row[0]; }
+  const hit = afFind(f.name);
+  const other = AF_UI.other.has(f) || (hasText(f.name) && !hit);
+  const cur = other ? '@other' : (hit ? hit[0] : '');
   const opt = (v, l, x) => '<option value="' + esc(v) + '"' + (v === cur ? ' selected' : '') + (x || '') + '>' + esc(l) + '</option>';
-  const grouped = ths.length > 1;
   let o = opt('', t('f.field.pick'));
-  ths.forEach(th => {
-    if (grouped) o += '<option value="" disabled data-grp>' + esc(t('th.' + th)) + '</option>';
-    afRows(th).forEach(r => { o += opt(th + '|' + r[0], r[0]); });
-  });
-  o += opt('@other', t('f.field.other'));
-  return '<div class="ed-field"><label>' + esc(t('f.field.name')) + '</label><select data-af="' + i + '">' + o + '</select>' + (other ? afFreeInput(i, f) : '') + '</div>';
+  afRows(dgTheatre()).forEach(r => { o += opt(r[0], r[0]); });
+  o += opt('@other', t('f.field.other'), ' data-keep');
+  return '<div class="ed-field"><label>' + esc(t('f.field.name')) + '</label><select data-af="' + i + '" data-search>' + o + '</select>' + (other ? afFreeInput(i, f) : '') + '</div>';
 }
 /* Un choix dans la liste (le <select> reçoit input puis change : le second ne change plus rien) */
 function onAfName(el) {
@@ -4014,9 +4097,8 @@ function onAfName(el) {
     return;
   }
   AF_UI.other.delete(f);
-  const k = v.indexOf('|');
-  if (v === '') { f.name = ''; AF_UI.th.delete(f); }
-  else afSetName(c, f, v.slice(k + 1), v.slice(0, k));
+  if (v === '') f.name = '';
+  else afSetName(c, f, v);
   if (li) {
     const fr = li.querySelector('.af-free');
     if (fr) fr.remove();
@@ -5704,6 +5786,7 @@ function setLang(lang) {
   document.documentElement.lang = lang;
   layoutCache.clear();
   applyI18nStatic();
+  dgFillTheatre();
   updateFlagButton();
   renderAll();
   if (!document.getElementById('import-modal').hidden) biRefresh(true);
@@ -6446,6 +6529,7 @@ function bindEvents() {
   document.getElementById('btn-example').addEventListener('click', loadExample);
   document.getElementById('btn-reset').addEventListener('click', resetDoc);
   document.getElementById('theme-select').addEventListener('change', e => applyTheme(e.target.value, true));
+  document.getElementById('theatre').addEventListener('change', e => dgSetTheatre(e.target.value));
   document.getElementById('btn-lang').addEventListener('click', () => setLang(CURRENT_LANG === 'fr' ? 'en' : 'fr'));
 
   /* Export */
@@ -6499,7 +6583,7 @@ function bindEvents() {
   initScrollBar(document.getElementById('tab-bar'));
 
   /* Passage depuis le Route Planner (même origine : l'évènement vient d'un autre document) */
-  window.addEventListener('storage', e => { if (e.key === KEY_HANDOFF) checkRouteHandoff(); dgStorage(e); });
+  window.addEventListener('storage', e => { if (e.key === KEY_HANDOFF) checkRouteHandoff(); if (e.key === KEY_THEATRE) dgFollowTheatre(); dgStorage(e); });
 
   window.addEventListener('beforeprint', fillPrintRoot);
   window.addEventListener('afterprint', clearPrintRoot);
@@ -6525,7 +6609,7 @@ function bindEvents() {
 const TBM = { cur: null, bound: false, swallow: false, n: 0, all: [], map: new WeakMap(), label: null, mo: null, ro: null };
 
 function initToolbarMenus(specs) {
-  specs.forEach(sp => tbmAttach(document.getElementById(sp[0]), sp[1], sp[2]));
+  specs.forEach(sp => tbmAttach(document.getElementById(sp[0]), sp[1], sp[2], sp[3]));
   if (TBM.bound) return;
   TBM.bound = true;
   document.addEventListener('pointerdown', tbmOutside, true);
@@ -6577,8 +6661,9 @@ function tbmNarrow(btn) {
 }
 
 /* mode : rien (liste de la barre) · 'field' (liste de formulaire, bouton d'un champ) · 'sheet' (liste de formulaire,
-   bouton fermé déjà habillé par le module) */
-function tbmAttach(sel, labelFn, mode) {
+   bouton fermé déjà habillé par le module) ; fit : le bouton prend la largeur de l'option choisie (comme au Route Planner) ;
+   un <select data-search> reçoit une recherche en tête de sa liste (lot mp-dg-terrains-liste : seule la liste des aérodromes) */
+function tbmAttach(sel, labelFn, mode, fit) {
   if (!sel || !sel.parentNode || TBM.map.has(sel)) return;
   const uid = sel.id || 'f' + (++TBM.n);
   const btn = document.createElement('button');
@@ -6590,7 +6675,7 @@ function tbmAttach(sel, labelFn, mode) {
   const lbl = document.createElement('span');
   lbl.className = 'tbm-lbl';
   btn.appendChild(lbl);
-  const m = { sel: sel, btn: btn, lbl: lbl, labelFn: labelFn, panel: null, active: -1, type: '', typeTimer: 0, x0: 0, y0: 0, uid: uid, form: !!mode, mo: null };
+  const m = { sel: sel, btn: btn, lbl: lbl, labelFn: labelFn, panel: null, active: -1, type: '', typeTimer: 0, x0: 0, y0: 0, uid: uid, form: !!mode, fit: !!fit, search: sel.hasAttribute('data-search'), q: null, lis: [], none: null, bar: null, mo: null };
   sel.parentNode.insertBefore(btn, sel);
   sel.setAttribute('data-tbm-src', '');
   ['value', 'selectedIndex'].forEach(k => {
@@ -6632,7 +6717,7 @@ function tbmSync(m) {
   if (m.lbl.textContent !== txt) m.lbl.textContent = txt;
   const all = [];
   for (let k = 0; k < o.length; k++) all.push(o[k].label);
-  const w = all.join(String.fromCharCode(10));
+  const w = m.fit ? txt : all.join(String.fromCharCode(10));       /* fit : le bouton prend la largeur de l'option choisie */
   if (m.lbl.getAttribute('data-w') !== w) m.lbl.setAttribute('data-w', w);
   let name = '';
   try { name = m.labelFn(); } catch (e) { name = ''; }
@@ -6657,9 +6742,31 @@ function tbmOpen(m) {
   head.setAttribute('role', 'presentation');
   head.textContent = name;
   ul.appendChild(head);
+  m.lis = [];
+  m.q = null; m.none = null; m.bar = null;
+  if (m.search) {
+    const bar = document.createElement('li');
+    bar.className = 'tbm-search';
+    bar.setAttribute('role', 'presentation');
+    const q = document.createElement('input');
+    q.type = 'text';
+    q.className = 'tbm-q';
+    q.setAttribute('role', 'searchbox');
+    q.setAttribute('placeholder', t('f.search'));
+    q.setAttribute('aria-label', t('f.search'));
+    q.setAttribute('autocomplete', 'off');
+    q.setAttribute('autocapitalize', 'off');
+    q.setAttribute('spellcheck', 'false');
+    q.setAttribute('enterkeyhint', 'search');
+    q.addEventListener('input', () => tbmFilter(m));
+    bar.appendChild(q);
+    ul.appendChild(bar);
+    m.q = q; m.bar = bar;
+  }
   for (let k = 0; k < opts.length; k++) {
     const o = opts[k], li = document.createElement('li');
-    li.className = 'tbm-opt' + (o.hasAttribute('data-grp') ? ' tbm-grp' : '');
+    li.className = 'tbm-opt';
+    if (o.hasAttribute('data-keep')) li.setAttribute('data-keep', '');
     li.id = 'tbm-' + m.uid + '-' + k;
     li.setAttribute('role', 'option');
     li.setAttribute('aria-selected', k === sel.selectedIndex ? 'true' : 'false');
@@ -6684,6 +6791,16 @@ function tbmOpen(m) {
       li.appendChild(n);
     }
     ul.appendChild(li);
+    m.lis.push(li);
+  }
+  if (m.search) {
+    const none = document.createElement('li');
+    none.className = 'tbm-none tbm-off';
+    none.setAttribute('role', 'presentation');
+    none.textContent = t('f.noaf');
+    const keep = m.lis.find(x => x.hasAttribute('data-keep'));
+    ul.insertBefore(none, keep || null);
+    m.none = none;
   }
   ul.addEventListener('keydown', e => tbmKey(m, e));
   ul.addEventListener('click', e => {
@@ -6706,8 +6823,29 @@ function tbmOpen(m) {
   let k0 = sel.selectedIndex;
   if (k0 < 0 || (opts[k0] && opts[k0].disabled)) k0 = tbmFirst(m, 1);
   tbmSetActive(m, k0, 'center');
-  ul.focus({ preventScroll: true });
+  if (m.q && window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches) m.q.focus({ preventScroll: true });       /* la recherche a le focus sur ordinateur, pas au toucher (le clavier de l'écran ne s'ouvre pas seul) */
+  else ul.focus({ preventScroll: true });
 }
+
+/* Sans casse ni accents */
+function tbmNorm(x) { return String(x).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase(); }
+/* La recherche : au fil de la frappe, une partie du nom ; « Autre… » (data-keep) reste ; sans résultat, une ligne neutre ; l'option active devient la première trouvée */
+function tbmFilter(m) {
+  const q = tbmNorm(m.q.value.trim()), o = m.sel.options;
+  let n = 0, first = -1;
+  m.lis.forEach((li, k) => {
+    const keep = li.hasAttribute('data-keep');
+    const show = q === '' || keep || (o[k].value !== '' && tbmNorm(o[k].label).indexOf(q) >= 0);
+    li.classList.toggle('tbm-off', !show);
+    if (q !== '' && !keep && show) { n++; if (first < 0) first = k; }
+  });
+  m.none.classList.toggle('tbm-off', !(q !== '' && n === 0));
+  if (q === '') { m.panel.scrollTop = 0; tbmSetActive(m, m.sel.selectedIndex >= 0 ? m.sel.selectedIndex : tbmFirst(m, 1), true); return; }
+  if (first < 0) first = m.lis.findIndex(li => li.hasAttribute('data-keep'));
+  m.panel.scrollTop = 0;
+  tbmSetActive(m, first, true);
+}
+function tbmOff(m, k) { return !!(m.lis[k] && m.lis[k].classList.contains('tbm-off')); }
 
 /* Sous le bouton (4 px), bord gauche aligné, au moins aussi large, à 8 px au moins des bords de la fenêtre.
    Liste de formulaire : la place utile va du bas de la barre du haut au haut de la barre d'onglets fixée en bas (portrait),
@@ -6755,7 +6893,7 @@ function tbmPlace(m) {
 function tbmFirst(m, d) {
   const o = m.sel.options;
   let k = d > 0 ? 0 : o.length - 1;
-  for (; k >= 0 && k < o.length; k += d) if (!o[k].disabled) return k;
+  for (; k >= 0 && k < o.length; k += d) if (!o[k].disabled && !tbmOff(m, k)) return k;
   return -1;
 }
 
@@ -6770,16 +6908,16 @@ function tbmSetActive(m, k, reveal) {
   li.classList.add('active');
   p.setAttribute('aria-activedescendant', li.id);
   if (!reveal) return;
-  const t = li.offsetTop, h = li.offsetHeight;
+  const t = li.offsetTop, h = li.offsetHeight, sh = m.bar ? m.bar.offsetHeight : 0;       /* la recherche collée en haut cache les sh premiers pixels */
   if (k === tbmFirst(m, 1)) p.scrollTop = 0;
-  else if (t < p.scrollTop) p.scrollTop = t;
-  else if (t + h > p.scrollTop + p.clientHeight) p.scrollTop = reveal === 'center' ? Math.max(0, t - (p.clientHeight - h) / 2) : t + h - p.clientHeight;
+  else if (t - sh < p.scrollTop) p.scrollTop = Math.max(0, t - sh);
+  else if (t + h > p.scrollTop + p.clientHeight) p.scrollTop = reveal === 'center' ? Math.max(0, t - sh - (p.clientHeight - sh - h) / 2) : t + h - p.clientHeight;
 }
 
 function tbmStep(m, d) {
   const o = m.sel.options;
   for (let k = m.active + d; k >= 0 && k < o.length; k += d) {
-    if (!o[k].disabled) { tbmSetActive(m, k, true); return; }
+    if (!o[k].disabled && !tbmOff(m, k)) { tbmSetActive(m, k, true); return; }
   }
 }
 
@@ -6790,12 +6928,30 @@ function tbmType(m, ch) {
   m.typeTimer = setTimeout(() => { m.type = ''; }, 700);
   const o = m.sel.options;
   for (let k = 0; k < o.length; k++) {
-    if (!o[k].disabled && o[k].label.toLowerCase().indexOf(m.type) === 0) { tbmSetActive(m, k, true); return; }
+    if (!o[k].disabled && !tbmOff(m, k) && o[k].label.toLowerCase().indexOf(m.type) === 0) { tbmSetActive(m, k, true); return; }
   }
+}
+
+/* Les touches dans le champ de recherche : ↓ passe à la première option, Entrée choisit l'option active, Échap ferme ; le reste est de la frappe */
+function tbmQKey(m, e) {
+  const k = e.key;
+  if (k === 'ArrowDown') { e.preventDefault(); tbmSetActive(m, tbmFirst(m, 1), true); m.panel.focus({ preventScroll: true }); }
+  else if (k === 'ArrowUp') e.preventDefault();
+  else if (k === 'Enter') { e.preventDefault(); if (m.active >= 0 && !tbmOff(m, m.active)) tbmChoose(m, m.active); }
+  else if (k === 'Escape') { e.preventDefault(); e.stopPropagation(); tbmClose(true); }
+  else if (k === 'Tab') tbmClose(true);
 }
 
 function tbmKey(m, e) {
   const k = e.key;
+  if (m.q && e.target === m.q) { tbmQKey(m, e); return; }
+  if (m.q && k.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {       /* une lettre tapée sur la liste va à la recherche */
+    e.preventDefault();
+    m.q.focus({ preventScroll: true });
+    m.q.value += k;
+    tbmFilter(m);
+    return;
+  }
   if (k === 'ArrowDown' || k === 'ArrowUp') { e.preventDefault(); tbmStep(m, k === 'ArrowDown' ? 1 : -1); }
   else if (k === 'Home') { e.preventDefault(); tbmSetActive(m, tbmFirst(m, 1), true); }
   else if (k === 'End') { e.preventDefault(); tbmSetActive(m, tbmFirst(m, -1), true); }
@@ -6825,6 +6981,7 @@ function tbmClose(refocus) {
   m.type = '';
   if (m.panel) m.panel.remove();
   m.panel = null;
+  m.q = null; m.bar = null; m.none = null; m.lis = [];
   m.active = -1;
   m.btn.classList.remove('tbm-trigger-open');
   m.btn.setAttribute('aria-expanded', 'false');
@@ -6873,7 +7030,12 @@ function init() {
   impSetup({ lang: () => CURRENT_LANG, onImported: dgImported, toast: msg => showToast('\u26a0 ' + msg, { type: 'err' }) });      /* la fenêtre d'import commune : elle écrit dans la fiche, les cartes suivent */
   gsMigrate(dgPackFn);
   loadState();
+  const th0 = doc.theatre;
+  { const k = dgReadTheatreKey(); if (k) doc.theatre = k; }       /* le théâtre que le Route Planner a écrit : le dernier changement gagne */
+  dgFillTheatre();
+  initToolbarMenus([['theatre', () => t('tb.theatre'), undefined, true]]);       /* la liste du théâtre, comme au Route Planner */
   gsApplyAll(true);
+  if (doc.theatre !== th0) persistState();       /* un théâtre pris (clé partagée, fiche ou route) est gardé */
   bindEvents();
   setActiveTab('meta');
   renderAll();

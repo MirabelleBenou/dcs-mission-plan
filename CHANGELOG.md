@@ -74,6 +74,7 @@ Changes merged since the last release, grouped per tool.
 #### Added
 - **Mission loaded in HQ** and **Flight package** in the import window: one datacard per flight (navigation, callsign, type, radios; mission date, time and weather from HQ), filtered by side, type and name; from the Route Planner, **all routes** at once, one datacard per route. You pick the radio channels to import. A radio now holds up to 20 channels.
 - The HF radio of the Mi-24P and Mi-8MT, with the frequencies chosen in the Flight Configurator or typed here: pick the ones shown on the card, with their name, as for the other radios; no channel number is printed for them.
+- Airfields: pick the airfield from the theatre's list (all eleven theatres, from the game data); the Datacard Generator has a theatre list like the Route Planner's, and the two modules share the theatre; the runway and the tower frequency in the band of the group's radio fill in when empty, and DEP and ARR are taken from the route's first and last points. A value typed by hand or imported is never replaced; ICAO codes stay to be typed.
 #### Changed
 - **One datacard per group**: the Datacard Generator now shares the groups of the Flight Configurator and the Route Planner. Each group has its datacard, listed in the new card list; a group's name, side, aircraft (callsign, type, board number) and radio frequencies are edited on either side and follow at once. Radios are shown in one box per aircraft type (“RADIO — MI-24P”), a channel that differs between two aircraft of a type is marked “varies by unit”, and you pick the channels shown on the card, with their name and modulation. The loadout can be taken from the Flight Configurator as a table. Pilots, times, weather, fuel, navigation and notes stay with the datacard. **New datacard** creates a group; **Free card** keeps a datacard outside the groups, and earlier datacards open as free cards.
 - The example loads in the interface language (French or English).
@@ -103,6 +104,7 @@ Changes merged since the last release, grouped per tool.
 - Each route now has a stable identifier in the route set (saved files included), so other tools can follow it.
 - **Groups…** replaces “Link to a group”: tick the groups that follow the route, or create one. Imports from HQ or a flight package attach each route to its group, creating it if needed; the flight package exports one flight per group.
 - **Import** replaces “From HQ” and “Flight package”: the same window as the Flight Configurator (mission loaded in HQ, current briefing, flight package .json or .zip, briefing file), bringing the group's aircraft, radios, loadouts and liveries along with its route. A route imported in the Flight Configurator is added here as its group's route.
+- The theatre is shared with the Datacard Generator: changing it in one module changes it in the other.
 #### Fixed
 - Computed magnetic variation now follows DCS for every mission date: years up to 1985 use the IGRF model DCS ships (up to 1.2° closer), later years the previous five-year WMM file, as DCS does (0.2° closer in 1990, 1995 … 2025).
 
@@ -116,6 +118,7 @@ Changes merged since the last release, grouped per tool.
 - The Datacard Generator chapter lists the editor's boxes in their new order, with **Group and crew**.
 - The Flight Configurator chapter: the helicopters' HF radio and the bands.
 - The Datacard Generator chapter: empty blocks are kept.
+- The Datacard Generator chapter: the airfield list.
 
 ---
 

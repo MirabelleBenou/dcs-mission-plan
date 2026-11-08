@@ -4509,11 +4509,31 @@ function resolveLayer() {
   else if (S.ui.layer === 'dcs' && !dcsKey()) S.ui.layer = 'topo';
 }
 
+/* Le théâtre partagé avec le Datacard Generator : mp_theatre_v1 = { theatre }, sans horodatage (réécrire la même valeur ne déclenche aucun évènement « storage » : c'est ce qui coupe la boucle).
+   Le Route Planner l'écrit à chaque changement de son théâtre, l'écoute, et la lit à l'ouverture (clé absente : il y écrit le sien). */
+const KEY_THEATRE = 'mp_theatre_v1';
+function mpTheatreRead() {
+  try {
+    const o = JSON.parse(localStorage.getItem(KEY_THEATRE));
+    return o && typeof o === 'object' && typeof o.theatre === 'string' && THEATRE_IDS.indexOf(o.theatre) !== -1 ? o.theatre : '';
+  } catch (e) { return ''; }
+}
+function mpTheatreWrite(id) {
+  if (mpTheatreRead() === id) return;       /* déjà là : aucune écriture */
+  try { localStorage.setItem(KEY_THEATRE, JSON.stringify({ theatre: id })); } catch (e) { if (!SAVE_FAILED) { try { showToast(t('toast.saveFail'), { type: 'err' }); } catch (e2) { /* page pas encore prête */ } } SAVE_FAILED = true; }
+}
+/* Un autre module a changé le théâtre : il s'applique comme un choix dans la liste de la barre */
+function mpTheatreFollow() {
+  const id = mpTheatreRead();
+  if (id && S && id !== S.theatre) setTheatre(id);
+}
+
 /* Le théâtre change (la route est gardée) : la liste de la barre, ou un fichier CombatFlite qui nomme le sien */
 function setTheatre(id) {
   const wasDcs = S.ui.layer === 'dcs' || !!ourLayer(S.ui.layer);
   if (S.theatre !== theatreOf(id).id) RL.pts.length = 0;      /* la règle mesure sur la carte d'un théâtre : elle ne passe pas à l'autre */
   S.theatre = theatreOf(id).id;
+  mpTheatreWrite(S.theatre);
   persistState();
   setTheatreView();
   if (wasDcs) setBase();        /* la couche DCS ou la nôtre change avec le théâtre (ou passe en Carte DCS, ou en Topographique) */
@@ -8581,6 +8601,7 @@ function setRoute(route) {
   if (S.theatre !== route.theatre) RL.pts.length = 0;      /* arriver sur un autre théâtre vide la règle (le mode Règle reste) */
   S.name = route.name;
   S.theatre = route.theatre;
+  mpTheatreWrite(S.theatre);
   S.units = route.units;
   S.navDisplay = route.navDisplay;
   S.groundSpeed = route.groundSpeed;
@@ -12505,6 +12526,7 @@ function bindEvents() {
   /* HQ charge une autre mission pendant que le Route Planner est ouvert : l'année se relit */
   window.addEventListener('storage', e => {
     if (e.key === 'mission_snapshot_v1' && navIsCalc()) { renderNav(); drawRoute(); syncControls(); }
+    if (e.key === KEY_THEATRE) mpTheatreFollow();       /* le Datacard Generator a changé le théâtre */
   });
   $('route-name').addEventListener('input', e => { S.name = e.target.value; persistState(); routesRender(); });
   routesBind();
@@ -12983,6 +13005,7 @@ function init() {
   syncPlaces();
   syncAirfields();
   syncTowns();
+  { const k = mpTheatreRead(); if (k) mpTheatreFollow(); else mpTheatreWrite(S.theatre); }       /* le théâtre partagé : pris s'il diffère, sinon écrit */
   persistState();
   /* Les polices embarquées servent au canevas : redessiner la grille une fois chargées */
   if (document.fonts && document.fonts.load) {
