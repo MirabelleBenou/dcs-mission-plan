@@ -22,6 +22,7 @@ import sys
 
 from magvar_block import build_block as build_magvar_block
 from route_pack_block import build_block as build_route_pack_block
+from route_theatre_block import build_block as build_route_theatre_block
 from group_store_block import build_block as build_group_store_block
 from radio_bands_block import build_block as build_radio_bands_block
 from radio_block import build_block as build_radio_block
@@ -3508,18 +3509,7 @@ function setObject() {
   return { format: SET_FORMAT, active: RSET.active, routes: vis.concat(hid) };
 }
 
-/* Le théâtre d'une route de l'ancien stockage (sans theatre) : le RP ne connaît pas l'emprise des cartes, seulement leur centre (THEATRES.c) ; le théâtre dont le centre est le plus proche
-   de son premier point, le théâtre courant gardé s'il est à moins de 150 km du plus proche ; sans point, ou à plus de 1 500 km de tout centre, le théâtre courant. */
-function theatreOfPoint(p, cur) {
-  if (!p || typeof p.lat !== 'number' || typeof p.lon !== 'number') return cur;
-  const R = 6371, rad = Math.PI / 180;
-  const d = c => { const a = Math.sin((c[0] - p.lat) * rad / 2) ** 2 + Math.cos(p.lat * rad) * Math.cos(c[0] * rad) * Math.sin((c[1] - p.lon) * rad / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(a)); };
-  let best = null;
-  THEATRES.forEach(x => { const k = d(x.c); if (!best || k < best.k) best = { id: x.id, k: k }; });
-  const dc = d(theatreOf(cur).c);
-  if (best.k > 1500) return cur;
-  return dc <= best.k + 150 ? cur : best.id;
-}
+@@ROUTE_THEATRE_BLOCK@@
 
 /* Le théâtre courant change : les routes de l'ancien passent à RSET.hidden (gardées), celles du nouveau reviennent, la route active est la première (ou une route vide neuve) ; S prend son nom et ses points.
    Aucune route n'est supprimée. S.theatre est changé par l'appelant. */
@@ -3575,8 +3565,7 @@ function loadSet(stateOk) {
   }
   /* Une route d'avant (sans theatre) prend celui de son premier point (theatreOfPoint), la route active comprise ; le théâtre de référence est mp_theatre_v1 s'il est valide, sinon celui de route_state_v1, sinon le défaut. Sans état, le théâtre courant est celui de mp_theatre_v1, sinon celui de la route active. */
   const flat = set.routes, act = flat[set.active], mpTh = mpTheatreRead(), ref = mpTh || S.theatre;
-  const first = r => (r === act && stateOk ? S.points : r.points)[0];
-  flat.forEach(r => { if (THEATRE_IDS.indexOf(r.theatre) === -1) { r.theatre = theatreOfPoint(first(r), ref); drawn = true; } });
+  flat.forEach(r => { if (THEATRE_IDS.indexOf(r.theatre) === -1) { r.theatre = routeTheatre(r === act && stateOk ? { points: S.points } : r, ref); drawn = true; } });
   if (!stateOk) S.theatre = mpTh || act.theatre;
   else if (act.theatre !== S.theatre) { act.theatre = S.theatre; drawn = true; }
   const vis = flat.filter(r => r.theatre === S.theatre);
@@ -3584,6 +3573,8 @@ function loadSet(stateOk) {
   const r = RSET.routes[RSET.active];
   if (stateOk) { r.name = S.name; r.points = S.points; }
   else { S.name = r.name; S.points = r.points; }
+  /* mp_theatre_v1 valide l'emporte sur le théâtre de route_state_v1 : le Route Planner s'ouvre sur lui par la bascule d'un changement de théâtre en direct (rsetSwitch : routes des autres théâtres masquées, route active = la première, sinon une route vide neuve) ; route_state_v1 est réécrit pour cette route par persistState */
+  if (stateOk && mpTh && mpTh !== S.theatre) { rsetSwitch(mpTh); S.theatre = mpTh; drawn = true; }
   /* un rid tiré, un théâtre posé : écrits aussitôt (les autres modules voient le même identifiant que le Route Planner) */
   if (drawn) { try { localStorage.setItem(KEY_SET, JSON.stringify(setObject())); } catch (e) { /* idem */ } }
 }
@@ -11114,7 +11105,7 @@ def build():
     airfields_js = json.dumps(AF['theatres'], ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
     towns_js = json.dumps(TW['theatres'], ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
     js = JS.replace('__EXAMPLE_ROUTE__', example_js).replace('__EXAMPLE_ROUTE_EN__', example_en_js).replace('__AIRFIELDS__', airfields_js).replace('__TOWNS__', towns_js)
-    js = js.replace('@@GEO_BLOCK@@\n', GEO_BLOCK).replace('@@READNUM_BLOCK@@\n', READNUM_BLOCK).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@ROUTE_PACK_BLOCK@@\n', build_route_pack_block()).replace('@@GROUP_STORE_BLOCK@@\n', build_group_store_block()).replace('@@RADIO_BLOCK@@\n', build_radio_block()).replace('@@RADIO_BANDS_BLOCK@@\n', build_radio_bands_block()).replace('@@IMPORT_BLOCK@@\n', build_import_block()).replace('@@MESSAGES_BLOCK@@\n', build_messages_block())
+    js = js.replace('@@GEO_BLOCK@@\n', GEO_BLOCK).replace('@@READNUM_BLOCK@@\n', READNUM_BLOCK).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@ROUTE_PACK_BLOCK@@\n', build_route_pack_block()).replace('@@ROUTE_THEATRE_BLOCK@@\n', build_route_theatre_block()).replace('@@GROUP_STORE_BLOCK@@\n', build_group_store_block()).replace('@@RADIO_BLOCK@@\n', build_radio_block()).replace('@@RADIO_BANDS_BLOCK@@\n', build_radio_bands_block()).replace('@@IMPORT_BLOCK@@\n', build_import_block()).replace('@@MESSAGES_BLOCK@@\n', build_messages_block())
     if '@@' in js:
         raise SystemExit("[ERREUR] Marqueur @@ non remplacé dans le script")
     lib = A['lib_leaflet']

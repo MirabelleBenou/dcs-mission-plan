@@ -4452,18 +4452,36 @@ function setObject() {
   return { format: SET_FORMAT, active: RSET.active, routes: vis.concat(hid) };
 }
 
-/* Le théâtre d'une route de l'ancien stockage (sans theatre) : le RP ne connaît pas l'emprise des cartes, seulement leur centre (THEATRES.c) ; le théâtre dont le centre est le plus proche
-   de son premier point, le théâtre courant gardé s'il est à moins de 150 km du plus proche ; sans point, ou à plus de 1 500 km de tout centre, le théâtre courant. */
+/* ===== THÉÂTRE D'UNE ROUTE (routeTheatre, routesOfTheatre) ===== */
+const RT_CENTRES = {
+  Caucasus: [43.0, 41.6], GermanyCW: [51.2, 10.4], Syria: [34.8, 35.8], PersianGulf: [26.3, 55.6], Normandy: [49.6, 0.0], TheChannel: [50.9, 1.6], Nevada: [36.6, -115.5],
+  MarianaIslands: [14.8, 145.4], MarianaIslandsWWII: [14.8, 145.4], Kola: [68.3, 28.5], SinaiMap: [30.4, 33.2], Iraq: [34.4, 42.6], Afghanistan: [33.4, 66.3], Falklands: [-51.7, -59.0]
+};
+function rtThOk(id) { return typeof id === 'string' && Object.prototype.hasOwnProperty.call(RT_CENTRES, id); }
+
+/* Le théâtre d'un point (route d'un stockage sans theatre) : voir l'en-tête du bloc */
 function theatreOfPoint(p, cur) {
   if (!p || typeof p.lat !== 'number' || typeof p.lon !== 'number') return cur;
   const R = 6371, rad = Math.PI / 180;
   const d = c => { const a = Math.sin((c[0] - p.lat) * rad / 2) ** 2 + Math.cos(p.lat * rad) * Math.cos(c[0] * rad) * Math.sin((c[1] - p.lon) * rad / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(a)); };
   let best = null;
-  THEATRES.forEach(x => { const k = d(x.c); if (!best || k < best.k) best = { id: x.id, k: k }; });
-  const dc = d(theatreOf(cur).c);
+  Object.keys(RT_CENTRES).forEach(id => { const k = d(RT_CENTRES[id]); if (!best || k < best.k) best = { id: id, k: k }; });
+  const dc = d(RT_CENTRES[rtThOk(cur) ? cur : 'Caucasus']);
   if (best.k > 1500) return cur;
   return dc <= best.k + 150 ? cur : best.id;
 }
+
+/* Le théâtre d'une route : son champ theatre s'il est un des quatorze, sinon celui de son premier point (ref : le théâtre de référence) */
+function routeTheatre(route, ref) {
+  if (route && rtThOk(route.theatre)) return route.theatre;
+  return theatreOfPoint(route && Array.isArray(route.points) ? route.points[0] : null, ref);
+}
+
+/* Les routes du théâtre C (l'ordre est gardé) */
+function routesOfTheatre(routes, C) {
+  return routes.filter(r => routeTheatre(r, C) === C);
+}
+/* ===== FIN DU THÉÂTRE D'UNE ROUTE ===== */
 
 /* Le théâtre courant change : les routes de l'ancien passent à RSET.hidden (gardées), celles du nouveau reviennent, la route active est la première (ou une route vide neuve) ; S prend son nom et ses points.
    Aucune route n'est supprimée. S.theatre est changé par l'appelant. */
@@ -4519,8 +4537,7 @@ function loadSet(stateOk) {
   }
   /* Une route d'avant (sans theatre) prend celui de son premier point (theatreOfPoint), la route active comprise ; le théâtre de référence est mp_theatre_v1 s'il est valide, sinon celui de route_state_v1, sinon le défaut. Sans état, le théâtre courant est celui de mp_theatre_v1, sinon celui de la route active. */
   const flat = set.routes, act = flat[set.active], mpTh = mpTheatreRead(), ref = mpTh || S.theatre;
-  const first = r => (r === act && stateOk ? S.points : r.points)[0];
-  flat.forEach(r => { if (THEATRE_IDS.indexOf(r.theatre) === -1) { r.theatre = theatreOfPoint(first(r), ref); drawn = true; } });
+  flat.forEach(r => { if (THEATRE_IDS.indexOf(r.theatre) === -1) { r.theatre = routeTheatre(r === act && stateOk ? { points: S.points } : r, ref); drawn = true; } });
   if (!stateOk) S.theatre = mpTh || act.theatre;
   else if (act.theatre !== S.theatre) { act.theatre = S.theatre; drawn = true; }
   const vis = flat.filter(r => r.theatre === S.theatre);
@@ -4528,6 +4545,8 @@ function loadSet(stateOk) {
   const r = RSET.routes[RSET.active];
   if (stateOk) { r.name = S.name; r.points = S.points; }
   else { S.name = r.name; S.points = r.points; }
+  /* mp_theatre_v1 valide l'emporte sur le théâtre de route_state_v1 : le Route Planner s'ouvre sur lui par la bascule d'un changement de théâtre en direct (rsetSwitch : routes des autres théâtres masquées, route active = la première, sinon une route vide neuve) ; route_state_v1 est réécrit pour cette route par persistState */
+  if (stateOk && mpTh && mpTh !== S.theatre) { rsetSwitch(mpTh); S.theatre = mpTh; drawn = true; }
   /* un rid tiré, un théâtre posé : écrits aussitôt (les autres modules voient le même identifiant que le Route Planner) */
   if (drawn) { try { localStorage.setItem(KEY_SET, JSON.stringify(setObject())); } catch (e) { /* idem */ } }
 }

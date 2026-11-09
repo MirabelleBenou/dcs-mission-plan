@@ -8174,6 +8174,37 @@ function packPoint(p, i, th, gsDefault) {
 }
 /* ===== FIN DES POINTS DE PAQUET ===== */
 
+/* ===== THÉÂTRE D'UNE ROUTE (routeTheatre, routesOfTheatre) ===== */
+const RT_CENTRES = {
+  Caucasus: [43.0, 41.6], GermanyCW: [51.2, 10.4], Syria: [34.8, 35.8], PersianGulf: [26.3, 55.6], Normandy: [49.6, 0.0], TheChannel: [50.9, 1.6], Nevada: [36.6, -115.5],
+  MarianaIslands: [14.8, 145.4], MarianaIslandsWWII: [14.8, 145.4], Kola: [68.3, 28.5], SinaiMap: [30.4, 33.2], Iraq: [34.4, 42.6], Afghanistan: [33.4, 66.3], Falklands: [-51.7, -59.0]
+};
+function rtThOk(id) { return typeof id === 'string' && Object.prototype.hasOwnProperty.call(RT_CENTRES, id); }
+
+/* Le théâtre d'un point (route d'un stockage sans theatre) : voir l'en-tête du bloc */
+function theatreOfPoint(p, cur) {
+  if (!p || typeof p.lat !== 'number' || typeof p.lon !== 'number') return cur;
+  const R = 6371, rad = Math.PI / 180;
+  const d = c => { const a = Math.sin((c[0] - p.lat) * rad / 2) ** 2 + Math.cos(p.lat * rad) * Math.cos(c[0] * rad) * Math.sin((c[1] - p.lon) * rad / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(a)); };
+  let best = null;
+  Object.keys(RT_CENTRES).forEach(id => { const k = d(RT_CENTRES[id]); if (!best || k < best.k) best = { id: id, k: k }; });
+  const dc = d(RT_CENTRES[rtThOk(cur) ? cur : 'Caucasus']);
+  if (best.k > 1500) return cur;
+  return dc <= best.k + 150 ? cur : best.id;
+}
+
+/* Le théâtre d'une route : son champ theatre s'il est un des quatorze, sinon celui de son premier point (ref : le théâtre de référence) */
+function routeTheatre(route, ref) {
+  if (route && rtThOk(route.theatre)) return route.theatre;
+  return theatreOfPoint(route && Array.isArray(route.points) ? route.points[0] : null, ref);
+}
+
+/* Les routes du théâtre C (l'ordre est gardé) */
+function routesOfTheatre(routes, C) {
+  return routes.filter(r => routeTheatre(r, C) === C);
+}
+/* ===== FIN DU THÉÂTRE D'UNE ROUTE ===== */
+
 /* ===== GROUPES PARTAGÉS (flight_set_v1) ===== */
 const KEY_FLIGHT_SET = 'flight_set_v1', KEY_FLIGHT_SET_BAD = 'flight_set_v1_illisible', FLIGHT_SET_FORMAT = 'dcs-flight-set-v1';
 const GS_KEY_FC = 'fc_state_v1', GS_KEY_ROUTES = 'route_set_v1', GS_KEY_ROUTE = 'route_state_v1';
@@ -10747,7 +10778,8 @@ function rpRead() {
   if (isObj(set) && (set.format === undefined || set.format === RP_SET_FORMAT) && Array.isArray(set.routes)) {
     set.routes.forEach(r => {
       if (!isObj(r) || !Array.isArray(r.points)) return;
-      routes.push({ rid: ridOk(r.rid) ? r.rid : '', theatre: thOk(r.theatre) ? r.theatre : state.theatre, name: str(r.name), points: r.points.filter(p => isObj(p) && packValidCoord(p.lat, p.lon)), flight: (isObj(r.flight) && typeof r.flight.groupName === 'string') ? r.flight : null });
+      const pts = r.points.filter(p => isObj(p) && packValidCoord(p.lat, p.lon));
+      routes.push({ rid: ridOk(r.rid) ? r.rid : '', theatre: routeTheatre({ theatre: r.theatre, points: pts }, S.theatre), name: str(r.name), points: pts, flight: (isObj(r.flight) && typeof r.flight.groupName === 'string') ? r.flight : null });       // une route sans theatre (stockage d'avant) : lue comme le Route Planner l'écrira (bloc partagé), jamais écrite ici
     });
   }
   return { state: state, routes: routes };
@@ -10758,7 +10790,7 @@ function rpPack(rt, theatre, gs) {
   rt.points.forEach((p, k) => { o[String(k + 1)] = packPoint(p, k, theatre, gs); });
   return o;
 }
-function rpUsable(rp) { return rp.routes.filter(r => r.points.length >= 2 && r.theatre === S.theatre); }       // seulement les routes du théâtre commun
+function rpUsable(rp) { return routesOfTheatre(rp.routes, S.theatre).filter(r => r.points.length >= 2); }       // seulement les routes du théâtre commun
 // Une route du Route Planner est « liée à ce groupe » : même nom (rogné, sans casse) et, si le groupe a un camp, le même
 function rtMatches(rt, f) {
   const fl = rt.flight, name = f.name.trim().toLowerCase();
@@ -10978,7 +11010,7 @@ function routeStatus(f, rp) {
   if (rp.state.theatre === '') return { k: 'norp' };
   const rt = rp.routes.filter(r => r.rid === f.routeLink.rid)[0];
   if (!rt) return { k: 'gone' };
-  if (rt.theatre !== rTh()) return { k: 'theatre', th: rt.theatre };       // la route est d'un autre théâtre (le Route Planner la garde masquée) : aucune reprise
+  if (routeTheatre(rt, S.theatre) !== rTh()) return { k: 'theatre', th: routeTheatre(rt, S.theatre) };       // la route est d'un autre théâtre (le Route Planner la garde masquée) : aucune reprise
   return rt.points.length < 2 ? { k: 'few' } : null;
 }
 function rpGeo(rt) { return rt.points.map((p, i) => ({ name: (p.name || '').replace(/\s+/g, ' ').trim() || 'WP' + (i + 1), lat: p.lat, lon: p.lon })); }
@@ -11183,7 +11215,7 @@ function exportIssues() {
     const rp = rpRead();
     S.flights.forEach((f, fi) => {
       const rt = f.routeLink ? rp.routes.filter(r => r.rid === f.routeLink.rid)[0] : null;
-      if (rt && rt.theatre !== S.theatre) out.push({ key: 'bar.route.theatre', args: [flightLabel(f, fi), theatreName(rt.theatre), theatreName(S.theatre)] });
+      if (rt && routeTheatre(rt, S.theatre) !== S.theatre) out.push({ key: 'bar.route.theatre', args: [flightLabel(f, fi), theatreName(routeTheatre(rt, S.theatre)), theatreName(S.theatre)] });
     });
   }
   if (!S.flights.length) out.push({ key: 'bar.no.flight', args: [] });

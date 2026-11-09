@@ -23,6 +23,7 @@ from radio_block import build_block as build_radio_block
 from projection_block import build_block as build_projection_block
 from group_store_block import build_block as build_group_store_block
 from route_pack_block import build_block as build_route_pack_block
+from route_theatre_block import build_block as build_route_theatre_block
 from payload_block import build_block as build_payload_block
 from import_block import build_block as build_import_block, build_css as build_import_css, build_html as build_import_html
 from messages_block import build_block as build_messages_block, build_css as build_messages_css
@@ -3861,6 +3862,7 @@ function setDoc(next) {
 }
 
 @@ROUTE_PACK_BLOCK@@
+@@ROUTE_THEATRE_BLOCK@@
 @@GROUP_STORE_BLOCK@@
 @@IMPORT_BLOCK@@
 const WEAPON_NAMES = @@WEAPON_NAMES@@;
@@ -6107,8 +6109,11 @@ function routeFromObject(o) {
 }
 
 /* La route enregistrée par le Route Planner, en lecture seule ; null s'il n'y a aucun point. */
+function dgCommonTheatre() { return dgReadTheatreKey() || dgTheatre(); }       /* le théâtre commun C : mp_theatre_v1 s'il est valide, sinon celui du document */
 function readCurrentRoute() {
-  const r = routeFromObject(readJsonKey(KEY_ROUTE));
+  const o = readJsonKey(KEY_ROUTE);
+  if (isPlainObject(o) && typeof o.theatre === 'string' && o.theatre !== dgCommonTheatre()) return null;       /* la route active du Route Planner est d'un autre théâtre que C : ignorée (rien d'importé, rien de rempli) jusqu'à ce que le Route Planner l'ait réécrite pour C */
+  const r = routeFromObject(o);
   return (r && r.points.length) ? r : null;
 }
 
@@ -6244,14 +6249,15 @@ function biAddCards(cards) {
 /* Les routes du Route Planner qui portent au moins un point : [{ route (lue comme « Route en cours », avec les réglages partagés), flight }],
    dans l'ordre des routes ; la route active est celle de route_state_v1 (qui fait foi pour elle, comme au Route Planner) */
 function biReadRouteSet() {
-  const st = readJsonKey(KEY_ROUTE), set = readJsonKey(KEY_ROUTESET);
-  if (!isPlainObject(st) || !isPlainObject(set) || set.format !== SET_FORMAT || !Array.isArray(set.routes)) return [];
-  const list = set.routes.filter(r => isPlainObject(r) && Array.isArray(r.points) && (typeof r.theatre !== 'string' || r.theatre === st.theatre));       /* seulement les routes du théâtre courant du Route Planner (les autres sont masquées au Route Planner ; les routes visibles viennent d'abord dans route_set_v1, l'index actif reste juste) */
-  const active = (Number.isInteger(set.active) && set.active >= 0 && set.active < list.length) ? set.active : 0;
+  const st = readJsonKey(KEY_ROUTE), set = readJsonKey(KEY_ROUTESET), C = dgCommonTheatre();
+  if (!isPlainObject(set) || set.format !== SET_FORMAT || !Array.isArray(set.routes)) return [];
+  const stOk = isPlainObject(st) && typeof st.theatre === 'string' && st.theatre === C;       /* route_state_v1 d'un autre théâtre que C : ignoré (ni la route active, ni ses réglages) */
+  const base = stOk ? st : { format: ROUTE_FORMAT, theatre: C };
   const out = [];
-  list.forEach((r, i) => {
-    const o = i === active ? { name: st.name, points: st.points } : { name: r.name, points: r.points };
-    const route = routeFromObject(Object.assign({}, st, o));
+  set.routes.forEach((r, i) => {
+    if (!isPlainObject(r) || !Array.isArray(r.points) || routeTheatre(r, C) !== C) return;       /* seulement les routes de C (bloc partagé : une route sans theatre est lue comme le Route Planner l'écrira) */
+    const o = (stOk && i === set.active) ? { name: st.name, points: st.points } : { name: r.name, points: r.points };
+    const route = routeFromObject(Object.assign({}, base, o));
     if (!route || !route.points.length) return;
     const f = r.flight;
     out.push({ route: route, flight: (isPlainObject(f) && typeof f.groupName === 'string') ? f : null });
@@ -6370,6 +6376,15 @@ function openImportModal(fileBriefing, fileName, fileRoute, forceSrc) {
   document.getElementById('bi-route-fill').checked = true;
   biRefresh();
   document.getElementById('import-modal').hidden = false;
+}
+/* Le théâtre commun ou les routes du Route Planner ont changé (autre onglet) pendant que la fenêtre d'import est ouverte : les routes proposées se relisent, sans recharger */
+function dgRoutesRefresh() {
+  const m = document.getElementById('import-modal');
+  if (!m || m.hidden) return;
+  bi.currentRoute = readCurrentRoute();
+  bi.routeSet = biReadRouteSet();
+  if (bi.src === 'route' && !bi.currentRoute) bi.src = bi.current ? 'current' : 'file';
+  biRefresh();
 }
 function closeImportModal() {
   if (TBM.cur) tbmClose(false);      /* la liste ouverte se ferme avec la fenêtre */
@@ -6712,7 +6727,7 @@ function bindEvents() {
   initScrollBar(document.getElementById('tab-bar'));
 
   /* Passage depuis le Route Planner (même origine : l'évènement vient d'un autre document) */
-  window.addEventListener('storage', e => { if (e.key === KEY_HANDOFF) checkRouteHandoff(); if (e.key === KEY_THEATRE) dgFollowTheatre(); if (e.key === KEY_UNITS) dgFollowUnits(); dgStorage(e); });
+  window.addEventListener('storage', e => { if (e.key === KEY_HANDOFF) checkRouteHandoff(); if (e.key === KEY_THEATRE) dgFollowTheatre(); if (e.key === KEY_UNITS) dgFollowUnits(); if (e.key === KEY_THEATRE || e.key === KEY_ROUTE || e.key === KEY_ROUTESET) dgRoutesRefresh(); dgStorage(e); });
 
   window.addEventListener('beforeprint', fillPrintRoot);
   window.addEventListener('afterprint', clearPrintRoot);
@@ -7479,7 +7494,7 @@ def build():
     js = js.replace('@@PAYLOAD_BLOCK@@\n', build_payload_block()).replace('@@IMPORT_BLOCK@@\n', build_import_block()).replace('@@MESSAGES_BLOCK@@\n', build_messages_block())
     facts_js = json.dumps(airfield_facts(), ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
     js = js.replace('__AIRFIELD_FACTS__', facts_js)
-    js = js.replace('@@ROUTE_PACK_BLOCK@@\n', build_route_pack_block()).replace('@@GROUP_STORE_BLOCK@@\n', build_group_store_block())
+    js = js.replace('@@ROUTE_PACK_BLOCK@@\n', build_route_pack_block()).replace('@@ROUTE_THEATRE_BLOCK@@\n', build_route_theatre_block()).replace('@@GROUP_STORE_BLOCK@@\n', build_group_store_block())
     js = js.replace('__EXAMPLE_DOC__', example_js).replace('__EXAMPLE_DOC_EN__', example_en_js).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@RADIO_BLOCK@@\n', build_radio_block()).replace('@@RADIO_BANDS_BLOCK@@\n', build_radio_bands_block()).replace('@@PROJECTION_BLOCK@@\n', build_projection_block())
     html = HTML
     html = html.replace('__CSS__', CSS.replace('@@MESSAGES_CSS@@\n', build_messages_css()) + build_import_css())

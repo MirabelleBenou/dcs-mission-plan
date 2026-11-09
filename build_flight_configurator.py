@@ -35,6 +35,7 @@ from projection_block import build_block as build_projection_block
 from radio_bands_block import build_block as build_radio_bands_block
 from radio_block import build_block as build_radio_block
 from route_pack_block import build_block as build_route_pack_block
+from route_theatre_block import build_block as build_route_theatre_block
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 APP_VERSION = "0.1.2"
@@ -2725,7 +2726,8 @@ function rpRead() {
   if (isObj(set) && (set.format === undefined || set.format === RP_SET_FORMAT) && Array.isArray(set.routes)) {
     set.routes.forEach(r => {
       if (!isObj(r) || !Array.isArray(r.points)) return;
-      routes.push({ rid: ridOk(r.rid) ? r.rid : '', theatre: thOk(r.theatre) ? r.theatre : state.theatre, name: str(r.name), points: r.points.filter(p => isObj(p) && packValidCoord(p.lat, p.lon)), flight: (isObj(r.flight) && typeof r.flight.groupName === 'string') ? r.flight : null });
+      const pts = r.points.filter(p => isObj(p) && packValidCoord(p.lat, p.lon));
+      routes.push({ rid: ridOk(r.rid) ? r.rid : '', theatre: routeTheatre({ theatre: r.theatre, points: pts }, S.theatre), name: str(r.name), points: pts, flight: (isObj(r.flight) && typeof r.flight.groupName === 'string') ? r.flight : null });       // une route sans theatre (stockage d'avant) : lue comme le Route Planner l'écrira (bloc partagé), jamais écrite ici
     });
   }
   return { state: state, routes: routes };
@@ -2736,7 +2738,7 @@ function rpPack(rt, theatre, gs) {
   rt.points.forEach((p, k) => { o[String(k + 1)] = packPoint(p, k, theatre, gs); });
   return o;
 }
-function rpUsable(rp) { return rp.routes.filter(r => r.points.length >= 2 && r.theatre === S.theatre); }       // seulement les routes du théâtre commun
+function rpUsable(rp) { return routesOfTheatre(rp.routes, S.theatre).filter(r => r.points.length >= 2); }       // seulement les routes du théâtre commun
 // Une route du Route Planner est « liée à ce groupe » : même nom (rogné, sans casse) et, si le groupe a un camp, le même
 function rtMatches(rt, f) {
   const fl = rt.flight, name = f.name.trim().toLowerCase();
@@ -2956,7 +2958,7 @@ function routeStatus(f, rp) {
   if (rp.state.theatre === '') return { k: 'norp' };
   const rt = rp.routes.filter(r => r.rid === f.routeLink.rid)[0];
   if (!rt) return { k: 'gone' };
-  if (rt.theatre !== rTh()) return { k: 'theatre', th: rt.theatre };       // la route est d'un autre théâtre (le Route Planner la garde masquée) : aucune reprise
+  if (routeTheatre(rt, S.theatre) !== rTh()) return { k: 'theatre', th: routeTheatre(rt, S.theatre) };       // la route est d'un autre théâtre (le Route Planner la garde masquée) : aucune reprise
   return rt.points.length < 2 ? { k: 'few' } : null;
 }
 function rpGeo(rt) { return rt.points.map((p, i) => ({ name: (p.name || '').replace(/\s+/g, ' ').trim() || 'WP' + (i + 1), lat: p.lat, lon: p.lon })); }
@@ -3161,7 +3163,7 @@ function exportIssues() {
     const rp = rpRead();
     S.flights.forEach((f, fi) => {
       const rt = f.routeLink ? rp.routes.filter(r => r.rid === f.routeLink.rid)[0] : null;
-      if (rt && rt.theatre !== S.theatre) out.push({ key: 'bar.route.theatre', args: [flightLabel(f, fi), theatreName(rt.theatre), theatreName(S.theatre)] });
+      if (rt && routeTheatre(rt, S.theatre) !== S.theatre) out.push({ key: 'bar.route.theatre', args: [flightLabel(f, fi), theatreName(routeTheatre(rt, S.theatre)), theatreName(S.theatre)] });
     });
   }
   if (!S.flights.length) out.push({ key: 'bar.no.flight', args: [] });
@@ -4380,7 +4382,7 @@ def build_html():
                   .replace('@@STARDOS_700@@', A['STARDOS_700'])
                   .replace('@@OSWALD_500@@', A['OSWALD_500']))
     js = (build_radio_block() + '\n' + build_radio_bands_block() + '\n' + tables_js() + '\n' + build_payload_block() + '\n' + PAD2_JS + '\n' + COORD_BLOCK + READNUM_BLOCK + build_magvar_block() + '\n' + build_projection_block() + '\n'
-          + build_route_pack_block() + '\n' + build_group_store_block() + '\n' + build_import_block() + '\n' + build_messages_block() + '\n' + JS_TBM + '\n' + app_js())
+          + build_route_pack_block() + '\n' + build_route_theatre_block() + '\n' + build_group_store_block() + '\n' + build_import_block() + '\n' + build_messages_block() + '\n' + JS_TBM + '\n' + app_js())
     return ('<!DOCTYPE html>\n<html lang="fr">\n<head>\n<meta charset="UTF-8">\n'
             '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">\n'
             '<meta name="theme-color" content="#1a1e10">\n<title>Flight Configurator</title>\n<style>\n'
@@ -4440,7 +4442,7 @@ def check(html):
     ok(not re.search(r'fetch\(|XMLHttpRequest|WebSocket|sendBeacon|<script[^>]*\bsrc=|<link[^>]*href=["\']http', own), 'aucune requête réseau (hors JSZip, qui n\'en fait pas)')
     ok(not re.search(r'font-weight:\s*(600|800|900|bold)|font:\s*(600|800|900|bold)\b', own), 'aucune graisse sans sa face (R295)')
     ok('/* ===== POSTES RADIO (COMME AU COCKPIT) ===== */' in html and '/* ===== EMPORT (PRESETS ET PAYLOAD) ===== */' in html, 'blocs partagés présents')
-    for label, blk in (('bandes et postes non pré-réglés', build_radio_bands_block()), ('déclinaison', build_magvar_block()), ('projections', build_projection_block()), ('points de paquet', build_route_pack_block()), ('groupes partagés', build_group_store_block()),
+    for label, blk in (('bandes et postes non pré-réglés', build_radio_bands_block()), ('déclinaison', build_magvar_block()), ('projections', build_projection_block()), ('points de paquet', build_route_pack_block()), ('théâtre d\'une route', build_route_theatre_block()), ('groupes partagés', build_group_store_block()),
                        ('import commun (script)', build_import_block()), ('import commun (feuille)', build_import_css()), ('import commun (fenêtre)', build_import_html()),
                        ('messages communs (script)', build_messages_block()), ('messages communs (feuille)', build_messages_css())):
         ok(blk in html, 'bloc %s inséré tel quel' % label)
