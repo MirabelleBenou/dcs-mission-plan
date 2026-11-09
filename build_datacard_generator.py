@@ -6112,7 +6112,7 @@ function routeFromObject(o) {
 function dgCommonTheatre() { return dgReadTheatreKey() || dgTheatre(); }       /* le théâtre commun C : mp_theatre_v1 s'il est valide, sinon celui du document */
 function readCurrentRoute() {
   const o = readJsonKey(KEY_ROUTE);
-  if (isPlainObject(o) && typeof o.theatre === 'string' && o.theatre !== dgCommonTheatre()) return null;       /* la route active du Route Planner est d'un autre théâtre que C : ignorée (rien d'importé, rien de rempli) jusqu'à ce que le Route Planner l'ait réécrite pour C */
+  if (isPlainObject(o) && typeof o.theatre === 'string' && routeTheatre({ theatre: o.theatre, points: Array.isArray(o.points) ? o.points : [] }, dgCommonTheatre()) !== dgCommonTheatre()) return null;       /* la route active du Route Planner est d'un autre théâtre que C : ignorée (rien d'importé, rien de rempli) jusqu'à ce que le Route Planner l'ait réécrite pour C */
   const r = routeFromObject(o);
   return (r && r.points.length) ? r : null;
 }
@@ -6251,7 +6251,7 @@ function biAddCards(cards) {
 function biReadRouteSet() {
   const st = readJsonKey(KEY_ROUTE), set = readJsonKey(KEY_ROUTESET), C = dgCommonTheatre();
   if (!isPlainObject(set) || set.format !== SET_FORMAT || !Array.isArray(set.routes)) return [];
-  const stOk = isPlainObject(st) && typeof st.theatre === 'string' && st.theatre === C;       /* route_state_v1 d'un autre théâtre que C : ignoré (ni la route active, ni ses réglages) */
+  const stOk = isPlainObject(st) && typeof st.theatre === 'string' && routeTheatre({ theatre: st.theatre, points: Array.isArray(st.points) ? st.points : [] }, C) === C;       /* route_state_v1 d'un autre théâtre que C : ignoré (ni la route active, ni ses réglages) */
   const base = stOk ? st : { format: ROUTE_FORMAT, theatre: C };
   const out = [];
   set.routes.forEach((r, i) => {

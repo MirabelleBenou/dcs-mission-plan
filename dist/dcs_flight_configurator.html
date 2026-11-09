@@ -8181,22 +8181,37 @@ const RT_CENTRES = {
 };
 function rtThOk(id) { return typeof id === 'string' && Object.prototype.hasOwnProperty.call(RT_CENTRES, id); }
 
+/* La distance (km) d'un point {lat, lon} à un centre [lat, lon] */
+function rtDist(p, c) {
+  const R = 6371, rad = Math.PI / 180;
+  const a = Math.sin((c[0] - p.lat) * rad / 2) ** 2 + Math.cos(p.lat * rad) * Math.cos(c[0] * rad) * Math.sin((c[1] - p.lon) * rad / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+function rtIsPt(p) { return !!p && typeof p.lat === 'number' && typeof p.lon === 'number' && isFinite(p.lat) && isFinite(p.lon); }
+
 /* Le théâtre d'un point (route d'un stockage sans theatre) : voir l'en-tête du bloc */
 function theatreOfPoint(p, cur) {
-  if (!p || typeof p.lat !== 'number' || typeof p.lon !== 'number') return cur;
-  const R = 6371, rad = Math.PI / 180;
-  const d = c => { const a = Math.sin((c[0] - p.lat) * rad / 2) ** 2 + Math.cos(p.lat * rad) * Math.cos(c[0] * rad) * Math.sin((c[1] - p.lon) * rad / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(a)); };
+  if (!rtIsPt(p)) return cur;
   let best = null;
-  Object.keys(RT_CENTRES).forEach(id => { const k = d(RT_CENTRES[id]); if (!best || k < best.k) best = { id: id, k: k }; });
-  const dc = d(RT_CENTRES[rtThOk(cur) ? cur : 'Caucasus']);
+  Object.keys(RT_CENTRES).forEach(id => { const k = rtDist(p, RT_CENTRES[id]); if (!best || k < best.k) best = { id: id, k: k }; });
+  const dc = rtDist(p, RT_CENTRES[rtThOk(cur) ? cur : 'Caucasus']);
   if (best.k > 1500) return cur;
   return dc <= best.k + 150 ? cur : best.id;
 }
 
-/* Le théâtre d'une route : son champ theatre s'il est un des quatorze, sinon celui de son premier point (ref : le théâtre de référence) */
+/* Le théâtre d'une route : son champ theatre s'il est un des quatorze, sinon celui de son premier point (ref : le théâtre de référence). Un champ theatre valide dont le premier point est à plus
+   de 1 500 km du centre de ce théâtre, alors qu'un autre théâtre est à moins de 1 500 km de ce point, est une route mal classée : elle prend cet autre théâtre. Le champ theatre de route_state_v1
+   n'entre jamais ici pour une route qui n'a pas le sien : on classe par les points de la route. */
 function routeTheatre(route, ref) {
-  if (route && rtThOk(route.theatre)) return route.theatre;
-  return theatreOfPoint(route && Array.isArray(route.points) ? route.points[0] : null, ref);
+  const p = route && Array.isArray(route.points) ? route.points[0] : null;
+  if (route && rtThOk(route.theatre)) {
+    if (rtIsPt(p) && rtDist(p, RT_CENTRES[route.theatre]) > 1500) {
+      const t = theatreOfPoint(p, ref);
+      if (rtThOk(t) && t !== route.theatre && rtDist(p, RT_CENTRES[t]) <= 1500) return t;
+    }
+    return route.theatre;
+  }
+  return theatreOfPoint(p, ref);
 }
 
 /* Les routes du théâtre C (l'ordre est gardé) */

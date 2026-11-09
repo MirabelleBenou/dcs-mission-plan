@@ -3563,16 +3563,19 @@ function loadSet(stateOk) {
     try { localStorage.setItem(KEY_SET, JSON.stringify(setObject())); } catch (e) { /* le stockage manque : le rid se tire à chaque ouverture */ }
     return;
   }
-  /* Une route d'avant (sans theatre) prend celui de son premier point (theatreOfPoint), la route active comprise ; le théâtre de référence est mp_theatre_v1 s'il est valide, sinon celui de route_state_v1, sinon le défaut. Sans état, le théâtre courant est celui de mp_theatre_v1, sinon celui de la route active. */
+  /* Le théâtre de chaque route : celui de son champ theatre, sinon (route d'avant) celui de ses propres points (routeTheatre ; pour la route active, ceux de route_state_v1), jamais le theatre de route_state_v1 ; un theatre
+     valide mais à plus de 1 500 km du premier point est réparé (bloc partagé). Le théâtre de référence est mp_theatre_v1 s'il est valide, sinon celui de route_state_v1, sinon le défaut. Sans état, le théâtre courant est celui de mp_theatre_v1, sinon celui de la route active. */
   const flat = set.routes, act = flat[set.active], mpTh = mpTheatreRead(), ref = mpTh || S.theatre;
-  flat.forEach(r => { if (THEATRE_IDS.indexOf(r.theatre) === -1) { r.theatre = routeTheatre(r === act && stateOk ? { points: S.points } : r, ref); drawn = true; } });
+  flat.forEach(r => { const th = routeTheatre({ theatre: r.theatre, points: r === act && stateOk ? S.points : r.points }, ref); if (th !== r.theatre) { r.theatre = th; drawn = true; } });
   if (!stateOk) S.theatre = mpTh || act.theatre;
-  else if (act.theatre !== S.theatre) { act.theatre = S.theatre; drawn = true; }
+  if (stateOk) { act.name = S.name; act.points = S.points; }
   const vis = flat.filter(r => r.theatre === S.theatre);
   RSET = { active: vis.indexOf(act), routes: vis, hidden: flat.filter(r => r.theatre !== S.theatre) };
-  const r = RSET.routes[RSET.active];
-  if (stateOk) { r.name = S.name; r.points = S.points; }
-  else { S.name = r.name; S.points = r.points; }
+  if (RSET.active === -1) {       /* la route active de route_state_v1 n'est pas du théâtre courant : la première route du théâtre, sinon une route vide neuve */
+    if (!vis.length) { const b = blankRoute(); b.theatre = S.theatre; vis.push(b); }
+    RSET.active = 0; drawn = true;
+    S.name = vis[0].name; S.points = vis[0].points;
+  } else if (!stateOk) { S.name = act.name; S.points = act.points; }
   /* mp_theatre_v1 valide l'emporte sur le théâtre de route_state_v1 : le Route Planner s'ouvre sur lui par la bascule d'un changement de théâtre en direct (rsetSwitch : routes des autres théâtres masquées, route active = la première, sinon une route vide neuve) ; route_state_v1 est réécrit pour cette route par persistState */
   if (stateOk && mpTh && mpTh !== S.theatre) { rsetSwitch(mpTh); S.theatre = mpTh; drawn = true; }
   /* un rid tiré, un théâtre posé : écrits aussitôt (les autres modules voient le même identifiant que le Route Planner) */
