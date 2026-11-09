@@ -263,6 +263,7 @@ For code contributions: fork, branch, study the build scripts to understand the 
 - NATO military symbols drawn with **[milsymbol](https://github.com/spatialillusions/milsymbol)** by Måns Beckman (MIT)
 - DCS airfield & helipad names and positions, and the DCS map projections, from **[pydcs](https://github.com/pydcs/dcs)** (LGPL-3.0); place-name overlay © Esri, HERE, Garmin, OpenStreetMap contributors
 - Airfield names and ids: pydcs, via DCS Airfield Charts
+- Datacard Generator: today's ICAO codes of the airfields from **[OurAirports](https://ourairports.com/)** (public domain), matched by position, via DCS Airfield Charts (`airfield_icao.json`)
 - Flight Configurator: weapon names, permitted weapons per station, masses and aircraft limits from **[pydcs](https://github.com/pydcs/dcs)** (LGPL-3.0, `data/COPYING.LESSER`), taken from Mission Tools; the front-view aircraft drawings are by **Goldwolf** (DCS Reference Guide), used with his permission and **not** under this repository's MIT licence — see `data/views/LICENSE.md`
 - HQ: the game's flyable aircraft types offered for a squadron, from **[pydcs](https://github.com/pydcs/dcs)** 1.0.0 (LGPL-3.0, `data/aircraft_types.json`)
 - DCS town names and positions from the DCS World maps, © Eagle Dynamics

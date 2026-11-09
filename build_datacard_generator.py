@@ -33,6 +33,7 @@ APP_VERSION = "1.5.1"
 OUT_PATH = os.path.join(HERE, 'dist', 'dcs_datacard_generator.html')
 ASSETS_PATH = os.path.join(HERE, 'assets.json')
 FACTS_PATH = os.path.join(HERE, 'airfield_facts.json')
+ICAO_PATH = os.path.join(HERE, 'airfield_icao.json')
 
 
 def airfield_facts():
@@ -55,6 +56,29 @@ def airfield_facts():
                   and (a[4] is None or (isinstance(a[4], list) and len(a[4]) == 4 and all(isinstance(x, int) and not isinstance(x, bool) and x > 0 for x in a[4]))))
             if not ok:
                 raise SystemExit(f"[ERREUR] airfield_facts.json : entrée illisible dans {th} : {a!r}")
+    return d['theatres']
+
+
+def airfield_icao(facts):
+    """Les codes OACI d'aujourd'hui des aérodromes (airfield_icao.json, format dcs-airfield-icao-v1) : { théâtre: { nom: OACI } }, vérifiés contre les faits du jeu (facts = airfield_facts()) :
+    chaque théâtre et chaque nom sont dans airfield_facts.json, chaque code est de quatre caractères A-Z ou 0-9."""
+    if not os.path.isfile(ICAO_PATH):
+        raise SystemExit(f"[ERREUR] Entrée manquante : {ICAO_PATH} (airfield_icao.json attendu à la racine du dépôt)")
+    with open(ICAO_PATH, encoding='utf-8') as f:
+        d = json.load(f)
+    if not isinstance(d, dict) or d.get('format') != 'dcs-airfield-icao-v1' or not isinstance(d.get('theatres'), dict):
+        raise SystemExit("[ERREUR] airfield_icao.json : le format doit être « dcs-airfield-icao-v1 » avec une table « theatres »")
+    for th, codes in d['theatres'].items():
+        if th not in facts:
+            raise SystemExit(f"[ERREUR] airfield_icao.json : le théâtre « {th} » n'est pas dans airfield_facts.json")
+        if not isinstance(codes, dict):
+            raise SystemExit(f"[ERREUR] airfield_icao.json : la table de {th} est illisible")
+        names = {a[0] for a in facts[th]}
+        for name, code in codes.items():
+            if name not in names:
+                raise SystemExit(f"[ERREUR] airfield_icao.json : {th} : « {name} » n'est pas un aérodrome de ce théâtre dans airfield_facts.json")
+            if not isinstance(code, str) or not re.fullmatch(r'[A-Z0-9]{4}', code):
+                raise SystemExit(f"[ERREUR] airfield_icao.json : {th} : « {name} » : le code {code!r} n'est pas de quatre caractères A-Z ou 0-9")
     return d['theatres']
 
 
@@ -4072,6 +4096,8 @@ function dgFreqStr(v) { return v.toFixed(3); }
    porte encore cette valeur pour l'aérodrome précédent. Une valeur saisie, importée ou posée par le MC n'est jamais remplacée.
    AF_UI (état d'écran, jamais écrit) : other = les rangées dont le champ libre est ouvert ; sig = les aérodromes de la route déjà posés, par carte. */
 const AIRFIELD_FACTS = __AIRFIELD_FACTS__;
+/* Les codes OACI d'aujourd'hui (airfield_icao.json, OurAirports, domaine public) : { théâtre: { nom: OACI } } ; un aérodrome absent a un code inconnu */
+const AIRFIELD_ICAO = __AIRFIELD_ICAO__;
 const AF_UI = { other: new WeakSet(), sig: new WeakMap() };
 const AF_ROUTE_M = 5000;       /* l'aérodrome pris de la route : à 5 km au plus du premier (DEP) ou du dernier (ARR) point */
 
@@ -4105,12 +4131,18 @@ function afTowerHz(radios, c) {
   }
   return radios[0];
 }
-/* Ce que le jeu donne pour un aérodrome : la piste (les pistes jointes par « , ») et la fréquence (MHz, comme la boîte Radio) ; '' quand le jeu n'a rien */
-function afGame(row, c) { return { rwy: row[3].join(', '), freq: row[4] ? dgFreqStr(afTowerHz(row[4], c) / 1e6) : '' }; }
+/* Le code OACI connu de l'aérodrome de ce nom dans ce théâtre, ou '' */
+function afIcao(th, name) {
+  const t = Object.prototype.hasOwnProperty.call(AIRFIELD_ICAO, th) ? AIRFIELD_ICAO[th] : null;
+  return t && Object.prototype.hasOwnProperty.call(t, name) ? t[name] : '';
+}
+/* Ce que le jeu donne pour un aérodrome (rangée des faits du théâtre du document) : l'OACI, la piste (les pistes jointes par « , ») et la fréquence (MHz, comme la boîte Radio) ; '' quand le jeu n'a rien */
+function afGame(row, c) { return { icao: afIcao(dgTheatre(), row[0]), rwy: row[3].join(', '), freq: row[4] ? dgFreqStr(afTowerHz(row[4], c) / 1e6) : '' }; }
 /* Les valeurs du jeu de l'aérodrome actuel de la rangée (ceux de ce nom, dans tous les théâtres) : la piste, et la fréquence de n'importe laquelle des quatre radios de la tour
    (pas seulement celle de la bande du type actuel : un type changé ne fige pas la fréquence posée pour l'ancien) */
 function afGameSet(f) {
-  const rows = afFindAny(f.name), set = { rwy: [], freq: [] };
+  const rows = afFindAny(f.name), set = { icao: [], rwy: [], freq: [] };
+  Object.keys(AIRFIELD_ICAO).forEach(th => { const k = afIcao(th, str(f.name).trim()); if (k !== '' && set.icao.indexOf(k) === -1) set.icao.push(k); });
   rows.forEach(r => {
     if (r[3].length) set.rwy.push(r[3].join(', '));
     if (r[4]) r[4].forEach(hz => set.freq.push(dgFreqStr(hz / 1e6)));
@@ -4119,22 +4151,24 @@ function afGameSet(f) {
 }
 /* Vrai si la case est vide ou porte encore la valeur du jeu de l'aérodrome actuel de la rangée : une valeur saisie, importée ou posée par le MC n'en est pas une */
 function afIsGame(f, key) {
-  const cur = f[key === 'rwy' ? 'runway' : 'frequency'];
+  const cur = f[key === 'icao' ? 'icao' : key === 'rwy' ? 'runway' : 'frequency'];
   return !hasText(cur) || afGameSet(f)[key].indexOf(cur.trim()) !== -1;
 }
 /* Le nom se vide ou passe en champ libre : la piste et la fréquence qui portent encore la valeur du jeu de l'ancien nom se vident ; une valeur saisie reste */
 function afClearGame(f) {
-  const own = { rwy: afIsGame(f, 'rwy'), freq: afIsGame(f, 'freq') };
+  const own = { icao: afIsGame(f, 'icao'), rwy: afIsGame(f, 'rwy'), freq: afIsGame(f, 'freq') };
+  if (own.icao) f.icao = '';
   if (own.rwy) f.runway = '';
   if (own.freq) f.frequency = '';
 }
 /* Pose le nom de la rangée ; la piste et la fréquence prennent la valeur du jeu si leur case est vide ou porte encore celle de l'aérodrome précédent. Rend vrai si le nom est dans la liste. */
 function afSetName(c, f, name) {
-  const keep = { rwy: !afIsGame(f, 'rwy'), freq: !afIsGame(f, 'freq') };
+  const keep = { icao: !afIsGame(f, 'icao'), rwy: !afIsGame(f, 'rwy'), freq: !afIsGame(f, 'freq') };
   f.name = name;
   const row = afFind(name);
   if (!row) return false;
   const g = afGame(row, c);
+  if (!keep.icao) f.icao = g.icao;
   if (!keep.rwy) f.runway = g.rwy;
   if (!keep.freq) f.frequency = g.freq;
   return true;
@@ -4184,6 +4218,7 @@ function afFillRows(c) {
     const row = afFind(f.name);
     if (!row) return;
     const g = afGame(row, c);
+    if (!hasText(f.icao)) f.icao = g.icao;
     if (!hasText(f.runway)) f.runway = g.rwy;
     if (!hasText(f.frequency)) f.frequency = g.freq;
   });
@@ -4211,7 +4246,7 @@ function onAfName(el) {
   if (v === '@other') {
     AF_UI.other.add(f);
     afClearGame(f);       /* le champ libre ne garde pas la piste ni la fréquence de l'aérodrome qu'on quitte (la valeur saisie reste) */
-    if (li) ['runway', 'frequency'].forEach(key => { const x = li.querySelector('[data-path="fields.' + i + '.' + key + '"]'); if (x && x.value !== f[key]) x.value = f[key]; });
+    if (li) ['icao', 'runway', 'frequency'].forEach(key => { const x = li.querySelector('[data-path="fields.' + i + '.' + key + '"]'); if (x && x.value !== f[key]) x.value = f[key]; });
     if (li && !li.querySelector('.af-free')) {
       el.parentNode.insertAdjacentHTML('beforeend', afFreeInput(i, f));
       const fr = li.querySelector('.af-free');
@@ -4226,7 +4261,7 @@ function onAfName(el) {
   if (li) {
     const fr = li.querySelector('.af-free');
     if (fr) fr.remove();
-    ['runway', 'frequency'].forEach(key => { const x = li.querySelector('[data-path="fields.' + i + '.' + key + '"]'); if (x && x.value !== f[key]) x.value = f[key]; });
+    ['icao', 'runway', 'frequency'].forEach(key => { const x = li.querySelector('[data-path="fields.' + i + '.' + key + '"]'); if (x && x.value !== f[key]) x.value = f[key]; });
   }
   touch();
 }
@@ -7501,8 +7536,11 @@ def build():
     _wn, _pyl, _lim = dg_tables()
     js = JS.replace('@@WEAPON_NAMES@@', _wn).replace('@@AIRCRAFT_PYLONS@@', _pyl).replace('@@AIRCRAFT_LIMITS@@', _lim)
     js = js.replace('@@PAYLOAD_BLOCK@@\n', build_payload_block()).replace('@@IMPORT_BLOCK@@\n', build_import_block()).replace('@@MESSAGES_BLOCK@@\n', build_messages_block())
-    facts_js = json.dumps(airfield_facts(), ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
+    _facts = airfield_facts()
+    facts_js = json.dumps(_facts, ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
     js = js.replace('__AIRFIELD_FACTS__', facts_js)
+    icao_js = json.dumps(airfield_icao(_facts), ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
+    js = js.replace('__AIRFIELD_ICAO__', icao_js)
     js = js.replace('@@ROUTE_PACK_BLOCK@@\n', build_route_pack_block()).replace('@@ROUTE_THEATRE_BLOCK@@\n', build_route_theatre_block()).replace('@@GROUP_STORE_BLOCK@@\n', build_group_store_block())
     js = js.replace('__EXAMPLE_DOC__', example_js).replace('__EXAMPLE_DOC_EN__', example_en_js).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@RADIO_BLOCK@@\n', build_radio_block()).replace('@@RADIO_BANDS_BLOCK@@\n', build_radio_bands_block()).replace('@@PROJECTION_BLOCK@@\n', build_projection_block())
     html = HTML
