@@ -4228,10 +4228,38 @@ function dgSyncRoutes() {
   });
   return changed;
 }
+/* La datacard stockée garde à jour les seuls champs qui viennent de la route : la dernière copie des lignes de route (nom, coordonnée, altitude par pid), les références du Route Planner et le rid d'une carte liée.
+   Elle est relue à l'instant : rien d'autre d'aucune carte n'est touché (heures, notes, lignes propres, réglages), un autre onglet a pu les changer. Les cartes se retrouvent par gsId, les cartes libres par leur rang. */
+function dgPatchStored() {
+  let raw = null;
+  try { raw = localStorage.getItem(KEY_STATE); } catch (e) { return; }
+  if (raw === null) return;
+  let s;
+  try { s = JSON.parse(raw); } catch (e) { return; }
+  if (!s || !Array.isArray(s.cards)) return;
+  const rs = dgRouteSet();
+  const sf = s.cards.filter(x => x && !x.gsId), mf = doc.cards.filter(c => !c.gsId);
+  const stored = c => c.gsId ? s.cards.find(x => x && x.gsId === c.gsId) : (sf.length === mf.length ? sf[mf.indexOf(c)] : null);
+  doc.cards.forEach(c => {
+    const x = stored(c);
+    if (!x || !Array.isArray(x.nav)) return;
+    const info = dgRouteInfo(c, rs);
+    if (info.state === 'linked') {
+      const tmp = { nav: x.nav.filter(l => l && typeof l === 'object') };
+      x.nav = dgMergeNav(tmp, info.route);
+      if (c.rid) x.rid = c.rid;
+    }
+    if (Array.isArray(x.refs)) { const t2 = { refs: x.refs, refsOff: x.refsOff }; dgSyncCardRefs(t2, rs.st); x.refs = t2.refs; if (t2.refsOff) x.refsOff = t2.refsOff; else delete x.refsOff; }
+  });
+  const out = JSON.stringify(s);
+  if (out === raw) return;
+  const inSync = raw === DG_DOC.raw;
+  try { localStorage.setItem(KEY_STATE, out); if (inSync) DG_DOC.raw = out; } catch (e) { /* quota */ }
+}
 /* Un évènement « storage » de route_set_v1, route_state_v1 ou mp_nav_v1 : une seule relecture après un court calme (le bloc écrit le jeu, puis l'état, puis le groupe) ; la saisie en cours est gardée (renderAll(true)) */
 function dgRoutesChanged() {
   clearTimeout(DG_RT.timer);
-  DG_RT.timer = setTimeout(() => { DG_RT.timer = 0; if (dgSyncRoutes()) renderAll(true); else renderEditor(true); }, 120);       /* une relecture n'écrit jamais datacard_state_v1 : seul l'onglet qui a modifié écrit */
+  DG_RT.timer = setTimeout(() => { DG_RT.timer = 0; const ch = dgSyncRoutes(); dgPatchStored(); if (ch) renderAll(true); else renderEditor(true); }, 120);       /* une relecture n'écrit jamais datacard_state_v1 : seul l'onglet qui a modifié écrit */
 }
 /* Un autre onglet du DG a écrit datacard_state_v1 : celui-ci prend le document, la saisie en cours gardée (renderAll(true)) ; il n'écrit rien */
 function dgFollowDoc() {
@@ -4351,15 +4379,22 @@ function dgPosByLeg(c, i, field, value) {
   return legDest(base, brg, km);
 }
 /* Un champ de route d'une ligne de nav a changé (sortie du champ) : l'écriture dans la route (ou, sans route, dans la ligne) ; el : le champ */
+/* Une carte de groupe dont les points n'ont pas de route : le premier geste de la carte (champ, ✕, ▲ ▼) crée la route à partir des lignes, puis s'applique à la ligne devenue point ; vrai si la route est née */
+function dgGrpRoute(c) {
+  if (!c.gsId || dgRouteInfo(c).state !== 'none' || !dgGroupPoints(c).length || !c.nav.some(l => !l.pid && parseCoord(l.coord))) return false;
+  if (!dgCreateFromLines(c)) return false;
+  gsApplyAll(); dgSyncRoutes(); persistState();
+  return true;
+}
 function dgNavField(c, i, k, el) {
+  if (!c.nav[i]) return;
+  dgGrpRoute(c);
   const x = c.nav[i];
   if (!x) return;
   const v = el.value;
   const info = dgRouteInfo(c);
   const own = !x.pid;
-  /* D5 : une carte de groupe dont les points n'ont pas de route : la première modification de la carte crée la route à partir de ses lignes */
-  const grpFirst = info.state === 'none' && c.gsId && own && dgGroupPoints(c).length && (k === 'name' || k === 'altitude' || k === 'altRef');
-  if (grpFirst) { x[k === 'altRef' ? 'altitude' : k] = k === 'altRef' ? x.altitude : v; if (dgCreateFromLines(c)) dgAfterRouteWrite(true); else { persistState(); syncNavEditor(true); renderPreview(); } return; }
+  if (info.state === 'other' && !(k === 'name' && own)) { syncNavEditor(true); return; }       /* une route d'un autre théâtre : rien de ce qui écrirait une position, ni le nom d'un point de route */
   if (k === 'name') { x.name = v; if (!own) dgWritePoint(c, x.pid, p => { p.name = v; }); dgAfterRouteWrite(false); return; }
   if (k === 'altitude') {
     x.altitude = v;
@@ -4390,6 +4425,7 @@ function dgNavAct(c, act, i) {
   const arr = c.nav, x = arr[i];
   const info = dgRouteInfo(c);
   if (info.state === 'other') return true;       /* une route d'un autre théâtre : aucun geste (la carte garde sa dernière copie) */
+  if (act !== 'add' && c.nav[i] && dgGrpRoute(c)) return dgNavAct(c, act, i);       /* les points d'un groupe sans route : la route naît d'abord, le geste s'applique ensuite */
   if (act === 'add') {
     if (arr.length >= LIMITS.nav) return true;
     const line = { name: '', course: '', distance: '', altitude: '', tos: '', note: '', coord: '' };
@@ -4678,7 +4714,8 @@ function dgStorage(e) {
     DGG.pend = false;
     const g = gsRead();
     if (g === null || gsStable(g) === DGG.shown) return;
-    if (gsApplyAll()) renderAll(true);       /* relire la fiche n'écrit pas la datacard */
+    const ch = gsApplyAll(); dgSyncRoutes(); dgPatchStored();       /* relire la fiche n'écrit pas la datacard (sauf les champs de route de la carte stockée) */
+    if (ch) renderAll(true);
   }, 300);
 }
 /* L'écran n'est plus à jour de la fiche (un autre module a écrit pendant une saisie) : il se redessine, la saisie en cours gardée */
@@ -6340,10 +6377,10 @@ const SECTION_BUILDERS = {
     return listHtml('nav', c.nav, (x, i) => {
       const g = legs[i], rt = !!x.pid, ro = rt && frozen;
       const first = rt && !legs.slice(0, i).some(q => q.pt);       /* la première ligne positionnée : rien d'où partir */
-      const rc = (ro || first) ? ' readonly' : '', rr = ro ? ' readonly' : '';
+      const rc = (frozen || first) ? ' readonly' : '', rr = frozen ? ' readonly' : '', rn = ro ? ' readonly' : '';       /* route d'un autre théâtre : tout ce qui écrirait une position est figé, lignes propres comprises ; le nom d'une ligne propre, les heures et les notes restent */
       const st = coordState(x.coord, g.pt, g);
       const al = rt ? (DG_ALTREF[dgAltKey(c, x.pid)] || 'AGL') : '';
-      return '<div class="li-grid gs">' + fInput('f.nav.name', 'nav.' + i + '.name', x.name, rr) + '</div>' +
+      return '<div class="li-grid gs">' + fInput('f.nav.name', 'nav.' + i + '.name', x.name, rn) + '</div>' +
         '<div class="li-grid gs"><div class="ed-field"><label>' + esc(t('f.nav.coord')) + '</label>' +
         '<input type="text" data-path="nav.' + i + '.coord" value="' + esc(x.coord) + '"' + phAttr('nav.' + i + '.coord') + ' autocomplete="off" spellcheck="false"' + rr + '>' +
         '<div class="ed-coord ' + st.cls + '" data-coord-state>' + esc(st.text) + '</div></div></div>' +
