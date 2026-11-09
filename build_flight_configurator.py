@@ -607,7 +607,7 @@ I18N_FR = {
     'clear.confirm.title': 'Effacer le module ?',
     'clear.confirm.text': 'Les groupes, la route et l’emport en cours seront effacés ; vos presets restent. Cela ne se défait pas.',
     'fl.remove.confirm.title': 'Retirer le groupe « {0} » ?',
-    'fl.remove.confirm.text': 'Ce groupe est partagé avec le Route Planner et le Datacard Generator : il sera retiré de tous les modules.',
+    'fl.remove.confirm.text': 'Ce groupe est partagé avec le Route Planner et le Datacard Generator : il sera retiré de tous les modules.',
     'ui.verb.clear': 'Effacer',
     'ui.verb.change': 'Changer',
     'ui.verb.remove': 'Retirer',
