@@ -90,6 +90,7 @@ Changes merged since the last release, grouped per tool.
 - The editor has one **Group and crew** box, as in the Flight Configurator: the group (name, coalition for a group's datacard, aircraft, count, task, threat), then one card per aircraft (callsign, type, board number, pilot). A group's datacard and a free card now show the same boxes in the same order — the order of the printed datacard — on desktop and in the phone's tabs; the units move to **Meta**. A mixed group's aircraft read "Mi-24P + Mi-8MT" on both.
 - The datacard always keeps all its blocks, even empty ones, so it can be printed and filled in by hand: an empty block shows its headings and a few blank lines (three mission steps, four crew rows, five navigation points, two reference points, four radio channels, the departure, arrival and alternate airfields, the weather labels, Joker and Bingo, two lines for the loadout and two for notes). A block with data is unchanged; a full datacard may now take two pages.
 - Units (mass, distance, altitude) move to the toolbar, apply to every card and are shared with the Route Planner.
+- Airfields box: airier columns with light separators and one text size. Picking an airfield from the list replaces its ICAO code, runway and tower frequency, even typed ones ("Other…" clears them); the runway is a single end, picked from the airfield's list, the one facing the Weather wind first.
 #### Removed
 - The Datacard Generator's own HQ and flight package imports, replaced by the common import window of the Flight Configurator and the Route Planner.
 #### Fixed
