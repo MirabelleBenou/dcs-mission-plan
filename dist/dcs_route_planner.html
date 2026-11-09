@@ -4320,6 +4320,7 @@ function parseRoute(src) {
 
 let SAVE_FAILED = false;
 function persistState() {
+  if (RLD.stale) rpMergeStale();       /* une relecture attend (le DG a écrit pendant une saisie) : on relit avant d'écrire, puis on rejoue ce que cet écran a changé */
   syncActive();
   let ok = true;
   /* route_set_v1 d'abord, route_state_v1 (lu par le DG) ensuite ; un échec (quota ou stockage indisponible) est dit une fois par série */
@@ -4329,6 +4330,7 @@ function persistState() {
   SAVE_FAILED = !ok;
   try { gsSyncRoutes(); } catch (e) { /* la fiche des groupes est facultative */ }
   mpNavWrite();
+  RLD.base = rpSnap();
 }
 
 function loadState() {
@@ -4351,6 +4353,7 @@ function loadState() {
   } catch (e) { /* état illisible : route neuve */ }
   if (!ok) S = defaultState();
   loadSet(ok);
+  RLD.base = rpSnap();
 }
 
 /* Le fichier exporté : l'état sans « ui » */
@@ -4676,7 +4679,7 @@ function rwUpdateRoute(rid, mut, o) {
   const route = set.routes.find(r => r.rid === rid);
   if (!route) return { ok: false, why: 'gone' };
   if (mut && mut(route) === false) return { ok: false, why: 'abort' };
-  if (route.points.length > RW_MAX_POINTS) return { ok: false, why: 'max' };
+  if (route.points.length > RW_MAX_POINTS) return { ok: false, why: 'pts' };
   rwAssignPids(route.points);
   return rwWrite(set, route, Object.assign({ oldSet: oldSet, oldState: oldState }, o || {}));
 }
@@ -4727,7 +4730,7 @@ function rwUpdateRefs(mut) {
   const st = st0 ? st0 : rwMinimalState(set, null);
   if (!Array.isArray(st.refs)) st.refs = [];
   if (mut && mut(st.refs) === false) return { ok: false, why: 'abort' };
-  if (st.refs.length > RW_MAX_REFS) return { ok: false, why: 'max' };
+  if (st.refs.length > RW_MAX_REFS) return { ok: false, why: 'refs' };
   rwAssignPids(st.refs);
   if (!rwCommit([{ k: RW_KEY_STATE, v: JSON.stringify(st) }])) return { ok: false, why: 'full' };
   return { ok: true, refs: st.refs };
@@ -4902,15 +4905,59 @@ function mpNavFollow() {
 
 /* Le Datacard Generator écrit route_set_v1 et route_state_v1 (son bloc d'écriture de route) : le Route Planner se relit, sans rien réécrire, sans perdre le point sélectionné s'il existe encore (son pid),
    et jamais sous un champ en cours de saisie (la relecture attend la sortie du champ). Il ne réécrit pas ce qu'il vient de lire : aucune boucle (l'évènement « storage » ne revient pas à l'onglet qui écrit). */
-const RLD = { timer: 0, wait: false };
-function rpReloadSoon() { clearTimeout(RLD.timer); RLD.timer = setTimeout(rpReload, 150); }
+const RLD = { timer: 0, wait: false, stale: false, base: null };       /* stale : une route a changé dans le stockage depuis la dernière lecture ; base : l'état lu ou écrit en dernier (pour rejouer la seule saisie en cours) */
+function rpReloadSoon() { RLD.stale = true; clearTimeout(RLD.timer); RLD.timer = setTimeout(rpReload, 150); }
 function rpBusy() {
   const a = document.activeElement;
-  return !!a && /^(INPUT|TEXTAREA)$/.test(a.tagName) && !a.readOnly && !a.disabled && a.type !== 'checkbox' && a.type !== 'radio' && a.type !== 'file';
+  return !!a && document.hasFocus() && /^(INPUT|TEXTAREA)$/.test(a.tagName) && !a.readOnly && !a.disabled && a.type !== 'checkbox' && a.type !== 'radio' && a.type !== 'file';       /* un champ d'une fenêtre qui n'a pas le focus ne compte pas */
+}
+function rpSnap() { try { const o = JSON.parse(JSON.stringify(S)); delete o.ui; return o; } catch (e) { return null; } }
+/* Ce que cet écran a changé depuis sa dernière lecture : réglages, et points et références (par pid : champs changés, ajoutés avec leur voisin, retirés) ; l'ordre n'est pas rejoué */
+function rpDiff(base, mine) {
+  const d = { set: {}, lists: {} };
+  Object.keys(mine).forEach(k => { if (k !== 'points' && k !== 'refs' && JSON.stringify(mine[k]) !== JSON.stringify(base[k])) d.set[k] = mine[k]; });
+  ['points', 'refs'].forEach(k => {
+    const b = Array.isArray(base[k]) ? base[k] : [], m = Array.isArray(mine[k]) ? mine[k] : [], bp = new Map(b.map(p => [p.pid, p])), mp = new Set(m.map(p => p.pid));
+    const L = { changed: [], added: [], removed: [] };
+    m.forEach((p, i) => {
+      const o = bp.get(p.pid);
+      if (!o) { L.added.push({ obj: p, after: i ? m[i - 1].pid : '' }); return; }
+      const ch = {};
+      new Set(Object.keys(p).concat(Object.keys(o))).forEach(f => { if (JSON.stringify(p[f]) !== JSON.stringify(o[f])) ch[f] = p[f]; });
+      if (Object.keys(ch).length) L.changed.push({ pid: p.pid, ch: ch });
+    });
+    b.forEach(p => { if (!mp.has(p.pid)) L.removed.push(p.pid); });
+    d.lists[k] = L;
+  });
+  return d;
+}
+function rpApply(d) {
+  Object.keys(d.set).forEach(k => { S[k] = d.set[k]; });
+  ['points', 'refs'].forEach(k => {
+    const L = d.lists[k], list = S[k];
+    L.removed.forEach(pid => { const i = list.findIndex(p => p.pid === pid); if (i >= 0) list.splice(i, 1); });
+    L.changed.forEach(c => { const p = list.find(q => q.pid === c.pid); if (p) Object.keys(c.ch).forEach(f => { if (c.ch[f] === undefined) delete p[f]; else p[f] = c.ch[f]; }); });
+    L.added.forEach(a => { const i = a.after ? list.findIndex(p => p.pid === a.after) : -1; list.splice(i + 1, 0, a.obj); });
+  });
+}
+function rpMergeStale() {
+  RLD.stale = false; clearTimeout(RLD.timer);
+  const base = RLD.base, mine = rpSnap(), d = base && mine ? rpDiff(base, mine) : null;
+  const kp = sel >= 0 && S.points[sel] ? S.points[sel].pid : null, kr = selR >= 0 && S.refs[selR] ? S.refs[selR].pid : null, ui = S.ui;
+  loadState();
+  S.ui = ui;
+  const k = mpNavRead();
+  if (k) S.navDisplay = k;
+  if (d) rpApply(d);
+  sel = kp ? S.points.findIndex(p => p.pid === kp) : -1;
+  selR = kr ? S.refs.findIndex(p => p.pid === kr) : -1;
+  RLD.wait = true;       /* le redessin (qui refait les champs) attend la sortie du champ, comme une relecture */
+  setTimeout(() => { if (RLD.wait && !rpBusy()) rpReload(); }, 0);
 }
 function rpReload() {
   if (rpBusy()) { RLD.wait = true; return; }
   RLD.wait = false;
+  RLD.stale = false;
   const kp = sel >= 0 && S.points[sel] ? S.points[sel].pid : null, kr = selR >= 0 && S.refs[selR] ? S.refs[selR].pid : null, ui = S.ui;
   loadState();
   S.ui = ui;

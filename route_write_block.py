@@ -210,7 +210,7 @@ function rwUpdateRoute(rid, mut, o) {
   const route = set.routes.find(r => r.rid === rid);
   if (!route) return { ok: false, why: 'gone' };
   if (mut && mut(route) === false) return { ok: false, why: 'abort' };
-  if (route.points.length > RW_MAX_POINTS) return { ok: false, why: 'max' };
+  if (route.points.length > RW_MAX_POINTS) return { ok: false, why: 'pts' };
   rwAssignPids(route.points);
   return rwWrite(set, route, Object.assign({ oldSet: oldSet, oldState: oldState }, o || {}));
 }
@@ -261,7 +261,7 @@ function rwUpdateRefs(mut) {
   const st = st0 ? st0 : rwMinimalState(set, null);
   if (!Array.isArray(st.refs)) st.refs = [];
   if (mut && mut(st.refs) === false) return { ok: false, why: 'abort' };
-  if (st.refs.length > RW_MAX_REFS) return { ok: false, why: 'max' };
+  if (st.refs.length > RW_MAX_REFS) return { ok: false, why: 'refs' };
   rwAssignPids(st.refs);
   if (!rwCommit([{ k: RW_KEY_STATE, v: JSON.stringify(st) }])) return { ok: false, why: 'full' };
   return { ok: true, refs: st.refs };

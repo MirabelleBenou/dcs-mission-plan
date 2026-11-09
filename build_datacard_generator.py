@@ -2638,6 +2638,10 @@ const I18N = {
     'nr.ref': '{m} réf.',
     'nr.sub': '{p} · {m} — toute modification ici s’écrit dans cette route, et inversement',
     'nr.tag.none': 'Aucune',
+    'nr.grp': 'Les points du groupe deviennent la route « {r} » au Route Planner à la première modification.',
+    'nr.over': 'Cette carte compte {n} lignes (30 au plus à l’ajout) : aucune n’est retirée.',
+    'toast.rwRefs': '⚠ Le Route Planner a déjà 12 références : celle-ci n’est pas ajoutée.',
+    'toast.typeLost': '⚠ Le point a été retiré pendant la saisie : elle est abandonnée.',
     'nr.none': 'La première coordonnée saisie crée la route « {name} » au Route Planner.',
     'nr.tag.full': 'Non créée',
     'nr.full': 'Le Route Planner a déjà 12 routes : cette carte garde sa navigation à elle. Libère une route au Route Planner, ou lie la carte à une route existante.',
@@ -3092,6 +3096,10 @@ const I18N = {
     'nr.ref': '{m} ref.',
     'nr.sub': '{p} · {m} — every change here is written to this route, and the other way round',
     'nr.tag.none': 'None',
+    'nr.grp': 'The group\'s waypoints become route "{r}" in the Route Planner at the first change.',
+    'nr.over': 'This card has {n} lines (30 at most when adding): none is removed.',
+    'toast.rwRefs': '⚠ The Route Planner already has 12 reference points: this one is not added.',
+    'toast.typeLost': '⚠ The waypoint was removed while you were typing: your entry is dropped.',
     'nr.none': 'The first coordinate entered creates the route “{name}” in the Route Planner.',
     'nr.tag.full': 'Not created',
     'nr.full': 'The Route Planner already has 12 routes: this card keeps its own navigation. Free a route in the Route Planner, or link the card to an existing route.',
@@ -3779,7 +3787,7 @@ function normalizeCard(src) {
     });
   }
   if (Array.isArray(src.nav)) {
-    c.nav = src.nav.slice(0, LIMITS.nav).map(o => {
+    c.nav = src.nav.slice(0, LIMITS.nav * 2).map(o => {       /* 30 points de route et leurs lignes propres : une fusion ne retire jamais une ligne */
       const l = { name: str(o && o.name), course: str(o && o.course), distance: str(o && o.distance),
         altitude: str(o && o.altitude), tos: str(o && o.tos), note: str(o && o.note), coord: str(o && o.coord) };
       if (o && rwPidValid(o.pid)) l.pid = o.pid;       /* un point de la route du Route Planner ; sans pid, une ligne propre */
@@ -3836,7 +3844,7 @@ function normalizeCard(src) {
     c.gsSide = gsSide(src.gsSide);
     c.radioSel = {};
   }
-  if (!c.gsId && rwRidValid(src.rid)) c.rid = src.rid;       /* la route d'une carte libre (celle d'une carte liée est celle de son groupe) */
+  if (rwRidValid(src.rid)) c.rid = src.rid;       /* la route d'une carte libre ; celle d'une carte liée est celle de son groupe, gardée ici : si le groupe disparaît, la carte garde sa route */
   if ('loadoutFc' in src) c.loadoutFc = src.loadoutFc === true;       /* une carte devenue libre garde ses canaux affichés et le choix de l'emport (rien ne se perd) */
   if (src.radioSel && typeof src.radioSel === 'object' && !Array.isArray(src.radioSel)) {
     c.radioSel = {};
@@ -3980,14 +3988,15 @@ let curIdx = 0;
 
 function curCard() { return doc.cards[curIdx]; }
 
+const DG_DOC = { raw: '', timer: 0 };       /* le texte de datacard_state_v1 que cet onglet a écrit ou lu en dernier */
 function persistState() {
-  try { localStorage.setItem(KEY_STATE, JSON.stringify(doc)); } catch (e) { /* quota ou stockage indisponible */ }
+  try { const s = JSON.stringify(doc); localStorage.setItem(KEY_STATE, s); DG_DOC.raw = s; } catch (e) { /* quota ou stockage indisponible */ }
 }
 
 function loadState() {
   try {
     const raw = localStorage.getItem(KEY_STATE);
-    if (raw) { doc = normalizeDoc(JSON.parse(raw)); curIdx = 0; return; }
+    if (raw) { doc = normalizeDoc(JSON.parse(raw)); curIdx = 0; DG_DOC.raw = raw; return; }
   } catch (e) { /* état illisible : document neuf */ }
   doc = newDoc();
   curIdx = 0;
@@ -4025,7 +4034,9 @@ const AIRCRAFT_LIMITS = @@AIRCRAFT_LIMITS@@;
    Les réglages de cap (vrai ou magnétique, déclinaison, année) sont ceux de la mission : mp_nav_v1, la règle de mp_units_v1. */
 const KEY_NAV = 'mp_nav_v1';
 const dgN = { ref: 'true', mode: 'calc', decl: '', year: '', force: false };       /* la valeur en cours : tout rendu la lit */
-const DG_ALTREF = {};       /* pid → 'AGL' | 'MSL' : ce que la route (ou le Route Planner, pour une référence) dit ; jamais enregistré */
+const DG_ALTREF = {};       /* « rid:pid » → 'AGL' | 'MSL' : ce que la route dit de ses points ; jamais enregistré */
+const DG_ALTREFR = {};      /* pid → 'AGL' | 'MSL' : ce que le Route Planner dit de ses références */
+function dgAltKey(c, pid) { return dgRidOf(c) + ':' + pid; }
 const DG_RT = { timer: 0 };
 
 function dgNavNorm(o) {
@@ -4052,11 +4063,13 @@ function dgNavSet(n, fromKey) {
   const stale = doc.cards.some(c => c.navDisplay.ref !== dgN.ref || c.navDisplay.decl !== dgN.decl || c.navDisplay.vmode !== dgN.mode);
   doc.cards.forEach(c => { c.navDisplay.ref = dgN.ref; c.navDisplay.decl = dgN.decl; c.navDisplay.vmode = dgN.mode; });
   if (!fromKey) { rwSetNavDisplay(dgN); dgWriteNavKey(dgN); }
-  if (changed || stale) { persistState(); renderEditor(true); renderPreview(); }
+  if (changed || stale) { if (!fromKey) persistState(); renderEditor(true); renderPreview(); }
   return changed;
 }
 /* Un document ouvert ou importé : les réglages de sa première carte deviennent la clé */
-function dgNavAdopt(c) { return dgNavSet(dgNavOfCard(c)); }
+function dgNavAdopt(c) { return dgNavSet(Object.assign(dgNavOfCard(c), { year: dgN.year, force: dgN.force })); }       /* le format de carte ne porte ni l'année ni « Forcer » : ils restent ceux de la clé */
+/* Sans clé, le Route Planner fait foi : les cinq champs de route_state_v1.navDisplay s'il existe */
+function dgStateNav() { const st = rwReadState(); return st && isPlainObject(st.navDisplay) ? dgNavNorm(st.navDisplay) : null; }
 function dgFollowNav() {
   const k = dgReadNavKey();
   if (k && !dgNavSame(dgN, k)) dgNavSet(k, true);
@@ -4113,22 +4126,37 @@ function dgRouteLine(o, p) {
 /* La nav d'une carte relue de sa route : un point neuf apparaît (sans heure ni note), un point retiré disparaît avec les siennes, un point déplacé garde les siennes ; les lignes propres gardent leur ancre
    (ancre disparue : après le point de route précédent encore là, sinon en tête) */
 function dgMergeNav(c, route) {
-  const pts = route.points.filter(p => rwObj(p) && rwValidCoord(p.lat, p.lon) && rwPidValid(p.pid)).slice(0, LIMITS.nav);
+  const pts = route.points.filter(p => rwObj(p) && rwValidCoord(p.lat, p.lon) && rwPidValid(p.pid));
   const ids = new Set(pts.map(p => p.pid));
   const byPid = new Map();
   c.nav.forEach(l => { if (l.pid) byPid.set(l.pid, l); });
+  /* Un document d'avant le lot : une ligne sans pid qui a une position est un point de la route copié une fois ; elle est rapprochée d'un point libre de la route, par le nom (casse et espaces ignorés, premier point libre),
+     sinon par la coordonnée (moins de 50 m) ; rapprochée, son heure et sa note passent au pid ; sinon elle reste une ligne propre sans sa coordonnée */
+  const matched = new Map(), legacy = c.nav.filter(l => !l.pid && parseCoord(l.coord));
+  if (legacy.length) {
+    const taken = new Set(c.nav.filter(l => l.pid && ids.has(l.pid)).map(l => l.pid));
+    const norm = s => String(s || '').replace(/\s+/g, '').toLowerCase();
+    legacy.forEach(l => {
+      let p = norm(l.name) !== '' ? pts.find(q => !taken.has(q.pid) && norm(q.name) === norm(l.name)) : null;
+      if (!p) { const q0 = parseCoord(l.coord); p = pts.find(q => !taken.has(q.pid) && legCalc(q0, q).km < 0.05); }
+      if (p) { taken.add(p.pid); matched.set(l, p.pid); byPid.set(p.pid, l); }
+    });
+  }
   const own = {};
   let last = '';
   c.nav.forEach(l => {
     if (l.pid) { if (ids.has(l.pid)) last = l.pid; return; }
+    if (matched.has(l)) { last = matched.get(l); return; }
     let a = typeof l.after === 'string' ? l.after : last;
     if (a !== '' && !ids.has(a)) a = last;
-    (own[a] = own[a] || []).push(Object.assign({}, l, { after: a }));
+    const o = Object.assign({}, l, { after: a });
+    if (parseCoord(o.coord)) o.coord = '';
+    (own[a] = own[a] || []).push(o);
   });
   const out = [];
   (own[''] || []).forEach(l => out.push(l));
   pts.forEach(p => { out.push(dgRouteLine(byPid.get(p.pid), p)); (own[p.pid] || []).forEach(l => out.push(l)); });
-  return out.slice(0, LIMITS.nav);
+  return out;       /* aucune ligne n'est retirée : au-delà de 30 le bandeau le dit */
 }
 /* Les références du Route Planner relues dans la carte : celles de route_state_v1.refs (pid) d'abord, dans l'ordre du Route Planner, puis les références propres de la carte (sans pid) */
 function dgRefLine(o, p) {
@@ -4153,8 +4181,28 @@ function dgSyncCardRefs(c, st) {
     if (!c.refsOff.length) delete c.refsOff;
   }
 }
+/* Les points de la copie de route d'un groupe qui n'a pas de routeLink (lus de la mission par le Flight Configurator) : { name, lat, lon, alt, altRef } ; vide sans théâtre commun ou sans projection */
+function dgGroupPoints(c) {
+  const f = dgFlightOf(c), th = DGG.theatre;
+  if (!f || gsIsObj(f.routeLink) || !gsIsObj(f.route) || th !== dgCommonTheatre() || !Object.prototype.hasOwnProperty.call(TM_PARAMS, th)) return [];
+  const src = f.route.points, list = Array.isArray(src) ? src : (gsIsObj(src) ? Object.keys(src).filter(k => /^\d+$/.test(k)).sort((a, b) => a - b).map(k => src[k]) : []);
+  const out = [];
+  list.forEach(p => {
+    if (!gsIsObj(p) || typeof p.x !== 'number' || typeof p.y !== 'number' || !isFinite(p.x) || !isFinite(p.y) || out.length >= RW_MAX_POINTS) return;
+    const ll = dcsToLl(th, p.x, p.y);
+    if (!rwValidCoord(ll.lat, ll.lon)) return;
+    out.push({ name: hasText(p.name) ? String(p.name).trim() : 'WP' + (out.length + 1), lat: ll.lat, lon: ll.lon, alt: typeof p.alt === 'number' && isFinite(p.alt) ? p.alt : 0, altRef: p.alt_type === 'BARO' ? 'MSL' : 'AGL' });
+  });
+  return out;
+}
 function dgSyncCardNav(c, rs) {
   const info = dgRouteInfo(c, rs);
+  if (c.gsId) { const r = dgRidOf(c); if (r) c.rid = r; else delete c.rid; }       /* la route d'une carte liée est gardée à la carte : si le groupe disparaît, la carte la garde */
+  if (info.state === 'none' && c.gsId && !c.nav.some(l => anyText(l, NAV_KEYS))) {
+    /* le groupe porte des points sans routeLink : la carte les montre, la première modification en fait la route */
+    const g = dgGroupPoints(c);
+    if (g.length) c.nav = g.map(p => ({ name: p.name, course: '', distance: '', altitude: routeAltStr(p.alt, dgU.altitude), tos: '', note: '', coord: toMGRS(p.lat, p.lon) || '' }));
+  }
   if (info.state === 'linked') c.nav = dgMergeNav(c, info.route);
   else if (info.state !== 'other') c.nav.forEach(l => { delete l.pid; delete l.after; });       /* plus de route : la dernière copie reste en nav propre */
   return info;
@@ -4168,8 +4216,9 @@ function dgSyncRoutes() {
   if (rs.st && Array.isArray(rs.st.refs) && rs.st.refs.some(p => rwObj(p) && !rwPidValid(p.pid))) rwUpdateRefs(null);
   if (need.size || (rs.st && Array.isArray(rs.st.refs) && rs.st.refs.some(p => rwObj(p) && !rwPidValid(p.pid)))) rs = dgRouteSet();
   Object.keys(DG_ALTREF).forEach(k => { delete DG_ALTREF[k]; });
-  if (rs.set) rs.set.routes.forEach(r => r.points.forEach(p => { if (rwObj(p) && rwPidValid(p.pid)) DG_ALTREF[p.pid] = p.altRef === 'MSL' ? 'MSL' : 'AGL'; }));
-  if (rs.st && Array.isArray(rs.st.refs)) rs.st.refs.forEach(p => { if (rwObj(p) && rwPidValid(p.pid)) DG_ALTREF[p.pid] = p.altRef === 'AGL' ? 'AGL' : 'MSL'; });
+  Object.keys(DG_ALTREFR).forEach(k => { delete DG_ALTREFR[k]; });
+  if (rs.set) rs.set.routes.forEach(r => r.points.forEach(p => { if (rwObj(p) && rwPidValid(p.pid)) DG_ALTREF[r.rid + ':' + p.pid] = p.altRef === 'MSL' ? 'MSL' : 'AGL'; }));
+  if (rs.st && Array.isArray(rs.st.refs)) rs.st.refs.forEach(p => { if (rwObj(p) && rwPidValid(p.pid)) DG_ALTREFR[p.pid] = p.altRef === 'AGL' ? 'AGL' : 'MSL'; });
   let changed = false;
   doc.cards.forEach(c => {
     const before = JSON.stringify([c.nav, c.refs, c.refsOff]);
@@ -4182,13 +4231,34 @@ function dgSyncRoutes() {
 /* Un évènement « storage » de route_set_v1, route_state_v1 ou mp_nav_v1 : une seule relecture après un court calme (le bloc écrit le jeu, puis l'état, puis le groupe) ; la saisie en cours est gardée (renderAll(true)) */
 function dgRoutesChanged() {
   clearTimeout(DG_RT.timer);
-  DG_RT.timer = setTimeout(() => { DG_RT.timer = 0; if (dgSyncRoutes()) { persistState(); renderAll(true); } else renderEditor(true); }, 120);
+  DG_RT.timer = setTimeout(() => { DG_RT.timer = 0; if (dgSyncRoutes()) renderAll(true); else renderEditor(true); }, 120);       /* une relecture n'écrit jamais datacard_state_v1 : seul l'onglet qui a modifié écrit */
+}
+/* Un autre onglet du DG a écrit datacard_state_v1 : celui-ci prend le document, la saisie en cours gardée (renderAll(true)) ; il n'écrit rien */
+function dgFollowDoc() {
+  clearTimeout(DG_DOC.timer);
+  DG_DOC.timer = setTimeout(() => {
+    let raw = null;
+    try { raw = localStorage.getItem(KEY_STATE); } catch (e) { return; }
+    if (raw === null || raw === DG_DOC.raw) return;
+    let nd;
+    try { nd = normalizeDoc(JSON.parse(raw)); } catch (e) { return; }
+    const cur = curCard(), id = cur ? (cur.gsId || '') : '', th = doc.theatre;
+    DG_DOC.raw = raw;
+    if (th) nd.theatre = th;
+    doc = nd;
+    doc.cards.forEach(c => { c.units = { mass: dgU.mass, distance: dgU.distance, altitude: dgU.altitude }; c.navDisplay.ref = dgN.ref; c.navDisplay.decl = dgN.decl; c.navDisplay.vmode = dgN.mode; });
+    const k = id ? doc.cards.findIndex(c => c.gsId === id) : -1;
+    curIdx = k >= 0 ? k : Math.min(curIdx, doc.cards.length - 1);
+    gsApplyAll(); dgSyncRoutes();
+    renderAll(true);
+  }, 150);
 }
 
 /* ----- Ce que le DG écrit dans la route ----- */
 function dgRouteFail(why) {
   if (why === 'max') showToast(t('toast.rwMax'), { type: 'err', ms: 6000 });
   else if (why === 'pts') showToast(t('toast.rwPts'), { type: 'err', ms: 6000 });
+  else if (why === 'refs') showToast(t('toast.rwRefs'), { type: 'err', ms: 6000 });
   else if (why === 'full') showToast(t('toast.rwFull'), { type: 'err', ms: 6000 });
 }
 /* Après une écriture : la fiche des groupes (la copie de route du groupe a pu changer), les cartes, l'enregistrement */
@@ -4207,7 +4277,8 @@ function dgPointFromLine(l, pt, k, prev) {
 /* Une carte sans route : la première position saisie crée la route (nom du groupe, de l'indicatif ou de la carte) ; ses points sont les lignes positionnées de la carte, dans l'ordre. Rend vrai si la route est née. */
 function dgCreateFromLines(c) {
   const legs = navLegs(c), pts = [], idx = [];
-  c.nav.forEach((l, i) => { if (legs[i].pt && pts.length < RW_MAX_POINTS) { pts.push(dgPointFromLine(l, legs[i].pt, pts.length, null)); idx.push(i); } });
+  const gp = c.gsId ? dgGroupPoints(c) : [];       /* les points du groupe : leur référence AGL ou MSL passe à la route */
+  c.nav.forEach((l, i) => { if (legs[i].pt && pts.length < RW_MAX_POINTS) { const p = dgPointFromLine(l, legs[i].pt, pts.length, null), g = gp[pts.length]; if (g && g.altRef === 'MSL') p.altRef = 'MSL'; pts.push(p); idx.push(i); } });
   if (!pts.length) return false;
   const r = rwCreateRoute({ name: dgNewRouteName(c), theatre: dgCommonTheatre(), points: pts, fcId: c.gsId || '' });
   if (!r.ok) { dgRouteFail(r.why); return false; }
@@ -4286,6 +4357,9 @@ function dgNavField(c, i, k, el) {
   const v = el.value;
   const info = dgRouteInfo(c);
   const own = !x.pid;
+  /* D5 : une carte de groupe dont les points n'ont pas de route : la première modification de la carte crée la route à partir de ses lignes */
+  const grpFirst = info.state === 'none' && c.gsId && own && dgGroupPoints(c).length && (k === 'name' || k === 'altitude' || k === 'altRef');
+  if (grpFirst) { x[k === 'altRef' ? 'altitude' : k] = k === 'altRef' ? x.altitude : v; if (dgCreateFromLines(c)) dgAfterRouteWrite(true); else { persistState(); syncNavEditor(true); renderPreview(); } return; }
   if (k === 'name') { x.name = v; if (!own) dgWritePoint(c, x.pid, p => { p.name = v; }); dgAfterRouteWrite(false); return; }
   if (k === 'altitude') {
     x.altitude = v;
@@ -4315,6 +4389,7 @@ function dgNavField(c, i, k, el) {
 function dgNavAct(c, act, i) {
   const arr = c.nav, x = arr[i];
   const info = dgRouteInfo(c);
+  if (info.state === 'other') return true;       /* une route d'un autre théâtre : aucun geste (la carte garde sa dernière copie) */
   if (act === 'add') {
     if (arr.length >= LIMITS.nav) return true;
     const line = { name: '', course: '', distance: '', altitude: '', tos: '', note: '', coord: '' };
@@ -4603,7 +4678,7 @@ function dgStorage(e) {
     DGG.pend = false;
     const g = gsRead();
     if (g === null || gsStable(g) === DGG.shown) return;
-    if (gsApplyAll()) { persistState(); renderAll(true); }
+    if (gsApplyAll()) renderAll(true);       /* relire la fiche n'écrit pas la datacard */
   }, 300);
 }
 /* L'écran n'est plus à jour de la fiche (un autre module a écrit pendant une saisie) : il se redessine, la saisie en cours gardée */
@@ -5539,9 +5614,9 @@ function navRows(c) { return c.nav.filter(r => anyText(r, NAV_KEYS)); }
 const REF_KEYS = ['name', 'coord', 'altitude', 'note'];
 function refRows(c) { const off = dgRefsHidden(c); return c.refs.filter(r => anyText(r, REF_KEYS) && !(r.pid && off.indexOf(r.pid) >= 0)); }       /* une référence décochée (refsOff) n'est ni sur l'aperçu, ni sur la fiche, ni sur le PNG */
 /* La cellule d'une altitude : un point (ou une référence) AGL du Route Planner montre AGL après son altitude, dans la même cellule */
-function altCell(r) {
+function altCell(r, c, isRef) {
   if (!hasText(r.altitude)) return '—';
-  return esc(r.altitude) + (r.pid && DG_ALTREF[r.pid] === 'AGL' ? ' <span class="alr">AGL</span>' : '');
+  return esc(r.altitude) + (r.pid && (isRef ? DG_ALTREFR[r.pid] : DG_ALTREF[dgAltKey(c, r.pid)]) === 'AGL' ? ' <span class="alr">AGL</span>' : '');
 }
 
 function blockHtml(name, title, bodyHtml, bodyClass) {
@@ -5660,7 +5735,7 @@ function blkNav(c) {
       const r = x.r, k = x.g.calc;
       return '<tr><td class="m ix">' + i + '</td><td class="nm">' + esc(r.name) + '</td>' +
         '<td class="m r">' + (k ? esc(k.cap) : dash(r.course)) + '</td><td class="m r">' + (k ? esc(k.dist) : dash(r.distance)) + '</td>' +
-        '<td class="m r">' + altCell(r) + '</td><td class="m r">' + dash(r.tos) + '</td>' +
+        '<td class="m r">' + altCell(r, c) + '</td><td class="m r">' + dash(r.tos) + '</td>' +
         '<td class="nt">' + esc(r.note) + '</td></tr>';
     }).join('');
   } else {
@@ -5670,7 +5745,7 @@ function blkNav(c) {
       const cc = p ? esc(mode === 'mgrs' ? (toMGRS(p.lat, p.lon) || '—') : toDMS(p.lat, p.lon)) : esc('—');
       return '<tr><td class="m ix">' + i + '</td><td class="nm">' + esc(r.name) + '</td>' +
         '<td class="m cc">' + cc + '</td>' +
-        '<td class="m r">' + altCell(r) + '</td><td class="m r">' + dash(r.tos) + '</td>' +
+        '<td class="m r">' + altCell(r, c) + '</td><td class="m r">' + dash(r.tos) + '</td>' +
         '<td class="nt">' + esc(r.note) + '</td></tr>';
     }).join('');
   }
@@ -5706,7 +5781,7 @@ function blkRefs(c) {
     const cc = p ? esc(mode === 'mgrs' ? (toMGRS(p.lat, p.lon) || '—') : toDMS(p.lat, p.lon)) : esc('—');
     return '<tr><td class="m ix">' + String.fromCharCode(65 + i) + '</td><td class="nm">' + esc(r.name) + '</td>' +
       '<td class="m cc">' + cc + '</td>' +
-      '<td class="m r">' + altCell(r) + '</td>' +
+      '<td class="m r">' + altCell(r, c, true) + '</td>' +
       '<td class="nt">' + esc(r.note) + '</td></tr>';
   }).join('');
   return blockHtml('refs', t('dc.b.refs'), refsTable(mode, head, body), 'dc-bbt');
@@ -6128,16 +6203,16 @@ function fSelect(labelKey, path, value, options) {
     '</select></div>';
 }
 
-function listHtml(path, items, renderItem, addKey) {
-  const spec = listSpec(path);
+function listHtml(path, items, renderItem, addKey, locked) {
+  const spec = listSpec(path), dis = locked ? ' disabled' : '';
   const rows = items.map((it, i) =>
     '<div class="li" data-list="' + path + '" data-i="' + i + '"><div class="li-main">' + renderItem(it, i) + '</div><div class="li-ctl">' +
-    '<button type="button" class="ed-btn-icon neutral" data-act="up" data-list="' + path + '" data-i="' + i + '"' + (i === 0 ? ' disabled' : '') + ' title="' + esc(t('li.up')) + '" aria-label="' + esc(t('li.up')) + '">▲</button>' +
-    '<button type="button" class="ed-btn-icon neutral" data-act="down" data-list="' + path + '" data-i="' + i + '"' + (i === items.length - 1 ? ' disabled' : '') + ' title="' + esc(t('li.down')) + '" aria-label="' + esc(t('li.down')) + '">▼</button>' +
-    '<button type="button" class="ed-btn-icon" data-act="remove" data-list="' + path + '" data-i="' + i + '" title="' + esc(t('li.del')) + '" aria-label="' + esc(t('li.del')) + '">✕</button>' +
+    '<button type="button" class="ed-btn-icon neutral" data-act="up" data-list="' + path + '" data-i="' + i + '"' + (i === 0 || locked ? ' disabled' : '') + ' title="' + esc(t('li.up')) + '" aria-label="' + esc(t('li.up')) + '">▲</button>' +
+    '<button type="button" class="ed-btn-icon neutral" data-act="down" data-list="' + path + '" data-i="' + i + '"' + (i === items.length - 1 || locked ? ' disabled' : '') + ' title="' + esc(t('li.down')) + '" aria-label="' + esc(t('li.down')) + '">▼</button>' +
+    '<button type="button" class="ed-btn-icon" data-act="remove" data-list="' + path + '" data-i="' + i + '"' + dis + ' title="' + esc(t('li.del')) + '" aria-label="' + esc(t('li.del')) + '">✕</button>' +
     '</div></div>').join('');
   return '<div class="ed-list">' + rows + '</div>' +
-    '<button type="button" class="ed-btn-add" data-act="add" data-list="' + path + '"' + (items.length >= spec.max || (spec.full && spec.full(items)) ? ' disabled' : '') + '>' + esc(Array.isArray(addKey) ? t(addKey[0], addKey[1]) : t(addKey)) + '</button>';
+    '<button type="button" class="ed-btn-add" data-act="add" data-list="' + path + '"' + (items.length >= spec.max || locked || (spec.full && spec.full(items)) ? ' disabled' : '') + '>' + esc(Array.isArray(addKey) ? t(addKey[0], addKey[1]) : t(addKey)) + '</button>';
 }
 
 
@@ -6190,11 +6265,11 @@ function navBannerHtml(c) {
   if (info.state === 'linked') {
     const m = c.refs.filter(x => x.pid && dgRefsHidden(c).indexOf(x.pid) < 0).length;
     top = '<span class="nr-name">' + esc(hasText(info.name) ? info.name : t('nr.unnamed')) + '</span><span class="cr-tag linked">' + esc(t('nr.tag')) + '</span>';
-    sub = t('nr.sub', { p: navPts(info.route.points.length), m: t('nr.ref', { m: m }) });
+    sub = t('nr.sub', { p: navPts(info.route.points.length), m: t('nr.ref', { m: m }) }) + (c.nav.length > LIMITS.nav ? ' ' + t('nr.over', { n: c.nav.length }) : '');
   } else {
     cls = info.state === 'none' ? ' none' : ' full';
     top = '<span class="cr-tag ' + (info.state === 'none' ? 'free' : 'gone') + '">' + esc(t('nr.tag.' + info.state)) + '</span>';
-    sub = t('nr.' + info.state, { name: hasText(info.name) ? info.name : cName, th: info.th ? t('th.' + info.th) : '' });
+    sub = info.state === 'none' && dgGroupPoints(c).length ? t('nr.grp', { r: cName }) : t('nr.' + info.state, { name: hasText(info.name) ? info.name : cName, th: info.th ? t('th.' + info.th) : '' });
   }
   const link = routes.length ? '<div class="ed-field nr-link"><label>' + esc(t('nr.link.k')) + '</label><select data-nr-link="1"><option value="">' + esc(t(info.state === 'linked' ? 'nr.link.other' : 'nr.link.exist')) + ' ▾</option>' +
     routes.map(r => '<option value="' + esc(r.rid) + '">' + esc(t('nr.opt', { name: hasText(r.name) ? r.name : t('nr.unnamed'), n: r.points.length })) + '</option>').join('') + '</select></div>' : '';
@@ -6267,7 +6342,7 @@ const SECTION_BUILDERS = {
       const first = rt && !legs.slice(0, i).some(q => q.pt);       /* la première ligne positionnée : rien d'où partir */
       const rc = (ro || first) ? ' readonly' : '', rr = ro ? ' readonly' : '';
       const st = coordState(x.coord, g.pt, g);
-      const al = rt ? (DG_ALTREF[x.pid] || 'AGL') : '';
+      const al = rt ? (DG_ALTREF[dgAltKey(c, x.pid)] || 'AGL') : '';
       return '<div class="li-grid gs">' + fInput('f.nav.name', 'nav.' + i + '.name', x.name, rr) + '</div>' +
         '<div class="li-grid gs"><div class="ed-field"><label>' + esc(t('f.nav.coord')) + '</label>' +
         '<input type="text" data-path="nav.' + i + '.coord" value="' + esc(x.coord) + '"' + phAttr('nav.' + i + '.coord') + ' autocomplete="off" spellcheck="false"' + rr + '>' +
@@ -6278,7 +6353,7 @@ const SECTION_BUILDERS = {
         (rt ? '<div class="li-grid g3"><div class="ed-field"><label>' + esc(t('f.nav.altref')) + '</label><select data-nref="' + i + '"' + (ro ? ' disabled' : '') + '><option value="AGL"' + (al === 'AGL' ? ' selected' : '') + '>AGL</option><option value="MSL"' + (al === 'MSL' ? ' selected' : '') + '>MSL</option></select></div>' +
           fInput('f.nav.tos', 'nav.' + i + '.tos', x.tos) + fInput('f.nav.note', 'nav.' + i + '.note', x.note) + '</div>'
         : '<div class="li-grid g2">' + fInput('f.nav.tos', 'nav.' + i + '.tos', x.tos) + fInput('f.nav.note', 'nav.' + i + '.note', x.note) + '</div>');
-    }, 'add.point');
+    }, 'add.point', frozen);
   })(),
 
   refs: c => {
@@ -6288,7 +6363,7 @@ const SECTION_BUILDERS = {
     '<div class="ed-help">' + esc(t('f.nav.coord')) + (CURRENT_LANG === 'fr' ? ' : ' : ': ') + esc(t('nav.coord.help')) + '</div>' +
     listHtml('refs', c.refs, (x, i) => {
       const st = coordState(x.coord, parseCoord(x.coord), null), rt = !!x.pid, off = rt && dgRefsHidden(c).indexOf(x.pid) >= 0;
-      const al = rt ? (DG_ALTREF[x.pid] || 'MSL') : '';
+      const al = rt ? (DG_ALTREFR[x.pid] || 'MSL') : '';
       return '<div class="' + (off ? 'ref-off' : 'ref-on') + '">' +
         (rt ? '<label class="ed-chk"><input type="checkbox" data-rshow="' + esc(x.pid) + '"' + (off ? '' : ' checked') + '><span>' + esc(t('f.ref.on')) + '</span></label>' : '') +
         '<div class="li-grid gs">' + fInput('f.nav.name', 'refs.' + i + '.name', x.name) + '</div>' +
@@ -6402,9 +6477,15 @@ function renderEditor(keep) {
   const isFreq = !!(cand && cand.dataset && cand.dataset.gs && cand.dataset.gs.indexOf('f.') === 0);
   const isGs = !!(cand && cand.dataset && cand.dataset.gs);
   const pending = !isGs || !!cand._dgPend || (cand._dgBase !== undefined && !(isFreq ? dgSameFreq(cand.value, cand._dgBase) : cand.value === cand._dgBase));
-  const kept = cand && pending ? cand : null;
-  const refocus = cand && !pending ? cand : null;
-  const sel = cand ? dgFocusSel(cand) : '';
+  let kept = cand && pending ? cand : null;
+  let refocus = cand && !pending ? cand : null;
+  let sel = cand ? dgFocusSel(cand) : '', movedTo = '', lost = false;
+  { const fk = cand && DG_UI.fk && DG_UI.fk.el === cand ? DG_UI.fk : null;
+    if (fk) {
+      const ni = c[fk.list].findIndex(l => l.pid === fk.pid);
+      if (ni < 0) { lost = true; kept = null; refocus = null; sel = ''; }
+      else { const np = fk.list + '.' + ni + '.' + fk.field; if (np !== cand.dataset.path) { movedTo = np; sel = '[data-path="' + np + '"]'; } }
+    } }
   const caret = cand ? [cand.selectionStart, cand.selectionEnd, cand.selectionDirection] : null;
   DG_UI.rendering = true;
   try {
@@ -6412,6 +6493,8 @@ function renderEditor(keep) {
     const nw = kept && sel ? ed.querySelector(sel) : null;
     if (nw && nw !== kept && nw.tagName === kept.tagName) {
       nw.replaceWith(kept);
+      if (movedTo) kept.dataset.path = movedTo;       /* la saisie en cours suit son point : sa sortie écrit sur ce pid */
+      if (kept._dgLost) { kept._dgLost = false; kept._dgCommit = true; }
       kept.focus({ preventScroll: true });
       try { kept.setSelectionRange(caret[0], caret[1], caret[2] || 'none'); } catch (err) { /* un champ sans curseur */ }
     } else if (refocus && sel) {
@@ -6424,6 +6507,7 @@ function renderEditor(keep) {
     }
   } finally { DG_UI.rendering = false; }
   ed.scrollTop = top;
+  if (lost) { DG_UI.fk = null; showToast(t('toast.typeLost'), { type: 'err' }); }       /* le point a disparu : la saisie est abandonnée, et on le dit */
 }
 
 function packTitle() {
@@ -6497,8 +6581,9 @@ function syncGroupEditor(c) {
 }
 
 function onEditorInput(e) {
-  if (DG_UI.rendering) return;        /* un redessin peut faire partir un « change » sur le champ qu'il retire : il n'ouvre ni confirmation ni écriture */
+  if (DG_UI.rendering) { if (e.type === 'change' && e.target) e.target._dgLost = true; return; }        /* un redessin peut faire partir un « change » sur le champ qu'il retire : il n'ouvre ni confirmation ni écriture ; la saisie sera validée à la sortie du champ */
   const el = e.target;
+  if (e.type === 'change' && el) el._dgCommit = false;
   if (el && el.dataset && el.dataset.rs) {        /* un canal affiché : la case, le nom, la modulation (propres à la carte) */
     const c = curCard(), key = el.dataset.rs, k = el.dataset.rk;
     if (k !== 'on' && e.type === 'change') return;
@@ -6553,11 +6638,15 @@ function onNavSet(el, e) {
 /* La sortie d'un champ de fréquence dont la saisie n'a pas été validée par un « change » (le champ a été gardé à travers un redessin) l'écrit maintenant */
 function onEditorFocusIn(e) {
   const el = e.target;
-  if (DG_UI.rendering) return;       /* le focus rendu par un redessin ne change pas la référence */
+  if (DG_UI.rendering) return;
+  DG_UI.fk = null;       /* le champ d'une ligne de route se repère par (pid, champ), pas par l'index : la route peut changer pendant la saisie */
+  { const m = el && el.dataset && el.dataset.path ? /^(nav|refs)\.(\d+)\.(\w+)$/.exec(el.dataset.path) : null, l = m ? curCard()[m[1]][+m[2]] : null;
+    if (l && l.pid) DG_UI.fk = { el: el, list: m[1], pid: l.pid, field: m[3] }; }       /* le focus rendu par un redessin ne change pas la référence */
   if (el && el.dataset && el.dataset.gs && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')) el._dgBase = el.value;       /* la valeur du champ à l'entrée : la référence de « rien n'a changé » */
 }
 function onEditorFocusOut(e) {
   const el = e.target;
+  if (el && el._dgCommit && !DG_UI.rendering) { el._dgCommit = false; onEditorInput({ target: el, type: 'change' }); return; }       /* la saisie gardée à travers un redessin : le « change » du navigateur est parti avec l'ancien champ, on la valide ici */
   if (DG_UI.rendering || !el || !el._dgPend || !el.dataset || !el.dataset.gs) return;
   el._dgPend = false;
   const c = curCard();
@@ -7423,6 +7512,9 @@ function loadExample() {
   const linked = doc.cards.filter(c => c.gsId);       /* les groupes de la fiche gardent leurs cartes ; la fiche n'est pas touchée */
   const ex = normalizeDoc(clone(CURRENT_LANG === 'en' ? EXAMPLE_DOC_EN : EXAMPLE_DOC));   // la langue de l'interface au moment du clic
   ex.cards = linked.concat(ex.cards);
+  dgSyncRoutes();
+  { const st = rwReadState(), ps = st && Array.isArray(st.refs) ? st.refs.map(p => p && p.pid).filter(p => rwPidValid(p)) : [];       /* la carte d'exemple masque toutes les références de la mission : son aperçu ne dépend pas de l'état */
+    if (ps.length) ex.cards.slice(linked.length).forEach(c => { c.refsOff = ps.slice(); }); }
   setDoc(ex);
   curIdx = linked.length;
   renderAll();
@@ -7525,7 +7617,7 @@ function bindEvents() {
   initScrollBar(document.getElementById('tab-bar'));
 
   /* Passage depuis le Route Planner (même origine : l'évènement vient d'un autre document) */
-  window.addEventListener('storage', e => { if (e.key === KEY_HANDOFF) checkRouteHandoff(); if (e.key === KEY_THEATRE) dgFollowTheatre(); if (e.key === KEY_UNITS) dgFollowUnits(); if (e.key === KEY_NAV) dgFollowNav(); if (e.key === KEY_THEATRE || e.key === KEY_ROUTE || e.key === KEY_ROUTESET) dgRoutesRefresh(); if (e.key === KEY_THEATRE || e.key === KEY_ROUTE || e.key === KEY_ROUTESET || e.key === KEY_NAV || e.key === null) dgRoutesChanged(); if (e.key === 'mission_snapshot_v1') { renderEditor(true); renderPreview(); } dgStorage(e); });
+  window.addEventListener('storage', e => { if (e.key === KEY_HANDOFF) checkRouteHandoff(); if (e.key === KEY_THEATRE) dgFollowTheatre(); if (e.key === KEY_UNITS) dgFollowUnits(); if (e.key === KEY_NAV) dgFollowNav(); if (e.key === KEY_STATE) dgFollowDoc(); if (e.key === KEY_THEATRE || e.key === KEY_ROUTE || e.key === KEY_ROUTESET) dgRoutesRefresh(); if (e.key === KEY_THEATRE || e.key === KEY_ROUTE || e.key === KEY_ROUTESET || e.key === KEY_NAV || e.key === null) dgRoutesChanged(); if (e.key === 'mission_snapshot_v1') { renderEditor(true); renderPreview(); } dgStorage(e); });
 
   window.addEventListener('beforeprint', fillPrintRoot);
   window.addEventListener('afterprint', clearPrintRoot);
@@ -8242,14 +8334,14 @@ function init() {
   gsMigrate(dgPackFn);
   loadState();
   { const k = dgReadUnitsKey(); dgUnitsSet(k || doc.cards[0].units, !!k); }       /* la clé fait foi ; absente, la première carte du document la pose */
-  { const k = dgReadNavKey(); dgNavSet(k || dgNavOfCard(doc.cards[0]), !!k); }       /* les réglages de cap de la mission : la clé fait foi ; absente, la première carte du document la pose */
+  { const k = dgReadNavKey(); dgNavSet(k || dgStateNav() || dgNavOfCard(doc.cards[0]), !!k); }       /* les réglages de cap de la mission : la clé fait foi ; absente, la première carte du document la pose */
   const th0 = doc.theatre;
   { const k = dgReadTheatreKey(); if (k) doc.theatre = k; }       /* le théâtre que le Route Planner a écrit : le dernier changement gagne */
   dgFillTheatre();
   initToolbarMenus([['theatre', () => t('tb.theatre'), undefined, true]]);       /* la liste du théâtre, comme au Route Planner */
   gsApplyAll(true);
   const synced = dgSyncRoutes();
-  if (doc.theatre !== th0 || synced) persistState();       /* un théâtre pris (clé partagée, fiche ou route) est gardé */
+  if (doc.theatre !== th0 || synced || JSON.stringify(doc) !== DG_DOC.raw) persistState();       /* le document tel qu'il se lit maintenant (migration d'une carte d'avant le lot comprise) est gardé, une fois */       /* un théâtre pris (clé partagée, fiche ou route) est gardé */
   bindEvents();
   setActiveTab('meta');
   renderAll();
