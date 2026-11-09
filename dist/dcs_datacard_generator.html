@@ -1910,6 +1910,8 @@ const PAGE_W = 1000;
 const PAGE_H = 1414;
 
 const LIMITS = { steps: 8, times: 8, crew: 6, nav: 30, refs: 12, radios: 4, channels: 20, fields: 5, loadout: 8, threats: 12 };
+/* Une carte porte au plus 12 références du Route Planner (la liste commune) et, en plus, ses références propres d'avant le lot (12 au plus) : aucune n'est perdue en silence */
+const REFS_CARD_MAX = LIMITS.refs * 2;
 
 const CLASSIF_KEYS = ['confidential', 'secret', 'top-secret', 'unclassified', 'nato-restricted', 'nato-secret'];
 const CLASSIF_LEGACY_MAP = {
@@ -4194,7 +4196,8 @@ function normalizeCard(src) {
     c.navDisplay.vmode = readVMode(nd.vmode, c.navDisplay.decl);
   }
   if (Array.isArray(src.refs)) {
-    c.refs = src.refs.slice(0, LIMITS.refs).map(o => {
+    let nc = 0, no = 0;
+    c.refs = src.refs.filter(o => { const rt = !!(o && rwPidValid(o.pid)); if (rt ? nc >= LIMITS.refs : no >= LIMITS.refs) return false; if (rt) nc++; else no++; return true; }).map(o => {
       const l = { name: str(o && o.name), coord: str(o && o.coord), altitude: str(o && o.altitude), note: str(o && o.note) };
       if (o && rwPidValid(o.pid)) l.pid = o.pid;       /* une référence du Route Planner ; sans pid, une référence propre à la carte */
       return l;
@@ -6114,7 +6117,7 @@ function dgSyncCardRefs(c, st) {
   if (!R.length && !had) return;
   const by = new Map();
   c.refs.forEach(x => { if (x.pid) by.set(x.pid, x); });
-  c.refs = R.map(p => dgRefLine(by.get(p.pid), p)).concat(c.refs.filter(x => !x.pid)).slice(0, LIMITS.refs);
+  c.refs = R.map(p => dgRefLine(by.get(p.pid), p)).concat(c.refs.filter(x => !x.pid).slice(0, LIMITS.refs));
   if (Array.isArray(c.refsOff)) {
     const ids = new Set(R.map(p => p.pid));
     c.refsOff = c.refsOff.filter(id => ids.has(id));
@@ -6340,7 +6343,7 @@ function dgNavAct(c, act, i) {
 /* À la première modification des références d'une carte, ses références propres qui ont une position rejoignent la liste commune (montrées sur cette carte seulement), 12 au plus ; le reste reste propre */
 function dgMigrateOwnRefs(c) {
   const own = c.refs.map((x, i) => ({ x: x, i: i })).filter(o => !o.x.pid && parseCoord(o.x.coord));
-  if (!own.length) return;
+  if (!own.length) return false;
   const added = [];
   const r = rwUpdateRefs(refs => {
     own.forEach(o => {
@@ -6352,9 +6355,10 @@ function dgMigrateOwnRefs(c) {
     });
     if (!added.length) return false;
   });
-  if (!r.ok) { if (r.why !== 'abort') dgRouteFail(r.why); return; }
+  if (!r.ok) { if (r.why !== 'abort') dgRouteFail(r.why); return false; }
   added.forEach(a => { a.o.x.pid = a.pid; });
   dgHideElsewhere(c, added.map(a => a.pid));
+  return true;
 }
 /* Une référence née d'une datacard n'est montrée que sur elle : son pid entre dans refsOff des autres cartes du document */
 function dgHideElsewhere(c, pids) {
@@ -6365,8 +6369,8 @@ function dgRefField(c, i, k, el) {
   const x = c.refs[i];
   if (!x) return;
   const v = el.value;
-  dgMigrateOwnRefs(c);
-  if (k === 'note') { x.note = v; persistState(); renderPreview(); return; }
+  const mig = dgMigrateOwnRefs(c);       /* vrai : des références propres viennent de rejoindre la liste commune, la section se redessine */
+  if (k === 'note') { x.note = v; persistState(); renderPreview(); if (mig) renderEditor(true); return; }
   if (k === 'name') x.name = v; else if (k === 'altitude') x.altitude = v; else if (k === 'coord') x.coord = v;
   const pid = x.pid;
   if (!pid) {
@@ -6393,12 +6397,12 @@ function dgRefField(c, i, k, el) {
     else if (k === 'coord') { const q = parseCoord(v); p.lat = dgRound7(q.lat); p.lon = dgRound7(q.lon); }
   });
   if (!r.ok && r.why !== 'abort') dgRouteFail(r.why);
-  dgAfterRouteWrite(false);
+  dgAfterRouteWrite(mig);
 }
 function dgRefAct(c, act, i) {
   const arr = c.refs, x = arr[i];
   if (act === 'add') {
-    if (arr.length >= LIMITS.refs) return true;
+    if (arr.length >= REFS_CARD_MAX || arr.filter(q => q.pid).length >= LIMITS.refs) return true;
     arr.push({ name: '', coord: '', altitude: '', note: '' });
     renderEditor(true); touch();
     const f = document.querySelector('#editor .li[data-list="refs"][data-i="' + (arr.length - 1) + '"] input');
@@ -8066,7 +8070,7 @@ const LIST_SPECS = {
   'times': { max: LIMITS.times, make: () => ({ label: '', value: '' }) },
   'crew': { max: LIMITS.crew, make: () => ({ callsign: '', pilot: '', type: '', board: '' }) },
   'nav': { max: LIMITS.nav, make: () => ({ name: '', course: '', distance: '', altitude: '', tos: '', note: '', coord: '' }) },
-  'refs': { max: LIMITS.refs, make: () => ({ name: '', coord: '', altitude: '', note: '' }) },
+  'refs': { max: REFS_CARD_MAX, full: items => items.filter(x => x.pid).length >= LIMITS.refs, make: () => ({ name: '', coord: '', altitude: '', note: '' }) },
   'radios': { max: LIMITS.radios, make: () => ({ name: '', channels: [] }) },
   'radios.*.channels': { max: LIMITS.channels, make: () => ({ channel: '', label: '', frequency: '', modulation: '' }) },
   'fields': { max: LIMITS.fields, make: () => ({ role: '', icao: '', name: '', runway: '', frequency: '' }) },
@@ -8104,7 +8108,7 @@ function listHtml(path, items, renderItem, addKey) {
     '<button type="button" class="ed-btn-icon" data-act="remove" data-list="' + path + '" data-i="' + i + '" title="' + esc(t('li.del')) + '" aria-label="' + esc(t('li.del')) + '">✕</button>' +
     '</div></div>').join('');
   return '<div class="ed-list">' + rows + '</div>' +
-    '<button type="button" class="ed-btn-add" data-act="add" data-list="' + path + '"' + (items.length >= spec.max ? ' disabled' : '') + '>' + esc(Array.isArray(addKey) ? t(addKey[0], addKey[1]) : t(addKey)) + '</button>';
+    '<button type="button" class="ed-btn-add" data-act="add" data-list="' + path + '"' + (items.length >= spec.max || (spec.full && spec.full(items)) ? ' disabled' : '') + '>' + esc(Array.isArray(addKey) ? t(addKey[0], addKey[1]) : t(addKey)) + '</button>';
 }
 
 
