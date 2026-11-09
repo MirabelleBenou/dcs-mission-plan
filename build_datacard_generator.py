@@ -28,6 +28,7 @@ from route_write_block import build_block as build_route_write_block
 from payload_block import build_block as build_payload_block
 from import_block import build_block as build_import_block, build_css as build_import_css, build_html as build_import_html
 from messages_block import build_block as build_messages_block, build_css as build_messages_css
+from ui_block import build_block as build_ui_block, build_css as build_ui_css, verify as ui_verify
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 APP_VERSION = "1.5.1"
@@ -2335,6 +2336,15 @@ const EXAMPLE_DOC_EN = __EXAMPLE_DOC_EN__;
 /* ============= i18n FR / EN ============= */
 const I18N = {
   fr: {
+    'ui.cancel': 'Annuler',
+    'ui.close': 'Fermer',
+    'ui.restore': 'Restaurer',
+    'ui.foldall': 'Tout replier',
+    'ui.unfoldall': 'Tout déplier',
+    'ui.fmt': 'Format',
+    'ui.pages': 'Pages',
+    'ui.fname': 'Nom du fichier',
+    'ui.export': 'Exporter',
     'app.title': 'Datacard Generator',
     'tb.subtitle': '░ CARTES DE BORD',
     'tb.mode.day': 'Jour',
@@ -2793,6 +2803,15 @@ const I18N = {
     'm07': 'JUL', 'm08': 'AOÛ', 'm09': 'SEP', 'm10': 'OCT', 'm11': 'NOV', 'm12': 'DÉC'
   },
   en: {
+    'ui.cancel': 'Cancel',
+    'ui.close': 'Close',
+    'ui.restore': 'Restore',
+    'ui.foldall': 'Fold all',
+    'ui.unfoldall': 'Unfold all',
+    'ui.fmt': 'Format',
+    'ui.pages': 'Pages',
+    'ui.fname': 'File name',
+    'ui.export': 'Export',
     'app.title': 'Datacard Generator',
     'tb.subtitle': '░ DATACARDS',
     'tb.mode.day': 'Day',
@@ -8420,7 +8439,7 @@ def build():
 
     _wn, _pyl, _lim = dg_tables()
     js = JS.replace('@@WEAPON_NAMES@@', _wn).replace('@@AIRCRAFT_PYLONS@@', _pyl).replace('@@AIRCRAFT_LIMITS@@', _lim)
-    js = js.replace('@@PAYLOAD_BLOCK@@\n', build_payload_block()).replace('@@IMPORT_BLOCK@@\n', build_import_block()).replace('@@MESSAGES_BLOCK@@\n', build_messages_block())
+    js = js.replace('@@PAYLOAD_BLOCK@@\n', build_payload_block()).replace('@@IMPORT_BLOCK@@\n', build_import_block()).replace('@@MESSAGES_BLOCK@@\n', build_messages_block() + build_ui_block())
     _facts = airfield_facts()
     facts_js = json.dumps(_facts, ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
     js = js.replace('__AIRFIELD_FACTS__', facts_js)
@@ -8429,13 +8448,14 @@ def build():
     js = js.replace('@@ROUTE_PACK_BLOCK@@\n', build_route_pack_block()).replace('@@ROUTE_THEATRE_BLOCK@@\n', build_route_theatre_block()).replace('@@GROUP_STORE_BLOCK@@\n', build_group_store_block()).replace('@@ROUTE_WRITE_BLOCK@@\n', build_route_write_block())
     js = js.replace('__EXAMPLE_DOC__', example_js).replace('__EXAMPLE_DOC_EN__', example_en_js).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@RADIO_BLOCK@@\n', build_radio_block()).replace('@@RADIO_BANDS_BLOCK@@\n', build_radio_bands_block()).replace('@@PROJECTION_BLOCK@@\n', build_projection_block())
     html = HTML
-    html = html.replace('__CSS__', CSS.replace('@@MESSAGES_CSS@@\n', build_messages_css()) + build_import_css())
+    html = html.replace('__CSS__', CSS.replace('@@MESSAGES_CSS@@\n', build_messages_css() + build_ui_css()) + build_import_css())
     html = html.replace('@@IMPORT_HTML@@\n', build_import_html())
     html = html.replace('__LIB_HTML2CANVAS__', A['lib_html2canvas'])
     html = html.replace('__LIB_JSZIP__', A['lib_jszip'])
     html = html.replace('__APP_VERSION__', APP_VERSION)
     html = html.replace('__APP_JS__', js)
 
+    ui_verify(html)
     # Contrôles de construction
     pt, it = re.search(r"const PAYLOAD_TYPES = \[(.*?)\];", build_payload_block()), re.search(r"const IMP_TYPES = \[(.*?)\];", build_import_block())
     if not (pt and it and pt.group(1) == it.group(1)):

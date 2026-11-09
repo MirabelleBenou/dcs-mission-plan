@@ -9,6 +9,7 @@ import json
 import os
 
 from messages_block import build_block as build_messages_block, build_css as build_messages_css
+from ui_block import build_block as build_ui_block, build_css as build_ui_css, verify as ui_verify
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -3660,6 +3661,15 @@ const IMG_RECOMPRESS_THRESHOLD = 800 * 1024;  // 800 Ko base64 : seuil de décle
 
 const I18N = {
   fr: {
+    'ui.cancel': 'Annuler',
+    'ui.close': 'Fermer',
+    'ui.restore': 'Restaurer',
+    'ui.foldall': 'Tout replier',
+    'ui.unfoldall': 'Tout déplier',
+    'ui.fmt': 'Format',
+    'ui.pages': 'Pages',
+    'ui.fname': 'Nom du fichier',
+    'ui.export': 'Exporter',
     // ── Toolbar ──
     'toolbar.save':           'Enregistrer',
     'toolbar.load':           'Ouvrir',
@@ -4041,6 +4051,15 @@ const I18N = {
     'simple.noPhoto':             '◯ PHOTO MANQUANTE ◯',
   },
   en: {
+    'ui.cancel': 'Cancel',
+    'ui.close': 'Close',
+    'ui.restore': 'Restore',
+    'ui.foldall': 'Fold all',
+    'ui.unfoldall': 'Unfold all',
+    'ui.fmt': 'Format',
+    'ui.pages': 'Pages',
+    'ui.fname': 'File name',
+    'ui.export': 'Export',
     // ── Toolbar ──
     'toolbar.save':           'Save',
     'toolbar.load':           'Open',
@@ -10096,8 +10115,8 @@ _default_wing_config_js = json.dumps(
     json.dumps(_default_wing_config, ensure_ascii=False)
 )
 
-HTML = HTML.replace('__CSS__', CSS.replace('@@MESSAGES_CSS@@\n', build_messages_css()))
-HTML = HTML.replace('@@MESSAGES_BLOCK@@\n', build_messages_block())
+HTML = HTML.replace('__CSS__', CSS.replace('@@MESSAGES_CSS@@\n', build_messages_css() + build_ui_css()))
+HTML = HTML.replace('@@MESSAGES_BLOCK@@\n', build_messages_block() + build_ui_block())
 HTML = HTML.replace('__LIB_HTML2CANVAS__', A['lib_html2canvas'])
 HTML = HTML.replace('__LIB_JSZIP__', A['lib_jszip'])
 
@@ -10134,6 +10153,7 @@ HTML = HTML.replace('__DEFAULT_WING_CONFIG__', _default_wing_config_js)
 HTML = HTML.replace('__APP_VERSION__', APP_VERSION)
 
 # Write the final file
+ui_verify(HTML)
 os.makedirs(os.path.join(HERE, 'dist'), exist_ok=True)
 output_path = os.path.join(HERE, 'dist', 'dcs_briefing_generator.html')
 with open(output_path, 'w', encoding='utf-8') as f:

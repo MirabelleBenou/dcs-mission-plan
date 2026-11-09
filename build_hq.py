@@ -9,6 +9,7 @@ import re
 from radio_bands_block import build_block as build_radio_bands_block
 from radio_block import build_block as build_radio_block
 from messages_block import build_block as build_messages_block, build_css as build_messages_css
+from ui_block import build_block as build_ui_block, build_css as build_ui_css, verify as ui_verify
 from aircraft_types_block import build_block as build_aircraft_types_block
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -1223,6 +1224,15 @@ const APP_VERSION = '{APP_VERSION}';
 // ── i18n ──────────────────────────────────────────────────────
 const I18N = {{
   fr: {{
+    'ui.cancel': 'Annuler',
+    'ui.close': 'Fermer',
+    'ui.restore': 'Restaurer',
+    'ui.foldall': 'Tout replier',
+    'ui.unfoldall': 'Tout déplier',
+    'ui.fmt': 'Format',
+    'ui.pages': 'Pages',
+    'ui.fname': 'Nom du fichier',
+    'ui.export': 'Exporter',
     'toolbar.title':            'HQ',
     'toolbar.subtitle':         '\u2591 POSTE DE COMMANDEMENT',
     'toolbar.lang.tooltip':     'Passer en anglais',
@@ -1549,6 +1559,15 @@ const I18N = {{
     'toast.mizNotLoaded':        '\u26a0 Ouvrez un .miz d\u2019abord',
   }},
   en: {{
+    'ui.cancel': 'Cancel',
+    'ui.close': 'Close',
+    'ui.restore': 'Restore',
+    'ui.foldall': 'Fold all',
+    'ui.unfoldall': 'Unfold all',
+    'ui.fmt': 'Format',
+    'ui.pages': 'Pages',
+    'ui.fname': 'File name',
+    'ui.export': 'Export',
     'toolbar.title':            'HQ',
     'toolbar.subtitle':         '\u2591 COMMAND POST',
     'toolbar.lang.tooltip':     'Switch to French',
@@ -5949,14 +5968,15 @@ HTML_FINAL = (HTML
     .replace('__APPLY_PATCHES__', _APPLY_PATCHES)
     .replace('__RETOKENIZE__', _RETOKENIZE)
     .replace('__REBUILD_MIZ__', _REBUILD_MIZ)
-    .replace('@@MESSAGES_CSS@@\n', build_messages_css())
-    .replace('@@MESSAGES_BLOCK@@\n', build_messages_block())
+    .replace('@@MESSAGES_CSS@@\n', build_messages_css() + build_ui_css())
+    .replace('@@MESSAGES_BLOCK@@\n', build_messages_block() + build_ui_block())
     .replace('@@RADIO_BLOCK@@\n', build_radio_block())
     .replace('@@RADIO_BANDS_BLOCK@@\n', build_radio_bands_block())
     .replace('@@AIRCRAFT_TYPES_BLOCK@@\n', build_aircraft_types_block())
     .replace('@@DYN_AIRDROMES@@', _DYN_AIRDROMES_JS)
 )
 
+ui_verify(HTML_FINAL)
 os.makedirs(os.path.join(HERE, 'dist'), exist_ok=True)
 OUTPUT_PATH = os.path.join(HERE, 'dist', 'dcs_hq.html')
 

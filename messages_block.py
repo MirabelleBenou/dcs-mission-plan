@@ -4,7 +4,7 @@
 
 Deux textes, identiques à l'octet dans les six dist/ :
   build_css()   — la feuille du toast (bas centré à --mp-toast-bottom, 20 px par défaut ; fond --olive-dark ; liseré 1 px, 4 px à gauche ;
-                  Oswald 500 ; la couleur du liseré porte le type : ambre (info), vert --green-radar (ok), rouge --red-faded (err))
+                  Oswald 500 ; la couleur du liseré porte le type : ambre (info), vert --green-radar (ok), --mp-warn (err : la couleur d'avertissement de ui_block.py))
   build_block() — le script : showToast(msg, opts), showToastAction(msg, label, fn, ms) (raccourci de showToast)
 
 L'appel : showToast(msg, opts).
@@ -37,7 +37,7 @@ _CSS = r"""
 .toast.show { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); transition-delay: 0s; }
 .toast.show.act { pointer-events: auto; }
 .toast.ok { border-color: var(--green-radar); }
-.toast.err { border-color: var(--red-faded); }
+.toast.err { border-color: var(--mp-warn, #e8806a); }
 .toast-action {
   background: none; border: 0; padding: 6px 4px; margin: -6px 0; cursor: pointer;
   font: inherit; letter-spacing: inherit; text-transform: inherit; color: var(--amber);

@@ -29,6 +29,7 @@ import sys
 from group_store_block import build_block as build_group_store_block
 from import_block import build_block as build_import_block, build_css as build_import_css, build_html as build_import_html
 from messages_block import build_block as build_messages_block, build_css as build_messages_css
+from ui_block import build_block as build_ui_block, build_css as build_ui_css, verify as ui_verify, fingerprint as ui_fingerprint
 from magvar_block import build_block as build_magvar_block
 from payload_block import build_block as build_payload_block
 from projection_block import build_block as build_projection_block
@@ -347,6 +348,15 @@ TABLES = [('WEAPON_NAMES', 'weapon_names.json'), ('AIRCRAFT_LIMITS', 'aircraft_l
 
 # ---------- Textes (FR et EN : le build vérifie la parité et que chaque clé sert) ----------
 I18N_FR = {
+    'ui.cancel': 'Annuler',
+    'ui.close': 'Fermer',
+    'ui.restore': 'Restaurer',
+    'ui.foldall': 'Tout replier',
+    'ui.unfoldall': 'Tout déplier',
+    'ui.fmt': 'Format',
+    'ui.pages': 'Pages',
+    'ui.fname': 'Nom du fichier',
+    'ui.export': 'Exporter',
     'toolbar.subtitle': '░ PAQUET DE VOL',
     'toolbar.theme.tooltip': 'Thème graphique',
     'toolbar.lang.tooltip': 'Passer en anglais',
@@ -608,6 +618,15 @@ I18N_FR = {
 }
 
 I18N_EN = {
+    'ui.cancel': 'Cancel',
+    'ui.close': 'Close',
+    'ui.restore': 'Restore',
+    'ui.foldall': 'Fold all',
+    'ui.unfoldall': 'Unfold all',
+    'ui.fmt': 'Format',
+    'ui.pages': 'Pages',
+    'ui.fname': 'File name',
+    'ui.export': 'Export',
     'toolbar.subtitle': '░ FLIGHT PACKAGE',
     'toolbar.theme.tooltip': 'Graphic theme',
     'toolbar.lang.tooltip': 'Switch to French',
@@ -4382,11 +4401,11 @@ def build_html():
                   .replace('@@STARDOS_700@@', A['STARDOS_700'])
                   .replace('@@OSWALD_500@@', A['OSWALD_500']))
     js = (build_radio_block() + '\n' + build_radio_bands_block() + '\n' + tables_js() + '\n' + build_payload_block() + '\n' + PAD2_JS + '\n' + COORD_BLOCK + READNUM_BLOCK + build_magvar_block() + '\n' + build_projection_block() + '\n'
-          + build_route_pack_block() + '\n' + build_route_theatre_block() + '\n' + build_group_store_block() + '\n' + build_import_block() + '\n' + build_messages_block() + '\n' + JS_TBM + '\n' + app_js())
+          + build_route_pack_block() + '\n' + build_route_theatre_block() + '\n' + build_group_store_block() + '\n' + build_import_block() + '\n' + build_messages_block() + '\n' + build_ui_block() + '\n' + JS_TBM + '\n' + app_js())
     return ('<!DOCTYPE html>\n<html lang="fr">\n<head>\n<meta charset="UTF-8">\n'
             '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">\n'
             '<meta name="theme-color" content="#1a1e10">\n<title>Flight Configurator</title>\n<style>\n'
-            + fonts + CSS_COMMON + CSS_FC + build_messages_css() + build_import_css() + '\n</style>\n'
+            + fonts + CSS_COMMON + CSS_FC + build_messages_css() + build_ui_css() + build_import_css() + '\n</style>\n'
             '<!-- JSZip v3.10.1 — embarqué pour lire un paquet .zip -->\n<script>' + A['lib_jszip'] + '</script>\n</head>\n'
             + BODY.replace('@@VERSION@@', APP_VERSION) + '\n<script>\n' + js + '\n</script>\n</body>\n</html>\n')
 
@@ -4416,7 +4435,7 @@ def check(html):
             bad += 1
 
     ok(set(I18N_FR) == set(I18N_EN), 'parité FR/EN : %d clés, écart %s' % (len(I18N_FR), sorted(set(I18N_FR) ^ set(I18N_EN))))
-    code = JS_APP + BODY
+    code = JS_APP + BODY + build_ui_block()      # les textes du bloc commun (ui.*) comptent comme utilisés
     used = set(re.findall(r"\bt(?:f)?\('([a-zA-Z0-9_.\-]+)'", code)) | set(re.findall(r'data-i18n(?:-title)?="([^"]+)"', code))
     used |= set(re.findall(r"key: '([a-z]+\.[a-zA-Z0-9_.]+)'", code))
     prefixed = lambda k: k.startswith(DYNAMIC_KEY_PREFIXES)
@@ -4444,8 +4463,10 @@ def check(html):
     ok('/* ===== POSTES RADIO (COMME AU COCKPIT) ===== */' in html and '/* ===== EMPORT (PRESETS ET PAYLOAD) ===== */' in html, 'blocs partagés présents')
     for label, blk in (('bandes et postes non pré-réglés', build_radio_bands_block()), ('déclinaison', build_magvar_block()), ('projections', build_projection_block()), ('points de paquet', build_route_pack_block()), ('théâtre d\'une route', build_route_theatre_block()), ('groupes partagés', build_group_store_block()),
                        ('import commun (script)', build_import_block()), ('import commun (feuille)', build_import_css()), ('import commun (fenêtre)', build_import_html()),
-                       ('messages communs (script)', build_messages_block()), ('messages communs (feuille)', build_messages_css())):
+                       ('messages communs (script)', build_messages_block()), ('messages communs (feuille)', build_messages_css()),
+                       ('interface commune (script)', build_ui_block()), ('interface commune (feuille)', build_ui_css())):
         ok(blk in html, 'bloc %s inséré tel quel' % label)
+    ok(True, "empreinte du bloc d'interface commun : %s" % ui_fingerprint())
     pt, it = re.search(r"const PAYLOAD_TYPES = \[(.*?)\];", build_payload_block()), re.search(r"const IMP_TYPES = \[(.*?)\];", build_import_block())
     ok(bool(pt) and bool(it) and pt.group(1) == it.group(1), 'les types du bloc d\'import sont ceux de PAYLOAD_TYPES')
     ok(COORD_BLOCK + READNUM_BLOCK in html and hashlib.sha256(COORD_BLOCK.encode('utf-8')).hexdigest()[:16] == COORD_SHA16, 'bloc de coordonnées inséré tel quel, empreinte %s' % COORD_SHA16)

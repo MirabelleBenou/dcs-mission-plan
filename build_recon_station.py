@@ -7,6 +7,7 @@ import base64
 import re
 
 from messages_block import build_block as build_messages_block, build_css as build_messages_css
+from ui_block import build_block as build_ui_block, build_css as build_ui_css, verify as ui_verify
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ASSETS_PATH = os.path.join(HERE, 'assets.json')
@@ -2685,6 +2686,15 @@ const APP_VERSION = '{APP_VERSION}';
 // ── i18n ──────────────────────────────────────────────────────
 const I18N = {{
   fr: {{
+    'ui.cancel': 'Annuler',
+    'ui.close': 'Fermer',
+    'ui.restore': 'Restaurer',
+    'ui.foldall': 'Tout replier',
+    'ui.unfoldall': 'Tout déplier',
+    'ui.fmt': 'Format',
+    'ui.pages': 'Pages',
+    'ui.fname': 'Nom du fichier',
+    'ui.export': 'Exporter',
     'toolbar.theme.tooltip': 'Thème graphique',
     'toolbar.lang.tooltip': 'Passer en anglais',
     'toolbar.subtitle': '░ RENSEIGNEMENT',
@@ -2826,6 +2836,15 @@ const I18N = {{
     'editor.classif.level': 'NIVEAU',
 {RSD_I18N_FR}  }},
   en: {{
+    'ui.cancel': 'Cancel',
+    'ui.close': 'Close',
+    'ui.restore': 'Restore',
+    'ui.foldall': 'Fold all',
+    'ui.unfoldall': 'Unfold all',
+    'ui.fmt': 'Format',
+    'ui.pages': 'Pages',
+    'ui.fname': 'File name',
+    'ui.export': 'Export',
     'toolbar.theme.tooltip': 'Graphic theme',
     'toolbar.lang.tooltip': 'Switch to French',
     'toolbar.subtitle': '░ INTELLIGENCE',
@@ -5124,7 +5143,8 @@ init();
 os.makedirs(os.path.join(HERE, 'dist'), exist_ok=True)
 OUTPUT_PATH = os.path.join(HERE, 'dist', 'dcs_recon_station.html')
 
-HTML = HTML.replace('@@MESSAGES_CSS@@\n', build_messages_css()).replace('@@MESSAGES_BLOCK@@\n', build_messages_block())
+HTML = HTML.replace('@@MESSAGES_CSS@@\n', build_messages_css() + build_ui_css()).replace('@@MESSAGES_BLOCK@@\n', build_messages_block() + build_ui_block())
+ui_verify(HTML)
 
 with open(OUTPUT_PATH, 'w', encoding='utf-8') as f:
     f.write(HTML)
