@@ -2681,6 +2681,9 @@ const I18N = {
     'ui.pages': 'Pages',
     'ui.fname': 'Nom du fichier',
     'ui.export': 'Exporter',
+    'ui.verb.delete': 'Supprimer',
+    'ui.verb.remove': 'Retirer',
+    'ui.verb.removeall': 'Tout retirer',
     'app.title': 'Route Planner',
     'app.short': 'R·P',
     'tb.subtitle': '░ NAVIGATION',
@@ -2941,8 +2944,8 @@ const I18N = {
     'pk.off.theatre': 'Le théâtre {th} n\'a pas de projection.',
     'pk.go.1': 'Exporter {n} route',
     'pk.go.n': 'Exporter {n} routes',
-    'confirm.routeDel': 'Supprimer la route « {name} » et ses points ?',
-    'confirm.openSet': 'Remplacer toutes les routes, de tous les théâtres, par celles du fichier ?',
+    'confirm.routeDel.title': 'Supprimer la route « {name} » ?',
+    'confirm.routeDel.text': 'Ses points seront supprimés. Cela ne se défait pas.',
     'confirm.theatre': 'Passer au théâtre {th} ? Les {n} routes existantes seront supprimées.',
     'confirm.theatre.1': 'Passer au théâtre {th} ? La route existante sera supprimée.',
     'toast.routesMax': '⚠ 12 routes au plus.',
@@ -3006,8 +3009,7 @@ const I18N = {
     'zoom.in': 'Zoom avant',
     'zoom.out': 'Zoom arrière',
     'toast.saved': 'Route enregistrée ✓',
-    'confirm.open': 'Remplacer la route en cours ?',
-    'confirm.example': 'Ouvrir l\'exemple à la place de la route en cours ?',
+    'toast.exampleLoaded': 'Exemple chargé ✓',
     'err.cf': '⚠ Fichier CombatFlite non reconnu.',
     'err.cfBrowser': '⚠ Ce navigateur ne sait pas lire les fichiers CombatFlite.',
     'err.layersQuota': '⚠ Calques trop lourds pour le navigateur : ils ne seront pas gardés après rechargement.',
@@ -3039,8 +3041,10 @@ const I18N = {
     'layers.remove': 'Retirer ce calque',
     'layers.removeAll': 'Retirer tous les calques',
     'layers.help': 'En mode Lire, touchez un objet pour lire sa fiche. En mode Point ou Réf., une cible touchée devient un point de la route ou une référence. En mode Dessin, vous créez et modifiez vos propres calques.',
-    'confirm.layer': 'Retirer le calque « {name} » ?',
-    'confirm.layers': 'Retirer tous les calques ?',
+    'confirm.layer.title': 'Retirer le calque « {name} » ?',
+    'confirm.layer.text': 'Ses éléments seront retirés de la carte. Cela ne se défait pas.',
+    'confirm.layers.title': 'Retirer tous les calques ?',
+    'confirm.layers.text': 'Tous les calques seront retirés de la carte. Cela ne se défait pas.',
     'cf.k.lines': 'Zone',
     'cf.k.curve': 'Courbe',
     'cf.k.flot': 'FLOT',
@@ -3135,7 +3139,8 @@ const I18N = {
     'dr.t.zone': '⚠ Une zone a au moins trois sommets.',
     'dr.t.line': '⚠ Une ligne a au moins deux sommets.',
     'dr.t.min': '⚠ Il faut au moins {n} sommets.',
-    'dr.confirmDel': 'Supprimer « {name} »\u202f?',
+    'dr.confirmDel.title': 'Supprimer « {name} » ?',
+    'dr.confirmDel.text': 'Cela ne se défait pas.',
     'dr.tool.orbit': 'Orbite',
     'dr.tool.box': 'Boîte',
     'dr.msg.orbit': 'Touchez l\'entrée de l\'orbite, puis sa sortie.',
@@ -3195,6 +3200,9 @@ const I18N = {
     'ui.pages': 'Pages',
     'ui.fname': 'File name',
     'ui.export': 'Export',
+    'ui.verb.delete': 'Delete',
+    'ui.verb.remove': 'Remove',
+    'ui.verb.removeall': 'Remove all',
     'app.title': 'Route Planner',
     'app.short': 'R·P',
     'tb.subtitle': '░ NAVIGATION',
@@ -3455,8 +3463,8 @@ const I18N = {
     'pk.off.theatre': 'The {th} theatre has no projection.',
     'pk.go.1': 'Export {n} route',
     'pk.go.n': 'Export {n} routes',
-    'confirm.routeDel': 'Delete the route "{name}" and its points?',
-    'confirm.openSet': "Replace all routes, on every theatre, with the file's?",
+    'confirm.routeDel.title': 'Delete the route "{name}"?',
+    'confirm.routeDel.text': 'Its waypoints will be deleted. This cannot be undone.',
     'confirm.theatre': 'Switch to the {th} theatre? The {n} existing routes will be deleted.',
     'confirm.theatre.1': 'Switch to the {th} theatre? The existing route will be deleted.',
     'toast.routesMax': '⚠ At most 12 routes.',
@@ -3520,8 +3528,7 @@ const I18N = {
     'zoom.in': 'Zoom in',
     'zoom.out': 'Zoom out',
     'toast.saved': 'Route saved ✓',
-    'confirm.open': 'Replace the current route?',
-    'confirm.example': 'Open the example instead of the current route?',
+    'toast.exampleLoaded': 'Example loaded ✓',
     'err.cf': '⚠ Unrecognised CombatFlite file.',
     'err.cfBrowser': '⚠ This browser cannot read CombatFlite files.',
     'err.layersQuota': '⚠ Layers too large for the browser: they will not be kept after reload.',
@@ -3553,8 +3560,10 @@ const I18N = {
     'layers.remove': 'Remove this layer',
     'layers.removeAll': 'Remove all layers',
     'layers.help': 'In Read mode, tap an item to read it. In Waypoint or Ref. mode, a tapped target becomes a waypoint or a reference point. In Draw mode, you create and edit your own layers.',
-    'confirm.layer': 'Remove layer “{name}”?',
-    'confirm.layers': 'Remove all layers?',
+    'confirm.layer.title': 'Remove layer “{name}”?',
+    'confirm.layer.text': 'Its items will be removed from the map. This cannot be undone.',
+    'confirm.layers.title': 'Remove all layers?',
+    'confirm.layers.text': 'All layers will be removed from the map. This cannot be undone.',
     'cf.k.lines': 'Zone',
     'cf.k.curve': 'Curve',
     'cf.k.flot': 'FLOT',
@@ -3649,7 +3658,8 @@ const I18N = {
     'dr.t.zone': '⚠ A zone needs at least three vertices.',
     'dr.t.line': '⚠ A line needs at least two vertices.',
     'dr.t.min': '⚠ At least {n} vertices are needed.',
-    'dr.confirmDel': 'Delete “{name}”?',
+    'dr.confirmDel.title': 'Delete “{name}”?',
+    'dr.confirmDel.text': 'This cannot be undone.',
     'dr.tool.orbit': 'Orbit',
     'dr.tool.box': 'Box',
     'dr.msg.orbit': 'Tap the orbit\'s entry point, then its exit.',
@@ -8306,11 +8316,13 @@ function drCopy() {
   drSelect(s.l.id, c.id);
 }
 
-function drDelete() {
+async function drDelete() {
+  const s0 = drSel();
+  if (!s0) return;
+  const name = hasText(s0.it.name) ? s0.it.name : t('dr.g.' + drGenre(s0.it));
+  if (!(await askConfirm({ title: t('dr.confirmDel.title', { name: name }), text: t('dr.confirmDel.text'), verb: t('ui.verb.delete'), danger: true }))) return;
   const s = drSel();
-  if (!s) return;
-  const name = hasText(s.it.name) ? s.it.name : t('dr.g.' + drGenre(s.it));
-  if (!confirm(t('dr.confirmDel', { name: name }))) return;
+  if (!s || s.it !== s0.it) return;
   s.l.items = s.l.items.filter(x => x !== s.it);
   persistLayers();
   renderLayers();
@@ -9475,17 +9487,36 @@ function openRouteFile(file) {
       if (layersChanged()) showToast(t(cfOne(lays.length) ? 'toast.layersAdded.1' : 'toast.layersAdded.n', { n: lays.length }), { type: 'ok', ms: 4500 });
       return;
     }
-    if (!openAsRoute(res.route)) return;
-    let msg = (res.dropped ? t('toast.openedDropped', { n: res.dropped }) : t('toast.opened')) +
-      (res.droppedRefs ? ' · ' + t('toast.refsDropped', { n: res.droppedRefs }) : '');
-    if (lays.length) { cfMerge(lays); if (layersChanged()) msg += ' · ' + t(cfOne(lays.length) ? 'toast.cfShown.1' : 'toast.cfShown.n', { n: lays.length }); }
-    showToast(msg, { type: 'ok' });
+    openAsRoute(res.route, () => {
+      let msg = (res.dropped ? t('toast.openedDropped', { n: res.dropped }) : t('toast.opened')) +
+        (res.droppedRefs ? ' · ' + t('toast.refsDropped', { n: res.droppedRefs }) : '');
+      if (lays.length) { cfMerge(lays); if (layersChanged()) msg += ' · ' + t(cfOne(lays.length) ? 'toast.cfShown.1' : 'toast.cfShown.n', { n: lays.length }); }
+      return msg;
+    });
   }, () => rejectMsg('rej.json'));
 }
 
 /* « Exemple » remplace toutes les routes par la route d'exemple */
+/* Ce que « Remplacer » garde pour « Restaurer » : les clés que l'action peut écrire (la route, le jeu de routes, le théâtre, les unités, les réglages de cap, les calques, la fiche des groupes)
+   et l'état en mémoire (la route, le jeu de routes, les calques) */
+function rpReplaceKeys() { return [KEY_STATE, KEY_SET, KEY_THEATRE, KEY_UNITS, KEY_NAV, KEY_LAYERS, KEY_FLIGHT_SET]; }
+function rpMem() { syncActive(); return { S: JSON.parse(JSON.stringify(S)), RSET: JSON.parse(JSON.stringify(RSET)), layers: JSON.parse(JSON.stringify(CF_LAYERS)) }; }
+function rpBack(m) {
+  S = m.S; RSET = m.RSET; CF_LAYERS = m.layers;
+  const r = RSET.routes[RSET.active];
+  if (r) { S.name = r.name; S.points = r.points; }       /* la route active et S partagent leurs points, comme avant */
+  sel = -1; selR = -1;
+  resolveLayer();
+  renderAll();
+  renderLayers(); drawLayers(); drAfterLayers();
+  setBase();
+  frameRoute();
+  RLD.base = rpSnap();
+}
 function loadExample() {
-  if (!confirm(t('confirm.example'))) return;
+  replaceWithRestore({ keys: rpReplaceKeys(), mem: rpMem, back: rpBack, msg: t('toast.exampleLoaded'), run: loadExampleNow });
+}
+function loadExampleNow() {
   const ex = parseRoute(JSON.parse(JSON.stringify(CURRENT_LANG === 'en' ? EXAMPLE_ROUTE_EN : EXAMPLE_ROUTE))).route;   // la langue de l'interface au moment du clic
   const ku = mpUnitsRead();
   if (ku) ex.units = { distance: ku.distance, altitude: ku.altitude };       // l'exemple s'affiche dans les unités partagées et n'écrit pas la clé
@@ -9643,10 +9674,11 @@ function duplicateRoute() {
 }
 
 /* « Supprimer » : une confirmation s'il y a des points ; la dernière route ne se supprime pas, elle se vide */
-function deleteRoute() {
+async function deleteRoute() {
   syncActive();
   const r = RSET.routes[RSET.active];
-  if (r.points.length && !confirm(t('confirm.routeDel', { name: r.name !== '' ? r.name : t('rs.unnamed') }))) return;
+  if (r.points.length && !(await askConfirm({ title: t('confirm.routeDel.title', { name: r.name !== '' ? r.name : t('rs.unnamed') }), text: t('confirm.routeDel.text'), verb: t('ui.verb.delete'), danger: true }))) return;
+  if (RSET.routes[RSET.active] !== r) return;       /* le jeu a changé pendant la question */
   if (RSET.routes.length === 1) {
     r.rid = newRid(); r.name = ''; r.points = []; r.flight = null;      /* la dernière route vidée est une route neuve : un rid neuf */
     S.name = ''; S.points = [];
@@ -9711,24 +9743,29 @@ function drawOthers() {
 
 /* ---------- l'ensemble de routes : lecture, enregistrement ---------- */
 /* Ouvrir une route (dcs-route-v1) : sur une route active vide, elle y entre ; sinon elle s'ajoute comme route neuve ; au plafond de 12, rien */
-function openAsRoute(route) {
+function openAsRoute(route, msgFn) {
   syncActive();
   const cross = route.theatre !== S.theatre;
   /* un autre théâtre : ses routes (masquées) reviennent, celles du théâtre courant se masquent, rien n'est supprimé, aucune confirmation */
   const land = cross ? RSET.hidden.filter(r => r.theatre === route.theatre) : RSET.routes;
   const empty = cross ? (!land.length || !land[0].points.length) : !S.points.length;
   if (!empty && land.length >= MAX_ROUTES) { showToast(t('toast.routesMax'), { type: 'err' }); return false; }
-  /* les références du RP que le fichier ne redonne pas seraient perdues : la confirmation d'aujourd'hui */
-  if (S.refs.length && JSON.stringify(S.refs) !== JSON.stringify(route.refs) && !confirm(t('confirm.open'))) return false;
-  if (cross) rsetSwitch(route.theatre);
-  if (!empty) {
-    const nb = blankRoute(); nb.theatre = route.theatre;
-    RSET.routes.push(nb);
-    RSET.active = RSET.routes.length - 1;
-    S.name = ''; S.points = nb.points;
-  }
-  /* route de plus : son nom, ses points et ses références viennent du fichier, les unités et les réglages restent ceux du RP ; route active vide remplacée : tout le fichier, comme avant */
-  setRoute(empty ? route : Object.assign({}, route, { units: S.units, navDisplay: S.navDisplay, groundSpeed: S.groundSpeed, legBoxes: S.legBoxes }));
+  /* les références du RP que le fichier ne redonne pas seraient perdues : « Remplacer » (sans question), le RP d'avant se rend par « Restaurer » ; msgFn dit le résultat, une fois fait */
+  const replacing = S.refs.length && JSON.stringify(S.refs) !== JSON.stringify(route.refs);
+  const go = () => {
+    if (cross) rsetSwitch(route.theatre);
+    if (!empty) {
+      const nb = blankRoute(); nb.theatre = route.theatre;
+      RSET.routes.push(nb);
+      RSET.active = RSET.routes.length - 1;
+      S.name = ''; S.points = nb.points;
+    }
+    /* route de plus : son nom, ses points et ses références viennent du fichier, les unités et les réglages restent ceux du RP ; route active vide remplacée : tout le fichier, comme avant */
+    setRoute(empty ? route : Object.assign({}, route, { units: S.units, navDisplay: S.navDisplay, groundSpeed: S.groundSpeed, legBoxes: S.legBoxes }));
+    return true;
+  };
+  if (!replacing) { go(); if (msgFn) showToast(msgFn(), { type: 'ok' }); return true; }
+  replaceWithRestore({ keys: rpReplaceKeys(), mem: rpMem, back: rpBack, msg: msgFn || (() => ''), run: go });
   return true;
 }
 
@@ -9746,26 +9783,32 @@ function openRouteSet(parsed) {
     return;
   }
   syncActive();
-  /* ouvrir un jeu remplace tout le jeu de routes, de tous les théâtres (confirmation s'il y a des points) ; chaque route rejoint son théâtre (son champ, sinon celui de tête du fichier, sinon le courant) ; le Route Planner reste sur son théâtre */
-  if (RSET.routes.concat(RSET.hidden || []).some(r => r.points.length) && !confirm(t('confirm.openSet'))) return;
-  const C = S.theatre;
-  const vis = rr.routes.filter(r => r.theatre === C), hid = rr.routes.filter(r => r.theatre !== C);
-  const a0 = rr.routes[readActiveIndex(parsed.active, rr.routes.length)];
-  RSET.routes = vis; RSET.hidden = hid; RSET.active = 0;
-  if (!vis.length) { const b = blankRoute(); b.theatre = C; vis.push(b); }
-  const act = Math.max(0, vis.indexOf(a0));
-  RSET.active = act;
-  const a = vis[act];
-  const route = sh.route;
-  route.theatre = C;
-  route.name = a.name;
-  route.points = a.points;
-  setRoute(route);
-  let msg = rr.dropped ? t('toast.openedDropped', { n: rr.dropped }) : t('toast.opened');
-  if (rr.droppedRoutes) msg += ' · ' + t('toast.routesMax').replace(/^\u26a0\s*/, '');
-  if (sh.droppedRefs) msg += ' · ' + t('toast.refsDropped', { n: sh.droppedRefs });
-  if (lays.length) { cfMerge(lays); if (layersChanged()) msg += ' · ' + t(cfOne(lays.length) ? 'toast.cfShown.1' : 'toast.cfShown.n', { n: lays.length }); }
-  showToast(msg, { type: 'ok' });
+  /* ouvrir un jeu remplace tout le jeu de routes, de tous les théâtres (« Remplacer » s'il y a des points) ; chaque route rejoint son théâtre (son champ, sinon celui de tête du fichier, sinon le courant) ; le Route Planner reste sur son théâtre */
+  /* « Remplacer » (sans question) quand des routes ont des points : le jeu d'avant se rend par « Restaurer » */
+  const replacing = RSET.routes.concat(RSET.hidden || []).some(r => r.points.length);
+  let msg = '';
+  const go = () => {
+    const C = S.theatre;
+    const vis = rr.routes.filter(r => r.theatre === C), hid = rr.routes.filter(r => r.theatre !== C);
+    const a0 = rr.routes[readActiveIndex(parsed.active, rr.routes.length)];
+    RSET.routes = vis; RSET.hidden = hid; RSET.active = 0;
+    if (!vis.length) { const b = blankRoute(); b.theatre = C; vis.push(b); }
+    const act = Math.max(0, vis.indexOf(a0));
+    RSET.active = act;
+    const a = vis[act];
+    const route = sh.route;
+    route.theatre = C;
+    route.name = a.name;
+    route.points = a.points;
+    setRoute(route);
+    msg = rr.dropped ? t('toast.openedDropped', { n: rr.dropped }) : t('toast.opened');
+    if (rr.droppedRoutes) msg += ' · ' + t('toast.routesMax').replace(/^\u26a0\s*/, '');
+    if (sh.droppedRefs) msg += ' · ' + t('toast.refsDropped', { n: sh.droppedRefs });
+    if (lays.length) { cfMerge(lays); if (layersChanged()) msg += ' · ' + t(cfOne(lays.length) ? 'toast.cfShown.1' : 'toast.cfShown.n', { n: lays.length }); }
+    return true;
+  };
+  if (!replacing) { go(); showToast(msg, { type: 'ok' }); return; }
+  replaceWithRestore({ keys: rpReplaceKeys(), mem: rpMem, back: rpBack, msg: () => msg, run: go });
 }
 
 /* « Enregistrer tout » : routes_<horodatage>.json */
@@ -12021,8 +12064,8 @@ function rtOpenGo() {
     pts.push({ name: p.name !== '' ? p.name : nextName(pts, pts.length), lat: r7(ll.lat), lon: r7(ll.lon), alt: p.alt, altRef: p.altRef });
   });
   rtHide('rt-open-modal');
-  if (!openAsRoute({ name: r.name, theatre: th, units: S.units, navDisplay: S.navDisplay, groundSpeed: S.groundSpeed, legBoxes: S.legBoxes, points: pts, refs: [] })) return;
-  showToast(t('toast.rtOpened') + (dropped ? ' · ' + t('toast.dropped', { n: dropped }) : ''), { type: 'ok' });
+  openAsRoute({ name: r.name, theatre: th, units: S.units, navDisplay: S.navDisplay, groundSpeed: S.groundSpeed, legBoxes: S.legBoxes, points: pts, refs: [] },
+    () => t('toast.rtOpened') + (dropped ? ' · ' + t('toast.dropped', { n: dropped }) : ''));
 }
 
 function rtExportName() {
@@ -12122,14 +12165,15 @@ function cfLayerOfRow(el) {
   return row ? CF_LAYERS.find(x => x.id === row.dataset.id) : null;
 }
 
-function removeLayer(l) {
-  if (!confirm(t('confirm.layer', { name: l.name }))) return;
+async function removeLayer(l) {
+  if (!(await askConfirm({ title: t('confirm.layer.title', { name: l.name }), text: t('confirm.layer.text'), verb: t('ui.verb.remove'), danger: true }))) return;
+  if (CF_LAYERS.indexOf(l) < 0) return;
   CF_LAYERS = CF_LAYERS.filter(x => x !== l);
   layersChanged();
 }
 
-function removeAllLayers() {
-  if (!CF_LAYERS.length || !confirm(t('confirm.layers'))) return;
+async function removeAllLayers() {
+  if (!CF_LAYERS.length || !(await askConfirm({ title: t('confirm.layers.title'), text: t('confirm.layers.text'), verb: t('ui.verb.removeall'), danger: true }))) return;
   CF_LAYERS = [];
   layersChanged();
 }
