@@ -3686,7 +3686,10 @@ function mpNavFollow() {
   const k = mpNavRead();
   if (!k || !S || mpNavSame(k, S.navDisplay)) return;
   S.navDisplay = k;
-  persistState(); renderNav(); drawRoute(); syncControls();
+  let sv = null;
+  try { sv = JSON.parse(localStorage.getItem(KEY_STATE)); } catch (e) { /* illisible : on réécrit */ }
+  if (!(sv && sv.navDisplay && mpNavSame(sv.navDisplay, k))) persistState();       /* le Datacard Generator a déjà mis la clé dans route_state_v1 : rien à réécrire */
+  renderNav(); drawRoute(); syncControls();
   if (document.activeElement !== $('decl')) $('decl').value = S.navDisplay.decl;
 }
 

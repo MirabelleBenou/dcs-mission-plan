@@ -2207,8 +2207,8 @@ __CSS__
     <div class="bi-block" id="bi-route-block" hidden>
       <h3 data-i18n="imp.route.title">Route à importer</h3>
       <div class="bi-note bi-route-line" id="bi-route-line"></div>
-      <label class="bi-src"><input type="radio" name="bi-route-mode" id="bi-route-fill" value="fill" checked><span data-i18n="imp.route.fill">Remplir la navigation de la datacard affichée</span></label>
-      <div class="bi-note" data-i18n="imp.route.fillNote">Sa navigation et ses points de référence sont remplacés.</div>
+      <label class="bi-src"><input type="radio" name="bi-route-mode" id="bi-route-fill" value="fill" checked><span data-i18n="imp.route.fill">Lier la carte à cette route</span></label>
+      <div class="bi-note" data-i18n="imp.route.fillNote">La navigation de la carte devient cette route ; ses heures et notes déjà saisies ne suivent pas.</div>
       <label class="bi-src"><input type="radio" name="bi-route-mode" id="bi-route-new" value="new"><span data-i18n="imp.route.new">Nouvelle datacard</span></label>
       <label class="bi-src" id="bi-route-all-row" hidden><input type="radio" name="bi-route-mode" id="bi-route-all" value="all"><span id="bi-route-all-lbl"></span></label>
     </div>
@@ -4048,7 +4048,7 @@ function dgNavSet(n, fromKey) {
   Object.assign(dgN, nn);
   const stale = doc.cards.some(c => c.navDisplay.ref !== dgN.ref || c.navDisplay.decl !== dgN.decl || c.navDisplay.vmode !== dgN.mode);
   doc.cards.forEach(c => { c.navDisplay.ref = dgN.ref; c.navDisplay.decl = dgN.decl; c.navDisplay.vmode = dgN.mode; });
-  if (!fromKey) { dgWriteNavKey(dgN); rwSetNavDisplay(dgN); }
+  if (!fromKey) { rwSetNavDisplay(dgN); dgWriteNavKey(dgN); }
   if (changed || stale) { persistState(); renderEditor(true); renderPreview(); }
   return changed;
 }
@@ -5618,8 +5618,14 @@ function navHead(c, mode, hc) {
     '<th class="r">' + esc(t('dc.h.tos')) + '</th>' +
     '<th>' + esc(t('dc.h.note')) + '</th>';
 }
+/* La colonne d'altitude s'élargit quand une cellule porte « AGL » (une altitude à 5 chiffres en pieds, suivie de AGL, tient sans déborder) ; le reste de la rangée garde ses largeurs */
+const ALR_EXTRA = 40;
+function colsHtml(widths, altIdx, body) {
+  const wide = body.indexOf('class="alr"') >= 0;
+  return '<colgroup>' + widths.map((w, i) => '<col style="width:' + (wide && i === altIdx ? w + ALR_EXTRA : w) + 'px">').join('') + '<col></colgroup>';
+}
 function navTable(mode, head, body) {
-  const cols = '<colgroup>' + NAV_COLS[mode].map(w => '<col style="width:' + w + 'px">').join('') + '<col></colgroup>';
+  const cols = colsHtml(NAV_COLS[mode], mode === 'course' ? 4 : 3, body);
   return '<table class="dc-tab dc-nav' + (mode === 'course' ? '' : ' dc-navc') + '">' + cols +
     '<thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody></table>';
 }
@@ -5682,7 +5688,7 @@ function refsHead(c, mode) {
     '<th>' + esc(t('dc.h.note')) + '</th>';
 }
 function refsTable(mode, head, body) {
-  const cols = '<colgroup>' + REF_COLS[mode].map(w => '<col style="width:' + w + 'px">').join('') + '<col></colgroup>';
+  const cols = colsHtml(REF_COLS[mode], 3, body);
   return '<table class="dc-tab dc-nav dc-navc dc-refs">' + cols +
     '<thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody></table>';
 }
