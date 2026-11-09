@@ -3814,10 +3814,11 @@ function dgUnitsSet(u, fromKey) {
   const n = dgUnitsNorm(u);
   const changed = Object.keys(UNITS_DEFAULT).some(k => dgU[k] !== n[k]);
   Object.assign(dgU, n);
+  const stale = doc.cards.some(c => !c.units || Object.keys(UNITS_DEFAULT).some(k => c.units[k] !== n[k]));       /* une carte stockée qui diffère de la clé : elle est remise à la clé et la persistance a lieu */
   doc.cards.forEach(c => { c.units = { mass: n.mass, distance: n.distance, altitude: n.altitude }; });
   if (!fromKey) dgWriteUnitsKey(n);
   dgUnitsSync();
-  if (changed) { persistState(); renderEditor(true); renderPreview(); }
+  if (changed || stale) { persistState(); renderEditor(true); renderPreview(); }
   return changed;
 }
 /* Un document ouvert, importé ou lu d'une route : les unités valides de sa première carte deviennent la clé */

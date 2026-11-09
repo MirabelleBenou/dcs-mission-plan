@@ -4534,9 +4534,9 @@ const KEY_UNITS = 'mp_units_v1';
 function mpUnitsRead() {
   try {
     const o = JSON.parse(localStorage.getItem(KEY_UNITS));
-    if (!o || typeof o !== 'object') return null;
-    if ((o.distance !== 'km' && o.distance !== 'nm') || (o.altitude !== 'm' && o.altitude !== 'ft')) return null;
-    return { mass: o.mass === 'lb' ? 'lb' : 'kg', distance: o.distance, altitude: o.altitude };
+    if (!o || typeof o !== 'object' || Array.isArray(o)) return null;
+    /* champ par champ, comme au Datacard Generator : un champ absent ou invalide prend sa valeur par défaut (kg, km, m), les autres sont gardés */
+    return { mass: o.mass === 'lb' ? 'lb' : 'kg', distance: o.distance === 'nm' ? 'nm' : 'km', altitude: o.altitude === 'ft' ? 'ft' : 'm' };
   } catch (e) { return null; }
 }
 function mpUnitsWrite() {
@@ -8622,13 +8622,13 @@ function deliverJsonFile(obj, fname, msg) {
 }
 
 /* Met une route lue à la place de la route en cours (unités, théâtre, cap et déclinaison compris ; la couche et la grille restent) */
-function setRoute(route) {
+function setRoute(route, noKey) {
   if (S.theatre !== route.theatre) RL.pts.length = 0;      /* arriver sur un autre théâtre vide la règle (le mode Règle reste) */
   S.name = route.name;
   S.theatre = route.theatre;
   mpTheatreWrite(S.theatre);
   S.units = route.units;
-  mpUnitsWrite();
+  if (!noKey) mpUnitsWrite();
   S.navDisplay = route.navDisplay;
   S.groundSpeed = route.groundSpeed;
   S.legBoxes = route.legBoxes;
@@ -8712,7 +8712,10 @@ function openRouteFile(file) {
 function loadExample() {
   if (!confirm(t('confirm.example'))) return;
   RSET = { active: 0, routes: [blankRoute()] };
-  setRoute(parseRoute(JSON.parse(JSON.stringify(CURRENT_LANG === 'en' ? EXAMPLE_ROUTE_EN : EXAMPLE_ROUTE))).route);   // la langue de l'interface au moment du clic
+  const ex = parseRoute(JSON.parse(JSON.stringify(CURRENT_LANG === 'en' ? EXAMPLE_ROUTE_EN : EXAMPLE_ROUTE))).route;   // la langue de l'interface au moment du clic
+  const ku = mpUnitsRead();
+  if (ku) ex.units = { distance: ku.distance, altitude: ku.altitude };       // l'exemple s'affiche dans les unités partagées et n'écrit pas la clé
+  setRoute(ex, true);
 }
 
 /* ============= « EFFACER » : CHOISIR CE QUI S'EFFACE ============= */

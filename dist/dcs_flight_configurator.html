@@ -382,7 +382,7 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
 /* La liste du théâtre (lot mp-theatre-unique) : jusqu'à 980 px le libellé « Théâtre » cède la place (la liste garde son nom accessible) ; sous 480 px la liste se resserre (texte entier jusqu'à 96 px, puis coupé)
    et la liste du thème de l'interface quitte la barre (le thème se règle au tableau du shell, qui le propage) : sans cela la barre défile de 21 à 28 px à 412 px */
 @media (max-width: 980px) { .tb-label { display: none; } }
-@media (max-width: 479px) { .tb-sel { padding: 0 20px 0 6px; font-size: 11px; letter-spacing: .5px; background-position: right 6px center; flex: none; max-width: 96px; } .tb-select.tbm-trigger { display: none; } }
+@media (max-width: 479px) { .tb-sel { padding: 0 20px 0 6px; font-size: 11px; letter-spacing: .5px; background-position: right 6px center; flex: none; max-width: 79px; } .tb-select.tbm-trigger { display: none; } }
 
 /* Tampon de décor : le style de celui du Briefing Generator, en anglais dans les deux langues ; il ne s'affiche que quand la barre a la place. */
 .tb-brand-sub { font-weight: 500; }
@@ -9280,7 +9280,7 @@ function tbmSync(m) {
   let name = '';
   try { name = m.labelFn(); } catch (e) { name = ''; }
   m.btn.setAttribute('aria-label', name);
-  if (sel.hasAttribute('title')) m.btn.title = sel.title; else m.btn.removeAttribute('title');
+  if (sel.hasAttribute('title')) m.btn.title = sel.title; else if (m.fit && txt) m.btn.title = txt; else m.btn.removeAttribute('title');       /* fit : nom entier en infobulle (le bouton peut le tronquer) */
   m.btn.disabled = sel.disabled;
 }
 
@@ -9625,6 +9625,7 @@ const I18N = {
   "route.norp": "Le Route Planner n’a pas encore été ouvert ici : la route n’est pas reprise.",
   "route.noid": "Ouvre le Route Planner une fois pour pouvoir choisir ces routes (il leur donne un identifiant).",
   "route.toast.one": "Route « {0} » reprise du Route Planner pour {1}.",
+  "toast.saveFail": "⚠ Enregistrement local impossible (espace plein)",
   "toast.gsFull": "⚠ Stockage du navigateur plein : vos groupes ne sont pas enregistrés. Enregistrez un fichier de travail.",
   "route.toast.many": "Routes reprises du Route Planner : {0}.",
   "u.title": "Unité {0}",
@@ -9863,6 +9864,7 @@ const I18N = {
   "route.norp": "The Route Planner has not been opened here yet: the route is not followed.",
   "route.noid": "Open the Route Planner once to be able to pick these routes (it gives them an identifier).",
   "route.toast.one": "Route “{0}” updated from the Route Planner for {1}.",
+  "toast.saveFail": "⚠ Cannot save locally (storage full)",
   "toast.gsFull": "⚠ Browser storage full: your groups are not saved. Save a work file.",
   "route.toast.many": "Routes updated from the Route Planner: {0}.",
   "u.title": "Unit {0}",
@@ -10069,8 +10071,9 @@ function thReadKey() {
 }
 function thWriteKey(id) {
   if (thReadKey() === id) return;       // déjà là : aucune écriture
-  lsSet(KEY_THEATRE, JSON.stringify({ theatre: id }));
+  try { localStorage.setItem(KEY_THEATRE, JSON.stringify({ theatre: id })); } catch (e) { if (!TH_SAVE_FAILED) { TH_SAVE_FAILED = true; try { showToast(t('toast.saveFail'), { type: 'err', ms: 6000 }); } catch (e2) { /* page pas encore prête */ } } }
 }
+let TH_SAVE_FAILED = false;
 // Au chargement : la clé partagée, sinon le théâtre de la fiche des groupes, sinon celui de la route enregistrée, sinon le Caucase (le défaut du Route Planner)
 function thInitial() {
   const k = thReadKey();
@@ -10110,7 +10113,7 @@ function thFollow() {
 function tcConflict() {
   const F = GS.live ? GS.theatre : '', C = S.theatre;
   if (F === '' || F === C || !S.flights.length) return null;
-  return S.flights.some(f => hasRoute(f) || f.routeLink) ? { F: F, C: C } : null;
+  return S.flights.some(f => hasRoute(f)) ? { F: F, C: C } : null;
 }
 // Rien à perdre : la fiche prend le théâtre commun, sans rien dire
 function tcAdopt() {
@@ -10712,13 +10715,13 @@ function routePoints(points) {
 const KEY_RP_SET = 'route_set_v1', KEY_RP_STATE = 'route_state_v1', RP_SET_FORMAT = 'dcs-route-set-v1', RP_GS_DEFAULT = 220;
 const ridOk = v => typeof v === 'string' && /^[a-z0-9]{6,32}$/.test(v);
 function lsJson(k) { try { return JSON.parse(lsGet(k) || 'null'); } catch (e) { return null; } }
-function hasRoute(f) { return !!(f && f.route && routePoints(f.route.points).length > 0); }
+function hasRoute(f) { return !!(f && f.route && isObj(f.route.points) && routeKeys(f.route.points).some(k => { const p = f.route.points[k]; return isObj(p) && isNum(p.x) && isNum(p.y); })); }       // une route : au moins un point aux coordonnées lisibles (le test du Route Planner)
 function ptsLabel(n) { return tf(n < 2 ? 'route.pts.one' : 'route.pts.many', n); }
-// L'unité de distance partagée : mp_units_v1.distance (« km » ou « nm »), posée par le Route Planner ou le Datacard Generator. Le Flight Configurator la lit à l'ouverture et la suit (évènement « storage ») ; il ne l'écrit jamais. Clé absente ou illisible : « nm », comme avant.
+// L'unité de distance partagée : mp_units_v1.distance (« km » ou « nm »), posée par le Route Planner ou le Datacard Generator. Le Flight Configurator la lit à l'ouverture et la suit (évènement « storage ») ; il ne l'écrit jamais. Clé absente ou distance invalide : « km » (le défaut du Route Planner et du Datacard Generator).
 const KEY_UNITS = 'mp_units_v1';
-let UDIST = 'nm';
+let UDIST = 'km';
 function udRead() {
-  try { const o = JSON.parse(lsGet(KEY_UNITS) || 'null'); return isObj(o) && (o.distance === 'km' || o.distance === 'nm') ? o.distance : 'nm'; } catch (e) { return 'nm'; }
+  try { const o = JSON.parse(lsGet(KEY_UNITS) || 'null'); return isObj(o) && (o.distance === 'km' || o.distance === 'nm') ? o.distance : 'km'; } catch (e) { return 'km'; }
 }
 function udLabel() { return UDIST === 'km' ? 'km' : 'NM'; }
 function fmtDist(nm) { return fmtNm(UDIST === 'km' ? nm * NAV_NM_KM : nm); }
@@ -10763,13 +10766,15 @@ function rtMatches(rt, f) {
 }
 
 // Les points du groupe en latitude / longitude (ils se lisent de la route du groupe, jamais de route_set_v1) ; null sans théâtre lisible
+// Le théâtre dans lequel les points d'un groupe sont écrits : celui de la fiche (F) tant que le bandeau est là, sinon le théâtre commun
+function rTh() { const tc = tcConflict(); return tc ? tc.F : S.theatre; }
 function routeGeo(f) {
-  if (!f || !f.route || !has(TM_PARAMS, S.theatre)) return null;
+  if (!f || !f.route || !has(TM_PARAMS, rTh())) return null;
   const pts = [];
   routeKeys(f.route.points).forEach(k => {
     const p = f.route.points[k];
     if (!isObj(p) || !isNum(p.x) || !isNum(p.y)) return;
-    const ll = dcsToLl(S.theatre, p.x, p.y);
+    const ll = dcsToLl(rTh(), p.x, p.y);
     pts.push({ name: (typeof p.name === 'string' && p.name.trim() !== '') ? p.name.replace(/\s+/g, ' ').trim() : 'WP' + k, lat: ll.lat, lon: ll.lon });
   });
   return pts.length ? pts : null;
@@ -10778,7 +10783,7 @@ function routeNm(pts) { let km = 0; for (let i = 0; i + 1 < pts.length; i++) km 
 // La déclinaison : la valeur saisie au Route Planner (mode « manual », lisible), sinon le calcul de WMM et d'IGRF à la date de la mission ou à l'année du Route Planner
 function declSource(nav) {
   if (nav.mode === 'manual') { const v = parseDecl(nav.decl); if (v !== null) return { manual: true, v: v }; }
-  return { manual: false, ys: magYearSource(S.theatre, nav.year, nav.force) };
+  return { manual: false, ys: magYearSource(rTh(), nav.year, nav.force) };
 }
 function declAt(ds, lat, lon) { if (ds.manual) return ds.v; const d = magVar(lat, lon, ds.ys.y); return d === null ? 0 : d; }
 // Les branches : cap initial vrai et distance par legCalc, cap magnétique = cap vrai − déclinaison au départ de la branche (toujours magnétique ici)
@@ -10971,7 +10976,7 @@ function rtSketch(pts, o) {
 function routeStatus(f, rp) {
   if (!f.routeLink) return null;
   if (rp.state.theatre === '') return { k: 'norp' };
-  if (rp.state.theatre !== S.theatre) return { k: 'theatre', th: rp.state.theatre };
+  if (rp.state.theatre !== rTh()) return { k: 'theatre', th: rp.state.theatre };
   const rt = rp.routes.filter(r => r.rid === f.routeLink.rid)[0];
   if (!rt) return { k: 'gone' };
   return rt.points.length < 2 ? { k: 'few' } : null;
@@ -11019,7 +11024,7 @@ function routeViewHtml(f, fi, rp) {
     table = `<table class="rt-tab"><thead><tr><th class="rt-n"></th><th>${esc(t('route.col.leg'))}</th><th class="rt-r">${esc(t('route.col.hdg'))}</th><th class="rt-r">${esc(t('route.col.dist'))}</th></tr></thead><tbody>${rows}<tr class="rt-tot"><td></td><td>${esc(t('route.total'))}</td><td></td><td class="rt-r">${esc(fmtDist(L.total))} ${udLabel()}</td></tr></tbody></table><p class="rt-note">${esc(declNote(ds, geo))}</p>`;
   }
   let note = '';
-  if (st) note = `<p class="rt-note rt-warn">${esc(st.k === 'theatre' ? tf('route.theatre', st.th, S.theatre) : t(st.k === 'norp' ? 'route.norp' : (st.k === 'gone' ? 'route.gone' : 'route.few')))}</p>`;
+  if (st) note = `<p class="rt-note rt-warn">${esc(st.k === 'theatre' ? tf('route.theatre', st.th, rTh()) : t(st.k === 'norp' ? 'route.norp' : (st.k === 'gone' ? 'route.gone' : 'route.few')))}</p>`;
   return `<div class="rt-head"><div class="rt-hl"><span class="rt-name">${esc(routeTitle(f))}</span><span class="rt-sub">${esc(sub)}</span></div>
       <div class="rt-hb"><button type="button" class="miz-btn fc-small" data-act="route-change">${esc(t('route.change'))}</button><button type="button" class="miz-btn fc-small" data-act="route-remove">${esc(t('route.remove'))}</button></div></div>
     ${note}${geo ? '<div class="rt-paper" id="rt-paper"></div>' + table : `<p class="rt-note">${esc(t('route.nosketch'))}</p>`}`;
@@ -11085,6 +11090,7 @@ function routePick(rid) {
 function routeSync() {
   const out = { toast: '', changed: false };
   if (!S.flights.some(f => f.routeLink)) return out;
+  if (tcConflict()) return out;       // le bandeau est là : aucune reprise, aucune écriture de la fiche (elle reste sur son théâtre)
   const rp = rpRead(), done = [];
   S.flights.forEach((f, fi) => {
     if (!f.routeLink || routeStatus(f, rp)) return;
@@ -11775,15 +11781,26 @@ function readHqMission() {
 function fcImportBefore() {
   flushWork();         // ce que l'on a tapé part dans la fiche avant que le bloc la lise
   UI.clamped = 0;      // le compte des réglages ramenés à la limite est celui de cet import
+  UI.impRefused = false;
+  const cur = (typeof impCur === 'function') ? impCur() : null;
+  if (cur && typeof cur.theatre === 'string' && cur.theatre !== '' && !thOk(cur.theatre)) {
+    // une source sur un théâtre hors des quatorze : refusée, rien n'est importé (la fenêtre n'a pas d'annulation : les lignes et le théâtre de la source sont vidés avant son écriture)
+    UI.impRefused = true;
+    const th = cur.theatre;
+    cur.theatre = '';
+    cur.rows.forEach(r => { r.managed = false; if (r.kind !== 'bg') r.chk = Object.assign({}, r.chk, { route: false }); r.kind = r.kind === 'bg' ? 'x' : r.kind; });
+    showToast(tf('open.theatre.unknown', th), { type: 'err' });
+  }
   const g = gsRead();
   UI.impPre = !g || !g.theatre || !g.flights.length;      // la fiche était vide ou sans théâtre : l'import peut lui en poser un
 }
 function fcImported(res) {
+  if (UI.impRefused) { UI.impRefused = false; UI.impPre = false; renderAll(); return; }
   if (res.failed && !res.fcIds.length) { renderAll(); return; }
+  const gi = gsRead();       // le théâtre que l'import a posé, lu avant gsPull (qui rend la fiche au théâtre commun quand aucun groupe ne porte de route)
   gsPull();
   if (UI.impPre) {       // l'import a posé le théâtre de la fiche : le théâtre commun le prend, sans question (le Route Planner et le Datacard Generator suivent)
-    const g = gsRead();
-    if (g && thOk(g.theatre) && g.theatre !== S.theatre) thSet(g.theatre);
+    if (gi && thOk(gi.theatre) && gi.theatre !== S.theatre) thSet(gi.theatre);
   }
   UI.impPre = false;
   const k = S.flights.findIndex(f => f.fcId === res.fcIds[0]);
