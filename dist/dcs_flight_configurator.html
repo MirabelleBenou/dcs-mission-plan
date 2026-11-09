@@ -330,11 +330,9 @@ select[data-tbm-src] { display: none !important; }
 body[data-theme] {
   --fc-dark: color-mix(in srgb, var(--fc) 62%, #000);
   --fc-dim: color-mix(in srgb, var(--fc) 26%, transparent);
-  --pk-warn: var(--red-faded); --pk-ok: var(--fc);
+  --pk-ok: var(--fc);
   --cmp-frame: #1f1f1f; --cmp-strip: #151a1f;
 }
-/* --red-faded est trop sombre sur le fond de la page de ces trois thèmes */
-body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="modern-east"] { --pk-warn: #e8b840; }
 
 /* ---------- Barre du haut : même méthode que HQ et le Datacard Generator ---------- */
 .toolbar { border-bottom-color: var(--fc); }
@@ -370,7 +368,7 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
 .editor { max-width: 1840px; }
 .fc-status { position: sticky; top: 0; z-index: 5; margin: 0 0 12px; padding: 7px 12px; font-family: var(--f-typewriter); font-size: 12px; line-height: 1.4; color: var(--paper-light); background: var(--olive-dark); border: 1px solid var(--khaki); border-left: 3px solid var(--khaki); word-break: break-word; }
 .fc-status.ok { border-left-color: var(--pk-ok); color: var(--paper); }
-.fc-status.err { border-left-color: var(--pk-warn); color: var(--paper); }
+.fc-status.err { border-left-color: var(--mp-warn); color: var(--paper); }
 /* Le bandeau « les groupes sont sur un autre théâtre » (lot mp-theatre-unique) : le style des avertissements de la fiche (.rt-warn), deux boutons de la suite */
 .fc-tc { margin: 0 0 12px; padding: 10px 12px; background: var(--olive-dark); border: 1px solid var(--khaki); border-left: 3px solid var(--amber); }
 .fc-tc[hidden] { display: none; }
@@ -388,8 +386,6 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
 .fc-row3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
 .fc-row4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
 .fc-row > *, .fc-row3 > *, .fc-row4 > *, .fc-set > * { min-width: 0; }
-.pk-note { font-family: var(--f-typewriter); font-size: 11px; color: var(--khaki-light); margin: 0; }
-.pk-warn { font-family: var(--f-typewriter); font-size: 11px; color: var(--pk-warn); margin-top: 6px; word-break: break-word; }
 .snap-flight-tag { font-family: var(--f-ui); font-size: 10px; padding: 2px 6px; border-radius: 2px; background: var(--olive); color: var(--paper-light); text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; }
 .pk-x { flex: none; min-width: 36px; min-height: 36px; background: none; border: 0; color: var(--khaki-light); font-size: 16px; cursor: pointer; }
 .pk-x:hover, .pk-x:focus-visible { color: var(--amber); outline: none; }
@@ -402,7 +398,7 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
 .miz-btn.primary:disabled:hover { background: rgba(0,0,0,.2); border-color: var(--fc); color: var(--fc); }
 .miz-btn.fc-small { min-height: 36px; }
 .fc-small { padding: 6px 12px; font-size: 11px; }
-.fc-msg { font-family: var(--f-typewriter); font-size: 11px; color: var(--pk-warn); margin-top: 6px; word-break: break-word; }
+.fc-msg { font-family: var(--f-typewriter); font-size: 11px; color: var(--mp-warn); margin-top: 6px; word-break: break-word; }
 .fc-msg:empty { display: none; }
 
 /* ---------- Champs : listes au thème de l'interface (même composant que la barre), nombres ---------- */
@@ -425,7 +421,7 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
 .fc-sel.tbm-trigger.tbm-field:disabled { opacity: .5; cursor: default; }
 .tbm-panel.tbm-p-field .tbm-opt { white-space: normal; line-height: 1.3; padding-top: 8px; padding-bottom: 8px; word-break: break-word; }
 .ed-field input[type=text] { min-width: 0; }
-.ed-field input.bad, .fc-ch input.bad { border-color: var(--pk-warn); border-left-color: var(--pk-warn); }
+.ed-field input.bad, .fc-ch input.bad { border-color: var(--mp-warn); border-left-color: var(--mp-warn); }
 .fc-ch input, .fc-set input[type=number] {
   background: rgba(216,201,165,.92); border: 1px solid var(--khaki); border-left: 3px solid var(--amber-dark);
   font-family: var(--f-typewriter); font-size: 13px; color: var(--ink); padding: 6px 8px; width: 100%; min-width: 0; border-radius: 0;
@@ -497,7 +493,7 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
 .fc-post > summary.ui-fold-head::before { grid-column: 1; grid-row: 1 / span 2; }
 .fc-ptop { grid-column: 2; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; min-width: 0; word-break: break-word; }
 .fc-band { grid-column: 2; font-family: var(--f-typewriter); font-weight: 400; font-size: 11px; letter-spacing: 0; text-transform: none; color: var(--khaki-light); min-width: 0; word-break: break-word; }
-.fc-flag { color: var(--pk-warn) !important; }
+.fc-flag { color: var(--mp-warn) !important; }
 .fc-flag:empty { display: none; }
 .fc-post > .fc-postc { padding: 4px 10px 10px; }
 .fc-chans { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 6px 8px; }
@@ -11655,7 +11651,7 @@ function renderLeft() {
   document.getElementById('col-flights').innerHTML = `<section class="fc-block">
     <div class="fc-bh">${esc(t('sec.flights'))} <span class="fc-count">(${S.flights.length})</span>${foldAll}</div>
     <div class="fc-bc">
-      ${S.flights.length ? '' : `<p class="pk-note">${esc(t('fl.empty'))}</p>`}
+      ${S.flights.length ? '' : `<p class="ui-note">${esc(t('fl.empty'))}</p>`}
       <div class="fc-list" id="fc-list">${S.flights.map(flightHtml).join('')}</div>
       <div class="miz-btn-row" style="margin-top:0"><button type="button" class="miz-btn primary" data-act="add-flight">${esc(t('fl.add'))}</button></div>
     </div></section>`;
@@ -11698,7 +11694,7 @@ function unitHtml(f, fi, u, ui) {
       ${fieldHtml(t('u.onboard'), inputHtml(`${at} data-k="onboard"`, u.onboard, t('u.opt')))}
       ${u.type === '' ? '' : fieldHtml(t('u.livery'), inputHtml(`${at} data-k="livery" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="lv-list"`, u.livery, t('u.livery.ph')))}
     </div>
-    ${u.type === '' ? `<p class="pk-note fc-notype">${esc(t('u.notype'))}</p>` : unitSettingsHtml(f, fi, u, ui, rk, at)}
+    ${u.type === '' ? `<p class="ui-note fc-notype">${esc(t('u.notype'))}</p>` : unitSettingsHtml(f, fi, u, ui, rk, at)}
   </div></div>`;
 }
 function unitSettingsHtml(f, fi, u, ui, rk, at) {
@@ -11725,7 +11721,7 @@ function radiosHtml(f, fi, u, ui) {
   }).join('');
   const sameType = f.units.some((x, k) => k !== ui && x.type === ty);       // « Recopier » ne va qu'aux unités du même type : sans elles, le bouton est inactif
   const copy = f.units.length > 1 ? `<div class="miz-btn-row" style="margin-top:0"><button type="button" class="miz-btn" data-u="${ui}" data-act="copy-radios"${sameType ? '' : ' disabled'}>${esc(t('rad.copy'))}</button></div>` : '';
-  return `<div class="fc-posts">${posts}</div><p class="pk-note">${esc(t('rad.hint'))}</p>${copy}`;
+  return `<div class="fc-posts">${posts}</div><p class="ui-note">${esc(t('rad.hint'))}</p>${copy}`;
 }
 
 // ----- Mises à jour ciblées (sans redessiner) -----
@@ -11849,7 +11845,7 @@ function renderRight() {
   const col = document.getElementById('col-right'), su = selUnit();
   CMP.small = col.clientWidth < 900;
   col.innerHTML = `<div id="col-route"></div><section class="fc-block" id="blk-cmp"><div class="fc-bh">${esc(t('sec.cmp'))}</div>
-    <div class="fc-bc">${su && su.u.type === '' ? `<p class="pk-note fc-notype">${esc(t('u.notype'))}</p>` : su ? cmpHtml(su) : `<p class="pk-note">${esc(t(S.flights[S.sel.f] && !S.flights[S.sel.f].units.length ? 'cmp.nounit' : 'cmp.pick'))}</p>`}</div></section><div id="col-presets"></div>`;
+    <div class="fc-bc">${su && su.u.type === '' ? `<p class="ui-note fc-notype">${esc(t('u.notype'))}</p>` : su ? cmpHtml(su) : `<p class="ui-note">${esc(t(S.flights[S.sel.f] && !S.flights[S.sel.f].units.length ? 'cmp.nounit' : 'cmp.pick'))}</p>`}</div></section><div id="col-presets"></div>`;
   if (CMP.ro) { CMP.ro.disconnect(); CMP.ro = null; }
   const wrap = document.getElementById('cmp-wrap');
   if (su && su.u.type !== '' && wrap && typeof ResizeObserver === 'function') {      // si la colonne passe de part et d'autre de 900 px (rotation d'une tablette), l'emport se redessine dans l'autre mode
@@ -11879,15 +11875,15 @@ function cmpHtml(su) {
     <div class="cmp-top"><div class="cmp-for"><span id="cmp-for-t">${esc(tf('cmp.for', flightLabel(f, su.fi), unitLabel(f, su.fi, su.u, su.ui)))}</span> <span class="snap-flight-tag">${esc(TYPE_LABEL[ty] || ty)}</span></div>
       ${fieldHtml(t('cmp.from'), selectHtml('id="cmp-from"', t('cmp.from'), cmpFromOptions(f, lo, su.u), lo ? lo.key : ''))}</div>
     <div class="fc-lo-line" id="cmp-lo-line">${cmpLineHtml(lo)}</div>
-    ${CMP.view ? cmpDrawingHtml() : `<p class="pk-note">${esc(t('cmp.noview'))}</p>`}
+    ${CMP.view ? cmpDrawingHtml() : `<p class="ui-note">${esc(t('cmp.noview'))}</p>`}
     <div class="cmp-list" id="cmp-list">${CMP.pyl.map(p => cmpRowHtml(p, lo)).join('')}</div>
     <div class="cmp-foot">${CMP.view ? `<label class="pk-chk"><input type="checkbox" id="cmp-sym"${UI.cmp.sym ? ' checked' : ''}> ${esc(t('cmp.sym'))}</label>` : ''}<span class="cmp-tot" id="cmp-total"></span></div>
     ${cmpSettingsHtml(f, su.ui, lo)}
-    <p class="pk-note" id="cmp-empty-note"${lo && lo.key === '~empty' && !armed ? '' : ' hidden'}>${esc(t('cmp.emptyNote'))}</p>
+    <p class="ui-note" id="cmp-empty-note"${lo && lo.key === '~empty' && !armed ? '' : ' hidden'}>${esc(t('cmp.emptyNote'))}</p>
     <div class="miz-btn-row" style="margin-top:0"><button type="button" class="miz-btn primary" data-act="cmp-save"${armed ? '' : ' disabled'}>${esc(t('cmp.save'))}</button>
       <button type="button" class="miz-btn" data-act="cmp-clear"${armed ? '' : ' disabled'}>${esc(t('cmp.clear'))}</button></div>
     ${UI.cmp.saving && lo ? cmpSaveHtml() : ''}
-    <p class="pk-note">${esc(t('cmp.note'))}</p>`;
+    <p class="ui-note">${esc(t('cmp.note'))}</p>`;
 }
 // « Partir de » : rien, l'emport importé ou copié en place, mes presets, « Vide », puis le groupe « Unités du module » :
 // chaque autre unité du même type, tous vols confondus, qui a un emport (clé « u:groupe:unité »).
@@ -12102,8 +12098,8 @@ function cmpSaveGo() {
 function presetsHtml() {
   const rep = LIB.report, lines = [];
   if (rep) {
-    lines.push(`<div class="pk-note">${esc(tf('pr.report', rep.added))}${rep.skipped ? esc(' · ' + tf('pr.skipped', rep.skipped)) : ''}</div>`);
-    rep.errors.forEach(e => lines.push(`<div class="pk-warn">⚠ ${esc(e)}</div>`));
+    lines.push(`<div class="ui-note">${esc(tf('pr.report', rep.added))}${rep.skipped ? esc(' · ' + tf('pr.skipped', rep.skipped)) : ''}</div>`);
+    rep.errors.forEach(e => lines.push(`<div class="ui-avert">⚠ ${esc(e)}</div>`));
   }
   const rows = [];
   PAYLOAD_TYPES.forEach(ty => (LIB.mine[ty] || []).forEach((p, i) => rows.push(`<div class="fc-file"><span class="fc-file-n">${esc(presetName(p))}</span><span class="snap-flight-tag">${esc(TYPE_LABEL[ty])}</span>
@@ -12111,7 +12107,7 @@ function presetsHtml() {
   return `<section class="fc-block" id="blk-pr"><div class="fc-bh">${esc(t('sec.presets'))}</div><div class="fc-bc">
     <div class="miz-btn-row" style="margin-top:0"><button type="button" class="miz-btn" data-act="load-lua">${esc(t('pr.load'))}</button></div>${lines.join('')}
     <div class="fc-h" style="margin-top:0">${esc(tf('pr.mine', mineCount()))}</div>
-    <div class="fc-lib">${rows.length ? rows.join('') : `<p class="pk-note">${esc(t('pr.none'))}</p>`}</div></div></section>`;
+    <div class="fc-lib">${rows.length ? rows.join('') : `<p class="ui-note">${esc(t('pr.none'))}</p>`}</div></div></section>`;
 }
 // Des .lua d'exemple : leurs presets rejoignent « Mes presets » sans écran intermédiaire ; un nom déjà pris est ignoré, et le bloc le dit.
 async function loadLuaFiles(files) {

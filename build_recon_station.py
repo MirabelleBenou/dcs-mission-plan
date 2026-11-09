@@ -2383,7 +2383,7 @@ select[data-tbm-src] {{ display: none !important; }}
              data-i18n-aria-label="editor.image.dropzone.aria"
              aria-label="Zone de dépôt d'image">
           <div id="drop-zone-text" data-i18n="editor.image.drop">↓ DÉPOSER UNE IMAGE ICI</div>
-          <div style="font-size:11px;margin-top:6px;opacity:.6" data-i18n="editor.image.drop.hint">PNG · JPEG — cliquer pour parcourir</div>
+          <div class="ui-note" style="margin-top:6px" data-i18n="editor.image.drop.hint">PNG · JPEG — cliquer pour parcourir</div>
         </div>
         <div class="img-credit" id="img-credit" data-i18n="editor.image.credit" hidden>Image : USDA NAIP, domaine public</div>
         <input type="file" id="file-source" accept="image/png,image/jpeg,image/webp" hidden>
@@ -2571,7 +2571,7 @@ select[data-tbm-src] {{ display: none !important; }}
         <button class="btn-export" id="btn-export" disabled data-i18n="editor.export.btn">
           ↓ EXPORTER PNG
         </button>
-        <p style="margin-top:8px;font-family:var(--f-ui);font-size:10px;letter-spacing:1px;color:var(--khaki);text-align:center" data-i18n="editor.export.hint">Export pleine résolution · lossless</p>
+        <p class="ui-note" style="margin-top:8px;text-align:center" data-i18n="editor.export.hint">Export pleine résolution · lossless</p>
       </div>
     </details>
 

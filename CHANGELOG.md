@@ -20,6 +20,7 @@ Changes merged since the last release, grouped per tool.
 - A DCS group is now called a group, not a flight, in HQ, the Route Planner, the Datacard Generator, the Flight Configurator, the Briefing Generator's quick brief and the Field Manual (“Link to a group…”, “Check shown groups”…). Format names do not change: a flight package is still a flight package.
 - In HQ and the Datacard Generator, radios are named and ordered as DCS does (A-10C II, C-130J, M-2000C, OH-58D, Gazelles, F-15E, AV-8B), as in Mission Tools; for the Gazelles, only the FM radio, the one missions preset.
 - One message style across the suite: a single toast at the bottom of the screen, with a coloured edge for success (green) and errors (red); errors stay on screen at least five seconds. Errors are told in plain words (“Unreadable file: this is not a .miz.”) instead of the browser's technical message. Switching language no longer shows a message; the flag's tooltip says what it does (“Switch to French”). Labels read by screen readers follow the tool's language.
+- One way to confirm, export and fold across the suite: questions open in the suite's own window and their button says what will happen (“Delete”, “Clear”); loading the example or opening a file over your work no longer asks, it offers “Restore” for twelve seconds instead. Collapsible sections all use the same arrow, in the tool's colour, on the left; the whole header is clickable, a folded section shows a one-line summary, and each tool remembers what you folded. Warnings use one colour in every theme.
 
 ### Mission Plan — landing
 #### Added
@@ -57,6 +58,7 @@ Changes merged since the last release, grouped per tool.
 - Theatres are listed by their name (“Cold War Germany”), as in the Route Planner. The status bar no longer opens in red: it says what to do first, and turns red only when you try to export something incomplete.
 - The theatre is picked in the toolbar, like the Route Planner and the Datacard Generator, and shared with them (all fourteen theatres). When the groups are on another theatre, a banner offers to go back to it or to keep the shared theatre and remove the groups' routes; export waits for that choice. An opened package, mission or working file sets the shared theatre.
 - Route lengths follow the distance unit shared by the Route Planner and the Datacard Generator.
+- Removing a group shared with the Route Planner and the Datacard Generator now asks first. “Empty the module” is now “Clear”.
 
 ### Recon Station
 #### Added
@@ -70,6 +72,7 @@ Changes merged since the last release, grouped per tool.
 #### Changed
 - The example loads in the interface language (French or English).
 - **Load** only accepts a briefing: any other file (flight package, route, datacard) is refused with a message and the current briefing is kept.
+- Export in one window: format, pages and file name together. Metadata is now the last section, folded.
 #### Fixed
 - In the export window, the page list no longer shows the PDF and PNG choices above it, so it fits on phones.
 - A .miz the METAR assistant cannot read shows a message in the interface language instead of a French-only alert.
@@ -93,6 +96,7 @@ Changes merged since the last release, grouped per tool.
 - Airfields box: airier columns with light separators and one text size. Picking an airfield from the list replaces its ICAO code, runway and tower frequency, even typed ones ("Other…" clears them); the runway is a single end, picked from the airfield's list, the one facing the Weather wind first.
 - Weather box: a light separator between its two columns, and a slightly smaller METAR, which now fits on one line in most cases.
 - A datacard's navigation is now a Route Planner route, edited from both sides: a waypoint entered (coordinates, or course and distance), moved or removed in one tool changes in the other; time and note stay with the datacard, attached to each waypoint. A card without a route gets one at its first position. Course settings (true or magnetic, variation, year) are shared with the Route Planner. Reference points are the Route Planner's, shared by the whole mission; each datacard chooses which ones it shows.
+- Export in one window: format, pages and file name together. Rarely used sections (meta, airfields, fuel, threats) start folded.
 #### Removed
 - The Datacard Generator's own HQ and flight package imports, replaced by the common import window of the Flight Configurator and the Route Planner.
 #### Fixed

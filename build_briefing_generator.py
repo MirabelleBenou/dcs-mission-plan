@@ -877,15 +877,7 @@ select[data-tbm-src] { display: none !important; }
 }
 .ed-phase-card .phase-rm:hover { background: var(--red-stamp); }
 
-.ed-help {
-  font-family: var(--f-typewriter);
-  font-size: 11px;
-  color: var(--khaki-light);
-  font-style: italic;
-  padding: 6px 0;
-  border-top: 1px dotted var(--khaki);
-  margin-top: 4px;
-}
+.ed-section .ui-note { padding: 6px 0; margin-top: 4px; }
 
 /* ============ WING EDITOR (Phase 4) ============ */
 .wing-fieldset {
@@ -1054,19 +1046,7 @@ select[data-tbm-src] { display: none !important; }
   margin-top: 3px;
   text-transform: uppercase;
 }
-.wing-hq-hint {
-  font-family: var(--f-ui);
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 1.5px;
-  color: var(--khaki-light);
-  text-align: center;
-  padding: 6px 0;
-  border-top: 1px dotted var(--khaki);
-  margin-top: 8px;
-  text-transform: uppercase;
-  opacity: .7;
-}
+.wing-hq-note { text-align: center; padding: 6px 0; border-top: 1px dotted var(--khaki); margin-top: 8px; }
 
 /* ============ PREVIEW ============ */
 .preview-wrap {
@@ -3188,13 +3168,13 @@ __CSS__
           <div id="radio-items-list"></div>
           <button type="button" class="ed-btn-add" id="radio-item-add" data-i18n="editor.radio.addItem">+ Ajouter un item</button>
         </div>
-        <div class="ed-help" data-i18n="editor.radio.help">Définissez ici les fréquences communes (ATC, MISSION, Groupes...). Vous les assignerez ensuite aux canaux radio par appareil ci-dessous.</div>
+        <div class="ui-note" data-i18n="editor.radio.help">Définissez ici les fréquences communes (ATC, MISSION, Groupes...). Vous les assignerez ensuite aux canaux radio par appareil ci-dessous.</div>
         <div class="ed-field" style="margin-top:8px;">
           <label data-i18n="editor.radio.aircraft">Plans radio par appareil</label>
           <div id="radio-aircraft-list"></div>
           <button type="button" class="ed-btn-add" id="radio-aircraft-add" data-i18n="editor.radio.addAircraft">+ Ajouter un appareil</button>
         </div>
-        <div class="ed-help" data-i18n="editor.radio.helpAircraft">Pour chaque appareil, configurez les radios et leurs canaux. Si une image est fournie, elle remplace la table générée.</div>
+        <div class="ui-note" data-i18n="editor.radio.helpAircraft">Pour chaque appareil, configurez les radios et leurs canaux. Si une image est fournie, elle remplace la table générée.</div>
       </div>
     </details>
 
@@ -3222,7 +3202,7 @@ __CSS__
       <summary class="ui-fold-head"><span data-i18n="editor.roster.summary">07 ░ ÉQUIPAGE</span></summary>
       <div class="ed-content">
         <div class="panel-mobile-header" data-i18n="editor.roster.summary">07 ░ ÉQUIPAGE</div>
-        <div class="ed-help" style="margin-bottom:10px;" data-i18n="editor.roster.help">
+        <div class="ui-note" style="margin-bottom:10px;" data-i18n="editor.roster.help">
           Définissez les pilotes par groupe ou sous-groupe. Une page d'ordre de bataille sera générée après l'aperçu mission si au moins un pilote est renseigné.
         </div>
         <div id="roster-groups-list"></div>
@@ -3270,7 +3250,7 @@ __CSS__
           </button>
         </div>
 
-        <p class="wing-hq-hint" data-i18n="editor.wing.hqHint">✦ Édition complète disponible dans HQ</p>
+        <p class="ui-note wing-hq-note" data-i18n="editor.wing.hqHint">✦ Édition complète disponible dans HQ</p>
 
       </div>
     </details>
@@ -3299,11 +3279,11 @@ __CSS__
         </div>
         <div class="ed-field" data-fmt="simple"><label data-i18n="editor.meta.time">Heure (Z)</label><input data-bind="meta.time" type="text" placeholder="1000Z"></div>
         <div class="ed-field"><label data-i18n="editor.meta.docRef">Référence document</label><input data-bind="meta.docRef" type="text" placeholder="FH-M3-1989"></div>
-        <div class="ed-help" data-i18n="editor.meta.help">Métadonnées présentes dans tous les pieds de page.</div>
+        <div class="ui-note" data-i18n="editor.meta.help">Métadonnées présentes dans tous les pieds de page.</div>
       </div>
     </details>
 
-    <div class="ed-help" data-wing-label style="text-align:center; padding:12px 4px;">
+    <div class="ui-note" data-wing-label style="text-align:center; padding:12px 4px;">
       ◆ MY WING ◆<br>
       <span data-i18n="editor.autoSave">Sauvegarde locale automatique</span><br>
       <span data-i18n="editor.exportTip">Enregistrez le briefing pour conserver vos templates</span>
@@ -5554,8 +5534,7 @@ function renderRadioAircrafts() {
     if (ap.image) {
       radiosWrap.style.opacity = '0.5';
       const note = document.createElement('div');
-      note.className = 'ed-help';
-      note.style.color = 'var(--amber)';
+      note.className = 'ui-avert';
       note.textContent = t('editor.radio.imgNote');
       radiosWrap.insertBefore(note, radiosWrap.firstChild);
     }
@@ -8436,7 +8415,7 @@ function applyWingBranding() {
   const stampEl = document.querySelector('.mp-wing-stamp-label');
   if (stampEl) stampEl.textContent = w.shortName;
   // Lateral help block (◆ MY WING ◆)
-  const helpEl = document.querySelector('.ed-help[data-wing-label]');
+  const helpEl = document.querySelector('.ui-note[data-wing-label]');
   if (helpEl) helpEl.firstChild.textContent = '◆ ' + w.shortName + ' ◆';
 }
 

@@ -554,24 +554,8 @@ select[data-tbm-src] { display: none !important; }
 .ed-field textarea { min-height: 70px; line-height: 1.4; }
 .ed-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .ed-field-row.three { grid-template-columns: 1fr 1fr 1fr; }
-.ed-help {
-  font-family: var(--f-ui);
-  font-size: 11px;
-  letter-spacing: 1px;
-  color: var(--khaki-light);
-}
 .ed-navset { margin-bottom: 6px; }
-.ed-warn {
-  font-family: var(--f-ui);
-  font-size: 11px;
-  letter-spacing: 1px;
-  color: var(--amber);
-  border-left: 3px solid var(--red-stamp);
-  background: rgba(0, 0, 0, .18);
-  padding: 5px 8px;
-  margin: 6px 0 8px;
-}
-.ed-warn[hidden] { display: none; }
+#ed-sections .ui-bandeau { margin: 6px 0 8px; }
 .ed-coord { font-family: var(--f-typewriter); font-size: 11px; line-height: 1.35; overflow-wrap: anywhere; }
 .ed-coord:empty { display: none; }
 .ed-coord.ok { color: var(--khaki-light); }
@@ -665,7 +649,7 @@ select[data-tbm-src] { display: none !important; }
 .nav-route .nr-link > label { display: none; }
 .nav-route .nr-link .tbm-trigger { background: transparent; border: 1px dashed var(--amber); color: var(--amber); font-family: var(--f-ui); font-weight: 700; letter-spacing: 1.5px; font-size: 11px; text-transform: uppercase; min-height: 44px; justify-self: start; width: auto; max-width: 100%; }
 .ed-navset-tag { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; }
-.ed-navset-tag .ed-help { margin: 0; }
+.ed-navset-tag .ui-note { margin: 0; }
 .ref-off { opacity: .55; }
 .ref-off .ed-chk { opacity: 1; }
 .dv-file { font-weight: 700; }
@@ -7380,10 +7364,10 @@ function dgLoadEditorHtml(c) {
   const g = dgLoadView(c);
   let h = '';
   g.groups.forEach(x => { h += '<div class="lo-grp"><div class="lo-t">' + esc(x.names.join(' · ') + (x.name ? ' — ' + x.name : '')) + '</div>' + dgLoadTable(x.rows, 'lo-tab', true) + '</div>'; });
-  if (!g.groups.length) h += '<div class="ed-help">' + esc(t('lo.empty')) + '</div>';
-  if (g.groups.length && g.none.length) h += '<div class="ed-help">' + esc(t('lo.none', { names: g.none.join(', ') })) + '</div>';
-  if (g.raw.length) h += '<div class="ed-warn">' + esc(t('lo.raw', { names: g.raw.join(', ') })) + '</div>';
-  return (c.gsId ? '' : '<div class="ed-help">' + esc(t('frz.note')) + '</div>') + h + (c.gsId ? '<div class="ed-help">' + esc(t('lo.fc.hint')) + '</div>' : '');
+  if (!g.groups.length) h += '<div class="ui-note">' + esc(t('lo.empty')) + '</div>';
+  if (g.groups.length && g.none.length) h += '<div class="ui-note">' + esc(t('lo.none', { names: g.none.join(', ') })) + '</div>';
+  if (g.raw.length) h += '<div class="ui-bandeau err">' + esc(t('lo.raw', { names: g.raw.join(', ') })) + '</div>';
+  return (c.gsId ? '' : '<div class="ui-note">' + esc(t('frz.note')) + '</div>') + h + (c.gsId ? '<div class="ui-note">' + esc(t('lo.fc.hint')) + '</div>' : '');
 }
 function dgLoadCardHtml(c) {
   const g = dgLoadView(c);
@@ -7407,7 +7391,7 @@ function groupBoxHtml(c) {
   const ro = (lk || deduceGroup(c)) ? ' readonly title="' + esc(t('f.group.deduced')) + '"' : '';
   const coal = [['', t('coal.none')], ['blue', t('coal.blue')], ['red', t('coal.red')]];
   const thr = fSelect('f.threat', 'flight.threat', c.flight.threat, [['', t('thr.none')], ['low', t('thr.low')], ['moderate', t('thr.moderate')], ['high', t('thr.high')]]);
-  const head = (!lk && c.gsGone ? '<div class="ed-warn">' + esc(t('grp.gone')) + '</div>' : '') +
+  const head = (!lk && c.gsGone ? '<div class="ui-bandeau err">' + esc(t('grp.gone')) + '</div>' : '') +
     '<div class="ed-field-row">' +
     (lk ? fShared('f.group.name', '<input type="text" data-gs="name" value="' + esc(dgStr(f.name)) + '" placeholder="' + esc(t('fl.name.ph')) + '" autocomplete="off" spellcheck="false">') + fShared('f.coalition', selShared('coalition', gsSide(f.coalition), coal))
       : fInput('f.group.name', 'flight.callsign', c.flight.callsign) + (c.gsGone && c.gsSide ? '<div class="ed-field"><label>' + esc(t('f.coalition')) + '</label><input type="text" value="' + esc(t('coal.' + c.gsSide)) + '" readonly tabindex="-1"></div>' : '<div class="ed-field"></div>')) + '</div>' +
@@ -7444,14 +7428,14 @@ function groupBoxHtml(c) {
   }).join('');
   return head + '<div class="ed-list">' + rows + '</div>' +
     '<button type="button" class="ed-btn-add" data-gs-act="add-unit"' + (units.length >= DG_MAX_UNITS ? ' disabled' : '') + '>' + esc(t('cr.add', { n: units.length, max: DG_MAX_UNITS })) + '</button>' +
-    '<div class="ed-help">' + esc(t('cr.legend')) + '</div>';
+    '<div class="ui-note">' + esc(t('cr.legend')) + '</div>';
 }
 function radioLinkedHtml(c) {
   const f = dgFlightOf(c);
   if (!f) return '';
   const model = dgRadioModel(f), fi = dgFlightPos(f.fcId);
-  if (!model.length) return '<div class="ed-help">' + esc(t('rt.none')) + '</div>';
-  return '<div class="ed-help">' + esc(t('rt.legend')) + '</div>' + model.map(m => {
+  if (!model.length) return '<div class="ui-note">' + esc(t('rt.none')) + '</div>';
+  return '<div class="ui-note">' + esc(t('rt.legend')) + '</div>' + model.map(m => {
     const names = m.units.map(i => dgUnitLabel(f, fi, i)).join(', ');
     const posts = m.posts.map(p => {
       const fk = m.type + '|' + p.r, all = !!DG_UI.free[fk];
@@ -7470,7 +7454,7 @@ function radioLinkedHtml(c) {
           '<div class="ed-field"><label>' + esc(t('rt.mod')) + '</label><input type="text" data-rs="' + esc(key) + '" data-rk="mod" value="' + esc(s.mod) + '" placeholder="' + esc(t('ph.radios.*.channels.*.modulation')) + '" autocomplete="off"></div></div></div>';
       }).join('');
       const fr = dgPostFree(m.type, p.r), more = nFree ? '<button type="button" class="ed-btn-add sm" data-rsfree="' + esc(fk) + '">' + esc(all ? t(fr ? 'rt.free.f.hide' : 'rt.free.hide') : t(fr ? 'rt.free.f' : 'rt.free', { n: nFree })) + '</button>' : '';
-      return '<div class="rt-post"><div class="rt-ph">' + esc(p.name) + '</div>' + (rows || '<div class="ed-help">' + esc(t('rt.nofreq')) + '</div>') + more + '</div>';
+      return '<div class="rt-post"><div class="rt-ph">' + esc(p.name) + '</div>' + (rows || '<div class="ui-note">' + esc(t('rt.nofreq')) + '</div>') + more + '</div>';
     }).join('');
     return '<section class="rt-box" data-rtype="' + esc(m.type) + '"><h4 class="rt-h"><span class="rt-t">' + esc(t('rt.title', { type: dgTypeLabel(m.type).toUpperCase() })) + '</span>' +
       '<span class="rt-u">' + esc(t(m.units.length < 2 ? 'rt.units.1' : 'rt.units', { n: m.units.length, names: names })) + '</span></h4>' + posts + '</section>';
@@ -8450,25 +8434,25 @@ function fSelectD(labelKey, attr, value, options) {
 
 function navSettingsHtml(c) {
   const nd = c.navDisplay, mag = dgN.ref === 'mag', calc = dgN.mode === 'calc';
-  let h = '<div class="ed-navset-tag"><span class="cr-tag linked">' + esc(t('nav.common')) + '</span><span class="ed-help">' + esc(t('nav.common.help')) + '</span></div>' +
+  let h = '<div class="ed-navset-tag"><span class="cr-tag linked">' + esc(t('nav.common')) + '</span><span class="ui-note">' + esc(t('nav.common.help')) + '</span></div>' +
     '<div class="ed-field-row three ed-navset">' +
     fSelect('f.nav.display', 'navDisplay.mode', nd.mode, [['course', t('nav.mode.course')], ['mgrs', t('nav.mode.mgrs')], ['dms', t('nav.mode.dms')]]) +
     fSelectD('f.nav.ref', 'ref', dgN.ref, [['true', t('nav.ref.true')], ['mag', t('nav.ref.mag')]]) +
     (mag ? fSelectD('f.nav.vmode', 'mode', dgN.mode, [['calc', t('nav.vmode.calc')], ['manual', t('nav.vmode.manual')]]) : '<div class="ed-field"></div>') + '</div>';
   if (mag && !calc) {
     h += '<div class="ed-field-row"><div class="ed-field"><label>' + esc(t('f.nav.decl')) + '</label><input type="text" data-navset="decl" value="' + esc(dgN.decl) + '" inputmode="decimal" autocomplete="off" placeholder="' + esc(t('ph.navDisplay.decl')) + '"></div></div>' +
-      '<div class="ed-help">' + esc(t('nav.decl.help')) + '</div>';
+      '<div class="ui-note">' + esc(t('nav.decl.help')) + '</div>';
   }
   if (mag && calc) {
     const ys = dgNavYear(), lock = ys.src === 'mission' && !dgN.force, forceOk = ys.src === 'mission' || ys.src === 'forced';
     h += '<div class="ed-field-row"><div class="ed-field"><label>' + esc(t('f.nav.year')) + '</label><input type="text" data-navset="year" value="' + esc(lock ? ys.year : dgN.year) + '" inputmode="numeric" maxlength="4" autocomplete="off" spellcheck="false" placeholder="1985"' + (lock ? ' disabled' : '') + '></div>' +
       (forceOk ? '<div class="ed-field"><label>&nbsp;</label><button type="button" class="ed-btn-add sm' + (dgN.force ? ' on' : '') + '" data-navforce="1" aria-pressed="' + (dgN.force ? 'true' : 'false') + '">' + esc(t('dv.force')) + '</button></div>' : '<div class="ed-field"></div>') + '</div>' +
-      '<div class="ed-help" data-nav-vhelp>' + navVarHelp(c) + '</div>';
+      '<div class="ui-note" data-nav-vhelp>' + navVarHelp(c) + '</div>';
   }
   return h +
-    '<div class="ed-help">' + esc(t('f.nav.coord')) + (CURRENT_LANG === 'fr' ? ' : ' : ': ') + esc(t('nav.coord.help')) + '</div>' +
-    '<div class="ed-help">' + esc(t('nav.rule')) + '</div>' +
-    '<div class="ed-warn" data-nav-warn' + (navDeclMissing(c) ? '' : ' hidden') + '>' + esc(t('nav.decl.warn')) + '</div>';
+    '<div class="ui-note">' + esc(t('f.nav.coord')) + (CURRENT_LANG === 'fr' ? ' : ' : ': ') + esc(t('nav.coord.help')) + '</div>' +
+    '<div class="ui-note">' + esc(t('nav.rule')) + '</div>' +
+    '<div class="ui-bandeau err" data-nav-warn' + (navDeclMissing(c) ? '' : ' hidden') + '>' + esc(t('nav.decl.warn')) + '</div>';
 }
 
 /* Le bandeau de la route, en tête de la section Navigation : liée, aucune, non créée, supprimée, d'un autre théâtre */
@@ -8575,7 +8559,7 @@ const SECTION_BUILDERS = {
     const own = c.refs.some(x => !x.pid && parseCoord(x.coord)), full = c.refs.filter(x => x.pid).length >= LIMITS.refs;
     return '<div class="nav-route"><div class="nr-top"><span class="nr-k">' + esc(t('nr.k')) + '</span><span class="cr-tag linked">' + esc(t('nr.tag')) + '</span></div><div class="nr-sub">' + esc(t('refs.note')) + '</div>' +
       (own && full ? '<div class="nr-sub">' + esc(t('refs.own.full')) + '</div>' : '') + '</div>' +
-    '<div class="ed-help">' + esc(t('f.nav.coord')) + (CURRENT_LANG === 'fr' ? ' : ' : ': ') + esc(t('nav.coord.help')) + '</div>' +
+    '<div class="ui-note">' + esc(t('f.nav.coord')) + (CURRENT_LANG === 'fr' ? ' : ' : ': ') + esc(t('nav.coord.help')) + '</div>' +
     listHtml('refs', c.refs, (x, i) => {
       const st = coordState(x.coord, parseCoord(x.coord), null), rt = !!x.pid, off = rt && dgRefsHidden(c).indexOf(x.pid) >= 0;
       const al = rt ? (DG_ALTREFR[x.pid] || 'MSL') : '';
@@ -8647,7 +8631,7 @@ function dgFrozenRadioHtml(c) {
     }).join('');
     if (posts) h += '<section class="rt-box" data-rtype="' + esc(m.type) + '"><h4 class="rt-h"><span class="rt-t">' + esc(t('rt.title', { type: dgTypeLabel(m.type).toUpperCase() })) + '</span></h4>' + posts + '</section>';
   });
-  return h ? '<div class="ed-help">' + esc(t('frz.note')) + '</div>' + h : '';
+  return h ? '<div class="ui-note">' + esc(t('frz.note')) + '</div>' + h : '';
 }
 function dgFrozenSection(id, c) {
   if (!dgFrozen(c)) return '';

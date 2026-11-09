@@ -969,15 +969,13 @@ select.in { appearance: none; -webkit-appearance: none; padding-right: 22px;
 .pt-row.pts input.in[data-k="alt"], .pt-row.pts input.in[data-k="gs"] { padding: 8px 5px 8px 7px; }
 .in:disabled { background: transparent; border: 1px dashed var(--amber-dark); color: var(--khaki-light); -webkit-text-fill-color: var(--khaki-light);
   text-align: center; cursor: not-allowed; opacity: 1; padding-left: 5px; }
-.hint { font-size: 11.5px; color: var(--khaki-light); letter-spacing: .3px; line-height: 1.45; margin: 8px 0 0; }
-.ed-warn { font-size: 11px; letter-spacing: 1px; color: var(--amber); border-left: 3px solid var(--red-stamp); background: rgba(0,0,0,.18);
-  padding: 5px 8px; margin: 6px 0 12px; }
-.ed-warn[hidden] { display: none; }
+.ed-section .ui-note { margin: 8px 0 0; }
+.ed-section .ui-bandeau { margin: 6px 0 12px; }
 
 .hdg { display: flex; gap: 8px; align-items: end; margin-bottom: 12px; flex-wrap: wrap; }
 .hdg .tb-group .tb-btn { height: 40px; }
 .hdg .decl { width: 110px; }
-.hdg + .hint { margin: -4px 0 12px; }
+.hdg + .ui-note { margin: -4px 0 12px; }
 .nav-set { gap: 12px 16px; }
 .nav-set .gs { width: 132px; }
 .nav-set .gs .lbl { white-space: nowrap; }
@@ -2025,7 +2023,7 @@ SOFTWARE.
             <button type="button" class="tb-btn" id="btn-add-ref" data-i18n="add.ref">+ Réf.</button>
           </div>
         </div>
-        <p class="hint" data-i18n="help.route">Touchez la carte pour ajouter un point ; glissez un point pour le déplacer ; le « + » d'une branche insère un point.</p>
+        <p class="ui-note" data-i18n="help.route">Touchez la carte pour ajouter un point ; glissez un point pour le déplacer ; le « + » d'une branche insère un point.</p>
       </div>
     </div>
     <div class="ed-section" data-section="refs" data-open="false">
@@ -2033,7 +2031,7 @@ SOFTWARE.
       <div class="ed-body">
         <div class="pt-head" id="ref-head" hidden><span>#</span><span data-i18n="th.name">Nom</span><span id="alt-unit2"></span><span data-i18n="th.ref">Réf.</span><span></span></div>
         <div id="refs"></div>
-        <p class="hint" data-i18n="help.refs">Choisissez « Réf. » en haut de la carte, puis touchez la carte ; glissez une référence pour la déplacer.</p>
+        <p class="ui-note" data-i18n="help.refs">Choisissez « Réf. » en haut de la carte, puis touchez la carte ; glissez une référence pour la déplacer.</p>
       </div>
     </div>
     <div class="ed-section" data-section="layers" id="sec-layers" data-open="false" hidden>
@@ -2041,7 +2039,7 @@ SOFTWARE.
       <div class="ed-body">
         <div id="layers-list"></div>
         <button type="button" class="tb-btn cf-clear" id="btn-layers-clear" data-i18n="layers.removeAll">Retirer tous les calques</button>
-        <p class="hint" data-i18n="layers.help">En mode Lire, touchez un objet pour lire sa fiche. En mode Point ou Réf., une cible touchée devient un point de la route ou une référence. En mode Dessin, vous créez et modifiez vos propres calques.</p>
+        <p class="ui-note" data-i18n="layers.help">En mode Lire, touchez un objet pour lire sa fiche. En mode Point ou Réf., une cible touchée devient un point de la route ou une référence. En mode Dessin, vous créez et modifiez vos propres calques.</p>
       </div>
     </div>
     <div class="ed-section" data-section="nav" data-open="false">
@@ -2063,8 +2061,8 @@ SOFTWARE.
             <div id="dv-force-w"><div class="lbl dv-nolbl" aria-hidden="true"></div><button type="button" class="tb-btn" id="dv-force" aria-pressed="false" data-i18n="dv.force">Forcer</button></div>
             <div class="decl" id="dv-decl-w"><label class="lbl" for="decl" data-i18n="f.decl">Déclinaison (°)</label><input class="in" id="decl" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" data-i18n-placeholder="f.decl.ph" placeholder="+4,5"></div>
           </div>
-          <p class="hint" id="dv-help" data-i18n="nav.decl.help"></p>
-          <div class="ed-warn" id="decl-warn" role="alert" hidden data-i18n="nav.decl.warn"></div>
+          <p class="ui-note" id="dv-help" data-i18n="nav.decl.help"></p>
+          <div class="ui-bandeau err" id="decl-warn" role="alert" hidden data-i18n="nav.decl.warn"></div>
           <p class="dv-src" id="dv-src"></p>
         </div>
         <div class="sheet">
