@@ -1144,8 +1144,8 @@ select[data-tbm-src] { display: none !important; }
 .ed-btn-icon.neutral:hover { background: var(--olive-dark); }
 .ed-btn-icon:disabled { opacity: .35; cursor: not-allowed; }
 .ed-btn-icon.unit-x { min-width: 44px; min-height: 44px; }
-.rc-msg { font-family: var(--f-ui); font-size: 11px; letter-spacing: .6px; color: #ff9d8a; margin-left: 56px; }
-.rc-freq input.bad { border-color: #ff9d8a; }
+.rc-msg { font-family: var(--f-ui); font-size: 11px; letter-spacing: .6px; color: var(--mp-warn); margin-left: 56px; }
+.rc-freq input.bad { border-color: var(--mp-warn); }
 .rc-row.nc .rc-msg { margin-left: 0; }
 .rc-row.frz .rc-top { gap: 4px 12px; }
 .frz-v { font-family: var(--f-typewriter); font-size: 13px; color: var(--paper); }
@@ -1280,6 +1280,7 @@ select[data-tbm-src] { display: none !important; }
 .export-png-page-cb { accent-color: var(--amber); width: 20px; height: 20px; flex: none; margin: 0; }
 .export-png-page-num { font-family: var(--f-stencil); font-weight: 700; letter-spacing: 1px; min-width: 60px; color: var(--paper); }
 .export-png-page-hint { color: var(--khaki-light); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bi-note { margin: 0 0 6px 30px; }
 .bi-block { margin-bottom: 14px; }
 .bi-src {
   display: flex; align-items: center; gap: 10px;
@@ -1289,7 +1290,6 @@ select[data-tbm-src] { display: none !important; }
 }
 .bi-src.off { opacity: .5; cursor: not-allowed; }
 .bi-src input { accent-color: var(--amber); width: 20px; height: 20px; flex: none; margin: 0; }
-.bi-note { font-family: 'Roboto Mono', 'Courier New', monospace; font-weight: 400; font-size: 11px; color: var(--khaki-light); margin: 0 0 6px 30px; line-height: 1.4; }
 .bi-file { display: flex; align-items: center; gap: 10px; margin: 2px 0 6px 30px; font-size: 11px; }
 .bi-file[hidden] { display: none; }
 .bi-filebtn { min-height: 44px; font-size: 11px; }
@@ -1961,9 +1961,9 @@ __CSS__
     <h2 class="ui-title" id="import-modal-title" data-i18n="imp.title">Importer dans la datacard</h2>
     <div class="bi-block">
       <label class="bi-src" id="bi-src-current-row"><input type="radio" name="bi-src" id="bi-src-current" value="current"><span data-i18n="imp.src.current">Briefing en cours</span></label>
-      <div class="bi-note" id="bi-current-note" hidden></div>
+      <div class="ui-note bi-note" id="bi-current-note" hidden></div>
       <label class="bi-src" id="bi-src-route-row"><input type="radio" name="bi-src" id="bi-src-route" value="route"><span data-i18n="imp.src.route">Route en cours</span></label>
-      <div class="bi-note" id="bi-route-note" hidden></div>
+      <div class="ui-note bi-note" id="bi-route-note" hidden></div>
       <label class="bi-src" id="bi-src-file-row"><input type="radio" name="bi-src" id="bi-src-file" value="file"><span data-i18n="imp.src.file">Fichier JSON (briefing ou route)</span></label>
       <div class="bi-file" id="bi-file-zone" hidden>
         <button type="button" class="ui-btn bi-filebtn" id="bi-file-btn" data-i18n="imp.choose">Choisir un fichier…</button>
@@ -1977,14 +1977,14 @@ __CSS__
     </div>
     <div class="bi-block" id="bi-route-block" hidden>
       <h3 data-i18n="imp.route.title">Route à importer</h3>
-      <div class="bi-note bi-route-line" id="bi-route-line"></div>
+      <div class="ui-note bi-note bi-route-line" id="bi-route-line"></div>
       <label class="bi-src"><input type="radio" name="bi-route-mode" id="bi-route-fill" value="fill" checked><span data-i18n="imp.route.fill">Lier la carte à cette route</span></label>
-      <div class="bi-note" data-i18n="imp.route.fillNote">La navigation de la carte devient cette route ; ses heures et notes déjà saisies ne suivent pas.</div>
+      <div class="ui-note bi-note" data-i18n="imp.route.fillNote">La navigation de la carte devient cette route ; ses heures et notes déjà saisies ne suivent pas.</div>
       <label class="bi-src"><input type="radio" name="bi-route-mode" id="bi-route-new" value="new"><span data-i18n="imp.route.new">Nouvelle datacard</span></label>
       <label class="bi-src" id="bi-route-all-row" hidden><input type="radio" name="bi-route-mode" id="bi-route-all" value="all"><span id="bi-route-all-lbl"></span></label>
     </div>
     <div class="bi-block bi-groups">
-      <div class="bi-note bi-groups-note" data-i18n="bi.groups.note">Les groupes (mission d'HQ, briefing, paquet de vol) s'importent par la fenêtre d'import commune : ils entrent dans la fiche des groupes, chacun avec sa datacard.</div>
+      <div class="ui-note bi-note bi-groups-note" data-i18n="bi.groups.note">Les groupes (mission d'HQ, briefing, paquet de vol) s'importent par la fenêtre d'import commune : ils entrent dans la fiche des groupes, chacun avec sa datacard.</div>
       <button type="button" class="ui-btn bi-filebtn" id="bi-groups" data-i18n="pack.impgroups">Importer des groupes</button>
     </div>
     <div class="ui-actions">
@@ -2159,7 +2159,11 @@ const I18N = {
     'save.title': 'Enregistrer la datacard',
     'ex.title': 'Exporter la datacard',
     'ex.note.pdf': 'Impression système',
-    'ex.note.png': 'Kneeboard DCS · 2000×2828',
+    'ex.note.png': 'Kneeboard DCS · 2000×2828, A4',
+    'ex.pick': 'Choisir…',
+    'ex.checkAll': 'Tout cocher',
+    'ex.uncheckAll': 'Tout décocher',
+    'ex.page': 'page',
     'ex.progress': 'Génération {i}/{n}…',
     'msg.exportFailed': '⚠ Export impossible.',
     'toast.noMeasure': '⚠ Mise en page non mesurée (le module n\'est pas affiché) : rien n\'est exporté.',
@@ -2638,7 +2642,11 @@ const I18N = {
     'save.title': 'Save the datacard',
     'ex.title': 'Export the datacard',
     'ex.note.pdf': 'System print',
-    'ex.note.png': 'DCS Kneeboard · 2000×2828',
+    'ex.note.png': 'DCS Kneeboard · 2000×2828, A4',
+    'ex.pick': 'Choose…',
+    'ex.checkAll': 'Check all',
+    'ex.uncheckAll': 'Uncheck all',
+    'ex.page': 'page',
     'ex.progress': 'Generating {i}/{n}…',
     'msg.exportFailed': '⚠ Export failed.',
     'toast.noMeasure': '⚠ Layout not measured (the module is not displayed): nothing was exported.',
@@ -7342,10 +7350,13 @@ function allExportPages() {
   return out;
 }
 
-/* La fenêtre : « Toutes | 1 | 2 » = toutes les pages, ou la page 1 de chaque carte, ou la page 2 ; le nom suit le format et les pages tant qu'il n'est pas changé à la main */
+/* La fenêtre : « Toutes | Choisir… » = toutes les pages, ou celles cochées dans la liste (une ligne par page de chaque carte) ; le nom suit le format et les pages tant qu'il n'est pas changé à la main */
 const DGX = { stamp: '', print: null };
-function dgPageIn(p, page) { return page === 'all' || String(p.page) === page; }
-function dgExportSel(page) { return allExportPages().filter(p => dgPageIn(p, page)); }
+function dgPickedIdx() { return Array.from(document.querySelectorAll('.export-png-page-cb.exp-cb:checked')).map(cb => parseInt(cb.dataset.idx, 10)); }
+function dgExportSel(page) {
+  const all = allExportPages();
+  return page === 'all' ? all : dgPickedIdx().map(i => all[i]).filter(Boolean);
+}
 function dgExportDefName(fmt, page) {
   const sel = dgExportSel(page);
   if (fmt === 'pdf') return fnDefault('datacard_' + fnPart(slug(curCard().flight.callsign), 'doc'), DGX.stamp);
@@ -7354,11 +7365,26 @@ function dgExportDefName(fmt, page) {
 }
 function openExportModal() {
   DGX.stamp = stamp();
-  const has2 = allExportPages().some(p => p.page === 2);
+  const pick = document.createElement('div');
+  const top = document.createElement('div');
+  top.className = 'export-png-actions-top';
+  const mkb = (id, key) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'ui-btn'; b.id = id; b.textContent = t(key); return b; };
+  const bAll = mkb('export-png-all', 'ex.checkAll'), bNone = mkb('export-png-none', 'ex.uncheckAll');
+  top.appendChild(bAll); top.appendChild(bNone);
+  const list = document.createElement('div');
+  list.className = 'export-png-list'; list.id = 'export-png-list';
+  list.innerHTML = allExportPages().map((p, i) =>
+    '<label class="export-png-page-row"><input type="checkbox" class="export-png-page-cb exp-cb" data-idx="' + i + '" checked>' +
+    '<span class="export-png-page-num">' + pad2(i + 1) + '</span><span>' + esc(p.cs.toUpperCase() + ' — ' + t('ex.page') + ' ' + p.page + '/' + p.pages) + '</span></label>').join('');
+  pick.appendChild(top); pick.appendChild(list);
+  const refresh = () => uiExportRefresh(true);
+  bAll.addEventListener('click', () => { list.querySelectorAll('.exp-cb').forEach(cb => { cb.checked = true; }); refresh(); });
+  bNone.addEventListener('click', () => { list.querySelectorAll('.exp-cb').forEach(cb => { cb.checked = false; }); refresh(); });
+  list.addEventListener('change', e => { if (e.target.classList.contains('exp-cb')) refresh(); });
   uiExportOpen({
     modal: 'export-modal', title: t('ex.title'),
     note: { pdf: t('ex.note.pdf'), png: t('ex.note.png') },
-    pages: [{ id: 'all', label: t('ui.all') }, { id: '1', label: '1' }, { id: '2', label: '2', dis: !has2 }], page: 'all',
+    pages: [{ id: 'all', label: t('ui.all') }, { id: 'pick', label: t('ex.pick') }], page: 'all', pick: pick,
     defName: dgExportDefName,
     ext: (fmt, page) => fmt === 'pdf' ? '.pdf' : (dgExportSel(page).length > 1 ? '.zip' : '.png'),
     count: page => dgExportSel(page).length,
@@ -7369,7 +7395,7 @@ function closeExportModal() { uiExportClose(); }
 function dgExportGo(o) {
   if (o.fmt === 'pdf') {
     /* le PDF : le nom devient le titre du document le temps de l'impression ; seules les pages choisies sont posées dans la feuille d'impression */
-    DGX.print = o.page;
+    DGX.print = o.page === 'all' ? null : dgPickedIdx();       /* la liste des pages choisies (index dans allExportPages), lue avant que la fenêtre ne se ferme */
     uiExportClose();
     uiPrintAs(o.name, []);
     return;
@@ -7453,8 +7479,8 @@ async function executePngExport(page, name) {
 
 /* ============= EXPORT PDF : impression, une feuille A4 par page ============= */
 function fillPrintRoot() {
-  const root = document.getElementById('print-root'), only = DGX.print || 'all';
-  root.innerHTML = allExportPages().filter(p => dgPageIn(p, only)).map(p => '<div class="dc-psheet" data-mode="' + doc.mode + '">' + p.html + '</div>').join('');
+  const root = document.getElementById('print-root'), only = DGX.print;
+  root.innerHTML = allExportPages().filter((p, i) => !only || only.indexOf(i) >= 0).map(p => '<div class="dc-psheet" data-mode="' + doc.mode + '">' + p.html + '</div>').join('');
 }
 function clearPrintRoot() { document.getElementById('print-root').innerHTML = ''; DGX.print = null; }
 

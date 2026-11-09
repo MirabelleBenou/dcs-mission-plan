@@ -1679,7 +1679,6 @@ select[data-tbm-src] { display: none !important; }
   border: 1px dashed var(--rust);
   margin-top: 2px;
 }
-.ed-guest-fields label::before { color: var(--red-stamp); }
 
 /* ── Assistant METAR (10A + 10C) ─────────────────────────────────── */
 .metar-form { padding: 10px 0; }
@@ -2823,7 +2822,7 @@ body[data-format="full"] [data-fmt="simple"] { display: none !important; }
     position: relative;
     z-index: 1;
   }
-  .page:last-child { page-break-after: auto; break-after: auto; }
+  .page:last-child, .page.ui-print-last { page-break-after: auto; break-after: auto; }
 
   /* Roster: identical layout in screen and print (same single <table>),
      so no print-specific overrides needed for roster anymore. */
@@ -8025,7 +8024,6 @@ function defaultBriefingName() {
   const ms = fnPart((state.meta.mission || 'm').toLowerCase().replace(/\s+/g, '_'), 'm');
   return fnDefault(`briefing_${op}_${ms}`, fnStamp());
 }
-function saveModalOpen() { return !document.getElementById('save-modal').hidden; }
 function saveSync() { document.getElementById('save-go').disabled = cleanFname(SAVEN.name) === ''; }
 function openSaveModal(opener) {
   SAVEN.name = cleanFname(defaultBriefingName());
@@ -9472,7 +9470,8 @@ function exportGo(o) {
     // PDF : le nom devient le titre du document le temps de l'impression ; les pages non choisies sont masquées
     const hide = o.page === 'all' ? [] : EXPT.pageEls.filter(function(_, i) { return idx.indexOf(i) < 0; });
     uiExportClose();
-    uiPrintAs(o.name, hide);
+    const vis = EXPT.pageEls.filter(function(_, i) { return idx.indexOf(i) >= 0; });
+    uiPrintAs(o.name, hide, vis[vis.length - 1]);
     return;
   }
   executePngExport(idx, o.name);

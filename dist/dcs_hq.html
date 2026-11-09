@@ -2009,15 +2009,24 @@ function askConfirm(o) {
    o.keys : les clés de localStorage que l'action écrit ; o.mem() : copie de l'état en mémoire ; o.back(copie) : remet l'état et redessine ;
    o.run() : l'action (rend false si rien n'a changé ; peut rendre une promesse) ; o.msg : la phrase du résultat, sans « · » (ou une fonction qui la rend, une fois l'action faite). Un second remplacement efface la copie du premier. */
 function replaceWithRestore(o) {
-  const ls = {};
-  (o.keys || []).forEach(k => { try { ls[k] = localStorage.getItem(k); } catch (e) { ls[k] = null; } });
-  const mem = o.mem ? o.mem() : null;
-  const snap = { ls: ls, mem: mem, back: o.back };
-  UIK.restore = null;
+  /* Tant que le toast « Restaurer » d'un premier remplacement est à l'écran, un second garde la copie du premier (et relance le toast) : « Restaurer » rend l'état d'avant le premier geste.
+     Le toast fermé ou expiré, la copie suivante remplace l'ancienne. Même geste = même fonction o.back (comparée par son texte : les gestes d'un module ont chacun la leur). */
+  const prev = UIK.restore;
+  const live = !!(prev && UIK.restoreN === showToast._n && mpToastEl().classList.contains('show') && prev.back && o.back && String(prev.back) === String(o.back));
+  let snap;
+  if (live) snap = prev;
+  else {
+    const mem = o.mem ? o.mem() : null;                 /* d'abord la copie en mémoire (un module peut y vider son écriture en attente), puis les clés */
+    const ls = {};
+    (o.keys || []).forEach(k => { try { ls[k] = localStorage.getItem(k); } catch (e) { ls[k] = null; } });
+    snap = { ls: ls, mem: mem, back: o.back };
+    UIK.restore = null;
+  }
   const fin = r => {
     if (r === false) return false;
     UIK.restore = snap;
     showToast((typeof o.msg === 'function' ? o.msg() : o.msg) + ' ·', { action: { label: uiT('ui.restore'), fn: () => uiRestore(snap) }, ms: 12000 });
+    UIK.restoreN = showToast._n;
     return true;
   };
   const r = o.run();
@@ -2131,7 +2140,8 @@ function uiExportOpen(cfg) {
   uiExportBuild(cfg);
   uiExportSync(true);
   m.hidden = false;
-  document.getElementById('export-fmt-pdf').focus({ preventScroll: true });
+  const go = document.getElementById('export-png-go');
+  (go && !go.disabled ? go : document.getElementById('export-fmt-pdf')).focus({ preventScroll: true });       /* le bouton principal, comme toute fenêtre de suite */
 }
 /* Le module change ce que la fenêtre propose (cases cochées, pages) : elle se met à jour sans toucher au nom écrit à la main. */
 function uiExportRefresh(rename) { if (UIK.ex) uiExportSync(rename !== false); }
@@ -2155,15 +2165,15 @@ function uiExportBind(modalId) {
   m.querySelector('.ui-close').addEventListener('click', uiExportClose);
   m.querySelector('.ui-backdrop').addEventListener('click', e => { if (e.detail >= 2 && UIK.ex && performance.now() - UIK.ex.at < 400) return; uiExportClose(); });
 }
-/* Le PDF : le nom saisi devient le titre du document le temps de l'impression, les pages non choisies sont masquées (hide : les éléments à masquer) ; puis tout revient. */
-function uiPrintAs(name, hide) {
+/* Le PDF : le nom saisi devient le titre du document le temps de l'impression, les pages non choisies sont masquées (hide : les éléments à masquer ; last : la dernière page visible, qui reçoit .ui-print-last pour que le module n'y force pas de saut de page) ; puis tout revient. */
+function uiPrintAs(name, hide, last) {
   const title = document.title, hidden = (hide || []).filter(Boolean);
   let done = false;
-  const apply = () => { document.title = name; hidden.forEach(e => e.classList.add('ui-print-hide')); };
+  const apply = () => { document.title = name; hidden.forEach(e => e.classList.add('ui-print-hide')); if (last) last.classList.add('ui-print-last'); };
   const undo = () => {
     if (done) return; done = true;
     window.removeEventListener('beforeprint', apply); window.removeEventListener('afterprint', undo);
-    document.title = title; hidden.forEach(e => e.classList.remove('ui-print-hide'));
+    document.title = title; hidden.forEach(e => e.classList.remove('ui-print-hide')); if (last) last.classList.remove('ui-print-last');
   };
   window.addEventListener('beforeprint', apply);
   window.addEventListener('afterprint', undo);

@@ -730,8 +730,6 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .rt-row input { accent-color: var(--amber); width: 18px; height: 18px; flex: none; margin: 0; }
 .rt-nm { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
 .rt-n { flex: none; font-size: 11px; opacity: .75; white-space: nowrap; }
-.rt-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: space-between; margin-top: 16px; }
-.rt-actions.col { flex-direction: column; flex-wrap: nowrap; }
 .rt-btn { min-height: 44px; min-width: 44px; padding: 8px 18px; background: transparent; color: var(--ink); border: 2px solid var(--ink); border-radius: 2px;
   font-family: var(--f-stencil); font-weight: 700; font-size: 13px; letter-spacing: 2px; line-height: 1.25; text-transform: uppercase; text-align: center;
   cursor: pointer; flex: 1 1 auto; overflow-wrap: anywhere; }
@@ -6923,7 +6921,7 @@ function drInit() {
   });
   map.on('zoomend', drOnZoom);
   document.addEventListener('keydown', ev => {
-    if (ev.key !== 'Escape' || !drOn() || SR.open || RT_MODALS.some(rtVisible)) return;
+    if (ev.key !== 'Escape' || ev.defaultPrevented || !drOn() || SR.open || RT_MODALS.some(rtVisible) || uiModalsOpen().length) return;       /* une fenêtre de suite ouverte (la question de « Supprimer » comprise) : Échap ne regarde qu'elle */
     if (DR.menu) { DR.menu = false; drSyncUi(); }
     else if (DR.build || DR.tool !== 'select') drCancel();
     else if (DR.sheet && drSel()) { DR.sheet = false; drSyncUi(); }
@@ -7257,7 +7255,7 @@ function rpFoldSecs() { return Array.prototype.slice.call(document.querySelector
 function rpSectionSum(id) {
   if (id === 'refs') return S.refs.length ? t(S.refs.length === 1 ? 'sum.refs.1' : 'sum.refs.n', { n: S.refs.length }) : '';
   if (id === 'layers') return CF_LAYERS.length ? t(CF_LAYERS.length === 1 ? 'layers.count.1' : 'layers.count.n', { n: CF_LAYERS.length }) : '';
-  if (id === 'nav') return uiJoin([navTitle().replace(/^[^—]*—\s*/, ''), S.points.length > 1 ? fmtDist(timing().km) : '']);
+  if (id === 'nav') return !S.points.length ? '' : uiJoin([navTitle().replace(/^[^—]*—\s*/, ''), S.points.length > 1 ? fmtDist(timing().km) : '']);
   return '';
 }
 function rpFoldRefresh() {
@@ -10671,7 +10669,7 @@ function expBind() {
     const b = e.target.closest && e.target.closest('[data-exo]');
     if (b) expSetOrient(b.dataset.exo);
   });
-  document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && EXP.on && !EXP.busy && !SR.open && !ev.defaultPrevented && !RT_MODALS.some(rtVisible)) { ev.preventDefault(); expClose(); } });
+  document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && EXP.on && !EXP.busy && !SR.open && !ev.defaultPrevented && !RT_MODALS.some(rtVisible) && !uiModalsOpen().length) { ev.preventDefault(); expClose(); } });
 }
 
 /* ============= BARRE ET THÈME ============= */

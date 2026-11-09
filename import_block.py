@@ -23,14 +23,8 @@ HTML_END = '<!-- ===== FIN DE LA FENÊTRE D\'IMPORT ===== -->'
 
 _CSS = r"""
 .imp-modal { --imp-acc: var(--imp-accent, var(--fc, var(--amber))); }
-.imp-modal[hidden] { display: none !important; }
-.imp-modal { position: fixed; inset: 0; z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 16px; }
-.imp-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.6); }
-.imp-panel { position: relative; background: var(--olive-dark); color: var(--paper); border: 2px solid var(--imp-acc); border-top: 3px solid var(--imp-acc); border-radius: 3px; padding: 22px 26px; max-width: 640px; width: 100%; max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 8px 40px rgba(0,0,0,.6); font-family: var(--f-typewriter); }
-.imp-x { position: absolute; top: 2px; right: 6px; min-width: 44px; min-height: 44px; background: none; border: none; color: var(--paper); font-size: 24px; line-height: 1; cursor: pointer; }
-.imp-x:hover, .imp-x:focus-visible { color: var(--amber); outline: none; }
-.imp-panel h2 { flex: none; font-family: var(--f-stencil); font-weight: 700; font-size: 18px; letter-spacing: 2px; margin: 0 44px 14px 0; text-transform: uppercase; color: var(--amber); }
-#imp-body { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; overflow-y: auto; }
+.ui-panel.imp-panel { display: flex; flex-direction: column; overflow: hidden; }       /* la fenêtre est celle de la suite (.ui-modal, .ui-panel) ; ici seulement la colonne : le corps défile, les boutons restent */
+#imp-body { font-family: var(--f-typewriter); font-weight: 400; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; overflow-y: auto; }
 .imp-block { margin-bottom: 14px; }
 .imp-block h3 { font-family: var(--f-stencil); font-weight: 700; font-size: 13px; letter-spacing: 2px; margin: 0 0 8px; color: var(--paper-light); text-transform: uppercase; }
 .imp-srcs { flex: none; }
@@ -92,37 +86,28 @@ _CSS = r"""
 .imp-chk input { accent-color: var(--imp-acc); width: 18px; height: 18px; margin: 0; flex: none; }
 .imp-chk.off { opacity: .4; cursor: default; }
 .imp-empty { font-size: 12px; color: var(--khaki-light); margin: 6px 0; }
-.imp-actions { flex: none; display: flex; justify-content: space-between; gap: 10px; padding-top: 10px; border-top: 1px solid rgba(128,116,84,.5); }
-.imp-btn { background: transparent; border: 2px solid var(--khaki); padding: 8px 18px; min-height: 44px; font-family: var(--f-stencil); font-weight: 700; letter-spacing: 2px; font-size: 13px; cursor: pointer; color: var(--paper); border-radius: 2px; }
-.imp-btn:hover { background: var(--olive); }
-.imp-btn:focus-visible { outline: 2px solid var(--imp-acc); outline-offset: 2px; }
-.imp-btn.go { background: var(--olive-deep); border-color: var(--imp-acc); color: var(--paper-light); }
-.imp-btn:disabled { opacity: .4; cursor: not-allowed; pointer-events: none; }
 @media (max-height: 800px) { .imp-file + .imp-note { display: none; } }
 @media (max-width: 539px) {
-  .imp-modal { padding: 8px; }
-  .imp-panel { padding: 12px 12px 10px; }
-  .imp-panel h2 { margin-bottom: 8px; font-size: 16px; }
+  .ui-panel.imp-panel { padding: 12px 12px 10px; }
   .imp-block { margin-bottom: 8px; }
   .imp-fls { margin-bottom: 4px; }
   .imp-srcline { margin-bottom: 2px; }
   .imp-n { margin-left: 0; text-align: left; width: 100%; }
   .imp-parts { padding-left: 0; gap: 0 10px; }
-  .imp-actions .imp-btn { flex: 1; padding: 8px 10px; }
 }
 @media print { .imp-modal { display: none; } }
 """
 
 _HTML = r"""
-<div class="imp-modal" id="imp-modal" hidden role="dialog" aria-modal="true" aria-labelledby="imp-modal-title">
-  <div class="imp-backdrop" id="imp-modal-backdrop"></div>
-  <div class="imp-panel">
-    <button type="button" class="imp-x" id="imp-modal-close" aria-label="Fermer">×</button>
-    <h2 id="imp-modal-title"></h2>
+<div class="ui-modal imp-modal" id="imp-modal" hidden role="dialog" aria-modal="true" aria-labelledby="imp-modal-title">
+  <div class="ui-backdrop" id="imp-modal-backdrop"></div>
+  <div class="ui-panel ui-wide imp-panel" role="document">
+    <button type="button" class="ui-close" id="imp-modal-close" aria-label="Fermer">×</button>
+    <h2 class="ui-title" id="imp-modal-title"></h2>
     <div id="imp-body"></div>
-    <div class="imp-actions">
-      <button type="button" class="imp-btn" id="imp-cancel"></button>
-      <button type="button" class="imp-btn go" id="imp-go" disabled></button>
+    <div class="ui-actions">
+      <button type="button" class="ui-btn" id="imp-cancel"></button>
+      <button type="button" class="ui-btn primary" id="imp-go" disabled></button>
     </div>
   </div>
 </div>
@@ -721,7 +706,6 @@ function impSetup(hooks) {
     else if (cur && el.hasAttribute('data-imp-part')) { cur.rows[Number(el.getAttribute('data-imp-i'))].chk[el.getAttribute('data-imp-part')] = el.checked; impUpdateGo(); }
   });
   document.getElementById('imp-file-in').addEventListener('change', e => { const f = e.target.files && e.target.files[0]; e.target.value = ''; if (f) impFile(f); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && impIsOpen()) impClose(); });
 }
 /* Ouvre la fenêtre ; opts.parsed (+ name) : un fichier déjà lu (« Ouvrir » au Route Planner), la source « Fichier » est alors celle-là. Rend faux si ce fichier est refusé (le refus est dit). */
 function impOpen(opts) {

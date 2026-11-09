@@ -366,9 +366,7 @@ body[data-theme] {
 
 /* ---------- Page : état de l'export, deux colonnes, blocs ---------- */
 .editor { max-width: 1840px; }
-.fc-status { position: sticky; top: 0; z-index: 5; margin: 0 0 12px; padding: 7px 12px; font-family: var(--f-typewriter); font-size: 12px; line-height: 1.4; color: var(--paper-light); background: var(--olive-dark); border: 1px solid var(--khaki); border-left: 3px solid var(--khaki); word-break: break-word; }
-.fc-status.ok { border-left-color: var(--pk-ok); color: var(--paper); }
-.fc-status.err { border-left-color: var(--mp-warn); color: var(--paper); }
+#fc-status { position: sticky; top: 0; z-index: 5; }       /* le bandeau est .ui-bandeau (neutre, .ok, .err) ; ici seulement sa place */
 /* Le bandeau « les groupes sont sur un autre théâtre » (lot mp-theatre-unique) : le style des avertissements de la fiche (.rt-warn), deux boutons de la suite */
 .fc-tc { margin: 0 0 12px; padding: 10px 12px; background: var(--olive-dark); border: 1px solid var(--khaki); border-left: 3px solid var(--amber); }
 .fc-tc[hidden] { display: none; }
@@ -757,14 +755,8 @@ details:not([open]) > .ui-fold-head > .ui-sum:not(:empty), .ui-fold-head[aria-ex
 /* ===== FIN DE LA FEUILLE DE L'INTERFACE COMMUNE ===== */
 /* ===== IMPORT COMMUN : feuille ===== */
 .imp-modal { --imp-acc: var(--imp-accent, var(--fc, var(--amber))); }
-.imp-modal[hidden] { display: none !important; }
-.imp-modal { position: fixed; inset: 0; z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 16px; }
-.imp-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.6); }
-.imp-panel { position: relative; background: var(--olive-dark); color: var(--paper); border: 2px solid var(--imp-acc); border-top: 3px solid var(--imp-acc); border-radius: 3px; padding: 22px 26px; max-width: 640px; width: 100%; max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 8px 40px rgba(0,0,0,.6); font-family: var(--f-typewriter); }
-.imp-x { position: absolute; top: 2px; right: 6px; min-width: 44px; min-height: 44px; background: none; border: none; color: var(--paper); font-size: 24px; line-height: 1; cursor: pointer; }
-.imp-x:hover, .imp-x:focus-visible { color: var(--amber); outline: none; }
-.imp-panel h2 { flex: none; font-family: var(--f-stencil); font-weight: 700; font-size: 18px; letter-spacing: 2px; margin: 0 44px 14px 0; text-transform: uppercase; color: var(--amber); }
-#imp-body { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; overflow-y: auto; }
+.ui-panel.imp-panel { display: flex; flex-direction: column; overflow: hidden; }       /* la fenêtre est celle de la suite (.ui-modal, .ui-panel) ; ici seulement la colonne : le corps défile, les boutons restent */
+#imp-body { font-family: var(--f-typewriter); font-weight: 400; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; overflow-y: auto; }
 .imp-block { margin-bottom: 14px; }
 .imp-block h3 { font-family: var(--f-stencil); font-weight: 700; font-size: 13px; letter-spacing: 2px; margin: 0 0 8px; color: var(--paper-light); text-transform: uppercase; }
 .imp-srcs { flex: none; }
@@ -826,23 +818,14 @@ details:not([open]) > .ui-fold-head > .ui-sum:not(:empty), .ui-fold-head[aria-ex
 .imp-chk input { accent-color: var(--imp-acc); width: 18px; height: 18px; margin: 0; flex: none; }
 .imp-chk.off { opacity: .4; cursor: default; }
 .imp-empty { font-size: 12px; color: var(--khaki-light); margin: 6px 0; }
-.imp-actions { flex: none; display: flex; justify-content: space-between; gap: 10px; padding-top: 10px; border-top: 1px solid rgba(128,116,84,.5); }
-.imp-btn { background: transparent; border: 2px solid var(--khaki); padding: 8px 18px; min-height: 44px; font-family: var(--f-stencil); font-weight: 700; letter-spacing: 2px; font-size: 13px; cursor: pointer; color: var(--paper); border-radius: 2px; }
-.imp-btn:hover { background: var(--olive); }
-.imp-btn:focus-visible { outline: 2px solid var(--imp-acc); outline-offset: 2px; }
-.imp-btn.go { background: var(--olive-deep); border-color: var(--imp-acc); color: var(--paper-light); }
-.imp-btn:disabled { opacity: .4; cursor: not-allowed; pointer-events: none; }
 @media (max-height: 800px) { .imp-file + .imp-note { display: none; } }
 @media (max-width: 539px) {
-  .imp-modal { padding: 8px; }
-  .imp-panel { padding: 12px 12px 10px; }
-  .imp-panel h2 { margin-bottom: 8px; font-size: 16px; }
+  .ui-panel.imp-panel { padding: 12px 12px 10px; }
   .imp-block { margin-bottom: 8px; }
   .imp-fls { margin-bottom: 4px; }
   .imp-srcline { margin-bottom: 2px; }
   .imp-n { margin-left: 0; text-align: left; width: 100%; }
   .imp-parts { padding-left: 0; gap: 0 10px; }
-  .imp-actions .imp-btn { flex: 1; padding: 8px 10px; }
 }
 @media print { .imp-modal { display: none; } }
 /* ===== FIN DE LA FEUILLE D'IMPORT ===== */
@@ -899,7 +882,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 <div class="app" id="app">
   <div class="editor" id="editor-panel">
     <div class="fc-tc" id="fc-tc" role="alert" hidden></div>
-    <div class="fc-status" id="fc-status" role="status" aria-live="polite"></div>
+    <div class="ui-bandeau" id="fc-status" role="status" aria-live="polite"></div>
     <div class="fc-cols">
       <div id="col-left"><div id="col-flights"></div></div>
       <div id="col-right"></div>
@@ -908,15 +891,15 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 </div>
 
 <!-- ===== IMPORT COMMUN : fenêtre ===== -->
-<div class="imp-modal" id="imp-modal" hidden role="dialog" aria-modal="true" aria-labelledby="imp-modal-title">
-  <div class="imp-backdrop" id="imp-modal-backdrop"></div>
-  <div class="imp-panel">
-    <button type="button" class="imp-x" id="imp-modal-close" aria-label="Fermer">×</button>
-    <h2 id="imp-modal-title"></h2>
+<div class="ui-modal imp-modal" id="imp-modal" hidden role="dialog" aria-modal="true" aria-labelledby="imp-modal-title">
+  <div class="ui-backdrop" id="imp-modal-backdrop"></div>
+  <div class="ui-panel ui-wide imp-panel" role="document">
+    <button type="button" class="ui-close" id="imp-modal-close" aria-label="Fermer">×</button>
+    <h2 class="ui-title" id="imp-modal-title"></h2>
     <div id="imp-body"></div>
-    <div class="imp-actions">
-      <button type="button" class="imp-btn" id="imp-cancel"></button>
-      <button type="button" class="imp-btn go" id="imp-go" disabled></button>
+    <div class="ui-actions">
+      <button type="button" class="ui-btn" id="imp-cancel"></button>
+      <button type="button" class="ui-btn primary" id="imp-go" disabled></button>
     </div>
   </div>
 </div>
@@ -9014,7 +8997,6 @@ function impSetup(hooks) {
     else if (cur && el.hasAttribute('data-imp-part')) { cur.rows[Number(el.getAttribute('data-imp-i'))].chk[el.getAttribute('data-imp-part')] = el.checked; impUpdateGo(); }
   });
   document.getElementById('imp-file-in').addEventListener('change', e => { const f = e.target.files && e.target.files[0]; e.target.value = ''; if (f) impFile(f); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && impIsOpen()) impClose(); });
 }
 /* Ouvre la fenêtre ; opts.parsed (+ name) : un fichier déjà lu (« Ouvrir » au Route Planner), la source « Fichier » est alors celle-là. Rend faux si ce fichier est refusé (le refus est dit). */
 function impOpen(opts) {
@@ -9321,15 +9303,24 @@ function askConfirm(o) {
    o.keys : les clés de localStorage que l'action écrit ; o.mem() : copie de l'état en mémoire ; o.back(copie) : remet l'état et redessine ;
    o.run() : l'action (rend false si rien n'a changé ; peut rendre une promesse) ; o.msg : la phrase du résultat, sans « · » (ou une fonction qui la rend, une fois l'action faite). Un second remplacement efface la copie du premier. */
 function replaceWithRestore(o) {
-  const ls = {};
-  (o.keys || []).forEach(k => { try { ls[k] = localStorage.getItem(k); } catch (e) { ls[k] = null; } });
-  const mem = o.mem ? o.mem() : null;
-  const snap = { ls: ls, mem: mem, back: o.back };
-  UIK.restore = null;
+  /* Tant que le toast « Restaurer » d'un premier remplacement est à l'écran, un second garde la copie du premier (et relance le toast) : « Restaurer » rend l'état d'avant le premier geste.
+     Le toast fermé ou expiré, la copie suivante remplace l'ancienne. Même geste = même fonction o.back (comparée par son texte : les gestes d'un module ont chacun la leur). */
+  const prev = UIK.restore;
+  const live = !!(prev && UIK.restoreN === showToast._n && mpToastEl().classList.contains('show') && prev.back && o.back && String(prev.back) === String(o.back));
+  let snap;
+  if (live) snap = prev;
+  else {
+    const mem = o.mem ? o.mem() : null;                 /* d'abord la copie en mémoire (un module peut y vider son écriture en attente), puis les clés */
+    const ls = {};
+    (o.keys || []).forEach(k => { try { ls[k] = localStorage.getItem(k); } catch (e) { ls[k] = null; } });
+    snap = { ls: ls, mem: mem, back: o.back };
+    UIK.restore = null;
+  }
   const fin = r => {
     if (r === false) return false;
     UIK.restore = snap;
     showToast((typeof o.msg === 'function' ? o.msg() : o.msg) + ' ·', { action: { label: uiT('ui.restore'), fn: () => uiRestore(snap) }, ms: 12000 });
+    UIK.restoreN = showToast._n;
     return true;
   };
   const r = o.run();
@@ -9443,7 +9434,8 @@ function uiExportOpen(cfg) {
   uiExportBuild(cfg);
   uiExportSync(true);
   m.hidden = false;
-  document.getElementById('export-fmt-pdf').focus({ preventScroll: true });
+  const go = document.getElementById('export-png-go');
+  (go && !go.disabled ? go : document.getElementById('export-fmt-pdf')).focus({ preventScroll: true });       /* le bouton principal, comme toute fenêtre de suite */
 }
 /* Le module change ce que la fenêtre propose (cases cochées, pages) : elle se met à jour sans toucher au nom écrit à la main. */
 function uiExportRefresh(rename) { if (UIK.ex) uiExportSync(rename !== false); }
@@ -9467,15 +9459,15 @@ function uiExportBind(modalId) {
   m.querySelector('.ui-close').addEventListener('click', uiExportClose);
   m.querySelector('.ui-backdrop').addEventListener('click', e => { if (e.detail >= 2 && UIK.ex && performance.now() - UIK.ex.at < 400) return; uiExportClose(); });
 }
-/* Le PDF : le nom saisi devient le titre du document le temps de l'impression, les pages non choisies sont masquées (hide : les éléments à masquer) ; puis tout revient. */
-function uiPrintAs(name, hide) {
+/* Le PDF : le nom saisi devient le titre du document le temps de l'impression, les pages non choisies sont masquées (hide : les éléments à masquer ; last : la dernière page visible, qui reçoit .ui-print-last pour que le module n'y force pas de saut de page) ; puis tout revient. */
+function uiPrintAs(name, hide, last) {
   const title = document.title, hidden = (hide || []).filter(Boolean);
   let done = false;
-  const apply = () => { document.title = name; hidden.forEach(e => e.classList.add('ui-print-hide')); };
+  const apply = () => { document.title = name; hidden.forEach(e => e.classList.add('ui-print-hide')); if (last) last.classList.add('ui-print-last'); };
   const undo = () => {
     if (done) return; done = true;
     window.removeEventListener('beforeprint', apply); window.removeEventListener('afterprint', undo);
-    document.title = title; hidden.forEach(e => e.classList.remove('ui-print-hide'));
+    document.title = title; hidden.forEach(e => e.classList.remove('ui-print-hide')); if (last) last.classList.remove('ui-print-last');
   };
   window.addEventListener('beforeprint', apply);
   window.addEventListener('afterprint', undo);
@@ -12192,7 +12184,6 @@ function cleanFname(v) {
 const FN = { name: '', opener: null, run: null, titleKey: '', goKey: '', at: 0, bodyFn: null, bodyEl: null, headFn: null, headEl: null, wide: false, blocked: false };
 // Un nom par défaut : la partie variable est nettoyée et coupée à 40 caractères ; l'horodatage s'ajoute ensuite, en fin de nom
 function fnPart(v, fallback) { return cleanFname(v).slice(0, 40) || fallback; }
-function fnOpen() { return !document.getElementById('fn-modal').hidden; }
 function fnSync() {
   document.getElementById('fn-go').disabled = cleanFname(FN.name) === '' || FN.blocked;
 }
@@ -12335,6 +12326,7 @@ function openFile(file) {
     if (fth !== '' && !thOk(fth)) { showToast(tf('open.theatre.unknown', fth), { type: 'err' }); return; }
     // Le fichier remplace le travail sans question : l'ancien est gardé et « Restaurer » le remet (bloc d'interface commun) ; le toast dit aussi un changement de théâtre.
     const thChanged = fth !== '' && fth !== S.theatre && S.flights.length > 0;
+    flushWork();       // la frappe en attente part dans le stockage avant que « Remplacer » en prenne la copie
     replaceWithRestore({
       keys: FC_REPLACE_KEYS, mem: fcMem, back: fcBack,
       run: () => {

@@ -1259,9 +1259,7 @@ body[data-theme] {
 
 /* ---------- Page : état de l'export, deux colonnes, blocs ---------- */
 .editor { max-width: 1840px; }
-.fc-status { position: sticky; top: 0; z-index: 5; margin: 0 0 12px; padding: 7px 12px; font-family: var(--f-typewriter); font-size: 12px; line-height: 1.4; color: var(--paper-light); background: var(--olive-dark); border: 1px solid var(--khaki); border-left: 3px solid var(--khaki); word-break: break-word; }
-.fc-status.ok { border-left-color: var(--pk-ok); color: var(--paper); }
-.fc-status.err { border-left-color: var(--mp-warn); color: var(--paper); }
+#fc-status { position: sticky; top: 0; z-index: 5; }       /* le bandeau est .ui-bandeau (neutre, .ok, .err) ; ici seulement sa place */
 /* Le bandeau « les groupes sont sur un autre théâtre » (lot mp-theatre-unique) : le style des avertissements de la fiche (.rt-warn), deux boutons de la suite */
 .fc-tc { margin: 0 0 12px; padding: 10px 12px; background: var(--olive-dark); border: 1px solid var(--khaki); border-left: 3px solid var(--amber); }
 .fc-tc[hidden] { display: none; }
@@ -1579,7 +1577,7 @@ BODY = r"""
 <div class="app" id="app">
   <div class="editor" id="editor-panel">
     <div class="fc-tc" id="fc-tc" role="alert" hidden></div>
-    <div class="fc-status" id="fc-status" role="status" aria-live="polite"></div>
+    <div class="ui-bandeau" id="fc-status" role="status" aria-live="polite"></div>
     <div class="fc-cols">
       <div id="col-left"><div id="col-flights"></div></div>
       <div id="col-right"></div>
@@ -3816,7 +3814,6 @@ function cleanFname(v) {
 const FN = { name: '', opener: null, run: null, titleKey: '', goKey: '', at: 0, bodyFn: null, bodyEl: null, headFn: null, headEl: null, wide: false, blocked: false };
 // Un nom par défaut : la partie variable est nettoyée et coupée à 40 caractères ; l'horodatage s'ajoute ensuite, en fin de nom
 function fnPart(v, fallback) { return cleanFname(v).slice(0, 40) || fallback; }
-function fnOpen() { return !document.getElementById('fn-modal').hidden; }
 function fnSync() {
   document.getElementById('fn-go').disabled = cleanFname(FN.name) === '' || FN.blocked;
 }
@@ -3959,6 +3956,7 @@ function openFile(file) {
     if (fth !== '' && !thOk(fth)) { showToast(tf('open.theatre.unknown', fth), { type: 'err' }); return; }
     // Le fichier remplace le travail sans question : l'ancien est gardé et « Restaurer » le remet (bloc d'interface commun) ; le toast dit aussi un changement de théâtre.
     const thChanged = fth !== '' && fth !== S.theatre && S.flights.length > 0;
+    flushWork();       // la frappe en attente part dans le stockage avant que « Remplacer » en prenne la copie
     replaceWithRestore({
       keys: FC_REPLACE_KEYS, mem: fcMem, back: fcBack,
       run: () => {
