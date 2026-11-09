@@ -3292,7 +3292,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
     <span class="tb-btn-label" data-i18n="toolbar.example">Exemple</span>
   </button>
-  <button class="tb-btn danger" id="btn-reset" data-i18n-title="toolbar.reset.tooltip" title="Vider le briefing (repartir d'une page blanche)">
+  <button class="tb-btn danger" id="btn-reset" data-i18n-title="toolbar.reset.tooltip" title="Effacer">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
     <span class="tb-btn-label" data-i18n="toolbar.reset">Effacer</span>
   </button>
@@ -3763,6 +3763,9 @@ const I18N = {
     'ui.pages': 'Pages',
     'ui.fname': 'Nom du fichier',
     'ui.export': 'Exporter',
+    'ui.verb.delete': 'Supprimer',
+    'ui.verb.reset': 'Réinitialiser',
+    'ui.verb.clear': 'Effacer',
     // ── Toolbar ──
     'toolbar.save':           'Enregistrer',
     'toolbar.load':           'Ouvrir',
@@ -3771,7 +3774,7 @@ const I18N = {
     'toolbar.save.tooltip':   'Enregistrer le briefing (JSON)',
     'toolbar.load.tooltip':   'Ouvrir un briefing (JSON)',
     'toolbar.export.tooltip': 'Exporter en PDF ou PNG (kneeboard DCS)',
-    'toolbar.reset.tooltip':  'Vider le briefing (repartir d\'une page blanche)',
+    'toolbar.reset.tooltip':  'Effacer',
     'toolbar.theme.tooltip':  'Thème graphique',
     'toolbar.lang.tooltip':   'Passer en anglais',
     'tab.bar.aria':           'Sections du briefing',
@@ -3826,8 +3829,8 @@ const I18N = {
     'editor.sitac.addPoint': '+ Ajouter un point',
     'editor.sitac.metar':           'METAR',
     'editor.sitac.metarAssistant':  '🛠 Assistant METAR',
-    'editor.sitac.metarOverwrite':   'Remplacer le METAR existant ?',
-    'editor.sitac.metarMizOverwrite':'Écraser les champs avec les données du .miz ?',
+    'toast.metarReplaced': 'METAR remplacé',
+    'toast.metarMizReplaced': 'Champs remplacés par la météo du .miz',
     'editor.sitac.map':      'Carte SITAC (image)',
     // ── Section 03 MISSION ──
     'editor.mission.summary':      '03 ░ APERÇU MISSION',
@@ -3930,7 +3933,8 @@ const I18N = {
     'editor.wing.summaryShort': '10 ░ CONFIG WING',
     'editor.wing.import':       '📥 Importer config',
     'editor.wing.hqHint':        '✦ Édition complète disponible dans HQ',
-    'editor.wing.resetConfirm.ro':'Réinitialiser le wing au défaut ?\nToutes les modifications seront perdues.',
+    'editor.wing.resetConfirm.title': 'Réinitialiser le wing au défaut ?',
+    'editor.wing.resetConfirm.text': 'Toutes les modifications seront perdues.',
     'editor.wing.roWing':        'Wing actif',
     'editor.wing.roSquadrons':   'Escadrons enregistrés',
     'toast.wingLoaded':          'Config wing chargée ✓',
@@ -4027,10 +4031,14 @@ const I18N = {
     'fmt.briefing':            'briefing',
     'toast.exportGenProgress': 'Génération ',
     // ── Confirmations ──
-    'confirm.resetBriefing': 'Vider tout le briefing ?',
-    'confirm.deletePhase':   'Supprimer la mission',
-    'confirm.deleteRadioAc': 'Supprimer la configuration radio de l\'appareil',
-    'confirm.deleteGroup':   'Supprimer ce groupe ?',
+    'confirm.resetBriefing.title': 'Effacer le briefing ?',
+    'confirm.resetBriefing.text': 'Tout le briefing sera effacé. Cela ne se défait pas.',
+    'confirm.deletePhase.title': 'Supprimer la mission {n} ?',
+    'confirm.deletePhase.text': 'La mission et son contenu seront supprimés. Cela ne se défait pas.',
+    'confirm.deleteRadioAc.title': 'Supprimer la configuration radio de l\'appareil {n} ?',
+    'confirm.deleteRadioAc.text': 'Ses radios seront supprimées. Cela ne se défait pas.',
+    'confirm.deleteGroup.title': 'Supprimer ce groupe ?',
+    'confirm.deleteGroup.text': 'Ses pilotes seront supprimés. Cela ne se défait pas.',
     // ── Aperçu rendu (preview) ──
     'preview.missionOverview':   'APERÇU MISSION',
     'preview.squadronsEngaged':  'Escadrons Engagés',
@@ -4074,7 +4082,6 @@ const I18N = {
     'toolbar.example':            'Exemple',
     'toolbar.subtitle':           '░ BRIEFING DE MISSION',
     'toolbar.example.tooltip':    'Ouvrir le briefing d\'exemple (remplace le briefing en cours)',
-    'confirm.loadExample':        'Remplacer le briefing en cours par l\'exemple ?',
     'toast.exampleLoaded':        'Exemple chargé ✓',
     // ── Carte du Route Planner (v2.5.0) ──
     'rpmap.title':        'Placer la carte du Route Planner',
@@ -4153,6 +4160,9 @@ const I18N = {
     'ui.pages': 'Pages',
     'ui.fname': 'File name',
     'ui.export': 'Export',
+    'ui.verb.delete': 'Delete',
+    'ui.verb.reset': 'Reset',
+    'ui.verb.clear': 'Clear',
     // ── Toolbar ──
     'toolbar.save':           'Save',
     'toolbar.load':           'Open',
@@ -4161,7 +4171,7 @@ const I18N = {
     'toolbar.save.tooltip':   'Save the briefing (JSON)',
     'toolbar.load.tooltip':   'Open a briefing (JSON)',
     'toolbar.export.tooltip': 'Export to PDF or PNG (DCS kneeboard)',
-    'toolbar.reset.tooltip':  'Clear the briefing (start from a blank page)',
+    'toolbar.reset.tooltip':  'Clear',
     'toolbar.theme.tooltip':  'Graphic theme',
     'toolbar.lang.tooltip':   'Switch to French',
     'tab.bar.aria':           'Briefing sections',
@@ -4216,8 +4226,8 @@ const I18N = {
     'editor.sitac.addPoint': '+ Add point',
     'editor.sitac.metar':           'METAR',
     'editor.sitac.metarAssistant':  '🛠 METAR Assistant',
-    'editor.sitac.metarOverwrite':   'Replace existing METAR?',
-    'editor.sitac.metarMizOverwrite':'Overwrite assistant fields with .miz data?',
+    'toast.metarReplaced': 'METAR replaced',
+    'toast.metarMizReplaced': 'Fields replaced with the .miz weather',
     'editor.sitac.map':      'SITAC map (image)',
     // ── Section 03 MISSION ──
     'editor.mission.summary':      '03 ░ MISSION OVERVIEW',
@@ -4320,7 +4330,8 @@ const I18N = {
     'editor.wing.summaryShort': '10 ░ WING CONFIG',
     'editor.wing.import':       '📥 Import config',
     'editor.wing.hqHint':        '✦ Full editing available in HQ',
-    'editor.wing.resetConfirm.ro':'Reset wing to default?\nAll changes will be lost.',
+    'editor.wing.resetConfirm.title': 'Reset wing to default?',
+    'editor.wing.resetConfirm.text': 'All changes will be lost.',
     'editor.wing.roWing':        'Active wing',
     'editor.wing.roSquadrons':   'Registered squadrons',
     'toast.wingLoaded':          'Wing config loaded ✓',
@@ -4417,10 +4428,14 @@ const I18N = {
     'fmt.briefing':            'briefing',
     'toast.exportGenProgress': 'Generating ',
     // ── Confirmations ──
-    'confirm.resetBriefing': 'Clear the entire briefing?',
-    'confirm.deletePhase':   'Delete mission',
-    'confirm.deleteRadioAc': 'Delete radio config for aircraft',
-    'confirm.deleteGroup':   'Delete this group?',
+    'confirm.resetBriefing.title': 'Clear the briefing?',
+    'confirm.resetBriefing.text': 'The whole briefing will be erased. This cannot be undone.',
+    'confirm.deletePhase.title': 'Delete mission {n}?',
+    'confirm.deletePhase.text': 'The mission and its content will be deleted. This cannot be undone.',
+    'confirm.deleteRadioAc.title': 'Delete radio config for aircraft {n}?',
+    'confirm.deleteRadioAc.text': 'Its radios will be deleted. This cannot be undone.',
+    'confirm.deleteGroup.title': 'Delete this group?',
+    'confirm.deleteGroup.text': 'Its pilots will be deleted. This cannot be undone.',
     // ── Preview (aperçu rendu) ──
     'preview.missionOverview':   'MISSION OVERVIEW',
     'preview.squadronsEngaged':  'Squadrons Engaged',
@@ -4464,7 +4479,6 @@ const I18N = {
     'toolbar.example':            'Example',
     'toolbar.subtitle':           '░ MISSION BRIEFING',
     'toolbar.example.tooltip':    'Open the example briefing (replaces the current one)',
-    'confirm.loadExample':        'Replace the current briefing with the example?',
     'toast.exampleLoaded':        'Example loaded ✓',
     // ── Route Planner map (v2.5.0) ──
     'rpmap.title':        'Place the Route Planner map',
@@ -5476,9 +5490,11 @@ function renderRoster() {
     });
 
     card.querySelector(`[data-grp-rm="${gi}"]`).addEventListener('click', () => {
-      if (!confirm(t('confirm.deleteGroup'))) return;
-      state.roster.groups.splice(gi, 1);
-      renderRoster(); schedulePreview();
+      askConfirm({ title: t('confirm.deleteGroup.title'), text: t('confirm.deleteGroup.text'), verb: t('ui.verb.delete'), danger: true }).then(ok => {
+        if (!ok || !state.roster.groups[gi]) return;
+        state.roster.groups.splice(gi, 1);
+        renderRoster(); schedulePreview();
+      });
     });
 
     renderPilots(card.querySelector('.roster-pilots-list'), gi);
@@ -5885,10 +5901,12 @@ function renderRadioAircrafts() {
     });
 
     card.querySelector(`[data-ap-rm="${ai}"]`).addEventListener('click', () => {
-      if (!confirm(t('confirm.deleteRadioAc') + ' ' + (ai + 1) + ' ?')) return;
-      plans.splice(ai, 1);
-      renderRadioAircrafts();
-      schedulePreview();
+      askConfirm({ title: t('confirm.deleteRadioAc.title').replace('{n}', ai + 1), text: t('confirm.deleteRadioAc.text'), verb: t('ui.verb.delete'), danger: true }).then(ok => {
+        if (!ok || !plans[ai]) return;
+        plans.splice(ai, 1);
+        renderRadioAircrafts();
+        schedulePreview();
+      });
     });
 
     // If image set, dim radios area and add note
@@ -6857,14 +6875,19 @@ function renderMetarAssistant(p) {
 
   document.getElementById('ma-insert').addEventListener('click', () => {
     const newMetar = buildMetarString(_metarParams);
+    const setMetar = v => {
+      state.sitac.metar = v;
+      // Mettre à jour le champ data-bind
+      document.querySelectorAll('[data-bind="sitac.metar"]').forEach(inp => { inp.value = v; });
+      schedulePreview();
+    };
+    const run = () => { setMetar(newMetar); document.getElementById('metar-assistant-panel').open = false; };
     if (state.sitac && state.sitac.metar && state.sitac.metar.trim() && state.sitac.metar.trim() !== newMetar) {
-      if (!confirm(t('editor.sitac.metarOverwrite'))) return;
+      /* « Remplacer » : le METAR d'avant est gardé, « Restaurer » le rend (le texte et l'aperçu) */
+      replaceWithRestore({ keys: [STORAGE_KEY], mem: () => ({ metar: state.sitac.metar }), back: m => { setMetar(m.metar); persistState(); }, msg: t('toast.metarReplaced'), run });
+      return;
     }
-    state.sitac.metar = newMetar;
-    // Mettre à jour le champ data-bind
-    document.querySelectorAll('[data-bind="sitac.metar"]').forEach(inp => { inp.value = newMetar; });
-    schedulePreview();
-    document.getElementById('metar-assistant-panel').open = false;
+    run();
   });
 
   // Import .miz (10C)
@@ -6875,7 +6898,10 @@ function renderMetarAssistant(p) {
     const file = e.target.files[0];
     if (!file) return;
     try {
-      await _importMizToMetar(file);
+      if (_metarParams && (_metarParams.windSpd > 0 || _metarParams.cavok === false)) {
+        /* des champs déjà remplis : « Remplacer » ; l'assistant d'avant est gardé pour « Restaurer » */
+        await replaceWithRestore({ keys: [], mem: () => ({ p: JSON.parse(JSON.stringify(_metarParams)) }), back: m => { _metarParams = m.p; renderMetarAssistant(_metarParams); }, msg: t('toast.metarMizReplaced'), run: () => _importMizToMetar(file) });
+      } else await _importMizToMetar(file);
     } catch(err) {
       console.warn('[BG] .miz : import de la météo :', err);
       showToast(t('msg.failed'), { type: 'err' });
@@ -6908,10 +6934,6 @@ function _readMetarForm() {
 }
 
 async function _importMizToMetar(file) {
-  // Confirmation si des champs sont déjà remplis
-  if (_metarParams && (_metarParams.windSpd > 0 || _metarParams.cavok === false)) {
-    if (!confirm(t('editor.sitac.metarMizOverwrite'))) return;
-  }
   // Lecture JSZip (déjà embarqué)
   let lua;
   try {
@@ -6923,7 +6945,7 @@ async function _importMizToMetar(file) {
   } catch (e) {
     console.warn('[BG] .miz illisible :', e);
     showToast(t('msg.notMiz'), { type: 'err' });
-    return;
+    return false;
   }
 
   // --- Parsing par regex tolérantes ---
@@ -7005,6 +7027,7 @@ async function _importMizToMetar(file) {
   };
   _metarParams = params;
   renderMetarAssistant(params);
+  return true;
 }
 
 /* ============= AÉRODROMES STRUCTURÉS (Partie 1 — 10B-lite) =============
@@ -7301,11 +7324,14 @@ function bindEditorEvents() {
   });
   document.getElementById('phase-rm').addEventListener('click', () => {
     if (state.phases.length === 0) return;
-    if (!confirm(t('confirm.deletePhase') + ' ' + (currentPhaseIdx + 1) + ' ?')) return;
-    state.phases.splice(currentPhaseIdx, 1);
-    if (currentPhaseIdx >= state.phases.length) currentPhaseIdx = Math.max(0, state.phases.length - 1);
-    renderPhaseEditor(); renderRoster();
-    schedulePreview();
+    const k = currentPhaseIdx;
+    askConfirm({ title: t('confirm.deletePhase.title').replace('{n}', k + 1), text: t('confirm.deletePhase.text'), verb: t('ui.verb.delete'), danger: true }).then(ok => {
+      if (!ok || !state.phases[k]) return;
+      state.phases.splice(k, 1);
+      if (currentPhaseIdx >= state.phases.length) currentPhaseIdx = Math.max(0, state.phases.length - 1);
+      renderPhaseEditor(); renderRoster();
+      schedulePreview();
+    });
   });
 
   // Roster: add group (picks first available mission group)
@@ -8833,8 +8859,8 @@ function loadJsonFile(file) {
   reader.readAsText(file);
 }
 
-function resetAll() {
-  if (!confirm(t('confirm.resetBriefing'))) return;
+async function resetAll() {
+  if (!(await askConfirm({ title: t('confirm.resetBriefing.title'), text: t('confirm.resetBriefing.text'), verb: t('ui.verb.clear'), danger: true }))) return;
   state = structuredClone(DEFAULTS);
   currentPhaseIdx = 0;
   renderEditorBindings();
@@ -8903,8 +8929,8 @@ function importWingConfig(file) {
 }
 
 /* Hard reset to the embedded DEFAULT_WING_CONFIG, wiping localStorage entry. */
-function resetWingConfig() {
-  if (!confirm(t('editor.wing.resetConfirm.ro') || 'Réinitialiser le wing au défaut ?')) return;
+async function resetWingConfig() {
+  if (!(await askConfirm({ title: t('editor.wing.resetConfirm.title'), text: t('editor.wing.resetConfirm.text'), verb: t('ui.verb.reset'), danger: true }))) return;
   wingConfig = structuredClone(DEFAULT_WING_CONFIG);
   localStorage.removeItem(KEY_WING);
   applyWingBranding();
@@ -9153,14 +9179,18 @@ function setFormat(fmt) {
 }
 
 function loadExample() {
-  if (!confirm(t('confirm.loadExample'))) return;
+  /* « Remplacer » : le briefing d'avant est gardé pour « Restaurer » (le stockage du module et l'état en mémoire) */
+  replaceWithRestore({ keys: [STORAGE_KEY], mem: () => ({ state: structuredClone(state), idx: currentPhaseIdx }),
+    back: m => { state = m.state; currentPhaseIdx = m.idx; renderEditorBindings(); schedulePreview(); persistState(); },
+    msg: t('toast.exampleLoaded'), run: loadExampleNow });
+}
+function loadExampleNow() {
   state = mergeDeep(structuredClone(DEFAULTS), structuredClone(CURRENT_LANG === 'en' ? EXAMPLE_BRIEFING_EN : EXAMPLE_BRIEFING));   // la langue de l'interface au moment du clic
   state.meta.format = 'full';
   currentPhaseIdx = 0;
   renderEditorBindings();
   schedulePreview();
   persistState();
-  showToast(t('toast.exampleLoaded'), { type: 'ok' });
 }
 
 function newBlankFlight() {
@@ -9295,9 +9325,11 @@ function renderSimpleFlights() {
       renderSimpleFlights(); schedulePreview();
     });
     card.querySelector('[data-fl="rm"]').addEventListener('click', () => {
-      if (!confirm(t('confirm.deletePhase') + ' ' + (i + 1) + ' ?')) return;
-      state.phases.splice(i, 1);
-      renderSimpleFlights(); schedulePreview();
+      askConfirm({ title: t('confirm.deletePhase.title').replace('{n}', i + 1), text: t('confirm.deletePhase.text'), verb: t('ui.verb.delete'), danger: true }).then(ok => {
+        if (!ok || !state.phases[i]) return;
+        state.phases.splice(i, 1);
+        renderSimpleFlights(); schedulePreview();
+      });
     });
   });
 }
