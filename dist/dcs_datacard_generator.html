@@ -7978,7 +7978,7 @@ function biAddCards(cards) {
 function biReadRouteSet() {
   const st = readJsonKey(KEY_ROUTE), set = readJsonKey(KEY_ROUTESET);
   if (!isPlainObject(st) || !isPlainObject(set) || set.format !== SET_FORMAT || !Array.isArray(set.routes)) return [];
-  const list = set.routes.filter(r => isPlainObject(r) && Array.isArray(r.points));
+  const list = set.routes.filter(r => isPlainObject(r) && Array.isArray(r.points) && (typeof r.theatre !== 'string' || r.theatre === st.theatre));       /* seulement les routes du théâtre courant du Route Planner (les autres sont masquées au Route Planner ; les routes visibles viennent d'abord dans route_set_v1, l'index actif reste juste) */
   const active = (Number.isInteger(set.active) && set.active >= 0 && set.active < list.length) ? set.active : 0;
   const out = [];
   list.forEach((r, i) => {

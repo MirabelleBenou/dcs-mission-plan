@@ -112,6 +112,7 @@ Changes merged since the last release, grouped per tool.
 - **Import** replaces “From HQ” and “Flight package”: the same window as the Flight Configurator (mission loaded in HQ, current briefing, flight package .json or .zip, briefing file), bringing the group's aircraft, radios, loadouts and liveries along with its route. A route imported in the Flight Configurator is added here as its group's route.
 - The theatre is shared with the Datacard Generator: changing it in one module changes it in the other.
 - Units are shared with the Datacard Generator.
+- Each route keeps its theatre: switching theatre hides the routes of the other theatres (kept, back when you return), and the Flight Configurator only offers the routes of the shared theatre.
 #### Fixed
 - Computed magnetic variation now follows DCS for every mission date: years up to 1985 use the IGRF model DCS ships (up to 1.2° closer), later years the previous five-year WMM file, as DCS does (0.2° closer in 1990, 1995 … 2025).
 

@@ -375,6 +375,7 @@ I18N_FR = {
     'bar.clamped': '{0} réglage(s) d’emport ramené(s) à la limite de l’appareil.',
     'bar.bad.freq': 'Export impossible : {0} fréquence(s) à corriger dans les radios.',
     'bar.theatre.conflict': "Export impossible : les groupes sont sur {0}, Mission Plan sur {1} (voir le bandeau).",
+    'bar.route.theatre': "Export impossible : la route du groupe {0} est sur {1}, Mission Plan sur {2}.",
     'bar.no.flight': 'Export impossible : ajoutez au moins un groupe.',
     'bar.no.name': 'Export impossible : le groupe {0} n’a pas de nom.',
     'bar.dup': 'Noms en double : {0}',
@@ -430,7 +431,6 @@ I18N_FR = {
     'route.tag.linked': 'liée à {0}',
     'route.tag.free': 'sans groupe',
     'route.empty': 'Le Route Planner n’a aucune route : trace-la d’abord là-bas.',
-    'route.th.mismatch': 'Les routes du Route Planner sont sur {0} ; ce paquet est sur {1}.',
     'route.th.nosupport': 'Les routes du Route Planner sont sur {0}, un théâtre que ce module ne gère pas.',
     'route.nosketch': 'Choisissez un théâtre pour voir la route.',
     'route.sketch': 'Croquis de la route {0}',
@@ -636,6 +636,7 @@ I18N_EN = {
     'bar.clamped': '{0} loadout setting(s) brought back to the aircraft limit.',
     'bar.bad.freq': 'Cannot export: {0} frequency(ies) to fix in the radios.',
     'bar.theatre.conflict': "Cannot export: the groups are on {0}, Mission Plan on {1} (see the banner).",
+    'bar.route.theatre': "Cannot export: group {0}'s route is on {1}, Mission Plan on {2}.",
     'bar.no.flight': 'Cannot export: add at least one group.',
     'bar.no.name': 'Cannot export: group {0} has no name.',
     'bar.dup': 'Duplicate names: {0}',
@@ -691,7 +692,6 @@ I18N_EN = {
     'route.tag.linked': 'linked to {0}',
     'route.tag.free': 'no group',
     'route.empty': 'The Route Planner has no route: draw it there first.',
-    'route.th.mismatch': 'The Route Planner routes are on {0}; this package is on {1}.',
     'route.th.nosupport': 'The Route Planner routes are on {0}, a theatre this module does not handle.',
     'route.nosketch': 'Choose a theatre to see the route.',
     'route.sketch': 'Sketch of route {0}',
@@ -2725,7 +2725,7 @@ function rpRead() {
   if (isObj(set) && (set.format === undefined || set.format === RP_SET_FORMAT) && Array.isArray(set.routes)) {
     set.routes.forEach(r => {
       if (!isObj(r) || !Array.isArray(r.points)) return;
-      routes.push({ rid: ridOk(r.rid) ? r.rid : '', name: str(r.name), points: r.points.filter(p => isObj(p) && packValidCoord(p.lat, p.lon)), flight: (isObj(r.flight) && typeof r.flight.groupName === 'string') ? r.flight : null });
+      routes.push({ rid: ridOk(r.rid) ? r.rid : '', theatre: thOk(r.theatre) ? r.theatre : state.theatre, name: str(r.name), points: r.points.filter(p => isObj(p) && packValidCoord(p.lat, p.lon)), flight: (isObj(r.flight) && typeof r.flight.groupName === 'string') ? r.flight : null });
     });
   }
   return { state: state, routes: routes };
@@ -2736,7 +2736,7 @@ function rpPack(rt, theatre, gs) {
   rt.points.forEach((p, k) => { o[String(k + 1)] = packPoint(p, k, theatre, gs); });
   return o;
 }
-function rpUsable(rp) { return rp.routes.filter(r => r.points.length >= 2); }
+function rpUsable(rp) { return rp.routes.filter(r => r.points.length >= 2 && r.theatre === S.theatre); }       // seulement les routes du théâtre commun
 // Une route du Route Planner est « liée à ce groupe » : même nom (rogné, sans casse) et, si le groupe a un camp, le même
 function rtMatches(rt, f) {
   const fl = rt.flight, name = f.name.trim().toLowerCase();
@@ -2954,9 +2954,9 @@ function rtSketch(pts, o) {
 function routeStatus(f, rp) {
   if (!f.routeLink) return null;
   if (rp.state.theatre === '') return { k: 'norp' };
-  if (rp.state.theatre !== rTh()) return { k: 'theatre', th: rp.state.theatre };
   const rt = rp.routes.filter(r => r.rid === f.routeLink.rid)[0];
   if (!rt) return { k: 'gone' };
+  if (rt.theatre !== rTh()) return { k: 'theatre', th: rt.theatre };       // la route est d'un autre théâtre (le Route Planner la garde masquée) : aucune reprise
   return rt.points.length < 2 ? { k: 'few' } : null;
 }
 function rpGeo(rt) { return rt.points.map((p, i) => ({ name: (p.name || '').replace(/\s+/g, ' ').trim() || 'WP' + (i + 1), lat: p.lat, lon: p.lon })); }
@@ -2976,8 +2976,7 @@ function routeChooseHtml(f, rp) {
   const usable = rpUsable(rp), th = rp.state.theatre;
   let msg = '';
   if (th === '') return `<p class="rt-note">${esc(t('route.norp'))}</p>` + (hasRoute(f) ? `<div class="miz-btn-row" style="margin-top:0"><button type="button" class="miz-btn fc-small" data-act="route-keep">${esc(t('route.keep'))}</button></div>` : '');
-  if (!has(TM_PARAMS, th)) msg = tf('route.th.nosupport', theatreName(th));
-  else if (S.theatre !== th) msg = tf('route.th.mismatch', theatreName(th), theatreName(S.theatre));
+  if (!has(TM_PARAMS, S.theatre)) msg = tf('route.th.nosupport', theatreName(S.theatre));
   const tcb = tcConflict();
   if (tcb && !msg) msg = tf('tc.banner', theatreName(tcb.F), theatreName(tcb.C));
   const off = msg !== '';
@@ -3055,9 +3054,9 @@ function routeChanged() { renderRouteBlock(); paintRouteLines(); refreshAll(); c
 
 function routePick(rid) {
   const su = selUnit(), rp = rpRead(), rt = ridOk(rid) ? rp.routes.filter(r => r.rid === rid)[0] : null;
-  if (!su || !rt || rt.points.length < 2 || !has(TM_PARAMS, rp.state.theatre)) return;
+  if (!su || !rt || rt.points.length < 2 || !has(TM_PARAMS, S.theatre)) return;
   const f = su.f;
-  if (S.theatre !== rp.state.theatre || tcConflict()) return;
+  if (rt.theatre !== S.theatre || tcConflict()) return;       // seulement une route du théâtre commun, et rien pendant le bandeau
   f.route = { points: rpPack(rt, S.theatre, rp.state.gs) };
   f.routeLink = { rid: rt.rid, name: rt.name };
   UI.rtChoose = null;
@@ -3158,6 +3157,13 @@ function exportIssues() {
   const out = [];
   const tc = tcConflict();
   if (tc) out.push({ key: 'bar.theatre.conflict', args: [theatreName(tc.F), theatreName(tc.C)] });
+  else if (S.flights.some(f => f.routeLink)) {       // un groupe lié à une route du Route Planner qui est d'un autre théâtre que le commun : son paquet porterait des points d'une autre carte
+    const rp = rpRead();
+    S.flights.forEach((f, fi) => {
+      const rt = f.routeLink ? rp.routes.filter(r => r.rid === f.routeLink.rid)[0] : null;
+      if (rt && rt.theatre !== S.theatre) out.push({ key: 'bar.route.theatre', args: [flightLabel(f, fi), theatreName(rt.theatre), theatreName(S.theatre)] });
+    });
+  }
   if (!S.flights.length) out.push({ key: 'bar.no.flight', args: [] });
   let badFreq = 0, noType = null;
   S.flights.forEach((f, fi) => {
