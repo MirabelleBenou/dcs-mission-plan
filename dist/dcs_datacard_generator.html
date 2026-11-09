@@ -5970,7 +5970,7 @@ function afRwyFreeInput(i, f) {
 function afRwyHtml(f, i) {
   const hit = AF_UI.other.has(f) ? null : afFind(f.name), ends = hit ? afEnds(hit) : [];
   if (!ends.length) return fInput('f.field.runway', 'fields.' + i + '.runway', f.runway).replace('class="ed-field"', 'class="ed-field" data-rwcell');
-  const cur = ends.indexOf(f.runway) !== -1 ? f.runway : (hasText(f.runway) || AF_UI.otherR.has(f) ? '@other' : '');
+  const cur = AF_UI.otherR.has(f) ? '@other' : (ends.indexOf(f.runway) !== -1 ? f.runway : (hasText(f.runway) ? '@other' : ''));       /* le champ libre ouvert le reste au redessin, comme pour le nom */
   const other = cur === '@other';
   const opt = (v, l, x) => '<option value="' + esc(v) + '"' + (v === cur ? ' selected' : '') + (x || '') + '>' + esc(l) + '</option>';
   let o = cur === '' ? opt('', t('f.field.pick')) : '';
