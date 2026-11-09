@@ -9621,7 +9621,7 @@ const I18N = {
   "route.src.manual": "saisie au Route Planner",
   "route.gone": "Cette route n’est plus au Route Planner : la dernière copie est gardée.",
   "route.few": "Cette route n’a plus de points au Route Planner : la dernière copie est gardée.",
-  "route.theatre": "Le Route Planner est sur {0}, ce paquet sur {1} : la route n’est pas reprise.",
+  "route.theatre.other": "La route liée est sur {0}, Mission Plan sur {1} : la route n’est pas reprise.",
   "route.norp": "Le Route Planner n’a pas encore été ouvert ici : la route n’est pas reprise.",
   "route.noid": "Ouvre le Route Planner une fois pour pouvoir choisir ces routes (il leur donne un identifiant).",
   "route.toast.one": "Route « {0} » reprise du Route Planner pour {1}.",
@@ -9860,7 +9860,7 @@ const I18N = {
   "route.src.manual": "typed in the Route Planner",
   "route.gone": "This route is no longer in the Route Planner: the last copy is kept.",
   "route.few": "This route no longer has points in the Route Planner: the last copy is kept.",
-  "route.theatre": "The Route Planner is on {0}, this package on {1}: the route is not followed.",
+  "route.theatre.other": "The linked route is on {0}, Mission Plan on {1}: the route is not followed.",
   "route.norp": "The Route Planner has not been opened here yet: the route is not followed.",
   "route.noid": "Open the Route Planner once to be able to pick these routes (it gives them an identifier).",
   "route.toast.one": "Route “{0}” updated from the Route Planner for {1}.",
@@ -11023,7 +11023,7 @@ function routeViewHtml(f, fi, rp) {
     table = `<table class="rt-tab"><thead><tr><th class="rt-n"></th><th>${esc(t('route.col.leg'))}</th><th class="rt-r">${esc(t('route.col.hdg'))}</th><th class="rt-r">${esc(t('route.col.dist'))}</th></tr></thead><tbody>${rows}<tr class="rt-tot"><td></td><td>${esc(t('route.total'))}</td><td></td><td class="rt-r">${esc(fmtDist(L.total))} ${udLabel()}</td></tr></tbody></table><p class="rt-note">${esc(declNote(ds, geo))}</p>`;
   }
   let note = '';
-  if (st) note = `<p class="rt-note rt-warn">${esc(st.k === 'theatre' ? tf('route.theatre', st.th, rTh()) : t(st.k === 'norp' ? 'route.norp' : (st.k === 'gone' ? 'route.gone' : 'route.few')))}</p>`;
+  if (st) note = `<p class="rt-note rt-warn">${esc(st.k === 'theatre' ? tf('route.theatre.other', theatreName(st.th), theatreName(rTh())) : t(st.k === 'norp' ? 'route.norp' : (st.k === 'gone' ? 'route.gone' : 'route.few')))}</p>`;
   return `<div class="rt-head"><div class="rt-hl"><span class="rt-name">${esc(routeTitle(f))}</span><span class="rt-sub">${esc(sub)}</span></div>
       <div class="rt-hb"><button type="button" class="miz-btn fc-small" data-act="route-change">${esc(t('route.change'))}</button><button type="button" class="miz-btn fc-small" data-act="route-remove">${esc(t('route.remove'))}</button></div></div>
     ${note}${geo ? '<div class="rt-paper" id="rt-paper"></div>' + table : `<p class="rt-note">${esc(t('route.nosketch'))}</p>`}`;

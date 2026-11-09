@@ -3573,11 +3573,12 @@ function loadSet(stateOk) {
     try { localStorage.setItem(KEY_SET, JSON.stringify(setObject())); } catch (e) { /* le stockage manque : le rid se tire à chaque ouverture */ }
     return;
   }
-  /* la route active est celle de route_state_v1, donc du théâtre courant ; sans état, elle fait foi pour le théâtre. Une route d'avant (sans theatre) prend celui de son premier point (theatreOfPoint). */
-  const flat = set.routes, act = flat[set.active];
-  if (!stateOk && THEATRE_IDS.indexOf(act.theatre) !== -1) S.theatre = act.theatre;
+  /* Une route d'avant (sans theatre) prend celui de son premier point (theatreOfPoint), la route active comprise ; le théâtre de référence est mp_theatre_v1 s'il est valide, sinon celui de route_state_v1, sinon le défaut. Sans état, le théâtre courant est celui de mp_theatre_v1, sinon celui de la route active. */
+  const flat = set.routes, act = flat[set.active], mpTh = mpTheatreRead(), ref = mpTh || S.theatre;
+  const first = r => (r === act && stateOk ? S.points : r.points)[0];
+  flat.forEach(r => { if (THEATRE_IDS.indexOf(r.theatre) === -1) { r.theatre = theatreOfPoint(first(r), ref); drawn = true; } });
+  if (!stateOk) S.theatre = mpTh || act.theatre;
   else if (act.theatre !== S.theatre) { act.theatre = S.theatre; drawn = true; }
-  flat.forEach(r => { if (THEATRE_IDS.indexOf(r.theatre) === -1) { r.theatre = theatreOfPoint(r.points[0], S.theatre); drawn = true; } });
   const vis = flat.filter(r => r.theatre === S.theatre);
   RSET = { active: vis.indexOf(act), routes: vis, hidden: flat.filter(r => r.theatre !== S.theatre) };
   const r = RSET.routes[RSET.active];
