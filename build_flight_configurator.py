@@ -2727,7 +2727,7 @@ function rpRead() {
     set.routes.forEach(r => {
       if (!isObj(r) || !Array.isArray(r.points)) return;
       const pts = r.points.filter(p => isObj(p) && packValidCoord(p.lat, p.lon));
-      routes.push({ rid: ridOk(r.rid) ? r.rid : '', theatre: routeTheatre({ theatre: r.theatre, points: pts }, S.theatre), name: str(r.name), points: pts, flight: (isObj(r.flight) && typeof r.flight.groupName === 'string') ? r.flight : null });       // une route sans theatre (stockage d'avant) : lue comme le Route Planner l'écrira (bloc partagé), jamais écrite ici
+      routes.push({ rid: ridOk(r.rid) ? r.rid : '', theatre: routeTheatre(r, thOk(state.theatre) ? state.theatre : S.theatre), name: str(r.name), points: pts, flight: (isObj(r.flight) && typeof r.flight.groupName === 'string') ? r.flight : null });       // une route d'avant le lot (sans theatre) : le théâtre de route_state_v1 s'il est valide, sinon le commun (mp_theatre_v1, Caucasus par défaut), comme le Route Planner l'écrira ; jamais écrite ici
     });
   }
   return { state: state, routes: routes };
@@ -2958,7 +2958,7 @@ function routeStatus(f, rp) {
   if (rp.state.theatre === '') return { k: 'norp' };
   const rt = rp.routes.filter(r => r.rid === f.routeLink.rid)[0];
   if (!rt) return { k: 'gone' };
-  if (routeTheatre(rt, S.theatre) !== rTh()) return { k: 'theatre', th: routeTheatre(rt, S.theatre) };       // la route est d'un autre théâtre (le Route Planner la garde masquée) : aucune reprise
+  if (rt.theatre !== rTh()) return { k: 'theatre', th: rt.theatre };       // la route est d'un autre théâtre (le Route Planner la garde masquée) : aucune reprise
   return rt.points.length < 2 ? { k: 'few' } : null;
 }
 function rpGeo(rt) { return rt.points.map((p, i) => ({ name: (p.name || '').replace(/\s+/g, ' ').trim() || 'WP' + (i + 1), lat: p.lat, lon: p.lon })); }
@@ -3163,7 +3163,7 @@ function exportIssues() {
     const rp = rpRead();
     S.flights.forEach((f, fi) => {
       const rt = f.routeLink ? rp.routes.filter(r => r.rid === f.routeLink.rid)[0] : null;
-      if (rt && routeTheatre(rt, S.theatre) !== S.theatre) out.push({ key: 'bar.route.theatre', args: [flightLabel(f, fi), theatreName(routeTheatre(rt, S.theatre)), theatreName(S.theatre)] });
+      if (rt && rt.theatre !== S.theatre) out.push({ key: 'bar.route.theatre', args: [flightLabel(f, fi), theatreName(rt.theatre), theatreName(S.theatre)] });
     });
   }
   if (!S.flights.length) out.push({ key: 'bar.no.flight', args: [] });

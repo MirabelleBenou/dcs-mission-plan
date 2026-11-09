@@ -2412,7 +2412,7 @@ const I18N = {
     'pk.go.1': 'Exporter {n} route',
     'pk.go.n': 'Exporter {n} routes',
     'confirm.routeDel': 'Supprimer la route « {name} » et ses points ?',
-    'confirm.openSet': 'Remplacer toutes les routes par celles du fichier ?',
+    'confirm.openSet': 'Remplacer toutes les routes, de tous les théâtres, par celles du fichier ?',
     'confirm.theatre': 'Passer au théâtre {th} ? Les {n} routes existantes seront supprimées.',
     'confirm.theatre.1': 'Passer au théâtre {th} ? La route existante sera supprimée.',
     'toast.routesMax': '⚠ 12 routes au plus.',
@@ -2917,7 +2917,7 @@ const I18N = {
     'pk.go.1': 'Export {n} route',
     'pk.go.n': 'Export {n} routes',
     'confirm.routeDel': 'Delete the route "{name}" and its points?',
-    'confirm.openSet': 'Replace all routes with those in the file?',
+    'confirm.openSet': "Replace all routes, on every theatre, with the file's?",
     'confirm.theatre': 'Switch to the {th} theatre? The {n} existing routes will be deleted.',
     'confirm.theatre.1': 'Switch to the {th} theatre? The existing route will be deleted.',
     'toast.routesMax': '⚠ At most 12 routes.',
@@ -3528,11 +3528,11 @@ function rsetSwitch(th) {
 function readRoutes(list, dflt) {
   if (!Array.isArray(list)) return null;
   const out = [], seen = new Set(), per = {};
-  let dropped = 0, drawn = false;
+  let dropped = 0, droppedRoutes = 0, drawn = false;
   list.forEach(r => {
     if (!r || typeof r !== 'object' || Array.isArray(r) || !Array.isArray(r.points)) return;
     const th = THEATRE_IDS.indexOf(r.theatre) !== -1 ? r.theatre : (dflt || '');
-    if ((per[th] || 0) >= MAX_ROUTES) { dropped++; return; }       /* 12 routes au plus par théâtre */
+    if ((per[th] || 0) >= MAX_ROUTES) { droppedRoutes++; return; }       /* 12 routes au plus par théâtre */
     per[th] = (per[th] || 0) + 1;
     const rp = readPoints(r.points);
     dropped += rp.dropped;
@@ -3541,7 +3541,7 @@ function readRoutes(list, dflt) {
     out.push({ rid: rid, name: str(r.name).slice(0, 60), points: rp.points, flight: readFlight(r.flight), theatre: th });
   });
   out.forEach(r => { if (!r.rid) { r.rid = newRid(seen); seen.add(r.rid); drawn = true; } });
-  return out.length ? { routes: out, dropped: dropped, drawn: drawn } : null;
+  return out.length ? { routes: out, dropped: dropped, droppedRoutes: droppedRoutes, drawn: drawn } : null;
 }
 
 function readActiveIndex(a, n) { return (Number.isInteger(a) && a >= 0 && a < n) ? a : 0; }
@@ -3563,10 +3563,9 @@ function loadSet(stateOk) {
     try { localStorage.setItem(KEY_SET, JSON.stringify(setObject())); } catch (e) { /* le stockage manque : le rid se tire à chaque ouverture */ }
     return;
   }
-  /* Le théâtre de chaque route : celui de son champ theatre, sinon (route d'avant) celui de ses propres points (routeTheatre ; pour la route active, ceux de route_state_v1), jamais le theatre de route_state_v1 ; un theatre
-     valide mais à plus de 1 500 km du premier point est réparé (bloc partagé). Le théâtre de référence est mp_theatre_v1 s'il est valide, sinon celui de route_state_v1, sinon le défaut. Sans état, le théâtre courant est celui de mp_theatre_v1, sinon celui de la route active. */
-  const flat = set.routes, act = flat[set.active], mpTh = mpTheatreRead(), ref = mpTh || S.theatre;
-  flat.forEach(r => { const th = routeTheatre({ theatre: r.theatre, points: r === act && stateOk ? S.points : r.points }, ref); if (th !== r.theatre) { r.theatre = th; drawn = true; } });
+  /* Le théâtre d'une route est celui où elle a été créée (son champ theatre), jamais déduit de ses points. Une route d'avant le lot (sans theatre), la route active comprise, prend le théâtre de référence : celui de route_state_v1 s'il est valide (le théâtre du Route Planner quand elle a été enregistrée), sinon mp_theatre_v1, sinon Caucasus ; écrit une fois. */
+  const flat = set.routes, act = flat[set.active], mpTh = mpTheatreRead(), ref = stateOk ? S.theatre : (mpTh || 'Caucasus');
+  flat.forEach(r => { if (THEATRE_IDS.indexOf(r.theatre) === -1) { r.theatre = routeTheatre(r, ref); drawn = true; } });
   if (!stateOk) S.theatre = mpTh || act.theatre;
   if (stateOk) { act.name = S.name; act.points = S.points; }
   const vis = flat.filter(r => r.theatre === S.theatre);
@@ -8049,7 +8048,7 @@ function openAsRoute(route) {
 /* Ouvrir un dcs-route-set-v1 : toutes les routes sont remplacées (confirmation s'il y a des points) ; les réglages partagés et les références, comme une route */
 function openRouteSet(parsed) {
   const sh = parseRoute(Object.assign({}, parsed, { format: FORMAT_ID, points: [], name: '' }));
-  const rr = readRoutes(parsed.routes, sh ? sh.route.theatre : S.theatre);
+  const rr = readRoutes(parsed.routes, THEATRE_IDS.indexOf(parsed.theatre) !== -1 ? parsed.theatre : S.theatre);       /* une route sans theatre prend celui de tête du fichier, sinon le courant */
   const lays = Array.isArray(parsed.layers) ? parsed.layers.map(cfLayer).filter(Boolean) : [];
   /* sans liste de routes, ou sans aucun point (et sans calque à ajouter) : rien ne s'ouvre, rien ne change */
   if (!rr || !sh || (!rr.routes.some(r => r.points.length) && !lays.length)) { rejectIncomplete(SET_FORMAT); return; }
@@ -8060,20 +8059,23 @@ function openRouteSet(parsed) {
     return;
   }
   syncActive();
-  /* les routes du théâtre du fichier sont remplacées (confirmation s'il y a des points) ; celles des autres théâtres se masquent, gardées */
-  const th = sh.route.theatre, cross = th !== S.theatre;
-  const landing = cross ? RSET.hidden.filter(r => r.theatre === th) : RSET.routes;
-  if (landing.some(r => r.points.length) && !confirm(t('confirm.openSet'))) return;
-  if (cross) rsetSwitch(th);
-  const act = readActiveIndex(parsed.active, rr.routes.length);
-  rr.routes.forEach(r => { r.theatre = th; });
-  RSET.routes = rr.routes; RSET.active = act;
-  const a = rr.routes[act];
+  /* ouvrir un jeu remplace tout le jeu de routes, de tous les théâtres (confirmation s'il y a des points) ; chaque route rejoint son théâtre (son champ, sinon celui de tête du fichier, sinon le courant) ; le Route Planner reste sur son théâtre */
+  if (RSET.routes.concat(RSET.hidden || []).some(r => r.points.length) && !confirm(t('confirm.openSet'))) return;
+  const C = S.theatre;
+  const vis = rr.routes.filter(r => r.theatre === C), hid = rr.routes.filter(r => r.theatre !== C);
+  const a0 = rr.routes[readActiveIndex(parsed.active, rr.routes.length)];
+  RSET.routes = vis; RSET.hidden = hid; RSET.active = 0;
+  if (!vis.length) { const b = blankRoute(); b.theatre = C; vis.push(b); }
+  const act = Math.max(0, vis.indexOf(a0));
+  RSET.active = act;
+  const a = vis[act];
   const route = sh.route;
+  route.theatre = C;
   route.name = a.name;
   route.points = a.points;
   setRoute(route);
   let msg = rr.dropped ? t('toast.openedDropped', { n: rr.dropped }) : t('toast.opened');
+  if (rr.droppedRoutes) msg += ' · ' + t('toast.routesMax').replace(/^\u26a0\s*/, '');
   if (sh.droppedRefs) msg += ' · ' + t('toast.refsDropped', { n: sh.droppedRefs });
   if (lays.length) { cfMerge(lays); if (layersChanged()) msg += ' · ' + t(cfOne(lays.length) ? 'toast.cfShown.1' : 'toast.cfShown.n', { n: lays.length }); }
   showToast(msg, { type: 'ok' });
@@ -8086,10 +8088,10 @@ function setFileObject(sel) {
   const obj = {
     format: SET_FORMAT, theatre: S.theatre, units: ex.units, navDisplay: ex.navDisplay, groundSpeed: S.groundSpeed, legBoxes: S.legBoxes,
     refs: ex.refs, active: RSET.active,
-    routes: RSET.routes.map(r => ({ rid: r.rid, name: r.name, points: r.points.map(exportPoint), flight: r.flight ? makeLink(r.flight, r.flight.source) : null }))
+    routes: RSET.routes.concat(RSET.hidden || []).map(r => ({ rid: r.rid, name: r.name, theatre: r.theatre, points: r.points.map(exportPoint), flight: r.flight ? makeLink(r.flight, r.flight.source) : null }))       /* toutes les routes de tous les théâtres, masquées comprises, chacune avec son theatre */
   };
   if (sel) {
-    if (!sel.route) { obj.routes = obj.routes.map(r => ({ rid: r.rid, name: r.name, points: [], flight: r.flight })); obj.refs = []; }
+    if (!sel.route) { obj.routes = obj.routes.map(r => ({ rid: r.rid, name: r.name, theatre: r.theatre, points: [], flight: r.flight })); obj.refs = []; }
     const chosen = CF_LAYERS.filter(l => sel.layers.indexOf(l.id) !== -1);
     if (chosen.length) obj.layers = chosen;
   }

@@ -2333,7 +2333,7 @@ const I18N = {
     'imp.src.current': 'Briefing en cours',
     'imp.src.currentOff': 'Aucun briefing enregistré dans ce navigateur.',
     'imp.src.route': 'Route en cours',
-    'imp.src.routeOff': 'Aucune route enregistrée dans ce navigateur.',
+    'imp.src.routeOff': 'Aucune route sur {th} dans ce navigateur.',
     'imp.src.file': 'Fichier JSON (briefing ou route)',
     'imp.route.title': 'Route à importer',
     'imp.route.line': '« {name} » — {n} points',
@@ -2744,7 +2744,7 @@ const I18N = {
     'imp.src.current': 'Current briefing',
     'imp.src.currentOff': 'No briefing saved in this browser.',
     'imp.src.route': 'Current route',
-    'imp.src.routeOff': 'No route saved in this browser.',
+    'imp.src.routeOff': 'No route on {th} in this browser.',
     'imp.src.file': 'JSON file (briefing or route)',
     'imp.route.title': 'Route to import',
     'imp.route.line': '“{name}” — {n} waypoints',
@@ -6110,11 +6110,17 @@ function routeFromObject(o) {
 
 /* La route enregistrée par le Route Planner, en lecture seule ; null s'il n'y a aucun point. */
 function dgCommonTheatre() { return dgReadTheatreKey() || dgTheatre(); }       /* le théâtre commun C : mp_theatre_v1 s'il est valide, sinon celui du document */
+/* Le théâtre de référence des routes d'avant le lot : celui de route_state_v1 s'il est valide, sinon mp_theatre_v1, sinon Caucasus (la même règle que le Route Planner et le Flight Configurator) */
+function dgStateTheatre(st) { return isPlainObject(st) && dgTheatreOk(st.theatre) ? st.theatre : (dgReadTheatreKey() || DG_THEATRE_DEFAULT); }
+/* La route en cours : route_state_v1 s'il est de C (un theatre absent ou invalide vaut dgStateTheatre) ; sinon la première route de C de route_set_v1 ; sinon aucune. Les réglages de la route viennent de route_state_v1 seulement s'il est de C ; sinon de la clé partagée et des défauts. */
 function readCurrentRoute() {
-  const o = readJsonKey(KEY_ROUTE);
-  if (isPlainObject(o) && typeof o.theatre === 'string' && routeTheatre({ theatre: o.theatre, points: Array.isArray(o.points) ? o.points : [] }, dgCommonTheatre()) !== dgCommonTheatre()) return null;       /* la route active du Route Planner est d'un autre théâtre que C : ignorée (rien d'importé, rien de rempli) jusqu'à ce que le Route Planner l'ait réécrite pour C */
-  const r = routeFromObject(o);
-  return (r && r.points.length) ? r : null;
+  const o = readJsonKey(KEY_ROUTE), C = dgCommonTheatre();
+  if (isPlainObject(o) && dgStateTheatre(o) === C) {
+    const r = routeFromObject(Object.assign({}, o, { theatre: C }));
+    if (r && r.points.length) return r;
+  }
+  const l = biReadRouteSet();
+  return l.length ? l[0].route : null;
 }
 
 /* Altitude d'un point (mètres) → chaîne entière dans l'unité de la route */
@@ -6251,11 +6257,12 @@ function biAddCards(cards) {
 function biReadRouteSet() {
   const st = readJsonKey(KEY_ROUTE), set = readJsonKey(KEY_ROUTESET), C = dgCommonTheatre();
   if (!isPlainObject(set) || set.format !== SET_FORMAT || !Array.isArray(set.routes)) return [];
-  const stOk = isPlainObject(st) && typeof st.theatre === 'string' && routeTheatre({ theatre: st.theatre, points: Array.isArray(st.points) ? st.points : [] }, C) === C;       /* route_state_v1 d'un autre théâtre que C : ignoré (ni la route active, ni ses réglages) */
-  const base = stOk ? st : { format: ROUTE_FORMAT, theatre: C };
+  const stOk = isPlainObject(st) && dgStateTheatre(st) === C;       /* route_state_v1 d'un autre théâtre que C : ignoré (ni la route active, ni ses réglages) */
+  const ref = dgStateTheatre(st);       /* le théâtre des routes d'avant le lot (H2) */
+  const base = stOk ? Object.assign({}, st, { theatre: C }) : { format: ROUTE_FORMAT, theatre: C };
   const out = [];
   set.routes.forEach((r, i) => {
-    if (!isPlainObject(r) || !Array.isArray(r.points) || routeTheatre(r, C) !== C) return;       /* seulement les routes de C (bloc partagé : une route sans theatre est lue comme le Route Planner l'écrira) */
+    if (!isPlainObject(r) || !Array.isArray(r.points) || routeTheatre(r, ref) !== C) return;       /* seulement les routes de C (bloc partagé : une route sans theatre est lue comme le Route Planner l'écrira) */
     const o = (stOk && i === set.active) ? { name: st.name, points: st.points } : { name: r.name, points: r.points };
     const route = routeFromObject(Object.assign({}, base, o));
     if (!route || !route.points.length) return;
@@ -6301,7 +6308,7 @@ function biRefresh(lang) {
   rtRow.classList.toggle('off', rtOff);
   rtRadio.disabled = rtOff;
   rtNote.hidden = !rtOff;
-  rtNote.textContent = rtOff ? t('imp.src.routeOff') : '';
+  rtNote.textContent = rtOff ? t('imp.src.routeOff', { th: t('th.' + dgCommonTheatre()) }) : '';
   document.getElementById('bi-src-current').checked = bi.src === 'current';
   document.getElementById('bi-src-route').checked = bi.src === 'route';
   document.getElementById('bi-src-file').checked = bi.src === 'file';
