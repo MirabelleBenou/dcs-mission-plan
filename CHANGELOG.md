@@ -55,6 +55,8 @@ Changes merged since the last release, grouped per tool.
 - **Import** now also reads the Briefing Generator — its groups, their number of aircraft and the radio plan of each aircraft type, cockpit channel numbers converted — with Side, Type and Name filters. A group is completed when its name, case included, and side match; a flight of an aircraft the suite does not handle comes in as a group with its route only. An aircraft the suite does not know by the briefing's name is left for you to pick; the package exports once every type is picked. An imported route now shows in the Route Planner as the group's route.
 - Radio bands follow the Mission Tools rule, keeping only what both DCS and the reference guide accept: the Mi-24P's R-863 now ends at 399.9 MHz and its R-828 at 59.9 MHz. An out-of-band frequency already in a group (imported, or typed before a band changed) is flagged but no longer blocks the export.
 - Theatres are listed by their name (“Cold War Germany”), as in the Route Planner. The status bar no longer opens in red: it says what to do first, and turns red only when you try to export something incomplete.
+- The theatre is picked in the toolbar, like the Route Planner and the Datacard Generator, and shared with them (all fourteen theatres). When the groups are on another theatre, a banner offers to go back to it or to keep the shared theatre and remove the groups' routes; export waits for that choice. An opened package, mission or working file sets the shared theatre.
+- Route lengths follow the distance unit shared by the Route Planner and the Datacard Generator.
 
 ### Recon Station
 #### Added
@@ -86,6 +88,7 @@ Changes merged since the last release, grouped per tool.
 - The crew has one line per aircraft (callsign, pilot, type, board number), filled from HQ or a flight package. When every line has a type, the group's aircraft and count follow the lines; the card's header reads “2 × Mi-24P · CAS” (or “1 × Mi-24P + 1 × Mi-8MT”) instead of “Mi-24P · FLIGHT OF 2”. A crew member saved in an older datacard is kept after the pilot's name.
 - The editor has one **Group and crew** box, as in the Flight Configurator: the group (name, coalition for a group's datacard, aircraft, count, task, threat), then one card per aircraft (callsign, type, board number, pilot). A group's datacard and a free card now show the same boxes in the same order — the order of the printed datacard — on desktop and in the phone's tabs; the units move to **Meta**. A mixed group's aircraft read "Mi-24P + Mi-8MT" on both.
 - The datacard always keeps all its blocks, even empty ones, so it can be printed and filled in by hand: an empty block shows its headings and a few blank lines (three mission steps, four crew rows, five navigation points, two reference points, four radio channels, the departure, arrival and alternate airfields, the weather labels, Joker and Bingo, two lines for the loadout and two for notes). A block with data is unchanged; a full datacard may now take two pages.
+- Units (mass, distance, altitude) move to the toolbar, apply to every card and are shared with the Route Planner.
 #### Removed
 - The Datacard Generator's own HQ and flight package imports, replaced by the common import window of the Flight Configurator and the Route Planner.
 #### Fixed
@@ -108,6 +111,7 @@ Changes merged since the last release, grouped per tool.
 - **Groups…** replaces “Link to a group”: tick the groups that follow the route, or create one. Imports from HQ or a flight package attach each route to its group, creating it if needed; the flight package exports one flight per group.
 - **Import** replaces “From HQ” and “Flight package”: the same window as the Flight Configurator (mission loaded in HQ, current briefing, flight package .json or .zip, briefing file), bringing the group's aircraft, radios, loadouts and liveries along with its route. A route imported in the Flight Configurator is added here as its group's route.
 - The theatre is shared with the Datacard Generator: changing it in one module changes it in the other.
+- Units are shared with the Datacard Generator.
 #### Fixed
 - Computed magnetic variation now follows DCS for every mission date: years up to 1985 use the IGRF model DCS ships (up to 1.2° closer), later years the previous five-year WMM file, as DCS does (0.2° closer in 1990, 1995 … 2025).
 
@@ -122,6 +126,7 @@ Changes merged since the last release, grouped per tool.
 - The Flight Configurator chapter: the helicopters' HF radio and the bands.
 - The Datacard Generator chapter: empty blocks are kept.
 - The Datacard Generator chapter: the airfield list.
+- The Flight Configurator, Datacard Generator and Route Planner chapters: shared theatre and units.
 
 ---
 

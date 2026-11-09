@@ -2692,6 +2692,21 @@ const ridOk = v => typeof v === 'string' && /^[a-z0-9]{6,32}$/.test(v);
 function lsJson(k) { try { return JSON.parse(lsGet(k) || 'null'); } catch (e) { return null; } }
 function hasRoute(f) { return !!(f && f.route && routePoints(f.route.points).length > 0); }
 function ptsLabel(n) { return tf(n < 2 ? 'route.pts.one' : 'route.pts.many', n); }
+// L'unité de distance partagée : mp_units_v1.distance (« km » ou « nm »), posée par le Route Planner ou le Datacard Generator. Le Flight Configurator la lit à l'ouverture et la suit (évènement « storage ») ; il ne l'écrit jamais. Clé absente ou illisible : « nm », comme avant.
+const KEY_UNITS = 'mp_units_v1';
+let UDIST = 'nm';
+function udRead() {
+  try { const o = JSON.parse(lsGet(KEY_UNITS) || 'null'); return isObj(o) && (o.distance === 'km' || o.distance === 'nm') ? o.distance : 'nm'; } catch (e) { return 'nm'; }
+}
+function udLabel() { return UDIST === 'km' ? 'km' : 'NM'; }
+function fmtDist(nm) { return fmtNm(UDIST === 'km' ? nm * NAV_NM_KM : nm); }
+// Le DG ou le RP a changé l'unité : les longueurs se redessinent, rien ne s'écrit
+function udFollow() {
+  const d = udRead();
+  if (d === UDIST) return;
+  UDIST = d;
+  renderRouteBlock(); paintRouteLines();
+}
 function fmtNm(v) { const s = (Math.round(v * 10) / 10).toFixed(1); return CURRENT_LANG === 'fr' ? s.replace('.', ',') : s; }
 function routeTitle(f) { return f.routeLink ? (f.routeLink.name.trim() !== '' ? f.routeLink.name : t('route.unnamed')) : t('route.imported'); }
 
@@ -2855,12 +2870,12 @@ function rtSketch(pts, o) {
     res.push({ x0: 8, y0: 12, x1: 22 + title.length * 13, y1: 38 });
     extra += '<g class="rt-north"><line x1="' + (W - 32) + '" y1="64" x2="' + (W - 32) + '" y2="28"/><path d="M' + (W - 38) + ' 36L' + (W - 32) + ' 28L' + (W - 26) + ' 36"/></g><text class="rt-nn" x="' + (W - 32) + '" y="86">N</text>';
     res.push({ x0: W - 48, y0: 18, x1: W - 14, y1: 94 });
-    const pxNm = s / RT_NM_PER_DEG, sizes = [1, 2, 5, 10, 20, 50, 100, 200, 500];
+    const pxNm = UDIST === 'km' ? s / RT_NM_PER_DEG / NAV_NM_KM : s / RT_NM_PER_DEG, sizes = [1, 2, 5, 10, 20, 50, 100, 200, 500];
     let nm = 0;
     if (pxNm > 0) for (let i = 0; i < sizes.length; i++) if (sizes[i] * pxNm > 50) { nm = sizes[i]; break; }
     if (nm) {
       const L = nm * pxNm, yb = H - 20;
-      extra += '<g class="rt-scale"><path d="M16 ' + (yb - 6) + 'V' + yb + 'H' + rn(16 + L) + 'V' + (yb - 6) + '"/><text x="' + rn(16 + L + 8) + '" y="' + (yb + 4) + '">' + nm + ' NM</text></g>';
+      extra += '<g class="rt-scale"><path d="M16 ' + (yb - 6) + 'V' + yb + 'H' + rn(16 + L) + 'V' + (yb - 6) + '"/><text x="' + rn(16 + L + 8) + '" y="' + (yb + 4) + '">' + nm + ' ' + udLabel() + '</text></g>';
       res.push({ x0: 10, y0: yb - 14, x1: 16 + L + 16 + String(nm).length * 7.2 + 24, y1: yb + 10 });
     }
     drawn.forEach(q => res.push(rtBoxAround(q.x, q.y, (q.start ? rStart : rPt) + 1.5)));
@@ -2943,12 +2958,13 @@ function rpGeo(rt) { return rt.points.map((p, i) => ({ name: (p.name || '').repl
 function routeCardHtml(rt, f, off) {
   const geo = rpGeo(rt), on = f.routeLink && f.routeLink.rid === rt.rid && ridOk(rt.rid), linked = rtMatches(rt, f);
   off = off || !ridOk(rt.rid);
+  const tcb = tcConflict(), tcTip = tcb ? ' title="' + esc(tf('tc.banner', theatreName(tcb.F), theatreName(tcb.C))) + '"' : '';
   const tag = rt.flight ? tf('route.tag.linked', rt.flight.groupName.trim()) : t('route.tag.free');
   const name = rt.name.trim() !== '' ? rt.name.trim() : t('route.unnamed');
-  return `<button type="button" class="rt-card${on ? ' on' : ''}" data-act="route-pick" data-rid="${esc(rt.rid)}"${off ? ' disabled' : ''}>
+  return `<button type="button" class="rt-card${on ? ' on' : ''}" data-act="route-pick" data-rid="${esc(rt.rid)}"${off ? ' disabled' : ''}${tcTip}>
     <span class="rt-mini">${rtSketch(geo, { mini: true, W: 160, H: 100, mx: 10, my: 10 })}</span>
     <span class="rt-cn">${esc(name)}</span>
-    <span class="rt-cm">${esc(ptsLabel(geo.length) + ' · ' + fmtNm(routeNm(geo)) + ' NM')}</span>
+    <span class="rt-cm">${esc(ptsLabel(geo.length) + ' · ' + fmtDist(routeNm(geo)) + ' ' + udLabel())}</span>
     <span class="snap-flight-tag rt-tag${linked ? ' full' : ''}">${esc(tag)}</span></button>`;
 }
 function routeChooseHtml(f, rp) {
@@ -2957,6 +2973,8 @@ function routeChooseHtml(f, rp) {
   if (th === '') return `<p class="rt-note">${esc(t('route.norp'))}</p>` + (hasRoute(f) ? `<div class="miz-btn-row" style="margin-top:0"><button type="button" class="miz-btn fc-small" data-act="route-keep">${esc(t('route.keep'))}</button></div>` : '');
   if (!has(TM_PARAMS, th)) msg = tf('route.th.nosupport', theatreName(th));
   else if (S.theatre !== th) msg = tf('route.th.mismatch', theatreName(th), theatreName(S.theatre));
+  const tcb = tcConflict();
+  if (tcb && !msg) msg = tf('tc.banner', theatreName(tcb.F), theatreName(tcb.C));
   const off = msg !== '';
   let h = usable.length ? `<p class="rt-note">${esc(t(hasRoute(f) ? 'route.choose.other' : 'route.choose.none'))}</p>` : `<p class="rt-note">${esc(t('route.empty'))}</p>`;
   if (msg) h += `<p class="rt-note">${esc(msg)}</p>`;
@@ -2974,9 +2992,9 @@ function routeViewHtml(f, fi, rp) {
   let table = '';
   if (geo) {
     const ds = declSource(rp.state.nav), L = routeLegs(geo, ds);
-    sub += ' · ' + fmtNm(L.total) + ' NM';
-    const rows = L.legs.map((l, i) => `<tr><td class="rt-n">${i + 1}</td><td>${esc(l.from)} → ${esc(l.to)}</td><td class="rt-r">${esc(l.hdg)}°</td><td class="rt-r">${esc(fmtNm(l.nm))} NM</td></tr>`).join('');
-    table = `<table class="rt-tab"><thead><tr><th class="rt-n"></th><th>${esc(t('route.col.leg'))}</th><th class="rt-r">${esc(t('route.col.hdg'))}</th><th class="rt-r">${esc(t('route.col.dist'))}</th></tr></thead><tbody>${rows}<tr class="rt-tot"><td></td><td>${esc(t('route.total'))}</td><td></td><td class="rt-r">${esc(fmtNm(L.total))} NM</td></tr></tbody></table><p class="rt-note">${esc(declNote(ds, geo))}</p>`;
+    sub += ' · ' + fmtDist(L.total) + ' ' + udLabel();
+    const rows = L.legs.map((l, i) => `<tr><td class="rt-n">${i + 1}</td><td>${esc(l.from)} → ${esc(l.to)}</td><td class="rt-r">${esc(l.hdg)}°</td><td class="rt-r">${esc(fmtDist(l.nm))} ${udLabel()}</td></tr>`).join('');
+    table = `<table class="rt-tab"><thead><tr><th class="rt-n"></th><th>${esc(t('route.col.leg'))}</th><th class="rt-r">${esc(t('route.col.hdg'))}</th><th class="rt-r">${esc(t('route.col.dist'))}</th></tr></thead><tbody>${rows}<tr class="rt-tot"><td></td><td>${esc(t('route.total'))}</td><td></td><td class="rt-r">${esc(fmtDist(L.total))} ${udLabel()}</td></tr></tbody></table><p class="rt-note">${esc(declNote(ds, geo))}</p>`;
   }
   let note = '';
   if (st) note = `<p class="rt-note rt-warn">${esc(st.k === 'theatre' ? tf('route.theatre', st.th, S.theatre) : t(st.k === 'norp' ? 'route.norp' : (st.k === 'gone' ? 'route.gone' : 'route.few')))}</p>`;
@@ -2997,7 +3015,7 @@ function rtDraw() {
   RT.w = w;
   if (!geo || w < 120) { paper.innerHTML = ''; return; }
   const rp = rpRead(), L = routeLegs(geo, declSource(rp.state.nav));
-  paper.innerHTML = rtSketch(geo, { W: w, phone: col.clientWidth <= 520, title: flightLabel(su.f, su.fi), label: tf('route.sketch', routeTitle(su.f)), texts: L.legs.map(l => l.hdg + '° · ' + fmtNm(l.nm)) });
+  paper.innerHTML = rtSketch(geo, { W: w, phone: col.clientWidth <= 520, title: flightLabel(su.f, su.fi), label: tf('route.sketch', routeTitle(su.f)), texts: L.legs.map(l => l.hdg + '° · ' + fmtDist(l.nm)) });
 }
 function renderRouteBlock() {
   const host = document.getElementById('col-route'), su = selUnit();
@@ -3017,7 +3035,7 @@ function routeHtml(f) {
   const see = key => f.units.length ? `<button type="button" class="fc-see" data-act="see-route">${esc(t(key))}</button>` : '';       // le bloc Route de la colonne de droite attend une unité
   if (!hasRoute(f)) return `<div class="fc-route none"><span class="fc-route-t">${esc(t('route.none'))}</span>${see('route.pick')}</div>`;
   const geo = routeGeo(f), n = routeKeys(f.route.points).length;
-  const text = geo ? tf('route.line', routeTitle(f), ptsLabel(n), fmtNm(routeNm(geo)) + ' NM') : tf('route.line.nod', routeTitle(f), ptsLabel(n));
+  const text = geo ? tf('route.line', routeTitle(f), ptsLabel(n), fmtDist(routeNm(geo)) + ' ' + udLabel()) : tf('route.line.nod', routeTitle(f), ptsLabel(n));
   const thumb = geo ? `<span class="rt-thumb">${rtSketch(geo, { mini: true, W: 64, H: 40, mx: 7, my: 7 })}</span>` : '';
   return `<div class="fc-route">${thumb}<span class="fc-route-t">${esc(text)}</span>${see('route.see')}</div>`;
 }
@@ -3034,7 +3052,7 @@ function routePick(rid) {
   const su = selUnit(), rp = rpRead(), rt = ridOk(rid) ? rp.routes.filter(r => r.rid === rid)[0] : null;
   if (!su || !rt || rt.points.length < 2 || !has(TM_PARAMS, rp.state.theatre)) return;
   const f = su.f;
-  if (S.theatre !== rp.state.theatre) return;
+  if (S.theatre !== rp.state.theatre || tcConflict()) return;
   f.route = { points: rpPack(rt, S.theatre, rp.state.gs) };
   f.routeLink = { rid: rt.rid, name: rt.name };
   UI.rtChoose = null;
@@ -3735,10 +3753,17 @@ function readHqMission() {
 function fcImportBefore() {
   flushWork();         // ce que l'on a tapé part dans la fiche avant que le bloc la lise
   UI.clamped = 0;      // le compte des réglages ramenés à la limite est celui de cet import
+  const g = gsRead();
+  UI.impPre = !g || !g.theatre || !g.flights.length;      // la fiche était vide ou sans théâtre : l'import peut lui en poser un
 }
 function fcImported(res) {
   if (res.failed && !res.fcIds.length) { renderAll(); return; }
   gsPull();
+  if (UI.impPre) {       // l'import a posé le théâtre de la fiche : le théâtre commun le prend, sans question (le Route Planner et le Datacard Generator suivent)
+    const g = gsRead();
+    if (g && thOk(g.theatre) && g.theatre !== S.theatre) thSet(g.theatre);
+  }
+  UI.impPre = false;
   const k = S.flights.findIndex(f => f.fcId === res.fcIds[0]);
   S.sel = { f: Math.max(0, k), u: 0 };       // la première unité du premier groupe importé
   Object.assign(UI.cmp, { saving: false, err: '', st: null });
@@ -4282,6 +4307,7 @@ function init() {
   } catch (e) { /* l'écran marche sans */ }
   if (gsRead() !== null && !adoptFailed) { gsMarkAll(); if (gsMarkRaw()) gsFixRaw(); } else { GS.seen = {}; GS.theatre = ''; GS.live = false; if (gsRead() === null) GS.mf = true; }       // sans fiche (stockage plein), les groupes restent dans fc_state_v1 jusqu'à ce qu'elle puisse être écrite
   S.theatre = thInitial();       // toujours un théâtre : la clé partagée, la fiche, la route enregistrée, le Caucase
+  UDIST = udRead();
   thFill();
   tcAdopt();
   initToolbarMenus([['theme-select', () => t('toolbar.theme.tooltip')], ['theatre', () => t('tb.theatre'), undefined, true]]);       // la liste du théâtre : le bouton prend la largeur de l'option choisie, comme au Datacard Generator
@@ -4295,7 +4321,7 @@ function init() {
   renderAll();
   if (taken.changed) showToast(taken.toast, 4500);
   window.addEventListener('pagehide', flushWork);
-  window.addEventListener('storage', e => { routeStorage(e); gsStorage(e); if (e.key === KEY_THEATRE) thFollow(); });
+  window.addEventListener('storage', e => { routeStorage(e); gsStorage(e); if (e.key === KEY_THEATRE) thFollow(); if (e.key === KEY_UNITS) udFollow(); });
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushWork(); else { UI.hq = undefined; gsPull(); routeTakeover(); } });
 }
 init();

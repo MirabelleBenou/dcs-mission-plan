@@ -3584,6 +3584,31 @@ function mpTheatreFollow() {
   if (id && S && id !== S.theatre) setTheatre(id);
 }
 
+/* Les unités partagées avec le Datacard Generator : mp_units_v1 = { mass, distance, altitude } (kg|lb, km|nm, m|ft), sans horodatage ; même règle que le théâtre (rien n'est réécrit si la valeur est déjà là).
+   Le Route Planner règle distance et altitude, et garde la masse telle qu'il la trouve (kg si la clé est absente). */
+const KEY_UNITS = 'mp_units_v1';
+function mpUnitsRead() {
+  try {
+    const o = JSON.parse(localStorage.getItem(KEY_UNITS));
+    if (!o || typeof o !== 'object') return null;
+    if ((o.distance !== 'km' && o.distance !== 'nm') || (o.altitude !== 'm' && o.altitude !== 'ft')) return null;
+    return { mass: o.mass === 'lb' ? 'lb' : 'kg', distance: o.distance, altitude: o.altitude };
+  } catch (e) { return null; }
+}
+function mpUnitsWrite() {
+  const cur = mpUnitsRead();
+  const u = { mass: cur ? cur.mass : 'kg', distance: S.units.distance, altitude: S.units.altitude };
+  if (cur && cur.mass === u.mass && cur.distance === u.distance && cur.altitude === u.altitude) return;   /* déjà là : aucune écriture */
+  try { localStorage.setItem(KEY_UNITS, JSON.stringify(u)); } catch (e) { if (!SAVE_FAILED) { try { showToast(t('toast.saveFail'), { type: 'err' }); } catch (e2) { /* page pas encore prête */ } } SAVE_FAILED = true; }
+}
+/* Le Datacard Generator a changé les unités : elles s'appliquent comme un choix du menu, sans réécrire la clé */
+function mpUnitsFollow() {
+  const u = mpUnitsRead();
+  if (!u || !S || (u.distance === S.units.distance && u.altitude === S.units.altitude)) return;
+  S.units.distance = u.distance; S.units.altitude = u.altitude;
+  persistState(); renderPts(); renderRefs(); renderNav(); drawRoute(); drawDecor(); syncControls();
+}
+
 /* Le théâtre change (la route est gardée) : la liste de la barre, ou un fichier CombatFlite qui nomme le sien */
 function setTheatre(id) {
   const wasDcs = S.ui.layer === 'dcs' || !!ourLayer(S.ui.layer);
@@ -7659,6 +7684,7 @@ function setRoute(route) {
   S.theatre = route.theatre;
   mpTheatreWrite(S.theatre);
   S.units = route.units;
+  mpUnitsWrite();
   S.navDisplay = route.navDisplay;
   S.groundSpeed = route.groundSpeed;
   S.legBoxes = route.legBoxes;
@@ -9857,9 +9883,11 @@ function unOutside(e) {
 function unChoose(k) {
   if (k === 'km' || k === 'nm') {
     S.units.distance = k;
+    mpUnitsWrite();
     persistState(); renderPts(); renderNav(); drawRoute(); syncControls();
   } else if (k === 'm' || k === 'ft') {
     S.units.altitude = k;
+    mpUnitsWrite();
     persistState(); renderPts(); renderRefs(); renderNav(); drawDecor(); syncControls();
   }
 }
@@ -10511,6 +10539,7 @@ function bindEvents() {
   window.addEventListener('storage', e => {
     if (e.key === 'mission_snapshot_v1' && navIsCalc()) { renderNav(); drawRoute(); syncControls(); }
     if (e.key === KEY_THEATRE) mpTheatreFollow();       /* le Datacard Generator a changé le théâtre */
+    if (e.key === KEY_UNITS) mpUnitsFollow();           /* ... ou les unités */
   });
   $('route-name').addEventListener('input', e => { S.name = e.target.value; persistState(); routesRender(); });
   routesBind();
@@ -10990,6 +11019,7 @@ function init() {
   syncAirfields();
   syncTowns();
   { const k = mpTheatreRead(); if (k) mpTheatreFollow(); else mpTheatreWrite(S.theatre); }       /* le théâtre partagé : pris s'il diffère, sinon écrit */
+  { const u = mpUnitsRead(); if (u) mpUnitsFollow(); else mpUnitsWrite(); }       /* les unités partagées : prises si elles diffèrent, sinon écrites */
   persistState();
   /* Les polices embarquées servent au canevas : redessiner la grille une fois chargées */
   if (document.fonts && document.fonts.load) {
