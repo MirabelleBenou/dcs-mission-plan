@@ -75,6 +75,7 @@ CSS = r"""
 }
 
 :root {
+  --mp-accent: #c0892a;
   /* Typography stack — partagée par tous les thèmes (la phase X — étape C
      redéfinira --f-typewriter sur les thèmes modernes). */
   --f-stencil: 'Stardos Stencil', 'Impact', 'Arial Narrow Bold', sans-serif;
@@ -578,20 +579,9 @@ select[data-tbm-src] { display: none !important; }
   letter-spacing: 2px;
   color: var(--amber);
   list-style: none;
-  display: flex; align-items: center; justify-content: space-between;
+  display: flex; align-items: center;
   border-bottom: 1px solid var(--amber-dark);
-  user-select: none;
   min-height: 48px;
-}
-.ed-section > summary::-webkit-details-marker { display: none; }
-.ed-section > summary::after {
-  content: '◄';
-  font-size: 10px;
-  color: var(--paper);
-  transition: transform .2s;
-}
-.ed-section[open] > summary::after {
-  transform: rotate(-90deg);
 }
 .ed-section > summary:hover { color: var(--paper-light); }
 
@@ -637,9 +627,11 @@ select[data-tbm-src] { display: none !important; }
   display: flex; align-items: center; gap: 6px;
 }
 .ed-field label::before {
-  content: '►';
-  color: var(--rust);
-  font-size: 8px;
+  content: '';
+  flex: none;
+  width: 6px;
+  height: 2px;
+  background: var(--rust);
 }
 
 .ed-field input[type=text],
@@ -919,45 +911,6 @@ select[data-tbm-src] { display: none !important; }
 }
 .wing-logo-zone {
   min-height: 80px;
-}
-/* Squadron cards */
-.wing-sq-card {
-  border: 1px solid var(--khaki);
-  border-radius: 4px;
-  padding: 10px;
-  margin-bottom: 10px;
-  background: rgba(0,0,0,.15);
-}
-.wing-sq-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
-  font-family: var(--f-stencil);
-  font-size: 12px;
-  color: var(--khaki-light);
-  letter-spacing: .06em;
-}
-.wing-sq-toggle {
-  flex: 1;
-  cursor: pointer;
-  user-select: none;
-}
-.wing-sq-toggle::before {
-  content: '▶ ';
-  font-size: 9px;
-  opacity: .7;
-}
-.wing-sq-card.open .wing-sq-toggle::before {
-  content: '▼ ';
-}
-.wing-sq-body {
-  display: none;
-}
-.wing-sq-card.open .wing-sq-body {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
 }
 /* Aircraft tags */
 .wing-aircraft-tags {
@@ -2693,6 +2646,7 @@ body[data-format="full"] [data-fmt="simple"] { display: none !important; }
 
   /* Active section: hide summary, force content visible */
   body[data-active-tab] .ed-section > summary { display: none; }
+  body[data-active-tab] .ui-foldbar { display: none; }
   body[data-active-tab] .ed-section > .ed-content {
     display: flex !important;
     padding: 0;
@@ -3050,38 +3004,11 @@ __CSS__
 
   <!-- ============ EDITOR ============ -->
   <aside class="editor" id="editor">
-
-    <!-- 00 META -->
-    <details class="ed-section" data-section="meta" open>
-      <summary data-i18n="editor.meta.summary">00 ░ MÉTADONNÉES</summary>
-      <div class="ed-content">
-        <div class="panel-mobile-header" data-i18n="editor.meta.summary">00 ░ MÉTADONNÉES</div>
-        <div class="ed-field-row">
-          <div class="ed-field"><label data-i18n="editor.meta.operation">Opération</label><input data-bind="meta.operation" type="text" placeholder="FOOTHOLD"></div>
-          <div class="ed-field"><label data-i18n="editor.meta.missionCode">Mission code</label><input data-bind="meta.mission" type="text" placeholder="M3"></div>
-        </div>
-        <div class="ed-field-row">
-          <div class="ed-field"><label data-i18n="editor.meta.date">Date mission</label><input data-bind="meta.date" type="date"></div>
-          <div class="ed-field"><label data-i18n="editor.meta.classification">Classification</label>
-            <select data-bind="meta.classification">
-              <option value="confidential"    data-i18n="classif.confidential">CONFIDENTIEL DÉFENSE</option>
-              <option value="secret"          data-i18n="classif.secret">SECRET DÉFENSE</option>
-              <option value="top-secret"      data-i18n="classif.top-secret">TRÈS SECRET</option>
-              <option value="unclassified"    data-i18n="classif.unclassified">NON CLASSIFIÉ</option>
-              <option value="nato-restricted" data-i18n="classif.nato-restricted">NATO RESTRICTED</option>
-              <option value="nato-secret"     data-i18n="classif.nato-secret">NATO SECRET</option>
-            </select>
-          </div>
-        </div>
-        <div class="ed-field" data-fmt="simple"><label data-i18n="editor.meta.time">Heure (Z)</label><input data-bind="meta.time" type="text" placeholder="1000Z"></div>
-        <div class="ed-field"><label data-i18n="editor.meta.docRef">Référence document</label><input data-bind="meta.docRef" type="text" placeholder="FH-M3-1989"></div>
-        <div class="ed-help" data-i18n="editor.meta.help">Métadonnées présentes dans tous les pieds de page.</div>
-      </div>
-    </details>
+    <div class="ui-foldbar"><button type="button" class="ui-btn ui-foldall" id="bg-foldall"></button></div>
 
     <!-- S1 SITUATION (brief simplifié) -->
-    <details class="ed-section" data-section="s-situation" data-fmt="simple" open>
-      <summary data-i18n="editor.simple.situation.summary">01 ░ SITUATION</summary>
+    <details class="ed-section" data-section="s-situation" data-fmt="simple">
+      <summary class="ui-fold-head"><span data-i18n="editor.simple.situation.summary">01 ░ SITUATION</span></summary>
       <div class="ed-content">
         <div class="panel-mobile-header" data-i18n="editor.simple.situation.summary">01 ░ SITUATION</div>
         <div class="ed-field">
@@ -3109,8 +3036,8 @@ __CSS__
     </details>
 
     <!-- S2 MISSION (brief simplifié) : objectifs + vols -->
-    <details class="ed-section" data-section="s-mission" data-fmt="simple" open>
-      <summary data-i18n="editor.simple.mission.summary">02 ░ MISSION</summary>
+    <details class="ed-section" data-section="s-mission" data-fmt="simple">
+      <summary class="ui-fold-head"><span data-i18n="editor.simple.mission.summary">02 ░ MISSION</span></summary>
       <div class="ed-content">
         <div class="panel-mobile-header" data-i18n="editor.simple.mission.summary">02 ░ MISSION</div>
         <div class="ed-field">
@@ -3132,8 +3059,8 @@ __CSS__
     </details>
 
     <!-- S3 COORDINATION (brief simplifié) : fréquences, terrains, METAR -->
-    <details class="ed-section" data-section="s-coord" data-fmt="simple" open>
-      <summary data-i18n="editor.simple.coord.summary">03 ░ COORDINATION</summary>
+    <details class="ed-section" data-section="s-coord" data-fmt="simple">
+      <summary class="ui-fold-head"><span data-i18n="editor.simple.coord.summary">03 ░ COORDINATION</span></summary>
       <div class="ed-content">
         <div class="panel-mobile-header" data-i18n="editor.simple.coord.summary">03 ░ COORDINATION</div>
         <div class="ed-field">
@@ -3158,8 +3085,8 @@ __CSS__
     </details>
 
     <!-- S4 PHOTOS (brief simplifié) -->
-    <details class="ed-section" data-section="s-photos" data-fmt="simple" open>
-      <summary data-i18n="editor.simple.photos.summary">04 ░ PHOTOS</summary>
+    <details class="ed-section" data-section="s-photos" data-fmt="simple">
+      <summary class="ui-fold-head"><span data-i18n="editor.simple.photos.summary">04 ░ PHOTOS</span></summary>
       <div class="ed-content">
         <div class="panel-mobile-header" data-i18n="editor.simple.photos.summary">04 ░ PHOTOS</div>
         <div class="ed-img-list" id="s-photos-list"></div>
@@ -3169,7 +3096,7 @@ __CSS__
 
     <!-- 01 COVER -->
     <details class="ed-section" data-section="cover" data-fmt="full">
-      <summary data-i18n="editor.cover.summary">01 ░ OPÉRATION (COUVERTURE)</summary>
+      <summary class="ui-fold-head"><span data-i18n="editor.cover.summary">01 ░ OPÉRATION (COUVERTURE)</span></summary>
       <div class="ed-content">
         <div class="panel-mobile-header" data-i18n="editor.cover.summaryShort">01 ░ OPÉRATION</div>
         <div class="ed-field"><label data-i18n="editor.cover.title">Titre opération</label><input data-bind="cover.title" type="text" placeholder="OPERATION FOOTHOLD"></div>
@@ -3186,7 +3113,7 @@ __CSS__
 
     <!-- 02 SITAC -->
     <details class="ed-section" data-section="sitac" data-fmt="full">
-      <summary data-i18n="editor.sitac.summary">02 ░ SITAC</summary>
+      <summary class="ui-fold-head"><span data-i18n="editor.sitac.summary">02 ░ SITAC</span></summary>
       <div class="ed-content">
         <div class="panel-mobile-header" data-i18n="editor.sitac.summary">02 ░ SITAC</div>
         <div class="ed-field"><label data-i18n="editor.sitac.date">Date SITAC (affichée)</label><input data-bind="sitac.date" type="text" placeholder="22-03-1989"></div>
@@ -3221,7 +3148,7 @@ __CSS__
 
     <!-- 03 MISSION -->
     <details class="ed-section" data-section="mission" data-fmt="full">
-      <summary data-i18n="editor.mission.summary">03 ░ APERÇU MISSION</summary>
+      <summary class="ui-fold-head"><span data-i18n="editor.mission.summary">03 ░ APERÇU MISSION</span></summary>
       <div class="ed-content">
         <div class="panel-mobile-header" data-i18n="editor.mission.summary">03 ░ APERÇU MISSION</div>
         <div class="ed-field">
@@ -3252,8 +3179,8 @@ __CSS__
     </details>
 
     <!-- 04 RADIO PLAN -->
-    <details class="ed-section" data-section="radio" data-fmt="full" open>
-      <summary data-i18n="editor.radio.summary">04 ░ PLAN RADIO</summary>
+    <details class="ed-section" data-section="radio" data-fmt="full">
+      <summary class="ui-fold-head"><span data-i18n="editor.radio.summary">04 ░ PLAN RADIO</span></summary>
       <div class="ed-content">
         <div class="panel-mobile-header" data-i18n="editor.radio.summary">04 ░ PLAN RADIO</div>
         <div class="ed-field">
@@ -3272,8 +3199,8 @@ __CSS__
     </details>
 
     <!-- 05 PHASES -->
-    <details class="ed-section" data-section="phases" data-fmt="full" open>
-      <summary data-i18n="editor.phases.summary">05 ░ MISSIONS</summary>
+    <details class="ed-section" data-section="phases" data-fmt="full">
+      <summary class="ui-fold-head"><span data-i18n="editor.phases.summary">05 ░ MISSIONS</span></summary>
       <div class="ed-content">
         <div class="panel-mobile-header" data-i18n="editor.phases.summary">05 ░ MISSIONS</div>
         <div class="phase-bar">
@@ -3292,7 +3219,7 @@ __CSS__
 
     <!-- 07 ÉQUIPAGE -->
     <details class="ed-section" data-section="roster" data-fmt="full">
-      <summary data-i18n="editor.roster.summary">07 ░ ÉQUIPAGE</summary>
+      <summary class="ui-fold-head"><span data-i18n="editor.roster.summary">07 ░ ÉQUIPAGE</span></summary>
       <div class="ed-content">
         <div class="panel-mobile-header" data-i18n="editor.roster.summary">07 ░ ÉQUIPAGE</div>
         <div class="ed-help" style="margin-bottom:10px;" data-i18n="editor.roster.help">
@@ -3305,7 +3232,7 @@ __CSS__
 
     <!-- 08 CHARTS -->
     <details class="ed-section" data-section="charts" data-fmt="full">
-      <summary data-i18n="editor.charts.summary">08 ░ CHARTS</summary>
+      <summary class="ui-fold-head"><span data-i18n="editor.charts.summary">08 ░ CHARTS</span></summary>
       <div class="ed-content">
         <div class="panel-mobile-header" data-i18n="editor.charts.summary">08 ░ CHARTS</div>
         <div id="charts-list"></div>
@@ -3315,7 +3242,7 @@ __CSS__
 
     <!-- 09 ANNEXES -->
     <details class="ed-section" data-section="annexes" data-fmt="full">
-      <summary data-i18n="editor.annexes.summary">09 ░ ANNEXES</summary>
+      <summary class="ui-fold-head"><span data-i18n="editor.annexes.summary">09 ░ ANNEXES</span></summary>
       <div class="ed-content">
         <div class="panel-mobile-header" data-i18n="editor.annexes.summary">09 ░ ANNEXES</div>
         <div id="annexes-list"></div>
@@ -3325,7 +3252,7 @@ __CSS__
 
     <!-- 10 WING — read-only consumer (édition dans HQ) -->
     <details class="ed-section" data-section="wing" data-fmt="full">
-      <summary data-i18n="editor.wing.summary">10 ░ CONFIGURATION WING</summary>
+      <summary class="ui-fold-head"><span data-i18n="editor.wing.summary">10 ░ CONFIGURATION WING</span></summary>
       <div class="ed-content">
         <div class="panel-mobile-header" data-i18n="editor.wing.summaryShort">10 ░ CONFIG WING</div>
 
@@ -3345,6 +3272,34 @@ __CSS__
 
         <p class="wing-hq-hint" data-i18n="editor.wing.hqHint">✦ Édition complète disponible dans HQ</p>
 
+      </div>
+    </details>
+
+    <!-- 11 META (dernière section ; 05 au brief simplifié) -->
+    <details class="ed-section" data-section="meta">
+      <summary class="ui-fold-head"><span data-fmt="simple" data-i18n="editor.meta.summarySimple">05 ░ MÉTADONNÉES</span><span data-fmt="full" data-i18n="editor.meta.summary">11 ░ MÉTADONNÉES</span></summary>
+      <div class="ed-content">
+        <div class="panel-mobile-header"><span data-fmt="simple" data-i18n="editor.meta.summarySimple">05 ░ MÉTADONNÉES</span><span data-fmt="full" data-i18n="editor.meta.summary">11 ░ MÉTADONNÉES</span></div>
+        <div class="ed-field-row">
+          <div class="ed-field"><label data-i18n="editor.meta.operation">Opération</label><input data-bind="meta.operation" type="text" placeholder="FOOTHOLD"></div>
+          <div class="ed-field"><label data-i18n="editor.meta.missionCode">Mission code</label><input data-bind="meta.mission" type="text" placeholder="M3"></div>
+        </div>
+        <div class="ed-field-row">
+          <div class="ed-field"><label data-i18n="editor.meta.date">Date mission</label><input data-bind="meta.date" type="date"></div>
+          <div class="ed-field"><label data-i18n="editor.meta.classification">Classification</label>
+            <select data-bind="meta.classification">
+              <option value="confidential"    data-i18n="classif.confidential">CONFIDENTIEL DÉFENSE</option>
+              <option value="secret"          data-i18n="classif.secret">SECRET DÉFENSE</option>
+              <option value="top-secret"      data-i18n="classif.top-secret">TRÈS SECRET</option>
+              <option value="unclassified"    data-i18n="classif.unclassified">NON CLASSIFIÉ</option>
+              <option value="nato-restricted" data-i18n="classif.nato-restricted">NATO RESTRICTED</option>
+              <option value="nato-secret"     data-i18n="classif.nato-secret">NATO SECRET</option>
+            </select>
+          </div>
+        </div>
+        <div class="ed-field" data-fmt="simple"><label data-i18n="editor.meta.time">Heure (Z)</label><input data-bind="meta.time" type="text" placeholder="1000Z"></div>
+        <div class="ed-field"><label data-i18n="editor.meta.docRef">Référence document</label><input data-bind="meta.docRef" type="text" placeholder="FH-M3-1989"></div>
+        <div class="ed-help" data-i18n="editor.meta.help">Métadonnées présentes dans tous les pieds de page.</div>
       </div>
     </details>
 
@@ -3475,7 +3430,17 @@ const I18N = {
     'fn.label':                    'Nom du fichier',
     'save.title':                  'Enregistrer le briefing',
     // ── Section 00 META ──
-    'editor.meta.summary':        '00 ░ MÉTADONNÉES',
+    'editor.meta.summary':        '11 ░ MÉTADONNÉES',
+    'editor.meta.summarySimple':  '05 ░ MÉTADONNÉES',
+    'sum.pt.1': '{n} point', 'sum.pt.n': '{n} points',
+    'sum.obj.1': '{n} objectif', 'sum.obj.n': '{n} objectifs',
+    'sum.item.1': '{n} item', 'sum.item.n': '{n} items',
+    'sum.photo.1': '{n} photo', 'sum.photo.n': '{n} photos',
+    'sum.mission.1': '{n} mission', 'sum.mission.n': '{n} missions',
+    'sum.group.1': '{n} groupe', 'sum.group.n': '{n} groupes',
+    'sum.chart.1': '{n} chart', 'sum.chart.n': '{n} charts',
+    'sum.annexe.1': '{n} annexe', 'sum.annexe.n': '{n} annexes',
+    'sum.sq.1': '{n} escadron', 'sum.sq.n': '{n} escadrons',
     'editor.meta.operation':      'Opération',
     'editor.meta.missionCode':    'Mission code',
     'editor.meta.date':           'Date mission',
@@ -3869,7 +3834,17 @@ const I18N = {
     'fn.label':                    'File name',
     'save.title':                  'Save the briefing',
     // ── Section 00 META ──
-    'editor.meta.summary':        '00 ░ METADATA',
+    'editor.meta.summary':        '11 ░ METADATA',
+    'editor.meta.summarySimple':  '05 ░ METADATA',
+    'sum.pt.1': '{n} point', 'sum.pt.n': '{n} points',
+    'sum.obj.1': '{n} objective', 'sum.obj.n': '{n} objectives',
+    'sum.item.1': '{n} item', 'sum.item.n': '{n} items',
+    'sum.photo.1': '{n} photo', 'sum.photo.n': '{n} photos',
+    'sum.mission.1': '{n} mission', 'sum.mission.n': '{n} missions',
+    'sum.group.1': '{n} group', 'sum.group.n': '{n} groups',
+    'sum.chart.1': '{n} chart', 'sum.chart.n': '{n} charts',
+    'sum.annexe.1': '{n} annex', 'sum.annexe.n': '{n} annexes',
+    'sum.sq.1': '{n} squadron', 'sum.sq.n': '{n} squadrons',
     'editor.meta.operation':      'Operation',
     'editor.meta.missionCode':    'Mission code',
     'editor.meta.date':           'Mission date',
@@ -4336,6 +4311,7 @@ function rerenderAllDynamic() {
   try { if (rpMapPayload) renderRpMapChoices(); } catch(e) { console.warn('rerender rpmap failed:', e); }
   try { document.querySelectorAll('[data-img-bind]').forEach(refreshImgZone); } catch(e) { console.warn('rerender img zones failed:', e); }
   // P1.B: wing read-only panel re-rendered via renderWingReadOnly() depuis storage listener
+  try { bgFoldRefresh(); }          catch(e) { console.warn('rerender folds failed:', e); }
 }
 
 /* ============= WING CONFIG (runtime, mutable) =============
@@ -5015,6 +4991,7 @@ function renderEditorBindings() {
   renderWingReadOnly();  // P1.B : afficher wing courant en read-only
   renderTargets();       // v2.4.0 : liste des cibles (éditeur simplifié et éditeur complet)
   renderSimpleEditor();  // v2.3.0 : éditeur du brief simplifié + mode courant
+  bgFoldRefresh();       // les résumés des sections repliées suivent l'état chargé
 }
 
 /* Returns all unique squadron+subgroup+aircraft combos from missions */
@@ -8301,6 +8278,76 @@ async function resetWingConfig() {
 }
 
 
+/* ============= REPLI DES SECTIONS (bg_folds_v1) =============
+   L'état se garde : { section: true (ouverte) | false (repliée) }. Défauts du profil neuf : Métadonnées (dernière section) repliée ; les autres comme avant.
+   Sous 1 100 px (onglets), la section de l'onglet est ouverte sans rien écrire dans la clé. */
+const BG_FOLDS = 'bg_folds_v1';
+const BG_FOLD_DEF = { 's-situation': true, 's-mission': true, 's-coord': true, 's-photos': true, cover: false, sitac: false, mission: false, radio: true, phases: true, roster: false, charts: false, annexes: false, wing: false, meta: false };
+function bgTabMode() { return window.innerWidth <= MOBILE_BREAKPOINT; }
+function bgSections() { return Array.prototype.slice.call(document.querySelectorAll('#editor > details.ed-section')); }
+function bgFmtSections() { const f = document.body.dataset.format; return bgSections().filter(d => !d.dataset.fmt || d.dataset.fmt === f); }
+
+/* La ligne de résumé d'une section repliée : son premier champ rempli, puis le nombre d'éléments de sa liste principale ; rien si la section est vide */
+function bgSectionSum(id) {
+  const v = x => (typeof x === 'string' ? x.trim() : '');
+  const first = (l, f) => { if (!Array.isArray(l)) return ''; for (const x of l) { const r = v(f ? (x && x[f]) : x); if (r) return r; } return ''; };
+  const cnt = (l, k) => (Array.isArray(l) && l.length) ? t('sum.' + k + (l.length === 1 ? '.1' : '.n')).replace('{n}', l.length) : '';
+  const m = state.meta || {}, sit = state.sitac || {}, mis = state.mission || {}, rp = state.radioPlan || {};
+  switch (id) {
+    case 'meta': return uiJoin([v(m.operation), v(m.mission), v(m.date)]);
+    case 's-situation': case 'sitac': return uiJoin([first(sit.points), cnt(sit.points, 'pt')]);
+    case 's-mission': case 'mission': return uiJoin([first(mis.objectives), cnt(mis.objectives, 'obj')]);
+    case 's-coord': case 'radio': return uiJoin([first(rp.items, 'label'), cnt(rp.items, 'item')]);
+    case 's-photos': return uiJoin([first(state.photos, 'title'), cnt(state.photos, 'photo')]);
+    case 'cover': return v((state.cover || {}).title) || v((state.cover || {}).narrative);
+    case 'phases': return uiJoin([first(state.phases, 'title'), cnt(state.phases, 'mission')]);
+    case 'roster': return cnt((state.roster || {}).groups, 'group');
+    case 'charts': return uiJoin([first(state.charts, 'name'), cnt(state.charts, 'chart')]);
+    case 'annexes': return uiJoin([first(state.annexes, 'title'), cnt(state.annexes, 'annexe')]);
+    case 'wing': return (wingConfig && wingConfig.wing && JSON.stringify(wingConfig) !== JSON.stringify(DEFAULT_WING_CONFIG)) ? uiJoin([v(wingConfig.wing.name) || v(wingConfig.wing.shortName), cnt(wingConfig.squadrons, 'sq')]) : '';
+  }
+  return '';
+}
+function bgFoldLabel() {
+  const b = document.getElementById('bg-foldall');
+  if (b) b.textContent = uiFoldAllLabel(bgFmtSections().some(d => d.open));
+}
+/* Les en-têtes : aria-expanded et résumé (replié seulement) ; appelé à l'ouverture, après un chargement, un changement de langue */
+function bgFoldRefresh() {
+  bgSections().forEach(d => {
+    const h = d.querySelector(':scope > summary');
+    h.setAttribute('aria-expanded', String(d.open));
+    uiSum(h, d.open ? '' : bgSectionSum(d.dataset.section));
+  });
+  bgFoldLabel();
+}
+function bgFoldInit() {
+  bgSections().forEach(d => {
+    const id = d.dataset.section, o = uiFoldOpen(BG_FOLDS, id, BG_FOLD_DEF[id]);
+    d.dataset.fold = String(o);
+    if (d.open !== o) d.open = o;
+  });
+  bgFoldRefresh();
+  document.getElementById('editor').addEventListener('toggle', e => {
+    const d = e.target;
+    if (!d || !d.matches || !d.matches('details.ed-section')) return;
+    const id = d.dataset.section;
+    if (!bgTabMode() && d.dataset.fold !== String(d.open)) uiFoldSave(BG_FOLDS, id, d.open);       /* un geste ; l'onglet du téléphone ouvre sans écrire */
+    d.dataset.fold = String(d.open);
+    const h = d.querySelector(':scope > summary');
+    h.setAttribute('aria-expanded', String(d.open));
+    uiSum(h, d.open ? '' : bgSectionSum(id));
+    bgFoldLabel();
+  }, true);
+  document.getElementById('bg-foldall').addEventListener('click', () => {
+    const ds = bgFmtSections(), open = !ds.some(d => d.open), map = {};
+    ds.forEach(d => { map[d.dataset.section] = open; });
+    uiFoldSaveAll(BG_FOLDS, map);
+    ds.forEach(d => { if (d.open !== open) d.open = open; });
+    bgFoldLabel();
+  });
+}
+
 function setActiveTab(tab) {
   activeTab = tab;
   document.body.dataset.activeTab = tab;
@@ -9332,6 +9379,7 @@ function init() {
   bindEditorEvents();
   bindSimpleEvents();    // v2.3.0 : sélecteur de mode, Exemple, éditeur simplifié
   bindTabBar();
+  bgFoldInit();
   initToolbarScroll();
   bindWingImportEvent();  // P1.B — filet import + storage listener
   setActiveTab('meta');

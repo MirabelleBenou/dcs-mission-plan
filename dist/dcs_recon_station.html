@@ -56,6 +56,7 @@
 }
 
 :root {
+  --mp-accent: #C95A9C;
   --f-stencil:    'Stardos Stencil', 'Impact', 'Arial Narrow Bold', sans-serif;
   --f-typewriter: 'Roboto Mono', 'Courier New', monospace;
   --f-ui:         'Oswald', 'Arial Narrow', sans-serif;
@@ -353,19 +354,10 @@ select[data-tbm-src] { display: none !important; }
   letter-spacing: 2px;
   color: var(--amber);
   list-style: none;
-  display: flex; align-items: center; justify-content: space-between;
+  display: flex; align-items: center;
   border-bottom: 1px solid var(--amber-dark);
-  user-select: none;
-  min-height: 42px;
+  min-height: 44px;
 }
-.ed-section > summary::-webkit-details-marker { display: none; }
-.ed-section > summary::after {
-  content: '◄';
-  font-size: 10px;
-  color: var(--paper);
-  transition: transform .2s;
-}
-.ed-section[open] > summary::after { transform: rotate(-90deg); }
 .ed-section > .ed-body { padding: 12px; }
 
 /* Form fields */
@@ -1262,10 +1254,11 @@ details:not([open]) > .ui-fold-head > .ui-sum:not(:empty), .ui-fold-head[aria-ex
 
   <!-- EDITOR -->
   <div class="editor" id="editor-panel" role="complementary">
+    <div class="ui-foldbar"><button type="button" class="ui-btn ui-foldall" id="rs-foldall"></button></div>
 
     <!-- Section Image -->
-    <details class="ed-section" open>
-      <summary data-i18n="editor.image.title">IMAGE SOURCE</summary>
+    <details class="ed-section" data-section="image">
+      <summary class="ui-fold-head"><span data-i18n="editor.image.title">IMAGE SOURCE</span></summary>
       <div class="ed-body">
         <div class="drop-zone" id="drop-zone" tabindex="0"
              data-i18n-aria-label="editor.image.dropzone.aria"
@@ -1280,8 +1273,8 @@ details:not([open]) > .ui-fold-head > .ui-sum:not(:empty), .ui-fold-head[aria-ex
     </details>
 
     <!-- Section Rendu -->
-    <details class="ed-section" open>
-      <summary data-i18n="editor.render.title">RENDU</summary>
+    <details class="ed-section" data-section="render">
+      <summary class="ui-fold-head"><span data-i18n="editor.render.title">RENDU</span></summary>
       <div class="ed-body">
         <div class="ed-row">
           <span class="ed-label" data-i18n="editor.render.contrast">CONTRASTE</span>
@@ -1292,8 +1285,8 @@ details:not([open]) > .ui-fold-head > .ui-sum:not(:empty), .ui-fold-head[aria-ex
     </details>
 
     <!-- Section Couleur texte -->
-    <details class="ed-section" open>
-      <summary data-i18n="editor.text.title">COULEUR DU TEXTE</summary>
+    <details class="ed-section" data-section="text">
+      <summary class="ui-fold-head"><span data-i18n="editor.text.title">COULEUR DU TEXTE</span></summary>
       <div class="ed-body">
         <div class="logo-mode" id="text-color-group" role="group" data-i18n-aria-label="aria.textColor" aria-label="Couleur du texte">
           <button type="button" data-text-color="#fff" data-i18n="editor.text.white">Blanc</button>
@@ -1303,8 +1296,8 @@ details:not([open]) > .ui-fold-head > .ui-sum:not(:empty), .ui-fold-head[aria-ex
     </details>
 
     <!-- Section Effets -->
-    <details class="ed-section" open>
-      <summary data-i18n="editor.fx.title">EFFETS</summary>
+    <details class="ed-section" data-section="fx">
+      <summary class="ui-fold-head"><span data-i18n="editor.fx.title">EFFETS</span></summary>
       <div class="ed-body">
         <div class="ed-row">
           <span class="ed-label" data-i18n="editor.fx.sensor">Imagerie</span>
@@ -1334,8 +1327,8 @@ details:not([open]) > .ui-fold-head > .ui-sum:not(:empty), .ui-fold-head[aria-ex
     </details>
 
     <!-- Section Bloc info -->
-    <details class="ed-section" open>
-      <summary data-i18n="editor.info.title">BLOC D'INFORMATIONS</summary>
+    <details class="ed-section" data-section="info">
+      <summary class="ui-fold-head"><span data-i18n="editor.info.title">BLOC D'INFORMATIONS</span></summary>
       <div class="ed-body">
         <div class="ed-row">
           <span class="ed-label">Target</span>
@@ -1375,8 +1368,8 @@ details:not([open]) > .ui-fold-head > .ui-sum:not(:empty), .ui-fold-head[aria-ex
     </details>
 
     <!-- Section Logo -->
-    <details class="ed-section" open>
-      <summary data-i18n="editor.logo.title">LOGO</summary>
+    <details class="ed-section" data-section="logo">
+      <summary class="ui-fold-head"><span data-i18n="editor.logo.title">LOGO</span></summary>
       <div class="ed-body">
         <div class="logo-grid" id="logo-grid"></div>
         <label class="btn-upload-logo" for="file-logo" data-i18n="editor.logo.upload">↑ IMPORTER UN LOGO PNG</label>
@@ -1393,8 +1386,8 @@ details:not([open]) > .ui-fold-head > .ui-sum:not(:empty), .ui-fold-head[aria-ex
     </details>
 
     <!-- Section Cartouche -->
-    <details class="ed-section" open>
-      <summary data-i18n="editor.cartouche.title">CARTOUCHE</summary>
+    <details class="ed-section" data-section="cartouche">
+      <summary class="ui-fold-head"><span data-i18n="editor.cartouche.title">CARTOUCHE</span></summary>
       <div class="ed-body">
         <div id="cartouche-editor"></div>
         <button class="btn-add-row" id="btn-add-cartouche" data-i18n="editor.cartouche.add">+ AJOUTER UN MARQUAGE</button>
@@ -1402,8 +1395,8 @@ details:not([open]) > .ui-fold-head > .ui-sum:not(:empty), .ui-fold-head[aria-ex
     </details>
 
     <!-- Section Formes (Lot 1) -->
-    <details class="ed-section" open>
-      <summary data-i18n="editor.shapes.title">FORMES</summary>
+    <details class="ed-section" data-section="shapes">
+      <summary class="ui-fold-head"><span data-i18n="editor.shapes.title">FORMES</span></summary>
       <div class="ed-body">
         <div class="shapes-toolbox">
           <button type="button" id="btn-add-ellipse" title="Ellipse" data-i18n-title="editor.shapes.ellipse.tooltip">◯</button>
@@ -1421,8 +1414,8 @@ details:not([open]) > .ui-fold-head > .ui-sum:not(:empty), .ui-fold-head[aria-ex
     </details>
 
     <!-- Section Couleur marquages -->
-    <details class="ed-section" open>
-      <summary data-i18n="editor.marker.color">COULEUR DES MARQUAGES</summary>
+    <details class="ed-section" data-section="marker">
+      <summary class="ui-fold-head"><span data-i18n="editor.marker.color">COULEUR DES MARQUAGES</span></summary>
       <div class="ed-body">
         <div class="logo-mode" id="marker-color-group" role="group" data-i18n-aria-label="aria.markerColor" aria-label="Couleur des marquages">
           <button type="button" data-marker-color="red"   data-i18n="editor.marker.red">Rouge</button>
@@ -1433,8 +1426,8 @@ details:not([open]) > .ui-fold-head > .ui-sum:not(:empty), .ui-fold-head[aria-ex
     </details>
 
     <!-- Section Classification (R2-B Lot 2) -->
-    <details class="ed-section">
-      <summary data-i18n="editor.classif.title">CLASSIFICATION</summary>
+    <details class="ed-section" data-section="classif">
+      <summary class="ui-fold-head"><span data-i18n="editor.classif.title">CLASSIFICATION</span></summary>
       <div class="ed-body">
         <label class="ed-toggle-row">
           <input type="checkbox" id="classif-enable">
@@ -1453,8 +1446,8 @@ details:not([open]) > .ui-fold-head > .ui-sum:not(:empty), .ui-fold-head[aria-ex
     </details>
 
     <!-- Section Export -->
-    <details class="ed-section" open>
-      <summary data-i18n="editor.export.title">EXPORT</summary>
+    <details class="ed-section" data-section="export">
+      <summary class="ui-fold-head"><span data-i18n="editor.export.title">EXPORT</span></summary>
       <div class="ed-body">
         <button class="btn-export" id="btn-export" disabled data-i18n="editor.export.btn">
           ↓ EXPORTER PNG
@@ -1622,6 +1615,7 @@ const I18N = {
     'msg.failed': '⚠ L’opération a échoué.',
     'editor.logo.removeCustom': 'Supprimer le logo importé',
     'editor.logo.none': 'Aucun logo',
+    'sum.none': 'Aucun',
     'aria.textColor': 'Couleur du texte',
     'aria.logoMode': 'Rendu du logo',
     'aria.markerColor': 'Couleur des marquages',
@@ -1830,6 +1824,7 @@ const I18N = {
     'msg.failed': '⚠ The operation failed.',
     'editor.logo.removeCustom': 'Remove imported logo',
     'editor.logo.none': 'No logo',
+    'sum.none': 'None',
     'aria.textColor': 'Text color',
     'aria.logoMode': 'Logo rendering',
     'aria.markerColor': 'Marker color',
@@ -2391,6 +2386,7 @@ function applyI18nStatic() {
 }
 
 function rerenderDynamic() {
+  rsFoldRefresh();
   renderCartoucheEditor();
   renderInsetEditor();
   renderShapesEditor();
@@ -2422,6 +2418,7 @@ function collectState() {
 
 function saveState() {
   collectState();
+  if (document.getElementById('rs-foldall')) rsFoldRefresh();
   try {
     const toSave = Object.assign({}, STATE, { schema: 2 });
     localStorage.setItem(KEY_STATE, JSON.stringify(toSave));
@@ -5427,6 +5424,64 @@ function tbmScrolled(e) {
 }
 
 // ── Init ───────────────────────────────────────────────────────
+// ── Repli des sections (rs_folds_v1) ─────────────────────────────
+// { section: true (ouverte) | false (repliée) } ; profil neuf : Image source, Rendu, Formes, Export ouvertes, les sept autres repliées.
+const RS_FOLDS = 'rs_folds_v1';
+const RS_FOLD_DEF = { image: true, render: true, text: false, fx: false, info: false, logo: false, cartouche: false, shapes: true, marker: false, classif: false, export: true };
+function rsSections() { return Array.prototype.slice.call(document.querySelectorAll('#editor-panel > details.ed-section')); }
+/* La ligne de résumé d'une section repliée ; rien si elle est vide (Image source, Rendu, Formes et Export n'en portent pas) */
+function rsSectionSum(id) {
+  const v = x => (typeof x === 'string' ? x.trim() : '');
+  if (id === 'text') return t(STATE.textColor === '#000' ? 'editor.text.black' : 'editor.text.white');
+  if (id === 'marker') return t('editor.marker.' + (['red', 'black', 'white'].indexOf(STATE.markerColor) >= 0 ? STATE.markerColor : 'red'));
+  if (id === 'fx') {
+    const sk = { 'ir-white': 'irw', 'ir-black': 'irb', sar: 'sar' }[STATE.sensorMode];
+    return uiJoin([sk ? t('editor.fx.sensor.' + sk) : '', STATE.fxVignette > 0 ? t('editor.fx.vignette') + ' ' + STATE.fxVignette : '', STATE.fxGrain > 0 ? t('editor.fx.grain') + ' ' + STATE.fxGrain : '', STATE.fxScanlines > 0 ? t('editor.fx.scanlines') + ' ' + STATE.fxScanlines : '']);
+  }
+  if (id === 'info') return v(STATE.fields.target);
+  if (id === 'logo') { const lg = STATE.logos.find(l => l.id === STATE.logoId); return STATE.logoId !== 'none' && lg ? (v(lg.name) || t('sum.none')) : t('sum.none'); }
+  if (id === 'cartouche') { const c = (STATE.cartouche || []).find(x => x && v(x.label)); return c ? v(c.label) : ''; }
+  if (id === 'classif') return STATE.classification && STATE.classification.enabled ? v(STATE.classification.level) : '';
+  return '';
+}
+function rsFoldLabel() {
+  const b = document.getElementById('rs-foldall');
+  if (b) b.textContent = uiFoldAllLabel(rsSections().some(d => d.open));
+}
+function rsFoldRefresh() {
+  rsSections().forEach(d => {
+    const h = d.querySelector(':scope > summary');
+    h.setAttribute('aria-expanded', String(d.open));
+    uiSum(h, d.open ? '' : rsSectionSum(d.dataset.section));
+  });
+  rsFoldLabel();
+}
+function rsFoldInit() {
+  rsSections().forEach(d => {
+    const id = d.dataset.section, o = uiFoldOpen(RS_FOLDS, id, RS_FOLD_DEF[id]);
+    d.dataset.fold = String(o);
+    if (d.open !== o) d.open = o;
+  });
+  rsFoldRefresh();
+  document.getElementById('editor-panel').addEventListener('toggle', e => {
+    const d = e.target;
+    if (!d || !d.matches || !d.matches('details.ed-section')) return;
+    if (d.dataset.fold !== String(d.open)) uiFoldSave(RS_FOLDS, d.dataset.section, d.open);
+    d.dataset.fold = String(d.open);
+    const h = d.querySelector(':scope > summary');
+    h.setAttribute('aria-expanded', String(d.open));
+    uiSum(h, d.open ? '' : rsSectionSum(d.dataset.section));
+    rsFoldLabel();
+  }, true);
+  document.getElementById('rs-foldall').addEventListener('click', () => {
+    const ds = rsSections(), open = !ds.some(d => d.open), map = {};
+    ds.forEach(d => { map[d.dataset.section] = open; });
+    uiFoldSaveAll(RS_FOLDS, map);
+    ds.forEach(d => { if (d.open !== open) d.open = open; });
+    rsFoldLabel();
+  });
+}
+
 async function init() {
   loadTheme();
   loadLang();
@@ -5451,6 +5506,7 @@ async function init() {
 
   initEvents();
   rsdInit();
+  rsFoldInit();
 
   if (hasState) {
     showToast(t('toast.state-restored'), 3500);

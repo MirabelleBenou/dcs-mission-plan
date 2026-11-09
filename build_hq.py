@@ -227,6 +227,7 @@ HTML = f"""<!DOCTYPE html>
 }}
 
 :root {{
+  --mp-accent: #4FB286;
   --f-stencil:    'Stardos Stencil', 'Impact', 'Arial Narrow Bold', sans-serif;
   --f-typewriter: 'Roboto Mono', 'Courier New', monospace;
   --f-ui:         'Oswald', 'Arial Narrow', sans-serif;
@@ -529,19 +530,10 @@ select[data-tbm-src] {{ display: none !important; }}
   letter-spacing: 2px;
   color: var(--amber);
   list-style: none;
-  display: flex; align-items: center; justify-content: space-between;
+  display: flex; align-items: center;
   border-bottom: 1px solid var(--amber-dark);
-  user-select: none;
   min-height: 48px;
 }}
-.ed-section > summary::-webkit-details-marker {{ display: none; }}
-.ed-section > summary::after {{
-  content: '\u25c4';
-  font-size: 10px;
-  color: var(--paper);
-  transition: transform .2s;
-}}
-.ed-section[open] > summary::after {{ transform: rotate(-90deg); }}
 .ed-section > summary:hover {{ color: var(--paper-light); }}
 .ed-content {{
   padding: 14px;
@@ -559,7 +551,7 @@ select[data-tbm-src] {{ display: none !important; }}
   color: var(--amber);
   display: flex; align-items: center; gap: 6px;
 }}
-.ed-field label::before {{ content: '\u25ba'; color: var(--rust); font-size: 8px; }}
+.ed-field label::before {{ content: ''; flex: none; width: 6px; height: 2px; background: var(--rust); }}
 .ed-field input[type=text] {{
   background: rgba(216,201,165,.92);
   border: 1px solid var(--khaki);
@@ -692,13 +684,11 @@ select[data-tbm-src] {{ display: none !important; }}
   padding: 10px; margin-bottom: 10px; background: rgba(0,0,0,.15);
 }}
 .wing-sq-header {{
-  display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 8px; margin-bottom: 8px; min-height: 44px; cursor: pointer;
   font-family: var(--f-stencil); font-size: 12px;
   color: var(--khaki-light); letter-spacing: .06em;
 }}
-.wing-sq-toggle {{ flex: 1; cursor: pointer; user-select: none; }}
-.wing-sq-toggle::before {{ content: '\u25ba '; font-size: 9px; opacity: .7; }}
-.wing-sq-card.open .wing-sq-toggle::before {{ content: '\u25bc '; }}
+.wing-sq-toggle {{ flex: 1; min-width: 0; align-self: stretch; padding: 0; background: none; border: 0; color: inherit; font: inherit; letter-spacing: inherit; text-align: left; flex-wrap: nowrap; overflow-wrap: anywhere; }}
 .wing-sq-body {{ display: none; }}
 .wing-sq-card.open .wing-sq-body {{
   display: flex; flex-direction: column; gap: 8px;
@@ -992,10 +982,7 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
 
 /* Dynamic Spawn (lecture) : le panneau reprend les styles de la liste des vols ; seule la flèche de repli reprend celle des sections */
 .dyn-panel {{ margin-top: 4px; }}
-.dyn-panel > summary {{ cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; min-height: 36px; user-select: none; }}
-.dyn-panel > summary::-webkit-details-marker {{ display: none; }}
-.dyn-panel > summary::after {{ content: '\u25c4'; font-size: 10px; color: var(--paper); transition: transform .2s; }}
-.dyn-panel[open] > summary::after {{ transform: rotate(-90deg); }}
+.dyn-panel > summary {{ list-style: none; min-height: 44px; }}
 .dyn-row {{ border: 1px solid var(--khaki); border-radius: 3px; padding: 8px 10px; background: rgba(0,0,0,.15); margin-bottom: 6px; }}
 .dyn-name {{ font-family: var(--f-stencil); font-size: 12px; color: var(--amber); letter-spacing: 1px; word-break: break-word; }}
 .dyn-links {{ margin-top: 6px; font-family: var(--f-typewriter); font-size: 11px; line-height: 1.6; color: var(--khaki-light); word-break: break-word; }}
@@ -1039,8 +1026,8 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
   <div class="editor" id="editor-panel">
 
     <!-- Section Mission -->
-    <details class="ed-section">
-      <summary data-i18n="editor.mission.summary">MISSION .MIZ</summary>
+    <details class="ed-section" data-section="mission">
+      <summary class="ui-fold-head"><span data-i18n="editor.mission.summary">MISSION .MIZ</span></summary>
       <div class="ed-content">
 
         <!-- Drop-zone .miz -->
@@ -1066,8 +1053,8 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
     </details>
 
     <!-- Section Wing -->
-    <details class="ed-section">
-      <summary data-i18n="editor.wing.summary">CONFIGURATION WING</summary>
+    <details class="ed-section" data-section="wing">
+      <summary class="ui-fold-head"><span data-i18n="editor.wing.summary">CONFIGURATION WING</span></summary>
       <div class="ed-content">
 
         <button type="button" class="wing-restore-btn" id="wing-restore-btn" data-i18n="example.restore" hidden>Restaurer ma configuration</button>
@@ -1140,8 +1127,8 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
     </details>
 
     <!-- Section Paquets de vol (import dans la mission du Mission Commander) -->
-    <details class="ed-section" id="commander-section">
-      <summary data-i18n="editor.commander.summary">PAQUETS DE VOL</summary>
+    <details class="ed-section" id="commander-section" data-section="commander">
+      <summary class="ui-fold-head"><span data-i18n="editor.commander.summary">PAQUETS DE VOL</span></summary>
       <div class="ed-content">
 
         <div class="pk-note" id="pk-nomiz" data-i18n="pk.needMiz">Ouvrez d’abord la mission (section MISSION .MIZ)</div>
@@ -1315,6 +1302,10 @@ const I18N = {{
     'snap.fingerprint':        'Empreinte',
     'editor.commander.summary': 'PAQUETS DE VOL',
     'snap.unit': 'unité',
+    'sum.groups.1': '{{n}} groupe',
+    'sum.groups.n': '{{n}} groupes',
+    'sum.sq.1': '{{n}} escadron',
+    'sum.sq.n': '{{n}} escadrons',
     'pk.needMiz': 'Ouvrez d’abord la mission (section MISSION .MIZ)',
     'pk.load': 'Importer des paquets',
     'pk.loaded': 'Paquets chargés',
@@ -1655,6 +1646,10 @@ const I18N = {{
     'snap.fingerprint':        'Fingerprint',
     'editor.commander.summary': 'FLIGHT PACKAGES',
     'snap.unit': 'unit',
+    'sum.groups.1': '{{n}} group',
+    'sum.groups.n': '{{n}} groups',
+    'sum.sq.1': '{{n}} squadron',
+    'sum.sq.n': '{{n}} squadrons',
     'pk.needMiz': 'Open the mission first (MISSION .MIZ section)',
     'pk.load': 'Import packages',
     'pk.loaded': 'Loaded packages',
@@ -1993,6 +1988,7 @@ function setLang(lang) {{
   applyI18nStatic();
   rerenderDynamic();
   updateFlagButton();
+  hqFoldRefresh();
 }}
 
 /* Drapeaux dessinés (ils ne s'affichent pas en lettres sous Windows) ; le bouton montre la langue vers laquelle il bascule */
@@ -2342,10 +2338,18 @@ function renderWingSquadronCard(sqIdx) {{
   const header = document.createElement('div');
   header.className = 'wing-sq-header';
 
-  const toggle = document.createElement('span');
-  toggle.className = 'wing-sq-toggle';
+  /* Tout l'en-tête replie la carte (les boutons ↑ ↓ × gardent leur geste) ; le titre est un vrai bouton : Entrée et Espace au clavier */
+  const toggle = document.createElement('button');
+  toggle.type = 'button';
+  toggle.className = 'wing-sq-toggle ui-fold-head';
+  toggle.setAttribute('aria-expanded', 'false');
   toggle.textContent = sq.id || '(sans id)';
-  toggle.addEventListener('click', () => {{ card.classList.toggle('open'); }});
+  header.addEventListener('click', e => {{
+    const b = e.target.closest('button');
+    if (b && b !== toggle) return;
+    card.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', String(card.classList.contains('open')));
+  }});
 
   const btnUp = document.createElement('button');
   btnUp.type = 'button'; btnUp.className = 'ed-btn-icon'; btnUp.title = t('editor.phases.moveUp');
@@ -2448,10 +2452,13 @@ function renderWingSquadrons(openLastCard) {{
     const isLast = openLastCard && (sqIdx === wingConfig.squadrons.length - 1);
     if (isLast || _wingOpenSqIds.has(wingConfig.squadrons[sqIdx].id)) {{
       card.classList.add('open');
+      const tg = card.querySelector('.wing-sq-toggle');
+      if (tg) tg.setAttribute('aria-expanded', 'true');
     }}
     list.appendChild(card);
   }});
   updateWingSizeCounter();
+  if (typeof hqFoldRefresh === 'function') hqFoldRefresh();
 }}
 
 // ── Render wing editor inputs ──────────────────────────────────
@@ -3040,7 +3047,7 @@ function dynPanelHtml() {{
   const linked = _HQ_DYN.whs.filter(w => w.links.length).map(w => ({{ w: w, name: dynWhName(w) }}))
     .sort((a, b) => ((a.w.kind === 'airport' ? 0 : 1) - (b.w.kind === 'airport' ? 0 : 1)) || dynCmp(a.name, b.name));
   const free = _HQ_DYN.whs.filter(w => !w.links.length).map(dynWhName).sort(dynCmp);
-  let html = '<details class="dyn-panel" id="dyn-panel"' + (_DYN_OPEN ? ' open' : '') + '><summary class="snap-header">' + h(t('dyn.title')) + '</summary>';
+  let html = '<details class="dyn-panel" id="dyn-panel"' + (_DYN_OPEN ? ' open' : '') + '><summary class="snap-header ui-fold-head" aria-expanded="' + _DYN_OPEN + '">' + h(t('dyn.title')) + '</summary>';
   for (const r of linked) {{
     html += '<div class="dyn-row" data-dyn-wh="' + h(String(r.w.id)) + '"><div class="snap-flight-header"><span class="dyn-name">' + h(r.name) + '</span>';
     html += ' <span class="snap-flight-tag">' + h(t('pk.flt.' + r.w.side, r.w.side)) + '</span>';
@@ -3383,6 +3390,7 @@ function loadPersistedSnapshot() {{
 //  P2.3 — AFFICHAGE SNAPSHOT (read-only)
 // =============================================================
 function renderSnapshot(snap) {{
+  hqFoldRefresh();
   const el = document.getElementById('snapshot-display');
   if (!el) return;
   const sm = snap.sourceMission;
@@ -3512,7 +3520,7 @@ function initMissionEvents() {{
   if (reloadBtn) {{
     reloadBtn.addEventListener('click', () => {{
       if (_PK_BUSY) return;
-      HQ_SNAPSHOT = null; _mizFilename = null; _HQ_MIZ_CONTEXT = null; _HQ_DYN = null;
+      HQ_SNAPSHOT = null; _mizFilename = null; _HQ_MIZ_CONTEXT = null; _HQ_DYN = null; hqFoldRefresh();
       try {{ localStorage.removeItem(KEY_SNAPSHOT); }} catch (e) {{ /* la mission offerte au Route Planner et au Datacard Generator reste */ }}
       _PK_EXPORT_SEL.clear(); _PK_REPORT = null; _MIZ_LOAD_FP = ''; pkResetFilters();
       pkRender();
@@ -5459,7 +5467,7 @@ function initPackagesUI() {{
   }}
   const snapEl = document.getElementById('snapshot-display');
   if (snapEl) {{
-    snapEl.addEventListener('toggle', e => {{ if (e.target && e.target.id === 'dyn-panel') _DYN_OPEN = e.target.open; }}, true);
+    snapEl.addEventListener('toggle', e => {{ if (e.target && e.target.id === 'dyn-panel') {{ _DYN_OPEN = e.target.open; const sm = e.target.querySelector(':scope > summary'); if (sm) sm.setAttribute('aria-expanded', String(e.target.open)); }} }}, true);
     snapEl.addEventListener('change', e => {{
       const cb = e.target;
       if (!cb || !cb.getAttribute) return;
@@ -5859,6 +5867,47 @@ function tbmScrolled(e) {{
 }}
 
 // ── Init ───────────────────────────────────────────────────────
+// ── Repli des sections (hq_folds_v1) ─────────────────────────────
+// {{ section: true (ouverte) | false (repliée) }} ; les sections sont repliées d'abord, comme avant. Le panneau Dynamic Spawn et les cartes d'escadron gardent leur mémoire d'aujourd'hui (en mémoire seulement).
+const HQ_FOLDS = 'hq_folds_v1';
+function hqSections() {{ return Array.prototype.slice.call(document.querySelectorAll('#editor-panel > details.ed-section')); }}
+/* La ligne de résumé d'une section repliée ; rien si elle est vide (Paquets de vol n'en porte pas) */
+function hqSectionSum(id) {{
+  const v = x => (typeof x === 'string' ? x.trim() : '');
+  const cnt = (n, k) => n ? t('sum.' + k + (n === 1 ? '.1' : '.n')).replace('{{n}}', n) : '';
+  if (id === 'mission') {{
+    const sm = HQ_SNAPSHOT && HQ_SNAPSHOT.sourceMission;
+    return sm ? uiJoin([v(sm.filename), v(sm.theatre), cnt((HQ_SNAPSHOT.flights || []).length, 'groups')]) : '';
+  }}
+  if (id === 'wing') {{
+    if (JSON.stringify(wingConfig) === JSON.stringify(DEFAULT_WING_CONFIG) || !wingConfig.wing) return '';
+    return uiJoin([v(wingConfig.wing.shortName) || v(wingConfig.wing.fullName), cnt((wingConfig.squadrons || []).length, 'sq')]);
+  }}
+  return '';
+}}
+function hqFoldRefresh() {{
+  hqSections().forEach(d => {{
+    const h = d.querySelector(':scope > summary');
+    h.setAttribute('aria-expanded', String(d.open));
+    uiSum(h, d.open ? '' : hqSectionSum(d.dataset.section));
+  }});
+}}
+function hqFoldInit() {{
+  hqSections().forEach(d => {{
+    const o = uiFoldOpen(HQ_FOLDS, d.dataset.section, false);
+    d.dataset.fold = String(o);
+    if (d.open !== o) d.open = o;
+  }});
+  hqFoldRefresh();
+  document.getElementById('editor-panel').addEventListener('toggle', e => {{
+    const d = e.target;
+    if (!d || !d.matches || !d.matches('details.ed-section')) return;
+    if (d.dataset.fold !== String(d.open)) uiFoldSave(HQ_FOLDS, d.dataset.section, d.open);
+    d.dataset.fold = String(d.open);
+    hqFoldRefresh();
+  }}, true);
+}}
+
 function init() {{
   loadTheme();
   loadLang();
@@ -5873,6 +5922,7 @@ function init() {{
   loadPersistedSnapshot();  // P2 — restaurer snapshot au rechargement
   initPackagesUI();         // paquets de vol (export / import)
   fnBind();                 // la fenêtre « Nom du fichier »
+  hqFoldInit();
 }}
 
 init();

@@ -578,6 +578,7 @@ CSS = r"""
 }
 
 :root {
+  --mp-accent: #8fb0c0;
   --f-stencil: 'Stardos Stencil', 'Impact', 'Arial Narrow Bold', sans-serif;
   --f-condensed: 'Oswald', 'Arial Narrow', sans-serif;
   --f-ui: 'Oswald', 'Arial Narrow', sans-serif;
@@ -1029,19 +1030,9 @@ select[data-tbm-src] { display: none !important; }
   letter-spacing: 2px;
   color: var(--amber);
   list-style: none;
-  display: flex; align-items: center; justify-content: space-between;
   border-bottom: 1px solid var(--amber-dark);
-  user-select: none;
   min-height: 48px;
 }
-.ed-section > summary::-webkit-details-marker { display: none; }
-.ed-section > summary::after {
-  content: '◄';
-  font-size: 10px;
-  color: var(--paper);
-  transition: transform .2s;
-}
-.ed-section[open] > summary::after { transform: rotate(-90deg); }
 .ed-section > summary:hover { color: var(--paper-light); }
 .ed-content {
   padding: 14px;
@@ -1061,9 +1052,11 @@ select[data-tbm-src] { display: none !important; }
   display: flex; align-items: center; gap: 6px;
 }
 .ed-field label::before {
-  content: '►';
-  color: var(--rust);
-  font-size: 8px;
+  content: '';
+  flex: none;
+  width: 6px;
+  height: 2px;
+  background: var(--rust);
 }
 .ed-field input[type=text],
 .ed-field input[type=number],
@@ -1756,6 +1749,7 @@ div.dc-bl, li.dc-bl, p.dc-bl { height: 24px; border-bottom: 1px dotted var(--dc-
   body:not([data-active-tab="preview"]) .ed-section { display: none; }
 __TAB_SECTION_RULES__
   body[data-active-tab] .ed-section > summary { display: none; }
+  body[data-active-tab] .ui-foldbar { display: none; }
   body[data-active-tab] .ed-section > .ed-content {
     display: flex !important;
     padding: 0;
@@ -2248,6 +2242,10 @@ const I18N = {
     'pack.tag.free': 'libre',
     'pack.tag.gone': 'groupe supprimé',
     'pack.unnamed': 'Datacard {n}',
+    'sum.chan.1': '{n} canal',
+    'sum.chan.n': '{n} canaux',
+    'sum.threat.1': '{n} menace',
+    'sum.threat.n': '{n} menaces',
     'sum.unit': '{n} unités',
     'sum.unit.1': '{n} unité',
     'sum.free': 'Carte libre, hors des groupes',
@@ -2723,6 +2721,10 @@ const I18N = {
     'pack.tag.free': 'free',
     'pack.tag.gone': 'group deleted',
     'pack.unnamed': 'Datacard {n}',
+    'sum.chan.1': '{n} channel',
+    'sum.chan.n': '{n} channels',
+    'sum.threat.1': '{n} threat',
+    'sum.threat.n': '{n} threats',
     'sum.unit': '{n} units',
     'sum.unit.1': '{n} unit',
     'sum.free': 'Free card, outside the groups',
@@ -6350,13 +6352,74 @@ Object.keys(LINKED_BUILDERS).forEach(id => {
 });
 
 /* L'éditeur suit l'ordre des blocs de l'aperçu imprimé, pour une carte liée comme pour une carte libre (SECTION_IDS) */
-const openState = {};
+/* Le repli : l'état se garde (dg_folds_v1 : { section: true (ouverte) | false (repliée) }) ; le profil neuf replie Méta, Terrains, Carburant et emport, Menaces et notes.
+   En mode onglets (≤ 1100 px) la section de l'onglet est ouverte sans rien écrire dans la clé. */
+const DG_FOLDS = 'dg_folds_v1';
+const DG_FOLD_DEF = { meta: false, mission: true, times: true, group: true, nav: true, refs: true, radio: true, fields: false, weather: true, fuel: false, threats: false };
+const DG_TABS = window.matchMedia('(max-width: 1100px)');
+function dgFoldOpen(id) { return DG_TABS.matches ? true : uiFoldOpen(DG_FOLDS, id, DG_FOLD_DEF[id] !== false); }
 
+/* La ligne de résumé d'une section repliée : les valeurs saisies, séparées par « · » ; rien si la section est vide */
+function dgSectionSum(id, c) {
+  const v = x => (typeof x === 'string' ? x.trim() : (typeof x === 'number' ? String(x) : ''));
+  const cnt = (l, one, many) => l.length ? t(l.length === 1 ? one : many, { n: l.length }) : '';
+  if (id === 'meta') return uiJoin([CLASSIF_KEYS.indexOf(c.meta.classification) >= 0 ? t('classif.' + c.meta.classification) : '', v(c.meta.docRef)]);
+  if (id === 'mission') return uiJoin([v(c.flight.task), v(c.mission.objective)]);
+  if (id === 'times') {
+    const vals = c.times.map(x => v(x.value)).filter(Boolean);
+    return vals.length > 1 ? vals[0] + ' → ' + vals[vals.length - 1] : (vals[0] || '');
+  }
+  if (id === 'group') return uiJoin([v(c.flight.callsign), (c.flight.count ? c.flight.count + ' × ' : '') + v(c.flight.aircraft)]);
+  if (id === 'nav') {
+    const info = dgRouteInfo(c, dgRouteSet());
+    return uiJoin([c.nav.length ? navPts(c.nav.length) : '', info.state === 'linked' && hasText(info.name) ? info.name.trim() : '']);
+  }
+  if (id === 'refs') return c.refs.length ? t('nr.ref', { m: c.refs.length }) : '';
+  if (id === 'radio') return cnt(Array.prototype.concat.apply([], c.radios.map(r => (Array.isArray(r.channels) ? r.channels : []))), 'sum.chan.1', 'sum.chan.n');
+  if (id === 'fields') {
+    const f = role => { const x = c.fields.find(y => y && y.role === role); return x ? (v(x.icao) || v(x.name)) : ''; };
+    const d = f('dep'), a = f('arr');
+    return d && a ? d + ' → ' + a : (d || a);
+  }
+  if (id === 'weather') return uiJoin([v(c.weather.qnh), v(c.weather.wind)]);
+  if (id === 'fuel') {
+    const fu = uiJoin([v(c.fuel.joker) ? t('f.joker') + ' ' + v(c.fuel.joker) : '', v(c.fuel.bingo) ? t('f.bingo') + ' ' + v(c.fuel.bingo) : '']).replace(' · ', ' / ');
+    const lo = c.loadout.map(v).filter(Boolean);
+    return uiJoin([fu, lo.length ? lo[0] + (lo.length > 1 ? ' +' + (lo.length - 1) : '') : '']);
+  }
+  if (id === 'threats') return cnt(c.threats.map(v).filter(Boolean), 'sum.threat.1', 'sum.threat.n');
+  return '';
+}
 function sectionHtml(id, idx, c) {
   const title = pad2(idx + 1) + ' ░ ' + t('sec.' + id);
-  return '<details class="ed-section" data-section="' + id + '"' + (openState[id] === false ? '' : ' open') + '>' +
-    '<summary>' + esc(title) + '</summary><div class="ed-content"><div class="panel-mobile-header">' + esc(title) + '</div>' +
+  const sum = dgSectionSum(id, c);
+  return '<details class="ed-section" data-section="' + id + '" data-fold="' + dgFoldOpen(id) + '"' + (dgFoldOpen(id) ? ' open' : '') + '>' +
+    '<summary class="ui-fold-head" aria-expanded="' + dgFoldOpen(id) + '">' + esc(title) + (sum ? '<span class="ui-sum">' + esc(sum) + '</span>' : '') + '</summary><div class="ed-content"><div class="panel-mobile-header">' + esc(title) + '</div>' +
     SECTION_BUILDERS[id](c) + '</div></details>';
+}
+function dgFoldBarHtml() {
+  const any = SECTION_IDS.some(id => dgFoldOpen(id));
+  return '<div class="ui-foldbar"><button type="button" class="ui-btn ui-foldall" id="dg-foldall" data-foldall="1">' + esc(uiFoldAllLabel(any)) + '</button></div>';
+}
+/* Après un geste de repli : la clé, le résumé de la section, le libellé de « Tout replier » */
+function dgFoldSync(d) {
+  if (d) {
+    const id = d.dataset.section;
+    if (!DG_TABS.matches && d.dataset.fold !== String(d.open)) { uiFoldSave(DG_FOLDS, id, d.open); d.dataset.fold = String(d.open); }       /* un geste (le rendu, lui, pose l'état qu'il lit : rien à écrire) */
+    const h = d.querySelector(':scope > summary');
+    h.setAttribute('aria-expanded', String(d.open));
+    if (!d.open) uiSum(h, dgSectionSum(id, curCard()));
+  }
+  const b = document.getElementById('dg-foldall');
+  if (b) b.textContent = uiFoldAllLabel(Array.prototype.some.call(document.querySelectorAll('#ed-sections details.ed-section'), x => x.open));
+}
+function dgFoldAll() {
+  const ds = Array.prototype.slice.call(document.querySelectorAll('#ed-sections details.ed-section'));
+  const open = !ds.some(x => x.open), map = {};
+  ds.forEach(x => { map[x.dataset.section] = open; });
+  uiFoldSaveAll(DG_FOLDS, map);
+  ds.forEach(x => { if (x.open !== open) x.open = open; });
+  dgFoldSync(null);
 }
 
 /* Le champ en cours de saisie, retrouvé dans l'éditeur refait */
@@ -6392,7 +6455,7 @@ function renderEditor(keep) {
   const caret = cand ? [cand.selectionStart, cand.selectionEnd, cand.selectionDirection] : null;
   DG_UI.rendering = true;
   try {
-    document.getElementById('ed-sections').innerHTML = SECTION_IDS.map((id, i) => sectionHtml(id, i, c)).join('');
+    document.getElementById('ed-sections').innerHTML = dgFoldBarHtml() + SECTION_IDS.map((id, i) => sectionHtml(id, i, c)).join('');
     const nw = kept && sel ? ed.querySelector(sel) : null;
     if (nw && nw !== kept && nw.tagName === kept.tagName) {
       nw.replaceWith(kept);
@@ -7455,8 +7518,10 @@ function bindEvents() {
   ed.addEventListener('click', onEditorClick);
   ed.addEventListener('toggle', e => {
     const d = e.target;
-    if (d && d.matches && d.matches('details.ed-section')) openState[d.dataset.section] = d.open;
+    if (d && d.matches && d.matches('details.ed-section')) dgFoldSync(d);
   }, true);
+  ed.addEventListener('click', e => { if (e.target.closest('[data-foldall]')) dgFoldAll(); });
+  DG_TABS.addEventListener('change', () => renderEditor());
   document.getElementById('pack-bar').addEventListener('click', onPackClick);
   document.getElementById('grp-backdrop').addEventListener('click', grpClose);
   document.getElementById('grp-modal').addEventListener('click', e => { const b = e.target.closest('[data-grp-act]'); if (b && !b.disabled) grpAct(b.dataset.grpAct); });

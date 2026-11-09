@@ -1176,7 +1176,7 @@ select[data-tbm-src] { display: none !important; }
   color: var(--amber);
   display: flex; align-items: center; gap: 6px;
 }
-.ed-field label::before { content: '\u25ba'; color: var(--rust); font-size: 8px; }
+.ed-field label::before { content: ''; flex: none; width: 6px; height: 2px; background: var(--rust); }
 .ed-field input[type=text] {
   background: rgba(216,201,165,.92);
   border: 1px solid var(--khaki);
@@ -1219,7 +1219,7 @@ CSS_FC = r"""
 
 /* ======== FLIGHT CONFIGURATOR ======== */
 /* L'accent du module : UNE variable, --fc (au shell, --a-fc). Il colore le bandeau, le bouton principal, le focus, les puces actives et le logo F·C. */
-:root { --fc: #D0784A; }
+:root { --fc: #D0784A; --mp-accent: #D0784A; }
 body[data-theme] {
   --fc-dark: color-mix(in srgb, var(--fc) 62%, #000);
   --fc-dim: color-mix(in srgb, var(--fc) 26%, transparent);
@@ -1349,9 +1349,9 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
 .fc-fhead .pk-x, .fc-uhead .pk-x { margin-left: auto; margin-right: -8px; }
 .fc-fhead .pk-x { min-width: 44px; min-height: 44px; }
 .fc-flight.folded .fc-fhead { margin-bottom: 0; }
-.fc-fold { display: flex; align-items: center; gap: 8px; min-height: 40px; min-width: 0; flex: 0 1 auto; padding: 0 4px 0 0; background: none; border: 0; cursor: pointer; text-align: left; color: inherit; }
+.fc-fold { display: flex; align-items: center; gap: 8px; min-height: 44px; min-width: 0; flex: 0 1 auto; padding: 0 4px 0 0; background: none; border: 0; cursor: pointer; text-align: left; color: inherit; }
 .fc-fold:focus-visible { outline: 2px solid var(--fc); outline-offset: 2px; }
-.fc-chev { flex: none; width: 0; height: 0; border-left: 7px solid var(--fc); border-top: 5px solid transparent; border-bottom: 5px solid transparent; transition: transform .2s; margin: 0 4px; }
+.fc-chev { flex: none; width: 0; height: 0; border-left: 7px solid var(--mp-accent); border-top: 5px solid transparent; border-bottom: 5px solid transparent; transition: transform .2s; margin: 0 4px; }
 .fc-fold[aria-expanded="true"] .fc-chev { transform: rotate(90deg); }
 .fc-ftitle { font-family: var(--f-stencil); font-size: 13px; letter-spacing: 1.5px; color: var(--amber); text-transform: uppercase; word-break: break-word; min-width: 0; }
 .fc-foldall { margin-left: auto; }
@@ -1369,8 +1369,8 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
 .fc-nounit { display: flex; align-items: center; min-height: 44px; box-sizing: border-box; border: 1px dashed rgba(128,116,84,.6); border-left: 3px solid var(--amber-dark); padding: 6px 10px; font-family: var(--f-typewriter); font-size: 12px; color: var(--khaki-light); cursor: pointer; }
 .fc-nounit.sel { border-left-color: var(--fc); background: var(--fc-dim); box-shadow: 0 0 0 1px var(--fc); color: var(--paper); }
 .fc-uhead { margin-bottom: 6px; }
-/* la flèche de l'unité : le dessin de celle du groupe (.fc-chev), une cible de 34 px ; repliée, la carte garde son en-tête et une ligne de résumé */
-.fc-ufold { display: flex; align-items: center; justify-content: center; flex: none; min-width: 34px; min-height: 34px; margin: -4px 0 -4px -8px; padding: 0; background: none; border: 0; cursor: pointer; color: inherit; }
+/* la flèche de l'unité : le dessin de celle du groupe (.fc-chev), une cible de 44 px ; repliée, la carte garde son en-tête et une ligne de résumé */
+.fc-ufold { display: flex; align-items: center; justify-content: center; flex: none; min-width: 44px; min-height: 44px; margin: -8px 0 -8px -12px; padding: 0; background: none; border: 0; cursor: pointer; color: inherit; }
 .fc-ufold:focus-visible { outline: 2px solid var(--fc); outline-offset: 1px; }
 .fc-ufold[aria-expanded="true"] .fc-chev { transform: rotate(90deg); }
 .fc-usum { display: none; margin: 0 0 2px 26px; font-family: var(--f-typewriter); font-size: 12px; line-height: 1.4; color: var(--khaki-light); overflow-wrap: anywhere; min-width: 0; }
@@ -1381,19 +1381,17 @@ body[data-theme="cw-soviet"], body[data-theme="modern-nato"], body[data-theme="m
 .fc-sub { margin-top: 10px; border-top: 1px solid rgba(128,116,84,.45); }
 .fc-sub > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px; min-height: 44px; user-select: none; font-family: var(--f-stencil); font-size: 12px; letter-spacing: 1.5px; color: var(--amber); text-transform: uppercase; }
 .fc-sub > summary::-webkit-details-marker, .fc-post > summary::-webkit-details-marker { display: none; }
-.fc-sub > summary::before { content: '\25ba'; font-size: 8px; color: var(--rust); transition: transform .2s; }
-.fc-sub[open] > summary::before { transform: rotate(90deg); }
+.fc-sub > summary.ui-fold-head::before, .fc-post > summary.ui-fold-head::before { margin: 0 4px; }
 .fc-sub .fc-sum, .fc-post .fc-sum { font-family: var(--f-typewriter); font-size: 11px; letter-spacing: 0; text-transform: none; color: var(--khaki-light); min-width: 0; word-break: break-word; }
 .fc-sub > .fc-subc { padding: 2px 0 6px; display: flex; flex-direction: column; gap: 10px; }
 .fc-posts { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
 .fc-post { border: 1px solid rgba(128,116,84,.4); background: rgba(0,0,0,.12); }
-.fc-post > summary { cursor: pointer; list-style: none; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 8px; min-height: 44px; padding: 3px 10px; user-select: none; font-family: var(--f-ui); font-weight: 500; font-size: 12px; letter-spacing: 1px; color: var(--paper); text-transform: uppercase; }
-.fc-post > summary::after { content: '\25c4'; grid-column: 2; grid-row: 1 / span 2; font-size: 10px; color: var(--paper); transition: transform .2s; }
-.fc-ptop { grid-column: 1; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; min-width: 0; word-break: break-word; }
-.fc-band { grid-column: 1; font-family: var(--f-typewriter); font-weight: 400; font-size: 11px; letter-spacing: 0; text-transform: none; color: var(--khaki-light); min-width: 0; word-break: break-word; }
+.fc-post > summary { cursor: pointer; list-style: none; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: 8px; min-height: 44px; padding: 3px 10px; user-select: none; font-family: var(--f-ui); font-weight: 500; font-size: 12px; letter-spacing: 1px; color: var(--paper); text-transform: uppercase; }
+.fc-post > summary.ui-fold-head::before { grid-column: 1; grid-row: 1 / span 2; }
+.fc-ptop { grid-column: 2; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; min-width: 0; word-break: break-word; }
+.fc-band { grid-column: 2; font-family: var(--f-typewriter); font-weight: 400; font-size: 11px; letter-spacing: 0; text-transform: none; color: var(--khaki-light); min-width: 0; word-break: break-word; }
 .fc-flag { color: var(--pk-warn) !important; }
 .fc-flag:empty { display: none; }
-.fc-post[open] > summary::after { transform: rotate(-90deg); }
 .fc-post > .fc-postc { padding: 4px 10px 10px; }
 .fc-chans { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 6px 8px; }
 .fc-ch { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
@@ -3328,7 +3326,7 @@ function unitHtml(f, fi, u, ui) {
   </div></div>`;
 }
 function unitSettingsHtml(f, fi, u, ui, rk, at) {
-  return `<details class="fc-sub" data-key="${rk}"${openAttr(rk)}><summary>${esc(t('u.radios'))} <span class="fc-sum" data-sum="radios">${esc(radiosSummary(f, u))}</span></summary>
+  return `<details class="fc-sub" data-key="${rk}"${openAttr(rk)}><summary class="ui-fold-head" aria-expanded="${UI.open.has(rk)}">${esc(t('u.radios'))} <span class="fc-sum" data-sum="radios">${esc(radiosSummary(f, u))}</span></summary>
       <div class="fc-subc">${radiosHtml(f, fi, u, ui)}</div></details>
     <div class="fc-lo-sum"><span class="fc-lo-k">${esc(t('u.loadout'))}</span><span class="fc-lo-v" data-sum="loadout">${esc(loadoutName(u.loadout))}</span>
       <button type="button" class="fc-see" ${at} data-act="see-cmp">${esc(t('u.see'))}</button></div>`;
@@ -3346,7 +3344,7 @@ function radiosHtml(f, fi, u, ui) {
       chans += `<div class="fc-ch"><label>${esc(free ? tf('rad.freq', c) : tf('rad.ch', radioCockpitChannel(ty, r, c)))}</label>`
         + numberInputHtml(`data-u="${ui}" data-r="${r}" data-c="${c}" data-k="chan" placeholder="—"`, chanShown(u, r, c), hull[0], hull[1], '0.001') + '</div>';
     }
-    return `<details class="fc-post" data-key="${pk}"${openAttr(pk)}><summary><span class="fc-ptop">${esc(radioPosteName(ty, r) || 'R' + r)} ${free ? '' : `<span class="fc-sum">${esc(tf('rad.chans', n))}</span>`}<span class="fc-sum fc-flag" data-flag="${r}"></span></span><span class="fc-band" data-band="${r}">${esc(bandText(ty, r))}</span></summary>
+    return `<details class="fc-post" data-key="${pk}"${openAttr(pk)}><summary class="ui-fold-head" aria-expanded="${UI.open.has(pk)}"><span class="fc-ptop">${esc(radioPosteName(ty, r) || 'R' + r)} ${free ? '' : `<span class="fc-sum">${esc(tf('rad.chans', n))}</span>`}<span class="fc-sum fc-flag" data-flag="${r}"></span></span><span class="fc-band" data-band="${r}">${esc(bandText(ty, r))}</span></summary>
       <div class="fc-postc"><div class="fc-chans">${chans}</div><div class="fc-msg" id="rm-${fi}-${ui}-${r}"></div></div></details>`;
   }).join('');
   const sameType = f.units.some((x, k) => k !== ui && x.type === ty);       // « Recopier » ne va qu'aux unités du même type : sans elles, le bouton est inactif
@@ -4262,6 +4260,8 @@ function onToggle(e) {
   const d = e.target, key = d && d.getAttribute && d.tagName === 'DETAILS' ? d.getAttribute('data-key') : null;
   if (!key) return;
   if (d.open) UI.open.add(key); else UI.open.delete(key);
+  const h = d.querySelector(':scope > summary');
+  if (h) h.setAttribute('aria-expanded', String(d.open));
 }
 function onFocusIn(e) {
   if (isLiveryField(e.target) && !LV.quiet) lvOpen(e.target);       // les suggestions de livrée se calculent à l'entrée dans le champ

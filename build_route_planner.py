@@ -273,6 +273,7 @@ CSS = r"""
 }
 
 :root {
+  --mp-accent: #7AC97A;
   --f-stencil: 'Stardos Stencil', 'Impact', 'Arial Narrow Bold', sans-serif;
   --f-condensed: 'Oswald', 'Arial Narrow', sans-serif;
   --f-ui: 'Oswald', 'Arial Narrow', sans-serif;
@@ -501,11 +502,15 @@ select[data-tbm-src] { display: none !important; }
 .ed-head { font-family: var(--f-stencil); font-weight: 700; color: var(--amber); letter-spacing: 1.5px; font-size: 14px;
   padding: 12px 14px; border-bottom: 1px solid var(--khaki); background: linear-gradient(90deg, rgba(74,82,48,.55), transparent);
   display: flex; justify-content: space-between; align-items: center; }
+button.ed-head { width: 100%; box-sizing: border-box; margin: 0; border: 0; border-bottom: 1px solid var(--khaki); text-align: left; }
+.ed-head.ui-fold-head { flex-wrap: wrap; justify-content: flex-start; min-height: 44px; }
+.ed-head.ui-fold-head small { margin-left: auto; }
+.ed-section[data-open="false"] > .ed-body { display: none; }
 .ed-title::before { counter-increment: sec; content: counter(sec, decimal-leading-zero) ' \2591  '; }
 .ed-head small { font-family: var(--f-ui); font-weight: 500; color: var(--khaki-light); font-size: 11px; letter-spacing: 1px; }
 .ed-body { padding: 12px 14px; }
 .lbl { display: block; font-size: 10.5px; letter-spacing: 1.5px; color: var(--amber); text-transform: uppercase; font-weight: 700; margin: 0 0 6px; }
-.lbl::before { content: '► '; font-size: 8px; color: var(--amber-dark); }
+.lbl::before { content: ''; display: inline-block; width: 6px; height: 2px; margin-right: 6px; vertical-align: middle; background: var(--rust); }
 .in { background: rgba(216,201,165,.92); border: 1px solid var(--khaki); border-left: 3px solid var(--amber-dark);
   font-family: var(--f-typewriter); font-weight: 400; font-size: 13px; color: #1f1c16; padding: 8px 9px; min-height: 40px; width: 100%; min-width: 0; border-radius: 0; }
 .in::placeholder { color: rgba(31,28,22,.45); }
@@ -1357,24 +1362,24 @@ __CSS__
         <p class="hint" data-i18n="help.route">Touchez la carte pour ajouter un point ; glissez un point pour le déplacer ; le « + » d'une branche insère un point.</p>
       </div>
     </div>
-    <div class="ed-section" data-section="refs">
-      <div class="ed-head"><span class="ed-title" data-i18n="sec.refs">Points de référence</span><small id="ref-count"></small></div>
+    <div class="ed-section" data-section="refs" data-open="false">
+      <button type="button" class="ed-head ui-fold-head" aria-expanded="false"><span class="ed-title" data-i18n="sec.refs">Points de référence</span><small id="ref-count"></small></button>
       <div class="ed-body">
         <div class="pt-head" id="ref-head" hidden><span>#</span><span data-i18n="th.name">Nom</span><span id="alt-unit2"></span><span data-i18n="th.ref">Réf.</span><span></span></div>
         <div id="refs"></div>
         <p class="hint" data-i18n="help.refs">Choisissez « Réf. » en haut de la carte, puis touchez la carte ; glissez une référence pour la déplacer.</p>
       </div>
     </div>
-    <div class="ed-section" data-section="layers" id="sec-layers" hidden>
-      <div class="ed-head"><span class="ed-title" data-i18n="sec.layers">Calques</span><small id="layers-count"></small></div>
+    <div class="ed-section" data-section="layers" id="sec-layers" data-open="false" hidden>
+      <button type="button" class="ed-head ui-fold-head" aria-expanded="false"><span class="ed-title" data-i18n="sec.layers">Calques</span><small id="layers-count"></small></button>
       <div class="ed-body">
         <div id="layers-list"></div>
         <button type="button" class="tb-btn cf-clear" id="btn-layers-clear" data-i18n="layers.removeAll">Retirer tous les calques</button>
         <p class="hint" data-i18n="layers.help">En mode Lire, touchez un objet pour lire sa fiche. En mode Point ou Réf., une cible touchée devient un point de la route ou une référence. En mode Dessin, vous créez et modifiez vos propres calques.</p>
       </div>
     </div>
-    <div class="ed-section" data-section="nav">
-      <div class="ed-head"><span class="ed-title" data-i18n="sec.nav">Navigation</span></div>
+    <div class="ed-section" data-section="nav" data-open="false">
+      <button type="button" class="ed-head ui-fold-head" aria-expanded="false"><span class="ed-title" data-i18n="sec.nav">Navigation</span></button>
       <div class="ed-body">
         <div class="hdg nav-set">
           <div><div class="lbl" data-i18n="f.lbx">Boîtes de branche</div><span class="tb-group" role="group" data-i18n-aria-label="f.lbx" aria-label="Boîtes de branche"><button type="button" class="tb-btn" data-lbx="none" aria-pressed="false" data-i18n="lbx.none">Aucune</button><button type="button" class="tb-btn" data-lbx="min" aria-pressed="false" data-i18n="lbx.min">Minimale</button><button type="button" class="tb-btn" data-lbx="full" aria-pressed="true" data-i18n="lbx.full">Complète</button></span></div>
@@ -2264,6 +2269,8 @@ const I18N = {
     'fallback': 'Fond indisponible — grille seule',
     'sec.route': 'Route',
     'sec.points': '{n} points',
+    'sum.refs.1': '{n} point',
+    'sum.refs.n': '{n} points',
     'f.name': 'Nom de la route',
     'th.no': 'N°',
     'th.name': 'Nom',
@@ -2783,6 +2790,8 @@ const I18N = {
     'fallback': 'Map unavailable — grid only',
     'sec.route': 'Route',
     'sec.points': '{n} waypoints',
+    'sum.refs.1': '{n} point',
+    'sum.refs.n': '{n} points',
     'f.name': 'Route name',
     'th.no': 'No.',
     'th.name': 'Name',
@@ -7095,6 +7104,7 @@ function renderRefs() {
   $('alt-unit2').textContent = t('th.alt', { u: t(S.units.altitude === 'ft' ? 'u.ft' : 'u.m') });
   $('ref-count').textContent = String(S.refs.length);
   dspSync();
+  rpFoldRefresh();
 }
 
 /* La vitesse par défaut, en exemple grisé dans les champs vides de la colonne */
@@ -7152,6 +7162,7 @@ function renderNav() {
   });
   $('nav-refs').innerHTML = rr;
   $('nav-refs-wrap').hidden = !S.refs.length;
+  rpFoldRefresh();
 }
 
 function renderTheatreOptions() {
@@ -7238,6 +7249,37 @@ function syncDecl() {
   fb.classList.toggle('on', !!S.navDisplay.force);
   fb.setAttribute('aria-pressed', S.navDisplay.force ? 'true' : 'false');
   $('dv-src').innerHTML = dvSrcHtml(ys);
+}
+
+/* ============= REPLI DES SECTIONS (rp_folds_v1) =============
+   { section: true (ouverte) | false (repliée) } ; Points de référence, Calques et Navigation se replient, repliés d'abord ; Route ne se replie pas.
+   L'en-tête est un bouton (toute sa largeur) ; replié, une ligne de résumé. */
+const RP_FOLDS = 'rp_folds_v1';
+function rpFoldSecs() { return Array.prototype.slice.call(document.querySelectorAll('#panel > .ed-section[data-open]')); }
+function rpSectionSum(id) {
+  if (id === 'refs') return S.refs.length ? t(S.refs.length === 1 ? 'sum.refs.1' : 'sum.refs.n', { n: S.refs.length }) : '';
+  if (id === 'layers') return CF_LAYERS.length ? t(CF_LAYERS.length === 1 ? 'layers.count.1' : 'layers.count.n', { n: CF_LAYERS.length }) : '';
+  if (id === 'nav') return uiJoin([navTitle().replace(/^[^—]*—\s*/, ''), S.points.length > 1 ? fmtDist(timing().km) : '']);
+  return '';
+}
+function rpFoldRefresh() {
+  rpFoldSecs().forEach(d => {
+    const h = d.querySelector(':scope > .ed-head'), open = d.dataset.open === 'true';
+    h.setAttribute('aria-expanded', String(open));
+    uiSum(h, open ? '' : rpSectionSum(d.dataset.section));
+  });
+}
+function rpFoldInit() {
+  rpFoldSecs().forEach(d => { d.dataset.open = String(uiFoldOpen(RP_FOLDS, d.dataset.section, false)); });
+  rpFoldRefresh();
+  document.getElementById('panel').addEventListener('click', e => {
+    const h = e.target.closest('.ed-head.ui-fold-head');
+    if (!h) return;
+    const d = h.closest('.ed-section'), open = d.dataset.open !== 'true';
+    d.dataset.open = String(open);
+    uiFoldSave(RP_FOLDS, d.dataset.section, open);
+    rpFoldRefresh();
+  });
 }
 
 function renderAll() {
@@ -9530,6 +9572,7 @@ function renderLayers() {
   const n = CF_LAYERS.length;
   $('sec-layers').hidden = !n;
   $('layers-count').textContent = t(n === 1 ? 'layers.count.1' : 'layers.count.n', { n: n });
+  rpFoldRefresh();
   $('layers-list').innerHTML = CF_LAYERS.map(l =>
     '<div class="cf-row" data-id="' + esc(l.id) + '" title="' + esc(l.source.file) + '">' +
     '<label class="cf-vis"><input type="checkbox" data-act="vis"' + (l.visible ? ' checked' : '') + ' aria-label="' + esc(l.name) + '"></label>' +
@@ -11241,6 +11284,7 @@ function init() {
   loadDisplay();
   createMap();
   bindEvents();
+  rpFoldInit();
   drInit();
   spInit();
   renderAll();
