@@ -6200,17 +6200,19 @@ function biSetFromFile(o) {
   if (!Array.isArray(o.routes)) return null;
   const list = o.routes.filter(r => isPlainObject(r) && Array.isArray(r.points));
   if (!list.length) return null;
-  const active = (Number.isInteger(o.active) && o.active >= 0 && o.active < list.length) ? o.active : 0;
-  const shared = Object.assign({}, o, { format: ROUTE_FORMAT });
-  const all = list.map(r => {
+  /* seulement les routes de C, chacune classée par son theatre, sinon par le theatre de tête du fichier, sinon par la règle H2 (comme le stockage et l'ouverture au Route Planner) */
+  const C = dgCommonTheatre(), ref = dgTheatreOk(o.theatre) ? o.theatre : dgStateTheatre(readJsonKey(KEY_ROUTE));
+  const active = (Number.isInteger(o.active) && o.active >= 0 && o.active < o.routes.length) ? o.routes[o.active] : null;
+  const shared = Object.assign({}, o, { format: ROUTE_FORMAT, theatre: C });
+  const all = list.filter(r => routeTheatre(r, ref) === C).map(r => {
     const f = r.flight;
-    return { route: routeFromObject(Object.assign({}, shared, { name: r.name, points: r.points })),
+    return { src: r, route: routeFromObject(Object.assign({}, shared, { name: r.name, points: r.points })),
       flight: (isPlainObject(f) && typeof f.groupName === 'string') ? f : null };
   });
   const routes = all.filter(e => e.route && e.route.points.length);
-  if (!routes.length) return null;      /* aucune route à points */
-  const chosen = (all[active].route && all[active].route.points.length) ? all[active] : routes[0];
-  return { routes: routes, route: chosen.route };
+  if (!routes.length) return null;      /* aucune route à points sur C */
+  const chosen = routes.filter(e => e.src === active)[0] || routes[0];
+  return { routes: routes.map(e => ({ route: e.route, flight: e.flight })), route: chosen.route };
 }
 
 /* Un fichier lu → ce qu'il est : { kind: 'datacard' | 'briefing' | 'route' | 'set' | 'pkg', … } ; null après avoir dit pourquoi il est refusé.

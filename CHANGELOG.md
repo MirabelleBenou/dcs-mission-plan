@@ -113,6 +113,7 @@ Changes merged since the last release, grouped per tool.
 - The theatre is shared with the Datacard Generator: changing it in one module changes it in the other.
 - Units are shared with the Datacard Generator.
 - Each route keeps its theatre: switching theatre hides the routes of the other theatres (kept, back when you return), and the Flight Configurator only offers the routes of the shared theatre.
+- A saved route set keeps every route's theatre, across all theatres; opening it puts each route back on its own theatre and replaces the whole set.
 #### Fixed
 - Computed magnetic variation now follows DCS for every mission date: years up to 1985 use the IGRF model DCS ships (up to 1.2° closer), later years the previous five-year WMM file, as DCS does (0.2° closer in 1990, 1995 … 2025).
 
