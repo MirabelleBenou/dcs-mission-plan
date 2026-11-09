@@ -1265,7 +1265,12 @@ const I18N = {{
     'editor.wing.sizeKo':       'Taille config : {{n}} Ko',
     'editor.wing.delSquadron':  'Supprimer escadron',
     'editor.wing.addedSquadron':"Escadron ajout\u00e9 \u2014 pensez \u00e0 renseigner l\u2019id \u2713",
-    'editor.wing.resetConfirm': 'R\u00e9initialiser au wing par d\u00e9faut ?\\nToutes les modifications seront perdues.',
+    'editor.wing.resetConfirm.title': 'R\u00e9initialiser au wing par d\u00e9faut\u202f?',
+    'editor.wing.resetConfirm.text': 'Toutes les modifications seront perdues.',
+    'delSquadron.confirm.title': 'Supprimer l\u2019escadron \u00ab {{id}} \u00bb\u202f?',
+    'delSquadron.confirm.text': 'L\u2019escadron sera retir\u00e9 de la configuration du wing. Cela ne se d\u00e9fait pas.',
+    'ui.verb.delete': 'Supprimer',
+    'ui.verb.reset': 'R\u00e9initialiser',
     'editor.wing.identifier':   'Identifiant',
     'editor.wing.identifierHint':'cl\u00e9 stable, ne pas modifier apr\u00e8s cr\u00e9ation',
     'editor.wing.nickname':     'Surnom',
@@ -1600,7 +1605,12 @@ const I18N = {{
     'editor.wing.sizeKo':       'Config size: {{n}} KB',
     'editor.wing.delSquadron':  'Delete squadron',
     'editor.wing.addedSquadron':'Squadron added \u2014 remember to fill in the id \u2713',
-    'editor.wing.resetConfirm': 'Reset to default wing?\\nAll changes will be lost.',
+    'editor.wing.resetConfirm.title': 'Reset to default wing?',
+    'editor.wing.resetConfirm.text': 'All changes will be lost.',
+    'delSquadron.confirm.title': 'Delete the squadron \u201c{{id}}\u201d?',
+    'delSquadron.confirm.text': 'The squadron will be removed from the wing configuration. This cannot be undone.',
+    'ui.verb.delete': 'Delete',
+    'ui.verb.reset': 'Reset',
     'editor.wing.identifier':   'Identifier',
     'editor.wing.identifierHint':'stable key, do not modify after creation',
     'editor.wing.nickname':     'Nickname',
@@ -2385,11 +2395,11 @@ function renderWingSquadronCard(sqIdx) {{
   const btnDel = document.createElement('button');
   btnDel.type = 'button'; btnDel.className = 'ed-btn-icon danger'; btnDel.title = t('editor.wing.delSquadron');
   btnDel.innerHTML = '\u00d7';
-  btnDel.addEventListener('click', () => {{
+  btnDel.addEventListener('click', async () => {{
     const sqId   = wingConfig.squadrons[sqIdx] ? wingConfig.squadrons[sqIdx].id : '?';
     const isLast = wingConfig.squadrons.length === 1;
-    const extra  = isLast ? t('delSquadron.lastWarning') : '';
-    if (!confirm(t('editor.wing.delSquadron') + ' "' + escapeHtml(sqId) + '" ?' + extra + t('delSquadron.refWarning'))) return;
+    const extra  = isLast ? '\\n\\n' + t('delSquadron.lastWarning').trim() : '';
+    if (!await askConfirm({{ title: t('delSquadron.confirm.title').replace('{{id}}', sqId), text: t('delSquadron.confirm.text') + extra + t('delSquadron.refWarning'), verb: t('ui.verb.delete'), danger: true }})) return;
     wingConfig.squadrons.splice(sqIdx, 1);
     persistWingConfig(); renderWingSquadrons();
   }});
@@ -2766,8 +2776,8 @@ function restoreWingConfig() {{
   showToast(t('toast.configRestored'), {{ type: 'ok' }});
 }}
 
-function resetWingConfig() {{
-  if (!confirm(t('editor.wing.resetConfirm'))) return;
+async function resetWingConfig() {{
+  if (!await askConfirm({{ title: t('editor.wing.resetConfirm.title'), text: t('editor.wing.resetConfirm.text'), verb: t('ui.verb.reset'), danger: true }})) return;
   wingConfig = structuredClone(DEFAULT_WING_CONFIG);
   localStorage.removeItem(KEY_WING);
   renderWingEditor();

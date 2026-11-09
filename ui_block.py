@@ -199,17 +199,21 @@ function askConfirm(o) {
 
 /* ---- le geste « Remplacer » : on fait, on garde l'ancien, un toast à action « Restaurer » 12 s ----
    o.keys : les clés de localStorage que l'action écrit ; o.mem() : copie de l'état en mémoire ; o.back(copie) : remet l'état et redessine ;
-   o.run() : l'action (rend false si rien n'a changé) ; o.msg : la phrase du résultat, sans « · ». Un second remplacement efface la copie du premier. */
+   o.run() : l'action (rend false si rien n'a changé ; peut rendre une promesse) ; o.msg : la phrase du résultat, sans « · » (ou une fonction qui la rend, une fois l'action faite). Un second remplacement efface la copie du premier. */
 function replaceWithRestore(o) {
   const ls = {};
   (o.keys || []).forEach(k => { try { ls[k] = localStorage.getItem(k); } catch (e) { ls[k] = null; } });
   const mem = o.mem ? o.mem() : null;
   const snap = { ls: ls, mem: mem, back: o.back };
   UIK.restore = null;
-  if (o.run() === false) return false;
-  UIK.restore = snap;
-  showToast(o.msg + ' ·', { action: { label: uiT('ui.restore'), fn: () => uiRestore(snap) }, ms: 12000 });
-  return true;
+  const fin = r => {
+    if (r === false) return false;
+    UIK.restore = snap;
+    showToast((typeof o.msg === 'function' ? o.msg() : o.msg) + ' ·', { action: { label: uiT('ui.restore'), fn: () => uiRestore(snap) }, ms: 12000 });
+    return true;
+  };
+  const r = o.run();
+  return (r && typeof r.then === 'function') ? r.then(fin) : fin(r);
 }
 function uiRestoreKeys(snap) {
   Object.keys(snap.ls).forEach(k => { try { if (snap.ls[k] === null) localStorage.removeItem(k); else localStorage.setItem(k, snap.ls[k]); } catch (e) { /* ignore */ } });

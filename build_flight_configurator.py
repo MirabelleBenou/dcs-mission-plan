@@ -380,7 +380,7 @@ I18N_FR = {
     'tb.export.tip': 'Exporter le paquet de vol pour le Mission Commander',
     'tb.clear': 'Effacer',
     'tb.clear.s': 'Effacer',
-    'tb.clear.tip': 'Vider le module (mes presets restent)',
+    'tb.clear.tip': 'Effacer',
 
     'bar.ok': 'Prêt à exporter : {0}',
     'bar.clamped': '{0} réglage(s) d’emport ramené(s) à la limite de l’appareil.',
@@ -469,7 +469,8 @@ I18N_FR = {
     'u.fold': 'Replier l’unité',
     'u.unfold': 'Déplier l’unité',
     'u.add': '+ Ajouter une unité ({0}/4)',
-    'u.type.confirm': 'Changer le type de {0} efface ses radios et son emport. Continuer ?',
+    'u.type.confirm.title': 'Changer le type de {0} ?',
+    'u.type.confirm.text': 'Ses radios et son emport seront effacés.',
     'u.remove': 'Retirer cette unité',
     'u.name': 'Nom',
     'u.callsign': 'Indicatif',
@@ -584,7 +585,7 @@ I18N_FR = {
     'fmt.pkg': 'paquet de vol',
     'rej.unknown': 'inconnu',
     'bar.start': 'Pour commencer : ajoutez un groupe.',
-    'open.theatre.confirm': "Ce fichier est sur {0} : le théâtre de Mission Plan passe de {1} à {0} (le Route Planner et le Datacard Generator suivent). Continuer ?",
+    'open.theatre.set': 'Théâtre de Mission Plan : {0}',
     'open.theatre.unknown': "Ce fichier est sur un théâtre que Mission Plan ne connaît pas ({0}) : il n’est pas ouvert.",
     'th.Afghanistan': 'Afghanistan',
     'th.Caucasus': 'Caucase',
@@ -603,7 +604,13 @@ I18N_FR = {
     'open.done': 'Fichier ouvert : {0} groupe(s).',
     'open.ignored': '{0} groupe(s) non géré(s) ignoré(s).',
 
-    'clear.confirm': 'Vider le module ? Les groupes, la route et l’emport en cours sont perdus (mes presets restent).',
+    'clear.confirm.title': 'Effacer le module ?',
+    'clear.confirm.text': 'Les groupes, la route et l’emport en cours seront effacés ; vos presets restent. Cela ne se défait pas.',
+    'fl.remove.confirm.title': 'Retirer le groupe « {0} » ?',
+    'fl.remove.confirm.text': 'Ce groupe est partagé avec le Route Planner et le Datacard Generator : il sera retiré de tous les modules.',
+    'ui.verb.clear': 'Effacer',
+    'ui.verb.change': 'Changer',
+    'ui.verb.remove': 'Retirer',
 
     'save.done': 'Travail enregistré : {0}',
     'fn.label': 'Nom du fichier',
@@ -650,7 +657,7 @@ I18N_EN = {
     'tb.export.tip': 'Export the flight package for the Mission Commander',
     'tb.clear': 'Clear',
     'tb.clear.s': 'Clear',
-    'tb.clear.tip': 'Empty the module (my presets stay)',
+    'tb.clear.tip': 'Clear',
 
     'bar.ok': 'Ready to export: {0}',
     'bar.clamped': '{0} loadout setting(s) brought back to the aircraft limit.',
@@ -739,7 +746,8 @@ I18N_EN = {
     'u.fold': 'Fold the unit',
     'u.unfold': 'Unfold the unit',
     'u.add': '+ Add a unit ({0}/4)',
-    'u.type.confirm': 'Changing {0}’s type clears its radios and loadout. Continue?',
+    'u.type.confirm.title': 'Change the type of {0}?',
+    'u.type.confirm.text': 'Its radios and loadout will be erased.',
     'u.remove': 'Remove this unit',
     'u.name': 'Name',
     'u.callsign': 'Callsign',
@@ -854,7 +862,7 @@ I18N_EN = {
     'fmt.pkg': 'flight package',
     'rej.unknown': 'unknown',
     'bar.start': 'To start: add a group.',
-    'open.theatre.confirm': "This file is on {0}: Mission Plan's theatre changes from {1} to {0} (the Route Planner and the Datacard Generator follow). Continue?",
+    'open.theatre.set': 'Mission Plan theatre: {0}',
     'open.theatre.unknown': "This file is on a theatre Mission Plan does not know ({0}): it is not opened.",
     'th.Afghanistan': 'Afghanistan',
     'th.Caucasus': 'Caucasus',
@@ -873,7 +881,13 @@ I18N_EN = {
     'open.done': 'File opened: {0} group(s).',
     'open.ignored': '{0} unhandled group(s) ignored.',
 
-    'clear.confirm': 'Empty the module? The groups, route and loadouts in progress are lost (my presets stay).',
+    'clear.confirm.title': 'Clear the module?',
+    'clear.confirm.text': 'The groups, route and loadouts in progress will be erased; your presets stay. This cannot be undone.',
+    'fl.remove.confirm.title': 'Remove the group “{0}”?',
+    'fl.remove.confirm.text': 'This group is shared with the Route Planner and the Datacard Generator: it will be removed from all modules.',
+    'ui.verb.clear': 'Clear',
+    'ui.verb.change': 'Change',
+    'ui.verb.remove': 'Remove',
 
     'save.done': 'Work saved: {0}',
     'fn.label': 'File name',
@@ -3982,27 +3996,51 @@ function openFile(file) {
     }
     const fth = work ? str(o.fc.state.theatre) : res.src.theatre;
     if (fth !== '' && !thOk(fth)) { showToast(tf('open.theatre.unknown', fth), { type: 'err' }); return; }
-    if (fth !== '' && fth !== S.theatre && S.flights.length && !confirm(tf('open.theatre.confirm', theatreName(fth), theatreName(S.theatre)))) return;
-    if (work) { restoreState(o.fc.state); UI.clamped = 0; mergeMine(o.fc.mine); remapPresetKeys(o.fc.mine); }
-    else {
-      UI.clamped = 0;
-      ignored = res.src.rows.filter(f => !f.managed).length;
-      const built = impBuildGroups(res.src.rows.filter(f => f.managed));
-      restoreState({ flights: built.flights, sel: { f: 0, u: 0 } });       // l'emport brut (payloadIn) est converti par restoreFlight
-      warn = built.warn.join(' · ');
-    }
-    if (fth !== '') { S.theatre = fth; thWriteKey(fth); }
-    S.sel = { f: 0, u: 0 };                    // la première unité du premier groupe ouvert
-    UI.exportTried = false;
-    UI.rtChoose = null;
-    Object.assign(UI.cmp, { saving: false, err: '', st: null });
-    clearTimeout(_saveTimer);
-    if (gsReplaceAll(S.theatre, JSON.parse(JSON.stringify(S.flights)))) gsMarkAll();       // le fichier remplace la fiche entière, théâtre compris
-    thFill();
-    renderAll();
-    writeState();
-    showToast(tf('open.done', S.flights.length) + (ignored ? ' · ' + tf('open.ignored', ignored) : '') + (warn ? ' · ' + warn : ''), { type: 'ok', ms: (ignored || warn) ? 6000 : undefined });
+    // Le fichier remplace le travail sans question : l'ancien est gardé et « Restaurer » le remet (bloc d'interface commun) ; le toast dit aussi un changement de théâtre.
+    const thChanged = fth !== '' && fth !== S.theatre && S.flights.length > 0;
+    replaceWithRestore({
+      keys: FC_REPLACE_KEYS, mem: fcMem, back: fcBack,
+      run: () => {
+        if (work) { restoreState(o.fc.state); UI.clamped = 0; mergeMine(o.fc.mine); remapPresetKeys(o.fc.mine); }
+        else {
+          UI.clamped = 0;
+          ignored = res.src.rows.filter(f => !f.managed).length;
+          const built = impBuildGroups(res.src.rows.filter(f => f.managed));
+          restoreState({ flights: built.flights, sel: { f: 0, u: 0 } });       // l'emport brut (payloadIn) est converti par restoreFlight
+          warn = built.warn.join(' · ');
+        }
+        if (fth !== '') { S.theatre = fth; thWriteKey(fth); }
+        S.sel = { f: 0, u: 0 };                    // la première unité du premier groupe ouvert
+        UI.exportTried = false;
+        UI.rtChoose = null;
+        Object.assign(UI.cmp, { saving: false, err: '', st: null });
+        clearTimeout(_saveTimer);
+        if (gsReplaceAll(S.theatre, JSON.parse(JSON.stringify(S.flights)))) gsMarkAll();       // le fichier remplace la fiche entière, théâtre compris
+        thFill();
+        renderAll();
+        writeState();
+      },
+      msg: () => tf('open.done', S.flights.length) + (ignored ? ' · ' + tf('open.ignored', ignored) : '') + (warn ? ' · ' + warn : '') + (thChanged ? ' · ' + tf('open.theatre.set', theatreName(S.theatre)) : '')
+    });
   });
+}
+// Ce que « Ouvrir » écrit : l'état du module, la fiche des groupes, le théâtre commun (et les clés que la migration de la fiche pourrait toucher).
+const FC_REPLACE_KEYS = ['fc_state_v1', 'flight_set_v1', 'flight_set_v1_illisible', 'mp_theatre_v1', 'route_state_v1', 'route_set_v1'];
+function fcMem() {
+  flushWork();
+  return { theatre: S.theatre, flights: clone(S.flights), sel: clone(S.sel), mine: clone(LIB.mine) };
+}
+// « Restaurer » : le stockage est déjà revenu à l'octet (bloc d'interface commun) ; le module reprend sa copie et se redessine, sans rien réécrire.
+function fcBack(m) {
+  clearTimeout(_saveTimer); _saveTimer = 0;
+  S.theatre = m.theatre; S.flights = clone(m.flights); S.sel = clone(m.sel); LIB.mine = clone(m.mine);
+  GS.removed = [];
+  gsMarkAll();
+  UI.exportTried = false; UI.rtChoose = null; UI.clamped = 0;
+  Object.assign(UI.cmp, { saving: false, err: '', st: null });
+  thFill();
+  renderAll();
+  clearTimeout(_saveTimer); _saveTimer = 0;
 }
 function saveFile() {
   fnAsk({
@@ -4035,8 +4073,8 @@ function exportFile() {
     }
   });
 }
-function clearAll() {
-  if (!confirm(t('clear.confirm'))) return;
+async function clearAll() {
+  if (!await askConfirm({ title: t('clear.confirm.title'), text: t('clear.confirm.text'), verb: t('ui.verb.clear'), danger: true })) return;
   Object.assign(S, { flights: [], sel: { f: 0, u: 0 } });       // le théâtre commun reste
   UI.clamped = 0;
   UI.exportTried = false;
@@ -4055,6 +4093,15 @@ function addFlight() {
   S.sel = { f: S.flights.length - 1, u: 0 };
   renderAll();
   commitNow();
+}
+// Un groupe déjà dans la fiche commune des groupes se retire de tous les modules : une question d'abord ; un groupe qui n'y est pas encore se retire sans question.
+async function askRemoveFlight(fi) {
+  const f = S.flights[fi], g = gsRead();
+  if (f && g && g.flights.some(x => x.fcId === f.fcId)) {
+    if (!await askConfirm({ title: tf('fl.remove.confirm.title', flightLabel(f, fi)), text: t('fl.remove.confirm.text'), verb: t('ui.verb.remove'), danger: true })) return;
+  }
+  const i = S.flights.indexOf(f);
+  if (i >= 0) removeFlight(i);
 }
 function removeFlight(fi) {
   if (S.flights[fi] && GS.removed.indexOf(S.flights[fi].fcId) < 0) GS.removed.push(S.flights[fi].fcId);
@@ -4091,7 +4138,7 @@ function backToUnit() {
 // Les actions des boutons, par data-act ; c = { b (le bouton), fi (vol), ui (unité) }.
 const ACTIONS = {
   'add-flight': () => addFlight(),
-  'rm-flight': c => removeFlight(c.fi),
+  'rm-flight': c => askRemoveFlight(c.fi),
   'fold': c => { setFold(S.flights[c.fi], !flightOpen(S.flights[c.fi], c.fi)); paintFold(); },
   'fold-all': () => { const open = !anyFlightOpen(); foldFreeze(); S.flights.forEach(f => UI.fold.set(f, open ? 'open' : 'closed')); paintFold(); },
   'add-unit': c => {
@@ -4223,10 +4270,11 @@ function commitLoadoutField(k, el) {
   refreshAll();
 }
 // Le type d'une unité change : ses radios et son emport ne valent plus (ils suivent le type), la livrée reste. S'il y en a à perdre, une confirmation ; refusée, la liste revient à l'ancien type.
-function changeUnitType(f, fi, ui, el) {
+async function changeUnitType(f, fi, ui, el) {
   const u = f.units[ui], nt = el.value;
   if (!u || nt === u.type || PAYLOAD_TYPES.indexOf(nt) < 0) return;
-  if ((radioCount(f, u) > 0 || !!u.loadout) && !confirm(tf('u.type.confirm', unitLabel(f, fi, u, ui)))) { el.value = u.type; return; }
+  if ((radioCount(f, u) > 0 || !!u.loadout) && !await askConfirm({ title: tf('u.type.confirm.title', unitLabel(f, fi, u, ui)), text: t('u.type.confirm.text'), verb: t('ui.verb.change'), danger: true })) { el.value = u.type; return; }
+  if (u.type === nt || f.units[ui] !== u) return;
   u.type = nt; u.radios = {}; u.loadout = null; REFUSED.delete(u);
   Object.assign(UI.cmp, { saving: false, err: '', st: null });
   renderAll();

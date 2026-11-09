@@ -1811,7 +1811,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
     <span class="tb-btn-label" data-i18n="tb.example">Exemple</span>
   </button>
-  <button class="tb-btn danger" id="btn-reset" data-i18n-title="tb.reset.tip" title="Vider le document (repartir d'une carte blanche)">
+  <button class="tb-btn danger" id="btn-reset" data-i18n-title="tb.reset.tip" title="Effacer">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
     <span class="tb-btn-label" data-i18n="tb.reset">Effacer</span>
   </button>
@@ -2450,6 +2450,12 @@ const I18N = {
     'ui.pages': 'Pages',
     'ui.fname': 'Nom du fichier',
     'ui.export': 'Exporter',
+    'ui.verb.remove': 'Retirer',
+    'ui.verb.link': 'Lier',
+    'ui.verb.change': 'Changer',
+    'ui.verb.write': 'Écrire',
+    'ui.verb.delete': 'Supprimer',
+    'ui.verb.clear': 'Effacer',
     'app.title': 'Datacard Generator',
     'tb.subtitle': '░ CARTES DE BORD',
     'tb.mode.day': 'Jour',
@@ -2468,7 +2474,7 @@ const I18N = {
     'tb.example': 'Exemple',
     'tb.example.tip': 'Ouvrir la datacard d\'exemple (remplace le document en cours)',
     'tb.reset': 'Effacer',
-    'tb.reset.tip': 'Vider le document (repartir d\'une carte blanche)',
+    'tb.reset.tip': 'Effacer',
     'tb.theme.tip': 'Thème graphique',
     'tb.theatre': 'Théâtre',
     'tb.units': 'Unités',
@@ -2530,8 +2536,6 @@ const I18N = {
     'toast.imported': '{n} datacard(s) importée(s) ✓',
     'toast.jsonSaved': 'Datacards enregistrées ✓',
     'toast.jsonLoaded': 'Datacards chargées ✓',
-    'confirm.json': 'Remplacer les datacards en cours ?',
-    'confirm.json.groups': 'Remplacer vos cartes libres par celles du fichier ? Les cartes des groupes sont gardées ; la carte du fichier qui porte un groupe de la fiche remplace la sienne.',
     'frz.note': 'Copie de ce que le groupe donnait à cette carte avant qu\'elle devienne libre : lecture seule.',
     'u.type.pick': '— à choisir —',
     'sum.type.pick': 'type à choisir',
@@ -2540,11 +2544,12 @@ const I18N = {
     'rad.err.nan.f': 'Fréquence {0} : « {1} » n’est pas une fréquence.',
     'rad.err.range.f': 'Fréquence {0} : {1} MHz hors de la bande du poste ({2}).',
     'toast.briefFilled': 'Carte « {n} » remplie depuis le briefing (mission, date et heure, terrains, météo)',
-    'confirm.example': 'Remplacer le document en cours par l\'exemple ?',
     'toast.example': 'Exemple chargé ✓',
-    'confirm.reset': 'Vider toutes les datacards ?',
+    'confirm.reset.title': 'Effacer toutes les datacards ?',
+    'confirm.reset.text': 'Toutes les datacards seront effacées. Cela ne se défait pas.',
     'toast.reset': 'Document vidé ✓',
-    'confirm.delete': 'Supprimer cette datacard ?',
+    'confirm.delete.title': 'Supprimer cette datacard ?',
+    'confirm.delete.text': 'Elle sera supprimée du document. Cela ne se défait pas.',
     'pack.dup': 'Dupliquer',
     'pack.del': 'Supprimer',
     'pack.list': 'Datacards ({n})',
@@ -2576,8 +2581,10 @@ const I18N = {
     'cr.legend': 'Indicatif, type et n° de bord sont ceux du groupe (partagés). Le pilote est propre à cette carte.',
     'cr.add': '+ Ajouter une unité ({n}/{max})',
     'cr.remove': 'Retirer cette unité',
-    'cr.rm.confirm': 'Retirer {n} supprime ses fréquences et son emport du groupe. Continuer ?',
-    'u.type.confirm': 'Changer le type de {n} efface ses radios et son emport. Continuer ?',
+    'cr.rm.confirm.title': 'Retirer {n} ?',
+    'cr.rm.confirm.text': 'Ses fréquences et son emport seront retirés du groupe.',
+    'u.type.confirm.title': 'Changer le type de {n} ?',
+    'u.type.confirm.text': 'Ses radios et son emport seront effacés.',
     'rt.title': 'RADIO — {type}',
     'rt.units': '{n} unités : {names}',
     'rt.units.1': '{n} unité : {names}',
@@ -2592,8 +2599,9 @@ const I18N = {
     'rt.free.f.hide': 'Masquer les fréquences libres',
     'rt.freq': 'Fréquence {n}',
     'rt.nofreq': 'Aucune fréquence dans la fiche pour ce poste.',
-    'rt.align.confirm': 'Ce canal diffère selon l\'unité : {list}.\nÉcrire « {freq} » dans les {n} unités {type} ?',
-    'rt.align.confirm.f': 'Cette fréquence diffère selon l\'unité : {list}.\nÉcrire « {freq} » dans les {n} unités {type} ?',
+    'rt.align.confirm.title': 'Écrire « {freq} » dans les {n} unités {type} ?',
+    'rt.align.confirm.text': 'Ce canal diffère selon l\'unité : {list}.',
+    'rt.align.confirm.f.text': 'Cette fréquence diffère selon l\'unité : {list}.',
     'rt.none': 'Ce groupe n\'a pas d\'unité : aucune radio à montrer.',
     'rt.legend': 'Les fréquences sont celles de la fiche. Cochez les canaux à porter sur la carte ; leur nom et leur modulation sont propres à cette carte.',
     'lo.fc': 'Emport du Flight Configurator',
@@ -2769,11 +2777,14 @@ const I18N = {
     'nr.link.exist': 'Lier à une route existante',
     'nr.unnamed': 'Route sans nom',
     'nr.opt': '{name} ({n} pts)',
-    'nav.rm.confirm': 'Retirer {n} de la route « {r} » ? Il sera aussi retiré au Route Planner.',
+    'nav.rm.confirm.title': 'Retirer {n} de la route « {r} » ?',
+    'nav.rm.confirm.text': 'Il sera aussi retiré au Route Planner.',
     'nav.rm.point': 'le point {k}',
     'nav.rm.route': 'cette route',
-    'nav.link.confirm': 'Lier cette carte à la route « {r} » ? Les heures et notes déjà saisies ne suivent pas : elles sont attachées aux points de la route actuelle.',
-    'ref.rm.confirm': 'Retirer la référence {n} ? Elle sera retirée au Route Planner et sur toutes les datacards.',
+    'nav.link.confirm.title': 'Lier cette carte à la route « {r} » ?',
+    'nav.link.confirm.text': 'Les heures et notes déjà saisies ne suivent pas : elles sont attachées aux points de la route actuelle.',
+    'ref.rm.confirm.title': 'Retirer la référence {n} ?',
+    'ref.rm.confirm.text': 'Elle sera retirée au Route Planner et sur toutes les datacards.',
     'refs.note': 'Les points de référence sont ceux du Route Planner, communs à la mission ; coche ceux que cette carte affiche.',
     'refs.own.full': 'Le Route Planner a déjà 12 références : celles de cette carte qui n’y sont pas restent à elle.',
     'toast.rwMax': '⚠ Le Route Planner a déjà 12 routes : la route n’est pas créée.',
@@ -2917,6 +2928,12 @@ const I18N = {
     'ui.pages': 'Pages',
     'ui.fname': 'File name',
     'ui.export': 'Export',
+    'ui.verb.remove': 'Remove',
+    'ui.verb.link': 'Link',
+    'ui.verb.change': 'Change',
+    'ui.verb.write': 'Write',
+    'ui.verb.delete': 'Delete',
+    'ui.verb.clear': 'Clear',
     'app.title': 'Datacard Generator',
     'tb.subtitle': '░ DATACARDS',
     'tb.mode.day': 'Day',
@@ -2935,7 +2952,7 @@ const I18N = {
     'tb.example': 'Example',
     'tb.example.tip': 'Open the example datacard (replaces the current document)',
     'tb.reset': 'Clear',
-    'tb.reset.tip': 'Clear the document (start from a blank card)',
+    'tb.reset.tip': 'Clear',
     'tb.theme.tip': 'Graphic theme',
     'tb.theatre': 'Theatre',
     'tb.units': 'Units',
@@ -2997,8 +3014,6 @@ const I18N = {
     'toast.imported': '{n} datacard(s) imported ✓',
     'toast.jsonSaved': 'Datacards saved ✓',
     'toast.jsonLoaded': 'Datacards loaded ✓',
-    'confirm.json': 'Replace the current datacards?',
-    'confirm.json.groups': 'Replace your free cards with the file\'s? The groups\' cards are kept; the file\'s card that carries a group of the shared set replaces that group\'s card.',
     'frz.note': 'A copy of what the group gave this card before it became free: read only.',
     'u.type.pick': '— to pick —',
     'sum.type.pick': 'type to pick',
@@ -3007,11 +3022,12 @@ const I18N = {
     'rad.err.nan.f': 'Frequency {0}: “{1}” is not a frequency.',
     'rad.err.range.f': 'Frequency {0}: {1} MHz is outside the radio’s band ({2}).',
     'toast.briefFilled': 'Card “{n}” filled from the briefing (mission, date and time, airfields, weather)',
-    'confirm.example': 'Replace the current document with the example?',
     'toast.example': 'Example loaded ✓',
-    'confirm.reset': 'Clear all datacards?',
+    'confirm.reset.title': 'Clear all datacards?',
+    'confirm.reset.text': 'All datacards will be erased. This cannot be undone.',
     'toast.reset': 'Document cleared ✓',
-    'confirm.delete': 'Delete this datacard?',
+    'confirm.delete.title': 'Delete this datacard?',
+    'confirm.delete.text': 'It will be deleted from the document. This cannot be undone.',
     'pack.dup': 'Duplicate',
     'pack.del': 'Delete',
     'pack.list': 'Datacards ({n})',
@@ -3043,8 +3059,10 @@ const I18N = {
     'cr.legend': 'Callsign, type and onboard no. belong to the group (shared). The pilot belongs to this card only.',
     'cr.add': '+ Add a unit ({n}/{max})',
     'cr.remove': 'Remove this unit',
-    'cr.rm.confirm': 'Removing {n} deletes its frequencies and loadout from the group. Continue?',
-    'u.type.confirm': 'Changing {n}’s type clears its radios and loadout. Continue?',
+    'cr.rm.confirm.title': 'Remove {n}?',
+    'cr.rm.confirm.text': 'Its frequencies and loadout will be removed from the group.',
+    'u.type.confirm.title': 'Change {n}’s type?',
+    'u.type.confirm.text': 'Its radios and loadout will be cleared.',
     'rt.title': 'RADIO — {type}',
     'rt.units': '{n} units: {names}',
     'rt.units.1': '{n} unit: {names}',
@@ -3059,8 +3077,9 @@ const I18N = {
     'rt.free.f.hide': 'Hide empty frequencies',
     'rt.freq': 'Frequency {n}',
     'rt.nofreq': 'No frequency in the group sheet for this radio.',
-    'rt.align.confirm': 'This channel differs between units: {list}.\nWrite “{freq}” to all {n} {type} units?',
-    'rt.align.confirm.f': 'This frequency differs between units: {list}.\nWrite “{freq}” to all {n} {type} units?',
+    'rt.align.confirm.title': 'Write “{freq}” to all {n} {type} units?',
+    'rt.align.confirm.text': 'This channel differs between units: {list}.',
+    'rt.align.confirm.f.text': 'This frequency differs between units: {list}.',
     'rt.none': 'This group has no unit: no radio to show.',
     'rt.legend': 'Frequencies are those of the group sheet. Tick the channels to print on the card; their name and modulation belong to this card only.',
     'lo.fc': 'Loadout from the Flight Configurator',
@@ -3236,11 +3255,14 @@ const I18N = {
     'nr.link.exist': 'Link to an existing route',
     'nr.unnamed': 'Untitled route',
     'nr.opt': '{name} ({n} pts)',
-    'nav.rm.confirm': 'Remove {n} from route "{r}"? It will also be removed in the Route Planner.',
+    'nav.rm.confirm.title': 'Remove {n} from route "{r}"?',
+    'nav.rm.confirm.text': 'It will also be removed in the Route Planner.',
     'nav.rm.point': 'point {k}',
     'nav.rm.route': 'this route',
-    'nav.link.confirm': 'Link this card to route "{r}"? The times and notes already entered do not follow: they are attached to the waypoints of the current route.',
-    'ref.rm.confirm': 'Remove reference {n}? It will be removed in the Route Planner and on every datacard.',
+    'nav.link.confirm.title': 'Link this card to route "{r}"?',
+    'nav.link.confirm.text': 'The times and notes already entered do not follow: they are attached to the waypoints of the current route.',
+    'ref.rm.confirm.title': 'Remove reference {n}?',
+    'ref.rm.confirm.text': 'It will be removed in the Route Planner and on every datacard.',
     'refs.note': 'Reference points are the Route Planner’s, shared by the whole mission; tick the ones this card shows.',
     'refs.own.full': 'The Route Planner already has 12 references: this card’s other references stay its own.',
     'toast.rwMax': '⚠ The Route Planner already has 12 routes: the route is not created.',
@@ -3564,17 +3586,21 @@ function askConfirm(o) {
 
 /* ---- le geste « Remplacer » : on fait, on garde l'ancien, un toast à action « Restaurer » 12 s ----
    o.keys : les clés de localStorage que l'action écrit ; o.mem() : copie de l'état en mémoire ; o.back(copie) : remet l'état et redessine ;
-   o.run() : l'action (rend false si rien n'a changé) ; o.msg : la phrase du résultat, sans « · ». Un second remplacement efface la copie du premier. */
+   o.run() : l'action (rend false si rien n'a changé ; peut rendre une promesse) ; o.msg : la phrase du résultat, sans « · » (ou une fonction qui la rend, une fois l'action faite). Un second remplacement efface la copie du premier. */
 function replaceWithRestore(o) {
   const ls = {};
   (o.keys || []).forEach(k => { try { ls[k] = localStorage.getItem(k); } catch (e) { ls[k] = null; } });
   const mem = o.mem ? o.mem() : null;
   const snap = { ls: ls, mem: mem, back: o.back };
   UIK.restore = null;
-  if (o.run() === false) return false;
-  UIK.restore = snap;
-  showToast(o.msg + ' ·', { action: { label: uiT('ui.restore'), fn: () => uiRestore(snap) }, ms: 12000 });
-  return true;
+  const fin = r => {
+    if (r === false) return false;
+    UIK.restore = snap;
+    showToast((typeof o.msg === 'function' ? o.msg() : o.msg) + ' ·', { action: { label: uiT('ui.restore'), fn: () => uiRestore(snap) }, ms: 12000 });
+    return true;
+  };
+  const r = o.run();
+  return (r && typeof r.then === 'function') ? r.then(fin) : fin(r);
 }
 function uiRestoreKeys(snap) {
   Object.keys(snap.ls).forEach(k => { try { if (snap.ls[k] === null) localStorage.removeItem(k); else localStorage.setItem(k, snap.ls[k]); } catch (e) { /* ignore */ } });
@@ -6764,12 +6790,15 @@ function dgNavAct(c, act, i) {
   if (!x) return true;
   if (act === 'remove') {
     if (x.pid && info.state === 'linked') {
-      if (!confirm(t('nav.rm.confirm', { n: hasText(x.name) ? x.name.trim() : t('nav.rm.point', { k: i }), r: info.name || t('nav.rm.route') }))) return true;
-      const pid = x.pid;
-      const r = rwUpdateRoute(info.rid, route => { const k = route.points.findIndex(q => rwObj(q) && q.pid === pid); if (k < 0) return false; route.points.splice(k, 1); });
-      if (!r.ok && r.why !== 'abort') { dgRouteFail(r.why); return true; }
-      arr.splice(i, 1);
-      dgAfterRouteWrite(true);
+      const pid = x.pid, rid = info.rid, vars = { n: hasText(x.name) ? x.name.trim() : t('nav.rm.point', { k: i }), r: info.name || t('nav.rm.route') };
+      askConfirm({ title: t('nav.rm.confirm.title', vars), text: t('nav.rm.confirm.text', vars), verb: t('ui.verb.remove'), danger: true }).then(ok => {
+        if (!ok || doc.cards.indexOf(c) < 0) return;
+        const r = rwUpdateRoute(rid, route => { const k = route.points.findIndex(q => rwObj(q) && q.pid === pid); if (k < 0) return false; route.points.splice(k, 1); });
+        if (!r.ok && r.why !== 'abort') { dgRouteFail(r.why); return; }
+        const j = c.nav.findIndex(q => q && q.pid === pid);
+        if (j >= 0) c.nav.splice(j, 1);
+        dgAfterRouteWrite(true);
+      });
       return true;
     }
     arr.splice(i, 1);
@@ -6878,12 +6907,15 @@ function dgRefAct(c, act, i) {
   dgMigrateOwnRefs(c);
   if (act === 'remove') {
     if (x.pid) {
-      if (!confirm(t('ref.rm.confirm', { n: hasText(x.name) ? x.name.trim() : String.fromCharCode(65 + i) }))) return true;
-      const pid = x.pid;
-      const r = rwUpdateRefs(refs => { const k = refs.findIndex(q => rwObj(q) && q.pid === pid); if (k < 0) return false; refs.splice(k, 1); });
-      if (!r.ok && r.why !== 'abort') { dgRouteFail(r.why); return true; }
-      arr.splice(i, 1);
-      dgAfterRouteWrite(true);
+      const pid = x.pid, vars = { n: hasText(x.name) ? x.name.trim() : String.fromCharCode(65 + i) };
+      askConfirm({ title: t('ref.rm.confirm.title', vars), text: t('ref.rm.confirm.text', vars), verb: t('ui.verb.remove'), danger: true }).then(ok => {
+        if (!ok || doc.cards.indexOf(c) < 0) return;
+        const r = rwUpdateRefs(refs => { const k = refs.findIndex(q => rwObj(q) && q.pid === pid); if (k < 0) return false; refs.splice(k, 1); });
+        if (!r.ok && r.why !== 'abort') { dgRouteFail(r.why); return; }
+        const j = c.refs.findIndex(q => q && q.pid === pid);
+        if (j >= 0) c.refs.splice(j, 1);
+        dgAfterRouteWrite(true);
+      });
       return true;
     }
     arr.splice(i, 1);
@@ -6921,8 +6953,7 @@ function dgRefShow(c, pid, on) {
 /* ----- Lier une carte à une route ----- */
 function dgCardHasTimes(c) { return c.nav.some(l => (l.pid || parseCoord(l.coord)) && (hasText(l.tos) || hasText(l.note))); }
 /* La carte suit la route rid : un groupe change son routeLink (une route par groupe), une carte libre prend rid ; les lignes de l'ancienne route s'en vont avec leurs heures et notes, les lignes propres sans position restent */
-function dgLinkCard(c, rid, name, quiet) {
-  if (!quiet && dgCardHasTimes(c) && !confirm(t('nav.link.confirm', { r: name || t('nav.rm.route') }))) return false;
+function dgLinkCard(c, rid) {
   if (c.gsId) {
     const r = rwLinkRoute(c.gsId, rid);
     if (!r.ok) { dgRouteFail(r.why); return false; }
@@ -6940,15 +6971,20 @@ function dgEnterRoute(r) {
   return x.ok ? { ok: true, rid: x.rid } : { ok: false, why: x.why };
 }
 /* Remplir la nav d'une carte de la route r quand le jeu de routes est plein : la copie du Route Planner, en lignes propres (comme avant) */
-function dgLinkToRouteObj(c, r, quiet) {
+function dgLinkToRouteObj(c, r) {
   const e = dgEnterRoute(r);
   if (!e.ok) { dgRouteFail(e.why); applyRouteToCard(c, r); return false; }
-  return dgLinkCard(c, e.rid, r.name, quiet);
+  return dgLinkCard(c, e.rid);
 }
-function dgLinkSelect(c, rid) {
+async function dgLinkSelect(c, rid) {
   const rs = dgRouteSet(), route = rs.set ? rs.set.routes.find(r => r.rid === rid) : null;
   if (!route) return;
-  if (!dgLinkCard(c, rid, str(route.name))) { renderEditor(true); return; }
+  if (dgCardHasTimes(c)) {
+    const vars = { r: str(route.name) || t('nav.rm.route') };
+    if (!(await askConfirm({ title: t('nav.link.confirm.title', vars), text: t('nav.link.confirm.text', vars), verb: t('ui.verb.link') }))) { renderEditor(true); return; }
+    if (doc.cards.indexOf(c) < 0) return;
+  }
+  if (!dgLinkCard(c, rid)) { renderEditor(true); return; }
   dgAfterRouteWrite(true);
 }
 
@@ -7100,10 +7136,14 @@ function onGsField(el, e) {
   if ((m = /^u\.(\d+)\.type$/.exec(key))) dgChangeType(c, parseInt(m[1], 10), el);
 }
 /* Le type d'une unité change : ses radios et son emport ne valent plus (ils suivent le type) ; s'il y en a à perdre, une confirmation, refusée la liste revient à l'ancien type */
-function dgChangeType(c, i, el) {
+async function dgChangeType(c, i, el) {
   const f = dgFlightOf(c), u = f ? dgUnits(f)[i] : null, nt = el.value;
   if (!u || nt === u.type || DG_UNIT_TYPES.indexOf(nt) < 0) return;
-  if (dgUnitHasData(u) && !confirm(t('u.type.confirm', { n: dgUnitLabel(f, dgFlightPos(f.fcId), i) }))) { renderEditor(); return; }
+  if (dgUnitHasData(u)) {
+    const vars = { n: dgUnitLabel(f, dgFlightPos(f.fcId), i) };
+    if (!(await askConfirm({ title: t('u.type.confirm.title', vars), text: t('u.type.confirm.text', vars), verb: t('ui.verb.change'), danger: true }))) { renderEditor(); return; }
+    if (doc.cards.indexOf(c) < 0) return;
+  }
   dgPut(c.gsId, nf => { const x = dgUnitsOf(nf)[i]; if (!x) return false; x.type = nt; x.radios = {}; x.loadout = null; delete x.payloadIn; });
   renderEditor(); renderPack(); renderPreview();
 }
@@ -7123,7 +7163,18 @@ function dgRemoveUnit(c, i) {
   if (gsStable(g) !== DGG.shown) { if (gsApplyAll()) { persistState(); renderAll(true); } return; }       /* l'écran n'était plus à jour de la fiche : il l'est maintenant, rien n'est retiré sur une rangée périmée */
   const us = dgUnits(f);
   if (us.length < 2 || !us[i]) return;
-  if (dgUnitHasData(us[i]) && !confirm(t('cr.rm.confirm', { n: dgUnitLabel(f, dgFlightPos(f.fcId), i) }))) return;
+  if (dgUnitHasData(us[i])) {
+    const vars = { n: dgUnitLabel(f, dgFlightPos(f.fcId), i) };
+    askConfirm({ title: t('cr.rm.confirm.title', vars), text: t('cr.rm.confirm.text', vars), verb: t('ui.verb.remove'), danger: true }).then(ok => { if (ok) dgRemoveUnitDo(c, i); });
+    return;
+  }
+  dgRemoveUnitDo(c, i);
+}
+function dgRemoveUnitDo(c, i) {
+  const g = gsRead(), f = g ? g.flights.find(x => x.fcId === c.gsId) : null;
+  if (!f || doc.cards.indexOf(c) < 0 || gsStable(g) !== DGG.shown) return;       /* la fiche a changé pendant la question : rien n'est retiré sur une rangée périmée */
+  const us = dgUnits(f);
+  if (us.length < 2 || !us[i]) return;
   const pilots = c.crew.map(x => x.pilot);
   c.crew.splice(i, 1);
   const ok = dgPut(c.gsId, nf => { const u = dgUnitsOf(nf)[i], k = u ? nf.units.indexOf(u) : -1; if (k < 0) return false; nf.units.splice(k, 1); });
@@ -7407,8 +7458,16 @@ function dgSetFreq(c, key, el) {
   if (olds.some(v => v !== olds[0])) {
     const fi = dgFlightPos(f.fcId);
     const list = idx.map((i, k) => dgUnitLabel(f, fi, i) + ' : ' + (olds[k] || '—')).join(' · ');
-    if (!confirm(t(free ? 'rt.align.confirm.f' : 'rt.align.confirm', { list: list, freq: val || '—', n: idx.length, type: dgTypeLabel(ty) }))) { el.value = olds[0]; el._dgBase = olds[0]; return; }       /* refusé : le champ revient à ce que la fiche porte, rien n'est écrit */
+    const vars = { list: list, freq: val || '—', n: idx.length, type: dgTypeLabel(ty) }, k = free ? 'rt.align.confirm.f' : 'rt.align.confirm';
+    askConfirm({ title: t('rt.align.confirm.title', vars), text: t(k + '.text', vars), verb: t('ui.verb.write') }).then(ok => {
+      if (!ok) { el.value = olds[0]; el._dgBase = olds[0]; return; }       /* refusé : le champ revient à ce que la fiche porte, rien n'est écrit */
+      dgFreqWrite(c, key, el, idx, r, ch, val);
+    });
+    return;
   }
+  dgFreqWrite(c, key, el, idx, r, ch, val);
+}
+function dgFreqWrite(c, key, el, idx, r, ch, val) {
   el.value = val; el._dgBase = val;
   dgPut(c.gsId, nf => { const nus = dgUnitsOf(nf); idx.forEach(i => { const u = nus[i]; if (!u) return; if (!gsIsObj(u.radios)) u.radios = {}; if (!gsIsObj(u.radios[r])) u.radios[r] = {}; u.radios[r][ch] = val; }); });
   const row = document.querySelector('#editor [data-rc="' + key.replace(/"/g, '') + '"]'), v = row ? row.querySelector('.rc-var') : null;
@@ -9068,10 +9127,17 @@ function onPackClick(e) {
   else if (act === 'dup') { doc.cards.splice(curIdx + 1, 0, clone(curCard())); curIdx++; }
   else if (act === 'del') {
     if (curCard().gsId) { grpAskDelete(); return; }
-    if (!confirm(t('confirm.delete'))) return;
-    doc.cards.splice(curIdx, 1);
-    if (!doc.cards.length) doc.cards = [newCard()];
-    if (curIdx >= doc.cards.length) curIdx = doc.cards.length - 1;
+    const card = curCard();
+    askConfirm({ title: t('confirm.delete.title'), text: t('confirm.delete.text'), verb: t('ui.verb.delete'), danger: true }).then(ok => {
+      const k = ok ? doc.cards.indexOf(card) : -1;
+      if (k < 0) return;
+      doc.cards.splice(k, 1);
+      if (!doc.cards.length) doc.cards = [newCard()];
+      if (curIdx >= doc.cards.length) curIdx = doc.cards.length - 1;
+      persistState();
+      renderAll();
+    });
+    return;
   } else return;
   persistState();
   renderAll();
@@ -9277,10 +9343,7 @@ function loadJsonFile(file) {
     const k = biRecognise(r.parsed, file.name, true, r.zip);
     if (!k) return;
     if (k.kind === 'datacard') {
-      const hasGroups = doc.cards.some(x => x.gsId);
-      if (!isBlankDoc(doc) && !confirm(t(hasGroups ? 'confirm.json.groups' : 'confirm.json'))) return;
-      openDatacards(normalizeDoc(r.parsed));
-      showToast(t('toast.jsonLoaded'), { type: 'ok' });
+      replaceWithRestore({ keys: DG_REPLACE_KEYS, mem: dgMem, back: dgBack, msg: t('toast.jsonLoaded'), run: () => { openDatacards(normalizeDoc(r.parsed)); } });
       return;
     }
     if (k.kind === 'pkg') { impOpen({ opener: document.getElementById('btn-json-import'), parsed: r.parsed, name: file.name }); return; }
@@ -9517,7 +9580,7 @@ function runAllRoutesImport() {
   if (bi.src === 'file') dgNavSet(list[0].route.navDisplay);       /* un jeu de routes ouvert impose ses réglages de cap, qui deviennent ceux de la mission */
   const cards = list.map(e => {
     const c = newCard();
-    dgLinkToRouteObj(c, e.route, true);       /* chaque carte neuve suit sa route (entrée dans le jeu de routes si elle vient d'un fichier) */
+    dgLinkToRouteObj(c, e.route);       /* chaque carte neuve suit sa route (entrée dans le jeu de routes si elle vient d'un fichier) */
     c.flight.callsign = e.flight ? e.flight.groupName : e.route.name;
     c.flight.aircraft = (e.flight && typeof e.flight.aircraftType === 'string') ? e.flight.aircraftType : '';      /* un lien sans type laisse l'appareil vide ; un lien ancien garde le sien */
     return c;
@@ -9647,19 +9710,22 @@ function checkRouteHandoff() {
   openImportModal(null, '', null, 'route');
 }
 
-function runRouteImport() {
+async function runRouteImport() {
   const r = biRoute();
   if (!r || !r.points.length) return;
   if (biSetList().length >= 2 && document.getElementById('bi-route-all').checked) { runAllRoutesImport(); return; }
   const fresh = document.getElementById('bi-route-new').checked, c = fresh ? newCard() : curCard();
-  if (!fresh && dgCardHasTimes(c) && !confirm(t('nav.link.confirm', { r: hasText(r.name) ? r.name.trim() : t('nav.rm.route') }))) return;       /* les heures et notes déjà saisies ne suivent pas */
+  if (!fresh && dgCardHasTimes(c)) {       /* les heures et notes déjà saisies ne suivent pas */
+    const vars = { r: hasText(r.name) ? r.name.trim() : t('nav.rm.route') };
+    if (!(await askConfirm({ title: t('nav.link.confirm.title', vars), text: t('nav.link.confirm.text', vars), verb: t('ui.verb.link') }))) return;
+  }
   dgUnitsAdopt({ mass: dgU.mass, distance: r.units.distance, altitude: r.units.altitude });       /* la route lue donne ses unités à la clé */
   if (bi.src === 'file') dgNavSet(r.navDisplay);       /* une route ouverte d'un fichier impose ses réglages de cap, qui deviennent ceux de la mission */
   if (fresh) {
     if (isBlankDoc(doc)) { doc.cards = [c]; curIdx = 0; }
     else { doc.cards.push(c); curIdx = doc.cards.length - 1; }
   }
-  dgLinkToRouteObj(c, r, true);       /* la carte suit la route : celle du Route Planner, ou celle du fichier, entrée dans le jeu de routes */
+  dgLinkToRouteObj(c, r);       /* la carte suit la route : celle du Route Planner, ou celle du fichier, entrée dans le jeu de routes */
   gsApplyAll();
   dgSyncRoutes();
   persistState();
@@ -9869,8 +9935,23 @@ function doPrint() {
 }
 
 /* ============= EXEMPLE ET RESET ============= */
+/* Ce que « Remplacer » garde pour « Restaurer » : les clés que l'action peut écrire (le document, les unités, les réglages de cap, le théâtre, l'état et le jeu des routes) et l'état en mémoire */
+const DG_REPLACE_KEYS = [KEY_STATE, KEY_UNITS, KEY_NAV, KEY_THEATRE, KEY_ROUTE, KEY_ROUTESET];
+function dgMem() { return { doc: clone(doc), curIdx: curIdx, u: Object.assign({}, dgU), n: Object.assign({}, dgN) }; }
+function dgBack(m) {
+  doc = m.doc; curIdx = m.curIdx;
+  Object.assign(dgU, m.u); Object.assign(dgN, m.n);
+  try { DG_DOC.raw = localStorage.getItem(KEY_STATE) || ''; } catch (e) { /* ignore */ }
+  const ts = document.getElementById('theatre');
+  if (ts && ts.value !== dgTheatre()) ts.value = dgTheatre();
+  dgUnitsSync();
+  gsApplyAll(true);
+  renderAll();
+}
 function loadExample() {
-  if (!confirm(t('confirm.example'))) return;
+  replaceWithRestore({ keys: DG_REPLACE_KEYS, mem: dgMem, back: dgBack, msg: t('toast.example'), run: loadExampleNow });
+}
+function loadExampleNow() {
   const linked = doc.cards.filter(c => c.gsId);       /* les groupes de la fiche gardent leurs cartes ; la fiche n'est pas touchée */
   const ex = normalizeDoc(clone(CURRENT_LANG === 'en' ? EXAMPLE_DOC_EN : EXAMPLE_DOC));   // la langue de l'interface au moment du clic
   ex.cards = linked.concat(ex.cards);
@@ -9880,10 +9961,9 @@ function loadExample() {
   setDoc(ex);
   curIdx = linked.length;
   renderAll();
-  showToast(t('toast.example'), { type: 'ok' });
 }
-function resetDoc() {
-  if (!confirm(t('confirm.reset'))) return;
+async function resetDoc() {
+  if (!(await askConfirm({ title: t('confirm.reset.title'), text: t('confirm.reset.text'), verb: t('ui.verb.clear'), danger: true }))) return;
   setDoc(newDoc());
   showToast(t('toast.reset'), { type: 'ok' });
 }

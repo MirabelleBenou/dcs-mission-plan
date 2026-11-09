@@ -1581,7 +1581,6 @@ const I18N = {
     'toolbar.subtitle': '░ RENSEIGNEMENT',
     'toolbar.example': 'Exemple',
     'toolbar.example.tooltip': "Ouvrir l'exemple",
-    'confirm.example': "Remplacer le travail en cours par l'exemple ?",
     'toast.example-loaded': 'Exemple chargé ✓',
     'msg.exampleUnavailable': '⚠ Exemple indisponible.',
     'editor.image.credit': 'Image : USDA NAIP, domaine public',
@@ -1790,7 +1789,6 @@ const I18N = {
     'toolbar.subtitle': '░ INTELLIGENCE',
     'toolbar.example': 'Example',
     'toolbar.example.tooltip': 'Open the example',
-    'confirm.example': 'Replace the current work with the example?',
     'toast.example-loaded': 'Example loaded ✓',
     'msg.exampleUnavailable': '⚠ Example unavailable.',
     'editor.image.credit': 'Image: USDA NAIP, public domain',
@@ -2192,17 +2190,21 @@ function askConfirm(o) {
 
 /* ---- le geste « Remplacer » : on fait, on garde l'ancien, un toast à action « Restaurer » 12 s ----
    o.keys : les clés de localStorage que l'action écrit ; o.mem() : copie de l'état en mémoire ; o.back(copie) : remet l'état et redessine ;
-   o.run() : l'action (rend false si rien n'a changé) ; o.msg : la phrase du résultat, sans « · ». Un second remplacement efface la copie du premier. */
+   o.run() : l'action (rend false si rien n'a changé ; peut rendre une promesse) ; o.msg : la phrase du résultat, sans « · » (ou une fonction qui la rend, une fois l'action faite). Un second remplacement efface la copie du premier. */
 function replaceWithRestore(o) {
   const ls = {};
   (o.keys || []).forEach(k => { try { ls[k] = localStorage.getItem(k); } catch (e) { ls[k] = null; } });
   const mem = o.mem ? o.mem() : null;
   const snap = { ls: ls, mem: mem, back: o.back };
   UIK.restore = null;
-  if (o.run() === false) return false;
-  UIK.restore = snap;
-  showToast(o.msg + ' ·', { action: { label: uiT('ui.restore'), fn: () => uiRestore(snap) }, ms: 12000 });
-  return true;
+  const fin = r => {
+    if (r === false) return false;
+    UIK.restore = snap;
+    showToast((typeof o.msg === 'function' ? o.msg() : o.msg) + ' ·', { action: { label: uiT('ui.restore'), fn: () => uiRestore(snap) }, ms: 12000 });
+    return true;
+  };
+  const r = o.run();
+  return (r && typeof r.then === 'function') ? r.then(fin) : fin(r);
 }
 function uiRestoreKeys(snap) {
   Object.keys(snap.ls).forEach(k => { try { if (snap.ls[k] === null) localStorage.removeItem(k); else localStorage.setItem(k, snap.ls[k]); } catch (e) { /* ignore */ } });
@@ -2560,13 +2562,48 @@ function exampleHasWork() {
     (STATE.cartouche || []).some(e => String(e.label || '').trim() !== '');
 }
 
+// L'exemple sur un travail en cours : on le charge sans question, l'ancien est gardé et « Restaurer » le remet (bloc d'interface commun).
+// La copie : l'état (STATE, logos et formes compris), l'image source en mémoire et ce que la zone d'image dit ; la seule clé écrite est recon_state_v1.
+function rsMem() {
+  collectState();
+  return {
+    state: structuredClone(STATE), img: SOURCE_IMG, ready: SOURCE_READY,
+    dz: document.getElementById('drop-zone-text').textContent, credit: !document.getElementById('img-credit').hidden
+  };
+}
+function rsBack(m) {
+  STATE = structuredClone(m.state);
+  SOURCE_IMG = m.img; SOURCE_READY = m.ready;
+  const dz = document.getElementById('drop-zone');
+  dz.classList.toggle('has-image', m.ready);
+  document.getElementById('drop-zone-text').textContent = m.dz;
+  document.getElementById('img-credit').hidden = !m.credit;
+  document.getElementById('btn-export').disabled = !m.ready;
+  document.getElementById('preview-placeholder').hidden = m.ready;
+  document.getElementById('preview-canvas').hidden = !m.ready;
+  applyStateToForm();
+  renderLogoGrid(); renderLogoMode(); renderTextColor(); renderMarkerColor();
+  renderCartoucheEditor(); renderInsetEditor(); renderShapesEditor(); renderLabelEditor();
+  const ce = document.getElementById('classif-enable'), cl = document.getElementById('classif-level');
+  if (ce) ce.checked = !!(STATE.classification && STATE.classification.enabled);
+  if (cl) cl.value = (STATE.classification && STATE.classification.level) || 'UNCLASSIFIED';
+  rsdSetTool('select');
+  rsdDeselect();
+  rsdSyncUi();
+  saveState();
+  schedulePreview();
+}
 async function loadExample() {
-  if (exampleHasWork() && !confirm(t('confirm.example'))) return;
+  // sans travail en cours : ni question ni « Restaurer »
+  if (!exampleHasWork()) return loadExampleNow(false);
+  return replaceWithRestore({ keys: [KEY_STATE], mem: rsMem, back: rsBack, msg: t('toast.example-loaded'), run: () => loadExampleNow(true) });
+}
+async function loadExampleNow(quiet) {
   const tx = RS_EXAMPLE_TEXT[CURRENT_LANG === 'en' ? 'en' : 'fr'];      // la langue de l'interface au moment du clic
   const img = new Image();
   try {
     await new Promise((ok, ko) => { img.onload = ok; img.onerror = ko; img.src = RS_EXAMPLE_IMG; });
-  } catch (e) { console.warn('[RS] exemple indisponible', e); showToast(t('msg.exampleUnavailable'), { type: 'err' }); return; }
+  } catch (e) { console.warn('[RS] exemple indisponible', e); showToast(t('msg.exampleUnavailable'), { type: 'err' }); return false; }
   SOURCE_IMG   = img;
   SOURCE_READY = true;
   document.getElementById('drop-zone').classList.add('has-image');
@@ -2609,7 +2646,7 @@ async function loadExample() {
   rsdDeselect();
   saveState();
   schedulePreview();
-  showToast(t('toast.example-loaded'), { type: 'ok' });
+  if (!quiet) showToast(t('toast.example-loaded'), { type: 'ok' });
   if (window.matchMedia('(max-width: 1100px)').matches) {
     const tab = document.querySelector('.tab-btn[data-tab="preview"]');   // petit écran : on montre l'aperçu
     if (tab) tab.click();
