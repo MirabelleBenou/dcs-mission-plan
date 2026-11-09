@@ -92,6 +92,7 @@ Changes merged since the last release, grouped per tool.
 - Units (mass, distance, altitude) move to the toolbar, apply to every card and are shared with the Route Planner.
 - Airfields box: airier columns with light separators and one text size. Picking an airfield from the list replaces its ICAO code, runway and tower frequency, even typed ones ("Other…" clears them); the runway is a single end, picked from the airfield's list, the one facing the Weather wind first.
 - Weather box: a light separator between its two columns, and a slightly smaller METAR, which now fits on one line in most cases.
+- A datacard's navigation is now a Route Planner route, edited from both sides: a waypoint entered (coordinates, or course and distance), moved or removed in one tool changes in the other; time and note stay with the datacard, attached to each waypoint. A card without a route gets one at its first position. Course settings (true or magnetic, variation, year) are shared with the Route Planner. Reference points are the Route Planner's, shared by the whole mission; each datacard chooses which ones it shows.
 #### Removed
 - The Datacard Generator's own HQ and flight package imports, replaced by the common import window of the Flight Configurator and the Route Planner.
 #### Fixed
@@ -117,6 +118,7 @@ Changes merged since the last release, grouped per tool.
 - Units are shared with the Datacard Generator.
 - Each route keeps its theatre: switching theatre hides the routes of the other theatres (kept, back when you return), and the Flight Configurator only offers the routes of the shared theatre.
 - A saved route set keeps every route's theatre, across all theatres; opening it puts each route back on its own theatre and replaces the whole set.
+- Routes can be edited from the Datacard Generator; each waypoint keeps a stable identifier; course settings are shared with the Datacard Generator.
 #### Fixed
 - Computed magnetic variation now follows DCS for every mission date: years up to 1985 use the IGRF model DCS ships (up to 1.2° closer), later years the previous five-year WMM file, as DCS does (0.2° closer in 1990, 1995 … 2025).
 
@@ -132,6 +134,7 @@ Changes merged since the last release, grouped per tool.
 - The Datacard Generator chapter: empty blocks are kept.
 - The Datacard Generator chapter: the airfield list.
 - The Flight Configurator, Datacard Generator and Route Planner chapters: shared theatre and units.
+- The Datacard Generator and Route Planner chapters: navigation shared with the route, shared course settings.
 
 ---
 
