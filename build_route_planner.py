@@ -3329,8 +3329,10 @@ function readPoints(list) {
     if (pts.length > 0) { const bx = readBox(p.box); if (bx) q.box = bx; }
     const dc = readDcs(p.dcs);
     if (dc) q.dcs = dc;
+    if (pidValid(p.pid)) q.pid = p.pid;
     pts.push(q);
   });
+  assignPids(pts);       /* un point sans pid valide, ou en doublon, en reçoit un neuf (migration silencieuse, écrite au prochain enregistrement) */
   return { points: pts, dropped: dropped };
 }
 
@@ -3360,13 +3362,16 @@ function parseRoute(src) {
   if (Array.isArray(src.refs)) src.refs.forEach(p => {
     if (!p || typeof p !== 'object' || !validCoord(p.lat, p.lon)) return;
     if (route.refs.length >= MAX_REFS) { droppedRefs++; return; }
-    route.refs.push({
+    const q = {
       name: typeof p.name === 'string' ? p.name : nextRefName(route.refs, route.refs.length),
       lat: r7(p.lat), lon: r7(p.lon),
       alt: (typeof p.alt === 'number' && isFinite(p.alt)) ? p.alt : 0,
       altRef: p.altRef === 'MSL' ? 'MSL' : 'AGL'
-    });
+    };
+    if (pidValid(p.pid)) q.pid = p.pid;
+    route.refs.push(q);
   });
+  assignPids(route.refs);
   return { route: route, dropped: dropped, droppedRefs: droppedRefs };
 }
 
@@ -3380,6 +3385,7 @@ function persistState() {
   if (!ok && !SAVE_FAILED) { try { showToast(t('toast.saveFail'), { type: 'err' }); } catch (e) { /* page pas encore prête */ } }
   SAVE_FAILED = !ok;
   try { gsSyncRoutes(); } catch (e) { /* la fiche des groupes est facultative */ }
+  mpNavWrite();
 }
 
 function loadState() {
@@ -3412,13 +3418,13 @@ function exportObject() {
     navDisplay: { ref: S.navDisplay.ref, decl: S.navDisplay.decl, mode: S.navDisplay.mode, year: S.navDisplay.year, force: S.navDisplay.force },
     groundSpeed: S.groundSpeed, legBoxes: S.legBoxes,
     points: S.points.map(exportPoint),
-    refs: S.refs.map(p => ({ name: p.name, lat: p.lat, lon: p.lon, alt: p.alt, altRef: p.altRef }))
+    refs: S.refs.map(p => ({ name: p.name, lat: p.lat, lon: p.lon, alt: p.alt, altRef: p.altRef, pid: p.pid }))
   };
 }
 
 /* Un point du fichier : sa source de mission (p.dcs) est gardée */
 function exportPoint(p, i) {
-  const o = { name: p.name, lat: p.lat, lon: p.lon, alt: p.alt, altRef: p.altRef };
+  const o = { name: p.name, lat: p.lat, lon: p.lon, alt: p.alt, altRef: p.altRef, pid: p.pid };
   if (i > 0 && typeof p.gs === 'number') o.gs = p.gs;
   if (i > 0 && p.box) o.box = { along: p.box.along, side: p.box.side };
   if (p.dcs) o.dcs = JSON.parse(JSON.stringify(p.dcs));
@@ -3447,6 +3453,39 @@ function newRid(taken) {
     if (!used.has(out)) return out;
   }
 }
+/* L'identifiant stable d'un point ou d'une référence (pid) : 12 caractères [a-z0-9] (le même tirage que le rid), unique dans sa liste. Il naît avec le point et le suit : déplacé, renommé,
+   altitude, ordre changé. Il vit dans route_state_v1, route_set_v1 et les fichiers du Route Planner ; jamais dans le paquet de vol, la copie de route d'un groupe ni l'export du Route Tool. */
+function pidValid(s) { return typeof s === 'string' && /^[a-z0-9]{8,16}$/.test(s); }
+function newPid(taken) {
+  const used = taken || new Set();
+  for (;;) {
+    let out = '';
+    try {
+      const a = new Uint8Array(48);
+      crypto.getRandomValues(a);
+      for (let i = 0; i < a.length && out.length < 12; i++) if (a[i] < 252) out += RID_CHARS[a[i] % 36];
+    } catch (e) { out = ''; }
+    while (out.length < 12) out += RID_CHARS[Math.floor(Math.random() * 36)];
+    if (!used.has(out)) return out;
+  }
+}
+/* Chaque élément de la liste porte un pid valide et distinct ; vrai si un pid a été tiré */
+function assignPids(list) {
+  const seen = new Set();
+  let drawn = false;
+  list.forEach(p => { if (pidValid(p.pid) && !seen.has(p.pid)) seen.add(p.pid); else p.pid = null; });
+  list.forEach(p => { if (!p.pid) { p.pid = newPid(seen); seen.add(p.pid); drawn = true; } });
+  return drawn;
+}
+function pidsOf(list) { return new Set(list.map(p => p.pid)); }
+/* Les routes, la route active et les références : tout point en porte un (filet pour une naissance qui n'en a pas tiré) */
+function ensurePids() {
+  let d = false;
+  RSET.routes.concat(RSET.hidden || []).forEach(r => { if (assignPids(r.points)) d = true; });
+  if (S && Array.isArray(S.refs) && assignPids(S.refs)) d = true;
+  return d;
+}
+
 /* Une route neuve : vide, sans lien, avec son rid */
 function blankRoute(taken) { return { rid: newRid(taken), name: '', points: [], flight: null, theatre: S && S.theatre ? S.theatre : 'Caucasus' }; }
 /* RSET.routes : les routes du théâtre courant (seules celles-là se voient, se listent, se dessinent, s'enregistrent) ; RSET.hidden : celles des autres théâtres, masquées et gardées telles quelles.
@@ -3493,6 +3532,7 @@ function syncActive() {
   const r = RSET.routes[RSET.active];
   if (r && S) { r.name = S.name; r.points = S.points; }
   ensureRids();
+  ensurePids();
 }
 
 /* Toute route de l'ensemble porte un rid valide et distinct (filet : une route entrée par un chemin qui n'en a pas tiré reçoit le sien) */
@@ -3638,6 +3678,54 @@ function mpUnitsFollow() {
   if (!u || !S || (u.distance === S.units.distance && u.altitude === S.units.altitude)) return;
   S.units.distance = u.distance; S.units.altitude = u.altitude;
   persistState(); renderPts(); renderRefs(); renderNav(); drawRoute(); drawDecor(); syncControls();
+}
+
+/* Les réglages de cap communs à la mission : mp_nav_v1 = { ref, mode, decl, year, force } (les champs et valeurs de S.navDisplay), partagés avec le Datacard Generator ; sans horodatage, écrite seulement
+   si un champ diffère de ce qu'elle porte (réécrire la même valeur ne déclenche aucun évènement « storage » : c'est ce qui coupe la boucle), jamais réécrite quand elle vient de l'autre module.
+   Absente ou invalide : les défauts du Route Planner. route_state_v1 garde navDisplay, toujours égal à la clé ; une route ouverte (fichier) impose ses réglages, qui deviennent la clé. */
+const KEY_NAV = 'mp_nav_v1';
+function mpNavRead() {
+  try {
+    const o = JSON.parse(localStorage.getItem(KEY_NAV));
+    return o && typeof o === 'object' && !Array.isArray(o) ? readNavDisplay(o) : null;
+  } catch (e) { return null; }
+}
+function mpNavSame(a, b) { return a.ref === b.ref && a.mode === b.mode && a.decl === b.decl && a.year === b.year && a.force === b.force; }
+function mpNavWrite() {
+  if (!S) return;
+  const cur = mpNavRead();
+  if (cur && mpNavSame(cur, S.navDisplay)) return;       /* déjà là : aucune écriture */
+  const n = S.navDisplay;
+  try { localStorage.setItem(KEY_NAV, JSON.stringify({ ref: n.ref, mode: n.mode, decl: n.decl, year: n.year, force: n.force })); } catch (e) { if (!SAVE_FAILED) { try { showToast(t('toast.saveFail'), { type: 'err' }); } catch (e2) { /* page pas encore prête */ } } SAVE_FAILED = true; }
+}
+/* Le Datacard Generator a changé les réglages : ils s'appliquent comme un choix des commandes, sans réécrire la clé */
+function mpNavFollow() {
+  const k = mpNavRead();
+  if (!k || !S || mpNavSame(k, S.navDisplay)) return;
+  S.navDisplay = k;
+  persistState(); renderNav(); drawRoute(); syncControls();
+  if (document.activeElement !== $('decl')) $('decl').value = S.navDisplay.decl;
+}
+
+/* Le Datacard Generator écrit route_set_v1 et route_state_v1 (son bloc d'écriture de route) : le Route Planner se relit, sans rien réécrire, sans perdre le point sélectionné s'il existe encore (son pid),
+   et jamais sous un champ en cours de saisie (la relecture attend la sortie du champ). Il ne réécrit pas ce qu'il vient de lire : aucune boucle (l'évènement « storage » ne revient pas à l'onglet qui écrit). */
+const RLD = { timer: 0, wait: false };
+function rpReloadSoon() { clearTimeout(RLD.timer); RLD.timer = setTimeout(rpReload, 150); }
+function rpBusy() {
+  const a = document.activeElement;
+  return !!a && /^(INPUT|TEXTAREA)$/.test(a.tagName) && !a.readOnly && !a.disabled && a.type !== 'checkbox' && a.type !== 'radio' && a.type !== 'file';
+}
+function rpReload() {
+  if (rpBusy()) { RLD.wait = true; return; }
+  RLD.wait = false;
+  const kp = sel >= 0 && S.points[sel] ? S.points[sel].pid : null, kr = selR >= 0 && S.refs[selR] ? S.refs[selR].pid : null, ui = S.ui;
+  loadState();
+  S.ui = ui;
+  const k = mpNavRead();
+  if (k) S.navDisplay = k;
+  sel = kp ? S.points.findIndex(p => p.pid === kp) : -1;
+  selR = kr ? S.refs.findIndex(p => p.pid === kr) : -1;
+  renderAll();
 }
 
 /* Le théâtre change (les routes des autres théâtres sont masquées et gardées) : la liste de la barre, ou un fichier CombatFlite qui nomme le sien */
@@ -5029,12 +5117,12 @@ function selectRef(i) {
 }
 
 function newPointFrom(src, lat, lon, rank) {
-  return { name: nextName(S.points, rank), lat: r7(lat), lon: r7(lon), alt: src ? src.alt : 0, altRef: src ? src.altRef : 'AGL' };
+  return { name: nextName(S.points, rank), lat: r7(lat), lon: r7(lon), alt: src ? src.alt : 0, altRef: src ? src.altRef : 'AGL', pid: newPid(pidsOf(S.points)) };
 }
 
 /* Un point d'une référence neuve : altitude et référence de la référence précédente, sinon 0 et MSL */
 function newRefFrom(src, lat, lon, rank) {
-  return { name: nextRefName(S.refs, rank), lat: r7(lat), lon: r7(lon), alt: src ? src.alt : 0, altRef: src ? src.altRef : 'MSL' };
+  return { name: nextRefName(S.refs, rank), lat: r7(lat), lon: r7(lon), alt: src ? src.alt : 0, altRef: src ? src.altRef : 'MSL', pid: newPid(pidsOf(S.refs)) };
 }
 
 /* Ajoute un point à la fin de la route (null au plafond) ; name : le nom imposé (un aérodrome), sinon WP<k> */
@@ -7803,6 +7891,7 @@ function loadExample() {
   const ex = parseRoute(JSON.parse(JSON.stringify(CURRENT_LANG === 'en' ? EXAMPLE_ROUTE_EN : EXAMPLE_ROUTE))).route;   // la langue de l'interface au moment du clic
   const ku = mpUnitsRead();
   if (ku) ex.units = { distance: ku.distance, altitude: ku.altitude };       // l'exemple s'affiche dans les unités partagées et n'écrit pas la clé
+  { const kn = mpNavRead(); if (kn) ex.navDisplay = kn; }       // ... et dans les réglages de cap communs
   syncActive();
   if (ex.theatre === S.theatre) { RSET.routes = [blankRoute()]; RSET.active = 0; S.name = ''; S.points = RSET.routes[0].points; }       // le travail en cours (les routes de ce théâtre) est remplacé, comme avant
   else {
@@ -8138,7 +8227,8 @@ function pointFromRaw(raw, k, idx, theatre) {
     name: (typeof raw.name === 'string' && raw.name !== '') ? raw.name : 'WP' + k,
     lat: r7(ll.lat), lon: r7(ll.lon),
     alt: (typeof raw.alt === 'number' && isFinite(raw.alt)) ? raw.alt : 0,
-    altRef: raw.alt_type === 'RADIO' ? 'AGL' : 'MSL'
+    altRef: raw.alt_type === 'RADIO' ? 'AGL' : 'MSL',
+    pid: newPid()
   };
   if (idx >= 1 && typeof raw.speed === 'number' && isFinite(raw.speed) && Math.round(raw.speed * 3.6) > 0) p.gs = Math.round(raw.speed * 3.6);
   const orig = { lat: p.lat, lon: p.lon, alt: p.alt, altRef: p.altRef, name: p.name };
@@ -10588,7 +10678,10 @@ function bindEvents() {
     if (e.key === 'mission_snapshot_v1' && navIsCalc()) { renderNav(); drawRoute(); syncControls(); }
     if (e.key === KEY_THEATRE) mpTheatreFollow();       /* le Datacard Generator a changé le théâtre */
     if (e.key === KEY_UNITS) mpUnitsFollow();           /* ... ou les unités */
+    if (e.key === KEY_NAV) mpNavFollow();               /* ... ou les réglages de cap */
+    if (e.key === KEY_SET || e.key === KEY_STATE || e.key === null) rpReloadSoon();       /* ... ou une route (son bloc d'écriture) */
   });
+  document.addEventListener('focusout', () => { if (RLD.wait) setTimeout(() => { if (RLD.wait && !rpBusy()) rpReload(); }, 60); });
   $('route-name').addEventListener('input', e => { S.name = e.target.value; persistState(); routesRender(); });
   routesBind();
   $('panel').addEventListener('focusin', ev => {
@@ -11051,6 +11144,7 @@ function init() {
   initFormMenus(sel => (sel.dataset.k === 'altRef' ? t('th.ref') : sel.dataset.lbl ? t(sel.dataset.lbl) : (sel.getAttribute('aria-label') || '')));   /* les listes des formulaires */
   impSetup({ lang: () => CURRENT_LANG, before: rpImportBefore, onImported: rpImported, toast: msg => showToast('\u26a0 ' + msg, { type: 'err' }) });      /* la fenêtre d'import commune */
   loadState();
+  { const k = mpNavRead(); if (k) S.navDisplay = k; }       /* les réglages de cap communs : pris s'ils existent, écrits sinon (persistState, plus bas) */
   try { gsMigrate((r, th) => gsPackRoute(r, th, S.groundSpeed)); } catch (e) { /* la fiche des groupes est facultative */ }      /* la fiche naît ici si le Flight Configurator ne l'a pas fait avant */
   loadLayers();
   loadDisplay();
