@@ -23,6 +23,7 @@ import sys
 from magvar_block import build_block as build_magvar_block
 from route_pack_block import build_block as build_route_pack_block
 from route_theatre_block import build_block as build_route_theatre_block
+from route_write_block import build_block as build_route_write_block
 from group_store_block import build_block as build_group_store_block
 from radio_bands_block import build_block as build_radio_bands_block
 from radio_block import build_block as build_radio_block
@@ -3455,28 +3456,9 @@ function newRid(taken) {
 }
 /* L'identifiant stable d'un point ou d'une référence (pid) : 12 caractères [a-z0-9] (le même tirage que le rid), unique dans sa liste. Il naît avec le point et le suit : déplacé, renommé,
    altitude, ordre changé. Il vit dans route_state_v1, route_set_v1 et les fichiers du Route Planner ; jamais dans le paquet de vol, la copie de route d'un groupe ni l'export du Route Tool. */
-function pidValid(s) { return typeof s === 'string' && /^[a-z0-9]{8,16}$/.test(s); }
-function newPid(taken) {
-  const used = taken || new Set();
-  for (;;) {
-    let out = '';
-    try {
-      const a = new Uint8Array(48);
-      crypto.getRandomValues(a);
-      for (let i = 0; i < a.length && out.length < 12; i++) if (a[i] < 252) out += RID_CHARS[a[i] % 36];
-    } catch (e) { out = ''; }
-    while (out.length < 12) out += RID_CHARS[Math.floor(Math.random() * 36)];
-    if (!used.has(out)) return out;
-  }
-}
-/* Chaque élément de la liste porte un pid valide et distinct ; vrai si un pid a été tiré */
-function assignPids(list) {
-  const seen = new Set();
-  let drawn = false;
-  list.forEach(p => { if (pidValid(p.pid) && !seen.has(p.pid)) seen.add(p.pid); else p.pid = null; });
-  list.forEach(p => { if (!p.pid) { p.pid = newPid(seen); seen.add(p.pid); drawn = true; } });
-  return drawn;
-}
+function pidValid(s) { return rwPidValid(s); }       /* le tirage, la validité et l'attribution sont ceux du bloc d'écriture d'une route (route_write_block.py), le même au Datacard Generator */
+function newPid(taken) { return rwNewPid(taken); }
+function assignPids(list) { return rwAssignPids(list); }
 function pidsOf(list) { return new Set(list.map(p => p.pid)); }
 /* Les routes, la route active et les références : tout point en porte un (filet pour une naissance qui n'en a pas tiré) */
 function ensurePids() {
@@ -3550,6 +3532,7 @@ function setObject() {
 }
 
 @@ROUTE_THEATRE_BLOCK@@
+@@ROUTE_WRITE_BLOCK@@
 
 /* Le théâtre courant change : les routes de l'ancien passent à RSET.hidden (gardées), celles du nouveau reviennent, la route active est la première (ou une route vide neuve) ; S prend son nom et ses points.
    Aucune route n'est supprimée. S.theatre est changé par l'appelant. */
@@ -11204,7 +11187,7 @@ def build():
     airfields_js = json.dumps(AF['theatres'], ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
     towns_js = json.dumps(TW['theatres'], ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
     js = JS.replace('__EXAMPLE_ROUTE__', example_js).replace('__EXAMPLE_ROUTE_EN__', example_en_js).replace('__AIRFIELDS__', airfields_js).replace('__TOWNS__', towns_js)
-    js = js.replace('@@GEO_BLOCK@@\n', GEO_BLOCK).replace('@@READNUM_BLOCK@@\n', READNUM_BLOCK).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@ROUTE_PACK_BLOCK@@\n', build_route_pack_block()).replace('@@ROUTE_THEATRE_BLOCK@@\n', build_route_theatre_block()).replace('@@GROUP_STORE_BLOCK@@\n', build_group_store_block()).replace('@@RADIO_BLOCK@@\n', build_radio_block()).replace('@@RADIO_BANDS_BLOCK@@\n', build_radio_bands_block()).replace('@@IMPORT_BLOCK@@\n', build_import_block()).replace('@@MESSAGES_BLOCK@@\n', build_messages_block())
+    js = js.replace('@@GEO_BLOCK@@\n', GEO_BLOCK).replace('@@READNUM_BLOCK@@\n', READNUM_BLOCK).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@ROUTE_PACK_BLOCK@@\n', build_route_pack_block()).replace('@@ROUTE_THEATRE_BLOCK@@\n', build_route_theatre_block()).replace('@@ROUTE_WRITE_BLOCK@@\n', build_route_write_block()).replace('@@GROUP_STORE_BLOCK@@\n', build_group_store_block()).replace('@@RADIO_BLOCK@@\n', build_radio_block()).replace('@@RADIO_BANDS_BLOCK@@\n', build_radio_bands_block()).replace('@@IMPORT_BLOCK@@\n', build_import_block()).replace('@@MESSAGES_BLOCK@@\n', build_messages_block())
     if '@@' in js:
         raise SystemExit("[ERREUR] Marqueur @@ non remplacé dans le script")
     lib = A['lib_leaflet']

@@ -4272,8 +4272,10 @@ function readPoints(list) {
     if (pts.length > 0) { const bx = readBox(p.box); if (bx) q.box = bx; }
     const dc = readDcs(p.dcs);
     if (dc) q.dcs = dc;
+    if (pidValid(p.pid)) q.pid = p.pid;
     pts.push(q);
   });
+  assignPids(pts);       /* un point sans pid valide, ou en doublon, en reçoit un neuf (migration silencieuse, écrite au prochain enregistrement) */
   return { points: pts, dropped: dropped };
 }
 
@@ -4303,13 +4305,16 @@ function parseRoute(src) {
   if (Array.isArray(src.refs)) src.refs.forEach(p => {
     if (!p || typeof p !== 'object' || !validCoord(p.lat, p.lon)) return;
     if (route.refs.length >= MAX_REFS) { droppedRefs++; return; }
-    route.refs.push({
+    const q = {
       name: typeof p.name === 'string' ? p.name : nextRefName(route.refs, route.refs.length),
       lat: r7(p.lat), lon: r7(p.lon),
       alt: (typeof p.alt === 'number' && isFinite(p.alt)) ? p.alt : 0,
       altRef: p.altRef === 'MSL' ? 'MSL' : 'AGL'
-    });
+    };
+    if (pidValid(p.pid)) q.pid = p.pid;
+    route.refs.push(q);
   });
+  assignPids(route.refs);
   return { route: route, dropped: dropped, droppedRefs: droppedRefs };
 }
 
@@ -4323,6 +4328,7 @@ function persistState() {
   if (!ok && !SAVE_FAILED) { try { showToast(t('toast.saveFail'), { type: 'err' }); } catch (e) { /* page pas encore prête */ } }
   SAVE_FAILED = !ok;
   try { gsSyncRoutes(); } catch (e) { /* la fiche des groupes est facultative */ }
+  mpNavWrite();
 }
 
 function loadState() {
@@ -4355,13 +4361,13 @@ function exportObject() {
     navDisplay: { ref: S.navDisplay.ref, decl: S.navDisplay.decl, mode: S.navDisplay.mode, year: S.navDisplay.year, force: S.navDisplay.force },
     groundSpeed: S.groundSpeed, legBoxes: S.legBoxes,
     points: S.points.map(exportPoint),
-    refs: S.refs.map(p => ({ name: p.name, lat: p.lat, lon: p.lon, alt: p.alt, altRef: p.altRef }))
+    refs: S.refs.map(p => ({ name: p.name, lat: p.lat, lon: p.lon, alt: p.alt, altRef: p.altRef, pid: p.pid }))
   };
 }
 
 /* Un point du fichier : sa source de mission (p.dcs) est gardée */
 function exportPoint(p, i) {
-  const o = { name: p.name, lat: p.lat, lon: p.lon, alt: p.alt, altRef: p.altRef };
+  const o = { name: p.name, lat: p.lat, lon: p.lon, alt: p.alt, altRef: p.altRef, pid: p.pid };
   if (i > 0 && typeof p.gs === 'number') o.gs = p.gs;
   if (i > 0 && p.box) o.box = { along: p.box.along, side: p.box.side };
   if (p.dcs) o.dcs = JSON.parse(JSON.stringify(p.dcs));
@@ -4390,6 +4396,20 @@ function newRid(taken) {
     if (!used.has(out)) return out;
   }
 }
+/* L'identifiant stable d'un point ou d'une référence (pid) : 12 caractères [a-z0-9] (le même tirage que le rid), unique dans sa liste. Il naît avec le point et le suit : déplacé, renommé,
+   altitude, ordre changé. Il vit dans route_state_v1, route_set_v1 et les fichiers du Route Planner ; jamais dans le paquet de vol, la copie de route d'un groupe ni l'export du Route Tool. */
+function pidValid(s) { return rwPidValid(s); }       /* le tirage, la validité et l'attribution sont ceux du bloc d'écriture d'une route (route_write_block.py), le même au Datacard Generator */
+function newPid(taken) { return rwNewPid(taken); }
+function assignPids(list) { return rwAssignPids(list); }
+function pidsOf(list) { return new Set(list.map(p => p.pid)); }
+/* Les routes, la route active et les références : tout point en porte un (filet pour une naissance qui n'en a pas tiré) */
+function ensurePids() {
+  let d = false;
+  RSET.routes.concat(RSET.hidden || []).forEach(r => { if (assignPids(r.points)) d = true; });
+  if (S && Array.isArray(S.refs) && assignPids(S.refs)) d = true;
+  return d;
+}
+
 /* Une route neuve : vide, sans lien, avec son rid */
 function blankRoute(taken) { return { rid: newRid(taken), name: '', points: [], flight: null, theatre: S && S.theatre ? S.theatre : 'Caucasus' }; }
 /* RSET.routes : les routes du théâtre courant (seules celles-là se voient, se listent, se dessinent, s'enregistrent) ; RSET.hidden : celles des autres théâtres, masquées et gardées telles quelles.
@@ -4436,6 +4456,7 @@ function syncActive() {
   const r = RSET.routes[RSET.active];
   if (r && S) { r.name = S.name; r.points = S.points; }
   ensureRids();
+  ensurePids();
 }
 
 /* Toute route de l'ensemble porte un rid valide et distinct (filet : une route entrée par un chemin qui n'en a pas tiré reçoit le sien) */
@@ -4466,6 +4487,259 @@ function routesOfTheatre(routes, C) {
   return routes.filter(r => routeTheatre(r, C) === C);
 }
 /* ===== FIN DU THÉÂTRE D'UNE ROUTE ===== */
+/* ===== ÉCRITURE D'UNE ROUTE (route_set_v1, route_state_v1, copie du groupe) ===== */
+const RW_KEY_SET = 'route_set_v1', RW_KEY_STATE = 'route_state_v1', RW_KEY_FLIGHT = 'flight_set_v1', RW_KEY_UNITS = 'mp_units_v1', RW_KEY_NAV = 'mp_nav_v1', RW_KEY_TH = 'mp_theatre_v1';
+const RW_SET_FORMAT = 'dcs-route-set-v1', RW_ROUTE_FORMAT = 'dcs-route-v1';
+const RW_MAX_POINTS = 30, RW_MAX_REFS = 12, RW_MAX_ROUTES = 12, RW_GS_DEFAULT = 220;
+const RW_CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789';
+
+function rwObj(v) { return !!v && typeof v === 'object' && !Array.isArray(v); }
+function rwClone(v) { return JSON.parse(JSON.stringify(v)); }
+function rwPidValid(s) { return typeof s === 'string' && /^[a-z0-9]{8,16}$/.test(s); }
+function rwRidValid(s) { return typeof s === 'string' && /^[a-z0-9]{6,32}$/.test(s); }
+/* 12 caractères [a-z0-9] tirés par crypto.getRandomValues (repli Math.random), absents de taken : la règle de newRid du Route Planner */
+function rwRand(taken) {
+  const used = taken || new Set();
+  for (;;) {
+    let out = '';
+    try {
+      const a = new Uint8Array(48);
+      crypto.getRandomValues(a);
+      for (let i = 0; i < a.length && out.length < 12; i++) if (a[i] < 252) out += RW_CHARS[a[i] % 36];      /* 252 = 7 × 36 : pas de biais */
+    } catch (e) { out = ''; }
+    while (out.length < 12) out += RW_CHARS[Math.floor(Math.random() * 36)];
+    if (!used.has(out)) return out;
+  }
+}
+function rwNewPid(taken) { return rwRand(taken); }
+function rwNewRid(taken) { return rwRand(taken); }
+/* Chaque élément porte un pid valide et distinct ; vrai si un pid a été tiré */
+function rwAssignPids(list) {
+  const seen = new Set();
+  let drawn = false;
+  list.forEach(p => { if (rwObj(p) && rwPidValid(p.pid) && !seen.has(p.pid)) seen.add(p.pid); else if (rwObj(p)) p.pid = null; });
+  list.forEach(p => { if (rwObj(p) && !p.pid) { p.pid = rwNewPid(seen); seen.add(p.pid); drawn = true; } });
+  return drawn;
+}
+function rwValidCoord(lat, lon) {
+  return typeof lat === 'number' && typeof lon === 'number' && isFinite(lat) && isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180;
+}
+function rwGet(k) { try { const r = localStorage.getItem(k); return r === null ? null : JSON.parse(r); } catch (e) { return null; } }
+function rwRaw(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function rwHasProj(th) { return typeof TM_PARAMS === 'object' && TM_PARAMS !== null && Object.prototype.hasOwnProperty.call(TM_PARAMS, th); }
+
+/* Le jeu de routes lu : l'objet brut (toutes les routes, masquées comprises, gardées telles quelles) ; null s'il est absent, d'un autre format ou sans liste de routes */
+function rwReadSet() {
+  const o = rwGet(RW_KEY_SET);
+  if (!rwObj(o) || o.format !== RW_SET_FORMAT || !Array.isArray(o.routes)) return null;
+  o.routes = o.routes.filter(r => rwObj(r) && Array.isArray(r.points));
+  if (!o.routes.length) return null;
+  if (!(Number.isInteger(o.active) && o.active >= 0 && o.active < o.routes.length)) o.active = 0;
+  return o;
+}
+/* L'état lu : route_state_v1 s'il se lit comme une route (format et liste de points), sinon null */
+function rwReadState() {
+  const o = rwGet(RW_KEY_STATE);
+  return rwObj(o) && o.format === RW_ROUTE_FORMAT && Array.isArray(o.points) ? o : null;
+}
+/* Le théâtre de référence des routes d'avant le lot : celui de route_state_v1 s'il est valide, sinon mp_theatre_v1, sinon Caucasus */
+function rwRefTheatre(st) {
+  if (rwObj(st) && rtThOk(st.theatre)) return st.theatre;
+  const k = rwGet(RW_KEY_TH);
+  return rwObj(k) && rtThOk(k.theatre) ? k.theatre : 'Caucasus';
+}
+/* Le Route Planner prend route_state_v1 pour source de la route active : ici aussi, la route active du jeu prend le nom et les points de l'état (du même théâtre) avant tout changement */
+function rwFresh(set, st) {
+  const act = set.routes[set.active];
+  if (act && st && routeTheatre(act, rwRefTheatre(st)) === rwRefTheatre(st)) { act.name = typeof st.name === 'string' ? st.name : act.name; act.points = st.points; }
+  return act;
+}
+/* Les routes du jeu qui sont du théâtre th (la règle du théâtre d'une route) */
+function rwRoutesOf(set, th, st) {
+  const ref = rwRefTheatre(st);
+  return set ? set.routes.filter(r => routeTheatre(r, ref) === th) : [];
+}
+/* Une route lue pour l'appelant : { rid, name, theatre, points (copies), active } ; null si le rid n'y est pas. Les points sans pid en reçoivent un (non écrit : rwUpdateRoute l'écrit). */
+function rwFind(rid) {
+  const set = rwReadSet(), st = rwReadState();
+  if (!set) return null;
+  rwFresh(set, st);
+  const i = set.routes.findIndex(r => r.rid === rid);
+  return i < 0 ? null : set.routes[i];
+}
+
+/* Écrit toutes les clés ou aucune : celles déjà écrites sont remises comme elles étaient */
+function rwCommit(items) {
+  const old = items.map(it => rwRaw(it.k));
+  let n = 0;
+  try {
+    for (; n < items.length; n++) localStorage.setItem(items[n].k, items[n].v);
+    return true;
+  } catch (e) {
+    rwRestore(items.slice(0, n), old.slice(0, n));
+    return false;
+  }
+}
+function rwRestore(items, old) {
+  items.forEach((it, i) => { try { if (old[i] === null) localStorage.removeItem(it.k); else localStorage.setItem(it.k, old[i]); } catch (e) { /* rien de plus à faire */ } });
+}
+
+/* Un état minimal que parseRoute du Route Planner accepte : les défauts du Route Planner, le théâtre commun ; la route active du jeu (nom, points) si le jeu existe */
+function rwMinimalState(set, th) {
+  const act = set ? set.routes[set.active] : null;
+  const un = rwGet(RW_KEY_UNITS), nv = rwGet(RW_KEY_NAV);
+  const nd = rwObj(nv) ? nv : {};
+  return {
+    format: RW_ROUTE_FORMAT, name: act && typeof act.name === 'string' ? act.name : '', theatre: act && rtThOk(act.theatre) ? act.theatre : (rtThOk(th) ? th : rwRefTheatre(null)),
+    units: { distance: rwObj(un) && un.distance === 'nm' ? 'nm' : 'km', altitude: rwObj(un) && un.altitude === 'ft' ? 'ft' : 'm' },
+    navDisplay: { ref: nd.ref === 'mag' ? 'mag' : 'true', decl: typeof nd.decl === 'string' ? nd.decl : '', mode: nd.mode === 'manual' ? 'manual' : 'calc', year: typeof nd.year === 'string' && /^\d{1,4}$/.test(nd.year) ? nd.year : '', force: nd.force === true },
+    groundSpeed: RW_GS_DEFAULT, legBoxes: 'full',
+    points: act ? act.points : [], refs: [],
+    ui: { layer: 'topo', grid: true, places: false, towns: true, airfields: true, trace: 'route', ticks: 'route' }
+  };
+}
+
+function rwGs(st) { return rwObj(st) && typeof st.groundSpeed === 'number' && st.groundSpeed > 0 ? st.groundSpeed : RW_GS_DEFAULT; }
+/* La copie d'un groupe qui prend la route r (ses points au format du paquet : pts) */
+function rwGroupTakes(f, r, pts) {
+  const nf = rwClone(f);
+  nf.route = { points: rwClone(pts) };
+  nf.routeLink = { rid: r.rid, name: r.name };
+  return nf;
+}
+function rwPackable(route, th, g) {
+  if (!rwHasProj(th) || route.points.length < 2) return false;
+  return g.theatre === '' || g.theatre === th;
+}
+/* Les groupes qui suivent la route reçoivent sa copie (la règle de gsSyncRoutes) ; faux si l'écriture d'un groupe échoue */
+function rwSyncGroups(route, th, st) {
+  if (typeof gsRead !== 'function') return true;
+  const g = gsRead();
+  if (!g) return true;
+  if (!rwPackable(route, th, g)) return true;
+  const pts = gsPackRoute(route, th, rwGs(st));
+  if (!pts) return true;
+  for (let i = 0; i < g.flights.length; i++) {
+    const f = g.flights[i], l = f.routeLink;
+    if (!gsIsObj(l) || l.rid !== route.rid) continue;
+    if (gsStable(f.route && f.route.points !== undefined ? f.route.points : null) === gsStable(pts) && l.name === route.name) continue;
+    if (g.theatre === '') { gsSetTheatre(th); g.theatre = th; }
+    if (!gsPutFlight(rwGroupTakes(f, route, pts))) return false;
+  }
+  return true;
+}
+/* Le groupe fcId suit la route : routeLink posé ; sa copie de points avec, quand la route la permet (deux points, théâtre) ; une copie plus ancienne reste sinon */
+function rwLinkFlight(fcId, route, th, st) {
+  if (typeof gsRead !== 'function') return false;
+  const g = gsRead(), f = g ? g.flights.find(x => x.fcId === fcId) : null;
+  if (!f) return false;
+  let nf;
+  const pts = rwPackable(route, th, g) ? gsPackRoute(route, th, rwGs(st)) : null;
+  if (pts) { if (g.theatre === '') { gsSetTheatre(th); } nf = rwGroupTakes(f, route, pts); }
+  else { nf = rwClone(f); nf.routeLink = { rid: route.rid, name: route.name }; }
+  return gsPutFlight(nf);
+}
+
+/* Écrit le jeu, l'état (si la route est l'active, ou si l'état doit naître) et les groupes qui la suivent. o.link : { fcId } un groupe qui prend la route ; o.state : l'état à écrire (déjà changé) */
+function rwWrite(set, route, o) {
+  o = o || {};
+  const st0 = rwReadState();
+  let st = o.state || null;
+  const act = set.routes[set.active];
+  const isAct = !!route && !!act && act.rid === route.rid;
+  if (isAct) {
+    if (!st) st = st0 ? rwClone(st0) : rwMinimalState(set, route.theatre);
+    st.name = route.name; st.points = route.points;       /* la route active : route_state_v1 fait foi pour elle au chargement du Route Planner */
+  }
+  const items = [{ k: RW_KEY_SET, v: JSON.stringify(set) }];
+  if (st) items.push({ k: RW_KEY_STATE, v: JSON.stringify(st) });
+  const flightRaw = rwRaw(RW_KEY_FLIGHT);
+  if (!rwCommit(items)) return { ok: false, why: 'full' };
+  const th = route ? routeTheatre(route, rwRefTheatre(st || st0)) : '';
+  let good = true;
+  if (route && o.link && o.link.fcId) good = rwLinkFlight(o.link.fcId, route, th, st || st0);
+  if (good && route) good = rwSyncGroups(route, th, st || st0);
+  if (!good) {
+    rwRestore(items, items.map(it => (it.k === RW_KEY_SET ? o.oldSet : o.oldState)));
+    try { if (flightRaw === null) localStorage.removeItem(RW_KEY_FLIGHT); else localStorage.setItem(RW_KEY_FLIGHT, flightRaw); } catch (e) { /* idem */ }
+    return { ok: false, why: 'full' };
+  }
+  return { ok: true, route: route };
+}
+
+/* Change la route rid : mut(route) modifie son nom ou ses points (objets bruts ; faux : rien n'est écrit). Rend { ok, route } ou { ok: false, why : 'none' | 'gone' | 'abort' | 'max' | 'full' } */
+function rwUpdateRoute(rid, mut, o) {
+  const set = rwReadSet(), st = rwReadState();
+  if (!set) return { ok: false, why: 'none' };
+  const oldSet = rwRaw(RW_KEY_SET), oldState = rwRaw(RW_KEY_STATE);
+  rwFresh(set, st);
+  const route = set.routes.find(r => r.rid === rid);
+  if (!route) return { ok: false, why: 'gone' };
+  if (mut && mut(route) === false) return { ok: false, why: 'abort' };
+  if (route.points.length > RW_MAX_POINTS) return { ok: false, why: 'max' };
+  rwAssignPids(route.points);
+  return rwWrite(set, route, Object.assign({ oldSet: oldSet, oldState: oldState }, o || {}));
+}
+
+/* Une route neuve, au théâtre th : { name, theatre, points, fcId? } ; le groupe fcId la suit. Rend { ok, rid, route } ou { ok: false, why: 'max' | 'full' | 'link' }.
+   12 routes sur le théâtre : refus. Un jeu absent naît ; l'état du Route Planner qui n'avait pas de jeu devient la route 1 (rien ne se perd). */
+function rwCreateRoute(o) {
+  let set = rwReadSet();
+  const st0 = rwReadState();
+  const oldSet = rwRaw(RW_KEY_SET), oldState = rwRaw(RW_KEY_STATE);
+  const th = o.theatre;
+  if (!set) {
+    set = { format: RW_SET_FORMAT, active: 0, routes: [] };
+    if (st0 && st0.points.length) set.routes.push({ rid: rwNewRid(new Set()), name: typeof st0.name === 'string' ? st0.name : '', points: st0.points, flight: null, theatre: rtThOk(st0.theatre) ? st0.theatre : rwRefTheatre(null) });
+  } else rwFresh(set, st0);
+  if (rwRoutesOf(set, th, st0).length >= RW_MAX_ROUTES) return { ok: false, why: 'max' };
+  const taken = new Set(set.routes.map(r => r.rid));
+  const route = { rid: rwNewRid(taken), name: String(o.name || '').slice(0, 60), points: (o.points || []).slice(0, RW_MAX_POINTS), flight: null, theatre: th };
+  rwAssignPids(route.points);
+  set.routes.push(route);
+  if (set.routes.length === 1) set.active = 0;
+  const r = rwWrite(set, route, { link: o.fcId ? { fcId: o.fcId } : null, oldSet: oldSet, oldState: oldState });
+  if (!r.ok) return r;
+  if (o.fcId && !rwLinkedTo(o.fcId, route.rid)) return { ok: true, rid: route.rid, route: route, link: false };
+  return { ok: true, rid: route.rid, route: route, link: true };
+}
+function rwLinkedTo(fcId, rid) {
+  const g = typeof gsRead === 'function' ? gsRead() : null, f = g ? g.flights.find(x => x.fcId === fcId) : null;
+  return !!f && gsIsObj(f.routeLink) && f.routeLink.rid === rid;
+}
+/* Le groupe fcId suit désormais la route rid (une route par groupe) */
+function rwLinkRoute(fcId, rid) {
+  const set = rwReadSet(), st = rwReadState();
+  if (!set) return { ok: false, why: 'none' };
+  rwFresh(set, st);
+  const route = set.routes.find(r => r.rid === rid);
+  if (!route) return { ok: false, why: 'gone' };
+  const flightRaw = rwRaw(RW_KEY_FLIGHT);
+  const ok = rwLinkFlight(fcId, route, routeTheatre(route, rwRefTheatre(st)), st);
+  if (!ok) { try { if (flightRaw === null) localStorage.removeItem(RW_KEY_FLIGHT); else localStorage.setItem(RW_KEY_FLIGHT, flightRaw); } catch (e) { /* idem */ } return { ok: false, why: 'full' }; }
+  return { ok: true, route: route };
+}
+
+/* Les références : celles du Route Planner (route_state_v1.refs). mut(refs) modifie la liste (faux : rien n'est écrit). Seul route_state_v1 change ; un état absent naît minimal. */
+function rwUpdateRefs(mut) {
+  const set = rwReadSet(), st0 = rwReadState();
+  const oldState = rwRaw(RW_KEY_STATE);
+  const st = st0 ? st0 : rwMinimalState(set, null);
+  if (!Array.isArray(st.refs)) st.refs = [];
+  if (mut && mut(st.refs) === false) return { ok: false, why: 'abort' };
+  if (st.refs.length > RW_MAX_REFS) return { ok: false, why: 'max' };
+  rwAssignPids(st.refs);
+  if (!rwCommit([{ k: RW_KEY_STATE, v: JSON.stringify(st) }])) return { ok: false, why: 'full' };
+  return { ok: true, refs: st.refs };
+}
+/* Les réglages de cap communs (mp_nav_v1) : route_state_v1.navDisplay leur reste égal ; un état absent n'est pas créé pour eux */
+function rwSetNavDisplay(n) {
+  const st = rwReadState();
+  if (!st) return true;
+  st.navDisplay = { ref: n.ref, decl: n.decl, mode: n.mode, year: n.year, force: n.force };
+  return rwCommit([{ k: RW_KEY_STATE, v: JSON.stringify(st) }]);
+}
+/* ===== FIN DE L'ÉCRITURE D'UNE ROUTE ===== */
 
 /* Le théâtre courant change : les routes de l'ancien passent à RSET.hidden (gardées), celles du nouveau reviennent, la route active est la première (ou une route vide neuve) ; S prend son nom et ses points.
    Aucune route n'est supprimée. S.theatre est changé par l'appelant. */
@@ -4594,6 +4868,54 @@ function mpUnitsFollow() {
   if (!u || !S || (u.distance === S.units.distance && u.altitude === S.units.altitude)) return;
   S.units.distance = u.distance; S.units.altitude = u.altitude;
   persistState(); renderPts(); renderRefs(); renderNav(); drawRoute(); drawDecor(); syncControls();
+}
+
+/* Les réglages de cap communs à la mission : mp_nav_v1 = { ref, mode, decl, year, force } (les champs et valeurs de S.navDisplay), partagés avec le Datacard Generator ; sans horodatage, écrite seulement
+   si un champ diffère de ce qu'elle porte (réécrire la même valeur ne déclenche aucun évènement « storage » : c'est ce qui coupe la boucle), jamais réécrite quand elle vient de l'autre module.
+   Absente ou invalide : les défauts du Route Planner. route_state_v1 garde navDisplay, toujours égal à la clé ; une route ouverte (fichier) impose ses réglages, qui deviennent la clé. */
+const KEY_NAV = 'mp_nav_v1';
+function mpNavRead() {
+  try {
+    const o = JSON.parse(localStorage.getItem(KEY_NAV));
+    return o && typeof o === 'object' && !Array.isArray(o) ? readNavDisplay(o) : null;
+  } catch (e) { return null; }
+}
+function mpNavSame(a, b) { return a.ref === b.ref && a.mode === b.mode && a.decl === b.decl && a.year === b.year && a.force === b.force; }
+function mpNavWrite() {
+  if (!S) return;
+  const cur = mpNavRead();
+  if (cur && mpNavSame(cur, S.navDisplay)) return;       /* déjà là : aucune écriture */
+  const n = S.navDisplay;
+  try { localStorage.setItem(KEY_NAV, JSON.stringify({ ref: n.ref, mode: n.mode, decl: n.decl, year: n.year, force: n.force })); } catch (e) { if (!SAVE_FAILED) { try { showToast(t('toast.saveFail'), { type: 'err' }); } catch (e2) { /* page pas encore prête */ } } SAVE_FAILED = true; }
+}
+/* Le Datacard Generator a changé les réglages : ils s'appliquent comme un choix des commandes, sans réécrire la clé */
+function mpNavFollow() {
+  const k = mpNavRead();
+  if (!k || !S || mpNavSame(k, S.navDisplay)) return;
+  S.navDisplay = k;
+  persistState(); renderNav(); drawRoute(); syncControls();
+  if (document.activeElement !== $('decl')) $('decl').value = S.navDisplay.decl;
+}
+
+/* Le Datacard Generator écrit route_set_v1 et route_state_v1 (son bloc d'écriture de route) : le Route Planner se relit, sans rien réécrire, sans perdre le point sélectionné s'il existe encore (son pid),
+   et jamais sous un champ en cours de saisie (la relecture attend la sortie du champ). Il ne réécrit pas ce qu'il vient de lire : aucune boucle (l'évènement « storage » ne revient pas à l'onglet qui écrit). */
+const RLD = { timer: 0, wait: false };
+function rpReloadSoon() { clearTimeout(RLD.timer); RLD.timer = setTimeout(rpReload, 150); }
+function rpBusy() {
+  const a = document.activeElement;
+  return !!a && /^(INPUT|TEXTAREA)$/.test(a.tagName) && !a.readOnly && !a.disabled && a.type !== 'checkbox' && a.type !== 'radio' && a.type !== 'file';
+}
+function rpReload() {
+  if (rpBusy()) { RLD.wait = true; return; }
+  RLD.wait = false;
+  const kp = sel >= 0 && S.points[sel] ? S.points[sel].pid : null, kr = selR >= 0 && S.refs[selR] ? S.refs[selR].pid : null, ui = S.ui;
+  loadState();
+  S.ui = ui;
+  const k = mpNavRead();
+  if (k) S.navDisplay = k;
+  sel = kp ? S.points.findIndex(p => p.pid === kp) : -1;
+  selR = kr ? S.refs.findIndex(p => p.pid === kr) : -1;
+  renderAll();
 }
 
 /* Le théâtre change (les routes des autres théâtres sont masquées et gardées) : la liste de la barre, ou un fichier CombatFlite qui nomme le sien */
@@ -5985,12 +6307,12 @@ function selectRef(i) {
 }
 
 function newPointFrom(src, lat, lon, rank) {
-  return { name: nextName(S.points, rank), lat: r7(lat), lon: r7(lon), alt: src ? src.alt : 0, altRef: src ? src.altRef : 'AGL' };
+  return { name: nextName(S.points, rank), lat: r7(lat), lon: r7(lon), alt: src ? src.alt : 0, altRef: src ? src.altRef : 'AGL', pid: newPid(pidsOf(S.points)) };
 }
 
 /* Un point d'une référence neuve : altitude et référence de la référence précédente, sinon 0 et MSL */
 function newRefFrom(src, lat, lon, rank) {
-  return { name: nextRefName(S.refs, rank), lat: r7(lat), lon: r7(lon), alt: src ? src.alt : 0, altRef: src ? src.altRef : 'MSL' };
+  return { name: nextRefName(S.refs, rank), lat: r7(lat), lon: r7(lon), alt: src ? src.alt : 0, altRef: src ? src.altRef : 'MSL', pid: newPid(pidsOf(S.refs)) };
 }
 
 /* Ajoute un point à la fin de la route (null au plafond) ; name : le nom imposé (un aérodrome), sinon WP<k> */
@@ -8759,6 +9081,7 @@ function loadExample() {
   const ex = parseRoute(JSON.parse(JSON.stringify(CURRENT_LANG === 'en' ? EXAMPLE_ROUTE_EN : EXAMPLE_ROUTE))).route;   // la langue de l'interface au moment du clic
   const ku = mpUnitsRead();
   if (ku) ex.units = { distance: ku.distance, altitude: ku.altitude };       // l'exemple s'affiche dans les unités partagées et n'écrit pas la clé
+  { const kn = mpNavRead(); if (kn) ex.navDisplay = kn; }       // ... et dans les réglages de cap communs
   syncActive();
   if (ex.theatre === S.theatre) { RSET.routes = [blankRoute()]; RSET.active = 0; S.name = ''; S.points = RSET.routes[0].points; }       // le travail en cours (les routes de ce théâtre) est remplacé, comme avant
   else {
@@ -9094,7 +9417,8 @@ function pointFromRaw(raw, k, idx, theatre) {
     name: (typeof raw.name === 'string' && raw.name !== '') ? raw.name : 'WP' + k,
     lat: r7(ll.lat), lon: r7(ll.lon),
     alt: (typeof raw.alt === 'number' && isFinite(raw.alt)) ? raw.alt : 0,
-    altRef: raw.alt_type === 'RADIO' ? 'AGL' : 'MSL'
+    altRef: raw.alt_type === 'RADIO' ? 'AGL' : 'MSL',
+    pid: newPid()
   };
   if (idx >= 1 && typeof raw.speed === 'number' && isFinite(raw.speed) && Math.round(raw.speed * 3.6) > 0) p.gs = Math.round(raw.speed * 3.6);
   const orig = { lat: p.lat, lon: p.lon, alt: p.alt, altRef: p.altRef, name: p.name };
@@ -12616,7 +12940,10 @@ function bindEvents() {
     if (e.key === 'mission_snapshot_v1' && navIsCalc()) { renderNav(); drawRoute(); syncControls(); }
     if (e.key === KEY_THEATRE) mpTheatreFollow();       /* le Datacard Generator a changé le théâtre */
     if (e.key === KEY_UNITS) mpUnitsFollow();           /* ... ou les unités */
+    if (e.key === KEY_NAV) mpNavFollow();               /* ... ou les réglages de cap */
+    if (e.key === KEY_SET || e.key === KEY_STATE || e.key === null) rpReloadSoon();       /* ... ou une route (son bloc d'écriture) */
   });
+  document.addEventListener('focusout', () => { if (RLD.wait) setTimeout(() => { if (RLD.wait && !rpBusy()) rpReload(); }, 60); });
   $('route-name').addEventListener('input', e => { S.name = e.target.value; persistState(); routesRender(); });
   routesBind();
   $('panel').addEventListener('focusin', ev => {
@@ -13079,6 +13406,7 @@ function init() {
   initFormMenus(sel => (sel.dataset.k === 'altRef' ? t('th.ref') : sel.dataset.lbl ? t(sel.dataset.lbl) : (sel.getAttribute('aria-label') || '')));   /* les listes des formulaires */
   impSetup({ lang: () => CURRENT_LANG, before: rpImportBefore, onImported: rpImported, toast: msg => showToast('\u26a0 ' + msg, { type: 'err' }) });      /* la fenêtre d'import commune */
   loadState();
+  { const k = mpNavRead(); if (k) S.navDisplay = k; }       /* les réglages de cap communs : pris s'ils existent, écrits sinon (persistState, plus bas) */
   try { gsMigrate((r, th) => gsPackRoute(r, th, S.groundSpeed)); } catch (e) { /* la fiche des groupes est facultative */ }      /* la fiche naît ici si le Flight Configurator ne l'a pas fait avant */
   loadLayers();
   loadDisplay();
