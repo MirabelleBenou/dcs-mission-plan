@@ -2287,35 +2287,6 @@ select[data-tbm-src] {{ display: none !important; }}
 }}
 
 /* ======== FENÊTRE « NOM DU FICHIER » ======== */
-.fn-modal[hidden] {{ display: none !important; }}
-.fn-modal {{ position: fixed; inset: 0; z-index: 9000; display: flex; align-items: center; justify-content: center; padding: 16px; }}
-.fn-backdrop {{ position: absolute; inset: 0; background: rgba(0,0,0,.55); }}
-.fn-panel {{
-  position: relative; width: 100%; max-width: 440px; max-height: calc(100vh - 32px); overflow: auto; box-sizing: border-box;
-  background: var(--olive-dark); color: var(--paper); border: 1px solid var(--amber); border-top: 3px solid var(--amber);
-  padding: 18px 18px 16px; box-shadow: 0 8px 40px rgba(0,0,0,.6);
-}}
-.fn-close {{ position: absolute; top: 4px; right: 8px; background: none; border: 0; color: var(--paper); font-size: 24px; line-height: 1; padding: 6px 8px; cursor: pointer; font-family: inherit; }}
-.fn-close:hover, .fn-close:focus-visible {{ color: var(--amber); outline: none; }}
-.fn-panel h2 {{ margin: 0 28px 14px 0; font-family: var(--f-stencil); font-weight: 400; font-size: 16px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--amber); }}
-.fn-field {{ margin: 0 0 14px; }}
-.fn-field .lbl {{ display: block; margin-bottom: 5px; font-family: var(--f-ui); font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--khaki-light); }}
-.fn-row {{ display: flex; align-items: center; gap: 8px; }}
-.fn-row .in {{
-  flex: 1 1 auto; min-width: 0; box-sizing: border-box; min-height: 40px; padding: 6px 8px;
-  background: var(--olive-deep); border: 1px solid var(--khaki); color: var(--paper);
-  font-family: var(--f-typewriter); font-size: 13px; transition: border-color .15s;
-}}
-.fn-row .in:focus {{ border-color: var(--amber); outline: none; }}
-.fn-ext {{ flex: none; font-family: var(--f-typewriter); font-size: 13px; color: var(--khaki-light); }}
-.fn-actions {{ display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }}
-.fn-btn {{
-  background: var(--olive-dark); border: 1px solid var(--khaki); color: var(--khaki-light); padding: 9px 16px; min-height: 40px;
-  font-family: var(--f-ui); font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; transition: all .15s;
-}}
-.fn-btn:hover {{ border-color: var(--amber-dark); color: var(--amber); }}
-.fn-btn.go {{ border: 2px solid var(--amber); color: var(--amber); }}
-.fn-btn:disabled {{ opacity: .35; cursor: not-allowed; }}
 
 @@MESSAGES_CSS@@
 
@@ -2657,15 +2628,15 @@ select[data-tbm-src] {{ display: none !important; }}
 </nav>
 
 <!-- FENÊTRE : EXPORTER L'IMAGE — CHOISIR LE NOM DU FICHIER -->
-<div class="fn-modal" id="fn-modal" hidden role="dialog" aria-modal="true" aria-labelledby="fn-title">
-  <div class="fn-backdrop" id="fn-backdrop"></div>
-  <div class="fn-panel" role="document">
-    <button type="button" class="fn-close" id="fn-close" data-i18n-aria-label="modal.close" aria-label="Fermer">&times;</button>
-    <h2 id="fn-title" data-i18n="fn.title">Exporter l'image</h2>
-    <div class="fn-field"><label class="lbl" for="fn-name" data-i18n="fn.label">Nom du fichier</label><div class="fn-row"><input class="in" id="fn-name" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="100"><span class="fn-ext">.png</span></div></div>
-    <div class="fn-actions">
-      <button type="button" class="fn-btn" id="fn-cancel" data-i18n="fn.cancel">Annuler</button>
-      <button type="button" class="fn-btn go" id="fn-go" data-i18n="fn.go">Exporter</button>
+<div class="ui-modal" id="fn-modal" hidden role="dialog" aria-modal="true" aria-labelledby="fn-title">
+  <div class="ui-backdrop" id="fn-backdrop"></div>
+  <div class="ui-panel" role="document">
+    <button type="button" class="ui-close" id="fn-close" data-i18n-aria-label="modal.close" aria-label="Fermer">&times;</button>
+    <h2 id="fn-title" class="ui-title" data-i18n="fn.title">Exporter l'image</h2>
+    <div class="ui-field"><label class="ui-lbl" for="fn-name" data-i18n="fn.label">Nom du fichier</label><div class="ui-row"><input class="ui-in" id="fn-name" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="100"><span class="ui-ext">.png</span></div></div>
+    <div class="ui-actions">
+      <button type="button" class="ui-btn" id="fn-cancel" data-i18n="fn.cancel">Annuler</button>
+      <button type="button" class="ui-btn primary" id="fn-go" data-i18n="fn.go">Exporter</button>
     </div>
   </div>
 </div>
@@ -4523,13 +4494,6 @@ function fnBind() {{
   document.addEventListener('keydown', e => {{
     if (!fnOpen()) return;
     if (e.key === 'Escape') {{ e.preventDefault(); e.stopImmediatePropagation(); fnClose(); return; }}
-    if (e.key !== 'Tab') return;
-    const m = document.getElementById('fn-modal');
-    const els = Array.prototype.filter.call(m.querySelectorAll('button, input'), x => !x.disabled && x.offsetParent !== null);
-    if (!els.length) return;
-    const first = els[0], last = els[els.length - 1];
-    if (e.shiftKey && (document.activeElement === first || !m.contains(document.activeElement))) {{ e.preventDefault(); last.focus(); }}
-    else if (!e.shiftKey && (document.activeElement === last || !m.contains(document.activeElement))) {{ e.preventDefault(); first.focus(); }}
   }}, true);
 }}
 

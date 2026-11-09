@@ -2753,219 +2753,13 @@ body[data-format="full"] [data-fmt="simple"] { display: none !important; }
   .phase-bar { grid-template-columns: 40px 1fr 40px 40px 40px 40px; }
 }
 
-/* ============= EXPORT MODAL ============= */
-.export-modal[hidden] { display: none !important; }
-.export-modal {
-  position: fixed;
-  inset: 0;
-  z-index: 10000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-}
-.export-modal-backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(2px);
-}
-.export-modal-panel {
-  position: relative;
-  background: var(--paper, #f4ead5);
-  color: var(--ink, #2a2a2a);
-  border: 2px solid var(--ink, #2a2a2a);
-  border-radius: 4px;
-  padding: 24px 28px;
-  max-width: 520px;
-  width: 100%;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
-  font-family: 'Roboto Mono', monospace;
-}
-.export-modal-close {
-  position: absolute;
-  top: 8px;
-  right: 12px;
-  background: none;
-  border: none;
-  color: var(--ink, #2a2a2a);
-  font-size: 24px;
-  line-height: 1;
-  cursor: pointer;
-  padding: 4px 8px;
-  font-family: inherit;
-}
-.export-modal-close:hover { color: var(--amber, #c8901f); }
-.export-modal h2 {
-  font-family: 'Stardos Stencil', sans-serif;
-  font-size: 22px;
-  letter-spacing: 2px;
-  margin: 0 0 4px;
-  text-transform: uppercase;
-}
-.export-modal-subtitle {
-  font-size: 12px;
-  opacity: 0.7;
-  margin: 0 0 20px;
-  letter-spacing: 1px;
-}
-.export-modal-choices {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-}
-.export-modal-choices[hidden] { display: none; }
-.export-choice {
-  background: transparent;
-  border: 2px solid var(--ink, #2a2a2a);
-  border-radius: 3px;
-  padding: 20px 14px;
-  cursor: pointer;
-  font-family: inherit;
-  color: inherit;
-  text-align: center;
-  transition: background 0.15s, border-color 0.15s, transform 0.1s;
-}
-.export-choice:hover {
-  background: rgba(0, 0, 0, 0.05);
-  border-color: var(--amber, #c8901f);
-  transform: translateY(-1px);
-}
-.export-choice:focus-visible {
-  outline: 2px solid var(--amber, #c8901f);
-  outline-offset: 2px;
-}
-.export-choice-icon { font-size: 32px; margin-bottom: 8px; }
-.export-choice-label {
-  font-family: 'Stardos Stencil', sans-serif;
-  font-size: 18px;
-  letter-spacing: 2px;
-  margin-bottom: 6px;
-}
-.export-choice-desc {
-  font-size: 11px;
-  opacity: 0.75;
-  letter-spacing: 0.5px;
-  line-height: 1.35;
-}
-/* Panneau PNG (step 2) */
-.export-png-config h3 {
-  font-family: 'Stardos Stencil', sans-serif;
-  font-size: 14px;
-  letter-spacing: 2px;
-  margin: 0 0 10px;
-  text-transform: uppercase;
-}
-.export-png-actions-top {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-.export-png-toggle {
-  background: transparent;
-  border: 1px solid var(--ink, #2a2a2a);
-  padding: 4px 10px;
-  font-family: inherit;
-  font-size: 11px;
-  letter-spacing: 0.5px;
-  cursor: pointer;
-  color: inherit;
-  border-radius: 2px;
-}
-.export-png-toggle:hover {
-  background: rgba(0, 0, 0, 0.06);
-  border-color: var(--amber, #c8901f);
-}
-.export-png-list {
-  max-height: 280px;
-  overflow-y: auto;
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  border-radius: 2px;
-  padding: 6px 10px;
-  margin-bottom: 14px;
-  background: rgba(255, 255, 255, 0.25);
-}
-.export-png-page-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 5px 0;
-  font-size: 12px;
-  cursor: pointer;
-}
-.export-png-page-cb { accent-color: var(--amber, #c8901f); }
-.export-png-page-num {
-  font-family: 'Stardos Stencil', sans-serif;
-  letter-spacing: 1px;
-  min-width: 60px;
-}
-.export-png-page-hint {
-  opacity: 0.7;
-  font-size: 11px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.export-png-actions-bottom {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-}
-.export-png-back, .export-png-go {
-  background: transparent;
-  border: 2px solid var(--ink, #2a2a2a);
-  padding: 8px 18px;
-  font-family: 'Stardos Stencil', sans-serif;
-  letter-spacing: 2px;
-  font-size: 13px;
-  cursor: pointer;
-  color: inherit;
-  border-radius: 2px;
-  text-transform: uppercase;
-}
-.export-png-back:hover {
-  background: rgba(0, 0, 0, 0.05);
-}
-.export-png-go {
-  background: var(--amber, #c8901f);
-  color: var(--paper, #f4ead5);
-  border-color: var(--amber, #c8901f);
-}
-.export-png-go:hover {
-  background: var(--ink, #2a2a2a);
-  border-color: var(--ink, #2a2a2a);
-}
-.export-png-go:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-/* ============= NOM DU FICHIER : le champ (fenêtre « Enregistrer » et panneau PNG) ============= */
-.fn-field { margin: 0 0 14px; }
-.fn-field .lbl {
-  display: block;
-  margin-bottom: 4px;
-  font-size: 11px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  opacity: 0.7;
-}
-.fn-row { display: flex; align-items: center; gap: 8px; }
-.fn-row .in {
-  flex: 1 1 auto;
-  min-width: 0;
-  box-sizing: border-box;
-  background: rgba(255, 255, 255, 0.25);
-  border: 1px solid var(--ink, #2a2a2a);
-  border-radius: 2px;
-  padding: 8px 10px;
-  font-family: inherit;
-  font-size: 13px;
-  color: inherit;
-}
-.fn-row .in:focus { outline: 2px solid var(--amber, #c8901f); outline-offset: 1px; }
-.fn-ext { flex: none; font-size: 13px; opacity: 0.7; }
+/* ============= EXPORT : la liste à cases des pages (« Choisir… ») ; la fenêtre est celle du bloc d'interface commun ============= */
+.export-png-actions-top { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.export-png-list { max-height: 280px; overflow-y: auto; border: 1px solid var(--khaki); padding: 2px 10px; background: rgba(0, 0, 0, 0.18); }
+.export-png-page-row { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 12px; cursor: pointer; }
+.export-png-page-cb { accent-color: var(--amber); width: 20px; height: 20px; flex: none; margin: 0; }
+.export-png-page-num { font-family: var(--f-stencil); letter-spacing: 1px; min-width: 60px; color: var(--paper); }
+.export-png-page-hint { color: var(--khaki-light); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* ============= CARTE DU ROUTE PLANNER (v2.5.0) : la fenêtre « Placer la carte » ============= */
 .rpmap-thumb {
@@ -2973,8 +2767,8 @@ body[data-format="full"] [data-fmt="simple"] { display: none !important; }
   justify-content: center;
   margin: 0 0 14px;
   padding: 6px;
-  background: rgba(0, 0, 0, 0.06);
-  border: 1px solid rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid var(--khaki);
 }
 .rpmap-thumb img { display: block; max-height: 160px; max-width: 100%; width: auto; height: auto; }
 .rpmap-choices {
@@ -2990,22 +2784,18 @@ body[data-format="full"] [data-fmt="simple"] { display: none !important; }
   align-items: center;
   gap: 10px;
   padding: 7px 10px;
-  border: 1px solid rgba(0, 0, 0, 0.25);
-  border-radius: 2px;
+  min-height: 44px;
+  box-sizing: border-box;
+  border: 1px solid var(--khaki);
+  border-radius: 0;
   font-size: 12px;
+  color: var(--paper);
   cursor: pointer;
 }
-.rpmap-choice:hover, .rpmap-choice.on { border-color: var(--amber, #c8901f); }
-.rpmap-choice.on { background: rgba(200, 144, 31, 0.12); }
-.rpmap-choice input { accent-color: var(--amber, #c8901f); flex: none; }
-.rpmap-replace { font-size: 11px; margin: 0 0 14px; color: #a83524; letter-spacing: 0.5px; }
+.rpmap-choice:hover, .rpmap-choice.on { border-color: var(--amber); }
+.rpmap-choice.on { background: rgba(200, 144, 31, 0.18); }
+.rpmap-choice input { accent-color: var(--amber); flex: none; width: 20px; height: 20px; margin: 0; }
 .rpmap-replace[hidden] { display: none; }
-
-/* Mobile : grille 2 colonnes → 1 colonne */
-@media (max-width: 600px) {
-  .export-modal-choices { grid-template-columns: 1fr; }
-  .export-modal-panel { padding: 18px 20px; }
-}
 
 /* ===========================================================
    WARNING débordement — aperçu UNIQUEMENT (chatE étape A)
@@ -3062,7 +2852,7 @@ body[data-format="full"] [data-fmt="simple"] { display: none !important; }
 /* ============ PRINT ============ */
 @media print {
   body { background: white; overflow: visible; }
-  .toolbar, .editor, .tab-bar, .export-modal { display: none !important; }
+  .toolbar, .editor, .tab-bar, .ui-modal { display: none !important; }
   .app { position: static; display: block; bottom: auto; }
   .preview-wrap {
     position: static; padding: 0; overflow: visible;
@@ -3216,69 +3006,41 @@ __CSS__
 </header>
 
 <!-- ===== EXPORT MODAL ===== -->
-<div class="export-modal" id="export-modal" hidden role="dialog" aria-labelledby="export-modal-title" aria-modal="true">
-  <div class="export-modal-backdrop" id="export-modal-backdrop"></div>
-  <div class="export-modal-panel" role="document">
-    <button class="export-modal-close" id="export-modal-close" data-i18n-aria-label="modal.export.close" aria-label="Fermer">×</button>
-    <h2 id="export-modal-title" data-i18n="modal.export.title">Exporter le briefing</h2>
-    <p class="export-modal-subtitle" data-i18n="modal.export.subtitle">Choisissez le format de sortie</p>
-    <div class="export-modal-choices">
-      <button class="export-choice" id="export-choice-pdf" type="button">
-        <div class="export-choice-icon">🖨</div>
-        <div class="export-choice-label">PDF</div>
-        <div class="export-choice-desc" data-i18n="modal.export.pdf.desc">Impression système · Toutes les pages</div>
-      </button>
-      <button class="export-choice" id="export-choice-png" type="button">
-        <div class="export-choice-icon">🖼</div>
-        <div class="export-choice-label">PNG</div>
-        <div class="export-choice-desc" data-i18n="modal.export.png.desc">Kneeboard DCS · 1588×2246, A4</div>
-      </button>
-    </div>
-    <!-- Le panneau PNG (sélecteur de pages) apparaît ici en step 2 — implémenté étape B -->
-    <div class="export-png-config" id="export-png-config" hidden>
-      <h3 data-i18n="modal.export.png.pages">Pages à exporter</h3>
-      <div class="export-png-actions-top">
-        <button type="button" class="export-png-toggle" id="export-png-all" data-i18n="modal.export.png.checkAll">Tout cocher</button>
-        <button type="button" class="export-png-toggle" id="export-png-none" data-i18n="modal.export.png.uncheckAll">Tout décocher</button>
-      </div>
-      <div class="export-png-list" id="export-png-list">
-        <!-- checkboxes par page injectées dynamiquement -->
-      </div>
-      <div class="fn-field"><label class="lbl" for="export-png-fname" data-i18n="fn.label">Nom du fichier</label><div class="fn-row"><input class="in" id="export-png-fname" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="100"><span class="fn-ext" id="export-png-ext">.png</span></div></div>
-      <div class="export-png-actions-bottom">
-        <button type="button" class="export-png-back" id="export-png-back" data-i18n="modal.export.png.back">← Retour</button>
-        <button type="button" class="export-png-go" id="export-png-go"><span data-i18n="modal.export.png.go">Exporter</span> <span id="export-png-count"></span></button>
-      </div>
-    </div>
+<div class="ui-modal" id="export-modal" hidden role="dialog" aria-labelledby="export-modal-title" aria-modal="true">
+  <div class="ui-backdrop" id="export-modal-backdrop"></div>
+  <div class="ui-panel" role="document">
+    <button type="button" class="ui-close" id="export-modal-close" data-i18n-aria-label="modal.export.close" aria-label="Fermer">×</button>
+    <h2 class="ui-title" id="export-modal-title" data-i18n="modal.export.title">Exporter le briefing</h2>
+    <div class="ui-xbody"></div>
   </div>
 </div>
 
 <!-- ===== FENÊTRE : ENREGISTRER LE BRIEFING — CHOISIR LE NOM DU FICHIER ===== -->
-<div class="export-modal" id="save-modal" hidden role="dialog" aria-labelledby="save-title" aria-modal="true">
-  <div class="export-modal-backdrop" id="save-backdrop"></div>
-  <div class="export-modal-panel" role="document">
-    <button type="button" class="export-modal-close" id="save-close" data-i18n-aria-label="modal.export.close" aria-label="Fermer">×</button>
-    <h2 id="save-title" data-i18n="save.title">Enregistrer le briefing</h2>
-    <div class="fn-field"><label class="lbl" for="save-fname" data-i18n="fn.label">Nom du fichier</label><div class="fn-row"><input class="in" id="save-fname" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="100"><span class="fn-ext">.json</span></div></div>
-    <div class="export-png-actions-bottom">
-      <button type="button" class="export-png-back" id="save-cancel" data-i18n="rpmap.cancel">Annuler</button>
-      <button type="button" class="export-png-go" id="save-go" data-i18n="toolbar.save">Enregistrer</button>
+<div class="ui-modal" id="save-modal" hidden role="dialog" aria-labelledby="save-title" aria-modal="true">
+  <div class="ui-backdrop" id="save-backdrop"></div>
+  <div class="ui-panel" role="document">
+    <button type="button" class="ui-close" id="save-close" data-i18n-aria-label="modal.export.close" aria-label="Fermer">×</button>
+    <h2 class="ui-title" id="save-title" data-i18n="save.title">Enregistrer le briefing</h2>
+    <div class="ui-field"><label class="ui-lbl" for="save-fname" data-i18n="fn.label">Nom du fichier</label><div class="ui-row"><input class="ui-in" id="save-fname" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="100"><span class="ui-ext">.json</span></div></div>
+    <div class="ui-actions">
+      <button type="button" class="ui-btn" id="save-cancel" data-i18n="rpmap.cancel">Annuler</button>
+      <button type="button" class="ui-btn primary" id="save-go" data-i18n="toolbar.save">Enregistrer</button>
     </div>
   </div>
 </div>
 
 <!-- ===== FENÊTRE : PLACER LA CARTE DU ROUTE PLANNER ===== -->
-<div class="export-modal" id="rpmap-modal" hidden role="dialog" aria-labelledby="rpmap-title" aria-modal="true">
-  <div class="export-modal-backdrop" id="rpmap-backdrop"></div>
-  <div class="export-modal-panel" role="document">
-    <button type="button" class="export-modal-close" id="rpmap-close" data-i18n-aria-label="modal.export.close" aria-label="Fermer">×</button>
-    <h2 id="rpmap-title" data-i18n="rpmap.title">Placer la carte du Route Planner</h2>
+<div class="ui-modal" id="rpmap-modal" hidden role="dialog" aria-labelledby="rpmap-title" aria-modal="true">
+  <div class="ui-backdrop" id="rpmap-backdrop"></div>
+  <div class="ui-panel" role="document">
+    <button type="button" class="ui-close" id="rpmap-close" data-i18n-aria-label="modal.export.close" aria-label="Fermer">×</button>
+    <h2 class="ui-title" id="rpmap-title" data-i18n="rpmap.title">Placer la carte du Route Planner</h2>
     <div class="rpmap-thumb"><img id="rpmap-img" alt=""></div>
     <div class="rpmap-choices" id="rpmap-choices" role="radiogroup" aria-labelledby="rpmap-title"></div>
-    <p class="rpmap-replace" id="rpmap-replace" role="status" hidden data-i18n="rpmap.replace">Une carte est déjà en place : elle sera remplacée.</p>
-    <div class="export-png-actions-bottom">
-      <button type="button" class="export-png-back" id="rpmap-cancel" data-i18n="rpmap.cancel">Annuler</button>
-      <button type="button" class="export-png-go" id="rpmap-place" data-i18n="rpmap.place">Placer</button>
+    <p class="ui-avert rpmap-replace" id="rpmap-replace" role="status" hidden data-i18n="rpmap.replace">Une carte est déjà en place : elle sera remplacée.</p>
+    <div class="ui-actions">
+      <button type="button" class="ui-btn" id="rpmap-cancel" data-i18n="rpmap.cancel">Annuler</button>
+      <button type="button" class="ui-btn primary" id="rpmap-place" data-i18n="rpmap.place">Placer</button>
     </div>
   </div>
 </div>
@@ -3670,6 +3432,8 @@ const I18N = {
     'ui.pages': 'Pages',
     'ui.fname': 'Nom du fichier',
     'ui.export': 'Exporter',
+    'ui.all': 'Toutes',
+    'modal.export.pick': 'Choisir…',
     'ui.verb.delete': 'Supprimer',
     'ui.verb.reset': 'Réinitialiser',
     'ui.verb.clear': 'Effacer',
@@ -3704,15 +3468,10 @@ const I18N = {
     // ── Modale export ──
     'modal.export.close':          'Fermer',
     'modal.export.title':          'Exporter le briefing',
-    'modal.export.subtitle':       'Choisissez le format de sortie',
-    'modal.export.pdf.desc':       'Impression système · Toutes les pages',
+    'modal.export.pdf.desc':       'Impression système',
     'modal.export.png.desc':       'Kneeboard DCS · 1588×2246, A4',
-    'modal.export.png.pages':      'Pages à exporter',
     'modal.export.png.checkAll':   'Tout cocher',
     'modal.export.png.uncheckAll': 'Tout décocher',
-    'modal.export.png.back':       '← Retour',
-    'modal.export.png.go':         'Exporter',
-    'modal.export.titlePng':       'Export PNG kneeboard',
     'fn.label':                    'Nom du fichier',
     'save.title':                  'Enregistrer le briefing',
     // ── Section 00 META ──
@@ -4067,6 +3826,8 @@ const I18N = {
     'ui.pages': 'Pages',
     'ui.fname': 'File name',
     'ui.export': 'Export',
+    'ui.all': 'All',
+    'modal.export.pick': 'Choose…',
     'ui.verb.delete': 'Delete',
     'ui.verb.reset': 'Reset',
     'ui.verb.clear': 'Clear',
@@ -4100,16 +3861,11 @@ const I18N = {
     'tab.preview': 'Preview',
     // ── Export modal ──
     'modal.export.close':          'Close',
-    'modal.export.title':          'Export briefing',
-    'modal.export.subtitle':       'Choose output format',
-    'modal.export.pdf.desc':       'System print · All pages',
+    'modal.export.title':          'Export the briefing',
+    'modal.export.pdf.desc':       'System print',
     'modal.export.png.desc':       'DCS Kneeboard · 1588×2246, A4',
-    'modal.export.png.pages':      'Pages to export',
     'modal.export.png.checkAll':   'Check all',
     'modal.export.png.uncheckAll': 'Uncheck all',
-    'modal.export.png.back':       '← Back',
-    'modal.export.png.go':         'Export',
-    'modal.export.titlePng':       'PNG kneeboard export',
     'fn.label':                    'File name',
     'save.title':                  'Save the briefing',
     // ── Section 00 META ──
@@ -8346,18 +8102,7 @@ document.addEventListener('DOMContentLoaded', function bindSaveModal() {
   const f = document.getElementById('save-fname');
   f.addEventListener('input', function(e) { SAVEN.name = e.target.value; saveSync(); });
   f.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); if (!e.repeat) saveGo(); } });
-  document.addEventListener('keydown', function(e) {
-    if (!saveModalOpen()) return;
-    if (e.key === 'Escape') { e.preventDefault(); closeSaveModal(); return; }
-    if (e.key !== 'Tab') return;
-    // Tab et Maj+Tab bouclent sur les contrôles de la fenêtre
-    const m = document.getElementById('save-modal');
-    const els = Array.prototype.filter.call(m.querySelectorAll('button, input'), function(x) { return !x.disabled && x.offsetParent !== null; });
-    if (!els.length) return;
-    const first = els[0], last = els[els.length - 1];
-    if (e.shiftKey && (document.activeElement === first || !m.contains(document.activeElement))) { e.preventDefault(); last.focus(); }
-    else if (!e.shiftKey && (document.activeElement === last || !m.contains(document.activeElement))) { e.preventDefault(); first.focus(); }
-  });
+  /* Échap, ✕ et le piège du focus : le bloc d'interface commun (la fenêtre est une .ui-modal) */
 });
 
 /* L'écriture du briefing sous le nom choisi (sans extension) */
@@ -9609,7 +9354,7 @@ function init() {
     if (e.target.files[0]) loadJsonFile(e.target.files[0]);
     e.target.value = '';
   });
-  document.getElementById('btn-print').addEventListener('click', openExportModal);
+  document.getElementById('btn-print').addEventListener('click', function() { openExportModal(); });
   document.getElementById('btn-reset').addEventListener('click', resetAll);
   document.getElementById('theme-select').addEventListener('change', e => { applyTheme(e.target.value); scheduleReflow(); });   // v2.4.0 : la pagination suit les polices du thème
   document.getElementById('btn-lang').addEventListener('click', () => {
@@ -9622,36 +9367,14 @@ function init() {
 
   // Keyboard shortcuts (desktop)
   document.addEventListener('keydown', e => {
-    if (e.ctrlKey && e.key === 's') { e.preventDefault(); if (!document.querySelector('.export-modal:not([hidden])')) openSaveModal(document.getElementById('btn-save')); }
+    if (e.ctrlKey && e.key === 's') { e.preventDefault(); if (!document.querySelector('.ui-modal:not([hidden])')) openSaveModal(document.getElementById('btn-save')); }
     if (e.ctrlKey && e.key === 'p') { /* let browser handle */ }
   });
 }
 
 document.addEventListener('DOMContentLoaded', init);
 
-/* ============= EXPORT MODAL ============= */
-function openExportModal() {
-  const m = document.getElementById('export-modal');
-  m.hidden = false;
-  // Reset à l'état "choix initial"
-  document.getElementById('export-png-config').hidden = true;
-  document.querySelector('.export-modal-choices').hidden = false;
-  document.getElementById('export-modal-title').textContent = t('modal.export.title');
-  // Focus pour accessibilité
-  document.getElementById('export-choice-pdf').focus();
-}
-
-function closeExportModal() {
-  document.getElementById('export-modal').hidden = true;
-}
-
-function handleExportPdf() {
-  closeExportModal();
-  // Léger délai pour laisser la modale se fermer avant la boîte d'impression
-  setTimeout(() => window.print(), 100);
-}
-
-/* ---- Step 2 : sélecteur de pages PNG ---- */
+/* ============= EXPORT : UNE FENÊTRE (format, pages, nom du fichier ; le bloc d'interface commun) ============= */
 
 /* Extrait un hint lisible depuis un élément .page du DOM.
    Lit le premier .p-section trouvé dans la page — c'est le titre de section
@@ -9664,58 +9387,68 @@ function pngPageHint(pageEl) {
   return '—';
 }
 
-/* Le nom du PNG (une page) ou du zip (plusieurs) : il suit les pages cochées tant qu'on ne l'a pas changé */
-const PNGN = { name: '', edited: false, stamp: '' };
-function pngDefaultName(checkedIdx) {
-  if (checkedIdx.length === 1) return 'kb_' + String(checkedIdx[0] + 1).padStart(2, '0') + '_' + PNGN.stamp;
-  return 'briefing_kneeboard_' + PNGN.stamp;
+/* Les pages de l'aperçu au moment de l'ouverture ; le nom par défaut suit le format et les pages choisies tant qu'il n'est pas changé à la main */
+const EXPT = { stamp: '', pageEls: [] };
+function exportPickedIdx() {
+  return Array.from(document.querySelectorAll('.export-png-page-cb:checked')).map(function(cb) { return parseInt(cb.dataset.idx, 10); });
 }
-function updatePngExportCount() {
-  const cbs = document.querySelectorAll('.export-png-page-cb:checked');
-  const span = document.getElementById('export-png-count');
-  if (!span) return;
-  span.textContent = cbs.length ? '(' + cbs.length + ')' : '';
-  const idx = Array.from(cbs).map(function(cb) { return parseInt(cb.dataset.idx, 10); });
-  const ext = document.getElementById('export-png-ext');
-  if (ext) ext.textContent = idx.length > 1 ? '.zip' : '.png';
-  const fld = document.getElementById('export-png-fname');
-  if (fld && !PNGN.edited && idx.length) { PNGN.name = cleanFname(pngDefaultName(idx)); fld.value = PNGN.name; }
-  const goBtn = document.getElementById('export-png-go');
-  if (goBtn) goBtn.disabled = cbs.length === 0 || cleanFname(PNGN.name) === '';
+function exportIdx(page) { return page === 'all' ? EXPT.pageEls.map(function(_, i) { return i; }) : exportPickedIdx(); }
+function exportDefName(fmt, page) {
+  if (fmt === 'pdf') return defaultBriefingName();
+  const idx = exportIdx(page);
+  if (idx.length === 1) return 'kb_' + String(idx[0] + 1).padStart(2, '0') + '_' + EXPT.stamp;
+  return 'briefing_kneeboard_' + EXPT.stamp;
 }
-
-function handleExportPngChoice() {
-  // S'assurer que l'aperçu est rendu (les .page doivent exister dans le DOM)
-  // On ne force PAS le mode ici : les pages sont générées par renderPreview()
-  // déjà appelé à l'init. On s'assure juste qu'elles sont dans le DOM.
+function openExportModal() {
+  // S'assurer que l'aperçu est rendu (les .page doivent exister dans le DOM) ; on ne force PAS le mode
   renderPreview();
-  PNGN.edited = false;
-  PNGN.stamp = fnStamp();
-
-  const allPageEls = document.querySelectorAll('#preview .page');
-  const list = document.getElementById('export-png-list');
-  if (!list) return;
-
-  // Construire une checkbox par page — data-idx = index réel dans #preview
-  list.innerHTML = '';
-  allPageEls.forEach(function(pageEl, i) {
-    const hint = pngPageHint(pageEl);
+  EXPT.stamp = fnStamp();
+  EXPT.pageEls = Array.from(document.querySelectorAll('#preview .page'));
+  const pick = document.createElement('div');
+  const top = document.createElement('div');
+  top.className = 'export-png-actions-top';
+  const mkb = function(id, key) { const b = document.createElement('button'); b.type = 'button'; b.className = 'ui-btn'; b.id = id; b.textContent = t(key); return b; };
+  const bAll = mkb('export-png-all', 'modal.export.png.checkAll'), bNone = mkb('export-png-none', 'modal.export.png.uncheckAll');
+  top.appendChild(bAll); top.appendChild(bNone);
+  const list = document.createElement('div');
+  list.className = 'export-png-list';
+  list.id = 'export-png-list';
+  // Une checkbox par page — data-idx = index réel dans #preview
+  EXPT.pageEls.forEach(function(pageEl, i) {
     const row = document.createElement('label');
     row.className = 'export-png-page-row';
-    // Numéro de page padé sur 2 chiffres pour l'affichage
     const numStr = String(i + 1).padStart(2, '0');
     row.innerHTML =
       '<input type="checkbox" class="export-png-page-cb" data-idx="' + i + '" checked>' +
       '<span class="export-png-page-num">Page ' + numStr + '</span>' +
-      '<span class="export-png-page-hint">' + hint + '</span>';
+      '<span class="export-png-page-hint">' + pngPageHint(pageEl) + '</span>';
     list.appendChild(row);
   });
-
-  // Passer au step 2 dans la modale
-  document.querySelector('.export-modal-choices').hidden = true;
-  document.getElementById('export-png-config').hidden = false;
-  document.getElementById('export-modal-title').textContent = t('modal.export.titlePng');
-  updatePngExportCount();
+  pick.appendChild(top); pick.appendChild(list);
+  const refresh = function() { uiExportRefresh(true); };
+  bAll.addEventListener('click', function() { list.querySelectorAll('.export-png-page-cb').forEach(function(cb) { cb.checked = true; }); refresh(); });
+  bNone.addEventListener('click', function() { list.querySelectorAll('.export-png-page-cb').forEach(function(cb) { cb.checked = false; }); refresh(); });
+  list.addEventListener('change', function(e) { if (e.target.classList.contains('export-png-page-cb')) refresh(); });
+  uiExportOpen({
+    modal: 'export-modal', title: t('modal.export.title'),
+    note: { pdf: t('modal.export.pdf.desc'), png: t('modal.export.png.desc') },
+    pages: [{ id: 'all', label: t('ui.all') }, { id: 'pick', label: t('modal.export.pick') }], page: 'all', pick: pick,
+    defName: exportDefName,
+    ext: function(fmt, page) { return fmt === 'pdf' ? '.pdf' : (exportIdx(page).length > 1 ? '.zip' : '.png'); },
+    count: function(page) { return exportIdx(page).length; },
+    clean: cleanFname, go: exportGo
+  });
+}
+function exportGo(o) {
+  const idx = exportIdx(o.page);
+  if (o.fmt === 'pdf') {
+    // PDF : le nom devient le titre du document le temps de l'impression ; les pages non choisies sont masquées
+    const hide = o.page === 'all' ? [] : EXPT.pageEls.filter(function(_, i) { return idx.indexOf(i) < 0; });
+    uiExportClose();
+    uiPrintAs(o.name, hide);
+    return;
+  }
+  executePngExport(idx, o.name);
 }
 
 /* ---- Rendu d'une page en PNG A4 en double résolution (1588×2246) ---- */
@@ -9799,14 +9532,10 @@ async function renderPageToPng(pageEl) {
 }
 
 /* ---- Export effectif (lancé par le bouton "Exporter (N)") ---- */
-async function executePngExport() {
-  // Récupérer les index de pages cochées (index réels dans #preview)
-  const checkedInputs = document.querySelectorAll('.export-png-page-cb:checked');
-  const checkedIdx = Array.from(checkedInputs).map(function(cb) {
-    return parseInt(cb.dataset.idx, 10);
-  });
+async function executePngExport(checkedIdx, name) {
+  // Les index de pages choisies (index réels dans #preview) et le nom du fichier viennent de la fenêtre d'export
   if (!checkedIdx.length) return;
-  const fileName = cleanFname(PNGN.name);
+  const fileName = cleanFname(name);
   if (fileName === '') return;
 
   // Les .page sont toujours dans le DOM (mode édition ou aperçu),
@@ -9823,6 +9552,7 @@ async function executePngExport() {
   const originalBtnHtml = goBtn.innerHTML;
   goBtn.disabled = true;
   goBtn.setAttribute('aria-busy', 'true');
+  uiExportBusy(true);
 
   function updateProgress(current) {
     const msg = t('toast.exportGenProgress') + current + '/' + total + '…';
@@ -9835,7 +9565,7 @@ async function executePngExport() {
       // Une seule page : téléchargement PNG direct
       updateProgress(1);
       const blob = await renderPageToPng(toExport[0]);
-      closeExportModal();
+      uiExportClose();
       fallbackDownload(blob, fileName + '.png', t('toast.exportSingle'));
 
     } else {
@@ -9849,7 +9579,7 @@ async function executePngExport() {
         zip.file(fname, blob);
       }
       const zipBlob = await zip.generateAsync({ type: 'blob' });
-      closeExportModal();
+      uiExportClose();
       fallbackDownload(zipBlob, fileName + '.zip',
         total + ' ' + t('toast.exportMulti'));
     }
@@ -9861,58 +9591,14 @@ async function executePngExport() {
     goBtn.innerHTML = originalBtnHtml;
     goBtn.disabled = false;
     goBtn.removeAttribute('aria-busy');
+    uiExportBusy(false);
   }
 }
 
 // Bindings modale — câblés ici en global (pas dans init) pour rester cohérent
 // avec le pattern "fonctions globales, pas de closures" du projet (cf. DOCS §2.4)
 document.addEventListener('DOMContentLoaded', function bindExportModal() {
-  document.getElementById('export-modal-backdrop').addEventListener('click', closeExportModal);
-  document.getElementById('export-modal-close').addEventListener('click', closeExportModal);
-  document.getElementById('export-choice-pdf').addEventListener('click', handleExportPdf);
-  document.getElementById('export-choice-png').addEventListener('click', handleExportPngChoice);
-
-  // Boutons Tout cocher / Tout décocher
-  document.getElementById('export-png-all').addEventListener('click', function() {
-    document.querySelectorAll('.export-png-page-cb').forEach(function(cb) { cb.checked = true; });
-    updatePngExportCount();
-  });
-  document.getElementById('export-png-none').addEventListener('click', function() {
-    document.querySelectorAll('.export-png-page-cb').forEach(function(cb) { cb.checked = false; });
-    updatePngExportCount();
-  });
-
-  // Mise à jour compteur au changement d'une checkbox (délégation sur le container)
-  document.getElementById('export-png-list').addEventListener('change', function(e) {
-    if (e.target.classList.contains('export-png-page-cb')) updatePngExportCount();
-  });
-
-  // Le champ « Nom du fichier » du panneau PNG : un nom tapé n'est plus remplacé par le défaut
-  document.getElementById('export-png-fname').addEventListener('input', function(e) {
-    PNGN.name = e.target.value;
-    PNGN.edited = true;
-    updatePngExportCount();
-  });
-  document.getElementById('export-png-fname').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') { e.preventDefault(); const g = document.getElementById('export-png-go'); if (!g.disabled && !e.repeat) executePngExport(); }
-  });
-
-  // Bouton Exporter (N) — lance l'export effectif
-  document.getElementById('export-png-go').addEventListener('click', executePngExport);
-
-  // Bouton ← Retour — revient au step 1 (choix PDF/PNG)
-  document.getElementById('export-png-back').addEventListener('click', function() {
-    document.getElementById('export-png-config').hidden = true;
-    document.querySelector('.export-modal-choices').hidden = false;
-    document.getElementById('export-modal-title').textContent = t('modal.export.title');
-  });
-
-  // Échap pour fermer la modale (quelle que soit l'étape)
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape' && !document.getElementById('export-modal').hidden) {
-      closeExportModal();
-    }
-  });
+  uiExportBind('export-modal');
 });
 
 /* ============= CARTE DU ROUTE PLANNER (v2.5.0) =============
@@ -9994,8 +9680,10 @@ function syncRpMapChoice() {
   document.getElementById('rpmap-replace').hidden = !filled;
 }
 
+let rpMapOpener = null;
 function openRpMapModal() {
   if (!rpMapPayload) return;
+  rpMapOpener = document.activeElement;
   document.getElementById('rpmap-img').src = rpMapPayload.dataUrl;
   document.querySelectorAll('input[name="rpmap-dest"]').forEach(i => { i.checked = false; });
   renderRpMapChoices();
@@ -10007,6 +9695,9 @@ function closeRpMapModal() {
   document.getElementById('rpmap-modal').hidden = true;
   rpMapPayload = null;
   document.getElementById('rpmap-img').removeAttribute('src');
+  const o = rpMapOpener;
+  rpMapOpener = null;
+  if (o && o.focus && o.isConnected && !o.disabled) { try { o.focus({ preventScroll: true }); } catch (e) { /* ignore */ } }
 }
 
 function placeRpMap() {
@@ -10038,9 +9729,7 @@ document.addEventListener('DOMContentLoaded', function bindRpMapModal() {
   document.getElementById('rpmap-cancel').addEventListener('click', closeRpMapModal);
   document.getElementById('rpmap-place').addEventListener('click', placeRpMap);
   document.getElementById('rpmap-choices').addEventListener('change', syncRpMapChoice);
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape' && !document.getElementById('rpmap-modal').hidden) closeRpMapModal();
-  });
+  /* Échap : le bloc d'interface commun (la fenêtre est une .ui-modal) */
 });
 
 /* ============= CONSOLE API ============= */

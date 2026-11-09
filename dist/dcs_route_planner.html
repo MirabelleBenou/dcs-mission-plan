@@ -1243,24 +1243,20 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .cf-del:hover, .cf-del:focus-visible { border-color: var(--red-faded); color: var(--paper-light); background: var(--rust); outline: none; }
 .cf-clear { width: 100%; height: 44px; margin-top: 8px; }
 /* fenêtres « Calques CombatFlite » et « Exporter » : la structure des fenêtres du Route Tool, la livrée de la maquette */
-.cf-modal .rt-panel { background: var(--olive-dark); color: var(--paper); border: 1px solid var(--khaki); border-radius: 0; padding: 16px 20px; max-width: 460px; font-family: var(--f-ui); font-weight: 500; }
-.cf-modal .rt-panel h2 { font-family: var(--f-stencil); font-weight: 700; font-size: 17px; letter-spacing: 2px; text-transform: none; color: var(--amber); margin: 4px 44px 10px 0; }
-.cf-modal .rt-close { color: var(--paper); font-size: 30px; }
-.cf-modal .rt-close:hover, .cf-modal .rt-close:focus-visible { color: var(--amber); }
-.cf-modal .rt-file { font-size: 12px; margin: 0 0 2px; opacity: 1; color: var(--khaki-light); }
-.cf-modal .rt-note { font-size: 12px; opacity: 1; color: var(--khaki-light); margin: 0 0 8px; }
-.cf-modal .rt-list { max-height: none; overflow: visible; border: none; background: none; padding: 0; margin: 0 0 12px; }
-.cf-modal .rt-row { gap: 12px; padding: 0; font-size: 14px; }
-.cf-modal .rt-row + .rt-row { border-top: 1px solid rgba(168,154,114,.25); }
-.cf-modal .rt-row input { width: 20px; height: 20px; accent-color: var(--amber); }
-.cf-modal .rt-nm { font-weight: 500; }
-.cf-modal .rt-n { white-space: normal; text-align: right; max-width: 55%; font-size: 11px; opacity: 1; color: var(--khaki-light); }
-.cf-modal .rt-actions { justify-content: flex-end; gap: 8px; margin-top: 4px; }
-.cf-modal .rt-btn { flex: 0 0 auto; padding: 8px 16px; font-family: var(--f-ui); font-weight: 700; font-size: 12px; letter-spacing: 1.5px; color: var(--paper); border: 2px solid var(--khaki); }
-.cf-modal .rt-btn:hover, .cf-modal .rt-btn:focus-visible { background: var(--olive); border-color: var(--amber); color: var(--amber); }
-.cf-modal .rt-btn.go { background: transparent; color: var(--amber); border-color: var(--amber); }
-.cf-modal .rt-btn.go:hover, .cf-modal .rt-btn.go:focus-visible { background: var(--olive); color: var(--paper-light); }
-.cf-modal .rt-btn:disabled { opacity: .35; }
+/* le contenu des fenêtres de suite (la fenêtre est une .ui-modal du bloc d'interface commun) */
+.ui-modal .rt-block { margin-bottom: 12px; }
+.ui-modal .rt-lbl { display: block; margin: 0 0 6px; font-family: var(--f-ui); font-weight: 500; font-size: 11px; letter-spacing: 1.8px; text-transform: uppercase; color: var(--amber); }
+.ui-modal .rt-in { background: rgba(216,201,165,.92); border: 1px solid var(--khaki); border-left: 3px solid var(--amber-dark); border-radius: 0; color: #1a1710; }
+.ui-modal .rt-in:focus { outline: none; background: var(--paper-light); box-shadow: 0 0 0 1px var(--amber); }
+.ui-actions.col { flex-direction: column; flex-wrap: nowrap; align-items: stretch; }
+.ui-modal .rt-file { font-size: 12px; margin: 0 0 2px; opacity: 1; color: var(--khaki-light); }
+.ui-modal .rt-note { font-size: 12px; opacity: 1; color: var(--khaki-light); margin: 0 0 8px; }
+.ui-modal .rt-list { max-height: none; overflow: visible; border: none; background: none; padding: 0; margin: 0 0 12px; }
+.ui-modal .rt-row { gap: 12px; padding: 0; font-size: 14px; }
+.ui-modal .rt-row + .rt-row { border-top: 1px solid rgba(168,154,114,.25); }
+.ui-modal .rt-row input { width: 20px; height: 20px; accent-color: var(--amber); }
+.ui-modal .rt-nm { font-weight: 500; }
+.ui-modal .rt-n { white-space: normal; text-align: right; max-width: 55%; font-size: 11px; opacity: 1; color: var(--khaki-light); }
 
 /* ---------- plusieurs routes (lot rp-route-du-vol) : la liste, les fenêtres « Depuis HQ » et « Paquet de vol », la ligne « Routes » du menu Affichage ---------- */
 .rs-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
@@ -1293,7 +1289,6 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .rt-filters > div.nm { flex: 2 1 140px; }
 .rt-filters .lbl { margin-bottom: 4px; }
 .rt-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin: 0 0 8px; }
-.cf-modal .rt-tools .rt-btn { min-height: 36px; padding: 4px 10px; font-size: 11px; letter-spacing: 1px; }
 .rt-tools .rt-cnt { margin-left: auto; font-size: 11px; letter-spacing: .3px; color: var(--khaki-light); }
 .rt-tools[hidden] { display: none; }
 .fn-field { margin: 0 0 12px; }
@@ -1307,9 +1302,9 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .rt-row.off input { cursor: not-allowed; }
 .rt-row .rt-n { display: flex; flex-direction: column; align-items: flex-end; }
 .rt-row .rt-n .rt-dup { color: var(--amber); }
-.cf-modal .rt-warn { color: var(--paper); border-left: 3px solid var(--amber); padding: 4px 0 4px 10px; background: rgba(0,0,0,.18); }
-.cf-modal .rt-filters .in { font-size: 13px; }
-.cf-modal .rt-empty { font-size: 12px; color: var(--khaki-light); margin: 4px 0 12px; }
+.ui-modal .rt-warn { color: var(--paper); border-left: 3px solid var(--amber); padding: 4px 0 4px 10px; background: rgba(0,0,0,.18); }
+.ui-modal .rt-filters .in { font-size: 13px; }
+.ui-modal .rt-empty { font-size: 12px; color: var(--khaki-light); margin: 4px 0 12px; }
 /* la ligne « Routes » du menu Affichage : le titre et son compte, puis un sélecteur à trois positions */
 .dsp-routes { padding: 8px 18px 10px; border-top: 1px solid rgba(168,154,114,.14); }
 .dsp-routes-h { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 6px; font-family: var(--f-ui); font-weight: 500; font-size: 13px;
@@ -2092,11 +2087,11 @@ SOFTWARE.
 </main>
 
 <!-- ===== FENÊTRE : OUVRIR UNE ROUTE DU ROUTE TOOL ===== -->
-<div class="rt-modal" id="rt-open-modal" hidden role="dialog" aria-modal="true" aria-labelledby="rt-open-title">
-  <div class="rt-backdrop" id="rt-open-backdrop"></div>
-  <div class="rt-panel" role="document">
-    <button type="button" class="rt-close" id="rt-open-close" data-i18n-aria-label="modal.close" aria-label="Fermer">&times;</button>
-    <h2 id="rt-open-title" data-i18n="rt.open.title">Ouvrir une route du Route Tool</h2>
+<div class="ui-modal" id="rt-open-modal" hidden role="dialog" aria-modal="true" aria-labelledby="rt-open-title">
+  <div class="ui-backdrop" id="rt-open-backdrop"></div>
+  <div class="ui-panel ui-wide" role="document">
+    <button type="button" class="ui-close" id="rt-open-close" data-i18n-aria-label="modal.close" aria-label="Fermer">&times;</button>
+    <h2 class="ui-title" id="rt-open-title" data-i18n="rt.open.title">Ouvrir une route du Route Tool</h2>
     <p class="rt-file" id="rt-open-file"></p>
     <div class="rt-block">
       <label class="rt-lbl" for="rt-theatre" data-i18n="tb.theatre">Théâtre</label>
@@ -2105,86 +2100,86 @@ SOFTWARE.
     </div>
     <div class="rt-list" id="rt-routes" role="radiogroup"></div>
     <p class="rt-note rt-warn" id="rt-replace-note" hidden data-i18n="rt.open.replace">La route en cours est remplacée.</p>
-    <div class="rt-actions">
-      <button type="button" class="rt-btn" id="rt-open-cancel" data-i18n="rt.cancel">Annuler</button>
-      <button type="button" class="rt-btn go" id="rt-open-go" data-i18n="rt.open.go">Ouvrir la route</button>
+    <div class="ui-actions">
+      <button type="button" class="ui-btn" id="rt-open-cancel" data-i18n="rt.cancel">Annuler</button>
+      <button type="button" class="ui-btn primary" id="rt-open-go" data-i18n="rt.open.go">Ouvrir la route</button>
     </div>
   </div>
 </div>
 
 <!-- ===== FENÊTRE : EXPORTER VERS LE ROUTE TOOL ===== -->
-<div class="rt-modal" id="rt-export-modal" hidden role="dialog" aria-modal="true" aria-labelledby="rt-export-title">
-  <div class="rt-backdrop" id="rt-export-backdrop"></div>
-  <div class="rt-panel" role="document">
-    <button type="button" class="rt-close" id="rt-export-close" data-i18n-aria-label="modal.close" aria-label="Fermer">&times;</button>
-    <h2 id="rt-export-title" data-i18n="rt.exp.title">Exporter vers le Route Tool</h2>
+<div class="ui-modal" id="rt-export-modal" hidden role="dialog" aria-modal="true" aria-labelledby="rt-export-title">
+  <div class="ui-backdrop" id="rt-export-backdrop"></div>
+  <div class="ui-panel" role="document">
+    <button type="button" class="ui-close" id="rt-export-close" data-i18n-aria-label="modal.close" aria-label="Fermer">&times;</button>
+    <h2 class="ui-title" id="rt-export-title" data-i18n="rt.exp.title">Exporter vers le Route Tool</h2>
     <div class="rt-block">
       <label class="rt-lbl" for="rt-name" data-i18n="rt.exp.name">Nom de la route dans le Route Tool</label>
       <input class="rt-in" id="rt-name" type="text" autocomplete="off" spellcheck="false">
     </div>
     <p class="rt-note" id="rt-help"></p>
     <p class="rt-note rt-warn" id="rt-refs-note" hidden data-i18n="rt.exp.refs">Les points de référence ne passent pas au Route Tool.</p>
-    <div class="rt-actions col">
-      <button type="button" class="rt-btn go" id="rt-add"></button>
-      <button type="button" class="rt-btn" id="rt-new" data-i18n="rt.exp.new">Créer un fichier neuf</button>
-      <button type="button" class="rt-btn" id="rt-export-cancel" data-i18n="rt.cancel">Annuler</button>
+    <div class="ui-actions col">
+      <button type="button" class="ui-btn primary" id="rt-add"></button>
+      <button type="button" class="ui-btn" id="rt-new" data-i18n="rt.exp.new">Créer un fichier neuf</button>
+      <button type="button" class="ui-btn" id="rt-export-cancel" data-i18n="rt.cancel">Annuler</button>
     </div>
     <input type="file" id="file-rt" hidden>
   </div>
 </div>
 
 <!-- ===== FENÊTRE : CALQUES D'UN FICHIER COMBATFLITE ===== -->
-<div class="rt-modal cf-modal" id="cf-import-modal" hidden role="dialog" aria-modal="true" aria-labelledby="cf-import-title">
-  <div class="rt-backdrop" id="cf-import-backdrop"></div>
-  <div class="rt-panel" role="document">
-    <button type="button" class="rt-close" id="cf-import-close" data-i18n-aria-label="modal.close" aria-label="Fermer">&times;</button>
-    <h2 id="cf-import-title" data-i18n="cf.import.title">Calques CombatFlite</h2>
+<div class="ui-modal" id="cf-import-modal" hidden role="dialog" aria-modal="true" aria-labelledby="cf-import-title">
+  <div class="ui-backdrop" id="cf-import-backdrop"></div>
+  <div class="ui-panel" role="document">
+    <button type="button" class="ui-close" id="cf-import-close" data-i18n-aria-label="modal.close" aria-label="Fermer">&times;</button>
+    <h2 class="ui-title" id="cf-import-title" data-i18n="cf.import.title">Calques CombatFlite</h2>
     <p class="rt-file" id="cf-import-file"></p>
     <p class="rt-note" data-i18n="cf.import.note">Cochez les calques à afficher. Ils restent en lecture seule.</p>
     <div class="rt-list" id="cf-import-list"></div>
-    <div class="rt-actions">
-      <button type="button" class="rt-btn" id="cf-import-cancel" data-i18n="rt.cancel">Annuler</button>
-      <button type="button" class="rt-btn go" id="cf-import-go" data-i18n="cf.import.go">Afficher</button>
+    <div class="ui-actions">
+      <button type="button" class="ui-btn" id="cf-import-cancel" data-i18n="rt.cancel">Annuler</button>
+      <button type="button" class="ui-btn primary" id="cf-import-go" data-i18n="cf.import.go">Afficher</button>
     </div>
   </div>
 </div>
 
 <!-- ===== FENÊTRE : EXPORTER — CHOISIR CE QU'EMPORTE LE FICHIER ===== -->
-<div class="rt-modal cf-modal" id="cf-export-modal" hidden role="dialog" aria-modal="true" aria-labelledby="cf-export-title">
-  <div class="rt-backdrop" id="cf-export-backdrop"></div>
-  <div class="rt-panel" role="document">
-    <button type="button" class="rt-close" id="cf-export-close" data-i18n-aria-label="modal.close" aria-label="Fermer">&times;</button>
-    <h2 id="cf-export-title"></h2>
+<div class="ui-modal" id="cf-export-modal" hidden role="dialog" aria-modal="true" aria-labelledby="cf-export-title">
+  <div class="ui-backdrop" id="cf-export-backdrop"></div>
+  <div class="ui-panel" role="document">
+    <button type="button" class="ui-close" id="cf-export-close" data-i18n-aria-label="modal.close" aria-label="Fermer">&times;</button>
+    <h2 class="ui-title" id="cf-export-title"></h2>
     <div class="fn-field"><label class="lbl" for="cf-fname" data-i18n="fn.label">Nom du fichier</label><div class="fn-row"><input class="in" id="cf-fname" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="100"><span class="fn-ext">.json</span></div></div>
     <div class="rt-list" id="cf-export-list"></div>
-    <div class="rt-actions">
-      <button type="button" class="rt-btn" id="cf-export-cancel" data-i18n="rt.cancel">Annuler</button>
-      <button type="button" class="rt-btn go" id="cf-export-go" data-i18n="tb.save">Enregistrer</button>
+    <div class="ui-actions">
+      <button type="button" class="ui-btn" id="cf-export-cancel" data-i18n="rt.cancel">Annuler</button>
+      <button type="button" class="ui-btn primary" id="cf-export-go" data-i18n="tb.save">Enregistrer</button>
     </div>
   </div>
 </div>
 
 <!-- ===== FENÊTRE : EFFACER — CHOISIR CE QUI S'EFFACE ===== -->
-<div class="rt-modal cf-modal" id="clr-modal" hidden role="dialog" aria-modal="true" aria-labelledby="clr-title">
-  <div class="rt-backdrop" id="clr-backdrop"></div>
-  <div class="rt-panel" role="document">
-    <button type="button" class="rt-close" id="clr-close" data-i18n-aria-label="modal.close" aria-label="Fermer">&times;</button>
-    <h2 id="clr-title" data-i18n="clr.title">Effacer</h2>
+<div class="ui-modal" id="clr-modal" hidden role="dialog" aria-modal="true" aria-labelledby="clr-title">
+  <div class="ui-backdrop" id="clr-backdrop"></div>
+  <div class="ui-panel" role="document">
+    <button type="button" class="ui-close" id="clr-close" data-i18n-aria-label="modal.close" aria-label="Fermer">&times;</button>
+    <h2 class="ui-title" id="clr-title" data-i18n="clr.title">Effacer</h2>
     <div class="rt-list" id="clr-list"></div>
-    <div class="rt-actions">
-      <button type="button" class="rt-btn" id="clr-cancel" data-i18n="rt.cancel">Annuler</button>
-      <button type="button" class="rt-btn" id="clr-all" data-i18n="clr.all">Tout effacer</button>
-      <button type="button" class="rt-btn go" id="clr-go" data-i18n="clr.go">Effacer la sélection</button>
+    <div class="ui-actions">
+      <button type="button" class="ui-btn" id="clr-cancel" data-i18n="rt.cancel">Annuler</button>
+      <button type="button" class="ui-btn" id="clr-all" data-i18n="clr.all">Tout effacer</button>
+      <button type="button" class="ui-btn primary" id="clr-go" data-i18n="clr.go">Effacer la sélection</button>
     </div>
   </div>
 </div>
 
 <!-- ===== FENÊTRE : GROUPES DE LA ROUTE (la fiche partagée flight_set_v1) ===== -->
-<div class="rt-modal cf-modal" id="ga-modal" hidden role="dialog" aria-modal="true" aria-labelledby="ga-title">
-  <div class="rt-backdrop" id="ga-backdrop"></div>
-  <div class="rt-panel" role="document">
-    <button type="button" class="rt-close" id="ga-close" data-i18n-aria-label="modal.close" aria-label="Fermer">&times;</button>
-    <h2 id="ga-title" data-i18n="ga.title">Groupes de la route</h2>
+<div class="ui-modal" id="ga-modal" hidden role="dialog" aria-modal="true" aria-labelledby="ga-title">
+  <div class="ui-backdrop" id="ga-backdrop"></div>
+  <div class="ui-panel ui-wide" role="document">
+    <button type="button" class="ui-close" id="ga-close" data-i18n-aria-label="modal.close" aria-label="Fermer">&times;</button>
+    <h2 class="ui-title" id="ga-title" data-i18n="ga.title">Groupes de la route</h2>
     <p class="rt-file" id="ga-route"></p>
     <p class="rt-note rt-warn" id="ga-warn" hidden></p>
     <div class="rt-list" id="ga-list"></div>
@@ -2196,9 +2191,9 @@ SOFTWARE.
       </div>
       <p class="rt-note rt-warn" id="ga-new-msg" hidden></p>
     </div>
-    <div class="rt-actions">
-      <button type="button" class="rt-btn" id="ga-cancel" data-i18n="rt.cancel">Annuler</button>
-      <button type="button" class="rt-btn go" id="ga-go" data-i18n="ga.go">Appliquer</button>
+    <div class="ui-actions">
+      <button type="button" class="ui-btn" id="ga-cancel" data-i18n="rt.cancel">Annuler</button>
+      <button type="button" class="ui-btn primary" id="ga-go" data-i18n="ga.go">Appliquer</button>
     </div>
   </div>
 </div>
@@ -2220,31 +2215,31 @@ SOFTWARE.
 <!-- ===== FIN DE LA FENÊTRE D'IMPORT ===== -->
 
 <!-- ===== FENÊTRE : PAQUET DE VOL ===== -->
-<div class="rt-modal cf-modal" id="pk-modal" hidden role="dialog" aria-modal="true" aria-labelledby="pk-title">
-  <div class="rt-backdrop" id="pk-backdrop"></div>
-  <div class="rt-panel" role="document">
-    <button type="button" class="rt-close" id="pk-close" data-i18n-aria-label="modal.close" aria-label="Fermer">&times;</button>
-    <h2 id="pk-title" data-i18n="pk.title">Paquet de vol</h2>
+<div class="ui-modal" id="pk-modal" hidden role="dialog" aria-modal="true" aria-labelledby="pk-title">
+  <div class="ui-backdrop" id="pk-backdrop"></div>
+  <div class="ui-panel ui-wide" role="document">
+    <button type="button" class="ui-close" id="pk-close" data-i18n-aria-label="modal.close" aria-label="Fermer">&times;</button>
+    <h2 class="ui-title" id="pk-title" data-i18n="pk.title">Paquet de vol</h2>
     <div class="fn-field"><label class="lbl" for="pk-fname" data-i18n="fn.label">Nom du fichier</label><div class="fn-row"><input class="in" id="pk-fname" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="100"><span class="fn-ext">.json</span></div></div>
     <p class="rt-note" data-i18n="pk.note">Cochez les routes à exporter : chacune devient un groupe du paquet, que HQ applique à la mission.</p>
     <div class="rt-list" id="pk-list"></div>
-    <div class="rt-actions">
-      <button type="button" class="rt-btn" id="pk-cancel" data-i18n="rt.cancel">Annuler</button>
-      <button type="button" class="rt-btn go" id="pk-go"></button>
+    <div class="ui-actions">
+      <button type="button" class="ui-btn" id="pk-cancel" data-i18n="rt.cancel">Annuler</button>
+      <button type="button" class="ui-btn primary" id="pk-go"></button>
     </div>
   </div>
 </div>
 
 <!-- ===== FENÊTRE : EXPORTER LA CARTE — CHOISIR LE NOM DU FICHIER (hors shell) ===== -->
-<div class="rt-modal cf-modal" id="exn-modal" hidden role="dialog" aria-modal="true" aria-labelledby="exn-title">
-  <div class="rt-backdrop" id="exn-backdrop"></div>
-  <div class="rt-panel" role="document">
-    <button type="button" class="rt-close" id="exn-close" data-i18n-aria-label="modal.close" aria-label="Fermer">&times;</button>
-    <h2 id="exn-title" data-i18n="exn.title">Exporter la carte</h2>
+<div class="ui-modal" id="exn-modal" hidden role="dialog" aria-modal="true" aria-labelledby="exn-title">
+  <div class="ui-backdrop" id="exn-backdrop"></div>
+  <div class="ui-panel" role="document">
+    <button type="button" class="ui-close" id="exn-close" data-i18n-aria-label="modal.close" aria-label="Fermer">&times;</button>
+    <h2 class="ui-title" id="exn-title" data-i18n="exn.title">Exporter la carte</h2>
     <div class="fn-field"><label class="lbl" for="exn-fname" data-i18n="fn.label">Nom du fichier</label><div class="fn-row"><input class="in" id="exn-fname" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="100"><span class="fn-ext">.jpg</span></div></div>
-    <div class="rt-actions">
-      <button type="button" class="rt-btn" id="exn-cancel" data-i18n="rt.cancel">Annuler</button>
-      <button type="button" class="rt-btn go" id="exn-go" data-i18n="frame.export">Exporter</button>
+    <div class="ui-actions">
+      <button type="button" class="ui-btn" id="exn-cancel" data-i18n="rt.cancel">Annuler</button>
+      <button type="button" class="ui-btn primary" id="exn-go" data-i18n="frame.export">Exporter</button>
     </div>
   </div>
 </div>

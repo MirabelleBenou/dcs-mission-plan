@@ -635,7 +635,6 @@ select[data-tbm-src] { display: none !important; }
 .ed-btn-icon.neutral:hover { background: var(--olive-dark); }
 .ed-btn-icon:disabled { opacity: .35; cursor: not-allowed; }
 .ed-btn-icon.unit-x { min-width: 44px; min-height: 44px; }
-#grp-modal .export-png-back, #grp-modal .export-png-go { min-height: 44px; }
 .rc-msg { font-family: var(--f-ui); font-size: 11px; letter-spacing: .6px; color: #ff9d8a; margin-left: 56px; }
 .rc-freq input.bad { border-color: #ff9d8a; }
 .rc-row.nc .rc-msg { margin-left: 0; }
@@ -869,91 +868,8 @@ details:not([open]) > .ui-fold-head > .ui-sum:not(:empty), .ui-fold-head[aria-ex
 @media print { .ui-print-hide { display: none !important; } }
 /* ===== FIN DE LA FEUILLE DE L'INTERFACE COMMUNE ===== */
 
-/* ============ FENÊTRES (export, import du briefing) ============ */
-.export-modal[hidden] { display: none !important; }
-.export-modal {
-  position: fixed;
-  inset: 0;
-  z-index: 10000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-}
-.export-modal-backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(2px);
-}
-.export-modal-panel {
-  position: relative;
-  background: var(--paper, #f4ead5);
-  color: #1f1c16;
-  border: 2px solid #1f1c16;
-  border-radius: 4px;
-  padding: 24px 28px;
-  max-width: 520px;
-  width: 100%;
-  max-height: 92vh;
-  overflow-y: auto;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
-  font-family: var(--f-typewriter);
-}
-.export-modal-close {
-  position: absolute;
-  top: 8px;
-  right: 12px;
-  background: none;
-  border: none;
-  color: #1f1c16;
-  font-size: 24px;
-  line-height: 1;
-  cursor: pointer;
-  padding: 4px 8px;
-  font-family: inherit;
-}
-.export-modal-close:hover { color: var(--amber, #c8901f); }
-.export-modal h2 {
-  font-family: var(--f-stencil);
-  font-weight: 700;
-  font-size: 20px;
-  letter-spacing: 2px;
-  margin: 0 28px 14px 0;
-  text-transform: uppercase;
-}
-.export-modal-choices {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-}
-.export-choice {
-  background: transparent;
-  border: 2px solid #1f1c16;
-  border-radius: 3px;
-  padding: 20px 14px;
-  cursor: pointer;
-  font-family: inherit;
-  color: inherit;
-  text-align: center;
-  transition: background 0.15s, border-color 0.15s, transform 0.1s;
-}
-.export-choice:hover {
-  background: rgba(0, 0, 0, 0.05);
-  border-color: var(--amber, #c8901f);
-  transform: translateY(-1px);
-}
-.export-choice:focus-visible { outline: 2px solid var(--amber, #c8901f); outline-offset: 2px; }
-.export-choice-icon { font-size: 32px; margin-bottom: 8px; }
-.export-choice-label {
-  font-family: var(--f-stencil);
-  font-weight: 700;
-  font-size: 18px;
-  letter-spacing: 2px;
-  margin-bottom: 6px;
-}
-.export-choice-desc { font-size: 11px; opacity: 0.75; letter-spacing: 0.5px; line-height: 1.35; }
-.export-png-config h3, .imp-block h3 {
+/* ============ FENÊTRES : l'export, « Enregistrer » et les groupes sont des .ui-modal (bloc d'interface commun) ; ici ce qui reste au module ============ */
+.imp-block h3 {
   font-family: var(--f-stencil);
   font-weight: 700;
   font-size: 14px;
@@ -961,125 +877,29 @@ details:not([open]) > .ui-fold-head > .ui-sum:not(:empty), .ui-fold-head[aria-ex
   margin: 0 0 10px;
   text-transform: uppercase;
 }
-.export-png-actions-top { display: flex; gap: 8px; margin-bottom: 10px; }
-.export-png-toggle {
-  background: transparent;
-  border: 1px solid #1f1c16;
-  padding: 4px 10px;
-  font-family: inherit;
-  font-size: 11px;
-  letter-spacing: 0.5px;
-  cursor: pointer;
-  color: inherit;
-  border-radius: 2px;
-}
-.export-png-toggle:hover { background: rgba(0, 0, 0, 0.06); border-color: var(--amber, #c8901f); }
-.export-png-list {
-  max-height: 280px;
-  overflow-y: auto;
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  border-radius: 2px;
-  padding: 6px 10px;
-  margin-bottom: 14px;
-  background: rgba(255, 255, 255, 0.25);
-}
-.export-png-page-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 5px 0;
-  font-size: 12px;
-  cursor: pointer;
-}
-.export-png-page-cb { accent-color: var(--amber, #c8901f); }
-.export-png-page-num {
-  font-family: var(--f-stencil);
-  font-weight: 700;
-  letter-spacing: 1px;
-  min-width: 60px;
-}
-.export-png-page-hint {
-  opacity: 0.8;
-  font-size: 11px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.export-png-actions-bottom { display: flex; justify-content: space-between; gap: 10px; }
-.export-png-back, .export-png-go {
-  background: transparent;
-  border: 2px solid #1f1c16;
-  padding: 8px 18px;
-  font-family: var(--f-stencil);
-  font-weight: 700;
-  letter-spacing: 2px;
-  font-size: 13px;
-  cursor: pointer;
-  color: inherit;
-  border-radius: 2px;
-  text-transform: uppercase;
-}
-.export-png-back:hover { background: rgba(0, 0, 0, 0.05); }
-.export-png-go {
-  background: var(--amber, #c8901f);
-  color: #f6efdc;
-  border-color: var(--amber, #c8901f);
-}
-.export-png-go:hover { background: #1f1c16; border-color: #1f1c16; }
-.export-png-go:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
-/* Nom du fichier : le champ (fenêtre « Enregistrer » et panneau PNG) */
-.fn-field { margin: 0 0 14px; }
-.fn-field .lbl {
-  display: block;
-  margin-bottom: 4px;
-  font-size: 11px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  opacity: 0.7;
-}
-.fn-row { display: flex; align-items: center; gap: 8px; }
-.fn-row .in {
-  flex: 1 1 auto;
-  min-width: 0;
-  box-sizing: border-box;
-  background: rgba(255, 255, 255, 0.25);
-  border: 1px solid #1f1c16;
-  border-radius: 2px;
-  padding: 8px 10px;
-  font-family: inherit;
-  font-size: 13px;
-  color: inherit;
-}
-.fn-row .in:focus { outline: 2px solid var(--amber, #c8901f); outline-offset: 1px; }
-.fn-ext { flex: none; font-size: 13px; opacity: 0.7; }
-.export-modal-choices[hidden] { display: none; }
+.bi-block h3 { margin: 0 0 8px; font-family: var(--f-ui); font-weight: 500; font-size: 11px; letter-spacing: 1.8px; text-transform: uppercase; color: var(--amber); }
+.export-png-actions-top { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.export-png-list { max-height: 280px; overflow-y: auto; border: 1px solid var(--khaki); padding: 2px 10px; margin-bottom: 14px; background: rgba(0, 0, 0, 0.18); }
+.export-png-page-row { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 12px; cursor: pointer; }
+.export-png-page-cb { accent-color: var(--amber); width: 20px; height: 20px; flex: none; margin: 0; }
+.export-png-page-num { font-family: var(--f-stencil); font-weight: 700; letter-spacing: 1px; min-width: 60px; color: var(--paper); }
+.export-png-page-hint { color: var(--khaki-light); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .bi-block { margin-bottom: 14px; }
 .bi-src {
   display: flex; align-items: center; gap: 10px;
-  padding: 6px 0;
+  min-height: 44px; padding: 0;
   font-size: 13px;
   cursor: pointer;
 }
 .bi-src.off { opacity: .5; cursor: not-allowed; }
-.bi-src input { accent-color: var(--amber, #c8901f); }
-.bi-note { font-size: 11px; opacity: .75; margin: 0 0 6px 26px; line-height: 1.35; }
-.bi-file { display: flex; align-items: center; gap: 10px; margin: 2px 0 6px 26px; font-size: 11px; }
+.bi-src input { accent-color: var(--amber); width: 20px; height: 20px; flex: none; margin: 0; }
+.bi-note { font-family: 'Roboto Mono', 'Courier New', monospace; font-weight: 400; font-size: 11px; color: var(--khaki-light); margin: 0 0 6px 30px; line-height: 1.4; }
+.bi-file { display: flex; align-items: center; gap: 10px; margin: 2px 0 6px 30px; font-size: 11px; }
 .bi-file[hidden] { display: none; }
-.bi-filebtn {
-  background: transparent;
-  border: 1px solid #1f1c16;
-  padding: 4px 10px;
-  min-height: 44px;
-  font-family: inherit;
-  font-size: 11px;
-  cursor: pointer;
-  color: inherit;
-  border-radius: 2px;
-}
-.bi-filebtn:hover { background: rgba(0, 0, 0, 0.06); border-color: var(--amber, #c8901f); }
+.bi-filebtn { min-height: 44px; font-size: 11px; }
 .bi-filename { opacity: .75; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .bi-src[hidden] { display: none; }
-.bi-groups { border-top: 1px dashed rgba(0, 0, 0, 0.25); padding-top: 10px; }
+.bi-groups { border-top: 1px dashed var(--khaki); padding-top: 10px; }
 .bi-groups-note { margin-left: 0; margin-bottom: 8px; }
 
 /* ============ DATACARD ============ */
@@ -1491,12 +1311,10 @@ div.dc-bl, li.dc-bl, p.dc-bl { height: 24px; border-bottom: 1px dotted var(--dc-
 /* Fenêtres (nouvelle datacard, rattacher, supprimer) */
 .grp-p { font-size: 13px; line-height: 1.45; margin: 0 0 12px; }
 .grp-p.grp-empty { font-weight: 700; }
-.grp-opt { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 6px 8px; border: 1px solid #8a7a52; margin-bottom: 6px; cursor: pointer; font-size: 13px; }
-.grp-opt input { width: 20px; height: 20px; accent-color: #3d4a22; }
+.grp-opt { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 6px 8px; border: 1px solid var(--khaki); margin-bottom: 6px; cursor: pointer; font-size: 13px; }
+.grp-opt input { width: 20px; height: 20px; flex: none; margin: 0; accent-color: var(--amber); }
 .grp-nm { font-weight: 700; overflow-wrap: anywhere; min-width: 0; }
 .grp-sub { margin-left: auto; font-size: 11px; opacity: .75; }
-#grp-actions { flex-wrap: wrap; margin-top: 14px; }
-.grp-danger { background: #a83524; border-color: #a83524; }
 
 /* La carte : emport en tableaux */
 .dc-lo { min-width: 0; }
@@ -1599,8 +1417,6 @@ div.dc-bl, li.dc-bl, p.dc-bl { height: 24px; border-bottom: 1px dotted var(--dc-
 @media (max-width: 600px) {
   .tb-btn { padding: 0 6px; min-width: 38px; height: 38px; }
   .ed-field-row, .ed-field-row.three, .li-grid.g2, .li-grid.g3, .li-grid.g4, .li-grid.g5 { grid-template-columns: 1fr 1fr; }
-  .export-modal-choices { grid-template-columns: 1fr; }
-  .export-modal-panel { padding: 18px 20px; }
   .editor { padding: 12px 12px 24px 12px; }
   .rc-extra { grid-template-columns: 1fr; }
   .card-row { min-height: 52px; }
@@ -1620,7 +1436,7 @@ div.dc-bl, li.dc-bl, p.dc-bl { height: 24px; border-bottom: 1px dotted var(--dc-
 @page { size: A4 portrait; margin: 0; }
 @media print {
   html, body { height: auto; overflow: visible; background: #ffffff; }
-  .toolbar, .app, .tab-bar, .export-modal, #measure-root { display: none !important; }
+  .toolbar, .app, .tab-bar, .ui-modal, #measure-root { display: none !important; }
   #print-root { display: block; }
   .dc-psheet {
     width: 210mm;
@@ -1827,60 +1643,36 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   <button class="tb-lang-btn" id="btn-lang" data-i18n-title="tb.lang.tip" title="Passer en anglais" data-i18n-aria-label="tb.lang.tip" aria-label="Passer en anglais"><svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="14" fill="#012169"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#fff" stroke-width="2.8"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#C8102E" stroke-width="1.6"/><rect x="8" width="4" height="14" fill="#fff"/><rect y="5" width="20" height="4" fill="#fff"/><rect x="9" width="2" height="14" fill="#C8102E"/><rect y="6" width="20" height="2" fill="#C8102E"/></svg></button>
 </header>
 
-<!-- ===== FENÊTRE D'EXPORT ===== -->
-<div class="export-modal" id="export-modal" hidden role="dialog" aria-labelledby="export-modal-title" aria-modal="true">
-  <div class="export-modal-backdrop" id="export-modal-backdrop"></div>
-  <div class="export-modal-panel" role="document">
-    <button class="export-modal-close" id="export-modal-close" data-i18n-aria-label="modal.close" aria-label="Fermer">×</button>
-    <h2 id="export-modal-title" data-i18n="tb.export">Exporter</h2>
-    <div class="export-modal-choices">
-      <button class="export-choice" id="export-choice-pdf" type="button">
-        <div class="export-choice-icon">🖨</div>
-        <div class="export-choice-label">PDF</div>
-        <div class="export-choice-desc" data-i18n="ex.pdf">PDF (impression)</div>
-      </button>
-      <button class="export-choice" id="export-choice-png" type="button">
-        <div class="export-choice-icon">🖼</div>
-        <div class="export-choice-label">PNG</div>
-        <div class="export-choice-desc" data-i18n="ex.png">PNG (kneeboard)</div>
-      </button>
-    </div>
-    <div class="export-png-config" id="export-png-config" hidden>
-      <h3 data-i18n="ex.pages">Pages à exporter</h3>
-      <div class="export-png-actions-top">
-        <button type="button" class="export-png-toggle" id="export-png-all" data-i18n="ex.all">Tout cocher</button>
-        <button type="button" class="export-png-toggle" id="export-png-none" data-i18n="ex.none">Tout décocher</button>
-      </div>
-      <div class="export-png-list" id="export-png-list"></div>
-      <div class="fn-field"><label class="lbl" for="export-png-fname" data-i18n="fn.label">Nom du fichier</label><div class="fn-row"><input class="in" id="export-png-fname" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="100"><span class="fn-ext" id="export-png-ext">.png</span></div></div>
-      <div class="export-png-actions-bottom">
-        <button type="button" class="export-png-back" id="export-png-back" data-i18n="ex.back">← Retour</button>
-        <button type="button" class="export-png-go" id="export-png-go"><span data-i18n="tb.export">Exporter</span> <span id="export-png-count"></span></button>
-      </div>
-    </div>
+<!-- ===== FENÊTRE D'EXPORT (une fenêtre : format, pages, nom du fichier ; le contenu vient du bloc d'interface commun) ===== -->
+<div class="ui-modal" id="export-modal" hidden role="dialog" aria-labelledby="export-modal-title" aria-modal="true">
+  <div class="ui-backdrop" id="export-modal-backdrop"></div>
+  <div class="ui-panel" role="document">
+    <button type="button" class="ui-close" id="export-modal-close" data-i18n-aria-label="modal.close" aria-label="Fermer">×</button>
+    <h2 class="ui-title" id="export-modal-title" data-i18n="ex.title">Exporter la datacard</h2>
+    <div class="ui-xbody"></div>
   </div>
 </div>
 
 <!-- ===== FENÊTRE : ENREGISTRER LA DATACARD — CHOISIR LE NOM DU FICHIER ===== -->
-<div class="export-modal" id="save-modal" hidden role="dialog" aria-labelledby="save-title" aria-modal="true">
-  <div class="export-modal-backdrop" id="save-backdrop"></div>
-  <div class="export-modal-panel" role="document">
-    <button type="button" class="export-modal-close" id="save-close" data-i18n-aria-label="modal.close" aria-label="Fermer">×</button>
-    <h2 id="save-title" data-i18n="save.title">Enregistrer la datacard</h2>
-    <div class="fn-field"><label class="lbl" for="save-fname" data-i18n="fn.label">Nom du fichier</label><div class="fn-row"><input class="in" id="save-fname" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="100"><span class="fn-ext">.json</span></div></div>
-    <div class="export-png-actions-bottom">
-      <button type="button" class="export-png-back" id="save-cancel" data-i18n="fn.cancel">Annuler</button>
-      <button type="button" class="export-png-go" id="save-go" data-i18n="tb.json.export">Enregistrer</button>
+<div class="ui-modal" id="save-modal" hidden role="dialog" aria-labelledby="save-title" aria-modal="true">
+  <div class="ui-backdrop" id="save-backdrop"></div>
+  <div class="ui-panel" role="document">
+    <button type="button" class="ui-close" id="save-close" data-i18n-aria-label="modal.close" aria-label="Fermer">×</button>
+    <h2 class="ui-title" id="save-title" data-i18n="save.title">Enregistrer la datacard</h2>
+    <div class="ui-field"><label class="ui-lbl" for="save-fname" data-i18n="fn.label">Nom du fichier</label><div class="ui-row"><input class="ui-in" id="save-fname" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="100"><span class="ui-ext">.json</span></div></div>
+    <div class="ui-actions">
+      <button type="button" class="ui-btn" id="save-cancel" data-i18n="fn.cancel">Annuler</button>
+      <button type="button" class="ui-btn primary" id="save-go" data-i18n="tb.json.export">Enregistrer</button>
     </div>
   </div>
 </div>
 
 <!-- ===== FENÊTRE D'IMPORT (briefing ou route) ===== -->
-<div class="export-modal" id="import-modal" hidden role="dialog" aria-labelledby="import-modal-title" aria-modal="true">
-  <div class="export-modal-backdrop" id="import-modal-backdrop"></div>
-  <div class="export-modal-panel" role="document">
-    <button class="export-modal-close" id="import-modal-close" data-i18n-aria-label="modal.close" aria-label="Fermer">×</button>
-    <h2 id="import-modal-title" data-i18n="imp.title">Importer dans la datacard</h2>
+<div class="ui-modal" id="import-modal" hidden role="dialog" aria-labelledby="import-modal-title" aria-modal="true">
+  <div class="ui-backdrop" id="import-modal-backdrop"></div>
+  <div class="ui-panel" role="document">
+    <button type="button" class="ui-close" id="import-modal-close" data-i18n-aria-label="modal.close" aria-label="Fermer">×</button>
+    <h2 class="ui-title" id="import-modal-title" data-i18n="imp.title">Importer dans la datacard</h2>
     <div class="bi-block">
       <label class="bi-src" id="bi-src-current-row"><input type="radio" name="bi-src" id="bi-src-current" value="current"><span data-i18n="imp.src.current">Briefing en cours</span></label>
       <div class="bi-note" id="bi-current-note" hidden></div>
@@ -1888,7 +1680,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
       <div class="bi-note" id="bi-route-note" hidden></div>
       <label class="bi-src" id="bi-src-file-row"><input type="radio" name="bi-src" id="bi-src-file" value="file"><span data-i18n="imp.src.file">Fichier JSON (briefing ou route)</span></label>
       <div class="bi-file" id="bi-file-zone" hidden>
-        <button type="button" class="bi-filebtn" id="bi-file-btn" data-i18n="imp.choose">Choisir un fichier…</button>
+        <button type="button" class="ui-btn bi-filebtn" id="bi-file-btn" data-i18n="imp.choose">Choisir un fichier…</button>
         <span class="bi-filename" id="bi-file-name"></span>
         <input type="file" id="file-briefing" accept=".json,.zip,application/json,application/zip" hidden>
       </div>
@@ -1907,11 +1699,11 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     </div>
     <div class="bi-block bi-groups">
       <div class="bi-note bi-groups-note" data-i18n="bi.groups.note">Les groupes (mission d'HQ, briefing, paquet de vol) s'importent par la fenêtre d'import commune : ils entrent dans la fiche des groupes, chacun avec sa datacard.</div>
-      <button type="button" class="bi-filebtn" id="bi-groups" data-i18n="pack.impgroups">Importer des groupes</button>
+      <button type="button" class="ui-btn bi-filebtn" id="bi-groups" data-i18n="pack.impgroups">Importer des groupes</button>
     </div>
-    <div class="export-png-actions-bottom">
-      <button type="button" class="export-png-back" id="bi-cancel" data-i18n="imp.cancel">Annuler</button>
-      <button type="button" class="export-png-go" id="bi-go" data-i18n="imp.go">Importer</button>
+    <div class="ui-actions">
+      <button type="button" class="ui-btn" id="bi-cancel" data-i18n="imp.cancel">Annuler</button>
+      <button type="button" class="ui-btn primary" id="bi-go" data-i18n="imp.go">Importer</button>
     </div>
   </div>
 </div>
@@ -1962,12 +1754,13 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 </nav>
 
 <!-- ===== FENÊTRE : GROUPES (nouvelle datacard, rattacher, supprimer) ===== -->
-<div class="export-modal" id="grp-modal" hidden role="dialog" aria-labelledby="grp-title" aria-modal="true">
-  <div class="export-modal-backdrop" id="grp-backdrop"></div>
-  <div class="export-modal-panel" role="document">
-    <h2 id="grp-title"></h2>
+<div class="ui-modal" id="grp-modal" hidden role="dialog" aria-labelledby="grp-title" aria-modal="true">
+  <div class="ui-backdrop" id="grp-backdrop"></div>
+  <div class="ui-panel" role="document">
+    <button type="button" class="ui-close" id="grp-close" data-i18n-aria-label="modal.close" aria-label="Fermer">×</button>
+    <h2 class="ui-title" id="grp-title"></h2>
     <div id="grp-body"></div>
-    <div class="export-png-actions-bottom" id="grp-actions"></div>
+    <div class="ui-actions" id="grp-actions"></div>
   </div>
 </div>
 
@@ -2450,6 +2243,7 @@ const I18N = {
     'ui.pages': 'Pages',
     'ui.fname': 'Nom du fichier',
     'ui.export': 'Exporter',
+    'ui.all': 'Toutes',
     'ui.verb.remove': 'Retirer',
     'ui.verb.link': 'Lier',
     'ui.verb.change': 'Changer',
@@ -2490,13 +2284,9 @@ const I18N = {
     'fn.label': 'Nom du fichier',
     'fn.cancel': 'Annuler',
     'save.title': 'Enregistrer la datacard',
-    'ex.pdf': 'PDF (impression)',
-    'ex.png': 'PNG (kneeboard)',
-    'ex.pages': 'Pages à exporter',
-    'ex.all': 'Tout cocher',
-    'ex.none': 'Tout décocher',
-    'ex.back': '← Retour',
-    'ex.page': 'Page',
+    'ex.title': 'Exporter la datacard',
+    'ex.note.pdf': 'Impression système',
+    'ex.note.png': 'Kneeboard DCS · 2000×2828',
     'ex.progress': 'Génération {i}/{n}…',
     'msg.exportFailed': '⚠ Export impossible.',
     'toast.noMeasure': '⚠ Mise en page non mesurée (le module n\'est pas affiché) : rien n\'est exporté.',
@@ -2928,6 +2718,7 @@ const I18N = {
     'ui.pages': 'Pages',
     'ui.fname': 'File name',
     'ui.export': 'Export',
+    'ui.all': 'All',
     'ui.verb.remove': 'Remove',
     'ui.verb.link': 'Link',
     'ui.verb.change': 'Change',
@@ -2968,13 +2759,9 @@ const I18N = {
     'fn.label': 'File name',
     'fn.cancel': 'Cancel',
     'save.title': 'Save the datacard',
-    'ex.pdf': 'PDF (print)',
-    'ex.png': 'PNG (kneeboard)',
-    'ex.pages': 'Pages to export',
-    'ex.all': 'Check all',
-    'ex.none': 'Uncheck all',
-    'ex.back': '← Back',
-    'ex.page': 'Page',
+    'ex.title': 'Export the datacard',
+    'ex.note.pdf': 'System print',
+    'ex.note.png': 'DCS Kneeboard · 2000×2828',
     'ex.progress': 'Generating {i}/{n}…',
     'msg.exportFailed': '⚠ Export failed.',
     'toast.noMeasure': '⚠ Layout not measured (the module is not displayed): nothing was exported.',
@@ -7699,15 +7486,20 @@ function cardSummary(x) {
 /* ----- Fenêtres : nouvelle datacard, rattacher, supprimer ----- */
 function grpModal(title, bodyHtml, buttons, kind) {
   const m = document.getElementById('grp-modal');
+  if (m.hidden) DG_UI.grpOpener = document.activeElement;
   DG_UI.grpKind = kind || '';
   m.querySelector('#grp-title').textContent = title;
   m.querySelector('#grp-body').innerHTML = bodyHtml;
   m.querySelector('#grp-actions').innerHTML = buttons.map(b => '<button type="button" class="' + b.cls + '" data-grp-act="' + b.act + '">' + esc(b.label) + '</button>').join('');
   m.hidden = false;
-  const first = m.querySelector('input:not([disabled]), button');
+  const first = m.querySelector('#grp-body input:not([disabled]), #grp-actions button');
   if (first) first.focus();
 }
-function grpClose() { document.getElementById('grp-modal').hidden = true; DG_UI.grpKind = ''; }
+function grpClose() {
+  document.getElementById('grp-modal').hidden = true; DG_UI.grpKind = '';
+  const o = DG_UI.grpOpener; DG_UI.grpOpener = null;
+  if (o && o.focus && o.isConnected && !o.disabled) { try { o.focus({ preventScroll: true }); } catch (e) { /* ignore */ } }
+}
 /* La langue change pendant que la fenêtre des groupes est ouverte : elle se refait dans la nouvelle langue, le nom saisi ou le groupe choisi gardés */
 function grpRetranslate() {
   const m = document.getElementById('grp-modal'), k = DG_UI.grpKind;
@@ -7722,8 +7514,8 @@ function grpRetranslate() {
   } else if (k === 'del') grpAskDelete();
 }
 function grpAskNew() {
-  grpModal(t('m.new.title'), '<div class="fn-field"><label class="lbl" for="grp-name">' + esc(t('f.group.name')) + '</label><div class="fn-row"><input class="in" id="grp-name" type="text" autocomplete="off" spellcheck="false" placeholder="' + esc(t('fl.name.ph')) + '"></div></div>',
-    [{ cls: 'export-png-back', act: 'cancel', label: t('m.cancel') }, { cls: 'export-png-go', act: 'new', label: t('m.new.go') }], 'new');
+  grpModal(t('m.new.title'), '<div class="ui-field"><label class="ui-lbl" for="grp-name">' + esc(t('f.group.name')) + '</label><div class="ui-row"><input class="ui-in" id="grp-name" type="text" autocomplete="off" spellcheck="false" placeholder="' + esc(t('fl.name.ph')) + '"></div></div>',
+    [{ cls: 'ui-btn', act: 'cancel', label: t('m.cancel') }, { cls: 'ui-btn primary', act: 'new', label: t('m.new.go') }], 'new');
 }
 /* « Rattacher à un groupe » (carte libre) : tous les groupes de la fiche ; la carte que le groupe avait devient libre (intacte) */
 function grpAskAttach() {
@@ -7734,7 +7526,7 @@ function grpAskAttach() {
     return '<label class="grp-opt"><input type="radio" name="grp-pick" value="' + esc(f.fcId) + '"><span class="grp-nm">' + esc(dgFlightLabel(f, i)) + '</span><span class="grp-sub">' + esc(sub) + '</span></label>';
   }).join('');
   grpModal(t('m.att.title'), '<p class="grp-p">' + esc(t('m.att.text')) + '</p>' + rows + (DGG.flights.length ? '' : '<p class="grp-p grp-empty">' + esc(t('m.att.empty')) + '</p>'),
-    [{ cls: 'export-png-back', act: 'cancel', label: t('m.cancel') }, { cls: 'export-png-go', act: 'attach', label: t('m.att.go') }], 'attach');
+    [{ cls: 'ui-btn', act: 'cancel', label: t('m.cancel') }, { cls: 'ui-btn primary', act: 'attach', label: t('m.att.go') }], 'attach');
   document.querySelector('#grp-actions [data-grp-act="attach"]').disabled = true;
 }
 /* Supprimer une carte liée supprime le groupe pour tous les modules : une seule voie, après confirmation */
@@ -7742,7 +7534,7 @@ function grpAskDelete() {
   const c = curCard();
   const nm = dgCardName(c, curIdx);
   grpModal(t('m.del.title', { n: nm }), '<p class="grp-p">' + esc(t('m.del.text', { n: nm })) + '</p>',
-    [{ cls: 'export-png-back', act: 'cancel', label: t('m.cancel') }, { cls: 'export-png-go grp-danger', act: 'del-both', label: t('m.del.both') }], 'del');
+    [{ cls: 'ui-btn', act: 'cancel', label: t('m.cancel') }, { cls: 'ui-btn primary danger', act: 'del-both', label: t('m.del.both') }], 'del');
 }
 function grpAct(act) {
   const c = curCard();
@@ -9266,7 +9058,6 @@ function fnDefault(base, stamp) {
 
 /* « Enregistrer » : la fenêtre du nom du fichier, pré-remplie du nom d'avant */
 const SAVEN = { name: '', opener: null, at: 0 };
-function saveModalOpen() { return !document.getElementById('save-modal').hidden; }
 function saveSync() { document.getElementById('save-go').disabled = cleanFname(SAVEN.name) === ''; }
 function openSaveModal(opener) {
   const cs = fnPart(slug(curCard().flight.callsign), 'doc');
@@ -9674,6 +9465,7 @@ function biUpdateGo() {
 }
 
 /* fileBriefing / fileRoute : un fichier déjà lu ; forceSrc 'route' : ouvrir sur « Route en cours » (passage depuis le Route Planner) */
+const IMPO = { opener: null };
 function openImportModal(fileBriefing, fileName, fileRoute, forceSrc) {
   bi.current = readCurrentBriefing();
   bi.currentRoute = readCurrentRoute();
@@ -9685,7 +9477,12 @@ function openImportModal(fileBriefing, fileName, fileRoute, forceSrc) {
   else bi.src = bi.current ? 'current' : (bi.currentRoute ? 'route' : 'file');
   document.getElementById('bi-route-fill').checked = true;
   biRefresh();
-  document.getElementById('import-modal').hidden = false;
+  const im = document.getElementById('import-modal');
+  if (im.hidden) IMPO.opener = document.activeElement;
+  im.hidden = false;
+  const go = document.getElementById('bi-go');
+  const fo = go.disabled ? im.querySelector('input[name="bi-src"]:checked') : go;
+  if (fo) fo.focus({ preventScroll: true });
 }
 /* Le théâtre commun ou les routes du Route Planner ont changé (autre onglet) pendant que la fenêtre d'import est ouverte : les routes proposées se relisent, sans recharger */
 function dgRoutesRefresh() {
@@ -9699,6 +9496,8 @@ function dgRoutesRefresh() {
 function closeImportModal() {
   if (TBM.cur) tbmClose(false);      /* la liste ouverte se ferme avec la fenêtre */
   document.getElementById('import-modal').hidden = true;
+  const o = IMPO.opener; IMPO.opener = null;
+  if (o && o.focus && o.isConnected && !o.disabled) { try { o.focus({ preventScroll: true }); } catch (e) { /* ignore */ } }
 }
 
 /* Passage depuis le Route Planner : la clé est lue puis supprimée, la fenêtre s'ouvre sur « Route en cours ». */
@@ -9806,45 +9605,39 @@ function allExportPages() {
   return out;
 }
 
+/* La fenêtre : « Toutes | 1 | 2 » = toutes les pages, ou la page 1 de chaque carte, ou la page 2 ; le nom suit le format et les pages tant qu'il n'est pas changé à la main */
+const DGX = { stamp: '', print: null };
+function dgPageIn(p, page) { return page === 'all' || String(p.page) === page; }
+function dgExportSel(page) { return allExportPages().filter(p => dgPageIn(p, page)); }
+function dgExportDefName(fmt, page) {
+  const sel = dgExportSel(page);
+  if (fmt === 'pdf') return fnDefault('datacard_' + fnPart(slug(curCard().flight.callsign), 'doc'), DGX.stamp);
+  if (sel.length === 1) return fnDefault('dc_' + fnPart(sel[0].cs, 'carte') + '_p' + sel[0].page, DGX.stamp);
+  return 'datacards_' + DGX.stamp;
+}
 function openExportModal() {
-  document.querySelector('#export-modal .export-modal-choices').hidden = false;
-  document.getElementById('export-png-config').hidden = true;
-  document.getElementById('export-modal-title').textContent = t('tb.export');
-  document.getElementById('export-modal').hidden = false;
+  DGX.stamp = stamp();
+  const has2 = allExportPages().some(p => p.page === 2);
+  uiExportOpen({
+    modal: 'export-modal', title: t('ex.title'),
+    note: { pdf: t('ex.note.pdf'), png: t('ex.note.png') },
+    pages: [{ id: 'all', label: t('ui.all') }, { id: '1', label: '1' }, { id: '2', label: '2', dis: !has2 }], page: 'all',
+    defName: dgExportDefName,
+    ext: (fmt, page) => fmt === 'pdf' ? '.pdf' : (dgExportSel(page).length > 1 ? '.zip' : '.png'),
+    count: page => dgExportSel(page).length,
+    clean: cleanFname, go: dgExportGo
+  });
 }
-function closeExportModal() { document.getElementById('export-modal').hidden = true; }
-
-/* Le nom du PNG (une page) ou du zip (plusieurs) : il suit les pages cochées tant qu'on ne l'a pas changé */
-const PNGN = { name: '', edited: false, stamp: '' };
-function pngDefaultName(idx) {
-  if (idx.length === 1) {
-    const p = allExportPages()[idx[0]];
-    return fnDefault('dc_' + fnPart(p.cs, 'carte') + '_p' + p.page, PNGN.stamp);
+function closeExportModal() { uiExportClose(); }
+function dgExportGo(o) {
+  if (o.fmt === 'pdf') {
+    /* le PDF : le nom devient le titre du document le temps de l'impression ; seules les pages choisies sont posées dans la feuille d'impression */
+    DGX.print = o.page;
+    uiExportClose();
+    uiPrintAs(o.name, []);
+    return;
   }
-  return 'datacards_' + PNGN.stamp;
-}
-function updatePngCount() {
-  const idx = Array.from(document.querySelectorAll('.export-png-page-cb.exp-cb:checked')).map(cb => parseInt(cb.dataset.idx, 10));
-  const n = idx.length;
-  const span = document.getElementById('export-png-count');
-  if (!span) return;      /* pendant le rendu, le bouton porte « Génération i/n » : le compteur n'existe pas */
-  span.textContent = '(' + n + ')';
-  document.getElementById('export-png-ext').textContent = n > 1 ? '.zip' : '.png';
-  const fld = document.getElementById('export-png-fname');
-  if (!PNGN.edited && n) { PNGN.name = cleanFname(pngDefaultName(idx)); fld.value = PNGN.name; }
-  document.getElementById('export-png-go').disabled = n === 0 || cleanFname(PNGN.name) === '';
-}
-
-function showPngConfig() {
-  PNGN.edited = false;
-  PNGN.stamp = stamp();
-  const pages = allExportPages();
-  document.getElementById('export-png-list').innerHTML = pages.map((p, i) =>
-    '<label class="export-png-page-row"><input type="checkbox" class="export-png-page-cb exp-cb" data-idx="' + i + '" checked>' +
-    '<span class="export-png-page-num">' + pad2(i + 1) + '</span><span>' + esc((p.cs.toUpperCase()) + ' — ' + t('ex.page') + ' ' + p.page + '/' + p.pages) + '</span></label>').join('');
-  document.querySelector('#export-modal .export-modal-choices').hidden = true;
-  document.getElementById('export-png-config').hidden = false;
-  updatePngCount();
+  executePngExport(o.page, o.name);
 }
 
 /* ============= EXPORT PNG : 2 000 × 2 828 px (×2) ============= */
@@ -9875,18 +9668,17 @@ async function renderPageToPng(html) {
   }
 }
 
-async function executePngExport() {
+async function executePngExport(page, name) {
   if (!dgMeasurable()) { showToast(t('toast.noMeasure'), { type: 'err' }); return; }       /* jamais d'image d'un plan non mesuré */
-  const all = allExportPages();
-  const idx = Array.from(document.querySelectorAll('.export-png-page-cb.exp-cb:checked')).map(cb => parseInt(cb.dataset.idx, 10));
-  const sel = idx.map(i => all[i]).filter(Boolean);
+  const sel = dgExportSel(page);
   if (!sel.length) return;
-  const fileName = cleanFname(PNGN.name);
+  const fileName = cleanFname(name);
   if (fileName === '') return;
   const goBtn = document.getElementById('export-png-go');
   const original = goBtn.innerHTML;
   goBtn.disabled = true;
   goBtn.setAttribute('aria-busy', 'true');
+  uiExportBusy(true);
   /* Deux cartes de même indicatif ne doivent pas écraser leurs noms de fichier (les pages d'un zip) */
   const used = {};
   const names = sel.map(p => {
@@ -9918,21 +9710,16 @@ async function executePngExport() {
   } finally {
     goBtn.innerHTML = original;
     goBtn.removeAttribute('aria-busy');
-    updatePngCount();
+    uiExportBusy(false);
   }
 }
 
 /* ============= EXPORT PDF : impression, une feuille A4 par page ============= */
 function fillPrintRoot() {
-  const root = document.getElementById('print-root');
-  root.innerHTML = allExportPages().map(p => '<div class="dc-psheet" data-mode="' + doc.mode + '">' + p.html + '</div>').join('');
+  const root = document.getElementById('print-root'), only = DGX.print || 'all';
+  root.innerHTML = allExportPages().filter(p => dgPageIn(p, only)).map(p => '<div class="dc-psheet" data-mode="' + doc.mode + '">' + p.html + '</div>').join('');
 }
-function clearPrintRoot() { document.getElementById('print-root').innerHTML = ''; }
-
-function doPrint() {
-  closeExportModal();
-  setTimeout(() => window.print(), 50);
-}
+function clearPrintRoot() { document.getElementById('print-root').innerHTML = ''; DGX.print = null; }
 
 /* ============= EXEMPLE ET RESET ============= */
 /* Ce que « Remplacer » garde pour « Restaurer » : les clés que l'action peut écrire (le document, les unités, les réglages de cap, le théâtre, l'état et le jeu des routes) et l'état en mémoire */
@@ -10000,7 +9787,7 @@ function bindEvents() {
   document.getElementById('save-go').addEventListener('click', saveGo);
   document.getElementById('save-fname').addEventListener('input', e => { SAVEN.name = e.target.value; saveSync(); });
   document.getElementById('save-fname').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); if (!e.repeat) saveGo(); } });
-  document.getElementById('btn-print').addEventListener('click', openExportModal);
+  document.getElementById('btn-print').addEventListener('click', () => openExportModal());
   document.getElementById('btn-example').addEventListener('click', loadExample);
   document.getElementById('btn-reset').addEventListener('click', resetDoc);
   document.getElementById('theme-select').addEventListener('change', e => applyTheme(e.target.value, true));
@@ -10008,18 +9795,8 @@ function bindEvents() {
   unBind();
   document.getElementById('btn-lang').addEventListener('click', () => setLang(CURRENT_LANG === 'fr' ? 'en' : 'fr'));
 
-  /* Export */
-  document.getElementById('export-modal-backdrop').addEventListener('click', closeExportModal);
-  document.getElementById('export-modal-close').addEventListener('click', closeExportModal);
-  document.getElementById('export-choice-pdf').addEventListener('click', doPrint);
-  document.getElementById('export-choice-png').addEventListener('click', showPngConfig);
-  document.getElementById('export-png-back').addEventListener('click', openExportModal);
-  document.getElementById('export-png-all').addEventListener('click', () => { document.querySelectorAll('.exp-cb').forEach(cb => { cb.checked = true; }); updatePngCount(); });
-  document.getElementById('export-png-none').addEventListener('click', () => { document.querySelectorAll('.exp-cb').forEach(cb => { cb.checked = false; }); updatePngCount(); });
-  document.getElementById('export-png-list').addEventListener('change', updatePngCount);
-  document.getElementById('export-png-go').addEventListener('click', executePngExport);
-  document.getElementById('export-png-fname').addEventListener('input', e => { PNGN.name = e.target.value; PNGN.edited = true; updatePngCount(); });
-  document.getElementById('export-png-fname').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); const g = document.getElementById('export-png-go'); if (!g.disabled && !e.repeat) executePngExport(); } });
+  /* Export : la fenêtre est celle du bloc d'interface commun */
+  uiExportBind('export-modal');
 
   /* Import depuis un briefing ou une route ; les groupes passent par la fenêtre d'import commune */
   document.getElementById('import-modal-backdrop').addEventListener('click', closeImportModal);
@@ -10035,24 +9812,8 @@ function bindEvents() {
   fb.addEventListener('change', () => { if (fb.files && fb.files[0]) loadBriefingFile(fb.files[0]); });
   document.getElementById('bi-groups').addEventListener('click', () => { closeImportModal(); impOpen({ opener: document.getElementById('btn-briefing') }); });
 
-  /* Tab et Maj+Tab bouclent sur les contrôles de la fenêtre « Enregistrer » */
-  document.addEventListener('keydown', e => {
-    if (e.key !== 'Tab' || !saveModalOpen()) return;
-    const m = document.getElementById('save-modal');
-    const els = Array.prototype.filter.call(m.querySelectorAll('button, input'), x => !x.disabled && x.offsetParent !== null);
-    if (!els.length) return;
-    const first = els[0], last = els[els.length - 1];
-    if (e.shiftKey && (document.activeElement === first || !m.contains(document.activeElement))) { e.preventDefault(); last.focus(); }
-    else if (!e.shiftKey && (document.activeElement === last || !m.contains(document.activeElement))) { e.preventDefault(); first.focus(); }
-  });
-
-  document.addEventListener('keydown', e => {
-    if (e.key !== 'Escape') return;
-    if (saveModalOpen()) { e.preventDefault(); closeSaveModal(); return; }
-    if (!document.getElementById('grp-modal').hidden) { grpClose(); return; }
-    if (!document.getElementById('export-modal').hidden) closeExportModal();
-    if (!document.getElementById('import-modal').hidden) closeImportModal();
-  });
+  /* Échap, ✕ et le piège du focus : le bloc d'interface commun (chaque fenêtre est une .ui-modal) */
+  document.getElementById('grp-close').addEventListener('click', grpClose);
 
   document.querySelectorAll('#tab-bar button').forEach(b => b.addEventListener('click', () => setActiveTab(b.dataset.tab)));
   initScrollBar(document.querySelector('.toolbar'));
