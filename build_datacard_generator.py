@@ -1505,6 +1505,7 @@ select[data-tbm-src] { display: none !important; }
   --dc-hi: #a3261a;  --dc-mod: #9a6b16;  --dc-lo: #4a5a2a;
   --dc-dot: #9a9480;  --dc-metar: #e2dccb;  --dc-muted: #5a5646;
   --dc-pill-fg: #f1ecdf;  --dc-rule: #14130f;
+  --dc-sep: rgba(20,19,15,.16);
 }
 .dc-page[data-mode="night"] {
   --dc-pg: #121310;  --dc-ink: #d6cfb8;  --dc-blk: #1a1b16;  --dc-bd: #3e3f33;
@@ -1514,6 +1515,7 @@ select[data-tbm-src] { display: none !important; }
   --dc-hi: #d0604c;  --dc-mod: #c08a2a;  --dc-lo: #7d8f52;
   --dc-dot: #4a4a3e;  --dc-metar: #24251d;  --dc-muted: #9a9378;
   --dc-pill-fg: #f1ecdf;  --dc-rule: #d6cfb8;
+  --dc-sep: rgba(214,207,184,.18);
 }
 
 .dc-page {
@@ -1738,12 +1740,14 @@ select[data-tbm-src] { display: none !important; }
 .dc-tab.dc-fields:not(.dc-blank) { table-layout: auto; }
 .dc-fields:not(.dc-blank) col { width: auto !important; }
 .dc-fields:not(.dc-blank) col:nth-child(1), .dc-fields:not(.dc-blank) col:nth-child(2), .dc-fields:not(.dc-blank) col:nth-child(4), .dc-fields:not(.dc-blank) col:nth-child(5) { width: 1px !important; }       /* la largeur de leur plus long élément insécable (l'OACI : au moins quatre caractères) ; le nom prend le reste */
-.dc-fields:not(.dc-blank) th, .dc-fields:not(.dc-blank) td { padding-left: 2px; padding-right: 2px; padding-top: 2px; padding-bottom: 2px; }       /* serré : trois pistes sur trois lignes ne font pas déborder la page */
+.dc-fields:not(.dc-blank) th, .dc-fields:not(.dc-blank) td { padding-left: 6px; padding-right: 6px; padding-top: 2px; padding-bottom: 2px; }       /* trois pistes sur trois lignes ne font pas déborder la page */
 .dc-fields:not(.dc-blank) td { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }
 .dc-fields:not(.dc-blank) td.ro { white-space: nowrap; overflow-wrap: normal; }
 .dc-fields:not(.dc-blank) td:nth-child(4), .dc-fields:not(.dc-blank) td:last-child { overflow-wrap: normal; word-break: normal; }
 .dc-fields:not(.dc-blank) td:nth-child(4) { line-height: 1; }
-.dc-fields:not(.dc-blank) td:nth-child(2) { min-width: calc(4ch + 4px); }       /* un code OACI de quatre lettres ne se coupe jamais */
+.dc-fields:not(.dc-blank) td:nth-child(2) { min-width: calc(4ch + 14px); }       /* un code OACI de quatre lettres ne se coupe jamais */
+.dc-fields:not(.dc-blank) td { font-size: 18px; }       /* une seule taille pour toutes les cellules, l'étiquette comprise */
+.dc-fields:not(.dc-blank) th:nth-child(n+3), .dc-fields:not(.dc-blank) td:nth-child(n+3) { border-left: 1px solid var(--dc-sep); }       /* un filet léger entre le nom, la piste et la fréquence ; aucun entre l'étiquette et l'OACI */
 
 /* Météo : quatre paires sur deux colonnes, valeur calée à droite, filet pointillé dessous */
 .dc-metar {
@@ -2332,6 +2336,7 @@ const I18N = {
     'tb.units': 'Unités',
     'f.search': 'Rechercher…',
     'f.noaf': 'Aucun aérodrome',
+    'f.norwy': 'Aucun sens',
     'tb.lang.tip': 'Passer en anglais',
     'theme.cw-nato': 'Cold War OTAN',
     'theme.cw-soviet': 'Cold War Soviétique',
@@ -2743,6 +2748,7 @@ const I18N = {
     'tb.units': 'Units',
     'f.search': 'Search…',
     'f.noaf': 'No airfield',
+    'f.norwy': 'No runway end',
     'tb.lang.tip': 'Switch to French',
     'theme.cw-nato': 'Cold War NATO',
     'theme.cw-soviet': 'Cold War Soviet',
@@ -4092,13 +4098,14 @@ function dgFreqStr(v) { return v.toFixed(3); }
 /* ============= TERRAINS : LISTE DES AÉRODROMES (lot mp-dg-terrains-liste) =============
    Les faits du jeu (airfield_facts.json, pydcs, LGPL-3.0) : { théâtre: [ [nom, lat, lon, pistes, radios], … ] } ; radios = [VHF haute, UHF, VHF basse, HF] en Hz, ou null.
    La liste des noms est celle du théâtre du document (la liste de la barre, comme au Route Planner).
-   Rien n'est ajouté à l'état de la carte : la « valeur du jeu » d'une case se recalcule du nom de la rangée et de ces faits, et une case n'est remplie que si elle est vide ou
-   porte encore cette valeur pour l'aérodrome précédent. Une valeur saisie, importée ou posée par le MC n'est jamais remplacée.
-   AF_UI (état d'écran, jamais écrit) : other = les rangées dont le champ libre est ouvert ; sig = les aérodromes de la route déjà posés, par carte. */
+   Rien n'est ajouté à l'état de la carte. Choisir un aérodrome dans la liste remplace toujours l'OACI, la piste et la fréquence (même saisies à la main) ; « Autre… » les vide ;
+   DEP et ARR pris de la route et les rangées remplies après l'import d'un briefing ne remplissent que des cases vides.
+   La piste est un seul sens (lot mp-dg-terrains-lisibilite) : les sens de l'aérodrome sont ses pistes du jeu éclatées (« 04R/22L » → 04R, 22L), sans doublon ; le sens proposé est celui face au vent de la Météo.
+   AF_UI (état d'écran, jamais écrit) : other = les rangées dont le champ libre du nom est ouvert ; otherR = celles dont le champ libre de la piste est ouvert ; sig = les aérodromes de la route déjà posés, par carte. */
 const AIRFIELD_FACTS = __AIRFIELD_FACTS__;
 /* Les codes OACI d'aujourd'hui (airfield_icao.json, OurAirports, domaine public) : { théâtre: { nom: OACI } } ; un aérodrome absent a un code inconnu */
 const AIRFIELD_ICAO = __AIRFIELD_ICAO__;
-const AF_UI = { other: new WeakSet(), sig: new WeakMap() };
+const AF_UI = { other: new WeakSet(), otherR: new WeakSet(), sig: new WeakMap() };
 const AF_ROUTE_M = 5000;       /* l'aérodrome pris de la route : à 5 km au plus du premier (DEP) ou du dernier (ARR) point */
 
 function afRows(th) { return Object.prototype.hasOwnProperty.call(AIRFIELD_FACTS, th) ? AIRFIELD_FACTS[th] : []; }
@@ -4107,13 +4114,6 @@ function afFind(name) {
   const n = str(name).trim();
   if (n === '') return null;
   return afRows(dgTheatre()).find(r => r[0] === n) || null;
-}
-/* Les aérodromes de ce nom dans tous les théâtres (pour reconnaître la valeur du jeu d'un nom venu d'un autre théâtre) */
-function afFindAny(name) {
-  const n = str(name).trim(), out = [];
-  if (n === '') return out;
-  Object.keys(AIRFIELD_FACTS).forEach(th => AIRFIELD_FACTS[th].forEach(r => { if (r[0] === n) out.push(r); }));
-  return out;
 }
 /* Le type du groupe d'une carte liée (celui de sa première unité) ; '' pour une carte libre */
 function afCardType(c) { const f = dgFlightOf(c), us = f ? dgUnits(f) : []; return us.length ? dgStr(us[0].type) : ''; }
@@ -4136,41 +4136,45 @@ function afIcao(th, name) {
   const t = Object.prototype.hasOwnProperty.call(AIRFIELD_ICAO, th) ? AIRFIELD_ICAO[th] : null;
   return t && Object.prototype.hasOwnProperty.call(t, name) ? t[name] : '';
 }
-/* Ce que le jeu donne pour un aérodrome (rangée des faits du théâtre du document) : l'OACI, la piste (les pistes jointes par « , ») et la fréquence (MHz, comme la boîte Radio) ; '' quand le jeu n'a rien */
-function afGame(row, c) { return { icao: afIcao(dgTheatre(), row[0]), rwy: row[3].join(', '), freq: row[4] ? dgFreqStr(afTowerHz(row[4], c) / 1e6) : '' }; }
-/* Les valeurs du jeu de l'aérodrome actuel de la rangée (ceux de ce nom, dans tous les théâtres) : la piste, et la fréquence de n'importe laquelle des quatre radios de la tour
-   (pas seulement celle de la bande du type actuel : un type changé ne fige pas la fréquence posée pour l'ancien) */
-function afGameSet(f) {
-  const rows = afFindAny(f.name), set = { icao: [], rwy: [], freq: [] };
-  Object.keys(AIRFIELD_ICAO).forEach(th => { const k = afIcao(th, str(f.name).trim()); if (k !== '' && set.icao.indexOf(k) === -1) set.icao.push(k); });
-  rows.forEach(r => {
-    if (r[3].length) set.rwy.push(r[3].join(', '));
-    if (r[4]) r[4].forEach(hz => set.freq.push(dgFreqStr(hz / 1e6)));
+/* Les sens d'un aérodrome : ses pistes du jeu, dans l'ordre, éclatées en sens (« 04R/22L » → 04R, 22L), sans doublon ; aucun pour un aérodrome sans piste */
+function afEnds(row) {
+  const out = [];
+  row[3].forEach(p => String(p).split('/').forEach(x => { x = x.trim(); if (x !== '' && out.indexOf(x) === -1) out.push(x); }));
+  return out;
+}
+/* La direction du vent (degrés) de la boîte Météo, ou -1 : trois chiffres, une barre et une vitesse non nulle (« 180/10 », « 250/12G20 ») ; vitesse nulle, VRB/…, calme, vide ou autre : pas de vent lisible */
+function afWindDir(w) {
+  const m = /^(\d{3})\/(\d+)/.exec(str(w).trim());
+  return m && parseInt(m[2], 10) > 0 ? parseInt(m[1], 10) : -1;
+}
+/* Le sens proposé : celui dont le cap (son numéro × 10°) fait le plus petit écart d'angle avec le vent, le premier à égalité ; sans vent lisible, le premier ; '' sans sens */
+function afPickEnd(ends, wind) {
+  if (!ends.length) return '';
+  const dir = afWindDir(wind);
+  if (dir < 0) return ends[0];
+  let best = ends[0], bd = Infinity;
+  ends.forEach(e => {
+    const n = /^\d+/.exec(e);
+    if (!n) return;
+    const d = Math.abs(parseInt(n[0], 10) * 10 - dir) % 360, g = Math.min(d, 360 - d);
+    if (g < bd) { bd = g; best = e; }
   });
-  return set;
+  return best;
 }
-/* Vrai si la case est vide ou porte encore la valeur du jeu de l'aérodrome actuel de la rangée : une valeur saisie, importée ou posée par le MC n'en est pas une */
-function afIsGame(f, key) {
-  const cur = f[key === 'icao' ? 'icao' : key === 'rwy' ? 'runway' : 'frequency'];
-  return !hasText(cur) || afGameSet(f)[key].indexOf(cur.trim()) !== -1;
-}
-/* Le nom se vide ou passe en champ libre : la piste et la fréquence qui portent encore la valeur du jeu de l'ancien nom se vident ; une valeur saisie reste */
-function afClearGame(f) {
-  const own = { icao: afIsGame(f, 'icao'), rwy: afIsGame(f, 'rwy'), freq: afIsGame(f, 'freq') };
-  if (own.icao) f.icao = '';
-  if (own.rwy) f.runway = '';
-  if (own.freq) f.frequency = '';
-}
-/* Pose le nom de la rangée ; la piste et la fréquence prennent la valeur du jeu si leur case est vide ou porte encore celle de l'aérodrome précédent. Rend vrai si le nom est dans la liste. */
-function afSetName(c, f, name) {
-  const keep = { icao: !afIsGame(f, 'icao'), rwy: !afIsGame(f, 'rwy'), freq: !afIsGame(f, 'freq') };
+/* Ce que le jeu donne pour un aérodrome (rangée des faits du théâtre du document) : l'OACI, la piste (le sens proposé face au vent de la carte) et la fréquence (MHz, comme la boîte Radio) ; '' quand le jeu n'a rien */
+function afGame(row, c) { return { icao: afIcao(dgTheatre(), row[0]), rwy: afPickEnd(afEnds(row), c.weather.wind), freq: row[4] ? dgFreqStr(afTowerHz(row[4], c) / 1e6) : '' }; }
+/* Le nom se vide ou passe en champ libre : l'OACI, la piste et la fréquence se vident, saisies à la main comprises */
+function afClearGame(f) { f.icao = ''; f.runway = ''; f.frequency = ''; }
+/* Pose le nom de la rangée. Par défaut (un choix dans la liste) l'OACI, la piste et la fréquence prennent les valeurs du jeu et remplacent les précédentes, saisies à la main comprises ;
+   avec only, seules les cases vides se remplissent (DEP et ARR de la route). Rend vrai si le nom est dans la liste. */
+function afSetName(c, f, name, only) {
   f.name = name;
   const row = afFind(name);
   if (!row) return false;
   const g = afGame(row, c);
-  if (!keep.icao) f.icao = g.icao;
-  if (!keep.rwy) f.runway = g.rwy;
-  if (!keep.freq) f.frequency = g.freq;
+  if (!only || !hasText(f.icao)) f.icao = g.icao;
+  if (!only || !hasText(f.runway)) f.runway = g.rwy;
+  if (!only || !hasText(f.frequency)) f.frequency = g.freq;
   return true;
 }
 /* Distance (m) entre deux points lat/lon (haversine, rayon moyen de la Terre) */
@@ -4208,11 +4212,11 @@ function afRouteFill(c, f) {
       row = { role: role, icao: '', name: '', runway: '', frequency: '' };
       c.fields.splice(role === 'arr' ? c.fields.map(x => x.role).lastIndexOf('dep') + 1 : 0, 0, row);       /* DEP en tête, ARR juste après DEP */
     }
-    afSetName(c, row, r[0]);
+    afSetName(c, row, r[0], true);
   });
 }
 
-/* Après l'import d'un briefing : les rangées dont le nom est dans la liste du théâtre prennent la piste et la fréquence du jeu si leur case est vide ; une piste venue du briefing reste */
+/* Après l'import d'un briefing : les rangées dont le nom est dans la liste du théâtre prennent l'OACI, la piste (le sens proposé) et la fréquence du jeu si leur case est vide ; une piste venue du briefing reste */
 function afFillRows(c) {
   c.fields.forEach(f => {
     const row = afFind(f.name);
@@ -4238,18 +4242,42 @@ function afNameHtml(f, i) {
   o += opt('@other', t('f.field.other'), ' data-keep');
   return '<div class="ed-field"><label>' + esc(t('f.field.name')) + '</label><select data-af="' + i + '" data-search data-search-empty="' + esc(t('f.noaf')) + '">' + o + '</select>' + (other ? afFreeInput(i, f) : '') + '</div>';
 }
+/* La case Piste d'une rangée : quand le nom est un aérodrome de la liste (champ libre du nom fermé) qui a au moins un sens, une liste (la liste du thème, comme le nom) de ses sens puis « Autre… » qui ouvre un champ libre ;
+   une valeur qui n'est pas un sens de l'aérodrome (ancien document, saisie) s'affiche, intacte, dans le champ libre. Nom libre ou aérodrome sans piste : un champ texte. La valeur reste du texte dans fields[i].runway. */
+function afRwyFreeInput(i, f) {
+  return '<input type="text" class="af-free" data-path="fields.' + i + '.runway" value="' + esc(f.runway) + '"' + phAttr('fields.' + i + '.runway') + ' autocomplete="off">';
+}
+function afRwyHtml(f, i) {
+  const hit = AF_UI.other.has(f) ? null : afFind(f.name), ends = hit ? afEnds(hit) : [];
+  if (!ends.length) return fInput('f.field.runway', 'fields.' + i + '.runway', f.runway).replace('class="ed-field"', 'class="ed-field" data-rwcell');
+  const cur = ends.indexOf(f.runway) !== -1 ? f.runway : (hasText(f.runway) || AF_UI.otherR.has(f) ? '@other' : '');
+  const other = cur === '@other';
+  const opt = (v, l, x) => '<option value="' + esc(v) + '"' + (v === cur ? ' selected' : '') + (x || '') + '>' + esc(l) + '</option>';
+  let o = cur === '' ? opt('', t('f.field.pick')) : '';
+  ends.forEach(e => { o += opt(e, e); });
+  o += opt('@other', t('f.field.other'), ' data-keep');
+  return '<div class="ed-field" data-rwcell><label>' + esc(t('f.field.runway')) + '</label><select data-afr="' + i + '" data-search data-search-empty="' + esc(t('f.norwy')) + '">' + o + '</select>' + (other ? afRwyFreeInput(i, f) : '') + '</div>';
+}
+/* Redessine la case Piste de la rangée (le nom ou la liste des sens a changé) */
+function afRwyRefresh(li, f, i) {
+  const cell = li && li.querySelector('[data-rwcell]');
+  if (cell) cell.outerHTML = afRwyHtml(f, i);
+}
 /* Un choix dans la liste (le <select> reçoit input puis change : le second ne change plus rien) */
 function onAfName(el) {
   const c = curCard(), i = parseInt(el.dataset.af, 10), f = c.fields[i];
   if (!f) return;
   const li = el.closest('.li'), v = el.value;
+  const sync = () => { if (li) ['icao', 'frequency'].forEach(key => { const x = li.querySelector('[data-path="fields.' + i + '.' + key + '"]'); if (x && x.value !== f[key]) x.value = f[key]; }); };
+  AF_UI.otherR.delete(f);
   if (v === '@other') {
     AF_UI.other.add(f);
-    afClearGame(f);       /* le champ libre ne garde pas la piste ni la fréquence de l'aérodrome qu'on quitte (la valeur saisie reste) */
-    if (li) ['icao', 'runway', 'frequency'].forEach(key => { const x = li.querySelector('[data-path="fields.' + i + '.' + key + '"]'); if (x && x.value !== f[key]) x.value = f[key]; });
-    if (li && !li.querySelector('.af-free')) {
+    afClearGame(f);       /* « Autre… » vide l'OACI, la piste et la fréquence, saisies à la main comprises */
+    afRwyRefresh(li, f, i);
+    sync();
+    if (li && !li.querySelector('.af-free[data-path$=".name"]')) {
       el.parentNode.insertAdjacentHTML('beforeend', afFreeInput(i, f));
-      const fr = li.querySelector('.af-free');
+      const fr = li.querySelector('.af-free[data-path$=".name"]');
       if (fr) fr.focus();
     }
     touch();
@@ -4259,10 +4287,31 @@ function onAfName(el) {
   if (v === '') { afClearGame(f); f.name = ''; }
   else afSetName(c, f, v);
   if (li) {
-    const fr = li.querySelector('.af-free');
+    const fr = li.querySelector('.af-free[data-path$=".name"]');
     if (fr) fr.remove();
-    ['icao', 'runway', 'frequency'].forEach(key => { const x = li.querySelector('[data-path="fields.' + i + '.' + key + '"]'); if (x && x.value !== f[key]) x.value = f[key]; });
+    afRwyRefresh(li, f, i);
+    sync();
   }
+  touch();
+}
+/* Un choix dans la liste des sens : un sens remplace la piste ; « Autre… » ouvre le champ libre, la valeur présente y reste */
+function onAfRwy(el) {
+  const c = curCard(), i = parseInt(el.dataset.afr, 10), f = c.fields[i];
+  if (!f) return;
+  const li = el.closest('.li'), v = el.value;
+  if (v === '@other') {
+    AF_UI.otherR.add(f);
+    if (li && !li.querySelector('.af-free[data-path$=".runway"]')) {
+      el.parentNode.insertAdjacentHTML('beforeend', afRwyFreeInput(i, f));
+      const fr = li.querySelector('.af-free[data-path$=".runway"]');
+      if (fr) fr.focus();
+    }
+    touch();
+    return;
+  }
+  AF_UI.otherR.delete(f);
+  f.runway = v;
+  if (li) { const fr = li.querySelector('.af-free[data-path$=".runway"]'); if (fr) fr.remove(); }
   touch();
 }
 
@@ -5590,7 +5639,7 @@ const SECTION_BUILDERS = {
     fSelect('f.field.role', 'fields.' + i + '.role', f.role, [['', t('role.none')], ['dep', t('dc.role.dep')], ['arr', t('dc.role.arr')], ['alt', t('dc.role.alt')]]) +
     fInput('f.field.icao', 'fields.' + i + '.icao', f.icao) + '</div>' +
     '<div class="li-grid gs">' + afNameHtml(f, i) + '</div>' +
-    '<div class="li-grid g2">' + fInput('f.field.runway', 'fields.' + i + '.runway', f.runway) + fInput('f.field.frequency', 'fields.' + i + '.frequency', f.frequency) + '</div>', 'add.field'),
+    '<div class="li-grid g2">' + afRwyHtml(f, i) + fInput('f.field.frequency', 'fields.' + i + '.frequency', f.frequency) + '</div>', 'add.field'),
 
   weather: c =>
     fInput('f.metar', 'weather.metar', c.weather.metar) +
@@ -5784,6 +5833,7 @@ function onEditorInput(e) {
     touch();
     return;
   }
+  if (el && el.dataset && el.dataset.afr !== undefined) { onAfRwy(el); return; }        /* la liste des sens d'une rangée de la boîte Terrains */
   if (el && el.dataset && el.dataset.af !== undefined) { onAfName(el); return; }        /* la liste des aérodromes d'une rangée de la boîte Terrains */
   if (el && el.dataset && el.dataset.lofc) { curCard().loadoutFc = el.checked; renderEditor(); touch(); return; }
   if (el && el.dataset && el.dataset.gs) { onGsField(el, e); return; }        /* champ partagé avec la fiche : écrit dans le groupe */
@@ -6477,8 +6527,8 @@ function runImport() {
     ['classification', 'docRef', 'operation', 'mission', 'date', 'time'].forEach(k => { cur.meta[k] = src.meta[k]; });
     cur.mission = clone(src.mission);
     cur.fields = clone(src.fields);
+    cur.weather = clone(src.weather);       /* avant les rangées : le sens proposé suit le vent du briefing */
     afFillRows(cur);
-    cur.weather = clone(src.weather);
     persistState();
     renderAll();
     closeImportModal();
