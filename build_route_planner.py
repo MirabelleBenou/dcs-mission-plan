@@ -362,7 +362,7 @@ button, input, select { font: inherit; }
 
 /* ---------- barre ---------- */
 .toolbar {
-  position: fixed; top: 0; left: 0; right: 0; height: 56px; z-index: 1000;
+  position: fixed; top: 0; left: 0; right: 0; height: 60px; z-index: 1000;
   background: linear-gradient(180deg, var(--olive-dark) 0%, var(--olive-deep) 100%);
   border-bottom: 2px solid var(--amber-dark); box-shadow: 0 4px 12px rgba(0,0,0,.4);
   display: flex; align-items: center; gap: 8px; padding: 0 14px;
@@ -481,7 +481,7 @@ select[data-tbm-src] { display: none !important; }
 .tb-lang-btn:active { transform: translateY(1px); }
 
 /* ---------- application ---------- */
-.app { position: fixed; top: 56px; bottom: 0; left: 0; right: 0; display: grid; grid-template-columns: 440px 1fr; }
+.app { position: fixed; top: 60px; bottom: 0; left: 0; right: 0; display: grid; grid-template-columns: 440px 1fr; }
 .app > .panel { order: -1; }
 .mapwrap { position: relative; z-index: 0; min-width: 0; border-left: 2px solid var(--amber-dark); }
 #map { position: absolute; inset: 0; background: #e8dfc6; }
@@ -1185,7 +1185,7 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 /* ---------- tablette, téléphone : sous 1 100 px de large, dans toutes les orientations, la page ne défile jamais : la carte reste en haut,
    à sa hauteur, et seul le panneau, dessous, défile ---------- */
 @media (max-width: 1099px) {
-  .app { position: fixed; top: 56px; bottom: 0; left: 0; right: 0; padding-top: 0; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+  .app { position: fixed; top: 60px; bottom: 0; left: 0; right: 0; padding-top: 0; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
   .mapwrap { height: 58vh; min-height: 340px; min-width: 0; border-left: none; border-bottom: 2px solid var(--amber-dark); }
   .app > .panel { order: 0; }
   .panel { overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; min-height: 0; }

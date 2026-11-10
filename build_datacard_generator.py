@@ -675,7 +675,7 @@ body {
 .toolbar {
   position: fixed;
   top: 0; left: 0; right: 0;
-  height: 56px;
+  height: 60px;
   background: linear-gradient(180deg, var(--olive-dark) 0%, var(--olive-deep) 100%);
   border-bottom: 2px solid var(--amber-dark);
   display: flex;
@@ -951,7 +951,7 @@ select[data-tbm-src] { display: none !important; }
 /* ============ MAIN APP ============ */
 .app {
   position: fixed;
-  top: 56px; bottom: 0; left: 0; right: 0;
+  top: 60px; bottom: 0; left: 0; right: 0;
   display: grid;
   grid-template-columns: 460px 1fr;
   background: var(--olive-deep);

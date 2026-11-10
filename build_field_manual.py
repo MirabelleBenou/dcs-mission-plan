@@ -101,6 +101,7 @@ SPECIAL_ELITE_B64 = b64_font('SPECIAL_ELITE')
 STARDOS_400_B64   = b64_font('STARDOS_400')
 STARDOS_700_B64   = b64_font('STARDOS_700')
 OSWALD_500_B64    = b64_font('OSWALD_500')
+OSWALD_700_B64    = b64_font('OSWALD_700')
 ROBOTO_MONO_400_B64 = b64_font('ROBOTO_MONO_400')
 
 def font_face_css():
@@ -142,6 +143,13 @@ def font_face_css():
   font-display: swap;
   src: url('data:font/woff2;base64,{OSWALD_500_B64}') format('woff2');
 }}""")
+    if OSWALD_700_B64:
+        parts.append(f"""@font-face {{
+  font-family: 'Oswald';
+  font-weight: 700;
+  font-display: swap;
+  src: url('data:font/woff2;base64,{OSWALD_700_B64}') format('woff2');
+}}""")
 
     # Roboto Mono 400 : le bouton retour que le shell ajoute à la barre l'emploie ; une police n'apparaît jamais sans sa face embarquée (R295)
     if ROBOTO_MONO_400_B64:
@@ -153,8 +161,7 @@ def font_face_css():
 }}""")
     return '\n'.join(parts)
 
-FONT_CDN = '' if (SPECIAL_ELITE_B64 and STARDOS_700_B64) else \
-    '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Stardos+Stencil:wght@700&family=Oswald:wght@500&display=swap">'
+FONT_CDN = ''   # aucune police distante : toutes sont embarquées (R295)
 
 # ── Couverture HTML ──────────────────────────────────────────────────────────────
 
@@ -1134,6 +1141,7 @@ body[data-theme="cw-nato"] {{
   --olive: #4a5230; --olive-dark: #2c321e; --olive-deep: #1a1e10;
   --khaki: #807454; --khaki-light: #a89a72;
   --red-stamp: #a83524; --red-faded: #c4574a;
+  --rust: #7a3a20;
   --kraft-bg: url('data:image/svg+xml;base64,{KRAFT_NATO}');
 }}
 body[data-theme="cw-soviet"] {{
@@ -1142,6 +1150,7 @@ body[data-theme="cw-soviet"] {{
   --olive: #2a3a5a; --olive-dark: #1a2540; --olive-deep: #0e1830;
   --khaki: #3a4a2e; --khaki-light: #5a6a48;
   --red-stamp: #841e1e; --red-faded: #a04040;
+  --rust: #5e1414;
   --kraft-bg: url('data:image/svg+xml;base64,{KRAFT_SOV}');
 }}
 body[data-theme="modern-nato"] {{
@@ -1150,6 +1159,7 @@ body[data-theme="modern-nato"] {{
   --olive: #2a3038; --olive-dark: #1c2026; --olive-deep: #0e1014;
   --khaki: #5c6b7a; --khaki-light: #7a8a98;
   --red-stamp: #1a1a1a; --red-faded: #4a4a4a;
+  --rust: #2a2a2a;
   --kraft-bg: url('data:image/svg+xml;base64,{KRAFT_MNATO}');
 }}
 body[data-theme="modern-east"] {{
@@ -1158,6 +1168,7 @@ body[data-theme="modern-east"] {{
   --olive: #3d3024; --olive-dark: #2a2018; --olive-deep: #1a140e;
   --khaki: #4a5238; --khaki-light: #6a7256;
   --red-stamp: #7a2424; --red-faded: #a04040;
+  --rust: #5a1a1a;
   --kraft-bg: url('data:image/svg+xml;base64,{KRAFT_MEAST}');
 }}
 

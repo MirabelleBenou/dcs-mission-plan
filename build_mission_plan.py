@@ -20,6 +20,7 @@ Sources images (à placer dans ./tiles/) :
 """
 
 import base64
+import json
 import os
 import sys
 
@@ -40,6 +41,13 @@ MODULES = [
 ]
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Les polices : celles de la suite, embarquées (octets d'assets.json) ; la page n'appelle aucune police distante
+with open(os.path.join(SCRIPT_DIR, 'assets.json')) as _f:
+    A = json.load(_f)
+for _k in ('OSWALD_500', 'OSWALD_700', 'STARDOS_400', 'STARDOS_700', 'ROBOTO_MONO_400'):
+    if not A.get(_k):
+        raise SystemExit(f"[ERREUR] Entrée manquante : {_k} dans assets.json")
 
 
 def encode_file_b64(path):
@@ -104,44 +112,49 @@ def build_html(module_html_js, tile_uris):
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
 <title>DCS Mission Plan</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&family=Oswald:wght@400;500;600;700&family=Special+Elite&family=Barlow+Condensed:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 /* ============================================================
    DCS MISSION PLAN — DA v4 (shell)
    Landing « Mur de situation » — 4 thèmes
    ============================================================ */
+@font-face{{ font-family:'Oswald'; font-weight:500; font-display:swap; src:url('data:font/woff2;base64,{A["OSWALD_500"]}') format('woff2'); }}
+@font-face{{ font-family:'Oswald'; font-weight:700; font-display:swap; src:url('data:font/woff2;base64,{A["OSWALD_700"]}') format('woff2'); }}
+@font-face{{ font-family:'Stardos Stencil'; font-weight:400; font-display:swap; src:url('data:font/woff2;base64,{A["STARDOS_400"]}') format('woff2'); }}
+@font-face{{ font-family:'Stardos Stencil'; font-weight:700; font-display:swap; src:url('data:font/woff2;base64,{A["STARDOS_700"]}') format('woff2'); }}
+@font-face{{ font-family:'Roboto Mono'; font-weight:400; font-display:swap; src:url('data:font/woff2;base64,{A["ROBOTO_MONO_400"]}') format('woff2'); }}
 :root{{
   --paper:#d8c9a5; --paper-edge:#8a7a52; --ink:#1f1c16; --ink-2:#463f30;
   --accent:#a98a4e; --olive:#4a5230; --stamp:#a83524; --amber:#c0892a;
   --board:#2a2417; --board-2:#1a1610; --lamp:rgba(255,228,168,.22);
   --line:rgba(192,137,42,.30); --grain:.08; --scan:0; --rot:-2.6deg; --rad:2px;
-  --f-disp:'Special Elite','Courier New',monospace;
-  --f-sten:'Saira Stencil One','Oswald',sans-serif;
+  --f-disp:'Roboto Mono','Courier New',monospace;
+  --f-sten:'Stardos Stencil','Impact',sans-serif;
   --f-ui:'Oswald','Arial Narrow',sans-serif;
-  --f-body:'Barlow Condensed',sans-serif;
-  --f-mono:'JetBrains Mono',monospace;
+  --f-body:'Oswald','Arial Narrow',sans-serif;
+  --f-mono:'Roboto Mono','Courier New',monospace;
   --a-hq:#4FB286; --a-bg:#c0892a; --a-rp:#7ac97a; --a-dg:#8fb0c0; --a-rs:#c95a9c; --a-fc:#d0784a; --a-fm:#7E8FA6;
 }}
 [data-theme="cw-nato"]{{ --paper:#d8c9a5; --paper-edge:#8a7a52; --ink:#1f1c16; --ink-2:#463f30;
-  --accent:#a98a4e; --olive:#4a5230; --stamp:#a83524; --amber:#c0892a;
+  --accent:#a98a4e; --olive:#4a5230; --stamp:#a83524; --rust:#7a3a20;
   --board:#2a2417; --board-2:#1a1610; --lamp:rgba(255,228,168,.22);
   --line:rgba(192,137,42,.30); --grain:.08; --scan:0; --rot:-2.6deg; --rad:2px; }}
 [data-theme="cw-soviet"]{{ --paper:#d8c479; --paper-edge:#8a7a30; --ink:#1f1c16; --ink-2:#463f30;
-  --accent:#c9b35c; --olive:#2a3a5a; --stamp:#841e1e; --amber:#d8b24a;
+  --accent:#c9b35c; --olive:#2a3a5a; --stamp:#841e1e; --rust:#5e1414;
   --board:#231d12; --board-2:#15110a; --lamp:rgba(255,224,150,.20);
   --line:rgba(232,214,144,.28); --grain:.09; --scan:0; --rot:-4deg; --rad:1px; }}
 [data-theme="modern-nato"]{{ --paper:#e8e3d8; --paper-edge:#948c7c; --ink:#15181c; --ink-2:#3a4048;
-  --accent:#7a8a98; --olive:#2a3038; --stamp:#1a1a1a; --amber:#5c6b7a;
+  --accent:#7a8a98; --olive:#2a3038; --stamp:#1a1a1a; --rust:#2a2a2a;
   --board:#10141a; --board-2:#080b0f; --lamp:rgba(170,200,225,.14);
   --line:rgba(122,138,152,.30); --grain:.03; --scan:.06; --rot:-.8deg; --rad:6px; }}
 [data-theme="modern-east"]{{ --paper:#cdc6b8; --paper-edge:#7a7466; --ink:#1a1610; --ink-2:#3d3024;
-  --accent:#8a7c5e; --olive:#3d3024; --stamp:#7a2424; --amber:#a98a4e;
+  --accent:#8a7c5e; --olive:#3d3024; --stamp:#7a2424; --rust:#5a1a1a;
   --board:#16110b; --board-2:#0c0805; --lamp:rgba(220,190,150,.14);
   --line:rgba(160,120,80,.26); --grain:.05; --scan:.04; --rot:-1.4deg; --rad:4px; }}
 
 *{{box-sizing:border-box;margin:0;padding:0;}}
+button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus-visible, a[href]:focus-visible, [tabindex]:focus-visible, [role="button"]:focus-visible {{
+  outline: 2px solid var(--amber) !important; outline-offset: 2px !important;
+}}
 html,body{{height:100%;}}
 body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); min-height:100vh; overflow-x:hidden; transition:background .5s ease;}}
 .app{{position:relative; z-index:3; min-height:100vh; display:flex; flex-direction:column;}}
@@ -152,15 +165,15 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
 .plate{{display:flex; align-items:baseline; gap:9px; padding:5px 11px; border:1px solid var(--line); border-radius:var(--rad);
   background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.3));}}
 .plate .mark{{font-family:var(--f-sten); font-size:16px; letter-spacing:.05em; color:var(--amber);}}
-.plate .sub{{font-family:var(--f-mono); font-size:9px; letter-spacing:.24em; color:var(--accent); text-transform:uppercase;}}
+.plate .sub{{font-family:var(--f-mono); font-size:10px; letter-spacing:.24em; color:var(--accent); text-transform:uppercase;}}
 .rail .spacer{{flex:1;}}
 .ctrl{{display:flex; align-items:center; gap:8px;}}
 .seg{{display:inline-flex; border:1px solid var(--line); border-radius:var(--rad); overflow:hidden;}}
-.seg button{{font-family:var(--f-ui); font-size:11.5px; letter-spacing:.06em; text-transform:uppercase; background:rgba(0,0,0,.4);
+.seg button{{font-family:var(--f-ui); font-weight:500; font-size:12px; letter-spacing:.06em; text-transform:uppercase; background:rgba(0,0,0,.4);
   color:var(--accent); border:none; padding:7px 13px; cursor:pointer;}}
 .seg button + button{{border-left:1px solid var(--line);}}
 .seg button.on{{background:var(--amber); color:#15120c;}}
-.theme-sel{{font-family:var(--f-ui); font-size:12px; letter-spacing:.05em; text-transform:uppercase; background:rgba(0,0,0,.45);
+.theme-sel{{font-family:var(--f-ui); font-weight:500; font-size:12px; letter-spacing:.05em; text-transform:uppercase; background:rgba(0,0,0,.45);
   color:var(--amber); border:1px solid var(--line); padding:7px 11px; border-radius:var(--rad); cursor:pointer; outline:none;}}
 
 /* ---------- Liste du thème au thème de la landing (lot mp-ui-listes) ----------
@@ -186,12 +199,12 @@ select[data-tbm-src] {{ display: none !important; }}
 .tbm-panel, .tbm-panel:focus, .tbm-panel:focus-visible {{ outline: none; }}
 @keyframes tbm-in {{ from {{ opacity: 0; transform: translateY(-4px); }} to {{ opacity: 1; transform: none; }} }}
 .tbm-head {{
-  font-family: var(--f-ui); font-size: 10px; letter-spacing: 1.8px; text-transform: uppercase;
+  font-family: var(--f-ui); font-weight: 500; font-size: 10px; letter-spacing: 1.8px; text-transform: uppercase;
   color: var(--accent); padding: 8px 14px 6px; border-bottom: 1px solid var(--line); margin-bottom: 2px;
 }}
 .tbm-opt {{
   position: relative; display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 16px 0 18px;
-  font-family: var(--f-ui); font-size: 13px; letter-spacing: 1.3px; text-transform: uppercase;
+  font-family: var(--f-ui); font-weight: 500; font-size: 13px; letter-spacing: 1.3px; text-transform: uppercase;
   color: var(--paper); cursor: pointer; white-space: nowrap; user-select: none;
 }}
 .tbm-opt + .tbm-opt {{ border-top: 1px solid var(--line); }}
@@ -207,7 +220,7 @@ select[data-tbm-src] {{ display: none !important; }}
 @media (prefers-reduced-motion: reduce) {{ .tbm-panel {{ animation: none; }} }}
 @media print {{ .tbm-panel {{ display: none; }} }}
 
-.flag{{font-size:15px; background:rgba(0,0,0,.45); border:1px solid var(--line); width:38px; height:34px; border-radius:var(--rad); cursor:pointer; color:var(--amber); display:inline-flex; align-items:center; justify-content:center; padding:0;}}
+.flag{{font-size:16px; background:rgba(0,0,0,.45); border:1px solid var(--line); width:38px; height:34px; border-radius:var(--rad); cursor:pointer; color:var(--amber); display:inline-flex; align-items:center; justify-content:center; padding:0;}}
 .flag svg{{display:block;}}
 .classif{{font-family:var(--f-mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--stamp);
   border:1px solid var(--stamp); padding:5px 9px; border-radius:var(--rad); opacity:.85;}}
@@ -234,13 +247,13 @@ select[data-tbm-src] {{ display: none !important; }}
 .wall-head{{position:relative; z-index:2; max-width:1200px; margin:0 auto 22px; width:100%; display:flex; align-items:flex-end; gap:20px; flex-wrap:wrap;}}
 .tab{{position:relative; background:var(--paper); color:var(--ink); padding:13px 22px 15px; border-radius:6px 6px 0 0;
   box-shadow:0 10px 26px rgba(0,0,0,.5); transform:rotate(-1deg); border:1px solid var(--paper-edge); border-bottom:none;}}
-.tab .ribbon{{font-family:var(--f-mono); font-size:9px; letter-spacing:.26em; color:var(--ink-2); text-transform:uppercase;}}
+.tab .ribbon{{font-family:var(--f-mono); font-size:10px; letter-spacing:.26em; color:var(--ink-2); text-transform:uppercase;}}
 .tab h1{{font-family:var(--f-sten); font-size:clamp(28px,4.8vw,48px); line-height:.9; letter-spacing:.02em; color:var(--ink); margin-top:4px;}}
 .tab h1 .x{{color:var(--stamp);}}
 .note{{display:flex; border:1px solid var(--line); border-radius:var(--rad); overflow:hidden; background:rgba(0,0,0,.32); transform:rotate(.6deg);}}
 .note .cell{{padding:8px 13px; border-right:1px solid var(--line);}} .note .cell:last-child{{border-right:none;}}
-.note .k{{font-family:var(--f-mono); font-size:9px; letter-spacing:.18em; color:var(--accent); text-transform:uppercase; display:block;}}
-.note .v{{font-family:var(--f-ui); font-size:13px; color:var(--amber);}}
+.note .k{{font-family:var(--f-mono); font-size:10px; letter-spacing:.18em; color:var(--accent); text-transform:uppercase; display:block;}}
+.note .v{{font-family:var(--f-ui); font-weight:500; font-size:13px; color:var(--amber);}}
 
 .wall-stage{{position:relative; z-index:1; max-width:1200px; margin:0 auto; width:100%; display:flex; flex-direction:column; gap:36px;}}
 .active-row{{display:grid; grid-template-columns:1fr 1fr 1fr; gap:26px;}}
@@ -266,14 +279,14 @@ select[data-tbm-src] {{ display: none !important; }}
 .tape{{position:absolute; top:-12px; left:50%; transform:translateX(-50%) rotate(-3deg); width:118px; height:25px; z-index:5;
   background:linear-gradient(180deg, rgba(230,225,200,.55), rgba(200,195,170,.42)); border:1px solid rgba(255,255,255,.22); box-shadow:0 2px 5px rgba(0,0,0,.3);}}
 .shot{{position:relative; border-radius:1px; overflow:hidden; background:var(--board-2) center/cover no-repeat;}}
-.shot .tagchip{{position:absolute; top:9px; left:9px; font-family:var(--f-mono); font-size:9px; letter-spacing:.14em; text-transform:uppercase;
+.shot .tagchip{{position:absolute; top:9px; left:9px; font-family:var(--f-mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase;
   color:#f3ecd9; background:rgba(0,0,0,.6); padding:3px 8px; border:1px solid rgba(255,255,255,.18);}}
 .caption{{padding:11px 8px 13px; color:var(--ink);}}
 .cap-row{{display:flex; align-items:center; gap:9px;}}
-.logo{{font-family:var(--f-mono); font-weight:700; font-size:12px; color:#15120c; padding:4px 7px; border-radius:3px; letter-spacing:.05em;}}
-.ptitle{{font-family:var(--f-ui); font-size:18px; font-weight:600; color:var(--ink);}}
+.logo{{font-family:var(--f-mono); font-weight:400; font-size:12px; color:#15120c; padding:4px 7px; border-radius:3px; letter-spacing:.05em;}}
+.ptitle{{font-family:var(--f-ui); font-size:16px; font-weight:700; color:var(--ink);}}
 .pver{{margin-left:auto; font-family:var(--f-mono); font-size:10px; color:var(--ink-2); border:1px solid var(--paper-edge); padding:1px 6px; border-radius:2px;}}
-.pdesc{{font-family:var(--f-body); font-size:14px; color:var(--ink-2); line-height:1.4; margin-top:6px;}}
+.pdesc{{font-family:var(--f-body); font-weight:500; font-size:13px; color:var(--ink-2); line-height:1.4; margin-top:6px;}}
 .pstatus{{display:flex; align-items:center; gap:7px; margin-top:8px; font-family:var(--f-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--olive);}}
 .pstatus .dot{{width:7px; height:7px; border-radius:50%; background:#4f8a3a; box-shadow:0 0 8px #4f8a3a;}}
 
@@ -309,7 +322,7 @@ select[data-tbm-src] {{ display: none !important; }}
 .active-row .print[id="card-rs"]:hover{{transform:rotate(-0.4deg) translateY(-7px);}}
 .active-row .print[id="card-fc"]:hover{{transform:rotate(-0.4deg) translateY(-7px);}}
 .active-row .print[id="card-fm"]:hover{{transform:rotate(-0.5deg) translateY(-7px);}}
-.cta{{margin:2px 8px 12px; display:inline-block; font-family:var(--f-ui); font-size:12.5px; letter-spacing:.08em; text-transform:uppercase;
+.cta{{margin:2px 8px 12px; display:inline-block; font-family:var(--f-ui); font-weight:500; font-size:12px; letter-spacing:.08em; text-transform:uppercase;
   color:#15120c; background:var(--card-accent); border:1px solid var(--paper-edge); padding:9px 15px; border-radius:var(--rad);}}
 .print.active:hover .cta{{filter:brightness(1.12);}}
 
@@ -324,7 +337,7 @@ select[data-tbm-src] {{ display: none !important; }}
 .print.sealed .ptitle{{font-size:16px; color:var(--ink-2);}}
 
 .bigstamp{{position:absolute; top:14px; right:30px; z-index:5; transform:rotate(var(--rot)); font-family:var(--f-disp); color:var(--stamp);
-  border:3px double var(--stamp); padding:9px 17px; font-size:19px; letter-spacing:.16em; text-transform:uppercase; opacity:.7; background:rgba(0,0,0,.14); border-radius:var(--rad);}}
+  border:3px double var(--stamp); padding:9px 17px; font-size:16px; letter-spacing:.16em; text-transform:uppercase; opacity:.7; background:rgba(0,0,0,.14); border-radius:var(--rad);}}
 [data-theme="modern-nato"] .classif,[data-theme="modern-nato"] .bigstamp{{color:#8e9aa6; border-color:#5f6b76;}}
 [data-theme="modern-east"] .classif,[data-theme="modern-east"] .bigstamp{{color:#a4756c; border-color:#79554e;}}
 [data-theme="modern-nato"] .bigstamp,[data-theme="modern-east"] .bigstamp{{opacity:.5;}}
@@ -340,7 +353,7 @@ select[data-tbm-src] {{ display: none !important; }}
 .props .tape-label::before{{left:-8px; clip-path:polygon(0 16%,100% 0,100% 100%,0 84%);}}
 .props .tape-label::after{{right:-8px; clip-path:polygon(0 0,100% 16%,100% 84%,0 100%);}}
 .props .imprint{{position:absolute; right:64px; bottom:118px; transform:rotate(-13deg); opacity:.17;
-  font-family:var(--f-disp); font-size:14px; letter-spacing:.16em; text-transform:uppercase; color:var(--stamp);
+  font-family:var(--f-disp); font-size:13px; letter-spacing:.16em; text-transform:uppercase; color:var(--stamp);
   border:2px double var(--stamp); padding:8px 14px; border-radius:2px;}}
 [data-theme="modern-nato"] .props .imprint{{color:#8e9aa6; border-color:#5f6b76;}}
 [data-theme="modern-east"] .props .imprint{{color:#a4756c; border-color:#79554e;}}
@@ -786,9 +799,9 @@ select[data-tbm-src] {{ display: none !important; }}
           var back = doc.createElement('button');
           back.className = 'mp-back-injected';
           back.textContent = t('back');
-          back.style.cssText = 'font-family:"Roboto Mono",monospace;font-weight:400;font-size:11px;cursor:pointer;color:#c0892a;'
+          back.style.cssText = 'font-family:"Roboto Mono",monospace;font-weight:400;font-size:11px;cursor:pointer;color:var(--mp-amber-txt,#d9a54a);'
             + 'background:transparent;border:1px solid #c0892a;border-radius:3px;padding:4px 10px;'
-            + 'margin-right:12px;letter-spacing:.03em;min-height:36px;flex-shrink:0;';
+            + 'margin-right:12px;letter-spacing:.03em;min-height:44px;box-sizing:border-box;flex-shrink:0;';
           back.addEventListener('click', goHub);
           toolbar.insertBefore(back, toolbar.firstChild);
           /* La barre des outils dans le shell : un seul style pour tous les outils (défilement de la barre, bouton retour
@@ -804,8 +817,8 @@ select[data-tbm-src] {{ display: none !important; }}
               + '-webkit-mask-image:linear-gradient(270deg,#000,transparent);mask-image:linear-gradient(270deg,#000,transparent);}}'
               + '@media (max-width:759px){{'
               + '.mp-wing-stamp{{display:none !important;}}'
-              + '.toolbar .mp-back-injected{{box-sizing:border-box !important;width:40px !important;min-width:40px !important;'
-              + 'height:36px !important;min-height:36px !important;padding:0 !important;font-size:14px !important;'
+              + '.toolbar .mp-back-injected{{box-sizing:border-box !important;width:44px !important;min-width:44px !important;'
+              + 'height:44px !important;min-height:44px !important;padding:0 !important;font-size:13px !important;'
               + 'line-height:1 !important;overflow:hidden;white-space:nowrap;}}'
               + '}}';
             doc.head.appendChild(tbs);
@@ -822,7 +835,7 @@ select[data-tbm-src] {{ display: none !important; }}
                 '.mp-wing-stamp{{display:inline-flex;align-items:center;gap:10px;'
               + 'margin-right:12px;padding-right:12px;border-right:1px solid #807454;'
               + "font-family:'Stardos Stencil','Impact','Arial Narrow Bold',sans-serif;"
-              + 'font-weight:700;letter-spacing:2px;font-size:15px;color:var(--paper,#e8e3d8);'
+              + 'font-weight:700;letter-spacing:2px;font-size:16px;color:var(--paper,#e8e3d8);'
               + 'white-space:nowrap;flex-shrink:0;}}'
               + '.mp-wing-stamp::before{{content:"";display:inline-block;width:8px;height:8px;'
               + 'border-radius:50%;background:' + acc + ';box-shadow:0 0 8px ' + acc + ';'
@@ -850,6 +863,11 @@ select[data-tbm-src] {{ display: none !important; }}
       iframes[id] = iframe;
     }} else {{
       iframes[id].style.display = 'block';
+      /* La langue suit comme le thème : un module déjà chargé qui n'est pas dans la langue de la suite passe à celle-ci, sans se recharger, par sa propre fonction de langue (celle de son drapeau) */
+      try {{
+        var mw = iframes[id].contentWindow;
+        if (mw && typeof mw.setLang === 'function' && mw.document.documentElement.lang !== CURRENT_LANG) mw.setLang(CURRENT_LANG);
+      }} catch(e) {{ console.warn('[M·P] langue du module ' + id + ' : ' + e); }}
       if (barSync[id]) barSync[id]();
       document.getElementById('module-loading').classList.add('hidden');
       try {{ iframes[id].contentDocument.body.setAttribute('data-theme', document.body.getAttribute('data-theme') || 'cw-nato'); }} catch(e) {{}}

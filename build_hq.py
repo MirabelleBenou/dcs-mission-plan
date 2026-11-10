@@ -202,12 +202,6 @@ HTML = f"""<!DOCTYPE html>
   src: url('data:font/woff2;base64,{A["ROBOTO_MONO_400"]}') format('woff2');
 }}
 @font-face {{
-  font-family: 'Roboto Mono';
-  font-weight: 700;
-  font-display: swap;
-  src: url('data:font/woff2;base64,{A["ROBOTO_MONO_400"]}') format('woff2');
-}}
-@font-face {{
   font-family: 'Stardos Stencil';
   font-weight: 400;
   font-display: swap;
@@ -224,6 +218,12 @@ HTML = f"""<!DOCTYPE html>
   font-weight: 500;
   font-display: swap;
   src: url('data:font/woff2;base64,{A["OSWALD_500"]}') format('woff2');
+}}
+@font-face {{
+  font-family: 'Oswald';
+  font-weight: 700;
+  font-display: swap;
+  src: url('data:font/woff2;base64,{A["OSWALD_700"]}') format('woff2');
 }}
 
 :root {{
@@ -251,7 +251,7 @@ body[data-theme="cw-soviet"] {{
   --ink: #1f1c16; --ink-faded: #463f30;
   --olive: #2a3a5a; --olive-dark: #1a2540; --olive-deep: #0e1830;
   --khaki: #3a4a2e; --khaki-light: #5a6a48;
-  --rust: #6a1a1a;
+  --rust: #5e1414;
   --red-stamp: #841e1e; --red-faded: #a04040;
   --kraft-bg: url('data:image/svg+xml;base64,{KRAFT_SOV}');
 }}
@@ -260,7 +260,7 @@ body[data-theme="modern-nato"] {{
   --ink: #15181c; --ink-faded: #3a4048;
   --olive: #2a3038; --olive-dark: #1c2026; --olive-deep: #0e1014;
   --khaki: #5c6b7a; --khaki-light: #7a8a98;
-  --rust: #4a3020;
+  --rust: #2a2a2a;
   --red-stamp: #1a1a1a; --red-faded: #4a4a4a;
   --kraft-bg: url('data:image/svg+xml;base64,{KRAFT_MNATO}');
 }}
@@ -269,7 +269,7 @@ body[data-theme="modern-east"] {{
   --ink: #1a1610; --ink-faded: #3d3024;
   --olive: #3d3024; --olive-dark: #2a2018; --olive-deep: #1a140e;
   --khaki: #4a5238; --khaki-light: #6a7256;
-  --rust: #6a3010;
+  --rust: #5a1a1a;
   --red-stamp: #7a2424; --red-faded: #a04040;
   --kraft-bg: url('data:image/svg+xml;base64,{KRAFT_MEAST}');
 }}
@@ -292,7 +292,7 @@ body {{
 .toolbar {{
   position: fixed;
   top: 0; left: 0; right: 0;
-  height: 56px;
+  height: 60px;
   background: linear-gradient(180deg, var(--olive-dark) 0%, var(--olive-deep) 100%);
   border-bottom: 2px solid var(--amber-dark);
   display: flex;
@@ -497,7 +497,7 @@ select[data-tbm-src] {{ display: none !important; }}
 /* ======== MAIN LAYOUT ======== */
 .app {{
   position: fixed;
-  top: 56px; bottom: 0; left: 0; right: 0;
+  top: 60px; bottom: 0; left: 0; right: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
   background: var(--olive-deep);

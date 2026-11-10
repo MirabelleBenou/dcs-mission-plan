@@ -367,20 +367,19 @@ I18N_FR = {
     'theme.modern-east': 'Bloc Est moderne',
 
     'tb.open': 'Ouvrir',
-    'tb.open.s': 'Ouvrir',
     'tb.open.tip': 'Ouvrir un fichier de travail (JSON) : remplace le contenu du module',
     'tb.save': 'Enregistrer',
-    'tb.save.s': 'Enreg.',
     'tb.save.tip': 'Enregistrer le travail en cours (JSON : le paquet et les réglages du module)',
     'tb.import': 'Importer',
-    'tb.import.s': 'Import.',
     'tb.import.tip': 'Importer des groupes, des routes, des radios, des emports depuis la mission chargée dans HQ ou un paquet de vol',
     'tb.export': 'Exporter',
-    'tb.export.s': 'Export.',
     'tb.export.tip': 'Exporter le paquet de vol pour le Mission Commander',
     'tb.clear': 'Effacer',
-    'tb.clear.s': 'Effacer',
     'tb.clear.tip': 'Effacer',
+    'tb.example': 'Exemple',
+    'tb.example.tip': 'Ouvrir l\u2019exemple : deux groupes (deux Mi-24P, deux Mi-8MT) ; le travail en cours se restaure en un geste',
+    'toast.example': 'Exemple chargé',
+    'ex.group': 'EXEMPLE',
 
     'bar.ok': 'Prêt à exporter : {0}',
     'bar.clamped': '{0} réglage(s) d’emport ramené(s) à la limite de l’appareil.',
@@ -644,20 +643,19 @@ I18N_EN = {
     'theme.modern-east': 'Modern Eastern Bloc',
 
     'tb.open': 'Open',
-    'tb.open.s': 'Open',
     'tb.open.tip': 'Open a working file (JSON): replaces the module content',
     'tb.save': 'Save',
-    'tb.save.s': 'Save',
     'tb.save.tip': 'Save the work in progress (JSON: the package and the module settings)',
     'tb.import': 'Import',
-    'tb.import.s': 'Import',
     'tb.import.tip': 'Import groups, routes, radios, loadouts from the mission loaded in HQ or a flight package',
     'tb.export': 'Export',
-    'tb.export.s': 'Export',
     'tb.export.tip': 'Export the flight package for the Mission Commander',
     'tb.clear': 'Clear',
-    'tb.clear.s': 'Clear',
     'tb.clear.tip': 'Clear',
+    'tb.example': 'Example',
+    'tb.example.tip': 'Open the example: two groups (two Mi-24P, two Mi-8MT); the work in progress comes back in one tap',
+    'toast.example': 'Example loaded',
+    'ex.group': 'EXAMPLE',
 
     'bar.ok': 'Ready to export: {0}',
     'bar.clamped': '{0} loadout setting(s) brought back to the aircraft limit.',
@@ -925,7 +923,7 @@ body[data-theme="cw-soviet"] {
   --ink: #1f1c16; --ink-faded: #463f30;
   --olive: #2a3a5a; --olive-dark: #1a2540; --olive-deep: #0e1830;
   --khaki: #3a4a2e; --khaki-light: #5a6a48;
-  --rust: #6a1a1a;
+  --rust: #5e1414;
   --red-stamp: #841e1e; --red-faded: #a04040;
 }
 body[data-theme="modern-nato"] {
@@ -933,7 +931,7 @@ body[data-theme="modern-nato"] {
   --ink: #15181c; --ink-faded: #3a4048;
   --olive: #2a3038; --olive-dark: #1c2026; --olive-deep: #0e1014;
   --khaki: #5c6b7a; --khaki-light: #7a8a98;
-  --rust: #4a3020;
+  --rust: #2a2a2a;
   --red-stamp: #1a1a1a; --red-faded: #4a4a4a;
 }
 body[data-theme="modern-east"] {
@@ -941,7 +939,7 @@ body[data-theme="modern-east"] {
   --ink: #1a1610; --ink-faded: #3d3024;
   --olive: #3d3024; --olive-dark: #2a2018; --olive-deep: #1a140e;
   --khaki: #4a5238; --khaki-light: #6a7256;
-  --rust: #6a3010;
+  --rust: #5a1a1a;
   --red-stamp: #7a2424; --red-faded: #a04040;
 }
 
@@ -963,7 +961,7 @@ body {
 .toolbar {
   position: fixed;
   top: 0; left: 0; right: 0;
-  height: 56px;
+  height: 60px;
   background: linear-gradient(180deg, var(--olive-dark) 0%, var(--olive-deep) 100%);
   border-bottom: 2px solid var(--amber-dark);
   display: flex;
@@ -1148,7 +1146,7 @@ select[data-tbm-src] { display: none !important; }
 /* ======== MAIN LAYOUT ======== */
 .app {
   position: fixed;
-  top: 56px; bottom: 0; left: 0; right: 0;
+  top: 60px; bottom: 0; left: 0; right: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
   background: var(--olive-deep);
@@ -1232,7 +1230,6 @@ body[data-theme] {
 .tb-brand-main, .tb-brand-short { color: var(--fc); }
 .tb-brand-short { display: none; font-family: var(--f-stencil); font-size: 16px; font-weight: 700; letter-spacing: 3px; }
 .tb-btn { width: auto; height: 38px; min-width: 38px; padding: 0 12px; gap: 6px; font-family: var(--f-ui); font-weight: 500; letter-spacing: 1.5px; font-size: 12px; text-transform: uppercase; white-space: nowrap; }
-.tb-btn .tb-short { display: none; }
 .tb-btn:hover, .tb-btn:focus-visible, .tb-lang-btn:hover, .tb-lang-btn:focus-visible { border-color: var(--fc); }
 .tb-btn:hover, .tb-btn:focus-visible { color: var(--fc); }
 .tb-btn:disabled { opacity: .4; cursor: default; }
@@ -1242,7 +1239,7 @@ body[data-theme] {
    libellé court de 1190 à 1329 px, icône seule en dessous ; le titre et la version dès 1615 px, le tampon de décor dès 1824 px ; le sigle reste visible à toutes les largeurs.
    La liste du théâtre (lot mp-theatre-unique) a déplacé de 179 px les seuils du titre et du tampon de décor, de 290 px ceux des libellés longs et courts (théâtre « Caucase », mesuré dans le shell, en français et en anglais, sans dépassement de 900 à 1900 px). */
 @media (max-width: 1614px) { .tb-brand-main, .tb-brand-sub, .tb-sep, .tb-version { display: none; } .tb-brand-short { display: inline; } }
-@media (max-width: 1329px) { .tb-btn .tb-long { display: none; } .tb-btn .tb-short { display: inline; } .tb-btn { padding: 0 9px; letter-spacing: 1px; } .tb-select { max-width: 130px; } }
+@media (max-width: 1329px) { .tb-btn { padding: 0 9px; letter-spacing: 1px; } .tb-select { max-width: 130px; } }
 @media (max-width: 1189px) { .tb-btn .tb-btn-label { display: none; } .tb-btn { padding: 0; width: 38px; } .tb-select { max-width: 110px; } }
 @media (max-width: 539px) { .tb-select { max-width: 96px; } }
 @media (max-width: 479px) { .toolbar { gap: 3px; } .tb-btn { width: 34px; min-width: 34px; } .tb-select { max-width: 64px; padding: 0 18px 0 6px; } .tb-lang-btn { min-width: 34px; padding: 0 2px; } }
@@ -1541,8 +1538,8 @@ def _icon(d):
 
 def _btn(bid, key, icon, extra=''):
     return ('<button type="button" class="tb-btn%s" id="btn-%s" data-i18n-title="tb.%s.tip" title="">%s'
-            '<span class="tb-btn-label"><span class="tb-long" data-i18n="tb.%s">.</span><span class="tb-short" data-i18n="tb.%s.s">.</span></span></button>'
-            % (extra, bid, key, _icon(icon), key, key))
+            '<span class="tb-btn-label" data-i18n="tb.%s">.</span></button>'
+            % (extra, bid, key, _icon(icon), key))
 
 
 BODY = r"""
@@ -1608,6 +1605,7 @@ BUTTONS = '\n  '.join([
     _btn('save', 'save', '<path d="M5 3h11l4 4v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M8 3v5h7V3"/><rect x="7" y="13" width="10" height="8"/>'),
     _btn('import', 'import', '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>'),
     _btn('export', 'export', '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>'),
+    _btn('example', 'example', '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/>'),
     _btn('clear', 'clear', '<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>', ' danger'),
 ])
 BODY = BODY.replace('@@BUTTONS@@', BUTTONS).replace('@@IMPORT_HTML@@\n', build_import_html())
@@ -4001,6 +3999,25 @@ function fcBack(m) {
   renderAll();
   clearTimeout(_saveTimer); _saveTimer = 0;
 }
+// « Exemple » : deux groupes, au geste « Remplacer » (on fait, on garde l'ancien, « Restaurer » 12 s, aucune question) ; chacun est ce que « + groupe » donne, puis le type posé sur ses deux unités.
+function loadExample() {
+  flushWork();
+  replaceWithRestore({
+    keys: FC_REPLACE_KEYS, mem: fcMem, back: fcBack,
+    run: () => {
+      const mk = (type, n) => { const f = newFlight(); f.name = t('ex.group') + ' ' + n; f.coalition = 'red'; f.units = [newUnit(type), newUnit(type)]; return f; };
+      S.flights = [mk('Mi-24P', 1), mk('Mi-8MT', 2)];
+      S.sel = { f: 0, u: 0 };
+      UI.clamped = 0; UI.exportTried = false; UI.rtChoose = null;
+      Object.assign(UI.cmp, { saving: false, err: '', st: null });
+      clearTimeout(_saveTimer);
+      if (gsReplaceAll(S.theatre, JSON.parse(JSON.stringify(S.flights)))) gsMarkAll();
+      renderAll();
+      writeState();
+    },
+    msg: () => t('toast.example')
+  });
+}
 function saveFile() {
   fnAsk({
     titleKey: 'fn.save.title', goKey: 'fn.save.go', ext: '.json',
@@ -4285,7 +4302,16 @@ function applyI18nStatic() {
   lang.innerHTML = CURRENT_LANG === 'fr' ? FLAG_EN : FLAG_FR;
   lang.title = t('toolbar.lang.tooltip');
   lang.setAttribute('aria-label', t('toolbar.lang.tooltip'));
-  ['open', 'save', 'import', 'export', 'clear'].forEach(k => document.getElementById('btn-' + k).setAttribute('aria-label', t('tb.' + k)));
+  ['open', 'save', 'import', 'export', 'example', 'clear'].forEach(k => document.getElementById('btn-' + k).setAttribute('aria-label', t('tb.' + k)));
+}
+/* La langue : le drapeau la change ; le shell l'appelle aussi (un module déjà chargé suit la langue de la suite) */
+function setLang(lang) {
+  if (lang !== 'fr' && lang !== 'en') return;
+  CURRENT_LANG = lang;
+  lsSet(KEY_LANG, CURRENT_LANG);
+  document.documentElement.lang = CURRENT_LANG;
+  if (impIsOpen()) impRender();
+  renderAll();
 }
 function bindColumns() {
   const left = document.getElementById('col-left'), right = document.getElementById('col-right');
@@ -4319,17 +4345,12 @@ function bindToolbar() {
   const on = (id, ev, fn) => document.getElementById(id).addEventListener(ev, fn);
   on('theme-select', 'change', e => { document.body.setAttribute('data-theme', e.target.value); lsSet(KEY_THEME, e.target.value); });
   on('theatre', 'change', e => thSet(e.target.value));
-  on('btn-lang', 'click', () => {
-    CURRENT_LANG = CURRENT_LANG === 'fr' ? 'en' : 'fr';
-    lsSet(KEY_LANG, CURRENT_LANG);
-    document.documentElement.lang = CURRENT_LANG;
-    if (impIsOpen()) impRender();
-    renderAll();
-  });
+  on('btn-lang', 'click', () => setLang(CURRENT_LANG === 'fr' ? 'en' : 'fr'));
   on('btn-open', 'click', () => document.getElementById('fc-in-open').click());
   on('btn-save', 'click', saveFile);
   on('btn-import', 'click', e => { UI.hq = readHqMission(); impOpen({ opener: e.currentTarget }); });       // le snapshot de HQ se relit à chaque ouverture (suggestions de livrée)
   on('btn-export', 'click', exportFile);
+  on('btn-example', 'click', loadExample);
   on('btn-clear', 'click', clearAll);
   const fileIn = (id, fn) => on(id, 'change', e => { const files = Array.prototype.slice.call(e.target.files); e.target.value = ''; fn(files); });
   fileIn('fc-in-lua', loadLuaFiles);
@@ -4385,6 +4406,7 @@ FONTS = """
 @font-face { font-family: 'Stardos Stencil'; font-weight: 400; font-display: swap; src: url('data:font/woff2;base64,@@STARDOS_400@@') format('woff2'); }
 @font-face { font-family: 'Stardos Stencil'; font-weight: 700; font-display: swap; src: url('data:font/woff2;base64,@@STARDOS_700@@') format('woff2'); }
 @font-face { font-family: 'Oswald'; font-weight: 500; font-display: swap; src: url('data:font/woff2;base64,@@OSWALD_500@@') format('woff2'); }
+@font-face { font-family: 'Oswald'; font-weight: 700; font-display: swap; src: url('data:font/woff2;base64,@@OSWALD_700@@') format('woff2'); }
 """
 
 
@@ -4408,7 +4430,8 @@ def build_html():
     fonts = (FONTS.replace('@@ROBOTO_MONO_400@@', A['ROBOTO_MONO_400'])
                   .replace('@@STARDOS_400@@', A['STARDOS_400'])
                   .replace('@@STARDOS_700@@', A['STARDOS_700'])
-                  .replace('@@OSWALD_500@@', A['OSWALD_500']))
+                  .replace('@@OSWALD_500@@', A['OSWALD_500'])
+                  .replace('@@OSWALD_700@@', A['OSWALD_700']))
     js = (build_radio_block() + '\n' + build_radio_bands_block() + '\n' + tables_js() + '\n' + build_payload_block() + '\n' + PAD2_JS + '\n' + COORD_BLOCK + READNUM_BLOCK + build_magvar_block() + '\n' + build_projection_block() + '\n'
           + build_route_pack_block() + '\n' + build_route_theatre_block() + '\n' + build_group_store_block() + '\n' + build_import_block() + '\n' + build_messages_block() + '\n' + build_ui_block() + '\n' + JS_TBM + '\n' + app_js())
     return ('<!DOCTYPE html>\n<html lang="fr">\n<head>\n<meta charset="UTF-8">\n'
@@ -4451,7 +4474,7 @@ def check(html):
     ok({k for k in used if not prefixed(k)} <= set(I18N_FR), 'toute clé de texte utilisée existe : manque %s' % sorted(k for k in used - set(I18N_FR) if not prefixed(k)))
     quoted = lambda k: ("'%s'" % k) in code or ('"%s"' % k) in code
     ok(all(quoted(k) or prefixed(k) for k in I18N_FR), 'aucun texte sans usage : reste %s' % sorted(k for k in I18N_FR if not quoted(k) and not prefixed(k)))
-    ok(all(any(k in I18N_FR for k in ['tb.%s%s' % (a, s)]) for a in ('open', 'save', 'import', 'export', 'clear') for s in ('', '.s', '.tip')), 'textes de la barre présents')
+    ok(all(any(k in I18N_FR for k in ['tb.%s%s' % (a, s)]) for a in ('open', 'save', 'import', 'export', 'example', 'clear') for s in ('', '.tip')), 'textes de la barre présents')
     # les quatre tables : la copie de la page égale le fichier de data/
     for name, fn in TABLES:
         mm = re.search(r'/\* %s:BEGIN \*/\nconst %s = (.*);\n/\* %s:END \*/' % (name, name, name), html, re.S)

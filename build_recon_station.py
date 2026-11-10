@@ -270,7 +270,7 @@ function rsdLabelBox(a, v) {      /* le rectangle qu'occupe un texte à l'écran
   const W = SOURCE_IMG ? SOURCE_IMG.naturalWidth : 1920, k = v.w / W, sc = W / 1920, s = n => Math.round(n * sc);
   if (!RSD_MEAS) RSD_MEAS = document.createElement('canvas').getContext('2d');
   let fs, font, bw, bh;
-  if (a.style === 'stamp') { fs = s(22); font = '700 ' + fs + 'px "Roboto Mono",monospace'; }
+  if (a.style === 'stamp') { fs = s(22); font = '400 ' + fs + 'px "Roboto Mono",monospace'; }
   else if (a.style === 'cursive') { fs = s(36); font = '400 ' + fs + 'px "Caveat",cursive'; }
   else { fs = s(22); font = '400 ' + fs + 'px "Roboto Mono",monospace'; }
   RSD_MEAS.font = font;
@@ -1380,12 +1380,6 @@ HTML = f"""<!DOCTYPE html>
   src: url('data:font/woff2;base64,{A["ROBOTO_MONO_400"]}') format('woff2');
 }}
 @font-face {{
-  font-family: 'Roboto Mono';
-  font-weight: 700;
-  font-display: swap;
-  src: url('data:font/woff2;base64,{A["ROBOTO_MONO_400"]}') format('woff2');
-}}
-@font-face {{
   font-family: 'Stardos Stencil';
   font-weight: 400;
   font-display: swap;
@@ -1433,6 +1427,7 @@ body[data-theme="cw-nato"] {{
   --olive: #4a5230; --olive-dark: #2c321e; --olive-deep: #1a1e10;
   --khaki: #807454; --khaki-light: #a89a72;
   --red-stamp: #a83524; --red-faded: #c4574a;
+  --rust: #7a3a20;
   --kraft-bg: url('data:image/svg+xml;base64,{KRAFT_NATO}');
 }}
 body[data-theme="cw-soviet"] {{
@@ -1441,6 +1436,7 @@ body[data-theme="cw-soviet"] {{
   --olive: #2a3a5a; --olive-dark: #1a2540; --olive-deep: #0e1830;
   --khaki: #3a4a2e; --khaki-light: #5a6a48;
   --red-stamp: #841e1e; --red-faded: #a04040;
+  --rust: #5e1414;
   --kraft-bg: url('data:image/svg+xml;base64,{KRAFT_SOV}');
 }}
 body[data-theme="modern-nato"] {{
@@ -1449,6 +1445,7 @@ body[data-theme="modern-nato"] {{
   --olive: #2a3038; --olive-dark: #1c2026; --olive-deep: #0e1014;
   --khaki: #5c6b7a; --khaki-light: #7a8a98;
   --red-stamp: #1a1a1a; --red-faded: #4a4a4a;
+  --rust: #2a2a2a;
   --kraft-bg: url('data:image/svg+xml;base64,{KRAFT_MNATO}');
 }}
 body[data-theme="modern-east"] {{
@@ -1457,6 +1454,7 @@ body[data-theme="modern-east"] {{
   --olive: #3d3024; --olive-dark: #2a2018; --olive-deep: #1a140e;
   --khaki: #4a5238; --khaki-light: #6a7256;
   --red-stamp: #7a2424; --red-faded: #a04040;
+  --rust: #5a1a1a;
   --kraft-bg: url('data:image/svg+xml;base64,{KRAFT_MEAST}');
 }}
 
@@ -1479,7 +1477,7 @@ body {{
 .toolbar {{
   position: fixed;
   top: 0; left: 0; right: 0;
-  height: 56px;
+  height: 60px;
   background: linear-gradient(180deg, var(--olive-dark) 0%, var(--olive-deep) 100%);
   border-bottom: 2px solid var(--amber-dark);
   display: flex;
@@ -1682,7 +1680,7 @@ select[data-tbm-src] {{ display: none !important; }}
 /* ======== MAIN LAYOUT ======== */
 .app {{
   position: fixed;
-  top: 56px; bottom: 0; left: 0; right: 0;
+  top: 60px; bottom: 0; left: 0; right: 0;
   display: grid;
   grid-template-columns: 420px 1fr;
   background: var(--olive-deep);
@@ -2331,9 +2329,9 @@ select[data-tbm-src] {{ display: none !important; }}
   .tab-btn svg {{ width: 18px; height: 18px; }}
   /* En mode tablette, afficher uniquement la zone active */
   .app[data-active-tab="editor"] .preview {{ display: none; }}
-  .app[data-active-tab="editor"] .editor {{ max-height: calc(100vh - 56px - 48px); order: 1; }}
+  .app[data-active-tab="editor"] .editor {{ max-height: calc(100vh - 60px - 48px); order: 1; }}
   .app[data-active-tab="preview"] .editor {{ display: none; }}
-  .app[data-active-tab="preview"] .preview {{ min-height: calc(100vh - 56px - 48px); order: 1; }}
+  .app[data-active-tab="preview"] .preview {{ min-height: calc(100vh - 60px - 48px); order: 1; }}
 }}
 @media (min-width: 1101px) {{
   .tab-bar {{ display: none; }}
@@ -3011,15 +3009,11 @@ async function ensureFonts() {{
       `url(data:font/woff2;base64,${{ROBOTO_MONO_B64}})`,
       {{ weight: '400', style: 'normal' }}
     );
-    const ff700 = new FontFace('Roboto Mono',
-      `url(data:font/woff2;base64,${{ROBOTO_MONO_B64}})`,
-      {{ weight: '700', style: 'normal' }}
-    );
     const ffCaveat = new FontFace('Caveat',
       `url(data:font/woff2;base64,${{CAVEAT_B64}})`,
       {{ weight: '400', style: 'normal' }}
     );
-    fontsReadyPromise = Promise.all([ff400.load(), ff700.load(), ffCaveat.load()]).then(faces => {{
+    fontsReadyPromise = Promise.all([ff400.load(), ffCaveat.load()]).then(faces => {{
       faces.forEach(f => document.fonts.add(f));
       return document.fonts.ready;
     }}).then(() => {{
@@ -3958,14 +3952,14 @@ function composeRecon(ctx, W, H, st, logoImg) {{
   // Largeur des champs de valeur (avec filet de soulignement)
   function drawField(label, value, x, y, fieldW) {{
     // Label gras
-    ctx.font = `700 ${{boldFont}}px "Gunplay","Roboto Mono",monospace`;
+    ctx.font = `400 ${{boldFont}}px "Gunplay","Roboto Mono",monospace`;
     ctx.fillStyle = TXT;
     ctx.textBaseline = 'alphabetic';
     const lw = ctx.measureText(label).width;
     ctx.fillText(label, x, y);
 
     // Valeur gras (E2)
-    ctx.font = `700 ${{baseFont}}px "Gunplay","Roboto Mono",monospace`;
+    ctx.font = `400 ${{baseFont}}px "Gunplay","Roboto Mono",monospace`;
     ctx.fillStyle = TXT;
     const valX = x + lw;
     ctx.fillText(value, valX, y);
@@ -4004,7 +3998,7 @@ function composeRecon(ctx, W, H, st, logoImg) {{
   // L4 : Class centré
   const y4 = y3 + lineH;
   const classLabel = 'Class: ';
-  ctx.font = `700 ${{boldFont}}px "Gunplay","Roboto Mono",monospace`;
+  ctx.font = `400 ${{boldFont}}px "Gunplay","Roboto Mono",monospace`;
   const classLabelW = ctx.measureText(classLabel).width;
   ctx.font = `400 ${{baseFont}}px "Gunplay","Roboto Mono",monospace`;
   const classValW = ctx.measureText(f.class_ || '').width;
@@ -4033,7 +4027,7 @@ function composeRecon(ctx, W, H, st, logoImg) {{
 
   // Header N° | Label
   const hdrFont = s(22);
-  ctx.font = `700 ${{hdrFont}}px "Gunplay","Roboto Mono",monospace`;
+  ctx.font = `400 ${{hdrFont}}px "Gunplay","Roboto Mono",monospace`;
   ctx.fillStyle = '#000000';
   ctx.textBaseline = 'middle';
   const numColW = s(46);
@@ -4241,7 +4235,7 @@ function composeRecon(ctx, W, H, st, logoImg) {{
     if (lb.style === 'stamp') {{
       // Boîte pleine + texte Roboto Mono inversé
       const fsize = s(22);
-      ctx.font = `700 ${{fsize}}px "Roboto Mono",monospace`;
+      ctx.font = `400 ${{fsize}}px "Roboto Mono",monospace`;
       const tw = ctx.measureText(lb.text).width;
       const pad = s(8);
       const bw2 = tw + pad * 2, bh2 = fsize + pad * 1.4;
@@ -4298,7 +4292,7 @@ function composeRecon(ctx, W, H, st, logoImg) {{
     ctx.fillRect(0, H - barH, W, barH);
     // Texte centré blanc gras
     ctx.fillStyle = '#fff';
-    ctx.font = `700 ${{cfsize}}px "Roboto Mono",monospace`;
+    ctx.font = `400 ${{cfsize}}px "Roboto Mono",monospace`;
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'center';
     ctx.fillText(level, W/2, barH/2);
@@ -4351,7 +4345,7 @@ function composeRecon(ctx, W, H, st, logoImg) {{
     const nx  = pcx + pr + s(10);
     const ny  = pcy;
     const lab = String(i + 1);
-    ctx.font = `700 ${{s(30)}}px "Gunplay","Roboto Mono",monospace`;
+    ctx.font = `400 ${{s(30)}}px "Gunplay","Roboto Mono",monospace`;
     ctx.textAlign = 'left';
     // Halo lisibilité (conservé pour blanc/rouge sur fond clair)
     ctx.lineWidth = s(4);

@@ -41,8 +41,7 @@ _CSS = r"""
   position: absolute; top: 0; right: 0; width: 44px; height: 44px; padding: 0; background: none; border: 0; cursor: pointer;
   color: var(--paper); font-family: inherit; font-size: 24px; line-height: 1;
 }
-.ui-close:hover, .ui-close:focus-visible { color: var(--amber); outline: none; }
-.ui-close:focus-visible { outline: 2px solid var(--amber); outline-offset: -4px; }
+.ui-close:hover, .ui-close:focus-visible { color: var(--amber); }
 .ui-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 14px; }
 .ui-btn {
   box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 0 16px;
@@ -50,7 +49,6 @@ _CSS = r"""
   background: rgba(0,0,0,.2); color: var(--paper-light); border: 1px solid var(--khaki); border-radius: 0; cursor: pointer;
 }
 .ui-btn:hover { background: var(--olive); border-color: var(--amber); color: var(--amber); }
-.ui-btn:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
 .ui-btn.primary { border-color: var(--amber); color: var(--amber); }
 .ui-btn.primary:hover { background: var(--amber-dark, var(--olive)); color: var(--paper-light); }
 .ui-btn.danger, .ui-btn.primary.danger { background: var(--mp-warn); border-color: var(--mp-warn); color: #14110a; }
@@ -81,7 +79,6 @@ _CSS = r"""
   border-top: 5px solid transparent; border-bottom: 5px solid transparent; transition: transform .2s;
 }
 details[open] > .ui-fold-head::before, .ui-fold-head[aria-expanded="true"]::before { transform: rotate(90deg); }
-.ui-fold-head:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
 .ui-sum {
   display: none; flex: 0 0 100%; box-sizing: border-box; min-width: 0; max-width: 100%; margin: -6px 0 8px; padding-left: 21px;
   font-family: 'Roboto Mono', 'Courier New', monospace; font-weight: 400; font-size: 12px; line-height: 1.4; letter-spacing: 0; text-transform: none; text-align: left;
@@ -101,21 +98,51 @@ details:not([open]) > .ui-fold-head > .ui-sum:not(:empty), .ui-fold-head[aria-ex
 }
 .ui-seg-btn:hover { background: var(--olive); color: var(--amber); }
 .ui-seg-btn[aria-pressed="true"] { background: var(--amber-dark, var(--olive)); color: var(--paper-light); border-color: var(--amber); box-shadow: inset 0 -3px 0 var(--amber); position: relative; }
-.ui-seg-btn:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; position: relative; }
+.ui-seg-btn:focus-visible { position: relative; }
 .ui-seg-btn:disabled { opacity: .4; cursor: default; }
 .ui-row { display: flex; align-items: center; gap: 8px; }
 .ui-in {
   flex: 1 1 auto; min-width: 0; box-sizing: border-box; min-height: 44px; padding: 10px 11px; background: rgba(216,201,165,.92); border: 1px solid var(--khaki); border-left: 3px solid var(--amber-dark, var(--amber));
   font-family: 'Roboto Mono', 'Courier New', monospace; font-weight: 400; font-size: 13px; color: #1a1710; border-radius: 0;
 }
-.ui-in:focus { outline: none; background: var(--paper-light); box-shadow: 0 0 0 1px var(--amber); }
+.ui-in:focus { background: var(--paper-light); box-shadow: 0 0 0 1px var(--amber); }
 .ui-ext { flex: none; font-family: 'Roboto Mono', 'Courier New', monospace; font-weight: 400; font-size: 13px; color: var(--khaki-light); }
 .ui-pick { margin: 6px 0 0; }
 .ui-pick[hidden] { display: none; }
 @media print { .ui-print-hide { display: none !important; } }
+
+/* ---- le focus visible (la même règle dans toute la suite) : un contour plein de 2 px à la couleur --amber, décalé de 2 px ; le focus à la souris ne change pas ---- */
+button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus-visible, a[href]:focus-visible, [tabindex]:focus-visible, [role="button"]:focus-visible {
+  outline: 2px solid var(--amber) !important; outline-offset: 2px !important;
+}
+
+/* ---- la barre : 60 px, des cibles de 44 px au moins, le texte des boutons en Oswald 700, le drapeau en Roboto Mono 400 ---- */
+.toolbar { height: 60px; }
+.toolbar .tb-btn, .toolbar .tb-sel, .toolbar .tb-select, .toolbar .tbm-trigger, .toolbar .tb-lang-btn, .toolbar .seg-btn, .toolbar .mp-back-injected {
+  box-sizing: border-box; min-width: 44px !important; min-height: 44px !important;
+}
+.toolbar .tb-btn, .toolbar .tb-sel, .toolbar .tb-select, .toolbar .tbm-trigger, .toolbar .seg-btn { font-family: var(--f-ui); font-weight: 700; }
+.toolbar .tb-lang-btn { font-family: 'Roboto Mono', 'Courier New', monospace; font-weight: 400; }
+.toolbar .tb-seg { height: auto; min-height: 44px; }
+/* dans la suite, le module laisse le thème à l'accueil : sa liste de thème n'est pas là (le drapeau reste) */
+html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-controls="tbm-list-theme-select"], html.mp-in-shell [aria-controls="tbm-list-theme"] { display: none !important; }
 """
 
 _JS = r"""
+/* ---- dans la suite : le module le sait par window.self !== window.top, à son démarrage ---- */
+try { if (window.self !== window.top) document.documentElement.classList.add('mp-in-shell'); } catch (e) { document.documentElement.classList.add('mp-in-shell'); }
+
+/* ---- la liste de thème suit le thème appliqué (le shell pousse data-theme sur le body du module) ---- */
+(function uiThemeFollow() {
+  const sync = () => {
+    const th = document.body && document.body.getAttribute('data-theme');
+    const s = document.getElementById('theme-select') || document.getElementById('theme');
+    if (th && s && s.value !== th) s.value = th;
+  };
+  const go = () => { sync(); new MutationObserver(sync).observe(document.body, { attributes: true, attributeFilter: ['data-theme'] }); };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
+})();
+
 const UIK = { cf: null, top: null, restore: null, ex: null };
 function uiT(key, fb) { let v; try { v = t(key); } catch (e) { v = key; } return (v === undefined || v === key) ? (fb !== undefined ? fb : key) : v; }
 

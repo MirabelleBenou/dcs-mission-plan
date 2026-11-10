@@ -54,18 +54,12 @@ CSS = r"""
 }
 @font-face {
   /* Partie B (2c) — Chrome éditeur : Oswald Medium latin subset (~13 Ko woff2).
-     Rendu homogène PC ↔ tablette. Depuis v2.4.1, Oswald 600 et 700 sont embarquées
+     Rendu homogène PC ↔ tablette. Depuis v2.4.1, Oswald 700 est embarquée
      aussi : le chrome éditeur et les pages (--f-condensed) n'ont plus de faux gras. */
   font-family: 'Oswald';
   font-weight: 500;
   font-display: swap;
   src: url('data:font/woff2;base64,__OSWALD_500__') format('woff2');
-}
-@font-face {
-  font-family: 'Oswald';
-  font-weight: 600;
-  font-display: swap;
-  src: url('data:font/woff2;base64,__OSWALD_600__') format('woff2');
 }
 @font-face {
   font-family: 'Oswald';
@@ -207,7 +201,7 @@ body {
 .toolbar {
   position: fixed;
   top: 0; left: 0; right: 0;
-  height: 56px;
+  height: 60px;
   background: linear-gradient(180deg, var(--olive-dark) 0%, var(--olive-deep) 100%);
   border-bottom: 2px solid var(--amber-dark);
   display: flex;
@@ -534,7 +528,7 @@ select[data-tbm-src] { display: none !important; }
 /* ============ MAIN APP ============ */
 .app {
   position: fixed;
-  top: 56px; bottom: 0; left: 0; right: 0;
+  top: 60px; bottom: 0; left: 0; right: 0;
   display: grid;
   grid-template-columns: 460px 1fr;
   background: var(--olive-deep);
@@ -714,7 +708,7 @@ select[data-tbm-src] { display: none !important; }
   text-align: center;
   cursor: pointer;
   font-family: var(--f-ui);
-  font-weight: 600;
+  font-weight: 700;
   font-size: 11px;
   color: var(--khaki-light);
   text-transform: uppercase;
@@ -1135,7 +1129,7 @@ select[data-tbm-src] { display: none !important; }
 }
 .p-header .p-title .p-sub {
   font-family: var(--f-condensed);
-  font-weight: 600;
+  font-weight: 700;
   font-size: 11px;
   letter-spacing: 3px;
   color: var(--ink-faded);
@@ -1239,7 +1233,7 @@ select[data-tbm-src] { display: none !important; }
   background: var(--paper);
   padding: 0 6px;
   font-family: var(--f-condensed);
-  font-weight: 600;
+  font-weight: 700;
   font-size: 10px;
   letter-spacing: 2px;
   color: var(--ink-faded);
@@ -1281,7 +1275,7 @@ select[data-tbm-src] { display: none !important; }
   border-top: 1px solid var(--ink-faded);
   padding-top: 6px;
   font-family: var(--f-condensed);
-  font-weight: 600;
+  font-weight: 700;
   font-size: 10px;
   letter-spacing: 2px;
   color: var(--ink-faded);
@@ -1442,7 +1436,7 @@ select[data-tbm-src] { display: none !important; }
 .ed-subtask-row input { flex: 1; font-size: 12px; }
 .ed-btn-subtask-add {
   font-family: var(--f-ui);
-  font-weight: 600;
+  font-weight: 700;
   font-size: 10px;
   letter-spacing: 1px;
   text-transform: uppercase;
@@ -1579,7 +1573,7 @@ select[data-tbm-src] { display: none !important; }
   width: 1%;
   white-space: nowrap;
   font-family: var(--f-condensed);
-  font-weight: 600;
+  font-weight: 700;
   font-size: 10px;
   color: var(--olive);
   letter-spacing: 1px;
@@ -2003,7 +1997,7 @@ select[data-tbm-src] { display: none !important; }
 }
 .squadron-cell .squadron-phases {
   font-family: var(--f-condensed);
-  font-weight: 600;
+  font-weight: 700;
   font-size: 10px;
   letter-spacing: 1.5px;
   color: var(--rust);
@@ -2850,7 +2844,6 @@ CSS = CSS.replace('__STARDOS_700__', A['STARDOS_700'])
 CSS = CSS.replace('__SPECIAL_ELITE__', A['SPECIAL_ELITE'])
 CSS = CSS.replace('__ROBOTO_MONO_400__', A['ROBOTO_MONO_400'])
 CSS = CSS.replace('__OSWALD_500__', A['OSWALD_500'])  # 2c
-CSS = CSS.replace('__OSWALD_600__', A['OSWALD_600'])
 CSS = CSS.replace('__OSWALD_700__', A['OSWALD_700'])
 
 # ════════════════════════════════════════════════════════════════════
