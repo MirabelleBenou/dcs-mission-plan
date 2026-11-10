@@ -1229,20 +1229,20 @@ div.dc-bl, li.dc-bl, p.dc-bl { height: 24px; border-bottom: 1px dotted var(--dc-
 
 
 /* ---------- Barre du haut commune aux sept modules (lot mp-imports-suite) ----------
-   La marque du Flight Configurator : le titre et son sous-titre à l'accent du module dès 1601 px, le sigle seul en dessous (à toutes les largeurs) ;
-   la version avec le titre ; le tampon de décor dès 2307 px. Seuils mesurés dans le shell avec un tampon d'escadre « TEST WING », en français et en anglais,
-   la liste du théâtre comprise (lot mp-dg-terrains-liste : +142 px au titre, +171 px aux textes des boutons, +183 px au tampon de décor, au pire des deux langues) et le bouton « Unités »
-   (lot mp-theatre-unique : +97 px au titre, +103 px aux textes des boutons, +103 px au tampon de décor, mesurés avant et après). */
+   La marque du Flight Configurator : le titre et son sous-titre à l'accent du module dès 1274 px, le sigle seul en dessous (à toutes les largeurs) ;
+   la version avec le titre ; le tampon de décor dès 1910 px. Seuils mesurés dans le shell avec un tampon d'escadre « TEST WING », en français et en anglais,
+   en paysage et en portrait (lot mp-ui-disposition : Jour | Nuit et les unités sont passés dans « Affichage », « Ouvrir » ouvre une datacard ou importe, le bouton « Briefing » a disparu de la barre,
+   la barre ne défile plus dès 1005 px ; chaque seuil est la plus petite largeur à partir de laquelle la barre tient avec ce qui précède : le français, plus large, donne le seuil). */
 .tb-brand-main, .tb-brand-short { color: #8fb0c0; }
 .tb-brand-short { display: none; font-family: var(--f-stencil); font-size: 16px; font-weight: 700; letter-spacing: 3px; white-space: nowrap; }
 .tb-classif { font-family: var(--f-stencil); font-weight: 400; font-size: 11px; letter-spacing: 3px; color: var(--red-faded); border: 1px solid var(--red-faded); padding: 4px 10px; white-space: nowrap; flex-shrink: 0; }
 .tb-lang-btn svg { display: block; }
 .tb-brand-sub { font-weight: 500; }
 .tb-version { font-family: 'Roboto Mono', monospace; }
-@media (max-width: 1600px) { .tb-brand-main, .tb-brand-sub, .tb-brand + .tb-sep, .tb-version { display: none; } .tb-brand-short { display: inline; } }
-@media (max-width: 2306px) { .tb-classif { display: none; } }
-/* Les boutons portent leur texte au-dessus de 2015 px ; en dessous, l'icône seule (seuil mesuré : avec le tampon d'escadre, la barre défilerait sinon) */
-@media (max-width: 2014px) { .tb-btn .tb-btn-label { display: none; } .tb-btn { padding: 0 10px; } }
+@media (max-width: 1273px) { .tb-brand-main, .tb-brand-sub, .tb-brand + .tb-sep, .tb-version { display: none; } .tb-brand-short { display: inline; } }
+@media (max-width: 1909px) { .tb-classif { display: none; } }
+/* Les boutons portent leur texte à partir de 1618 px ; en dessous, l'icône seule (seuil mesuré dans le shell avec le tampon d'escadre « TEST WING » : plus petite largeur où la barre tient avec les textes et la marque ; en dessous, elle défilerait) */
+@media (max-width: 1617px) { .tb-btn .tb-btn-label { display: none; } .tb-btn { padding: 0 10px; } }
 @media (max-width: 1250px) {
   /* le sélecteur de thème se resserre */
   .tb-select { max-width: 124px; padding: 0 26px 0 8px; text-overflow: ellipsis; overflow: hidden; }
