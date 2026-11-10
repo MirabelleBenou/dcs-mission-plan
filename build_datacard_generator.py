@@ -1201,7 +1201,7 @@ select[data-tbm-src] { display: none !important; }
 .ed-seg { display: flex; width: 100%; }
 .ed-seg-btn { flex: 1 1 0; min-height: 44px; padding: 6px 10px; background: var(--olive-dark); border: 1px solid var(--khaki); color: var(--paper); font-family: var(--f-ui); font-weight: 700; font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; transition: background .15s; }
 .ed-seg-btn + .ed-seg-btn { border-left: none; }
-.ed-seg-btn[aria-pressed="true"] { background: var(--amber-dark); color: var(--paper-light); border-color: var(--amber); box-shadow: inset 0 -3px 0 var(--amber); }
+.ed-seg-btn[aria-pressed="true"] { background: var(--amber-dark); color: #fff; border-color: var(--amber); box-shadow: inset 0 -3px 0 var(--amber); }
 .ed-seg-btn[aria-pressed="false"]:hover { background: var(--olive); color: var(--amber); }
 .ed-seg-btn:active { transform: translateY(1px); }
 /* La route d'une datacard (lot mp-dg-nav-route) : le bandeau de la section Navigation, la pastille « Commun à la mission » */
@@ -1335,6 +1335,7 @@ select[data-tbm-src] { display: none !important; }
 
 /* ============ DATACARD ============ */
 .dc-sheet {
+  font-size: 14px;       /* le document garde sa taille de base : il ne suit pas celle de l'interface */
   width: calc(1000px * var(--s, 1));
   height: calc(1414px * var(--s, 1));
   margin: 0 auto 28px auto;
@@ -1370,6 +1371,7 @@ select[data-tbm-src] { display: none !important; }
 }
 
 .dc-page {
+  font-size: 14px;   /* le document garde sa taille de base (l'export PNG le pose hors de #preview) */
   position: relative;
   width: 1000px;
   height: 1414px;

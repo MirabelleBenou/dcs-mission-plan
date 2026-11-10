@@ -21,6 +21,7 @@ Changes merged since the last release, grouped per tool.
 - In HQ and the Datacard Generator, radios are named and ordered as DCS does (A-10C II, C-130J, M-2000C, OH-58D, Gazelles, F-15E, AV-8B), as in Mission Tools; for the Gazelles, only the FM radio, the one missions preset.
 - One message style across the suite: a single toast at the bottom of the screen, with a coloured edge for success (green) and errors (red); errors stay on screen at least five seconds. Errors are told in plain words (“Unreadable file: this is not a .miz.”) instead of the browser's technical message. Switching language no longer shows a message; the flag's tooltip says what it does (“Switch to French”). Labels read by screen readers follow the tool's language.
 - One way to confirm, export and fold across the suite: questions open in the suite's own window and their button says what will happen (“Delete”, “Clear”); loading the example or opening a file over your work no longer asks, it offers “Restore” for twelve seconds instead. Collapsible sections all use the same arrow, in the tool's colour, on the left; the whole header is clickable, a folded section shows a one-line summary, and each tool remembers what you folded. Warnings use one colour in every theme.
+- One toolbar across the suite: 44-pixel buttons, the same fonts, built in (the landing page no longer loads web fonts), six text sizes, readable contrast in every theme, and a visible focus outline for the keyboard. Inside Mission Plan, each tool keeps its language flag and leaves the theme to the landing page; switching language in one tool now carries over to the others. “Side” is now “Coalition” everywhere, blue first.
 
 ### Mission Plan — landing
 #### Added
@@ -51,6 +52,7 @@ Changes merged since the last release, grouped per tool.
 - **Flight Configurator**, a new module: a Flight Lead prepares a flight (identity, radios, loadout built on the aircraft's front view or started from the squadron's presets, livery) and exports it as a flight package that HQ applies to the Mission Commander's mission. Each aircraft of a flight has its own type, so a flight can mix types; flight names must be unique per side before export.
 - A **Route** block above the loadout: pick one of the Route Planner's routes for the group (one route per group), then see it as a paper sketch — waypoints, names, numbered legs — with each leg's magnetic heading and distance in NM. When the route changes in the Route Planner, the group follows it; if it is deleted there, the last copy is kept.
 - The Mi-24P's and Mi-8MT's HF radio (Jadro-1I, Jadro-1A), which missions do not preset: up to five frequencies, carried in the flight package and shown on the datacard, never written to the mission by HQ.
+- An Example button that loads two groups (Mi-24P, Mi-8MT), with “Restore” for twelve seconds.
 #### Changed
 - Groups are now shared with the Route Planner: create, rename or re-route a group in either tool and the other follows at once. A group may have no unit yet. A group with no unit is exported route only.
 - **Import** now also reads the Briefing Generator — its groups, their number of aircraft and the radio plan of each aircraft type, cockpit channel numbers converted — with Side, Type and Name filters. A group is completed when its name, case included, and side match; a flight of an aircraft the suite does not handle comes in as a group with its route only. An aircraft the suite does not know by the briefing's name is left for you to pick; the package exports once every type is picked. An imported route now shows in the Route Planner as the group's route.
@@ -67,6 +69,7 @@ Changes merged since the last release, grouped per tool.
 - The top bar no longer overflows on narrow phones.
 - Importing a wing configuration checks the file like HQ and the Briefing Generator, with the same messages.
 - Messages no longer cover the drawing bar, and choosing a file that is not an image now says so.
+- Classification uses the Briefing Generator's six levels, translated; “Import config” no longer points to the Briefing Generator.
 
 ### Briefing Generator
 #### Changed
@@ -97,6 +100,7 @@ Changes merged since the last release, grouped per tool.
 - Weather box: a light separator between its two columns, and a slightly smaller METAR, which now fits on one line in most cases.
 - A datacard's navigation is now a Route Planner route, edited from both sides: a waypoint entered (coordinates, or course and distance), moved or removed in one tool changes in the other; time and note stay with the datacard, attached to each waypoint. A card without a route gets one at its first position. Course settings (true or magnetic, variation, year) are shared with the Route Planner. Reference points are the Route Planner's, shared by the whole mission; each datacard chooses which ones it shows.
 - Export in one window: format, pages and file name together. Rarely used sections (meta, airfields, fuel, threats) start folded.
+- True or magnetic heading is now two buttons, as in the Route Planner.
 #### Removed
 - The Datacard Generator's own HQ and flight package imports, replaced by the common import window of the Flight Configurator and the Route Planner.
 #### Fixed

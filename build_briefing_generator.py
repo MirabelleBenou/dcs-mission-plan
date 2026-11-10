@@ -1092,7 +1092,9 @@ select[data-tbm-src] { display: none !important; }
 .preview-wrap::-webkit-scrollbar-thumb { background: var(--khaki); border: 2px solid var(--olive-deep); }
 
 /* PAGES */
+/* Le document garde sa taille de base (14 px) : il ne suit pas celle de l'interface */
 .page {
+  font-size: 14px;
   width: 794px;
   height: 1123px;           /* A4 figée — plus de min-height (chatE étape A) */
   max-height: 1123px;
