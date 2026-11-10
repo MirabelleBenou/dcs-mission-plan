@@ -951,7 +951,7 @@ body {
   font-family: var(--f-typewriter);
   background: var(--olive-deep);
   color: var(--paper);
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.5;
   -webkit-tap-highlight-color: transparent;
   -webkit-text-size-adjust: 100%;
@@ -1019,7 +1019,7 @@ body {
 }
 .tb-select option { background-color: var(--olive-dark); color: var(--paper); }
 /* Le théâtre dans la barre : le libellé et la liste, mêmes règles qu'au Route Planner et au Datacard Generator (.tb-label, .tb-sel) */
-.tb-label { font-size: 10px; font-weight: 500; letter-spacing: 1.5px; color: var(--khaki-light); text-transform: uppercase; flex: none; margin-left: 4px; white-space: nowrap; }
+.tb-label { font-family: var(--f-ui); font-size: 10px; font-weight: 500; letter-spacing: 1.5px; color: var(--khaki-light); text-transform: uppercase; flex: none; margin-left: 4px; white-space: nowrap; }
 .tb-sel {
   font-family: var(--f-ui); font-weight: 700; letter-spacing: 1.5px; font-size: 12px; text-transform: uppercase;
   color: var(--amber); border: 1px solid var(--amber-dark); height: 40px; min-width: 44px;
@@ -1075,7 +1075,7 @@ select[data-tbm-src] { display: none !important; }
    à 12 px du bord droit, 8 px sur un champ de moins de 120 px). La liste ouverte garde la police du champ. */
 .tbm-panel.tbm-p-field { max-width: calc(100vw - 16px); }
 .tbm-panel.tbm-p-field .tbm-opt {
-  font-family: var(--f-typewriter); font-weight: 400; font-size: 14px; letter-spacing: .2px; text-transform: none;
+  font-family: var(--f-typewriter); font-weight: 400; font-size: 13px; letter-spacing: .2px; text-transform: none;
 }
 .tbm-panel.tbm-p-field .tbm-opt[aria-selected="true"] { font-weight: 400; }
 .tbm-panel .tbm-group { margin-top: 2px; border-top: 1px solid rgba(168,154,114,.25); }
@@ -1136,7 +1136,7 @@ select[data-tbm-src] { display: none !important; }
   .toolbar { gap: 6px; padding-left: max(8px, env(safe-area-inset-left)); padding-right: max(8px, env(safe-area-inset-right)); }
   .tb-brand { min-width: 0; }
   .tb-brand-sub, .tb-sep { display: none; }
-  .tb-brand-main { font-size: 14px; letter-spacing: 2px; }
+  .tb-brand-main { font-size: 13px; letter-spacing: 2px; }
   .tb-btn { width: 36px; }
   .tb-select { font-size: 11px; letter-spacing: .5px; padding: 0 22px 0 8px; background-position: right 6px center; }
   .tb-select.tbm-trigger { min-width: 0; flex: 0 1 auto; }
@@ -1239,8 +1239,8 @@ body[data-theme] {
    libellé court de 1190 à 1329 px, icône seule en dessous ; le titre et la version dès 1615 px, le tampon de décor dès 1824 px ; le sigle reste visible à toutes les largeurs.
    La liste du théâtre (lot mp-theatre-unique) a déplacé de 179 px les seuils du titre et du tampon de décor, de 290 px ceux des libellés longs et courts (théâtre « Caucase », mesuré dans le shell, en français et en anglais, sans dépassement de 900 à 1900 px). */
 @media (max-width: 1614px) { .tb-brand-main, .tb-brand-sub, .tb-sep, .tb-version { display: none; } .tb-brand-short { display: inline; } }
-@media (max-width: 1329px) { .tb-btn { padding: 0 9px; letter-spacing: 1px; } .tb-select { max-width: 130px; } }
-@media (max-width: 1189px) { .tb-btn .tb-btn-label { display: none; } .tb-btn { padding: 0; width: 38px; } .tb-select { max-width: 110px; } }
+@media (max-width: 1329px) { .tb-btn { padding: 0 9px; letter-spacing: 1px; } }
+@media (max-width: 1189px) { .tb-btn .tb-btn-label { display: none; } .tb-btn { padding: 0; width: 44px; } }
 @media (max-width: 539px) { .tb-select { max-width: 96px; } }
 @media (max-width: 479px) { .toolbar { gap: 3px; } .tb-btn { width: 34px; min-width: 34px; } .tb-select { max-width: 64px; padding: 0 18px 0 6px; } .tb-lang-btn { min-width: 34px; padding: 0 2px; } }
 /* La liste du théâtre (lot mp-theatre-unique) : jusqu'à 980 px le libellé « Théâtre » cède la place (la liste garde son nom accessible) ; sous 480 px la liste se resserre (texte entier jusqu'à 96 px, puis coupé)
@@ -1274,7 +1274,7 @@ body[data-theme] {
 .fc-row3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
 .fc-row4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
 .fc-row > *, .fc-row3 > *, .fc-row4 > *, .fc-set > * { min-width: 0; }
-.snap-flight-tag { font-family: var(--f-ui); font-size: 10px; padding: 2px 6px; border-radius: 2px; background: var(--olive); color: var(--paper-light); text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; }
+.snap-flight-tag { font-family: var(--f-ui); font-weight: 500; font-size: 10px; padding: 2px 6px; border-radius: 2px; background: var(--olive); color: var(--paper-light); text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; }
 .pk-x { flex: none; min-width: 36px; min-height: 36px; background: none; border: 0; color: var(--khaki-light); font-size: 16px; cursor: pointer; }
 .pk-x:hover, .pk-x:focus-visible { color: var(--amber); outline: none; }
 .pk-chk { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; cursor: pointer; font-family: var(--f-typewriter); font-size: 12px; }
@@ -1373,7 +1373,7 @@ body[data-theme] {
 .fc-sub > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px; min-height: 44px; user-select: none; font-family: var(--f-stencil); font-size: 12px; letter-spacing: 1.5px; color: var(--amber); text-transform: uppercase; }
 .fc-sub > summary::-webkit-details-marker, .fc-post > summary::-webkit-details-marker { display: none; }
 .fc-sub > summary.ui-fold-head::before, .fc-post > summary.ui-fold-head::before { margin: 0 4px; }
-.fc-sub .fc-sum, .fc-post .fc-sum { font-family: var(--f-typewriter); font-size: 11px; letter-spacing: 0; text-transform: none; color: var(--khaki-light); min-width: 0; word-break: break-word; }
+.fc-sub .fc-sum, .fc-post .fc-sum { font-family: var(--f-typewriter); font-weight: 400; font-size: 11px; letter-spacing: 0; text-transform: none; color: var(--khaki-light); min-width: 0; word-break: break-word; }
 .fc-sub > .fc-subc { padding: 2px 0 6px; display: flex; flex-direction: column; gap: 10px; }
 .fc-posts { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
 .fc-post { border: 1px solid rgba(128,116,84,.4); background: rgba(0,0,0,.12); }
@@ -1386,7 +1386,7 @@ body[data-theme] {
 .fc-post > .fc-postc { padding: 4px 10px 10px; }
 .fc-chans { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 6px 8px; }
 .fc-ch { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.fc-ch > label { font-family: var(--f-ui); font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--khaki-light); }
+.fc-ch > label { font-family: var(--f-ui); font-weight: 500; font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--khaki-light); }
 .fc-lo-sum { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(128,116,84,.45); }
 .fc-see { background: none; border: 0; padding: 6px 2px; min-height: 34px; font-family: var(--f-typewriter); font-size: 12px; color: var(--fc); text-decoration: underline; cursor: pointer; }
 @media (min-width: 1100px) { .fc-see { display: none; } }
@@ -1438,9 +1438,9 @@ body[data-theme] {
 .rt-hd { font-size: 11px; fill: var(--red-stamp); stroke: var(--paper-light); stroke-width: 3px; stroke-linejoin: round; paint-order: stroke; text-anchor: middle; }
 .rt-num circle { fill: var(--paper-light); stroke: var(--red-stamp); stroke-width: 1.2; }
 .rt-num text { font-size: 10px; fill: var(--red-stamp); text-anchor: middle; }
-.rt-svg .rt-gn { font-family: var(--f-stencil); font-weight: 400; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; fill: var(--ink-faded); }
+.rt-svg .rt-gn { font-family: var(--f-stencil); font-weight: 400; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; fill: var(--ink-faded); }
 .rt-north line, .rt-north path, .rt-scale path { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-.rt-svg .rt-nn { font-family: var(--f-stencil); font-weight: 400; font-size: 15px; fill: var(--ink); text-anchor: middle; }
+.rt-svg .rt-nn { font-family: var(--f-stencil); font-weight: 400; font-size: 16px; fill: var(--ink); text-anchor: middle; }
 .rt-scale text { font-size: 12px; fill: var(--ink); }
 .rt-tab { width: 100%; border-collapse: collapse; font-family: var(--f-typewriter); font-size: 13px; color: var(--paper); }
 .rt-tab th { padding: 8px 6px; text-align: left; font-family: var(--f-ui); font-weight: 500; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--amber); border-bottom: 1px solid var(--khaki-light); }
@@ -1448,7 +1448,7 @@ body[data-theme] {
 .rt-tab .rt-n { width: 2.2em; color: var(--khaki-light); }
 .rt-tab .rt-r { text-align: right; white-space: nowrap; }
 .rt-tab .rt-tot td { border-bottom: 0; }
-@media (max-width: 539px) { .rt-name { font-size: 20px; } .rt-tab { font-size: 12px; } }
+@media (max-width: 539px) { .rt-name { font-size: 22px; } .rt-tab { font-size: 12px; } }
 
 /* ---------- L'emport : la vue de face de Mission Tools (Loadout Editor), reprise ---------- */
 .fc-back { display: none; align-self: flex-start; min-height: 40px; padding: 0 4px; background: none; border: 0; font-family: var(--f-typewriter); font-size: 13px; color: var(--fc); text-decoration: underline; cursor: pointer; }
@@ -4436,7 +4436,7 @@ def build_html():
           + build_route_pack_block() + '\n' + build_route_theatre_block() + '\n' + build_group_store_block() + '\n' + build_import_block() + '\n' + build_messages_block() + '\n' + build_ui_block() + '\n' + JS_TBM + '\n' + app_js())
     return ('<!DOCTYPE html>\n<html lang="fr">\n<head>\n<meta charset="UTF-8">\n'
             '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">\n'
-            '<meta name="theme-color" content="#1a1e10">\n<title>Flight Configurator</title>\n<style>\n'
+            '<meta name="theme-color" content="#1a1e10">\n<title>Flight Configurator — Mission Plan</title>\n<style>\n'
             + fonts + CSS_COMMON + CSS_FC + build_messages_css() + build_ui_css() + build_import_css() + '\n</style>\n'
             '<!-- JSZip v3.10.1 — embarqué pour lire un paquet .zip -->\n<script>' + A['lib_jszip'] + '</script>\n</head>\n'
             + BODY.replace('@@VERSION@@', APP_VERSION) + '\n<script>\n' + js + '\n</script>\n</body>\n</html>\n')

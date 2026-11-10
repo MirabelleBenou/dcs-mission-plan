@@ -664,7 +664,7 @@ body {
   font-family: var(--f-typewriter);
   background: var(--olive-deep);
   color: var(--ink);
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.5;
   overflow: hidden;
   -webkit-tap-highlight-color: transparent;
@@ -774,7 +774,7 @@ body {
 }
 
 /* Le théâtre dans la barre : le libellé et la liste, mêmes règles qu'au Route Planner (.tb-label, .tb-sel) */
-.tb-label { font-size: 10px; font-weight: 500; letter-spacing: 1.5px; color: var(--khaki-light); text-transform: uppercase; flex: none; margin-left: 4px; white-space: nowrap; }
+.tb-label { font-family: var(--f-ui); font-size: 10px; font-weight: 500; letter-spacing: 1.5px; color: var(--khaki-light); text-transform: uppercase; flex: none; margin-left: 4px; white-space: nowrap; }
 .tb-sel {
   font-family: var(--f-ui); font-weight: 700; letter-spacing: 1.5px; font-size: 12px; text-transform: uppercase;
   color: var(--amber); border: 1px solid var(--amber-dark); height: 40px; min-width: 44px;
@@ -845,11 +845,11 @@ select[data-tbm-src] { display: none !important; }
 .tbm-list { margin: 0; padding: 0; list-style: none; outline: none; }
 .tbm-list:focus, .tbm-list:focus-visible { outline: none; }
 .tbm-search { position: sticky; top: 0; z-index: 2; padding: 6px 10px; background: var(--olive-dark); border-bottom: 1px solid rgba(168,154,114,.25); }
-.tbm-q { display: block; width: 100%; min-height: 36px; box-sizing: border-box; padding: 6px 10px; font-family: var(--f-typewriter); font-size: 14px; letter-spacing: .2px; color: #1f1c16; background: rgba(216, 201, 165, .92); border: 1px solid var(--khaki); border-left: 3px solid var(--amber-dark); border-radius: 0; outline: none; }
+.tbm-q { display: block; width: 100%; min-height: 36px; box-sizing: border-box; padding: 6px 10px; font-family: var(--f-typewriter); font-size: 13px; letter-spacing: .2px; color: #1f1c16; background: rgba(216, 201, 165, .92); border: 1px solid var(--khaki); border-left: 3px solid var(--amber-dark); border-radius: 0; outline: none; }
 .tbm-q:focus { border-left-color: var(--red-stamp); box-shadow: 0 0 0 1px var(--amber); }
 .tbm-q::placeholder { color: #6b6450; opacity: 1; }
 .tbm-none { margin: 0; padding: 0; list-style: none; cursor: default; }
-.tbm-msg { font-family: var(--f-typewriter); font-size: 14px; color: var(--khaki-light); }
+.tbm-msg { font-family: var(--f-typewriter); font-size: 13px; color: var(--khaki-light); }
 .tbm-msg:not(:empty) { padding: 12px 18px; }
 @media (prefers-reduced-motion: reduce) { .tbm-panel { animation: none; } }
 @media print { .tbm-panel { display: none; } }
@@ -875,7 +875,7 @@ select[data-tbm-src] { display: none !important; }
 
 .tbm-panel.tbm-p-field { max-width: calc(100vw - 16px); }
 .tbm-panel.tbm-p-field .tbm-opt {
-  font-family: var(--f-typewriter); font-weight: 400; font-size: 14px; letter-spacing: .2px; text-transform: none;
+  font-family: var(--f-typewriter); font-weight: 400; font-size: 13px; letter-spacing: .2px; text-transform: none;
 }
 .tbm-panel.tbm-p-field .tbm-opt[aria-selected="true"] { font-weight: 400; }
 .tbm-panel.tbm-up { border-top: 1px solid var(--amber-dark); border-bottom: 3px solid var(--amber); transform-origin: bottom left; }
@@ -983,7 +983,7 @@ select[data-tbm-src] { display: none !important; }
 .pack-title {
   font-family: var(--f-stencil);
   font-weight: 700;
-  font-size: 14px;
+  font-size: 13px;
   letter-spacing: 2px;
   color: var(--amber);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -1130,7 +1130,7 @@ select[data-tbm-src] { display: none !important; }
   cursor: pointer;
   padding: 0;
   transition: background .15s;
-  font-size: 15px;
+  font-size: 16px;
   line-height: 1;
   min-width: 40px;
   min-height: 34px;
@@ -1175,8 +1175,8 @@ select[data-tbm-src] { display: none !important; }
 .nav-route.full { border-left-color: var(--red-stamp); }
 .nav-route .nr-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .nav-route .nr-k { font: 500 11px/1 var(--f-ui); letter-spacing: 2px; color: var(--khaki-light); text-transform: uppercase; }
-.nav-route .nr-name { font: 700 15px/1.1 var(--f-stencil); letter-spacing: 1px; color: var(--paper-light); }
-.nav-route .nr-sub { font: 400 11px/1.35 var(--f-ui); letter-spacing: 1px; color: var(--khaki-light); }
+.nav-route .nr-name { font: 700 16px/1.1 var(--f-stencil); letter-spacing: 1px; color: var(--paper-light); }
+.nav-route .nr-sub { font: 500 11px/1.35 var(--f-ui); letter-spacing: 1px; color: var(--khaki-light); }
 .nav-route .nr-link { margin: 0; }
 .nav-route .nr-link > label { display: none; }
 .nav-route .nr-link .tbm-trigger { background: transparent; border: 1px dashed var(--amber); color: var(--amber); font-family: var(--f-ui); font-weight: 700; letter-spacing: 1.5px; font-size: 11px; text-transform: uppercase; min-height: 44px; justify-self: start; width: auto; max-width: 100%; }
@@ -1268,7 +1268,7 @@ select[data-tbm-src] { display: none !important; }
 .imp-block h3 {
   font-family: var(--f-stencil);
   font-weight: 700;
-  font-size: 14px;
+  font-size: 13px;
   letter-spacing: 2px;
   margin: 0 0 10px;
   text-transform: uppercase;
@@ -1651,17 +1651,17 @@ div.dc-bl, li.dc-bl, p.dc-bl { height: 24px; border-bottom: 1px dotted var(--dc-
 .card-row:hover, .card-row:focus-visible { border-color: var(--amber); outline: none; }
 .card-row.cur { background: var(--olive); border-color: var(--amber); border-left-color: var(--amber); }
 .card-row.free { border-left-style: dashed; }
-.cr-name { font-family: var(--f-stencil); font-weight: 700; font-size: 14px; letter-spacing: 2px; color: var(--amber); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-.cr-tag { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 2px 7px; border: 1px solid; white-space: nowrap; }
+.cr-name { font-family: var(--f-stencil); font-weight: 700; font-size: 13px; letter-spacing: 2px; color: var(--amber); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.cr-tag { font-family: var(--f-ui); font-size: 10px; font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase; padding: 2px 7px; border: 1px solid; white-space: nowrap; }
 .cr-tag.linked { color: var(--amber); border-color: var(--amber-dark); }
 .cr-tag.free { color: var(--khaki-light); border-color: var(--khaki); border-style: dashed; }
 .cr-tag.gone { color: #e8806a; border-color: var(--red-faded); }
-.cr-sum { grid-column: 1 / -1; font-size: 11px; letter-spacing: .6px; color: var(--khaki-light); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cr-sum { grid-column: 1 / -1; font-weight: 500; font-size: 11px; letter-spacing: .6px; color: var(--khaki-light); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .card-row.cur .cr-sum { color: var(--paper); opacity: .85; }
 
 /* La boîte « Groupe et équipage » : champs partagés avec le Flight Configurator (pastille FC) sur une carte liée */
 .sh {
-  display: inline-block; padding: 0 4px; margin-left: 2px; font-size: 9px; line-height: 14px; letter-spacing: 1px;
+  display: inline-block; padding: 0 4px; margin-left: 2px; font-size: 10px; line-height: 14px; letter-spacing: 1px;
   color: var(--olive-deep); background: var(--amber); border-radius: 2px;
 }
 .ed-field label .sh { align-self: center; }
@@ -1677,7 +1677,7 @@ div.dc-bl, li.dc-bl, p.dc-bl { height: 24px; border-bottom: 1px dotted var(--dc-
 /* Radios : un encadré par type */
 .rt-box { border: 1px solid var(--khaki); background: rgba(0, 0, 0, .14); padding: 10px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .rt-h { display: flex; flex-direction: column; gap: 2px; font-weight: 400; }
-.rt-t { font-family: var(--f-stencil); font-weight: 700; font-size: 14px; letter-spacing: 2px; color: var(--amber); }
+.rt-t { font-family: var(--f-stencil); font-weight: 700; font-size: 13px; letter-spacing: 2px; color: var(--amber); }
 .rt-u { font-family: var(--f-ui); font-size: 11px; letter-spacing: .8px; color: var(--khaki-light); }
 .rt-post { display: flex; flex-direction: column; gap: 6px; padding-top: 8px; border-top: 1px dashed var(--khaki); }
 .rt-ph { font-family: var(--f-ui); font-weight: 700; font-size: 11px; letter-spacing: 1.8px; text-transform: uppercase; color: var(--paper); }
@@ -1745,7 +1745,7 @@ __TAB_SECTION_RULES__
     padding: 12px 14px;
     font-family: var(--f-stencil);
     font-weight: 700;
-    font-size: 14px;
+    font-size: 13px;
     letter-spacing: 2px;
     color: var(--amber);
     border-bottom: 1px solid var(--amber-dark);
@@ -1863,7 +1863,7 @@ HTML = r"""<!DOCTYPE html>
 <meta name="theme-color" content="#1a1e10">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<title>Datacard Generator</title>
+<title>Datacard Generator — Mission Plan</title>
 <style>
 __CSS__
 </style>
@@ -3101,7 +3101,7 @@ function applyI18nStatic() {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
   document.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = t(el.dataset.i18nTitle); });
   document.querySelectorAll('[data-i18n-aria-label]').forEach(el => { el.setAttribute('aria-label', t(el.dataset.i18nAriaLabel)); });
-  document.title = t('app.title');
+  document.title = 'Datacard Generator — Mission Plan';       // le nom de l'outil, sans traduction
 }
 
 /* Drapeaux dessinés (ils ne s'affichent pas en lettres sous Windows) ; le bouton montre la langue vers laquelle il bascule */

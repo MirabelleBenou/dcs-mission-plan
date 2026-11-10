@@ -87,11 +87,11 @@ RSD_CSS = r'''/* ======== ANNOTER AU DOIGT (lot mp-rs-v1.1.0) — la barre, le m
   min-height: 52px; background: transparent; color: var(--paper); border: 1px solid var(--khaki); border-left: none; cursor: pointer; padding: 4px 2px; }
 .dr-tool:first-child { border-left: 1px solid var(--khaki); }
 .dr-tool svg { width: 22px; height: 22px; display: block; }
-.dr-tool i { font-style: normal; font-weight: 700; font-size: 9.5px; letter-spacing: 1px; text-transform: uppercase; line-height: 1; }
+.dr-tool i { font-style: normal; font-weight: 700; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; line-height: 1; }
 .dr-tool.on { background: var(--amber-dark); color: var(--paper-light); border-color: var(--amber); box-shadow: inset 0 -3px 0 var(--amber); }
 .dr-tool.danger { color: #f0a090; }
 .dr-sel { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; justify-content: center; padding: 0 6px; color: var(--paper-light); }
-.dr-sel small { font-weight: 700; font-size: 9.5px; letter-spacing: 1.5px; color: var(--amber); text-transform: uppercase; }
+.dr-sel small { font-weight: 700; font-size: 10px; letter-spacing: 1.5px; color: var(--amber); text-transform: uppercase; }
 .dr-sel span { font-family: var(--f-mono); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dr-bar.selmode .dr-tools { flex: 0 0 auto; }
 .dr-bar.selmode .dr-tool { width: 60px; flex: none; }
@@ -103,10 +103,10 @@ RSD_CSS = r'''/* ======== ANNOTER AU DOIGT (lot mp-rs-v1.1.0) — la barre, le m
 .dr-sheet[hidden] { display: none; }
 .dr-sheet .sh-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
 .dr-sheet .sh-head b { font-weight: 700; font-size: 11px; letter-spacing: 1.5px; color: var(--amber); text-transform: uppercase; }
-.dr-sheet .sh-x { width: 40px; height: 40px; background: transparent; border: 1px solid var(--khaki); color: var(--paper); font-size: 18px; cursor: pointer; }
+.dr-sheet .sh-x { width: 40px; height: 40px; background: transparent; border: 1px solid var(--khaki); color: var(--paper); font-size: 16px; cursor: pointer; }
 .dr-f { margin-top: 8px; }
-.dr-f > label { display: block; font-weight: 700; font-size: 9.5px; letter-spacing: 1.5px; color: var(--amber); text-transform: uppercase; margin-bottom: 4px; }
-.dr-f input[type=text], .dr-f input[type=number], .dr-f select { width: 100%; height: 40px; box-sizing: border-box; font-family: var(--f-mono); font-size: 14px;
+.dr-f > label { display: block; font-weight: 700; font-size: 10px; letter-spacing: 1.5px; color: var(--amber); text-transform: uppercase; margin-bottom: 4px; }
+.dr-f input[type=text], .dr-f input[type=number], .dr-f select { width: 100%; height: 40px; box-sizing: border-box; font-family: var(--f-mono); font-size: 13px;
   padding: 0 8px; background: var(--paper-light); color: var(--ink); border: 1px solid var(--khaki); border-left: 3px solid var(--amber-dark); }
 .dr-sw { display: flex; gap: 6px; flex-wrap: wrap; }
 .dr-sw button { width: 36px; height: 36px; border: 2px solid var(--khaki); cursor: pointer; padding: 0; position: relative; }
@@ -142,13 +142,13 @@ RSD_CSS = r'''/* ======== ANNOTER AU DOIGT (lot mp-rs-v1.1.0) — la barre, le m
 /* 1.7.0 : barrettes de bord, rotation, réglages de l'objet à venir */
 @media (max-width: 600px) {
   .dr-tool { min-width: 0; padding: 4px 0; }
-  .dr-tool i { font-size: 8.5px; letter-spacing: .4px; }
+  .dr-tool i { font-size: 10px; letter-spacing: .4px; }
   .dr-tool svg { width: 21px; height: 21px; }
 }
 .dr-h.v.edge i { width: 22px; height: 10px; margin: -5px 0 0 -11px; border-radius: 2px; background: var(--paper-light); }
 .dr-h.v.corner i { width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 2px; background: var(--paper-light); border: 2px solid var(--amber-dark); }
 .dr-h.r.rot i { width: 22px; height: 22px; margin: -11px 0 0 -11px; }
-.dr-h.r.rot i::after { content: '⟳'; position: absolute; inset: 0; font: 700 15px/18px var(--f-ui); color: var(--ink); text-align: center; }
+.dr-h.r.rot i::after { content: '⟳'; position: absolute; inset: 0; font: 700 16px/18px var(--f-ui); color: var(--ink); text-align: center; }
 .dr-hint .tb-btn.mq-props svg { width: 18px; height: 18px; }
 .dr-hint .tb-btn.mq-props.on { background: var(--amber-dark); border-color: var(--amber); }
 
@@ -169,7 +169,7 @@ RSD_CSS = r'''/* ======== ANNOTER AU DOIGT (lot mp-rs-v1.1.0) — la barre, le m
 .dr-sw.rsd-sw button[data-v=white] span { color: #111; }
 @media (max-width: 600px) {
   .rsd-ui .dr-tool { min-width: 0; padding: 4px 0; }
-  .rsd-ui .dr-tool i { font-size: 8.5px; letter-spacing: .4px; }
+  .rsd-ui .dr-tool i { font-size: 10px; letter-spacing: .4px; }
   .rsd-ui .dr-tool svg { width: 21px; height: 21px; }
   .rsd-sheet { bottom: 86px; }
 }
@@ -191,7 +191,7 @@ RSD_CSS = r'''/* ======== ANNOTER AU DOIGT (lot mp-rs-v1.1.0) — la barre, le m
 .rsd-sheet .dr-seg .tb-btn + .tb-btn { border-left: none; }
 .rsd-ui .dr-hint .tb-btn { height: 36px; font-size: 11px; padding: 0 10px; }
 .rsd-sheet .sh-x { background: transparent; color: var(--paper); border: 1px solid var(--khaki); }
-.rsd-sheet input[type=text] { width: 100%; height: 40px; box-sizing: border-box; font-family: 'Roboto Mono', monospace; font-size: 14px; padding: 0 8px;
+.rsd-sheet input[type=text] { width: 100%; height: 40px; box-sizing: border-box; font-family: 'Roboto Mono', monospace; font-size: 13px; padding: 0 8px;
   background: var(--paper-light); color: var(--ink); border: 1px solid var(--khaki); border-left: 3px solid var(--amber-dark); }
 '''
 
@@ -1366,7 +1366,7 @@ HTML = f"""<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
 <meta name="theme-color" content="#1a1e10">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>RECON STATION</title>
+<title>Recon Station — Mission Plan</title>
 <style>
 /* =============================================
    DCS RECON STATION v{APP_VERSION}
@@ -1466,7 +1466,7 @@ body {{
   font-family: var(--f-typewriter);
   background: var(--olive-deep);
   color: var(--paper);
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.5;
   overflow: hidden;
   -webkit-tap-highlight-color: transparent;
@@ -1595,7 +1595,7 @@ select[data-tbm-src] {{ display: none !important; }}
 
 .tbm-panel.tbm-p-field {{ max-width: calc(100vw - 16px); }}
 .tbm-panel.tbm-p-field .tbm-opt {{
-  font-family: var(--f-typewriter); font-weight: 400; font-size: 14px; letter-spacing: .2px; text-transform: none;
+  font-family: var(--f-typewriter); font-weight: 400; font-size: 13px; letter-spacing: .2px; text-transform: none;
 }}
 .tbm-panel.tbm-p-field .tbm-opt[aria-selected="true"] {{ font-weight: 400; }}
 .tbm-panel.tbm-up {{ border-top: 1px solid var(--amber-dark); border-bottom: 3px solid var(--amber); transform-origin: bottom left; }}
@@ -1655,7 +1655,7 @@ select[data-tbm-src] {{ display: none !important; }}
   .toolbar {{ gap: 6px; padding-left: max(8px, env(safe-area-inset-left)); padding-right: max(8px, env(safe-area-inset-right)); }}
   .tb-brand {{ min-width: 0; }}
   .tb-brand-sub, .tb-sep {{ display: none; }}
-  .tb-brand-main {{ font-size: 14px; letter-spacing: 2px; }}
+  .tb-brand-main {{ font-size: 13px; letter-spacing: 2px; }}
   .tb-select {{ font-size: 11px; letter-spacing: .5px; padding: 0 22px 0 8px; background-position: right 6px center; }}
   .tb-select.tbm-trigger {{ min-width: 0; flex: 0 1 auto; }}
   .tb-lang-btn {{ min-width: 36px; padding: 0 4px; }}
@@ -1726,7 +1726,7 @@ select[data-tbm-src] {{ display: none !important; }}
   gap: 8px;
   margin-bottom: 8px;
 }}
-.ed-label {{
+.ed-label {{ font-weight: 500;
   font-family: var(--f-ui);
   font-size: 11px;
   letter-spacing: 1.5px;
@@ -1797,7 +1797,7 @@ select[data-tbm-src] {{ display: none !important; }}
 }}
 
 /* Drop zone */
-.drop-zone {{
+.drop-zone {{ font-weight: 500;
   border: 2px dashed var(--khaki);
   padding: 24px 16px;
   text-align: center;
@@ -1820,7 +1820,7 @@ select[data-tbm-src] {{ display: none !important; }}
   color: var(--green-radar);
 }}
 /* Crédit de l'image de l'exemple : discret, hors de l'export */
-.img-credit {{
+.img-credit {{ font-weight: 500;
   margin-top: 6px;
   font-family: var(--f-ui);
   font-size: 10px;
@@ -1847,7 +1847,7 @@ select[data-tbm-src] {{ display: none !important; }}
   padding: 5px 4px;
   font-family: var(--f-typewriter);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 400;
 }}
 .btn-remove-row {{
   background: var(--olive-dark);
@@ -1855,7 +1855,7 @@ select[data-tbm-src] {{ display: none !important; }}
   color: var(--red-faded);
   padding: 4px 6px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
   transition: all .15s;
   display: flex; align-items: center; justify-content: center;
   line-height: 1;
@@ -1881,7 +1881,7 @@ select[data-tbm-src] {{ display: none !important; }}
   border: 1px solid var(--khaki);
   background: var(--olive-dark);
   color: var(--khaki);
-  font-size: 14px;
+  font-size: 13px;
   transition: all .15s;
   cursor: pointer;
 }}
@@ -1890,7 +1890,7 @@ select[data-tbm-src] {{ display: none !important; }}
   color: #E22;
   background: rgba(238,34,34,.12);
 }}
-.btn-add-row {{
+.btn-add-row {{ font-weight: 500;
   margin-top: 8px;
   background: var(--olive-dark);
   border: 1px solid var(--amber-dark);
@@ -1918,7 +1918,7 @@ select[data-tbm-src] {{ display: none !important; }}
   flex-wrap: wrap;
   margin-bottom: 8px;
 }}
-.shapes-toolbox button {{
+.shapes-toolbox button {{ font-weight: 500;
   background: var(--olive-dark);
   border: 1px solid var(--amber-dark);
   color: var(--amber);
@@ -1957,7 +1957,7 @@ select[data-tbm-src] {{ display: none !important; }}
   display: flex;
   gap: 3px;
 }}
-.shape-color-group button {{
+.shape-color-group button {{ font-weight: 500;
   background: var(--olive-dark);
   border: 1px solid var(--khaki);
   color: var(--khaki-light);
@@ -2016,7 +2016,7 @@ select[data-tbm-src] {{ display: none !important; }}
   opacity: 0;
   width: 0; height: 0;
 }}
-.amorce-marker {{
+.amorce-marker {{ font-weight: 500;
   display: inline-flex;
   align-items: center;
   padding: 3px 8px;
@@ -2058,7 +2058,7 @@ select[data-tbm-src] {{ display: none !important; }}
   display: flex;
   gap: 3px;
 }}
-.inset-color-group button {{
+.inset-color-group button {{ font-weight: 500;
   background: var(--olive-dark);
   border: 1px solid var(--khaki);
   color: var(--khaki-light);
@@ -2129,7 +2129,7 @@ select[data-tbm-src] {{ display: none !important; }}
   transition: background .15s, border-color .15s, color .15s;
 }}
 .logo-thumb-del:hover {{ background: var(--red-stamp); color: #fff; border-color: var(--red-stamp); }}
-.logo-thumb-none {{
+.logo-thumb-none {{ font-weight: 500;
   color: var(--khaki);
   font-family: var(--f-ui);
   font-size: 10px;
@@ -2145,7 +2145,7 @@ select[data-tbm-src] {{ display: none !important; }}
   color: var(--amber);
   padding: 12px;
   font-family: var(--f-stencil);
-  font-size: 14px;
+  font-size: 13px;
   letter-spacing: 3px;
   text-transform: uppercase;
   cursor: pointer;
@@ -2162,7 +2162,7 @@ select[data-tbm-src] {{ display: none !important; }}
 }}
 
 /* Replace image button */
-.btn-replace {{
+.btn-replace {{ font-weight: 500;
   width: 100%;
   background: var(--olive-dark);
   border: 1px solid var(--khaki);
@@ -2179,7 +2179,7 @@ select[data-tbm-src] {{ display: none !important; }}
 .btn-replace:hover {{ border-color: var(--amber-dark); color: var(--amber); }}
 
 /* Upload logo btn */
-.btn-upload-logo {{
+.btn-upload-logo {{ font-weight: 500;
   background: var(--olive-dark);
   border: 1px dashed var(--khaki);
   color: var(--khaki-light);
@@ -2198,7 +2198,7 @@ select[data-tbm-src] {{ display: none !important; }}
 .btn-upload-logo:hover {{ border-color: var(--amber-dark); color: var(--amber); }}
 
 /* Logo mode — boutons segmentés */
-.logo-mode-label {{
+.logo-mode-label {{ font-weight: 500;
   font-family: var(--f-ui);
   font-size: 10px;
   letter-spacing: 1.5px;
@@ -2211,7 +2211,7 @@ select[data-tbm-src] {{ display: none !important; }}
   display: flex;
   gap: 4px;
 }}
-.logo-mode button {{
+.logo-mode button {{ font-weight: 500;
   flex: 1;
   background: var(--olive-dark);
   border: 1px solid var(--khaki);

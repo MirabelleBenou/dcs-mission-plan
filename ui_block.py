@@ -39,7 +39,7 @@ _CSS = r"""
 .ui-panel > h2, .ui-title { margin: 0 44px 14px 0; font-family: var(--f-stencil); font-weight: 400; font-size: 16px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--amber); line-height: 1.25; overflow-wrap: anywhere; }
 .ui-close {
   position: absolute; top: 0; right: 0; width: 44px; height: 44px; padding: 0; background: none; border: 0; cursor: pointer;
-  color: var(--paper); font-family: inherit; font-size: 24px; line-height: 1;
+  color: var(--paper); font-family: inherit; font-size: 22px; line-height: 1;
 }
 .ui-close:hover, .ui-close:focus-visible { color: var(--amber); }
 .ui-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 14px; }

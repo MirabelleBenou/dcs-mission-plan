@@ -190,7 +190,7 @@ body {
   font-family: var(--f-typewriter);
   background: var(--olive-deep);
   color: var(--ink);
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.5;
   overflow: hidden;
   -webkit-tap-highlight-color: transparent;
@@ -259,7 +259,7 @@ body {
   display: inline-flex; align-items: center; gap: 10px;
   margin-right: 12px; padding-right: 12px; border-right: 1px solid #807454;
   font-family: 'Stardos Stencil', 'Impact', 'Arial Narrow Bold', sans-serif;
-  font-weight: 700; letter-spacing: 2px; font-size: 15px; color: var(--paper, #e8e3d8);
+  font-weight: 700; letter-spacing: 2px; font-size: 16px; color: var(--paper, #e8e3d8);
   white-space: nowrap; flex-shrink: 0;
 }
 .mp-wing-stamp::before {
@@ -443,7 +443,7 @@ select[data-tbm-src] { display: none !important; }
 }
 .tbm-panel.tbm-p-field { max-width: calc(100vw - 16px); }
 .tbm-panel.tbm-p-field .tbm-opt {
-  font-family: var(--f-typewriter); font-weight: 400; font-size: 14px; letter-spacing: .2px; text-transform: none;
+  font-family: var(--f-typewriter); font-weight: 400; font-size: 13px; letter-spacing: .2px; text-transform: none;
 }
 .tbm-panel.tbm-p-field .tbm-opt[aria-selected="true"] { font-weight: 400; }
 .tbm-panel.tbm-up { border-top: 1px solid var(--amber-dark); border-bottom: 3px solid var(--amber); transform-origin: bottom left; }
@@ -672,7 +672,7 @@ select[data-tbm-src] { display: none !important; }
   cursor: pointer;
   padding: 0 12px;
   transition: background .15s;
-  font-size: 18px;
+  font-size: 16px;
   line-height: 1;
   min-width: 44px;
   min-height: 44px;
@@ -750,7 +750,7 @@ select[data-tbm-src] { display: none !important; }
   font-weight: 700;
   display: flex; align-items: center; justify-content: center;
   font-family: var(--f-ui);
-  font-size: 18px;
+  font-size: 16px;
   line-height: 1;
   padding: 0;
 }
@@ -760,7 +760,7 @@ select[data-tbm-src] { display: none !important; }
   background: rgba(0,0,0,.7);
   color: var(--paper);
   font-family: var(--f-mono);
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 1px;
   padding: 2px 6px;
 }
@@ -1017,7 +1017,7 @@ select[data-tbm-src] { display: none !important; }
 }
 .wing-ro-name {
   font-family: var(--f-stencil);
-  font-size: 14px;
+  font-size: 13px;
   letter-spacing: 2px;
   color: var(--amber);
   text-transform: uppercase;
@@ -2389,7 +2389,7 @@ body[data-theme="modern-east"] .stamp-classif::after {
   color: var(--khaki-light);
   font-family: var(--f-condensed);
   font-weight: 700;
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 1px;
   text-transform: uppercase;
   padding: 6px 2px;
@@ -2441,7 +2441,7 @@ body[data-format="full"] [data-fmt="simple"] { display: none !important; }
 }
 .ed-radio-item-row.s-row .s-sub-mark {
   color: var(--amber);
-  font-size: 18px;
+  font-size: 16px;
   line-height: 1;
   text-align: center;
 }
@@ -2632,7 +2632,7 @@ body[data-format="full"] [data-fmt="simple"] { display: none !important; }
     background: linear-gradient(90deg, var(--olive) 0%, var(--olive-dark) 100%);
     padding: 12px 14px;
     font-family: var(--f-stencil);
-    font-size: 14px;
+    font-size: 13px;
     letter-spacing: 2px;
     color: var(--amber);
     border-bottom: 1px solid var(--amber-dark);
@@ -2660,12 +2660,9 @@ body[data-format="full"] [data-fmt="simple"] { display: none !important; }
 @media (min-width: 1101px) and (max-width: 1366px) {
   .tb-btn { padding: 0 10px; }
 
-  /* Sélecteur de thème compressé (la liste déroulante reste lisible au clic) */
+  /* Le sélecteur de thème garde son libellé entier */
   .tb-select {
-    max-width: 130px;
     padding: 0 28px 0 10px;
-    text-overflow: ellipsis;
-    overflow: hidden;
   }
 }
 
@@ -2673,8 +2670,8 @@ body[data-format="full"] [data-fmt="simple"] { display: none !important; }
 @media (max-width: 600px) {
   .tb-btn { padding: 0 8px; min-width: 40px; height: 38px; }
   .tb-btn svg { width: 14px; height: 14px; }
-  .tab-bar button { font-size: 9px; min-height: 50px; }
-  .tab-bar button .tab-ico { font-size: 14px; }
+  .tab-bar button { font-size: 10px; min-height: 50px; }
+  .tab-bar button .tab-ico { font-size: 13px; }
   .editor { padding: 12px 12px 24px 12px; }
   .ed-field-row { grid-template-columns: 1fr; }
   .phase-bar { grid-template-columns: 40px 1fr 40px 40px 40px 40px; }
@@ -2874,7 +2871,7 @@ HTML = r"""<!DOCTYPE html>
 <meta name="theme-color" content="#1a1e10">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<title>MY WING // GÉNÉRATEUR DE BRIEFING</title>
+<title>Briefing Generator — Mission Plan</title>
 <style>
 __CSS__
 </style>
@@ -3379,7 +3376,6 @@ const I18N = {
     'preview.overflowWarning': '⚠ Contenu tronqué',
     'toast.missingSquadrons': '⚠ Ce briefing référence {0} escadron(s) absent(s) du wing courant : {1}. Importez le wing correspondant.',
     // ── Document ──
-    'doc.title.suffix': 'GÉNÉRATEUR DE BRIEFING',
     // ── Tab bar ──
     'tab.meta':    'Méta',
     'tab.cover':   'Couv.',
@@ -3783,7 +3779,6 @@ const I18N = {
     'preview.overflowWarning': '⚠ Content cut off',
     'toast.missingSquadrons': '⚠ This briefing references {0} squadron(s) missing from the current wing: {1}. Import the matching wing.',
     // ── Document ──
-    'doc.title.suffix': 'BRIEFING GENERATOR',
     // ── Tab bar ──
     'tab.meta':    'Meta',
     'tab.cover':   'Cover',
@@ -4243,9 +4238,7 @@ function updateFlagButton() {
 }
 
 function updateDocTitle() {
-  const w = wingConfig ? wingConfig.wing : null;
-  const base = w ? w.shortName : 'MY WING';
-  document.title = base + ' // ' + t('doc.title.suffix');
+  document.title = 'Briefing Generator — Mission Plan';      // le nom de l'outil, sans traduction ; l'export PDF le remplace le temps de l'impression, puis il revient
 }
 
 function setLang(lang) {

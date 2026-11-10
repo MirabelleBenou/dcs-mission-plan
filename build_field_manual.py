@@ -595,11 +595,9 @@ FM_EXTRA_CSS = r'''
 .fm-zoom-host { position: relative; }
 [data-zoomable] { cursor: zoom-in; }
 [data-zoomable]:focus-visible {
-  outline: 2px solid var(--chapter-accent, var(--fm-accent));
+  outline: 2px solid var(--amber);
   outline-offset: 2px;
 }
-.fm-hero-img[data-zoomable]:focus-visible,
-.cover-img-box[data-zoomable]:focus-visible { outline-offset: -3px; }
 .fm-zoom-badge {
   position: absolute;
   top: 8px; right: 8px;
@@ -701,7 +699,7 @@ body.zm-open #fm-root { overflow: hidden; }
   box-shadow: 0 2px 10px rgba(0, 0, 0, .5);
 }
 .zm-btn:hover { background: var(--olive); border-color: var(--fm-accent); }
-.zm-btn:focus-visible { outline: 2px solid var(--fm-accent); outline-offset: 2px; background: var(--olive); }
+.zm-btn:focus-visible { background: var(--olive); }
 .zm-sym { width: 44px; padding: 0; font-size: 24px; letter-spacing: 0; text-transform: none; }
 .zm-close {
   position: absolute;
@@ -1112,7 +1110,7 @@ HTML = f"""<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
-<title>FIELD MANUAL — DCS Mission Plan</title>
+<title>Field Manual — Mission Plan</title>
 {FONT_CDN}
 <style>
 /* =============================================
@@ -1129,6 +1127,7 @@ HTML = f"""<!DOCTYPE html>
   --amber:        #c0892a;
   --amber-dark:   #8a5e15;
   --green-radar:  #4f6b3a;
+  --mp-warn:      #e8806a;
   /* Accent du module Field Manual */
   --fm-accent:    #7E8FA6;
   --fm-accent-dark: #5a6a7a;
@@ -1176,6 +1175,10 @@ body[data-theme="modern-east"] {{
 * {{ box-sizing: border-box; margin: 0; padding: 0; }}
 html, body {{ height: 100%; overscroll-behavior: none; }}
 button, input, select, textarea {{ font: inherit; cursor: pointer; }}
+/* le focus visible : la même règle que le bloc d'interface commun des autres modules */
+button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus-visible, a[href]:focus-visible, [tabindex]:focus-visible, [role="button"]:focus-visible {{
+  outline: 2px solid var(--amber) !important; outline-offset: 2px !important;
+}}
 
 body {{
   font-family: var(--f-typewriter);
@@ -1195,7 +1198,7 @@ body {{
 .toolbar {{
   position: relative;
   flex-shrink: 0;
-  height: 56px;
+  height: 60px;
   background: linear-gradient(180deg, var(--olive-dark) 0%, var(--olive-deep) 100%);
   border-bottom: 2px solid var(--fm-accent-dark);
   display: flex;
@@ -1243,13 +1246,17 @@ body {{
   background: transparent;
   border: 1px solid var(--khaki);
   color: var(--paper);
-  height: 36px;
-  min-width: 40px;
+  box-sizing: border-box;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
   padding: 0 8px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  font-family: 'Roboto Mono', 'Courier New', monospace;
+  font-weight: 400;
   font-size: 16px;
   transition: all .15s;
   flex-shrink: 0;
@@ -1257,7 +1264,6 @@ body {{
 #btn-lang:hover, #btn-lang:focus-visible {{
   background: var(--olive);
   border-color: var(--fm-accent);
-  outline: none;
 }}
 
 
@@ -1469,7 +1475,7 @@ body {{
   border-color: var(--chapter-accent, var(--fm-accent));
 }}
 .fm-plaque.active:focus-visible {{
-  outline: 2px solid var(--chapter-accent, var(--fm-accent));
+  outline: 2px solid var(--amber);
   outline-offset: 2px;
 }}
 .fm-plaque.soon {{
@@ -1576,7 +1582,6 @@ body {{
   transition: all .12s;
 }}
 .fm-back-btn:hover {{ background: rgba(126,143,166,.12); }}
-.fm-back-btn:focus-visible {{ outline: 2px solid var(--fm-accent); outline-offset: 2px; }}
 
 /* ── HERO ── */
 .fm-hero {{
