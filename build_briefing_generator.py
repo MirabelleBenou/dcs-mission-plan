@@ -356,7 +356,6 @@ body {
   background: var(--olive);
   border-color: var(--amber);
   color: var(--amber);
-  outline: none;
 }
 .tb-btn:active { transform: translateY(1px); }
 .tb-btn.active {
@@ -402,7 +401,6 @@ body {
 .tb-select:hover, .tb-select:focus-visible {
   background-color: var(--olive);
   border-color: var(--amber);
-  outline: none;
 }
 .tb-select:active { transform: translateY(1px); }
 /* Le menu déroulant natif est rendu par l'OS — on force au moins un fond
@@ -429,7 +427,7 @@ select[data-tbm-src] { display: none !important; }
   padding: 4px 0; margin: 0; list-style: none; scrollbar-width: thin; scrollbar-color: var(--amber-dark) transparent;
   transform-origin: top left; animation: tbm-in .12s ease-out;
 }
-.tbm-panel, .tbm-panel:focus, .tbm-panel:focus-visible { outline: none; }
+.tbm-panel, .tbm-panel:focus, .tbm-panel:focus-visible { }
 @keyframes tbm-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
 .tbm-head {
   font-family: var(--f-ui); font-weight: 500; font-size: 10px; letter-spacing: 1.8px; text-transform: uppercase;
@@ -481,7 +479,7 @@ select[data-tbm-src] { display: none !important; }
 .tbm-trigger.tbm-field.tbm-narrow::after { right: 8px; }
 .ed-field .tbm-trigger.tbm-field:focus-visible,
 .ed-field .tbm-trigger.tbm-field.tbm-trigger-open {
-  outline: none; border-left-color: var(--red-stamp); background-color: var(--paper-light); box-shadow: 0 0 0 1px var(--amber);
+ border-left-color: var(--red-stamp); background-color: var(--paper-light); box-shadow: 0 0 0 1px var(--amber);
   border-top-color: var(--khaki) !important; border-right-color: var(--khaki) !important; border-bottom-color: var(--khaki) !important;
 }
 .tbm-panel.tbm-p-field { max-width: calc(100vw - 16px); }
@@ -524,7 +522,6 @@ select[data-tbm-src] { display: none !important; }
 .tb-lang-btn:hover, .tb-lang-btn:focus-visible {
   background: var(--olive);
   border-color: var(--amber);
-  outline: none;
 }
 .tb-lang-btn:active { transform: translateY(1px); }
 
@@ -554,7 +551,6 @@ select[data-tbm-src] { display: none !important; }
 .tb-seg .seg-btn:hover, .tb-seg .seg-btn:focus-visible {
   background: var(--olive);
   color: var(--amber);
-  outline: none;
 }
 .tb-seg .seg-btn.active,
 .tb-seg .seg-btn.active:hover {
@@ -691,7 +687,6 @@ select[data-tbm-src] { display: none !important; }
 .ed-field input:focus,
 .ed-field textarea:focus,
 .ed-field select:focus {
-  outline: none;
   border-left-color: var(--red-stamp);
   background: var(--paper-light);
   box-shadow: 0 0 0 1px var(--amber);

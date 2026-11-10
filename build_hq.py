@@ -378,7 +378,6 @@ body {{
 .tb-select:hover, .tb-select:focus-visible {{
   background-color: var(--olive);
   border-color: var(--amber);
-  outline: none;
 }}
 .tb-select option {{ background-color: var(--olive-dark); color: var(--paper); }}
 
@@ -399,7 +398,7 @@ select[data-tbm-src] {{ display: none !important; }}
   padding: 4px 0; margin: 0; list-style: none; scrollbar-width: thin; scrollbar-color: var(--amber-dark) transparent;
   transform-origin: top left; animation: tbm-in .12s ease-out;
 }}
-.tbm-panel, .tbm-panel:focus, .tbm-panel:focus-visible {{ outline: none; }}
+.tbm-panel, .tbm-panel:focus, .tbm-panel:focus-visible {{ }}
 @keyframes tbm-in {{ from {{ opacity: 0; transform: translateY(-4px); }} to {{ opacity: 1; transform: none; }} }}
 .tbm-head {{
   font-family: var(--f-ui); font-weight: 500; font-size: 10px; letter-spacing: 1.8px; text-transform: uppercase;
@@ -441,7 +440,7 @@ select[data-tbm-src] {{ display: none !important; }}
 .pk-flt-f .tbm-trigger.tbm-field.tbm-narrow::after {{ right: 8px; }}
 .pk-flt-f .tbm-trigger.tbm-field .tbm-lbl {{ margin: 0; padding: 0; line-height: 17px; }}
 .pk-flt-f .tbm-trigger.tbm-field .tbm-lbl::after {{ display: none; }}
-.pk-flt-f .tbm-trigger.tbm-field:focus {{ outline: none; border-left-color: var(--red-stamp); box-shadow: 0 0 0 1px var(--amber); }}
+.pk-flt-f .tbm-trigger.tbm-field:focus {{ border-left-color: var(--red-stamp); box-shadow: 0 0 0 1px var(--amber); }}
 .tbm-panel.tbm-p-field {{ max-width: calc(100vw - 16px); }}
 .tbm-panel.tbm-p-field .tbm-opt {{
   font-family: var(--f-typewriter); font-weight: 400; font-size: 13px; letter-spacing: .2px; text-transform: none;
@@ -466,7 +465,6 @@ select[data-tbm-src] {{ display: none !important; }}
 .tb-lang-btn:hover, .tb-lang-btn:focus-visible {{
   background: var(--olive);
   border-color: var(--amber);
-  outline: none;
 }}
 /* Exemple (lot mp-exemples-demarrer) : le bouton de la barre, avec son texte quand la barre a la place (lot mp-imports-suite) */
 .tb-btn {{
@@ -487,7 +485,6 @@ select[data-tbm-src] {{ display: none !important; }}
   background: var(--olive);
   border-color: var(--amber);
   color: var(--amber);
-  outline: none;
 }}
 .tb-btn:active {{ transform: translateY(1px); }}
 .tb-btn svg {{ width: 16px; height: 16px; flex-shrink: 0; }}
@@ -597,7 +594,6 @@ select[data-tbm-src] {{ display: none !important; }}
   width: 100%;
 }}
 .ed-field input:focus {{
-  outline: none;
   border-left-color: var(--red-stamp);
   background: var(--paper-light);
   box-shadow: 0 0 0 1px var(--amber);
@@ -765,7 +761,7 @@ select[data-tbm-src] {{ display: none !important; }}
 }}
 .wing-ac-sel.tbm-trigger.tbm-field .tbm-lbl {{ display: block; margin: 0; padding: 0; line-height: 44px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }}
 .wing-ac-sel.tbm-trigger.tbm-field .tbm-lbl::after {{ display: none; }}
-.wing-ac-sel.tbm-trigger.tbm-field:focus {{ outline: none; border-left-color: var(--red-stamp); box-shadow: 0 0 0 1px var(--amber); }}
+.wing-ac-sel.tbm-trigger.tbm-field:focus {{ border-left-color: var(--red-stamp); box-shadow: 0 0 0 1px var(--amber); }}
 .wing-ac-sel.wing-ac-add-sel.tbm-trigger.tbm-field {{ flex: 1 1 100%; }}
 .wing-ac-sel.wing-ac-rep.tbm-trigger.tbm-field {{ flex: 0 1 220px; }}
 @media (max-width: 520px) {{
@@ -796,7 +792,7 @@ select[data-tbm-src] {{ display: none !important; }}
   border-radius: 3px; border: 1px solid var(--amber); background: rgba(192,137,42,.1); color: var(--amber);
   cursor: pointer; text-align: center; transition: background .15s;
 }}
-.wing-restore-btn:hover, .wing-restore-btn:focus-visible {{ background: var(--amber-dark); color: var(--paper-light); outline: none; }}
+.wing-restore-btn:hover, .wing-restore-btn:focus-visible {{ background: var(--amber-dark); color: var(--paper-light); }}
 .wing-restore-btn[hidden] {{ display: none; }}
 
 /* Size counter */
@@ -999,7 +995,7 @@ body[data-theme] {{
   background: rgba(216,201,165,.92); color: var(--ink);
   border: 1px solid var(--khaki); border-left: 3px solid var(--amber-dark); border-radius: 0;
 }}
-.pk-flt-f input:focus, .pk-flt-f select:focus {{ outline: none; border-left-color: var(--red-stamp); box-shadow: 0 0 0 1px var(--amber); }}
+.pk-flt-f input:focus, .pk-flt-f select:focus {{ border-left-color: var(--red-stamp); box-shadow: 0 0 0 1px var(--amber); }}
 .pk-flt-name {{ flex: 2 1 170px; }}
 .pk-flt .miz-btn {{ margin: 0; min-height: 34px; padding: 4px 9px; font-size: 11px; flex: 0 1 auto; text-align: left; text-transform: none; letter-spacing: 0; }}
 @media (max-height: 480px) {{ .pk-flt {{ position: static; }} }}   /* téléphone à l'horizontale : la barre mangerait l'écran */

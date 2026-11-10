@@ -39,7 +39,7 @@ _CSS = r"""
 .imp-warn { color: var(--paper-light); border-left: 3px solid var(--imp-acc); padding: 4px 0 4px 10px; background: rgba(0,0,0,.18); }
 .imp-file { display: flex; align-items: center; gap: 10px; margin: 2px 0 4px 30px; font-size: 11px; flex-wrap: wrap; }
 .imp-filebtn { background: transparent; border: 1px solid var(--khaki); padding: 6px 12px; min-height: 44px; font-family: inherit; font-size: 11px; cursor: pointer; color: var(--paper); border-radius: 2px; }
-.imp-filebtn:hover, .imp-filebtn:focus-visible { background: var(--olive); border-color: var(--imp-acc); outline: none; }
+.imp-filebtn:hover, .imp-filebtn:focus-visible { background: var(--olive); border-color: var(--imp-acc); }
 .imp-filename { color: var(--khaki-light); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
 .imp-bgside { display: flex; align-items: center; gap: 8px; margin: 0 0 6px 30px; font-size: 11px; }
 .imp-srcline .imp-bgside { margin: 0; }
@@ -65,11 +65,11 @@ _CSS = r"""
 }
 .imp-sel.tbm-trigger.tbm-field .tbm-lbl { margin: 0; padding: 0; line-height: 42px; }
 .imp-sel.tbm-trigger.tbm-field .tbm-lbl::after { display: none; }
-.imp-sel.tbm-trigger.tbm-field:focus { outline: none; border-left-color: var(--red-stamp); box-shadow: 0 0 0 1px var(--imp-acc); }
+.imp-sel.tbm-trigger.tbm-field:focus { border-left-color: var(--red-stamp); box-shadow: 0 0 0 1px var(--imp-acc); }
 .imp-sel.tbm-trigger.tbm-field:disabled { opacity: .5; cursor: default; }
 .tbm-panel.tbm-imp { z-index: 10500; }
 .imp-in { display: block; box-sizing: border-box; width: 100%; min-width: 0; min-height: 44px; padding: 0 10px; background: rgba(216,201,165,.92); color: var(--ink); border: 1px solid var(--khaki); border-left: 3px solid var(--amber-dark); border-radius: 0; font-family: var(--f-typewriter); font-size: 13px; cursor: text; }
-.imp-in:focus { outline: none; border-left-color: var(--red-stamp); box-shadow: 0 0 0 1px var(--imp-acc); }
+.imp-in:focus { border-left-color: var(--red-stamp); box-shadow: 0 0 0 1px var(--imp-acc); }
 .imp-bulk { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 4px; }
 .imp-cnt { margin-left: auto; font-size: 11px; color: var(--khaki-light); }
 .imp-list { flex: 1 1 auto; min-height: 90px; overflow-y: auto; border: 1px solid rgba(128,116,84,.5); padding: 4px 10px; background: rgba(0,0,0,.18); }

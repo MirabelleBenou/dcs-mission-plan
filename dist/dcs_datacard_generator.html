@@ -198,7 +198,6 @@ body {
   background: var(--olive);
   border-color: var(--amber);
   color: var(--amber);
-  outline: none;
 }
 .tb-btn:active { transform: translateY(1px); }
 .tb-btn.danger:hover {
@@ -234,7 +233,6 @@ body {
 .tb-select:hover, .tb-select:focus-visible {
   background-color: var(--olive);
   border-color: var(--amber);
-  outline: none;
 }
 .tb-select option {
   background-color: var(--olive-dark);
@@ -249,7 +247,7 @@ body {
   padding: 0 30px 0 12px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex: none; appearance: none; -webkit-appearance: none;
   background: var(--olive-dark) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23c0892a' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right 11px center;
 }
-.tb-sel:hover, .tb-sel:focus-visible { border-color: var(--amber); outline: none; }
+.tb-sel:hover, .tb-sel:focus-visible { border-color: var(--amber); }
 .tb-sel option { background: var(--olive-dark); color: var(--paper); font-weight: 500; }
 
 /* ---------- le menu « Unités » (recopié du Route Planner, lot mp-theatre-unique) : le bouton de la barre et son panneau, au style des listes de la barre (tbm-*) ---------- */
@@ -287,7 +285,7 @@ select[data-tbm-src] { display: none !important; }
   padding: 4px 0; margin: 0; list-style: none; scrollbar-width: thin; scrollbar-color: var(--amber-dark) transparent;
   transform-origin: top left; animation: tbm-in .12s ease-out;
 }
-.tbm-panel, .tbm-panel:focus, .tbm-panel:focus-visible { outline: none; }
+.tbm-panel, .tbm-panel:focus, .tbm-panel:focus-visible { }
 @keyframes tbm-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
 .tbm-head {
   font-family: var(--f-ui); font-weight: 500; font-size: 10px; letter-spacing: 1.8px; text-transform: uppercase;
@@ -311,7 +309,7 @@ select[data-tbm-src] { display: none !important; }
 .tbm-off { display: none !important; }
 /* La recherche en tête d'une liste (option data-search du <select>) : collée en haut du panneau qui défile */
 .tbm-list { margin: 0; padding: 0; list-style: none; outline: none; }
-.tbm-list:focus, .tbm-list:focus-visible { outline: none; }
+.tbm-list:focus, .tbm-list:focus-visible { }
 .tbm-search { position: sticky; top: 0; z-index: 2; padding: 6px 10px; background: var(--olive-dark); border-bottom: 1px solid rgba(168,154,114,.25); }
 .tbm-q { display: block; width: 100%; min-height: 36px; box-sizing: border-box; padding: 6px 10px; font-family: var(--f-typewriter); font-size: 13px; letter-spacing: .2px; color: #1f1c16; background: rgba(216, 201, 165, .92); border: 1px solid var(--khaki); border-left: 3px solid var(--amber-dark); border-radius: 0; outline: none; }
 .tbm-q:focus { border-left-color: var(--red-stamp); box-shadow: 0 0 0 1px var(--amber); }
@@ -337,7 +335,7 @@ select[data-tbm-src] { display: none !important; }
 .ed-field .tbm-trigger.tbm-field .tbm-lbl::after { display: none; }
 .ed-field .tbm-trigger.tbm-field:focus-visible,
 .ed-field .tbm-trigger.tbm-field.tbm-trigger-open {
-  outline: none; border-left-color: var(--red-stamp); background-color: #ece0c2; box-shadow: 0 0 0 1px var(--amber);
+ border-left-color: var(--red-stamp); background-color: #ece0c2; box-shadow: 0 0 0 1px var(--amber);
   border-top-color: var(--khaki) !important; border-right-color: var(--khaki) !important; border-bottom-color: var(--khaki) !important;
 }
 
@@ -377,7 +375,6 @@ select[data-tbm-src] { display: none !important; }
 .tb-lang-btn:hover, .tb-lang-btn:focus-visible {
   background: var(--olive);
   border-color: var(--amber);
-  outline: none;
 }
 .tb-lang-btn:active { transform: translateY(1px); }
 
@@ -407,7 +404,6 @@ select[data-tbm-src] { display: none !important; }
 .tb-seg .seg-btn:hover, .tb-seg .seg-btn:focus-visible {
   background: var(--olive);
   color: var(--amber);
-  outline: none;
 }
 .tb-seg .seg-btn.active,
 .tb-seg .seg-btn.active:hover {
@@ -475,7 +471,6 @@ select[data-tbm-src] { display: none !important; }
   background: var(--olive);
   border-color: var(--amber);
   color: var(--amber);
-  outline: none;
 }
 .pack-btn:disabled { opacity: .35; cursor: not-allowed; }
 .pack-btn.danger:hover:not(:disabled) { background: var(--rust); border-color: var(--red-faded); color: var(--paper-light); }
@@ -546,7 +541,6 @@ select[data-tbm-src] { display: none !important; }
 .ed-field input:focus,
 .ed-field textarea:focus,
 .ed-field select:focus {
-  outline: none;
   border-left-color: var(--red-stamp);
   background: #ece0c2;
   box-shadow: 0 0 0 1px var(--amber);
@@ -756,7 +750,7 @@ select[data-tbm-src] { display: none !important; }
   font: inherit; letter-spacing: inherit; text-transform: inherit; color: var(--amber);
   text-decoration: underline; text-underline-offset: 3px;
 }
-.toast-action:hover, .toast-action:focus-visible { color: var(--paper-light, var(--paper)); outline: none; }
+.toast-action:hover, .toast-action:focus-visible { color: var(--paper-light, var(--paper)); }
 @media print { .toast { display: none !important; } }
 /* ===== FIN DE LA FEUILLE DU TOAST ===== */
 /* ===== INTERFACE COMMUNE : feuille ===== */
@@ -849,7 +843,7 @@ details:not([open]) > .ui-fold-head > .ui-sum:not(:empty), .ui-fold-head[aria-ex
 @media print { .ui-print-hide { display: none !important; } }
 
 /* ---- le focus visible (la même règle dans toute la suite) : un contour plein de 2 px à la couleur --amber, décalé de 2 px ; le focus à la souris ne change pas ---- */
-button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus-visible, a[href]:focus-visible, [tabindex]:focus-visible, [role="button"]:focus-visible {
+:focus-visible {
   outline: 2px solid var(--amber) !important; outline-offset: 2px !important;
 }
 
@@ -1266,7 +1260,7 @@ div.dc-bl, li.dc-bl, p.dc-bl { height: 24px; border-bottom: 1px dotted var(--dc-
   background: rgba(0, 0, 0, .18); border: 1px solid var(--khaki); border-left: 3px solid var(--khaki); color: var(--paper);
   font-family: var(--f-ui);
 }
-.card-row:hover, .card-row:focus-visible { border-color: var(--amber); outline: none; }
+.card-row:hover, .card-row:focus-visible { border-color: var(--amber); }
 .card-row.cur { background: var(--olive); border-color: var(--amber); border-left-color: var(--amber); }
 .card-row.free { border-left-style: dashed; }
 .cr-name { font-family: var(--f-stencil); font-weight: 700; font-size: 13px; letter-spacing: 2px; color: var(--amber); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
@@ -1490,7 +1484,7 @@ div.dc-bl, li.dc-bl, p.dc-bl { height: 24px; border-bottom: 1px dotted var(--dc-
 .imp-warn { color: var(--paper-light); border-left: 3px solid var(--imp-acc); padding: 4px 0 4px 10px; background: rgba(0,0,0,.18); }
 .imp-file { display: flex; align-items: center; gap: 10px; margin: 2px 0 4px 30px; font-size: 11px; flex-wrap: wrap; }
 .imp-filebtn { background: transparent; border: 1px solid var(--khaki); padding: 6px 12px; min-height: 44px; font-family: inherit; font-size: 11px; cursor: pointer; color: var(--paper); border-radius: 2px; }
-.imp-filebtn:hover, .imp-filebtn:focus-visible { background: var(--olive); border-color: var(--imp-acc); outline: none; }
+.imp-filebtn:hover, .imp-filebtn:focus-visible { background: var(--olive); border-color: var(--imp-acc); }
 .imp-filename { color: var(--khaki-light); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
 .imp-bgside { display: flex; align-items: center; gap: 8px; margin: 0 0 6px 30px; font-size: 11px; }
 .imp-srcline .imp-bgside { margin: 0; }
@@ -1516,11 +1510,11 @@ div.dc-bl, li.dc-bl, p.dc-bl { height: 24px; border-bottom: 1px dotted var(--dc-
 }
 .imp-sel.tbm-trigger.tbm-field .tbm-lbl { margin: 0; padding: 0; line-height: 42px; }
 .imp-sel.tbm-trigger.tbm-field .tbm-lbl::after { display: none; }
-.imp-sel.tbm-trigger.tbm-field:focus { outline: none; border-left-color: var(--red-stamp); box-shadow: 0 0 0 1px var(--imp-acc); }
+.imp-sel.tbm-trigger.tbm-field:focus { border-left-color: var(--red-stamp); box-shadow: 0 0 0 1px var(--imp-acc); }
 .imp-sel.tbm-trigger.tbm-field:disabled { opacity: .5; cursor: default; }
 .tbm-panel.tbm-imp { z-index: 10500; }
 .imp-in { display: block; box-sizing: border-box; width: 100%; min-width: 0; min-height: 44px; padding: 0 10px; background: rgba(216,201,165,.92); color: var(--ink); border: 1px solid var(--khaki); border-left: 3px solid var(--amber-dark); border-radius: 0; font-family: var(--f-typewriter); font-size: 13px; cursor: text; }
-.imp-in:focus { outline: none; border-left-color: var(--red-stamp); box-shadow: 0 0 0 1px var(--imp-acc); }
+.imp-in:focus { border-left-color: var(--red-stamp); box-shadow: 0 0 0 1px var(--imp-acc); }
 .imp-bulk { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 4px; }
 .imp-cnt { margin-left: auto; font-size: 11px; color: var(--khaki-light); }
 .imp-list { flex: 1 1 auto; min-height: 90px; overflow-y: auto; border: 1px solid rgba(128,116,84,.5); padding: 4px 10px; background: rgba(0,0,0,.18); }

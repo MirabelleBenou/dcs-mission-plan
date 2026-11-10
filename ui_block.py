@@ -112,7 +112,7 @@ details:not([open]) > .ui-fold-head > .ui-sum:not(:empty), .ui-fold-head[aria-ex
 @media print { .ui-print-hide { display: none !important; } }
 
 /* ---- le focus visible (la même règle dans toute la suite) : un contour plein de 2 px à la couleur --amber, décalé de 2 px ; le focus à la souris ne change pas ---- */
-button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus-visible, a[href]:focus-visible, [tabindex]:focus-visible, [role="button"]:focus-visible {
+:focus-visible {
   outline: 2px solid var(--amber) !important; outline-offset: 2px !important;
 }
 

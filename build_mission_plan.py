@@ -175,7 +175,7 @@ def build_html(module_html_js, tile_uris):
   --line:rgba(160,120,80,.26); --grain:.05; --scan:.04; --rot:-1.4deg; --rad:4px; }}
 
 *{{box-sizing:border-box;margin:0;padding:0;}}
-button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus-visible, a[href]:focus-visible, [tabindex]:focus-visible, [role="button"]:focus-visible {{
+:focus-visible {{
   outline: 2px solid var(--amber) !important; outline-offset: 2px !important;
 }}
 html,body{{height:100%;}}
@@ -219,7 +219,7 @@ select[data-tbm-src] {{ display: none !important; }}
   padding: 4px 0; margin: 0; list-style: none; scrollbar-width: thin; scrollbar-color: var(--line) transparent;
   transform-origin: top left; animation: tbm-in .12s ease-out;
 }}
-.tbm-panel, .tbm-panel:focus, .tbm-panel:focus-visible {{ outline: none; }}
+.tbm-panel, .tbm-panel:focus, .tbm-panel:focus-visible {{ }}
 @keyframes tbm-in {{ from {{ opacity: 0; transform: translateY(-4px); }} to {{ opacity: 1; transform: none; }} }}
 .tbm-head {{
   font-family: var(--f-ui); font-weight: 500; font-size: 10px; letter-spacing: 1.8px; text-transform: uppercase;

@@ -1187,7 +1187,7 @@ body[data-theme="modern-east"] {{
 html, body {{ height: 100%; overscroll-behavior: none; }}
 button, input, select, textarea {{ font: inherit; cursor: pointer; }}
 /* le focus visible : la même règle que le bloc d'interface commun des autres modules */
-button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus-visible, a[href]:focus-visible, [tabindex]:focus-visible, [role="button"]:focus-visible {{
+:focus-visible {{
   outline: 2px solid var(--amber) !important; outline-offset: 2px !important;
 }}
 
@@ -1344,7 +1344,7 @@ body {{
   gap: 4px;
   z-index: 2;
 }}
-.cover-suite {{
+.cover-suite {{ font-weight: 500;
   font-family: var(--f-ui);
   font-size: 12px;
   letter-spacing: 3px;
@@ -1521,7 +1521,7 @@ body {{
   color: var(--ink);
   margin-bottom: 3px;
 }}
-.fm-plaque-desc {{
+.fm-plaque-desc {{ font-weight: 500;
   font-family: var(--f-ui);
   font-size: 11px;
   letter-spacing: 1px;
@@ -1836,6 +1836,7 @@ kbd {{
 .fm-plaque[data-module="dg"]  {{ --chapter-accent: #4f7a8e; --chapter-accent-rgb: 79,122,142; }}
 .fm-plaque[data-module="fc"]  {{ --chapter-accent: #D0784A; --chapter-accent-rgb: 208,120,74; }}
 
+strong, b {{ font-weight: 400; }}   /* Special Elite n'a que sa face 400 : pas de gras demandé sans face */
 {FM_EXTRA_CSS}
 {CONTRAST_CSS}</style>
 </head>

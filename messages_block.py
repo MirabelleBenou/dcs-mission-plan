@@ -43,7 +43,7 @@ _CSS = r"""
   font: inherit; letter-spacing: inherit; text-transform: inherit; color: var(--amber);
   text-decoration: underline; text-underline-offset: 3px;
 }
-.toast-action:hover, .toast-action:focus-visible { color: var(--paper-light, var(--paper)); outline: none; }
+.toast-action:hover, .toast-action:focus-visible { color: var(--paper-light, var(--paper)); }
 @media print { .toast { display: none !important; } }
 """
 

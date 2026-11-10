@@ -432,7 +432,7 @@ button, input, select { font: inherit; }
 }
 .tb-group .tb-btn + .tb-btn { border-left: none; }
 .tb-btn.on { background: var(--amber-dark); color: var(--paper-light); border-color: var(--amber); box-shadow: inset 0 -3px 0 var(--amber); }
-.tb-btn:hover, .tb-btn:focus-visible { border-color: var(--amber); outline: none; }
+.tb-btn:hover, .tb-btn:focus-visible { border-color: var(--amber); }
 .tb-btn:not(.on):hover, .tb-btn:not(.on):focus-visible { background: var(--olive); color: var(--amber); }
 .tb-btn:active { transform: translateY(1px); }
 .tb-btn:disabled { opacity: .35; cursor: not-allowed; pointer-events: none; }
@@ -441,7 +441,7 @@ button, input, select { font: inherit; }
 .tb-btn .tb-btn-label.solo { display: none; }
 .tb-sel { color: var(--amber); border-color: var(--amber-dark); padding-right: 30px; appearance: none; -webkit-appearance: none;
   background: var(--olive-dark) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23c0892a' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right 11px center; }
-.tb-sel:hover, .tb-sel:focus-visible { border-color: var(--amber); outline: none; }
+.tb-sel:hover, .tb-sel:focus-visible { border-color: var(--amber); }
 .tb-sel option { background: var(--olive-dark); color: var(--paper); font-weight: 500; }
 
 /* ---------- Listes de la barre au thème de l'interface (lot mp-ui-listes) ----------
@@ -461,7 +461,7 @@ select[data-tbm-src] { display: none !important; }
   padding: 4px 0; margin: 0; list-style: none; scrollbar-width: thin; scrollbar-color: var(--amber-dark) transparent;
   transform-origin: top left; animation: tbm-in .12s ease-out;
 }
-.tbm-panel, .tbm-panel:focus, .tbm-panel:focus-visible { outline: none; }
+.tbm-panel, .tbm-panel:focus, .tbm-panel:focus-visible { }
 @keyframes tbm-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
 .tbm-head {
   font-family: var(--f-ui); font-weight: 500; font-size: 10px; letter-spacing: 1.8px; text-transform: uppercase;
@@ -517,7 +517,7 @@ select[data-tbm-src] { display: none !important; }
   background: transparent; border: 1px solid var(--khaki); color: var(--paper); height: 40px; min-width: 44px; padding: 0 10px;
   cursor: pointer; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; line-height: 1; flex: none;
 }
-.tb-lang-btn:hover, .tb-lang-btn:focus-visible { background: var(--olive); border-color: var(--amber); outline: none; }
+.tb-lang-btn:hover, .tb-lang-btn:focus-visible { background: var(--olive); border-color: var(--amber); }
 .tb-lang-btn:active { transform: translateY(1px); }
 
 /* ---------- application ---------- */
@@ -554,7 +554,7 @@ button.ed-head { width: 100%; box-sizing: border-box; margin: 0; border: 0; bord
 .in { background: rgba(216,201,165,.92); border: 1px solid var(--khaki); border-left: 3px solid var(--amber-dark);
   font-family: var(--f-typewriter); font-weight: 400; font-size: 13px; color: #1f1c16; padding: 8px 9px; min-height: 40px; width: 100%; min-width: 0; border-radius: 0; }
 .in::placeholder { color: rgba(31,28,22,.45); }
-.in:focus { outline: none; border-left-color: var(--red-stamp); background: #ece0c2; box-shadow: 0 0 0 1px var(--amber); }
+.in:focus { border-left-color: var(--red-stamp); background: #ece0c2; box-shadow: 0 0 0 1px var(--amber); }
 select.in { appearance: none; -webkit-appearance: none; padding-right: 22px;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%231f1c16' stroke-width='1.5'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 7px center; }
@@ -565,7 +565,7 @@ select.in { appearance: none; -webkit-appearance: none; padding-right: 22px;
 .pt-num { font-family: var(--f-stencil); font-weight: 700; color: var(--paper); border: 1px solid var(--khaki); height: 40px; background: transparent; padding: 0;
   display: flex; align-items: center; justify-content: center; font-size: 13px; cursor: pointer; }
 .pt-del { height: 40px; border: 1px solid var(--khaki); background: transparent; color: var(--khaki-light); cursor: pointer; font-size: 16px; padding: 0; }
-.pt-del:hover, .pt-del:focus-visible { border-color: var(--red-faded); color: var(--paper-light); background: var(--rust); outline: none; }
+.pt-del:hover, .pt-del:focus-visible { border-color: var(--red-faded); color: var(--paper-light); background: var(--rust); }
 .pt-head { display: grid; grid-template-columns: 30px 1fr 84px 76px 34px; gap: 6px; margin-bottom: 4px; }
 .pt-head[hidden] { display: none; }
 .pt-head span { font-size: 10px; letter-spacing: 1.2px; color: var(--khaki-light); text-transform: uppercase; min-width: 0; }
@@ -713,7 +713,7 @@ table.nav td.r { text-align: right; white-space: nowrap; }
 .sr-in:focus { box-shadow: inset 0 -3px 0 var(--amber); }
 .sr-x { flex: none; width: 44px; height: 44px; margin: 0; padding: 0; border: 0; border-left: 1px solid var(--khaki); background: transparent; color: var(--paper);
   font-family: var(--f-ui); font-weight: 500; font-size: 22px; line-height: 1; cursor: pointer; }
-.sr-x:hover, .sr-x:focus-visible { background: var(--olive); color: var(--amber); outline: none; }
+.sr-x:hover, .sr-x:focus-visible { background: var(--olive); color: var(--amber); }
 .sr-list { overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--amber-dark) transparent; }
 .sr-list[hidden] { display: none; }
 .sr-row { display: flex; align-items: center; gap: 10px; min-height: 44px; box-sizing: border-box; padding: 0 12px; border-top: 1px solid rgba(168,154,114,.25); cursor: pointer; user-select: none; -webkit-user-select: none; }
@@ -745,7 +745,7 @@ body[data-theme="modern-east"] { --route: #7a2424; }
   font-family: var(--f-typewriter); font-weight: 400; }
 .rt-close { position: absolute; top: 4px; right: 6px; width: 44px; height: 44px; background: none; border: none; color: var(--ink);
   font-size: 22px; line-height: 1; cursor: pointer; padding: 0; font-family: inherit; }
-.rt-close:hover, .rt-close:focus-visible { color: var(--amber-dark); outline: none; }
+.rt-close:hover, .rt-close:focus-visible { color: var(--amber-dark); }
 .rt-panel h2 { font-family: var(--f-stencil); font-weight: 700; font-size: 22px; letter-spacing: 2px; margin: 0 40px 14px 0; text-transform: uppercase; overflow-wrap: anywhere; }
 .rt-file { font-size: 12px; margin: 0 0 14px; overflow-wrap: anywhere; opacity: .85; }
 .rt-block { margin-bottom: 14px; }
@@ -773,7 +773,7 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .rt-btn { min-height: 44px; min-width: 44px; padding: 8px 18px; background: transparent; color: var(--ink); border: 2px solid var(--ink); border-radius: 2px;
   font-family: var(--f-stencil); font-weight: 700; font-size: 13px; letter-spacing: 2px; line-height: 1.25; text-transform: uppercase; text-align: center;
   cursor: pointer; flex: 1 1 auto; overflow-wrap: anywhere; }
-.rt-btn:hover, .rt-btn:focus-visible { background: rgba(0,0,0,.06); border-color: var(--amber-dark); outline: none; }
+.rt-btn:hover, .rt-btn:focus-visible { background: rgba(0,0,0,.06); border-color: var(--amber-dark); }
 .rt-fn { text-transform: none; letter-spacing: 1px; }
 .rt-btn.go { background: var(--amber); color: #f6efdc; border-color: var(--amber); }
 .rt-btn.go:hover, .rt-btn.go:focus-visible { background: var(--ink); border-color: var(--ink); color: #f6efdc; }
@@ -832,7 +832,7 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .cf-popup .leaflet-popup-tip { background: var(--paper-light); box-shadow: none; }
 .cf-popup .leaflet-popup-content { margin: 10px 14px 12px; min-width: 150px; font-family: var(--f-typewriter); font-weight: 400; font-size: 12px; line-height: 1.45; }
 .cf-popup a.leaflet-popup-close-button { top: 0; right: 0; width: 44px; height: 44px; padding: 0; font: 400 26px/44px var(--f-typewriter); color: var(--ink); text-align: center; }
-.cf-popup a.leaflet-popup-close-button:hover, .cf-popup a.leaflet-popup-close-button:focus-visible { color: var(--amber-dark); outline: none; }
+.cf-popup a.leaflet-popup-close-button:hover, .cf-popup a.leaflet-popup-close-button:focus-visible { color: var(--amber-dark); }
 .cf-f-nm { font-family: var(--f-condensed); font-weight: 700; font-size: 14px; letter-spacing: .5px; line-height: 1.25; margin: 0 0 4px; padding-right: 30px; overflow-wrap: anywhere; }
 .cf-f-l { overflow-wrap: anywhere; }
 .cf-f-mgrs { font-family: var(--f-mono); font-weight: 400; margin-top: 2px; }
@@ -845,14 +845,14 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .cf-nm { font-family: var(--f-ui); font-weight: 500; font-size: 13px; color: var(--paper); overflow-wrap: anywhere; }
 .cf-n { margin-left: auto; font-family: var(--f-ui); font-weight: 500; font-size: 11px; color: var(--khaki-light); text-align: right; }
 .cf-del { width: 44px; height: 44px; flex: none; padding: 0; border: 1px solid var(--khaki); background: transparent; color: var(--khaki-light); font-size: 22px; line-height: 1; cursor: pointer; }
-.cf-del:hover, .cf-del:focus-visible { border-color: var(--red-faded); color: var(--paper-light); background: var(--rust); outline: none; }
+.cf-del:hover, .cf-del:focus-visible { border-color: var(--red-faded); color: var(--paper-light); background: var(--rust); }
 .cf-clear { width: 100%; height: 44px; margin-top: 8px; }
 /* fenêtres « Calques CombatFlite » et « Exporter » : la structure des fenêtres du Route Tool, la livrée de la maquette */
 /* le contenu des fenêtres de suite (la fenêtre est une .ui-modal du bloc d'interface commun) */
 .ui-modal .rt-block { margin-bottom: 12px; }
 .ui-modal .rt-lbl { display: block; margin: 0 0 6px; font-family: var(--f-ui); font-weight: 500; font-size: 11px; letter-spacing: 1.8px; text-transform: uppercase; color: var(--amber); }
 .ui-modal .rt-in { background: rgba(216,201,165,.92); border: 1px solid var(--khaki); border-left: 3px solid var(--amber-dark); border-radius: 0; color: #1a1710; }
-.ui-modal .rt-in:focus { outline: none; background: var(--paper-light); box-shadow: 0 0 0 1px var(--amber); }
+.ui-modal .rt-in:focus { background: var(--paper-light); box-shadow: 0 0 0 1px var(--amber); }
 .ui-actions.col { flex-direction: column; flex-wrap: nowrap; align-items: stretch; }
 .ui-modal .rt-file { font-size: 12px; margin: 0 0 2px; opacity: 1; color: var(--khaki-light); }
 .ui-modal .rt-note { font-size: 12px; opacity: 1; color: var(--khaki-light); margin: 0 0 8px; }
@@ -1170,13 +1170,13 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .dr-h { touch-action: none; -webkit-user-select: none; user-select: none; cursor: grab; }
 .dr-rlab-icon { width: 0; height: 0; }
 .dr-hint .dr-acts[hidden] { display: none; }
-.dr-tool:hover, .dr-tool:focus-visible, .dr-chip:hover, .dr-chip:focus-visible { border-color: var(--amber); outline: none; }
+.dr-tool:hover, .dr-tool:focus-visible, .dr-chip:hover, .dr-chip:focus-visible { border-color: var(--amber); }
 .dr-ly .lock svg { display: block; width: 14px; height: 14px; }
 .dr-ly .nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dr-ly .tb-btn { flex: none; align-self: stretch; height: auto; min-height: 40px; padding: 0 8px; font-size: 10px; letter-spacing: 1px; }
 .dr-seg .tb-btn + .tb-btn { border-left: none; }
-.dr-sheet .sh-x:hover, .dr-sheet .sh-x:focus-visible { border-color: var(--amber); outline: none; }
-.dr-f input:focus, .dr-f select:focus, .dr-new input:focus { outline: none; border-left-color: var(--red-stamp); box-shadow: 0 0 0 1px var(--amber); }
+.dr-sheet .sh-x:hover, .dr-sheet .sh-x:focus-visible { border-color: var(--amber); }
+.dr-f input:focus, .dr-f select:focus, .dr-new input:focus { border-left-color: var(--red-stamp); box-shadow: 0 0 0 1px var(--amber); }
 .rp-split:focus-visible { outline: 2px solid var(--amber); outline-offset: -2px; }
 /* la liste « Type » de la fiche prend la liste du module (le <select> reste, masqué) ; le bouton garde l'aspect d'un champ de la fiche
    (les valeurs de « .dr-f select ») et un chevron de la puce « Calque » ; rien de .tb-sel ni de .tbm-trigger n'en change l'aspect fermé */
@@ -1187,7 +1187,7 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .dr-f .tbm-trigger::after { content: ''; position: absolute; right: 9px; top: 50%; width: 7px; height: 7px; margin-top: -6px;
   border-right: 2px solid var(--amber); border-bottom: 2px solid var(--amber); transform: rotate(45deg); pointer-events: none; }
 .dr-f .tbm-trigger.tbm-trigger-open::after { transform: rotate(-135deg); margin-top: -2px; }
-.dr-f .tbm-trigger:focus-visible { outline: none; border-left-color: var(--red-stamp); box-shadow: 0 0 0 1px var(--amber); }
+.dr-f .tbm-trigger:focus-visible { border-left-color: var(--red-stamp); box-shadow: 0 0 0 1px var(--amber); }
 
 
 /* ---------- Barre du haut commune aux sept modules (lot mp-imports-suite) ----------

@@ -764,7 +764,6 @@ body {
   background: var(--olive);
   border-color: var(--amber);
   color: var(--amber);
-  outline: none;
 }
 .tb-btn:active { transform: translateY(1px); }
 .tb-btn.danger:hover {
@@ -800,7 +799,6 @@ body {
 .tb-select:hover, .tb-select:focus-visible {
   background-color: var(--olive);
   border-color: var(--amber);
-  outline: none;
 }
 .tb-select option {
   background-color: var(--olive-dark);
@@ -815,7 +813,7 @@ body {
   padding: 0 30px 0 12px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex: none; appearance: none; -webkit-appearance: none;
   background: var(--olive-dark) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23c0892a' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right 11px center;
 }
-.tb-sel:hover, .tb-sel:focus-visible { border-color: var(--amber); outline: none; }
+.tb-sel:hover, .tb-sel:focus-visible { border-color: var(--amber); }
 .tb-sel option { background: var(--olive-dark); color: var(--paper); font-weight: 500; }
 
 /* ---------- le menu « Unités » (recopié du Route Planner, lot mp-theatre-unique) : le bouton de la barre et son panneau, au style des listes de la barre (tbm-*) ---------- */
@@ -853,7 +851,7 @@ select[data-tbm-src] { display: none !important; }
   padding: 4px 0; margin: 0; list-style: none; scrollbar-width: thin; scrollbar-color: var(--amber-dark) transparent;
   transform-origin: top left; animation: tbm-in .12s ease-out;
 }
-.tbm-panel, .tbm-panel:focus, .tbm-panel:focus-visible { outline: none; }
+.tbm-panel, .tbm-panel:focus, .tbm-panel:focus-visible { }
 @keyframes tbm-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
 .tbm-head {
   font-family: var(--f-ui); font-weight: 500; font-size: 10px; letter-spacing: 1.8px; text-transform: uppercase;
@@ -877,7 +875,7 @@ select[data-tbm-src] { display: none !important; }
 .tbm-off { display: none !important; }
 /* La recherche en tête d'une liste (option data-search du <select>) : collée en haut du panneau qui défile */
 .tbm-list { margin: 0; padding: 0; list-style: none; outline: none; }
-.tbm-list:focus, .tbm-list:focus-visible { outline: none; }
+.tbm-list:focus, .tbm-list:focus-visible { }
 .tbm-search { position: sticky; top: 0; z-index: 2; padding: 6px 10px; background: var(--olive-dark); border-bottom: 1px solid rgba(168,154,114,.25); }
 .tbm-q { display: block; width: 100%; min-height: 36px; box-sizing: border-box; padding: 6px 10px; font-family: var(--f-typewriter); font-size: 13px; letter-spacing: .2px; color: #1f1c16; background: rgba(216, 201, 165, .92); border: 1px solid var(--khaki); border-left: 3px solid var(--amber-dark); border-radius: 0; outline: none; }
 .tbm-q:focus { border-left-color: var(--red-stamp); box-shadow: 0 0 0 1px var(--amber); }
@@ -903,7 +901,7 @@ select[data-tbm-src] { display: none !important; }
 .ed-field .tbm-trigger.tbm-field .tbm-lbl::after { display: none; }
 .ed-field .tbm-trigger.tbm-field:focus-visible,
 .ed-field .tbm-trigger.tbm-field.tbm-trigger-open {
-  outline: none; border-left-color: var(--red-stamp); background-color: #ece0c2; box-shadow: 0 0 0 1px var(--amber);
+ border-left-color: var(--red-stamp); background-color: #ece0c2; box-shadow: 0 0 0 1px var(--amber);
   border-top-color: var(--khaki) !important; border-right-color: var(--khaki) !important; border-bottom-color: var(--khaki) !important;
 }
 
@@ -943,7 +941,6 @@ select[data-tbm-src] { display: none !important; }
 .tb-lang-btn:hover, .tb-lang-btn:focus-visible {
   background: var(--olive);
   border-color: var(--amber);
-  outline: none;
 }
 .tb-lang-btn:active { transform: translateY(1px); }
 
@@ -973,7 +970,6 @@ select[data-tbm-src] { display: none !important; }
 .tb-seg .seg-btn:hover, .tb-seg .seg-btn:focus-visible {
   background: var(--olive);
   color: var(--amber);
-  outline: none;
 }
 .tb-seg .seg-btn.active,
 .tb-seg .seg-btn.active:hover {
@@ -1041,7 +1037,6 @@ select[data-tbm-src] { display: none !important; }
   background: var(--olive);
   border-color: var(--amber);
   color: var(--amber);
-  outline: none;
 }
 .pack-btn:disabled { opacity: .35; cursor: not-allowed; }
 .pack-btn.danger:hover:not(:disabled) { background: var(--rust); border-color: var(--red-faded); color: var(--paper-light); }
@@ -1112,7 +1107,6 @@ select[data-tbm-src] { display: none !important; }
 .ed-field input:focus,
 .ed-field textarea:focus,
 .ed-field select:focus {
-  outline: none;
   border-left-color: var(--red-stamp);
   background: #ece0c2;
   box-shadow: 0 0 0 1px var(--amber);
@@ -1689,7 +1683,7 @@ div.dc-bl, li.dc-bl, p.dc-bl { height: 24px; border-bottom: 1px dotted var(--dc-
   background: rgba(0, 0, 0, .18); border: 1px solid var(--khaki); border-left: 3px solid var(--khaki); color: var(--paper);
   font-family: var(--f-ui);
 }
-.card-row:hover, .card-row:focus-visible { border-color: var(--amber); outline: none; }
+.card-row:hover, .card-row:focus-visible { border-color: var(--amber); }
 .card-row.cur { background: var(--olive); border-color: var(--amber); border-left-color: var(--amber); }
 .card-row.free { border-left-style: dashed; }
 .cr-name { font-family: var(--f-stencil); font-weight: 700; font-size: 13px; letter-spacing: 2px; color: var(--amber); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }

@@ -1611,7 +1611,6 @@ body {{
 .tb-select:hover, .tb-select:focus-visible {{
   background-color: var(--olive);
   border-color: var(--amber);
-  outline: none;
 }}
 .tb-select option {{ background-color: var(--olive-dark); color: var(--paper); }}
 
@@ -1632,7 +1631,7 @@ select[data-tbm-src] {{ display: none !important; }}
   padding: 4px 0; margin: 0; list-style: none; scrollbar-width: thin; scrollbar-color: var(--amber-dark) transparent;
   transform-origin: top left; animation: tbm-in .12s ease-out;
 }}
-.tbm-panel, .tbm-panel:focus, .tbm-panel:focus-visible {{ outline: none; }}
+.tbm-panel, .tbm-panel:focus, .tbm-panel:focus-visible {{ }}
 @keyframes tbm-in {{ from {{ opacity: 0; transform: translateY(-4px); }} to {{ opacity: 1; transform: none; }} }}
 .tbm-head {{
   font-family: var(--f-ui); font-weight: 500; font-size: 10px; letter-spacing: 1.8px; text-transform: uppercase;
@@ -1671,7 +1670,7 @@ select[data-tbm-src] {{ display: none !important; }}
 .ed-select.tbm-trigger.tbm-field.tbm-narrow::after {{ right: 8px; }}
 .ed-select.tbm-trigger.tbm-field .tbm-lbl {{ margin: 0; padding: 0; line-height: 17px; }}
 .ed-select.tbm-trigger.tbm-field .tbm-lbl::after {{ display: none; }}
-.ed-select.tbm-trigger.tbm-field:focus-visible {{ border-color: var(--amber); outline: none; }}
+.ed-select.tbm-trigger.tbm-field:focus-visible {{ border-color: var(--amber); }}
 
 .tbm-panel.tbm-p-field {{ max-width: calc(100vw - 16px); }}
 .tbm-panel.tbm-p-field .tbm-opt {{
@@ -1696,7 +1695,6 @@ select[data-tbm-src] {{ display: none !important; }}
 .tb-lang-btn:hover, .tb-lang-btn:focus-visible {{
   background: var(--olive);
   border-color: var(--amber);
-  outline: none;
 }}
 /* Exemple (lot mp-exemples-demarrer) : bouton de la barre, avec son texte quand elle a la place (lot mp-imports-suite) ;
    borné à la barre du haut : les .tb-btn de la barre de dessin et de sa fiche ont leurs propres règles (.rsd-ui, .rsd-sheet) */
@@ -1718,7 +1716,6 @@ select[data-tbm-src] {{ display: none !important; }}
   background: var(--olive);
   border-color: var(--amber);
   color: var(--amber);
-  outline: none;
 }}
 .toolbar .tb-btn:active {{ transform: translateY(1px); }}
 .toolbar .tb-btn svg {{ width: 16px; height: 16px; flex-shrink: 0; }}
@@ -1826,7 +1823,7 @@ select[data-tbm-src] {{ display: none !important; }}
   font-size: 12px;
   transition: border-color .15s;
 }}
-.ed-input:focus {{ border-color: var(--amber); outline: none; }}
+.ed-input:focus {{ border-color: var(--amber); }}
 .ed-input::placeholder {{ color: var(--khaki); opacity: .6; }}
 .ed-toggle-row {{
   display: flex;
@@ -1851,7 +1848,7 @@ select[data-tbm-src] {{ display: none !important; }}
   font-size: 11px;
   cursor: pointer;
 }}
-.ed-select:focus {{ border-color: var(--amber); outline: none; }}
+.ed-select:focus {{ border-color: var(--amber); }}
 .label-text-input {{
   width: 100%;
   margin-top: 4px;
@@ -2170,7 +2167,7 @@ select[data-tbm-src] {{ display: none !important; }}
   font-family: var(--f-typewriter);
   font-size: 11px;
 }}
-.inset-label-input:focus {{ border-color: var(--amber); outline: none; }}
+.inset-label-input:focus {{ border-color: var(--amber); }}
 
 /* Logo picker */
 .logo-grid {{
