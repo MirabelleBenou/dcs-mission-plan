@@ -22,16 +22,13 @@ CONTRAST_CSS = r"""
 :where(body[data-theme="cw-nato"]) .phase-bar button.danger { color: #e6b7b1; }
 :where(body[data-theme="cw-nato"]) .ed-label-hint { color: #aea692; }
 :where(body[data-theme="cw-nato"]) .ed-btn-subtask-add { color: #898f78; }
-:where(body[data-theme="cw-nato"]) .wing-action-reset { color: #c17064; }
 :where(body[data-theme="cw-soviet"]) .tb-seg .seg-btn.active { color: #f2e8c0; }
 :where(body[data-theme="cw-soviet"]) .ed-section > summary { color: #cc9f52; }
 :where(body[data-theme="cw-soviet"]) .ed-phase-card .phase-num { color: #f0e8cb; }
 :where(body[data-theme="cw-soviet"]) .phase-bar button.danger { color: #cd9a9a; }
 :where(body[data-theme="cw-soviet"]) .ed-label-hint { color: #9da597; }
 :where(body[data-theme="cw-soviet"]) .ed-btn-subtask-add { color: #7d879a; }
-:where(body[data-theme="cw-soviet"]) .wing-action-reset { color: #b27171; }
 :where(body[data-theme="cw-soviet"]) .phase-empty { color: #7e8b70; }
-:where(body[data-theme="cw-soviet"]) .ui-note { color: #879279; }
 :where(body[data-theme="cw-soviet"]) .ed-btn-move { color: #879279; }
 :where(body[data-theme="cw-soviet"]) .wing-ro-meta { color: #7b886d; }
 :where(body[data-theme="modern-nato"]) .ed-section > summary { color: #c38f35; }
@@ -39,16 +36,13 @@ CONTRAST_CSS = r"""
 :where(body[data-theme="modern-nato"]) .phase-bar button.danger { color: #9a9a9a; }
 :where(body[data-theme="modern-nato"]) .ed-label-hint { color: #97a0aa; }
 :where(body[data-theme="modern-nato"]) .ed-btn-subtask-add { color: #81858a; }
-:where(body[data-theme="modern-nato"]) .wing-action-reset { color: #818181; }
 :where(body[data-theme="modern-east"]) .tb-seg .seg-btn.active { color: #ece8e0; }
 :where(body[data-theme="modern-east"]) .ed-section > summary { color: #c6943d; }
 :where(body[data-theme="modern-east"]) .ed-phase-card .phase-num { color: #ebe8e2; }
 :where(body[data-theme="modern-east"]) .phase-bar button.danger { color: #c78e8e; }
 :where(body[data-theme="modern-east"]) .ed-label-hint { color: #9da294; }
 :where(body[data-theme="modern-east"]) .ed-btn-subtask-add { color: #8d857e; }
-:where(body[data-theme="modern-east"]) .wing-action-reset { color: #aa7373; }
 :where(body[data-theme="modern-east"]) .phase-empty { color: #828971; }
-:where(body[data-theme="modern-east"]) .ui-note { color: #888e78; }
 :where(body[data-theme="modern-east"]) .ed-btn-move { color: #888e78; }
 :where(body[data-theme="modern-east"]) .wing-ro-meta { color: #7d846c; }
 /* MP-20 end */
@@ -228,6 +222,8 @@ body[data-theme="modern-east"] {
 html, body { height: 100%; overscroll-behavior: none; }
 button { font: inherit; cursor: pointer; }
 input, select, textarea { font: inherit; }
+/* l'aperçu est un document : il garde la taille de texte d'origine (14 px), hors de l'échelle de l'interface */
+#preview { font-size: 14px; }
 
 body {
   font-family: var(--f-typewriter);
@@ -427,7 +423,6 @@ select[data-tbm-src] { display: none !important; }
   padding: 4px 0; margin: 0; list-style: none; scrollbar-width: thin; scrollbar-color: var(--amber-dark) transparent;
   transform-origin: top left; animation: tbm-in .12s ease-out;
 }
-.tbm-panel, .tbm-panel:focus, .tbm-panel:focus-visible { }
 @keyframes tbm-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
 .tbm-head {
   font-family: var(--f-ui); font-weight: 500; font-size: 10px; letter-spacing: 1.8px; text-transform: uppercase;
@@ -1087,6 +1082,8 @@ select[data-tbm-src] { display: none !important; }
   background: var(--olive-deep);
   padding: 30px 20px 60px 20px;
 }
+/* la zone défilante prend le focus au clavier (le navigateur la rend focalisable) : le même contour que le reste */
+.preview-wrap:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
 .preview-wrap::-webkit-scrollbar { width: 12px; }
 .preview-wrap::-webkit-scrollbar-track { background: var(--olive-deep); }
 .preview-wrap::-webkit-scrollbar-thumb { background: var(--khaki); border: 2px solid var(--olive-deep); }

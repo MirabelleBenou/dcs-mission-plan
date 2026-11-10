@@ -175,8 +175,9 @@ def build_html(module_html_js, tile_uris):
   --line:rgba(160,120,80,.26); --grain:.05; --scan:.04; --rot:-1.4deg; --rad:4px; }}
 
 *{{box-sizing:border-box;margin:0;padding:0;}}
-:focus-visible {{
-  outline: 2px solid var(--amber) !important; outline-offset: 2px !important;
+button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus-visible,
+a[href]:focus-visible, [tabindex]:focus-visible, [role="button"]:focus-visible {{
+  outline: 2px solid var(--amber); outline-offset: 2px;
 }}
 html,body{{height:100%;}}
 body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); min-height:100vh; overflow-x:hidden; transition:background .5s ease;}}
@@ -219,7 +220,6 @@ select[data-tbm-src] {{ display: none !important; }}
   padding: 4px 0; margin: 0; list-style: none; scrollbar-width: thin; scrollbar-color: var(--line) transparent;
   transform-origin: top left; animation: tbm-in .12s ease-out;
 }}
-.tbm-panel, .tbm-panel:focus, .tbm-panel:focus-visible {{ }}
 @keyframes tbm-in {{ from {{ opacity: 0; transform: translateY(-4px); }} to {{ opacity: 1; transform: none; }} }}
 .tbm-head {{
   font-family: var(--f-ui); font-weight: 500; font-size: 10px; letter-spacing: 1.8px; text-transform: uppercase;
@@ -792,11 +792,27 @@ select[data-tbm-src] {{ display: none !important; }}
   }}
 
   /* ── Navigation ────────────────────────────────────────────── */
+  /* La langue de la suite est celle de lang_v1 : un outil qui change sa langue par son drapeau l'écrit, mais CURRENT_LANG du shell
+     n'est remis à jour qu'au retour à l'accueil. Chemin commun à tout ce qui montre un module (accueil, « Vers la datacard »,
+     « Vers le briefing », MP_SEND_MAP) : le shell reprend lang_v1 (drapeau de l'accueil compris), sans rien écrire. */
+  function adoptStoredLang() {{
+    try {{
+      var s = localStorage.getItem(KEY_LANG);
+      if ((s === 'fr' || s === 'en') && s !== CURRENT_LANG) {{
+        CURRENT_LANG = s;
+        applyI18n();
+        updateFlagBtn();
+        Object.keys(barSync).forEach(function(bid) {{ barSync[bid](); }});
+      }}
+    }} catch(e) {{}}
+  }}
+
   function openModule(id) {{
     if (!MODULE_HTML[id]) {{
       console.warn('[M·P] Module ' + id + ' : base64 vide');
       return;
     }}
+    adoptStoredLang();
     document.getElementById('landing').style.display = 'none';
     var mv = document.getElementById('module-view');
     mv.style.display = 'block';
@@ -822,7 +838,7 @@ select[data-tbm-src] {{ display: none !important; }}
           var back = doc.createElement('button');
           back.className = 'mp-back-injected';
           back.textContent = t('back');
-          back.style.cssText = 'font-family:"Roboto Mono",monospace;font-weight:400;font-size:11px;cursor:pointer;color:var(--mp-amber-txt,#d9a54a);'
+          back.style.cssText = 'font-family:"Roboto Mono",monospace;font-weight:400;font-size:11px;cursor:pointer;--mp-amber-txt:#d9a54a;color:var(--mp-amber-txt);'
             + 'background:transparent;border:1px solid #c0892a;border-radius:3px;padding:4px 10px;'
             + 'margin-right:12px;letter-spacing:.03em;min-height:44px;box-sizing:border-box;flex-shrink:0;';
           back.addEventListener('click', goHub);

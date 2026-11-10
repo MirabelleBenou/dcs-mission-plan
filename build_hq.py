@@ -19,24 +19,20 @@ CONTRAST_CSS = r"""
 :where(body[data-theme="cw-nato"]) .tb-classif { color: #d4847b; }
 :where(body[data-theme="cw-nato"]) .ed-section > summary { color: #dcbe8a; }
 :where(body[data-theme="cw-nato"]) .drop-zone-miz { color: #d2cab6; }
-:where(body[data-theme="cw-nato"]) .wing-action-reset { color: #be685b; }
 :where(body[data-theme="cw-nato"]) .wing-size-counter { color: #aea692; }
 :where(body[data-theme="cw-soviet"]) .tb-classif { color: #be7d7d; }
 :where(body[data-theme="cw-soviet"]) .ed-section > summary { color: #cc9f52; }
 :where(body[data-theme="cw-soviet"]) .drop-zone-miz { color: #c5cbbf; }
-:where(body[data-theme="cw-soviet"]) .wing-action-reset { color: #af6d6d; }
 :where(body[data-theme="cw-soviet"]) .wing-size-counter { color: #a0a89b; }
 :where(body[data-theme="cw-soviet"]) .wing-legend { color: #79866b; }
 :where(body[data-theme="cw-soviet"]) .wing-sq-toggle { color: #788569; }
 :where(body[data-theme="modern-nato"]) .tb-classif { color: #898989; }
 :where(body[data-theme="modern-nato"]) .ed-section > summary { color: #c38f35; }
 :where(body[data-theme="modern-nato"]) .drop-zone-miz { color: #c0c8cf; }
-:where(body[data-theme="modern-nato"]) .wing-action-reset { color: #7f7f7f; }
 :where(body[data-theme="modern-nato"]) .wing-size-counter { color: #9ca5ae; }
 :where(body[data-theme="modern-east"]) .tb-classif { color: #bd7979; }
 :where(body[data-theme="modern-east"]) .ed-section > summary { color: #c6943d; }
 :where(body[data-theme="modern-east"]) .drop-zone-miz { color: #c6c9bf; }
-:where(body[data-theme="modern-east"]) .wing-action-reset { color: #a97171; }
 :where(body[data-theme="modern-east"]) .wing-size-counter { color: #a3a79a; }
 :where(body[data-theme="modern-east"]) .wing-legend { color: #7d846c; }
 :where(body[data-theme="modern-east"]) .wing-sq-toggle { color: #7a8269; }
@@ -398,7 +394,6 @@ select[data-tbm-src] {{ display: none !important; }}
   padding: 4px 0; margin: 0; list-style: none; scrollbar-width: thin; scrollbar-color: var(--amber-dark) transparent;
   transform-origin: top left; animation: tbm-in .12s ease-out;
 }}
-.tbm-panel, .tbm-panel:focus, .tbm-panel:focus-visible {{ }}
 @keyframes tbm-in {{ from {{ opacity: 0; transform: translateY(-4px); }} to {{ opacity: 1; transform: none; }} }}
 .tbm-head {{
   font-family: var(--f-ui); font-weight: 500; font-size: 10px; letter-spacing: 1.8px; text-transform: uppercase;
@@ -739,7 +734,7 @@ select[data-tbm-src] {{ display: none !important; }}
 }}
 .wing-ac-tag button:hover {{ opacity: 1; }}
 .wing-ac-flag {{ font-size: 10px; letter-spacing: .3px; color: #e8b840; cursor: pointer; text-decoration: underline dotted; }}
-.wing-ac-flag:focus-visible {{ outline: 1px solid #e8b840; outline-offset: 2px; }}
+.wing-ac-flag:focus-visible {{ outline: 2px solid var(--amber); outline-offset: 2px; }}
 .wing-ac-item {{ display: flex; flex-wrap: wrap; align-items: center; gap: 5px; max-width: 100%; min-width: 0; }}
 .wing-ac-item.wing-ac-item-rep {{ flex: 1 1 100%; }}   /* l'étiquette et sa liste de types proches ont leur ligne : aucune autre étiquette ne passe entre elles */
 .wing-ac-add-row {{ display: flex; gap: 6px; margin-top: 4px; width: 100%; }}

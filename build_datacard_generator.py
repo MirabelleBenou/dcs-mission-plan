@@ -46,7 +46,6 @@ CONTRAST_CSS = r"""
 :where(body[data-theme="cw-soviet"]) .pack-btn.main { color: #cc9f52; }
 :where(body[data-theme="cw-soviet"]) .ed-section > summary { color: #cc9f52; }
 :where(body[data-theme="cw-soviet"]) .tb-label { color: #879279; }
-:where(body[data-theme="cw-soviet"]) .ui-note { color: #879279; }
 :where(body[data-theme="cw-soviet"]) .nav-route .nr-k { color: #7b886d; }
 :where(body[data-theme="cw-soviet"]) .nav-route .nr-sub { color: #7b886d; }
 :where(body[data-theme="modern-nato"]) .cr-name { color: #c38f35; }
@@ -58,7 +57,6 @@ CONTRAST_CSS = r"""
 :where(body[data-theme="modern-east"]) .pack-btn.main { color: #c6943d; }
 :where(body[data-theme="modern-east"]) .ed-section > summary { color: #c6943d; }
 :where(body[data-theme="modern-east"]) .tb-label { color: #888e78; }
-:where(body[data-theme="modern-east"]) .ui-note { color: #888e78; }
 :where(body[data-theme="modern-east"]) .nav-route .nr-k { color: #7f866e; }
 :where(body[data-theme="modern-east"]) .nav-route .nr-sub { color: #7f866e; }
 /* MP-20 end */
@@ -693,6 +691,8 @@ body[data-theme="modern-east"] {
 html, body { height: 100%; overscroll-behavior: none; }
 button { font: inherit; cursor: pointer; }
 input, select, textarea { font: inherit; }
+/* l'aperçu est un document : il garde la taille de texte d'origine (14 px), hors de l'échelle de l'interface */
+#preview { font-size: 14px; }
 
 body {
   font-family: var(--f-typewriter);
@@ -851,7 +851,6 @@ select[data-tbm-src] { display: none !important; }
   padding: 4px 0; margin: 0; list-style: none; scrollbar-width: thin; scrollbar-color: var(--amber-dark) transparent;
   transform-origin: top left; animation: tbm-in .12s ease-out;
 }
-.tbm-panel, .tbm-panel:focus, .tbm-panel:focus-visible { }
 @keyframes tbm-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
 .tbm-head {
   font-family: var(--f-ui); font-weight: 500; font-size: 10px; letter-spacing: 1.8px; text-transform: uppercase;
@@ -875,7 +874,6 @@ select[data-tbm-src] { display: none !important; }
 .tbm-off { display: none !important; }
 /* La recherche en tête d'une liste (option data-search du <select>) : collée en haut du panneau qui défile */
 .tbm-list { margin: 0; padding: 0; list-style: none; outline: none; }
-.tbm-list:focus, .tbm-list:focus-visible { }
 .tbm-search { position: sticky; top: 0; z-index: 2; padding: 6px 10px; background: var(--olive-dark); border-bottom: 1px solid rgba(168,154,114,.25); }
 .tbm-q { display: block; width: 100%; min-height: 36px; box-sizing: border-box; padding: 6px 10px; font-family: var(--f-typewriter); font-size: 13px; letter-spacing: .2px; color: #1f1c16; background: rgba(216, 201, 165, .92); border: 1px solid var(--khaki); border-left: 3px solid var(--amber-dark); border-radius: 0; outline: none; }
 .tbm-q:focus { border-left-color: var(--red-stamp); box-shadow: 0 0 0 1px var(--amber); }
@@ -1197,13 +1195,7 @@ select[data-tbm-src] { display: none !important; }
 .ed-btn-add:disabled { opacity: .35; cursor: not-allowed; }
 .ed-btn-add.sm { min-height: 44px; padding: 6px 10px; font-size: 11px; }
 .ed-btn-add.on { background: var(--olive); color: var(--paper-light); }
-/* Cap : deux boutons segmentés, 44 px */
-.ed-seg { display: flex; width: 100%; }
-.ed-seg-btn { flex: 1 1 0; min-height: 44px; padding: 6px 10px; background: var(--olive-dark); border: 1px solid var(--khaki); color: var(--paper); font-family: var(--f-ui); font-weight: 700; font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; transition: background .15s; }
-.ed-seg-btn + .ed-seg-btn { border-left: none; }
-.ed-seg-btn[aria-pressed="true"] { background: var(--amber-dark); color: #fff; border-color: var(--amber); box-shadow: inset 0 -3px 0 var(--amber); }
-.ed-seg-btn[aria-pressed="false"]:hover { background: var(--olive); color: var(--amber); }
-.ed-seg-btn:active { transform: translateY(1px); }
+/* Cap : le segmenté commun (.ui-seg, 44 px) */
 /* La route d'une datacard (lot mp-dg-nav-route) : le bandeau de la section Navigation, la pastille « Commun à la mission » */
 .nav-route { border-left: 3px solid var(--amber); background: rgba(0,0,0,.18); padding: 8px 10px; margin: 0 0 10px; display: grid; gap: 6px; }
 .nav-route.none { border-left-style: dashed; border-left-color: var(--khaki); }
@@ -1217,8 +1209,8 @@ select[data-tbm-src] { display: none !important; }
 .nav-route .nr-link .tbm-trigger { background: transparent; border: 1px dashed var(--amber); color: var(--amber); font-family: var(--f-ui); font-weight: 700; letter-spacing: 1.5px; font-size: 11px; text-transform: uppercase; min-height: 44px; justify-self: start; width: auto; max-width: 100%; }
 .ed-navset-tag { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; }
 .ed-navset-tag .ui-note { margin: 0; }
-.ref-off { opacity: .55; }
-.ref-off .ed-chk { opacity: 1; }
+/* une référence décochée : seul le reste de la ligne est atténué (la case et son libellé restent à pleine opacité, lisibles) */
+.ref-off > .li-grid { opacity: .55; }
 .dv-file { font-weight: 700; }
 
 /* Aperçu */
@@ -6169,8 +6161,8 @@ function fSelectD(labelKey, attr, value, options) {
 
 /* « Cap » : deux boutons segmentés (comme au Route Planner), la valeur est celle de la mission (mp_nav_v1) */
 function fSegD(labelKey, attr, value, options) {
-  return '<div class="ed-field"><label>' + esc(t(labelKey)) + '</label><span class="ed-seg" role="group" aria-label="' + esc(t(labelKey)) + '">' +
-    options.map(o => '<button type="button" class="ed-seg-btn" data-navseg="' + attr + '" data-v="' + esc(o[0]) + '" aria-pressed="' + (o[0] === value ? 'true' : 'false') + '">' + esc(o[1]) + '</button>').join('') +
+  return '<div class="ed-field"><label>' + esc(t(labelKey)) + '</label><span class="ui-seg" role="group" aria-label="' + esc(t(labelKey)) + '">' +
+    options.map(o => '<button type="button" class="ui-seg-btn" data-navseg="' + attr + '" data-v="' + esc(o[0]) + '" aria-pressed="' + (o[0] === value ? 'true' : 'false') + '">' + esc(o[1]) + '</button>').join('') +
     '</span></div>';
 }
 

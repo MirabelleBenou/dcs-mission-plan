@@ -42,6 +42,8 @@ _CSS = r"""
   color: var(--paper); font-family: inherit; font-size: 22px; line-height: 1;
 }
 .ui-close:hover, .ui-close:focus-visible { color: var(--amber); }
+.ui-close:focus-visible { outline-offset: -4px; }
+button.imp-link:focus-visible { outline-color: var(--amber); }   /* le lien de la fenêtre d'import : même couleur de contour que le reste */   /* la fenêtre coupe ce qui déborde : le contour reste à l'intérieur de la croix */
 .ui-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 14px; }
 .ui-btn {
   box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 0 16px;
@@ -112,8 +114,9 @@ details:not([open]) > .ui-fold-head > .ui-sum:not(:empty), .ui-fold-head[aria-ex
 @media print { .ui-print-hide { display: none !important; } }
 
 /* ---- le focus visible (la même règle dans toute la suite) : un contour plein de 2 px à la couleur --amber, décalé de 2 px ; le focus à la souris ne change pas ---- */
-:focus-visible {
-  outline: 2px solid var(--amber) !important; outline-offset: 2px !important;
+button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus-visible,
+a[href]:focus-visible, [tabindex]:focus-visible, [role="button"]:focus-visible {
+  outline: 2px solid var(--amber); outline-offset: 2px;
 }
 
 /* ---- la barre : 60 px, des cibles de 44 px au moins, le texte des boutons en Oswald 700, le drapeau en Roboto Mono 400 ---- */
@@ -130,6 +133,12 @@ html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-
 /* Contrastes (texte sous 18 px, 4,5 : 1 au moins) : couleur du texte seule, la palette commune ne bouge pas. */
 :where(body[data-theme="cw-nato"]) .ui-lbl { color: #c49037; }
 :where(body[data-theme="cw-nato"]) .toast-action { color: #c49037; }
+:where(body[data-theme="cw-nato"]) .toolbar .tb-select:not(:hover):not(:focus-visible) { color: #c49037; }   /* le libellé de la liste de thème, hors de la suite (au repos ; le survol garde sa couleur) */
+/* le bouton « Remise à zéro » du HQ et du BG : une seule couleur par thème (la plus claire des deux anciennes), la même dans les deux outils ; :not(:hover) pour que le survol garde la sienne */
+:where(body[data-theme="cw-nato"]) .wing-action-reset:not(:hover) { color: #c17064; }
+:where(body[data-theme="cw-soviet"]) .wing-action-reset:not(:hover) { color: #b27171; }
+:where(body[data-theme="modern-nato"]) .wing-action-reset:not(:hover) { color: #818181; }
+:where(body[data-theme="modern-east"]) .wing-action-reset:not(:hover) { color: #aa7373; }
 :where(body[data-theme="cw-nato"]) .ui-note { color: #ab9e78; }
 :where(body[data-theme="cw-nato"]) .ui-sum { color: #cbc2aa; }
 :where(body[data-theme="cw-nato"]) .ui-panel > h2 { color: #c49037; }
