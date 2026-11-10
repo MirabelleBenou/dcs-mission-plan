@@ -57,7 +57,6 @@ test_briefing.json
 *_local.json
 
 # Exception: the example wing config IS tracked
-!wing_config_4th_veaw.json
 !wing_config_*_example.json
 
 # --- Logs ---

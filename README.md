@@ -269,7 +269,6 @@ For code contributions: fork, branch, study the build scripts to understand the 
 - DCS town names and positions from the DCS World maps, © Eagle Dynamics
 - World Magnetic Model coefficients (epochs 1985–2025, the ones DCS World ships) by NOAA NCEI and the British Geological Survey, public domain
 - International Geomagnetic Reference Field, 12th generation (IAGA), in the NOAA geomag70 file DCS World ships, used for years up to 1985
-- Initial version developed for the **4th VEAW** virtual wing — distributed as a generic wing config example
 - Cold War kraft SVG file provided by Flappie, thanks to him !
 
 ---

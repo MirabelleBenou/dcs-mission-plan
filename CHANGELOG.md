@@ -24,6 +24,9 @@ Changes merged since the last release, grouped per tool.
 - One toolbar across the suite: 44-pixel buttons, the same fonts, built in (the landing page no longer loads web fonts), six text sizes, readable contrast in every theme, and a visible focus outline for the keyboard. Inside Mission Plan, each tool keeps its language flag and leaves the theme to the landing page; switching language in one tool now carries over to the others. “Side” is now “Coalition” wherever it names the coalition of a group, blue first, in the Field Manual too (the Route Planner’s symbol field keeps “Side”).
 - The empty Recon Station reads at 4.5:1 in the four themes, the heading buttons of the Datacard Generator sit side by side, and its preview area shows the same focus outline as the rest.
 
+#### Removed
+- The repository no longer ships one particular wing's configuration file, nor six squadron logos that no tool used; the README and the code comments no longer name that wing. Each wing still makes or imports its own configuration in HQ.
+
 ### Mission Plan — landing
 #### Added
 - A card for the Flight Configurator, right after HQ.
