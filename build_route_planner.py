@@ -38,6 +38,7 @@ CONTRAST_CSS = r"""
 :where(body[data-theme="cw-nato"]) .rs-pick .tbm-trigger { color: #c49037; }
 :where(body[data-theme="cw-nato"]) #btn-display { color: #c49037; }
 :where(body[data-theme="cw-nato"]) #btn-open { color: #c49037; }
+:where(body[data-theme="cw-nato"]) #btn-export-menu { color: #c49037; }
 :where(body[data-theme="cw-nato"]) .ed-head { color: #c99a48; }
 :where(body[data-theme="cw-nato"]) .ed-head small { color: #aea17c; }
 :where(body[data-theme="cw-nato"]) .rs-groups { color: #ab9d76; }
@@ -781,7 +782,6 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .rt-btn.go { background: var(--amber); color: #f6efdc; border-color: var(--amber); }
 .rt-btn.go:hover, .rt-btn.go:focus-visible { background: var(--ink); border-color: var(--ink); color: #f6efdc; }
 .rt-btn:disabled { opacity: .4; cursor: not-allowed; pointer-events: none; }
-#btn-export-rt:disabled { pointer-events: auto; cursor: not-allowed; }
 @media (max-width: 520px) {
   .rt-panel { padding: 18px 16px; }
   .rt-panel h2 { font-size: 16px; letter-spacing: 1.5px; }
@@ -881,7 +881,7 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .rs-groups b { font-family: var(--f-ui); font-weight: 700; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--amber); margin-right: 6px; }
 .rs-groups em { font-style: normal; color: var(--paper); }
 .rs-groups.none { opacity: .8; }
-/* la fenêtre « Groupes de la route » : la liste des groupes de la fiche, puis « Nouveau groupe » */
+/* la fenêtre « Groupes de la route » : la liste des groupes de la fiche, puis « + Ajouter un groupe » */
 .ga-new { margin: 0 0 12px; padding-top: 10px; border-top: 1px dashed rgba(168,154,114,.45); }
 .ga-new .lbl { margin-bottom: 6px; }
 .ga-new-row { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -925,10 +925,10 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .dsp-seg .tb-btn + .tb-btn { border-left: none; }
 
 /* ---------- le menu « Affichage » (lot rp-v1.12.1) : le bouton de la barre et son panneau, au style des listes de la barre (tbm-*) ---------- */
-#btn-display, #btn-open, #btn-save { position: relative; color: var(--amber); border-color: var(--amber-dark); padding-right: 12px; }
-#btn-display:hover, #btn-display:focus-visible, #btn-display.dsp-open, #btn-open:hover, #btn-open:focus-visible, #btn-open.dsp-open, #btn-save:hover, #btn-save:focus-visible, #btn-save.dsp-open { border-color: var(--amber); }
-#btn-display .dsp-chev, #btn-open .dsp-chev, #btn-save .dsp-chev { width: 10px; height: 6px; }
-#btn-display.dsp-open .dsp-chev, #btn-open.dsp-open .dsp-chev, #btn-save.dsp-open .dsp-chev { transform: rotate(180deg); }
+#btn-display, #btn-open, #btn-save, #btn-export-menu { position: relative; color: var(--amber); border-color: var(--amber-dark); padding-right: 12px; }
+#btn-display:hover, #btn-display:focus-visible, #btn-display.dsp-open, #btn-open:hover, #btn-open:focus-visible, #btn-open.dsp-open, #btn-save:hover, #btn-save:focus-visible, #btn-save.dsp-open, #btn-export-menu:hover, #btn-export-menu:focus-visible, #btn-export-menu.dsp-open { border-color: var(--amber); }
+#btn-display .dsp-chev, #btn-open .dsp-chev, #btn-save .dsp-chev, #btn-export-menu .dsp-chev { width: 10px; height: 6px; }
+#btn-display.dsp-open .dsp-chev, #btn-open.dsp-open .dsp-chev, #btn-save.dsp-open .dsp-chev, #btn-export-menu.dsp-open .dsp-chev { transform: rotate(180deg); }
 .dsp-dot { position: absolute; top: -3px; right: -3px; width: 7px; height: 7px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 0 2px var(--olive-deep); pointer-events: none; }
 .dsp-dot[hidden] { display: none; }
 .dsp-panel { max-height: min(80vh, 600px); min-width: 240px; padding-bottom: 6px; }
@@ -1344,9 +1344,13 @@ __CSS__
     <span class="tb-btn-label solo" data-i18n="tb.open">Ouvrir</span>
     <svg class="dsp-chev" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg></button>
   <input type="file" id="file-open" hidden>
-  <button type="button" class="tb-btn" id="btn-save" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.save.tip" title="Enregistrer" data-i18n-aria-label="tb.save.tip" aria-label="Enregistrer">
+  <button type="button" class="tb-btn" id="btn-save" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.save.tip" title="Sauvegarder" data-i18n-aria-label="tb.save.tip" aria-label="Sauvegarder">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h11l4 4v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M8 3v5h7V3"/><rect x="7" y="13" width="10" height="8"/></svg>
-    <span class="tb-btn-label solo" data-i18n="tb.save">Enregistrer</span>
+    <span class="tb-btn-label solo" data-i18n="tb.save">Sauvegarder</span>
+    <svg class="dsp-chev" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg></button>
+  <button type="button" class="tb-btn" id="btn-export-menu" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.export.tip" title="Exporter l'image pour le briefing ou le fichier du Route Tool" data-i18n-aria-label="tb.export.tip" aria-label="Exporter l'image pour le briefing ou le fichier du Route Tool">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    <span class="tb-btn-label solo" data-i18n="tb.export">Exporter</span>
     <svg class="dsp-chev" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg></button>
   <button type="button" class="tb-btn" id="btn-example" data-i18n-title="tb.example.tip" title="Ouvrir l'exemple" data-i18n-aria-label="tb.example.tip" aria-label="Ouvrir l'exemple">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
@@ -1434,13 +1438,6 @@ __CSS__
             <button type="button" class="tb-btn primary" id="btn-add-wp" data-i18n="add.wp">+ Point</button>
             <button type="button" class="tb-btn" id="btn-add-ref" data-i18n="add.ref">+ Réf.</button>
           </div>
-        </div>
-        <div class="actions">
-          <button type="button" class="tb-btn primary" id="btn-handoff" data-i18n="btn.handoff">→ Vers la datacard</button>
-          <button type="button" class="tb-btn primary" id="btn-export-bg" data-i18n="btn.exportBg">→ Vers le briefing</button>
-          <button type="button" class="tb-btn primary" id="btn-package" data-i18n="pk.btn">📦 Paquet de vol</button>
-          <button type="button" class="tb-btn" id="btn-export" data-i18n="btn.export">Enregistrer</button>
-          <button type="button" class="tb-btn" id="btn-export-rt" data-i18n="btn.exportRt">Exporter vers le Route Tool</button>
         </div>
         <p class="ui-note" data-i18n="help.route">Touchez la carte pour ajouter un point ; glissez un point pour le déplacer ; le « + » d'une branche insère un point.</p>
       </div>
@@ -1569,7 +1566,7 @@ __CSS__
     <div class="rt-list" id="cf-export-list"></div>
     <div class="ui-actions">
       <button type="button" class="ui-btn" id="cf-export-cancel" data-i18n="rt.cancel">Annuler</button>
-      <button type="button" class="ui-btn primary" id="cf-export-go" data-i18n="tb.save">Enregistrer</button>
+      <button type="button" class="ui-btn primary" id="cf-export-go" data-i18n="tb.save">Sauvegarder</button>
     </div>
   </div>
 </div>
@@ -1599,7 +1596,7 @@ __CSS__
     <p class="rt-note rt-warn" id="ga-warn" hidden></p>
     <div class="rt-list" id="ga-list"></div>
     <div class="ga-new">
-      <div class="lbl" data-i18n="ga.new">Nouveau groupe</div>
+      <div class="lbl" data-i18n="ga.new">+ Ajouter un groupe</div>
       <div class="ga-new-row">
         <input class="in" id="ga-new-name" type="text" maxlength="60" autocomplete="off" autocapitalize="off" spellcheck="false" data-i18n-aria-label="ga.new.name" data-i18n-placeholder="ga.new.ph" aria-label="Nom du nouveau groupe" placeholder="Hind 1">
         <div class="ga-side"><select class="in" id="ga-new-side" data-lbl="hq.side"></select></div>
@@ -1614,22 +1611,6 @@ __CSS__
 </div>
 
 __IMPORT_HTML__
-
-<!-- ===== FENÊTRE : PAQUET DE VOL ===== -->
-<div class="ui-modal" id="pk-modal" hidden role="dialog" aria-modal="true" aria-labelledby="pk-title">
-  <div class="ui-backdrop" id="pk-backdrop"></div>
-  <div class="ui-panel ui-wide" role="document">
-    <button type="button" class="ui-close" id="pk-close" data-i18n-aria-label="modal.close" aria-label="Fermer">&times;</button>
-    <h2 class="ui-title" id="pk-title" data-i18n="pk.title">Paquet de vol</h2>
-    <div class="fn-field"><label class="lbl" for="pk-fname" data-i18n="fn.label">Nom du fichier</label><div class="fn-row"><input class="in" id="pk-fname" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="100"><span class="fn-ext">.json</span></div></div>
-    <p class="rt-note" data-i18n="pk.note">Cochez les routes à exporter : chacune devient un groupe du paquet, que HQ applique à la mission.</p>
-    <div class="rt-list" id="pk-list"></div>
-    <div class="ui-actions">
-      <button type="button" class="ui-btn" id="pk-cancel" data-i18n="rt.cancel">Annuler</button>
-      <button type="button" class="ui-btn primary" id="pk-go"></button>
-    </div>
-  </div>
-</div>
 
 <!-- ===== FENÊTRE : EXPORTER LA CARTE — CHOISIR LE NOM DU FICHIER (hors shell) ===== -->
 <div class="ui-modal" id="exn-modal" hidden role="dialog" aria-modal="true" aria-labelledby="exn-title">
@@ -1980,15 +1961,11 @@ JS = r"""
    ===================================================== */
 
 const KEY_STATE = 'route_state_v1';
-const KEY_HANDOFF = 'route_handoff_v1';
 const KEY_SET = 'route_set_v1';
-const KEY_SNAPSHOT = 'mission_snapshot_v1';
-const SNAPSHOT_SCHEMAS = ['dcs-mission-snapshot-v1', 'dcs-mission-snapshot-v2'];        /* un snapshot d'un autre schéma (ou sans schéma) est tenu pour absent ; la v1 ne reste qu'en lecture */
 const KEY_THEME = 'theme_v1';
 const KEY_LANG = 'lang_v1';
 const FORMAT_ID = 'dcs-route-v1';
 const SET_FORMAT = 'dcs-route-set-v1';
-const PACKAGE_FORMAT = 'dcs-flight-package-v2';
 const PACKAGE_FORMATS = ['dcs-flight-package-v1', 'dcs-flight-package-v2'];     /* la v1 ne reste qu'en lecture */
 const THEME_IDS = ['cw-nato', 'cw-soviet', 'modern-nato', 'modern-east'];
 const LAYER_IDS = ['dcs', 'flappie', 'topo', 'sat', 'grid'];
@@ -2296,10 +2273,16 @@ const I18N = {
     'u.ft': 'ft',
     'tb.open': 'Ouvrir',
     'tb.open.tip': 'Ouvrir une route, des routes, un paquet de vol (JSON ou ZIP) ou un fichier du Route Tool',
-    'tb.save': 'Enregistrer',
-    'tb.save.tip': 'Enregistrer',
-    'sv.one': 'Enregistrer la route sélectionnée',
-    'sv.all': 'Enregistrer toutes les routes',
+    'tb.save': 'Sauvegarder',
+    'tb.save.tip': 'Sauvegarder',
+    'sv.one': 'Sauvegarder la route sélectionnée',
+    'sv.all': 'Sauvegarder toutes les routes',
+    'tb.export': 'Exporter',
+    'tb.export.tip': "Exporter l'image pour le briefing ou le fichier du Route Tool",
+    'ex.bg': 'Image pour le briefing…',
+    'ex.bg.h': 'PNG',
+    'ex.rt': 'Route Tool…',
+    'ex.rt.h': '.lua',
     'fn.label': 'Nom du fichier',
     'exn.title': 'Exporter la carte',
     'tb.example': 'Exemple',
@@ -2431,8 +2414,6 @@ const I18N = {
     'nav.th.pt': 'Point · alt.',
     'nav.th.co': 'MGRS · DMS / cap · distance',
     'nav.total': 'TOTAL',
-    'btn.handoff': '→ Vers la datacard',
-    'btn.exportBg': '→ Vers le briefing',
     'frame.label': 'CADRE D\'EXPORT · {r}',
     'frame.landscape': 'Paysage',
     'frame.portrait': 'Portrait',
@@ -2445,8 +2426,6 @@ const I18N = {
     'toast.mapSaved': 'Image enregistrée : importez-la dans le Briefing Generator (Carte).',
     'toast.mapPartial': 'Le fond vient d\'un autre site : il peut manquer dans l\'image.',
     'toast.mapFail': '⚠ L\'image n\'a pas pu être produite.',
-    'btn.export': 'Enregistrer',
-    'btn.exportRt': 'Exporter vers le Route Tool',
     'tb.rt.off': 'Route Tool indisponible pour ce théâtre',
     'err.rt': '⚠ Fichier du Route Tool non reconnu.',
     'modal.close': 'Fermer',
@@ -2470,7 +2449,7 @@ const I18N = {
     'ga.replace.imported': 'remplace la route importée',
     'ga.nocamp': 'sans coalition',
     'ga.unnamed': 'Groupe {n}',
-    'ga.new': 'Nouveau groupe',
+    'ga.new': '+ Ajouter un groupe',
     'ga.new.name': 'Nom du nouveau groupe',
     'ga.new.ph': 'Hind 1',
     'ga.side.none': 'Aucun',
@@ -2480,7 +2459,6 @@ const I18N = {
     'ga.warn.proj': 'Le théâtre {th} n\'a pas de projection : les groupes ne peuvent pas suivre cette route.',
     'rs.unnamed': 'Sans nom',
     'rs.copy': '{name} (copie)',
-    'rs.hq.off.theatre': 'Le théâtre de la mission de HQ ({th}) n\'a pas de projection.',
     'hq.side': 'Coalition',
     'hq.red': 'Rouge',
     'hq.blue': 'Bleue (OTAN)',
@@ -2497,16 +2475,6 @@ const I18N = {
     'fmt.pkg': 'paquet de vol',
     'fmt.cf': 'CombatFlite',
     'fmt.rt': 'Route Tool',
-    'pk.btn': '📦 Paquet de vol',
-    'pk.title': 'Paquet de vol',
-    'pk.note': 'Cochez les routes à exporter : chaque groupe qui en suit une devient un groupe du paquet, que HQ applique à la mission.',
-    'pk.off.nogroup': 'aucun groupe ne la suit',
-    'pk.off.empty': 'route vide',
-    'pk.off.short': 'route trop courte',
-    'pk.off.unnamed': 'groupe sans nom — nommez-le au Flight Configurator',
-    'pk.off.theatre': 'Le théâtre {th} n\'a pas de projection.',
-    'pk.go.1': 'Exporter {n} route',
-    'pk.go.n': 'Exporter {n} routes',
     'confirm.routeDel.title': 'Supprimer la route « {name} » ?',
     'confirm.routeDel.text': 'Ses points seront supprimés. Cela ne se défait pas.',
     'confirm.theatre': 'Passer au théâtre {th} ? Les {n} routes existantes seront supprimées.',
@@ -2525,9 +2493,7 @@ const I18N = {
     'toast.hqTrunc': '{name} : tronquée à 30 points',
     'toast.dcsKept': 'source DCS non gardée : {n} point(s)',
     'toast.saveFail': '⚠ Enregistrement local impossible (espace plein)',
-    'toast.pkExported.1': '📦 {n} groupe exporté ✓',
-    'toast.pkExported.n': '📦 {n} groupes exportés ✓',
-    'toast.savedAll': 'Routes enregistrées ✓',
+    'toast.savedAll': 'Routes sauvegardées ✓',
     'cf.exp.routes': 'Les routes',
     'cf.exp.routesN': '{n} routes · {p} points · {m} réf.',
     'fiche.type.a': 'Aérodrome',
@@ -2562,7 +2528,6 @@ const I18N = {
     'toast.rtOther': '⚠ Ce fichier est celui de {theatre}\u202f: choisissez {t}.lua.',
     'toast.rtTaken': 'Nom déjà pris\u202f: route enregistrée sous « {name} ».',
     'toast.rtReady': '{t}.lua prêt\u202f: copiez-le dans Saved Games\\DCS\\Config\\RouteToolPresets (il remplace l\'ancien).',
-    'toast.standalone': 'Route enregistrée : ouvrez le Datacard Generator, puis Ouvrir ▾ › Importer… → Route en cours.',
     'toast.max': '⚠ 30 points au plus.',
     'toast.maxRefs': '⚠ 12 points de référence au plus.',
     'toast.refsDropped': '{n} points de référence écartés (12 au plus)',
@@ -2574,7 +2539,7 @@ const I18N = {
     'toast.openedDropped': 'Route ouverte ✓ · {n} points écartés (30 au plus)',
     'zoom.in': 'Zoom avant',
     'zoom.out': 'Zoom arrière',
-    'toast.saved': 'Route enregistrée ✓',
+    'toast.saved': 'Route sauvegardée ✓',
     'toast.exampleLoaded': 'Exemple chargé ✓',
     'err.cf': '⚠ Fichier CombatFlite non reconnu.',
     'err.cfBrowser': '⚠ Ce navigateur ne sait pas lire les fichiers CombatFlite.',
@@ -2828,6 +2793,12 @@ const I18N = {
     'tb.save.tip': 'Save',
     'sv.one': 'Save the selected route',
     'sv.all': 'Save all routes',
+    'tb.export': 'Export',
+    'tb.export.tip': 'Export the image for the briefing or the Route Tool file',
+    'ex.bg': 'Image for the briefing…',
+    'ex.bg.h': 'PNG',
+    'ex.rt': 'Route Tool…',
+    'ex.rt.h': '.lua',
     'fn.label': 'File name',
     'exn.title': 'Export the map',
     'tb.example': 'Example',
@@ -2959,8 +2930,6 @@ const I18N = {
     'nav.th.pt': 'Waypoint · alt.',
     'nav.th.co': 'MGRS · DMS / heading · distance',
     'nav.total': 'TOTAL',
-    'btn.handoff': '→ To the datacard',
-    'btn.exportBg': '→ To the briefing',
     'frame.label': 'EXPORT FRAME · {r}',
     'frame.landscape': 'Landscape',
     'frame.portrait': 'Portrait',
@@ -2973,8 +2942,6 @@ const I18N = {
     'toast.mapSaved': 'Image saved: import it into the Briefing Generator (Map).',
     'toast.mapPartial': 'The background comes from another site: it may be missing from the image.',
     'toast.mapFail': '⚠ The image could not be produced.',
-    'btn.export': 'Save',
-    'btn.exportRt': 'Export to the Route Tool',
     'tb.rt.off': 'Route Tool not available for this theatre',
     'err.rt': '⚠ Unrecognised Route Tool file.',
     'modal.close': 'Close',
@@ -2998,7 +2965,7 @@ const I18N = {
     'ga.replace.imported': 'replaces the imported route',
     'ga.nocamp': 'no coalition',
     'ga.unnamed': 'Group {n}',
-    'ga.new': 'New group',
+    'ga.new': '+ Add a group',
     'ga.new.name': 'Name of the new group',
     'ga.new.ph': 'Hind 1',
     'ga.side.none': 'None',
@@ -3008,7 +2975,6 @@ const I18N = {
     'ga.warn.proj': 'The {th} theatre has no projection: groups cannot follow this route.',
     'rs.unnamed': 'Unnamed',
     'rs.copy': '{name} (copy)',
-    'rs.hq.off.theatre': 'The theatre of the HQ mission ({th}) has no projection.',
     'hq.side': 'Coalition',
     'hq.red': 'Red',
     'hq.blue': 'Blue (NATO)',
@@ -3025,16 +2991,6 @@ const I18N = {
     'fmt.pkg': 'flight package',
     'fmt.cf': 'CombatFlite',
     'fmt.rt': 'Route Tool',
-    'pk.btn': '📦 Flight package',
-    'pk.title': 'Flight package',
-    'pk.note': 'Check the routes to export: each group that follows one becomes a group of the package, which HQ applies to the mission.',
-    'pk.off.nogroup': 'no group follows it',
-    'pk.off.empty': 'empty route',
-    'pk.off.short': 'route too short',
-    'pk.off.unnamed': 'unnamed group — name it in the Flight Configurator',
-    'pk.off.theatre': 'The {th} theatre has no projection.',
-    'pk.go.1': 'Export {n} route',
-    'pk.go.n': 'Export {n} routes',
     'confirm.routeDel.title': 'Delete the route "{name}"?',
     'confirm.routeDel.text': 'Its waypoints will be deleted. This cannot be undone.',
     'confirm.theatre': 'Switch to the {th} theatre? The {n} existing routes will be deleted.',
@@ -3053,8 +3009,6 @@ const I18N = {
     'toast.hqTrunc': '{name}: cut to 30 points',
     'toast.dcsKept': 'DCS source not kept: {n} point(s)',
     'toast.saveFail': '⚠ Cannot save locally (storage full)',
-    'toast.pkExported.1': '📦 {n} group exported ✓',
-    'toast.pkExported.n': '📦 {n} groups exported ✓',
     'toast.savedAll': 'Routes saved ✓',
     'cf.exp.routes': 'The routes',
     'cf.exp.routesN': '{n} routes · {p} waypoints · {m} ref.',
@@ -3090,7 +3044,6 @@ const I18N = {
     'toast.rtOther': '⚠ This file belongs to {theatre}: choose {t}.lua.',
     'toast.rtTaken': 'Name already taken: route saved as “{name}”.',
     'toast.rtReady': '{t}.lua ready: copy it into Saved Games\\DCS\\Config\\RouteToolPresets (it replaces the old one).',
-    'toast.standalone': 'Route saved: open the Datacard Generator, then Open ▾ › Import… → Current route.',
     'toast.max': '⚠ 30 waypoints at most.',
     'toast.maxRefs': '⚠ 12 reference points at most.',
     'toast.refsDropped': '{n} reference points dropped (12 at most)',
@@ -7286,11 +7239,6 @@ function syncControls() {
   if (document.activeElement !== gsIn) gsIn.value = speedDisp(S.groundSpeed);
   syncSpeedPlaceholders();
   syncDecl();
-  $('btn-handoff').disabled = S.points.length === 0;
-  const rtb = $('btn-export-rt');
-  const hasRt = hasRouteTool(S.theatre);
-  rtb.disabled = !S.points.length || !hasRt;
-  if (hasRt) rtb.removeAttribute('title'); else rtb.title = t('tb.rt.off');
   $('theme').value = document.body.dataset.theme;
   dspSync();
   syncAdd();
@@ -8267,7 +8215,7 @@ async function deleteRoute() {
   renderAll();
 }
 
-/* La liste, ses boutons, les groupes de la route et « Paquet de vol » reflètent les routes */
+/* La liste, ses boutons et les groupes de la route reflètent les routes */
 function routesRender() {
   if (!S) return;
   syncActive();
@@ -8283,9 +8231,6 @@ function routesRender() {
   const fl = $('rs-groups'), names = groupLabels(r.rid);
   fl.className = 'rs-groups' + (names.length ? '' : ' none');
   fl.innerHTML = names.length ? '<b>' + esc(t('rs.groups')) + '</b><em>' + esc(names.join(' · ')) + '</em>' : esc(t('rs.nogroup'));
-  const pk = packageState(readSnapshot());      /* une lecture par rendu */
-  $('btn-package').disabled = !pk.ok;
-  if (pk.ok) $('btn-package').removeAttribute('title'); else $('btn-package').title = pk.tip;
   dspSync();
 }
 
@@ -8408,26 +8353,9 @@ function defaultRouteName() { return 'route_' + (cleanFname(slug(S.name)).slice(
 function defaultSetName() { return 'routes_' + stamp(); }
 
 /* ============= LECTURE DES VOLS (snapshot de HQ, fiche des groupes) ============= */
-/* Le snapshot de la mission chargée dans HQ (mission_snapshot_v1) : ses vols, le théâtre de la mission */
-function readSnapshot() {
-  try {
-    const o = JSON.parse(localStorage.getItem(KEY_SNAPSHOT));
-    if (o && typeof o === 'object' && SNAPSHOT_SCHEMAS.indexOf(o.schema) >= 0 && o.sourceMission && typeof o.sourceMission.theatre === 'string' && Array.isArray(o.flights)) return o;
-  } catch (e) { /* pas de snapshot */ }
-  return null;
-}
-
 /* Les clés numériques de la table des points d'un vol, dans l'ordre */
 function snapKeys(points) {
   return points ? Object.keys(points).filter(k => /^\d+$/.test(k)).sort((a, b) => Number(a) - Number(b)) : [];
-}
-
-/* « Paquet de vol » : actif si le théâtre de la route (et celui de la mission de HQ, quand il y en a une) a une projection */
-function packageState(known) {
-  if (!hasRouteTool(S.theatre)) return { ok: false, tip: t('pk.off.theatre', { th: theatreText(S.theatre) }) };
-  const snap = known === undefined ? readSnapshot() : known;
-  if (snap && !hasRouteTool(snap.sourceMission.theatre)) return { ok: false, tip: t('rs.hq.off.theatre', { th: theatreText(snap.sourceMission.theatre) }) };
-  return { ok: true, tip: '' };
 }
 
 /* Le point d'une table brute du .miz → un point du RP (avec sa source p.dcs) ; null si x, y ne se lisent pas */
@@ -8514,65 +8442,6 @@ function rpImported(res) {
   const long = failed || !!(a.skipped || a.other || a.trunc.length || a.nodcs);
   showToast((failed ? '\u26a0 ' : '') + msg, { type: failed ? 'err' : 'ok', ms: Math.max(res && res.ms ? res.ms : 3000, long ? 6000 : 0) });
   routesRender();
-}
-
-/* ============= PAQUET DE VOL ============= */
-const PM = { checked: new Set(), name: '', edited: false, stamp: '' };
-
-/* Les routes de la fenêtre : { i, r, why (raison de l'inactivité), names } ; une route se coche si au moins un groupe de la fiche la suit et si elle a des points */
-function pkRows() {
-  syncActive();
-  const rows = [];
-  RSET.routes.forEach((r, i) => {
-    const names = groupLabels(r.rid, true), all = groupLabels(r.rid);
-    let why = '';
-    if (!all.length) why = t('pk.off.nogroup');
-    else if (!names.length) why = t('pk.off.unnamed');
-    else if (r.points.length < 2 && !groupsOfRoute(r.rid).some(f => gsNameKey(f.name) !== '' && groupCopyCount(f) >= 2)) why = t(r.points.length ? 'pk.off.short' : 'pk.off.empty');
-    if (why !== '') PM.checked.delete(i);
-    rows.push({ i: i, r: r, why: why, names: names });
-  });
-  return rows;
-}
-
-function pkName(idxs) {
-  const r = RSET.routes[idxs[0]];
-  const base = r.name !== '' ? r.name : (groupLabels(r.rid, true)[0] || '');
-  return 'paquet_' + (cleanFname(base).slice(0, 40) || 'groupe') + (idxs.length > 1 ? '_+' + (idxs.length - 1) : '');
-}
-
-function pkRender() {
-  const rows = pkRows();
-  $('pk-list').innerHTML = rows.map(x => {
-    const ok = x.why === '';
-    return '<label class="rt-row' + (ok ? '' : ' off') + '"><input type="checkbox" data-i="' + x.i + '"' + (ok && PM.checked.has(x.i) ? ' checked' : '') + (ok ? '' : ' disabled') + '>' +
-      '<span class="rt-two"><span class="rt-nm">' + esc((x.i + 1) + ' · ' + (x.r.name !== '' ? x.r.name : t('rs.unnamed'))) + '</span>' +
-      '<small>' + esc(ok ? x.names.join(' · ') + ' — ' + ptsText(x.r.points.length) : x.why) + '</small></span></label>';
-  }).join('');
-  const idxs = rows.filter(x => x.why === '' && PM.checked.has(x.i)).map(x => x.i);
-  /* le nom suit les routes cochées tant qu'on ne l'a pas changé */
-  if (!PM.edited && idxs.length) { PM.name = cleanFname(pkName(idxs) + '_' + PM.stamp); $('pk-fname').value = PM.name; }
-  const go = $('pk-go');
-  go.textContent = t(CURRENT_LANG === 'fr' ? (idxs.length < 2 ? 'pk.go.1' : 'pk.go.n') : (idxs.length === 1 ? 'pk.go.1' : 'pk.go.n'), { n: idxs.length });
-  go.disabled = idxs.length === 0 || cleanFname(PM.name) === '';
-}
-
-function pkStamp() {
-  const d = new Date();
-  return d.getFullYear() + pad2(d.getMonth() + 1) + pad2(d.getDate()) + '-' + pad2(d.getHours()) + pad2(d.getMinutes()) + pad2(d.getSeconds());
-}
-
-function openPackageModal(opener) {
-  const pk = packageState();
-  if (!pk.ok) { showToast('\u26a0 ' + pk.tip, { type: 'err' }); return; }
-  syncActive();
-  PM.checked = new Set();
-  PM.edited = false;
-  PM.stamp = pkStamp();
-  pkRows().forEach(x => { if (x.why === '') PM.checked.add(x.i); });
-  pkRender();
-  rtShow('pk-modal', opener, 'pk-fname');
-  $('pk-fname').select();
 }
 
 @@ROUTE_PACK_BLOCK@@
@@ -8795,43 +8664,6 @@ function gaApply() {
   if (!GS_FAILED) showToast(t('toast.groupsDone'), { type: 'ok' });      /* une écriture qui a échoué a déjà montré son toast : pas de succès par-dessus */
 }
 
-/* Le paquet (dcs-flight-package-v2) des routes idxs : un vol par groupe de la fiche qui suit l'une d'elles, dans l'ordre de la fiche (nom et camp du groupe, la route en points) ;
-   ses vols n'ont pas d'unités, donc pas de type ; sourceMission : la source commune des liens des routes, sinon nul */
-/* Les points qu'un groupe donne au paquet : sa copie (route.points de la fiche) si elle a deux points au moins, sinon la route vivante si elle en a deux ; sinon rien */
-function groupCopyCount(f) { return gsIsObj(f.route) && gsIsObj(f.route.points) ? Object.keys(f.route.points).length : 0; }
-function groupPackPoints(f, r) {
-  if (groupCopyCount(f) >= 2) return JSON.parse(JSON.stringify(f.route.points));
-  return r.points.length >= 2 ? packRoutePoints(r) : null;
-}
-function buildPackage(idxs) {
-  syncActive();
-  try { gsSyncRoutes(); } catch (e) { /* la fiche est facultative */ }       /* les copies des groupes sont à jour de la route vivante (d'au moins deux points) avant d'être exportées */
-  const th = S.theatre, byRid = {};
-  idxs.forEach(i => { byRid[RSET.routes[i].rid] = RSET.routes[i]; });
-  const g = gsRead(), flights = [];
-  (g ? g.flights : []).forEach((f, k) => {
-    const r = gsIsObj(f.routeLink) && Object.prototype.hasOwnProperty.call(byRid, f.routeLink.rid) ? byRid[f.routeLink.rid] : null;
-    if (!r || gsNameKey(f.name) === '') return;       /* un groupe sans nom ne s'exporte pas (comme au Flight Configurator) */
-    const pts = groupPackPoints(f, r);
-    if (pts === null) return;
-    flights.push({ groupName: groupLabel(f, k), coalition: f.coalition || null, groupFrequency: null, route: { points: pts }, units: [] });
-  });
-  /* la mission source : celle des liens, si toutes les routes cochées ont la même */
-  let src = null;
-  const ss = idxs.map(i => (RSET.routes[i].flight && RSET.routes[i].flight.source) || null);
-  if (ss[0] && ss.every(x => x && x.filename === ss[0].filename && x.fingerprint === ss[0].fingerprint)) src = { filename: ss[0].filename, fingerprint: ss[0].fingerprint };
-  return { format: PACKAGE_FORMAT, createdAt: new Date().toISOString(), createdBy: 'Route Planner', theatre: th, sourceMission: src, flights: flights };
-}
-
-function pkGo() {
-  const idxs = pkRows().filter(x => x.why === '' && PM.checked.has(x.i)).map(x => x.i);
-  const fname = cleanFname(PM.name);
-  if (!idxs.length || fname === '' || !packageState().ok) return;
-  const pkg = buildPackage(idxs);
-  rtHide('pk-modal');
-  deliverJsonFile(pkg, fname + '.json', t(pkg.flights.length === 1 ? 'toast.pkExported.1' : 'toast.pkExported.n', { n: pkg.flights.length }));
-}
-
 /* ---------- le câblage ---------- */
 function routesBind() {
   $('route-list').addEventListener('change', e => activateRoute(parseInt(e.target.value, 10), true));
@@ -8850,20 +8682,9 @@ function routesBind() {
   });
   $('ga-new-name').addEventListener('input', e => { GA.name = e.target.value; gaRender(); });
   $('ga-new-side').addEventListener('change', e => { GA.side = e.target.value; gaRender(); });
-  $('btn-package').addEventListener('click', ev => openPackageModal(ev.currentTarget));
-  $('pk-fname').addEventListener('input', e => { PM.name = e.target.value; PM.edited = true; pkRender(); });
-  ['pk-backdrop', 'pk-close', 'pk-cancel'].forEach(id => $(id).addEventListener('click', () => rtHide('pk-modal')));
-  $('pk-go').addEventListener('click', pkGo);
-  $('pk-list').addEventListener('change', e => {
-    const i = parseInt(e.target.dataset.i, 10);
-    if (!(i >= 0)) return;
-    if (e.target.checked) PM.checked.add(i); else PM.checked.delete(i);
-    pkRender();
-  });
   /* le Flight Configurator écrit la fiche des groupes (ou HQ une autre mission) : les routes que ses groupes portent sont reprises, les groupes de la route et la fenêtre ouverte se redessinent */
   window.addEventListener('storage', e => {
-    if (e.key === KEY_SNAPSHOT) routesRender();
-    else if (e.key === null || e.key === KEY_FLIGHT_SET) {
+    if (e.key === null || e.key === KEY_FLIGHT_SET) {
       /* le Flight Configurator écrit en plusieurs temps (un groupe après l'autre, puis la conversion de l'emport brut) : la reprise attend 400 ms de calme, la minuterie repart à chaque événement */
       if (ADOPT.timer) clearTimeout(ADOPT.timer);
       ADOPT.timer = setTimeout(() => { ADOPT.timer = 0; adoptNotice(gsAdoptRoutes({})); routesRender(); if (rtVisible('ga-modal')) { gaSync(); gaRender(); } }, 400);
@@ -9162,7 +8983,7 @@ function bytesToText(bytes) {
 /* ---- Fenêtres : « Ouvrir une route du Route Tool » et « Exporter vers le Route Tool » ---- */
 const RT = { fileName: '', routes: [], theatre: 'Caucasus', sel: 0, opener: null };
 
-const RT_MODALS = ['rt-open-modal', 'rt-export-modal', 'cf-import-modal', 'cf-export-modal', 'clr-modal', 'ga-modal', 'imp-modal', 'pk-modal', 'exn-modal', 'fiche'];
+const RT_MODALS = ['rt-open-modal', 'rt-export-modal', 'cf-import-modal', 'cf-export-modal', 'clr-modal', 'ga-modal', 'imp-modal', 'exn-modal', 'fiche'];
 function rtVisible(id) { return !$(id).hidden; }
 function rtShow(id, opener, focusId) {
   RT.opener = opener || null;
@@ -9582,7 +9403,7 @@ function openExportRouteTool() {
   if (!S.points.length || !hasRouteTool(S.theatre)) return;
   $('rt-name').value = S.name.trim() !== '' ? S.name.trim() : t('app.title');
   rtExportRender();
-  rtShow('rt-export-modal', $('btn-export-rt'), 'rt-name');
+  rtShow('rt-export-modal', $('btn-export-menu'), 'rt-name');
 }
 
 /* Remet le fichier au navigateur : partage (tablette) ou téléchargement, sous le nom exact <théâtre>.lua, UTF-8 sans BOM */
@@ -9756,25 +9577,6 @@ function cfExportGo() {
   rtHide('cf-export-modal');
   if (CFE.all) downloadSet(sel, name); else downloadJson(sel, name);
 }
-
-/* « Exporter JSON » de la section Navigation : la route sélectionnée, par la même fenêtre que « Enregistrer la route sélectionnée » */
-function onSaveClick(ev) {
-  openCfExport(ev && ev.currentTarget, false);
-}
-
-/* ============= VERS LA DATACARD ============= */
-function sendToDatacard() {
-  if (!S.points.length) return;
-  persistState();
-  let open = null;
-  try {
-    if (window.parent && window.parent !== window && typeof window.parent.MP_OPEN_MODULE === 'function') open = window.parent.MP_OPEN_MODULE;
-  } catch (e) { open = null; }
-  if (!open) { showToast(t('toast.standalone')); return; }
-  try { localStorage.setItem(KEY_HANDOFF, String(Date.now())); } catch (e) { /* stockage indisponible */ }
-  open.call(window.parent, 'dg');
-}
-
 
 /* ============= LE MENU « AFFICHAGE » (lot rp-v1.12.1) ============= */
 /* Ce qu'on masque ou montre sur la carte : la route, les points de référence, les dessins, les symboles OTAN, les calques importés, puis les quatre
@@ -10133,9 +9935,9 @@ function dspBind() {
 }
 
 /* ============= LES MENUS « OUVRIR » ET « … » (lot mp-ui-disposition) =============
-   Même composant et même aspect que « Enregistrer » et « Affichage » (tbm-panel dsp-panel, dsp-opt) : une ligne par geste, son indice à droite ;
+   Même composant et même aspect que « Sauvegarder » et « Affichage » (tbm-panel dsp-panel, dsp-opt) : une ligne par geste, son indice à droite ;
    un trait sépare ; un geste qui détruit est en --mp-warn. Un seul menu ouvert à la fois, avec les listes et les autres menus de la barre. */
-const MENU_TRIG = '.tbm-trigger, #btn-display, #btn-save, #btn-open, #rs-more';
+const MENU_TRIG = '.tbm-trigger, #btn-display, #btn-save, #btn-open, #btn-export-menu, #rs-more';
 const MN = { cur: null, bound: false };
 
 function mnClose(refocus) {
@@ -10287,6 +10089,20 @@ function moreMenuToggle(btn) {
   ], k => { if (k === 'dup') duplicateRoute(); else if (k === 'del') deleteRoute(); });
 }
 
+/* « Exporter ▾ » (lot mp-ui-disposition-b) : l'image pour le briefing (le geste de l'ancien « → Vers le briefing »), le fichier du Route Tool (celui de l'ancien « Exporter vers le Route Tool », même état désactivé et même infobulle) */
+function exportRtState() {
+  const hasRt = hasRouteTool(S.theatre);
+  return { disabled: !S.points.length || !hasRt, title: hasRt ? '' : t('tb.rt.off') };
+}
+function exportMenuToggle(btn) {
+  if (MN.cur && MN.cur.btn === btn) { mnClose(false); return; }
+  const rt = exportRtState();
+  mnOpen(btn, 'ex-panel', t('tb.export'), [
+    { k: 'bg', label: t('ex.bg'), hint: t('ex.bg.h') },
+    { k: 'rt', label: t('ex.rt'), hint: t('ex.rt.h'), disabled: rt.disabled, title: rt.title }
+  ], k => { if (k === 'bg') expOpen(); else openExportRouteTool(); });
+}
+
 /* ============= LES UNITÉS (lot mp-rp-unites-menu, puis mp-ui-disposition) =============
    « Distance » et « Altitude » sont deux rangées segmentées du menu Affichage (mêmes valeurs, même clé mp_units_v1, mêmes effets qu'avant). */
 const UN_SEGS = [
@@ -10316,7 +10132,7 @@ function dspSetBase(id) {
   setBase();
 }
 
-/* ============= LE MENU « ENREGISTRER » : la route sélectionnée, toutes les routes ============= */
+/* ============= LE MENU « SAUVEGARDER » : la route sélectionnée, toutes les routes ============= */
 const SV = { open: false, panel: null, x0: 0, y0: 0 };
 const SV_ROWS = [{ k: 'one', l: 'sv.one' }, { k: 'all', l: 'sv.all' }];
 
@@ -10796,7 +10612,6 @@ async function expRun(fname) {
 }
 
 function expBind() {
-  $('btn-export-bg').addEventListener('click', expOpen);
   $('exp-cancel').addEventListener('click', () => { if (!EXP.busy) expClose(); });
   $('exp-go').addEventListener('click', expGo);
   ['exn-close', 'exn-cancel'].forEach(id => $(id).addEventListener('click', () => rtHide('exn-modal')));
@@ -10880,7 +10695,6 @@ function setLang(lang) {
   if (rtVisible('cf-export-modal')) cfExportRender();
   if (rtVisible('clr-modal')) clrRender();
   if (impIsOpen()) impRender();
-  if (rtVisible('pk-modal')) pkRender();
   if (rtVisible('fiche')) ficheRender();
   expSyncTexts();
   if (DSP.open) dspBuild();
@@ -10976,8 +10790,16 @@ function bindEvents() {
   /* la sélection est remise à zéro après lecture : choisir deux fois le même fichier le relit */
   fileOpen.addEventListener('change', () => { const f = fileOpen.files && fileOpen.files[0]; if (f) openRouteFile(f); fileOpen.value = ''; });
   svBind();
-  $('btn-export').addEventListener('click', onSaveClick);
-  $('btn-export-rt').addEventListener('click', openExportRouteTool);
+  $('btn-export-menu').addEventListener('click', ev => exportMenuToggle(ev.currentTarget));
+  $('btn-export-menu').addEventListener('keydown', e => { if (e.key === 'ArrowDown' && !MN.cur) { e.preventDefault(); exportMenuToggle(e.currentTarget); } });
+  /* Ctrl+S (Cmd+S) : le geste de la première ligne de « Sauvegarder ▾ » (la route sélectionnée), sauf fenêtre ou menu ouvert */
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+      e.preventDefault();
+      if (uiModalsOpen().length || RT_MODALS.some(rtVisible) || MN.cur || SV.open || DSP.open || TBM.cur) return;
+      svChoose('one');
+    }
+  });
   ['rt-open-backdrop', 'rt-open-close', 'rt-open-cancel'].forEach(id => $(id).addEventListener('click', () => rtHide('rt-open-modal')));
   ['rt-export-backdrop', 'rt-export-close', 'rt-export-cancel'].forEach(id => $(id).addEventListener('click', () => rtHide('rt-export-modal')));
   $('rt-theatre').addEventListener('change', e => { if (hasRouteTool(e.target.value)) RT.theatre = e.target.value; });
@@ -11024,7 +10846,6 @@ function bindEvents() {
   $('btn-example').addEventListener('click', loadExample);
   $('btn-clear').addEventListener('click', ev => openClearModal(ev.currentTarget));
   clrBind();
-  $('btn-handoff').addEventListener('click', sendToDatacard);
   expBind();
   $('theme').addEventListener('change', e => { applyTheme(e.target.value, true); drawRoute(); });
   $('btn-lang').addEventListener('click', () => setLang(CURRENT_LANG === 'fr' ? 'en' : 'fr'));

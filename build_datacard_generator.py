@@ -1282,7 +1282,7 @@ select[data-tbm-src] { display: none !important; }
 
 @@MESSAGES_CSS@@
 
-/* ============ FENÊTRES : l'export, « Enregistrer » et les groupes sont des .ui-modal (bloc d'interface commun) ; ici ce qui reste au module ============ */
+/* ============ FENÊTRES : l'export, « Sauvegarder » et les groupes sont des .ui-modal (bloc d'interface commun) ; ici ce qui reste au module ============ */
 .imp-block h3 {
   font-family: var(--f-stencil);
   font-weight: 700;
@@ -1900,9 +1900,9 @@ __CSS__
     <svg class="dsp-chev" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg>
   </button>
   <input type="file" id="file-load" accept=".json,.zip,application/json,application/zip" hidden>
-  <button class="tb-btn" id="btn-json-export" data-i18n-title="tb.json.export.tip" title="Enregistrer la datacard (JSON)">
+  <button class="tb-btn" id="btn-json-export" data-i18n-title="tb.json.export.tip" title="Sauvegarder la datacard (JSON)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h11l4 4v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M8 3v5h7V3"/><rect x="7" y="13" width="10" height="8"/></svg>
-    <span class="tb-btn-label" data-i18n="tb.json.export">Enregistrer</span>
+    <span class="tb-btn-label" data-i18n="tb.json.export">Sauvegarder</span>
   </button>
   <button class="tb-btn" id="btn-print" data-i18n-title="tb.export.tip" title="Exporter en PDF ou PNG">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -1938,21 +1938,21 @@ __CSS__
   </div>
 </div>
 
-<!-- ===== FENÊTRE : ENREGISTRER LA DATACARD — CHOISIR LE NOM DU FICHIER ===== -->
+<!-- ===== FENÊTRE : SAUVEGARDER LA DATACARD — CHOISIR LE NOM DU FICHIER ===== -->
 <div class="ui-modal" id="save-modal" hidden role="dialog" aria-labelledby="save-title" aria-modal="true">
   <div class="ui-backdrop" id="save-backdrop"></div>
   <div class="ui-panel" role="document">
     <button type="button" class="ui-close" id="save-close" data-i18n-aria-label="modal.close" aria-label="Fermer">×</button>
-    <h2 class="ui-title" id="save-title" data-i18n="save.title">Enregistrer la datacard</h2>
+    <h2 class="ui-title" id="save-title" data-i18n="save.title">Sauvegarder la datacard</h2>
     <div class="ui-field"><label class="ui-lbl" for="save-fname" data-i18n="fn.label">Nom du fichier</label><div class="ui-row"><input class="ui-in" id="save-fname" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="100"><span class="ui-ext">.json</span></div></div>
     <div class="ui-actions">
       <button type="button" class="ui-btn" id="save-cancel" data-i18n="fn.cancel">Annuler</button>
-      <button type="button" class="ui-btn primary" id="save-go" data-i18n="tb.json.export">Enregistrer</button>
+      <button type="button" class="ui-btn primary" id="save-go" data-i18n="tb.json.export">Sauvegarder</button>
     </div>
   </div>
 </div>
 
-<!-- ===== FENÊTRE D'IMPORT (briefing ou route) ===== -->
+<!-- ===== FENÊTRE D'IMPORT (briefing ou fichier de route) ===== -->
 <div class="ui-modal" id="import-modal" hidden role="dialog" aria-labelledby="import-modal-title" aria-modal="true">
   <div class="ui-backdrop" id="import-modal-backdrop"></div>
   <div class="ui-panel" role="document">
@@ -1961,8 +1961,6 @@ __CSS__
     <div class="bi-block">
       <label class="bi-src" id="bi-src-current-row"><input type="radio" name="bi-src" id="bi-src-current" value="current"><span data-i18n="imp.src.current">Briefing en cours</span></label>
       <div class="ui-note bi-note" id="bi-current-note" hidden></div>
-      <label class="bi-src" id="bi-src-route-row"><input type="radio" name="bi-src" id="bi-src-route" value="route"><span data-i18n="imp.src.route">Route en cours</span></label>
-      <div class="ui-note bi-note" id="bi-route-note" hidden></div>
       <label class="bi-src" id="bi-src-file-row"><input type="radio" name="bi-src" id="bi-src-file" value="file"><span data-i18n="imp.src.file">Fichier JSON (briefing ou route)</span></label>
       <div class="bi-file" id="bi-file-zone" hidden>
         <button type="button" class="ui-btn bi-filebtn" id="bi-file-btn" data-i18n="imp.choose">Choisir un fichier…</button>
@@ -2062,9 +2060,8 @@ const KEY_LANG = 'lang_v1';
 const KEY_BRIEFING = 'khr26_briefing_state_v2';
 const KEY_WING = 'wing_config_v1';                // lecture seule : indicatifs des escadrons
 const FORMAT_ID = 'dcs-datacard-v1';
-/* Route Planner : clé de l'état de la route (lecture seule), clé du passage vers la datacard, format du fichier */
+/* Route Planner : clé de l'état de la route (lecture seule), format du fichier */
 const KEY_ROUTE = 'route_state_v1';
-const KEY_HANDOFF = 'route_handoff_v1';
 const ROUTE_FORMAT = 'dcs-route-v1';
 const FT_M = 0.3048;
 const THEME_IDS = ['cw-nato', 'cw-soviet', 'modern-nato', 'modern-east'];
@@ -2136,8 +2133,8 @@ const I18N = {
     'op.card.h': '.json',
     'op.import': 'Importer…',
     'op.import.h': 'briefing, route, HQ, paquet',
-    'tb.json.export': 'Enregistrer',
-    'tb.json.export.tip': 'Enregistrer la datacard (JSON)',
+    'tb.json.export': 'Sauvegarder',
+    'tb.json.export.tip': 'Sauvegarder la datacard (JSON)',
     'tb.export': 'Exporter',
     'tb.export.tip': 'Exporter en PDF ou PNG',
     'tb.example': 'Exemple',
@@ -2158,7 +2155,7 @@ const I18N = {
     'modal.close': 'Fermer',
     'fn.label': 'Nom du fichier',
     'fn.cancel': 'Annuler',
-    'save.title': 'Enregistrer la datacard',
+    'save.title': 'Sauvegarder la datacard',
     'ex.title': 'Exporter la datacard',
     'ex.note.pdf': 'Impression système',
     'ex.note.png': 'Kneeboard DCS · 2000×2828, A4',
@@ -2174,8 +2171,6 @@ const I18N = {
     'imp.title': 'Importer dans la datacard',
     'imp.src.current': 'Briefing en cours',
     'imp.src.currentOff': 'Aucun briefing enregistré dans ce navigateur.',
-    'imp.src.route': 'Route en cours',
-    'imp.src.routeOff': 'Aucune route sur {th} dans ce navigateur.',
     'imp.src.file': 'Fichier JSON (briefing ou route)',
     'imp.route.title': 'Route à importer',
     'imp.route.line': '« {name} » — {n} points',
@@ -2203,7 +2198,7 @@ const I18N = {
     'imp.go': 'Importer',
     'imp.cancel': 'Annuler',
     'toast.imported': '{n} datacard(s) importée(s) ✓',
-    'toast.jsonSaved': 'Datacards enregistrées ✓',
+    'toast.jsonSaved': 'Datacards sauvegardées ✓',
     'toast.jsonLoaded': 'Datacards chargées ✓',
     'frz.note': 'Copie de ce que le groupe donnait à cette carte avant qu\'elle devienne libre : lecture seule.',
     'u.type.pick': '— à choisir —',
@@ -2229,6 +2224,8 @@ const I18N = {
     'pack.newfree': 'Carte libre',
     'pack.attach': 'Rattacher à un groupe',
     'pack.impgroups': 'Importer des groupes',
+    'pack.allroutes': 'Une datacard par route',
+    'pack.allroutes.off': 'Il faut au moins deux routes au Route Planner',
     'bi.groups.note': 'Les groupes (mission d\'HQ, briefing, paquet de vol) s\'importent par la fenêtre d\'import commune : ils entrent dans la fiche des groupes, chacun avec sa datacard.',
     'pack.dup.linked': 'Une carte liée ne se duplique pas',
     'pack.tag.linked': 'liée',
@@ -2292,7 +2289,7 @@ const I18N = {
     'cmp.offTable': '(hors table)',
     'cmp.mod': 'modifié',
     'cmp.copied': 'copié de {n}',
-    'toast.gsFull': '⚠ Stockage du navigateur plein : vos groupes ne sont pas enregistrés. Enregistrez un fichier de travail.',
+    'toast.gsFull': '⚠ Stockage du navigateur plein : vos groupes ne sont pas enregistrés. Sauvegardez un fichier de travail.',
     'm.cancel': 'Annuler',
     'm.new.title': 'Nouvelle datacard',
     'm.new.go': 'Créer',
@@ -2663,8 +2660,6 @@ const I18N = {
     'imp.title': 'Import into the datacard',
     'imp.src.current': 'Current briefing',
     'imp.src.currentOff': 'No briefing saved in this browser.',
-    'imp.src.route': 'Current route',
-    'imp.src.routeOff': 'No route on {th} in this browser.',
     'imp.src.file': 'JSON file (briefing or route)',
     'imp.route.title': 'Route to import',
     'imp.route.line': '“{name}” — {n} waypoints',
@@ -2718,6 +2713,8 @@ const I18N = {
     'pack.newfree': 'Free card',
     'pack.attach': 'Attach to a group',
     'pack.impgroups': 'Import groups',
+    'pack.allroutes': 'One datacard per route',
+    'pack.allroutes.off': 'The Route Planner needs at least two routes',
     'bi.groups.note': 'Groups (HQ mission, briefing, flight package) are imported through the common import window: they enter the group sheet, each with its datacard.',
     'pack.dup.linked': 'A linked card cannot be duplicated',
     'pack.tag.linked': 'linked',
@@ -6680,6 +6677,7 @@ function packAct(act, btn) {
   if (act === 'newlinked') { grpAskNew(); return; }
   if (act === 'attach') { grpAskAttach(); return; }
   if (act === 'impgroups') { impOpen({ opener: btn }); return; }
+  if (act === 'allroutes') { runAllRoutesImport(biReadRouteSet(), false); return; }
   if (act === 'newfree') { doc.cards.push(newCard()); curIdx = doc.cards.length - 1; }
   else if (act === 'dup') { doc.cards.splice(curIdx + 1, 0, clone(curCard())); curIdx++; }
   else if (act === 'del') {
@@ -6821,7 +6819,7 @@ function fnDefault(base, stamp) {
   return (b ? b + '_' : '') + stamp;
 }
 
-/* « Enregistrer » : la fenêtre du nom du fichier, pré-remplie du nom d'avant */
+/* « Sauvegarder » : la fenêtre du nom du fichier, pré-remplie du nom d'avant */
 const SAVEN = { name: '', opener: null, at: 0 };
 function saveSync() { document.getElementById('save-go').disabled = cleanFname(SAVEN.name) === ''; }
 function openSaveModal(opener) {
@@ -6911,19 +6909,18 @@ function loadJsonFile(file) {
 /* ============= IMPORT DEPUIS UN BRIEFING OU UNE ROUTE ============= */
 /* Les groupes (mission d'HQ, briefing, paquet de vol) passent par la fenêtre d'import commune (import_block.py) : ils s'écrivent dans la fiche et chaque groupe a sa carte.
    Cette fenêtre-ci ne garde que ce qui n'est pas un groupe : le briefing (mission, temps, terrains, météo) et la route (navigation), dans des cartes libres ou la carte affichée. */
-const bi = { src: 'current', fileBriefing: null, fileRoute: null, fileSet: [], fileName: '', current: null, currentRoute: null, routeSet: [] };
+const bi = { src: 'current', fileBriefing: null, fileRoute: null, fileSet: [], fileName: '', current: null };
 
 function biBriefing() {
   if (bi.src === 'file') return bi.fileBriefing;
   return bi.src === 'current' ? bi.current : null;
 }
 function biRoute() {
-  if (bi.src === 'file') return bi.fileRoute;
-  return bi.src === 'route' ? bi.currentRoute : null;
+  return bi.src === 'file' ? bi.fileRoute : null;
 }
-/* Les routes que « Toutes les routes » importerait : celles du Route Planner (« Route en cours ») ou celles du jeu de routes d'un fichier */
+/* Les routes que « Toutes les routes » importerait : celles du jeu de routes d'un fichier */
 function biSetList() {
-  return bi.src === 'route' ? bi.routeSet : (bi.src === 'file' ? bi.fileSet : []);
+  return bi.src === 'file' ? bi.fileSet : [];
 }
 
 /* ----- Route du Route Planner ----- */
@@ -6972,23 +6969,6 @@ function routeFromObject(o) {
 function dgCommonTheatre() { return dgReadTheatreKey() || dgTheatre(); }       /* le théâtre commun C : mp_theatre_v1 s'il est valide, sinon celui du document */
 /* Le théâtre de référence des routes d'avant le lot : celui de route_state_v1 s'il est valide, sinon mp_theatre_v1, sinon Caucasus (la même règle que le Route Planner et le Flight Configurator) */
 function dgStateTheatre(st) { return isPlainObject(st) && dgTheatreOk(st.theatre) ? st.theatre : (dgReadTheatreKey() || DG_THEATRE_DEFAULT); }
-/* La route en cours : route_state_v1 s'il est de C (un theatre absent ou invalide vaut dgStateTheatre) ; sinon la première route de C de route_set_v1 ; sinon aucune. Les réglages de la route viennent de route_state_v1 seulement s'il est de C ; sinon de la clé partagée et des défauts. */
-function readCurrentRoute() {
-  const o = readJsonKey(KEY_ROUTE), C = dgCommonTheatre();
-  if (isPlainObject(o) && dgStateTheatre(o) === C) {
-    const r = routeFromObject(Object.assign({}, o, { theatre: C }));
-    if (r && r.points.length) { r.rid = dgActiveRid(); return r; }
-  }
-  const l = biReadRouteSet();
-  return l.length ? l[0].route : null;
-}
-
-/* Le rid de la route active du Route Planner (celle de route_state_v1), si elle est du théâtre commun ; '' sinon */
-function dgActiveRid() {
-  const rs = dgRouteSet(), act = rs.set ? rs.set.routes[rs.set.active] : null;
-  return act && routeTheatre(act, rwRefTheatre(rs.st)) === dgCommonTheatre() && typeof act.rid === 'string' ? act.rid : '';
-}
-
 /* Altitude d'un point (mètres) → chaîne entière dans l'unité de la route */
 function routeAltStr(m, unit) {
   return String(Math.round(unit === 'ft' ? m / FT_M : m));
@@ -7129,11 +7109,11 @@ function biReadRouteSet() {
   return out;
 }
 
-function runAllRoutesImport() {
-  const list = biSetList();
-  if (list.length < 2) return;
+/* list : les routes à importer (celles d'un fichier, ou celles du Route Planner pour « Une datacard par route ») ; fromFile : un jeu de routes ouvert d'un fichier */
+function runAllRoutesImport(list, fromFile) {
+  if (!list || list.length < 2) return;
   dgUnitsAdopt({ mass: dgU.mass, distance: list[0].route.units.distance, altitude: list[0].route.units.altitude });       /* la première route donne ses unités à la clé, toutes les cartes les prennent */
-  if (bi.src === 'file') dgNavSet(list[0].route.navDisplay);       /* un jeu de routes ouvert impose ses réglages de cap, qui deviennent ceux de la mission */
+  if (fromFile) dgNavSet(list[0].route.navDisplay);       /* un jeu de routes ouvert impose ses réglages de cap, qui deviennent ceux de la mission */
   const cards = list.map(e => {
     const c = newCard();
     dgLinkToRouteObj(c, e.route);       /* chaque carte neuve suit sa route (entrée dans le jeu de routes si elle vient d'un fichier) */
@@ -7160,16 +7140,7 @@ function biRefresh(lang) {
   curRadio.disabled = off;
   note.hidden = !off;
   note.textContent = off ? t('imp.src.currentOff') : '';
-  const rtRow = document.getElementById('bi-src-route-row');
-  const rtRadio = document.getElementById('bi-src-route');
-  const rtNote = document.getElementById('bi-route-note');
-  const rtOff = !bi.currentRoute;
-  rtRow.classList.toggle('off', rtOff);
-  rtRadio.disabled = rtOff;
-  rtNote.hidden = !rtOff;
-  rtNote.textContent = rtOff ? t('imp.src.routeOff', { th: t('th.' + dgCommonTheatre()) }) : '';
   document.getElementById('bi-src-current').checked = bi.src === 'current';
-  document.getElementById('bi-src-route').checked = bi.src === 'route';
   document.getElementById('bi-src-file').checked = bi.src === 'file';
   document.getElementById('bi-file-zone').hidden = bi.src !== 'file';
   document.getElementById('bi-file-name').textContent = bi.fileName;
@@ -7180,7 +7151,7 @@ function biRefresh(lang) {
     const nm = hasText(r.name) ? r.name.trim() : t('imp.route.noname');
     document.getElementById('bi-route-line').textContent = t('imp.route.line', { name: nm, n: r.points.length }) +
       (r.refs.length ? t('imp.route.refs', { k: r.refs.length }) : '');
-    /* « Toutes les routes » : sur la route en cours quand le Route Planner en garde au moins deux, ou sur un jeu de routes d'un fichier qui en porte au moins deux */
+    /* « Toutes les routes » : sur un jeu de routes d'un fichier qui en porte au moins deux */
     const nAll = biSetList().length;
     const allRow = document.getElementById('bi-route-all-row');
     allRow.hidden = nAll < 2;
@@ -7229,17 +7200,14 @@ function biUpdateGo() {
   go.disabled = r ? !r.points.length : !document.querySelector('#bi-list .bi-cb:checked');
 }
 
-/* fileBriefing / fileRoute : un fichier déjà lu ; forceSrc 'route' : ouvrir sur « Route en cours » (passage depuis le Route Planner) */
+/* fileBriefing / fileRoute : un fichier déjà lu */
 const IMPO = { opener: null };
-function openImportModal(fileBriefing, fileName, fileRoute, forceSrc) {
+function openImportModal(fileBriefing, fileName, fileRoute) {
   bi.current = readCurrentBriefing();
-  bi.currentRoute = readCurrentRoute();
-  bi.routeSet = biReadRouteSet();
   bi.fileBriefing = null; bi.fileRoute = null; bi.fileSet = []; bi.fileName = '';      /* rouvrir la fenêtre oublie le fichier */
   if (fileBriefing) { bi.fileBriefing = fileBriefing; bi.fileName = fileName || ''; bi.src = 'file'; }
   else if (fileRoute) { bi.fileRoute = fileRoute; bi.fileName = fileName || ''; bi.src = 'file'; }
-  else if (forceSrc === 'route' && bi.currentRoute) { bi.src = 'route'; }
-  else bi.src = bi.current ? 'current' : (bi.currentRoute ? 'route' : 'file');
+  else bi.src = bi.current ? 'current' : 'file';
   document.getElementById('bi-route-fill').checked = true;
   biRefresh();
   const im = document.getElementById('import-modal');
@@ -7249,15 +7217,6 @@ function openImportModal(fileBriefing, fileName, fileRoute, forceSrc) {
   const fo = go.disabled ? im.querySelector('input[name="bi-src"]:checked') : go;
   if (fo) fo.focus({ preventScroll: true });
 }
-/* Le théâtre commun ou les routes du Route Planner ont changé (autre onglet) pendant que la fenêtre d'import est ouverte : les routes proposées se relisent, sans recharger */
-function dgRoutesRefresh() {
-  const m = document.getElementById('import-modal');
-  if (!m || m.hidden) return;
-  bi.currentRoute = readCurrentRoute();
-  bi.routeSet = biReadRouteSet();
-  if (bi.src === 'route' && !bi.currentRoute) bi.src = bi.current ? 'current' : 'file';
-  biRefresh();
-}
 function closeImportModal() {
   if (TBM.cur) tbmClose(false);      /* la liste ouverte se ferme avec la fenêtre */
   document.getElementById('import-modal').hidden = true;
@@ -7265,19 +7224,10 @@ function closeImportModal() {
   if (o && o.focus && o.isConnected && !o.disabled) { try { o.focus({ preventScroll: true }); } catch (e) { /* ignore */ } }
 }
 
-/* Passage depuis le Route Planner : la clé est lue puis supprimée, la fenêtre s'ouvre sur « Route en cours ». */
-function checkRouteHandoff() {
-  let v = null;
-  try { v = localStorage.getItem(KEY_HANDOFF); } catch (e) { return; }
-  if (v === null) return;
-  try { localStorage.removeItem(KEY_HANDOFF); } catch (e) { /* ignore */ }
-  openImportModal(null, '', null, 'route');
-}
-
 async function runRouteImport() {
   const r = biRoute();
   if (!r || !r.points.length) return;
-  if (biSetList().length >= 2 && document.getElementById('bi-route-all').checked) { runAllRoutesImport(); return; }
+  if (biSetList().length >= 2 && document.getElementById('bi-route-all').checked) { runAllRoutesImport(biSetList(), true); return; }
   const fresh = document.getElementById('bi-route-new').checked, c = fresh ? newCard() : curCard();
   if (!fresh && dgCardHasTimes(c)) {       /* les heures et notes déjà saisies ne suivent pas */
     const vars = { r: hasText(r.name) ? r.name.trim() : t('nav.rm.route') };
@@ -7560,8 +7510,15 @@ function bindEvents() {
   const fileLoad = document.getElementById('file-load');
   fileLoad.addEventListener('change', () => { if (fileLoad.files && fileLoad.files[0]) loadJsonFile(fileLoad.files[0]); });
   document.getElementById('btn-json-export').addEventListener('click', e => openSaveModal(e.currentTarget));
+  /* Ctrl+S (Cmd+S) : le geste du bouton « Sauvegarder », sauf fenêtre ou menu ouvert */
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+      e.preventDefault();
+      if (!uiModalsOpen().length && !MN.cur && !TBM.cur) document.getElementById('btn-json-export').click();
+    }
+  });
   ['save-close', 'save-cancel'].forEach(id => document.getElementById(id).addEventListener('click', closeSaveModal));
-  /* le fond ignore les clics des 400 ms qui suivent l'ouverture : le 2e clic d'un double-clic sur « Enregistrer » ne ferme pas la fenêtre */
+  /* le fond ignore les clics des 400 ms qui suivent l'ouverture : le 2e clic d'un double-clic sur « Sauvegarder » ne ferme pas la fenêtre */
   document.getElementById('save-backdrop').addEventListener('click', () => { if (performance.now() - SAVEN.at > 400) closeSaveModal(); });
   document.getElementById('save-go').addEventListener('click', saveGo);
   document.getElementById('save-fname').addEventListener('input', e => { SAVEN.name = e.target.value; saveSync(); });
@@ -7588,7 +7545,6 @@ function bindEvents() {
   document.getElementById('bi-go').addEventListener('click', runImport);
   document.getElementById('bi-list').addEventListener('change', biUpdateGo);
   document.getElementById('bi-src-current').addEventListener('change', () => { bi.src = 'current'; biRefresh(); });
-  document.getElementById('bi-src-route').addEventListener('change', () => { bi.src = 'route'; biRefresh(); });
   document.getElementById('bi-src-file').addEventListener('change', () => { bi.src = 'file'; biRefresh(); });
   const fb = document.getElementById('file-briefing');
   document.getElementById('bi-file-btn').addEventListener('click', () => { fb.value = ''; fb.click(); });
@@ -7603,7 +7559,7 @@ function bindEvents() {
   initScrollBar(document.getElementById('tab-bar'));
 
   /* Passage depuis le Route Planner (même origine : l'évènement vient d'un autre document) */
-  window.addEventListener('storage', e => { if (e.key === KEY_HANDOFF) checkRouteHandoff(); if (e.key === KEY_THEATRE) dgFollowTheatre(); if (e.key === KEY_UNITS) dgFollowUnits(); if (e.key === KEY_NAV) dgFollowNav(); if (e.key === KEY_STATE) dgFollowDoc(); if (e.key === KEY_THEATRE || e.key === KEY_ROUTE || e.key === KEY_ROUTESET) dgRoutesRefresh(); if (e.key === KEY_THEATRE || e.key === KEY_ROUTE || e.key === KEY_ROUTESET || e.key === KEY_NAV || e.key === null) dgRoutesChanged(); if (e.key === 'mission_snapshot_v1') { renderEditor(true); renderPreview(); } dgStorage(e); });
+  window.addEventListener('storage', e => { if (e.key === KEY_THEATRE) dgFollowTheatre(); if (e.key === KEY_UNITS) dgFollowUnits(); if (e.key === KEY_NAV) dgFollowNav(); if (e.key === KEY_STATE) dgFollowDoc(); if (e.key === KEY_THEATRE || e.key === KEY_ROUTE || e.key === KEY_ROUTESET || e.key === KEY_NAV || e.key === null) dgRoutesChanged(); if (e.key === 'mission_snapshot_v1') { renderEditor(true); renderPreview(); } dgStorage(e); });
 
   window.addEventListener('beforeprint', fillPrintRoot);
   window.addEventListener('afterprint', clearPrintRoot);
@@ -7885,6 +7841,8 @@ function dgCardMoreOpen(btn) {
   const items = [{ k: 'newfree', label: t('pack.newfree'), pack: true }];
   if (!linked) items.push({ k: 'attach', label: t('pack.attach'), pack: true });
   items.push({ k: 'impgroups', label: t('pack.impgroups'), pack: true });
+  const nRoutes = biReadRouteSet().length;       /* les routes du Route Planner au théâtre commun, qui portent un point au moins */
+  items.push({ k: 'allroutes', label: t('pack.allroutes'), pack: true, disabled: nRoutes < 2, title: nRoutes < 2 ? t('pack.allroutes.off') : '' });
   items.push({ k: 'dup', label: t('pack.dup'), pack: true, disabled: linked, title: linked ? t('pack.dup.linked') : '' });
   items.push({ sep: true });
   items.push({ k: 'del', label: t('pack.del'), pack: true, danger: true });
@@ -8450,7 +8408,6 @@ function init() {
   bindEvents();
   setActiveTab('meta');
   renderAll();
-  checkRouteHandoff();
   /* Les polices embarquées mesurent autrement que les polices de repli : refaire le découpage une fois chargées. */
   if (document.fonts && document.fonts.load) {
     Promise.all([
