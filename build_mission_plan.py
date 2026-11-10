@@ -896,6 +896,7 @@ select[data-tbm-src] {{ display: none !important; }}
         }}
         console.log('[M·P v' + APP_VERSION + '] Module ' + id + ' chargé');
         try {{ doc.body.setAttribute('data-theme', document.body.getAttribute('data-theme') || 'cw-nato'); }} catch(e) {{}}
+        try {{ iframe.contentWindow.focus(); }} catch(e) {{}}       /* l'outil ouvert reçoit le clavier : Ctrl+S lui parvient sans clic */
       }});
 
       mv.appendChild(iframe);
@@ -910,6 +911,7 @@ select[data-tbm-src] {{ display: none !important; }}
       if (barSync[id]) barSync[id]();
       document.getElementById('module-loading').classList.add('hidden');
       try {{ iframes[id].contentDocument.body.setAttribute('data-theme', document.body.getAttribute('data-theme') || 'cw-nato'); }} catch(e) {{}}
+      try {{ iframes[id].contentWindow.focus(); }} catch(e) {{}}
     }}
 
     activeModule = id;

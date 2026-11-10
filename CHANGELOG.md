@@ -32,6 +32,7 @@ Changes merged since the last release, grouped per tool.
 - A card for the Flight Configurator, right after HQ.
 #### Changed
 - On phones (below 760 px wide), the back button shrinks to an arrow and the wing stamp is hidden, so each tool's top bar fits; a bar that is still too wide scrolls sideways, with a fade on its right edge.
+- The open tool takes the keyboard focus, so Ctrl+S reaches it.
 #### Fixed
 - On phones and tablets, the on-screen keyboard no longer hides the bottom of the open tool.
 
@@ -65,6 +66,7 @@ Changes merged since the last release, grouped per tool.
 - The theatre is picked in the toolbar, like the Route Planner and the Datacard Generator, and shared with them (all fourteen theatres). When the groups are on another theatre, a banner offers to go back to it or to keep the shared theatre and remove the groups' routes; export waits for that choice. An opened package, mission or working file sets the shared theatre.
 - Route lengths follow the distance unit shared by the Route Planner and the Datacard Generator.
 - Removing a group shared with the Route Planner and the Datacard Generator now asks first. “Empty the module” is now “Clear”.
+- **Open ▾** opens a configuration or imports groups, in place of the separate Open and Import buttons. **Ctrl+S** saves.
 
 ### Recon Station
 #### Added
@@ -74,12 +76,14 @@ Changes merged since the last release, grouped per tool.
 - Importing a wing configuration checks the file like HQ and the Briefing Generator, with the same messages.
 - Messages no longer cover the drawing bar, and choosing a file that is not an image now says so.
 - Classification uses the Briefing Generator's six levels, translated; “Import config” no longer points to the Briefing Generator.
+- **Export** is now in the top bar, and the Export section leaves the panel. In the info block, a value too long for its field is drawn smaller, then cut with “…”, instead of running over the next label.
 
 ### Briefing Generator
 #### Changed
 - The example loads in the interface language (French or English).
 - **Load** only accepts a briefing: any other file (flight package, route, datacard) is refused with a message and the current briefing is kept.
 - Export in one window: format, pages and file name together. Metadata is now the last section, folded.
+- The briefing format moves into **Display ▾**: “Standard” (one mission page plus photo pages, now the default, the example included) or “Advanced” (ten sections); the printed brief no longer names its format, and “OPERATION” follows the interface language. Empty fields hint at what to type instead of showing sample values. **Ctrl+S** saves.
 #### Fixed
 - In the export window, the page list no longer shows the PDF and PNG choices above it, so it fits on phones.
 - A .miz the METAR assistant cannot read shows a message in the interface language instead of a French-only alert.
@@ -106,6 +110,7 @@ Changes merged since the last release, grouped per tool.
 - Export in one window: format, pages and file name together. Rarely used sections (meta, airfields, fuel, threats) start folded.
 - True or magnetic heading is now two buttons, as in the Route Planner.
 - A lighter top bar: Day | Night and the units move into **Display ▾**, and **Open ▾** opens a datacard or imports. Datacards are chosen on one line — the card's name with its tag, “+” for a new datacard, “…” for a free card, attach, import groups, duplicate and delete; the list groups linked and free cards, and two cards of the same name read “CAESAR” and “CAESAR · 2”.
+- “Current route” leaves the Import window — a card is linked to a route from its own route list — and “One datacard per route” moves into the “…” menu. Empty fields hint at what to type instead of showing sample values. **Ctrl+S** saves.
 #### Removed
 - The Datacard Generator's own HQ and flight package imports, replaced by the common import window of the Flight Configurator and the Route Planner.
 #### Fixed
@@ -133,6 +138,7 @@ Changes merged since the last release, grouped per tool.
 - A saved route set keeps every route's theatre, across all theatres; opening it puts each route back on its own theatre and replaces the whole set.
 - Routes can be edited from the Datacard Generator; each waypoint keeps a stable identifier; course settings are shared with the Datacard Generator.
 - A lighter top bar: the base map and the units move into **Display ▾**, above what the map shows (that menu's former “Base map” group is now “Overlays”); **Open ▾** opens a route or imports routes, and the Import button leaves the panel. Routes are chosen on one line — the route's name, “+” for a new route, “…” to duplicate or delete — and the next steps (to the datacard, to the briefing, flight package, save, Route Tool) now follow the points instead of closing the Navigation section.
+- **Export ▾** in the top bar exports the image for the briefing or the Route Tool file; the panel now ends after the waypoints. The panel's Save, “To the datacard” and Flight package buttons are gone: save from the top bar, datacards follow routes by themselves, and the flight package is exported from the Flight Configurator. “+ Add a group” as in the Flight Configurator. **Ctrl+S** saves the selected route.
 #### Fixed
 - Computed magnetic variation now follows DCS for every mission date: years up to 1985 use the IGRF model DCS ships (up to 1.2° closer), later years the previous five-year WMM file, as DCS does (0.2° closer in 1990, 1995 … 2025).
 
@@ -150,6 +156,7 @@ Changes merged since the last release, grouped per tool.
 - The Flight Configurator, Datacard Generator and Route Planner chapters: shared theatre and units.
 - The Datacard Generator and Route Planner chapters: navigation shared with the route, shared course settings.
 - The Route Planner and Datacard Generator pages follow their new Display and Open menus and their one-line route and datacard selection.
+- The French pages say “Sauvegarder” for saving a work file, and follow the new Display, Open and Export menus of the Briefing Generator, Recon Station, Flight Configurator, Route Planner and Datacard Generator.
 
 ---
 

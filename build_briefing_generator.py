@@ -3062,7 +3062,7 @@ __CSS__
         <div class="ed-field">
           <label data-i18n="editor.sitac.metar">METAR</label>
           <div style="display:flex;gap:8px;align-items:center;">
-            <input data-bind="sitac.metar" type="text" placeholder="LCRA 221000Z 18002KT 9999 SCT082 20/15 Q1013" style="flex:1;">
+            <input data-bind="sitac.metar" type="text" placeholder="METAR" data-i18n-placeholder="placeholder.metar" style="flex:1;">
             <button type="button" class="ed-btn-add" id="s-metar-assistant-btn" data-i18n="editor.sitac.metarAssistant">🛠 Assistant METAR</button>
           </div>
           <div id="s-metar-slot"></div>
@@ -3085,7 +3085,7 @@ __CSS__
       <summary class="ui-fold-head"><span data-i18n="editor.cover.summary">01 ░ OPÉRATION (COUVERTURE)</span></summary>
       <div class="ed-content">
         <div class="panel-mobile-header" data-i18n="editor.cover.summaryShort">01 ░ OPÉRATION</div>
-        <div class="ed-field"><label data-i18n="editor.cover.title">Titre opération</label><input data-bind="cover.title" type="text" placeholder="OPERATION FOOTHOLD"></div>
+        <div class="ed-field"><label data-i18n="editor.cover.title">Titre opération</label><input data-bind="cover.title" type="text" placeholder="Titre de l'opération" data-i18n-placeholder="placeholder.coverTitle"></div>
         <div class="ed-field"><label data-i18n="editor.cover.narrative">Récit / Contexte</label><textarea data-bind="cover.narrative" rows="6"></textarea></div>
         <div class="ed-field">
           <label data-i18n="editor.cover.map">Carte d'opération (image)</label>
@@ -3102,7 +3102,7 @@ __CSS__
       <summary class="ui-fold-head"><span data-i18n="editor.sitac.summary">02 ░ SITAC</span></summary>
       <div class="ed-content">
         <div class="panel-mobile-header" data-i18n="editor.sitac.summary">02 ░ SITAC</div>
-        <div class="ed-field"><label data-i18n="editor.sitac.date">Date SITAC (affichée)</label><input data-bind="sitac.date" type="text" placeholder="22-03-1989"></div>
+        <div class="ed-field"><label data-i18n="editor.sitac.date">Date SITAC (affichée)</label><input data-bind="sitac.date" type="text" placeholder="Date affichée" data-i18n-placeholder="placeholder.sitacDate"></div>
         <div class="ed-field">
           <label data-i18n="editor.sitac.points">Points de situation</label>
           <div class="ed-list" data-list="sitac.points"></div>
@@ -3111,7 +3111,7 @@ __CSS__
         <div class="ed-field">
           <label data-i18n="editor.sitac.metar">METAR</label>
           <div style="display:flex;gap:8px;align-items:center;">
-            <input data-bind="sitac.metar" type="text" placeholder="LCRA 221000Z 18002KT 9999 SCT082 20/15 Q1013" style="flex:1;">
+            <input data-bind="sitac.metar" type="text" placeholder="METAR" data-i18n-placeholder="placeholder.metar" style="flex:1;">
             <button type="button" class="ed-btn-add" id="metar-assistant-btn" data-i18n="editor.sitac.metarAssistant">🛠 Assistant METAR</button>
           </div>
         </div>
@@ -3267,8 +3267,8 @@ __CSS__
       <div class="ed-content">
         <div class="panel-mobile-header"><span data-fmt="simple" data-i18n="editor.meta.summarySimple">05 ░ MÉTADONNÉES</span><span data-fmt="full" data-i18n="editor.meta.summary">11 ░ MÉTADONNÉES</span></div>
         <div class="ed-field-row">
-          <div class="ed-field"><label data-i18n="editor.meta.operation">Opération</label><input data-bind="meta.operation" type="text" placeholder="FOOTHOLD"></div>
-          <div class="ed-field"><label data-i18n="editor.meta.missionCode">Mission code</label><input data-bind="meta.mission" type="text" placeholder="M3"></div>
+          <div class="ed-field"><label data-i18n="editor.meta.operation">Opération</label><input data-bind="meta.operation" type="text" placeholder="Nom de l'opération" data-i18n-placeholder="placeholder.operation"></div>
+          <div class="ed-field"><label data-i18n="editor.meta.missionCode">Mission code</label><input data-bind="meta.mission" type="text" placeholder="Code mission" data-i18n-placeholder="placeholder.missionCode"></div>
         </div>
         <div class="ed-field-row">
           <div class="ed-field"><label data-i18n="editor.meta.date">Date mission</label><input data-bind="meta.date" type="date"></div>
@@ -3283,8 +3283,8 @@ __CSS__
             </select>
           </div>
         </div>
-        <div class="ed-field" data-fmt="simple"><label data-i18n="editor.meta.time">Heure (Z)</label><input data-bind="meta.time" type="text" placeholder="1000Z"></div>
-        <div class="ed-field"><label data-i18n="editor.meta.docRef">Référence document</label><input data-bind="meta.docRef" type="text" placeholder="FH-M3-1989"></div>
+        <div class="ed-field" data-fmt="simple"><label data-i18n="editor.meta.time">Heure (Z)</label><input data-bind="meta.time" type="text" placeholder="hh:mm" data-i18n-placeholder="placeholder.time"></div>
+        <div class="ed-field"><label data-i18n="editor.meta.docRef">Référence document</label><input data-bind="meta.docRef" type="text" placeholder="Référence du document" data-i18n-placeholder="placeholder.docRef"></div>
         <div class="ui-note" data-i18n="editor.meta.help">Métadonnées présentes dans tous les pieds de page.</div>
       </div>
     </details>
@@ -3475,7 +3475,7 @@ const I18N = {
     'editor.radio.helpAircraft': 'Pour chaque appareil, configurez les radios et leurs canaux. Si une image est fournie, elle remplace la table générée.',
     'editor.radio.customName':   'Nom personnalisé',
     'editor.radio.radioName':    'Nom radio (R-863, UHF, ...)',
-    'editor.radio.labelEx':      'Libellé (ex: ATC)',
+    'editor.radio.labelEx':      'Libellé',
     'editor.radio.freqLabel':    'Fréq.',
     'editor.radio.chLabel':      'Ch.',
     'editor.radio.chanLabel':    'Libellé',
@@ -3579,20 +3579,28 @@ const I18N = {
     'select.modulation':           'Modulation',
     'select.radioItem':            'Item radio',
     'phase.newTitle':              'Nouvelle mission',
-    'placeholder.guestName':       'Ex : WOLF',
-    'placeholder.guestSub':        'Ex : WOLF 1 (optionnel)',
-    'placeholder.guestAircraft':   'Ex : F-16CM',
-    'placeholder.subgroup':        'Ex : ANTON, CAESAR, WOLF 2…',
-    'placeholder.imgTitle':        'Ex : Route d\'approche — Attaque ERCAN',
-    'placeholder.chartName':       'Ex : AKROTIRI (LCRA) — Piste 10',
-    'placeholder.annexeTitle':     'Ex : Notes additionnelles',
+    'placeholder.guestName':       'Indicatif',
+    'placeholder.guestSub':        'Sous-groupe (optionnel)',
+    'placeholder.guestAircraft':   'Type d\'appareil',
+    'placeholder.subgroup':        'Sous-groupe',
+    'placeholder.imgTitle':        'Titre de l\'image',
+    'placeholder.chartName':       'Nom de la carte',
+    'placeholder.annexeTitle':     'Titre de l\'annexe',
+    'placeholder.metar':     'METAR',
+    'placeholder.coverTitle': 'Titre de l\'opération',
+    'placeholder.sitacDate': 'Date affichée',
+    'placeholder.operation': 'Nom de l\'opération',
+    'placeholder.missionCode': 'Code mission',
+    'placeholder.time':      'hh:mm',
+    'placeholder.docRef':    'Référence du document',
+    'placeholder.icao':      'OACI',
+    'placeholder.ddhhmm':    'DDhhmm',
     'editor.image.label':         'Image',
     'editor.imgZone.tapShort':    '▲ TOUCHER POUR IMPORTER ▲',
     'editor.imgCard.remove':      'Suppr.',
     'editor.phases.moveUp':       'Monter',
     'editor.phases.moveDown':     'Descendre',
     'phase.defaultMapTitle':      'Carte phase',
-    'placeholder.optional':       '(optionnel)',
     'preview.objectives':             'Objectifs',
     'preview.sitrepPoints':           'Points de Situation',
     'preview.metar':                  'METAR',
@@ -3878,7 +3886,7 @@ const I18N = {
     'editor.radio.helpAircraft': 'For each aircraft, configure radios and their channels. If an image is provided, it replaces the generated table.',
     'editor.radio.customName':   'Custom name',
     'editor.radio.radioName':    'Radio name (R-863, UHF, ...)',
-    'editor.radio.labelEx':      'Label (e.g. ATC)',
+    'editor.radio.labelEx':      'Label',
     'editor.radio.freqLabel':    'Freq.',
     'editor.radio.chLabel':      'Ch.',
     'editor.radio.chanLabel':    'Label',
@@ -3982,20 +3990,28 @@ const I18N = {
     'select.modulation':           'Modulation',
     'select.radioItem':            'Radio item',
     'phase.newTitle':              'New mission',
-    'placeholder.guestName':       'e.g. WOLF',
-    'placeholder.guestSub':        'e.g. WOLF 1 (optional)',
-    'placeholder.guestAircraft':   'e.g. F-16CM',
-    'placeholder.subgroup':        'e.g. ANTON, CAESAR, WOLF 2…',
-    'placeholder.imgTitle':        'e.g. Approach route — ERCAN Strike',
-    'placeholder.chartName':       'e.g. AKROTIRI (LCRA) — RWY 10',
-    'placeholder.annexeTitle':     'e.g. Additional notes',
+    'placeholder.guestName':       'Callsign',
+    'placeholder.guestSub':        'Subgroup (optional)',
+    'placeholder.guestAircraft':   'Aircraft type',
+    'placeholder.subgroup':        'Subgroup',
+    'placeholder.imgTitle':        'Image title',
+    'placeholder.chartName':       'Chart name',
+    'placeholder.annexeTitle':     'Annex title',
+    'placeholder.metar':     'METAR',
+    'placeholder.coverTitle': 'Operation title',
+    'placeholder.sitacDate': 'Displayed date',
+    'placeholder.operation': 'Operation name',
+    'placeholder.missionCode': 'Mission code',
+    'placeholder.time':      'hh:mm',
+    'placeholder.docRef':    'Document reference',
+    'placeholder.icao':      'ICAO',
+    'placeholder.ddhhmm':    'DDhhmm',
     'editor.image.label':         'Image',
     'editor.imgZone.tapShort':    '▲ TAP TO IMPORT ▲',
     'editor.imgCard.remove':      'Remove',
     'editor.phases.moveUp':       'Move up',
     'editor.phases.moveDown':     'Move down',
     'phase.defaultMapTitle':      'Phase map',
-    'placeholder.optional':       '(optional)',
     'preview.objectives':             'Objectives',
     'preview.sitrepPoints':           'Situation Points',
     'preview.metar':                  'METAR',
@@ -5791,7 +5807,7 @@ function renderPhaseEditor() {
         <input id="pf-guest-name" type="text" value="${escapeAttr(guestData.name)}" placeholder="${t('placeholder.guestName')}">
       </div>
       <div class="ed-field"><label>${t('editor.phases.guestSub')}</label>
-        <input id="pf-guest-sub" type="text" value="${escapeAttr(guestData.subgroup)}" placeholder="${t('placeholder.guestName')} 1 ${t('placeholder.optional')}">
+        <input id="pf-guest-sub" type="text" value="${escapeAttr(guestData.subgroup)}" placeholder="${t('placeholder.guestSub')}">
       </div>
       <div class="ed-field"><label>${t('editor.phases.guestAircraft')}</label>
         <input id="pf-guest-aircraft" type="text" value="${escapeAttr(guestData.aircraft)}" placeholder="${t('placeholder.guestAircraft')}">
@@ -6427,9 +6443,9 @@ function renderMetarAssistant(p) {
     <div class="metar-form">
       <div class="metar-row">
         <div class="metar-field"><label>ICAO</label>
-          <input id="ma-icao" type="text" value="${escapeAttr(p.icao||'')}" placeholder="LCRA" maxlength="4"></div>
+          <input id="ma-icao" type="text" value="${escapeAttr(p.icao||'')}" placeholder="${escapeAttr(t('placeholder.icao'))}" maxlength="4"></div>
         <div class="metar-field"><label>DDhhmmZ</label>
-          <input id="ma-ddhhmm" type="text" value="${escapeAttr(p.ddhhmm||'')}" placeholder="250700" maxlength="6"></div>
+          <input id="ma-ddhhmm" type="text" value="${escapeAttr(p.ddhhmm||'')}" placeholder="${escapeAttr(t('placeholder.ddhhmm'))}" maxlength="6"></div>
       </div>
       <div class="metar-row">
         <label class="metar-check-label"><input id="ma-calm" type="checkbox" ${p.calm?'checked':''}> Calme (00000KT)</label>
@@ -6692,7 +6708,7 @@ function renderAirfieldsInto(list) {
     const isFarp = !!af.isFarp;
     const rwyLabel = isFarp ? t('editor.mission.rwyFarp') : t('editor.mission.rwyAirport');
     row.innerHTML = `
-      <input type="text" class="af-icao" placeholder="ICAO" value="${escapeAttr(af.icao || '')}" ${isFarp ? 'disabled' : ''}>
+      <input type="text" class="af-icao" placeholder="${escapeAttr(t('placeholder.icao'))}" value="${escapeAttr(af.icao || '')}" ${isFarp ? 'disabled' : ''}>
       <label class="af-farp-check" title="${t('editor.mission.farpCheck')}">
         <input type="checkbox" class="af-farp" ${isFarp ? 'checked' : ''}> ${t('editor.mission.farpCheck')}
       </label>
@@ -8624,7 +8640,7 @@ function renderSimpleFlights() {
         <div class="ed-field"><label>${t('editor.phases.guestName')}</label>
           <input class="fl-g-name" type="text" value="${escapeAttr(g.name)}" placeholder="${escapeAttr(t('placeholder.guestName'))}"></div>
         <div class="ed-field"><label>${t('editor.phases.guestSub')}</label>
-          <input class="fl-g-sub" type="text" value="${escapeAttr(g.subgroup)}" placeholder="${escapeAttr(t('placeholder.guestName'))} 1 ${escapeAttr(t('placeholder.optional'))}"></div>
+          <input class="fl-g-sub" type="text" value="${escapeAttr(g.subgroup)}" placeholder="${escapeAttr(t('placeholder.guestSub'))}"></div>
         <div class="ed-field"><label>${t('editor.phases.guestAircraft')}</label>
           <input class="fl-g-ac" type="text" value="${escapeAttr(g.aircraft)}" placeholder="${escapeAttr(t('placeholder.guestAircraft'))}"></div>
       </div>` : '';
