@@ -53,9 +53,9 @@ CONTRAST_CSS = r"""
 :where(body[data-theme="modern-east"]) .tb-label { color: #888e78; }
 :where(body[data-theme="modern-east"]) .nav-route .nr-k { color: #7f866e; }
 :where(body[data-theme="modern-east"]) .nav-route .nr-sub { color: #7f866e; }
-/* lignes d'action des menus « Ouvrir » et « … » et listes (lot mp-ui-disposition) : le texte gris-vert du reste de la palette tombe sous 4,5 : 1 dans ces deux thèmes */
-:where(body[data-theme="cw-soviet"]) .mn-opt:not(:hover):not(:focus-visible):not([aria-selected="true"]):not([aria-disabled="true"]):not(.mn-danger) { color: #879279; }
-:where(body[data-theme="modern-east"]) .mn-opt:not(:hover):not(:focus-visible):not([aria-selected="true"]):not([aria-disabled="true"]):not(.mn-danger) { color: #888e78; }
+/* lignes des menus de la barre (lot mp-ui-disposition) : le texte neutre des lignes « .dsp-opt » (Affichage, Ouvrir, Enregistrer, « … », listes) atteint 4,5 : 1 dans les quatre thèmes ; les thèmes cw-nato et modern-nato le tenaient déjà */
+:where(body[data-theme="cw-soviet"]) .dsp-opt:not([aria-checked="true"]):not(:hover):not(:focus-visible):not([aria-selected="true"]):not([aria-disabled="true"]):not(.mn-danger) { color: #879279; }
+:where(body[data-theme="modern-east"]) .dsp-opt:not([aria-checked="true"]):not(:hover):not(:focus-visible):not([aria-selected="true"]):not([aria-disabled="true"]):not(.mn-danger) { color: #888e78; }
 /* MP-20 end */
 """
 
@@ -826,15 +826,19 @@ body {
 .dsp-seg .tb-btn { flex: 1 1 auto; min-width: 0; height: auto; min-height: 44px; padding: 0 8px; font-size: 11px; letter-spacing: .2px; white-space: nowrap; margin: 0 -1px 0 0; }
 .dsp-seg .tb-btn.on, .dsp-seg .tb-btn.on:hover { background: var(--amber-dark); border-color: var(--amber); color: #f6efdc; box-shadow: inset 0 -3px 0 var(--amber); position: relative; }
 .dsp-urow { display: flex; align-items: center; gap: 10px; padding: 4px 18px 6px; }
+.dsp-seg .tb-btn:last-child { margin-right: 0; }
 .dsp-urow .ui-lbl { flex: 0 0 74px; margin: 0; }
 .dsp-urow .dsp-seg { flex: 1 1 auto; width: auto; }
-.mn-hint { margin-left: auto; padding-left: 14px; flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mn-hint { margin-left: auto; padding-left: 14px; flex: 0 1 auto; min-width: 0; text-align: right; }
+/* rien de coupé : le menu s'élargit à son contenu, dans la largeur de la vue ; au-delà, l'indice passe à la ligne */
+.tbm-panel.mn-panel { max-width: min(560px, calc(100vw - 16px)); }
+.mn-panel .tbm-opt .tbm-txt { flex: 0 0 auto; overflow: visible; text-overflow: clip; }
 .mn-sep { height: 1px; margin: 4px 0; background: rgba(168,154,114,.35); }
 .mn-opt + .mn-sep + .mn-opt { border-top: none; }
 .mn-opt[aria-disabled="true"] { color: var(--khaki-light); cursor: not-allowed; opacity: .7; }
 .mn-opt[aria-disabled="true"]:hover { background: none; color: var(--khaki-light); }
 .tbm-opt.mn-danger, .tbm-opt.mn-danger:hover, .tbm-opt.mn-danger:focus-visible { color: var(--mp-warn); }
-.tbm-panel.mn-list { max-width: min(520px, calc(100vw - 16px)); }
+.tbm-panel.mn-list { max-width: min(560px, calc(100vw - 16px)); }
 .mn-list .tbm-opt .cr-tag { flex: none; }
 .dsp-sub { font-family: var(--f-ui); font-weight: 500; font-size: 10px; letter-spacing: 1.8px; text-transform: uppercase; color: var(--khaki); padding: 10px 18px 4px; }
 .dsp-sub:not(:first-of-type) { border-top: 1px solid rgba(168,154,114,.25); margin-top: 4px; }
@@ -1880,7 +1884,7 @@ __CSS__
     <span class="tb-brand-sub" data-i18n="tb.subtitle">░ CARTES DE BORD</span>
   </div>
   <div class="tb-sep"></div>
-  <button type="button" class="tb-btn" id="btn-display" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.display.tip" title="Jour ou nuit, unités" data-i18n-aria-label="tb.display.tip" aria-label="Jour ou nuit, unités">
+  <button type="button" class="tb-btn" id="btn-display" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.display.tip" title="Version de la datacard et unités" data-i18n-aria-label="tb.display.tip" aria-label="Version de la datacard et unités">
     <svg class="dsp-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/></svg>
     <span data-i18n="tb.display">Affichage</span>
     <svg class="dsp-chev" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg>
@@ -1890,7 +1894,7 @@ __CSS__
   <span class="tb-label" data-i18n="tb.theatre">Théâtre</span>
   <select class="tb-sel" id="theatre" data-i18n-aria-label="tb.theatre" aria-label="Théâtre"></select>
   <div class="tb-sep"></div>
-  <button type="button" class="tb-btn" id="btn-json-import" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.json.import.tip" title="Ouvrir une datacard (JSON)" data-i18n-aria-label="tb.json.import.tip" aria-label="Ouvrir une datacard (JSON)">
+  <button type="button" class="tb-btn" id="btn-json-import" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.json.import.tip" title="Ouvrir une datacard ou importer" data-i18n-aria-label="tb.json.import.tip" aria-label="Ouvrir une datacard ou importer">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v1H3z"/><path d="M3 10h19l-2 8a2 2 0 0 1-2 1.5H5a2 2 0 0 1-2-2z"/></svg>
     <span class="tb-btn-label" data-i18n="tb.json.import">Ouvrir</span>
     <svg class="dsp-chev" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg>
@@ -2123,11 +2127,11 @@ const I18N = {
     'tb.mode.day': 'Jour',
     'tb.mode.night': 'Nuit',
     'tb.display': 'Affichage',
-    'tb.display.tip': 'Jour ou nuit, unités',
+    'tb.display.tip': 'Version de la datacard et unités',
     'dsp.g.card': 'Datacard',
     'app.short': 'D·G',
     'tb.json.import': 'Ouvrir',
-    'tb.json.import.tip': 'Ouvrir une datacard (JSON)',
+    'tb.json.import.tip': 'Ouvrir une datacard ou importer',
     'op.card': 'Ouvrir une datacard…',
     'op.card.h': '.json',
     'op.import': 'Importer…',
@@ -2612,11 +2616,11 @@ const I18N = {
     'tb.mode.day': 'Day',
     'tb.mode.night': 'Night',
     'tb.display': 'Display',
-    'tb.display.tip': 'Day or night, units',
+    'tb.display.tip': 'Datacard version and units',
     'dsp.g.card': 'Datacard',
     'app.short': 'D·G',
     'tb.json.import': 'Open',
-    'tb.json.import.tip': 'Open a datacard (JSON)',
+    'tb.json.import.tip': 'Open a datacard or import',
     'op.card': 'Open a datacard…',
     'op.card.h': '.json',
     'op.import': 'Import…',
@@ -6490,16 +6494,18 @@ function updatePackTitle() { renderPack(); }
 /* La ligne de sélection : « NOM ▾ » (avec la pastille de la carte), « + » (nouvelle datacard), « … » (les autres gestes), puis « résumé — n / N » ;
    la liste qui s'ouvre groupe les cartes liées, puis les cartes libres */
 function renderPack() {
+  const ae = document.activeElement, keepId = ae && ae.closest && ae.closest('#pack-bar') ? ae.id : '';      /* le focus reste sur le bouton qui a ouvert le menu */
   mnClose(false);
   const c = curCard(), n = doc.cards.length, tag = dgCardTag(c), label = dgCardLabels()[curIdx];
   document.getElementById('pack-bar').innerHTML =
     '<div class="pk-pick">' +
-    '<button type="button" class="pk-trig" id="pk-pick" aria-haspopup="listbox" aria-expanded="false" aria-label="' + esc(packTitle()) + '"><span class="pk-name">' + esc(label) + '</span>' +
+    '<button type="button" class="pk-trig" id="pk-pick" aria-haspopup="listbox" aria-expanded="false" aria-label="' + esc(label + ', ' + t(tag[1]) + ' — ' + packTitle()) + '"><span class="pk-name">' + esc(label) + '</span>' +
     '<span class="cr-tag ' + tag[0] + '">' + esc(t(tag[1])) + '</span></button>' +
     '<button type="button" class="pk-sq" id="pk-new" data-pack="newlinked" title="' + esc(t('pack.newlinked')) + '" aria-label="' + esc(t('pack.newlinked')) + '">+</button>' +
     '<button type="button" class="pk-sq" id="pk-more" aria-haspopup="menu" aria-expanded="false" title="' + esc(t('pack.more')) + '" aria-label="' + esc(t('pack.more')) + '">…</button>' +
     '</div>' +
     '<p class="ui-note pk-sum" id="pk-sum">' + esc(cardSummary(c) + ' — ' + (curIdx + 1) + ' / ' + n) + '</p>';
+  if (keepId) { const f = document.getElementById(keepId); if (f) f.focus({ preventScroll: true }); }
 }
 
 function updateModeSeg() { dgDispSync(); }
@@ -7848,12 +7854,13 @@ function dgOpenMenu(btn) {
 /* ----- La ligne de sélection des cartes : « NOM ▾ », « + », « … » ----- */
 /* Le nom de chaque carte tel qu'on le lit : deux cartes de même nom s'affichent « CAESAR » puis « CAESAR · 2 » (l'affichage seul : la carte garde son nom) */
 function dgCardLabels() {
-  const seen = {}, used = {};
-  return doc.cards.map((x, i) => {
-    const n = dgCardName(x, i);
-    seen[n] = (seen[n] || 0) + 1;
-    let k = seen[n], out = k > 1 ? n + ' · ' + k : n;
-    while (k > 1 && used[out]) { k++; out = n + ' · ' + k; }
+  /* le premier de chaque nom garde son nom ; les suivants prennent le premier suffixe « · k » libre, quel que soit leur rang (noms enregistrés inchangés) */
+  const names = doc.cards.map((x, i) => dgCardName(x, i)), used = {}, first = [];
+  names.forEach((n, i) => { if (!used[n]) { used[n] = true; first[i] = true; } });
+  return names.map((n, i) => {
+    if (first[i]) return n;
+    let k = 2, out = n + ' · ' + k;
+    while (used[out]) { k++; out = n + ' · ' + k; }
     used[out] = true;
     return out;
   });

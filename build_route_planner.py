@@ -67,9 +67,11 @@ CONTRAST_CSS = r"""
 :where(body[data-theme="modern-east"]) .pt-del { color: #7d846c; }
 :where(body[data-theme="modern-east"]) .ui-modal .rt-note { color: #888e78; }
 :where(body[data-theme="modern-east"]) .fn-ext { color: #888e78; }
-/* lignes d'action des menus « Ouvrir » et « … » et listes (lot mp-ui-disposition) : le texte gris-vert du reste de la palette tombe sous 4,5 : 1 dans ces deux thèmes */
-:where(body[data-theme="cw-soviet"]) .mn-opt:not(:hover):not(:focus-visible):not([aria-selected="true"]):not([aria-disabled="true"]):not(.mn-danger) { color: #879279; }
-:where(body[data-theme="modern-east"]) .mn-opt:not(:hover):not(:focus-visible):not([aria-selected="true"]):not([aria-disabled="true"]):not(.mn-danger) { color: #888e78; }
+/* lignes des menus de la barre (lot mp-ui-disposition) : le texte neutre des lignes « .dsp-opt » (Affichage, Ouvrir, Enregistrer, « … », listes) atteint 4,5 : 1 dans les quatre thèmes ; les thèmes cw-nato et modern-nato le tenaient déjà */
+:where(body[data-theme="cw-soviet"]) .dsp-opt:not([aria-checked="true"]):not(:hover):not(:focus-visible):not([aria-selected="true"]):not([aria-disabled="true"]):not(.mn-danger) { color: #879279; }
+:where(body[data-theme="modern-east"]) .dsp-opt:not([aria-checked="true"]):not(:hover):not(:focus-visible):not([aria-selected="true"]):not([aria-disabled="true"]):not(.mn-danger) { color: #888e78; }
+:where(body[data-theme="cw-soviet"]) .dsp-n { color: #879279; }
+:where(body[data-theme="modern-east"]) .dsp-n { color: #888e78; }
 /* MP-20 end */
 """
 
@@ -943,19 +945,23 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .dsp-opt[role="menuitemradio"] .dsp-box { border-radius: 50%; }
 .dsp-opt[aria-disabled="true"] .dsp-box { border-style: dashed; border-color: var(--khaki); background: none; }
 .dsp-opt[aria-disabled="true"] .dsp-box::after { display: none; }
-.dsp-n { margin-left: auto; padding-left: 14px; font-family: var(--f-mono); font-weight: 400; font-size: 11px; letter-spacing: 0; text-transform: none; color: var(--khaki); }
+.dsp-n { margin-left: auto; padding-left: 14px; font-family: var(--f-mono); font-weight: 400; font-size: 11px; letter-spacing: 0; text-transform: none; color: var(--khaki-light); }
 
 /* ---------- le menu Affichage : le fond et les unités en tête (lot mp-ui-disposition), les menus « Ouvrir » et « … » ---------- */
 .dsp-panel { min-width: 260px; }
 .dsp-base.dsp-routes { padding-top: 6px; border-top: none; }
-.dsp-base .dsp-seg { flex-wrap: wrap; }
+.dsp-base .dsp-seg { flex-wrap: wrap; padding-right: 1px; box-sizing: border-box; }
 .dsp-seg .tb-btn { min-height: 44px; }
+.dsp-seg .tb-btn:last-child { margin-right: 0; }
 .dsp-base .dsp-seg .tb-btn { margin: 0 -1px -1px 0; border-left: 1px solid var(--khaki); }
 .dsp-seg .tb-btn[aria-disabled="true"] { opacity: .45; cursor: not-allowed; }
 .dsp-urow { display: flex; align-items: center; gap: 10px; padding: 4px 18px 6px; }
 .dsp-urow .ui-lbl { flex: 0 0 74px; margin: 0; }
 .dsp-urow .dsp-seg { flex: 1 1 auto; width: auto; }
-.mn-hint { margin-left: auto; padding-left: 14px; flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mn-hint { margin-left: auto; padding-left: 14px; flex: 0 1 auto; min-width: 0; text-align: right; }
+/* rien de coupé : le menu s'élargit à son contenu, dans la largeur de la vue ; au-delà, l'indice passe à la ligne */
+.tbm-panel.mn-panel { max-width: min(560px, calc(100vw - 16px)); }
+.mn-panel .tbm-opt .tbm-txt { flex: 0 0 auto; overflow: visible; text-overflow: clip; }
 .mn-sep { height: 1px; margin: 4px 0; background: rgba(168,154,114,.35); }
 .mn-opt + .mn-sep + .mn-opt { border-top: none; }
 .mn-opt[aria-disabled="true"] { color: var(--khaki-light); cursor: not-allowed; opacity: .7; }
@@ -1323,7 +1329,7 @@ __CSS__
     <span class="tb-brand-sub" data-i18n="tb.subtitle">░ NAVIGATION</span>
   </div>
   <span class="tb-sep"></span>
-  <button type="button" class="tb-btn" id="btn-display" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.display.tip" title="Ce qui s'affiche sur la carte">
+  <button type="button" class="tb-btn" id="btn-display" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.display.tip" title="Fond, unités et ce que montre la carte">
     <svg class="dsp-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/></svg>
     <span data-i18n="tb.display">Affichage</span>
     <svg class="dsp-chev" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg>
@@ -2246,7 +2252,7 @@ const I18N = {
     'layer.dcsOff': 'Carte DCS — absente de ce théâtre',
     'layer.flappie': 'Carte de navigation (Flappie)',
     'tb.display': 'Affichage',
-    'tb.display.tip': 'Ce qui s\'affiche sur la carte',
+    'tb.display.tip': 'Fond, unités et ce que montre la carte',
     'dsp.head': 'Afficher sur la carte',
     'tb.units': 'Unités',
     'un.g.dist': 'Distance',
@@ -2556,7 +2562,7 @@ const I18N = {
     'toast.rtOther': '⚠ Ce fichier est celui de {theatre}\u202f: choisissez {t}.lua.',
     'toast.rtTaken': 'Nom déjà pris\u202f: route enregistrée sous « {name} ».',
     'toast.rtReady': '{t}.lua prêt\u202f: copiez-le dans Saved Games\\DCS\\Config\\RouteToolPresets (il remplace l\'ancien).',
-    'toast.standalone': 'Route enregistrée : ouvrez le Datacard Generator, puis Importer → Route en cours.',
+    'toast.standalone': 'Route enregistrée : ouvrez le Datacard Generator, puis Ouvrir ▾ › Importer… → Route en cours.',
     'toast.max': '⚠ 30 points au plus.',
     'toast.maxRefs': '⚠ 12 points de référence au plus.',
     'toast.refsDropped': '{n} points de référence écartés (12 au plus)',
@@ -2774,7 +2780,7 @@ const I18N = {
     'layer.dcsOff': 'DCS map — not available for this theatre',
     'layer.flappie': 'Navigation chart (Flappie)',
     'tb.display': 'Display',
-    'tb.display.tip': 'What the map shows',
+    'tb.display.tip': 'Base map, units and what the map shows',
     'dsp.head': 'Show on the map',
     'tb.units': 'Units',
     'un.g.dist': 'Distance',
@@ -3084,7 +3090,7 @@ const I18N = {
     'toast.rtOther': '⚠ This file belongs to {theatre}: choose {t}.lua.',
     'toast.rtTaken': 'Name already taken: route saved as “{name}”.',
     'toast.rtReady': '{t}.lua ready: copy it into Saved Games\\DCS\\Config\\RouteToolPresets (it replaces the old one).',
-    'toast.standalone': 'Route saved: open the Datacard Generator, then Import → Current route.',
+    'toast.standalone': 'Route saved: open the Datacard Generator, then Open ▾ › Import… → Current route.',
     'toast.max': '⚠ 30 waypoints at most.',
     'toast.maxRefs': '⚠ 12 reference points at most.',
     'toast.refsDropped': '{n} reference points dropped (12 at most)',
@@ -10304,6 +10310,7 @@ function unChoose(k) {
 /* Le fond : même effet que l'ancien sélecteur de la barre ; choisir à nouveau le fond retente */
 function dspSetBase(id) {
   if (LAYER_IDS.indexOf(id) === -1) return;
+  if (S.ui.layer === id) return;                 /* le fond déjà actif : rien à faire */
   S.ui.layer = id;
   persistState();
   setBase();
