@@ -838,7 +838,7 @@ select[data-tbm-src] {{ display: none !important; }}
           var back = doc.createElement('button');
           back.className = 'mp-back-injected';
           back.textContent = t('back');
-          back.style.cssText = 'font-family:"Roboto Mono",monospace;font-weight:400;font-size:11px;cursor:pointer;--mp-amber-txt:#d9a54a;color:var(--mp-amber-txt);'
+          back.style.cssText = 'font-family:"Roboto Mono",monospace;font-weight:400;font-size:11px;cursor:pointer;color:#d9a54a;'
             + 'background:transparent;border:1px solid #c0892a;border-radius:3px;padding:4px 10px;'
             + 'margin-right:12px;letter-spacing:.03em;min-height:44px;box-sizing:border-box;flex-shrink:0;';
           back.addEventListener('click', goHub);

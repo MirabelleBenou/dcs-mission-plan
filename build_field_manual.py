@@ -1347,6 +1347,8 @@ body {{
   z-index: 2;
 }}
 .cover-suite {{
+  font-weight: 500;   /* Oswald 500, la face que le navigateur dessinait déjà pour 400 */
+  font-weight: 500;   /* Oswald 500, la face que le navigateur dessinait déjà pour 400 */
   font-family: var(--f-ui);
   font-size: 12px;
   letter-spacing: 3px;
@@ -1524,6 +1526,8 @@ body {{
   margin-bottom: 3px;
 }}
 .fm-plaque-desc {{
+  font-weight: 500;   /* idem */
+  font-weight: 500;   /* idem */
   font-family: var(--f-ui);
   font-size: 11px;
   letter-spacing: 1px;

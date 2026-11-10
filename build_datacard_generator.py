@@ -1113,6 +1113,10 @@ select[data-tbm-src] { display: none !important; }
 .ed-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .ed-field-row.three { grid-template-columns: 1fr 1fr 1fr; }
 .ed-navset { margin-bottom: 6px; }
+/* le Cap : les deux boutons côte à côte dans leur colonne, sans déborder (le segmenté commun ne change pas ailleurs) */
+.ed-navset .ui-seg { flex-wrap: nowrap; }
+.ed-navset .ui-seg-btn { flex: 1 1 auto; min-width: 0; padding: 0 6px; }
+.ed-navset .ui-seg-btn:last-child { margin-right: 0; }
 #ed-sections .ui-bandeau { margin: 6px 0 8px; }
 .ed-coord { font-family: var(--f-typewriter); font-size: 11px; line-height: 1.35; overflow-wrap: anywhere; }
 .ed-coord:empty { display: none; }
@@ -1221,6 +1225,8 @@ select[data-tbm-src] { display: none !important; }
   padding: 20px 20px 60px 20px;
   min-width: 0;
 }
+/* la zone défilante prend le focus au clavier (le navigateur la rend focalisable) : le contour commun */
+.preview-wrap:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
 .preview-wrap::-webkit-scrollbar { width: 12px; height: 12px; }
 .preview-wrap::-webkit-scrollbar-track { background: var(--olive-deep); }
 .preview-wrap::-webkit-scrollbar-thumb { background: var(--khaki); border: 2px solid var(--olive-deep); }

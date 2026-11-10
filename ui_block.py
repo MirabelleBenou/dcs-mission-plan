@@ -42,8 +42,10 @@ _CSS = r"""
   color: var(--paper); font-family: inherit; font-size: 22px; line-height: 1;
 }
 .ui-close:hover, .ui-close:focus-visible { color: var(--amber); }
+/* la fenêtre coupe ce qui déborde : le contour reste à l'intérieur de la croix */
 .ui-close:focus-visible { outline-offset: -4px; }
-button.imp-link:focus-visible { outline-color: var(--amber); }   /* le lien de la fenêtre d'import : même couleur de contour que le reste */   /* la fenêtre coupe ce qui déborde : le contour reste à l'intérieur de la croix */
+/* le lien de la fenêtre d'import : même couleur de contour que le reste */
+button.imp-link:focus-visible { outline-color: var(--amber); }
 .ui-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 14px; }
 .ui-btn {
   box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 0 16px;
@@ -134,6 +136,8 @@ html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-
 :where(body[data-theme="cw-nato"]) .ui-lbl { color: #c49037; }
 :where(body[data-theme="cw-nato"]) .toast-action { color: #c49037; }
 :where(body[data-theme="cw-nato"]) .toolbar .tb-select:not(:hover):not(:focus-visible) { color: #c49037; }   /* le libellé de la liste de thème, hors de la suite (au repos ; le survol garde sa couleur) */
+/* au focus clavier, le libellé de la liste de thème (fond de survol) prend une couleur qui tient 4,5 : 1 dans les quatre thèmes */
+.toolbar .tb-select:focus-visible, .toolbar .tb-sel:focus-visible { color: var(--paper-light); }
 /* le bouton « Remise à zéro » du HQ et du BG : une seule couleur par thème (la plus claire des deux anciennes), la même dans les deux outils ; :not(:hover) pour que le survol garde la sienne */
 :where(body[data-theme="cw-nato"]) .wing-action-reset:not(:hover) { color: #c17064; }
 :where(body[data-theme="cw-soviet"]) .wing-action-reset:not(:hover) { color: #b27171; }

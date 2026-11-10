@@ -86,6 +86,12 @@ CONTRAST_CSS = r"""
 :where(body[data-theme="modern-east"]) .amorce-marker { color: #888e78; }
 :where(body[data-theme="modern-east"]) .shape-color-group button { color: #888e78; }
 :where(body[data-theme="modern-east"]) .inset-color-group button { color: #888e78; }
+:where(body[data-theme="cw-nato"]) .preview-placeholder { color: #897e60; }
+:where(body[data-theme="cw-soviet"]) .drop-zone { color: #7e8b70; }
+:where(body[data-theme="cw-soviet"]) .preview-placeholder { color: #77826f; }
+:where(body[data-theme="modern-nato"]) .preview-placeholder { color: #73808d; }
+:where(body[data-theme="modern-east"]) .drop-zone { color: #828971; }
+:where(body[data-theme="modern-east"]) .preview-placeholder { color: #7b816e; }
 /* MP-20 end */
 """
 
@@ -2345,14 +2351,13 @@ select[data-tbm-src] {{ display: none !important; }}
   font-size: 13px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  opacity: .5;
   user-select: none;
   pointer-events: none;
 }}
 .preview-placeholder svg {{
   width: 64px; height: 64px;
   margin-bottom: 12px;
-  opacity: .3;
+  opacity: .15;   /* l'atténuation porte sur le dessin, pas sur le texte (lisible, 4,5 : 1) */
 }}
 
 /* ======== FENÊTRE « NOM DU FICHIER » ======== */
