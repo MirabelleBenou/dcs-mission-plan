@@ -105,6 +105,7 @@ Changes merged since the last release, grouped per tool.
 - A datacard's navigation is now a Route Planner route, edited from both sides: a waypoint entered (coordinates, or course and distance), moved or removed in one tool changes in the other; time and note stay with the datacard, attached to each waypoint. A card without a route gets one at its first position. Course settings (true or magnetic, variation, year) are shared with the Route Planner. Reference points are the Route Planner's, shared by the whole mission; each datacard chooses which ones it shows.
 - Export in one window: format, pages and file name together. Rarely used sections (meta, airfields, fuel, threats) start folded.
 - True or magnetic heading is now two buttons, as in the Route Planner.
+- A lighter top bar: Day | Night and the units move into **Display ▾**, and **Open ▾** opens a datacard or imports. Datacards are chosen on one line — the card's name with its tag, “+” for a new datacard, “…” for a free card, attach, import groups, duplicate and delete; the list groups linked and free cards, and two cards of the same name read “CAESAR” and “CAESAR · 2”.
 #### Removed
 - The Datacard Generator's own HQ and flight package imports, replaced by the common import window of the Flight Configurator and the Route Planner.
 #### Fixed
@@ -131,6 +132,7 @@ Changes merged since the last release, grouped per tool.
 - Each route keeps its theatre: switching theatre hides the routes of the other theatres (kept, back when you return), and the Flight Configurator only offers the routes of the shared theatre.
 - A saved route set keeps every route's theatre, across all theatres; opening it puts each route back on its own theatre and replaces the whole set.
 - Routes can be edited from the Datacard Generator; each waypoint keeps a stable identifier; course settings are shared with the Datacard Generator.
+- A lighter top bar: the base map and the units move into **Display ▾**, above what the map shows (that menu's former “Base map” group is now “Overlays”); **Open ▾** opens a route or imports routes, and the Import button leaves the panel. Routes are chosen on one line — the route's name, “+” for a new route, “…” to duplicate or delete — and the next steps (to the datacard, to the briefing, flight package, save, Route Tool) now follow the points instead of closing the Navigation section.
 #### Fixed
 - Computed magnetic variation now follows DCS for every mission date: years up to 1985 use the IGRF model DCS ships (up to 1.2° closer), later years the previous five-year WMM file, as DCS does (0.2° closer in 1990, 1995 … 2025).
 
@@ -147,6 +149,7 @@ Changes merged since the last release, grouped per tool.
 - The Datacard Generator chapter: the airfield list.
 - The Flight Configurator, Datacard Generator and Route Planner chapters: shared theatre and units.
 - The Datacard Generator and Route Planner chapters: navigation shared with the route, shared course settings.
+- The Route Planner and Datacard Generator pages follow their new Display and Open menus and their one-line route and datacard selection.
 
 ---
 
