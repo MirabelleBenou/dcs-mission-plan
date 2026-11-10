@@ -9389,7 +9389,7 @@ function readImportFile(file, done) {
   reader.readAsArrayBuffer(file);
 }
 
-/* Un jeu de routes (dcs-route-set-v1) lu d'un fichier → { routes, route } : routes, celles qui portent au moins un point, dans l'ordre, chacune lue comme « Route en cours »
+/* Un jeu de routes (dcs-route-set-v1) lu d'un fichier → { routes, route } : routes, celles qui portent au moins un point, dans l'ordre, chacune lue comme une route du Route Planner
    avec les réglages que porte le fichier ; route, la route active (à défaut la première qui a des points) ; null s'il n'y a pas de liste de routes */
 function biSetFromFile(o) {
   if (!Array.isArray(o.routes)) return null;
@@ -9449,7 +9449,7 @@ function biAddCards(cards) {
   else { const first = doc.cards.length; doc.cards = doc.cards.concat(cards); curIdx = first; }
 }
 
-/* Les routes du Route Planner qui portent au moins un point : [{ route (lue comme « Route en cours », avec les réglages partagés), flight }],
+/* Les routes du Route Planner qui portent au moins un point : [{ route (lue comme une route du Route Planner, avec les réglages partagés), flight }],
    dans l'ordre des routes ; la route active est celle de route_state_v1 (qui fait foi pour elle, comme au Route Planner) */
 function biReadRouteSet() {
   const st = readJsonKey(KEY_ROUTE), set = readJsonKey(KEY_ROUTESET), C = dgCommonTheatre();

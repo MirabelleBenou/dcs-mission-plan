@@ -2591,10 +2591,12 @@ body[data-format="full"] [data-fmt="simple"] { display: none !important; }
 .tb-lang-btn svg { display: block; }
 .tb-brand-sub { font-weight: 500; }
 .tb-version { font-family: 'Roboto Mono', monospace; }
-@media (max-width: 1391px) { .tb-brand-main, .tb-brand-sub, .tb-brand + .tb-sep, .tb-version { display: none; } .tb-brand-short { display: inline; } }
-@media (max-width: 1983px) { .tb-classif { display: none; } }
-/* Les boutons portent leur texte au-dessus de 1720 px ; en dessous, l'icône seule (seuil mesuré : avec le tampon d'escadre, la barre défilerait sinon) */
-@media (max-width: 1719px) { .tb-btn .tb-btn-label { display: none; } .tb-btn { padding: 0 10px; } }
+@media (max-width: 1080px) { .tb-brand-main, .tb-brand-sub, .tb-brand + .tb-sep, .tb-version { display: none; } .tb-brand-short { display: inline; } }
+@media (max-width: 1691px) { .tb-classif { display: none; } }
+/* Seuils de la barre, mesurés dans le shell avec un tampon d'escadre « TEST WING », en français et en anglais, en paysage et en portrait (lot mp-ui-disposition-b : le format est passé dans « Affichage ») : la barre tient sans défiler dès 590 px, sauf de 760 à 823 px où le tampon
+   du shell s'ajoute ; chaque seuil est la plus petite largeur où la barre tient sans défiler avec ce qui précède (le français, plus large, donne le seuil) : le titre, le sous-titre et la version dès 1081 px,
+   les textes des boutons dès 1428 px, le tampon de décor dès 1692 px ; en dessous, le sigle et l'icône seuls */
+@media (max-width: 1427px) { .tb-btn .tb-btn-label { display: none; } .tb-btn { padding: 0 10px; } }
 
 /* ============ RESPONSIVE — TABLET / MOBILE ============ */
 @media (max-width: 1100px) {

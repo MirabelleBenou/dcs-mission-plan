@@ -1241,9 +1241,9 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 
 
 /* ---------- Barre du haut commune aux sept modules (lot mp-imports-suite) ----------
-   La marque du Flight Configurator : le titre et son sous-titre à l'accent du module dès 1179 px, le sigle seul en dessous (à toutes les largeurs) ;
-   la version avec le titre ; le tampon de décor dès 1649 px. Seuils mesurés dans le shell avec un tampon d'escadre « TEST WING », en français et en anglais,
-   en paysage et en portrait (lot mp-ui-disposition : la base et les unités sont passées dans « Affichage », « Ouvrir » ouvre une route ou importe, la barre ne défile plus dès 971 px ;
+   La marque du Flight Configurator : le titre et son sous-titre à l'accent du module dès 1246 px, le sigle seul en dessous (à toutes les largeurs) ;
+   la version avec le titre ; le tampon de décor dès 1790 px. Seuils mesurés dans le shell avec un tampon d'escadre « TEST WING », en français et en anglais,
+   en paysage et en portrait (lot mp-ui-disposition : la base et les unités sont passées dans « Affichage », « Ouvrir » ouvre une route ou importe ; lot mp-ui-disposition-b : « Exporter ▾ » est dans la barre, qui ne défile plus dès 1038 px ;
    chaque seuil est la plus petite largeur à partir de laquelle la barre tient avec ce qui précède : le français, plus large, donne le seuil). */
 .tb-brand-main, .tb-brand-short { color: #7ac97a; }
 .tb-brand-short { display: none; font-family: var(--f-stencil); font-size: 16px; font-weight: 700; letter-spacing: 3px; white-space: nowrap; }
@@ -1251,11 +1251,11 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .tb-lang-btn svg { display: block; }
 .tb-brand-sub { font-weight: 500; }
 .tb-version { font-family: 'Roboto Mono', monospace; }
-@media (max-width: 1178px) { .tb-brand-main, .tb-brand-sub, .tb-brand + .tb-sep, .tb-version { display: none; } .tb-brand-short { display: inline; } }
-@media (max-width: 1648px) { .tb-classif { display: none; } }
+@media (max-width: 1245px) { .tb-brand-main, .tb-brand-sub, .tb-brand + .tb-sep, .tb-version { display: none; } .tb-brand-short { display: inline; } }
+@media (max-width: 1789px) { .tb-classif { display: none; } }
 
-/* ---------- étiquettes des boutons de fichier : à partir de 1434 px (seuil mesuré dans le shell avec le tampon d'escadre « TEST WING » : plus petite largeur où la barre tient avec les textes, la marque et la version ; en dessous, elle défilerait) ---------- */
-@media (min-width: 1434px) {
+/* ---------- étiquettes des boutons de fichier : à partir de 1575 px (seuil mesuré dans le shell avec le tampon d'escadre « TEST WING » : plus petite largeur où la barre tient avec les textes, la marque et la version ; en dessous, elle défilerait) ---------- */
+@media (min-width: 1575px) {
   .tb-btn .tb-btn-label.solo { display: inline; }
 }
 
