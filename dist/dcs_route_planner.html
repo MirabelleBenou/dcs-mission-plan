@@ -1965,8 +1965,8 @@ SOFTWARE.
   </section>
   <div class="rp-split" id="rp-split" role="separator" aria-orientation="horizontal" tabindex="0" data-i18n-title="sp.title" data-i18n-aria-label="sp.title" title="Glissez pour agrandir ou réduire la carte ; touchez deux fois pour revenir à la taille d'origine" aria-label="Glissez pour agrandir ou réduire la carte ; touchez deux fois pour revenir à la taille d'origine"><div class="grip"></div></div>
   <aside class="panel" id="panel">
-    <div class="ed-section" data-section="route">
-      <div class="ed-head"><span class="ed-title" data-i18n="sec.route">Route</span><small id="pt-count"></small></div>
+    <div class="ed-section" data-section="route" data-open="true">
+      <button type="button" class="ed-head ui-fold-head" aria-expanded="true"><span class="ed-title" data-i18n="sec.route">Route</span><small id="pt-count"></small></button>
       <div class="ed-body">
         <div class="rs-set">
           <div class="rs-head"><label class="lbl" for="route-list" data-i18n="rs.list">Routes</label><small id="rs-count"></small></div>
@@ -8789,11 +8789,15 @@ function syncDecl() {
 }
 
 /* ============= REPLI DES SECTIONS (rp_folds_v1) =============
-   { section: true (ouverte) | false (repliée) } ; Points de référence, Calques et Navigation se replient, repliés d'abord ; Route ne se replie pas.
+   { section: true (ouverte) | false (repliée) } ; Route (ouverte d'abord), Points de référence, Calques et Navigation se replient (les trois derniers repliés d'abord).
    L'en-tête est un bouton (toute sa largeur) ; replié, une ligne de résumé. */
 const RP_FOLDS = 'rp_folds_v1';
 function rpFoldSecs() { return Array.prototype.slice.call(document.querySelectorAll('#panel > .ed-section[data-open]')); }
 function rpSectionSum(id) {
+  if (id === 'route') {
+    const nm = S.name !== '' ? S.name : (S.points.length ? t('rs.unnamed') : '');
+    return uiJoin([nm, S.points.length ? t(S.points.length === 1 ? 'sum.refs.1' : 'sum.refs.n', { n: S.points.length }) : '']);
+  }
   if (id === 'refs') return S.refs.length ? t(S.refs.length === 1 ? 'sum.refs.1' : 'sum.refs.n', { n: S.refs.length }) : '';
   if (id === 'layers') return CF_LAYERS.length ? t(CF_LAYERS.length === 1 ? 'layers.count.1' : 'layers.count.n', { n: CF_LAYERS.length }) : '';
   if (id === 'nav') return !S.points.length ? '' : uiJoin([navTitle().replace(/^[^—]*—\s*/, ''), S.points.length > 1 ? fmtDist(timing().km) : '']);
@@ -8807,7 +8811,7 @@ function rpFoldRefresh() {
   });
 }
 function rpFoldInit() {
-  rpFoldSecs().forEach(d => { d.dataset.open = String(uiFoldOpen(RP_FOLDS, d.dataset.section, false)); });
+  rpFoldSecs().forEach(d => { d.dataset.open = String(uiFoldOpen(RP_FOLDS, d.dataset.section, d.dataset.section === 'route')); });
   rpFoldRefresh();
   document.getElementById('panel').addEventListener('click', e => {
     const h = e.target.closest('.ed-head.ui-fold-head');
