@@ -36,6 +36,7 @@ CONTRAST_CSS = r"""
 /* Contrastes (texte sous 18 px, 4,5 : 1 au moins) : couleur du texte seule, la palette commune ne bouge pas. */
 :where(body[data-theme="cw-nato"]) .tb-brand-short { color: #d5865c; }
 :where(body[data-theme="cw-nato"]) .tb-sel { color: #c49037; }
+:where(body[data-theme="cw-nato"]) #btn-open { color: #c49037; }
 :where(body[data-theme="cw-nato"]) .fc-bh { color: #dcbe8a; }
 :where(body[data-theme="cw-nato"]) .pk-x { color: #ab9e78; }
 :where(body[data-theme="cw-nato"]) .ed-field label { color: #c79641; }
@@ -85,6 +86,9 @@ CONTRAST_CSS = r"""
 :where(body[data-theme="modern-east"]) .cmp-tot { color: #7d846c; }
 :where(body[data-theme="cw-soviet"]) .rt-cm { color: #768367; }
 :where(body[data-theme="modern-east"]) .rt-cm { color: #7a8269; }
+/* lignes des menus de la barre (lot mp-ui-disposition-b) : le texte neutre des lignes « .dsp-opt » (Ouvrir) atteint 4,5 : 1 dans les quatre thèmes ; les thèmes cw-nato et modern-nato le tenaient déjà */
+:where(body[data-theme="cw-soviet"]) .dsp-opt:not([aria-checked="true"]):not(:hover):not(:focus-visible):not([aria-selected="true"]):not([aria-disabled="true"]) { color: #879279; }
+:where(body[data-theme="modern-east"]) .dsp-opt:not([aria-checked="true"]):not(:hover):not(:focus-visible):not([aria-selected="true"]):not([aria-disabled="true"]) { color: #888e78; }
 /* MP-20 end */
 """
 from magvar_block import build_block as build_magvar_block
@@ -424,11 +428,15 @@ I18N_FR = {
     'theme.modern-east': 'Bloc Est moderne',
 
     'tb.open': 'Ouvrir',
-    'tb.open.tip': 'Ouvrir un fichier de travail (JSON) : remplace le contenu du module',
-    'tb.save': 'Enregistrer',
-    'tb.save.tip': 'Enregistrer le travail en cours (JSON : le paquet et les réglages du module)',
-    'tb.import': 'Importer',
-    'tb.import.tip': 'Importer des groupes, des routes, des radios, des emports depuis la mission chargée dans HQ ou un paquet de vol',
+    'tb.open.tip': 'Ouvrir une configuration ou importer des groupes',
+    'tb.save': 'Sauvegarder',
+    'tb.save.tip': 'Sauvegarder le travail en cours (JSON : le paquet et les réglages du module)',
+    'op.file': 'Ouvrir une configuration…',
+    'op.file.h': '.json',
+    'op.file.tip': 'Ouvrir un fichier de travail (JSON) : remplace le contenu du module',
+    'op.import': 'Importer des groupes…',
+    'op.import.h': 'HQ, paquet',
+    'op.import.tip': 'Importer des groupes, des routes, des radios, des emports depuis la mission chargée dans HQ ou un paquet de vol',
     'tb.export': 'Exporter',
     'tb.export.tip': 'Exporter le paquet de vol pour le Mission Commander',
     'tb.clear': 'Effacer',
@@ -518,7 +526,7 @@ I18N_FR = {
     'route.noid': 'Ouvre le Route Planner une fois pour pouvoir choisir ces routes (il leur donne un identifiant).',
     'route.toast.one': 'Route « {0} » reprise du Route Planner pour {1}.',
     'toast.saveFail': '⚠ Enregistrement local impossible (espace plein)',
-    'toast.gsFull': '⚠ Stockage du navigateur plein : vos groupes ne sont pas enregistrés. Enregistrez un fichier de travail.',
+    'toast.gsFull': '⚠ Stockage du navigateur plein : vos groupes ne sont pas enregistrés. Sauvegardez un fichier de travail.',
     'route.toast.many': 'Routes reprises du Route Planner : {0}.',
 
     'u.title': 'Unité {0}',
@@ -668,12 +676,12 @@ I18N_FR = {
     'ui.verb.change': 'Changer',
     'ui.verb.remove': 'Retirer',
 
-    'save.done': 'Travail enregistré : {0}',
+    'save.done': 'Travail sauvegardé : {0}',
     'fn.label': 'Nom du fichier',
     'fn.cancel': 'Annuler',
     'fn.close': 'Fermer',
-    'fn.save.title': 'Enregistrer le travail',
-    'fn.save.go': 'Enregistrer',
+    'fn.save.title': 'Sauvegarder le travail',
+    'fn.save.go': 'Sauvegarder',
     'fn.export.title': 'Exporter le paquet',
     'fn.export.go': 'Exporter',
 
@@ -700,11 +708,15 @@ I18N_EN = {
     'theme.modern-east': 'Modern Eastern Bloc',
 
     'tb.open': 'Open',
-    'tb.open.tip': 'Open a working file (JSON): replaces the module content',
+    'tb.open.tip': 'Open a configuration or import groups',
     'tb.save': 'Save',
     'tb.save.tip': 'Save the work in progress (JSON: the package and the module settings)',
-    'tb.import': 'Import',
-    'tb.import.tip': 'Import groups, routes, radios, loadouts from the mission loaded in HQ or a flight package',
+    'op.file': 'Open a configuration…',
+    'op.file.h': '.json',
+    'op.file.tip': 'Open a working file (JSON): replaces the module content',
+    'op.import': 'Import groups…',
+    'op.import.h': 'HQ, package',
+    'op.import.tip': 'Import groups, routes, radios, loadouts from the mission loaded in HQ or a flight package',
     'tb.export': 'Export',
     'tb.export.tip': 'Export the flight package for the Mission Commander',
     'tb.clear': 'Clear',
@@ -1136,6 +1148,21 @@ select[data-tbm-src] { display: none !important; }
 .tbm-panel .tbm-group { margin-top: 2px; border-top: 1px solid rgba(168,154,114,.25); }
 .fc-lo-line:empty { display: none; }
 .tbm-panel.tbm-up { border-top: 1px solid var(--amber-dark); border-bottom: 3px solid var(--amber); transform-origin: bottom left; }
+
+/* ---------- le menu « Ouvrir » (lot mp-ui-disposition-b) : le bouton de la barre et son panneau, au style des listes de la barre (tbm-*) ---------- */
+#btn-open { position: relative; color: var(--amber); border-color: var(--amber-dark); padding-right: 12px; }
+#btn-open:hover, #btn-open:focus-visible, #btn-open.dsp-open { border-color: var(--amber); }
+#btn-open .dsp-chev { width: 10px; height: 6px; }
+#btn-open.dsp-open .dsp-chev { transform: rotate(180deg); }
+.dsp-panel { max-height: min(80vh, 600px); min-width: 260px; padding-bottom: 6px; }
+.mn-hint { margin-left: auto; padding-left: 14px; flex: 0 1 auto; min-width: 0; text-align: right; }
+/* rien de coupé : le menu s'élargit à son contenu, dans la largeur de la vue ; au-delà, l'indice passe à la ligne */
+.tbm-panel.mn-panel { max-width: min(560px, calc(100vw - 16px)); }
+.mn-panel .tbm-opt .tbm-txt { flex: 0 0 auto; overflow: visible; text-overflow: clip; }
+.mn-opt[aria-disabled="true"] { color: var(--khaki-light); cursor: not-allowed; opacity: .7; }
+.mn-opt[aria-disabled="true"]:hover { background: none; color: var(--khaki-light); }
+.dsp-opt { outline: none; color: var(--khaki-light); }
+.dsp-opt:focus-visible { background: var(--olive); color: var(--amber); }
 .tb-lang-btn {
   background: transparent;
   border: 1px solid var(--khaki);
@@ -1651,10 +1678,14 @@ BODY = r"""
 </div>
 """
 
+OPEN_BTN = '''  <button type="button" class="tb-btn" id="btn-open" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.open.tip" title="">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v1H3z"/><path d="M3 10h19l-2 8a2 2 0 0 1-2 1.5H5a2 2 0 0 1-2-2z"/></svg>
+    <span class="tb-btn-label" data-i18n="tb.open">.</span>
+    <svg class="dsp-chev" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg>
+  </button>'''.strip()
 BUTTONS = '\n  '.join([
-    _btn('open', 'open', '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v1H3z"/><path d="M3 10h19l-2 8a2 2 0 0 1-2 1.5H5a2 2 0 0 1-2-2z"/>'),
+    OPEN_BTN,
     _btn('save', 'save', '<path d="M5 3h11l4 4v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M8 3v5h7V3"/><rect x="7" y="13" width="10" height="8"/>'),
-    _btn('import', 'import', '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>'),
     _btn('export', 'export', '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>'),
     _btn('example', 'example', '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/>'),
     _btn('clear', 'clear', '<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>', ' danger'),
@@ -1663,6 +1694,128 @@ BODY = BODY.replace('@@BUTTONS@@', BUTTONS).replace('@@IMPORT_HTML@@\n', build_i
 
 # ---------- Listes au thème de l'interface (copie du composant de HQ) ----------
 JS_TBM = """
+/* ============= LE MENU « OUVRIR » (lot mp-ui-disposition-b) =============
+   Même composant et même aspect que les listes de la barre (tbm-panel dsp-panel, dsp-opt) et que les menus du Route Planner et du Datacard Generator :
+   un seul menu ouvert à la fois, avec les listes de la barre. Une ligne par geste, son indice à droite. */
+const MENU_TRIG = '.tbm-trigger, #btn-open';
+const MN = { cur: null, bound: false };
+
+function mnClose(refocus) {
+  const m = MN.cur;
+  if (!m) return;
+  MN.cur = null;
+  if (m.panel) m.panel.remove();
+  m.btn.classList.remove('dsp-open');
+  m.btn.setAttribute('aria-expanded', 'false');
+  if (refocus) m.btn.focus({ preventScroll: true });
+}
+
+function mnPlace(m) {
+  const r = m.btn.getBoundingClientRect(), p = m.panel;
+  const vw = document.documentElement.clientWidth, vh = window.innerHeight;
+  const top = r.bottom + 4;
+  m.x0 = r.left; m.y0 = r.top;
+  p.style.minWidth = Math.min(240, vw - 16) + 'px';
+  p.style.top = top + 'px';
+  p.style.maxHeight = Math.max(60, Math.min(0.8 * vh, 600, vh - top - 8)) + 'px';
+  const w = p.getBoundingClientRect().width;
+  let left = r.left;
+  if (left + w > vw - 8) left = vw - 8 - w;
+  if (left < 8) left = 8;
+  p.style.left = left + 'px';
+}
+
+/* o : { items, choose } : une ligne par geste ; le menu se ferme avant choose.
+   items : { k, label, hint?, title?, disabled? } */
+function mnOpen(btn, id, label, o) {
+  if (MN.cur) mnClose(false);
+  if (TBM.cur) tbmClose(false);
+  const ul = document.createElement('div');
+  ul.className = 'tbm-panel dsp-panel mn-panel';
+  ul.id = id;
+  ul.setAttribute('role', 'menu');
+  ul.setAttribute('aria-label', label);
+  ul.tabIndex = -1;
+  o.items.forEach(it => {
+    const row = document.createElement('div');
+    row.className = 'tbm-opt dsp-opt mn-opt';
+    row.setAttribute('role', 'menuitem');
+    row.tabIndex = -1;
+    row.setAttribute('data-k', it.k);
+    if (it.disabled) row.setAttribute('aria-disabled', 'true');
+    if (it.title) row.title = it.title;
+    const txt = document.createElement('span');
+    txt.className = 'tbm-txt';
+    txt.textContent = it.label;
+    row.appendChild(txt);
+    if (it.hint) { const h = document.createElement('span'); h.className = 'ui-note mn-hint'; h.textContent = it.hint; row.appendChild(h); }
+    ul.appendChild(row);
+  });
+  document.body.appendChild(ul);
+  const m = { btn: btn, panel: ul, x0: 0, y0: 0, rows: '.mn-opt:not([aria-disabled="true"])' };
+  MN.cur = m;
+  ul.addEventListener('click', e => {
+    const row = e.target.closest ? e.target.closest('.mn-opt') : null;
+    if (!row || row.getAttribute('aria-disabled') === 'true') return;
+    const k = row.getAttribute('data-k');
+    mnClose(false);
+    btn.focus({ preventScroll: true });      /* la fenêtre qui s'ouvre rend le focus au bouton du menu */
+    o.choose(k, btn);
+  });
+  ul.addEventListener('keydown', mnKey);
+  btn.classList.add('dsp-open');
+  btn.setAttribute('aria-expanded', 'true');
+  btn.setAttribute('aria-controls', id);
+  mnPlace(m);
+  ul.focus({ preventScroll: true });
+}
+
+function mnKey(e) {
+  const m = MN.cur;
+  if (!m) return;
+  const rows = Array.prototype.slice.call(m.panel.querySelectorAll(m.rows));
+  const cur = rows.indexOf(document.activeElement);
+  const go = k => { if (rows[k]) rows[k].focus({ preventScroll: true }); };
+  const k = e.key;
+  if (k === 'ArrowDown') { e.preventDefault(); go(cur < 0 ? 0 : Math.min(rows.length - 1, cur + 1)); }
+  else if (k === 'ArrowUp') { e.preventDefault(); go(cur < 0 ? rows.length - 1 : Math.max(0, cur - 1)); }
+  else if (k === 'Home') { e.preventDefault(); go(0); }
+  else if (k === 'End') { e.preventDefault(); go(rows.length - 1); }
+  else if ((k === 'Enter' || k === ' ') && cur >= 0) { e.preventDefault(); rows[cur].click(); }
+  else if (k === 'Escape') { e.preventDefault(); e.stopPropagation(); mnClose(true); }
+  else if (k === 'Tab') mnClose(true);
+}
+
+/* Un toucher ou un clic hors du menu et de son bouton le ferme, sans agir ailleurs (le clic qui suit est avalé) */
+function mnOutside(e) {
+  const m = MN.cur;
+  if (!m) return;
+  const t = e.target;
+  if (m.panel.contains(t) || m.btn.contains(t)) return;
+  const other = t && t.closest ? t.closest(MENU_TRIG) : null;
+  mnClose(false);
+  if (other) return;
+  tbmSwallowNext();
+}
+
+function mnBind() {
+  if (MN.bound) return;
+  MN.bound = true;
+  document.addEventListener('pointerdown', mnOutside, true);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && MN.cur) { e.preventDefault(); mnClose(true); } });
+  window.addEventListener('resize', () => mnClose(false));
+  window.addEventListener('blur', () => mnClose(false));
+  window.addEventListener('scroll', e => {
+    const m = MN.cur;
+    if (!m || (e.target && e.target.nodeType && m.panel.contains(e.target))) return;
+    const r = m.btn.getBoundingClientRect();
+    if (Math.abs(r.left - m.x0) > 0.5 || Math.abs(r.top - m.y0) > 0.5) mnClose(false);
+  }, true);
+  const opn = document.getElementById('btn-open');
+  opn.addEventListener('click', () => { if (MN.cur && MN.cur.btn === opn) mnClose(false); else fcOpenMenu(opn); });
+  opn.addEventListener('keydown', e => { if (e.key === 'ArrowDown' && !MN.cur) { e.preventDefault(); fcOpenMenu(opn); } });
+}
+
 /* ============= LISTES DE LA BARRE — thème de l'interface (lot mp-ui-listes) =============
    Le <select> reste dans la page (id, options, écouteurs) : il garde la valeur, mais il est masqué.
    Un <button> de mêmes classes prend sa place et porte le libellé de l'option choisie ; la liste ouverte
@@ -1790,6 +1943,7 @@ function tbmSync(m) {
 
 function tbmOpen(m) {
   if (TBM.cur) tbmClose(false);
+  mnClose(false);
   if (m.sel.disabled) return;
   tbmSync(m);
   const sel = m.sel, opts = sel.options, name = m.labelFn();
@@ -1998,9 +2152,14 @@ function tbmOutside(e) {
   if (!m) return;
   const t = e.target;
   if (m.panel.contains(t) || m.btn.contains(t)) return;
-  const other = t && t.closest ? t.closest('.tbm-trigger') : null;
+  const other = t && t.closest ? t.closest(MENU_TRIG) : null;
   tbmClose(false);
   if (other) return;
+  tbmSwallowNext();
+}
+
+/* Le clic qui suit le toucher hors de la liste est avalé (aussi pour le menu « Ouvrir ») */
+function tbmSwallowNext() {
   TBM.swallow = true;
   const rel = () => { document.removeEventListener('pointerup', rel, true); document.removeEventListener('pointercancel', rel, true); setTimeout(() => { TBM.swallow = false; }, 350); };
   document.addEventListener('pointerup', rel, true);
@@ -3848,7 +4007,7 @@ function fcImported(res) {
 }
 
 
-// ---------- 6. Fichiers : Ouvrir, Enregistrer, Exporter, Effacer ----------
+// ---------- 6. Fichiers : Ouvrir, Sauvegarder, Exporter, Effacer ----------
 function fcDownload(blob, name) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -4353,7 +4512,7 @@ function applyI18nStatic() {
   lang.innerHTML = CURRENT_LANG === 'fr' ? FLAG_EN : FLAG_FR;
   lang.title = t('toolbar.lang.tooltip');
   lang.setAttribute('aria-label', t('toolbar.lang.tooltip'));
-  ['open', 'save', 'import', 'export', 'example', 'clear'].forEach(k => document.getElementById('btn-' + k).setAttribute('aria-label', t('tb.' + k)));
+  ['open', 'save', 'export', 'example', 'clear'].forEach(k => document.getElementById('btn-' + k).setAttribute('aria-label', t(k === 'open' ? 'tb.open.tip' : 'tb.' + k)));
 }
 /* La langue : le drapeau la change ; le shell l'appelle aussi (un module déjà chargé suit la langue de la suite) */
 function setLang(lang) {
@@ -4392,20 +4551,40 @@ function bindColumns() {
     if (row && UI.cmp.st !== row.getAttribute('data-st')) { UI.cmp.st = row.getAttribute('data-st'); cmpUpdate(); }
   });
 }
+/* « Ouvrir ▾ » : une configuration (le sélecteur de fichier de l'ancien « Ouvrir »), des groupes à importer (la fenêtre de l'ancien « Importer ») */
+function fcOpenMenu(btn) {
+  mnOpen(btn, 'op-panel', t('tb.open'), {
+    items: [
+      { k: 'file', label: t('op.file'), hint: t('op.file.h'), title: t('op.file.tip') },
+      { k: 'import', label: t('op.import'), hint: t('op.import.h'), title: t('op.import.tip') }
+    ],
+    choose: k => {
+      if (k === 'file') document.getElementById('fc-in-open').click();
+      else { UI.hq = readHqMission(); impOpen({ opener: btn }); }       // le snapshot de HQ se relit à chaque ouverture (suggestions de livrée)
+    }
+  });
+}
+
 function bindToolbar() {
   const on = (id, ev, fn) => document.getElementById(id).addEventListener(ev, fn);
   on('theme-select', 'change', e => { document.body.setAttribute('data-theme', e.target.value); lsSet(KEY_THEME, e.target.value); });
   on('theatre', 'change', e => thSet(e.target.value));
   on('btn-lang', 'click', () => setLang(CURRENT_LANG === 'fr' ? 'en' : 'fr'));
-  on('btn-open', 'click', () => document.getElementById('fc-in-open').click());
+  mnBind();       // « Ouvrir ▾ » : une configuration ou des groupes à importer
   on('btn-save', 'click', saveFile);
-  on('btn-import', 'click', e => { UI.hq = readHqMission(); impOpen({ opener: e.currentTarget }); });       // le snapshot de HQ se relit à chaque ouverture (suggestions de livrée)
   on('btn-export', 'click', exportFile);
   on('btn-example', 'click', loadExample);
   on('btn-clear', 'click', clearAll);
   const fileIn = (id, fn) => on(id, 'change', e => { const files = Array.prototype.slice.call(e.target.files); e.target.value = ''; fn(files); });
   fileIn('fc-in-lua', loadLuaFiles);
   fileIn('fc-in-open', files => { if (files[0]) openFile(files[0]); });
+  /* Ctrl+S (Cmd+S) : le geste du bouton « Sauvegarder », sauf fenêtre ou menu ouvert */
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+      e.preventDefault();
+      if (!uiModalsOpen().length && !MN.cur && !TBM.cur) document.getElementById('btn-save').click();
+    }
+  });
 }
 function init() {
   loadTheme();
@@ -4525,7 +4704,7 @@ def check(html):
     ok({k for k in used if not prefixed(k)} <= set(I18N_FR), 'toute clé de texte utilisée existe : manque %s' % sorted(k for k in used - set(I18N_FR) if not prefixed(k)))
     quoted = lambda k: ("'%s'" % k) in code or ('"%s"' % k) in code
     ok(all(quoted(k) or prefixed(k) for k in I18N_FR), 'aucun texte sans usage : reste %s' % sorted(k for k in I18N_FR if not quoted(k) and not prefixed(k)))
-    ok(all(any(k in I18N_FR for k in ['tb.%s%s' % (a, s)]) for a in ('open', 'save', 'import', 'export', 'example', 'clear') for s in ('', '.tip')), 'textes de la barre présents')
+    ok(all(any(k in I18N_FR for k in ['tb.%s%s' % (a, s)]) for a in ('open', 'save', 'export', 'example', 'clear') for s in ('', '.tip')), 'textes de la barre présents')
     # les quatre tables : la copie de la page égale le fichier de data/
     for name, fn in TABLES:
         mm = re.search(r'/\* %s:BEGIN \*/\nconst %s = (.*);\n/\* %s:END \*/' % (name, name, name), html, re.S)

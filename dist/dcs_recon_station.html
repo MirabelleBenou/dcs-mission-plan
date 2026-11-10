@@ -775,29 +775,9 @@ select[data-tbm-src] { display: none !important; }
   text-align: center;
 }
 
-/* Export button */
-.btn-export {
-  width: 100%;
-  background: linear-gradient(180deg, var(--olive) 0%, var(--olive-dark) 100%);
-  border: 2px solid var(--amber);
-  color: var(--amber);
-  padding: 12px;
-  font-family: var(--f-stencil);
-  font-size: 13px;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: all .2s;
-  margin-top: 4px;
-}
-.btn-export:hover:not(:disabled) {
-  background: linear-gradient(180deg, var(--amber-dark) 0%, var(--olive) 100%);
-  color: var(--paper);
-}
-.btn-export:disabled {
-  opacity: .35;
-  cursor: not-allowed;
-}
+/* Le bouton « Exporter » de la barre : grisé tant qu'il n'y a pas d'image */
+.tb-btn:disabled { opacity: .35; cursor: not-allowed; }
+.tb-btn:disabled:hover { background: transparent; border-color: var(--khaki); }
 
 /* Replace image button */
 .btn-replace { font-weight: 500;
@@ -1278,7 +1258,6 @@ html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-
 :where(body[data-theme="cw-nato"]) .btn-add-inset { color: #8d9f7f; }
 :where(body[data-theme="cw-nato"]) .inset-num { color: #849775; }
 :where(body[data-theme="cw-nato"]) .inset-color-group button.active { color: #c79641; }
-:where(body[data-theme="cw-nato"]) .btn-export { color: #dcbe8a; }
 :where(body[data-theme="cw-nato"]) .dr-tool.on { color: #efe8d5; }
 :where(body[data-theme="cw-soviet"]) .tb-brand-short { color: #cf6ea8; }
 :where(body[data-theme="cw-soviet"]) .tb-classif { color: #be7d7d; }
@@ -1292,7 +1271,6 @@ html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-
 :where(body[data-theme="cw-soviet"]) .btn-add-inset { color: #809471; }
 :where(body[data-theme="cw-soviet"]) .inset-num { color: #7f936f; }
 :where(body[data-theme="cw-soviet"]) .inset-color-group button.active { color: #c49037; }
-:where(body[data-theme="cw-soviet"]) .btn-export { color: #cc9f52; }
 :where(body[data-theme="cw-soviet"]) .dr-tool.on { color: #f2e8c0; }
 :where(body[data-theme="cw-soviet"]) .btn-replace { color: #879279; }
 :where(body[data-theme="cw-soviet"]) .ed-label { color: #859178; }
@@ -1314,7 +1292,6 @@ html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-
 :where(body[data-theme="modern-nato"]) .btn-add-inset { color: #798f69; }
 :where(body[data-theme="modern-nato"]) .inset-num { color: #7b906b; }
 :where(body[data-theme="modern-nato"]) .inset-color-group button.active { color: #c28d30; }
-:where(body[data-theme="modern-nato"]) .btn-export { color: #c38f35; }
 :where(body[data-theme="modern-east"]) .tb-brand-short { color: #ce69a5; }
 :where(body[data-theme="modern-east"]) .tb-classif { color: #bd7979; }
 :where(body[data-theme="modern-east"]) .ed-section > summary { color: #c6943d; }
@@ -1327,7 +1304,6 @@ html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-
 :where(body[data-theme="modern-east"]) .btn-add-inset { color: #7d916d; }
 :where(body[data-theme="modern-east"]) .inset-num { color: #7d916d; }
 :where(body[data-theme="modern-east"]) .inset-color-group button.active { color: #c38f35; }
-:where(body[data-theme="modern-east"]) .btn-export { color: #c6943d; }
 :where(body[data-theme="modern-east"]) .dr-tool.on { color: #ece8e0; }
 :where(body[data-theme="modern-east"]) .btn-replace { color: #888e78; }
 :where(body[data-theme="modern-east"]) .ed-label { color: #868d76; }
@@ -1356,6 +1332,10 @@ html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-
     <span class="tb-brand-sub" data-i18n="toolbar.subtitle">░ RENSEIGNEMENT</span>
   </div>
   <div class="tb-sep"></div>
+  <button type="button" class="tb-btn" id="btn-export" disabled data-i18n-title="toolbar.export.tooltip" title="Exporter l'image (PNG pleine résolution)" data-i18n-aria-label="toolbar.export.tooltip" aria-label="Exporter l'image (PNG pleine résolution)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    <span class="tb-btn-label" data-i18n="toolbar.export">Exporter</span>
+  </button>
   <button type="button" class="tb-btn" id="btn-example" data-i18n-title="toolbar.example.tooltip" title="Ouvrir l'exemple" data-i18n-aria-label="toolbar.example.tooltip" aria-label="Ouvrir l'exemple">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
     <span class="tb-btn-label" data-i18n="toolbar.example">Exemple</span>
@@ -1571,17 +1551,6 @@ html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-
       </div>
     </details>
 
-    <!-- Section Export -->
-    <details class="ed-section" data-section="export">
-      <summary class="ui-fold-head"><span data-i18n="editor.export.title">EXPORT</span></summary>
-      <div class="ed-body">
-        <button class="btn-export" id="btn-export" disabled data-i18n="editor.export.btn">
-          ↓ EXPORTER PNG
-        </button>
-        <p class="ui-note" style="margin-top:8px;text-align:center" data-i18n="editor.export.hint">Export pleine résolution · lossless</p>
-      </div>
-    </details>
-
   </div><!-- /editor -->
 
   <!-- PREVIEW -->
@@ -1669,6 +1638,8 @@ const I18N = {
     'toolbar.theme.tooltip': 'Thème graphique',
     'toolbar.lang.tooltip': 'Passer en anglais',
     'toolbar.subtitle': '░ RENSEIGNEMENT',
+    'toolbar.export': 'Exporter',
+    'toolbar.export.tooltip': "Exporter l'image (PNG pleine résolution)",
     'toolbar.example': 'Exemple',
     'toolbar.example.tooltip': "Ouvrir l'exemple",
     'toast.example-loaded': 'Exemple chargé ✓',
@@ -1706,9 +1677,6 @@ const I18N = {
     'editor.logo.mode.color': 'COULEUR',
     'editor.logo.mode.gray': 'GRIS',
     'editor.logo.mode.white': 'BLANC',
-    'editor.export.title': 'EXPORT',
-    'editor.export.btn': '↓ EXPORTER PNG',
-    'editor.export.hint': 'Export pleine résolution · lossless',
     'preview.empty': 'IMPORTER UNE IMAGE POUR COMMENCER',
     'tab.editor': 'ÉDITEUR',
     'tab.preview': 'APERÇU',
@@ -1885,6 +1853,8 @@ const I18N = {
     'toolbar.theme.tooltip': 'Graphic theme',
     'toolbar.lang.tooltip': 'Switch to French',
     'toolbar.subtitle': '░ INTELLIGENCE',
+    'toolbar.export': 'Export',
+    'toolbar.export.tooltip': 'Export the image (full-resolution PNG)',
     'toolbar.example': 'Example',
     'toolbar.example.tooltip': 'Open the example',
     'toast.example-loaded': 'Example loaded ✓',
@@ -1922,9 +1892,6 @@ const I18N = {
     'editor.logo.mode.color': 'COLOR',
     'editor.logo.mode.gray': 'GRAY',
     'editor.logo.mode.white': 'WHITE',
-    'editor.export.title': 'EXPORT',
-    'editor.export.btn': '↓ EXPORT PNG',
-    'editor.export.hint': 'Full resolution · lossless',
     'preview.empty': 'IMPORT AN IMAGE TO BEGIN',
     'tab.editor': 'EDITOR',
     'tab.preview': 'PREVIEW',
@@ -3419,11 +3386,25 @@ function composeRecon(ctx, W, H, st, logoImg) {
     const lw = ctx.measureText(label).width;
     ctx.fillText(label, x, y);
 
-    // Valeur gras (E2)
-    ctx.font = `400 ${baseFont}px "Gunplay","Roboto Mono",monospace`;
+    // Valeur gras (E2) : une valeur plus large que son champ rétrécit d'abord (jusqu'à 75 % de baseFont), puis se coupe et finit par « … »
+    const valFont = px => `400 ${px}px "Gunplay","Roboto Mono",monospace`;
+    ctx.font = valFont(baseFont);
     ctx.fillStyle = TXT;
     const valX = x + lw;
-    ctx.fillText(value, valX, y);
+    let val = String(value == null ? '' : value), vw = ctx.measureText(val).width;
+    if (vw > fieldW) {
+      const minFont = baseFont * 0.75;
+      let fs = Math.max(minFont, baseFont * fieldW / vw);
+      ctx.font = valFont(fs);
+      vw = ctx.measureText(val).width;
+      while (vw > fieldW && fs > minFont) { fs = Math.max(minFont, fs - baseFont * 0.01); ctx.font = valFont(fs); vw = ctx.measureText(val).width; }
+      if (vw > fieldW) {
+        let n = val.length;
+        while (n > 0 && ctx.measureText(val.slice(0, n).trimEnd() + '…').width > fieldW) n--;
+        val = val.slice(0, n).trimEnd() + '…';
+      }
+    }
+    ctx.fillText(val, valX, y);
 
     // Filet sous la valeur (même largeur que fieldW)
     const lineY = y + s(4);
@@ -5593,11 +5574,11 @@ function tbmScrolled(e) {
 
 // ── Init ───────────────────────────────────────────────────────
 // ── Repli des sections (rs_folds_v1) ─────────────────────────────
-// { section: true (ouverte) | false (repliée) } ; profil neuf : Image source, Rendu, Formes, Export ouvertes, les sept autres repliées.
+// { section: true (ouverte) | false (repliée) } ; profil neuf : Image source, Rendu, Formes ouvertes, les sept autres repliées ; une clé « export » d'un ancien rs_folds_v1 n'est plus lue.
 const RS_FOLDS = 'rs_folds_v1';
-const RS_FOLD_DEF = { image: true, render: true, text: false, fx: false, info: false, logo: false, cartouche: false, shapes: true, marker: false, classif: false, export: true };
+const RS_FOLD_DEF = { image: true, render: true, text: false, fx: false, info: false, logo: false, cartouche: false, shapes: true, marker: false, classif: false };
 function rsSections() { return Array.prototype.slice.call(document.querySelectorAll('#editor-panel > details.ed-section')); }
-/* La ligne de résumé d'une section repliée ; rien si elle est vide (Image source, Rendu, Formes et Export n'en portent pas) */
+/* La ligne de résumé d'une section repliée ; rien si elle est vide (Image source, Rendu et Formes n'en portent pas) */
 function rsSectionSum(id) {
   const v = x => (typeof x === 'string' ? x.trim() : '');
   if (id === 'text') return t(STATE.textColor === '#000' ? 'editor.text.black' : 'editor.text.white');
