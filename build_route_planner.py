@@ -67,6 +67,9 @@ CONTRAST_CSS = r"""
 :where(body[data-theme="modern-east"]) .pt-del { color: #7d846c; }
 :where(body[data-theme="modern-east"]) .ui-modal .rt-note { color: #888e78; }
 :where(body[data-theme="modern-east"]) .fn-ext { color: #888e78; }
+/* lignes d'action des menus « Ouvrir » et « … » et listes (lot mp-ui-disposition) : le texte gris-vert du reste de la palette tombe sous 4,5 : 1 dans ces deux thèmes */
+:where(body[data-theme="cw-soviet"]) .mn-opt:not(:hover):not(:focus-visible):not([aria-selected="true"]):not([aria-disabled="true"]):not(.mn-danger) { color: #879279; }
+:where(body[data-theme="modern-east"]) .mn-opt:not(:hover):not(:focus-visible):not([aria-selected="true"]):not([aria-disabled="true"]):not(.mn-danger) { color: #888e78; }
 /* MP-20 end */
 """
 

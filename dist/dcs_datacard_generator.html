@@ -1546,6 +1546,9 @@ div.dc-bl, li.dc-bl, p.dc-bl { height: 24px; border-bottom: 1px dotted var(--dc-
 :where(body[data-theme="modern-east"]) .tb-label { color: #888e78; }
 :where(body[data-theme="modern-east"]) .nav-route .nr-k { color: #7f866e; }
 :where(body[data-theme="modern-east"]) .nav-route .nr-sub { color: #7f866e; }
+/* lignes d'action des menus « Ouvrir » et « … » et listes (lot mp-ui-disposition) : le texte gris-vert du reste de la palette tombe sous 4,5 : 1 dans ces deux thèmes */
+:where(body[data-theme="cw-soviet"]) .mn-opt:not(:hover):not(:focus-visible):not([aria-selected="true"]):not([aria-disabled="true"]):not(.mn-danger) { color: #879279; }
+:where(body[data-theme="modern-east"]) .mn-opt:not(:hover):not(:focus-visible):not([aria-selected="true"]):not([aria-disabled="true"]):not(.mn-danger) { color: #888e78; }
 /* MP-20 end */
 
 </style>
