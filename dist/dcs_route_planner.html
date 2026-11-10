@@ -1354,7 +1354,7 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .mn-opt + .mn-sep + .mn-opt { border-top: none; }
 .mn-opt[aria-disabled="true"] { color: var(--khaki-light); cursor: not-allowed; opacity: .7; }
 .mn-opt[aria-disabled="true"]:hover { background: none; color: var(--khaki-light); }
-.mn-danger, .mn-danger:hover, .mn-danger:focus-visible { color: var(--mp-warn); }
+.tbm-opt.mn-danger, .tbm-opt.mn-danger:hover, .tbm-opt.mn-danger:focus-visible { color: var(--mp-warn); }
 
 /* ---------- la ligne de sélection des routes : « 1 · NOM ▾ » pleine largeur, « + » et « … » (44 × 44), puis le rang et le total ---------- */
 .rs-pick { display: flex; align-items: stretch; gap: 8px; }
@@ -12866,6 +12866,7 @@ function mnOpen(btn, id, label, items, choose) {
     if (!row || row.getAttribute('aria-disabled') === 'true') return;
     const k = row.getAttribute('data-k');
     mnClose(false);
+    btn.focus({ preventScroll: true });      /* la fenêtre ou la question qui s'ouvre rend le focus au bouton du menu */
     choose(k);
   });
   ul.addEventListener('keydown', mnKey);

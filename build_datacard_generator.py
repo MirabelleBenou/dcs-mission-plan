@@ -34,27 +34,21 @@ CONTRAST_CSS = r"""
 /* MP-20 begin */
 /* Contrastes (texte sous 18 px, 4,5 : 1 au moins) : couleur du texte seule, la palette commune ne bouge pas. */
 :where(body[data-theme="cw-nato"]) .tb-sel { color: #c49037; }
-:where(body[data-theme="cw-nato"]) #btn-units { color: #c49037; }
+:where(body[data-theme="cw-nato"]) #btn-display { color: #c49037; }
+:where(body[data-theme="cw-nato"]) #btn-json-import { color: #c49037; }
+:where(body[data-theme="cw-nato"]) .pk-trig { color: #c49037; }
+:where(body[data-theme="cw-nato"]) .cr-tag.linked { color: #c49037; }
 :where(body[data-theme="cw-nato"]) .bi-block h3 { color: #c49037; }
-:where(body[data-theme="cw-nato"]) .cr-name { color: #dcbe8a; }
 :where(body[data-theme="cw-nato"]) .cr-tag.free { color: #cbc2aa; }
-:where(body[data-theme="cw-nato"]) .card-row.cur .cr-sum { color: #e1d6bb; }
-:where(body[data-theme="cw-nato"]) .pack-btn.main { color: #dcbe8a; }
 :where(body[data-theme="cw-nato"]) .ed-section > summary { color: #dcbe8a; }
-:where(body[data-theme="cw-soviet"]) .cr-name { color: #cc9f52; }
 :where(body[data-theme="cw-soviet"]) .cr-tag.free { color: #9fa995; }
-:where(body[data-theme="cw-soviet"]) .pack-btn.main { color: #cc9f52; }
 :where(body[data-theme="cw-soviet"]) .ed-section > summary { color: #cc9f52; }
 :where(body[data-theme="cw-soviet"]) .tb-label { color: #879279; }
 :where(body[data-theme="cw-soviet"]) .nav-route .nr-k { color: #7b886d; }
 :where(body[data-theme="cw-soviet"]) .nav-route .nr-sub { color: #7b886d; }
-:where(body[data-theme="modern-nato"]) .cr-name { color: #c38f35; }
 :where(body[data-theme="modern-nato"]) .cr-tag.free { color: #8d9aa6; }
-:where(body[data-theme="modern-nato"]) .pack-btn.main { color: #c38f35; }
 :where(body[data-theme="modern-nato"]) .ed-section > summary { color: #c38f35; }
-:where(body[data-theme="modern-east"]) .cr-name { color: #c6943d; }
 :where(body[data-theme="modern-east"]) .cr-tag.free { color: #9a9f8c; }
-:where(body[data-theme="modern-east"]) .pack-btn.main { color: #c6943d; }
 :where(body[data-theme="modern-east"]) .ed-section > summary { color: #c6943d; }
 :where(body[data-theme="modern-east"]) .tb-label { color: #888e78; }
 :where(body[data-theme="modern-east"]) .nav-route .nr-k { color: #7f866e; }
@@ -816,12 +810,41 @@ body {
 .tb-sel:hover, .tb-sel:focus-visible { border-color: var(--amber); }
 .tb-sel option { background: var(--olive-dark); color: var(--paper); font-weight: 500; }
 
-/* ---------- le menu « Unités » (recopié du Route Planner, lot mp-theatre-unique) : le bouton de la barre et son panneau, au style des listes de la barre (tbm-*) ---------- */
-#btn-units { position: relative; color: var(--amber); border-color: var(--amber-dark); padding-right: 12px; }
-#btn-units:hover, #btn-units:focus-visible, #btn-units.dsp-open { border-color: var(--amber); }
-#btn-units .dsp-chev { width: 10px; height: 6px; }
-#btn-units.dsp-open .dsp-chev { transform: rotate(180deg); }
-.dsp-panel { max-height: min(80vh, 600px); min-width: 240px; padding-bottom: 6px; }
+/* ---------- les menus « Affichage » et « Ouvrir » (lot mp-ui-disposition ; le menu « Unités » du lot mp-theatre-unique y est entré) : le bouton de la barre et son panneau, au style des listes de la barre (tbm-*) ---------- */
+#btn-display, #btn-json-import { position: relative; color: var(--amber); border-color: var(--amber-dark); padding-right: 12px; }
+#btn-display:hover, #btn-display:focus-visible, #btn-display.dsp-open, #btn-json-import:hover, #btn-json-import:focus-visible, #btn-json-import.dsp-open { border-color: var(--amber); }
+#btn-display .dsp-chev, #btn-json-import .dsp-chev { width: 10px; height: 6px; }
+#btn-display.dsp-open .dsp-chev, #btn-json-import.dsp-open .dsp-chev { transform: rotate(180deg); }
+.dsp-dot { position: absolute; top: -3px; right: -3px; width: 7px; height: 7px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 0 2px var(--olive-deep); pointer-events: none; }
+.dsp-dot[hidden] { display: none; }
+.dsp-panel { max-height: min(80vh, 600px); min-width: 260px; padding-bottom: 6px; }
+.dsp-block { padding: 6px 18px 8px; }
+.dsp-seg { display: flex; width: 100%; }
+.dsp-seg .tb-btn { flex: 1 1 auto; min-width: 0; height: auto; min-height: 44px; padding: 0 8px; font-size: 11px; letter-spacing: .2px; white-space: nowrap; margin: 0 -1px 0 0; }
+.dsp-seg .tb-btn.on, .dsp-seg .tb-btn.on:hover { background: var(--amber-dark); border-color: var(--amber); color: #f6efdc; box-shadow: inset 0 -3px 0 var(--amber); position: relative; }
+.dsp-urow { display: flex; align-items: center; gap: 10px; padding: 4px 18px 6px; }
+.dsp-urow .ui-lbl { flex: 0 0 74px; margin: 0; }
+.dsp-urow .dsp-seg { flex: 1 1 auto; width: auto; }
+.mn-hint { margin-left: auto; padding-left: 14px; flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mn-sep { height: 1px; margin: 4px 0; background: rgba(168,154,114,.35); }
+.mn-opt + .mn-sep + .mn-opt { border-top: none; }
+.mn-opt[aria-disabled="true"] { color: var(--khaki-light); cursor: not-allowed; opacity: .7; }
+.mn-opt[aria-disabled="true"]:hover { background: none; color: var(--khaki-light); }
+.tbm-opt.mn-danger, .tbm-opt.mn-danger:hover, .tbm-opt.mn-danger:focus-visible { color: var(--mp-warn); }
+.tbm-panel.mn-list { max-width: min(520px, calc(100vw - 16px)); }
+.mn-list .tbm-opt .cr-tag { flex: none; }
+.dsp-sub { font-family: var(--f-ui); font-weight: 500; font-size: 10px; letter-spacing: 1.8px; text-transform: uppercase; color: var(--khaki); padding: 10px 18px 4px; }
+.dsp-sub:not(:first-of-type) { border-top: 1px solid rgba(168,154,114,.25); margin-top: 4px; }
+.dsp-opt { outline: none; color: var(--khaki-light); }
+.dsp-opt[aria-checked="true"] { color: var(--paper); }
+.dsp-opt:focus-visible { background: var(--olive); color: var(--amber); }
+.dsp-box { position: relative; width: 15px; height: 15px; flex: none; box-sizing: border-box; border: 1.5px solid var(--khaki); }
+.dsp-opt[aria-checked="true"] .dsp-box { background: var(--amber); border-color: var(--amber); }
+.dsp-opt[aria-checked="true"] .dsp-box::after { content: ''; position: absolute; left: 3.5px; top: 0.5px; width: 4px; height: 8px; box-sizing: border-box;
+  border-right: 2px solid var(--olive-deep); border-bottom: 2px solid var(--olive-deep); transform: rotate(45deg); }
+.dsp-opt:hover .dsp-box { border-color: var(--amber); }
+.dsp-opt[role="menuitemradio"] .dsp-box { border-radius: 50%; }
+
 .dsp-sub { font-family: var(--f-ui); font-weight: 500; font-size: 10px; letter-spacing: 1.8px; text-transform: uppercase; color: var(--khaki); padding: 10px 18px 4px; }
 .dsp-sub:not(:first-of-type) { border-top: 1px solid rgba(168,154,114,.25); margin-top: 4px; }
 .dsp-opt { outline: none; color: var(--khaki-light); }
@@ -942,40 +965,6 @@ select[data-tbm-src] { display: none !important; }
 }
 .tb-lang-btn:active { transform: translateY(1px); }
 
-/* Sélecteur à deux positions Day | Night : la position active est pleine, soulignée d'ambre */
-.tb-seg {
-  display: inline-flex;
-  align-items: stretch;
-  height: 40px;
-  flex-shrink: 0;
-  border: 1px solid var(--khaki);
-}
-.tb-seg .seg-btn {
-  font-family: var(--f-ui);
-  font-weight: 700;
-  letter-spacing: 1.5px;
-  font-size: 12px;
-  text-transform: uppercase;
-  background: transparent;
-  color: var(--paper);
-  border: 0;
-  padding: 0 14px;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all .15s ease;
-}
-.tb-seg .seg-btn + .seg-btn { border-left: 1px solid var(--khaki); }
-.tb-seg .seg-btn:hover, .tb-seg .seg-btn:focus-visible {
-  background: var(--olive);
-  color: var(--amber);
-}
-.tb-seg .seg-btn.active,
-.tb-seg .seg-btn.active:hover {
-  background: var(--amber-dark);
-  color: #f6efdc;
-  box-shadow: inset 0 -3px 0 var(--amber);
-}
-
 /* ============ MAIN APP ============ */
 .app {
   position: fixed;
@@ -1000,44 +989,33 @@ select[data-tbm-src] { display: none !important; }
 .editor::-webkit-scrollbar-track { background: var(--olive-deep); }
 .editor::-webkit-scrollbar-thumb { background: var(--khaki); border: 2px solid var(--olive-deep); }
 
-/* Paquet de datacards */
+/* La ligne de sélection des cartes : « NOM ▾ » pleine largeur (avec la pastille de la carte), « + » et « … » (44 × 44), puis le résumé et le rang */
 .pack-bar {
   margin-bottom: 14px;
   border: 1px solid var(--amber-dark);
   background: rgba(20, 24, 12, .6);
   padding: 10px 12px;
-  display: flex; flex-direction: column; gap: 10px;
+  display: flex; flex-direction: column; gap: 8px;
 }
-.pack-title {
-  font-family: var(--f-stencil);
-  font-weight: 700;
-  font-size: 13px;
-  letter-spacing: 2px;
-  color: var(--amber);
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+.pk-pick { display: flex; align-items: stretch; gap: 8px; }
+.pk-trig {
+  flex: 1 1 auto; min-width: 0; position: relative; display: flex; align-items: center; gap: 10px; box-sizing: border-box; min-height: 44px; margin: 0; padding: 0 38px 0 14px; text-align: left; cursor: pointer;
+  font-family: var(--f-stencil); font-weight: 700; font-size: 14px; letter-spacing: 1.5px; text-transform: none; color: var(--amber);
+  background: var(--olive-dark); border: 1px solid var(--amber-dark); border-left: 3px solid var(--amber); border-radius: 0;
 }
-.pack-btns { display: flex; flex-wrap: wrap; gap: 6px; }
-.pack-btn {
-  font-family: var(--f-ui);
-  font-weight: 700;
-  letter-spacing: 1.2px;
-  font-size: 11px;
-  text-transform: uppercase;
-  background: transparent;
-  color: var(--paper);
-  border: 1px solid var(--khaki);
-  padding: 0 10px;
-  min-height: 44px;
-  min-width: 40px;
-  white-space: nowrap;
+.pk-trig:hover, .pk-trig.dsp-open { border-color: var(--amber); background: var(--olive); }
+.pk-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pk-trig::after {
+  content: ''; position: absolute; right: 15px; top: 50%; width: 7px; height: 7px; margin-top: -6px;
+  border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(45deg); transition: transform .15s;
 }
-.pack-btn:hover:not(:disabled), .pack-btn:focus-visible {
-  background: var(--olive);
-  border-color: var(--amber);
-  color: var(--amber);
+.pk-trig.dsp-open::after { transform: rotate(-135deg); margin-top: -2px; }
+.pk-sq {
+  flex: none; width: 44px; height: 44px; padding: 0; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;
+  font-family: var(--f-ui); font-weight: 700; font-size: 16px; line-height: 1; color: var(--paper); background: transparent; border: 1px solid var(--khaki); border-radius: 0; cursor: pointer;
 }
-.pack-btn:disabled { opacity: .35; cursor: not-allowed; }
-.pack-btn.danger:hover:not(:disabled) { background: var(--rust); border-color: var(--red-faded); color: var(--paper-light); }
+.pk-sq:hover, .pk-sq:focus-visible, .pk-sq.dsp-open { background: var(--olive); border-color: var(--amber); color: var(--amber); }
+.pk-sum { margin: 0; font-size: 12px; }
 
 /* Sections */
 .ed-section {
@@ -1673,26 +1651,10 @@ div.dc-bl, li.dc-bl, p.dc-bl { height: 24px; border-bottom: 1px dotted var(--dc-
 }
 
 /* ============ GROUPES PARTAGÉS (maquette) : liste des cartes, groupe, équipage, radios par type, emport ============ */
-.pack-btn.main { background: var(--olive); border-color: var(--amber); color: var(--amber); }
-.pack-btn.main:hover:not(:disabled), .pack-btn.main:focus-visible { background: var(--olive-dark); color: var(--paper-light); }
-.pack-sub { font-family: var(--f-ui); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--khaki-light); }
-.cards-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
-.card-row {
-  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 8px; align-items: center;
-  width: 100%; min-height: 48px; padding: 7px 10px; text-align: left;
-  background: rgba(0, 0, 0, .18); border: 1px solid var(--khaki); border-left: 3px solid var(--khaki); color: var(--paper);
-  font-family: var(--f-ui);
-}
-.card-row:hover, .card-row:focus-visible { border-color: var(--amber); }
-.card-row.cur { background: var(--olive); border-color: var(--amber); border-left-color: var(--amber); }
-.card-row.free { border-left-style: dashed; }
-.cr-name { font-family: var(--f-stencil); font-weight: 700; font-size: 13px; letter-spacing: 2px; color: var(--amber); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .cr-tag { font-family: var(--f-ui); font-size: 10px; font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase; padding: 2px 7px; border: 1px solid; white-space: nowrap; }
 .cr-tag.linked { color: var(--amber); border-color: var(--amber-dark); }
 .cr-tag.free { color: var(--khaki-light); border-color: var(--khaki); border-style: dashed; }
 .cr-tag.gone { color: #e8806a; border-color: var(--red-faded); }
-.cr-sum { grid-column: 1 / -1; font-weight: 500; font-size: 11px; letter-spacing: .6px; color: var(--khaki-light); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.card-row.cur .cr-sum { color: var(--paper); opacity: .85; }
 
 /* La boîte « Groupe et équipage » : champs partagés avec le Flight Configurator (pastille FC) sur une carte liée */
 .sh {
@@ -1759,7 +1721,6 @@ div.dc-bl, li.dc-bl, p.dc-bl { height: 24px; border-bottom: 1px dotted var(--dc-
 @media (max-width: 1100px) {
   .tb-btn { padding: 0 8px; }
   .tb-select { max-width: 120px; padding: 0 26px 0 8px; text-overflow: ellipsis; overflow: hidden; }
-  .tb-seg .seg-btn { padding: 0 10px; }
 
   .app { grid-template-columns: 1fr; bottom: 68px; }
   .app .editor, .app .preview-wrap { display: none; }
@@ -1838,7 +1799,6 @@ __TAB_SECTION_RULES__
   .ed-field-row, .ed-field-row.three, .li-grid.g2, .li-grid.g3, .li-grid.g4, .li-grid.g5 { grid-template-columns: 1fr 1fr; }
   .editor { padding: 12px 12px 24px 12px; }
   .rc-extra { grid-template-columns: 1fr; }
-  .card-row { min-height: 52px; }
 }
 
 /* ============ IMPRESSION : une feuille A4 portrait par page de datacard ============ */
@@ -1917,28 +1877,25 @@ __CSS__
     <span class="tb-brand-sub" data-i18n="tb.subtitle">░ CARTES DE BORD</span>
   </div>
   <div class="tb-sep"></div>
-  <div class="tb-seg" id="mode-seg" role="group" data-i18n-title="tb.mode.tip" title="Version de jour ou de nuit de la datacard" data-i18n-aria-label="tb.mode.tip" aria-label="Version de jour ou de nuit de la datacard">
-    <button type="button" class="seg-btn" id="mode-day" data-mode="day" aria-pressed="true" data-i18n="tb.mode.day">Day</button>
-    <button type="button" class="seg-btn" id="mode-night" data-mode="night" aria-pressed="false" data-i18n="tb.mode.night">Night</button>
-  </div>
+  <button type="button" class="tb-btn" id="btn-display" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.display.tip" title="Jour ou nuit, unités" data-i18n-aria-label="tb.display.tip" aria-label="Jour ou nuit, unités">
+    <svg class="dsp-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/></svg>
+    <span data-i18n="tb.display">Affichage</span>
+    <svg class="dsp-chev" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg>
+    <i class="dsp-dot" id="dsp-dot" hidden></i>
+  </button>
   <div class="tb-sep"></div>
   <span class="tb-label" data-i18n="tb.theatre">Théâtre</span>
   <select class="tb-sel" id="theatre" data-i18n-aria-label="tb.theatre" aria-label="Théâtre"></select>
   <div class="tb-sep"></div>
-  <button type="button" class="tb-btn" id="btn-units" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.units" title="Unités" data-i18n-aria-label="tb.units" aria-label="Unités"><span id="units-txt"></span><svg class="dsp-chev" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg></button>
-  <div class="tb-sep"></div>
-  <button class="tb-btn" id="btn-json-import" data-i18n-title="tb.json.import.tip" title="Ouvrir une datacard (JSON)">
+  <button type="button" class="tb-btn" id="btn-json-import" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.json.import.tip" title="Ouvrir une datacard (JSON)" data-i18n-aria-label="tb.json.import.tip" aria-label="Ouvrir une datacard (JSON)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v1H3z"/><path d="M3 10h19l-2 8a2 2 0 0 1-2 1.5H5a2 2 0 0 1-2-2z"/></svg>
     <span class="tb-btn-label" data-i18n="tb.json.import">Ouvrir</span>
+    <svg class="dsp-chev" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg>
   </button>
   <input type="file" id="file-load" accept=".json,.zip,application/json,application/zip" hidden>
   <button class="tb-btn" id="btn-json-export" data-i18n-title="tb.json.export.tip" title="Enregistrer la datacard (JSON)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h11l4 4v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M8 3v5h7V3"/><rect x="7" y="13" width="10" height="8"/></svg>
     <span class="tb-btn-label" data-i18n="tb.json.export">Enregistrer</span>
-  </button>
-  <button class="tb-btn" id="btn-briefing" data-i18n-title="tb.briefing.tip" title="Importer un briefing, une route, la mission d'HQ ou un paquet de vol" data-i18n-aria-label="tb.briefing.tip" aria-label="Importer un briefing, une route, la mission d'HQ ou un paquet de vol">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-    <span class="tb-btn-label" data-i18n="tb.briefing">Importer</span>
   </button>
   <button class="tb-btn" id="btn-print" data-i18n-title="tb.export.tip" title="Exporter en PDF ou PNG">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -2162,13 +2119,16 @@ const I18N = {
     'tb.subtitle': '░ CARTES DE BORD',
     'tb.mode.day': 'Jour',
     'tb.mode.night': 'Nuit',
-    'tb.mode.tip': 'Version de jour ou de nuit de la datacard',
-    'tb.briefing': 'Importer',
-    'tb.briefing.tip': 'Importer un briefing ou une route dans une datacard',
+    'tb.display': 'Affichage',
+    'tb.display.tip': 'Jour ou nuit, unités',
+    'dsp.g.card': 'Datacard',
     'app.short': 'D·G',
-    'tb.briefing.short': 'Importer',
     'tb.json.import': 'Ouvrir',
     'tb.json.import.tip': 'Ouvrir une datacard (JSON)',
+    'op.card': 'Ouvrir une datacard…',
+    'op.card.h': '.json',
+    'op.import': 'Importer…',
+    'op.import.h': 'briefing, route, HQ, paquet',
     'tb.json.export': 'Enregistrer',
     'tb.json.export.tip': 'Enregistrer la datacard (JSON)',
     'tb.export': 'Exporter',
@@ -2255,6 +2215,9 @@ const I18N = {
     'pack.dup': 'Dupliquer',
     'pack.del': 'Supprimer',
     'pack.list': 'Datacards ({n})',
+    'pack.more': 'Autres actions',
+    'pack.group.linked': 'Liées aux groupes du FC',
+    'pack.group.free': 'Libres',
     'pack.newlinked': 'Nouvelle datacard',
     'pack.newfree': 'Carte libre',
     'pack.attach': 'Rattacher à un groupe',
@@ -2645,13 +2608,16 @@ const I18N = {
     'tb.subtitle': '░ DATACARDS',
     'tb.mode.day': 'Day',
     'tb.mode.night': 'Night',
-    'tb.mode.tip': 'Day or night version of the datacard',
-    'tb.briefing': 'Import',
-    'tb.briefing.tip': 'Import a briefing or a route into a datacard',
+    'tb.display': 'Display',
+    'tb.display.tip': 'Day or night, units',
+    'dsp.g.card': 'Datacard',
     'app.short': 'D·G',
-    'tb.briefing.short': 'Import',
     'tb.json.import': 'Open',
     'tb.json.import.tip': 'Open a datacard (JSON)',
+    'op.card': 'Open a datacard…',
+    'op.card.h': '.json',
+    'op.import': 'Import…',
+    'op.import.h': 'briefing, route, HQ, package',
     'tb.json.export': 'Save',
     'tb.json.export.tip': 'Save the datacard (JSON)',
     'tb.export': 'Export',
@@ -2738,6 +2704,9 @@ const I18N = {
     'pack.dup': 'Duplicate',
     'pack.del': 'Delete',
     'pack.list': 'Datacards ({n})',
+    'pack.more': 'More actions',
+    'pack.group.linked': 'Linked to FC groups',
+    'pack.group.free': 'Free',
     'pack.newlinked': 'New datacard',
     'pack.newfree': 'Free card',
     'pack.attach': 'Attach to a group',
@@ -6515,34 +6484,22 @@ function packTitle() {
 }
 function updatePackTitle() { renderPack(); }
 
-/* La liste des cartes : les cartes liées (dans l'ordre de la fiche), puis les cartes libres */
+/* La ligne de sélection : « NOM ▾ » (avec la pastille de la carte), « + » (nouvelle datacard), « … » (les autres gestes), puis « résumé — n / N » ;
+   la liste qui s'ouvre groupe les cartes liées, puis les cartes libres */
 function renderPack() {
-  const c = curCard(), linked = !!c.gsId;
-  const b = (act, label, extra, disabled, tip) =>
-    '<button type="button" class="pack-btn' + (extra || '') + '" data-pack="' + act + '"' + (disabled ? ' disabled' : '') + (tip ? ' title="' + esc(tip) + '"' : '') + '>' + esc(label) + '</button>';
-  const rows = doc.cards.map((x, i) => {
-    const name = dgCardName(x, i);
-    const tag = x.gsId ? ['linked', 'pack.tag.linked'] : (x.gsGone ? ['gone', 'pack.tag.gone'] : ['free', 'pack.tag.free']);
-    return '<li><button type="button" class="card-row' + (x.gsId ? '' : ' free') + (i === curIdx ? ' cur' : '') + '" data-card="' + i + '"' + (i === curIdx ? ' aria-current="true"' : '') + '>' +
-      '<span class="cr-name">' + esc(name) + '</span><span class="cr-tag ' + tag[0] + '">' + esc(t(tag[1])) + '</span><span class="cr-sum">' + esc(cardSummary(x)) + '</span></button></li>';
-  }).join('');
+  mnClose(false);
+  const c = curCard(), n = doc.cards.length, tag = dgCardTag(c), label = dgCardLabels()[curIdx];
   document.getElementById('pack-bar').innerHTML =
-    '<div class="pack-title" id="pack-title">' + esc(packTitle()) + '</div>' +
-    '<ul class="cards-list">' + rows + '</ul>' +
-    '<div class="pack-btns">' +
-    b('newlinked', t('pack.newlinked'), ' main') + b('newfree', t('pack.newfree')) +
-    (linked ? '' : b('attach', t('pack.attach'))) + b('impgroups', t('pack.impgroups')) +
-    b('dup', t('pack.dup'), '', linked, linked ? t('pack.dup.linked') : '') + b('del', t('pack.del'), ' danger') +
-    '</div>';
+    '<div class="pk-pick">' +
+    '<button type="button" class="pk-trig" id="pk-pick" aria-haspopup="listbox" aria-expanded="false" aria-label="' + esc(packTitle()) + '"><span class="pk-name">' + esc(label) + '</span>' +
+    '<span class="cr-tag ' + tag[0] + '">' + esc(t(tag[1])) + '</span></button>' +
+    '<button type="button" class="pk-sq" id="pk-new" data-pack="newlinked" title="' + esc(t('pack.newlinked')) + '" aria-label="' + esc(t('pack.newlinked')) + '">+</button>' +
+    '<button type="button" class="pk-sq" id="pk-more" aria-haspopup="menu" aria-expanded="false" title="' + esc(t('pack.more')) + '" aria-label="' + esc(t('pack.more')) + '">…</button>' +
+    '</div>' +
+    '<p class="ui-note pk-sum" id="pk-sum">' + esc(cardSummary(c) + ' — ' + (curIdx + 1) + ' / ' + n) + '</p>';
 }
 
-function updateModeSeg() {
-  document.querySelectorAll('#mode-seg .seg-btn').forEach(b => {
-    const on = b.dataset.mode === doc.mode;
-    b.classList.toggle('active', on);
-    b.setAttribute('aria-pressed', on ? 'true' : 'false');
-  });
-}
+function updateModeSeg() { dgDispSync(); }
 
 function renderAll(keep) {
   renderPack();
@@ -6702,11 +6659,15 @@ function onEditorClick(e) {
 
 /* ----- Liste des cartes ----- */
 function onPackClick(e) {
-  const row = e.target.closest('[data-card]');
-  if (row) { curIdx = parseInt(row.dataset.card, 10); renderAll(); return; }
+  const pick = e.target.closest('#pk-pick'), more = e.target.closest('#pk-more');
+  if (pick) { mnToggle(pick, () => dgCardListOpen(pick)); return; }
+  if (more) { mnToggle(more, () => dgCardMoreOpen(more)); return; }
   const btn = e.target.closest('[data-pack]');
   if (!btn || btn.disabled) return;
-  const act = btn.dataset.pack;
+  packAct(btn.dataset.pack, btn);
+}
+/* Un geste de la liste des cartes : « + » (newlinked) et les lignes du menu « … » (newfree, attach, impgroups, dup, del) */
+function packAct(act, btn) {
   if (act === 'newlinked') { grpAskNew(); return; }
   if (act === 'attach') { grpAskAttach(); return; }
   if (act === 'impgroups') { impOpen({ opener: btn }); return; }
@@ -7372,7 +7333,7 @@ function loadBriefingFile(file) {
     if (r.reject) { rejectMsg(r.reject); return; }
     const k = biRecognise(r.parsed, file.name, false, r.zip);
     if (!k) return;
-    if (k.kind === 'pkg') { closeImportModal(); impOpen({ opener: document.getElementById('btn-briefing'), parsed: r.parsed, name: file.name }); return; }
+    if (k.kind === 'pkg') { closeImportModal(); impOpen({ opener: document.getElementById('btn-json-import'), parsed: r.parsed, name: file.name }); return; }
     biUseFile(k, file.name);
   });
 }
@@ -7587,13 +7548,7 @@ function bindEvents() {
   document.getElementById('grp-modal').addEventListener('click', e => { const b = e.target.closest('[data-grp-act]'); if (b && !b.disabled) grpAct(b.dataset.grpAct); });
   document.getElementById('grp-modal').addEventListener('change', e => { const b = document.querySelector('#grp-actions [data-grp-act="attach"]'); if (b && e.target.name === 'grp-pick') b.disabled = false; });
 
-  document.getElementById('mode-seg').addEventListener('click', e => {
-    const b = e.target.closest('[data-mode]');
-    if (b) setMode(b.dataset.mode);
-  });
-  document.getElementById('btn-briefing').addEventListener('click', () => openImportModal(null));
   const fileLoad = document.getElementById('file-load');
-  document.getElementById('btn-json-import').addEventListener('click', () => { fileLoad.value = ''; fileLoad.click(); });
   fileLoad.addEventListener('change', () => { if (fileLoad.files && fileLoad.files[0]) loadJsonFile(fileLoad.files[0]); });
   document.getElementById('btn-json-export').addEventListener('click', e => openSaveModal(e.currentTarget));
   ['save-close', 'save-cancel'].forEach(id => document.getElementById(id).addEventListener('click', closeSaveModal));
@@ -7607,7 +7562,11 @@ function bindEvents() {
   document.getElementById('btn-reset').addEventListener('click', resetDoc);
   document.getElementById('theme-select').addEventListener('change', e => applyTheme(e.target.value, true));
   document.getElementById('theatre').addEventListener('change', e => dgSetTheatre(e.target.value));
-  unBind();
+  mnBind();
+  document.getElementById('pack-bar').addEventListener('keydown', e => {
+    const b = e.target.closest ? e.target.closest('#pk-pick, #pk-more') : null;
+    if (b && e.key === 'ArrowDown' && !MN.cur) { e.preventDefault(); if (b.id === 'pk-pick') dgCardListOpen(b); else dgCardMoreOpen(b); }
+  });
   document.getElementById('btn-lang').addEventListener('click', () => setLang(CURRENT_LANG === 'fr' ? 'en' : 'fr'));
 
   /* Export : la fenêtre est celle du bloc d'interface commun */
@@ -7625,7 +7584,7 @@ function bindEvents() {
   const fb = document.getElementById('file-briefing');
   document.getElementById('bi-file-btn').addEventListener('click', () => { fb.value = ''; fb.click(); });
   fb.addEventListener('change', () => { if (fb.files && fb.files[0]) loadBriefingFile(fb.files[0]); });
-  document.getElementById('bi-groups').addEventListener('click', () => { closeImportModal(); impOpen({ opener: document.getElementById('btn-briefing') }); });
+  document.getElementById('bi-groups').addEventListener('click', () => { closeImportModal(); impOpen({ opener: document.getElementById('btn-json-import') }); });
 
   /* Échap, croix et le piège du focus : le bloc d'interface commun (chaque fenêtre est une .ui-modal) */
   document.getElementById('grp-close').addEventListener('click', grpClose);
@@ -7651,71 +7610,33 @@ function bindEvents() {
   }).observe(document.body, { attributes: true, attributeFilter: ['data-theme'] });
 }
 
-/* ============= LE MENU « UNITÉS » (recopié du Route Planner, lot mp-theatre-unique) =============
-   Même composant et même aspect que le menu du Route Planner (tbm-panel dsp-panel, dsp-opt, dsp-box), des lignes « radio » : une seule unité par groupe, celle de dgU ;
-   trois groupes ici (Masse, Distance, Altitude) ; les titres des groupes sont ceux des anciens réglages par carte. Un choix règle l'unité et la clé ; le panneau reste ouvert. */
-const UN = { open: false, panel: null, x0: 0, y0: 0 };
-const UN_ROWS = [
-  { g: 'mass', k: 'kg' }, { g: 'mass', k: 'lb' },
-  { g: 'distance', k: 'km' }, { g: 'distance', k: 'nm' },
-  { g: 'altitude', k: 'm' }, { g: 'altitude', k: 'ft' }
+/* ============= LES MENUS : « Affichage », « Ouvrir », la liste des cartes et « … » (lot mp-ui-disposition) =============
+   Même composant et même aspect que les listes de la barre (tbm-panel dsp-panel, dsp-opt) : un seul menu ouvert à la fois, avec les listes de la barre.
+   Les unités viennent du menu « Unités » du lot mp-theatre-unique : trois rangées segmentées (Masse, Distance, Altitude) du menu « Affichage ». */
+const MENU_TRIG = '.tbm-trigger, #btn-display, #btn-json-import, #pk-pick, #pk-more';
+const MN = { cur: null, bound: false };
+const DG_UN_SEGS = [
+  { g: 'mass', l: 'f.mass', opts: [['kg', 'u.kg'], ['lb', 'u.lb']] },
+  { g: 'distance', l: 'f.distance', opts: [['km', 'u.km'], ['nm', 'u.nm']] },
+  { g: 'altitude', l: 'f.altitude', opts: [['m', 'u.m'], ['ft', 'u.ft']] }
 ];
-function unOn(r) { return dgU[r.g] === r.k; }
-/* Le bouton dit le réglage en cours (distance · altitude, comme au Route Planner) ; les cases du panneau ouvert le suivent */
-function dgUnitsSync() {
-  const tx = document.getElementById('units-txt');
-  if (tx) tx.textContent = t('u.' + dgU.distance) + ' · ' + t('u.' + dgU.altitude);
-  if (!UN.open || !UN.panel) return;
-  UN_ROWS.forEach(r => {
-    const row = UN.panel.querySelector('[data-g="' + r.g + '"][data-k="' + r.k + '"]');
-    if (row) row.setAttribute('aria-checked', unOn(r) ? 'true' : 'false');
-  });
+
+function mnClose(refocus) {
+  const m = MN.cur;
+  if (!m) return;
+  MN.cur = null;
+  if (m.panel) m.panel.remove();
+  m.btn.classList.remove('dsp-open');
+  m.btn.setAttribute('aria-expanded', 'false');
+  if (refocus) m.btn.focus({ preventScroll: true });
 }
-function unBuild() {
-  const ul = UN.panel;
-  ul.textContent = '';
-  ul.setAttribute('aria-label', t('tb.units'));
-  const head = document.createElement('div');
-  head.className = 'tbm-head';
-  head.setAttribute('role', 'presentation');
-  head.textContent = t('tb.units');
-  ul.appendChild(head);
-  let g = '';
-  UN_ROWS.forEach(r => {
-    if (r.g !== g) {
-      g = r.g;
-      const sub = document.createElement('div');
-      sub.className = 'dsp-sub';
-      sub.setAttribute('role', 'presentation');
-      sub.textContent = t('f.' + g);
-      ul.appendChild(sub);
-    }
-    const row = document.createElement('div');
-    row.className = 'tbm-opt dsp-opt';
-    row.setAttribute('role', 'menuitemradio');
-    row.setAttribute('aria-checked', 'false');
-    row.tabIndex = -1;
-    row.setAttribute('data-g', r.g);
-    row.setAttribute('data-k', r.k);
-    const box = document.createElement('span');
-    box.className = 'dsp-box';
-    box.setAttribute('aria-hidden', 'true');
-    const txt = document.createElement('span');
-    txt.className = 'tbm-txt';
-    txt.textContent = t('u.' + r.k);
-    row.appendChild(box);
-    row.appendChild(txt);
-    ul.appendChild(row);
-  });
-  dgUnitsSync();
-}
-function unPlace() {
-  const btn = document.getElementById('btn-units'), p = UN.panel;
-  const r = btn.getBoundingClientRect();
+
+function mnPlace(m) {
+  const r = m.btn.getBoundingClientRect(), p = m.panel;
   const vw = document.documentElement.clientWidth, vh = window.innerHeight;
   const top = r.bottom + 4;
-  UN.x0 = r.left; UN.y0 = r.top;
-  p.style.minWidth = Math.max(240, r.width) + 'px';
+  m.x0 = r.left; m.y0 = r.top;
+  p.style.minWidth = Math.min(Math.max(m.list ? r.width : 240, 0), vw - 16) + 'px';
   p.style.top = top + 'px';
   p.style.maxHeight = Math.max(60, Math.min(0.8 * vh, 600, vh - top - 8)) + 'px';
   const w = p.getBoundingClientRect().width;
@@ -7724,85 +7645,240 @@ function unPlace() {
   if (left < 8) left = 8;
   p.style.left = left + 'px';
 }
-function unOpen() {
-  if (UN.open) return;
+
+/* o : { items, choose } (une ligne par geste ; le menu se ferme avant choose) ou { build(ul), click(e), rows } (un panneau qui reste ouvert) ;
+   items : { k, label, hint?, tag?, danger?, disabled?, title?, pack?, selected? } · { head } · { sep } ; o.list : une liste à choix unique (role listbox) */
+function mnOpen(btn, id, label, o) {
+  if (MN.cur) mnClose(false);
   if (TBM.cur) tbmClose(false);
   const ul = document.createElement('div');
-  ul.className = 'tbm-panel dsp-panel';
-  ul.id = 'un-panel';
-  ul.setAttribute('role', 'menu');
+  ul.className = 'tbm-panel dsp-panel mn-panel' + (o.list ? ' mn-list' : '');
+  ul.id = id;
+  ul.setAttribute('role', o.list ? 'listbox' : 'menu');
+  ul.setAttribute('aria-label', label);
   ul.tabIndex = -1;
-  document.body.appendChild(ul);
-  UN.panel = ul;
-  UN.open = true;
-  unBuild();
-  ul.addEventListener('click', e => {
-    const row = e.target.closest ? e.target.closest('.dsp-opt') : null;
-    if (row) unChoose(row.getAttribute('data-g'), row.getAttribute('data-k'));
+  if (o.build) o.build(ul);
+  else o.items.forEach(it => {
+    if (it.sep) { const sp = document.createElement('div'); sp.className = 'mn-sep'; sp.setAttribute('role', 'separator'); ul.appendChild(sp); return; }
+    if (it.head) { const h = document.createElement('div'); h.className = 'tbm-head'; h.setAttribute('role', 'presentation'); h.textContent = it.head; ul.appendChild(h); return; }
+    const row = document.createElement('div');
+    row.className = 'tbm-opt dsp-opt mn-opt' + (it.danger ? ' mn-danger' : '');
+    row.setAttribute('role', o.list ? 'option' : 'menuitem');
+    if (o.list) row.setAttribute('aria-selected', it.selected ? 'true' : 'false');
+    row.tabIndex = -1;
+    row.setAttribute('data-k', it.k);
+    if (it.pack) row.setAttribute('data-pack', it.k);
+    if (it.disabled) row.setAttribute('aria-disabled', 'true');
+    if (it.title) row.title = it.title;
+    const txt = document.createElement('span');
+    txt.className = 'tbm-txt';
+    txt.textContent = it.label;
+    row.appendChild(txt);
+    if (it.tag) { const tg = document.createElement('span'); tg.className = 'cr-tag ' + it.tag[0]; tg.textContent = it.tag[1]; row.appendChild(tg); }
+    if (it.hint) { const h = document.createElement('span'); h.className = 'ui-note mn-hint'; h.textContent = it.hint; row.appendChild(h); }
+    ul.appendChild(row);
   });
-  ul.addEventListener('keydown', unKey);
-  const b = document.getElementById('btn-units');
-  b.classList.add('dsp-open');
-  b.setAttribute('aria-expanded', 'true');
-  b.setAttribute('aria-controls', 'un-panel');
-  unPlace();
-  ul.focus({ preventScroll: true });
+  document.body.appendChild(ul);
+  const m = { btn: btn, panel: ul, x0: 0, y0: 0, list: !!o.list, rows: o.rows || '.mn-opt:not([aria-disabled="true"])' };
+  MN.cur = m;
+  ul.addEventListener('click', e => {
+    if (o.click) { o.click(e); return; }
+    const row = e.target.closest ? e.target.closest('.mn-opt') : null;
+    if (!row || row.getAttribute('aria-disabled') === 'true') return;
+    const k = row.getAttribute('data-k');
+    mnClose(false);
+    btn.focus({ preventScroll: true });      /* la fenêtre ou la question qui s'ouvre rend le focus au bouton du menu */
+    o.choose(k, btn);
+  });
+  ul.addEventListener('keydown', mnKey);
+  btn.classList.add('dsp-open');
+  btn.setAttribute('aria-expanded', 'true');
+  btn.setAttribute('aria-controls', id);
+  mnPlace(m);
+  const cur = ul.querySelector('[aria-selected="true"]');
+  (cur || ul).focus({ preventScroll: true });
+  if (cur) cur.scrollIntoView({ block: 'nearest' });
 }
-function unClose(refocus) {
-  if (!UN.open) return;
-  UN.open = false;
-  if (UN.panel) UN.panel.remove();
-  UN.panel = null;
-  const b = document.getElementById('btn-units');
-  b.classList.remove('dsp-open');
-  b.setAttribute('aria-expanded', 'false');
-  if (refocus) b.focus({ preventScroll: true });
-}
-function unKey(e) {
-  const rows = Array.prototype.slice.call(UN.panel.querySelectorAll('.dsp-opt'));
+
+function mnKey(e) {
+  const m = MN.cur;
+  if (!m) return;
+  const rows = Array.prototype.slice.call(m.panel.querySelectorAll(m.rows));
   const cur = rows.indexOf(document.activeElement);
   const go = k => { if (rows[k]) { rows[k].focus({ preventScroll: true }); rows[k].scrollIntoView({ block: 'nearest' }); } };
   const k = e.key;
-  if (k === 'ArrowDown') { e.preventDefault(); go(cur < 0 ? 0 : Math.min(rows.length - 1, cur + 1)); }
-  else if (k === 'ArrowUp') { e.preventDefault(); go(cur < 0 ? rows.length - 1 : Math.max(0, cur - 1)); }
+  if (k === 'ArrowDown' || (k === 'ArrowRight' && cur >= 0 && !rows[cur].classList.contains('mn-opt'))) { e.preventDefault(); go(cur < 0 ? 0 : Math.min(rows.length - 1, cur + 1)); }
+  else if (k === 'ArrowUp' || (k === 'ArrowLeft' && cur >= 0 && !rows[cur].classList.contains('mn-opt'))) { e.preventDefault(); go(cur < 0 ? rows.length - 1 : Math.max(0, cur - 1)); }
   else if (k === 'Home') { e.preventDefault(); go(0); }
   else if (k === 'End') { e.preventDefault(); go(rows.length - 1); }
-  else if ((k === 'Enter' || k === ' ') && cur >= 0) { e.preventDefault(); unChoose(rows[cur].getAttribute('data-g'), rows[cur].getAttribute('data-k')); }
-  else if (k === 'Escape') { e.preventDefault(); e.stopPropagation(); unClose(true); }
-  else if (k === 'Tab') unClose(true);
+  else if ((k === 'Enter' || k === ' ') && cur >= 0) { e.preventDefault(); rows[cur].click(); }
+  else if (k === 'Escape') { e.preventDefault(); e.stopPropagation(); mnClose(true); }
+  else if (k === 'Tab') mnClose(true);
 }
-/* Un toucher ou un clic hors du panneau et du bouton le ferme, sans agir ailleurs (le clic qui suit est avalé) */
-function unOutside(e) {
-  if (!UN.open) return;
+
+/* Un toucher ou un clic hors du menu et de son bouton le ferme, sans agir ailleurs (le clic qui suit est avalé) */
+function mnOutside(e) {
+  const m = MN.cur;
+  if (!m) return;
   const t = e.target;
-  if (UN.panel.contains(t) || document.getElementById('btn-units').contains(t)) return;
-  const other = t && t.closest ? t.closest('.tbm-trigger') : null;
-  unClose(false);
+  if (m.panel.contains(t) || m.btn.contains(t)) return;
+  const other = t && t.closest ? t.closest(MENU_TRIG) : null;
+  mnClose(false);
   if (other) return;
   tbmSwallowNext();
 }
-/* Une ligne règle l'unité de son groupe (le menu reste ouvert) */
+
+function mnToggle(btn, open) {
+  if (MN.cur && MN.cur.btn === btn) { mnClose(false); return; }
+  open();
+}
+
+function mnBind() {
+  if (MN.bound) return;
+  MN.bound = true;
+  document.addEventListener('pointerdown', mnOutside, true);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && MN.cur) { e.preventDefault(); mnClose(true); } });
+  window.addEventListener('resize', () => mnClose(false));
+  window.addEventListener('blur', () => mnClose(false));
+  window.addEventListener('scroll', e => {
+    const m = MN.cur;
+    if (!m || (e.target && e.target.nodeType && m.panel.contains(e.target))) return;
+    const r = m.btn.getBoundingClientRect();
+    if (Math.abs(r.left - m.x0) > 0.5 || Math.abs(r.top - m.y0) > 0.5) mnClose(false);
+  }, true);
+  const arrow = (id, fn) => document.getElementById(id).addEventListener('keydown', e => { if (e.key === 'ArrowDown' && !MN.cur) { e.preventDefault(); fn(e.currentTarget); } });
+  const dsp = document.getElementById('btn-display'), opn = document.getElementById('btn-json-import');
+  dsp.addEventListener('click', () => mnToggle(dsp, () => dgDisplayOpen(dsp)));
+  opn.addEventListener('click', () => mnToggle(opn, () => dgOpenMenu(opn)));
+  arrow('btn-display', dgDisplayOpen);
+  arrow('btn-json-import', dgOpenMenu);
+}
+
+/* ----- « Affichage ▾ » : Datacard Jour · Nuit, puis les unités ----- */
+function dgDispMark(b, on) { b.classList.toggle('on', on); b.setAttribute('aria-checked', on ? 'true' : 'false'); b.setAttribute('aria-pressed', on ? 'true' : 'false'); }
+
+/* Le point ambre : Nuit, ou des unités autres que kg, km et m ; le panneau ouvert suit */
+function dgDispSync() {
+  const dot = document.getElementById('dsp-dot');
+  if (dot) dot.hidden = !(doc.mode === 'night' || Object.keys(UNITS_DEFAULT).some(k => dgU[k] !== UNITS_DEFAULT[k]));
+  const m = MN.cur;
+  if (!m || m.btn.id !== 'btn-display') return;
+  m.panel.querySelectorAll('[data-mode]').forEach(b => dgDispMark(b, b.getAttribute('data-mode') === doc.mode));
+  m.panel.querySelectorAll('[data-un]').forEach(b => dgDispMark(b, dgU[b.getAttribute('data-g')] === b.getAttribute('data-un')));
+}
+
+function dgDisplayBuild(ul) {
+  const head = txt => { const h = document.createElement('div'); h.className = 'tbm-head'; h.setAttribute('role', 'presentation'); h.textContent = txt; ul.appendChild(h); };
+  const seg = (label, btns) => {
+    const sg = document.createElement('span');
+    sg.className = 'dsp-seg';
+    sg.setAttribute('role', 'radiogroup');
+    sg.setAttribute('aria-label', label);
+    btns.forEach(o => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'tb-btn';
+      b.setAttribute('role', 'radio');
+      Object.keys(o.attrs).forEach(k => b.setAttribute(k, o.attrs[k]));
+      b.tabIndex = -1;
+      b.textContent = o.text;
+      sg.appendChild(b);
+    });
+    return sg;
+  };
+  head(t('dsp.g.card'));
+  const cd = document.createElement('div');
+  cd.className = 'dsp-block';
+  cd.appendChild(seg(t('dsp.g.card'), [{ text: t('tb.mode.day'), attrs: { 'data-mode': 'day' } }, { text: t('tb.mode.night'), attrs: { 'data-mode': 'night' } }]));
+  ul.appendChild(cd);
+  head(t('tb.units'));
+  DG_UN_SEGS.forEach(u => {
+    const row = document.createElement('div');
+    row.className = 'dsp-urow';
+    const lb = document.createElement('span');
+    lb.className = 'ui-lbl';
+    lb.textContent = t(u.l);
+    row.appendChild(lb);
+    row.appendChild(seg(t(u.l), u.opts.map(o => ({ text: t(o[1]), attrs: { 'data-un': o[0], 'data-g': u.g } }))));
+    ul.appendChild(row);
+  });
+}
+
+function dgDisplayOpen(btn) {
+  mnOpen(btn, 'dsp-panel', t('tb.display'), {
+    build: dgDisplayBuild,
+    rows: '.dsp-seg .tb-btn',
+    click: e => {
+      const md = e.target.closest ? e.target.closest('[data-mode]') : null;
+      if (md) { setMode(md.getAttribute('data-mode')); return; }
+      const us = e.target.closest ? e.target.closest('[data-un]') : null;
+      if (us) unChoose(us.getAttribute('data-g'), us.getAttribute('data-un'));
+    }
+  });
+  dgDispSync();
+}
+
+/* Une rangée règle l'unité de son groupe (le panneau reste ouvert) */
 function unChoose(g, k) {
   const u = { mass: dgU.mass, distance: dgU.distance, altitude: dgU.altitude };
   if (!(g in u)) return;
   u[g] = k;
   dgUnitsSet(u);
 }
-function unBind() {
-  const b = document.getElementById('btn-units');
-  b.addEventListener('click', () => { if (UN.open) unClose(false); else unOpen(); });
-  b.addEventListener('keydown', e => {
-    if (e.key === 'ArrowDown' && !UN.open) { e.preventDefault(); unOpen(); }
+/* Les unités ont changé (ou sont posées) : le point ambre et le panneau ouvert */
+function dgUnitsSync() { dgDispSync(); }
+
+/* ----- « Ouvrir ▾ » : une datacard (le sélecteur de fichier), un import (la fenêtre d'import d'aujourd'hui) ----- */
+function dgOpenMenu(btn) {
+  mnOpen(btn, 'op-panel', t('tb.json.import'), {
+    items: [
+      { k: 'file', label: t('op.card'), hint: t('op.card.h') },
+      { k: 'import', label: t('op.import'), hint: t('op.import.h') }
+    ],
+    choose: k => {
+      if (k === 'file') { const f = document.getElementById('file-load'); f.value = ''; f.click(); }
+      else openImportModal(null);
+    }
   });
-  document.addEventListener('pointerdown', unOutside, true);
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && UN.open) { e.preventDefault(); unClose(true); } });
-  window.addEventListener('resize', () => unClose(false));
-  window.addEventListener('blur', () => unClose(false));
-  window.addEventListener('scroll', e => {
-    if (!UN.open || (e.target && e.target.nodeType && UN.panel.contains(e.target))) return;
-    const r = b.getBoundingClientRect();
-    if (Math.abs(r.left - UN.x0) > 0.5 || Math.abs(r.top - UN.y0) > 0.5) unClose(false);
-  }, true);
+}
+
+/* ----- La ligne de sélection des cartes : « NOM ▾ », « + », « … » ----- */
+/* Le nom de chaque carte tel qu'on le lit : deux cartes de même nom s'affichent « CAESAR » puis « CAESAR · 2 » (l'affichage seul : la carte garde son nom) */
+function dgCardLabels() {
+  const seen = {}, used = {};
+  return doc.cards.map((x, i) => {
+    const n = dgCardName(x, i);
+    seen[n] = (seen[n] || 0) + 1;
+    let k = seen[n], out = k > 1 ? n + ' · ' + k : n;
+    while (k > 1 && used[out]) { k++; out = n + ' · ' + k; }
+    used[out] = true;
+    return out;
+  });
+}
+function dgCardTag(x) { return x.gsId ? ['linked', 'pack.tag.linked'] : (x.gsGone ? ['gone', 'pack.tag.gone'] : ['free', 'pack.tag.free']); }
+
+function dgCardListOpen(btn) {
+  const names = dgCardLabels(), items = [];
+  const grp = (head, pick) => {
+    const cs = doc.cards.map((x, i) => i).filter(i => pick(doc.cards[i]));
+    if (!cs.length) return;
+    items.push({ head: head });
+    cs.forEach(i => { const x = doc.cards[i]; items.push({ k: String(i), label: names[i], hint: cardSummary(x), selected: i === curIdx, tag: x.gsGone ? [dgCardTag(x)[0], t(dgCardTag(x)[1])] : null }); });
+  };
+  grp(t('pack.group.linked'), x => !!x.gsId);
+  grp(t('pack.group.free'), x => !x.gsId);
+  mnOpen(btn, 'pk-list', packTitle(), { items: items, list: true, choose: k => { curIdx = parseInt(k, 10); renderAll(); } });
+}
+
+function dgCardMoreOpen(btn) {
+  const linked = !!curCard().gsId;
+  const items = [{ k: 'newfree', label: t('pack.newfree'), pack: true }];
+  if (!linked) items.push({ k: 'attach', label: t('pack.attach'), pack: true });
+  items.push({ k: 'impgroups', label: t('pack.impgroups'), pack: true });
+  items.push({ k: 'dup', label: t('pack.dup'), pack: true, disabled: linked, title: linked ? t('pack.dup.linked') : '' });
+  items.push({ sep: true });
+  items.push({ k: 'del', label: t('pack.del'), pack: true, danger: true });
+  mnOpen(btn, 'pk-more-list', t('pack.more'), { items: items, choose: (k, b) => packAct(k, b) });
 }
 
 /* ============= DÉMARRAGE ============= */
@@ -7935,6 +8011,7 @@ function tbmSync(m) {
 
 function tbmOpen(m) {
   if (TBM.cur) tbmClose(false);
+  mnClose(false);
   if (m.sel.disabled) return;
   tbmSync(m);
   const sel = m.sel, opts = sel.options, name = m.labelFn();
@@ -8247,7 +8324,7 @@ function tbmOutside(e) {
   if (!m) return;
   const t = e.target;
   if (m.panel.contains(t) || m.btn.contains(t)) return;
-  const other = t && t.closest ? t.closest('.tbm-trigger, #btn-units') : null;
+  const other = t && t.closest ? t.closest(MENU_TRIG) : null;
   tbmClose(false);
   if (other) return;
   tbmSwallowNext();
