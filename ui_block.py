@@ -163,7 +163,7 @@ try { if (window.self !== window.top) document.documentElement.classList.add('mp
 const UIK = { cf: null, top: null, restore: null, ex: null };
 function uiT(key, fb) { let v; try { v = t(key); } catch (e) { v = key; } return (v === undefined || v === key) ? (fb !== undefined ? fb : key) : v; }
 
-/* ---- la fenêtre de suite : Échap (= ✕ = Annuler) et le piège du focus, pour la fenêtre du dessus ---- */
+/* ---- la fenêtre de suite : Échap (= croix = Annuler) et le piège du focus, pour la fenêtre du dessus ---- */
 function uiModalsOpen() { return Array.prototype.filter.call(document.querySelectorAll('.ui-modal'), m => !m.hidden); }
 function uiTopModal() { const c = document.getElementById('ui-confirm'); if (c && !c.hidden) return c; const l = uiModalsOpen(); return l.length ? l[l.length - 1] : null; }
 function uiFocusables(m) {
@@ -186,7 +186,7 @@ window.addEventListener('keydown', e => {
   }
 });
 
-/* ---- askConfirm({ title, text, verb, danger }) → promesse : true (le verbe) ou false (Annuler, ✕, Échap, fond) ---- */
+/* ---- askConfirm({ title, text, verb, danger }) → promesse : true (le verbe) ou false (Annuler, croix, Échap, fond) ---- */
 function uiConfirmEl() {
   let m = document.getElementById('ui-confirm');
   if (m) return m;

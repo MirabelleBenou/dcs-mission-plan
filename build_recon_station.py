@@ -2571,8 +2571,9 @@ select[data-tbm-src] {{ display: none !important; }}
         <div class="logo-grid" id="logo-grid"></div>
         <label class="btn-upload-logo" for="file-logo" data-i18n="editor.logo.upload">↑ IMPORTER UN LOGO PNG</label>
         <input type="file" id="file-logo" accept="image/png,image/webp" hidden>
-        <label class="btn-upload-logo" for="file-wing" data-i18n="editor.logo.importWing" style="margin-top:4px">↑ IMPORTER CONFIG WING (BG)</label>
+        <label class="btn-upload-logo" for="file-wing" data-i18n="editor.logo.importWing" style="margin-top:4px">📥 Importer config</label>
         <input type="file" id="file-wing" accept=".json,application/json" hidden>
+        <p class="ui-note" data-i18n="editor.logo.importWing.note">✦ Édition complète disponible dans HQ</p>
         <div class="logo-mode-label" data-i18n="editor.logo.mode.title">RENDU DU LOGO</div>
         <div class="logo-mode" id="logo-mode" role="group" data-i18n-aria-label="aria.logoMode" aria-label="Rendu du logo">
           <button type="button" data-logo-mode="color" data-i18n="editor.logo.mode.color">COULEUR</button>
@@ -2633,10 +2634,12 @@ select[data-tbm-src] {{ display: none !important; }}
         <div class="ed-row" style="margin-top:6px">
           <span class="ed-label" data-i18n="editor.classif.level">NIVEAU</span>
           <select id="classif-level" class="ed-select">
-            <option value="UNCLASSIFIED">UNCLASSIFIED</option>
-            <option value="CONFIDENTIAL">CONFIDENTIAL</option>
-            <option value="SECRET">SECRET</option>
-            <option value="TOP SECRET">TOP SECRET</option>
+            <option value="confidential"    data-i18n="classif.confidential">CONFIDENTIEL DÉFENSE</option>
+            <option value="secret"          data-i18n="classif.secret">SECRET DÉFENSE</option>
+            <option value="top-secret"      data-i18n="classif.top-secret">TRÈS SECRET</option>
+            <option value="unclassified"    data-i18n="classif.unclassified">NON CLASSIFIÉ</option>
+            <option value="nato-restricted" data-i18n="classif.nato-restricted">NATO RESTRICTED</option>
+            <option value="nato-secret"     data-i18n="classif.nato-secret">NATO SECRET</option>
           </select>
         </div>
       </div>
@@ -2816,7 +2819,8 @@ const I18N = {{
     'aria.textColor': 'Couleur du texte',
     'aria.logoMode': 'Rendu du logo',
     'aria.markerColor': 'Couleur des marquages',
-    'editor.logo.importWing': 'Importer config wing (BG)',
+    'editor.logo.importWing': '📥 Importer config',
+    'editor.logo.importWing.note': '✦ Édition complète disponible dans HQ',
     'toast.noLogoInJson': '⚠ Aucun logo dans ce fichier',
     'validate.schemaMissing': 'configSchemaVersion doit être 1',
     'validate.wingMissing': 'Champ wing manquant',
@@ -2876,6 +2880,12 @@ const I18N = {{
     'editor.classif.title': 'CLASSIFICATION',
     'editor.classif.enable': 'Activer le bandeau',
     'editor.classif.level': 'NIVEAU',
+    'classif.confidential': 'CONFIDENTIEL DÉFENSE',
+    'classif.secret': 'SECRET DÉFENSE',
+    'classif.top-secret': 'TRÈS SECRET',
+    'classif.unclassified': 'NON CLASSIFIÉ',
+    'classif.nato-restricted': 'NATO RESTRICTED',
+    'classif.nato-secret': 'NATO SECRET',
 {RSD_I18N_FR}  }},
   en: {{
     'ui.cancel': 'Cancel',
@@ -2966,7 +2976,8 @@ const I18N = {{
     'aria.textColor': 'Text color',
     'aria.logoMode': 'Logo rendering',
     'aria.markerColor': 'Marker color',
-    'editor.logo.importWing': 'Import wing config (BG)',
+    'editor.logo.importWing': '📥 Import config',
+    'editor.logo.importWing.note': '✦ Full editing available in HQ',
     'toast.noLogoInJson': '⚠ No logo in this file',
     'validate.schemaMissing': 'configSchemaVersion must be 1',
     'validate.wingMissing': 'Missing wing field',
@@ -3026,6 +3037,12 @@ const I18N = {{
     'editor.classif.title': 'CLASSIFICATION',
     'editor.classif.enable': 'Enable banner',
     'editor.classif.level': 'LEVEL',
+    'classif.confidential': 'CONFIDENTIAL',
+    'classif.secret': 'SECRET',
+    'classif.top-secret': 'TOP SECRET',
+    'classif.unclassified': 'UNCLASSIFIED',
+    'classif.nato-restricted': 'NATO RESTRICTED',
+    'classif.nato-secret': 'NATO SECRET',
 {RSD_I18N_EN}  }}
 }};
 
@@ -3062,8 +3079,13 @@ let STATE = {{
   fxScanlines: 0,      // 0..100
   sensorMode: 'eo',    // R2-C : 'eo' | 'ir-white' | 'ir-black' | 'sar'
   annotations: [],     // R2-A : insets (loupes)
-  classification: {{ enabled: false, level: 'UNCLASSIFIED' }},  // R2-B Lot 2
+  classification: {{ enabled: false, level: 'unclassified' }},  // R2-B Lot 2
 }};
+
+/* Les six niveaux du Briefing Generator (clés du BG, libellés « classif.* » dans la langue de l'outil) ; une valeur enregistrée avant (UNCLASSIFIED, CONFIDENTIAL, SECRET, TOP SECRET) se relit sur le niveau correspondant */
+const RS_CLASS_KEYS = ['confidential', 'secret', 'top-secret', 'unclassified', 'nato-restricted', 'nato-secret'];
+const RS_CLASS_OLD = {{ 'UNCLASSIFIED': 'unclassified', 'CONFIDENTIAL': 'confidential', 'SECRET': 'secret', 'TOP SECRET': 'top-secret' }};
+function rsClassKey(v) {{ return RS_CLASS_KEYS.indexOf(v) >= 0 ? v : (RS_CLASS_OLD[v] || 'unclassified'); }}
 
 // Source image — non persistée
 let SOURCE_IMG   = null;   // HTMLImageElement chargée
@@ -3241,7 +3263,7 @@ function restoreState() {{
     STATE.annotations.forEach(a => {{ if (!a.id) a.id = uid(); }});
     // R2-B Lot 2 : classification (champ absent → défaut)
     if (saved.classification && typeof saved.classification === 'object') {{
-      STATE.classification = {{ enabled: !!saved.classification.enabled, level: saved.classification.level || 'UNCLASSIFIED' }};
+      STATE.classification = {{ enabled: !!saved.classification.enabled, level: rsClassKey(saved.classification.level) }};
     }}
     return true;
   }} catch(e) {{ return false; }}
@@ -3338,7 +3360,7 @@ function rsBack(m) {{
   renderCartoucheEditor(); renderInsetEditor(); renderShapesEditor(); renderLabelEditor();
   const ce = document.getElementById('classif-enable'), cl = document.getElementById('classif-level');
   if (ce) ce.checked = !!(STATE.classification && STATE.classification.enabled);
-  if (cl) cl.value = (STATE.classification && STATE.classification.level) || 'UNCLASSIFIED';
+  if (cl) cl.value = (STATE.classification && STATE.classification.level) || 'unclassified';
   rsdSetTool('select');
   rsdDeselect();
   rsdSyncUi();
@@ -3386,7 +3408,7 @@ async function loadExampleNow(quiet) {{
   STATE.markerColor = 'red';
   STATE.fxVignette = 0; STATE.fxGrain = 0; STATE.fxScanlines = 0;
   STATE.sensorMode = 'eo';
-  STATE.classification = {{ enabled: false, level: 'UNCLASSIFIED' }};
+  STATE.classification = {{ enabled: false, level: 'unclassified' }};
 
   applyStateToForm();
   renderLogoGrid(); renderLogoMode(); renderTextColor(); renderMarkerColor();
@@ -4355,13 +4377,16 @@ function composeRecon(ctx, W, H, st, logoImg) {{
   // ── Bandeau classification (R2-B Lot 2) — z-max ──────────────
   if (st.classification && st.classification.enabled) {{
     const CLASSIF_COLORS = {{
-      'UNCLASSIFIED': '#007a33',
-      'CONFIDENTIAL': '#003087',
-      'SECRET':       '#c8102e',
-      'TOP SECRET':   '#ff8200'
+      'unclassified':    '#007a33',
+      'confidential':    '#003087',
+      'secret':          '#c8102e',
+      'top-secret':      '#ff8200',
+      'nato-restricted': '#003087',
+      'nato-secret':     '#c8102e'
     }};
-    const level = st.classification.level || 'UNCLASSIFIED';
-    const barColor = CLASSIF_COLORS[level] || '#007a33';
+    const levelKey = rsClassKey(st.classification.level);
+    const level = t('classif.' + levelKey);
+    const barColor = CLASSIF_COLORS[levelKey] || '#007a33';
     const barH = bannerH;   // même valeur que celle utilisée pour blockY/cartY
     const cfsize = s(18);
     ctx.save();
@@ -5186,7 +5211,7 @@ function rsSectionSum(id) {{
   if (id === 'info') return v(STATE.fields.target);
   if (id === 'logo') {{ const lg = STATE.logos.find(l => l.id === STATE.logoId); return STATE.logoId !== 'none' && lg ? (v(lg.name) || t('sum.none')) : t('sum.none'); }}
   if (id === 'cartouche') {{ const c = (STATE.cartouche || []).find(x => x && v(x.label)); return c ? v(c.label) : ''; }}
-  if (id === 'classif') return STATE.classification && STATE.classification.enabled ? v(STATE.classification.level) : '';
+  if (id === 'classif') return STATE.classification && STATE.classification.enabled ? t('classif.' + rsClassKey(STATE.classification.level)) : '';
   return '';
 }}
 function rsFoldLabel() {{

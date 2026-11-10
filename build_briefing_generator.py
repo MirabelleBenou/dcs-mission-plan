@@ -1444,12 +1444,12 @@ select[data-tbm-src] { display: none !important; }
   background: var(--olive-dark);
   border: 1px solid var(--khaki);
   color: var(--khaki-light);
-  font-size: 12px;
+  font-size: 16px;
   line-height: 1;
   cursor: pointer;
   padding: 0;
-  width: 32px;
-  height: 20px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -6797,7 +6797,7 @@ function renderPhaseExec(container, phaseIdx) {
 
     const upBtn = document.createElement('button');
     upBtn.type = 'button'; upBtn.className = 'ed-btn-move';
-    upBtn.textContent = '▲'; upBtn.disabled = j === 0;
+    upBtn.textContent = '↑'; upBtn.disabled = j === 0;
     upBtn.addEventListener('click', () => {
       if (j === 0) return;
       [steps[j-1], steps[j]] = [steps[j], steps[j-1]];
@@ -6806,7 +6806,7 @@ function renderPhaseExec(container, phaseIdx) {
 
     const dnBtn = document.createElement('button');
     dnBtn.type = 'button'; dnBtn.className = 'ed-btn-move';
-    dnBtn.textContent = '▼'; dnBtn.disabled = j === steps.length - 1;
+    dnBtn.textContent = '↓'; dnBtn.disabled = j === steps.length - 1;
     dnBtn.addEventListener('click', () => {
       if (j === steps.length - 1) return;
       [steps[j], steps[j+1]] = [steps[j+1], steps[j]];
@@ -8085,7 +8085,7 @@ document.addEventListener('DOMContentLoaded', function bindSaveModal() {
   const f = document.getElementById('save-fname');
   f.addEventListener('input', function(e) { SAVEN.name = e.target.value; saveSync(); });
   f.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); if (!e.repeat) saveGo(); } });
-  /* Échap, ✕ et le piège du focus : le bloc d'interface commun (la fenêtre est une .ui-modal) */
+  /* Échap, croix et le piège du focus : le bloc d'interface commun (la fenêtre est une .ui-modal) */
 });
 
 /* L'écriture du briefing sous le nom choisi (sans extension) */

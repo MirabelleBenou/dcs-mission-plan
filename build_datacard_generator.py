@@ -1133,7 +1133,7 @@ select[data-tbm-src] { display: none !important; }
 .ed-list { display: flex; flex-direction: column; gap: 8px; }
 .li {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 40px;
+  grid-template-columns: minmax(0, 1fr) 44px;
   gap: 8px;
   align-items: start;
   padding: 8px;
@@ -1166,8 +1166,8 @@ select[data-tbm-src] { display: none !important; }
   transition: background .15s;
   font-size: 16px;
   line-height: 1;
-  min-width: 40px;
-  min-height: 34px;
+  min-width: 44px;
+  min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1203,6 +1203,13 @@ select[data-tbm-src] { display: none !important; }
 .ed-btn-add:disabled { opacity: .35; cursor: not-allowed; }
 .ed-btn-add.sm { min-height: 44px; padding: 6px 10px; font-size: 11px; }
 .ed-btn-add.on { background: var(--olive); color: var(--paper-light); }
+/* Cap : deux boutons segmentés, 44 px */
+.ed-seg { display: flex; width: 100%; }
+.ed-seg-btn { flex: 1 1 0; min-height: 44px; padding: 6px 10px; background: var(--olive-dark); border: 1px solid var(--khaki); color: var(--paper); font-family: var(--f-ui); font-weight: 700; font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; transition: background .15s; }
+.ed-seg-btn + .ed-seg-btn { border-left: none; }
+.ed-seg-btn[aria-pressed="true"] { background: var(--amber-dark); color: var(--paper-light); border-color: var(--amber); box-shadow: inset 0 -3px 0 var(--amber); }
+.ed-seg-btn[aria-pressed="false"]:hover { background: var(--olive); color: var(--amber); }
+.ed-seg-btn:active { transform: translateY(1px); }
 /* La route d'une datacard (lot mp-dg-nav-route) : le bandeau de la section Navigation, la pastille « Commun à la mission » */
 .nav-route { border-left: 3px solid var(--amber); background: rgba(0,0,0,.18); padding: 8px 10px; margin: 0 0 10px; display: grid; gap: 6px; }
 .nav-route.none { border-left-style: dashed; border-left-color: var(--khaki); }
@@ -4235,7 +4242,7 @@ function dgPosByLeg(c, i, field, value) {
   return legDest(base, brg, km);
 }
 /* Un champ de route d'une ligne de nav a changé (sortie du champ) : l'écriture dans la route (ou, sans route, dans la ligne) ; el : le champ */
-/* Une carte de groupe dont les points n'ont pas de route : le premier geste de la carte (champ, ✕, ▲ ▼) crée la route à partir des lignes, puis s'applique à la ligne devenue point ; vrai si la route est née */
+/* Une carte de groupe dont les points n'ont pas de route : le premier geste de la carte (champ, croix, monter, descendre) crée la route à partir des lignes, puis s'applique à la ligne devenue point ; vrai si la route est née */
 function dgGrpRoute(c) {
   if (!c.gsId || dgRouteInfo(c).state !== 'none' || !dgGroupPoints(c).length || !c.nav.some(l => !l.pid && parseCoord(l.coord))) return false;
   if (!dgCreateFromLines(c)) return false;
@@ -4276,7 +4283,7 @@ function dgNavField(c, i, k, el) {
   if (info.state === 'none' || info.state === 'gone') { if (dgCreateFromLines(c)) dgAfterRouteWrite(true); else { persistState(); syncNavEditor(true); renderPreview(); } return; }
   persistState(); syncNavEditor(true); renderPreview();       /* full ou autre théâtre : la nav reste propre */
 }
-/* Ajouter, supprimer, ▲ ▼ d'une ligne de nav ; vrai si le geste est le sien */
+/* Ajouter, supprimer, monter, descendre une ligne de nav ; vrai si le geste est le sien */
 function dgNavAct(c, act, i) {
   const arr = c.nav, x = arr[i];
   const info = dgRouteInfo(c);
@@ -5131,15 +5138,15 @@ function groupBoxHtml(c) {
     fInput('f.count', 'flight.count', c.flight.count == null ? '' : String(c.flight.count), ' inputmode="numeric"' + ro) + '</div>' +
     '<div class="ed-field-row">' + fInput('f.task', 'flight.task', c.flight.task) + thr + '</div>';
   if (!lk) {
-    /* même ligne que celle d'une carte liée : le ✕ en tête de ses boutons (même place, même taille, même infobulle), ▲ et ▼ en dessous */
+    /* même ligne que celle d'une carte liée : la croix en tête de ses boutons (même place, même taille, même infobulle), monter et descendre en dessous */
     const frows = c.crew.map((x, i) =>
       '<div class="li li-u" data-list="crew" data-i="' + i + '"><div class="li-main">' +
       '<div class="li-uh"><span class="li-ut">' + esc(t('cr.unit', { n: i + 1 })) + '</span></div>' +
       '<div class="li-grid g2">' + fInput('f.crew.callsign', 'crew.' + i + '.callsign', x.callsign) + fInput('f.crew.type', 'crew.' + i + '.type', x.type) + '</div>' +
       '<div class="li-grid g2">' + fInput('f.crew.board', 'crew.' + i + '.board', x.board) + fInput('f.crew.pilot', 'crew.' + i + '.pilot', x.pilot) + '</div></div>' +
-      '<div class="li-ctl"><button type="button" class="ed-btn-icon unit-x" data-act="remove" data-list="crew" data-i="' + i + '" title="' + esc(t('cr.remove')) + '" aria-label="' + esc(t('cr.remove')) + '">✕</button>' +
-      '<button type="button" class="ed-btn-icon neutral" data-act="up" data-list="crew" data-i="' + i + '"' + (i === 0 ? ' disabled' : '') + ' title="' + esc(t('li.up')) + '" aria-label="' + esc(t('li.up')) + '">▲</button>' +
-      '<button type="button" class="ed-btn-icon neutral" data-act="down" data-list="crew" data-i="' + i + '"' + (i === c.crew.length - 1 ? ' disabled' : '') + ' title="' + esc(t('li.down')) + '" aria-label="' + esc(t('li.down')) + '">▼</button></div></div>').join('');
+      '<div class="li-ctl"><button type="button" class="ed-btn-icon unit-x" data-act="remove" data-list="crew" data-i="' + i + '" title="' + esc(t('cr.remove')) + '" aria-label="' + esc(t('cr.remove')) + '">×</button>' +
+      '<button type="button" class="ed-btn-icon neutral" data-act="up" data-list="crew" data-i="' + i + '"' + (i === 0 ? ' disabled' : '') + ' title="' + esc(t('li.up')) + '" aria-label="' + esc(t('li.up')) + '">↑</button>' +
+      '<button type="button" class="ed-btn-icon neutral" data-act="down" data-list="crew" data-i="' + i + '"' + (i === c.crew.length - 1 ? ' disabled' : '') + ' title="' + esc(t('li.down')) + '" aria-label="' + esc(t('li.down')) + '">↓</button></div></div>').join('');
     return head + '<div class="ed-list">' + frows + '</div>' +
       '<button type="button" class="ed-btn-add" data-act="add" data-list="crew"' + (c.crew.length >= LIMITS.crew ? ' disabled' : '') + '>' + esc(t('cr.add', { n: c.crew.length, max: LIMITS.crew })) + '</button>';
   }
@@ -5156,7 +5163,7 @@ function groupBoxHtml(c) {
       '<div class="li-grid g2">' +
       fShared('f.crew.board', '<input type="text" data-gs="u.' + i + '.onboard" value="' + esc(dgStr(u.onboard)) + '" autocomplete="off" spellcheck="false">') +
       fInput('f.crew.pilot', 'crew.' + i + '.pilot', x.pilot) + '</div></div>' +
-      '<div class="li-ctl"><button type="button" class="ed-btn-icon unit-x" data-gs-act="rm-unit" data-i="' + i + '"' + (units.length > 1 ? '' : ' disabled') + ' title="' + esc(t('cr.remove')) + '" aria-label="' + esc(t('cr.remove')) + '">✕</button></div></div>';
+      '<div class="li-ctl"><button type="button" class="ed-btn-icon unit-x" data-gs-act="rm-unit" data-i="' + i + '"' + (units.length > 1 ? '' : ' disabled') + ' title="' + esc(t('cr.remove')) + '" aria-label="' + esc(t('cr.remove')) + '">×</button></div></div>';
   }).join('');
   return head + '<div class="ed-list">' + rows + '</div>' +
     '<button type="button" class="ed-btn-add" data-gs-act="add-unit"' + (units.length >= DG_MAX_UNITS ? ' disabled' : '') + '>' + esc(t('cr.add', { n: units.length, max: DG_MAX_UNITS })) + '</button>' +
@@ -6138,9 +6145,9 @@ function listHtml(path, items, renderItem, addKey, locked) {
   const spec = listSpec(path), dis = locked ? ' disabled' : '';
   const rows = items.map((it, i) =>
     '<div class="li" data-list="' + path + '" data-i="' + i + '"><div class="li-main">' + renderItem(it, i) + '</div><div class="li-ctl">' +
-    '<button type="button" class="ed-btn-icon neutral" data-act="up" data-list="' + path + '" data-i="' + i + '"' + (i === 0 || locked ? ' disabled' : '') + ' title="' + esc(t('li.up')) + '" aria-label="' + esc(t('li.up')) + '">▲</button>' +
-    '<button type="button" class="ed-btn-icon neutral" data-act="down" data-list="' + path + '" data-i="' + i + '"' + (i === items.length - 1 || locked ? ' disabled' : '') + ' title="' + esc(t('li.down')) + '" aria-label="' + esc(t('li.down')) + '">▼</button>' +
-    '<button type="button" class="ed-btn-icon" data-act="remove" data-list="' + path + '" data-i="' + i + '"' + dis + ' title="' + esc(t('li.del')) + '" aria-label="' + esc(t('li.del')) + '">✕</button>' +
+    '<button type="button" class="ed-btn-icon neutral" data-act="up" data-list="' + path + '" data-i="' + i + '"' + (i === 0 || locked ? ' disabled' : '') + ' title="' + esc(t('li.up')) + '" aria-label="' + esc(t('li.up')) + '">↑</button>' +
+    '<button type="button" class="ed-btn-icon neutral" data-act="down" data-list="' + path + '" data-i="' + i + '"' + (i === items.length - 1 || locked ? ' disabled' : '') + ' title="' + esc(t('li.down')) + '" aria-label="' + esc(t('li.down')) + '">↓</button>' +
+    '<button type="button" class="ed-btn-icon" data-act="remove" data-list="' + path + '" data-i="' + i + '"' + dis + ' title="' + esc(t('li.del')) + '" aria-label="' + esc(t('li.del')) + '">×</button>' +
     '</div></div>').join('');
   return '<div class="ed-list">' + rows + '</div>' +
     '<button type="button" class="ed-btn-add" data-act="add" data-list="' + path + '"' + (items.length >= spec.max || locked || (spec.full && spec.full(items)) ? ' disabled' : '') + '>' + esc(Array.isArray(addKey) ? t(addKey[0], addKey[1]) : t(addKey)) + '</button>';
@@ -6164,12 +6171,19 @@ function fSelectD(labelKey, attr, value, options) {
     '</select></div>';
 }
 
+/* « Cap » : deux boutons segmentés (comme au Route Planner), la valeur est celle de la mission (mp_nav_v1) */
+function fSegD(labelKey, attr, value, options) {
+  return '<div class="ed-field"><label>' + esc(t(labelKey)) + '</label><span class="ed-seg" role="group" aria-label="' + esc(t(labelKey)) + '">' +
+    options.map(o => '<button type="button" class="ed-seg-btn" data-navseg="' + attr + '" data-v="' + esc(o[0]) + '" aria-pressed="' + (o[0] === value ? 'true' : 'false') + '">' + esc(o[1]) + '</button>').join('') +
+    '</span></div>';
+}
+
 function navSettingsHtml(c) {
   const nd = c.navDisplay, mag = dgN.ref === 'mag', calc = dgN.mode === 'calc';
   let h = '<div class="ed-navset-tag"><span class="cr-tag linked">' + esc(t('nav.common')) + '</span><span class="ui-note">' + esc(t('nav.common.help')) + '</span></div>' +
     '<div class="ed-field-row three ed-navset">' +
     fSelect('f.nav.display', 'navDisplay.mode', nd.mode, [['course', t('nav.mode.course')], ['mgrs', t('nav.mode.mgrs')], ['dms', t('nav.mode.dms')]]) +
-    fSelectD('f.nav.ref', 'ref', dgN.ref, [['true', t('nav.ref.true')], ['mag', t('nav.ref.mag')]]) +
+    fSegD('f.nav.ref', 'ref', dgN.ref, [['true', t('nav.ref.true')], ['mag', t('nav.ref.mag')]]) +
     (mag ? fSelectD('f.nav.vmode', 'mode', dgN.mode, [['calc', t('nav.vmode.calc')], ['manual', t('nav.vmode.manual')]]) : '<div class="ed-field"></div>') + '</div>';
   if (mag && !calc) {
     h += '<div class="ed-field-row"><div class="ed-field"><label>' + esc(t('f.nav.decl')) + '</label><input type="text" data-navset="decl" value="' + esc(dgN.decl) + '" inputmode="decimal" autocomplete="off" placeholder="' + esc(t('ph.navDisplay.decl')) + '"></div></div>' +
@@ -6652,13 +6666,21 @@ function onEditorClick(e) {
   }
   const fr = e.target.closest('[data-rsfree]');
   if (fr) { DG_UI.free[fr.dataset.rsfree] = !DG_UI.free[fr.dataset.rsfree]; renderEditor(); return; }
+  const ns = e.target.closest('[data-navseg]');
+  if (ns) {
+    const k = ns.dataset.navseg, v = ns.dataset.v;
+    dgNavSet(Object.assign({}, dgN, { [k]: v }));
+    const nb = document.querySelector('#editor [data-navseg="' + k + '"][data-v="' + v + '"]');
+    if (nb) nb.focus();
+    return;
+  }
   const nf = e.target.closest('[data-navforce]');
   if (nf) { dgNavSet(Object.assign({}, dgN, { force: !dgN.force })); return; }
   const btn = e.target.closest('[data-act]');
   if (!btn || btn.disabled) return;
   const act = btn.dataset.act, path = btn.dataset.list, i = parseInt(btn.dataset.i, 10);
   const c = curCard();
-  if (path === 'nav' && dgNavAct(c, act, i)) return;        /* la nav est la route : ajouter, supprimer, ▲ ▼ s'écrivent dans la route */
+  if (path === 'nav' && dgNavAct(c, act, i)) return;        /* la nav est la route : ajouter, supprimer, monter, descendre s'écrivent dans la route */
   if (path === 'refs' && dgRefAct(c, act, i)) return;       /* les références sont celles du Route Planner */
   const arr = getPath(c, path);
   const spec = listSpec(path);
@@ -7611,7 +7633,7 @@ function bindEvents() {
   fb.addEventListener('change', () => { if (fb.files && fb.files[0]) loadBriefingFile(fb.files[0]); });
   document.getElementById('bi-groups').addEventListener('click', () => { closeImportModal(); impOpen({ opener: document.getElementById('btn-briefing') }); });
 
-  /* Échap, ✕ et le piège du focus : le bloc d'interface commun (chaque fenêtre est une .ui-modal) */
+  /* Échap, croix et le piège du focus : le bloc d'interface commun (chaque fenêtre est une .ui-modal) */
   document.getElementById('grp-close').addEventListener('click', grpClose);
 
   document.querySelectorAll('#tab-bar button').forEach(b => b.addEventListener('click', () => setActiveTab(b.dataset.tab)));

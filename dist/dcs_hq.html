@@ -1401,10 +1401,10 @@ const I18N = {
     'toast.pkDeleting': 'Suppression des groupes…',
     'toast.pkDelFail': '⚠ Suppression échouée — rien n’est téléchargé',
     'pk.exportN': '📦 Exporter les groupes cochés ({0})',
-    'pk.flt.side': 'Camp',
+    'pk.flt.side': 'Coalition',
     'pk.flt.all': 'Tous',
     'pk.flt.red': 'Rouge',
-    'pk.flt.blue': 'Bleu',
+    'pk.flt.blue': 'Bleue (OTAN)',
     'pk.flt.neutrals': 'Neutre',
     'pk.flt.type': 'Type',
     'pk.flt.name': 'Nom',
@@ -1745,10 +1745,10 @@ const I18N = {
     'toast.pkDeleting': 'Deleting groups…',
     'toast.pkDelFail': '⚠ Deletion failed — nothing downloaded',
     'pk.exportN': '📦 Export checked groups ({0})',
-    'pk.flt.side': 'Side',
+    'pk.flt.side': 'Coalition',
     'pk.flt.all': 'All',
     'pk.flt.red': 'Red',
-    'pk.flt.blue': 'Blue',
+    'pk.flt.blue': 'Blue (NATO)',
     'pk.flt.neutrals': 'Neutral',
     'pk.flt.type': 'Type',
     'pk.flt.name': 'Name',
@@ -2001,7 +2001,7 @@ try { if (window.self !== window.top) document.documentElement.classList.add('mp
 const UIK = { cf: null, top: null, restore: null, ex: null };
 function uiT(key, fb) { let v; try { v = t(key); } catch (e) { v = key; } return (v === undefined || v === key) ? (fb !== undefined ? fb : key) : v; }
 
-/* ---- la fenêtre de suite : Échap (= ✕ = Annuler) et le piège du focus, pour la fenêtre du dessus ---- */
+/* ---- la fenêtre de suite : Échap (= croix = Annuler) et le piège du focus, pour la fenêtre du dessus ---- */
 function uiModalsOpen() { return Array.prototype.filter.call(document.querySelectorAll('.ui-modal'), m => !m.hidden); }
 function uiTopModal() { const c = document.getElementById('ui-confirm'); if (c && !c.hidden) return c; const l = uiModalsOpen(); return l.length ? l[l.length - 1] : null; }
 function uiFocusables(m) {
@@ -2024,7 +2024,7 @@ window.addEventListener('keydown', e => {
   }
 });
 
-/* ---- askConfirm({ title, text, verb, danger }) → promesse : true (le verbe) ou false (Annuler, ✕, Échap, fond) ---- */
+/* ---- askConfirm({ title, text, verb, danger }) → promesse : true (le verbe) ou false (Annuler, croix, Échap, fond) ---- */
 function uiConfirmEl() {
   let m = document.getElementById('ui-confirm');
   if (m) return m;
@@ -4343,7 +4343,7 @@ function renderSnapshot(snap) {
   html += '<div class="pk-flt" id="pk-flt" role="group" aria-label="' + h(t('pk.flt.aria')) + '">';
   html += '<div class="pk-flt-row">';
   html += '<label class="pk-flt-f"><span>' + h(t('pk.flt.side')) + '</span><select id="pk-f-side">' +
-    opt('all', t('pk.flt.all'), _PK_FLT.side) + opt('red', t('pk.flt.red'), _PK_FLT.side) + opt('blue', t('pk.flt.blue'), _PK_FLT.side) +
+    opt('all', t('pk.flt.all'), _PK_FLT.side) + opt('blue', t('pk.flt.blue'), _PK_FLT.side) + opt('red', t('pk.flt.red'), _PK_FLT.side) +
     (hasNeutral ? opt('neutrals', t('pk.flt.neutrals'), _PK_FLT.side) : '') + '</select></label>';
   html += '<label class="pk-flt-f"><span>' + h(t('pk.flt.type')) + '</span><select id="pk-f-type">' +
     opt('all', t('pk.flt.all'), _PK_FLT.type) + types.map(x => opt(x, x, _PK_FLT.type)).join('') + '</select></label>';

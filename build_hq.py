@@ -1430,10 +1430,10 @@ const I18N = {{
     'toast.pkDeleting': 'Suppression des groupes…',
     'toast.pkDelFail': '⚠ Suppression échouée — rien n’est téléchargé',
     'pk.exportN': '📦 Exporter les groupes cochés ({{0}})',
-    'pk.flt.side': 'Camp',
+    'pk.flt.side': 'Coalition',
     'pk.flt.all': 'Tous',
     'pk.flt.red': 'Rouge',
-    'pk.flt.blue': 'Bleu',
+    'pk.flt.blue': 'Bleue (OTAN)',
     'pk.flt.neutrals': 'Neutre',
     'pk.flt.type': 'Type',
     'pk.flt.name': 'Nom',
@@ -1774,10 +1774,10 @@ const I18N = {{
     'toast.pkDeleting': 'Deleting groups…',
     'toast.pkDelFail': '⚠ Deletion failed — nothing downloaded',
     'pk.exportN': '📦 Export checked groups ({{0}})',
-    'pk.flt.side': 'Side',
+    'pk.flt.side': 'Coalition',
     'pk.flt.all': 'All',
     'pk.flt.red': 'Red',
-    'pk.flt.blue': 'Blue',
+    'pk.flt.blue': 'Blue (NATO)',
     'pk.flt.neutrals': 'Neutral',
     'pk.flt.type': 'Type',
     'pk.flt.name': 'Name',
@@ -3456,7 +3456,7 @@ function renderSnapshot(snap) {{
   html += '<div class="pk-flt" id="pk-flt" role="group" aria-label="' + h(t('pk.flt.aria')) + '">';
   html += '<div class="pk-flt-row">';
   html += '<label class="pk-flt-f"><span>' + h(t('pk.flt.side')) + '</span><select id="pk-f-side">' +
-    opt('all', t('pk.flt.all'), _PK_FLT.side) + opt('red', t('pk.flt.red'), _PK_FLT.side) + opt('blue', t('pk.flt.blue'), _PK_FLT.side) +
+    opt('all', t('pk.flt.all'), _PK_FLT.side) + opt('blue', t('pk.flt.blue'), _PK_FLT.side) + opt('red', t('pk.flt.red'), _PK_FLT.side) +
     (hasNeutral ? opt('neutrals', t('pk.flt.neutrals'), _PK_FLT.side) : '') + '</select></label>';
   html += '<label class="pk-flt-f"><span>' + h(t('pk.flt.type')) + '</span><select id="pk-f-type">' +
     opt('all', t('pk.flt.all'), _PK_FLT.type) + types.map(x => opt(x, x, _PK_FLT.type)).join('') + '</select></label>';
@@ -6105,7 +6105,7 @@ grep_absent('fallbackDownloadSnap', 'fallbackDownloadSnap absent')
 grep_absent('miz-export-btn',       'bouton Exporter snapshot JSON absent')
 grep_absent('pk.warnSource',        'avertissement de source d\'ancienne forme absent')
 grep_absent('noGroupFreq',          'fréquence de groupe non écrite')
-grep_present('pk-f-side',           'filtre Camp présent')
+grep_present('pk-f-side',           'filtre Coalition présent')
 grep_present('pk-f-name',           'filtre Nom présent')
 grep_present('function initFormMenus','listes des formulaires (initFormMenus) présentes')
 grep_present('initFormMenus(sel =>','initFormMenus appelé au démarrage')

@@ -154,13 +154,13 @@ const IMP_I18N = {
     'imp.bg.ok': '{0} phase(s)',
     'imp.choose': 'Choisir un fichier…',
     'imp.file.note': 'Un paquet de vol (.json ou .zip) ou un briefing (.json).',
-    'imp.side': 'Camp',
-    'imp.side.groups': 'Camp des groupes',
+    'imp.side': 'Coalition',
+    'imp.side.groups': 'Coalition des groupes',
     'imp.type': 'Type',
     'imp.name': 'Nom',
     'imp.all': 'Tous',
     'imp.red': 'Rouge',
-    'imp.blue': 'Bleu',
+    'imp.blue': 'Bleue (OTAN)',
     'imp.neutral': 'Neutre',
     'imp.noside': 'Aucun',
     'imp.checkshown': 'Cocher les groupes affichés',
@@ -219,13 +219,13 @@ const IMP_I18N = {
     'imp.bg.ok': '{0} phase(s)',
     'imp.choose': 'Choose a file…',
     'imp.file.note': 'A flight package (.json or .zip) or a briefing (.json).',
-    'imp.side': 'Side',
-    'imp.side.groups': 'Groups’ side',
+    'imp.side': 'Coalition',
+    'imp.side.groups': 'Groups’ coalition',
     'imp.type': 'Type',
     'imp.name': 'Name',
     'imp.all': 'All',
     'imp.red': 'Red',
-    'imp.blue': 'Blue',
+    'imp.blue': 'Blue (NATO)',
     'imp.neutral': 'Neutral',
     'imp.noside': 'None',
     'imp.checkshown': 'Check shown groups',
@@ -748,14 +748,14 @@ function impFile(file) {
 function impFolded(I) { return !!impCur(I) && !I.srcOpen; }
 function impSideText(c) { return c === 'red' ? impT('imp.red') : c === 'blue' ? impT('imp.blue') : c === 'neutrals' ? impT('imp.neutral') : String(c || ''); }
 function impSideOptions(sel, withNone) {
-  return (withNone ? [['red', impT('imp.red')], ['blue', impT('imp.blue')], ['', impT('imp.noside')]] : [['all', impT('imp.all')], ['red', impT('imp.red')], ['blue', impT('imp.blue')]])
+  return (withNone ? [['blue', impT('imp.blue')], ['red', impT('imp.red')], ['', impT('imp.noside')]] : [['all', impT('imp.all')], ['blue', impT('imp.blue')], ['red', impT('imp.red')]])
     .map(x => '<option value="' + impEsc(x[0]) + '"' + (x[0] === sel ? ' selected' : '') + '>' + impEsc(x[1]) + '</option>').join('');
 }
-/* La liste « Camp des groupes » existe dès que la source chargée est un briefing (le briefing en cours, ou un fichier de briefing) */
+/* La liste « Coalition des groupes » existe dès que la source chargée est un briefing (le briefing en cours, ou un fichier de briefing) */
 function impSrcIsBriefing(I) { const c = impCur(I); return !!c && c.what === 'bg'; }
 /* La liste se mesure à sa plus longue option (en caractères de sa police à chasse fixe, plus le cadre et la flèche) : le sélecteur remplacé par le module n'a pas de largeur propre */
 function impBgSideHtml(I) {
-  const n = ['imp.red', 'imp.blue', 'imp.noside'].reduce((m, k) => Math.max(m, impT(k).length), 0) + 2;
+  const n = ['imp.blue', 'imp.red', 'imp.noside'].reduce((m, k) => Math.max(m, impT(k).length), 0) + 2;
   return '<div class="imp-bgside"><label class="imp-lbl" for="imp-bg-side">' + impEsc(impT('imp.side.groups')) + '</label><span class="imp-bgsel" style="width: calc(' + n + 'ch + 52px)"><select class="imp-sel" id="imp-bg-side" aria-label="' + impEsc(impT('imp.side.groups')) + '">' + impSideOptions(I.bgSide, true) + '</select></span></div>';
 }
 function impSourceLabel(I) {
@@ -825,7 +825,7 @@ function impFlightsHtml(I, cur) {
   const g = gsRead() || { theatre: '', flights: [] };
   const other = impRouteOff(cur, g);
   const th = other ? impTf('imp.theatre.other', cur.theatre, g.theatre) : ((cur.theatre && (!g.theatre || !g.flights.length)) ? impTf('imp.theatre.set', cur.theatre) : '');
-  const sides = [['all', impT('imp.all')], ['red', impT('imp.red')], ['blue', impT('imp.blue')]];
+  const sides = [['all', impT('imp.all')], ['blue', impT('imp.blue')], ['red', impT('imp.red')]];
   if (cur.rows.some(r => r.coal === 'neutrals')) sides.push(['neutrals', impT('imp.neutral')]);
   const types = cur.rows.reduce((acc, r) => acc.concat(r.types), []).filter((v, i, a) => a.indexOf(v) === i).sort();
   const opt = (v, l, sel) => '<option value="' + impEsc(v) + '"' + (v === sel ? ' selected' : '') + '>' + impEsc(l) + '</option>';
