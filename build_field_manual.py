@@ -9,6 +9,17 @@ import subprocess
 import sys
 import tempfile
 
+CONTRAST_CSS = r"""
+/* MP-20 begin */
+/* Contrastes (texte sous 18 px, 4,5 : 1 au moins) : couleur du texte seule, la palette commune ne bouge pas. */
+:where(body[data-theme="cw-nato"]) .tb-brand-short { color: #8b9aaf; }
+:where(body[data-theme="cw-nato"]) .tb-classif { color: #d4847b; }
+:where(body[data-theme="cw-soviet"]) .tb-classif { color: #be7d7d; }
+:where(body[data-theme="modern-nato"]) .tb-classif { color: #898989; }
+:where(body[data-theme="modern-east"]) .tb-classif { color: #bd7979; }
+/* MP-20 end */
+"""
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 APP_VERSION = '1.3.0'
@@ -1826,7 +1837,7 @@ kbd {{
 .fm-plaque[data-module="fc"]  {{ --chapter-accent: #D0784A; --chapter-accent-rgb: 208,120,74; }}
 
 {FM_EXTRA_CSS}
-</style>
+{CONTRAST_CSS}</style>
 </head>
 <body data-theme="cw-nato">
 

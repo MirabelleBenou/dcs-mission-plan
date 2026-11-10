@@ -9,6 +9,86 @@ import re
 from messages_block import build_block as build_messages_block, build_css as build_messages_css
 from ui_block import build_block as build_ui_block, build_css as build_ui_css, verify as ui_verify
 
+CONTRAST_CSS = r"""
+/* MP-20 begin */
+/* Contrastes (texte sous 18 px, 4,5 : 1 au moins) : couleur du texte seule, la palette commune ne bouge pas. */
+:where(body[data-theme="cw-nato"]) .tb-brand-short { color: #d47db1; }
+:where(body[data-theme="cw-nato"]) .tb-classif { color: #d4847b; }
+:where(body[data-theme="cw-nato"]) .ed-section > summary { color: #dcbe8a; }
+:where(body[data-theme="cw-nato"]) .drop-zone.has-image { color: #7f936f; }
+:where(body[data-theme="cw-nato"]) .img-credit { color: #a69e87; }
+:where(body[data-theme="cw-nato"]) .logo-mode button.active { color: #dcbe8a; }
+:where(body[data-theme="cw-nato"]) .logo-thumb-none { color: #a69e87; }
+:where(body[data-theme="cw-nato"]) .cartouche-point-toggle input:checked + .point-marker { color: #f36262; }
+:where(body[data-theme="cw-nato"]) .btn-remove-row { color: #d4847b; }
+:where(body[data-theme="cw-nato"]) .amorce-toggle input:checked + .amorce-marker { color: #c28d30; }
+:where(body[data-theme="cw-nato"]) .btn-add-row { color: #c49037; }
+:where(body[data-theme="cw-nato"]) .shapes-toolbox button { color: #c49037; }
+:where(body[data-theme="cw-nato"]) .btn-add-inset { color: #8d9f7f; }
+:where(body[data-theme="cw-nato"]) .inset-num { color: #849775; }
+:where(body[data-theme="cw-nato"]) .inset-color-group button.active { color: #c79641; }
+:where(body[data-theme="cw-nato"]) .btn-export { color: #dcbe8a; }
+:where(body[data-theme="cw-nato"]) .dr-tool.on { color: #efe8d5; }
+:where(body[data-theme="cw-soviet"]) .tb-brand-short { color: #cf6ea8; }
+:where(body[data-theme="cw-soviet"]) .tb-classif { color: #be7d7d; }
+:where(body[data-theme="cw-soviet"]) .ed-section > summary { color: #cc9f52; }
+:where(body[data-theme="cw-soviet"]) .drop-zone.has-image { color: #798f69; }
+:where(body[data-theme="cw-soviet"]) .img-credit { color: #959d8e; }
+:where(body[data-theme="cw-soviet"]) .logo-mode button.active { color: #cc9f52; }
+:where(body[data-theme="cw-soviet"]) .logo-thumb-none { color: #919a8a; }
+:where(body[data-theme="cw-soviet"]) .cartouche-point-toggle input:checked + .point-marker { color: #f25757; }
+:where(body[data-theme="cw-soviet"]) .btn-remove-row { color: #be7d7d; }
+:where(body[data-theme="cw-soviet"]) .btn-add-inset { color: #809471; }
+:where(body[data-theme="cw-soviet"]) .inset-num { color: #7f936f; }
+:where(body[data-theme="cw-soviet"]) .inset-color-group button.active { color: #c49037; }
+:where(body[data-theme="cw-soviet"]) .btn-export { color: #cc9f52; }
+:where(body[data-theme="cw-soviet"]) .dr-tool.on { color: #f2e8c0; }
+:where(body[data-theme="cw-soviet"]) .btn-replace { color: #879279; }
+:where(body[data-theme="cw-soviet"]) .ed-label { color: #859178; }
+:where(body[data-theme="cw-soviet"]) .logo-mode button { color: #879279; }
+:where(body[data-theme="cw-soviet"]) .btn-upload-logo { color: #879279; }
+:where(body[data-theme="cw-soviet"]) .logo-mode-label { color: #7e8b70; }
+:where(body[data-theme="cw-soviet"]) .amorce-marker { color: #879279; }
+:where(body[data-theme="cw-soviet"]) .shape-color-group button { color: #879279; }
+:where(body[data-theme="cw-soviet"]) .inset-color-group button { color: #879279; }
+:where(body[data-theme="modern-nato"]) .tb-brand-short { color: #cd66a3; }
+:where(body[data-theme="modern-nato"]) .tb-classif { color: #898989; }
+:where(body[data-theme="modern-nato"]) .ed-section > summary { color: #c38f35; }
+:where(body[data-theme="modern-nato"]) .drop-zone.has-image { color: #768c65; }
+:where(body[data-theme="modern-nato"]) .img-credit { color: #8f99a3; }
+:where(body[data-theme="modern-nato"]) .logo-mode button.active { color: #c38f35; }
+:where(body[data-theme="modern-nato"]) .logo-thumb-none { color: #8d97a2; }
+:where(body[data-theme="modern-nato"]) .cartouche-point-toggle input:checked + .point-marker { color: #f25353; }
+:where(body[data-theme="modern-nato"]) .btn-remove-row { color: #898989; }
+:where(body[data-theme="modern-nato"]) .btn-add-inset { color: #798f69; }
+:where(body[data-theme="modern-nato"]) .inset-num { color: #7b906b; }
+:where(body[data-theme="modern-nato"]) .inset-color-group button.active { color: #c28d30; }
+:where(body[data-theme="modern-nato"]) .btn-export { color: #c38f35; }
+:where(body[data-theme="modern-east"]) .tb-brand-short { color: #ce69a5; }
+:where(body[data-theme="modern-east"]) .tb-classif { color: #bd7979; }
+:where(body[data-theme="modern-east"]) .ed-section > summary { color: #c6943d; }
+:where(body[data-theme="modern-east"]) .drop-zone.has-image { color: #768c65; }
+:where(body[data-theme="modern-east"]) .img-credit { color: #969b8c; }
+:where(body[data-theme="modern-east"]) .logo-mode button.active { color: #c6943d; }
+:where(body[data-theme="modern-east"]) .logo-thumb-none { color: #94998a; }
+:where(body[data-theme="modern-east"]) .cartouche-point-toggle input:checked + .point-marker { color: #f25757; }
+:where(body[data-theme="modern-east"]) .btn-remove-row { color: #bd7979; }
+:where(body[data-theme="modern-east"]) .btn-add-inset { color: #7d916d; }
+:where(body[data-theme="modern-east"]) .inset-num { color: #7d916d; }
+:where(body[data-theme="modern-east"]) .inset-color-group button.active { color: #c38f35; }
+:where(body[data-theme="modern-east"]) .btn-export { color: #c6943d; }
+:where(body[data-theme="modern-east"]) .dr-tool.on { color: #ece8e0; }
+:where(body[data-theme="modern-east"]) .btn-replace { color: #888e78; }
+:where(body[data-theme="modern-east"]) .ed-label { color: #868d76; }
+:where(body[data-theme="modern-east"]) .logo-mode button { color: #888e78; }
+:where(body[data-theme="modern-east"]) .btn-upload-logo { color: #888e78; }
+:where(body[data-theme="modern-east"]) .logo-mode-label { color: #828971; }
+:where(body[data-theme="modern-east"]) .amorce-marker { color: #888e78; }
+:where(body[data-theme="modern-east"]) .shape-color-group button { color: #888e78; }
+:where(body[data-theme="modern-east"]) .inset-color-group button { color: #888e78; }
+/* MP-20 end */
+"""
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 ASSETS_PATH = os.path.join(HERE, 'assets.json')
 if not os.path.isfile(ASSETS_PATH):
@@ -2338,7 +2418,7 @@ select[data-tbm-src] {{ display: none !important; }}
 }}
 
 {RSD_CSS}
-</style>
+{CONTRAST_CSS}</style>
 </head>
 <body data-theme="cw-nato">
 

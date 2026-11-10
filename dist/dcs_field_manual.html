@@ -885,6 +885,15 @@ body.zm-open #fm-root { overflow: hidden; }
   font-size: 28px;
 }
 
+
+/* MP-20 begin */
+/* Contrastes (texte sous 18 px, 4,5 : 1 au moins) : couleur du texte seule, la palette commune ne bouge pas. */
+:where(body[data-theme="cw-nato"]) .tb-brand-short { color: #8b9aaf; }
+:where(body[data-theme="cw-nato"]) .tb-classif { color: #d4847b; }
+:where(body[data-theme="cw-soviet"]) .tb-classif { color: #be7d7d; }
+:where(body[data-theme="modern-nato"]) .tb-classif { color: #898989; }
+:where(body[data-theme="modern-east"]) .tb-classif { color: #bd7979; }
+/* MP-20 end */
 </style>
 </head>
 <body data-theme="cw-nato">

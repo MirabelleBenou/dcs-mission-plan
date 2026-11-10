@@ -2530,6 +2530,23 @@ button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-
 .toolbar .tb-seg { height: auto; min-height: 44px; }
 /* dans la suite, le module laisse le thème à l'accueil : sa liste de thème n'est pas là (le drapeau reste) */
 html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-controls="tbm-list-theme-select"], html.mp-in-shell [aria-controls="tbm-list-theme"] { display: none !important; }
+/* MP-20 begin */
+/* Contrastes (texte sous 18 px, 4,5 : 1 au moins) : couleur du texte seule, la palette commune ne bouge pas. */
+:where(body[data-theme="cw-nato"]) .ui-lbl { color: #c49037; }
+:where(body[data-theme="cw-nato"]) .toast-action { color: #c49037; }
+:where(body[data-theme="cw-nato"]) .ui-note { color: #ab9e78; }
+:where(body[data-theme="cw-nato"]) .ui-sum { color: #cbc2aa; }
+:where(body[data-theme="cw-nato"]) .ui-panel > h2 { color: #c49037; }
+:where(body[data-theme="cw-nato"]) .ui-title { color: #c49037; }
+:where(body[data-theme="cw-soviet"]) .ui-note { color: #95a08a; }
+:where(body[data-theme="cw-soviet"]) .ui-ext { color: #879279; }
+:where(body[data-theme="cw-soviet"]) .ui-sum { color: #9fa995; }
+:where(body[data-theme="modern-nato"]) .ui-note { color: #8e9ca7; }
+:where(body[data-theme="modern-nato"]) .ui-sum { color: #929fab; }
+:where(body[data-theme="modern-east"]) .ui-note { color: #989e8a; }
+:where(body[data-theme="modern-east"]) .ui-ext { color: #888e78; }
+:where(body[data-theme="modern-east"]) .ui-sum { color: #9da28f; }
+/* MP-20 end */
 /* ===== FIN DE LA FEUILLE DE L'INTERFACE COMMUNE ===== */
 
 /* ============ BRIEF COMPLET / SIMPLIFIÉ (v2.3.0) ============ */
@@ -2949,6 +2966,47 @@ body[data-format="full"] [data-fmt="simple"] { display: none !important; }
     margin: 0;
   }
 }
+
+/* MP-20 begin */
+/* Contrastes (texte sous 18 px, 4,5 : 1 au moins) : couleur du texte seule, la palette commune ne bouge pas. */
+:where(body[data-theme="cw-nato"]) .tb-brand-short { color: #c49037; }
+:where(body[data-theme="cw-nato"]) .tb-seg .seg-btn.active { color: #efe8d5; }
+:where(body[data-theme="cw-nato"]) .ed-section > summary { color: #dcbe8a; }
+:where(body[data-theme="cw-nato"]) .ed-phase-card .phase-num { color: #eee8d8; }
+:where(body[data-theme="cw-nato"]) .phase-indicator { color: #c49037; }
+:where(body[data-theme="cw-nato"]) .phase-bar button.danger { color: #e6b7b1; }
+:where(body[data-theme="cw-nato"]) .ed-label-hint { color: #aea692; }
+:where(body[data-theme="cw-nato"]) .ed-btn-subtask-add { color: #898f78; }
+:where(body[data-theme="cw-nato"]) .wing-action-reset { color: #c17064; }
+:where(body[data-theme="cw-soviet"]) .tb-seg .seg-btn.active { color: #f2e8c0; }
+:where(body[data-theme="cw-soviet"]) .ed-section > summary { color: #cc9f52; }
+:where(body[data-theme="cw-soviet"]) .ed-phase-card .phase-num { color: #f0e8cb; }
+:where(body[data-theme="cw-soviet"]) .phase-bar button.danger { color: #cd9a9a; }
+:where(body[data-theme="cw-soviet"]) .ed-label-hint { color: #9da597; }
+:where(body[data-theme="cw-soviet"]) .ed-btn-subtask-add { color: #7d879a; }
+:where(body[data-theme="cw-soviet"]) .wing-action-reset { color: #b27171; }
+:where(body[data-theme="cw-soviet"]) .phase-empty { color: #7e8b70; }
+:where(body[data-theme="cw-soviet"]) .ui-note { color: #879279; }
+:where(body[data-theme="cw-soviet"]) .ed-btn-move { color: #879279; }
+:where(body[data-theme="cw-soviet"]) .wing-ro-meta { color: #7b886d; }
+:where(body[data-theme="modern-nato"]) .ed-section > summary { color: #c38f35; }
+:where(body[data-theme="modern-nato"]) .ed-phase-card .phase-num { color: #ece8df; }
+:where(body[data-theme="modern-nato"]) .phase-bar button.danger { color: #9a9a9a; }
+:where(body[data-theme="modern-nato"]) .ed-label-hint { color: #97a0aa; }
+:where(body[data-theme="modern-nato"]) .ed-btn-subtask-add { color: #81858a; }
+:where(body[data-theme="modern-nato"]) .wing-action-reset { color: #818181; }
+:where(body[data-theme="modern-east"]) .tb-seg .seg-btn.active { color: #ece8e0; }
+:where(body[data-theme="modern-east"]) .ed-section > summary { color: #c6943d; }
+:where(body[data-theme="modern-east"]) .ed-phase-card .phase-num { color: #ebe8e2; }
+:where(body[data-theme="modern-east"]) .phase-bar button.danger { color: #c78e8e; }
+:where(body[data-theme="modern-east"]) .ed-label-hint { color: #9da294; }
+:where(body[data-theme="modern-east"]) .ed-btn-subtask-add { color: #8d857e; }
+:where(body[data-theme="modern-east"]) .wing-action-reset { color: #aa7373; }
+:where(body[data-theme="modern-east"]) .phase-empty { color: #828971; }
+:where(body[data-theme="modern-east"]) .ui-note { color: #888e78; }
+:where(body[data-theme="modern-east"]) .ed-btn-move { color: #888e78; }
+:where(body[data-theme="modern-east"]) .wing-ro-meta { color: #7d846c; }
+/* MP-20 end */
 
 </style>
 <!-- html2canvas v1.4.1 — embarqué pour export PNG kneeboard (étape B) -->

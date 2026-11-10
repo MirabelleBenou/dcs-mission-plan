@@ -30,6 +30,61 @@ from group_store_block import build_block as build_group_store_block
 from import_block import build_block as build_import_block, build_css as build_import_css, build_html as build_import_html
 from messages_block import build_block as build_messages_block, build_css as build_messages_css
 from ui_block import build_block as build_ui_block, build_css as build_ui_css, verify as ui_verify, fingerprint as ui_fingerprint
+
+CONTRAST_CSS = r"""
+/* MP-20 begin */
+/* Contrastes (texte sous 18 px, 4,5 : 1 au moins) : couleur du texte seule, la palette commune ne bouge pas. */
+:where(body[data-theme="cw-nato"]) .tb-brand-short { color: #d5865c; }
+:where(body[data-theme="cw-nato"]) .tb-sel { color: #c49037; }
+:where(body[data-theme="cw-nato"]) .fc-bh { color: #dcbe8a; }
+:where(body[data-theme="cw-nato"]) .pk-x { color: #ab9e78; }
+:where(body[data-theme="cw-nato"]) .ed-field label { color: #c79641; }
+:where(body[data-theme="cw-nato"]) .fc-sub > summary { color: #c79641; }
+:where(body[data-theme="cw-nato"]) .fc-sub .fc-sum { color: #ab9e78; }
+:where(body[data-theme="cw-nato"]) .fc-lo-k { color: #c79641; }
+:where(body[data-theme="cw-soviet"]) .fc-bh { color: #cc9f52; }
+:where(body[data-theme="cw-soviet"]) .pk-x { color: #95a08a; }
+:where(body[data-theme="cw-soviet"]) .ed-field label { color: #c6943d; }
+:where(body[data-theme="cw-soviet"]) .fc-sub > summary { color: #c6943d; }
+:where(body[data-theme="cw-soviet"]) .fc-sub .fc-sum { color: #95a08a; }
+:where(body[data-theme="cw-soviet"]) .fc-lo-k { color: #c6943d; }
+:where(body[data-theme="cw-soviet"]) .tb-label { color: #879279; }
+:where(body[data-theme="cw-soviet"]) .fc-route.none { color: #788569; }
+:where(body[data-theme="cw-soviet"]) .fc-post .fc-sum { color: #8f9a83; }
+:where(body[data-theme="cw-soviet"]) .fc-band { color: #8f9a83; }
+:where(body[data-theme="cw-soviet"]) .fc-ch > label { color: #8f9a83; }
+:where(body[data-theme="cw-soviet"]) .cmp-credit { color: #808c72; }
+:where(body[data-theme="cw-soviet"]) .cmp-st .n { color: #808c72; }
+:where(body[data-theme="cw-soviet"]) .cmp-row > .sn { color: #79866b; }
+:where(body[data-theme="cw-soviet"]) .cmp-sub { color: #79866b; }
+:where(body[data-theme="cw-soviet"]) .cmp-tot { color: #79866b; }
+:where(body[data-theme="modern-nato"]) .fc-bh { color: #c38f35; }
+:where(body[data-theme="modern-nato"]) .pk-x { color: #8e9ca7; }
+:where(body[data-theme="modern-nato"]) .ed-field label { color: #c49037; }
+:where(body[data-theme="modern-nato"]) .fc-sub > summary { color: #c49037; }
+:where(body[data-theme="modern-nato"]) .fc-sub .fc-sum { color: #8e9ca7; }
+:where(body[data-theme="modern-nato"]) .fc-lo-k { color: #c49037; }
+:where(body[data-theme="modern-nato"]) .fc-post .fc-sum { color: #8695a1; }
+:where(body[data-theme="modern-nato"]) .fc-band { color: #8695a1; }
+:where(body[data-theme="modern-nato"]) .fc-ch > label { color: #8695a1; }
+:where(body[data-theme="modern-east"]) .fc-bh { color: #c6943d; }
+:where(body[data-theme="modern-east"]) .pk-x { color: #989e8a; }
+:where(body[data-theme="modern-east"]) .ed-field label { color: #c6943d; }
+:where(body[data-theme="modern-east"]) .fc-sub > summary { color: #c6943d; }
+:where(body[data-theme="modern-east"]) .fc-sub .fc-sum { color: #989e8a; }
+:where(body[data-theme="modern-east"]) .fc-lo-k { color: #c6943d; }
+:where(body[data-theme="modern-east"]) .tb-label { color: #888e78; }
+:where(body[data-theme="modern-east"]) .fc-route.none { color: #7a8269; }
+:where(body[data-theme="modern-east"]) .fc-post .fc-sum { color: #929884; }
+:where(body[data-theme="modern-east"]) .fc-band { color: #929884; }
+:where(body[data-theme="modern-east"]) .fc-ch > label { color: #929884; }
+:where(body[data-theme="modern-east"]) .cmp-credit { color: #858b74; }
+:where(body[data-theme="modern-east"]) .cmp-st .n { color: #858b74; }
+:where(body[data-theme="modern-east"]) .cmp-row > .sn { color: #7d846c; }
+:where(body[data-theme="modern-east"]) .cmp-sub { color: #7d846c; }
+:where(body[data-theme="modern-east"]) .cmp-tot { color: #7d846c; }
+/* MP-20 end */
+"""
 from magvar_block import build_block as build_magvar_block
 from payload_block import build_block as build_payload_block
 from projection_block import build_block as build_projection_block
@@ -4437,7 +4492,7 @@ def build_html():
     return ('<!DOCTYPE html>\n<html lang="fr">\n<head>\n<meta charset="UTF-8">\n'
             '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">\n'
             '<meta name="theme-color" content="#1a1e10">\n<title>Flight Configurator — Mission Plan</title>\n<style>\n'
-            + fonts + CSS_COMMON + CSS_FC + build_messages_css() + build_ui_css() + build_import_css() + '\n</style>\n'
+            + fonts + CSS_COMMON + CSS_FC + build_messages_css() + build_ui_css() + build_import_css() + CONTRAST_CSS + '\n</style>\n'
             '<!-- JSZip v3.10.1 — embarqué pour lire un paquet .zip -->\n<script>' + A['lib_jszip'] + '</script>\n</head>\n'
             + BODY.replace('@@VERSION@@', APP_VERSION) + '\n<script>\n' + js + '\n</script>\n</body>\n</html>\n')
 

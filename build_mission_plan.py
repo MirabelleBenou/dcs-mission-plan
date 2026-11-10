@@ -24,6 +24,29 @@ import json
 import os
 import sys
 
+CONTRAST_CSS = r"""
+/* MP-20 begin */
+/* Contrastes (texte sous 18 px, 4,5 : 1 au moins) : couleur du texte seule, la palette commune ne bouge pas. */
+:where(body[data-theme="cw-nato"]) .classif { color: #c88075; }
+:where(body[data-theme="cw-nato"]) .bigstamp { color: #d7a29a; }
+:where(body[data-theme="cw-nato"]) .pver { color: #40392c; }
+:where(body[data-theme="cw-nato"]) .pdesc { color: #40392c; }
+:where(body[data-theme="cw-nato"]) .pstatus { color: #373d24; }
+:where(body[data-theme="cw-nato"]) .foot { color: #f1ece3; }
+:where(body[data-theme="cw-soviet"]) .classif { color: #ba8181; }
+:where(body[data-theme="cw-soviet"]) .bigstamp { color: #cda3a3; }
+:where(body[data-theme="cw-soviet"]) .pver { color: #3c3629; }
+:where(body[data-theme="cw-soviet"]) .pdesc { color: #3c3629; }
+:where(body[data-theme="cw-soviet"]) .pstatus { color: #273654; }
+:where(body[data-theme="cw-soviet"]) .foot { color: #f1ebd5; }
+:where(body[data-theme="modern-nato"]) .foot { color: #e8ebed; }
+[data-theme="modern-nato"] .bigstamp { color: #e8ebed; }
+:where(body[data-theme="modern-east"]) .foot { color: #edebe7; }
+[data-theme="modern-east"] .classif { color: #ae847c; }
+[data-theme="modern-east"] .bigstamp { color: #f1eae9; }
+/* MP-20 end */
+"""
+
 # ── Configuration ──────────────────────────────────────────────────────────────
 OUT_FILE = 'dist/dcs_mission_plan.html'
 
@@ -388,7 +411,7 @@ select[data-tbm-src] {{ display: none !important; }}
 @media(max-width:768px){{
   .bigstamp,.soviet-star{{display:none;}}
 }}
-</style>
+{CONTRAST_CSS}</style>
 </head>
 <body data-theme="cw-nato">
 

@@ -765,6 +765,23 @@ button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-
 .toolbar .tb-seg { height: auto; min-height: 44px; }
 /* dans la suite, le module laisse le thème à l'accueil : sa liste de thème n'est pas là (le drapeau reste) */
 html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-controls="tbm-list-theme-select"], html.mp-in-shell [aria-controls="tbm-list-theme"] { display: none !important; }
+/* MP-20 begin */
+/* Contrastes (texte sous 18 px, 4,5 : 1 au moins) : couleur du texte seule, la palette commune ne bouge pas. */
+:where(body[data-theme="cw-nato"]) .ui-lbl { color: #c49037; }
+:where(body[data-theme="cw-nato"]) .toast-action { color: #c49037; }
+:where(body[data-theme="cw-nato"]) .ui-note { color: #ab9e78; }
+:where(body[data-theme="cw-nato"]) .ui-sum { color: #cbc2aa; }
+:where(body[data-theme="cw-nato"]) .ui-panel > h2 { color: #c49037; }
+:where(body[data-theme="cw-nato"]) .ui-title { color: #c49037; }
+:where(body[data-theme="cw-soviet"]) .ui-note { color: #95a08a; }
+:where(body[data-theme="cw-soviet"]) .ui-ext { color: #879279; }
+:where(body[data-theme="cw-soviet"]) .ui-sum { color: #9fa995; }
+:where(body[data-theme="modern-nato"]) .ui-note { color: #8e9ca7; }
+:where(body[data-theme="modern-nato"]) .ui-sum { color: #929fab; }
+:where(body[data-theme="modern-east"]) .ui-note { color: #989e8a; }
+:where(body[data-theme="modern-east"]) .ui-ext { color: #888e78; }
+:where(body[data-theme="modern-east"]) .ui-sum { color: #9da28f; }
+/* MP-20 end */
 /* ===== FIN DE LA FEUILLE DE L'INTERFACE COMMUNE ===== */
 /* ===== IMPORT COMMUN : feuille ===== */
 .imp-modal { --imp-acc: var(--imp-accent, var(--fc, var(--amber))); }
@@ -842,6 +859,59 @@ html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-
 }
 @media print { .imp-modal { display: none; } }
 /* ===== FIN DE LA FEUILLE D'IMPORT ===== */
+
+/* MP-20 begin */
+/* Contrastes (texte sous 18 px, 4,5 : 1 au moins) : couleur du texte seule, la palette commune ne bouge pas. */
+:where(body[data-theme="cw-nato"]) .tb-brand-short { color: #d5865c; }
+:where(body[data-theme="cw-nato"]) .tb-sel { color: #c49037; }
+:where(body[data-theme="cw-nato"]) .fc-bh { color: #dcbe8a; }
+:where(body[data-theme="cw-nato"]) .pk-x { color: #ab9e78; }
+:where(body[data-theme="cw-nato"]) .ed-field label { color: #c79641; }
+:where(body[data-theme="cw-nato"]) .fc-sub > summary { color: #c79641; }
+:where(body[data-theme="cw-nato"]) .fc-sub .fc-sum { color: #ab9e78; }
+:where(body[data-theme="cw-nato"]) .fc-lo-k { color: #c79641; }
+:where(body[data-theme="cw-soviet"]) .fc-bh { color: #cc9f52; }
+:where(body[data-theme="cw-soviet"]) .pk-x { color: #95a08a; }
+:where(body[data-theme="cw-soviet"]) .ed-field label { color: #c6943d; }
+:where(body[data-theme="cw-soviet"]) .fc-sub > summary { color: #c6943d; }
+:where(body[data-theme="cw-soviet"]) .fc-sub .fc-sum { color: #95a08a; }
+:where(body[data-theme="cw-soviet"]) .fc-lo-k { color: #c6943d; }
+:where(body[data-theme="cw-soviet"]) .tb-label { color: #879279; }
+:where(body[data-theme="cw-soviet"]) .fc-route.none { color: #788569; }
+:where(body[data-theme="cw-soviet"]) .fc-post .fc-sum { color: #8f9a83; }
+:where(body[data-theme="cw-soviet"]) .fc-band { color: #8f9a83; }
+:where(body[data-theme="cw-soviet"]) .fc-ch > label { color: #8f9a83; }
+:where(body[data-theme="cw-soviet"]) .cmp-credit { color: #808c72; }
+:where(body[data-theme="cw-soviet"]) .cmp-st .n { color: #808c72; }
+:where(body[data-theme="cw-soviet"]) .cmp-row > .sn { color: #79866b; }
+:where(body[data-theme="cw-soviet"]) .cmp-sub { color: #79866b; }
+:where(body[data-theme="cw-soviet"]) .cmp-tot { color: #79866b; }
+:where(body[data-theme="modern-nato"]) .fc-bh { color: #c38f35; }
+:where(body[data-theme="modern-nato"]) .pk-x { color: #8e9ca7; }
+:where(body[data-theme="modern-nato"]) .ed-field label { color: #c49037; }
+:where(body[data-theme="modern-nato"]) .fc-sub > summary { color: #c49037; }
+:where(body[data-theme="modern-nato"]) .fc-sub .fc-sum { color: #8e9ca7; }
+:where(body[data-theme="modern-nato"]) .fc-lo-k { color: #c49037; }
+:where(body[data-theme="modern-nato"]) .fc-post .fc-sum { color: #8695a1; }
+:where(body[data-theme="modern-nato"]) .fc-band { color: #8695a1; }
+:where(body[data-theme="modern-nato"]) .fc-ch > label { color: #8695a1; }
+:where(body[data-theme="modern-east"]) .fc-bh { color: #c6943d; }
+:where(body[data-theme="modern-east"]) .pk-x { color: #989e8a; }
+:where(body[data-theme="modern-east"]) .ed-field label { color: #c6943d; }
+:where(body[data-theme="modern-east"]) .fc-sub > summary { color: #c6943d; }
+:where(body[data-theme="modern-east"]) .fc-sub .fc-sum { color: #989e8a; }
+:where(body[data-theme="modern-east"]) .fc-lo-k { color: #c6943d; }
+:where(body[data-theme="modern-east"]) .tb-label { color: #888e78; }
+:where(body[data-theme="modern-east"]) .fc-route.none { color: #7a8269; }
+:where(body[data-theme="modern-east"]) .fc-post .fc-sum { color: #929884; }
+:where(body[data-theme="modern-east"]) .fc-band { color: #929884; }
+:where(body[data-theme="modern-east"]) .fc-ch > label { color: #929884; }
+:where(body[data-theme="modern-east"]) .cmp-credit { color: #858b74; }
+:where(body[data-theme="modern-east"]) .cmp-st .n { color: #858b74; }
+:where(body[data-theme="modern-east"]) .cmp-row > .sn { color: #7d846c; }
+:where(body[data-theme="modern-east"]) .cmp-sub { color: #7d846c; }
+:where(body[data-theme="modern-east"]) .cmp-tot { color: #7d846c; }
+/* MP-20 end */
 
 </style>
 <!-- JSZip v3.10.1 — embarqué pour lire un paquet .zip -->

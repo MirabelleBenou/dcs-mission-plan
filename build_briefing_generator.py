@@ -11,6 +11,49 @@ import os
 from messages_block import build_block as build_messages_block, build_css as build_messages_css
 from ui_block import build_block as build_ui_block, build_css as build_ui_css, verify as ui_verify
 
+CONTRAST_CSS = r"""
+/* MP-20 begin */
+/* Contrastes (texte sous 18 px, 4,5 : 1 au moins) : couleur du texte seule, la palette commune ne bouge pas. */
+:where(body[data-theme="cw-nato"]) .tb-brand-short { color: #c49037; }
+:where(body[data-theme="cw-nato"]) .tb-seg .seg-btn.active { color: #efe8d5; }
+:where(body[data-theme="cw-nato"]) .ed-section > summary { color: #dcbe8a; }
+:where(body[data-theme="cw-nato"]) .ed-phase-card .phase-num { color: #eee8d8; }
+:where(body[data-theme="cw-nato"]) .phase-indicator { color: #c49037; }
+:where(body[data-theme="cw-nato"]) .phase-bar button.danger { color: #e6b7b1; }
+:where(body[data-theme="cw-nato"]) .ed-label-hint { color: #aea692; }
+:where(body[data-theme="cw-nato"]) .ed-btn-subtask-add { color: #898f78; }
+:where(body[data-theme="cw-nato"]) .wing-action-reset { color: #c17064; }
+:where(body[data-theme="cw-soviet"]) .tb-seg .seg-btn.active { color: #f2e8c0; }
+:where(body[data-theme="cw-soviet"]) .ed-section > summary { color: #cc9f52; }
+:where(body[data-theme="cw-soviet"]) .ed-phase-card .phase-num { color: #f0e8cb; }
+:where(body[data-theme="cw-soviet"]) .phase-bar button.danger { color: #cd9a9a; }
+:where(body[data-theme="cw-soviet"]) .ed-label-hint { color: #9da597; }
+:where(body[data-theme="cw-soviet"]) .ed-btn-subtask-add { color: #7d879a; }
+:where(body[data-theme="cw-soviet"]) .wing-action-reset { color: #b27171; }
+:where(body[data-theme="cw-soviet"]) .phase-empty { color: #7e8b70; }
+:where(body[data-theme="cw-soviet"]) .ui-note { color: #879279; }
+:where(body[data-theme="cw-soviet"]) .ed-btn-move { color: #879279; }
+:where(body[data-theme="cw-soviet"]) .wing-ro-meta { color: #7b886d; }
+:where(body[data-theme="modern-nato"]) .ed-section > summary { color: #c38f35; }
+:where(body[data-theme="modern-nato"]) .ed-phase-card .phase-num { color: #ece8df; }
+:where(body[data-theme="modern-nato"]) .phase-bar button.danger { color: #9a9a9a; }
+:where(body[data-theme="modern-nato"]) .ed-label-hint { color: #97a0aa; }
+:where(body[data-theme="modern-nato"]) .ed-btn-subtask-add { color: #81858a; }
+:where(body[data-theme="modern-nato"]) .wing-action-reset { color: #818181; }
+:where(body[data-theme="modern-east"]) .tb-seg .seg-btn.active { color: #ece8e0; }
+:where(body[data-theme="modern-east"]) .ed-section > summary { color: #c6943d; }
+:where(body[data-theme="modern-east"]) .ed-phase-card .phase-num { color: #ebe8e2; }
+:where(body[data-theme="modern-east"]) .phase-bar button.danger { color: #c78e8e; }
+:where(body[data-theme="modern-east"]) .ed-label-hint { color: #9da294; }
+:where(body[data-theme="modern-east"]) .ed-btn-subtask-add { color: #8d857e; }
+:where(body[data-theme="modern-east"]) .wing-action-reset { color: #aa7373; }
+:where(body[data-theme="modern-east"]) .phase-empty { color: #828971; }
+:where(body[data-theme="modern-east"]) .ui-note { color: #888e78; }
+:where(body[data-theme="modern-east"]) .ed-btn-move { color: #888e78; }
+:where(body[data-theme="modern-east"]) .wing-ro-meta { color: #7d846c; }
+/* MP-20 end */
+"""
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 ASSETS_PATH = os.path.join(HERE, 'assets.json')
@@ -9848,7 +9891,7 @@ _default_wing_config_js = json.dumps(
     json.dumps(_default_wing_config, ensure_ascii=False)
 )
 
-HTML = HTML.replace('__CSS__', CSS.replace('@@MESSAGES_CSS@@\n', build_messages_css() + build_ui_css()))
+HTML = HTML.replace('__CSS__', CSS.replace('@@MESSAGES_CSS@@\n', build_messages_css() + build_ui_css()) + CONTRAST_CSS)
 HTML = HTML.replace('@@MESSAGES_BLOCK@@\n', build_messages_block() + build_ui_block())
 HTML = HTML.replace('__LIB_HTML2CANVAS__', A['lib_html2canvas'])
 HTML = HTML.replace('__LIB_JSZIP__', A['lib_jszip'])

@@ -31,6 +31,46 @@ from import_block import build_block as build_import_block, build_css as build_i
 from messages_block import build_block as build_messages_block, build_css as build_messages_css
 from ui_block import build_block as build_ui_block, build_css as build_ui_css, verify as ui_verify
 
+CONTRAST_CSS = r"""
+/* MP-20 begin */
+/* Contrastes (texte sous 18 px, 4,5 : 1 au moins) : couleur du texte seule, la palette commune ne bouge pas. */
+:where(body[data-theme="cw-nato"]) .tb-sel { color: #c49037; }
+:where(body[data-theme="cw-nato"]) #btn-display { color: #c49037; }
+:where(body[data-theme="cw-nato"]) #btn-units { color: #c49037; }
+:where(body[data-theme="cw-nato"]) .ed-head { color: #c99a48; }
+:where(body[data-theme="cw-nato"]) .ed-head small { color: #aea17c; }
+:where(body[data-theme="cw-nato"]) .rs-groups { color: #ab9d76; }
+:where(body[data-theme="cw-nato"]) .tb-btn.on { color: #efe8d5; }
+:where(body[data-theme="cw-nato"]) .ui-modal .rt-lbl { color: #c49037; }
+:where(body[data-theme="cw-nato"]) .lbl { color: #c49037; }
+:where(body[data-theme="cw-soviet"]) .ed-head { color: #c89744; }
+:where(body[data-theme="cw-soviet"]) .ed-head small { color: #99a38e; }
+:where(body[data-theme="cw-soviet"]) .rs-groups { color: #95a08a; }
+:where(body[data-theme="cw-soviet"]) .tb-btn.on { color: #f2e8c0; }
+:where(body[data-theme="cw-soviet"]) .tb-label { color: #879279; }
+:where(body[data-theme="cw-soviet"]) .rs-head small { color: #79866b; }
+:where(body[data-theme="cw-soviet"]) .pt-head span { color: #79866b; }
+:where(body[data-theme="cw-soviet"]) .pt-del { color: #79866b; }
+:where(body[data-theme="cw-soviet"]) .ui-note { color: #79866b; }
+:where(body[data-theme="cw-soviet"]) .ui-modal .rt-note { color: #879279; }
+:where(body[data-theme="cw-soviet"]) .fn-ext { color: #879279; }
+:where(body[data-theme="modern-nato"]) .ed-head { color: #c6953f; }
+:where(body[data-theme="modern-nato"]) .ed-head small { color: #929fab; }
+:where(body[data-theme="modern-nato"]) .rs-groups { color: #8e9ca7; }
+:where(body[data-theme="modern-east"]) .ed-head { color: #c89744; }
+:where(body[data-theme="modern-east"]) .ed-head small { color: #9da28f; }
+:where(body[data-theme="modern-east"]) .rs-groups { color: #989e8a; }
+:where(body[data-theme="modern-east"]) .tb-btn.on { color: #ece8e0; }
+:where(body[data-theme="modern-east"]) .tb-label { color: #888e78; }
+:where(body[data-theme="modern-east"]) .rs-head small { color: #7d846c; }
+:where(body[data-theme="modern-east"]) .pt-head span { color: #7d846c; }
+:where(body[data-theme="modern-east"]) .pt-del { color: #7d846c; }
+:where(body[data-theme="modern-east"]) .ui-note { color: #7d846c; }
+:where(body[data-theme="modern-east"]) .ui-modal .rt-note { color: #888e78; }
+:where(body[data-theme="modern-east"]) .fn-ext { color: #888e78; }
+/* MP-20 end */
+"""
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 APP_VERSION = "1.13.1"
 OUT_PATH = os.path.join(HERE, 'dist', 'dcs_route_planner.html')
@@ -11354,7 +11394,7 @@ def build():
         raise SystemExit("[ERREUR] lib_milsymbol : la mention de licence MIT n'est plus en tête")
 
     html = HTML
-    html = html.replace('__CSS__', CSS.replace('@@MESSAGES_CSS@@\n', build_messages_css() + build_ui_css()) + build_import_css())
+    html = html.replace('__CSS__', CSS.replace('@@MESSAGES_CSS@@\n', build_messages_css() + build_ui_css()) + build_import_css() + CONTRAST_CSS)
     html = html.replace('__IMPORT_HTML__\n', build_import_html())
     html = html.replace('__LIB_LEAFLET_CSS__', A['lib_leaflet_css'])
     html = html.replace('__LIB_LEAFLET__', lib)

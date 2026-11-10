@@ -10,6 +10,38 @@ from radio_bands_block import build_block as build_radio_bands_block
 from radio_block import build_block as build_radio_block
 from messages_block import build_block as build_messages_block, build_css as build_messages_css
 from ui_block import build_block as build_ui_block, build_css as build_ui_css, verify as ui_verify
+
+CONTRAST_CSS = r"""
+/* MP-20 begin */
+/* Contrastes (texte sous 18 px, 4,5 : 1 au moins) : couleur du texte seule, la palette commune ne bouge pas. */
+/* garde-fou : une accolade fermante isolée, plus haut dans cette feuille (héritée), avale la première règle qui la suit */
+.mp-parse-guard { }
+:where(body[data-theme="cw-nato"]) .tb-classif { color: #d4847b; }
+:where(body[data-theme="cw-nato"]) .ed-section > summary { color: #dcbe8a; }
+:where(body[data-theme="cw-nato"]) .drop-zone-miz { color: #d2cab6; }
+:where(body[data-theme="cw-nato"]) .wing-action-reset { color: #be685b; }
+:where(body[data-theme="cw-nato"]) .wing-size-counter { color: #aea692; }
+:where(body[data-theme="cw-soviet"]) .tb-classif { color: #be7d7d; }
+:where(body[data-theme="cw-soviet"]) .ed-section > summary { color: #cc9f52; }
+:where(body[data-theme="cw-soviet"]) .drop-zone-miz { color: #c5cbbf; }
+:where(body[data-theme="cw-soviet"]) .wing-action-reset { color: #af6d6d; }
+:where(body[data-theme="cw-soviet"]) .wing-size-counter { color: #a0a89b; }
+:where(body[data-theme="cw-soviet"]) .wing-legend { color: #79866b; }
+:where(body[data-theme="cw-soviet"]) .wing-sq-toggle { color: #788569; }
+:where(body[data-theme="modern-nato"]) .tb-classif { color: #898989; }
+:where(body[data-theme="modern-nato"]) .ed-section > summary { color: #c38f35; }
+:where(body[data-theme="modern-nato"]) .drop-zone-miz { color: #c0c8cf; }
+:where(body[data-theme="modern-nato"]) .wing-action-reset { color: #7f7f7f; }
+:where(body[data-theme="modern-nato"]) .wing-size-counter { color: #9ca5ae; }
+:where(body[data-theme="modern-east"]) .tb-classif { color: #bd7979; }
+:where(body[data-theme="modern-east"]) .ed-section > summary { color: #c6943d; }
+:where(body[data-theme="modern-east"]) .drop-zone-miz { color: #c6c9bf; }
+:where(body[data-theme="modern-east"]) .wing-action-reset { color: #a97171; }
+:where(body[data-theme="modern-east"]) .wing-size-counter { color: #a3a79a; }
+:where(body[data-theme="modern-east"]) .wing-legend { color: #7d846c; }
+:where(body[data-theme="modern-east"]) .wing-sq-toggle { color: #7a8269; }
+/* MP-20 end */
+"""
 from aircraft_types_block import build_block as build_aircraft_types_block
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -988,7 +1020,7 @@ body[data-theme] {{
   .wing-actions {{ flex-direction: column; }}
   .wing-action-btn {{ min-width: unset; }}
 }}
-</style>
+{CONTRAST_CSS}</style>
 </head>
 <body data-theme="cw-nato">
 

@@ -126,6 +126,23 @@ button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-
 .toolbar .tb-seg { height: auto; min-height: 44px; }
 /* dans la suite, le module laisse le thème à l'accueil : sa liste de thème n'est pas là (le drapeau reste) */
 html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-controls="tbm-list-theme-select"], html.mp-in-shell [aria-controls="tbm-list-theme"] { display: none !important; }
+/* MP-20 begin */
+/* Contrastes (texte sous 18 px, 4,5 : 1 au moins) : couleur du texte seule, la palette commune ne bouge pas. */
+:where(body[data-theme="cw-nato"]) .ui-lbl { color: #c49037; }
+:where(body[data-theme="cw-nato"]) .toast-action { color: #c49037; }
+:where(body[data-theme="cw-nato"]) .ui-note { color: #ab9e78; }
+:where(body[data-theme="cw-nato"]) .ui-sum { color: #cbc2aa; }
+:where(body[data-theme="cw-nato"]) .ui-panel > h2 { color: #c49037; }
+:where(body[data-theme="cw-nato"]) .ui-title { color: #c49037; }
+:where(body[data-theme="cw-soviet"]) .ui-note { color: #95a08a; }
+:where(body[data-theme="cw-soviet"]) .ui-ext { color: #879279; }
+:where(body[data-theme="cw-soviet"]) .ui-sum { color: #9fa995; }
+:where(body[data-theme="modern-nato"]) .ui-note { color: #8e9ca7; }
+:where(body[data-theme="modern-nato"]) .ui-sum { color: #929fab; }
+:where(body[data-theme="modern-east"]) .ui-note { color: #989e8a; }
+:where(body[data-theme="modern-east"]) .ui-ext { color: #888e78; }
+:where(body[data-theme="modern-east"]) .ui-sum { color: #9da28f; }
+/* MP-20 end */
 """
 
 _JS = r"""

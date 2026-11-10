@@ -560,7 +560,7 @@ select[data-tbm-src] { display: none !important; }
 .ed-coord:empty { display: none; }
 .ed-coord.ok { color: var(--khaki-light); }
 .ed-coord.bad { color: #e8806a; }
-.ed-field input[readonly] { background: rgba(216, 201, 165, .5); color: #4a4636; cursor: not-allowed; }
+.ed-field input[readonly] { background: rgba(216, 201, 165, .7); color: #1f1c16; cursor: not-allowed; }
 .ed-field .af-free { margin-top: 6px; }
 
 /* Listes */
@@ -856,6 +856,23 @@ button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-
 .toolbar .tb-seg { height: auto; min-height: 44px; }
 /* dans la suite, le module laisse le thème à l'accueil : sa liste de thème n'est pas là (le drapeau reste) */
 html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-controls="tbm-list-theme-select"], html.mp-in-shell [aria-controls="tbm-list-theme"] { display: none !important; }
+/* MP-20 begin */
+/* Contrastes (texte sous 18 px, 4,5 : 1 au moins) : couleur du texte seule, la palette commune ne bouge pas. */
+:where(body[data-theme="cw-nato"]) .ui-lbl { color: #c49037; }
+:where(body[data-theme="cw-nato"]) .toast-action { color: #c49037; }
+:where(body[data-theme="cw-nato"]) .ui-note { color: #ab9e78; }
+:where(body[data-theme="cw-nato"]) .ui-sum { color: #cbc2aa; }
+:where(body[data-theme="cw-nato"]) .ui-panel > h2 { color: #c49037; }
+:where(body[data-theme="cw-nato"]) .ui-title { color: #c49037; }
+:where(body[data-theme="cw-soviet"]) .ui-note { color: #95a08a; }
+:where(body[data-theme="cw-soviet"]) .ui-ext { color: #879279; }
+:where(body[data-theme="cw-soviet"]) .ui-sum { color: #9fa995; }
+:where(body[data-theme="modern-nato"]) .ui-note { color: #8e9ca7; }
+:where(body[data-theme="modern-nato"]) .ui-sum { color: #929fab; }
+:where(body[data-theme="modern-east"]) .ui-note { color: #989e8a; }
+:where(body[data-theme="modern-east"]) .ui-ext { color: #888e78; }
+:where(body[data-theme="modern-east"]) .ui-sum { color: #9da28f; }
+/* MP-20 end */
 /* ===== FIN DE LA FEUILLE DE L'INTERFACE COMMUNE ===== */
 
 /* ============ FENÊTRES : l'export, « Enregistrer » et les groupes sont des .ui-modal (bloc d'interface commun) ; ici ce qui reste au module ============ */
@@ -1524,6 +1541,38 @@ div.dc-bl, li.dc-bl, p.dc-bl { height: 24px; border-bottom: 1px dotted var(--dc-
 }
 @media print { .imp-modal { display: none; } }
 /* ===== FIN DE LA FEUILLE D'IMPORT ===== */
+
+/* MP-20 begin */
+/* Contrastes (texte sous 18 px, 4,5 : 1 au moins) : couleur du texte seule, la palette commune ne bouge pas. */
+:where(body[data-theme="cw-nato"]) .tb-sel { color: #c49037; }
+:where(body[data-theme="cw-nato"]) #btn-units { color: #c49037; }
+:where(body[data-theme="cw-nato"]) .bi-block h3 { color: #c49037; }
+:where(body[data-theme="cw-nato"]) .cr-name { color: #dcbe8a; }
+:where(body[data-theme="cw-nato"]) .cr-tag.free { color: #cbc2aa; }
+:where(body[data-theme="cw-nato"]) .card-row.cur .cr-sum { color: #e1d6bb; }
+:where(body[data-theme="cw-nato"]) .pack-btn.main { color: #dcbe8a; }
+:where(body[data-theme="cw-nato"]) .ed-section > summary { color: #dcbe8a; }
+:where(body[data-theme="cw-soviet"]) .cr-name { color: #cc9f52; }
+:where(body[data-theme="cw-soviet"]) .cr-tag.free { color: #9fa995; }
+:where(body[data-theme="cw-soviet"]) .pack-btn.main { color: #cc9f52; }
+:where(body[data-theme="cw-soviet"]) .ed-section > summary { color: #cc9f52; }
+:where(body[data-theme="cw-soviet"]) .tb-label { color: #879279; }
+:where(body[data-theme="cw-soviet"]) .ui-note { color: #879279; }
+:where(body[data-theme="cw-soviet"]) .nav-route .nr-k { color: #7b886d; }
+:where(body[data-theme="cw-soviet"]) .nav-route .nr-sub { color: #7b886d; }
+:where(body[data-theme="modern-nato"]) .cr-name { color: #c38f35; }
+:where(body[data-theme="modern-nato"]) .cr-tag.free { color: #8d9aa6; }
+:where(body[data-theme="modern-nato"]) .pack-btn.main { color: #c38f35; }
+:where(body[data-theme="modern-nato"]) .ed-section > summary { color: #c38f35; }
+:where(body[data-theme="modern-east"]) .cr-name { color: #c6943d; }
+:where(body[data-theme="modern-east"]) .cr-tag.free { color: #9a9f8c; }
+:where(body[data-theme="modern-east"]) .pack-btn.main { color: #c6943d; }
+:where(body[data-theme="modern-east"]) .ed-section > summary { color: #c6943d; }
+:where(body[data-theme="modern-east"]) .tb-label { color: #888e78; }
+:where(body[data-theme="modern-east"]) .ui-note { color: #888e78; }
+:where(body[data-theme="modern-east"]) .nav-route .nr-k { color: #7f866e; }
+:where(body[data-theme="modern-east"]) .nav-route .nr-sub { color: #7f866e; }
+/* MP-20 end */
 
 </style>
 <!-- html2canvas v1.4.1 — embarqué pour l'export PNG -->

@@ -30,6 +30,40 @@ from import_block import build_block as build_import_block, build_css as build_i
 from messages_block import build_block as build_messages_block, build_css as build_messages_css
 from ui_block import build_block as build_ui_block, build_css as build_ui_css, verify as ui_verify
 
+CONTRAST_CSS = r"""
+/* MP-20 begin */
+/* Contrastes (texte sous 18 px, 4,5 : 1 au moins) : couleur du texte seule, la palette commune ne bouge pas. */
+:where(body[data-theme="cw-nato"]) .tb-sel { color: #c49037; }
+:where(body[data-theme="cw-nato"]) #btn-units { color: #c49037; }
+:where(body[data-theme="cw-nato"]) .bi-block h3 { color: #c49037; }
+:where(body[data-theme="cw-nato"]) .cr-name { color: #dcbe8a; }
+:where(body[data-theme="cw-nato"]) .cr-tag.free { color: #cbc2aa; }
+:where(body[data-theme="cw-nato"]) .card-row.cur .cr-sum { color: #e1d6bb; }
+:where(body[data-theme="cw-nato"]) .pack-btn.main { color: #dcbe8a; }
+:where(body[data-theme="cw-nato"]) .ed-section > summary { color: #dcbe8a; }
+:where(body[data-theme="cw-soviet"]) .cr-name { color: #cc9f52; }
+:where(body[data-theme="cw-soviet"]) .cr-tag.free { color: #9fa995; }
+:where(body[data-theme="cw-soviet"]) .pack-btn.main { color: #cc9f52; }
+:where(body[data-theme="cw-soviet"]) .ed-section > summary { color: #cc9f52; }
+:where(body[data-theme="cw-soviet"]) .tb-label { color: #879279; }
+:where(body[data-theme="cw-soviet"]) .ui-note { color: #879279; }
+:where(body[data-theme="cw-soviet"]) .nav-route .nr-k { color: #7b886d; }
+:where(body[data-theme="cw-soviet"]) .nav-route .nr-sub { color: #7b886d; }
+:where(body[data-theme="modern-nato"]) .cr-name { color: #c38f35; }
+:where(body[data-theme="modern-nato"]) .cr-tag.free { color: #8d9aa6; }
+:where(body[data-theme="modern-nato"]) .pack-btn.main { color: #c38f35; }
+:where(body[data-theme="modern-nato"]) .ed-section > summary { color: #c38f35; }
+:where(body[data-theme="modern-east"]) .cr-name { color: #c6943d; }
+:where(body[data-theme="modern-east"]) .cr-tag.free { color: #9a9f8c; }
+:where(body[data-theme="modern-east"]) .pack-btn.main { color: #c6943d; }
+:where(body[data-theme="modern-east"]) .ed-section > summary { color: #c6943d; }
+:where(body[data-theme="modern-east"]) .tb-label { color: #888e78; }
+:where(body[data-theme="modern-east"]) .ui-note { color: #888e78; }
+:where(body[data-theme="modern-east"]) .nav-route .nr-k { color: #7f866e; }
+:where(body[data-theme="modern-east"]) .nav-route .nr-sub { color: #7f866e; }
+/* MP-20 end */
+"""
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 APP_VERSION = "1.5.1"
 OUT_PATH = os.path.join(HERE, 'dist', 'dcs_datacard_generator.html')
@@ -1092,7 +1126,7 @@ select[data-tbm-src] { display: none !important; }
 .ed-coord:empty { display: none; }
 .ed-coord.ok { color: var(--khaki-light); }
 .ed-coord.bad { color: #e8806a; }
-.ed-field input[readonly] { background: rgba(216, 201, 165, .5); color: #4a4636; cursor: not-allowed; }
+.ed-field input[readonly] { background: rgba(216, 201, 165, .7); color: #1f1c16; cursor: not-allowed; }
 .ed-field .af-free { margin-top: 6px; }
 
 /* Listes */
@@ -8360,7 +8394,7 @@ def build():
     js = js.replace('@@ROUTE_PACK_BLOCK@@\n', build_route_pack_block()).replace('@@ROUTE_THEATRE_BLOCK@@\n', build_route_theatre_block()).replace('@@GROUP_STORE_BLOCK@@\n', build_group_store_block()).replace('@@ROUTE_WRITE_BLOCK@@\n', build_route_write_block())
     js = js.replace('__EXAMPLE_DOC__', example_js).replace('__EXAMPLE_DOC_EN__', example_en_js).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@RADIO_BLOCK@@\n', build_radio_block()).replace('@@RADIO_BANDS_BLOCK@@\n', build_radio_bands_block()).replace('@@PROJECTION_BLOCK@@\n', build_projection_block())
     html = HTML
-    html = html.replace('__CSS__', CSS.replace('@@MESSAGES_CSS@@\n', build_messages_css() + build_ui_css()) + build_import_css())
+    html = html.replace('__CSS__', CSS.replace('@@MESSAGES_CSS@@\n', build_messages_css() + build_ui_css()) + build_import_css() + CONTRAST_CSS)
     html = html.replace('@@IMPORT_HTML@@\n', build_import_html())
     html = html.replace('__LIB_HTML2CANVAS__', A['lib_html2canvas'])
     html = html.replace('__LIB_JSZIP__', A['lib_jszip'])
