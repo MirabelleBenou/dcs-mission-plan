@@ -965,8 +965,16 @@ select[data-tbm-src] {{ display: none !important; }}
   function goHub() {{
     Object.keys(iframes).forEach(function(iid) {{ iframes[iid].style.display = 'none'; }});
     document.getElementById('module-view').style.display = 'none';
-    document.getElementById('landing').style.display = '';
+    var landing = document.getElementById('landing');
+    landing.style.display = '';
     activeModule = null;
+    /* Le clavier quitte l'outil qu'on vient de fermer (le clic sur Retour l'y avait laissé) : Ctrl+S au hub reste au navigateur */
+    try {{
+      if (document.activeElement && document.activeElement.tagName === 'IFRAME') document.activeElement.blur();
+      if (!landing.hasAttribute('tabindex')) landing.setAttribute('tabindex', '-1');
+      landing.focus({{ preventScroll: true }});
+      window.focus();
+    }} catch(e) {{}}
     /* Resync thème + langue si changé dans le module */
     try {{
       var storedTheme = localStorage.getItem(KEY_THEME);

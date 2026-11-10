@@ -1011,7 +1011,6 @@ table.nav td.r { text-align: right; white-space: nowrap; }
 .sheet-top.sub { border-top: 2px solid #f0e8d6; }
 #nav-refs-wrap[hidden] { display: none; }
 
-.actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
 
 /* bloc « Ajouter » : un point par ses coordonnées, ou par cap et distance depuis le dernier point */
 .add-block { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--khaki); }
@@ -1260,7 +1259,7 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .ui-modal .rt-nm { font-weight: 500; }
 .ui-modal .rt-n { white-space: normal; text-align: right; max-width: 55%; font-size: 11px; opacity: 1; color: var(--khaki-light); }
 
-/* ---------- plusieurs routes (lot rp-route-du-vol) : la liste, les fenêtres « Depuis HQ » et « Paquet de vol », la ligne « Routes » du menu Affichage ---------- */
+/* ---------- plusieurs routes (lot rp-route-du-vol) : la liste, la fenêtre des groupes, la ligne « Routes » du menu Affichage ---------- */
 .rs-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
 .rs-head small { font-family: var(--f-ui); font-weight: 500; font-size: 11px; letter-spacing: 1px; color: var(--khaki-light); }
 .rs-btns { display: flex; gap: 6px; margin-top: 8px; }
@@ -1355,8 +1354,9 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .mn-panel .tbm-opt .tbm-txt { flex: 0 0 auto; overflow: visible; text-overflow: clip; }
 .mn-sep { height: 1px; margin: 4px 0; background: rgba(168,154,114,.35); }
 .mn-opt + .mn-sep + .mn-opt { border-top: none; }
-.mn-opt[aria-disabled="true"] { color: var(--khaki-light); cursor: not-allowed; opacity: .7; }
-.mn-opt[aria-disabled="true"]:hover { background: none; color: var(--khaki-light); }
+.mn-opt { color: var(--paper); }   /* comme au Datacard Generator : les lignes actives des menus sont à l'encre du papier, la ligne grisée seule s'efface */
+.mn-opt[aria-disabled="true"] { color: var(--khaki); cursor: not-allowed; opacity: .7; }
+.mn-opt[aria-disabled="true"]:hover { background: none; color: var(--khaki); }
 .tbm-opt.mn-danger, .tbm-opt.mn-danger:hover, .tbm-opt.mn-danger:focus-visible { color: var(--mp-warn); }
 
 /* ---------- la ligne de sélection des routes : « 1 · NOM ▾ » pleine largeur, « + » et « … » (44 × 44), puis le rang et le total ---------- */
@@ -2288,7 +2288,7 @@ SOFTWARE.
     <p class="rt-note rt-warn" id="ga-warn" hidden></p>
     <div class="rt-list" id="ga-list"></div>
     <div class="ga-new">
-      <div class="lbl" data-i18n="ga.new">+ Ajouter un groupe</div>
+      <div class="lbl" data-i18n="ga.new">Ajouter un groupe</div>
       <div class="ga-new-row">
         <input class="in" id="ga-new-name" type="text" maxlength="60" autocomplete="off" autocapitalize="off" spellcheck="false" data-i18n-aria-label="ga.new.name" data-i18n-placeholder="ga.new.ph" aria-label="Nom du nouveau groupe" placeholder="Hind 1">
         <div class="ga-side"><select class="in" id="ga-new-side" data-lbl="hq.side"></select></div>
@@ -2994,7 +2994,7 @@ const I18N = {
     'ga.replace.imported': 'remplace la route importée',
     'ga.nocamp': 'sans coalition',
     'ga.unnamed': 'Groupe {n}',
-    'ga.new': '+ Ajouter un groupe',
+    'ga.new': 'Ajouter un groupe',
     'ga.new.name': 'Nom du nouveau groupe',
     'ga.new.ph': 'Hind 1',
     'ga.side.none': 'Aucun',
@@ -3510,7 +3510,7 @@ const I18N = {
     'ga.replace.imported': 'replaces the imported route',
     'ga.nocamp': 'no coalition',
     'ga.unnamed': 'Group {n}',
-    'ga.new': '+ Add a group',
+    'ga.new': 'Add a group',
     'ga.new.name': 'Name of the new group',
     'ga.new.ph': 'Hind 1',
     'ga.side.none': 'None',
@@ -11132,9 +11132,9 @@ function packRoutePoints(r) {
 function gsOnSaveFail() { showToast(t('toast.saveFail'), { type: 'err' }); }
 function groupLabel(f, i) { return gsNameKey(f.name) !== '' ? f.name.trim() : t('ga.unnamed', { n: i + 1 }); }
 /* Les noms des groupes de la fiche qui suivent la route rid, dans l'ordre de la fiche */
-function groupLabels(rid, namedOnly) {
+function groupLabels(rid) {
   const g = gsRead(), out = [];
-  if (g) g.flights.forEach((f, i) => { if (gsIsObj(f.routeLink) && f.routeLink.rid === rid && !(namedOnly && gsNameKey(f.name) === '')) out.push(groupLabel(f, i)); });
+  if (g) g.flights.forEach((f, i) => { if (gsIsObj(f.routeLink) && f.routeLink.rid === rid) out.push(groupLabel(f, i)); });
   return out;
 }
 function groupsOfRoute(rid) {

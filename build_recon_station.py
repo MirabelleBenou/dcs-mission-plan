@@ -4023,8 +4023,31 @@ function composeRecon(ctx, W, H, st, logoImg) {{
   const lineH    = s(34);
   const TXT = st.textColor || '#fff';   // E2 : couleur texte pilotée
 
-  // Largeur des champs de valeur (avec filet de soulignement)
-  function drawField(label, value, x, y, fieldW) {{
+  const valFont = px => `400 ${{px}}px "Gunplay","Roboto Mono",monospace`;
+  // Une valeur plus large que la place qui lui reste rétrécit d'abord (jusqu'à 75 % de baseFont), puis se coupe et finit par « … » ;
+  // laisse ctx.font à la taille choisie et rend le texte à dessiner, sa largeur et sa taille de police
+  function fitValue(value, avail) {{
+    ctx.font = valFont(baseFont);
+    let val = String(value == null ? '' : value), vw = ctx.measureText(val).width;
+    if (vw > avail) {{
+      const minFont = baseFont * 0.75;
+      let fs = Math.max(minFont, baseFont * avail / vw);
+      ctx.font = valFont(fs);
+      vw = ctx.measureText(val).width;
+      while (vw > avail && fs > minFont) {{ fs = Math.max(minFont, fs - baseFont * 0.01); ctx.font = valFont(fs); vw = ctx.measureText(val).width; }}
+      if (vw > avail) {{
+        let n = val.length;
+        while (n > 0 && ctx.measureText(val.slice(0, n).trimEnd() + '…').width > avail) n--;
+        val = val.slice(0, n).trimEnd() + '…';
+        vw = ctx.measureText(val).width;
+      }}
+    }}
+    return {{ val: val, w: vw, font: parseFloat(ctx.font.match(/([0-9.]+)px/)[1]) }};
+  }}
+
+  // Largeur des champs de valeur (avec filet de soulignement) ; maxX : où commence ce qui suit sur la ligne (libellé suivant, ou bord droit du bloc) :
+  // la valeur ne dépasse jamais maxX moins s(10), le filet garde sa longueur fieldW
+  function drawField(label, value, x, y, fieldW, maxX, preFit) {{
     // Label gras
     ctx.font = `400 ${{boldFont}}px "Gunplay","Roboto Mono",monospace`;
     ctx.fillStyle = TXT;
@@ -4032,25 +4055,13 @@ function composeRecon(ctx, W, H, st, logoImg) {{
     const lw = ctx.measureText(label).width;
     ctx.fillText(label, x, y);
 
-    // Valeur gras (E2) : une valeur plus large que son champ rétrécit d'abord (jusqu'à 75 % de baseFont), puis se coupe et finit par « … »
-    const valFont = px => `400 ${{px}}px "Gunplay","Roboto Mono",monospace`;
-    ctx.font = valFont(baseFont);
+    // Valeur gras (E2)
     ctx.fillStyle = TXT;
     const valX = x + lw;
-    let val = String(value == null ? '' : value), vw = ctx.measureText(val).width;
-    if (vw > fieldW) {{
-      const minFont = baseFont * 0.75;
-      let fs = Math.max(minFont, baseFont * fieldW / vw);
-      ctx.font = valFont(fs);
-      vw = ctx.measureText(val).width;
-      while (vw > fieldW && fs > minFont) {{ fs = Math.max(minFont, fs - baseFont * 0.01); ctx.font = valFont(fs); vw = ctx.measureText(val).width; }}
-      if (vw > fieldW) {{
-        let n = val.length;
-        while (n > 0 && ctx.measureText(val.slice(0, n).trimEnd() + '…').width > fieldW) n--;
-        val = val.slice(0, n).trimEnd() + '…';
-      }}
-    }}
-    ctx.fillText(val, valX, y);
+    const avail = Math.max(s(10), (maxX == null ? valX + fieldW + s(10) : maxX) - valX - s(10));
+    const fit = preFit || fitValue(value, avail);
+    ctx.font = valFont(fit.font);
+    ctx.fillText(fit.val, valX, y);
 
     // Filet sous la valeur (même largeur que fieldW)
     const lineY = y + s(4);
@@ -4068,31 +4079,32 @@ function composeRecon(ctx, W, H, st, logoImg) {{
 
   // L1 : Target · Coords
   const y1 = blockY + lineH;
-  drawField('Target : ', f.target, lx, y1, s(280));
-  drawField('Coords: ', f.coords, colMid, y1, s(320));
+  const rightX = blockX + blockW;       // bord droit du bloc : la place du dernier champ d'une ligne
+  drawField('Target : ', f.target, lx, y1, s(280), colMid);
+  drawField('Coords: ', f.coords, colMid, y1, s(320), rightX);
 
   // L2 : Crs · Alt · Msn · Sensor
   const y2 = y1 + lineH;
-  drawField('Crs: ', f.crs, lx, y2, s(70));
-  drawField('Alt: ', f.alt, lx + s(180), y2, s(90));
-  drawField('Msn: ', f.msn, lx + s(380), y2, s(220));
-  drawField('Sensor : ', f.sensor, colMid + s(60), y2, s(220));
+  drawField('Crs: ', f.crs, lx, y2, s(70), lx + s(180));
+  drawField('Alt: ', f.alt, lx + s(180), y2, s(90), lx + s(380));
+  drawField('Msn: ', f.msn, lx + s(380), y2, s(220), colMid + s(60));
+  drawField('Sensor : ', f.sensor, colMid + s(60), y2, s(220), rightX);
 
   // L3 : DTG · Crew
   const y3 = y2 + lineH;
-  drawField('DTG : ', f.dtg, lx, y3, s(320));
-  drawField('Crew: ', f.crew, colMid, y3, s(280));
+  drawField('DTG : ', f.dtg, lx, y3, s(320), colMid);
+  drawField('Crew: ', f.crew, colMid, y3, s(280), rightX);
 
   // L4 : Class centré
   const y4 = y3 + lineH;
   const classLabel = 'Class: ';
   ctx.font = `400 ${{boldFont}}px "Gunplay","Roboto Mono",monospace`;
   const classLabelW = ctx.measureText(classLabel).width;
-  ctx.font = `400 ${{baseFont}}px "Gunplay","Roboto Mono",monospace`;
-  const classValW = ctx.measureText(f.class_ || '').width;
-  const totalClassW = classLabelW + classValW + s(80);
+  // la ligne se centre sur la valeur réellement dessinée (après réduction et coupe) et reste dans le bloc : la place de la valeur est celle du bloc moins le libellé et l'écart de s(80)
+  const classFit = fitValue(f.class_, Math.max(s(10), blockW - classLabelW - s(80)));
+  const totalClassW = classLabelW + classFit.w + s(80);
   const classX = blockX + (blockW - totalClassW) / 2;
-  drawField('Class: ', f.class_, classX, y4, s(200));
+  drawField('Class: ', f.class_, classX, y4, s(200), classX + totalClassW, classFit);
 
   // ── Cartouche haut-droite (I1: omis si vide) ─────────────────
   const cartRows = (st.cartouche || []);
