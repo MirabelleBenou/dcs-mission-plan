@@ -35,8 +35,9 @@ CONTRAST_CSS = r"""
 /* MP-20 begin */
 /* Contrastes (texte sous 18 px, 4,5 : 1 au moins) : couleur du texte seule, la palette commune ne bouge pas. */
 :where(body[data-theme="cw-nato"]) .tb-sel { color: #c49037; }
+:where(body[data-theme="cw-nato"]) .rs-pick .tbm-trigger { color: #c49037; }
 :where(body[data-theme="cw-nato"]) #btn-display { color: #c49037; }
-:where(body[data-theme="cw-nato"]) #btn-units { color: #c49037; }
+:where(body[data-theme="cw-nato"]) #btn-open { color: #c49037; }
 :where(body[data-theme="cw-nato"]) .ed-head { color: #c99a48; }
 :where(body[data-theme="cw-nato"]) .ed-head small { color: #aea17c; }
 :where(body[data-theme="cw-nato"]) .rs-groups { color: #ab9d76; }
@@ -919,10 +920,10 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .dsp-seg .tb-btn + .tb-btn { border-left: none; }
 
 /* ---------- le menu « Affichage » (lot rp-v1.12.1) : le bouton de la barre et son panneau, au style des listes de la barre (tbm-*) ---------- */
-#btn-display, #btn-units, #btn-save { position: relative; color: var(--amber); border-color: var(--amber-dark); padding-right: 12px; }
-#btn-display:hover, #btn-display:focus-visible, #btn-display.dsp-open, #btn-units:hover, #btn-units:focus-visible, #btn-units.dsp-open, #btn-save:hover, #btn-save:focus-visible, #btn-save.dsp-open { border-color: var(--amber); }
-#btn-display .dsp-chev, #btn-units .dsp-chev, #btn-save .dsp-chev { width: 10px; height: 6px; }
-#btn-display.dsp-open .dsp-chev, #btn-units.dsp-open .dsp-chev, #btn-save.dsp-open .dsp-chev { transform: rotate(180deg); }
+#btn-display, #btn-open, #btn-save { position: relative; color: var(--amber); border-color: var(--amber-dark); padding-right: 12px; }
+#btn-display:hover, #btn-display:focus-visible, #btn-display.dsp-open, #btn-open:hover, #btn-open:focus-visible, #btn-open.dsp-open, #btn-save:hover, #btn-save:focus-visible, #btn-save.dsp-open { border-color: var(--amber); }
+#btn-display .dsp-chev, #btn-open .dsp-chev, #btn-save .dsp-chev { width: 10px; height: 6px; }
+#btn-display.dsp-open .dsp-chev, #btn-open.dsp-open .dsp-chev, #btn-save.dsp-open .dsp-chev { transform: rotate(180deg); }
 .dsp-dot { position: absolute; top: -3px; right: -3px; width: 7px; height: 7px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 0 2px var(--olive-deep); pointer-events: none; }
 .dsp-dot[hidden] { display: none; }
 .dsp-panel { max-height: min(80vh, 600px); min-width: 240px; padding-bottom: 6px; }
@@ -940,6 +941,46 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .dsp-opt[aria-disabled="true"] .dsp-box { border-style: dashed; border-color: var(--khaki); background: none; }
 .dsp-opt[aria-disabled="true"] .dsp-box::after { display: none; }
 .dsp-n { margin-left: auto; padding-left: 14px; font-family: var(--f-mono); font-weight: 400; font-size: 11px; letter-spacing: 0; text-transform: none; color: var(--khaki); }
+
+/* ---------- le menu Affichage : le fond et les unités en tête (lot mp-ui-disposition), les menus « Ouvrir » et « … » ---------- */
+.dsp-panel { min-width: 260px; }
+.dsp-base.dsp-routes { padding-top: 6px; border-top: none; }
+.dsp-base .dsp-seg { flex-wrap: wrap; }
+.dsp-seg .tb-btn { min-height: 44px; }
+.dsp-base .dsp-seg .tb-btn { margin: 0 -1px -1px 0; border-left: 1px solid var(--khaki); }
+.dsp-seg .tb-btn[aria-disabled="true"] { opacity: .45; cursor: not-allowed; }
+.dsp-urow { display: flex; align-items: center; gap: 10px; padding: 4px 18px 6px; }
+.dsp-urow .ui-lbl { flex: 0 0 74px; margin: 0; }
+.dsp-urow .dsp-seg { flex: 1 1 auto; width: auto; }
+.mn-hint { margin-left: auto; padding-left: 14px; flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mn-sep { height: 1px; margin: 4px 0; background: rgba(168,154,114,.35); }
+.mn-opt + .mn-sep + .mn-opt { border-top: none; }
+.mn-opt[aria-disabled="true"] { color: var(--khaki-light); cursor: not-allowed; opacity: .7; }
+.mn-opt[aria-disabled="true"]:hover { background: none; color: var(--khaki-light); }
+.mn-danger, .mn-danger:hover, .mn-danger:focus-visible { color: var(--mp-warn); }
+
+/* ---------- la ligne de sélection des routes : « 1 · NOM ▾ » pleine largeur, « + » et « … » (44 × 44), puis le rang et le total ---------- */
+.rs-pick { display: flex; align-items: stretch; gap: 8px; }
+.rs-pick .tbm-trigger {
+  flex: 1 1 auto; min-width: 0; display: block; position: relative; contain: inline-size; box-sizing: border-box; min-height: 44px; margin: 0; padding: 0 38px 0 14px; text-align: left; cursor: pointer;
+  font-family: var(--f-stencil); font-weight: 700; font-size: 14px; letter-spacing: 1.5px; text-transform: none; color: var(--amber);
+  background: var(--olive-dark); border: 1px solid var(--amber-dark); border-left: 3px solid var(--amber); border-radius: 0;
+}
+.rs-pick .tbm-trigger:hover, .rs-pick .tbm-trigger.tbm-trigger-open { border-color: var(--amber); background: var(--olive); }
+.rs-pick .tbm-trigger .tbm-lbl { margin: 0; padding: 0; line-height: 42px; }
+.rs-pick .tbm-trigger .tbm-lbl::after { display: none; }
+.rs-pick .tbm-trigger::after {
+  content: ''; position: absolute; right: 15px; top: 50%; width: 7px; height: 7px; margin-top: -6px;
+  border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(45deg); transition: transform .15s;
+}
+.rs-pick .tbm-trigger.tbm-trigger-open::after { transform: rotate(-135deg); margin-top: -2px; }
+.rs-sq {
+  flex: none; width: 44px; height: 44px; padding: 0; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;
+  font-family: var(--f-ui); font-weight: 700; font-size: 16px; line-height: 1; color: var(--paper); background: transparent; border: 1px solid var(--khaki); border-radius: 0; cursor: pointer;
+}
+.rs-sq:hover, .rs-sq:focus-visible, .rs-sq.dsp-open { background: var(--olive); border-color: var(--amber); color: var(--amber); }
+.rs-sq:disabled { opacity: .35; cursor: not-allowed; background: transparent; border-color: var(--khaki); color: var(--paper); }
+.rs-count { margin: 8px 0 0; font-size: 12px; }
 
 /* ---------- export de la vue vers le briefing (lot rp-v1.12.0) : le cadre 3:2 / 2:3 posé sur la carte et sa barre ---------- */
 .export-layer { position: absolute; inset: 0; z-index: 800; overflow: hidden; pointer-events: none; }
@@ -1277,13 +1318,6 @@ __CSS__
     <span class="tb-brand-sub" data-i18n="tb.subtitle">░ NAVIGATION</span>
   </div>
   <span class="tb-sep"></span>
-  <span class="tb-label" data-i18n="tb.layer">Fond</span>
-  <select class="tb-sel" id="layer" data-i18n-aria-label="tb.layer" aria-label="Fond">
-    <option value="dcs" data-i18n="layer.dcs">Carte DCS</option>
-    <option value="topo" data-i18n="layer.topo">Topographique</option>
-    <option value="sat" data-i18n="layer.sat">Satellite</option>
-    <option value="grid" data-i18n="layer.grid">Grille seule</option>
-  </select>
   <button type="button" class="tb-btn" id="btn-display" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.display.tip" title="Ce qui s'affiche sur la carte">
     <svg class="dsp-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/></svg>
     <span data-i18n="tb.display">Affichage</span>
@@ -1294,11 +1328,10 @@ __CSS__
   <span class="tb-label" data-i18n="tb.theatre">Théâtre</span>
   <select class="tb-sel" id="theatre" data-i18n-aria-label="tb.theatre" aria-label="Théâtre"></select>
   <span class="tb-sep"></span>
-  <button type="button" class="tb-btn" id="btn-units" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.units" title="Unités" data-i18n-aria-label="tb.units" aria-label="Unités"><span id="units-txt"></span><svg class="dsp-chev" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg></button>
-  <span class="tb-sep"></span>
-  <button type="button" class="tb-btn" id="btn-open" data-i18n-title="tb.open.tip" title="Ouvrir une route (JSON) ou un fichier du Route Tool de DCS" data-i18n-aria-label="tb.open.tip" aria-label="Ouvrir une route (JSON) ou un fichier du Route Tool de DCS">
+  <button type="button" class="tb-btn" id="btn-open" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.open.tip" title="Ouvrir une route (JSON) ou un fichier du Route Tool de DCS" data-i18n-aria-label="tb.open.tip" aria-label="Ouvrir une route (JSON) ou un fichier du Route Tool de DCS">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v1H3z"/><path d="M3 10h19l-2 8a2 2 0 0 1-2 1.5H5a2 2 0 0 1-2-2z"/></svg>
-    <span class="tb-btn-label solo" data-i18n="tb.open">Ouvrir</span></button>
+    <span class="tb-btn-label solo" data-i18n="tb.open">Ouvrir</span>
+    <svg class="dsp-chev" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg></button>
   <input type="file" id="file-open" hidden>
   <button type="button" class="tb-btn" id="btn-save" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.save.tip" title="Enregistrer" data-i18n-aria-label="tb.save.tip" aria-label="Enregistrer">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h11l4 4v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M8 3v5h7V3"/><rect x="7" y="13" width="10" height="8"/></svg>
@@ -1358,16 +1391,12 @@ __CSS__
       <button type="button" class="ed-head ui-fold-head" aria-expanded="true"><span class="ed-title" data-i18n="sec.route">Route</span><small id="pt-count"></small></button>
       <div class="ed-body">
         <div class="rs-set">
-          <div class="rs-head"><label class="lbl" for="route-list" data-i18n="rs.list">Routes</label><small id="rs-count"></small></div>
-          <select class="in" id="route-list" data-lbl="rs.list"></select>
-          <div class="rs-btns">
-            <button type="button" class="tb-btn" id="rs-add" data-i18n="rs.add">+ Route</button>
-            <button type="button" class="tb-btn" id="rs-dup" data-i18n="rs.dup">Dupliquer</button>
-            <button type="button" class="tb-btn danger" id="rs-del" data-i18n="rs.del">Supprimer</button>
+          <div class="rs-pick">
+            <select class="rs-pick-sel" id="route-list" data-lbl="rs.list"></select>
+            <button type="button" class="rs-sq" id="rs-add" data-i18n-title="rs.new" title="Nouvelle route" data-i18n-aria-label="rs.new" aria-label="Nouvelle route">+</button>
+            <button type="button" class="rs-sq" id="rs-more" aria-haspopup="menu" aria-expanded="false" data-i18n-title="rs.more" title="Autres actions" data-i18n-aria-label="rs.more" aria-label="Autres actions">…</button>
           </div>
-          <div class="rs-btns">
-            <button type="button" class="tb-btn primary" id="rs-import" data-i18n="rs.import">⇣ Importer</button>
-          </div>
+          <p class="ui-note rs-count" id="rs-count" role="status"></p>
         </div>
         <div class="rn">
           <label class="lbl" for="route-name" data-i18n="f.name">Nom de la route</label>
@@ -1394,6 +1423,13 @@ __CSS__
             <button type="button" class="tb-btn primary" id="btn-add-wp" data-i18n="add.wp">+ Point</button>
             <button type="button" class="tb-btn" id="btn-add-ref" data-i18n="add.ref">+ Réf.</button>
           </div>
+        </div>
+        <div class="actions">
+          <button type="button" class="tb-btn primary" id="btn-handoff" data-i18n="btn.handoff">→ Vers la datacard</button>
+          <button type="button" class="tb-btn primary" id="btn-export-bg" data-i18n="btn.exportBg">→ Vers le briefing</button>
+          <button type="button" class="tb-btn primary" id="btn-package" data-i18n="pk.btn">📦 Paquet de vol</button>
+          <button type="button" class="tb-btn" id="btn-export" data-i18n="btn.export">Enregistrer</button>
+          <button type="button" class="tb-btn" id="btn-export-rt" data-i18n="btn.exportRt">Exporter vers le Route Tool</button>
         </div>
         <p class="ui-note" data-i18n="help.route">Touchez la carte pour ajouter un point ; glissez un point pour le déplacer ; le « + » d'une branche insère un point.</p>
       </div>
@@ -1448,13 +1484,6 @@ __CSS__
             <div class="sheet-top sub"><span data-i18n="nav.refs">POINTS DE RÉFÉRENCE</span></div>
             <table class="nav"><tbody id="nav-refs"></tbody></table>
           </div>
-        </div>
-        <div class="actions">
-          <button type="button" class="tb-btn primary" id="btn-handoff" data-i18n="btn.handoff">→ Vers la datacard</button>
-          <button type="button" class="tb-btn primary" id="btn-export-bg" data-i18n="btn.exportBg">→ Vers le briefing</button>
-          <button type="button" class="tb-btn primary" id="btn-package" data-i18n="pk.btn">📦 Paquet de vol</button>
-          <button type="button" class="tb-btn" id="btn-export" data-i18n="btn.export">Enregistrer</button>
-          <button type="button" class="tb-btn" id="btn-export-rt" data-i18n="btn.exportRt">Exporter vers le Route Tool</button>
         </div>
       </div>
     </div>
@@ -2204,11 +2233,11 @@ const I18N = {
     'app.title': 'Route Planner',
     'app.short': 'R·P',
     'tb.subtitle': '░ NAVIGATION',
-    'tb.layer': 'Fond',
     'layer.dcs': 'Carte DCS',
-    'layer.topo': 'Topographique',
-    'layer.sat': 'Satellite',
-    'layer.grid': 'Grille seule',
+    'bm.dcs': 'Carte DCS',
+    'bm.topo': 'Topo',
+    'bm.sat': 'Satellite',
+    'bm.grid': 'Grille',
     'layer.dcsOff': 'Carte DCS — absente de ce théâtre',
     'layer.flappie': 'Carte de navigation (Flappie)',
     'tb.display': 'Affichage',
@@ -2219,7 +2248,8 @@ const I18N = {
     'un.g.alt': 'Altitude',
     'dsp.g.mission': 'Mission',
     'dsp.g.layers': 'Calques',
-    'dsp.g.base': 'Fond',
+    'dsp.g.base': 'Repères',
+    'dsp.g.fond': 'Fond',
     'dsp.routes': 'Routes',
     'dsp.routes.none': 'Aucune',
     'dsp.routes.active': 'Sélectionnée',
@@ -2410,7 +2440,10 @@ const I18N = {
     'err.rt': '⚠ Fichier du Route Tool non reconnu.',
     'modal.close': 'Fermer',
     'rs.list': 'Routes',
-    'rs.add': '+ Route',
+    'rs.new': 'Nouvelle route',
+    'rs.more': 'Autres actions',
+    'rs.max': '12 routes au plus',
+    'rs.count': '{a} / {n} routes',
     'rs.dup': 'Dupliquer',
     'rs.del': 'Supprimer',
     'rs.assign': 'Groupes…',
@@ -2470,7 +2503,10 @@ const I18N = {
     'toast.routesMax': '⚠ 12 routes au plus.',
     'toast.groupsDone': 'Groupes de la route mis à jour ✓',
     'toast.groupsOther': 'groupes non rattachés : ils sont sur {th}',
-    'rs.import': '⇣ Importer',
+    'op.route': 'Ouvrir une route…',
+    'op.route.h': '.json · Route Tool',
+    'op.import': 'Importer des routes…',
+    'op.import.h': 'briefing, HQ, paquet',
     'toast.routesMade.1': '{n} route créée',
     'toast.routesMade.n': '{n} routes créées',
     'toast.routesSkip.1': '{n} route non reprise : 12 routes au plus',
@@ -2725,11 +2761,11 @@ const I18N = {
     'app.title': 'Route Planner',
     'app.short': 'R·P',
     'tb.subtitle': '░ NAVIGATION',
-    'tb.layer': 'Map',
     'layer.dcs': 'DCS map',
-    'layer.topo': 'Topographic',
-    'layer.sat': 'Satellite',
-    'layer.grid': 'Grid only',
+    'bm.dcs': 'DCS map',
+    'bm.topo': 'Topo',
+    'bm.sat': 'Satellite',
+    'bm.grid': 'Grid',
     'layer.dcsOff': 'DCS map — not available for this theatre',
     'layer.flappie': 'Navigation chart (Flappie)',
     'tb.display': 'Display',
@@ -2740,7 +2776,8 @@ const I18N = {
     'un.g.alt': 'Altitude',
     'dsp.g.mission': 'Mission',
     'dsp.g.layers': 'Layers',
-    'dsp.g.base': 'Base map',
+    'dsp.g.base': 'Overlays',
+    'dsp.g.fond': 'Base map',
     'dsp.routes': 'Routes',
     'dsp.routes.none': 'None',
     'dsp.routes.active': 'Selected',
@@ -2931,7 +2968,10 @@ const I18N = {
     'err.rt': '⚠ Unrecognised Route Tool file.',
     'modal.close': 'Close',
     'rs.list': 'Routes',
-    'rs.add': '+ Route',
+    'rs.new': 'New route',
+    'rs.more': 'More actions',
+    'rs.max': '12 routes at most',
+    'rs.count': '{a} / {n} routes',
     'rs.dup': 'Duplicate',
     'rs.del': 'Delete',
     'rs.assign': 'Groups…',
@@ -2991,7 +3031,10 @@ const I18N = {
     'toast.routesMax': '⚠ At most 12 routes.',
     'toast.groupsDone': 'Route groups updated ✓',
     'toast.groupsOther': 'groups not attached: they are on {th}',
-    'rs.import': '⇣ Import',
+    'op.route': 'Open a route…',
+    'op.route.h': '.json · Route Tool',
+    'op.import': 'Import routes…',
+    'op.import.h': 'briefing, HQ, package',
     'toast.routesMade.1': '{n} route created',
     'toast.routesMade.n': '{n} routes created',
     'toast.routesSkip.1': '{n} route not taken: 12 routes at most',
@@ -4655,7 +4698,7 @@ function setBase() {
   const before = S.ui.layer;
   resolveLayer();
   if (S.ui.layer !== before) persistState();
-  syncLayerSelect();
+  dspSync();
   tileOk = 0; tileErr = 0; timerElapsed = false;
   const id = S.ui.layer;
   if (id === 'grid') { setFallback(false); return; }
@@ -7206,31 +7249,17 @@ function renderTheatreOptions() {
   $('theatre').innerHTML = THEATRES.map(x => '<option value="' + x.id + '">' + esc(t('th.' + x.id)) + '</option>').join('');
 }
 
-function syncLayerSelect() {
-  const sl = $('layer');
-  const opt = sl.querySelector('option[value="dcs"]');
-  const has = !!dcsKey();
-  opt.disabled = !has;
-  opt.textContent = t(has ? 'layer.dcs' : 'layer.dcsOff');
-  /* Nos fonds : présents (juste après « Carte DCS ») sur le théâtre qui les a, absents du <select> ailleurs */
-  const want = ourLayerIds(S.theatre);
-  Object.keys(OUR_LAYERS).forEach(id => {
-    const cur = sl.querySelector('option[value="' + id + '"]');
-    if (want.indexOf(id) < 0) { if (cur) cur.remove(); return; }
-    if (cur) { cur.textContent = t('layer.' + id); return; }
-    const o = document.createElement('option');
-    o.value = id;
-    o.setAttribute('data-i18n', 'layer.' + id);
-    o.textContent = t('layer.' + id);
-    const prev = want.indexOf(id) > 0 ? sl.querySelector('option[value="' + want[want.indexOf(id) - 1] + '"]') : opt;
-    prev.after(o);
-  });
-  sl.value = S.ui.layer;
+/* Les fonds du sélecteur « Fond » du menu Affichage : « Carte DCS », nos couches du théâtre (juste après), puis Topo, Satellite, Grille ;
+   « Carte DCS » est grisée quand le théâtre n'en a pas */
+function baseRows() {
+  const rows = [{ id: 'dcs', l: 'bm.dcs', off: !dcsKey() }];
+  ourLayerIds(S.theatre).forEach(id => rows.push({ id: id, l: 'layer.' + id }));
+  rows.push({ id: 'topo', l: 'bm.topo' }, { id: 'sat', l: 'bm.sat' }, { id: 'grid', l: 'bm.grid' });
+  return rows;
 }
 
 /* Les contrôles de la barre et du panneau reflètent l'état */
 function syncControls() {
-  syncLayerSelect();
   $('theatre').value = S.theatre;
   const mark = (attr, val) => document.querySelectorAll('[' + attr + ']').forEach(b => {
     const on = b.getAttribute(attr) === val;
@@ -7253,7 +7282,6 @@ function syncControls() {
   if (hasRt) rtb.removeAttribute('title'); else rtb.title = t('tb.rt.off');
   $('theme').value = document.body.dataset.theme;
   dspSync();
-  unSync();
   syncAdd();
   routesRender();
   rlRender();       /* unités, référence de cap, déclinaison, langue : les étiquettes et le bandeau de la règle suivent */
@@ -8238,9 +8266,9 @@ function routesRender() {
     '<option value="' + i + '"' + (groupLabels(x.rid).length ? ' data-right="' + esc(groupLabels(x.rid).join(' · ')) + '"' : '') + '>' + esc((i + 1) + ' · ' + (x.name !== '' ? x.name : t('rs.unnamed'))) + '</option>').join('');
   if (list.getAttribute('data-sig') !== html) { list.innerHTML = html; list.setAttribute('data-sig', html); }
   list.value = String(RSET.active);
-  $('rs-count').textContent = n + ' / ' + MAX_ROUTES;
+  $('rs-count').textContent = t('rs.count', { a: RSET.active + 1, n: n });      /* le rang de la route choisie, le total ; la limite se dit sur « + » grisé */
   $('rs-add').disabled = n >= MAX_ROUTES;
-  $('rs-dup').disabled = n >= MAX_ROUTES;
+  $('rs-add').title = t(n >= MAX_ROUTES ? 'rs.max' : 'rs.new');
   const fl = $('rs-groups'), names = groupLabels(r.rid);
   fl.className = 'rs-groups' + (names.length ? '' : ' none');
   fl.innerHTML = names.length ? '<b>' + esc(t('rs.groups')) + '</b><em>' + esc(names.join(' · ')) + '</em>' : esc(t('rs.nogroup'));
@@ -8797,9 +8825,8 @@ function pkGo() {
 function routesBind() {
   $('route-list').addEventListener('change', e => activateRoute(parseInt(e.target.value, 10), true));
   $('rs-add').addEventListener('click', addRoute);
-  $('rs-dup').addEventListener('click', duplicateRoute);
-  $('rs-del').addEventListener('click', deleteRoute);
-  $('rs-import').addEventListener('click', ev => impOpen({ opener: ev.currentTarget }));
+  $('rs-more').addEventListener('click', ev => moreMenuToggle(ev.currentTarget));
+  $('rs-more').addEventListener('keydown', e => { if (e.key === 'ArrowDown' && !MN.cur) { e.preventDefault(); moreMenuToggle(e.currentTarget); } });
   $('rs-assign').addEventListener('click', ev => gaOpen(ev.currentTarget));
   ['ga-backdrop', 'ga-close', 'ga-cancel'].forEach(id => $(id).addEventListener('click', () => rtHide('ga-modal')));
   $('ga-go').addEventListener('click', gaApply);
@@ -9787,9 +9814,10 @@ function dspState(k) {
   return { on: !!DISP[k], off: false, tip: '' };
 }
 
-/* Le point ambre : au moins une ligne n'est pas à sa valeur par défaut (tout affiché, sauf Lieux masqué) */
+/* Le point ambre : au moins un réglage du panneau n'est pas à sa valeur par défaut (fond Topo, km et m, tout affiché, sauf Lieux masqué) */
 function dspChanged() {
-  return !(DISP.routes === 'all' && DISP.refs && DISP.draw && DISP.sym && DISP.cf && S.ui.grid && S.ui.towns && S.ui.airfields) || !!S.ui.places;
+  return !(DISP.routes === 'all' && DISP.refs && DISP.draw && DISP.sym && DISP.cf && S.ui.grid && S.ui.towns && S.ui.airfields) || !!S.ui.places
+    || S.ui.layer !== 'topo' || S.units.distance !== 'km' || S.units.altitude !== 'm';
 }
 
 function dspSync() {
@@ -9797,6 +9825,9 @@ function dspSync() {
   const dot = $('dsp-dot');
   if (dot) dot.hidden = !dspChanged();
   if (!DSP.open || !DSP.panel) return;
+  const mark = (b, on) => { b.classList.toggle('on', on); b.setAttribute('aria-checked', on ? 'true' : 'false'); b.setAttribute('aria-pressed', on ? 'true' : 'false'); };
+  DSP.panel.querySelectorAll('[data-base]').forEach(b => mark(b, b.getAttribute('data-base') === S.ui.layer));
+  DSP.panel.querySelectorAll('[data-un]').forEach(b => mark(b, S.units[b.getAttribute('data-g')] === b.getAttribute('data-un')));
   DSP_ROWS.forEach(r => {
     const row = DSP.panel.querySelector('[data-k="' + r.k + '"]');
     if (!row) return;
@@ -9821,11 +9852,52 @@ function dspSync() {
 function dspBuild() {
   const ul = DSP.panel;
   ul.textContent = '';
-  const head = document.createElement('div');
-  head.className = 'tbm-head';
-  head.setAttribute('role', 'presentation');
-  head.textContent = t('dsp.head');
-  ul.appendChild(head);
+  const mkHead = txt => {
+    const h = document.createElement('div');
+    h.className = 'tbm-head';
+    h.setAttribute('role', 'presentation');
+    h.textContent = txt;
+    ul.appendChild(h);
+  };
+  const mkSeg = (label, build) => {
+    const seg = document.createElement('span');
+    seg.className = 'tb-group dsp-seg';
+    seg.setAttribute('role', 'radiogroup');
+    seg.setAttribute('aria-label', label);
+    build(seg);
+    return seg;
+  };
+  const mkBtn = (txt, attrs, off, tip) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'tb-btn';
+    b.setAttribute('role', 'radio');
+    Object.keys(attrs).forEach(k => b.setAttribute(k, attrs[k]));
+    b.tabIndex = -1;
+    b.textContent = txt;
+    if (off) { b.setAttribute('aria-disabled', 'true'); if (tip) b.title = tip; }
+    return b;
+  };
+  /* « Fond » : une rangée à choix unique, la valeur de l'ancien sélecteur de la barre */
+  mkHead(t('dsp.g.fond'));
+  const bm = document.createElement('div');
+  bm.className = 'dsp-routes dsp-base';
+  bm.appendChild(mkSeg(t('dsp.g.fond'), seg => baseRows().forEach(r => seg.appendChild(mkBtn(t(r.l), { 'data-base': r.id }, r.off, r.off ? t('layer.dcsOff') : '')))));
+  ul.appendChild(bm);
+  /* « Unités » : Distance km · NM, Altitude m · ft */
+  mkHead(t('tb.units'));
+  UN_SEGS.forEach(u => {
+    const row = document.createElement('div');
+    row.className = 'dsp-urow';
+    const lb = document.createElement('span');
+    lb.className = 'ui-lbl';
+    lb.textContent = t(u.l);
+    row.appendChild(lb);
+    row.appendChild(mkSeg(t(u.l), seg => u.opts.forEach(o => seg.appendChild(mkBtn(t(o[1]), { 'data-un': o[0], 'data-g': u.g }, false)))));
+    ul.appendChild(row);
+  });
+  /* puis ce que la carte montre */
+  mkHead(t('dsp.head'));
   let g = '';
   DSP_ROWS.forEach(r => {
     if (r.g !== g) {
@@ -9912,8 +9984,8 @@ function dspPlace() {
 function dspOpen() {
   if (DSP.open) return;
   if (TBM.cur) tbmClose(false);
-  unClose(false);
   svClose(false);
+  mnClose(false);
   const ul = document.createElement('div');
   ul.className = 'tbm-panel dsp-panel';
   ul.id = 'dsp-panel';
@@ -9927,6 +9999,10 @@ function dspOpen() {
   ul.addEventListener('click', e => {
     const sg = e.target.closest ? e.target.closest('[data-routes]') : null;
     if (sg) { dspSetRoutes(sg.getAttribute('data-routes')); return; }
+    const bs = e.target.closest ? e.target.closest('[data-base]') : null;
+    if (bs) { if (bs.getAttribute('aria-disabled') !== 'true') dspSetBase(bs.getAttribute('data-base')); return; }
+    const us = e.target.closest ? e.target.closest('[data-un]') : null;
+    if (us) { unChoose(us.getAttribute('data-un')); return; }
     const row = e.target.closest ? e.target.closest('.dsp-opt') : null;
     if (!row || row.getAttribute('aria-disabled') === 'true') return;
     dspToggle(row.getAttribute('data-k'));
@@ -9951,7 +10027,9 @@ function dspClose(refocus) {
 }
 
 function dspKey(e) {
-  const rows = Array.prototype.slice.call(DSP.panel.querySelectorAll('.dsp-opt:not([aria-disabled="true"]), [data-routes]'));
+  const rows = Array.prototype.slice.call(DSP.panel.querySelectorAll('.dsp-opt:not([aria-disabled="true"]), [data-routes], [data-base]:not([aria-disabled="true"]), [data-un]'));
+  const isSeg = el => el.hasAttribute('data-routes') || el.hasAttribute('data-base') || el.hasAttribute('data-un');
+  const pick = el => { if (el.hasAttribute('data-routes')) dspSetRoutes(el.getAttribute('data-routes')); else if (el.hasAttribute('data-base')) dspSetBase(el.getAttribute('data-base')); else if (el.hasAttribute('data-un')) unChoose(el.getAttribute('data-un')); else dspToggle(el.getAttribute('data-k')); };
   const cur = rows.indexOf(document.activeElement);
   const go = k => { if (rows[k]) { rows[k].focus({ preventScroll: true }); rows[k].scrollIntoView({ block: 'nearest' }); } };
   const k = e.key;
@@ -9961,9 +10039,9 @@ function dspKey(e) {
   else if (k === 'End') { e.preventDefault(); go(rows.length - 1); }
   else if ((k === 'Enter' || k === ' ') && cur >= 0) {
     e.preventDefault();
-    if (rows[cur].hasAttribute('data-routes')) dspSetRoutes(rows[cur].getAttribute('data-routes')); else dspToggle(rows[cur].getAttribute('data-k'));
+    pick(rows[cur]);
   }
-  else if ((k === 'ArrowRight' || k === 'ArrowLeft') && cur >= 0 && rows[cur].hasAttribute('data-routes')) { e.preventDefault(); go(Math.max(0, Math.min(rows.length - 1, cur + (k === 'ArrowRight' ? 1 : -1)))); }
+  else if ((k === 'ArrowRight' || k === 'ArrowLeft') && cur >= 0 && isSeg(rows[cur])) { e.preventDefault(); go(Math.max(0, Math.min(rows.length - 1, cur + (k === 'ArrowRight' ? 1 : -1)))); }
   else if (k === 'Escape') { e.preventDefault(); e.stopPropagation(); dspClose(true); }
   else if (k === 'Tab') dspClose(true);
 }
@@ -9973,7 +10051,7 @@ function dspOutside(e) {
   if (!DSP.open) return;
   const t = e.target;
   if (DSP.panel.contains(t) || $('btn-display').contains(t)) return;
-  const other = t && t.closest ? t.closest('.tbm-trigger, #btn-units, #btn-save') : null;
+  const other = t && t.closest ? t.closest(MENU_TRIG) : null;
   dspClose(false);
   if (other) return;
   tbmSwallowNext();
@@ -10043,82 +10121,27 @@ function dspBind() {
   }, true);
 }
 
-/* ============= LE MENU « UNITÉS » (lot mp-rp-unites-menu) =============
-   Même composant et même aspect que le menu Affichage (tbm-panel dsp-panel, dsp-opt, dsp-box), mais des lignes « radio » :
-   une seule unité par groupe, celle de S.units. Un choix règle l'unité, redessine ce qui en dépend ; le panneau reste ouvert. */
-const UN = { open: false, panel: null, x0: 0, y0: 0 };
-const UN_ROWS = [
-  { g: 'dist', k: 'km', l: 'u.km', n: 'u.kmh' },
-  { g: 'dist', k: 'nm', l: 'u.nm', n: 'u.kt' },
-  { g: 'alt', k: 'm', l: 'u.m' },
-  { g: 'alt', k: 'ft', l: 'u.ft' }
-];
+/* ============= LES MENUS « OUVRIR » ET « … » (lot mp-ui-disposition) =============
+   Même composant et même aspect que « Enregistrer » et « Affichage » (tbm-panel dsp-panel, dsp-opt) : une ligne par geste, son indice à droite ;
+   un trait sépare ; un geste qui détruit est en --mp-warn. Un seul menu ouvert à la fois, avec les listes et les autres menus de la barre. */
+const MENU_TRIG = '.tbm-trigger, #btn-display, #btn-save, #btn-open, #rs-more';
+const MN = { cur: null, bound: false };
 
-function unOn(r) { return (r.g === 'dist' ? S.units.distance : S.units.altitude) === r.k; }
-
-/* Le bouton dit le réglage en cours ; les cases du panneau ouvert le suivent */
-function unSync() {
-  if (!S) return;
-  const nm = S.units.distance === 'nm', ft = S.units.altitude === 'ft';
-  const tx = $('units-txt');
-  if (tx) tx.textContent = t(nm ? 'u.nm' : 'u.km') + ' · ' + t(ft ? 'u.ft' : 'u.m');
-  if (!UN.open || !UN.panel) return;
-  UN_ROWS.forEach(r => {
-    const row = UN.panel.querySelector('[data-k="' + r.k + '"]');
-    if (row) row.setAttribute('aria-checked', unOn(r) ? 'true' : 'false');
-  });
+function mnClose(refocus) {
+  const m = MN.cur;
+  if (!m) return;
+  MN.cur = null;
+  if (m.panel) m.panel.remove();
+  m.btn.classList.remove('dsp-open');
+  m.btn.setAttribute('aria-expanded', 'false');
+  if (refocus) m.btn.focus({ preventScroll: true });
 }
 
-function unBuild() {
-  const ul = UN.panel;
-  ul.textContent = '';
-  ul.setAttribute('aria-label', t('tb.units'));
-  const head = document.createElement('div');
-  head.className = 'tbm-head';
-  head.setAttribute('role', 'presentation');
-  head.textContent = t('tb.units');
-  ul.appendChild(head);
-  let g = '';
-  UN_ROWS.forEach(r => {
-    if (r.g !== g) {
-      g = r.g;
-      const sub = document.createElement('div');
-      sub.className = 'dsp-sub';
-      sub.setAttribute('role', 'presentation');
-      sub.textContent = t('un.g.' + g);
-      ul.appendChild(sub);
-    }
-    const row = document.createElement('div');
-    row.className = 'tbm-opt dsp-opt';
-    row.setAttribute('role', 'menuitemradio');
-    row.setAttribute('aria-checked', 'false');
-    row.tabIndex = -1;
-    row.setAttribute('data-k', r.k);
-    const box = document.createElement('span');
-    box.className = 'dsp-box';
-    box.setAttribute('aria-hidden', 'true');
-    const txt = document.createElement('span');
-    txt.className = 'tbm-txt';
-    txt.textContent = t(r.l);
-    row.appendChild(box);
-    row.appendChild(txt);
-    if (r.n) {
-      const n = document.createElement('span');
-      n.className = 'dsp-n';
-      n.textContent = t(r.n);
-      row.appendChild(n);
-    }
-    ul.appendChild(row);
-  });
-  unSync();
-}
-
-function unPlace() {
-  const btn = $('btn-units'), p = UN.panel;
-  const r = btn.getBoundingClientRect();
+function mnPlace(m) {
+  const r = m.btn.getBoundingClientRect(), p = m.panel;
   const vw = document.documentElement.clientWidth, vh = window.innerHeight;
   const top = r.bottom + 4;
-  UN.x0 = r.left; UN.y0 = r.top;
+  m.x0 = r.left; m.y0 = r.top;
   p.style.minWidth = Math.max(240, r.width) + 'px';
   p.style.top = top + 'px';
   p.style.maxHeight = Math.max(60, Math.min(0.8 * vh, 600, vh - top - 8)) + 'px';
@@ -10129,70 +10152,137 @@ function unPlace() {
   p.style.left = left + 'px';
 }
 
-function unOpen() {
-  if (UN.open) return;
+/* items : { k, label, hint?, danger?, disabled?, title? } ou { sep: true } ; choose(k) quand une ligne est choisie (le menu est déjà fermé) */
+function mnOpen(btn, id, label, items, choose) {
+  if (MN.cur) mnClose(false);
   if (TBM.cur) tbmClose(false);
   dspClose(false);
   svClose(false);
   const ul = document.createElement('div');
-  ul.className = 'tbm-panel dsp-panel';
-  ul.id = 'un-panel';
+  ul.className = 'tbm-panel dsp-panel mn-panel';
+  ul.id = id;
   ul.setAttribute('role', 'menu');
+  ul.setAttribute('aria-label', label);
   ul.tabIndex = -1;
-  document.body.appendChild(ul);
-  UN.panel = ul;
-  UN.open = true;
-  unBuild();
-  ul.addEventListener('click', e => {
-    const row = e.target.closest ? e.target.closest('.dsp-opt') : null;
-    if (row) unChoose(row.getAttribute('data-k'));
+  items.forEach(it => {
+    if (it.sep) {
+      const sp = document.createElement('div');
+      sp.className = 'mn-sep';
+      sp.setAttribute('role', 'separator');
+      ul.appendChild(sp);
+      return;
+    }
+    const row = document.createElement('div');
+    row.className = 'tbm-opt dsp-opt mn-opt' + (it.danger ? ' mn-danger' : '');
+    row.setAttribute('role', 'menuitem');
+    row.tabIndex = -1;
+    row.setAttribute('data-k', it.k);
+    if (it.disabled) row.setAttribute('aria-disabled', 'true');
+    if (it.title) row.title = it.title;
+    const txt = document.createElement('span');
+    txt.className = 'tbm-txt';
+    txt.textContent = it.label;
+    row.appendChild(txt);
+    if (it.hint) {
+      const h = document.createElement('span');
+      h.className = 'ui-note mn-hint';
+      h.textContent = it.hint;
+      row.appendChild(h);
+    }
+    ul.appendChild(row);
   });
-  ul.addEventListener('keydown', unKey);
-  const b = $('btn-units');
-  b.classList.add('dsp-open');
-  b.setAttribute('aria-expanded', 'true');
-  b.setAttribute('aria-controls', 'un-panel');
-  unPlace();
+  document.body.appendChild(ul);
+  const m = { btn: btn, panel: ul, x0: 0, y0: 0, choose: choose };
+  MN.cur = m;
+  ul.addEventListener('click', e => {
+    const row = e.target.closest ? e.target.closest('.mn-opt') : null;
+    if (!row || row.getAttribute('aria-disabled') === 'true') return;
+    const k = row.getAttribute('data-k');
+    mnClose(false);
+    choose(k);
+  });
+  ul.addEventListener('keydown', mnKey);
+  btn.classList.add('dsp-open');
+  btn.setAttribute('aria-expanded', 'true');
+  btn.setAttribute('aria-controls', id);
+  mnPlace(m);
   ul.focus({ preventScroll: true });
 }
 
-function unClose(refocus) {
-  if (!UN.open) return;
-  UN.open = false;
-  if (UN.panel) UN.panel.remove();
-  UN.panel = null;
-  const b = $('btn-units');
-  b.classList.remove('dsp-open');
-  b.setAttribute('aria-expanded', 'false');
-  if (refocus) b.focus({ preventScroll: true });
-}
-
-function unKey(e) {
-  const rows = Array.prototype.slice.call(UN.panel.querySelectorAll('.dsp-opt'));
+function mnKey(e) {
+  const m = MN.cur;
+  if (!m) return;
+  const rows = Array.prototype.slice.call(m.panel.querySelectorAll('.mn-opt:not([aria-disabled="true"])'));
   const cur = rows.indexOf(document.activeElement);
-  const go = k => { if (rows[k]) { rows[k].focus({ preventScroll: true }); rows[k].scrollIntoView({ block: 'nearest' }); } };
+  const go = k => { if (rows[k]) rows[k].focus({ preventScroll: true }); };
   const k = e.key;
   if (k === 'ArrowDown') { e.preventDefault(); go(cur < 0 ? 0 : Math.min(rows.length - 1, cur + 1)); }
   else if (k === 'ArrowUp') { e.preventDefault(); go(cur < 0 ? rows.length - 1 : Math.max(0, cur - 1)); }
   else if (k === 'Home') { e.preventDefault(); go(0); }
   else if (k === 'End') { e.preventDefault(); go(rows.length - 1); }
-  else if ((k === 'Enter' || k === ' ') && cur >= 0) { e.preventDefault(); unChoose(rows[cur].getAttribute('data-k')); }
-  else if (k === 'Escape') { e.preventDefault(); e.stopPropagation(); unClose(true); }
-  else if (k === 'Tab') unClose(true);
+  else if ((k === 'Enter' || k === ' ') && cur >= 0) { e.preventDefault(); rows[cur].click(); }
+  else if (k === 'Escape') { e.preventDefault(); e.stopPropagation(); mnClose(true); }
+  else if (k === 'Tab') mnClose(true);
 }
 
-/* Un toucher ou un clic hors du panneau et du bouton le ferme, sans agir ailleurs (le clic qui suit est avalé) */
-function unOutside(e) {
-  if (!UN.open) return;
+/* Un toucher ou un clic hors du menu et de son bouton le ferme, sans agir ailleurs (le clic qui suit est avalé) */
+function mnOutside(e) {
+  const m = MN.cur;
+  if (!m) return;
   const t = e.target;
-  if (UN.panel.contains(t) || $('btn-units').contains(t)) return;
-  const other = t && t.closest ? t.closest('.tbm-trigger, #btn-display, #btn-save') : null;
-  unClose(false);
+  if (m.panel.contains(t) || m.btn.contains(t)) return;
+  const other = t && t.closest ? t.closest(MENU_TRIG) : null;
+  mnClose(false);
   if (other) return;
   tbmSwallowNext();
 }
 
-/* Une ligne règle l'unité de son groupe, avec les effets des anciens boutons de la barre ; le panneau reste ouvert */
+function mnBind() {
+  if (MN.bound) return;
+  MN.bound = true;
+  document.addEventListener('pointerdown', mnOutside, true);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && MN.cur) { e.preventDefault(); mnClose(true); } });
+  window.addEventListener('resize', () => mnClose(false));
+  window.addEventListener('blur', () => mnClose(false));
+  window.addEventListener('scroll', e => {
+    const m = MN.cur;
+    if (!m || (e.target && e.target.nodeType && m.panel.contains(e.target))) return;
+    const r = m.btn.getBoundingClientRect();
+    if (Math.abs(r.left - m.x0) > 0.5 || Math.abs(r.top - m.y0) > 0.5) mnClose(false);
+  }, true);
+}
+
+/* « Ouvrir ▾ » : une route (le sélecteur de fichier), des routes (la fenêtre d'import commune) */
+function openMenuToggle(btn) {
+  if (MN.cur && MN.cur.btn === btn) { mnClose(false); return; }
+  mnOpen(btn, 'op-panel', t('tb.open'), [
+    { k: 'file', label: t('op.route'), hint: t('op.route.h') },
+    { k: 'import', label: t('op.import'), hint: t('op.import.h') }
+  ], k => {
+    if (k === 'file') { const f = $('file-open'); f.value = ''; f.click(); }
+    else impOpen({ opener: $('btn-open') });
+  });
+}
+
+/* « … » de la ligne de sélection : Dupliquer, un trait, Supprimer */
+function moreMenuToggle(btn) {
+  if (MN.cur && MN.cur.btn === btn) { mnClose(false); return; }
+  const full = RSET.routes.length >= MAX_ROUTES;
+  mnOpen(btn, 'mr-panel', t('rs.more'), [
+    { k: 'dup', label: t('rs.dup'), disabled: full, title: full ? t('rs.max') : '' },
+    { sep: true },
+    { k: 'del', label: t('rs.del'), danger: true }
+  ], k => { if (k === 'dup') duplicateRoute(); else if (k === 'del') deleteRoute(); });
+}
+
+/* ============= LES UNITÉS (lot mp-rp-unites-menu, puis mp-ui-disposition) =============
+   « Distance » et « Altitude » sont deux rangées segmentées du menu Affichage (mêmes valeurs, même clé mp_units_v1, mêmes effets qu'avant). */
+const UN_SEGS = [
+  { g: 'distance', l: 'un.g.dist', opts: [['km', 'u.km'], ['nm', 'u.nm']] },
+  { g: 'altitude', l: 'un.g.alt', opts: [['m', 'u.m'], ['ft', 'u.ft']] }
+];
+
+/* Une rangée choisit l'unité de son groupe, avec les effets des anciens boutons de la barre ; le panneau reste ouvert */
 function unChoose(k) {
   if (k === 'km' || k === 'nm') {
     S.units.distance = k;
@@ -10205,20 +10295,12 @@ function unChoose(k) {
   }
 }
 
-function unBind() {
-  $('btn-units').addEventListener('click', () => { if (UN.open) unClose(false); else unOpen(); });
-  $('btn-units').addEventListener('keydown', e => {
-    if (e.key === 'ArrowDown' && !UN.open) { e.preventDefault(); unOpen(); }
-  });
-  document.addEventListener('pointerdown', unOutside, true);
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && UN.open) { e.preventDefault(); unClose(true); } });
-  window.addEventListener('resize', () => unClose(false));
-  window.addEventListener('blur', () => unClose(false));
-  window.addEventListener('scroll', e => {
-    if (!UN.open || (e.target && e.target.nodeType && UN.panel.contains(e.target))) return;
-    const r = $('btn-units').getBoundingClientRect();
-    if (Math.abs(r.left - UN.x0) > 0.5 || Math.abs(r.top - UN.y0) > 0.5) unClose(false);
-  }, true);
+/* Le fond : même effet que l'ancien sélecteur de la barre ; choisir à nouveau le fond retente */
+function dspSetBase(id) {
+  if (LAYER_IDS.indexOf(id) === -1) return;
+  S.ui.layer = id;
+  persistState();
+  setBase();
 }
 
 /* ============= LE MENU « ENREGISTRER » : la route sélectionnée, toutes les routes ============= */
@@ -10268,7 +10350,7 @@ function svOpen() {
   if (SV.open) return;
   if (TBM.cur) tbmClose(false);
   dspClose(false);
-  unClose(false);
+  mnClose(false);
   const ul = document.createElement('div');
   ul.className = 'tbm-panel dsp-panel';
   ul.id = 'sv-panel';
@@ -10320,7 +10402,7 @@ function svOutside(e) {
   if (!SV.open) return;
   const t = e.target;
   if (SV.panel.contains(t) || $('btn-save').contains(t)) return;
-  const other = t && t.closest ? t.closest('.tbm-trigger, #btn-display, #btn-units, #btn-save') : null;
+  const other = t && t.closest ? t.closest(MENU_TRIG) : null;
   svClose(false);
   if (other) return;
   tbmSwallowNext();
@@ -10789,23 +10871,16 @@ function setLang(lang) {
   if (rtVisible('fiche')) ficheRender();
   expSyncTexts();
   if (DSP.open) dspBuild();
-  unSync();
-  if (UN.open) unBuild();
   if (SV.open) svBuild();
+  mnClose(false);
   map.closePopup();
   if (drOn()) { DR.sheetKey = ''; drRlab(); drSyncUi(); }
 }
 
 /* ============= CÂBLAGE ============= */
 function bindEvents() {
-  $('layer').addEventListener('change', e => {
-    S.ui.layer = LAYER_IDS.indexOf(e.target.value) !== -1 ? e.target.value : 'topo';
-    persistState();
-    setBase();
-  });
   dspBind();
   $('theatre').addEventListener('change', e => setTheatre(e.target.value));
-  unBind();
   document.querySelectorAll('[data-ref]').forEach(b => b.addEventListener('click', () => {
     S.navDisplay.ref = b.dataset.ref === 'mag' ? 'mag' : 'true';
     persistState(); renderNav(); drawRoute(); syncControls();
@@ -10882,7 +10957,9 @@ function bindEvents() {
   }));
 
   const fileOpen = $('file-open');
-  $('btn-open').addEventListener('click', () => { fileOpen.value = ''; fileOpen.click(); });
+  mnBind();
+  $('btn-open').addEventListener('click', ev => openMenuToggle(ev.currentTarget));
+  $('btn-open').addEventListener('keydown', e => { if (e.key === 'ArrowDown' && !MN.cur) { e.preventDefault(); openMenuToggle(e.currentTarget); } });
   /* la sélection est remise à zéro après lecture : choisir deux fois le même fichier le relit */
   fileOpen.addEventListener('change', () => { const f = fileOpen.files && fileOpen.files[0]; if (f) openRouteFile(f); fileOpen.value = ''; });
   svBind();
@@ -11081,8 +11158,8 @@ function tbmSync(m) {
 
 function tbmOpen(m) {
   if (TBM.cur) tbmClose(false);
-  unClose(false);
   svClose(false);
+  mnClose(false);
   if (m.sel.disabled) return;
   tbmSync(m);
   const sel = m.sel, opts = sel.options, name = m.labelFn();
@@ -11280,7 +11357,7 @@ function tbmOutside(e) {
   if (!m) return;
   const t = e.target;
   if (m.panel.contains(t) || m.btn.contains(t)) return;
-  const other = t && t.closest ? t.closest('.tbm-trigger, #btn-display, #btn-units, #btn-save') : null;
+  const other = t && t.closest ? t.closest(MENU_TRIG) : null;
   tbmClose(false);
   if (other) return;
   tbmSwallowNext();
@@ -11315,7 +11392,7 @@ function init() {
   applyTheme(loadTheme(), false);
   applyI18nStatic();
   updateFlagButton();
-  initToolbarMenus([['layer', () => t('tb.layer'), undefined, true], ['theatre', () => t('tb.theatre'), undefined, true], ['theme', () => t('tb.theme.tip')], ['rt-theatre', () => t('tb.theatre'), 'sheet']]);   /* les listes de la barre au thème de l'interface */
+  initToolbarMenus([['theatre', () => t('tb.theatre'), undefined, true], ['theme', () => t('tb.theme.tip')], ['rt-theatre', () => t('tb.theatre'), 'sheet'], ['route-list', () => t('rs.list'), 'sheet']]);   /* les listes de la barre au thème de l'interface ; la liste des routes, de la ligne de sélection */
   initFormMenus(sel => (sel.dataset.k === 'altRef' ? t('th.ref') : sel.dataset.lbl ? t(sel.dataset.lbl) : (sel.getAttribute('aria-label') || '')));   /* les listes des formulaires */
   impSetup({ lang: () => CURRENT_LANG, before: rpImportBefore, onImported: rpImported, toast: msg => showToast('\u26a0 ' + msg, { type: 'err' }) });      /* la fenêtre d'import commune */
   loadState();
