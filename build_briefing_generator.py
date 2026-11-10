@@ -15,14 +15,13 @@ CONTRAST_CSS = r"""
 /* MP-20 begin */
 /* Contrastes (texte sous 18 px, 4,5 : 1 au moins) : couleur du texte seule, la palette commune ne bouge pas. */
 :where(body[data-theme="cw-nato"]) .tb-brand-short { color: #c49037; }
-:where(body[data-theme="cw-nato"]) .tb-seg .seg-btn.active { color: #efe8d5; }
+:where(body[data-theme="cw-nato"]) #btn-display { color: #c49037; }
 :where(body[data-theme="cw-nato"]) .ed-section > summary { color: #dcbe8a; }
 :where(body[data-theme="cw-nato"]) .ed-phase-card .phase-num { color: #eee8d8; }
 :where(body[data-theme="cw-nato"]) .phase-indicator { color: #c49037; }
 :where(body[data-theme="cw-nato"]) .phase-bar button.danger { color: #e6b7b1; }
 :where(body[data-theme="cw-nato"]) .ed-label-hint { color: #aea692; }
 :where(body[data-theme="cw-nato"]) .ed-btn-subtask-add { color: #898f78; }
-:where(body[data-theme="cw-soviet"]) .tb-seg .seg-btn.active { color: #f2e8c0; }
 :where(body[data-theme="cw-soviet"]) .ed-section > summary { color: #cc9f52; }
 :where(body[data-theme="cw-soviet"]) .ed-phase-card .phase-num { color: #f0e8cb; }
 :where(body[data-theme="cw-soviet"]) .phase-bar button.danger { color: #cd9a9a; }
@@ -36,7 +35,6 @@ CONTRAST_CSS = r"""
 :where(body[data-theme="modern-nato"]) .phase-bar button.danger { color: #9a9a9a; }
 :where(body[data-theme="modern-nato"]) .ed-label-hint { color: #97a0aa; }
 :where(body[data-theme="modern-nato"]) .ed-btn-subtask-add { color: #81858a; }
-:where(body[data-theme="modern-east"]) .tb-seg .seg-btn.active { color: #ece8e0; }
 :where(body[data-theme="modern-east"]) .ed-section > summary { color: #c6943d; }
 :where(body[data-theme="modern-east"]) .ed-phase-card .phase-num { color: #ebe8e2; }
 :where(body[data-theme="modern-east"]) .phase-bar button.danger { color: #c78e8e; }
@@ -520,44 +518,23 @@ select[data-tbm-src] { display: none !important; }
 }
 .tb-lang-btn:active { transform: translateY(1px); }
 
-/* Brief complet / simplifié — sélecteur à deux positions (v2.3.0) */
-.tb-seg {
-  display: inline-flex;
-  align-items: stretch;
-  height: 40px;
-  flex-shrink: 0;
-  border: 1px solid var(--khaki);
-}
-.tb-seg .seg-btn {
-  font-family: var(--f-ui);
-  font-weight: 700;
-  letter-spacing: 1.5px;
-  font-size: 12px;
-  text-transform: uppercase;
-  background: transparent;
-  color: var(--paper);
-  border: 0;
-  padding: 0 12px;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all .15s ease;
-}
-.tb-seg .seg-btn + .seg-btn { border-left: 1px solid var(--khaki); }
-.tb-seg .seg-btn:hover, .tb-seg .seg-btn:focus-visible {
-  background: var(--olive);
-  color: var(--amber);
-}
-.tb-seg .seg-btn.active,
-.tb-seg .seg-btn.active:hover {
-  background: var(--amber-dark);
-  color: var(--paper-light);
-  box-shadow: inset 0 -3px 0 var(--amber);
-}
-.tb-seg .seg-short { display: none; }
-@media (max-width: 1500px) {
-  .tb-seg .seg-long { display: none; }
-  .tb-seg .seg-short { display: inline; }
-}
+/* Le menu « Affichage » (lot mp-ui-disposition-b) : le format du brief, Standard ou Avancé, en un bouton de la barre et son panneau, au style des listes de la barre (tbm-*) ; même composant qu'au Route Planner et au Datacard Generator */
+#btn-display { position: relative; color: var(--amber); border-color: var(--amber-dark); padding-right: 12px; }
+#btn-display:hover, #btn-display:focus-visible, #btn-display.dsp-open { border-color: var(--amber); }
+#btn-display .dsp-chev { width: 10px; height: 6px; }
+#btn-display.dsp-open .dsp-chev { transform: rotate(180deg); }
+.dsp-dot { position: absolute; top: -3px; right: -3px; width: 7px; height: 7px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 0 2px var(--olive-deep); pointer-events: none; }
+.dsp-dot[hidden] { display: none; }
+.dsp-panel { max-height: min(80vh, 600px); min-width: 260px; padding-bottom: 6px; }
+.dsp-panel.dsp-bg { width: 340px; max-width: calc(100vw - 16px); box-sizing: border-box; }
+.dsp-block { padding: 6px 18px 8px; }
+.dsp-note { padding: 0 18px 8px; }
+.dsp-seg { display: flex; width: 100%; }
+.dsp-seg .tb-btn { flex: 1 1 auto; min-width: 0; height: auto; min-height: 44px; padding: 0 8px; font-size: 11px; letter-spacing: .2px; white-space: nowrap; margin: 0 -1px 0 0; }
+.dsp-seg .tb-btn.on, .dsp-seg .tb-btn.on:hover { background: var(--amber-dark); border-color: var(--amber); color: #f6efdc; box-shadow: inset 0 -3px 0 var(--amber); position: relative; }
+.dsp-seg .tb-btn:last-child { margin-right: 0; }
+.dsp-opt { outline: none; color: var(--khaki-light); }
+.dsp-opt:focus-visible { background: var(--olive); color: var(--amber); }
 
 /* ============ MAIN APP ============ */
 .app {
@@ -2928,18 +2905,21 @@ __CSS__
     <span class="tb-brand-sub" data-i18n="toolbar.subtitle">░ BRIEFING DE MISSION</span>
   </div>
   <div class="tb-sep"></div>
-  <div class="tb-seg" id="format-seg" role="group" data-i18n-title="toolbar.format.tooltip" title="Choisir le format du briefing" data-i18n-aria-label="toolbar.format.tooltip" aria-label="Choisir le format du briefing">
-    <button type="button" class="seg-btn" data-format="full" aria-pressed="false"><span class="seg-long" data-i18n="toolbar.format.full">Brief complet</span><span class="seg-short" data-i18n="toolbar.format.fullShort">Complet</span></button>
-    <button type="button" class="seg-btn" data-format="simple" aria-pressed="true"><span class="seg-long" data-i18n="toolbar.format.simple">Brief simplifié</span><span class="seg-short" data-i18n="toolbar.format.simpleShort">Simplifié</span></button>
-  </div>
+  <button type="button" class="tb-btn" id="btn-display" aria-haspopup="menu" aria-expanded="false" data-i18n-title="toolbar.display.tip" title="Format du brief" data-i18n-aria-label="toolbar.display.tip" aria-label="Format du brief">
+    <svg class="dsp-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/></svg>
+    <span data-i18n="toolbar.display">Affichage</span>
+    <svg class="dsp-chev" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg>
+    <i class="dsp-dot" id="dsp-dot" hidden></i>
+  </button>
+  <div class="tb-sep"></div>
   <button class="tb-btn" id="btn-load" data-i18n-title="toolbar.load.tooltip" title="Ouvrir un briefing (JSON)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v1H3z"/><path d="M3 10h19l-2 8a2 2 0 0 1-2 1.5H5a2 2 0 0 1-2-2z"/></svg>
     <span class="tb-btn-label" data-i18n="toolbar.load">Ouvrir</span>
   </button>
   <input type="file" id="file-load" accept=".json,application/json" hidden>
-  <button class="tb-btn" id="btn-save" data-i18n-title="toolbar.save.tooltip" title="Enregistrer le briefing (JSON)">
+  <button class="tb-btn" id="btn-save" data-i18n-title="toolbar.save.tooltip" title="Sauvegarder le briefing (JSON)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h11l4 4v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M8 3v5h7V3"/><rect x="7" y="13" width="10" height="8"/></svg>
-    <span class="tb-btn-label" data-i18n="toolbar.save">Enregistrer</span>
+    <span class="tb-btn-label" data-i18n="toolbar.save">Sauvegarder</span>
   </button>
   <button class="tb-btn" id="btn-print" data-i18n-title="toolbar.export.tooltip" title="Exporter en PDF ou PNG (kneeboard DCS)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -2975,16 +2955,16 @@ __CSS__
   </div>
 </div>
 
-<!-- ===== FENÊTRE : ENREGISTRER LE BRIEFING — CHOISIR LE NOM DU FICHIER ===== -->
+<!-- ===== FENÊTRE : SAUVEGARDER LE BRIEFING — CHOISIR LE NOM DU FICHIER ===== -->
 <div class="ui-modal" id="save-modal" hidden role="dialog" aria-labelledby="save-title" aria-modal="true">
   <div class="ui-backdrop" id="save-backdrop"></div>
   <div class="ui-panel" role="document">
     <button type="button" class="ui-close" id="save-close" data-i18n-aria-label="modal.export.close" aria-label="Fermer">×</button>
-    <h2 class="ui-title" id="save-title" data-i18n="save.title">Enregistrer le briefing</h2>
+    <h2 class="ui-title" id="save-title" data-i18n="save.title">Sauvegarder le briefing</h2>
     <div class="ui-field"><label class="ui-lbl" for="save-fname" data-i18n="fn.label">Nom du fichier</label><div class="ui-row"><input class="ui-in" id="save-fname" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="100"><span class="ui-ext">.json</span></div></div>
     <div class="ui-actions">
       <button type="button" class="ui-btn" id="save-cancel" data-i18n="rpmap.cancel">Annuler</button>
-      <button type="button" class="ui-btn primary" id="save-go" data-i18n="toolbar.save">Enregistrer</button>
+      <button type="button" class="ui-btn primary" id="save-go" data-i18n="toolbar.save">Sauvegarder</button>
     </div>
   </div>
 </div>
@@ -3312,7 +3292,7 @@ __CSS__
     <div class="ui-note" data-wing-label style="text-align:center; padding:12px 4px;">
       ◆ MY WING ◆<br>
       <span data-i18n="editor.autoSave">Sauvegarde locale automatique</span><br>
-      <span data-i18n="editor.exportTip">Enregistrez le briefing pour conserver vos templates</span>
+      <span data-i18n="editor.exportTip">Sauvegardez le briefing pour conserver vos templates</span>
     </div>
   </aside>
 
@@ -3399,11 +3379,11 @@ const I18N = {
     'ui.verb.reset': 'Réinitialiser',
     'ui.verb.clear': 'Effacer',
     // ── Toolbar ──
-    'toolbar.save':           'Enregistrer',
+    'toolbar.save':           'Sauvegarder',
     'toolbar.load':           'Ouvrir',
     'toolbar.export':         'Exporter',
     'toolbar.reset':          'Effacer',
-    'toolbar.save.tooltip':   'Enregistrer le briefing (JSON)',
+    'toolbar.save.tooltip':   'Sauvegarder le briefing (JSON)',
     'toolbar.load.tooltip':   'Ouvrir un briefing (JSON)',
     'toolbar.export.tooltip': 'Exporter en PDF ou PNG (kneeboard DCS)',
     'toolbar.reset.tooltip':  'Effacer',
@@ -3433,7 +3413,7 @@ const I18N = {
     'modal.export.png.checkAll':   'Tout cocher',
     'modal.export.png.uncheckAll': 'Tout décocher',
     'fn.label':                    'Nom du fichier',
-    'save.title':                  'Enregistrer le briefing',
+    'save.title':                  'Sauvegarder le briefing',
     // ── Section 00 META ──
     'editor.meta.summary':        '11 ░ MÉTADONNÉES',
     'editor.meta.summarySimple':  '05 ░ MÉTADONNÉES',
@@ -3590,7 +3570,7 @@ const I18N = {
     'editor.imgZone.tap':     '▲ TOUCHER POUR IMPORTER UNE CARTE ▲',
     'editor.imgZone.tapLogo': '▲ TOUCHER POUR IMPORTER UN LOGO ▲',
     'editor.autoSave':        'Sauvegarde locale automatique',
-    'editor.exportTip':       'Enregistrez le briefing pour conserver vos templates',
+    'editor.exportTip':       'Sauvegardez le briefing pour conserver vos templates',
     // ── Strings résiduelles externalisées (Étape C) ──
     'select.noSquadron':           '— Aucun escadron —',
     'select.noGroup':              '— Sélectionner un groupe —',
@@ -3709,12 +3689,13 @@ const I18N = {
     'theme.cw-soviet':    'Cold War Soviétique',
     'theme.modern-nato':  'OTAN moderne',
     'theme.modern-east':  'Bloc Est moderne',
-    // ── Brief complet / simplifié (v2.3.0) ──
-    'toolbar.format.full':        'Brief complet',
-    'toolbar.format.simple':      'Brief simplifié',
-    'toolbar.format.fullShort':   'Complet',
-    'toolbar.format.simpleShort': 'Simplifié',
-    'toolbar.format.tooltip':     'Choisir le format du briefing',
+    // ── Affichage : le format du brief, Standard · Avancé ──
+    'toolbar.display':            'Affichage',
+    'toolbar.display.tip':        'Format du brief',
+    'dsp.format':                 'Format du brief',
+    'dsp.format.standard':        'Standard',
+    'dsp.format.advanced':        'Avancé',
+    'dsp.format.note':            'Standard : une page de mission et des pages de photos. Avancé : dix sections.',
     'toolbar.example':            'Exemple',
     'toolbar.subtitle':           '░ BRIEFING DE MISSION',
     'toolbar.example.tooltip':    'Ouvrir le briefing d\'exemple (remplace le briefing en cours)',
@@ -3770,7 +3751,6 @@ const I18N = {
     'simple.hdr.threats':         'MENACES',
     'simple.hdr.targets':         'CIBLES',
     'simple.hdr.cont':            'SUITE',
-    'simple.subtitle':            'BRIEF SIMPLIFIÉ',
     'simple.hdr.operation':       'OPÉRATION',
     'simple.hdr.mission':         'MISSION',
     'simple.situation':           'Situation',
@@ -4112,12 +4092,13 @@ const I18N = {
     'theme.cw-soviet':    'Cold War Soviet',
     'theme.modern-nato':  'Modern NATO',
     'theme.modern-east':  'Modern Eastern Bloc',
-    // ── Full / quick brief (v2.3.0) ──
-    'toolbar.format.full':        'Full brief',
-    'toolbar.format.simple':      'Quick brief',
-    'toolbar.format.fullShort':   'Full',
-    'toolbar.format.simpleShort': 'Quick',
-    'toolbar.format.tooltip':     'Choose the briefing format',
+    // ── Display: the briefing format, Standard · Advanced ──
+    'toolbar.display':            'Display',
+    'toolbar.display.tip':        'Briefing format',
+    'dsp.format':                 'Briefing format',
+    'dsp.format.standard':        'Standard',
+    'dsp.format.advanced':        'Advanced',
+    'dsp.format.note':            'Standard: one mission page plus photo pages. Advanced: ten sections.',
     'toolbar.example':            'Example',
     'toolbar.subtitle':           '░ MISSION BRIEFING',
     'toolbar.example.tooltip':    'Open the example briefing (replaces the current one)',
@@ -4173,7 +4154,6 @@ const I18N = {
     'simple.hdr.threats':         'THREATS',
     'simple.hdr.targets':         'TARGETS',
     'simple.hdr.cont':            'CONT.',
-    'simple.subtitle':            'QUICK BRIEF',
     'simple.hdr.operation':       'OPERATION',
     'simple.hdr.mission':         'MISSION',
     'simple.situation':           'Situation',
@@ -4362,13 +4342,13 @@ const DEFAULTS = {
   photos: []   // brief simplifié : { title, img, caption }
 };
 
-/* Briefing d'exemple (ancienne démonstration). Toujours en brief complet. */
+/* Briefing d'exemple (ancienne démonstration). Part en Standard. */
 const EXAMPLE_BRIEFING = {
   meta: {
     operation: 'FOOTHOLD',
     mission: 'M3',
     date: '1989-03-22',
-    format: 'full',
+    format: 'simple',
     classification: 'confidential',
     docRef: 'FH-M3-1989'
   },
@@ -4514,7 +4494,7 @@ const EXAMPLE_BRIEFING_EN = {
     operation: 'FOOTHOLD',
     mission: 'M3',
     date: '1989-03-22',
-    format: 'full',
+    format: 'simple',
     classification: 'confidential',
     docRef: 'FH-M3-1989'
   },
@@ -7044,17 +7024,16 @@ function schedulePreview() {
   });
 }
 
-/* Sous-titre des pages. Mode complet : texte historique, inchangé.
-   Brief simplifié : éléments vides omis, se termine par le libellé du format. */
+/* Sous-titre des pages : le document ne dit pas son format. Mode Avancé : opération et mission, tels quels ;
+   mode Standard : éléments vides omis. « OPÉRATION » suit la langue de l'interface. */
 function pageSubtitle() {
   if (state.meta.format === 'simple') {
     const parts = [];
     if (state.meta.operation) parts.push(t('simple.hdr.operation') + ' ' + state.meta.operation);
     if (state.meta.mission) parts.push(t('simple.hdr.mission') + ' ' + state.meta.mission);
-    parts.push(t('simple.subtitle'));
     return parts.map(p => escapeHtml(p)).join(' • ');
   }
-  return `OPÉRATION ${escapeHtml(state.meta.operation)} • MISSION ${escapeHtml(state.meta.mission)}`;
+  return `${escapeHtml(t('simple.hdr.operation'))} ${escapeHtml(state.meta.operation)} • MISSION ${escapeHtml(state.meta.mission)}`;
 }
 
 function pageHeader(opts) {
@@ -7400,7 +7379,7 @@ function buildPages() {
   // PAGE 1 — COVER
   pages.push({
     body: `
-      <div class="p-section">OPÉRATION ${escapeHtml(state.meta.operation)}</div>
+      <div class="p-section">${escapeHtml(t('simple.hdr.operation'))} ${escapeHtml(state.meta.operation)}</div>
       ${imgFrame(t('preview.theaterMap'), state.cover.mapImage)}
       <div class="p-body" style="margin-top:14px;">
         ${(state.cover.narrative || '').split('\n').map(p => p.trim() ? `<p>${escapeHtml(p)}</p>` : '').join('')}
@@ -8040,7 +8019,7 @@ function fnDefault(base, stamp) {
   return (b ? b + '_' : '') + stamp;
 }
 
-/* « Enregistrer » (et Ctrl+S) : la fenêtre du nom du fichier, pré-remplie du nom d'avant */
+/* « Sauvegarder » (et Ctrl+S) : la fenêtre du nom du fichier, pré-remplie du nom d'avant */
 const SAVEN = { name: '', opener: null, at: 0 };
 function defaultBriefingName() {
   const op = fnPart((state.meta.operation || 'op').toLowerCase().replace(/\s+/g, '_'), 'op');
@@ -8073,7 +8052,7 @@ function saveGo() {
 }
 document.addEventListener('DOMContentLoaded', function bindSaveModal() {
   ['save-close', 'save-cancel'].forEach(function(id) { document.getElementById(id).addEventListener('click', closeSaveModal); });
-  /* le fond ignore les clics des 400 ms qui suivent l'ouverture : le 2e clic d'un double-clic sur « Enregistrer » ne ferme pas la fenêtre */
+  /* le fond ignore les clics des 400 ms qui suivent l'ouverture : le 2e clic d'un double-clic sur « Sauvegarder » ne ferme pas la fenêtre */
   document.getElementById('save-backdrop').addEventListener('click', function() { if (performance.now() - SAVEN.at > 400) closeSaveModal(); });
   document.getElementById('save-go').addEventListener('click', saveGo);
   const f = document.getElementById('save-fname');
@@ -8541,11 +8520,7 @@ function placeMetarPanel(fmt) {
 function applyFormatUi() {
   const fmt = (state && state.meta && state.meta.format === 'simple') ? 'simple' : 'full';
   document.body.dataset.format = fmt;
-  document.querySelectorAll('#format-seg .seg-btn').forEach(b => {
-    const on = b.dataset.format === fmt;
-    b.classList.toggle('active', on);
-    b.setAttribute('aria-pressed', on ? 'true' : 'false');
-  });
+  bgDispSync();
   placeMetarPanel(fmt);
   // l'onglet courant doit exister dans ce mode
   const tabBtn = document.querySelector('.tab-bar button[data-tab="' + activeTab + '"]');
@@ -8594,7 +8569,7 @@ function loadExample() {
 }
 function loadExampleNow() {
   state = mergeDeep(structuredClone(DEFAULTS), structuredClone(CURRENT_LANG === 'en' ? EXAMPLE_BRIEFING_EN : EXAMPLE_BRIEFING));   // la langue de l'interface au moment du clic
-  state.meta.format = 'full';
+  state.meta.format = 'simple';
   currentPhaseIdx = 0;
   renderEditorBindings();
   schedulePreview();
@@ -8943,9 +8918,6 @@ function addTarget() {
 }
 
 function bindSimpleEvents() {
-  document.querySelectorAll('#format-seg .seg-btn').forEach(b => {
-    b.addEventListener('click', () => setFormat(b.dataset.format));
-  });
   document.getElementById('btn-example').addEventListener('click', loadExample);
   document.getElementById('s-flight-add').addEventListener('click', () => {
     if (!Array.isArray(state.phases)) state.phases = [];
@@ -9008,6 +8980,163 @@ function initToolbarScroll() {
   // Le shell ajoute son bouton de retour et son tampon après le chargement
   new MutationObserver(update).observe(bar, { childList: true, subtree: true, characterData: true });
   update();
+}
+
+/* ============= LE MENU « AFFICHAGE » (lot mp-ui-disposition-b) =============
+   Même composant et même aspect que les listes de la barre (tbm-panel dsp-panel) et que le menu du Route Planner et du Datacard Generator :
+   un seul menu ouvert à la fois, avec les listes de la barre. Le panneau reste ouvert quand on choisit un format. */
+const MENU_TRIG = '.tbm-trigger, #btn-display';
+const MN = { cur: null, bound: false };
+
+function mnClose(refocus) {
+  const m = MN.cur;
+  if (!m) return;
+  MN.cur = null;
+  if (m.panel) m.panel.remove();
+  m.btn.classList.remove('dsp-open');
+  m.btn.setAttribute('aria-expanded', 'false');
+  if (refocus) m.btn.focus({ preventScroll: true });
+}
+
+function mnPlace(m) {
+  const r = m.btn.getBoundingClientRect(), p = m.panel;
+  const vw = document.documentElement.clientWidth, vh = window.innerHeight;
+  const top = r.bottom + 4;
+  m.x0 = r.left; m.y0 = r.top;
+  p.style.minWidth = Math.min(240, vw - 16) + 'px';
+  p.style.top = top + 'px';
+  p.style.maxHeight = Math.max(60, Math.min(0.8 * vh, 600, vh - top - 8)) + 'px';
+  const w = p.getBoundingClientRect().width;
+  let left = r.left;
+  if (left + w > vw - 8) left = vw - 8 - w;
+  if (left < 8) left = 8;
+  p.style.left = left + 'px';
+}
+
+/* o : { build(ul), click(e), rows, cls } (un panneau qui reste ouvert) */
+function mnOpen(btn, id, label, o) {
+  if (MN.cur) mnClose(false);
+  if (TBM.cur) tbmClose(false);
+  const ul = document.createElement('div');
+  ul.className = 'tbm-panel dsp-panel mn-panel' + (o.cls ? ' ' + o.cls : '');
+  ul.id = id;
+  ul.setAttribute('role', 'menu');
+  ul.setAttribute('aria-label', label);
+  ul.tabIndex = -1;
+  o.build(ul);
+  document.body.appendChild(ul);
+  const m = { btn: btn, panel: ul, x0: 0, y0: 0, rows: o.rows };
+  MN.cur = m;
+  ul.addEventListener('click', o.click);
+  ul.addEventListener('keydown', mnKey);
+  btn.classList.add('dsp-open');
+  btn.setAttribute('aria-expanded', 'true');
+  btn.setAttribute('aria-controls', id);
+  mnPlace(m);
+  const cur = ul.querySelector('[aria-checked="true"]');
+  (cur || ul).focus({ preventScroll: true });
+}
+
+function mnKey(e) {
+  const m = MN.cur;
+  if (!m) return;
+  const rows = Array.prototype.slice.call(m.panel.querySelectorAll(m.rows));
+  const cur = rows.indexOf(document.activeElement);
+  const go = k => { if (rows[k]) rows[k].focus({ preventScroll: true }); };
+  const k = e.key;
+  if (k === 'ArrowDown' || k === 'ArrowRight') { e.preventDefault(); go(cur < 0 ? 0 : Math.min(rows.length - 1, cur + 1)); }
+  else if (k === 'ArrowUp' || k === 'ArrowLeft') { e.preventDefault(); go(cur < 0 ? rows.length - 1 : Math.max(0, cur - 1)); }
+  else if (k === 'Home') { e.preventDefault(); go(0); }
+  else if (k === 'End') { e.preventDefault(); go(rows.length - 1); }
+  else if ((k === 'Enter' || k === ' ') && cur >= 0) { e.preventDefault(); rows[cur].click(); }
+  else if (k === 'Escape') { e.preventDefault(); e.stopPropagation(); mnClose(true); }
+  else if (k === 'Tab') mnClose(true);
+}
+
+/* Un toucher ou un clic hors du menu et de son bouton le ferme, sans agir ailleurs (le clic qui suit est avalé) */
+function mnOutside(e) {
+  const m = MN.cur;
+  if (!m) return;
+  const t = e.target;
+  if (m.panel.contains(t) || m.btn.contains(t)) return;
+  const other = t && t.closest ? t.closest(MENU_TRIG) : null;
+  mnClose(false);
+  if (other) return;
+  tbmSwallowNext();
+}
+
+function mnBind() {
+  if (MN.bound) return;
+  MN.bound = true;
+  document.addEventListener('pointerdown', mnOutside, true);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && MN.cur) { e.preventDefault(); mnClose(true); } });
+  window.addEventListener('resize', () => mnClose(false));
+  window.addEventListener('blur', () => mnClose(false));
+  window.addEventListener('scroll', e => {
+    const m = MN.cur;
+    if (!m || (e.target && e.target.nodeType && m.panel.contains(e.target))) return;
+    const r = m.btn.getBoundingClientRect();
+    if (Math.abs(r.left - m.x0) > 0.5 || Math.abs(r.top - m.y0) > 0.5) mnClose(false);
+  }, true);
+  const dsp = document.getElementById('btn-display');
+  dsp.addEventListener('click', () => { if (MN.cur && MN.cur.btn === dsp) mnClose(false); else bgDisplayOpen(dsp); });
+  dsp.addEventListener('keydown', e => { if (e.key === 'ArrowDown' && !MN.cur) { e.preventDefault(); bgDisplayOpen(dsp); } });
+}
+
+/* « Affichage ▾ » : le format du brief, Standard · Avancé (state.meta.format : 'simple' · 'full'), et sa note */
+function bgFmtMark(b, on) { b.classList.toggle('on', on); b.setAttribute('aria-checked', on ? 'true' : 'false'); b.setAttribute('aria-pressed', on ? 'true' : 'false'); }
+
+/* Le point ambre : format Avancé ; le panneau ouvert suit */
+function bgDispSync() {
+  const fmt = (state && state.meta && state.meta.format === 'simple') ? 'simple' : 'full';
+  const dot = document.getElementById('dsp-dot');
+  if (dot) dot.hidden = fmt === 'simple';
+  const m = MN.cur;
+  if (!m || m.btn.id !== 'btn-display') return;
+  m.panel.querySelectorAll('[data-format]').forEach(b => bgFmtMark(b, b.getAttribute('data-format') === fmt));
+}
+
+function bgDisplayBuild(ul) {
+  const h = document.createElement('div');
+  h.className = 'tbm-head';
+  h.setAttribute('role', 'presentation');
+  h.textContent = t('dsp.format');
+  ul.appendChild(h);
+  const blk = document.createElement('div');
+  blk.className = 'dsp-block';
+  const sg = document.createElement('span');
+  sg.className = 'dsp-seg';
+  sg.setAttribute('role', 'radiogroup');
+  sg.setAttribute('aria-label', t('dsp.format'));
+  [['simple', 'dsp.format.standard'], ['full', 'dsp.format.advanced']].forEach(o => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'tb-btn';
+    b.setAttribute('role', 'radio');
+    b.setAttribute('data-format', o[0]);
+    b.tabIndex = -1;
+    b.textContent = t(o[1]);
+    sg.appendChild(b);
+  });
+  blk.appendChild(sg);
+  ul.appendChild(blk);
+  const n = document.createElement('p');
+  n.className = 'ui-note dsp-note';
+  n.textContent = t('dsp.format.note');
+  ul.appendChild(n);
+}
+
+function bgDisplayOpen(btn) {
+  mnOpen(btn, 'dsp-panel', t('toolbar.display'), {
+    build: bgDisplayBuild,
+    rows: '.dsp-seg .tb-btn',
+    cls: 'dsp-bg',
+    click: e => {
+      const b = e.target.closest ? e.target.closest('[data-format]') : null;
+      if (b) setFormat(b.getAttribute('data-format'));
+    }
+  });
+  bgDispSync();
 }
 
 /* ============= LISTES DE LA BARRE — thème de l'interface (lot mp-ui-listes) =============
@@ -9137,6 +9266,7 @@ function tbmSync(m) {
 
 function tbmOpen(m) {
   if (TBM.cur) tbmClose(false);
+  mnClose(false);
   if (m.sel.disabled) return;
   tbmSync(m);
   const sel = m.sel, opts = sel.options, name = m.labelFn();
@@ -9332,9 +9462,14 @@ function tbmOutside(e) {
   if (!m) return;
   const t = e.target;
   if (m.panel.contains(t) || m.btn.contains(t)) return;
-  const other = t && t.closest ? t.closest('.tbm-trigger') : null;
+  const other = t && t.closest ? t.closest(MENU_TRIG) : null;
   tbmClose(false);
   if (other) return;
+  tbmSwallowNext();
+}
+
+/* Le clic qui suit le toucher hors de la liste est avalé (aussi pour le menu « Affichage ») */
+function tbmSwallowNext() {
   TBM.swallow = true;
   const rel = () => { document.removeEventListener('pointerup', rel, true); document.removeEventListener('pointercancel', rel, true); setTimeout(() => { TBM.swallow = false; }, 350); };
   document.addEventListener('pointerup', rel, true);
@@ -9374,6 +9509,7 @@ function init() {
   applyI18nStatic();                   // Phase 9 — peupler les data-i18n (Étape B)
   updateFlagButton();                  // Phase 9 — afficher le bon drapeau
   initToolbarMenus([['theme-select', () => t('toolbar.theme.tooltip')]]);   // les listes de la barre au thème de l'interface
+  mnBind();   // le menu « Affichage »
   initFormMenus(formListLabel);   // les listes des formulaires
   renderEditorBindings();
   bindEditorEvents();
@@ -9415,7 +9551,11 @@ function init() {
 
   // Keyboard shortcuts (desktop)
   document.addEventListener('keydown', e => {
-    if (e.ctrlKey && e.key === 's') { e.preventDefault(); if (!document.querySelector('.ui-modal:not([hidden])')) openSaveModal(document.getElementById('btn-save')); }
+    /* Ctrl+S (Cmd+S) : le geste du bouton « Sauvegarder », sauf fenêtre ou menu ouvert */
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+      e.preventDefault();
+      if (!document.querySelector('.ui-modal:not([hidden])') && !MN.cur && !TBM.cur) document.getElementById('btn-save').click();
+    }
     if (e.ctrlKey && e.key === 'p') { /* let browser handle */ }
   });
 }
