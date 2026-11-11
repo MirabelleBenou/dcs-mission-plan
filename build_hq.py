@@ -18,21 +18,17 @@ CONTRAST_CSS = r"""
 .mp-parse-guard { }
 :where(body[data-theme="cw-nato"]) .tb-classif { color: #d4847b; }
 :where(body[data-theme="cw-nato"]) .ed-section > summary { color: #dcbe8a; }
-:where(body[data-theme="cw-nato"]) .drop-zone-miz { color: #d2cab6; }
 :where(body[data-theme="cw-nato"]) .wing-size-counter { color: #aea692; }
 :where(body[data-theme="cw-soviet"]) .tb-classif { color: #be7d7d; }
 :where(body[data-theme="cw-soviet"]) .ed-section > summary { color: #cc9f52; }
-:where(body[data-theme="cw-soviet"]) .drop-zone-miz { color: #c5cbbf; }
 :where(body[data-theme="cw-soviet"]) .wing-size-counter { color: #a0a89b; }
 :where(body[data-theme="cw-soviet"]) .wing-legend { color: #79866b; }
 :where(body[data-theme="cw-soviet"]) .wing-sq-toggle { color: #788569; }
 :where(body[data-theme="modern-nato"]) .tb-classif { color: #898989; }
 :where(body[data-theme="modern-nato"]) .ed-section > summary { color: #c38f35; }
-:where(body[data-theme="modern-nato"]) .drop-zone-miz { color: #c0c8cf; }
 :where(body[data-theme="modern-nato"]) .wing-size-counter { color: #9ca5ae; }
 :where(body[data-theme="modern-east"]) .tb-classif { color: #bd7979; }
 :where(body[data-theme="modern-east"]) .ed-section > summary { color: #c6943d; }
-:where(body[data-theme="modern-east"]) .drop-zone-miz { color: #c6c9bf; }
 :where(body[data-theme="modern-east"]) .wing-size-counter { color: #a3a79a; }
 :where(body[data-theme="modern-east"]) .wing-legend { color: #7d846c; }
 :where(body[data-theme="modern-east"]) .wing-sq-toggle { color: #7a8269; }
@@ -513,7 +509,7 @@ select[data-tbm-src] {{ display: none !important; }}
 .tb-brand-sub {{ font-weight: 500; }}
 .tb-version {{ font-family: 'Roboto Mono', monospace; }}
 @media (max-width: 1359px) {{ .tb-brand-main, .tb-brand-sub, .tb-brand + .tb-sep, .tb-version {{ display: none; }} .tb-brand-short {{ display: inline; }} }}
-@media (max-width: 1100px) {{ .tb-classif {{ display: none; }} }}
+@media (max-width: 1499px) {{ .tb-classif {{ display: none; }} }}   /* le tampon de décor tombe sous 1 500 px (lot mp-hq-disposition) */
 .tb-btn {{ width: auto; height: 38px; min-width: 38px; padding: 0 12px; gap: 6px; font-family: var(--f-ui); font-weight: 500; letter-spacing: 1.5px; font-size: 12px; text-transform: uppercase; white-space: nowrap; }}
 @media (max-width: 899px) {{ .tb-btn .tb-btn-label {{ display: none; }} .tb-btn {{ padding: 0; width: 38px; }} }}
 @media (max-width: 479px) {{ .tb-btn {{ width: 34px; min-width: 34px; }} }}
@@ -529,7 +525,7 @@ select[data-tbm-src] {{ display: none !important; }}
 
 /* ======== EDITOR ======== */
 .editor {{
-  max-width: 800px;
+  max-width: 1480px;
   margin: 0 auto;
   padding: 20px 16px 80px 16px;
   color: var(--paper);
@@ -805,31 +801,7 @@ select[data-tbm-src] {{ display: none !important; }}
 
 @@MESSAGES_CSS@@
 
-/* ======== MISSION SECTION ======== */
-.drop-zone-miz {{
-  border: 2px dashed var(--khaki);
-  padding: 32px 20px;
-  text-align: center;
-  cursor: pointer;
-  transition: all .2s;
-  color: var(--khaki-light);
-  font-family: var(--f-ui);
-  font-size: 13px;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  margin-bottom: 12px;
-}}
-.drop-zone-miz:hover, .drop-zone-miz.dragover {{
-  border-color: var(--amber);
-  background: rgba(192,137,42,.07);
-  color: var(--amber);
-}}
-.drop-zone-miz.has-file {{
-  border-style: solid;
-  border-color: var(--green-radar);
-  color: var(--green-radar);
-  padding: 14px 20px;
-}}
+/* ======== BOUTONS DE LA PAGE ======== */
 .miz-btn {{
   display: inline-flex; align-items: center; gap: 6px;
   font-family: var(--f-stencil); font-size: 12px;
@@ -859,10 +831,64 @@ select[data-tbm-src] {{ display: none !important; }}
   .dsx-hot {{ order: 3; flex: 0 0 100%; padding-left: 26px; box-sizing: border-box; }}
 }}
 
-/* Mission snapshot read-only display */
-.snapshot-section {{
-  margin-top: 14px;
+/* ======== LA PAGE AUTOUR DE LA MISSION (lot mp-hq-disposition) ======== */
+/* Les boutons de la barre : Ouvrir, Sauvegarder (et son compteur), Paquets de vol, Wing, Exemple ; « Wing » prend le dessin du bouton principal tant que rien n'est configuré */
+.tb-btn {{ position: relative; }}
+.tb-btn:disabled {{ opacity: .4; cursor: default; }}
+.tb-btn:disabled:hover {{ background: transparent; border-color: var(--khaki); color: var(--paper); }}
+.tb-btn.primary {{ background: var(--amber); border-color: var(--amber); color: #15120c; }}
+.tb-btn.primary:hover, .tb-btn.primary:focus-visible {{ background: #d9a54a; border-color: #d9a54a; color: #15120c; }}
+.tb-count {{
+  display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; flex: none; min-width: 18px; height: 18px; padding: 0 5px;
+  background: var(--amber); color: #15120c; border-radius: 9px; font-family: 'Roboto Mono', 'Courier New', monospace; font-weight: 400; font-size: 11px; line-height: 1; letter-spacing: 0;
 }}
+.tb-count[hidden] {{ display: none; }}
+
+/* Sans mission : le centre de la page */
+.hq-empty {{ min-height: calc(100vh - 60px - 120px); min-height: calc(100dvh - 60px - 120px); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center; padding: 24px 16px; }}
+.hq-empty[hidden], .hq-page[hidden] {{ display: none; }}
+.hq-empty-title {{ margin: 0; font-family: var(--f-ui); font-weight: 500; font-size: 16px; letter-spacing: 1px; line-height: 1.3; color: var(--paper); }}
+.hq-empty .ui-note {{ max-width: 560px; }}
+.hq-open-btn {{ min-height: 44px; padding: 0 18px; }}
+
+/* Avec une mission : les groupes à gauche, les actions et la mission à droite (une colonne sous 1 100 px, la droite d'abord) */
+.hq-page {{ display: flex; align-items: flex-start; gap: 16px; }}
+.hq-left {{ flex: 1 1 0; min-width: 0; }}
+.hq-groups {{ border: 1px solid var(--khaki); background: rgba(20,24,12,.5); padding: 0 14px 14px; }}
+.hq-groups .pk-fwrap > .snap-header {{ margin-top: 0; padding-top: 14px; }}
+.hq-right {{ flex: 0 0 clamp(360px, 32vw, 440px); min-width: 0; position: sticky; top: 12px; align-self: flex-start; max-height: calc(100vh - 60px - 24px); max-height: calc(100dvh - 60px - 24px); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--khaki) transparent; }}
+.hq-right > .ui-bandeau {{ margin: 0 0 14px; }}
+.hq-right > .ed-section:last-child {{ margin-bottom: 0; }}
+.hq-band-txt {{ margin: 0; }}
+.hq-band-act {{ display: flex; justify-content: flex-end; margin-top: 8px; }}
+.hq-acts {{ display: flex; flex-direction: column; gap: 8px; }}
+.hq-acts .miz-btn {{ width: 100%; min-height: 44px; justify-content: flex-start; padding: 0 14px; font-size: 13px; text-align: left; }}
+.hq-acts .miz-btn[hidden] {{ display: none; }}
+.hq-right .dyn-panel {{ margin: 0 0 14px; border: 1px solid var(--khaki); background: rgba(20,24,12,.5); padding: 0 14px 10px; }}
+.hq-right .dyn-panel > summary {{ margin: 0; padding: 0; border-bottom: 0; }}
+.hq-right > .ui-avert {{ margin: 0 0 14px; }}
+.hq-src .snap-header:first-child {{ padding-top: 0; }}
+@media (max-width: 1099px) {{
+  .hq-page {{ flex-direction: column; align-items: stretch; gap: 14px; }}
+  .hq-right {{ order: -1; flex: none; position: static; max-height: none; overflow: visible; width: 100%; }}
+  .hq-left {{ flex: none; width: 100%; }}
+}}
+
+/* La page entière accepte le dépôt d'un .miz : le retour visuel d'aujourd'hui, sur toute la page */
+.hq-veil {{ position: fixed; top: 60px; right: 0; bottom: 0; left: 0; z-index: 900; box-sizing: border-box; border: 2px dashed var(--amber); background: rgba(192,137,42,.07); pointer-events: none; }}
+.hq-veil[hidden] {{ display: none; }}
+
+/* Les fenêtres « Paquets de vol » et « Wing » : le titre et le pied restent, le corps défile */
+.ui-panel.hq-win {{ display: flex; flex-direction: column; overflow: hidden; }}
+.hq-win .hq-win-body {{ flex: 1 1 auto; min-height: 0; overflow-y: auto; margin: 0 -18px; padding: 0 18px; display: flex; flex-direction: column; gap: 14px; overscroll-behavior: contain; }}
+.hq-win .hq-win-foot {{ flex: none; margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(168,154,114,.25); }}
+.hq-win .hq-win-foot .ui-actions {{ margin-top: 10px; }}
+.hq-win .wing-fieldset, .hq-win .wing-actions {{ margin-bottom: 0; }}
+@media (max-width: 480px) {{ .hq-win .hq-win-body {{ margin: 0 -14px; padding: 0 14px; }} }}
+/* les listes de la fenêtre Wing (types d'appareils) s'ouvrent au-dessus des fenêtres */
+.tbm-panel {{ z-index: 10600; }}
+
+/* Mission snapshot read-only display */
 .snap-header {{
   font-family: var(--f-stencil); font-size: 11px;
   letter-spacing: 2px; text-transform: uppercase;
@@ -934,9 +960,7 @@ body[data-theme] {{
 .pk-chk input {{ accent-color: var(--amber); width: 18px; height: 18px; margin: 0; flex: none; }}
 .pk-chk.off {{ opacity: .4; cursor: default; }}
 .pk-chk.off input {{ cursor: default; }}
-.drop-zone-miz.pk-busy {{ opacity: .4; pointer-events: none; }}
 .snap-flight-header .pk-chk {{ font-family: var(--f-stencil); letter-spacing: 1px; color: var(--amber); text-transform: none; }}
-#pk-nomiz {{ margin: 0 0 10px; }}
 .pk-pack {{
   border: 1px solid var(--khaki); border-radius: 3px;
   padding: 8px 10px; background: rgba(0,0,0,.15); margin-top: 8px;
@@ -1023,6 +1047,23 @@ body[data-theme] {{
     <span class="tb-brand-sub" data-i18n="toolbar.subtitle">\u2591 POSTE DE COMMANDEMENT</span>
   </div>
   <div class="tb-sep"></div>
+  <button type="button" class="tb-btn" id="btn-open">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+    <span class="tb-btn-label" data-i18n="tb.open">Ouvrir .miz</span>
+  </button>
+  <button type="button" class="tb-btn" id="btn-save" disabled>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 3h11l3 3v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M7 3v5h8V3"/><path d="M7 21v-7h10v7"/></svg>
+    <span class="tb-btn-label" data-i18n="tb.save">Sauvegarder .miz</span>
+    <span class="tb-count" id="save-count" hidden>0</span>
+  </button>
+  <button type="button" class="tb-btn" id="btn-packages" disabled>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5"/><path d="M12 13v8"/></svg>
+    <span class="tb-btn-label" data-i18n="tb.pk">Paquets de vol</span>
+  </button>
+  <button type="button" class="tb-btn" id="btn-wing">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></svg>
+    <span class="tb-btn-label" data-i18n="tb.wing">Wing</span>
+  </button>
   <button type="button" class="tb-btn" id="btn-example" data-i18n-title="toolbar.example.tooltip" title="Ouvrir l'exemple" aria-label="Ouvrir l'exemple">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
     <span class="tb-btn-label" data-i18n="toolbar.example">Exemple</span>
@@ -1043,39 +1084,80 @@ body[data-theme] {{
 <div class="app" id="app">
   <div class="editor" id="editor-panel">
 
-    <!-- Section Mission -->
-    <details class="ed-section" data-section="mission">
-      <summary class="ui-fold-head"><span data-i18n="editor.mission.summary">MISSION .MIZ</span></summary>
-      <div class="ed-content">
+    <!-- Sans mission -->
+    <div class="hq-empty" id="hq-empty">
+      <p class="hq-empty-title" data-i18n="hq.empty.title">Ouvrez une mission .miz pour commencer.</p>
+      <button type="button" class="miz-btn primary hq-open-btn" data-hq-act="open"><span data-i18n="tb.open">Ouvrir .miz</span></button>
+      <p class="ui-note" data-i18n="hq.empty.hint">ou déposez le fichier ici · configurez d'abord votre wing (Wing, en haut)</p>
+    </div>
+    <input type="file" id="miz-file-input" accept=".miz" hidden>
 
-        <!-- Drop-zone .miz -->
-        <div class="drop-zone-miz" id="miz-drop-zone" tabindex="0"
-             role="button" data-i18n-aria-label="editor.mission.dropzone.aria"
-             aria-label="Zone de chargement .miz">
-          <div id="miz-drop-text" style="font-weight:500" data-i18n="editor.mission.drop">⇓ DÉPOSER UN FICHIER .MIZ ICI</div>
-          <div style="font-size:11px;font-weight:500;margin-top:6px;opacity:.6" data-i18n="editor.mission.drop.hint">ou cliquer pour parcourir</div>
-        </div>
-        <input type="file" id="miz-file-input" accept=".miz" hidden>
+    <!-- Avec une mission : les groupes à gauche, la droite collée en haut -->
+    <div class="hq-page" id="hq-page" hidden>
+      <div class="hq-left" id="hq-left"></div>
+      <aside class="hq-right" id="hq-right">
+        <div id="hq-banner"></div>
+        <details class="ed-section hq-box" data-section="checked" data-def="open" open>
+          <summary class="ui-fold-head"><span id="hq-checked-title">Sur 0 groupe coché</span></summary>
+          <div class="ed-content hq-acts">
+            <button type="button" class="miz-btn primary" id="pk-export-btn" disabled></button>
+            <button type="button" class="miz-btn primary" id="pk-delete-btn" hidden disabled></button>
+            <button type="button" class="miz-btn primary" id="pk-dyn-btn" hidden disabled></button>
+          </div>
+        </details>
+        <div id="hq-dyn"></div>
+        <details class="ed-section hq-box" data-section="mission" data-def="open" open>
+          <summary class="ui-fold-head"><span data-i18n="snap.sourceMission">Mission source</span></summary>
+          <div class="ed-content hq-src" id="hq-source"></div>
+        </details>
+      </aside>
+    </div>
 
-        <!-- Boutons action -->
-        <div class="miz-btn-row" id="miz-actions" style="display:none">
-          <button type="button" class="miz-btn" id="miz-reload-btn" data-i18n="editor.mission.reload">
-            ↺ Ouvrir un autre .miz
-          </button>
-        </div>
+  </div><!-- /editor -->
+</div><!-- /app -->
+<div class="hq-veil" id="hq-veil" hidden></div>
 
-        <!-- Affichage snapshot read-only -->
-        <div class="snapshot-section" id="snapshot-display" style="display:none"></div>
-
+<!-- FENÊTRE : PAQUETS DE VOL -->
+<div class="ui-modal" id="pk-modal" hidden role="dialog" aria-modal="true" aria-labelledby="pk-win-title">
+  <div class="ui-backdrop" id="pk-backdrop"></div>
+  <div class="ui-panel ui-wide hq-win" role="document">
+    <button type="button" class="ui-close" id="pk-close" data-i18n-aria-label="fn.close" aria-label="Fermer">&times;</button>
+    <h2 id="pk-win-title" class="ui-title" data-i18n="pk.win.title">Paquets de vol</h2>
+    <div class="hq-win-body">
+      <div class="miz-btn-row" style="margin-top:0">
+        <button type="button" class="miz-btn" id="pk-load-btn" data-i18n="pk.load" disabled>Importer des paquets</button>
       </div>
-    </details>
+      <input type="file" id="pk-file-input" accept=".json,.zip,application/json,application/zip" multiple hidden>
+      <div id="pk-refused"></div>
+      <div id="pk-list"></div>
+      <div id="pk-report"></div>
+    </div>
+    <div class="hq-win-foot">
+      <p class="ui-note" data-i18n="pk.win.note">Appliquer modifie la mission ouverte ; rien n'est téléchargé avant « Sauvegarder .miz ».</p>
+      <div class="ui-actions">
+        <button type="button" class="ui-btn" id="pk-done" data-i18n="fn.close">Fermer</button>
+        <button type="button" class="ui-btn primary" id="pk-apply-btn" data-i18n="pk.apply" disabled>Appliquer à la mission</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-    <!-- Section Wing -->
-    <details class="ed-section" data-section="wing">
-      <summary class="ui-fold-head"><span data-i18n="editor.wing.summary">CONFIGURATION WING</span></summary>
-      <div class="ed-content">
+<!-- FENÊTRE : CONFIGURATION DU WING -->
+<div class="ui-modal" id="wing-modal" hidden role="dialog" aria-modal="true" aria-labelledby="wing-win-title">
+  <div class="ui-backdrop" id="wing-backdrop"></div>
+  <div class="ui-panel ui-wide hq-win" role="document">
+    <button type="button" class="ui-close" id="wing-close" data-i18n-aria-label="fn.close" aria-label="Fermer">&times;</button>
+    <h2 id="wing-win-title" class="ui-title" data-i18n="wing.win.title">Configuration du wing</h2>
+    <div class="hq-win-body">
 
         <button type="button" class="wing-restore-btn" id="wing-restore-btn" data-i18n="example.restore" hidden>Restaurer ma configuration</button>
+
+<!-- Liste des escadrons -->
+        <fieldset class="wing-fieldset">
+          <legend class="wing-legend" data-i18n="editor.wing.squadrons">Escadrons</legend>
+          <div id="wing-squadrons-list"></div>
+          <button type="button" class="ed-btn-add" id="wing-sq-add" data-i18n="editor.wing.addSquadron">+ Ajouter un escadron</button>
+        </fieldset>
 
         <!-- Identit\u00e9 du wing -->
         <fieldset class="wing-fieldset">
@@ -1084,27 +1166,27 @@ body[data-theme] {{
           <div class="ed-field-row" style="margin-bottom:10px">
             <div class="ed-field">
               <label data-i18n="editor.wing.shortName">Nom court <span class="wing-hint">(toolbar, branding)</span></label>
-              <input type="text" id="wing-shortName" maxlength="40" placeholder="MY WING">
+              <input type="text" id="wing-shortName" maxlength="40" data-i18n-placeholder="ph.wing.shortName">
             </div>
             <div class="ed-field">
               <label data-i18n="editor.wing.id">Identifiant <span class="wing-hint">(sans espace ni /)</span></label>
-              <input type="text" id="wing-id" maxlength="32" placeholder="MY-WING">
+              <input type="text" id="wing-id" maxlength="32" data-i18n-placeholder="ph.wing.id">
             </div>
           </div>
 
           <div class="ed-field" style="margin-bottom:10px">
             <label data-i18n="editor.wing.fullName">Nom complet</label>
-            <input type="text" id="wing-fullName" maxlength="120" placeholder="Mon Wing Virtuel">
+            <input type="text" id="wing-fullName" maxlength="120" data-i18n-placeholder="ph.wing.fullName">
           </div>
 
           <div class="ed-field-row" style="margin-bottom:10px">
             <div class="ed-field">
               <label data-i18n="editor.wing.appTitle">Titre de l\u2019application</label>
-              <input type="text" id="wing-appTitle" maxlength="60" placeholder="HQ">
+              <input type="text" id="wing-appTitle" maxlength="60" data-i18n-placeholder="ph.wing.appTitle">
             </div>
             <div class="ed-field">
               <label data-i18n="editor.wing.hqStamp">Tampon HQ <span class="wing-hint">(couverture)</span></label>
-              <input type="text" id="wing-hqStamp" maxlength="60" placeholder="HQ \u2591 MY WING">
+              <input type="text" id="wing-hqStamp" maxlength="60" data-i18n-placeholder="ph.wing.hqStamp">
             </div>
           </div>
 
@@ -1115,13 +1197,6 @@ body[data-theme] {{
               <span class="img-text" data-i18n="editor.imgZone.tapLogo">\u25b2 TOUCHER POUR IMPORTER UN LOGO \u25b2</span>
             </label>
           </div>
-        </fieldset>
-
-        <!-- Liste des escadrons -->
-        <fieldset class="wing-fieldset">
-          <legend class="wing-legend" data-i18n="editor.wing.squadrons">Escadrons</legend>
-          <div id="wing-squadrons-list"></div>
-          <button type="button" class="ed-btn-add" id="wing-sq-add" data-i18n="editor.wing.addSquadron">+ Ajouter un escadron</button>
         </fieldset>
 
         <!-- Actions -->
@@ -1138,38 +1213,18 @@ body[data-theme] {{
           </button>
         </div>
 
+        
         <!-- Compteur taille -->
-        <div class="wing-size-counter" id="wing-size-counter" data-i18n="editor.wing.sizeLoading">Taille config : \u2014</div>
+        <div class="wing-size-counter" id="wing-size-counter" data-i18n="editor.wing.sizeLoading">Taille config : —</div>
 
+    </div>
+    <div class="hq-win-foot">
+      <div class="ui-actions">
+        <button type="button" class="ui-btn primary" id="wing-done" data-i18n="wing.win.done">Terminé</button>
       </div>
-    </details>
-
-    <!-- Section Paquets de vol (import dans la mission du Mission Commander) -->
-    <details class="ed-section" id="commander-section" data-section="commander">
-      <summary class="ui-fold-head"><span data-i18n="editor.commander.summary">PAQUETS DE VOL</span></summary>
-      <div class="ed-content">
-
-        <div class="ui-note" id="pk-nomiz" data-i18n="pk.needMiz">Ouvrez d’abord la mission (section MISSION .MIZ)</div>
-
-        <div class="miz-btn-row" style="margin-top:0">
-          <button type="button" class="miz-btn" id="pk-load-btn" data-i18n="pk.load" disabled>Importer des paquets</button>
-        </div>
-        <input type="file" id="pk-file-input" accept=".json,.zip,application/json,application/zip" multiple hidden>
-
-        <div id="pk-refused"></div>
-        <div id="pk-list"></div>
-
-        <div class="miz-btn-row">
-          <button type="button" class="miz-btn primary" id="pk-apply-btn" data-i18n="pk.apply" disabled>Appliquer et télécharger le .miz</button>
-        </div>
-
-        <div id="pk-report"></div>
-
-      </div>
-    </details>
-
-  </div><!-- /editor -->
-</div><!-- /app -->
+    </div>
+  </div>
+</div>
 
 <!-- FENÊTRE : NOM DU FICHIER (config wing, paquet de vol, .miz modifié) -->
 <div class="ui-modal" id="fn-modal" hidden role="dialog" aria-modal="true" aria-labelledby="fn-title">
@@ -1219,6 +1274,44 @@ const I18N = {{
     'toolbar.theme.tooltip':    'Th\u00e8me graphique',
     'toolbar.example':          'Exemple',
     'toolbar.example.tooltip':  "Ouvrir l'exemple",
+    'tb.open': 'Ouvrir .miz',
+    'tb.open.tip': 'Ouvrir une mission de l\\'éditeur de DCS',
+    'tb.save': 'Sauvegarder .miz',
+    'tb.save.none': 'Aucune modification à sauvegarder',
+    'tb.pk': 'Paquets de vol',
+    'tb.needMiz': 'Ouvrez d\\'abord une mission .miz',
+    'tb.wing': 'Wing',
+    'hq.empty.title': 'Ouvrez une mission .miz pour commencer.',
+    'hq.empty.hint': 'ou déposez le fichier ici · configurez d\\'abord votre wing (Wing, en haut)',
+    'hq.checked.one': 'Sur {{0}} groupe coché',
+    'hq.checked.many': 'Sur {{0}} groupes cochés',
+    'hq.mod.one': '{{0}} modification pas encore sauvegardée dans le .miz.',
+    'hq.mod.many': '{{0}} modifications pas encore sauvegardées dans le .miz.',
+    'hq.noMem': 'Le .miz n\\'est plus en mémoire depuis le rechargement de la page : rouvrez-le pour modifier la mission.',
+    'hq.open.title': 'Ouvrir un autre .miz ?',
+    'hq.open.text.one': 'La modification pas encore sauvegardée sera perdue.',
+    'hq.open.text.many': 'Les {{0}} modifications pas encore sauvegardées seront perdues.',
+    'hq.open.verb': 'Ouvrir',
+    'pk.export': '📦 Exporter',
+    'pk.export.dirty': 'Sauvegardez d\\'abord le .miz : le paquet porte l\\'empreinte de la mission sauvegardée.',
+    'pk.delete': 'Supprimer',
+    'pk.dyn': 'Dynamic Spawn…',
+    'pk.win.title': 'Paquets de vol',
+    'pk.win.note': 'Appliquer modifie la mission ouverte ; rien n\\'est téléchargé avant « Sauvegarder .miz ».',
+    'wing.win.title': 'Configuration du wing',
+    'wing.win.done': 'Terminé',
+    'fn.save.title': 'Sauvegarder le .miz',
+    'fn.save.go': 'Sauvegarder',
+    'toast.mizSaved': '.miz sauvegardé ✔',
+    'ph.wing.shortName': 'Nom court affiché dans la barre',
+    'ph.wing.id': 'Identifiant, sans espace ni /',
+    'ph.wing.fullName': 'Nom complet du wing',
+    'ph.wing.appTitle': 'Titre affiché en haut de l\\'application',
+    'ph.wing.hqStamp': 'Texte du tampon de la couverture',
+    'ph.sq.id': 'Identifiant, sans espace ni /',
+    'ph.sq.callsign': 'Indicatif radio de l\\'escadron',
+    'ph.sq.name': 'Nom complet de l\\'escadron',
+    'ph.sq.nickname': 'Surnom de l\\'escadron',
     'toast.exampleLoaded':      'Exemple charg\u00e9 \u2713',
     'example.restore':          'Restaurer ma configuration',
     'toast.configRestored':     'Configuration restaur\u00e9e \u2713',
@@ -1226,7 +1319,6 @@ const I18N = {{
     'theme.cw-soviet':          'Cold War Sovi\u00e9tique',
     'theme.modern-nato':        'OTAN moderne',
     'theme.modern-east':        'Bloc Est moderne',
-    'editor.wing.summary':      'CONFIGURATION WING',
     'editor.wing.identity':     'Identit\u00e9 du wing',
     'editor.wing.shortName':    'Nom court (toolbar, branding)',
     'editor.wing.id':           'Identifiant (sans espace ni /)',
@@ -1268,7 +1360,7 @@ const I18N = {{
     'editor.wing.ac.planes':    'Avions',
     'editor.wing.ac.mods':      'Hors jeu de base',
     'editor.wing.ac.other':     'Autre type (mod)\u2026',
-    'editor.wing.ac.modPh':     'Type dans le .miz (ex. A-4E-C)',
+    'editor.wing.ac.modPh': 'Type tel qu\\'il s\\'écrit dans le .miz',
     'editor.wing.ac.modAdd':    'Ajouter ce type',
     'editor.wing.ac.flag':      'hors jeu de base',
     'editor.wing.ac.flagTip':   "Ce nom n'est pas un type jouable du jeu de base (pydcs 1.0.0). Un mod garde son nom ; sinon, remplacez-le par le type du jeu.",
@@ -1301,11 +1393,6 @@ const I18N = {{
     'msg.imageUnreadable':      '\u26a0 Image illisible.',
     'msg.exportFailed':         '\u26a0 Export impossible.',
     'msg.failed':               '\u26a0 L\u2019op\u00e9ration a \u00e9chou\u00e9.',
-    'editor.mission.summary':   'MISSION .MIZ',
-    'editor.mission.drop':      '\u21d3 D\u00c9POSER UN FICHIER .MIZ ICI',
-    'editor.mission.drop.hint': 'ou cliquer pour parcourir',
-    'editor.mission.dropzone.aria': 'Zone de chargement .miz',
-    'editor.mission.reload':    '\u21ba Ouvrir un autre .miz',
     'toast.mizLoading':         'Chargement .miz\u2026',
     'toast.mizLoaded':          '.miz charg\u00e9 \u2713',
     'toast.mizNotMiz':          '\u26a0 S\u00e9lectionnez un fichier .miz',
@@ -1318,16 +1405,12 @@ const I18N = {{
     'snap.units':               'unit\u00e9s',
     'snap.freq':                'fr\u00e9q',
     'snap.fingerprint':        'Empreinte',
-    'editor.commander.summary': 'PAQUETS DE VOL',
     'snap.unit': 'unité',
     'sum.groups.1': '{{n}} groupe',
     'sum.groups.n': '{{n}} groupes',
-    'sum.sq.1': '{{n}} escadron',
-    'sum.sq.n': '{{n}} escadrons',
-    'pk.needMiz': 'Ouvrez d’abord la mission (section MISSION .MIZ)',
     'pk.load': 'Importer des paquets',
     'pk.loaded': 'Paquets chargés',
-    'pk.apply': 'Appliquer et télécharger le .miz',
+    'pk.apply': 'Appliquer à la mission',
     'fn.label': 'Nom du fichier',
     'fn.cancel': 'Annuler',
     'fn.close': 'Fermer',
@@ -1335,12 +1418,8 @@ const I18N = {{
     'fn.cfg.go': 'Exporter',
     'fn.pk.title': 'Exporter le paquet',
     'fn.pk.go': 'Exporter',
-    'fn.miz.title': 'Appliquer et télécharger le .miz',
-    'fn.miz.go': 'Appliquer',
     'fn.del.title': 'Supprimer les groupes cochés',
-    'fn.del.go': 'Supprimer et enregistrer',
-    'pk.deleteN': 'Supprimer les groupes cochés ({{0}})',
-    'pk.dynN': 'Dynamic Spawn… ({{0}})',
+    'fn.del.go': 'Supprimer',
     'fn.dyn.title': 'Dynamic Spawn',
     'fn.dyn.go': 'Valider',
     'dyn.w.prereq': 'Seuls les aérodromes, FARP et navires dont le Dynamic Spawn est activé dans l’éditeur de mission, et dont la liste d’appareils contient le type du template, sont proposés pour un template. HQ n’active jamais le Dynamic Spawn et ne crée jamais un type d’appareil.',
@@ -1385,7 +1464,7 @@ const I18N = {{
     'dyn.w.e.clients': 'les groupes relus diffèrent de l’attendu',
     'dyn.w.e.clash': 'deux templates du même type sur un même entrepôt',
     'toast.dsxWriting': 'Écriture du Dynamic Spawn…',
-    'toast.dsxFail': '⚠ Dynamic Spawn : écriture échouée — rien n’est téléchargé',
+    'toast.dsxFail': '⚠ Dynamic Spawn : écriture échouée — rien n’a changé',
     'dyn.w.none': 'Aucun aérodrome ni FARP ne peut recevoir ce template.',
     'dyn.w.off': 'Non offerts — Dynamic Spawn non activé dans l’éditeur de mission : {{0}}',
     'dyn.w.offMore': ' et {{0}} autres sans ce type',
@@ -1419,8 +1498,7 @@ const I18N = {{
     'pk.del.e.clients': 'les groupes relus diffèrent de l’attendu',
     'pk.del.e.wh': 'fichier warehouses : écriture ou relecture différente de l’attendu',
     'toast.pkDeleting': 'Suppression des groupes…',
-    'toast.pkDelFail': '⚠ Suppression échouée — rien n’est téléchargé',
-    'pk.exportN': '📦 Exporter les groupes cochés ({{0}})',
+    'toast.pkDelFail': '⚠ Suppression échouée — rien n’a changé',
     'pk.flt.side': 'Coalition',
     'pk.flt.all': 'Tous',
     'pk.flt.red': 'Rouge',
@@ -1478,7 +1556,7 @@ const I18N = {{
     'pk.rep.absent': '– {{0}} ({{1}}) : absent de la mission, rien écrit',
     'pk.rep.conflict': '⚠ {{0}} : visé par {{1}} et par {{2}} — le dernier chargé l’emporte, rien écrit depuis le premier',
     'pk.rep.fail': '✗ {{0}} ({{1}}) : vérification échouée — {{2}}',
-    'pk.rep.failTail': 'Rien n’est téléchargé, le .miz chargé reste inchangé.',
+    'pk.rep.failTail': 'Rien n’a changé : le .miz ouvert reste inchangé.',
     'pk.rep.route.one': 'route ({{0}} point)',
     'pk.rep.route.many': 'route ({{0}} points)',
     'pk.rep.radios': 'radios ({{0}})',
@@ -1525,7 +1603,7 @@ const I18N = {{
     'toast.pkRefused.many': '{{0}} refusés',
     'toast.pkApplying': 'Application des paquets…',
     'toast.pkNoChange': 'Aucun changement à écrire',
-    'toast.pkFail': '⚠ Vérification échouée : {{0}} — rien n’est téléchargé',
+    'toast.pkFail': '⚠ Vérification échouée : {{0}} — rien n’a changé',
     'pk.join': '{{0}} : {{1}}',
     'pk.w.prefix': '{{0}} : {{1}}',
     'pk.w.departure': '{{0}} : départ de la mission conservé — le paquet part d’ailleurs',
@@ -1563,6 +1641,44 @@ const I18N = {{
     'toolbar.theme.tooltip':    'Graphic theme',
     'toolbar.example':          'Example',
     'toolbar.example.tooltip':  'Open the example',
+    'tb.open': 'Open .miz',
+    'tb.open.tip': 'Open a mission from the DCS editor',
+    'tb.save': 'Save .miz',
+    'tb.save.none': 'No changes to save',
+    'tb.pk': 'Flight packages',
+    'tb.needMiz': 'Open a .miz mission first',
+    'tb.wing': 'Wing',
+    'hq.empty.title': 'Open a .miz mission to start.',
+    'hq.empty.hint': 'or drop the file here · set up your wing first (Wing, at the top)',
+    'hq.checked.one': 'On {{0}} checked group',
+    'hq.checked.many': 'On {{0}} checked groups',
+    'hq.mod.one': '{{0}} change not yet saved to the .miz.',
+    'hq.mod.many': '{{0}} changes not yet saved to the .miz.',
+    'hq.noMem': 'The .miz is no longer in memory since the page was reloaded: open it again to change the mission.',
+    'hq.open.title': 'Open another .miz?',
+    'hq.open.text.one': 'The unsaved change will be lost.',
+    'hq.open.text.many': 'The {{0}} unsaved changes will be lost.',
+    'hq.open.verb': 'Open',
+    'pk.export': '📦 Export',
+    'pk.export.dirty': 'Save the .miz first: the package carries the saved mission\\'s fingerprint.',
+    'pk.delete': 'Delete',
+    'pk.dyn': 'Dynamic Spawn…',
+    'pk.win.title': 'Flight packages',
+    'pk.win.note': 'Apply changes the open mission; nothing is downloaded until “Save .miz”.',
+    'wing.win.title': 'Wing configuration',
+    'wing.win.done': 'Done',
+    'fn.save.title': 'Save the .miz',
+    'fn.save.go': 'Save',
+    'toast.mizSaved': '.miz saved ✔',
+    'ph.wing.shortName': 'Short name shown in the toolbar',
+    'ph.wing.id': 'Identifier, no spaces or /',
+    'ph.wing.fullName': 'Full name of the wing',
+    'ph.wing.appTitle': 'Title shown at the top of the application',
+    'ph.wing.hqStamp': 'Text of the cover stamp',
+    'ph.sq.id': 'Identifier, no spaces or /',
+    'ph.sq.callsign': 'Radio callsign of the squadron',
+    'ph.sq.name': 'Full name of the squadron',
+    'ph.sq.nickname': 'Nickname of the squadron',
     'toast.exampleLoaded':      'Example loaded \u2713',
     'example.restore':          'Restore my configuration',
     'toast.configRestored':     'Configuration restored \u2713',
@@ -1570,7 +1686,6 @@ const I18N = {{
     'theme.cw-soviet':          'Cold War Soviet',
     'theme.modern-nato':        'Modern NATO',
     'theme.modern-east':        'Modern East Bloc',
-    'editor.wing.summary':      'WING CONFIGURATION',
     'editor.wing.identity':     'Wing identity',
     'editor.wing.shortName':    'Short name (toolbar, branding)',
     'editor.wing.id':           'Identifier (no spaces or /)',
@@ -1612,7 +1727,7 @@ const I18N = {{
     'editor.wing.ac.planes':    'Airplanes',
     'editor.wing.ac.mods':      'Not in the base game',
     'editor.wing.ac.other':     'Other type (mod)\u2026',
-    'editor.wing.ac.modPh':     'Type in the .miz (e.g. A-4E-C)',
+    'editor.wing.ac.modPh': 'Type as written in the .miz',
     'editor.wing.ac.modAdd':    'Add this type',
     'editor.wing.ac.flag':      'not in the base game',
     'editor.wing.ac.flagTip':   "This name is not a flyable type of the base game (pydcs 1.0.0). A mod keeps its name; otherwise, replace it with the game's type.",
@@ -1645,11 +1760,6 @@ const I18N = {{
     'msg.imageUnreadable':      '\u26a0 Unreadable image.',
     'msg.exportFailed':         '\u26a0 Export failed.',
     'msg.failed':               '\u26a0 The operation failed.',
-    'editor.mission.summary':   'MISSION .MIZ',
-    'editor.mission.drop':      '\u21d3 DROP A .MIZ FILE HERE',
-    'editor.mission.drop.hint': 'or click to browse',
-    'editor.mission.dropzone.aria': '.miz drop zone',
-    'editor.mission.reload':    '\u21ba Open another .miz',
     'toast.mizLoading':         'Loading .miz\u2026',
     'toast.mizLoaded':          '.miz loaded \u2713',
     'toast.mizNotMiz':          '\u26a0 Please select a .miz file',
@@ -1662,16 +1772,12 @@ const I18N = {{
     'snap.units':               'units',
     'snap.freq':                'freq',
     'snap.fingerprint':        'Fingerprint',
-    'editor.commander.summary': 'FLIGHT PACKAGES',
     'snap.unit': 'unit',
     'sum.groups.1': '{{n}} group',
     'sum.groups.n': '{{n}} groups',
-    'sum.sq.1': '{{n}} squadron',
-    'sum.sq.n': '{{n}} squadrons',
-    'pk.needMiz': 'Open the mission first (MISSION .MIZ section)',
     'pk.load': 'Import packages',
     'pk.loaded': 'Loaded packages',
-    'pk.apply': 'Apply and download the .miz',
+    'pk.apply': 'Apply to the mission',
     'fn.label': 'File name',
     'fn.cancel': 'Cancel',
     'fn.close': 'Close',
@@ -1679,12 +1785,8 @@ const I18N = {{
     'fn.cfg.go': 'Export',
     'fn.pk.title': 'Export the package',
     'fn.pk.go': 'Export',
-    'fn.miz.title': 'Apply and download the .miz',
-    'fn.miz.go': 'Apply',
     'fn.del.title': 'Delete checked groups',
-    'fn.del.go': 'Delete and save',
-    'pk.deleteN': 'Delete checked groups ({{0}})',
-    'pk.dynN': 'Dynamic Spawn… ({{0}})',
+    'fn.del.go': 'Delete',
     'fn.dyn.title': 'Dynamic Spawn',
     'fn.dyn.go': 'Confirm',
     'dyn.w.prereq': 'Only airfields, FARPs and ships that have Dynamic Spawn enabled in the mission editor, and whose aircraft list contains the template’s type, are offered for a template. HQ never enables Dynamic Spawn and never creates an aircraft type.',
@@ -1729,7 +1831,7 @@ const I18N = {{
     'dyn.w.e.clients': 'the re-read groups differ from what was expected',
     'dyn.w.e.clash': 'two templates of the same type on one warehouse',
     'toast.dsxWriting': 'Writing Dynamic Spawn…',
-    'toast.dsxFail': '⚠ Dynamic Spawn: write failed — nothing downloaded',
+    'toast.dsxFail': '⚠ Dynamic Spawn: write failed — nothing changed',
     'dyn.w.none': 'No airfield or FARP can receive this template.',
     'dyn.w.off': 'Not offered — Dynamic Spawn not enabled in the mission editor: {{0}}',
     'dyn.w.offMore': ' and {{0}} others without this type',
@@ -1763,8 +1865,7 @@ const I18N = {{
     'pk.del.e.clients': 'the groups read back differ from the expected ones',
     'pk.del.e.wh': 'warehouses file: written or read back differently from expected',
     'toast.pkDeleting': 'Deleting groups…',
-    'toast.pkDelFail': '⚠ Deletion failed — nothing downloaded',
-    'pk.exportN': '📦 Export checked groups ({{0}})',
+    'toast.pkDelFail': '⚠ Deletion failed — nothing changed',
     'pk.flt.side': 'Coalition',
     'pk.flt.all': 'All',
     'pk.flt.red': 'Red',
@@ -1822,7 +1923,7 @@ const I18N = {{
     'pk.rep.absent': '– {{0}} ({{1}}): not in the mission, nothing written',
     'pk.rep.conflict': '⚠ {{0}}: targeted by {{1}} and by {{2}} — the last one loaded wins, nothing written from the first',
     'pk.rep.fail': '✗ {{0}} ({{1}}): verification failed — {{2}}',
-    'pk.rep.failTail': 'Nothing is downloaded, the loaded .miz is unchanged.',
+    'pk.rep.failTail': 'Nothing changed: the open .miz is unchanged.',
     'pk.rep.route.one': 'route ({{0}} point)',
     'pk.rep.route.many': 'route ({{0}} points)',
     'pk.rep.radios': 'radios ({{0}})',
@@ -1869,7 +1970,7 @@ const I18N = {{
     'toast.pkRefused.many': '{{0}} refused',
     'toast.pkApplying': 'Applying packages…',
     'toast.pkNoChange': 'Nothing to write',
-    'toast.pkFail': '⚠ Verification failed: {{0}} — nothing downloaded',
+    'toast.pkFail': '⚠ Verification failed: {{0}} — nothing changed',
     'pk.join': '{{0}}: {{1}}',
     'pk.w.prefix': '{{0}}: {{1}}',
     'pk.w.departure': '{{0}}: mission departure kept — the package starts elsewhere',
@@ -2040,6 +2141,7 @@ function rerenderDynamic() {{
   renderWingEditor();
   if (HQ_SNAPSHOT) renderSnapshot(HQ_SNAPSHOT);
   pkRender();
+  hqChrome();
 }}
 
 // ── Wing config persistence ────────────────────────────────────
@@ -2086,6 +2188,7 @@ function persistWingConfig() {{
     _wingPersistTimer = null;
     try {{
       localStorage.setItem(KEY_WING, JSON.stringify(wingConfig));
+      hqWingOrder();
     }} catch(e) {{
       if (e.name === 'QuotaExceededError') {{
         showToast(t('toast.wingStorageFull'), {{ type: 'err' }});
@@ -2431,13 +2534,13 @@ function renderWingSquadronCard(sqIdx) {{
   }}
 
   const rowIdName = document.createElement('div'); rowIdName.className = 'ed-field-row';
-  rowIdName.appendChild(makeField(t('editor.wing.identifier'), 'id', sq.id, 'SQN-01', t('editor.wing.identifierHint')));
-  rowIdName.appendChild(makeField(t('editor.roster.callsignPlaceholder'), 'callsign', sq.callsign, 'ALPHA', ''));
+  rowIdName.appendChild(makeField(t('editor.wing.identifier'), 'id', sq.id, t('ph.sq.id'), t('editor.wing.identifierHint')));
+  rowIdName.appendChild(makeField(t('editor.roster.callsignPlaceholder'), 'callsign', sq.callsign, t('ph.sq.callsign'), ''));
   body.appendChild(rowIdName);
-  body.appendChild(makeField(t('editor.wing.fullName'), 'name', sq.name, '1st Squadron', ''));
+  body.appendChild(makeField(t('editor.wing.fullName'), 'name', sq.name, t('ph.sq.name'), ''));
 
   const rowNick = document.createElement('div'); rowNick.className = 'ed-field-row';
-  rowNick.appendChild(makeField(t('editor.wing.nickname'), 'nickname', sq.nickname, 'Demo', ''));
+  rowNick.appendChild(makeField(t('editor.wing.nickname'), 'nickname', sq.nickname, t('ph.sq.nickname'), ''));
   body.appendChild(rowNick);
 
   const acWrap = document.createElement('div'); acWrap.className = 'ed-field';
@@ -2491,6 +2594,7 @@ function renderWingEditor() {{
   refreshWingLogoZone();
   renderWingSquadrons();
   updateWingSizeCounter();
+  hqWingOrder();
 }}
 
 // ── Bind wing editor events (appel\u00e9 une seule fois \u00e0 l'init) ───────
@@ -2553,16 +2657,18 @@ function str(v) {{
 function cleanFname(v) {{
   return str(v).trim().replace(/\\.json$/i, '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').replace(/[^A-Za-z0-9_+-]+/g, '_').replace(/_{{2,}}/g, '_').replace(/^_+|_+$/g, '').slice(0, 100);
 }}
-const FN = {{ name: '', opener: null, run: null, titleKey: '', goKey: '', at: 0, bodyFn: null, bodyEl: null, headFn: null, headEl: null, wide: false, blocked: false }};
+const FN = {{ name: '', opener: null, run: null, titleKey: '', goKey: '', at: 0, bodyFn: null, bodyEl: null, headFn: null, headEl: null, wide: false, blocked: false, noName: false, danger: false, hide: null }};
 // Un nom par défaut : la partie variable est nettoyée et coupée à 40 caractères ; l'horodatage s'ajoute ensuite, en fin de nom
 function fnPart(v, fallback) {{ return cleanFname(v).slice(0, 40) || fallback; }}
 function fnOpen() {{ return !document.getElementById('fn-modal').hidden; }}
 function fnSync() {{
-  document.getElementById('fn-go').disabled = cleanFname(FN.name) === '' || FN.blocked;
+  document.getElementById('fn-go').disabled = (!FN.noName && cleanFname(FN.name) === '') || FN.blocked;
 }}
 function fnRender() {{
   document.getElementById('fn-title').textContent = t(FN.titleKey);
-  document.getElementById('fn-go').textContent = t(FN.goKey);
+  const go = document.getElementById('fn-go');
+  go.textContent = t(FN.goKey);
+  go.className = 'ui-btn primary' + (FN.danger ? ' danger' : '');
   document.getElementById('fn-close').setAttribute('aria-label', t('fn.close'));
   fnBodyMount();
 }}
@@ -2585,7 +2691,9 @@ function fnBodyMount() {{
   panel.insertBefore(el, panel.querySelector('.ui-field'));
   FN.bodyEl = el;
 }}
-/* o : titleKey, goKey, ext, name (le défaut, sans extension), opener, run(nom nettoyé), body (facultatif : () => HTML), blocked (facultatif : le bouton qui écrit reste inactif) */
+/* o : titleKey, goKey, ext, name (le défaut, sans extension), opener, run(nom nettoyé), body (facultatif : () => HTML), blocked (facultatif : le bouton qui écrit reste inactif),
+   noName (facultatif : pas de champ de nom : le geste ne remet pas de fichier), danger (facultatif : le bouton du geste est en danger),
+   hide (facultatif : une fenêtre masquée tant que celle-ci est ouverte, et rendue à sa fermeture) */
 function fnAsk(o) {{
   FN.name = cleanFname(o.name);
   FN.run = o.run;
@@ -2597,27 +2705,39 @@ function fnAsk(o) {{
   FN.wide = !!o.wide;
   document.querySelector('#fn-modal .ui-panel').classList.toggle('ui-wide', FN.wide);
   FN.blocked = !!o.blocked;
+  FN.noName = !!o.noName;
+  FN.danger = !!o.danger;
+  FN.hide = (o.hide && !o.hide.hidden) ? o.hide : null;
+  if (FN.hide) FN.hide.hidden = true;
   const inp = document.getElementById('fn-name');
   inp.value = FN.name;
   document.getElementById('fn-ext').textContent = o.ext;
+  document.querySelector('#fn-modal .ui-field').hidden = FN.noName;
   fnRender();
   fnSync();
   document.getElementById('fn-modal').hidden = false;
-  inp.focus({{ preventScroll: true }});
-  inp.select();
+  if (FN.noName) {{
+    const go = document.getElementById('fn-go');
+    (go.disabled || FN.danger ? document.getElementById('fn-cancel') : go).focus({{ preventScroll: true }});
+  }} else {{
+    inp.focus({{ preventScroll: true }});
+    inp.select();
+  }}
 }}
 function fnClose() {{
   document.getElementById('fn-modal').hidden = true;
   const o = FN.opener;
-  FN.opener = null; FN.run = null; FN.bodyFn = null; FN.headFn = null; FN.blocked = false;
+  FN.opener = null; FN.run = null; FN.bodyFn = null; FN.headFn = null; FN.blocked = false; FN.noName = false; FN.danger = false;
+  document.querySelector('#fn-modal .ui-field').hidden = false;
   document.querySelector('#fn-modal .ui-panel').classList.remove('ui-wide');
+  if (FN.hide) {{ FN.hide.hidden = false; FN.hide = null; }}
   if (FN.bodyEl) {{ FN.bodyEl.remove(); FN.bodyEl = null; }}
   if (FN.headEl) {{ FN.headEl.remove(); FN.headEl = null; }}
   if (o && o.focus && !o.disabled) {{ try {{ o.focus({{ preventScroll: true }}); }} catch (e) {{}} }}
 }}
 function fnGo() {{
   const name = cleanFname(FN.name), run = FN.run;
-  if (name === '' || !run || FN.blocked) return;
+  if ((!FN.noName && name === '') || !run || FN.blocked) return;
   fnClose();
   run(name);
 }}
@@ -2655,6 +2775,7 @@ function exportWingConfig(ev) {{
     titleKey: 'fn.cfg.title', goKey: 'fn.cfg.go', ext: '.json',
     name: 'wing_config_' + fnPart(wid, 'wing') + '_' + pkStamp(),
     opener: ev && ev.currentTarget,
+    hide: document.getElementById('wing-modal'),
     run: name => {{
       const blob = new Blob([JSON.stringify(wingConfig, null, 2)], {{ type: 'application/json' }});
       shareOrDownload(blob, name + '.json', 'application/json', 'Config ' + wingConfig.wing.shortName, fallbackDownload);
@@ -2745,9 +2866,8 @@ function loadWingExample() {{
   wingConfig = structuredClone(EXAMPLE_WING_CONFIGS[lang]);
   renderWingEditor();
   refreshRestoreButton();
-  const sec = document.getElementById('wing-restore-btn');
-  if (sec && sec.closest('details')) sec.closest('details').open = true;
   showToastAction(t('toast.exampleLoaded') + ' \u00b7', t('example.restore'), restoreWingConfig, 12000);
+  hqWinOpen('wing', document.getElementById('btn-example'));
 }}
 
 function restoreWingConfig() {{
@@ -2923,7 +3043,7 @@ function mizWeatherToMetar(wx, dateObj, startTime, theatre) {{
 // =============================================================
 const DYN_AIRDROMES = @@DYN_AIRDROMES@@;   // théâtre -> airdromeId -> nom (DCS Airfield Charts, d'après pydcs)
 let _HQ_DYN = null;     // lu au chargement du .miz : {{ warn, templates, whs }} ; remis à zéro avec le .miz
-let _DYN_OPEN = true;   // le panneau est déplié (en mémoire seulement)
+let _DYN_OPEN = false;  // le panneau est déplié (en mémoire seulement) ; replié d'abord
 
 function dynNum(n) {{ return (n && n.kind === 'number') ? n.value : null; }}
 function dynStr(n) {{ return (n && n.kind === 'string') ? n.value : null; }}
@@ -3136,6 +3256,7 @@ async function loadMiz(file) {{
       persistSnapshot();
       _PK_EXPORT_SEL.clear();
       _PK_REPORT = null;
+      _HQ_DIRTY = 0;     // un .miz ouvert : rien à sauvegarder
       _MIZ_LOAD_FP = snapshot.sourceMission.fingerprint || '';
       pkResetFilters();
       renderSnapshot(snapshot);
@@ -3408,15 +3529,16 @@ function loadPersistedSnapshot() {{
 //  P2.3 — AFFICHAGE SNAPSHOT (read-only)
 // =============================================================
 function renderSnapshot(snap) {{
-  hqFoldRefresh();
-  const el = document.getElementById('snapshot-display');
-  if (!el) return;
+  const left = document.getElementById('hq-left');
+  const src = document.getElementById('hq-source');
+  const dynEl = document.getElementById('hq-dyn');
+  if (!left || !src) return;
   const sm = snap.sourceMission;
   const wx = snap.weather;
   const h = escapeHtml;
-  // Section source
-  let html = '<div class="snap-header">' + h(t('snap.sourceMission')) + '</div>';
-  html += '<div class="snap-meta">';
+  const noMem = !_HQ_MIZ_CONTEXT;
+  // À droite : la mission source, la météo, l'empreinte
+  let html = '<div class="snap-meta">';
   html += h(sm.filename) + ' &nbsp;·&nbsp; ' + h(t('snap.theatre')) + ': ' + h(sm.theatre || '');
   html += ' &nbsp;·&nbsp; ' + h(t('snap.date')) + ': ' + h(sm.missionDate || '');
   const startHH = Math.floor((sm.startTime || 0) / 3600);
@@ -3427,16 +3549,18 @@ function renderSnapshot(snap) {{
   html += '<div class="snap-header">' + h(t('snap.weather')) + '</div>';
   html += '<div class="snap-metar">' + h(wx.metar || '') + '</div>';
   html += '<div class="snap-meta">';
-  html += 'Vent: ' + wx.windDir + '\u00b0 · ' + wx.windKt + 'kt';
+  html += 'Vent: ' + wx.windDir + '° · ' + wx.windKt + 'kt';
   html += ' &nbsp;·&nbsp; QNH: ' + wx.qnhHpa + ' hPa';
   html += ' &nbsp;·&nbsp; T°: ' + wx.tempC + '°C';
   html += ' &nbsp;·&nbsp; Vis: ' + (wx.visM >= 9999 ? 'CAVOK' : wx.visM + 'm');
   html += '</div>';
-  // Dynamic Spawn : panneau (ou avertissement) sous la météo ; rien si la mission n'en a pas
-  html += dynPanelHtml();
+  html += '<div class="snap-fingerprint">' + h(t('snap.fingerprint')) + ': ' + h(sm.fingerprint || '') + '</div>';
+  src.innerHTML = html;
+  // À droite aussi : le panneau Dynamic Spawn (ou l'avertissement) ; rien si la mission n'en a pas
+  if (dynEl) dynEl.innerHTML = dynPanelHtml();
   const dynT = dynMarks() ? dynTemplateIds() : null;
-  // Vols : en-tête, barre de filtres collante, liste
-  html += '<div class="pk-fwrap">';
+  // À gauche : les groupes (en-tête, filtres, liste)
+  html = '<div class="hq-groups"><div class="pk-fwrap">';
   html += '<div class="snap-header">' + h(t('snap.flights')) + ' (' + snap.flights.length + ')</div>';
   const fKey = (f) => flightTypeKeys(f).join(' + ');
   const hasNeutral = snap.flights.some(f => f.coalition === 'neutrals');
@@ -3456,9 +3580,6 @@ function renderSnapshot(snap) {{
   html += '<div class="pk-flt-row">';
   html += '<button type="button" class="miz-btn" id="pk-check-shown">' + h(t('pk.flt.checkShown')) + '</button>';
   html += '<button type="button" class="miz-btn" id="pk-uncheck">' + h(t('pk.flt.uncheck')) + '</button>';
-  html += '<button type="button" class="miz-btn primary" id="pk-export-btn" disabled>' + h(tf('pk.exportN', 0)) + '</button>';
-  if (_HQ_MIZ_CONTEXT) html += '<button type="button" class="miz-btn primary" id="pk-delete-btn" disabled>' + h(tf('pk.deleteN', 0)) + '</button>';
-  if (_HQ_MIZ_CONTEXT) html += '<button type="button" class="miz-btn primary" id="pk-dyn-btn" disabled>' + h(tf('pk.dynN', 0)) + '</button>';
   html += '<span class="pk-count" id="pk-count"></span>';
   html += '</div>';
   html += '</div>';
@@ -3466,7 +3587,7 @@ function renderSnapshot(snap) {{
   for (const fl of snap.flights) {{
     html += '<div class="snap-flight" data-gid="' + h(String(fl.groupId)) + '" data-side="' + h(fl.coalition || '') + '" data-type="' + h('|' + flightTypeKeys(fl).join('|') + '|') + '" data-name="' + h(pkNorm(fl.groupName)) + '">';
     html += '<div class="snap-flight-header">';
-    html += '<label class="pk-chk"><input type="checkbox" data-pk-export="' + h(String(fl.groupId)) + '"' +
+    html += '<label class="pk-chk"' + (noMem ? ' title="' + h(t('hq.noMem')) + '"' : '') + '><input type="checkbox" data-pk-export="' + h(String(fl.groupId)) + '"' +
       (_PK_EXPORT_SEL.has(fl.groupId) ? ' checked' : '') + (_HQ_MIZ_CONTEXT ? '' : ' disabled') + '>' + h(fl.groupName || '—') + '</label>';
     if (dynT && dynT[fl.groupId]) html += ' <span class="snap-flight-tag" data-dyn-template="1">' + h(t('dyn.tmpl')) + '</span>';
     html += ' <span class="snap-flight-tag">' + h(fKey(fl)) + '</span>';
@@ -3493,63 +3614,27 @@ function renderSnapshot(snap) {{
     html += '</div></div>';
   }}
   html += '</div>';
-  html += '</div>';
-  // Fingerprint
-  html += '<div class="snap-fingerprint">' + h(t('snap.fingerprint')) + ': ' + h(sm.fingerprint || '') + '</div>';
-  el.innerHTML = html;
-  el.style.display = 'block';
+  html += '</div></div>';
+  left.innerHTML = html;
   pkApplyFilter();
-  pkRefreshExportBtn();
-  // Afficher boutons actions
-  const actionsEl = document.getElementById('miz-actions');
-  if (actionsEl) actionsEl.style.display = 'flex';
-  // Mettre à jour drop-zone
-  const dz = document.getElementById('miz-drop-zone');
-  if (dz) {{
-    dz.classList.add('has-file');
-    document.getElementById('miz-drop-text').textContent = _mizFilename || '';
-  }}
+  hqFoldRefresh();
+  hqChrome();
 }}
 
 // =============================================================
 //  P2.1 — ÉVÉNEMENTS SECTION MISSION
 // =============================================================
 function initMissionEvents() {{
-  const dropZone = document.getElementById('miz-drop-zone');
+  /* Le choix de fichier de la barre (et du bouton de la page vide) : le fichier choisi s'ouvre ; une question a déjà précédé s'il y avait des modifications */
   const fileInput = document.getElementById('miz-file-input');
-  if (dropZone) {{
-    dropZone.addEventListener('click', () => {{ if (!_PK_BUSY && fileInput) fileInput.click(); }});
-    dropZone.addEventListener('keydown', e => {{ if (e.key === 'Enter' || e.key === ' ') {{ e.preventDefault(); if (!_PK_BUSY && fileInput) fileInput.click(); }} }});
-    dropZone.addEventListener('dragover', e => {{ e.preventDefault(); dropZone.classList.add('dragover'); }});
-    dropZone.addEventListener('dragleave', () => {{ dropZone.classList.remove('dragover'); }});
-    dropZone.addEventListener('drop', e => {{
-      e.preventDefault(); dropZone.classList.remove('dragover');
-      const files = e.dataTransfer && e.dataTransfer.files;
-      if (files && files[0]) handleFile(files[0]);
-    }});
-  }}
   if (fileInput) {{
     fileInput.addEventListener('change', e => {{
-      if (e.target.files[0]) handleFile(e.target.files[0]);
+      const f = e.target.files && e.target.files[0];
       e.target.value = '';
-    }});
-  }}
-  const reloadBtn = document.getElementById('miz-reload-btn');
-  if (reloadBtn) {{
-    reloadBtn.addEventListener('click', () => {{
-      if (_PK_BUSY) return;
-      HQ_SNAPSHOT = null; _mizFilename = null; _HQ_MIZ_CONTEXT = null; _HQ_DYN = null; hqFoldRefresh();
-      try {{ localStorage.removeItem(KEY_SNAPSHOT); }} catch (e) {{ /* la mission offerte au Route Planner et au Datacard Generator reste */ }}
-      _PK_EXPORT_SEL.clear(); _PK_REPORT = null; _MIZ_LOAD_FP = ''; pkResetFilters();
-      pkRender();
-      const dz = document.getElementById('miz-drop-zone');
-      if (dz) {{ dz.classList.remove('has-file'); }}
-      const dropText = document.getElementById('miz-drop-text');
-      if (dropText) {{ dropText.textContent = t('editor.mission.drop'); }}
-      const actEl = document.getElementById('miz-actions');
-      if (actEl) actEl.style.display = 'none';
-      const snapEl = document.getElementById('snapshot-display');
-      if (snapEl) {{ snapEl.style.display = 'none'; snapEl.innerHTML = ''; }}
+      const asked = _HQ_PICK === _HQ_DIRTY;
+      _HQ_PICK = null;
+      if (!f) return;
+      if (_HQ_DIRTY > 0 && !asked) hqOpenFile(f); else handleFile(f);
     }});
   }}
 }}
@@ -4047,18 +4132,25 @@ function pkExport(name) {{
 }}
 
 function pkRefreshExportBtn() {{
+  const ctx = !!(_HQ_MIZ_CONTEXT && HQ_SNAPSHOT);
+  const n = ctx ? HQ_SNAPSHOT.flights.filter(f => _PK_EXPORT_SEL.has(f.groupId)).length : 0;
+  const why = (HQ_SNAPSHOT && !_HQ_MIZ_CONTEXT) ? t('hq.noMem') : '';
+  const ttl = document.getElementById('hq-checked-title');
+  if (ttl) ttl.textContent = tn('hq.checked', n);
   const btn = document.getElementById('pk-export-btn');
-  if (!btn) return;
-  const n = (_HQ_MIZ_CONTEXT && HQ_SNAPSHOT) ? HQ_SNAPSHOT.flights.filter(f => _PK_EXPORT_SEL.has(f.groupId)).length : 0;
-  btn.disabled = n === 0;
-  btn.textContent = tf('pk.exportN', n);
+  if (btn) {{
+    // le paquet porte l'empreinte de la mission : elle doit être celle d'un fichier sauvegardé
+    btn.disabled = n === 0 || _HQ_DIRTY > 0;
+    btn.textContent = t('pk.export');
+    btn.title = why || (_HQ_DIRTY > 0 ? t('pk.export.dirty') : '');
+  }}
   const del = document.getElementById('pk-delete-btn');
-  if (del) {{ del.disabled = n === 0; del.textContent = tf('pk.deleteN', n); }}
+  if (del) {{ del.hidden = !_HQ_MIZ_CONTEXT; del.disabled = n === 0; del.textContent = t('pk.delete'); }}
   const dsb = document.getElementById('pk-dyn-btn');
-  if (dsb) {{ dsb.disabled = n === 0; dsb.textContent = tf('pk.dynN', n); }}
+  if (dsb) {{ dsb.hidden = !_HQ_MIZ_CONTEXT; dsb.disabled = n === 0; dsb.textContent = t('pk.dyn'); }}
   const ck = document.getElementById('pk-check-shown'), un = document.getElementById('pk-uncheck');
-  if (ck) ck.disabled = !_HQ_MIZ_CONTEXT;
-  if (un) un.disabled = !_HQ_MIZ_CONTEXT;
+  if (ck) {{ ck.disabled = !_HQ_MIZ_CONTEXT; ck.title = why; }}
+  if (un) {{ un.disabled = !_HQ_MIZ_CONTEXT; un.title = why; }}
 }}
 
 // ---------- FILTRES DE LA LISTE DES VOLS (n'ont d'effet que sur l'affichage : un vol coché puis masqué reste coché) ----------
@@ -4067,7 +4159,7 @@ let _MIZ_LOAD_FP = '';   // empreinte du .miz tel qu'il a été chargé depuis l
 function pkResetFilters() {{ _PK_FLT = {{ side: 'all', type: 'all', name: '' }}; }}
 function pkNorm(s) {{ return String(s === undefined || s === null ? '' : s).normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase(); }}
 function pkApplyFilter() {{
-  const root = document.getElementById('snapshot-display');
+  const root = document.getElementById('hq-left');
   if (!root) return;
   const q = pkNorm(_PK_FLT.name);
   const rows = root.querySelectorAll('.snap-flight');
@@ -4086,7 +4178,7 @@ function pkSetChecked(gid, on) {{
   if (on) _PK_EXPORT_SEL.add(gid); else _PK_EXPORT_SEL.delete(gid);
 }}
 function pkSyncCheckboxes() {{
-  document.querySelectorAll('#snapshot-display [data-pk-export]').forEach(cb => {{
+  document.querySelectorAll('#hq-left [data-pk-export]').forEach(cb => {{
     cb.checked = _PK_EXPORT_SEL.has(Number(cb.getAttribute('data-pk-export')));
   }});
 }}
@@ -4241,18 +4333,12 @@ function pkRender() {{
   const seq = pkComputeState();
   const ctx = _HQ_MIZ_CONTEXT;
   const h = escapeHtml;
-  const note = document.getElementById('pk-nomiz');
-  if (note) note.style.display = ctx ? 'none' : 'block';
   const busy = _PK_BUSY;
   const loadBtn = document.getElementById('pk-load-btn');
   if (loadBtn) loadBtn.disabled = !ctx || busy;
   // Pendant l'application, on ne charge pas d'autre .miz
   const mizIn = document.getElementById('miz-file-input');
   if (mizIn) mizIn.disabled = busy;
-  const mizDz = document.getElementById('miz-drop-zone');
-  if (mizDz) {{ mizDz.classList.toggle('pk-busy', busy); mizDz.setAttribute('aria-disabled', busy ? 'true' : 'false'); }}
-  const mizRl = document.getElementById('miz-reload-btn');
-  if (mizRl) mizRl.disabled = busy;
 
   const refEl = document.getElementById('pk-refused');
   if (refEl) {{
@@ -4311,6 +4397,7 @@ function pkRender() {{
       repEl.innerHTML = html;
     }}
   }}
+  hqChrome();
 }}
 
 // ---------- APPLICATION ----------
@@ -4445,19 +4532,7 @@ function pkDoneText(done) {{
   return parts.join(' · ');
 }}
 
-// La fenêtre « Appliquer et télécharger le .miz » : le nom du .miz ouvert (sans .miz), puis _<horodatage>
-function pkApplyAsk(opener) {{
-  if (_PK_BUSY || _mizLoading) return;
-  if (!_HQ_MIZ_CONTEXT) {{ showToast(t('toast.mizNotLoaded'), {{ type: 'err' }}); return; }}
-  fnAsk({{
-    titleKey: 'fn.miz.title', goKey: 'fn.miz.go', ext: '.miz',
-    name: fnPart((_mizFilename || 'mission').replace(/\\.miz$/i, ''), 'mission') + '_paquets_' + pkStamp(),
-    opener: opener,
-    run: name => pkApply(name)
-  }});
-}}
-
-async function pkApply(name) {{
+async function pkApply() {{
   if (_PK_BUSY || _mizLoading) return;
   if (!_HQ_MIZ_CONTEXT) {{ showToast(t('toast.mizNotLoaded'), {{ type: 'err' }}); return; }}
   _PK_BUSY = true;
@@ -4533,13 +4608,13 @@ async function pkApply(name) {{
       showToast(t('toast.pkNoChange'));
       return;
     }}
-    // Rien n'a échoué : l'archive est refaite (rebuildMizHQ) et le snapshot recalculé, puis seulement on télécharge et on change d'état
-    const blob = await rebuildMizHQ(work.missionText);
+    // Rien n'a échoué : l'archive est refaite à blanc (rebuildMizHQ, la même épreuve qu'avant) et le snapshot recalculé, puis seulement on change d'état.
+    // Le .miz n'est remis qu'à « Sauvegarder .miz » ; le snapshot gardé (mission_snapshot_v1) reste celui du fichier ouvert ou sauvegardé.
+    await rebuildMizHQ(work.missionText);
     const snap = await buildMissionSnapshot(work.ast, work.model, work.missionText, _mizFilename || 'mission.miz', work.theatre);
-    shareOrDownload(blob, name + '.miz', 'application/octet-stream', 'HQ', pkDownload);
     _HQ_MIZ_CONTEXT = {{ missionText: work.missionText, ast: work.ast, model: work.model, otherFilesMap: work.otherFilesMap, theatre: work.theatre }};
     HQ_SNAPSHOT = snap;
-    persistSnapshot();
+    _HQ_DIRTY += 1;
     renderSnapshot(HQ_SNAPSHOT);
     _PK_REPORT = {{ lines, total: () => pkTotalText(applied, absent, warnN) }};
     showToast(tn('pk.rep.applied', applied) + ' ✔', {{ type: 'ok' }});
@@ -4867,12 +4942,12 @@ function pkDeleteAsk(opener) {{
     return;
   }}
   fnAsk({{
-    titleKey: 'fn.del.title', goKey: 'fn.del.go', ext: '.miz',
-    name: fnPart((_mizFilename || 'mission').replace(/\\.miz$/i, ''), 'mission') + '_' + pkStamp(),
+    titleKey: 'fn.del.title', goKey: 'fn.del.go', ext: '',
+    noName: true, danger: true,
     opener: opener,
     body: () => delBodyHtml(an),
     blocked: an.badWh,   // warehouses présent mais illisible : rien ne s'écrit
-    run: name => pkDeleteApply(name, ids)
+    run: () => pkDeleteApply(ids)
   }});
 }}
 
@@ -5277,18 +5352,18 @@ function dsxAsk(opener) {{
     }});
   }}
   fnAsk({{
-    titleKey: 'fn.dyn.title', goKey: 'fn.dyn.go', ext: '.miz',
-    name: fnPart((_mizFilename || 'mission').replace(/\\.miz$/i, ''), 'mission') + '_' + pkStamp(),
+    titleKey: 'fn.dyn.title', goKey: 'fn.dyn.go', ext: '',
+    noName: true,
     opener: opener, wide: true,
     head: () => t('dyn.w.prereq'),
     body: dsxBody,
     blocked: dsxBlocked(),
-    run: name => dsxApply(name)
+    run: () => dsxApply()
   }});
 }}
 
 // ----- l'écriture -----
-async function dsxApply(name) {{
+async function dsxApply() {{
   if (_PK_BUSY || _mizLoading) return;
   const base = _HQ_MIZ_CONTEXT;
   if (!base || !HQ_SNAPSHOT || base !== DSX.ctx) {{ showToast(t('toast.mizNotLoaded'), {{ type: 'err' }}); return; }}
@@ -5320,14 +5395,13 @@ async function dsxApply(name) {{
     const work = {{ missionText: missionText, ast: mAst, model: model, otherFilesMap: otherFilesMap, theatre: base.theatre }};
     dsxVerify(base, DSX, plan, mAst, wText, wRootNew, work);
     const dyn = dynBuild(mAst, otherFilesMap, base.theatre);
-    const blob = await rebuildMizHQ(missionText, otherFilesMap);
+    await rebuildMizHQ(missionText, otherFilesMap);     // l'archive refaite à blanc : la même épreuve qu'avant ; le .miz n'est remis qu'à « Sauvegarder .miz »
     const snap = await buildMissionSnapshot(mAst, model, missionText, _mizFilename || 'mission.miz', base.theatre);
-    // Rien n'a échoué : on remet le fichier, puis seulement on change d'état
-    shareOrDownload(blob, name + '.miz', 'application/octet-stream', 'HQ', pkDownload);
+    // Rien n'a échoué : on change d'état
     _HQ_MIZ_CONTEXT = work;
     _HQ_DYN = dyn;
     HQ_SNAPSHOT = snap;
-    persistSnapshot();
+    _HQ_DIRTY += 1;
     _PK_EXPORT_SEL.clear();
     renderSnapshot(HQ_SNAPSHOT);
     // Le compte rendu : les cinq compteurs, une ligne par changement, puis les signalements
@@ -5358,13 +5432,13 @@ async function dsxApply(name) {{
   }} finally {{
     _PK_BUSY = false;
     pkRender();
-    delFocusReport();
+    hqFocusSave();
   }}
 }}
 // Le nom d'un template, au compte rendu : le snapshot d'avant l'écriture n'est plus là, on lit le snapshot courant (mêmes groupes)
 function dsxTplNameOf(gid) {{ return dsxTplName(gid); }}
 
-async function pkDeleteApply(name, ids) {{
+async function pkDeleteApply(ids) {{
   if (_PK_BUSY || _mizLoading) return;
   const base = _HQ_MIZ_CONTEXT;
   if (!base || !HQ_SNAPSHOT) {{ showToast(t('toast.mizNotLoaded'), {{ type: 'err' }}); return; }}
@@ -5406,14 +5480,13 @@ async function pkDeleteApply(name, ids) {{
     const keep = pkClientGroups(base).map(g => g.group.groupId).filter(g => !gset.has(g));
     if (JSON.stringify(pkClientGroups(work).map(g => g.group.groupId)) !== JSON.stringify(keep)) throw delErr('pk.del.e.clients');
     const dyn = dynBuild(ast, otherFilesMap, base.theatre);
-    const blob = await rebuildMizHQ(missionText, otherFilesMap);
+    await rebuildMizHQ(missionText, otherFilesMap);     // l'archive refaite à blanc : la même épreuve qu'avant ; le .miz n'est remis qu'à « Sauvegarder .miz »
     const snap = await buildMissionSnapshot(ast, model, missionText, _mizFilename || 'mission.miz', base.theatre);
-    // Rien n'a échoué : on remet le fichier, puis seulement on change d'état
-    shareOrDownload(blob, name + '.miz', 'application/octet-stream', 'HQ', pkDownload);
+    // Rien n'a échoué : on change d'état
     _HQ_MIZ_CONTEXT = work;
     _HQ_DYN = dyn;
     HQ_SNAPSHOT = snap;
-    persistSnapshot();
+    _HQ_DIRTY += 1;
     _PK_EXPORT_SEL.clear();
     renderSnapshot(HQ_SNAPSHOT);
     // Le compte rendu : les trois compteurs, une ligne par vol supprimé (avec ses liens remis à zéro), puis les références laissées
@@ -5439,16 +5512,13 @@ async function pkDeleteApply(name, ids) {{
   }} finally {{
     _PK_BUSY = false;
     pkRender();
-    delFocusReport();
+    hqFocusSave();
   }}
 }}
-// Le focus va au compte rendu (la section Paquets de vol s'ouvre pour qu'il se voie)
-function delFocusReport() {{
-  const rep = document.getElementById('pk-report'), sec = document.getElementById('commander-section');
-  if (!rep) return;
-  if (sec) sec.open = true;
-  rep.setAttribute('tabindex', '-1');
-  try {{ rep.focus(); }} catch (e) {{}}
+// Après Supprimer ou Dynamic Spawn, le focus va à « Sauvegarder .miz » (le compte rendu est dans la fenêtre « Paquets de vol »)
+function hqFocusSave() {{
+  const b = document.getElementById('btn-save');
+  if (b && !b.disabled) {{ try {{ b.focus({{ preventScroll: true }}); }} catch (e) {{}} }}
 }}
 
 // ---------- ÉVÉNEMENTS ----------
@@ -5464,7 +5534,7 @@ function initPackagesUI() {{
     }});
   }}
   const applyBtn = document.getElementById('pk-apply-btn');
-  if (applyBtn) applyBtn.addEventListener('click', ev => pkApplyAsk(ev.currentTarget));
+  if (applyBtn) applyBtn.addEventListener('click', () => pkApply());
   const listEl = document.getElementById('pk-list');
   if (listEl) {{
     listEl.addEventListener('click', e => {{
@@ -5483,7 +5553,7 @@ function initPackagesUI() {{
       if (fl) fl.chk[cb.getAttribute('data-part')] = cb.checked;
     }});
   }}
-  const snapEl = document.getElementById('snapshot-display');
+  const snapEl = document.getElementById('hq-page');   // les deux colonnes : les filtres et la liste à gauche, les boutons des groupes cochés et le panneau Dynamic Spawn à droite
   if (snapEl) {{
     snapEl.addEventListener('toggle', e => {{ if (e.target && e.target.id === 'dyn-panel') {{ _DYN_OPEN = e.target.open; const sm = e.target.querySelector(':scope > summary'); if (sm) sm.setAttribute('aria-expanded', String(e.target.open)); }} }}, true);
     snapEl.addEventListener('change', e => {{
@@ -5523,6 +5593,195 @@ function initPackagesUI() {{
     }});
   }}
   pkRender();
+}}
+
+// =============================================================
+//  LA PAGE AUTOUR DE LA MISSION (lot mp-hq-disposition) : la barre, les deux fenêtres, les modifications cumulées, la sauvegarde
+// =============================================================
+let _HQ_DIRTY = 0;     // les modifications faites au .miz ouvert (Appliquer, Supprimer, Dynamic Spawn) et pas encore sauvegardées ; en mémoire seulement
+let _HQ_PICK = null;   // le compteur au moment où le choix de fichier a été ouvert (la question « perdre les modifications ? » est déjà passée)
+const HQW = {{ pk: 'pk-modal', wing: 'wing-modal', opener: null, at: 0 }};
+function hqEl(id) {{ return document.getElementById(id); }}
+
+/* Le wing est configuré : la clé existe et sa valeur n'est pas (valeurs, pas texte) la configuration par défaut */
+function wingConfigured() {{
+  let raw = null;
+  try {{ raw = localStorage.getItem(KEY_WING); }} catch (e) {{ return false; }}
+  if (raw === null) return false;
+  let v;
+  try {{ v = JSON.parse(raw); }} catch (e) {{ return false; }}
+  return !deepEqValues(v, DEFAULT_WING_CONFIG);
+}}
+/* « Wing » en premier (juste après le sigle) et au dessin du bouton principal tant que le wing n'est pas configuré ; à sa place sinon */
+function hqWingOrder() {{
+  const b = hqEl('btn-wing'), ex = hqEl('btn-example');
+  const sep = document.querySelector('header.toolbar > .tb-sep');
+  if (!b || !ex || !sep) return;
+  const cfg = wingConfigured();
+  b.classList.toggle('primary', !cfg);
+  if (!cfg) {{ if (sep.nextElementSibling !== b) sep.after(b); }}
+  else if (b.nextElementSibling !== ex) ex.before(b);
+}}
+
+/* L'état de la page et de la barre : sans mission la page vide, avec le snapshot la page à deux colonnes ; les boutons, leurs infobulles, le compteur, le bandeau */
+function hqChrome() {{
+  const ctx = !!_HQ_MIZ_CONTEXT, snap = !!HQ_SNAPSHOT, busy = _PK_BUSY || _mizLoading;
+  const why = (snap && !ctx) ? t('hq.noMem') : t('tb.needMiz');
+  const empty = hqEl('hq-empty'), page = hqEl('hq-page');
+  if (empty) empty.hidden = snap;
+  if (page) page.hidden = !snap;
+  const open = hqEl('btn-open');
+  if (open) {{ open.disabled = busy; open.title = t('tb.open.tip'); }}
+  const save = hqEl('btn-save');
+  if (save) {{ save.disabled = busy || !ctx || _HQ_DIRTY < 1; save.title = !ctx ? why : (_HQ_DIRTY < 1 ? t('tb.save.none') : ''); }}
+  const cnt = hqEl('save-count');
+  if (cnt) {{ cnt.textContent = String(_HQ_DIRTY); cnt.hidden = _HQ_DIRTY < 1; }}
+  const pk = hqEl('btn-packages');
+  if (pk) {{ pk.disabled = !ctx; pk.title = ctx ? '' : why; }}
+  hqWingOrder();
+  hqBanner();
+  pkRefreshExportBtn();
+}}
+/* Le bandeau en tête de la colonne de droite : les modifications pas encore sauvegardées, ou le .miz qui n'est plus en mémoire */
+function hqBanner() {{
+  const el = hqEl('hq-banner');
+  if (!el) return;
+  let kind = '', text = '', act = '', label = '';
+  if (HQ_SNAPSHOT && !_HQ_MIZ_CONTEXT) {{ kind = 'nomem'; text = t('hq.noMem'); act = 'open'; label = t('tb.open'); }}
+  else if (_HQ_MIZ_CONTEXT && _HQ_DIRTY > 0) {{ kind = 'dirty'; text = tn('hq.mod', _HQ_DIRTY); act = 'save'; label = t('tb.save'); }}
+  const sig = kind + '|' + text + '|' + label;
+  if (el.getAttribute('data-sig') === sig) return;     // rien n'a changé : le bouton garde son focus
+  el.setAttribute('data-sig', sig);
+  el.innerHTML = kind ? '<div class="ui-bandeau" data-hq-banner="' + kind + '"><p class="hq-band-txt">' + escapeHtml(text) + '</p>' +
+    '<div class="hq-band-act"><button type="button" class="miz-btn primary" data-hq-act="' + act + '">' + escapeHtml(label) + '</button></div></div>' : '';
+}}
+
+// ---------- les deux fenêtres ----------
+function hqWinOpen(which, opener) {{
+  const m = hqEl(HQW[which]);
+  if (!m || !m.hidden) return;
+  if (which === 'pk' && !_HQ_MIZ_CONTEXT) return;
+  const other = hqEl(HQW[which === 'pk' ? 'wing' : 'pk']);
+  if (other) other.hidden = true;
+  HQW.opener = opener || document.activeElement;
+  HQW.at = performance.now();
+  m.hidden = false;
+  if (which === 'pk') pkRender();
+  const f = uiFocusables(m), to = f[1] || f[0];
+  if (to) {{ try {{ to.focus({{ preventScroll: true }}); }} catch (e) {{}} }}
+}}
+function hqWinClose(which) {{
+  const m = hqEl(HQW[which]);
+  if (!m || m.hidden) return;
+  m.hidden = true;
+  const o = HQW.opener;
+  HQW.opener = null;
+  if (o && o.focus && o.isConnected && !o.disabled) {{ try {{ o.focus({{ preventScroll: true }}); }} catch (e) {{}} }}
+}}
+
+// ---------- ouvrir un .miz ----------
+function hqOpenConfirm() {{
+  return askConfirm({{ title: t('hq.open.title'), text: tn('hq.open.text', _HQ_DIRTY), verb: t('hq.open.verb'), danger: true }});
+}}
+/* Le choix de fichier : s'il reste des modifications, la question d'abord */
+async function hqOpenPick() {{
+  if (_PK_BUSY || _mizLoading) return;
+  if (_HQ_DIRTY > 0 && !await hqOpenConfirm()) return;
+  _HQ_PICK = _HQ_DIRTY;
+  hqEl('miz-file-input').click();
+}}
+/* Un fichier déposé sur la page : un autre fichier qu'un .miz, le toast d'aujourd'hui ; des modifications, la question d'abord */
+async function hqOpenFile(file) {{
+  if (_PK_BUSY || _mizLoading) return;
+  if (!file || !file.name.toLowerCase().endsWith('.miz')) {{ showToast(t('toast.mizNotMiz'), {{ type: 'err' }}); return; }}
+  if (_HQ_DIRTY > 0 && !await hqOpenConfirm()) return;
+  handleFile(file);
+}}
+
+// ---------- sauvegarder le .miz : la fenêtre du nom, la vérification du texte final, puis le fichier, une seule fois ----------
+function hqSaveAsk(opener) {{
+  if (_PK_BUSY || _mizLoading || !_HQ_MIZ_CONTEXT || !HQ_SNAPSHOT || _HQ_DIRTY < 1) return;
+  fnAsk({{
+    titleKey: 'fn.save.title', goKey: 'fn.save.go', ext: '.miz',
+    name: fnPart((_mizFilename || 'mission').replace(/\\.miz$/i, ''), 'mission') + '_' + pkStamp(),
+    opener: opener,
+    run: name => hqSaveRun(name)
+  }});
+}}
+async function hqSaveRun(name) {{
+  if (_PK_BUSY || _mizLoading) return;
+  const ctx = _HQ_MIZ_CONTEXT;
+  if (!ctx || !HQ_SNAPSHOT) {{ showToast(t('toast.mizNotLoaded'), {{ type: 'err' }}); return; }}
+  _PK_BUSY = true;
+  pkRender();
+  try {{
+    retokenizeSafety(ctx.missionText);                                     // la vérification d'aujourd'hui, sur le texte final
+    const blob = await rebuildMizHQ(ctx.missionText, ctx.otherFilesMap);
+    shareOrDownload(blob, name + '.miz', 'application/octet-stream', 'HQ', pkDownload);
+    _HQ_DIRTY = 0;
+    persistSnapshot();                                                     // mission_snapshot_v1 décrit un fichier qui existe sur le disque
+    showToast(t('toast.mizSaved'), {{ type: 'ok' }});
+  }} catch (err) {{
+    console.error('[HQ] sauvegarde du .miz :', err);
+    showToast(t('msg.failed'), {{ type: 'err' }});                           // rien n'est téléchargé, le compteur ne bouge pas
+  }} finally {{
+    _PK_BUSY = false;
+    pkRender();
+  }}
+}}
+
+// ---------- les événements de la page ----------
+function initHqShell() {{
+  hqEl('btn-open').addEventListener('click', () => hqOpenPick());
+  hqEl('btn-save').addEventListener('click', e => hqSaveAsk(e.currentTarget));
+  hqEl('btn-packages').addEventListener('click', e => hqWinOpen('pk', e.currentTarget));
+  hqEl('btn-wing').addEventListener('click', e => hqWinOpen('wing', e.currentTarget));
+  // le bouton de la page vide et ceux du bandeau : le geste de la barre
+  document.addEventListener('click', e => {{
+    const b = e.target.closest ? e.target.closest('[data-hq-act]') : null;
+    if (!b || b.disabled) return;
+    if (b.getAttribute('data-hq-act') === 'open') hqOpenPick();
+    else if (b.getAttribute('data-hq-act') === 'save') hqSaveAsk(b);
+  }});
+  // les fenêtres : la croix (aussi Échap), le pied, le fond (sans réagir au 2e clic d'un double-clic sur le bouton qui ouvre)
+  [['pk', 'pk-close', 'pk-done', 'pk-backdrop'], ['wing', 'wing-close', 'wing-done', 'wing-backdrop']].forEach(a => {{
+    hqEl(a[1]).addEventListener('click', () => hqWinClose(a[0]));
+    hqEl(a[2]).addEventListener('click', () => hqWinClose(a[0]));
+    hqEl(a[3]).addEventListener('click', () => {{ if (performance.now() - HQW.at > 400) hqWinClose(a[0]); }});
+  }});
+  // Ctrl+S (Cmd+S) : le geste de « Sauvegarder .miz », sauf fenêtre ou menu ouvert
+  document.addEventListener('keydown', e => {{
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {{
+      e.preventDefault();
+      if (!uiModalsOpen().length && !TBM.cur) hqEl('btn-save').click();
+    }}
+  }});
+  // quitter la page avec des modifications : le message du navigateur
+  window.addEventListener('beforeunload', e => {{
+    if (_HQ_DIRTY > 0) {{ e.preventDefault(); e.returnValue = ''; }}
+  }});
+  // la page entière accepte le dépôt d'un .miz (sauf sous une fenêtre : là, le dépôt ne fait rien)
+  const veil = hqEl('hq-veil');
+  let depth = 0;
+  const files = e => !!(e.dataTransfer && Array.prototype.indexOf.call(e.dataTransfer.types || [], 'Files') >= 0);
+  const hide = () => {{ depth = 0; veil.hidden = true; }};
+  window.addEventListener('dragenter', e => {{ if (!files(e) || uiModalsOpen().length) return; e.preventDefault(); depth++; veil.hidden = false; }});
+  window.addEventListener('dragover', e => {{
+    if (!files(e) || uiModalsOpen().length) return;
+    e.preventDefault();
+    try {{ e.dataTransfer.dropEffect = 'copy'; }} catch (x) {{}}
+    veil.hidden = false;
+  }});
+  window.addEventListener('dragleave', e => {{ if (!files(e)) return; depth = Math.max(0, depth - 1); if (depth === 0) veil.hidden = true; }});
+  window.addEventListener('dragend', hide);
+  window.addEventListener('drop', e => {{
+    if (!files(e)) return;
+    hide();
+    if (uiModalsOpen().length) return;
+    e.preventDefault();
+    const f = e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) hqOpenFile(f);
+  }});
 }}
 
 /* ============= LISTES DE LA BARRE — thème de l'interface (lot mp-ui-listes) =============
@@ -5886,9 +6145,9 @@ function tbmScrolled(e) {{
 
 // ── Init ───────────────────────────────────────────────────────
 // ── Repli des sections (hq_folds_v1) ─────────────────────────────
-// {{ section: true (ouverte) | false (repliée) }} ; les sections sont repliées d'abord, comme avant. Le panneau Dynamic Spawn et les cartes d'escadron gardent leur mémoire d'aujourd'hui (en mémoire seulement).
+// {{ section: true (ouverte) | false (repliée) }} ; les deux boîtes de droite sont ouvertes d'abord (data-def). Le panneau Dynamic Spawn et les cartes d'escadron gardent leur mémoire d'aujourd'hui (en mémoire seulement).
 const HQ_FOLDS = 'hq_folds_v1';
-function hqSections() {{ return Array.prototype.slice.call(document.querySelectorAll('#editor-panel > details.ed-section')); }}
+function hqSections() {{ return Array.prototype.slice.call(document.querySelectorAll('#hq-right > details.ed-section')); }}
 /* La ligne de résumé d'une section repliée ; rien si elle est vide (Paquets de vol n'en porte pas) */
 function hqSectionSum(id) {{
   const v = x => (typeof x === 'string' ? x.trim() : '');
@@ -5896,10 +6155,6 @@ function hqSectionSum(id) {{
   if (id === 'mission') {{
     const sm = HQ_SNAPSHOT && HQ_SNAPSHOT.sourceMission;
     return sm ? uiJoin([v(sm.filename), v(sm.theatre), cnt((HQ_SNAPSHOT.flights || []).length, 'groups')]) : '';
-  }}
-  if (id === 'wing') {{
-    if (JSON.stringify(wingConfig) === JSON.stringify(DEFAULT_WING_CONFIG) || !wingConfig.wing) return '';
-    return uiJoin([v(wingConfig.wing.shortName) || v(wingConfig.wing.fullName), cnt((wingConfig.squadrons || []).length, 'sq')]);
   }}
   return '';
 }}
@@ -5912,7 +6167,7 @@ function hqFoldRefresh() {{
 }}
 function hqFoldInit() {{
   hqSections().forEach(d => {{
-    const o = uiFoldOpen(HQ_FOLDS, d.dataset.section, false);
+    const o = uiFoldOpen(HQ_FOLDS, d.dataset.section, d.dataset.def === 'open');
     d.dataset.fold = String(o);
     if (d.open !== o) d.open = o;
   }});
@@ -5940,7 +6195,9 @@ function init() {{
   loadPersistedSnapshot();  // P2 — restaurer snapshot au rechargement
   initPackagesUI();         // paquets de vol (export / import)
   fnBind();                 // la fenêtre « Nom du fichier »
+  initHqShell();            // la barre, les deux fenêtres, le dépôt, Ctrl+S, la sortie de la page
   hqFoldInit();
+  hqChrome();
 }}
 
 init();
@@ -6090,7 +6347,16 @@ grep_present('buildMissionSnapshot','buildMissionSnapshot présent')
 grep_present('computeFingerprint',  'computeFingerprint présent')
 grep_present('mizWeatherToMetar',   'mizWeatherToMetar présent')
 grep_present('miz-file-input',      'input .miz présent')
-grep_present('miz-drop-zone',       'drop-zone .miz présente')
+grep_absent('miz-drop-zone',        'zone de dépôt de la section MISSION .MIZ absente (la page entière accepte le dépôt)')
+grep_absent('miz-reload-btn',       '« Ouvrir un autre .miz » de la section absent (la barre ouvre)')
+grep_absent('commander-section',    'section Paquets de vol absente (une fenêtre)')
+grep_present('hq-veil',             'retour visuel du dépôt sur la page entière')
+grep_present('id="btn-save"',       'bouton Sauvegarder .miz de la barre')
+grep_present('id="btn-open"',       'bouton Ouvrir .miz de la barre')
+grep_present('id="btn-packages"',   'bouton Paquets de vol de la barre')
+grep_present('id="btn-wing"',       'bouton Wing de la barre')
+grep_present('beforeunload',        'sortie de la page avec des modifications')
+grep_present('_HQ_DIRTY',           'compteur des modifications')
 grep_absent('exportSnapshot',       'exportSnapshot absent')
 grep_absent('fallbackDownloadSnap', 'fallbackDownloadSnap absent')
 grep_absent('miz-export-btn',       'bouton Exporter snapshot JSON absent')
@@ -6116,7 +6382,7 @@ grep_present('pkApply',            'pkApply présent (application des paquets)')
 grep_present('liveryPos',           'liveryPos présent (P3.2)')
 grep_present('_HQ_MIZ_CONTEXT',     '_HQ_MIZ_CONTEXT présent')
 grep_present('otherFilesMap',       'otherFilesMap chargé (rezip complet)')
-grep_present('_paquets_',           'suffixe _paquets_ présent')
+grep_absent('_paquets_',            'plus de suffixe _paquets_ : le .miz se remet une fois, à la sauvegarde')
 grep_absent('commander-ghost',      'fantôme Commander absent')
 grep_absent('commander-dev-area',   'zone dev/test absente')
 grep_absent('dev=1',                'flag dev=1 absent')
@@ -6130,7 +6396,7 @@ grep_present('pk-delete-btn',       'bouton de suppression présent')
 grep_present('pkDeleteApply',       'suppression de vols présente')
 grep_present('pk-file-input',       'sélecteur de paquets présent')
 grep_present('pk.err.noTheatre',    'refus : paquet sans théâtre')
-grep_present("removeItem(KEY_SNAPSHOT)", 'Ouvrir un autre .miz efface le snapshot')
+grep_present('hqSaveRun',           'sauvegarde du .miz présente')
 grep_absent('pk.err.type',          'refus « ni .json ni .zip » absent (le contenu décide)')
 # P4 vérifications
 grep_present('serializeLua',        'serializeLua présent (P4.1)')
