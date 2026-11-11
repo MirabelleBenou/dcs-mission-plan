@@ -2226,7 +2226,6 @@ const LO_FIELDS = ['fuel', 'flare', 'chaff', 'gun'];
 const MAX_UNITS = 4;
 const SUMMARY_LIVERY_MAX = 24;
 const KEY_THEME = 'theme_v1', KEY_LANG = 'lang_v1', KEY_STATE = 'fc_state_v1', KEY_HQ_MISSION = 'mission_snapshot_v1';
-const HQ_MISSION_SCHEMAS = ['dcs-mission-snapshot-v1', 'dcs-mission-snapshot-v2'];       // la v1 ne reste qu'en lecture
 const PACKAGE_FORMAT = 'dcs-flight-package-v2', PACKAGE_FORMATS = ['dcs-flight-package-v1', 'dcs-flight-package-v2'];
 
 // L'état. S est le travail en cours : les groupes et le théâtre vivent dans flight_set_v1 (partagée avec le Route Planner, bloc group_store_block.py), le fichier de travail
@@ -2240,8 +2239,7 @@ const UI = {
   clamped: 0,               // réglages d'emport ramenés à la limite (ligne d'état)
   exportTried: false,       // un clic sur Exporter avec des manques : le bandeau passe en rouge, jusqu'à ce que les manques soient levés (jamais enregistré)
   cmp: { sym: true, st: null, saving: false, name: '', err: '' },
-  rtChoose: null,           // le fcId du groupe dont on choisit la route (« Changer de route ») ; un groupe sans route est toujours au choix
-  hq: undefined             // la mission de HQ lue dans le stockage : une lecture par ouverture de la fenêtre d'import (undefined = à relire)
+  rtChoose: null            // le fcId du groupe dont on choisit la route (« Changer de route ») ; un groupe sans route est toujours au choix
 };
 
 // ----- Le théâtre commun (lot mp-theatre-unique) -----
@@ -2782,7 +2780,7 @@ function livCmp(a, b) { const x = a.toLowerCase(), y = b.toLowerCase(); return x
 // Les options du champ d'une unité : « Inchangée », puis la liste du type. Le jeu lit les livrées sans tenir compte de la casse : une valeur égale à un nom
 // de la liste à la casse près prend la place de ce nom (sa valeur, son libellé, à sa place dans le tri) : un seul nom, et l'export garde l'écriture de l'unité.
 // Une valeur qu'aucun nom n'égale à la casse près reste une option hors liste, telle quelle, en tête après « Inchangée ».
-function liveryValue(u) { return u.livery.trim() === '' ? '' : u.livery; }
+function liveryValue(u) { return u.livery.trim(); }
 function liveryOptions(u) {
   let names = liveriesFor(u.type);
   const cur = liveryValue(u), opts = [{ v: '', l: t('u.livery.keep') }];
@@ -2799,9 +2797,11 @@ function refreshLiveryLists() {
     const fe = sel.closest('.fc-flight'), f = fe && S.flights[Number(fe.getAttribute('data-f'))], u = f && f.units[Number(sel.getAttribute('data-u'))];
     if (!u || u.type === '') return;
     if (TBM.cur && TBM.cur.sel === sel) tbmClose(false);
-    sel.innerHTML = optionsHtml(liveryOptions(u), liveryValue(u));
+    fillLiverySelect(sel, u);
   });
 }
+// Les options d'un champ Livrée, refaites sur place : la valeur de l'unité y reste choisie.
+function fillLiverySelect(sel, u) { sel.innerHTML = optionsHtml(liveryOptions(u), liveryValue(u)); }
 
 // ----- Les points d'une route du groupe (le paquet les porte tels quels) -----
 function routeKeys(points) { return isObj(points) ? Object.keys(points).filter(k => /^\d+$/.test(k)).sort((a, b) => a - b) : []; }
@@ -3218,7 +3218,6 @@ function routeTakeover() {
   if (r.changed) { refreshSummaries(); showToast(r.toast, 4500); }
 }
 function routeStorage(e) {
-  if (e.key === KEY_HQ_MISSION || e.key === null) UI.hq = undefined;      // le cache de la mission d'HQ suit sa clé (HQ en ouvre une autre dans le shell, ou la vide) : le prochain hqMission() relit
   if (e.key !== null && e.key !== KEY_RP_SET && e.key !== KEY_RP_STATE && e.key !== KEY_HQ_MISSION) return;
   clearTimeout(RT.timer);
   RT.timer = setTimeout(routeTakeover, 80);      // le Route Planner écrit route_set_v1 puis route_state_v1 : un seul passage pour les deux
@@ -3880,13 +3879,6 @@ async function loadLuaFiles(files) {
 // ---------- 5. Import : la fenêtre est celle du bloc commun (import_block.py) ; ici seulement ses rappels ----------
 // Le bloc lit HQ, le briefing en cours ou un fichier et écrit dans la fiche partagée en une fois, l'emport déjà converti (loadoutFrom : loadoutFromPayload). Le module relit la fiche à son rappel,
 // puis choisit la première unité du premier groupe importé. Un emport brut (payloadIn) ne vient que du Route Planner : gsFixRaw le convertit sans toucher au reste du groupe.
-function hqMission() { if (UI.hq === undefined) UI.hq = readHqMission(); return UI.hq; }
-function readHqMission() {
-  let o = null;
-  try { o = JSON.parse(lsGet(KEY_HQ_MISSION) || 'null'); } catch (e) { return null; }
-  const ok = isObj(o) && HQ_MISSION_SCHEMAS.indexOf(o.schema) >= 0 && isObj(o.sourceMission) && typeof o.sourceMission.theatre === 'string' && Array.isArray(o.flights);
-  return ok ? o : null;
-}
 function fcImportBefore() {
   flushWork();         // ce que l'on a tapé part dans la fiche avant que le bloc la lise
   UI.clamped = 0;      // le compte des réglages ramenés à la limite est celui de cet import
@@ -4368,13 +4360,15 @@ function commitLoadoutField(k, el) {
   if (k === 'fuel') paintFuelBar(fuelPct(v, lim), true);
   refreshAll();
 }
-// Le type d'une unité change : ses radios et son emport ne valent plus (ils suivent le type), la livrée reste. S'il y en a à perdre, une confirmation ; refusée, la liste revient à l'ancien type.
+// Le type d'une unité change : ses radios et son emport ne valent plus (ils suivent le type) ; la livrée reste si le nouveau type l'a, sinon elle revient à « Inchangée ». S'il y en a à perdre, une confirmation ; refusée, la liste revient à l'ancien type.
 async function changeUnitType(f, fi, ui, el) {
   const u = f.units[ui], nt = el.value;
   if (!u || nt === u.type || PAYLOAD_TYPES.indexOf(nt) < 0) return;
   if ((radioCount(f, u) > 0 || !!u.loadout) && !await askConfirm({ title: tf('u.type.confirm.title', unitLabel(f, fi, u, ui)), text: t('u.type.confirm.text'), verb: t('ui.verb.change'), danger: true })) { el.value = u.type; return; }
   if (u.type === nt || f.units[ui] !== u) return;
   u.type = nt; u.radios = {}; u.loadout = null; REFUSED.delete(u);
+  const lv = u.livery.trim().toLowerCase();
+  if (!liveriesFor(nt).some(n => n.toLowerCase() === lv)) u.livery = '';       // une livrée que le nouveau type n'a pas (à la casse et aux espaces de bout près) revient à « Inchangée »
   Object.assign(UI.cmp, { saving: false, err: '', st: null });
   renderAll();
 }
@@ -4388,7 +4382,7 @@ function onChange(e) {
   if (LO_FIELDS.indexOf(k) >= 0) { commitLoadoutField(k, el); return; }
   const fe = el.closest('.fc-flight'), f = fe && S.flights[Number(fe.getAttribute('data-f'))];
   if (k === 'utype') changeUnitType(f, Number(fe.getAttribute('data-f')), Number(el.getAttribute('data-u')), el);
-  else if (k === 'livery') { const u = f.units[Number(el.getAttribute('data-u'))]; if (u) { u.livery = el.value; refreshAll(); } }
+  else if (k === 'livery') { const u = f.units[Number(el.getAttribute('data-u'))]; if (u) { u.livery = el.value; fillLiverySelect(el, u); refreshAll(); } }
   else if (k === 'coalition') { f.coalition = el.value; if (S.flights.indexOf(f) === S.sel.f) renderRouteBlock(); refreshAll(); }
 }
 function onToggle(e) {
@@ -4467,7 +4461,7 @@ function fcOpenMenu(btn) {
     ],
     choose: k => {
       if (k === 'file') document.getElementById('fc-in-open').click();
-      else { UI.hq = readHqMission(); impOpen({ opener: btn }); }       // le snapshot de HQ se relit à chaque ouverture
+      else impOpen({ opener: btn });
     }
   });
 }
@@ -4533,7 +4527,7 @@ function init() {
   if (taken.changed) showToast(taken.toast, 4500);
   window.addEventListener('pagehide', flushWork);
   window.addEventListener('storage', e => { routeStorage(e); gsStorage(e); if (e.key === KEY_THEATRE) thFollow(); if (e.key === KEY_UNITS) udFollow(); if (e.key === KEY_WING || e.key === null) refreshLiveryLists(); });
-  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushWork(); else { UI.hq = undefined; gsPull(); routeTakeover(); } });
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushWork(); else { gsPull(); routeTakeover(); } });
 }
 init();
 """

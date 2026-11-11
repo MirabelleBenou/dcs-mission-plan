@@ -2605,11 +2605,27 @@ function validateWingConfig(obj) {
   return errors.length === 0 ? { ok: true } : { ok: false, errors };
 }
 
+// Une configuration gardée ne se perd pas pour un `liveries` mal formé (écrit par un autre module, ou à la main) : le champ est retiré s'il n'est pas
+// un tableau, réduit à ses entrées valides sinon ; le reste de la configuration est gardé tel quel. L'import d'un fichier, lui, reste strict.
+function sanitizeWingLiveries(cfg) {
+  if (!cfg || typeof cfg !== 'object' || cfg.liveries === undefined) return;
+  if (!Array.isArray(cfg.liveries)) {
+    console.warn('[Wing] liveries retiré : ce n’est pas un tableau');
+    delete cfg.liveries;
+    return;
+  }
+  const kept = cfg.liveries.filter(l => !!l && typeof l === 'object' && !Array.isArray(l) && typeof l.name === 'string' && Array.isArray(l.aircraft) && l.aircraft.every(a => typeof a === 'string'));
+  if (kept.length === cfg.liveries.length) return;
+  console.warn('[Wing] liveries réduit à ses entrées valides : ' + kept.length + ' sur ' + cfg.liveries.length);
+  if (kept.length) cfg.liveries = kept; else delete cfg.liveries;
+}
+
 function loadWingConfig() {
   try {
     const raw = localStorage.getItem(KEY_WING);
     if (raw) {
       const parsed = JSON.parse(raw);
+      sanitizeWingLiveries(parsed);
       const check = validateWingConfig(parsed);
       if (check.ok) return parsed;
       console.warn('[Wing] Config localStorage invalide — utilisation du défaut :', check.errors);
@@ -3052,6 +3068,7 @@ function renderWingLivRow(liv, i) {
   row.appendChild(nameWrap);
 
   const ac = document.createElement('div'); ac.className = 'wing-liv-ac';
+  ac.setAttribute('role', 'group'); ac.setAttribute('aria-labelledby', nameId);
   const types = wingAircraftTypes();
   liv.aircraft.forEach(ty => { if (types.indexOf(ty) < 0) types.push(ty); });       // un type coché qui n'est plus à aucun escadron reste affiché
   if (!types.length) {
