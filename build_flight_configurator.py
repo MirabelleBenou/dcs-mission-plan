@@ -2762,16 +2762,18 @@ function mineCount() { return PAYLOAD_TYPES.reduce((n, ty) => n + (LIB.mine[ty] 
 // La liste d'un type = les livrées du jeu (LIVERIES_DEFAULT, noms de DCS) et les livrées custom déclarées dans la fenêtre Wing de HQ
 // (`liveries` de wing_config_v1) qui portent ce type ; sans doublon à la casse près (le nom du jeu l'emporte), triée sans casse.
 const KEY_WING = 'wing_config_v1';
-const WL = { raw: undefined, list: [] };      // la lecture de wing_config_v1, gardée tant que la chaîne ne change pas (elle peut peser plusieurs Mo : logos)
-function wingLiveries() {
+const WL = { raw: undefined, list: [], defs: {} };      // la lecture de wing_config_v1, gardée tant que la chaîne ne change pas (elle peut peser plusieurs Mo : logos)
+function wingRead() {
   const raw = lsGet(KEY_WING);
-  if (raw === WL.raw) return WL.list;
+  if (raw === WL.raw) return WL;
   let o = null;
   try { o = JSON.parse(raw || 'null'); } catch (e) { o = null; }
   WL.raw = raw;
   WL.list = isObj(o) && Array.isArray(o.liveries) ? o.liveries.filter(x => isObj(x) && typeof x.name === 'string' && Array.isArray(x.aircraft)) : [];
-  return WL.list;
+  WL.defs = isObj(o) && isObj(o.defaultLiveries) ? o.defaultLiveries : {};       // { type: nom } : la livrée par défaut de chaque type, déclarée dans la fenêtre Wing de HQ
+  return WL;
 }
+function wingLiveries() { return wingRead().list; }
 function liveriesFor(type) {
   const seen = new Set(), out = [];
   const add = n => { const k = n.toLowerCase(); if (n !== '' && !seen.has(k)) { seen.add(k); out.push(n); } };
@@ -2780,31 +2782,75 @@ function liveriesFor(type) {
   return out.sort(livCmp);
 }
 function livCmp(a, b) { const x = a.toLowerCase(), y = b.toLowerCase(); return x < y ? -1 : (x > y ? 1 : (a < b ? -1 : (a > b ? 1 : 0))); }
-// Les options du champ d'une unité : « Inchangée », puis la liste du type. Le jeu lit les livrées sans tenir compte de la casse : une valeur égale à un nom
-// de la liste à la casse près prend la place de ce nom (sa valeur, son libellé, à sa place dans le tri) : un seul nom, et l'export garde l'écriture de l'unité.
-// Une valeur qu'aucun nom n'égale à la casse près reste une option hors liste, telle quelle, en tête après « Inchangée ».
+// Le nom que le champ affiche : toujours un nom (c'est lui que le paquet emporte). Celui que l'utilisateur a choisi (u.livery) ; sinon, tant qu'il n'a rien
+// choisi (u.livery reste ''), liveryAuto, qui suit la mission ouverte dans HQ et la configuration Wing.
 function liveryValue(u) { return u.livery.trim(); }
-function liveryOptions(u) {
+const MS = { raw: undefined, flights: [] };      // la lecture de mission_snapshot_v1 (la mission ouverte dans HQ), gardée tant que la chaîne ne change pas
+function missionFlights() {
+  const raw = lsGet(KEY_HQ_MISSION);
+  if (raw === MS.raw) return MS.flights;
+  let o = null;
+  try { o = JSON.parse(raw || 'null'); } catch (e) { o = null; }
+  MS.raw = raw;
+  MS.flights = isObj(o) && o.schema === 'dcs-mission-snapshot-v2' && Array.isArray(o.flights) ? o.flights.filter(isObj) : [];
+  return MS.flights;
+}
+// La livrée de l'unité dans la mission ouverte dans HQ, comme HQ la retrouve à l'application du paquet : le groupe Client de même nom (rogné, casse exacte) et, si le vol
+// a une coalition, de même coalition — un seul, sinon rien ; les unités du groupe d'abord par nom exact (celui que le paquet emporte), puis par rang parmi les restantes.
+// Elle ne vaut que si l'unité de la mission a le même type et une livrée non vide.
+function missionLivery(f, fi, u, ui) {
+  const fname = f.name.trim();
+  if (fname === '') return '';
+  const groups = missionFlights().filter(g => typeof g.groupName === 'string' && g.groupName.trim() === fname && (f.coalition === '' || g.coalition === f.coalition));
+  if (groups.length !== 1) return '';
+  const tus = Array.isArray(groups[0].units) ? groups[0].units.filter(isObj) : [], used = new Set(), map = new Array(f.units.length).fill(null);
+  f.units.forEach((x, i) => {
+    const j = tus.findIndex((tu, k) => !used.has(k) && tu.name === unitLabel(f, fi, x, i));
+    if (j >= 0) { used.add(j); map[i] = tus[j]; }
+  });
+  f.units.forEach((x, i) => {
+    if (map[i]) return;
+    const j = tus.findIndex((tu, k) => !used.has(k));
+    if (j >= 0) { used.add(j); map[i] = tus[j]; }
+  });
+  const mu = map[ui];
+  return mu && mu.type === u.type && typeof mu.liveryId === 'string' && mu.liveryId.trim() !== '' ? mu.liveryId.trim() : '';
+}
+// La livrée par défaut d'une unité qui a un type, dans l'ordre : celle de la mission d'HQ ; la livrée par défaut du type déclarée dans Wing (si elle est dans la liste du type,
+// à la casse près : le nom s'écrit alors comme la liste) ; la première de la liste du type. '' sans type, ou si la liste est vide.
+function liveryAuto(f, fi, u, ui) {
+  if (u.type === '') return '';
+  const m = missionLivery(f, fi, u, ui);
+  if (m !== '') return m;
+  const names = liveriesFor(u.type), defs = wingRead().defs, w = impHas(defs, u.type) && typeof defs[u.type] === 'string' ? defs[u.type].trim().toLowerCase() : '';
+  const hit = w === '' ? undefined : names.find(n => n.toLowerCase() === w);
+  return hit !== undefined ? hit : (names.length ? names[0] : '');
+}
+function liveryShown(f, fi, u, ui) { const v = liveryValue(u); return v !== '' ? v : liveryAuto(f, fi, u, ui); }
+// Les options du champ d'une unité : la liste du type, sans « Inchangée » ; la valeur courante est le nom affiché. Le jeu lit les livrées sans tenir compte de la casse : une valeur égale
+// à un nom de la liste à la casse près prend la place de ce nom (sa valeur, son libellé, à sa place dans le tri) : un seul nom, et l'export garde l'écriture de l'unité.
+// Une valeur qu'aucun nom n'égale à la casse près reste une option hors liste, telle quelle, en tête. Seule une liste vide sans valeur garde « Inchangée » (repli).
+function liveryOptions(f, fi, u, ui) {
   let names = liveriesFor(u.type);
-  const cur = liveryValue(u), opts = [{ v: '', l: t('u.livery.keep') }];
+  const cur = liveryShown(f, fi, u, ui), opts = [];
   if (cur !== '') {
     const k = names.findIndex(n => n.toLowerCase() === cur.toLowerCase());
     if (k >= 0) { names = names.slice(); names[k] = cur; names.sort(livCmp); }
     else opts.push({ v: cur, l: cur });
-  }
+  } else opts.push({ v: '', l: t('u.livery.keep') });
   return opts.concat(names.map(n => ({ v: n, l: n })));
 }
-// wing_config_v1 a changé (HQ, Wing) : les listes de livrées se refont sur place, la valeur de chaque unité reste choisie.
-function refreshLiveryLists() {
-  document.querySelectorAll('#col-left select[data-k="livery"]').forEach(sel => {
-    const fe = sel.closest('.fc-flight'), f = fe && S.flights[Number(fe.getAttribute('data-f'))], u = f && f.units[Number(sel.getAttribute('data-u'))];
+// La mission d'HQ, wing_config_v1 ou un nom a changé : les listes de livrées se refont sur place (celles de root, sinon de la page), le nom affiché suit ; une liste ouverte sur un champ refait se ferme.
+function refreshLiveryLists(root) {
+  (root || document.getElementById('col-left')).querySelectorAll('select[data-k="livery"]').forEach(sel => {
+    const fe = sel.closest('.fc-flight'), fi = fe ? Number(fe.getAttribute('data-f')) : -1, f = S.flights[fi], ui = Number(sel.getAttribute('data-u')), u = f && f.units[ui];
     if (!u || u.type === '') return;
     if (TBM.cur && TBM.cur.sel === sel) tbmClose(false);
-    fillLiverySelect(sel, u);
+    fillLiverySelect(sel, f, fi, u, ui);
   });
 }
-// Les options d'un champ Livrée, refaites sur place : la valeur de l'unité y reste choisie.
-function fillLiverySelect(sel, u) { sel.innerHTML = optionsHtml(liveryOptions(u), liveryValue(u)); }
+// Les options d'un champ Livrée, refaites sur place : le nom affiché y reste choisi.
+function fillLiverySelect(sel, f, fi, u, ui) { sel.innerHTML = optionsHtml(liveryOptions(f, fi, u, ui), liveryShown(f, fi, u, ui)); }
 
 // ----- Les points d'une route du groupe (le paquet les porte tels quels) -----
 function routeKeys(points) { return isObj(points) ? Object.keys(points).filter(k => /^\d+$/.test(k)).sort((a, b) => a - b) : []; }
@@ -3231,7 +3277,7 @@ function commonOrVaried(values, textOne, textVaried) {
   return values.every(x => x === values[0]) ? textOne(values[0]) : textVaried;
 }
 function clipText(s, max) { return s.length > max ? s.slice(0, max) + '…' : s; }
-function flightSummary(f) {
+function flightSummary(f, fi) {
   const counts = [];       // [type, nombre], dans l'ordre des unités
   f.units.forEach(u => { const c = counts.filter(x => x[0] === u.type)[0]; if (c) c[1]++; else counts.push([u.type, 1]); });
   const parts = [counts.length ? counts.map(c => c[1] + ' × ' + typeLabel(c[0])).join(' + ') : t('fl.nounit')];
@@ -3241,7 +3287,7 @@ function flightSummary(f) {
   if (radios.some(n => n > 0)) parts.push(commonOrVaried(radios, n => tf('sum.radios', n), t('sum.radios.var')));
   const loadouts = f.units.map(u => (u.loadout ? loadoutSummary(u.loadout) : ''));
   if (loadouts.some(x => x !== '')) parts.push(commonOrVaried(loadouts, x => x, t('sum.loadout.var')));
-  const liveries = f.units.map(u => u.livery.trim());
+  const liveries = f.units.map((u, ui) => liveryShown(f, fi, u, ui));
   if (liveries.some(x => x !== '')) parts.push(commonOrVaried(liveries, x => tf('sum.livery', clipText(x, SUMMARY_LIVERY_MAX)), t('sum.livery.var')));
   return parts.join(' · ');
 }
@@ -3250,7 +3296,8 @@ function flightSummary(f) {
 function unitSummary(f, fi, u, ui) {
   const parts = [unitLabel(f, fi, u, ui), typeLabel(u.type)];
   if (u.callsign.trim() !== '') parts.push(u.callsign.trim());
-  if (u.livery.trim() !== '') parts.push(tf('sum.livery', clipText(u.livery.trim(), SUMMARY_LIVERY_MAX)));
+  const lv = liveryShown(f, fi, u, ui);
+  if (lv !== '') parts.push(tf('sum.livery', clipText(lv, SUMMARY_LIVERY_MAX)));
   if (u.loadout) parts.push(loadoutSummary(u.loadout));
   return parts.join(' · ');
 }
@@ -3337,7 +3384,7 @@ function buildPackage() {
       groupName: f.name.trim(), coalition: f.coalition || null, groupFrequency: null,
       route: f.route ? { points: clone(f.route.points) } : null,
       units: f.units.map((u, ui) => {
-        const o = { name: unitLabel(f, fi, u, ui), type: u.type, callsign: csValue(u), liveryId: u.livery.trim() || null, radios: unitRadiosOut(f, u), payload: unitPayloadOut(f, u) };
+        const o = { name: unitLabel(f, fi, u, ui), type: u.type, callsign: csValue(u), liveryId: liveryShown(f, fi, u, ui) || null, radios: unitRadiosOut(f, u), payload: unitPayloadOut(f, u) };
         if (u.onboard.trim()) o.onboardNum = u.onboard.trim();
         return o;
       })
@@ -3413,7 +3460,7 @@ function flightHtml(f, fi) {
       <button type="button" class="fc-fold" data-act="fold" aria-expanded="${open}" aria-label="${esc(foldLabel(f, fi, open))}"><span class="fc-chev" aria-hidden="true"></span><span class="fc-ftitle">${esc(flightLabel(f, fi))}</span></button>
       ${f.units.length ? `<span class="snap-flight-tag">${esc(modTypesLabel(f))}</span>` : ''}<span class="snap-flight-tag">${esc(f.units.length ? unitsLabel(f.units.length) : t('fl.nounit'))}</span>
       <button type="button" class="pk-x" data-act="rm-flight" aria-label="${esc(t('fl.remove'))}" title="${esc(t('fl.remove'))}">✕</button>
-      <div class="fc-fsum">${esc(flightSummary(f))}</div>
+      <div class="fc-fsum">${esc(flightSummary(f, fi))}</div>
     </div>
     <div class="fc-fbody"${open ? '' : ' hidden'}>
       ${flightFieldsHtml(f)}<div class="fc-depart" hidden></div>${routeHtml(f)}
@@ -3438,7 +3485,7 @@ function unitHtml(f, fi, u, ui) {
       ${fieldHtml(t('u.name'), inputHtml(`${at} data-k="uname"`, u.name, unitDefaultName(f, fi, ui)))}
       ${fieldHtml(t('u.callsign'), inputHtml(`${at} data-k="callsign"`, u.callsign, t('u.opt')))}
       ${fieldHtml(t('u.onboard'), inputHtml(`${at} data-k="onboard"`, u.onboard, t('u.opt')))}
-      ${u.type === '' ? '' : fieldHtml(t('u.livery'), selectHtml(`${at} data-k="livery"`, t('u.livery'), liveryOptions(u), liveryValue(u)))}
+      ${u.type === '' ? '' : fieldHtml(t('u.livery'), selectHtml(`${at} data-k="livery"`, t('u.livery'), liveryOptions(f, fi, u, ui), liveryShown(f, fi, u, ui)))}
     </div>
     ${u.type === '' ? `<p class="ui-note fc-notype">${esc(t('u.notype'))}</p>` : unitSettingsHtml(f, fi, u, ui, rk, at)}
   </div></div>`;
@@ -3508,7 +3555,7 @@ function refreshSummaries() {
   S.flights.forEach((f, fi) => {
     const head = flightEl(fi);
     if (!head) return;
-    head.querySelector('.fc-fsum').textContent = flightSummary(f);
+    head.querySelector('.fc-fsum').textContent = flightSummary(f, fi);
     f.units.forEach((u, ui) => {
       const root = unitEl(fi, ui);
       if (!root) return;
@@ -4288,8 +4335,8 @@ function onInput(e) {
   if (k === 'cmp-name') { UI.cmp.name = el.value; return; }
   const fe = el.closest('.fc-flight'), fi = fe ? Number(fe.getAttribute('data-f')) : -1, f = S.flights[fi];
   const u = f && el.hasAttribute('data-u') ? f.units[Number(el.getAttribute('data-u'))] : null;
-  if (k === 'name') { f.name = el.value; paintFlightName(f, fi, fe); paintCmpNames(); if (fi === S.sel.f) renderRouteBlock(); }
-  else if (k === 'uname') { u.name = el.value; paintCmpNames(); }
+  if (k === 'name') { f.name = el.value; paintFlightName(f, fi, fe); paintCmpNames(); if (fi === S.sel.f) renderRouteBlock(); refreshLiveryLists(fe); }
+  else if (k === 'uname') { u.name = el.value; paintCmpNames(); refreshLiveryLists(fe); }
   else if (k === 'callsign') u.callsign = el.value;
   else if (k === 'onboard') u.onboard = el.value;
   else if (k === 'chan') {
@@ -4363,7 +4410,7 @@ function commitLoadoutField(k, el) {
   if (k === 'fuel') paintFuelBar(fuelPct(v, lim), true);
   refreshAll();
 }
-// Le type d'une unité change : ses radios et son emport ne valent plus (ils suivent le type) ; la livrée reste si le nouveau type l'a, sinon elle revient à « Inchangée ». S'il y en a à perdre, une confirmation ; refusée, la liste revient à l'ancien type.
+// Le type d'une unité change : ses radios et son emport ne valent plus (ils suivent le type) ; la livrée choisie reste si le nouveau type l'a, sinon l'unité reprend sa livrée par défaut. S'il y en a à perdre, une confirmation ; refusée, la liste revient à l'ancien type.
 async function changeUnitType(f, fi, ui, el) {
   const u = f.units[ui], nt = el.value;
   if (!u || nt === u.type || PAYLOAD_TYPES.indexOf(nt) < 0) return;
@@ -4371,7 +4418,7 @@ async function changeUnitType(f, fi, ui, el) {
   if (u.type === nt || f.units[ui] !== u) return;
   u.type = nt; u.radios = {}; u.loadout = null; REFUSED.delete(u);
   const lv = u.livery.trim().toLowerCase();
-  if (!liveriesFor(nt).some(n => n.toLowerCase() === lv)) u.livery = '';       // une livrée que le nouveau type n'a pas (à la casse et aux espaces de bout près) revient à « Inchangée »
+  if (!liveriesFor(nt).some(n => n.toLowerCase() === lv)) u.livery = '';       // une livrée choisie que le nouveau type n'a pas (à la casse et aux espaces de bout près) s'efface : l'unité reprend son défaut
   Object.assign(UI.cmp, { saving: false, err: '', st: null });
   renderAll();
 }
@@ -4385,8 +4432,8 @@ function onChange(e) {
   if (LO_FIELDS.indexOf(k) >= 0) { commitLoadoutField(k, el); return; }
   const fe = el.closest('.fc-flight'), f = fe && S.flights[Number(fe.getAttribute('data-f'))];
   if (k === 'utype') changeUnitType(f, Number(fe.getAttribute('data-f')), Number(el.getAttribute('data-u')), el);
-  else if (k === 'livery') { const u = f.units[Number(el.getAttribute('data-u'))]; if (u) { u.livery = el.value; fillLiverySelect(el, u); refreshAll(); } }
-  else if (k === 'coalition') { f.coalition = el.value; if (S.flights.indexOf(f) === S.sel.f) renderRouteBlock(); refreshAll(); }
+  else if (k === 'livery') { const u = f.units[Number(el.getAttribute('data-u'))]; if (u) { const ui = Number(el.getAttribute('data-u')); u.livery = el.value; fillLiverySelect(el, f, Number(fe.getAttribute('data-f')), u, ui); refreshAll(); } }
+  else if (k === 'coalition') { f.coalition = el.value; if (S.flights.indexOf(f) === S.sel.f) renderRouteBlock(); refreshLiveryLists(fe); refreshAll(); }
 }
 function onToggle(e) {
   const d = e.target, key = d && d.getAttribute && d.tagName === 'DETAILS' ? d.getAttribute('data-key') : null;
@@ -4529,7 +4576,7 @@ function init() {
   renderAll();
   if (taken.changed) showToast(taken.toast, 4500);
   window.addEventListener('pagehide', flushWork);
-  window.addEventListener('storage', e => { routeStorage(e); gsStorage(e); if (e.key === KEY_THEATRE) thFollow(); if (e.key === KEY_UNITS) udFollow(); if (e.key === KEY_WING || e.key === null) refreshLiveryLists(); });
+  window.addEventListener('storage', e => { routeStorage(e); gsStorage(e); if (e.key === KEY_THEATRE) thFollow(); if (e.key === KEY_UNITS) udFollow(); if (e.key === KEY_WING || e.key === KEY_HQ_MISSION || e.key === null) { refreshLiveryLists(); refreshSummaries(); } });
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushWork(); else { gsPull(); routeTakeover(); } });
 }
 init();
@@ -4625,8 +4672,21 @@ def check(html):
     ok('input[data-k="livery"]' not in html and 'data-k="livery" role="combobox"' not in html, 'le champ Livrée est une liste, plus un texte libre')
     ok(not re.search(r'\blvOpen\b|\blvItems\b|\blvChoose\b|\blvClose\b|\bisLiveryField\b|\bnoteLiveries\s*:|\bseenLiv\b|u\.livery\.ph', html), 'plus de panneau de suggestions de livrée ni de suggestions tirées des paquets, de la mission d\'HQ ou des autres unités')
     ok('n.toLowerCase() === cur.toLowerCase()' in html and 'names[k] = cur' in html, 'une livrée égale à un nom de la liste à la casse près prend la place de ce nom (un seul nom, son écriture à elle)')
-    ok(not re.search(r'\bhqMission\b|\breadHqMission\b|\bHQ_MISSION_SCHEMAS\b|\bUI\.hq\b', html), 'plus de lecture de la mission d\'HQ dans le module (l\'import la lit par le bloc commun)')
-    ok("if (!liveriesFor(nt).some(n => n.toLowerCase() === lv)) u.livery = '';" in html, "changer le type d'une unité remet sa livrée à « Inchangée » si le nouveau type ne l'a pas")
+    ok(not re.search(r'\bhqMission\b|\breadHqMission\b|\bHQ_MISSION_SCHEMAS\b|\bUI\.hq\b', html), 'plus de lecteur de la mission d\'HQ sous ses anciens noms (hqMission, readHqMission, UI.hq)')
+    fns = re.findall(r'^function (\w+)\(', JS_APP, re.M)
+    def fn_body(name):
+        mm = re.search(r'^function %s\(.*?^}' % name, JS_APP, re.S | re.M)
+        return mm.group(0) if mm else ''
+    ok(JS_APP.count('lsGet(KEY_HQ_MISSION)') == 1 and 'lsGet(KEY_HQ_MISSION)' in fn_body('missionFlights'), 'la mission d\'HQ n\'est lue que par missionFlights (le bloc d\'import commun lit la sienne pour l\'import)')
+    ok(len(re.findall(r'\bmissionFlights\(', JS_APP)) == 2 and 'missionFlights()' in fn_body('missionLivery'), 'missionFlights n\'est appelée que par missionLivery, que liveryAuto seule appelle : ' + ', '.join(f for f in fns if 'missionLivery(' in fn_body(f)))
+    ok([f for f in fns if 'missionLivery(' in fn_body(f) and f != 'missionLivery'] == ['liveryAuto'], 'missionLivery n\'est appelée que par liveryAuto')
+    ok("if (!liveriesFor(nt).some(n => n.toLowerCase() === lv)) u.livery = '';" in html, "changer le type d'une unité efface sa livrée choisie si le nouveau type ne l'a pas (l'unité reprend alors son défaut)")
+    lo = fn_body('liveryOptions')
+    ok("u.livery.keep" in lo and lo.count("t('u.livery.keep')") == 1 and re.search(r"else opts\.push\(\{ v: '', l: t\('u\.livery\.keep'\) \}\)", lo) is not None, "« Inchangée » n'est plus en tête : seul le repli d'une liste vide sans valeur la garde")
+    ok("const v = liveryValue(u); return v !== '' ? v : liveryAuto(f, fi, u, ui);" in html, 'liveryShown : le choix de l\'utilisateur, sinon liveryAuto')
+    ok("liveryId: liveryShown(f, fi, u, ui) || null" in html and 'liveryId: u.livery' not in html, 'l\'export écrit le nom affiché')
+    ok(all(not re.search(r'\bu\.livery(?![.\w])', fn_body(n)) for n in ('flightSummary', 'unitSummary', 'buildPackage', 'liveryOptions', 'liveryAuto', 'missionLivery')), 'les résumés, l\'export et les options ne lisent pas u.livery : ils lisent liveryShown')
+    ok(all(k in html for k in ("e.key === KEY_WING || e.key === KEY_HQ_MISSION || e.key === null", "refreshLiveryLists(fe)")), 'les listes de livrées suivent wing_config_v1, la mission d\'HQ, et un nom ou une coalition changés')
     ok("const KEY_WING = 'wing_config_v1';" in html and 'refreshLiveryLists' in html, 'les listes de livrées lisent wing_config_v1 et suivent son changement')
     scripts = re.findall(r'<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>', html, re.S)
     for i, s in enumerate(scripts):
