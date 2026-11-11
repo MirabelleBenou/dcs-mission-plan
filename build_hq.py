@@ -509,10 +509,10 @@ select[data-tbm-src] {{ display: none !important; }}
 .tb-brand-sub {{ font-weight: 500; }}
 .tb-version {{ font-family: 'Roboto Mono', monospace; }}
 @media (max-width: 1359px) {{ .tb-brand-main, .tb-brand-sub, .tb-brand + .tb-sep, .tb-version {{ display: none; }} .tb-brand-short {{ display: inline; }} }}
-@media (max-width: 1599px) {{ .tb-classif {{ display: none; }} }}   /* le tampon de décor tombe sous 1 600 px, avec le sous-titre du sigle (lot mp-hq-disposition, addendum 2) */
-@media (max-width: 1599px) {{ .tb-brand-sub {{ display: none; }} }}   /* le sous-titre du sigle cède la place au tampon d'escadre du shell et au libellé des boutons (la barre mesurée dans le shell, FR, tampon de 9 lettres) */
+@media (max-width: 1699px) {{ .tb-classif {{ display: none; }} }}   /* le tampon de décor tombe sous 1 700 px (1 600 avant « Annuler » dans la barre), avec le sous-titre du sigle (lot mp-hq-disposition, addendum 2) */
+@media (max-width: 1699px) {{ .tb-brand-sub {{ display: none; }} }}   /* le sous-titre du sigle cède la place au tampon d'escadre du shell et au libellé des boutons (la barre mesurée dans le shell, FR, tampon de 9 lettres) */
 .tb-btn {{ width: auto; height: 38px; min-width: 38px; padding: 0 12px; gap: 6px; font-family: var(--f-ui); font-weight: 500; letter-spacing: 1.5px; font-size: 12px; text-transform: uppercase; white-space: nowrap; }}
-@media (max-width: 1149px) {{ .tb-btn .tb-btn-label {{ display: none; }} .tb-btn {{ padding: 0; width: 38px; }} }}   /* 1 150 px : la barre du shell (retour, tampon d'escadre) et cinq boutons libellés en français tiennent ; en dessous, les icônes (lot mp-hq-disposition) */
+@media (max-width: 1249px) {{ .tb-btn .tb-btn-label {{ display: none; }} .tb-btn {{ padding: 0; width: 38px; }} }}   /* 1 250 px (1 150 avant « Annuler » dans la barre) : la barre du shell (retour, tampon d'escadre) et cinq boutons libellés en français tiennent ; en dessous, les icônes (lot mp-hq-disposition) */
 @media (max-width: 479px) {{ .tb-btn {{ width: 34px; min-width: 34px; }} }}
 
 /* ======== MAIN LAYOUT ======== */
@@ -862,8 +862,8 @@ select[data-tbm-src] {{ display: none !important; }}
   background: var(--amber); color: #15120c; border-radius: 9px; font-family: 'Roboto Mono', 'Courier New', monospace; font-weight: 400; font-size: 11px; line-height: 1; letter-spacing: 0;
 }}
 .tb-count[hidden] {{ display: none; }}
-/* sans libellé (sous 1 150 px), la pastille se pose au coin du bouton, dans son cadre : elle ne déborde pas sur le bouton voisin */
-@media (max-width: 1149px) {{ .tb-btn > .tb-count {{ position: absolute; top: 2px; right: 2px; }} }}
+/* sans libellé (sous 1 250 px), la pastille se pose au coin du bouton, dans son cadre : elle ne déborde pas sur le bouton voisin */
+@media (max-width: 1249px) {{ .tb-btn > .tb-count {{ position: absolute; top: 2px; right: 2px; }} }}
 
 /* Sans mission : le centre de la page */
 .hq-empty {{ min-height: calc(100vh - 60px - 120px); min-height: calc(100dvh - 60px - 120px); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center; padding: 24px 16px; }}
@@ -5913,7 +5913,7 @@ function hqChrome() {{
   const empty = hqEl('hq-empty'), page = hqEl('hq-page');
   if (empty) empty.hidden = snap;
   if (page) page.hidden = !snap;
-  // sous 1 150 px les boutons n'ont plus de libellé : le nom accessible et l'infobulle le portent
+  // sous 1 250 px les boutons n'ont plus de libellé : le nom accessible et l'infobulle le portent
   const open = hqEl('btn-open');
   if (open) {{ open.disabled = busy; open.title = t('tb.open.tip'); open.setAttribute('aria-label', t('tb.open')); }}
   const save = hqEl('btn-save');
