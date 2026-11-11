@@ -5437,5 +5437,9 @@ if sensor_pos < vignette_pos:
   print("  [OK] ordre : preset → vignette")
 else:
   print(f"  [FAIL] ordre incorrect preset={sensor_pos} vignette={vignette_pos}")
+# Revue : une valeur du bloc d'informations s'arrête avant ce qui la suit, la ligne Class se centre sur la valeur dessinée
+grep_present("function fitValue(value, avail)", "bloc d'informations : la place d'une valeur se mesure (fitValue)")
+grep_present("- valX - s(10))", "bloc d'informations : la valeur s'arrête s(10) avant le libellé suivant")
+grep_present("const totalClassW = classLabelW + classFit.w + s(80)", "bloc d'informations : Class se centre sur la valeur dessinée")
 
 print("\n[BUILD DONE]")

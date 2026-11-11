@@ -1328,6 +1328,10 @@ def main():
 
     print(f'\n[3/3] Génération {OUT_FILE}…')
     html = build_html(module_html_js, tile_uris)
+    # Retour au hub : le clavier quitte l'outil fermé (sinon Ctrl+S ouvrirait la fenêtre d'enregistrement de l'outil masqué)
+    if "landing.focus({ preventScroll: true })" not in html:
+        raise SystemExit("[ERREUR] goHub ne rend plus le clavier au hub")
+    print('  [OK] goHub rend le clavier au hub')
 
     out_path = os.path.join(SCRIPT_DIR, OUT_FILE)
     os.makedirs(os.path.dirname(out_path), exist_ok=True)

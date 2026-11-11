@@ -3322,6 +3322,9 @@ grep_absent('MT_onModuleSave', 'MT_onModuleSave absent')
 grep_absent('app-header',      'app-header absent')
 grep_absent('4th VEAW',        '4th VEAW absent')
 grep_absent('KHR-26',          'KHR-26 absent')
+# Les deux formats du Briefing Generator s'appellent Standard et Avancé, partout dans le manuel
+for _old in ('brief simplifié', 'brief complet', 'quick brief', 'full brief', 'simplifiée', 'quick-brief'):
+    grep_absent(_old, 'ancien nom de format « ' + _old + ' » absent')
 
 # Vérifier les paires lang-block
 fr_count = src.count('data-lang="fr"')
