@@ -11404,15 +11404,22 @@ function liveriesFor(type) {
   const add = n => { const k = n.toLowerCase(); if (n !== '' && !seen.has(k)) { seen.add(k); out.push(n); } };
   (impHas(LIVERIES_DEFAULT, type) ? LIVERIES_DEFAULT[type] : []).forEach(add);
   wingLiveries().forEach(x => { if (x.aircraft.indexOf(type) >= 0) add(x.name.trim()); });
-  return out.sort((a, b) => { const x = a.toLowerCase(), y = b.toLowerCase(); return x < y ? -1 : (x > y ? 1 : (a < b ? -1 : (a > b ? 1 : 0))); });
+  return out.sort(livCmp);
 }
-// Les options du champ d'une unité : « Inchangée », puis (si elle n'est pas dans la liste du type) la valeur de l'unité telle quelle, puis la liste.
+function livCmp(a, b) { const x = a.toLowerCase(), y = b.toLowerCase(); return x < y ? -1 : (x > y ? 1 : (a < b ? -1 : (a > b ? 1 : 0))); }
+// Les options du champ d'une unité : « Inchangée », puis la liste du type. Le jeu lit les livrées sans tenir compte de la casse : une valeur égale à un nom
+// de la liste à la casse près prend la place de ce nom (sa valeur, son libellé, à sa place dans le tri) : un seul nom, et l'export garde l'écriture de l'unité.
+// Une valeur qu'aucun nom n'égale à la casse près reste une option hors liste, telle quelle, en tête après « Inchangée ».
 function liveryValue(u) { return u.livery.trim() === '' ? '' : u.livery; }
 function liveryOptions(u) {
-  const list = liveriesFor(u.type), cur = liveryValue(u);
-  const opts = [{ v: '', l: t('u.livery.keep') }];
-  if (cur !== '' && list.indexOf(cur) < 0) opts.push({ v: cur, l: cur });
-  return opts.concat(list.map(n => ({ v: n, l: n })));
+  let names = liveriesFor(u.type);
+  const cur = liveryValue(u), opts = [{ v: '', l: t('u.livery.keep') }];
+  if (cur !== '') {
+    const k = names.findIndex(n => n.toLowerCase() === cur.toLowerCase());
+    if (k >= 0) { names = names.slice(); names[k] = cur; names.sort(livCmp); }
+    else opts.push({ v: cur, l: cur });
+  }
+  return opts.concat(names.map(n => ({ v: n, l: n })));
 }
 // wing_config_v1 a changé (HQ, Wing) : les listes de livrées se refont sur place, la valeur de chaque unité reste choisie.
 function refreshLiveryLists() {
