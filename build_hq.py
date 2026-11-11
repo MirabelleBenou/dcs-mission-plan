@@ -823,13 +823,30 @@ select[data-tbm-src] {{ display: none !important; }}
 .fn-del .pk-flight-head, .fn-del .snap-meta {{ word-break: break-word; }}
 .ui-wide .fn-del {{ max-height: 56vh; }}
 .fn-head {{ margin: 0 0 10px; word-break: break-word; }}
-.dsx-wh {{ align-items: center; }}
-.dsx-off {{ opacity: .6; }}
+/* La fenêtre Dynamic Spawn : une carte par groupe, trois étapes (lot mp-hq-dyn-simplifier) */
+.dsx-card {{ border: 1px solid rgba(128,116,84,.55); border-radius: 3px; padding: 10px 12px 12px; margin: 0 0 12px; background: rgba(0,0,0,.12); }}
+.dsx-head {{ display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-family: var(--f-stencil); letter-spacing: 1px; color: var(--paper-light); }}
+.dsx-name {{ color: var(--amber); margin-right: 4px; word-break: break-word; }}
+.dsx-badge {{ font-family: var(--f-stencil); font-size: 11px; letter-spacing: 1px; padding: 2px 7px; border-radius: 2px; background: var(--amber); color: #14110a; }}
+.dsx-step {{ margin-top: 12px; }}
+.dsx-later {{ opacity: .4; }}
+.dsx-step-t {{ font-family: var(--f-stencil); font-size: 12px; letter-spacing: 1px; color: var(--amber); text-transform: uppercase; word-break: break-word; }}
+.dsx-n {{ display: inline-block; min-width: 18px; height: 18px; line-height: 18px; text-align: center; border: 1px solid var(--amber); border-radius: 50%; margin-right: 6px; font-size: 11px; }}
+.dsx-sub {{ margin: 8px 0 2px; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--khaki-light); }}
+.dsx-help {{ font-family: var(--f-typewriter); margin: 6px 0 8px; font-size: 12px; line-height: 1.5; color: var(--khaki-light); }}
+.dsx-row {{ display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }}
+.dsx-row .dsx-help {{ flex: 1 1 280px; margin: 4px 0; }}
+.dsx-wh {{ display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; min-height: 44px; }}
+.dsx-wh .pk-chk {{ min-height: 44px; min-width: 0; }}
+.dsx-wh .snap-meta {{ font-size: 11px; }}
 .dsx-lib {{ word-break: break-word; }}
+.dsx-btn {{ min-height: 44px; padding: 4px 14px; font-size: 11px; }}
+.dsx-why {{ margin-top: 8px; }}
+.dsx-why > summary {{ cursor: pointer; font-size: 11px; color: var(--khaki-light); min-height: 44px; display: flex; align-items: center; }}
+.dsx-why p {{ margin: 4px 0; font-size: 11px; line-height: 1.5; color: var(--khaki-light); word-break: break-word; }}
 @media (max-width: 439px) {{
   .dsx-wh {{ align-items: flex-start; }}
   .dsx-lib {{ order: 2; flex: 0 0 100%; padding-left: 26px; box-sizing: border-box; }}
-  .dsx-hot {{ order: 3; flex: 0 0 100%; padding-left: 26px; box-sizing: border-box; }}
 }}
 
 /* ======== LA PAGE AUTOUR DE LA MISSION (lot mp-hq-disposition) ======== */
@@ -1426,15 +1443,35 @@ const I18N = {{
     'fn.del.title': 'Supprimer les groupes cochés',
     'fn.del.go': 'Supprimer',
     'fn.dyn.title': 'Dynamic Spawn',
-    'fn.dyn.go': 'Valider',
+    'fn.dyn.go': 'Appliquer à la mission',
     'dyn.w.prereq': 'Seuls les aérodromes, FARP et navires dont le Dynamic Spawn est activé dans l’éditeur de mission, et dont la liste d’appareils contient le type du template, sont proposés pour un template. HQ n’active jamais le Dynamic Spawn et ne crée jamais un type d’appareil.',
-    'dyn.w.template': 'Template',
-    'dyn.w.hot': 'moteur tournant',
+    'dyn.w.s1': 'Template',
+    'dyn.w.s1ok': 'Template ✓',
+    'dyn.w.s2': 'Bases où il apparaît · {{0}} — {{1}} cochée(s) sur {{2}}',
+    'dyn.w.s2nocount': 'Bases où il apparaît · {{0}}',
+    'dyn.w.s2off': 'Bases où il apparaît',
+    'dyn.w.s3': 'Départ moteur tournant',
+    'dyn.w.later': 'Après l’étape 1.',
+    'dyn.w.plain': 'Groupe ordinaire.',
+    'dyn.w.help1': 'Les {{0}} qui apparaissent par Dynamic Spawn sur les bases choisies à l’étape 2 prennent la configuration de ce groupe (emport, radios, livrée).',
+    'dyn.w.make': '★ Faire un template',
+    'dyn.w.drop': 'Retirer le template',
+    'dyn.w.keep': 'Garder le template',
+    'dyn.w.badge': 'TEMPLATE',
+    'dyn.w.pk1': 'Déjà liées à ce template',
+    'dyn.w.pk2': 'Liées à un autre template — cocher le remplace',
+    'dyn.w.pk3': 'Sans template {{0}}',
+    'dyn.w.today': 'aujourd’hui : {{0}}',
+    'dyn.w.why': 'Pourquoi d’autres bases n’apparaissent pas ?',
+    'dyn.w.help3': 'Réglage de la base : il vaut pour tous les appareils qui y apparaissent par Dynamic Spawn.',
+    'dyn.w.hotline': '{{0}} — moteur tournant',
+    'dyn.w.hotnone': 'Cocher une base à l’étape 2.',
+    'dyn.w.hotnoset': 'Les bases cochées n’ont pas ce réglage dans la mission.',
     'dyn.w.replaces': 'remplace {{0}}',
     'dyn.w.linked': 'lié à {{0}}',
-    'dyn.w.wh.absent': 'Ce .miz n’a pas de fichier warehouses : HQ ne peut pas poser de lien Dynamic Spawn. Marquer ou démarquer un template reste possible.',
-    'dyn.w.wh.unreadable': 'Le fichier warehouses de ce .miz ne se lit pas : HQ ne peut pas poser de lien Dynamic Spawn. Marquer un template reste possible.',
-    'dyn.w.unmarkBad': 'Démarquer ce template demande de remettre ses liens à zéro dans warehouses, qui ne se lit pas. Rien n’a été écrit.',
+    'dyn.w.wh.absent': 'Ce .miz n’a pas de fichier warehouses : HQ ne peut pas poser de lien Dynamic Spawn. Faire ou retirer un template reste possible.',
+    'dyn.w.wh.unreadable': 'Le fichier warehouses de ce .miz ne se lit pas : HQ ne peut pas poser de lien Dynamic Spawn. Faire un template reste possible.',
+    'dyn.w.unmarkBad': 'Retirer ce template demande de remettre ses liens à zéro dans warehouses, qui ne se lit pas. Rien n’a été écrit.',
     'dyn.w.nochange': 'Aucun changement à écrire.',
     'dyn.w.rep.n.one': '{{0}} template marqué',
     'dyn.w.rep.n.many': '{{0}} templates marqués',
@@ -1447,7 +1484,7 @@ const I18N = {{
     'dyn.w.rep.h.one': '{{0}} moteur changé',
     'dyn.w.rep.h.many': '{{0}} moteurs changés',
     'dyn.w.rep.mark': '✓ {{0}} ({{1}}) : template marqué',
-    'dyn.w.rep.unmark': '✓ {{0}} ({{1}}) : template démarqué',
+    'dyn.w.rep.unmark': '✓ {{0}} ({{1}}) : template retiré',
     'dyn.w.rep.link': '✓ {{1}} ({{2}}) : lié à {{0}}',
     'dyn.w.rep.repl': '✓ {{1}} ({{2}}) : lié à {{0}}, remplace {{3}}',
     'dyn.w.rep.unlink': '✓ {{1}} ({{2}}) : lien vers {{0}} remis à zéro',
@@ -1476,7 +1513,7 @@ const I18N = {{
     'dyn.w.offOnly': '{{0}} aérodromes et FARP, sans ce type',
     'dyn.w.notype': 'Non offerts — type {{0}} absent : {{1}}',
     'dyn.w.clash': '⚠ {{0}} : deux templates {{1}} cochés — un seul par type',
-    'dyn.w.unlink': 'Démarquer ce template remet à zéro ses liens : {{0}}',
+    'dyn.w.unlink': 'Retirer le template remet à zéro ses liens : {{0}}',
     'pk.del.dyn': 'Dynamic Spawn : {{0}} — lien remis à zéro',
     'pk.del.trig': 'Déclencheur « {{0}} » ({{1}}) — laissé tel quel, à corriger dans l’éditeur',
     'pk.del.task': 'Tâche {{0}} du groupe « {{1}} » — laissée telle quelle',
@@ -1795,15 +1832,35 @@ const I18N = {{
     'fn.del.title': 'Delete checked groups',
     'fn.del.go': 'Delete',
     'fn.dyn.title': 'Dynamic Spawn',
-    'fn.dyn.go': 'Confirm',
+    'fn.dyn.go': 'Apply to the mission',
     'dyn.w.prereq': 'Only airfields, FARPs and ships that have Dynamic Spawn enabled in the mission editor, and whose aircraft list contains the template’s type, are offered for a template. HQ never enables Dynamic Spawn and never creates an aircraft type.',
-    'dyn.w.template': 'Template',
-    'dyn.w.hot': 'hot start',
+    'dyn.w.s1': 'Template',
+    'dyn.w.s1ok': 'Template ✓',
+    'dyn.w.s2': 'Bases where it appears · {{0}} — {{1}} of {{2}} checked',
+    'dyn.w.s2nocount': 'Bases where it appears · {{0}}',
+    'dyn.w.s2off': 'Bases where it appears',
+    'dyn.w.s3': 'Hot start',
+    'dyn.w.later': 'After step 1.',
+    'dyn.w.plain': 'Ordinary group.',
+    'dyn.w.help1': 'The {{0}} that appear through Dynamic Spawn at the bases chosen in step 2 take this group’s configuration (loadout, radios, livery).',
+    'dyn.w.make': '★ Make a template',
+    'dyn.w.drop': 'Remove the template',
+    'dyn.w.keep': 'Keep the template',
+    'dyn.w.badge': 'TEMPLATE',
+    'dyn.w.pk1': 'Already linked to this template',
+    'dyn.w.pk2': 'Linked to another template — checking replaces it',
+    'dyn.w.pk3': 'No {{0}} template',
+    'dyn.w.today': 'currently: {{0}}',
+    'dyn.w.why': 'Why are other bases missing?',
+    'dyn.w.help3': 'A base setting: it applies to every aircraft that appears there through Dynamic Spawn.',
+    'dyn.w.hotline': '{{0}} — hot start',
+    'dyn.w.hotnone': 'Check a base in step 2.',
+    'dyn.w.hotnoset': 'The checked bases have no such setting in the mission.',
     'dyn.w.replaces': 'replaces {{0}}',
     'dyn.w.linked': 'linked to {{0}}',
-    'dyn.w.wh.absent': 'This .miz has no warehouses file: HQ cannot set a Dynamic Spawn link. Marking or unmarking a template is still possible.',
-    'dyn.w.wh.unreadable': 'This .miz’s warehouses file cannot be read: HQ cannot set a Dynamic Spawn link. Marking a template is still possible.',
-    'dyn.w.unmarkBad': 'Unmarking this template requires resetting its links to zero in warehouses, which cannot be read. Nothing has been written.',
+    'dyn.w.wh.absent': 'This .miz has no warehouses file: HQ cannot set a Dynamic Spawn link. Making or removing a template is still possible.',
+    'dyn.w.wh.unreadable': 'This .miz’s warehouses file cannot be read: HQ cannot set a Dynamic Spawn link. Making a template is still possible.',
+    'dyn.w.unmarkBad': 'Removing this template requires resetting its links to zero in warehouses, which cannot be read. Nothing has been written.',
     'dyn.w.nochange': 'Nothing to write.',
     'dyn.w.rep.n.one': '{{0}} template marked',
     'dyn.w.rep.n.many': '{{0}} templates marked',
@@ -1816,7 +1873,7 @@ const I18N = {{
     'dyn.w.rep.h.one': '{{0}} hot start changed',
     'dyn.w.rep.h.many': '{{0}} hot starts changed',
     'dyn.w.rep.mark': '✓ {{0}} ({{1}}): template marked',
-    'dyn.w.rep.unmark': '✓ {{0}} ({{1}}): template unmarked',
+    'dyn.w.rep.unmark': '✓ {{0}} ({{1}}): template removed',
     'dyn.w.rep.link': '✓ {{1}} ({{2}}): linked to {{0}}',
     'dyn.w.rep.repl': '✓ {{1}} ({{2}}): linked to {{0}}, replaces {{3}}',
     'dyn.w.rep.unlink': '✓ {{1}} ({{2}}): link to {{0}} reset to zero',
@@ -1845,7 +1902,7 @@ const I18N = {{
     'dyn.w.offOnly': '{{0}} airfields and FARPs, without this type',
     'dyn.w.notype': 'Not offered — type {{0}} missing: {{1}}',
     'dyn.w.clash': '⚠ {{0}}: two {{1}} templates checked — only one per type',
-    'dyn.w.unlink': 'Unmarking this template resets its links to zero: {{0}}',
+    'dyn.w.unlink': 'Removing the template resets its links to zero: {{0}}',
     'pk.del.dyn': 'Dynamic Spawn: {{0}} — link reset to zero',
     'pk.del.trig': 'Trigger “{{0}}” ({{1}}) — left as is, fix it in the editor',
     'pk.del.task': 'Task {{0}} of group “{{1}}” — left as is',
@@ -5292,43 +5349,84 @@ function dsxSafePlan() {{
   }}
 }}
 function dsxBody() {{
-  const h = escapeHtml, st = DSX.st, own = dsxOwners(DSX), sp = dsxSafePlan();
+  const h = escapeHtml, st = DSX.st, sp = dsxSafePlan();
+  const okWh = DSX.wh.state === 'ok';
+  const step = (n, title, inner, later) => '<div class="dsx-step' + (later ? ' dsx-later' : '') + '"><div class="dsx-step-t"><span class="dsx-n">' + n + '</span>' + h(title) + '</div>' + inner + '</div>';
   let html = '';
-  if (DSX.wh.state !== 'ok') html += '<div class="ui-avert" data-dsx-whwarn="' + DSX.wh.state + '">⚠ ' + h(t('dyn.w.wh.' + DSX.wh.state)) + '</div>';
+  if (!okWh) html += '<div class="ui-avert" data-dsx-whwarn="' + DSX.wh.state + '">⚠ ' + h(t('dyn.w.wh.' + DSX.wh.state)) + '</div>';
   if (sp.err) html += '<div class="ui-avert" data-dsx-error="1">⚠ ' + h(pkErrText(sp.err)) + '</div>';
   const clash = dsxClashes(DSX);
+  const laterHtml = '<div class="snap-meta">' + h(t('dyn.w.later')) + '</div>';
   for (const f of DSX.flights) {{
-    html += '<div class="pk-flight" data-dsx-gid="' + h(String(f.gid)) + '"><div class="pk-flight-head">' + h(f.name) +
-      ' <span class="snap-flight-tag">' + h(f.type) + '</span> <span class="snap-flight-tag">' + h(t('pk.flt.' + f.side, f.side)) + '</span></div>';
-    html += '<label class="pk-chk"><input type="checkbox" data-dsx-tmpl="' + h(String(f.gid)) + '"' + (st.tmpl[f.gid] ? ' checked' : '') + '>' + h(t('dyn.w.template')) + '</label>';
-    if (st.tmpl[f.gid]) {{
-      if (DSX.wh.state === 'ok') {{
-        const all = DSX.wh.whs;
-        const off = all.filter(w => !w.dyn), offT = off.filter(w => f.tk in w.types), noType = all.filter(w => w.dyn && !(f.tk in w.types));
-        if (off.length) {{
-          let who = offT.map(dynWhName).sort(dynCmp).join(', ');
-          const rest = off.length - offT.length;
-          if (rest) who += (who ? tf('dyn.w.offMore', String(rest)) : tf('dyn.w.offOnly', String(rest)));
-          html += '<div class="snap-meta dsx-off" data-dsx-off="1">' + h(tf('dyn.w.off', who)) + '</div>';
+    const gid = String(f.gid), on = !!st.tmpl[f.gid];
+    html += '<div class="dsx-card" data-dsx-gid="' + h(gid) + '"><div class="dsx-head"><span class="dsx-name">' + h(f.name) + '</span>' +
+      '<span class="snap-flight-tag">' + h(f.type) + '</span><span class="snap-flight-tag">' + h(t('pk.flt.' + f.side, f.side)) + '</span>' +
+      (on ? '<span class="dsx-badge">' + h(t('dyn.w.badge')) + '</span>' : '') + '</div>';
+    const help = '<span class="dsx-help">' + h(tf('dyn.w.help1', f.type)) + '</span>';
+    if (!on) {{
+      // 1 · pas template
+      let in1 = '';
+      if (DSX.wasT[f.gid]) {{
+        if (DSX.was[f.gid] && DSX.was[f.gid].length) {{
+          in1 += '<div class="ui-avert" data-dsx-unlink="1">' + h(tf('dyn.w.unlink', DSX.was[f.gid].map(x => x.name + ' (' + x.type + ')').join(', '))) + '</div>';
+          if (DSX.wh.state === 'unreadable') in1 += '<div class="ui-avert" data-dsx-error="1">⚠ ' + h(t('dyn.w.unmarkBad')) + '</div>';
+        }} else if (DSX.wh.state === 'unreadable') {{
+          in1 += '<div class="ui-avert" data-dsx-error="1">⚠ ' + h(t('dyn.w.unmarkBad')) + '</div>';
         }}
-        if (noType.length) html += '<div class="snap-meta dsx-off" data-dsx-off="1">' + h(tf('dyn.w.notype', f.type, noType.map(dynWhName).sort(dynCmp).join(', '))) + '</div>';
-        if (!DSX.off[f.gid].length) html += '<div class="ui-avert">' + h(t('dyn.w.none')) + '</div>';
-        for (const w of DSX.off[f.gid]) {{
-          const cur = w.types[f.tk].gid, on = !!st.link[f.gid][w.key];
-          html += '<div class="pk-parts dsx-wh" data-dsx-wh="' + h(w.key) + '"><label class="pk-chk"><input type="checkbox" data-dsx-link="' + h(f.gid + '#' + w.key) + '"' + (on ? ' checked' : '') + '>' +
-            h(dynWhName(w)) + ' <span class="snap-flight-tag">' + h(t('pk.flt.' + w.side, w.side)) + '</span></label>';
-          if (own[w.key] === f.gid) html += '<label class="pk-chk dsx-hot"><input type="checkbox" data-dsx-hot="' + h(w.key) + '"' + (st.hot[w.key] ? ' checked' : '') + '>' + h(t('dyn.w.hot')) + '</label>';
-          if (cur && cur !== f.gid) html += '<span class="snap-meta dsx-lib" data-dsx-lib="1">' + h(tf(on ? 'dyn.w.replaces' : 'dyn.w.linked', dsxTplName(cur))) + '</span>';
-          html += '</div>';
-          for (const grp of clash) if (grp.length > 1 && grp.some(x => x.f === f && x.w === w)) html += '<div class="ui-avert" data-dsx-clash="1">' + h(tf('dyn.w.clash', dynWhName(w), f.type)) + '</div>';
-        }}
+        in1 += '<button type="button" class="ui-btn dsx-btn" data-dsx-make="' + h(gid) + '">' + h(t('dyn.w.keep')) + '</button>';
+      }} else {{
+        in1 += '<div class="dsx-help"><b>' + h(t('dyn.w.plain')) + '</b> ' + h(tf('dyn.w.help1', f.type)) + '</div>' +
+          '<button type="button" class="ui-btn primary dsx-btn" data-dsx-make="' + h(gid) + '">' + h(t('dyn.w.make')) + '</button>';
       }}
-    }} else if (DSX.was[f.gid] && DSX.was[f.gid].length) {{
-      html += '<div class="ui-avert" data-dsx-unlink="1">' + h(tf('dyn.w.unlink', DSX.was[f.gid].map(x => x.name + ' (' + x.type + ')').join(', '))) + '</div>';
-      if (DSX.wh.state === 'unreadable') html += '<div class="ui-avert" data-dsx-error="1">⚠ ' + h(t('dyn.w.unmarkBad')) + '</div>';
-    }} else if (DSX.wasT[f.gid] && DSX.wh.state === 'unreadable') {{
-      html += '<div class="ui-avert" data-dsx-error="1">⚠ ' + h(t('dyn.w.unmarkBad')) + '</div>';
+      html += step(1, t('dyn.w.s1'), in1, false);
+      html += step(2, t('dyn.w.s2off'), laterHtml, true);
+      html += step(3, t('dyn.w.s3'), laterHtml, true);
+      html += '</div>';
+      continue;
     }}
+    html += step(1, t('dyn.w.s1ok'), '<div class="dsx-row">' + help + '<button type="button" class="ui-btn dsx-btn" data-dsx-drop="' + h(gid) + '">' + h(t('dyn.w.drop')) + '</button></div>', false);
+    // 2 · bases
+    const offs = okWh ? DSX.off[f.gid] : [];
+    const picked = offs.filter(w => st.link[f.gid][w.key]);
+    let in2 = '';
+    if (okWh) {{
+      const all = DSX.wh.whs;
+      if (!offs.length) in2 += '<div class="ui-avert">' + h(t('dyn.w.none')) + '</div>';
+      const row = w => {{
+        const cur = w.types[f.tk].gid, on2 = !!st.link[f.gid][w.key];
+        let r = '<div class="dsx-wh" data-dsx-wh="' + h(w.key) + '"><label class="pk-chk"><input type="checkbox" data-dsx-link="' + h(f.gid + '#' + w.key) + '"' + (on2 ? ' checked' : '') + '>' +
+          h(dynWhName(w)) + ' <span class="snap-flight-tag">' + h(t('pk.flt.' + w.side, w.side)) + '</span></label>';
+        if (cur && cur !== f.gid) r += '<span class="snap-meta dsx-lib" data-dsx-lib="1">' + h(tf('dyn.w.today', dsxTplName(cur))) + '</span>';
+        r += '</div>';
+        for (const grp of clash) if (grp.length > 1 && grp.some(x => x.f === f && x.w === w)) r += '<div class="ui-avert" data-dsx-clash="1">' + h(tf('dyn.w.clash', dynWhName(w), f.type)) + '</div>';
+        return r;
+      }};
+      const pk = (key, list) => list.length ? '<div class="dsx-sub">' + h(tf(key, f.type)) + '</div>' + list.map(row).join('') : '';
+      in2 += pk('dyn.w.pk1', offs.filter(w => w.types[f.tk].gid === f.gid));
+      in2 += pk('dyn.w.pk2', offs.filter(w => w.types[f.tk].gid && w.types[f.tk].gid !== f.gid));
+      in2 += pk('dyn.w.pk3', offs.filter(w => !w.types[f.tk].gid));
+      const off = all.filter(w => !w.dyn), offT = off.filter(w => f.tk in w.types), noType = all.filter(w => w.dyn && !(f.tk in w.types));
+      in2 += '<details class="dsx-why"><summary>' + h(t('dyn.w.why')) + '</summary><p>' + h(t('dyn.w.prereq')) + '</p>';
+      if (off.length) {{
+        let who = offT.map(dynWhName).sort(dynCmp).join(', ');
+        const rest = off.length - offT.length;
+        if (rest) who += (who ? tf('dyn.w.offMore', String(rest)) : tf('dyn.w.offOnly', String(rest)));
+        in2 += '<p data-dsx-off="1">' + h(tf('dyn.w.off', who)) + '</p>';
+      }}
+      if (noType.length) in2 += '<p data-dsx-off="1">' + h(tf('dyn.w.notype', f.type, noType.map(dynWhName).sort(dynCmp).join(', '))) + '</p>';
+      in2 += '</details>';
+    }}
+    html += step(2, okWh ? tf('dyn.w.s2', f.type, picked.length, offs.length) : tf('dyn.w.s2nocount', f.type), in2, false);
+    // 3 · moteur tournant : une ligne par base cochée qui porte le réglage
+    let in3 = '';
+    const hotRows = picked.filter(w => w.hotNode);
+    if (!picked.length) in3 = '<div class="snap-meta">' + h(t('dyn.w.hotnone')) + '</div>';
+    else if (!hotRows.length) in3 = '<div class="snap-meta">' + h(t('dyn.w.hotnoset')) + '</div>';
+    else {{
+      in3 = '<div class="dsx-help">' + h(t('dyn.w.help3')) + '</div>';
+      for (const w of hotRows) in3 += '<div class="dsx-wh"><label class="pk-chk"><input type="checkbox" data-dsx-hot="' + h(w.key) + '"' + (st.hot[w.key] ? ' checked' : '') + '>' + h(tf('dyn.w.hotline', dynWhName(w))) + '</label></div>';
+    }}
+    html += step(3, t('dyn.w.s3'), in3, !picked.length);
     html += '</div>';
   }}
   if (sp.plan && sp.plan.empty && !sp.err) html += '<div class="snap-meta" data-dsx-nochange="1">' + h(t('dyn.w.nochange')) + '</div>';
@@ -5338,10 +5436,10 @@ function dsxBlocked() {{
   const sp = dsxSafePlan();
   return !!(sp.err || !sp.plan || sp.plan.clash.length || sp.plan.badUnmark || sp.plan.empty);
 }}
-function dsxRefresh() {{
+function dsxRefresh(focusSel) {{
   const el = FN.bodyEl, keep = el ? el.scrollTop : 0, a = document.activeElement;
-  let sel = null;
-  if (a && a.getAttribute) for (const at of ['data-dsx-tmpl', 'data-dsx-link', 'data-dsx-hot']) if (a.hasAttribute(at)) sel = '[' + at + '="' + a.getAttribute(at).replace(/"/g, '\\\\"') + '"]';
+  let sel = focusSel || null;
+  if (!sel && a && a.getAttribute) for (const at of ['data-dsx-link', 'data-dsx-hot']) if (a.hasAttribute(at)) sel = '[' + at + '="' + a.getAttribute(at).replace(/"/g, '\\\\"') + '"]';
   FN.blocked = dsxBlocked();
   fnRender();
   fnSync();
@@ -5380,18 +5478,23 @@ function dsxAsk(opener) {{
     document.getElementById('fn-modal').addEventListener('change', e => {{
       const c = e.target;
       if (!c || !c.hasAttribute || FN.titleKey !== 'fn.dyn.title' || !FN.bodyEl || !FN.bodyEl.contains(c)) return;
-      if (c.hasAttribute('data-dsx-tmpl')) DSX.st.tmpl[Number(c.getAttribute('data-dsx-tmpl'))] = c.checked;
-      else if (c.hasAttribute('data-dsx-hot')) DSX.st.hot[c.getAttribute('data-dsx-hot')] = c.checked;
+      if (c.hasAttribute('data-dsx-hot')) DSX.st.hot[c.getAttribute('data-dsx-hot')] = c.checked;
       else if (c.hasAttribute('data-dsx-link')) {{ const p = c.getAttribute('data-dsx-link').split('#'); DSX.st.link[Number(p[0])][p[1]] = c.checked; }}
       else return;
       dsxRefresh();
+    }});
+    document.getElementById('fn-modal').addEventListener('click', e => {{
+      const b = e.target && e.target.closest ? e.target.closest('[data-dsx-make],[data-dsx-drop]') : null;
+      if (!b || FN.titleKey !== 'fn.dyn.title' || !FN.bodyEl || !FN.bodyEl.contains(b)) return;
+      const make = b.hasAttribute('data-dsx-make'), gid = b.getAttribute(make ? 'data-dsx-make' : 'data-dsx-drop');
+      DSX.st.tmpl[Number(gid)] = make;
+      dsxRefresh('[data-dsx-' + (make ? 'drop' : 'make') + '="' + gid + '"]');
     }});
   }}
   fnAsk({{
     titleKey: 'fn.dyn.title', goKey: 'fn.dyn.go', ext: '',
     noName: true,
     opener: opener, wide: true,
-    head: () => t('dyn.w.prereq'),
     body: dsxBody,
     blocked: dsxBlocked(),
     run: () => dsxApply()
