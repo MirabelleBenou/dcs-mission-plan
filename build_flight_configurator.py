@@ -4627,6 +4627,7 @@ def check(html):
     ok(all(isinstance(v, list) and v and all(isinstance(n, str) and n.strip() == n and n for n in v) and len({n.lower() for n in v}) == len(v) for v in liv.values()), 'livrées par défaut : des noms non vides, sans espace de bout ni doublon à la casse près')
     ok('input[data-k="livery"]' not in html and 'data-k="livery" role="combobox"' not in html, 'le champ Livrée est une liste, plus un texte libre')
     ok(not re.search(r'\blvOpen\b|\blvItems\b|\blvChoose\b|\blvClose\b|\bisLiveryField\b|\bnoteLiveries\s*:|\bseenLiv\b|u\.livery\.ph', html), 'plus de panneau de suggestions de livrée ni de suggestions tirées des paquets, de la mission d\'HQ ou des autres unités')
+    ok('n.toLowerCase() === cur.toLowerCase()' in html and 'names[k] = cur' in html, 'une livrée égale à un nom de la liste à la casse près prend la place de ce nom (un seul nom, son écriture à elle)')
     ok("const KEY_WING = 'wing_config_v1';" in html and 'refreshLiveryLists' in html, 'les listes de livrées lisent wing_config_v1 et suivent son changement')
     scripts = re.findall(r'<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>', html, re.S)
     for i, s in enumerate(scripts):
