@@ -49,6 +49,7 @@ Changes merged since the last release, grouped per tool.
 - The Side and Type filters of the flight list open in the suite's own list, like every other list, instead of the system menu.
 - **Wing configuration**: a squadron's aircraft are now picked from the game's flyable types (75, by their name in a .miz, from pydcs 1.0.0), grouped into helicopters and airplanes, with “Other type (mod)…” for a community mod. A name that is not a game type is marked “not in the base game”, with a “Replace with…” list of close types; nothing is blocked. The example uses the game's names (Mi-8MT, MiG-21Bis).
 - Flight packages: the frequencies of a radio that missions do not preset (the Mi-24P's and Mi-8MT's HF radio) are skipped; the mission is not changed for them.
+- The page is laid out around the mission: **Open .miz**, **Save .miz**, **Flight packages** and **Wing** in the top bar (Wing comes first until the wing is set up), flight packages and the wing configuration in windows, and from 1,100 px the groups on the left, the actions on the checked groups on the right. Applying packages, deleting groups and Dynamic Spawn now change the open mission and add up, with a counter; **Save .miz** (or **Ctrl+S**) checks the mission and downloads it once. Export waits until the changes are saved. After a page reload, HQ says the .miz must be opened again. In the wing configuration, squadrons come first and empty fields hint at what to type.
 #### Fixed
 - The interface language is shared with the other tools (HQ kept its own); the language already chosen in HQ is kept.
 
@@ -157,6 +158,7 @@ Changes merged since the last release, grouped per tool.
 - The Datacard Generator and Route Planner chapters: navigation shared with the route, shared course settings.
 - The Route Planner and Datacard Generator pages follow their new Display and Open menus and their one-line route and datacard selection.
 - The French pages say “Sauvegarder” for saving a work file, and follow the new Display, Open and Export menus of the Briefing Generator, Recon Station, Flight Configurator, Route Planner and Datacard Generator.
+- The HQ page follows the new layout: Open .miz, Save .miz, Flight packages and Wing in the top bar; changes add up and are saved once with Save .miz.
 
 ---
 
