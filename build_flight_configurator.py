@@ -2123,13 +2123,13 @@ function tbmKey(m, e) {
   else if (k.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); tbmType(m, k); }
 }
 
-/* Choisir : si la valeur change, le <select> la prend et reçoit un évènement change (qui bouillonne) */
+/* Choisir : si la valeur change, le <select> la prend et reçoit un évènement change (qui bouillonne) ; un <select data-repick> (le champ Livrée) le reçoit aussi quand on re-choisit sa valeur : le nom affiché devient un choix */
 function tbmChoose(m, k) {
   const sel = m.sel, o = sel.options[k];
   if (!o || o.disabled) return;
   const changed = k !== sel.selectedIndex;
   tbmClose(true);
-  if (!changed) return;
+  if (!changed && !sel.hasAttribute('data-repick')) return;
   sel.selectedIndex = k;
   if (m.form) sel.dispatchEvent(new Event('input', { bubbles: true }));   /* comme le contrôle natif : input puis change */
   sel.dispatchEvent(new Event('change', { bubbles: true }));
@@ -2762,13 +2762,12 @@ function mineCount() { return PAYLOAD_TYPES.reduce((n, ty) => n + (LIB.mine[ty] 
 // La liste d'un type = les livrées du jeu (LIVERIES_DEFAULT, noms de DCS) et les livrées custom déclarées dans la fenêtre Wing de HQ
 // (`liveries` de wing_config_v1) qui portent ce type ; sans doublon à la casse près (le nom du jeu l'emporte), triée sans casse.
 const KEY_WING = 'wing_config_v1';
-const WL = { raw: undefined, list: [], defs: {} };      // la lecture de wing_config_v1, gardée tant que la chaîne ne change pas (elle peut peser plusieurs Mo : logos)
+const WL = { stale: true, list: [], defs: {} };      // la lecture de wing_config_v1 (elle peut peser plusieurs Mo : logos) : faite au premier appel, refaite seulement après un évènement storage de sa clé (stale)
 function wingRead() {
-  const raw = lsGet(KEY_WING);
-  if (raw === WL.raw) return WL;
+  if (!WL.stale) return WL;
+  WL.stale = false;
   let o = null;
-  try { o = JSON.parse(raw || 'null'); } catch (e) { o = null; }
-  WL.raw = raw;
+  try { o = JSON.parse(lsGet(KEY_WING) || 'null'); } catch (e) { o = null; }
   WL.list = isObj(o) && Array.isArray(o.liveries) ? o.liveries.filter(x => isObj(x) && typeof x.name === 'string' && Array.isArray(x.aircraft)) : [];
   WL.defs = isObj(o) && isObj(o.defaultLiveries) ? o.defaultLiveries : {};       // { type: nom } : la livrée par défaut de chaque type, déclarée dans la fenêtre Wing de HQ
   return WL;
@@ -2785,13 +2784,12 @@ function livCmp(a, b) { const x = a.toLowerCase(), y = b.toLowerCase(); return x
 // Le nom que le champ affiche : toujours un nom (c'est lui que le paquet emporte). Celui que l'utilisateur a choisi (u.livery) ; sinon, tant qu'il n'a rien
 // choisi (u.livery reste ''), liveryAuto, qui suit la mission ouverte dans HQ et la configuration Wing.
 function liveryValue(u) { return u.livery.trim(); }
-const MS = { raw: undefined, flights: [] };      // la lecture de mission_snapshot_v1 (la mission ouverte dans HQ), gardée tant que la chaîne ne change pas
+const MS = { stale: true, flights: [] };      // la lecture de mission_snapshot_v1 (la mission ouverte dans HQ) : faite au premier appel, refaite seulement après un évènement storage de sa clé (stale)
 function missionFlights() {
-  const raw = lsGet(KEY_HQ_MISSION);
-  if (raw === MS.raw) return MS.flights;
+  if (!MS.stale) return MS.flights;
+  MS.stale = false;
   let o = null;
-  try { o = JSON.parse(raw || 'null'); } catch (e) { o = null; }
-  MS.raw = raw;
+  try { o = JSON.parse(lsGet(KEY_HQ_MISSION) || 'null'); } catch (e) { o = null; }
   MS.flights = isObj(o) && o.schema === 'dcs-mission-snapshot-v2' && Array.isArray(o.flights) ? o.flights.filter(isObj) : [];
   return MS.flights;
 }
@@ -3485,7 +3483,7 @@ function unitHtml(f, fi, u, ui) {
       ${fieldHtml(t('u.name'), inputHtml(`${at} data-k="uname"`, u.name, unitDefaultName(f, fi, ui)))}
       ${fieldHtml(t('u.callsign'), inputHtml(`${at} data-k="callsign"`, u.callsign, t('u.opt')))}
       ${fieldHtml(t('u.onboard'), inputHtml(`${at} data-k="onboard"`, u.onboard, t('u.opt')))}
-      ${u.type === '' ? '' : fieldHtml(t('u.livery'), selectHtml(`${at} data-k="livery"`, t('u.livery'), liveryOptions(f, fi, u, ui), liveryShown(f, fi, u, ui)))}
+      ${u.type === '' ? '' : fieldHtml(t('u.livery'), selectHtml(`${at} data-k="livery" data-repick`, t('u.livery'), liveryOptions(f, fi, u, ui), liveryShown(f, fi, u, ui)))}
     </div>
     ${u.type === '' ? `<p class="ui-note fc-notype">${esc(t('u.notype'))}</p>` : unitSettingsHtml(f, fi, u, ui, rk, at)}
   </div></div>`;
@@ -4576,7 +4574,12 @@ function init() {
   renderAll();
   if (taken.changed) showToast(taken.toast, 4500);
   window.addEventListener('pagehide', flushWork);
-  window.addEventListener('storage', e => { routeStorage(e); gsStorage(e); if (e.key === KEY_THEATRE) thFollow(); if (e.key === KEY_UNITS) udFollow(); if (e.key === KEY_WING || e.key === KEY_HQ_MISSION || e.key === null) { refreshLiveryLists(); refreshSummaries(); } });
+  window.addEventListener('storage', e => {
+    if (e.key === KEY_WING || e.key === null) WL.stale = true;       // les sources de livrée ne se relisent qu'après un évènement de leur clé (ou de clé null), avant de refaire les listes
+    if (e.key === KEY_HQ_MISSION || e.key === null) MS.stale = true;
+    routeStorage(e); gsStorage(e); if (e.key === KEY_THEATRE) thFollow(); if (e.key === KEY_UNITS) udFollow();
+    if (e.key === KEY_WING || e.key === KEY_HQ_MISSION || e.key === null) { refreshLiveryLists(); refreshSummaries(); }
+  });
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushWork(); else { gsPull(); routeTakeover(); } });
 }
 init();
@@ -4681,6 +4684,9 @@ def check(html):
     ok(len(re.findall(r'\bmissionFlights\(', JS_APP)) == 2 and 'missionFlights()' in fn_body('missionLivery'), 'missionFlights n\'est appelée que par missionLivery, que liveryAuto seule appelle : ' + ', '.join(f for f in fns if 'missionLivery(' in fn_body(f)))
     ok([f for f in fns if 'missionLivery(' in fn_body(f) and f != 'missionLivery'] == ['liveryAuto'], 'missionLivery n\'est appelée que par liveryAuto')
     ok("if (!liveriesFor(nt).some(n => n.toLowerCase() === lv)) u.livery = '';" in html, "changer le type d'une unité efface sa livrée choisie si le nouveau type ne l'a pas (l'unité reprend alors son défaut)")
+    ok('data-k="livery" data-repick' in html and html.count('data-repick') == 3 and "if (!changed && !sel.hasAttribute('data-repick')) return;" in JS_TBM, 'seul le champ Livrée porte data-repick, et tbmChoose du module re-lance input puis change pour lui seul')
+    ok('raw ===' not in fn_body('wingRead') + fn_body('missionFlights') and 'if (!WL.stale) return WL;' in fn_body('wingRead') and 'if (!MS.stale) return MS.flights;' in fn_body('missionFlights'), 'wingRead et missionFlights ne relisent leur clé qu\'une fois marquées à relire (plus de comparaison de la chaîne entière)')
+    ok(JS_APP.index('WL.stale = true') < JS_APP.index('refreshLiveryLists(); refreshSummaries();') and 'MS.stale = true' in JS_APP and JS_APP.count('WL.stale = true') == 1 and JS_APP.count('MS.stale = true') == 1, 'l\'écouteur storage marque les sources à relire (clé ou clé null) avant de refaire les listes')
     lo = fn_body('liveryOptions')
     ok("u.livery.keep" in lo and lo.count("t('u.livery.keep')") == 1 and re.search(r"else opts\.push\(\{ v: '', l: t\('u\.livery\.keep'\) \}\)", lo) is not None, "« Inchangée » n'est plus en tête : seul le repli d'une liste vide sans valeur la garde")
     ok("const v = liveryValue(u); return v !== '' ? v : liveryAuto(f, fi, u, ui);" in html, 'liveryShown : le choix de l\'utilisateur, sinon liveryAuto')
