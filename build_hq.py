@@ -1306,6 +1306,8 @@ const I18N = {{
     'fn.save.title': 'Sauvegarder le .miz',
     'fn.save.go': 'Sauvegarder',
     'toast.mizSaved': '.miz sauvegardé ✔',
+    'toast.saveFail': '\u2717 Sauvegarde : v\u00e9rification \u00e9chou\u00e9e \u2014 rien n\u2019est t\u00e9l\u00e9charg\u00e9.',
+    'hq.report.see': 'Voir le compte rendu',
     'ph.wing.shortName': 'Nom court affiché dans la barre',
     'ph.wing.id': 'Identifiant, sans espace ni /',
     'ph.wing.fullName': 'Nom complet du wing',
@@ -1673,6 +1675,8 @@ const I18N = {{
     'fn.save.title': 'Save the .miz',
     'fn.save.go': 'Save',
     'toast.mizSaved': '.miz saved ✔',
+    'toast.saveFail': '\u2717 Save: verification failed \u2014 nothing downloaded.',
+    'hq.report.see': 'See the report',
     'ph.wing.shortName': 'Short name shown in the toolbar',
     'ph.wing.id': 'Identifier, no spaces or /',
     'ph.wing.fullName': 'Full name of the wing',
@@ -3275,6 +3279,8 @@ async function loadMiz(file) {{
     showToast(t('msg.notMiz'), {{ type: 'err' }});
   }} finally {{
     _mizLoading = false;
+    hqChrome();      // la barre et la page se redessinent à la fin de toute ouverture, réussie ou non : « Ouvrir .miz » est actif
+    pkRender();
   }}
 }}
 
@@ -4535,6 +4541,23 @@ function pkDoneText(done) {{
   return parts.join(' · ');
 }}
 
+// Un geste n'ajoute 1 au compteur que si la mission en mémoire a changé : le texte « mission » ou un autre fichier de l'archive.
+function hqCtxDiffers(a, b) {{
+  if (!a || !b) return true;
+  if (a.missionText !== b.missionText) return true;
+  const fa = a.otherFilesMap || {{}}, fb = b.otherFilesMap || {{}};
+  const ka = Object.keys(fa), kb = Object.keys(fb);
+  if (ka.length !== kb.length) return true;
+  for (const k of ka) {{
+    const x = fa[k], y = fb[k];
+    if (!y) return true;
+    if (x === y) continue;
+    if (x.length !== y.length) return true;
+    for (let i = 0; i < x.length; i++) if (x[i] !== y[i]) return true;
+  }}
+  return false;
+}}
+
 async function pkApply() {{
   if (_PK_BUSY || _mizLoading) return;
   if (!_HQ_MIZ_CONTEXT) {{ showToast(t('toast.mizNotLoaded'), {{ type: 'err' }}); return; }}
@@ -4615,9 +4638,10 @@ async function pkApply() {{
     // Le .miz n'est remis qu'à « Sauvegarder .miz » ; le snapshot gardé (mission_snapshot_v1) reste celui du fichier ouvert ou sauvegardé.
     await rebuildMizHQ(work.missionText);
     const snap = await buildMissionSnapshot(work.ast, work.model, work.missionText, _mizFilename || 'mission.miz', work.theatre);
+    const changed = hqCtxDiffers(base, work);
     _HQ_MIZ_CONTEXT = {{ missionText: work.missionText, ast: work.ast, model: work.model, otherFilesMap: work.otherFilesMap, theatre: work.theatre }};
     HQ_SNAPSHOT = snap;
-    _HQ_DIRTY += 1;
+    if (changed) _HQ_DIRTY += 1;
     renderSnapshot(HQ_SNAPSHOT);
     _PK_REPORT = {{ lines, total: () => pkTotalText(applied, absent, warnN) }};
     showToast(tn('pk.rep.applied', applied) + ' ✔', {{ type: 'ok' }});
@@ -5404,7 +5428,7 @@ async function dsxApply() {{
     _HQ_MIZ_CONTEXT = work;
     _HQ_DYN = dyn;
     HQ_SNAPSHOT = snap;
-    _HQ_DIRTY += 1;
+    if (hqCtxDiffers(base, work)) _HQ_DIRTY += 1;
     _PK_EXPORT_SEL.clear();
     renderSnapshot(HQ_SNAPSHOT);
     // Le compte rendu : les cinq compteurs, une ligne par changement, puis les signalements
@@ -5423,7 +5447,7 @@ async function dsxApply() {{
       else lines.push({{ cls: 'w', text: () => tf('dyn.w.warn.side', nm(x.f), dynWhName(x.w), S(x.f.side), S(x.w.side)) }});
     }}
     _PK_REPORT = {{ lines: lines, total: null }};
-    showToast(tn('dyn.w.rep.n', plan.N) + ' ✔', {{ type: 'ok' }});
+    hqReportToast(tn('dyn.w.rep.n', plan.N) + ' ✔', 'ok');
   }} catch (err) {{
     console.error('[HQ] Dynamic Spawn écrit:', err);
     const fe = err || {{}};
@@ -5431,7 +5455,7 @@ async function dsxApply() {{
       {{ cls: 'w', text: () => tf('dyn.w.fail', pkErrText(fe)) }},
       {{ cls: 'a', text: () => t('pk.rep.failTail') }},
     ], total: null }};
-    showToast(t('toast.dsxFail'), {{ type: 'err' }});
+    hqReportToast(t('toast.dsxFail'), 'err');
   }} finally {{
     _PK_BUSY = false;
     pkRender();
@@ -5489,7 +5513,7 @@ async function pkDeleteApply(ids) {{
     _HQ_MIZ_CONTEXT = work;
     _HQ_DYN = dyn;
     HQ_SNAPSHOT = snap;
-    _HQ_DIRTY += 1;
+    if (hqCtxDiffers(base, work)) _HQ_DIRTY += 1;
     _PK_EXPORT_SEL.clear();
     renderSnapshot(HQ_SNAPSHOT);
     // Le compte rendu : les trois compteurs, une ligne par vol supprimé (avec ses liens remis à zéro), puis les références laissées
@@ -5503,7 +5527,7 @@ async function pkDeleteApply(ids) {{
       }}
     }}
     _PK_REPORT = {{ lines: lines, total: null }};
-    showToast(tn('pk.del.rep.flights', an.flights.length) + ' ✔', {{ type: 'ok' }});
+    hqReportToast(tn('pk.del.rep.flights', an.flights.length) + ' ✔', 'ok');
   }} catch (err) {{
     console.error('[HQ] suppression de groupes:', err);
     const fe = err || {{}};
@@ -5511,7 +5535,7 @@ async function pkDeleteApply(ids) {{
       {{ cls: 'w', text: () => tf('pk.del.fail', pkErrText(fe)) }},
       {{ cls: 'a', text: () => t('pk.rep.failTail') }},
     ], total: null }};
-    showToast(t('toast.pkDelFail'), {{ type: 'err' }});
+    hqReportToast(t('toast.pkDelFail'), 'err');
   }} finally {{
     _PK_BUSY = false;
     pkRender();
@@ -5519,6 +5543,17 @@ async function pkDeleteApply(ids) {{
   }}
 }}
 // Après Supprimer ou Dynamic Spawn, le focus va à « Sauvegarder .miz » (le compte rendu est dans la fenêtre « Paquets de vol »)
+// Le toast de Supprimer et de Dynamic Spawn : son texte, et « Voir le compte rendu » qui ouvre la fenêtre « Paquets de vol » sur le compte rendu (aucune fenêtre ne s'ouvre d'elle-même)
+function hqReportToast(text, type) {{
+  showToast(text, {{ type: type, ms: 12000, action: {{ label: t('hq.report.see'), fn: hqSeeReport }} }});
+}}
+function hqSeeReport() {{
+  hqWinOpen('pk', document.getElementById('btn-packages'));
+  const r = hqEl('pk-report');
+  if (!r || !r.firstChild) return;
+  r.setAttribute('tabindex', '-1');
+  try {{ r.scrollIntoView({{ block: 'start' }}); r.focus({{ preventScroll: true }}); }} catch (e) {{}}
+}}
 function hqFocusSave() {{
   const b = document.getElementById('btn-save');
   if (b && !b.disabled) {{ try {{ b.focus({{ preventScroll: true }}); }} catch (e) {{}} }}
@@ -5733,7 +5768,7 @@ async function hqSaveRun(name) {{
     showToast(t('toast.mizSaved'), {{ type: 'ok' }});
   }} catch (err) {{
     console.error('[HQ] sauvegarde du .miz :', err);
-    showToast(t('msg.failed'), {{ type: 'err' }});                           // rien n'est téléchargé, le compteur ne bouge pas
+    showToast(t('toast.saveFail'), {{ type: 'err' }});                       // rien n'est téléchargé, le compteur ne bouge pas
   }} finally {{
     _PK_BUSY = false;
     pkRender();
@@ -5777,8 +5812,9 @@ function initHqShell() {{
   const hide = () => {{ depth = 0; veil.hidden = true; }};
   window.addEventListener('dragenter', e => {{ if (!files(e) || uiModalsOpen().length) return; e.preventDefault(); depth++; veil.hidden = false; }});
   window.addEventListener('dragover', e => {{
-    if (!files(e) || uiModalsOpen().length) return;
-    e.preventDefault();
+    if (!files(e)) return;
+    e.preventDefault();                  // sous une fenêtre aussi : le navigateur n'ouvre pas le fichier
+    if (uiModalsOpen().length) return;
     try {{ e.dataTransfer.dropEffect = 'copy'; }} catch (x) {{}}
     veil.hidden = false;
   }});
@@ -5787,8 +5823,8 @@ function initHqShell() {{
   window.addEventListener('drop', e => {{
     if (!files(e)) return;
     hide();
-    if (uiModalsOpen().length) return;
     e.preventDefault();
+    if (uiModalsOpen().length) return;
     const f = e.dataTransfer.files && e.dataTransfer.files[0];
     if (f) hqOpenFile(f);
   }});
