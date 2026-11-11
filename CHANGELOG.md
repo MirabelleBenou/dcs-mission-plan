@@ -45,6 +45,7 @@ Changes merged since the last release, grouped per tool.
 - **Delete flights** from the loaded mission: check them in the flight list, review what still points to them, and save the mission without them. Dynamic Spawn links to a deleted flight are reset; triggers, tasks and scripts that name it are listed, not changed.
 - **Dynamic Spawn**, written to the mission: a flight can be made a template and linked, per aircraft type, to the airfields and FARPs that already have Dynamic Spawn enabled in the mission editor.
 - **Discard** (↺), next to **Save .miz** in the top bar while there are unsaved changes, takes the mission back to how it was when opened or last saved, after confirmation. The question's other button, like the one asked before opening another .miz over unsaved changes, says **Keep changes**.
+- **Custom liveries** in the Wing window: a name per livery, as DCS writes it, and the aircraft that wear it. The Flight Configurator lists them next to the game's own.
 #### Changed
 - Radios are named and numbered as in the cockpit in the mission summary and in the package messages (the Mi-24P's R-863 and R-828 start at channel 0). The .miz keeps its own numbering.
 - Flight packages are recognised by their content, not their file name; unreadable flights are skipped and counted, an empty package or one without theatre is refused, with the same messages as the Route Planner and the Datacard Generator. *Load another .miz* also clears the mission offered to the Route Planner and the Datacard Generator.
@@ -60,7 +61,7 @@ Changes merged since the last release, grouped per tool.
 
 ### Flight Configurator
 #### Added
-- **Flight Configurator**, a new module: a Flight Lead prepares a flight (identity, radios, loadout built on the aircraft's front view or started from the squadron's presets, livery) and exports it as a flight package that HQ applies to the Mission Commander's mission. Each aircraft of a flight has its own type, so a flight can mix types; flight names must be unique per side before export.
+- **Flight Configurator**, a new module: a Flight Lead prepares a flight (identity, radios, loadout built on the aircraft's front view or started from the squadron's presets, livery picked from a list — the game's and the wing's custom ones) and exports it as a flight package that HQ applies to the Mission Commander's mission. Each aircraft of a flight has its own type, so a flight can mix types; flight names must be unique per side before export.
 - A **Route** block above the loadout: pick one of the Route Planner's routes for the group (one route per group), then see it as a paper sketch — waypoints, names, numbered legs — with each leg's magnetic heading and distance in NM. When the route changes in the Route Planner, the group follows it; if it is deleted there, the last copy is kept.
 - The Mi-24P's and Mi-8MT's HF radio (Jadro-1I, Jadro-1A), which missions do not preset: up to five frequencies, carried in the flight package and shown on the datacard, never written to the mission by HQ.
 - An Example button that loads two groups (Mi-24P, Mi-8MT), with “Restore” for twelve seconds.

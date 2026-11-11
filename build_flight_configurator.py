@@ -405,7 +405,7 @@ function readNum(s) {
 
 # Les quatre tables : (nom de la constante, fichier de data/)
 TABLES = [('WEAPON_NAMES', 'weapon_names.json'), ('AIRCRAFT_LIMITS', 'aircraft_limits.json'),
-          ('AIRCRAFT_PYLONS', 'aircraft_pylons.json'), ('AIRCRAFT_VIEWS', 'aircraft_views.json')]
+          ('AIRCRAFT_PYLONS', 'aircraft_pylons.json'), ('AIRCRAFT_VIEWS', 'aircraft_views.json'), ('LIVERIES_DEFAULT', 'liveries_default.json')]
 
 # ---------- Textes (FR et EN : le build vérifie la parité et que chaque clé sert) ----------
 I18N_FR = {
@@ -540,7 +540,7 @@ I18N_FR = {
     'u.callsign': 'Indicatif',
     'u.onboard': 'N° de bord',
     'u.livery': 'Livrée',
-    'u.livery.ph': 'texte libre',
+    'u.livery.keep': 'Inchangée (celle de la mission)',
     'u.opt': 'facultatif',
     'u.radios': 'Radios',
     'u.radios.sum': '{0} postes',
@@ -820,7 +820,7 @@ I18N_EN = {
     'u.callsign': 'Callsign',
     'u.onboard': 'Onboard no.',
     'u.livery': 'Livery',
-    'u.livery.ph': 'free text',
+    'u.livery.keep': 'Unchanged (the mission’s)',
     'u.opt': 'optional',
     'u.radios': 'Radios',
     'u.radios.sum': '{0} radios',
@@ -2239,7 +2239,6 @@ const UI = {
   fold: new WeakMap(),      // vol → 'open' | 'closed'
   clamped: 0,               // réglages d'emport ramenés à la limite (ligne d'état)
   exportTried: false,       // un clic sur Exporter avec des manques : le bandeau passe en rouge, jusqu'à ce que les manques soient levés (jamais enregistré)
-  seenLiv: {},              // type → [liveryId vus dans les paquets importés, une entrée par occurrence]
   cmp: { sym: true, st: null, saving: false, name: '', err: '' },
   rtChoose: null,           // le fcId du groupe dont on choisit la route (« Changer de route ») ; un groupe sans route est toujours au choix
   hq: undefined             // la mission de HQ lue dans le stockage : une lecture par ouverture de la fenêtre d'import (undefined = à relire)
@@ -2758,137 +2757,44 @@ function weaponLabel(type, clsid) {
 }
 function mineCount() { return PAYLOAD_TYPES.reduce((n, ty) => n + (LIB.mine[ty] || []).length, 0); }
 
-// ----- Livrée : suggestions = les liveryId déjà vus pour ce type (mission chargée dans HQ, paquets importés, vols du module) ; aucune liste écrite à la main -----
-// UI.seenLiv[type] garde chaque occurrence vue dans un paquet importé, dans l'ordre : de quoi compter les graphies.
-function noteLiveries(f) {
-  (isObj(f) && Array.isArray(f.units) ? f.units : []).forEach(u => {
-    const type = unitTypeOf(f, u);
-    if (isObj(u) && type !== '' && typeof u.liveryId === 'string' && u.liveryId !== '') (UI.seenLiv[type] = UI.seenLiv[type] || []).push(u.liveryId);
-  });
+// ----- Livrée : un <select>, jamais un texte libre -----
+// La liste d'un type = les livrées du jeu (LIVERIES_DEFAULT, noms de DCS) et les livrées custom déclarées dans la fenêtre Wing de HQ
+// (`liveries` de wing_config_v1) qui portent ce type ; sans doublon à la casse près (le nom du jeu l'emporte), triée sans casse.
+const KEY_WING = 'wing_config_v1';
+const WL = { raw: undefined, list: [] };      // la lecture de wing_config_v1, gardée tant que la chaîne ne change pas (elle peut peser plusieurs Mo : logos)
+function wingLiveries() {
+  const raw = lsGet(KEY_WING);
+  if (raw === WL.raw) return WL.list;
+  let o = null;
+  try { o = JSON.parse(raw || 'null'); } catch (e) { o = null; }
+  WL.raw = raw;
+  WL.list = isObj(o) && Array.isArray(o.liveries) ? o.liveries.filter(x => isObj(x) && typeof x.name === 'string' && Array.isArray(x.aircraft)) : [];
+  return WL.list;
 }
-// Les suggestions d'un type, sans doublon à la casse près : une seule par livrée, dans la graphie la plus fréquente (à égalité, la première vue).
-// `skip` : l'unité dont on tape le champ (sa propre frappe ne se propose pas). Triées sans tenir compte de la casse.
-function liveriesFor(type, skip) {
-  const all = (UI.seenLiv[type] || []).slice();
-  const hq = hqMission();
-  if (hq) hq.flights.forEach(f => { if (isObj(f) && Array.isArray(f.units)) f.units.forEach(u => { if (isObj(u) && unitTypeOf(f, u) === type && typeof u.liveryId === 'string' && u.liveryId !== '') all.push(u.liveryId); }); });
-  S.flights.forEach(f => f.units.forEach(u => { if (u.type === type && u !== skip && u.livery.trim() !== '') all.push(u.livery.trim()); }));
-  const groups = new Map();
-  all.forEach(v => {
-    const k = v.toLowerCase();
-    if (!groups.has(k)) groups.set(k, new Map());
-    const g = groups.get(k);
-    g.set(v, (g.get(v) || 0) + 1);
-  });
-  const out = [];
-  groups.forEach(g => {
-    let best = null, n = 0;
-    g.forEach((c, v) => { if (c > n) { best = v; n = c; } });      // l'ordre d'insertion d'une Map est l'ordre de première vue
-    out.push(best);
-  });
+function liveriesFor(type) {
+  const seen = new Set(), out = [];
+  const add = n => { const k = n.toLowerCase(); if (n !== '' && !seen.has(k)) { seen.add(k); out.push(n); } };
+  (impHas(LIVERIES_DEFAULT, type) ? LIVERIES_DEFAULT[type] : []).forEach(add);
+  wingLiveries().forEach(x => { if (x.aircraft.indexOf(type) >= 0) add(x.name.trim()); });
   return out.sort((a, b) => { const x = a.toLowerCase(), y = b.toLowerCase(); return x < y ? -1 : (x > y ? 1 : (a < b ? -1 : (a > b ? 1 : 0))); });
 }
-
-// ----- Livrée : un champ texte libre et un panneau de suggestions au thème de l'interface (la liste native du navigateur ouvrait un menu blanc du système) -----
-// Le panneau est celui des listes (.tbm-panel, posé par tbmPlace) ; le focus reste dans le champ : flèches, Entrée (choisit la suggestion marquée), Échap, Tab.
-// Il se filtre par ce qui est tapé, sans casse ni accents (impNorm), et se ferme quand le champ perd le focus.
-const LV = { btn: null, form: true, panel: null, items: [], active: -1, quiet: false, x0: 0, y0: 0 };
-function lvUnit(inp) {
-  const fe = inp.closest ? inp.closest('.fc-flight') : null, f = fe && S.flights[Number(fe.getAttribute('data-f'))];
-  return f ? { f: f, u: f.units[Number(inp.getAttribute('data-u'))] } : null;
+// Les options du champ d'une unité : « Inchangée », puis (si elle n'est pas dans la liste du type) la valeur de l'unité telle quelle, puis la liste.
+function liveryValue(u) { return u.livery.trim() === '' ? '' : u.livery; }
+function liveryOptions(u) {
+  const list = liveriesFor(u.type), cur = liveryValue(u);
+  const opts = [{ v: '', l: t('u.livery.keep') }];
+  if (cur !== '' && list.indexOf(cur) < 0) opts.push({ v: cur, l: cur });
+  return opts.concat(list.map(n => ({ v: n, l: n })));
 }
-function lvItems(inp) {
-  const x = lvUnit(inp);
-  if (!x) return [];
-  const q = impNorm(inp.value.trim());
-  return liveriesFor(x.u.type, x.u).filter(v => v !== inp.value && (q === '' || impNorm(v).indexOf(q) >= 0));
+// wing_config_v1 a changé (HQ, Wing) : les listes de livrées se refont sur place, la valeur de chaque unité reste choisie.
+function refreshLiveryLists() {
+  document.querySelectorAll('#col-left select[data-k="livery"]').forEach(sel => {
+    const fe = sel.closest('.fc-flight'), f = fe && S.flights[Number(fe.getAttribute('data-f'))], u = f && f.units[Number(sel.getAttribute('data-u'))];
+    if (!u || u.type === '') return;
+    if (TBM.cur && TBM.cur.sel === sel) tbmClose(false);
+    sel.innerHTML = optionsHtml(liveryOptions(u), liveryValue(u));
+  });
 }
-function lvClose() {
-  if (!LV.panel) return;
-  LV.panel.remove();
-  LV.panel = null;
-  LV.active = -1;
-  if (LV.btn) { LV.btn.setAttribute('aria-expanded', 'false'); LV.btn.removeAttribute('aria-activedescendant'); }
-}
-function lvOpen(inp) {
-  const items = lvItems(inp);
-  if (!items.length) { lvClose(); return; }
-  if (LV.panel && LV.btn !== inp) lvClose();
-  let ul = LV.panel;
-  if (!ul) {
-    ul = document.createElement('ul');
-    ul.className = 'tbm-panel tbm-p-field';
-    ul.id = 'lv-list';
-    ul.setAttribute('role', 'listbox');
-    ul.setAttribute('aria-label', t('u.livery'));
-    ul.tabIndex = -1;
-    ul.addEventListener('mousedown', e => e.preventDefault());          // le champ garde le focus (la souris, le doigt)
-    ul.addEventListener('click', e => {
-      const li = e.target.closest ? e.target.closest('.tbm-opt') : null;
-      if (li) lvChoose(LV.items[Number(li.getAttribute('data-i'))]);
-    });
-    ul.addEventListener('mousemove', e => {
-      const li = e.target.closest ? e.target.closest('.tbm-opt') : null;
-      if (li && Number(li.getAttribute('data-i')) !== LV.active) lvActive(Number(li.getAttribute('data-i')), false);
-    });
-    document.body.appendChild(ul);
-    LV.panel = ul;
-    LV.btn = inp;
-    inp.setAttribute('aria-expanded', 'true');
-  }
-  LV.items = items;
-  ul.innerHTML = items.map((v, i) => `<li class="tbm-opt" role="option" id="lv-opt-${i}" data-i="${i}" aria-selected="false"><span class="tbm-mark"></span><span class="tbm-txt">${esc(v)}</span></li>`).join('');
-  LV.active = -1;
-  inp.removeAttribute('aria-activedescendant');
-  tbmPlace(LV);
-}
-function lvActive(k, reveal) {
-  const ul = LV.panel;
-  if (!ul) return;
-  const prev = ul.querySelector('.tbm-opt.active');
-  if (prev) { prev.classList.remove('active'); prev.setAttribute('aria-selected', 'false'); }
-  LV.active = k;
-  const li = k >= 0 ? ul.querySelector('.tbm-opt[data-i="' + k + '"]') : null;
-  if (!li) { LV.btn.removeAttribute('aria-activedescendant'); return; }
-  li.classList.add('active');
-  li.setAttribute('aria-selected', 'true');
-  LV.btn.setAttribute('aria-activedescendant', li.id);
-  if (reveal === false) return;
-  const top = li.offsetTop, h = li.offsetHeight;
-  if (top < ul.scrollTop) ul.scrollTop = top;
-  else if (top + h > ul.scrollTop + ul.clientHeight) ul.scrollTop = top + h - ul.clientHeight;
-}
-// Choisir : le champ prend la valeur (évènement input, comme une frappe), le panneau se ferme, le focus reste au champ.
-function lvChoose(v) {
-  const inp = LV.btn;
-  if (!inp || typeof v !== 'string') return;
-  inp.value = v;
-  lvClose();
-  LV.quiet = true;
-  inp.dispatchEvent(new Event('input', { bubbles: true }));
-  inp.focus({ preventScroll: true });
-  LV.quiet = false;
-}
-function lvKey(e) {
-  const inp = e.target, k = e.key;
-  if (k === 'ArrowDown' || k === 'ArrowUp') {
-    if (!LV.panel || LV.btn !== inp) { lvOpen(inp); if (!LV.panel) return; e.preventDefault(); lvActive(k === 'ArrowDown' ? 0 : LV.items.length - 1, true); return; }
-    e.preventDefault();
-    const n = LV.items.length;
-    lvActive(k === 'ArrowDown' ? Math.min(n - 1, LV.active + 1) : (LV.active < 0 ? n - 1 : Math.max(0, LV.active - 1)), true);
-  } else if (k === 'Enter') {
-    if (LV.panel && LV.active >= 0) { e.preventDefault(); lvChoose(LV.items[LV.active]); }
-  } else if (k === 'Escape') {
-    if (LV.panel) { e.preventDefault(); e.stopPropagation(); lvClose(); }
-  } else if (k === 'Tab') lvClose();
-}
-function lvOutside(e) { if (LV.panel && !LV.panel.contains(e.target) && e.target !== LV.btn) lvClose(); }
-function lvScrolled(e) {
-  if (!LV.panel || (e.target.nodeType && LV.panel.contains(e.target))) return;
-  const r = LV.btn.getBoundingClientRect();
-  if (Math.abs(r.left - LV.x0) > 0.5 || Math.abs(r.top - LV.y0) > 0.5) lvClose();
-}
-const isLiveryField = el => !!el && !!el.matches && el.matches('input[data-k="livery"]');
 
 // ----- Les points d'une route du groupe (le paquet les porte tels quels) -----
 function routeKeys(points) { return isObj(points) ? Object.keys(points).filter(k => /^\d+$/.test(k)).sort((a, b) => a - b) : []; }
@@ -3478,7 +3384,6 @@ function flightEl(fi) { return document.querySelector(`#col-left .fc-flight[data
 function unitEl(fi, ui) { return document.querySelector(`#col-left .fc-flight[data-f="${fi}"] .fc-unit[data-u="${ui}"]`); }
 
 function renderLeft() {
-  lvClose();
   const foldAll = S.flights.length > 1 ? `<button type="button" class="miz-btn fc-small fc-foldall" id="fc-foldall" data-act="fold-all">${esc(foldAllLabel())}</button>` : '';
   document.getElementById('col-flights').innerHTML = `<section class="fc-block">
     <div class="fc-bh">${esc(t('sec.flights'))} <span class="fc-count">(${S.flights.length})</span>${foldAll}</div>
@@ -3524,7 +3429,7 @@ function unitHtml(f, fi, u, ui) {
       ${fieldHtml(t('u.name'), inputHtml(`${at} data-k="uname"`, u.name, unitDefaultName(f, fi, ui)))}
       ${fieldHtml(t('u.callsign'), inputHtml(`${at} data-k="callsign"`, u.callsign, t('u.opt')))}
       ${fieldHtml(t('u.onboard'), inputHtml(`${at} data-k="onboard"`, u.onboard, t('u.opt')))}
-      ${u.type === '' ? '' : fieldHtml(t('u.livery'), inputHtml(`${at} data-k="livery" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="lv-list"`, u.livery, t('u.livery.ph')))}
+      ${u.type === '' ? '' : fieldHtml(t('u.livery'), selectHtml(`${at} data-k="livery"`, t('u.livery'), liveryOptions(u), liveryValue(u)))}
     </div>
     ${u.type === '' ? `<p class="ui-note fc-notype">${esc(t('u.notype'))}</p>` : unitSettingsHtml(f, fi, u, ui, rk, at)}
   </div></div>`;
@@ -4385,7 +4290,6 @@ function onInput(e) {
   else if (k === 'uname') { u.name = el.value; paintCmpNames(); }
   else if (k === 'callsign') u.callsign = el.value;
   else if (k === 'onboard') u.onboard = el.value;
-  else if (k === 'livery') { u.livery = el.value; if (!LV.quiet) lvOpen(el); }
   else if (k === 'chan') {
     const r = Number(el.getAttribute('data-r'));
     const c = Number(el.getAttribute('data-c')), p = parseFreq(el.value);
@@ -4477,6 +4381,7 @@ function onChange(e) {
   if (LO_FIELDS.indexOf(k) >= 0) { commitLoadoutField(k, el); return; }
   const fe = el.closest('.fc-flight'), f = fe && S.flights[Number(fe.getAttribute('data-f'))];
   if (k === 'utype') changeUnitType(f, Number(fe.getAttribute('data-f')), Number(el.getAttribute('data-u')), el);
+  else if (k === 'livery') { const u = f.units[Number(el.getAttribute('data-u'))]; if (u) { u.livery = el.value; refreshAll(); } }
   else if (k === 'coalition') { f.coalition = el.value; if (S.flights.indexOf(f) === S.sel.f) renderRouteBlock(); refreshAll(); }
 }
 function onToggle(e) {
@@ -4487,7 +4392,6 @@ function onToggle(e) {
   if (h) h.setAttribute('aria-expanded', String(d.open));
 }
 function onFocusIn(e) {
-  if (isLiveryField(e.target) && !LV.quiet) lvOpen(e.target);       // les suggestions de livrée se calculent à l'entrée dans le champ
   const ue = e.target.closest ? e.target.closest('.fc-unit') : null;
   if (ue && !(e.target.matches && e.target.matches('[data-act="rm-unit"], [data-act="fold-unit"]'))) selectUnit(Number(ue.closest('.fc-flight').getAttribute('data-f')), Number(ue.getAttribute('data-u')));
 }
@@ -4538,12 +4442,6 @@ function bindColumns() {
     if (a === 'tc-back') tcBack(); else if (a === 'tc-keep') tcKeep();
   });
   left.addEventListener('focusin', onFocusIn);
-  left.addEventListener('keydown', e => { if (isLiveryField(e.target)) lvKey(e); });
-  left.addEventListener('click', e => { if (isLiveryField(e.target)) lvOpen(e.target); });
-  left.addEventListener('focusout', e => { if (isLiveryField(e.target)) lvClose(); });
-  document.addEventListener('pointerdown', lvOutside, true);
-  window.addEventListener('resize', lvClose);
-  window.addEventListener('scroll', lvScrolled, true);
   right.addEventListener('click', e => {      // une case du dessin désigne sa station
     const cell = e.target.closest ? e.target.closest('.cmp-st') : null;
     if (cell) { UI.cmp.st = cell.getAttribute('data-st'); cmpUpdate(); }
@@ -4562,7 +4460,7 @@ function fcOpenMenu(btn) {
     ],
     choose: k => {
       if (k === 'file') document.getElementById('fc-in-open').click();
-      else { UI.hq = readHqMission(); impOpen({ opener: btn }); }       // le snapshot de HQ se relit à chaque ouverture (suggestions de livrée)
+      else { UI.hq = readHqMission(); impOpen({ opener: btn }); }       // le snapshot de HQ se relit à chaque ouverture
     }
   });
 }
@@ -4620,14 +4518,14 @@ function init() {
   initFormMenus(sel => sel.getAttribute('aria-label') || '');
   bindColumns();
   bindToolbar();
-  impSetup({ lang: () => CURRENT_LANG, before: fcImportBefore, onImported: fcImported, toast: msg => showToast('\u26a0 ' + msg, { type: 'err' }), noteLiveries: noteLiveries, loadoutFrom: loadoutFromPayload });       // la fenêtre d'import du bloc commun
+  impSetup({ lang: () => CURRENT_LANG, before: fcImportBefore, onImported: fcImported, toast: msg => showToast('\u26a0 ' + msg, { type: 'err' }), loadoutFrom: loadoutFromPayload });       // la fenêtre d'import du bloc commun
   fnBind();                 // la fenêtre « Nom du fichier »
   const taken = routeSync();      // à l'ouverture : les routes liées reprennent ce que le Route Planner a changé depuis
   if (taken.changed) writeState();
   renderAll();
   if (taken.changed) showToast(taken.toast, 4500);
   window.addEventListener('pagehide', flushWork);
-  window.addEventListener('storage', e => { routeStorage(e); gsStorage(e); if (e.key === KEY_THEATRE) thFollow(); if (e.key === KEY_UNITS) udFollow(); });
+  window.addEventListener('storage', e => { routeStorage(e); gsStorage(e); if (e.key === KEY_THEATRE) thFollow(); if (e.key === KEY_UNITS) udFollow(); if (e.key === KEY_WING || e.key === null) refreshLiveryLists(); });
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushWork(); else { UI.hq = undefined; gsPull(); routeTakeover(); } });
 }
 init();
@@ -4713,6 +4611,14 @@ def check(html):
         with open(os.path.join(HERE, 'data', fn), encoding='utf-8', newline='') as f:
             txt = f.read().rstrip('\n')
         ok(bool(mm) and mm.group(1) == txt, 'table %s égale à data/%s' % (name, fn))
+    # les livrées par défaut : exactement les types du FC, chaque type avec des noms de texte, sans doublon à la casse près
+    with open(os.path.join(HERE, 'data', 'liveries_default.json'), encoding='utf-8') as f:
+        liv = json.load(f)
+    ptm = re.search(r"const PAYLOAD_TYPES = \[(.*?)\];", html)
+    ptypes = re.findall(r"'([^']+)'", ptm.group(1)) if ptm else []
+    ok(bool(ptypes) and sorted(liv) == sorted(ptypes), 'livrées par défaut : exactement les types de PAYLOAD_TYPES (%s)' % ', '.join('%s %d' % (k, len(v)) for k, v in sorted(liv.items())))
+    ok(all(isinstance(v, list) and v and all(isinstance(n, str) and n.strip() == n and n for n in v) and len({n.lower() for n in v}) == len(v) for v in liv.values()), 'livrées par défaut : des noms non vides, sans espace de bout ni doublon à la casse près')
+    ok('input[data-k="livery"]' not in html and 'data-k="livery" role="combobox"' not in html, 'le champ Livrée est une liste, plus un texte libre')
     scripts = re.findall(r'<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>', html, re.S)
     for i, s in enumerate(scripts):
         tmp = os.path.join(HERE, '.fc_check_%d.js' % i)

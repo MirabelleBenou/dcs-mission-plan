@@ -698,6 +698,21 @@ select[data-tbm-src] {{ display: none !important; }}
 }}
 .wing-logo-zone {{ min-height: 80px; }}
 
+/* Livrées custom : une ligne par livrée (nom, une case par appareil, ✕) ; les cases passent sous le nom quand la place manque */
+.wing-liv-hint {{ margin: 0 0 8px; }}
+.wing-liv-row {{ display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 8px 0; border-top: 1px dashed rgba(168,154,114,.3); min-width: 0; }}
+.wing-liv-row:first-child {{ border-top: 0; padding-top: 0; }}
+.wing-liv-name {{ flex: 1 1 200px; min-width: 0; }}
+.wing-liv-name input {{ width: 100%; box-sizing: border-box; min-width: 0; }}
+.wing-liv-ac {{ flex: 2 1 200px; display: flex; flex-wrap: wrap; align-items: center; gap: 0 14px; min-width: 0; }}
+.wing-liv-chk {{ display: inline-flex; align-items: center; gap: 0; min-height: 44px; font-family: var(--f-typewriter); font-size: 12px; color: var(--paper); cursor: pointer; max-width: 100%; overflow-wrap: anywhere; }}
+.wing-liv-chk input {{ -webkit-appearance: none; appearance: none; position: relative; flex: none; width: 44px; height: 44px; margin: 0; background: transparent; cursor: pointer; }}
+.wing-liv-chk input::before {{ content: ''; position: absolute; left: 11px; top: 11px; width: 22px; height: 22px; box-sizing: border-box; border: 2px solid var(--khaki-light); border-radius: 3px; background: rgba(0,0,0,.2); }}
+.wing-liv-chk input:checked::before {{ background: var(--amber); border-color: var(--amber); }}
+.wing-liv-chk input:checked::after {{ content: ''; position: absolute; left: 19px; top: 14px; width: 6px; height: 12px; box-sizing: border-box; border: solid var(--ink); border-width: 0 3px 3px 0; transform: rotate(45deg); }}
+.wing-liv-chk input:focus-visible {{ outline: 2px solid var(--amber); outline-offset: -4px; }}
+.wing-liv-rm {{ flex: none; margin-left: auto; }}
+
 /* Squadron cards */
 .wing-sq-card {{
   border: 1px solid var(--khaki); border-radius: 4px;
@@ -1180,6 +1195,14 @@ body[data-theme] {{
           <button type="button" class="ed-btn-add" id="wing-sq-add" data-i18n="editor.wing.addSquadron">+ Ajouter un escadron</button>
         </fieldset>
 
+        <!-- Livrées custom -->
+        <fieldset class="wing-fieldset" id="wing-liv-fieldset">
+          <legend class="wing-legend" data-i18n="wing.liv.title">Livrées custom</legend>
+          <p class="wing-hint wing-liv-hint" data-i18n="wing.liv.hint">Le nom tel qu’il s’écrit dans DCS (celui du dossier de la livrée), et les appareils qui la portent.</p>
+          <div id="wing-liv-list"></div>
+          <button type="button" class="ed-btn-add" id="wing-liv-add" data-i18n="wing.liv.add">+ Ajouter une livrée</button>
+        </fieldset>
+
         <!-- Identit\u00e9 du wing -->
         <fieldset class="wing-fieldset">
           <legend class="wing-legend" data-i18n="editor.wing.identity">Identit\u00e9 du wing</legend>
@@ -1325,6 +1348,13 @@ const I18N = {{
     'pk.win.note': 'Appliquer modifie la mission ouverte ; rien n\\'est téléchargé avant « Sauvegarder .miz ».',
     'wing.win.title': 'Configuration du wing',
     'wing.win.done': 'Terminé',
+    'wing.liv.title': 'Livrées custom',
+    'wing.liv.hint': 'Le nom tel qu’il s’écrit dans DCS (celui du dossier de la livrée), et les appareils qui la portent.',
+    'wing.liv.name': 'Nom',
+    'wing.liv.ph': 'ex. 112 Squadron Desert',
+    'wing.liv.add': '+ Ajouter une livrée',
+    'wing.liv.rm': 'Retirer cette livrée',
+    'wing.liv.noac': 'Ajoutez d’abord un appareil à un escadron.',
     'fn.save.title': 'Sauvegarder le .miz',
     'fn.save.go': 'Sauvegarder',
     'toast.mizSaved': '.miz sauvegardé ✔',
@@ -1404,6 +1434,7 @@ const I18N = {{
     'validate.sqIdMissing':     '.id manquant',
     'validate.sqCallsignMissing':'.callsign manquant',
     'validate.sqAircraftNotArray':'.aircraft doit \u00eatre un tableau',
+    'validate.liveriesInvalid': 'liveries doit être un tableau de {{ name, aircraft }}',
     'toast.theme':              'Th\u00e8me appliqu\u00e9',
     'toast.logoCompressing':    'Compression logo...',
     'toast.logoWingLoaded':     'Logo wing charg\u00e9 \u2713',
@@ -1728,6 +1759,13 @@ const I18N = {{
     'pk.win.note': 'Apply changes the open mission; nothing is downloaded until “Save .miz”.',
     'wing.win.title': 'Wing configuration',
     'wing.win.done': 'Done',
+    'wing.liv.title': 'Custom liveries',
+    'wing.liv.hint': 'The name as DCS writes it (the livery’s folder name), and the aircraft that wear it.',
+    'wing.liv.name': 'Name',
+    'wing.liv.ph': 'e.g. 112 Squadron Desert',
+    'wing.liv.add': '+ Add a livery',
+    'wing.liv.rm': 'Remove this livery',
+    'wing.liv.noac': 'First add an aircraft to a squadron.',
     'fn.save.title': 'Save the .miz',
     'fn.save.go': 'Save',
     'toast.mizSaved': '.miz saved ✔',
@@ -1807,6 +1845,7 @@ const I18N = {{
     'validate.sqIdMissing':     '.id missing',
     'validate.sqCallsignMissing':'.callsign missing',
     'validate.sqAircraftNotArray':'.aircraft must be an array',
+    'validate.liveriesInvalid': 'liveries must be an array of {{ name, aircraft }}',
     'toast.theme':              'Theme applied',
     'toast.logoCompressing':    'Compressing logo\u2026',
     'toast.logoWingLoaded':     'Wing logo loaded \u2713',
@@ -2258,6 +2297,11 @@ function validateWingConfig(obj) {{
       if (!Array.isArray(sq.aircraft)) errors.push('squadrons[' + i + ']' + t('validate.sqAircraftNotArray'));
     }});
   }}
+  // liveries est facultatif : absent, aucune livrée custom ; présent, un tableau de {{ name: texte, aircraft: [textes] }}
+  if (obj.liveries !== undefined) {{
+    const okLiv = Array.isArray(obj.liveries) && obj.liveries.every(l => !!l && typeof l === 'object' && !Array.isArray(l) && typeof l.name === 'string' && Array.isArray(l.aircraft) && l.aircraft.every(a => typeof a === 'string'));
+    if (!okLiv) errors.push(t('validate.liveriesInvalid'));
+  }}
   return errors.length === 0 ? {{ ok: true }} : {{ ok: false, errors }};
 }}
 
@@ -2462,6 +2506,7 @@ function renderSqAircraftTags(container, sqIdx) {{
       wingConfig.squadrons[sqIdx].aircraft.splice(acIdx, 1);
       persistWingConfig(); updateWingSizeCounter();
       renderSqAircraftTags(container, sqIdx);
+      renderWingLiveries();
     }});
     tag.appendChild(rmBtn);
     item.appendChild(tag);
@@ -2479,6 +2524,7 @@ function renderSqAircraftTags(container, sqIdx) {{
         wingConfig.squadrons[sqIdx].aircraft[acIdx] = v;
         persistWingConfig(); updateWingSizeCounter();
         renderSqAircraftTags(container, sqIdx);
+        renderWingLiveries();
         acFocusAdd(container);
       }});
       item.appendChild(rep);
@@ -2515,6 +2561,7 @@ function renderSqAircraftTags(container, sqIdx) {{
     list.push(val);
     persistWingConfig(); updateWingSizeCounter();
     renderSqAircraftTags(container, sqIdx);
+    renderWingLiveries();
     acFocusAdd(container);
     return true;
   }};
@@ -2671,8 +2718,83 @@ function renderWingSquadrons(openLastCard) {{
     }}
     list.appendChild(card);
   }});
+  renderWingLiveries();       // les appareils proposés aux livrées suivent les escadrons
   updateWingSizeCounter();
   if (typeof hqFoldRefresh === 'function') hqFoldRefresh();
+}}
+
+// ── Livrées custom (wing_config_v1.liveries) ───────────────────
+// Un nom par livrée, tel qu'il s'écrit dans DCS (le dossier de la livrée), et les appareils qui la portent ; le Flight Configurator les lit
+// dans la liste des livrées de chaque type. Le champ est facultatif : absent, aucune livrée custom.
+function wingAircraftTypes() {{
+  const out = [];
+  wingConfig.squadrons.forEach(sq => {{
+    (Array.isArray(sq.aircraft) ? sq.aircraft : []).forEach(ty => {{ if (typeof ty === 'string' && ty !== '' && out.indexOf(ty) < 0) out.push(ty); }});
+  }});
+  return out;
+}}
+
+function renderWingLivRow(liv, i) {{
+  const row = document.createElement('div');
+  row.className = 'wing-liv-row';
+
+  const nameWrap = document.createElement('div'); nameWrap.className = 'ed-field wing-liv-name';
+  const nameId = 'wing-liv-name-' + i;
+  const nameLbl = document.createElement('label'); nameLbl.htmlFor = nameId; nameLbl.textContent = t('wing.liv.name');
+  const inp = document.createElement('input');
+  inp.type = 'text'; inp.id = nameId; inp.maxLength = 80; inp.value = liv.name; inp.placeholder = t('wing.liv.ph');
+  inp.autocomplete = 'off'; inp.spellcheck = false;
+  inp.addEventListener('input', () => {{
+    liv.name = inp.value;
+    persistWingConfig(); updateWingSizeCounter();
+  }});
+  nameWrap.appendChild(nameLbl); nameWrap.appendChild(inp);
+  row.appendChild(nameWrap);
+
+  const ac = document.createElement('div'); ac.className = 'wing-liv-ac';
+  const types = wingAircraftTypes();
+  liv.aircraft.forEach(ty => {{ if (types.indexOf(ty) < 0) types.push(ty); }});       // un type coché qui n'est plus à aucun escadron reste affiché
+  if (!types.length) {{
+    const none = document.createElement('span'); none.className = 'wing-hint wing-liv-noac'; none.textContent = t('wing.liv.noac');
+    ac.appendChild(none);
+  }} else {{
+    types.forEach(ty => {{
+      const cl = document.createElement('label'); cl.className = 'wing-liv-chk';
+      const cb = document.createElement('input'); cb.type = 'checkbox'; cb.value = ty; cb.checked = liv.aircraft.indexOf(ty) >= 0;
+      cb.addEventListener('change', () => {{
+        liv.aircraft = Array.prototype.filter.call(ac.querySelectorAll('input[type=checkbox]'), b => b.checked).map(b => b.value);       // dans l'ordre des cases
+        persistWingConfig(); updateWingSizeCounter();
+      }});
+      const tx = document.createElement('span'); tx.textContent = ty;
+      cl.appendChild(cb); cl.appendChild(tx);
+      ac.appendChild(cl);
+    }});
+  }}
+  row.appendChild(ac);
+
+  const rm = document.createElement('button');
+  rm.type = 'button'; rm.className = 'ed-btn-icon danger wing-liv-rm';
+  rm.setAttribute('aria-label', t('wing.liv.rm')); rm.title = t('wing.liv.rm');
+  rm.textContent = '\u2715';
+  rm.addEventListener('click', () => {{
+    const k = Array.isArray(wingConfig.liveries) ? wingConfig.liveries.indexOf(liv) : -1;
+    if (k < 0) return;
+    wingConfig.liveries.splice(k, 1);
+    if (!wingConfig.liveries.length) delete wingConfig.liveries;       // plus aucune : le champ facultatif disparaît
+    persistWingConfig(); updateWingSizeCounter();
+    renderWingLiveries();
+    const add = document.getElementById('wing-liv-add');
+    if (add) add.focus({{ preventScroll: true }});
+  }});
+  row.appendChild(rm);
+  return row;
+}}
+
+function renderWingLiveries() {{
+  const list = document.getElementById('wing-liv-list');
+  if (!list) return;
+  list.innerHTML = '';
+  (Array.isArray(wingConfig.liveries) ? wingConfig.liveries : []).forEach((liv, i) => list.appendChild(renderWingLivRow(liv, i)));
 }}
 
 // ── Render wing editor inputs ──────────────────────────────────
@@ -2722,6 +2844,18 @@ function bindWingEditorEvents() {{
       persistWingConfig();
       renderWingSquadrons(true);
       showToast(t('editor.wing.addedSquadron'), {{ type: 'ok' }});
+    }});
+  }}
+
+  const btnAddLiv = document.getElementById('wing-liv-add');
+  if (btnAddLiv) {{
+    btnAddLiv.addEventListener('click', () => {{
+      if (!Array.isArray(wingConfig.liveries)) wingConfig.liveries = [];
+      wingConfig.liveries.push({{ name: '', aircraft: [] }});
+      persistWingConfig(); updateWingSizeCounter();
+      renderWingLiveries();
+      const names = document.querySelectorAll('#wing-liv-list .wing-liv-name input');
+      if (names.length) names[names.length - 1].focus({{ preventScroll: false }});
     }});
   }}
 
@@ -6625,6 +6759,9 @@ grep_present('renderWingEditor',   'renderWingEditor pr\u00e9sent')
 grep_present('exportWingConfig',   'exportWingConfig pr\u00e9sent')
 grep_present('importWingConfig',   'importWingConfig pr\u00e9sent')
 grep_present('resetWingConfig',    'resetWingConfig pr\u00e9sent')
+grep_present('validate.liveriesInvalid', 'validation du champ liveries pr\u00e9sente')
+grep_present('id="wing-liv-list"', 'liste des livr\u00e9es custom de la fen\u00eatre Wing')
+grep_present('function renderWingLiveries', 'renderWingLiveries pr\u00e9sent')
 grep_present('compressLogoFile',   'compressLogoFile pr\u00e9sent')
 grep_present('LOGO_MAX_SIZE',      'LOGO_MAX_SIZE (256) pr\u00e9sent')
 grep_present("image/png",          'format PNG logo')
