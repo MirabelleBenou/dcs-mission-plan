@@ -8555,7 +8555,7 @@ const IMP_I18N = {
     'imp.src.hq': 'Mission chargée dans HQ',
     'imp.src.bg': 'Briefing en cours',
     'imp.src.file': 'Fichier',
-    'imp.hq.none': 'Aucune mission dans HQ : chargez-en une dans HQ (même navigateur).',
+    'imp.hq.none': 'Aucune mission dans HQ : ouvrez un .miz dans HQ, dans cette page de Mission Plan.',
     'imp.hq.ok': '{0} · théâtre {1}',
     'imp.bg.none': 'Aucun briefing en cours : ouvrez le Briefing Generator (même navigateur).',
     'imp.bg.ok': '{0} phase(s)',
@@ -8620,7 +8620,7 @@ const IMP_I18N = {
     'imp.src.hq': 'Mission loaded in HQ',
     'imp.src.bg': 'Current briefing',
     'imp.src.file': 'File',
-    'imp.hq.none': 'No mission in HQ: load one in HQ (same browser).',
+    'imp.hq.none': 'No mission in HQ: open a .miz in HQ, in this Mission Plan page.',
     'imp.hq.ok': '{0} · theatre {1}',
     'imp.bg.none': 'No current briefing: open the Briefing Generator (same browser).',
     'imp.bg.ok': '{0} phase(s)',
@@ -11730,6 +11730,7 @@ function routeTakeover() {
   if (r.changed) { refreshSummaries(); showToast(r.toast, 4500); }
 }
 function routeStorage(e) {
+  if (e.key === KEY_HQ_MISSION || e.key === null) UI.hq = undefined;      // le cache de la mission d'HQ suit sa clé : le prochain hqMission() relit
   if (e.key !== null && e.key !== KEY_RP_SET && e.key !== KEY_RP_STATE && e.key !== KEY_HQ_MISSION) return;
   clearTimeout(RT.timer);
   RT.timer = setTimeout(routeTakeover, 80);      // le Route Planner écrit route_set_v1 puis route_state_v1 : un seul passage pour les deux
