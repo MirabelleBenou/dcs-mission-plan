@@ -6923,7 +6923,7 @@ grep_present('aria-labelledby', 'groupe de cases des livr\u00e9es nomm\u00e9 par
 grep_present('function renderWingLiveries', 'renderWingLiveries pr\u00e9sent')
 grep_present('compressLogoFile',   'compressLogoFile pr\u00e9sent')
 
-# Livrée par défaut de chaque type (lot mp-fc-livree-nom) : un contrôle qui échoue arrête le build
+# Livrée par défaut de chaque type : un contrôle qui échoue arrête le build
 _DEF_BAD = 0
 def must(cond, label):
     global _DEF_BAD
