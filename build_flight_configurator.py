@@ -1323,6 +1323,9 @@ body[data-theme] {
 @media (max-width: 1132px) { .tb-btn .tb-btn-label { display: none; } .tb-btn { padding: 0; width: 44px; } }
 @media (max-width: 539px) { .tb-select { max-width: 96px; } }
 @media (max-width: 479px) { .toolbar { gap: 3px; } .tb-btn { width: 34px; min-width: 34px; } .tb-select { max-width: 64px; padding: 0 18px 0 6px; } .tb-lang-btn { min-width: 34px; padding: 0 2px; } }
+/* Le bouton « Ouvrir » reste un bouton de menu (icône + chevron) : à la taille de celui du Route Planner, jamais réduit à la forme d'un bouton à icône seule */
+@media (max-width: 1132px) { #btn-open { width: auto; min-width: 44px; padding-left: 12px; padding-right: 12px; } }
+@media (max-width: 520px) { #btn-open { padding-left: 8px; } }
 /* La liste du théâtre (lot mp-theatre-unique) : jusqu'à 980 px le libellé « Théâtre » cède la place (la liste garde son nom accessible) ; sous 480 px la liste se resserre (texte entier jusqu'à 96 px, puis coupé)
    et la liste du thème de l'interface quitte la barre (le thème se règle au tableau du shell, qui le propage) : sans cela la barre défile de 21 à 28 px à 412 px */
 @media (max-width: 849px) { .tb-label { display: none; } }
