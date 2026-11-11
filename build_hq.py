@@ -204,6 +204,97 @@ _example_wing_configs_js = json.dumps(
 )
 
 # ---------- HTML ----------
+# ---------- Livrée par défaut de chaque type (wing_config_v1.defaultLiveries) ----------
+# Les noms de livrées du jeu (data/liveries_default.json, les mêmes octets qu'au Flight Configurator) et la section « Livrée par défaut » de la fenêtre Wing.
+_LIVERIES_DEFAULT_PATH = os.path.join(HERE, 'data', 'liveries_default.json')
+with open(_LIVERIES_DEFAULT_PATH, encoding='utf-8', newline='') as _f:
+    _LIVERIES_DEFAULT_TXT = _f.read().rstrip('\n')
+assert '</script' not in _LIVERIES_DEFAULT_TXT.lower()
+assert isinstance(json.loads(_LIVERIES_DEFAULT_TXT), dict)
+
+_WING_DEF_JS = r"""
+/* LIVERIES_DEFAULT:BEGIN */
+const LIVERIES_DEFAULT = @@LIVERIES_DEFAULT_TXT@@;
+/* LIVERIES_DEFAULT:END */
+
+// ── Livrée par défaut (wing_config_v1.defaultLiveries) ─────────
+// Un objet { type: nom }, facultatif : absent, aucun défaut. Le Flight Configurator affiche cette livrée quand la mission ouverte dans HQ n'en donne pas à l'unité ;
+// sans défaut, la première de la liste du type. La liste d'un type se calcule comme au Flight Configurator (liveriesFor) : les noms du jeu, puis les noms des
+// livrées custom qui portent ce type ; sans doublon à la casse près (le nom du jeu l'emporte), triée sans casse.
+function wingDefIsObj(o) { return !!o && typeof o === 'object' && !Array.isArray(o); }
+function livCmp(a, b) { const x = a.toLowerCase(), y = b.toLowerCase(); return x < y ? -1 : (x > y ? 1 : (a < b ? -1 : (a > b ? 1 : 0))); }
+function liveriesFor(type) {
+  const seen = new Set(), out = [];
+  const add = n => { const k = n.toLowerCase(); if (n !== '' && !seen.has(k)) { seen.add(k); out.push(n); } };
+  (Object.prototype.hasOwnProperty.call(LIVERIES_DEFAULT, type) ? LIVERIES_DEFAULT[type] : []).forEach(add);
+  (Array.isArray(wingConfig.liveries) ? wingConfig.liveries : []).forEach(x => {
+    if (x && typeof x === 'object' && typeof x.name === 'string' && Array.isArray(x.aircraft) && x.aircraft.indexOf(type) >= 0) add(x.name.trim());
+  });
+  return out.sort(livCmp);
+}
+
+// Les options de la ligne d'un type : « La première de la liste » (valeur vide), la valeur gardée si aucun nom de la liste ne l'égale à la casse près (telle quelle),
+// puis la liste ; une valeur égale à un nom à la casse près prend la place de ce nom.
+function wingDefOptions(ty) {
+  let names = liveriesFor(ty);
+  const kept = wingDefIsObj(wingConfig.defaultLiveries) && Object.prototype.hasOwnProperty.call(wingConfig.defaultLiveries, ty) && typeof wingConfig.defaultLiveries[ty] === 'string' ? wingConfig.defaultLiveries[ty].trim() : '';
+  const opts = [{ v: '', l: t('wing.def.first') }];
+  if (kept !== '') {
+    const k = names.findIndex(n => n.toLowerCase() === kept.toLowerCase());
+    if (k >= 0) { names = names.slice(); names[k] = kept; names.sort(livCmp); }
+    else opts.push({ v: kept, l: kept });
+  }
+  return { opts: opts.concat(names.map(n => ({ v: n, l: n }))), value: kept };
+}
+function wingDefFill(sel, ty) {
+  const o = wingDefOptions(ty);
+  sel.innerHTML = '';
+  o.opts.forEach(x => sel.appendChild(acMakeOption(x.v, x.l)));
+  sel.value = o.value;
+}
+
+function renderWingDefRow(ty) {
+  const row = document.createElement('div');
+  row.className = 'wing-def-row';
+  const lbl = document.createElement('span'); lbl.className = 'wing-def-lbl'; lbl.textContent = ty;
+  const sel = acMakeSelect('wing-def-sel', ty);
+  wingDefFill(sel, ty);
+  sel.addEventListener('change', () => {
+    const v = sel.value;
+    if (v === '') {
+      if (wingDefIsObj(wingConfig.defaultLiveries)) {
+        delete wingConfig.defaultLiveries[ty];
+        if (!Object.keys(wingConfig.defaultLiveries).length) delete wingConfig.defaultLiveries;       // plus aucun : le champ facultatif disparaît
+      }
+    } else {
+      if (!wingDefIsObj(wingConfig.defaultLiveries)) wingConfig.defaultLiveries = {};
+      wingConfig.defaultLiveries[ty] = v;
+    }
+    persistWingConfig(); updateWingSizeCounter();
+    wingDefFill(sel, ty);       // une valeur hors liste qui n'est plus choisie quitte la liste
+  });
+  row.appendChild(lbl); row.appendChild(sel);
+  return row;
+}
+
+// Une ligne par type des escadrons (dans l'ordre des escadrons) dont la liste n'est pas vide ; la clé d'un type sans ligne reste dans la donnée.
+function renderWingDefLiveries() {
+  const list = document.getElementById('wing-def-list');
+  if (!list) return;
+  list.innerHTML = '';
+  let n = 0;
+  wingAircraftTypes().forEach(ty => {
+    if (!liveriesFor(ty).length) return;
+    n++;
+    list.appendChild(renderWingDefRow(ty));
+  });
+  if (!n) {
+    const none = document.createElement('p'); none.className = 'wing-hint wing-def-none'; none.textContent = t('wing.def.none');
+    list.appendChild(none);
+  }
+}
+"""
+
 HTML = f"""<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -713,6 +804,12 @@ select[data-tbm-src] {{ display: none !important; }}
 .wing-liv-chk input:focus-visible {{ outline: 2px solid var(--amber); outline-offset: -4px; }}
 .wing-liv-rm {{ flex: none; margin-left: auto; }}
 
+/* Livrée par défaut : une ligne par appareil (son type, la liste) ; la liste passe sous le type quand la place manque */
+.wing-def-hint {{ margin: 0 0 8px; }}
+.wing-def-row {{ display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 4px 0; min-width: 0; }}
+.wing-def-lbl {{ flex: 0 1 auto; min-width: 0; max-width: 100%; font-family: var(--f-typewriter); font-size: 12px; color: var(--paper); overflow-wrap: anywhere; }}
+.wing-def-none {{ margin: 0; }}
+
 /* Squadron cards */
 .wing-sq-card {{
   border: 1px solid var(--khaki); border-radius: 4px;
@@ -1203,6 +1300,13 @@ body[data-theme] {{
           <button type="button" class="ed-btn-add" id="wing-liv-add" data-i18n="wing.liv.add">+ Ajouter une livrée</button>
         </fieldset>
 
+        <!-- Livrée par défaut -->
+        <fieldset class="wing-fieldset" id="wing-def-fieldset">
+          <legend class="wing-legend" data-i18n="wing.def.title">Livrée par défaut</legend>
+          <p class="wing-hint wing-def-hint" data-i18n="wing.def.hint">Pour chaque appareil des escadrons, la livrée que le Flight Configurator affiche quand la mission ouverte dans HQ ne lui en donne pas.</p>
+          <div id="wing-def-list"></div>
+        </fieldset>
+
         <!-- Identit\u00e9 du wing -->
         <fieldset class="wing-fieldset">
           <legend class="wing-legend" data-i18n="editor.wing.identity">Identit\u00e9 du wing</legend>
@@ -1355,6 +1459,10 @@ const I18N = {{
     'wing.liv.add': '+ Ajouter une livrée',
     'wing.liv.rm': 'Retirer cette livrée',
     'wing.liv.noac': 'Ajoutez d’abord un appareil à un escadron.',
+    'wing.def.title': 'Livrée par défaut',
+    'wing.def.hint': 'Pour chaque appareil des escadrons, la livrée que le Flight Configurator affiche quand la mission ouverte dans HQ ne lui en donne pas.',
+    'wing.def.first': 'La première de la liste',
+    'wing.def.none': 'Aucun appareil des escadrons n’a de livrée connue.',
     'fn.save.title': 'Sauvegarder le .miz',
     'fn.save.go': 'Sauvegarder',
     'toast.mizSaved': '.miz sauvegardé ✔',
@@ -1435,6 +1543,7 @@ const I18N = {{
     'validate.sqCallsignMissing':'.callsign manquant',
     'validate.sqAircraftNotArray':'.aircraft doit \u00eatre un tableau',
     'validate.liveriesInvalid': 'liveries doit être un tableau de {{ name, aircraft }}',
+    'validate.defaultLiveriesInvalid': 'defaultLiveries doit être un objet {{ type: nom }}',
     'toast.theme':              'Th\u00e8me appliqu\u00e9',
     'toast.logoCompressing':    'Compression logo...',
     'toast.logoWingLoaded':     'Logo wing charg\u00e9 \u2713',
@@ -1766,6 +1875,10 @@ const I18N = {{
     'wing.liv.add': '+ Add a livery',
     'wing.liv.rm': 'Remove this livery',
     'wing.liv.noac': 'First add an aircraft to a squadron.',
+    'wing.def.title': 'Default livery',
+    'wing.def.hint': 'For each of the squadrons’ aircraft, the livery the Flight Configurator shows when the mission open in HQ doesn’t give it one.',
+    'wing.def.first': 'The first in the list',
+    'wing.def.none': 'None of the squadrons’ aircraft has a known livery.',
     'fn.save.title': 'Save the .miz',
     'fn.save.go': 'Save',
     'toast.mizSaved': '.miz saved ✔',
@@ -1846,6 +1959,7 @@ const I18N = {{
     'validate.sqCallsignMissing':'.callsign missing',
     'validate.sqAircraftNotArray':'.aircraft must be an array',
     'validate.liveriesInvalid': 'liveries must be an array of {{ name, aircraft }}',
+    'validate.defaultLiveriesInvalid': 'defaultLiveries must be an object {{ type: name }}',
     'toast.theme':              'Theme applied',
     'toast.logoCompressing':    'Compressing logo\u2026',
     'toast.logoWingLoaded':     'Wing logo loaded \u2713',
@@ -2302,6 +2416,12 @@ function validateWingConfig(obj) {{
     const okLiv = Array.isArray(obj.liveries) && obj.liveries.every(l => !!l && typeof l === 'object' && !Array.isArray(l) && typeof l.name === 'string' && Array.isArray(l.aircraft) && l.aircraft.every(a => typeof a === 'string'));
     if (!okLiv) errors.push(t('validate.liveriesInvalid'));
   }}
+  // defaultLiveries est facultatif : absent, aucun défaut ; présent, un objet {{ type: nom }} (pas un tableau, pas null) dont chaque valeur est une chaîne
+  if (obj.defaultLiveries !== undefined) {{
+    const d = obj.defaultLiveries;
+    const okDef = !!d && typeof d === 'object' && !Array.isArray(d) && Object.keys(d).every(k => typeof d[k] === 'string');
+    if (!okDef) errors.push(t('validate.defaultLiveriesInvalid'));
+  }}
   return errors.length === 0 ? {{ ok: true }} : {{ ok: false, errors }};
 }}
 
@@ -2320,12 +2440,29 @@ function sanitizeWingLiveries(cfg) {{
   if (kept.length) cfg.liveries = kept; else delete cfg.liveries;
 }}
 
+// Même règle pour `defaultLiveries` : retiré s'il n'est pas un objet, réduit à ses valeurs chaînes sinon, la clé part s'il ne reste rien ; l'import reste strict.
+function sanitizeWingDefaultLiveries(cfg) {{
+  if (!cfg || typeof cfg !== 'object' || cfg.defaultLiveries === undefined) return;
+  const d = cfg.defaultLiveries;
+  if (!d || typeof d !== 'object' || Array.isArray(d)) {{
+    console.warn('[Wing] defaultLiveries retiré : ce n\u2019est pas un objet');
+    delete cfg.defaultLiveries;
+    return;
+  }}
+  const keys = Object.keys(d);
+  const kept = Object.fromEntries(keys.filter(k => typeof d[k] === 'string').map(k => [k, d[k]]));
+  const n = Object.keys(kept).length;
+  if (n !== keys.length) console.warn('[Wing] defaultLiveries réduit à ses valeurs valides : ' + n + ' sur ' + keys.length);
+  if (n) cfg.defaultLiveries = kept; else delete cfg.defaultLiveries;
+}}
+
 function loadWingConfig() {{
   try {{
     const raw = localStorage.getItem(KEY_WING);
     if (raw) {{
       const parsed = JSON.parse(raw);
       sanitizeWingLiveries(parsed);
+      sanitizeWingDefaultLiveries(parsed);
       const check = validateWingConfig(parsed);
       if (check.ok) return parsed;
       console.warn('[Wing] Config localStorage invalide \u2014 utilisation du d\u00e9faut :', check.errors);
@@ -2739,6 +2876,7 @@ function renderWingSquadrons(openLastCard) {{
   if (typeof hqFoldRefresh === 'function') hqFoldRefresh();
 }}
 
+@@WING_DEF_BLOCK@@
 // ── Livrées custom (wing_config_v1.liveries) ───────────────────
 // Un nom par livrée, tel qu'il s'écrit dans DCS (le dossier de la livrée), et les appareils qui la portent ; le Flight Configurator les lit
 // dans la liste des livrées de chaque type. Le champ est facultatif : absent, aucune livrée custom.
@@ -2762,7 +2900,7 @@ function renderWingLivRow(liv, i) {{
   inp.autocomplete = 'off'; inp.spellcheck = false;
   inp.addEventListener('input', () => {{
     liv.name = inp.value;
-    persistWingConfig(); updateWingSizeCounter();
+    persistWingConfig(); updateWingSizeCounter(); renderWingDefLiveries();
   }});
   nameWrap.appendChild(nameLbl); nameWrap.appendChild(inp);
   row.appendChild(nameWrap);
@@ -2780,7 +2918,7 @@ function renderWingLivRow(liv, i) {{
       const cb = document.createElement('input'); cb.type = 'checkbox'; cb.value = ty; cb.checked = liv.aircraft.indexOf(ty) >= 0;
       cb.addEventListener('change', () => {{
         liv.aircraft = Array.prototype.filter.call(ac.querySelectorAll('input[type=checkbox]'), b => b.checked).map(b => b.value);       // dans l'ordre des cases
-        persistWingConfig(); updateWingSizeCounter();
+        persistWingConfig(); updateWingSizeCounter(); renderWingDefLiveries();
       }});
       const tx = document.createElement('span'); tx.textContent = ty;
       cl.appendChild(cb); cl.appendChild(tx);
@@ -2812,6 +2950,7 @@ function renderWingLiveries() {{
   if (!list) return;
   list.innerHTML = '';
   (Array.isArray(wingConfig.liveries) ? wingConfig.liveries : []).forEach((liv, i) => list.appendChild(renderWingLivRow(liv, i)));
+  renderWingDefLiveries();       // la liste d'un type suit les escadrons et les livrées custom
 }}
 
 // ── Render wing editor inputs ──────────────────────────────────
@@ -6724,6 +6863,7 @@ HTML_FINAL = (HTML
     .replace('@@RADIO_BLOCK@@\n', build_radio_block())
     .replace('@@RADIO_BANDS_BLOCK@@\n', build_radio_bands_block())
     .replace('@@AIRCRAFT_TYPES_BLOCK@@\n', build_aircraft_types_block())
+    .replace('@@WING_DEF_BLOCK@@\n', _WING_DEF_JS.replace('@@LIVERIES_DEFAULT_TXT@@', _LIVERIES_DEFAULT_TXT))
     .replace('@@DYN_AIRDROMES@@', _DYN_AIRDROMES_JS)
 )
 
@@ -6782,6 +6922,27 @@ grep_present('function sanitizeWingLiveries', 'lecture de la configuration : un 
 grep_present('aria-labelledby', 'groupe de cases des livr\u00e9es nomm\u00e9 par son champ Nom')
 grep_present('function renderWingLiveries', 'renderWingLiveries pr\u00e9sent')
 grep_present('compressLogoFile',   'compressLogoFile pr\u00e9sent')
+
+# Livrée par défaut de chaque type (lot mp-fc-livree-nom) : un contrôle qui échoue arrête le build
+_DEF_BAD = 0
+def must(cond, label):
+    global _DEF_BAD
+    print("  [%s] %s" % ('OK' if cond else '\u00c9CHEC', label))
+    if not cond:
+        _DEF_BAD += 1
+_m = _re.search(r'/\* LIVERIES_DEFAULT:BEGIN \*/\nconst LIVERIES_DEFAULT = (.*);\n/\* LIVERIES_DEFAULT:END \*/', src, _re.S)
+must(bool(_m) and _m.group(1) == _LIVERIES_DEFAULT_TXT, 'table LIVERIES_DEFAULT \u00e9gale \u00e0 data/liveries_default.json (aux octets pr\u00e8s)')
+must('@@WING_DEF_BLOCK@@' not in src and '@@LIVERIES_DEFAULT_TXT@@' not in src, 'rep\u00e8res du bloc des livr\u00e9es par d\u00e9faut remplac\u00e9s')
+must(src.find('id="wing-liv-fieldset"') < src.find('id="wing-def-fieldset"') < src.find('data-i18n="editor.wing.identity"'), 'fieldset \u00ab Livr\u00e9e par d\u00e9faut \u00bb juste apr\u00e8s \u00ab Livr\u00e9es custom \u00bb, avant \u00ab Identit\u00e9 du wing \u00bb')
+must('function sanitizeWingDefaultLiveries' in src and 'sanitizeWingDefaultLiveries(parsed);' in src, 'lecture de la configuration : un defaultLiveries mal form\u00e9 ne la fait pas perdre')
+must('validate.defaultLiveriesInvalid' in src and 'obj.defaultLiveries !== undefined' in src, 'validation du champ defaultLiveries pr\u00e9sente (l\u2019import reste strict)')
+must('function renderWingDefLiveries' in src and 'renderWingDefLiveries();       // la liste d\'un type suit les escadrons' in src, 'la section se refait avec renderWingLiveries')
+_fr = src.split("fr: {")[1].split("en: {")[0]; _en = src.split("en: {")[1].split("}};")[0]
+_kd = lambda txt: set(_re.findall(r"'(wing\.def\.[^']+|validate\.defaultLiveriesInvalid)':", txt))
+must(_kd(_fr) == _kd(_en) and len(_kd(_fr)) == 5, 'I18N parit\u00e9 wing.def.* et validate.defaultLiveriesInvalid fr/en (%d cl\u00e9s)' % len(_kd(_fr)))
+must(all(('t(\'%s\')' % k) in src or ('data-i18n="%s"' % k) in src for k in ('wing.def.title', 'wing.def.hint', 'wing.def.first', 'wing.def.none', 'validate.defaultLiveriesInvalid')), 'chaque texte de la section est utilis\u00e9')
+if _DEF_BAD:
+    sys.exit(1)
 grep_present('LOGO_MAX_SIZE',      'LOGO_MAX_SIZE (256) pr\u00e9sent')
 grep_present("image/png",          'format PNG logo')
 grep_present('DEFAULT_WING_CONFIG', 'DEFAULT_WING_CONFIG embarqu\u00e9')

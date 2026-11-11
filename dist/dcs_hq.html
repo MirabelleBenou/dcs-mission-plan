@@ -519,6 +519,12 @@ select[data-tbm-src] { display: none !important; }
 .wing-liv-chk input:focus-visible { outline: 2px solid var(--amber); outline-offset: -4px; }
 .wing-liv-rm { flex: none; margin-left: auto; }
 
+/* Livrée par défaut : une ligne par appareil (son type, la liste) ; la liste passe sous le type quand la place manque */
+.wing-def-hint { margin: 0 0 8px; }
+.wing-def-row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 4px 0; min-width: 0; }
+.wing-def-lbl { flex: 0 1 auto; min-width: 0; max-width: 100%; font-family: var(--f-typewriter); font-size: 12px; color: var(--paper); overflow-wrap: anywhere; }
+.wing-def-none { margin: 0; }
+
 /* Squadron cards */
 .wing-sq-card {
   border: 1px solid var(--khaki); border-radius: 4px;
@@ -1187,6 +1193,13 @@ body[data-theme] {
           <button type="button" class="ed-btn-add" id="wing-liv-add" data-i18n="wing.liv.add">+ Ajouter une livrée</button>
         </fieldset>
 
+        <!-- Livrée par défaut -->
+        <fieldset class="wing-fieldset" id="wing-def-fieldset">
+          <legend class="wing-legend" data-i18n="wing.def.title">Livrée par défaut</legend>
+          <p class="wing-hint wing-def-hint" data-i18n="wing.def.hint">Pour chaque appareil des escadrons, la livrée que le Flight Configurator affiche quand la mission ouverte dans HQ ne lui en donne pas.</p>
+          <div id="wing-def-list"></div>
+        </fieldset>
+
         <!-- Identité du wing -->
         <fieldset class="wing-fieldset">
           <legend class="wing-legend" data-i18n="editor.wing.identity">Identité du wing</legend>
@@ -1339,6 +1352,10 @@ const I18N = {
     'wing.liv.add': '+ Ajouter une livrée',
     'wing.liv.rm': 'Retirer cette livrée',
     'wing.liv.noac': 'Ajoutez d’abord un appareil à un escadron.',
+    'wing.def.title': 'Livrée par défaut',
+    'wing.def.hint': 'Pour chaque appareil des escadrons, la livrée que le Flight Configurator affiche quand la mission ouverte dans HQ ne lui en donne pas.',
+    'wing.def.first': 'La première de la liste',
+    'wing.def.none': 'Aucun appareil des escadrons n’a de livrée connue.',
     'fn.save.title': 'Sauvegarder le .miz',
     'fn.save.go': 'Sauvegarder',
     'toast.mizSaved': '.miz sauvegardé ✔',
@@ -1419,6 +1436,7 @@ const I18N = {
     'validate.sqCallsignMissing':'.callsign manquant',
     'validate.sqAircraftNotArray':'.aircraft doit être un tableau',
     'validate.liveriesInvalid': 'liveries doit être un tableau de { name, aircraft }',
+    'validate.defaultLiveriesInvalid': 'defaultLiveries doit être un objet { type: nom }',
     'toast.theme':              'Thème appliqué',
     'toast.logoCompressing':    'Compression logo...',
     'toast.logoWingLoaded':     'Logo wing chargé ✓',
@@ -1750,6 +1768,10 @@ const I18N = {
     'wing.liv.add': '+ Add a livery',
     'wing.liv.rm': 'Remove this livery',
     'wing.liv.noac': 'First add an aircraft to a squadron.',
+    'wing.def.title': 'Default livery',
+    'wing.def.hint': 'For each of the squadrons’ aircraft, the livery the Flight Configurator shows when the mission open in HQ doesn’t give it one.',
+    'wing.def.first': 'The first in the list',
+    'wing.def.none': 'None of the squadrons’ aircraft has a known livery.',
     'fn.save.title': 'Save the .miz',
     'fn.save.go': 'Save',
     'toast.mizSaved': '.miz saved ✔',
@@ -1830,6 +1852,7 @@ const I18N = {
     'validate.sqCallsignMissing':'.callsign missing',
     'validate.sqAircraftNotArray':'.aircraft must be an array',
     'validate.liveriesInvalid': 'liveries must be an array of { name, aircraft }',
+    'validate.defaultLiveriesInvalid': 'defaultLiveries must be an object { type: name }',
     'toast.theme':              'Theme applied',
     'toast.logoCompressing':    'Compressing logo…',
     'toast.logoWingLoaded':     'Wing logo loaded ✓',
@@ -2602,6 +2625,12 @@ function validateWingConfig(obj) {
     const okLiv = Array.isArray(obj.liveries) && obj.liveries.every(l => !!l && typeof l === 'object' && !Array.isArray(l) && typeof l.name === 'string' && Array.isArray(l.aircraft) && l.aircraft.every(a => typeof a === 'string'));
     if (!okLiv) errors.push(t('validate.liveriesInvalid'));
   }
+  // defaultLiveries est facultatif : absent, aucun défaut ; présent, un objet { type: nom } (pas un tableau, pas null) dont chaque valeur est une chaîne
+  if (obj.defaultLiveries !== undefined) {
+    const d = obj.defaultLiveries;
+    const okDef = !!d && typeof d === 'object' && !Array.isArray(d) && Object.keys(d).every(k => typeof d[k] === 'string');
+    if (!okDef) errors.push(t('validate.defaultLiveriesInvalid'));
+  }
   return errors.length === 0 ? { ok: true } : { ok: false, errors };
 }
 
@@ -2620,12 +2649,29 @@ function sanitizeWingLiveries(cfg) {
   if (kept.length) cfg.liveries = kept; else delete cfg.liveries;
 }
 
+// Même règle pour `defaultLiveries` : retiré s'il n'est pas un objet, réduit à ses valeurs chaînes sinon, la clé part s'il ne reste rien ; l'import reste strict.
+function sanitizeWingDefaultLiveries(cfg) {
+  if (!cfg || typeof cfg !== 'object' || cfg.defaultLiveries === undefined) return;
+  const d = cfg.defaultLiveries;
+  if (!d || typeof d !== 'object' || Array.isArray(d)) {
+    console.warn('[Wing] defaultLiveries retiré : ce n’est pas un objet');
+    delete cfg.defaultLiveries;
+    return;
+  }
+  const keys = Object.keys(d);
+  const kept = Object.fromEntries(keys.filter(k => typeof d[k] === 'string').map(k => [k, d[k]]));
+  const n = Object.keys(kept).length;
+  if (n !== keys.length) console.warn('[Wing] defaultLiveries réduit à ses valeurs valides : ' + n + ' sur ' + keys.length);
+  if (n) cfg.defaultLiveries = kept; else delete cfg.defaultLiveries;
+}
+
 function loadWingConfig() {
   try {
     const raw = localStorage.getItem(KEY_WING);
     if (raw) {
       const parsed = JSON.parse(raw);
       sanitizeWingLiveries(parsed);
+      sanitizeWingDefaultLiveries(parsed);
       const check = validateWingConfig(parsed);
       if (check.ok) return parsed;
       console.warn('[Wing] Config localStorage invalide — utilisation du défaut :', check.errors);
@@ -3039,6 +3085,286 @@ function renderWingSquadrons(openLastCard) {
   if (typeof hqFoldRefresh === 'function') hqFoldRefresh();
 }
 
+
+/* LIVERIES_DEFAULT:BEGIN */
+const LIVERIES_DEFAULT = {
+ "Mi-24P": [
+  "262nd_SHQ_USSR",
+  "AF 440 OVP",
+  "AF Bagram OVE autumn 1988",
+  "AF Standard3 Old",
+  "AF Syzran AFB",
+  "AF Torzhok AFB",
+  "AF USSR",
+  "Azerbaijan Army 1993",
+  "Bulgarian Air Force 129",
+  "Czech Republic",
+  "Egyptian Air Force",
+  "GDR Mi-24P",
+  "Georgian Air Force",
+  "IQAF",
+  "Polish 49PSB",
+  "Polish 56BLot",
+  "Russian Air Force",
+  "SyAAF",
+  "Ukrainian Army Aviation",
+  "United Nations",
+  "United States Coast Guard Mi-24"
+ ],
+ "Mi-8MT": [
+  "Abkhazia",
+  "Algerian AF Green",
+  "Algerian AF Green EVSAN",
+  "Algerian AF New Desert",
+  "Algerian AF Old Desert",
+  "Algerian AF VIP",
+  "Australia",
+  "Belgium",
+  "Bulgarian AF",
+  "Canada",
+  "China PLAAA Camo",
+  "China PLAAA White",
+  "China UN",
+  "Czech Air Force dark camo",
+  "Denmark",
+  "Egyptian Air Force",
+  "Egyptian Air Force 1465",
+  "Egyptian Police",
+  "France ARMY",
+  "France NAVY",
+  "Georgia",
+  "Germany",
+  "Hellenic Airforce SAR",
+  "Hellenic Army Aviation",
+  "Insurgents",
+  "IQAA",
+  "IQAA Desert",
+  "IQAA Green",
+  "IR AFAGIR Blue",
+  "IR AFAGIR Sand",
+  "IR Iranian Special Police Forces",
+  "Israel",
+  "Italy ARMY",
+  "Italy NAVY",
+  "Netherlands ARMY",
+  "Netherlands NAVY",
+  "Norway",
+  "Russia_Aeroflot",
+  "Russia_Army_Weather",
+  "Russia_FSB",
+  "Russia_Gazprom",
+  "Russia_KazanVZ",
+  "Russia_LII_Gromov RA-25546",
+  "Russia_MVD_Mozdok",
+  "Russia_MVD_Standard",
+  "Russia_Naryan-Mar",
+  "Russia_PF_Ambulance",
+  "Russia_Police",
+  "Russia_UN",
+  "Russia_UTair",
+  "Russia_Vertolety_Russia",
+  "Russia_Vertolety_Russia_2",
+  "Russia_VVS_Grey",
+  "Russia_VVS_Grey_2",
+  "Russia_VVS_MA",
+  "Russia_VVS_Standard",
+  "Russia_VVS_Standard_2",
+  "South Ossetia",
+  "Spain",
+  "Standard",
+  "Turkey",
+  "Ukraine",
+  "United Kingdom",
+  "USA_AFG"
+ ],
+ "F-4E-45MC": [
+  "37+01_PP_JG71",
+  "37+24_N81B_JG72",
+  "37+36_N72_JG74",
+  "37+45_N90_JG74",
+  "37+49_N81A_JG73",
+  "37+83_N81A_JG74",
+  "38+10_N72_JG71",
+  "38+13_PP_WTD61",
+  "38+59_N90_JG71",
+  "ADC AF66-300",
+  "ADC AF66-382",
+  "CA68-426_H2_163tfg",
+  "CA69-382_H2_163tfg",
+  "default",
+  "EAF-60366_Ghost",
+  "EAF-70355_H2",
+  "EAF-70373_SEAW",
+  "HAF-01507_AG",
+  "HAF-01520_AB",
+  "HAF-71752_SEAW",
+  "HAF-Generic-AG",
+  "HAF-Generic-AG_mod",
+  "IAF-Kurnass-114-119SQN",
+  "IAF-Kurnass-114-119SQN_mod",
+  "IAF-Kurnass-175-69SQN",
+  "IAF-Kurnass-175-69SQN_mod",
+  "IAF-Kurnass-303-69SQN",
+  "IIAF-3-6687",
+  "IIAF-USAF",
+  "IRIAF-3-6564",
+  "IRIAF-3-6643",
+  "IRIAF-3-6673",
+  "JASDF-07-8428",
+  "JASDF-57-6371",
+  "JASDF-57-8367-301st",
+  "JASDF-57-8368",
+  "JASDF-67-8380",
+  "JASDF-77-8399",
+  "JASDF-87-8312-3WG",
+  "JASDF-87-8312-3WG-BlackPanthers50th",
+  "JASDF-87-8409-ADTW-GifuAB2017",
+  "JV67-287_SEAW_469TFS",
+  "JV67-288_SEAW_469TFS",
+  "MY68-328_E1_68FS",
+  "NJ68-357_H1_141TFS",
+  "OS68-349_SEAW_36TFS",
+  "RAAF-97203_SEA",
+  "RAF-43-Sqn-FG.1",
+  "ROKAF-68377-H2-156FS",
+  "ROKAF-80407-H2-152FS",
+  "ROKAF-80470-CG-153FS",
+  "ROKAF-80728-H2-153FS",
+  "RS68-381_E1_526TFS",
+  "RS68-480_SEA_512TFS",
+  "RS68-517_SEA_526TFS",
+  "SAF-C12_30 ALA-12",
+  "SL68-303_H1_110ANG",
+  "TH68-450_H1_457FS",
+  "Thunderbird1",
+  "Thunderbird2",
+  "Thunderbird3",
+  "Thunderbird4",
+  "Thunderbird5",
+  "Thunderbird6",
+  "Thunderbird7",
+  "TuAF-66-0312_H2_KaraSahin",
+  "TUAF-67-0268-H2",
+  "TuAF-67-0285-SEA",
+  "TUAF-68-0342-H2",
+  "TUAF-69-7585-H2-Son_Seytanlar",
+  "TuAF-77-0288-H2-70thNATO",
+  "TUAF-77-1053-H2_Korsanlar",
+  "WA66-376_E1_57TTW",
+  "WA68-373_SEA_57TTW"
+ ],
+ "Mirage-F1EE": [
+  "Aerges Blue",
+  "Aerges Camo",
+  "Aerges NATO grey",
+  "ALA 14 Blue Skin (EE) Albacete",
+  "ALA 14 NATO Skin 1 (EE)",
+  "ALA 46 Blue Skin (EE) Gando",
+  "ALA 46 SQ 462 Blue Skin (EE) Gando",
+  "EC 1 12 Cambresis",
+  "EC 1 5 Vendee BA Orange-Cariat",
+  "EC 2 30 Normandie Niemen (FICTIONAL CT)",
+  "EC 212 Picardie",
+  "EC 3 33 Lorraine BA 112 Reims - Champagne Ardennes",
+  "EC 330 Lorraine",
+  "EC 5 330 Cote d'Argent (FICTIONAL CT)",
+  "Ecuador Air Force 21st Combat Wing Taura Air base",
+  "ER 2 33 Savoie 100 ans de reco (FICTIONAL CR)",
+  "ER 233 Savoie BA 118 Mont de Marsan (FICTIONAL CR)",
+  "ER 233 Savoie BA 118 Mont de Marsan Dessert Camu (FICTIONAL CR)",
+  "Iraq Air Force (FICTIONAL EQ VERSION)",
+  "IRIAF 3-6209 _ 2010s Blue_Gray (EQ Variant)",
+  "IRIAF 3-6210 _ 2013 Gray (EQ Variant)",
+  "IRIAF 3-6210 _ 2017 Blue (EQ Variant)",
+  "IRIAF 3-6210 _ 2021 Blue (EQ Variant)",
+  "IRIAF 3-6211 _ 2010s Blue_Gray (EQ Variant)",
+  "IRIAF 3-6212 _ Col. Naghdibake (EQ Variant)",
+  "IRIAF 3-6214 _ 2021 Blue (EQ Variant)",
+  "IRIAF 3-6215 _ 1990-2010s Desert (EQ Variant)",
+  "IRIAF 3-6215 _ 2021 Blue (EQ Variant)",
+  "USA Company Grey (M-EE)",
+  "USA Company Skin (M-EE)",
+  "USA Company Skin 2 (M-EE)"
+ ]
+};
+/* LIVERIES_DEFAULT:END */
+
+// ── Livrée par défaut (wing_config_v1.defaultLiveries) ─────────
+// Un objet { type: nom }, facultatif : absent, aucun défaut. Le Flight Configurator affiche cette livrée quand la mission ouverte dans HQ n'en donne pas à l'unité ;
+// sans défaut, la première de la liste du type. La liste d'un type se calcule comme au Flight Configurator (liveriesFor) : les noms du jeu, puis les noms des
+// livrées custom qui portent ce type ; sans doublon à la casse près (le nom du jeu l'emporte), triée sans casse.
+function wingDefIsObj(o) { return !!o && typeof o === 'object' && !Array.isArray(o); }
+function livCmp(a, b) { const x = a.toLowerCase(), y = b.toLowerCase(); return x < y ? -1 : (x > y ? 1 : (a < b ? -1 : (a > b ? 1 : 0))); }
+function liveriesFor(type) {
+  const seen = new Set(), out = [];
+  const add = n => { const k = n.toLowerCase(); if (n !== '' && !seen.has(k)) { seen.add(k); out.push(n); } };
+  (Object.prototype.hasOwnProperty.call(LIVERIES_DEFAULT, type) ? LIVERIES_DEFAULT[type] : []).forEach(add);
+  (Array.isArray(wingConfig.liveries) ? wingConfig.liveries : []).forEach(x => {
+    if (x && typeof x === 'object' && typeof x.name === 'string' && Array.isArray(x.aircraft) && x.aircraft.indexOf(type) >= 0) add(x.name.trim());
+  });
+  return out.sort(livCmp);
+}
+
+// Les options de la ligne d'un type : « La première de la liste » (valeur vide), la valeur gardée si aucun nom de la liste ne l'égale à la casse près (telle quelle),
+// puis la liste ; une valeur égale à un nom à la casse près prend la place de ce nom.
+function wingDefOptions(ty) {
+  let names = liveriesFor(ty);
+  const kept = wingDefIsObj(wingConfig.defaultLiveries) && Object.prototype.hasOwnProperty.call(wingConfig.defaultLiveries, ty) && typeof wingConfig.defaultLiveries[ty] === 'string' ? wingConfig.defaultLiveries[ty].trim() : '';
+  const opts = [{ v: '', l: t('wing.def.first') }];
+  if (kept !== '') {
+    const k = names.findIndex(n => n.toLowerCase() === kept.toLowerCase());
+    if (k >= 0) { names = names.slice(); names[k] = kept; names.sort(livCmp); }
+    else opts.push({ v: kept, l: kept });
+  }
+  return { opts: opts.concat(names.map(n => ({ v: n, l: n }))), value: kept };
+}
+function wingDefFill(sel, ty) {
+  const o = wingDefOptions(ty);
+  sel.innerHTML = '';
+  o.opts.forEach(x => sel.appendChild(acMakeOption(x.v, x.l)));
+  sel.value = o.value;
+}
+
+function renderWingDefRow(ty) {
+  const row = document.createElement('div');
+  row.className = 'wing-def-row';
+  const lbl = document.createElement('span'); lbl.className = 'wing-def-lbl'; lbl.textContent = ty;
+  const sel = acMakeSelect('wing-def-sel', ty);
+  wingDefFill(sel, ty);
+  sel.addEventListener('change', () => {
+    const v = sel.value;
+    if (v === '') {
+      if (wingDefIsObj(wingConfig.defaultLiveries)) {
+        delete wingConfig.defaultLiveries[ty];
+        if (!Object.keys(wingConfig.defaultLiveries).length) delete wingConfig.defaultLiveries;       // plus aucun : le champ facultatif disparaît
+      }
+    } else {
+      if (!wingDefIsObj(wingConfig.defaultLiveries)) wingConfig.defaultLiveries = {};
+      wingConfig.defaultLiveries[ty] = v;
+    }
+    persistWingConfig(); updateWingSizeCounter();
+    wingDefFill(sel, ty);       // une valeur hors liste qui n'est plus choisie quitte la liste
+  });
+  row.appendChild(lbl); row.appendChild(sel);
+  return row;
+}
+
+// Une ligne par type des escadrons (dans l'ordre des escadrons) dont la liste n'est pas vide ; la clé d'un type sans ligne reste dans la donnée.
+function renderWingDefLiveries() {
+  const list = document.getElementById('wing-def-list');
+  if (!list) return;
+  list.innerHTML = '';
+  let n = 0;
+  wingAircraftTypes().forEach(ty => {
+    if (!liveriesFor(ty).length) return;
+    n++;
+    list.appendChild(renderWingDefRow(ty));
+  });
+  if (!n) {
+    const none = document.createElement('p'); none.className = 'wing-hint wing-def-none'; none.textContent = t('wing.def.none');
+    list.appendChild(none);
+  }
+}
 // ── Livrées custom (wing_config_v1.liveries) ───────────────────
 // Un nom par livrée, tel qu'il s'écrit dans DCS (le dossier de la livrée), et les appareils qui la portent ; le Flight Configurator les lit
 // dans la liste des livrées de chaque type. Le champ est facultatif : absent, aucune livrée custom.
@@ -3062,7 +3388,7 @@ function renderWingLivRow(liv, i) {
   inp.autocomplete = 'off'; inp.spellcheck = false;
   inp.addEventListener('input', () => {
     liv.name = inp.value;
-    persistWingConfig(); updateWingSizeCounter();
+    persistWingConfig(); updateWingSizeCounter(); renderWingDefLiveries();
   });
   nameWrap.appendChild(nameLbl); nameWrap.appendChild(inp);
   row.appendChild(nameWrap);
@@ -3080,7 +3406,7 @@ function renderWingLivRow(liv, i) {
       const cb = document.createElement('input'); cb.type = 'checkbox'; cb.value = ty; cb.checked = liv.aircraft.indexOf(ty) >= 0;
       cb.addEventListener('change', () => {
         liv.aircraft = Array.prototype.filter.call(ac.querySelectorAll('input[type=checkbox]'), b => b.checked).map(b => b.value);       // dans l'ordre des cases
-        persistWingConfig(); updateWingSizeCounter();
+        persistWingConfig(); updateWingSizeCounter(); renderWingDefLiveries();
       });
       const tx = document.createElement('span'); tx.textContent = ty;
       cl.appendChild(cb); cl.appendChild(tx);
@@ -3112,6 +3438,7 @@ function renderWingLiveries() {
   if (!list) return;
   list.innerHTML = '';
   (Array.isArray(wingConfig.liveries) ? wingConfig.liveries : []).forEach((liv, i) => list.appendChild(renderWingLivRow(liv, i)));
+  renderWingDefLiveries();       // la liste d'un type suit les escadrons et les livrées custom
 }
 
 // ── Render wing editor inputs ──────────────────────────────────
