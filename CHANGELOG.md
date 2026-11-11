@@ -43,6 +43,7 @@ Changes merged since the last release, grouped per tool.
 - **Dynamic Spawn**, read from the mission: templates are marked in the flight list with the airfields and FARPs they serve, and a panel lists each airfield and FARP offering Dynamic Spawn, with its template per aircraft type.
 - **Delete flights** from the loaded mission: check them in the flight list, review what still points to them, and save the mission without them. Dynamic Spawn links to a deleted flight are reset; triggers, tasks and scripts that name it are listed, not changed.
 - **Dynamic Spawn**, written to the mission: a flight can be made a template and linked, per aircraft type, to the airfields and FARPs that already have Dynamic Spawn enabled in the mission editor.
+- **Discard changes** in the changes banner takes the mission back to how it was when opened or last saved, after confirmation.
 #### Changed
 - Radios are named and numbered as in the cockpit in the mission summary and in the package messages (the Mi-24P's R-863 and R-828 start at channel 0). The .miz keeps its own numbering.
 - Flight packages are recognised by their content, not their file name; unreadable flights are skipped and counted, an empty package or one without theatre is refused, with the same messages as the Route Planner and the Datacard Generator. *Load another .miz* also clears the mission offered to the Route Planner and the Datacard Generator.
@@ -51,6 +52,7 @@ Changes merged since the last release, grouped per tool.
 - Flight packages: the frequencies of a radio that missions do not preset (the Mi-24P's and Mi-8MT's HF radio) are skipped; the mission is not changed for them.
 - The page is laid out around the mission: **Open .miz**, **Save .miz**, **Flight packages** and **Wing** in the top bar (Wing comes first until the wing is set up), flight packages and the wing configuration in windows, and from 1,100 px the groups on the left, the actions on the checked groups on the right. Applying packages, deleting groups and Dynamic Spawn now change the open mission and add up, with a counter; **Save .miz** (or **Ctrl+S**) checks the mission and downloads it once. Export waits until the changes are saved. After a page reload, HQ says the .miz must be opened again. In the wing configuration, squadrons come first and empty fields hint at what to type.
 - The Dynamic Spawn window works in three steps for each checked group: **Make a template**, then the bases where it appears (grouped by what they are linked to today), then their hot start; why other bases are missing folds under the list, and the button reads **Apply to the mission**.
+- Dynamic Spawn only lets a single-aircraft group become a template, and links it only to bases of its coalition; a neutral airfield can take it and then joins the template’s coalition.
 #### Fixed
 - The interface language is shared with the other tools (HQ kept its own); the language already chosen in HQ is kept.
 - Deleting groups no longer refuses a mission whose group table is written out of key order (for example [18] before [17]), as the DCS editor can leave it; the remaining groups are renumbered by key.
@@ -162,6 +164,7 @@ Changes merged since the last release, grouped per tool.
 - The French pages say “Sauvegarder” for saving a work file, and follow the new Display, Open and Export menus of the Briefing Generator, Recon Station, Flight Configurator, Route Planner and Datacard Generator.
 - The HQ page follows the new layout: Open .miz, Save .miz, Flight packages and Wing in the top bar; changes add up and are saved once with Save .miz.
 - HQ page: Dynamic Spawn described in its three steps; the outdated “HQ only reads” sentence and the “Commander is coming” note are removed.
+- HQ page: the Dynamic Spawn rules (one aircraft, same coalition, neutral airfields) and Discard changes.
 
 ---
 
