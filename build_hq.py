@@ -6941,6 +6941,9 @@ _fr = src.split("fr: {")[1].split("en: {")[0]; _en = src.split("en: {")[1].split
 _kd = lambda txt: set(_re.findall(r"'(wing\.def\.[^']+|validate\.defaultLiveriesInvalid)':", txt))
 must(_kd(_fr) == _kd(_en) and len(_kd(_fr)) == 5, 'I18N parit\u00e9 wing.def.* et validate.defaultLiveriesInvalid fr/en (%d cl\u00e9s)' % len(_kd(_fr)))
 must(all(('t(\'%s\')' % k) in src or ('data-i18n="%s"' % k) in src for k in ('wing.def.title', 'wing.def.hint', 'wing.def.first', 'wing.def.none', 'validate.defaultLiveriesInvalid')), 'chaque texte de la section est utilis\u00e9')
+_fr_txt = lambda k: _re.search(r"'%s': '((?:[^'\\]|\\.)*)'" % _re.escape(k), _fr).group(1)
+must(all(('data-i18n="%s">%s<' % (k, _fr_txt(k))) in src for k in ('wing.def.title', 'wing.def.hint')), 'le texte français de la section, dans la page, est celui du dictionnaire (légende et indice)')
+must('.wing-def-row {' in src and '.wing-def-lbl {' in src and "acMakeSelect('wing-def-sel', ty)" in src, 'la liste d\'une ligne est celle du thème de l\'éditeur du Wing (acMakeSelect), la ligne a sa feuille')
 if _DEF_BAD:
     sys.exit(1)
 grep_present('LOGO_MAX_SIZE',      'LOGO_MAX_SIZE (256) pr\u00e9sent')
