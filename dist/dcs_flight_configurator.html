@@ -11730,7 +11730,7 @@ function routeTakeover() {
   if (r.changed) { refreshSummaries(); showToast(r.toast, 4500); }
 }
 function routeStorage(e) {
-  if (e.key === KEY_HQ_MISSION || e.key === null) UI.hq = undefined;      // le cache de la mission d'HQ suit sa clé : le prochain hqMission() relit
+  if (e.key === KEY_HQ_MISSION || e.key === null) UI.hq = undefined;      // le cache de la mission d'HQ suit sa clé (HQ en ouvre une autre dans le shell, ou la vide) : le prochain hqMission() relit
   if (e.key !== null && e.key !== KEY_RP_SET && e.key !== KEY_RP_STATE && e.key !== KEY_HQ_MISSION) return;
   clearTimeout(RT.timer);
   RT.timer = setTimeout(routeTakeover, 80);      // le Route Planner écrit route_set_v1 puis route_state_v1 : un seul passage pour les deux
