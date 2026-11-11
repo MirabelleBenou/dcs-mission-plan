@@ -1467,8 +1467,6 @@ const I18N = {{
     'dyn.w.hotline': '{{0}} — moteur tournant',
     'dyn.w.hotnone': 'Cocher une base à l’étape 2.',
     'dyn.w.hotnoset': 'Les bases cochées n’ont pas ce réglage dans la mission.',
-    'dyn.w.replaces': 'remplace {{0}}',
-    'dyn.w.linked': 'lié à {{0}}',
     'dyn.w.wh.absent': 'Ce .miz n’a pas de fichier warehouses : HQ ne peut pas poser de lien Dynamic Spawn. Faire ou retirer un template reste possible.',
     'dyn.w.wh.unreadable': 'Le fichier warehouses de ce .miz ne se lit pas : HQ ne peut pas poser de lien Dynamic Spawn. Faire un template reste possible.',
     'dyn.w.unmarkBad': 'Retirer ce template demande de remettre ses liens à zéro dans warehouses, qui ne se lit pas. Rien n’a été écrit.',
@@ -1856,8 +1854,6 @@ const I18N = {{
     'dyn.w.hotline': '{{0}} — hot start',
     'dyn.w.hotnone': 'Check a base in step 2.',
     'dyn.w.hotnoset': 'The checked bases have no such setting in the mission.',
-    'dyn.w.replaces': 'replaces {{0}}',
-    'dyn.w.linked': 'linked to {{0}}',
     'dyn.w.wh.absent': 'This .miz has no warehouses file: HQ cannot set a Dynamic Spawn link. Making or removing a template is still possible.',
     'dyn.w.wh.unreadable': 'This .miz’s warehouses file cannot be read: HQ cannot set a Dynamic Spawn link. Making a template is still possible.',
     'dyn.w.unmarkBad': 'Removing this template requires resetting its links to zero in warehouses, which cannot be read. Nothing has been written.',
@@ -5420,7 +5416,8 @@ function dsxBody() {{
     // 3 · moteur tournant : une ligne par base cochée qui porte le réglage
     let in3 = '';
     const hotRows = picked.filter(w => w.hotNode);
-    if (!picked.length) in3 = '<div class="snap-meta">' + h(t('dyn.w.hotnone')) + '</div>';
+    if (!okWh) in3 = '';
+    else if (!picked.length) in3 = '<div class="snap-meta">' + h(t('dyn.w.hotnone')) + '</div>';
     else if (!hotRows.length) in3 = '<div class="snap-meta">' + h(t('dyn.w.hotnoset')) + '</div>';
     else {{
       in3 = '<div class="dsx-help">' + h(t('dyn.w.help3')) + '</div>';
@@ -5436,10 +5433,19 @@ function dsxBlocked() {{
   const sp = dsxSafePlan();
   return !!(sp.err || !sp.plan || sp.plan.clash.length || sp.plan.badUnmark || sp.plan.empty);
 }}
+// Une base que plus aucune carte template ne coche reprend le moteur tournant lu à l'ouverture : rien d'elle ne s'écrit
+function dsxResetHot(key) {{
+  if (DSX.flights.some(f => DSX.st.tmpl[f.gid] && DSX.st.link[f.gid][key])) return;
+  const w = DSX.wh.whs.find(x => x.key === key);
+  if (w) DSX.st.hot[key] = w.hot;
+}}
 function dsxRefresh(focusSel) {{
   const el = FN.bodyEl, keep = el ? el.scrollTop : 0, a = document.activeElement;
   let sel = focusSel || null;
-  if (!sel && a && a.getAttribute) for (const at of ['data-dsx-link', 'data-dsx-hot']) if (a.hasAttribute(at)) sel = '[' + at + '="' + a.getAttribute(at).replace(/"/g, '\\\\"') + '"]';
+  if (!sel && a && a.getAttribute) for (const at of ['data-dsx-link', 'data-dsx-hot']) if (a.hasAttribute(at)) {{
+    const card = a.closest ? a.closest('[data-dsx-gid]') : null;
+    sel = (card ? '[data-dsx-gid="' + card.getAttribute('data-dsx-gid') + '"] ' : '') + '[' + at + '="' + a.getAttribute(at).replace(/"/g, '\\\\"') + '"]';
+  }}
   FN.blocked = dsxBlocked();
   fnRender();
   fnSync();
@@ -5479,7 +5485,7 @@ function dsxAsk(opener) {{
       const c = e.target;
       if (!c || !c.hasAttribute || FN.titleKey !== 'fn.dyn.title' || !FN.bodyEl || !FN.bodyEl.contains(c)) return;
       if (c.hasAttribute('data-dsx-hot')) DSX.st.hot[c.getAttribute('data-dsx-hot')] = c.checked;
-      else if (c.hasAttribute('data-dsx-link')) {{ const p = c.getAttribute('data-dsx-link').split('#'); DSX.st.link[Number(p[0])][p[1]] = c.checked; }}
+      else if (c.hasAttribute('data-dsx-link')) {{ const p = c.getAttribute('data-dsx-link').split('#'); DSX.st.link[Number(p[0])][p[1]] = c.checked; dsxResetHot(p[1]); }}
       else return;
       dsxRefresh();
     }});
@@ -5488,6 +5494,7 @@ function dsxAsk(opener) {{
       if (!b || FN.titleKey !== 'fn.dyn.title' || !FN.bodyEl || !FN.bodyEl.contains(b)) return;
       const make = b.hasAttribute('data-dsx-make'), gid = b.getAttribute(make ? 'data-dsx-make' : 'data-dsx-drop');
       DSX.st.tmpl[Number(gid)] = make;
+      if (!make && DSX.wh.state === 'ok') for (const w of DSX.off[Number(gid)]) if (DSX.st.link[Number(gid)][w.key]) dsxResetHot(w.key);
       dsxRefresh('[data-dsx-' + (make ? 'drop' : 'make') + '="' + gid + '"]');
     }});
   }}

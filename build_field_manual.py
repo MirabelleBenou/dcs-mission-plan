@@ -2327,7 +2327,6 @@ kbd {{
         <div class="lang-block" data-lang="en"><p>HQ can write Dynamic Spawn into the mission: check groups in the list, then <strong>Dynamic Spawn…</strong>. The window works in three steps: <strong>Make a template</strong> of the group, then choose, for its aircraft type, the airfields, FARPs and ships where it appears, then the hot start of each. <strong>Prerequisite:</strong> only airfields, FARPs and ships that have Dynamic Spawn enabled in the mission editor, and whose aircraft list contains the template’s type, are offered for a template; the window says why the others are not offered (“Why are other bases missing?”). HQ never enables Dynamic Spawn and never creates an aircraft type: that is done in the mission editor. Removing a template resets its links to zero; a place already linked to another template for that type is flagged, and the link is replaced if you check it. HQ only changes the .miz’s <code>mission</code> and <code>warehouses</code> files, reads them back before handing over the file, and reports in the summary a template of more than one aircraft or a different coalition between the template and the place, to be checked in DCS.</p></div>
       </div>
 
-
     </div><!-- /fm-chapter -->
   </section><!-- /page-hq -->
 
