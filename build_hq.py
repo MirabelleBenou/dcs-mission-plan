@@ -878,10 +878,7 @@ select[data-tbm-src] {{ display: none !important; }}
 .hq-groups {{ border: 1px solid var(--khaki); background: rgba(20,24,12,.5); padding: 0 14px 14px; }}
 .hq-groups .pk-fwrap > .snap-header {{ margin-top: 0; padding-top: 14px; }}
 .hq-right {{ flex: 0 0 clamp(360px, 32vw, 440px); min-width: 0; position: sticky; top: 12px; align-self: flex-start; max-height: calc(100vh - 60px - 24px); max-height: calc(100dvh - 60px - 24px); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--khaki) transparent; }}
-.hq-right #hq-banner > .ui-bandeau {{ margin: 0 0 14px; }}
 .hq-right > .ed-section:last-child {{ margin-bottom: 0; }}
-.hq-band-txt {{ margin: 0; }}
-.hq-band-act {{ display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 8px; }}
 .hq-acts {{ display: flex; flex-direction: column; gap: 8px; }}
 .hq-acts .miz-btn {{ width: 100%; min-height: 44px; justify-content: flex-start; padding: 0 14px; font-size: 13px; text-align: left; }}
 .hq-acts .miz-btn[hidden] {{ display: none; }}
@@ -1121,7 +1118,6 @@ body[data-theme] {{
     <div class="hq-page" id="hq-page" hidden>
       <div class="hq-left" id="hq-left"></div>
       <aside class="hq-right" id="hq-right">
-        <div id="hq-banner"></div>
         <details class="ed-section hq-box" data-section="checked" data-def="open" open>
           <summary class="ui-fold-head"><span id="hq-checked-title">Sur 0 groupe coché</span></summary>
           <div class="ed-content hq-acts">
@@ -1311,7 +1307,6 @@ const I18N = {{
     'hq.empty.hint': 'ou déposez le fichier ici · configurez d\\'abord votre wing (Wing, en haut)',
     'hq.checked.one': 'Sur {{0}} groupe coché',
     'hq.checked.many': 'Sur {{0}} groupes cochés',
-    'hq.noMem': 'Le .miz n\\'est plus en mémoire depuis le rechargement de la page : rouvrez-le pour modifier la mission.',
     'hq.open.title': 'Ouvrir un autre .miz ?',
     'hq.open.text.one': 'La modification pas encore sauvegardée sera perdue.',
     'hq.open.text.many': 'Les {{0}} modifications pas encore sauvegardées seront perdues.',
@@ -1714,7 +1709,6 @@ const I18N = {{
     'hq.empty.hint': 'or drop the file here · set up your wing first (Wing, at the top)',
     'hq.checked.one': 'On {{0}} checked group',
     'hq.checked.many': 'On {{0}} checked groups',
-    'hq.noMem': 'The .miz is no longer in memory since the page was reloaded: open it again to change the mission.',
     'hq.open.title': 'Open another .miz?',
     'hq.open.text.one': 'The unsaved change will be lost.',
     'hq.open.text.many': 'The {{0}} unsaved changes will be lost.',
@@ -3615,14 +3609,9 @@ function persistSnapshot() {{
   }} catch(e) {{ console.warn('[HQ] Snapshot persist error:', e); }}
 }}
 
-function loadPersistedSnapshot() {{
-  try {{
-    const raw = localStorage.getItem(KEY_SNAPSHOT);
-    if (raw) {{
-      HQ_SNAPSHOT = JSON.parse(raw);
-      renderSnapshot(HQ_SNAPSHOT);
-    }}
-  }} catch(e) {{ console.warn('[HQ] Snapshot restore error:', e); }}
+// La mission partagée ne vit que tant que son .miz est ouvert : au démarrage la clé est effacée, jamais relue
+function clearPersistedSnapshot() {{
+  try {{ localStorage.removeItem(KEY_SNAPSHOT); }} catch(e) {{ console.warn('[HQ] Snapshot clear error:', e); }}
 }}
 
 // =============================================================
@@ -3636,7 +3625,6 @@ function renderSnapshot(snap) {{
   const sm = snap.sourceMission;
   const wx = snap.weather;
   const h = escapeHtml;
-  const noMem = !_HQ_MIZ_CONTEXT;
   // À droite : la mission source, la météo, l'empreinte
   let html = '<div class="snap-meta">';
   html += h(sm.filename) + ' &nbsp;·&nbsp; ' + h(t('snap.theatre')) + ': ' + h(sm.theatre || '');
@@ -3687,8 +3675,8 @@ function renderSnapshot(snap) {{
   for (const fl of snap.flights) {{
     html += '<div class="snap-flight" data-gid="' + h(String(fl.groupId)) + '" data-side="' + h(fl.coalition || '') + '" data-type="' + h('|' + flightTypeKeys(fl).join('|') + '|') + '" data-name="' + h(pkNorm(fl.groupName)) + '">';
     html += '<div class="snap-flight-header">';
-    html += '<label class="pk-chk"' + (noMem ? ' title="' + h(t('hq.noMem')) + '"' : '') + '><input type="checkbox" data-pk-export="' + h(String(fl.groupId)) + '"' +
-      (_PK_EXPORT_SEL.has(fl.groupId) ? ' checked' : '') + (_HQ_MIZ_CONTEXT ? '' : ' disabled') + '>' + h(fl.groupName || '—') + '</label>';
+    html += '<label class="pk-chk"><input type="checkbox" data-pk-export="' + h(String(fl.groupId)) + '"' +
+      (_PK_EXPORT_SEL.has(fl.groupId) ? ' checked' : '') + '>' + h(fl.groupName || '—') + '</label>';
     if (dynT && dynT[fl.groupId]) html += ' <span class="snap-flight-tag" data-dyn-template="1">' + h(t('dyn.tmpl')) + '</span>';
     html += ' <span class="snap-flight-tag">' + h(fKey(fl)) + '</span>';
     html += ' <span class="snap-flight-tag">' + h(fl.coalition || '') + '</span>';
@@ -4234,7 +4222,6 @@ function pkExport(name) {{
 function pkRefreshExportBtn() {{
   const ctx = !!(_HQ_MIZ_CONTEXT && HQ_SNAPSHOT);
   const n = ctx ? HQ_SNAPSHOT.flights.filter(f => _PK_EXPORT_SEL.has(f.groupId)).length : 0;
-  const why = (HQ_SNAPSHOT && !_HQ_MIZ_CONTEXT) ? t('hq.noMem') : '';
   const ttl = document.getElementById('hq-checked-title');
   if (ttl) ttl.textContent = tn('hq.checked', n);
   const btn = document.getElementById('pk-export-btn');
@@ -4242,15 +4229,15 @@ function pkRefreshExportBtn() {{
     // le paquet porte l'empreinte de la mission : elle doit être celle d'un fichier sauvegardé
     btn.disabled = n === 0 || _HQ_DIRTY > 0;
     btn.textContent = t('pk.export');
-    btn.title = why || (_HQ_DIRTY > 0 ? t('pk.export.dirty') : '');
+    btn.title = _HQ_DIRTY > 0 ? t('pk.export.dirty') : '';
   }}
   const del = document.getElementById('pk-delete-btn');
   if (del) {{ del.hidden = !_HQ_MIZ_CONTEXT; del.disabled = n === 0; del.textContent = t('pk.delete'); }}
   const dsb = document.getElementById('pk-dyn-btn');
   if (dsb) {{ dsb.hidden = !_HQ_MIZ_CONTEXT; dsb.disabled = n === 0; dsb.textContent = t('pk.dyn'); }}
   const ck = document.getElementById('pk-check-shown'), un = document.getElementById('pk-uncheck');
-  if (ck) {{ ck.disabled = !_HQ_MIZ_CONTEXT; ck.title = why; }}
-  if (un) {{ un.disabled = !_HQ_MIZ_CONTEXT; un.title = why; }}
+  if (ck) ck.disabled = !_HQ_MIZ_CONTEXT;
+  if (un) un.disabled = !_HQ_MIZ_CONTEXT;
 }}
 
 // ---------- FILTRES DE LA LISTE DES VOLS (n'ont d'effet que sur l'affichage : un vol coché puis masqué reste coché) ----------
@@ -5906,10 +5893,10 @@ function hqRevertPlace() {{
   if (rv && sv && sv.nextElementSibling !== rv) sv.after(rv);
 }}
 
-/* L'état de la page et de la barre : sans mission la page vide, avec le snapshot la page à deux colonnes ; les boutons, leurs infobulles, le compteur, le bandeau */
+/* L'état de la page et de la barre : sans mission la page vide, avec le snapshot la page à deux colonnes ; les boutons, leurs infobulles, le compteur */
 function hqChrome() {{
   const ctx = !!_HQ_MIZ_CONTEXT, snap = !!HQ_SNAPSHOT, busy = _PK_BUSY || _mizLoading;
-  const why = (snap && !ctx) ? t('hq.noMem') : t('tb.needMiz');
+  const why = t('tb.needMiz');
   const empty = hqEl('hq-empty'), page = hqEl('hq-page');
   if (empty) empty.hidden = snap;
   if (page) page.hidden = !snap;
@@ -5938,21 +5925,7 @@ function hqChrome() {{
   if (wg) {{ wg.title = t('tb.wing'); wg.setAttribute('aria-label', t('tb.wing')); }}
   hqWingOrder();
   hqRevertPlace();
-  hqBanner();
   pkRefreshExportBtn();
-}}
-/* Le bandeau en tête de la colonne de droite : le .miz qui n'est plus en mémoire */
-function hqBanner() {{
-  const el = hqEl('hq-banner');
-  if (!el) return;
-  let kind = '', text = '', act = '', label = '';
-  if (HQ_SNAPSHOT && !_HQ_MIZ_CONTEXT) {{ kind = 'nomem'; text = t('hq.noMem'); act = 'open'; label = t('tb.open'); }}
-  const sig = kind + '|' + text + '|' + label;
-  if (el.getAttribute('data-sig') === sig) return;     // rien n'a changé : le bouton garde son focus
-  el.setAttribute('data-sig', sig);
-  el.innerHTML = kind ? '<div class="ui-bandeau" data-hq-banner="' + kind + '"><p class="hq-band-txt">' + escapeHtml(text) + '</p>' +
-    '<div class="hq-band-act"><button type="button" class="miz-btn primary" data-hq-act="' + act + '">' + escapeHtml(label) + '</button>' +
-    '</div></div>' : '';
 }}
 
 // ---------- les deux fenêtres ----------
@@ -6060,7 +6033,7 @@ function initHqShell() {{
   hqEl('btn-revert').addEventListener('click', () => hqRevertAsk());
   hqEl('btn-packages').addEventListener('click', e => hqWinOpen('pk', e.currentTarget));
   hqEl('btn-wing').addEventListener('click', e => hqWinOpen('wing', e.currentTarget));
-  // le bouton de la page vide et celui du bandeau : le geste de la barre
+  // le bouton de la page vide : le geste de la barre
   document.addEventListener('click', e => {{
     const b = e.target.closest ? e.target.closest('[data-hq-act]') : null;
     if (!b || b.disabled) return;
@@ -6506,6 +6479,7 @@ function hqFoldInit() {{
 }}
 
 function init() {{
+  clearPersistedSnapshot();  // la mission partagée ne survit pas au rechargement : HQ démarre vide, avant toute lecture
   loadTheme();
   loadLang();
   initToolbarMenus([['theme-select', () => t('toolbar.theme.tooltip')]]);   // les listes de la barre au thème de l'interface
@@ -6516,7 +6490,6 @@ function init() {{
   initToolbarEvents();
   refreshRestoreButton();
   initMissionEvents();
-  loadPersistedSnapshot();  // P2 — restaurer snapshot au rechargement
   initPackagesUI();         // paquets de vol (export / import)
   fnBind();                 // la fenêtre « Nom du fichier »
   initHqShell();            // la barre, les deux fenêtres, le dépôt, Ctrl+S, la sortie de la page
@@ -6694,7 +6667,12 @@ grep_present('initFormMenus(sel =>','initFormMenus appelé au démarrage')
 grep_present('.pk-flt-f .tbm-trigger.tbm-field','filtres de la liste des vols au thème de l\'interface')
 grep_present('pk-check-shown',      'bouton Cocher les vols affichés présent')
 grep_present('_MIZ_LOAD_FP',        'empreinte du .miz chargé gardée à part')
-grep_present('loadPersistedSnapshot','loadPersistedSnapshot présent')
+grep_present('localStorage.removeItem(KEY_SNAPSHOT)', 'la clé mission_snapshot_v1 est effacée au démarrage')
+grep_present('clearPersistedSnapshot();', 'l\u2019effacement est appelé au démarrage (init)')
+grep_absent('loadPersistedSnapshot', 'plus de relecture de la mission partagée')
+grep_absent('hqBanner',              'plus de bandeau d\u2019état « mission sans .miz »')
+grep_absent('hq.noMem',              'plus de clé hq.noMem')
+grep_absent('data-hq-banner',        'plus de bandeau data-hq-banner')
 grep_present('sha256',              'fingerprint sha256 présent')
 grep_present('cyrb53',              'fingerprint cyrb53 repli présent')
 # P3 vérifications

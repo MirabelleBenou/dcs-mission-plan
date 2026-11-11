@@ -1255,6 +1255,8 @@ function tbmScrolled(e) {{
 
   /* ── Init ───────────────────────────────────────────────────── */
   function init() {{
+    /* La mission d'HQ ne vit que tant que son .miz est ouvert : à son démarrage le shell efface la clé, avant toute lecture et avant qu'un module s'ouvre */
+    try {{ localStorage.removeItem('mission_snapshot_v1'); }} catch(e) {{}}
     initLang();
     /* Thème : lire localStorage */
     try {{
@@ -1332,6 +1334,10 @@ def main():
     if "landing.focus({ preventScroll: true })" not in html:
         raise SystemExit("[ERREUR] goHub ne rend plus le clavier au hub")
     print('  [OK] goHub rend le clavier au hub')
+    # La mission d'HQ ne survit pas au rechargement : la clé s'efface en tête de init(), avant tout autre geste
+    if "function init() {\n    /* La mission d'HQ ne vit que tant que son .miz est ouvert" not in html or html.index("localStorage.removeItem('mission_snapshot_v1')") > html.index("initLang();\n    /* Thème"):
+        raise SystemExit("[ERREUR] init() n'efface plus mission_snapshot_v1 en tête")
+    print('  [OK] init() efface mission_snapshot_v1 en tête, avant toute lecture')
 
     out_path = os.path.join(SCRIPT_DIR, OUT_FILE)
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
