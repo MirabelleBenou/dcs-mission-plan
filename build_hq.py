@@ -880,7 +880,7 @@ select[data-tbm-src] {{ display: none !important; }}
 .hq-right #hq-banner > .ui-bandeau {{ margin: 0 0 14px; }}
 .hq-right > .ed-section:last-child {{ margin-bottom: 0; }}
 .hq-band-txt {{ margin: 0; }}
-.hq-band-act {{ display: flex; justify-content: flex-end; margin-top: 8px; }}
+.hq-band-act {{ display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 8px; }}
 .hq-acts {{ display: flex; flex-direction: column; gap: 8px; }}
 .hq-acts .miz-btn {{ width: 100%; min-height: 44px; justify-content: flex-start; padding: 0 14px; font-size: 13px; text-align: left; }}
 .hq-acts .miz-btn[hidden] {{ display: none; }}
@@ -1312,6 +1312,11 @@ const I18N = {{
     'hq.open.text.one': 'La modification pas encore sauvegardée sera perdue.',
     'hq.open.text.many': 'Les {{0}} modifications pas encore sauvegardées seront perdues.',
     'hq.open.verb': 'Ouvrir',
+    'hq.revert': 'Annuler les modifications',
+    'hq.revert.title': 'Annuler les modifications ?',
+    'hq.revert.text.one': 'La modification pas encore sauvegardée sera perdue : HQ revient à la mission telle qu’elle était à l’ouverture ou à la dernière sauvegarde.',
+    'hq.revert.text.many': 'Les {{0}} modifications pas encore sauvegardées seront perdues : HQ revient à la mission telle qu’elle était à l’ouverture ou à la dernière sauvegarde.',
+    'hq.revert.verb': 'Annuler les modifications',
     'pk.export': '📦 Exporter',
     'pk.export.dirty': 'Sauvegardez d\\'abord le .miz : le paquet porte l\\'empreinte de la mission sauvegardée.',
     'pk.delete': 'Supprimer',
@@ -1323,6 +1328,7 @@ const I18N = {{
     'fn.save.title': 'Sauvegarder le .miz',
     'fn.save.go': 'Sauvegarder',
     'toast.mizSaved': '.miz sauvegardé ✔',
+    'toast.hqReverted': 'Modifications annulées.',
     'toast.saveFail': '\u2717 Sauvegarde : v\u00e9rification \u00e9chou\u00e9e \u2014 rien n\u2019est t\u00e9l\u00e9charg\u00e9.',
     'hq.report.see': 'Voir le compte rendu',
     'ph.wing.shortName': 'Nom court affiché dans la barre',
@@ -1512,6 +1518,17 @@ const I18N = {{
     'dyn.w.notype': 'Non offerts — type {{0}} absent : {{1}}',
     'dyn.w.clash': '⚠ {{0}} : deux templates {{1}} cochés — un seul par type',
     'dyn.w.unlink': 'Retirer le template remet à zéro ses liens : {{0}}',
+    'dyn.w.multi1': 'Ce groupe compte {{0}} appareils : un template n’en a qu’un.',
+    'dyn.w.multi2': 'Ce template compte {{0}} appareils : un template n’en a qu’un. Retirer le template, ou réduire le groupe à un appareil dans l’éditeur de mission.',
+    'dyn.w.side': 'Camp différent : {{0}}',
+    'dyn.w.neutral': 'neutre : passera {{0}}',
+    'dyn.w.sideclash': '⚠ {{0}} : deux templates de camps différents — un aérodrome neutre ne passe qu’à un camp',
+    'dyn.w.offside': '⚠ camp différent : décocher le délie',
+    'dyn.w.rep.s.one': '{{0}} aérodrome passé à un camp',
+    'dyn.w.rep.s.many': '{{0}} aérodromes passés à un camp',
+    'dyn.w.rep.side': '✓ {{0}} : passe au camp {{1}}',
+    'dyn.w.e.side': 'camp relu différent de l’attendu : {{0}}',
+    'dyn.w.e.sideclash': 'deux templates de camps différents sur un même aérodrome neutre',
     'pk.del.dyn': 'Dynamic Spawn : {{0}} — lien remis à zéro',
     'pk.del.trig': 'Déclencheur « {{0}} » ({{1}}) — laissé tel quel, à corriger dans l’éditeur',
     'pk.del.task': 'Tâche {{0}} du groupe « {{1}} » — laissée telle quelle',
@@ -1699,6 +1716,11 @@ const I18N = {{
     'hq.open.text.one': 'The unsaved change will be lost.',
     'hq.open.text.many': 'The {{0}} unsaved changes will be lost.',
     'hq.open.verb': 'Open',
+    'hq.revert': 'Discard changes',
+    'hq.revert.title': 'Discard the changes?',
+    'hq.revert.text.one': 'The unsaved change will be lost: HQ goes back to the mission as it was when opened or last saved.',
+    'hq.revert.text.many': 'The {{0}} unsaved changes will be lost: HQ goes back to the mission as it was when opened or last saved.',
+    'hq.revert.verb': 'Discard changes',
     'pk.export': '📦 Export',
     'pk.export.dirty': 'Save the .miz first: the package carries the saved mission\\'s fingerprint.',
     'pk.delete': 'Delete',
@@ -1710,6 +1732,7 @@ const I18N = {{
     'fn.save.title': 'Save the .miz',
     'fn.save.go': 'Save',
     'toast.mizSaved': '.miz saved ✔',
+    'toast.hqReverted': 'Changes discarded.',
     'toast.saveFail': '\u2717 Save: verification failed \u2014 nothing downloaded.',
     'hq.report.see': 'See the report',
     'ph.wing.shortName': 'Short name shown in the toolbar',
@@ -1899,6 +1922,17 @@ const I18N = {{
     'dyn.w.notype': 'Not offered — type {{0}} missing: {{1}}',
     'dyn.w.clash': '⚠ {{0}}: two {{1}} templates checked — only one per type',
     'dyn.w.unlink': 'Removing the template resets its links to zero: {{0}}',
+    'dyn.w.multi1': 'This group has {{0}} aircraft: a template has only one.',
+    'dyn.w.multi2': 'This template has {{0}} aircraft: a template has only one. Remove the template, or reduce the group to one aircraft in the mission editor.',
+    'dyn.w.side': 'Different coalition: {{0}}',
+    'dyn.w.neutral': 'neutral: will become {{0}}',
+    'dyn.w.sideclash': '⚠ {{0}}: two templates of different coalitions — a neutral airfield can only join one',
+    'dyn.w.offside': '⚠ different coalition: uncheck to unlink',
+    'dyn.w.rep.s.one': '{{0}} airfield changed coalition',
+    'dyn.w.rep.s.many': '{{0}} airfields changed coalition',
+    'dyn.w.rep.side': '✓ {{0}}: now {{1}}',
+    'dyn.w.e.side': 're-read coalition differs from what was expected: {{0}}',
+    'dyn.w.e.sideclash': 'two templates of different coalitions on one neutral airfield',
     'pk.del.dyn': 'Dynamic Spawn: {{0}} — link reset to zero',
     'pk.del.trig': 'Trigger “{{0}}” ({{1}}) — left as is, fix it in the editor',
     'pk.del.task': 'Task {{0}} of group “{{1}}” — left as is',
@@ -3317,6 +3351,7 @@ async function loadMiz(file) {{
       _PK_EXPORT_SEL.clear();
       _PK_REPORT = null;
       _HQ_DIRTY = 0;     // un .miz ouvert : rien à sauvegarder
+      hqSetPoint();      // le point de retour d'« Annuler les modifications »
       _MIZ_LOAD_FP = snapshot.sourceMission.fingerprint || '';
       pkResetFilters();
       renderSnapshot(snapshot);
@@ -5093,10 +5128,11 @@ function dsxScan(ctx) {{
       if (!we.key || !w || w.kind !== 'table') continue;
       const id = we.key.value, airport = sec === 'airports';
       const ds = _astGetKey(w, 'dynamicSpawn'), hn = _astGetKey(w, 'allowHotStart');
-      const c = String(dynStr(_astGetKey(w, 'coalition')) || '').toLowerCase();
+      const cnode = _astGetKey(w, 'coalition');
+      const c = String(dynStr(cnode) || '').toLowerCase();
       const rec = {{ key: sec + '|' + id, sec: sec, id: id, kind: airport ? 'airport' : 'unit',
         name: airport ? (afNames[String(id)] || null) : (unitNames[id] || null),
-        side: c === 'neutral' ? 'neutrals' : c, dyn: !!ds && ds.value === true,
+        side: c === 'neutral' ? 'neutrals' : c, coalNode: (cnode && cnode.kind === 'string') ? cnode : null, dyn: !!ds && ds.value === true,
         hot: !!hn && hn.value === true, hotNode: (hn && hn.kind === 'bool') ? hn : null, types: {{}}, anyLink: false }};
       const ac = _astGetKey(w, 'aircrafts');
       for (const cat of ['planes', 'helicopters']) {{
@@ -5173,11 +5209,35 @@ function dsxClashes(DS) {{
   return out;
 }}
 
+// Deux cartes de camps différents cochées sur un même aérodrome neutre : [{{ f, w }}, …] par aérodrome
+function dsxSideClashes(DS) {{
+  const claims = {{}};
+  if (DS.wh.state !== 'ok') return [];
+  for (const f of DS.flights) if (DS.st.tmpl[f.gid]) for (const w of DS.off[f.gid]) if (dsxNeutralAf(w) && DS.st.link[f.gid][w.key]) (claims[w.key] = claims[w.key] || []).push({{ f: f, w: w }});
+  const out = [];
+  for (const k of Object.keys(claims)) if (new Set(claims[k].map(x => x.f.side)).size > 1) out.push(claims[k]);
+  return out;
+}}
+// Un aérodrome neutre : le seul genre de base qu'un template d'un autre camp puisse recevoir (il passe alors au camp du template)
+function dsxNeutralAf(w) {{ return w.kind === 'airport' && w.side === 'neutrals'; }}
+// Le lien d'un template à une base d'un autre camp que le sien, hors aérodrome neutre : un lien du fichier que HQ ne pose plus
+function dsxOffside(f, w) {{ return w.types[f.tk].gid === f.gid && w.side !== f.side && !dsxNeutralAf(w); }}
+// La règle du camp : la base est du camp du template ; ou un aérodrome neutre, qui ne porte pas déjà un lien vers un template d'un autre camp que celui du groupe
+function dsxSideOk(f, w, tids) {{
+  if (w.side === f.side) return true;
+  if (!dsxNeutralAf(w)) return false;
+  for (const tk of Object.keys(w.types)) {{
+    const g = w.types[tk].gid;
+    if (g && tids[g] && tids[g].coalition !== f.side) return false;
+  }}
+  return true;
+}}
+
 // Le plan d'écriture : patches de `mission` et de `warehouses`, compteurs, lignes du compte rendu, valeurs attendues à la relecture
 function dsxPlan(ctx, DS) {{
   const st = DS.st, tids = dynTemplateIds();
-  const plan = {{ mp: [], wp: [], N: 0, M: 0, K: 0, L: 0, H: 0, marks: [], links: [], hots: [], warns: [], clash: dsxClashes(DS), badUnmark: false,
-    expT: {{}}, expLink: {{}}, expHot: {{}} }};
+  const plan = {{ mp: [], wp: [], N: 0, M: 0, K: 0, L: 0, H: 0, S: 0, marks: [], links: [], hots: [], sides: [], warns: [], clash: dsxClashes(DS), sideClash: dsxSideClashes(DS), badUnmark: false,
+    expT: {{}}, expLink: {{}}, expHot: {{}}, expSide: {{}} }};
   const win = new Map(DS.flights.map(f => [f.gid, f]));
   // mission
   const groups = {{}};
@@ -5217,11 +5277,31 @@ function dsxPlan(ctx, DS) {{
         const ch = {{ w: w, type: nd.type, from: cur, to: fin, why: why }};
         plan.links.push(ch);
         if (fin === 0) plan.L++; else if (cur === 0) plan.M++; else plan.K++;
-        if (fin !== 0) {{
-          const f = win.get(fin);
-          if (f && f.side && w.side && f.side !== w.side) plan.warns.push({{ k: 'side', f: f, w: w }});
-        }}
       }}
+    }}
+    // le camp : un aérodrome neutre lié, dans l'état final, à un template bleu ou rouge passe au camp de ce template (jamais un FARP ni un navire)
+    const sideOfT = g => {{ const f = win.get(g); if (f) return st.tmpl[g] ? f.side : ''; return tids[g] ? tids[g].coalition : ''; }};
+    for (const w of DS.wh.whs) {{
+      plan.expSide[w.key] = w.side;
+      if (!dsxNeutralAf(w) || !w.coalNode) continue;
+      const sides = new Set();
+      for (const tk of Object.keys(w.types)) {{
+        const fin = plan.expLink[w.key + '|' + tk];
+        if (!fin) continue;
+        const sd = sideOfT(fin);
+        if (sd === 'blue' || sd === 'red') sides.add(sd);
+      }}
+      if (sides.size !== 1) continue;      // deux camps (un fichier déjà en conflit) : l'aérodrome reste neutre
+      const ns = Array.from(sides)[0];
+      plan.wp.push({{ pos: w.coalNode.pos, newValueStr: '"' + ns.toUpperCase() + '"' }});
+      plan.expSide[w.key] = ns;
+      plan.sides.push({{ w: w, side: ns }});
+      plan.S++;
+    }}
+    // signalement : un lien posé vers une base d'un autre camp que le template (après l'écriture du camp des aérodromes neutres)
+    for (const l of plan.links) if (l.to) {{
+      const f = win.get(l.to), ws = plan.expSide[l.w.key];
+      if (f && f.side && ws && f.side !== ws) plan.warns.push({{ k: 'side', f: f, w: l.w }});
     }}
     const own = dsxOwners(DS);
     for (const w of DS.wh.whs) {{
@@ -5308,6 +5388,7 @@ function dsxVerify(base, DS, plan, mAst, wText, wRootNew, work) {{
     const sp2 = new Map();
     for (const w of DS.wh.whs) {{
       if (w.hotNode && plan.expHot[w.key] !== w.hot) sp2.set(w.hotNode, (nb, path) => (nb && nb.kind === 'bool' && nb.value === plan.expHot[w.key]) ? [] : [path.join('/')]);
+      if (w.coalNode && plan.expSide[w.key] !== w.side) sp2.set(w.coalNode, (nb, path) => (nb && nb.kind === 'string' && nb.value === plan.expSide[w.key].toUpperCase()) ? [] : [path.join('/')]);
       for (const tk of Object.keys(w.types)) {{
         const nd = w.types[tk], fin = plan.expLink[w.key + '|' + tk];
         if (fin === undefined || fin === nd.gid) continue;
@@ -5329,6 +5410,17 @@ function dsxVerify(base, DS, plan, mAst, wText, wRootNew, work) {{
       const exp = fin === undefined ? nd.gid : fin, k = w.key + '|' + tk;
       if ((after[k] || 0) !== exp) throw delErr('dyn.w.e.links', dynWhName(w), nd.type);
     }}
+    // les camps relus : celui attendu pour chaque entrepôt (le nouveau pour un aérodrome neutre passé à un camp, l'ancien pour tous les autres)
+    const sideAfter = {{}};
+    for (const sec of ['airports', 'warehouses']) {{
+      const sn = _astGetKey(wRootNew, sec);
+      if (!sn || sn.kind !== 'table') continue;
+      for (const we of sn.entries) if (we.key && we.value && we.value.kind === 'table') {{
+        const c = String(dynStr(_astGetKey(we.value, 'coalition')) || '').toLowerCase();
+        sideAfter[sec + '|' + we.key.value] = c === 'neutral' ? 'neutrals' : c;
+      }}
+    }}
+    for (const w of DS.wh.whs) if (sideAfter[w.key] !== plan.expSide[w.key]) throw delErr('dyn.w.e.side', dynWhName(w));
   }}
   const keep = pkClientGroups(base).map(g => g.group.groupId);
   if (JSON.stringify(pkClientGroups(work).map(g => g.group.groupId)) !== JSON.stringify(keep)) throw delErr('dyn.w.e.clients');
@@ -5351,7 +5443,7 @@ function dsxBody() {{
   let html = '';
   if (!okWh) html += '<div class="ui-avert" data-dsx-whwarn="' + DSX.wh.state + '">⚠ ' + h(t('dyn.w.wh.' + DSX.wh.state)) + '</div>';
   if (sp.err) html += '<div class="ui-avert" data-dsx-error="1">⚠ ' + h(pkErrText(sp.err)) + '</div>';
-  const clash = dsxClashes(DSX);
+  const clash = dsxClashes(DSX), sideClash = dsxSideClashes(DSX);
   const laterHtml = '<div class="snap-meta">' + h(t('dyn.w.later')) + '</div>';
   for (const f of DSX.flights) {{
     const gid = String(f.gid), on = !!st.tmpl[f.gid];
@@ -5359,6 +5451,9 @@ function dsxBody() {{
       '<span class="snap-flight-tag">' + h(f.type) + '</span><span class="snap-flight-tag">' + h(t('pk.flt.' + f.side, f.side)) + '</span>' +
       (on ? '<span class="dsx-badge">' + h(t('dyn.w.badge')) + '</span>' : '') + '</div>';
     const help = '<span class="dsx-help">' + h(tf('dyn.w.help1', f.type)) + '</span>';
+    // plus d'un appareil : un template n'en a qu'un (le groupe ordinaire ne devient pas template ; le template existant ne se garde que tel quel, ou se retire)
+    const multi = f.units > 1;
+    const multiLine = multi ? '<div class="ui-avert" data-dsx-multi="' + h(gid) + '">' + h(tf(DSX.wasT[f.gid] ? 'dyn.w.multi2' : 'dyn.w.multi1', f.units)) + '</div>' : '';
     if (!on) {{
       // 1 · pas template
       let in1 = '';
@@ -5369,10 +5464,10 @@ function dsxBody() {{
         }} else if (DSX.wh.state === 'unreadable') {{
           in1 += '<div class="ui-avert" data-dsx-error="1">⚠ ' + h(t('dyn.w.unmarkBad')) + '</div>';
         }}
-        in1 += '<button type="button" class="ui-btn dsx-btn" data-dsx-make="' + h(gid) + '">' + h(t('dyn.w.keep')) + '</button>';
+        in1 += '<button type="button" class="ui-btn dsx-btn" data-dsx-make="' + h(gid) + '">' + h(t('dyn.w.keep')) + '</button>' + multiLine;
       }} else {{
         in1 += '<div class="dsx-help"><b>' + h(t('dyn.w.plain')) + '</b> ' + h(tf('dyn.w.help1', f.type)) + '</div>' +
-          '<button type="button" class="ui-btn primary dsx-btn" data-dsx-make="' + h(gid) + '">' + h(t('dyn.w.make')) + '</button>';
+          '<button type="button" class="ui-btn primary dsx-btn" data-dsx-make="' + h(gid) + '"' + (multi ? ' disabled' : '') + '>' + h(t('dyn.w.make')) + '</button>' + multiLine;
       }}
       html += step(1, t('dyn.w.s1'), in1, false);
       html += step(2, t('dyn.w.s2off'), laterHtml, true);
@@ -5380,7 +5475,14 @@ function dsxBody() {{
       html += '</div>';
       continue;
     }}
-    html += step(1, t('dyn.w.s1ok'), '<div class="dsx-row">' + help + '<button type="button" class="ui-btn dsx-btn" data-dsx-drop="' + h(gid) + '">' + h(t('dyn.w.drop')) + '</button></div>', false);
+    html += step(1, t('dyn.w.s1ok'), '<div class="dsx-row">' + help + '<button type="button" class="ui-btn dsx-btn" data-dsx-drop="' + h(gid) + '">' + h(t('dyn.w.drop')) + '</button></div>' + multiLine, false);
+    if (multi) {{
+      // un template de plusieurs appareils : ses liens ne changent que par « Retirer le template »
+      html += step(2, t('dyn.w.s2off'), '', true);
+      html += step(3, t('dyn.w.s3'), '', true);
+      html += '</div>';
+      continue;
+    }}
     // 2 · bases
     const offs = okWh ? DSX.off[f.gid] : [];
     const picked = offs.filter(w => st.link[f.gid][w.key]);
@@ -5390,10 +5492,14 @@ function dsxBody() {{
       if (!offs.length) in2 += '<div class="ui-avert">' + h(t('dyn.w.none')) + '</div>';
       const row = w => {{
         const cur = w.types[f.tk].gid, on2 = !!st.link[f.gid][w.key];
-        let r = '<div class="dsx-wh" data-dsx-wh="' + h(w.key) + '"><label class="pk-chk"><input type="checkbox" data-dsx-link="' + h(f.gid + '#' + w.key) + '"' + (on2 ? ' checked' : '') + '>' +
+        const offside = dsxOffside(f, w);
+        let r = '<div class="dsx-wh" data-dsx-wh="' + h(w.key) + '"><label class="pk-chk"><input type="checkbox" data-dsx-link="' + h(f.gid + '#' + w.key) + '"' + (on2 ? ' checked' : '') + ((offside && !on2) ? ' disabled' : '') + '>' +
           h(dynWhName(w)) + ' <span class="snap-flight-tag">' + h(t('pk.flt.' + w.side, w.side)) + '</span></label>';
         if (cur && cur !== f.gid) r += '<span class="snap-meta dsx-lib" data-dsx-lib="1">' + h(tf('dyn.w.today', dsxTplName(cur))) + '</span>';
+        if (dsxNeutralAf(w) && f.side !== 'neutrals') r += '<span class="snap-meta dsx-lib" data-dsx-neutral="1">' + h(tf('dyn.w.neutral', t('pk.flt.' + f.side, f.side))) + '</span>';
         r += '</div>';
+        if (offside) r += '<div class="ui-avert" data-dsx-offside="1">' + h(t('dyn.w.offside')) + '</div>';
+        for (const grp of sideClash) if (grp.some(x => x.f === f && x.w === w)) r += '<div class="ui-avert" data-dsx-sideclash="1">' + h(tf('dyn.w.sideclash', dynWhName(w))) + '</div>';
         for (const grp of clash) if (grp.length > 1 && grp.some(x => x.f === f && x.w === w)) r += '<div class="ui-avert" data-dsx-clash="1">' + h(tf('dyn.w.clash', dynWhName(w), f.type)) + '</div>';
         return r;
       }};
@@ -5410,6 +5516,8 @@ function dsxBody() {{
         in2 += '<p data-dsx-off="1">' + h(tf('dyn.w.off', who)) + '</p>';
       }}
       if (noType.length) in2 += '<p data-dsx-off="1">' + h(tf('dyn.w.notype', f.type, noType.map(dynWhName).sort(dynCmp).join(', '))) + '</p>';
+      const bySide = DSX.sideOut[f.gid] || [];
+      if (bySide.length) in2 += '<p data-dsx-side="1">' + h(tf('dyn.w.side', bySide.map(dynWhName).sort(dynCmp).join(', '))) + '</p>';
       in2 += '</details>';
     }}
     html += step(2, okWh ? tf('dyn.w.s2', f.type, picked.length, offs.length) : tf('dyn.w.s2nocount', f.type), in2, false);
@@ -5431,7 +5539,7 @@ function dsxBody() {{
 }}
 function dsxBlocked() {{
   const sp = dsxSafePlan();
-  return !!(sp.err || !sp.plan || sp.plan.clash.length || sp.plan.badUnmark || sp.plan.empty);
+  return !!(sp.err || !sp.plan || sp.plan.clash.length || sp.plan.sideClash.length || sp.plan.badUnmark || sp.plan.empty);
 }}
 // Une base que plus aucune carte template ne coche reprend le moteur tournant lu à l'ouverture : rien d'elle ne s'écrit
 function dsxResetHot(key) {{
@@ -5464,14 +5572,17 @@ function dsxAsk(opener) {{
   DSX.flights = HQ_SNAPSHOT.flights.filter(f => _PK_EXPORT_SEL.has(f.groupId)).map(f => dsxFlightInfo(f, dsxGroupUnits(ctx.ast)));
   const tids = dynTemplateIds();
   DSX.st = {{ tmpl: {{}}, link: {{}}, hot: {{}} }};
-  DSX.off = {{}}; DSX.was = {{}}; DSX.wasT = {{}};
+  DSX.off = {{}}; DSX.was = {{}}; DSX.wasT = {{}}; DSX.sideOut = {{}};
   for (const w of DSX.wh.whs) DSX.st.hot[w.key] = w.hot;
   for (const f of DSX.flights) {{
     DSX.st.tmpl[f.gid] = !!tids[f.gid];
     DSX.wasT[f.gid] = !!tids[f.gid];
     DSX.st.link[f.gid] = {{}};
     const rank = w => {{ const c = w.types[f.tk].gid; return c === f.gid ? 0 : (c ? 1 : 2); }};
-    DSX.off[f.gid] = DSX.wh.whs.filter(w => w.dyn && f.tk in w.types).sort((x, y) => rank(x) - rank(y) || dsxWhSort(x, y));
+    // le camp : une base du camp du template, ou un aérodrome neutre ; un lien existant du fichier reste offert (« Déjà liées »), hors règle ou non
+    const kept = w => w.types[f.tk].gid === f.gid;
+    DSX.off[f.gid] = DSX.wh.whs.filter(w => w.dyn && f.tk in w.types && (dsxSideOk(f, w, tids) || kept(w))).sort((x, y) => rank(x) - rank(y) || dsxWhSort(x, y));
+    DSX.sideOut[f.gid] = DSX.wh.whs.filter(w => w.dyn && f.tk in w.types && !dsxSideOk(f, w, tids) && !kept(w));
     for (const w of DSX.off[f.gid]) if (w.types[f.tk].gid === f.gid) DSX.st.link[f.gid][w.key] = true;
     // tous les liens qui visent ce vol, quel que soit le type : ce que « démarquer » remet à zéro
     const was = [];
@@ -5493,6 +5604,7 @@ function dsxAsk(opener) {{
       const b = e.target && e.target.closest ? e.target.closest('[data-dsx-make],[data-dsx-drop]') : null;
       if (!b || FN.titleKey !== 'fn.dyn.title' || !FN.bodyEl || !FN.bodyEl.contains(b)) return;
       const make = b.hasAttribute('data-dsx-make'), gid = b.getAttribute(make ? 'data-dsx-make' : 'data-dsx-drop');
+      if (make && !DSX.wasT[Number(gid)] && DSX.flights.some(x => x.gid === Number(gid) && x.units > 1)) return;
       DSX.st.tmpl[Number(gid)] = make;
       if (!make && DSX.wh.state === 'ok') for (const w of DSX.off[Number(gid)]) if (DSX.st.link[Number(gid)][w.key]) dsxResetHot(w.key);
       dsxRefresh('[data-dsx-' + (make ? 'drop' : 'make') + '="' + gid + '"]');
@@ -5520,6 +5632,7 @@ async function dsxApply() {{
     await pkYield();
     const plan = dsxPlan(base, DSX);
     if (plan.clash.length) throw delErr('dyn.w.e.clash');
+    if (plan.sideClash.length) throw delErr('dyn.w.e.sideclash');
     if (plan.badUnmark) throw delErr('dyn.w.unmarkBad');
     if (plan.empty) throw delErr('dyn.w.nochange');
     // mission : éditions ciblées, puis relecture
@@ -5550,9 +5663,9 @@ async function dsxApply() {{
     if (hqCtxDiffers(base, work)) _HQ_DIRTY += 1;
     _PK_EXPORT_SEL.clear();
     renderSnapshot(HQ_SNAPSHOT);
-    // Le compte rendu : les cinq compteurs, une ligne par changement, puis les signalements
+    // Le compte rendu : les six compteurs, une ligne par changement, puis les signalements
     const nm = f => f.name, S = s => t('pk.flt.' + s, s);
-    const lines = [{{ cls: 'ok', text: () => [tn('dyn.w.rep.n', plan.N), tn('dyn.w.rep.m', plan.M), tn('dyn.w.rep.k', plan.K), tn('dyn.w.rep.l', plan.L), tn('dyn.w.rep.h', plan.H)].join(' · ') }}];
+    const lines = [{{ cls: 'ok', text: () => [tn('dyn.w.rep.n', plan.N), tn('dyn.w.rep.m', plan.M), tn('dyn.w.rep.k', plan.K), tn('dyn.w.rep.l', plan.L), tn('dyn.w.rep.h', plan.H), tn('dyn.w.rep.s', plan.S)].join(' · ') }}];
     for (const m of plan.marks) lines.push({{ cls: 'a', text: () => tf(m.on ? 'dyn.w.rep.mark' : 'dyn.w.rep.unmark', nm(m.f), m.f.type) }});
     for (const l of plan.links) {{
       const wn = () => dynWhName(l.w);
@@ -5561,6 +5674,7 @@ async function dsxApply() {{
       else lines.push({{ cls: 'a', text: () => tf('dyn.w.rep.repl', dsxTplNameOf(l.to), wn(), l.type, dsxTplNameOf(l.from)) }});
     }}
     for (const x of plan.hots) lines.push({{ cls: 'a', text: () => tf(x.on ? 'dyn.w.rep.hotOn' : 'dyn.w.rep.hotOff', dynWhName(x.w)) }});
+    for (const x of plan.sides) lines.push({{ cls: 'a', text: () => tf('dyn.w.rep.side', dynWhName(x.w), S(x.side)) }});
     for (const x of plan.warns) {{
       if (x.k === 'multi') lines.push({{ cls: 'w', text: () => tf('dyn.w.warn.multi', nm(x.f), x.f.units) }});
       else lines.push({{ cls: 'w', text: () => tf('dyn.w.warn.side', nm(x.f), dynWhName(x.w), S(x.f.side), S(x.w.side)) }});
@@ -5757,6 +5871,7 @@ function initPackagesUI() {{
 // =============================================================
 let _HQ_DIRTY = 0;     // les modifications faites au .miz ouvert (Appliquer, Supprimer, Dynamic Spawn) et pas encore sauvegardées ; en mémoire seulement
 let _HQ_PICK = null;   // le compteur au moment où le choix de fichier a été ouvert (la question « perdre les modifications ? » est déjà passée)
+let _HQ_POINT = null;  // le point de retour d'« Annuler les modifications » : {{ ctx, dyn, snap }} à l'ouverture du .miz ou à la dernière sauvegarde ; en mémoire seulement
 const HQW = {{ pk: 'pk-modal', wing: 'wing-modal', opener: null, at: 0 }};
 function hqEl(id) {{ return document.getElementById(id); }}
 
@@ -5813,11 +5928,18 @@ function hqBanner() {{
   let kind = '', text = '', act = '', label = '';
   if (HQ_SNAPSHOT && !_HQ_MIZ_CONTEXT) {{ kind = 'nomem'; text = t('hq.noMem'); act = 'open'; label = t('tb.open'); }}
   else if (_HQ_MIZ_CONTEXT && _HQ_DIRTY > 0) {{ kind = 'dirty'; text = tn('hq.mod', _HQ_DIRTY); act = 'save'; label = t('tb.save'); }}
-  const sig = kind + '|' + text + '|' + label;
-  if (el.getAttribute('data-sig') === sig) return;     // rien n'a changé : le bouton garde son focus
+  const rlabel = kind === 'dirty' ? t('hq.revert') : '';
+  const sig = kind + '|' + text + '|' + label + '|' + rlabel;
+  if (el.getAttribute('data-sig') === sig) {{     // rien n'a changé : le bouton garde son focus
+    const rv = el.querySelector('[data-hq-act="revert"]');
+    if (rv) rv.disabled = _PK_BUSY || _mizLoading;
+    return;
+  }}
   el.setAttribute('data-sig', sig);
   el.innerHTML = kind ? '<div class="ui-bandeau" data-hq-banner="' + kind + '"><p class="hq-band-txt">' + escapeHtml(text) + '</p>' +
-    '<div class="hq-band-act"><button type="button" class="miz-btn primary" data-hq-act="' + act + '">' + escapeHtml(label) + '</button></div></div>' : '';
+    '<div class="hq-band-act"><button type="button" class="miz-btn primary" data-hq-act="' + act + '">' + escapeHtml(label) + '</button>' +
+    (kind === 'dirty' ? '<button type="button" class="miz-btn" data-hq-act="revert"' + ((_PK_BUSY || _mizLoading) ? ' disabled' : '') + '>' + escapeHtml(rlabel) + '</button>' : '') +
+    '</div></div>' : '';
 }}
 
 // ---------- les deux fenêtres ----------
@@ -5883,6 +6005,7 @@ async function hqSaveRun(name) {{
     const blob = await rebuildMizHQ(ctx.missionText, ctx.otherFilesMap);
     shareOrDownload(blob, name + '.miz', 'application/octet-stream', 'HQ', pkDownload);
     _HQ_DIRTY = 0;
+    hqSetPoint();                                                          // le point de retour d'« Annuler les modifications » : le fichier qui vient d'être sauvegardé
     persistSnapshot();                                                     // mission_snapshot_v1 décrit un fichier qui existe sur le disque
     showToast(t('toast.mizSaved'), {{ type: 'ok' }});
   }} catch (err) {{
@@ -5892,6 +6015,27 @@ async function hqSaveRun(name) {{
     _PK_BUSY = false;
     pkRender();
   }}
+}}
+
+// ---------- annuler les modifications : retour à la mission telle qu'elle était à l'ouverture ou à la dernière sauvegarde ----------
+function hqSetPoint() {{
+  _HQ_POINT = (_HQ_MIZ_CONTEXT && HQ_SNAPSHOT) ? {{ ctx: _HQ_MIZ_CONTEXT, dyn: _HQ_DYN, snap: structuredClone(HQ_SNAPSHOT) }} : null;
+}}
+async function hqRevertAsk() {{
+  if (_PK_BUSY || _mizLoading || !_HQ_MIZ_CONTEXT || !HQ_SNAPSHOT || !_HQ_POINT || _HQ_DIRTY < 1) return;
+  const ok = await askConfirm({{ title: t('hq.revert.title'), text: tn('hq.revert.text', _HQ_DIRTY), verb: t('hq.revert.verb'), danger: true }});
+  if (!ok || _PK_BUSY || _mizLoading || !_HQ_POINT) return;
+  const p = _HQ_POINT;
+  _HQ_MIZ_CONTEXT = p.ctx;
+  _HQ_DYN = p.dyn;
+  HQ_SNAPSHOT = structuredClone(p.snap);
+  _HQ_DIRTY = 0;
+  _PK_EXPORT_SEL.clear();
+  _PK_REPORT = null;
+  persistSnapshot();
+  renderSnapshot(HQ_SNAPSHOT);
+  pkRender();
+  showToast(t('toast.hqReverted'), {{ type: 'ok' }});
 }}
 
 // ---------- les événements de la page ----------
@@ -5906,6 +6050,7 @@ function initHqShell() {{
     if (!b || b.disabled) return;
     if (b.getAttribute('data-hq-act') === 'open') hqOpenPick();
     else if (b.getAttribute('data-hq-act') === 'save') hqSaveAsk(b);
+    else if (b.getAttribute('data-hq-act') === 'revert') hqRevertAsk();
   }});
   // les fenêtres : la croix (aussi Échap), le pied, le fond (sans réagir au 2e clic d'un double-clic sur le bouton qui ouvre)
   [['pk', 'pk-close', 'pk-done', 'pk-backdrop'], ['wing', 'wing-close', 'wing-done', 'wing-backdrop']].forEach(a => {{
@@ -6562,6 +6707,9 @@ grep_present('pkDeleteApply',       'suppression de vols présente')
 grep_present('pk-file-input',       'sélecteur de paquets présent')
 grep_present('pk.err.noTheatre',    'refus : paquet sans théâtre')
 grep_present('hqSaveRun',           'sauvegarde du .miz présente')
+grep_present('hqRevertAsk',         'Annuler les modifications présent')
+grep_present('data-dsx-sideclash',  'garde-fou : deux camps sur un aérodrome neutre')
+grep_present('data-dsx-multi',      'garde-fou : un template n\'a qu\'un appareil')
 grep_absent('pk.err.type',          'refus « ni .json ni .zip » absent (le contenu décide)')
 # P4 vérifications
 grep_present('serializeLua',        'serializeLua présent (P4.1)')
