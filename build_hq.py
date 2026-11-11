@@ -3347,11 +3347,11 @@ async function loadMiz(file) {{
       _HQ_MIZ_CONTEXT = {{ missionText, ast, model, otherFilesMap, theatre }};
       _HQ_DYN = dyn;
       HQ_SNAPSHOT = snapshot;
+      hqSetPoint();      // le point de retour d'« Annuler les modifications » : avant le stockage, qu'une erreur ne doit pas laisser celui du .miz précédent
       persistSnapshot();
       _PK_EXPORT_SEL.clear();
       _PK_REPORT = null;
       _HQ_DIRTY = 0;     // un .miz ouvert : rien à sauvegarder
-      hqSetPoint();      // le point de retour d'« Annuler les modifications »
       _MIZ_LOAD_FP = snapshot.sourceMission.fingerprint || '';
       pkResetFilters();
       renderSnapshot(snapshot);
@@ -5281,19 +5281,19 @@ function dsxPlan(ctx, DS) {{
         if (fin === 0) plan.L++; else if (cur === 0) plan.M++; else plan.K++;
       }}
     }}
-    // le camp : un aérodrome neutre lié, dans l'état final, à un template bleu ou rouge passe au camp de ce template (jamais un FARP ni un navire)
+    // le camp : un aérodrome neutre vers lequel la fenêtre pose un lien (de 0 ou d'un autre groupe vers un template bleu ou rouge) passe au camp de ce template (jamais un FARP ni un navire) ;
+    // les liens inchangés du fichier, et les liens retirés, ne réécrivent aucun camp
     const sideOfT = g => {{ const f = win.get(g); if (f) return st.tmpl[g] ? f.side : ''; return tids[g] ? tids[g].coalition : ''; }};
     for (const w of DS.wh.whs) {{
       plan.expSide[w.key] = w.side;
       if (!dsxNeutralAf(w) || !w.coalNode) continue;
       const sides = new Set();
-      for (const tk of Object.keys(w.types)) {{
-        const fin = plan.expLink[w.key + '|' + tk];
-        if (!fin) continue;
-        const sd = sideOfT(fin);
+      for (const l of plan.links) {{
+        if (l.w !== w || !l.to) continue;
+        const sd = sideOfT(l.to);
         if (sd === 'blue' || sd === 'red') sides.add(sd);
       }}
-      if (sides.size !== 1) continue;      // deux camps (un fichier déjà en conflit) : l'aérodrome reste neutre
+      if (sides.size !== 1) continue;      // aucun lien posé, ou deux camps (déjà bloqué par la règle 6) : l'aérodrome garde son camp
       const ns = Array.from(sides)[0];
       plan.wp.push({{ pos: w.coalNode.pos, newValueStr: '"' + ns.toUpperCase() + '"' }});
       plan.expSide[w.key] = ns;
@@ -5498,7 +5498,7 @@ function dsxBody() {{
         let r = '<div class="dsx-wh" data-dsx-wh="' + h(w.key) + '"><label class="pk-chk"><input type="checkbox" data-dsx-link="' + h(f.gid + '#' + w.key) + '"' + (on2 ? ' checked' : '') + ((offside && !on2) ? ' disabled' : '') + '>' +
           h(dynWhName(w)) + ' <span class="snap-flight-tag">' + h(t('pk.flt.' + w.side, w.side)) + '</span></label>';
         if (cur && cur !== f.gid) r += '<span class="snap-meta dsx-lib" data-dsx-lib="1">' + h(tf('dyn.w.today', dsxTplName(cur))) + '</span>';
-        if (dsxNeutralAf(w) && f.side !== 'neutrals') r += '<span class="snap-meta dsx-lib" data-dsx-neutral="1">' + h(tf('dyn.w.neutral', t('pk.flt.' + f.side, f.side))) + '</span>';
+        if (dsxNeutralAf(w) && f.side !== 'neutrals' && cur !== f.gid) r += '<span class="snap-meta dsx-lib" data-dsx-neutral="1">' + h(tf('dyn.w.neutral', t('pk.flt.' + f.side, f.side))) + '</span>';
         r += '</div>';
         if (offside) r += '<div class="ui-avert" data-dsx-offside="1">' + h(t('dyn.w.offside')) + '</div>';
         for (const grp of sideClash) if (grp.some(x => x.f === f && x.w === w)) r += '<div class="ui-avert" data-dsx-sideclash="1">' + h(tf('dyn.w.sideclash', dynWhName(w))) + '</div>';
