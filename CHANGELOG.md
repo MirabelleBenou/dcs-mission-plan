@@ -52,6 +52,7 @@ Changes merged since the last release, grouped per tool.
 - The page is laid out around the mission: **Open .miz**, **Save .miz**, **Flight packages** and **Wing** in the top bar (Wing comes first until the wing is set up), flight packages and the wing configuration in windows, and from 1,100 px the groups on the left, the actions on the checked groups on the right. Applying packages, deleting groups and Dynamic Spawn now change the open mission and add up, with a counter; **Save .miz** (or **Ctrl+S**) checks the mission and downloads it once. Export waits until the changes are saved. After a page reload, HQ says the .miz must be opened again. In the wing configuration, squadrons come first and empty fields hint at what to type.
 #### Fixed
 - The interface language is shared with the other tools (HQ kept its own); the language already chosen in HQ is kept.
+- Deleting groups no longer refuses a mission whose group table is written out of key order (for example [18] before [17]), as the DCS editor can leave it; the remaining groups are renumbered by key.
 
 ### Flight Configurator
 #### Added
