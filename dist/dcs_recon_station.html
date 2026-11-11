@@ -2222,7 +2222,8 @@ window.addEventListener('keydown', e => {
   }
 });
 
-/* ---- askConfirm({ title, text, verb, danger }) → promesse : true (le verbe) ou false (Annuler, croix, Échap, fond) ---- */
+/* ---- askConfirm({ title, text, verb, danger, cancel }) → promesse : true (le verbe) ou false (le bouton de renoncement, la croix, Échap, le fond) ;
+   cancel (facultatif) : le libellé du bouton de renoncement, « Annuler » (ui.cancel) s'il manque — dit à chaque appel, la fenêtre est resservie ---- */
 function uiConfirmEl() {
   let m = document.getElementById('ui-confirm');
   if (m) return m;
@@ -2259,7 +2260,7 @@ function askConfirm(o) {
   const tx = $('ui-confirm-text');
   tx.textContent = o.text || ''; tx.hidden = !o.text;
   $('ui-confirm-close').setAttribute('aria-label', uiT('ui.close'));
-  $('ui-confirm-cancel').textContent = uiT('ui.cancel');
+  $('ui-confirm-cancel').textContent = o.cancel || uiT('ui.cancel');
   const ok = $('ui-confirm-ok');
   ok.textContent = o.verb || 'OK';
   ok.className = 'ui-btn primary' + (o.danger ? ' danger' : '');

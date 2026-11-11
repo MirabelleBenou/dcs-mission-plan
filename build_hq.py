@@ -1311,6 +1311,7 @@ const I18N = {{
     'hq.open.text.one': 'La modification pas encore sauvegardée sera perdue.',
     'hq.open.text.many': 'Les {{0}} modifications pas encore sauvegardées seront perdues.',
     'hq.open.verb': 'Ouvrir',
+    'hq.keep': 'Garder les modifications',
     'hq.revert': 'Annuler les modifications',
     'hq.revert.title': 'Annuler les modifications ?',
     'hq.revert.text.one': 'La modification pas encore sauvegardée sera perdue : HQ revient à la mission telle qu’elle était à l’ouverture ou à la dernière sauvegarde.',
@@ -1713,6 +1714,7 @@ const I18N = {{
     'hq.open.text.one': 'The unsaved change will be lost.',
     'hq.open.text.many': 'The {{0}} unsaved changes will be lost.',
     'hq.open.verb': 'Open',
+    'hq.keep': 'Keep changes',
     'hq.revert': 'Discard changes',
     'hq.revert.title': 'Discard the changes?',
     'hq.revert.text.one': 'The unsaved change will be lost: HQ goes back to the mission as it was when opened or last saved.',
@@ -5953,7 +5955,7 @@ function hqWinClose(which) {{
 
 // ---------- ouvrir un .miz ----------
 function hqOpenConfirm() {{
-  return askConfirm({{ title: t('hq.open.title'), text: tn('hq.open.text', _HQ_DIRTY), verb: t('hq.open.verb'), danger: true }});
+  return askConfirm({{ title: t('hq.open.title'), text: tn('hq.open.text', _HQ_DIRTY), verb: t('hq.open.verb'), danger: true, cancel: t('hq.keep') }});
 }}
 /* Le choix de fichier : s'il reste des modifications, la question d'abord */
 async function hqOpenPick() {{
@@ -6009,7 +6011,7 @@ function hqSetPoint() {{
 }}
 async function hqRevertAsk() {{
   if (_PK_BUSY || _mizLoading || !_HQ_MIZ_CONTEXT || !HQ_SNAPSHOT || !_HQ_POINT || _HQ_DIRTY < 1) return;
-  const ok = await askConfirm({{ title: t('hq.revert.title'), text: tn('hq.revert.text', _HQ_DIRTY), verb: t('hq.revert.verb'), danger: true }});
+  const ok = await askConfirm({{ title: t('hq.revert.title'), text: tn('hq.revert.text', _HQ_DIRTY), verb: t('hq.revert.verb'), danger: true, cancel: t('hq.keep') }});
   if (!ok || _PK_BUSY || _mizLoading || !_HQ_POINT) return;
   const p = _HQ_POINT;
   _HQ_MIZ_CONTEXT = p.ctx;
