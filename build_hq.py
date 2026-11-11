@@ -5077,7 +5077,9 @@ function pkDeleteAsk(opener) {{
 
 // =============================================================
 //  DYNAMIC SPAWN — écriture : un vol devient template (`mission`, dynSpawnTemplate) et se lie, par type d'appareil, aux aérodromes et FARP
-//  (`warehouses`, linkDynTempl ; départ moteur tournant : allowHotStart). Éditions ciblées sur le texte ; tout le reste est recopié à l'octet.
+//  (`warehouses`, linkDynTempl ; départ moteur tournant : allowHotStart ; camp d'un aérodrome neutre : coalition). Éditions ciblées sur le texte ; tout le reste est recopié à l'octet.
+//  Garde-fous : un template n'a qu'un appareil ; une base n'est offerte qu'à un template de son camp, sauf un aérodrome neutre qui passe alors au camp du template
+//  (deux camps sur le même aérodrome neutre bloquent la fenêtre) ; un lien existant hors règle reste visible, et ne se délie qu'en le décochant.
 // =============================================================
 const DSX = {{ ctx: null, st: null, flights: [], wh: null, off: {{}}, was: {{}}, bound: false }};
 
