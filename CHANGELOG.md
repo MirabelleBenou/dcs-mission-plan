@@ -43,7 +43,7 @@ Changes merged since the last release, grouped per tool.
 - **Dynamic Spawn**, read from the mission: templates are marked in the flight list with the airfields and FARPs they serve, and a panel lists each airfield and FARP offering Dynamic Spawn, with its template per aircraft type.
 - **Delete flights** from the loaded mission: check them in the flight list, review what still points to them, and save the mission without them. Dynamic Spawn links to a deleted flight are reset; triggers, tasks and scripts that name it are listed, not changed.
 - **Dynamic Spawn**, written to the mission: a flight can be made a template and linked, per aircraft type, to the airfields and FARPs that already have Dynamic Spawn enabled in the mission editor.
-- **Discard changes** in the changes banner takes the mission back to how it was when opened or last saved, after confirmation.
+- **Discard** (↺), next to **Save .miz** in the top bar while there are unsaved changes, takes the mission back to how it was when opened or last saved, after confirmation.
 #### Changed
 - Radios are named and numbered as in the cockpit in the mission summary and in the package messages (the Mi-24P's R-863 and R-828 start at channel 0). The .miz keeps its own numbering.
 - Flight packages are recognised by their content, not their file name; unreadable flights are skipped and counted, an empty package or one without theatre is refused, with the same messages as the Route Planner and the Datacard Generator. *Load another .miz* also clears the mission offered to the Route Planner and the Datacard Generator.

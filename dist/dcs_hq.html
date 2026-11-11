@@ -814,6 +814,7 @@ html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-
 /* ======== LA PAGE AUTOUR DE LA MISSION (lot mp-hq-disposition) ======== */
 /* Les boutons de la barre : Ouvrir, Sauvegarder (et son compteur), Paquets de vol, Wing, Exemple ; « Wing » prend le dessin du bouton principal tant que rien n'est configuré */
 .tb-btn { position: relative; }
+#btn-revert[hidden] { display: none; }
 .tb-btn:disabled { opacity: .4; cursor: default; }
 .tb-btn:disabled:hover { background: transparent; border-color: var(--khaki); color: var(--paper); }
 .tb-btn.primary { background: var(--amber); border-color: var(--amber); color: #15120c; }
@@ -1060,6 +1061,10 @@ body[data-theme] {
     <span class="tb-btn-label" data-i18n="tb.save">Sauvegarder .miz</span>
     <span class="tb-count" id="save-count" hidden>0</span>
   </button>
+  <button type="button" class="tb-btn" id="btn-revert" hidden>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+    <span class="tb-btn-label" data-i18n="tb.revert">Annuler</span>
+  </button>
   <button type="button" class="tb-btn" id="btn-packages" disabled>
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5"/><path d="M12 13v8"/></svg>
     <span class="tb-btn-label" data-i18n="tb.pk">Paquets de vol</span>
@@ -1281,6 +1286,7 @@ const I18N = {
     'tb.open': 'Ouvrir .miz',
     'tb.open.tip': 'Ouvrir une mission de l\'éditeur de DCS',
     'tb.save': 'Sauvegarder .miz',
+    'tb.revert': 'Annuler',
     'tb.save.none': 'Aucune modification à sauvegarder',
     'tb.pk': 'Paquets de vol',
     'tb.needMiz': 'Ouvrez d\'abord une mission .miz',
@@ -1289,8 +1295,6 @@ const I18N = {
     'hq.empty.hint': 'ou déposez le fichier ici · configurez d\'abord votre wing (Wing, en haut)',
     'hq.checked.one': 'Sur {0} groupe coché',
     'hq.checked.many': 'Sur {0} groupes cochés',
-    'hq.mod.one': '{0} modification pas encore sauvegardée dans le .miz.',
-    'hq.mod.many': '{0} modifications pas encore sauvegardées dans le .miz.',
     'hq.noMem': 'Le .miz n\'est plus en mémoire depuis le rechargement de la page : rouvrez-le pour modifier la mission.',
     'hq.open.title': 'Ouvrir un autre .miz ?',
     'hq.open.text.one': 'La modification pas encore sauvegardée sera perdue.',
@@ -1685,6 +1689,7 @@ const I18N = {
     'tb.open': 'Open .miz',
     'tb.open.tip': 'Open a mission from the DCS editor',
     'tb.save': 'Save .miz',
+    'tb.revert': 'Discard',
     'tb.save.none': 'No changes to save',
     'tb.pk': 'Flight packages',
     'tb.needMiz': 'Open a .miz mission first',
@@ -1693,8 +1698,6 @@ const I18N = {
     'hq.empty.hint': 'or drop the file here · set up your wing first (Wing, at the top)',
     'hq.checked.one': 'On {0} checked group',
     'hq.checked.many': 'On {0} checked groups',
-    'hq.mod.one': '{0} change not yet saved to the .miz.',
-    'hq.mod.many': '{0} changes not yet saved to the .miz.',
     'hq.noMem': 'The .miz is no longer in memory since the page was reloaded: open it again to change the mission.',
     'hq.open.title': 'Open another .miz?',
     'hq.open.text.one': 'The unsaved change will be lost.',
@@ -7037,6 +7040,12 @@ function hqWingOrder() {
   else if (b.nextElementSibling !== ex) ex.before(b);
 }
 
+/* « Annuler » suit toujours « Sauvegarder .miz », quel que soit l'ordre que pose hqWingOrder() */
+function hqRevertPlace() {
+  const rv = hqEl('btn-revert'), sv = hqEl('btn-save');
+  if (rv && sv && sv.nextElementSibling !== rv) sv.after(rv);
+}
+
 /* L'état de la page et de la barre : sans mission la page vide, avec le snapshot la page à deux colonnes ; les boutons, leurs infobulles, le compteur, le bandeau */
 function hqChrome() {
   const ctx = !!_HQ_MIZ_CONTEXT, snap = !!HQ_SNAPSHOT, busy = _PK_BUSY || _mizLoading;
@@ -7053,6 +7062,14 @@ function hqChrome() {
     save.title = !ctx ? why : (_HQ_DIRTY < 1 ? t('tb.save.none') : t('tb.save'));
     save.setAttribute('aria-label', t('tb.save') + (_HQ_DIRTY > 0 ? ' (' + _HQ_DIRTY + ')' : ''));
   }
+  const rv = hqEl('btn-revert');
+  if (rv) {
+    const show = ctx && _HQ_DIRTY >= 1;
+    rv.hidden = !show;
+    rv.disabled = busy;
+    rv.title = t('hq.revert') + (_HQ_DIRTY > 0 ? ' (' + _HQ_DIRTY + ')' : '');
+    rv.setAttribute('aria-label', rv.title);
+  }
   const cnt = hqEl('save-count');
   if (cnt) { cnt.textContent = String(_HQ_DIRTY); cnt.hidden = _HQ_DIRTY < 1; }
   const pk = hqEl('btn-packages');
@@ -7060,27 +7077,21 @@ function hqChrome() {
   const wg = hqEl('btn-wing');
   if (wg) { wg.title = t('tb.wing'); wg.setAttribute('aria-label', t('tb.wing')); }
   hqWingOrder();
+  hqRevertPlace();
   hqBanner();
   pkRefreshExportBtn();
 }
-/* Le bandeau en tête de la colonne de droite : les modifications pas encore sauvegardées, ou le .miz qui n'est plus en mémoire */
+/* Le bandeau en tête de la colonne de droite : le .miz qui n'est plus en mémoire */
 function hqBanner() {
   const el = hqEl('hq-banner');
   if (!el) return;
   let kind = '', text = '', act = '', label = '';
   if (HQ_SNAPSHOT && !_HQ_MIZ_CONTEXT) { kind = 'nomem'; text = t('hq.noMem'); act = 'open'; label = t('tb.open'); }
-  else if (_HQ_MIZ_CONTEXT && _HQ_DIRTY > 0) { kind = 'dirty'; text = tn('hq.mod', _HQ_DIRTY); act = 'save'; label = t('tb.save'); }
-  const rlabel = kind === 'dirty' ? t('hq.revert') : '';
-  const sig = kind + '|' + text + '|' + label + '|' + rlabel;
-  if (el.getAttribute('data-sig') === sig) {     // rien n'a changé : le bouton garde son focus
-    const rv = el.querySelector('[data-hq-act="revert"]');
-    if (rv) rv.disabled = _PK_BUSY || _mizLoading;
-    return;
-  }
+  const sig = kind + '|' + text + '|' + label;
+  if (el.getAttribute('data-sig') === sig) return;     // rien n'a changé : le bouton garde son focus
   el.setAttribute('data-sig', sig);
   el.innerHTML = kind ? '<div class="ui-bandeau" data-hq-banner="' + kind + '"><p class="hq-band-txt">' + escapeHtml(text) + '</p>' +
     '<div class="hq-band-act"><button type="button" class="miz-btn primary" data-hq-act="' + act + '">' + escapeHtml(label) + '</button>' +
-    (kind === 'dirty' ? '<button type="button" class="miz-btn" data-hq-act="revert"' + ((_PK_BUSY || _mizLoading) ? ' disabled' : '') + '>' + escapeHtml(rlabel) + '</button>' : '') +
     '</div></div>' : '';
 }
 
@@ -7178,21 +7189,22 @@ async function hqRevertAsk() {
   renderSnapshot(HQ_SNAPSHOT);
   pkRender();
   showToast(t('toast.hqReverted'), { type: 'ok' });
+  const op = hqEl('btn-open');
+  if (op && !op.disabled) op.focus();      // après le retour d'askConfirm : « Annuler » a disparu, le focus va à « Ouvrir .miz »
 }
 
 // ---------- les événements de la page ----------
 function initHqShell() {
   hqEl('btn-open').addEventListener('click', () => hqOpenPick());
   hqEl('btn-save').addEventListener('click', e => hqSaveAsk(e.currentTarget));
+  hqEl('btn-revert').addEventListener('click', () => hqRevertAsk());
   hqEl('btn-packages').addEventListener('click', e => hqWinOpen('pk', e.currentTarget));
   hqEl('btn-wing').addEventListener('click', e => hqWinOpen('wing', e.currentTarget));
-  // le bouton de la page vide et ceux du bandeau : le geste de la barre
+  // le bouton de la page vide et celui du bandeau : le geste de la barre
   document.addEventListener('click', e => {
     const b = e.target.closest ? e.target.closest('[data-hq-act]') : null;
     if (!b || b.disabled) return;
     if (b.getAttribute('data-hq-act') === 'open') hqOpenPick();
-    else if (b.getAttribute('data-hq-act') === 'save') hqSaveAsk(b);
-    else if (b.getAttribute('data-hq-act') === 'revert') hqRevertAsk();
   });
   // les fenêtres : la croix (aussi Échap), le pied, le fond (sans réagir au 2e clic d'un double-clic sur le bouton qui ouvre)
   [['pk', 'pk-close', 'pk-done', 'pk-backdrop'], ['wing', 'wing-close', 'wing-done', 'wing-backdrop']].forEach(a => {
