@@ -4622,6 +4622,8 @@ def check(html):
     ok('input[data-k="livery"]' not in html and 'data-k="livery" role="combobox"' not in html, 'le champ Livrée est une liste, plus un texte libre')
     ok(not re.search(r'\blvOpen\b|\blvItems\b|\blvChoose\b|\blvClose\b|\bisLiveryField\b|\bnoteLiveries\s*:|\bseenLiv\b|u\.livery\.ph', html), 'plus de panneau de suggestions de livrée ni de suggestions tirées des paquets, de la mission d\'HQ ou des autres unités')
     ok('n.toLowerCase() === cur.toLowerCase()' in html and 'names[k] = cur' in html, 'une livrée égale à un nom de la liste à la casse près prend la place de ce nom (un seul nom, son écriture à elle)')
+    ok(not re.search(r'\bhqMission\b|\breadHqMission\b|\bHQ_MISSION_SCHEMAS\b|\bUI\.hq\b', html), 'plus de lecture de la mission d\'HQ dans le module (l\'import la lit par le bloc commun)')
+    ok("if (!liveriesFor(nt).some(n => n.toLowerCase() === lv)) u.livery = '';" in html, "changer le type d'une unité remet sa livrée à « Inchangée » si le nouveau type ne l'a pas")
     ok("const KEY_WING = 'wing_config_v1';" in html and 'refreshLiveryLists' in html, 'les listes de livrées lisent wing_config_v1 et suivent son changement')
     scripts = re.findall(r'<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>', html, re.S)
     for i, s in enumerate(scripts):
