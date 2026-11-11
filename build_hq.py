@@ -509,7 +509,7 @@ select[data-tbm-src] {{ display: none !important; }}
 .tb-brand-sub {{ font-weight: 500; }}
 .tb-version {{ font-family: 'Roboto Mono', monospace; }}
 @media (max-width: 1359px) {{ .tb-brand-main, .tb-brand-sub, .tb-brand + .tb-sep, .tb-version {{ display: none; }} .tb-brand-short {{ display: inline; }} }}
-@media (max-width: 1499px) {{ .tb-classif {{ display: none; }} }}   /* le tampon de décor tombe sous 1 500 px (lot mp-hq-disposition) */
+@media (max-width: 1599px) {{ .tb-classif {{ display: none; }} }}   /* le tampon de décor tombe sous 1 600 px, avec le sous-titre du sigle (lot mp-hq-disposition, addendum 2) */
 @media (max-width: 1599px) {{ .tb-brand-sub {{ display: none; }} }}   /* le sous-titre du sigle cède la place au tampon d'escadre du shell et au libellé des boutons (la barre mesurée dans le shell, FR, tampon de 9 lettres) */
 .tb-btn {{ width: auto; height: 38px; min-width: 38px; padding: 0 12px; gap: 6px; font-family: var(--f-ui); font-weight: 500; letter-spacing: 1.5px; font-size: 12px; text-transform: uppercase; white-space: nowrap; }}
 @media (max-width: 1149px) {{ .tb-btn .tb-btn-label {{ display: none; }} .tb-btn {{ padding: 0; width: 38px; }} }}   /* 1 150 px : la barre du shell (retour, tampon d'escadre) et cinq boutons libellés en français tiennent ; en dessous, les icônes (lot mp-hq-disposition) */
