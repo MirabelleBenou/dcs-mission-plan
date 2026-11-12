@@ -3609,10 +3609,10 @@ function syncActive() {
   ensurePids();
   ensureDates();
 }
-/* La date reçue avec une route (route.missionDate) : la route la porte, partout où elle vit. Une route sans point n'est plus une route importée : elle n'a plus de date ; une date illisible s'en va.
+/* La date reçue avec une route (route.missionDate) : la route la porte, partout où elle vit. Elle la garde tant que la route garde son rid, même vidée de ses points (une route sans point n'a pas de navigation : la date ne s'affiche nulle part) ; elle tombe quand la route disparaît, qu'une route neuve naît ou qu'un nouvel import la remplace ; une date illisible s'en va.
    S (route_state_v1) en est le miroir pour la route active : c'est la route de RSET qui fait foi. */
 function ensureDates() {
-  RSET.routes.concat(RSET.hidden || []).forEach(r => { if (r.missionDate !== undefined && (!r.points.length || magRouteDate(r.missionDate) === '')) delete r.missionDate; });
+  RSET.routes.concat(RSET.hidden || []).forEach(r => { if (r.missionDate !== undefined && magRouteDate(r.missionDate) === '') delete r.missionDate; });
   const a = RSET.routes[RSET.active];
   if (S) { if (a && a.missionDate !== undefined) S.missionDate = a.missionDate; else delete S.missionDate; }
 }
@@ -3664,7 +3664,7 @@ function readRoutes(list, dflt) {
     if (ridValid(r.rid) && !seen.has(r.rid)) { rid = r.rid; seen.add(rid); }
     const o = { rid: rid, name: str(r.name).slice(0, 60), points: rp.points, flight: readFlight(r.flight), theatre: th };
     const md = magRouteDate(r.missionDate);
-    if (md !== '' && o.points.length) o.missionDate = md;
+    if (md !== '') o.missionDate = md;
     out.push(o);
   });
   out.forEach(r => { if (!r.rid) { r.rid = newRid(seen); seen.add(r.rid); drawn = true; } });
@@ -7968,7 +7968,7 @@ function setRoute(route, noKey) {
   S.points = route.points;
   S.refs = route.refs;
   const ar = RSET.routes[RSET.active];       /* la date de la route lue (fichier) passe à la route active ; sans date : aucune (une route remplacée ne garde pas celle de la précédente) */
-  if (ar) { if (magRouteDate(route.missionDate) !== '' && route.points.length) ar.missionDate = route.missionDate; else delete ar.missionDate; }
+  if (ar) { if (magRouteDate(route.missionDate) !== '') ar.missionDate = route.missionDate; else delete ar.missionDate; }
   sel = -1; selR = -1;
   resolveLayer();
   persistState();

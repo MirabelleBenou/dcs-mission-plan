@@ -1647,6 +1647,7 @@ const I18N = {
     'pk.rep.conflict': '⚠ {0} : visé par {1} et par {2} — le dernier chargé l’emporte, rien écrit depuis le premier',
     'pk.rep.fail': '✗ {0} ({1}) : vérification échouée — {2}',
     'pk.rep.failTail': 'Rien n’a changé : le .miz ouvert reste inchangé.',
+    'pk.rep.clock': 'Paquet refusé : il changerait la date ou l’heure de départ de la mission.',
     'pk.rep.route.one': 'route ({0} point)',
     'pk.rep.route.many': 'route ({0} points)',
     'pk.rep.radios': 'radios ({0})',
@@ -2063,6 +2064,7 @@ const I18N = {
     'pk.rep.conflict': '⚠ {0}: targeted by {1} and by {2} — the last one loaded wins, nothing written from the first',
     'pk.rep.fail': '✗ {0} ({1}): verification failed — {2}',
     'pk.rep.failTail': 'Nothing changed: the open .miz is unchanged.',
+    'pk.rep.clock': 'Package refused: it would change the mission’s date or start time.',
     'pk.rep.route.one': 'route ({0} point)',
     'pk.rep.route.many': 'route ({0} points)',
     'pk.rep.radios': 'radios ({0})',
@@ -5812,13 +5814,13 @@ function pkBuildExport(groupIds) {
   pkg.flights = flights;
   return { pkg, omit };
 }
-// Une date de mission lisible : la chaîne AAAA-MM-JJ d'un jour du calendrier (la règle de magDecYear des autres outils), sinon '' (ignorée, comme absente)
+// Une date de mission lisible : la chaîne AAAA-MM-JJ d'un jour du calendrier, d'une année de 1900 à 2099 (la règle de magRouteDate des autres outils), sinon '' (ignorée, comme absente)
 function pkMissionDate(s) {
   const m = typeof s === 'string' ? /^(\d{4})-(\d{2})-(\d{2})$/.exec(s) : null;
   if (!m) return '';
   const y = +m[1], mo = +m[2], da = +m[3], leap = (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
   const dm = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-  return mo >= 1 && mo <= 12 && da >= 1 && da <= dm[mo - 1] ? s : '';
+  return y >= 1900 && y <= 2099 && mo >= 1 && mo <= 12 && da >= 1 && da <= dm[mo - 1] ? s : '';
 }
 
 // La fenêtre « Exporter le paquet » : le nom par défaut est celui du Route Planner, paquet_<groupe>[_+n]_<horodatage>
@@ -6268,6 +6270,19 @@ function hqCtxDiffers(a, b) {
   return false;
 }
 
+// Garde à l'exécution : la date (table `date`) et l'heure de départ (`start_time`, à la racine) de la mission, lues dans le texte de la mission telle qu'elle est (avant) et telle qu'elle serait écrite (après).
+// Un paquet n'y touche jamais ; si les deux lectures diffèrent, le paquet est refusé (pkApply). Lecture de deux nœuds de l'arbre déjà là : aucune relecture de la mission.
+function pkClockOf(ctx) {
+  const root = ctx.ast && ctx.ast.kind === 'assignment' ? ctx.ast.value : ctx.ast;
+  const one = key => {
+    const n = _astGetKey(root, key);
+    if (!n) return null;
+    return n.pos && n.pos.start && n.pos.end ? ctx.missionText.slice(n.pos.start.offset, n.pos.end.offset) : JSON.stringify(astToValue(n) === undefined ? null : astToValue(n));
+  };
+  return JSON.stringify([one('date'), one('start_time')]);
+}
+function pkClockMoved(before, after) { return pkClockOf(before) !== pkClockOf(after); }
+
 async function pkApply() {
   if (_PK_BUSY || _mizLoading) return;
   if (!_HQ_MIZ_CONTEXT) { showToast(t('toast.mizNotLoaded'), { type: 'err' }); return; }
@@ -6342,6 +6357,12 @@ async function pkApply() {
     if (patchesN === 0) {
       _PK_REPORT = { lines, total: () => pkTotalText(applied, absent, warnN) };
       showToast(t('toast.pkNoChange'));
+      return;
+    }
+    // La garde : la mission qui serait écrite garde la date et l'heure de départ de celle d'avant, sinon le paquet est refusé et rien ne change (ni l'archive, ni le contexte, ni le compteur de modifications)
+    if (pkClockMoved(base, work)) {
+      _PK_REPORT = { lines: [ { cls: 'w', text: () => t('pk.rep.clock') } ], total: null };
+      showToast(t('pk.rep.clock'), { type: 'err' });
       return;
     }
     // Rien n'a échoué : l'archive est refaite à blanc (rebuildMizHQ, la même épreuve qu'avant) et le snapshot recalculé, puis seulement on change d'état.

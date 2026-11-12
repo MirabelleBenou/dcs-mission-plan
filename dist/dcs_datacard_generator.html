@@ -4062,9 +4062,9 @@ function magVar(lat, lon, y) {
   return Math.atan2(by, bxg) / R;
 }
 
-/* La date d'une route reçue avec elle (route.missionDate, ou missionDate à la racine d'un paquet) : la chaîne AAAA-MM-JJ que magDecYear sait lire, sinon '' (ignorée, comme absente). */
+/* La date d'une route reçue avec elle (route.missionDate, ou missionDate à la racine d'un paquet) : la chaîne AAAA-MM-JJ d'un jour du calendrier, que magDecYear sait lire, et dont l'année est comprise entre 1900 et 2099 (les bornes de la saisie de l'Année) ; sinon '' (ignorée, comme absente). */
 function magRouteDate(s) {
-  return (typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s) && magDecYear(s) != null) ? s : '';
+  return (typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s) && magDecYear(s) != null && +s.slice(0, 4) >= 1900 && +s.slice(0, 4) <= 2099) ? s : '';
 }
 
 /* L'année d'une route et sa source : { src: 'mission' | 'route' | 'routeForced' | 'forced' | 'typed' | 'default', y (décimale), year (AAAA, texte),
