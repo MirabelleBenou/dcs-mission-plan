@@ -1057,10 +1057,6 @@ body {
 .ed-field input[readonly] { background: rgba(216, 201, 165, .7); color: #1f1c16; cursor: not-allowed; }
 .ed-field .af-free { margin-top: 6px; }
 
-/* Au téléphone, dans la suite : Affichage n'a plus que l'icône œil (le nom accessible et l'infobulle gardent « Affichage ») */
-@media (max-width: 759px) {
-  html.mp-in-shell #btn-display > span, html.mp-in-shell #btn-display > .dsp-chev { display: none; }
-}
 
 /* Listes */
 .ed-list { display: flex; flex-direction: column; gap: 8px; }
@@ -3090,17 +3086,12 @@ function initLang() {
   document.documentElement.lang = CURRENT_LANG;
 }
 
-/* Au téléphone, dans la suite (sous 760 px) : Affichage n'a que l'icône, le théâtre s'abrège dans le bouton de sa liste (la liste ouverte garde les noms entiers) */
+/* Au téléphone, dans la suite (sous 760 px) : le théâtre s'abrège dans le bouton de sa liste (la liste ouverte garde les noms entiers) ; Affichage se réduit à l'icône dans le bloc d'interface commun */
 const TH_SHORT = {
   fr: { GermanyCW: 'All. GF', PersianGulf: 'Golfe', MarianaIslandsWWII: 'Mar. 1944', Falklands: 'Atl. Sud', Afghanistan: 'Afgh.' },
   en: { GermanyCW: 'CW Germany', PersianGulf: 'Gulf', TheChannel: 'Channel', MarianaIslands: 'Marianas', MarianaIslandsWWII: 'Marianas 44', Falklands: 'S. Atlantic', Afghanistan: 'Afgh.' }
 };
 function barPhoneSync() {
-  const c = uiBarCompact(), d = document.getElementById('btn-display');
-  if (d) {
-    if (c) { const n = t('tb.display'); d.title = n; d.setAttribute('aria-label', n); }
-    else { d.title = t('tb.display.tip'); d.setAttribute('aria-label', t('tb.display.tip')); }
-  }
   const sel = document.getElementById('theatre'), m = sel && TBM.map.get(sel);
   if (m) tbmSync(m);
 }

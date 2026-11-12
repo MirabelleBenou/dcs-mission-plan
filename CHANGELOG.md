@@ -30,6 +30,7 @@ Changes merged since the last release, grouped per tool.
 - Deleting a route in the Route Planner removes it from the groups that follow it; removing a group in the Flight Configurator also removes its datacard; a route you named is never replaced by an imported one.
 - Every tool's top bar keeps one order at every width: the file buttons first, then the settings.
 - Every drop-down list in the suite works the same way: a search field on long lists, keyboard navigation, and placement above the on-screen keyboard.
+- On phones, every tool's top bar shortens the same way: list labels such as Theatre are hidden and Display shows its icon only.
 
 #### Removed
 - The repository no longer ships one particular wing's configuration file, nor six squadron logos that no tool used; the README and the code comments no longer name that wing. Each wing still makes or imports its own configuration in HQ.

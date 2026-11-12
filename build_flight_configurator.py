@@ -1289,9 +1289,8 @@ body[data-theme] {
 /* Le bouton « Ouvrir » reste un bouton de menu (icône + chevron) : à la taille de celui du Route Planner, jamais réduit à la forme d'un bouton à icône seule (mêmes marges intérieures : 12 px, 8 px à gauche sous 521 px) */
 @media (max-width: 1132px) { #btn-open { width: auto; min-width: 44px; padding-left: 12px; padding-right: 12px; } }
 @media (max-width: 520px) { #btn-open { padding-left: 8px; } }
-/* La liste du théâtre (lot mp-theatre-unique) : jusqu'à 980 px le libellé « Théâtre » cède la place (la liste garde son nom accessible) ; sous 480 px la liste se resserre (texte entier jusqu'à 96 px, puis coupé)
+/* La liste du théâtre : le libellé « Théâtre » cède la place sous 850 px (règle commune, bloc d'interface commun ; la liste garde son nom accessible) ; sous 480 px la liste se resserre (texte entier jusqu'à 96 px, puis coupé)
    et la liste du thème de l'interface quitte la barre (le thème se règle au tableau du shell, qui le propage) : sans cela la barre défile de 21 à 28 px à 412 px */
-@media (max-width: 849px) { .tb-label { display: none; } }
 @media (max-width: 479px) { .tb-sel { padding: 0 20px 0 6px; font-size: 11px; letter-spacing: .5px; background-position: right 6px center; flex: none; max-width: 79px; } .tb-select.tbm-trigger { display: none; } }
 
 /* Tampon de décor : le style de celui du Briefing Generator, en anglais dans les deux langues ; il ne s'affiche que quand la barre a la place. */

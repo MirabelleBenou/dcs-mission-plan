@@ -884,10 +884,6 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 #btn-display:hover, #btn-display:focus-visible, #btn-display.dsp-open, #btn-open:hover, #btn-open:focus-visible, #btn-open.dsp-open, #btn-save:hover, #btn-save:focus-visible, #btn-save.dsp-open, #btn-export-menu:hover, #btn-export-menu:focus-visible, #btn-export-menu.dsp-open { border-color: var(--amber); }
 #btn-display .dsp-chev, #btn-open .dsp-chev, #btn-save .dsp-chev, #btn-export-menu .dsp-chev { width: 10px; height: 6px; }
 #btn-display.dsp-open .dsp-chev, #btn-open.dsp-open .dsp-chev, #btn-save.dsp-open .dsp-chev, #btn-export-menu.dsp-open .dsp-chev { transform: rotate(180deg); }
-/* Au téléphone, dans la suite : Affichage n'a plus que l'icône œil (le nom accessible et l'infobulle gardent « Affichage ») */
-@media (max-width: 759px) {
-  html.mp-in-shell #btn-display > span, html.mp-in-shell #btn-display > .dsp-chev { display: none; }
-}
 .dsp-dot { position: absolute; top: -3px; right: -3px; width: 7px; height: 7px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 0 2px var(--olive-deep); pointer-events: none; }
 .dsp-dot[hidden] { display: none; }
 .dsp-panel { max-height: min(80vh, 600px); min-width: 240px; padding-bottom: 6px; }
@@ -3248,17 +3244,12 @@ function initLang() {
   document.documentElement.lang = CURRENT_LANG;
 }
 
-/* Au téléphone, dans la suite (sous 760 px) : Affichage n'a que l'icône, le théâtre s'abrège dans le bouton de sa liste (la liste ouverte garde les noms entiers) */
+/* Au téléphone, dans la suite (sous 760 px) : le théâtre s'abrège dans le bouton de sa liste (la liste ouverte garde les noms entiers) ; Affichage se réduit à l'icône dans le bloc d'interface commun */
 const TH_SHORT = {
   fr: { GermanyCW: 'All. GF', PersianGulf: 'Golfe', MarianaIslandsWWII: 'Mar. 1944', Falklands: 'Atl. Sud', Afghanistan: 'Afgh.' },
   en: { GermanyCW: 'CW Germany', PersianGulf: 'Gulf', TheChannel: 'Channel', MarianaIslands: 'Marianas', MarianaIslandsWWII: 'Marianas 44', Falklands: 'S. Atlantic', Afghanistan: 'Afgh.' }
 };
 function barPhoneSync() {
-  const c = uiBarCompact(), d = document.getElementById('btn-display');
-  if (d) {
-    if (c) { const n = t('tb.display'); d.title = n; d.setAttribute('aria-label', n); }
-    else { d.title = t('tb.display.tip'); d.removeAttribute('aria-label'); }
-  }
   const sel = document.getElementById('theatre'), m = sel && TBM.map.get(sel);
   if (m) tbmSync(m);
 }

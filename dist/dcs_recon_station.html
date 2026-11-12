@@ -1042,6 +1042,10 @@ a[href]:focus-visible, [tabindex]:focus-visible, [role="button"]:focus-visible {
 .toolbar > .tb-sep.tb-files-end { display: block; }
 /* dans la suite, le module laisse le thème à l'accueil : sa liste de thème n'est pas là (le drapeau reste) */
 html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-controls="tbm-list-theme-select"], html.mp-in-shell [aria-controls="tbm-list-theme"] { display: none !important; }
+/* la barre au téléphone : une seule règle de réduction pour tous les outils à barre. Sous 850 px, le libellé d'une liste de la barre (« Théâtre ») est masqué (la liste garde son nom accessible) ;
+   dans la suite, sous 760 px, un bouton de réglage à texte et à icône (Affichage) n'a plus que l'icône (son infobulle et son nom accessible gardent son nom : uiBarDisplaySync) */
+@media (max-width: 849px) { .toolbar .tb-label { display: none; } }
+@media (max-width: 759px) { html.mp-in-shell #btn-display > span, html.mp-in-shell #btn-display > .dsp-chev { display: none; } }
 /* MP-20 begin */
 /* Contrastes (texte sous 18 px, 4,5 : 1 au moins) : couleur du texte seule, la palette commune ne bouge pas. */
 :where(body[data-theme="cw-nato"]) .ui-lbl { color: #c49037; }
@@ -2217,14 +2221,30 @@ try { if (window.self !== window.top) document.documentElement.classList.add('mp
 
 /* ---- la barre : le même ordre à toutes les largeurs, écrit dans le HTML de chaque module (retour, sigle, .tb-lead s'il y en a un, les boutons de fichier .tb-file,
    le séparateur .tb-files-end, puis le reste) ; rien ne se déplace selon la largeur. Seul HQ déplace son « Wing » (.tb-lead tant que le wing n'est pas configuré), et pas selon la largeur.
-   Ce qui suit ne sert qu'à raccourcir sans déplacer : sous 760 px dans la suite, le Route Planner et le Datacard Generator réduisent Affichage à l'œil et abrègent le théâtre ;
-   le passage de 760 px, dans les deux sens, est suivi sans rechargement (uiBarChanged() du module). ---- */
+   Ce qui suit ne sert qu'à raccourcir sans déplacer : la réduction de la barre est écrite une fois, dans la feuille (libellé de liste sous 850 px, Affichage à l'icône sous 760 px dans la suite) ;
+   uiBarDisplaySync() tient l'infobulle et le nom accessible d'Affichage ; le passage de 760 px, dans les deux sens, est suivi sans rechargement (uiBarChanged() du module, s'il en a une). ---- */
 const UIBAR = { mq: null };
 function uiBarCompact() { return document.documentElement.classList.contains('mp-in-shell') && !!UIBAR.mq && UIBAR.mq.matches; }
+/* Affichage réduit à l'icône (sous 760 px, dans la suite) : l'infobulle et le nom accessible disent « Affichage » ; sinon, ceux du bouton entier (data-i18n-title, et data-i18n-aria-label s'il en a un) */
+function uiBarDisplaySync() {
+  const d = document.getElementById('btn-display'), lbl = d && d.querySelector(':scope > span');
+  if (!d || !lbl) return;
+  let title, aria;
+  if (uiBarCompact()) { title = aria = lbl.textContent.trim(); }
+  else {
+    title = d.dataset.i18nTitle ? uiT(d.dataset.i18nTitle, d.title) : d.title;
+    aria = d.dataset.i18nAriaLabel ? uiT(d.dataset.i18nAriaLabel, title) : null;
+  }
+  if (d.title !== title) d.title = title;
+  if (aria === null) { if (d.hasAttribute('aria-label')) d.removeAttribute('aria-label'); }
+  else if (d.getAttribute('aria-label') !== aria) d.setAttribute('aria-label', aria);
+}
 function uiBarInit() {
   if (UIBAR.mq || !window.matchMedia) return;
   UIBAR.mq = window.matchMedia('(max-width: 759px)');
-  const go = () => { try { if (typeof uiBarChanged === 'function') uiBarChanged(); } catch (e) { /* le module réagit au passage de 760 px */ } };
+  const dsp = document.getElementById('btn-display');
+  if (dsp && window.MutationObserver) new MutationObserver(uiBarDisplaySync).observe(dsp, { attributes: true, attributeFilter: ['title', 'aria-label'], childList: true, characterData: true, subtree: true });
+  const go = () => { uiBarDisplaySync(); try { if (typeof uiBarChanged === 'function') uiBarChanged(); } catch (e) { /* le module réagit au passage de 760 px */ } };
   if (UIBAR.mq.addEventListener) UIBAR.mq.addEventListener('change', go); else UIBAR.mq.addListener(go);
   go();
 }
