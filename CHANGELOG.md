@@ -76,6 +76,8 @@ Changes merged since the last release, grouped per tool.
 - The Mi-24P's and Mi-8MT's HF radio (Jadro-1I, Jadro-1A), which missions do not preset: up to five frequencies, carried in the flight package and shown on the datacard, never written to the mission by HQ.
 - An Example button that loads two groups (Mi-24P, Mi-8MT), with “Restore” for twelve seconds.
 - Each radio channel has a box to print it on the group's datacard; the Datacard Generator shows the same choice.
+- The loadout follows the Loadout Editor of Mission Tools: the Kord of the Mi-24P on one door only; a weapon that cannot go with the rest of the loadout is greyed out with the stations in the way, and a loadout received with such a mix says it under each station.
+- A slider for the gun, like the one for the fuel, and the estimated take-off weight (empty, fuel and stores; gun and flares not counted), in orange above the recommended maximum.
 #### Changed
 - Groups are now shared with the Route Planner: create, rename or re-route a group in either tool and the other follows at once. A group may have no unit yet. A group with no unit is exported route only.
 - **Import** now also reads the Briefing Generator — its groups, their number of aircraft and the radio plan of each aircraft type, cockpit channel numbers converted — with Side, Type and Name filters. A group is completed when its name, case included, and side match; a flight of an aircraft the suite does not handle comes in as a group with its route only. An aircraft the suite does not know by the briefing's name is left for you to pick; the package exports once every type is picked. An imported route now shows in the Route Planner as the group's route.
@@ -85,6 +87,7 @@ Changes merged since the last release, grouped per tool.
 - Route lengths follow the distance unit shared by the Route Planner and the Datacard Generator.
 - Removing a group shared with the Route Planner and the Datacard Generator now asks first. “Empty the module” is now “Clear”.
 - **Open ▾** opens a configuration or imports groups, in place of the separate Open and Import buttons. **Ctrl+S** saves.
+- Flares and chaff follow the aircraft's total countermeasure capacity instead of their default counts; a value typed out of range is refused and the previous value comes back.
 
 ### Recon Station
 #### Added
@@ -134,6 +137,7 @@ Changes merged since the last release, grouped per tool.
 - A datacard born from a group shows the Flight Configurator loadout by default; the channels to print belong to the group.
 - Importing a briefing on a linked datacard also takes the task, threat level, threats and notes; importing from HQ takes the mission date, time and weather.
 - The year of the magnetic variation also reads the datacard date, after the date received with the route.
+- A printed loadout table no longer carries the loadout name; unit names are printed only when the datacard has several tables.
 #### Removed
 - The Datacard Generator's own HQ and flight package imports, replaced by the common import window of the Flight Configurator and the Route Planner.
 #### Fixed
