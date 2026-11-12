@@ -988,6 +988,7 @@ select[data-tbm-src] { display: none !important; }
   opacity: .75;
 }
 .wing-size-counter.warn { color: #e8b840; opacity: 1; }
+.ed-field input.bad { border-color: var(--mp-warn); color: var(--mp-warn); }
 
 /* id field invalid: spaces or slashes detected */
 .wing-id-warning {
@@ -2619,6 +2620,7 @@ body[data-format="full"] [data-fmt="simple"] { display: none !important; }
   body[data-active-tab="s-mission"] .ed-section[data-section="s-mission"],
   body[data-active-tab="s-coord"] .ed-section[data-section="s-coord"],
   body[data-active-tab="s-photos"] .ed-section[data-section="s-photos"],
+  body[data-active-tab="header"] .ed-section[data-section="header"],
   body[data-active-tab="meta"] .ed-section[data-section="meta"],
   body[data-active-tab="cover"] .ed-section[data-section="cover"],
   body[data-active-tab="sitac"] .ed-section[data-section="sitac"],
@@ -2914,16 +2916,16 @@ __CSS__
     <i class="dsp-dot" id="dsp-dot" hidden></i>
   </button>
   <div class="tb-sep"></div>
-  <button class="tb-btn" id="btn-load" data-i18n-title="toolbar.load.tooltip" title="Ouvrir un briefing (JSON)">
+  <button class="tb-btn tb-file" id="btn-load" data-i18n-title="toolbar.load.tooltip" title="Ouvrir un briefing (JSON)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v1H3z"/><path d="M3 10h19l-2 8a2 2 0 0 1-2 1.5H5a2 2 0 0 1-2-2z"/></svg>
     <span class="tb-btn-label" data-i18n="toolbar.load">Ouvrir</span>
   </button>
   <input type="file" id="file-load" accept=".json,application/json" hidden>
-  <button class="tb-btn" id="btn-save" data-i18n-title="toolbar.save.tooltip" title="Sauvegarder le briefing (JSON)">
+  <button class="tb-btn tb-file" id="btn-save" data-i18n-title="toolbar.save.tooltip" title="Sauvegarder le briefing (JSON)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h11l4 4v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M8 3v5h7V3"/><rect x="7" y="13" width="10" height="8"/></svg>
     <span class="tb-btn-label" data-i18n="toolbar.save">Sauvegarder</span>
   </button>
-  <button class="tb-btn" id="btn-print" data-i18n-title="toolbar.export.tooltip" title="Exporter en PDF ou PNG (kneeboard DCS)">
+  <button class="tb-btn tb-file" id="btn-print" data-i18n-title="toolbar.export.tooltip" title="Exporter en PDF ou PNG (kneeboard DCS)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
     <span class="tb-btn-label" data-i18n="toolbar.export">Exporter</span>
   </button>
@@ -2994,11 +2996,27 @@ __CSS__
   <aside class="editor" id="editor">
     <div class="ui-foldbar"><button type="button" class="ui-btn ui-foldall" id="bg-foldall"></button></div>
 
+    <!-- 01 EN-TÊTE (les deux formats) : le même qu'au Datacard Generator -->
+    <details class="ed-section" data-section="header">
+      <summary class="ui-fold-head"><span data-i18n="editor.header.summary">01 ░ EN-TÊTE</span></summary>
+      <div class="ed-content">
+        <div class="panel-mobile-header" data-i18n="editor.header.summary">01 ░ EN-TÊTE</div>
+        <div class="ed-field-row">
+          <div class="ed-field"><label data-i18n="editor.meta.operation">Opération</label><input data-bind="meta.operation" type="text" placeholder="Nom de l'opération" data-i18n-placeholder="placeholder.operation"></div>
+          <div class="ed-field"><label data-i18n="editor.meta.missionCode">Mission</label><input data-bind="meta.mission" type="text" placeholder="Code mission" data-i18n-placeholder="placeholder.missionCode"></div>
+        </div>
+        <div class="ed-field-row">
+          <div class="ed-field"><label data-i18n="editor.meta.date">Date</label><input data-bind="meta.date" type="text" autocomplete="off" spellcheck="false" placeholder="AAAA-MM-JJ" data-i18n-placeholder="placeholder.date"></div>
+          <div class="ed-field" data-fmt="simple"><label data-i18n="editor.meta.time">Heure (Z)</label><input data-bind="meta.time" type="text" placeholder="hh:mm" data-i18n-placeholder="placeholder.time"></div>
+        </div>
+      </div>
+    </details>
+
     <!-- S1 SITUATION (brief simplifié) -->
     <details class="ed-section" data-section="s-situation" data-fmt="simple">
-      <summary class="ui-fold-head"><span data-i18n="editor.simple.situation.summary">01 ░ SITUATION</span></summary>
+      <summary class="ui-fold-head"><span data-i18n="editor.simple.situation.summary">02 ░ SITUATION</span></summary>
       <div class="ed-content">
-        <div class="panel-mobile-header" data-i18n="editor.simple.situation.summary">01 ░ SITUATION</div>
+        <div class="panel-mobile-header" data-i18n="editor.simple.situation.summary">02 ░ SITUATION</div>
         <div class="ed-field">
           <label data-i18n="editor.sitac.points">Points de situation</label>
           <div class="ed-list" data-list="sitac.points"></div>
@@ -3025,9 +3043,9 @@ __CSS__
 
     <!-- S2 MISSION (brief simplifié) : objectifs + vols -->
     <details class="ed-section" data-section="s-mission" data-fmt="simple">
-      <summary class="ui-fold-head"><span data-i18n="editor.simple.mission.summary">02 ░ MISSION</span></summary>
+      <summary class="ui-fold-head"><span data-i18n="editor.simple.mission.summary">03 ░ MISSION</span></summary>
       <div class="ed-content">
-        <div class="panel-mobile-header" data-i18n="editor.simple.mission.summary">02 ░ MISSION</div>
+        <div class="panel-mobile-header" data-i18n="editor.simple.mission.summary">03 ░ MISSION</div>
         <div class="ed-field">
           <label data-i18n="editor.mission.objectives">Objectifs principaux</label>
           <div class="ed-list" data-list="mission.objectives"></div>
@@ -3048,9 +3066,9 @@ __CSS__
 
     <!-- S3 COORDINATION (brief simplifié) : fréquences, terrains, METAR -->
     <details class="ed-section" data-section="s-coord" data-fmt="simple">
-      <summary class="ui-fold-head"><span data-i18n="editor.simple.coord.summary">03 ░ COORDINATION</span></summary>
+      <summary class="ui-fold-head"><span data-i18n="editor.simple.coord.summary">04 ░ COORDINATION</span></summary>
       <div class="ed-content">
-        <div class="panel-mobile-header" data-i18n="editor.simple.coord.summary">03 ░ COORDINATION</div>
+        <div class="panel-mobile-header" data-i18n="editor.simple.coord.summary">04 ░ COORDINATION</div>
         <div class="ed-field">
           <label data-i18n="simple.freq">Fréquences</label>
           <div id="s-radio-items-list"></div>
@@ -3074,9 +3092,9 @@ __CSS__
 
     <!-- S4 PHOTOS (brief simplifié) -->
     <details class="ed-section" data-section="s-photos" data-fmt="simple">
-      <summary class="ui-fold-head"><span data-i18n="editor.simple.photos.summary">04 ░ PHOTOS</span></summary>
+      <summary class="ui-fold-head"><span data-i18n="editor.simple.photos.summary">05 ░ PHOTOS</span></summary>
       <div class="ed-content">
-        <div class="panel-mobile-header" data-i18n="editor.simple.photos.summary">04 ░ PHOTOS</div>
+        <div class="panel-mobile-header" data-i18n="editor.simple.photos.summary">05 ░ PHOTOS</div>
         <div class="ed-img-list" id="s-photos-list"></div>
         <button type="button" class="ed-btn-add" id="s-photo-add" data-i18n="editor.simple.addPhoto">+ Ajouter une photo</button>
       </div>
@@ -3084,9 +3102,9 @@ __CSS__
 
     <!-- 01 COVER -->
     <details class="ed-section" data-section="cover" data-fmt="full">
-      <summary class="ui-fold-head"><span data-i18n="editor.cover.summary">01 ░ OPÉRATION (COUVERTURE)</span></summary>
+      <summary class="ui-fold-head"><span data-i18n="editor.cover.summary">02 ░ OPÉRATION (COUVERTURE)</span></summary>
       <div class="ed-content">
-        <div class="panel-mobile-header" data-i18n="editor.cover.summaryShort">01 ░ OPÉRATION</div>
+        <div class="panel-mobile-header" data-i18n="editor.cover.summaryShort">02 ░ OPÉRATION</div>
         <div class="ed-field"><label data-i18n="editor.cover.title">Titre opération</label><input data-bind="cover.title" type="text" placeholder="Titre de l'opération" data-i18n-placeholder="placeholder.coverTitle"></div>
         <div class="ed-field"><label data-i18n="editor.cover.narrative">Récit / Contexte</label><textarea data-bind="cover.narrative" rows="6"></textarea></div>
         <div class="ed-field">
@@ -3101,9 +3119,9 @@ __CSS__
 
     <!-- 02 SITAC -->
     <details class="ed-section" data-section="sitac" data-fmt="full">
-      <summary class="ui-fold-head"><span data-i18n="editor.sitac.summary">02 ░ SITAC</span></summary>
+      <summary class="ui-fold-head"><span data-i18n="editor.sitac.summary">03 ░ SITAC</span></summary>
       <div class="ed-content">
-        <div class="panel-mobile-header" data-i18n="editor.sitac.summary">02 ░ SITAC</div>
+        <div class="panel-mobile-header" data-i18n="editor.sitac.summary">03 ░ SITAC</div>
         <div class="ed-field"><label data-i18n="editor.sitac.date">Date SITAC (affichée)</label><input data-bind="sitac.date" type="text" placeholder="Date affichée" data-i18n-placeholder="placeholder.sitacDate"></div>
         <div class="ed-field">
           <label data-i18n="editor.sitac.points">Points de situation</label>
@@ -3136,9 +3154,9 @@ __CSS__
 
     <!-- 03 MISSION -->
     <details class="ed-section" data-section="mission" data-fmt="full">
-      <summary class="ui-fold-head"><span data-i18n="editor.mission.summary">03 ░ APERÇU MISSION</span></summary>
+      <summary class="ui-fold-head"><span data-i18n="editor.mission.summary">04 ░ APERÇU MISSION</span></summary>
       <div class="ed-content">
-        <div class="panel-mobile-header" data-i18n="editor.mission.summary">03 ░ APERÇU MISSION</div>
+        <div class="panel-mobile-header" data-i18n="editor.mission.summary">04 ░ APERÇU MISSION</div>
         <div class="ed-field">
           <label data-i18n="editor.mission.objectives">Objectifs principaux</label>
           <div class="ed-list" data-list="mission.objectives"></div>
@@ -3168,9 +3186,9 @@ __CSS__
 
     <!-- 04 RADIO PLAN -->
     <details class="ed-section" data-section="radio" data-fmt="full">
-      <summary class="ui-fold-head"><span data-i18n="editor.radio.summary">04 ░ PLAN RADIO</span></summary>
+      <summary class="ui-fold-head"><span data-i18n="editor.radio.summary">05 ░ PLAN RADIO</span></summary>
       <div class="ed-content">
-        <div class="panel-mobile-header" data-i18n="editor.radio.summary">04 ░ PLAN RADIO</div>
+        <div class="panel-mobile-header" data-i18n="editor.radio.summary">05 ░ PLAN RADIO</div>
         <div class="ed-field">
           <label data-i18n="editor.radio.items">Items radio (max 6) — affichés sur la page 3</label>
           <div id="radio-items-list"></div>
@@ -3188,9 +3206,9 @@ __CSS__
 
     <!-- 05 PHASES -->
     <details class="ed-section" data-section="phases" data-fmt="full">
-      <summary class="ui-fold-head"><span data-i18n="editor.phases.summary">05 ░ MISSIONS</span></summary>
+      <summary class="ui-fold-head"><span data-i18n="editor.phases.summary">06 ░ MISSIONS</span></summary>
       <div class="ed-content">
-        <div class="panel-mobile-header" data-i18n="editor.phases.summary">05 ░ MISSIONS</div>
+        <div class="panel-mobile-header" data-i18n="editor.phases.summary">06 ░ MISSIONS</div>
         <div class="phase-bar">
           <button type="button" id="phase-prev" data-i18n-title="editor.phases.prev" title="Mission précédente">◄</button>
           <div class="phase-indicator" id="phase-indicator">—</div>
@@ -3265,16 +3283,10 @@ __CSS__
 
     <!-- 11 META (dernière section ; 05 au brief simplifié) -->
     <details class="ed-section" data-section="meta">
-      <summary class="ui-fold-head"><span data-fmt="simple" data-i18n="editor.meta.summarySimple">05 ░ MÉTADONNÉES</span><span data-fmt="full" data-i18n="editor.meta.summary">11 ░ MÉTADONNÉES</span></summary>
+      <summary class="ui-fold-head"><span data-fmt="simple" data-i18n="editor.meta.summarySimple">06 ░ MÉTADONNÉES</span><span data-fmt="full" data-i18n="editor.meta.summary">11 ░ MÉTADONNÉES</span></summary>
       <div class="ed-content">
-        <div class="panel-mobile-header"><span data-fmt="simple" data-i18n="editor.meta.summarySimple">05 ░ MÉTADONNÉES</span><span data-fmt="full" data-i18n="editor.meta.summary">11 ░ MÉTADONNÉES</span></div>
-        <div class="ed-field-row">
-          <div class="ed-field"><label data-i18n="editor.meta.operation">Opération</label><input data-bind="meta.operation" type="text" placeholder="Nom de l'opération" data-i18n-placeholder="placeholder.operation"></div>
-          <div class="ed-field"><label data-i18n="editor.meta.missionCode">Mission code</label><input data-bind="meta.mission" type="text" placeholder="Code mission" data-i18n-placeholder="placeholder.missionCode"></div>
-        </div>
-        <div class="ed-field-row">
-          <div class="ed-field"><label data-i18n="editor.meta.date">Date mission</label><input data-bind="meta.date" type="date"></div>
-          <div class="ed-field"><label data-i18n="editor.meta.classification">Classification</label>
+        <div class="panel-mobile-header"><span data-fmt="simple" data-i18n="editor.meta.summarySimple">06 ░ MÉTADONNÉES</span><span data-fmt="full" data-i18n="editor.meta.summary">11 ░ MÉTADONNÉES</span></div>
+        <div class="ed-field"><label data-i18n="editor.meta.classification">Classification</label>
             <select data-bind="meta.classification">
               <option value="confidential"    data-i18n="classif.confidential">CONFIDENTIEL DÉFENSE</option>
               <option value="secret"          data-i18n="classif.secret">SECRET DÉFENSE</option>
@@ -3284,8 +3296,6 @@ __CSS__
               <option value="nato-secret"     data-i18n="classif.nato-secret">NATO SECRET</option>
             </select>
           </div>
-        </div>
-        <div class="ed-field" data-fmt="simple"><label data-i18n="editor.meta.time">Heure (Z)</label><input data-bind="meta.time" type="text" placeholder="hh:mm" data-i18n-placeholder="placeholder.time"></div>
         <div class="ed-field"><label data-i18n="editor.meta.docRef">Référence document</label><input data-bind="meta.docRef" type="text" placeholder="Référence du document" data-i18n-placeholder="placeholder.docRef"></div>
         <div class="ui-note" data-i18n="editor.meta.help">Métadonnées présentes dans tous les pieds de page.</div>
       </div>
@@ -3307,7 +3317,7 @@ __CSS__
 
 <!-- ============ MOBILE TAB BAR ============ -->
 <nav class="tab-bar" id="tab-bar" role="tablist" data-i18n-aria-label="tab.bar.aria" aria-label="Sections du briefing">
-  <button type="button" data-tab="meta" role="tab"><span class="tab-ico">⚙</span><span data-i18n="tab.meta">Méta</span></button>
+  <button type="button" data-tab="header" role="tab"><span class="tab-ico">▤</span><span data-i18n="tab.header">En-tête</span></button>
   <button type="button" data-tab="s-situation" data-fmt="simple" role="tab"><span class="tab-ico">▣</span><span data-i18n="tab.simple.situation">Situation</span></button>
   <button type="button" data-tab="s-mission" data-fmt="simple" role="tab"><span class="tab-ico">✈</span><span data-i18n="tab.mission">Mission</span></button>
   <button type="button" data-tab="s-coord" data-fmt="simple" role="tab"><span class="tab-ico">📻</span><span data-i18n="tab.simple.coord">Coordination</span></button>
@@ -3321,6 +3331,7 @@ __CSS__
   <button type="button" data-tab="charts" data-fmt="full" role="tab"><span class="tab-ico">🗺</span><span data-i18n="tab.charts">Charts</span></button>
   <button type="button" data-tab="annexes" data-fmt="full" role="tab"><span class="tab-ico">📎</span><span data-i18n="tab.annexes">Annexes</span></button>
   <button type="button" data-tab="wing" data-fmt="full" role="tab"><span class="tab-ico">🛡</span><span data-i18n="tab.wing">Wing</span></button>
+  <button type="button" data-tab="meta" role="tab"><span class="tab-ico">⚙</span><span data-i18n="tab.meta">Méta</span></button>
   <button type="button" data-tab="preview" role="tab"><span class="tab-ico">◈</span><span data-i18n="tab.preview">Aperçu</span></button>
 </nav>
 
@@ -3396,6 +3407,7 @@ const I18N = {
     'toast.missingSquadrons': '⚠ Ce briefing référence {0} escadron(s) absent(s) du wing courant : {1}. Importez le wing correspondant.',
     // ── Document ──
     // ── Tab bar ──
+    'tab.header':  'En-tête',
     'tab.meta':    'Méta',
     'tab.cover':   'Couv.',
     'tab.sitac':   'SITAC',
@@ -3417,8 +3429,9 @@ const I18N = {
     'fn.label':                    'Nom du fichier',
     'save.title':                  'Sauvegarder le briefing',
     // ── Section 00 META ──
+    'editor.header.summary':      '01 ░ EN-TÊTE',
     'editor.meta.summary':        '11 ░ MÉTADONNÉES',
-    'editor.meta.summarySimple':  '05 ░ MÉTADONNÉES',
+    'editor.meta.summarySimple':  '06 ░ MÉTADONNÉES',
     'sum.pt.1': '{n} point', 'sum.pt.n': '{n} points',
     'sum.obj.1': '{n} objectif', 'sum.obj.n': '{n} objectifs',
     'sum.item.1': '{n} item', 'sum.item.n': '{n} items',
@@ -3429,19 +3442,19 @@ const I18N = {
     'sum.annexe.1': '{n} annexe', 'sum.annexe.n': '{n} annexes',
     'sum.sq.1': '{n} escadron', 'sum.sq.n': '{n} escadrons',
     'editor.meta.operation':      'Opération',
-    'editor.meta.missionCode':    'Mission code',
-    'editor.meta.date':           'Date mission',
+    'editor.meta.missionCode':    'Mission',
+    'editor.meta.date':           'Date',
     'editor.meta.classification': 'Classification',
     'editor.meta.docRef':         'Référence document',
     'editor.meta.help':           'Métadonnées présentes dans tous les pieds de page.',
     // ── Section 01 COVER ──
-    'editor.cover.summary':      '01 ░ OPÉRATION (COUVERTURE)',
-    'editor.cover.summaryShort': '01 ░ OPÉRATION',
+    'editor.cover.summary':      '02 ░ OPÉRATION (COUVERTURE)',
+    'editor.cover.summaryShort': '02 ░ OPÉRATION',
     'editor.cover.title':        'Titre opération',
     'editor.cover.narrative':    'Récit / Contexte',
     'editor.cover.map':          'Carte d\'opération (image)',
     // ── Section 02 SITAC ──
-    'editor.sitac.summary':  '02 ░ SITAC',
+    'editor.sitac.summary':  '03 ░ SITAC',
     'editor.sitac.date':     'Date SITAC (affichée)',
     'editor.sitac.points':   'Points de situation',
     'editor.sitac.addPoint': '+ Ajouter un point',
@@ -3451,7 +3464,7 @@ const I18N = {
     'toast.metarMizReplaced': 'Champs remplacés par la météo du .miz',
     'editor.sitac.map':      'Carte SITAC (image)',
     // ── Section 03 MISSION ──
-    'editor.mission.summary':      '03 ░ APERÇU MISSION',
+    'editor.mission.summary':      '04 ░ APERÇU MISSION',
     'editor.mission.objectives':   'Objectifs principaux',
     'editor.mission.addObjective': '+ Ajouter un objectif',
     'editor.mission.farp':         'FARP & Aéroports',
@@ -3468,7 +3481,7 @@ const I18N = {
     'editor.mission.sam':          'Menaces — SAM',
     'editor.mission.threatsNote':  'Note menaces (libre)',
     // ── Section 04 RADIO ──
-    'editor.radio.summary':      '04 ░ PLAN RADIO',
+    'editor.radio.summary':      '05 ░ PLAN RADIO',
     'editor.radio.items':        'Items radio — cochez jusqu\'à 6 pour l\'aperçu',
     'editor.radio.addItem':      '+ Ajouter un item',
     'editor.radio.help':         'Définissez ici les fréquences communes (ATC, MISSION, Groupes...). Vous les assignerez ensuite aux canaux radio par appareil ci-dessous.',
@@ -3489,7 +3502,7 @@ const I18N = {
     'editor.radio.freeFreqTooltip':   'Fréquence libre — tap pour passer en Item global',
     'editor.radio.globalItemTooltip': 'Item global — tap pour passer en Fréquence libre',
     // ── Section 05 PHASES ──
-    'editor.phases.summary': '05 ░ MISSIONS',
+    'editor.phases.summary': '06 ░ MISSIONS',
     'editor.phases.prev':    'Mission précédente',
     'editor.phases.next':    'Mission suivante',
     'editor.phases.add':     'Ajouter une mission',
@@ -3593,6 +3606,7 @@ const I18N = {
     'placeholder.sitacDate': 'Date affichée',
     'placeholder.operation': 'Nom de l\'opération',
     'placeholder.missionCode': 'Code mission',
+    'placeholder.date':      'AAAA-MM-JJ',
     'placeholder.time':      'hh:mm',
     'placeholder.docRef':    'Référence du document',
     'placeholder.icao':      'OACI',
@@ -3728,10 +3742,10 @@ const I18N = {
     'tab.simple.coord':           'Coordination',
     'tab.simple.photos':          'Photos',
     'editor.meta.time':           'Heure (Z)',
-    'editor.simple.situation.summary': '01 ░ SITUATION',
-    'editor.simple.mission.summary':   '02 ░ MISSION',
-    'editor.simple.coord.summary':     '03 ░ COORDINATION',
-    'editor.simple.photos.summary':    '04 ░ PHOTOS',
+    'editor.simple.situation.summary': '02 ░ SITUATION',
+    'editor.simple.mission.summary':   '03 ░ MISSION',
+    'editor.simple.coord.summary':     '04 ░ COORDINATION',
+    'editor.simple.photos.summary':    '05 ░ PHOTOS',
     'editor.simple.flights':      'Groupes',
     'editor.simple.flightNum':    'GROUPE',
     'editor.simple.photoNum':     'PHOTO',
@@ -3807,6 +3821,7 @@ const I18N = {
     'toast.missingSquadrons': '⚠ This briefing references {0} squadron(s) missing from the current wing: {1}. Import the matching wing.',
     // ── Document ──
     // ── Tab bar ──
+    'tab.header':  'Header',
     'tab.meta':    'Meta',
     'tab.cover':   'Cover',
     'tab.sitac':   'SITAC',
@@ -3828,8 +3843,9 @@ const I18N = {
     'fn.label':                    'File name',
     'save.title':                  'Save the briefing',
     // ── Section 00 META ──
+    'editor.header.summary':      '01 ░ HEADER',
     'editor.meta.summary':        '11 ░ METADATA',
-    'editor.meta.summarySimple':  '05 ░ METADATA',
+    'editor.meta.summarySimple':  '06 ░ METADATA',
     'sum.pt.1': '{n} point', 'sum.pt.n': '{n} points',
     'sum.obj.1': '{n} objective', 'sum.obj.n': '{n} objectives',
     'sum.item.1': '{n} item', 'sum.item.n': '{n} items',
@@ -3840,19 +3856,19 @@ const I18N = {
     'sum.annexe.1': '{n} annex', 'sum.annexe.n': '{n} annexes',
     'sum.sq.1': '{n} squadron', 'sum.sq.n': '{n} squadrons',
     'editor.meta.operation':      'Operation',
-    'editor.meta.missionCode':    'Mission code',
-    'editor.meta.date':           'Mission date',
+    'editor.meta.missionCode':    'Mission',
+    'editor.meta.date':           'Date',
     'editor.meta.classification': 'Classification',
     'editor.meta.docRef':         'Document reference',
     'editor.meta.help':           'Metadata shown in all page footers.',
     // ── Section 01 COVER ──
-    'editor.cover.summary':      '01 ░ OPERATION (COVER)',
-    'editor.cover.summaryShort': '01 ░ OPERATION',
+    'editor.cover.summary':      '02 ░ OPERATION (COVER)',
+    'editor.cover.summaryShort': '02 ░ OPERATION',
     'editor.cover.title':        'Operation title',
     'editor.cover.narrative':    'Narrative / Context',
     'editor.cover.map':          'Operation map (image)',
     // ── Section 02 SITAC ──
-    'editor.sitac.summary':  '02 ░ SITAC',
+    'editor.sitac.summary':  '03 ░ SITAC',
     'editor.sitac.date':     'SITREP date (displayed)',
     'editor.sitac.points':   'SITREP points',
     'editor.sitac.addPoint': '+ Add point',
@@ -3862,7 +3878,7 @@ const I18N = {
     'toast.metarMizReplaced': 'Fields replaced with the .miz weather',
     'editor.sitac.map':      'SITAC map (image)',
     // ── Section 03 MISSION ──
-    'editor.mission.summary':      '03 ░ MISSION OVERVIEW',
+    'editor.mission.summary':      '04 ░ MISSION OVERVIEW',
     'editor.mission.objectives':   'Main objectives',
     'editor.mission.addObjective': '+ Add objective',
     'editor.mission.farp':         'FARP & Airfields',
@@ -3879,7 +3895,7 @@ const I18N = {
     'editor.mission.sam':          'Threats — SAM',
     'editor.mission.threatsNote':  'Threats note (free text)',
     // ── Section 04 RADIO ──
-    'editor.radio.summary':      '04 ░ RADIO PLAN',
+    'editor.radio.summary':      '05 ░ RADIO PLAN',
     'editor.radio.items':        'Radio items — check up to 6 for the overview',
     'editor.radio.addItem':      '+ Add item',
     'editor.radio.help':         'Define shared frequencies here (ATC, MISSION, Groups...). Assign them to aircraft radio channels below.',
@@ -3900,7 +3916,7 @@ const I18N = {
     'editor.radio.freeFreqTooltip':   'Custom frequency — tap to switch to global item',
     'editor.radio.globalItemTooltip': 'Global item — tap to switch to custom frequency',
     // ── Section 05 PHASES ──
-    'editor.phases.summary': '05 ░ MISSIONS',
+    'editor.phases.summary': '06 ░ MISSIONS',
     'editor.phases.prev':    'Previous mission',
     'editor.phases.next':    'Next mission',
     'editor.phases.add':     'Add mission',
@@ -4004,6 +4020,7 @@ const I18N = {
     'placeholder.sitacDate': 'Displayed date',
     'placeholder.operation': 'Operation name',
     'placeholder.missionCode': 'Mission code',
+    'placeholder.date':      'YYYY-MM-DD',
     'placeholder.time':      'hh:mm',
     'placeholder.docRef':    'Document reference',
     'placeholder.icao':      'ICAO',
@@ -4139,10 +4156,10 @@ const I18N = {
     'tab.simple.coord':           'Coordination',
     'tab.simple.photos':          'Photos',
     'editor.meta.time':           'Time (Z)',
-    'editor.simple.situation.summary': '01 ░ SITUATION',
-    'editor.simple.mission.summary':   '02 ░ MISSION',
-    'editor.simple.coord.summary':     '03 ░ COORDINATION',
-    'editor.simple.photos.summary':    '04 ░ PHOTOS',
+    'editor.simple.situation.summary': '02 ░ SITUATION',
+    'editor.simple.mission.summary':   '03 ░ MISSION',
+    'editor.simple.coord.summary':     '04 ░ COORDINATION',
+    'editor.simple.photos.summary':    '05 ░ PHOTOS',
     'editor.simple.flights':      'Groups',
     'editor.simple.flightNum':    'GROUP',
     'editor.simple.photoNum':     'PHOTO',
@@ -4653,7 +4670,7 @@ const EXAMPLE_BRIEFING_EN = {
 
 let state;
 let currentPhaseIdx = 0;
-let activeTab = 'meta';
+let activeTab = 'header';
 
 /* ============= STATE / PERSISTENCE ============= */
 function loadState() {
@@ -4967,11 +4984,20 @@ async function recompressOversizedImagesInState(s) {
 }
 
 /* ============= EDITOR RENDERING ============= */
+/* La date de l'en-tête est un champ texte, AAAA-MM-JJ : une saisie d'une autre forme est gardée telle quelle et le champ prend la couleur d'avertissement */
+function bgDateWarn() {
+  const el = document.querySelector('input[data-bind="meta.date"]');
+  if (!el) return;
+  const v = el.value.trim(), bad = v !== '' && !(/^\d{4}-\d{2}-\d{2}$/.test(v) && !isNaN(new Date(v + 'T00:00:00Z')) && new Date(v + 'T00:00:00Z').toISOString().slice(0, 10) === v);
+  el.classList.toggle('bad', bad);
+  if (bad) el.setAttribute('aria-invalid', 'true'); else el.removeAttribute('aria-invalid');
+}
 function renderEditorBindings() {
   document.querySelectorAll('[data-bind]').forEach(input => {
     const v = getByPath(state, input.dataset.bind);
     if (v != null) input.value = v;
   });
+  bgDateWarn();
 
   document.querySelectorAll('[data-img-bind]').forEach(zone => {
     refreshImgZone(zone);
@@ -6906,6 +6932,7 @@ function bindEditorEvents() {
   document.querySelectorAll('[data-bind]').forEach(input => {
     input.addEventListener('input', () => {
       setByPath(state, input.dataset.bind, input.value);
+      if (input.dataset.bind === 'meta.date') bgDateWarn();
       schedulePreview();
     });
   });
@@ -8276,10 +8303,10 @@ async function resetWingConfig() {
 
 
 /* ============= REPLI DES SECTIONS (bg_folds_v1) =============
-   L'état se garde : { section: true (ouverte) | false (repliée) }. Défauts du profil neuf : Métadonnées (dernière section) repliée ; les autres comme avant.
+   L'état se garde : { section: true (ouverte) | false (repliée) }. Défauts du profil neuf : l'En-tête (première section) ouvert, Métadonnées (dernière section) repliée ; les autres comme avant.
    Sous 1 100 px (onglets), la section de l'onglet est ouverte sans rien écrire dans la clé. */
 const BG_FOLDS = 'bg_folds_v1';
-const BG_FOLD_DEF = { 's-situation': true, 's-mission': true, 's-coord': true, 's-photos': true, cover: false, sitac: false, mission: false, radio: true, phases: true, roster: false, charts: false, annexes: false, wing: false, meta: false };
+const BG_FOLD_DEF = { header: true, 's-situation': true, 's-mission': true, 's-coord': true, 's-photos': true, cover: false, sitac: false, mission: false, radio: true, phases: true, roster: false, charts: false, annexes: false, wing: false, meta: false };
 function bgTabMode() { return window.innerWidth <= MOBILE_BREAKPOINT; }
 function bgSections() { return Array.prototype.slice.call(document.querySelectorAll('#editor > details.ed-section')); }
 function bgFmtSections() { const f = document.body.dataset.format; return bgSections().filter(d => !d.dataset.fmt || d.dataset.fmt === f); }
@@ -8291,7 +8318,8 @@ function bgSectionSum(id) {
   const cnt = (l, k) => (Array.isArray(l) && l.length) ? t('sum.' + k + (l.length === 1 ? '.1' : '.n')).replace('{n}', l.length) : '';
   const m = state.meta || {}, sit = state.sitac || {}, mis = state.mission || {}, rp = state.radioPlan || {};
   switch (id) {
-    case 'meta': return uiJoin([v(m.operation), v(m.mission), v(m.date)]);
+    case 'header': return uiJoin([v(m.operation), v(m.mission), v(m.date), document.body.dataset.format === 'simple' ? v(m.time) : '']);
+    case 'meta': return uiJoin([v(m.classification) ? t('classif.' + m.classification) : '', v(m.docRef)]);
     case 's-situation': case 'sitac': return uiJoin([first(sit.points), cnt(sit.points, 'pt')]);
     case 's-mission': case 'mission': return uiJoin([first(mis.objectives), cnt(mis.objectives, 'obj')]);
     case 's-coord': case 'radio': return uiJoin([first(rp.items, 'label'), cnt(rp.items, 'item')]);
@@ -8542,8 +8570,8 @@ function applyFormatUi() {
   placeMetarPanel(fmt);
   // l'onglet courant doit exister dans ce mode
   const tabBtn = document.querySelector('.tab-bar button[data-tab="' + activeTab + '"]');
-  const shared = activeTab === 'meta' || activeTab === 'preview';
-  if (!shared && !(tabBtn && tabBtn.dataset.fmt === fmt)) setActiveTab('meta');
+  const shared = activeTab === 'header' || activeTab === 'meta' || activeTab === 'preview';
+  if (!shared && !(tabBtn && tabBtn.dataset.fmt === fmt)) setActiveTab('header');
 }
 
 function renderSimpleEditor() {
@@ -8563,6 +8591,7 @@ function setFormat(fmt) {
     const v = getByPath(state, input.dataset.bind);
     if (v != null) input.value = v;
   });
+  bgDateWarn();
   document.querySelectorAll('[data-list]').forEach(renderList);
   document.querySelectorAll('[data-img-bind]').forEach(refreshImgZone);   // v2.4.0 : la carte est partagée
   renderTargets();                                                       // v2.4.0 : les cibles aussi
@@ -9536,7 +9565,7 @@ function init() {
   bgFoldInit();
   initToolbarScroll();
   bindWingImportEvent();  // P1.B — filet import + storage listener
-  setActiveTab('meta');
+  setActiveTab('header');
   renderPreview();
   initOverflowObserver();  // chatE étape A : détection débordement via MutationObserver
   window.MP_RECEIVE_MAP = receiveRpMap;   // v2.5.0 : la carte du Route Planner, BG déjà ouvert

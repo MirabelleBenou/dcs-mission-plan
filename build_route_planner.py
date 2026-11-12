@@ -928,6 +928,10 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 #btn-display:hover, #btn-display:focus-visible, #btn-display.dsp-open, #btn-open:hover, #btn-open:focus-visible, #btn-open.dsp-open, #btn-save:hover, #btn-save:focus-visible, #btn-save.dsp-open, #btn-export-menu:hover, #btn-export-menu:focus-visible, #btn-export-menu.dsp-open { border-color: var(--amber); }
 #btn-display .dsp-chev, #btn-open .dsp-chev, #btn-save .dsp-chev, #btn-export-menu .dsp-chev { width: 10px; height: 6px; }
 #btn-display.dsp-open .dsp-chev, #btn-open.dsp-open .dsp-chev, #btn-save.dsp-open .dsp-chev, #btn-export-menu.dsp-open .dsp-chev { transform: rotate(180deg); }
+/* Au téléphone, dans la suite : Affichage n'a plus que l'icône œil (le nom accessible et l'infobulle gardent « Affichage ») */
+@media (max-width: 759px) {
+  html.mp-in-shell #btn-display > span, html.mp-in-shell #btn-display > .dsp-chev { display: none; }
+}
 .dsp-dot { position: absolute; top: -3px; right: -3px; width: 7px; height: 7px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 0 2px var(--olive-deep); pointer-events: none; }
 .dsp-dot[hidden] { display: none; }
 .dsp-panel { max-height: min(80vh, 600px); min-width: 240px; padding-bottom: 6px; }
@@ -1339,16 +1343,16 @@ __CSS__
   <span class="tb-label" data-i18n="tb.theatre">Théâtre</span>
   <select class="tb-sel" id="theatre" data-i18n-aria-label="tb.theatre" aria-label="Théâtre"></select>
   <span class="tb-sep"></span>
-  <button type="button" class="tb-btn" id="btn-open" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.open.tip" title="Ouvrir une route (JSON) ou un fichier du Route Tool de DCS" data-i18n-aria-label="tb.open.tip" aria-label="Ouvrir une route (JSON) ou un fichier du Route Tool de DCS">
+  <button type="button" class="tb-btn tb-file" id="btn-open" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.open.tip" title="Ouvrir une route (JSON) ou un fichier du Route Tool de DCS" data-i18n-aria-label="tb.open.tip" aria-label="Ouvrir une route (JSON) ou un fichier du Route Tool de DCS">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v1H3z"/><path d="M3 10h19l-2 8a2 2 0 0 1-2 1.5H5a2 2 0 0 1-2-2z"/></svg>
     <span class="tb-btn-label solo" data-i18n="tb.open">Ouvrir</span>
     <svg class="dsp-chev" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg></button>
   <input type="file" id="file-open" hidden>
-  <button type="button" class="tb-btn" id="btn-save" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.save.tip" title="Sauvegarder" data-i18n-aria-label="tb.save.tip" aria-label="Sauvegarder">
+  <button type="button" class="tb-btn tb-file" id="btn-save" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.save.tip" title="Sauvegarder" data-i18n-aria-label="tb.save.tip" aria-label="Sauvegarder">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h11l4 4v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M8 3v5h7V3"/><rect x="7" y="13" width="10" height="8"/></svg>
     <span class="tb-btn-label solo" data-i18n="tb.save">Sauvegarder</span>
     <svg class="dsp-chev" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg></button>
-  <button type="button" class="tb-btn" id="btn-export-menu" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.export.tip" title="Exporter l'image pour le briefing ou le fichier du Route Tool" data-i18n-aria-label="tb.export.tip" aria-label="Exporter l'image pour le briefing ou le fichier du Route Tool">
+  <button type="button" class="tb-btn tb-file" id="btn-export-menu" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.export.tip" title="Exporter l'image pour le briefing ou le fichier du Route Tool" data-i18n-aria-label="tb.export.tip" aria-label="Exporter l'image pour le briefing ou le fichier du Route Tool">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
     <span class="tb-btn-label solo" data-i18n="tb.export">Exporter</span>
     <svg class="dsp-chev" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg></button>
@@ -3270,12 +3274,29 @@ function initLang() {
   document.documentElement.lang = CURRENT_LANG;
 }
 
+/* Au téléphone, dans la suite (sous 760 px) : Affichage n'a que l'icône, le théâtre s'abrège dans le bouton de sa liste (la liste ouverte garde les noms entiers) */
+const TH_SHORT = {
+  fr: { GermanyCW: 'All. GF', PersianGulf: 'Golfe', MarianaIslandsWWII: 'Mar. 1944', Falklands: 'Atl. Sud', Afghanistan: 'Afgh.' },
+  en: { GermanyCW: 'CW Germany', PersianGulf: 'Gulf', TheChannel: 'Channel', MarianaIslands: 'Marianas', MarianaIslandsWWII: 'Marianas 44', Falklands: 'S. Atlantic', Afghanistan: 'Afgh.' }
+};
+function barPhoneSync() {
+  const c = uiBarCompact(), d = document.getElementById('btn-display');
+  if (d) {
+    if (c) { const n = t('tb.display'); d.title = n; d.setAttribute('aria-label', n); }
+    else { d.title = t('tb.display.tip'); d.removeAttribute('aria-label'); }
+  }
+  const sel = document.getElementById('theatre'), m = sel && TBM.map.get(sel);
+  if (m) tbmSync(m);
+}
+function uiBarChanged() { barPhoneSync(); }
+
 function applyI18nStatic() {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
   document.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = t(el.dataset.i18nTitle); });
   document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.placeholder = t(el.dataset.i18nPlaceholder); });
   document.querySelectorAll('[data-i18n-aria-label]').forEach(el => { el.setAttribute('aria-label', t(el.dataset.i18nAriaLabel)); });
   document.title = 'Route Planner — Mission Plan';       // le nom de l'outil, sans traduction
+  barPhoneSync();
 }
 
 /* Drapeaux dessinés (ils ne s'affichent pas en lettres sous Windows) ; le bouton montre la langue vers laquelle il bascule */
@@ -11010,7 +11031,8 @@ function tbmAttach(sel, labelFn, mode, fit) {
 /* Le libellé affiché = l'option choisie ; la largeur = l'option la plus large (comme le <select>) */
 function tbmSync(m) {
   const sel = m.sel, o = sel.options, i = sel.selectedIndex;
-  const txt = i >= 0 && o[i] ? o[i].label : '';
+  let txt = i >= 0 && o[i] ? o[i].label : '';
+  if (txt && sel.id === 'theatre' && uiBarCompact()) txt = (TH_SHORT[CURRENT_LANG] || {})[o[i].value] || txt;       /* abrégé au téléphone */
   if (m.lbl.textContent !== txt) m.lbl.textContent = txt;
   const all = [];
   for (let k = 0; k < o.length; k++) all.push(o[k].label);

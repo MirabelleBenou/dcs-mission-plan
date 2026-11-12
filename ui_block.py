@@ -175,6 +175,38 @@ try { if (window.self !== window.top) document.documentElement.classList.add('mp
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
 })();
 
+/* ---- la barre au téléphone (dans la suite, sous 760 px) : les boutons de fichier du module (.tb-file : Ouvrir, Sauvegarder, Exporter…, dans l'ordre de la suite)
+   passent juste après le sigle, devant les réglages ; un bouton .tb-lead (« Wing » de HQ tant que le wing n'est pas configuré) reste devant eux.
+   Les boutons sont déplacés dans le DOM, pas seulement dans l'affichage : l'ordre de tabulation est celui de l'écran. Au-dessus de 760 px chacun retrouve sa place
+   (un repère le garde). Le passage de 760 px, dans les deux sens, est suivi sans rechargement ; uiBarPlace() se rappelle quand le module change la barre. ---- */
+const UIBAR = { mq: null };
+function uiBarCompact() { return document.documentElement.classList.contains('mp-in-shell') && !!UIBAR.mq && UIBAR.mq.matches; }
+function uiBarPlace() {
+  const tb = document.querySelector('header.toolbar');
+  if (!tb) return;
+  const files = Array.prototype.filter.call(tb.children, e => e.classList.contains('tb-file'));
+  if (!uiBarCompact()) {
+    files.forEach(f => { const m = f._uiMark; if (m && m.parentNode) { m.parentNode.insertBefore(f, m); m.parentNode.removeChild(m); } f._uiMark = null; });
+    return;
+  }
+  let a = tb.querySelector('.tb-brand');
+  if (!a) return;
+  while (a.nextElementSibling && (a.nextElementSibling.classList.contains('tb-sep') || a.nextElementSibling.classList.contains('tb-lead'))) a = a.nextElementSibling;
+  files.forEach(f => {
+    if (!f._uiMark) { f._uiMark = document.createComment('tb-file'); f.parentNode.insertBefore(f._uiMark, f); }
+    if (a.nextElementSibling !== f) a.after(f);
+    a = f;
+  });
+}
+function uiBarInit() {
+  if (UIBAR.mq || !window.matchMedia) return;
+  UIBAR.mq = window.matchMedia('(max-width: 759px)');
+  const go = () => { uiBarPlace(); try { if (typeof uiBarChanged === 'function') uiBarChanged(); } catch (e) { /* le module réagit au passage de 760 px */ } };
+  if (UIBAR.mq.addEventListener) UIBAR.mq.addEventListener('change', go); else UIBAR.mq.addListener(go);
+  go();
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', uiBarInit); else uiBarInit();
+
 const UIK = { cf: null, top: null, restore: null, ex: null };
 function uiT(key, fb) { let v; try { v = t(key); } catch (e) { v = key; } return (v === undefined || v === key) ? (fb !== undefined ? fb : key) : v; }
 

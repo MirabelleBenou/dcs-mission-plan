@@ -1177,20 +1177,20 @@ body[data-theme] {{
     <span class="tb-brand-sub" data-i18n="toolbar.subtitle">\u2591 POSTE DE COMMANDEMENT</span>
   </div>
   <div class="tb-sep"></div>
-  <button type="button" class="tb-btn" id="btn-open">
+  <button type="button" class="tb-btn tb-file" id="btn-open">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
     <span class="tb-btn-label" data-i18n="tb.open">Ouvrir .miz</span>
   </button>
-  <button type="button" class="tb-btn" id="btn-save" disabled>
+  <button type="button" class="tb-btn tb-file" id="btn-save" disabled>
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 3h11l3 3v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M7 3v5h8V3"/><path d="M7 21v-7h10v7"/></svg>
     <span class="tb-btn-label" data-i18n="tb.save">Sauvegarder .miz</span>
     <span class="tb-count" id="save-count" hidden>0</span>
   </button>
-  <button type="button" class="tb-btn" id="btn-revert" hidden>
+  <button type="button" class="tb-btn tb-file" id="btn-revert" hidden>
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
     <span class="tb-btn-label" data-i18n="tb.revert">Annuler</span>
   </button>
-  <button type="button" class="tb-btn" id="btn-packages" disabled>
+  <button type="button" class="tb-btn tb-file" id="btn-packages" disabled>
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5"/><path d="M12 13v8"/></svg>
     <span class="tb-btn-label" data-i18n="tb.pk">Paquets de vol</span>
   </button>
@@ -6207,8 +6207,10 @@ function hqWingOrder() {{
   if (!b || !ex || !sep) return;
   const cfg = wingConfigured();
   b.classList.toggle('primary', !cfg);
+  b.classList.toggle('tb-lead', !cfg);       /* au téléphone, « Wing » reste devant les boutons de fichier tant que le wing n'est pas configuré */
   if (!cfg) {{ if (sep.nextElementSibling !== b) sep.after(b); }}
   else if (b.nextElementSibling !== ex) ex.before(b);
+  uiBarPlace();
 }}
 
 /* « Annuler » suit toujours « Sauvegarder .miz », quel que soit l'ordre que pose hqWingOrder() */

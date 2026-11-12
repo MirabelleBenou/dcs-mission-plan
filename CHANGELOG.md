@@ -24,6 +24,8 @@ Changes merged since the last release, grouped per tool.
 - One toolbar across the suite: 44-pixel buttons, the same fonts, built in (the landing page no longer loads web fonts), six text sizes, readable contrast in every theme, and a visible focus outline for the keyboard. Inside Mission Plan, each tool keeps its language flag and leaves the theme to the landing page; switching language in one tool now carries over to the others. “Side” is now “Coalition” wherever it names the coalition of a group, blue first, in the Field Manual too (the Route Planner’s symbol field keeps “Side”).
 - The empty Recon Station reads at 4.5:1 in the four themes, the heading buttons of the Datacard Generator sit side by side, and its preview area shows the same focus outline as the rest.
 - **Mission date in the flight package**: HQ and the Flight Configurator write the mission's date into the package; an imported route keeps it, and the magnetic declination uses it when no HQ mission of that theatre is loaded. Applying a package never changes the mission's date.
+- The Briefing Generator and the Datacard Generator open on the same **Header**: operation, mission, date (YYYY-MM-DD) and time (Z); classification and document reference move to their last section, folded.
+- On phones, every tool's top bar shows its file buttons first (Open, Save, Export), then its settings; the Route Planner and the Datacard Generator shrink Display to its icon and the theatre to a short name.
 
 #### Removed
 - The repository no longer ships one particular wing's configuration file, nor six squadron logos that no tool used; the README and the code comments no longer name that wing. Each wing still makes or imports its own configuration in HQ.
@@ -119,6 +121,7 @@ Changes merged since the last release, grouped per tool.
 - True or magnetic heading is now two buttons, as in the Route Planner.
 - A lighter top bar: Day | Night and the units move into **Display ▾**, and **Open ▾** opens a datacard or imports. Datacards are chosen on one line — the card's name with its tag, “+” for a new datacard, “…” for a free card, attach, import groups, duplicate and delete; the list groups linked and free cards, and two cards of the same name read “CAESAR” and “CAESAR · 2”.
 - “Current route” leaves the Import window — a card is linked to a route from its own route list — and “One datacard per route” moves into the “…” menu. Empty fields hint at what to type instead of showing sample values. **Ctrl+S** saves.
+- The group comes right after the header; ↑ ↓ × sit on the row they act on; a unit reads Type · Callsign · Board number · Pilot, as in the Flight Configurator. On a free card the type is picked from the game's aircraft list (or typed for a mod), and a new unit takes the type of the one above. A unit without a type is printed as « ? » (2 × Mi-24P + 1 × ?) instead of being counted under another type.
 #### Removed
 - The Datacard Generator's own HQ and flight package imports, replaced by the common import window of the Flight Configurator and the Route Planner.
 #### Fixed
