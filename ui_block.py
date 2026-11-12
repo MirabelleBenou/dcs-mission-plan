@@ -142,10 +142,15 @@ a[href]:focus-visible, [tabindex]:focus-visible, [role="button"]:focus-visible {
 .toolbar > .tb-sep.tb-files-end { display: block; }
 /* dans la suite, le module laisse le thème à l'accueil : sa liste de thème n'est pas là (le drapeau reste) */
 html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-controls="tbm-list-theme-select"], html.mp-in-shell [aria-controls="tbm-list-theme"] { display: none !important; }
-/* le texte des boutons de la barre : il s'affiche s'il tient, sinon les icônes seules (la classe tb-icons, posée par uiBarFit sur la barre : sa largeur avec le texte déborde, ou sous 760 px) ; une seule règle pour tous les outils */
+/* la barre qui manque de place se réduit dans un seul ordre, par la même règle « s'il tient » (uiBarFit, classes tb-st1 à tb-st4, cumulatives) : 1 le tampon de décor (et celui de l'escadre), 2 le numéro de version,
+   3 le texte des boutons (icônes seules), 4 le titre long, qui passe au sigle court (titre et sous-titre masqués) ; aucun seuil de largeur propre à un outil ne retire plus rien de cela */
 .toolbar.tb-fit, .toolbar.tb-fit * { transition: none !important; }
-.toolbar.tb-icons .tb-btn .tb-btn-label { display: none; }
-.toolbar.tb-icons .tb-btn { padding: 0 10px; width: auto; }
+.toolbar.tb-st1 .tb-classif, .toolbar.tb-st1 .mp-wing-stamp { display: none; }
+.toolbar.tb-st2 .tb-version { display: none; }
+.toolbar.tb-st3 .tb-btn .tb-btn-label { display: none; }
+.toolbar.tb-st3 .tb-btn { padding: 0 10px; width: auto; }
+.toolbar.tb-st4 .tb-brand-main, .toolbar.tb-st4 .tb-brand-sub, .toolbar.tb-st4 .tb-brand + .tb-sep { display: none; }
+.toolbar.tb-st4 .tb-brand-short { display: inline; }
 /* la barre au téléphone : une seule règle de réduction, un seul seuil (sous 760 px, celui de la suite) pour tous les outils à barre. Le libellé d'une liste de la barre (« Théâtre ») est masqué (la liste garde son nom accessible) ;
    dans la suite, un bouton de réglage à texte et à icône (Affichage) n'a plus que l'icône (son infobulle et son nom accessible gardent son nom : uiBarDisplaySync) */
 @media (max-width: 759px) {
@@ -199,21 +204,24 @@ try { if (window.self !== window.top) document.documentElement.classList.add('mp
    Ce qui suit ne sert qu'à raccourcir sans déplacer : la réduction de la barre est écrite une fois, dans la feuille (sous 760 px : libellé de liste masqué, Affichage à l'icône dans la suite) ;
    uiBarDisplaySync() tient l'infobulle et le nom accessible d'Affichage ; le passage de 760 px, dans les deux sens, est suivi sans rechargement (uiBarChanged() du module, s'il en a une). ---- */
 const UIBAR = { mq: null };
-/* ---- le texte des boutons de la barre : s'il tient, il s'affiche ; sinon la barre passe en icônes seules (classe tb-icons). La décision se prend toujours sur la largeur de la barre AVEC le texte
-   (la classe est retirée le temps de la mesure, sans repeindre, ainsi que le fondu du shell, mp-fade-r) : elle ne dépend que de la largeur, de la langue et du contenu, jamais de l'état d'avant, donc aucune bascule en boucle.
-   Sous 760 px : toujours des icônes seules. Recalculée au chargement, après les polices, au redimensionnement, au changement de langue et quand le contenu de la barre change. ---- */
+/* ---- la réduction de la barre : une seule séquence. Elle part de l'état le plus complet et retire, tant que son contenu déborde (scrollWidth > clientWidth), l'étape suivante : 1 le tampon, 2 la version, 3 le texte des boutons, 4 le titre long.
+   Elle s'arrête dès que tout tient. La décision se prend toujours en repartant de l'état complet (classes retirées, ainsi que le fondu du shell, mp-fade-r, sans transition le temps de la mesure) : elle ne dépend que de la largeur, de la langue et du contenu,
+   jamais de l'état d'avant, donc pas de bascule en boucle ; une fenêtre plus étroite ne montre jamais plus. Sous 760 px, les quatre étapes sont toujours prises.
+   Recalculée au chargement, après les polices, au redimensionnement, au changement de langue et quand le contenu de la barre change (un bouton, le tampon de l'escadre). ---- */
+const UISTEPS = ['tb-st1', 'tb-st2', 'tb-st3', 'tb-st4'];
+function uiBarStep(bar, k) { UISTEPS.forEach((c, i) => bar.classList.toggle(c, i < k)); }
 function uiBarFit() {
   const bar = document.querySelector('.toolbar');
   if (!bar || !bar.clientWidth) return;                 /* un outil masqué (largeur nulle) garde son état */
-  let icons = !!window.matchMedia && window.matchMedia('(max-width: 759px)').matches;
+  let k = 4;
   const fade = bar.classList.contains('mp-fade-r');
   bar.classList.add('tb-fit');                          /* sans transition le temps de la mesure : la largeur lue est celle de l'état final, jamais celle d'une animation en cours */
-  if (!icons) {
-    bar.classList.remove('tb-icons', 'mp-fade-r');
-    icons = bar.scrollWidth > bar.clientWidth;
+  if (!(window.matchMedia && window.matchMedia('(max-width: 759px)').matches)) {
+    bar.classList.remove('mp-fade-r');
+    for (k = 0; k < 4; k++) { uiBarStep(bar, k); if (bar.scrollWidth <= bar.clientWidth) break; }
     if (fade) bar.classList.add('mp-fade-r');
   }
-  bar.classList.toggle('tb-icons', icons);
+  uiBarStep(bar, k);
   void bar.scrollWidth;                                 /* l'état final est calculé avant le retour des transitions : rien ne s'anime */
   bar.classList.remove('tb-fit');
 }

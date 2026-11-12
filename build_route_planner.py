@@ -1206,8 +1206,6 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .tb-lang-btn svg { display: block; }
 .tb-brand-sub { font-weight: 500; }
 .tb-version { font-family: 'Roboto Mono', monospace; }
-@media (max-width: 1245px) { .tb-brand-main, .tb-brand-sub, .tb-brand + .tb-sep, .tb-version { display: none; } .tb-brand-short { display: inline; } }
-@media (max-width: 1789px) { .tb-classif { display: none; } }
 
 /* ---------- barre du haut : une seule ligne qui défile quand elle déborde (à tout écran : avec « Lieux » et « Aérodromes », elle
    ne tient plus sur un portable) ; un fondu signale le bord qui déborde ---------- */

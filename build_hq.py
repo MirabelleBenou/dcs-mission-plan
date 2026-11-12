@@ -554,9 +554,6 @@ body {{
 .tb-lang-btn svg {{ display: block; }}
 .tb-brand-sub {{ font-weight: 500; }}
 .tb-version {{ font-family: 'Roboto Mono', monospace; }}
-@media (max-width: 1359px) {{ .tb-brand-main, .tb-brand-sub, .tb-brand + .tb-sep, .tb-version {{ display: none; }} .tb-brand-short {{ display: inline; }} }}
-@media (max-width: 1699px) {{ .tb-classif {{ display: none; }} }}   /* le tampon de décor tombe sous 1 700 px (1 600 avant « Annuler » dans la barre), avec le sous-titre du sigle (lot mp-hq-disposition, addendum 2) */
-@media (max-width: 1699px) {{ .tb-brand-sub {{ display: none; }} }}   /* le sous-titre du sigle cède la place au tampon d'escadre du shell et au libellé des boutons (la barre mesurée dans le shell, FR, tampon de 9 lettres) */
 .tb-btn {{ width: auto; height: 38px; min-width: 38px; padding: 0 12px; gap: 6px; font-family: var(--f-ui); font-weight: 500; letter-spacing: 1.5px; font-size: 12px; text-transform: uppercase; white-space: nowrap; }}
 @media (max-width: 479px) {{ .tb-btn {{ width: 34px; min-width: 34px; }} }}
 
@@ -930,7 +927,7 @@ body {{
 }}
 .tb-count[hidden] {{ display: none; }}
 /* sans libellé (sous 1 250 px), la pastille se pose au coin du bouton, dans son cadre : elle ne déborde pas sur le bouton voisin */
-.toolbar.tb-icons .tb-btn > .tb-count {{ position: absolute; top: 2px; right: 2px; }}
+.toolbar.tb-st3 .tb-btn > .tb-count {{ position: absolute; top: 2px; right: 2px; }}
 
 /* Sans mission : le centre de la page */
 .hq-empty {{ min-height: calc(100vh - 60px - 120px); min-height: calc(100dvh - 60px - 120px); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center; padding: 24px 16px; }}

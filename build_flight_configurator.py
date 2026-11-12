@@ -1281,14 +1281,15 @@ body[data-theme] {
    la barre tient sans défiler dès 553 px, sauf de 760 à 792 px où le tampon du shell s'ajoute ; chaque seuil est la plus petite largeur où elle tient avec ce qui précède) : libellés entiers dès 1179 px (le français est le plus large),
    les mêmes libellés aux marges resserrées de 1133 à 1178 px (plus de libellé court), icône seule en dessous ; le titre et la version dès 1468 px, le tampon de décor dès 1677 px ; le sigle reste visible à toutes les largeurs.
    La liste du théâtre (lot mp-theatre-unique) a déplacé de 179 px les seuils du titre et du tampon de décor, de 290 px ceux des libellés entiers et resserrés (théâtre « Caucase », mesuré dans le shell, en français et en anglais, sans dépassement de 900 à 1900 px). */
-@media (max-width: 1467px) { .tb-brand-main, .tb-brand-sub, .tb-sep, .tb-version { display: none; } .tb-brand-short { display: inline; } }
 @media (max-width: 1178px) { .tb-btn { padding: 0 9px; letter-spacing: 1px; } }
 @media (max-width: 539px) { .tb-select { max-width: 96px; } }
 @media (max-width: 479px) { .toolbar { gap: 3px; } .tb-btn { width: 34px; min-width: 34px; } .tb-select { max-width: 64px; padding: 0 18px 0 6px; } .tb-lang-btn { min-width: 34px; padding: 0 2px; } }
 /* Le bouton « Ouvrir » reste un bouton de menu (icône + chevron) : à la taille de celui du Route Planner, jamais réduit à la forme d'un bouton à icône seule (mêmes marges intérieures : 12 px, 8 px à gauche sous 521 px) */
+/* en titre court, les séparateurs de la barre cèdent aussi la place (comme avant) */
+.toolbar.tb-st4 .tb-sep { display: none; }
 /* « Ouvrir » garde ses marges de bouton de menu en icônes seules (mêmes que celles du Route Planner) */
-.toolbar.tb-icons #btn-open { width: auto; min-width: 44px; padding-left: 12px; padding-right: 12px; }
-@media (max-width: 520px) { .toolbar.tb-icons #btn-open { padding-left: 8px; } }
+.toolbar.tb-st3 #btn-open { width: auto; min-width: 44px; padding-left: 12px; padding-right: 12px; }
+@media (max-width: 520px) { .toolbar.tb-st3 #btn-open { padding-left: 8px; } }
 /* La liste du théâtre : le libellé « Théâtre » cède la place sous 760 px (règle commune, bloc d'interface commun ; la liste garde son nom accessible) ; sous 480 px la liste se resserre (texte entier jusqu'à 96 px, puis coupé)
    et la liste du thème de l'interface quitte la barre (le thème se règle au tableau du shell, qui le propage) : sans cela la barre défile de 21 à 28 px à 412 px */
 @media (max-width: 479px) { .tb-sel { padding: 0 20px 0 6px; font-size: 11px; letter-spacing: .5px; background-position: right 6px center; flex: none; max-width: 79px; } .tb-select.tbm-trigger { display: none; } }
@@ -1297,7 +1298,6 @@ body[data-theme] {
 .tb-brand-sub { font-weight: 500; }
 .tb-version { font-family: 'Roboto Mono', monospace; }
 .tb-classif { font-family: var(--f-stencil); font-weight: 400; font-size: 11px; letter-spacing: 3px; color: var(--red-faded); border: 1px solid var(--red-faded); padding: 4px 10px; white-space: nowrap; flex-shrink: 0; }
-@media (max-width: 1676px) { .tb-classif { display: none; } }
 
 /* ---------- Page : état de l'export, deux colonnes, blocs ---------- */
 .editor { max-width: 1840px; }
