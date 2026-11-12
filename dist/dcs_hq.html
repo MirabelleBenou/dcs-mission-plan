@@ -5804,10 +5804,21 @@ function pkBuildExport(groupIds) {
     createdAt:     new Date().toISOString(),
     createdBy:     'HQ',
     theatre:       snap.sourceMission.theatre,
-    sourceMission: { filename: snap.sourceMission.filename, fingerprint: snap.sourceMission.fingerprint },
-    flights:       flights,
   };
+  // missionDate (facultatif, racine) : la date de la mission d'où viennent les routes (AAAA-MM-JJ) ; illisible, elle n'est pas écrite
+  const md = pkMissionDate(snap.sourceMission.missionDate);
+  if (md !== '') pkg.missionDate = md;
+  pkg.sourceMission = { filename: snap.sourceMission.filename, fingerprint: snap.sourceMission.fingerprint };
+  pkg.flights = flights;
   return { pkg, omit };
+}
+// Une date de mission lisible : la chaîne AAAA-MM-JJ d'un jour du calendrier (la règle de magDecYear des autres outils), sinon '' (ignorée, comme absente)
+function pkMissionDate(s) {
+  const m = typeof s === 'string' ? /^(\d{4})-(\d{2})-(\d{2})$/.exec(s) : null;
+  if (!m) return '';
+  const y = +m[1], mo = +m[2], da = +m[3], leap = (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+  const dm = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  return mo >= 1 && mo <= 12 && da >= 1 && da <= dm[mo - 1] ? s : '';
 }
 
 // La fenêtre « Exporter le paquet » : le nom par défaut est celui du Route Planner, paquet_<groupe>[_+n]_<horodatage>

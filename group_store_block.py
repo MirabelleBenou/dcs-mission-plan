@@ -7,6 +7,7 @@ ou d'une unité est gardée telle quelle. Un groupe peut n'avoir aucune unité (
 
 Une seule façon d'écrire : relire la clé, changer le seul groupe touché, écrire (gsPutFlight, gsRemoveFlight, gsSetTheatre). Seule gsReplaceAll écrit toute la liste.
 Un échec d'écriture (stockage plein) appelle une fois par série d'échecs gsOnSaveFail() si le module la définit (son toast).
+Une route porte, facultative, la date de la mission d'où elle vient (route.missionDate, AAAA-MM-JJ) : gsRouteCopy la recopie, gsMigrate la reprend de route_set_v1 ; magRouteDate (bloc de la déclinaison) la valide.
 Rien ici ne touche au DOM, à t() ni au réseau ; tout accès au stockage est en try/catch : sans stockage, l'écran marche.
 
 gsMigrate(packFn) : au premier chargement de l'un des deux modules, la fiche est bâtie des groupes de fc_state_v1 puis des routes de route_set_v1 qui portent un lien
@@ -97,6 +98,12 @@ function gsPackRoute(r, th, gs) {
   (Array.isArray(r.points) ? r.points : []).filter(p => gsIsObj(p) && packValidCoord(p.lat, p.lon)).forEach((p, k) => { o[String(k + 1)] = packPoint(p, k, th, gs); });
   return o;
 }
+/* La copie de route d'un groupe : { points } et, si la route a reçu une date de sa source (AAAA-MM-JJ lisible, magRouteDate du bloc de la déclinaison), missionDate. La date suit la route : toute copie en passe par ici. */
+function gsRouteCopy(pts, date) {
+  const r = { points: pts }, d = magRouteDate(date);
+  if (d !== '') r.missionDate = d;
+  return r;
+}
 /* Seule la migration fait naître la fiche : une écriture sur une fiche absente la fait d'abord ; si la migration ne peut pas écrire, l'écriture rend faux et rien n'est écrit. */
 let GS_PACKER = null;
 function gsEnsure() {
@@ -176,8 +183,8 @@ function gsMigrate(packFn) {
       try { pts = packFn(r, theatre); } catch (e) { pts = null; }
       if (!gsIsObj(pts)) return;
       const link = { rid: r.rid, name: typeof r.name === 'string' ? r.name : '' };
-      if (hits.length === 1) { hits[0].route = { points: pts }; hits[0].routeLink = link; }
-      else flights.push({ fcId: gsNewId(), name: r.flight.groupName, coalition: side, route: { points: pts }, routeLink: link, units: [] });
+      if (hits.length === 1) { hits[0].route = gsRouteCopy(pts, r.missionDate); hits[0].routeLink = link; }
+      else flights.push({ fcId: gsNewId(), name: r.flight.groupName, coalition: side, route: gsRouteCopy(pts, r.missionDate), routeLink: link, units: [] });
     });
   }
   if (!gsWrite(theatre, flights)) return gsMigrateFail();

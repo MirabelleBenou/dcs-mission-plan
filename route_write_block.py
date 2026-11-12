@@ -12,7 +12,9 @@ Une écriture qui échoue (stockage plein, 12 routes déjà sur le théâtre, 30
 la valeur rendue le dit ({ ok: false, why }), l'appelant l'annonce.
 pid : chaîne [a-z0-9]{8,16}, unique dans sa liste ; il n'entre jamais dans le paquet de vol, la copie de route d'un groupe (gsPackRoute ne le recopie pas) ni l'export du Route Tool.
 
-Dépend, dans la page : routeTheatre / rtThOk (bloc du théâtre d'une route), gsRead, gsPutFlight, gsPackRoute, gsStable, gsIsObj, gsSetTheatre (bloc des groupes), TM_PARAMS (bloc des projections, facultatif :
+La route porte, facultative, la date de la mission d'où elle vient (route.missionDate, AAAA-MM-JJ lisible par magRouteDate) : elle suit la route dans route_set_v1, route_state_v1 (la route active) et la copie du groupe ; modifier les points ne l'efface pas.
+
+Dépend, dans la page : magRouteDate (bloc de la déclinaison), routeTheatre / rtThOk (bloc du théâtre d'une route), gsRead, gsPutFlight, gsPackRoute, gsStable, gsIsObj, gsSetTheatre (bloc des groupes), TM_PARAMS (bloc des projections, facultatif :
 sans lui, aucune copie de groupe n'est écrite).
 
 Usage (par les builds) : from route_write_block import build_block ; texte = build_block()
@@ -85,7 +87,11 @@ function rwRefTheatre(st) {
 /* Le Route Planner prend route_state_v1 pour source de la route active : ici aussi, la route active du jeu prend le nom et les points de l'état (du même théâtre) avant tout changement */
 function rwFresh(set, st) {
   const act = set.routes[set.active];
-  if (act && st && routeTheatre(act, rwRefTheatre(st)) === rwRefTheatre(st)) { act.name = typeof st.name === 'string' ? st.name : act.name; act.points = st.points; }
+  if (act && st && routeTheatre(act, rwRefTheatre(st)) === rwRefTheatre(st)) {
+    act.name = typeof st.name === 'string' ? st.name : act.name; act.points = st.points;
+    const d = magRouteDate(st.missionDate);       /* la date de la route active suit son état comme son nom et ses points ; un état sans date lisible laisse celle du jeu */
+    if (d !== '') act.missionDate = d;
+  }
   return act;
 }
 /* Les routes du jeu qui sont du théâtre th (la règle du théâtre d'une route) */
@@ -137,10 +143,11 @@ function rwGs(st) { return rwObj(st) && typeof st.groundSpeed === 'number' && st
 /* La copie d'un groupe qui prend la route r (ses points au format du paquet : pts) */
 function rwGroupTakes(f, r, pts) {
   const nf = rwClone(f);
-  nf.route = { points: rwClone(pts) };
+  nf.route = gsRouteCopy(rwClone(pts), r.missionDate);       /* la date de la route la suit */
   nf.routeLink = { rid: r.rid, name: r.name };
   return nf;
 }
+function rwCopyDate(f) { return gsIsObj(f.route) ? magRouteDate(f.route.missionDate) : ''; }       /* la date que la copie de route d'un groupe porte ('' : aucune) */
 function rwPackable(route, th, g) {
   if (!rwHasProj(th) || route.points.length < 2) return false;
   return g.theatre === '' || g.theatre === th;
@@ -156,7 +163,7 @@ function rwSyncGroups(route, th, st) {
   for (let i = 0; i < g.flights.length; i++) {
     const f = g.flights[i], l = f.routeLink;
     if (!gsIsObj(l) || l.rid !== route.rid) continue;
-    if (gsStable(f.route && f.route.points !== undefined ? f.route.points : null) === gsStable(pts) && l.name === route.name) continue;
+    if (gsStable(f.route && f.route.points !== undefined ? f.route.points : null) === gsStable(pts) && l.name === route.name && rwCopyDate(f) === magRouteDate(route.missionDate)) continue;
     if (g.theatre === '') { gsSetTheatre(th); g.theatre = th; }
     if (!gsPutFlight(rwGroupTakes(f, route, pts))) return false;
   }
@@ -184,6 +191,7 @@ function rwWrite(set, route, o) {
   if (isAct) {
     if (!st) st = st0 ? rwClone(st0) : rwMinimalState(set, route.theatre);
     st.name = route.name; st.points = route.points;       /* la route active : route_state_v1 fait foi pour elle au chargement du Route Planner */
+    if (magRouteDate(route.missionDate) !== '') st.missionDate = route.missionDate; else delete st.missionDate;       /* ... sa date avec elle */
   }
   const items = [{ k: RW_KEY_SET, v: JSON.stringify(set) }];
   if (st) items.push({ k: RW_KEY_STATE, v: JSON.stringify(st) });
@@ -215,7 +223,7 @@ function rwUpdateRoute(rid, mut, o) {
   return rwWrite(set, route, Object.assign({ oldSet: oldSet, oldState: oldState }, o || {}));
 }
 
-/* Une route neuve, au théâtre th : { name, theatre, points, fcId? } ; le groupe fcId la suit. Rend { ok, rid, route } ou { ok: false, why: 'max' | 'full' | 'link' }.
+/* Une route neuve, au théâtre th : { name, theatre, points, fcId?, missionDate? } ; le groupe fcId la suit. Rend { ok, rid, route } ou { ok: false, why: 'max' | 'full' | 'link' }.
    12 routes sur le théâtre : refus. Un jeu absent naît ; l'état du Route Planner qui n'avait pas de jeu devient la route 1 (rien ne se perd). */
 function rwCreateRoute(o) {
   let set = rwReadSet();
@@ -224,11 +232,16 @@ function rwCreateRoute(o) {
   const th = o.theatre;
   if (!set) {
     set = { format: RW_SET_FORMAT, active: 0, routes: [] };
-    if (st0 && st0.points.length) set.routes.push({ rid: rwNewRid(new Set()), name: typeof st0.name === 'string' ? st0.name : '', points: st0.points, flight: null, theatre: rtThOk(st0.theatre) ? st0.theatre : rwRefTheatre(null) });
+    if (st0 && st0.points.length) {
+      const r0 = { rid: rwNewRid(new Set()), name: typeof st0.name === 'string' ? st0.name : '', points: st0.points, flight: null, theatre: rtThOk(st0.theatre) ? st0.theatre : rwRefTheatre(null) };
+      if (magRouteDate(st0.missionDate) !== '') r0.missionDate = st0.missionDate;       /* l'état qui devient la route 1 garde sa date */
+      set.routes.push(r0);
+    }
   } else rwFresh(set, st0);
   if (rwRoutesOf(set, th, st0).length >= RW_MAX_ROUTES) return { ok: false, why: 'max' };
   const taken = new Set(set.routes.map(r => r.rid));
   const route = { rid: rwNewRid(taken), name: String(o.name || '').slice(0, 60), points: (o.points || []).slice(0, RW_MAX_POINTS), flight: null, theatre: th };
+  if (magRouteDate(o.missionDate) !== '') route.missionDate = o.missionDate;       /* o.missionDate : la date d'une route dont celle-ci est la copie (route importée d'un groupe, route d'un fichier) ; une route tracée de rien n'en a pas */
   rwAssignPids(route.points);
   set.routes.push(route);
   if (set.routes.length === 1) set.active = 0;

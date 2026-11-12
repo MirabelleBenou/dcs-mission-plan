@@ -516,6 +516,7 @@ I18N_FR = {
     'route.note': 'Cap magnétique : déclinaison {0} ({1}) — le même calcul que le Route Planner et le Datacard Generator. Le croquis n’est qu’un rappel : la route se trace au Route Planner.',
     'route.decl.to': ' à ',
     'route.src.mission': 'date de la mission',
+    'route.src.route': 'date du paquet',
     'route.src.rp': 'année du Route Planner',
     'route.src.default': 'année par défaut',
     'route.src.manual': 'saisie au Route Planner',
@@ -796,6 +797,7 @@ I18N_EN = {
     'route.note': 'Magnetic heading: variation {0} ({1}) — the same calculation as the Route Planner and the Datacard Generator. The sketch is only a reminder: the route is drawn in the Route Planner.',
     'route.decl.to': ' to ',
     'route.src.mission': 'mission date',
+    'route.src.route': 'package date',
     'route.src.rp': 'Route Planner year',
     'route.src.default': 'default year',
     'route.src.manual': 'typed in the Route Planner',
@@ -2554,7 +2556,7 @@ function restoreFlight(f) {       // un groupe sans fcId en reçoit un par resto
   if (typeof nf.fcId !== 'string' || nf.fcId === '') nf.fcId = newId();
   nf.name = str(f.name);
   nf.coalition = (f.coalition === 'blue' || f.coalition === 'red') ? f.coalition : '';
-  nf.route = (isObj(f.route) && isObj(f.route.points)) ? { points: f.route.points } : null;
+  nf.route = (isObj(f.route) && isObj(f.route.points)) ? gsRouteCopy(f.route.points, f.route.missionDate) : null;       // la date reçue avec la route (missionDate) la suit
   if (nf.route && isObj(f.routeLink) && ridOk(f.routeLink.rid)) nf.routeLink = { rid: f.routeLink.rid, name: str(f.routeLink.name) };       // le lien avec le Route Planner ne se garde que s'il y a une route
   nf.units = rawUnits.map((u, i) => {
     const nu = newUnit(types[i]);
@@ -2897,7 +2899,7 @@ function rpRead() {
     set.routes.forEach(r => {
       if (!isObj(r) || !Array.isArray(r.points)) return;
       const pts = r.points.filter(p => isObj(p) && packValidCoord(p.lat, p.lon));
-      routes.push({ rid: ridOk(r.rid) ? r.rid : '', theatre: routeTheatre(r, thOk(state.theatre) ? state.theatre : S.theatre), name: str(r.name), points: pts, flight: (isObj(r.flight) && typeof r.flight.groupName === 'string') ? r.flight : null });       // une route d'avant le lot (sans theatre) : le théâtre de route_state_v1 s'il est valide, sinon le commun (mp_theatre_v1, Caucasus par défaut), comme le Route Planner l'écrira ; jamais écrite ici
+      routes.push({ rid: ridOk(r.rid) ? r.rid : '', theatre: routeTheatre(r, thOk(state.theatre) ? state.theatre : S.theatre), name: str(r.name), points: pts, flight: (isObj(r.flight) && typeof r.flight.groupName === 'string') ? r.flight : null, missionDate: magRouteDate(r.missionDate) });       // une route d'avant le lot (sans theatre) : le théâtre de route_state_v1 s'il est valide, sinon le commun (mp_theatre_v1, Caucasus par défaut), comme le Route Planner l'écrira ; jamais écrite ici
     });
   }
   return { state: state, routes: routes };
@@ -2931,10 +2933,12 @@ function routeGeo(f) {
 }
 function routeNm(pts) { let km = 0; for (let i = 0; i + 1 < pts.length; i++) km += legCalc(pts[i], pts[i + 1]).km; return km / NAV_NM_KM; }
 // La déclinaison : la valeur saisie au Route Planner (mode « manual », lisible), sinon le calcul de WMM et d'IGRF à la date de la mission ou à l'année du Route Planner
-function declSource(nav) {
+function declSource(nav, routeDate) {
   if (nav.mode === 'manual') { const v = parseDecl(nav.decl); if (v !== null) return { manual: true, v: v }; }
-  return { manual: false, ys: magYearSource(rTh(), nav.year, nav.force) };
+  return { manual: false, ys: magYearSource(rTh(), nav.year, nav.force, routeDate) };
 }
+// La date reçue avec la route d'un groupe (paquet ou mission de HQ) : '' sans date lisible
+function routeDateOf(f) { return f && f.route ? magRouteDate(f.route.missionDate) : ''; }
 function declAt(ds, lat, lon) { if (ds.manual) return ds.v; const d = magVar(lat, lon, ds.ys.y); return d === null ? 0 : d; }
 // Les branches : cap initial vrai et distance par legCalc, cap magnétique = cap vrai − déclinaison au départ de la branche (toujours magnétique ici)
 function routeLegs(pts, ds) {
@@ -2957,7 +2961,7 @@ function declNote(ds, pts) {
     else if ((lo < 0) === (hi < 0)) v = fmtNm(Math.min(Math.abs(lo), Math.abs(hi))) + '°' + t('route.decl.to') + declText(Math.abs(lo) > Math.abs(hi) ? lo : hi);
     else v = declText(lo) + t('route.decl.to') + declText(hi);
   }
-  const src = ds.manual ? t('route.src.manual') : ds.ys.year + ', ' + t(ds.ys.src === 'mission' ? 'route.src.mission' : (ds.ys.src === 'default' ? 'route.src.default' : 'route.src.rp'));
+  const src = ds.manual ? t('route.src.manual') : ds.ys.year + ', ' + t(ds.ys.src === 'mission' ? 'route.src.mission' : (ds.ys.src === 'route' ? 'route.src.route' : (ds.ys.src === 'default' ? 'route.src.default' : 'route.src.rp')));
   return tf('route.note', v, src);
 }
 
@@ -3167,7 +3171,7 @@ function routeViewHtml(f, fi, rp) {
   let sub = t(f.routeLink ? 'route.from.rp' : 'route.from.pkg') + ' · ' + ptsLabel(pts);
   let table = '';
   if (geo) {
-    const ds = declSource(rp.state.nav), L = routeLegs(geo, ds);
+    const ds = declSource(rp.state.nav, routeDateOf(f)), L = routeLegs(geo, ds);
     sub += ' · ' + fmtDist(L.total) + ' ' + udLabel();
     const rows = L.legs.map((l, i) => `<tr><td class="rt-n">${i + 1}</td><td>${esc(l.from)} → ${esc(l.to)}</td><td class="rt-r">${esc(l.hdg)}°</td><td class="rt-r">${esc(fmtDist(l.nm))} ${udLabel()}</td></tr>`).join('');
     table = `<table class="rt-tab"><thead><tr><th class="rt-n"></th><th>${esc(t('route.col.leg'))}</th><th class="rt-r">${esc(t('route.col.hdg'))}</th><th class="rt-r">${esc(t('route.col.dist'))}</th></tr></thead><tbody>${rows}<tr class="rt-tot"><td></td><td>${esc(t('route.total'))}</td><td></td><td class="rt-r">${esc(fmtDist(L.total))} ${udLabel()}</td></tr></tbody></table><p class="rt-note">${esc(declNote(ds, geo))}</p>`;
@@ -3190,7 +3194,7 @@ function rtDraw() {
   const geo = routeGeo(su.f), w = Math.floor(paper.clientWidth), col = document.getElementById('col-right');
   RT.w = w;
   if (!geo || w < 120) { paper.innerHTML = ''; return; }
-  const rp = rpRead(), L = routeLegs(geo, declSource(rp.state.nav));
+  const rp = rpRead(), L = routeLegs(geo, declSource(rp.state.nav, routeDateOf(f)));
   paper.innerHTML = rtSketch(geo, { W: w, phone: col.clientWidth <= 520, title: flightLabel(su.f, su.fi), label: tf('route.sketch', routeTitle(su.f)), texts: L.legs.map(l => l.hdg + '° · ' + fmtDist(l.nm)) });
 }
 function renderRouteBlock() {
@@ -3229,7 +3233,7 @@ function routePick(rid) {
   if (!su || !rt || rt.points.length < 2 || !has(TM_PARAMS, S.theatre)) return;
   const f = su.f;
   if (rt.theatre !== S.theatre || tcConflict()) return;       // seulement une route du théâtre commun, et rien pendant le bandeau
-  f.route = { points: rpPack(rt, S.theatre, rp.state.gs) };
+  f.route = gsRouteCopy(rpPack(rt, S.theatre, rp.state.gs), rt.missionDate);       // la date de la route du Route Planner la suit
   f.routeLink = { rid: rt.rid, name: rt.name };
   UI.rtChoose = null;
   routeChanged();
@@ -3244,8 +3248,8 @@ function routeSync() {
   S.flights.forEach((f, fi) => {
     if (!f.routeLink || routeStatus(f, rp)) return;
     const rt = rp.routes.filter(r => r.rid === f.routeLink.rid)[0], pts = rpPack(rt, S.theatre, rp.state.gs);
-    if (JSON.stringify(pts) === JSON.stringify(f.route ? f.route.points : null) && rt.name === f.routeLink.name) return;
-    f.route = { points: pts };
+    if (JSON.stringify(pts) === JSON.stringify(f.route ? f.route.points : null) && rt.name === f.routeLink.name && routeDateOf(f) === rt.missionDate) return;
+    f.route = gsRouteCopy(pts, rt.missionDate);
     f.routeLink = { rid: rt.rid, name: rt.name };
     done.push({ label: flightLabel(f, fi), name: rt.name.trim() !== '' ? rt.name : t('route.unnamed') });
   });
@@ -3376,8 +3380,12 @@ function unitPayloadOut(f, u) {
 }
 // Le paquet dcs-flight-package-v2 : une partie non renseignée sort en null (HQ n'y touche pas). Ni fcId, ni sourceMission.
 function buildPackage() {
-  return {
-    format: PACKAGE_FORMAT, createdAt: new Date().toISOString(), createdBy: 'Flight Configurator', theatre: S.theatre,
+  // missionDate (facultatif, racine) : la date de la mission d'où viennent les routes ; écrite si tous les groupes dont la route porte une date portent la même, sinon absente
+  const dates = [];
+  S.flights.forEach(f => { const d = routeDateOf(f); if (d !== '' && dates.indexOf(d) < 0) dates.push(d); });
+  const pkg = { format: PACKAGE_FORMAT, createdAt: new Date().toISOString(), createdBy: 'Flight Configurator', theatre: S.theatre };
+  if (dates.length === 1) pkg.missionDate = dates[0];
+  return Object.assign(pkg, {
     flights: S.flights.map((f, fi) => ({
       groupName: f.name.trim(), coalition: f.coalition || null, groupFrequency: null,
       route: f.route ? { points: clone(f.route.points) } : null,
@@ -3387,7 +3395,7 @@ function buildPackage() {
         return o;
       })
     }))
-  };
+  });
 }
 // Le fichier de travail : le paquet tel qu'il se lit, plus la clé « fc » (l'état de l'écran et mes presets) que HQ ignore.
 function buildWorkFile() {
@@ -4126,7 +4134,7 @@ function openFile(file) {
         else {
           UI.clamped = 0;
           ignored = res.src.rows.filter(f => !f.managed).length;
-          const built = impBuildGroups(res.src.rows.filter(f => f.managed));
+          const built = impBuildGroups(res.src.rows.filter(f => f.managed), res.src);
           restoreState({ flights: built.flights, sel: { f: 0, u: 0 } });       // l'emport brut (payloadIn) est converti par restoreFlight
           warn = built.warn.join(' · ');
         }

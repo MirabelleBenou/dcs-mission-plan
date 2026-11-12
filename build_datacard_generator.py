@@ -2417,6 +2417,10 @@ const I18N = {
     'dv.tag.forced': 'FORCÉE',
     'dv.tag.typed': 'SAISIE',
     'dv.tag.default': 'PAR DÉFAUT',
+    'dv.tag.route': 'PAQUET',
+    'dv.tag.routeForced': 'FORCÉE',
+    'dv.src.route': 'date reçue avec la route · {date}',
+    'dv.src.routeForced': 'la date reçue avec la route ({date}) est ignorée',
     'dv.src.mission': '{file} · {date}',
     'dv.src.forced': 'la mission chargée ({file}) est ignorée',
     'dv.src.typed': 'année tapée, aucune mission de ce théâtre',
@@ -2907,6 +2911,10 @@ const I18N = {
     'dv.tag.forced': 'OVERRIDDEN',
     'dv.tag.typed': 'ENTERED',
     'dv.tag.default': 'DEFAULT',
+    'dv.tag.route': 'PACKAGE',
+    'dv.tag.routeForced': 'OVERRIDDEN',
+    'dv.src.route': 'date received with the route · {date}',
+    'dv.src.routeForced': 'the date received with the route ({date}) is ignored',
     'dv.src.mission': '{file} · {date}',
     'dv.src.forced': 'the loaded mission ({file}) is ignored',
     'dv.src.typed': 'typed year, no mission for this theatre',
@@ -3450,7 +3458,7 @@ function readNum(s) {
 function navVar(c) {
   if (dgN.ref !== 'mag') return null;       /* les réglages de cap sont ceux de la mission (mp_nav_v1), l'année celle de la mission (magYearSource), comme au Route Planner */
   if (dgN.mode === 'manual') { const d = parseDecl(dgN.decl); return d == null ? null : { decl: d }; }
-  const ys = dgNavYear();
+  const ys = dgNavYear(c);
   return { calc: true, y: ys.y, ys: ys };
 }
 /* La déclinaison (°, + vers l'Est) au point pt */
@@ -3906,8 +3914,17 @@ function dgFollowNav() {
   const k = dgReadNavKey();
   if (k && !dgNavSame(dgN, k)) dgNavSet(k, true);
 }
-/* L'année des caps : celle de la mission (magYearSource, comme au Route Planner), sinon la saisie, sinon 1985 */
-function dgNavYear() { return magYearSource(dgTheatre(), dgN.year, dgN.force); }
+/* L'année des caps : celle de la mission (magYearSource, comme au Route Planner), sinon la date reçue avec la route de la carte c (paquet, mission de HQ), sinon la saisie, sinon 1985 */
+function dgNavYear(c) { return magYearSource(dgTheatre(), dgN.year, dgN.force, dgRouteDate(c)); }
+/* La date reçue avec la route que suit la carte : celle de la route du jeu (liée, du théâtre commun) ; sans route du jeu, celle de la copie de route du groupe (importée, pas encore reprise par le Route Planner) ; '' sans date lisible */
+function dgRouteDate(c) {
+  if (!c) return '';
+  const info = dgRouteInfo(c);
+  if (info.state === 'linked') return magRouteDate(info.route.missionDate);
+  if (info.state === 'other') return '';
+  const f = c.gsId ? dgFlightOf(c) : null;
+  return f && gsIsObj(f.route) ? magRouteDate(f.route.missionDate) : '';
+}
 
 /* ----- La route d'une carte ----- */
 function dgRidOf(c) {
@@ -4140,7 +4157,8 @@ function dgCreateFromLines(c) {
   const gp = c.gsId ? dgGroupPoints(c) : [];       /* les points du groupe : leur référence AGL ou MSL passe à la route */
   c.nav.forEach((l, i) => { if (legs[i].pt && pts.length < RW_MAX_POINTS) { const p = dgPointFromLine(l, legs[i].pt, pts.length, null), g = gp[pts.length]; if (g && g.altRef === 'MSL') p.altRef = 'MSL'; pts.push(p); idx.push(i); } });
   if (!pts.length) return false;
-  const r = rwCreateRoute({ name: dgNewRouteName(c), theatre: dgCommonTheatre(), points: pts, fcId: c.gsId || '' });
+  const gf = c.gsId ? dgFlightOf(c) : null;
+  const r = rwCreateRoute({ name: dgNewRouteName(c), theatre: dgCommonTheatre(), points: pts, fcId: c.gsId || '', missionDate: gp.length && gf && gsIsObj(gf.route) ? gf.route.missionDate : undefined });       /* la route née des points importés d'un groupe garde la date reçue avec eux ; tracée de rien : aucune */
   if (!r.ok) { dgRouteFail(r.why); return false; }
   idx.forEach((i, k) => { c.nav[i].pid = r.route.points[k].pid; });
   if (!c.gsId) c.rid = r.rid;
@@ -4448,7 +4466,7 @@ function dgEnterRoute(r) {
   const rs = dgRouteSet();
   if (r.rid && rs.set && rs.set.routes.some(x => x.rid === r.rid && routeTheatre(x, rwRefTheatre(rs.st)) === dgCommonTheatre())) return { ok: true, rid: r.rid };
   const pts = r.points.slice(0, RW_MAX_POINTS).map(p => { const o = { name: p.name, lat: dgRound7(p.lat), lon: dgRound7(p.lon), alt: p.alt, altRef: p.altRef }; if (rwPidValid(p.pid)) o.pid = p.pid; return o; });
-  const x = rwCreateRoute({ name: hasText(r.name) ? r.name.trim().slice(0, 60) : '', theatre: dgCommonTheatre(), points: pts });
+  const x = rwCreateRoute({ name: hasText(r.name) ? r.name.trim().slice(0, 60) : '', theatre: dgCommonTheatre(), points: pts, missionDate: r.missionDate });
   return x.ok ? { ok: true, rid: x.rid } : { ok: false, why: x.why };
 }
 /* Remplir la nav d'une carte de la route r quand le jeu de routes est plein : la copie du Route Planner, en lignes propres (comme avant) */
@@ -6131,7 +6149,7 @@ function dgFill(key, file, date) {
   return esc(t(key)).split('{date}').join(esc(date)).split('{file}').join('<span class="dv-file">' + esc(file) + '</span>');
 }
 function navVarHelp(c) {
-  const ys = dgNavYear();
+  const ys = dgNavYear(c);
   return '<b>' + esc(t('dv.tag.' + ys.src)) + '</b> ' + dgFill('dv.src.' + ys.src, ys.file, ys.date) + '<br>' + esc(t('dv.src.model', { e: magModel(ys.y) }));
 }
 function fSelectD(labelKey, attr, value, options) {
@@ -6159,7 +6177,7 @@ function navSettingsHtml(c) {
       '<div class="ui-note">' + esc(t('nav.decl.help')) + '</div>';
   }
   if (mag && calc) {
-    const ys = dgNavYear(), lock = ys.src === 'mission' && !dgN.force, forceOk = ys.src === 'mission' || ys.src === 'forced';
+    const ys = dgNavYear(c), lock = (ys.src === 'mission' || ys.src === 'route') && !dgN.force, forceOk = ys.src === 'mission' || ys.src === 'forced' || ys.src === 'route' || ys.src === 'routeForced';
     h += '<div class="ed-field-row"><div class="ed-field"><label>' + esc(t('f.nav.year')) + '</label><input type="text" data-navset="year" value="' + esc(lock ? ys.year : dgN.year) + '" inputmode="numeric" maxlength="4" autocomplete="off" spellcheck="false" placeholder="' + esc(t('ph.navDisplay.year')) + '"' + (lock ? ' disabled' : '') + '></div>' +
       (forceOk ? '<div class="ed-field"><label>&nbsp;</label><button type="button" class="ed-btn-add sm' + (dgN.force ? ' on' : '') + '" data-navforce="1" aria-pressed="' + (dgN.force ? 'true' : 'false') + '">' + esc(t('dv.force')) + '</button></div>' : '<div class="ed-field"></div>') + '</div>' +
       '<div class="ui-note" data-nav-vhelp>' + navVarHelp(c) + '</div>';
@@ -6963,7 +6981,8 @@ function routeFromObject(o) {
       year: (typeof nd.year === 'string' && /^\d{1,4}$/.test(nd.year)) ? nd.year : '', force: nd.force === true
     },
     points: points.slice(0, LIMITS.nav),
-    refs: refs.slice(0, LIMITS.refs)
+    refs: refs.slice(0, LIMITS.refs),
+    missionDate: magRouteDate(o.missionDate)       /* la date reçue avec la route ('' : aucune) */
   };
 }
 
@@ -7042,7 +7061,7 @@ function biSetFromFile(o) {
   const shared = Object.assign({}, o, { format: ROUTE_FORMAT, theatre: C });
   const all = list.filter(r => routeTheatre(r, ref) === C).map(r => {
     const f = r.flight;
-    return { src: r, route: routeFromObject(Object.assign({}, shared, { name: r.name, points: r.points })),
+    return { src: r, route: routeFromObject(Object.assign({}, shared, { name: r.name, points: r.points, missionDate: r.missionDate })),
       flight: (isPlainObject(f) && typeof f.groupName === 'string') ? f : null };
   });
   const routes = all.filter(e => e.route && e.route.points.length);
@@ -7101,7 +7120,7 @@ function biReadRouteSet() {
   const out = [];
   set.routes.forEach((r, i) => {
     if (!isPlainObject(r) || !Array.isArray(r.points) || routeTheatre(r, ref) !== C) return;       /* seulement les routes de C (bloc partagé : une route sans theatre est lue comme le Route Planner l'écrira) */
-    const o = (stOk && i === set.active) ? { name: st.name, points: st.points } : { name: r.name, points: r.points };
+    const o = (stOk && i === set.active) ? { name: st.name, points: st.points, missionDate: magRouteDate(st.missionDate) || r.missionDate } : { name: r.name, points: r.points, missionDate: r.missionDate };
     const route = routeFromObject(Object.assign({}, base, o));
     if (!route || !route.points.length) return;
     route.rid = typeof r.rid === 'string' ? r.rid : '';

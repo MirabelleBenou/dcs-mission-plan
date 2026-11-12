@@ -8,7 +8,7 @@ Trois textes, identiques à l'octet dans les deux dist/ :
 
 Le bloc écrit dans la fiche (group_store_block.py : relire, changer le seul groupe touché, gsPutFlight), jamais dans l'état d'un module. L'emport importé s'écrit en une fois : si le module donne un rappel loadoutFrom(type, payload) (le Flight Configurator), l'emport est écrit déjà converti ;
 sinon (le Route Planner) il est écrit brut, unité.payloadIn, avec loadout: null, et le Flight Configurator le convertit à la lecture de la fiche en ne changeant que ces champs.
-Il lit group_store_block.py (gsRead, gsPutFlight, gsNewId, gsNameKey, gsSide, gsEnsure, gsSetTheatre, gsJson, gsIsObj) radio_block.py (RADIO_POSTES, RADIO_FIRST_CHANNEL) et radio_bands_block.py (RADIO_FREE, radioFreeCount : les postes que la mission ne pré-règle pas).
+Il lit magvar_block.py (magRouteDate : la date de la mission d'une source, qui naît sur la route importée) et group_store_block.py (gsRead, gsPutFlight, gsNewId, gsNameKey, gsSide, gsEnsure, gsSetTheatre, gsJson, gsIsObj) radio_block.py (RADIO_POSTES, RADIO_FIRST_CHANNEL) et radio_bands_block.py (RADIO_FREE, radioFreeCount : les postes que la mission ne pré-règle pas).
 Le module lui donne sa langue et ses rappels par impSetup({ lang, before, onImported, toast, noteLiveries, loadoutFrom }) ; il ouvre la fenêtre par impOpen().
 
 Usage (par les builds) : from import_block import build_block, build_css, build_html
@@ -337,11 +337,18 @@ function impNoteLiveries(f, v1) {
   try { if (IMP.hooks.noteLiveries && gsIsObj(f)) IMP.hooks.noteLiveries(v1 ? f : { units: f.units }); } catch (e) { /* facultatif */ }
 }
 /* Une source : ses lignes lisibles ; la mission de HQ n'a rien de coché à l'ouverture (on y choisit parmi beaucoup), un paquet : tous les vols. */
-function impSource(kind, theatre, file, list, v1) {
+function impSource(kind, theatre, file, list, v1, date) {
   list.forEach(f => impNoteLiveries(f, v1));
   const rows = list.map(f => impFlightRow(f, v1)).filter(Boolean);
   rows.forEach(r => { r.on = kind !== 'hq'; r.chk = Object.assign({}, r.avail); });
-  return { kind: kind, theatre: theatre, file: file, rows: rows, skipped: list.length - rows.length };
+  /* missionDate : la date de la mission d'où viennent les routes (AAAA-MM-JJ lisible, sinon aucune) ; elle naît ici et suit la route importée (impRouteOf) */
+  return { kind: kind, theatre: theatre, file: file, rows: rows, skipped: list.length - rows.length, missionDate: magRouteDate(date) };
+}
+/* La route d'un groupe importé : ses points, et la date de la source quand elle en a une ; une route remplacée par un nouvel import prend la date du nouvel import, ou rien */
+function impRouteOf(row, src) {
+  const r = { points: impClone(row.points) };
+  if (src && typeof src.missionDate === 'string' && src.missionDate !== '') r.missionDate = src.missionDate;
+  return r;
 }
 function impReadHqObject() {
   const o = gsJson(IMP_KEY_HQ);
@@ -351,12 +358,12 @@ function impReadHqObject() {
 function impReadHq() {
   const o = impReadHqObject();
   if (!o) return null;
-  const src = impSource('hq', o.sourceMission.theatre, impStr(o.sourceMission.filename), o.flights, o.schema === 'dcs-mission-snapshot-v1');
+  const src = impSource('hq', o.sourceMission.theatre, impStr(o.sourceMission.filename), o.flights, o.schema === 'dcs-mission-snapshot-v1', o.sourceMission.missionDate);
   return src.rows.length ? src : null;
 }
 function impReadPackage(o, fname) {
   if (typeof o.theatre !== 'string' || o.theatre === '') return { reject: 'rej.noTheatre' };
-  const src = impSource('file', o.theatre, fname || '', Array.isArray(o.flights) ? o.flights : [], o.format === 'dcs-flight-package-v1');
+  const src = impSource('file', o.theatre, fname || '', Array.isArray(o.flights) ? o.flights : [], o.format === 'dcs-flight-package-v1', o.missionDate);
   src.what = 'pkg';
   if (!src.rows.length) return { reject: 'rej.noFlight' };
   return { src: src };
@@ -635,7 +642,7 @@ function impWrite(src, picks, side) {
     let fi = g.flights.findIndex(x => x.fcId === target.fcId);
     if (fi < 0) fi = g.flights.length;
     if (!Array.isArray(target.units)) target.units = [];
-    if (chk.route && row.points) { target.route = { points: impClone(row.points) }; delete target.routeLink; }       // une route importée est un autre plan de vol : le lien avec le Route Planner tombe, le Route Planner la reprend
+    if (chk.route && row.points) { target.route = impRouteOf(row, src); delete target.routeLink; }       // une route importée est un autre plan de vol : le lien avec le Route Planner tombe, le Route Planner la reprend
     if (row.kind === 'bg') impBriefingUnits(st, target, fi, row, chk, src);
     else if (row.managed) {
       row.units.slice(0, IMP_MAX_UNITS).forEach((iu, k) => impMergeUnit(st, target, fi, k, iu, chk, row.aircraftType !== undefined ? row : { units: row.units }, !!src && src.kind === 'hq'));
@@ -654,7 +661,7 @@ function impResult(st, n, src) {
   return { fcIds: st.ids, created: st.created.size, warnings: st.warn.slice(), noTypeUnits: st.noTypeUnits, ignored: st.ignored, picked: n, failed: st.failed, kind: src ? src.kind : '', text: parts.join(' · '), ms: (st.warn.length || st.noTypeUnits || st.ignored) ? 7000 : undefined };
 }
 /* « Ouvrir » un paquet au Flight Configurator : ses vols gérés, toutes leurs parties, dans une liste de groupes neuve ; rend { flights, warn } (les groupes au format de la fiche, emport brut) */
-function impBuildGroups(rows) {
+function impBuildGroups(rows, src) {
   const st = { created: new Set(), warn: [], noTypeUnits: 0, noTypeGroups: [], ignored: 0, counted: {} }, flights = [];
   rows.forEach(row => {
     const hits = impFindGroups(flights, row.name, row.coalition);
@@ -662,7 +669,7 @@ function impBuildGroups(rows) {
     if (!target && hits.length > 0) st.warn.push(impTf('imp.multi', row.name.trim()));
     if (!target) { target = { fcId: gsNewId(), name: row.name.trim(), coalition: gsSide(row.coalition), route: null, units: [] }; flights.push(target); st.created.add(target.fcId); }
     const fi = flights.indexOf(target);
-    if (row.chk.route && row.points) { target.route = { points: impClone(row.points) }; delete target.routeLink; }
+    if (row.chk.route && row.points) { target.route = impRouteOf(row, src); delete target.routeLink; }
     row.units.slice(0, IMP_MAX_UNITS).forEach((iu, k) => impMergeUnit(st, target, fi, k, iu, row.chk, row.aircraftType !== undefined ? row : { units: row.units }));
     if (!target.units.length) target.units.push(newUnit(IMP_TYPES.indexOf(row.types[0]) >= 0 ? row.types[0] : IMP_DEFAULT_TYPE));
   });

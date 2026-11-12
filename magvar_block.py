@@ -5,7 +5,7 @@ Lit les coefficients du World Magnetic Model (NOAA NCEI / British Geological Sur
 1985 à 2025 que DCS World embarque) dans le dossier wmm/ à la racine du dépôt, ceux de l'International Geomagnetic
 Reference Field, 12e génération (IAGA, au format geomag70 de la NOAA ; les époques 1900 à 1985, que DCS World embarque
 aussi) dans le dossier igrf/, et rend le texte JavaScript du bloc : les deux tables compactes de coefficients et les
-fonctions magDecYear, magModel, magVar et magYearSource. Comme DCS : une année entière jusqu'à 1985 → IGRF au 1er janvier
+fonctions magDecYear, magModel, magVar, magRouteDate et magYearSource. Comme DCS : une année entière jusqu'à 1985 → IGRF au 1er janvier
 de cette année ; plus tard → le WMM de l'époque précédente.
 Les deux builds insèrent ce texte tel quel : le bloc est identique à l'octet dans les deux fichiers de dist/.
 
@@ -307,10 +307,16 @@ function magVar(lat, lon, y) {
   return Math.atan2(by, bxg) / R;
 }
 
-/* L'année d'une route et sa source : { src: 'mission' | 'forced' | 'typed' | 'default', y (décimale), year (AAAA, texte),
+/* La date d'une route reçue avec elle (route.missionDate, ou missionDate à la racine d'un paquet) : la chaîne AAAA-MM-JJ que magDecYear sait lire, sinon '' (ignorée, comme absente). */
+function magRouteDate(s) {
+  return (typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s) && magDecYear(s) != null) ? s : '';
+}
+
+/* L'année d'une route et sa source : { src: 'mission' | 'route' | 'routeForced' | 'forced' | 'typed' | 'default', y (décimale), year (AAAA, texte),
    file, date } ; la mission est celle de HQ (mission_snapshot_v1), prise si son théâtre est celui de la route et sa date se lit,
-   sauf si « Forcer » est enfoncé avec une année saisie valide (quatre chiffres, de 1900 à 2099) ; sinon la saisie, sinon 1985. */
-function magYearSource(theatre, yearStr, force) {
+   sauf si « Forcer » est enfoncé avec une année saisie valide (quatre chiffres, de 1900 à 2099) ; sinon la date de la route (routeDate, reçue avec elle : paquet ou mission de HQ ;
+   undefined si l'appelant n'en a pas) si elle se lit, avec la même exception (« routeForced ») ; sinon la saisie, sinon 1985. */
+function magYearSource(theatre, yearStr, force, routeDate) {
   let mis = null;
   try {
     const o = JSON.parse(localStorage.getItem('mission_snapshot_v1'));
@@ -321,6 +327,9 @@ function magYearSource(theatre, yearStr, force) {
   } catch (e) { /* aucune mission lisible */ }
   const ys = (typeof yearStr === 'string' && /^\d{4}$/.test(yearStr) && +yearStr >= 1900 && +yearStr <= 2099) ? yearStr : '';
   if (mis && !(force === true && ys)) return { src: 'mission', y: mis.y, year: String(Math.floor(mis.y)), file: mis.file, date: mis.date };
+  const rd = mis ? '' : magRouteDate(routeDate);
+  if (rd && !(force === true && ys)) { const ry = magDecYear(rd); return { src: 'route', y: ry, year: String(Math.floor(ry)), file: '', date: rd }; }
+  if (rd) return { src: 'routeForced', y: magDecYear(ys), year: ys, file: '', date: rd };
   if (ys) return { src: mis ? 'forced' : 'typed', y: magDecYear(ys), year: ys, file: mis ? mis.file : '', date: '' };
   return { src: 'default', y: magDecYear('1985'), year: '1985', file: '', date: '' };
 }

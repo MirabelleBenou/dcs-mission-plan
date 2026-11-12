@@ -2548,6 +2548,10 @@ const I18N = {
     'dv.tag.forced': 'FORCÉE',
     'dv.tag.typed': 'SAISIE',
     'dv.tag.default': 'PAR DÉFAUT',
+    'dv.tag.route': 'PAQUET',
+    'dv.tag.routeForced': 'FORCÉE',
+    'dv.src.route': 'date reçue avec la route · {date}',
+    'dv.src.routeForced': 'la date reçue avec la route ({date}) est ignorée',
     'dv.src.mission': '{file} · {date}',
     'dv.src.forced': 'la mission chargée ({file}) est ignorée',
     'dv.src.typed': 'année tapée, aucune mission de ce théâtre',
@@ -3038,6 +3042,10 @@ const I18N = {
     'dv.tag.forced': 'OVERRIDDEN',
     'dv.tag.typed': 'ENTERED',
     'dv.tag.default': 'DEFAULT',
+    'dv.tag.route': 'PACKAGE',
+    'dv.tag.routeForced': 'OVERRIDDEN',
+    'dv.src.route': 'date received with the route · {date}',
+    'dv.src.routeForced': 'the date received with the route ({date}) is ignored',
     'dv.src.mission': '{file} · {date}',
     'dv.src.forced': 'the loaded mission ({file}) is ignored',
     'dv.src.typed': 'typed year, no mission for this theatre',
@@ -4054,10 +4062,16 @@ function magVar(lat, lon, y) {
   return Math.atan2(by, bxg) / R;
 }
 
-/* L'année d'une route et sa source : { src: 'mission' | 'forced' | 'typed' | 'default', y (décimale), year (AAAA, texte),
+/* La date d'une route reçue avec elle (route.missionDate, ou missionDate à la racine d'un paquet) : la chaîne AAAA-MM-JJ que magDecYear sait lire, sinon '' (ignorée, comme absente). */
+function magRouteDate(s) {
+  return (typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s) && magDecYear(s) != null) ? s : '';
+}
+
+/* L'année d'une route et sa source : { src: 'mission' | 'route' | 'routeForced' | 'forced' | 'typed' | 'default', y (décimale), year (AAAA, texte),
    file, date } ; la mission est celle de HQ (mission_snapshot_v1), prise si son théâtre est celui de la route et sa date se lit,
-   sauf si « Forcer » est enfoncé avec une année saisie valide (quatre chiffres, de 1900 à 2099) ; sinon la saisie, sinon 1985. */
-function magYearSource(theatre, yearStr, force) {
+   sauf si « Forcer » est enfoncé avec une année saisie valide (quatre chiffres, de 1900 à 2099) ; sinon la date de la route (routeDate, reçue avec elle : paquet ou mission de HQ ;
+   undefined si l'appelant n'en a pas) si elle se lit, avec la même exception (« routeForced ») ; sinon la saisie, sinon 1985. */
+function magYearSource(theatre, yearStr, force, routeDate) {
   let mis = null;
   try {
     const o = JSON.parse(localStorage.getItem('mission_snapshot_v1'));
@@ -4068,6 +4082,9 @@ function magYearSource(theatre, yearStr, force) {
   } catch (e) { /* aucune mission lisible */ }
   const ys = (typeof yearStr === 'string' && /^\d{4}$/.test(yearStr) && +yearStr >= 1900 && +yearStr <= 2099) ? yearStr : '';
   if (mis && !(force === true && ys)) return { src: 'mission', y: mis.y, year: String(Math.floor(mis.y)), file: mis.file, date: mis.date };
+  const rd = mis ? '' : magRouteDate(routeDate);
+  if (rd && !(force === true && ys)) { const ry = magDecYear(rd); return { src: 'route', y: ry, year: String(Math.floor(ry)), file: '', date: rd }; }
+  if (rd) return { src: 'routeForced', y: magDecYear(ys), year: ys, file: '', date: rd };
   if (ys) return { src: mis ? 'forced' : 'typed', y: magDecYear(ys), year: ys, file: mis ? mis.file : '', date: '' };
   return { src: 'default', y: magDecYear('1985'), year: '1985', file: '', date: '' };
 }
@@ -4241,7 +4258,7 @@ function dcsToLl(theatre, x, y) {
 function navVar(c) {
   if (dgN.ref !== 'mag') return null;       /* les réglages de cap sont ceux de la mission (mp_nav_v1), l'année celle de la mission (magYearSource), comme au Route Planner */
   if (dgN.mode === 'manual') { const d = parseDecl(dgN.decl); return d == null ? null : { decl: d }; }
-  const ys = dgNavYear();
+  const ys = dgNavYear(c);
   return { calc: true, y: ys.y, ys: ys };
 }
 /* La déclinaison (°, + vers l'Est) au point pt */
@@ -4765,6 +4782,12 @@ function gsPackRoute(r, th, gs) {
   (Array.isArray(r.points) ? r.points : []).filter(p => gsIsObj(p) && packValidCoord(p.lat, p.lon)).forEach((p, k) => { o[String(k + 1)] = packPoint(p, k, th, gs); });
   return o;
 }
+/* La copie de route d'un groupe : { points } et, si la route a reçu une date de sa source (AAAA-MM-JJ lisible, magRouteDate du bloc de la déclinaison), missionDate. La date suit la route : toute copie en passe par ici. */
+function gsRouteCopy(pts, date) {
+  const r = { points: pts }, d = magRouteDate(date);
+  if (d !== '') r.missionDate = d;
+  return r;
+}
 /* Seule la migration fait naître la fiche : une écriture sur une fiche absente la fait d'abord ; si la migration ne peut pas écrire, l'écriture rend faux et rien n'est écrit. */
 let GS_PACKER = null;
 function gsEnsure() {
@@ -4844,8 +4867,8 @@ function gsMigrate(packFn) {
       try { pts = packFn(r, theatre); } catch (e) { pts = null; }
       if (!gsIsObj(pts)) return;
       const link = { rid: r.rid, name: typeof r.name === 'string' ? r.name : '' };
-      if (hits.length === 1) { hits[0].route = { points: pts }; hits[0].routeLink = link; }
-      else flights.push({ fcId: gsNewId(), name: r.flight.groupName, coalition: side, route: { points: pts }, routeLink: link, units: [] });
+      if (hits.length === 1) { hits[0].route = gsRouteCopy(pts, r.missionDate); hits[0].routeLink = link; }
+      else flights.push({ fcId: gsNewId(), name: r.flight.groupName, coalition: side, route: gsRouteCopy(pts, r.missionDate), routeLink: link, units: [] });
     });
   }
   if (!gsWrite(theatre, flights)) return gsMigrateFail();
@@ -4920,7 +4943,11 @@ function rwRefTheatre(st) {
 /* Le Route Planner prend route_state_v1 pour source de la route active : ici aussi, la route active du jeu prend le nom et les points de l'état (du même théâtre) avant tout changement */
 function rwFresh(set, st) {
   const act = set.routes[set.active];
-  if (act && st && routeTheatre(act, rwRefTheatre(st)) === rwRefTheatre(st)) { act.name = typeof st.name === 'string' ? st.name : act.name; act.points = st.points; }
+  if (act && st && routeTheatre(act, rwRefTheatre(st)) === rwRefTheatre(st)) {
+    act.name = typeof st.name === 'string' ? st.name : act.name; act.points = st.points;
+    const d = magRouteDate(st.missionDate);       /* la date de la route active suit son état comme son nom et ses points ; un état sans date lisible laisse celle du jeu */
+    if (d !== '') act.missionDate = d;
+  }
   return act;
 }
 /* Les routes du jeu qui sont du théâtre th (la règle du théâtre d'une route) */
@@ -4972,10 +4999,11 @@ function rwGs(st) { return rwObj(st) && typeof st.groundSpeed === 'number' && st
 /* La copie d'un groupe qui prend la route r (ses points au format du paquet : pts) */
 function rwGroupTakes(f, r, pts) {
   const nf = rwClone(f);
-  nf.route = { points: rwClone(pts) };
+  nf.route = gsRouteCopy(rwClone(pts), r.missionDate);       /* la date de la route la suit */
   nf.routeLink = { rid: r.rid, name: r.name };
   return nf;
 }
+function rwCopyDate(f) { return gsIsObj(f.route) ? magRouteDate(f.route.missionDate) : ''; }       /* la date que la copie de route d'un groupe porte ('' : aucune) */
 function rwPackable(route, th, g) {
   if (!rwHasProj(th) || route.points.length < 2) return false;
   return g.theatre === '' || g.theatre === th;
@@ -4991,7 +5019,7 @@ function rwSyncGroups(route, th, st) {
   for (let i = 0; i < g.flights.length; i++) {
     const f = g.flights[i], l = f.routeLink;
     if (!gsIsObj(l) || l.rid !== route.rid) continue;
-    if (gsStable(f.route && f.route.points !== undefined ? f.route.points : null) === gsStable(pts) && l.name === route.name) continue;
+    if (gsStable(f.route && f.route.points !== undefined ? f.route.points : null) === gsStable(pts) && l.name === route.name && rwCopyDate(f) === magRouteDate(route.missionDate)) continue;
     if (g.theatre === '') { gsSetTheatre(th); g.theatre = th; }
     if (!gsPutFlight(rwGroupTakes(f, route, pts))) return false;
   }
@@ -5019,6 +5047,7 @@ function rwWrite(set, route, o) {
   if (isAct) {
     if (!st) st = st0 ? rwClone(st0) : rwMinimalState(set, route.theatre);
     st.name = route.name; st.points = route.points;       /* la route active : route_state_v1 fait foi pour elle au chargement du Route Planner */
+    if (magRouteDate(route.missionDate) !== '') st.missionDate = route.missionDate; else delete st.missionDate;       /* ... sa date avec elle */
   }
   const items = [{ k: RW_KEY_SET, v: JSON.stringify(set) }];
   if (st) items.push({ k: RW_KEY_STATE, v: JSON.stringify(st) });
@@ -5050,7 +5079,7 @@ function rwUpdateRoute(rid, mut, o) {
   return rwWrite(set, route, Object.assign({ oldSet: oldSet, oldState: oldState }, o || {}));
 }
 
-/* Une route neuve, au théâtre th : { name, theatre, points, fcId? } ; le groupe fcId la suit. Rend { ok, rid, route } ou { ok: false, why: 'max' | 'full' | 'link' }.
+/* Une route neuve, au théâtre th : { name, theatre, points, fcId?, missionDate? } ; le groupe fcId la suit. Rend { ok, rid, route } ou { ok: false, why: 'max' | 'full' | 'link' }.
    12 routes sur le théâtre : refus. Un jeu absent naît ; l'état du Route Planner qui n'avait pas de jeu devient la route 1 (rien ne se perd). */
 function rwCreateRoute(o) {
   let set = rwReadSet();
@@ -5059,11 +5088,16 @@ function rwCreateRoute(o) {
   const th = o.theatre;
   if (!set) {
     set = { format: RW_SET_FORMAT, active: 0, routes: [] };
-    if (st0 && st0.points.length) set.routes.push({ rid: rwNewRid(new Set()), name: typeof st0.name === 'string' ? st0.name : '', points: st0.points, flight: null, theatre: rtThOk(st0.theatre) ? st0.theatre : rwRefTheatre(null) });
+    if (st0 && st0.points.length) {
+      const r0 = { rid: rwNewRid(new Set()), name: typeof st0.name === 'string' ? st0.name : '', points: st0.points, flight: null, theatre: rtThOk(st0.theatre) ? st0.theatre : rwRefTheatre(null) };
+      if (magRouteDate(st0.missionDate) !== '') r0.missionDate = st0.missionDate;       /* l'état qui devient la route 1 garde sa date */
+      set.routes.push(r0);
+    }
   } else rwFresh(set, st0);
   if (rwRoutesOf(set, th, st0).length >= RW_MAX_ROUTES) return { ok: false, why: 'max' };
   const taken = new Set(set.routes.map(r => r.rid));
   const route = { rid: rwNewRid(taken), name: String(o.name || '').slice(0, 60), points: (o.points || []).slice(0, RW_MAX_POINTS), flight: null, theatre: th };
+  if (magRouteDate(o.missionDate) !== '') route.missionDate = o.missionDate;       /* o.missionDate : la date d'une route dont celle-ci est la copie (route importée d'un groupe, route d'un fichier) ; une route tracée de rien n'en a pas */
   rwAssignPids(route.points);
   set.routes.push(route);
   if (set.routes.length === 1) set.active = 0;
@@ -5332,11 +5366,18 @@ function impNoteLiveries(f, v1) {
   try { if (IMP.hooks.noteLiveries && gsIsObj(f)) IMP.hooks.noteLiveries(v1 ? f : { units: f.units }); } catch (e) { /* facultatif */ }
 }
 /* Une source : ses lignes lisibles ; la mission de HQ n'a rien de coché à l'ouverture (on y choisit parmi beaucoup), un paquet : tous les vols. */
-function impSource(kind, theatre, file, list, v1) {
+function impSource(kind, theatre, file, list, v1, date) {
   list.forEach(f => impNoteLiveries(f, v1));
   const rows = list.map(f => impFlightRow(f, v1)).filter(Boolean);
   rows.forEach(r => { r.on = kind !== 'hq'; r.chk = Object.assign({}, r.avail); });
-  return { kind: kind, theatre: theatre, file: file, rows: rows, skipped: list.length - rows.length };
+  /* missionDate : la date de la mission d'où viennent les routes (AAAA-MM-JJ lisible, sinon aucune) ; elle naît ici et suit la route importée (impRouteOf) */
+  return { kind: kind, theatre: theatre, file: file, rows: rows, skipped: list.length - rows.length, missionDate: magRouteDate(date) };
+}
+/* La route d'un groupe importé : ses points, et la date de la source quand elle en a une ; une route remplacée par un nouvel import prend la date du nouvel import, ou rien */
+function impRouteOf(row, src) {
+  const r = { points: impClone(row.points) };
+  if (src && typeof src.missionDate === 'string' && src.missionDate !== '') r.missionDate = src.missionDate;
+  return r;
 }
 function impReadHqObject() {
   const o = gsJson(IMP_KEY_HQ);
@@ -5346,12 +5387,12 @@ function impReadHqObject() {
 function impReadHq() {
   const o = impReadHqObject();
   if (!o) return null;
-  const src = impSource('hq', o.sourceMission.theatre, impStr(o.sourceMission.filename), o.flights, o.schema === 'dcs-mission-snapshot-v1');
+  const src = impSource('hq', o.sourceMission.theatre, impStr(o.sourceMission.filename), o.flights, o.schema === 'dcs-mission-snapshot-v1', o.sourceMission.missionDate);
   return src.rows.length ? src : null;
 }
 function impReadPackage(o, fname) {
   if (typeof o.theatre !== 'string' || o.theatre === '') return { reject: 'rej.noTheatre' };
-  const src = impSource('file', o.theatre, fname || '', Array.isArray(o.flights) ? o.flights : [], o.format === 'dcs-flight-package-v1');
+  const src = impSource('file', o.theatre, fname || '', Array.isArray(o.flights) ? o.flights : [], o.format === 'dcs-flight-package-v1', o.missionDate);
   src.what = 'pkg';
   if (!src.rows.length) return { reject: 'rej.noFlight' };
   return { src: src };
@@ -5630,7 +5671,7 @@ function impWrite(src, picks, side) {
     let fi = g.flights.findIndex(x => x.fcId === target.fcId);
     if (fi < 0) fi = g.flights.length;
     if (!Array.isArray(target.units)) target.units = [];
-    if (chk.route && row.points) { target.route = { points: impClone(row.points) }; delete target.routeLink; }       // une route importée est un autre plan de vol : le lien avec le Route Planner tombe, le Route Planner la reprend
+    if (chk.route && row.points) { target.route = impRouteOf(row, src); delete target.routeLink; }       // une route importée est un autre plan de vol : le lien avec le Route Planner tombe, le Route Planner la reprend
     if (row.kind === 'bg') impBriefingUnits(st, target, fi, row, chk, src);
     else if (row.managed) {
       row.units.slice(0, IMP_MAX_UNITS).forEach((iu, k) => impMergeUnit(st, target, fi, k, iu, chk, row.aircraftType !== undefined ? row : { units: row.units }, !!src && src.kind === 'hq'));
@@ -5649,7 +5690,7 @@ function impResult(st, n, src) {
   return { fcIds: st.ids, created: st.created.size, warnings: st.warn.slice(), noTypeUnits: st.noTypeUnits, ignored: st.ignored, picked: n, failed: st.failed, kind: src ? src.kind : '', text: parts.join(' · '), ms: (st.warn.length || st.noTypeUnits || st.ignored) ? 7000 : undefined };
 }
 /* « Ouvrir » un paquet au Flight Configurator : ses vols gérés, toutes leurs parties, dans une liste de groupes neuve ; rend { flights, warn } (les groupes au format de la fiche, emport brut) */
-function impBuildGroups(rows) {
+function impBuildGroups(rows, src) {
   const st = { created: new Set(), warn: [], noTypeUnits: 0, noTypeGroups: [], ignored: 0, counted: {} }, flights = [];
   rows.forEach(row => {
     const hits = impFindGroups(flights, row.name, row.coalition);
@@ -5657,7 +5698,7 @@ function impBuildGroups(rows) {
     if (!target && hits.length > 0) st.warn.push(impTf('imp.multi', row.name.trim()));
     if (!target) { target = { fcId: gsNewId(), name: row.name.trim(), coalition: gsSide(row.coalition), route: null, units: [] }; flights.push(target); st.created.add(target.fcId); }
     const fi = flights.indexOf(target);
-    if (row.chk.route && row.points) { target.route = { points: impClone(row.points) }; delete target.routeLink; }
+    if (row.chk.route && row.points) { target.route = impRouteOf(row, src); delete target.routeLink; }
     row.units.slice(0, IMP_MAX_UNITS).forEach((iu, k) => impMergeUnit(st, target, fi, k, iu, row.chk, row.aircraftType !== undefined ? row : { units: row.units }));
     if (!target.units.length) target.units.push(newUnit(IMP_TYPES.indexOf(row.types[0]) >= 0 ? row.types[0] : IMP_DEFAULT_TYPE));
   });
@@ -6266,8 +6307,17 @@ function dgFollowNav() {
   const k = dgReadNavKey();
   if (k && !dgNavSame(dgN, k)) dgNavSet(k, true);
 }
-/* L'année des caps : celle de la mission (magYearSource, comme au Route Planner), sinon la saisie, sinon 1985 */
-function dgNavYear() { return magYearSource(dgTheatre(), dgN.year, dgN.force); }
+/* L'année des caps : celle de la mission (magYearSource, comme au Route Planner), sinon la date reçue avec la route de la carte c (paquet, mission de HQ), sinon la saisie, sinon 1985 */
+function dgNavYear(c) { return magYearSource(dgTheatre(), dgN.year, dgN.force, dgRouteDate(c)); }
+/* La date reçue avec la route que suit la carte : celle de la route du jeu (liée, du théâtre commun) ; sans route du jeu, celle de la copie de route du groupe (importée, pas encore reprise par le Route Planner) ; '' sans date lisible */
+function dgRouteDate(c) {
+  if (!c) return '';
+  const info = dgRouteInfo(c);
+  if (info.state === 'linked') return magRouteDate(info.route.missionDate);
+  if (info.state === 'other') return '';
+  const f = c.gsId ? dgFlightOf(c) : null;
+  return f && gsIsObj(f.route) ? magRouteDate(f.route.missionDate) : '';
+}
 
 /* ----- La route d'une carte ----- */
 function dgRidOf(c) {
@@ -6500,7 +6550,8 @@ function dgCreateFromLines(c) {
   const gp = c.gsId ? dgGroupPoints(c) : [];       /* les points du groupe : leur référence AGL ou MSL passe à la route */
   c.nav.forEach((l, i) => { if (legs[i].pt && pts.length < RW_MAX_POINTS) { const p = dgPointFromLine(l, legs[i].pt, pts.length, null), g = gp[pts.length]; if (g && g.altRef === 'MSL') p.altRef = 'MSL'; pts.push(p); idx.push(i); } });
   if (!pts.length) return false;
-  const r = rwCreateRoute({ name: dgNewRouteName(c), theatre: dgCommonTheatre(), points: pts, fcId: c.gsId || '' });
+  const gf = c.gsId ? dgFlightOf(c) : null;
+  const r = rwCreateRoute({ name: dgNewRouteName(c), theatre: dgCommonTheatre(), points: pts, fcId: c.gsId || '', missionDate: gp.length && gf && gsIsObj(gf.route) ? gf.route.missionDate : undefined });       /* la route née des points importés d'un groupe garde la date reçue avec eux ; tracée de rien : aucune */
   if (!r.ok) { dgRouteFail(r.why); return false; }
   idx.forEach((i, k) => { c.nav[i].pid = r.route.points[k].pid; });
   if (!c.gsId) c.rid = r.rid;
@@ -6808,7 +6859,7 @@ function dgEnterRoute(r) {
   const rs = dgRouteSet();
   if (r.rid && rs.set && rs.set.routes.some(x => x.rid === r.rid && routeTheatre(x, rwRefTheatre(rs.st)) === dgCommonTheatre())) return { ok: true, rid: r.rid };
   const pts = r.points.slice(0, RW_MAX_POINTS).map(p => { const o = { name: p.name, lat: dgRound7(p.lat), lon: dgRound7(p.lon), alt: p.alt, altRef: p.altRef }; if (rwPidValid(p.pid)) o.pid = p.pid; return o; });
-  const x = rwCreateRoute({ name: hasText(r.name) ? r.name.trim().slice(0, 60) : '', theatre: dgCommonTheatre(), points: pts });
+  const x = rwCreateRoute({ name: hasText(r.name) ? r.name.trim().slice(0, 60) : '', theatre: dgCommonTheatre(), points: pts, missionDate: r.missionDate });
   return x.ok ? { ok: true, rid: x.rid } : { ok: false, why: x.why };
 }
 /* Remplir la nav d'une carte de la route r quand le jeu de routes est plein : la copie du Route Planner, en lignes propres (comme avant) */
@@ -8491,7 +8542,7 @@ function dgFill(key, file, date) {
   return esc(t(key)).split('{date}').join(esc(date)).split('{file}').join('<span class="dv-file">' + esc(file) + '</span>');
 }
 function navVarHelp(c) {
-  const ys = dgNavYear();
+  const ys = dgNavYear(c);
   return '<b>' + esc(t('dv.tag.' + ys.src)) + '</b> ' + dgFill('dv.src.' + ys.src, ys.file, ys.date) + '<br>' + esc(t('dv.src.model', { e: magModel(ys.y) }));
 }
 function fSelectD(labelKey, attr, value, options) {
@@ -8519,7 +8570,7 @@ function navSettingsHtml(c) {
       '<div class="ui-note">' + esc(t('nav.decl.help')) + '</div>';
   }
   if (mag && calc) {
-    const ys = dgNavYear(), lock = ys.src === 'mission' && !dgN.force, forceOk = ys.src === 'mission' || ys.src === 'forced';
+    const ys = dgNavYear(c), lock = (ys.src === 'mission' || ys.src === 'route') && !dgN.force, forceOk = ys.src === 'mission' || ys.src === 'forced' || ys.src === 'route' || ys.src === 'routeForced';
     h += '<div class="ed-field-row"><div class="ed-field"><label>' + esc(t('f.nav.year')) + '</label><input type="text" data-navset="year" value="' + esc(lock ? ys.year : dgN.year) + '" inputmode="numeric" maxlength="4" autocomplete="off" spellcheck="false" placeholder="' + esc(t('ph.navDisplay.year')) + '"' + (lock ? ' disabled' : '') + '></div>' +
       (forceOk ? '<div class="ed-field"><label>&nbsp;</label><button type="button" class="ed-btn-add sm' + (dgN.force ? ' on' : '') + '" data-navforce="1" aria-pressed="' + (dgN.force ? 'true' : 'false') + '">' + esc(t('dv.force')) + '</button></div>' : '<div class="ed-field"></div>') + '</div>' +
       '<div class="ui-note" data-nav-vhelp>' + navVarHelp(c) + '</div>';
@@ -9323,7 +9374,8 @@ function routeFromObject(o) {
       year: (typeof nd.year === 'string' && /^\d{1,4}$/.test(nd.year)) ? nd.year : '', force: nd.force === true
     },
     points: points.slice(0, LIMITS.nav),
-    refs: refs.slice(0, LIMITS.refs)
+    refs: refs.slice(0, LIMITS.refs),
+    missionDate: magRouteDate(o.missionDate)       /* la date reçue avec la route ('' : aucune) */
   };
 }
 
@@ -9402,7 +9454,7 @@ function biSetFromFile(o) {
   const shared = Object.assign({}, o, { format: ROUTE_FORMAT, theatre: C });
   const all = list.filter(r => routeTheatre(r, ref) === C).map(r => {
     const f = r.flight;
-    return { src: r, route: routeFromObject(Object.assign({}, shared, { name: r.name, points: r.points })),
+    return { src: r, route: routeFromObject(Object.assign({}, shared, { name: r.name, points: r.points, missionDate: r.missionDate })),
       flight: (isPlainObject(f) && typeof f.groupName === 'string') ? f : null };
   });
   const routes = all.filter(e => e.route && e.route.points.length);
@@ -9461,7 +9513,7 @@ function biReadRouteSet() {
   const out = [];
   set.routes.forEach((r, i) => {
     if (!isPlainObject(r) || !Array.isArray(r.points) || routeTheatre(r, ref) !== C) return;       /* seulement les routes de C (bloc partagé : une route sans theatre est lue comme le Route Planner l'écrira) */
-    const o = (stOk && i === set.active) ? { name: st.name, points: st.points } : { name: r.name, points: r.points };
+    const o = (stOk && i === set.active) ? { name: st.name, points: st.points, missionDate: magRouteDate(st.missionDate) || r.missionDate } : { name: r.name, points: r.points, missionDate: r.missionDate };
     const route = routeFromObject(Object.assign({}, base, o));
     if (!route || !route.points.length) return;
     route.rid = typeof r.rid === 'string' ? r.rid : '';

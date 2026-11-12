@@ -2405,6 +2405,10 @@ const I18N = {
     'dv.tag.forced': 'FORCÉE',
     'dv.tag.typed': 'SAISIE',
     'dv.tag.default': 'PAR DÉFAUT',
+    'dv.tag.route': 'PAQUET',
+    'dv.tag.routeForced': 'FORCÉE',
+    'dv.src.route': 'date reçue avec la route · {date}',
+    'dv.src.routeForced': 'la date reçue avec la route ({date}) est ignorée',
     'dv.src.mission': '{file} · {date}',
     'dv.src.forced': 'la mission chargée ({file}) est ignorée',
     'dv.src.typed': 'année tapée, aucune mission de ce théâtre',
@@ -2921,6 +2925,10 @@ const I18N = {
     'dv.tag.forced': 'OVERRIDDEN',
     'dv.tag.typed': 'ENTERED',
     'dv.tag.default': 'DEFAULT',
+    'dv.tag.route': 'PACKAGE',
+    'dv.tag.routeForced': 'OVERRIDDEN',
+    'dv.src.route': 'date received with the route · {date}',
+    'dv.src.routeForced': 'the date received with the route ({date}) is ignored',
     'dv.src.mission': '{file} · {date}',
     'dv.src.forced': 'the loaded mission ({file}) is ignored',
     'dv.src.typed': 'typed year, no mission for this theatre',
@@ -3432,6 +3440,8 @@ function parseRoute(src) {
     points: [],
     refs: []
   };
+  const md = magRouteDate(src.missionDate);       /* la date de la mission d'où vient la route (facultative, AAAA-MM-JJ lisible, sinon ignorée) */
+  if (md !== '') route.missionDate = md;
   let droppedRefs = 0;
   const rp = readPoints(src.points);
   route.points = rp.points;
@@ -3492,7 +3502,7 @@ function loadState() {
 
 /* Le fichier exporté : l'état sans « ui » */
 function exportObject() {
-  return {
+  const o = {
     format: FORMAT_ID, name: S.name, theatre: S.theatre,
     units: { distance: S.units.distance, altitude: S.units.altitude },
     navDisplay: { ref: S.navDisplay.ref, decl: S.navDisplay.decl, mode: S.navDisplay.mode, year: S.navDisplay.year, force: S.navDisplay.force },
@@ -3500,6 +3510,9 @@ function exportObject() {
     points: S.points.map(exportPoint),
     refs: S.refs.map(p => ({ name: p.name, lat: p.lat, lon: p.lon, alt: p.alt, altRef: p.altRef, pid: p.pid }))
   };
+  const md = activeRouteDate();       /* la date reçue avec la route suit son fichier (facultative : sans elle, le fichier est celui d'avant) */
+  if (md !== '') o.missionDate = md;
+  return o;
 }
 
 /* Un point du fichier : sa source de mission (p.dcs) est gardée */
@@ -3594,7 +3607,16 @@ function syncActive() {
   if (r && S) { r.name = S.name; r.points = S.points; }
   ensureRids();
   ensurePids();
+  ensureDates();
 }
+/* La date reçue avec une route (route.missionDate) : la route la porte, partout où elle vit. Une route sans point n'est plus une route importée : elle n'a plus de date ; une date illisible s'en va.
+   S (route_state_v1) en est le miroir pour la route active : c'est la route de RSET qui fait foi. */
+function ensureDates() {
+  RSET.routes.concat(RSET.hidden || []).forEach(r => { if (r.missionDate !== undefined && (!r.points.length || magRouteDate(r.missionDate) === '')) delete r.missionDate; });
+  const a = RSET.routes[RSET.active];
+  if (S) { if (a && a.missionDate !== undefined) S.missionDate = a.missionDate; else delete S.missionDate; }
+}
+function activeRouteDate() { const a = RSET.routes[RSET.active]; return a ? magRouteDate(a.missionDate) : ''; }
 
 /* Toute route de l'ensemble porte un rid valide et distinct (filet : une route entrée par un chemin qui n'en a pas tiré reçoit le sien) */
 function ensureRids() {
@@ -3605,8 +3627,8 @@ function ensureRids() {
 
 function setObject() {
   syncActive();
-  const vis = RSET.routes.map(r => ({ rid: r.rid, name: r.name, points: r.points, flight: r.flight, theatre: S.theatre }));
-  const hid = (RSET.hidden || []).map(r => ({ rid: r.rid, name: r.name, points: r.points, flight: r.flight, theatre: r.theatre }));
+  const vis = RSET.routes.map(r => ({ rid: r.rid, name: r.name, points: r.points, flight: r.flight, theatre: S.theatre, missionDate: r.missionDate }));       /* missionDate absent : la clé n'est pas écrite */
+  const hid = (RSET.hidden || []).map(r => ({ rid: r.rid, name: r.name, points: r.points, flight: r.flight, theatre: r.theatre, missionDate: r.missionDate }));
   return { format: SET_FORMAT, active: RSET.active, routes: vis.concat(hid) };
 }
 
@@ -3640,7 +3662,10 @@ function readRoutes(list, dflt) {
     dropped += rp.dropped;
     let rid = null;
     if (ridValid(r.rid) && !seen.has(r.rid)) { rid = r.rid; seen.add(rid); }
-    out.push({ rid: rid, name: str(r.name).slice(0, 60), points: rp.points, flight: readFlight(r.flight), theatre: th });
+    const o = { rid: rid, name: str(r.name).slice(0, 60), points: rp.points, flight: readFlight(r.flight), theatre: th };
+    const md = magRouteDate(r.missionDate);
+    if (md !== '' && o.points.length) o.missionDate = md;
+    out.push(o);
   });
   out.forEach(r => { if (!r.rid) { r.rid = newRid(seen); seen.add(r.rid); drawn = true; } });
   return out.length ? { routes: out, dropped: dropped, droppedRoutes: droppedRoutes, drawn: drawn } : null;
@@ -3662,6 +3687,7 @@ function loadSet(stateOk) {
   } catch (e) { set = null; }
   if (!set) {
     RSET = { active: 0, routes: [{ rid: newRid(new Set()), name: S.name, points: S.points, flight: null, theatre: S.theatre }], hidden: [] };
+    if (magRouteDate(S.missionDate) !== '') RSET.routes[0].missionDate = S.missionDate;       /* la route de route_state_v1 devenue la route 1 garde sa date */
     try { localStorage.setItem(KEY_SET, JSON.stringify(setObject())); } catch (e) { /* le stockage manque : le rid se tire à chaque ouverture */ }
     return;
   }
@@ -3669,7 +3695,7 @@ function loadSet(stateOk) {
   const flat = set.routes, act = flat[set.active], mpTh = mpTheatreRead(), ref = stateOk ? S.theatre : (mpTh || 'Caucasus');
   flat.forEach(r => { if (THEATRE_IDS.indexOf(r.theatre) === -1) { r.theatre = routeTheatre(r, ref); drawn = true; } });
   if (!stateOk) S.theatre = mpTh || act.theatre;
-  if (stateOk) { act.name = S.name; act.points = S.points; }
+  if (stateOk) { act.name = S.name; act.points = S.points; if (magRouteDate(S.missionDate) !== '') act.missionDate = S.missionDate; }       /* route_state_v1 fait foi pour la route active : son nom, ses points, sa date (un état sans date lisible laisse celle du jeu) */
   const vis = flat.filter(r => r.theatre === S.theatre);
   RSET = { active: vis.indexOf(act), routes: vis, hidden: flat.filter(r => r.theatre !== S.theatre) };
   if (RSET.active === -1) {       /* la route active de route_state_v1 n'est pas du théâtre courant : la première route du théâtre, sinon une route vide neuve */
@@ -3679,6 +3705,7 @@ function loadSet(stateOk) {
   } else if (!stateOk) { S.name = act.name; S.points = act.points; }
   /* mp_theatre_v1 valide l'emporte sur le théâtre de route_state_v1 : le Route Planner s'ouvre sur lui par la bascule d'un changement de théâtre en direct (rsetSwitch : routes des autres théâtres masquées, route active = la première, sinon une route vide neuve) ; route_state_v1 est réécrit pour cette route par persistState */
   if (stateOk && mpTh && mpTh !== S.theatre) { rsetSwitch(mpTh); S.theatre = mpTh; drawn = true; }
+  ensureDates();       /* la date de la route active et son miroir dans S */
   /* un rid tiré, un théâtre posé : écrits aussitôt (les autres modules voient le même identifiant que le Route Planner) */
   if (drawn) { try { localStorage.setItem(KEY_SET, JSON.stringify(setObject())); } catch (e) { /* idem */ } }
 }
@@ -3856,8 +3883,8 @@ function setTheatre(id) {
 /* La déclinaison : calculée (le modèle de DCS, à l'année de la route) ou saisie ; seul le cap magnétique en a besoin */
 function navIsMag() { return S.navDisplay.ref === 'mag' && (S.navDisplay.mode === 'calc' || parseDecl(S.navDisplay.decl) != null); }
 function navIsCalc() { return S.navDisplay.ref === 'mag' && S.navDisplay.mode === 'calc'; }
-/* L'année de la route et sa source : la mission de HQ (même théâtre), la saisie, ou 1985 */
-function navYear() { return magYearSource(S.theatre, S.navDisplay.year, S.navDisplay.force); }
+/* L'année de la route et sa source : la mission de HQ (même théâtre), la date reçue avec la route active (paquet, mission de HQ), la saisie, ou 1985 */
+function navYear() { return magYearSource(S.theatre, S.navDisplay.year, S.navDisplay.force, activeRouteDate()); }
 /* La déclinaison (°, + vers l'Est) au point p, ou null en cap vrai ; ys : l'année déjà lue, sinon elle se lit ici */
 function declAt(p, ys) {
   if (S.navDisplay.ref !== 'mag') return null;
@@ -7263,9 +7290,9 @@ function syncDecl() {
   $('dv-src').hidden = !calc;
   $('decl-warn').hidden = calc || !(mag && parseDecl(S.navDisplay.decl) == null);
   if (!mag || !calc) return;
-  const ys = navYear(), mis = ys.src === 'mission' || ys.src === 'forced';
+  const ys = navYear(), mis = ys.src === 'mission' || ys.src === 'forced' || ys.src === 'route' || ys.src === 'routeForced';       /* « Forcer » : une mission de HQ, ou une date reçue avec la route */
   const yin = $('dv-year'), fb = $('dv-force');
-  const lock = ys.src === 'mission' && !S.navDisplay.force;     /* la mission fait foi : le champ montre son année, sans la laisser modifier */
+  const lock = (ys.src === 'mission' || ys.src === 'route') && !S.navDisplay.force;     /* la mission (ou la date de la route) fait foi : le champ montre son année, sans la laisser modifier */
   yin.disabled = lock;
   if (document.activeElement !== yin) yin.value = lock ? ys.year : S.navDisplay.year;
   fb.parentNode.style.visibility = mis ? '' : 'hidden';
@@ -7903,7 +7930,7 @@ function fallbackDownload(blob, fname, toastMsg) {
 function downloadJson(sel, name) {
   const obj = exportObject();
   if (sel) {
-    if (!sel.route) { obj.points = []; obj.refs = []; }
+    if (!sel.route) { obj.points = []; obj.refs = []; delete obj.missionDate; }
     const chosen = CF_LAYERS.filter(l => sel.layers.indexOf(l.id) !== -1);
     if (chosen.length) obj.layers = chosen;
   }
@@ -7940,6 +7967,8 @@ function setRoute(route, noKey) {
   S.legBoxes = route.legBoxes;
   S.points = route.points;
   S.refs = route.refs;
+  const ar = RSET.routes[RSET.active];       /* la date de la route lue (fichier) passe à la route active ; sans date : aucune (une route remplacée ne garde pas celle de la précédente) */
+  if (ar) { if (magRouteDate(route.missionDate) !== '' && route.points.length) ar.missionDate = route.missionDate; else delete ar.missionDate; }
   sel = -1; selR = -1;
   resolveLayer();
   persistState();
@@ -8189,6 +8218,7 @@ function duplicateRoute() {
     flight: null,
     theatre: S.theatre
   });
+  if (magRouteDate(src.missionDate) !== '') RSET.routes[RSET.routes.length - 1].missionDate = src.missionDate;       /* une copie de route garde sa date */
   activateRoute(RSET.routes.length - 1);
 }
 
@@ -8199,7 +8229,7 @@ async function deleteRoute() {
   if (r.points.length && !(await askConfirm({ title: t('confirm.routeDel.title', { name: r.name !== '' ? r.name : t('rs.unnamed') }), text: t('confirm.routeDel.text'), verb: t('ui.verb.delete'), danger: true }))) return;
   if (RSET.routes[RSET.active] !== r) return;       /* le jeu a changé pendant la question */
   if (RSET.routes.length === 1) {
-    r.rid = newRid(); r.name = ''; r.points = []; r.flight = null;      /* la dernière route vidée est une route neuve : un rid neuf */
+    r.rid = newRid(); r.name = ''; r.points = []; r.flight = null; delete r.missionDate;      /* la dernière route vidée est une route neuve : un rid neuf, aucune date */
     S.name = ''; S.points = [];
     sel = -1; selR = -1;
     persistState();
@@ -8316,6 +8346,7 @@ function openRouteSet(parsed) {
     route.theatre = C;
     route.name = a.name;
     route.points = a.points;
+    if (a.missionDate !== undefined) route.missionDate = a.missionDate; else delete route.missionDate;       /* la date de la route active du jeu ; celle des autres routes est dans leur objet */
     setRoute(route);
     msg = rr.dropped ? t('toast.openedDropped', { n: rr.dropped }) : t('toast.opened');
     if (rr.droppedRoutes) msg += ' · ' + t('toast.routesMax').replace(/^\u26a0\s*/, '');
@@ -8334,10 +8365,10 @@ function setFileObject(sel) {
   const obj = {
     format: SET_FORMAT, theatre: S.theatre, units: ex.units, navDisplay: ex.navDisplay, groundSpeed: S.groundSpeed, legBoxes: S.legBoxes,
     refs: ex.refs, active: RSET.active,
-    routes: RSET.routes.concat(RSET.hidden || []).map(r => ({ rid: r.rid, name: r.name, theatre: r.theatre, points: r.points.map(exportPoint), flight: r.flight ? makeLink(r.flight, r.flight.source) : null }))       /* toutes les routes de tous les théâtres, masquées comprises, chacune avec son theatre */
+    routes: RSET.routes.concat(RSET.hidden || []).map(r => ({ rid: r.rid, name: r.name, theatre: r.theatre, points: r.points.map(exportPoint), flight: r.flight ? makeLink(r.flight, r.flight.source) : null, missionDate: magRouteDate(r.missionDate) || undefined }))       /* toutes les routes de tous les théâtres, masquées comprises, chacune avec son theatre */
   };
   if (sel) {
-    if (!sel.route) { obj.routes = obj.routes.map(r => ({ rid: r.rid, name: r.name, theatre: r.theatre, points: [], flight: r.flight })); obj.refs = []; }
+    if (!sel.route) { obj.routes = obj.routes.map(r => ({ rid: r.rid, name: r.name, theatre: r.theatre, points: [], flight: r.flight })); obj.refs = []; }       /* sans route : ni points ni date */
     const chosen = CF_LAYERS.filter(l => sel.layers.indexOf(l.id) !== -1);
     if (chosen.length) obj.layers = chosen;
   }
@@ -8389,7 +8420,9 @@ function routeFromFlight(fl, theatre, source) {
     pts.push(p);
   });
   const nodcs = pts.filter(p => !p.dcs).length;      /* sources de mission retirées (plus de 20 Kio) */
-  return { route: { rid: newRid(), name: cut60(fl.groupName), points: pts, flight: makeLink(fl, source), theatre: theatre }, trunc: trunc, nodcs: nodcs };
+  const route = { rid: newRid(), name: cut60(fl.groupName), points: pts, flight: makeLink(fl, source), theatre: theatre };
+  if (pts.length && magRouteDate(fl.missionDate) !== '') route.missionDate = fl.missionDate;       /* la route d'un groupe importé garde la date que la copie du groupe portait */
+  return { route: route, trunc: trunc, nodcs: nodcs };
 }
 
 /* Le théâtre change comme aujourd'hui (setTheatre : références, calques et réglages partagés suivent) ; les routes de l'ancien théâtre se masquent et sont gardées (rien n'est supprimé) */
@@ -8477,7 +8510,7 @@ function groupsOfRoute(rid) {
 /* Le groupe f qui prend la route r (ses points sont pts) / qui n'en a plus : des copies, f n'est pas touché */
 function groupTakes(f, r, pts) {
   const nf = JSON.parse(JSON.stringify(f));
-  nf.route = { points: JSON.parse(JSON.stringify(pts)) };
+  nf.route = gsRouteCopy(JSON.parse(JSON.stringify(pts)), r.missionDate);       /* la date de la route suit sa copie */
   nf.routeLink = { rid: r.rid, name: r.name };
   return nf;
 }
@@ -8503,7 +8536,7 @@ function gsSyncRoutes() {
     const r = RSET.routes.filter(x => x.rid === l.rid)[0];
     if (!r || r.points.length < 2) return;       /* une route supprimée ou réduite à moins de deux points : le groupe garde sa dernière copie, son lien et son nom (R469) */
     const pts = packRoutePoints(r);
-    if (gsStable(f.route && f.route.points !== undefined ? f.route.points : null) === gsStable(pts) && l.name === r.name) return;
+    if (gsStable(f.route && f.route.points !== undefined ? f.route.points : null) === gsStable(pts) && l.name === r.name && (gsIsObj(f.route) ? magRouteDate(f.route.missionDate) : '') === magRouteDate(r.missionDate)) return;
     if (g.theatre === '') { gsSetTheatre(th); g.theatre = th; }       /* une fiche sans théâtre prend celui de la route qu'on lui recopie */
     gsPutFlight(groupTakes(f, r, pts));
   });
@@ -8540,7 +8573,7 @@ function gsAdoptRoutes(opts) {
       if (count >= MAX_ROUTES) { out.skipped++; return; }
       const cur0 = gsRead(), cur = cur0 ? cur0.flights.filter(x => x.fcId === f.fcId)[0] : null;
       if (!cur || !carries(cur) || done.has(cur.fcId)) return;       /* relu à l'instant : repris ailleurs, ou disparu, ou plus de route */
-      const r = routeFromFlight({ groupName: cur.name, coalition: gsSide(cur.coalition), points: cur.route.points }, th, null);
+      const r = routeFromFlight({ groupName: cur.name, coalition: gsSide(cur.coalition), points: cur.route.points, missionDate: cur.route.missionDate }, th, null);
       done.add(cur.fcId);
       if (!gsPutFlight(groupTakes(cur, r.route, packRoutePoints(r.route)))) return;       /* le groupe qui suit la route s'écrit d'abord, de la copie relue à l'instant ; pas d'écriture, pas de route */
       out.nodcs += r.nodcs;
@@ -8658,7 +8691,7 @@ function gaApply() {
     else if (!want && follows) gsPutFlight(groupDrops(f));
   });
   const nm = GA.name.trim().slice(0, 60);
-  if (nm !== '') gsPutFlight({ fcId: gsNewId(), name: nm, coalition: GA.side, route: { points: JSON.parse(JSON.stringify(pts)) }, routeLink: { rid: r.rid, name: r.name }, units: [] });
+  if (nm !== '') gsPutFlight({ fcId: gsNewId(), name: nm, coalition: GA.side, route: gsRouteCopy(JSON.parse(JSON.stringify(pts)), r.missionDate), routeLink: { rid: r.rid, name: r.name }, units: [] });
   rtHide('ga-modal');
   routesRender();
   if (!GS_FAILED) showToast(t('toast.groupsDone'), { type: 'ok' });      /* une écriture qui a échoué a déjà montré son toast : pas de succès par-dessus */

@@ -4475,10 +4475,21 @@ function pkBuildExport(groupIds) {{
     createdAt:     new Date().toISOString(),
     createdBy:     'HQ',
     theatre:       snap.sourceMission.theatre,
-    sourceMission: {{ filename: snap.sourceMission.filename, fingerprint: snap.sourceMission.fingerprint }},
-    flights:       flights,
   }};
+  // missionDate (facultatif, racine) : la date de la mission d'où viennent les routes (AAAA-MM-JJ) ; illisible, elle n'est pas écrite
+  const md = pkMissionDate(snap.sourceMission.missionDate);
+  if (md !== '') pkg.missionDate = md;
+  pkg.sourceMission = {{ filename: snap.sourceMission.filename, fingerprint: snap.sourceMission.fingerprint }};
+  pkg.flights = flights;
   return {{ pkg, omit }};
+}}
+// Une date de mission lisible : la chaîne AAAA-MM-JJ d'un jour du calendrier (la règle de magDecYear des autres outils), sinon '' (ignorée, comme absente)
+function pkMissionDate(s) {{
+  const m = typeof s === 'string' ? /^(\\d{{4}})-(\\d{{2}})-(\\d{{2}})$/.exec(s) : null;
+  if (!m) return '';
+  const y = +m[1], mo = +m[2], da = +m[3], leap = (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+  const dm = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  return mo >= 1 && mo <= 12 && da >= 1 && da <= dm[mo - 1] ? s : '';
 }}
 
 // La fenêtre « Exporter le paquet » : le nom par défaut est celui du Route Planner, paquet_<groupe>[_+n]_<horodatage>
@@ -7040,6 +7051,22 @@ grep_present('pointsPos',           'pointsPos présent (P4.2)')
 grep_present('payloadPos',          'payloadPos présent (P4.2)')
 grep_present("replacements.route",  'replacements.route géré (P4.3)')
 grep_present("repl.payloads",       'replacements.payloads géré (P4.3)')
+
+# Appliquer un paquet ne change jamais la date ni l'heure de départ de la mission (lot mp-paquet-date-mission) : aucune écriture de `date` ni de `start_time`
+# dans le chemin d'application (buildPatchesFromPackage, pkPlanFlight, pkApply) ; le contrôle arrête le build s'il en trouve une, ou s'il ne trouve pas l'une des trois fonctions
+_APPLY_PATH = ''
+for _fn in ('function buildPatchesFromPackage(', 'function pkPlanFlight(', 'async function pkApply('):
+    _a = src.find(_fn)
+    if _a < 0:
+        raise SystemExit("[ERREUR] contrôle : %s introuvable (le chemin d'application d'un paquet ne se contrôle plus)" % _fn)
+    _b = src.find('\n}\n', _a)
+    if _b < 0:
+        raise SystemExit("[ERREUR] contrôle : la fin de %s est introuvable" % _fn)
+    _APPLY_PATH += src[_a:_b] + '\n'
+_bad = _re.findall(r"""start_time|startTime|missionDate|['"]date['"]|\.date\b|\bYear\b|\bMonth\b|\bDay\b""", _APPLY_PATH)
+if _bad:
+    raise SystemExit("[ERREUR] contrôle : le chemin d'application d'un paquet touche la date ou l'heure de départ : %s" % sorted(set(_bad)))
+print("  [OK] le chemin d'application d'un paquet n'écrit ni date ni start_time (%d caractères contrôlés)" % len(_APPLY_PATH))
 
 # Types d'appareils du jeu (lot mp-wing-types-jeu)
 grep_present('const GAME_AIRCRAFT_TYPES','table des types du jeu embarquée')
