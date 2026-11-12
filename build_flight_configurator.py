@@ -437,9 +437,11 @@ I18N_FR = {
     'theme.modern-east': 'Bloc Est moderne',
 
     'tb.open': 'Ouvrir',
-    'tb.open.tip': 'Ouvrir une configuration ou importer des groupes',
+    'tb.open.tip': 'Ouvrir un travail, une configuration ou importer des groupes',
+    'work.open': 'Ouvrir un travail…',
+    'work.open.tip': 'Ouvrir un travail de Mission Plan (JSON) : remplace le travail de toute la suite',
+    'work.save.tip': 'Sauvegarder tout le travail de Mission Plan (JSON)',
     'tb.save': 'Sauvegarder',
-    'tb.save.tip': 'Sauvegarder le travail en cours (JSON : le paquet et les réglages du module)',
     'op.file': 'Ouvrir une configuration…',
     'op.file.h': '.json',
     'op.file.tip': 'Ouvrir un fichier de travail (JSON) : remplace le contenu du module',
@@ -714,12 +716,9 @@ I18N_FR = {
     'ui.verb.change': 'Changer',
     'ui.verb.remove': 'Retirer',
 
-    'save.done': 'Travail sauvegardé : {0}',
     'fn.label': 'Nom du fichier',
     'fn.cancel': 'Annuler',
     'fn.close': 'Fermer',
-    'fn.save.title': 'Sauvegarder le travail',
-    'fn.save.go': 'Sauvegarder',
     'fn.export.title': 'Exporter le paquet',
     'fn.export.go': 'Exporter',
 
@@ -748,9 +747,11 @@ I18N_EN = {
     'theme.modern-east': 'Modern Eastern Bloc',
 
     'tb.open': 'Open',
-    'tb.open.tip': 'Open a configuration or import groups',
+    'tb.open.tip': 'Open a work file, a configuration or import groups',
+    'work.open': 'Open a work file…',
+    'work.open.tip': 'Open a Mission Plan work file (JSON): replaces the work of the whole suite',
+    'work.save.tip': 'Save all the Mission Plan work (JSON)',
     'tb.save': 'Save',
-    'tb.save.tip': 'Save the work in progress (JSON: the package and the module settings)',
     'op.file': 'Open a configuration…',
     'op.file.h': '.json',
     'op.file.tip': 'Open a working file (JSON): replaces the module content',
@@ -1025,12 +1026,9 @@ I18N_EN = {
     'ui.verb.change': 'Change',
     'ui.verb.remove': 'Remove',
 
-    'save.done': 'Work saved: {0}',
     'fn.label': 'File name',
     'fn.cancel': 'Cancel',
     'fn.close': 'Close',
-    'fn.save.title': 'Save the work',
-    'fn.save.go': 'Save',
     'fn.export.title': 'Export the package',
     'fn.export.go': 'Export',
 
@@ -1641,10 +1639,10 @@ def _icon(d):
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>'
 
 
-def _btn(bid, key, icon, extra=''):
-    return ('<button type="button" class="tb-btn%s" id="btn-%s" data-i18n-title="tb.%s.tip" title="">%s'
+def _btn(bid, key, icon, extra='', tip=None):
+    return ('<button type="button" class="tb-btn%s" id="btn-%s" data-i18n-title="%s" title="">%s'
             '<span class="tb-btn-label" data-i18n="tb.%s">.</span></button>'
-            % (extra, bid, key, _icon(icon), key))
+            % (extra, bid, tip or 'tb.%s.tip' % key, _icon(icon), key))
 
 
 BODY = r"""
@@ -1713,7 +1711,7 @@ OPEN_BTN = '''  <button type="button" class="tb-btn tb-file" id="btn-open" aria-
   </button>'''.strip()
 FILES = '\n  '.join([
     OPEN_BTN,
-    _btn('save', 'save', '<path d="M5 3h11l4 4v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M8 3v5h7V3"/><rect x="7" y="13" width="10" height="8"/>', ' tb-file'),
+    _btn('save', 'save', '<path d="M5 3h11l4 4v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M8 3v5h7V3"/><rect x="7" y="13" width="10" height="8"/>', ' tb-file', 'work.save.tip'),
     _btn('export', 'export', '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>', ' tb-file'),
 ])
 OTHERS = '\n  '.join([
@@ -3125,14 +3123,6 @@ function buildPackage() {
     }))
   });
 }
-// Le fichier de travail : le paquet tel qu'il se lit, plus la clé « fc » (l'état de l'écran et mes presets) que HQ ignore.
-function buildWorkFile() {
-  const pkg = buildPackage();
-  const tc = tcConflict();
-  pkg.fc = { v: 1, state: clone(S), mine: clone(LIB.mine) };
-  if (tc) { pkg.theatre = tc.F; pkg.fc.state.theatre = tc.F; }       // le bandeau est là : les routes des groupes sont sur le théâtre de la fiche, le fichier de travail le garde
-  return pkg;
-}
 
 // ----- Replier les vols -----
 // Sans choix de la personne, tout vol est déplié tant qu'il y en a deux ou moins ; au-delà, seul le vol sur lequel on travaille l'est.
@@ -3996,10 +3986,18 @@ function fcRejectText(key, args) {
 }
 // Ouvrir : un fichier de travail (clé fc) ou un paquet de vol ; il remplace le contenu du module. Le fichier impose son théâtre : un théâtre hors des quatorze le refuse, un autre que le théâtre commun
 // demande d'abord (s'il y a des groupes à remplacer) ; un fichier de travail sans théâtre laisse le théâtre commun.
+// Le fichier de travail de la suite : le shell l'écrit (Sauvegarder), l'ouvre (Ouvrir un travail…) et le restaure ; le module ne fait que le lui demander.
+const WORK_FORMAT = 'dcs-mission-plan-work-v1';
+function workSave() { try { parent.MP_WORK_SAVE(); } catch (e) { console.warn('[FC] sauvegarde du travail indisponible', e); } }
+function workOpen() { try { parent.MP_WORK_OPEN(); } catch (e) { console.warn('[FC] ouverture du travail indisponible', e); } }
+function workHand(text, name) { try { parent.MP_WORK_OPEN_TEXT(text, name); } catch (e) { console.warn('[FC] ouverture du travail indisponible', e); } }
+// Le shell écrit le travail de toute la suite : il demande d'abord à chaque module d'écrire ce qu'il garde en attente (ici, la frappe regroupée sur 400 ms : flushWork).
+window.MP_FLUSH = function () { flushWork(); };
 function openFile(file) {
   impReadJsonFile(file, r => {
     if (r.reject) { showToast(fcRejectText(r.reject), { type: 'err' }); return; }
     const o = r.parsed;
+    if (isObj(o) && o.format === WORK_FORMAT) { workHand(JSON.stringify(o), file.name); return; }       // un travail de Mission Plan : le shell l'ouvre
     let ignored = 0, warn = '', res = null;
     const work = isObj(o) && isObj(o.fc) && isObj(o.fc.state) && Array.isArray(o.fc.state.flights);
     if (!work && isObj(o) && PACKAGE_FORMATS.indexOf(o.format) >= 0) {
@@ -4079,18 +4077,6 @@ function loadExample() {
       return gsSettled();
     },
     msg: () => t('toast.example')
-  });
-}
-function saveFile() {
-  fnAsk({
-    titleKey: 'fn.save.title', goKey: 'fn.save.go', ext: '.json',
-    name: packageFileName('fc'),
-    opener: document.getElementById('btn-save'),
-    run: name => {
-      const text = JSON.stringify(buildWorkFile(), null, 1);
-      shareOrDownload(new Blob([text], { type: 'application/json' }), name + '.json', 'application/json', 'Flight Configurator', fcDownload);
-      showToast(tf('save.done', name + '.json'), { type: 'ok' });
-    }
   });
 }
 function exportFile() {
@@ -4413,7 +4399,7 @@ function applyI18nStatic() {
   lang.innerHTML = CURRENT_LANG === 'fr' ? FLAG_EN : FLAG_FR;
   lang.title = t('toolbar.lang.tooltip');
   lang.setAttribute('aria-label', t('toolbar.lang.tooltip'));
-  ['open', 'save', 'export', 'example', 'clear'].forEach(k => document.getElementById('btn-' + k).setAttribute('aria-label', t(k === 'open' ? 'tb.open.tip' : 'tb.' + k)));
+  ['open', 'save', 'export', 'example', 'clear'].forEach(k => document.getElementById('btn-' + k).setAttribute('aria-label', t(k === 'open' ? 'tb.open.tip' : (k === 'save' ? 'work.save.tip' : 'tb.' + k))));
 }
 /* La langue : le drapeau la change ; le shell l'appelle aussi (un module déjà chargé suit la langue de la suite) */
 function setLang(lang) {
@@ -4446,15 +4432,17 @@ function bindColumns() {
     if (row && UI.cmp.st !== row.getAttribute('data-st')) { UI.cmp.st = row.getAttribute('data-st'); cmpUpdate(); }
   });
 }
-/* « Ouvrir ▾ » : une configuration (le sélecteur de fichier de l'ancien « Ouvrir »), des groupes à importer (la fenêtre de l'ancien « Importer ») */
+/* « Ouvrir ▾ » : un travail de Mission Plan (le shell), une configuration (le sélecteur de fichier de l'ancien « Ouvrir »), des groupes à importer (la fenêtre de l'ancien « Importer ») */
 function fcOpenMenu(btn) {
   mnOpen(btn, 'op-panel', t('tb.open'), {
     items: [
+      { k: 'work', label: t('work.open'), hint: t('op.file.h'), title: t('work.open.tip') },
       { k: 'file', label: t('op.file'), hint: t('op.file.h'), title: t('op.file.tip') },
       { k: 'import', label: t('op.import'), hint: t('op.import.h'), title: t('op.import.tip') }
     ],
     choose: k => {
-      if (k === 'file') document.getElementById('fc-in-open').click();
+      if (k === 'work') workOpen();
+      else if (k === 'file') document.getElementById('fc-in-open').click();
       else impOpen({ opener: btn });
     }
   });
@@ -4466,7 +4454,7 @@ function bindToolbar() {
   on('theatre', 'change', e => thSet(e.target.value));
   on('btn-lang', 'click', () => setLang(CURRENT_LANG === 'fr' ? 'en' : 'fr'));
   mnBind();       // « Ouvrir ▾ » : une configuration ou des groupes à importer
-  on('btn-save', 'click', saveFile);
+  on('btn-save', 'click', workSave);
   on('btn-export', 'click', exportFile);
   on('btn-example', 'click', loadExample);
   on('btn-clear', 'click', clearAll);
@@ -4606,7 +4594,7 @@ def check(html):
     ok({k for k in used if not prefixed(k)} <= set(I18N_FR), 'toute clé de texte utilisée existe : manque %s' % sorted(k for k in used - set(I18N_FR) if not prefixed(k)))
     quoted = lambda k: ("'%s'" % k) in code or ('"%s"' % k) in code
     ok(all(quoted(k) or prefixed(k) for k in I18N_FR), 'aucun texte sans usage : reste %s' % sorted(k for k in I18N_FR if not quoted(k) and not prefixed(k)))
-    ok(all(any(k in I18N_FR for k in ['tb.%s%s' % (a, s)]) for a in ('open', 'save', 'export', 'example', 'clear') for s in ('', '.tip')), 'textes de la barre présents')
+    ok(all(any(k in I18N_FR for k in [('work.save.tip' if (a, s) == ('save', '.tip') else 'tb.%s%s' % (a, s))]) for a in ('open', 'save', 'export', 'example', 'clear') for s in ('', '.tip')), 'textes de la barre présents')
     # les quatre tables : la copie de la page égale le fichier de data/
     for name, fn in TABLES:
         mm = re.search(r'/\* %s:BEGIN \*/\nconst %s = (.*);\n/\* %s:END \*/' % (name, name, name), html, re.S)

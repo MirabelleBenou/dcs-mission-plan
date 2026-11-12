@@ -882,10 +882,10 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .dsp-seg .tb-btn + .tb-btn { border-left: none; }
 
 /* ---------- le menu « Affichage » (lot rp-v1.12.1) : le bouton de la barre et son panneau, au style des listes de la barre (tbm-*) ---------- */
-#btn-display, #btn-open, #btn-save, #btn-export-menu { position: relative; color: var(--amber); border-color: var(--amber-dark); padding-right: 12px; }
-#btn-display:hover, #btn-display:focus-visible, #btn-display.dsp-open, #btn-open:hover, #btn-open:focus-visible, #btn-open.dsp-open, #btn-save:hover, #btn-save:focus-visible, #btn-save.dsp-open, #btn-export-menu:hover, #btn-export-menu:focus-visible, #btn-export-menu.dsp-open { border-color: var(--amber); }
-#btn-display .dsp-chev, #btn-open .dsp-chev, #btn-save .dsp-chev, #btn-export-menu .dsp-chev { width: 10px; height: 6px; }
-#btn-display.dsp-open .dsp-chev, #btn-open.dsp-open .dsp-chev, #btn-save.dsp-open .dsp-chev, #btn-export-menu.dsp-open .dsp-chev { transform: rotate(180deg); }
+#btn-display, #btn-open, #btn-export-menu { position: relative; color: var(--amber); border-color: var(--amber-dark); padding-right: 12px; }
+#btn-display:hover, #btn-display:focus-visible, #btn-display.dsp-open, #btn-open:hover, #btn-open:focus-visible, #btn-open.dsp-open, #btn-export-menu:hover, #btn-export-menu:focus-visible, #btn-export-menu.dsp-open { border-color: var(--amber); }
+#btn-display .dsp-chev, #btn-open .dsp-chev, #btn-export-menu .dsp-chev { width: 10px; height: 6px; }
+#btn-display.dsp-open .dsp-chev, #btn-open.dsp-open .dsp-chev, #btn-export-menu.dsp-open .dsp-chev { transform: rotate(180deg); }
 .dsp-dot { position: absolute; top: -3px; right: -3px; width: 7px; height: 7px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 0 2px var(--olive-deep); pointer-events: none; }
 .dsp-dot[hidden] { display: none; }
 .dsp-panel { max-height: min(80vh, 600px); min-width: 240px; padding-bottom: 6px; }
@@ -1279,15 +1279,15 @@ __CSS__
     <span class="tb-brand-short" data-i18n="app.short">R·P</span>
     <span class="tb-brand-sub" data-i18n="tb.subtitle">░ NAVIGATION</span>
   </div>
-  <button type="button" class="tb-btn tb-file" id="btn-open" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.open.tip" title="Ouvrir une route (JSON) ou un fichier du Route Tool de DCS" data-i18n-aria-label="tb.open.tip" aria-label="Ouvrir une route (JSON) ou un fichier du Route Tool de DCS">
+  <button type="button" class="tb-btn tb-file" id="btn-open" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.open.tip" title="Ouvrir un travail, une route (JSON) ou un fichier du Route Tool de DCS" data-i18n-aria-label="tb.open.tip" aria-label="Ouvrir un travail, une route (JSON) ou un fichier du Route Tool de DCS">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v1H3z"/><path d="M3 10h19l-2 8a2 2 0 0 1-2 1.5H5a2 2 0 0 1-2-2z"/></svg>
     <span class="tb-btn-label solo" data-i18n="tb.open">Ouvrir</span>
     <svg class="dsp-chev" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg></button>
   <input type="file" id="file-open" hidden>
-  <button type="button" class="tb-btn tb-file" id="btn-save" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.save.tip" title="Sauvegarder" data-i18n-aria-label="tb.save.tip" aria-label="Sauvegarder">
+  <button type="button" class="tb-btn tb-file" id="btn-save" data-i18n-title="work.save.tip" title="Sauvegarder tout le travail de Mission Plan (JSON)" data-i18n-aria-label="work.save.tip" aria-label="Sauvegarder tout le travail de Mission Plan (JSON)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h11l4 4v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M8 3v5h7V3"/><rect x="7" y="13" width="10" height="8"/></svg>
     <span class="tb-btn-label solo" data-i18n="tb.save">Sauvegarder</span>
-    <svg class="dsp-chev" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg></button>
+  </button>
   <button type="button" class="tb-btn tb-file" id="btn-export-menu" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.export.tip" title="Exporter l'image pour le briefing ou le fichier du Route Tool" data-i18n-aria-label="tb.export.tip" aria-label="Exporter l'image pour le briefing ou le fichier du Route Tool">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
     <span class="tb-btn-label solo" data-i18n="tb.export">Exporter</span>
@@ -1503,21 +1503,6 @@ __CSS__
     <div class="ui-actions">
       <button type="button" class="ui-btn" id="cf-import-cancel" data-i18n="rt.cancel">Annuler</button>
       <button type="button" class="ui-btn primary" id="cf-import-go" data-i18n="cf.import.go">Afficher</button>
-    </div>
-  </div>
-</div>
-
-<!-- ===== FENÊTRE : EXPORTER — CHOISIR CE QU'EMPORTE LE FICHIER ===== -->
-<div class="ui-modal" id="cf-export-modal" hidden role="dialog" aria-modal="true" aria-labelledby="cf-export-title">
-  <div class="ui-backdrop" id="cf-export-backdrop"></div>
-  <div class="ui-panel" role="document">
-    <button type="button" class="ui-close" id="cf-export-close" data-i18n-aria-label="modal.close" aria-label="Fermer">&times;</button>
-    <h2 class="ui-title" id="cf-export-title"></h2>
-    <div class="fn-field"><label class="lbl" for="cf-fname" data-i18n="fn.label">Nom du fichier</label><div class="fn-row"><input class="in" id="cf-fname" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="100"><span class="fn-ext">.json</span></div></div>
-    <div class="rt-list" id="cf-export-list"></div>
-    <div class="ui-actions">
-      <button type="button" class="ui-btn" id="cf-export-cancel" data-i18n="rt.cancel">Annuler</button>
-      <button type="button" class="ui-btn primary" id="cf-export-go" data-i18n="tb.save">Sauvegarder</button>
     </div>
   </div>
 </div>
@@ -2225,11 +2210,11 @@ const I18N = {
     'u.m': 'm',
     'u.ft': 'ft',
     'tb.open': 'Ouvrir',
-    'tb.open.tip': 'Ouvrir une route, des routes, un paquet de vol (JSON ou ZIP) ou un fichier du Route Tool',
+    'tb.open.tip': 'Ouvrir un travail, une route, des routes, un paquet de vol (JSON ou ZIP) ou un fichier du Route Tool',
+    'work.open': 'Ouvrir un travail…',
+    'work.open.h': '.json',
+    'work.save.tip': 'Sauvegarder tout le travail de Mission Plan (JSON)',
     'tb.save': 'Sauvegarder',
-    'tb.save.tip': 'Sauvegarder',
-    'sv.one': 'Sauvegarder la route sélectionnée',
-    'sv.all': 'Sauvegarder toutes les routes',
     'tb.export': 'Exporter',
     'tb.export.tip': "Exporter l'image pour le briefing ou le fichier du Route Tool",
     'ex.bg': 'Image pour le briefing…',
@@ -2457,9 +2442,6 @@ const I18N = {
     'toast.hqTrunc': '{name} : tronquée à 30 points',
     'toast.dcsKept': 'source DCS non gardée : {n} point(s)',
     'toast.saveFail': '⚠ Enregistrement local impossible (espace plein)',
-    'toast.savedAll': 'Routes sauvegardées ✓',
-    'cf.exp.routes': 'Les routes',
-    'cf.exp.routesN': '{n} routes · {p} points · {m} réf.',
     'fiche.type.a': 'Aérodrome',
     'fiche.type.h': 'Hélistation',
     'fiche.dir': 'Répertoire · p. {n}',
@@ -2503,7 +2485,6 @@ const I18N = {
     'toast.openedDropped': 'Route ouverte ✓ · {n} points écartés (30 au plus)',
     'zoom.in': 'Zoom avant',
     'zoom.out': 'Zoom arrière',
-    'toast.saved': 'Route sauvegardée ✓',
     'toast.exampleLoaded': 'Exemple chargé ✓',
     'err.cf': '⚠ Fichier CombatFlite non reconnu.',
     'err.cfBrowser': '⚠ Ce navigateur ne sait pas lire les fichiers CombatFlite.',
@@ -2553,8 +2534,6 @@ const I18N = {
     'cf.mhz': '{f} MHz',
     'cf.toRef': '→ Point de référence',
     'cf.formation': 'Formation {f}',
-    'cf.exp.route': 'La route',
-    'cf.exp.routeN': '{n} points · {m} réf.',
     'toast.layersAdded.1': '{n} calque ajouté ✓ (fichier sans route : la route n\'est pas touchée)',
     'toast.layersAdded.n': '{n} calques ajoutés ✓ (fichier sans route : la route n\'est pas touchée)',
     'tap.draw': 'Dessin',
@@ -2754,11 +2733,11 @@ const I18N = {
     'u.m': 'm',
     'u.ft': 'ft',
     'tb.open': 'Open',
-    'tb.open.tip': 'Open a route, routes, a flight package (JSON or ZIP) or a Route Tool file',
+    'tb.open.tip': 'Open a work file, a route, routes, a flight package (JSON or ZIP) or a Route Tool file',
+    'work.open': 'Open a work file…',
+    'work.open.h': '.json',
+    'work.save.tip': 'Save all the Mission Plan work (JSON)',
     'tb.save': 'Save',
-    'tb.save.tip': 'Save',
-    'sv.one': 'Save the selected route',
-    'sv.all': 'Save all routes',
     'tb.export': 'Export',
     'tb.export.tip': 'Export the image for the briefing or the Route Tool file',
     'ex.bg': 'Image for the briefing…',
@@ -2986,9 +2965,6 @@ const I18N = {
     'toast.hqTrunc': '{name}: cut to 30 points',
     'toast.dcsKept': 'DCS source not kept: {n} point(s)',
     'toast.saveFail': '⚠ Cannot save locally (storage full)',
-    'toast.savedAll': 'Routes saved ✓',
-    'cf.exp.routes': 'The routes',
-    'cf.exp.routesN': '{n} routes · {p} waypoints · {m} ref.',
     'fiche.type.a': 'Airfield',
     'fiche.type.h': 'Heliport',
     'fiche.dir': 'Directory · p. {n}',
@@ -3032,7 +3008,6 @@ const I18N = {
     'toast.openedDropped': 'Route opened ✓ · {n} waypoints dropped (30 at most)',
     'zoom.in': 'Zoom in',
     'zoom.out': 'Zoom out',
-    'toast.saved': 'Route saved ✓',
     'toast.exampleLoaded': 'Example loaded ✓',
     'err.cf': '⚠ Unrecognised CombatFlite file.',
     'err.cfBrowser': '⚠ This browser cannot read CombatFlite files.',
@@ -3082,8 +3057,6 @@ const I18N = {
     'cf.mhz': '{f} MHz',
     'cf.toRef': '→ Reference point',
     'cf.formation': 'Higher formation {f}',
-    'cf.exp.route': 'The route',
-    'cf.exp.routeN': '{n} waypoints · {m} ref.',
     'toast.layersAdded.1': '{n} layer added ✓ (no route in the file: the route is unchanged)',
     'toast.layersAdded.n': '{n} layers added ✓ (no route in the file: the route is unchanged)',
     'tap.draw': 'Draw',
@@ -3479,30 +3452,6 @@ function loadState() {
   if (!ok) S = defaultState();
   loadSet(ok);
   RLD.base = rpSnap();
-}
-
-/* Le fichier exporté : l'état sans « ui » */
-function exportObject() {
-  const o = {
-    format: FORMAT_ID, name: S.name, theatre: S.theatre,
-    units: { distance: S.units.distance, altitude: S.units.altitude },
-    navDisplay: { ref: S.navDisplay.ref, decl: S.navDisplay.decl, mode: S.navDisplay.mode, year: S.navDisplay.year, force: S.navDisplay.force },
-    groundSpeed: S.groundSpeed, legBoxes: S.legBoxes,
-    points: S.points.map(exportPoint),
-    refs: S.refs.map(p => ({ name: p.name, lat: p.lat, lon: p.lon, alt: p.alt, altRef: p.altRef, pid: p.pid }))
-  };
-  const md = activeRouteDate();       /* la date reçue avec la route suit son fichier (facultative : sans elle, le fichier est celui d'avant) */
-  if (md !== '') o.missionDate = md;
-  return o;
-}
-
-/* Un point du fichier : sa source de mission (p.dcs) est gardée */
-function exportPoint(p, i) {
-  const o = { name: p.name, lat: p.lat, lon: p.lon, alt: p.alt, altRef: p.altRef, pid: p.pid };
-  if (i > 0 && typeof p.gs === 'number') o.gs = p.gs;
-  if (i > 0 && p.box) o.box = { along: p.box.along, side: p.box.side };
-  if (p.dcs) o.dcs = JSON.parse(JSON.stringify(p.dcs));
-  return o;
 }
 
 /* ============= PLUSIEURS ROUTES =============
@@ -7886,14 +7835,6 @@ function createSearchControl() {
 }
 
 /* ============= FICHIERS ============= */
-function stamp() {
-  const d = new Date();
-  return d.getFullYear() + pad2(d.getMonth() + 1) + pad2(d.getDate()) + '-' + pad2(d.getHours()) + pad2(d.getMinutes()) + pad2(d.getSeconds());
-}
-function slug(s) {
-  return str(s).trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
-}
-
 function fallbackDownload(blob, fname, toastMsg) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -7904,35 +7845,6 @@ function fallbackDownload(blob, fname, toastMsg) {
   document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 1000);
   if (toastMsg) showToast(toastMsg, { type: 'ok' });
-}
-
-/* sel (avec des calques) : { route, layers: [id…] } — la route décochée laisse points et refs vides ; les calques cochés, dans l'ordre de la section,
-   forment le champ « layers » ; sans sel : le fichier d'avant les calques, à l'octet */
-function downloadJson(sel, name) {
-  const obj = exportObject();
-  if (sel) {
-    if (!sel.route) { obj.points = []; obj.refs = []; delete obj.missionDate; }
-    const chosen = CF_LAYERS.filter(l => sel.layers.indexOf(l.id) !== -1);
-    if (chosen.length) obj.layers = chosen;
-  }
-  deliverJsonFile(obj, (name || defaultRouteName()) + '.json', t('toast.saved'));
-}
-
-/* Un fichier JSON remis à la personne : le partage du système quand il le permet, sinon un téléchargement */
-function deliverJsonFile(obj, fname, msg) {
-  const blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' });
-  if (navigator.share && navigator.canShare) {
-    try {
-      const file = new File([blob], fname, { type: 'application/json' });
-      if (navigator.canShare({ files: [file] })) {
-        navigator.share({ files: [file], title: t('app.title'), text: fname }).catch(() => {
-          fallbackDownload(blob, fname, msg);
-        });
-        return;
-      }
-    } catch (e) { /* repli ci-dessous */ }
-  }
-  fallbackDownload(blob, fname, msg);
 }
 
 /* Met une route lue à la place de la route en cours (unités, théâtre, cap et déclinaison compris ; la couche et la grille restent) */
@@ -8001,6 +7913,7 @@ function openRouteFile(file) {
     }
     let parsed;
     try { parsed = JSON.parse(text); } catch (e) { console.warn('[RP] JSON illisible', e); rejectMsg('rej.json'); return; }
+    if (isPlainObj(parsed) && parsed.format === WORK_FORMAT) { workHand(text, file.name); return; }       /* un travail de Mission Plan : le shell l'ouvre */
     if (isPlainObj(parsed) && parsed.format === SET_FORMAT) { openRouteSet(parsed); return; }
     if (isPlainObj(parsed) && PACKAGE_FORMATS.indexOf(parsed.format) >= 0) { impOpen({ opener: $('btn-open'), parsed: parsed, name: file.name }); return; }
     const res = parseRoute(parsed);
@@ -8380,31 +8293,6 @@ function openRouteSet(parsed) {
   if (!replacing) { go(); showToast(msg, { type: 'ok' }); return; }
   replaceWithRestore({ keys: GS_CONTENT_KEYS, mem: rpMem, back: rpBack, msg: () => msg, run: () => gsSettled(go()) });
 }
-
-/* « Enregistrer tout » : routes_<horodatage>.json */
-function setFileObject(sel) {
-  syncActive();
-  const ex = exportObject();
-  const obj = {
-    format: SET_FORMAT, theatre: S.theatre, units: ex.units, navDisplay: ex.navDisplay, groundSpeed: S.groundSpeed, legBoxes: S.legBoxes,
-    refs: ex.refs, active: RSET.active,
-    routes: RSET.routes.concat(RSET.hidden || []).map(r => ({ rid: r.rid, name: r.name, theatre: r.theatre, points: r.points.map(exportPoint), flight: r.flight ? makeLink(r.flight, r.flight.source) : null, missionDate: magRouteDate(r.missionDate) || undefined }))       /* toutes les routes de tous les théâtres, masquées comprises, chacune avec son theatre */
-  };
-  if (sel) {
-    if (!sel.route) { obj.routes = obj.routes.map(r => ({ rid: r.rid, name: r.name, theatre: r.theatre, points: [], flight: r.flight })); obj.refs = []; }       /* sans route : ni points ni date */
-    const chosen = CF_LAYERS.filter(l => sel.layers.indexOf(l.id) !== -1);
-    if (chosen.length) obj.layers = chosen;
-  }
-  return obj;
-}
-
-function downloadSet(sel, name) {
-  deliverJsonFile(setFileObject(sel), (name || defaultSetName()) + '.json', t('toast.savedAll'));
-}
-
-/* Les noms proposés (sans l'extension) */
-function defaultRouteName() { return 'route_' + (cleanFname(slug(S.name)).slice(0, 40) || 'route') + '_' + stamp(); }
-function defaultSetName() { return 'routes_' + stamp(); }
 
 /* ============= LECTURE DES VOLS (snapshot de HQ, fiche des groupes) ============= */
 /* Les clés numériques de la table des points d'un vol, dans l'ordre */
@@ -9065,7 +8953,7 @@ function bytesToText(bytes) {
 /* ---- Fenêtres : « Ouvrir une route du Route Tool » et « Exporter vers le Route Tool » ---- */
 const RT = { fileName: '', routes: [], theatre: 'Caucasus', sel: 0, opener: null };
 
-const RT_MODALS = ['rt-open-modal', 'rt-export-modal', 'cf-import-modal', 'cf-export-modal', 'clr-modal', 'ga-modal', 'imp-modal', 'exn-modal', 'fiche'];
+const RT_MODALS = ['rt-open-modal', 'rt-export-modal', 'cf-import-modal', 'clr-modal', 'ga-modal', 'imp-modal', 'exn-modal', 'fiche'];
 function rtVisible(id) { return !$(id).hidden; }
 function rtShow(id, opener, focusId) {
   RT.opener = opener || null;
@@ -9620,46 +9508,6 @@ function cfImportGo() {
   showToast(msg, { type: 'ok', ms: CFI.known ? 2600 : 5000 });
 }
 
-/* ---- Fenêtre « Exporter » : la route et les calques que le fichier emporte ---- */
-/* La fenêtre d'enregistrement d'une route (all faux) ou de toutes les routes (all vrai) : le nom du fichier, puis les calques s'il y en a */
-const CFE = { route: true, checked: [], all: false, name: '' };
-
-function cfExportRender() {
-  $('cf-export-title').textContent = t(CFE.all ? 'sv.all' : 'sv.one');
-  const f = $('cf-fname');
-  if (f.value !== CFE.name) f.value = CFE.name;
-  const list = $('cf-export-list');
-  list.hidden = !CF_LAYERS.length;
-  list.innerHTML = !CF_LAYERS.length ? '' :
-    '<label class="rt-row"><input type="checkbox" data-k="route"' + (CFE.route ? ' checked' : '') + '><span class="rt-nm">' + esc(t(CFE.all ? 'cf.exp.routes' : 'cf.exp.route')) + '</span>' +
-    '<span class="rt-n">' + esc(CFE.all ? t('cf.exp.routesN', { n: RSET.routes.length, p: RSET.routes.reduce((a, r) => a + r.points.length, 0), m: S.refs.length }) : t('cf.exp.routeN', { n: S.points.length, m: S.refs.length })) + '</span></label>' +
-    CF_LAYERS.map((l, i) =>
-      '<label class="rt-row"><input type="checkbox" data-i="' + i + '"' + (CFE.checked[i] ? ' checked' : '') + '>' +
-      '<span class="rt-nm">' + esc(l.name) + '</span><span class="rt-n">' + esc(cfCounts(l.items)) + '</span></label>').join('');
-  cfExportSync();
-}
-
-/* Enregistrer est désactivé sans nom, ou, avec des calques, sans rien de coché */
-function cfExportSync() { $('cf-export-go').disabled = cleanFname(CFE.name) === '' || (CF_LAYERS.length > 0 && !(CFE.route || CFE.checked.some(Boolean))); }
-
-function openCfExport(opener, all) {
-  CFE.all = !!all;
-  CFE.route = true;
-  CFE.checked = CF_LAYERS.map(l => l.visible);
-  CFE.name = cleanFname(CFE.all ? defaultSetName() : defaultRouteName());
-  cfExportRender();
-  rtShow('cf-export-modal', opener, 'cf-fname');
-  $('cf-fname').select();
-}
-
-function cfExportGo() {
-  const name = cleanFname(CFE.name);
-  if (name === '') return;
-  const sel = CF_LAYERS.length ? { route: CFE.route, layers: CF_LAYERS.filter((l, i) => CFE.checked[i]).map(l => l.id) } : undefined;
-  rtHide('cf-export-modal');
-  if (CFE.all) downloadSet(sel, name); else downloadJson(sel, name);
-}
-
 /* ============= LE MENU « AFFICHAGE » (lot rp-v1.12.1) ============= */
 /* Ce qu'on masque ou montre sur la carte : la route, les points de référence, les dessins, les symboles OTAN, les calques importés, puis les quatre
    lignes de fond (grille, villes, aérodromes, lieux) qui reprennent le rôle des anciennes bascules de la barre. Masqué = non dessiné (ni vu ni touchable) ;
@@ -9879,7 +9727,6 @@ function dspPlace() {
 function dspOpen() {
   if (DSP.open) return;
   if (TBM.cur) tbmClose(false);
-  svClose(false);
   mnClose(false);
   const ul = document.createElement('div');
   ul.className = 'tbm-panel dsp-panel';
@@ -10019,7 +9866,7 @@ function dspBind() {
 /* ============= LES MENUS « OUVRIR » ET « … » (lot mp-ui-disposition) =============
    Même composant et même aspect que « Sauvegarder » et « Affichage » (tbm-panel dsp-panel, dsp-opt) : une ligne par geste, son indice à droite ;
    un trait sépare ; un geste qui détruit est en --mp-warn. Un seul menu ouvert à la fois, avec les listes et les autres menus de la barre. */
-const MENU_TRIG = '.tbm-trigger, #btn-display, #btn-save, #btn-open, #btn-export-menu, #rs-more';
+const MENU_TRIG = '.tbm-trigger, #btn-display, #btn-open, #btn-export-menu, #rs-more';
 const MN = { cur: null, bound: false };
 
 function mnClose(refocus) {
@@ -10052,7 +9899,6 @@ function mnOpen(btn, id, label, items, choose) {
   if (MN.cur) mnClose(false);
   if (TBM.cur) tbmClose(false);
   dspClose(false);
-  svClose(false);
   const ul = document.createElement('div');
   ul.className = 'tbm-panel dsp-panel mn-panel';
   ul.id = id;
@@ -10148,14 +9994,16 @@ function mnBind() {
   }, true);
 }
 
-/* « Ouvrir ▾ » : une route (le sélecteur de fichier), des routes (la fenêtre d'import commune) */
+/* « Ouvrir ▾ » : un travail de Mission Plan (le shell), une route (le sélecteur de fichier), des routes (la fenêtre d'import commune) */
 function openMenuToggle(btn) {
   if (MN.cur && MN.cur.btn === btn) { mnClose(false); return; }
   mnOpen(btn, 'op-panel', t('tb.open'), [
+    { k: 'work', label: t('work.open'), hint: t('work.open.h') },
     { k: 'file', label: t('op.route'), hint: t('op.route.h') },
     { k: 'import', label: t('op.import'), hint: t('op.import.h') }
   ], k => {
-    if (k === 'file') { const f = $('file-open'); f.value = ''; f.click(); }
+    if (k === 'work') workOpen();
+    else if (k === 'file') { const f = $('file-open'); f.value = ''; f.click(); }
     else impOpen({ opener: $('btn-open') });
   });
 }
@@ -10214,132 +10062,13 @@ function dspSetBase(id) {
   setBase();
 }
 
-/* ============= LE MENU « SAUVEGARDER » : la route sélectionnée, toutes les routes ============= */
-const SV = { open: false, panel: null, x0: 0, y0: 0 };
-const SV_ROWS = [{ k: 'one', l: 'sv.one' }, { k: 'all', l: 'sv.all' }];
-
-function svBuild() {
-  const ul = SV.panel;
-  ul.textContent = '';
-  ul.setAttribute('aria-label', t('tb.save'));
-  const head = document.createElement('div');
-  head.className = 'tbm-head';
-  head.setAttribute('role', 'presentation');
-  head.textContent = t('tb.save');
-  ul.appendChild(head);
-  SV_ROWS.forEach(r => {
-    const row = document.createElement('div');
-    row.className = 'tbm-opt dsp-opt';
-    row.setAttribute('role', 'menuitem');
-    row.tabIndex = -1;
-    row.setAttribute('data-k', r.k);
-    const txt = document.createElement('span');
-    txt.className = 'tbm-txt';
-    txt.textContent = t(r.l);
-    row.appendChild(txt);
-    ul.appendChild(row);
-  });
-}
-
-function svPlace() {
-  const btn = $('btn-save'), p = SV.panel;
-  const r = btn.getBoundingClientRect();
-  const vw = document.documentElement.clientWidth, vh = window.innerHeight;
-  const top = r.bottom + 4;
-  SV.x0 = r.left; SV.y0 = r.top;
-  p.style.minWidth = Math.max(240, r.width) + 'px';
-  p.style.top = top + 'px';
-  p.style.maxHeight = Math.max(60, Math.min(0.8 * vh, 600, vh - top - 8)) + 'px';
-  const w = p.getBoundingClientRect().width;
-  let left = r.left;
-  if (left + w > vw - 8) left = vw - 8 - w;
-  if (left < 8) left = 8;
-  p.style.left = left + 'px';
-}
-
-function svOpen() {
-  if (SV.open) return;
-  if (TBM.cur) tbmClose(false);
-  dspClose(false);
-  mnClose(false);
-  const ul = document.createElement('div');
-  ul.className = 'tbm-panel dsp-panel';
-  ul.id = 'sv-panel';
-  ul.setAttribute('role', 'menu');
-  ul.tabIndex = -1;
-  document.body.appendChild(ul);
-  SV.panel = ul;
-  SV.open = true;
-  svBuild();
-  ul.addEventListener('click', e => {
-    const row = e.target.closest ? e.target.closest('.dsp-opt') : null;
-    if (row) svChoose(row.getAttribute('data-k'));
-  });
-  ul.addEventListener('keydown', svKey);
-  const b = $('btn-save');
-  b.classList.add('dsp-open');
-  b.setAttribute('aria-expanded', 'true');
-  b.setAttribute('aria-controls', 'sv-panel');
-  svPlace();
-  ul.focus({ preventScroll: true });
-}
-
-function svClose(refocus) {
-  if (!SV.open) return;
-  SV.open = false;
-  if (SV.panel) SV.panel.remove();
-  SV.panel = null;
-  const b = $('btn-save');
-  b.classList.remove('dsp-open');
-  b.setAttribute('aria-expanded', 'false');
-  if (refocus) b.focus({ preventScroll: true });
-}
-
-function svKey(e) {
-  const rows = Array.prototype.slice.call(SV.panel.querySelectorAll('.dsp-opt'));
-  const cur = rows.indexOf(document.activeElement);
-  const go = k => { if (rows[k]) rows[k].focus({ preventScroll: true }); };
-  const k = e.key;
-  if (k === 'ArrowDown') { e.preventDefault(); go(cur < 0 ? 0 : Math.min(rows.length - 1, cur + 1)); }
-  else if (k === 'ArrowUp') { e.preventDefault(); go(cur < 0 ? rows.length - 1 : Math.max(0, cur - 1)); }
-  else if (k === 'Home') { e.preventDefault(); go(0); }
-  else if (k === 'End') { e.preventDefault(); go(rows.length - 1); }
-  else if ((k === 'Enter' || k === ' ') && cur >= 0) { e.preventDefault(); svChoose(rows[cur].getAttribute('data-k')); }
-  else if (k === 'Escape') { e.preventDefault(); e.stopPropagation(); svClose(true); }
-  else if (k === 'Tab') svClose(true);
-}
-
-function svOutside(e) {
-  if (!SV.open) return;
-  const t = e.target;
-  if (SV.panel.contains(t) || $('btn-save').contains(t)) return;
-  const other = t && t.closest ? t.closest(MENU_TRIG) : null;
-  svClose(false);
-  if (other) return;
-  tbmSwallowNext();
-}
-
-/* Une ligne ferme le menu et ouvre la fenêtre du nom du fichier */
-function svChoose(k) {
-  svClose(false);
-  openCfExport($('btn-save'), k === 'all');
-}
-
-function svBind() {
-  $('btn-save').addEventListener('click', () => { if (SV.open) svClose(false); else svOpen(); });
-  $('btn-save').addEventListener('keydown', e => {
-    if (e.key === 'ArrowDown' && !SV.open) { e.preventDefault(); svOpen(); }
-  });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && SV.open) { e.preventDefault(); svClose(true); } });
-  document.addEventListener('pointerdown', svOutside, true);
-  window.addEventListener('resize', () => svClose(false));
-  window.addEventListener('blur', () => svClose(false));
-  window.addEventListener('scroll', e => {
-    if (!SV.open || (e.target && e.target.nodeType && SV.panel.contains(e.target))) return;
-    const r = $('btn-save').getBoundingClientRect();
-    if (Math.abs(r.left - SV.x0) > 0.5 || Math.abs(r.top - SV.y0) > 0.5) svClose(false);
-  }, true);
-}
+/* ============= LE FICHIER DE TRAVAIL DE LA SUITE =============
+   Le shell écrit le travail (Sauvegarder), l'ouvre (Ouvrir un travail…) et le restaure ; le module ne fait que le lui demander.
+   Il ne diffère aucune écriture : persistState écrit route_set_v1, route_state_v1 et mp_nav_v1 tout de suite, la fin d'un glisser écrit route_layers_v1 (drCommit) : pas de MP_FLUSH. */
+const WORK_FORMAT = 'dcs-mission-plan-work-v1';
+function workSave() { try { parent.MP_WORK_SAVE(); } catch (e) { console.warn('[RP] sauvegarde du travail indisponible', e); } }
+function workOpen() { try { parent.MP_WORK_OPEN(); } catch (e) { console.warn('[RP] ouverture du travail indisponible', e); } }
+function workHand(text, name) { try { parent.MP_WORK_OPEN_TEXT(text, name); } catch (e) { console.warn('[RP] ouverture du travail indisponible', e); } }
 
 /* ============= VERS LE BRIEFING : LA VUE DE LA CARTE, CADRÉE (lot rp-v1.12.0) ============= */
 /* Le mode cadre pose un cadre 3:2 (ou 2:3) sur la carte ; « Exporter » compose une image JPEG : la zone du cadre rendue par html2canvas
@@ -10774,13 +10503,11 @@ function setLang(lang) {
   if (rtVisible('rt-open-modal')) rtOpenRender();
   if (rtVisible('rt-export-modal')) rtExportRender();
   if (rtVisible('cf-import-modal')) cfImportRender();
-  if (rtVisible('cf-export-modal')) cfExportRender();
   if (rtVisible('clr-modal')) clrRender();
   if (impIsOpen()) impRender();
   if (rtVisible('fiche')) ficheRender();
   expSyncTexts();
   if (DSP.open) dspBuild();
-  if (SV.open) svBuild();
   mnClose(false);
   map.closePopup();
   if (drOn()) { DR.sheetKey = ''; drRlab(); drSyncUi(); }
@@ -10872,15 +10599,15 @@ function bindEvents() {
   $('btn-open').addEventListener('keydown', e => { if (e.key === 'ArrowDown' && !MN.cur) { e.preventDefault(); openMenuToggle(e.currentTarget); } });
   /* la sélection est remise à zéro après lecture : choisir deux fois le même fichier le relit */
   fileOpen.addEventListener('change', () => { const f = fileOpen.files && fileOpen.files[0]; if (f) openRouteFile(f); fileOpen.value = ''; });
-  svBind();
+  $('btn-save').addEventListener('click', workSave);
   $('btn-export-menu').addEventListener('click', ev => exportMenuToggle(ev.currentTarget));
   $('btn-export-menu').addEventListener('keydown', e => { if (e.key === 'ArrowDown' && !MN.cur) { e.preventDefault(); exportMenuToggle(e.currentTarget); } });
-  /* Ctrl+S (Cmd+S) : le geste de la première ligne de « Sauvegarder ▾ » (la route sélectionnée), sauf fenêtre ou menu ouvert */
+  /* Ctrl+S (Cmd+S) : le geste du bouton « Sauvegarder », sauf fenêtre ou menu ouvert */
   document.addEventListener('keydown', e => {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
       e.preventDefault();
-      if (uiModalsOpen().length || RT_MODALS.some(rtVisible) || MN.cur || SV.open || DSP.open || TBM.cur) return;
-      svChoose('one');
+      if (uiModalsOpen().length || RT_MODALS.some(rtVisible) || MN.cur || DSP.open || TBM.cur) return;
+      workSave();
     }
   });
   ['rt-open-backdrop', 'rt-open-close', 'rt-open-cancel'].forEach(id => $(id).addEventListener('click', () => rtHide('rt-open-modal')));
@@ -10904,20 +10631,12 @@ function bindEvents() {
   });
   $('btn-layers-clear').addEventListener('click', removeAllLayers);
   ['cf-import-backdrop', 'cf-import-close', 'cf-import-cancel'].forEach(id => $(id).addEventListener('click', () => rtHide('cf-import-modal')));
-  ['cf-export-backdrop', 'cf-export-close', 'cf-export-cancel'].forEach(id => $(id).addEventListener('click', () => rtHide('cf-export-modal')));
   $('cf-import-go').addEventListener('click', cfImportGo);
   $('cf-import-list').addEventListener('change', ev => {
     const i = parseInt(ev.target.dataset.i, 10);
     if (i >= 0 && i < CFI.checked.length) CFI.checked[i] = ev.target.checked;
   });
-  $('cf-export-go').addEventListener('click', cfExportGo);
-  $('cf-fname').addEventListener('input', ev => { CFE.name = ev.target.value; cfExportSync(); });
   ficheBind();
-  $('cf-export-list').addEventListener('change', ev => {
-    if (ev.target.dataset.k === 'route') CFE.route = ev.target.checked;
-    else { const i = parseInt(ev.target.dataset.i, 10); if (i >= 0 && i < CFE.checked.length) CFE.checked[i] = ev.target.checked; }
-    cfExportSync();
-  });
   const fileRt = $('file-rt');
   $('rt-add').addEventListener('click', () => { fileRt.value = ''; fileRt.click(); });
   fileRt.addEventListener('change', () => { if (fileRt.files && fileRt.files[0]) rtExportAdd(fileRt.files[0]); });
@@ -10955,7 +10674,7 @@ function init() {
   applyTheme(loadTheme(), false);
   applyI18nStatic();
   updateFlagButton();
-  TBM.cfg = { others: () => { svClose(false); mnClose(false); }, trig: MENU_TRIG, short: (sel, o) => sel.id === 'theatre' && uiBarCompact() ? (TH_SHORT[CURRENT_LANG] || {})[o.value] : '' };       /* ce que ce module ajoute à la liste commune */
+  TBM.cfg = { others: () => { mnClose(false); }, trig: MENU_TRIG, short: (sel, o) => sel.id === 'theatre' && uiBarCompact() ? (TH_SHORT[CURRENT_LANG] || {})[o.value] : '' };       /* ce que ce module ajoute à la liste commune */
   initToolbarMenus([['theatre', () => t('tb.theatre'), undefined, true], ['theme', () => t('tb.theme.tip')], ['rt-theatre', () => t('tb.theatre'), 'sheet'], ['route-list', () => t('rs.list'), 'sheet']]);   /* les listes de la barre au thème de l'interface ; la liste des routes, de la ligne de sélection */
   initFormMenus(sel => (sel.dataset.k === 'altRef' ? t('th.ref') : sel.dataset.lbl ? t(sel.dataset.lbl) : (sel.getAttribute('aria-label') || '')));   /* les listes des formulaires */
   impSetup({ lang: () => CURRENT_LANG, before: rpImportBefore, onImported: rpImported, toast: msg => showToast('\u26a0 ' + msg, { type: 'err' }) });      /* la fenêtre d'import commune */

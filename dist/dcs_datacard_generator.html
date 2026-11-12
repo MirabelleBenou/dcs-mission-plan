@@ -1668,13 +1668,13 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <span class="tb-brand-short" data-i18n="app.short">D·G</span>
     <span class="tb-brand-sub" data-i18n="tb.subtitle">░ CARTES DE BORD</span>
   </div>
-  <button type="button" class="tb-btn tb-file" id="btn-json-import" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.json.import.tip" title="Ouvrir une datacard ou importer" data-i18n-aria-label="tb.json.import.tip" aria-label="Ouvrir une datacard ou importer">
+  <button type="button" class="tb-btn tb-file" id="btn-json-import" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.json.import.tip" title="Ouvrir un travail, une datacard ou importer" data-i18n-aria-label="tb.json.import.tip" aria-label="Ouvrir un travail, une datacard ou importer">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v1H3z"/><path d="M3 10h19l-2 8a2 2 0 0 1-2 1.5H5a2 2 0 0 1-2-2z"/></svg>
     <span class="tb-btn-label" data-i18n="tb.json.import">Ouvrir</span>
     <svg class="dsp-chev" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg>
   </button>
   <input type="file" id="file-load" accept=".json,.zip,application/json,application/zip" hidden>
-  <button class="tb-btn tb-file" id="btn-json-export" data-i18n-title="tb.json.export.tip" title="Sauvegarder la datacard (JSON)">
+  <button class="tb-btn tb-file" id="btn-json-export" data-i18n-title="work.save.tip" title="Sauvegarder tout le travail de Mission Plan (JSON)" data-i18n-aria-label="work.save.tip" aria-label="Sauvegarder tout le travail de Mission Plan (JSON)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h11l4 4v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M8 3v5h7V3"/><rect x="7" y="13" width="10" height="8"/></svg>
     <span class="tb-btn-label" data-i18n="tb.json.export">Sauvegarder</span>
   </button>
@@ -1720,20 +1720,6 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <button type="button" class="ui-close" id="export-modal-close" data-i18n-aria-label="modal.close" aria-label="Fermer">×</button>
     <h2 class="ui-title" id="export-modal-title" data-i18n="ex.title">Exporter la datacard</h2>
     <div class="ui-xbody"></div>
-  </div>
-</div>
-
-<!-- ===== FENÊTRE : SAUVEGARDER LA DATACARD — CHOISIR LE NOM DU FICHIER ===== -->
-<div class="ui-modal" id="save-modal" hidden role="dialog" aria-labelledby="save-title" aria-modal="true">
-  <div class="ui-backdrop" id="save-backdrop"></div>
-  <div class="ui-panel" role="document">
-    <button type="button" class="ui-close" id="save-close" data-i18n-aria-label="modal.close" aria-label="Fermer">×</button>
-    <h2 class="ui-title" id="save-title" data-i18n="save.title">Sauvegarder la datacard</h2>
-    <div class="ui-field"><label class="ui-lbl" for="save-fname" data-i18n="fn.label">Nom du fichier</label><div class="ui-row"><input class="ui-in" id="save-fname" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="100"><span class="ui-ext">.json</span></div></div>
-    <div class="ui-actions">
-      <button type="button" class="ui-btn" id="save-cancel" data-i18n="fn.cancel">Annuler</button>
-      <button type="button" class="ui-btn primary" id="save-go" data-i18n="tb.json.export">Sauvegarder</button>
-    </div>
   </div>
 </div>
 
@@ -2327,13 +2313,14 @@ const I18N = {
     'dsp.g.card': 'Datacard',
     'app.short': 'D·G',
     'tb.json.import': 'Ouvrir',
-    'tb.json.import.tip': 'Ouvrir une datacard ou importer',
+    'tb.json.import.tip': 'Ouvrir un travail, une datacard ou importer',
+    'work.open': 'Ouvrir un travail…',
+    'work.save.tip': 'Sauvegarder tout le travail de Mission Plan (JSON)',
     'op.card': 'Ouvrir une datacard…',
     'op.card.h': '.json',
     'op.import': 'Importer…',
     'op.import.h': 'briefing, route, HQ, paquet',
     'tb.json.export': 'Sauvegarder',
-    'tb.json.export.tip': 'Sauvegarder la datacard (JSON)',
     'tb.export': 'Exporter',
     'tb.export.tip': 'Exporter en PDF ou PNG',
     'tb.example': 'Exemple',
@@ -2352,9 +2339,6 @@ const I18N = {
     'theme.modern-nato': 'OTAN moderne',
     'theme.modern-east': 'Bloc Est moderne',
     'modal.close': 'Fermer',
-    'fn.label': 'Nom du fichier',
-    'fn.cancel': 'Annuler',
-    'save.title': 'Sauvegarder la datacard',
     'ex.title': 'Exporter la datacard',
     'ex.note.pdf': 'Impression système',
     'ex.note.png': 'Kneeboard DCS · 2000×2828, A4',
@@ -2397,7 +2381,6 @@ const I18N = {
     'imp.go': 'Importer',
     'imp.cancel': 'Annuler',
     'toast.imported': '{n} datacard(s) importée(s) ✓',
-    'toast.jsonSaved': 'Datacards sauvegardées ✓',
     'toast.jsonLoaded': 'Datacards chargées ✓',
     'frz.note': 'Copie de ce que le groupe donnait à cette carte avant qu\'elle devienne libre : lecture seule.',
     'u.type.pick': '— à choisir —',
@@ -2831,13 +2814,14 @@ const I18N = {
     'dsp.g.card': 'Datacard',
     'app.short': 'D·G',
     'tb.json.import': 'Open',
-    'tb.json.import.tip': 'Open a datacard or import',
+    'tb.json.import.tip': 'Open a work file, a datacard or import',
+    'work.open': 'Open a work file…',
+    'work.save.tip': 'Save all the Mission Plan work (JSON)',
     'op.card': 'Open a datacard…',
     'op.card.h': '.json',
     'op.import': 'Import…',
     'op.import.h': 'briefing, route, HQ, package',
     'tb.json.export': 'Save',
-    'tb.json.export.tip': 'Save the datacard (JSON)',
     'tb.export': 'Export',
     'tb.export.tip': 'Export to PDF or PNG',
     'tb.example': 'Example',
@@ -2856,9 +2840,6 @@ const I18N = {
     'theme.modern-nato': 'Modern NATO',
     'theme.modern-east': 'Modern East Bloc',
     'modal.close': 'Close',
-    'fn.label': 'File name',
-    'fn.cancel': 'Cancel',
-    'save.title': 'Save the datacard',
     'ex.title': 'Export the datacard',
     'ex.note.pdf': 'System print',
     'ex.note.png': 'DCS Kneeboard · 2000×2828, A4',
@@ -2901,7 +2882,6 @@ const I18N = {
     'imp.go': 'Import',
     'imp.cancel': 'Cancel',
     'toast.imported': '{n} datacard(s) imported ✓',
-    'toast.jsonSaved': 'Datacards saved ✓',
     'toast.jsonLoaded': 'Datacards loaded ✓',
     'frz.note': 'A copy of what the group gave this card before it became free: read only.',
     'u.type.pick': '— to pick —',
@@ -9870,51 +9850,14 @@ function fnDefault(base, stamp) {
   return (b ? b + '_' : '') + stamp;
 }
 
-/* « Sauvegarder » : la fenêtre du nom du fichier, pré-remplie du nom d'avant */
-const SAVEN = { name: '', opener: null, at: 0 };
-function saveSync() { document.getElementById('save-go').disabled = cleanFname(SAVEN.name) === ''; }
-function openSaveModal(opener) {
-  const cs = fnPart(slug(curCard().flight.callsign), 'doc');
-  SAVEN.name = fnDefault('datacard_' + cs, stamp());
-  SAVEN.opener = opener || document.activeElement;
-  SAVEN.at = performance.now();
-  const f = document.getElementById('save-fname');
-  f.value = SAVEN.name;
-  saveSync();
-  document.getElementById('save-modal').hidden = false;
-  f.focus({ preventScroll: true });
-  f.select();
-}
-function closeSaveModal() {
-  document.getElementById('save-modal').hidden = true;
-  const o = SAVEN.opener;
-  SAVEN.opener = null;
-  if (o && o.focus && !o.disabled) { try { o.focus({ preventScroll: true }); } catch (e) { /* ignore */ } }
-}
-function saveGo() {
-  const name = cleanFname(SAVEN.name);
-  if (name === '') return;
-  closeSaveModal();
-  downloadJson(name);
-}
 
-/* L'écriture de la datacard sous le nom choisi (sans extension) */
-function downloadJson(name) {
-  const blob = new Blob([JSON.stringify(doc, null, 2)], { type: 'application/json' });
-  const fname = name + '.json';
-  if (navigator.share && navigator.canShare) {
-    try {
-      const file = new File([blob], fname, { type: 'application/json' });
-      if (navigator.canShare({ files: [file] })) {
-        navigator.share({ files: [file], title: t('app.title'), text: fname }).catch(() => {
-          fallbackDownload(blob, fname, t('toast.jsonSaved'));
-        });
-        return;
-      }
-    } catch (e) { /* repli ci-dessous */ }
-  }
-  fallbackDownload(blob, fname, t('toast.jsonSaved'));
-}
+/* Le fichier de travail de la suite : le shell l'écrit (Sauvegarder), l'ouvre (Ouvrir un travail…) et le restaure ; le module ne fait que le lui demander */
+const WORK_FORMAT = 'dcs-mission-plan-work-v1';
+function workSave() { try { parent.MP_WORK_SAVE(); } catch (e) { console.warn('[DG] sauvegarde du travail indisponible', e); } }
+function workOpen() { try { parent.MP_WORK_OPEN(); } catch (e) { console.warn('[DG] ouverture du travail indisponible', e); } }
+function workHand(text, name) { try { parent.MP_WORK_OPEN_TEXT(text, name); } catch (e) { console.warn('[DG] ouverture du travail indisponible', e); } }
+/* Le shell écrit le travail de toute la suite : il demande d'abord à chaque module d'écrire ce qu'il garde en attente (ici, la saisie d'un canal d'une carte liée) */
+window.MP_FLUSH = function () { dgTypFlush(); };
 
 /* « Ouvrir » une datacard : les cartes des groupes de la fiche sont gardées, comme à « Exemple » ; une carte du fichier qui porte un groupe de la fiche (son gsId) remplace la carte de ce
    groupe (ses champs propres viennent du fichier, ses champs de groupe de la fiche) ; les autres cartes du fichier (libres, ou liées à un groupe que la fiche n'a pas) entrent comme cartes libres,
@@ -9945,6 +9888,7 @@ function openDatacards(next) {
 function loadJsonFile(file) {
   readImportFile(file, r => {
     if (r.reject) { rejectMsg(r.reject); return; }
+    if (r.work !== undefined) { workHand(r.work, file.name); return; }
     const k = biRecognise(r.parsed, file.name, true, r.zip);
     if (!k) return;
     if (k.kind === 'datacard') {
@@ -10065,6 +10009,7 @@ function readImportFile(file, done) {
       if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
       let parsed;
       try { parsed = JSON.parse(text); } catch (e) { console.warn('[DG] import : JSON illisible', e); done({ reject: 'rej.json' }); return; }
+      if (isPlainObject(parsed) && parsed.format === WORK_FORMAT) { done({ work: text }); return; }       /* un travail de Mission Plan : le shell l'ouvre */
       done({ parsed: parsed, zip: zip });
     };
     if (!(bytes.length >= 2 && bytes[0] === 0x50 && bytes[1] === 0x4B)) {
@@ -10347,6 +10292,7 @@ function runImport() {
 function loadBriefingFile(file) {
   readImportFile(file, r => {
     if (r.reject) { rejectMsg(r.reject); return; }
+    if (r.work !== undefined) { closeImportModal(); workHand(r.work, file.name); return; }
     const k = biRecognise(r.parsed, file.name, false, r.zip);
     if (!k) return;
     if (k.kind === 'pkg') { closeImportModal(); impOpen({ opener: document.getElementById('btn-json-import'), parsed: r.parsed, name: file.name }); return; }
@@ -10600,20 +10546,14 @@ function bindEvents() {
 
   const fileLoad = document.getElementById('file-load');
   fileLoad.addEventListener('change', () => { if (fileLoad.files && fileLoad.files[0]) loadJsonFile(fileLoad.files[0]); });
-  document.getElementById('btn-json-export').addEventListener('click', e => openSaveModal(e.currentTarget));
+  document.getElementById('btn-json-export').addEventListener('click', workSave);
   /* Ctrl+S (Cmd+S) : le geste du bouton « Sauvegarder », sauf fenêtre ou menu ouvert */
   document.addEventListener('keydown', e => {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
       e.preventDefault();
-      if (!uiModalsOpen().length && !MN.cur && !TBM.cur) document.getElementById('btn-json-export').click();
+      if (!uiModalsOpen().length && !MN.cur && !TBM.cur) workSave();
     }
   });
-  ['save-close', 'save-cancel'].forEach(id => document.getElementById(id).addEventListener('click', closeSaveModal));
-  /* le fond ignore les clics des 400 ms qui suivent l'ouverture : le 2e clic d'un double-clic sur « Sauvegarder » ne ferme pas la fenêtre */
-  document.getElementById('save-backdrop').addEventListener('click', () => { if (performance.now() - SAVEN.at > 400) closeSaveModal(); });
-  document.getElementById('save-go').addEventListener('click', saveGo);
-  document.getElementById('save-fname').addEventListener('input', e => { SAVEN.name = e.target.value; saveSync(); });
-  document.getElementById('save-fname').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); if (!e.repeat) saveGo(); } });
   document.getElementById('btn-print').addEventListener('click', () => openExportModal());
   document.getElementById('btn-example').addEventListener('click', loadExample);
   document.getElementById('btn-reset').addEventListener('click', resetDoc);
@@ -10888,11 +10828,13 @@ function dgUnitsSync() { dgDispSync(); }
 function dgOpenMenu(btn) {
   mnOpen(btn, 'op-panel', t('tb.json.import'), {
     items: [
+      { k: 'work', label: t('work.open'), hint: t('op.card.h') },
       { k: 'file', label: t('op.card'), hint: t('op.card.h') },
       { k: 'import', label: t('op.import'), hint: t('op.import.h') }
     ],
     choose: k => {
-      if (k === 'file') { const f = document.getElementById('file-load'); f.value = ''; f.click(); }
+      if (k === 'work') workOpen();
+      else if (k === 'file') { const f = document.getElementById('file-load'); f.value = ''; f.click(); }
       else openImportModal(null);
     }
   });

@@ -20,6 +20,7 @@ CONTRAST_CSS = r"""
 /* Contrastes (texte sous 18 px, 4,5 : 1 au moins) : couleur du texte seule, la palette commune ne bouge pas. */
 :where(body[data-theme="cw-nato"]) .tb-brand-short { color: #c49037; }
 :where(body[data-theme="cw-nato"]) #btn-display { color: #c49037; }
+:where(body[data-theme="cw-nato"]) #btn-load { color: #c49037; }
 :where(body[data-theme="cw-nato"]) .ed-section > summary { color: #dcbe8a; }
 :where(body[data-theme="cw-nato"]) .ed-phase-card .phase-num { color: #eee8d8; }
 :where(body[data-theme="cw-nato"]) .phase-indicator { color: #c49037; }
@@ -479,10 +480,10 @@ body {
 .tb-lang-btn:active { transform: translateY(1px); }
 
 /* Le menu « Affichage » (lot mp-ui-disposition-b) : le format du brief, Standard ou Avancé, en un bouton de la barre et son panneau, au style des listes de la barre (tbm-*) ; même composant qu'au Route Planner et au Datacard Generator */
-#btn-display { position: relative; color: var(--amber); border-color: var(--amber-dark); padding-right: 12px; }
-#btn-display:hover, #btn-display:focus-visible, #btn-display.dsp-open { border-color: var(--amber); }
-#btn-display .dsp-chev { width: 10px; height: 6px; }
-#btn-display.dsp-open .dsp-chev { transform: rotate(180deg); }
+#btn-display, #btn-load { position: relative; color: var(--amber); border-color: var(--amber-dark); padding-right: 12px; }
+#btn-display:hover, #btn-display:focus-visible, #btn-display.dsp-open, #btn-load:hover, #btn-load:focus-visible, #btn-load.dsp-open { border-color: var(--amber); }
+#btn-display .dsp-chev, #btn-load .dsp-chev { width: 10px; height: 6px; }
+#btn-display.dsp-open .dsp-chev, #btn-load.dsp-open .dsp-chev { transform: rotate(180deg); }
 .dsp-dot { position: absolute; top: -3px; right: -3px; width: 7px; height: 7px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 0 2px var(--olive-deep); pointer-events: none; }
 .dsp-dot[hidden] { display: none; }
 .dsp-panel { max-height: min(80vh, 600px); min-width: 260px; padding-bottom: 6px; }
@@ -493,6 +494,13 @@ body {
 .dsp-seg .tb-btn { flex: 1 1 auto; min-width: 0; height: auto; min-height: 44px; padding: 0 8px; font-size: 11px; letter-spacing: .2px; white-space: nowrap; margin: 0 -1px 0 0; }
 .dsp-seg .tb-btn.on, .dsp-seg .tb-btn.on:hover { background: var(--amber-dark); border-color: var(--amber); color: #f6efdc; box-shadow: inset 0 -3px 0 var(--amber); position: relative; }
 .dsp-seg .tb-btn:last-child { margin-right: 0; }
+.mn-hint { margin-left: auto; padding-left: 14px; flex: 0 1 auto; min-width: 0; text-align: right; }
+.tbm-panel.mn-panel { max-width: min(560px, calc(100vw - 16px)); }
+.mn-panel .tbm-opt .tbm-txt { flex: 0 0 auto; overflow: visible; text-overflow: clip; }
+.mn-sep { height: 1px; margin: 4px 0; background: rgba(168,154,114,.35); }
+.mn-opt + .mn-sep + .mn-opt { border-top: none; }
+.mn-opt[aria-disabled="true"] { color: var(--khaki-light); cursor: not-allowed; opacity: .7; }
+.mn-opt[aria-disabled="true"]:hover { background: none; color: var(--khaki-light); }
 .dsp-opt { outline: none; color: var(--khaki-light); }
 .dsp-opt:focus-visible { background: var(--olive); color: var(--amber); }
 
@@ -2836,12 +2844,13 @@ __CSS__
     <span class="tb-brand-short">B·G</span>
     <span class="tb-brand-sub" data-i18n="toolbar.subtitle">░ BRIEFING DE MISSION</span>
   </div>
-  <button class="tb-btn tb-file" id="btn-load" data-i18n-title="toolbar.load.tooltip" title="Ouvrir un briefing (JSON)">
+  <button type="button" class="tb-btn tb-file" id="btn-load" aria-haspopup="menu" aria-expanded="false" data-i18n-title="toolbar.load.tooltip" title="Ouvrir un travail ou un briefing" data-i18n-aria-label="toolbar.load.tooltip" aria-label="Ouvrir un travail ou un briefing">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v1H3z"/><path d="M3 10h19l-2 8a2 2 0 0 1-2 1.5H5a2 2 0 0 1-2-2z"/></svg>
     <span class="tb-btn-label" data-i18n="toolbar.load">Ouvrir</span>
+    <svg class="dsp-chev" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg>
   </button>
   <input type="file" id="file-load" accept=".json,application/json" hidden>
-  <button class="tb-btn tb-file" id="btn-save" data-i18n-title="toolbar.save.tooltip" title="Sauvegarder le briefing (JSON)">
+  <button class="tb-btn tb-file" id="btn-save" data-i18n-title="work.save.tip" title="Sauvegarder tout le travail de Mission Plan (JSON)" data-i18n-aria-label="work.save.tip" aria-label="Sauvegarder tout le travail de Mission Plan (JSON)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h11l4 4v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M8 3v5h7V3"/><rect x="7" y="13" width="10" height="8"/></svg>
     <span class="tb-btn-label" data-i18n="toolbar.save">Sauvegarder</span>
   </button>
@@ -2884,20 +2893,6 @@ __CSS__
     <button type="button" class="ui-close" id="export-modal-close" data-i18n-aria-label="modal.export.close" aria-label="Fermer">×</button>
     <h2 class="ui-title" id="export-modal-title" data-i18n="modal.export.title">Exporter le briefing</h2>
     <div class="ui-xbody"></div>
-  </div>
-</div>
-
-<!-- ===== FENÊTRE : SAUVEGARDER LE BRIEFING — CHOISIR LE NOM DU FICHIER ===== -->
-<div class="ui-modal" id="save-modal" hidden role="dialog" aria-labelledby="save-title" aria-modal="true">
-  <div class="ui-backdrop" id="save-backdrop"></div>
-  <div class="ui-panel" role="document">
-    <button type="button" class="ui-close" id="save-close" data-i18n-aria-label="modal.export.close" aria-label="Fermer">×</button>
-    <h2 class="ui-title" id="save-title" data-i18n="save.title">Sauvegarder le briefing</h2>
-    <div class="ui-field"><label class="ui-lbl" for="save-fname" data-i18n="fn.label">Nom du fichier</label><div class="ui-row"><input class="ui-in" id="save-fname" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="100"><span class="ui-ext">.json</span></div></div>
-    <div class="ui-actions">
-      <button type="button" class="ui-btn" id="save-cancel" data-i18n="rpmap.cancel">Annuler</button>
-      <button type="button" class="ui-btn primary" id="save-go" data-i18n="toolbar.save">Sauvegarder</button>
-    </div>
   </div>
 </div>
 
@@ -3314,8 +3309,11 @@ const I18N = {
     'toolbar.load':           'Ouvrir',
     'toolbar.export':         'Exporter',
     'toolbar.reset':          'Effacer',
-    'toolbar.save.tooltip':   'Sauvegarder le briefing (JSON)',
-    'toolbar.load.tooltip':   'Ouvrir un briefing (JSON)',
+    'toolbar.load.tooltip':   'Ouvrir un travail ou un briefing',
+    'work.open':              'Ouvrir un travail…',
+    'work.open.hint':         '.json',
+    'work.save.tip':          'Sauvegarder tout le travail de Mission Plan (JSON)',
+    'work.briefing':          'Ouvrir un briefing…',
     'toolbar.export.tooltip': 'Exporter en PDF ou PNG (kneeboard DCS)',
     'toolbar.reset.tooltip':  'Effacer',
     'toolbar.theme.tooltip':  'Thème graphique',
@@ -3344,8 +3342,6 @@ const I18N = {
     'modal.export.png.desc':       'Kneeboard DCS · 1588×2246, A4',
     'modal.export.png.checkAll':   'Tout cocher',
     'modal.export.png.uncheckAll': 'Tout décocher',
-    'fn.label':                    'Nom du fichier',
-    'save.title':                  'Sauvegarder le briefing',
     // ── Section 00 META ──
     'editor.header.summary':      '01 ░ EN-TÊTE',
     'editor.meta.summary':        '11 ░ MÉTADONNÉES',
@@ -3723,8 +3719,11 @@ const I18N = {
     'toolbar.load':           'Open',
     'toolbar.export':         'Export',
     'toolbar.reset':          'Clear',
-    'toolbar.save.tooltip':   'Save the briefing (JSON)',
-    'toolbar.load.tooltip':   'Open a briefing (JSON)',
+    'toolbar.load.tooltip':   'Open a work file or a briefing',
+    'work.open':              'Open a work file…',
+    'work.open.hint':         '.json',
+    'work.save.tip':          'Save all the Mission Plan work (JSON)',
+    'work.briefing':          'Open a briefing…',
     'toolbar.export.tooltip': 'Export to PDF or PNG (DCS kneeboard)',
     'toolbar.reset.tooltip':  'Clear',
     'toolbar.theme.tooltip':  'Graphic theme',
@@ -3753,8 +3752,6 @@ const I18N = {
     'modal.export.png.desc':       'DCS Kneeboard · 1588×2246, A4',
     'modal.export.png.checkAll':   'Check all',
     'modal.export.png.uncheckAll': 'Uncheck all',
-    'fn.label':                    'File name',
-    'save.title':                  'Save the briefing',
     // ── Section 00 META ──
     'editor.header.summary':      '01 ░ HEADER',
     'editor.meta.summary':        '11 ░ METADATA',
@@ -6953,6 +6950,7 @@ let previewTimer = null;
 function schedulePreview() {
   if (previewTimer) cancelAnimationFrame(previewTimer);
   previewTimer = requestAnimationFrame(() => {
+    previewTimer = null;
     renderPreview();
     persistState();
   });
@@ -7955,68 +7953,12 @@ function fnDefault(base, stamp) {
   return (b ? b + '_' : '') + stamp;
 }
 
-/* « Sauvegarder » (et Ctrl+S) : la fenêtre du nom du fichier, pré-remplie du nom d'avant */
-const SAVEN = { name: '', opener: null, at: 0 };
+/* Le nom par défaut d'un briefing : celui que propose la fenêtre d'export (PDF) */
 function defaultBriefingName() {
   const op = fnPart((state.meta.operation || 'op').toLowerCase().replace(/\s+/g, '_'), 'op');
   const ms = fnPart((state.meta.mission || 'm').toLowerCase().replace(/\s+/g, '_'), 'm');
   return fnDefault(`briefing_${op}_${ms}`, fnStamp());
 }
-function saveSync() { document.getElementById('save-go').disabled = cleanFname(SAVEN.name) === ''; }
-function openSaveModal(opener) {
-  SAVEN.name = cleanFname(defaultBriefingName());
-  SAVEN.opener = opener || document.activeElement;
-  SAVEN.at = performance.now();
-  const f = document.getElementById('save-fname');
-  f.value = SAVEN.name;
-  saveSync();
-  document.getElementById('save-modal').hidden = false;
-  f.focus({ preventScroll: true });
-  f.select();
-}
-function closeSaveModal() {
-  document.getElementById('save-modal').hidden = true;
-  const o = SAVEN.opener;
-  SAVEN.opener = null;
-  if (o && o.focus && !o.disabled) { try { o.focus({ preventScroll: true }); } catch (e) { /* ignore */ } }
-}
-function saveGo() {
-  const name = cleanFname(SAVEN.name);
-  if (name === '') return;
-  closeSaveModal();
-  downloadJson(name);
-}
-document.addEventListener('DOMContentLoaded', function bindSaveModal() {
-  ['save-close', 'save-cancel'].forEach(function(id) { document.getElementById(id).addEventListener('click', closeSaveModal); });
-  /* le fond ignore les clics des 400 ms qui suivent l'ouverture : le 2e clic d'un double-clic sur « Sauvegarder » ne ferme pas la fenêtre */
-  document.getElementById('save-backdrop').addEventListener('click', function() { if (performance.now() - SAVEN.at > 400) closeSaveModal(); });
-  document.getElementById('save-go').addEventListener('click', saveGo);
-  const f = document.getElementById('save-fname');
-  f.addEventListener('input', function(e) { SAVEN.name = e.target.value; saveSync(); });
-  f.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); if (!e.repeat) saveGo(); } });
-  /* Échap, croix et le piège du focus : le bloc d'interface commun (la fenêtre est une .ui-modal) */
-});
-
-/* L'écriture du briefing sous le nom choisi (sans extension) */
-function downloadJson(name) {
-  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
-  const fname = name + '.json';
-
-  // Try Web Share API first (better on Android)
-  if (navigator.share && navigator.canShare) {
-    try {
-      const file = new File([blob], fname, { type: 'application/json' });
-      if (navigator.canShare({ files: [file] })) {
-        navigator.share({ files: [file], title: 'Briefing ' + wingConfig.wing.id, text: fname }).catch(() => {
-          fallbackDownload(blob, fname);
-        });
-        return;
-      }
-    } catch (e) {}
-  }
-  fallbackDownload(blob, fname);
-}
-
 function fallbackDownload(blob, fname, toastMsg) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -8045,11 +7987,20 @@ function rejectNotBriefing(parsed) {
   }
 }
 
+/* Le fichier de travail de la suite : le shell l'écrit (Sauvegarder), l'ouvre (Ouvrir un travail…) et le restaure ; le module ne fait que le lui demander */
+const WORK_FORMAT = 'dcs-mission-plan-work-v1';
+function workSave() { try { parent.MP_WORK_SAVE(); } catch (e) { console.warn('[BG] sauvegarde du travail indisponible', e); } }
+function workOpen() { try { parent.MP_WORK_OPEN(); } catch (e) { console.warn('[BG] ouverture du travail indisponible', e); } }
+function workHand(text, name) { try { parent.MP_WORK_OPEN_TEXT(text, name); } catch (e) { console.warn('[BG] ouverture du travail indisponible', e); } }
+/* Le shell écrit le travail de toute la suite : il demande d'abord à chaque module d'écrire ce qu'il garde en attente (ici, le briefing dont l'écriture suit le prochain dessin de l'aperçu) */
+window.MP_FLUSH = function () { if (previewTimer) { cancelAnimationFrame(previewTimer); previewTimer = null; persistState(); } };
+
 function loadJsonFile(file) {
   const reader = new FileReader();
   reader.onload = async () => {
     let parsed;
     try { parsed = JSON.parse(reader.result); } catch (e) { console.warn('[BG] briefing : JSON illisible', e); showToast(t('rej.json'), { type: 'err' }); return; }
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed) && parsed.format === WORK_FORMAT) { workHand(reader.result, file.name); return; }       /* un travail de Mission Plan : le shell l'ouvre */
     if (!isBriefingObject(parsed)) { rejectNotBriefing(parsed); return; }
     try {
       state = mergeDeep(structuredClone(DEFAULTS), parsed);
@@ -8952,7 +8903,7 @@ function initToolbarScroll() {
 /* ============= LE MENU « AFFICHAGE » (lot mp-ui-disposition-b) =============
    Même composant et même aspect que les listes de la barre (tbm-panel dsp-panel) et que le menu du Route Planner et du Datacard Generator :
    un seul menu ouvert à la fois, avec les listes de la barre. Le panneau reste ouvert quand on choisit un format. */
-const MENU_TRIG = '.tbm-trigger, #btn-display';
+const MENU_TRIG = '.tbm-trigger, #btn-display, #btn-load';
 const MN = { cur: null, bound: false };
 
 function mnClose(refocus) {
@@ -8980,7 +8931,8 @@ function mnPlace(m) {
   p.style.left = left + 'px';
 }
 
-/* o : { build(ul), click(e), rows, cls } (un panneau qui reste ouvert) */
+/* o : { items, choose } (une ligne par geste ; le menu se ferme avant choose) ou { build(ul), click(e), rows, cls } (un panneau qui reste ouvert) ;
+   items : { k, label, hint? } (comme au Datacard Generator) */
 function mnOpen(btn, id, label, o) {
   if (MN.cur) mnClose(false);
   if (TBM.cur) tbmClose(false);
@@ -8990,11 +8942,31 @@ function mnOpen(btn, id, label, o) {
   ul.setAttribute('role', 'menu');
   ul.setAttribute('aria-label', label);
   ul.tabIndex = -1;
-  o.build(ul);
+  if (o.build) o.build(ul);
+  else o.items.forEach(it => {
+    const row = document.createElement('div');
+    row.className = 'tbm-opt dsp-opt mn-opt';
+    row.setAttribute('role', 'menuitem');
+    row.tabIndex = -1;
+    row.setAttribute('data-k', it.k);
+    const txt = document.createElement('span');
+    txt.className = 'tbm-txt';
+    txt.textContent = it.label;
+    row.appendChild(txt);
+    if (it.hint) { const h = document.createElement('span'); h.className = 'ui-note mn-hint'; h.textContent = it.hint; row.appendChild(h); }
+    ul.appendChild(row);
+  });
   document.body.appendChild(ul);
-  const m = { btn: btn, panel: ul, x0: 0, y0: 0, rows: o.rows };
+  const m = { btn: btn, panel: ul, x0: 0, y0: 0, rows: o.rows || '.mn-opt:not([aria-disabled="true"])' };
   MN.cur = m;
-  ul.addEventListener('click', o.click);
+  ul.addEventListener('click', o.click || (e => {
+    const row = e.target.closest ? e.target.closest('.mn-opt') : null;
+    if (!row) return;
+    const k = row.getAttribute('data-k');
+    mnClose(false);
+    btn.focus({ preventScroll: true });
+    o.choose(k, btn);
+  }));
   ul.addEventListener('keydown', mnKey);
   btn.classList.add('dsp-open');
   btn.setAttribute('aria-expanded', 'true');
@@ -9045,9 +9017,22 @@ function mnBind() {
     const r = m.btn.getBoundingClientRect();
     if (Math.abs(r.left - m.x0) > 0.5 || Math.abs(r.top - m.y0) > 0.5) mnClose(false);
   }, true);
-  const dsp = document.getElementById('btn-display');
+  const dsp = document.getElementById('btn-display'), opn = document.getElementById('btn-load');
   dsp.addEventListener('click', () => { if (MN.cur && MN.cur.btn === dsp) mnClose(false); else bgDisplayOpen(dsp); });
   dsp.addEventListener('keydown', e => { if (e.key === 'ArrowDown' && !MN.cur) { e.preventDefault(); bgDisplayOpen(dsp); } });
+  opn.addEventListener('click', () => { if (MN.cur && MN.cur.btn === opn) mnClose(false); else bgOpenMenu(opn); });
+  opn.addEventListener('keydown', e => { if (e.key === 'ArrowDown' && !MN.cur) { e.preventDefault(); bgOpenMenu(opn); } });
+}
+
+/* « Ouvrir ▾ » : un travail de Mission Plan, ou un briefing */
+function bgOpenMenu(btn) {
+  mnOpen(btn, 'op-panel', t('toolbar.load'), {
+    items: [
+      { k: 'work', label: t('work.open'), hint: t('work.open.hint') },
+      { k: 'briefing', label: t('work.briefing'), hint: t('work.open.hint') }
+    ],
+    choose: k => { if (k === 'work') workOpen(); else document.getElementById('file-load').click(); }
+  });
 }
 
 /* « Affichage ▾ » : le format du brief, Standard · Avancé (state.meta.format : 'simple' · 'full'), et sa note */
@@ -9149,8 +9134,7 @@ function init() {
       showToast(t('toast.briefingOptimizedOnLoad').replace('{n}', recompressed), { type: 'ok' });
     }
   });
-  document.getElementById('btn-save').addEventListener('click', e => openSaveModal(e.currentTarget));
-  document.getElementById('btn-load').addEventListener('click', () => document.getElementById('file-load').click());
+  document.getElementById('btn-save').addEventListener('click', workSave);
   document.getElementById('file-load').addEventListener('change', e => {
     if (e.target.files[0]) loadJsonFile(e.target.files[0]);
     e.target.value = '';
@@ -9171,7 +9155,7 @@ function init() {
     /* Ctrl+S (Cmd+S) : le geste du bouton « Sauvegarder », sauf fenêtre ou menu ouvert */
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
       e.preventDefault();
-      if (!document.querySelector('.ui-modal:not([hidden])') && !MN.cur && !TBM.cur) document.getElementById('btn-save').click();
+      if (!document.querySelector('.ui-modal:not([hidden])') && !MN.cur && !TBM.cur) workSave();
     }
     if (e.ctrlKey && e.key === 'p') { /* let browser handle */ }
   });
