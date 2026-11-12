@@ -5008,6 +5008,28 @@ function dgRadioModel(f) {
 function dgRsKey(ty, r, c) { return ty + '|' + r + '|' + c; }
 /* Les canaux à imprimer d'une carte : ceux du groupe de la fiche (radioPrint) quand la carte est liée ; sinon la copie de la carte (radioSel : une carte libre, une carte devenue libre, ou le groupe qui n'a pas encore radioPrint) */
 const DG_TYP = new WeakMap();       /* la saisie en cours (pas encore écrite) du nom ou de la modulation d'un canal d'une carte liée : { key, k, v } ; l'aperçu la montre, la fiche l'a au « change » */
+const DG_TYPP = { c: null, key: '', k: '', v: '', timer: 0 };       /* la saisie en attente d'écriture : une seule à la fois (un autre champ la fait écrire d’abord) */
+/* Une saisie montrée est une saisie écrite : le nom ou la modulation d'un canal d'une carte liée s'écrit dans la fiche 400 ms après la dernière frappe (une écriture par rafale), et tout de suite au « change », à la sortie du champ,
+   avant tout redessin, à pagehide, quand la page est cachée et quand le shell masque le module (la page n'a plus de taille). Rend vrai si la fiche a été écrite. */
+function dgTypFlush() {
+  clearTimeout(DG_TYPP.timer); DG_TYPP.timer = 0;
+  const c = DG_TYPP.c;
+  if (!c) return false;
+  const key = DG_TYPP.key, k = DG_TYPP.k, v = DG_TYPP.v, id = c.gsId;
+  DG_TYPP.c = null;
+  DG_TYP.delete(c);
+  if (!id) return false;
+  const ok = dgPut(id, nf => { const o = gsIsObj(nf.radioPrint) ? nf.radioPrint : gsPrintNorm(c.radioSel); const cur = gsIsObj(o[key]) ? o[key] : { on: false, label: '', mod: '' }; cur[k] = v; o[key] = cur; nf.radioPrint = o; });
+  if (ok) touch();
+  return ok;
+}
+function dgTypNote(c, key, k, v) {
+  if (DG_TYPP.c && (DG_TYPP.c !== c || DG_TYPP.key !== key || DG_TYPP.k !== k)) dgTypFlush();
+  DG_TYP.set(c, { key: key, k: k, v: v });
+  DG_TYPP.c = c; DG_TYPP.key = key; DG_TYPP.k = k; DG_TYPP.v = v;
+  clearTimeout(DG_TYPP.timer);
+  DG_TYPP.timer = setTimeout(dgTypFlush, 400);
+}
 function dgPrintOf(c) {
   const f = dgFlightOf(c), base = f && gsIsObj(f.radioPrint) ? f.radioPrint : (gsIsObj(c.radioSel) ? c.radioSel : {}), ty = DG_TYP.get(c);
   if (!ty || !f) return base;
@@ -6537,6 +6559,7 @@ function dgFocusSel(el) {
 /* keep : le redessin vient d'un autre module ; le champ qu'on est en train de saisir est gardé tel quel (même nœud : sa valeur, son focus, son curseur et sa saisie
    non validée), le reste est refait. Le « change » que le retrait du champ peut déclencher est ignoré (DG_UI.rendering). */
 function renderEditor(keep) {
+  dgTypFlush();       /* idem : ce qui remplace l'éditeur n'emporte jamais une saisie non écrite */
   const ed = document.getElementById('editor');
   const top = ed.scrollTop;
   const c = curCard();
@@ -6605,6 +6628,7 @@ function renderPack() {
 function updateModeSeg() { dgDispSync(); }
 
 function renderAll(keep) {
+  dgTypFlush();       /* la saisie en attente s'écrit avant tout redessin */
   renderPack();
   renderEditor(keep);
   renderPreview();
@@ -6707,8 +6731,8 @@ function onEditorInput(e) {
   if (e.type === 'change' && el) el._dgCommit = false;
   if (el && el.dataset && el.dataset.rs) {        /* un canal affiché : la case, le nom, la modulation (propres à la carte) */
     const c = curCard(), key = el.dataset.rs, k = el.dataset.rk, linked = !!(c.gsId && dgFlightOf(c));
-    if (linked && k !== 'on' && e.type !== 'change') { DG_TYP.set(c, { key: key, k: k, v: el.value }); renderPreview(); return; }       /* une carte liée : le nom et la modulation s'écrivent dans la fiche au « change », pas à chaque frappe ; l'aperçu suit la frappe */
-    if (k !== 'on' && e.type === 'change') { if (!linked) return; DG_TYP.delete(c); }
+    if (linked && k !== 'on' && e.type !== 'change') { dgTypNote(c, key, k, el.value); renderPreview(); return; }       /* une carte liée : le nom et la modulation s'écrivent dans la fiche au « change », pas à chaque frappe ; l'aperçu suit la frappe */
+    if (k !== 'on' && e.type === 'change') { if (!linked) return; clearTimeout(DG_TYPP.timer); DG_TYPP.c = null; DG_TYP.delete(c); }
     const put = o => {
       const cur = gsIsObj(o[key]) ? o[key] : { on: false, label: '', mod: '' };
       if (k === 'on') cur.on = el.checked; else cur[k] = el.value;
@@ -6775,6 +6799,7 @@ function onEditorFocusIn(e) {
 }
 function onEditorFocusOut(e) {
   const el = e.target;
+  if (el && el.dataset && el.dataset.rs !== undefined && !DG_UI.rendering) dgTypFlush();       /* la sortie du champ d'un canal écrit sa saisie */
   if (el && el.dataset && el.dataset.dgOther !== undefined) { dgOtherLeave(el); return; }
   if (el && el._dgCommit && !DG_UI.rendering) { el._dgCommit = false; onEditorInput({ target: el, type: 'change' }); return; }       /* la saisie gardée à travers un redessin : le « change » du navigateur est parti avec l'ancien champ, on la valide ici */
   if (DG_UI.rendering || !el || !el._dgPend || !el.dataset || !el.dataset.gs) return;
@@ -7697,6 +7722,9 @@ async function resetDoc() {
 /* ============= CÂBLAGE ============= */
 function bindEvents() {
   const ed = document.getElementById('editor');
+  window.addEventListener('pagehide', dgTypFlush);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') dgTypFlush(); });
+  if (typeof ResizeObserver === 'function') new ResizeObserver(es => { const r = es[es.length - 1].contentRect; if (!r.width || !r.height) dgTypFlush(); }).observe(document.documentElement);       /* le shell masque le module (display: none) : le document n'a plus de taille (la mesure de l'observateur, pas clientWidth, qui garde l'ancienne) */
   ed.addEventListener('input', onEditorInput);
   ed.addEventListener('keydown', onEditorKeyDown);
   ed.addEventListener('change', onEditorInput);
