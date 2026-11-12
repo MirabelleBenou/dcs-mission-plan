@@ -962,9 +962,10 @@ select[data-tbm-src] {{ display: none !important; }}
 }}
 
 /* ======== LA PAGE AUTOUR DE LA MISSION (lot mp-hq-disposition) ======== */
-/* Les boutons de la barre : Ouvrir, Sauvegarder (et son compteur), Paquets de vol, Wing, Exemple ; « Wing » prend le dessin du bouton principal tant que rien n'est configuré */
+/* Les boutons de la barre : Ouvrir, Sauvegarder (et son compteur), Paquets de vol, Wing, Exemple, Effacer ; « Wing » prend le dessin du bouton principal tant que rien n'est configuré */
 .tb-btn {{ position: relative; }}
 #btn-revert[hidden] {{ display: none; }}
+.tb-btn.danger:hover, .tb-btn.danger:focus-visible {{ background: var(--rust); border-color: var(--red-faded); color: var(--paper-light); }}
 .tb-btn:disabled {{ opacity: .4; cursor: default; }}
 .tb-btn:disabled:hover {{ background: transparent; border-color: var(--khaki); color: var(--paper); }}
 .tb-btn.primary {{ background: var(--amber); border-color: var(--amber); color: #15120c; }}
@@ -1202,6 +1203,10 @@ body[data-theme] {{
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
     <span class="tb-btn-label" data-i18n="toolbar.example">Exemple</span>
   </button>
+  <button type="button" class="tb-btn danger" id="btn-clear" disabled data-i18n-title="tb.clear.tip" title="Retirer la mission ouverte" data-i18n-aria-label="tb.clear.tip" aria-label="Retirer la mission ouverte">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+    <span class="tb-btn-label" data-i18n="tb.clear">Effacer</span>
+  </button>
   <select class="tb-select" id="theme-select" data-i18n-title="toolbar.theme.tooltip" title="Th\u00e8me graphique">
     <option value="cw-nato"     data-i18n="theme.cw-nato">Cold War OTAN</option>
     <option value="cw-soviet"   data-i18n="theme.cw-soviet">Cold War Sovi\u00e9tique</option>
@@ -1426,6 +1431,8 @@ const I18N = {{
     'tb.open.tip': 'Ouvrir une mission de l\\'éditeur de DCS',
     'tb.save': 'Sauvegarder .miz',
     'tb.revert': 'Annuler',
+    'tb.clear': 'Effacer',
+    'tb.clear.tip': 'Retirer la mission ouverte',
     'tb.save.none': 'Aucune modification à sauvegarder',
     'tb.pk': 'Paquets de vol',
     'tb.needMiz': 'Ouvrez d\\'abord une mission .miz',
@@ -1438,6 +1445,9 @@ const I18N = {{
     'hq.open.text.one': 'La modification pas encore sauvegardée sera perdue.',
     'hq.open.text.many': 'Les {{0}} modifications pas encore sauvegardées seront perdues.',
     'hq.open.verb': 'Ouvrir',
+    'hq.clear.title': 'Retirer la mission \u00ab {{0}} \u00bb\u202f?',
+    'hq.clear.text': 'HQ revient \u00e0 l\u2019\u00e9cran sans mission et les autres outils ne s\u2019en servent plus. La configuration Wing ne change pas.',
+    'hq.clear.verb': 'Retirer',
     'hq.keep': 'Garder les modifications',
     'hq.revert': 'Annuler les modifications',
     'hq.revert.title': 'Annuler les modifications ?',
@@ -1467,6 +1477,7 @@ const I18N = {{
     'fn.save.go': 'Sauvegarder',
     'toast.mizSaved': '.miz sauvegardé ✔',
     'toast.hqReverted': 'Modifications annulées.',
+    'toast.hqCleared': 'Mission retirée.',
     'toast.saveFail': '\u2717 Sauvegarde : v\u00e9rification \u00e9chou\u00e9e \u2014 rien n\u2019est t\u00e9l\u00e9charg\u00e9.',
     'hq.report.see': 'Voir le compte rendu',
     'ph.wing.shortName': 'Nom court affiché dans la barre',
@@ -1843,6 +1854,8 @@ const I18N = {{
     'tb.open.tip': 'Open a mission from the DCS editor',
     'tb.save': 'Save .miz',
     'tb.revert': 'Discard',
+    'tb.clear': 'Clear',
+    'tb.clear.tip': 'Remove the open mission',
     'tb.save.none': 'No changes to save',
     'tb.pk': 'Flight packages',
     'tb.needMiz': 'Open a .miz mission first',
@@ -1855,6 +1868,9 @@ const I18N = {{
     'hq.open.text.one': 'The unsaved change will be lost.',
     'hq.open.text.many': 'The {{0}} unsaved changes will be lost.',
     'hq.open.verb': 'Open',
+    'hq.clear.title': 'Remove the mission \u201c{{0}}\u201d?',
+    'hq.clear.text': 'HQ goes back to the empty screen and the other tools stop using it. The Wing configuration does not change.',
+    'hq.clear.verb': 'Remove',
     'hq.keep': 'Keep changes',
     'hq.revert': 'Discard changes',
     'hq.revert.title': 'Discard the changes?',
@@ -1884,6 +1900,7 @@ const I18N = {{
     'fn.save.go': 'Save',
     'toast.mizSaved': '.miz saved ✔',
     'toast.hqReverted': 'Changes discarded.',
+    'toast.hqCleared': 'Mission removed.',
     'toast.saveFail': '\u2717 Save: verification failed \u2014 nothing downloaded.',
     'hq.report.see': 'See the report',
     'ph.wing.shortName': 'Short name shown in the toolbar',
@@ -6243,6 +6260,8 @@ function hqChrome() {{
     rv.title = t('hq.revert') + (_HQ_DIRTY > 0 ? ' (' + _HQ_DIRTY + ')' : '');
     rv.setAttribute('aria-label', rv.title);
   }}
+  const cl = hqEl('btn-clear');
+  if (cl) {{ cl.disabled = busy || !ctx; cl.title = t('tb.clear.tip'); cl.setAttribute('aria-label', t('tb.clear.tip')); }}
   const cnt = hqEl('save-count');
   if (cnt) {{ cnt.textContent = String(_HQ_DIRTY); cnt.hidden = _HQ_DIRTY < 1; }}
   const pk = hqEl('btn-packages');
@@ -6352,11 +6371,42 @@ async function hqRevertAsk() {{
   if (op && !op.disabled) op.focus();      // après le retour d'askConfirm : « Annuler » a disparu, le focus va à « Ouvrir .miz »
 }}
 
+// ---------- effacer : retirer la mission ouverte (HQ revient à l'écran du premier lancement ; la configuration Wing ne bouge pas) ----------
+async function hqClearAsk() {{
+  if (_PK_BUSY || _mizLoading || !_HQ_MIZ_CONTEXT || !HQ_SNAPSHOT) return;
+  const name = (HQ_SNAPSHOT.sourceMission && HQ_SNAPSHOT.sourceMission.filename) || _mizFilename || '';
+  const text = t('hq.clear.text') + (_HQ_DIRTY > 0 ? ' ' + tn('hq.open.text', _HQ_DIRTY) : '');       /* les modifications pas encore sauvegardées, dites comme à l'ouverture d'un autre .miz */
+  const ok = await askConfirm({{ title: tf('hq.clear.title', name), text: text, verb: t('hq.clear.verb'), danger: true }});
+  if (!ok || _PK_BUSY || _mizLoading || !_HQ_MIZ_CONTEXT) return;
+  hqClearRun();
+}}
+function hqClearRun() {{
+  HQ_SNAPSHOT = null;
+  _HQ_MIZ_CONTEXT = null;
+  _HQ_DYN = null;
+  _HQ_POINT = null;
+  _HQ_DIRTY = 0;
+  _HQ_PICK = null;
+  _mizFilename = null;
+  _MIZ_LOAD_FP = '';
+  _PK_EXPORT_SEL.clear();
+  _PK_REPORT = null;
+  pkResetFilters();
+  clearPersistedSnapshot();                 // mission_snapshot_v1 : les autres outils perdent la source MISSION (l'évènement storage les prévient)
+  ['hq-left', 'hq-source', 'hq-dyn'].forEach(id => {{ const e = hqEl(id); if (e) e.textContent = ''; }});
+  pkRender();
+  hqChrome();
+  showToast(t('toast.hqCleared'), {{ type: 'ok' }});
+  const op = hqEl('btn-open');
+  if (op && !op.disabled) op.focus();       // « Effacer » est devenu inactif : le focus va à « Ouvrir .miz »
+}}
+
 // ---------- les événements de la page ----------
 function initHqShell() {{
   hqEl('btn-open').addEventListener('click', () => hqOpenPick());
   hqEl('btn-save').addEventListener('click', e => hqSaveAsk(e.currentTarget));
   hqEl('btn-revert').addEventListener('click', () => hqRevertAsk());
+  hqEl('btn-clear').addEventListener('click', () => hqClearAsk());
   hqEl('btn-packages').addEventListener('click', e => hqWinOpen('pk', e.currentTarget));
   hqEl('btn-wing').addEventListener('click', e => hqWinOpen('wing', e.currentTarget));
   // le bouton de la page vide : le geste de la barre
@@ -7062,6 +7112,19 @@ grep_present('hqRevertAsk',         'Annuler les modifications présent')
 grep_present("verb: t('hq.open.verb'), danger: true, cancel: t('hq.keep')", 'ouvrir un autre .miz : le renoncement dit « Garder les modifications »')
 grep_present("verb: t('hq.revert.verb'), danger: true, cancel: t('hq.keep')", 'annuler les modifications : le renoncement dit « Garder les modifications »')
 grep_present("o.cancel || uiT('ui.cancel')", 'askConfirm : libellé de renoncement facultatif, « Annuler » par défaut')
+grep_present('id="btn-clear"',      'bouton Effacer de la barre, après Exemple')
+grep_present("verb: t('hq.clear.verb'), danger: true", 'effacer : toujours une confirmation, en danger')
+grep_present("clearPersistedSnapshot();                 // mission_snapshot_v1", 'effacer : mission_snapshot_v1 retirée')
+# Effacer ne touche ni à la configuration Wing ni à sa clé : le contrôle arrête le build s'il en trouve une trace dans hqClearRun, ou s'il ne trouve pas la fonction
+_a = src.find('function hqClearRun() {')
+_b = src.find('\n}\n', _a)
+if _a < 0 or _b < 0:
+    raise SystemExit("[ERREUR] contrôle : hqClearRun introuvable (Effacer ne se contrôle plus)")
+if re.search(r'KEY_WING|wingConfig|persistWingConfig|wing_config_v1', src[_a:_b]):
+    raise SystemExit("[ERREUR] hqClearRun touche à la configuration Wing")
+print("  [OK] effacer ne touche pas à la configuration Wing")
+if src.index('id="btn-example"') > src.index('id="btn-clear"'):
+    raise SystemExit("[ERREUR] le bouton Effacer doit suivre Exemple")
 grep_present('data-dsx-sideclash',  'garde-fou : deux camps sur un aérodrome neutre')
 grep_present('data-dsx-multi',      'garde-fou : un template n\'a qu\'un appareil')
 grep_absent('pk.err.type',          'refus « ni .json ni .zip » absent (le contenu décide)')
