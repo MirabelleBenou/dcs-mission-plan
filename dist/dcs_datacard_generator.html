@@ -1647,7 +1647,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
     <span class="tb-btn-label" data-i18n="tb.example">Exemple</span>
   </button>
-  <button class="tb-btn danger" id="btn-reset" data-i18n-title="tb.reset.tip" data-i18n-aria-label="tb.reset.tip" title="Effacer les datacards libres" aria-label="Effacer les datacards libres">
+  <button class="tb-btn danger" id="btn-reset" data-i18n-title="tb.reset.tip" data-i18n-aria-label="tb.reset.tip" title="Tout effacer…" aria-label="Tout effacer…">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
     <span class="tb-btn-label" data-i18n="tb.reset">Effacer</span>
   </button>
@@ -2267,7 +2267,6 @@ const I18N = {
     'ui.verb.change': 'Changer',
     'ui.verb.write': 'Écrire',
     'ui.verb.delete': 'Supprimer',
-    'ui.verb.clear': 'Effacer',
     'app.title': 'Datacard Generator',
     'tb.subtitle': '░ CARTES DE BORD',
     'tb.mode.day': 'Jour',
@@ -2289,7 +2288,7 @@ const I18N = {
     'tb.example': 'Exemple',
     'tb.example.tip': 'Ouvrir la datacard d\'exemple (remplace le document en cours)',
     'tb.reset': 'Effacer',
-    'tb.reset.tip': 'Effacer les datacards libres',
+    'tb.reset.tip': 'Tout effacer…',
     'tb.theme.tip': 'Thème graphique',
     'tb.theatre': 'Théâtre',
     'tb.units': 'Unités',
@@ -2363,9 +2362,10 @@ const I18N = {
     'rad.err.range.f': 'Fréquence {0} : {1} MHz hors de la bande du poste ({2}).',
     'toast.briefFilled': 'Carte « {n} » remplie depuis le briefing (mission, date et heure, terrains, météo)',
     'toast.example': 'Exemple chargé ✓',
-    'confirm.reset.title': 'Effacer les datacards libres ?',
-    'confirm.reset.text': 'Les cartes libres seront effacées. Les cartes des groupes du Flight Configurator restent : elles suivent leur groupe.',
-    'toast.reset': 'Datacards libres effacées ✓',
+    'ft.clear.title': 'Tout effacer ?',
+    'ft.clear.text': 'Les groupes, les routes de tous les théâtres, les points de référence, dessins, symboles et calques, et toutes les datacards seront effacés du Flight Configurator, du Route Planner et du Datacard Generator. HQ, le Briefing Generator et Recon Station ne changent pas ; vos presets d’emport, le théâtre, les unités et les réglages restent. Cela ne se défait pas.',
+    'ft.clear.verb': 'Tout effacer',
+    'ft.clear.toast': 'Tout est effacé : Flight Configurator, Route Planner, Datacard Generator.',
     'confirm.delete.title': 'Supprimer cette datacard ?',
     'confirm.delete.text': 'Elle sera supprimée du document. Cela ne se défait pas.',
     'pack.dup': 'Dupliquer',
@@ -2767,7 +2767,6 @@ const I18N = {
     'ui.verb.change': 'Change',
     'ui.verb.write': 'Write',
     'ui.verb.delete': 'Delete',
-    'ui.verb.clear': 'Clear',
     'app.title': 'Datacard Generator',
     'tb.subtitle': '░ DATACARDS',
     'tb.mode.day': 'Day',
@@ -2789,7 +2788,7 @@ const I18N = {
     'tb.example': 'Example',
     'tb.example.tip': 'Open the example datacard (replaces the current document)',
     'tb.reset': 'Clear',
-    'tb.reset.tip': 'Clear the free datacards',
+    'tb.reset.tip': 'Clear everything…',
     'tb.theme.tip': 'Graphic theme',
     'tb.theatre': 'Theatre',
     'tb.units': 'Units',
@@ -2863,9 +2862,10 @@ const I18N = {
     'rad.err.range.f': 'Frequency {0}: {1} MHz is outside the radio’s band ({2}).',
     'toast.briefFilled': 'Card “{n}” filled from the briefing (mission, date and time, airfields, weather)',
     'toast.example': 'Example loaded ✓',
-    'confirm.reset.title': 'Clear the free datacards?',
-    'confirm.reset.text': "Free cards will be erased. The Flight Configurator groups' cards stay: they follow their group.",
-    'toast.reset': 'Free datacards cleared ✓',
+    'ft.clear.title': 'Clear everything?',
+    'ft.clear.text': 'The groups, the routes of every theatre, the reference points, drawings, symbols and layers, and all the datacards will be cleared from the Flight Configurator, the Route Planner and the Datacard Generator. HQ, the Briefing Generator and Recon Station do not change; your loadout presets, the theatre, the units and the settings stay. This cannot be undone.',
+    'ft.clear.verb': 'Clear everything',
+    'ft.clear.toast': 'Everything cleared: Flight Configurator, Route Planner, Datacard Generator.',
     'confirm.delete.title': 'Delete this datacard?',
     'confirm.delete.text': 'It will be deleted from the document. This cannot be undone.',
     'pack.dup': 'Duplicate',
@@ -4767,11 +4767,12 @@ function routesOfTheatre(routes, C) {
 /* ===== FIN DU THÉÂTRE D'UNE ROUTE ===== */
 /* ===== GROUPES PARTAGÉS (flight_set_v1) ===== */
 const KEY_FLIGHT_SET = 'flight_set_v1', KEY_FLIGHT_SET_BAD = 'flight_set_v1_illisible', FLIGHT_SET_FORMAT = 'dcs-flight-set-v1';
-const GS_KEY_FC = 'fc_state_v1', GS_KEY_ROUTES = 'route_set_v1', GS_KEY_ROUTE = 'route_state_v1';
+const GS_KEY_FC = 'fc_state_v1', GS_KEY_ROUTES = 'route_set_v1', GS_KEY_ROUTE = 'route_state_v1', GS_KEY_DG = 'datacard_state_v1', GS_KEY_LAYERS = 'route_layers_v1';
 
 function gsIsObj(v) { return !!v && typeof v === 'object' && !Array.isArray(v); }
 function gsLsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
 function gsLsSet(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } }
+function gsLsDel(k) { try { localStorage.removeItem(k); return true; } catch (e) { return false; } }
 function gsJson(k) { try { const r = gsLsGet(k); return r === null ? null : JSON.parse(r); } catch (e) { return null; } }
 /* Le JSON d'une valeur à clés triées : deux groupes égaux se comparent par leur texte, quel que soit l'ordre de leurs clés */
 function gsStable(v) {
@@ -4869,12 +4870,24 @@ function gsPutFlight(f) {
   } else g.flights.push(f);
   return gsWrite(g.theatre, g.flights);
 }
+/* La datacard d'un groupe retiré : les cartes de datacard_state_v1 qui portent son fcId (gsId) sont retirées ; le reste du document est gardé tel quel (ses réglages, ses autres cartes).
+   Un document absent ou illisible n'est pas touché. Les modules qui montrent des datacards se relisent par l'évènement « storage » de la clé. */
+function gsDropCard(fcId) {
+  const d = gsJson(GS_KEY_DG);
+  if (!gsIsObj(d) || !Array.isArray(d.cards)) return false;
+  const n = d.cards.filter(c => !(gsIsObj(c) && c.gsId === fcId));
+  if (n.length === d.cards.length) return false;
+  d.cards = n;
+  return gsLsSet(GS_KEY_DG, JSON.stringify(d));
+}
 function gsRemoveFlight(fcId) {
   if (!gsEnsure()) return false;
   const g = gsRead();
   const n = g.flights.filter(x => x.fcId !== fcId);
   if (n.length === g.flights.length) return true;
-  return gsWrite(g.theatre, n);
+  if (!gsWrite(g.theatre, n)) return false;
+  gsDropCard(fcId);       /* la fiche d'abord : sans elle, la datacard reste */
+  return true;
 }
 function gsSetTheatre(th) {
   if (!gsEnsure()) return false;
@@ -4889,7 +4902,7 @@ function gsReplaceAll(theatre, flights) {
 
 /* La migration : la fiche n'existe pas encore (ou ne se lit pas).
    1. les groupes de fc_state_v1 (avec leur fcId) et son théâtre ; à défaut le théâtre de route_state_v1 ; à défaut '' ;
-   2. dans l'ordre de route_set_v1, chaque route qui porte un lien par nom (flight) : les groupes de même nom rogné (casse exacte) et même camp :
+   2. dans l'ordre de route_set_v1, chaque route du théâtre de la fiche (son champ theatre, sinon celui de route_state_v1 : routeTheatre) qui porte un lien par nom (flight) : les groupes de même nom rogné (casse exacte) et même camp :
       un seul, sans route : il la prend ; un seul qui a déjà une route : rien ; aucun : un groupe neuf sans unité ; plusieurs : rien.
       Pas de route retenue sans théâtre commun : le théâtre de la fiche et celui de route_state_v1 doivent être le même ;
    3. écrit la fiche (même vide), puis, seulement si elle est écrite, réécrit fc_state_v1 en { v: 2, sel, mine } : un stockage plein laisse fc_state_v1 tel qu'il est. route_set_v1 n'est pas touché.
@@ -4921,6 +4934,7 @@ function gsMigrate(packFn) {
   if (!retry && theatre !== '' && theatre === rsTheatre && gsIsObj(set) && Array.isArray(set.routes) && typeof packFn === 'function') {
     set.routes.forEach(r => {
       if (!gsIsObj(r) || !gsIsObj(r.flight) || typeof r.rid !== 'string' || !/^[a-z0-9]{6,32}$/.test(r.rid)) return;
+      if (routeTheatre(r, rsTheatre) !== theatre) return;       /* une route d'un autre théâtre (masquée au Route Planner) ne se lie à aucun groupe : elle n'est pas de ce théâtre (R527) */
       const name = gsNameKey(r.flight.groupName), side = gsSide(r.flight.coalition);
       if (name === '') return;
       const hits = flights.filter(f => gsNameKey(f.name) === name && gsSide(f.coalition) === side);
@@ -4939,6 +4953,32 @@ function gsMigrate(packFn) {
     gsLsSet(GS_KEY_FC, JSON.stringify({ v: 2, sel: sel, mine: gsIsObj(fc.mine) ? fc.mine : {} }));
   }
   return true;
+}
+
+/* « Tout effacer » des trois outils du Flight Leader : ce qui est effacé, ce qui reste.
+   Effacé : les groupes (flight_set_v1 : une fiche vide, son théâtre gardé ; fc_state_v1 : la sélection revient au premier groupe), les routes de tous les théâtres (route_set_v1 retirée), la route, ses références
+   et sa date (route_state_v1), les calques (route_layers_v1 retirée), toutes les datacards (datacard_state_v1 : aucune carte), libres et liées.
+   Reste : les presets d'emport (fc_state_v1.mine), les réglages de route_state_v1 (théâtre, unités, cap, vitesse, boîtes, affichage), le mode et le théâtre du document des datacards, mp_theatre_v1, mp_units_v1, mp_nav_v1,
+   la langue, le thème, les replis, l'affichage ; HQ (mission_snapshot_v1), le Briefing Generator, Recon Station et wing_config_v1 ne sont jamais touchés. Une copie illisible qu'un module a gardée de la fiche
+   (flight_set_v1_illisible) reste aussi : aucun module ne la lit.
+   Les clés qui se lisent s'écrivent d'abord, la fiche en dernier : un module qui suit les évènements « storage » relit les groupes une fois le reste en place. Rend faux si une écriture a échoué. */
+function gsClearAll() {
+  let ok = true;
+  const set = (k, v) => { if (!gsLsSet(k, v)) ok = false; };
+  const del = k => { if (gsLsGet(k) !== null && !gsLsDel(k)) ok = false; };
+  del(GS_KEY_ROUTES);
+  del(GS_KEY_LAYERS);
+  const rs = gsJson(GS_KEY_ROUTE);
+  if (gsIsObj(rs)) { rs.name = ''; rs.points = []; rs.refs = []; delete rs.missionDate; set(GS_KEY_ROUTE, JSON.stringify(rs)); }
+  else del(GS_KEY_ROUTE);
+  const dg = gsJson(GS_KEY_DG);
+  if (gsIsObj(dg)) { dg.cards = []; set(GS_KEY_DG, JSON.stringify(dg)); }
+  else del(GS_KEY_DG);
+  const fc = gsJson(GS_KEY_FC);
+  if (gsIsObj(fc)) set(GS_KEY_FC, JSON.stringify({ v: 2, sel: { f: 0, u: 0 }, mine: gsIsObj(fc.mine) ? fc.mine : {} }));
+  const g = gsRead();
+  if (!gsWrite(g ? g.theatre : '', [])) ok = false;
+  return ok;
 }
 /* ===== FIN DES GROUPES PARTAGÉS ===== */
 /* ===== ÉCRITURE D'UNE ROUTE (route_set_v1, route_state_v1, copie du groupe) ===== */
@@ -10186,10 +10226,14 @@ function loadExampleNow() {
   curIdx = linked.length;
   renderAll();
 }
+/* « Tout effacer » : le même pour le Flight Configurator, le Route Planner et le Datacard Generator (gsClearAll, bloc des groupes partagés) ; toutes les datacards, libres et liées, partent ; le mode et le théâtre du document restent */
 async function resetDoc() {
-  if (!(await askConfirm({ title: t('confirm.reset.title'), text: t('confirm.reset.text'), verb: t('ui.verb.clear'), danger: true }))) return;
-  setDoc(newDoc());
-  showToast(t('toast.reset'), { type: 'ok' });
+  if (!(await askConfirm({ title: t('ft.clear.title'), text: t('ft.clear.text'), verb: t('ft.clear.verb'), danger: true }))) return;
+  clearTimeout(DG_DOC.timer); clearTimeout(dgStorage._h); clearTimeout(DG_RT.timer); DG_RT.timer = 0; DGG.pend = false;       /* une relecture en attente rendrait l'ancien état */
+  const ok = gsClearAll();
+  loadState();       /* le document sans carte : une carte vierge */
+  setDoc(doc);
+  if (ok) showToast(t('ft.clear.toast'), { type: 'ok' });
 }
 
 /* ============= CÂBLAGE ============= */

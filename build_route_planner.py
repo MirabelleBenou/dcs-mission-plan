@@ -2485,11 +2485,17 @@ const I18N = {
     'fmt.rt': 'Route Tool',
     'confirm.routeDel.title': 'Supprimer la route « {name} » ?',
     'confirm.routeDel.text': 'Ses points seront supprimés. Cela ne se défait pas.',
+    'confirm.routeDel.groups': 'Elle sera retirée des groupes qui la suivent : {list}.',
+    'ft.clear.title': 'Tout effacer ?',
+    'ft.clear.text': 'Les groupes, les routes de tous les théâtres, les points de référence, dessins, symboles et calques, et toutes les datacards seront effacés du Flight Configurator, du Route Planner et du Datacard Generator. HQ, le Briefing Generator et Recon Station ne changent pas ; vos presets d’emport, le théâtre, les unités et les réglages restent. Cela ne se défait pas.',
+    'ft.clear.verb': 'Tout effacer',
+    'ft.clear.toast': 'Tout est effacé : Flight Configurator, Route Planner, Datacard Generator.',
     'confirm.theatre': 'Passer au théâtre {th} ? Les {n} routes existantes seront supprimées.',
     'confirm.theatre.1': 'Passer au théâtre {th} ? La route existante sera supprimée.',
     'toast.routesMax': '⚠ 12 routes au plus.',
     'toast.groupsDone': 'Groupes de la route mis à jour ✓',
     'toast.groupsOther': 'groupes non rattachés : ils sont sur {th}',
+    'open.theatre.set': 'Théâtre de Mission Plan : {0}',
     'op.route': 'Ouvrir une route…',
     'op.route.h': '.json · Route Tool',
     'op.import': 'Importer des routes…',
@@ -3005,11 +3011,17 @@ const I18N = {
     'fmt.rt': 'Route Tool',
     'confirm.routeDel.title': 'Delete the route "{name}"?',
     'confirm.routeDel.text': 'Its waypoints will be deleted. This cannot be undone.',
+    'confirm.routeDel.groups': 'It will be removed from the groups that follow it: {list}.',
+    'ft.clear.title': 'Clear everything?',
+    'ft.clear.text': 'The groups, the routes of every theatre, the reference points, drawings, symbols and layers, and all the datacards will be cleared from the Flight Configurator, the Route Planner and the Datacard Generator. HQ, the Briefing Generator and Recon Station do not change; your loadout presets, the theatre, the units and the settings stay. This cannot be undone.',
+    'ft.clear.verb': 'Clear everything',
+    'ft.clear.toast': 'Everything cleared: Flight Configurator, Route Planner, Datacard Generator.',
     'confirm.theatre': 'Switch to the {th} theatre? The {n} existing routes will be deleted.',
     'confirm.theatre.1': 'Switch to the {th} theatre? The existing route will be deleted.',
     'toast.routesMax': '⚠ At most 12 routes.',
     'toast.groupsDone': 'Route groups updated ✓',
     'toast.groupsOther': 'groups not attached: they are on {th}',
+    'open.theatre.set': 'Mission Plan theatre: {0}',
     'op.route': 'Open a route…',
     'op.route.h': '.json · Route Tool',
     'op.import': 'Import routes…',
@@ -8141,7 +8153,7 @@ function clrRender() {
       '<span class="rt-nm">' + esc(t('clr.' + k)) + '</span><span class="rt-n">' + esc(right) + '</span></label>';
   }).join('');
   $('clr-go').disabled = !CLR_SETS.some(k => CLR.checked.has(k) && clrHas(c, k));
-  $('clr-all').disabled = !CLR_SETS.some(k => clrHas(c, k));
+  $('clr-all').disabled = false;       /* « Tout effacer » efface aussi les groupes et les datacards : il reste possible quand le Route Planner est vide */
 }
 
 function openClearModal(opener) {
@@ -8187,6 +8199,32 @@ function clrRun(keys) {
   showToast(t('toast.cleared', { list: what.filter(k => !(k === 'one' && has('routes'))).map(k => t('clr.' + k)).join(' · ') }), { type: 'ok', ms: 4000 });
 }
 
+/* « Tout effacer » : le même pour le Flight Configurator, le Route Planner et le Datacard Generator (gsClearAll, bloc des groupes partagés) ; le Route Planner se relit vide, ses réglages gardés */
+function rpAfterWipe() {
+  RL.pts.length = 0;
+  loadState();
+  { const k = mpNavRead(); if (k) S.navDisplay = k; }
+  loadLayers();
+  drDeselect();
+  sel = -1; selR = -1;
+  resolveLayer();
+  renderAll();
+  renderLayers(); drawLayers(); drAfterLayers();
+  persistState();
+  setTheatreView();
+}
+async function clearEverything() {
+  if (!await askConfirm({ title: t('ft.clear.title'), text: t('ft.clear.text'), verb: t('ft.clear.verb'), danger: true })) return;
+  clearTimeout(RLD.timer); RLD.stale = false; RLD.wait = false;
+  if (ADOPT.timer) { clearTimeout(ADOPT.timer); ADOPT.timer = 0; }
+  ADOPT.skipped = 0;
+  const ok = gsClearAll();
+  rpAfterWipe();
+  if (ok) showToast(t('ft.clear.toast'), { type: 'ok', ms: 4000 });
+}
+/* Les calques ont été retirés par un autre onglet (son « Tout effacer ») : ils se relisent ; toute autre écriture des calques reste celle de l'onglet qui les change */
+function rpLayersWiped() { loadLayers(); drDeselect(); renderLayers(); drawLayers(); drAfterLayers(); }
+
 function clrBind() {
   ['clr-backdrop', 'clr-close', 'clr-cancel'].forEach(id => $(id).addEventListener('click', () => rtHide('clr-modal')));
   $('clr-list').addEventListener('change', e => {
@@ -8196,12 +8234,12 @@ function clrBind() {
     clrRender();
   });
   $('clr-go').addEventListener('click', () => { const keys = CLR_SETS.filter(k => CLR.checked.has(k)); rtHide('clr-modal'); clrRun(keys); });
-  $('clr-all').addEventListener('click', () => { rtHide('clr-modal'); clrRun(CLR_SETS); });
+  $('clr-all').addEventListener('click', () => { rtHide('clr-modal'); clearEverything(); });
 }
 
 /* ============= PLUSIEURS ROUTES : LA LISTE, LES AUTRES ROUTES, LES FICHIERS ============= */
 /* Une route de plus (la route active : celle de S) ; null au plafond de 12 routes */
-function routeIsEmpty(r) { return !r.points.length && !r.flight && !groupsOfRoute(r.rid).length; }       /* une route que des groupes suivent n'est jamais remplacée par un import */
+function routeIsEmpty(r) { return !r.points.length && !r.flight && String(r.name || '').trim() === '' && !groupsOfRoute(r.rid).length; }       /* une route que des groupes suivent, ou qui porte un nom, n'est jamais remplacée par un import */
 
 function cut60(s) { return String(s).slice(0, 60); }
 
@@ -8247,8 +8285,10 @@ function duplicateRoute() {
 async function deleteRoute() {
   syncActive();
   const r = RSET.routes[RSET.active];
-  if (r.points.length && !(await askConfirm({ title: t('confirm.routeDel.title', { name: r.name !== '' ? r.name : t('rs.unnamed') }), text: t('confirm.routeDel.text'), verb: t('ui.verb.delete'), danger: true }))) return;
+  const gl = groupLabels(r.rid);       /* les groupes qui suivent la route : elle leur est retirée (route, lien et nom de route) */
+  if ((r.points.length || gl.length) && !(await askConfirm({ title: t('confirm.routeDel.title', { name: r.name !== '' ? r.name : t('rs.unnamed') }), text: t('confirm.routeDel.text') + (gl.length ? ' ' + t('confirm.routeDel.groups', { list: gl.join(', ') }) : ''), verb: t('ui.verb.delete'), danger: true }))) return;
   if (RSET.routes[RSET.active] !== r) return;       /* le jeu a changé pendant la question */
+  groupsOfRoute(r.rid).forEach(f => { gsPutFlight(groupDrops(f)); });       /* avant que la dernière route vidée prenne un rid neuf */
   if (RSET.routes.length === 1) {
     r.rid = newRid(); r.name = ''; r.points = []; r.flight = null; delete r.missionDate;      /* la dernière route vidée est une route neuve : un rid neuf, aucune date */
     S.name = ''; S.points = [];
@@ -8315,7 +8355,8 @@ function openAsRoute(route, msgFn) {
   const cross = route.theatre !== S.theatre;
   /* un autre théâtre : ses routes (masquées) reviennent, celles du théâtre courant se masquent, rien n'est supprimé, aucune confirmation */
   const land = cross ? RSET.hidden.filter(r => r.theatre === route.theatre) : RSET.routes;
-  const empty = cross ? (!land.length || !land[0].points.length) : !S.points.length;
+  const named = r => String(r.name || '').trim() !== '';       /* une route nommée n'est jamais remplacée : celle du fichier s'ajoute à côté */
+  const empty = cross ? (!land.length || (!land[0].points.length && !named(land[0]))) : (!S.points.length && !named(S));
   if (!empty && land.length >= MAX_ROUTES) { showToast(t('toast.routesMax'), { type: 'err' }); return false; }
   /* les références du RP que le fichier ne redonne pas seraient perdues : « Remplacer » (sans question), le RP d'avant se rend par « Restaurer » ; msgFn dit le résultat, une fois fait */
   const replacing = S.refs.length && JSON.stringify(S.refs) !== JSON.stringify(route.refs);
@@ -8471,6 +8512,7 @@ function adoptText(a, say, skip) {
   const parts = [];
   if (a.made) parts.push(t(a.made === 1 ? 'toast.routesMade.1' : 'toast.routesMade.n', { n: a.made }));
   if (a.skipped && skip !== false) parts.push(t(a.skipped === 1 ? 'toast.routesSkip.1' : 'toast.routesSkip.n', { n: a.skipped }));
+  if (a.theatre) parts.push(t('open.theatre.set', { 0: theatreText(a.theatre) }));
   if (say && a.other) parts.push(t('toast.groupsOther', { th: theatreText(a.other) }));
   if (a.trunc.length) parts.push(t('toast.hqTrunc', { name: a.trunc.join(', ') }));
   if (a.nodcs) parts.push(t('toast.dcsKept', { n: a.nodcs }));
@@ -8572,7 +8614,7 @@ function gsSyncRoutes() {
    opts.activate : la première route créée devient active. Rend { made, skipped, other, trunc, nodcs, routes }. */
 function gsAdoptRoutes(opts) {
   opts = opts || {};
-  const out = { made: 0, skipped: 0, other: '', trunc: [], nodcs: 0, routes: [] };
+  const out = { made: 0, skipped: 0, other: '', theatre: '', trunc: [], nodcs: 0, routes: [] };
   try {
     if (!RSET || !S) return out;
     const g = gsRead();
@@ -8586,6 +8628,7 @@ function gsAdoptRoutes(opts) {
     if (th !== S.theatre) {
       if (RSET.routes.some(r => r.points.length)) { out.other = th; return out; }
       resetRoutesForTheatre(th);
+      out.theatre = th;       /* le théâtre commun a changé : le message de reprise le dit */
     }
     const replace = routeIsEmpty(RSET.routes[RSET.active]);
     let count = RSET.routes.length - (replace ? 1 : 0);
@@ -10811,6 +10854,7 @@ function bindEvents() {
     if (e.key === KEY_UNITS) mpUnitsFollow();           /* ... ou les unités */
     if (e.key === KEY_NAV) mpNavFollow();               /* ... ou les réglages de cap */
     if (e.key === KEY_SET || e.key === KEY_STATE || e.key === null) rpReloadSoon();       /* ... ou une route (son bloc d'écriture) */
+    if (e.key === KEY_LAYERS && e.newValue === null) rpLayersWiped();       /* ... ou « Tout effacer » */
   });
   document.addEventListener('focusout', () => { if (RLD.wait) setTimeout(() => { if (RLD.wait && !rpBusy()) rpReload(); }, 60); });
   $('route-name').addEventListener('input', e => { S.name = e.target.value; persistState(); routesRender(); });

@@ -6,6 +6,8 @@ Un groupe est le vol du Flight Configurator tel qu'il est dans son état (fcId, 
 ou d'une unité est gardée telle quelle. Un groupe peut n'avoir aucune unité (units: []).
 
 Une seule façon d'écrire : relire la clé, changer le seul groupe touché, écrire (gsPutFlight, gsRemoveFlight, gsSetTheatre). Seule gsReplaceAll écrit toute la liste.
+Retirer un groupe (gsRemoveFlight) retire aussi sa datacard de datacard_state_v1 (gsDropCard) : un groupe supprimé l'est partout.
+gsClearAll() : le « Tout effacer » des trois outils du Flight Leader (Flight Configurator, Route Planner, Datacard Generator), une seule fois pour les trois (voir plus bas).
 Un échec d'écriture (stockage plein) appelle une fois par série d'échecs gsOnSaveFail() si le module la définit (son toast).
 Une route porte, facultative, la date de la mission d'où elle vient (route.missionDate, AAAA-MM-JJ) : gsRouteCopy la recopie, gsMigrate la reprend de route_set_v1 ; magRouteDate (bloc de la déclinaison) la valide.
 Rien ici ne touche au DOM, à t() ni au réseau ; tout accès au stockage est en try/catch : sans stockage, l'écran marche.
@@ -21,11 +23,12 @@ BLOCK_END = '/* ===== FIN DES GROUPES PARTAGÉS ===== */'
 
 _JS = r"""
 const KEY_FLIGHT_SET = 'flight_set_v1', KEY_FLIGHT_SET_BAD = 'flight_set_v1_illisible', FLIGHT_SET_FORMAT = 'dcs-flight-set-v1';
-const GS_KEY_FC = 'fc_state_v1', GS_KEY_ROUTES = 'route_set_v1', GS_KEY_ROUTE = 'route_state_v1';
+const GS_KEY_FC = 'fc_state_v1', GS_KEY_ROUTES = 'route_set_v1', GS_KEY_ROUTE = 'route_state_v1', GS_KEY_DG = 'datacard_state_v1', GS_KEY_LAYERS = 'route_layers_v1';
 
 function gsIsObj(v) { return !!v && typeof v === 'object' && !Array.isArray(v); }
 function gsLsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
 function gsLsSet(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } }
+function gsLsDel(k) { try { localStorage.removeItem(k); return true; } catch (e) { return false; } }
 function gsJson(k) { try { const r = gsLsGet(k); return r === null ? null : JSON.parse(r); } catch (e) { return null; } }
 /* Le JSON d'une valeur à clés triées : deux groupes égaux se comparent par leur texte, quel que soit l'ordre de leurs clés */
 function gsStable(v) {
@@ -123,12 +126,24 @@ function gsPutFlight(f) {
   } else g.flights.push(f);
   return gsWrite(g.theatre, g.flights);
 }
+/* La datacard d'un groupe retiré : les cartes de datacard_state_v1 qui portent son fcId (gsId) sont retirées ; le reste du document est gardé tel quel (ses réglages, ses autres cartes).
+   Un document absent ou illisible n'est pas touché. Les modules qui montrent des datacards se relisent par l'évènement « storage » de la clé. */
+function gsDropCard(fcId) {
+  const d = gsJson(GS_KEY_DG);
+  if (!gsIsObj(d) || !Array.isArray(d.cards)) return false;
+  const n = d.cards.filter(c => !(gsIsObj(c) && c.gsId === fcId));
+  if (n.length === d.cards.length) return false;
+  d.cards = n;
+  return gsLsSet(GS_KEY_DG, JSON.stringify(d));
+}
 function gsRemoveFlight(fcId) {
   if (!gsEnsure()) return false;
   const g = gsRead();
   const n = g.flights.filter(x => x.fcId !== fcId);
   if (n.length === g.flights.length) return true;
-  return gsWrite(g.theatre, n);
+  if (!gsWrite(g.theatre, n)) return false;
+  gsDropCard(fcId);       /* la fiche d'abord : sans elle, la datacard reste */
+  return true;
 }
 function gsSetTheatre(th) {
   if (!gsEnsure()) return false;
@@ -143,7 +158,7 @@ function gsReplaceAll(theatre, flights) {
 
 /* La migration : la fiche n'existe pas encore (ou ne se lit pas).
    1. les groupes de fc_state_v1 (avec leur fcId) et son théâtre ; à défaut le théâtre de route_state_v1 ; à défaut '' ;
-   2. dans l'ordre de route_set_v1, chaque route qui porte un lien par nom (flight) : les groupes de même nom rogné (casse exacte) et même camp :
+   2. dans l'ordre de route_set_v1, chaque route du théâtre de la fiche (son champ theatre, sinon celui de route_state_v1 : routeTheatre) qui porte un lien par nom (flight) : les groupes de même nom rogné (casse exacte) et même camp :
       un seul, sans route : il la prend ; un seul qui a déjà une route : rien ; aucun : un groupe neuf sans unité ; plusieurs : rien.
       Pas de route retenue sans théâtre commun : le théâtre de la fiche et celui de route_state_v1 doivent être le même ;
    3. écrit la fiche (même vide), puis, seulement si elle est écrite, réécrit fc_state_v1 en { v: 2, sel, mine } : un stockage plein laisse fc_state_v1 tel qu'il est. route_set_v1 n'est pas touché.
@@ -175,6 +190,7 @@ function gsMigrate(packFn) {
   if (!retry && theatre !== '' && theatre === rsTheatre && gsIsObj(set) && Array.isArray(set.routes) && typeof packFn === 'function') {
     set.routes.forEach(r => {
       if (!gsIsObj(r) || !gsIsObj(r.flight) || typeof r.rid !== 'string' || !/^[a-z0-9]{6,32}$/.test(r.rid)) return;
+      if (routeTheatre(r, rsTheatre) !== theatre) return;       /* une route d'un autre théâtre (masquée au Route Planner) ne se lie à aucun groupe : elle n'est pas de ce théâtre (R527) */
       const name = gsNameKey(r.flight.groupName), side = gsSide(r.flight.coalition);
       if (name === '') return;
       const hits = flights.filter(f => gsNameKey(f.name) === name && gsSide(f.coalition) === side);
@@ -193,6 +209,32 @@ function gsMigrate(packFn) {
     gsLsSet(GS_KEY_FC, JSON.stringify({ v: 2, sel: sel, mine: gsIsObj(fc.mine) ? fc.mine : {} }));
   }
   return true;
+}
+
+/* « Tout effacer » des trois outils du Flight Leader : ce qui est effacé, ce qui reste.
+   Effacé : les groupes (flight_set_v1 : une fiche vide, son théâtre gardé ; fc_state_v1 : la sélection revient au premier groupe), les routes de tous les théâtres (route_set_v1 retirée), la route, ses références
+   et sa date (route_state_v1), les calques (route_layers_v1 retirée), toutes les datacards (datacard_state_v1 : aucune carte), libres et liées.
+   Reste : les presets d'emport (fc_state_v1.mine), les réglages de route_state_v1 (théâtre, unités, cap, vitesse, boîtes, affichage), le mode et le théâtre du document des datacards, mp_theatre_v1, mp_units_v1, mp_nav_v1,
+   la langue, le thème, les replis, l'affichage ; HQ (mission_snapshot_v1), le Briefing Generator, Recon Station et wing_config_v1 ne sont jamais touchés. Une copie illisible qu'un module a gardée de la fiche
+   (flight_set_v1_illisible) reste aussi : aucun module ne la lit.
+   Les clés qui se lisent s'écrivent d'abord, la fiche en dernier : un module qui suit les évènements « storage » relit les groupes une fois le reste en place. Rend faux si une écriture a échoué. */
+function gsClearAll() {
+  let ok = true;
+  const set = (k, v) => { if (!gsLsSet(k, v)) ok = false; };
+  const del = k => { if (gsLsGet(k) !== null && !gsLsDel(k)) ok = false; };
+  del(GS_KEY_ROUTES);
+  del(GS_KEY_LAYERS);
+  const rs = gsJson(GS_KEY_ROUTE);
+  if (gsIsObj(rs)) { rs.name = ''; rs.points = []; rs.refs = []; delete rs.missionDate; set(GS_KEY_ROUTE, JSON.stringify(rs)); }
+  else del(GS_KEY_ROUTE);
+  const dg = gsJson(GS_KEY_DG);
+  if (gsIsObj(dg)) { dg.cards = []; set(GS_KEY_DG, JSON.stringify(dg)); }
+  else del(GS_KEY_DG);
+  const fc = gsJson(GS_KEY_FC);
+  if (gsIsObj(fc)) set(GS_KEY_FC, JSON.stringify({ v: 2, sel: { f: 0, u: 0 }, mine: gsIsObj(fc.mine) ? fc.mine : {} }));
+  const g = gsRead();
+  if (!gsWrite(g ? g.theatre : '', [])) ok = false;
+  return ok;
 }
 """
 

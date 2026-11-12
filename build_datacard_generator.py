@@ -1927,7 +1927,7 @@ __CSS__
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
     <span class="tb-btn-label" data-i18n="tb.example">Exemple</span>
   </button>
-  <button class="tb-btn danger" id="btn-reset" data-i18n-title="tb.reset.tip" data-i18n-aria-label="tb.reset.tip" title="Effacer les datacards libres" aria-label="Effacer les datacards libres">
+  <button class="tb-btn danger" id="btn-reset" data-i18n-title="tb.reset.tip" data-i18n-aria-label="tb.reset.tip" title="Tout effacer…" aria-label="Tout effacer…">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
     <span class="tb-btn-label" data-i18n="tb.reset">Effacer</span>
   </button>
@@ -2134,7 +2134,6 @@ const I18N = {
     'ui.verb.change': 'Changer',
     'ui.verb.write': 'Écrire',
     'ui.verb.delete': 'Supprimer',
-    'ui.verb.clear': 'Effacer',
     'app.title': 'Datacard Generator',
     'tb.subtitle': '░ CARTES DE BORD',
     'tb.mode.day': 'Jour',
@@ -2156,7 +2155,7 @@ const I18N = {
     'tb.example': 'Exemple',
     'tb.example.tip': 'Ouvrir la datacard d\'exemple (remplace le document en cours)',
     'tb.reset': 'Effacer',
-    'tb.reset.tip': 'Effacer les datacards libres',
+    'tb.reset.tip': 'Tout effacer…',
     'tb.theme.tip': 'Thème graphique',
     'tb.theatre': 'Théâtre',
     'tb.units': 'Unités',
@@ -2230,9 +2229,10 @@ const I18N = {
     'rad.err.range.f': 'Fréquence {0} : {1} MHz hors de la bande du poste ({2}).',
     'toast.briefFilled': 'Carte « {n} » remplie depuis le briefing (mission, date et heure, terrains, météo)',
     'toast.example': 'Exemple chargé ✓',
-    'confirm.reset.title': 'Effacer les datacards libres ?',
-    'confirm.reset.text': 'Les cartes libres seront effacées. Les cartes des groupes du Flight Configurator restent : elles suivent leur groupe.',
-    'toast.reset': 'Datacards libres effacées ✓',
+    'ft.clear.title': 'Tout effacer ?',
+    'ft.clear.text': 'Les groupes, les routes de tous les théâtres, les points de référence, dessins, symboles et calques, et toutes les datacards seront effacés du Flight Configurator, du Route Planner et du Datacard Generator. HQ, le Briefing Generator et Recon Station ne changent pas ; vos presets d’emport, le théâtre, les unités et les réglages restent. Cela ne se défait pas.',
+    'ft.clear.verb': 'Tout effacer',
+    'ft.clear.toast': 'Tout est effacé : Flight Configurator, Route Planner, Datacard Generator.',
     'confirm.delete.title': 'Supprimer cette datacard ?',
     'confirm.delete.text': 'Elle sera supprimée du document. Cela ne se défait pas.',
     'pack.dup': 'Dupliquer',
@@ -2634,7 +2634,6 @@ const I18N = {
     'ui.verb.change': 'Change',
     'ui.verb.write': 'Write',
     'ui.verb.delete': 'Delete',
-    'ui.verb.clear': 'Clear',
     'app.title': 'Datacard Generator',
     'tb.subtitle': '░ DATACARDS',
     'tb.mode.day': 'Day',
@@ -2656,7 +2655,7 @@ const I18N = {
     'tb.example': 'Example',
     'tb.example.tip': 'Open the example datacard (replaces the current document)',
     'tb.reset': 'Clear',
-    'tb.reset.tip': 'Clear the free datacards',
+    'tb.reset.tip': 'Clear everything…',
     'tb.theme.tip': 'Graphic theme',
     'tb.theatre': 'Theatre',
     'tb.units': 'Units',
@@ -2730,9 +2729,10 @@ const I18N = {
     'rad.err.range.f': 'Frequency {0}: {1} MHz is outside the radio’s band ({2}).',
     'toast.briefFilled': 'Card “{n}” filled from the briefing (mission, date and time, airfields, weather)',
     'toast.example': 'Example loaded ✓',
-    'confirm.reset.title': 'Clear the free datacards?',
-    'confirm.reset.text': "Free cards will be erased. The Flight Configurator groups' cards stay: they follow their group.",
-    'toast.reset': 'Free datacards cleared ✓',
+    'ft.clear.title': 'Clear everything?',
+    'ft.clear.text': 'The groups, the routes of every theatre, the reference points, drawings, symbols and layers, and all the datacards will be cleared from the Flight Configurator, the Route Planner and the Datacard Generator. HQ, the Briefing Generator and Recon Station do not change; your loadout presets, the theatre, the units and the settings stay. This cannot be undone.',
+    'ft.clear.verb': 'Clear everything',
+    'ft.clear.toast': 'Everything cleared: Flight Configurator, Route Planner, Datacard Generator.',
     'confirm.delete.title': 'Delete this datacard?',
     'confirm.delete.text': 'It will be deleted from the document. This cannot be undone.',
     'pack.dup': 'Duplicate',
@@ -7663,10 +7663,14 @@ function loadExampleNow() {
   curIdx = linked.length;
   renderAll();
 }
+/* « Tout effacer » : le même pour le Flight Configurator, le Route Planner et le Datacard Generator (gsClearAll, bloc des groupes partagés) ; toutes les datacards, libres et liées, partent ; le mode et le théâtre du document restent */
 async function resetDoc() {
-  if (!(await askConfirm({ title: t('confirm.reset.title'), text: t('confirm.reset.text'), verb: t('ui.verb.clear'), danger: true }))) return;
-  setDoc(newDoc());
-  showToast(t('toast.reset'), { type: 'ok' });
+  if (!(await askConfirm({ title: t('ft.clear.title'), text: t('ft.clear.text'), verb: t('ft.clear.verb'), danger: true }))) return;
+  clearTimeout(DG_DOC.timer); clearTimeout(dgStorage._h); clearTimeout(DG_RT.timer); DG_RT.timer = 0; DGG.pend = false;       /* une relecture en attente rendrait l'ancien état */
+  const ok = gsClearAll();
+  loadState();       /* le document sans carte : une carte vierge */
+  setDoc(doc);
+  if (ok) showToast(t('ft.clear.toast'), { type: 'ok' });
 }
 
 /* ============= CÂBLAGE ============= */

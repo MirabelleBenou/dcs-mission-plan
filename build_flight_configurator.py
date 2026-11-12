@@ -440,7 +440,7 @@ I18N_FR = {
     'tb.export': 'Exporter',
     'tb.export.tip': 'Exporter le paquet de vol pour le Mission Commander',
     'tb.clear': 'Effacer',
-    'tb.clear.tip': 'Effacer',
+    'tb.clear.tip': 'Tout effacer…',
     'tb.example': 'Exemple',
     'tb.example.tip': 'Ouvrir l\u2019exemple : deux groupes (deux Mi-24P, deux Mi-8MT) ; le travail en cours se restaure en un geste',
     'toast.example': 'Exemple chargé',
@@ -669,11 +669,12 @@ I18N_FR = {
     'open.done': 'Fichier ouvert : {0} groupe(s).',
     'open.ignored': '{0} groupe(s) non géré(s) ignoré(s).',
 
-    'clear.confirm.title': 'Effacer le module ?',
-    'clear.confirm.text': 'Les groupes, la route et l’emport en cours seront effacés ; vos presets restent. Cela ne se défait pas.',
+    'ft.clear.title': 'Tout effacer ?',
+    'ft.clear.text': 'Les groupes, les routes de tous les théâtres, les points de référence, dessins, symboles et calques, et toutes les datacards seront effacés du Flight Configurator, du Route Planner et du Datacard Generator. HQ, le Briefing Generator et Recon Station ne changent pas ; vos presets d’emport, le théâtre, les unités et les réglages restent. Cela ne se défait pas.',
+    'ft.clear.verb': 'Tout effacer',
+    'ft.clear.toast': 'Tout est effacé : Flight Configurator, Route Planner, Datacard Generator.',
     'fl.remove.confirm.title': 'Retirer le groupe « {0} » ?',
-    'fl.remove.confirm.text': 'Ce groupe est partagé avec le Route Planner et le Datacard Generator : il sera retiré de tous les modules.',
-    'ui.verb.clear': 'Effacer',
+    'fl.remove.confirm.text': 'Ce groupe est partagé avec le Route Planner et le Datacard Generator : il sera retiré de tous les modules, sa datacard comprise.',
     'ui.verb.change': 'Changer',
     'ui.verb.remove': 'Retirer',
 
@@ -721,7 +722,7 @@ I18N_EN = {
     'tb.export': 'Export',
     'tb.export.tip': 'Export the flight package for the Mission Commander',
     'tb.clear': 'Clear',
-    'tb.clear.tip': 'Clear',
+    'tb.clear.tip': 'Clear everything…',
     'tb.example': 'Example',
     'tb.example.tip': 'Open the example: two groups (two Mi-24P, two Mi-8MT); the work in progress comes back in one tap',
     'toast.example': 'Example loaded',
@@ -950,11 +951,12 @@ I18N_EN = {
     'open.done': 'File opened: {0} group(s).',
     'open.ignored': '{0} unhandled group(s) ignored.',
 
-    'clear.confirm.title': 'Clear the module?',
-    'clear.confirm.text': 'The groups, route and loadouts in progress will be erased; your presets stay. This cannot be undone.',
+    'ft.clear.title': 'Clear everything?',
+    'ft.clear.text': 'The groups, the routes of every theatre, the reference points, drawings, symbols and layers, and all the datacards will be cleared from the Flight Configurator, the Route Planner and the Datacard Generator. HQ, the Briefing Generator and Recon Station do not change; your loadout presets, the theatre, the units and the settings stay. This cannot be undone.',
+    'ft.clear.verb': 'Clear everything',
+    'ft.clear.toast': 'Everything cleared: Flight Configurator, Route Planner, Datacard Generator.',
     'fl.remove.confirm.title': 'Remove the group “{0}”?',
-    'fl.remove.confirm.text': 'This group is shared with the Route Planner and the Datacard Generator: it will be removed from all modules.',
-    'ui.verb.clear': 'Clear',
+    'fl.remove.confirm.text': 'This group is shared with the Route Planner and the Datacard Generator: it will be removed from all tools, its datacard included.',
     'ui.verb.change': 'Change',
     'ui.verb.remove': 'Remove',
 
@@ -4224,14 +4226,21 @@ function exportFile() {
     }
   });
 }
+// « Tout effacer » : le même pour le Flight Configurator, le Route Planner et le Datacard Generator (gsClearAll, bloc des groupes partagés) ; ici l'écran se vide, les presets et le théâtre restent.
 async function clearAll() {
-  if (!await askConfirm({ title: t('clear.confirm.title'), text: t('clear.confirm.text'), verb: t('ui.verb.clear'), danger: true })) return;
-  Object.assign(S, { flights: [], sel: { f: 0, u: 0 } });       // le théâtre commun reste
+  if (!await askConfirm({ title: t('ft.clear.title'), text: t('ft.clear.text'), verb: t('ft.clear.verb'), danger: true })) return;
+  clearTimeout(_saveTimer); _saveTimer = 0;       // une écriture en attente rendrait les groupes à la fiche
+  const ok = gsClearAll();
+  S.flights = []; S.sel = { f: 0, u: 0 };       // le théâtre commun reste
+  GS.removed = [];
+  gsMarkAll();       // la fiche est vide : ce que le module a lu d'elle
   UI.clamped = 0;
   UI.exportTried = false;
-  UI.cmp.saving = false;
+  UI.rtChoose = null;
+  Object.assign(UI.cmp, { saving: false, err: '', st: null });
   renderAll();
   commitNow();
+  if (ok) showToast(t('ft.clear.toast'), { type: 'ok' });
 }
 // ---------- 7. Événements ----------
 function addFlight() {
