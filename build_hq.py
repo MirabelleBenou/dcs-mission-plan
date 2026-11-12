@@ -1371,6 +1371,7 @@ const I18N = {{
     'f.search': 'Rechercher…',
     'ui.close': 'Fermer',
     'ui.restore': 'Restaurer',
+    'ui.restore.refused': 'Restauration impossible : les données ont changé depuis.',
     'ui.foldall': 'Tout replier',
     'ui.unfoldall': 'Tout déplier',
     'ui.fmt': 'Format',
@@ -1795,6 +1796,7 @@ const I18N = {{
     'f.search': 'Search…',
     'ui.close': 'Close',
     'ui.restore': 'Restore',
+    'ui.restore.refused': 'Cannot restore: the data has changed since.',
     'ui.foldall': 'Fold all',
     'ui.unfoldall': 'Unfold all',
     'ui.fmt': 'Format',
@@ -6348,6 +6350,9 @@ function hqClearRun() {{
   _MIZ_LOAD_FP = '';
   _PK_EXPORT_SEL.clear();
   _PK_REPORT = null;
+  _PK_LIST = [];                            // les paquets chargés et les refus du dernier chargement : comme au premier lancement
+  _PK_REFUSED = [];
+  _PK_SEQ = 0;
   pkResetFilters();
   clearPersistedSnapshot();                 // mission_snapshot_v1 : les autres outils perdent la source MISSION (l'évènement storage les prévient)
   ['hq-left', 'hq-source', 'hq-dyn'].forEach(id => {{ const e = hqEl(id); if (e) e.textContent = ''; }});

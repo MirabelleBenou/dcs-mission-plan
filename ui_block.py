@@ -13,7 +13,7 @@ Quatre textes, identiques à l'octet dans les six dist/ (les deux derniers, la l
                   Flight Configurator et Recon Station ; ce qui diffère d'un module à l'autre se règle par TBM.cfg (voir l'en-tête du script)
 
 Le bloc ne dépend que des variables de thème communes (--olive-dark, --amber, --khaki, --khaki-light, --paper, --green-radar,
---f-stencil, --f-ui, --f-typewriter), de t() du module (clés ui.cancel, ui.close, ui.restore, ui.foldall, ui.unfoldall, ui.fmt,
+--f-stencil, --f-ui, --f-typewriter), de t() du module (clés ui.cancel, ui.close, ui.restore, ui.restore.refused, ui.foldall, ui.unfoldall, ui.fmt,
 ui.pages, ui.fname, ui.export, ui.all, et f.search pour la recherche d'une liste) et de showToast() du bloc de messages (messages_block.py).
 
 askConfirm({ title, text, verb, danger, cancel } : cancel, facultatif, est le libellé du bouton de renoncement (« Annuler » par défaut).
@@ -295,11 +295,12 @@ function replaceWithRestore(o) {
     const mem = o.mem ? o.mem() : null;                 /* d'abord la copie en mémoire (un module peut y vider son écriture en attente), puis les clés */
     const ls = {};
     (o.keys || []).forEach(k => { try { ls[k] = localStorage.getItem(k); } catch (e) { ls[k] = null; } });
-    snap = { ls: ls, mem: mem, back: o.back };
+    snap = { ls: ls, mem: mem, back: o.back, keys: (o.keys || []).slice(), after: null };
     UIK.restore = null;
   }
   const fin = r => {
     if (r === false) return false;
+    snap.after = uiKeysNow(snap.keys);                  /* l'état écrit après le remplacement : « Restaurer » ne vaut que tant qu'il est encore là */
     UIK.restore = snap;
     showToast((typeof o.msg === 'function' ? o.msg() : o.msg) + ' ·', { action: { label: uiT('ui.restore'), fn: () => uiRestore(snap) }, ms: 12000 });
     UIK.restoreN = showToast._n;
@@ -308,12 +309,21 @@ function replaceWithRestore(o) {
   const r = o.run();
   return (r && typeof r.then === 'function') ? r.then(fin) : fin(r);
 }
+function uiKeysNow(keys) {
+  const r = {};
+  keys.forEach(k => { try { r[k] = localStorage.getItem(k); } catch (e) { r[k] = null; } });
+  return r;
+}
 function uiRestoreKeys(snap) {
   Object.keys(snap.ls).forEach(k => { try { if (snap.ls[k] === null) localStorage.removeItem(k); else localStorage.setItem(k, snap.ls[k]); } catch (e) { /* ignore */ } });
 }
 function uiRestore(snap) {
   if (UIK.restore !== snap) return;
   UIK.restore = null;
+  if (snap.after) {                                   /* une de ces clés a changé depuis (Tout effacer, un autre outil, un autre geste) : rien n'est écrit, rien ne revient */
+    const now = uiKeysNow(snap.keys);
+    if (snap.keys.some(k => now[k] !== snap.after[k])) { showToast(uiT('ui.restore.refused'), { type: 'err' }); return; }
+  }
   uiRestoreKeys(snap);
   try { if (snap.back) snap.back(snap.mem); } catch (e) { console.warn('[ui] restauration', e); }
   uiRestoreKeys(snap);                                /* le stockage redevient, à l'octet, celui d'avant le geste */

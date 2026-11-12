@@ -190,7 +190,7 @@ function gsMigrate(packFn) {
   if (!retry && theatre !== '' && theatre === rsTheatre && gsIsObj(set) && Array.isArray(set.routes) && typeof packFn === 'function') {
     set.routes.forEach(r => {
       if (!gsIsObj(r) || !gsIsObj(r.flight) || typeof r.rid !== 'string' || !/^[a-z0-9]{6,32}$/.test(r.rid)) return;
-      if (routeTheatre(r, rsTheatre) !== theatre) return;       /* une route d'un autre théâtre (masquée au Route Planner) ne se lie à aucun groupe : elle n'est pas de ce théâtre (R527) */
+      if (routeTheatre(r, rsTheatre) !== theatre) return;       /* une route d'un autre théâtre (masquée au Route Planner) ne se lie à aucun groupe : elle n'est pas de ce théâtre */
       const name = gsNameKey(r.flight.groupName), side = gsSide(r.flight.coalition);
       if (name === '') return;
       const hits = flights.filter(f => gsNameKey(f.name) === name && gsSide(f.coalition) === side);
@@ -215,8 +215,8 @@ function gsMigrate(packFn) {
    Effacé : les groupes (flight_set_v1 : une fiche vide, son théâtre gardé ; fc_state_v1 : la sélection revient au premier groupe), les routes de tous les théâtres (route_set_v1 retirée), la route, ses références
    et sa date (route_state_v1), les calques (route_layers_v1 retirée), toutes les datacards (datacard_state_v1 : aucune carte), libres et liées.
    Reste : les presets d'emport (fc_state_v1.mine), les réglages de route_state_v1 (théâtre, unités, cap, vitesse, boîtes, affichage), le mode et le théâtre du document des datacards, mp_theatre_v1, mp_units_v1, mp_nav_v1,
-   la langue, le thème, les replis, l'affichage ; HQ (mission_snapshot_v1), le Briefing Generator, Recon Station et wing_config_v1 ne sont jamais touchés. Une copie illisible qu'un module a gardée de la fiche
-   (flight_set_v1_illisible) reste aussi : aucun module ne la lit.
+   la langue, le thème, les replis, l'affichage ; HQ (mission_snapshot_v1), le Briefing Generator, Recon Station et wing_config_v1 ne sont jamais touchés. La copie d'anciens groupes qu'un module a gardée de la fiche
+   (flight_set_v1_illisible) est retirée aussi : un groupe effacé ne doit pas revenir de là.
    Les clés qui se lisent s'écrivent d'abord, la fiche en dernier : un module qui suit les évènements « storage » relit les groupes une fois le reste en place. Rend faux si une écriture a échoué. */
 function gsClearAll() {
   let ok = true;
@@ -224,6 +224,7 @@ function gsClearAll() {
   const del = k => { if (gsLsGet(k) !== null && !gsLsDel(k)) ok = false; };
   del(GS_KEY_ROUTES);
   del(GS_KEY_LAYERS);
+  del(KEY_FLIGHT_SET_BAD);
   const rs = gsJson(GS_KEY_ROUTE);
   if (gsIsObj(rs)) { rs.name = ''; rs.points = []; rs.refs = []; delete rs.missionDate; set(GS_KEY_ROUTE, JSON.stringify(rs)); }
   else del(GS_KEY_ROUTE);

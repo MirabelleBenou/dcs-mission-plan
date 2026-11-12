@@ -3531,6 +3531,7 @@ const I18N = {
     'f.search': 'Rechercher…',
     'ui.close': 'Fermer',
     'ui.restore': 'Restaurer',
+    'ui.restore.refused': 'Restauration impossible : les données ont changé depuis.',
     'ui.foldall': 'Tout replier',
     'ui.unfoldall': 'Tout déplier',
     'ui.fmt': 'Format',
@@ -3946,6 +3947,7 @@ const I18N = {
     'f.search': 'Search…',
     'ui.close': 'Close',
     'ui.restore': 'Restore',
+    'ui.restore.refused': 'Cannot restore: the data has changed since.',
     'ui.foldall': 'Fold all',
     'ui.unfoldall': 'Unfold all',
     'ui.fmt': 'Format',
@@ -8361,11 +8363,12 @@ function replaceWithRestore(o) {
     const mem = o.mem ? o.mem() : null;                 /* d'abord la copie en mémoire (un module peut y vider son écriture en attente), puis les clés */
     const ls = {};
     (o.keys || []).forEach(k => { try { ls[k] = localStorage.getItem(k); } catch (e) { ls[k] = null; } });
-    snap = { ls: ls, mem: mem, back: o.back };
+    snap = { ls: ls, mem: mem, back: o.back, keys: (o.keys || []).slice(), after: null };
     UIK.restore = null;
   }
   const fin = r => {
     if (r === false) return false;
+    snap.after = uiKeysNow(snap.keys);                  /* l'état écrit après le remplacement : « Restaurer » ne vaut que tant qu'il est encore là */
     UIK.restore = snap;
     showToast((typeof o.msg === 'function' ? o.msg() : o.msg) + ' ·', { action: { label: uiT('ui.restore'), fn: () => uiRestore(snap) }, ms: 12000 });
     UIK.restoreN = showToast._n;
@@ -8374,12 +8377,21 @@ function replaceWithRestore(o) {
   const r = o.run();
   return (r && typeof r.then === 'function') ? r.then(fin) : fin(r);
 }
+function uiKeysNow(keys) {
+  const r = {};
+  keys.forEach(k => { try { r[k] = localStorage.getItem(k); } catch (e) { r[k] = null; } });
+  return r;
+}
 function uiRestoreKeys(snap) {
   Object.keys(snap.ls).forEach(k => { try { if (snap.ls[k] === null) localStorage.removeItem(k); else localStorage.setItem(k, snap.ls[k]); } catch (e) { /* ignore */ } });
 }
 function uiRestore(snap) {
   if (UIK.restore !== snap) return;
   UIK.restore = null;
+  if (snap.after) {                                   /* une de ces clés a changé depuis (Tout effacer, un autre outil, un autre geste) : rien n'est écrit, rien ne revient */
+    const now = uiKeysNow(snap.keys);
+    if (snap.keys.some(k => now[k] !== snap.after[k])) { showToast(uiT('ui.restore.refused'), { type: 'err' }); return; }
+  }
   uiRestoreKeys(snap);
   try { if (snap.back) snap.back(snap.mem); } catch (e) { console.warn('[ui] restauration', e); }
   uiRestoreKeys(snap);                                /* le stockage redevient, à l'octet, celui d'avant le geste */

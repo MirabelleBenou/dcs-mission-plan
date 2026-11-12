@@ -2170,6 +2170,7 @@ const I18N = {
     'f.search': 'Rechercher…',
     'ui.close': 'Fermer',
     'ui.restore': 'Restaurer',
+    'ui.restore.refused': 'Restauration impossible : les données ont changé depuis.',
     'ui.foldall': 'Tout replier',
     'ui.unfoldall': 'Tout déplier',
     'ui.fmt': 'Format',
@@ -2262,6 +2263,7 @@ const I18N = {
     'clr.all': 'Tout effacer',
     'clr.go': 'Effacer la sélection',
     'toast.cleared': 'Effacé : {list}',
+    'toast.groupsDetached': '{n} groupe(s) n’ont plus de route.',
     'tb.theme.tip': 'Thème graphique',
     'tb.lang.tip': 'Passer en anglais',
     'theme.cw-nato': 'Cold War OTAN',
@@ -2697,6 +2699,7 @@ const I18N = {
     'f.search': 'Search…',
     'ui.close': 'Close',
     'ui.restore': 'Restore',
+    'ui.restore.refused': 'Cannot restore: the data has changed since.',
     'ui.foldall': 'Fold all',
     'ui.unfoldall': 'Unfold all',
     'ui.fmt': 'Format',
@@ -2789,6 +2792,7 @@ const I18N = {
     'clr.all': 'Clear all',
     'clr.go': 'Clear selected',
     'toast.cleared': 'Cleared: {list}',
+    'toast.groupsDetached': '{n} group(s) no longer have a route.',
     'tb.theme.tip': 'Graphic theme',
     'tb.lang.tip': 'Switch to French',
     'theme.cw-nato': 'Cold War NATO',
@@ -8053,7 +8057,7 @@ function rpBack(m) {
   RLD.base = rpSnap();
 }
 function loadExample() {
-  replaceWithRestore({ keys: rpReplaceKeys(), mem: rpMem, back: rpBack, msg: t('toast.exampleLoaded'), run: loadExampleNow });
+  replaceWithRestore({ keys: rpReplaceKeys(), mem: rpMem, back: rpBack, msg: () => t('toast.exampleLoaded') + rpDetachedText(), run: loadExampleNow });
 }
 function loadExampleNow() {
   const ex = parseRoute(JSON.parse(JSON.stringify(CURRENT_LANG === 'en' ? EXAMPLE_ROUTE_EN : EXAMPLE_ROUTE))).route;   // la langue de l'interface au moment du clic
@@ -8061,6 +8065,7 @@ function loadExampleNow() {
   if (ku) ex.units = { distance: ku.distance, altitude: ku.altitude };       // l'exemple s'affiche dans les unités partagées et n'écrit pas la clé
   { const kn = mpNavRead(); if (kn) ex.navDisplay = kn; }       // ... et dans les réglages de cap communs
   syncActive();
+  const before = rpRids();
   if (ex.theatre === S.theatre) { RSET.routes = [blankRoute()]; RSET.active = 0; S.name = ''; S.points = RSET.routes[0].points; }       // le travail en cours (les routes de ce théâtre) est remplacé, comme avant
   else {
     /* un autre théâtre : les routes du théâtre courant se masquent (gardées), l'exemple entre dans la route active vide de son théâtre, sinon il s'y ajoute (au plafond : il remplace la route active) */
@@ -8071,11 +8076,12 @@ function loadExampleNow() {
     }
   }
   setRoute(ex, true);
+  RPD.n = rpDetachGone(before);       /* les routes que l'exemple a remplacées ne sont plus suivies */
 }
 
 /* ============= « EFFACER » : CHOISIR CE QUI S'EFFACE ============= */
 /* Six ensembles, dans cet ordre. Les dessins et les symboles OTAN sont les objets des calques dessinés (source « drawn ») ; les calques importés sont ceux d'un
-   fichier CombatFlite. Les routes : la sélectionnée (nom et points, le lien reste) ou toutes (il reste une route vide, sans lien, active). */
+   fichier CombatFlite. Les routes : la sélectionnée (nom et points ; les groupes qui la suivaient ne la suivent plus) ou toutes (il reste une route vide, sans lien, active ; les groupes qui les suivaient ne les suivent plus). */
 const CLR_SETS = ['one', 'routes', 'refs', 'draw', 'sym', 'layers'];
 const CLR = { checked: new Set() };
 
@@ -8130,6 +8136,7 @@ function clrRun(keys) {
   const what = CLR_SETS.filter(k => keys.indexOf(k) !== -1 && clrHas(c, k));
   if (!what.length) return;
   const has = k => what.indexOf(k) !== -1;
+  const before = rpRids(), activeRid = RSET.routes[RSET.active].rid;
   if (has('routes')) {
     RSET.routes = [blankRoute()]; RSET.active = 0;       /* les routes du théâtre courant seulement : celles des autres théâtres restent */
     S.name = ''; S.points = RSET.routes[0].points;
@@ -8150,11 +8157,12 @@ function clrRun(keys) {
     /* les calques dessinés restent, même vides, avec leur nom */
   }
   if (has('layers')) { CF_LAYERS = CF_LAYERS.filter(l => l.source.kind === 'drawn'); layers = true; }
+  if (has('one') || has('routes')) RPD.n = rpDetachGone(before, has('one') ? [activeRid] : []);       /* une route qui se vide ou qui part n'est plus suivie par aucun groupe */
   persistState();
   if (layers) { drDeselect(); layersChanged(); }
   renderAll();
   if (has('one') || has('routes')) setTheatreView();
-  showToast(t('toast.cleared', { list: what.filter(k => !(k === 'one' && has('routes'))).map(k => t('clr.' + k)).join(' · ') }), { type: 'ok', ms: 4000 });
+  showToast(t('toast.cleared', { list: what.filter(k => !(k === 'one' && has('routes'))).map(k => t('clr.' + k)).join(' · ') }) + rpDetachedText(), { type: 'ok', ms: 4000 });
 }
 
 /* « Tout effacer » : le même pour le Flight Configurator, le Route Planner et le Datacard Generator (gsClearAll, bloc des groupes partagés) ; le Route Planner se relit vide, ses réglages gardés */
@@ -8172,13 +8180,14 @@ function rpAfterWipe() {
   setTheatreView();
 }
 async function clearEverything() {
-  if (!await askConfirm({ title: t('ft.clear.title'), text: t('ft.clear.text'), verb: t('ft.clear.verb'), danger: true })) return;
+  if (!await askConfirm({ title: t('ft.clear.title'), text: t('ft.clear.text'), verb: t('ft.clear.verb'), danger: true })) return false;
   clearTimeout(RLD.timer); RLD.stale = false; RLD.wait = false;
   if (ADOPT.timer) { clearTimeout(ADOPT.timer); ADOPT.timer = 0; }
   ADOPT.skipped = 0;
   const ok = gsClearAll();
   rpAfterWipe();
   if (ok) showToast(t('ft.clear.toast'), { type: 'ok', ms: 4000 });
+  return true;
 }
 /* Les calques ont été retirés par un autre onglet (son « Tout effacer ») : ils se relisent ; toute autre écriture des calques reste celle de l'onglet qui les change */
 function rpLayersWiped() { loadLayers(); drDeselect(); renderLayers(); drawLayers(); drAfterLayers(); }
@@ -8192,7 +8201,14 @@ function clrBind() {
     clrRender();
   });
   $('clr-go').addEventListener('click', () => { const keys = CLR_SETS.filter(k => CLR.checked.has(k)); rtHide('clr-modal'); clrRun(keys); });
-  $('clr-all').addEventListener('click', () => { rtHide('clr-modal'); clearEverything(); });
+  $('clr-all').addEventListener('click', async () => {
+    const keep = new Set(CLR.checked);
+    rtHide('clr-modal');
+    if (await clearEverything()) return;
+    CLR.checked = keep;       /* un renoncement à la confirmation rend la fenêtre telle qu'elle était */
+    clrRender();
+    rtShow('clr-modal', $('btn-clear'), 'clr-cancel');
+  });
 }
 
 /* ============= PLUSIEURS ROUTES : LA LISTE, LES AUTRES ROUTES, LES FICHIERS ============= */
@@ -8351,10 +8367,10 @@ function openRouteSet(parsed) {
   syncActive();
   /* ouvrir un jeu remplace tout le jeu de routes, de tous les théâtres (« Remplacer » s'il y a des points) ; chaque route rejoint son théâtre (son champ, sinon celui de tête du fichier, sinon le courant) ; le Route Planner reste sur son théâtre */
   /* « Remplacer » (sans question) quand des routes ont des points : le jeu d'avant se rend par « Restaurer » */
-  const replacing = RSET.routes.concat(RSET.hidden || []).some(r => r.points.length);
+  const replacing = RSET.routes.concat(RSET.hidden || []).some(r => r.points.length || String(r.name || '').trim() !== '');       /* une route nommée, même sans point, n'est jamais remplacée en silence */
   let msg = '';
   const go = () => {
-    const C = S.theatre;
+    const C = S.theatre, before = rpRids();
     const vis = rr.routes.filter(r => r.theatre === C), hid = rr.routes.filter(r => r.theatre !== C);
     const a0 = rr.routes[readActiveIndex(parsed.active, rr.routes.length)];
     RSET.routes = vis; RSET.hidden = hid; RSET.active = 0;
@@ -8368,7 +8384,9 @@ function openRouteSet(parsed) {
     route.points = a.points;
     if (a.missionDate !== undefined) route.missionDate = a.missionDate; else delete route.missionDate;       /* la date de la route active du jeu ; celle des autres routes est dans leur objet */
     setRoute(route);
+    RPD.n = rpDetachGone(before);       /* les routes que le jeu ouvert n'a pas gardées ne sont plus suivies */
     msg = rr.dropped ? t('toast.openedDropped', { n: rr.dropped }) : t('toast.opened');
+    msg += rpDetachedText();
     if (rr.droppedRoutes) msg += ' · ' + t('toast.routesMax').replace(/^\u26a0\s*/, '');
     if (sh.droppedRefs) msg += ' · ' + t('toast.refsDropped', { n: sh.droppedRefs });
     if (lays.length) { cfMerge(lays); if (layersChanged()) msg += ' · ' + t(cfOne(lays.length) ? 'toast.cfShown.1' : 'toast.cfShown.n', { n: lays.length }); }
@@ -8541,6 +8559,30 @@ function groupDrops(f) {
   delete nf.routeLink;
   return nf;
 }
+/* Une route qui quitte le jeu n'est plus suivie. Les rid du jeu, de tous les théâtres, avant un geste (rpRids) ; après lui, rpDetachGone retire des groupes qui les suivaient
+   chaque route absente du jeu (plus extra : des routes qui restent mais se vident) : copie, lien et nom de route. Rend le nombre de groupes détachés. */
+const RPD = { n: 0 };
+function rpRids() {
+  const s = new Set();
+  RSET.routes.concat(RSET.hidden || []).forEach(r => s.add(r.rid));
+  return s;
+}
+function rpDetachGone(before, extra) {
+  const now = rpRids(), gone = new Set(extra || []);
+  before.forEach(rid => { if (!now.has(rid)) gone.add(rid); });
+  if (!gone.size) return 0;
+  const g = gsRead();
+  if (!g) return 0;
+  let n = 0;
+  g.flights.filter(f => gsIsObj(f.routeLink) && gone.has(f.routeLink.rid)).forEach(f => { gsPutFlight(groupDrops(f)); n++; });
+  return n;
+}
+/* La phrase du toast d'un geste qui a détaché des groupes (une fois) ; vide s'il n'y en a pas */
+function rpDetachedText() {
+  const n = RPD.n;
+  RPD.n = 0;
+  return n ? ' · ' + t('toast.groupsDetached', { n: n }) : '';
+}
 
 /* La copie à jour : chaque groupe lié à une route qui existe prend ses points (paquet, vitesse sol courante) et son nom s'ils diffèrent ; une route supprimée : le groupe garde sa copie et son lien.
    Un théâtre qui change : les copies attendent le retour au théâtre de la fiche ; la fiche suit le théâtre seulement si elle n'a aucun groupe. */
@@ -8555,7 +8597,7 @@ function gsSyncRoutes() {
     const l = f.routeLink;
     if (!gsIsObj(l)) return;
     const r = RSET.routes.filter(x => x.rid === l.rid)[0];
-    if (!r || r.points.length < 2) return;       /* une route supprimée ou réduite à moins de deux points : le groupe garde sa dernière copie, son lien et son nom (R469) */
+    if (!r || r.points.length < 2) return;       /* une route réduite à moins de deux points : le groupe garde sa dernière copie, son lien et son nom ; une route qui a quitté le jeu n'est plus suivie, les gestes qui la retirent la détachent des groupes (rpDetachGone) */
     const pts = packRoutePoints(r);
     if (gsStable(f.route && f.route.points !== undefined ? f.route.points : null) === gsStable(pts) && l.name === r.name && (gsIsObj(f.route) ? magRouteDate(f.route.missionDate) : '') === magRouteDate(r.missionDate)) return;
     if (g.theatre === '') { gsSetTheatre(th); g.theatre = th; }       /* une fiche sans théâtre prend celui de la route qu'on lui recopie */
@@ -8566,7 +8608,7 @@ function gsSyncRoutes() {
 /* La reprise des routes. Chaque groupe de la fiche (dans son ordre) qui porte des points (route.points, un point lisible au moins) et n'a pas de routeLink devient une route neuve du Route Planner :
    nommée comme le groupe, ses points comme à l'import (30 au plus), flight { groupName, coalition } de provenance ; le groupe la suit ensuite (groupTakes, la copie au format du paquet).
    Le théâtre de la fiche doit être celui du Route Planner et avoir une projection ; sinon, sans aucune route à points, le Route Planner passe au théâtre de la fiche puis reprend ; sinon rien (other).
-   La route active vide et sans groupe prend la première. 12 routes au plus : au-delà le groupe garde sa copie (skipped). Un groupe dont la route a été supprimée garde son routeLink : il n'est pas repris.
+   La route active vide et sans groupe prend la première. 12 routes au plus : au-delà le groupe garde sa copie (skipped). Un groupe dont la route a été retirée du jeu n'a plus de routeLink ni de copie : il n'est pas repris.
    Juste avant d'écrire un groupe, la fiche est relue : un groupe qui a entre-temps reçu un routeLink (une autre fenêtre l'a repris), ou qu'un passage de celui-ci a déjà repris, ne l'est pas deux fois ;
    la copie écrite est celle de la fiche relue, jamais celle du début du passage (le Flight Configurator a pu convertir l'emport de ses unités entre-temps). Le groupe s'écrit avant que la route entre dans la liste.
    opts.activate : la première route créée devient active. Rend { made, skipped, other, trunc, nodcs, routes }. */
