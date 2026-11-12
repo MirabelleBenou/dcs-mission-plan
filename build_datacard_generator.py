@@ -4092,25 +4092,30 @@ function dgRoutesChanged() {
   clearTimeout(DG_RT.timer);
   DG_RT.timer = setTimeout(() => { DG_RT.timer = 0; const ch = dgSyncRoutes(); dgPatchStored(); if (ch) renderAll(true); else renderEditor(true); }, 120);       /* une relecture n'écrit jamais datacard_state_v1 : seul l'onglet qui a modifié écrit */
 }
-/* Un autre onglet du DG a écrit datacard_state_v1 : celui-ci prend le document, la saisie en cours gardée (renderAll(true)) ; il n'écrit rien */
+/* Un autre onglet du DG a écrit datacard_state_v1 (ou « Restaurer » l'a rendu) : celui-ci prend le document, la saisie en cours gardée (renderAll(true)) ; il n'écrit rien.
+   dgFollowDocNow le fait à l'instant : un évènement d'une autre clé qui fait écrire le document (théâtre, unités, réglages de cap) le relit d'abord, sinon il écrirait l'ancien par-dessus. */
+function dgFollowDocNow() {
+  let raw = null;
+  try { raw = localStorage.getItem(KEY_STATE); } catch (e) { return false; }
+  if (raw === null || raw === DG_DOC.raw) return false;
+  let nd;
+  try { nd = normalizeDoc(JSON.parse(raw)); } catch (e) { return false; }
+  clearTimeout(DG_DOC.timer);
+  const cur = curCard(), id = cur ? (cur.gsId || '') : '', th = doc.theatre;
+  DG_DOC.raw = raw;
+  if (th) nd.theatre = th;
+  doc = nd;
+  const U = dgReadUnitsKey() || dgU, N = dgReadNavKey() || dgN;       /* les clés d'unités et de cap telles qu'elles sont maintenant : leurs évènements n'ont pas tous été traités */
+  doc.cards.forEach(c => { c.units = { mass: U.mass, distance: U.distance, altitude: U.altitude }; c.navDisplay.ref = N.ref; c.navDisplay.decl = N.decl; c.navDisplay.vmode = N.mode; });
+  const k = id ? doc.cards.findIndex(c => c.gsId === id) : -1;
+  curIdx = k >= 0 ? k : Math.min(curIdx, doc.cards.length - 1);
+  gsApplyAll(); dgSyncRoutes();
+  renderAll(true);
+  return true;
+}
 function dgFollowDoc() {
   clearTimeout(DG_DOC.timer);
-  DG_DOC.timer = setTimeout(() => {
-    let raw = null;
-    try { raw = localStorage.getItem(KEY_STATE); } catch (e) { return; }
-    if (raw === null || raw === DG_DOC.raw) return;
-    let nd;
-    try { nd = normalizeDoc(JSON.parse(raw)); } catch (e) { return; }
-    const cur = curCard(), id = cur ? (cur.gsId || '') : '', th = doc.theatre;
-    DG_DOC.raw = raw;
-    if (th) nd.theatre = th;
-    doc = nd;
-    doc.cards.forEach(c => { c.units = { mass: dgU.mass, distance: dgU.distance, altitude: dgU.altitude }; c.navDisplay.ref = dgN.ref; c.navDisplay.decl = dgN.decl; c.navDisplay.vmode = dgN.mode; });
-    const k = id ? doc.cards.findIndex(c => c.gsId === id) : -1;
-    curIdx = k >= 0 ? k : Math.min(curIdx, doc.cards.length - 1);
-    gsApplyAll(); dgSyncRoutes();
-    renderAll(true);
-  }, 150);
+  DG_DOC.timer = setTimeout(dgFollowDocNow, 150);
 }
 
 /* ----- Ce que le DG écrit dans la route ----- */
@@ -7013,7 +7018,7 @@ function loadJsonFile(file) {
     const k = biRecognise(r.parsed, file.name, true, r.zip);
     if (!k) return;
     if (k.kind === 'datacard') {
-      replaceWithRestore({ keys: DG_REPLACE_KEYS, mem: dgMem, back: dgBack, msg: t('toast.jsonLoaded'), run: () => { openDatacards(normalizeDoc(r.parsed)); } });
+      replaceWithRestore({ keys: GS_CONTENT_KEYS, mem: dgMem, back: dgBack, msg: t('toast.jsonLoaded'), run: () => gsSettled(openDatacards(normalizeDoc(r.parsed))) });
       return;
     }
     if (k.kind === 'pkg') { impOpen({ opener: document.getElementById('btn-json-import'), parsed: r.parsed, name: file.name }); return; }
@@ -7572,8 +7577,7 @@ function fillPrintRoot() {
 function clearPrintRoot() { document.getElementById('print-root').innerHTML = ''; DGX.print = null; }
 
 /* ============= EXEMPLE ET RESET ============= */
-/* Ce que « Remplacer » garde pour « Restaurer » : les clés que l'action peut écrire (le document, les unités, les réglages de cap, le théâtre, l'état et le jeu des routes) et l'état en mémoire */
-const DG_REPLACE_KEYS = [KEY_STATE, KEY_UNITS, KEY_NAV, KEY_THEATRE, KEY_ROUTE, KEY_ROUTESET];
+/* Ce que « Remplacer » garde pour « Restaurer » : toutes les clés de contenu des outils du Flight Leader (GS_CONTENT_KEYS, bloc des groupes partagés) et l'état en mémoire */
 function dgMem() { return { doc: clone(doc), curIdx: curIdx, u: Object.assign({}, dgU), n: Object.assign({}, dgN) }; }
 function dgBack(m) {
   doc = m.doc; curIdx = m.curIdx;
@@ -7586,7 +7590,7 @@ function dgBack(m) {
   renderAll();
 }
 function loadExample() {
-  replaceWithRestore({ keys: DG_REPLACE_KEYS, mem: dgMem, back: dgBack, msg: t('toast.example'), run: loadExampleNow });
+  replaceWithRestore({ keys: GS_CONTENT_KEYS, mem: dgMem, back: dgBack, msg: t('toast.example'), run: () => gsSettled(loadExampleNow()) });
 }
 function loadExampleNow() {
   const linked = doc.cards.filter(c => c.gsId);       /* les groupes de la fiche gardent leurs cartes ; la fiche n'est pas touchée */
@@ -7681,7 +7685,7 @@ function bindEvents() {
   initScrollBar(document.getElementById('tab-bar'));
 
   /* Passage depuis le Route Planner (même origine : l'évènement vient d'un autre document) */
-  window.addEventListener('storage', e => { if (e.key === KEY_THEATRE) dgFollowTheatre(); if (e.key === KEY_UNITS) dgFollowUnits(); if (e.key === KEY_NAV) dgFollowNav(); if (e.key === KEY_STATE) dgFollowDoc(); if (e.key === KEY_THEATRE || e.key === KEY_ROUTE || e.key === KEY_ROUTESET || e.key === KEY_NAV || e.key === null) dgRoutesChanged(); if (e.key === 'mission_snapshot_v1') { renderEditor(true); renderPreview(); } dgStorage(e); });
+  window.addEventListener('storage', e => { if (e.key === KEY_THEATRE || e.key === KEY_UNITS || e.key === KEY_NAV) dgFollowDocNow(); if (e.key === KEY_THEATRE) dgFollowTheatre(); if (e.key === KEY_UNITS) dgFollowUnits(); if (e.key === KEY_NAV) dgFollowNav(); if (e.key === KEY_STATE) dgFollowDoc(); if (e.key === KEY_THEATRE || e.key === KEY_ROUTE || e.key === KEY_ROUTESET || e.key === KEY_NAV || e.key === null) dgRoutesChanged(); if (e.key === 'mission_snapshot_v1') { renderEditor(true); renderPreview(); } dgStorage(e); });
 
   window.addEventListener('beforeprint', fillPrintRoot);
   window.addEventListener('afterprint', clearPrintRoot);

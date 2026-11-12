@@ -3725,7 +3725,7 @@ function openFile(file) {
     const thChanged = fth !== '' && fth !== S.theatre && S.flights.length > 0;
     flushWork();       // la frappe en attente part dans le stockage avant que « Remplacer » en prenne la copie
     replaceWithRestore({
-      keys: FC_REPLACE_KEYS, mem: fcMem, back: fcBack,
+      keys: GS_CONTENT_KEYS, mem: fcMem, back: fcBack,
       run: () => {
         if (work) { restoreState(o.fc.state); UI.clamped = 0; mergeMine(o.fc.mine); remapPresetKeys(o.fc.mine); }
         else {
@@ -3745,13 +3745,13 @@ function openFile(file) {
         thFill();
         renderAll();
         writeState();
+        return gsSettled();       // les autres outils ouverts suivent le geste avant que « Restaurer » prenne le stockage de référence
       },
       msg: () => tf('open.done', S.flights.length) + (ignored ? ' · ' + tf('open.ignored', ignored) : '') + (warn ? ' · ' + warn : '') + (thChanged ? ' · ' + tf('open.theatre.set', theatreName(S.theatre)) : '')
     });
   });
 }
-// Ce que « Ouvrir » écrit : l'état du module, la fiche des groupes, le théâtre commun (et les clés que la migration de la fiche pourrait toucher).
-const FC_REPLACE_KEYS = ['fc_state_v1', 'flight_set_v1', 'flight_set_v1_illisible', 'mp_theatre_v1', 'route_state_v1', 'route_set_v1'];
+// Ce que « Ouvrir » et « Exemple » photographient pour « Restaurer » : toutes les clés de contenu des outils du Flight Leader (GS_CONTENT_KEYS, bloc des groupes partagés).
 function fcMem() {
   flushWork();
   return { theatre: S.theatre, flights: clone(S.flights), sel: clone(S.sel), mine: clone(LIB.mine) };
@@ -3772,7 +3772,7 @@ function fcBack(m) {
 function loadExample() {
   flushWork();
   replaceWithRestore({
-    keys: FC_REPLACE_KEYS, mem: fcMem, back: fcBack,
+    keys: GS_CONTENT_KEYS, mem: fcMem, back: fcBack,
     run: () => {
       const mk = (type, n) => { const f = newFlight(); f.name = t('ex.group') + ' ' + n; f.coalition = 'red'; f.units = [newUnit(type), newUnit(type)]; return f; };
       S.flights = [mk('Mi-24P', 1), mk('Mi-8MT', 2)];
@@ -3783,6 +3783,7 @@ function loadExample() {
       if (gsReplaceAll(S.theatre, JSON.parse(JSON.stringify(S.flights)))) gsMarkAll();
       renderAll();
       writeState();
+      return gsSettled();
     },
     msg: () => t('toast.example')
   });

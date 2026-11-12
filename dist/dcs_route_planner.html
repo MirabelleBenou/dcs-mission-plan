@@ -9789,9 +9789,8 @@ function openRouteFile(file) {
 }
 
 /* « Exemple » remplace toutes les routes par la route d'exemple */
-/* Ce que « Remplacer » garde pour « Restaurer » : les clés que l'action peut écrire (la route, le jeu de routes, le théâtre, les unités, les réglages de cap, les calques, la fiche des groupes)
+/* Ce que « Remplacer » garde pour « Restaurer » : toutes les clés de contenu des outils du Flight Leader (GS_CONTENT_KEYS, bloc des groupes partagés)
    et l'état en mémoire (la route, le jeu de routes, les calques) */
-function rpReplaceKeys() { return [KEY_STATE, KEY_SET, KEY_THEATRE, KEY_UNITS, KEY_NAV, KEY_LAYERS, KEY_FLIGHT_SET]; }
 function rpMem() { syncActive(); return { S: JSON.parse(JSON.stringify(S)), RSET: JSON.parse(JSON.stringify(RSET)), layers: JSON.parse(JSON.stringify(CF_LAYERS)) }; }
 function rpBack(m) {
   S = m.S; RSET = m.RSET; CF_LAYERS = m.layers;
@@ -9806,7 +9805,7 @@ function rpBack(m) {
   RLD.base = rpSnap();
 }
 function loadExample() {
-  replaceWithRestore({ keys: rpReplaceKeys(), mem: rpMem, back: rpBack, msg: () => t('toast.exampleLoaded') + rpDetachedText(), run: loadExampleNow });
+  replaceWithRestore({ keys: GS_CONTENT_KEYS, mem: rpMem, back: rpBack, msg: () => t('toast.exampleLoaded') + rpDetachedText(), run: () => gsSettled(loadExampleNow()) });
 }
 function loadExampleNow() {
   const ex = parseRoute(JSON.parse(JSON.stringify(CURRENT_LANG === 'en' ? EXAMPLE_ROUTE_EN : EXAMPLE_ROUTE))).route;   // la langue de l'interface au moment du clic
@@ -10096,7 +10095,7 @@ function openAsRoute(route, msgFn) {
     return true;
   };
   if (!replacing) { go(); if (msgFn) showToast(msgFn(), { type: 'ok' }); return true; }
-  replaceWithRestore({ keys: rpReplaceKeys(), mem: rpMem, back: rpBack, msg: msgFn || (() => ''), run: go });
+  replaceWithRestore({ keys: GS_CONTENT_KEYS, mem: rpMem, back: rpBack, msg: msgFn || (() => ''), run: () => gsSettled(go()) });
   return true;
 }
 
@@ -10142,7 +10141,7 @@ function openRouteSet(parsed) {
     return true;
   };
   if (!replacing) { go(); showToast(msg, { type: 'ok' }); return; }
-  replaceWithRestore({ keys: rpReplaceKeys(), mem: rpMem, back: rpBack, msg: () => msg, run: go });
+  replaceWithRestore({ keys: GS_CONTENT_KEYS, mem: rpMem, back: rpBack, msg: () => msg, run: () => gsSettled(go()) });
 }
 
 /* « Enregistrer tout » : routes_<horodatage>.json */
@@ -10302,6 +10301,13 @@ function packPoint(p, i, th, gsDefault) {
 /* ===== GROUPES PARTAGÉS (flight_set_v1) ===== */
 const KEY_FLIGHT_SET = 'flight_set_v1', KEY_FLIGHT_SET_BAD = 'flight_set_v1_illisible', FLIGHT_SET_FORMAT = 'dcs-flight-set-v1';
 const GS_KEY_FC = 'fc_state_v1', GS_KEY_ROUTES = 'route_set_v1', GS_KEY_ROUTE = 'route_state_v1', GS_KEY_DG = 'datacard_state_v1', GS_KEY_LAYERS = 'route_layers_v1';
+/* Les clés de contenu des trois outils du Flight Leader (Flight Configurator, Route Planner, Datacard Generator), écrites une seule fois : ce que le geste « Remplacer » (Exemple, ouverture d'un fichier) photographie
+   pour « Restaurer », quel que soit l'outil où l'on est. Les groupes, leurs routes et calques, les datacards, le théâtre, les unités et les réglages de cap communs. Ni la langue, ni le thème, ni les replis. */
+const GS_CONTENT_KEYS = ['fc_state_v1', 'flight_set_v1', 'flight_set_v1_illisible', 'route_set_v1', 'route_state_v1', 'route_layers_v1', 'datacard_state_v1', 'mp_theatre_v1', 'mp_units_v1', 'mp_nav_v1'];
+/* Un geste « Remplacer » se termine par gsSettled : les autres outils ouverts dans la page suivent le geste par évènement « storage » et, après un court calme, réécrivent leurs copies (les datacards gardent la dernière copie de la route) ;
+   « Restaurer » ne compare le stockage à ce qu'il était qu'une fois ce calme passé, sinon il se croirait devant des données changées. À rendre par run (replaceWithRestore attend la promesse) : run: () => { …; return gsSettled(); }. Faux (rien n'a changé) passe tel quel. */
+const GS_SETTLE_MS = 700;
+function gsSettled(r) { return r === false ? false : new Promise(res => setTimeout(() => res(r), GS_SETTLE_MS)); }
 
 function gsIsObj(v) { return !!v && typeof v === 'object' && !Array.isArray(v); }
 function gsLsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }

@@ -6713,7 +6713,7 @@ function renderMetarAssistant(p) {
       document.querySelectorAll('[data-bind="sitac.metar"]').forEach(inp => { inp.value = v; });
       schedulePreview();
     };
-    const run = () => { setMetar(newMetar); document.getElementById('metar-assistant-panel').open = false; };
+    const run = () => { setMetar(newMetar); persistState(); document.getElementById('metar-assistant-panel').open = false; };       /* écrit tout de suite : « Restaurer » compare le stockage à ce qu'il était à la fin du geste */
     if (state.sitac && state.sitac.metar && state.sitac.metar.trim() && state.sitac.metar.trim() !== newMetar) {
       /* « Remplacer » : le METAR d'avant est gardé, « Restaurer » le rend (le texte et l'aperçu) */
       replaceWithRestore({ keys: [STORAGE_KEY], mem: () => ({ metar: state.sitac.metar }), back: m => { setMetar(m.metar); persistState(); }, msg: t('toast.metarReplaced'), run });

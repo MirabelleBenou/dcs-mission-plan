@@ -24,6 +24,13 @@ BLOCK_END = '/* ===== FIN DES GROUPES PARTAGÉS ===== */'
 _JS = r"""
 const KEY_FLIGHT_SET = 'flight_set_v1', KEY_FLIGHT_SET_BAD = 'flight_set_v1_illisible', FLIGHT_SET_FORMAT = 'dcs-flight-set-v1';
 const GS_KEY_FC = 'fc_state_v1', GS_KEY_ROUTES = 'route_set_v1', GS_KEY_ROUTE = 'route_state_v1', GS_KEY_DG = 'datacard_state_v1', GS_KEY_LAYERS = 'route_layers_v1';
+/* Les clés de contenu des trois outils du Flight Leader (Flight Configurator, Route Planner, Datacard Generator), écrites une seule fois : ce que le geste « Remplacer » (Exemple, ouverture d'un fichier) photographie
+   pour « Restaurer », quel que soit l'outil où l'on est. Les groupes, leurs routes et calques, les datacards, le théâtre, les unités et les réglages de cap communs. Ni la langue, ni le thème, ni les replis. */
+const GS_CONTENT_KEYS = ['fc_state_v1', 'flight_set_v1', 'flight_set_v1_illisible', 'route_set_v1', 'route_state_v1', 'route_layers_v1', 'datacard_state_v1', 'mp_theatre_v1', 'mp_units_v1', 'mp_nav_v1'];
+/* Un geste « Remplacer » se termine par gsSettled : les autres outils ouverts dans la page suivent le geste par évènement « storage » et, après un court calme, réécrivent leurs copies (les datacards gardent la dernière copie de la route) ;
+   « Restaurer » ne compare le stockage à ce qu'il était qu'une fois ce calme passé, sinon il se croirait devant des données changées. À rendre par run (replaceWithRestore attend la promesse) : run: () => { …; return gsSettled(); }. Faux (rien n'a changé) passe tel quel. */
+const GS_SETTLE_MS = 700;
+function gsSettled(r) { return r === false ? false : new Promise(res => setTimeout(() => res(r), GS_SETTLE_MS)); }
 
 function gsIsObj(v) { return !!v && typeof v === 'object' && !Array.isArray(v); }
 function gsLsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }

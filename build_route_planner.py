@@ -8023,9 +8023,8 @@ function openRouteFile(file) {
 }
 
 /* « Exemple » remplace toutes les routes par la route d'exemple */
-/* Ce que « Remplacer » garde pour « Restaurer » : les clés que l'action peut écrire (la route, le jeu de routes, le théâtre, les unités, les réglages de cap, les calques, la fiche des groupes)
+/* Ce que « Remplacer » garde pour « Restaurer » : toutes les clés de contenu des outils du Flight Leader (GS_CONTENT_KEYS, bloc des groupes partagés)
    et l'état en mémoire (la route, le jeu de routes, les calques) */
-function rpReplaceKeys() { return [KEY_STATE, KEY_SET, KEY_THEATRE, KEY_UNITS, KEY_NAV, KEY_LAYERS, KEY_FLIGHT_SET]; }
 function rpMem() { syncActive(); return { S: JSON.parse(JSON.stringify(S)), RSET: JSON.parse(JSON.stringify(RSET)), layers: JSON.parse(JSON.stringify(CF_LAYERS)) }; }
 function rpBack(m) {
   S = m.S; RSET = m.RSET; CF_LAYERS = m.layers;
@@ -8040,7 +8039,7 @@ function rpBack(m) {
   RLD.base = rpSnap();
 }
 function loadExample() {
-  replaceWithRestore({ keys: rpReplaceKeys(), mem: rpMem, back: rpBack, msg: () => t('toast.exampleLoaded') + rpDetachedText(), run: loadExampleNow });
+  replaceWithRestore({ keys: GS_CONTENT_KEYS, mem: rpMem, back: rpBack, msg: () => t('toast.exampleLoaded') + rpDetachedText(), run: () => gsSettled(loadExampleNow()) });
 }
 function loadExampleNow() {
   const ex = parseRoute(JSON.parse(JSON.stringify(CURRENT_LANG === 'en' ? EXAMPLE_ROUTE_EN : EXAMPLE_ROUTE))).route;   // la langue de l'interface au moment du clic
@@ -8330,7 +8329,7 @@ function openAsRoute(route, msgFn) {
     return true;
   };
   if (!replacing) { go(); if (msgFn) showToast(msgFn(), { type: 'ok' }); return true; }
-  replaceWithRestore({ keys: rpReplaceKeys(), mem: rpMem, back: rpBack, msg: msgFn || (() => ''), run: go });
+  replaceWithRestore({ keys: GS_CONTENT_KEYS, mem: rpMem, back: rpBack, msg: msgFn || (() => ''), run: () => gsSettled(go()) });
   return true;
 }
 
@@ -8376,7 +8375,7 @@ function openRouteSet(parsed) {
     return true;
   };
   if (!replacing) { go(); showToast(msg, { type: 'ok' }); return; }
-  replaceWithRestore({ keys: rpReplaceKeys(), mem: rpMem, back: rpBack, msg: () => msg, run: go });
+  replaceWithRestore({ keys: GS_CONTENT_KEYS, mem: rpMem, back: rpBack, msg: () => msg, run: () => gsSettled(go()) });
 }
 
 /* « Enregistrer tout » : routes_<horodatage>.json */
