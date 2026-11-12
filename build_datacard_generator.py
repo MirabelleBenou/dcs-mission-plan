@@ -26,6 +26,7 @@ from route_pack_block import build_block as build_route_pack_block
 from route_theatre_block import build_block as build_route_theatre_block
 from route_write_block import build_block as build_route_write_block
 from payload_block import build_block as build_payload_block
+from aircraft_types_block import build_block as build_aircraft_types_block
 from import_block import build_block as build_import_block, build_css as build_import_css, build_html as build_import_html
 from messages_block import build_block as build_messages_block, build_css as build_messages_css
 from ui_block import build_block as build_ui_block, build_css as build_ui_css, verify as ui_verify
@@ -892,6 +893,7 @@ select[data-tbm-src] { display: none !important; }
   color: var(--paper); cursor: pointer; white-space: nowrap; user-select: none;
 }
 .tbm-opt + .tbm-opt { border-top: 1px solid rgba(168,154,114,.14); }
+.tbm-list .tbm-group { margin-top: 2px; border-top: 1px solid rgba(168,154,114,.25); list-style: none; }
 .tbm-opt .tbm-mark { width: 7px; height: 7px; flex: none; transform: rotate(45deg); border: 1px solid var(--khaki); }
 .tbm-opt.active, .tbm-opt:hover { background: var(--olive); color: var(--amber); }
 .tbm-opt.active .tbm-mark, .tbm-opt:hover .tbm-mark { border-color: var(--amber); }
@@ -1112,9 +1114,11 @@ select[data-tbm-src] { display: none !important; }
 
 /* Listes */
 .ed-list { display: flex; flex-direction: column; gap: 8px; }
+/* Une ligne de liste : ↑ ↓ × en rangée, à droite, sur la rangée du premier champ ; les autres rangées de la ligne prennent toute la largeur
+   (.li-main n'est qu'un regroupement : ses enfants sont les cases de la grille de la ligne) */
 .li {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 44px;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 8px;
   align-items: start;
   padding: 8px;
@@ -1122,8 +1126,11 @@ select[data-tbm-src] { display: none !important; }
   background: rgba(0,0,0,.14);
   min-width: 0;
 }
-.li-main { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
-.li-ctl { display: flex; flex-direction: column; gap: 4px; }
+.li:has(> .li-main > :only-child) { padding-block: 3px; }
+.li-main { display: contents; }
+.li-main > * { grid-column: 1 / -1; min-width: 0; }
+.li-main > :first-child { grid-column: 1; }
+.li-ctl { grid-column: 2; grid-row: 1; display: flex; flex-direction: row; gap: 4px; }
 .li-grid { display: grid; gap: 8px; min-width: 0; }
 .li-grid.g2 { grid-template-columns: 1fr 1fr; }
 .li-grid.g3 { grid-template-columns: 1fr 1fr 1fr; }
@@ -1669,10 +1676,12 @@ div.dc-bl, li.dc-bl, p.dc-bl { height: 24px; border-bottom: 1px dotted var(--dc-
   color: var(--olive-deep); background: var(--amber); border-radius: 2px;
 }
 .ed-field label .sh { align-self: center; }
-.li-u { padding: 6px 8px; grid-template-columns: minmax(0, 1fr) 44px; }
+.li-u { padding: 6px 8px; row-gap: 6px; }
+.li-u > .li-ctl { grid-row: 1 / span 2; }
+.li-u > .li-main > :nth-child(2) { grid-column: 1; }
 .li-u .ed-btn-icon { min-width: 44px; min-height: 44px; }
-.li-u .li-main { gap: 6px; }
 .li-u .li-grid { gap: 6px; }
+.cr-flag { color: var(--mp-warn); border-color: var(--red-faded); }
 .li-u .ed-field { gap: 3px; }
 .li-uh { display: flex; align-items: center; gap: 8px; }
 .li-ut { font-family: var(--f-stencil); font-weight: 700; font-size: 12px; letter-spacing: 2px; color: var(--amber); }
@@ -1845,8 +1854,8 @@ __TAB_SECTION_RULES__
 }
 """
 
-# Règles « un onglet = une section » sous 1 100 px, générées pour les onze sections (l'ordre de l'aperçu imprimé : méta, mission, horaires, groupe et équipage, navigation, références, radio, terrains, météo, carburant et emport, menaces et notes).
-SECTION_IDS = ['meta', 'mission', 'times', 'group', 'nav', 'refs', 'radio', 'fields', 'weather', 'fuel', 'threats']
+# Règles « un onglet = une section » sous 1 100 px, générées pour les douze sections (l'ordre de l'éditeur : en-tête, groupe et équipage, mission, horaires, navigation, références, radio, terrains, météo, carburant et emport, menaces et notes, méta).
+SECTION_IDS = ['header', 'group', 'mission', 'times', 'nav', 'refs', 'radio', 'fields', 'weather', 'fuel', 'threats', 'meta']
 _tab_rules = ',\n'.join(
     f'  body[data-active-tab="{s}"] .ed-section[data-section="{s}"]' for s in SECTION_IDS
 ) + ' {\n    display: block;\n    border: none;\n  }'
@@ -2008,10 +2017,10 @@ __CSS__
 
 <!-- ===== ONGLETS (tablette) ===== -->
 <nav class="tab-bar" id="tab-bar" role="tablist" aria-label="Datacard Generator" data-i18n-aria-label="app.title">
-  <button type="button" data-tab="meta" role="tab"><span class="tab-ico">⚙</span><span data-i18n="sec.meta">Méta</span></button>
+  <button type="button" data-tab="header" role="tab"><span class="tab-ico">▤</span><span data-i18n="sec.header">En-tête</span></button>
+  <button type="button" data-tab="group" role="tab"><span class="tab-ico">✈</span><span data-i18n="tab.group">Groupe</span></button>
   <button type="button" data-tab="mission" role="tab"><span class="tab-ico">▣</span><span data-i18n="sec.mission">Mission</span></button>
   <button type="button" data-tab="times" role="tab"><span class="tab-ico">⏱</span><span data-i18n="sec.times">Horaires</span></button>
-  <button type="button" data-tab="group" role="tab"><span class="tab-ico">✈</span><span data-i18n="tab.group">Groupe</span></button>
   <button type="button" data-tab="nav" role="tab"><span class="tab-ico">🧭</span><span data-i18n="sec.nav">Navigation</span></button>
   <button type="button" data-tab="refs" role="tab"><span class="tab-ico">◆</span><span data-i18n="sec.refs">Points de référence</span></button>
   <button type="button" data-tab="radio" role="tab"><span class="tab-ico">📻</span><span data-i18n="sec.radio">Radio</span></button>
@@ -2019,6 +2028,7 @@ __CSS__
   <button type="button" data-tab="weather" role="tab"><span class="tab-ico">☁</span><span data-i18n="sec.weather">Météo</span></button>
   <button type="button" data-tab="fuel" role="tab"><span class="tab-ico">⛽</span><span data-i18n="tab.fuel">Carburant</span></button>
   <button type="button" data-tab="threats" role="tab"><span class="tab-ico">⚠</span><span data-i18n="tab.threats">Menaces</span></button>
+  <button type="button" data-tab="meta" role="tab"><span class="tab-ico">⚙</span><span data-i18n="sec.meta">Méta</span></button>
   <button type="button" data-tab="preview" role="tab"><span class="tab-ico">◈</span><span data-i18n="sec.preview">Aperçu</span></button>
 </nav>
 
@@ -2093,7 +2103,7 @@ const THREAT_LEGACY_MAP = {
 };
 const THREAT_KEYS = ['', 'low', 'moderate', 'high'];
 const UNIT_CHOICES = { mass: ['kg', 'lb'], distance: ['km', 'nm'], altitude: ['m', 'ft'] };
-const SECTION_IDS = ['meta', 'mission', 'times', 'group', 'nav', 'refs', 'radio', 'fields', 'weather', 'fuel', 'threats'];
+const SECTION_IDS = ['header', 'group', 'mission', 'times', 'nav', 'refs', 'radio', 'fields', 'weather', 'fuel', 'threats', 'meta'];
 const TAB_IDS = SECTION_IDS.concat(['preview']);
 
 /* Contenu du bouton « Exemple » (document dcs-datacard-v1) */
@@ -2202,6 +2212,11 @@ const I18N = {
     'toast.jsonLoaded': 'Datacards chargées ✓',
     'frz.note': 'Copie de ce que le groupe donnait à cette carte avant qu\'elle devienne libre : lecture seule.',
     'u.type.pick': '— à choisir —',
+    'ac.helis': 'Hélicoptères',
+    'ac.planes': 'Avions',
+    'ac.mods': 'Hors jeu de base',
+    'ac.other': 'Autre type (mod)\u2026',
+    'ac.flag': 'hors jeu de base',
     'sum.type.pick': 'type à choisir',
     'rad.err.nan': 'Canal {0} : « {1} » n’est pas une fréquence.',
     'rad.err.range': 'Canal {0} : {1} MHz hors de la bande du poste ({2}).',
@@ -2307,6 +2322,7 @@ const I18N = {
     'warn.overflow': 'Contenu tronqué : la page 1 déborde même sans la navigation.',
     'warn.overflow2': 'Contenu tronqué\u202f: la page 2 déborde.',
     'warn.overflowR': 'Contenu tronqué\u202f: la page Radios déborde.',
+    'sec.header': 'En-tête',
     'sec.meta': 'Méta',
     'sec.group': 'Groupe et équipage',
     'sec.mission': 'Mission',
@@ -2373,7 +2389,7 @@ const I18N = {
     'f.operation': 'Opération',
     'f.mission': 'Mission',
     'f.date': 'Date',
-    'f.time': 'Heure',
+    'f.time': 'Heure (Z)',
     'f.aircraft': 'Appareil',
     'f.group.deduced': 'Déduit des équipages',
     'f.count': 'Nombre',
@@ -2696,6 +2712,11 @@ const I18N = {
     'toast.jsonLoaded': 'Datacards loaded ✓',
     'frz.note': 'A copy of what the group gave this card before it became free: read only.',
     'u.type.pick': '— to pick —',
+    'ac.helis': 'Helicopters',
+    'ac.planes': 'Airplanes',
+    'ac.mods': 'Not in the base game',
+    'ac.other': 'Other type (mod)\u2026',
+    'ac.flag': 'not in the base game',
     'sum.type.pick': 'type to pick',
     'rad.err.nan': 'Channel {0}: “{1}” is not a frequency.',
     'rad.err.range': 'Channel {0}: {1} MHz is outside the radio’s band ({2}).',
@@ -2801,6 +2822,7 @@ const I18N = {
     'warn.overflow': 'Content truncated: page 1 overflows even without navigation.',
     'warn.overflow2': 'Content truncated: page 2 overflows.',
     'warn.overflowR': 'Content truncated: the Radios page overflows.',
+    'sec.header': 'Header',
     'sec.meta': 'Meta',
     'sec.group': 'Group and crew',
     'sec.mission': 'Mission',
@@ -2867,7 +2889,7 @@ const I18N = {
     'f.operation': 'Operation',
     'f.mission': 'Mission',
     'f.date': 'Date',
-    'f.time': 'Time',
+    'f.time': 'Time (Z)',
     'f.aircraft': 'Aircraft',
     'f.group.deduced': 'Deduced from the crew list',
     'f.count': 'Count',
@@ -3865,6 +3887,7 @@ const WEAPON_NAMES = @@WEAPON_NAMES@@;
 const AIRCRAFT_PYLONS = @@AIRCRAFT_PYLONS@@;
 const AIRCRAFT_LIMITS = @@AIRCRAFT_LIMITS@@;
 @@PAYLOAD_BLOCK@@
+@@AIRCRAFT_TYPES_BLOCK@@
 /* ============= LA NAVIGATION EST LA ROUTE (lot mp-dg-nav-route) =============
    La navigation d'une datacard est une route de route_set_v1 : ce qu'on y saisit s'écrit dans la route (bloc d'écriture, route_write_block.py), ce que le Route Planner change s'y voit.
    Une ligne de nav est un point de la route (elle porte pid) ou une ligne propre (pas de position : « Décollage », une heure seule) ; une ligne propre s'ancre après le point de route qui la précède
@@ -4496,7 +4519,7 @@ async function dgLinkSelect(c, rid) {
 const DG_UNIT_TYPES = PAYLOAD_TYPES;
 const DG_TYPE_LABEL = IMP_TYPE_LABEL;
 const DG_MAX_UNITS = IMP_MAX_UNITS;
-const DG_UI = { free: {} };       /* état d'écran : les canaux libres montrés, par « type|poste » */
+const DG_UI = { free: {}, other: null };       /* état d'écran : les canaux libres montrés, par « type|poste » ; other : l'unité d'une carte libre dont le type se saisit (« Autre type (mod)… ») */
 let DGG = { flights: [], theatre: '', stable: '', shown: '', pend: false };       /* stable : la fiche lue ; shown : la fiche que l'écran montre ; pend : un évènement « storage » attend sa relecture */
 
 function dgStr(v) { return typeof v === 'string' ? v : (typeof v === 'number' ? String(v) : ''); }
@@ -5108,6 +5131,23 @@ function fShared(labelKey, inner) { return '<div class="ed-field"><label>' + shL
 function selShared(gsKey, value, options) {
   return '<select data-gs="' + gsKey + '">' + options.map(o => '<option value="' + esc(o[0]) + '"' + (o[0] === value ? ' selected' : '') + '>' + esc(o[1]) + '</option>').join('') + '</select>';
 }
+/* Le type d'une unité de carte libre : la liste des types du jeu, celle de la configuration Wing de HQ (GAME_AIRCRAFT_TYPES, groupes Hélicoptères et Avions,
+   puis « Hors jeu de base » : « Autre type (mod)… » ouvre la saisie libre, et une valeur déjà saisie hors table s'y trouve, marquée). Rien n'est bloqué : le type reste un texte. */
+function dgTypeOff(v) { return hasText(v) && !gameAircraftIsType(v); }
+function dgFreeTypeField(c, i, x) {
+  const cur = hasText(x.type) ? x.type : '', path = 'crew.' + i + '.type';
+  if (DG_UI.other && DG_UI.other.c === c && DG_UI.other.i === i) {
+    return '<div class="ed-field"><label>' + esc(t('f.crew.type')) + '</label><input type="text" data-path="' + path + '" data-dg-other="' + i + '" value="' + esc(dgTypeOff(cur) ? cur : '') + '"' + phAttr(path) + ' autocomplete="off" spellcheck="false" maxlength="60"></div>';
+  }
+  const grp = (label, names) => '<optgroup label="' + esc(label) + '">' + names.map(n => '<option value="' + esc(n) + '"' + (n === cur ? ' selected' : '') + '>' + esc(n) + '</option>').join('') + '</optgroup>';
+  const off = dgTypeOff(cur);
+  return '<div class="ed-field"><label>' + esc(t('f.crew.type')) + '</label><select data-path="' + path + '" data-dg-type="' + i + '">' +
+    '<option value=""' + (cur === '' ? ' selected' : '') + '>' + esc(t('u.type.pick')) + '</option>' +
+    grp(t('ac.helis'), GAME_AIRCRAFT_TYPES.helicopters) + grp(t('ac.planes'), GAME_AIRCRAFT_TYPES.planes) +
+    '<optgroup label="' + esc(t('ac.mods')) + '">' + (off ? '<option value="' + esc(cur) + '" data-dg-mod selected>' + esc(cur) + '</option>' : '') +
+    '<option value="__other__">' + esc(t('ac.other')) + '</option></optgroup></select></div>';
+}
+
 /* La boîte « Groupe et équipage », la même pour une carte liée et une carte libre : le groupe (nom, coalition, appareil, nombre, tâche, menace), puis une ligne par unité
    (indicatif, type, n° de bord, pilote). Carte liée : nom, coalition, indicatif, type et n° de bord sont écrits dans le groupe de la fiche (pastille FC), appareil et nombre sont déduits ;
    carte libre : tout est saisi sur la carte, et la coalition n'existe pas (l'état d'une carte libre n'en porte pas). */
@@ -5125,15 +5165,16 @@ function groupBoxHtml(c) {
     fInput('f.count', 'flight.count', c.flight.count == null ? '' : String(c.flight.count), ' inputmode="numeric"' + ro) + '</div>' +
     '<div class="ed-field-row">' + fInput('f.task', 'flight.task', c.flight.task) + thr + '</div>';
   if (!lk) {
-    /* même ligne que celle d'une carte liée : la croix en tête de ses boutons (même place, même taille, même infobulle), monter et descendre en dessous */
+    /* même ligne que celle d'une carte liée : Type · Indicatif, puis N° de bord · Pilote (l'ordre du Flight Configurator, sans nom ni livrée) ; ↑ ↓ × à droite, sur la rangée du premier champ */
     const frows = c.crew.map((x, i) =>
       '<div class="li li-u" data-list="crew" data-i="' + i + '"><div class="li-main">' +
-      '<div class="li-uh"><span class="li-ut">' + esc(t('cr.unit', { n: i + 1 })) + '</span></div>' +
-      '<div class="li-grid g2">' + fInput('f.crew.callsign', 'crew.' + i + '.callsign', x.callsign) + fInput('f.crew.type', 'crew.' + i + '.type', x.type) + '</div>' +
+      '<div class="li-uh"><span class="li-ut">' + esc(t('cr.unit', { n: i + 1 })) + '</span><span class="snap-tag cr-flag" data-dg-flag="' + i + '"' + (dgTypeOff(x.type) ? '' : ' hidden') + '>' + esc(t('ac.flag')) + '</span></div>' +
+      '<div class="li-grid g2">' + dgFreeTypeField(c, i, x) + fInput('f.crew.callsign', 'crew.' + i + '.callsign', x.callsign) + '</div>' +
       '<div class="li-grid g2">' + fInput('f.crew.board', 'crew.' + i + '.board', x.board) + fInput('f.crew.pilot', 'crew.' + i + '.pilot', x.pilot) + '</div></div>' +
-      '<div class="li-ctl"><button type="button" class="ed-btn-icon unit-x" data-act="remove" data-list="crew" data-i="' + i + '" title="' + esc(t('cr.remove')) + '" aria-label="' + esc(t('cr.remove')) + '">×</button>' +
+      '<div class="li-ctl">' +
       '<button type="button" class="ed-btn-icon neutral" data-act="up" data-list="crew" data-i="' + i + '"' + (i === 0 ? ' disabled' : '') + ' title="' + esc(t('li.up')) + '" aria-label="' + esc(t('li.up')) + '">↑</button>' +
-      '<button type="button" class="ed-btn-icon neutral" data-act="down" data-list="crew" data-i="' + i + '"' + (i === c.crew.length - 1 ? ' disabled' : '') + ' title="' + esc(t('li.down')) + '" aria-label="' + esc(t('li.down')) + '">↓</button></div></div>').join('');
+      '<button type="button" class="ed-btn-icon neutral" data-act="down" data-list="crew" data-i="' + i + '"' + (i === c.crew.length - 1 ? ' disabled' : '') + ' title="' + esc(t('li.down')) + '" aria-label="' + esc(t('li.down')) + '">↓</button>' +
+      '<button type="button" class="ed-btn-icon unit-x" data-act="remove" data-list="crew" data-i="' + i + '" title="' + esc(t('cr.remove')) + '" aria-label="' + esc(t('cr.remove')) + '">×</button></div></div>').join('');
     return head + '<div class="ed-list">' + frows + '</div>' +
       '<button type="button" class="ed-btn-add" data-act="add" data-list="crew"' + (c.crew.length >= LIMITS.crew ? ' disabled' : '') + '>' + esc(t('cr.add', { n: c.crew.length, max: LIMITS.crew })) + '</button>';
   }
@@ -5145,8 +5186,8 @@ function groupBoxHtml(c) {
     return '<div class="li li-u" data-unit="' + i + '"><div class="li-main">' +
       '<div class="li-uh"><span class="li-ut">' + esc(t('cr.unit', { n: i + 1 })) + '</span><span class="snap-tag">' + esc(dgTypeLabel(dgStr(u.type))) + '</span></div>' +
       '<div class="li-grid g2">' +
-      fShared('f.crew.callsign', '<input type="text" data-gs="u.' + i + '.callsign" value="' + esc(dgCs(u.callsign)) + '" placeholder="' + esc(dgUnitDefault(f, fi, i)) + '" autocomplete="off" spellcheck="false">') +
-      fShared('f.crew.type', selShared('u.' + i + '.type', dgStr(u.type), uo)) + '</div>' +
+      fShared('f.crew.type', selShared('u.' + i + '.type', dgStr(u.type), uo)) +
+      fShared('f.crew.callsign', '<input type="text" data-gs="u.' + i + '.callsign" value="' + esc(dgCs(u.callsign)) + '" placeholder="' + esc(dgUnitDefault(f, fi, i)) + '" autocomplete="off" spellcheck="false">') + '</div>' +
       '<div class="li-grid g2">' +
       fShared('f.crew.board', '<input type="text" data-gs="u.' + i + '.onboard" value="' + esc(dgStr(u.onboard)) + '" autocomplete="off" spellcheck="false">') +
       fInput('f.crew.pilot', 'crew.' + i + '.pilot', x.pilot) + '</div></div>' +
@@ -5527,6 +5568,20 @@ function deduceGroup(c) {
     if (e) e[1]++; else types.push([ty, 1]);
   });
   return { types: types, aircraft: types.map(x => x[0]).join(' + '), count: rows.length };
+}
+/* Des lignes remplies dont certaines seulement ont un type : les types connus avec leur nombre, dans l'ordre des lignes, et le nombre de lignes sans type ; sinon null
+   (aucune ligne n'a de type, ou toutes en ont : deduceGroup ou l'ancien texte) */
+function partialGroup(c) {
+  const rows = c.crew.filter(r => anyText(r, CREW_KEYS));
+  const typed = rows.filter(r => hasText(r.type)), unknown = rows.length - typed.length;
+  if (!typed.length || !unknown) return null;
+  const types = [];
+  typed.forEach(r => {
+    const ty = r.type.trim();
+    const e = types.find(x => x[0] === ty);
+    if (e) e[1]++; else types.push([ty, 1]);
+  });
+  return { types: types, unknown: unknown };
 }
 /* Quand le groupe se déduit, la carte enregistre l'appareil et le nombre déduits */
 function syncGroup(c) {
@@ -5920,6 +5975,8 @@ function rowHtml(cls, cells) {
 function groupText(c) {
   const d = deduceGroup(c);
   if (d) return d.types.map(x => x[1] + ' \u00d7 ' + x[0]).join(' + ');
+  const p = partialGroup(c);
+  if (p) return p.types.map(x => x[1] + ' \u00d7 ' + x[0]).join(' + ') + ' + ' + p.unknown + ' \u00d7 ?';
   const a = c.flight.aircraft.trim(), n = c.flight.count;
   if (hasText(a)) return (n != null && a.indexOf('+') < 0) ? n + ' \u00d7 ' + a : a;
   return n != null ? t('dc.flightOf', { n: n }) : '';
@@ -6251,11 +6308,15 @@ function syncRefsEditor() {
 }
 
 const SECTION_BUILDERS = {
-  meta: c =>
-    fSelect('f.classification', 'meta.classification', c.meta.classification, CLASSIF_KEYS.map(k => [k, t('classif.' + k)])) +
-    fInput('f.docRef', 'meta.docRef', c.meta.docRef) +
+  /* L'en-tête : le même qu'au Briefing Generator (Opération · Mission, puis Date · Heure (Z)) */
+  header: c =>
     '<div class="ed-field-row">' + fInput('f.operation', 'meta.operation', c.meta.operation) + fInput('f.mission', 'meta.mission', c.meta.mission) + '</div>' +
     '<div class="ed-field-row">' + fInput('f.date', 'meta.date', c.meta.date) + fInput('f.time', 'meta.time', c.meta.time) + '</div>',
+
+  /* Méta : la classification et la référence du document, en dernière section */
+  meta: c =>
+    fSelect('f.classification', 'meta.classification', c.meta.classification, CLASSIF_KEYS.map(k => [k, t('classif.' + k)])) +
+    fInput('f.docRef', 'meta.docRef', c.meta.docRef),
 
   mission: c =>
     fArea('f.objective', 'mission.objective', c.mission.objective) +
@@ -6382,7 +6443,7 @@ Object.keys(LINKED_BUILDERS).forEach(id => {
 /* Le repli : l'état se garde (dg_folds_v1 : { section: true (ouverte) | false (repliée) }) ; le profil neuf replie Méta, Terrains, Carburant et emport, Menaces et notes.
    En mode onglets (≤ 1100 px) la section de l'onglet est ouverte sans rien écrire dans la clé. */
 const DG_FOLDS = 'dg_folds_v1';
-const DG_FOLD_DEF = { meta: false, mission: true, times: true, group: true, nav: true, refs: true, radio: true, fields: false, weather: true, fuel: false, threats: false };
+const DG_FOLD_DEF = { header: true, meta: false, mission: true, times: true, group: true, nav: true, refs: true, radio: true, fields: false, weather: true, fuel: false, threats: false };
 const DG_TABS = window.matchMedia('(max-width: 1100px)');
 function dgFoldOpen(id) { return DG_TABS.matches ? true : uiFoldOpen(DG_FOLDS, id, DG_FOLD_DEF[id] !== false); }
 
@@ -6390,6 +6451,7 @@ function dgFoldOpen(id) { return DG_TABS.matches ? true : uiFoldOpen(DG_FOLDS, i
 function dgSectionSum(id, c) {
   const v = x => (typeof x === 'string' ? x.trim() : (typeof x === 'number' ? String(x) : ''));
   const cnt = (l, one, many) => l.length ? t(l.length === 1 ? one : many, { n: l.length }) : '';
+  if (id === 'header') return uiJoin([v(c.meta.operation), v(c.meta.mission), v(c.meta.date), v(c.meta.time)]);
   if (id === 'meta') return uiJoin([CLASSIF_KEYS.indexOf(c.meta.classification) >= 0 ? t('classif.' + c.meta.classification) : '', v(c.meta.docRef)]);
   if (id === 'mission') return uiJoin([v(c.flight.task), v(c.mission.objective)]);
   if (id === 'times') {
@@ -6563,6 +6625,50 @@ function syncGroupEditor(c) {
   });
 }
 
+/* La marque « hors jeu de base » d'une unité : posée ou levée au fil de la saisie, sans refaire l'éditeur */
+function dgFlagSync(i, v) {
+  const f = document.querySelector('#editor [data-dg-flag="' + i + '"]');
+  if (f) f.hidden = !dgTypeOff(v);
+}
+/* Le focus revient au bouton de la liste (ou au champ) du type de l'unité i, après un redessin */
+function dgTypeFocus(i) {
+  const n = document.querySelector('#editor [data-path="crew.' + i + '.type"]');
+  if (!n) return;
+  const b = n.tagName === 'SELECT' ? n.previousElementSibling : n;
+  if (b && b.focus) b.focus({ preventScroll: true });
+}
+/* Le choix dans la liste du type : « Autre type (mod)… » ouvre la saisie libre ; un type du jeu s'écrit sur l'unité */
+function dgTypePick(c, el) {
+  const i = parseInt(el.dataset.dgType, 10);
+  if (el.value === '__other__') {
+    DG_UI.other = { c: c, i: i };
+    renderEditor();
+    const f = document.querySelector('#editor [data-dg-other="' + i + '"]');
+    if (f) f.focus();
+    return;
+  }
+  const stale = !!el.querySelector('option[data-dg-mod]') && !el.options[el.selectedIndex].hasAttribute('data-dg-mod');       /* la valeur hors jeu de base qu'on quitte ne reste pas dans la liste */
+  setPath(c, 'crew.' + i + '.type', el.value);
+  syncGroup(c); syncGroupEditor(c);
+  dgFlagSync(i, el.value);
+  touch();
+  if (stale) { renderEditor(); dgTypeFocus(i); }
+}
+/* La sortie de la saisie libre : la valeur est gardée telle quelle ; Entrée la valide et revient à la liste, Échap revient à la liste sans rien changer de plus */
+function dgOtherCommit(el, back) {
+  if (!back || !DG_UI.other) return;
+  const i = DG_UI.other.i;
+  DG_UI.other = null;
+  renderEditor();
+  dgTypeFocus(i);
+}
+function onEditorKeyDown(e) {
+  const el = e.target;
+  if (!el || !el.dataset || el.dataset.dgOther === undefined || (e.key !== 'Enter' && e.key !== 'Escape')) return;
+  e.preventDefault();
+  dgOtherCommit(el, true);
+}
+
 function onEditorInput(e) {
   if (DG_UI.rendering) { if (e.type === 'change' && e.target) e.target._dgLost = true; return; }        /* un redessin peut faire partir un « change » sur le champ qu'il retire : il n'ouvre ni confirmation ni écriture ; la saisie sera validée à la sortie du champ */
   const el = e.target;
@@ -6597,11 +6703,13 @@ function onEditorInput(e) {
   }
   if (e.type === 'change' && el.tagName !== 'SELECT') return;
   const c = curCard();
+  if (el.tagName === 'SELECT' && el.dataset.dgType !== undefined) { dgTypePick(c, el); return; }        /* le type d'une unité de carte libre : la liste des types du jeu */
   if (path === 'flight.count') setPath(c, path, normCount(el.value));
   else setPath(c, path, el.value);
   if (path === 'weather.metar') syncMetar(c);
   if (path === 'flight.callsign') updatePackTitle();
   if (/^crew\./.test(path) && !c.gsId) { syncGroup(c); syncGroupEditor(c); }
+  if (el.dataset.dgOther !== undefined) dgFlagSync(el.dataset.dgOther, el.value);
   if (/^nav(Display)?\./.test(path)) syncNavEditor();
   if (/^refs\./.test(path)) syncRefsEditor();
   touch();
@@ -6663,9 +6771,12 @@ function onEditorClick(e) {
   const spec = listSpec(path);
   if (!Array.isArray(arr) || !spec) return;
   let focusIdx = -1;
+  if (path === 'crew') DG_UI.other = null;
   if (act === 'add') {
     if (arr.length >= spec.max) return;
-    arr.push(spec.make());
+    const nu = spec.make();
+    if (path === 'crew' && arr.length && hasText(arr[arr.length - 1].type)) nu.type = arr[arr.length - 1].type;       /* une unité ajoutée prend le type de celle du dessus ; la première, aucun */
+    arr.push(nu);
     focusIdx = arr.length - 1;
   } else if (act === 'remove') {
     arr.splice(i, 1);
@@ -6720,7 +6831,7 @@ function packAct(act, btn) {
 
 /* ----- Onglets (tablette) ----- */
 function setActiveTab(id) {
-  if (TAB_IDS.indexOf(id) === -1) id = 'meta';
+  if (TAB_IDS.indexOf(id) === -1) id = 'header';
   document.body.dataset.activeTab = id;
   document.querySelectorAll('#tab-bar button').forEach(b => b.classList.toggle('current', b.dataset.tab === id));
   if (id === 'preview') applyPreviewScale();
@@ -7513,6 +7624,7 @@ async function resetDoc() {
 function bindEvents() {
   const ed = document.getElementById('editor');
   ed.addEventListener('input', onEditorInput);
+  ed.addEventListener('keydown', onEditorKeyDown);
   ed.addEventListener('change', onEditorInput);
   ed.addEventListener('focusin', onEditorFocusIn);
   ed.addEventListener('focusout', onEditorFocusOut);
@@ -8057,8 +8169,20 @@ function tbmOpen(m) {
     m.none = msg;
     m.noneLi = none;
   }
+  let grp = null;
   for (let k = 0; k < opts.length; k++) {
     const o = opts[k], li = document.createElement('li');
+    const og = o.parentNode && o.parentNode.tagName === 'OPTGROUP' ? o.parentNode : null;       /* un groupe d'options : son titre, une fois, avant la première */
+    if (og !== grp) {
+      grp = og;
+      if (og) {
+        const gh = document.createElement('li');
+        gh.className = 'tbm-head tbm-group';
+        gh.setAttribute('role', 'presentation');
+        gh.textContent = og.label;
+        ul.appendChild(gh);
+      }
+    }
     li.className = 'tbm-opt';
     if (o.hasAttribute('data-keep')) li.setAttribute('data-keep', '');
     li.id = 'tbm-' + m.uid + '-' + k;
@@ -8427,7 +8551,7 @@ function init() {
   const synced = dgSyncRoutes();
   if (doc.theatre !== th0 || synced || JSON.stringify(doc) !== DG_DOC.raw) persistState();       /* le document tel qu'il se lit maintenant (migration d'une carte d'avant le lot comprise) est gardé, une fois */       /* un théâtre pris (clé partagée, fiche ou route) est gardé */
   bindEvents();
-  setActiveTab('meta');
+  setActiveTab('header');
   renderAll();
   /* Les polices embarquées mesurent autrement que les polices de repli : refaire le découpage une fois chargées. */
   if (document.fonts && document.fonts.load) {
@@ -8466,7 +8590,7 @@ def build():
 
     _wn, _pyl, _lim = dg_tables()
     js = JS.replace('@@WEAPON_NAMES@@', _wn).replace('@@AIRCRAFT_PYLONS@@', _pyl).replace('@@AIRCRAFT_LIMITS@@', _lim)
-    js = js.replace('@@PAYLOAD_BLOCK@@\n', build_payload_block()).replace('@@IMPORT_BLOCK@@\n', build_import_block()).replace('@@MESSAGES_BLOCK@@\n', build_messages_block() + build_ui_block())
+    js = js.replace('@@PAYLOAD_BLOCK@@\n', build_payload_block()).replace('@@AIRCRAFT_TYPES_BLOCK@@\n', build_aircraft_types_block()).replace('@@IMPORT_BLOCK@@\n', build_import_block()).replace('@@MESSAGES_BLOCK@@\n', build_messages_block() + build_ui_block())
     _facts = airfield_facts()
     facts_js = json.dumps(_facts, ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
     js = js.replace('__AIRFIELD_FACTS__', facts_js)
@@ -8487,6 +8611,8 @@ def build():
     pt, it = re.search(r"const PAYLOAD_TYPES = \[(.*?)\];", build_payload_block()), re.search(r"const IMP_TYPES = \[(.*?)\];", build_import_block())
     if not (pt and it and pt.group(1) == it.group(1)):
         raise SystemExit("[ERREUR] Les types du bloc d'import ne sont pas ceux de PAYLOAD_TYPES")
+    if build_aircraft_types_block() not in js or 'const GAME_AIRCRAFT_TYPES' not in js:
+        raise SystemExit("[ERREUR] Le bloc des types d'appareils du jeu n'est pas embarqué tel quel")
     left = re.findall(r'__[A-Z0-9_]{4,}__', re.sub(r'<script>.*?</script>', '', html, flags=re.S)[:])
     left = [x for x in left if x not in ('__proto__',)]
     if left:
