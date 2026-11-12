@@ -26,6 +26,10 @@ Changes merged since the last release, grouped per tool.
 - **Mission date in the flight package**: HQ and the Flight Configurator write the mission's date into the package; an imported route keeps it, and the magnetic declination uses it when no HQ mission of that theatre is loaded. Applying a package never changes the mission's date.
 - The Briefing Generator and the Datacard Generator open on the same **Header**: operation, mission, date (YYYY-MM-DD) and time (Z); classification and document reference move to their last section, folded.
 - On phones, every tool's top bar shows its file buttons first (Open, Save, Export), then its settings; the Route Planner and the Datacard Generator shrink Display to its icon and the theatre to a short name.
+- **Clear** works the same in the Flight Configurator, the Route Planner and the Datacard Generator: after one confirmation it clears the groups, the routes of every theatre and all the datacards of these three tools; HQ, the Briefing Generator and Recon Station are untouched. The Route Planner keeps its finer choices.
+- Deleting a route in the Route Planner removes it from the groups that follow it; removing a group in the Flight Configurator also removes its datacard; a route you named is never replaced by an imported one.
+- Every tool's top bar keeps one order at every width: the file buttons first, then the settings.
+- Every drop-down list in the suite works the same way: a search field on long lists, keyboard navigation, and placement above the on-screen keyboard.
 
 #### Removed
 - The repository no longer ships one particular wing's configuration file, nor six squadron logos that no tool used; the README and the code comments no longer name that wing. Each wing still makes or imports its own configuration in HQ.
@@ -49,6 +53,7 @@ Changes merged since the last release, grouped per tool.
 - **Dynamic Spawn**, written to the mission: a flight can be made a template and linked, per aircraft type, to the airfields and FARPs that already have Dynamic Spawn enabled in the mission editor.
 - **Discard** (↺), next to **Save .miz** in the top bar while there are unsaved changes, takes the mission back to how it was when opened or last saved, after confirmation. The question's other button, like the one asked before opening another .miz over unsaved changes, says **Keep changes**.
 - **Custom liveries** in the Wing window: a name per livery, as DCS writes it, and the aircraft that wear it, plus a **default livery** per aircraft type. The Flight Configurator lists them next to the game's own.
+- **Clear** removes the open mission, with a warning when changes are not saved; the other tools stop using it.
 #### Changed
 - Radios are named and numbered as in the cockpit in the mission summary and in the package messages (the Mi-24P's R-863 and R-828 start at channel 0). The .miz keeps its own numbering.
 - Flight packages are recognised by their content, not their file name; unreadable flights are skipped and counted, an empty package or one without theatre is refused, with the same messages as the Route Planner and the Datacard Generator. *Load another .miz* also clears the mission offered to the Route Planner and the Datacard Generator.
