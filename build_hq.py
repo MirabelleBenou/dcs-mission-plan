@@ -7052,7 +7052,7 @@ grep_present('payloadPos',          'payloadPos présent (P4.2)')
 grep_present("replacements.route",  'replacements.route géré (P4.3)')
 grep_present("repl.payloads",       'replacements.payloads géré (P4.3)')
 
-# Appliquer un paquet ne change jamais la date ni l'heure de départ de la mission (lot mp-paquet-date-mission) : aucune écriture de `date` ni de `start_time`
+# Appliquer un paquet ne change jamais la date ni l'heure de départ de la mission : aucune écriture de `date` ni de `start_time`
 # dans le chemin d'application (buildPatchesFromPackage, pkPlanFlight, pkApply) ; le contrôle arrête le build s'il en trouve une, ou s'il ne trouve pas l'une des trois fonctions
 _APPLY_PATH = ''
 for _fn in ('function buildPatchesFromPackage(', 'function pkPlanFlight(', 'async function pkApply('):
