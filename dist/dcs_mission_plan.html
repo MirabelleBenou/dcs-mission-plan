@@ -277,6 +277,194 @@ select[data-tbm-src] { display: none !important; }
 @media(max-width:768px){
   .bigstamp,.soviet-star{display:none;}
 }
+/* ===== MESSAGES COMMUNS : feuille du toast ===== */
+.toast {
+  position: fixed; bottom: var(--mp-toast-bottom, 20px); left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: var(--olive-dark); border: 1px solid var(--amber); border-left-width: 4px;
+  color: var(--paper); font-family: var(--f-ui); font-weight: 500; letter-spacing: 2px; text-transform: uppercase; font-size: 12px;
+  padding: 10px 20px; z-index: 20000; opacity: 0; visibility: hidden; pointer-events: none;
+  transition: opacity .3s ease, transform .3s ease, visibility 0s linear .3s;
+  box-shadow: 0 4px 16px rgba(0,0,0,.6); width: max-content; max-width: calc(100vw - 24px); text-align: center;
+}
+.toast.show { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); transition-delay: 0s; }
+.toast.show.act { pointer-events: auto; }
+.toast.ok { border-color: var(--green-radar); }
+.toast.err { border-color: var(--mp-warn, #e8806a); }
+.toast-action {
+  background: none; border: 0; padding: 6px 4px; margin: -6px 0; cursor: pointer;
+  font: inherit; letter-spacing: inherit; text-transform: inherit; color: var(--amber);
+  text-decoration: underline; text-underline-offset: 3px;
+}
+.toast-action:hover, .toast-action:focus-visible { color: var(--paper-light, var(--paper)); }
+@media print { .toast { display: none !important; } }
+/* ===== FIN DE LA FEUILLE DU TOAST ===== */
+/* ===== INTERFACE COMMUNE : feuille ===== */
+:root { --mp-warn: #e8806a; }
+
+/* ---- la fenêtre de suite ---- */
+.ui-modal[hidden] { display: none !important; }
+.ui-modal { position: fixed; inset: 0; z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box; }
+#ui-confirm { z-index: 10500; }
+.ui-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.55); }
+.ui-panel {
+  position: relative; box-sizing: border-box; width: 440px; max-width: calc(100vw - 24px); max-height: 90vh; max-height: 90dvh; overflow: auto;
+  background: var(--olive-dark); color: var(--paper); border: 1px solid var(--amber); border-top: 3px solid var(--amber);
+  padding: 18px 18px 16px; box-shadow: 0 8px 40px rgba(0,0,0,.6); font-family: var(--f-ui); font-weight: 500; text-align: left;
+}
+.ui-panel.ui-wide { width: 720px; }
+.ui-panel > h2, .ui-title { margin: 0 44px 14px 0; font-family: var(--f-stencil); font-weight: 400; font-size: 16px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--amber); line-height: 1.25; overflow-wrap: anywhere; }
+.ui-close {
+  position: absolute; top: 0; right: 0; width: 44px; height: 44px; padding: 0; background: none; border: 0; cursor: pointer;
+  color: var(--paper); font-family: inherit; font-size: 22px; line-height: 1;
+}
+.ui-close:hover, .ui-close:focus-visible { color: var(--amber); }
+/* la fenêtre coupe ce qui déborde : le contour reste à l'intérieur de la croix */
+.ui-close:focus-visible { outline-offset: -4px; }
+/* le lien de la fenêtre d'import : même couleur de contour que le reste */
+button.imp-link:focus-visible { outline-color: var(--amber); }
+.ui-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+.ui-btn {
+  box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 0 16px;
+  font-family: var(--f-ui); font-weight: 500; font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase;
+  background: rgba(0,0,0,.2); color: var(--paper-light); border: 1px solid var(--khaki); border-radius: 0; cursor: pointer;
+}
+.ui-btn:hover { background: var(--olive); border-color: var(--amber); color: var(--amber); }
+.ui-btn.primary { border-color: var(--amber); color: var(--amber); }
+.ui-btn.primary:hover { background: var(--amber-dark, var(--olive)); color: var(--paper-light); }
+.ui-btn.danger, .ui-btn.primary.danger { background: var(--mp-warn); border-color: var(--mp-warn); color: #14110a; }
+.ui-btn.danger:hover, .ui-btn.primary.danger:hover { background: var(--paper-light); border-color: var(--mp-warn); color: #14110a; }
+.ui-btn:disabled { opacity: .4; cursor: default; }
+.ui-btn:disabled:hover { background: rgba(0,0,0,.2); border-color: var(--khaki); color: var(--paper-light); }
+.ui-btn.primary:disabled:hover { border-color: var(--amber); color: var(--amber); }
+.ui-btn.danger:disabled:hover { background: var(--mp-warn); border-color: var(--mp-warn); color: #14110a; }
+@media (max-width: 480px) { .ui-modal { padding: 8px; } .ui-panel { padding: 14px 14px 12px; } }
+@media print { .ui-modal { display: none !important; } }
+
+/* ---- les notes ---- */
+.ui-note { margin: 0; font-family: 'Roboto Mono', 'Courier New', monospace; font-weight: 400; font-size: 11px; line-height: 1.4; color: var(--khaki-light); overflow-wrap: anywhere; }
+.ui-avert { margin: 6px 0 0; font-family: 'Roboto Mono', 'Courier New', monospace; font-weight: 400; font-size: 11px; line-height: 1.4; color: var(--mp-warn); overflow-wrap: anywhere; }
+.ui-bandeau {
+  box-sizing: border-box; margin: 0 0 12px; padding: 7px 12px; font-family: 'Roboto Mono', 'Courier New', monospace; font-weight: 400; font-size: 12px; line-height: 1.4;
+  color: var(--paper-light); background: var(--olive-dark); border: 1px solid var(--khaki); border-left: 3px solid var(--khaki); overflow-wrap: anywhere;
+}
+.ui-bandeau.ok { border-left-color: var(--green-radar); color: var(--paper); }
+.ui-bandeau.err { border-left-color: var(--mp-warn); color: var(--paper); }
+#ui-confirm .ui-note { white-space: pre-line; font-size: 12px; margin: 0 0 4px; }
+
+/* ---- le repli : un triangle plein à la couleur du module (--mp-accent), à gauche du titre ; tout l'en-tête est la cible ---- */
+.ui-fold-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-start; min-height: 44px; box-sizing: border-box; cursor: pointer; list-style: none; user-select: none; }
+.ui-fold-head::-webkit-details-marker { display: none; }
+.ui-fold-head::before {
+  content: ''; flex: none; width: 0; height: 0; margin: 0 14px 0 0; border-left: 7px solid var(--mp-accent, var(--amber));
+  border-top: 5px solid transparent; border-bottom: 5px solid transparent; transition: transform .2s;
+}
+details[open] > .ui-fold-head::before, .ui-fold-head[aria-expanded="true"]::before { transform: rotate(90deg); }
+.ui-sum {
+  display: none; flex: 0 0 100%; box-sizing: border-box; min-width: 0; max-width: 100%; margin: -6px 0 8px; padding-left: 21px;
+  font-family: 'Roboto Mono', 'Courier New', monospace; font-weight: 400; font-size: 12px; line-height: 1.4; letter-spacing: 0; text-transform: none; text-align: left;
+  color: var(--khaki-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+details:not([open]) > .ui-fold-head > .ui-sum:not(:empty), .ui-fold-head[aria-expanded="false"] > .ui-sum:not(:empty) { display: block; }
+.ui-foldall { min-height: 44px; padding: 0 12px; font-size: 11px; white-space: nowrap; }
+.ui-foldbar { display: flex; justify-content: flex-end; margin: 0 0 10px; }
+
+/* ---- boutons segmentés et champs de la fenêtre d'export ---- */
+.ui-field { margin: 0 0 14px; }
+.ui-lbl { display: block; margin: 0 0 5px; font-family: var(--f-ui); font-weight: 500; font-size: 11px; letter-spacing: 1.8px; text-transform: uppercase; color: var(--amber); }
+.ui-seg { display: flex; flex-wrap: wrap; margin: 0 0 6px; }
+.ui-seg-btn {
+  box-sizing: border-box; min-height: 44px; min-width: 56px; padding: 0 16px; margin: 0 -1px 0 0; font-family: var(--f-ui); font-weight: 500; font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase;
+  background: rgba(0,0,0,.2); color: var(--paper-light); border: 1px solid var(--khaki); border-radius: 0; cursor: pointer;
+}
+.ui-seg-btn:hover { background: var(--olive); color: var(--amber); }
+.ui-seg-btn[aria-pressed="true"] { background: var(--amber-dark, var(--olive)); color: #fff; border-color: var(--amber); box-shadow: inset 0 -3px 0 var(--amber); position: relative; }
+.ui-seg-btn:focus-visible { position: relative; }
+.ui-seg-btn:disabled { opacity: .4; cursor: default; }
+.ui-row { display: flex; align-items: center; gap: 8px; }
+.ui-in {
+  flex: 1 1 auto; min-width: 0; box-sizing: border-box; min-height: 44px; padding: 10px 11px; background: rgba(216,201,165,.92); border: 1px solid var(--khaki); border-left: 3px solid var(--amber-dark, var(--amber));
+  font-family: 'Roboto Mono', 'Courier New', monospace; font-weight: 400; font-size: 13px; color: #1a1710; border-radius: 0;
+}
+.ui-in:focus { background: var(--paper-light); box-shadow: 0 0 0 1px var(--amber); }
+.ui-ext { flex: none; font-family: 'Roboto Mono', 'Courier New', monospace; font-weight: 400; font-size: 13px; color: var(--khaki-light); }
+.ui-pick { margin: 6px 0 0; }
+.ui-pick[hidden] { display: none; }
+@media print { .ui-print-hide { display: none !important; } }
+
+/* ---- le focus visible (la même règle dans toute la suite) : un contour plein de 2 px à la couleur --amber, décalé de 2 px ; le focus à la souris ne change pas ---- */
+button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus-visible,
+a[href]:focus-visible, [tabindex]:focus-visible, [role="button"]:focus-visible {
+  outline: 2px solid var(--amber); outline-offset: 2px;
+}
+
+/* ---- la barre : 60 px, des cibles de 44 px au moins, le texte des boutons en Oswald 700, le drapeau en Roboto Mono 400 ---- */
+.toolbar { height: 60px; }
+.toolbar .tb-btn, .toolbar .tb-sel, .toolbar .tb-select, .toolbar .tbm-trigger, .toolbar .tb-lang-btn, .toolbar .seg-btn, .toolbar .mp-back-injected {
+  box-sizing: border-box; min-width: 44px !important; min-height: 44px !important;
+}
+.toolbar .tb-btn, .toolbar .tb-sel, .toolbar .tb-select, .toolbar .tbm-trigger, .toolbar .seg-btn { font-family: var(--f-ui); font-weight: 700; }
+.toolbar .tb-lang-btn { font-family: 'Roboto Mono', 'Courier New', monospace; font-weight: 400; }
+.toolbar .tb-seg { height: auto; min-height: 44px; }
+/* le séparateur qui suit le groupe des fichiers : visible à toutes les largeurs (les modules masquent les leurs quand la barre se resserre) */
+.toolbar > .tb-sep.tb-files-end { display: block; }
+/* dans la suite, le module laisse le thème à l'accueil : sa liste de thème n'est pas là (le drapeau reste) */
+html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-controls="tbm-list-theme-select"], html.mp-in-shell [aria-controls="tbm-list-theme"] { display: none !important; }
+/* la barre qui manque de place se réduit dans un seul ordre, par la même règle « s'il tient » (uiBarFit, classes tb-st1 à tb-st4, cumulatives) : 1 le tampon de décor (et le tampon posé par le shell), 2 le numéro de version,
+   3 le texte des boutons (icônes seules), 4 le titre long, qui passe au sigle court (titre, sous-titre et séparateurs masqués) ; aucun seuil de largeur propre à un outil ne retire plus rien de cela */
+.toolbar.tb-fit, .toolbar.tb-fit * { transition: none !important; }
+.toolbar.tb-st1 .tb-classif, .toolbar.tb-st1 .mp-wing-stamp { display: none; }
+.toolbar.tb-st2 .tb-version { display: none; }
+.toolbar.tb-st3 .tb-btn .tb-btn-label { display: none; }
+.toolbar.tb-st3 .tb-btn { padding: 0 10px; width: auto; }
+.toolbar.tb-st4 .tb-brand-main, .toolbar.tb-st4 .tb-brand-sub, .toolbar.tb-st4 .tb-sep, .toolbar.tb-st4 > .tb-sep.tb-files-end { display: none; }
+.toolbar.tb-st4 .tb-brand-short { display: inline; }
+/* la barre au téléphone : une seule règle de réduction, un seul seuil (sous 760 px, celui de la suite) pour tous les outils à barre. Le libellé d'une liste de la barre (« Théâtre ») est masqué (la liste garde son nom accessible) ;
+   dans la suite, un bouton de réglage à texte et à icône (Affichage) n'a plus que l'icône (son infobulle et son nom accessible gardent son nom : uiBarDisplaySync) */
+@media (max-width: 759px) {
+  .toolbar .tb-label { display: none; }
+  html.mp-in-shell #btn-display > span, html.mp-in-shell #btn-display > .dsp-chev { display: none; }
+}
+/* MP-20 begin */
+/* Contrastes (texte sous 18 px, 4,5 : 1 au moins) : couleur du texte seule, la palette commune ne bouge pas. */
+:where(body[data-theme="cw-nato"]) .ui-lbl { color: #c49037; }
+:where(body[data-theme="cw-nato"]) .toast-action { color: #c49037; }
+:where(body[data-theme="cw-nato"]) .toolbar .tb-select:not(:hover):not(:focus-visible) { color: #c49037; }   /* le libellé de la liste de thème, hors de la suite (au repos ; le survol garde sa couleur) */
+/* au focus clavier, le libellé de la liste de thème (fond de survol) prend une couleur qui tient 4,5 : 1 dans les quatre thèmes */
+.toolbar .tb-select:focus-visible, .toolbar .tb-sel:focus-visible { color: var(--paper-light); }
+/* le bouton « Remise à zéro » du HQ et du BG : une seule couleur par thème (la plus claire des deux anciennes), la même dans les deux outils ; :not(:hover) pour que le survol garde la sienne */
+:where(body[data-theme="cw-nato"]) .wing-action-reset:not(:hover) { color: #c17064; }
+:where(body[data-theme="cw-soviet"]) .wing-action-reset:not(:hover) { color: #b27171; }
+:where(body[data-theme="modern-nato"]) .wing-action-reset:not(:hover) { color: #818181; }
+:where(body[data-theme="modern-east"]) .wing-action-reset:not(:hover) { color: #aa7373; }
+:where(body[data-theme="cw-nato"]) .ui-note { color: #ab9e78; }
+:where(body[data-theme="cw-nato"]) .ui-sum { color: #cbc2aa; }
+:where(body[data-theme="cw-nato"]) .ui-panel > h2 { color: #c49037; }
+:where(body[data-theme="cw-nato"]) .ui-title { color: #c49037; }
+:where(body[data-theme="cw-soviet"]) .ui-note { color: #95a08a; }
+:where(body[data-theme="cw-soviet"]) .ui-ext { color: #879279; }
+:where(body[data-theme="cw-soviet"]) .ui-sum { color: #9fa995; }
+:where(body[data-theme="modern-nato"]) .ui-note { color: #8e9ca7; }
+:where(body[data-theme="modern-nato"]) .ui-sum { color: #929fab; }
+:where(body[data-theme="modern-east"]) .ui-note { color: #989e8a; }
+:where(body[data-theme="modern-east"]) .ui-ext { color: #888e78; }
+:where(body[data-theme="modern-east"]) .ui-sum { color: #9da28f; }
+/* MP-20 end */
+/* ===== FIN DE LA FEUILLE DE L'INTERFACE COMMUNE ===== */
+/* ===== FICHIER DE TRAVAIL : couleurs de la fenêtre du nom et du toast ===== */
+[data-theme="cw-nato"] #mp-work-modal, [data-theme="cw-nato"] #toast {
+  --amber: #c0892a; --amber-dark: #8a5e15; --green-radar: #4f6b3a; --khaki: #807454; --khaki-light: #a89a72; --mp-warn: #e8806a; --olive: #4a5230; --olive-dark: #2c321e; --paper: #d8c9a5; --paper-light: #e3d6b5; --f-ui: 'Oswald', 'Arial Narrow', sans-serif; --f-stencil: 'Stardos Stencil', 'Impact', 'Arial Narrow Bold', sans-serif;
+}
+[data-theme="cw-soviet"] #mp-work-modal, [data-theme="cw-soviet"] #toast {
+  --amber: #c0892a; --amber-dark: #8a5e15; --green-radar: #4f6b3a; --khaki: #3a4a2e; --khaki-light: #5a6a48; --mp-warn: #e8806a; --olive: #2a3a5a; --olive-dark: #1a2540; --paper: #d8c479; --paper-light: #e8d690; --f-ui: 'Oswald', 'Arial Narrow', sans-serif; --f-stencil: 'Stardos Stencil', 'Impact', 'Arial Narrow Bold', sans-serif;
+}
+[data-theme="modern-nato"] #mp-work-modal, [data-theme="modern-nato"] #toast {
+  --amber: #c0892a; --amber-dark: #8a5e15; --green-radar: #4f6b3a; --khaki: #5c6b7a; --khaki-light: #7a8a98; --mp-warn: #e8806a; --olive: #2a3038; --olive-dark: #1c2026; --paper: #e8e3d8; --paper-light: #f0ece2; --f-ui: 'Oswald', 'Arial Narrow', sans-serif; --f-stencil: 'Stardos Stencil', 'Impact', 'Arial Narrow Bold', sans-serif;
+}
+[data-theme="modern-east"] #mp-work-modal, [data-theme="modern-east"] #toast {
+  --amber: #c0892a; --amber-dark: #8a5e15; --green-radar: #4f6b3a; --khaki: #4a5238; --khaki-light: #6a7256; --mp-warn: #e8806a; --olive: #3d3024; --olive-dark: #2a2018; --paper: #cdc6b8; --paper-light: #ddd6c8; --f-ui: 'Oswald', 'Arial Narrow', sans-serif; --f-stencil: 'Stardos Stencil', 'Impact', 'Arial Narrow Bold', sans-serif;
+}
+/* ===== FIN DES COULEURS DE LA FENÊTRE DU NOM ET DU TOAST ===== */
 
 /* ===== Deux cadres selon le rôle : Mission Commander, Flight Leader (sans numéro) ===== */
 .mp-grp{position:relative; border:2px dashed color-mix(in srgb, var(--accent) 55%, transparent); border-radius:8px; padding:34px 18px 22px; background:rgba(0,0,0,.18);}
@@ -502,6 +690,20 @@ select[data-tbm-src] { display: none !important; }
 <div id="module-view"></div>
 <div id="module-loading" class="hidden">Chargement…</div>
 
+<!-- ===== FENÊTRE : SAUVEGARDER LE TRAVAIL — CHOISIR LE NOM DU FICHIER ===== -->
+<div class="ui-modal" id="mp-work-modal" hidden role="dialog" aria-labelledby="mp-work-title" aria-modal="true">
+  <div class="ui-backdrop" id="mp-work-backdrop"></div>
+  <div class="ui-panel" role="document">
+    <button type="button" class="ui-close" id="mp-work-close" data-i18n-aria="ui.close" aria-label="Fermer">×</button>
+    <h2 class="ui-title" id="mp-work-title" data-i18n="work.name.title">Sauvegarder le travail</h2>
+    <div class="ui-field"><label class="ui-lbl" for="mp-work-name" data-i18n="work.name.label">Nom du fichier</label><div class="ui-row"><input class="ui-in" id="mp-work-name" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="100"><span class="ui-ext">.json</span></div></div>
+    <div class="ui-actions">
+      <button type="button" class="ui-btn" id="mp-work-cancel" data-i18n="ui.cancel">Annuler</button>
+      <button type="button" class="ui-btn primary" id="mp-work-go" data-i18n="work.save.btn">Sauvegarder</button>
+    </div>
+  </div>
+</div>
+
 <script>
   /* ── Données ──────────────────────────────────────────────── */
   const MODULE_HTML = {
@@ -536,6 +738,17 @@ select[data-tbm-src] { display: none !important; }
       'work.save.tip': 'Sauvegarder tout le travail de Mission Plan (JSON)',
       'fm.btn': 'Field Manual',
       'fm.tip': 'Le manuel de la suite',
+      'work.name.title': 'Sauvegarder le travail',
+      'work.name.label': 'Nom du fichier',
+      'work.opened': 'Travail ouvert : {0}',
+      'work.err.json': "⚠ Fichier illisible : ce n'est pas du JSON.",
+      'work.err.format': "⚠ Ce fichier n'est pas un travail de Mission Plan.",
+      'work.err.empty': "⚠ Ce travail est vide : rien n'a changé.",
+      'work.err.full': "⚠ Mémoire du navigateur pleine : le travail n'a pas été ouvert.",
+      'ui.cancel': 'Annuler',
+      'ui.close': 'Fermer',
+      'ui.restore': 'Restaurer',
+      'ui.restore.refused': 'Restauration impossible : les données ont changé depuis.',
       'hq.desc': 'Poste de commandement — configuration Wing, identité escadrons, logos partagés avec tous les modules.',
       'bg.desc': 'Briefings complets — SITAC, plan radio, aérodromes, charts, annexes — export PDF prêt à partager.',
       'rs.desc': "Transforme une capture en photo d'analyse de reconnaissance — niveaux de gris, annotations au doigt, export PNG pleine résolution.",
@@ -563,6 +776,17 @@ select[data-tbm-src] { display: none !important; }
       'work.save.tip': 'Save all the Mission Plan work (JSON)',
       'fm.btn': 'Field Manual',
       'fm.tip': "The suite's manual",
+      'work.name.title': 'Save the work',
+      'work.name.label': 'File name',
+      'work.opened': 'Work opened: {0}',
+      'work.err.json': '⚠ Unreadable file: this is not JSON.',
+      'work.err.format': '⚠ This file is not a Mission Plan work file.',
+      'work.err.empty': '⚠ This work file is empty: nothing has changed.',
+      'work.err.full': '⚠ Browser storage is full: the work was not opened.',
+      'ui.cancel': 'Cancel',
+      'ui.close': 'Close',
+      'ui.restore': 'Restore',
+      'ui.restore.refused': 'Cannot restore: the data has changed since.',
       'hq.desc': 'Command hub — Wing configuration, squadron identity, logos shared across all modules.',
       'bg.desc': 'Complete briefings — SITAC, radio plan, airfields, charts, annexes — PDF export ready to share.',
       'rs.desc': 'Turns a screenshot into a reconnaissance analysis photo — greyscale, touch annotations, full-resolution PNG export.',
@@ -928,6 +1152,252 @@ select[data-tbm-src] { display: none !important; }
     } catch(e) {}
   }
 
+/* ===== MESSAGES COMMUNS (toast) ===== */
+function mpToastEl() {
+  let el = document.getElementById('toast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'toast'; el.className = 'toast';
+    el.setAttribute('role', 'status'); el.setAttribute('aria-live', 'polite');
+    (document.body || document.documentElement).appendChild(el);
+  }
+  return el;
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mpToastEl); else mpToastEl();
+function mpToastHide(el) {
+  el.classList.remove('show', 'act');
+  setTimeout(() => { if (!el.classList.contains('show')) el.textContent = ''; }, 400);
+}
+function showToast(msg, opts) {
+  const el = mpToastEl();
+  const o = (opts && typeof opts === 'object') ? opts : { ms: (typeof opts === 'number') ? opts : 0 };
+  const type = (o.type === 'ok' || o.type === 'err') ? o.type : '';
+  const act = (o.action && typeof o.action.fn === 'function') ? o.action : null;
+  let ms = (o.ms > 0) ? o.ms : (act ? 12000 : 2200);
+  if (type === 'err' && ms < 5000) ms = 5000;
+  const n = (showToast._n || 0) + 1;
+  showToast._n = n;
+  clearTimeout(showToast._h);
+  el.textContent = '';
+  const m = document.createElement('span');
+  m.textContent = (act ? msg + ' ' : String(msg));
+  el.appendChild(m);
+  if (act) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'toast-action'; b.textContent = act.label;
+    b.addEventListener('click', () => {
+      try { act.fn(); } finally { if (showToast._n === n) { clearTimeout(showToast._h); mpToastHide(el); } }
+    });
+    el.appendChild(b);
+  }
+  el.setAttribute('aria-live', type === 'err' ? 'assertive' : 'polite');
+  el.className = 'toast show' + (type ? ' ' + type : '') + (act ? ' act' : '');
+  showToast._h = setTimeout(() => { if (showToast._n === n) mpToastHide(el); }, ms);
+}
+function showToastAction(msg, label, fn, ms) { showToast(msg, { action: { label: label, fn: fn }, ms: ms }); }
+/* ===== FIN DES MESSAGES COMMUNS ===== */
+
+/* ===== FICHIER DE TRAVAIL DE LA SUITE ===== */
+const SUITE_FORMAT = 'dcs-mission-plan-work-v1';
+const SUITE_KEYS = ['fc_state_v1', 'flight_set_v1', 'flight_set_v1_illisible', 'route_set_v1', 'route_state_v1', 'route_layers_v1', 'datacard_state_v1', 'mp_theatre_v1', 'mp_units_v1', 'mp_nav_v1', 'khr26_briefing_state_v2', 'recon_state_v1'];
+/* Les outils dont l'iframe est retirée quand le travail est remplacé (ils lisent les clés ci-dessus) ; HQ et le Field Manual n'en lisent aucune : ils restent (le .miz d'HQ reste chargé) */
+const SUITE_DROP = ['bg', 'dg', 'rp', 'fc', 'rs'];
+/* Le calme du stockage, mesuré comme gsSettled (group_store_block.py) : aucune écriture des clés pendant SUITE_CALM_MS, constaté à deux relectures de suite (toutes les SUITE_CALM_STEP_MS), au plus SUITE_CALM_MAX_MS */
+const SUITE_CALM_MS = 400, SUITE_CALM_MAX_MS = 3000, SUITE_CALM_STEP_MS = 50;
+const SUITE = { restore: null, toastN: 0, name: '', at: 0, from: null };
+
+function suiteGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function suiteRead() { const o = {}; SUITE_KEYS.forEach(k => { o[k] = suiteGet(k); }); return o; }
+/* Écrit la table clé → texte ou null : les clés absentes sont retirées d'abord (de la place se libère), puis les autres sont écrites. Faux si une écriture a échoué (stockage plein). */
+function suiteWriteAll(map) {
+  let ok = true;
+  SUITE_KEYS.forEach(k => { if (typeof map[k] !== 'string') { try { localStorage.removeItem(k); } catch (e) { ok = false; } } });
+  SUITE_KEYS.forEach(k => { if (typeof map[k] === 'string') { try { localStorage.setItem(k, map[k]); } catch (e) { ok = false; } } });
+  return ok;
+}
+/* Chaque outil vivant écrit d'abord sa saisie en attente (MP_FLUSH), puis le stockage est lu */
+function suiteFlush(id) {
+  const ids = id ? [id] : Object.keys(iframes);
+  ids.forEach(i => {
+    try { const w = iframes[i] && iframes[i].contentWindow; if (w && typeof w.MP_FLUSH === 'function') w.MP_FLUSH(); }
+    catch (e) { console.warn('[M·P] écriture en attente de ' + i + ' : ' + e); }
+  });
+}
+/* Le nom d'un fichier choisi : la règle des noms de fichier des outils (cleanFname) — sans « .json », accents ôtés, tout ce qui n'est pas lettre, chiffre, _ + - devient « _ » ; vide si rien ne reste */
+function suiteCleanName(v) {
+  return String(v === undefined || v === null ? '' : v).trim().replace(/\.json$/i, '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9_+-]+/g, '_').replace(/_{2,}/g, '_').replace(/^_+|_+$/g, '').slice(0, 100);
+}
+function suiteDefaultName() {
+  const d = new Date(), p = n => String(n).padStart(2, '0');
+  return 'mission_plan_' + d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+}
+/* Le texte du fichier : les clés sont lues à ce moment, chaînes du stockage à l'octet */
+function suiteWorkText() {
+  const now = suiteRead(), keys = {};
+  SUITE_KEYS.forEach(k => { if (now[k] !== null) keys[k] = now[k]; });
+  let th = null;
+  try { const o = JSON.parse(now.mp_theatre_v1); if (o && typeof o.theatre === 'string' && o.theatre !== '') th = o.theatre; } catch (e) { th = null; }
+  return JSON.stringify({ format: SUITE_FORMAT, createdAt: new Date().toISOString(), version: APP_VERSION, theatre: th, keys: keys }, null, 2);
+}
+
+/* ---- la fenêtre du nom (une .ui-modal) ---- */
+function suiteModal() { return document.getElementById('mp-work-modal'); }
+function suiteFrom() {
+  if (activeModule && iframes[activeModule]) {
+    try { return { win: iframes[activeModule].contentWindow, el: iframes[activeModule].contentDocument.activeElement }; } catch (e) { /* le module garde le clavier */ }
+  }
+  return { win: null, el: document.activeElement };
+}
+function suiteSaveSync() { document.getElementById('mp-work-go').disabled = suiteCleanName(SUITE.name) === ''; }
+function suiteModalClose() {
+  const m = suiteModal();
+  if (!m || m.hidden) return;
+  m.hidden = true;
+  const f = SUITE.from;
+  SUITE.from = null;
+  try {
+    if (f && f.win) { f.win.focus(); if (f.el && f.el.isConnected && f.el.focus) f.el.focus({ preventScroll: true }); }
+    else if (f && f.el && f.el.isConnected && f.el.focus && f.el !== document.body && !f.el.disabled) f.el.focus({ preventScroll: true });
+    else { const l = document.getElementById('landing'); if (l && activeModule === null) l.focus({ preventScroll: true }); }
+  } catch (e) { /* le focus est facultatif */ }
+}
+function suiteSaveGo() {
+  const name = suiteCleanName(SUITE.name);
+  if (name === '') return;
+  const text = suiteWorkText();
+  suiteModalClose();
+  const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+/* « Sauvegarder » (le bouton de l'accueil, celui de chaque outil, Ctrl+S) : chaque outil vivant écrit sa saisie en attente, puis la fenêtre du nom s'ouvre */
+window.MP_WORK_SAVE = function () {
+  const m = suiteModal();
+  if (!m || !m.hidden) return;
+  suiteFlush();
+  SUITE.from = suiteFrom();
+  SUITE.name = suiteCleanName(suiteDefaultName());
+  SUITE.at = performance.now();
+  const f = document.getElementById('mp-work-name');
+  f.value = SUITE.name;
+  suiteSaveSync();
+  m.hidden = false;
+  f.focus({ preventScroll: true });
+  f.select();
+};
+function suiteBind() {
+  ['mp-work-close', 'mp-work-cancel'].forEach(id => document.getElementById(id).addEventListener('click', suiteModalClose));
+  /* le fond ignore les clics des 400 ms qui suivent l'ouverture : le 2e clic d'un double-clic sur « Sauvegarder » ne ferme pas la fenêtre */
+  document.getElementById('mp-work-backdrop').addEventListener('click', () => { if (performance.now() - SUITE.at > 400) suiteModalClose(); });
+  document.getElementById('mp-work-go').addEventListener('click', suiteSaveGo);
+  const f = document.getElementById('mp-work-name');
+  f.addEventListener('input', e => { SUITE.name = e.target.value; suiteSaveSync(); });
+  f.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); if (!e.repeat) suiteSaveGo(); } });
+  /* Échap (= la croix) et le piège du focus de la fenêtre */
+  window.addEventListener('keydown', e => {
+    const m = suiteModal();
+    if (!m || m.hidden || e.defaultPrevented) return;
+    if (e.key === 'Escape') { e.preventDefault(); suiteModalClose(); }
+    else if (e.key === 'Tab') {
+      const els = Array.prototype.filter.call(m.querySelectorAll('button, input'), x => !x.disabled && x.getClientRects().length > 0);
+      if (!els.length) return;
+      const first = els[0], last = els[els.length - 1], a = document.activeElement;
+      if (e.shiftKey && (a === first || !m.contains(a))) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && (a === last || !m.contains(a))) { e.preventDefault(); first.focus(); }
+    }
+  }, true);
+}
+
+/* ---- le calme du stockage ---- */
+function suiteSettled() {
+  return new Promise(res => {
+    const t0 = Date.now(), vals = SUITE_KEYS.map(suiteGet);
+    let last = t0, calm = 0, tm = 0;
+    const onSt = e => { if (e.key === null || SUITE_KEYS.indexOf(e.key) >= 0) last = Date.now(); };
+    window.addEventListener('storage', onSt);
+    const tick = () => {
+      const now = Date.now();
+      SUITE_KEYS.forEach((k, i) => { const v = suiteGet(k); if (v !== vals[i]) { vals[i] = v; last = now; } });
+      calm = now - last >= SUITE_CALM_MS ? calm + 1 : 0;
+      if (calm >= 2 || now - t0 >= SUITE_CALM_MAX_MS) { window.removeEventListener('storage', onSt); res(); return; }
+      tm = setTimeout(tick, SUITE_CALM_STEP_MS);
+    };
+    tm = setTimeout(tick, SUITE_CALM_STEP_MS);
+  });
+}
+
+/* ---- remplacer le travail : on fait, on garde l'ancien, un toast « Restaurer » 12 s, jamais de question ---- */
+/* b. les iframes des cinq outils sont retirées (leurs écritures en attente partent d'abord, par MP_FLUSH puis à pagehide) ; c. le stockage est photographié ; d. les clés sont écrites (celles qui manquent sont retirées ;
+   un stockage plein remet la photographie à l'octet) ; e. si l'on était dans l'un de ces outils, il est rouvert, iframe neuve. Rend { ok, snap }. */
+function suiteReplace(next) {
+  const was = activeModule;
+  SUITE_DROP.forEach(id => {
+    const f = iframes[id];
+    if (!f) return;
+    suiteFlush(id);
+    f.remove();
+    delete iframes[id];
+    delete barSync[id];
+  });
+  const snap = suiteRead();
+  const ok = suiteWriteAll(next);
+  if (!ok) { suiteWriteAll(snap); suiteWriteAll(snap); }
+  if (was && SUITE_DROP.indexOf(was) >= 0) openModule(was);
+  return { ok: ok, snap: snap };
+}
+window.MP_WORK_OPEN_TEXT = function (text, name) {
+  let o;
+  try { o = JSON.parse(text); } catch (e) { console.warn('[M·P] fichier de travail : JSON illisible', e); showToast(t('work.err.json'), { type: 'err' }); return false; }
+  const isObj = v => !!v && typeof v === 'object' && !Array.isArray(v);
+  if (!isObj(o) || o.format !== SUITE_FORMAT || !isObj(o.keys) || Object.keys(o.keys).some(k => typeof o.keys[k] !== 'string')) { showToast(t('work.err.format'), { type: 'err' }); return false; }
+  if (!SUITE_KEYS.some(k => typeof o.keys[k] === 'string')) { showToast(t('work.err.empty'), { type: 'err' }); return false; }
+  const next = {};
+  SUITE_KEYS.forEach(k => { next[k] = typeof o.keys[k] === 'string' ? o.keys[k] : null; });
+  /* Une seule restauration en attente : tant que le toast « Restaurer » d'un premier remplacement est à l'écran, la photographie reste celle d'avant le premier (comme replaceWithRestore) */
+  const toastEl = document.getElementById('toast');
+  const live = !!(SUITE.restore && SUITE.toastN === showToast._n && toastEl && toastEl.classList.contains('show'));
+  const keep = live ? SUITE.restore : null;
+  const res = suiteReplace(next);
+  if (!res.ok) { showToast(t('work.err.full'), { type: 'err' }); return false; }
+  const r = { snap: keep ? keep.snap : res.snap, ref: null, settled: null };
+  SUITE.restore = r;
+  /* la référence de « Restaurer » : le stockage relu une fois les outils rouverts calmes */
+  r.settled = suiteSettled().then(() => { r.ref = suiteRead(); });
+  showToast(t('work.opened').replace('{0}', String(name || '')) + ' ·', { action: { label: t('ui.restore'), fn: () => suiteRestore(r) }, ms: 12000 });
+  SUITE.toastN = showToast._n;
+  return true;
+};
+window.MP_WORK_OPEN = function () {
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = '.json,application/json';
+  inp.addEventListener('change', () => {
+    const f = inp.files && inp.files[0];
+    if (!f) return;
+    const rd = new FileReader();
+    rd.onload = () => window.MP_WORK_OPEN_TEXT(String(rd.result), f.name);
+    rd.onerror = () => showToast(t('work.err.json'), { type: 'err' });
+    rd.readAsText(f);
+  });
+  inp.click();
+};
+/* « Restaurer » : refusé si une clé a changé depuis la référence (une saisie, un autre geste) ; sinon la photographie revient, par le même chemin que l'ouverture, sans nouveau « Restaurer » */
+async function suiteRestore(r) {
+  if (SUITE.restore !== r) return;
+  if (r.ref === null) await r.settled;
+  if (SUITE.restore !== r) return;
+  const now = suiteRead();
+  if (SUITE_KEYS.some(k => now[k] !== r.ref[k])) { SUITE.restore = null; showToast(t('ui.restore.refused'), { type: 'err' }); return; }
+  SUITE.restore = null;
+  if (!suiteReplace(r.snap).ok) showToast(t('work.err.full'), { type: 'err' });
+}
+/* ===== FIN DU FICHIER DE TRAVAIL DE LA SUITE ===== */
+
 /* ============= LISTES DE LA BARRE — thème de l'interface (lot mp-ui-listes) =============
    Le <select> reste dans la page (id, options, écouteurs) : il garde la valeur, mais il est masqué.
    Un <button> de mêmes classes prend sa place et porte le libellé de l'option choisie ; la liste ouverte
@@ -1215,6 +1685,7 @@ function tbmScrolled(e) {
     setTheme(cur);
     applyI18n();
     updateFlagBtn();
+    suiteBind();                                         /* la fenêtre du nom du fichier de travail */
     initToolbarMenus([['theme-sel', function() { return t('theme.sel'); }]]);   /* la liste du thème au thème de la landing */
 
     /* Clics cartes : les six cartes des deux cadres (le Field Manual n'a pas de carte : sa touche est dans la barre) */

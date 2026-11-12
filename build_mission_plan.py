@@ -27,6 +27,10 @@ import re
 import sys
 
 from shell_only_block import build_block as build_shell_only_block, BLOCK_BEGIN as SHELL_ONLY_BEGIN, BLOCK_END as SHELL_ONLY_END
+from messages_block import build_block as build_messages_block, build_css as build_messages_css
+from ui_block import build_css as build_ui_css, fingerprint as ui_fingerprint
+from suite_file_block import build_block as build_suite_file_block, build_html as build_suite_file_html, build_css as build_suite_file_css, THEME_VARS as SUITE_THEME_VARS
+import group_store_block
 
 CONTRAST_CSS = r"""
 /* MP-20 begin */
@@ -154,6 +158,28 @@ def check_shell_only_block():
         print(f"  [OK] Garde du module seul identique à shell_only_block.py ({mod['src']})")
 
 
+def check_suite_colors():
+    """Les variables des feuilles de ui_block et de messages_block, posées par le shell sur la fenêtre du nom et sur #toast (suite_file_block.THEME_VARS),
+    ont dans chacun des six outils la valeur que le shell leur donne, thème par thème (une variable qui ne change pas d'un thème à l'autre est celle de :root).
+    Sinon le build s'arrête, en nommant l'outil, le thème et la variable."""
+    for mod in MODULES:
+        if mod['id'] in ('fm',):
+            continue                                    # le Field Manual n'a ni fenêtre de suite ni toast
+        with open(os.path.join(SCRIPT_DIR, mod['src']), 'r', encoding='utf-8') as fh:
+            html = fh.read()
+        for th, vs in SUITE_THEME_VARS.items():
+            for var, val in vs.items():
+                if var in ('--f-ui', '--f-stencil'):
+                    pat = re.escape(var) + r'\s*:\s*' + re.escape(val)
+                elif len({SUITE_THEME_VARS[x][var] for x in SUITE_THEME_VARS}) == 1:
+                    pat = r'(?::root|html)\s*\{[^}]*?' + re.escape(var) + r'\s*:\s*' + re.escape(val) + r'\s*[;}]'
+                else:
+                    pat = r'\[data-theme="' + th + r'"\]\s*\{[^}]*?' + re.escape(var) + r'\s*:\s*' + re.escape(val) + r'\s*[;}]'
+                if not re.search(pat, html, re.I):
+                    raise SystemExit(f"[ERREUR] {mod['src']} : {var} n'a pas la valeur {val} au thème {th} (la fenêtre du nom et le toast du shell l'ont) — build arrêté")
+    print('  [OK] couleurs de la fenêtre du nom et du toast : celles des six outils, aux quatre thèmes')
+
+
 def encode_file_b64(path):
     abs_path = os.path.join(SCRIPT_DIR, path)
     if not os.path.isfile(abs_path):
@@ -204,6 +230,12 @@ def build_tile_uris(modules):
 
 
 def build_html(module_html_js, tile_uris):
+    MESSAGES_CSS = build_messages_css()          # le toast : la feuille de messages_block.py, telle quelle (le shell parle par le même toast que les outils)
+    UI_CSS = build_ui_css()                      # la feuille de ui_block.py, telle quelle : la fenêtre du nom est une .ui-modal (le shell ne reçoit pas le script de ui_block)
+    SUITE_CSS = build_suite_file_css()           # les couleurs de ces deux feuilles, posées sur la fenêtre du nom et sur #toast
+    MESSAGES_JS = build_messages_block()
+    SUITE_JS = build_suite_file_block()
+    SUITE_HTML = build_suite_file_html()
     tile_hq = tile_uris.get('hq', '')
     tile_bg = tile_uris.get('bg', '')
     tile_rs = tile_uris.get('rs', '')
@@ -490,7 +522,7 @@ select[data-tbm-src] {{ display: none !important; }}
 @media(max-width:768px){{
   .bigstamp,.soviet-star{{display:none;}}
 }}
-{LANDING_CSS}{CONTRAST_CSS}</style>
+{MESSAGES_CSS}{UI_CSS}{SUITE_CSS}{LANDING_CSS}{CONTRAST_CSS}</style>
 </head>
 <body data-theme="cw-nato">
 
@@ -663,6 +695,7 @@ select[data-tbm-src] {{ display: none !important; }}
 <div id="module-view"></div>
 <div id="module-loading" class="hidden">Chargement…</div>
 
+{SUITE_HTML}
 <script>
   /* ── Données ──────────────────────────────────────────────── */
   {module_html_js}
@@ -689,6 +722,17 @@ select[data-tbm-src] {{ display: none !important; }}
       'work.save.tip': 'Sauvegarder tout le travail de Mission Plan (JSON)',
       'fm.btn': 'Field Manual',
       'fm.tip': 'Le manuel de la suite',
+      'work.name.title': 'Sauvegarder le travail',
+      'work.name.label': 'Nom du fichier',
+      'work.opened': 'Travail ouvert : {{0}}',
+      'work.err.json': "⚠ Fichier illisible : ce n'est pas du JSON.",
+      'work.err.format': "⚠ Ce fichier n'est pas un travail de Mission Plan.",
+      'work.err.empty': "⚠ Ce travail est vide : rien n'a changé.",
+      'work.err.full': "⚠ Mémoire du navigateur pleine : le travail n'a pas été ouvert.",
+      'ui.cancel': 'Annuler',
+      'ui.close': 'Fermer',
+      'ui.restore': 'Restaurer',
+      'ui.restore.refused': 'Restauration impossible\u202f: les données ont changé depuis.',
       'hq.desc': 'Poste de commandement — configuration Wing, identité escadrons, logos partagés avec tous les modules.',
       'bg.desc': 'Briefings complets — SITAC, plan radio, aérodromes, charts, annexes — export PDF prêt à partager.',
       'rs.desc': "Transforme une capture en photo d'analyse de reconnaissance — niveaux de gris, annotations au doigt, export PNG pleine résolution.",
@@ -716,6 +760,17 @@ select[data-tbm-src] {{ display: none !important; }}
       'work.save.tip': 'Save all the Mission Plan work (JSON)',
       'fm.btn': 'Field Manual',
       'fm.tip': "The suite's manual",
+      'work.name.title': 'Save the work',
+      'work.name.label': 'File name',
+      'work.opened': 'Work opened: {{0}}',
+      'work.err.json': '⚠ Unreadable file: this is not JSON.',
+      'work.err.format': '⚠ This file is not a Mission Plan work file.',
+      'work.err.empty': '⚠ This work file is empty: nothing has changed.',
+      'work.err.full': '⚠ Browser storage is full: the work was not opened.',
+      'ui.cancel': 'Cancel',
+      'ui.close': 'Close',
+      'ui.restore': 'Restore',
+      'ui.restore.refused': 'Cannot restore: the data has changed since.',
       'hq.desc': 'Command hub — Wing configuration, squadron identity, logos shared across all modules.',
       'bg.desc': 'Complete briefings — SITAC, radio plan, airfields, charts, annexes — PDF export ready to share.',
       'rs.desc': 'Turns a screenshot into a reconnaissance analysis photo — greyscale, touch annotations, full-resolution PNG export.',
@@ -1081,6 +1136,8 @@ select[data-tbm-src] {{ display: none !important; }}
     }} catch(e) {{}}
   }}
 
+{MESSAGES_JS}
+{SUITE_JS}
 /* ============= LISTES DE LA BARRE — thème de l'interface (lot mp-ui-listes) =============
    Le <select> reste dans la page (id, options, écouteurs) : il garde la valeur, mais il est masqué.
    Un <button> de mêmes classes prend sa place et porte le libellé de l'option choisie ; la liste ouverte
@@ -1368,6 +1425,7 @@ function tbmScrolled(e) {{
     setTheme(cur);
     applyI18n();
     updateFlagBtn();
+    suiteBind();                                         /* la fenêtre du nom du fichier de travail */
     initToolbarMenus([['theme-sel', function() {{ return t('theme.sel'); }}]]);   /* la liste du thème au thème de la landing */
 
     /* Clics cartes : les six cartes des deux cadres (le Field Manual n'a pas de carte : sa touche est dans la barre) */
@@ -1413,6 +1471,8 @@ def main():
     print('\n[0/3] Garde du module seul dans les sept modules…')
     check_shell_only_block()
 
+    check_suite_colors()
+
     print('\n[1/3] Encodage modules HTML…')
     module_html_js = build_module_html_js(MODULES)
 
@@ -1429,6 +1489,31 @@ def main():
         if found:
             raise SystemExit(f"[ERREUR] La garde du module seul figure dans le shell lui-même ({what}) — build arrêté")
     print('  [OK] Garde du module seul absente du shell lui-même')
+    # Le fichier de travail : SUITE_KEYS contient toutes les clés de GS_CONTENT_KEYS (group_store_block.py), dans son ordre, puis celles du briefing et de Recon Station
+    gs = re.search(r"const GS_CONTENT_KEYS = \[([^\]]*)\];", group_store_block.build_block())
+    sk = re.search(r"const SUITE_KEYS = \[([^\]]*)\];", shell_text)
+    if not gs or not sk:
+        raise SystemExit("[ERREUR] GS_CONTENT_KEYS ou SUITE_KEYS introuvable — build arrêté")
+    gs_keys = re.findall(r"'([^']+)'", gs.group(1))
+    suite_keys = re.findall(r"'([^']+)'", sk.group(1))
+    missing = [k for k in gs_keys if k not in suite_keys]
+    if missing:
+        raise SystemExit(f"[ERREUR] SUITE_KEYS ne contient pas toutes les clés de GS_CONTENT_KEYS (manque : {missing}) — build arrêté")
+    if suite_keys[:len(gs_keys)] != gs_keys or len(suite_keys) != len(gs_keys) + 2:
+        raise SystemExit("[ERREUR] SUITE_KEYS n'est pas GS_CONTENT_KEYS (dans son ordre) suivi des deux clés du briefing et de Recon Station — build arrêté")
+    print(f'  [OK] SUITE_KEYS = les {len(gs_keys)} clés de GS_CONTENT_KEYS (dans son ordre) + {len(suite_keys) - len(gs_keys)}')
+    # Le toast et les feuilles communes : tels quels dans le shell ; le script de ui_block n'y entre pas
+    for what, found in (('le script du toast (messages_block)', shell_text.count(build_messages_block()) == 1),
+                        ('la feuille du toast (messages_block)', shell_text.count(build_messages_css()) == 1),
+                        ('la feuille de ui_block', shell_text.count(build_ui_css()) == 1),
+                        ('le bloc du fichier de travail', shell_text.count(build_suite_file_block()) == 1),
+                        ('la fenêtre du nom', shell_text.count(build_suite_file_html()) == 1),
+                        ('les couleurs de la fenêtre du nom et du toast', shell_text.count(build_suite_file_css()) == 1)):
+        if not found:
+            raise SystemExit(f"[ERREUR] {what} ne figure pas une fois, tel quel, dans le shell — build arrêté")
+    if 'function askConfirm' in shell_text or 'function uiConfirmEl' in shell_text:
+        raise SystemExit("[ERREUR] le script de ui_block figure dans le shell (il n'en prend que la feuille) — build arrêté")
+    print(f'  [OK] toast et feuille de ui_block identiques à leurs blocs ; le script de ui_block n\'est pas dans le shell (empreinte {ui_fingerprint()})')
     # Retour au hub : le clavier quitte l'outil fermé (sinon Ctrl+S irait à l'outil masqué et non à Sauvegarder de l'accueil)
     if "landing.focus({ preventScroll: true })" not in html:
         raise SystemExit("[ERREUR] goHub ne rend plus le clavier au hub")
