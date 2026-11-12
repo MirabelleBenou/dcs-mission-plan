@@ -781,6 +781,8 @@ a[href]:focus-visible, [tabindex]:focus-visible, [role="button"]:focus-visible {
 .toolbar .tb-btn, .toolbar .tb-sel, .toolbar .tb-select, .toolbar .tbm-trigger, .toolbar .seg-btn { font-family: var(--f-ui); font-weight: 700; }
 .toolbar .tb-lang-btn { font-family: 'Roboto Mono', 'Courier New', monospace; font-weight: 400; }
 .toolbar .tb-seg { height: auto; min-height: 44px; }
+/* le séparateur qui suit le groupe des fichiers : visible à toutes les largeurs (les modules masquent les leurs quand la barre se resserre) */
+.toolbar > .tb-sep.tb-files-end { display: block; }
 /* dans la suite, le module laisse le thème à l'accueil : sa liste de thème n'est pas là (le drapeau reste) */
 html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-controls="tbm-list-theme-select"], html.mp-in-shell [aria-controls="tbm-list-theme"] { display: none !important; }
 /* MP-20 begin */
@@ -971,10 +973,6 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <span class="tb-brand-short">F·C</span>
     <span class="tb-brand-sub" data-i18n="toolbar.subtitle">░ PAQUET DE VOL</span>
   </div>
-  <div class="tb-sep"></div>
-  <span class="tb-label" data-i18n="tb.theatre">Théâtre</span>
-  <select class="tb-sel" id="theatre" aria-label="Théâtre"></select>
-  <div class="tb-sep"></div>
   <button type="button" class="tb-btn tb-file" id="btn-open" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.open.tip" title="">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v1H3z"/><path d="M3 10h19l-2 8a2 2 0 0 1-2 1.5H5a2 2 0 0 1-2-2z"/></svg>
     <span class="tb-btn-label" data-i18n="tb.open">.</span>
@@ -982,6 +980,10 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   </button>
   <button type="button" class="tb-btn tb-file" id="btn-save" data-i18n-title="tb.save.tip" title=""><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h11l4 4v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M8 3v5h7V3"/><rect x="7" y="13" width="10" height="8"/></svg><span class="tb-btn-label" data-i18n="tb.save">.</span></button>
   <button type="button" class="tb-btn tb-file" id="btn-export" data-i18n-title="tb.export.tip" title=""><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><span class="tb-btn-label" data-i18n="tb.export">.</span></button>
+  <div class="tb-sep tb-files-end" aria-hidden="true"></div>
+  <span class="tb-label" data-i18n="tb.theatre">Théâtre</span>
+  <select class="tb-sel" id="theatre" aria-label="Théâtre"></select>
+  <div class="tb-sep"></div>
   <button type="button" class="tb-btn" id="btn-example" data-i18n-title="tb.example.tip" title=""><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg><span class="tb-btn-label" data-i18n="tb.example">.</span></button>
   <button type="button" class="tb-btn danger" id="btn-clear" data-i18n-title="tb.clear.tip" title=""><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg><span class="tb-btn-label" data-i18n="tb.clear">.</span></button>
   <div class="tb-sep"></div>
@@ -9575,38 +9577,16 @@ try { if (window.self !== window.top) document.documentElement.classList.add('mp
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
 })();
 
-/* ---- la barre au téléphone (dans la suite, sous 760 px) : les boutons de fichier du module (.tb-file : Ouvrir, Sauvegarder, Exporter…, dans l'ordre de la suite)
-   passent juste après le sigle, devant les réglages ; un bouton .tb-lead (« Wing » de HQ tant que le wing n'est pas configuré) reste devant eux.
-   Les boutons sont déplacés dans le DOM, pas seulement dans l'affichage : l'ordre de tabulation est celui de l'écran. Au-dessus de 760 px chacun retrouve sa place
-   (un repère le garde) et le séparateur ajouté s'en va. Le passage de 760 px, dans les deux sens, est suivi sans rechargement ; uiBarPlace() se rappelle quand le module change la barre. ---- */
-const UIBAR = { mq: null, sep: null };
+/* ---- la barre : le même ordre à toutes les largeurs, écrit dans le HTML de chaque module (retour, sigle, .tb-lead s'il y en a un, les boutons de fichier .tb-file,
+   le séparateur .tb-files-end, puis le reste) ; rien ne se déplace selon la largeur. Seul HQ déplace son « Wing » (.tb-lead tant que le wing n'est pas configuré), et pas selon la largeur.
+   Ce qui suit ne sert qu'à raccourcir sans déplacer : sous 760 px dans la suite, le Route Planner et le Datacard Generator réduisent Affichage à l'œil et abrègent le théâtre ;
+   le passage de 760 px, dans les deux sens, est suivi sans rechargement (uiBarChanged() du module). ---- */
+const UIBAR = { mq: null };
 function uiBarCompact() { return document.documentElement.classList.contains('mp-in-shell') && !!UIBAR.mq && UIBAR.mq.matches; }
-function uiBarPlace() {
-  const tb = document.querySelector('header.toolbar');
-  if (!tb) return;
-  const files = Array.prototype.filter.call(tb.children, e => e.classList.contains('tb-file'));
-  if (!uiBarCompact()) {
-    files.forEach(f => { const m = f._uiMark; if (m && m.parentNode) { m.parentNode.insertBefore(f, m); m.parentNode.removeChild(m); } f._uiMark = null; });
-    if (UIBAR.sep && UIBAR.sep.parentNode) UIBAR.sep.parentNode.removeChild(UIBAR.sep);
-    return;
-  }
-  let a = tb.querySelector('.tb-brand');
-  if (!a) return;
-  while (a.nextElementSibling && (a.nextElementSibling.classList.contains('tb-sep') || a.nextElementSibling.classList.contains('tb-lead'))) a = a.nextElementSibling;
-  files.forEach(f => {
-    if (!f._uiMark) { f._uiMark = document.createComment('tb-file'); f.parentNode.insertBefore(f._uiMark, f); }
-    if (a.nextElementSibling !== f) a.after(f);
-    a = f;
-  });
-  if (files.length) {        /* un séparateur (le .tb-sep des modules, affiché même là où le module masque les siens au téléphone) entre le groupe des fichiers et la suite ; il disparaît au-dessus de 760 px */
-    if (!UIBAR.sep) { UIBAR.sep = document.createElement('div'); UIBAR.sep.className = 'tb-sep'; UIBAR.sep.style.display = 'block'; UIBAR.sep.setAttribute('aria-hidden', 'true'); }
-    if (a.nextElementSibling !== UIBAR.sep) a.after(UIBAR.sep);
-  } else if (UIBAR.sep && UIBAR.sep.parentNode) UIBAR.sep.parentNode.removeChild(UIBAR.sep);
-}
 function uiBarInit() {
   if (UIBAR.mq || !window.matchMedia) return;
   UIBAR.mq = window.matchMedia('(max-width: 759px)');
-  const go = () => { uiBarPlace(); try { if (typeof uiBarChanged === 'function') uiBarChanged(); } catch (e) { /* le module réagit au passage de 760 px */ } };
+  const go = () => { try { if (typeof uiBarChanged === 'function') uiBarChanged(); } catch (e) { /* le module réagit au passage de 760 px */ } };
   if (UIBAR.mq.addEventListener) UIBAR.mq.addEventListener('change', go); else UIBAR.mq.addListener(go);
   go();
 }

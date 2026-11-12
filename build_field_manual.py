@@ -455,10 +455,12 @@ def _build_rp_screen_svg():
     # la barre du haut
     o.append('          ' + sv_box(110, 48, 500, 26))
     o.append('          ' + T(118, 64.5, 8.5, 'R·P', anchor='start', ls=1))
-    o.append('          ' + T(146, 64.5, 8, 'Affichage ▾', 'Display ▾', anchor='start'))
-    o.append('          ' + T(208, 64.5, 8, 'Théâtre ▾', 'Theatre ▾', anchor='start'))
-    o.append('          ' + T(262, 64.5, 8, 'Ouvrir ▾ · Sauvegarder ▾ · Exporter ▾ · Exemple · Effacer',
-                              'Open ▾ · Save ▾ · Export ▾ · Example · Clear', anchor='start'))
+    o.append('          ' + T(146, 64.5, 8, 'Ouvrir ▾ · Sauvegarder ▾ · Exporter ▾',
+                              'Open ▾ · Save ▾ · Export ▾', anchor='start'))
+    o.append('          ' + T(322, 64.5, 8, 'Affichage ▾', 'Display ▾', anchor='start'))
+    o.append('          ' + T(384, 64.5, 8, 'Théâtre ▾', 'Theatre ▾', anchor='start'))
+    o.append('          ' + T(440, 64.5, 8, 'Exemple · Effacer',
+                              'Example · Clear', anchor='start'))
     # le panneau et ses sections
     o.append('          ' + sv_box(110, 80, 160, 260))
     secs = [
@@ -2632,8 +2634,8 @@ kbd {{
       <div class="fm-prose">
         <h3 class="lang-block" data-lang="fr">La barre du haut sur tablette et téléphone</h3>
         <h3 class="lang-block" data-lang="en">The top bar on tablets and phones</h3>
-        <div class="lang-block" data-lang="fr"><p>Sur un téléphone (sous 760 px), la barre de chaque outil montre ses <strong>boutons de fichier</strong> (Ouvrir, Sauvegarder, Exporter) juste après le sigle, devant les réglages ; le Route Planner et le Datacard Generator réduisent Affichage à son icône et le théâtre à un nom court. Quand la barre du haut ne tient pas dans la largeur, elle <strong>défile</strong> au doigt, à la molette ou au pavé tactile ; un <strong>fondu</strong> sur un bord signale qu’il reste des boutons de ce côté. Toucher un bouton à moitié visible le ramène en entier avant de l’activer. Jusqu’à 1 100 px de large, l’éditeur passe en <strong>onglets</strong> : un par section, plus <strong>Aperçu</strong>.</p></div>
-        <div class="lang-block" data-lang="en"><p>On a phone (below 760 px), each tool’s bar shows its <strong>file buttons</strong> (Open, Save, Export) right after the short name, ahead of the settings; the Route Planner and the Datacard Generator shrink Display to its icon and the theatre to a short name. When the top bar doesn’t fit the width, it <strong>scrolls</strong> by finger, mouse wheel, or touchpad; a <strong>fade</strong> on one edge shows there are more buttons that way. Tapping a half-visible button brings it fully into view before activating it. Up to 1,100 px wide, the editor switches to <strong>tabs</strong>: one per section, plus <strong>Preview</strong>.</p></div>
+        <div class="lang-block" data-lang="fr"><p>La barre de chaque outil garde le <strong>même ordre à toutes les largeurs</strong> : les <strong>boutons de fichier</strong> (Ouvrir, Sauvegarder, Exporter) juste après le sigle, puis les réglages. Sur un téléphone (sous 760 px), le Route Planner et le Datacard Generator réduisent Affichage à son icône et le théâtre à un nom court, sans rien déplacer. Quand la barre du haut ne tient pas dans la largeur, elle <strong>défile</strong> au doigt, à la molette ou au pavé tactile ; un <strong>fondu</strong> sur un bord signale qu’il reste des boutons de ce côté. Toucher un bouton à moitié visible le ramène en entier avant de l’activer. Jusqu’à 1 100 px de large, l’éditeur passe en <strong>onglets</strong> : un par section, plus <strong>Aperçu</strong>.</p></div>
+        <div class="lang-block" data-lang="en"><p>Each tool’s bar keeps the <strong>same order at every width</strong>: the <strong>file buttons</strong> (Open, Save, Export) right after the short name, then the settings. On a phone (below 760 px), the Route Planner and the Datacard Generator shrink Display to its icon and the theatre to a short name, without moving anything. When the top bar doesn’t fit the width, it <strong>scrolls</strong> by finger, mouse wheel, or touchpad; a <strong>fade</strong> on one edge shows there are more buttons that way. Tapping a half-visible button brings it fully into view before activating it. Up to 1,100 px wide, the editor switches to <strong>tabs</strong>: one per section, plus <strong>Preview</strong>.</p></div>
       </div>
 
       <!-- Et la datacard ? -->

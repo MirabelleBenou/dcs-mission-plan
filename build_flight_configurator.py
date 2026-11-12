@@ -29,7 +29,7 @@ import sys
 from group_store_block import build_block as build_group_store_block
 from import_block import build_block as build_import_block, build_css as build_import_css, build_html as build_import_html
 from messages_block import build_block as build_messages_block, build_css as build_messages_css
-from ui_block import build_block as build_ui_block, build_css as build_ui_css, verify as ui_verify, fingerprint as ui_fingerprint
+from ui_block import build_block as build_ui_block, build_css as build_ui_css, verify as ui_verify, verify_bar as ui_verify_bar, fingerprint as ui_fingerprint
 
 CONTRAST_CSS = r"""
 /* MP-20 begin */
@@ -1636,11 +1636,12 @@ BODY = r"""
     <span class="tb-brand-short">F·C</span>
     <span class="tb-brand-sub" data-i18n="toolbar.subtitle">░ PAQUET DE VOL</span>
   </div>
-  <div class="tb-sep"></div>
+  @@FILES@@
+  <div class="tb-sep tb-files-end" aria-hidden="true"></div>
   <span class="tb-label" data-i18n="tb.theatre">Théâtre</span>
   <select class="tb-sel" id="theatre" aria-label="Théâtre"></select>
   <div class="tb-sep"></div>
-  @@BUTTONS@@
+  @@OTHERS@@
   <div class="tb-sep"></div>
   <select class="tb-select" id="theme-select" data-i18n-title="toolbar.theme.tooltip" title="Thème graphique">
     <option value="cw-nato"     data-i18n="theme.cw-nato">Cold War OTAN</option>
@@ -1689,14 +1690,16 @@ OPEN_BTN = '''  <button type="button" class="tb-btn tb-file" id="btn-open" aria-
     <span class="tb-btn-label" data-i18n="tb.open">.</span>
     <svg class="dsp-chev" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg>
   </button>'''.strip()
-BUTTONS = '\n  '.join([
+FILES = '\n  '.join([
     OPEN_BTN,
     _btn('save', 'save', '<path d="M5 3h11l4 4v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M8 3v5h7V3"/><rect x="7" y="13" width="10" height="8"/>', ' tb-file'),
     _btn('export', 'export', '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>', ' tb-file'),
+])
+OTHERS = '\n  '.join([
     _btn('example', 'example', '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/>'),
     _btn('clear', 'clear', '<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>', ' danger'),
 ])
-BODY = BODY.replace('@@BUTTONS@@', BUTTONS).replace('@@IMPORT_HTML@@\n', build_import_html())
+BODY = BODY.replace('@@FILES@@', FILES).replace('@@OTHERS@@', OTHERS).replace('@@IMPORT_HTML@@\n', build_import_html())
 
 # ---------- Listes au thème de l'interface (copie du composant de HQ) ----------
 JS_TBM = """
@@ -4721,6 +4724,7 @@ def check(html):
                        ('interface commune (script)', build_ui_block()), ('interface commune (feuille)', build_ui_css())):
         ok(blk in html, 'bloc %s inséré tel quel' % label)
     ok(True, "empreinte du bloc d'interface commun : %s" % ui_fingerprint())
+    ui_verify_bar(html)
     pt, it = re.search(r"const PAYLOAD_TYPES = \[(.*?)\];", build_payload_block()), re.search(r"const IMP_TYPES = \[(.*?)\];", build_import_block())
     ok(bool(pt) and bool(it) and pt.group(1) == it.group(1), 'les types du bloc d\'import sont ceux de PAYLOAD_TYPES')
     ok(COORD_BLOCK + READNUM_BLOCK in html and hashlib.sha256(COORD_BLOCK.encode('utf-8')).hexdigest()[:16] == COORD_SHA16, 'bloc de coordonnées inséré tel quel, empreinte %s' % COORD_SHA16)

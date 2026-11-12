@@ -131,6 +131,8 @@ a[href]:focus-visible, [tabindex]:focus-visible, [role="button"]:focus-visible {
 .toolbar .tb-btn, .toolbar .tb-sel, .toolbar .tb-select, .toolbar .tbm-trigger, .toolbar .seg-btn { font-family: var(--f-ui); font-weight: 700; }
 .toolbar .tb-lang-btn { font-family: 'Roboto Mono', 'Courier New', monospace; font-weight: 400; }
 .toolbar .tb-seg { height: auto; min-height: 44px; }
+/* le séparateur qui suit le groupe des fichiers : visible à toutes les largeurs (les modules masquent les leurs quand la barre se resserre) */
+.toolbar > .tb-sep.tb-files-end { display: block; }
 /* dans la suite, le module laisse le thème à l'accueil : sa liste de thème n'est pas là (le drapeau reste) */
 html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-controls="tbm-list-theme-select"], html.mp-in-shell [aria-controls="tbm-list-theme"] { display: none !important; }
 /* MP-20 begin */
@@ -175,38 +177,16 @@ try { if (window.self !== window.top) document.documentElement.classList.add('mp
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
 })();
 
-/* ---- la barre au téléphone (dans la suite, sous 760 px) : les boutons de fichier du module (.tb-file : Ouvrir, Sauvegarder, Exporter…, dans l'ordre de la suite)
-   passent juste après le sigle, devant les réglages ; un bouton .tb-lead (« Wing » de HQ tant que le wing n'est pas configuré) reste devant eux.
-   Les boutons sont déplacés dans le DOM, pas seulement dans l'affichage : l'ordre de tabulation est celui de l'écran. Au-dessus de 760 px chacun retrouve sa place
-   (un repère le garde) et le séparateur ajouté s'en va. Le passage de 760 px, dans les deux sens, est suivi sans rechargement ; uiBarPlace() se rappelle quand le module change la barre. ---- */
-const UIBAR = { mq: null, sep: null };
+/* ---- la barre : le même ordre à toutes les largeurs, écrit dans le HTML de chaque module (retour, sigle, .tb-lead s'il y en a un, les boutons de fichier .tb-file,
+   le séparateur .tb-files-end, puis le reste) ; rien ne se déplace selon la largeur. Seul HQ déplace son « Wing » (.tb-lead tant que le wing n'est pas configuré), et pas selon la largeur.
+   Ce qui suit ne sert qu'à raccourcir sans déplacer : sous 760 px dans la suite, le Route Planner et le Datacard Generator réduisent Affichage à l'œil et abrègent le théâtre ;
+   le passage de 760 px, dans les deux sens, est suivi sans rechargement (uiBarChanged() du module). ---- */
+const UIBAR = { mq: null };
 function uiBarCompact() { return document.documentElement.classList.contains('mp-in-shell') && !!UIBAR.mq && UIBAR.mq.matches; }
-function uiBarPlace() {
-  const tb = document.querySelector('header.toolbar');
-  if (!tb) return;
-  const files = Array.prototype.filter.call(tb.children, e => e.classList.contains('tb-file'));
-  if (!uiBarCompact()) {
-    files.forEach(f => { const m = f._uiMark; if (m && m.parentNode) { m.parentNode.insertBefore(f, m); m.parentNode.removeChild(m); } f._uiMark = null; });
-    if (UIBAR.sep && UIBAR.sep.parentNode) UIBAR.sep.parentNode.removeChild(UIBAR.sep);
-    return;
-  }
-  let a = tb.querySelector('.tb-brand');
-  if (!a) return;
-  while (a.nextElementSibling && (a.nextElementSibling.classList.contains('tb-sep') || a.nextElementSibling.classList.contains('tb-lead'))) a = a.nextElementSibling;
-  files.forEach(f => {
-    if (!f._uiMark) { f._uiMark = document.createComment('tb-file'); f.parentNode.insertBefore(f._uiMark, f); }
-    if (a.nextElementSibling !== f) a.after(f);
-    a = f;
-  });
-  if (files.length) {        /* un séparateur (le .tb-sep des modules, affiché même là où le module masque les siens au téléphone) entre le groupe des fichiers et la suite ; il disparaît au-dessus de 760 px */
-    if (!UIBAR.sep) { UIBAR.sep = document.createElement('div'); UIBAR.sep.className = 'tb-sep'; UIBAR.sep.style.display = 'block'; UIBAR.sep.setAttribute('aria-hidden', 'true'); }
-    if (a.nextElementSibling !== UIBAR.sep) a.after(UIBAR.sep);
-  } else if (UIBAR.sep && UIBAR.sep.parentNode) UIBAR.sep.parentNode.removeChild(UIBAR.sep);
-}
 function uiBarInit() {
   if (UIBAR.mq || !window.matchMedia) return;
   UIBAR.mq = window.matchMedia('(max-width: 759px)');
-  const go = () => { uiBarPlace(); try { if (typeof uiBarChanged === 'function') uiBarChanged(); } catch (e) { /* le module réagit au passage de 760 px */ } };
+  const go = () => { try { if (typeof uiBarChanged === 'function') uiBarChanged(); } catch (e) { /* le module réagit au passage de 760 px */ } };
   if (UIBAR.mq.addEventListener) UIBAR.mq.addEventListener('change', go); else UIBAR.mq.addListener(go);
   go();
 }
@@ -492,6 +472,35 @@ def verify(html):
     if build_css() not in html or build_block() not in html:
         raise SystemExit("[ERREUR] bloc d'interface commun absent du livrable ou modifié")
     print("[OK] bloc d'interface commun inséré tel quel, empreinte %s" % fingerprint())
+
+
+def verify_bar(html):
+    """Garde-fou de build : l'ordre de la barre est celui du HTML, le même à toutes les largeurs (retour, sigle, boutons de fichier .tb-file,
+    séparateur .tb-files-end, puis le reste) ; plus aucun déplacement selon la largeur."""
+    import re
+    m = re.search(r'<header class="toolbar".*?</header>', html, re.S)
+    if not m:
+        raise SystemExit("[ERREUR] barre introuvable dans le livrable")
+    bar = m.group(0)
+    tags = re.findall(r'<(button|select)\b([^>]*)>|<(?:div|span) class="([^"]*\btb-files-end\b[^"]*)"', bar)
+    seq = []
+    for tag, attrs, sep in tags:
+        if sep:
+            seq.append('|')
+        elif tag == 'button':
+            c = re.search(r'class="([^"]*)"', attrs)
+            seq.append('F' if c and 'tb-file' in c.group(1).split() else 'B')
+        else:
+            seq.append('S')
+    s = ''.join(seq)
+    if not re.match(r'^F+\|', s):
+        raise SystemExit("[ERREUR] barre : les boutons de fichier ne sont pas en tête, suivis du séparateur (%s)" % s)
+    if 'F' in s[s.index('|'):]:
+        raise SystemExit("[ERREUR] barre : un bouton de fichier après le séparateur (%s)" % s)
+    for old_name in ('uiBarPlace', '_uiMark'):
+        if old_name in html:
+            raise SystemExit("[ERREUR] barre : le déplacement selon la largeur (%s) est encore dans le livrable" % old_name)
+    print("[OK] barre : fichiers d'abord, séparateur, puis le reste, dans le HTML (%s)" % s)
 
 
 if __name__ == '__main__':

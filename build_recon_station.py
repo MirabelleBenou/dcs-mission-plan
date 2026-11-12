@@ -7,7 +7,7 @@ import base64
 import re
 
 from messages_block import build_block as build_messages_block, build_css as build_messages_css
-from ui_block import build_block as build_ui_block, build_css as build_ui_css, verify as ui_verify
+from ui_block import build_block as build_ui_block, build_css as build_ui_css, verify as ui_verify, verify_bar as ui_verify_bar
 
 CONTRAST_CSS = r"""
 /* MP-20 begin */
@@ -2410,11 +2410,11 @@ select[data-tbm-src] {{ display: none !important; }}
     <span class="tb-brand-short">R·S</span>
     <span class="tb-brand-sub" data-i18n="toolbar.subtitle">░ RENSEIGNEMENT</span>
   </div>
-  <div class="tb-sep"></div>
   <button type="button" class="tb-btn tb-file" id="btn-export" disabled data-i18n-title="toolbar.export.tooltip" title="Exporter l'image (PNG pleine résolution)" data-i18n-aria-label="toolbar.export.tooltip" aria-label="Exporter l'image (PNG pleine résolution)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
     <span class="tb-btn-label" data-i18n="toolbar.export">Exporter</span>
   </button>
+  <div class="tb-sep tb-files-end" aria-hidden="true"></div>
   <button type="button" class="tb-btn" id="btn-example" data-i18n-title="toolbar.example.tooltip" title="Ouvrir l'exemple" data-i18n-aria-label="toolbar.example.tooltip" aria-label="Ouvrir l'exemple">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
     <span class="tb-btn-label" data-i18n="toolbar.example">Exemple</span>
@@ -5295,6 +5295,7 @@ OUTPUT_PATH = os.path.join(HERE, 'dist', 'dcs_recon_station.html')
 
 HTML = HTML.replace('@@MESSAGES_CSS@@\n', build_messages_css() + build_ui_css()).replace('@@MESSAGES_BLOCK@@\n', build_messages_block() + build_ui_block())
 ui_verify(HTML)
+ui_verify_bar(HTML)
 
 with open(OUTPUT_PATH, 'w', encoding='utf-8') as f:
     f.write(HTML)

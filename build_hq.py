@@ -9,7 +9,7 @@ import re
 from radio_bands_block import build_block as build_radio_bands_block
 from radio_block import build_block as build_radio_block
 from messages_block import build_block as build_messages_block, build_css as build_messages_css
-from ui_block import build_block as build_ui_block, build_css as build_ui_css, verify as ui_verify
+from ui_block import build_block as build_ui_block, build_css as build_ui_css, verify as ui_verify, verify_bar as ui_verify_bar
 
 CONTRAST_CSS = r"""
 /* MP-20 begin */
@@ -1176,7 +1176,6 @@ body[data-theme] {{
     <span class="tb-brand-short">H·Q</span>
     <span class="tb-brand-sub" data-i18n="toolbar.subtitle">\u2591 POSTE DE COMMANDEMENT</span>
   </div>
-  <div class="tb-sep"></div>
   <button type="button" class="tb-btn tb-file" id="btn-open">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
     <span class="tb-btn-label" data-i18n="tb.open">Ouvrir .miz</span>
@@ -1194,6 +1193,7 @@ body[data-theme] {{
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5"/><path d="M12 13v8"/></svg>
     <span class="tb-btn-label" data-i18n="tb.pk">Paquets de vol</span>
   </button>
+  <div class="tb-sep tb-files-end" aria-hidden="true"></div>
   <button type="button" class="tb-btn" id="btn-wing">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></svg>
     <span class="tb-btn-label" data-i18n="tb.wing">Wing</span>
@@ -6200,17 +6200,17 @@ function wingConfigured() {{
   try {{ v = JSON.parse(raw); }} catch (e) {{ return false; }}
   return !deepEqValues(v, DEFAULT_WING_CONFIG);
 }}
-/* « Wing » en premier (juste après le sigle) et au dessin du bouton principal tant que le wing n'est pas configuré ; à sa place sinon */
+/* « Wing » en premier (juste après le sigle, devant les boutons de fichier) et au dessin du bouton principal tant que le wing n'est pas configuré ; à sa place sinon.
+   Le seul déplacement de la barre : il ne dépend pas de la largeur. */
 function hqWingOrder() {{
   const b = hqEl('btn-wing'), ex = hqEl('btn-example');
-  const sep = document.querySelector('header.toolbar > .tb-sep');
-  if (!b || !ex || !sep) return;
+  const brand = document.querySelector('header.toolbar > .tb-brand');
+  if (!b || !ex || !brand) return;
   const cfg = wingConfigured();
   b.classList.toggle('primary', !cfg);
-  b.classList.toggle('tb-lead', !cfg);       /* au téléphone, « Wing » reste devant les boutons de fichier tant que le wing n'est pas configuré */
-  if (!cfg) {{ if (sep.nextElementSibling !== b) sep.after(b); }}
+  b.classList.toggle('tb-lead', !cfg);
+  if (!cfg) {{ if (brand.nextElementSibling !== b) brand.after(b); }}
   else if (b.nextElementSibling !== ex) ex.before(b);
-  uiBarPlace();
 }}
 
 /* « Annuler » suit toujours « Sauvegarder .miz », quel que soit l'ordre que pose hqWingOrder() */
@@ -6902,6 +6902,7 @@ HTML_FINAL = (HTML
 )
 
 ui_verify(HTML_FINAL)
+ui_verify_bar(HTML_FINAL)
 os.makedirs(os.path.join(HERE, 'dist'), exist_ok=True)
 OUTPUT_PATH = os.path.join(HERE, 'dist', 'dcs_hq.html')
 

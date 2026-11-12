@@ -29,7 +29,7 @@ from radio_bands_block import build_block as build_radio_bands_block
 from radio_block import build_block as build_radio_block
 from import_block import build_block as build_import_block, build_css as build_import_css, build_html as build_import_html
 from messages_block import build_block as build_messages_block, build_css as build_messages_css
-from ui_block import build_block as build_ui_block, build_css as build_ui_css, verify as ui_verify
+from ui_block import build_block as build_ui_block, build_css as build_ui_css, verify as ui_verify, verify_bar as ui_verify_bar
 
 CONTRAST_CSS = r"""
 /* MP-20 begin */
@@ -1332,17 +1332,6 @@ __CSS__
     <span class="tb-brand-short" data-i18n="app.short">R·P</span>
     <span class="tb-brand-sub" data-i18n="tb.subtitle">░ NAVIGATION</span>
   </div>
-  <span class="tb-sep"></span>
-  <button type="button" class="tb-btn" id="btn-display" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.display.tip" title="Fond, unités et ce que montre la carte">
-    <svg class="dsp-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/></svg>
-    <span data-i18n="tb.display">Affichage</span>
-    <svg class="dsp-chev" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg>
-    <i class="dsp-dot" id="dsp-dot" hidden></i>
-  </button>
-  <span class="tb-sep"></span>
-  <span class="tb-label" data-i18n="tb.theatre">Théâtre</span>
-  <select class="tb-sel" id="theatre" data-i18n-aria-label="tb.theatre" aria-label="Théâtre"></select>
-  <span class="tb-sep"></span>
   <button type="button" class="tb-btn tb-file" id="btn-open" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.open.tip" title="Ouvrir une route (JSON) ou un fichier du Route Tool de DCS" data-i18n-aria-label="tb.open.tip" aria-label="Ouvrir une route (JSON) ou un fichier du Route Tool de DCS">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v1H3z"/><path d="M3 10h19l-2 8a2 2 0 0 1-2 1.5H5a2 2 0 0 1-2-2z"/></svg>
     <span class="tb-btn-label solo" data-i18n="tb.open">Ouvrir</span>
@@ -1356,6 +1345,17 @@ __CSS__
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
     <span class="tb-btn-label solo" data-i18n="tb.export">Exporter</span>
     <svg class="dsp-chev" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg></button>
+  <span class="tb-sep tb-files-end" aria-hidden="true"></span>
+  <button type="button" class="tb-btn" id="btn-display" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.display.tip" title="Fond, unités et ce que montre la carte">
+    <svg class="dsp-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/></svg>
+    <span data-i18n="tb.display">Affichage</span>
+    <svg class="dsp-chev" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg>
+    <i class="dsp-dot" id="dsp-dot" hidden></i>
+  </button>
+  <span class="tb-sep"></span>
+  <span class="tb-label" data-i18n="tb.theatre">Théâtre</span>
+  <select class="tb-sel" id="theatre" data-i18n-aria-label="tb.theatre" aria-label="Théâtre"></select>
+  <span class="tb-sep"></span>
   <button type="button" class="tb-btn" id="btn-example" data-i18n-title="tb.example.tip" title="Ouvrir l'exemple" data-i18n-aria-label="tb.example.tip" aria-label="Ouvrir l'exemple">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
     <span class="tb-btn-label solo" data-i18n="tb.example">Exemple</span></button>
@@ -11375,6 +11375,7 @@ def build():
 
     # Contrôles de construction
     ui_verify(html)
+    ui_verify_bar(html)
     left = re.findall(r'__[A-Z0-9_]{4,}__', re.sub(r'<script>.*?</script>', '', html, flags=re.S)[:])
     left = [x for x in left if x not in ('__proto__',)]
     if left:
