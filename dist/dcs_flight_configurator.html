@@ -11844,7 +11844,7 @@ function rtDraw() {
   const geo = routeGeo(su.f), w = Math.floor(paper.clientWidth), col = document.getElementById('col-right');
   RT.w = w;
   if (!geo || w < 120) { paper.innerHTML = ''; return; }
-  const rp = rpRead(), L = routeLegs(geo, declSource(rp.state.nav, routeDateOf(f)));
+  const rp = rpRead(), L = routeLegs(geo, declSource(rp.state.nav, routeDateOf(su.f)));
   paper.innerHTML = rtSketch(geo, { W: w, phone: col.clientWidth <= 520, title: flightLabel(su.f, su.fi), label: tf('route.sketch', routeTitle(su.f)), texts: L.legs.map(l => l.hdg + '° · ' + fmtDist(l.nm)) });
 }
 function renderRouteBlock() {
