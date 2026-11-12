@@ -31,6 +31,7 @@ Changes merged since the last release, grouped per tool.
 - Every tool's top bar keeps one order at every width: the file buttons first, then the settings.
 - Every drop-down list in the suite works the same way: a search field on long lists, keyboard navigation, and placement above the on-screen keyboard.
 - Every tool's top bar follows the same rules: when space runs short it drops, in this order, the decorative stamp, the version, the button labels and finally the long title; on phones, list labels such as Theatre are hidden, Display shows its icon only and the theatre a short name.
+- **Restore** after an example or an opened file brings back everything the flight lead tools had (groups, routes, datacards, theatre, units, settings), whichever tool you are in.
 
 #### Removed
 - The repository no longer ships one particular wing's configuration file, nor six squadron logos that no tool used; the README and the code comments no longer name that wing. Each wing still makes or imports its own configuration in HQ.
@@ -74,6 +75,7 @@ Changes merged since the last release, grouped per tool.
 - A **Route** block above the loadout: pick one of the Route Planner's routes for the group (one route per group), then see it as a paper sketch — waypoints, names, numbered legs — with each leg's magnetic heading and distance in NM. When the route changes in the Route Planner, the group follows it; if it is deleted there, the last copy is kept.
 - The Mi-24P's and Mi-8MT's HF radio (Jadro-1I, Jadro-1A), which missions do not preset: up to five frequencies, carried in the flight package and shown on the datacard, never written to the mission by HQ.
 - An Example button that loads two groups (Mi-24P, Mi-8MT), with “Restore” for twelve seconds.
+- Each radio channel has a box to print it on the group's datacard; the Datacard Generator shows the same choice.
 #### Changed
 - Groups are now shared with the Route Planner: create, rename or re-route a group in either tool and the other follows at once. A group may have no unit yet. A group with no unit is exported route only.
 - **Import** now also reads the Briefing Generator — its groups, their number of aircraft and the radio plan of each aircraft type, cockpit channel numbers converted — with Side, Type and Name filters. A group is completed when its name, case included, and side match; a flight of an aircraft the suite does not handle comes in as a group with its route only. An aircraft the suite does not know by the briefing's name is left for you to pick; the package exports once every type is picked. An imported route now shows in the Route Planner as the group's route.
@@ -100,6 +102,7 @@ Changes merged since the last release, grouped per tool.
 - **Load** only accepts a briefing: any other file (flight package, route, datacard) is refused with a message and the current briefing is kept.
 - Export in one window: format, pages and file name together. Metadata is now the last section, folded.
 - The briefing format moves into **Display ▾**: “Standard” (one mission page plus photo pages, now the default, the example included) or “Advanced” (ten sections); the printed brief no longer names its format, and “OPERATION” follows the interface language. Empty fields hint at what to type instead of showing sample values. **Ctrl+S** saves.
+- Standard: a group without a squadron, and a guest squadron, pick their aircraft type from the list of the game (as in HQ); the Flight Configurator import takes it, and the Standard frequencies by their radio and channel.
 #### Fixed
 - In the export window, the page list no longer shows the PDF and PNG choices above it, so it fits on phones.
 - A .miz the METAR assistant cannot read shows a message in the interface language instead of a French-only alert.
@@ -128,6 +131,9 @@ Changes merged since the last release, grouped per tool.
 - A lighter top bar: Day | Night and the units move into **Display ▾**, and **Open ▾** opens a datacard or imports. Datacards are chosen on one line — the card's name with its tag, “+” for a new datacard, “…” for a free card, attach, import groups, duplicate and delete; the list groups linked and free cards, and two cards of the same name read “CAESAR” and “CAESAR · 2”.
 - “Current route” leaves the Import window — a card is linked to a route from its own route list — and “One datacard per route” moves into the “…” menu. Empty fields hint at what to type instead of showing sample values. **Ctrl+S** saves.
 - The group comes right after the header; ↑ ↓ × sit on the row they act on; a unit reads Type · Callsign · Board number · Pilot, as in the Flight Configurator. On a free card the type is picked from the game's aircraft list (or typed for a mod), and a new unit takes the type of the one above. A unit without a type is printed as « ? » (2 × Mi-24P + 1 × ?) instead of being counted under another type.
+- A datacard born from a group shows the Flight Configurator loadout by default; the channels to print belong to the group.
+- Importing a briefing on a linked datacard also takes the task, threat level, threats and notes; importing from HQ takes the mission date, time and weather.
+- The year of the magnetic variation also reads the datacard date, after the date received with the route.
 #### Removed
 - The Datacard Generator's own HQ and flight package imports, replaced by the common import window of the Flight Configurator and the Route Planner.
 #### Fixed

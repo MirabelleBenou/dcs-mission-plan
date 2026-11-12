@@ -4104,10 +4104,10 @@ function dgRoutesChanged() {
 }
 /* Un autre onglet du DG a écrit datacard_state_v1 (ou « Restaurer » l'a rendu) : celui-ci prend le document, la saisie en cours gardée (renderAll(true)) ; il n'écrit rien.
    dgFollowDocNow le fait à l'instant : un évènement d'une autre clé qui fait écrire le document (théâtre, unités, réglages de cap) le relit d'abord, sinon il écrirait l'ancien par-dessus. */
-function dgFollowDocNow() {
+function dgFollowDocNow(force) {
   let raw = null;
   try { raw = localStorage.getItem(KEY_STATE); } catch (e) { return false; }
-  if (raw === null || raw === DG_DOC.raw) return false;
+  if (raw === null || (raw === DG_DOC.raw && force !== true)) return false;
   let nd;
   try { nd = normalizeDoc(JSON.parse(raw)); } catch (e) { return false; }
   clearTimeout(DG_DOC.timer);
@@ -4572,6 +4572,7 @@ function dgStorage(e) {
     DGG.pend = false;
     const g = gsRead();
     if (g === null || gsStable(g) === DGG.shown) return;
+    if (dgFollowDocNow(true)) { dgPatchStored(); return; }       /* la fiche a changé : les cartes sont relues de ce qui est stocké avant d'être rapprochées des groupes (ce que la lecture précédente avait détaché sans l'écrire, un groupe que « Restaurer » remet, ne reste pas à part) */
     const ch = gsApplyAll(); dgSyncRoutes(); dgPatchStored();       /* relire la fiche n'écrit pas la datacard (sauf les champs de route de la carte stockée) */
     if (ch) renderAll(true);
   }, 300);
@@ -5390,7 +5391,8 @@ function phaseIdentity(ph) {
   else if (guest && hasText(g.name)) callsign = g.name.trim();
   else if (sq && hasText(sq.callsign)) callsign = sq.callsign.trim();
   else callsign = str(ph.squadron).trim();
-  const aircraft = guest ? str(g.aircraft).trim() : str(ph.aircraft).trim();
+  /* Le type : celui du vol (ph.aircraft, que le Standard écrit pour un groupe sans escadron), sinon pour un escadron son premier type, sinon celui de l'escadron invité (la règle de l'import commun) */
+  const aircraft = hasText(ph.aircraft) ? ph.aircraft.trim() : (guest ? str(g.aircraft).trim() : ((sq && Array.isArray(sq.aircraft) && sq.aircraft.length) ? str(sq.aircraft[0]).trim() : ''));
   /* Clé de groupe : escadron || sous-groupe || appareil, comme les groupes de mission du briefing */
   let id, sub, ac;
   if (guest) {
