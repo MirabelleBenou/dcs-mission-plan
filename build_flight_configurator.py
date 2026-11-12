@@ -453,7 +453,7 @@ I18N_FR = {
     'ex.group': 'EXEMPLE',
 
     'bar.ok': 'Prêt à exporter : {0}',
-    'bar.clamped': '{0} réglage(s) d’emport ramené(s) à la limite de l’appareil.',
+    'bar.clamped': '{0} réglage(s) d’emport ramené(s) à la limite ou aux valeurs par défaut de l’appareil.',
     'bar.bad.freq': 'Export impossible : {0} fréquence(s) à corriger dans les radios.',
     'bar.theatre.conflict': "Export impossible : les groupes sont sur {0}, Mission Plan sur {1} (voir le bandeau).",
     'bar.route.theatre': "Export impossible : la route du groupe {0} est sur {1}, Mission Plan sur {2}.",
@@ -764,7 +764,7 @@ I18N_EN = {
     'ex.group': 'EXAMPLE',
 
     'bar.ok': 'Ready to export: {0}',
-    'bar.clamped': '{0} loadout setting(s) brought back to the aircraft limit.',
+    'bar.clamped': '{0} loadout setting(s) brought back to the aircraft limit or default values.',
     'bar.bad.freq': 'Cannot export: {0} frequency(ies) to fix in the radios.',
     'bar.theatre.conflict': "Cannot export: the groups are on {0}, Mission Plan on {1} (see the banner).",
     'bar.route.theatre': "Cannot export: group {0}'s route is on {1}, Mission Plan on {2}.",
@@ -2361,6 +2361,11 @@ function chargeRule(cl) {
   const w = k => k === 1 ? '' : ' × ' + k;
   return t('set.charge').replace('{fs}', w(cl.fs)).replace('{cs}', w(cl.cs)).replace('{n}', cl.total);
 }
+// Un type porte des paillettes quand la charge qu'on en donne (chargeLimit) pèse quelque chose (cs > 0) ; sans plafond dans la table, quand son nombre par défaut est au-dessus de 0.
+function loCarriesChaff(type) {
+  const cl = chargeLimit(loLim(type));
+  return cl ? cl.cs > 0 : payloadDefaults(type).chaff > 0;
+}
 // Leurres et paillettes au-dessus du plafond : { cl, used } ; null s'ils tiennent (ou si la table ne donne pas de plafond).
 function loChargeOver(type, flare, chaff) {
   const cl = chargeLimit(loLim(type));
@@ -2397,12 +2402,14 @@ function loCheck(type, lo, k, raw, badInput) {
   return { text: String(r.v) };
 }
 // Ramène dans la règle les réglages d'un emport reçu (import, état rouvert, fichier de travail) : un fichier ne se discute pas, rien n'est refusé. Carburant et canon dans [0, limite de la table] ;
-// leurres et paillettes gardés tels quels (entiers, jamais négatifs) s'ils tiennent dans le plafond, sinon tous deux aux valeurs par défaut du type. `get(k)` lit le brut, `set(k, texte)` l'écrit ;
+// leurres et paillettes gardés tels quels (entiers, jamais négatifs) s'ils tiennent dans le plafond, sinon tous deux aux valeurs par défaut du type ; les paillettes à 0 pour un type qui n'en porte pas. `get(k)` lit le brut, `set(k, texte)` l'écrit ;
 // rend le nombre de réglages qui ont bougé (le couple leurres et paillettes compte pour un).
 function loBring(type, get, set) {
   let moved = 0;
   ['fuel', 'gun'].forEach(k => { const c = clampNum(get(k), 0, loLimit(type, k), k !== 'fuel'); if (c.v !== null) { set(k, c.v); moved += c.n; } });
-  const d = payloadDefaults(type), f = clampNum(get('flare'), 0, Infinity, true), h = clampNum(get('chaff'), 0, Infinity, true);
+  const d = payloadDefaults(type), f = clampNum(get('flare'), 0, Infinity, true);
+  let h = clampNum(get('chaff'), 0, Infinity, true);
+  if (!loCarriesChaff(type) && h.v !== null) h = { v: '0', n: (h.n || h.v !== '0') ? 1 : 0 };       // un type sans paillettes n'en garde pas : l'emport et l'export disent la même valeur
   const cur = (c, k) => { if (c.v !== null) return Number(c.v); const n = loNumber(get(k)); return n === undefined ? d[k] : n; };
   if (loChargeOver(type, cur(f, 'flare'), cur(h, 'chaff'))) { set('flare', String(d.flare)); set('chaff', String(d.chaff)); moved += 1; }
   else { if (f.v !== null) { set('flare', f.v); moved += f.n; } if (h.v !== null) { set('chaff', h.v); moved += h.n; } }
@@ -3576,7 +3583,7 @@ function cmpSettingsHtml(f, ui, lo) {
   const note = k => k === 'fuel' ? tf('lo.max', fmtMHz(d.fuel)) : (k === 'gun' ? tf('lo.max', d.gun) : (cl ? chargeRule(cl) : tf('lo.max', d[k])));
   const field = (k, step, disabled) => fieldHtml(`${t('lo.' + k)} · ${note(k)}`,
     numberInputHtml(`${at} data-k="${k}"${disabled ? ' disabled' : ''}`, val(k), 0, loFieldMax(type, k), step) + (BAR_KEYS.indexOf(k) >= 0 ? bar(k) : ''));
-  return `<div class="fc-set">${field('fuel', 'any')}${field('flare', '1')}${field('chaff', '1', d.chaff === 0)}${field('gun', '1')}</div>`;
+  return `<div class="fc-set">${field('fuel', 'any')}${field('flare', '1')}${field('chaff', '1', !loCarriesChaff(type))}${field('gun', '1')}</div>`;
 }
 function cmpSaveHtml() {
   const C = UI.cmp;
@@ -4286,7 +4293,7 @@ function loTyping(su, k, el) {
   const q = loCheck(su.u.type, su.u.loadout, k, el.value, el.validity && el.validity.badInput);
   if (q.err) return;
   loSetting(k, q.text);
-  paintBar(k, barPct(su.u.type, k, q.text), true);
+  if (BAR_KEYS.indexOf(k) >= 0) paintBar(k, barPct(su.u.type, k, q.text), true);
   cmpUpdateTotal();
 }
 // La barre bouge (carburant ou canon) : elle écrit sa valeur dans le champ et dans l'emport ; une saisie la replace (loTyping).
@@ -4315,11 +4322,12 @@ function commitLoadoutField(k, el) {
   if (!su) return;
   const prev = loRemember(su, k), q = loCheck(su.u.type, su.u.loadout, k, el.value, el.validity && el.validity.badInput);
   UI.loPrev = null;
+  const emptied = String(el.value).trim() === '' && !(el.validity && el.validity.badInput);       // un champ vidé : comme au Loadout Editor, il n'a pas été touché ; la valeur d'avant revient, sans message
   if (q.err) {
     if (!prev.lo && su.u.loadout) su.u.loadout = null;                      // l'unité n'avait pas d'emport : celui que la frappe a créé s'en va avec elle
     else if (su.u.loadout) { su.u.loadout[k] = prev.v; loTouch(su.u.loadout); }
     el.value = prev.v;
-    showToast(q.err, { type: 'err' });
+    if (!emptied) showToast(q.err, { type: 'err' });
     if (BAR_KEYS.indexOf(k) >= 0) paintBar(k, barPct(su.u.type, k, prev.v), true);
     cmpUpdate();
   } else {
