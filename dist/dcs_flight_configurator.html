@@ -635,6 +635,7 @@ body[data-theme] {
 .cmp-foot { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 18px; padding-top: 4px; }
 .cmp-tot { font-family: var(--f-typewriter); font-size: 12px; color: var(--khaki-light); }
 .cmp-tot b { color: var(--paper-light); white-space: nowrap; }
+.cmp-tot .cmp-over { color: var(--mp-warn); }
 .fc-chip { font-family: var(--f-ui); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; padding: 1px 6px; border: 1px solid var(--khaki); color: var(--khaki-light); white-space: nowrap; }
 .fc-set { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
 .fc-set .ed-field label { font-size: 10px; letter-spacing: 1.2px; }
@@ -11306,6 +11307,7 @@ const I18N = {
   "cmp.offTable": "(hors table)",
   "cmp.sym": "Symétrique",
   "cmp.mass": "Masse des emports :",
+  "cmp.takeoff": " · Au décollage, carburant {f} kg : {y} (max {max} kg)",
   "cmp.oneOf": "Une seule porte : retiré de la station {0}",
   "cmp.clash": "incompatible avec {0}",
   "cmp.rule": "Incompatible avec la station {0} : {1}",
@@ -11594,6 +11596,7 @@ const I18N = {
   "cmp.offTable": "(not in table)",
   "cmp.sym": "Symmetric",
   "cmp.mass": "Loadout weight:",
+  "cmp.takeoff": " · Take-off, fuel {f} kg: {y} (max {max} kg)",
   "cmp.oneOf": "One door only: removed from station {0}",
   "cmp.clash": "clashes with {0}",
   "cmp.rule": "Clashes with station {0}: {1}",
@@ -13487,7 +13490,14 @@ function cmpUpdate() {
   if (keep) { if (blocked) keep.title = t('cmp.blocked'); else if (keep.hasAttribute('title')) keep.removeAttribute('title'); }
   cmpDraw();
 }
-// Sous la liste : la masse des emports de l'unité choisie (une arme sans masse connue rend la somme incertaine : « + ? »).
+// Le carburant de l'unité pour la masse au décollage : son champ (l'emport), sinon le plein du type (une unité sans emport).
+function cmpFuel(u) {
+  const n = u.loadout ? loNumber(u.loadout.fuel) : undefined;
+  return n === undefined ? payloadDefaults(u.type).fuel : n;
+}
+// Sous la liste : la masse des emports de l'unité choisie (une arme sans masse connue rend la somme incertaine : « + ? ») puis, comme au Loadout Editor, la masse au décollage :
+// à vide + carburant de l'unité + emports (le canon et les leurres ne comptent pas) ; « + ? » si une arme n'a pas de masse connue ; en orange au-dessus du maximum recommandé, sans jamais rien bloquer.
+// Un type absent de AIRCRAFT_MASSES : pas de ligne.
 function cmpUpdateTotal() {
   const su = selUnit(), el = document.getElementById('cmp-total');
   if (!su || !el || su.u.type === '') return;
@@ -13497,7 +13507,13 @@ function cmpUpdateTotal() {
     const mass = st[n] === '' ? 0 : payloadWeaponMass(st[n]);
     if (mass === null) unknown = true; else total += mass;
   });
-  el.innerHTML = `${esc(t('cmp.mass'))} <b>${esc(cmpNum(total) + ' kg' + (unknown ? ' + ?' : ''))}</b>`;
+  const am = has(AIRCRAFT_MASSES, su.u.type) ? AIRCRAFT_MASSES[su.u.type] : null;
+  let takeoff = '';
+  if (am) {
+    const f = cmpFuel(su.u), y = am.empty + f + total;
+    takeoff = `<span class="${Math.round(y) > am.max ? 'cmp-over' : ''}">` + esc(t('cmp.takeoff')).replace('{f}', esc(cmpNum(f))).replace('{y}', esc(cmpNum(y) + ' kg' + (unknown ? ' + ?' : ''))).replace('{max}', esc(cmpNum(am.max))) + '</span>';
+  }
+  el.innerHTML = `${esc(t('cmp.mass'))} <b>${esc(cmpNum(total) + ' kg' + (unknown ? ' + ?' : ''))}</b>${takeoff}`;
 }
 // La ligne sous la liste : la station jumelle n'y figure que si « Symétrique » est cochée ; la puce « réglages » quand l'arme en porte.
 function cmpUpdateSub(row, hasSettings, noMirror) {
