@@ -16,7 +16,8 @@ Sources modules actifs (produits par les sept autres build_*.py, dans ./dist/) :
   dist/dcs_field_manual.html
 
 Sources images (à placer dans ./tiles/) :
-  tiles/hq.webp  tiles/bg.webp  tiles/rs.webp  tiles/fm.webp  tiles/rp.webp  tiles/kg.webp  tiles/fc.webp
+  tiles/hq.webp  tiles/bg.webp  tiles/rs.webp  tiles/rp.webp  tiles/kg.webp  tiles/fc.webp
+  (le Field Manual n'a plus de carte : tiles/fm.webp reste au dépôt, il n'est pas embarqué)
 """
 
 import base64
@@ -50,20 +51,54 @@ CONTRAST_CSS = r"""
 /* MP-20 end */
 """
 
+LANDING_CSS = r"""
+/* ===== Deux cadres selon le rôle : Mission Commander, Flight Leader (sans numéro) ===== */
+.mp-grp{position:relative; border:2px dashed color-mix(in srgb, var(--accent) 55%, transparent); border-radius:8px; padding:34px 18px 22px; background:rgba(0,0,0,.18);}
+.mp-tab{position:absolute; top:-15px; left:22px; z-index:7; display:flex; gap:10px; align-items:baseline; background:var(--paper); color:var(--ink);
+  border:1px solid var(--paper-edge); padding:5px 14px; border-radius:4px; box-shadow:0 6px 14px rgba(0,0,0,.45); transform:rotate(-1deg);}
+.mp-tab b{font-family:var(--f-sten); font-size:20px; letter-spacing:.04em;}
+.mp-tab small{font-family:var(--f-mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-2);}
+/* ===== La barre du haut : Ouvrir…, Sauvegarder, Field Manual (icône et texte ; l'icône seule sous 760 px) ===== */
+.mp-sep{width:1px; align-self:stretch; background:var(--line); margin:0 2px;}
+.mp-railbtn{display:inline-flex; align-items:center; justify-content:center; gap:7px; box-sizing:border-box; min-width:44px; min-height:44px; padding:7px 12px;
+  font-family:var(--f-ui); font-weight:500; font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--amber); background:rgba(0,0,0,.3);
+  border:1px solid var(--line); border-radius:4px; cursor:pointer;}
+.mp-railbtn:hover{border-color:var(--amber);}
+.mp-railbtn svg{flex:none;}
+.rail .theme-sel{min-height:44px;}
+.rail .flag{width:44px; height:44px;}
+@media(max-width:760px){
+  .rail{padding:11px 12px; gap:10px;}
+  .rail .spacer{display:none;}
+  .rail .ctrl{flex:1 1 100%; min-width:0;}
+  .rail .ctrl .theme-sel{flex:1 1 0; min-width:0; overflow:hidden;}
+  .rail .classif{display:none;}
+  .mp-railbtn span{display:none;}
+  .mp-railbtn{padding:7px 9px;}
+}
+@media(max-width:900px){
+  .mp-grp{padding:30px 10px 16px;}
+  .mp-tab{flex-direction:column; gap:0; padding:4px 12px;}
+  .mp-tab b{font-size:16px; white-space:nowrap;}
+  .mp-tab small{font-size:9px;}
+}
+"""
+
 # ── Configuration ──────────────────────────────────────────────────────────────
 OUT_FILE = 'dist/dcs_mission_plan.html'
 
 # status : 'active' = module embarqué ; 'soon' = carte voilée uniquement
-# Ordre des modules actifs = ordre des cartes de la landing. RÈGLE : Field Manual reste TOUJOURS le dernier
-# module actif ; tout module activé plus tard s'insère avant lui.
+# Ordre des modules actifs = ordre des cartes de la landing, en deux cadres : Mission Commander (hq, bg, rs) puis Flight Leader (rp, dg, fc).
+# RÈGLE : Field Manual reste TOUJOURS le dernier module actif (il s'ouvre dans le shell, par la barre du haut) et n'a pas de carte :
+# 'tile': None. Tout module activé plus tard s'insère avant lui, dans le cadre de son rôle.
 MODULES = [
     {'id': 'hq', 'status': 'active', 'src': 'dist/dcs_hq.html',                        'tile': 'tiles/hq.webp'},
-    {'id': 'fc', 'status': 'active', 'src': 'dist/dcs_flight_configurator.html',       'tile': 'tiles/fc.webp'},
-    {'id': 'rp', 'status': 'active', 'src': 'dist/dcs_route_planner.html',             'tile': 'tiles/rp.webp'},
     {'id': 'bg', 'status': 'active', 'src': 'dist/dcs_briefing_generator.html',       'tile': 'tiles/bg.webp'},
-    {'id': 'dg', 'status': 'active', 'src': 'dist/dcs_datacard_generator.html',        'tile': 'tiles/kg.webp'},
     {'id': 'rs', 'status': 'active', 'src': 'dist/dcs_recon_station.html',             'tile': 'tiles/rs.webp'},
-    {'id': 'fm', 'status': 'active', 'src': 'dist/dcs_field_manual.html',              'tile': 'tiles/fm.webp'},
+    {'id': 'rp', 'status': 'active', 'src': 'dist/dcs_route_planner.html',             'tile': 'tiles/rp.webp'},
+    {'id': 'dg', 'status': 'active', 'src': 'dist/dcs_datacard_generator.html',        'tile': 'tiles/kg.webp'},
+    {'id': 'fc', 'status': 'active', 'src': 'dist/dcs_flight_configurator.html',       'tile': 'tiles/fc.webp'},
+    {'id': 'fm', 'status': 'active', 'src': 'dist/dcs_field_manual.html',              'tile': None},
 ]
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -153,9 +188,11 @@ def build_module_html_js(modules):
 
 
 def build_tile_uris(modules):
-    """Encode les 4 tuiles (active + soon)."""
+    """Encode les tuiles des modules qui ont une carte (le Field Manual n'en a pas : tile None)."""
     uris = {}
     for mod in modules:
+        if not mod['tile']:
+            continue
         b64 = encode_file_b64(mod['tile'])
         if b64 is None:
             print(f'  [WARN] Image tuile introuvable : {mod["tile"]} — placeholder utilisé', file=sys.stderr)
@@ -170,7 +207,6 @@ def build_html(module_html_js, tile_uris):
     tile_hq = tile_uris.get('hq', '')
     tile_bg = tile_uris.get('bg', '')
     tile_rs = tile_uris.get('rs', '')
-    tile_fm = tile_uris.get('fm', '')
     tile_rp = tile_uris.get('rp', '')
     tile_dg = tile_uris.get('dg', '')
     tile_fc = tile_uris.get('fc', '')
@@ -313,7 +349,7 @@ select[data-tbm-src] {{ display: none !important; }}
   background-image:linear-gradient(var(--accent) 1px, transparent 1px), linear-gradient(90deg, var(--accent) 1px, transparent 1px);
   background-size:46px 46px; -webkit-mask:radial-gradient(78% 70% at 50% 34%, #000, transparent 88%); mask:radial-gradient(78% 70% at 50% 34%, #000, transparent 88%);}}
 
-.wall-head{{position:relative; z-index:2; max-width:1200px; margin:0 auto 22px; width:100%; display:flex; align-items:flex-end; gap:20px; flex-wrap:wrap;}}
+.wall-head{{position:relative; z-index:2; max-width:1200px; margin:0 auto 44px; width:100%; display:flex; align-items:flex-end; gap:20px; flex-wrap:wrap;}}
 .tab{{position:relative; background:var(--paper); color:var(--ink); padding:13px 22px 15px; border-radius:6px 6px 0 0;
   box-shadow:0 10px 26px rgba(0,0,0,.5); transform:rotate(-1deg); border:1px solid var(--paper-edge); border-bottom:none;}}
 .tab .ribbon{{font-family:var(--f-mono); font-size:10px; letter-spacing:.26em; color:var(--ink-2); text-transform:uppercase;}}
@@ -355,19 +391,18 @@ select[data-tbm-src] {{ display: none !important; }}
 .logo{{font-family:var(--f-mono); font-weight:400; font-size:12px; color:#15120c; padding:4px 7px; border-radius:3px; letter-spacing:.05em;}}
 .ptitle{{font-family:var(--f-ui); font-size:16px; font-weight:700; color:var(--ink);}}
 .pver{{margin-left:auto; font-family:var(--f-mono); font-size:10px; color:var(--ink-2); border:1px solid var(--paper-edge); padding:1px 6px; border-radius:2px;}}
-.pdesc{{font-family:var(--f-body); font-weight:500; font-size:13px; color:var(--ink-2); line-height:1.4; margin-top:6px;}}
+.pdesc{{font-family:var(--f-body); font-weight:500; font-size:13px; color:var(--ink-2); line-height:1.4; margin-top:6px;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;}}
 .pstatus{{display:flex; align-items:center; gap:7px; margin-top:8px; font-family:var(--f-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--olive);}}
 .pstatus .dot{{width:7px; height:7px; border-radius:50%; background:#4f8a3a; box-shadow:0 0 8px #4f8a3a;}}
 
 /* ── Cartes ACTIVES (dossiers ouverts) : BG + Recon, traitement identique ── */
 .print.active{{cursor:pointer;}}
-.print.active .shot{{height:280px; cursor:pointer;}}
+.print.active .shot{{height:130px; cursor:pointer;}}
 #card-hq .shot{{background-image:url("{tile_hq}");}}
 #card-hq::before{{background:radial-gradient(circle at 12% 8%, rgba(96,64,30,.5), transparent 14%);}}
 #card-bg .shot{{background-image:url("{tile_bg}");}}
 #card-rs .shot{{background-image:url("{tile_rs}");}}
-#card-fm .shot{{background-image:url("{tile_fm}");}}
-#card-fm::before{{background:radial-gradient(circle at 90% 10%, rgba(96,64,30,.5), transparent 14%);}}
 #card-fc .shot{{background-image:url("{tile_fc}");}}
 #card-fc::before{{background:radial-gradient(circle at 92% 90%, rgba(96,64,30,.5), transparent 15%);}}
 #card-dg .shot{{background-image:url("{tile_dg}");}}
@@ -382,7 +417,6 @@ select[data-tbm-src] {{ display: none !important; }}
 .active-row .print[id="card-rp"]{{transform:rotate(-0.9deg); transition:transform .38s cubic-bezier(.2,.75,.2,1), box-shadow .38s;}}
 .active-row .print[id="card-rs"]{{transform:rotate(0.6deg); transition:transform .44s cubic-bezier(.2,.75,.2,1), box-shadow .44s;}}
 .active-row .print[id="card-fc"]{{transform:rotate(-1.2deg); transition:transform .4s cubic-bezier(.2,.75,.2,1), box-shadow .4s;}}
-.active-row .print[id="card-fm"]{{transform:rotate(-1.4deg); transition:transform .4s cubic-bezier(.2,.75,.2,1), box-shadow .4s;}}
 .print.active:hover{{transform:rotate(0) translateY(-7px); cursor:pointer; box-shadow:0 30px 64px rgba(0,0,0,.6), 0 0 0 2px var(--card-accent);}}
 .active-row .print[id="card-hq"]:hover{{transform:rotate(-0.7deg) translateY(-7px);}}
 .active-row .print[id="card-bg"]:hover{{transform:rotate(0.3deg) translateY(-7px);}}
@@ -390,9 +424,8 @@ select[data-tbm-src] {{ display: none !important; }}
 .active-row .print[id="card-rp"]:hover{{transform:rotate(-0.2deg) translateY(-7px);}}
 .active-row .print[id="card-rs"]:hover{{transform:rotate(-0.4deg) translateY(-7px);}}
 .active-row .print[id="card-fc"]:hover{{transform:rotate(-0.4deg) translateY(-7px);}}
-.active-row .print[id="card-fm"]:hover{{transform:rotate(-0.5deg) translateY(-7px);}}
-.cta{{margin:2px 8px 12px; display:inline-block; font-family:var(--f-ui); font-weight:500; font-size:12px; letter-spacing:.08em; text-transform:uppercase;
-  color:#15120c; background:var(--card-accent); border:1px solid var(--paper-edge); padding:9px 15px; border-radius:var(--rad);}}
+.cta{{margin:0 8px 10px; display:inline-block; font-family:var(--f-ui); font-weight:500; font-size:12px; letter-spacing:.08em; text-transform:uppercase;
+  color:#15120c; background:var(--card-accent); border:1px solid var(--paper-edge); padding:6px 12px; border-radius:var(--rad);}}
 .print.active:hover .cta{{filter:brightness(1.12);}}
 
 /* sealed (à venir) — plus petites, voilées + tampon */
@@ -457,7 +490,7 @@ select[data-tbm-src] {{ display: none !important; }}
 @media(max-width:768px){{
   .bigstamp,.soviet-star{{display:none;}}
 }}
-{CONTRAST_CSS}</style>
+{LANDING_CSS}{CONTRAST_CSS}</style>
 </head>
 <body data-theme="cw-nato">
 
@@ -471,6 +504,10 @@ select[data-tbm-src] {{ display: none !important; }}
     <div class="plate"><span class="mark">DCS · MISSION PLAN</span></div>
     <div class="spacer"></div>
     <div class="ctrl">
+      <button type="button" class="mp-railbtn" id="btn-work-open" data-i18n-title="work.open.tip" data-i18n-aria="work.open.tip" title="Ouvrir un travail de Mission Plan (JSON)" aria-label="Ouvrir un travail de Mission Plan (JSON)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 7h6l2 2h10v10H3z"/></svg><span data-i18n="work.open.btn">Ouvrir…</span></button>
+      <button type="button" class="mp-railbtn" id="btn-work-save" data-i18n-title="work.save.tip" data-i18n-aria="work.save.tip" title="Sauvegarder tout le travail de Mission Plan (JSON)" aria-label="Sauvegarder tout le travail de Mission Plan (JSON)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 3h12l3 3v15H5z"/><path d="M8 3v6h8V3M8 21v-7h8v7"/></svg><span data-i18n="work.save.btn">Sauvegarder</span></button>
+      <span class="mp-sep" aria-hidden="true"></span>
+      <button type="button" class="mp-railbtn" id="btn-fm" data-i18n-title="fm.tip" data-i18n-aria="fm.tip" title="Le manuel de la suite" aria-label="Le manuel de la suite"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H4zM20 4h-6M20 4v14h-6"/></svg><span data-i18n="fm.btn">Field Manual</span></button>
       <select class="theme-sel" id="theme-sel" onchange="setTheme(this.value)" data-i18n-title="theme.sel" title="Thème">
         <option value="cw-nato" data-i18n="theme.cwnato">Cold War OTAN</option>
         <option value="cw-soviet" data-i18n="theme.cwsoviet">Cold War Soviétique</option>
@@ -505,110 +542,107 @@ select[data-tbm-src] {{ display: none !important; }}
 
     <div class="wall-stage">
 
-      <!-- Modules actifs : dossiers ouverts, traitement identique.
-           Ordre : HQ · Route Planner · Briefing Generator · Datacard Generator · Recon Station · Field Manual.
-           RÈGLE : Field Manual reste TOUJOURS la dernière carte active ; un module activé plus tard s'insère avant. -->
-      <div class="active-row">
-        <div class="print active reveal d1" id="card-hq" style="--card-accent:var(--a-hq)" tabindex="0" role="button" aria-label="HQ">
-          <span class="tape"></span><span class="pin tl"></span><span class="pin tr"></span>
-          <div class="shot"></div>
-          <div class="caption">
-            <div class="cap-row">
-              <span class="logo" style="background:var(--a-hq)">H·Q</span>
-              <span class="ptitle">HQ</span>
-              <span class="pver">v0.1.1</span>
+      <!-- Modules actifs : dossiers ouverts, traitement identique, en deux cadres selon le rôle (aucun numéro).
+           Mission Commander : HQ · Briefing Generator · Recon Station. Flight Leader : Route Planner · Datacard Generator · Flight Configurator.
+           Le Field Manual n'a pas de carte : il s'ouvre par la barre du haut.
+           RÈGLE : un module activé plus tard s'insère dans le cadre de son rôle (et dans MODULES, avant le Field Manual). -->
+      <div class="mp-grp" id="grp-mc">
+        <div class="mp-tab"><b>Mission Commander</b><small data-i18n="grp.mc.sub">prépare la mission</small></div>
+        <div class="active-row">
+          <div class="print active reveal d1" id="card-hq" style="--card-accent:var(--a-hq)" tabindex="0" role="button" aria-label="HQ">
+            <span class="tape"></span><span class="pin tl"></span><span class="pin tr"></span>
+            <div class="shot"></div>
+            <div class="caption">
+              <div class="cap-row">
+                <span class="logo" style="background:var(--a-hq)">H·Q</span>
+                <span class="ptitle">HQ</span>
+                <span class="pver">v0.1.1</span>
+              </div>
+              <div class="pdesc" data-i18n="hq.desc">Poste de commandement — configuration Wing, identité escadrons, logos partagés avec tous les modules.</div>
+              <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
             </div>
-            <div class="pdesc" data-i18n="hq.desc">Poste de commandement — configuration Wing, identité escadrons, logos partagés avec tous les modules.</div>
-            <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
+            <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>
           </div>
-          <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>
-        </div>
 
-        <div class="print active reveal d2" id="card-fc" style="--card-accent:var(--a-fc)" tabindex="0" role="button" aria-label="Flight Configurator">
-          <span class="tape"></span><span class="pin tl"></span><span class="pin tr"></span>
-          <div class="shot"></div>
-          <div class="caption">
-            <div class="cap-row">
-              <span class="logo" style="background:var(--a-fc)">F·C</span>
-              <span class="ptitle">Flight Configurator</span>
-              <span class="pver">v0.1.2</span>
+          <div class="print active reveal d2" id="card-bg" style="--card-accent:var(--a-bg)" tabindex="0" role="button" aria-label="Briefing Generator">
+            <span class="tape"></span><span class="pin tl"></span><span class="pin tr"></span>
+            <div class="shot"></div>
+            <div class="caption">
+              <div class="cap-row">
+                <span class="logo" style="background:var(--a-bg)">B·G</span>
+                <span class="ptitle">Briefing Generator</span>
+                <span class="pver">v2.6.0</span>
+              </div>
+              <div class="pdesc" data-i18n="bg.desc">Briefings complets — SITAC, plan radio, aérodromes, charts, annexes — export PDF prêt à partager.</div>
+              <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
             </div>
-            <div class="pdesc" data-i18n="fc.desc">Assemble un groupe — identité, radios, emport composé sur la vue de face ou tiré de mes presets, livrée — et l'exporte en paquet de vol que HQ applique à une mission.</div>
-            <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
+            <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>
           </div>
-          <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>
-        </div>
 
-        <div class="print active reveal d3" id="card-rp" style="--card-accent:var(--a-rp)" tabindex="0" role="button" aria-label="Route Planner">
-          <span class="tape"></span><span class="pin tl"></span><span class="pin tr"></span>
-          <div class="shot"></div>
-          <div class="caption">
-            <div class="cap-row">
-              <span class="logo" style="background:var(--a-rp)">R·P</span>
-              <span class="ptitle">Route Planner</span>
-              <span class="pver">v1.13.1</span>
+          <div class="print active reveal d3" id="card-rs" style="--card-accent:var(--a-rs)" tabindex="0" role="button" aria-label="Recon Station">
+            <span class="tape"></span><span class="pin tl"></span><span class="pin tr"></span>
+            <div class="shot"></div>
+            <div class="caption">
+              <div class="cap-row">
+                <span class="logo" style="background:var(--a-rs)">R·S</span>
+                <span class="ptitle">Recon Station</span>
+                <span class="pver">v1.1.1</span>
+              </div>
+              <div class="pdesc" data-i18n="rs.desc">Transforme une capture en photo d'analyse de reconnaissance — niveaux de gris, annotations au doigt, export PNG pleine résolution.</div>
+              <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
             </div>
-            <div class="pdesc" data-i18n="rp.desc">Tracé de route sur carte — carte DCS, topographique ou satellite, grille MGRS, villes et aérodromes, recherche ; points de référence ; caps, distances, vitesse sol et minutage ; calques CombatFlite et dessin au doigt (zones, FLOT, couloirs, orbites, boîtes) ; MGRS et DMS, envoyés à la datacard ; import et export du Route Tool de DCS.</div>
-            <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
+            <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>
           </div>
-          <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>
         </div>
-        <div class="print active reveal d4" id="card-bg" style="--card-accent:var(--a-bg)" tabindex="0" role="button" aria-label="Briefing Generator">
-          <span class="tape"></span><span class="pin tl"></span><span class="pin tr"></span>
-          <div class="shot"></div>
-          <div class="caption">
-            <div class="cap-row">
-              <span class="logo" style="background:var(--a-bg)">B·G</span>
-              <span class="ptitle">Briefing Generator</span>
-              <span class="pver">v2.6.0</span>
-            </div>
-            <div class="pdesc" data-i18n="bg.desc">Briefings complets — SITAC, plan radio, aérodromes, charts, annexes — export PDF prêt à partager.</div>
-            <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
-          </div>
-          <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>
-        </div>
+      </div>
 
-        <div class="print active reveal d5" id="card-dg" style="--card-accent:var(--a-dg)" tabindex="0" role="button" aria-label="Datacard Generator">
-          <span class="tape"></span><span class="pin tl"></span><span class="pin tr"></span>
-          <div class="shot"></div>
-          <div class="caption">
-            <div class="cap-row">
-              <span class="logo" style="background:var(--a-dg)">D·G</span>
-              <span class="ptitle">Datacard Generator</span>
-              <span class="pver">v1.5.1</span>
+      <div class="mp-grp" id="grp-fl">
+        <div class="mp-tab"><b>Flight Leader</b><small data-i18n="grp.fl.sub">prépare son vol</small></div>
+        <div class="active-row">
+          <div class="print active reveal d4" id="card-rp" style="--card-accent:var(--a-rp)" tabindex="0" role="button" aria-label="Route Planner">
+            <span class="tape"></span><span class="pin tl"></span><span class="pin tr"></span>
+            <div class="shot"></div>
+            <div class="caption">
+              <div class="cap-row">
+                <span class="logo" style="background:var(--a-rp)">R·P</span>
+                <span class="ptitle">Route Planner</span>
+                <span class="pver">v1.13.1</span>
+              </div>
+              <div class="pdesc" data-i18n="rp.desc">Tracé de route sur carte — carte DCS, topographique ou satellite, grille MGRS, villes et aérodromes, recherche ; points de référence ; caps, distances, vitesse sol et minutage ; calques CombatFlite et dessin au doigt (zones, FLOT, couloirs, orbites, boîtes) ; MGRS et DMS, envoyés à la datacard ; import et export du Route Tool de DCS.</div>
+              <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
             </div>
-            <div class="pdesc" data-i18n="dg.desc">Datacards de vol d'une page pour le kneeboard — saisie ou depuis un briefing, day et night, export PNG et PDF.</div>
-            <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
+            <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>
           </div>
-          <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>
-        </div>
-        <div class="print active reveal d6" id="card-rs" style="--card-accent:var(--a-rs)" tabindex="0" role="button" aria-label="Recon Station">
-          <span class="tape"></span><span class="pin tl"></span><span class="pin tr"></span>
-          <div class="shot"></div>
-          <div class="caption">
-            <div class="cap-row">
-              <span class="logo" style="background:var(--a-rs)">R·S</span>
-              <span class="ptitle">Recon Station</span>
-              <span class="pver">v1.1.1</span>
+
+          <div class="print active reveal d5" id="card-dg" style="--card-accent:var(--a-dg)" tabindex="0" role="button" aria-label="Datacard Generator">
+            <span class="tape"></span><span class="pin tl"></span><span class="pin tr"></span>
+            <div class="shot"></div>
+            <div class="caption">
+              <div class="cap-row">
+                <span class="logo" style="background:var(--a-dg)">D·G</span>
+                <span class="ptitle">Datacard Generator</span>
+                <span class="pver">v1.5.1</span>
+              </div>
+              <div class="pdesc" data-i18n="dg.desc">Datacards de vol d'une page pour le kneeboard — saisie ou depuis un briefing, day et night, export PNG et PDF.</div>
+              <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
             </div>
-            <div class="pdesc" data-i18n="rs.desc">Transforme une capture en photo d'analyse de reconnaissance — niveaux de gris, annotations au doigt, export PNG pleine résolution.</div>
-            <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
+            <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>
           </div>
-          <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>
-        </div>
-        <div class="print active reveal d6" id="card-fm" style="--card-accent:var(--a-fm)" tabindex="0" role="button" aria-label="Field Manual">
-          <span class="tape"></span><span class="pin tl"></span><span class="pin tr"></span>
-          <div class="shot"></div>
-          <div class="caption">
-            <div class="cap-row">
-              <span class="logo" style="background:var(--a-fm)">F·M</span>
-              <span class="ptitle">Field Manual</span>
-              <span class="pver">v1.3.0</span>
+
+          <div class="print active reveal d6" id="card-fc" style="--card-accent:var(--a-fc)" tabindex="0" role="button" aria-label="Flight Configurator">
+            <span class="tape"></span><span class="pin tl"></span><span class="pin tr"></span>
+            <div class="shot"></div>
+            <div class="caption">
+              <div class="cap-row">
+                <span class="logo" style="background:var(--a-fc)">F·C</span>
+                <span class="ptitle">Flight Configurator</span>
+                <span class="pver">v0.1.2</span>
+              </div>
+              <div class="pdesc" data-i18n="fc.desc">Assemble un groupe — identité, radios, emport composé sur la vue de face ou tiré de mes presets, livrée — et l'exporte en paquet de vol que HQ applique à une mission.</div>
+              <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
             </div>
-            <div class="pdesc" data-i18n="fm.desc">Le manuel d'emploi de la suite — un chapitre par module, schémas et mode d'emploi, entièrement hors-ligne.</div>
-            <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
+            <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>
           </div>
-          <span class="cta" data-i18n="cta">▶ Ouvrir le dossier</span>
         </div>
       </div>
 
@@ -647,10 +681,17 @@ select[data-tbm-src] {{ display: none !important; }}
   var I18N = {{
     fr: {{
       ribbon: '// Suite de préparation opérationnelle',
+      'grp.mc.sub': 'prépare la mission',
+      'grp.fl.sub': 'prépare son vol',
+      'work.open.btn': 'Ouvrir…',
+      'work.open.tip': 'Ouvrir un travail de Mission Plan (JSON)',
+      'work.save.btn': 'Sauvegarder',
+      'work.save.tip': 'Sauvegarder tout le travail de Mission Plan (JSON)',
+      'fm.btn': 'Field Manual',
+      'fm.tip': 'Le manuel de la suite',
       'hq.desc': 'Poste de commandement — configuration Wing, identité escadrons, logos partagés avec tous les modules.',
       'bg.desc': 'Briefings complets — SITAC, plan radio, aérodromes, charts, annexes — export PDF prêt à partager.',
       'rs.desc': "Transforme une capture en photo d'analyse de reconnaissance — niveaux de gris, annotations au doigt, export PNG pleine résolution.",
-      'fm.desc': "Le manuel d'emploi de la suite — un chapitre par module, schémas et mode d'emploi, entièrement hors-ligne.",
       'dg.desc': "Datacards de vol d'une page pour le kneeboard — saisie ou depuis un briefing, day et night, export PNG et PDF.",
       'fc.desc': "Assemble un groupe — identité, radios, emport composé sur la vue de face ou tiré de mes presets, livrée — et l'exporte en paquet de vol que HQ applique à une mission.",
       'rp.desc': 'Tracé de route sur carte — carte DCS, topographique ou satellite, grille MGRS, villes et aérodromes, recherche ; points de référence ; caps, distances, vitesse sol et minutage ; calques CombatFlite et dessin au doigt (zones, FLOT, couloirs, orbites, boîtes) ; MGRS et DMS, envoyés à la datacard ; import et export du Route Tool de DCS.',
@@ -667,10 +708,17 @@ select[data-tbm-src] {{ display: none !important; }}
     }},
     en: {{
       ribbon: '// Operational planning suite',
+      'grp.mc.sub': 'prepares the mission',
+      'grp.fl.sub': 'prepares the flight',
+      'work.open.btn': 'Open…',
+      'work.open.tip': 'Open a Mission Plan work file (JSON)',
+      'work.save.btn': 'Save',
+      'work.save.tip': 'Save all the Mission Plan work (JSON)',
+      'fm.btn': 'Field Manual',
+      'fm.tip': "The suite's manual",
       'hq.desc': 'Command hub — Wing configuration, squadron identity, logos shared across all modules.',
       'bg.desc': 'Complete briefings — SITAC, radio plan, airfields, charts, annexes — PDF export ready to share.',
       'rs.desc': 'Turns a screenshot into a reconnaissance analysis photo — greyscale, touch annotations, full-resolution PNG export.',
-      'fm.desc': "The suite's field manual — one chapter per module, diagrams and how-tos, fully offline.",
       'dg.desc': 'One-page flight datacards for the kneeboard — from scratch or from a briefing, day and night, PNG and PDF export.',
       'fc.desc': "Assembles a group — identity, radios, loadout built on the front view or started from my presets, livery — and exports it as a flight package that HQ applies to a mission.",
       'rp.desc': 'Lay a route on a map — DCS, topographic or satellite, MGRS grid, towns and airfields, search; reference points; headings, distances, ground speed and minute marks; CombatFlite layers and touch drawing (zones, FLOT, corridors, orbits, boxes); MGRS and DMS, sent to the datacard; DCS Route Tool import and export.',
@@ -743,6 +791,9 @@ select[data-tbm-src] {{ display: none !important; }}
     }});
     document.querySelectorAll('[data-i18n-title]').forEach(function(el) {{
       el.title = t(el.getAttribute('data-i18n-title'));
+    }});
+    document.querySelectorAll('[data-i18n-aria]').forEach(function(el) {{
+      el.setAttribute('aria-label', t(el.getAttribute('data-i18n-aria')));
     }});
     /* Sync bigstamp / classif via thème actuel */
     var cur = document.body.getAttribute('data-theme') || 'cw-nato';
@@ -1014,7 +1065,7 @@ select[data-tbm-src] {{ display: none !important; }}
     var landing = document.getElementById('landing');
     landing.style.display = '';
     activeModule = null;
-    /* Le clavier quitte l'outil qu'on vient de fermer (le clic sur Retour l'y avait laissé) : Ctrl+S au hub reste au navigateur */
+    /* Le clavier quitte l'outil qu'on vient de fermer (le clic sur Retour l'y avait laissé) : Ctrl+S au hub est à l'accueil (Sauvegarder), pas à l'outil masqué */
     try {{
       if (document.activeElement && document.activeElement.tagName === 'IFRAME') document.activeElement.blur();
       if (!landing.hasAttribute('tabindex')) landing.setAttribute('tabindex', '-1');
@@ -1319,34 +1370,25 @@ function tbmScrolled(e) {{
     updateFlagBtn();
     initToolbarMenus([['theme-sel', function() {{ return t('theme.sel'); }}]]);   /* la liste du thème au thème de la landing */
 
-    /* Clics cartes */
-    document.getElementById('card-hq').addEventListener('click', function() {{ openModule('hq'); }});
-    document.getElementById('card-hq').addEventListener('keydown', function(e) {{
-      if (e.key === 'Enter' || e.key === ' ') {{ e.preventDefault(); openModule('hq'); }}
+    /* Clics cartes : les six cartes des deux cadres (le Field Manual n'a pas de carte : sa touche est dans la barre) */
+    ['hq', 'bg', 'rs', 'rp', 'dg', 'fc'].forEach(function(id) {{
+      var card = document.getElementById('card-' + id);
+      card.addEventListener('click', function() {{ openModule(id); }});
+      card.addEventListener('keydown', function(e) {{
+        if (e.key === 'Enter' || e.key === ' ') {{ e.preventDefault(); openModule(id); }}
+      }});
     }});
-    document.getElementById('card-bg').addEventListener('click', function() {{ openModule('bg'); }});
-    document.getElementById('card-bg').addEventListener('keydown', function(e) {{
-      if (e.key === 'Enter' || e.key === ' ') {{ e.preventDefault(); openModule('bg'); }}
-    }});
-    document.getElementById('card-rs').addEventListener('click', function() {{ openModule('rs'); }});
-    document.getElementById('card-rs').addEventListener('keydown', function(e) {{
-      if (e.key === 'Enter' || e.key === ' ') {{ e.preventDefault(); openModule('rs'); }}
-    }});
-    document.getElementById('card-rp').addEventListener('click', function() {{ openModule('rp'); }});
-    document.getElementById('card-rp').addEventListener('keydown', function(e) {{
-      if (e.key === 'Enter' || e.key === ' ') {{ e.preventDefault(); openModule('rp'); }}
-    }});
-    document.getElementById('card-fm').addEventListener('click', function() {{ openModule('fm'); }});
-    document.getElementById('card-fm').addEventListener('keydown', function(e) {{
-      if (e.key === 'Enter' || e.key === ' ') {{ e.preventDefault(); openModule('fm'); }}
-    }});
-    document.getElementById('card-fc').addEventListener('click', function() {{ openModule('fc'); }});
-    document.getElementById('card-fc').addEventListener('keydown', function(e) {{
-      if (e.key === 'Enter' || e.key === ' ') {{ e.preventDefault(); openModule('fc'); }}
-    }});
-    document.getElementById('card-dg').addEventListener('click', function() {{ openModule('dg'); }});
-    document.getElementById('card-dg').addEventListener('keydown', function(e) {{
-      if (e.key === 'Enter' || e.key === ' ') {{ e.preventDefault(); openModule('dg'); }}
+    /* La barre du haut : le fichier de travail de la suite (Ouvrir…, Sauvegarder) et le Field Manual */
+    document.getElementById('btn-work-open').addEventListener('click', function() {{ if (window.MP_WORK_OPEN) window.MP_WORK_OPEN(); }});
+    document.getElementById('btn-work-save').addEventListener('click', function() {{ if (window.MP_WORK_SAVE) window.MP_WORK_SAVE(); }});
+    document.getElementById('btn-fm').addEventListener('click', function() {{ openModule('fm'); }});
+    /* Ctrl+S / Cmd+S à l'accueil = Sauvegarder (rien sous une fenêtre ou une liste ouverte) */
+    document.addEventListener('keydown', function(e) {{
+      if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey || (e.key !== 's' && e.key !== 'S')) return;
+      if (activeModule !== null) return;
+      e.preventDefault();
+      if (document.querySelector('.ui-modal:not([hidden])') || TBM.cur) return;
+      if (window.MP_WORK_SAVE) window.MP_WORK_SAVE();
     }});
 
     document.getElementById('flag-btn').addEventListener('click', toggleLang);
@@ -1387,7 +1429,7 @@ def main():
         if found:
             raise SystemExit(f"[ERREUR] La garde du module seul figure dans le shell lui-même ({what}) — build arrêté")
     print('  [OK] Garde du module seul absente du shell lui-même')
-    # Retour au hub : le clavier quitte l'outil fermé (sinon Ctrl+S ouvrirait la fenêtre d'enregistrement de l'outil masqué)
+    # Retour au hub : le clavier quitte l'outil fermé (sinon Ctrl+S irait à l'outil masqué et non à Sauvegarder de l'accueil)
     if "landing.focus({ preventScroll: true })" not in html:
         raise SystemExit("[ERREUR] goHub ne rend plus le clavier au hub")
     print('  [OK] goHub rend le clavier au hub')
