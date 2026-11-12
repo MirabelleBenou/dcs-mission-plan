@@ -1173,6 +1173,7 @@ select[data-tbm-src] { display: none !important; }
 .ed-btn-icon.unit-x { min-width: 44px; min-height: 44px; }
 .rc-msg { font-family: var(--f-ui); font-size: 11px; letter-spacing: .6px; color: var(--mp-warn); margin-left: 56px; }
 .rc-freq input.bad { border-color: var(--mp-warn); }
+.ed-field input.bad { border-color: var(--mp-warn); color: var(--mp-warn); }
 .rc-row.nc .rc-msg { margin-left: 0; }
 .rc-row.frz .rc-top { gap: 4px 12px; }
 .frz-v { font-family: var(--f-typewriter); font-size: 13px; color: var(--paper); }
@@ -5176,7 +5177,7 @@ function dgFreeTypeField(c, i, x) {
 function groupBoxHtml(c) {
   const lk = !!c.gsId, f = lk ? dgFlightOf(c) : null;
   if (lk && !f) return '';
-  const ro = (lk || deduceGroup(c)) ? ' readonly title="' + esc(t('f.group.deduced')) + '"' : '';
+  const ro = (lk || deduceGroup(c) || partialGroup(c)) ? ' readonly title="' + esc(t('f.group.deduced')) + '"' : '';
   const coal = [['', t('coal.none')], ['blue', t('coal.blue')], ['red', t('coal.red')]];
   const thr = fSelect('f.threat', 'flight.threat', c.flight.threat, [['', t('thr.none')], ['low', t('thr.low')], ['moderate', t('thr.moderate')], ['high', t('thr.high')]]);
   const head = (!lk && c.gsGone ? '<div class="ui-bandeau err">' + esc(t('grp.gone')) + '</div>' : '') +
@@ -6192,6 +6193,12 @@ function phAttr(path) {
   const key = 'ph.' + path.replace(/\.\d+(?=\.|$)/g, '.*');
   return ' placeholder="' + esc(t(key)) + '"';
 }
+/* La date de l'en-tête est un champ texte, AAAA-MM-JJ : une saisie d'une autre forme est gardée telle quelle et le champ prend la couleur d'avertissement */
+function dgDateBad(v) {
+  v = String(v == null ? '' : v).trim();
+  return v !== '' && !(/^\d{4}-\d{2}-\d{2}$/.test(v) && !isNaN(new Date(v + 'T00:00:00Z')) && new Date(v + 'T00:00:00Z').toISOString().slice(0, 10) === v);
+}
+function dgDateAttr(v) { return dgDateBad(v) ? ' class="bad" aria-invalid="true"' : ''; }
 function fInput(labelKey, path, value, extra) {
   return '<div class="ed-field"><label>' + esc(t(labelKey)) + '</label><input type="text" data-path="' + path + '" value="' + esc(value) + '"' + phAttr(path) + (extra || '') + '></div>';
 }
@@ -6333,7 +6340,7 @@ const SECTION_BUILDERS = {
   /* L'en-tête : le même qu'au Briefing Generator (Opération · Mission, puis Date · Heure (Z)) */
   header: c =>
     '<div class="ed-field-row">' + fInput('f.operation', 'meta.operation', c.meta.operation) + fInput('f.mission', 'meta.mission', c.meta.mission) + '</div>' +
-    '<div class="ed-field-row">' + fInput('f.date', 'meta.date', c.meta.date) + fInput('f.time', 'meta.time', c.meta.time) + '</div>',
+    '<div class="ed-field-row">' + fInput('f.date', 'meta.date', c.meta.date, dgDateAttr(c.meta.date)) + fInput('f.time', 'meta.time', c.meta.time) + '</div>',
 
   /* Méta : la classification et la référence du document, en dernière section */
   meta: c =>
@@ -6461,7 +6468,7 @@ Object.keys(LINKED_BUILDERS).forEach(id => {
   SECTION_BUILDERS[id] = c => c.gsId ? LINKED_BUILDERS[id](c) : (id === 'fuel' && dgFrozenLoad(c) ? LINKED_BUILDERS.fuel(c) : dgFrozenSection(id, c) + base(c));
 });
 
-/* L'éditeur suit l'ordre des blocs de l'aperçu imprimé, pour une carte liée comme pour une carte libre (SECTION_IDS) */
+/* L'éditeur suit l'ordre de SECTION_IDS (En-tête, Groupe, Mission, …), pour une carte liée comme pour une carte libre ; ce n'est plus l'ordre des blocs de l'aperçu imprimé, que l'impression garde */
 /* Le repli : l'état se garde (dg_folds_v1 : { section: true (ouverte) | false (repliée) }) ; le profil neuf replie Méta, Terrains, Carburant et emport, Menaces et notes.
    En mode onglets (≤ 1100 px) la section de l'onglet est ouverte sans rien écrire dans la clé. */
 const DG_FOLDS = 'dg_folds_v1';
@@ -6480,7 +6487,7 @@ function dgSectionSum(id, c) {
     const vals = c.times.map(x => v(x.value)).filter(Boolean);
     return vals.length > 1 ? vals[0] + ' → ' + vals[vals.length - 1] : (vals[0] || '');
   }
-  if (id === 'group') return uiJoin([v(c.flight.callsign), (c.flight.count ? c.flight.count + ' × ' : '') + v(c.flight.aircraft)]);
+  if (id === 'group') return uiJoin([v(c.flight.callsign), partialGroup(c) ? groupText(c) : (c.flight.count ? c.flight.count + ' × ' : '') + v(c.flight.aircraft)]);
   if (id === 'nav') {
     const info = dgRouteInfo(c, dgRouteSet());
     return uiJoin([c.nav.length ? navPts(c.nav.length) : '', info.state === 'linked' && hasText(info.name) ? info.name.trim() : '']);
@@ -6548,6 +6555,7 @@ function renderEditor(keep) {
   const ed = document.getElementById('editor');
   const top = ed.scrollTop;
   const c = curCard();
+  if (DG_UI.other && DG_UI.other.c !== c) DG_UI.other = null;       /* la saisie libre d'un type ne survit pas à un changement de carte */
   const act = document.activeElement;
   const cand = keep && act && ed.contains(act) && (act.tagName === 'TEXTAREA' || (act.tagName === 'INPUT' && /^(text|search|tel|url|number)$/.test(act.type))) ? act : null;
   /* Un champ de fréquence n'est gardé que si une saisie y est en cours (non validée, ou une valeur différente de celle de l'entrée) ; sinon le champ neuf prend sa place, avec la valeur à jour, et reçoit le focus */
@@ -6637,11 +6645,11 @@ function syncMetar(c) {
 
 /* Les champs Appareil et Nombre du groupe suivent les lignes d'équipage, sans refaire l'éditeur (le curseur reste en place) */
 function syncGroupEditor(c) {
-  const lock = !!deduceGroup(c);
+  const ded = !!deduceGroup(c), lock = ded || !!partialGroup(c);       /* partiel : les champs restent en lecture seule, l'aperçu imprimé dit déjà « n × ? » */
   [['aircraft', c.flight.aircraft], ['count', c.flight.count == null ? '' : String(c.flight.count)]].forEach(p => {
     const el = document.querySelector('#editor [data-path="flight.' + p[0] + '"]');
     if (!el) return;
-    if (lock && el.value !== p[1]) el.value = p[1];
+    if (ded && el.value !== p[1]) el.value = p[1];
     el.readOnly = lock;
     if (lock) el.title = t('f.group.deduced'); else el.removeAttribute('title');
   });
@@ -6653,11 +6661,16 @@ function dgFlagSync(i, v) {
   if (f) f.hidden = !dgTypeOff(v);
 }
 /* Le focus revient au bouton de la liste (ou au champ) du type de l'unité i, après un redessin */
-function dgTypeFocus(i) {
+function dgTypeFocus(i, tries) {
   const n = document.querySelector('#editor [data-path="crew.' + i + '.type"]');
   if (!n) return;
-  const b = n.tagName === 'SELECT' ? n.previousElementSibling : n;
-  if (b && b.focus) b.focus({ preventScroll: true });
+  if (n.tagName !== 'SELECT') { n.focus({ preventScroll: true }); return; }
+  const b = n.previousElementSibling;
+  if (b && b.classList && b.classList.contains('tbm-trigger')) { b.focus({ preventScroll: true }); return; }
+  /* le bouton de la liste est posé après le redessin (tbmScan) : on l'attend, sans cibler l'étiquette qui le précède */
+  const k = tries || 0, a = document.activeElement;
+  if (k >= 40 || (a && a !== document.body && a.closest && a.closest('#editor') && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))) return;
+  setTimeout(() => dgTypeFocus(i, k + 1), 25);
 }
 /* Le choix dans la liste du type : « Autre type (mod)… » ouvre la saisie libre ; un type du jeu s'écrit sur l'unité */
 function dgTypePick(c, el) {
@@ -6675,6 +6688,18 @@ function dgTypePick(c, el) {
   dgFlagSync(i, el.value);
   touch();
   if (stale) { renderEditor(); dgTypeFocus(i); }
+}
+/* Quitter la saisie libre sans Entrée (clic ailleurs, autre champ, autre carte, autre onglet) : un texte saisi vaut Entrée, un champ vide vaut Échap ;
+   la liste reprend la place du champ sur place (le reste de l'éditeur ne bouge pas : le clic en cours aboutit) et le focus reste où l'utilisateur l'a mis */
+function dgOtherLeave(el) {
+  const o = DG_UI.other;
+  if (!o || DG_UI.rendering) return;
+  DG_UI.other = null;
+  const c = curCard(), fld = el && el.closest ? el.closest('.ed-field') : null;
+  if (!fld || o.c !== c || !c.crew[o.i]) return;
+  const tmp = document.createElement('div');
+  tmp.innerHTML = dgFreeTypeField(c, o.i, c.crew[o.i]);
+  fld.replaceWith(tmp.firstChild);
 }
 /* La fin de la saisie libre du type (Entrée ou Échap) : la valeur déjà écrite est gardée telle quelle, la liste revient avec le focus */
 function dgOtherDone() {
@@ -6730,6 +6755,7 @@ function onEditorInput(e) {
   else setPath(c, path, el.value);
   if (path === 'weather.metar') syncMetar(c);
   if (path === 'flight.callsign') updatePackTitle();
+  if (path === 'meta.date') { const b = dgDateBad(el.value); el.classList.toggle('bad', b); if (b) el.setAttribute('aria-invalid', 'true'); else el.removeAttribute('aria-invalid'); }
   if (/^crew\./.test(path) && !c.gsId) { syncGroup(c); syncGroupEditor(c); }
   if (el.dataset.dgOther !== undefined) dgFlagSync(el.dataset.dgOther, el.value);
   if (/^nav(Display)?\./.test(path)) syncNavEditor();
@@ -6759,6 +6785,7 @@ function onEditorFocusIn(e) {
 }
 function onEditorFocusOut(e) {
   const el = e.target;
+  if (el && el.dataset && el.dataset.dgOther !== undefined) { dgOtherLeave(el); return; }
   if (el && el._dgCommit && !DG_UI.rendering) { el._dgCommit = false; onEditorInput({ target: el, type: 'change' }); return; }       /* la saisie gardée à travers un redessin : le « change » du navigateur est parti avec l'ancien champ, on la valide ici */
   if (DG_UI.rendering || !el || !el._dgPend || !el.dataset || !el.dataset.gs) return;
   el._dgPend = false;

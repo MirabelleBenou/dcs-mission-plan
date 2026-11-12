@@ -7127,13 +7127,13 @@ function pageMeta() {
 }
 
 function formatMissionDate(d) {
+  /* Une date AAAA-MM-JJ se lit à la main (sans objet Date : ni fuseau, ni lecture américaine) et s'imprime JJ/MM/AAAA ; toute autre valeur s'imprime telle quelle */
   if (!d) return '';
-  try {
-    const dt = new Date(d);
-    if (isNaN(dt)) return d;
-    const locale = CURRENT_LANG === 'fr' ? 'fr-FR' : 'en-GB';  // en-GB : DD/MM/YYYY, format OTAN-conforme
-    return dt.toLocaleDateString(locale, { day: '2-digit', month: '2-digit', year: 'numeric' });
-  } catch { return d; }
+  const v = String(d).trim(), m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v);
+  if (!m) return d;
+  const mo = parseInt(m[2], 10), dd = parseInt(m[3], 10);
+  if (mo < 1 || mo > 12 || dd < 1 || dd > 31) return d;
+  return m[3] + '/' + m[2] + '/' + m[1];
 }
 
 /* ============= RADIO RENDER HELPERS ============= */
