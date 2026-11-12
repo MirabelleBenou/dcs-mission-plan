@@ -5736,19 +5736,31 @@ function impBriefingTable(b, type) {
     return (s === '' || !isFinite(f) || !(f > 0)) ? '' : String(f);
   };
   if (gsIsObj(b.meta) && b.meta.format === 'simple') {
-    /* Un brief Standard : les fréquences globales (radioPlan.items) portent leur radio (nom court du poste) et leur canal du cockpit ; le premier de chaque poste et canal l'emporte, tout autre est compté ignoré */
-    items.forEach(it => {
+    /* Un brief Standard : les fréquences globales (radioPlan.items) portent leur radio (nom court du poste) et leur canal du cockpit (un nombre se lit comme son texte). Un item va sur le poste du type qui porte ce nom court ;
+       plusieurs postes du type au même nom court : les items de ce nom les prennent dans l'ordre, un item prend le premier de ces postes où son canal existe et n'est pas encore pris (le premier item d'un poste et d'un canal l'emporte).
+       Rend aussi std (c'est un Standard), total (les items qui portent quelque chose) et used (les rangs des items qui ont servi à ce type) : un item n'est compté ignoré qu'une fois, s'il n'a servi à aucun type du briefing (impBriefingUnits) ; ignored, ici, est celui de ce type seul. */
+    const txt = v => (typeof v === 'string' ? v : (typeof v === 'number' && isFinite(v) ? String(v) : ''));
+    const byName = {};
+    for (let i = 1; i <= 9; i++) if (posts.indexOf(i) >= 0) { const sn = shortOf(i); if (sn !== '') (byName[sn] = byName[sn] || []).push(i); }
+    out.std = true; out.total = 0; out.used = [];
+    items.forEach((it, rank) => {
       const nm = impStr(it.radio).replace(/\s+/g, '').toLowerCase();
-      const hasAny = nm !== '' || impStr(it.channel).trim() !== '' || impStr(it.frequency).trim() !== '';
+      const hasAny = nm !== '' || txt(it.channel).trim() !== '' || txt(it.frequency).trim() !== '';
       if (!hasAny) return;
-      let poste = 0;
-      if (nm !== '') for (let i = 1; i <= 9; i++) if (shortOf(i) === nm) { poste = i; break; }
-      const miz = poste && posts.indexOf(poste) >= 0 ? mizOf(poste, it.channel) : 0, fr = freqOf(it.frequency);
-      if (!poste || !miz || fr === '') { out.ignored++; return; }
-      const tb = impHas(out.posts, poste) ? out.posts[poste] : (out.posts[poste] = {});
-      if (impHas(tb, String(miz))) { out.ignored++; return; }
-      tb[String(miz)] = fr;
+      out.total++;
+      const cands = nm !== '' && impHas(byName, nm) ? byName[nm] : [], fr = freqOf(it.frequency);
+      if (!cands.length || fr === '') return;
+      for (let k = 0; k < cands.length; k++) {
+        const poste = cands[k], miz = mizOf(poste, it.channel);
+        if (!miz) continue;
+        const tb = impHas(out.posts, poste) ? out.posts[poste] : (out.posts[poste] = {});
+        if (impHas(tb, String(miz))) continue;
+        tb[String(miz)] = fr;
+        out.used.push(rank);
+        return;
+      }
     });
+    out.ignored = out.total - out.used.length;
     return out;
   }
   const plan = (Array.isArray(rp.aircraftPlans) ? rp.aircraftPlans : []).find(p => gsIsObj(p) && impSame(p.aircraft, type));
@@ -5948,7 +5960,12 @@ function impBriefingUnits(st, target, fi, row, chk, src) {
   }
   if (chk.radios && ty !== '') {
     const tab = src.tableOf(ty);
-    if (!impHas(st.counted, ty)) { st.counted[ty] = true; st.ignored += tab.ignored; }
+    if (!impHas(st.counted, ty)) {
+      st.counted[ty] = true;
+      if (tab.std) { if (!st.std) st.std = { total: tab.total, used: {} }; }       /* un Standard : un item n'est compté ignoré qu'une fois, à la fin, s'il n'a servi à aucun type */
+      else st.ignored += tab.ignored;
+    }
+    if (tab.std) tab.used.forEach(i => { st.std.used[i] = true; });
     target.units.forEach(u => {
       if (u.type !== ty) return;
       Object.keys(tab.posts).forEach(p => { u.radios[p] = Object.assign({}, tab.posts[p]); });
@@ -5990,6 +6007,7 @@ function impWrite(src, picks, side) {
   return impResult(st, picks.length, src);
 }
 function impResult(st, n, src) {
+  if (st.std) st.ignored += st.std.total - Object.keys(st.std.used).length;       /* les items du Standard qui n'ont servi à aucun type du briefing, une fois chacun */
   const parts = [impTf('imp.done', n)].concat(st.warn);
   if (st.noTypeUnits) parts.push(impTf('imp.notype', st.noTypeUnits, st.noTypeGroups.join(', ')));
   if (st.ignored) parts.push(impTf('imp.skipchan', st.ignored));
