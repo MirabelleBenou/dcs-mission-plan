@@ -1453,14 +1453,16 @@ body {{
   display: flex;
   flex-direction: column;
   gap: 16px;
+  margin-bottom: 32px;
 }}
+.fm-section-title + .fm-plaque-grid, .fm-intro + .fm-plaque-grid {{ margin-top: 0; }}
 @media (min-width: 900px) {{
   .fm-plaque-grid {{
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 16px;
   }}
-  .fm-plaque-grid .fm-plaque:first-child {{
+  .fm-plaque-grid .fm-plaque.fm-plaque-wide {{
     grid-column: 1 / -1;
   }}
 }}
@@ -1542,6 +1544,7 @@ body {{
   overflow: hidden;
   text-overflow: ellipsis;
 }}
+.fm-plaque-wide .fm-plaque-desc {{ white-space: normal; }}       /* la plaque 0 : sa description passe à la ligne au lieu d'être coupée */
 .fm-plaque-badge {{
   font-family: var(--f-stencil);
   font-size: 9px;
@@ -1888,25 +1891,34 @@ kbd {{
       <!-- Intro -->
       <div class="fm-intro">
         <div class="lang-block" data-lang="fr">
-          <p>La suite DCS Mission Plan regroupe des outils de préparation de mission entièrement hors-ligne, distribués sous forme de fichiers HTML autonomes. Aucune installation requise, aucune dépendance réseau : chaque outil s'ouvre directement dans votre navigateur.</p>
+          <p>La suite DCS Mission Plan regroupe des outils de préparation de mission entièrement hors ligne, dans un seul fichier HTML : dcs_mission_plan.html, ou sa version en ligne. Aucune installation, aucune dépendance réseau : on l'ouvre dans le navigateur, et chaque outil s'ouvre depuis son accueil.</p>
           <p>Ce manuel documente l'utilisation de chaque module : fonctionnalités, interface, flux de travail, et limites à connaître. Il est conçu pour être parcouru chapitre par chapitre, ou consulté ponctuellement.</p>
         </div>
         <div class="lang-block" data-lang="en">
-          <p>The DCS Mission Plan suite brings together fully offline mission preparation tools, distributed as self-contained HTML files. No installation required, no network dependency: each tool opens directly in your browser.</p>
+          <p>The DCS Mission Plan suite brings together fully offline mission preparation tools in a single HTML file: dcs_mission_plan.html, or its online version. No installation, no network dependency: open it in your browser, and every tool opens from its home page.</p>
           <p>This manual documents how to use each module: features, interface, workflow, and caveats worth knowing. It is designed to be read chapter by chapter, or consulted as needed.</p>
         </div>
       </div>
 
-      <!-- Démarrer : le bouton Exemple de chaque outil -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Démarrer</h3>
-        <h3 class="lang-block" data-lang="en">Getting started</h3>
-        <div class="lang-block" data-lang="fr"><p>Chaque outil a un bouton <strong>Exemple</strong> (l’icône de feuille de la barre du haut) qui le remplit d’une démonstration, dans la langue de l’interface au moment du clic : le moyen le plus rapide de voir ce qu’il fait. Les exemples du Briefing Generator, du Datacard Generator, du Route Planner et de Recon Station racontent la même opération fictive, FOOTHOLD ; celui de HQ est une escadre de démonstration. <strong>HQ garde votre configuration d’escadre</strong> et propose de la restaurer en un geste ; dans les autres outils, l’exemple <strong>remplace le travail en cours</strong> (Recon Station seulement s’il y a déjà du travail) et le message qui suit propose <strong>Restaurer</strong>, qui le rend pendant quelques secondes. Au Flight Configurator, au Datacard Generator et au Route Planner, Restaurer rend tout ce que ces trois outils partagent, quel que soit celui où l’on est : les groupes, les routes, les calques, les datacards, le théâtre, les unités et les réglages de cap. Si l’on enchaîne deux remplacements (deux Exemple, ou un Exemple puis Ouvrir), Restaurer rend l’état d’avant le premier. Une fois chargé, l’exemple est à vous : changer de langue ensuite ne le retraduit pas. Pour repartir d’une page blanche, <strong>Effacer</strong> vide le Briefing Generator, après confirmation ; au Flight Configurator, au Datacard Generator et au Route Planner, <strong>Tout effacer</strong> efface d’un coup les groupes, les routes et les datacards de ces trois outils, après confirmation.</p></div>
-        <div class="lang-block" data-lang="en"><p>Every tool has an <strong>Example</strong> button (the sheet icon in the top bar) that fills it with a demonstration, in the interface language at the moment of the click: the quickest way to see what it does. The Briefing Generator, Datacard Generator, Route Planner and Recon Station examples tell the same fictional operation, FOOTHOLD; HQ’s is a demonstration wing. <strong>HQ keeps your wing configuration</strong> and offers to restore it in one tap; in the other tools, the example <strong>replaces the current work</strong> (Recon Station only when there is already work in place) and the message that follows offers <strong>Restore</strong>, which brings it back for a few seconds. In the Flight Configurator, the Datacard Generator and the Route Planner, Restore brings back everything these three tools share, whichever of them you are in: groups, routes, layers, datacards, theatre, units and heading settings. If two replacements follow each other (two Examples, or an Example then Open), Restore brings back the state before the first. Once loaded, the example is yours: switching language afterwards does not translate it again. To start from a blank page, <strong>Clear</strong> empties the Briefing Generator, after confirmation; in the Flight Configurator, the Datacard Generator and the Route Planner, <strong>Clear everything</strong> clears the groups, routes and datacards of these three tools at once, after confirmation.</p></div>
-      </div>
-
       <!-- Index -->
-      <p class="fm-section-title" data-i18n="index.title">Modules documentés</p>
+      <div class="fm-plaque-grid">
+
+        <!-- 0 · Par où commencer -->
+        <div class="fm-plaque active fm-plaque-wide" data-module="start" tabindex="0" role="button"
+             aria-label="0 — Par où commencer"
+             onclick="navigate('start')"
+             onkeydown="if(event.key==='Enter'||event.key===' '){{event.preventDefault();navigate('start')}}">
+          <div class="fm-plaque-monogram">0</div>
+          <div class="fm-plaque-info">
+            <div class="fm-plaque-name" data-i18n="index.start.name">Par où commencer</div>
+            <div class="fm-plaque-desc" data-i18n="index.start.desc">Les deux rôles, l'ordre des outils, le fichier de travail</div>
+          </div>
+          <div class="fm-plaque-badge" data-i18n="index.badge.active">Manuel</div>
+        </div>
+
+      </div><!-- /fm-plaque-grid -->
+
+      <p class="fm-section-title">Mission Commander</p>
 
       <div class="fm-plaque-grid">
 
@@ -1919,19 +1931,6 @@ kbd {{
           <div class="fm-plaque-info">
             <div class="fm-plaque-name">HQ</div>
             <div class="fm-plaque-desc" data-i18n="index.hq.desc">Wing Command Center — configuration escadre</div>
-          </div>
-          <div class="fm-plaque-badge" data-i18n="index.badge.active">Manuel</div>
-        </div>
-
-        <!-- FC -->
-        <div class="fm-plaque active" data-module="fc" tabindex="0" role="button"
-             aria-label="FC — Flight Configurator"
-             onclick="navigate('fc')"
-             onkeydown="if(event.key==='Enter'||event.key===' '){{event.preventDefault();navigate('fc')}}">
-          <div class="fm-plaque-monogram">FC</div>
-          <div class="fm-plaque-info">
-            <div class="fm-plaque-name">Flight Configurator</div>
-            <div class="fm-plaque-desc" data-i18n="index.fc.desc">Un groupe prêt à appliquer : radios, emport, livrée</div>
           </div>
           <div class="fm-plaque-badge" data-i18n="index.badge.active">Manuel</div>
         </div>
@@ -1949,19 +1948,6 @@ kbd {{
           <div class="fm-plaque-badge" data-i18n="index.badge.active">Manuel</div>
         </div>
 
-        <!-- DG -->
-        <div class="fm-plaque active" data-module="dg" tabindex="0" role="button"
-             aria-label="DG — Datacard Generator"
-             onclick="navigate('dg')"
-             onkeydown="if(event.key==='Enter'||event.key===' '){{event.preventDefault();navigate('dg')}}">
-          <div class="fm-plaque-monogram">DG</div>
-          <div class="fm-plaque-info">
-            <div class="fm-plaque-name">Datacard Generator</div>
-            <div class="fm-plaque-desc" data-i18n="index.dg.desc">Datacards de vol d’une page</div>
-          </div>
-          <div class="fm-plaque-badge" data-i18n="index.badge.active">Manuel</div>
-        </div>
-
         <!-- RS -->
         <div class="fm-plaque active" data-module="rs" tabindex="0" role="button"
              aria-label="RS — Recon Station"
@@ -1974,6 +1960,12 @@ kbd {{
           </div>
           <div class="fm-plaque-badge" data-i18n="index.badge.active">Manuel</div>
         </div>
+
+      </div><!-- /fm-plaque-grid -->
+
+      <p class="fm-section-title">Flight Leader</p>
+
+      <div class="fm-plaque-grid">
 
         <!-- RP -->
         <div class="fm-plaque active" data-module="rp" tabindex="0" role="button"
@@ -1988,9 +1980,88 @@ kbd {{
           <div class="fm-plaque-badge" data-i18n="index.badge.active">Manuel</div>
         </div>
 
+        <!-- DG -->
+        <div class="fm-plaque active" data-module="dg" tabindex="0" role="button"
+             aria-label="DG — Datacard Generator"
+             onclick="navigate('dg')"
+             onkeydown="if(event.key==='Enter'||event.key===' '){{event.preventDefault();navigate('dg')}}">
+          <div class="fm-plaque-monogram">DG</div>
+          <div class="fm-plaque-info">
+            <div class="fm-plaque-name">Datacard Generator</div>
+            <div class="fm-plaque-desc" data-i18n="index.dg.desc">Datacards de vol d’une page</div>
+          </div>
+          <div class="fm-plaque-badge" data-i18n="index.badge.active">Manuel</div>
+        </div>
+
+        <!-- FC -->
+        <div class="fm-plaque active" data-module="fc" tabindex="0" role="button"
+             aria-label="FC — Flight Configurator"
+             onclick="navigate('fc')"
+             onkeydown="if(event.key==='Enter'||event.key===' '){{event.preventDefault();navigate('fc')}}">
+          <div class="fm-plaque-monogram">FC</div>
+          <div class="fm-plaque-info">
+            <div class="fm-plaque-name">Flight Configurator</div>
+            <div class="fm-plaque-desc" data-i18n="index.fc.desc">Un groupe prêt à appliquer : radios, emport, livrée</div>
+          </div>
+          <div class="fm-plaque-badge" data-i18n="index.badge.active">Manuel</div>
+        </div>
+
       </div><!-- /fm-plaque-grid -->
     </div>
   </section><!-- /page-index -->
+
+
+  <!-- ===== PAGE 0 — Par où commencer ===== -->
+  <section id="page-start" class="fm-page hidden">
+    <div class="fm-chapter">
+
+      <button class="fm-back-btn" onclick="navigate('index')" data-i18n="btn.back">◄ Index</button>
+
+      <div class="fm-hero">
+        <div class="fm-hero-pin" aria-hidden="true"></div>
+        <div class="fm-hero-caption">
+          <div><div class="fm-hero-monogram">0</div></div>
+          <div>
+            <div class="fm-hero-title" data-i18n="start.hero.title">Par où commencer</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="fm-prose">
+        <div class="lang-block" data-lang="fr"><p>Mission Plan prépare une mission à deux rôles. Le <strong>Mission Commander</strong> prépare la mission pour toute l’escadre ; chaque <strong>Flight Leader</strong> prépare le vol de son groupe. L’accueil range les outils ainsi, en deux cadres.</p></div>
+        <div class="lang-block" data-lang="en"><p>Mission Plan prepares a mission in two roles. The <strong>Mission Commander</strong> prepares the mission for the whole wing; each <strong>Flight Leader</strong> prepares their group’s flight. The home page sorts the tools that way, in two frames.</p></div>
+      </div>
+
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Le Mission Commander</h3>
+        <h3 class="lang-block" data-lang="en">The Mission Commander</h3>
+        <div class="lang-block" data-lang="fr"><p><strong>HQ</strong>, une fois pour toutes : la configuration Wing (escadre, escadrons, logos), que tous les outils reprennent ; puis, pour chaque mission, HQ ouvre le .miz de l’éditeur de DCS. Le <strong>Briefing Generator</strong> écrit le briefing : situation, plan radio, aérodromes, cartes. <strong>Recon Station</strong> prépare les photos de reconnaissance, si la mission en a.</p></div>
+        <div class="lang-block" data-lang="en"><p><strong>HQ</strong>, once and for all: the Wing configuration (wing, squadrons, logos), which every tool picks up; then, for each mission, HQ opens the .miz from the DCS mission editor. The <strong>Briefing Generator</strong> writes the briefing: situation, radio plan, airfields, charts. <strong>Recon Station</strong> prepares the reconnaissance photos, if the mission has any.</p></div>
+      </div>
+
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Le Flight Leader</h3>
+        <h3 class="lang-block" data-lang="en">The Flight Leader</h3>
+        <div class="lang-block" data-lang="fr"><p>Dans l’ordre du cadre : le <strong>Route Planner</strong> trace la route du vol sur la carte ; le <strong>Datacard Generator</strong> en fait la datacard du kneeboard ; le <strong>Flight Configurator</strong> prépare le groupe (radios, emport, livrée) et exporte le <strong>paquet de vol</strong>.</p></div>
+        <div class="lang-block" data-lang="en"><p>In the order of the frame: the <strong>Route Planner</strong> lays the flight’s route on the map; the <strong>Datacard Generator</strong> turns it into the kneeboard datacard; the <strong>Flight Configurator</strong> prepares the group (radios, loadout, livery) and exports the <strong>flight package</strong>.</p></div>
+      </div>
+
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">Le travail passe de l’un à l’autre</h3>
+        <h3 class="lang-block" data-lang="en">The work goes from one to the other</h3>
+        <div class="lang-block" data-lang="fr"><p><strong>Sauvegarder</strong> (dans la barre de chaque outil, ou en haut de l’accueil) écrit <strong>tout le travail de Mission Plan</strong> dans un seul fichier .json : briefing, recon, groupes, routes, calques, datacards, théâtre, unités et réglages de cap. Le Mission Commander envoie ce fichier à ses Flight Leaders ; chacun l’ouvre par <strong>Ouvrir…</strong> (en haut de l’accueil, ou Ouvrir ▾ › Ouvrir un travail… dans un outil) et trouve ce que le Mission Commander a préparé. Ouvrir un travail <strong>remplace tout le travail en cours</strong> ; le message qui suit propose <strong>Restaurer</strong> pendant quelques secondes. Le fichier ne porte ni la configuration Wing, qui appartient à l’escadre, ni la mission ouverte dans HQ, dont le fichier est le .miz, ni la photo de Recon Station. Le Flight Leader rend au Mission Commander son <strong>paquet de vol</strong>, que HQ applique au .miz.</p></div>
+        <div class="lang-block" data-lang="en"><p><strong>Save</strong> (in every tool’s bar, or at the top of the home page) writes <strong>all the Mission Plan work</strong> into a single .json file: briefing, recon, groups, routes, layers, datacards, theatre, units and heading settings. The Mission Commander sends this file to the Flight Leaders; each opens it with <strong>Open…</strong> (at the top of the home page, or Open ▾ › Open a work file… in a tool) and finds what the Mission Commander has prepared. Opening a work file <strong>replaces all the current work</strong>; the message that follows offers <strong>Restore</strong> for a few seconds. The file carries neither the Wing configuration, which belongs to the wing, nor the mission open in HQ, whose file is the .miz, nor the Recon Station photo. The Flight Leader hands the <strong>flight package</strong> back to the Mission Commander, and HQ applies it to the .miz.</p></div>
+      </div>
+
+      <div class="fm-prose">
+        <h3 class="lang-block" data-lang="fr">L’exemple</h3>
+        <h3 class="lang-block" data-lang="en">The example</h3>
+        <div class="lang-block" data-lang="fr"><p>Chaque outil a un bouton <strong>Exemple</strong> (l’icône de feuille de la barre du haut) qui le remplit d’une démonstration, dans la langue de l’interface au moment du clic : le moyen le plus rapide de voir ce qu’il fait. Les exemples du Briefing Generator, du Datacard Generator, du Route Planner et de Recon Station racontent la même opération fictive, FOOTHOLD ; celui de HQ est une escadre de démonstration. <strong>HQ garde votre configuration d’escadre</strong> et propose de la restaurer en un geste ; dans les autres outils, l’exemple <strong>remplace le travail en cours</strong> (Recon Station seulement s’il y a déjà du travail) et le message qui suit propose <strong>Restaurer</strong>, qui le rend pendant quelques secondes. Au Flight Configurator, au Datacard Generator et au Route Planner, Restaurer rend tout ce que ces trois outils partagent, quel que soit celui où l’on est : les groupes, les routes, les calques, les datacards, le théâtre, les unités et les réglages de cap. Si l’on enchaîne deux remplacements (deux Exemple, ou un Exemple puis Ouvrir), Restaurer rend l’état d’avant le premier. Une fois chargé, l’exemple est à vous : changer de langue ensuite ne le retraduit pas. Pour repartir d’une page blanche, <strong>Effacer</strong> vide le Briefing Generator, après confirmation ; au Flight Configurator, au Datacard Generator et au Route Planner, <strong>Tout effacer</strong> efface d’un coup les groupes, les routes et les datacards de ces trois outils, après confirmation.</p></div>
+        <div class="lang-block" data-lang="en"><p>Every tool has an <strong>Example</strong> button (the sheet icon in the top bar) that fills it with a demonstration, in the interface language at the moment of the click: the quickest way to see what it does. The Briefing Generator, Datacard Generator, Route Planner and Recon Station examples tell the same fictional operation, FOOTHOLD; HQ’s is a demonstration wing. <strong>HQ keeps your wing configuration</strong> and offers to restore it in one tap; in the other tools, the example <strong>replaces the current work</strong> (Recon Station only when there is already work in place) and the message that follows offers <strong>Restore</strong>, which brings it back for a few seconds. In the Flight Configurator, the Datacard Generator and the Route Planner, Restore brings back everything these three tools share, whichever of them you are in: groups, routes, layers, datacards, theatre, units and heading settings. If two replacements follow each other (two Examples, or an Example then Open), Restore brings back the state before the first. Once loaded, the example is yours: switching language afterwards does not translate it again. To start from a blank page, <strong>Clear</strong> empties the Briefing Generator, after confirmation; in the Flight Configurator, the Datacard Generator and the Route Planner, <strong>Clear everything</strong> clears the groups, routes and datacards of these three tools at once, after confirmation.</p></div>
+      </div>
+
+    </div>
+  </section><!-- /page-start -->
 
 
   <!-- ===== PAGE RS — Chapitre-gabarit : Recon Station ===== -->
@@ -2434,8 +2505,8 @@ kbd {{
       <div class="fm-prose">
         <h3 class="lang-block" data-lang="fr">Ouvrir, Sauvegarder, Importer, Exporter, Effacer</h3>
         <h3 class="lang-block" data-lang="en">Open, Save, Import, Export, Clear</h3>
-        <div class="lang-block" data-lang="fr"><p><strong>Ouvrir ▾ › Ouvrir une configuration…</strong> et <strong>Sauvegarder</strong> gèrent le <strong>fichier de travail</strong> du module (un <code>.json</code> qui porte vos groupes et « Mes presets »). <kbd>Ctrl</kbd>+<kbd>S</kbd> (<kbd>Cmd</kbd>+<kbd>S</kbd> sur Mac) fait le même geste que <strong>Sauvegarder</strong>. Au Flight Configurator, <strong>Ouvrir ▾ › Importer des groupes…</strong> ouvre la même fenêtre que <strong>Ouvrir ▾ › Importer des routes…</strong> au Route Planner : la mission chargée dans HQ, le briefing en cours du Briefing Generator, ou un fichier (paquet de vol <code>.json</code> ou <code>.zip</code>, briefing). Cochez les groupes et, pour chacun, ce qu'il apporte (route, radios, emport, livrée). Un groupe de même nom (majuscules comprises) et de même coalition est complété, sinon il est créé ; une route importée devient une route du Route Planner. Du briefing viennent les groupes, leur nombre d'appareils, leur type (pour un groupe sans escadron, l'appareil choisi au brief Standard) et le plan radio de leur type (au brief Standard, les fréquences avec leur radio et leur canal) ; un appareil que la suite ne connaît pas sous ce nom arrive sans type, à choisir. Une unité sans type se règle une fois son type choisi ; le paquet ne s'exporte qu'une fois chaque type choisi. <strong>Exporter</strong> écrit le paquet pour le Mission Commander ; <strong>Effacer</strong> demande confirmation, puis efface les groupes, les routes de tous les théâtres, les dessins, symboles et calques du Route Planner et toutes les datacards : le Flight Configurator, le Route Planner et le Datacard Generator d’un coup (vos presets, le théâtre, les unités et les réglages restent ; HQ, le Briefing Generator et Recon Station ne changent pas). Retirer un groupe (✕) le retire aussi du Route Planner et du Datacard Generator, sa datacard comprise. Une source chargée se replie en une ligne (« changer » la rouvre) pour laisser la place à la liste. Le théâtre se choisit dans la barre, comme au Route Planner et au Datacard Generator, et les trois le partagent ; si les groupes sont sur un autre théâtre, un bandeau propose d’y revenir ou de retirer leurs routes.</p></div>
-        <div class="lang-block" data-lang="en"><p><strong>Open ▾ › Open a configuration…</strong> and <strong>Save</strong> handle the module's <strong>working file</strong> (a <code>.json</code> that carries your groups and “My presets”). <kbd>Ctrl</kbd>+<kbd>S</kbd> (<kbd>Cmd</kbd>+<kbd>S</kbd> on a Mac) does the same as <strong>Save</strong>. In the Flight Configurator, <strong>Open ▾ › Import groups…</strong> opens the same window as <strong>Open ▾ › Import routes…</strong> in the Route Planner: the mission loaded in HQ, the Briefing Generator's current briefing, or a file (flight package <code>.json</code> or <code>.zip</code>, briefing). Tick the groups and, for each, what it brings (route, radios, loadout, livery). A group with the same name (case included) and coalition is completed, otherwise it is created; an imported route becomes a Route Planner route. A briefing brings its groups, their number of aircraft, their type (for a group without a squadron, the aircraft picked in the Standard brief) and the radio plan of their type (in the Standard brief, the frequencies with their radio and channel); an aircraft the suite does not know by that name arrives without a type, to be picked. A unit without a type is set up once its type is picked; the package exports only once every type is picked. <strong>Export</strong> writes the package for the Mission Commander; <strong>Clear</strong> asks for confirmation, then clears the groups, the routes of every theatre, the Route Planner’s drawings, symbols and layers, and all the datacards: the Flight Configurator, the Route Planner and the Datacard Generator at once (your presets, the theatre, the units and the settings stay; HQ, the Briefing Generator and Recon Station do not change). Removing a group (✕) removes it from the Route Planner and the Datacard Generator too, its datacard included. A loaded source folds into one line (“change” reopens it) to leave room for the list. The theatre is picked in the toolbar, as in the Route Planner and the Datacard Generator, and all three share it; if the groups are on another theatre, a banner offers to go back to it or to remove their routes.</p></div>
+        <div class="lang-block" data-lang="fr"><p><strong>Sauvegarder</strong> écrit le <strong>fichier de travail</strong> de toute la suite (voir « Par où commencer »), que <strong>Ouvrir ▾ › Ouvrir un travail…</strong> rouvre ; <strong>Ouvrir ▾ › Ouvrir une configuration…</strong> lit encore l’ancien fichier de travail du module (un <code>.json</code> qui porte vos groupes et « Mes presets »). <kbd>Ctrl</kbd>+<kbd>S</kbd> (<kbd>Cmd</kbd>+<kbd>S</kbd> sur Mac) fait le même geste que <strong>Sauvegarder</strong>. Au Flight Configurator, <strong>Ouvrir ▾ › Importer des groupes…</strong> ouvre la même fenêtre que <strong>Ouvrir ▾ › Importer des routes…</strong> au Route Planner : la mission chargée dans HQ, le briefing en cours du Briefing Generator, ou un fichier (paquet de vol <code>.json</code> ou <code>.zip</code>, briefing). Cochez les groupes et, pour chacun, ce qu'il apporte (route, radios, emport, livrée). Un groupe de même nom (majuscules comprises) et de même coalition est complété, sinon il est créé ; une route importée devient une route du Route Planner. Du briefing viennent les groupes, leur nombre d'appareils, leur type (pour un groupe sans escadron, l'appareil choisi au brief Standard) et le plan radio de leur type (au brief Standard, les fréquences avec leur radio et leur canal) ; un appareil que la suite ne connaît pas sous ce nom arrive sans type, à choisir. Une unité sans type se règle une fois son type choisi ; le paquet ne s'exporte qu'une fois chaque type choisi. <strong>Exporter</strong> écrit le paquet pour le Mission Commander ; <strong>Effacer</strong> demande confirmation, puis efface les groupes, les routes de tous les théâtres, les dessins, symboles et calques du Route Planner et toutes les datacards : le Flight Configurator, le Route Planner et le Datacard Generator d’un coup (vos presets, le théâtre, les unités et les réglages restent ; HQ, le Briefing Generator et Recon Station ne changent pas). Retirer un groupe (✕) le retire aussi du Route Planner et du Datacard Generator, sa datacard comprise. Une source chargée se replie en une ligne (« changer » la rouvre) pour laisser la place à la liste. Le théâtre se choisit dans la barre, comme au Route Planner et au Datacard Generator, et les trois le partagent ; si les groupes sont sur un autre théâtre, un bandeau propose d’y revenir ou de retirer leurs routes.</p></div>
+        <div class="lang-block" data-lang="en"><p><strong>Save</strong> writes the <strong>work file</strong> of the whole suite (see “Where to start”), which <strong>Open ▾ › Open a work file…</strong> brings back; <strong>Open ▾ › Open a configuration…</strong> still reads the module's old working file (a <code>.json</code> that carries your groups and “My presets”). <kbd>Ctrl</kbd>+<kbd>S</kbd> (<kbd>Cmd</kbd>+<kbd>S</kbd> on a Mac) does the same as <strong>Save</strong>. In the Flight Configurator, <strong>Open ▾ › Import groups…</strong> opens the same window as <strong>Open ▾ › Import routes…</strong> in the Route Planner: the mission loaded in HQ, the Briefing Generator's current briefing, or a file (flight package <code>.json</code> or <code>.zip</code>, briefing). Tick the groups and, for each, what it brings (route, radios, loadout, livery). A group with the same name (case included) and coalition is completed, otherwise it is created; an imported route becomes a Route Planner route. A briefing brings its groups, their number of aircraft, their type (for a group without a squadron, the aircraft picked in the Standard brief) and the radio plan of their type (in the Standard brief, the frequencies with their radio and channel); an aircraft the suite does not know by that name arrives without a type, to be picked. A unit without a type is set up once its type is picked; the package exports only once every type is picked. <strong>Export</strong> writes the package for the Mission Commander; <strong>Clear</strong> asks for confirmation, then clears the groups, the routes of every theatre, the Route Planner’s drawings, symbols and layers, and all the datacards: the Flight Configurator, the Route Planner and the Datacard Generator at once (your presets, the theatre, the units and the settings stay; HQ, the Briefing Generator and Recon Station do not change). Removing a group (✕) removes it from the Route Planner and the Datacard Generator too, its datacard included. A loaded source folds into one line (“change” reopens it) to leave room for the list. The theatre is picked in the toolbar, as in the Route Planner and the Datacard Generator, and all three share it; if the groups are on another theatre, a banner offers to go back to it or to remove their routes.</p></div>
       </div>
 
       <!-- Radios -->
@@ -2613,16 +2684,16 @@ kbd {{
 
       <!-- Identité d’escadre HQ — CALLOUT -->
       <div class="fm-callout note">
-        <div class="lang-block" data-lang="fr">L’escadre se gère dans HQ — la création et la modification de l’escadre (logo, noms, escadrons) se font désormais dans le module HQ. Ici, l’onglet Wing n’affiche plus que le branding hérité, en lecture seule, et se met à jour automatiquement quand HQ change. (En usage autonome, l’import manuel d’une config <code>.json</code> reste un dépannage possible.)</div>
-        <div class="lang-block" data-lang="en">The wing lives in HQ — creating and editing the wing (logo, names, squadrons) now happens in the HQ module. Here, the Wing tab only shows the inherited branding, read-only, and updates automatically when HQ changes. (In standalone use, importing a <code>.json</code> config remains a possible fallback.)</div>
+        <div class="lang-block" data-lang="fr">L’escadre se gère dans HQ — la création et la modification de l’escadre (logo, noms, escadrons) se font désormais dans le module HQ. Ici, l’onglet Wing n’affiche plus que le branding hérité, en lecture seule, et se met à jour automatiquement quand HQ change.</div>
+        <div class="lang-block" data-lang="en">The wing lives in HQ — creating and editing the wing (logo, names, squadrons) now happens in the HQ module. Here, the Wing tab only shows the inherited branding, read-only, and updates automatically when HQ changes.</div>
       </div>
 
       <!-- Sauvegarder & reprendre -->
       <div class="fm-prose">
         <h3 class="lang-block" data-lang="fr">Sauvegarder &amp; reprendre</h3>
         <h3 class="lang-block" data-lang="en">Save &amp; resume</h3>
-        <div class="lang-block" data-lang="fr"><p>Le briefing est <strong>sauvegardé automatiquement</strong> dans le navigateur. <strong>Sauvegarder</strong> l’écrit en fichier <code>.json</code> pour l’archiver, le partager ou le reprendre sur une autre machine ; <strong>Ouvrir</strong> le relit. Le format choisi voyage avec le fichier. <kbd>Ctrl</kbd>+<kbd>S</kbd> (<kbd>Cmd</kbd>+<kbd>S</kbd> sur Mac) fait le même geste que <strong>Sauvegarder</strong>.</p></div>
-        <div class="lang-block" data-lang="en"><p>The briefing is <strong>saved automatically</strong> in the browser. <strong>Save</strong> writes it to a <code>.json</code> file to archive, share, or resume it on another machine; <strong>Open</strong> reads it back. The chosen format travels with the file. <kbd>Ctrl</kbd>+<kbd>S</kbd> (<kbd>Cmd</kbd>+<kbd>S</kbd> on a Mac) does the same as <strong>Save</strong>.</p></div>
+        <div class="lang-block" data-lang="fr"><p>Le briefing est <strong>sauvegardé automatiquement</strong> dans le navigateur. <strong>Sauvegarder</strong> l’écrit, avec tout le travail de Mission Plan, dans un fichier <code>.json</code> pour l’archiver, le partager ou le reprendre sur une autre machine ; <strong>Ouvrir ▾ › Ouvrir un travail…</strong> le relit, et <strong>Ouvrir ▾ › Ouvrir un briefing…</strong> lit encore un ancien fichier de briefing. Le format choisi voyage avec le fichier. <kbd>Ctrl</kbd>+<kbd>S</kbd> (<kbd>Cmd</kbd>+<kbd>S</kbd> sur Mac) fait le même geste que <strong>Sauvegarder</strong>.</p></div>
+        <div class="lang-block" data-lang="en"><p>The briefing is <strong>saved automatically</strong> in the browser. <strong>Save</strong> writes it, with all the Mission Plan work, to a <code>.json</code> file to archive, share, or resume it on another machine; <strong>Open ▾ › Open a work file…</strong> reads it back, and <strong>Open ▾ › Open a briefing…</strong> still reads an old briefing file. The chosen format travels with the file. <kbd>Ctrl</kbd>+<kbd>S</kbd> (<kbd>Cmd</kbd>+<kbd>S</kbd> on a Mac) does the same as <strong>Save</strong>.</p></div>
       </div>
 
       <!-- Exporter -->
@@ -2867,8 +2938,8 @@ kbd {{
       <div class="fm-prose">
         <h3 class="lang-block" data-lang="fr">Sauvegarder &amp; reprendre</h3>
         <h3 class="lang-block" data-lang="en">Save &amp; resume</h3>
-        <div class="lang-block" data-lang="fr"><p>Le paquet est <strong>sauvegardé automatiquement</strong> dans le navigateur. <strong>Sauvegarder</strong> l’écrit en fichier pour l’archiver ou le partager (<kbd>Ctrl</kbd>+<kbd>S</kbd>, <kbd>Cmd</kbd>+<kbd>S</kbd> sur Mac, fait le même geste) ; <strong>Ouvrir ▾ › Ouvrir une datacard…</strong> le rouvre ; il remplace le paquet en cours, après confirmation si celui-ci n’est pas vierge. <strong>Exemple</strong> ouvre une datacard de démonstration ; <strong>Effacer</strong> efface toutes les datacards, libres et liées, et avec elles les groupes et les routes du Flight Configurator et du Route Planner (le théâtre, les unités et les réglages restent). Tous deux demandent confirmation.</p></div>
-        <div class="lang-block" data-lang="en"><p>The deck is <strong>saved automatically</strong> in the browser. <strong>Save</strong> writes it to a file to archive or share it (<kbd>Ctrl</kbd>+<kbd>S</kbd>, <kbd>Cmd</kbd>+<kbd>S</kbd> on a Mac, does the same); <strong>Open ▾ › Open a datacard…</strong> reopens it; it replaces the current deck, after confirmation unless that deck is blank. <strong>Example</strong> opens a demonstration datacard; <strong>Clear</strong> clears all the datacards, free and linked, and with them the groups and routes of the Flight Configurator and the Route Planner (the theatre, the units and the settings stay). Both ask for confirmation.</p></div>
+        <div class="lang-block" data-lang="fr"><p>Le paquet est <strong>sauvegardé automatiquement</strong> dans le navigateur. <strong>Sauvegarder</strong> l’écrit, avec tout le travail de Mission Plan, en fichier pour l’archiver ou le partager (<kbd>Ctrl</kbd>+<kbd>S</kbd>, <kbd>Cmd</kbd>+<kbd>S</kbd> sur Mac, fait le même geste) ; <strong>Ouvrir ▾ › Ouvrir un travail…</strong> le rouvre ; <strong>Ouvrir ▾ › Ouvrir une datacard…</strong> lit encore un ancien fichier de datacards, qui remplace le paquet en cours, après confirmation si celui-ci n’est pas vierge. <strong>Exemple</strong> ouvre une datacard de démonstration ; <strong>Effacer</strong> efface toutes les datacards, libres et liées, et avec elles les groupes et les routes du Flight Configurator et du Route Planner (le théâtre, les unités et les réglages restent). Tous deux demandent confirmation.</p></div>
+        <div class="lang-block" data-lang="en"><p>The deck is <strong>saved automatically</strong> in the browser. <strong>Save</strong> writes it, with all the Mission Plan work, to a file to archive or share it (<kbd>Ctrl</kbd>+<kbd>S</kbd>, <kbd>Cmd</kbd>+<kbd>S</kbd> on a Mac, does the same); <strong>Open ▾ › Open a work file…</strong> reopens it; <strong>Open ▾ › Open a datacard…</strong> still reads an old datacards file, which replaces the current deck, after confirmation unless that deck is blank. <strong>Example</strong> opens a demonstration datacard; <strong>Clear</strong> clears all the datacards, free and linked, and with them the groups and routes of the Flight Configurator and the Route Planner (the theatre, the units and the settings stay). Both ask for confirmation.</p></div>
       </div>
 
       <!-- Exporter -->
@@ -2963,8 +3034,8 @@ kbd {{
       <div class="fm-prose">
         <h3 class="lang-block" data-lang="fr">Construire la route</h3>
         <h3 class="lang-block" data-lang="en">Building the route</h3>
-        <div class="lang-block" data-lang="fr"><p>En tête de la section <strong>Route</strong>, une ligne choisit la route : « 1 · FOOTHOLD M3 ▾ » ouvre la liste des routes du théâtre ; <strong>+</strong> ajoute une route ; <strong>…</strong> ouvre <strong>Dupliquer</strong> et <strong>Supprimer</strong> ; dessous, « 1 / 1 routes » donne le rang de la route choisie et le total. Il y a 12 routes au plus : <strong>+</strong> se grise alors, et son info-bulle le dit.</p><p>Touchez la carte pour ajouter un point ; glissez un point pour le déplacer ; le « + » posé sur une branche assez longue insère un point ; il ne paraît qu’en modes <strong>Point</strong> et <strong>Réf.</strong> La route compte <strong>30 points</strong> au plus. Sans toucher la carte, le bloc <strong>Ajouter</strong> place un point par ses <strong>Coordonnées</strong> — MGRS, DMS, DDM ou décimal — ou par <strong>Cap et distance</strong> depuis le dernier point, le cap s’entendant comme celui de la navigation, vrai ou magnétique ; <strong>+ Point</strong> l’ajoute à la route, <strong>+ Réf.</strong> en fait une référence.</p><p>Chaque point a sa ligne dans la section <strong>Route</strong> : un <strong>Nom</strong>, une altitude et sa référence, <strong>SOL</strong> ou <strong>MER</strong>, une vitesse (laissée vide, c’est la vitesse sol de la route ; le point de départ n’en a pas), et × pour le supprimer. Les unités, km ou NM, m ou ft, se choisissent dans le menu <strong>Affichage ▾</strong>, groupe <strong>Unités</strong>. Le champ <strong>Nom de la route</strong> donne son nom à la route. <strong>Groupes…</strong> choisit les groupes qui suivent cette route, ou en crée un ; un groupe ne suit qu'une route. Le Flight Configurator voit le même choix, et ce qu'il change se voit ici. <strong>Exemple</strong> ouvre une route de démonstration et demande confirmation. <strong>Effacer</strong> ouvre une fenêtre : cochez ce qui s’efface (la route sélectionnée, toutes les routes du théâtre, les références, les dessins, les symboles, les calques importés), puis <strong>Effacer la sélection</strong> ; <strong>Tout effacer</strong> demande confirmation et efface, du Route Planner, du Flight Configurator et du Datacard Generator, les groupes, les routes de tous les théâtres, les références, dessins, symboles et calques, et toutes les datacards. Une route qui disparaît (<strong>Supprimer</strong>, <strong>Effacer la sélection</strong>, <strong>Exemple</strong>, l’ouverture d’un jeu de routes) est aussi retirée des groupes qui la suivent. Les unités sont partagées avec le Datacard Generator. Chaque route garde son théâtre : en changer masque les routes des autres théâtres, qui reviennent quand on y retourne. Un fichier de routes garde le théâtre de chacune : à l’ouverture, chaque route retrouve le sien, et ouvrir un jeu de routes remplace toutes les routes, de tous les théâtres.</p></div>
-        <div class="lang-block" data-lang="en"><p>At the top of the <strong>Route</strong> section, one line picks the route: “1 · FOOTHOLD M3 ▾” opens the list of the theatre’s routes; <strong>+</strong> adds a route; <strong>…</strong> opens <strong>Duplicate</strong> and <strong>Delete</strong>; below, “1 / 1 routes” gives the rank of the chosen route and the total. There are 12 routes at most: <strong>+</strong> is then greyed out, and its tooltip says so.</p><p>Tap the map to add a waypoint; drag a waypoint to move it; the “+” placed on a long enough leg inserts a waypoint; it only shows in <strong>Waypoint</strong> and <strong>Ref.</strong> modes. The route holds <strong>30 waypoints</strong> at most. Without tapping the map, the <strong>Add</strong> block places a point by its <strong>Coordinates</strong> — MGRS, DMS, DDM or decimal — or by <strong>Heading and distance</strong> from the last waypoint, the heading being read like the navigation’s, true or magnetic; <strong>+ Waypoint</strong> adds it to the route, <strong>+ Ref.</strong> makes it a reference point.</p><p>Each waypoint has its row in the <strong>Route</strong> section: a <strong>Name</strong>, an altitude and its reference, <strong>AGL</strong> or <strong>MSL</strong>, a speed (left empty, it is the route’s ground speed; the starting point has none), and × to delete it. Units, km or NM, m or ft, are chosen in the <strong>Display ▾</strong> menu, <strong>Units</strong> group. The <strong>Route name</strong> field names the route. <strong>Groups…</strong> picks the groups that follow this route, or creates one; a group follows one route. The Flight Configurator sees the same choice, and what it changes shows here. <strong>Example</strong> opens a demonstration route and asks for confirmation. <strong>Clear</strong> opens a window: tick what is cleared (the selected route, all the theatre’s routes, the references, the drawings, the symbols, the imported layers), then <strong>Clear selected</strong>; <strong>Clear all</strong> asks for confirmation and clears, from the Route Planner, the Flight Configurator and the Datacard Generator, the groups, the routes of every theatre, the references, drawings, symbols and layers, and all the datacards. A route that disappears (<strong>Delete</strong>, <strong>Clear selected</strong>, <strong>Example</strong>, opening a route set) is removed from the groups that follow it too. Units are shared with the Datacard Generator. Each route keeps its theatre: switching theatre hides the other theatres' routes, which come back when you return. A route file keeps each route's theatre: on opening, every route returns to its own, and opening a route set replaces all routes, on every theatre.</p></div>
+        <div class="lang-block" data-lang="fr"><p>En tête de la section <strong>Route</strong>, une ligne choisit la route : « 1 · FOOTHOLD M3 ▾ » ouvre la liste des routes du théâtre ; <strong>+</strong> ajoute une route ; <strong>…</strong> ouvre <strong>Dupliquer</strong> et <strong>Supprimer</strong> ; dessous, « 1 / 1 routes » donne le rang de la route choisie et le total. Il y a 12 routes au plus : <strong>+</strong> se grise alors, et son info-bulle le dit.</p><p>Touchez la carte pour ajouter un point ; glissez un point pour le déplacer ; le « + » posé sur une branche assez longue insère un point ; il ne paraît qu’en modes <strong>Point</strong> et <strong>Réf.</strong> La route compte <strong>30 points</strong> au plus. Sans toucher la carte, le bloc <strong>Ajouter</strong> place un point par ses <strong>Coordonnées</strong> — MGRS, DMS, DDM ou décimal — ou par <strong>Cap et distance</strong> depuis le dernier point, le cap s’entendant comme celui de la navigation, vrai ou magnétique ; <strong>+ Point</strong> l’ajoute à la route, <strong>+ Réf.</strong> en fait une référence.</p><p>Chaque point a sa ligne dans la section <strong>Route</strong> : un <strong>Nom</strong>, une altitude et sa référence, <strong>SOL</strong> ou <strong>MER</strong>, une vitesse (laissée vide, c’est la vitesse sol de la route ; le point de départ n’en a pas), et × pour le supprimer. Les unités, km ou NM, m ou ft, se choisissent dans le menu <strong>Affichage ▾</strong>, groupe <strong>Unités</strong>. Le champ <strong>Nom de la route</strong> donne son nom à la route. <strong>Groupes…</strong> choisit les groupes qui suivent cette route, ou en crée un ; un groupe ne suit qu'une route. Le Flight Configurator voit le même choix, et ce qu'il change se voit ici. <strong>Exemple</strong> ouvre une route de démonstration et demande confirmation. <strong>Effacer</strong> ouvre une fenêtre : cochez ce qui s’efface (la route sélectionnée, toutes les routes du théâtre, les références, les dessins, les symboles, les calques importés), puis <strong>Effacer la sélection</strong> ; <strong>Tout effacer</strong> demande confirmation et efface, du Route Planner, du Flight Configurator et du Datacard Generator, les groupes, les routes de tous les théâtres, les références, dessins, symboles et calques, et toutes les datacards. Une route qui disparaît (<strong>Supprimer</strong>, <strong>Effacer la sélection</strong>, <strong>Exemple</strong>, l’ouverture d’un jeu de routes) est aussi retirée des groupes qui la suivent. Les unités sont partagées avec le Datacard Generator. Chaque route garde son théâtre : en changer masque les routes des autres théâtres, qui reviennent quand on y retourne. Le fichier de travail garde le théâtre de chaque route : à l’ouverture, chaque route retrouve le sien, et ouvrir un travail, ou un ancien jeu de routes, remplace toutes les routes, de tous les théâtres.</p></div>
+        <div class="lang-block" data-lang="en"><p>At the top of the <strong>Route</strong> section, one line picks the route: “1 · FOOTHOLD M3 ▾” opens the list of the theatre’s routes; <strong>+</strong> adds a route; <strong>…</strong> opens <strong>Duplicate</strong> and <strong>Delete</strong>; below, “1 / 1 routes” gives the rank of the chosen route and the total. There are 12 routes at most: <strong>+</strong> is then greyed out, and its tooltip says so.</p><p>Tap the map to add a waypoint; drag a waypoint to move it; the “+” placed on a long enough leg inserts a waypoint; it only shows in <strong>Waypoint</strong> and <strong>Ref.</strong> modes. The route holds <strong>30 waypoints</strong> at most. Without tapping the map, the <strong>Add</strong> block places a point by its <strong>Coordinates</strong> — MGRS, DMS, DDM or decimal — or by <strong>Heading and distance</strong> from the last waypoint, the heading being read like the navigation’s, true or magnetic; <strong>+ Waypoint</strong> adds it to the route, <strong>+ Ref.</strong> makes it a reference point.</p><p>Each waypoint has its row in the <strong>Route</strong> section: a <strong>Name</strong>, an altitude and its reference, <strong>AGL</strong> or <strong>MSL</strong>, a speed (left empty, it is the route’s ground speed; the starting point has none), and × to delete it. Units, km or NM, m or ft, are chosen in the <strong>Display ▾</strong> menu, <strong>Units</strong> group. The <strong>Route name</strong> field names the route. <strong>Groups…</strong> picks the groups that follow this route, or creates one; a group follows one route. The Flight Configurator sees the same choice, and what it changes shows here. <strong>Example</strong> opens a demonstration route and asks for confirmation. <strong>Clear</strong> opens a window: tick what is cleared (the selected route, all the theatre’s routes, the references, the drawings, the symbols, the imported layers), then <strong>Clear selected</strong>; <strong>Clear all</strong> asks for confirmation and clears, from the Route Planner, the Flight Configurator and the Datacard Generator, the groups, the routes of every theatre, the references, drawings, symbols and layers, and all the datacards. A route that disappears (<strong>Delete</strong>, <strong>Clear selected</strong>, <strong>Example</strong>, opening a route set) is removed from the groups that follow it too. Units are shared with the Datacard Generator. Each route keeps its theatre: switching theatre hides the other theatres' routes, which come back when you return. The work file keeps each route's theatre: on opening, every route returns to its own, and opening a work file, or an old route set, replaces all routes, on every theatre.</p></div>
       </div>
 
       <!-- Les points de référence -->
@@ -3079,7 +3150,9 @@ var I18N = {{
   fr: {{
     'brand.name':       'Field Manual',
     'brand.sub':        '░ MANUEL OPÉRATIONNEL',
-    'index.title':      'Modules documentés',
+    'index.start.name': 'Par où commencer',
+    'index.start.desc': "Les deux rôles, l'ordre des outils, le fichier de travail",
+    'start.hero.title': 'Par où commencer',
     'index.badge.active': 'Manuel',
     'index.hq.desc':    'Wing Command Center — configuration escadre',
     'index.fc.desc':    'Un groupe prêt à appliquer : radios, emport, livrée',
@@ -3114,7 +3187,9 @@ var I18N = {{
   en: {{
     'brand.name':       'Field Manual',
     'brand.sub':        '░ OPERATIONAL MANUAL',
-    'index.title':      'Documented Modules',
+    'index.start.name': 'Where to start',
+    'index.start.desc': 'The two roles, the order of the tools, the work file',
+    'start.hero.title': 'Where to start',
     'index.badge.active': 'Manual',
     'index.hq.desc':    'Wing Command Center — wing configuration',
     'index.fc.desc':    'A group ready to apply: radios, loadout, livery',
@@ -3226,7 +3301,7 @@ function initTheme() {{
 }}
 
 // ── Routing hash ──────────────────────────────
-var PAGES = ['index', 'rs', 'hq', 'fc', 'bg', 'dg', 'rp'];
+var PAGES = ['index', 'start', 'rs', 'hq', 'fc', 'bg', 'dg', 'rp'];
 
 function showPage(id) {{
   if (PAGES.indexOf(id) === -1) id = 'index';
