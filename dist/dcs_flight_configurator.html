@@ -627,7 +627,8 @@ body[data-theme] {
 .cmp-row > .cmp-kg { grid-column: 3; grid-row: 1; text-align: right; font-family: var(--f-typewriter); font-size: 12px; color: var(--paper); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .cmp-row > .cmp-sub { grid-column: 2 / 4; grid-row: 2; }
 .cmp-sub { display: flex; align-items: center; flex-wrap: wrap; gap: 2px 10px; font-family: var(--f-typewriter); font-size: 11px; color: var(--khaki-light); }
-.cmp-sub[hidden], .cmp-mirror[hidden], .cmp-nomirror[hidden] { display: none; }
+.cmp-sub[hidden], .cmp-mirror[hidden], .cmp-nomirror[hidden], .cmp-oneof[hidden] { display: none; }
+.cmp-row > .cmp-oneof, .cmp-row > .cmp-rule { grid-column: 2 / 4; font-family: var(--f-typewriter); font-size: 11px; line-height: 1.35; color: var(--mp-warn); overflow-wrap: anywhere; }
 /* une arme au nom long passe sur deux lignes au lieu d'être coupée */
 .cmp-row .fc-sel.tbm-trigger.tbm-field { display: flex; align-items: center; line-height: 1.25; padding-top: 5px; padding-bottom: 5px; min-height: 40px; }
 .cmp-row .fc-sel.tbm-trigger.tbm-field .tbm-lbl { line-height: 1.25; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; text-overflow: clip; }
@@ -11298,6 +11299,26 @@ const I18N = {
   "cmp.offTable": "(hors table)",
   "cmp.sym": "Symétrique",
   "cmp.mass": "Masse des emports :",
+  "cmp.oneOf": "Une seule porte : retiré de la station {0}",
+  "cmp.clash": "incompatible avec {0}",
+  "cmp.rule": "Incompatible avec la station {0} : {1}",
+  "cmp.need": "Exige en station {0} : {1}",
+  "cmp.or": " ou ",
+  "cmp.others": "{0} autres",
+  "cmp.blocked": "Corrigez les stations signalées pour garder cet emport dans vos presets",
+  "rule.game": "l'éditeur de mission de DCS refuse ce mélange",
+  "rule.ajs37-mix": "une seule arme air-sol à la fois sur l'AJS37, sauf l'AKAN avec la RB 75 ou la RB 05",
+  "rule.mig21-ecm": "le SPS-141 ou l'ASO-2, pas les deux",
+  "rule.mi24-guv": "seul le GUV resterait utilisable",
+  "rule.mi24-kmgu": "seul le KMGU-2 resterait utilisable",
+  "rule.mi24-s24": "seule la S-24B resterait utilisable",
+  "rule.mi24-s8": "seules les S-8 resteraient utilisables",
+  "rule.mi24-s13": "seules les S-13 resteraient utilisables",
+  "rule.mi24-r60": "seules les R-60 resteraient utilisables",
+  "rule.mi24-atgm": "seuls les missiles des stations 2 et 5 resteraient utilisables",
+  "rule.mi24-r60-asym": "emport asymétrique : seules les R-60 resteraient utilisables (Symétrique pose les deux côtés)",
+  "rule.mi24-atgm-asym": "emport asymétrique : seuls les missiles des stations 2 et 5 resteraient utilisables (Symétrique pose les deux côtés)",
+  "rule.mi24-bombs": "les bombes des stations 3 et 4 ne se largueraient pas",
   "lo.pylon": "Station {0}",
   "cmp.credit": "Illustration : Goldwolf, DCS Reference Guide — avec son accord",
   "cmp.mirror": "↔ station jumelle : {0}",
@@ -11562,6 +11583,26 @@ const I18N = {
   "cmp.offTable": "(not in table)",
   "cmp.sym": "Symmetric",
   "cmp.mass": "Loadout weight:",
+  "cmp.oneOf": "One door only: removed from station {0}",
+  "cmp.clash": "clashes with {0}",
+  "cmp.rule": "Clashes with station {0}: {1}",
+  "cmp.need": "Needs at station {0}: {1}",
+  "cmp.or": " or ",
+  "cmp.others": "{0} others",
+  "cmp.blocked": "Fix the flagged stations to keep this loadout in your presets",
+  "rule.game": "the DCS mission editor does not allow this combination",
+  "rule.ajs37-mix": "one air-to-ground weapon at a time on the AJS37, except the AKAN with the RB 75 or the RB 05",
+  "rule.mig21-ecm": "the SPS-141 or the ASO-2, not both",
+  "rule.mi24-guv": "only the GUV pod would remain usable",
+  "rule.mi24-kmgu": "only the KMGU-2 would remain usable",
+  "rule.mi24-s24": "only the S-24B would remain usable",
+  "rule.mi24-s8": "only the S-8 rockets would remain usable",
+  "rule.mi24-s13": "only the S-13 rockets would remain usable",
+  "rule.mi24-r60": "only the R-60 missiles would remain usable",
+  "rule.mi24-atgm": "only the missiles on stations 2 and 5 would remain usable",
+  "rule.mi24-r60-asym": "asymmetric loadout: only the R-60 missiles would remain usable (Symmetric fits both sides)",
+  "rule.mi24-atgm-asym": "asymmetric loadout: only the missiles on stations 2 and 5 would remain usable (Symmetric fits both sides)",
+  "rule.mi24-bombs": "the bombs on stations 3 and 4 would not release",
   "lo.pylon": "Station {0}",
   "cmp.credit": "Illustration: Goldwolf, DCS Reference Guide — used with permission",
   "cmp.mirror": "↔ twin station: {0}",
@@ -11709,7 +11750,7 @@ const UI = {
   fold: new WeakMap(),      // vol → 'open' | 'closed'
   clamped: 0,               // réglages d'emport ramenés à la limite (ligne d'état)
   exportTried: false,       // un clic sur Exporter avec des manques : le bandeau passe en rouge, jusqu'à ce que les manques soient levés (jamais enregistré)
-  cmp: { sym: true, st: null, saving: false, name: '', err: '' },
+  cmp: { sym: true, st: null, saving: false, name: '', err: '', oneOf: null },
   rtChoose: null            // le fcId du groupe dont on choisit la route (« Changer de route ») ; un groupe sans route est toujours au choix
 };
 
@@ -13094,7 +13135,7 @@ function selectUnit(fi, ui) {
     fe.querySelectorAll('.fc-unit').forEach(ue => ue.classList.toggle('sel', Number(fe.getAttribute('data-f')) === fi && Number(ue.getAttribute('data-u')) === ui));
     fe.querySelectorAll('.fc-nounit').forEach(ue => ue.classList.toggle('sel', Number(fe.getAttribute('data-f')) === fi));
   });
-  if (changed) { Object.assign(UI.cmp, { saving: false, err: '', st: null }); renderRight(); saveWork(); }
+  if (changed) { Object.assign(UI.cmp, { saving: false, err: '', st: null, oneOf: null }); renderRight(); saveWork(); }
 }
 
 
@@ -13136,6 +13177,84 @@ function cmpNoMirror(lo, n, clsid) {
   return !!twin && payloadMirrorClsid(clsid, twin.allowed) === '';
 }
 function cmpClsid(lo, n) { return lo && lo.pylons[n] && lo.pylons[n].CLSID ? String(lo.pylons[n].CLSID) : ''; }
+
+// ----- Règles d'emport (payload_rules_block.py, recopié du Loadout Editor) : la porte unique, les incompatibilités, les exigences -----
+// Les stations de l'emport comme le bloc des règles les lit : { station: CLSID, '' si vide } pour chaque station du type.
+function cmpStations(lo) {
+  const st = {};
+  CMP.pyl.forEach(p => { st[p.n] = cmpClsid(lo, p.n); });
+  return st;
+}
+// Le type a des règles, écrites (PAYLOAD_RULES) ou du jeu (PAYLOAD_GAME_RULES)
+const cmpRuled = () => has(PAYLOAD_RULES, CMP.type) || has(PAYLOAD_GAME_RULES, CMP.type);
+// Les stations en conflit, jointes par « , »
+const cmpStationsOf = cl => cl.map(x => x.st).filter((m, i, a) => a.indexOf(m) === i).join(', ');
+// Le libellé d'une option avant que sa raison d'être grisée n'y soit ajoutée
+const cmpOptBase = new WeakMap();
+// La station jumelle de `n` quand « Symétrique » est coché (et que le type a une vue), sinon null.
+function cmpTwin(n) {
+  return (UI.cmp.sym && CMP.view && has(CMP.pairs, n)) ? (CMP.pyl.filter(x => x.n === CMP.pairs[n])[0] || null) : null;
+}
+// Les conflits de la situation (A) : `c` en `n` ET le miroir `m` sur la jumelle `tw` (emport simulé) : [{ st, rule }]
+function cmpClashPair(st, n, c, tw, m) {
+  const sim = Object.assign({}, st);
+  sim[n] = c; sim[tw.n] = m;
+  const out = payloadRuleConflicts(CMP.type, sim, n, c);
+  // un conflit du miroir avec le choix lui-même est porté par la jumelle
+  payloadRuleConflicts(CMP.type, sim, tw.n, m).forEach(x => {
+    const e = { st: x.st === String(n) ? tw.n : x.st, rule: x.rule };
+    if (!out.some(y => y.st === e.st && y.rule === e.rule)) out.push(e);
+  });
+  return out.sort((a, b) => (Number(a.st) - Number(b.st)) || (a.rule < b.rule ? -1 : a.rule > b.rule ? 1 : 0));
+}
+// Les conflits qu'entraînerait le choix `c` à la station `n` de l'emport `st` : [{ st, rule }] ; [] s'il est permis. Le grisé de cmpUpdate et le refus de cmpChoose font ce même calcul.
+// Symétrique coché, si `n` a une jumelle où `c` a un miroir `m` (payloadMirrorClsid), le choix est permis si l'une des deux situations est sans conflit :
+// (A) `c` en `n` ET `m` sur la jumelle ; (B) `c` en `n`, la jumelle inchangée. Si (A) et (B) ont des conflits, ceux de (A) sont rendus ; sinon [].
+// Sans « Symétrique », ou sans miroir : `c` seul en `n`.
+function cmpChoiceClash(st, n, c) {
+  if (c === '' || !cmpRuled()) return [];
+  const tw = cmpTwin(n);
+  const m = tw ? payloadMirrorClsid(c, tw.allowed) : '';
+  if (!tw || m === '') return payloadRuleConflicts(CMP.type, st, n, c);
+  const a = cmpClashPair(st, n, c, tw, m);
+  if (!a.length) return [];
+  return payloadRuleConflicts(CMP.type, st, n, c).length ? a : [];
+}
+// Une exigence : la station et les armes dont l'une est exigée (trois au plus ; au-delà, les deux premières et le nombre des autres)
+function cmpNeedText(m) {
+  const ws = m.need.map(c => weaponLabel(CMP.type, c));
+  const list = ws.length <= 3 ? ws.join(t('cmp.or')) : ws.slice(0, 2).join(t('cmp.or')) + t('cmp.or') + t('cmp.others').replace('{0}', ws.length - 2);
+  return t('cmp.need').replace(/\{(\d)\}/g, (x, k) => k === '0' ? m.st : list);
+}
+// Les règles de la station `n` : son contenu seul, avec les autres stations — une phrase par règle en conflit, puis une par exigence
+function cmpRuleText(st, n) {
+  const cl = payloadRuleConflicts(CMP.type, st, n, st[n]);
+  const ids = cl.map(x => x.rule).filter((r, i, a) => a.indexOf(r) === i);
+  return ids.map(id => t('cmp.rule').replace(/\{(\d)\}/g, (m, k) => k === '0' ? cmpStationsOf(cl.filter(x => x.rule === id)) : t('rule.' + id)))
+    .concat(payloadRuleMissing(CMP.type, st, n).map(cmpNeedText)).join(CURRENT_LANG === 'fr' ? ' ; ' : '; ');
+}
+// Vrai si une station porte un contenu en conflit avec une autre, ou une exigence que rien ne satisfait
+function cmpBlocked(st) {
+  return cmpRuled() && CMP.pyl.some(p => st[p.n] !== '' && (payloadRuleConflicts(CMP.type, st, p.n, st[p.n]).length > 0 || payloadRuleMissing(CMP.type, st, p.n).length > 0));
+}
+// Dans la liste d'une station : une option qui entrerait en conflit est grisée, avec les stations en cause (jamais la raison) ; l'option vide et celle en place ne le sont jamais.
+// Sous la ligne, les règles que le contenu en place enfreint (un emport reçu d'un fichier, d'un preset ou d'une copie : rien n'est vidé).
+function cmpUpdateRules(row, sel, st, n) {
+  const c = st[n];
+  for (const o of sel.options) {
+    if (o.value === '') continue;
+    if (!cmpOptBase.has(o)) cmpOptBase.set(o, o.textContent);
+    const cl = o.value === c ? [] : cmpChoiceClash(st, n, o.value);
+    const dis = cl.length > 0;
+    const txt = cmpOptBase.get(o) + (dis ? ' — ' + t('cmp.clash').replace('{0}', cmpStationsOf(cl)) : '');
+    if (o.disabled !== dis) o.disabled = dis;
+    if (o.textContent !== txt) o.textContent = txt;
+  }
+  const msg = c !== '' ? cmpRuleText(st, n) : '';
+  let rl = row.querySelector('.cmp-rule');
+  if (msg && !rl) { rl = document.createElement('span'); rl.className = 'cmp-rule'; row.appendChild(rl); }
+  if (rl) { if (msg) { if (rl.textContent !== msg) rl.textContent = msg; } else rl.remove(); }
+}
 
 function renderRight() {
   const col = document.getElementById('col-right'), su = selUnit();
@@ -13222,7 +13341,7 @@ function cmpRowHtml(p, lo) {
   opts += p.allowed.map(c => `<option value="${esc(c)}">${esc(weaponLabel(CMP.type, c) || c)}</option>`).join('');
   return `<div class="cmp-row" data-st="${esc(p.n)}"><span class="sn">${esc(p.n)}</span>
     <select class="fc-sel cmp-sel" data-st="${esc(p.n)}" aria-label="${esc(tf('lo.pylon', p.n))}">${opts}</select>
-    <span class="cmp-kg"></span><div class="cmp-sub">${pair !== null ? `<span class="cmp-mirror">${esc(tf('cmp.mirror', pair))}</span><span class="cmp-nomirror" hidden>${esc(tf('cmp.noMirror', pair))}</span>` : ''}</div></div>`;
+    <span class="cmp-kg"></span><div class="cmp-sub">${pair !== null ? `<span class="cmp-mirror">${esc(tf('cmp.mirror', pair))}</span><span class="cmp-nomirror" hidden>${esc(tf('cmp.noMirror', pair))}</span>` : ''}</div><span class="cmp-oneof" hidden></span></div>`;
 }
 // Carburant, leurres, paillettes, canon : toujours montrés dès qu'une unité est choisie — aux valeurs de son emport, sinon aux défauts de la table.
 // Sous le champ en kg, la barre du carburant (0 à 100 %) et sa valeur.
@@ -13252,13 +13371,20 @@ function cmpSaveHtml() {
 function cmpUpdate() {
   const su = selUnit(), blk = document.getElementById('blk-cmp');
   if (!su || !blk || su.u.type === '') return;
-  const lo = su.u.loadout, C = UI.cmp;
+  const lo = su.u.loadout, C = UI.cmp, ruled = cmpRuled(), st = cmpStations(lo);
   let total = 0, unknown = false;
   CMP.pyl.forEach(({ n }) => {
-    const clsid = cmpClsid(lo, n), row = blk.querySelector(`.cmp-row[data-st="${n}"]`);
+    const clsid = st[n], row = blk.querySelector(`.cmp-row[data-st="${n}"]`);
     if (!row) return;
     const sel = row.querySelector('select');
     if (sel.value !== clsid) sel.value = clsid;
+    if (ruled) cmpUpdateRules(row, sel, st, n);
+    const oo = row.querySelector('.cmp-oneof');       // la porte unique : « retiré de la station 8 », jusqu'au choix suivant
+    if (oo) {
+      const on = !!C.oneOf && C.oneOf.lo === lo && C.oneOf.n === n;
+      oo.textContent = on ? tf('cmp.oneOf', C.oneOf.removed.join(', ')) : '';
+      oo.hidden = !on;
+    }
     const mass = clsid === '' ? 0 : payloadWeaponMass(clsid);
     if (mass === null) unknown = true; else total += mass;
     row.querySelector('.cmp-kg').textContent = clsid === '' ? '' : (mass === null ? '—' : cmpNum(mass) + ' kg');
@@ -13273,7 +13399,10 @@ function cmpUpdate() {
   if (line) line.innerHTML = cmpLineHtml(lo);
   if (from && from.value !== want && Array.prototype.some.call(from.options, o => o.value === want)) from.value = want;
   if (note) note.hidden = !(lo && lo.key === '~empty' && !armed);
-  blk.querySelectorAll('[data-act="cmp-save"], [data-act="cmp-clear"]').forEach(b => { b.disabled = !armed; });
+  const blocked = cmpBlocked(st);       // une station qui porte un conflit ou une exigence non tenue : « Garder dans mes presets » est désactivé, l'export ne l'est pas
+  blk.querySelectorAll('[data-act="cmp-save"], [data-act="cmp-clear"]').forEach(b => { b.disabled = !armed || (blocked && b.getAttribute('data-act') === 'cmp-save'); });
+  const keep = blk.querySelector('[data-act="cmp-save"]');
+  if (keep) { if (blocked) keep.title = t('cmp.blocked'); else if (keep.hasAttribute('title')) keep.removeAttribute('title'); }
   cmpDraw();
 }
 // La ligne sous la liste : la station jumelle n'y figure que si « Symétrique » est cochée ; la puce « réglages » quand l'arme en porte.
@@ -13315,26 +13444,37 @@ function cmpDraw() {
 // ----- Choisir une arme, partir d'un preset, garder un preset -----
 // Un choix sur une station ; « Symétrique » pose aussi sur sa jumelle l'arme miroir (payloadMirrorClsid : même CLSID, Left↔Right, même nom), et dit quand il n'y en a pas.
 // « Vide » ne se pose sur la jumelle que si elle portait, juste avant ce choix, le miroir de l'arme d'avant. Un `settings` suit sa station tant que l'arme ne change pas.
+// Un choix qui entrerait en conflit (cmpChoiceClash, avec la jumelle si Symétrique est coché) est refusé, quel que soit le chemin : rien ne change.
+// Un choix non vide vide les autres stations de son groupe (payloadOneOfOthers : le Kord du Mi-24P, une porte) et le dit sur la station choisie ;
+// la jumelle ne reçoit le miroir que s'il n'y crée aucun conflit (situation A), sinon l'arme se pose seule (situation B).
 function cmpChoose(n, clsid) {
   const su = selUnit();
   if (!su) return;
-  const created = !su.u.loadout;                 // premier choix sur une unité sans emport : le panneau se redessine (réglages, boutons)
+  const was = su.u.loadout, before = cmpClsid(was, n);
+  if (clsid !== '' && clsid !== before && cmpChoiceClash(cmpStations(was), n, clsid).length) { cmpUpdate(); return; }
+  const created = !was;                          // premier choix sur une unité sans emport : le panneau se redessine (réglages, boutons)
   if (created) su.u.loadout = makeLoadout(su.u.type, { key: '~empty', label: t('cmp.custom'), src: '' }, {}, null);
-  const lo = su.u.loadout, before = cmpClsid(lo, n);
+  const lo = su.u.loadout;
   const put = (k, v) => {
     if (v === '') delete lo.pylons[k];
     else if (cmpClsid(lo, k) !== v) lo.pylons[k] = { CLSID: v };
   };
   put(n, clsid);
   UI.cmp.st = n;
-  const twin = (UI.cmp.sym && CMP.view && has(CMP.pairs, n)) ? CMP.pyl.filter(x => x.n === CMP.pairs[n])[0] : null;
+  UI.cmp.oneOf = null;
+  if (clsid !== '') {
+    const removed = payloadOneOfOthers(su.u.type, n).filter(m => cmpClsid(lo, m) !== '');
+    removed.forEach(m => put(m, ''));
+    if (removed.length) UI.cmp.oneOf = { lo: lo, n: n, removed: removed };
+  }
+  const twin = cmpTwin(n);
   if (twin) {
     if (clsid === '') {
-      const was = payloadMirrorClsid(before, twin.allowed);
-      if (was !== '' && cmpClsid(lo, twin.n) === was) put(twin.n, '');
+      const prev = payloadMirrorClsid(before, twin.allowed);
+      if (prev !== '' && cmpClsid(lo, twin.n) === prev) put(twin.n, '');
     } else {
       const m = payloadMirrorClsid(clsid, twin.allowed);
-      if (m !== '') put(twin.n, m);
+      if (m !== '' && !cmpClashPair(cmpStations(lo), n, clsid, twin, m).length) put(twin.n, m);
     }
   }
   loTouch(lo);
@@ -13374,6 +13514,7 @@ function cmpSaveGo() {
   const su = selUnit(), C = UI.cmp;
   if (!su || !su.u.loadout) return;
   const name = C.name.trim(), type = su.u.type, lo = su.u.loadout;
+  if (cmpBlocked(cmpStations(lo))) return;       // un emport qui porte un conflit ou une exigence non tenue ne se garde pas
   const fail = msg => { C.err = msg; const e = document.getElementById('cmp-save-msg'); if (e) e.textContent = msg; };
   const pylons = cleanPylons(lo.pylons);
   if (!name) return fail(t('cmp.save.err.name'));
