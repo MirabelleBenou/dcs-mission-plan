@@ -1285,8 +1285,6 @@ body[data-theme] {
 @media (max-width: 539px) { .tb-select { max-width: 96px; } }
 @media (max-width: 479px) { .toolbar { gap: 3px; } .tb-btn { width: 34px; min-width: 34px; } .tb-select { max-width: 64px; padding: 0 18px 0 6px; } .tb-lang-btn { min-width: 34px; padding: 0 2px; } }
 /* Le bouton « Ouvrir » reste un bouton de menu (icône + chevron) : à la taille de celui du Route Planner, jamais réduit à la forme d'un bouton à icône seule (mêmes marges intérieures : 12 px, 8 px à gauche sous 521 px) */
-/* en titre court, les séparateurs de la barre cèdent aussi la place (comme avant) */
-.toolbar.tb-st4 .tb-sep { display: none; }
 /* « Ouvrir » garde ses marges de bouton de menu en icônes seules (mêmes que celles du Route Planner) */
 .toolbar.tb-st3 #btn-open { width: auto; min-width: 44px; padding-left: 12px; padding-right: 12px; }
 @media (max-width: 520px) { .toolbar.tb-st3 #btn-open { padding-left: 8px; } }

@@ -769,13 +769,13 @@ a[href]:focus-visible, [tabindex]:focus-visible, [role="button"]:focus-visible {
 /* dans la suite, le module laisse le thème à l'accueil : sa liste de thème n'est pas là (le drapeau reste) */
 html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-controls="tbm-list-theme-select"], html.mp-in-shell [aria-controls="tbm-list-theme"] { display: none !important; }
 /* la barre qui manque de place se réduit dans un seul ordre, par la même règle « s'il tient » (uiBarFit, classes tb-st1 à tb-st4, cumulatives) : 1 le tampon de décor (et le tampon posé par le shell), 2 le numéro de version,
-   3 le texte des boutons (icônes seules), 4 le titre long, qui passe au sigle court (titre et sous-titre masqués) ; aucun seuil de largeur propre à un outil ne retire plus rien de cela */
+   3 le texte des boutons (icônes seules), 4 le titre long, qui passe au sigle court (titre, sous-titre et séparateurs masqués) ; aucun seuil de largeur propre à un outil ne retire plus rien de cela */
 .toolbar.tb-fit, .toolbar.tb-fit * { transition: none !important; }
 .toolbar.tb-st1 .tb-classif, .toolbar.tb-st1 .mp-wing-stamp { display: none; }
 .toolbar.tb-st2 .tb-version { display: none; }
 .toolbar.tb-st3 .tb-btn .tb-btn-label { display: none; }
 .toolbar.tb-st3 .tb-btn { padding: 0 10px; width: auto; }
-.toolbar.tb-st4 .tb-brand-main, .toolbar.tb-st4 .tb-brand-sub, .toolbar.tb-st4 .tb-brand + .tb-sep { display: none; }
+.toolbar.tb-st4 .tb-brand-main, .toolbar.tb-st4 .tb-brand-sub, .toolbar.tb-st4 .tb-sep, .toolbar.tb-st4 > .tb-sep.tb-files-end { display: none; }
 .toolbar.tb-st4 .tb-brand-short { display: inline; }
 /* la barre au téléphone : une seule règle de réduction, un seul seuil (sous 760 px, celui de la suite) pour tous les outils à barre. Le libellé d'une liste de la barre (« Théâtre ») est masqué (la liste garde son nom accessible) ;
    dans la suite, un bouton de réglage à texte et à icône (Affichage) n'a plus que l'icône (son infobulle et son nom accessible gardent son nom : uiBarDisplaySync) */
