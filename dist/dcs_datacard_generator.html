@@ -303,7 +303,8 @@ body {
 .dsp-opt:hover .dsp-box { border-color: var(--amber); }
 .dsp-opt[role="menuitemradio"] .dsp-box { border-radius: 50%; }
 
-/* ---------- Listes de la barre au thème de l'interface (lot mp-ui-listes) ----------
+/* ===== LISTES AU THÈME DE L'INTERFACE : feuille ===== */
+/* ---------- Listes de la barre au thème de l'interface ----------
    Le <select> reste dans la page, masqué ; un bouton de mêmes classes prend sa place (voir initToolbarMenus). */
 select[data-tbm-src] { display: none !important; }
 .tbm-trigger { display: inline-block; text-align: left; white-space: nowrap; }
@@ -353,6 +354,13 @@ select[data-tbm-src] { display: none !important; }
 .tbm-msg:not(:empty) { padding: 12px 18px; }
 @media (prefers-reduced-motion: reduce) { .tbm-panel { animation: none; } }
 @media print { .tbm-panel { display: none; } }
+.tbm-panel.tbm-p-field { max-width: calc(100vw - 16px); }
+.tbm-panel.tbm-p-field .tbm-opt {
+  font-family: var(--f-typewriter); font-weight: 400; font-size: 13px; letter-spacing: .2px; text-transform: none;
+}
+.tbm-panel.tbm-p-field .tbm-opt[aria-selected="true"] { font-weight: 400; }
+.tbm-panel.tbm-up { border-top: 1px solid var(--amber-dark); border-bottom: 3px solid var(--amber); transform-origin: bottom left; }
+/* ===== FIN DE LA FEUILLE DES LISTES ===== */
 
 /* ---------- Listes des formulaires au thème de l'interface (lot mp-ui-listes-formulaires) ----------
    Le bouton fermé garde la boîte et le texte du <select> du champ ; seul le chevron est dessiné (12 × 8, trait 1,6 px, couleur du texte,
@@ -373,12 +381,6 @@ select[data-tbm-src] { display: none !important; }
   border-top-color: var(--khaki) !important; border-right-color: var(--khaki) !important; border-bottom-color: var(--khaki) !important;
 }
 
-.tbm-panel.tbm-p-field { max-width: calc(100vw - 16px); }
-.tbm-panel.tbm-p-field .tbm-opt {
-  font-family: var(--f-typewriter); font-weight: 400; font-size: 13px; letter-spacing: .2px; text-transform: none;
-}
-.tbm-panel.tbm-p-field .tbm-opt[aria-selected="true"] { font-weight: 400; }
-.tbm-panel.tbm-up { border-top: 1px solid var(--amber-dark); border-bottom: 3px solid var(--amber); transform-origin: bottom left; }
 .tb-spacer { flex: 1; min-width: 0; }
 .tb-version {
   font-family: var(--f-typewriter);
@@ -10599,13 +10601,19 @@ function dgCardMoreOpen(btn) {
 }
 
 /* ============= DÉMARRAGE ============= */
-/* ============= LISTES DE LA BARRE — thème de l'interface (lot mp-ui-listes) =============
+/* ===== LISTES AU THÈME DE L'INTERFACE (tbm*) ===== */
+/* ============= LISTES AU THÈME DE L'INTERFACE (composant commun des six modules) =============
    Le <select> reste dans la page (id, options, écouteurs) : il garde la valeur, mais il est masqué.
    Un <button> de mêmes classes prend sa place et porte le libellé de l'option choisie ; la liste ouverte
    est un <ul role="listbox"> posé en fin de <body> (la barre défile et couperait ce qui déborde).
    Le libellé suit toujours le <select> : mutations du DOM (options reconstruites, traduites, désactivées,
-   title) et affectations par le code (value, selectedIndex) interceptées sur l'instance. */
-const TBM = { cur: null, bound: false, swallow: false, n: 0, all: [], map: new WeakMap(), label: null, mo: null, ro: null };
+   title) et affectations par le code (value, selectedIndex) interceptées sur l'instance.
+   Ce que le <select> demande par ses attributs : data-search (une recherche en tête de la liste ; data-search-empty : le texte sans résultat), data-keep (une option qui reste malgré la recherche),
+   data-right (le texte à droite d'une option), data-repick (un choix identique à la valeur envoie quand même « change »), des <optgroup> (leur titre dans la liste).
+   Ce que le module règle, une fois, avant initToolbarMenus : TBM.cfg = { others, trig, short, fitTitle }
+     others() : ferme ce qui doit l'être quand une liste s'ouvre (le menu, le panneau du module) ; trig : le sélecteur des boutons qui ouvrent une liste ou un menu (le clic hors de la liste sur l'un d'eux
+     ne s'avale pas) ; short(select, option) : le libellé abrégé du bouton fermé, ou rien (le théâtre au téléphone) ; fitTitle : le bouton qui prend la largeur de l'option (fit) porte son nom entier en infobulle. */
+const TBM = { cur: null, bound: false, swallow: false, n: 0, all: [], map: new WeakMap(), label: null, mo: null, ro: null, cfg: {} };
 
 function initToolbarMenus(specs) {
   specs.forEach(sp => tbmAttach(document.getElementById(sp[0]), sp[1], sp[2], sp[3]));
@@ -10619,7 +10627,7 @@ function initToolbarMenus(specs) {
   if (window.visualViewport) { window.visualViewport.addEventListener('resize', tbmVvChanged); window.visualViewport.addEventListener('scroll', tbmVvChanged); }
 }
 
-/* ----- Listes des formulaires (lot mp-ui-listes-formulaires) -----
+/* ----- Listes des formulaires -----
    Tout <select> hors de la barre du haut passe par le même composant, présent au chargement ou inséré ensuite
    (formulaire reconstruit, rangée ajoutée, onglet ouvert) : un observateur le rattache dès son insertion, et
    détache le bouton d'un <select> qui quitte la page (la liste ouverte sur lui se ferme). labelFn(select) donne l'intitulé. */
@@ -10662,7 +10670,7 @@ function tbmNarrow(btn) {
 
 /* mode : rien (liste de la barre) · 'field' (liste de formulaire, bouton d'un champ) · 'sheet' (liste de formulaire,
    bouton fermé déjà habillé par le module) ; fit : le bouton prend la largeur de l'option choisie (comme au Route Planner) ;
-   un <select data-search> reçoit une recherche en tête de sa liste (lot mp-dg-terrains-liste : seule la liste des aérodromes) */
+   un <select data-search> reçoit une recherche en tête de sa liste */
 function tbmAttach(sel, labelFn, mode, fit) {
   if (!sel || !sel.parentNode || TBM.map.has(sel)) return;
   const uid = sel.id || 'f' + (++TBM.n);
@@ -10714,7 +10722,7 @@ function tbmAttach(sel, labelFn, mode, fit) {
 function tbmSync(m) {
   const sel = m.sel, o = sel.options, i = sel.selectedIndex;
   let txt = i >= 0 && o[i] ? o[i].label : '';
-  if (txt && sel.id === 'theatre' && uiBarCompact()) txt = (TH_SHORT[CURRENT_LANG] || {})[o[i].value] || txt;       /* abrégé au téléphone */
+  if (txt && TBM.cfg.short) txt = TBM.cfg.short(sel, o[i]) || txt;       /* le libellé abrégé du module (le théâtre au téléphone) */
   if (m.lbl.textContent !== txt) m.lbl.textContent = txt;
   const all = [];
   for (let k = 0; k < o.length; k++) all.push(o[k].label);
@@ -10723,13 +10731,13 @@ function tbmSync(m) {
   let name = '';
   try { name = m.labelFn(); } catch (e) { name = ''; }
   m.btn.setAttribute('aria-label', name);
-  if (sel.hasAttribute('title')) m.btn.title = sel.title; else m.btn.removeAttribute('title');
+  if (sel.hasAttribute('title')) m.btn.title = sel.title; else if (TBM.cfg.fitTitle && m.fit && txt) m.btn.title = txt; else m.btn.removeAttribute('title');       /* fitTitle : nom entier en infobulle (le bouton peut le tronquer) */
   m.btn.disabled = sel.disabled;
 }
 
 function tbmOpen(m) {
   if (TBM.cur) tbmClose(false);
-  mnClose(false);
+  if (TBM.cfg.others) TBM.cfg.others();
   if (m.sel.disabled) return;
   tbmSync(m);
   const sel = m.sel, opts = sel.options, name = m.labelFn();
@@ -10816,6 +10824,7 @@ function tbmOpen(m) {
       const j = label.indexOf(' — ');
       if (j >= 0) { note = label.slice(j + 3); label = label.slice(0, j); }
     }
+    if (o.hasAttribute('data-right')) note = o.getAttribute('data-right');      /* une option qui porte son texte de droite (le vol lié d'une route) */
     txt.textContent = label;
     li.appendChild(mark);
     li.appendChild(txt);
@@ -11020,13 +11029,13 @@ function tbmKey(m, e) {
   else if (k.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); tbmType(m, k); }
 }
 
-/* Choisir : si la valeur change, le <select> la prend et reçoit un évènement change (qui bouillonne) */
+/* Choisir : si la valeur change, le <select> la prend et reçoit un évènement change (qui bouillonne) ; un <select data-repick> (le champ Livrée) le reçoit aussi quand on re-choisit sa valeur : le nom affiché devient un choix */
 function tbmChoose(m, k) {
   const sel = m.sel, o = sel.options[k];
   if (!o || o.disabled) return;
   const changed = k !== sel.selectedIndex;
   tbmClose(true);
-  if (!changed) return;
+  if (!changed && !sel.hasAttribute('data-repick')) return;
   sel.selectedIndex = k;
   if (m.form) sel.dispatchEvent(new Event('input', { bubbles: true }));   /* comme le contrôle natif : input puis change */
   sel.dispatchEvent(new Event('change', { bubbles: true }));
@@ -11054,13 +11063,13 @@ function tbmOutside(e) {
   if (!m) return;
   const t = e.target;
   if (m.panel.contains(t) || m.btn.contains(t)) return;
-  const other = t && t.closest ? t.closest(MENU_TRIG) : null;
+  const other = t && t.closest ? t.closest(TBM.cfg.trig || '.tbm-trigger') : null;
   tbmClose(false);
   if (other) return;
   tbmSwallowNext();
 }
 
-/* Le clic qui suit le toucher hors de la liste est avalé (aussi pour le menu « Unités ») */
+/* Le clic qui suit le toucher hors de la liste est avalé (aussi pour les menus du module) */
 function tbmSwallowNext() {
   TBM.swallow = true;
   const rel = () => { document.removeEventListener('pointerup', rel, true); document.removeEventListener('pointercancel', rel, true); setTimeout(() => { TBM.swallow = false; }, 350); };
@@ -11147,12 +11156,14 @@ function tbmScrolled(e) {
     tbmClose(false);
   }
 }
+/* ===== FIN DES LISTES AU THÈME DE L'INTERFACE ===== */
 
 function init() {
   initLang();
   applyTheme(loadTheme(), false);
   applyI18nStatic();
   updateFlagButton();
+  TBM.cfg = { others: () => mnClose(false), trig: MENU_TRIG, short: (sel, o) => sel.id === 'theatre' && uiBarCompact() ? (TH_SHORT[CURRENT_LANG] || {})[o.value] : '' };       /* ce que ce module ajoute à la liste commune */
   initToolbarMenus([['theme-select', () => t('tb.theme.tip')]]);   /* les listes de la barre au thème de l'interface */
   initFormMenus(sel => { const f = sel.closest('.ed-field'), l = f && f.querySelector('label'); return l ? l.textContent.trim() : (sel.getAttribute('aria-label') || ''); });   /* les listes des formulaires */
   impSetup({ lang: () => CURRENT_LANG, onImported: dgImported, toast: msg => showToast('\u26a0 ' + msg, { type: 'err' }) });      /* la fenêtre d'import commune : elle écrit dans la fiche, les cartes suivent */

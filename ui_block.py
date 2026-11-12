@@ -3,15 +3,18 @@
 le repli et l'export en une fenêtre, écrits une fois et injectés tels quels dans les six modules qui ont une interface à fenêtres
 (HQ, Route Planner, Briefing Generator, Datacard Generator, Flight Configurator, Recon Station).
 
-Deux textes, identiques à l'octet dans les six dist/ :
+Quatre textes, identiques à l'octet dans les six dist/ (les deux derniers, la liste au thème de l'interface, y sont posés à la place où chaque module avait sa copie, @@TBM_CSS@@ et @@TBM_JS@@) :
   build_css()   — la feuille : --mp-warn, .ui-modal / .ui-panel (la fenêtre de suite), .ui-btn, .ui-note / .ui-avert / .ui-bandeau,
                   .ui-fold-head / .ui-sum (le repli), .ui-seg (boutons segmentés), les champs de la fenêtre d'export
   build_block() — le script : askConfirm, replaceWithRestore, le piège du focus et Échap des fenêtres, l'état du repli (uiFold*),
                   la fenêtre d'export (uiExport*)
+  build_tbm_css() / build_tbm_block() — le composant des listes déroulantes au thème de l'interface (tbm* : le bouton qui remplace le <select> masqué, le panneau, la liste,
+                  la recherche, le clavier, le placement au-dessus du clavier de l'écran) : une seule copie pour HQ, Route Planner, Briefing Generator, Datacard Generator,
+                  Flight Configurator et Recon Station ; ce qui diffère d'un module à l'autre se règle par TBM.cfg (voir l'en-tête du script)
 
 Le bloc ne dépend que des variables de thème communes (--olive-dark, --amber, --khaki, --khaki-light, --paper, --green-radar,
 --f-stencil, --f-ui, --f-typewriter), de t() du module (clés ui.cancel, ui.close, ui.restore, ui.foldall, ui.unfoldall, ui.fmt,
-ui.pages, ui.fname, ui.export, ui.all) et de showToast() du bloc de messages (messages_block.py).
+ui.pages, ui.fname, ui.export, ui.all, et f.search pour la recherche d'une liste) et de showToast() du bloc de messages (messages_block.py).
 
 askConfirm({ title, text, verb, danger, cancel } : cancel, facultatif, est le libellé du bouton de renoncement (« Annuler » par défaut).
 
@@ -23,6 +26,10 @@ BLOCK_BEGIN = '/* ===== INTERFACE COMMUNE (fenêtre, confirmation, repli, notes)
 BLOCK_END = '/* ===== FIN DE L\'INTERFACE COMMUNE ===== */'
 CSS_BEGIN = '/* ===== INTERFACE COMMUNE : feuille ===== */'
 CSS_END = '/* ===== FIN DE LA FEUILLE DE L\'INTERFACE COMMUNE ===== */'
+TBM_BEGIN = '/* ===== LISTES AU THÈME DE L\'INTERFACE (tbm*) ===== */'
+TBM_END = '/* ===== FIN DES LISTES AU THÈME DE L\'INTERFACE ===== */'
+TBM_CSS_BEGIN = '/* ===== LISTES AU THÈME DE L\'INTERFACE : feuille ===== */'
+TBM_CSS_END = '/* ===== FIN DE LA FEUILLE DES LISTES ===== */'
 
 _CSS = r"""
 :root { --mp-warn: #e8806a; }
@@ -452,6 +459,623 @@ function uiPrintAs(name, hide, last) {
 """
 
 
+_TBM_CSS = r"""
+/* ---------- Listes de la barre au thème de l'interface ----------
+   Le <select> reste dans la page, masqué ; un bouton de mêmes classes prend sa place (voir initToolbarMenus). */
+select[data-tbm-src] { display: none !important; }
+.tbm-trigger { display: inline-block; text-align: left; white-space: nowrap; }
+.tbm-lbl { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; padding: 4px 0; margin: -3.25px 0 -2.75px; pointer-events: none; }
+.tbm-lbl::after { content: attr(data-w); display: block; height: 0; overflow: hidden; visibility: hidden; white-space: pre; }
+@supports (width: calc-size(max-content, round(up, size, 1px))) { .tbm-lbl::after { width: calc-size(max-content, round(up, size, 1px)); } }
+.tbm-trigger-open { border-color: var(--amber) !important; }
+.tbm-panel {
+  position: fixed; z-index: 10500; min-width: 180px; max-width: min(340px, calc(100vw - 16px));
+  max-height: min(62vh, 440px); overflow-y: auto; overscroll-behavior: contain;
+  background: linear-gradient(180deg, var(--olive-dark) 0%, var(--olive-deep) 100%);
+  border: 1px solid var(--amber-dark); border-top: 3px solid var(--amber);
+  box-shadow: 0 12px 28px rgba(0,0,0,.55), 0 2px 0 rgba(0,0,0,.35);
+  padding: 4px 0; margin: 0; list-style: none; scrollbar-width: thin; scrollbar-color: var(--amber-dark) transparent;
+  transform-origin: top left; animation: tbm-in .12s ease-out;
+}
+@keyframes tbm-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+.tbm-head {
+  font-family: var(--f-ui); font-weight: 500; font-size: 10px; letter-spacing: 1.8px; text-transform: uppercase;
+  color: var(--khaki-light); padding: 8px 14px 6px; border-bottom: 1px solid rgba(168,154,114,.25); margin-bottom: 2px;
+}
+.tbm-opt {
+  position: relative; display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 16px 0 18px;
+  font-family: var(--f-ui); font-weight: 500; font-size: 13px; letter-spacing: 1.3px; text-transform: uppercase;
+  color: var(--paper); cursor: pointer; white-space: nowrap; user-select: none;
+}
+.tbm-opt + .tbm-opt { border-top: 1px solid rgba(168,154,114,.14); }
+.tbm-list .tbm-group { margin-top: 2px; border-top: 1px solid rgba(168,154,114,.25); list-style: none; }
+.tbm-opt .tbm-mark { width: 7px; height: 7px; flex: none; transform: rotate(45deg); border: 1px solid var(--khaki); }
+.tbm-opt.active, .tbm-opt:hover { background: var(--olive); color: var(--amber); }
+.tbm-opt.active .tbm-mark, .tbm-opt:hover .tbm-mark { border-color: var(--amber); }
+.tbm-opt[aria-selected="true"] { color: var(--amber); font-weight: 700; }
+.tbm-opt[aria-selected="true"]::before { content: ''; position: absolute; left: 0; top: 6px; bottom: 6px; width: 3px; background: var(--amber); }
+.tbm-opt[aria-selected="true"] .tbm-mark { background: var(--amber); border-color: var(--amber); }
+.tbm-opt[aria-disabled="true"] { color: var(--khaki); cursor: not-allowed; background: none; }
+.tbm-opt[aria-disabled="true"] .tbm-mark { border-style: dashed; border-color: var(--khaki); background: none; }
+.tbm-opt[aria-disabled="true"] .tbm-note { color: var(--khaki); font-size: 10px; letter-spacing: 1px; margin-left: auto; padding-left: 14px; }
+.tbm-off { display: none !important; }
+/* La recherche en tête d'une liste (option data-search du <select>) : collée en haut du panneau qui défile */
+.tbm-list { margin: 0; padding: 0; list-style: none; outline: none; }
+.tbm-search { position: sticky; top: 0; z-index: 2; padding: 6px 10px; background: var(--olive-dark); border-bottom: 1px solid rgba(168,154,114,.25); }
+.tbm-q { display: block; width: 100%; min-height: 36px; box-sizing: border-box; padding: 6px 10px; font-family: var(--f-typewriter); font-size: 13px; letter-spacing: .2px; color: #1f1c16; background: rgba(216, 201, 165, .92); border: 1px solid var(--khaki); border-left: 3px solid var(--amber-dark); border-radius: 0; outline: none; }
+.tbm-q:focus { border-left-color: var(--red-stamp); box-shadow: 0 0 0 1px var(--amber); }
+.tbm-q::placeholder { color: #6b6450; opacity: 1; }
+.tbm-none { margin: 0; padding: 0; list-style: none; cursor: default; }
+.tbm-msg { font-family: var(--f-typewriter); font-size: 13px; color: var(--khaki-light); }
+.tbm-msg:not(:empty) { padding: 12px 18px; }
+@media (prefers-reduced-motion: reduce) { .tbm-panel { animation: none; } }
+@media print { .tbm-panel { display: none; } }
+.tbm-panel.tbm-p-field { max-width: calc(100vw - 16px); }
+.tbm-panel.tbm-p-field .tbm-opt {
+  font-family: var(--f-typewriter); font-weight: 400; font-size: 13px; letter-spacing: .2px; text-transform: none;
+}
+.tbm-panel.tbm-p-field .tbm-opt[aria-selected="true"] { font-weight: 400; }
+.tbm-panel.tbm-up { border-top: 1px solid var(--amber-dark); border-bottom: 3px solid var(--amber); transform-origin: bottom left; }
+"""
+
+_TBM_JS = r"""
+/* ============= LISTES AU THÈME DE L'INTERFACE (composant commun des six modules) =============
+   Le <select> reste dans la page (id, options, écouteurs) : il garde la valeur, mais il est masqué.
+   Un <button> de mêmes classes prend sa place et porte le libellé de l'option choisie ; la liste ouverte
+   est un <ul role="listbox"> posé en fin de <body> (la barre défile et couperait ce qui déborde).
+   Le libellé suit toujours le <select> : mutations du DOM (options reconstruites, traduites, désactivées,
+   title) et affectations par le code (value, selectedIndex) interceptées sur l'instance.
+   Ce que le <select> demande par ses attributs : data-search (une recherche en tête de la liste ; data-search-empty : le texte sans résultat), data-keep (une option qui reste malgré la recherche),
+   data-right (le texte à droite d'une option), data-repick (un choix identique à la valeur envoie quand même « change »), des <optgroup> (leur titre dans la liste).
+   Ce que le module règle, une fois, avant initToolbarMenus : TBM.cfg = { others, trig, short, fitTitle }
+     others() : ferme ce qui doit l'être quand une liste s'ouvre (le menu, le panneau du module) ; trig : le sélecteur des boutons qui ouvrent une liste ou un menu (le clic hors de la liste sur l'un d'eux
+     ne s'avale pas) ; short(select, option) : le libellé abrégé du bouton fermé, ou rien (le théâtre au téléphone) ; fitTitle : le bouton qui prend la largeur de l'option (fit) porte son nom entier en infobulle. */
+const TBM = { cur: null, bound: false, swallow: false, n: 0, all: [], map: new WeakMap(), label: null, mo: null, ro: null, cfg: {} };
+
+function initToolbarMenus(specs) {
+  specs.forEach(sp => tbmAttach(document.getElementById(sp[0]), sp[1], sp[2], sp[3]));
+  if (TBM.bound) return;
+  TBM.bound = true;
+  document.addEventListener('pointerdown', tbmOutside, true);
+  window.addEventListener('click', tbmSwallowClick, true);
+  window.addEventListener('resize', tbmResized);
+  window.addEventListener('blur', () => tbmClose(false));
+  window.addEventListener('scroll', tbmScrolled, true);
+  if (window.visualViewport) { window.visualViewport.addEventListener('resize', tbmVvChanged); window.visualViewport.addEventListener('scroll', tbmVvChanged); }
+}
+
+/* ----- Listes des formulaires -----
+   Tout <select> hors de la barre du haut passe par le même composant, présent au chargement ou inséré ensuite
+   (formulaire reconstruit, rangée ajoutée, onglet ouvert) : un observateur le rattache dès son insertion, et
+   détache le bouton d'un <select> qui quitte la page (la liste ouverte sur lui se ferme). labelFn(select) donne l'intitulé. */
+function initFormMenus(labelFn) {
+  TBM.label = labelFn;
+  tbmScan(document.body);
+  if (TBM.mo) return;
+  TBM.mo = new MutationObserver(recs => {
+    for (let i = TBM.all.length - 1; i >= 0; i--) if (!TBM.all[i].sel.isConnected) tbmForget(TBM.all[i]);
+    recs.forEach(r => r.addedNodes.forEach(n => { if (n.nodeType === 1) tbmScan(n); }));
+  });
+  TBM.mo.observe(document.body, { childList: true, subtree: true });
+}
+
+function tbmScan(root) {
+  if (!TBM.label || !root || root.nodeType !== 1 || root.classList.contains('tbm-panel')) return;
+  if (root.tagName !== 'SELECT' && !root.firstElementChild) return;
+  const list = root.tagName === 'SELECT' ? [root] : Array.prototype.slice.call(root.querySelectorAll('select'));
+  list.forEach(s => {
+    if (TBM.map.has(s) || (s.closest && s.closest('header.toolbar'))) return;
+    tbmAttach(s, () => TBM.label(s), 'field');
+  });
+}
+
+function tbmForget(m) {
+  if (TBM.cur === m) tbmClose(false);
+  if (m.mo) m.mo.disconnect();
+  if (TBM.ro) TBM.ro.unobserve(m.btn);
+  if (m.btn.parentNode) m.btn.parentNode.removeChild(m.btn);
+  TBM.map.delete(m.sel);
+  const i = TBM.all.indexOf(m);
+  if (i >= 0) TBM.all.splice(i, 1);
+}
+
+/* Un champ de moins de 120 px de large : chevron à 8 px du bord (12 px sinon) */
+function tbmNarrow(btn) {
+  const w = btn.offsetWidth;
+  if (w > 0) btn.classList.toggle('tbm-narrow', w < 120);
+}
+
+/* mode : rien (liste de la barre) · 'field' (liste de formulaire, bouton d'un champ) · 'sheet' (liste de formulaire,
+   bouton fermé déjà habillé par le module) ; fit : le bouton prend la largeur de l'option choisie (comme au Route Planner) ;
+   un <select data-search> reçoit une recherche en tête de sa liste */
+function tbmAttach(sel, labelFn, mode, fit) {
+  if (!sel || !sel.parentNode || TBM.map.has(sel)) return;
+  const uid = sel.id || 'f' + (++TBM.n);
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = sel.className + ' tbm-trigger' + (mode === 'field' ? ' tbm-field' : '');
+  btn.setAttribute('aria-haspopup', 'listbox');
+  btn.setAttribute('aria-expanded', 'false');
+  btn.setAttribute('aria-controls', 'tbm-list-' + uid);
+  const lbl = document.createElement('span');
+  lbl.className = 'tbm-lbl';
+  btn.appendChild(lbl);
+  const m = { sel: sel, btn: btn, lbl: lbl, labelFn: labelFn, panel: null, active: -1, type: '', typeTimer: 0, x0: 0, y0: 0, uid: uid, form: !!mode, fit: !!fit, search: sel.hasAttribute('data-search'), q: null, lis: [], list: null, none: null, noneLi: null, bar: null, empty: '', up: undefined, mo: null };
+  sel.parentNode.insertBefore(btn, sel);
+  sel.setAttribute('data-tbm-src', '');
+  ['value', 'selectedIndex'].forEach(k => {
+    const d = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, k);
+    if (!d || !d.set) return;
+    Object.defineProperty(sel, k, {
+      configurable: true, enumerable: true,
+      get() { return d.get.call(this); },
+      set(v) { d.set.call(this, v); tbmSync(m); }
+    });
+  });
+  m.mo = new MutationObserver(() => tbmSync(m));
+  m.mo.observe(sel, {
+    childList: true, subtree: true, characterData: true, attributes: true,
+    attributeFilter: ['title', 'aria-label', 'disabled', 'label', 'selected', 'value']
+  });
+  TBM.map.set(sel, m);
+  TBM.all.push(m);
+  if (mode === 'field' && window.ResizeObserver) {
+    if (!TBM.ro) TBM.ro = new ResizeObserver(es => es.forEach(e => tbmNarrow(e.target)));
+    TBM.ro.observe(btn);
+  }
+  sel.addEventListener('change', () => tbmSync(m));
+  ['focus', 'mouseover'].forEach(ev => btn.addEventListener(ev, () => tbmSync(m)));   /* filet : option.selected posé par le code */
+  btn.addEventListener('click', () => { if (m.panel) tbmClose(true); else tbmOpen(m); });
+  btn.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (!m.panel) tbmOpen(m);
+    }
+  });
+  tbmSync(m);
+}
+
+/* Le libellé affiché = l'option choisie ; la largeur = l'option la plus large (comme le <select>) */
+function tbmSync(m) {
+  const sel = m.sel, o = sel.options, i = sel.selectedIndex;
+  let txt = i >= 0 && o[i] ? o[i].label : '';
+  if (txt && TBM.cfg.short) txt = TBM.cfg.short(sel, o[i]) || txt;       /* le libellé abrégé du module (le théâtre au téléphone) */
+  if (m.lbl.textContent !== txt) m.lbl.textContent = txt;
+  const all = [];
+  for (let k = 0; k < o.length; k++) all.push(o[k].label);
+  const w = m.fit ? txt : all.join(String.fromCharCode(10));       /* fit : le bouton prend la largeur de l'option choisie */
+  if (m.lbl.getAttribute('data-w') !== w) m.lbl.setAttribute('data-w', w);
+  let name = '';
+  try { name = m.labelFn(); } catch (e) { name = ''; }
+  m.btn.setAttribute('aria-label', name);
+  if (sel.hasAttribute('title')) m.btn.title = sel.title; else if (TBM.cfg.fitTitle && m.fit && txt) m.btn.title = txt; else m.btn.removeAttribute('title');       /* fitTitle : nom entier en infobulle (le bouton peut le tronquer) */
+  m.btn.disabled = sel.disabled;
+}
+
+function tbmOpen(m) {
+  if (TBM.cur) tbmClose(false);
+  if (TBM.cfg.others) TBM.cfg.others();
+  if (m.sel.disabled) return;
+  tbmSync(m);
+  const sel = m.sel, opts = sel.options, name = m.labelFn();
+  const panel = document.createElement('div');
+  panel.className = 'tbm-panel' + (m.form ? ' tbm-p-field' : '');
+  panel.id = 'tbm-panel-' + m.uid;
+  const head = document.createElement('div');
+  head.className = 'tbm-head';
+  head.setAttribute('aria-hidden', 'true');
+  head.textContent = name;
+  panel.appendChild(head);
+  const ul = document.createElement('ul');
+  ul.className = 'tbm-list';
+  ul.id = 'tbm-list-' + m.uid;
+  ul.setAttribute('role', 'listbox');
+  ul.setAttribute('aria-label', name);
+  ul.tabIndex = -1;
+  let real = 0;
+  for (let k = 0; k < opts.length; k++) if (opts[k].value !== '' && !opts[k].hasAttribute('data-keep')) real++;
+  m.q = null; m.none = null; m.noneLi = null; m.bar = null; m.list = ul; m.lis = [];
+  if (m.search) {
+    /* le champ de recherche est un combobox hors de la listbox (modèle ARIA) ; sans aucune option à chercher, pas de champ : seule la ligne neutre le dit */
+    if (real > 0) {
+      const bar = document.createElement('div');
+      bar.className = 'tbm-search';
+      const q = document.createElement('input');
+      q.type = 'text';
+      q.className = 'tbm-q';
+      q.setAttribute('role', 'combobox');
+      q.setAttribute('aria-controls', ul.id);
+      q.setAttribute('aria-expanded', 'true');
+      q.setAttribute('aria-autocomplete', 'list');
+      q.setAttribute('placeholder', t('f.search'));
+      q.setAttribute('aria-label', t('f.search'));
+      q.setAttribute('autocomplete', 'off');
+      q.setAttribute('autocapitalize', 'off');
+      q.setAttribute('spellcheck', 'false');
+      q.setAttribute('enterkeyhint', 'search');
+      q.addEventListener('input', () => tbmFilter(m));
+      bar.appendChild(q);
+      panel.appendChild(bar);
+      m.q = q; m.bar = bar;
+    }
+    /* la ligne neutre (L4) : dans la liste, entre « Choisir… » ou les aérodromes et « Autre… » ; elle est transparente pour la listbox (role presentation) et son texte est dans une zone aria-live qui existe toujours, vide tant qu'il y a des résultats */
+    const none = document.createElement('li');
+    none.className = 'tbm-none';
+    none.setAttribute('role', 'presentation');
+    const msg = document.createElement('div');
+    msg.className = 'tbm-msg';
+    msg.setAttribute('aria-live', 'polite');
+    m.empty = sel.getAttribute('data-search-empty') || '';
+    if (real === 0) msg.textContent = m.empty;
+    none.appendChild(msg);
+    m.none = msg;
+    m.noneLi = none;
+  }
+  let grp = null;
+  for (let k = 0; k < opts.length; k++) {
+    const o = opts[k], li = document.createElement('li');
+    const og = o.parentNode && o.parentNode.tagName === 'OPTGROUP' ? o.parentNode : null;       /* un groupe d'options : son titre, une fois, avant la première */
+    if (og !== grp) {
+      grp = og;
+      if (og) {
+        const gh = document.createElement('li');
+        gh.className = 'tbm-head tbm-group';
+        gh.setAttribute('role', 'presentation');
+        gh.textContent = og.label;
+        ul.appendChild(gh);
+      }
+    }
+    li.className = 'tbm-opt';
+    if (o.hasAttribute('data-keep')) li.setAttribute('data-keep', '');
+    li.id = 'tbm-' + m.uid + '-' + k;
+    li.setAttribute('role', 'option');
+    li.setAttribute('aria-selected', k === sel.selectedIndex ? 'true' : 'false');
+    li.setAttribute('data-i', String(k));
+    const mark = document.createElement('span');
+    mark.className = 'tbm-mark';
+    const txt = document.createElement('span');
+    txt.className = 'tbm-txt';
+    let label = o.label, note = '';
+    if (o.disabled) {
+      li.setAttribute('aria-disabled', 'true');
+      const j = label.indexOf(' — ');
+      if (j >= 0) { note = label.slice(j + 3); label = label.slice(0, j); }
+    }
+    if (o.hasAttribute('data-right')) note = o.getAttribute('data-right');      /* une option qui porte son texte de droite (le vol lié d'une route) */
+    txt.textContent = label;
+    li.appendChild(mark);
+    li.appendChild(txt);
+    if (note) {
+      const n = document.createElement('span');
+      n.className = 'tbm-note';
+      n.textContent = note;
+      li.appendChild(n);
+    }
+    ul.appendChild(li);
+    m.lis.push(li);
+  }
+  if (m.noneLi) ul.insertBefore(m.noneLi, m.lis.find(x => x.hasAttribute('data-keep')) || null);
+  panel.appendChild(ul);
+  panel.addEventListener('keydown', e => tbmKey(m, e));
+  panel.addEventListener('click', e => {
+    const li = e.target.closest ? e.target.closest('.tbm-opt') : null;
+    if (!li || li.getAttribute('aria-disabled') === 'true') return;
+    tbmChoose(m, Number(li.getAttribute('data-i')));
+  });
+  panel.addEventListener('mousemove', e => {
+    const li = e.target.closest ? e.target.closest('.tbm-opt') : null;
+    if (!li || li.getAttribute('aria-disabled') === 'true') return;
+    const k = Number(li.getAttribute('data-i'));
+    if (k !== m.active) tbmSetActive(m, k, false);
+  });
+  document.body.appendChild(panel);
+  m.panel = panel;
+  TBM.cur = m;
+  m.btn.classList.add('tbm-trigger-open');
+  m.btn.setAttribute('aria-expanded', 'true');
+  m.up = undefined;
+  tbmPlace(m);
+  let k0 = sel.selectedIndex;
+  if (k0 < 0 || (opts[k0] && opts[k0].disabled)) k0 = tbmFirst(m, 1);
+  tbmSetActive(m, k0, 'center');
+  if (m.q && window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches) m.q.focus({ preventScroll: true });       /* la recherche a le focus sur ordinateur, pas au toucher (le clavier de l'écran ne s'ouvre pas seul) */
+  else ul.focus({ preventScroll: true });
+}
+
+/* Sans casse ni accents */
+function tbmNorm(x) { return String(x).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase(); }
+/* La recherche : au fil de la frappe, une partie du nom ; « Autre… » (data-keep) reste ; sans résultat, une ligne neutre ; l'option active devient la première trouvée */
+function tbmFilter(m) {
+  const q = tbmNorm(m.q.value.trim()), o = m.sel.options;
+  let n = 0, first = -1;
+  m.lis.forEach((li, k) => {
+    const keep = li.hasAttribute('data-keep');
+    const show = q === '' || keep || (o[k].value !== '' && tbmNorm(o[k].label).indexOf(q) >= 0);
+    li.classList.toggle('tbm-off', !show);
+    if (q !== '' && !keep && show) { n++; if (first < 0) first = k; }
+  });
+  const none = q !== '' && n === 0;
+  m.none.textContent = none ? m.empty : '';       /* la ligne sans résultat est annoncée (aria-live) quand son texte apparaît */
+  if (m.form) tbmPlace(m, true);       /* la liste a changé de hauteur : ouverte vers le haut, elle reste accrochée au bouton */
+  if (q === '') { m.panel.scrollTop = 0; tbmSetActive(m, m.sel.selectedIndex >= 0 ? m.sel.selectedIndex : tbmFirst(m, 1), true); return; }
+  if (first < 0) first = m.lis.findIndex(li => li.hasAttribute('data-keep'));
+  m.panel.scrollTop = 0;
+  tbmSetActive(m, first, true);
+}
+function tbmOff(m, k) { return !!(m.lis[k] && m.lis[k].classList.contains('tbm-off')); }
+
+/* Sous le bouton (4 px), bord gauche aligné, au moins aussi large, à 8 px au moins des bords de la fenêtre.
+   Liste de formulaire : la place utile va du bas de la barre du haut au haut de la barre d'onglets fixée en bas (portrait),
+   sinon au bas de la fenêtre ; dessous si elle y tient entière, sinon dessus si la place y est plus grande (classe tbm-up). Appelée à l'ouverture, après chaque filtrage (sens gardé : keepDir)
+   et quand la fenêtre est redimensionnée ou défilée pendant que la recherche a le focus (le clavier de l'écran). */
+/* La zone visible, en coordonnées de la fenêtre : le visualViewport quand il existe (sur Chrome Android et iOS, le clavier de l'écran ne réduit que lui), sinon la fenêtre ;
+   dans un cadre (le shell), la fenêtre du cadre : le shell la fait suivre le clavier, et le visualViewport d'un cadre n'est pas fiable */
+function tbmVis() {
+  const v = window.visualViewport;
+  if (v && v.height > 0 && v.width > 0 && window.parent === window) return { top: v.offsetTop, bottom: v.offsetTop + v.height, left: v.offsetLeft, right: v.offsetLeft + v.width };
+  return { top: 0, bottom: window.innerHeight, left: 0, right: document.documentElement.clientWidth };
+}
+function tbmScroller(el) {
+  for (let e = el.parentElement; e && e !== document.documentElement; e = e.parentElement) {
+    const o = getComputedStyle(e).overflowY;
+    if ((o === 'auto' || o === 'scroll') && e.scrollHeight > e.clientHeight + 1) return e;
+  }
+  return null;
+}
+/* Pendant la recherche : le bouton sorti de la zone visible (clavier, défilement) est ramené au centre de celle-ci, puis la liste se replace */
+function tbmReveal(m) {
+  const r = m.btn.getBoundingClientRect(), vis = tbmVis(), tb = document.querySelector('header.toolbar');
+  const lo = Math.max(vis.top, tb ? tb.getBoundingClientRect().bottom : 0);
+  if (r.bottom <= vis.bottom - 8 && r.top >= lo) return;
+  const d = (r.top + r.height / 2) - (lo + (vis.bottom - lo) / 2), sc = tbmScroller(m.btn);
+  if (sc) sc.scrollTop += d; else window.scrollBy(0, d);
+}
+function tbmPlace(m, keepDir) {
+  const r = m.btn.getBoundingClientRect(), p = m.panel;
+  const vis = tbmVis(), vw = vis.right, vh = vis.bottom;       /* la zone visible (visualViewport) : le clavier de l'écran ne réduit parfois que celle-ci */
+  let top = r.bottom + 4;
+  m.x0 = r.left; m.y0 = r.top;
+  if (m.form) {
+    const tb = document.querySelector('header.toolbar'), bar = document.querySelector('.tab-bar');
+    const lo = Math.max(vis.top, tb ? tb.getBoundingClientRect().bottom : 0);
+    let hi = vh;
+    if (bar) {
+      const bs = getComputedStyle(bar), br = bar.getBoundingClientRect();
+      if (bs.position === 'fixed' && bs.display !== 'none' && br.height > 0 && br.top > lo) hi = Math.min(hi, br.top);
+    }
+    const cap = tbmKb(m) ? Math.max(60, vh - lo - 8) : Math.min(0.62 * (vh - vis.top), 440);       /* pendant la recherche au toucher (clavier de l'écran) : plus de plafond, toute la hauteur visible */
+    const below = hi - (r.bottom + 4) - 12, above = (r.top - 4) - lo - 12;
+    p.style.minWidth = Math.min(Math.max(180, r.width), vw - 16) + 'px';
+    p.style.maxHeight = 'none';
+    const up = keepDir && m.up !== undefined ? m.up : Math.min(p.offsetHeight, cap) > below && above > below;       /* keepDir : le sens choisi à l'ouverture ne change pas pendant la frappe */
+    m.up = up;
+    p.style.maxHeight = Math.max(60, Math.min(cap, up ? above : below, vh - lo - 8)) + 'px';
+    p.classList.toggle('tbm-up', up);
+    let ty = up ? r.top - 4 - p.offsetHeight : r.bottom + 4;
+    ty = Math.max(lo, Math.min(ty, vh - 4 - p.offsetHeight));       /* le bouton hors de la zone visible et sans rien à défiler : la liste reste dans la zone visible */
+    p.style.top = ty + 'px';
+    p.style.left = r.left + 'px';
+    const fw = p.getBoundingClientRect().width;
+    let fl = r.left;
+    if (fl + fw > vw - 8) fl = vw - 8 - fw;
+    if (fl < vis.left + 8) fl = vis.left + 8;
+    p.style.left = fl + 'px';
+    return;
+  }
+  p.style.minWidth = Math.max(180, r.width) + 'px';
+  p.style.top = top + 'px';
+  p.style.left = r.left + 'px';
+  p.style.maxHeight = Math.max(60, Math.min(0.62 * (vh - vis.top), 440, vh - top - 12)) + 'px';
+  const w = p.getBoundingClientRect().width;
+  let left = r.left;
+  if (left + w > vw - 8) left = vw - 8 - w;
+  if (left < vis.left + 8) left = vis.left + 8;
+  p.style.left = left + 'px';
+}
+
+function tbmFirst(m, d) {
+  const o = m.sel.options;
+  let k = d > 0 ? 0 : o.length - 1;
+  for (; k >= 0 && k < o.length; k += d) if (!o[k].disabled && !tbmOff(m, k)) return k;
+  return -1;
+}
+
+function tbmSetActive(m, k, reveal) {
+  const p = m.panel;
+  if (!p) return;
+  const prev = p.querySelector('.tbm-opt.active');
+  if (prev) prev.classList.remove('active');
+  m.active = k;
+  const li = k >= 0 ? p.querySelector('.tbm-opt[data-i="' + k + '"]') : null;
+  const holders = [m.list, m.q].filter(Boolean);       /* la listbox, et le champ de recherche quand il y en a un */
+  if (!li) { holders.forEach(h => h.removeAttribute('aria-activedescendant')); return; }
+  li.classList.add('active');
+  holders.forEach(h => h.setAttribute('aria-activedescendant', li.id));
+  if (!reveal) return;
+  const t = li.offsetTop, h = li.offsetHeight, sh = m.bar ? m.bar.offsetHeight : 0;       /* la recherche collée en haut cache les sh premiers pixels */
+  if (k === tbmFirst(m, 1)) p.scrollTop = 0;
+  else if (t - sh < p.scrollTop) p.scrollTop = Math.max(0, t - sh);
+  else if (t + h > p.scrollTop + p.clientHeight) p.scrollTop = reveal === 'center' ? Math.max(0, t - sh - (p.clientHeight - sh - h) / 2) : t + h - p.clientHeight;
+}
+
+function tbmStep(m, d) {
+  const o = m.sel.options;
+  for (let k = m.active + d; k >= 0 && k < o.length; k += d) {
+    if (!o[k].disabled && !tbmOff(m, k)) { tbmSetActive(m, k, true); return; }
+  }
+}
+
+/* Saisie de lettres : première option qui commence par elles, remise à zéro après 0,7 s */
+function tbmType(m, ch) {
+  clearTimeout(m.typeTimer);
+  m.type += ch.toLowerCase();
+  m.typeTimer = setTimeout(() => { m.type = ''; }, 700);
+  const o = m.sel.options;
+  for (let k = 0; k < o.length; k++) {
+    if (!o[k].disabled && !tbmOff(m, k) && o[k].label.toLowerCase().indexOf(m.type) === 0) { tbmSetActive(m, k, true); return; }
+  }
+}
+
+/* Les touches dans le champ de recherche : ↓ passe à la première option, Entrée choisit l'option active, Échap ferme ; le reste est de la frappe */
+function tbmQKey(m, e) {
+  const k = e.key;
+  if (k === 'ArrowDown') { e.preventDefault(); tbmSetActive(m, tbmFirst(m, 1), true); m.list.focus({ preventScroll: true }); }
+  else if (k === 'ArrowUp') e.preventDefault();
+  else if (k === 'Enter') { e.preventDefault(); if (m.active >= 0 && !tbmOff(m, m.active)) tbmChoose(m, m.active); }
+  else if (k === 'Escape') { e.preventDefault(); e.stopPropagation(); tbmClose(true); }
+  else if (k === 'Tab') tbmClose(true);
+}
+
+function tbmKey(m, e) {
+  const k = e.key;
+  if (m.q && e.target === m.q) { tbmQKey(m, e); return; }
+  if (m.q && k === 'ArrowUp' && m.active === tbmFirst(m, 1) && e.target !== m.q) { e.preventDefault(); m.q.focus({ preventScroll: true }); return; }       /* ↑ sur la première option : le focus revient au champ */
+  if (m.q && k.length === 1 && k !== ' ' && !e.ctrlKey && !e.metaKey && !e.altKey) {       /* une lettre tapée sur la liste va à la recherche ; Espace, non : il choisit l'option active (dans le champ, il se tape) */
+    e.preventDefault();
+    m.q.focus({ preventScroll: true });
+    m.q.value += k;
+    tbmFilter(m);
+    return;
+  }
+  if (k === 'ArrowDown' || k === 'ArrowUp') { e.preventDefault(); tbmStep(m, k === 'ArrowDown' ? 1 : -1); }
+  else if (k === 'Home') { e.preventDefault(); tbmSetActive(m, tbmFirst(m, 1), true); }
+  else if (k === 'End') { e.preventDefault(); tbmSetActive(m, tbmFirst(m, -1), true); }
+  else if (k === 'Enter' || k === ' ') { e.preventDefault(); if (m.active >= 0) tbmChoose(m, m.active); }
+  else if (k === 'Escape') { e.preventDefault(); e.stopPropagation(); tbmClose(true); }
+  else if (k === 'Tab') { tbmClose(true); }   /* sans preventDefault : le focus part du bouton vers le contrôle suivant */
+  else if (k.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); tbmType(m, k); }
+}
+
+/* Choisir : si la valeur change, le <select> la prend et reçoit un évènement change (qui bouillonne) ; un <select data-repick> (le champ Livrée) le reçoit aussi quand on re-choisit sa valeur : le nom affiché devient un choix */
+function tbmChoose(m, k) {
+  const sel = m.sel, o = sel.options[k];
+  if (!o || o.disabled) return;
+  const changed = k !== sel.selectedIndex;
+  tbmClose(true);
+  if (!changed && !sel.hasAttribute('data-repick')) return;
+  sel.selectedIndex = k;
+  if (m.form) sel.dispatchEvent(new Event('input', { bubbles: true }));   /* comme le contrôle natif : input puis change */
+  sel.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+function tbmClose(refocus) {
+  const m = TBM.cur;
+  if (!m) return;
+  TBM.cur = null;
+  clearTimeout(m.typeTimer);
+  m.type = '';
+  if (m.panel) m.panel.remove();
+  m.panel = null;
+  m.q = null; m.bar = null; m.none = null; m.noneLi = null; m.list = null; m.lis = [];
+  m.active = -1;
+  m.btn.classList.remove('tbm-trigger-open');
+  m.btn.setAttribute('aria-expanded', 'false');
+  if (refocus) m.btn.focus({ preventScroll: true });
+}
+
+/* Un toucher ou un clic hors de la liste et du bouton la ferme, sans agir ailleurs (le clic qui suit est avalé) ;
+   le bouton d'une autre liste ferme celle-ci et s'ouvre ensuite par son propre clic. */
+function tbmOutside(e) {
+  const m = TBM.cur;
+  if (!m) return;
+  const t = e.target;
+  if (m.panel.contains(t) || m.btn.contains(t)) return;
+  const other = t && t.closest ? t.closest(TBM.cfg.trig || '.tbm-trigger') : null;
+  tbmClose(false);
+  if (other) return;
+  tbmSwallowNext();
+}
+
+/* Le clic qui suit le toucher hors de la liste est avalé (aussi pour les menus du module) */
+function tbmSwallowNext() {
+  TBM.swallow = true;
+  const rel = () => { document.removeEventListener('pointerup', rel, true); document.removeEventListener('pointercancel', rel, true); setTimeout(() => { TBM.swallow = false; }, 350); };
+  document.addEventListener('pointerup', rel, true);
+  document.addEventListener('pointercancel', rel, true);
+}
+
+function tbmSwallowClick(e) {
+  if (!TBM.swallow) return;
+  TBM.swallow = false;
+  e.stopPropagation();
+  e.preventDefault();
+}
+
+/* Le champ de recherche a le focus : le clavier de l'écran redimensionne la fenêtre ou fait défiler la page ; la liste ne se ferme pas, elle se replace */
+function tbmSearching(m) { return !!(m && m.panel && m.q && document.activeElement === m.q); }
+
+/* La recherche au toucher : le clavier de l'écran est ouvert (pas de souris : sur ordinateur la recherche a le focus dès l'ouverture, sans clavier) */
+function tbmKb(m) { return tbmSearching(m) && !(window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches); }
+/* La hauteur qu'il faut pour le champ et quatre options entières (ou toutes, s'il y en a moins) */
+function tbmNeed(m) {
+  const p = m.panel, h0 = p.style.maxHeight, sy = p.scrollTop;
+  p.style.maxHeight = 'none';
+  p.scrollTop = 0;
+  const pr = p.getBoundingClientRect();
+  const opts = m.lis.filter(li => !li.classList.contains('tbm-off'));
+  let need = p.offsetHeight;
+  if (opts.length) {
+    const last = opts[Math.min(4, opts.length) - 1].getBoundingClientRect();
+    need = Math.min(need, last.bottom - pr.top + 4);
+  }
+  p.style.maxHeight = h0;
+  p.scrollTop = sy;
+  return need;
+}
+/* Si la place sous le bouton ne suffit pas, le bouton remonte en haut de la zone visible (sous la barre, 8 px) : vrai quand la place sous lui suffit ensuite */
+function tbmFit(m) {
+  const vis = tbmVis(), tb = document.querySelector('header.toolbar'), bar = document.querySelector('.tab-bar');
+  const lo = Math.max(vis.top, tb ? tb.getBoundingClientRect().bottom : 0);
+  let hi = vis.bottom;
+  if (bar) {
+    const bs = getComputedStyle(bar), br = bar.getBoundingClientRect();
+    if (bs.position === 'fixed' && bs.display !== 'none' && br.height > 0 && br.top > lo) hi = Math.min(hi, br.top);
+  }
+  const below = () => hi - (m.btn.getBoundingClientRect().bottom + 4) - 12;
+  const need = tbmNeed(m);
+  if (below() >= need) return false;
+  const d = m.btn.getBoundingClientRect().top - (lo + 8);
+  if (Math.abs(d) > 0.5) {
+    const sc = tbmScroller(m.btn);
+    if (sc) sc.scrollTop += d; else window.scrollBy(0, d);
+    const rest = m.btn.getBoundingClientRect().top - (lo + 8);
+    if (sc && Math.abs(rest) > 0.5) window.scrollBy(0, rest);
+  }
+  return below() >= need;
+}
+
+/* Le redimensionnement de la fenêtre ferme la liste, sauf pendant la recherche (elle se replace, le bouton ramené à l'écran) */
+function tbmResized() {
+  const m = TBM.cur;
+  if (tbmSearching(m)) { tbmFollow(m); return; }
+  tbmClose(false);
+}
+function tbmFollow(m) {
+  if (!m.form) return;
+  tbmReveal(m);
+  if (tbmKb(m) && tbmFit(m)) { m.up = false; tbmPlace(m, true); return; }
+  tbmPlace(m);
+}
+/* Le visualViewport (zone visible) change — clavier de l'écran, zoom : sans effet hors recherche ; pendant la recherche la liste se replace dans la zone visible */
+function tbmVvChanged() {
+  const m = TBM.cur;
+  if (tbmSearching(m)) tbmFollow(m);
+}
+
+/* Le défilement de la barre (ou de la page) déplace le bouton : la liste se ferme, sauf pendant la recherche (le bouton sorti de la zone visible est ramené, la liste se replace) */
+function tbmScrolled(e) {
+  const m = TBM.cur;
+  if (!m || !m.panel) return;
+  if (e.target === m.panel || (e.target.nodeType && m.panel.contains(e.target))) return;
+  const r = m.btn.getBoundingClientRect();
+  if (Math.abs(r.left - m.x0) > 0.5 || Math.abs(r.top - m.y0) > 0.5) {
+    if (tbmSearching(m)) { tbmFollow(m); return; }
+    tbmClose(false);
+  }
+}
+"""
+
+
 def build_block():
     """Le script du bloc, délimité par ses deux commentaires, terminé par un saut de ligne."""
     return BLOCK_BEGIN + _JS + BLOCK_END + '\n'
@@ -462,15 +1086,31 @@ def build_css():
     return CSS_BEGIN + _CSS + CSS_END + '\n'
 
 
+def build_tbm_css():
+    """La feuille des listes au thème de l'interface, délimitée, terminée par un saut de ligne."""
+    return TBM_CSS_BEGIN + _TBM_CSS + TBM_CSS_END + '\n'
+
+
+def build_tbm_block():
+    """Le script des listes au thème de l'interface (tbm*), délimité, terminé par un saut de ligne."""
+    return TBM_BEGIN + _TBM_JS + TBM_END + '\n'
+
+
 def fingerprint():
-    """L'empreinte du bloc (feuille puis script) : sha256, 16 premiers caractères."""
-    return hashlib.sha256((build_css() + build_block()).encode('utf-8')).hexdigest()[:16]
+    """L'empreinte du bloc (feuille, script, puis les listes : feuille et script) : sha256, 16 premiers caractères."""
+    return hashlib.sha256((build_css() + build_block() + build_tbm_css() + build_tbm_block()).encode('utf-8')).hexdigest()[:16]
 
 
 def verify(html):
     """Garde-fou de build : le bloc (feuille et script) est dans le livrable, tel quel ; imprime l'empreinte."""
     if build_css() not in html or build_block() not in html:
         raise SystemExit("[ERREUR] bloc d'interface commun absent du livrable ou modifié")
+    if build_tbm_css() not in html or build_tbm_block() not in html:
+        raise SystemExit("[ERREUR] listes au thème de l'interface (tbm*) absentes du livrable ou modifiées")
+    if html.count('function tbmOpen(') != 1 or html.count('const TBM = ') != 1 or html.count('position: fixed; z-index: 10500; min-width: 180px') != 1:
+        raise SystemExit("[ERREUR] les listes au thème de l'interface (tbm*) ne sont pas en un seul exemplaire dans le livrable")
+    if '@@TBM_' in html:
+        raise SystemExit("[ERREUR] un emplacement des listes (@@TBM_…) est resté dans le livrable")
     print("[OK] bloc d'interface commun inséré tel quel, empreinte %s" % fingerprint())
 
 
@@ -504,4 +1144,4 @@ def verify_bar(html):
 
 
 if __name__ == '__main__':
-    print(f"[OK] bloc d'interface : script {len(build_block())} caractères, feuille {len(build_css())}, empreinte {fingerprint()}")
+    print(f"[OK] bloc d'interface : script {len(build_block())} caractères, feuille {len(build_css())}, listes {len(build_tbm_block())} + {len(build_tbm_css())}, empreinte {fingerprint()}")
