@@ -3753,6 +3753,12 @@ const I18N = {
     'editor.exportTip':       'Sauvegardez le briefing pour conserver vos templates',
     // ── Strings résiduelles externalisées (Étape C) ──
     'select.noSquadron':           '— Aucun escadron —',
+    'select.noAircraft':           '— Aucun —',
+    'editor.wing.ac.helis':        'Hélicoptères',
+    'editor.wing.ac.planes':       'Avions',
+    'editor.wing.ac.mods':         'Hors jeu de base',
+    'editor.wing.ac.other':        'Autre type (mod)…',
+    'editor.wing.ac.modPh':        'Type tel qu\'il s\'écrit dans le .miz',
     'select.noGroup':              '— Sélectionner un groupe —',
     'select.customAircraft':       '— Autre (libre) —',
     'select.noItem':               '— Item —',
@@ -4169,6 +4175,12 @@ const I18N = {
     'editor.exportTip':       'Save the briefing to keep your templates',
     // ── Residual strings externalized (Step C) ──
     'select.noSquadron':           '— No squadron —',
+    'select.noAircraft':           '— None —',
+    'editor.wing.ac.helis':        'Helicopters',
+    'editor.wing.ac.planes':       'Airplanes',
+    'editor.wing.ac.mods':         'Not in the base game',
+    'editor.wing.ac.other':        'Other type (mod)…',
+    'editor.wing.ac.modPh':        'Type as written in the .miz',
     'select.noGroup':              '— Select a group —',
     'select.customAircraft':       '— Other (custom) —',
     'select.noItem':               '— Item —',
@@ -7418,7 +7430,8 @@ function simpleFlightRows() {
   return (state.phases || []).map(ph => {
     const info = getPhaseSquadronInfo(ph);
     const vol = info ? getRosterLabelParts(info).shortLabel : '';
-    const acft = (info && info.aircraft && info.aircraft !== '?') ? info.aircraft : '';
+    /* un groupe sans escadron imprime l'appareil choisi (ph.aircraft) ; un groupe d'escadron ou invité garde le sien */
+    const acft = (info && info.aircraft && info.aircraft !== '?') ? info.aircraft : ((!info && ph.squadron !== '__guest__' && typeof ph.aircraft === 'string') ? ph.aircraft.trim() : '');
     const n = parseInt(ph.count, 10);
     const app = (Number.isInteger(n) && n >= 1) ? (acft ? n + '× ' + acft : n + '×') : acft;
     return [vol, app, ph.title || '', ph.departure || ''];
@@ -8206,6 +8219,120 @@ function escapeHtml(str) {
 }
 function escapeAttr(str) { return escapeHtml(str); }
 
+/* ===== TYPES D'APPAREILS DU JEU ===== */
+// Types jouables du jeu de base (pydcs 1.0.0), par leur nom dans un .miz ; l'ordre est celui de la table.
+const GAME_AIRCRAFT_TYPES = {
+  "helicopters": [
+    "AH-64D_BLK_II",
+    "CH-47Fbl1",
+    "Ka-50",
+    "Ka-50_3",
+    "Mi-24P",
+    "Mi-8MT",
+    "OH58D",
+    "SA342L",
+    "SA342M",
+    "SA342Minigun",
+    "SA342Mistral",
+    "UH-1H"
+  ],
+  "planes": [
+    "A-10A",
+    "A-10C",
+    "A-10C_2",
+    "AJS37",
+    "AV8BNA",
+    "Bf-109K-4",
+    "C-101CC",
+    "C-101EB",
+    "C-130J-30",
+    "Christen Eagle II",
+    "F-100D",
+    "F-14A-135-GR",
+    "F-14A-135-GR-Early",
+    "F-14A-95-GR",
+    "F-14B",
+    "F-14BU",
+    "F-15C",
+    "F-15ESE",
+    "F-16C_50",
+    "F-4E-45MC",
+    "F-5E-3",
+    "F-5E-3_FC",
+    "F-86F Sabre",
+    "F-86F_FC",
+    "F4U-1D",
+    "FA-18C_hornet",
+    "FW-190A8",
+    "FW-190D9",
+    "Hawk",
+    "I-16",
+    "J-11A",
+    "JF-17",
+    "L-39C",
+    "L-39ZA",
+    "La-7",
+    "M-2000C",
+    "MB-339A",
+    "MB-339APAN",
+    "MiG-15bis",
+    "MiG-15bis_FC",
+    "MiG-19P",
+    "MiG-21Bis",
+    "MiG-29 Fulcrum",
+    "MiG-29A",
+    "MiG-29G",
+    "MiG-29S",
+    "Mirage-F1BE",
+    "Mirage-F1CE",
+    "Mirage-F1EE",
+    "MosquitoFBMkVI",
+    "P-47D-30",
+    "P-47D-30bl1",
+    "P-47D-40",
+    "P-51D",
+    "P-51D-30-NA",
+    "SpitfireLFMkIX",
+    "SpitfireLFMkIXCW",
+    "Su-25",
+    "Su-25T",
+    "Su-27",
+    "Su-33",
+    "TF-51D",
+    "Yak-52"
+  ]
+};
+
+// Nom exactement dans la table (casse comprise).
+function gameAircraftIsType(name) {
+  return GAME_AIRCRAFT_TYPES.helicopters.indexOf(name) >= 0 || GAME_AIRCRAFT_TYPES.planes.indexOf(name) >= 0;
+}
+
+// Nom réduit : minuscules, rien d'autre que les lettres a-z et les chiffres.
+function gameAircraftReduce(name) {
+  return String(name).toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+// Types proches d'un nom, dans l'ordre de la table (hélicoptères, puis avions) ; [] si le nom est dans la table.
+// 1. même nom réduit ; 2. sinon le plus long début commun des noms réduits, au moins 3 caractères (tous les types qui l'atteignent).
+function gameAircraftClose(name) {
+  if (gameAircraftIsType(name)) return [];
+  const all = GAME_AIRCRAFT_TYPES.helicopters.concat(GAME_AIRCRAFT_TYPES.planes);
+  const r = gameAircraftReduce(name);
+  const same = all.filter(ty => gameAircraftReduce(ty) === r);
+  if (same.length) return same;
+  let best = 0;
+  const lens = all.map(ty => {
+    const q = gameAircraftReduce(ty);
+    let n = 0;
+    while (n < r.length && n < q.length && r.charAt(n) === q.charAt(n)) n++;
+    if (n > best) best = n;
+    return n;
+  });
+  if (best < 3) return [];
+  return all.filter((ty, i) => lens[i] === best);
+}
+/* ===== FIN DES TYPES D'APPAREILS DU JEU ===== */
 /* ===== MESSAGES COMMUNS (toast) ===== */
 function mpToastEl() {
   let el = document.getElementById('toast');
@@ -9192,6 +9319,91 @@ function newBlankFlight() {
 }
 
 /* Vols = missions de l'état (state.phases) ; les champs propres au mode complet sont conservés. */
+/* L'appareil d'un groupe du Standard qui n'a pas d'escadron (phase.aircraft) et celui d'un escadron invité (guestSquadron.aircraft) : la liste des types du jeu, celle de HQ
+   (« — Aucun — », Hélicoptères et Avions de GAME_AIRCRAFT_TYPES, puis « Hors jeu de base » : « Autre type (mod)… » ouvre la saisie libre, et une valeur hors table déjà écrite s'y trouve, choisie).
+   Rien n'est bloqué : le type reste un texte. SIMPLE_AC.key : la liste dont la saisie libre est ouverte ('p' ou 'g' et le rang du vol). */
+const SIMPLE_AC = { key: '', prev: '' };
+function simpleAcField(i, isGuest) {
+  const key = (isGuest ? 'g' : 'p') + i, labelKey = isGuest ? 'editor.phases.guestAircraft' : 'editor.phases.aircraft';
+  const ph = () => state.phases[i];
+  const get = () => { const v = isGuest ? (ph().guestSquadron && ph().guestSquadron.aircraft) : ph().aircraft; return typeof v === 'string' ? v : ''; };
+  const set = v => {
+    if (isGuest) { if (!ph().guestSquadron) ph().guestSquadron = { name: '', subgroup: '', aircraft: '' }; ph().guestSquadron.aircraft = v; }
+    else ph().aircraft = v;
+  };
+  const wrap = document.createElement('div');
+  wrap.className = 'ed-field';
+  const lab = document.createElement('label');
+  lab.textContent = t(labelKey);
+  const opt = (v, l, mod) => { const o = document.createElement('option'); o.value = v; o.textContent = l; if (mod) o.setAttribute('data-ac-mod', ''); return o; };
+  const focusList = () => setTimeout(() => {
+    const s = wrap.querySelector('select'), m = s && TBM.map.get(s);
+    if (m && m.btn) m.btn.focus({ preventScroll: true }); else if (s) s.focus({ preventScroll: true });
+  }, 0);
+  const paintList = () => {
+    wrap.innerHTML = '';
+    wrap.appendChild(lab);
+    const cur = get(), off = cur.trim() !== '' && !gameAircraftIsType(cur);
+    const sel = document.createElement('select');
+    sel.className = 'fl-ac-sel';
+    sel.setAttribute('data-search', '');
+    sel.setAttribute('aria-label', t(labelKey));
+    sel.appendChild(opt('', t('select.noAircraft')));
+    [['editor.wing.ac.helis', GAME_AIRCRAFT_TYPES.helicopters], ['editor.wing.ac.planes', GAME_AIRCRAFT_TYPES.planes]].forEach(g => {
+      const og = document.createElement('optgroup');
+      og.label = t(g[0]);
+      g[1].forEach(ty => og.appendChild(opt(ty, ty)));
+      sel.appendChild(og);
+    });
+    const ogMod = document.createElement('optgroup');
+    ogMod.label = t('editor.wing.ac.mods');
+    if (off) ogMod.appendChild(opt(cur, cur, true));
+    const other = opt('__other__', t('editor.wing.ac.other'));
+    other.setAttribute('data-keep', '');
+    ogMod.appendChild(other);
+    sel.appendChild(ogMod);
+    wrap.appendChild(sel);
+    sel.value = cur.trim() === '' ? '' : cur;
+    sel.addEventListener('change', () => {
+      if (sel.value === '__other__') { SIMPLE_AC.key = key; SIMPLE_AC.prev = get(); paintInput(); return; }
+      const stale = !!sel.querySelector('option[data-ac-mod]') && !sel.options[sel.selectedIndex].hasAttribute('data-ac-mod');       // la valeur hors jeu de base qu'on quitte ne reste pas dans la liste
+      set(sel.value);
+      schedulePreview();
+      if (stale) { paintList(); focusList(); }
+    });
+  };
+  const paintInput = () => {
+    wrap.innerHTML = '';
+    wrap.appendChild(lab);
+    const inp = document.createElement('input');
+    inp.type = 'text'; inp.maxLength = 60; inp.autocomplete = 'off'; inp.spellcheck = false;
+    inp.className = 'fl-ac-other';
+    inp.setAttribute('aria-label', t(labelKey));
+    inp.placeholder = t('editor.wing.ac.modPh');
+    const cur = get();
+    inp.value = cur.trim() !== '' && !gameAircraftIsType(cur) ? cur : '';
+    wrap.appendChild(inp);
+    let done = false;
+    const leave = cancel => {       // un texte saisi vaut Entrée, un champ vide ou Échap rend la liste telle qu'elle était ; la liste reprend la place du champ sur place
+      if (done) return;
+      done = true;
+      SIMPLE_AC.key = '';
+      if (cancel) set(SIMPLE_AC.prev); else set(inp.value.trim());
+      schedulePreview();
+      paintList();
+    };
+    inp.addEventListener('input', () => { set(inp.value); schedulePreview(); });
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); leave(false); focusList(); }
+      else if (e.key === 'Escape') { e.preventDefault(); leave(true); focusList(); }
+    });
+    inp.addEventListener('blur', () => leave(false));
+    setTimeout(() => inp.focus({ preventScroll: true }), 0);
+  };
+  if (SIMPLE_AC.key === key) paintInput(); else paintList();
+  return wrap;
+}
+
 function renderSimpleFlights() {
   const list = document.getElementById('s-flights-list');
   if (!list) return;
@@ -9220,18 +9432,18 @@ function renderSimpleFlights() {
     const g = ph.guestSquadron || { name: '', subgroup: '', aircraft: '' };
     const n = parseInt(ph.count, 10);
 
+    const noSq = !isGuest && !selectedSq;       // un groupe sans escadron choisit son appareil dans la liste du jeu
     const aircraftHtml = showAircraft ? `
       <div class="ed-field"><label>${t('editor.phases.aircraft')}</label>
         <select class="fl-aircraft">${selectedSq.aircraft.map(a => `<option value="${escapeAttr(a)}">${escapeHtml(a)}</option>`).join('')}</select>
-      </div>` : '';
+      </div>` : (noSq ? '<div data-ac-slot="p"></div>' : '');
     const guestHtml = isGuest ? `
       <div class="ed-guest-fields">
         <div class="ed-field"><label>${t('editor.phases.guestName')}</label>
           <input class="fl-g-name" type="text" value="${escapeAttr(g.name)}" placeholder="${escapeAttr(t('placeholder.guestName'))}"></div>
         <div class="ed-field"><label>${t('editor.phases.guestSub')}</label>
           <input class="fl-g-sub" type="text" value="${escapeAttr(g.subgroup)}" placeholder="${escapeAttr(t('placeholder.guestSub'))}"></div>
-        <div class="ed-field"><label>${t('editor.phases.guestAircraft')}</label>
-          <input class="fl-g-ac" type="text" value="${escapeAttr(g.aircraft)}" placeholder="${escapeAttr(t('placeholder.guestAircraft'))}"></div>
+        <div data-ac-slot="g"></div>
       </div>` : '';
 
     const card = document.createElement('div');
@@ -9258,6 +9470,8 @@ function renderSimpleFlights() {
           <input class="fl-departure" type="text" value="${escapeAttr(ph.departure || '')}"></div>
       </div>
     `;
+    const acSlot = card.querySelector('[data-ac-slot]');
+    if (acSlot) acSlot.replaceWith(simpleAcField(i, isGuest));
     list.appendChild(card);
 
     card.querySelector('.fl-squadron').value = ph.squadron || '';
@@ -9275,7 +9489,6 @@ function renderSimpleFlights() {
       (state.phases[i].guestSquadron = { name: '', subgroup: '', aircraft: '' });
     bindText('.fl-g-name', v => { guest().name = v; });
     bindText('.fl-g-sub', v => { guest().subgroup = v; });
-    bindText('.fl-g-ac', v => { guest().aircraft = v; });
 
     const countEl = card.querySelector('.fl-count');
     countEl.addEventListener('input', () => {
@@ -9289,6 +9502,7 @@ function renderSimpleFlights() {
       const p = state.phases[i];
       const newSqId = e.target.value;
       p.squadron = newSqId;
+      SIMPLE_AC.key = '';
       if (newSqId === '__guest__') {
         if (!p.guestSquadron) p.guestSquadron = { name: '', subgroup: '', aircraft: '' };
         p.aircraft = '';

@@ -4761,11 +4761,12 @@ function magRouteDate(s) {
   return (typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s) && magDecYear(s) != null && +s.slice(0, 4) >= 1900 && +s.slice(0, 4) <= 2099) ? s : '';
 }
 
-/* L'année d'une route et sa source : { src: 'mission' | 'route' | 'routeForced' | 'forced' | 'typed' | 'default', y (décimale), year (AAAA, texte),
+/* L'année d'une route et sa source : { src: 'mission' | 'route' | 'routeForced' | 'card' | 'cardForced' | 'forced' | 'typed' | 'default', y (décimale), year (AAAA, texte),
    file, date } ; la mission est celle de HQ (mission_snapshot_v1), prise si son théâtre est celui de la route et sa date se lit,
    sauf si « Forcer » est enfoncé avec une année saisie valide (quatre chiffres, de 1900 à 2099) ; sinon la date de la route (routeDate, reçue avec elle : paquet ou mission de HQ ;
-   undefined si l'appelant n'en a pas) si elle se lit, avec la même exception (« routeForced ») ; sinon la saisie, sinon 1985. */
-function magYearSource(theatre, yearStr, force, routeDate) {
+   undefined si l'appelant n'en a pas) si elle se lit, avec la même exception (« routeForced ») ; sinon la date de la carte (cardDate, la date d'une datacard, facultative : seul le Datacard Generator en passe une)
+   si elle se lit, avec la même exception (« cardForced ») ; sinon la saisie, sinon 1985. */
+function magYearSource(theatre, yearStr, force, routeDate, cardDate) {
   let mis = null;
   try {
     const o = JSON.parse(localStorage.getItem('mission_snapshot_v1'));
@@ -4779,6 +4780,9 @@ function magYearSource(theatre, yearStr, force, routeDate) {
   const rd = mis ? '' : magRouteDate(routeDate);
   if (rd && !(force === true && ys)) { const ry = magDecYear(rd); return { src: 'route', y: ry, year: String(Math.floor(ry)), file: '', date: rd }; }
   if (rd) return { src: 'routeForced', y: magDecYear(ys), year: ys, file: '', date: rd };
+  const cd = mis ? '' : magRouteDate(cardDate);
+  if (cd && !(force === true && ys)) { const cy = magDecYear(cd); return { src: 'card', y: cy, year: String(Math.floor(cy)), file: '', date: cd }; }
+  if (cd) return { src: 'cardForced', y: magDecYear(ys), year: ys, file: '', date: cd };
   if (ys) return { src: mis ? 'forced' : 'typed', y: magDecYear(ys), year: ys, file: mis ? mis.file : '', date: '' };
   return { src: 'default', y: magDecYear('1985'), year: '1985', file: '', date: '' };
 }
@@ -10323,6 +10327,35 @@ function gsStable(v) {
     return o;
   });
 }
+/* Les canaux à imprimer sur la datacard d'un groupe : radioPrint, « type|poste|canal » → { on, label, mod }, une clé de groupe comme les autres (le Flight Configurator coche, le Datacard Generator coche, nomme et module ;
+   le paquet de vol ne la porte pas). gsPrintNorm en rend une copie lisible : seules les entrées objets sont gardées, on est un booléen, label et mod des textes. */
+function gsPrintNorm(o) {
+  const r = {};
+  if (gsIsObj(o)) Object.keys(o).forEach(k => {
+    const e = o[k];
+    if (gsIsObj(e)) r[k] = { on: e.on === true, label: typeof e.label === 'string' ? e.label : '', mod: typeof e.mod === 'string' ? e.mod : '' };
+  });
+  return r;
+}
+/* La migration de radioPrint, une fois : un groupe qui n'a pas encore radioPrint et dont la datacard liée (cards : les cartes du document des datacards, gsId = fcId du groupe) a des canaux cochés prend ceux de la carte ;
+   ensuite le groupe fait foi. Les deux outils l'appellent à leur chargement (le Datacard Generator avec les cartes qu'il vient de lire, le Flight Configurator sans argument : les cartes sont alors lues dans datacard_state_v1).
+   Rend vrai si un groupe a été écrit. */
+function gsPrintMigrate(cards) {
+  if (cards === undefined) { const d = gsJson(GS_KEY_DG); cards = gsIsObj(d) ? d.cards : null; }
+  if (!Array.isArray(cards)) return false;
+  const g = gsRead();
+  if (g === null) return false;
+  let any = false;
+  g.flights.forEach(f => {
+    if (gsIsObj(f.radioPrint)) return;
+    const c = cards.find(x => gsIsObj(x) && x.gsId === f.fcId && gsIsObj(x.radioSel) && Object.keys(x.radioSel).some(k => gsIsObj(x.radioSel[k]) && x.radioSel[k].on === true));
+    if (!c) return;
+    const nf = JSON.parse(JSON.stringify(f));
+    nf.radioPrint = gsPrintNorm(c.radioSel);
+    if (gsPutFlight(nf)) any = true;
+  });
+  return any;
+}
 /* L'identifiant d'un groupe neuf : « f » et trois nombres aléatoires en base 36 */
 function gsNewId() {
   try {
@@ -10902,7 +10935,8 @@ function impPhaseIdentity(ph, wing) {
   else if (sq && impHasText(sq.callsign)) callsign = sq.callsign.trim();
   else callsign = impStr(ph.squadron).trim();
   if (guest && callsign === '__guest__') callsign = '';
-  const aircraft = guest ? impStr(g.aircraft).trim() : impStr(ph.aircraft).trim();
+  /* Le type : celui du vol (ph.aircraft, que le Standard écrit pour un groupe sans escadron), sinon pour un escadron son premier type, sinon celui de l'escadron invité */
+  const aircraft = impHasText(ph.aircraft) ? ph.aircraft.trim() : (guest ? impStr(g.aircraft).trim() : ((sq && Array.isArray(sq.aircraft) && sq.aircraft.length) ? impStr(sq.aircraft[0]).trim() : ''));
   let id, sub, ac;
   if (guest) {
     id = impHasText(g.name) ? g.name : '?';
@@ -10932,10 +10966,37 @@ function impBriefingTable(b, type) {
   const items = Array.isArray(rp.items) ? rp.items.filter(gsIsObj) : [];
   const byId = {};
   items.forEach(it => { byId[it.id] = it; });
-  const plan = (Array.isArray(rp.aircraftPlans) ? rp.aircraftPlans : []).find(p => gsIsObj(p) && impSame(p.aircraft, type));
-  if (!plan) return out;
   const posts = Object.keys(RADIO_CHANNELS[type]).map(Number);
   const shortOf = i => impPosteShort(type, i).replace(/\s+/g, '').toLowerCase();
+  const mizOf = (poste, chan) => {       // le canal du cockpit (texte) → le canal du .miz du poste, ou 0 s'il n'existe pas
+    const t = String(chan === undefined || chan === null ? '' : chan).trim(), cock = Number(t);
+    const fm = impHas(RADIO_FIRST_CHANNEL, type) ? RADIO_FIRST_CHANNEL[type] : null;
+    const first = fm && impHas(fm, poste) ? fm[poste] : 1;
+    const miz = cock - first + 1;
+    return (t === '' || !Number.isInteger(cock) || !Number.isInteger(miz) || miz < 1 || miz > RADIO_CHANNELS[type][poste]) ? 0 : miz;
+  };
+  const freqOf = raw => {
+    const s = String(raw === undefined || raw === null ? '' : raw).trim(), f = Number(s.replace(',', '.'));
+    return (s === '' || !isFinite(f) || !(f > 0)) ? '' : String(f);
+  };
+  if (gsIsObj(b.meta) && b.meta.format === 'simple') {
+    /* Un brief Standard : les fréquences globales (radioPlan.items) portent leur radio (nom court du poste) et leur canal du cockpit ; le premier de chaque poste et canal l'emporte, tout autre est compté ignoré */
+    items.forEach(it => {
+      const nm = impStr(it.radio).replace(/\s+/g, '').toLowerCase();
+      const hasAny = nm !== '' || impStr(it.channel).trim() !== '' || impStr(it.frequency).trim() !== '';
+      if (!hasAny) return;
+      let poste = 0;
+      if (nm !== '') for (let i = 1; i <= 9; i++) if (shortOf(i) === nm) { poste = i; break; }
+      const miz = poste && posts.indexOf(poste) >= 0 ? mizOf(poste, it.channel) : 0, fr = freqOf(it.frequency);
+      if (!poste || !miz || fr === '') { out.ignored++; return; }
+      const tb = impHas(out.posts, poste) ? out.posts[poste] : (out.posts[poste] = {});
+      if (impHas(tb, String(miz))) { out.ignored++; return; }
+      tb[String(miz)] = fr;
+    });
+    return out;
+  }
+  const plan = (Array.isArray(rp.aircraftPlans) ? rp.aircraftPlans : []).find(p => gsIsObj(p) && impSame(p.aircraft, type));
+  if (!plan) return out;
   const used = {};       // nom court → combien de radios du plan l'ont déjà pris
   (Array.isArray(plan.radios) ? plan.radios : []).forEach(r => {
     if (!gsIsObj(r)) return;

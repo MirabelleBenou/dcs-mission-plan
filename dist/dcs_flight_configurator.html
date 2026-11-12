@@ -443,14 +443,14 @@ body[data-theme] {
 .tbm-panel.tbm-p-field .tbm-opt { white-space: normal; line-height: 1.3; padding-top: 8px; padding-bottom: 8px; word-break: break-word; }
 .ed-field input[type=text] { min-width: 0; }
 .ed-field input.bad, .fc-ch input.bad { border-color: var(--mp-warn); border-left-color: var(--mp-warn); }
-.fc-ch input, .fc-set input[type=number] {
+.fc-ch input:not([type=checkbox]), .fc-set input[type=number] {
   background: rgba(216,201,165,.92); border: 1px solid var(--khaki); border-left: 3px solid var(--amber-dark);
   font-family: var(--f-typewriter); font-size: 13px; color: var(--ink); padding: 6px 8px; width: 100%; min-width: 0; border-radius: 0;
   -moz-appearance: textfield; appearance: textfield;
 }
-.fc-ch input { min-height: 44px; }
+.fc-ch input:not([type=checkbox]) { min-height: 44px; }
 .fc-set input[type=number] { min-height: 44px; }
-.fc-ch input:focus, .fc-set input[type=number]:focus { border-left-color: var(--red-stamp); background: var(--paper-light); box-shadow: 0 0 0 1px var(--fc); }
+.fc-ch input:not([type=checkbox]):focus, .fc-set input[type=number]:focus { border-left-color: var(--red-stamp); background: var(--paper-light); box-shadow: 0 0 0 1px var(--fc); }
 .fc-ch input::-webkit-outer-spin-button, .fc-ch input::-webkit-inner-spin-button, .fc-set input::-webkit-outer-spin-button, .fc-set input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .fc-set input:disabled { opacity: .5; }
 /* la barre du carburant : piste et curseur aux couleurs du thème (--khaki, --paper-light), la part pleine à l'accent du module (--fc) ; l'élément fait 34 px de haut pour se prendre au doigt */
@@ -8460,11 +8460,12 @@ function magRouteDate(s) {
   return (typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s) && magDecYear(s) != null && +s.slice(0, 4) >= 1900 && +s.slice(0, 4) <= 2099) ? s : '';
 }
 
-/* L'année d'une route et sa source : { src: 'mission' | 'route' | 'routeForced' | 'forced' | 'typed' | 'default', y (décimale), year (AAAA, texte),
+/* L'année d'une route et sa source : { src: 'mission' | 'route' | 'routeForced' | 'card' | 'cardForced' | 'forced' | 'typed' | 'default', y (décimale), year (AAAA, texte),
    file, date } ; la mission est celle de HQ (mission_snapshot_v1), prise si son théâtre est celui de la route et sa date se lit,
    sauf si « Forcer » est enfoncé avec une année saisie valide (quatre chiffres, de 1900 à 2099) ; sinon la date de la route (routeDate, reçue avec elle : paquet ou mission de HQ ;
-   undefined si l'appelant n'en a pas) si elle se lit, avec la même exception (« routeForced ») ; sinon la saisie, sinon 1985. */
-function magYearSource(theatre, yearStr, force, routeDate) {
+   undefined si l'appelant n'en a pas) si elle se lit, avec la même exception (« routeForced ») ; sinon la date de la carte (cardDate, la date d'une datacard, facultative : seul le Datacard Generator en passe une)
+   si elle se lit, avec la même exception (« cardForced ») ; sinon la saisie, sinon 1985. */
+function magYearSource(theatre, yearStr, force, routeDate, cardDate) {
   let mis = null;
   try {
     const o = JSON.parse(localStorage.getItem('mission_snapshot_v1'));
@@ -8478,6 +8479,9 @@ function magYearSource(theatre, yearStr, force, routeDate) {
   const rd = mis ? '' : magRouteDate(routeDate);
   if (rd && !(force === true && ys)) { const ry = magDecYear(rd); return { src: 'route', y: ry, year: String(Math.floor(ry)), file: '', date: rd }; }
   if (rd) return { src: 'routeForced', y: magDecYear(ys), year: ys, file: '', date: rd };
+  const cd = mis ? '' : magRouteDate(cardDate);
+  if (cd && !(force === true && ys)) { const cy = magDecYear(cd); return { src: 'card', y: cy, year: String(Math.floor(cy)), file: '', date: cd }; }
+  if (cd) return { src: 'cardForced', y: magDecYear(ys), year: ys, file: '', date: cd };
   if (ys) return { src: mis ? 'forced' : 'typed', y: magDecYear(ys), year: ys, file: mis ? mis.file : '', date: '' };
   return { src: 'default', y: magDecYear('1985'), year: '1985', file: '', date: '' };
 }
@@ -8614,6 +8618,35 @@ function gsStable(v) {
     Object.keys(x).sort().forEach(n => { o[n] = x[n]; });
     return o;
   });
+}
+/* Les canaux à imprimer sur la datacard d'un groupe : radioPrint, « type|poste|canal » → { on, label, mod }, une clé de groupe comme les autres (le Flight Configurator coche, le Datacard Generator coche, nomme et module ;
+   le paquet de vol ne la porte pas). gsPrintNorm en rend une copie lisible : seules les entrées objets sont gardées, on est un booléen, label et mod des textes. */
+function gsPrintNorm(o) {
+  const r = {};
+  if (gsIsObj(o)) Object.keys(o).forEach(k => {
+    const e = o[k];
+    if (gsIsObj(e)) r[k] = { on: e.on === true, label: typeof e.label === 'string' ? e.label : '', mod: typeof e.mod === 'string' ? e.mod : '' };
+  });
+  return r;
+}
+/* La migration de radioPrint, une fois : un groupe qui n'a pas encore radioPrint et dont la datacard liée (cards : les cartes du document des datacards, gsId = fcId du groupe) a des canaux cochés prend ceux de la carte ;
+   ensuite le groupe fait foi. Les deux outils l'appellent à leur chargement (le Datacard Generator avec les cartes qu'il vient de lire, le Flight Configurator sans argument : les cartes sont alors lues dans datacard_state_v1).
+   Rend vrai si un groupe a été écrit. */
+function gsPrintMigrate(cards) {
+  if (cards === undefined) { const d = gsJson(GS_KEY_DG); cards = gsIsObj(d) ? d.cards : null; }
+  if (!Array.isArray(cards)) return false;
+  const g = gsRead();
+  if (g === null) return false;
+  let any = false;
+  g.flights.forEach(f => {
+    if (gsIsObj(f.radioPrint)) return;
+    const c = cards.find(x => gsIsObj(x) && x.gsId === f.fcId && gsIsObj(x.radioSel) && Object.keys(x.radioSel).some(k => gsIsObj(x.radioSel[k]) && x.radioSel[k].on === true));
+    if (!c) return;
+    const nf = JSON.parse(JSON.stringify(f));
+    nf.radioPrint = gsPrintNorm(c.radioSel);
+    if (gsPutFlight(nf)) any = true;
+  });
+  return any;
 }
 /* L'identifiant d'un groupe neuf : « f » et trois nombres aléatoires en base 36 */
 function gsNewId() {
@@ -9085,7 +9118,8 @@ function impPhaseIdentity(ph, wing) {
   else if (sq && impHasText(sq.callsign)) callsign = sq.callsign.trim();
   else callsign = impStr(ph.squadron).trim();
   if (guest && callsign === '__guest__') callsign = '';
-  const aircraft = guest ? impStr(g.aircraft).trim() : impStr(ph.aircraft).trim();
+  /* Le type : celui du vol (ph.aircraft, que le Standard écrit pour un groupe sans escadron), sinon pour un escadron son premier type, sinon celui de l'escadron invité */
+  const aircraft = impHasText(ph.aircraft) ? ph.aircraft.trim() : (guest ? impStr(g.aircraft).trim() : ((sq && Array.isArray(sq.aircraft) && sq.aircraft.length) ? impStr(sq.aircraft[0]).trim() : ''));
   let id, sub, ac;
   if (guest) {
     id = impHasText(g.name) ? g.name : '?';
@@ -9115,10 +9149,37 @@ function impBriefingTable(b, type) {
   const items = Array.isArray(rp.items) ? rp.items.filter(gsIsObj) : [];
   const byId = {};
   items.forEach(it => { byId[it.id] = it; });
-  const plan = (Array.isArray(rp.aircraftPlans) ? rp.aircraftPlans : []).find(p => gsIsObj(p) && impSame(p.aircraft, type));
-  if (!plan) return out;
   const posts = Object.keys(RADIO_CHANNELS[type]).map(Number);
   const shortOf = i => impPosteShort(type, i).replace(/\s+/g, '').toLowerCase();
+  const mizOf = (poste, chan) => {       // le canal du cockpit (texte) → le canal du .miz du poste, ou 0 s'il n'existe pas
+    const t = String(chan === undefined || chan === null ? '' : chan).trim(), cock = Number(t);
+    const fm = impHas(RADIO_FIRST_CHANNEL, type) ? RADIO_FIRST_CHANNEL[type] : null;
+    const first = fm && impHas(fm, poste) ? fm[poste] : 1;
+    const miz = cock - first + 1;
+    return (t === '' || !Number.isInteger(cock) || !Number.isInteger(miz) || miz < 1 || miz > RADIO_CHANNELS[type][poste]) ? 0 : miz;
+  };
+  const freqOf = raw => {
+    const s = String(raw === undefined || raw === null ? '' : raw).trim(), f = Number(s.replace(',', '.'));
+    return (s === '' || !isFinite(f) || !(f > 0)) ? '' : String(f);
+  };
+  if (gsIsObj(b.meta) && b.meta.format === 'simple') {
+    /* Un brief Standard : les fréquences globales (radioPlan.items) portent leur radio (nom court du poste) et leur canal du cockpit ; le premier de chaque poste et canal l'emporte, tout autre est compté ignoré */
+    items.forEach(it => {
+      const nm = impStr(it.radio).replace(/\s+/g, '').toLowerCase();
+      const hasAny = nm !== '' || impStr(it.channel).trim() !== '' || impStr(it.frequency).trim() !== '';
+      if (!hasAny) return;
+      let poste = 0;
+      if (nm !== '') for (let i = 1; i <= 9; i++) if (shortOf(i) === nm) { poste = i; break; }
+      const miz = poste && posts.indexOf(poste) >= 0 ? mizOf(poste, it.channel) : 0, fr = freqOf(it.frequency);
+      if (!poste || !miz || fr === '') { out.ignored++; return; }
+      const tb = impHas(out.posts, poste) ? out.posts[poste] : (out.posts[poste] = {});
+      if (impHas(tb, String(miz))) { out.ignored++; return; }
+      tb[String(miz)] = fr;
+    });
+    return out;
+  }
+  const plan = (Array.isArray(rp.aircraftPlans) ? rp.aircraftPlans : []).find(p => gsIsObj(p) && impSame(p.aircraft, type));
+  if (!plan) return out;
   const used = {};       // nom court → combien de radios du plan l'ont déjà pris
   (Array.isArray(plan.radios) ? plan.radios : []).forEach(r => {
     if (!gsIsObj(r)) return;
@@ -10810,6 +10871,8 @@ const I18N = {
   "rad.chans": "{0} canaux",
   "rad.ch": "CH {0}",
   "rad.hint": "Fréquences en MHz, dans la bande de chaque poste (virgule ou point). Les modulations ne sont pas écrites. Un canal vide n’est pas écrit.",
+  "rad.print": "Imprimer ce canal sur la datacard du groupe",
+  "rad.print.note": "Un canal coché s’imprime sur la datacard du groupe ; le Datacard Generator suit, et l’inverse.",
   "rad.err.nan": "Canal {0} : « {1} » n’est pas une fréquence.",
   "rad.err.range": "Canal {0} : {1} MHz hors de la bande du poste ({2}).",
   "rad.freq": "Fréquence {0}",
@@ -11072,6 +11135,8 @@ const I18N = {
   "rad.chans": "{0} channels",
   "rad.ch": "CH {0}",
   "rad.hint": "Frequencies in MHz, within each radio’s band (comma or dot). Modulations are not written. An empty channel is not written.",
+  "rad.print": "Print this channel on the group's datacard",
+  "rad.print.note": "A ticked channel is printed on the group's datacard; the Datacard Generator follows, and the other way round.",
   "rad.err.nan": "Channel {0}: “{1}” is not a frequency.",
   "rad.err.range": "Channel {0}: {1} MHz is outside the radio’s band ({2}).",
   "rad.freq": "Frequency {0}",
@@ -12509,7 +12574,8 @@ function radiosHtml(f, fi, u, ui) {
     const pk = `f${fi}u${ui}p${r}`, n = radioSlotsOf(ty, r), hull = bandHull(ty, r), free = radioIsFree(ty, r);
     let chans = '';
     for (let c = 1; c <= n; c++) {
-      chans += `<div class="fc-ch"><label>${esc(free ? tf('rad.freq', c) : tf('rad.ch', radioCockpitChannel(ty, r, c)))}</label>`
+      const pk2 = printKey(ty, r, c), pon = printOn(f, pk2), pshow = printShown(f, ty, r, c);
+      chans += `<div class="fc-ch"><label class="pk-chk${pon || pshow ? '' : ' off'}" title="${esc(t('rad.print'))}"><input type="checkbox" data-u="${ui}" data-r="${r}" data-c="${c}" data-k="prn" aria-label="${esc(t('rad.print'))}"${pon ? ' checked' : ''}${pon || pshow ? '' : ' disabled'}>${esc(free ? tf('rad.freq', c) : tf('rad.ch', radioCockpitChannel(ty, r, c)))}</label>`
         + numberInputHtml(`data-u="${ui}" data-r="${r}" data-c="${c}" data-k="chan" placeholder="—"`, chanShown(u, r, c), hull[0], hull[1], '0.001') + '</div>';
     }
     return `<details class="fc-post" data-key="${pk}"${openAttr(pk)}><summary class="ui-fold-head" aria-expanded="${UI.open.has(pk)}"><span class="fc-ptop">${esc(radioPosteName(ty, r) || 'R' + r)} ${free ? '' : `<span class="fc-sum">${esc(tf('rad.chans', n))}</span>`}<span class="fc-sum fc-flag" data-flag="${r}"></span></span><span class="fc-band" data-band="${r}">${esc(bandText(ty, r))}</span></summary>
@@ -12517,7 +12583,35 @@ function radiosHtml(f, fi, u, ui) {
   }).join('');
   const sameType = f.units.some((x, k) => k !== ui && x.type === ty);       // « Recopier » ne va qu'aux unités du même type : sans elles, le bouton est inactif
   const copy = f.units.length > 1 ? `<div class="miz-btn-row" style="margin-top:0"><button type="button" class="miz-btn" data-u="${ui}" data-act="copy-radios"${sameType ? '' : ' disabled'}>${esc(t('rad.copy'))}</button></div>` : '';
-  return `<div class="fc-posts">${posts}</div><p class="ui-note">${esc(t('rad.hint'))}</p>${copy}`;
+  return `<div class="fc-posts">${posts}</div><p class="ui-note">${esc(t('rad.hint'))}</p><p class="ui-note">${esc(t('rad.print.note'))}</p>${copy}`;
+}
+// Les canaux à imprimer sur la datacard du groupe : f.radioPrint (« type|poste|canal » → { on, label, mod }), une clé de groupe que le Datacard Generator lit aussi ; ici on ne touche qu'à « on » (label et mod sont à lui).
+// Le paquet de vol ne la porte pas ; le fichier de travail la garde avec le groupe.
+function printKey(ty, r, c) { return ty + '|' + r + '|' + c; }
+function printOn(f, key) { return isObj(f.radioPrint) && isObj(f.radioPrint[key]) && f.radioPrint[key].on === true; }
+// La case n'est active que si le Datacard Generator montrerait la ligne : une unité de ce type au moins a une fréquence sur ce canal (une case déjà cochée reste active, pour pouvoir la décocher)
+function printShown(f, ty, r, c) { return f.units.some(x => x.type === ty && chanValue(x, r, c).trim() !== ''); }
+function printSet(f, key, on) {
+  const cur = isObj(f.radioPrint) ? f.radioPrint : {}, e = isObj(cur[key]) ? cur[key] : { on: false, label: '', mod: '' };
+  const nx = {};
+  Object.keys(cur).forEach(k => { nx[k] = cur[k]; });
+  nx[key] = Object.assign({}, e, { on: on });
+  f.radioPrint = nx;
+}
+function paintPrintBoxes() {
+  document.querySelectorAll('#col-left .fc-flight').forEach(fe => {
+    const f = S.flights[Number(fe.getAttribute('data-f'))];
+    if (!f) return;
+    fe.querySelectorAll('input[data-k="prn"]').forEach(inp => {
+      const u = f.units[Number(inp.getAttribute('data-u'))];
+      if (!u) return;
+      const r = Number(inp.getAttribute('data-r')), c = Number(inp.getAttribute('data-c'));
+      const on = printOn(f, printKey(u.type, r, c)), act = on || printShown(f, u.type, r, c);
+      if (inp.checked !== on) inp.checked = on;
+      inp.disabled = !act;
+      if (inp.parentNode) inp.parentNode.classList.toggle('off', !act);
+    });
+  });
 }
 
 // ----- Mises à jour ciblées (sans redessiner) -----
@@ -12582,7 +12676,7 @@ function refreshBar() {
   bar.textContent = msg;
   tcPaint();
 }
-function refreshAll() { refreshBar(); refreshSummaries(); saveWork(); }
+function refreshAll() { refreshBar(); refreshSummaries(); paintPrintBoxes(); saveWork(); }
 function renderAll() { renderLeft(); renderRight(); refreshBar(); applyI18nStatic(); saveWork(); }
 
 function selectUnit(fi, ui) {
@@ -13344,6 +13438,7 @@ function onInput(e) {
   const el = e.target, k = el.getAttribute && el.getAttribute('data-k');
   if (!k) return;
   if (k === 'cmp-name') { UI.cmp.name = el.value; return; }
+  if (k === 'prn') return;       // la case s'écrit au « change » (onChange)
   const fe = el.closest('.fc-flight'), fi = fe ? Number(fe.getAttribute('data-f')) : -1, f = S.flights[fi];
   const u = f && el.hasAttribute('data-u') ? f.units[Number(el.getAttribute('data-u'))] : null;
   if (k === 'name') { f.name = el.value; paintFlightName(f, fi, fe); paintCmpNames(); if (fi === S.sel.f) renderRouteBlock(); refreshLiveryLists(fe); }
@@ -13442,7 +13537,11 @@ function onChange(e) {
   if (k === 'fuel-bar') return;
   if (LO_FIELDS.indexOf(k) >= 0) { commitLoadoutField(k, el); return; }
   const fe = el.closest('.fc-flight'), f = fe && S.flights[Number(fe.getAttribute('data-f'))];
-  if (k === 'utype') changeUnitType(f, Number(fe.getAttribute('data-f')), Number(el.getAttribute('data-u')), el);
+  if (k === 'prn') {
+    const pu = f && f.units[Number(el.getAttribute('data-u'))];
+    if (pu) { printSet(f, printKey(pu.type, Number(el.getAttribute('data-r')), Number(el.getAttribute('data-c'))), el.checked); paintPrintBoxes(); refreshAll(); }
+  }
+  else if (k === 'utype') changeUnitType(f, Number(fe.getAttribute('data-f')), Number(el.getAttribute('data-u')), el);
   else if (k === 'livery') { const u = f.units[Number(el.getAttribute('data-u'))]; if (u) { const ui = Number(el.getAttribute('data-u')); u.livery = el.value; fillLiverySelect(el, f, Number(fe.getAttribute('data-f')), u, ui); refreshAll(); } }
   else if (k === 'coalition') { f.coalition = el.value; if (S.flights.indexOf(f) === S.sel.f) renderRouteBlock(); refreshLiveryLists(fe); refreshAll(); }
 }
@@ -13567,6 +13666,7 @@ function init() {
   try {
     if (ok) mergeMine(saved.mine);
     if (ok && saved.gsMigrateFailed === true) GS.mf = true;
+    gsPrintMigrate();       // une fois : les canaux cochés d'une datacard liée d'avant passent à son groupe (radioPrint), avant que le module ne lise la fiche
     const had = gsRead() !== null;       // la fiche existait avant ce chargement (sinon la migration vient de la bâtir avec les groupes de l'état d'avant)
     gsMigrate(gsPackFn);       // la fiche naît ici si le Route Planner ne l'a pas fait avant : les groupes de l'état d'avant, puis les routes liées par nom
     const gs = gsRead();

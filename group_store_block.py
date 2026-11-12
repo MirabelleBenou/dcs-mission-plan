@@ -46,6 +46,35 @@ function gsStable(v) {
     return o;
   });
 }
+/* Les canaux à imprimer sur la datacard d'un groupe : radioPrint, « type|poste|canal » → { on, label, mod }, une clé de groupe comme les autres (le Flight Configurator coche, le Datacard Generator coche, nomme et module ;
+   le paquet de vol ne la porte pas). gsPrintNorm en rend une copie lisible : seules les entrées objets sont gardées, on est un booléen, label et mod des textes. */
+function gsPrintNorm(o) {
+  const r = {};
+  if (gsIsObj(o)) Object.keys(o).forEach(k => {
+    const e = o[k];
+    if (gsIsObj(e)) r[k] = { on: e.on === true, label: typeof e.label === 'string' ? e.label : '', mod: typeof e.mod === 'string' ? e.mod : '' };
+  });
+  return r;
+}
+/* La migration de radioPrint, une fois : un groupe qui n'a pas encore radioPrint et dont la datacard liée (cards : les cartes du document des datacards, gsId = fcId du groupe) a des canaux cochés prend ceux de la carte ;
+   ensuite le groupe fait foi. Les deux outils l'appellent à leur chargement (le Datacard Generator avec les cartes qu'il vient de lire, le Flight Configurator sans argument : les cartes sont alors lues dans datacard_state_v1).
+   Rend vrai si un groupe a été écrit. */
+function gsPrintMigrate(cards) {
+  if (cards === undefined) { const d = gsJson(GS_KEY_DG); cards = gsIsObj(d) ? d.cards : null; }
+  if (!Array.isArray(cards)) return false;
+  const g = gsRead();
+  if (g === null) return false;
+  let any = false;
+  g.flights.forEach(f => {
+    if (gsIsObj(f.radioPrint)) return;
+    const c = cards.find(x => gsIsObj(x) && x.gsId === f.fcId && gsIsObj(x.radioSel) && Object.keys(x.radioSel).some(k => gsIsObj(x.radioSel[k]) && x.radioSel[k].on === true));
+    if (!c) return;
+    const nf = JSON.parse(JSON.stringify(f));
+    nf.radioPrint = gsPrintNorm(c.radioSel);
+    if (gsPutFlight(nf)) any = true;
+  });
+  return any;
+}
 /* L'identifiant d'un groupe neuf : « f » et trois nombres aléatoires en base 36 */
 function gsNewId() {
   try {

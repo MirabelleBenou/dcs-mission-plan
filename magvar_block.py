@@ -312,11 +312,12 @@ function magRouteDate(s) {
   return (typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s) && magDecYear(s) != null && +s.slice(0, 4) >= 1900 && +s.slice(0, 4) <= 2099) ? s : '';
 }
 
-/* L'année d'une route et sa source : { src: 'mission' | 'route' | 'routeForced' | 'forced' | 'typed' | 'default', y (décimale), year (AAAA, texte),
+/* L'année d'une route et sa source : { src: 'mission' | 'route' | 'routeForced' | 'card' | 'cardForced' | 'forced' | 'typed' | 'default', y (décimale), year (AAAA, texte),
    file, date } ; la mission est celle de HQ (mission_snapshot_v1), prise si son théâtre est celui de la route et sa date se lit,
    sauf si « Forcer » est enfoncé avec une année saisie valide (quatre chiffres, de 1900 à 2099) ; sinon la date de la route (routeDate, reçue avec elle : paquet ou mission de HQ ;
-   undefined si l'appelant n'en a pas) si elle se lit, avec la même exception (« routeForced ») ; sinon la saisie, sinon 1985. */
-function magYearSource(theatre, yearStr, force, routeDate) {
+   undefined si l'appelant n'en a pas) si elle se lit, avec la même exception (« routeForced ») ; sinon la date de la carte (cardDate, la date d'une datacard, facultative : seul le Datacard Generator en passe une)
+   si elle se lit, avec la même exception (« cardForced ») ; sinon la saisie, sinon 1985. */
+function magYearSource(theatre, yearStr, force, routeDate, cardDate) {
   let mis = null;
   try {
     const o = JSON.parse(localStorage.getItem('mission_snapshot_v1'));
@@ -330,6 +331,9 @@ function magYearSource(theatre, yearStr, force, routeDate) {
   const rd = mis ? '' : magRouteDate(routeDate);
   if (rd && !(force === true && ys)) { const ry = magDecYear(rd); return { src: 'route', y: ry, year: String(Math.floor(ry)), file: '', date: rd }; }
   if (rd) return { src: 'routeForced', y: magDecYear(ys), year: ys, file: '', date: rd };
+  const cd = mis ? '' : magRouteDate(cardDate);
+  if (cd && !(force === true && ys)) { const cy = magDecYear(cd); return { src: 'card', y: cy, year: String(Math.floor(cy)), file: '', date: cd }; }
+  if (cd) return { src: 'cardForced', y: magDecYear(ys), year: ys, file: '', date: cd };
   if (ys) return { src: mis ? 'forced' : 'typed', y: magDecYear(ys), year: ys, file: mis ? mis.file : '', date: '' };
   return { src: 'default', y: magDecYear('1985'), year: '1985', file: '', date: '' };
 }

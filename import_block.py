@@ -384,7 +384,8 @@ function impPhaseIdentity(ph, wing) {
   else if (sq && impHasText(sq.callsign)) callsign = sq.callsign.trim();
   else callsign = impStr(ph.squadron).trim();
   if (guest && callsign === '__guest__') callsign = '';
-  const aircraft = guest ? impStr(g.aircraft).trim() : impStr(ph.aircraft).trim();
+  /* Le type : celui du vol (ph.aircraft, que le Standard écrit pour un groupe sans escadron), sinon pour un escadron son premier type, sinon celui de l'escadron invité */
+  const aircraft = impHasText(ph.aircraft) ? ph.aircraft.trim() : (guest ? impStr(g.aircraft).trim() : ((sq && Array.isArray(sq.aircraft) && sq.aircraft.length) ? impStr(sq.aircraft[0]).trim() : ''));
   let id, sub, ac;
   if (guest) {
     id = impHasText(g.name) ? g.name : '?';
@@ -414,10 +415,37 @@ function impBriefingTable(b, type) {
   const items = Array.isArray(rp.items) ? rp.items.filter(gsIsObj) : [];
   const byId = {};
   items.forEach(it => { byId[it.id] = it; });
-  const plan = (Array.isArray(rp.aircraftPlans) ? rp.aircraftPlans : []).find(p => gsIsObj(p) && impSame(p.aircraft, type));
-  if (!plan) return out;
   const posts = Object.keys(RADIO_CHANNELS[type]).map(Number);
   const shortOf = i => impPosteShort(type, i).replace(/\s+/g, '').toLowerCase();
+  const mizOf = (poste, chan) => {       // le canal du cockpit (texte) → le canal du .miz du poste, ou 0 s'il n'existe pas
+    const t = String(chan === undefined || chan === null ? '' : chan).trim(), cock = Number(t);
+    const fm = impHas(RADIO_FIRST_CHANNEL, type) ? RADIO_FIRST_CHANNEL[type] : null;
+    const first = fm && impHas(fm, poste) ? fm[poste] : 1;
+    const miz = cock - first + 1;
+    return (t === '' || !Number.isInteger(cock) || !Number.isInteger(miz) || miz < 1 || miz > RADIO_CHANNELS[type][poste]) ? 0 : miz;
+  };
+  const freqOf = raw => {
+    const s = String(raw === undefined || raw === null ? '' : raw).trim(), f = Number(s.replace(',', '.'));
+    return (s === '' || !isFinite(f) || !(f > 0)) ? '' : String(f);
+  };
+  if (gsIsObj(b.meta) && b.meta.format === 'simple') {
+    /* Un brief Standard : les fréquences globales (radioPlan.items) portent leur radio (nom court du poste) et leur canal du cockpit ; le premier de chaque poste et canal l'emporte, tout autre est compté ignoré */
+    items.forEach(it => {
+      const nm = impStr(it.radio).replace(/\s+/g, '').toLowerCase();
+      const hasAny = nm !== '' || impStr(it.channel).trim() !== '' || impStr(it.frequency).trim() !== '';
+      if (!hasAny) return;
+      let poste = 0;
+      if (nm !== '') for (let i = 1; i <= 9; i++) if (shortOf(i) === nm) { poste = i; break; }
+      const miz = poste && posts.indexOf(poste) >= 0 ? mizOf(poste, it.channel) : 0, fr = freqOf(it.frequency);
+      if (!poste || !miz || fr === '') { out.ignored++; return; }
+      const tb = impHas(out.posts, poste) ? out.posts[poste] : (out.posts[poste] = {});
+      if (impHas(tb, String(miz))) { out.ignored++; return; }
+      tb[String(miz)] = fr;
+    });
+    return out;
+  }
+  const plan = (Array.isArray(rp.aircraftPlans) ? rp.aircraftPlans : []).find(p => gsIsObj(p) && impSame(p.aircraft, type));
+  if (!plan) return out;
   const used = {};       // nom court → combien de radios du plan l'ont déjà pris
   (Array.isArray(plan.radios) ? plan.radios : []).forEach(r => {
     if (!gsIsObj(r)) return;

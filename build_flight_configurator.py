@@ -555,6 +555,8 @@ I18N_FR = {
     'rad.chans': '{0} canaux',
     'rad.ch': 'CH {0}',
     'rad.hint': 'Fréquences en MHz, dans la bande de chaque poste (virgule ou point). Les modulations ne sont pas écrites. Un canal vide n’est pas écrit.',
+    'rad.print': "Imprimer ce canal sur la datacard du groupe",
+    'rad.print.note': "Un canal coché s’imprime sur la datacard du groupe ; le Datacard Generator suit, et l’inverse.",
     'rad.err.nan': 'Canal {0} : « {1} » n’est pas une fréquence.',
     'rad.err.range': 'Canal {0} : {1} MHz hors de la bande du poste ({2}).',
     'rad.freq': 'Fréquence {0}',
@@ -839,6 +841,8 @@ I18N_EN = {
     'rad.chans': '{0} channels',
     'rad.ch': 'CH {0}',
     'rad.hint': 'Frequencies in MHz, within each radio’s band (comma or dot). Modulations are not written. An empty channel is not written.',
+    'rad.print': "Print this channel on the group's datacard",
+    'rad.print.note': "A ticked channel is printed on the group's datacard; the Datacard Generator follows, and the other way round.",
     'rad.err.nan': 'Channel {0}: “{1}” is not a frequency.',
     'rad.err.range': 'Channel {0}: {1} MHz is outside the radio’s band ({2}).',
     'rad.freq': 'Frequency {0}',
@@ -1353,14 +1357,14 @@ body[data-theme] {
 .tbm-panel.tbm-p-field .tbm-opt { white-space: normal; line-height: 1.3; padding-top: 8px; padding-bottom: 8px; word-break: break-word; }
 .ed-field input[type=text] { min-width: 0; }
 .ed-field input.bad, .fc-ch input.bad { border-color: var(--mp-warn); border-left-color: var(--mp-warn); }
-.fc-ch input, .fc-set input[type=number] {
+.fc-ch input:not([type=checkbox]), .fc-set input[type=number] {
   background: rgba(216,201,165,.92); border: 1px solid var(--khaki); border-left: 3px solid var(--amber-dark);
   font-family: var(--f-typewriter); font-size: 13px; color: var(--ink); padding: 6px 8px; width: 100%; min-width: 0; border-radius: 0;
   -moz-appearance: textfield; appearance: textfield;
 }
-.fc-ch input { min-height: 44px; }
+.fc-ch input:not([type=checkbox]) { min-height: 44px; }
 .fc-set input[type=number] { min-height: 44px; }
-.fc-ch input:focus, .fc-set input[type=number]:focus { border-left-color: var(--red-stamp); background: var(--paper-light); box-shadow: 0 0 0 1px var(--fc); }
+.fc-ch input:not([type=checkbox]):focus, .fc-set input[type=number]:focus { border-left-color: var(--red-stamp); background: var(--paper-light); box-shadow: 0 0 0 1px var(--fc); }
 .fc-ch input::-webkit-outer-spin-button, .fc-ch input::-webkit-inner-spin-button, .fc-set input::-webkit-outer-spin-button, .fc-set input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .fc-set input:disabled { opacity: .5; }
 /* la barre du carburant : piste et curseur aux couleurs du thème (--khaki, --paper-light), la part pleine à l'accent du module (--fc) ; l'élément fait 34 px de haut pour se prendre au doigt */
@@ -3109,7 +3113,8 @@ function radiosHtml(f, fi, u, ui) {
     const pk = `f${fi}u${ui}p${r}`, n = radioSlotsOf(ty, r), hull = bandHull(ty, r), free = radioIsFree(ty, r);
     let chans = '';
     for (let c = 1; c <= n; c++) {
-      chans += `<div class="fc-ch"><label>${esc(free ? tf('rad.freq', c) : tf('rad.ch', radioCockpitChannel(ty, r, c)))}</label>`
+      const pk2 = printKey(ty, r, c), pon = printOn(f, pk2), pshow = printShown(f, ty, r, c);
+      chans += `<div class="fc-ch"><label class="pk-chk${pon || pshow ? '' : ' off'}" title="${esc(t('rad.print'))}"><input type="checkbox" data-u="${ui}" data-r="${r}" data-c="${c}" data-k="prn" aria-label="${esc(t('rad.print'))}"${pon ? ' checked' : ''}${pon || pshow ? '' : ' disabled'}>${esc(free ? tf('rad.freq', c) : tf('rad.ch', radioCockpitChannel(ty, r, c)))}</label>`
         + numberInputHtml(`data-u="${ui}" data-r="${r}" data-c="${c}" data-k="chan" placeholder="—"`, chanShown(u, r, c), hull[0], hull[1], '0.001') + '</div>';
     }
     return `<details class="fc-post" data-key="${pk}"${openAttr(pk)}><summary class="ui-fold-head" aria-expanded="${UI.open.has(pk)}"><span class="fc-ptop">${esc(radioPosteName(ty, r) || 'R' + r)} ${free ? '' : `<span class="fc-sum">${esc(tf('rad.chans', n))}</span>`}<span class="fc-sum fc-flag" data-flag="${r}"></span></span><span class="fc-band" data-band="${r}">${esc(bandText(ty, r))}</span></summary>
@@ -3117,7 +3122,35 @@ function radiosHtml(f, fi, u, ui) {
   }).join('');
   const sameType = f.units.some((x, k) => k !== ui && x.type === ty);       // « Recopier » ne va qu'aux unités du même type : sans elles, le bouton est inactif
   const copy = f.units.length > 1 ? `<div class="miz-btn-row" style="margin-top:0"><button type="button" class="miz-btn" data-u="${ui}" data-act="copy-radios"${sameType ? '' : ' disabled'}>${esc(t('rad.copy'))}</button></div>` : '';
-  return `<div class="fc-posts">${posts}</div><p class="ui-note">${esc(t('rad.hint'))}</p>${copy}`;
+  return `<div class="fc-posts">${posts}</div><p class="ui-note">${esc(t('rad.hint'))}</p><p class="ui-note">${esc(t('rad.print.note'))}</p>${copy}`;
+}
+// Les canaux à imprimer sur la datacard du groupe : f.radioPrint (« type|poste|canal » → { on, label, mod }), une clé de groupe que le Datacard Generator lit aussi ; ici on ne touche qu'à « on » (label et mod sont à lui).
+// Le paquet de vol ne la porte pas ; le fichier de travail la garde avec le groupe.
+function printKey(ty, r, c) { return ty + '|' + r + '|' + c; }
+function printOn(f, key) { return isObj(f.radioPrint) && isObj(f.radioPrint[key]) && f.radioPrint[key].on === true; }
+// La case n'est active que si le Datacard Generator montrerait la ligne : une unité de ce type au moins a une fréquence sur ce canal (une case déjà cochée reste active, pour pouvoir la décocher)
+function printShown(f, ty, r, c) { return f.units.some(x => x.type === ty && chanValue(x, r, c).trim() !== ''); }
+function printSet(f, key, on) {
+  const cur = isObj(f.radioPrint) ? f.radioPrint : {}, e = isObj(cur[key]) ? cur[key] : { on: false, label: '', mod: '' };
+  const nx = {};
+  Object.keys(cur).forEach(k => { nx[k] = cur[k]; });
+  nx[key] = Object.assign({}, e, { on: on });
+  f.radioPrint = nx;
+}
+function paintPrintBoxes() {
+  document.querySelectorAll('#col-left .fc-flight').forEach(fe => {
+    const f = S.flights[Number(fe.getAttribute('data-f'))];
+    if (!f) return;
+    fe.querySelectorAll('input[data-k="prn"]').forEach(inp => {
+      const u = f.units[Number(inp.getAttribute('data-u'))];
+      if (!u) return;
+      const r = Number(inp.getAttribute('data-r')), c = Number(inp.getAttribute('data-c'));
+      const on = printOn(f, printKey(u.type, r, c)), act = on || printShown(f, u.type, r, c);
+      if (inp.checked !== on) inp.checked = on;
+      inp.disabled = !act;
+      if (inp.parentNode) inp.parentNode.classList.toggle('off', !act);
+    });
+  });
 }
 
 // ----- Mises à jour ciblées (sans redessiner) -----
@@ -3182,7 +3215,7 @@ function refreshBar() {
   bar.textContent = msg;
   tcPaint();
 }
-function refreshAll() { refreshBar(); refreshSummaries(); saveWork(); }
+function refreshAll() { refreshBar(); refreshSummaries(); paintPrintBoxes(); saveWork(); }
 function renderAll() { renderLeft(); renderRight(); refreshBar(); applyI18nStatic(); saveWork(); }
 
 function selectUnit(fi, ui) {
@@ -3944,6 +3977,7 @@ function onInput(e) {
   const el = e.target, k = el.getAttribute && el.getAttribute('data-k');
   if (!k) return;
   if (k === 'cmp-name') { UI.cmp.name = el.value; return; }
+  if (k === 'prn') return;       // la case s'écrit au « change » (onChange)
   const fe = el.closest('.fc-flight'), fi = fe ? Number(fe.getAttribute('data-f')) : -1, f = S.flights[fi];
   const u = f && el.hasAttribute('data-u') ? f.units[Number(el.getAttribute('data-u'))] : null;
   if (k === 'name') { f.name = el.value; paintFlightName(f, fi, fe); paintCmpNames(); if (fi === S.sel.f) renderRouteBlock(); refreshLiveryLists(fe); }
@@ -4042,7 +4076,11 @@ function onChange(e) {
   if (k === 'fuel-bar') return;
   if (LO_FIELDS.indexOf(k) >= 0) { commitLoadoutField(k, el); return; }
   const fe = el.closest('.fc-flight'), f = fe && S.flights[Number(fe.getAttribute('data-f'))];
-  if (k === 'utype') changeUnitType(f, Number(fe.getAttribute('data-f')), Number(el.getAttribute('data-u')), el);
+  if (k === 'prn') {
+    const pu = f && f.units[Number(el.getAttribute('data-u'))];
+    if (pu) { printSet(f, printKey(pu.type, Number(el.getAttribute('data-r')), Number(el.getAttribute('data-c'))), el.checked); paintPrintBoxes(); refreshAll(); }
+  }
+  else if (k === 'utype') changeUnitType(f, Number(fe.getAttribute('data-f')), Number(el.getAttribute('data-u')), el);
   else if (k === 'livery') { const u = f.units[Number(el.getAttribute('data-u'))]; if (u) { const ui = Number(el.getAttribute('data-u')); u.livery = el.value; fillLiverySelect(el, f, Number(fe.getAttribute('data-f')), u, ui); refreshAll(); } }
   else if (k === 'coalition') { f.coalition = el.value; if (S.flights.indexOf(f) === S.sel.f) renderRouteBlock(); refreshLiveryLists(fe); refreshAll(); }
 }
@@ -4167,6 +4205,7 @@ function init() {
   try {
     if (ok) mergeMine(saved.mine);
     if (ok && saved.gsMigrateFailed === true) GS.mf = true;
+    gsPrintMigrate();       // une fois : les canaux cochés d'une datacard liée d'avant passent à son groupe (radioPrint), avant que le module ne lise la fiche
     const had = gsRead() !== null;       // la fiche existait avant ce chargement (sinon la migration vient de la bâtir avec les groupes de l'état d'avant)
     gsMigrate(gsPackFn);       // la fiche naît ici si le Route Planner ne l'a pas fait avant : les groupes de l'état d'avant, puis les routes liées par nom
     const gs = gsRead();

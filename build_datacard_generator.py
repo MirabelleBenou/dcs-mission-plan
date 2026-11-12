@@ -2168,6 +2168,7 @@ const I18N = {
     'rad.err.nan.f': 'Fréquence {0} : « {1} » n’est pas une fréquence.',
     'rad.err.range.f': 'Fréquence {0} : {1} MHz hors de la bande du poste ({2}).',
     'toast.briefFilled': 'Carte « {n} » remplie depuis le briefing (mission, date et heure, terrains, météo)',
+    'toast.hqFilled': 'date, heure et météo de la mission reprises',
     'toast.example': 'Exemple chargé ✓',
     'ft.clear.title': 'Tout effacer ?',
     'ft.clear.text': 'Les groupes, les routes de tous les théâtres, les points de référence, dessins, symboles et calques, et toutes les datacards seront effacés du Flight Configurator, du Route Planner et du Datacard Generator. HQ, le Briefing Generator et Recon Station ne changent pas ; vos presets d’emport, le théâtre, les unités et les réglages restent. Cela ne se défait pas.',
@@ -2381,6 +2382,10 @@ const I18N = {
     'dv.tag.default': 'PAR DÉFAUT',
     'dv.tag.route': 'PAQUET',
     'dv.tag.routeForced': 'FORCÉE',
+    'dv.tag.card': 'CARTE',
+    'dv.tag.cardForced': 'FORCÉE',
+    'dv.src.card': 'date de la datacard · {date}',
+    'dv.src.cardForced': 'la date de la datacard ({date}) est ignorée',
     'dv.src.route': 'date reçue avec la route · {date}',
     'dv.src.routeForced': 'la date reçue avec la route ({date}) est ignorée',
     'dv.src.mission': '{file} · {date}',
@@ -2669,6 +2674,7 @@ const I18N = {
     'rad.err.nan.f': 'Frequency {0}: “{1}” is not a frequency.',
     'rad.err.range.f': 'Frequency {0}: {1} MHz is outside the radio’s band ({2}).',
     'toast.briefFilled': 'Card “{n}” filled from the briefing (mission, date and time, airfields, weather)',
+    'toast.hqFilled': 'mission date, time and weather applied',
     'toast.example': 'Example loaded ✓',
     'ft.clear.title': 'Clear everything?',
     'ft.clear.text': 'The groups, the routes of every theatre, the reference points, drawings, symbols and layers, and all the datacards will be cleared from the Flight Configurator, the Route Planner and the Datacard Generator. HQ, the Briefing Generator and Recon Station do not change; your loadout presets, the theatre, the units and the settings stay. This cannot be undone.',
@@ -2882,6 +2888,10 @@ const I18N = {
     'dv.tag.default': 'DEFAULT',
     'dv.tag.route': 'PACKAGE',
     'dv.tag.routeForced': 'OVERRIDDEN',
+    'dv.tag.card': 'CARD',
+    'dv.tag.cardForced': 'OVERRIDDEN',
+    'dv.src.card': 'datacard date · {date}',
+    'dv.src.cardForced': 'the datacard date ({date}) is ignored',
     'dv.src.route': 'date received with the route · {date}',
     'dv.src.routeForced': 'the date received with the route ({date}) is ignored',
     'dv.src.mission': '{file} · {date}',
@@ -3435,7 +3445,7 @@ function readNum(s) {
 @@RADIO_BANDS_BLOCK@@
 @@PROJECTION_BLOCK@@
 /* La déclinaison des caps d'une datacard : null (cap vrai, ou saisie illisible) ; { decl } saisie ; { calc: true, y } calculée,
-   y étant l'année décimale du champ Date (1985, le 1er juillet, s'il est vide ou illisible) */
+   y étant l'année décimale de magYearSource (la mission d'HQ, la date de la route, la date de la datacard, l'année saisie, sinon 1985, le 1er juillet) */
 function navVar(c) {
   if (dgN.ref !== 'mag') return null;       /* les réglages de cap sont ceux de la mission (mp_nav_v1), l'année celle de la mission (magYearSource), comme au Route Planner */
   if (dgN.mode === 'manual') { const d = parseDecl(dgN.decl); return d == null ? null : { decl: d }; }
@@ -3897,7 +3907,7 @@ function dgFollowNav() {
   if (k && !dgNavSame(dgN, k)) dgNavSet(k, true);
 }
 /* L'année des caps : celle de la mission (magYearSource, comme au Route Planner), sinon la date reçue avec la route de la carte c (paquet, mission de HQ), sinon la saisie, sinon 1985 */
-function dgNavYear(c) { return magYearSource(dgTheatre(), dgN.year, dgN.force, dgRouteDate(c)); }
+function dgNavYear(c) { return magYearSource(dgTheatre(), dgN.year, dgN.force, dgRouteDate(c), c.meta.date); }       /* la date de la datacard passe après celle de la route (elle seule en passe une : le Route Planner et le Flight Configurator n'ont pas de date de carte) */
 /* La date reçue avec la route que suit la carte : celle de la route du jeu (liée, du théâtre commun) ; sans route du jeu, celle de la copie de route du groupe (importée, pas encore reprise par le Route Planner) ; '' sans date lisible */
 function dgRouteDate(c) {
   if (!c) return '';
@@ -4520,7 +4530,8 @@ function dgApplyGroup(c, f, fi) {
   units.forEach(u => { const ty = dgStr(u.type); if (ty && types.indexOf(ty) < 0) types.push(ty); });
   c.flight.count = units.length || null;
   c.flight.aircraft = types.join(' + ');
-  if (!gsIsObj(c.radioSel)) c.radioSel = {};
+  if (gsIsObj(f.radioPrint)) c.radioSel = gsPrintNorm(f.radioPrint);       /* la copie de la carte suit le groupe : devenue libre, elle garde ses canaux */
+  else if (!gsIsObj(c.radioSel)) c.radioSel = {};
   if (typeof c.loadoutFc !== 'boolean') c.loadoutFc = false;
   const z = dgFreeze(f, c);
   if (z) c.frz = z; else delete c.frz;
@@ -4542,7 +4553,7 @@ function gsApplyAll(first) {
     else if (c.gsId) { delete c.gsId; c.gsGone = true; free.push(c); }
     else free.push(c);
   });
-  g.flights.forEach((f, i) => { if (!seen.has(f.fcId)) { const c = newCard(); dgApplyGroup(c, f, i); linked.push(c); } });
+  g.flights.forEach((f, i) => { if (!seen.has(f.fcId)) { const c = newCard(); c.loadoutFc = true; dgApplyGroup(c, f, i); linked.push(c); } });       /* une carte née liée montre l'emport du Flight Configurator ; une carte existante garde son choix */
   linked.sort((a, b) => pos.get(a.gsId) - pos.get(b.gsId));
   doc.cards = linked.concat(linked.length && first ? free.filter(c => !isBlankCard(c)) : free);       /* une carte vierge intacte n'est écartée qu'au premier passage de la fiche (chargement, « Ouvrir ») : jamais sur un évènement « storage » ni après une écriture */
   if (!doc.cards.length) doc.cards = [newCard()];
@@ -4984,7 +4995,9 @@ function dgRadioModel(f) {
   });
 }
 function dgRsKey(ty, r, c) { return ty + '|' + r + '|' + c; }
-function dgRs(c, key) { const o = gsIsObj(c.radioSel) && gsIsObj(c.radioSel[key]) ? c.radioSel[key] : null; return { on: !!(o && o.on), label: o ? str(o.label) : '', mod: o ? str(o.mod) : '' }; }
+/* Les canaux à imprimer d'une carte : ceux du groupe de la fiche (radioPrint) quand la carte est liée ; sinon la copie de la carte (radioSel : une carte libre, une carte devenue libre, ou le groupe qui n'a pas encore radioPrint) */
+function dgPrintOf(c) { const f = dgFlightOf(c); return f && gsIsObj(f.radioPrint) ? f.radioPrint : (gsIsObj(c.radioSel) ? c.radioSel : {}); }
+function dgRs(c, key) { const src = dgPrintOf(c), o = gsIsObj(src[key]) ? src[key] : null; return { on: !!(o && o.on), label: o ? str(o.label) : '', mod: o ? str(o.mod) : '' }; }
 function dgRowShown(row) { return row.vals.some(v => v !== ''); }
 /* Les encadrés de la carte : les types qui ont au moins un canal coché ; [{ title, posts: [{ name, ch: [{ channel, label, frequency, modulation }] }] }] */
 function dgRadioBoxes(c) {
@@ -6175,6 +6188,21 @@ function navDeclMissing(c) { return dgN.ref === 'mag' && dgN.mode === 'manual' &
 function dgFill(key, file, date) {
   return esc(t(key)).split('{date}').join(esc(date)).split('{file}').join('<span class="dv-file">' + esc(file) + '</span>');
 }
+/* Le champ Année (verrouillé quand la mission, la date de la route ou celle de la datacard la donne, sauf « Forcer »), son bouton Forcer et la ligne de source */
+function dgYearHtml(c) {
+  const ys = dgNavYear(c), lock = (ys.src === 'mission' || ys.src === 'route' || ys.src === 'card') && !dgN.force, forceOk = ys.src === 'mission' || ys.src === 'forced' || ys.src === 'route' || ys.src === 'routeForced' || ys.src === 'card' || ys.src === 'cardForced';
+  return '<div class="ed-field-row"><div class="ed-field"><label>' + esc(t('f.nav.year')) + '</label><input type="text" data-navset="year" value="' + esc(lock ? ys.year : dgN.year) + '" inputmode="numeric" maxlength="4" autocomplete="off" spellcheck="false" placeholder="' + esc(t('ph.navDisplay.year')) + '"' + (lock ? ' disabled' : '') + '></div>' +
+    (forceOk ? '<div class="ed-field"><label>&nbsp;</label><button type="button" class="ed-btn-add sm' + (dgN.force ? ' on' : '') + '" data-navforce="1" aria-pressed="' + (dgN.force ? 'true' : 'false') + '">' + esc(t('dv.force')) + '</button></div>' : '<div class="ed-field"></div>') + '</div>' +
+    '<div class="ui-note" data-nav-vhelp>' + navVarHelp(c) + '</div>';
+}
+/* La date de la datacard change : le champ Année, son bouton et sa ligne de source suivent, sans refaire l'éditeur (le curseur reste dans la date) */
+function dgYearSync(c) {
+  const inp = document.querySelector('#editor [data-navset="year"]');
+  const row = inp && inp.closest('.ed-field-row'), help = row && row.nextElementSibling;
+  if (!row || !help || !help.hasAttribute('data-nav-vhelp')) return;
+  row.insertAdjacentHTML('beforebegin', dgYearHtml(c));
+  row.remove(); help.remove();
+}
 function navVarHelp(c) {
   const ys = dgNavYear(c);
   return '<b>' + esc(t('dv.tag.' + ys.src)) + '</b> ' + dgFill('dv.src.' + ys.src, ys.file, ys.date) + '<br>' + esc(t('dv.src.model', { e: magModel(ys.y) }));
@@ -6204,10 +6232,7 @@ function navSettingsHtml(c) {
       '<div class="ui-note">' + esc(t('nav.decl.help')) + '</div>';
   }
   if (mag && calc) {
-    const ys = dgNavYear(c), lock = (ys.src === 'mission' || ys.src === 'route') && !dgN.force, forceOk = ys.src === 'mission' || ys.src === 'forced' || ys.src === 'route' || ys.src === 'routeForced';
-    h += '<div class="ed-field-row"><div class="ed-field"><label>' + esc(t('f.nav.year')) + '</label><input type="text" data-navset="year" value="' + esc(lock ? ys.year : dgN.year) + '" inputmode="numeric" maxlength="4" autocomplete="off" spellcheck="false" placeholder="' + esc(t('ph.navDisplay.year')) + '"' + (lock ? ' disabled' : '') + '></div>' +
-      (forceOk ? '<div class="ed-field"><label>&nbsp;</label><button type="button" class="ed-btn-add sm' + (dgN.force ? ' on' : '') + '" data-navforce="1" aria-pressed="' + (dgN.force ? 'true' : 'false') + '">' + esc(t('dv.force')) + '</button></div>' : '<div class="ed-field"></div>') + '</div>' +
-      '<div class="ui-note" data-nav-vhelp>' + navVarHelp(c) + '</div>';
+    h += dgYearHtml(c);
   }
   return h +
     '<div class="ui-note">' + esc(t('f.nav.coord')) + (CURRENT_LANG === 'fr' ? ' : ' : ': ') + esc(t('nav.coord.help')) + '</div>' +
@@ -6664,11 +6689,14 @@ function onEditorInput(e) {
   if (el && el.dataset && el.dataset.rs) {        /* un canal affiché : la case, le nom, la modulation (propres à la carte) */
     const c = curCard(), key = el.dataset.rs, k = el.dataset.rk;
     if (k !== 'on' && e.type === 'change') return;
-    if (!gsIsObj(c.radioSel)) c.radioSel = {};
-    const cur = gsIsObj(c.radioSel[key]) ? c.radioSel[key] : { on: false, label: '', mod: '' };
-    if (k === 'on') { cur.on = el.checked; const row = el.closest('.rc-row'); if (row) row.classList.toggle('on', el.checked); }
-    else cur[k] = el.value;
-    c.radioSel[key] = cur;
+    const put = o => {
+      const cur = gsIsObj(o[key]) ? o[key] : { on: false, label: '', mod: '' };
+      if (k === 'on') cur.on = el.checked; else cur[k] = el.value;
+      o[key] = cur;
+    };
+    if (c.gsId && dgFlightOf(c)) dgPut(c.gsId, nf => { const o = gsIsObj(nf.radioPrint) ? nf.radioPrint : gsPrintNorm(c.radioSel); put(o); nf.radioPrint = o; });       /* une carte liée écrit dans le groupe (le seul groupe touché) ; la copie de la carte suit */
+    else { if (!gsIsObj(c.radioSel)) c.radioSel = {}; put(c.radioSel); }
+    if (k === 'on') { const row = el.closest('.rc-row'); if (row) row.classList.toggle('on', el.checked); }
     touch();
     return;
   }
@@ -6696,6 +6724,7 @@ function onEditorInput(e) {
   else setPath(c, path, el.value);
   if (path === 'weather.metar') syncMetar(c);
   if (path === 'flight.callsign') updatePackTitle();
+  if (path === 'meta.date') dgYearSync(c);
   if (path === 'meta.date') { const b = dgDateBad(el.value); el.classList.toggle('bad', b); if (b) el.setAttribute('aria-invalid', 'true'); else el.removeAttribute('aria-invalid'); }
   if (/^crew\./.test(path) && !c.gsId) { syncGroup(c); syncGroupEditor(c); }
   if (el.dataset.dgOther !== undefined) dgFlagSync(el.dataset.dgOther, el.value);
@@ -7378,13 +7407,18 @@ function runImport() {
   const boxes = Array.from(document.querySelectorAll('#bi-list .bi-cb:checked'));
   const cur = curCard();
   if (cur.gsId && boxes.length) {
-    /* Une carte liée est affichée : le briefing la remplit pour ce qui n'est pas un groupe (mission, date et heure, terrains, météo), jamais l'indicatif, l'équipage ni les radios */
+    /* Une carte liée est affichée : le briefing la remplit pour ce qui n'est pas un groupe (mission, date et heure, terrains, météo), jamais l'indicatif, l'équipage ni les radios ;
+       la tâche, le niveau de menace, les menaces et les notes de la ligne choisie la rejoignent, mais pour ces quatre seulement une source vide n'efface rien */
     const cb = boxes[0], src = cb.dataset.i === 'general' ? cardFromGeneral(b) : (phases[parseInt(cb.dataset.i, 10)] ? cardFromPhase(b, phases[parseInt(cb.dataset.i, 10)]) : null);
     if (!src) return;
     ['classification', 'docRef', 'operation', 'mission', 'date', 'time'].forEach(k => { cur.meta[k] = src.meta[k]; });
     cur.mission = clone(src.mission);
     cur.fields = clone(src.fields);
     cur.weather = clone(src.weather);       /* avant les rangées : le sens proposé suit le vent du briefing */
+    if (hasText(src.flight.task)) cur.flight.task = src.flight.task;
+    if (hasText(src.flight.threat)) cur.flight.threat = src.flight.threat;
+    if (src.threats.length) cur.threats = clone(src.threats);
+    if (hasText(src.notes)) cur.notes = src.notes;
     afFillRows(cur);
     persistState();
     renderAll();
@@ -7420,13 +7454,40 @@ function loadBriefingFile(file) {
 }
 
 /* La fenêtre d'import commune (import_block.py) écrit dans la fiche des groupes ; la liste des cartes la suit : chaque groupe importé a sa carte, la première est affichée */
+/* Une mission d'HQ importée : sur les cartes des groupes importés, la date et l'heure de la mission (date lue par magRouteDate ; startTime, en secondes, en HH:MM) et sa météo (le METAR, décodé comme à l'import d'un briefing), puis les rangées des terrains ;
+   les autres cartes ne changent pas. Rend vrai si une carte a été remplie. */
+function dgHqFill(res) {
+  const o = impReadHqObject();
+  if (!o) return false;
+  const sm = o.sourceMission, wx = gsIsObj(o.weather) ? o.weather : {};
+  const date = magRouteDate(sm.missionDate);
+  const st = typeof sm.startTime === 'number' && isFinite(sm.startTime) && sm.startTime >= 0 ? Math.floor(sm.startTime) : -1;
+  const time = st < 0 ? '' : String(Math.floor(st / 3600) % 24).padStart(2, '0') + ':' + String(Math.floor((st % 3600) / 60)).padStart(2, '0');
+  const metar = hasText(wx.metar) ? str(wx.metar) : '';
+  let any = false;
+  doc.cards.forEach(c => {
+    if (!c.gsId || res.fcIds.indexOf(c.gsId) < 0) return;
+    if (date) c.meta.date = date;
+    if (time) c.meta.time = time;
+    if (metar) {
+      c.weather.metar = metar;
+      const dm = decodeMetar(metar);
+      c.weather.wind = dm.wind; c.weather.visibility = dm.visibility; c.weather.qnh = dm.qnh; c.weather.clouds = dm.clouds;
+    }
+    afFillRows(c);
+    any = true;
+  });
+  return any && !!(date || time || metar);
+}
 function dgImported(res) {
   gsApplyAll();
   const k = doc.cards.findIndex(x => x.gsId && res.fcIds.indexOf(x.gsId) >= 0);
   if (k >= 0) curIdx = k;
+  const hq = res.kind === 'hq' && dgHqFill(res);
   persistState();
   renderAll();
-  showToast(res.failed ? '⚠ ' + res.text + ' · ' + t('toast.gsFull').replace(/^⚠\s*/, '') : res.text, { type: res.failed ? 'err' : 'ok', ms: res.failed ? 6000 : res.ms });
+  const text = hq ? res.text + ' · ' + t('toast.hqFilled') : res.text;
+  showToast(res.failed ? '⚠ ' + text + ' · ' + t('toast.gsFull').replace(/^⚠\s*/, '') : text, { type: res.failed ? 'err' : 'ok', ms: res.failed ? 6000 : res.ms });
 }
 
 /* ============= EXPORT : fenêtre ============= */
@@ -7995,6 +8056,7 @@ function init() {
   { const k = dgReadTheatreKey(); if (k) doc.theatre = k; }       /* le théâtre que le Route Planner a écrit : le dernier changement gagne */
   dgFillTheatre();
   initToolbarMenus([['theatre', () => t('tb.theatre'), undefined, true]]);       /* la liste du théâtre, comme au Route Planner */
+  gsPrintMigrate(doc.cards);       /* une fois : les canaux cochés d'une carte liée d'avant passent à son groupe */
   gsApplyAll(true);
   const synced = dgSyncRoutes();
   if (doc.theatre !== th0 || synced || JSON.stringify(doc) !== DG_DOC.raw) persistState();       /* le document tel qu'il se lit maintenant (migration d'une carte d'avant le lot comprise) est gardé, une fois */       /* un théâtre pris (clé partagée, fiche ou route) est gardé */
