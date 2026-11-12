@@ -8,6 +8,9 @@ import re
 
 from messages_block import build_block as build_messages_block, build_css as build_messages_css
 from ui_block import build_tbm_css, build_tbm_block, build_block as build_ui_block, build_css as build_ui_css, verify as ui_verify, verify_bar as ui_verify_bar
+from shell_only_block import build_block as build_shell_only_block
+# La garde du module seul : premier élément du <body> (build_mission_plan.py la vérifie dans le dist/)
+SHELL_ONLY_TAG = '<script data-lang-key="lang_v1">\n' + build_shell_only_block() + '</script>\n'
 
 CONTRAST_CSS = r"""
 /* MP-20 begin */
@@ -4905,6 +4908,7 @@ init();
 os.makedirs(os.path.join(HERE, 'dist'), exist_ok=True)
 OUTPUT_PATH = os.path.join(HERE, 'dist', 'dcs_recon_station.html')
 
+HTML = HTML.replace('<body data-theme="cw-nato">\n', '<body data-theme="cw-nato">\n' + SHELL_ONLY_TAG, 1)
 HTML = HTML.replace('@@MESSAGES_CSS@@\n', build_messages_css() + build_ui_css()).replace('@@MESSAGES_BLOCK@@\n', build_messages_block() + build_ui_block()).replace('@@TBM_CSS@@\n', build_tbm_css()).replace('@@TBM_JS@@\n', build_tbm_block())
 ui_verify(HTML)
 ui_verify_bar(HTML)

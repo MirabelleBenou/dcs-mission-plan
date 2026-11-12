@@ -32,6 +32,9 @@ from group_store_block import build_block as build_group_store_block
 from import_block import build_block as build_import_block, build_css as build_import_css, build_html as build_import_html
 from messages_block import build_block as build_messages_block, build_css as build_messages_css
 from ui_block import build_tbm_css, build_tbm_block, build_block as build_ui_block, build_css as build_ui_css, verify as ui_verify, verify_bar as ui_verify_bar, fingerprint as ui_fingerprint
+from shell_only_block import build_block as build_shell_only_block
+# La garde du module seul : premier élément du <body> (build_mission_plan.py la vérifie dans le dist/)
+SHELL_ONLY_TAG = '<script data-lang-key="lang_v1">\n' + build_shell_only_block() + '</script>\n'
 
 CONTRAST_CSS = r"""
 /* MP-20 begin */
@@ -4568,7 +4571,7 @@ def build_html():
             '<meta name="theme-color" content="#1a1e10">\n<title>Flight Configurator — Mission Plan</title>\n<style>\n'
             + fonts + CSS_COMMON.replace('@@TBM_CSS@@\n', build_tbm_css()) + CSS_FC + build_messages_css() + build_ui_css() + build_import_css() + CONTRAST_CSS + '\n</style>\n'
             '<!-- JSZip v3.10.1 — embarqué pour lire un paquet .zip -->\n<script>' + A['lib_jszip'] + '</script>\n</head>\n'
-            + BODY.replace('@@VERSION@@', APP_VERSION) + '\n<script>\n' + js + '\n</script>\n</body>\n</html>\n')
+            + BODY.replace('@@VERSION@@', APP_VERSION).replace('<body data-theme="cw-nato">\n', '<body data-theme="cw-nato">\n' + SHELL_ONLY_TAG, 1) + '\n<script>\n' + js + '\n</script>\n</body>\n</html>\n')
 
 
 def main():

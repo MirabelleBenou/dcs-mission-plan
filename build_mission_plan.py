@@ -22,7 +22,10 @@ Sources images (à placer dans ./tiles/) :
 import base64
 import json
 import os
+import re
 import sys
+
+from shell_only_block import build_block as build_shell_only_block, BLOCK_BEGIN as SHELL_ONLY_BEGIN, BLOCK_END as SHELL_ONLY_END
 
 CONTRAST_CSS = r"""
 /* MP-20 begin */
@@ -71,6 +74,49 @@ with open(os.path.join(SCRIPT_DIR, 'assets.json')) as _f:
 for _k in ('OSWALD_500', 'OSWALD_700', 'STARDOS_400', 'STARDOS_700', 'ROBOTO_MONO_400'):
     if not A.get(_k):
         raise SystemExit(f"[ERREUR] Entrée manquante : {_k} dans assets.json")
+
+
+_KEY_LANG_RE = re.compile(r"\bKEY_LANG\s*=\s*'([0-9A-Za-z_]+)'")
+# Les seuls scripts que le <head> d'un module porte : des bibliothèques embarquées (aucun code d'outil), reconnues à leur mention en tête
+_HEAD_LIB_BANNERS = ('/*!\n\nJSZip v3.10.1', '/*!\n * html2canvas 1.4.1', '/* @preserve\n * Leaflet 1.9.4', '/*! milsymbol 3.0.5')
+
+
+def check_shell_only_block():
+    """Garde d'identité : la garde du module seul (shell_only_block.build_block()) doit figurer exactement une fois, telle quelle,
+    dans chacun des sept modules, dans une balise <script data-lang-key="lang_v1">, premier élément du <body> (la page seule est
+    peinte : posée dans le <head>, la garde arrêtait l'analyse avant le <body>, et rien ne se peignait). Le <head> d'un module ne porte
+    que des bibliothèques embarquées (JSZip, html2canvas, Leaflet, milsymbol), jamais un script d'outil. Sinon le build s'arrête avant
+    toute écriture, en nommant le module."""
+    block = build_shell_only_block()
+    for mod in MODULES:
+        try:
+            with open(os.path.join(SCRIPT_DIR, mod['src']), 'r', encoding='utf-8') as fh:
+                html = fh.read()
+        except OSError as exc:
+            raise SystemExit(f"[ERREUR] Module illisible ({exc}) — build arrêté")
+        if html.count(block) != 1:
+            raise SystemExit(f"[ERREUR] La garde du module seul de {mod['src']} diffère de shell_only_block.py (attendu : une fois, à l'identique) — build arrêté")
+        if html.count(SHELL_ONLY_BEGIN) != 1 or html.count(SHELL_ONLY_END) != 1:
+            raise SystemExit(f"[ERREUR] Un marqueur de la garde du module seul figure plusieurs fois dans {mod['src']} — build arrêté")
+        key = _KEY_LANG_RE.search(html)
+        if not key:
+            raise SystemExit(f"[ERREUR] KEY_LANG introuvable dans {mod['src']} — build arrêté")
+        if key.group(1) != 'lang_v1':
+            raise SystemExit(f"[ERREUR] {mod['src']} ne lit pas la langue de la suite (lang_v1) : {key.group(1)} — build arrêté")
+        tag = f'<script data-lang-key="{key.group(1)}">\n{block}</script>'
+        if html.count(tag) != 1:
+            raise SystemExit(f"[ERREUR] {mod['src']} : la garde du module seul n'est pas posée dans une balise <script data-lang-key=\"{key.group(1)}\"> — build arrêté")
+        at = html.index(tag)
+        head, head_end = html.find('<head>'), html.find('</head>')
+        if head < 0 or head_end < head:
+            raise SystemExit(f"[ERREUR] {mod['src']} : <head> introuvable — build arrêté")
+        for sc in re.finditer(r'<script[^>]*>', html[head:head_end]):
+            if not html[head + sc.end():head + sc.end() + 80].startswith(_HEAD_LIB_BANNERS):
+                raise SystemExit(f"[ERREUR] {mod['src']} : le <head> porte un script qui n'est pas une bibliothèque embarquée — build arrêté")
+        body = re.compile(r'<body[^>]*>\s*').search(html, head_end)
+        if not body or html[head_end + len('</head>'):body.start()].strip() or body.end() != at:
+            raise SystemExit(f"[ERREUR] {mod['src']} : la garde du module seul n'est pas le premier élément du <body> — build arrêté")
+        print(f"  [OK] Garde du module seul identique à shell_only_block.py ({mod['src']})")
 
 
 def encode_file_b64(path):
@@ -1322,6 +1368,9 @@ function tbmScrolled(e) {{
 def main():
     print('=== build_mission_plan.py — DCS Mission Plan shell ===')
 
+    print('\n[0/3] Garde du module seul dans les sept modules…')
+    check_shell_only_block()
+
     print('\n[1/3] Encodage modules HTML…')
     module_html_js = build_module_html_js(MODULES)
 
@@ -1330,6 +1379,14 @@ def main():
 
     print(f'\n[3/3] Génération {OUT_FILE}…')
     html = build_html(module_html_js, tile_uris)
+    # La garde du module seul ne figure pas dans le shell lui-même (hors des modules embarqués)
+    shell_text = html.replace(module_html_js, '', 1)
+    shell_only_body = build_shell_only_block().replace(SHELL_ONLY_BEGIN, '').replace(SHELL_ONLY_END, '').strip()
+    for what, found in (('son marqueur de début', SHELL_ONLY_BEGIN in shell_text), ('son marqueur de fin', SHELL_ONLY_END in shell_text),
+                        ('le corps du bloc', shell_only_body in shell_text), ('la balise data-lang-key', 'data-lang-key' in shell_text)):
+        if found:
+            raise SystemExit(f"[ERREUR] La garde du module seul figure dans le shell lui-même ({what}) — build arrêté")
+    print('  [OK] Garde du module seul absente du shell lui-même')
     # Retour au hub : le clavier quitte l'outil fermé (sinon Ctrl+S ouvrirait la fenêtre d'enregistrement de l'outil masqué)
     if "landing.focus({ preventScroll: true })" not in html:
         raise SystemExit("[ERREUR] goHub ne rend plus le clavier au hub")

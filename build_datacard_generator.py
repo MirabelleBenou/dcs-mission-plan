@@ -30,6 +30,9 @@ from aircraft_types_block import build_block as build_aircraft_types_block
 from import_block import build_block as build_import_block, build_css as build_import_css, build_html as build_import_html
 from messages_block import build_block as build_messages_block, build_css as build_messages_css
 from ui_block import build_tbm_css, build_tbm_block, build_block as build_ui_block, build_css as build_ui_css, verify as ui_verify, verify_bar as ui_verify_bar
+from shell_only_block import build_block as build_shell_only_block
+# La garde du module seul : premier élément du <body> (build_mission_plan.py la vérifie dans le dist/)
+SHELL_ONLY_TAG = '<script data-lang-key="lang_v1">\n' + build_shell_only_block() + '</script>\n'
 
 CONTRAST_CSS = r"""
 /* MP-20 begin */
@@ -8147,7 +8150,7 @@ def build():
     js = js.replace('__AIRFIELD_ICAO__', icao_js)
     js = js.replace('@@ROUTE_PACK_BLOCK@@\n', build_route_pack_block()).replace('@@ROUTE_THEATRE_BLOCK@@\n', build_route_theatre_block()).replace('@@GROUP_STORE_BLOCK@@\n', build_group_store_block()).replace('@@ROUTE_WRITE_BLOCK@@\n', build_route_write_block())
     js = js.replace('__EXAMPLE_DOC__', example_js).replace('__EXAMPLE_DOC_EN__', example_en_js).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@RADIO_BLOCK@@\n', build_radio_block()).replace('@@RADIO_BANDS_BLOCK@@\n', build_radio_bands_block()).replace('@@PROJECTION_BLOCK@@\n', build_projection_block())
-    html = HTML
+    html = HTML.replace('<body data-theme="cw-nato">\n', '<body data-theme="cw-nato">\n' + SHELL_ONLY_TAG, 1)
     html = html.replace('__CSS__', CSS.replace('@@MESSAGES_CSS@@\n', build_messages_css() + build_ui_css()).replace('@@TBM_CSS@@\n', build_tbm_css()) + build_import_css() + CONTRAST_CSS)
     html = html.replace('@@IMPORT_HTML@@\n', build_import_html())
     html = html.replace('__LIB_HTML2CANVAS__', A['lib_html2canvas'])

@@ -35,6 +35,10 @@ CONTRAST_CSS = r"""
 /* MP-20 end */
 """
 from aircraft_types_block import build_block as build_aircraft_types_block
+from shell_only_block import build_block as build_shell_only_block
+
+# La garde du module seul : premier élément du <body> (build_mission_plan.py la vérifie dans le dist/)
+SHELL_ONLY_TAG = '<script data-lang-key="lang_v1">\n' + build_shell_only_block() + '</script>\n'
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ASSETS_PATH = os.path.join(HERE, 'assets.json')
@@ -2229,7 +2233,6 @@ function t(key, fallback) {{
 const KEY_WING  = 'wing_config_v1';
 const KEY_THEME = 'theme_v1';
 const KEY_LANG  = 'lang_v1';
-const KEY_LANG_OLD = 'hq_lang_v1';   // ancienne clé de HQ : reprise une fois si lang_v1 manque, puis toujours supprimée
 
 // ── Wing config state ──────────────────────────────────────────
 let wingConfig = null;
@@ -2297,18 +2300,7 @@ function applyTheme(val) {{
 }}
 
 // ── Lang ───────────────────────────────────────────────────────
-function migrateLangKey() {{
-  try {{
-    const old = localStorage.getItem(KEY_LANG_OLD);
-    if (old !== null) {{
-      if (localStorage.getItem(KEY_LANG) === null && (old === 'fr' || old === 'en')) localStorage.setItem(KEY_LANG, old);
-      localStorage.removeItem(KEY_LANG_OLD);   // jamais de clé orpheline
-    }}
-  }} catch (e) {{ /* stockage indisponible */ }}
-}}
-
 function loadLang() {{
-  migrateLangKey();
   const saved = localStorage.getItem(KEY_LANG);
   if (saved === 'fr' || saved === 'en') {{
     CURRENT_LANG = saved;
@@ -6456,7 +6448,6 @@ function hqFoldInit() {{
 }}
 
 function init() {{
-  clearPersistedSnapshot();  // la mission partagée ne survit pas au rechargement : HQ démarre vide, avant toute lecture
   loadTheme();
   loadLang();
   initToolbarMenus([['theme-select', () => t('toolbar.theme.tooltip')]]);   // les listes de la barre au thème de l'interface
@@ -6538,6 +6529,7 @@ with open(os.path.join(HERE, 'airdromes.json'), encoding='utf-8') as _f:
 assert '</' not in _DYN_AIRDROMES_JS
 
 HTML_FINAL = (HTML
+    .replace('<body data-theme="cw-nato">\n', '<body data-theme="cw-nato">\n' + SHELL_ONLY_TAG, 1)
     .replace('__DCS_ENGINE__', _DCS_ENGINE_HQ)
     .replace('__DCS_EXTRACTOR__', _DCS_EXTRACTOR_HQ)
     .replace('__APPLY_PATCHES__', _APPLY_PATCHES)
@@ -6594,7 +6586,7 @@ grep_present('wing-appTitle',   'champ wing-appTitle')
 grep_present('wing-hqStamp',    'champ wing-hqStamp')
 grep_present('wing-logo-input', 'champ wing-logo-input')
 grep_present("const KEY_LANG  = 'lang_v1'", 'cl\u00e9 langue lang_v1 (celle des autres outils)')
-grep_present("localStorage.removeItem(KEY_LANG_OLD)", 'migration unique de hq_lang_v1')
+grep_absent("hq_lang_v1", 'plus de reprise de l\u2019ancienne clé de langue hq_lang_v1')
 grep_present('data-i18n',       'attributs i18n pr\u00e9sents')
 grep_present('function t(key',  'fonction t() pr\u00e9sente')
 grep_present('validateWingConfig', 'validateWingConfig pr\u00e9sent')
@@ -6625,7 +6617,8 @@ must(src.find('id="wing-liv-fieldset"') < src.find('id="wing-def-fieldset"') < s
 must('function sanitizeWingDefaultLiveries' in src and 'sanitizeWingDefaultLiveries(parsed);' in src, 'lecture de la configuration : un defaultLiveries mal form\u00e9 ne la fait pas perdre')
 must('validate.defaultLiveriesInvalid' in src and 'obj.defaultLiveries !== undefined' in src, 'validation du champ defaultLiveries pr\u00e9sente (l\u2019import reste strict)')
 must('function renderWingDefLiveries' in src and 'renderWingDefLiveries();       // la liste d\'un type suit les escadrons' in src, 'la section se refait avec renderWingLiveries')
-_fr = src.split("fr: {")[1].split("en: {")[0]; _en = src.split("en: {")[1].split("}};")[0]
+_I18N = src.split("const I18N = {", 1)[1]    # le dictionnaire de HQ (la garde du module seul porte aussi un « fr: { » avant lui)
+_fr = _I18N.split("fr: {")[1].split("en: {")[0]; _en = _I18N.split("en: {")[1].split("}};")[0]
 _kd = lambda txt: set(_re.findall(r"'(wing\.def\.[^']+|validate\.defaultLiveriesInvalid)':", txt))
 must(_kd(_fr) == _kd(_en) and len(_kd(_fr)) == 5, 'I18N parit\u00e9 wing.def.* et validate.defaultLiveriesInvalid fr/en (%d cl\u00e9s)' % len(_kd(_fr)))
 must(all(('t(\'%s\')' % k) in src or ('data-i18n="%s"' % k) in src for k in ('wing.def.title', 'wing.def.hint', 'wing.def.first', 'wing.def.none', 'validate.defaultLiveriesInvalid')), 'chaque texte de la section est utilis\u00e9')
@@ -6677,9 +6670,8 @@ grep_present('initFormMenus(sel =>','initFormMenus appelé au démarrage')
 grep_present('.pk-flt-f .tbm-trigger.tbm-field','filtres de la liste des vols au thème de l\'interface')
 grep_present('pk-check-shown',      'bouton Cocher les vols affichés présent')
 grep_present('_MIZ_LOAD_FP',        'empreinte du .miz chargé gardée à part')
-grep_present('localStorage.removeItem(KEY_SNAPSHOT)', 'la clé mission_snapshot_v1 est effacée au démarrage')
-grep_present('clearPersistedSnapshot();', 'l\u2019effacement est appelé au démarrage (init)')
-grep_present('function init() {\n  clearPersistedSnapshot();', 'init() efface la clé en tête, avant toute lecture')
+grep_present('localStorage.removeItem(KEY_SNAPSHOT)', 'la clé mission_snapshot_v1 s\u2019efface (Effacer) ; au démarrage, c\u2019est le shell qui l\u2019efface')
+grep_absent('function init() {\n  clearPersistedSnapshot();', 'init() n\u2019efface plus la clé : l\u2019accueil de la suite le fait avant qu\u2019HQ naisse')
 grep_absent('loadPersistedSnapshot', 'plus de relecture de la mission partagée')
 grep_absent('hqBanner',              'plus de bandeau d\u2019état « mission sans .miz »')
 grep_absent('hq.noMem',              'plus de clé hq.noMem')
@@ -6777,8 +6769,8 @@ grep_absent('@@AIRCRAFT_TYPES_BLOCK@@', 'repère du bloc des types remplacé')
 
 # I18N parity check
 import ast
-fr_keys = set(_re.findall(r"'(editor\\.wing\\.[^']+)':", src.split("fr: {")[1].split("en: {")[0]))
-en_keys = set(_re.findall(r"'(editor\\.wing\\.[^']+)':", src.split("en: {")[1].split("}};")[0]))
+fr_keys = set(_re.findall(r"'(editor\\.wing\\.[^']+)':", _I18N.split("fr: {")[1].split("en: {")[0]))
+en_keys = set(_re.findall(r"'(editor\\.wing\\.[^']+)':", _I18N.split("en: {")[1].split("}};")[0]))
 diff_fr = fr_keys - en_keys
 diff_en = en_keys - fr_keys
 if not diff_fr and not diff_en:
@@ -6787,15 +6779,15 @@ else:
     if diff_fr: print(f"  [FAIL] Cl\u00e9s fr manquantes en en: {{diff_fr}}")
     if diff_en: print(f"  [FAIL] Cl\u00e9s en manquantes en fr: {{diff_en}}")
 
-fr_pk = set(_re.findall(r"'((?:pk|toast\\.pk|snap\\.unit|snap\\.radio)[^']*)':", src.split("fr: {")[1].split("en: {")[0]))
-en_pk = set(_re.findall(r"'((?:pk|toast\\.pk|snap\\.unit|snap\\.radio)[^']*)':", src.split("en: {")[1].split("}};")[0]))
+fr_pk = set(_re.findall(r"'((?:pk|toast\\.pk|snap\\.unit|snap\\.radio)[^']*)':", _I18N.split("fr: {")[1].split("en: {")[0]))
+en_pk = set(_re.findall(r"'((?:pk|toast\\.pk|snap\\.unit|snap\\.radio)[^']*)':", _I18N.split("en: {")[1].split("}};")[0]))
 if fr_pk and fr_pk == en_pk:
     print("  [OK] I18N parit\u00e9 pk.* fr/en (%d cl\u00e9s)" % len(fr_pk))
 else:
     print("  [FAIL] I18N pk.* fr/en : %s / %s" % (sorted(fr_pk - en_pk), sorted(en_pk - fr_pk)))
 
-fr_dy = set(_re.findall(r"'((?:dyn|fn\\.dyn|toast\\.dsx)[^']*)':", src.split("fr: {")[1].split("en: {")[0]))
-en_dy = set(_re.findall(r"'((?:dyn|fn\\.dyn|toast\\.dsx)[^']*)':", src.split("en: {")[1].split("}};")[0]))
+fr_dy = set(_re.findall(r"'((?:dyn|fn\\.dyn|toast\\.dsx)[^']*)':", _I18N.split("fr: {")[1].split("en: {")[0]))
+en_dy = set(_re.findall(r"'((?:dyn|fn\\.dyn|toast\\.dsx)[^']*)':", _I18N.split("en: {")[1].split("}};")[0]))
 if fr_dy and fr_dy == en_dy:
     print("  [OK] I18N parit\u00e9 dyn.* fr/en (%d cl\u00e9s)" % len(fr_dy))
 else:

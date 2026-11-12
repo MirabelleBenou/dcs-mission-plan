@@ -30,6 +30,9 @@ from radio_block import build_block as build_radio_block
 from import_block import build_block as build_import_block, build_css as build_import_css, build_html as build_import_html
 from messages_block import build_block as build_messages_block, build_css as build_messages_css
 from ui_block import build_tbm_css, build_tbm_block, build_block as build_ui_block, build_css as build_ui_css, verify as ui_verify, verify_bar as ui_verify_bar
+from shell_only_block import build_block as build_shell_only_block
+# La garde du module seul : premier élément du <body> (build_mission_plan.py la vérifie dans le dist/)
+SHELL_ONLY_TAG = '<script data-lang-key="lang_v1">\n' + build_shell_only_block() + '</script>\n'
 
 CONTRAST_CSS = r"""
 /* MP-20 begin */
@@ -11033,7 +11036,7 @@ def build():
     if not lib_ms.startswith('/*! milsymbol 3.0.5'):
         raise SystemExit("[ERREUR] lib_milsymbol : la mention de licence MIT n'est plus en tête")
 
-    html = HTML
+    html = HTML.replace('<body data-theme="cw-nato">\n', '<body data-theme="cw-nato">\n' + SHELL_ONLY_TAG, 1)
     html = html.replace('__CSS__', CSS.replace('@@MESSAGES_CSS@@\n', build_messages_css() + build_ui_css()).replace('@@TBM_CSS@@\n', build_tbm_css()) + build_import_css() + CONTRAST_CSS)
     html = html.replace('__IMPORT_HTML__\n', build_import_html())
     html = html.replace('__LIB_LEAFLET_CSS__', A['lib_leaflet_css'])

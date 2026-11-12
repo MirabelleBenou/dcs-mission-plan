@@ -8,6 +8,9 @@ import re
 import subprocess
 import sys
 import tempfile
+from shell_only_block import build_block as build_shell_only_block
+# La garde du module seul : premier élément du <body> (build_mission_plan.py la vérifie dans le dist/)
+SHELL_ONLY_TAG = '<script data-lang-key="lang_v1">\n' + build_shell_only_block() + '</script>\n'
 
 CONTRAST_CSS = r"""
 /* MP-20 begin */
@@ -3273,6 +3276,8 @@ document.addEventListener('DOMContentLoaded', init);
 """
 
 # ── Écriture ─────────────────────────────────────────────────────────────────────
+
+HTML = HTML.replace('<body data-theme="cw-nato">\n', '<body data-theme="cw-nato">\n' + SHELL_ONLY_TAG, 1)
 
 os.makedirs(os.path.join(HERE, 'dist'), exist_ok=True)
 OUTPUT_PATH = os.path.join(HERE, 'dist', 'dcs_field_manual.html')

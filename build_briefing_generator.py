@@ -11,6 +11,9 @@ import os
 from aircraft_types_block import build_block as build_aircraft_types_block
 from messages_block import build_block as build_messages_block, build_css as build_messages_css
 from ui_block import build_tbm_css, build_tbm_block, build_block as build_ui_block, build_css as build_ui_css, verify as ui_verify, verify_bar as ui_verify_bar
+from shell_only_block import build_block as build_shell_only_block
+# La garde du module seul : premier élément du <body> (build_mission_plan.py la vérifie dans le dist/)
+SHELL_ONLY_TAG = '<script data-lang-key="lang_v1">\n' + build_shell_only_block() + '</script>\n'
 
 CONTRAST_CSS = r"""
 /* MP-20 begin */
@@ -905,36 +908,6 @@ body {
 .wing-ac-add-row button {
   white-space: nowrap;
 }
-/* Action buttons */
-.wing-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 4px 0 10px 0;
-}
-.wing-action-btn {
-  flex: 1;
-  min-width: 120px;
-  font-family: var(--f-stencil);
-  font-size: 12px;
-  letter-spacing: .05em;
-  padding: 9px 10px;
-  border-radius: 3px;
-  border: 1px solid var(--khaki);
-  background: rgba(0,0,0,.2);
-  color: var(--paper-light);
-  cursor: pointer;
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  transition: background .15s;
-}
-.wing-action-btn:hover { background: var(--olive); }
-.wing-action-import input[type=file] { display: none; }
-.wing-action-reset { border-color: var(--red-stamp); color: var(--red-stamp); }
-.wing-action-reset:hover { background: var(--red-stamp); color: var(--paper-light); }
 /* Size counter */
 .wing-size-counter {
   font-family: var(--f-typewriter);
@@ -3220,17 +3193,6 @@ __CSS__
         <!-- Informations wing courantes (read-only) -->
         <div id="wing-ro-info" class="wing-ro-info"></div>
 
-        <!-- Filet d'import standalone / fallback -->
-        <div class="wing-actions">
-          <label class="wing-action-btn wing-action-import" data-i18n-title="editor.wing.importTooltip" title="Importer un fichier wing_config.json">
-            <input type="file" accept=".json" id="wing-import-input">
-            <span data-i18n="editor.wing.import">📥 Importer config</span>
-          </label>
-          <button type="button" class="wing-action-btn wing-action-reset" id="wing-reset-btn" data-i18n="editor.wing.reset">
-            ♻ Réinitialiser
-          </button>
-        </div>
-
         <p class="ui-note wing-hq-note" data-i18n="editor.wing.hqHint">✦ Édition complète disponible dans HQ</p>
 
       </div>
@@ -3346,7 +3308,6 @@ const I18N = {
     'ui.all': 'Toutes',
     'modal.export.pick': 'Choisir…',
     'ui.verb.delete': 'Supprimer',
-    'ui.verb.reset': 'Réinitialiser',
     'ui.verb.clear': 'Effacer',
     // ── Toolbar ──
     'toolbar.save':           'Sauvegarder',
@@ -3519,25 +3480,14 @@ const I18N = {
     // ── Section 10 WING ──
     'editor.wing.summary':      '10 ░ CONFIGURATION WING',
     'editor.wing.summaryShort': '10 ░ CONFIG WING',
-    'editor.wing.import':       '📥 Importer config',
     'editor.wing.hqHint':        '✦ Édition complète disponible dans HQ',
-    'editor.wing.resetConfirm.title': 'Réinitialiser le wing au défaut ?',
-    'editor.wing.resetConfirm.text': 'Toutes les modifications seront perdues.',
     'editor.wing.roWing':        'Wing actif',
     'editor.wing.roSquadrons':   'Escadrons enregistrés',
-    'toast.wingLoaded':          'Config wing chargée ✓',
-    'toast.wingReset':           'Wing réinitialisé ✓',
-    'msg.jsonUnreadable':        '⚠ Fichier illisible : ce n’est pas du JSON.',
-    'msg.notWingConfig':         '⚠ Ce fichier n’est pas une configuration wing.',
-    'msg.wingIncomplete':        '⚠ Configuration wing incomplète : {0} champ(s) manquant(s) ou invalide(s).',
     'msg.notMiz':                '⚠ Fichier illisible : ce n’est pas un .miz.',
     'msg.failed':                '⚠ L’opération a échoué.',
     'msg.notImage':              '⚠ Le fichier doit être une image.',
     'msg.imageUnreadable':       '⚠ Image illisible.',
     'msg.exportFailed':          '⚠ Export impossible.',
-    'toast.wingFileError':       '⚠ Lecture du fichier impossible',
-    'editor.wing.importTooltip':'Importer un fichier wing_config.json',
-    'editor.wing.reset':        '♻ Réinitialiser',
     // ── Shared editor strings ──
     'editor.imgZone.tap':     '▲ TOUCHER POUR IMPORTER UNE CARTE ▲',
     'editor.imgZone.tapLogo': '▲ TOUCHER POUR IMPORTER UN LOGO ▲',
@@ -3700,7 +3650,6 @@ const I18N = {
     'rpmap.place':        'Placer',
     'toast.rpmapPlaced':  'Carte placée.',
     'toast.storageFull':  '⚠ Mémoire du navigateur pleine : le briefing n\'est plus enregistré.',
-    'toast.wingStorageFull': '⚠ Mémoire du navigateur pleine : la configuration wing n’est pas enregistrée.',
     'tab.simple.situation':       'Situation',
     'tab.simple.coord':           'Coordination',
     'tab.simple.photos':          'Photos',
@@ -3768,7 +3717,6 @@ const I18N = {
     'ui.all': 'All',
     'modal.export.pick': 'Choose…',
     'ui.verb.delete': 'Delete',
-    'ui.verb.reset': 'Reset',
     'ui.verb.clear': 'Clear',
     // ── Toolbar ──
     'toolbar.save':           'Save',
@@ -3941,25 +3889,14 @@ const I18N = {
     // ── Section 10 WING ──
     'editor.wing.summary':      '10 ░ WING CONFIGURATION',
     'editor.wing.summaryShort': '10 ░ WING CONFIG',
-    'editor.wing.import':       '📥 Import config',
     'editor.wing.hqHint':        '✦ Full editing available in HQ',
-    'editor.wing.resetConfirm.title': 'Reset wing to default?',
-    'editor.wing.resetConfirm.text': 'All changes will be lost.',
     'editor.wing.roWing':        'Active wing',
     'editor.wing.roSquadrons':   'Registered squadrons',
-    'toast.wingLoaded':          'Wing config loaded ✓',
-    'toast.wingReset':           'Wing reset ✓',
-    'msg.jsonUnreadable':        '⚠ Unreadable file: this is not JSON.',
-    'msg.notWingConfig':         '⚠ This file is not a wing configuration.',
-    'msg.wingIncomplete':        '⚠ Incomplete wing configuration: {0} missing or invalid field(s).',
     'msg.notMiz':                '⚠ Unreadable file: this is not a .miz.',
     'msg.failed':                '⚠ The operation failed.',
     'msg.notImage':              '⚠ The file must be an image.',
     'msg.imageUnreadable':       '⚠ Unreadable image.',
     'msg.exportFailed':          '⚠ Export failed.',
-    'toast.wingFileError':       '⚠ Cannot read file',
-    'editor.wing.importTooltip':'Import a wing_config.json file',
-    'editor.wing.reset':        '♻ Reset',
     // ── Shared editor strings ──
     'editor.imgZone.tap':     '▲ TAP TO IMPORT A MAP ▲',
     'editor.imgZone.tapLogo': '▲ TAP TO IMPORT A LOGO ▲',
@@ -4122,7 +4059,6 @@ const I18N = {
     'rpmap.place':        'Place',
     'toast.rpmapPlaced':  'Map placed.',
     'toast.storageFull':  '⚠ Browser storage full: the briefing is no longer being saved.',
-    'toast.wingStorageFull': '⚠ Browser storage full: the wing configuration is not saved.',
     'tab.simple.situation':       'Situation',
     'tab.simple.coord':           'Coordination',
     'tab.simple.photos':          'Photos',
@@ -4715,7 +4651,7 @@ function persistState() {
 
 /* Validates a candidate wing config object.
    Returns { ok: true } or { ok: false, errors: string[] }.
-   Called both at import and at localStorage load to guard against corruption. */
+   Called at localStorage load to guard against corruption. */
 function validateWingConfig(obj) {
   const errors = [];
   if (!obj || typeof obj !== 'object') return { ok: false, errors: [t('validate.schemaMissing')] };
@@ -4754,24 +4690,6 @@ function loadWingConfig() {
     }
   } catch(e) { console.warn('[Wing] Lecture localStorage échouée :', e); }
   return structuredClone(DEFAULT_WING_CONFIG);
-}
-
-/* Debounced write of wingConfig to localStorage (200 ms).
-   Called by importWingConfig/resetWingConfig (P1.B: wing editor moved to HQ). */
-let _wingPersistTimer = null;
-function persistWingConfig() {
-  if (_wingPersistTimer) clearTimeout(_wingPersistTimer);
-  _wingPersistTimer = setTimeout(() => {
-    try {
-      localStorage.setItem(KEY_WING, JSON.stringify(wingConfig));
-    } catch(e) {
-      if (e.name === 'QuotaExceededError') {
-        showToast(t('toast.wingStorageFull'), { type: 'err' });
-      } else {
-        console.warn('[Wing] Erreur persistance :', e);
-      }
-    }
-  }, 200);
 }
 
 function mergeDeep(target, source) {
@@ -7027,7 +6945,7 @@ function bindEditorEvents() {
     renderAnnexes();
     schedulePreview();
   });
-  // P1.B: wing binding moved to bindWingImportEvent() (called from init)
+  // P1.B: wing binding moved to bindWingStorageEvent() (called from init)
 }
 
 /* ============= PREVIEW ============= */
@@ -8226,54 +8144,6 @@ const LOGO_MAX_SIZE = 256;
 
 /* renderWingEditor — supprimé P1.B */
 /* bindWingEditorEvents — supprimé P1.B */
-/* ============= WING ACTIONS ============= */
-
-/* exportWingConfig — supprimé P1.B */
-
-/* Read a JSON file, validate it as a wing config, and apply it.
-   On error, shows a toast — never throws / alerts. */
-function importWingConfig(file) {
-  const reader = new FileReader();
-  reader.onload = () => {
-    let parsed;
-    try { parsed = JSON.parse(reader.result); }
-    catch (e) { console.warn('[BG] configuration wing : JSON illisible', e); showToast(t('msg.jsonUnreadable'), { type: 'err' }); return; }
-    if (!parsed || typeof parsed !== 'object' || parsed.configSchemaVersion !== 1) { showToast(t('msg.notWingConfig'), { type: 'err' }); return; }
-    let check;
-    try { check = validateWingConfig(parsed); }
-    catch (e) { console.warn('[BG] configuration wing : validation impossible', e); showToast(t('msg.notWingConfig'), { type: 'err' }); return; }
-    if (!check.ok) {
-      console.warn('[BG] configuration wing incomplète :', check.errors);
-      showToast(t('msg.wingIncomplete').replace('{0}', check.errors.length), { type: 'err' });
-      return;
-    }
-    try {
-      wingConfig = parsed;
-      persistWingConfig();
-      applyWingBranding();
-      renderWingReadOnly();
-      schedulePreview();
-      showToast(t('toast.wingLoaded'), { type: 'ok' });
-    } catch (e) {
-      console.warn('[BG] configuration wing : enregistrement ou rendu impossible', e);
-      showToast(t('msg.failed'), { type: 'err' });
-    }
-  };
-  reader.onerror = () => showToast(t('toast.wingFileError'), { type: 'err' });
-  reader.readAsText(file);
-}
-
-/* Hard reset to the embedded DEFAULT_WING_CONFIG, wiping localStorage entry. */
-async function resetWingConfig() {
-  if (!(await askConfirm({ title: t('editor.wing.resetConfirm.title'), text: t('editor.wing.resetConfirm.text'), verb: t('ui.verb.reset'), danger: true }))) return;
-  wingConfig = structuredClone(DEFAULT_WING_CONFIG);
-  localStorage.removeItem(KEY_WING);
-  applyWingBranding();
-  renderWingReadOnly();
-  schedulePreview();
-  showToast(t('toast.wingReset'), { type: 'ok' });
-}
-
 
 /* ============= REPLI DES SECTIONS (bg_folds_v1) =============
    L'état se garde : { section: true (ouverte) | false (repliée) }. Défauts du profil neuf : l'En-tête (première section) ouvert, Métadonnées (dernière section) repliée ; les autres comme avant.
@@ -8377,7 +8247,7 @@ function bindTabBar() {
 
 /* ============= WING READ-ONLY PANEL (P1.B) ============= */
 /* Renders current wingConfig as read-only info in #wing-ro-info.
-   Called on init, after import, after reset, and on storage event. */
+   Called on init and on storage event. */
 function renderWingReadOnly() {
   const el = document.getElementById('wing-ro-info');
   if (!el) return;
@@ -8397,18 +8267,8 @@ function renderWingReadOnly() {
     '</div></div>';
 }
 
-/* Bind the standalone wing import input (P1.B filet standalone). Called once from init(). */
-function bindWingImportEvent() {
-  const inp = document.getElementById('wing-import-input');
-  if (inp) {
-    inp.addEventListener('change', e => {
-      if (e.target.files[0]) importWingConfig(e.target.files[0]);
-      e.target.value = '';
-    });
-  }
-  const btnReset = document.getElementById('wing-reset-btn');
-  if (btnReset) btnReset.addEventListener('click', resetWingConfig);
-  /* Storage listener: refresh wing when HQ writes wing_config_v1 (sous shell). */
+/* Storage listener (called once from init()): refresh the wing when HQ writes wing_config_v1. The Wing tab only displays: HQ is where it is set. */
+function bindWingStorageEvent() {
   window.addEventListener('storage', function(e) {
     if (e.key === 'wing_config_v1') {
       wingConfig = loadWingConfig();
@@ -8422,7 +8282,7 @@ function bindWingImportEvent() {
 /* Apply wing identity to all dynamic HTML entry-points.
    Must be called:
      - once in init() after loadWingConfig()
-     - again after any change to wingConfig (importWingConfig, resetWingConfig, wing editor)
+     - again after any change to wingConfig (the storage event, when HQ writes it)
    XSS safety: all values from wingConfig pass through escapeHtml / escapeAttr.
    The static HTML contains 'MY WING' placeholders; this function overwrites
    them at DOMContentLoaded so they never appear if wingConfig is loaded. */
@@ -9274,7 +9134,7 @@ function init() {
   bindTabBar();
   bgFoldInit();
   initToolbarScroll();
-  bindWingImportEvent();  // P1.B — filet import + storage listener
+  bindWingStorageEvent();  // l'onglet Wing n'affiche que ; HQ écrit wing_config_v1 (évènement storage)
   setActiveTab('header');
   renderPreview();
   initOverflowObserver();  // chatE étape A : détection débordement via MutationObserver
@@ -9682,12 +9542,9 @@ document.addEventListener('DOMContentLoaded', function bindRpMapModal() {
 /* All functions below are globally accessible from the browser console.
    No IIFE wrapping — window scope is intentional (cf. DOCS §2.4).
 
-   Wing config read/write (P1.B: editing moved to HQ module):
+   Wing config, read only here (editing is in the HQ module):
      wingConfig                          // current wing object (mutable)
      loadWingConfig()                    // → parsed localStorage or DEFAULT_WING_CONFIG
-     persistWingConfig()                 // debounced save → localStorage[KEY_WING]
-     importWingConfig(file)              // file = File object from <input type="file">
-     resetWingConfig()                   // → confirm → DEFAULT_WING_CONFIG + localStorage.removeItem
 
    Branding refresh (always call after mutating wingConfig directly):
      applyWingBranding()
@@ -9781,6 +9638,7 @@ _default_wing_config_js = json.dumps(
     json.dumps(_default_wing_config, ensure_ascii=False)
 )
 
+HTML = HTML.replace('<body data-theme="cw-nato" data-format="simple">\n', '<body data-theme="cw-nato" data-format="simple">\n' + SHELL_ONLY_TAG, 1)
 HTML = HTML.replace('__CSS__', CSS.replace('@@MESSAGES_CSS@@\n', build_messages_css() + build_ui_css()).replace('@@TBM_CSS@@\n', build_tbm_css()) + CONTRAST_CSS)
 HTML = HTML.replace('@@AIRCRAFT_TYPES_BLOCK@@\n', build_aircraft_types_block()).replace('@@MESSAGES_BLOCK@@\n', build_messages_block() + build_ui_block()).replace('@@TBM_JS@@\n', build_tbm_block())
 HTML = HTML.replace('__LIB_HTML2CANVAS__', A['lib_html2canvas'])
