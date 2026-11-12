@@ -443,7 +443,6 @@ button, input, select { font: inherit; }
 .tb-btn:disabled { opacity: .35; cursor: not-allowed; pointer-events: none; }
 .tb-btn.danger:hover { background: var(--rust); border-color: var(--red-faded); color: var(--paper-light); }
 .tb-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
-.tb-btn .tb-btn-label.solo { display: none; }
 .tb-sel { color: var(--amber); border-color: var(--amber-dark); padding-right: 30px; appearance: none; -webkit-appearance: none;
   background: var(--olive-dark) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23c0892a' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right 11px center; }
 .tb-sel:hover, .tb-sel:focus-visible { border-color: var(--amber); }
@@ -1209,11 +1208,6 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .tb-version { font-family: 'Roboto Mono', monospace; }
 @media (max-width: 1245px) { .tb-brand-main, .tb-brand-sub, .tb-brand + .tb-sep, .tb-version { display: none; } .tb-brand-short { display: inline; } }
 @media (max-width: 1789px) { .tb-classif { display: none; } }
-
-/* ---------- étiquettes des boutons de fichier : à partir de 1575 px (seuil mesuré dans le shell avec le tampon d'escadre « TEST WING » : plus petite largeur où la barre tient avec les textes, la marque et la version ; en dessous, elle défilerait) ---------- */
-@media (min-width: 1575px) {
-  .tb-btn .tb-btn-label.solo { display: inline; }
-}
 
 /* ---------- barre du haut : une seule ligne qui défile quand elle déborde (à tout écran : avec « Lieux » et « Aérodromes », elle
    ne tient plus sur un portable) ; un fondu signale le bord qui déborde ---------- */

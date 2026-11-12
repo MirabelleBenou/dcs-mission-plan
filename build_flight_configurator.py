@@ -1283,12 +1283,12 @@ body[data-theme] {
    La liste du théâtre (lot mp-theatre-unique) a déplacé de 179 px les seuils du titre et du tampon de décor, de 290 px ceux des libellés entiers et resserrés (théâtre « Caucase », mesuré dans le shell, en français et en anglais, sans dépassement de 900 à 1900 px). */
 @media (max-width: 1467px) { .tb-brand-main, .tb-brand-sub, .tb-sep, .tb-version { display: none; } .tb-brand-short { display: inline; } }
 @media (max-width: 1178px) { .tb-btn { padding: 0 9px; letter-spacing: 1px; } }
-@media (max-width: 1132px) { .tb-btn .tb-btn-label { display: none; } .tb-btn { padding: 0; width: 44px; } }
 @media (max-width: 539px) { .tb-select { max-width: 96px; } }
 @media (max-width: 479px) { .toolbar { gap: 3px; } .tb-btn { width: 34px; min-width: 34px; } .tb-select { max-width: 64px; padding: 0 18px 0 6px; } .tb-lang-btn { min-width: 34px; padding: 0 2px; } }
 /* Le bouton « Ouvrir » reste un bouton de menu (icône + chevron) : à la taille de celui du Route Planner, jamais réduit à la forme d'un bouton à icône seule (mêmes marges intérieures : 12 px, 8 px à gauche sous 521 px) */
-@media (max-width: 1132px) { #btn-open { width: auto; min-width: 44px; padding-left: 12px; padding-right: 12px; } }
-@media (max-width: 520px) { #btn-open { padding-left: 8px; } }
+/* « Ouvrir » garde ses marges de bouton de menu en icônes seules (mêmes que celles du Route Planner) */
+.toolbar.tb-icons #btn-open { width: auto; min-width: 44px; padding-left: 12px; padding-right: 12px; }
+@media (max-width: 520px) { .toolbar.tb-icons #btn-open { padding-left: 8px; } }
 /* La liste du théâtre : le libellé « Théâtre » cède la place sous 760 px (règle commune, bloc d'interface commun ; la liste garde son nom accessible) ; sous 480 px la liste se resserre (texte entier jusqu'à 96 px, puis coupé)
    et la liste du thème de l'interface quitte la barre (le thème se règle au tableau du shell, qui le propage) : sans cela la barre défile de 21 à 28 px à 412 px */
 @media (max-width: 479px) { .tb-sel { padding: 0 20px 0 6px; font-size: 11px; letter-spacing: .5px; background-position: right 6px center; flex: none; max-width: 79px; } .tb-select.tbm-trigger { display: none; } }
@@ -4073,6 +4073,15 @@ function loadLang() {
 /* Drapeaux dessinés (ils ne s'affichent pas en lettres sous Windows) ; le bouton montre la langue vers laquelle il bascule */
 const FLAG_FR = '<svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="7" height="14" fill="#002395"/><rect x="7" width="6" height="14" fill="#fff"/><rect x="13" width="7" height="14" fill="#ED2939"/></svg>';
 const FLAG_EN = '<svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="14" fill="#012169"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#fff" stroke-width="2.8"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#C8102E" stroke-width="1.6"/><rect x="8" width="4" height="14" fill="#fff"/><rect y="5" width="20" height="4" fill="#fff"/><rect x="9" width="2" height="14" fill="#C8102E"/><rect y="6" width="20" height="2" fill="#C8102E"/></svg>';
+/* Au téléphone, dans la suite (sous 760 px) : le théâtre s'abrège dans le bouton de sa liste, comme au Route Planner et au Datacard Generator (la liste ouverte garde les noms entiers) */
+const TH_SHORT = {
+  fr: { GermanyCW: 'All. GF', PersianGulf: 'Golfe', MarianaIslandsWWII: 'Mar. 1944', Falklands: 'Atl. Sud', Afghanistan: 'Afgh.' },
+  en: { GermanyCW: 'CW Germany', PersianGulf: 'Gulf', TheChannel: 'Channel', MarianaIslands: 'Marianas', MarianaIslandsWWII: 'Marianas 44', Falklands: 'S. Atlantic', Afghanistan: 'Afgh.' }
+};
+function uiBarChanged() {
+  const sel = document.getElementById('theatre'), m = sel && TBM.map.get(sel);
+  if (m) tbmSync(m);
+}
 function applyI18nStatic() {
   thFill();
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.getAttribute('data-i18n')); });
@@ -4177,7 +4186,7 @@ function init() {
   UDIST = udRead();
   thFill();
   tcAdopt();
-  TBM.cfg = { others: () => mnClose(false), trig: MENU_TRIG, fitTitle: true };       // ce que ce module ajoute à la liste commune
+  TBM.cfg = { others: () => mnClose(false), trig: MENU_TRIG, fitTitle: true, short: (sel, o) => sel.id === 'theatre' && uiBarCompact() ? (TH_SHORT[CURRENT_LANG] || {})[o.value] : '' };       // ce que ce module ajoute à la liste commune
   initToolbarMenus([['theme-select', () => t('toolbar.theme.tooltip')], ['theatre', () => t('tb.theatre'), undefined, true]]);       // la liste du théâtre : le bouton prend la largeur de l'option choisie, comme au Datacard Generator
   initFormMenus(sel => sel.getAttribute('aria-label') || '');
   bindColumns();

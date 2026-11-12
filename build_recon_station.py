@@ -1712,7 +1712,6 @@ body {{
 @media (max-width: 1050px) {{ .tb-brand-main, .tb-brand-sub, .tb-brand + .tb-sep, .tb-version {{ display: none; }} .tb-brand-short {{ display: inline; }} }}
 @media (max-width: 858px) {{ .tb-classif {{ display: none; }} }}
 .toolbar .tb-btn {{ width: auto; height: 38px; min-width: 38px; padding: 0 12px; gap: 6px; font-family: var(--f-ui); font-weight: 500; letter-spacing: 1.5px; font-size: 12px; text-transform: uppercase; white-space: nowrap; }}
-@media (max-width: 479px) {{ .toolbar .tb-btn .tb-btn-label {{ display: none; }} .toolbar .tb-btn {{ padding: 0; width: 38px; }} }}
 @media (max-width: 479px) {{ .toolbar .tb-btn {{ width: 34px; min-width: 34px; }} }}
 
 /* ======== MAIN LAYOUT ======== */
