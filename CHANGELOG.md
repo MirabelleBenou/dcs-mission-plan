@@ -11,6 +11,8 @@ The suite bundles several **independently-versioned tools**, so entries are grou
 Changes merged since the last release, grouped per tool.
 
 ### All tools
+#### Added
+- One work file for the whole suite: **Save** in any tool (and on the home page) writes the briefing, recon, groups, routes, layers, datacards, theatre and settings into a single `.json`; **Open… › Open a work file…** brings it all back, with **Restore** for a few seconds. The Wing configuration and the mission open in HQ are not part of it.
 #### Changed
 - File buttons use the same words everywhere: **Open** and **Save** for the tool's own file, **Import** and **Export** to exchange with another tool or produce the final document, **Clear** to empty the tool. The Datacard Generator's four file buttons become Open, Import, Save and Export.
 - Every file you save or export asks for its name first, with the usual name filled in; names use one date format everywhere. On tablets, HQ's flight packages and modified .miz now open the share menu, like the other files.
@@ -32,6 +34,7 @@ Changes merged since the last release, grouped per tool.
 - Every drop-down list in the suite works the same way: a search field on long lists, keyboard navigation, and placement above the on-screen keyboard.
 - Every tool's top bar follows the same rules: when space runs short it drops, in this order, the decorative stamp, the version, the button labels and finally the long title; on phones, list labels such as Theatre are hidden, Display shows its icon only and the theatre a short name.
 - **Restore** after an example or an opened file brings back everything the flight lead tools had (groups, routes, datacards, theatre, units, settings), whichever tool you are in.
+- A tool no longer opens on its own: opened outside Mission Plan, it only shows a line pointing to the suite. Each tool now writes only the suite's work file; the old briefing, datacard, route and configuration files can still be opened.
 
 #### Removed
 - The repository no longer ships one particular wing's configuration file, nor six squadron logos that no tool used; the README and the code comments no longer name that wing. Each wing still makes or imports its own configuration in HQ.
@@ -43,6 +46,7 @@ Changes merged since the last release, grouped per tool.
 - On phones (below 760 px wide), the back button shrinks to an arrow and the wing stamp is hidden, so each tool's top bar fits; a bar that is still too wide scrolls sideways, with a fade on its right edge.
 - The open tool takes the keyboard focus, so Ctrl+S reaches it.
 - The mission opened in HQ is shared with the other tools (imports, the magnetic variation year) only while its .miz is open in the board; reloading the board forgets it, so no tool works from an outdated mission.
+- The home page sorts the tools in two frames, Mission Commander (HQ, Briefing Generator, Recon Station) and Flight Leader (Route Planner, Datacard Generator, Flight Configurator), with smaller cards; Open, Save and the Field Manual are in the top bar.
 #### Fixed
 - On phones and tablets, the on-screen keyboard no longer hides the bottom of the open tool.
 
@@ -92,6 +96,7 @@ Changes merged since the last release, grouped per tool.
 ### Recon Station
 #### Added
 - **Example** button: loads a demonstration reconnaissance photo with its markers, shapes, magnifier and info block (USDA NAIP aerial image, public domain).
+- Open ▾ (a work file, or an image) and Save, like the other tools.
 #### Changed
 - The top bar no longer overflows on narrow phones.
 - Importing a wing configuration checks the file like HQ and the Briefing Generator, with the same messages.
@@ -106,6 +111,8 @@ Changes merged since the last release, grouped per tool.
 - Export in one window: format, pages and file name together. Metadata is now the last section, folded.
 - The briefing format moves into **Display ▾**: “Standard” (one mission page plus photo pages, now the default, the example included) or “Advanced” (ten sections); the printed brief no longer names its format, and “OPERATION” follows the interface language. Empty fields hint at what to type instead of showing sample values. **Ctrl+S** saves.
 - Standard: a group without a squadron, and a guest squadron, pick their aircraft type from the list of the game (as in HQ); the Flight Configurator import takes it, and the Standard frequencies by their radio and channel.
+#### Removed
+- The Wing tab no longer imports or resets the wing configuration: HQ is where it is set.
 #### Fixed
 - In the export window, the page list no longer shows the PDF and PNG choices above it, so it fits on phones.
 - A .miz the METAR assistant cannot read shows a message in the interface language instead of a French-only alert.
@@ -173,6 +180,7 @@ Changes merged since the last release, grouped per tool.
 #### Added
 - A **Flight Configurator** chapter.
 - **Getting started** on the index page: every tool's Example button.
+- A "Where to start" page: the two roles, the order of the tools, the work file.
 #### Changed
 - HQ and Recon Station chapters: the Example button.
 - The Route Planner chapter names the magnetic models DCS uses: IGRF up to 1985, then WMM.

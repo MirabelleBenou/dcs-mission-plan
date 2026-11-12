@@ -46,7 +46,7 @@ The landing page presents each tool as a **pinned print** on the board. Active t
 | **Route Planner** | Lay a route on a map — DCS map (by DCS Olympus), Flappie's navigation chart on the Caucasus, topographic or satellite, MGRS grid, place names, DCS towns and airfields, map search — type coordinates or heading & distance, reference points, headings, distances, MGRS & DMS, sent to the datacard; DCS Route Tool import & export; leg boxes, ground speed and minute marks; CombatFlite layers (.cf); draw your own layers by touch — circles, zones and curves, lines, FLOT and corridors, points, text, orbits, kill boxes with their grid; NATO military symbols (APP-6) — units, equipment, aircraft, FARP — filled or outlined, three sizes; magnetic headings with the variation computed like DCS, leg by leg; tap an airfield or heliport to open its chart from DCS Airfield Charts, served by the wing's server; send the framed map view to the Briefing Generator; a Display menu to show or hide the route, reference points, drawings, NATO symbols, imported layers, grid, towns, airfields and places | ✅ `v1.13.1` |
 | **Datacard Generator** | One-page flight datacards for the kneeboard — from scratch, from a briefing or from a route — reference points, day & night, PNG & PDF export; magnetic headings computed like DCS | ✅ `v1.5.1` |
 
-> Each tool is a standalone HTML file with its own build; the landing page embeds the live tools and stages them all on one board.
+> Mission Plan is a single HTML file: every tool opens from its home page, and one **Save** writes all the work of the suite into one `.json` file that **Open…** brings back.
 
 ### 🛡️ HQ — your wing, configured once
 
@@ -61,7 +61,7 @@ The Flight Configurator is the **Flight Lead's** tool: it prepares one or more f
 - **Loadout** — built on the aircraft's **front view**: a weapon list per station, twin stations, total mass, and fuel, flares, chaff and gun brought back to the aircraft's limits; start from **My presets** (loaded from `.lua` preset files, or kept from your own loadouts)
 - **Livery** — free text, with suggestions from the liveries already seen for that aircraft type
 - **Import** — the mission loaded in HQ or a flight package (`.json` or `.zip`, including the Route Planner's), with four boxes per flight: Route, Radios, Loadout, Livery; the route is carried as is, never drawn
-- **Open / Save** — a working file with your flights and presets; **Export** writes the package (parts left empty stay untouched in HQ)
+- **Open / Save** — **Save** writes all the Mission Plan work, your flights and presets included, into the suite's work file, and **Open ▾ › Open a work file…** brings it back (an old Flight Configurator file still opens); **Export** writes the package (parts left empty stay untouched in HQ)
 - **Reusable loadout engine** — `payload_block.py` reads preset files and builds a `.miz` `payload`, with no DOM and no network; other modules can take it as is
 - **4 themes, FR/EN**, touch-first, fully offline
 
@@ -169,7 +169,7 @@ If you want to modify the code yourself.
 - Python 3.8+ (standard library only)
 
 ### Build
-Each tool builds to a standalone HTML, then the landing page embeds the live tools:
+Each tool builds to an HTML module (a build step, not a file to open on its own), then the landing page embeds them:
 
 ```bash
 # 1) Build the tools
@@ -184,6 +184,8 @@ python3 build_route_planner.py                 # → dist/dcs_route_planner.html
 # 2) Assemble the landing page (embeds the tools + board tiles)
 python3 build_mission_plan.py                   # → dist/dcs_mission_plan.html
 ```
+
+Opened on its own, a module only shows a line pointing to Mission Plan.
 
 Run the seven tool builds first, then the landing-page build: the latter reads the seven modules from `dist/` and the tiles from `tiles/`. Inputs (`assets.json`, `tiles/`) are read from the repository, and a build stops with a non-zero exit code if one is missing.
 
