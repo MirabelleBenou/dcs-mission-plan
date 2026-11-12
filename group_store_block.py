@@ -74,21 +74,41 @@ function gsPrintNorm(o) {
   });
   return r;
 }
-/* La migration de radioPrint, une fois : un groupe qui n'a pas encore radioPrint et dont la datacard liée (cards : les cartes du document des datacards, gsId = fcId du groupe) a des canaux cochés prend ceux de la carte ;
-   ensuite le groupe fait foi. Les deux outils l'appellent à leur chargement (le Datacard Generator avec les cartes qu'il vient de lire, le Flight Configurator sans argument : les cartes sont alors lues dans datacard_state_v1).
-   Rend vrai si un groupe a été écrit. */
-function gsPrintMigrate(cards) {
-  if (cards === undefined) { const d = gsJson(GS_KEY_DG); cards = gsIsObj(d) ? d.cards : null; }
+/* La fusion des canaux d'une carte et de son groupe, une seule règle, partout où une carte est liée au groupe de la fiche (chargement du Datacard Generator et du Flight Configurator, relecture de la fiche, « Rattacher à un groupe »,
+   ouverture d'un fichier de datacards : tout passe par gsApplyAll au Datacard Generator) : pour chaque entrée « type|poste|canal », le groupe gagne sur une entrée qu'il a ; une entrée que seule la carte a s'ajoute au groupe.
+   Une entrée que seule la carte a ne compte que si elle porte quelque chose (cochée, nommée ou modulée) : une entrée vide, { on: false, label: '', mod: '' }, vaut une entrée absente. Rien ne s'enlève jamais au groupe.
+   gsPrintMergeOf(radioPrint du groupe, radioSel de la carte) rend { print, added } sans rien écrire ; gsPrintMerge(cards, g) l'écrit pour chaque groupe de la fiche qui a une carte liée dans cards (gsId = fcId du groupe) : g est la fiche
+   déjà lue (sinon elle est lue ici). Sans cards, les cartes sont lues dans datacard_state_v1 (le Flight Configurator). Rend vrai si un groupe a été écrit. */
+function gsPrintMergeOf(grp, card) {
+  const print = gsIsObj(grp) ? Object.assign({}, grp) : {};
+  let added = 0;
+  if (gsIsObj(card)) Object.keys(card).forEach(k => {
+    const e = card[k];
+    if (gsIsObj(print[k]) || !gsIsObj(e)) return;
+    const n = { on: e.on === true, label: typeof e.label === 'string' ? e.label : '', mod: typeof e.mod === 'string' ? e.mod : '' };
+    if (n.on || n.label !== '' || n.mod !== '') { print[k] = n; added++; }
+  });
+  return { print: print, added: added };
+}
+function gsPrintCards() { const d = gsJson(GS_KEY_DG); return gsIsObj(d) && Array.isArray(d.cards) ? d.cards : null; }
+/* Le radioPrint d'un groupe tel que la fusion le donnerait, les cartes lues dans datacard_state_v1, sans rien écrire (le Flight Configurator part de lui pour une case cochée) */
+function gsPrintBase(f) {
+  const cards = gsPrintCards(), c = cards ? cards.find(x => gsIsObj(x) && x.gsId === f.fcId) : null;
+  return gsPrintMergeOf(f.radioPrint, c ? c.radioSel : null).print;
+}
+function gsPrintMerge(cards, g) {
+  if (cards === undefined) cards = gsPrintCards();
   if (!Array.isArray(cards)) return false;
-  const g = gsRead();
+  if (!g) g = gsRead();
   if (g === null) return false;
   let any = false;
   g.flights.forEach(f => {
-    if (gsIsObj(f.radioPrint)) return;
-    const c = cards.find(x => gsIsObj(x) && x.gsId === f.fcId && gsIsObj(x.radioSel) && Object.keys(x.radioSel).some(k => gsIsObj(x.radioSel[k]) && x.radioSel[k].on === true));
+    const c = cards.find(x => gsIsObj(x) && x.gsId === f.fcId && gsIsObj(x.radioSel));
     if (!c) return;
+    const m = gsPrintMergeOf(f.radioPrint, c.radioSel);
+    if (!m.added) return;
     const nf = JSON.parse(JSON.stringify(f));
-    nf.radioPrint = gsPrintNorm(c.radioSel);
+    nf.radioPrint = m.print;
     if (gsPutFlight(nf)) any = true;
   });
   return any;

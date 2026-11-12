@@ -53,7 +53,7 @@ CONTRAST_CSS = r"""
 :where(body[data-theme="cw-soviet"]) .fc-route.none { color: #788569; }
 :where(body[data-theme="cw-soviet"]) .fc-post .fc-sum { color: #8f9a83; }
 :where(body[data-theme="cw-soviet"]) .fc-band { color: #8f9a83; }
-:where(body[data-theme="cw-soviet"]) .fc-ch > label { color: #8f9a83; }
+:where(body[data-theme="cw-soviet"]) .fc-ch label { color: #8f9a83; }
 :where(body[data-theme="cw-soviet"]) .cmp-credit { color: #808c72; }
 :where(body[data-theme="cw-soviet"]) .cmp-st .n { color: #808c72; }
 :where(body[data-theme="cw-soviet"]) .cmp-row > .sn { color: #79866b; }
@@ -67,7 +67,7 @@ CONTRAST_CSS = r"""
 :where(body[data-theme="modern-nato"]) .fc-lo-k { color: #c49037; }
 :where(body[data-theme="modern-nato"]) .fc-post .fc-sum { color: #8695a1; }
 :where(body[data-theme="modern-nato"]) .fc-band { color: #8695a1; }
-:where(body[data-theme="modern-nato"]) .fc-ch > label { color: #8695a1; }
+:where(body[data-theme="modern-nato"]) .fc-ch label { color: #8695a1; }
 :where(body[data-theme="modern-east"]) .fc-bh { color: #c6943d; }
 :where(body[data-theme="modern-east"]) .pk-x { color: #989e8a; }
 :where(body[data-theme="modern-east"]) .ed-field label { color: #c6943d; }
@@ -78,7 +78,7 @@ CONTRAST_CSS = r"""
 :where(body[data-theme="modern-east"]) .fc-route.none { color: #7a8269; }
 :where(body[data-theme="modern-east"]) .fc-post .fc-sum { color: #929884; }
 :where(body[data-theme="modern-east"]) .fc-band { color: #929884; }
-:where(body[data-theme="modern-east"]) .fc-ch > label { color: #929884; }
+:where(body[data-theme="modern-east"]) .fc-ch label { color: #929884; }
 :where(body[data-theme="modern-east"]) .cmp-credit { color: #858b74; }
 :where(body[data-theme="modern-east"]) .cmp-st .n { color: #858b74; }
 :where(body[data-theme="modern-east"]) .cmp-row > .sn { color: #7d846c; }
@@ -1432,7 +1432,7 @@ body[data-theme] {
 .fc-post > .fc-postc { padding: 4px 10px 10px; }
 .fc-chans { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 6px 8px; }
 .fc-ch { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.fc-ch > label { font-family: var(--f-ui); font-weight: 500; font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--khaki-light); }
+.fc-ch label { font-family: var(--f-ui); font-weight: 500; font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--khaki-light); }
 .fc-lo-sum { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(128,116,84,.45); }
 .fc-see { background: none; border: 0; padding: 6px 2px; min-height: 34px; font-family: var(--f-typewriter); font-size: 12px; color: var(--fc); text-decoration: underline; cursor: pointer; }
 @media (min-width: 1100px) { .fc-see { display: none; } }
@@ -2088,6 +2088,7 @@ function gsPush() {
 // Un groupe en cours d'écriture locale s'écrit d'abord. Rend vrai si l'écran a changé (il est redessiné).
 function gsPull() {
   flushWork();
+  gsPrintMerge();       // un groupe apparu ou remplacé depuis : les canaux de sa datacard qu'il n'a pas passent à lui avant la relecture
   if (!GS.live) return gsRead() !== null && gsAdopt();
   const gs = gsRead();
   if (!gs) return false;
@@ -3114,7 +3115,7 @@ function radiosHtml(f, fi, u, ui) {
     let chans = '';
     for (let c = 1; c <= n; c++) {
       const pk2 = printKey(ty, r, c), pon = printOn(f, pk2), pshow = printShown(f, ty, r, c);
-      chans += `<div class="fc-ch"><label class="pk-chk${pon || pshow ? '' : ' off'}" title="${esc(t('rad.print'))}"><input type="checkbox" data-u="${ui}" data-r="${r}" data-c="${c}" data-k="prn" aria-label="${esc(t('rad.print'))}"${pon ? ' checked' : ''}${pon || pshow ? '' : ' disabled'}>${esc(free ? tf('rad.freq', c) : tf('rad.ch', radioCockpitChannel(ty, r, c)))}</label>`
+      chans += `<div class="fc-ch"><div class="pk-chk${pon || pshow ? '' : ' off'}"><label title="${esc(t('rad.print'))}"><input type="checkbox" data-u="${ui}" data-r="${r}" data-c="${c}" data-k="prn" aria-label="${esc(t('rad.print'))}"${pon ? ' checked' : ''}${pon || pshow ? '' : ' disabled'}></label><label style="cursor:default">${esc(free ? tf('rad.freq', c) : tf('rad.ch', radioCockpitChannel(ty, r, c)))}</label></div>`
         + numberInputHtml(`data-u="${ui}" data-r="${r}" data-c="${c}" data-k="chan" placeholder="—"`, chanShown(u, r, c), hull[0], hull[1], '0.001') + '</div>';
     }
     return `<details class="fc-post" data-key="${pk}"${openAttr(pk)}><summary class="ui-fold-head" aria-expanded="${UI.open.has(pk)}"><span class="fc-ptop">${esc(radioPosteName(ty, r) || 'R' + r)} ${free ? '' : `<span class="fc-sum">${esc(tf('rad.chans', n))}</span>`}<span class="fc-sum fc-flag" data-flag="${r}"></span></span><span class="fc-band" data-band="${r}">${esc(bandText(ty, r))}</span></summary>
@@ -3131,7 +3132,7 @@ function printOn(f, key) { return isObj(f.radioPrint) && isObj(f.radioPrint[key]
 // La case n'est active que si le Datacard Generator montrerait la ligne : une unité de ce type au moins a une fréquence sur ce canal (une case déjà cochée reste active, pour pouvoir la décocher)
 function printShown(f, ty, r, c) { return f.units.some(x => x.type === ty && chanValue(x, r, c).trim() !== ''); }
 function printSet(f, key, on) {
-  const cur = isObj(f.radioPrint) ? f.radioPrint : {}, e = isObj(cur[key]) ? cur[key] : { on: false, label: '', mod: '' };
+  const cur = gsPrintBase(f), e = isObj(cur[key]) ? cur[key] : { on: false, label: '', mod: '' };       // le groupe, plus les canaux de sa datacard qu'il n'a pas encore : cocher une case ne fait disparaître aucun autre canal
   const nx = {};
   Object.keys(cur).forEach(k => { nx[k] = cur[k]; });
   nx[key] = Object.assign({}, e, { on: on });
@@ -3148,6 +3149,7 @@ function paintPrintBoxes() {
       const on = printOn(f, printKey(u.type, r, c)), act = on || printShown(f, u.type, r, c);
       if (inp.checked !== on) inp.checked = on;
       inp.disabled = !act;
+      const w = inp.closest('.pk-chk'); if (w) w.classList.toggle('off', !act);
       if (inp.parentNode) inp.parentNode.classList.toggle('off', !act);
     });
   });
@@ -4205,7 +4207,7 @@ function init() {
   try {
     if (ok) mergeMine(saved.mine);
     if (ok && saved.gsMigrateFailed === true) GS.mf = true;
-    gsPrintMigrate();       // une fois : les canaux cochés d'une datacard liée d'avant passent à son groupe (radioPrint), avant que le module ne lise la fiche
+    gsPrintMerge();       // la fusion : les canaux d'une datacard liée que son groupe n'a pas encore passent au groupe (radioPrint), avant que le module ne lise la fiche
     const had = gsRead() !== null;       // la fiche existait avant ce chargement (sinon la migration vient de la bâtir avec les groupes de l'état d'avant)
     gsMigrate(gsPackFn);       // la fiche naît ici si le Route Planner ne l'a pas fait avant : les groupes de l'état d'avant, puis les routes liées par nom
     const gs = gsRead();

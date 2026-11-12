@@ -2238,7 +2238,7 @@ const I18N = {
     'rt.align.confirm.text': 'Ce canal diffère selon l\'unité : {list}.',
     'rt.align.confirm.f.text': 'Cette fréquence diffère selon l\'unité : {list}.',
     'rt.none': 'Ce groupe n\'a pas d\'unité : aucune radio à montrer.',
-    'rt.legend': 'Les fréquences sont celles de la fiche. Cochez les canaux à porter sur la carte ; leur nom et leur modulation sont propres à cette carte.',
+    'rt.legend': 'Les fréquences sont celles de la fiche. Cochez les canaux à porter sur la carte ; le choix, leur nom et leur modulation sont ceux du groupe : le Flight Configurator montre les mêmes cases.',
     'lo.fc': 'Emport du Flight Configurator',
     'lo.fc.hint': 'Lecture seule : l\'emport se modifie au Flight Configurator.',
     'lo.h.n': 'N°',
@@ -2744,7 +2744,7 @@ const I18N = {
     'rt.align.confirm.text': 'This channel differs between units: {list}.',
     'rt.align.confirm.f.text': 'This frequency differs between units: {list}.',
     'rt.none': 'This group has no unit: no radio to show.',
-    'rt.legend': 'Frequencies are those of the group sheet. Tick the channels to print on the card; their name and modulation belong to this card only.',
+    'rt.legend': 'Frequencies are those of the group sheet. Tick the channels to print on the card; the choice, their name and modulation belong to the group: the Flight Configurator shows the same boxes.',
     'lo.fc': 'Loadout from the Flight Configurator',
     'lo.fc.hint': 'Read only: the loadout is edited in the Flight Configurator.',
     'lo.h.n': 'NO.',
@@ -4497,8 +4497,8 @@ async function dgLinkSelect(c, rid) {
    La fiche des groupes (flight_set_v1, bloc partagé) : une carte liée porte gsId (le fcId de son groupe). Ses champs de groupe (nom, camp, unités : indicatif,
    type, n° de bord ; fréquences ; emport) sont ceux de la fiche : ils se lisent à l'ouverture et à chaque évènement « storage », et chaque modification d'un
    de ces champs s'écrit dans la fiche par dgPut (gsPutFlight : le seul groupe touché, les clés inconnues gardées). Restent à la carte : le pilote (rangé par
-   le rang de l'unité dans le groupe, la fiche n'ayant pas d'identifiant d'unité), les temps, la météo, le carburant, les notes, la navigation, les canaux
-   affichés (radioSel : « type|poste|canal » → { on, label, mod }) et le choix de l'emport (loadoutFc). */
+   le rang de l'unité dans le groupe, la fiche n'ayant pas d'identifiant d'unité), les temps, la météo, le carburant, les notes, la navigation, la copie
+   des canaux affichés (radioSel : « type|poste|canal » → { on, label, mod } ; le choix, le nom et la modulation sont ceux du groupe, radioPrint, et la fusion de gsApplyAll y ajoute ce que la carte a de plus) et le choix de l'emport (loadoutFc). */
 const DG_UNIT_TYPES = PAYLOAD_TYPES;
 const DG_TYPE_LABEL = IMP_TYPE_LABEL;
 const DG_MAX_UNITS = IMP_MAX_UNITS;
@@ -4550,8 +4550,9 @@ function dgApplyGroup(c, f, fi) {
 /* La liste des cartes suit la fiche : les cartes liées dans l'ordre de la fiche, puis les cartes libres ; un groupe sans carte reçoit la sienne ;
    une carte dont le groupe a disparu devient libre (elle garde sa dernière copie des champs de groupe et le dit) */
 function gsApplyAll(first) {
-  const g = gsRead();
+  let g = gsRead();
   if (g === null) return false;
+  if (gsPrintMerge(doc.cards, g)) { g = gsRead(); if (g === null) return false; }       /* la fusion des canaux de chaque carte liée et de son groupe (le groupe gagne, une entrée que seule la carte a s'ajoute) : au chargement, à « Rattacher à un groupe », à l'ouverture d'un fichier, à chaque relecture de la fiche */
   DGG.flights = g.flights; DGG.theatre = g.theatre; DGG.stable = gsStable(g);
   dgAdoptTheatre();
   const cur = doc.cards[curIdx] || null;
@@ -5006,7 +5007,14 @@ function dgRadioModel(f) {
 }
 function dgRsKey(ty, r, c) { return ty + '|' + r + '|' + c; }
 /* Les canaux à imprimer d'une carte : ceux du groupe de la fiche (radioPrint) quand la carte est liée ; sinon la copie de la carte (radioSel : une carte libre, une carte devenue libre, ou le groupe qui n'a pas encore radioPrint) */
-function dgPrintOf(c) { const f = dgFlightOf(c); return f && gsIsObj(f.radioPrint) ? f.radioPrint : (gsIsObj(c.radioSel) ? c.radioSel : {}); }
+const DG_TYP = new WeakMap();       /* la saisie en cours (pas encore écrite) du nom ou de la modulation d'un canal d'une carte liée : { key, k, v } ; l'aperçu la montre, la fiche l'a au « change » */
+function dgPrintOf(c) {
+  const f = dgFlightOf(c), base = f && gsIsObj(f.radioPrint) ? f.radioPrint : (gsIsObj(c.radioSel) ? c.radioSel : {}), ty = DG_TYP.get(c);
+  if (!ty || !f) return base;
+  const o = gsPrintNorm(base), e = o[ty.key] || { on: false, label: '', mod: '' };
+  e[ty.k] = ty.v; o[ty.key] = e;
+  return o;
+}
 function dgRs(c, key) { const src = dgPrintOf(c), o = gsIsObj(src[key]) ? src[key] : null; return { on: !!(o && o.on), label: o ? str(o.label) : '', mod: o ? str(o.mod) : '' }; }
 function dgRowShown(row) { return row.vals.some(v => v !== ''); }
 /* Les encadrés de la carte : les types qui ont au moins un canal coché ; [{ title, posts: [{ name, ch: [{ channel, label, frequency, modulation }] }] }] */
@@ -6698,8 +6706,9 @@ function onEditorInput(e) {
   const el = e.target;
   if (e.type === 'change' && el) el._dgCommit = false;
   if (el && el.dataset && el.dataset.rs) {        /* un canal affiché : la case, le nom, la modulation (propres à la carte) */
-    const c = curCard(), key = el.dataset.rs, k = el.dataset.rk;
-    if (k !== 'on' && e.type === 'change') return;
+    const c = curCard(), key = el.dataset.rs, k = el.dataset.rk, linked = !!(c.gsId && dgFlightOf(c));
+    if (linked && k !== 'on' && e.type !== 'change') { DG_TYP.set(c, { key: key, k: k, v: el.value }); renderPreview(); return; }       /* une carte liée : le nom et la modulation s'écrivent dans la fiche au « change », pas à chaque frappe ; l'aperçu suit la frappe */
+    if (k !== 'on' && e.type === 'change') { if (!linked) return; DG_TYP.delete(c); }
     const put = o => {
       const cur = gsIsObj(o[key]) ? o[key] : { on: false, label: '', mod: '' };
       if (k === 'on') cur.on = el.checked; else cur[k] = el.value;
@@ -8067,7 +8076,6 @@ function init() {
   { const k = dgReadTheatreKey(); if (k) doc.theatre = k; }       /* le théâtre que le Route Planner a écrit : le dernier changement gagne */
   dgFillTheatre();
   initToolbarMenus([['theatre', () => t('tb.theatre'), undefined, true]]);       /* la liste du théâtre, comme au Route Planner */
-  gsPrintMigrate(doc.cards);       /* une fois : les canaux cochés d'une carte liée d'avant passent à son groupe */
   gsApplyAll(true);
   const synced = dgSyncRoutes();
   if (doc.theatre !== th0 || synced || JSON.stringify(doc) !== DG_DOC.raw) persistState();       /* le document tel qu'il se lit maintenant (migration d'une carte d'avant le lot comprise) est gardé, une fois */       /* un théâtre pris (clé partagée, fiche ou route) est gardé */
