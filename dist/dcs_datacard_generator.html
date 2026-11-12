@@ -9214,9 +9214,9 @@ function dgTypePick(c, el) {
   touch();
   if (stale) { renderEditor(); dgTypeFocus(i); }
 }
-/* La sortie de la saisie libre : la valeur est gardée telle quelle ; Entrée la valide et revient à la liste, Échap revient à la liste sans rien changer de plus */
-function dgOtherCommit(el, back) {
-  if (!back || !DG_UI.other) return;
+/* La fin de la saisie libre du type (Entrée ou Échap) : la valeur déjà écrite est gardée telle quelle, la liste revient avec le focus */
+function dgOtherDone() {
+  if (!DG_UI.other) return;
   const i = DG_UI.other.i;
   DG_UI.other = null;
   renderEditor();
@@ -9226,7 +9226,7 @@ function onEditorKeyDown(e) {
   const el = e.target;
   if (!el || !el.dataset || el.dataset.dgOther === undefined || (e.key !== 'Enter' && e.key !== 'Escape')) return;
   e.preventDefault();
-  dgOtherCommit(el, true);
+  dgOtherDone();
 }
 
 function onEditorInput(e) {
