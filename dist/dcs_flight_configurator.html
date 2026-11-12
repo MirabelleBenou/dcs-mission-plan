@@ -796,7 +796,7 @@ a[href]:focus-visible, [tabindex]:focus-visible, [role="button"]:focus-visible {
 .toolbar > .tb-sep.tb-files-end { display: block; }
 /* dans la suite, le module laisse le thème à l'accueil : sa liste de thème n'est pas là (le drapeau reste) */
 html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-controls="tbm-list-theme-select"], html.mp-in-shell [aria-controls="tbm-list-theme"] { display: none !important; }
-/* la barre qui manque de place se réduit dans un seul ordre, par la même règle « s'il tient » (uiBarFit, classes tb-st1 à tb-st4, cumulatives) : 1 le tampon de décor (et celui de l'escadre), 2 le numéro de version,
+/* la barre qui manque de place se réduit dans un seul ordre, par la même règle « s'il tient » (uiBarFit, classes tb-st1 à tb-st4, cumulatives) : 1 le tampon de décor (et le tampon posé par le shell), 2 le numéro de version,
    3 le texte des boutons (icônes seules), 4 le titre long, qui passe au sigle court (titre et sous-titre masqués) ; aucun seuil de largeur propre à un outil ne retire plus rien de cela */
 .toolbar.tb-fit, .toolbar.tb-fit * { transition: none !important; }
 .toolbar.tb-st1 .tb-classif, .toolbar.tb-st1 .mp-wing-stamp { display: none; }
@@ -9652,7 +9652,7 @@ const UIBAR = { mq: null };
 /* ---- la réduction de la barre : une seule séquence. Elle part de l'état le plus complet et retire, tant que son contenu déborde (scrollWidth > clientWidth), l'étape suivante : 1 le tampon, 2 la version, 3 le texte des boutons, 4 le titre long.
    Elle s'arrête dès que tout tient. La décision se prend toujours en repartant de l'état complet (classes retirées, ainsi que le fondu du shell, mp-fade-r, sans transition le temps de la mesure) : elle ne dépend que de la largeur, de la langue et du contenu,
    jamais de l'état d'avant, donc pas de bascule en boucle ; une fenêtre plus étroite ne montre jamais plus. Sous 760 px, les quatre étapes sont toujours prises.
-   Recalculée au chargement, après les polices, au redimensionnement, au changement de langue et quand le contenu de la barre change (un bouton, le tampon de l'escadre). ---- */
+   Recalculée au chargement, après les polices, au redimensionnement, au changement de langue et quand le contenu de la barre change (un bouton, un tampon qui apparaît). ---- */
 const UISTEPS = ['tb-st1', 'tb-st2', 'tb-st3', 'tb-st4'];
 function uiBarStep(bar, k) { UISTEPS.forEach((c, i) => bar.classList.toggle(c, i < k)); }
 function uiBarFit() {
