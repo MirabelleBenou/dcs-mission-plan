@@ -3472,7 +3472,7 @@ function uiBarInit() {
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', uiBarInit); else uiBarInit();
 
-const UIK = { cf: null, top: null, restore: null, ex: null };
+const UIK = { cf: null, top: null, restore: null, ex: null, busy: null };
 function uiT(key, fb) { let v; try { v = t(key); } catch (e) { v = key; } return (v === undefined || v === key) ? (fb !== undefined ? fb : key) : v; }
 
 /* ---- la fenêtre de suite : Échap (= croix = Annuler) et le piège du focus, pour la fenêtre du dessus ---- */
@@ -3558,29 +3558,39 @@ function askConfirm(o) {
    o.keys : les clés de localStorage que l'action écrit ; o.mem() : copie de l'état en mémoire ; o.back(copie) : remet l'état et redessine ;
    o.run() : l'action (rend false si rien n'a changé ; peut rendre une promesse) ; o.msg : la phrase du résultat, sans « · » (ou une fonction qui la rend, une fois l'action faite). Un second remplacement efface la copie du premier. */
 function replaceWithRestore(o) {
-  /* Tant que le toast « Restaurer » d'un premier remplacement est à l'écran, un second garde la copie du premier (et relance le toast) : « Restaurer » rend l'état d'avant le premier geste.
-     Le toast fermé ou expiré, la copie suivante remplace l'ancienne. Même geste = même fonction o.back (comparée par son texte : les gestes d'un module ont chacun la leur). */
-  const prev = UIK.restore;
-  const live = !!(prev && UIK.restoreN === showToast._n && mpToastEl().classList.contains('show') && prev.back && o.back && String(prev.back) === String(o.back));
+  /* La copie d'un geste vaut dès qu'il commence, pas à sa fin : un second geste du même module (même fonction o.back, comparée par son texte : les gestes d'un module partagent la leur) lancé avant la fin du premier,
+     ou pendant que le toast « Restaurer » du premier est à l'écran, garde la copie du premier, et « Restaurer » rend l'état d'avant le premier geste. Le toast fermé ou expiré, et aucun geste en cours, la copie suivante remplace l'ancienne.
+     Tant qu'un geste dure (UIK.busy, la copie en cours), « Restaurer » ne fait rien et le toast ne paraît qu'à la fin du dernier geste. Un verrou de plus de 30 s est tenu pour oublié. */
+  const prev = UIK.restore, bz = UIK.busy;
+  const same = p => !!(p && p.back && o.back && String(p.back) === String(o.back));
+  const live = !!(prev && UIK.restoreN === showToast._n && mpToastEl().classList.contains('show') && same(prev));
   let snap;
-  if (live) snap = prev;
+  if (bz && same(bz) && performance.now() - bz.t0 < 30000) snap = bz;
+  else if (live) snap = prev;
   else {
     const mem = o.mem ? o.mem() : null;                 /* d'abord la copie en mémoire (un module peut y vider son écriture en attente), puis les clés */
     const ls = {};
     (o.keys || []).forEach(k => { try { ls[k] = localStorage.getItem(k); } catch (e) { ls[k] = null; } });
-    snap = { ls: ls, mem: mem, back: o.back, keys: (o.keys || []).slice(), after: null };
-    UIK.restore = null;
+    snap = { ls: ls, mem: mem, back: o.back, keys: (o.keys || []).slice(), after: null, busy: 0, changed: false, shown: false, msg: '', t0: performance.now() };
   }
+  UIK.restore = null;                                    /* le toast d'un geste précédent ne rend rien tant que celui-ci dure ; il en reparaît un (ou le même, si ce geste ne change rien) à sa fin */
+  snap.busy++; snap.t0 = performance.now(); UIK.busy = snap;
   const fin = r => {
-    if (r === false) return false;
+    snap.busy = Math.max(0, snap.busy - 1);
+    if (r !== false) { snap.changed = true; snap.msg = o.msg; }
+    if (snap.busy > 0) return r !== false;              /* un autre geste du module dure encore : le dernier posera la copie et le toast */
+    if (UIK.busy === snap) UIK.busy = null;
+    if (!snap.changed) return false;
     snap.after = uiKeysNow(snap.keys);                  /* l'état écrit après le remplacement : « Restaurer » ne vaut que tant qu'il est encore là */
     UIK.restore = snap;
-    showToast((typeof o.msg === 'function' ? o.msg() : o.msg) + ' ·', { action: { label: uiT('ui.restore'), fn: () => uiRestore(snap) }, ms: 12000 });
-    UIK.restoreN = showToast._n;
+    if (r === false && snap.shown && UIK.restoreN === showToast._n && mpToastEl().classList.contains('show')) return false;       /* ce geste n'a rien changé : le toast déjà à l'écran vaut toujours */
+    showToast((typeof snap.msg === 'function' ? snap.msg() : snap.msg) + ' ·', { action: { label: uiT('ui.restore'), fn: () => uiRestore(snap) }, ms: 12000 });
+    UIK.restoreN = showToast._n; snap.shown = true;
     return true;
   };
-  const r = o.run();
-  return (r && typeof r.then === 'function') ? r.then(fin) : fin(r);
+  let r;
+  try { r = o.run(); } catch (e) { fin(false); throw e; }
+  return (r && typeof r.then === 'function') ? r.then(fin, e => { fin(false); throw e; }) : fin(r);
 }
 function uiKeysNow(keys) {
   const r = {};
@@ -4637,7 +4647,7 @@ function normalizeCard(src) {
       if (o && typeof o === 'object') c.radioSel[k] = { on: o.on === true, label: str(o.label), mod: str(o.mod) };
     });
   }
-  if (src.gsGone === true) c.gsGone = true;
+  if (src.gsGone === true) { c.gsGone = true; if ('gsSide' in src) c.gsSide = gsSide(src.gsSide); }       /* une carte dont le groupe a disparu garde son camp : relue, elle ne le perd plus (le document relu est celui qui a été écrit) */
   const fz = src.frz;
   if (gsIsObj(fz)) c.frz = normFrz(fz);
   if (!c.gsId) syncGroup(c);
@@ -4699,7 +4709,7 @@ function dgSetTheatre(id, fromKey) {
   const s = document.getElementById('theatre');
   if (s && s.value !== id) s.value = id;
   doc.cards.forEach(c => { const f = dgFlightOf(c); if (f) afRouteFill(c, f); });       /* DEP et ARR de la route, si la fiche est de ce théâtre */
-  persistState();
+  if (fromKey) persistStateIfChanged(); else persistState();       /* un théâtre venu de l'autre module ne réécrit le document que s'il en change le contenu */
   renderEditor(true);
   renderPreview();
 }
@@ -4775,6 +4785,15 @@ function curCard() { return doc.cards[curIdx]; }
 const DG_DOC = { raw: '', timer: 0 };       /* le texte de datacard_state_v1 que cet onglet a écrit ou lu en dernier */
 function persistState() {
   try { const s = JSON.stringify(doc); localStorage.setItem(KEY_STATE, s); DG_DOC.raw = s; } catch (e) { /* quota ou stockage indisponible */ }
+}
+
+/* Écrit le document seulement si son contenu diffère de celui qui est stocké : le même contenu aux clés dans un autre ordre ne réécrit rien (le stockage que « Restaurer » vient de rendre reste, à l'octet, celui d'avant le geste) */
+function persistStateIfChanged() {
+  try {
+    const raw = localStorage.getItem(KEY_STATE);
+    if (raw !== null && gsStable(JSON.parse(raw)) === gsStable(doc)) { DG_DOC.raw = raw; return; }
+  } catch (e) { /* illisible : il s'écrit */ }
+  persistState();
 }
 
 function loadState() {
@@ -4854,9 +4873,27 @@ const GS_KEY_FC = 'fc_state_v1', GS_KEY_ROUTES = 'route_set_v1', GS_KEY_ROUTE = 
    pour « Restaurer », quel que soit l'outil où l'on est. Les groupes, leurs routes et calques, les datacards, le théâtre, les unités et les réglages de cap communs. Ni la langue, ni le thème, ni les replis. */
 const GS_CONTENT_KEYS = ['fc_state_v1', 'flight_set_v1', 'flight_set_v1_illisible', 'route_set_v1', 'route_state_v1', 'route_layers_v1', 'datacard_state_v1', 'mp_theatre_v1', 'mp_units_v1', 'mp_nav_v1'];
 /* Un geste « Remplacer » se termine par gsSettled : les autres outils ouverts dans la page suivent le geste par évènement « storage » et, après un court calme, réécrivent leurs copies (les datacards gardent la dernière copie de la route) ;
-   « Restaurer » ne compare le stockage à ce qu'il était qu'une fois ce calme passé, sinon il se croirait devant des données changées. À rendre par run (replaceWithRestore attend la promesse) : run: () => { …; return gsSettled(); }. Faux (rien n'a changé) passe tel quel. */
-const GS_SETTLE_MS = 700;
-function gsSettled(r) { return r === false ? false : new Promise(res => setTimeout(() => res(r), GS_SETTLE_MS)); }
+   « Restaurer » ne compare le stockage à ce qu'il était qu'une fois ce calme passé, sinon il se croirait devant des données changées. À rendre par run (replaceWithRestore attend la promesse) : run: () => { …; return gsSettled(); }. Faux (rien n'a changé) passe tel quel.
+   Le calme est mesuré, pas supposé : aucune écriture des clés de contenu (GS_CONTENT_KEYS) pendant GS_CALM_MS, qu'elle vienne d'un autre outil (évènement « storage ») ou de cette page (le texte des clés relu toutes les GS_CALM_STEP_MS) ;
+   il doit se retrouver à deux relectures de suite (une écriture qui tombe juste à l'échéance, comme la reprise du Route Planner après 400 ms, repart de zéro) ; au bout de GS_CALM_MAX_MS on continue comme avant, calme ou non. */
+const GS_CALM_MS = 400, GS_CALM_MAX_MS = 3000, GS_CALM_STEP_MS = 50;
+function gsSettled(r) {
+  if (r === false) return false;
+  return new Promise(res => {
+    const t0 = Date.now(), vals = GS_CONTENT_KEYS.map(gsLsGet);
+    let last = t0, calm = 0, tm = 0;
+    const onSt = e => { if (e.key === null || GS_CONTENT_KEYS.indexOf(e.key) >= 0) last = Date.now(); };
+    window.addEventListener('storage', onSt);
+    const tick = () => {
+      const now = Date.now();
+      GS_CONTENT_KEYS.forEach((k, i) => { const v = gsLsGet(k); if (v !== vals[i]) { vals[i] = v; last = now; } });
+      calm = now - last >= GS_CALM_MS ? calm + 1 : 0;
+      if (calm >= 2 || now - t0 >= GS_CALM_MAX_MS) { window.removeEventListener('storage', onSt); res(r); return; }
+      tm = setTimeout(tick, GS_CALM_STEP_MS);
+    };
+    tm = setTimeout(tick, GS_CALM_STEP_MS);
+  });
+}
 
 function gsIsObj(v) { return !!v && typeof v === 'object' && !Array.isArray(v); }
 function gsLsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
@@ -7317,7 +7354,7 @@ function gsApplyAll(first) {
     else if (c.gsId) { delete c.gsId; c.gsGone = true; free.push(c); }
     else free.push(c);
   });
-  g.flights.forEach((f, i) => { if (!seen.has(f.fcId)) { const c = newCard(); c.loadoutFc = true; dgApplyGroup(c, f, i); linked.push(c); } });       /* une carte née liée montre l'emport du Flight Configurator ; une carte existante garde son choix */
+  g.flights.forEach((f, i) => { if (!seen.has(f.fcId)) { const c = newCard(); c.loadoutFc = true; c.navDisplay.ref = dgN.ref; c.navDisplay.decl = dgN.decl; c.navDisplay.vmode = dgN.mode; dgApplyGroup(c, f, i); linked.push(c); } });       /* une carte née liée montre l'emport du Flight Configurator ; une carte existante garde son choix */
   linked.sort((a, b) => pos.get(a.gsId) - pos.get(b.gsId));
   doc.cards = linked.concat(linked.length && first ? free.filter(c => !isBlankCard(c)) : free);       /* une carte vierge intacte n'est écartée qu'au premier passage de la fiche (chargement, « Ouvrir ») : jamais sur un évènement « storage » ni après une écriture */
   if (!doc.cards.length) doc.cards = [newCard()];

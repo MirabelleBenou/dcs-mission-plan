@@ -28,9 +28,27 @@ const GS_KEY_FC = 'fc_state_v1', GS_KEY_ROUTES = 'route_set_v1', GS_KEY_ROUTE = 
    pour « Restaurer », quel que soit l'outil où l'on est. Les groupes, leurs routes et calques, les datacards, le théâtre, les unités et les réglages de cap communs. Ni la langue, ni le thème, ni les replis. */
 const GS_CONTENT_KEYS = ['fc_state_v1', 'flight_set_v1', 'flight_set_v1_illisible', 'route_set_v1', 'route_state_v1', 'route_layers_v1', 'datacard_state_v1', 'mp_theatre_v1', 'mp_units_v1', 'mp_nav_v1'];
 /* Un geste « Remplacer » se termine par gsSettled : les autres outils ouverts dans la page suivent le geste par évènement « storage » et, après un court calme, réécrivent leurs copies (les datacards gardent la dernière copie de la route) ;
-   « Restaurer » ne compare le stockage à ce qu'il était qu'une fois ce calme passé, sinon il se croirait devant des données changées. À rendre par run (replaceWithRestore attend la promesse) : run: () => { …; return gsSettled(); }. Faux (rien n'a changé) passe tel quel. */
-const GS_SETTLE_MS = 700;
-function gsSettled(r) { return r === false ? false : new Promise(res => setTimeout(() => res(r), GS_SETTLE_MS)); }
+   « Restaurer » ne compare le stockage à ce qu'il était qu'une fois ce calme passé, sinon il se croirait devant des données changées. À rendre par run (replaceWithRestore attend la promesse) : run: () => { …; return gsSettled(); }. Faux (rien n'a changé) passe tel quel.
+   Le calme est mesuré, pas supposé : aucune écriture des clés de contenu (GS_CONTENT_KEYS) pendant GS_CALM_MS, qu'elle vienne d'un autre outil (évènement « storage ») ou de cette page (le texte des clés relu toutes les GS_CALM_STEP_MS) ;
+   il doit se retrouver à deux relectures de suite (une écriture qui tombe juste à l'échéance, comme la reprise du Route Planner après 400 ms, repart de zéro) ; au bout de GS_CALM_MAX_MS on continue comme avant, calme ou non. */
+const GS_CALM_MS = 400, GS_CALM_MAX_MS = 3000, GS_CALM_STEP_MS = 50;
+function gsSettled(r) {
+  if (r === false) return false;
+  return new Promise(res => {
+    const t0 = Date.now(), vals = GS_CONTENT_KEYS.map(gsLsGet);
+    let last = t0, calm = 0, tm = 0;
+    const onSt = e => { if (e.key === null || GS_CONTENT_KEYS.indexOf(e.key) >= 0) last = Date.now(); };
+    window.addEventListener('storage', onSt);
+    const tick = () => {
+      const now = Date.now();
+      GS_CONTENT_KEYS.forEach((k, i) => { const v = gsLsGet(k); if (v !== vals[i]) { vals[i] = v; last = now; } });
+      calm = now - last >= GS_CALM_MS ? calm + 1 : 0;
+      if (calm >= 2 || now - t0 >= GS_CALM_MAX_MS) { window.removeEventListener('storage', onSt); res(r); return; }
+      tm = setTimeout(tick, GS_CALM_STEP_MS);
+    };
+    tm = setTimeout(tick, GS_CALM_STEP_MS);
+  });
+}
 
 function gsIsObj(v) { return !!v && typeof v === 'object' && !Array.isArray(v); }
 function gsLsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }

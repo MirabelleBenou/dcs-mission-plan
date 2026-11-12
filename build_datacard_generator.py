@@ -3684,7 +3684,7 @@ function normalizeCard(src) {
       if (o && typeof o === 'object') c.radioSel[k] = { on: o.on === true, label: str(o.label), mod: str(o.mod) };
     });
   }
-  if (src.gsGone === true) c.gsGone = true;
+  if (src.gsGone === true) { c.gsGone = true; if ('gsSide' in src) c.gsSide = gsSide(src.gsSide); }       /* une carte dont le groupe a disparu garde son camp : relue, elle ne le perd plus (le document relu est celui qui a été écrit) */
   const fz = src.frz;
   if (gsIsObj(fz)) c.frz = normFrz(fz);
   if (!c.gsId) syncGroup(c);
@@ -3746,7 +3746,7 @@ function dgSetTheatre(id, fromKey) {
   const s = document.getElementById('theatre');
   if (s && s.value !== id) s.value = id;
   doc.cards.forEach(c => { const f = dgFlightOf(c); if (f) afRouteFill(c, f); });       /* DEP et ARR de la route, si la fiche est de ce théâtre */
-  persistState();
+  if (fromKey) persistStateIfChanged(); else persistState();       /* un théâtre venu de l'autre module ne réécrit le document que s'il en change le contenu */
   renderEditor(true);
   renderPreview();
 }
@@ -3822,6 +3822,15 @@ function curCard() { return doc.cards[curIdx]; }
 const DG_DOC = { raw: '', timer: 0 };       /* le texte de datacard_state_v1 que cet onglet a écrit ou lu en dernier */
 function persistState() {
   try { const s = JSON.stringify(doc); localStorage.setItem(KEY_STATE, s); DG_DOC.raw = s; } catch (e) { /* quota ou stockage indisponible */ }
+}
+
+/* Écrit le document seulement si son contenu diffère de celui qui est stocké : le même contenu aux clés dans un autre ordre ne réécrit rien (le stockage que « Restaurer » vient de rendre reste, à l'octet, celui d'avant le geste) */
+function persistStateIfChanged() {
+  try {
+    const raw = localStorage.getItem(KEY_STATE);
+    if (raw !== null && gsStable(JSON.parse(raw)) === gsStable(doc)) { DG_DOC.raw = raw; return; }
+  } catch (e) { /* illisible : il s'écrit */ }
+  persistState();
 }
 
 function loadState() {
@@ -4553,7 +4562,7 @@ function gsApplyAll(first) {
     else if (c.gsId) { delete c.gsId; c.gsGone = true; free.push(c); }
     else free.push(c);
   });
-  g.flights.forEach((f, i) => { if (!seen.has(f.fcId)) { const c = newCard(); c.loadoutFc = true; dgApplyGroup(c, f, i); linked.push(c); } });       /* une carte née liée montre l'emport du Flight Configurator ; une carte existante garde son choix */
+  g.flights.forEach((f, i) => { if (!seen.has(f.fcId)) { const c = newCard(); c.loadoutFc = true; c.navDisplay.ref = dgN.ref; c.navDisplay.decl = dgN.decl; c.navDisplay.vmode = dgN.mode; dgApplyGroup(c, f, i); linked.push(c); } });       /* une carte née liée montre l'emport du Flight Configurator ; une carte existante garde son choix */
   linked.sort((a, b) => pos.get(a.gsId) - pos.get(b.gsId));
   doc.cards = linked.concat(linked.length && first ? free.filter(c => !isBlankCard(c)) : free);       /* une carte vierge intacte n'est écartée qu'au premier passage de la fiche (chargement, « Ouvrir ») : jamais sur un évènement « storage » ni après une écriture */
   if (!doc.cards.length) doc.cards = [newCard()];

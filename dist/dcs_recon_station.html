@@ -2292,7 +2292,7 @@ function uiBarInit() {
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', uiBarInit); else uiBarInit();
 
-const UIK = { cf: null, top: null, restore: null, ex: null };
+const UIK = { cf: null, top: null, restore: null, ex: null, busy: null };
 function uiT(key, fb) { let v; try { v = t(key); } catch (e) { v = key; } return (v === undefined || v === key) ? (fb !== undefined ? fb : key) : v; }
 
 /* ---- la fenêtre de suite : Échap (= croix = Annuler) et le piège du focus, pour la fenêtre du dessus ---- */
@@ -2378,29 +2378,39 @@ function askConfirm(o) {
    o.keys : les clés de localStorage que l'action écrit ; o.mem() : copie de l'état en mémoire ; o.back(copie) : remet l'état et redessine ;
    o.run() : l'action (rend false si rien n'a changé ; peut rendre une promesse) ; o.msg : la phrase du résultat, sans « · » (ou une fonction qui la rend, une fois l'action faite). Un second remplacement efface la copie du premier. */
 function replaceWithRestore(o) {
-  /* Tant que le toast « Restaurer » d'un premier remplacement est à l'écran, un second garde la copie du premier (et relance le toast) : « Restaurer » rend l'état d'avant le premier geste.
-     Le toast fermé ou expiré, la copie suivante remplace l'ancienne. Même geste = même fonction o.back (comparée par son texte : les gestes d'un module ont chacun la leur). */
-  const prev = UIK.restore;
-  const live = !!(prev && UIK.restoreN === showToast._n && mpToastEl().classList.contains('show') && prev.back && o.back && String(prev.back) === String(o.back));
+  /* La copie d'un geste vaut dès qu'il commence, pas à sa fin : un second geste du même module (même fonction o.back, comparée par son texte : les gestes d'un module partagent la leur) lancé avant la fin du premier,
+     ou pendant que le toast « Restaurer » du premier est à l'écran, garde la copie du premier, et « Restaurer » rend l'état d'avant le premier geste. Le toast fermé ou expiré, et aucun geste en cours, la copie suivante remplace l'ancienne.
+     Tant qu'un geste dure (UIK.busy, la copie en cours), « Restaurer » ne fait rien et le toast ne paraît qu'à la fin du dernier geste. Un verrou de plus de 30 s est tenu pour oublié. */
+  const prev = UIK.restore, bz = UIK.busy;
+  const same = p => !!(p && p.back && o.back && String(p.back) === String(o.back));
+  const live = !!(prev && UIK.restoreN === showToast._n && mpToastEl().classList.contains('show') && same(prev));
   let snap;
-  if (live) snap = prev;
+  if (bz && same(bz) && performance.now() - bz.t0 < 30000) snap = bz;
+  else if (live) snap = prev;
   else {
     const mem = o.mem ? o.mem() : null;                 /* d'abord la copie en mémoire (un module peut y vider son écriture en attente), puis les clés */
     const ls = {};
     (o.keys || []).forEach(k => { try { ls[k] = localStorage.getItem(k); } catch (e) { ls[k] = null; } });
-    snap = { ls: ls, mem: mem, back: o.back, keys: (o.keys || []).slice(), after: null };
-    UIK.restore = null;
+    snap = { ls: ls, mem: mem, back: o.back, keys: (o.keys || []).slice(), after: null, busy: 0, changed: false, shown: false, msg: '', t0: performance.now() };
   }
+  UIK.restore = null;                                    /* le toast d'un geste précédent ne rend rien tant que celui-ci dure ; il en reparaît un (ou le même, si ce geste ne change rien) à sa fin */
+  snap.busy++; snap.t0 = performance.now(); UIK.busy = snap;
   const fin = r => {
-    if (r === false) return false;
+    snap.busy = Math.max(0, snap.busy - 1);
+    if (r !== false) { snap.changed = true; snap.msg = o.msg; }
+    if (snap.busy > 0) return r !== false;              /* un autre geste du module dure encore : le dernier posera la copie et le toast */
+    if (UIK.busy === snap) UIK.busy = null;
+    if (!snap.changed) return false;
     snap.after = uiKeysNow(snap.keys);                  /* l'état écrit après le remplacement : « Restaurer » ne vaut que tant qu'il est encore là */
     UIK.restore = snap;
-    showToast((typeof o.msg === 'function' ? o.msg() : o.msg) + ' ·', { action: { label: uiT('ui.restore'), fn: () => uiRestore(snap) }, ms: 12000 });
-    UIK.restoreN = showToast._n;
+    if (r === false && snap.shown && UIK.restoreN === showToast._n && mpToastEl().classList.contains('show')) return false;       /* ce geste n'a rien changé : le toast déjà à l'écran vaut toujours */
+    showToast((typeof snap.msg === 'function' ? snap.msg() : snap.msg) + ' ·', { action: { label: uiT('ui.restore'), fn: () => uiRestore(snap) }, ms: 12000 });
+    UIK.restoreN = showToast._n; snap.shown = true;
     return true;
   };
-  const r = o.run();
-  return (r && typeof r.then === 'function') ? r.then(fin) : fin(r);
+  let r;
+  try { r = o.run(); } catch (e) { fin(false); throw e; }
+  return (r && typeof r.then === 'function') ? r.then(fin, e => { fin(false); throw e; }) : fin(r);
 }
 function uiKeysNow(keys) {
   const r = {};
