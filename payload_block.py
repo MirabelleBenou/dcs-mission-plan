@@ -122,6 +122,13 @@ function payloadDefaults(type) {
   return { fuel: l.fuel_max, flare: l.flare, chaff: l.chaff, gun: 100 };
 }
 
+// Le plus grand nombre de leurres (k = 'flare') ou de paillettes (k = 'chaff') que l'appareil porte à lui seul : charge_total ÷ taille d'une charge ; le nombre par défaut si la table ne donne pas
+// la capacité. Les deux ensemble (flares × flare_charge_size + chaff × chaff_charge_size ≤ charge_total) se jugent ailleurs (saisie, import, lecture d'un emport) : buildPayload ne borne que chaque nombre.
+function payloadCountMax(type, k) {
+  const l = AIRCRAFT_LIMITS[type], size = l[k + '_charge_size'];
+  return (typeof l.charge_total === 'number' && typeof size === 'number' && size > 0) ? Math.floor(l.charge_total / size) : l[k];
+}
+
 // ---------------------------------------------------------------------------------------------------------------
 //  LECTURE — sous-ensemble Lua des fichiers UnitPayloads : tables, chaînes, nombres, booléens, nil, commentaires.
 //  Une erreur est une Error avec .line (numéro de ligne, à partir de 1), .code et .detail ; le texte est à traduire par l'appelant.
@@ -330,8 +337,8 @@ function buildPayload(type, pylons, opts) {
   const fuel = payloadClamp(o.fuel === undefined || o.fuel === null || o.fuel === '' ? d.fuel : o.fuel, 0, d.fuel);
   const p = {};
   if (Object.prototype.hasOwnProperty.call(shape, 'ammo_type')) p.ammo_type = shape.ammo_type;
-  p.chaff = Math.round(payloadClamp(o.chaff === undefined || o.chaff === null || o.chaff === '' ? d.chaff : o.chaff, 0, d.chaff));
-  p.flare = Math.round(payloadClamp(o.flare === undefined || o.flare === null || o.flare === '' ? d.flare : o.flare, 0, d.flare));
+  p.chaff = Math.round(payloadClamp(o.chaff === undefined || o.chaff === null || o.chaff === '' ? d.chaff : o.chaff, 0, payloadCountMax(type, 'chaff')));
+  p.flare = Math.round(payloadClamp(o.flare === undefined || o.flare === null || o.flare === '' ? d.flare : o.flare, 0, payloadCountMax(type, 'flare')));
   p.fuel = shape.fuelAsString ? String(fuel) : fuel;
   p.gun = Math.round(payloadClamp(o.gun === undefined || o.gun === null || o.gun === '' ? d.gun : o.gun, 0, 100));
   p.pylons = {};

@@ -610,7 +610,7 @@ I18N_FR = {
     'cmp.mirror': '↔ station jumelle : {0}',
     'cmp.noMirror': '↔ pas d\'équivalent sur la station jumelle {0}',
     'cmp.back': '↑ Retour à l’unité',
-    'cmp.note': 'Un réglage d’arme (code laser, fusée…) suit sa station tant que l’arme n’est pas changée. Une valeur hors limites est ramenée à la limite de l’appareil (0 ou son maximum).',
+    'cmp.note': 'Un réglage d’arme (code laser, fusée…) suit sa station tant que l’arme n’est pas changée. Une valeur hors limites est refusée : la valeur d’avant revient.',
     'cmp.noview': 'Pas de vue de face pour ce type : la liste des stations.',
     'cmp.pick': 'Choisissez un groupe et une unité : l’emport se compose ici.',
     'cmp.mod': 'modifié',
@@ -634,6 +634,10 @@ I18N_FR = {
     'lo.max': 'max {0}',
     'lo.pct': '{0} %',
     'lo.fuelbar': 'Carburant (%)',
+    'set.charge': 'leurres{fs} + paillettes{cs} ≤ {n}',
+    'lo.refused.fuel': '⚠ Au-delà du maximum : carburant {0} kg, limite {1} kg',
+    'lo.refused.charge': '⚠ Au-delà du maximum : leurres{0} + paillettes{1} ≤ {2} ({3} demandé)',
+    'lo.refused.bad': '⚠ Valeur invalide : {0}',
     'lo.imported': 'emport importé',
     'lo.src.mine': 'mes presets',
     'lo.src.imp': 'import',
@@ -916,7 +920,7 @@ I18N_EN = {
     'cmp.mirror': '↔ twin station: {0}',
     'cmp.noMirror': '↔ no equivalent on twin station {0}',
     'cmp.back': '↑ Back to the unit',
-    'cmp.note': 'A weapon setting (laser code, fuze…) follows its station as long as the weapon is not changed. A loadout setting out of range is brought back to the aircraft limit (0 or its maximum).',
+    'cmp.note': 'A weapon setting (laser code, fuze…) follows its station as long as the weapon is not changed. A loadout setting out of range is refused: the previous value comes back.',
     'cmp.noview': 'No front view for this type: the station list.',
     'cmp.pick': 'Pick a group and a unit: the loadout is composed here.',
     'cmp.mod': 'modified',
@@ -940,6 +944,10 @@ I18N_EN = {
     'lo.max': 'max {0}',
     'lo.pct': '{0}%',
     'lo.fuelbar': 'Fuel (%)',
+    'set.charge': 'flares{fs} + chaff{cs} ≤ {n}',
+    'lo.refused.fuel': '⚠ Above the maximum: fuel {0} kg, limit {1} kg',
+    'lo.refused.charge': '⚠ Above the maximum: flares{0} + chaff{1} ≤ {2} ({3} requested)',
+    'lo.refused.bad': '⚠ Invalid value: {0}',
     'lo.imported': 'imported loadout',
     'lo.src.mine': 'my presets',
     'lo.src.imp': 'import',
@@ -1890,6 +1898,7 @@ const UI = {
   clamped: 0,               // réglages d'emport ramenés à la limite (ligne d'état)
   exportTried: false,       // un clic sur Exporter avec des manques : le bandeau passe en rouge, jusqu'à ce que les manques soient levés (jamais enregistré)
   cmp: { sym: true, st: null, saving: false, name: '', err: '', oneOf: null },
+  loPrev: null,       // la valeur d'avant du champ de réglage en cours de saisie (loRemember)
   rtChoose: null            // le fcId du groupe dont on choisit la route (« Changer de route ») ; un groupe sans route est toujours au choix
 };
 
@@ -2212,7 +2221,7 @@ function restoreFlight(f) {       // un groupe sans fcId en reçoit un par resto
     nu.radios = isObj(u.radios) ? u.radios : {};
     Object.keys(u).forEach(k => { if (UNIT_KEYS.indexOf(k) < 0) nu[k] = u[k]; });       // une clé inconnue d'une unité est gardée telle quelle
     nu.loadout = (isObj(u.loadout) && isObj(u.loadout.pylons)) ? u.loadout : null;
-    if (nu.loadout) LO_FIELDS.forEach(k => { const c = clampNum(nu.loadout[k], 0, loLimit(nu.type, k), k !== 'fuel'); if (c.v !== null) nu.loadout[k] = c.v; });
+    if (nu.loadout) loBring(nu.type, k => nu.loadout[k], (k, v) => { nu.loadout[k] = v; });       // un fichier de travail édité : jamais de valeur hors règle
     if (nu.loadout && !nu.loadout.base && !nu.loadout.modified && nu.loadout.key !== '~empty') nu.loadout.base = loSnap(nu.loadout);      // un emport d'avant le lot, non modifié : son contenu présent est sa source     // un fichier de travail édité : jamais de valeur négative
     if (isObj(u.payloadIn) && nu.type !== '') { const lo = loadoutFromPayload(nu.type, u.payloadIn); if (lo) nu.loadout = lo; }       // l'emport brut d'un import (bloc d'import commun) devient l'emport « importé », limites comprises
     return nu;
@@ -2333,8 +2342,69 @@ function radioCount(f, u) {
   return n;
 }
 
-// ----- Emport : réglages (carburant, leurres, paillettes, canon) bornés par la table de l'appareil -----
-function loLimit(type, k) { return payloadDefaults(type)[k]; }     // le maximum est aussi la valeur par défaut
+// ----- Emport : réglages (carburant, leurres, paillettes, canon) -----
+// Carburant : de 0 à fuel_max ; canon : un entier de 0 à 100 ; leurres et paillettes : des entiers dont la charge tient dans le plafond de l'appareil
+// (leurres × taille + paillettes × taille ≤ charge_total : chargeLimit, la règle du Loadout Editor) ; sans plafond dans la table, aucune borne.
+function loLimit(type, k) { return payloadDefaults(type)[k]; }     // le maximum du carburant et du canon ; le nombre par défaut de leurres et de paillettes
+function loLim(type) { return has(AIRCRAFT_LIMITS, type) ? AIRCRAFT_LIMITS[type] : null; }
+// La borne HTML d'un champ : le plus grand nombre de leurres ou de paillettes que l'appareil porte à lui seul (payloadCountMax), le maximum du carburant, 100 pour le canon.
+function loFieldMax(type, k) {
+  if (k === 'gun') return 100;
+  if (k === 'fuel') return payloadDefaults(type).fuel;
+  return payloadCountMax(type, k);
+}
+// « leurres + paillettes ≤ 192 » ; quand une charge pèse plus d'une unité : « leurres × 2 + paillettes ≤ 180 »
+function chargeRule(cl) {
+  const w = k => k === 1 ? '' : ' × ' + k;
+  return t('set.charge').replace('{fs}', w(cl.fs)).replace('{cs}', w(cl.cs)).replace('{n}', cl.total);
+}
+// Leurres et paillettes au-dessus du plafond : { cl, used } ; null s'ils tiennent (ou si la table ne donne pas de plafond).
+function loChargeOver(type, flare, chaff) {
+  const cl = chargeLimit(loLim(type));
+  if (!cl) return null;
+  const used = flare * cl.fs + chaff * cl.cs;
+  return used > cl.total ? { cl: cl, used: used } : null;
+}
+// Lit la saisie d'un champ : { v: nombre } ou { bad: true } (illisible, négative ; non entière pour les leurres, les paillettes et le canon). Le carburant garde trois décimales.
+function loRead(k, raw, badInput) {
+  const x = String(raw).trim().replace(',', '.');
+  if (badInput || !/^-?(\d+(\.\d*)?|\.\d+)(e[+-]?\d+)?$/i.test(x)) return { bad: true };
+  const n = Number(x);
+  if (!isFinite(n) || n < 0 || (k !== 'fuel' && !Number.isInteger(n))) return { bad: true };
+  return { v: k === 'fuel' ? Math.round(n * 1000) / 1000 : n };
+}
+// La règle, pour la saisie `raw` du champ `k` de l'unité de type `type` dont l'emport est `lo` (null : les défauts) : { text } si elle est permise (le texte écrit dans le champ et l'emport),
+// { err } sinon (le texte du toast : la règle, avec « ⚠ » en tête).
+function loCheck(type, lo, k, raw, badInput) {
+  const r = loRead(k, raw, badInput), d = payloadDefaults(type), name = t('lo.' + k);
+  if (r.bad) return { err: tf('lo.refused.bad', name) };
+  if (k === 'gun' && r.v > 100) return { err: tf('lo.refused.bad', name) };
+  if (k === 'fuel') {
+    const lim = loLim(type);
+    if (lim && typeof lim.fuel_max === 'number' && r.v > lim.fuel_max) return { err: tf('lo.refused.fuel', fmtMHz(r.v), fmtMHz(lim.fuel_max)) };
+  }
+  if (k === 'flare' || k === 'chaff') {
+    const other = k === 'flare' ? 'chaff' : 'flare', o = lo ? loNumber(lo[other]) : undefined, ov = o === undefined ? d[other] : o;
+    const over = loChargeOver(type, k === 'flare' ? r.v : ov, k === 'flare' ? ov : r.v);
+    if (over) {
+      const w = n => n === 1 ? '' : ' × ' + n;
+      return { err: tf('lo.refused.charge', w(over.cl.fs), w(over.cl.cs), over.cl.total, String(Math.round(over.used * 100) / 100)) };
+    }
+  }
+  return { text: String(r.v) };
+}
+// Ramène dans la règle les réglages d'un emport reçu (import, état rouvert, fichier de travail) : un fichier ne se discute pas, rien n'est refusé. Carburant et canon dans [0, limite de la table] ;
+// leurres et paillettes gardés tels quels (entiers, jamais négatifs) s'ils tiennent dans le plafond, sinon tous deux aux valeurs par défaut du type. `get(k)` lit le brut, `set(k, texte)` l'écrit ;
+// rend le nombre de réglages qui ont bougé (le couple leurres et paillettes compte pour un).
+function loBring(type, get, set) {
+  let moved = 0;
+  ['fuel', 'gun'].forEach(k => { const c = clampNum(get(k), 0, loLimit(type, k), k !== 'fuel'); if (c.v !== null) { set(k, c.v); moved += c.n; } });
+  const d = payloadDefaults(type), f = clampNum(get('flare'), 0, Infinity, true), h = clampNum(get('chaff'), 0, Infinity, true);
+  const cur = (c, k) => { if (c.v !== null) return Number(c.v); const n = loNumber(get(k)); return n === undefined ? d[k] : n; };
+  if (loChargeOver(type, cur(f, 'flare'), cur(h, 'chaff'))) { set('flare', String(d.flare)); set('chaff', String(d.chaff)); moved += 1; }
+  else { if (f.v !== null) { set('flare', f.v); moved += f.n; } if (h.v !== null) { set('chaff', h.v); moved += h.n; } }
+  return moved;
+}
 // Ramène une valeur dans [min, max] : { v: texte, n: 1 si elle a bougé } ; { v: null } si ce n'est pas un nombre. Les décimales en trop s'arrondissent sans compter.
 function clampNum(raw, min, max, int) {
   const x = String(raw).trim().replace(',', '.');
@@ -2374,10 +2444,8 @@ function loadoutFromPayload(type, p) {
   const pylons = {};
   Object.keys(p.pylons).forEach(k => { if (/^\d+$/.test(k)) pylons[k] = p.pylons[k]; });
   const lo = makeLoadout(type, { key: 'imp', label: t('lo.imported'), src: t('lo.src.imp') }, pylons, null);
-  LO_FIELDS.forEach(k => {      // hors limites : ramené à la limite de la table, et compté à la ligne d'état
-    const c = clampNum(p[k], 0, loLimit(type, k), k !== 'fuel');
-    if (c.v !== null) { lo[k] = c.v; UI.clamped += c.n; }
-  });
+  // hors règle : carburant et canon ramenés à la limite de la table ; leurres et paillettes gardés tels quels s'ils tiennent dans le plafond, sinon aux valeurs par défaut du type ; compté à la ligne d'état
+  UI.clamped += loBring(type, k => (p[k] !== undefined ? p[k] : lo[k]), (k, v) => { lo[k] = v; });
   lo.base = loSnap(lo);
   return lo;
 }
@@ -3397,6 +3465,7 @@ function cmpUpdateRules(row, sel, st, n) {
 
 function renderRight() {
   const col = document.getElementById('col-right'), su = selUnit();
+  UI.loPrev = null;       // une saisie interrompue par le redessin n'a plus de valeur d'avant à rendre
   CMP.small = col.clientWidth < 900;
   col.innerHTML = `<div id="col-route"></div><section class="fc-block" id="blk-cmp"><div class="fc-bh">${esc(t('sec.cmp'))}</div>
     <div class="fc-bc">${su && su.u.type === '' ? `<p class="ui-note fc-notype">${esc(t('u.notype'))}</p>` : su ? cmpHtml(su) : `<p class="ui-note">${esc(t(S.flights[S.sel.f] && !S.flights[S.sel.f].units.length ? 'cmp.nounit' : 'cmp.pick'))}</p>`}</div></section><div id="col-presets"></div>`;
@@ -3490,12 +3559,20 @@ function fuelPct(raw, max) {
   return Math.max(0, Math.min(100, Math.round(Number(x) / max * 100)));
 }
 function fuelKg(pct, max) { return pct >= 100 ? String(max) : String(Math.round(max * pct / 100)); }
+// Les barres : le carburant (kg, le maximum de la table à 100 %) et le canon (0 à 100, la barre dit la valeur elle-même). Une seule fonction pour les deux.
+const BAR_KEYS = ['fuel', 'gun'];
+function barPct(type, k, raw) { return k === 'gun' ? fuelPct(raw, 100) : fuelPct(raw, loLimit(type, 'fuel')); }
+function barValue(type, k, pct) { return k === 'gun' ? String(pct) : fuelKg(pct, loLimit(type, 'fuel')); }
 function cmpSettingsHtml(f, ui, lo) {
-  const d = payloadDefaults(f.units[ui].type), at = `data-u="${ui}"`, val = k => (lo ? lo[k] : String(d[k]));
-  const pct = fuelPct(val('fuel'), d.fuel);
-  const bar = `<div class="fc-bar"><input type="range" class="fc-range" min="0" max="100" step="1" value="${pct === null ? 0 : pct}" style="--p:${pct === null ? 0 : pct}%" data-k="fuel-bar" ${at} aria-label="${esc(t('lo.fuelbar'))}" aria-valuetext="${esc(tf('lo.pct', pct === null ? 0 : pct))}"><span class="fc-pct" id="fuel-pct">${esc(tf('lo.pct', pct === null ? 0 : pct))}</span></div>`;
-  const field = (k, step, disabled) => fieldHtml(`${t('lo.' + k)} · ${tf('lo.max', k === 'fuel' ? fmtMHz(d.fuel) : d[k])}`,
-    numberInputHtml(`${at} data-k="${k}"${disabled ? ' disabled' : ''}`, val(k), 0, d[k], step) + (k === 'fuel' ? bar : ''));
+  const type = f.units[ui].type, d = payloadDefaults(type), at = `data-u="${ui}"`, val = k => (lo ? lo[k] : String(d[k]));
+  const bar = k => {
+    const pct = barPct(type, k, val(k)), p0 = pct === null ? 0 : pct;
+    return `<div class="fc-bar"><input type="range" class="fc-range" min="0" max="100" step="1" value="${p0}" style="--p:${p0}%" data-k="${k}-bar" ${at} aria-label="${esc(t(k === 'fuel' ? 'lo.fuelbar' : 'lo.gun'))}" aria-valuetext="${esc(tf('lo.pct', p0))}"><span class="fc-pct" id="${k}-pct">${esc(tf('lo.pct', p0))}</span></div>`;
+  };
+  const cl = chargeLimit(loLim(type));
+  const note = k => k === 'fuel' ? tf('lo.max', fmtMHz(d.fuel)) : (k === 'gun' ? tf('lo.max', d.gun) : (cl ? chargeRule(cl) : tf('lo.max', d[k])));
+  const field = (k, step, disabled) => fieldHtml(`${t('lo.' + k)} · ${note(k)}`,
+    numberInputHtml(`${at} data-k="${k}"${disabled ? ' disabled' : ''}`, val(k), 0, loFieldMax(type, k), step) + (BAR_KEYS.indexOf(k) >= 0 ? bar(k) : ''));
   return `<div class="fc-set">${field('fuel', 'any')}${field('flare', '1')}${field('chaff', '1', d.chaff === 0)}${field('gun', '1')}</div>`;
 }
 function cmpSaveHtml() {
@@ -3511,7 +3588,6 @@ function cmpUpdate() {
   const su = selUnit(), blk = document.getElementById('blk-cmp');
   if (!su || !blk || su.u.type === '') return;
   const lo = su.u.loadout, C = UI.cmp, ruled = cmpRuled(), st = cmpStations(lo);
-  let total = 0, unknown = false;
   CMP.pyl.forEach(({ n }) => {
     const clsid = st[n], row = blk.querySelector(`.cmp-row[data-st="${n}"]`);
     if (!row) return;
@@ -3525,13 +3601,12 @@ function cmpUpdate() {
       oo.hidden = !on;
     }
     const mass = clsid === '' ? 0 : payloadWeaponMass(clsid);
-    if (mass === null) unknown = true; else total += mass;
     row.querySelector('.cmp-kg').textContent = clsid === '' ? '' : (mass === null ? '—' : cmpNum(mass) + ' kg');
     row.classList.toggle('sel', C.st === n);
     cmpUpdateSub(row, lo && lo.pylons[n] && lo.pylons[n].settings !== undefined, cmpNoMirror(lo, n, clsid));
     cmpUpdateCell(blk.querySelector(`.cmp-st[data-st="${n}"]`), clsid, C.st === n);
   });
-  document.getElementById('cmp-total').innerHTML = `${esc(t('cmp.mass'))} <b>${esc(cmpNum(total) + ' kg' + (unknown ? ' + ?' : ''))}</b>`;
+  cmpUpdateTotal();
   // l'étiquette de l'emport, « Partir de », la ligne « emport vide » et les deux boutons suivent l'état (un emport créé par un réglage, un « modifié » qui paraît)
   const armed = cmpArmed(lo), line = document.getElementById('cmp-lo-line'), from = document.getElementById('cmp-from'), note = document.getElementById('cmp-empty-note');
   const want = lo ? lo.key : '';
@@ -3543,6 +3618,18 @@ function cmpUpdate() {
   const keep = blk.querySelector('[data-act="cmp-save"]');
   if (keep) { if (blocked) keep.title = t('cmp.blocked'); else if (keep.hasAttribute('title')) keep.removeAttribute('title'); }
   cmpDraw();
+}
+// Sous la liste : la masse des emports de l'unité choisie (une arme sans masse connue rend la somme incertaine : « + ? »).
+function cmpUpdateTotal() {
+  const su = selUnit(), el = document.getElementById('cmp-total');
+  if (!su || !el || su.u.type === '') return;
+  const st = cmpStations(su.u.loadout);
+  let total = 0, unknown = false;
+  CMP.pyl.forEach(({ n }) => {
+    const mass = st[n] === '' ? 0 : payloadWeaponMass(st[n]);
+    if (mass === null) unknown = true; else total += mass;
+  });
+  el.innerHTML = `${esc(t('cmp.mass'))} <b>${esc(cmpNum(total) + ' kg' + (unknown ? ' + ?' : ''))}</b>`;
 }
 // La ligne sous la liste : la station jumelle n'y figure que si « Symétrique » est cochée ; la puce « réglages » quand l'arme en porte.
 function cmpUpdateSub(row, hasSettings, noMirror) {
@@ -4139,9 +4226,8 @@ function onInput(e) {
     paintRadioMsg(fi, Number(el.getAttribute('data-u')), r);
   } else if (LO_FIELDS.indexOf(k) >= 0) {
     const su = selUnit();
-    loSetting(k, el.value);
-    if (k === 'fuel' && su) paintFuelBar(fuelPct(el.value, loLimit(su.u.type, 'fuel')), true);
-  } else if (k === 'fuel-bar') onFuelBar(el);
+    if (su) loTyping(su, k, el);
+  } else if (k === 'fuel-bar' || k === 'gun-bar') onBar(k.slice(0, -4), el);
   refreshAll();
 }
 // Le nom d'un groupe change : son titre, l'étiquette de son bouton de repli et les noms par défaut de ses unités (affichés en grisé) suivent la frappe.
@@ -4160,7 +4246,7 @@ function loSetting(k, raw) {
   const su = selUnit();
   if (!su) return null;
   if (!su.u.loadout) {
-    const c = clampNum(raw, 0, loLimit(su.u.type, k), k !== 'fuel');
+    const c = clampNum(raw, 0, Infinity, k !== 'fuel');
     if (c.v === null || Number(c.v) === loLimit(su.u.type, k)) return null;
     su.u.loadout = makeLoadout(su.u.type, { key: '~empty', label: t('cmp.custom'), src: '' }, {}, null);
     cmpUpdate();       // « Partir de », la ligne et les boutons ; le panneau n'est pas redessiné : le champ garde le focus
@@ -4171,35 +4257,61 @@ function loSetting(k, raw) {
   if (su.u.loadout.modified !== was) { const line = document.getElementById('cmp-lo-line'); if (line) line.innerHTML = cmpLineHtml(su.u.loadout); }      // la puce « modifié » paraît ou s'efface
   return su.u.loadout;
 }
-// La barre du carburant et sa valeur en % (sans toucher à la position de la barre quand c'est elle qu'on déplace).
-function paintFuelBar(pct, moveBar) {
-  const bar = document.querySelector('#blk-cmp input[data-k="fuel-bar"]'), out = document.getElementById('fuel-pct');
+// La valeur d'avant d'un champ : prise à la première frappe (l'emport, ou rien, tel qu'il était), rendue si la saisie est refusée à la validation.
+function loRemember(su, k) {
+  const p = UI.loPrev;
+  if (p && p.u === su.u && p.k === k) return p;
+  return (UI.loPrev = { u: su.u, k: k, lo: su.u.loadout, v: su.u.loadout ? su.u.loadout[k] : String(loLimit(su.u.type, k)) });
+}
+// Une frappe dans un champ : une valeur dans la règle s'écrit tout de suite (la barre, la masse au décollage et le fichier de travail la suivent) ; une valeur hors règle ne s'écrit pas :
+// elle est refusée à la validation du champ (commitLoadoutField).
+function loTyping(su, k, el) {
+  loRemember(su, k);
+  const q = loCheck(su.u.type, su.u.loadout, k, el.value, el.validity && el.validity.badInput);
+  if (q.err) return;
+  loSetting(k, q.text);
+  paintBar(k, barPct(su.u.type, k, q.text), true);
+  cmpUpdateTotal();
+}
+// La barre bouge (carburant ou canon) : elle écrit sa valeur dans le champ et dans l'emport ; une saisie la replace (loTyping).
+function paintBar(k, pct, moveBar) {
+  const bar = document.querySelector(`#blk-cmp input[data-k="${k}-bar"]`), out = document.getElementById(k + '-pct');
   if (!bar || pct === null) return;
   if (moveBar) bar.value = String(pct);
   bar.style.setProperty('--p', pct + '%');
   bar.setAttribute('aria-valuetext', tf('lo.pct', pct));
   if (out) out.textContent = tf('lo.pct', pct);
 }
-// La barre bouge : elle écrit les kg (arrondis au kg, le maximum de la table à 100 %) dans le champ et dans l'emport.
-function onFuelBar(el) {
+function onBar(k, el) {
   const su = selUnit();
   if (!su) return;
-  const pct = Number(el.value), kg = fuelKg(pct, loLimit(su.u.type, 'fuel'));
-  loSetting('fuel', kg);
-  const num = document.querySelector('#blk-cmp input[data-k="fuel"]');
-  if (num) num.value = kg;
-  paintFuelBar(pct, false);
+  const pct = Number(el.value), v = barValue(su.u.type, k, pct);
+  UI.loPrev = null;       // la barre ne sort jamais de la règle : elle n'a pas de valeur d'avant à rendre
+  loSetting(k, v);
+  const num = document.querySelector(`#blk-cmp input[data-k="${k}"]`);
+  if (num) num.value = v;
+  paintBar(k, pct, false);
+  cmpUpdateTotal();
 }
-// Validation d'un champ : un réglage d'emport hors limites est ramené à la limite de l'appareil (0 pour une valeur négative), et compté à la ligne d'état.
+// Validation d'un champ : une valeur hors règle est refusée — la valeur d'avant revient dans le champ et dans l'emport, et un toast dit la règle ; une valeur dans la règle se range (texte normalisé).
 function commitLoadoutField(k, el) {
   const su = selUnit();
   if (!su) return;
-  const lim = loLimit(su.u.type, k), q = clampNum(el.value, 0, lim, k !== 'fuel');
-  const v = q.v === null ? String(lim) : q.v;
-  if (q.v !== null) UI.clamped += q.n;
-  loSetting(k, v);
-  el.value = v;
-  if (k === 'fuel') paintFuelBar(fuelPct(v, lim), true);
+  const prev = loRemember(su, k), q = loCheck(su.u.type, su.u.loadout, k, el.value, el.validity && el.validity.badInput);
+  UI.loPrev = null;
+  if (q.err) {
+    if (!prev.lo && su.u.loadout) su.u.loadout = null;                      // l'unité n'avait pas d'emport : celui que la frappe a créé s'en va avec elle
+    else if (su.u.loadout) { su.u.loadout[k] = prev.v; loTouch(su.u.loadout); }
+    el.value = prev.v;
+    showToast(q.err, { type: 'err' });
+    if (BAR_KEYS.indexOf(k) >= 0) paintBar(k, barPct(su.u.type, k, prev.v), true);
+    cmpUpdate();
+  } else {
+    loSetting(k, q.text);
+    el.value = q.text;
+    if (BAR_KEYS.indexOf(k) >= 0) paintBar(k, barPct(su.u.type, k, q.text), true);
+    cmpUpdateTotal();
+  }
   refreshAll();
 }
 // Le type d'une unité change : ses radios et son emport ne valent plus (ils suivent le type) ; la livrée choisie reste si le nouveau type l'a, sinon l'unité reprend sa livrée par défaut. S'il y en a à perdre, une confirmation ; refusée, la liste revient à l'ancien type.
@@ -4220,7 +4332,7 @@ function onChange(e) {
   if (el.id === 'cmp-sym') { UI.cmp.sym = el.checked; cmpUpdate(); return; }
   if (el.classList && el.classList.contains('cmp-sel')) { cmpChoose(el.getAttribute('data-st'), el.value); return; }
   if (!k) return;
-  if (k === 'fuel-bar') return;
+  if (k === 'fuel-bar' || k === 'gun-bar') return;
   if (LO_FIELDS.indexOf(k) >= 0) { commitLoadoutField(k, el); return; }
   const fe = el.closest('.fc-flight'), f = fe && S.flights[Number(fe.getAttribute('data-f'))];
   if (k === 'prn') {
