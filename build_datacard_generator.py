@@ -2249,8 +2249,6 @@ const I18N = {
     'w.left': '(gauche)',
     'w.right': '(droite)',
     'cmp.offTable': '(hors table)',
-    'cmp.mod': 'modifié',
-    'cmp.copied': 'copié de {n}',
     'toast.gsFull': '⚠ Stockage du navigateur plein : vos groupes ne sont pas enregistrés. Sauvegardez un fichier de travail.',
     'm.cancel': 'Annuler',
     'm.new.title': 'Nouvelle datacard',
@@ -2755,8 +2753,6 @@ const I18N = {
     'w.left': '(left)',
     'w.right': '(right)',
     'cmp.offTable': '(not in table)',
-    'cmp.mod': 'modified',
-    'cmp.copied': 'copied from {n}',
     'toast.gsFull': '⚠ Browser storage full: your groups are not saved. Save a work file.',
     'm.cancel': 'Cancel',
     'm.new.title': 'New datacard',
@@ -5069,25 +5065,20 @@ function dgPylonLabel(type, n, clsid) {
   const p = (payloadPylons(type) || []).find(x => String(x.n) === String(n));
   return (p && p.allowed.indexOf(clsid) >= 0) ? lab : lab + ' ' + t('cmp.offTable');
 }
-/* Le nom de l'emport comme le Flight Configurator le donne (loadoutName) : l'étiquette (preset, « copié de … »), puis « · modifié » */
-function dgLoadName(lo) {
-  const lab = lo.key === 'copy' && typeof lo.from === 'string' ? t('cmp.copied', { n: lo.from }) : dgStr(lo.label);
-  return lab + (lo.modified ? ' · ' + t('cmp.mod') : '');
-}
 function dgLoadRows(type, lo) {
   const py = gsIsObj(lo.pylons) ? lo.pylons : {};
   return Object.keys(py).filter(k => /^\d+$/.test(k) && gsIsObj(py[k]) && typeof py[k].CLSID === 'string' && py[k].CLSID !== '').sort((a, b) => Number(a) - Number(b)).map(k => ({ n: k, name: dgPylonLabel(type, k, py[k].CLSID), clsid: py[k].CLSID }));
 }
-/* { groups: [{ names, rows, name, type, lo }], none: [noms], raw: [noms] } : les unités au même emport (mêmes points chargés, même nom) partagent un tableau */
+/* { groups: [{ names, rows, type, lo }], none: [noms], raw: [noms] } : les unités au même emport (même type, mêmes points chargés) partagent un tableau */
 function dgLoadGroups(f) {
   const us = dgUnits(f), groups = [], none = [], raw = [];
   us.forEach((u, i) => {
     const lo = gsIsObj(u.loadout) && gsIsObj(u.loadout.pylons) ? u.loadout : null;
     const rows = lo ? dgLoadRows(dgStr(u.type), lo) : [];
     if (!rows.length) { (gsIsObj(u.payloadIn) && !lo ? raw : none).push(i); return; }
-    const name = dgLoadName(lo), key = dgStr(u.type) + '\u0001' + name + '\u0001' + JSON.stringify(rows.map(r => [r.n, r.name]));
+    const key = dgStr(u.type) + '\u0001' + JSON.stringify(rows.map(r => [r.n, r.name]));
     const g = groups.find(x => x.key === key);
-    if (g) g.idx.push(i); else groups.push({ key: key, idx: [i], rows: rows, name: name, type: dgStr(u.type), lo: lo });
+    if (g) g.idx.push(i); else groups.push({ key: key, idx: [i], rows: rows, type: dgStr(u.type), lo: lo });
   });
   groups.forEach(g => { g.names = dgNames(f, g.idx); });
   return { groups: groups, none: dgNames(f, none), raw: dgNames(f, raw) };
@@ -5116,7 +5107,7 @@ function dgLoadView(c) {
   const z = !c.gsId && gsIsObj(c.frz) ? c.frz : null;
   if (!z) return { groups: [], none: [], raw: [] };
   return {
-    groups: (Array.isArray(z.loads) ? z.loads : []).map(x => ({ names: x.names, rows: x.rows.map(r => ({ n: r[0], name: dgPylonLabel(x.type, r[0], r[1]) })), name: dgLoadName(x.lo), type: x.type })),
+    groups: (Array.isArray(z.loads) ? z.loads : []).map(x => ({ names: x.names, rows: x.rows.map(r => ({ n: r[0], name: dgPylonLabel(x.type, r[0], r[1]) })), type: x.type })),
     none: [], raw: Array.isArray(z.raw) ? z.raw : []
   };
 }
@@ -5129,7 +5120,7 @@ function dgLoadTable(rows, cls, head) {
 function dgLoadEditorHtml(c) {
   const g = dgLoadView(c);
   let h = '';
-  g.groups.forEach(x => { h += '<div class="lo-grp"><div class="lo-t">' + esc(x.names.join(' · ') + (x.name ? ' — ' + x.name : '')) + '</div>' + dgLoadTable(x.rows, 'lo-tab', true) + '</div>'; });
+  g.groups.forEach(x => { h += '<div class="lo-grp"><div class="lo-t">' + esc(x.names.join(' · ')) + '</div>' + dgLoadTable(x.rows, 'lo-tab', true) + '</div>'; });
   if (!g.groups.length) h += '<div class="ui-note">' + esc(t('lo.empty')) + '</div>';
   if (g.groups.length && g.none.length) h += '<div class="ui-note">' + esc(t('lo.none', { names: g.none.join(', ') })) + '</div>';
   if (g.raw.length) h += '<div class="ui-bandeau err">' + esc(t('lo.raw', { names: g.raw.join(', ') })) + '</div>';
@@ -5137,7 +5128,8 @@ function dgLoadEditorHtml(c) {
 }
 function dgLoadCardHtml(c) {
   const g = dgLoadView(c);
-  let h = g.groups.map(x => '<div class="dc-lo"><div class="dc-lo-t">' + esc(x.names.join(' · ').toUpperCase() + (x.name ? ' — ' + x.name : '')) + '</div>' + dgLoadTable(x.rows, 'dc-tab dc-lot', false) + '</div>').join('');
+  const titled = g.groups.length > 1;       /* un seul tableau : aucun titre ; plusieurs : les noms des unités seuls */
+  let h = g.groups.map(x => '<div class="dc-lo">' + (titled ? '<div class="dc-lo-t">' + esc(x.names.join(' · ').toUpperCase()) + '</div>' : '') + dgLoadTable(x.rows, 'dc-tab dc-lot', false) + '</div>').join('');
   if (g.raw.length) h += '<div class="dc-lo-n">' + esc(t('lo.raw', { names: g.raw.join(', ') })) + '</div>';
   return h;
 }
