@@ -4,6 +4,9 @@ construction du `payload` d'un .miz. Une seule source pour le Flight Configurato
 
 Rend le texte JavaScript du bloc. Aucune dépendance au reste de la page : ni DOM, ni t(), ni réseau ; le bloc s'exécute seul
 sous node. Les tables d'armes (data/*.json de Mission Tools, d'après pydcs, LGPL-3.0) sont des constantes de la page, lues par le bloc.
+Il ne porte que ce que les deux modules qui le reçoivent (Flight Configurator, Datacard Generator) lisent : pylônes, noms et masses des armes,
+miroir d'une station, valeurs par défaut, lecture d'un .lua, `payload` d'un .miz. Les règles entre stations (portes, incompatibilités, plafond
+de leurres et de paillettes) sont dans payload_rules_block.py, que le Flight Configurator seul reçoit.
 
 Les modules qui l'utilisent insèrent ce texte tel quel : le bloc est identique à l'octet dans chaque fichier de dist/.
 
@@ -50,12 +53,6 @@ function payloadPylons(type) {
     if (ex && ex.pylons.indexOf(Number(n)) >= 0) allowed.unshift(ex.clsid);
     return { n: n, allowed: allowed };
   });
-}
-
-// Numéros de pylône d'un type, dans l'ordre croissant.
-function payloadPylonNumbers(type) {
-  const p = payloadPylons(type);
-  return p ? p.map(x => Number(x.n)) : [];
 }
 
 // Nom lisible d'une arme ; '' si le CLSID est vide, null s'il est inconnu des tables.
@@ -123,12 +120,6 @@ function payloadWeaponSide(type, clsid) {
 function payloadDefaults(type) {
   const l = AIRCRAFT_LIMITS[type];
   return { fuel: l.fuel_max, flare: l.flare, chaff: l.chaff, gun: 100 };
-}
-
-// Limites des leurres : flares × flare_charge_size + chaff × chaff_charge_size ≤ charge_total
-function payloadLureLimits(type) {
-  const l = AIRCRAFT_LIMITS[type];
-  return { total: l.charge_total, flareSize: l.flare_charge_size, chaffSize: l.chaff_charge_size };
 }
 
 // ---------------------------------------------------------------------------------------------------------------

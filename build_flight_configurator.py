@@ -9,6 +9,8 @@ Blocs partagés insérés tels quels (identiques à l'octet dans les modules qui
   radio_bands_block.py — la bande de chaque poste (règle de Mission Tools) et les postes que la mission ne pré-règle pas (le poste HF des deux hélicoptères) ; le Datacard Generator, HQ et le Route Planner l'emploient aussi
   payload_block.py  — lecture d'un .lua de presets, pylônes et armes permis, `payload` d'un .miz ; il lit les constantes WEAPON_NAMES,
                       AIRCRAFT_PYLONS et AIRCRAFT_LIMITS, qui sont celles du Loadout Editor de Mission Tools
+  payload_rules_block.py — les règles d'emport du Loadout Editor, recopiées au caractère (portes, incompatibilités, exigences, plafond de leurres et de paillettes) ;
+                      il lit AIRCRAFT_PYLONS et PAYLOAD_GAME_RULES. Le Flight Configurator seul le reçoit.
   group_store_block.py — la fiche des groupes partagée avec le Route Planner (flight_set_v1) : lecture, écriture groupe par groupe, migration
   import_block.py   — la fenêtre d'import commune au Route Planner (HQ, briefing en cours, fichier) : lit les sources et écrit dans la fiche ; le module en reçoit un rappel
   magvar_block.py, projection_block.py, route_pack_block.py — la déclinaison magnétique, les projections des théâtres de DCS (llToDcs, dcsToLl) et
@@ -93,6 +95,7 @@ CONTRAST_CSS = r"""
 """
 from magvar_block import build_block as build_magvar_block
 from payload_block import build_block as build_payload_block
+from payload_rules_block import build_block as build_payload_rules_block, NAMES as PAYLOAD_RULES_NAMES
 from projection_block import build_block as build_projection_block
 from radio_bands_block import build_block as build_radio_bands_block
 from radio_block import build_block as build_radio_block
@@ -403,9 +406,10 @@ function readNum(s) {
 
 """
 
-# Les quatre tables : (nom de la constante, fichier de data/)
+# Les tables : (nom de la constante, fichier de data/)
 TABLES = [('WEAPON_NAMES', 'weapon_names.json'), ('AIRCRAFT_LIMITS', 'aircraft_limits.json'),
-          ('AIRCRAFT_PYLONS', 'aircraft_pylons.json'), ('AIRCRAFT_VIEWS', 'aircraft_views.json'), ('LIVERIES_DEFAULT', 'liveries_default.json')]
+          ('AIRCRAFT_PYLONS', 'aircraft_pylons.json'), ('AIRCRAFT_VIEWS', 'aircraft_views.json'), ('LIVERIES_DEFAULT', 'liveries_default.json'),
+          ('AIRCRAFT_MASSES', 'aircraft_masses.json'), ('PAYLOAD_GAME_RULES', 'loadout_rules.json')]
 
 # ---------- Textes (FR et EN : le build vérifie la parité et que chaque clé sert) ----------
 I18N_FR = {
@@ -4259,7 +4263,7 @@ FONTS = """
 
 
 def tables_js():
-    """Les quatre tables de data/, recopiées telles quelles entre leurs marqueurs : `const NOM = <fichier>;`."""
+    """Les tables de data/, recopiées telles quelles entre leurs marqueurs : `const NOM = <fichier>;`."""
     out = ''
     for name, fn in TABLES:
         with open(os.path.join(HERE, 'data', fn), encoding='utf-8', newline='') as f:
@@ -4280,7 +4284,7 @@ def build_html():
                   .replace('@@STARDOS_700@@', A['STARDOS_700'])
                   .replace('@@OSWALD_500@@', A['OSWALD_500'])
                   .replace('@@OSWALD_700@@', A['OSWALD_700']))
-    js = (build_radio_block() + '\n' + build_radio_bands_block() + '\n' + tables_js() + '\n' + build_payload_block() + '\n' + PAD2_JS + '\n' + COORD_BLOCK + READNUM_BLOCK + build_magvar_block() + '\n' + build_projection_block() + '\n'
+    js = (build_radio_block() + '\n' + build_radio_bands_block() + '\n' + tables_js() + '\n' + build_payload_block() + '\n' + build_payload_rules_block() + '\n' + PAD2_JS + '\n' + COORD_BLOCK + READNUM_BLOCK + build_magvar_block() + '\n' + build_projection_block() + '\n'
           + build_route_pack_block() + '\n' + build_route_theatre_block() + '\n' + build_group_store_block() + '\n' + build_import_block() + '\n' + build_messages_block() + '\n' + build_ui_block() + '\n' + JS_TBM.replace('@@TBM_JS@@\n', build_tbm_block()) + '\n' + app_js())
     return ('<!DOCTYPE html>\n<html lang="fr">\n<head>\n<meta charset="UTF-8">\n'
             '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">\n'
@@ -4329,6 +4333,14 @@ def check(html):
         with open(os.path.join(HERE, 'data', fn), encoding='utf-8', newline='') as f:
             txt = f.read().rstrip('\n')
         ok(bool(mm) and mm.group(1) == txt, 'table %s égale à data/%s' % (name, fn))
+    # les règles d'emport recopiées du Loadout Editor : le bloc est inséré tel quel, chacune de ses dix déclarations est dans la page, et rien d'autre ne les redéfinit
+    rules_blk = build_payload_rules_block()
+    ok(rules_blk in html and html.count(rules_blk) == 1, "bloc des règles d'emport inséré tel quel, une fois")
+    missing = [n for n in PAYLOAD_RULES_NAMES if not re.search(r'^(?:function %s\(|(?:const|let) %s =)' % (n, n), html, re.M)]
+    ok(not missing, "les dix déclarations recopiées du Loadout Editor sont dans la page : manque %s" % missing)
+    ok(all(len(re.findall(r'^(?:function %s\(|(?:const|let) %s =)' % (n, n), html, re.M)) == 1 for n in PAYLOAD_RULES_NAMES), "chaque déclaration recopiée n'est déclarée qu'une fois")
+    ok(not re.search(r'\bpayloadPylonNumbers\b|\bpayloadLureLimits\b', html), "payloadPylonNumbers et payloadLureLimits (jamais appelées) ne sont plus dans la page")
+    ok(html.index(rules_blk) > html.index(build_payload_block()) and html.index('const PAYLOAD_GAME_RULES =') < html.index(rules_blk), "les règles viennent après le bloc de l'emport et après leur table")
     # les livrées par défaut : exactement les types du FC, chaque type avec des noms de texte, sans doublon à la casse près
     with open(os.path.join(HERE, 'data', 'liveries_default.json'), encoding='utf-8') as f:
         liv = json.load(f)

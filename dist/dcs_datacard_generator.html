@@ -6279,12 +6279,6 @@ function payloadPylons(type) {
   });
 }
 
-// Numéros de pylône d'un type, dans l'ordre croissant.
-function payloadPylonNumbers(type) {
-  const p = payloadPylons(type);
-  return p ? p.map(x => Number(x.n)) : [];
-}
-
 // Nom lisible d'une arme ; '' si le CLSID est vide, null s'il est inconnu des tables.
 function payloadWeaponName(clsid) {
   if (clsid === '' || clsid === undefined || clsid === null) return '';
@@ -6350,12 +6344,6 @@ function payloadWeaponSide(type, clsid) {
 function payloadDefaults(type) {
   const l = AIRCRAFT_LIMITS[type];
   return { fuel: l.fuel_max, flare: l.flare, chaff: l.chaff, gun: 100 };
-}
-
-// Limites des leurres : flares × flare_charge_size + chaff × chaff_charge_size ≤ charge_total
-function payloadLureLimits(type) {
-  const l = AIRCRAFT_LIMITS[type];
-  return { total: l.charge_total, flareSize: l.flare_charge_size, chaffSize: l.chaff_charge_size };
 }
 
 // ---------------------------------------------------------------------------------------------------------------
