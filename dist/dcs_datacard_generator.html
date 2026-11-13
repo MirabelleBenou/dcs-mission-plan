@@ -2157,6 +2157,8 @@ const I18N = {
     'ph.weather.visibility': 'Visibilité',
     'ph.weather.qnh': 'QNH',
     'ph.weather.clouds': 'Nuages',
+    'ph.fuel.amount': 'Quantité',
+    'ph.fuel.weight': 'Quantité',
     'ph.fuel.joker': 'Quantité',
     'ph.fuel.bingo': 'Quantité',
     'ph.loadout.*': 'Emport',
@@ -2313,6 +2315,8 @@ const I18N = {
     'f.visibility': 'Visibilité',
     'f.qnh': 'QNH',
     'f.clouds': 'Nuages',
+    'f.fuelqty': 'Carburant',
+    'f.weight': 'Poids',
     'f.joker': 'Joker',
     'f.bingo': 'Bingo',
     'f.loadout': 'Emport',
@@ -2389,6 +2393,8 @@ const I18N = {
     'dc.w.qnh': 'QNH',
     'dc.w.clouds': 'NUAGES',
     'dc.w.calm': 'CALME',
+    'dc.fuelqty': 'CARBURANT',
+    'dc.weight': 'POIDS',
     'dc.joker': 'JOKER',
     'dc.bingo': 'BINGO',
     'm01': 'JAN', 'm02': 'FÉV', 'm03': 'MAR', 'm04': 'AVR', 'm05': 'MAI', 'm06': 'JUN',
@@ -2659,6 +2665,8 @@ const I18N = {
     'ph.weather.visibility': 'Visibility',
     'ph.weather.qnh': 'QNH',
     'ph.weather.clouds': 'Clouds',
+    'ph.fuel.amount': 'Amount',
+    'ph.fuel.weight': 'Amount',
     'ph.fuel.joker': 'Amount',
     'ph.fuel.bingo': 'Amount',
     'ph.loadout.*': 'Loadout',
@@ -2815,6 +2823,8 @@ const I18N = {
     'f.visibility': 'Visibility',
     'f.qnh': 'QNH',
     'f.clouds': 'Clouds',
+    'f.fuelqty': 'Fuel',
+    'f.weight': 'Weight',
     'f.joker': 'Joker',
     'f.bingo': 'Bingo',
     'f.loadout': 'Loadout',
@@ -2891,6 +2901,8 @@ const I18N = {
     'dc.w.qnh': 'QNH',
     'dc.w.clouds': 'CLOUDS',
     'dc.w.calm': 'CALM',
+    'dc.fuelqty': 'FUEL',
+    'dc.weight': 'WEIGHT',
     'dc.joker': 'JOKER',
     'dc.bingo': 'BINGO',
     'm01': 'JAN', 'm02': 'FEB', 'm03': 'MAR', 'm04': 'APR', 'm05': 'MAY', 'm06': 'JUN',
@@ -4163,7 +4175,7 @@ function newCard() {
     radios: [],
     fields: [],
     weather: { metar: '', wind: '', visibility: '', qnh: '', clouds: '' },
-    fuel: { joker: '', bingo: '' },
+    fuel: { amount: '', weight: '', joker: '', bingo: '' },       /* amount (Carburant) et weight (Poids) : saisis sur une carte libre ou à emport décoché ; sinon calculés d'après l'emport du Flight Configurator (dgFuelView), jamais stockés ici */
     loadout: [],
     threats: [],
     notes: ''
@@ -4197,12 +4209,16 @@ function readVMode(v, decl) {
   return (v === 'calc' || v === 'manual') ? v : (parseDecl(decl) != null ? 'manual' : 'calc');
 }
 
-/* La copie figée (c.frz) lue : radios [{ type, posts: [{ r, name, rows: [[canal, canal du cockpit, fréquence]] }] }], emports [{ names, type, lo, rows: [[point, CLSID]] }], bruts [noms] ; ce qui n'a pas la forme est écarté */
+/* La copie figée (c.frz) lue : radios [{ type, posts: [{ r, name, rows: [[canal, canal du cockpit, fréquence]] }] }], emports [{ names, type, lo, rows: [[point, CLSID]] }], bruts [noms], lots de carburant et de poids [{ ranks, fuel, weight, unc }] (en kg) ; ce qui n'a pas la forme est écarté */
 function normFrz(o) {
   const arr = v => Array.isArray(v) ? v : [];
   const radios = arr(o.radios).filter(m => gsIsObj(m) && typeof m.type === 'string' && Array.isArray(m.posts)).map(m => ({ type: m.type, posts: m.posts.filter(p => gsIsObj(p) && Array.isArray(p.rows)).map(p => ({ r: Number(p.r) || 0, name: str(p.name), rows: p.rows.filter(r => Array.isArray(r)).map(r => [Number(r[0]) || 0, str(r[1]), str(r[2])]) })) }));
   const loads = arr(o.loads).filter(x => gsIsObj(x) && typeof x.type === 'string' && gsIsObj(x.lo) && Array.isArray(x.rows)).map(x => ({ names: arr(x.names).map(str), type: x.type, lo: { key: str(x.lo.key), label: str(x.lo.label), from: str(x.lo.from), modified: x.lo.modified === true }, rows: x.rows.filter(r => Array.isArray(r)).map(r => [str(r[0]), str(r[1])]) }));
-  return { radios: radios, loads: loads, raw: arr(o.raw).map(str) };
+  const out = { radios: radios, loads: loads, raw: arr(o.raw).map(str) };
+  const nn = v => (typeof v === 'number' && isFinite(v) ? v : null);
+  const fuel = arr(o.fuel).filter(x => gsIsObj(x) && Array.isArray(x.ranks)).map(x => ({ ranks: x.ranks.map(Number).filter(n => Number.isInteger(n) && n > 0), fuel: nn(x.fuel), weight: nn(x.weight), unc: x.unc === true }));
+  if (fuel.length) out.fuel = fuel;       /* les lots de carburant et de poids, en kg : la clé n'existe que s'il y en a (une copie d'avant ne change pas) */
+  return out;
 }
 
 /* Fusion d'une carte lue sur une carte neuve : champ absent → valeur neuve ; champ inconnu → ignoré. */
@@ -4291,7 +4307,7 @@ function normalizeCard(src) {
   }
   const fu = src.fuel;
   if (fu && typeof fu === 'object') {
-    ['joker', 'bingo'].forEach(k => { if (k in fu) c.fuel[k] = str(fu[k]); });
+    ['amount', 'weight', 'joker', 'bingo'].forEach(k => { if (k in fu) c.fuel[k] = str(fu[k]); });
   }
   if (Array.isArray(src.loadout)) c.loadout = normStrList(src.loadout, LIMITS.loadout);
   if (Array.isArray(src.threats)) c.threats = normStrList(src.threats, LIMITS.threats);
@@ -4436,7 +4452,7 @@ function dgUnitsSet(u, fromKey) {
   const changed = Object.keys(UNITS_DEFAULT).some(k => dgU[k] !== n[k]);
   Object.assign(dgU, n);
   const stale = doc.cards.some(c => !c.units || Object.keys(UNITS_DEFAULT).some(k => c.units[k] !== n[k]));       /* une carte stockée qui diffère de la clé : elle est remise à la clé et la persistance a lieu */
-  doc.cards.forEach(c => { c.units = { mass: n.mass, distance: n.distance, altitude: n.altitude }; });
+  doc.cards.forEach(c => { dgMassConv(c, n.mass); c.units = { mass: n.mass, distance: n.distance, altitude: n.altitude }; });       /* les masses saisies passent de l'unité de la carte à la nouvelle */
   if (!fromKey) dgWriteUnitsKey(n);
   dgUnitsSync();
   if (changed || stale) { persistState(); renderEditor(true); renderPreview(); }
@@ -4482,7 +4498,7 @@ function loadState() {
 function setDoc(next) {
   if (doc.theatre) next.theatre = doc.theatre;       /* ouvrir un fichier, l'exemple ou une carte blanche ne change pas le théâtre choisi ; un fichier n'en pose un que si le document n'en a pas */
   doc = next;
-  doc.cards.forEach(c => { c.units = { mass: dgU.mass, distance: dgU.distance, altitude: dgU.altitude }; });       /* « Exemple », une carte blanche, un fichier : les cartes suivent la clé */
+  doc.cards.forEach(c => { dgMassConv(c, dgU.mass); c.units = { mass: dgU.mass, distance: dgU.distance, altitude: dgU.altitude }; });       /* « Exemple », une carte blanche, un fichier : les cartes suivent la clé, et leurs masses saisies passent de l'unité de la carte à celle de la clé */
   curIdx = 0;
   const ts = document.getElementById('theatre');
   if (ts && ts.value !== dgTheatre()) ts.value = dgTheatre();       /* un fichier a pu poser le théâtre d'un document qui n'en avait pas */
@@ -5915,6 +5931,7 @@ function impGo() {
 const WEAPON_NAMES = {"BARAX_ECM":"BARAX - ECM Pod","BR_250":"BR-250 - 250kg GP Bomb LD","BR_500":"BR-500 - 500kg GP Bomb LD","B_8V20A_CM":"B-8V20A - 20 x UnGd Rkts, 80 mm S-8TsM SM Orange","B_8V20A_CM_BU":"B-8V20A - 20 x UnGd Rkts, 80 mm S-8TsM SM Blue","B_8V20A_CM_GN":"B-8V20A - 20 x UnGd Rkts, 80 mm S-8TsM SM Green","B_8V20A_CM_RD":"B-8V20A - 20 x UnGd Rkts, 80 mm S-8TsM SM Red","B_8V20A_CM_VT":"B-8V20A - 20 x UnGd Rkts, 80 mm S-8TsM SM Violet","B_8V20A_CM_WH":"B-8V20A - 20 x UnGd Rkts, 80 mm S-8TsM SM White","B_8V20A_CM_YE":"B-8V20A - 20 x UnGd Rkts, 80 mm S-8TsM SM Yellow","B_8V20A_OFP2":"B-8V20A - 20 x UnGd Rkts, 80 mm S-8OFP2 MPP","B_8V20A_OM":"B-8V20A - 20 x UnGd Rkts, 80 mm S-8OM IL","CATM-9M":"Captive AIM-9M for ACM","GUV_VOG":"GUV-8700 w AP-30 - 30mm Grenade Launcher","GUV_YakB_GSHP":"GUV-8700 w 1x12.7 mm & 2x7.62 mm Rotary HMG","KORD_12_7":"Kord 12.7mm HMG","KORD_12_7_MI24_L":"Kord 12.7mm HMG","KORD_12_7_MI24_R":"Kord 12.7mm HMG","PKT_7_62":"PKT 7.62mm MMG","PTB-1200-F1":"RP35 Pylon Fuel Tank (1137 l usable)","PTB-1200-F1-EMPTY":"RP35 Pylon Fuel Tank (1137 l usable) [Empty]","PTB-580G-F1":"RPL201 Pylon Fuel Tank (2310 l usable)","PTB-580G-F1-EMPTY":"RPL201 Pylon Fuel Tank (2310 l usable) [Empty]","{0511E528-EA28-4caf-A212-00D1408DF10A}":"SAB-100MN - 100 kg Illumination Bomb","{05544F1A-C39C-466b-BC37-5BD1D52E57BB}":"UPK-23-250 - 2 x 23mm  GSh-23L Autocannon Pod","{0D33DDAE-524F-4A4E-B5B8-621754FE3ADE}":"GBU-16 - 1000lb Laser Guided Bomb","{14_3_M2_6xBAP100}":"14-3-M2 - 6 x BAP-100 - 32kg Concrete Piercing Chute Retarded Bomb w/Booster","{14_3_M2_6xBAT120}":"14-3-M2 - 6 x BAT-120 ABL - 34kg HE/Frag Chute Retarded Bomb HD","{14_3_M2_9xBAP100}":"14-3-M2 - 9 x BAP-100 - 32kg Concrete Piercing Chute Retarded Bomb w/Booster","{14_3_M2_9xBAT120}":"14-3-M2 - 9 x BAT-120 ABL - 34kg HE/Frag Chute Retarded Bomb HD","{275A2855-4A79-4B2D-B082-91EA2ADF4691}":"APU-60-2M with 2 x R-60M (AA-8 Aphid-B) - IR AAM","{2x9M114_with_adapter}":"2 x 9M114 Shturm (AT-6 Spiral) - ATGM, SACLOS, HEAT","{2x9M120F_Ataka_V_with_adapter}":"2 x 9M120F Ataka (AT-9 Spiral-2) - AGM, SACLOS, HE","{2x9M120F_Ataka_V}":"2 x 9M120F Ataka (AT-9 Spiral-2) - AGM, SACLOS, HE","{2x9M120_Ataka_V_with_adapter}":"2 x 9M120 Ataka (AT-9 Spiral-2) - ATGM, SACLOS, Tandem HEAT","{2x9M120_Ataka_V}":"2 x 9M120 Ataka (AT-9 Spiral-2) - ATGM, SACLOS, Tandem HEAT","{2x9M220_Ataka_V_with_adapter}":"2 x 9M220O Ataka (AT-9 Spiral-2) - AAM, SACLOS, Frag","{2x9M220_Ataka_V}":"2 x 9M220O Ataka (AT-9 Spiral-2) - AAM, SACLOS, Frag","{30_6_M2_12xBAP100}":"30-6-M2 - 12 x BAP-100 - 32kg Concrete Piercing Chute Retarded Bomb w/Booster","{30_6_M2_12xBAT120}":"30-6-M2 - 12 x BAT-120 ABL - 34kg HE/Frag Chute Retarded Bomb HD","{30_6_M2_18xBAP100}":"30-6-M2 - 18 x BAP-100 - 32kg Concrete Piercing Chute Retarded Bomb w/Booster","{30_6_M2_18xBAT120}":"30-6-M2 - 18 x BAT-120 ABL - 34kg HE/Frag Chute Retarded Bomb HD","{34759BBC-AF1E-4AEE-A581-498FF7A6EBCE}":"GBU-24A/B Paveway III - 2000lb Laser Guided Bomb","{37DCC01E-9E02-432F-B61D-10C166CA2798}":"FAB-500M-62 - 500 kg GP Bomb LD","{3C612111-C7AD-476E-8A8E-2485812F4E5C}":"OFAB-250-270 - 250 kg GP Bomb LD","{4203753F-8198-4E85-9924-6F8FF679F9FF}":"RBK-250 - 42 x PTAB-2.5M, 250kg CBU Medium HEAT/AP","{51F9AAE5-964F-4D21-83FB-502E3BFE5F8A}":"GBU-10 - 2000lb Laser Guided Bomb","{6A4B9E69-64FE-439a-9163-3A87FB6A4D81}":"B-8V20A - 20 x UnGd Rkts, 80 mm S-8KOM HEAT/Frag","{6D21ECEA-F85B-4E8D-9D51-31DC9B8AA4EF}":"ALQ-131 - ECM Pod","{7A44FF09-527C-4B7E-B42B-3F111CFE50FB}":"Mk-83 - 1000lb GP Bomb LD","{7AEC222D-C523-425e-B714-719C0D1EB14D}":"RBK-500 - 268 x PTAB-1M, 500kg CBU Light HEAT/AP","{96A7F676-F956-404A-AD04-F33FB2C74881}":"KMGU-2 - 96 x PTAB-2.5KO Dispenser (CBU) HEAT/AP","{96A7F676-F956-404A-AD04-F33FB2C74884}":"KMGU-2 - 96 x AO-2.5RT Dispenser (CBU) HE/Frag","{9BFD8C90-F7AE-4e90-833B-BFD0CED0E536}":"AIM-9P Sidewinder IR AAM","{9M114 Shturm-V-2 Rack}":"Missile Launcher Rack (Empty)","{A4BCC903-06C8-47bb-9937-A30FEDB4E741}":"Smokewinder - red","{A4BCC903-06C8-47bb-9937-A30FEDB4E742}":"Smokewinder - green","{A4BCC903-06C8-47bb-9937-A30FEDB4E743}":"Smokewinder - blue","{A4BCC903-06C8-47bb-9937-A30FEDB4E744}":"Smokewinder - white","{A4BCC903-06C8-47bb-9937-A30FEDB4E745}":"Smokewinder - yellow","{A4BCC903-06C8-47bb-9937-A30FEDB4E746}":"Smokewinder - orange","{AB8B8299-F1CC-4359-89B5-2172E0CF4A5A}":"Mk-84 - 2000lb GP Bomb LD","{AGM_12A}":"AGM-12A Bullpup MCLOS ASM (LAU-34)","{AGM_12B}":"AGM-12B Bullpup MCLOS ASM (LAU-34)","{AGM_12C}":"AGM-12C Bullpup MCLOS ASM","{AGM_62_I}":"AGM-62 Walleye I - Guided Weapon Mk 1 (TV Guided)","{AIM-9B}":"AIM-9B Sidewinder IR AAM","{AIM-9E}":"AIM-9E Sidewinder IR AAM","{AIM-9JULI}":"AIM-9JULI Sidewinder IR AAM","{AIM-9J}":"AIM-9J Sidewinder IR AAM","{AIM-9L}":"AIM-9L Sidewinder IR AAM","{AIM-9M}":"AIM-9M Sidewinder IR AAM","{AIM-9P3}":"AIM-9P3 Sidewinder IR AAM","{AIM-9P5}":"AIM-9P5 Sidewinder IR AAM","{AIS_ASQ_T50}":"AN/ASQ-T50 TCTS Pod - ACMI Pod","{APU-60-1_R_60M}":"APU-60-1M with R-60M (AA-8 Aphid-B) - IR AAM","{APU_68_S-24}":"APU-68UM3 - S-24B - 240mm UnGd Rkt, 235kg, HE/Frag, (Low Smk)","{AUF2_BLG66}":"AUF 2 - 2 x BLG-66 Belouga AC - CBU, 151 x HEAT Bomblets","{AUF2_BLU107}":"AUF 2 - 2 x BLU-107/B Durandal - 219kg Concrete Piercing Chute Retarded Bomb w/Booster","{AUF2_BR250}":"AUF 2 - 2 x BR-250 - 250kg GP Bomb LD","{AUF2_GBU12}":"AUF 2 - 2 x GBU-12 - 500lb Laser Guided Bomb","{AUF2_MK82}":"AUF 2 - 2 x Mk-82 - 500lb GP Bomb LD","{AUF2_SAMP125LD}":"AUF 2 - 2 x SAMP-125 - 125 kg GP Bomb LD","{AUF2_SAMP250HD}":"AUF 2 - 2 x SAMP-250 - 250 kg GP Bomb LD","{AUF2_SAMP250LD}":"AUF 2 - 2 x SAMP-250 - 250 kg GP Chute Retarded Bomb HD","{B0DBC591-0F52-4F7D-AD7B-51E67725FB81}":"APU-60-2M with 2 x R-60M (AA-8 Aphid-B) - IR AAM","{B919B0F4-7C25-455E-9A02-CEA51DB895E3}":"2 x 9M114 Shturm (AT-6 Spiral) - ATGM, SACLOS, HEAT","{BCE4E030-38E9-423E-98ED-24BE3DA87C32}":"Mk-82 - 500lb GP Bomb LD","{BDU_45LG}":"BDU-45 LG - 500lb Practice Laser Guided Bomb","{BLG66_AC}":"BLG-66 Belouga AC - CBU, 151 x HEAT Bomblets","{BLU107B_DURANDAL}":"BLU-107/B Durandal - 219kg Concrete Piercing Chute Retarded Bomb w/Booster","{C40A1E3A-DD05-40D9-85A4-217729E37FAE}":"AGM-62 Walleye II - Guided Weapon Mk 5 (TV Guided)","{CAE48299-A294-4bad-8EE6-89EFC5DCDF00}":"SUU-25 - 8 x Illumination Flare, LUU-2B","{CBU-52B}":"CBU-52B - 220 x HE/Frag bomblets","{CBU-87}":"CBU-87 - 202 x CEM Cluster Bomb","{CC420_GUN_POD}":"CC420 DEFA-550 gun pod - 30mm Revolver Cannon","{CLB4_BLU107}":"CLB 4 - 4 x BLU-107/B Durandal - 219kg Concrete Piercing Chute Retarded Bomb w/Booster","{CLB4_BR250}":"CLB 4 - 4 x BR-250 - 250kg GP Bomb LD","{CLB4_MK82}":"CLB 4 - 4 x Mk-82 - 500lb GP Bomb LD","{CLB4_SAMP125LD}":"CLB 4 - 4 x SAMP-125 - 125 kg GP Bomb LD","{CLB4_SAMP250HD}":"CLB 4 - 4 x SAMP-250 - 250 kg GP Chute Retarded Bomb HD","{CLB4_SAMP250LD}":"CLB 4 - 4 x SAMP-250 - 250 kg GP Bomb LD","{CLB4_SAMP400HD}":"CLB 4 - 4 x SAMP-400 - 400 kg GP Chute Retarded Bomb HD","{CLB4_SAMP400LD}":"CLB 4 - 4 x SAMP-400 - 400 kg GP Bomb LD","{D5435F26-F120-4FA3-9867-34ACE562EF1B}":"RBK-500-255 - 30 x PTAB-10-5, 500kg CBU Heavy HEAT/AP","{DB769D48-67D7-42ED-A2BE-108D566C8B1E}":"GBU-12 - 500lb Laser Guided Bomb","{F3EFE0AB-E91A-42D8-9CA2-B63C91ED570A}":"LAU-10 - 4 x UnGd Rkts, 127 mm Zuni Mk. 24 Mod. 1 HE","{F4_SARGENT_TANK_370_GAL_EMPTY}":"Sargent Fletcher Fuel Tank 370 gallons (empty)","{F4_SARGENT_TANK_370_GAL_R_EMPTY}":"Sargent Fletcher Fuel Tank 370 gallons (empty)","{F4_SARGENT_TANK_370_GAL_R}":"Sargent Fletcher Fuel Tank 370 gallons","{F4_SARGENT_TANK_370_GAL}":"Sargent Fletcher Fuel Tank 370 gallons","{F4_SARGENT_TANK_600_GAL_EMPTY}":"Sargent Fletcher Fuel Tank 600 gallons (empty)","{F4_SARGENT_TANK_600_GAL}":"Sargent Fletcher Fuel Tank 600 gallons","{FAB_250_M62}":"FAB-250M-62 - 250 kg GP Bomb LD","{FB3CE165-BF07-4979-887C-92B87F13276B}":"OFAB-100-120 - 100 kg GP Bomb LD","{FC23864E-3B80-48E3-9C03-4DA8B1D7497B}":"R550 Magic 2 IR AAM","{FC56DF80-9B09-44C5-8976-DCFAFF219062}":"B-13L - 5 x UnGd Rkts, 122 mm S-13OF Blast/Fragmentation","{GBU_8_B}":"GBU-8/B HOBOS - 2000 lb TV Guided Bomb","{GPU_5_POD}":"GPU-5","{HB_ALE_40_0_0}":"ALE-40 Dispensers (Empty)","{HB_ALE_40_0_120}":"ALE-40 Dispensers (120 Chaff)","{HB_ALE_40_15_90}":"ALE-40 Dispensers (15 Flares + 90 Chaff)","{HB_ALE_40_30_0}":"ALE-40 Dispensers (30 Flares)","{HB_ALE_40_30_60}":"ALE-40 Dispensers (30 Flares + 60 Chaff)","{HB_ALQ-131_ON_ADAPTER_IN_AERO7}":"ALQ-131 - ECM Pod Rack","{HB_BDU_45LGB_SWA}":"(Special Weapons Adapter) BDU-45 LG - 500lb Practice Laser Guided Bomb","{HB_CBU-52B_SWA}":"(Special Weapons Adapter) CBU-52B - 220 x HE/Frag bomblets","{HB_CBU-87_SWA}":"(Special Weapons Adapter) CBU-87 - 202 x CEM Cluster Bomb","{HB_F4EAGM-65A_LAU88_2x_Left}":"2x AGM-65A - Maverick A (TV Guided) (LAU-88)","{HB_F4EAGM-65A_LAU88_2x_Right}":"2x AGM-65A - Maverick A (TV Guided) (LAU-88)","{HB_F4EAGM-65A_LAU88_3x_Left}":"3x AGM-65A - Maverick A (TV Guided) (LAU-88)","{HB_F4EAGM-65A_LAU88_3x_Right}":"3x AGM-65A - Maverick A (TV Guided) (LAU-88)","{HB_F4EAGM-65B_LAU88_2x_Left}":"2x AGM-65B - Maverick B (TV Guided) (LAU-88)","{HB_F4EAGM-65B_LAU88_2x_Right}":"2x AGM-65B - Maverick B (TV Guided) (LAU-88)","{HB_F4EAGM-65B_LAU88_3x_Left}":"3x AGM-65B - Maverick B (TV Guided) (LAU-88)","{HB_F4EAGM-65B_LAU88_3x_Right}":"3x AGM-65B - Maverick B (TV Guided) (LAU-88)","{HB_F4EAGM-65D_LAU88_2x_Left}":"2x AGM-65D - Maverick D (IIR ASM) (LAU-88)","{HB_F4EAGM-65D_LAU88_2x_Right}":"2x AGM-65D - Maverick D (IIR ASM) (LAU-88)","{HB_F4EAGM-65D_LAU88_3x_Left}":"3x AGM-65D - Maverick D (IIR ASM) (LAU-88)","{HB_F4EAGM-65D_LAU88_3x_Right}":"3x AGM-65D - Maverick D (IIR ASM) (LAU-88)","{HB_F4E_AGM-65A_LAU117_SWA}":"(Special Weapons Adapter) AGM-65A - Maverick A (TV Guided) (LAU-117)(Special Weapons Adapter) ","{HB_F4E_AGM-65A_LAU117}":"AGM-65A - Maverick A (TV Guided) (LAU-117)","{HB_F4E_AGM-65B_LAU117_SWA}":"(Special Weapons Adapter) AGM-65B - Maverick B (TV Guided) (LAU-117)(Special Weapons Adapter) ","{HB_F4E_AGM-65B_LAU117}":"AGM-65B - Maverick B (TV Guided) (LAU-117)","{HB_F4E_AGM-65D_LAU117_SWA}":"(Special Weapons Adapter) AGM-65D - Maverick D (IIR ASM) (LAU-117)(Special Weapons Adapter) ","{HB_F4E_AGM-65D_LAU117}":"AGM-65D - Maverick D (IIR ASM) (LAU-117)","{HB_F4E_AGM-65G_LAU117}":"AGM-65G - Maverick G (IIR ASM - Lg Whd) (LAU-117)","{HB_F4E_AIM-7E-2}":"AIM-7E-2 Sparrow Semi-Active Radar","{HB_F4E_AIM-7E}":"AIM-7E Sparrow Semi-Active Radar","{HB_F4E_AIM-7F}":"AIM-7F Sparrow Semi-Active Radar","{HB_F4E_AIM-7M}":"AIM-7M Sparrow Semi-Active Radar","{HB_F4E_BDU-33_2x_SWA}":"(Special Weapons Adapter) 2x BDU-33 - 25lb Practice Bomb LD (TER)","{HB_F4E_BDU-33_2x}":"2x BDU-33 - 25lb Practice Bomb LD (TER)","{HB_F4E_BDU-33_3x_SWA}":"(Special Weapons Adapter) 3x BDU-33 - 25lb Practice Bomb LD (TER)","{HB_F4E_BDU-33_3x}":"3x BDU-33 - 25lb Practice Bomb LD (TER)","{HB_F4E_BDU-33_6x}":"6x BDU-33 - 25lb Practice Bomb LD (MER)","{HB_F4E_BDU-50HD_2x_SWA}":"(Special Weapons Adapter) 2x BDU-50HD - 500lb Practice Bomb HD (TER)","{HB_F4E_BDU-50HD_2x}":"2x BDU-50HD - 500lb Practice Bomb HD (TER)","{HB_F4E_BDU-50HD_3x}":"3x BDU-50HD - 500lb Practice Bomb HD (TER)","{HB_F4E_BDU-50HD_6x}":"6x BDU-50HD - 500lb Practice Bomb HD (MER)","{HB_F4E_BDU-50LD_2x_SWA}":"(Special Weapons Adapter) 2x BDU-50LD - 500lb Practice Bomb LD (TER)","{HB_F4E_BDU-50LD_2x}":"2x BDU-50LD - 500lb Practice Bomb LD (TER)","{HB_F4E_BDU-50LD_3x}":"3x BDU-50LD - 500lb Practice Bomb LD (TER)","{HB_F4E_BDU-50LD_6x}":"6x BDU-50LD - 500lb Practice Bomb LD (MER)","{HB_F4E_BDU_45LGB_2x_SWA}":"(Special Weapons Adapter) 2x BDU-45 LG - 500lb Practice Laser Guided Bomb (TER)","{HB_F4E_BDU_45LGB_2x}":"2x BDU-45 LG - 500lb Practice Laser Guided Bomb (TER)","{HB_F4E_BL755_TER_1x_SingleLeft}":"1x BL-755 - 147 Frag/Pen bomblets (TER)","{HB_F4E_BL755_TER_1x_SingleRight}":"1x BL-755 - 147 Frag/Pen bomblets (TER)","{HB_F4E_BL755_TER_2x_Left}":"2x BL-755 - 147 Frag/Pen bomblets (TER)","{HB_F4E_BL755_TER_2x_Right}":"2x BL-755 - 147 Frag/Pen bomblets (TER)","{HB_F4E_BL755_TER_2x_opposed}":"2x BL-755 - 147 Frag/Pen bomblets (TER)","{HB_F4E_BL755_TER_3x}":"3x BL-755 - 147 Frag/Pen bomblets (TER)","{HB_F4E_BLU-107B_3x_SWA}":"(Special Weapons Adapter) 3x BLU-107/B Durandal - 219kg Concrete Piercing Chute Retarded Bomb w/Booster (TER)","{HB_F4E_BLU-107B_3x}":"3x BLU-107/B Durandal - 219kg Concrete Piercing Chute Retarded Bomb w/Booster (TER)","{HB_F4E_BLU-107B_6x}":"6x BLU-107/B Durandal - 219kg Concrete Piercing Chute Retarded Bomb w/Booster (MER)","{HB_F4E_CBU-1A_MER_1x_Left}":"1x CBU-1A/A x 27x19 (513) BLU-4B Bomblets, HE (MER)","{HB_F4E_CBU-1A_MER_1x_Right}":"1x CBU-1A/A x 27x19 (513) BLU-4B Bomblets, HE (MER)","{HB_F4E_CBU-1A_MER_1x}":"1x CBU-1A/A x 27x19 (513) BLU-4B Bomblets, HE (MER)","{HB_F4E_CBU-1A_MER_2x_Left}":"2x CBU-1A/A x 27x19 (513) BLU-4B Bomblets, HE (MER)","{HB_F4E_CBU-1A_MER_2x_Right}":"2x CBU-1A/A x 27x19 (513) BLU-4B Bomblets, HE (MER)","{HB_F4E_CBU-2A_MER_1x_Left}":"1x CBU-2/A x 19x19 (361) BLU-3 Bomblets, HE (MER)","{HB_F4E_CBU-2A_MER_1x_Right}":"1x CBU-2/A x 19x19 (361) BLU-3 Bomblets, HE (MER)","{HB_F4E_CBU-2A_MER_1x}":"1x CBU-2/A x 19x19 (361) BLU-3 Bomblets, HE (MER)","{HB_F4E_CBU-2A_MER_2x_Left}":"2x CBU-2/A x 19x19 (361) BLU-3 Bomblets, HE (MER)","{HB_F4E_CBU-2A_MER_2x_Right}":"2x CBU-2/A x 19x19 (361) BLU-3 Bomblets, HE (MER)","{HB_F4E_CBU-2BA_MER_1x_Left}":"1x CBU-2B/A x 22x19 (418) BLU-3B Bomblets, HE (MER)","{HB_F4E_CBU-2BA_MER_1x_Right}":"1x CBU-2B/A x 22x19 (418) BLU-3B Bomblets, HE (MER)","{HB_F4E_CBU-2BA_MER_1x}":"1x CBU-2B/A x 22x19 (418) BLU-3B Bomblets, HE (MER)","{HB_F4E_CBU-2BA_MER_2x_Left}":"2x CBU-2B/A x 22x19 (418) BLU-3B Bomblets, HE (MER)","{HB_F4E_CBU-2BA_MER_2x_Right}":"2x CBU-2B/A x 22x19 (418) BLU-3B Bomblets, HE (MER)","{HB_F4E_CBU-38A_1x_Alt}":"1x CBU-38/A x 1x40 (40) BLU-49/B Bomblets, HE (TER) Alternate","{HB_F4E_CBU-38A_1x}":"1x CBU-38/A x 1x40 (40) BLU-49/B Bomblets, HE (TER)","{HB_F4E_CBU-38A_2x}":"2x CBU-38/A x 1x40 (40) BLU-49/B Bomblets, HE (TER)","{HB_F4E_CBU-38A_3x}":"3x CBU-38/A x 1x40 (40) BLU-49/B Bomblets, HE (TER)","{HB_F4E_CBU-38A_MER_1x_Left}":"1x CBU-38/A x 1x40 (40) BLU-49/B Bomblets, HE (MER)","{HB_F4E_CBU-38A_MER_1x_Right}":"1x CBU-38/A x 1x40 (40) BLU-49/B Bomblets, HE (MER)","{HB_F4E_CBU-38A_MER_2x_Center_Opposed}":"2x CBU-38/A x 1x40 (40) BLU-49/B Bomblets, HE (MER) Opposed","{HB_F4E_CBU-38A_MER_2x_Center}":"2x CBU-38/A x 1x40 (40) BLU-49/B Bomblets, HE (MER)","{HB_F4E_CBU-38A_MER_2x_Left}":"2x CBU-38/A x 1x40 (40) BLU-49/B Bomblets, HE (MER)","{HB_F4E_CBU-38A_MER_2x_Right}":"2x CBU-38/A x 1x40 (40) BLU-49/B Bomblets, HE (MER)","{HB_F4E_CBU-38A_MER_3x_Center}":"3x CBU-38/A x 1x40 (40) BLU-49/B Bomblets, HE (MER)","{HB_F4E_CBU-38A_MER_3x_Left}":"3x CBU-38/A x 1x40 (40) BLU-49/B Bomblets, HE (MER)","{HB_F4E_CBU-38A_MER_3x_Right}":"3x CBU-38/A x 1x40 (40) BLU-49/B Bomblets, HE (MER)","{HB_F4E_CBU-38A_MER_4x_Center}":"4x CBU-38/A x 1x40 (40) BLU-49/B Bomblets, HE (MER)","{HB_F4E_CBU-38A_MER_4x_Left}":"4x CBU-38/A x 1x40 (40) BLU-49/B Bomblets, HE (MER)","{HB_F4E_CBU-38A_MER_4x_Right}":"4x CBU-38/A x 1x40 (40) BLU-49/B Bomblets, HE (MER)","{HB_F4E_CBU-52B_2x_SWA}":"(Special Weapons Adapter) 2x CBU-52B - 220 x HE/Frag bomblets (TER)","{HB_F4E_CBU-52B_2x}":"2x CBU-52B - 220 x HE/Frag bomblets (TER)","{HB_F4E_CBU-52B_MER_3x_Left}":"3x CBU-52B - 220 x HE/Frag bomblets (MER)","{HB_F4E_CBU-52B_MER_3x_Right}":"3x CBU-52B - 220 x HE/Frag bomblets (MER)","{HB_F4E_CBU-7A_1x_Alt}":"1x CBU-7/A x 30x40 (1200) BLU-18/B Bomblets, HE (TER) Alternate","{HB_F4E_CBU-7A_1x}":"1x CBU-7/A x 30x40 (1200) BLU-18/B Bomblets, HE (TER)","{HB_F4E_CBU-7A_2x}":"2x CBU-7/A x 30x40 (1200) BLU-18/B Bomblets, HE (TER)","{HB_F4E_CBU-7A_3x}":"3x CBU-7/A x 30x40 (1200) BLU-18/B Bomblets, HE (TER)","{HB_F4E_CBU-7A_MER_1x_Left}":"1x CBU-7/A x 30x40 (1200) BLU-18/B Bomblets, HE (MER)","{HB_F4E_CBU-7A_MER_1x_Right}":"1x CBU-7/A x 30x40 (1200) BLU-18/B Bomblets, HE (MER)","{HB_F4E_CBU-7A_MER_2x_Center_Opposed}":"2x CBU-7/A x 30x40 (1200) BLU-18/B Bomblets, HE (MER) Opposed","{HB_F4E_CBU-7A_MER_2x_Center}":"2x CBU-7/A x 30x40 (1200) BLU-18/B Bomblets, HE (MER)","{HB_F4E_CBU-7A_MER_2x_Left}":"2x CBU-7/A x 30x40 (1200) BLU-18/B Bomblets, HE (MER)","{HB_F4E_CBU-7A_MER_2x_Right}":"2x CBU-7/A x 30x40 (1200) BLU-18/B Bomblets, HE (MER)","{HB_F4E_CBU-7A_MER_3x_Center}":"3x CBU-7/A x 30x40 (1200) BLU-18/B Bomblets, HE (MER)","{HB_F4E_CBU-7A_MER_3x_Left}":"3x CBU-7/A x 30x40 (1200) BLU-18/B Bomblets, HE (MER)","{HB_F4E_CBU-7A_MER_3x_Right}":"3x CBU-7/A x 30x40 (1200) BLU-18/B Bomblets, HE (MER)","{HB_F4E_CBU-7A_MER_4x_Center}":"4x CBU-7/A x 30x40 (1200) BLU-18/B Bomblets, HE (MER)","{HB_F4E_CBU-7A_MER_4x_Left}":"4x CBU-7/A x 30x40 (1200) BLU-18/B Bomblets, HE (MER)","{HB_F4E_CBU-7A_MER_4x_Right}":"4x CBU-7/A x 30x40 (1200) BLU-18/B Bomblets, HE (MER)","{HB_F4E_CBU-87_2x_SWA}":"(Special Weapons Adapter) 2x CBU-87 - 202 x CEM Cluster Bomb (TER)","{HB_F4E_CBU-87_2x}":"2x CBU-87 - 202 x CEM Cluster Bomb (TER)","{HB_F4E_CBU-87_MER_3x_Left}":"3x CBU-87 - 202 x CEM Cluster Bomb (MER)","{HB_F4E_CBU-87_MER_3x_Right}":"3x CBU-87 - 202 x CEM Cluster Bomb (MER)","{HB_F4E_CBU-87_MER_4x}":"4x CBU-87 - 202 x CEM Cluster Bomb (MER)","{HB_F4E_GBU-12_2x_SWA}":"(Special Weapons Adapter) 2x GBU-12 - 500lb Laser Guided Bomb (TER)","{HB_F4E_GBU-12_2x}":"2x GBU-12 - 500lb Laser Guided Bomb (TER)","{HB_F4E_LAU-10_ZUNI_1x}":"1x LAU-10 pod - 4 x 5\" Zuni, UnGd Rkts Mk71, HE/FRAG (TER)","{HB_F4E_LAU-10_ZUNI_2x_Left}":"2x LAU-10 pod - 4 x 5\" Zuni, UnGd Rkts Mk71, HE/FRAG (TER)","{HB_F4E_LAU-10_ZUNI_2x_Opposed}":"2x LAU-10 pod - 4 x 5\" Zuni, UnGd Rkts Mk71, HE/FRAG (TER) Opposed","{HB_F4E_LAU-10_ZUNI_2x_Right}":"2x LAU-10 pod - 4 x 5\" Zuni, UnGd Rkts Mk71, HE/FRAG (TER)","{HB_F4E_LAU-10_ZUNI_3x}":"3x LAU-10 pod - 4 x 5\" Zuni, UnGd Rkts Mk71, HE/FRAG (TER)","{HB_F4E_LAU-10_ZUNI_MER_1x}":"1x LAU-10 pod - 4 x 5\" Zuni, UnGd Rkts Mk71, HE/FRAG (MER)","{HB_F4E_LAU-10_ZUNI_MER_2x}":"2x LAU-10 pod - 4 x 5\" Zuni, UnGd Rkts Mk71, HE/FRAG (MER)","{HB_F4E_LAU-10_ZUNI_MER_3x}":"3x LAU-10 pod - 4 x 5\" Zuni, UnGd Rkts Mk71, HE/FRAG (MER)","{HB_F4E_LAU-3_MK1_1x}":"1x LAU-3 pod - 19 x 2.75\" FFAR, UnGd Rkts Mk1, HE (TER)","{HB_F4E_LAU-3_MK1_2x_Left}":"2x LAU-3 pod - 19 x 2.75\" FFAR, UnGd Rkts Mk1, HE (TER)","{HB_F4E_LAU-3_MK1_2x_Right}":"2x LAU-3 pod - 19 x 2.75\" FFAR, UnGd Rkts Mk1, HE (TER)","{HB_F4E_LAU-3_MK1_3x}":"3x LAU-3 pod - 19 x 2.75\" FFAR, UnGd Rkts Mk1, HE (TER)","{HB_F4E_LAU-3_MK1_MER_3x}":"3x LAU-3 pod - 19 x 2.75\" FFAR, UnGd Rkts Mk1, HE (MER)","{HB_F4E_LAU-3_MK5_1x}":"1x LAU-3 pod - 19 x 2.75\" FFAR, UnGd Rkts Mk5, HEAT (TER)","{HB_F4E_LAU-3_MK5_2x_Left}":"2x LAU-3 pod - 19 x 2.75\" FFAR, UnGd Rkts Mk5, HEAT (TER)","{HB_F4E_LAU-3_MK5_2x_Right}":"2x LAU-3 pod - 19 x 2.75\" FFAR, UnGd Rkts Mk5, HEAT (TER)","{HB_F4E_LAU-3_MK5_3x}":"3x LAU-3 pod - 19 x 2.75\" FFAR, UnGd Rkts Mk5, HEAT (TER)","{HB_F4E_LAU-3_MK5_MER_3x}":"3x LAU-3 pod - 19 x 2.75\" FFAR, UnGd Rkts Mk5, HEAT (MER)","{HB_F4E_LAU-3_WP156_1x}":"1x LAU-3 pod - 19 x 2.75\" FFAR, UnGd Rkts M156, Wht Phos (TER)","{HB_F4E_LAU-3_WP156_2x_Left}":"2x LAU-3 pod - 19 x 2.75\" FFAR, UnGd Rkts M156, Wht Phos (TER)","{HB_F4E_LAU-3_WP156_2x_Right}":"2x LAU-3 pod - 19 x 2.75\" FFAR, UnGd Rkts M156, Wht Phos (TER)","{HB_F4E_LAU-3_WP156_3x}":"3x LAU-3 pod - 19 x 2.75\" FFAR, UnGd Rkts M156, Wht Phos (TER)","{HB_F4E_LAU-3_WP156_MER_3x}":"3x LAU-3 pod - 19 x 2.75\" FFAR, UnGd Rkts M156, Wht Phos (MER)","{HB_F4E_LAU-68_MK1_1x}":"1x LAU-68 pod - 7 x 2.75\" FFAR, UnGd Rkts Mk1, HE (TER)","{HB_F4E_LAU-68_MK1_2x_Left}":"2x LAU-68 pod - 7 x 2.75\" FFAR, UnGd Rkts Mk1, HE (TER)","{HB_F4E_LAU-68_MK1_2x_Right}":"2x LAU-68 pod - 7 x 2.75\" FFAR, UnGd Rkts Mk1, HE (TER)","{HB_F4E_LAU-68_MK1_3x}":"3x LAU-68 pod - 7 x 2.75\" FFAR, UnGd Rkts Mk1, HE (TER)","{HB_F4E_LAU-68_MK5_1x}":"1x LAU-68 pod - 7 x 2.75\" FFAR, UnGd Rkts Mk5, HEAT (TER)","{HB_F4E_LAU-68_MK5_2x_Left}":"2x LAU-68 pod - 7 x 2.75\" FFAR, UnGd Rkts Mk5, HEAT (TER)","{HB_F4E_LAU-68_MK5_2x_Right}":"2x LAU-68 pod - 7 x 2.75\" FFAR, UnGd Rkts Mk5, HEAT (TER)","{HB_F4E_LAU-68_MK5_3x}":"3x LAU-68 pod - 7 x 2.75\" FFAR, UnGd Rkts Mk5, HEAT (TER)","{HB_F4E_LAU-68_WP156_1x}":"1x LAU-68 pod - 7 x 2.75\" FFAR, UnGd Rkts M156, Wht Phos (TER)","{HB_F4E_LAU-68_WP156_2x_Left}":"2x LAU-68 pod - 7 x 2.75\" FFAR, UnGd Rkts M156, Wht Phos (TER)","{HB_F4E_LAU-68_WP156_2x_Right}":"2x LAU-68 pod - 7 x 2.75\" FFAR, UnGd Rkts M156, Wht Phos (TER)","{HB_F4E_LAU-68_WP156_3x}":"3x LAU-68 pod - 7 x 2.75\" FFAR, UnGd Rkts M156, Wht Phos (TER)","{HB_F4E_M117_2x_Left}":"2x M117 - 750lb GP Bomb LD (TER)","{HB_F4E_M117_2x_Right}":"2x M117 - 750lb GP Bomb LD (TER)","{HB_F4E_M117_3x}":"3x M117 - 750lb GP Bomb LD (TER)","{HB_F4E_M117_MER_3x_Left}":"3x M117 - 750lb GP Bomb LD (MER)","{HB_F4E_M117_MER_3x_Right}":"3x M117 - 750lb GP Bomb LD (MER)","{HB_F4E_M117_MER_5x}":"5x M117 - 750lb GP Bomb LD (MER)","{HB_F4E_MK-81_2x_SWA}":"(Special Weapons Adapter) 2x Mk-81 - 250lb GP Bomb LD (TER)","{HB_F4E_MK-81_2x}":"2x Mk-81 - 250lb GP Bomb LD (TER)","{HB_F4E_MK-81_3x}":"3x Mk-81 - 250lb GP Bomb LD (TER)","{HB_F4E_MK-81_6x}":"6x Mk-81 - 250lb GP Bomb LD (MER)","{HB_F4E_MK-82AIR_2x_SWA}":"(Special Weapons Adapter) 2x Mk-82 AIR Ballute - 500lb GP Bomb HD (TER)","{HB_F4E_MK-82AIR_2x}":"2x Mk-82 AIR Ballute - 500lb GP Bomb HD (TER)","{HB_F4E_MK-82AIR_3x}":"3x Mk-82 AIR Ballute - 500lb GP Bomb HD (TER)","{HB_F4E_MK-82AIR_6x}":"6x Mk-82 AIR Ballute - 500lb GP Bomb HD (MER)","{HB_F4E_MK-82_2x_SWA}":"(Special Weapons Adapter) 2x Mk-82 - 500lb GP Bomb LD (TER)","{HB_F4E_MK-82_2x}":"2x Mk-82 - 500lb GP Bomb LD (TER)","{HB_F4E_MK-82_3x}":"3x Mk-82 - 500lb GP Bomb LD (TER)","{HB_F4E_MK-82_6x}":"6x Mk-82 - 500lb GP Bomb LD (MER)","{HB_F4E_MK-82_Snakeye_2x_SWA}":"(Special Weapons Adapter) 2x Mk-82 Snakeye - 500lb GP Bomb HD (TER)","{HB_F4E_MK-82_Snakeye_2x}":"2x Mk-82 Snakeye - 500lb GP Bomb HD (TER)","{HB_F4E_MK-82_Snakeye_3x}":"3x Mk-82 Snakeye - 500lb GP Bomb HD (TER)","{HB_F4E_MK-82_Snakeye_6x}":"6x Mk-82 Snakeye - 500lb GP Bomb HD (MER)","{HB_F4E_MK-83_2x_Left}":"2x Mk-83 - 1000lb GP Bomb LD (TER)","{HB_F4E_MK-83_2x_Right}":"2x Mk-83 - 1000lb GP Bomb LD (TER)","{HB_F4E_MK-83_3x}":"3x Mk-83 - 1000lb GP Bomb LD (TER)","{HB_F4E_MK-83_MER_1x_Left_Ripple}":"1x Mk-83 - 1000lb GP Bomb LD (MER) Ripple","{HB_F4E_MK-83_MER_1x_Right_Ripple}":"1x Mk-83 - 1000lb GP Bomb LD (MER) Ripple","{HB_F4E_MK-83_MER_2x}":"2x Mk-83 - 1000lb GP Bomb LD (MER)","{HB_F4E_MK-83_MER_3x_Ripple}":"3x Mk-83 - 1000lb GP Bomb LD (MER) Ripple","{HB_F4E_MK-83_MER_3x}":"3x Mk-83 - 1000lb GP Bomb LD (MER)","{HB_F4E_ROCKEYE_2x_SWA}":"(Special Weapons Adapter) 2x Mk-20 Rockeye - 490lbs CBU, 247 x HEAT Bomblets (TER)","{HB_F4E_ROCKEYE_2x}":"2x Mk-20 Rockeye - 490lbs CBU, 247 x HEAT Bomblets (TER)","{HB_F4E_ROCKEYE_3x}":"3x Mk-20 Rockeye - 490lbs CBU, 247 x HEAT Bomblets (TER)","{HB_F4E_ROCKEYE_6x}":"6x Mk-20 Rockeye - 490lbs CBU, 247 x HEAT Bomblets (MER)","{HB_F4E_SAMP250HD_TER_1x_SingleLeft}":"1x SAMP-250 - 250KG GP Chute Retarded Bomb HD (TER)","{HB_F4E_SAMP250HD_TER_1x_SingleRight}":"1x SAMP-250 - 250KG GP Chute Retarded Bomb HD (TER)","{HB_F4E_SAMP250HD_TER_2x_Left}":"2x SAMP-250 - 250KG GP Chute Retarded Bomb HD (TER)","{HB_F4E_SAMP250HD_TER_2x_Right}":"2x SAMP-250 - 250KG GP Chute Retarded Bomb HD (TER)","{HB_F4E_SAMP250HD_TER_2x_opposed}":"2x SAMP-250 - 250KG GP Chute Retarded Bomb HD (TER)","{HB_F4E_SAMP250HD_TER_3x}":"3x SAMP-250 - 250KG GP Chute Retarded Bomb HD (TER)","{HB_F4E_SAMP250LD_TER_1x_SingleLeft}":"1x SAMP-250 - 250KG GP Bomb LD (TER)","{HB_F4E_SAMP250LD_TER_1x_SingleRight}":"1x SAMP-250 - 250KG GP Bomb LD (TER)","{HB_F4E_SAMP250LD_TER_2x_Left}":"2x SAMP-250 - 250KG GP Bomb LD (TER)","{HB_F4E_SAMP250LD_TER_2x_Right}":"2x SAMP-250 - 250KG GP Bomb LD (TER)","{HB_F4E_SAMP250LD_TER_2x_opposed}":"2x SAMP-250 - 250KG GP Bomb LD (TER)","{HB_F4E_SAMP250LD_TER_3x}":"3x SAMP-250 - 250KG GP Bomb LD (TER)","{HB_F4E_SUU-25_MER_2x_Left}":"2x SUU-25 x 8 LUU-2 - Target Marker Flares (MER)","{HB_F4E_SUU-25_MER_2x_Right}":"2x SUU-25 x 8 LUU-2 - Target Marker Flares (MER)","{HB_F4E_SUU-25_MER_2x}":"2x SUU-25 x 8 LUU-2 - Target Marker Flares (MER)","{HB_GBU-12_SWA}":"(Special Weapons Adapter) GBU-12 - 500lb Laser Guided Bomb","{HB_PAVE_SPIKE_FAST_ON_ADAPTER_IN_AERO7}":"AN/AVQ-23 Pave Spike (Fast/Smart Track) - Targeting Pod Rack","{HB_PAVE_SPIKE_ON_ADAPTER_IN_AERO7}":"AN/AVQ-23 Pave Spike - Targeting Pod Rack","{LAU3_FFAR_MK1HE}":"LAU-3 - 19 x UnGd Rkts, 70 mm Mk 4 FFAR Mk 1 HE","{LAU3_FFAR_MK5HEAT}":"LAU-3 - 19 x UnGd Rkts, 70 mm Mk 4 FFAR Mk 5 HEAT","{LAU3_FFAR_WP156}":"LAU-3 - 19 x UnGd Rkts, 70 mm Mk 4 FFAR M156 SM","{LAU68_FFAR_MK1HE}":"LAU-68 - 7 x UnGd Rkts, 70 mm Mk 4 FFAR Mk 1 HE","{LAU68_FFAR_MK5HEAT}":"LAU-68 - 7 x UnGd Rkts, 70 mm Mk 4 FFAR Mk 5 HEAT","{LAU68_FFAR_WP156}":"LAU-68 - 7 x UnGd Rkts, 70 mm Mk 4 FFAR M156 SM","{LAU_34_AGM_45A_SWA}":"(Special Weapons Adapter) AGM-45A Shrike ARM (LAU-34)","{LAU_34_AGM_45A}":"AGM-45A Shrike ARM (LAU-34)","{LAU_34_AGM_45B_SWA}":"(Special Weapons Adapter) AGM-45B Shrike ARM (LAU-34)","{LAU_34_AGM_45B}":"AGM-45B Shrike ARM (LAU-34)","{MATRA_F1_SNEBT250}":"MATRA F1 - 36 x UnGd Rkts, 68 mm SNEB Type 250 F1B TP-SM","{MATRA_F1_SNEBT251}":"MATRA F1 - 36 x UnGd Rkts, 68 mm SNEB Type 251 F1B HE","{MATRA_F1_SNEBT252}":"MATRA F1 - 36 x UnGd Rkts, 68 mm SNEB Type 252 F1B TP","{MATRA_F1_SNEBT253}":"MATRA F1 - 36 x UnGd Rkts, 68 mm SNEB Type 253 F1B HEAT","{MATRA_F1_SNEBT254_GREEN}":"MATRA F1 - 36 x UnGd Rkts, 68 mm SNEB Type 254 F1B SM Green","{MATRA_F1_SNEBT254_RED}":"MATRA F1 - 36 x UnGd Rkts, 68 mm SNEB Type 254 F1B SM Red","{MATRA_F1_SNEBT254_YELLOW}":"MATRA F1 - 36 x UnGd Rkts, 68 mm SNEB Type 254 F1B SM Yellow","{MATRA_F1_SNEBT256}":"MATRA F1 - 36 x UnGd Rkts, 68 mm SNEB Type 256 F1B HE/Frag","{MATRA_F1_SNEBT257}":"MATRA F1 - 36 x UnGd Rkts, 68 mm SNEB Type 257 F1B HE/Frag Lg Whd","{MATRA_F1_SNEBT259E}":"MATRA F1 - 36 x UnGd Rkts, 68 mm SNEB Type 259E F1B IL","{MATRA_F4_SNEBT250}":"MATRA F4 - 18 x UnGd Rkts, 68 mm SNEB Type 250 F1B TP-SM","{MATRA_F4_SNEBT251}":"MATRA F4 - 18 x UnGd Rkts, 68 mm SNEB Type 251 F1B HE","{MATRA_F4_SNEBT252}":"MATRA F4 - 18 x UnGd Rkts, 68 mm SNEB Type 252 F1B TP","{MATRA_F4_SNEBT253}":"MATRA F4 - 18 x UnGd Rkts, 68 mm SNEB Type 253 F1B HEAT","{MATRA_F4_SNEBT254_GREEN}":"MATRA F4 - 18 x UnGd Rkts, 68 mm SNEB Type 254 F1B SM Green","{MATRA_F4_SNEBT254_RED}":"MATRA F4 - 18 x UnGd Rkts, 68 mm SNEB Type 254 F1B SM Red","{MATRA_F4_SNEBT254_YELLOW}":"MATRA F4 - 18 x UnGd Rkts, 68 mm SNEB Type 254 F1B SM Yellow","{MATRA_F4_SNEBT256}":"MATRA F4 - 18 x UnGd Rkts, 68 mm SNEB Type 256 F1B HE/Frag","{MATRA_F4_SNEBT257}":"MATRA F4 - 18 x UnGd Rkts, 68 mm SNEB Type 257 F1B HE/Frag Lg Whd","{Mk_84AIR_GP}":"Mk-84 AIR (BSU-50) - 2000 lb GP Chute Retarded Bomb HD","{PTB_450}":"Fuel tank PTB-450","{R530F_EM}":"R530F EM","{R530F_IR}":"R530F IR","{R550_Magic_1}":"R550 Magic 1 IR AAM","{RBK_250_275_AO_1SCH}":"RBK-250-275 - 150 x AO-1SCh, 250kg CBU HE/Frag","{RBK_500U_OAB_2_5RT}":"RBK-500U - 126 x OAB-2.5RT, 500kg CBU HE/Frag","{S530F}":"S530F","{SAMP125LD}":"SAMP-125 - 125 kg GP Bomb LD","{SAMP250HD}":"SAMP-250 - 250 kg GP Chute Retarded Bomb HD","{SAMP250LD}":"SAMP-250 - 250 kg GP Bomb LD","{SAMP400HD}":"SAMP-400 - 400 kg GP Chute Retarded Bomb HD","{SAMP400LD}":"SAMP-400 - 400 kg GP Bomb LD","{SUU_23_POD_Centerline}":"SUU-23","{SUU_23_POD_Wing}":"SUU-23","{UB-32A-24}":"UB-32A-24 - 32 x UnGd Rkts, 57 mm S-5KO HEAT/Frag","{UB32A24_S5KP}":"UB-32A-24 - 32 x UnGd Rkts, 57 mm S-5KP HEAT/Frag","{UB32A24_S5M}":"UB-32A-24 - 32 x UnGd Rkts, 57 mm S-5M HE"};
 const AIRCRAFT_PYLONS = {"clsids":["{B919B0F4-7C25-455E-9A02-CEA51DB895E3}","{2x9M120_Ataka_V}","{2x9M120F_Ataka_V}","{2x9M220_Ataka_V}","{9M114 Shturm-V-2 Rack}","B_8V20A_CM","B_8V20A_OFP2","B_8V20A_OM","{UB-32A-24}","{UB32A24_S5KP}","{UB32A24_S5M}","{2x9M114_with_adapter}","{2x9M120_Ataka_V_with_adapter}","{2x9M120F_Ataka_V_with_adapter}","{2x9M220_Ataka_V_with_adapter}","{FC56DF80-9B09-44C5-8976-DCFAFF219062}","{PTB_450}","{6A4B9E69-64FE-439a-9163-3A87FB6A4D81}","{3C612111-C7AD-476E-8A8E-2485812F4E5C}","{FAB_250_M62}","{FB3CE165-BF07-4979-887C-92B87F13276B}","{4203753F-8198-4E85-9924-6F8FF679F9FF}","{RBK_250_275_AO_1SCH}","{APU_68_S-24}","GUV_VOG","{APU-60-1_R_60M}","{B0DBC591-0F52-4F7D-AD7B-51E67725FB81}","{37DCC01E-9E02-432F-B61D-10C166CA2798}","{D5435F26-F120-4FA3-9867-34ACE562EF1B}","{7AEC222D-C523-425e-B714-719C0D1EB14D}","{RBK_500U_OAB_2_5RT}","{96A7F676-F956-404A-AD04-F33FB2C74884}","{96A7F676-F956-404A-AD04-F33FB2C74881}","GUV_YakB_GSHP","{275A2855-4A79-4B2D-B082-91EA2ADF4691}","KORD_12_7_MI24_L","KORD_12_7_MI24_R","B_8V20A_CM_GN","B_8V20A_CM_RD","B_8V20A_CM_WH","B_8V20A_CM_BU","B_8V20A_CM_YE","B_8V20A_CM_VT","{0511E528-EA28-4caf-A212-00D1408DF10A}","{05544F1A-C39C-466b-BC37-5BD1D52E57BB}","KORD_12_7","PKT_7_62","{HB_F4E_MK-83_MER_1x_Left_Ripple}","{HB_F4E_M117_MER_3x_Left}","{HB_F4E_CBU-87_MER_3x_Left}","{HB_F4E_CBU-52B_MER_3x_Left}","{HB_F4E_SUU-25_MER_2x_Left}","{HB_F4E_BL755_TER_2x_Left}","{HB_F4E_BL755_TER_1x_SingleLeft}","{HB_F4E_SAMP250LD_TER_3x}","{HB_F4E_SAMP250LD_TER_2x_Left}","{HB_F4E_SAMP250LD_TER_1x_SingleLeft}","{HB_F4E_SAMP250HD_TER_3x}","{HB_F4E_SAMP250HD_TER_2x_Left}","{HB_F4E_SAMP250HD_TER_1x_SingleLeft}","{HB_F4E_CBU-1A_MER_2x_Left}","{HB_F4E_CBU-2A_MER_2x_Left}","{HB_F4E_CBU-2BA_MER_2x_Left}","{HB_F4E_CBU-1A_MER_1x_Left}","{HB_F4E_CBU-2A_MER_1x_Left}","{HB_F4E_CBU-2BA_MER_1x_Left}","{HB_F4E_CBU-7A_MER_4x_Left}","{HB_F4E_CBU-7A_MER_3x_Left}","{HB_F4E_CBU-7A_MER_2x_Left}","{HB_F4E_CBU-7A_MER_1x_Left}","{HB_F4E_CBU-38A_MER_4x_Left}","{HB_F4E_CBU-38A_MER_3x_Left}","{HB_F4E_CBU-38A_MER_2x_Left}","{HB_F4E_CBU-38A_MER_1x_Left}","{F4_SARGENT_TANK_370_GAL}","{F4_SARGENT_TANK_370_GAL_EMPTY}","{HB_F4E_MK-81_6x}","{HB_F4E_MK-82_6x}","{HB_F4E_MK-82_Snakeye_6x}","{HB_F4E_MK-82AIR_6x}","{HB_F4E_BDU-50LD_6x}","{HB_F4E_BDU-50HD_6x}","{HB_F4E_BDU-33_6x}","{HB_F4E_MK-83_MER_2x}","{CBU-87}","{CBU-52B}","{AB8B8299-F1CC-4359-89B5-2172E0CF4A5A}","{Mk_84AIR_GP}","{51F9AAE5-964F-4D21-83FB-502E3BFE5F8A}","{34759BBC-AF1E-4AEE-A581-498FF7A6EBCE}","{DB769D48-67D7-42ED-A2BE-108D566C8B1E}","{BDU_45LG}","{GBU_8_B}","{AGM_62_I}","{LAU3_FFAR_WP156}","{LAU3_FFAR_MK1HE}","{LAU3_FFAR_MK5HEAT}","{HB_F4E_LAU-3_WP156_MER_3x}","{HB_F4E_LAU-3_MK1_MER_3x}","{HB_F4E_LAU-3_MK5_MER_3x}","{F3EFE0AB-E91A-42D8-9CA2-B63C91ED570A}","{HB_F4E_LAU-10_ZUNI_MER_3x}","{HB_F4E_LAU-10_ZUNI_MER_2x}","{HB_F4E_LAU-10_ZUNI_MER_1x}","{CAE48299-A294-4bad-8EE6-89EFC5DCDF00}","{LAU_34_AGM_45A}","{LAU_34_AGM_45B}","{AGM_12A}","{AGM_12B}","{SUU_23_POD_Wing}","{AIM-9B}","{AIM-9E}","{AIM-9J}","{9BFD8C90-F7AE-4e90-833B-BFD0CED0E536}","{AIM-9L}","{AIM-9JULI}","{AIM-9M}","CATM-9M","{AIM-9P5}","{AIM-9P3}","{A4BCC903-06C8-47bb-9937-A30FEDB4E741}","{A4BCC903-06C8-47bb-9937-A30FEDB4E742}","{A4BCC903-06C8-47bb-9937-A30FEDB4E743}","{A4BCC903-06C8-47bb-9937-A30FEDB4E744}","{A4BCC903-06C8-47bb-9937-A30FEDB4E745}","{A4BCC903-06C8-47bb-9937-A30FEDB4E746}","{AIS_ASQ_T50}","{HB_F4E_MK-83_2x_Left}","{HB_F4E_M117_2x_Left}","{HB_F4E_LAU-68_MK5_2x_Left}","{HB_F4E_LAU-68_MK1_2x_Left}","{HB_F4E_LAU-68_WP156_2x_Left}","{HB_F4E_LAU-3_MK5_2x_Left}","{HB_F4E_LAU-3_MK1_2x_Left}","{HB_F4E_LAU-3_WP156_2x_Left}","{HB_F4E_LAU-10_ZUNI_2x_Left}","{HB_F4EAGM-65A_LAU88_3x_Left}","{HB_F4EAGM-65A_LAU88_2x_Left}","{HB_F4EAGM-65B_LAU88_3x_Left}","{HB_F4EAGM-65B_LAU88_2x_Left}","{HB_F4EAGM-65D_LAU88_3x_Left}","{HB_F4EAGM-65D_LAU88_2x_Left}","{HB_CBU-87_SWA}","{HB_F4E_CBU-87_2x}","{HB_F4E_CBU-87_2x_SWA}","{HB_CBU-52B_SWA}","{HB_F4E_CBU-52B_2x}","{HB_F4E_CBU-52B_2x_SWA}","{HB_F4E_CBU-7A_3x}","{HB_F4E_CBU-7A_2x}","{HB_F4E_CBU-7A_1x_Alt}","{HB_F4E_CBU-7A_1x}","{HB_F4E_CBU-38A_3x}","{HB_F4E_CBU-38A_2x}","{HB_F4E_CBU-38A_1x_Alt}","{HB_F4E_CBU-38A_1x}","{HB_F4E_BLU-107B_3x}","{HB_F4E_BLU-107B_3x_SWA}","{HB_F4E_MK-83_3x}","{HB_F4E_M117_3x}","{HB_F4E_BL755_TER_3x}","{HB_F4E_BL755_TER_2x_opposed}","{HB_F4E_BL755_TER_1x_SingleRight}","{HB_F4E_SAMP250LD_TER_2x_opposed}","{HB_F4E_SAMP250LD_TER_1x_SingleRight}","{HB_F4E_SAMP250HD_TER_2x_opposed}","{HB_F4E_SAMP250HD_TER_1x_SingleRight}","{HB_GBU-12_SWA}","{HB_F4E_GBU-12_2x}","{HB_F4E_GBU-12_2x_SWA}","{HB_BDU_45LGB_SWA}","{HB_F4E_BDU_45LGB_2x}","{HB_F4E_BDU_45LGB_2x_SWA}","{HB_F4E_AGM-65G_LAU117}","{LAU_34_AGM_45A_SWA}","{LAU_34_AGM_45B_SWA}","{C40A1E3A-DD05-40D9-85A4-217729E37FAE}","{AGM_12C}","{HB_F4E_LAU-68_MK5_1x}","{HB_F4E_LAU-68_MK1_1x}","{HB_F4E_LAU-68_WP156_1x}","{HB_F4E_LAU-68_MK5_3x}","{HB_F4E_LAU-68_MK1_3x}","{HB_F4E_LAU-68_WP156_3x}","{LAU68_FFAR_WP156}","{LAU68_FFAR_MK1HE}","{LAU68_FFAR_MK5HEAT}","{HB_F4E_LAU-3_WP156_1x}","{HB_F4E_LAU-3_MK1_1x}","{HB_F4E_LAU-3_MK5_1x}","{HB_F4E_LAU-3_WP156_3x}","{HB_F4E_LAU-3_MK1_3x}","{HB_F4E_LAU-3_MK5_3x}","{HB_F4E_LAU-10_ZUNI_3x}","{HB_F4E_LAU-10_ZUNI_2x_Opposed}","{HB_F4E_LAU-10_ZUNI_1x}","{6D21ECEA-F85B-4E8D-9D51-31DC9B8AA4EF}","{HB_F4E_MK-81_3x}","{HB_F4E_MK-81_2x}","{HB_F4E_MK-81_2x_SWA}","{HB_F4E_MK-82_3x}","{HB_F4E_MK-82_2x}","{HB_F4E_MK-82_2x_SWA}","{HB_F4E_MK-82_Snakeye_3x}","{HB_F4E_MK-82_Snakeye_2x}","{HB_F4E_MK-82_Snakeye_2x_SWA}","{HB_F4E_ROCKEYE_3x}","{HB_F4E_ROCKEYE_2x}","{HB_F4E_ROCKEYE_2x_SWA}","{HB_F4E_MK-82AIR_3x}","{HB_F4E_MK-82AIR_2x}","{HB_F4E_MK-82AIR_2x_SWA}","{HB_F4E_BDU-50LD_3x}","{HB_F4E_BDU-50LD_2x}","{HB_F4E_BDU-50LD_2x_SWA}","{HB_F4E_BDU-50HD_3x}","{HB_F4E_BDU-50HD_2x}","{HB_F4E_BDU-50HD_2x_SWA}","{HB_F4E_BDU-33_3x}","{HB_F4E_BDU-33_2x}","{HB_F4E_BDU-33_2x_SWA}","{HB_F4E_BDU-33_3x_SWA}","{HB_F4E_AGM-65A_LAU117}","{HB_F4E_AGM-65A_LAU117_SWA}","{HB_F4E_AGM-65B_LAU117}","{HB_F4E_AGM-65B_LAU117_SWA}","{HB_F4E_AGM-65D_LAU117}","{HB_F4E_AGM-65D_LAU117_SWA}","{HB_F4E_AIM-7F}","{HB_F4E_AIM-7E}","{HB_F4E_AIM-7E-2}","{HB_F4E_AIM-7M}","{HB_PAVE_SPIKE_ON_ADAPTER_IN_AERO7}","{HB_PAVE_SPIKE_FAST_ON_ADAPTER_IN_AERO7}","{HB_ALQ-131_ON_ADAPTER_IN_AERO7}","{HB_F4E_ROCKEYE_6x}","{HB_F4E_BLU-107B_6x}","{HB_F4E_CBU-87_MER_4x}","{HB_F4E_M117_MER_5x}","{HB_F4E_MK-83_MER_3x}","{HB_F4E_MK-83_MER_3x_Ripple}","{HB_F4E_SUU-25_MER_2x}","{HB_F4E_CBU-1A_MER_1x}","{HB_F4E_CBU-2A_MER_1x}","{HB_F4E_CBU-2BA_MER_1x}","{HB_F4E_CBU-7A_MER_4x_Center}","{HB_F4E_CBU-7A_MER_3x_Center}","{HB_F4E_CBU-7A_MER_2x_Center}","{HB_F4E_CBU-7A_MER_2x_Center_Opposed}","{HB_F4E_CBU-7A_MER_1x_Right}","{HB_F4E_CBU-38A_MER_4x_Center}","{HB_F4E_CBU-38A_MER_3x_Center}","{HB_F4E_CBU-38A_MER_2x_Center}","{HB_F4E_CBU-38A_MER_2x_Center_Opposed}","{HB_F4E_CBU-38A_MER_1x_Right}","{SUU_23_POD_Centerline}","{GPU_5_POD}","{F4_SARGENT_TANK_600_GAL}","{F4_SARGENT_TANK_600_GAL_EMPTY}","{HB_F4E_MK-83_2x_Right}","{HB_F4E_M117_2x_Right}","{HB_F4E_LAU-68_MK5_2x_Right}","{HB_F4E_LAU-68_MK1_2x_Right}","{HB_F4E_LAU-68_WP156_2x_Right}","{HB_F4E_LAU-3_MK5_2x_Right}","{HB_F4E_LAU-3_MK1_2x_Right}","{HB_F4E_LAU-3_WP156_2x_Right}","{HB_F4E_LAU-10_ZUNI_2x_Right}","{HB_F4EAGM-65A_LAU88_3x_Right}","{HB_F4EAGM-65A_LAU88_2x_Right}","{HB_F4EAGM-65B_LAU88_3x_Right}","{HB_F4EAGM-65B_LAU88_2x_Right}","{HB_F4EAGM-65D_LAU88_3x_Right}","{HB_F4EAGM-65D_LAU88_2x_Right}","{HB_F4E_MK-83_MER_1x_Right_Ripple}","{HB_F4E_M117_MER_3x_Right}","{HB_F4E_CBU-87_MER_3x_Right}","{HB_F4E_CBU-52B_MER_3x_Right}","{HB_F4E_SUU-25_MER_2x_Right}","{HB_F4E_BL755_TER_2x_Right}","{HB_F4E_SAMP250LD_TER_2x_Right}","{HB_F4E_SAMP250HD_TER_2x_Right}","{HB_F4E_CBU-1A_MER_2x_Right}","{HB_F4E_CBU-2A_MER_2x_Right}","{HB_F4E_CBU-2BA_MER_2x_Right}","{HB_F4E_CBU-1A_MER_1x_Right}","{HB_F4E_CBU-2A_MER_1x_Right}","{HB_F4E_CBU-2BA_MER_1x_Right}","{HB_F4E_CBU-7A_MER_4x_Right}","{HB_F4E_CBU-7A_MER_3x_Right}","{HB_F4E_CBU-7A_MER_2x_Right}","{HB_F4E_CBU-38A_MER_4x_Right}","{HB_F4E_CBU-38A_MER_3x_Right}","{HB_F4E_CBU-38A_MER_2x_Right}","{F4_SARGENT_TANK_370_GAL_R}","{F4_SARGENT_TANK_370_GAL_R_EMPTY}","{HB_ALE_40_0_0}","{HB_ALE_40_0_120}","{HB_ALE_40_30_60}","{HB_ALE_40_15_90}","{HB_ALE_40_30_0}","{R550_Magic_1}","{FC23864E-3B80-48E3-9C03-4DA8B1D7497B}","{SAMP125LD}","{SAMP250LD}","{SAMP250HD}","{SAMP400LD}","{SAMP400HD}","{BLU107B_DURANDAL}","{BLG66_AC}","{MATRA_F1_SNEBT250}","{MATRA_F1_SNEBT251}","{MATRA_F1_SNEBT252}","{MATRA_F1_SNEBT253}","{MATRA_F1_SNEBT254_RED}","{MATRA_F1_SNEBT254_YELLOW}","{MATRA_F1_SNEBT254_GREEN}","{MATRA_F1_SNEBT256}","{MATRA_F1_SNEBT257}","{MATRA_F1_SNEBT259E}","{MATRA_F4_SNEBT250}","{MATRA_F4_SNEBT251}","{MATRA_F4_SNEBT252}","{MATRA_F4_SNEBT253}","{MATRA_F4_SNEBT254_RED}","{MATRA_F4_SNEBT254_YELLOW}","{MATRA_F4_SNEBT254_GREEN}","{MATRA_F4_SNEBT256}","{MATRA_F4_SNEBT257}","{BCE4E030-38E9-423E-98ED-24BE3DA87C32}","{7A44FF09-527C-4B7E-B42B-3F111CFE50FB}","BR_250","BR_500","BARAX_ECM","{AUF2_BLU107}","{AUF2_SAMP125LD}","{AUF2_SAMP250LD}","{AUF2_SAMP250HD}","{AUF2_BLG66}","PTB-1200-F1","PTB-1200-F1-EMPTY","{CC420_GUN_POD}","{0D33DDAE-524F-4A4E-B5B8-621754FE3ADE}","{AUF2_BR250}","{AUF2_MK82}","{AUF2_GBU12}","{R530F_EM}","{R530F_IR}","{S530F}","{14_3_M2_6xBAP100}","{14_3_M2_9xBAP100}","{30_6_M2_12xBAP100}","{30_6_M2_18xBAP100}","{14_3_M2_6xBAT120}","{14_3_M2_9xBAT120}","{30_6_M2_12xBAT120}","{30_6_M2_18xBAT120}","{CLB4_BLU107}","{CLB4_SAMP125LD}","{CLB4_SAMP250LD}","{CLB4_SAMP250HD}","{CLB4_SAMP400LD}","{CLB4_SAMP400HD}","{CLB4_MK82}","{CLB4_BR250}","PTB-580G-F1","PTB-580G-F1-EMPTY"],"weights":[103.8,118,118,112,13,344,467,364,248.72,263.12,231.6,108.8,123,123,123,505,550,348,266,227,123,244.6,273,273.5,274,75.5,158,520,253,427,427,778,675.6,452,158,95,95,344,344,344,344,344,344,106,218,95,90,553.8,1119.8,1389.8,1167.8,553.4,684,406,869,622,375,935,666,397,758.72402656,776.13288752,865.59030176,429.26201328,437.96644376,482.69515088,1444.246688,1108.135016,772.023344,435.911672,1342.64208,1031.93156,721.22104,410.51052,1233.05,149.7,807.8,1467.8,1596.8,1551.8,1545.8,1545.8,167.6,1007.8,430,244.6,894,911.7,959,1087,277,277,1027,510,211.82,184.27,185.6,842,759.2,761.9,289.02,966.5,677.6,388.7,226.8,219,224,296,302,788.796488,74.39,76.43,76.93,74.84,85.73,82.3,86.64,85.73,80.7,80.7,92.1,92.1,92.1,92.1,92.1,92.1,62.6,1036,808,348.6,348,368.4,569.4,567.6,622.8,705.8,842.5,632,842.5,632,842.5,632,430,988,988,356,840,840,1136.335016,800.223344,464.111672,464.111672,1060.13156,749.42104,438.71052,438.71052,785,785,1490,1148,962,684,406,622,375,666,397,277,682,682,277,682,682,360,219,224,1061,811.5,238.3,238,248.2,458.9,458,488.6,107.36,97.21,97.7,375.4,347.8,348.7,870.2,787.4,790.1,994.7,705.8,416.9,305,482,364,364,812,584,584,876.5,627,627,794,572,572,854,612,612,851,610,610,851,610,610,161.9,150.6,150.6,161.9,269.5,269.5,269.5,269.5,269.5,269.5,231,206.4,194,231,217.9,217.9,330.9,1431.8,1413.8,1819.8,1799.8,1461.8,1461.8,553.4,429.26201328,437.96644376,482.69515088,1444.246688,1108.135016,772.023344,772.023344,435.911672,1342.64208,1031.93156,721.22104,721.22104,410.51052,788.796488,845.94908,1885.9,149.7,1036,808,348.6,348,368.4,569.4,567.6,622.8,705.8,842.5,632,842.5,632,842.5,632,553.8,1119.8,1389.8,1167.8,553.4,684,622,666,758.72402656,776.13288752,865.59030176,429.26201328,437.96644376,482.69515088,1444.246688,1108.135016,772.023344,1342.64208,1031.93156,721.22104,1233.05,149.7,59,59,59,59,59,89,89,120,245,269,360,395,219,300,228.184,243.16,245.68,269.8,228.184,228.184,228.184,313.36,371.68,363.76,166.592,174.08,175.34,187.4,166.592,166.592,166.592,209.18,238.34,228,454,250,500,85,518,320,618,570,680,1058,160,205,513,580,536,634,195,192,245,257.5,355,540,735,266.5,368.5,558,762,1059,663,1163,1259,1623,1763,1095,1183,2090,265],"types":{"Mi-24P":{"1":[0,1,2,3,4],"2":[5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26],"3":[5,6,7,8,9,10,17,20,18,19,27,21,22,28,29,30,31,32,16,23,33,24],"4":[5,6,7,8,9,10,17,20,18,19,27,21,22,28,29,30,31,32,16,23,33,24],"5":[5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,34],"6":[0,1,2,3,4],"7":[35],"8":[36]},"Mi-8MT":{"1":[5,37,38,39,40,41,42,7,6,17,20,43,18,19,24],"2":[5,37,38,39,40,41,42,7,6,44,17,18,19,27,33,24,20,43],"3":[5,37,38,39,40,41,42,7,6,17,18,19,20,43],"4":[5,37,38,39,40,41,42,7,6,17,18,19,20,43],"5":[5,37,38,39,40,41,42,7,6,44,17,18,19,27,33,24,20,43],"6":[5,37,38,39,40,41,42,7,6,17,20,43,18,19,24],"7":[45],"8":[46]},"F-4E-45MC":{"1":[47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109],"2":[110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126],"3":[127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,84,142,143,144,85,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,54,163,164,57,165,166,87,89,88,90,167,168,169,91,170,171,172,173,105,174,106,175,176,93,92,107,108,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,100,94,95,96,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225,226,227],"4":[110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126],"5":[228,229,230,231],"6":[228,229,230,231,232,233,234],"7":[76,77,78,235,79,80,81,82,236,237,238,239,240,160,161,162,54,163,164,57,165,166,86,97,98,99,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255,256,257,258],"8":[228,229,230,231],"9":[228,229,230,231],"10":[110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126],"11":[259,260,261,262,263,264,265,266,267,268,269,270,271,272,273,84,142,143,144,85,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,54,163,164,57,165,166,87,89,88,90,167,168,169,91,170,171,172,173,105,174,106,175,176,93,92,107,108,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,100,94,95,96,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225,226,227],"12":[110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126],"13":[274,275,276,277,278,279,162,54,280,164,57,281,166,282,283,284,285,286,287,288,289,290,249,291,292,293,254,294,295,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109],"14":[296,297,298,299,300]},"Mirage-F1EE":{"1":[110,112,113,119,115,301,302],"2":[303,304,305,306,307,308,309,310,311,312,313,314,315,316,317,318,319,320,321,322,323,324,325,326,327,328,329,330,331,332,90,333],"3":[303,304,305,306,307,308,309,334,335,336,337,338,310,311,312,313,314,315,316,317,318,319,320,321,322,323,324,325,326,327,328,339,340,341,329,330,331,332,90,342,343,344,345,346,347,348,349,350,351,352,353,354,355,356],"4":[304,305,306,307,309,357,358,359,360,361,362,334,335,336,337,338,339,340,341,329,330,331,332,88,90,342,363,364,343,344,345,346,347,365,366,349,350,351,352,353,354,355,356],"5":[303,304,305,306,307,308,309,334,335,336,337,338,310,311,312,313,314,315,316,317,318,319,320,321,322,323,324,325,326,327,328,339,340,341,329,330,331,332,90,342,343,344,345,346,347,348,349,350,351,352,353,354,355,356],"6":[303,304,305,306,307,308,309,310,311,312,313,314,315,316,317,318,319,320,321,322,323,324,325,326,327,328,329,330,331,332,90,333],"7":[110,112,113,119,115,301,302]}}};
 const AIRCRAFT_LIMITS = {"Mi-24P":{"fuel_max":1701,"flare":192,"chaff":0,"charge_total":192,"flare_charge_size":1,"chaff_charge_size":1},"Mi-8MT":{"fuel_max":1929,"flare":128,"chaff":0,"charge_total":128,"flare_charge_size":1,"chaff_charge_size":0},"F-4E-45MC":{"fuel_max":5510.5,"flare":30,"chaff":120,"charge_total":150,"flare_charge_size":1,"chaff_charge_size":1},"Mirage-F1EE":{"fuel_max":3246,"flare":15,"chaff":30,"charge_total":60,"flare_charge_size":2,"chaff_charge_size":1}};
+const AIRCRAFT_MASSES = {"Mi-24P":{"empty":8891,"max":11500},"Mi-8MT":{"empty":8866,"max":13000},"F-4E-45MC":{"empty":14742,"max":28122},"Mirage-F1EE":{"empty":7887,"max":16200}};       /* les masses à vide et maximales des types du Flight Configurator (data/aircraft_masses.json) : le poids au décollage, payloadTakeoff */
 /* ===== EMPORT (PRESETS ET PAYLOAD) ===== */
 // Les trois tables de Mission Tools (data/*.json, d'après pydcs 1.0.0, LGPL-3.0) doivent exister avant ce bloc, sous ces noms :
 //   WEAPON_NAMES { CLSID: nom } · AIRCRAFT_PYLONS { clsids: [...], weights: [...], types: { type: { pylône: [indices dans clsids] } } }
@@ -6016,6 +6033,35 @@ function payloadWeaponSide(type, clsid) {
 function payloadDefaults(type) {
   const l = AIRCRAFT_LIMITS[type];
   return { fuel: l.fuel_max, flare: l.flare, chaff: l.chaff, gun: 100 };
+}
+
+// La livre, en kilogrammes : les données restent en kg, l'unité de masse choisie ne change que l'affichage (payloadMassIn). Une valeur en lb s'affiche en entier arrondi.
+const PAYLOAD_KG_PER_LB = 0.45359237;
+function payloadMassIn(kg, unit) { return unit === 'lb' ? kg / PAYLOAD_KG_PER_LB : kg; }
+
+// Le poids au décollage d'une unité, la même règle au Flight Configurator et au Datacard Generator : à vide (la table des masses `masses`, { type: { empty, max } }, passée en argument : le bloc
+// ne la porte pas) + carburant + masse des emports. `fuel` : le carburant de l'unité en kg (un nombre) ; sinon le plein du type (payloadDefaults) ; sans plein dans AIRCRAFT_LIMITS, pas de carburant.
+// `stations` : { station: CLSID } ou { station: { CLSID } } ; seules comptent les stations du type, dans l'ordre numérique ; le canon et les leurres ne comptent pas. Une arme sans masse connue rend
+// le total incertain (unknown) : la somme est celle des armes connues. Rend { loadout, unknown, fuel, empty, max, takeoff } en kg : fuel, empty, max et takeoff valent null quand la table ne les donne pas
+// (un type absent de `masses` : ni poids ni maximum ; un type sans carburant : pas de poids). Rien n'est arrondi.
+function payloadTakeoff(type, fuel, stations, masses) {
+  const out = { loadout: 0, unknown: false, fuel: null, empty: null, max: null, takeoff: null };
+  (payloadPylons(type) || []).forEach(p => {
+    const v = stations ? stations[p.n] : '';
+    const clsid = typeof v === 'string' ? v : (v && typeof v.CLSID === 'string' ? v.CLSID : '');
+    if (clsid === '') return;
+    const m = payloadWeaponMass(clsid);
+    if (m === null) out.unknown = true; else out.loadout += m;
+  });
+  let f = (typeof fuel === 'number' && isFinite(fuel)) ? fuel : null;
+  if (f === null && payloadHas(AIRCRAFT_LIMITS, type)) f = payloadDefaults(type).fuel;
+  out.fuel = f;
+  if (masses && payloadHas(masses, type)) {
+    out.empty = masses[type].empty;
+    out.max = masses[type].max;
+    if (f !== null) out.takeoff = out.empty + f + out.loadout;
+  }
+  return out;
 }
 
 // Le plus grand nombre de leurres (k = 'flare') ou de paillettes (k = 'chaff') que l'appareil porte à lui seul : charge_total ÷ taille d'une charge ; le nombre par défaut si la table ne donne pas
@@ -6622,7 +6668,7 @@ function dgFollowDocNow(force) {
   if (th) nd.theatre = th;
   doc = nd;
   const U = dgReadUnitsKey() || dgU, N = dgReadNavKey() || dgN;       /* les clés d'unités et de cap telles qu'elles sont maintenant : leurs évènements n'ont pas tous été traités */
-  doc.cards.forEach(c => { c.units = { mass: U.mass, distance: U.distance, altitude: U.altitude }; c.navDisplay.ref = N.ref; c.navDisplay.decl = N.decl; c.navDisplay.vmode = N.mode; });
+  doc.cards.forEach(c => { dgMassConv(c, U.mass); c.units = { mass: U.mass, distance: U.distance, altitude: U.altitude }; c.navDisplay.ref = N.ref; c.navDisplay.decl = N.decl; c.navDisplay.vmode = N.mode; });
   const k = id ? doc.cards.findIndex(c => c.gsId === id) : -1;
   curIdx = k >= 0 ? k : Math.min(curIdx, doc.cards.length - 1);
   gsApplyAll(); dgSyncRoutes();
@@ -7593,7 +7639,76 @@ function dgFreeze(f, c) {
   const g = dgLoadGroups(f);
   const loads = g.groups.map(x => ({ names: x.names, type: x.type, lo: { key: dgStr(x.lo.key), label: dgStr(x.lo.label), from: dgStr(x.lo.from), modified: !!x.lo.modified }, rows: x.rows.map(r => [r.n, r.clsid]) }));
   const hasFreq = radios.some(m => m.posts.some(p => p.rows.some(r => r[2] !== '')));
-  return (hasFreq || loads.length || g.raw.length) ? { radios: hasFreq ? radios : [], loads: loads, raw: g.raw } : null;
+  const fuel = dgFuelLots(f);       /* en kg, sans texte : la langue et l'unité de masse ne s'y écrivent pas */
+  if (!(hasFreq || loads.length || g.raw.length || fuel.length)) return null;
+  const z = { radios: hasFreq ? radios : [], loads: loads, raw: g.raw };
+  if (fuel.length) z.fuel = fuel;
+  return z;
+}
+/* ----- Carburant et poids : une valeur par lot d'appareils identiques (lot mp-fc-affichage) -----
+   Le carburant emporté et le poids au décollage de chaque unité d'un groupe : payloadTakeoff (payload_block.py), la même règle qu'au Flight Configurator, en kg ; les unités dont le couple (carburant, poids, incertain)
+   est le même forment un lot, dans l'ordre des unités. Une unité sans type connu des tables n'en a pas ; un emport brut (payloadIn, pas encore lu par le Flight Configurator) non plus. Rien de cela ne se stocke dans c.fuel :
+   une carte liée le calcule, une carte libre née d'une carte liée en garde les lots en kg (c.frz.fuel). L'unité de masse choisie et la langue ne changent que l'affichage. */
+function dgLoFuel(v) { const x = String(v == null ? '' : v).trim().replace(',', '.'); return /^-?\d+(\.\d+)?$/.test(x) ? Number(x) : undefined; }       /* le carburant de l'emport, lu comme le Flight Configurator (loNumber) */
+function dgFuelLots(f) {
+  const lots = [];
+  dgUnits(f).forEach((u, i) => {
+    const lo = gsIsObj(u.loadout) ? u.loadout : null;
+    if (!lo && gsIsObj(u.payloadIn)) return;
+    const w = payloadTakeoff(dgStr(u.type), lo ? dgLoFuel(lo.fuel) : undefined, lo && gsIsObj(lo.pylons) ? lo.pylons : {}, AIRCRAFT_MASSES);
+    if (w.fuel === null && w.takeoff === null) return;
+    const l = lots.find(x => x.fuel === w.fuel && x.weight === w.takeoff && x.unc === w.unknown);
+    if (l) l.ranks.push(i + 1); else lots.push({ ranks: [i + 1], fuel: w.fuel, weight: w.takeoff, unc: w.unknown });
+  });
+  return lots;
+}
+/* Les rangs d'un lot : « 1-2 », « 1-2, 4 », « 1, 3 », « 3 » (une suite contiguë en plage, sinon des virgules) */
+function dgRanks(r) {
+  const out = [];
+  let i = 0;
+  while (i < r.length) {
+    let j = i;
+    while (j + 1 < r.length && r[j + 1] === r[j] + 1) j++;
+    out.push(j > i ? r[i] + '-' + r[j] : String(r[i]));
+    i = j + 1;
+  }
+  return out.join(', ');
+}
+/* Les lots d'une carte dont la case « Emport du Flight Configurator » est cochée : ceux de son groupe (carte liée) ou la copie figée (carte libre née d'une carte liée) ; null sinon : Carburant et Poids sont alors saisis (c.fuel) */
+function dgFuelView(c) {
+  if (!((c.gsId || dgFrozen(c)) && c.loadoutFc)) return null;
+  const f = dgFlightOf(c);
+  if (f) return dgFuelLots(f);
+  const z = !c.gsId && gsIsObj(c.frz) ? c.frz : null;
+  return z && Array.isArray(z.fuel) ? z.fuel : [];
+}
+const dgGroup = ds => ds.replace(/\B(?=(\d{3})+(?!\d))/g, CURRENT_LANG === 'fr' ? ' ' : ',');       /* le séparateur de milliers de la langue, comme cmpNum au Flight Configurator */
+function dgMassCalc(kg) { return dgGroup(String(Math.round(payloadMassIn(kg, dgU.mass)))); }       /* une valeur calculée, en kg, affichée dans l'unité choisie : l'entier arrondi */
+/* Une masse saisie qui est un nombre (chiffres, espaces de milliers, une décimale à virgule ou point) : sa valeur ; sinon null (un texte comme « plein » ne se convertit pas) */
+function dgMassParse(v) {
+  const s = String(v == null ? '' : v).trim();
+  return /^(\d{1,3}([ \u00a0\u202f]\d{3})+|\d+)([.,]\d+)?$/.test(s) ? Number(s.replace(/[ \u00a0\u202f]/g, '').replace(',', '.')) : null;
+}
+/* Une masse saisie, affichée : un nombre au format de la langue (« 1 323 », « 1,323 »), un texte tel quel */
+function dgMassShow(v) {
+  const n = dgMassParse(v), s = String(v).trim();
+  if (n === null) return s;
+  const p = s.replace(/[ \u00a0\u202f]/g, '').replace(',', '.').split('.');
+  return dgGroup(p[0]) + (p.length > 1 ? (CURRENT_LANG === 'fr' ? ',' : '.') + p[1] : '');
+}
+/* La conversion des masses saisies d'une carte (Carburant, Poids, JOKER, BINGO) de l'unité de la carte (c.units.mass) vers `to` : les nombres s'arrondissent à l'entier et s'écrivent en chiffres seuls ; un texte reste tel quel.
+   Une seule fonction pour tous les chemins : dgUnitsSet (le menu Affichage, la clé écrite ailleurs, l'ouverture), setDoc (l'exemple, une carte blanche, un fichier ouvert ou importé), dgFollowDocNow (le document relu). Rend vrai si une valeur a bougé. */
+function dgMassConv(c, to) {
+  const from = c.units && UNIT_CHOICES.mass.indexOf(c.units.mass) !== -1 ? c.units.mass : 'kg';
+  if (from === to || !c.fuel) return false;
+  let moved = false;
+  ['amount', 'weight', 'joker', 'bingo'].forEach(k => {
+    const n = dgMassParse(c.fuel[k]);
+    if (n === null) return;
+    c.fuel[k] = String(Math.round(from === 'kg' ? n / PAYLOAD_KG_PER_LB : n * PAYLOAD_KG_PER_LB));
+    moved = true;
+  });
+  return moved;
 }
 /* c.frz relu (carte libre née d'une carte liée) : les encadrés radio, comme dgRadioModel les donne */
 function dgFrozenModel(c) {
@@ -7613,7 +7728,7 @@ function dgLoadView(c) {
   };
 }
 /* Une carte libre née d'une carte liée porte-t-elle une copie figée à montrer ? */
-function dgFrozen(c) { return !c.gsId && gsIsObj(c.frz) && ((Array.isArray(c.frz.radios) && c.frz.radios.length) || (Array.isArray(c.frz.loads) && c.frz.loads.length) || (Array.isArray(c.frz.raw) && c.frz.raw.length)); }
+function dgFrozen(c) { return !c.gsId && gsIsObj(c.frz) && ((Array.isArray(c.frz.radios) && c.frz.radios.length) || (Array.isArray(c.frz.loads) && c.frz.loads.length) || (Array.isArray(c.frz.fuel) && c.frz.fuel.length) || (Array.isArray(c.frz.raw) && c.frz.raw.length)); }
 /* le tableau de l'éditeur : une ligne par station (seule l'impression regroupe, dgLoadPrintTable) */
 function dgLoadTable(rows, cls) {
   return '<table class="' + cls + '"><colgroup><col style="width:40px"><col></colgroup><thead><tr><th>' + esc(t('lo.h.n')) + '</th><th>' + esc(t('lo.h.load')) + '</th></tr></thead><tbody>' +
@@ -8387,21 +8502,28 @@ function blkWeather(c) {
 }
 
 function blkFuel(c) {
-  const fuelRows = [['dc.joker', c.fuel.joker], ['dc.bingo', c.fuel.bingo]].filter(r => hasText(r[1]));
+  const mu = unitLabel(c, 'mass');
+  const typed = v => hasText(v) ? dgMassShow(v) + ' ' + mu : '';
+  const calc = (kg, unc) => kg === null ? '' : dgMassCalc(kg) + ' ' + mu + (unc ? ' + ?' : '');
+  const lots = dgFuelView(c);
+  /* une rangée CARBURANT | POIDS par lot (ou celle de la saisie), puis JOKER | BINGO ; une valeur absente laisse sa moitié vide, une rangée sans valeur ne s'imprime pas */
+  const rows = (lots === null
+    ? [{ k: ['dc.fuelqty', 'dc.weight'], sfx: '', v: [typed(c.fuel.amount), typed(c.fuel.weight)] }]
+    : lots.map(l => ({ k: ['dc.fuelqty', 'dc.weight'], sfx: lots.length > 1 ? ' \u00b7 ' + dgRanks(l.ranks) : '', v: [calc(l.fuel, false), calc(l.weight, l.unc)] }))
+  ).concat([{ k: ['dc.joker', 'dc.bingo'], sfx: '', v: [typed(c.fuel.joker), typed(c.fuel.bingo)] }]).filter(r => r.v[0] !== '' || r.v[1] !== '');
   const fcLoad = (c.gsId || dgFrozen(c)) && c.loadoutFc ? dgLoadCardHtml(c) : '';
   const load = fcLoad ? [''] : c.loadout.filter(hasText);
-  if (!fuelRows.length && !load.length) return '';
-  const mu = unitLabel(c, 'mass');
+  if (!rows.length && !load.length) return '';
   let b = '<div class="dc-fuelwrap">';
-  if (fuelRows.length) {
-    b += '<div class="dc-fuel">' + fuelRows.map(r =>
-      '<div class="dc-fp"><span class="fl">' + esc(t(r[0])) + '</span><span class="fv">' + esc(r[1].trim() + ' ' + mu) + '</span></div>').join('') + '</div>';
+  if (rows.length) {
+    b += '<div class="dc-fuel">' + rows.map(r => r.v.map((v, i) => v === '' ? '<div></div>' :
+      '<div class="dc-fp"><span class="fl">' + esc(t(r.k[i]) + r.sfx) + '</span><span class="fv">' + esc(v) + '</span></div>').join('')).join('') + '</div>';
   }
   if (load.length) {
     b += fcLoad || '<ul class="dc-load">' + load.map(l => '<li><span class="bl">▪</span><span class="lx">' + esc(l) + '</span></li>').join('') + '</ul>';
   }
   b += '</div>';
-  const title = [fuelRows.length ? t('dc.b.fuel') : '', load.length ? t('dc.b.loadout') : ''].filter(Boolean).join(' · ');
+  const title = [rows.length ? t('dc.b.fuel') : '', load.length ? t('dc.b.loadout') : ''].filter(Boolean).join(' · ');
   return blockHtml('fuel', title, b);
 }
 
@@ -8479,7 +8601,7 @@ function blkWeatherBlank(c) {
 }
 
 function blkFuelBlank(c) {
-  let b = '<div class="dc-fuelwrap dc-fblank"><div class="dc-fuel">' + ['dc.joker', 'dc.bingo'].map(k =>
+  let b = '<div class="dc-fuelwrap dc-fblank"><div class="dc-fuel">' + ['dc.fuelqty', 'dc.weight', 'dc.joker', 'dc.bingo'].map(k =>
     '<div class="dc-fp dc-bl"><span class="fl">' + esc(t(k)) + '</span><span class="fv"></span></div>').join('') + '</div><ul class="dc-load">';
   for (let i = 0; i < BLANK_ROWS.loadout; i++) b += '<li class="dc-bl"><span class="lx"></span></li>';
   return blockHtml('fuel', t('dc.b.fuel') + ' · ' + t('dc.b.loadout'), b + '</ul></div>');
@@ -8854,6 +8976,20 @@ function syncRefsEditor() {
   });
 }
 
+/* La rangée Carburant | Poids de la section « Carburant et emport », puis JOKER | BINGO : saisis (carte libre, ou emport du Flight Configurator décoché), ou calculés d'après l'emport du Flight Configurator, en lecture seule avec la pastille FC,
+   une rangée par lot d'appareils identiques (les rangs suivent le libellé quand il y en a plusieurs) */
+function dgFuelFieldsHtml(c) {
+  const jb = '<div class="ed-field-row">' + fInput('f.joker', 'fuel.joker', c.fuel.joker) + fInput('f.bingo', 'fuel.bingo', c.fuel.bingo) + '</div>';
+  const lots = dgFuelView(c);
+  if (lots === null) return '<div class="ed-field-row">' + fInput('f.fuelqty', 'fuel.amount', c.fuel.amount) + fInput('f.weight', 'fuel.weight', c.fuel.weight) + '</div>' + jb;
+  const mu = t('u.' + dgU.mass);
+  const ro = (key, sfx, v) => '<div class="ed-field"><label>' + esc(t(key) + sfx) + ' <span class="sh" title="' + esc(t('sh.tip')) + '">FC</span></label><input type="text" value="' + esc(v) + '" readonly></div>';
+  return lots.map(l => {
+    const sfx = lots.length > 1 ? ' \u00b7 ' + dgRanks(l.ranks) : '';
+    return '<div class="ed-field-row">' + ro('f.fuelqty', sfx, l.fuel === null ? '' : dgMassCalc(l.fuel) + ' ' + mu) + ro('f.weight', sfx, l.weight === null ? '' : dgMassCalc(l.weight) + ' ' + mu + (l.unc ? ' + ?' : '')) + '</div>';
+  }).join('') + jb;
+}
+
 const SECTION_BUILDERS = {
   /* L'en-tête : le même qu'au Briefing Generator (Opération · Mission, puis Date · Heure (Z)) */
   header: c =>
@@ -8938,7 +9074,7 @@ const SECTION_BUILDERS = {
     '<div class="ed-field-row">' + fInput('f.qnh', 'weather.qnh', c.weather.qnh) + fInput('f.clouds', 'weather.clouds', c.weather.clouds) + '</div>',
 
   fuel: c =>
-    '<div class="ed-field-row">' + fInput('f.joker', 'fuel.joker', c.fuel.joker) + fInput('f.bingo', 'fuel.bingo', c.fuel.bingo) + '</div>' +
+    dgFuelFieldsHtml(c) +
     '<div class="ed-field"><label>' + esc(t('f.loadout')) + '</label></div>' +
     listHtml('loadout', c.loadout, (s, i) => fInputBare('loadout.' + i, s), 'add.line'),
 
@@ -8952,7 +9088,7 @@ const SECTION_BUILDERS = {
 const LINKED_BUILDERS = {
   radio: radioLinkedHtml,
   fuel: c =>
-    '<div class="ed-field-row">' + fInput('f.joker', 'fuel.joker', c.fuel.joker) + fInput('f.bingo', 'fuel.bingo', c.fuel.bingo) + '</div>' +
+    dgFuelFieldsHtml(c) +
     '<label class="ed-chk"><input type="checkbox" data-lofc="1"' + (c.loadoutFc ? ' checked' : '') + '><span>' + esc(t('lo.fc')) + '</span></label>' +
     (c.loadoutFc ? dgLoadEditorHtml(c) :
       '<div class="ed-field"><label>' + esc(t('f.loadout')) + '</label></div>' + listHtml('loadout', c.loadout, (s, i) => fInputBare('loadout.' + i, s), 'add.line'))
@@ -8980,7 +9116,7 @@ function dgFrozenSection(id, c) {
   return '';
 }
 /* Une carte libre née d'une carte liée qui portait un emport du FC : la section Carburant et emport garde la case « Emport du Flight Configurator » : cochée, le tableau figé (la liste manuelle est masquée) ; décochée, la saisie à la main, qui s'imprime */
-function dgFrozenLoad(c) { return !c.gsId && gsIsObj(c.frz) && ((Array.isArray(c.frz.loads) && c.frz.loads.length) || (Array.isArray(c.frz.raw) && c.frz.raw.length)); }
+function dgFrozenLoad(c) { return !c.gsId && gsIsObj(c.frz) && ((Array.isArray(c.frz.loads) && c.frz.loads.length) || (Array.isArray(c.frz.fuel) && c.frz.fuel.length) || (Array.isArray(c.frz.raw) && c.frz.raw.length)); }
 Object.keys(LINKED_BUILDERS).forEach(id => {
   const base = SECTION_BUILDERS[id];
   SECTION_BUILDERS[id] = c => c.gsId ? LINKED_BUILDERS[id](c) : (id === 'fuel' && dgFrozenLoad(c) ? LINKED_BUILDERS.fuel(c) : dgFrozenSection(id, c) + base(c));
