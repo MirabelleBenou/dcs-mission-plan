@@ -165,6 +165,7 @@ RSD_CSS = r'''/* ======== ANNOTER AU DOIGT (lot mp-rs-v1.1.0) — la barre, le m
 .dr-hint .tb-btn { height: 36px; font-size: 11px; padding: 0 10px; border-color: var(--khaki); }
 .dr-hint .tb-btn.go { background: var(--amber-dark); color: var(--paper-light); border-color: var(--amber); }
 .dr-hint .dr-acts { display: flex; gap: 4px; flex: none; }
+.dr-hint .dr-acts[hidden] { display: none; }
 
 .dr-bar { display: flex; align-items: stretch; gap: 8px; background: var(--olive-deep); border: 2px solid var(--amber-dark);
   box-shadow: 0 2px 8px rgba(0,0,0,.45); padding: 6px; box-sizing: border-box; }
@@ -2441,6 +2442,7 @@ body {{
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
 }}
+#preview-canvas[hidden] {{ display: none; }}   /* « display: block » ci-dessus l'emportait sur l'attribut hidden : après Effacer, l'ancien dessin restait affiché */
 .preview-placeholder {{
   text-align: center;
   color: var(--khaki);
@@ -3407,6 +3409,11 @@ function restoreState() {{
     if (saved.classification && typeof saved.classification === 'object') {{
       STATE.classification = {{ enabled: !!saved.classification.enabled, level: rsClassKey(saved.classification.level) }};
     }}
+    // L'image de l'exemple : l'image source n'est jamais enregistrée ; un état qui porte exampleImage: true la recharge (la même image, la même zone, le même crédit)
+    if (saved.exampleImage === true) {{
+      STATE.exampleImage = true;
+      if (!SOURCE_READY) rsExampleImage(false);
+    }} else delete STATE.exampleImage;
     return true;
   }} catch(e) {{ return false; }}
 }}
@@ -3480,6 +3487,7 @@ function loadImageFile(file) {{
       document.getElementById('btn-export').disabled = false;
       document.getElementById('preview-placeholder').hidden = true;
       document.getElementById('preview-canvas').hidden = false;
+      if (STATE.exampleImage) {{ delete STATE.exampleImage; saveState(); }}     // une autre image que celle de l'exemple : l'état ne la porte plus
       showToast(t('toast.image-loaded'), {{ type: 'ok' }});
       rsdSyncUi();
       schedulePreview();
@@ -3498,6 +3506,26 @@ const RS_EXAMPLE_TEXT = {{
   fr: {{ target: 'DÉPÔT LOGISTIQUE 7', class_: 'CONFIDENTIEL', legend: ['STOCKAGE POL', 'PARC DE RÉSERVOIRS', 'PARC DE VÉHICULES'] }},
   en: {{ target: 'LOGISTICS DEPOT 7', class_: 'CONFIDENTIAL', legend: ['POL STORAGE', 'TANK FARM', 'VEHICLE PARK'] }}
 }};
+
+// La photo de l'exemple dans la zone d'image, quand l'état porte exampleImage: true (au démarrage, à la relecture de l'état) ou quand l'exemple se charge (force).
+async function rsExampleImage(force) {{
+  const img = new Image();
+  try {{
+    await new Promise((ok, ko) => {{ img.onload = ok; img.onerror = ko; img.src = RS_EXAMPLE_IMG; }});
+  }} catch (e) {{ console.warn('[RS] exemple indisponible', e); showToast(t('msg.exampleUnavailable'), {{ type: 'err' }}); return false; }}
+  if (!force && (!STATE.exampleImage || SOURCE_READY)) return false;     // l'état a changé pendant le chargement : une autre image, ou plus d'image d'exemple
+  SOURCE_IMG   = img;
+  SOURCE_READY = true;
+  document.getElementById('drop-zone').classList.add('has-image');
+  document.getElementById('drop-zone-text').textContent = 'rs_example_naip.jpg — ' + img.naturalWidth + '×' + img.naturalHeight + 'px';
+  document.getElementById('btn-export').disabled = false;
+  document.getElementById('preview-placeholder').hidden = true;
+  document.getElementById('preview-canvas').hidden = false;
+  document.getElementById('img-credit').hidden = false;
+  rsdSyncUi();
+  schedulePreview();
+  return true;
+}}
 
 function exampleHasWork() {{
   collectState();
@@ -3548,6 +3576,7 @@ async function rsReset() {{
   st.fields = rsFreshState().fields;
   st.cartouche = [];
   st.annotations = [];
+  delete st.exampleImage;
   rsBack({{ state: st, img: null, ready: false, dz: t('editor.image.drop'), credit: false }});
   rsBriefingFill();
   showToast(t('clear.toast'), {{ type: 'ok' }});
@@ -3559,22 +3588,12 @@ async function loadExample() {{
 }}
 async function loadExampleNow(quiet) {{
   const tx = RS_EXAMPLE_TEXT[CURRENT_LANG === 'en' ? 'en' : 'fr'];      // la langue de l'interface au moment du clic
-  const img = new Image();
-  try {{
-    await new Promise((ok, ko) => {{ img.onload = ok; img.onerror = ko; img.src = RS_EXAMPLE_IMG; }});
-  }} catch (e) {{ console.warn('[RS] exemple indisponible', e); showToast(t('msg.exampleUnavailable'), {{ type: 'err' }}); return false; }}
-  SOURCE_IMG   = img;
-  SOURCE_READY = true;
-  document.getElementById('drop-zone').classList.add('has-image');
-  document.getElementById('drop-zone-text').textContent = 'rs_example_naip.jpg — ' + img.naturalWidth + '×' + img.naturalHeight + 'px';
-  document.getElementById('btn-export').disabled = false;
-  document.getElementById('preview-placeholder').hidden = true;
-  document.getElementById('preview-canvas').hidden = false;
-  document.getElementById('img-credit').hidden = false;
+  if (!(await rsExampleImage(true))) return false;
+  STATE.exampleImage = true;                                           // l'état porte l'image : saveState l'écrit, restoreState la recharge
 
   STATE.fields = {{
     target: tx.target, coords: 'N35°08.6 E032°49.5', crs: '118°', alt: '',
-    msn: 'FOOTHOLD M3', sensor: 'KS-87', dtg: '22.03.1989', crew: 'RECCE 11', class_: tx.class_
+    msn: 'STEPPE WIND M3', sensor: 'KS-87', dtg: '22.03.1989', crew: 'RECCE 11', class_: tx.class_
   }};
   STATE.cartouche = [
     {{ label: tx.legend[0], x: 0.7805, y: 0.3995, point: true, target: {{ x: 0.7108, y: 0.4400 }} }},

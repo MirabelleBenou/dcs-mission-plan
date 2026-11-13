@@ -4287,16 +4287,16 @@ const DEFAULTS = {
 /* Briefing d'exemple (ancienne démonstration). Part en Standard. */
 const EXAMPLE_BRIEFING = {
   meta: {
-    operation: 'FOOTHOLD',
+    operation: 'STEPPE WIND',
     mission: 'M3',
     date: '1989-03-22',
     time: '08:00',
     format: 'simple',
     classification: 'confidential',
-    docRef: 'FH-M3-1989'
+    docRef: 'SW-M3-1989'
   },
   cover: {
-    title: 'OPERATION FOOTHOLD',
+    title: 'OPERATION STEPPE WIND',
     narrative: "Les forces soviétiques sont à l'origine du déclenchement d'une guerre civile en Syrie et ont assisté les troupes rebelles pour réussir un coup d'État. Une fois le gouvernement tombé, les forces dissidentes ont envahi l'île de Chypre et capturé la quasi-totalité de l'île, sauf la base OTAN d'AKROTIRI.\n\nLes forces de l'OTAN opèrent un déploiement majeur afin d'assister le gouvernement légitime chypriote à reprendre le contrôle total de l'île. Il n'est pas exclu une opération aéro-navale majeure pour « libérer » la Syrie.",
     mapImage: ''
   },
@@ -4434,16 +4434,16 @@ const EXAMPLE_BRIEFING = {
    (lot mp-exemples-demarrer). Le bouton « Exemple » charge l'un ou l'autre selon la langue de l'interface au moment du clic. */
 const EXAMPLE_BRIEFING_EN = {
   meta: {
-    operation: 'FOOTHOLD',
+    operation: 'STEPPE WIND',
     mission: 'M3',
     date: '1989-03-22',
     time: '08:00',
     format: 'simple',
     classification: 'confidential',
-    docRef: 'FH-M3-1989'
+    docRef: 'SW-M3-1989'
   },
   cover: {
-    title: 'OPERATION FOOTHOLD',
+    title: 'OPERATION STEPPE WIND',
     narrative: "Soviet forces instigated the outbreak of a civil war in Syria and helped the rebel troops carry out a coup. Once the government had fallen, the dissident forces invaded the island of Cyprus and captured almost all of it, except the NATO base of AKROTIRI.\n\nNATO forces are mounting a major deployment to help the legitimate Cypriot government regain full control of the island. A major air-naval operation to “free” Syria cannot be ruled out.",
     mapImage: ''
   },

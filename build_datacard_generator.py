@@ -168,8 +168,8 @@ EXAMPLE_DOC_JSON = r'''{
     {
       "meta": {
         "classification": "confidential",
-        "docRef": "FH-M3-1989",
-        "operation": "FOOTHOLD",
+        "docRef": "SW-M3-1989",
+        "operation": "STEPPE WIND",
         "mission": "M3",
         "date": "1989-03-22",
         "time": "08:00"
@@ -375,8 +375,8 @@ EXAMPLE_DOC_JSON_EN = r'''{
     {
       "meta": {
         "classification": "confidential",
-        "docRef": "FH-M3-1989",
-        "operation": "FOOTHOLD",
+        "docRef": "SW-M3-1989",
+        "operation": "STEPPE WIND",
         "mission": "M3",
         "date": "1989-03-22",
         "time": "08:00"
@@ -7650,7 +7650,7 @@ function dgBack(m) {
 function loadExample() {
   replaceWithRestore({ keys: GS_CONTENT_KEYS, mem: dgMem, back: dgBack, msg: t('toast.example'), run: () => gsSettled(loadExampleNow()) });
 }
-const DG_EXAMPLE_THEATRE = 'Syria';       /* l'exemple raconte FOOTHOLD au-dessus de Chypre : le théâtre de la route d'exemple du Route Planner */
+const DG_EXAMPLE_THEATRE = 'Syria';       /* l'exemple raconte STEPPE WIND au-dessus de Chypre : le théâtre de la route d'exemple du Route Planner */
 function loadExampleNow() {
   dgSetTheatre(DG_EXAMPLE_THEATRE);       /* le geste d'un choix dans la liste de la barre : le document le prend et mp_theatre_v1 s'écrit (une valeur égale n'est pas réécrite) */
   const linked = doc.cards.filter(c => c.gsId);       /* les groupes de la fiche gardent leurs cartes ; la fiche n'est pas touchée */

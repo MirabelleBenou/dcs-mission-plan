@@ -452,7 +452,7 @@ I18N_FR = {
     'tb.clear': 'Effacer',
     'tb.clear.tip': 'Tout effacer…',
     'tb.example': 'Exemple',
-    'tb.example.tip': 'Ouvrir l\u2019exemple : le groupe CAESAR (deux Mi-24P) sur la route FOOTHOLD M3, en Syrie ; le travail en cours se restaure en un geste',
+    'tb.example.tip': 'Ouvrir l\u2019exemple : le groupe CAESAR (deux Mi-24P) sur la route STEPPE WIND M3, en Syrie ; le travail en cours se restaure en un geste',
     'toast.example': 'Exemple chargé',
 
     'bar.ok': 'Prêt à exporter : {0}',
@@ -759,7 +759,7 @@ I18N_EN = {
     'tb.clear': 'Clear',
     'tb.clear.tip': 'Clear everything…',
     'tb.example': 'Example',
-    'tb.example.tip': 'Open the example: the CAESAR group (two Mi-24P) on the FOOTHOLD M3 route, in Syria; the work in progress comes back in one tap',
+    'tb.example.tip': 'Open the example: the CAESAR group (two Mi-24P) on the STEPPE WIND M3 route, in Syria; the work in progress comes back in one tap',
     'toast.example': 'Example loaded',
 
     'bar.ok': 'Ready to export: {0}',
@@ -4054,7 +4054,7 @@ function fcBack(m) {
   renderAll();
   clearTimeout(_saveTimer); _saveTimer = 0;
 }
-// « Exemple » : un seul groupe, CAESAR (deux Mi-24P, camp rouge), au théâtre de l'exemple (Syria), qui suit la route d'exemple de la suite (FOOTHOLD M3, la même que celle du Route Planner) ; au geste « Remplacer »
+// « Exemple » : un seul groupe, CAESAR (deux Mi-24P, camp rouge), au théâtre de l'exemple (Syria), qui suit la route d'exemple de la suite (STEPPE WIND M3, la même que celle du Route Planner) ; au geste « Remplacer »
 // (on fait, on garde l'ancien, « Restaurer » 12 s, aucune question). Le groupe est ce que « + groupe » donne, puis le type posé sur ses deux unités ; sa route s'écrit par le bloc d'écriture d'une route,
 // seul chemin d'écriture de route_set_v1 (une route de même nom et mêmes points y est déjà, celle de l'exemple du Route Planner : le groupe la suit, aucune seconde route).
 // L'exemple est aussi le seul geste, avec l'ouverture d'un fichier, qui écrit le théâtre commun (mp_theatre_v1) : thWriteKey ne réécrit pas une valeur égale, la boucle des autres modules reste coupée.
