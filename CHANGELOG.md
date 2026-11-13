@@ -169,6 +169,7 @@ Changes merged since the last release, grouped per tool.
 - A frequency field you had only clicked into now shows a frequency changed meanwhile in the Flight Configurator.
 - A group name, callsign or board number field you had only clicked into now shows a change made meanwhile in the Flight Configurator, instead of writing the old value back.
 - Airfield search on phones and tablets: the list stays above the on-screen keyboard.
+- The example opens on a single card, linked to the CAESAR group and its route, with its date and time.
 
 ### Route Planner
 #### Added
