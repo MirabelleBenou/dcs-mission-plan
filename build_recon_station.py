@@ -3521,6 +3521,32 @@ async function rsExampleImage() {{
   return true;
 }}
 
+// ── L'image source, gardée en mémoire par le shell pour « Restaurer » (rien au stockage) ──
+// Prise par le shell avant de retirer cette iframe (exemple, ouverture d'un fichier, restauration) ; pas pour la photo de l'exemple, que l'état nomme (exampleImage) et que rsExampleImage recharge.
+window.MP_IMG_TAKE = function () {{
+  if (!SOURCE_READY || !SOURCE_IMG || STATE.exampleImage || !SOURCE_IMG.src) return null;
+  return {{ src: SOURCE_IMG.src, dz: document.getElementById('drop-zone-text').textContent }};
+}};
+// Rendue par le shell à l'iframe rouverte, quand « Restaurer » remet l'état d'avant : seulement si ce RS n'a pas d'image et que son état ne nomme pas celle de l'exemple.
+window.MP_IMG_GIVE = function (m) {{
+  if (!m || typeof m.src !== 'string' || SOURCE_READY || STATE.exampleImage) return;
+  const img = new Image();
+  img.onload = () => {{
+    if (SOURCE_READY || STATE.exampleImage) return;
+    SOURCE_IMG   = img;
+    SOURCE_READY = true;
+    document.getElementById('img-credit').hidden = true;
+    document.getElementById('drop-zone').classList.add('has-image');
+    document.getElementById('drop-zone-text').textContent = m.dz || (img.naturalWidth + '×' + img.naturalHeight + 'px');
+    document.getElementById('btn-export').disabled = false;
+    document.getElementById('preview-placeholder').hidden = true;
+    document.getElementById('preview-canvas').hidden = false;
+    rsdSyncUi();
+    schedulePreview();
+  }};
+  img.src = m.src;
+}};
+
 function rsBack(m) {{
   STATE = structuredClone(m.state);
   SOURCE_IMG = m.img; SOURCE_READY = m.ready;

@@ -57,7 +57,7 @@ const SUITE_GROUPS = {
 const SUITE_DROP = ['bg', 'dg', 'rp', 'fc', 'rs'];
 /* Le calme du stockage, mesuré comme gsSettled (group_store_block.py) : aucune écriture des clés pendant SUITE_CALM_MS, constaté à deux relectures de suite (toutes les SUITE_CALM_STEP_MS), au plus SUITE_CALM_MAX_MS */
 const SUITE_CALM_MS = 400, SUITE_CALM_MAX_MS = 3000, SUITE_CALM_STEP_MS = 50;
-const SUITE = { restore: null, toastN: 0, name: '', at: 0, from: null, busy: false };
+const SUITE = { restore: null, toastN: 0, name: '', at: 0, from: null, busy: false, give: {} };
 
 function suiteGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
 function suiteRead(keys) { const o = {}; (keys || SUITE_KEYS).forEach(k => { o[k] = suiteGet(k); }); return o; }
@@ -198,21 +198,25 @@ function suiteSettled() {
 /* ---- remplacer le travail : on fait, on garde l'ancien, un toast « Restaurer » 12 s, jamais de question ---- */
 /* b. les iframes des outils retirés (les cinq par défaut, ceux d'un groupe pour un exemple) partent (leurs écritures en attente d'abord, par MP_FLUSH puis à pagehide) ; c. les clés de la portée (toutes par défaut) sont photographiées ;
    d. elles sont écrites (celles qui manquent sont retirées ; un stockage plein remet la photographie à l'octet) ; e. si l'on était dans l'un de ces outils, il est rouvert, iframe neuve. Rend { ok, snap }. */
-function suiteReplace(next, tools, keys) {
-  const was = activeModule, drop = tools || SUITE_DROP, ks = keys || SUITE_KEYS;
+function suiteReplace(next, tools, keys, give) {
+  const was = activeModule, drop = tools || SUITE_DROP, ks = keys || SUITE_KEYS, mem = {};
   drop.forEach(id => {
     const f = iframes[id];
     if (!f) return;
     suiteFlush(id);
+    /* l'image source d'un outil qui la garde hors du stockage (le Recon Station) : prise en mémoire avant le retrait, pour « Restaurer » */
+    try { const w = f.contentWindow; if (w && typeof w.MP_IMG_TAKE === 'function') { const m = w.MP_IMG_TAKE(); if (m) mem[id] = m; } }
+    catch (e) { console.warn('[M·P] image de ' + id + ' : ' + e); }
     f.remove();
     delete iframes[id];
     delete barSync[id];
   });
+  if (give) Object.keys(give).forEach(id => { SUITE.give[id] = give[id]; });       /* rendue à l'outil rouvert, à son « load » (suiteOnLoad) */
   const snap = suiteRead(ks);
   const ok = suiteWriteAll(next, ks);
   if (!ok) { suiteWriteAll(snap, ks); suiteWriteAll(snap, ks); }
   if (was && drop.indexOf(was) >= 0) openModule(was);
-  return { ok: ok, snap: snap };
+  return { ok: ok, snap: snap, mem: mem };
 }
 /* La restauration en attente, si son toast est encore à l'écran */
 function suiteLive() {
@@ -226,12 +230,13 @@ function suiteDo(next, keys, tools, toast) {
   const keep = suiteLive();
   const res = suiteReplace(next, tools, keys);
   if (!res.ok) { showToast(t('work.err.full'), { type: 'err' }); return null; }
-  const r = { snap: res.snap, keys: keys.slice(), tools: tools.slice(), ref: null, pending: null, n: 0 };
+  const r = { snap: res.snap, keys: keys.slice(), tools: tools.slice(), ref: null, pending: null, n: 0, mem: res.mem };
   if (keep) {
     SUITE_KEYS.forEach(k => { if (keep.keys.indexOf(k) >= 0 && r.keys.indexOf(k) < 0) r.keys.push(k); });
     tools = SUITE_DROP.filter(id => keep.tools.indexOf(id) >= 0 || r.tools.indexOf(id) >= 0);
     r.tools = tools;
     keep.keys.forEach(k => { r.snap[k] = keep.snap[k]; });
+    r.mem = Object.assign({}, res.mem, keep.mem);       /* la photographie reste celle d'avant le premier remplacement : ses images aussi */
   }
   SUITE.restore = r;
   /* la référence de « Restaurer » : le stockage relu une fois les outils rouverts calmes */
@@ -248,6 +253,12 @@ function suiteTake(r) {
 /* Au « load » de l'iframe d'un des outils de la restauration en attente (rouverte par l'ouverture ou ouverte ensuite) : ses écritures de démarrage différées partent tout de suite (MP_FLUSH), puis la référence est reprise,
    calme compté depuis ce load. Un outil d'un autre groupe ne touche aucune clé de la portée : il ne reprend rien. */
 function suiteOnLoad(id) {
+  const gm = SUITE.give[id];
+  if (gm) {
+    delete SUITE.give[id];
+    try { const w = iframes[id] && iframes[id].contentWindow; if (w && typeof w.MP_IMG_GIVE === 'function') w.MP_IMG_GIVE(gm); }
+    catch (e) { console.warn('[M·P] image de ' + id + ' : ' + e); }
+  }
   const r = suiteLive();
   if (!r || r.tools.indexOf(id) < 0) return;
   suiteFlush(id);
@@ -269,6 +280,7 @@ window.MP_WORK_OPEN_TEXT = function (text, name) {
 window.MP_WORK_EXAMPLE = function (g) {
   const grp = SUITE_GROUPS[g];
   if (!grp) { console.warn('[M·P] exemple : groupe inconnu ' + g); return false; }
+  if (typeof adoptStoredLang === 'function') adoptStoredLang();       /* la langue se lit au clic : le drapeau d'un outil n'est relu par le shell qu'à l'ouverture d'un outil */
   const ex = SUITE_EXAMPLES[CURRENT_LANG === 'en' ? 'en' : 'fr'], next = {};
   grp.keys.forEach(k => { next[k] = typeof ex.keys[k] === 'string' ? ex.keys[k] : null; });
   return !!suiteDo(next, grp.keys, grp.tools, t('work.example.' + g));
@@ -294,7 +306,7 @@ async function suiteRestore(r) {
   const now = suiteRead(r.keys);
   if (r.keys.some(k => now[k] !== r.ref[k])) { SUITE.restore = null; showToast(t('ui.restore.refused'), { type: 'err' }); return; }
   SUITE.restore = null;
-  if (!suiteReplace(r.snap, r.tools, r.keys).ok) showToast(t('work.err.full'), { type: 'err' });
+  if (!suiteReplace(r.snap, r.tools, r.keys, r.mem).ok) showToast(t('work.err.full'), { type: 'err' });
 }
 """
 

@@ -6800,6 +6800,12 @@ function renderRadioTable(ap) {
 }
 
 /* Return a unified info object regardless of whether phase uses known or guest squadron */
+/* Le sous-groupe d'une ligne qui n'a pas d'escadre lisible (getPhaseSquadronInfo rend null) : le sien, ou celui de sa fiche d'invité ; vide sinon */
+function phaseBareSubgroup(ph) {
+  if (getPhaseSquadronInfo(ph)) return '';
+  const g = ph.squadron === '__guest__' ? (ph.guestSquadron || {}) : {};
+  return String(ph.subgroup || g.subgroup || '').trim();
+}
 function getPhaseSquadronInfo(ph) {
   if (!ph.squadron) return null;
   if (ph.squadron === '__guest__') {
@@ -6832,8 +6838,8 @@ function getPhaseSquadronInfo(ph) {
    Une page de mission (Situation, Mission + tableau des vols, Fréquences, Terrains, Météo),
    puis des pages de photos (deux par page) s'il y en a. Un bloc sans contenu n'est pas rendu.
    Pas de bloc Menaces dans ce mode. */
-/* Une heure imprimée : la valeur rognée ; « h:mm » ou « hh:mm » reçoit un Z (08:00 → 08:00Z) ; toute autre valeur (08:00Z, 10:00 L, 0800) s'imprime telle quelle ; vide : rien (ni séparateur) */
-function fmtTimeZ(v) { const s = String(v === undefined || v === null ? '' : v).trim(); return /^\d{1,2}:\d{2}$/.test(s) ? s + 'Z' : s; }
+/* Une heure imprimée : la valeur rognée ; « h:mm » ou « hh:mm » valide (heures 0 à 23, minutes 0 à 59) reçoit un Z (08:00 → 08:00Z) ; toute autre valeur (08:00Z, 10:00 L, 0800, 24:00, 99:99) s'imprime telle quelle ; vide : rien (ni séparateur) */
+function fmtTimeZ(v) { const s = String(v === undefined || v === null ? '' : v).trim(); return /^([01]?\d|2[0-3]):[0-5]\d$/.test(s) ? s + 'Z' : s; }
 function simpleBannerText() {
   let s = t('simple.hdr.mission');
   if (state.meta.mission) s += ' ' + state.meta.mission;
@@ -6848,8 +6854,8 @@ function simpleBannerText() {
 function simpleFlightRows() {
   return (state.phases || []).map(ph => {
     const info = getPhaseSquadronInfo(ph);
-    /* un groupe sans escadre (ni escadre invitée) mais avec un sous-groupe imprime ce sous-groupe seul ; sans rien, « — » */
-    const vol = info ? getRosterLabelParts(info).shortLabel : (!ph.squadron ? String(ph.subgroup || '').trim() : '');
+    /* une ligne sans escadre lisible (sans escadre, escadre invitée sans nom ni appareil, escadre absente de la configuration Wing) mais avec un sous-groupe imprime ce sous-groupe seul ; sans rien, « — » */
+    const vol = info ? getRosterLabelParts(info).shortLabel : phaseBareSubgroup(ph);
     /* un groupe sans escadron imprime l'appareil choisi (ph.aircraft) ; un groupe d'escadron ou invité garde le sien */
     const acft = (info && info.aircraft && info.aircraft !== '?') ? info.aircraft : ((!info && ph.squadron !== '__guest__' && typeof ph.aircraft === 'string') ? ph.aircraft.trim() : '');
     const n = parseInt(ph.count, 10);
@@ -7220,11 +7226,11 @@ function buildPages() {
           <span class="sq-cs">${escapeHtml(nameToShow)}</span>
           <span class="sq-ac">${escapeHtml(info.aircraft)}</span>
         </div>`;
-    } else if (!ph.squadron && String(ph.subgroup || '').trim()) {
-      /* sans escadre : la puce ne porte que le sous-groupe */
+    } else if (phaseBareSubgroup(ph)) {
+      /* sans escadre lisible : la puce ne porte que le sous-groupe */
       squadronChip = `
         <div class="squadron-chip">
-          <span class="sq-cs">${escapeHtml(String(ph.subgroup).trim())}</span>
+          <span class="sq-cs">${escapeHtml(phaseBareSubgroup(ph))}</span>
         </div>`;
     }
 

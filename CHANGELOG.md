@@ -116,6 +116,7 @@ Changes merged since the last release, grouped per tool.
 - Empty mission, date and classification fields are filled in from the current briefing.
 #### Fixed
 - **Clear** no longer leaves the previous image drawn in the preview.
+- Restore after an example or an opened work file brings back the image that was loaded.
 
 ### Briefing Generator
 #### Changed

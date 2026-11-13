@@ -8434,8 +8434,8 @@ function groupText(c) {
   return n != null ? t('dc.flightOf', { n: n }) : '';
 }
 
-/* Une heure imprimée : la valeur rognée ; « h:mm » ou « hh:mm » reçoit un Z (08:00 → 08:00Z) ; toute autre valeur (08:00Z, 10:00 L, 0800) s'imprime telle quelle ; vide : rien (ni séparateur) */
-function fmtTimeZ(v) { const s = String(v === undefined || v === null ? '' : v).trim(); return /^\d{1,2}:\d{2}$/.test(s) ? s + 'Z' : s; }
+/* Une heure imprimée : la valeur rognée ; « h:mm » ou « hh:mm » valide (heures 0 à 23, minutes 0 à 59) reçoit un Z (08:00 → 08:00Z) ; toute autre valeur (08:00Z, 10:00 L, 0800, 24:00, 99:99) s'imprime telle quelle ; vide : rien (ni séparateur) */
+function fmtTimeZ(v) { const s = String(v === undefined || v === null ? '' : v).trim(); return /^([01]?\d|2[0-3]):[0-5]\d$/.test(s) ? s + 'Z' : s; }
 function headMain(c) {
   const f = c.flight, m = c.meta;
   const sub = [
