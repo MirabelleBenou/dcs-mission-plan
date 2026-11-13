@@ -22,10 +22,16 @@ au format ci-dessus) dans SUITE_EXAMPLES ({ fr, en }) ; MP_WORK_EXAMPLE(g) rempl
 Hors du fichier : les préférences d'écran (langue, thème, replis, affichage, partages d'écran, calques de carte), la mission d'HQ (mission_snapshot_v1), la configuration Wing (wing_config_v1)
 et les presets d'emport du Flight Configurator (fc_presets_v1, une bibliothèque personnelle : Ouvrir, Exemple, Tout effacer et Restaurer n'y touchent jamais).
 Ouvrir : une clé de la suite que le fichier ne porte pas est retirée, sauf mp_units_v1 et mp_nav_v1 (les réglages), qui restent telles quelles ; une clé dont la valeur n'est pas un JSON lisible est écrite, et le toast le dit.
-Le briefing vit sous briefing_state_v2 ; le shell migre l'ancien nom au démarrage (suiteMigrateBriefing) et lit un fichier d'avant sous le nom neuf (suiteFileKeys).
+Le briefing vit sous briefing_state_v2 ; le shell migre l'ancien nom au démarrage, par déplacement (suiteMigrateBriefing), et lit un fichier d'avant sous le nom neuf (suiteFileKeys).
+Les presets qu'un état d'avant garde dans fc_state_v1.mine migrent au démarrage vers fc_presets_v1 (suiteMigratePresets) ; tant qu'ils y sont, Ouvrir et l'exemple les reportent (suiteCarryMine) ; Sauvegarder n'écrit jamais mine.
 
-Usage (par le build) : from suite_file_block import build_block, build_html, build_css, THEME_VARS
+La règle de fusion des presets (presetsMerge) est UNE seule fonction, écrite ici (PRESETS_MERGE_JS) : le shell la porte dans ce bloc, le Flight Configurator la reprend par build_presets_merge() et son mergeMine l'appelle.
+
+Usage (par le build) : from suite_file_block import build_block, build_html, build_css, build_presets_merge, THEME_VARS
 """
+import re
+
+import payload_block
 
 BLOCK_BEGIN = '/* ===== FICHIER DE TRAVAIL DE LA SUITE ===== */'
 BLOCK_END = '/* ===== FIN DU FICHIER DE TRAVAIL DE LA SUITE ===== */'
@@ -48,6 +54,34 @@ THEME_VARS = {
                     '--olive': '#3d3024', '--olive-dark': '#2a2018', '--paper': '#cdc6b8', '--paper-light': '#ddd6c8', '--f-ui': _F_UI, '--f-stencil': _F_STENCIL},
 }
 
+# Les types d'appareil dont les presets se gardent : ceux du Flight Configurator (PAYLOAD_TYPES de payload_block.py), lus là pour que le shell et le module n'aient qu'une liste.
+_PT = re.search(r"const PAYLOAD_TYPES = (\[[^\]]*\]);", payload_block.build_block())
+if not _PT:
+    raise SystemExit("[ERREUR] PAYLOAD_TYPES introuvable dans payload_block.py")
+PRESET_TYPES_JS = _PT.group(1)
+
+PM_BEGIN = '/* ===== FUSION DES PRESETS D\'EMPORT ===== */'
+PM_END = '/* ===== FIN DE LA FUSION DES PRESETS D\'EMPORT ===== */'
+PRESETS_MERGE_JS = r"""
+/* « Mes presets » d'emport : { <type>: [ { id, name, pylons } ] }. La règle de fusion, la même pour le shell (migration au démarrage) et le Flight Configurator (mergeMine) : les presets de src s'ajoutent à dst sans rien remplacer ;
+   un nom déjà pris pour ce type est ignoré (celui de dst reste tel quel) ; un preset garde son identifiant, ou en reçoit un (newId) s'il n'en a pas ou s'il est déjà pris. dst gagne une liste (vide au besoin) par type de `types`. */
+function presetsMerge(dst, src, types, newId) {
+  const isO = o => !!o && typeof o === 'object' && !Array.isArray(o);
+  const sx = v => (typeof v === 'string' ? v : '');
+  const nm = p => sx(p.displayName) || sx(p.name);
+  types.forEach(ty => {
+    const list = (dst[ty] = dst[ty] || []);
+    (isO(src) && Array.isArray(src[ty]) ? src[ty] : []).forEach(p => {
+      if (isO(p) && isO(p.pylons) && nm(p) !== '' && !list.some(q => nm(q) === nm(p))) {
+        const id = (typeof p.id === 'string' && p.id !== '' && !list.some(q => q.id === p.id)) ? p.id : newId();
+        list.push({ id: id, name: nm(p), pylons: p.pylons });
+      }
+    });
+  });
+  types.forEach(ty => (dst[ty] || []).forEach(p => { if (typeof p.id !== 'string' || p.id === '') p.id = newId(); }));
+}
+"""
+
 _JS = r"""
 const SUITE_FORMAT = 'dcs-mission-plan-work-v1';
 /* Les clés de contenu : celles que le fichier de travail porte, que « Ouvrir » remplace et que « Restaurer » rend. fc_presets_v1 (« Mes presets » d'emport du Flight Configurator) n'est PAS une clé de contenu : c'est une bibliothèque personnelle, comme wing_config_v1 ;
@@ -56,10 +90,11 @@ const SUITE_KEYS = ['fc_state_v1', 'flight_set_v1', 'flight_set_v1_illisible', '
 /* Les réglages (unités, cap) : un fichier qui les porte les écrit ; un fichier qui ne les porte pas les laisse tels qu'ils sont au stockage (ils ne sont ni retirés, ni photographiés pour « Restaurer »). */
 const SUITE_SETTINGS = ['mp_units_v1', 'mp_nav_v1'];
 /* L'ancien nom de la clé du briefing : il ne sert qu'à deux reprises, le démarrage du shell (suiteMigrateBriefing) et la lecture d'un fichier de travail d'avant (suiteFileKeys). Rien ne l'écrit plus. */
+const SUITE_PRESET_TYPES = @@PRESET_TYPES@@;       /* les types du Flight Configurator (PAYLOAD_TYPES) */
 const SUITE_OLD_BRIEFING_KEY = 'khr26_briefing_state_v2', SUITE_BRIEFING_KEY = 'briefing_state_v2';
-/* Qui montre une clé illisible, pour le toast d'ouverture : l'outil, ou 'settings' pour les réglages communs (unités, cap, théâtre) ; l'ordre des outils est celui de l'accueil.
+/* Qui montre une clé illisible, pour le toast d'ouverture : l'outil, ou 'settings' pour les réglages communs (unités, cap) ; le théâtre commun est dit au Route Planner ; l'ordre des outils est celui de l'accueil.
    flight_set_v1_illisible n'y est pas : c'est, par construction, la copie d'une fiche qui ne se lit pas. */
-const SUITE_KEY_TOOL = { fc_state_v1: 'fc', flight_set_v1: 'fc', route_set_v1: 'rp', route_state_v1: 'rp', route_layers_v1: 'rp', datacard_state_v1: 'dg', mp_theatre_v1: 'settings', mp_units_v1: 'settings', mp_nav_v1: 'settings', briefing_state_v2: 'bg', recon_state_v1: 'rs' };
+const SUITE_KEY_TOOL = { fc_state_v1: 'fc', flight_set_v1: 'fc', route_set_v1: 'rp', route_state_v1: 'rp', route_layers_v1: 'rp', datacard_state_v1: 'dg', mp_theatre_v1: 'rp', mp_units_v1: 'settings', mp_nav_v1: 'settings', briefing_state_v2: 'bg', recon_state_v1: 'rs' };
 const SUITE_TOOL_ORDER = ['bg', 'rs', 'rp', 'dg', 'fc'];
 const SUITE_TOOL_NAME = { bg: 'Briefing Generator', rs: 'Recon Station', rp: 'Route Planner', dg: 'Datacard Generator', fc: 'Flight Configurator' };
 /* Les deux groupes de l'exemple : leurs outils et leurs clés. mp_units_v1 et mp_nav_v1 (des réglages) ne sont d'aucun groupe : un exemple ne les écrit ni ne les retire ; fc_presets_v1 non plus (voir SUITE_KEYS). Le build vérifie que les deux listes de clés sont disjointes et que leur union avec ces deux clés est SUITE_KEYS. */
@@ -74,18 +109,65 @@ const SUITE_CALM_MS = 400, SUITE_CALM_MAX_MS = 3000, SUITE_CALM_STEP_MS = 50;
 const SUITE = { restore: null, toastN: 0, name: '', at: 0, from: null, busy: false, give: {} };
 
 function suiteGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
-/* Au démarrage du shell, avant qu'un outil s'ouvre : le briefing vit sous son nom neutre. L'ancienne clé seule est copiée à l'octet vers la neuve, puis retirée ; si les deux existent, la neuve gagne et l'ancienne est retirée.
-   Une écriture refusée (stockage plein) ou une copie qui ne se relit pas à l'identique laisse l'ancienne en place : elle n'est retirée qu'une fois la neuve vérifiée, et l'essai est repris au démarrage suivant. */
+/* Au démarrage du shell, avant qu'un outil s'ouvre : le briefing vit sous son nom neutre. Il se DÉPLACE, sans copie (un briefing lourd ne tient pas deux fois au stockage) : la valeur est lue, l'ancienne clé retirée, la neuve écrite et relue ;
+   si cette écriture est refusée (ou ne se relit pas à l'identique), l'ancienne clé est réécrite avec la valeur (la place vient d'être libérée) et l'essai est repris au démarrage suivant. Si les deux clés existent, la neuve gagne et l'ancienne est retirée. */
 function suiteMigrateBriefing() {
+  let v = null;
+  try { v = localStorage.getItem(SUITE_OLD_BRIEFING_KEY); } catch (e) { return; }
+  if (v === null) return;
   try {
-    const old = localStorage.getItem(SUITE_OLD_BRIEFING_KEY);
-    if (old === null) return;
-    if (localStorage.getItem(SUITE_BRIEFING_KEY) === null) {
-      localStorage.setItem(SUITE_BRIEFING_KEY, old);
-      if (localStorage.getItem(SUITE_BRIEFING_KEY) !== old) return;
-    }
+    if (localStorage.getItem(SUITE_BRIEFING_KEY) !== null) { localStorage.removeItem(SUITE_OLD_BRIEFING_KEY); return; }
     localStorage.removeItem(SUITE_OLD_BRIEFING_KEY);
-  } catch (e) { console.warn('[M·P] migration du briefing : ' + e); }
+    try { localStorage.setItem(SUITE_BRIEFING_KEY, v); if (localStorage.getItem(SUITE_BRIEFING_KEY) === v) return; } catch (e) { /* refusée : l'ancienne revient */ }
+    try { localStorage.removeItem(SUITE_BRIEFING_KEY); } catch (e) { /* rien à défaire */ }
+    localStorage.setItem(SUITE_OLD_BRIEFING_KEY, v);
+  } catch (e) { console.error('[M·P] migration du briefing : l\'ancienne clé n\'a pas pu être remise : ' + e); }
+}
+/* Les presets d'emport vivent dans fc_presets_v1 (une bibliothèque personnelle). Au démarrage du shell, avant qu'un outil s'ouvre : les presets qu'un état d'avant porte encore (fc_state_v1.mine) s'ajoutent à fc_presets_v1 par presetsMerge ;
+   la clé est écrite puis relue ; seulement si la relecture est juste, fc_state_v1 est réécrite sans mine. Une écriture refusée ne change rien (retenté au démarrage suivant). Une fc_presets_v1 illisible n'est pas touchée.
+   Un emport d'avant les identifiants (clé « m:<rang> ») se retrouve par le rang dans mine, que le Flight Configurator seul sait lire : tant qu'il y en a un, mine reste dans fc_state_v1 (la migration n'écrit que la bibliothèque). */
+function suiteMigratePresets() {
+  try {
+    const raw = localStorage.getItem('fc_state_v1');
+    if (raw === null) return;
+    let st = null;
+    try { st = JSON.parse(raw); } catch (e) { return; }
+    if (!st || typeof st !== 'object' || Array.isArray(st) || !('mine' in st)) return;
+    const rawP = localStorage.getItem('fc_presets_v1');
+    let lib = null;
+    if (rawP !== null) { try { lib = JSON.parse(rawP); } catch (e) { return; } if (!lib || typeof lib !== 'object' || Array.isArray(lib)) return; }
+    const id = () => 'p' + (function () { try { const a = new Uint32Array(3); crypto.getRandomValues(a); return Array.prototype.map.call(a, x => x.toString(36)).join(''); } catch (e) { return Date.now().toString(36) + Math.random().toString(36).slice(2); } })();
+    const dst = {};
+    presetsMerge(dst, lib ? lib.mine : null, SUITE_PRESET_TYPES, id);
+    const base = JSON.stringify({ v: 1, mine: dst });
+    presetsMerge(dst, st.mine, SUITE_PRESET_TYPES, id);
+    const text = JSON.stringify({ v: 1, mine: dst });
+    if (text !== base) {
+      localStorage.setItem('fc_presets_v1', text);
+      if (localStorage.getItem('fc_presets_v1') !== text) return;
+    }
+    if (/"m:\d+"/.test(raw) || /"m:\d+"/.test(localStorage.getItem('flight_set_v1') || '')) return;
+    delete st.mine;
+    localStorage.setItem('fc_state_v1', JSON.stringify(st));
+  } catch (e) { console.warn('[M·P] migration des presets : ' + e); }
+}
+/* Tant que fc_state_v1 porte encore mine (la migration ci-dessus n'a pas pu se faire), ce que « Ouvrir » ou l'exemple écrivent dans fc_state_v1 le reporte : les presets ne se perdent pas avec la clé remplacée.
+   `val` est la valeur que le geste écrit (texte, ou null si elle manque) ; rend le texte à écrire. */
+function suiteCarryMine(val) {
+  try {
+    const cur = JSON.parse(localStorage.getItem('fc_state_v1') || 'null');
+    if (!cur || typeof cur !== 'object' || Array.isArray(cur) || !cur.mine || typeof cur.mine !== 'object') return val;
+    let o = null;
+    if (typeof val === 'string') { try { o = JSON.parse(val); } catch (e) { return val; } if (!o || typeof o !== 'object' || Array.isArray(o)) return val; }
+    else o = { v: 2 };
+    const id = () => 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2);
+    const dst = {};
+    presetsMerge(dst, cur.mine, SUITE_PRESET_TYPES, id);
+    presetsMerge(dst, o.mine, SUITE_PRESET_TYPES, id);
+    if (!SUITE_PRESET_TYPES.some(ty => dst[ty].length > 0)) return val;       /* aucun preset à reporter : la valeur reste celle du geste */
+    o.mine = dst;
+    return JSON.stringify(o);
+  } catch (e) { return val; }
 }
 /* Les clés d'un fichier de travail, sous les noms d'aujourd'hui : le briefing d'un fichier d'avant (ancien nom) est lu comme la clé neuve ; si le fichier porte les deux, la neuve gagne. */
 function suiteFileKeys(keys) {
@@ -136,6 +218,10 @@ function suiteDefaultName() {
 function suiteWorkText() {
   const now = suiteRead(), keys = {};
   SUITE_KEYS.forEach(k => { if (now[k] !== null) keys[k] = now[k]; });
+  /* les presets d'emport sont personnels : fc_state_v1 part sans mine (le seul texte qui ne part pas à l'octet) */
+  if (typeof keys.fc_state_v1 === 'string') {
+    try { const o = JSON.parse(keys.fc_state_v1); if (o && typeof o === 'object' && !Array.isArray(o) && 'mine' in o) { delete o.mine; keys.fc_state_v1 = JSON.stringify(o); } } catch (e) { /* illisible : tel quel */ }
+  }
   let th = null;
   try { const o = JSON.parse(now.mp_theatre_v1); if (o && typeof o.theatre === 'string' && o.theatre !== '') th = o.theatre; } catch (e) { th = null; }
   return JSON.stringify({ format: SUITE_FORMAT, createdAt: new Date().toISOString(), version: APP_VERSION, theatre: th, keys: keys }, null, 2);
@@ -321,6 +407,8 @@ window.MP_WORK_OPEN_TEXT = function (text, name) {
   /* Les réglages que le fichier ne porte pas restent au stockage : ils sortent de la portée (ni écrits, ni retirés) ; les autres clés absentes sont retirées */
   const keys = SUITE_KEYS.filter(k => typeof fk[k] === 'string' || SUITE_SETTINGS.indexOf(k) < 0), next = {};
   keys.forEach(k => { next[k] = typeof fk[k] === 'string' ? fk[k] : null; });
+  const carried = suiteCarryMine(next.fc_state_v1);
+  if (typeof carried === 'string') next.fc_state_v1 = carried;
   const bad = suiteBadNames(fk);
   return !!suiteDo(next, keys, SUITE_DROP, t('work.opened').replace('{0}', String(name || '')) + (bad ? ' — ' + t('work.bad').replace('{0}', bad) : ''));
 };
@@ -332,6 +420,7 @@ window.MP_WORK_EXAMPLE = function (g) {
   if (typeof adoptStoredLang === 'function') adoptStoredLang();       /* la langue se lit au clic : le drapeau d'un outil n'est relu par le shell qu'à l'ouverture d'un outil */
   const ex = SUITE_EXAMPLES[CURRENT_LANG === 'en' ? 'en' : 'fr'], next = {};
   grp.keys.forEach(k => { next[k] = typeof ex.keys[k] === 'string' ? ex.keys[k] : null; });
+  if (grp.keys.indexOf('fc_state_v1') >= 0) { const carried = suiteCarryMine(next.fc_state_v1); if (typeof carried === 'string') next.fc_state_v1 = carried; }
   return !!suiteDo(next, grp.keys, grp.tools, t('work.example.' + g));
 };
 window.MP_WORK_OPEN = function () {
@@ -374,9 +463,14 @@ _HTML = r"""<div class="ui-modal" id="mp-work-modal" hidden role="dialog" aria-l
 """
 
 
+def build_presets_merge():
+    """La fonction de fusion des presets, délimitée par ses deux commentaires, terminée par un saut de ligne (le shell la porte dans build_block(), le Flight Configurator la reprend telle quelle)."""
+    return PM_BEGIN + PRESETS_MERGE_JS + PM_END + '\n'
+
+
 def build_block():
     """Le script du bloc, délimité par ses deux commentaires, terminé par un saut de ligne."""
-    return BLOCK_BEGIN + _JS + BLOCK_END + '\n'
+    return BLOCK_BEGIN + '\n' + build_presets_merge() + _JS.replace('@@PRESET_TYPES@@', PRESET_TYPES_JS) + BLOCK_END + '\n'
 
 
 def build_html():

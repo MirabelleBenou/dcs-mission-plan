@@ -9265,7 +9265,7 @@ function gsReplaceAll(theatre, flights) {
    2. dans l'ordre de route_set_v1, chaque route du théâtre de la fiche (son champ theatre, sinon celui de route_state_v1 : routeTheatre) qui porte un lien par nom (flight) : les groupes de même nom rogné (casse exacte) et même camp :
       un seul, sans route : il la prend ; un seul qui a déjà une route : rien ; aucun : un groupe neuf sans unité ; plusieurs : rien.
       Pas de route retenue sans théâtre commun : le théâtre de la fiche et celui de route_state_v1 doivent être le même ;
-   3. écrit la fiche (même vide), puis, seulement si elle est écrite, réécrit fc_state_v1 en { v: 2, sel, mine } : un stockage plein laisse fc_state_v1 tel qu'il est. route_set_v1 n'est pas touché.
+   3. écrit la fiche (même vide), puis, seulement si elle est écrite, réécrit fc_state_v1 en { v: 2, sel } (plus mine, sauf celui d'un état d'avant qui y était, que le Flight Configurator verse à fc_presets_v1) : un stockage plein laisse fc_state_v1 tel qu'il est. route_set_v1 n'est pas touché.
    Une fiche qui existe sans se lire est recopiée sous flight_set_v1_illisible (une seule fois) avant d'être remplacée ; si la copie échoue, rien n'est remplacé.
    Un échec pose gsMigrateFailed dans fc_state_v1 ; une migration retentée ne fait alors que l'étape 1 (les liens par nom ne sont posés qu'au premier essai réussi d'un module qui n'a jamais échoué).
    Rend vrai si la fiche a été écrite. */
@@ -9310,7 +9310,9 @@ function gsMigrate(packFn) {
   if (!gsWrite(theatre, flights)) return gsMigrateFail();
   if (gsIsObj(fc)) {
     const sel = st && gsIsObj(st.sel) ? st.sel : (gsIsObj(fc.sel) ? fc.sel : { f: 0, u: 0 });
-    gsLsSet(GS_KEY_FC, JSON.stringify({ v: 2, sel: sel, mine: gsIsObj(fc.mine) ? fc.mine : {} }));
+    const out = { v: 2, sel: sel };
+    if (gsIsObj(fc.mine)) out.mine = fc.mine;       /* les presets d'un état d'avant restent tels quels s'ils y étaient ; jamais de mine vide */
+    gsLsSet(GS_KEY_FC, JSON.stringify(out));
   }
   return true;
 }
@@ -9336,12 +9338,32 @@ function gsClearAll() {
   if (gsIsObj(dg)) { dg.cards = []; set(GS_KEY_DG, JSON.stringify(dg)); }
   else del(GS_KEY_DG);
   const fc = gsJson(GS_KEY_FC);
-  if (gsIsObj(fc)) set(GS_KEY_FC, JSON.stringify({ v: 2, sel: { f: 0, u: 0 }, mine: gsIsObj(fc.mine) ? fc.mine : {} }));
+  if (gsIsObj(fc)) { const out = { v: 2, sel: { f: 0, u: 0 } }; if (gsIsObj(fc.mine)) out.mine = fc.mine; set(GS_KEY_FC, JSON.stringify(out)); }       // mine seulement s'il y était (état d'avant) : les presets sont dans fc_presets_v1
   const g = gsRead();
   if (!gsWrite(g ? g.theatre : '', [])) ok = false;
   return ok;
 }
 /* ===== FIN DES GROUPES PARTAGÉS ===== */
+
+/* ===== FUSION DES PRESETS D'EMPORT ===== */
+/* « Mes presets » d'emport : { <type>: [ { id, name, pylons } ] }. La règle de fusion, la même pour le shell (migration au démarrage) et le Flight Configurator (mergeMine) : les presets de src s'ajoutent à dst sans rien remplacer ;
+   un nom déjà pris pour ce type est ignoré (celui de dst reste tel quel) ; un preset garde son identifiant, ou en reçoit un (newId) s'il n'en a pas ou s'il est déjà pris. dst gagne une liste (vide au besoin) par type de `types`. */
+function presetsMerge(dst, src, types, newId) {
+  const isO = o => !!o && typeof o === 'object' && !Array.isArray(o);
+  const sx = v => (typeof v === 'string' ? v : '');
+  const nm = p => sx(p.displayName) || sx(p.name);
+  types.forEach(ty => {
+    const list = (dst[ty] = dst[ty] || []);
+    (isO(src) && Array.isArray(src[ty]) ? src[ty] : []).forEach(p => {
+      if (isO(p) && isO(p.pylons) && nm(p) !== '' && !list.some(q => nm(q) === nm(p))) {
+        const id = (typeof p.id === 'string' && p.id !== '' && !list.some(q => q.id === p.id)) ? p.id : newId();
+        list.push({ id: id, name: nm(p), pylons: p.pylons });
+      }
+    });
+  });
+  types.forEach(ty => (dst[ty] || []).forEach(p => { if (typeof p.id !== 'string' || p.id === '') p.id = newId(); }));
+}
+/* ===== FIN DE LA FUSION DES PRESETS D'EMPORT ===== */
 
 /* ===== IMPORT COMMUN (HQ, briefing, fichier) ===== */
 /* Les types que la suite gère, et les canaux par poste (sonde des .miz) : les postes que la mission pré-règle. Le poste HF des deux hélicoptères, que la mission ne pré-règle pas, est dans RADIO_FREE (radio_bands_block.py). */
@@ -11568,6 +11590,7 @@ const I18N = {
   "cmp.save.err.dup": "Un preset de ce nom existe déjà pour le {0}.",
   "cmp.save.err.none": "Aucune arme posée : rien à enregistrer.",
   "cmp.save.ok": "Preset « {0} » gardé dans « mes presets ».",
+  "fc.preset.unsaved": "Preset non enregistré : le stockage du navigateur est plein.",
   "cmp.clear": "Vider l’emport",
   "lo.fuel": "Carburant ({u})",
   "lo.flare": "Leurres",
@@ -11864,6 +11887,7 @@ const I18N = {
   "cmp.save.err.dup": "A preset with this name already exists for the {0}.",
   "cmp.save.err.none": "No weapon placed: nothing to save.",
   "cmp.save.ok": "Preset “{0}” kept in “my presets”.",
+  "fc.preset.unsaved": "Preset not saved: the browser storage is full.",
   "cmp.clear": "Empty the loadout",
   "lo.fuel": "Fuel ({u})",
   "lo.flare": "Flares",
@@ -12102,19 +12126,28 @@ function writeState() {
   try { ok = gsPush(); } catch (e) { ok = false; }
   try { tcAdopt(); } catch (e) { /* l'écran marche sans */ }
   // fc_state_v1 ne perd ses groupes qu'une fois la fiche écrite avec eux : sinon il reste à l'état d'avant (v1, state.flights) et la fiche est retentée à la prochaine écriture
-  try { lsSet(KEY_STATE, JSON.stringify(ok ? { v: 2, sel: S.sel } : fcV1Doc())); } catch (e) { /* l'écran marche sans */ }
-  presetsWrite();
+  try { lsSet(KEY_STATE, JSON.stringify(ok ? fcStateDoc() : fcV1Doc())); } catch (e) { /* l'écran marche sans */ }
 }
 
 // ----- Mes presets : une bibliothèque personnelle, hors du fichier de travail -----
 // fc_presets_v1 = { v: 1, mine: { <type>: [ { id, name, pylons } ] } }, écrite par ce module seul, à chaque changement de la bibliothèque (enregistrer, charger des .lua, supprimer un preset). Elle n'est ni dans le fichier de travail,
 // ni dans la portée de « Ouvrir », de l'exemple, de « Tout effacer » ou de « Restaurer » (le shell ne la connaît pas). PR.text : le texte que la clé porte, tel que ce module l'a lu ou écrit (rien ne s'écrit s'il n'a pas changé).
-const PR = { text: null };
+const PR = { text: null, failed: null, loud: false };
 function presetsText() { return JSON.stringify({ v: 1, mine: LIB.mine }); }
+// Rend vrai si fc_presets_v1 porte la bibliothèque courante (écrite, puis relue juste). Un refus du stockage ne perd rien : le preset reste en mémoire, fc_state_v1 garde alors mine (fcStateDoc, fcV1Doc), l'écriture est retentée
+// au prochain changement, et l'utilisateur est prévenu une fois par bibliothèque refusée (une fois l'écran démarré).
 function presetsWrite() {
   const text = presetsText();
-  if (text === PR.text) return;
-  try { localStorage.setItem(KEY_PRESETS, text); PR.text = text; } catch (e) { /* l'écran marche sans : l'écriture est retentée au prochain changement */ }
+  if (text === PR.text) return true;
+  try { localStorage.setItem(KEY_PRESETS, text); if (localStorage.getItem(KEY_PRESETS) === text) { PR.text = text; PR.failed = null; return true; } } catch (e) { /* refusé : voir plus bas */ }
+  if (PR.loud && PR.failed !== text) { PR.failed = text; showToast(t('fc.preset.unsaved'), { type: 'err' }); }
+  return false;
+}
+// Le fc_state_v1 d'aujourd'hui : { v: 2, sel } ; la bibliothèque est écrite avant, et fc_state_v1 ne perd mine qu'une fois fc_presets_v1 écrite et relue juste
+function fcStateDoc() {
+  const d = { v: 2, sel: S.sel };
+  if (!presetsWrite()) d.mine = LIB.mine;
+  return d;
 }
 // Au démarrage : la bibliothèque est celle de fc_presets_v1 ; les presets que fc_state_v1 porte encore (un état d'avant, un fichier de travail d'avant ouvert) s'y ajoutent sans rien remplacer (mergeMine), et la clé s'écrit si elle a changé.
 function presetsLoad(saved) {
@@ -12123,7 +12156,7 @@ function presetsLoad(saved) {
   if (isObj(o)) mergeMine(o.mine);
   PR.text = presetsText();
   if (isObj(saved)) mergeMine(saved.mine);
-  presetsWrite();
+  presetsWrite();       // écrite d'abord ; le premier refus ne dit rien tant que l'écran n'est pas démarré (PR.loud)
 }
 // Un autre onglet ou une autre copie du module a écrit fc_presets_v1 : la bibliothèque la suit, sans rien réécrire. Une saisie en attente ici garde ses presets (ajoutés, pas remplacés).
 function presetsFollow() {
@@ -12138,6 +12171,7 @@ function presetsFollow() {
 // L'état d'avant (v1, groupes compris) ; gsMigrateFailed (une migration a déjà échoué) est gardé : la migration retentée ne refait que l'étape 1
 function fcV1Doc() {
   const d = { v: 1, state: S };
+  if (!presetsWrite()) d.mine = LIB.mine;
   if (GS.mf) d.gsMigrateFailed = true;
   return d;
 }
@@ -12244,7 +12278,7 @@ function gsAdopt(quiet) {
   gsMarkAll();
   if (gsMarkRaw()) gsFixRaw();       // l'emport brut que la fiche portait est converti et écrit dès l'adoption
   GS.base = {};
-  try { lsSet(KEY_STATE, JSON.stringify({ v: 2, sel: S.sel })); } catch (e) { /* l'écran marche sans */ }
+  try { lsSet(KEY_STATE, JSON.stringify(fcStateDoc())); } catch (e) { /* l'écran marche sans */ }
   if (!quiet) renderAll();
   return true;
 }
@@ -14165,19 +14199,10 @@ function shareOrDownload(blob, fname, mime, title, download) {
   download(blob, fname);
 }
 
-// Mes presets d'un fichier de travail rejoignent les miens ; un nom déjà pris est ignoré. Un preset garde son identifiant, ou en reçoit un.
+// Mes presets d'un fichier de travail ou d'un état d'avant rejoignent les miens : la règle est celle du shell (presetsMerge, bloc de fusion des presets) — ajout seul, un nom déjà pris est ignoré, l'identifiant est gardé ou donné.
 function mergeMine(mine) {
   if (!isObj(mine)) return;
-  PAYLOAD_TYPES.forEach(ty => {
-    const list = (LIB.mine[ty] = LIB.mine[ty] || []);
-    (Array.isArray(mine[ty]) ? mine[ty] : []).forEach(p => {
-      if (isObj(p) && isObj(p.pylons) && presetName(p) !== '' && !list.some(q => presetName(q) === presetName(p))) {
-        const id = (typeof p.id === 'string' && p.id !== '' && !list.some(q => q.id === p.id)) ? p.id : newPresetId();
-        list.push({ id: id, name: presetName(p), pylons: p.pylons });
-      }
-    });
-  });
-  PAYLOAD_TYPES.forEach(ty => (LIB.mine[ty] || []).forEach(p => { if (typeof p.id !== 'string' || p.id === '') p.id = newPresetId(); }));
+  presetsMerge(LIB.mine, mine, PAYLOAD_TYPES, newPresetId);
 }
 // Un emport d'un état d'avant garde la clé « m:<rang> » de son preset : elle est remplacée par l'identifiant du preset de ce rang dans `mine` (retrouvé par son nom).
 function remapPresetKeys(mine) {
@@ -14719,6 +14744,7 @@ function init() {
     if (e.key === KEY_WING || e.key === KEY_HQ_MISSION || e.key === null) { refreshLiveryLists(); refreshSummaries(); }
   });
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushWork(); else { gsPull(); routeTakeover(); } });
+  PR.loud = true;
 }
 init();
 

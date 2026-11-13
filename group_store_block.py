@@ -236,7 +236,7 @@ function gsReplaceAll(theatre, flights) {
    2. dans l'ordre de route_set_v1, chaque route du théâtre de la fiche (son champ theatre, sinon celui de route_state_v1 : routeTheatre) qui porte un lien par nom (flight) : les groupes de même nom rogné (casse exacte) et même camp :
       un seul, sans route : il la prend ; un seul qui a déjà une route : rien ; aucun : un groupe neuf sans unité ; plusieurs : rien.
       Pas de route retenue sans théâtre commun : le théâtre de la fiche et celui de route_state_v1 doivent être le même ;
-   3. écrit la fiche (même vide), puis, seulement si elle est écrite, réécrit fc_state_v1 en { v: 2, sel, mine } : un stockage plein laisse fc_state_v1 tel qu'il est. route_set_v1 n'est pas touché.
+   3. écrit la fiche (même vide), puis, seulement si elle est écrite, réécrit fc_state_v1 en { v: 2, sel } (plus mine, sauf celui d'un état d'avant qui y était, que le Flight Configurator verse à fc_presets_v1) : un stockage plein laisse fc_state_v1 tel qu'il est. route_set_v1 n'est pas touché.
    Une fiche qui existe sans se lire est recopiée sous flight_set_v1_illisible (une seule fois) avant d'être remplacée ; si la copie échoue, rien n'est remplacé.
    Un échec pose gsMigrateFailed dans fc_state_v1 ; une migration retentée ne fait alors que l'étape 1 (les liens par nom ne sont posés qu'au premier essai réussi d'un module qui n'a jamais échoué).
    Rend vrai si la fiche a été écrite. */
@@ -281,7 +281,9 @@ function gsMigrate(packFn) {
   if (!gsWrite(theatre, flights)) return gsMigrateFail();
   if (gsIsObj(fc)) {
     const sel = st && gsIsObj(st.sel) ? st.sel : (gsIsObj(fc.sel) ? fc.sel : { f: 0, u: 0 });
-    gsLsSet(GS_KEY_FC, JSON.stringify({ v: 2, sel: sel, mine: gsIsObj(fc.mine) ? fc.mine : {} }));
+    const out = { v: 2, sel: sel };
+    if (gsIsObj(fc.mine)) out.mine = fc.mine;       /* les presets d'un état d'avant restent tels quels s'ils y étaient ; jamais de mine vide */
+    gsLsSet(GS_KEY_FC, JSON.stringify(out));
   }
   return true;
 }
@@ -307,7 +309,7 @@ function gsClearAll() {
   if (gsIsObj(dg)) { dg.cards = []; set(GS_KEY_DG, JSON.stringify(dg)); }
   else del(GS_KEY_DG);
   const fc = gsJson(GS_KEY_FC);
-  if (gsIsObj(fc)) set(GS_KEY_FC, JSON.stringify({ v: 2, sel: { f: 0, u: 0 }, mine: gsIsObj(fc.mine) ? fc.mine : {} }));
+  if (gsIsObj(fc)) { const out = { v: 2, sel: { f: 0, u: 0 } }; if (gsIsObj(fc.mine)) out.mine = fc.mine; set(GS_KEY_FC, JSON.stringify(out)); }       // mine seulement s'il y était (état d'avant) : les presets sont dans fc_presets_v1
   const g = gsRead();
   if (!gsWrite(g ? g.theatre : '', [])) ok = false;
   return ok;

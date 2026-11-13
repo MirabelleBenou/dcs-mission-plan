@@ -29,7 +29,7 @@ import sys
 from shell_only_block import build_block as build_shell_only_block, BLOCK_BEGIN as SHELL_ONLY_BEGIN, BLOCK_END as SHELL_ONLY_END
 from messages_block import build_block as build_messages_block, build_css as build_messages_css
 from ui_block import build_css as build_ui_css, fingerprint as ui_fingerprint
-from suite_file_block import build_block as build_suite_file_block, build_html as build_suite_file_html, build_css as build_suite_file_css, THEME_VARS as SUITE_THEME_VARS
+from suite_file_block import build_presets_merge, build_block as build_suite_file_block, build_html as build_suite_file_html, build_css as build_suite_file_css, THEME_VARS as SUITE_THEME_VARS
 import group_store_block
 
 CONTRAST_CSS = r"""
@@ -1574,6 +1574,7 @@ function tbmScrolled(e) {{
     /* La mission d'HQ ne vit que tant que son .miz est ouvert : à son démarrage le shell efface la clé, avant toute lecture et avant qu'un module s'ouvre */
     try {{ localStorage.removeItem('mission_snapshot_v1'); }} catch(e) {{}}
     suiteMigrateBriefing();                              /* le briefing sous son nom neutre, avant qu'un outil s'ouvre */
+    suiteMigratePresets();                               /* les presets d'emport d'un état d'avant passent à leur bibliothèque, avant qu'un outil s'ouvre */
     initLang();
     /* Thème : lire localStorage */
     try {{
@@ -1699,8 +1700,12 @@ def main():
     old_name = re.search(r"const SUITE_OLD_BRIEFING_KEY = '([^']+)'", shell_text)
     if 'briefing_state_v2' not in suite_keys or not old_name or old_name.group(1) in suite_keys or shell_text.count(old_name.group(1)) != 1:
         raise SystemExit("[ERREUR] le briefing n'est pas sous son nom neutre, ou l'ancien nom figure ailleurs que dans sa constante — build arrêté")
-    if "suiteMigrateBriefing();" not in html.split("function init() {", 1)[1].split("initLang();", 1)[0]:
-        raise SystemExit("[ERREUR] init() ne migre pas le briefing avant initLang() — build arrêté")
+    init_head = html.split("function init() {", 1)[1].split("initLang();", 1)[0]
+    if "suiteMigrateBriefing();" not in init_head or "suiteMigratePresets();" not in init_head:
+        raise SystemExit("[ERREUR] init() ne migre pas le briefing et les presets avant initLang() — build arrêté")
+    # La règle de fusion des presets est une seule fonction (suite_file_block.build_presets_merge) : une fois dans le shell, telle quelle ; le Flight Configurator la reprend et le dit à son build
+    if shell_text.count(build_presets_merge()) != 1:
+        raise SystemExit("[ERREUR] la fusion des presets ne figure pas une fois, telle quelle, dans le shell — build arrêté")
     print("  [OK] fc_presets_v1 hors de SUITE_KEYS, GS_CONTENT_KEYS, des groupes et des exemples ; briefing sous briefing_state_v2, ancien nom dans sa seule constante, migré en tête de init()")
     # Les textes de l'exemple : ceux de la table, dans l'accueil (I18N : menu, infobulle, libellé) et dans le toast
     for g in ('mc', 'fl'):

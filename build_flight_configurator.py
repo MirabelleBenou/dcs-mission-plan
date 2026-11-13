@@ -33,6 +33,7 @@ from import_block import build_block as build_import_block, build_css as build_i
 from messages_block import build_block as build_messages_block, build_css as build_messages_css
 from ui_block import build_tbm_css, build_tbm_block, build_block as build_ui_block, build_css as build_ui_css, verify as ui_verify, verify_bar as ui_verify_bar, fingerprint as ui_fingerprint
 from shell_only_block import build_block as build_shell_only_block
+from suite_file_block import build_presets_merge
 # La garde du module seul : premier élément du <body> (build_mission_plan.py la vérifie dans le dist/)
 SHELL_ONLY_TAG = '<script data-lang-key="lang_v1">\n' + build_shell_only_block() + '</script>\n'
 
@@ -639,6 +640,7 @@ I18N_FR = {
     'cmp.save.err.dup': 'Un preset de ce nom existe déjà pour le {0}.',
     'cmp.save.err.none': 'Aucune arme posée : rien à enregistrer.',
     'cmp.save.ok': 'Preset « {0} » gardé dans « mes presets ».',
+    'fc.preset.unsaved': 'Preset non enregistré : le stockage du navigateur est plein.',
     'cmp.clear': 'Vider l’emport',
 
     'lo.fuel': 'Carburant ({u})',
@@ -957,6 +959,7 @@ I18N_EN = {
     'cmp.save.err.dup': 'A preset with this name already exists for the {0}.',
     'cmp.save.err.none': 'No weapon placed: nothing to save.',
     'cmp.save.ok': 'Preset “{0}” kept in “my presets”.',
+    'fc.preset.unsaved': 'Preset not saved: the browser storage is full.',
     'cmp.clear': 'Empty the loadout',
 
     'lo.fuel': 'Fuel ({u})',
@@ -2122,19 +2125,28 @@ function writeState() {
   try { ok = gsPush(); } catch (e) { ok = false; }
   try { tcAdopt(); } catch (e) { /* l'écran marche sans */ }
   // fc_state_v1 ne perd ses groupes qu'une fois la fiche écrite avec eux : sinon il reste à l'état d'avant (v1, state.flights) et la fiche est retentée à la prochaine écriture
-  try { lsSet(KEY_STATE, JSON.stringify(ok ? { v: 2, sel: S.sel } : fcV1Doc())); } catch (e) { /* l'écran marche sans */ }
-  presetsWrite();
+  try { lsSet(KEY_STATE, JSON.stringify(ok ? fcStateDoc() : fcV1Doc())); } catch (e) { /* l'écran marche sans */ }
 }
 
 // ----- Mes presets : une bibliothèque personnelle, hors du fichier de travail -----
 // fc_presets_v1 = { v: 1, mine: { <type>: [ { id, name, pylons } ] } }, écrite par ce module seul, à chaque changement de la bibliothèque (enregistrer, charger des .lua, supprimer un preset). Elle n'est ni dans le fichier de travail,
 // ni dans la portée de « Ouvrir », de l'exemple, de « Tout effacer » ou de « Restaurer » (le shell ne la connaît pas). PR.text : le texte que la clé porte, tel que ce module l'a lu ou écrit (rien ne s'écrit s'il n'a pas changé).
-const PR = { text: null };
+const PR = { text: null, failed: null, loud: false };
 function presetsText() { return JSON.stringify({ v: 1, mine: LIB.mine }); }
+// Rend vrai si fc_presets_v1 porte la bibliothèque courante (écrite, puis relue juste). Un refus du stockage ne perd rien : le preset reste en mémoire, fc_state_v1 garde alors mine (fcStateDoc, fcV1Doc), l'écriture est retentée
+// au prochain changement, et l'utilisateur est prévenu une fois par bibliothèque refusée (une fois l'écran démarré).
 function presetsWrite() {
   const text = presetsText();
-  if (text === PR.text) return;
-  try { localStorage.setItem(KEY_PRESETS, text); PR.text = text; } catch (e) { /* l'écran marche sans : l'écriture est retentée au prochain changement */ }
+  if (text === PR.text) return true;
+  try { localStorage.setItem(KEY_PRESETS, text); if (localStorage.getItem(KEY_PRESETS) === text) { PR.text = text; PR.failed = null; return true; } } catch (e) { /* refusé : voir plus bas */ }
+  if (PR.loud && PR.failed !== text) { PR.failed = text; showToast(t('fc.preset.unsaved'), { type: 'err' }); }
+  return false;
+}
+// Le fc_state_v1 d'aujourd'hui : { v: 2, sel } ; la bibliothèque est écrite avant, et fc_state_v1 ne perd mine qu'une fois fc_presets_v1 écrite et relue juste
+function fcStateDoc() {
+  const d = { v: 2, sel: S.sel };
+  if (!presetsWrite()) d.mine = LIB.mine;
+  return d;
 }
 // Au démarrage : la bibliothèque est celle de fc_presets_v1 ; les presets que fc_state_v1 porte encore (un état d'avant, un fichier de travail d'avant ouvert) s'y ajoutent sans rien remplacer (mergeMine), et la clé s'écrit si elle a changé.
 function presetsLoad(saved) {
@@ -2143,7 +2155,7 @@ function presetsLoad(saved) {
   if (isObj(o)) mergeMine(o.mine);
   PR.text = presetsText();
   if (isObj(saved)) mergeMine(saved.mine);
-  presetsWrite();
+  presetsWrite();       // écrite d'abord ; le premier refus ne dit rien tant que l'écran n'est pas démarré (PR.loud)
 }
 // Un autre onglet ou une autre copie du module a écrit fc_presets_v1 : la bibliothèque la suit, sans rien réécrire. Une saisie en attente ici garde ses presets (ajoutés, pas remplacés).
 function presetsFollow() {
@@ -2158,6 +2170,7 @@ function presetsFollow() {
 // L'état d'avant (v1, groupes compris) ; gsMigrateFailed (une migration a déjà échoué) est gardé : la migration retentée ne refait que l'étape 1
 function fcV1Doc() {
   const d = { v: 1, state: S };
+  if (!presetsWrite()) d.mine = LIB.mine;
   if (GS.mf) d.gsMigrateFailed = true;
   return d;
 }
@@ -2264,7 +2277,7 @@ function gsAdopt(quiet) {
   gsMarkAll();
   if (gsMarkRaw()) gsFixRaw();       // l'emport brut que la fiche portait est converti et écrit dès l'adoption
   GS.base = {};
-  try { lsSet(KEY_STATE, JSON.stringify({ v: 2, sel: S.sel })); } catch (e) { /* l'écran marche sans */ }
+  try { lsSet(KEY_STATE, JSON.stringify(fcStateDoc())); } catch (e) { /* l'écran marche sans */ }
   if (!quiet) renderAll();
   return true;
 }
@@ -4185,19 +4198,10 @@ function shareOrDownload(blob, fname, mime, title, download) {
   download(blob, fname);
 }
 
-// Mes presets d'un fichier de travail rejoignent les miens ; un nom déjà pris est ignoré. Un preset garde son identifiant, ou en reçoit un.
+// Mes presets d'un fichier de travail ou d'un état d'avant rejoignent les miens : la règle est celle du shell (presetsMerge, bloc de fusion des presets) — ajout seul, un nom déjà pris est ignoré, l'identifiant est gardé ou donné.
 function mergeMine(mine) {
   if (!isObj(mine)) return;
-  PAYLOAD_TYPES.forEach(ty => {
-    const list = (LIB.mine[ty] = LIB.mine[ty] || []);
-    (Array.isArray(mine[ty]) ? mine[ty] : []).forEach(p => {
-      if (isObj(p) && isObj(p.pylons) && presetName(p) !== '' && !list.some(q => presetName(q) === presetName(p))) {
-        const id = (typeof p.id === 'string' && p.id !== '' && !list.some(q => q.id === p.id)) ? p.id : newPresetId();
-        list.push({ id: id, name: presetName(p), pylons: p.pylons });
-      }
-    });
-  });
-  PAYLOAD_TYPES.forEach(ty => (LIB.mine[ty] || []).forEach(p => { if (typeof p.id !== 'string' || p.id === '') p.id = newPresetId(); }));
+  presetsMerge(LIB.mine, mine, PAYLOAD_TYPES, newPresetId);
 }
 // Un emport d'un état d'avant garde la clé « m:<rang> » de son preset : elle est remplacée par l'identifiant du preset de ce rang dans `mine` (retrouvé par son nom).
 function remapPresetKeys(mine) {
@@ -4739,6 +4743,7 @@ function init() {
     if (e.key === KEY_WING || e.key === KEY_HQ_MISSION || e.key === null) { refreshLiveryLists(); refreshSummaries(); }
   });
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushWork(); else { gsPull(); routeTakeover(); } });
+  PR.loud = true;
 }
 init();
 """
@@ -4775,7 +4780,7 @@ def build_html():
                   .replace('@@OSWALD_500@@', A['OSWALD_500'])
                   .replace('@@OSWALD_700@@', A['OSWALD_700']))
     js = (build_radio_block() + '\n' + build_radio_bands_block() + '\n' + tables_js() + '\n' + build_payload_block() + '\n' + build_payload_rules_block() + '\n' + PAD2_JS + '\n' + COORD_BLOCK + READNUM_BLOCK + build_magvar_block() + '\n' + build_projection_block() + '\n'
-          + build_route_pack_block() + '\n' + build_route_theatre_block() + '\n' + build_group_store_block() + '\n' + build_import_block() + '\n' + build_messages_block() + '\n' + build_ui_block() + '\n' + JS_TBM.replace('@@TBM_JS@@\n', build_tbm_block()) + '\n' + app_js())
+          + build_route_pack_block() + '\n' + build_route_theatre_block() + '\n' + build_group_store_block() + '\n' + build_presets_merge() + '\n' + build_import_block() + '\n' + build_messages_block() + '\n' + build_ui_block() + '\n' + JS_TBM.replace('@@TBM_JS@@\n', build_tbm_block()) + '\n' + app_js())
     return ('<!DOCTYPE html>\n<html lang="fr">\n<head>\n<meta charset="UTF-8">\n'
             '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">\n'
             '<meta name="theme-color" content="#1a1e10">\n<title>Flight Configurator — Mission Plan</title>\n<style>\n'
@@ -4886,7 +4891,7 @@ def check(html):
     ok(not re.search(r'fetch\(|XMLHttpRequest|WebSocket|sendBeacon|<script[^>]*\bsrc=|<link[^>]*href=["\']http', own), 'aucune requête réseau (hors JSZip, qui n\'en fait pas)')
     ok(not re.search(r'font-weight:\s*(600|800|900|bold)|font:\s*(600|800|900|bold)\b', own), 'aucune graisse sans sa face (R295)')
     ok('/* ===== POSTES RADIO (COMME AU COCKPIT) ===== */' in html and '/* ===== EMPORT (PRESETS ET PAYLOAD) ===== */' in html, 'blocs partagés présents')
-    for label, blk in (('bandes et postes non pré-réglés', build_radio_bands_block()), ('déclinaison', build_magvar_block()), ('projections', build_projection_block()), ('points de paquet', build_route_pack_block()), ('théâtre d\'une route', build_route_theatre_block()), ('groupes partagés', build_group_store_block()),
+    for label, blk in (('bandes et postes non pré-réglés', build_radio_bands_block()), ('déclinaison', build_magvar_block()), ('projections', build_projection_block()), ('points de paquet', build_route_pack_block()), ('théâtre d\'une route', build_route_theatre_block()), ('groupes partagés', build_group_store_block()), ('fusion des presets (celle du shell)', build_presets_merge()),
                        ('import commun (script)', build_import_block()), ('import commun (feuille)', build_import_css()), ('import commun (fenêtre)', build_import_html()),
                        ('messages communs (script)', build_messages_block()), ('messages communs (feuille)', build_messages_css()),
                        ('interface commune (script)', build_ui_block()), ('interface commune (feuille)', build_ui_css())):

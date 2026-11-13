@@ -63,7 +63,7 @@ The Flight Configurator is the **Flight Lead's** tool: it prepares one or more f
 - **Loadout** — built on the aircraft's **front view**: a weapon list per station, twin stations, total mass, and fuel, flares, chaff and gun brought back to the aircraft's limits; start from **My presets** (loaded from `.lua` preset files, or kept from your own loadouts)
 - **Livery** — free text, with suggestions from the liveries already seen for that aircraft type
 - **Import** — the mission loaded in HQ or a flight package (`.json` or `.zip`, including the Route Planner's), with four boxes per flight: Route, Radios, Loadout, Livery; the route is carried as is, never drawn
-- **Open / Save** — **Save** writes all the Mission Plan work, your flights and presets included, into the suite's work file, and **Open ▾ › Open a work file…** brings it back (an old Flight Configurator file still opens); **Export** writes the package (parts left empty stay untouched in HQ)
+- **Open / Save** — **Save** writes all the Mission Plan work, your flights included (your loadout presets stay in your browser), into the suite's work file, and **Open ▾ › Open a work file…** brings it back (an old Flight Configurator file still opens); **Export** writes the package (parts left empty stay untouched in HQ)
 - **Reusable loadout engine** — `payload_block.py` reads preset files and builds a `.miz` `payload`, with no DOM and no network; other modules can take it as is
 - **4 themes, FR/EN**, touch-first, fully offline
 
