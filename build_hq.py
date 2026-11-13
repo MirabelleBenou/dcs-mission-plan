@@ -1521,6 +1521,7 @@ const I18N = {{
     'toast.wingReset':          'Wing r\u00e9initialis\u00e9 \u2713',
     'toast.wingFileError':      '\u26a0 Lecture du fichier impossible',
     'toast.wingStorageFull':    '\u26a0 Espace de stockage satur\u00e9 \u2014 exportez votre wing puis r\u00e9initialisez',
+    'wing.save.err':            '\u26a0 Configuration Wing non enregistr\u00e9e dans le navigateur : stockage plein ou refus\u00e9',
     'msg.jsonUnreadable':       '\u26a0 Fichier illisible : ce n\u2019est pas du JSON.',
     'msg.notWingConfig':        '\u26a0 Ce fichier n\u2019est pas une configuration wing.',
     'msg.wingIncomplete':       '\u26a0 Configuration wing incompl\u00e8te : {{0}} champ(s) manquant(s) ou invalide(s).',
@@ -1946,6 +1947,7 @@ const I18N = {{
     'toast.wingReset':          'Wing reset \u2713',
     'toast.wingFileError':      '\u26a0 Cannot read file',
     'toast.wingStorageFull':    '\u26a0 Storage full \u2014 export your wing then reset',
+    'wing.save.err':            '\u26a0 Wing configuration not saved in the browser: storage full or refused',
     'msg.jsonUnreadable':       '\u26a0 Unreadable file: this is not JSON.',
     'msg.notWingConfig':        '\u26a0 This file is not a wing configuration.',
     'msg.wingIncomplete':       '\u26a0 Incomplete wing configuration: {{0}} missing or invalid field(s).',
@@ -2453,6 +2455,16 @@ function persistWingConfig() {{
       }}
     }}
   }}, 200);
+}}
+
+/* Écrit la configuration tout de suite, sans attendre la minuterie : l'import ne dit « chargée » qu'une fois l'écriture faite. Faux si le stockage la refuse (plein ou interdit) ;
+   la configuration reste alors en mémoire, utilisable à l'écran jusqu'au rechargement. */
+function persistWingConfigNow() {{
+  if (_wingPersistTimer) {{ clearTimeout(_wingPersistTimer); _wingPersistTimer = null; }}
+  try {{ localStorage.setItem(KEY_WING, JSON.stringify(wingConfig)); }}
+  catch(e) {{ console.warn('[Wing] Erreur persistance :', e); return false; }}
+  hqWingOrder();
+  return true;
 }}
 
 // ── Wing size counter ──────────────────────────────────────────
@@ -3158,9 +3170,10 @@ function importWingConfig(file) {{
     }}
     try {{
       wingConfig = parsed;
-      persistWingConfig();
+      const saved = persistWingConfigNow();
       renderWingEditor();
-      showToast(t('toast.wingLoaded') + escapeHtml(wingConfig.wing.shortName), {{ type: 'ok' }});
+      if (saved) showToast(t('toast.wingLoaded') + escapeHtml(wingConfig.wing.shortName), {{ type: 'ok' }});
+      else showToast(t('wing.save.err'), {{ type: 'err' }});
     }} catch (e) {{
       console.warn('[HQ] configuration wing : enregistrement ou rendu impossible', e);
       showToast(t('msg.failed'), {{ type: 'err' }});

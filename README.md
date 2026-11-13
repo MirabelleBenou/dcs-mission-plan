@@ -4,11 +4,13 @@
 ![Intro-image](docs/screenshots/landing.jpg)
 > Prepare your DCS World missions end to end — a suite of tools behind one operational landing page. **Use it online, or download a single offline file.**
 
-![License](https://img.shields.io/badge/license-MIT-blue)
+![License](https://img.shields.io/badge/license-AGPL--3.0--or--later-blue)
 ![Platform](https://img.shields.io/badge/platform-Web-green)
 ![Offline](https://img.shields.io/badge/offline-yes-success)
 ![Tablet & mobile](https://img.shields.io/badge/tablet%20%26%20mobile-ready-orange)
 ![Tools](https://img.shields.io/badge/tools-7%20live-brown)
+
+> Aircraft, airfield and map data come from **[pydcs](https://github.com/pydcs/dcs)** (LGPL-3.0-or-later) — many thanks to its authors.
 
 🌐 **[Use it online »](https://mirabellebenou.github.io/dcs-mission-plan/)** &nbsp;·&nbsp; 💾 **[Download the offline file »](../../releases)**
 
@@ -54,7 +56,7 @@ HQ is the suite's **command post**. Its main job today is the **wing hub**: set 
 
 ### ✈️ Flight Configurator — in detail
 
-The Flight Configurator is the **Flight Lead's** tool: it prepares one or more flights and exports them as a **flight package** (`dcs-flight-package-v1`) that the Mission Commander applies to a mission with HQ. It runs for the **Mi-24P, Mi-8MT, F-4E-45MC and Mirage F1EE**.
+The Flight Configurator is the **Flight Lead's** tool: it prepares one or more flights and exports them as a **flight package** (`dcs-flight-package-v2`; the v1 packages are still read) that the Mission Commander applies to a mission with HQ. It runs for the **Mi-24P, Mi-8MT, F-4E-45MC and Mirage F1EE**.
 
 - **Flights** — group name, aircraft, coalition, up to four units (name, call sign, onboard number, livery); flights fold into a one-line summary
 - **Radios** — every radio of the aircraft, one field per channel, frequencies from 0 to 999.999 MHz (the Comm Plan Editor's rule); copy to the other units of the flight
@@ -254,7 +256,7 @@ For code contributions: fork, branch, study the build scripts to understand the 
 
 ## 📄 License
 
-[MIT License](./LICENSE) — free to use, modify, and distribute, including commercially. Exceptions: the Flight Configurator's front-view drawings (by Goldwolf, `data/views/LICENSE.md`) and the pydcs-derived tables of the Flight Configurator and of HQ (LGPL-3.0, `data/COPYING.LESSER`).
+[GNU AGPL-3.0-or-later](https://github.com/MirabelleBenou/dcs-mission-plan/blob/main/LICENSE) — free to use, modify and share, commercial use included (a paid service too), **provided the source code of your version is published under the same licence**, hosted services included (section 13). Every interface must keep the credit line “Based on Mission Plan by MirabelleBenou and the 4th VEAW virtual wing” (an additional term under section 7(b), see `LICENSE`). Releases up to v1.24.0 remain under the MIT licence. Exceptions: the Flight Configurator's front-view drawings (by Goldwolf, `data/views/LICENSE.md`) and the pydcs-derived tables (LGPL-3.0-or-later, `data/COPYING.LESSER`).
 
 ## 🙏 Acknowledgments
 
@@ -263,14 +265,14 @@ For code contributions: fork, branch, study the build scripts to understand the 
 - Caucasus navigation chart by **Flappie** — [his website](http://dcsmaps.com/caucasus/openlayers) and the [GeoTIFF on DCS User Files](https://digitalcombatsimulator.com/en/files/3305623/), many thanks to him!
 - Map engine [Leaflet](https://leafletjs.com) (BSD-2-Clause); topographic tiles © OpenStreetMap contributors, SRTM, style © OpenTopoMap (CC-BY-SA); satellite imagery © Esri, Maxar, Earthstar Geographics
 - NATO military symbols drawn with **[milsymbol](https://github.com/spatialillusions/milsymbol)** by Måns Beckman (MIT)
-- DCS airfield & helipad names and positions, and the DCS map projections, from **[pydcs](https://github.com/pydcs/dcs)** (LGPL-3.0); place-name overlay © Esri, HERE, Garmin, OpenStreetMap contributors
+- DCS airfield & helipad names and positions, and the DCS map projections, from **[pydcs](https://github.com/pydcs/dcs)** (LGPL-3.0-or-later); place-name overlay © Esri, HERE, Garmin, OpenStreetMap contributors
 - Airfield names and ids: pydcs, via DCS Airfield Charts
 - Datacard Generator: today's ICAO codes of the airfields from **[OurAirports](https://ourairports.com/)** (public domain), matched by position, via DCS Airfield Charts (`airfield_icao.json`)
-- Flight Configurator: weapon names, permitted weapons per station, masses and aircraft limits from **[pydcs](https://github.com/pydcs/dcs)** (LGPL-3.0, `data/COPYING.LESSER`), taken from Mission Tools; the front-view aircraft drawings are by **Goldwolf** (DCS Reference Guide), used with his permission and **not** under this repository's MIT licence — see `data/views/LICENSE.md`
-- HQ: the game's flyable aircraft types offered for a squadron, from **[pydcs](https://github.com/pydcs/dcs)** 1.0.0 (LGPL-3.0, `data/aircraft_types.json`)
+- Flight Configurator: weapon names, permitted weapons per station, masses and aircraft limits from **[pydcs](https://github.com/pydcs/dcs)** (LGPL-3.0-or-later, `data/COPYING.LESSER`), taken from Mission Tools; the front-view aircraft drawings are by **Goldwolf** (DCS Reference Guide), used with his permission and **not** under this repository's AGPL licence — see `data/views/LICENSE.md`
+- HQ: the game's flyable aircraft types offered for a squadron, from **[pydcs](https://github.com/pydcs/dcs)** 1.0.0 (LGPL-3.0-or-later, `data/aircraft_types.json`)
 - DCS town names and positions from the DCS World maps, © Eagle Dynamics
 - World Magnetic Model coefficients (epochs 1985–2025, the ones DCS World ships) by NOAA NCEI and the British Geological Survey, public domain
-- International Geomagnetic Reference Field, 12th generation (IAGA), in the NOAA geomag70 file DCS World ships, used for years up to 1985
+- International Geomagnetic Reference Field, 12th generation (IAGA), in the NOAA geomag70 file DCS World ships, used for years up to 1984
 - Cold War kraft SVG file provided by Flappie, thanks to him !
 
 ---

@@ -9618,6 +9618,7 @@ const IMP_I18N = {
     'imp.skipchan': '{0} canal(aux) ignoré(s)',
     'imp.group': 'Groupe {0}',
     'rej.json': 'Fichier illisible : ce n’est pas du JSON.',
+    'rej.read': 'Fichier illisible : il n’a pas pu être lu.',
     'rej.zip': 'Archive illisible : pas de package.json à la racine.',
     'rej.noTheatre': 'Le paquet n’a pas de théâtre.',
     'rej.noFlight': 'Aucun groupe lisible dans ce fichier.',
@@ -9683,6 +9684,7 @@ const IMP_I18N = {
     'imp.skipchan': '{0} channel(s) ignored',
     'imp.group': 'Group {0}',
     'rej.json': 'Unreadable file: this is not JSON.',
+    'rej.read': 'Unreadable file: it could not be read.',
     'rej.zip': 'Unreadable archive: no package.json at the root.',
     'rej.noTheatre': 'The package has no theatre.',
     'rej.noFlight': 'No readable group in this file.',
@@ -9757,12 +9759,8 @@ function impFlightRow(f, v1) {
   row.count = managed ? Math.min(units.length || 1, IMP_MAX_UNITS) : 0;
   return row;
 }
-function impNoteLiveries(f, v1) {
-  try { if (IMP.hooks.noteLiveries && gsIsObj(f)) IMP.hooks.noteLiveries(v1 ? f : { units: f.units }); } catch (e) { /* facultatif */ }
-}
 /* Une source : ses lignes lisibles ; la mission de HQ n'a rien de coché à l'ouverture (on y choisit parmi beaucoup), un paquet : tous les vols. */
 function impSource(kind, theatre, file, list, v1, date) {
-  list.forEach(f => impNoteLiveries(f, v1));
   const rows = list.map(f => impFlightRow(f, v1)).filter(Boolean);
   rows.forEach(r => { r.on = kind !== 'hq'; r.chk = Object.assign({}, r.avail); });
   /* missionDate : la date de la mission d'où viennent les routes (AAAA-MM-JJ lisible, sinon aucune) ; elle naît ici et suit la route importée (impRouteOf) */
@@ -10000,7 +9998,7 @@ function impReadJsonFile(file, done) {
     try { done({ parsed: JSON.parse(text.charCodeAt(0) === 0xFEFF ? text.slice(1) : text) }); } catch (e) { done({ reject: 'rej.json' }); }
   };
   const reader = new FileReader();
-  reader.onerror = () => done({ reject: 'rej.json' });
+  reader.onerror = () => done({ reject: 'rej.read' });
   reader.onload = () => {
     const bytes = new Uint8Array(reader.result);
     if (!(bytes.length >= 2 && bytes[0] === 0x50 && bytes[1] === 0x4B)) {       // pas de « PK » en tête : un JSON, en UTF-8 ou UTF-16
@@ -10812,7 +10810,6 @@ function mnOpen(btn, id, label, o) {
     row.tabIndex = -1;
     row.setAttribute('data-k', it.k);
     if (it.disabled) row.setAttribute('aria-disabled', 'true');
-    if (it.title) row.title = it.title;
     const txt = document.createElement('span');
     txt.className = 'tbm-txt';
     txt.textContent = it.label;
@@ -11477,10 +11474,8 @@ const I18N = {
   "tb.save": "Sauvegarder",
   "op.file": "Ouvrir une configuration…",
   "op.file.h": ".json",
-  "op.file.tip": "Ouvrir un fichier de travail (JSON) : remplace le contenu du module",
   "op.import": "Importer des groupes…",
   "op.import.h": "briefing, HQ, paquet",
-  "op.import.tip": "Importer des groupes, des routes, des radios, des emports depuis la mission chargée dans HQ ou un paquet de vol",
   "tb.export": "Exporter",
   "tb.export.tip": "Exporter le paquet de vol pour le Mission Commander",
   "tb.clear": "Effacer",
@@ -11514,7 +11509,7 @@ const I18N = {
   "fl.nounit": "Aucune unité",
   "cmp.nounit": "Ajoutez une unité à ce groupe : ses radios, son emport et sa route se règlent ici.",
   "fl.name": "Nom du groupe",
-  "fl.name.ph": "Hind 1",
+  "fl.name.ph": "Indicatif",
   "u.type": "Type",
   "fl.coalition": "Coalition",
   "fl.coalition.any": "— non renseignée —",
@@ -11763,10 +11758,8 @@ const I18N = {
   "tb.save": "Save",
   "op.file": "Open a configuration…",
   "op.file.h": ".json",
-  "op.file.tip": "Open a working file (JSON): replaces the module content",
   "op.import": "Import groups…",
   "op.import.h": "briefing, HQ, package",
-  "op.import.tip": "Import groups, routes, radios, loadouts from the mission loaded in HQ or a flight package",
   "tb.export": "Export",
   "tb.export.tip": "Export the flight package for the Mission Commander",
   "tb.clear": "Clear",
@@ -11800,7 +11793,7 @@ const I18N = {
   "fl.nounit": "No unit",
   "cmp.nounit": "Add a unit to this group: its radios, loadout and route are set here.",
   "fl.name": "Group name",
-  "fl.name.ph": "Hind 1",
+  "fl.name.ph": "Callsign",
   "u.type": "Type",
   "fl.coalition": "Coalition",
   "fl.coalition.any": "— not set —",
@@ -14632,9 +14625,21 @@ function onChange(e) {
 function onToggle(e) {
   const d = e.target, key = d && d.getAttribute && d.tagName === 'DETAILS' ? d.getAttribute('data-key') : null;
   if (!key) return;
+  const was = UI.open.has(key);
   if (d.open) UI.open.add(key); else UI.open.delete(key);
   const h = d.querySelector(':scope > summary');
   if (h) h.setAttribute('aria-expanded', String(d.open));
+  if (d.open && !was && d.classList.contains('fc-sub')) openFirstPost(d);
+}
+// Ouvrir « Radios » d'une unité ouvre aussi son premier poste quand aucun poste de cette unité n'est ouvert ; la refermer ne referme pas les postes (l'état de chacun se garde).
+// Seule une ouverture à la main compte (was : la clé n'était pas ouverte) : un redessin qui rend « Radios » ouvert, ses postes fermés par l'utilisateur, ne les rouvre pas.
+function openFirstPost(sub) {
+  const ps = Array.prototype.slice.call(sub.querySelectorAll('details.fc-post'));
+  if (!ps.length || ps.some(p => UI.open.has(p.getAttribute('data-key')))) return;
+  UI.open.add(ps[0].getAttribute('data-key'));
+  ps[0].open = true;
+  const h = ps[0].querySelector(':scope > summary');
+  if (h) h.setAttribute('aria-expanded', 'true');
 }
 function onFocusIn(e) {
   const ue = e.target.closest ? e.target.closest('.fc-unit') : null;
@@ -14710,8 +14715,8 @@ function fcOpenMenu(btn) {
   mnOpen(btn, 'op-panel', t('tb.open'), {
     items: [
       { k: 'work', label: t('work.open'), hint: t('op.file.h') },
-      { k: 'file', label: t('op.file'), hint: t('op.file.h'), title: t('op.file.tip') },
-      { k: 'import', label: t('op.import'), hint: t('op.import.h'), title: t('op.import.tip') }
+      { k: 'file', label: t('op.file'), hint: t('op.file.h') },
+      { k: 'import', label: t('op.import'), hint: t('op.import.h') }
     ],
     choose: k => {
       if (k === 'work') workOpen();

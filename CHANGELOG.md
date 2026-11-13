@@ -35,9 +35,15 @@ Changes merged since the last release, grouped per tool.
 - Every tool's top bar follows the same rules: when space runs short it drops, in this order, the decorative stamp, the version, the button labels and finally the long title; on phones, list labels such as Theatre are hidden, Display shows its icon only and the theatre a short name.
 - **Restore** after an example or an opened file brings back everything the flight lead tools had (groups, routes, datacards, theatre, units, settings), whichever tool you are in.
 - A tool no longer opens on its own: opened outside Mission Plan, it only shows a line pointing to the suite. Each tool now writes only the suite's work file; the old briefing, datacard, route and configuration files can still be opened.
+- **Licence**: from the next release, DCS Mission Plan is licensed under the GNU AGPL-3.0-or-later instead of MIT: any use, commercial included, must publish its source under the same licence, hosted services included; an additional term (section 7(b)) requires every interface to keep the credit line *Based on Mission Plan by MirabelleBenou and the 4th VEAW virtual wing*, now shown at the bottom of the landing page. Releases up to v1.24.0 remain under MIT. The pydcs tables (LGPL-3.0-or-later) and Goldwolf's drawings keep their own terms.
+- The examples tell one mission, FOOTHOLD over Cyprus: the Flight Configurator's example is the CAESAR group of two Mi-24P on the Route Planner's example route, and the Datacard Generator's example sets its theatre; example times are in Zulu.
 
 #### Removed
 - The repository no longer ships one particular wing's configuration file, nor six squadron logos that no tool used; the README and the code comments no longer name that wing. Each wing still makes or imports its own configuration in HQ.
+#### Fixed
+- Magnetic declination in 1985 now uses the WMM 1985, as DCS does (the IGRF up to 1984).
+- Mirage F1CE and F1BE: radio names and frequency bands of the TRAP 136 and TRAP 137B, as in the F1EE.
+- A wing configuration that the browser refuses to store now says so instead of showing it as loaded; an import window says when a file cannot be read.
 
 ### Mission Plan — landing
 #### Added
@@ -92,6 +98,7 @@ Changes merged since the last release, grouped per tool.
 - Removing a group shared with the Route Planner and the Datacard Generator now asks first. “Empty the module” is now “Clear”.
 - **Open ▾** opens a configuration or imports groups, in place of the separate Open and Import buttons. **Ctrl+S** saves.
 - Flares and chaff follow the aircraft's total countermeasure capacity instead of their default counts; a value typed out of range is refused and the previous value comes back.
+- Opening a unit's radios also opens its first radio.
 
 ### Recon Station
 #### Added
@@ -103,6 +110,7 @@ Changes merged since the last release, grouped per tool.
 - Messages no longer cover the drawing bar, and choosing a file that is not an image now says so.
 - Classification uses the Briefing Generator's six levels, translated; “Import config” no longer points to the Briefing Generator.
 - **Export** is now in the top bar, and the Export section leaves the panel. In the info block, a value too long for its field is drawn smaller, then cut with “…”, instead of running over the next label.
+- Empty mission, date and classification fields are filled in from the current briefing.
 
 ### Briefing Generator
 #### Changed
@@ -111,6 +119,7 @@ Changes merged since the last release, grouped per tool.
 - Export in one window: format, pages and file name together. Metadata is now the last section, folded.
 - The briefing format moves into **Display ▾**: “Standard” (one mission page plus photo pages, now the default, the example included) or “Advanced” (ten sections); the printed brief no longer names its format, and “OPERATION” follows the interface language. Empty fields hint at what to type instead of showing sample values. **Ctrl+S** saves.
 - Standard: a group without a squadron, and a guest squadron, pick their aircraft type from the list of the game (as in HQ); the Flight Configurator import takes it, and the Standard frequencies by their radio and channel.
+- The map image box says the image can come from the Route Planner.
 #### Removed
 - The Wing tab no longer imports or resets the wing configuration: HQ is where it is set.
 #### Fixed

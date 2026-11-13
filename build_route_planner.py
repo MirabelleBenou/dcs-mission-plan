@@ -1395,7 +1395,7 @@ __CSS__
     <div class="ga-new">
       <div class="lbl" data-i18n="ga.new">Ajouter un groupe</div>
       <div class="ga-new-row">
-        <input class="in" id="ga-new-name" type="text" maxlength="60" autocomplete="off" autocapitalize="off" spellcheck="false" data-i18n-aria-label="ga.new.name" data-i18n-placeholder="ga.new.ph" aria-label="Nom du nouveau groupe" placeholder="Hind 1">
+        <input class="in" id="ga-new-name" type="text" maxlength="60" autocomplete="off" autocapitalize="off" spellcheck="false" data-i18n-aria-label="ga.new.name" data-i18n-placeholder="ga.new.ph" aria-label="Nom du nouveau groupe" placeholder="Indicatif">
         <div class="ga-side"><select class="in" id="ga-new-side" data-lbl="hq.side"></select></div>
       </div>
       <p class="rt-note rt-warn" id="ga-new-msg" hidden></p>
@@ -2255,7 +2255,7 @@ const I18N = {
     'ga.unnamed': 'Groupe {n}',
     'ga.new': 'Ajouter un groupe',
     'ga.new.name': 'Nom du nouveau groupe',
-    'ga.new.ph': 'Hind 1',
+    'ga.new.ph': 'Indicatif',
     'ga.side.none': 'Aucun',
     'ga.dup': 'Un groupe porte déjà ce nom dans cette coalition.',
     'ga.go': 'Appliquer',
@@ -2778,7 +2778,7 @@ const I18N = {
     'ga.unnamed': 'Group {n}',
     'ga.new': 'Add a group',
     'ga.new.name': 'Name of the new group',
-    'ga.new.ph': 'Hind 1',
+    'ga.new.ph': 'Callsign',
     'ga.side.none': 'None',
     'ga.dup': 'A group with this name already exists in this coalition.',
     'ga.go': 'Apply',

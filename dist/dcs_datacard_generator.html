@@ -4667,8 +4667,19 @@ function normalizeCard(src) {
   const fz = src.frz;
   if (gsIsObj(fz)) c.frz = normFrz(fz);
   if (!c.gsId) syncGroup(c);
-  return c;
+  return dgCanonCard(c);
 }
+
+/* L'ordre des clés d'une carte : celui de newCard(), puis les clés facultatives, chacune à sa place (une clé qui manque et que le module pose plus tard, loadoutFc, ne se range pas en fin d'objet) ; une clé inconnue suit.
+   Le même contenu s'écrit donc au même texte, quel que soit le chemin qui l'a construit : un chargement qui ne change rien ne réécrit pas datacard_state_v1. */
+const DG_CARD_OPTIONAL = ['refsOff', 'gsId', 'gsSide', 'radioSel', 'rid', 'loadoutFc', 'gsGone', 'frz'];
+function dgCanonCard(c) {
+  const o = {}, has = k => Object.prototype.hasOwnProperty.call(c, k);
+  Object.keys(newCard()).concat(DG_CARD_OPTIONAL).forEach(k => { if (has(k)) o[k] = c[k]; });
+  Object.keys(c).forEach(k => { if (!Object.prototype.hasOwnProperty.call(o, k)) o[k] = c[k]; });
+  return o;
+}
+function dgCanonDoc(d) { return Object.assign({}, d, { cards: d.cards.map(dgCanonCard) }); }
 
 function normalizeDoc(src) {
   const d = { format: FORMAT_ID, mode: 'day', cards: [] };
@@ -4800,7 +4811,7 @@ function curCard() { return doc.cards[curIdx]; }
 
 const DG_DOC = { raw: '', timer: 0 };       /* le texte de datacard_state_v1 que cet onglet a écrit ou lu en dernier */
 function persistState() {
-  try { const s = JSON.stringify(doc); localStorage.setItem(KEY_STATE, s); DG_DOC.raw = s; } catch (e) { /* quota ou stockage indisponible */ }
+  try { const s = JSON.stringify(dgCanonDoc(doc)); localStorage.setItem(KEY_STATE, s); DG_DOC.raw = s; } catch (e) { /* quota ou stockage indisponible */ }
 }
 
 /* Écrit le document seulement si son contenu diffère de celui qui est stocké : le même contenu aux clés dans un autre ordre ne réécrit rien (le stockage que « Restaurer » vient de rendre reste, à l'octet, celui d'avant le geste) */
@@ -5517,6 +5528,7 @@ const IMP_I18N = {
     'imp.skipchan': '{0} canal(aux) ignoré(s)',
     'imp.group': 'Groupe {0}',
     'rej.json': 'Fichier illisible : ce n’est pas du JSON.',
+    'rej.read': 'Fichier illisible : il n’a pas pu être lu.',
     'rej.zip': 'Archive illisible : pas de package.json à la racine.',
     'rej.noTheatre': 'Le paquet n’a pas de théâtre.',
     'rej.noFlight': 'Aucun groupe lisible dans ce fichier.',
@@ -5582,6 +5594,7 @@ const IMP_I18N = {
     'imp.skipchan': '{0} channel(s) ignored',
     'imp.group': 'Group {0}',
     'rej.json': 'Unreadable file: this is not JSON.',
+    'rej.read': 'Unreadable file: it could not be read.',
     'rej.zip': 'Unreadable archive: no package.json at the root.',
     'rej.noTheatre': 'The package has no theatre.',
     'rej.noFlight': 'No readable group in this file.',
@@ -5656,12 +5669,8 @@ function impFlightRow(f, v1) {
   row.count = managed ? Math.min(units.length || 1, IMP_MAX_UNITS) : 0;
   return row;
 }
-function impNoteLiveries(f, v1) {
-  try { if (IMP.hooks.noteLiveries && gsIsObj(f)) IMP.hooks.noteLiveries(v1 ? f : { units: f.units }); } catch (e) { /* facultatif */ }
-}
 /* Une source : ses lignes lisibles ; la mission de HQ n'a rien de coché à l'ouverture (on y choisit parmi beaucoup), un paquet : tous les vols. */
 function impSource(kind, theatre, file, list, v1, date) {
-  list.forEach(f => impNoteLiveries(f, v1));
   const rows = list.map(f => impFlightRow(f, v1)).filter(Boolean);
   rows.forEach(r => { r.on = kind !== 'hq'; r.chk = Object.assign({}, r.avail); });
   /* missionDate : la date de la mission d'où viennent les routes (AAAA-MM-JJ lisible, sinon aucune) ; elle naît ici et suit la route importée (impRouteOf) */
@@ -5899,7 +5908,7 @@ function impReadJsonFile(file, done) {
     try { done({ parsed: JSON.parse(text.charCodeAt(0) === 0xFEFF ? text.slice(1) : text) }); } catch (e) { done({ reject: 'rej.json' }); }
   };
   const reader = new FileReader();
-  reader.onerror = () => done({ reject: 'rej.json' });
+  reader.onerror = () => done({ reject: 'rej.read' });
   reader.onload = () => {
     const bytes = new Uint8Array(reader.result);
     if (!(bytes.length >= 2 && bytes[0] === 0x50 && bytes[1] === 0x4B)) {       // pas de « PK » en tête : un JSON, en UTF-8 ou UTF-16
@@ -11463,7 +11472,7 @@ function init() {
   initToolbarMenus([['theatre', () => t('tb.theatre'), undefined, true]]);       /* la liste du théâtre, comme au Route Planner */
   gsApplyAll(true);
   const synced = dgSyncRoutes();
-  if (doc.theatre !== th0 || synced || JSON.stringify(doc) !== DG_DOC.raw) persistState();       /* le document tel qu'il se lit maintenant (migration d'une carte d'avant le lot comprise) est gardé, une fois */       /* un théâtre pris (clé partagée, fiche ou route) est gardé */
+  if (doc.theatre !== th0 || synced) persistState(); else persistStateIfChanged();       /* le document tel qu'il se lit maintenant (migration d'une carte d'avant le lot comprise) est gardé, une fois */       /* un théâtre pris (clé partagée, fiche ou route) est gardé */
   bindEvents();
   setActiveTab('header');
   renderAll();

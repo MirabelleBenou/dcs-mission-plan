@@ -498,6 +498,12 @@ select[data-tbm-src] {{ display: none !important; }}
 .props .clip::before{{content:''; position:absolute; left:2px; right:2px; top:3px; bottom:7px; border:2px solid #a9acb0; border-bottom:none; border-radius:6px 6px 0 0;}}
 @media(max-width:1024px){{ .props{{display:none;}} }}
 
+/* ===== CRÉDIT (l'attribution de la licence, à l'accueil seulement) ===== */
+#credits{{margin-top:24px; padding:0 24px 14px; text-align:center; font-family:var(--f-mono); font-size:11px; line-height:1.55; color:var(--accent); position:relative; z-index:6;
+  overflow-wrap:anywhere;}}
+#credits p + p{{margin-top:3px;}}
+#credits a{{color:inherit; text-decoration:underline;}}
+
 /* ===== PIED ===== */
 .foot{{padding:13px 24px; border-top:1px solid var(--line); display:flex; gap:14px; align-items:center; flex-wrap:wrap; position:relative; z-index:6;
   font-family:var(--f-mono); font-size:10px; letter-spacing:.16em; color:var(--accent); text-transform:uppercase;}}
@@ -681,9 +687,14 @@ select[data-tbm-src] {{ display: none !important; }}
     </div>
   </div>
 
+  <div id="credits">
+    <p>Based on Mission Plan by MirabelleBenou and the 4th VEAW virtual wing — <a href="https://github.com/MirabelleBenou/dcs-mission-plan" target="_blank" rel="noopener">github.com/MirabelleBenou/dcs-mission-plan</a> · <a href="https://github.com/MirabelleBenou/dcs-mission-plan/blob/main/LICENSE" target="_blank" rel="noopener">AGPL-3.0-or-later</a></p>
+    <p><span data-i18n="credits.data">Données des appareils et des terrains : </span><a href="https://github.com/pydcs/dcs" target="_blank" rel="noopener">pydcs</a><span data-i18n="credits.rest"> (LGPL-3.0-or-later) · vues de face : Goldwolf, DCS Reference Guide, avec son autorisation</span></p>
+  </div>
+
   <div class="foot">
     <span>DCS Mission Suite</span><span class="dot">·</span>
-    <span>Open source · MIT</span><span class="dot">·</span>
+    <span>Open source · AGPL-3.0</span><span class="dot">·</span>
     <span id="foot-info">Cold War OTAN</span>
     <span class="right" id="foot-right">Mission Plan</span>
   </div>
@@ -740,6 +751,8 @@ select[data-tbm-src] {{ display: none !important; }}
       'fc.desc': "Assemble un groupe — identité, radios, emport composé sur la vue de face ou tiré de mes presets, livrée — et l'exporte en paquet de vol que HQ applique à une mission.",
       'rp.desc': 'Tracé de route sur carte — carte DCS, topographique ou satellite, grille MGRS, villes et aérodromes, recherche ; points de référence ; caps, distances, vitesse sol et minutage ; calques CombatFlite et dessin au doigt (zones, FLOT, couloirs, orbites, boîtes) ; MGRS et DMS, envoyés à la datacard ; import et export du Route Tool de DCS.',
       'status.op': 'Opérationnel',
+      'credits.data': 'Données des appareils et des terrains : ',
+      'credits.rest': ' (LGPL-3.0-or-later) · vues de face : Goldwolf, DCS Reference Guide, avec son autorisation',
       cta: '▶ Ouvrir le dossier',
       soon: 'À venir',
       loading: 'Chargement',
@@ -778,6 +791,8 @@ select[data-tbm-src] {{ display: none !important; }}
       'fc.desc': "Assembles a group — identity, radios, loadout built on the front view or started from my presets, livery — and exports it as a flight package that HQ applies to a mission.",
       'rp.desc': 'Lay a route on a map — DCS, topographic or satellite, MGRS grid, towns and airfields, search; reference points; headings, distances, ground speed and minute marks; CombatFlite layers and touch drawing (zones, FLOT, corridors, orbits, boxes); MGRS and DMS, sent to the datacard; DCS Route Tool import and export.',
       'status.op': 'Operational',
+      'credits.data': 'Aircraft and airfield data: ',
+      'credits.rest': ' (LGPL-3.0-or-later) · front views: Goldwolf, DCS Reference Guide, used with permission',
       cta: '▶ Open the file',
       soon: 'Coming soon',
       loading: 'Loading',

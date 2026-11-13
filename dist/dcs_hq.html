@@ -1523,6 +1523,7 @@ const I18N = {
     'toast.wingReset':          'Wing réinitialisé ✓',
     'toast.wingFileError':      '⚠ Lecture du fichier impossible',
     'toast.wingStorageFull':    '⚠ Espace de stockage saturé — exportez votre wing puis réinitialisez',
+    'wing.save.err':            '⚠ Configuration Wing non enregistrée dans le navigateur : stockage plein ou refusé',
     'msg.jsonUnreadable':       '⚠ Fichier illisible : ce n’est pas du JSON.',
     'msg.notWingConfig':        '⚠ Ce fichier n’est pas une configuration wing.',
     'msg.wingIncomplete':       '⚠ Configuration wing incomplète : {0} champ(s) manquant(s) ou invalide(s).',
@@ -1948,6 +1949,7 @@ const I18N = {
     'toast.wingReset':          'Wing reset ✓',
     'toast.wingFileError':      '⚠ Cannot read file',
     'toast.wingStorageFull':    '⚠ Storage full — export your wing then reset',
+    'wing.save.err':            '⚠ Wing configuration not saved in the browser: storage full or refused',
     'msg.jsonUnreadable':       '⚠ Unreadable file: this is not JSON.',
     'msg.notWingConfig':        '⚠ This file is not a wing configuration.',
     'msg.wingIncomplete':       '⚠ Incomplete wing configuration: {0} missing or invalid field(s).',
@@ -2856,6 +2858,16 @@ function persistWingConfig() {
       }
     }
   }, 200);
+}
+
+/* Écrit la configuration tout de suite, sans attendre la minuterie : l'import ne dit « chargée » qu'une fois l'écriture faite. Faux si le stockage la refuse (plein ou interdit) ;
+   la configuration reste alors en mémoire, utilisable à l'écran jusqu'au rechargement. */
+function persistWingConfigNow() {
+  if (_wingPersistTimer) { clearTimeout(_wingPersistTimer); _wingPersistTimer = null; }
+  try { localStorage.setItem(KEY_WING, JSON.stringify(wingConfig)); }
+  catch(e) { console.warn('[Wing] Erreur persistance :', e); return false; }
+  hqWingOrder();
+  return true;
 }
 
 // ── Wing size counter ──────────────────────────────────────────
@@ -3840,9 +3852,10 @@ function importWingConfig(file) {
     }
     try {
       wingConfig = parsed;
-      persistWingConfig();
+      const saved = persistWingConfigNow();
       renderWingEditor();
-      showToast(t('toast.wingLoaded') + escapeHtml(wingConfig.wing.shortName), { type: 'ok' });
+      if (saved) showToast(t('toast.wingLoaded') + escapeHtml(wingConfig.wing.shortName), { type: 'ok' });
+      else showToast(t('wing.save.err'), { type: 'err' });
     } catch (e) {
       console.warn('[HQ] configuration wing : enregistrement ou rendu impossible', e);
       showToast(t('msg.failed'), { type: 'err' });

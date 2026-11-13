@@ -445,10 +445,8 @@ I18N_FR = {
     'tb.save': 'Sauvegarder',
     'op.file': 'Ouvrir une configuration…',
     'op.file.h': '.json',
-    'op.file.tip': 'Ouvrir un fichier de travail (JSON) : remplace le contenu du module',
     'op.import': 'Importer des groupes…',
     'op.import.h': 'briefing, HQ, paquet',
-    'op.import.tip': 'Importer des groupes, des routes, des radios, des emports depuis la mission chargée dans HQ ou un paquet de vol',
     'tb.export': 'Exporter',
     'tb.export.tip': 'Exporter le paquet de vol pour le Mission Commander',
     'tb.clear': 'Effacer',
@@ -486,7 +484,7 @@ I18N_FR = {
     'fl.nounit': 'Aucune unité',
     'cmp.nounit': 'Ajoutez une unité à ce groupe : ses radios, son emport et sa route se règlent ici.',
     'fl.name': 'Nom du groupe',
-    'fl.name.ph': 'Hind 1',
+    'fl.name.ph': 'Indicatif',
     'u.type': 'Type',
     'fl.coalition': 'Coalition',
     'fl.coalition.any': '— non renseignée —',
@@ -753,10 +751,8 @@ I18N_EN = {
     'tb.save': 'Save',
     'op.file': 'Open a configuration…',
     'op.file.h': '.json',
-    'op.file.tip': 'Open a working file (JSON): replaces the module content',
     'op.import': 'Import groups…',
     'op.import.h': 'briefing, HQ, package',
-    'op.import.tip': 'Import groups, routes, radios, loadouts from the mission loaded in HQ or a flight package',
     'tb.export': 'Export',
     'tb.export.tip': 'Export the flight package for the Mission Commander',
     'tb.clear': 'Clear',
@@ -794,7 +790,7 @@ I18N_EN = {
     'fl.nounit': 'No unit',
     'cmp.nounit': 'Add a unit to this group: its radios, loadout and route are set here.',
     'fl.name': 'Group name',
-    'fl.name.ph': 'Hind 1',
+    'fl.name.ph': 'Callsign',
     'u.type': 'Type',
     'fl.coalition': 'Coalition',
     'fl.coalition.any': '— not set —',
@@ -1769,7 +1765,6 @@ function mnOpen(btn, id, label, o) {
     row.tabIndex = -1;
     row.setAttribute('data-k', it.k);
     if (it.disabled) row.setAttribute('aria-disabled', 'true');
-    if (it.title) row.title = it.title;
     const txt = document.createElement('span');
     txt.className = 'tbm-txt';
     txt.textContent = it.label;
@@ -4384,9 +4379,21 @@ function onChange(e) {
 function onToggle(e) {
   const d = e.target, key = d && d.getAttribute && d.tagName === 'DETAILS' ? d.getAttribute('data-key') : null;
   if (!key) return;
+  const was = UI.open.has(key);
   if (d.open) UI.open.add(key); else UI.open.delete(key);
   const h = d.querySelector(':scope > summary');
   if (h) h.setAttribute('aria-expanded', String(d.open));
+  if (d.open && !was && d.classList.contains('fc-sub')) openFirstPost(d);
+}
+// Ouvrir « Radios » d'une unité ouvre aussi son premier poste quand aucun poste de cette unité n'est ouvert ; la refermer ne referme pas les postes (l'état de chacun se garde).
+// Seule une ouverture à la main compte (was : la clé n'était pas ouverte) : un redessin qui rend « Radios » ouvert, ses postes fermés par l'utilisateur, ne les rouvre pas.
+function openFirstPost(sub) {
+  const ps = Array.prototype.slice.call(sub.querySelectorAll('details.fc-post'));
+  if (!ps.length || ps.some(p => UI.open.has(p.getAttribute('data-key')))) return;
+  UI.open.add(ps[0].getAttribute('data-key'));
+  ps[0].open = true;
+  const h = ps[0].querySelector(':scope > summary');
+  if (h) h.setAttribute('aria-expanded', 'true');
 }
 function onFocusIn(e) {
   const ue = e.target.closest ? e.target.closest('.fc-unit') : null;
@@ -4462,8 +4469,8 @@ function fcOpenMenu(btn) {
   mnOpen(btn, 'op-panel', t('tb.open'), {
     items: [
       { k: 'work', label: t('work.open'), hint: t('op.file.h') },
-      { k: 'file', label: t('op.file'), hint: t('op.file.h'), title: t('op.file.tip') },
-      { k: 'import', label: t('op.import'), hint: t('op.import.h'), title: t('op.import.tip') }
+      { k: 'file', label: t('op.file'), hint: t('op.file.h') },
+      { k: 'import', label: t('op.import'), hint: t('op.import.h') }
     ],
     choose: k => {
       if (k === 'work') workOpen();
@@ -4671,7 +4678,7 @@ def check(html):
     ok(bool(ptypes) and sorted(liv) == sorted(ptypes), 'livrées par défaut : exactement les types de PAYLOAD_TYPES (%s)' % ', '.join('%s %d' % (k, len(v)) for k, v in sorted(liv.items())))
     ok(all(isinstance(v, list) and v and all(isinstance(n, str) and n.strip() == n and n for n in v) and len({n.lower() for n in v}) == len(v) for v in liv.values()), 'livrées par défaut : des noms non vides, sans espace de bout ni doublon à la casse près')
     ok('input[data-k="livery"]' not in html and 'data-k="livery" role="combobox"' not in html, 'le champ Livrée est une liste, plus un texte libre')
-    ok(not re.search(r'\blvOpen\b|\blvItems\b|\blvChoose\b|\blvClose\b|\bisLiveryField\b|\bnoteLiveries\s*:|\bseenLiv\b|u\.livery\.ph', html), 'plus de panneau de suggestions de livrée ni de suggestions tirées des paquets, de la mission d\'HQ ou des autres unités')
+    ok(not re.search(r'\blvOpen\b|\blvItems\b|\blvChoose\b|\blvClose\b|\bisLiveryField\b|\bseenLiv\b|u\.livery\.ph', html), 'plus de panneau de suggestions de livrée ni de suggestions tirées des paquets, de la mission d\'HQ ou des autres unités')
     ok('n.toLowerCase() === cur.toLowerCase()' in html and 'names[k] = cur' in html, 'une livrée égale à un nom de la liste à la casse près prend la place de ce nom (un seul nom, son écriture à elle)')
     ok(not re.search(r'\bhqMission\b|\breadHqMission\b|\bHQ_MISSION_SCHEMAS\b|\bUI\.hq\b', html), 'plus de lecteur de la mission d\'HQ sous ses anciens noms (hqMission, readHqMission, UI.hq)')
     fns = re.findall(r'^function (\w+)\(', JS_APP, re.M)

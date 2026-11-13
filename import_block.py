@@ -9,7 +9,7 @@ Trois textes, identiques à l'octet dans les deux dist/ :
 Le bloc écrit dans la fiche (group_store_block.py : relire, changer le seul groupe touché, gsPutFlight), jamais dans l'état d'un module. L'emport importé s'écrit en une fois : si le module donne un rappel loadoutFrom(type, payload) (le Flight Configurator), l'emport est écrit déjà converti ;
 sinon (le Route Planner) il est écrit brut, unité.payloadIn, avec loadout: null, et le Flight Configurator le convertit à la lecture de la fiche en ne changeant que ces champs.
 Il lit magvar_block.py (magRouteDate : la date de la mission d'une source, qui naît sur la route importée) et group_store_block.py (gsRead, gsPutFlight, gsNewId, gsNameKey, gsSide, gsEnsure, gsSetTheatre, gsJson, gsIsObj) radio_block.py (RADIO_POSTES, RADIO_FIRST_CHANNEL) et radio_bands_block.py (RADIO_FREE, radioFreeCount : les postes que la mission ne pré-règle pas).
-Le module lui donne sa langue et ses rappels par impSetup({ lang, before, onImported, toast, noteLiveries, loadoutFrom }) ; il ouvre la fenêtre par impOpen().
+Le module lui donne sa langue et ses rappels par impSetup({ lang, before, onImported, toast, loadoutFrom }) ; il ouvre la fenêtre par impOpen().
 
 Usage (par les builds) : from import_block import build_block, build_css, build_html
 """
@@ -194,6 +194,7 @@ const IMP_I18N = {
     'imp.skipchan': '{0} canal(aux) ignoré(s)',
     'imp.group': 'Groupe {0}',
     'rej.json': 'Fichier illisible : ce n’est pas du JSON.',
+    'rej.read': 'Fichier illisible : il n’a pas pu être lu.',
     'rej.zip': 'Archive illisible : pas de package.json à la racine.',
     'rej.noTheatre': 'Le paquet n’a pas de théâtre.',
     'rej.noFlight': 'Aucun groupe lisible dans ce fichier.',
@@ -259,6 +260,7 @@ const IMP_I18N = {
     'imp.skipchan': '{0} channel(s) ignored',
     'imp.group': 'Group {0}',
     'rej.json': 'Unreadable file: this is not JSON.',
+    'rej.read': 'Unreadable file: it could not be read.',
     'rej.zip': 'Unreadable archive: no package.json at the root.',
     'rej.noTheatre': 'The package has no theatre.',
     'rej.noFlight': 'No readable group in this file.',
@@ -333,12 +335,8 @@ function impFlightRow(f, v1) {
   row.count = managed ? Math.min(units.length || 1, IMP_MAX_UNITS) : 0;
   return row;
 }
-function impNoteLiveries(f, v1) {
-  try { if (IMP.hooks.noteLiveries && gsIsObj(f)) IMP.hooks.noteLiveries(v1 ? f : { units: f.units }); } catch (e) { /* facultatif */ }
-}
 /* Une source : ses lignes lisibles ; la mission de HQ n'a rien de coché à l'ouverture (on y choisit parmi beaucoup), un paquet : tous les vols. */
 function impSource(kind, theatre, file, list, v1, date) {
-  list.forEach(f => impNoteLiveries(f, v1));
   const rows = list.map(f => impFlightRow(f, v1)).filter(Boolean);
   rows.forEach(r => { r.on = kind !== 'hq'; r.chk = Object.assign({}, r.avail); });
   /* missionDate : la date de la mission d'où viennent les routes (AAAA-MM-JJ lisible, sinon aucune) ; elle naît ici et suit la route importée (impRouteOf) */
@@ -576,7 +574,7 @@ function impReadJsonFile(file, done) {
     try { done({ parsed: JSON.parse(text.charCodeAt(0) === 0xFEFF ? text.slice(1) : text) }); } catch (e) { done({ reject: 'rej.json' }); }
   };
   const reader = new FileReader();
-  reader.onerror = () => done({ reject: 'rej.json' });
+  reader.onerror = () => done({ reject: 'rej.read' });
   reader.onload = () => {
     const bytes = new Uint8Array(reader.result);
     if (!(bytes.length >= 2 && bytes[0] === 0x50 && bytes[1] === 0x4B)) {       // pas de « PK » en tête : un JSON, en UTF-8 ou UTF-16

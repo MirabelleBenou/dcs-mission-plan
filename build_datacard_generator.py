@@ -3667,8 +3667,19 @@ function normalizeCard(src) {
   const fz = src.frz;
   if (gsIsObj(fz)) c.frz = normFrz(fz);
   if (!c.gsId) syncGroup(c);
-  return c;
+  return dgCanonCard(c);
 }
+
+/* L'ordre des clés d'une carte : celui de newCard(), puis les clés facultatives, chacune à sa place (une clé qui manque et que le module pose plus tard, loadoutFc, ne se range pas en fin d'objet) ; une clé inconnue suit.
+   Le même contenu s'écrit donc au même texte, quel que soit le chemin qui l'a construit : un chargement qui ne change rien ne réécrit pas datacard_state_v1. */
+const DG_CARD_OPTIONAL = ['refsOff', 'gsId', 'gsSide', 'radioSel', 'rid', 'loadoutFc', 'gsGone', 'frz'];
+function dgCanonCard(c) {
+  const o = {}, has = k => Object.prototype.hasOwnProperty.call(c, k);
+  Object.keys(newCard()).concat(DG_CARD_OPTIONAL).forEach(k => { if (has(k)) o[k] = c[k]; });
+  Object.keys(c).forEach(k => { if (!Object.prototype.hasOwnProperty.call(o, k)) o[k] = c[k]; });
+  return o;
+}
+function dgCanonDoc(d) { return Object.assign({}, d, { cards: d.cards.map(dgCanonCard) }); }
 
 function normalizeDoc(src) {
   const d = { format: FORMAT_ID, mode: 'day', cards: [] };
@@ -3800,7 +3811,7 @@ function curCard() { return doc.cards[curIdx]; }
 
 const DG_DOC = { raw: '', timer: 0 };       /* le texte de datacard_state_v1 que cet onglet a écrit ou lu en dernier */
 function persistState() {
-  try { const s = JSON.stringify(doc); localStorage.setItem(KEY_STATE, s); DG_DOC.raw = s; } catch (e) { /* quota ou stockage indisponible */ }
+  try { const s = JSON.stringify(dgCanonDoc(doc)); localStorage.setItem(KEY_STATE, s); DG_DOC.raw = s; } catch (e) { /* quota ou stockage indisponible */ }
 }
 
 /* Écrit le document seulement si son contenu diffère de celui qui est stocké : le même contenu aux clés dans un autre ordre ne réécrit rien (le stockage que « Restaurer » vient de rendre reste, à l'octet, celui d'avant le geste) */
@@ -8045,7 +8056,7 @@ function init() {
   initToolbarMenus([['theatre', () => t('tb.theatre'), undefined, true]]);       /* la liste du théâtre, comme au Route Planner */
   gsApplyAll(true);
   const synced = dgSyncRoutes();
-  if (doc.theatre !== th0 || synced || JSON.stringify(doc) !== DG_DOC.raw) persistState();       /* le document tel qu'il se lit maintenant (migration d'une carte d'avant le lot comprise) est gardé, une fois */       /* un théâtre pris (clé partagée, fiche ou route) est gardé */
+  if (doc.theatre !== th0 || synced) persistState(); else persistStateIfChanged();       /* le document tel qu'il se lit maintenant (migration d'une carte d'avant le lot comprise) est gardé, une fois */       /* un théâtre pris (clé partagée, fiche ou route) est gardé */
   bindEvents();
   setActiveTab('header');
   renderAll();

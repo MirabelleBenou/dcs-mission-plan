@@ -2951,6 +2951,7 @@ __CSS__
             <input type="file" accept="image/*">
             <span class="img-text" data-i18n="editor.imgZone.tap">▲ TOUCHER POUR IMPORTER UNE CARTE ▲</span>
           </label>
+          <div class="ui-note" data-i18n="editor.simple.mapHelp">ou du Route Planner : Exporter ▾ › Image pour le briefing…</div>
         </div>
         <div class="ed-field-row">
           <div class="ed-field"><label data-i18n="editor.mission.tanks">Menaces — Chars</label><input data-bind="mission.threats.tanks" type="text"></div>
@@ -3665,6 +3666,7 @@ const I18N = {
     'editor.simple.up':           'Monter',
     'editor.simple.down':         'Descendre',
     'editor.simple.map':          'Carte (image)',
+    'editor.simple.mapHelp':      'ou du Route Planner : Exporter ▾ › Image pour le briefing…',
     'editor.targets.label':       'Cibles',
     'editor.targets.add':         '+ Ajouter une cible',
     'editor.targets.num':         'N°',
@@ -4075,6 +4077,7 @@ const I18N = {
     'editor.simple.up':           'Move up',
     'editor.simple.down':         'Move down',
     'editor.simple.map':          'Map (image)',
+    'editor.simple.mapHelp':      'or from the Route Planner: Export ▾ › Image for the briefing…',
     'editor.targets.label':       'Targets',
     'editor.targets.add':         '+ Add target',
     'editor.targets.num':         'No.',
