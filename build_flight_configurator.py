@@ -536,6 +536,7 @@ I18N_FR = {
     'route.noid': 'Ouvre le Route Planner une fois pour pouvoir choisir ces routes (il leur donne un identifiant).',
     'route.toast.one': 'Route « {0} » reprise du Route Planner pour {1}.',
     'toast.saveFail': '⚠ Enregistrement local impossible (espace plein)',
+    'ex.routeFail': '⚠ La route de l\'exemple n\'a pas pu s\'écrire',
     'toast.gsFull': '⚠ Stockage du navigateur plein : vos groupes ne sont pas enregistrés. Sauvegardez un fichier de travail.',
     'route.toast.many': 'Routes reprises du Route Planner : {0}.',
 
@@ -842,6 +843,7 @@ I18N_EN = {
     'route.noid': 'Open the Route Planner once to be able to pick these routes (it gives them an identifier).',
     'route.toast.one': 'Route “{0}” updated from the Route Planner for {1}.',
     'toast.saveFail': '⚠ Cannot save locally (storage full)',
+    'ex.routeFail': '⚠ The example route could not be written',
     'toast.gsFull': '⚠ Browser storage full: your groups are not saved. Save a work file.',
     'route.toast.many': 'Routes updated from the Route Planner: {0}.',
 
@@ -4074,13 +4076,21 @@ function exampleRouteFor(fcId) {
     if (hit) rid = hit.rid;
   }
   const res = rid ? rwLinkRoute(fcId, rid) : rwCreateRoute({ name: ex.name, theatre: ex.theatre, points: clone(ex.points), fcId: fcId });
-  if (!res.ok && res.why === 'full') showToast(t('toast.saveFail'), { type: 'err', ms: 6000 });
+  const failKey = (!res.ok || res.link === false) ? (res.why === 'full' ? 'toast.saveFail' : 'ex.routeFail') : '';
   const g = gsRead(), raw = g ? g.flights.filter(x => x.fcId === fcId)[0] : null, nf = raw ? restoreFlight(raw) : null;
   if (nf) S.flights = S.flights.map(f => (f.fcId === fcId ? nf : f));
+  return failKey;
+}
+// Le toast « Exemple chargé · Restaurer » est posé à la fin du geste et prendrait la place du message d'échec : celui-ci vient donc après, en toast d'erreur qui garde l'action « Restaurer »
+function exampleFailToast(key) {
+  const snap = UIK.restore;
+  showToast(t(key), { type: 'err', ms: 12000, action: snap ? { label: uiT('ui.restore'), fn: () => uiRestore(snap) } : null });
+  if (snap) UIK.restoreN = showToast._n;
 }
 function loadExample() {
   flushWork();
-  replaceWithRestore({
+  let exFail = '';
+  const done = replaceWithRestore({
     keys: GS_CONTENT_KEYS, mem: fcMem, back: fcBack,
     run: () => {
       const f = newFlight(); f.name = EXAMPLE_GROUP; f.coalition = 'red'; f.units = [newUnit('Mi-24P'), newUnit('Mi-24P')];
@@ -4090,7 +4100,7 @@ function loadExample() {
       UI.clamped = 0; UI.exportTried = false; UI.rtChoose = null;
       Object.assign(UI.cmp, { saving: false, err: '', st: null });
       clearTimeout(_saveTimer);
-      if (gsReplaceAll(S.theatre, JSON.parse(JSON.stringify(S.flights)))) { gsMarkAll(); exampleRouteFor(f.fcId); gsMarkAll(); }
+      if (gsReplaceAll(S.theatre, JSON.parse(JSON.stringify(S.flights)))) { gsMarkAll(); exFail = exampleRouteFor(f.fcId); gsMarkAll(); }
       thFill();
       renderAll();
       writeState();
@@ -4098,6 +4108,7 @@ function loadExample() {
     },
     msg: () => t('toast.example')
   });
+  Promise.resolve(done).then(() => { if (exFail) exampleFailToast(exFail); });
 }
 function exportFile() {
   if (exportIssues().length) {

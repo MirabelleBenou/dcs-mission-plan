@@ -2543,8 +2543,8 @@ kbd {{
 
       <!-- Crédits et limites -->
       <div class="fm-callout note">
-        <div class="lang-block" data-lang="fr">Crédits : les tables d'armes viennent de <strong>pydcs</strong> (LGPL-3.0), reprises de Mission Tools ; les dessins de la vue de face sont de <strong>Goldwolf</strong> (DCS Reference Guide), utilisés avec son accord et <strong>hors de la licence MIT</strong> du dépôt (voir <code>data/views/LICENSE.md</code>). Limite : le module n'applique aucune règle d'emport — il écrit ce qu'on compose, il ne dit pas que DCS l'acceptera.</div>
-        <div class="lang-block" data-lang="en">Credits: the weapon tables come from <strong>pydcs</strong> (LGPL-3.0), taken from Mission Tools; the front-view drawings are by <strong>Goldwolf</strong> (DCS Reference Guide), used with his permission and <strong>outside the repository's MIT licence</strong> (see <code>data/views/LICENSE.md</code>). Limit: the module applies no loadout rule — it writes what you compose, it does not say that DCS will accept it.</div>
+        <div class="lang-block" data-lang="fr">Crédits : les tables d'armes viennent de <strong>pydcs</strong> (LGPL-3.0-or-later), reprises de Mission Tools ; les dessins de la vue de face sont de <strong>Goldwolf</strong> (DCS Reference Guide), utilisés avec son accord et <strong>hors de la licence MIT</strong> du dépôt (voir <code>data/views/LICENSE.md</code>). Limite : le module n'applique aucune règle d'emport — il écrit ce qu'on compose, il ne dit pas que DCS l'acceptera.</div>
+        <div class="lang-block" data-lang="en">Credits: the weapon tables come from <strong>pydcs</strong> (LGPL-3.0-or-later), taken from Mission Tools; the front-view drawings are by <strong>Goldwolf</strong> (DCS Reference Guide), used with his permission and <strong>outside the repository's MIT licence</strong> (see <code>data/views/LICENSE.md</code>). Limit: the module applies no loadout rule — it writes what you compose, it does not say that DCS will accept it.</div>
       </div>
 
     </div><!-- /fm-chapter -->
