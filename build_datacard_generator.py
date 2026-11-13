@@ -1024,7 +1024,6 @@ body {
 .dc-row.dc-two { display: grid; gap: 12px; }
 .dc-r1.dc-two { grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); }
 .dc-r4.dc-two { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
-.dc-r5.dc-two { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 .dc-row > .dc-block, .dc-row > .dc-col { min-width: 0; }
 .dc-col { display: flex; flex-direction: column; gap: 12px; }
 .dc-col > .dc-block:last-child { flex: 1 1 auto; }
@@ -5652,7 +5651,8 @@ function pageHtml(c, mode, p, N, kind, withNav, withRefs, noRadio) {
       (withNav ? rowHtml('dc-r3', [blkNav(c) || blkNavBlank(c)]) : '') +
       (withRefs ? rowHtml('dc-r3', [blkRefs(c) || blkRefsBlank(c)]) : '') +
       rowHtml('dc-r4', [noRadio ? '' : (blkRadio(c) || blkRadioBlank(c)), col]) +
-      rowHtml('dc-r5', [blkFuel(c) || blkFuelBlank(c), blkThreats(c) || blkThreatsBlank(c)]);
+      rowHtml('dc-r5', [blkFuel(c) || blkFuelBlank(c)]) +
+      rowHtml('dc-r6', [blkThreats(c) || blkThreatsBlank(c)]);
   }
   return '<article class="dc-page" data-mode="' + mode + '">' + top + head + '<div class="dc-body">' + body + '</div>' + foot + '</article>';
 }
