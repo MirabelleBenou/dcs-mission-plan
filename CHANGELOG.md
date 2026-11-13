@@ -126,6 +126,7 @@ Changes merged since the last release, grouped per tool.
 - Standard: a group without a squadron, and a guest squadron, pick their aircraft type from the list of the game (as in HQ); the Flight Configurator import takes it, and the Standard frequencies by their radio and channel.
 - The map image box says the image can come from the Route Planner.
 - The time field is in both formats.
+- A mission line without a squadron shows its sub-group in the group column.
 #### Removed
 - The Wing tab no longer imports or resets the wing configuration: HQ is where it is set.
 #### Fixed

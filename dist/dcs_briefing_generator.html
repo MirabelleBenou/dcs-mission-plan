@@ -7092,7 +7092,8 @@ function simpleBannerText() {
 function simpleFlightRows() {
   return (state.phases || []).map(ph => {
     const info = getPhaseSquadronInfo(ph);
-    const vol = info ? getRosterLabelParts(info).shortLabel : '';
+    /* un groupe sans escadre (ni escadre invitée) mais avec un sous-groupe imprime ce sous-groupe seul ; sans rien, « — » */
+    const vol = info ? getRosterLabelParts(info).shortLabel : (!ph.squadron ? String(ph.subgroup || '').trim() : '');
     /* un groupe sans escadron imprime l'appareil choisi (ph.aircraft) ; un groupe d'escadron ou invité garde le sien */
     const acft = (info && info.aircraft && info.aircraft !== '?') ? info.aircraft : ((!info && ph.squadron !== '__guest__' && typeof ph.aircraft === 'string') ? ph.aircraft.trim() : '');
     const n = parseInt(ph.count, 10);
@@ -7462,6 +7463,12 @@ function buildPages() {
           <span class="sq-id">${escapeHtml(info.id)}</span>
           <span class="sq-cs">${escapeHtml(nameToShow)}</span>
           <span class="sq-ac">${escapeHtml(info.aircraft)}</span>
+        </div>`;
+    } else if (!ph.squadron && String(ph.subgroup || '').trim()) {
+      /* sans escadre : la puce ne porte que le sous-groupe */
+      squadronChip = `
+        <div class="squadron-chip">
+          <span class="sq-cs">${escapeHtml(String(ph.subgroup).trim())}</span>
         </div>`;
     }
 
