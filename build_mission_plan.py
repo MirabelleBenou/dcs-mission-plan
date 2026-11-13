@@ -983,6 +983,7 @@ select[data-tbm-src] {{ display: none !important; }}
 
       iframe.addEventListener('load', function() {{
         loading.classList.add('hidden');
+        if (typeof suiteOnLoad === 'function') suiteOnLoad(id);
         var doc = iframe.contentDocument;
         /* Injection bouton retour dans .toolbar (pas #app-header — cf. vérif grep) */
         var toolbar = doc && doc.querySelector('.toolbar');
@@ -1440,10 +1441,9 @@ function tbmScrolled(e) {{
     document.getElementById('btn-work-open').addEventListener('click', function() {{ if (window.MP_WORK_OPEN) window.MP_WORK_OPEN(); }});
     document.getElementById('btn-work-save').addEventListener('click', function() {{ if (window.MP_WORK_SAVE) window.MP_WORK_SAVE(); }});
     document.getElementById('btn-fm').addEventListener('click', function() {{ openModule('fm'); }});
-    /* Ctrl+S / Cmd+S à l'accueil = Sauvegarder (rien sous une fenêtre ou une liste ouverte) */
+    /* Ctrl+S / Cmd+S quand le clavier est dans le shell = Sauvegarder (rien sous une fenêtre ou une liste ouverte ; jamais « Enregistrer la page sous ») */
     document.addEventListener('keydown', function(e) {{
       if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey || (e.key !== 's' && e.key !== 'S')) return;
-      if (activeModule !== null) return;
       e.preventDefault();
       if (document.querySelector('.ui-modal:not([hidden])') || TBM.cur) return;
       if (window.MP_WORK_SAVE) window.MP_WORK_SAVE();

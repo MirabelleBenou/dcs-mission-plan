@@ -107,7 +107,7 @@ Changes merged since the last release, grouped per tool.
 ### Briefing Generator
 #### Changed
 - The example loads in the interface language (French or English).
-- **Load** only accepts a briefing: any other file (flight package, route, datacard) is refused with a message and the current briefing is kept.
+- **Open › Open a briefing…** only accepts a briefing: any other file (flight package, route, datacard) is refused with a message and the current briefing is kept; a Mission Plan work file is opened as such.
 - Export in one window: format, pages and file name together. Metadata is now the last section, folded.
 - The briefing format moves into **Display ▾**: “Standard” (one mission page plus photo pages, now the default, the example included) or “Advanced” (ten sections); the printed brief no longer names its format, and “OPERATION” follows the interface language. Empty fields hint at what to type instead of showing sample values. **Ctrl+S** saves.
 - Standard: a group without a squadron, and a guest squadron, pick their aircraft type from the list of the game (as in HQ); the Flight Configurator import takes it, and the Standard frequencies by their radio and channel.
@@ -179,7 +179,7 @@ Changes merged since the last release, grouped per tool.
 ### Field Manual
 #### Added
 - A **Flight Configurator** chapter.
-- **Getting started** on the index page: every tool's Example button.
+- **Getting started** on the "Where to start" page: every tool's Example button.
 - A "Where to start" page: the two roles, the order of the tools, the work file.
 #### Changed
 - HQ and Recon Station chapters: the Example button.

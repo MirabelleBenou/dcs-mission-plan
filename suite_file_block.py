@@ -50,7 +50,7 @@ const SUITE_KEYS = ['fc_state_v1', 'flight_set_v1', 'flight_set_v1_illisible', '
 const SUITE_DROP = ['bg', 'dg', 'rp', 'fc', 'rs'];
 /* Le calme du stockage, mesuré comme gsSettled (group_store_block.py) : aucune écriture des clés pendant SUITE_CALM_MS, constaté à deux relectures de suite (toutes les SUITE_CALM_STEP_MS), au plus SUITE_CALM_MAX_MS */
 const SUITE_CALM_MS = 400, SUITE_CALM_MAX_MS = 3000, SUITE_CALM_STEP_MS = 50;
-const SUITE = { restore: null, toastN: 0, name: '', at: 0, from: null };
+const SUITE = { restore: null, toastN: 0, name: '', at: 0, from: null, busy: false };
 
 function suiteGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
 function suiteRead() { const o = {}; SUITE_KEYS.forEach(k => { o[k] = suiteGet(k); }); return o; }
@@ -94,7 +94,7 @@ function suiteFrom() {
   }
   return { win: null, el: document.activeElement };
 }
-function suiteSaveSync() { document.getElementById('mp-work-go').disabled = suiteCleanName(SUITE.name) === ''; }
+function suiteSaveSync() { document.getElementById('mp-work-go').disabled = SUITE.busy || suiteCleanName(SUITE.name) === ''; }
 function suiteModalClose() {
   const m = suiteModal();
   if (!m || m.hidden) return;
@@ -107,9 +107,18 @@ function suiteModalClose() {
     else { const l = document.getElementById('landing'); if (l && activeModule === null) l.focus({ preventScroll: true }); }
   } catch (e) { /* le focus est facultatif */ }
 }
-function suiteSaveGo() {
+/* Le fichier est lu après le calme : chaque outil vivant écrit sa saisie en attente (MP_FLUSH), le shell attend que les clés ne bougent plus (suiteSettled, 3 s au plus), puis lit. Le bouton reste désactivé pendant l'attente ; fermer la fenêtre l'annule. */
+async function suiteSaveGo() {
   const name = suiteCleanName(SUITE.name);
-  if (name === '') return;
+  if (name === '' || SUITE.busy) return;
+  SUITE.busy = true;
+  suiteSaveSync();
+  suiteFlush();
+  await suiteSettled();
+  SUITE.busy = false;
+  const m = suiteModal();
+  if (!m || m.hidden) return;
+  suiteSaveSync();
   const text = suiteWorkText();
   suiteModalClose();
   const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
@@ -196,6 +205,25 @@ function suiteReplace(next) {
   if (was && SUITE_DROP.indexOf(was) >= 0) openModule(was);
   return { ok: ok, snap: snap };
 }
+/* La référence de « Restaurer » : prise après le calme, compté à partir de l'appel ; une prise plus récente remplace la précédente (r.n). r.pending est vrai tant qu'une prise est en cours. */
+function suiteTake(r) {
+  const n = ++r.n;
+  r.pending = suiteSettled().then(() => { if (r.n === n) { r.ref = suiteRead(); r.pending = null; } });
+}
+/* Une restauration est en attente tant que son toast est à l'écran */
+function suiteRestoreLive() {
+  const r = SUITE.restore, el = document.getElementById('toast');
+  return r && SUITE.toastN === showToast._n && el && el.classList.contains('show') ? r : null;
+}
+/* Au « load » de l'iframe d'un des cinq outils (rouverte par l'ouverture ou ouverte ensuite) : ses écritures de démarrage différées partent tout de suite (MP_FLUSH), puis la référence est reprise, calme compté depuis ce load */
+function suiteOnLoad(id) {
+  if (SUITE_DROP.indexOf(id) < 0) return;
+  const r = suiteRestoreLive();
+  if (!r) return;
+  suiteFlush(id);
+  r.ref = null;
+  suiteTake(r);
+}
 window.MP_WORK_OPEN_TEXT = function (text, name) {
   let o;
   try { o = JSON.parse(text); } catch (e) { console.warn('[M·P] fichier de travail : JSON illisible', e); showToast(t('work.err.json'), { type: 'err' }); return false; }
@@ -210,10 +238,10 @@ window.MP_WORK_OPEN_TEXT = function (text, name) {
   const keep = live ? SUITE.restore : null;
   const res = suiteReplace(next);
   if (!res.ok) { showToast(t('work.err.full'), { type: 'err' }); return false; }
-  const r = { snap: keep ? keep.snap : res.snap, ref: null, settled: null };
+  const r = { snap: keep ? keep.snap : res.snap, ref: null, pending: null, n: 0 };
   SUITE.restore = r;
   /* la référence de « Restaurer » : le stockage relu une fois les outils rouverts calmes */
-  r.settled = suiteSettled().then(() => { r.ref = suiteRead(); });
+  suiteTake(r);
   showToast(t('work.opened').replace('{0}', String(name || '')) + ' ·', { action: { label: t('ui.restore'), fn: () => suiteRestore(r) }, ms: 12000 });
   SUITE.toastN = showToast._n;
   return true;
@@ -235,8 +263,7 @@ window.MP_WORK_OPEN = function () {
 /* « Restaurer » : refusé si une clé a changé depuis la référence (une saisie, un autre geste) ; sinon la photographie revient, par le même chemin que l'ouverture, sans nouveau « Restaurer » */
 async function suiteRestore(r) {
   if (SUITE.restore !== r) return;
-  if (r.ref === null) await r.settled;
-  if (SUITE.restore !== r) return;
+  while (r.pending) { await r.pending; if (SUITE.restore !== r) return; }
   const now = suiteRead();
   if (SUITE_KEYS.some(k => now[k] !== r.ref[k])) { SUITE.restore = null; showToast(t('ui.restore.refused'), { type: 'err' }); return; }
   SUITE.restore = null;

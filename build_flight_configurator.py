@@ -439,7 +439,6 @@ I18N_FR = {
     'tb.open': 'Ouvrir',
     'tb.open.tip': 'Ouvrir un travail, une configuration ou importer des groupes',
     'work.open': 'Ouvrir un travail…',
-    'work.open.tip': 'Ouvrir un travail de Mission Plan (JSON) : remplace le travail de toute la suite',
     'work.save.tip': 'Sauvegarder tout le travail de Mission Plan (JSON)',
     'tb.save': 'Sauvegarder',
     'op.file': 'Ouvrir une configuration…',
@@ -749,7 +748,6 @@ I18N_EN = {
     'tb.open': 'Open',
     'tb.open.tip': 'Open a work file, a configuration or import groups',
     'work.open': 'Open a work file…',
-    'work.open.tip': 'Open a Mission Plan work file (JSON): replaces the work of the whole suite',
     'work.save.tip': 'Save all the Mission Plan work (JSON)',
     'tb.save': 'Save',
     'op.file': 'Open a configuration…',
@@ -4436,7 +4434,7 @@ function bindColumns() {
 function fcOpenMenu(btn) {
   mnOpen(btn, 'op-panel', t('tb.open'), {
     items: [
-      { k: 'work', label: t('work.open'), hint: t('op.file.h'), title: t('work.open.tip') },
+      { k: 'work', label: t('work.open'), hint: t('op.file.h') },
       { k: 'file', label: t('op.file'), hint: t('op.file.h'), title: t('op.file.tip') },
       { k: 'import', label: t('op.import'), hint: t('op.import.h'), title: t('op.import.tip') }
     ],
