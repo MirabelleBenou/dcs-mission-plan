@@ -83,7 +83,7 @@ LANDING_CSS = r"""
   .mp-railbtn{padding:7px 9px;}
 }
 @media(max-width:900px){
-  .mp-grp{padding:30px 10px 16px;}
+  .mp-grp{padding:42px 10px 16px;}       /* de la place sous le bouton Exemple (et l'onglet) : les cartes, empilées et inclinées, ne le touchent pas */
   .mp-tab{flex-direction:column; gap:0; padding:4px 12px;}
   .mp-tab b{font-size:16px; white-space:nowrap;}
   .mp-tab small{font-size:9px;}

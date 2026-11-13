@@ -2930,7 +2930,7 @@ __CSS__
         </div>
         <div class="ed-field-row">
           <div class="ed-field"><label data-i18n="editor.meta.date">Date</label><input data-bind="meta.date" type="text" autocomplete="off" spellcheck="false" placeholder="AAAA-MM-JJ" data-i18n-placeholder="placeholder.date"></div>
-          <div class="ed-field" data-fmt="simple"><label data-i18n="editor.meta.time">Heure (Z)</label><input data-bind="meta.time" type="text" placeholder="hh:mm" data-i18n-placeholder="placeholder.time"></div>
+          <div class="ed-field"><label data-i18n="editor.meta.time">Heure (Z)</label><input data-bind="meta.time" type="text" placeholder="hh:mm" data-i18n-placeholder="placeholder.time"></div>
         </div>
       </div>
     </details>
@@ -6717,7 +6717,7 @@ function imgFrame(label, url, extraClass) {
 function pageMeta() {
   const d = formatMissionDate(state.meta.date);
   // v2.3.0 : un élément vide est omis avec son séparateur (briefing vierge)
-  const parts = [state.meta.docRef, d].filter(Boolean).map(p => escapeHtml(p));
+  const parts = [state.meta.docRef, [d, fmtTimeZ(state.meta.time)].filter(Boolean).join(' · ')].filter(Boolean).map(p => escapeHtml(p));       // la date et l'heure en un seul élément : « 22/03/1989 · 08:00Z »
   return `<div class="doc-meta">DOC${parts.length ? ' ▸ ' + parts.join(' ▸ ') : ''}</div>`;
 }
 
@@ -6832,12 +6832,15 @@ function getPhaseSquadronInfo(ph) {
    Une page de mission (Situation, Mission + tableau des vols, Fréquences, Terrains, Météo),
    puis des pages de photos (deux par page) s'il y en a. Un bloc sans contenu n'est pas rendu.
    Pas de bloc Menaces dans ce mode. */
+/* Une heure imprimée : la valeur rognée ; « h:mm » ou « hh:mm » reçoit un Z (08:00 → 08:00Z) ; toute autre valeur (08:00Z, 10:00 L, 0800) s'imprime telle quelle ; vide : rien (ni séparateur) */
+function fmtTimeZ(v) { const s = String(v === undefined || v === null ? '' : v).trim(); return /^\d{1,2}:\d{2}$/.test(s) ? s + 'Z' : s; }
 function simpleBannerText() {
   let s = t('simple.hdr.mission');
   if (state.meta.mission) s += ' ' + state.meta.mission;
   const d = formatMissionDate(state.meta.date);
   if (d) s += ' ░ ' + d;
-  if (state.meta.time) s += ' ░ ' + state.meta.time;
+  const tz = fmtTimeZ(state.meta.time);
+  if (tz) s += ' ░ ' + tz;
   return s;
 }
 
@@ -7821,7 +7824,7 @@ function bgSectionSum(id) {
   const cnt = (l, k) => (Array.isArray(l) && l.length) ? t('sum.' + k + (l.length === 1 ? '.1' : '.n')).replace('{n}', l.length) : '';
   const m = state.meta || {}, sit = state.sitac || {}, mis = state.mission || {}, rp = state.radioPlan || {};
   switch (id) {
-    case 'header': return uiJoin([v(m.operation), v(m.mission), v(m.date), document.body.dataset.format === 'simple' ? v(m.time) : '']);
+    case 'header': return uiJoin([v(m.operation), v(m.mission), v(m.date), v(m.time)]);
     case 'meta': return uiJoin([v(m.classification) ? t('classif.' + m.classification) : '', v(m.docRef)]);
     case 's-situation': case 'sitac': return uiJoin([first(sit.points), cnt(sit.points, 'pt')]);
     case 's-mission': case 'mission': return uiJoin([first(mis.objectives), cnt(mis.objectives, 'obj')]);

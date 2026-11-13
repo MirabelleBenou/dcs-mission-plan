@@ -8434,6 +8434,8 @@ function groupText(c) {
   return n != null ? t('dc.flightOf', { n: n }) : '';
 }
 
+/* Une heure imprimée : la valeur rognée ; « h:mm » ou « hh:mm » reçoit un Z (08:00 → 08:00Z) ; toute autre valeur (08:00Z, 10:00 L, 0800) s'imprime telle quelle ; vide : rien (ni séparateur) */
+function fmtTimeZ(v) { const s = String(v === undefined || v === null ? '' : v).trim(); return /^\d{1,2}:\d{2}$/.test(s) ? s + 'Z' : s; }
 function headMain(c) {
   const f = c.flight, m = c.meta;
   const sub = [
@@ -8441,7 +8443,7 @@ function headMain(c) {
     f.task.trim().toUpperCase()
   ].filter(hasText).join(' · ');
   const op = [hasText(m.operation) ? t('dc.operation', { op: m.operation.trim() }) : '', m.mission.trim()].filter(hasText).join(' · ');
-  const dt = [fmtDate(m.date).trim(), m.time.trim()].filter(hasText).join(' · ');
+  const dt = [fmtDate(m.date).trim(), fmtTimeZ(m.time)].filter(hasText).join(' · ');
   let r = '<div class="dc-ttl">' + esc(t('dc.title')) + '</div>';
   if (op) r += '<div class="dc-op">' + esc(op) + '</div>';
   if (dt) r += '<div class="dc-dt">' + esc(dt) + '</div>';
