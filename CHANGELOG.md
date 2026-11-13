@@ -91,6 +91,7 @@ Changes merged since the last release, grouped per tool.
 - Each radio channel has a box to print it on the group's datacard; the Datacard Generator shows the same choice.
 - The loadout follows the Loadout Editor of Mission Tools: the Kord of the Mi-24P on one door only; a weapon that cannot go with the rest of the loadout is greyed out with the stations in the way, and a loadout received with such a mix says it under each station.
 - A slider for the gun, like the one for the fuel, and the estimated take-off weight (empty, fuel and stores; gun and flares not counted), in orange above the recommended maximum.
+- A **Display** menu sets the mass (kg or lb) and distance (km or NM) units, shared with the other tools.
 #### Changed
 - Groups are now shared with the Route Planner: create, rename or re-route a group in either tool and the other follows at once. A group may have no unit yet. A group with no unit is exported route only.
 - **Import** now also reads the Briefing Generator — its groups, their number of aircraft and the radio plan of each aircraft type, cockpit channel numbers converted — with Side, Type and Name filters. A group is completed when its name, case included, and side match; a flight of an aircraft the suite does not handle comes in as a group with its route only. An aircraft the suite does not know by the briefing's name is left for you to pick; the package exports once every type is picked. An imported route now shows in the Route Planner as the group's route.
@@ -143,6 +144,7 @@ Changes merged since the last release, grouped per tool.
 - The HF radio of the Mi-24P and Mi-8MT, with the frequencies chosen in the Flight Configurator or typed here: pick the ones shown on the card, with their name, as for the other radios; no channel number is printed for them.
 - Airfields: pick the airfield from the theatre's list (the eleven theatres with game data; the other three offer a free name); the Datacard Generator has a theatre list like the Route Planner's, and the two modules share the theatre, which the datacard file keeps; the runway and the tower frequency in the band of the group's radio fill in, and DEP and ARR are taken from the route's first and last points, filling only empty boxes.
 - Airfields: the ICAO code fills in with the runway and tower frequency when the airfield is picked from the list (today's codes, known for 292 of the 745 airfields; from OurAirports, via DCS Airfield Charts).
+- The fuel line shows the **fuel** load and the take-off **weight** of each aircraft, from the Flight Configurator or typed on a free card.
 #### Changed
 - **One datacard per group**: the Datacard Generator now shares the groups of the Flight Configurator and the Route Planner. Each group has its datacard, listed in the new card list; a group's name, side, aircraft (callsign, type, board number) and radio frequencies are edited on either side and follow at once. Radios are shown in one box per aircraft type (“RADIO — MI-24P”), a channel that differs between two aircraft of a type is marked “varies by unit”, and you pick the channels shown on the card, with their name and modulation. The loadout can be taken from the Flight Configurator as a table. Pilots, times, weather, fuel, navigation and notes stay with the datacard. **New datacard** creates a group; **Free card** keeps a datacard outside the groups, and earlier datacards open as free cards.
 - The example loads in the interface language (French or English).
@@ -166,6 +168,7 @@ Changes merged since the last release, grouped per tool.
 - The year of the magnetic variation also reads the datacard date, after the date received with the route.
 - A printed loadout table no longer carries the loadout name; unit names are printed only when the datacard has several tables.
 - The **Fuel · Loadout** box spans the page: fuel on one line at the top, then one line per station, stations carrying the same weapon together (1/6, 2/3/4/5); **Threats · Notes** moves below it.
+- Changing the mass unit converts JOKER, BINGO, fuel and weight.
 #### Removed
 - The Datacard Generator's own HQ and flight package imports, replaced by the common import window of the Flight Configurator and the Route Planner.
 #### Fixed
@@ -219,6 +222,7 @@ Changes merged since the last release, grouped per tool.
 - HQ page: Dynamic Spawn described in its three steps; the outdated “HQ only reads” sentence and the “Commander is coming” note are removed.
 - HQ page: the Dynamic Spawn rules (one aircraft, same coalition, neutral airfields) and Discard changes.
 - The fold-all icon in section headers is described.
+- The Flight Configurator Display menu and the Datacard Generator fuel line are described.
 
 ---
 

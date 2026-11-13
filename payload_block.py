@@ -122,6 +122,35 @@ function payloadDefaults(type) {
   return { fuel: l.fuel_max, flare: l.flare, chaff: l.chaff, gun: 100 };
 }
 
+// La livre, en kilogrammes : les données restent en kg, l'unité de masse choisie ne change que l'affichage (payloadMassIn). Une valeur en lb s'affiche en entier arrondi.
+const PAYLOAD_KG_PER_LB = 0.45359237;
+function payloadMassIn(kg, unit) { return unit === 'lb' ? kg / PAYLOAD_KG_PER_LB : kg; }
+
+// Le poids au décollage d'une unité, la même règle au Flight Configurator et au Datacard Generator : à vide (la table des masses `masses`, { type: { empty, max } }, passée en argument : le bloc
+// ne la porte pas) + carburant + masse des emports. `fuel` : le carburant de l'unité en kg (un nombre) ; sinon le plein du type (payloadDefaults) ; sans plein dans AIRCRAFT_LIMITS, pas de carburant.
+// `stations` : { station: CLSID } ou { station: { CLSID } } ; seules comptent les stations du type, dans l'ordre numérique ; le canon et les leurres ne comptent pas. Une arme sans masse connue rend
+// le total incertain (unknown) : la somme est celle des armes connues. Rend { loadout, unknown, fuel, empty, max, takeoff } en kg : fuel, empty, max et takeoff valent null quand la table ne les donne pas
+// (un type absent de `masses` : ni poids ni maximum ; un type sans carburant : pas de poids). Rien n'est arrondi.
+function payloadTakeoff(type, fuel, stations, masses) {
+  const out = { loadout: 0, unknown: false, fuel: null, empty: null, max: null, takeoff: null };
+  (payloadPylons(type) || []).forEach(p => {
+    const v = stations ? stations[p.n] : '';
+    const clsid = typeof v === 'string' ? v : (v && typeof v.CLSID === 'string' ? v.CLSID : '');
+    if (clsid === '') return;
+    const m = payloadWeaponMass(clsid);
+    if (m === null) out.unknown = true; else out.loadout += m;
+  });
+  let f = (typeof fuel === 'number' && isFinite(fuel)) ? fuel : null;
+  if (f === null && payloadHas(AIRCRAFT_LIMITS, type)) f = payloadDefaults(type).fuel;
+  out.fuel = f;
+  if (masses && payloadHas(masses, type)) {
+    out.empty = masses[type].empty;
+    out.max = masses[type].max;
+    if (f !== null) out.takeoff = out.empty + f + out.loadout;
+  }
+  return out;
+}
+
 // Le plus grand nombre de leurres (k = 'flare') ou de paillettes (k = 'chaff') que l'appareil porte à lui seul : charge_total ÷ taille d'une charge ; le nombre par défaut si la table ne donne pas
 // la capacité. Les deux ensemble (flares × flare_charge_size + chaff × chaff_charge_size ≤ charge_total) se jugent ailleurs (saisie, import, lecture d'un emport) : buildPayload ne borne que chaque nombre.
 function payloadCountMax(type, k) {

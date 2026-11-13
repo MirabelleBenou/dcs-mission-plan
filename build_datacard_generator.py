@@ -119,8 +119,8 @@ def airfield_icao(facts):
 
 
 def dg_tables():
-    """Les trois tables que payload_block.py lit (WEAPON_NAMES, AIRCRAFT_PYLONS, AIRCRAFT_LIMITS), tirées de data/*.json, les mêmes fichiers que ceux du
-    Flight Configurator, et réduites aux types du Flight Configurator (PAYLOAD_TYPES de payload_block.py) : rien n'est recopié à la main. Les index de
+    """Les tables que payload_block.py lit (WEAPON_NAMES, AIRCRAFT_PYLONS, AIRCRAFT_LIMITS) et celle des masses à vide (AIRCRAFT_MASSES, pour le poids au décollage), tirées de data/*.json, les mêmes fichiers que ceux du
+    Flight Configurator, et réduites aux types du Flight Configurator (PAYLOAD_TYPES de payload_block.py), sauf les masses de toutes les armes du fichier des pylônes : rien n'est recopié à la main. Les index de
     pylônes sont renumérotés sur les seuls CLSID gardés ; le nom d'une arme est celui du fichier. Le build s'arrête si un CLSID d'un type du
     Flight Configurator n'a pas de nom."""
     types = json.loads(re.search(r"const PAYLOAD_TYPES = (\[.*?\]);", build_payload_block()).group(1).replace("'", '"'))
@@ -130,11 +130,13 @@ def dg_tables():
         names = json.load(f)
     with open(os.path.join(HERE, 'data', 'aircraft_limits.json'), encoding='utf-8') as f:
         lim = json.load(f)
+    with open(os.path.join(HERE, 'data', 'aircraft_masses.json'), encoding='utf-8') as f:
+        masses = json.load(f)
     orig = {c: i for i, c in enumerate(pyl['clsids'])}
     idx = {}
     kept_types = {}
     for ty in types:
-        if ty not in pyl['types'] or ty not in lim:
+        if ty not in pyl['types'] or ty not in lim or ty not in masses:
             raise SystemExit("[ERREUR] Type du Flight Configurator absent des tables de data/ : " + ty)
         kept_types[ty] = {}
         for n, lst in pyl['types'][ty].items():
@@ -143,9 +145,11 @@ def dg_tables():
     nameless = [c for c in clsids if c not in names]
     if nameless:
         raise SystemExit("[ERREUR] CLSID sans nom dans data/weapon_names.json : " + ", ".join(sorted(set(nameless))[:10]))
-    pylons = {'clsids': clsids, 'weights': [pyl['weights'][orig[c]] for c in clsids], 'types': kept_types}
+    # Les CLSID gardés d'abord (leurs index sont ceux des listes de pylônes), puis tous les autres du fichier : seule leur masse sert (payloadWeaponMass), pour qu'une arme pèse au Datacard Generator comme au Flight Configurator
+    all_clsids = clsids + [c for c in pyl['clsids'] if c not in idx]
+    pylons = {'clsids': all_clsids, 'weights': [pyl['weights'][orig[c]] for c in all_clsids], 'types': kept_types}
     dump = lambda o: json.dumps(o, ensure_ascii=False, separators=(',', ':'))
-    out = (dump({c: names[c] for c in sorted(clsids)}), dump(pylons), dump({ty: lim[ty] for ty in types}))
+    out = (dump({c: names[c] for c in sorted(clsids)}), dump(pylons), dump({ty: lim[ty] for ty in types}), dump({ty: masses[ty] for ty in types}))
     assert all('</script' not in x.lower() for x in out)
     return out
 
@@ -1898,6 +1902,8 @@ const I18N = {
     'ph.weather.visibility': 'Visibilité',
     'ph.weather.qnh': 'QNH',
     'ph.weather.clouds': 'Nuages',
+    'ph.fuel.amount': 'Quantité',
+    'ph.fuel.weight': 'Quantité',
     'ph.fuel.joker': 'Quantité',
     'ph.fuel.bingo': 'Quantité',
     'ph.loadout.*': 'Emport',
@@ -2054,6 +2060,8 @@ const I18N = {
     'f.visibility': 'Visibilité',
     'f.qnh': 'QNH',
     'f.clouds': 'Nuages',
+    'f.fuelqty': 'Carburant',
+    'f.weight': 'Poids',
     'f.joker': 'Joker',
     'f.bingo': 'Bingo',
     'f.loadout': 'Emport',
@@ -2130,6 +2138,8 @@ const I18N = {
     'dc.w.qnh': 'QNH',
     'dc.w.clouds': 'NUAGES',
     'dc.w.calm': 'CALME',
+    'dc.fuelqty': 'CARBURANT',
+    'dc.weight': 'POIDS',
     'dc.joker': 'JOKER',
     'dc.bingo': 'BINGO',
     'm01': 'JAN', 'm02': 'FÉV', 'm03': 'MAR', 'm04': 'AVR', 'm05': 'MAI', 'm06': 'JUN',
@@ -2400,6 +2410,8 @@ const I18N = {
     'ph.weather.visibility': 'Visibility',
     'ph.weather.qnh': 'QNH',
     'ph.weather.clouds': 'Clouds',
+    'ph.fuel.amount': 'Amount',
+    'ph.fuel.weight': 'Amount',
     'ph.fuel.joker': 'Amount',
     'ph.fuel.bingo': 'Amount',
     'ph.loadout.*': 'Loadout',
@@ -2556,6 +2568,8 @@ const I18N = {
     'f.visibility': 'Visibility',
     'f.qnh': 'QNH',
     'f.clouds': 'Clouds',
+    'f.fuelqty': 'Fuel',
+    'f.weight': 'Weight',
     'f.joker': 'Joker',
     'f.bingo': 'Bingo',
     'f.loadout': 'Loadout',
@@ -2632,6 +2646,8 @@ const I18N = {
     'dc.w.qnh': 'QNH',
     'dc.w.clouds': 'CLOUDS',
     'dc.w.calm': 'CALM',
+    'dc.fuelqty': 'FUEL',
+    'dc.weight': 'WEIGHT',
     'dc.joker': 'JOKER',
     'dc.bingo': 'BINGO',
     'm01': 'JAN', 'm02': 'FEB', 'm03': 'MAR', 'm04': 'APR', 'm05': 'MAY', 'm06': 'JUN',
@@ -3105,7 +3121,7 @@ function newCard() {
     radios: [],
     fields: [],
     weather: { metar: '', wind: '', visibility: '', qnh: '', clouds: '' },
-    fuel: { joker: '', bingo: '' },
+    fuel: { amount: '', weight: '', joker: '', bingo: '' },       /* amount (Carburant) et weight (Poids) : saisis sur une carte libre ou à emport décoché ; sinon calculés d'après l'emport du Flight Configurator (dgFuelView), jamais stockés ici */
     loadout: [],
     threats: [],
     notes: ''
@@ -3139,12 +3155,16 @@ function readVMode(v, decl) {
   return (v === 'calc' || v === 'manual') ? v : (parseDecl(decl) != null ? 'manual' : 'calc');
 }
 
-/* La copie figée (c.frz) lue : radios [{ type, posts: [{ r, name, rows: [[canal, canal du cockpit, fréquence]] }] }], emports [{ names, type, lo, rows: [[point, CLSID]] }], bruts [noms] ; ce qui n'a pas la forme est écarté */
+/* La copie figée (c.frz) lue : radios [{ type, posts: [{ r, name, rows: [[canal, canal du cockpit, fréquence]] }] }], emports [{ names, type, lo, rows: [[point, CLSID]] }], bruts [noms], lots de carburant et de poids [{ ranks, fuel, weight, unc }] (en kg) ; ce qui n'a pas la forme est écarté */
 function normFrz(o) {
   const arr = v => Array.isArray(v) ? v : [];
   const radios = arr(o.radios).filter(m => gsIsObj(m) && typeof m.type === 'string' && Array.isArray(m.posts)).map(m => ({ type: m.type, posts: m.posts.filter(p => gsIsObj(p) && Array.isArray(p.rows)).map(p => ({ r: Number(p.r) || 0, name: str(p.name), rows: p.rows.filter(r => Array.isArray(r)).map(r => [Number(r[0]) || 0, str(r[1]), str(r[2])]) })) }));
   const loads = arr(o.loads).filter(x => gsIsObj(x) && typeof x.type === 'string' && gsIsObj(x.lo) && Array.isArray(x.rows)).map(x => ({ names: arr(x.names).map(str), type: x.type, lo: { key: str(x.lo.key), label: str(x.lo.label), from: str(x.lo.from), modified: x.lo.modified === true }, rows: x.rows.filter(r => Array.isArray(r)).map(r => [str(r[0]), str(r[1])]) }));
-  return { radios: radios, loads: loads, raw: arr(o.raw).map(str) };
+  const out = { radios: radios, loads: loads, raw: arr(o.raw).map(str) };
+  const nn = v => (typeof v === 'number' && isFinite(v) ? v : null);
+  const fuel = arr(o.fuel).filter(x => gsIsObj(x) && Array.isArray(x.ranks)).map(x => ({ ranks: x.ranks.map(Number).filter(n => Number.isInteger(n) && n > 0), fuel: nn(x.fuel), weight: nn(x.weight), unc: x.unc === true }));
+  if (fuel.length) out.fuel = fuel;       /* les lots de carburant et de poids, en kg : la clé n'existe que s'il y en a (une copie d'avant ne change pas) */
+  return out;
 }
 
 /* Fusion d'une carte lue sur une carte neuve : champ absent → valeur neuve ; champ inconnu → ignoré. */
@@ -3162,7 +3182,9 @@ function normalizeCard(src) {
     if ('count' in fl) c.flight.count = normCount(fl.count);
     if ('threat' in fl) c.flight.threat = THREAT_KEYS.indexOf(fl.threat) !== -1 ? fl.threat : '';
   }
+  c.units = { mass: UNITS_DEFAULT.mass, distance: UNITS_DEFAULT.distance, altitude: UNITS_DEFAULT.altitude };       /* une carte source sans unités est en kg, km, m : setDoc convertit alors ses masses saisies vers la clé */
   const un = src.units;
+  if (!(un && typeof un === 'object')) Object.defineProperty(c, '_noUnits', { value: true, enumerable: false });       /* le fichier ne disait pas ses unités : elles ne deviennent pas la clé à l'ouverture */
   if (un && typeof un === 'object') {
     Object.keys(UNIT_CHOICES).forEach(k => { if (k in un && UNIT_CHOICES[k].indexOf(un[k]) !== -1) c.units[k] = un[k]; });
   }
@@ -3233,7 +3255,7 @@ function normalizeCard(src) {
   }
   const fu = src.fuel;
   if (fu && typeof fu === 'object') {
-    ['joker', 'bingo'].forEach(k => { if (k in fu) c.fuel[k] = str(fu[k]); });
+    ['amount', 'weight', 'joker', 'bingo'].forEach(k => { if (k in fu) c.fuel[k] = str(fu[k]); });
   }
   if (Array.isArray(src.loadout)) c.loadout = normStrList(src.loadout, LIMITS.loadout);
   if (Array.isArray(src.threats)) c.threats = normStrList(src.threats, LIMITS.threats);
@@ -3256,7 +3278,9 @@ function normalizeCard(src) {
   const fz = src.frz;
   if (gsIsObj(fz)) c.frz = normFrz(fz);
   if (!c.gsId) syncGroup(c);
-  return dgCanonCard(c);
+  const out = dgCanonCard(c);
+  if (c._noUnits) Object.defineProperty(out, '_noUnits', { value: true, enumerable: false });       /* le drapeau suit la carte rangée */
+  return out;
 }
 
 /* L'ordre des clés d'une carte : celui de newCard(), puis les clés facultatives, chacune à sa place (une clé qui manque et que le module pose plus tard, loadoutFc, ne se range pas en fin d'objet) ; une clé inconnue suit.
@@ -3378,7 +3402,7 @@ function dgUnitsSet(u, fromKey) {
   const changed = Object.keys(UNITS_DEFAULT).some(k => dgU[k] !== n[k]);
   Object.assign(dgU, n);
   const stale = doc.cards.some(c => !c.units || Object.keys(UNITS_DEFAULT).some(k => c.units[k] !== n[k]));       /* une carte stockée qui diffère de la clé : elle est remise à la clé et la persistance a lieu */
-  doc.cards.forEach(c => { c.units = { mass: n.mass, distance: n.distance, altitude: n.altitude }; });
+  doc.cards.forEach(c => { dgMassConv(c, n.mass); c.units = { mass: n.mass, distance: n.distance, altitude: n.altitude }; });       /* les masses saisies passent de l'unité de la carte à la nouvelle */
   if (!fromKey) dgWriteUnitsKey(n);
   dgUnitsSync();
   if (changed || stale) { persistState(); renderEditor(true); renderPreview(); }
@@ -3424,7 +3448,7 @@ function loadState() {
 function setDoc(next) {
   if (doc.theatre) next.theatre = doc.theatre;       /* ouvrir un fichier, l'exemple ou une carte blanche ne change pas le théâtre choisi ; un fichier n'en pose un que si le document n'en a pas */
   doc = next;
-  doc.cards.forEach(c => { c.units = { mass: dgU.mass, distance: dgU.distance, altitude: dgU.altitude }; });       /* « Exemple », une carte blanche, un fichier : les cartes suivent la clé */
+  doc.cards.forEach(c => { dgMassConv(c, dgU.mass); c.units = { mass: dgU.mass, distance: dgU.distance, altitude: dgU.altitude }; });       /* « Exemple », une carte blanche, un fichier : les cartes suivent la clé, et leurs masses saisies passent de l'unité de la carte à celle de la clé */
   curIdx = 0;
   const ts = document.getElementById('theatre');
   if (ts && ts.value !== dgTheatre()) ts.value = dgTheatre();       /* un fichier a pu poser le théâtre d'un document qui n'en avait pas */
@@ -3443,6 +3467,7 @@ function setDoc(next) {
 const WEAPON_NAMES = @@WEAPON_NAMES@@;
 const AIRCRAFT_PYLONS = @@AIRCRAFT_PYLONS@@;
 const AIRCRAFT_LIMITS = @@AIRCRAFT_LIMITS@@;
+const AIRCRAFT_MASSES = @@AIRCRAFT_MASSES@@;       /* les masses à vide et maximales des types du Flight Configurator (data/aircraft_masses.json) : le poids au décollage, payloadTakeoff */
 @@PAYLOAD_BLOCK@@
 @@AIRCRAFT_TYPES_BLOCK@@
 /* ============= LA NAVIGATION EST LA ROUTE (lot mp-dg-nav-route) =============
@@ -3704,7 +3729,7 @@ function dgFollowDocNow(force) {
   if (th) nd.theatre = th;
   doc = nd;
   const U = dgReadUnitsKey() || dgU, N = dgReadNavKey() || dgN;       /* les clés d'unités et de cap telles qu'elles sont maintenant : leurs évènements n'ont pas tous été traités */
-  doc.cards.forEach(c => { c.units = { mass: U.mass, distance: U.distance, altitude: U.altitude }; c.navDisplay.ref = N.ref; c.navDisplay.decl = N.decl; c.navDisplay.vmode = N.mode; });
+  doc.cards.forEach(c => { dgMassConv(c, U.mass); c.units = { mass: U.mass, distance: U.distance, altitude: U.altitude }; c.navDisplay.ref = N.ref; c.navDisplay.decl = N.decl; c.navDisplay.vmode = N.mode; });
   const k = id ? doc.cards.findIndex(c => c.gsId === id) : -1;
   curIdx = k >= 0 ? k : Math.min(curIdx, doc.cards.length - 1);
   gsApplyAll(); dgSyncRoutes();
@@ -4675,7 +4700,78 @@ function dgFreeze(f, c) {
   const g = dgLoadGroups(f);
   const loads = g.groups.map(x => ({ names: x.names, type: x.type, lo: { key: dgStr(x.lo.key), label: dgStr(x.lo.label), from: dgStr(x.lo.from), modified: !!x.lo.modified }, rows: x.rows.map(r => [r.n, r.clsid]) }));
   const hasFreq = radios.some(m => m.posts.some(p => p.rows.some(r => r[2] !== '')));
-  return (hasFreq || loads.length || g.raw.length) ? { radios: hasFreq ? radios : [], loads: loads, raw: g.raw } : null;
+  const fuel = dgFuelLots(f);       /* en kg, sans texte : la langue et l'unité de masse ne s'y écrivent pas */
+  if (!(hasFreq || loads.length || g.raw.length || fuel.length)) return null;
+  const z = { radios: hasFreq ? radios : [], loads: loads, raw: g.raw };
+  if (fuel.length) z.fuel = fuel;
+  return z;
+}
+/* ----- Carburant et poids : une valeur par lot d'appareils identiques -----
+   Le carburant emporté et le poids au décollage de chaque unité d'un groupe : payloadTakeoff (payload_block.py), la même règle qu'au Flight Configurator, en kg ; les unités dont le couple (carburant, poids, incertain)
+   est le même forment un lot, dans l'ordre des unités. Une unité sans type connu des tables n'en a pas ; un emport brut (payloadIn, pas encore lu par le Flight Configurator) non plus. Rien de cela ne se stocke dans c.fuel :
+   une carte liée le calcule, une carte libre née d'une carte liée en garde les lots en kg (c.frz.fuel). L'unité de masse choisie et la langue ne changent que l'affichage. */
+function dgLoFuel(v) { const x = String(v == null ? '' : v).trim().replace(',', '.'); return /^-?\d+(\.\d+)?$/.test(x) ? Number(x) : undefined; }       /* le carburant de l'emport, lu comme le Flight Configurator (loNumber) */
+function dgFuelLots(f) {
+  const lots = [];
+  dgUnits(f).forEach((u, i) => {
+    const lo = gsIsObj(u.loadout) ? u.loadout : null;
+    if (!lo && gsIsObj(u.payloadIn)) return;
+    const w = payloadTakeoff(dgStr(u.type), lo ? dgLoFuel(lo.fuel) : undefined, lo && gsIsObj(lo.pylons) ? lo.pylons : {}, AIRCRAFT_MASSES);
+    if (w.fuel === null && w.takeoff === null) return;
+    const l = lots.find(x => x.fuel === w.fuel && x.weight === w.takeoff && x.unc === w.unknown);
+    if (l) l.ranks.push(i + 1); else lots.push({ ranks: [i + 1], fuel: w.fuel, weight: w.takeoff, unc: w.unknown });
+  });
+  return lots;
+}
+/* Les rangs d'un lot : « 1-2 », « 1-2, 4 », « 1, 3 », « 3 » (une suite contiguë en plage, sinon des virgules) */
+function dgRanks(r) {
+  const out = [];
+  let i = 0;
+  while (i < r.length) {
+    let j = i;
+    while (j + 1 < r.length && r[j + 1] === r[j] + 1) j++;
+    out.push(j > i ? r[i] + '-' + r[j] : String(r[i]));
+    i = j + 1;
+  }
+  return out.join(', ');
+}
+/* Les lots d'une carte dont la case « Emport du Flight Configurator » est cochée : ceux de son groupe (carte liée) ou la copie figée (carte libre née d'une carte liée) ; null sinon : Carburant et Poids sont alors saisis (c.fuel) */
+function dgFuelView(c) {
+  if (!((c.gsId || dgFrozen(c)) && c.loadoutFc)) return null;
+  const f = dgFlightOf(c);
+  if (f) return dgFuelLots(f);
+  const z = !c.gsId && gsIsObj(c.frz) ? c.frz : null;
+  return z && Array.isArray(z.fuel) ? z.fuel : null;       /* une copie figée avant ce lot n'a pas de lots : la saisie manuelle */
+}
+const dgGroup = ds => ds.replace(/\B(?=(\d{3})+(?!\d))/g, CURRENT_LANG === 'fr' ? ' ' : ',');       /* le séparateur de milliers de la langue, comme cmpNum au Flight Configurator */
+function dgMassCalc(kg) { return dgGroup(String(Math.round(payloadMassIn(kg, dgU.mass)))); }       /* une valeur calculée, en kg, affichée dans l'unité choisie : l'entier arrondi */
+/* Une masse saisie qui est un nombre : sa valeur ; sinon null (un texte comme « plein » ne se convertit pas). La même lecture dans les deux langues : un séparateur (virgule, point, espace, espace fine)
+   suivi d'exactement trois chiffres, en groupes, sépare des milliers (« 1,200 », « 1 200 », « 1.200 » valent 1200) ; sinon une seule virgule ou un seul point est la décimale (« 1,5 », « 12,25 »). */
+function dgMassParse(v) {
+  const s = String(v == null ? '' : v).trim();
+  const g = s.match(/^([1-9]\d{0,2}(?:[,. \u00a0\u202f]\d{3})+)(?:[.,](\d+))?$/);
+  if (g) return Number(g[1].replace(/\D/g, '') + (g[2] ? '.' + g[2] : ''));
+  const d = s.match(/^(\d+)(?:[.,](\d+))?$/);
+  return d ? Number(d[1] + (d[2] ? '.' + d[2] : '')) : null;
+}
+/* Une masse saisie, affichée à l'aperçu : un nombre arrondi à l'entier, au format de la langue (« 1 323 », « 1,323 »), un texte tel quel */
+function dgMassShow(v) {
+  const n = dgMassParse(v);
+  return n === null ? String(v).trim() : dgGroup(String(Math.round(n)));
+}
+/* La conversion des masses saisies d'une carte (Carburant, Poids, JOKER, BINGO) de l'unité de la carte (c.units.mass) vers `to` : les nombres s'écrivent au dixième (sans « .0 » final), en chiffres et point décimal, pour que l'aller-retour ne dérive pas ; un texte reste tel quel.
+   Une seule fonction pour tous les chemins : dgUnitsSet (le menu Affichage, la clé écrite ailleurs, l'ouverture), setDoc (l'exemple, une carte blanche, un fichier ouvert ou importé), dgFollowDocNow (le document relu). Rend vrai si une valeur a bougé. */
+function dgMassConv(c, to) {
+  const from = c.units && UNIT_CHOICES.mass.indexOf(c.units.mass) !== -1 ? c.units.mass : 'kg';
+  if (from === to || !c.fuel) return false;
+  let moved = false;
+  ['amount', 'weight', 'joker', 'bingo'].forEach(k => {
+    const n = dgMassParse(c.fuel[k]);
+    if (n === null) return;
+    c.fuel[k] = String(Math.round((from === 'kg' ? n / PAYLOAD_KG_PER_LB : n * PAYLOAD_KG_PER_LB) * 10) / 10);
+    moved = true;
+  });
+  return moved;
 }
 /* c.frz relu (carte libre née d'une carte liée) : les encadrés radio, comme dgRadioModel les donne */
 function dgFrozenModel(c) {
@@ -4695,7 +4791,7 @@ function dgLoadView(c) {
   };
 }
 /* Une carte libre née d'une carte liée porte-t-elle une copie figée à montrer ? */
-function dgFrozen(c) { return !c.gsId && gsIsObj(c.frz) && ((Array.isArray(c.frz.radios) && c.frz.radios.length) || (Array.isArray(c.frz.loads) && c.frz.loads.length) || (Array.isArray(c.frz.raw) && c.frz.raw.length)); }
+function dgFrozen(c) { return !c.gsId && gsIsObj(c.frz) && ((Array.isArray(c.frz.radios) && c.frz.radios.length) || (Array.isArray(c.frz.loads) && c.frz.loads.length) || (Array.isArray(c.frz.fuel) && c.frz.fuel.length) || (Array.isArray(c.frz.raw) && c.frz.raw.length)); }
 /* le tableau de l'éditeur : une ligne par station (seule l'impression regroupe, dgLoadPrintTable) */
 function dgLoadTable(rows, cls) {
   return '<table class="' + cls + '"><colgroup><col style="width:40px"><col></colgroup><thead><tr><th>' + esc(t('lo.h.n')) + '</th><th>' + esc(t('lo.h.load')) + '</th></tr></thead><tbody>' +
@@ -5469,21 +5565,29 @@ function blkWeather(c) {
 }
 
 function blkFuel(c) {
-  const fuelRows = [['dc.joker', c.fuel.joker], ['dc.bingo', c.fuel.bingo]].filter(r => hasText(r[1]));
-  const fcLoad = (c.gsId || dgFrozen(c)) && c.loadoutFc ? dgLoadCardHtml(c) : '';
-  const load = fcLoad ? [''] : c.loadout.filter(hasText);
-  if (!fuelRows.length && !load.length) return '';
   const mu = unitLabel(c, 'mass');
+  const typed = v => hasText(v) ? dgMassShow(v) + ' ' + mu : '';
+  const calc = (kg, unc) => kg === null ? '' : dgMassCalc(kg) + ' ' + mu + (unc ? ' + ?' : '');
+  const lots = dgFuelView(c);
+  /* une rangée CARBURANT | POIDS par lot (ou celle de la saisie), puis JOKER | BINGO ; une valeur absente laisse sa moitié vide, une rangée sans valeur ne s'imprime pas */
+  const rows = (lots === null
+    ? [{ k: ['dc.fuelqty', 'dc.weight'], sfx: '', v: [typed(c.fuel.amount), typed(c.fuel.weight)] }]
+    : lots.map(l => ({ k: ['dc.fuelqty', 'dc.weight'], sfx: lots.length > 1 ? ' \u00b7 ' + dgRanks(l.ranks) : '', v: [calc(l.fuel, false), calc(l.weight, l.unc)] }))
+  ).concat([{ k: ['dc.joker', 'dc.bingo'], sfx: '', v: [typed(c.fuel.joker), typed(c.fuel.bingo)] }]).filter(r => r.v[0] !== '' || r.v[1] !== '');
+  const fcLoad = (c.gsId || dgFrozen(c)) && c.loadoutFc ? dgLoadCardHtml(c) : '';
+  const linked = !!((c.gsId || dgFrozen(c)) && c.loadoutFc);       /* case cochée d'une carte liée ou figée : l'aperçu suit l'éditeur, les lignes saisies ne s'impriment pas */
+  const load = linked ? (fcLoad ? [''] : []) : c.loadout.filter(hasText);
+  if (!rows.length && !load.length) return '';
   let b = '<div class="dc-fuelwrap">';
-  if (fuelRows.length) {
-    b += '<div class="dc-fuel">' + fuelRows.map(r =>
-      '<div class="dc-fp"><span class="fl">' + esc(t(r[0])) + '</span><span class="fv">' + esc(r[1].trim() + ' ' + mu) + '</span></div>').join('') + '</div>';
+  if (rows.length) {
+    b += '<div class="dc-fuel">' + rows.map(r => r.v.map((v, i) => v === '' ? '<div></div>' :
+      '<div class="dc-fp"><span class="fl">' + esc(t(r.k[i]) + r.sfx) + '</span><span class="fv">' + esc(v) + '</span></div>').join('')).join('') + '</div>';
   }
   if (load.length) {
     b += fcLoad || '<ul class="dc-load">' + load.map(l => '<li><span class="bl">▪</span><span class="lx">' + esc(l) + '</span></li>').join('') + '</ul>';
   }
   b += '</div>';
-  const title = [fuelRows.length ? t('dc.b.fuel') : '', load.length ? t('dc.b.loadout') : ''].filter(Boolean).join(' · ');
+  const title = [rows.length ? t('dc.b.fuel') : '', load.length ? t('dc.b.loadout') : ''].filter(Boolean).join(' · ');
   return blockHtml('fuel', title, b);
 }
 
@@ -5561,7 +5665,7 @@ function blkWeatherBlank(c) {
 }
 
 function blkFuelBlank(c) {
-  let b = '<div class="dc-fuelwrap dc-fblank"><div class="dc-fuel">' + ['dc.joker', 'dc.bingo'].map(k =>
+  let b = '<div class="dc-fuelwrap dc-fblank"><div class="dc-fuel">' + ['dc.fuelqty', 'dc.weight', 'dc.joker', 'dc.bingo'].map(k =>
     '<div class="dc-fp dc-bl"><span class="fl">' + esc(t(k)) + '</span><span class="fv"></span></div>').join('') + '</div><ul class="dc-load">';
   for (let i = 0; i < BLANK_ROWS.loadout; i++) b += '<li class="dc-bl"><span class="lx"></span></li>';
   return blockHtml('fuel', t('dc.b.fuel') + ' · ' + t('dc.b.loadout'), b + '</ul></div>');
@@ -5936,6 +6040,20 @@ function syncRefsEditor() {
   });
 }
 
+/* La rangée Carburant | Poids de la section « Carburant et emport », puis JOKER | BINGO : saisis (carte libre, ou emport du Flight Configurator décoché), ou calculés d'après l'emport du Flight Configurator, en lecture seule avec la pastille FC,
+   une rangée par lot d'appareils identiques (les rangs suivent le libellé quand il y en a plusieurs) */
+function dgFuelFieldsHtml(c) {
+  const jb = '<div class="ed-field-row">' + fInput('f.joker', 'fuel.joker', c.fuel.joker) + fInput('f.bingo', 'fuel.bingo', c.fuel.bingo) + '</div>';
+  const lots = dgFuelView(c);
+  if (lots === null) return '<div class="ed-field-row">' + fInput('f.fuelqty', 'fuel.amount', c.fuel.amount) + fInput('f.weight', 'fuel.weight', c.fuel.weight) + '</div>' + jb;
+  const mu = t('u.' + dgU.mass);
+  const ro = (key, sfx, v) => '<div class="ed-field"><label>' + esc(t(key) + sfx) + ' <span class="sh" title="' + esc(t('sh.tip')) + '">FC</span></label><input type="text" value="' + esc(v) + '" readonly></div>';
+  return lots.map(l => {
+    const sfx = lots.length > 1 ? ' \u00b7 ' + dgRanks(l.ranks) : '';
+    return '<div class="ed-field-row">' + ro('f.fuelqty', sfx, l.fuel === null ? '' : dgMassCalc(l.fuel) + ' ' + mu) + ro('f.weight', sfx, l.weight === null ? '' : dgMassCalc(l.weight) + ' ' + mu + (l.unc ? ' + ?' : '')) + '</div>';
+  }).join('') + jb;
+}
+
 const SECTION_BUILDERS = {
   /* L'en-tête : le même qu'au Briefing Generator (Opération · Mission, puis Date · Heure (Z)) */
   header: c =>
@@ -6020,7 +6138,7 @@ const SECTION_BUILDERS = {
     '<div class="ed-field-row">' + fInput('f.qnh', 'weather.qnh', c.weather.qnh) + fInput('f.clouds', 'weather.clouds', c.weather.clouds) + '</div>',
 
   fuel: c =>
-    '<div class="ed-field-row">' + fInput('f.joker', 'fuel.joker', c.fuel.joker) + fInput('f.bingo', 'fuel.bingo', c.fuel.bingo) + '</div>' +
+    dgFuelFieldsHtml(c) +
     '<div class="ed-field"><label>' + esc(t('f.loadout')) + '</label></div>' +
     listHtml('loadout', c.loadout, (s, i) => fInputBare('loadout.' + i, s), 'add.line'),
 
@@ -6034,7 +6152,7 @@ const SECTION_BUILDERS = {
 const LINKED_BUILDERS = {
   radio: radioLinkedHtml,
   fuel: c =>
-    '<div class="ed-field-row">' + fInput('f.joker', 'fuel.joker', c.fuel.joker) + fInput('f.bingo', 'fuel.bingo', c.fuel.bingo) + '</div>' +
+    dgFuelFieldsHtml(c) +
     '<label class="ed-chk"><input type="checkbox" data-lofc="1"' + (c.loadoutFc ? ' checked' : '') + '><span>' + esc(t('lo.fc')) + '</span></label>' +
     (c.loadoutFc ? dgLoadEditorHtml(c) :
       '<div class="ed-field"><label>' + esc(t('f.loadout')) + '</label></div>' + listHtml('loadout', c.loadout, (s, i) => fInputBare('loadout.' + i, s), 'add.line'))
@@ -6062,7 +6180,7 @@ function dgFrozenSection(id, c) {
   return '';
 }
 /* Une carte libre née d'une carte liée qui portait un emport du FC : la section Carburant et emport garde la case « Emport du Flight Configurator » : cochée, le tableau figé (la liste manuelle est masquée) ; décochée, la saisie à la main, qui s'imprime */
-function dgFrozenLoad(c) { return !c.gsId && gsIsObj(c.frz) && ((Array.isArray(c.frz.loads) && c.frz.loads.length) || (Array.isArray(c.frz.raw) && c.frz.raw.length)); }
+function dgFrozenLoad(c) { return !c.gsId && gsIsObj(c.frz) && ((Array.isArray(c.frz.loads) && c.frz.loads.length) || (Array.isArray(c.frz.fuel) && c.frz.fuel.length) || (Array.isArray(c.frz.raw) && c.frz.raw.length)); }
 Object.keys(LINKED_BUILDERS).forEach(id => {
   const base = SECTION_BUILDERS[id];
   SECTION_BUILDERS[id] = c => c.gsId ? LINKED_BUILDERS[id](c) : (id === 'fuel' && dgFrozenLoad(c) ? LINKED_BUILDERS.fuel(c) : dgFrozenSection(id, c) + base(c));
@@ -6101,7 +6219,7 @@ function dgSectionSum(id, c) {
   }
   if (id === 'weather') return uiJoin([v(c.weather.qnh), v(c.weather.wind)]);
   if (id === 'fuel') {
-    const fu = uiJoin([v(c.fuel.joker) ? t('f.joker') + ' ' + v(c.fuel.joker) : '', v(c.fuel.bingo) ? t('f.bingo') + ' ' + v(c.fuel.bingo) : '']).replace(' · ', ' / ');
+    const fu = [['f.fuelqty', c.fuel.amount], ['f.weight', c.fuel.weight], ['f.joker', c.fuel.joker], ['f.bingo', c.fuel.bingo]].filter(x => v(x[1])).map(x => t(x[0]) + ' ' + v(x[1])).join(' / ');
     const lo = c.loadout.map(v).filter(Boolean);
     return uiJoin([fu, lo.length ? lo[0] + (lo.length > 1 ? ' +' + (lo.length - 1) : '') : '']);
   }
@@ -6622,7 +6740,7 @@ window.MP_FLUSH = function () { dgTypFlush(); };
    groupe (ses champs propres viennent du fichier, ses champs de groupe de la fiche) ; les autres cartes du fichier (libres, ou liées à un groupe que la fiche n'a pas) entrent comme cartes libres,
    et remplacent les cartes libres d'avant. Le mode est celui du fichier. */
 function openDatacards(next) {
-  const u0 = next.cards.length ? next.cards[0].units : null;       /* les unités de la première carte du fichier */
+  const u0 = next.cards.length && !next.cards[0]._noUnits ? next.cards[0].units : null;       /* les unités de la première carte du fichier */
   const g = gsRead(), ids = new Set(g ? g.flights.map(f => f.fcId) : []);
   const mine = new Map(next.cards.filter(c => c.gsId && ids.has(c.gsId)).map(c => [c.gsId, c]));
   const kept = doc.cards.filter(x => x.gsId).map(x => mine.get(x.gsId) || x);
@@ -7682,8 +7800,8 @@ else init();
 # ASSEMBLAGE
 # ============================================================
 def build():
-    _wn, _pyl, _lim = dg_tables()
-    js = JS.replace('@@WEAPON_NAMES@@', _wn).replace('@@AIRCRAFT_PYLONS@@', _pyl).replace('@@AIRCRAFT_LIMITS@@', _lim)
+    _wn, _pyl, _lim, _mas = dg_tables()
+    js = JS.replace('@@WEAPON_NAMES@@', _wn).replace('@@AIRCRAFT_PYLONS@@', _pyl).replace('@@AIRCRAFT_LIMITS@@', _lim).replace('@@AIRCRAFT_MASSES@@', _mas)
     js = js.replace('@@PAYLOAD_BLOCK@@\n', build_payload_block()).replace('@@AIRCRAFT_TYPES_BLOCK@@\n', build_aircraft_types_block()).replace('@@IMPORT_BLOCK@@\n', build_import_block()).replace('@@MESSAGES_BLOCK@@\n', build_messages_block() + build_ui_block()).replace('@@TBM_JS@@\n', build_tbm_block())
     _facts = airfield_facts()
     facts_js = json.dumps(_facts, ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
