@@ -452,7 +452,7 @@ I18N_FR = {
     'tb.clear': 'Effacer',
     'tb.clear.tip': 'Tout effacer…',
     'tb.example': 'Exemple',
-    'tb.example.tip': 'Ouvrir l\u2019exemple : deux groupes (deux Mi-24P, deux Mi-8MT) ; le travail en cours se restaure en un geste',
+    'tb.example.tip': 'Ouvrir l\u2019exemple : le groupe CAESAR (deux Mi-24P) sur la route FOOTHOLD M3, en Syrie ; le travail en cours se restaure en un geste',
     'toast.example': 'Exemple chargé',
 
     'bar.ok': 'Prêt à exporter : {0}',
@@ -759,7 +759,7 @@ I18N_EN = {
     'tb.clear': 'Clear',
     'tb.clear.tip': 'Clear everything…',
     'tb.example': 'Example',
-    'tb.example.tip': 'Open the example: two groups (two Mi-24P, two Mi-8MT); the work in progress comes back in one tap',
+    'tb.example.tip': 'Open the example: the CAESAR group (two Mi-24P) on the FOOTHOLD M3 route, in Syria; the work in progress comes back in one tap',
     'toast.example': 'Example loaded',
 
     'bar.ok': 'Ready to export: {0}',
@@ -4081,16 +4081,10 @@ function exampleRouteFor(fcId) {
   if (nf) S.flights = S.flights.map(f => (f.fcId === fcId ? nf : f));
   return failKey;
 }
-// Le toast « Exemple chargé · Restaurer » est posé à la fin du geste et prendrait la place du message d'échec : celui-ci vient donc après, en toast d'erreur qui garde l'action « Restaurer »
-function exampleFailToast(key) {
-  const snap = UIK.restore;
-  showToast(t(key), { type: 'err', ms: 12000, action: snap ? { label: uiT('ui.restore'), fn: () => uiRestore(snap) } : null });
-  if (snap) UIK.restoreN = showToast._n;
-}
 function loadExample() {
   flushWork();
   let exFail = '';
-  const done = replaceWithRestore({
+  replaceWithRestore({
     keys: GS_CONTENT_KEYS, mem: fcMem, back: fcBack,
     run: () => {
       const f = newFlight(); f.name = EXAMPLE_GROUP; f.coalition = 'red'; f.units = [newUnit('Mi-24P'), newUnit('Mi-24P')];
@@ -4106,9 +4100,8 @@ function loadExample() {
       writeState();
       return gsSettled();
     },
-    msg: () => t('toast.example')
+    msg: () => t('toast.example') + (exFail ? ' · ' + t(exFail).replace(/^⚠\s*/, '') : '')       // l'échec de l'écriture de la route se dit dans le message de « Restaurer »
   });
-  Promise.resolve(done).then(() => { if (exFail) exampleFailToast(exFail); });
 }
 function exportFile() {
   if (exportIssues().length) {

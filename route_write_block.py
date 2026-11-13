@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Bloc « ÉCRITURE D'UNE ROUTE » : le seul chemin par lequel un module autre que le Route Planner écrit une route (lot mp-dg-nav-route).
+"""Bloc « ÉCRITURE D'UNE ROUTE » : le seul chemin par lequel un module autre que le Route Planner écrit une route.
 
 Injecté tel quel au Route Planner (qui y prend l'identifiant stable pid : tirage, validité, attribution), au Datacard Generator (qui y écrit) et au Flight Configurator (qui n'y écrit que la route de son exemple).
 Il lit et réécrit à l'instant (jamais une copie gardée) :

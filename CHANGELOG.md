@@ -84,7 +84,7 @@ Changes merged since the last release, grouped per tool.
 - **Flight Configurator**, a new module: a Flight Lead prepares a flight (identity, radios, loadout built on the aircraft's front view or started from the squadron's presets, livery picked from a list — the game's and the wing's custom ones — and always shown by name: the mission's, else the wing's default, else the first in the list) and exports it as a flight package that HQ applies to the Mission Commander's mission. Each aircraft of a flight has its own type, so a flight can mix types; flight names must be unique per side before export.
 - A **Route** block above the loadout: pick one of the Route Planner's routes for the group (one route per group), then see it as a paper sketch — waypoints, names, numbered legs — with each leg's magnetic heading and distance in NM. When the route changes in the Route Planner, the group follows it; if it is deleted there, the last copy is kept.
 - The Mi-24P's and Mi-8MT's HF radio (Jadro-1I, Jadro-1A), which missions do not preset: up to five frequencies, carried in the flight package and shown on the datacard, never written to the mission by HQ.
-- An Example button that loads two groups (Mi-24P, Mi-8MT), with “Restore” for twelve seconds.
+- An Example button that loads the CAESAR group (two Mi-24P) on the FOOTHOLD M3 route, in Syria, with “Restore” for twelve seconds.
 - Each radio channel has a box to print it on the group's datacard; the Datacard Generator shows the same choice.
 - The loadout follows the Loadout Editor of Mission Tools: the Kord of the Mi-24P on one door only; a weapon that cannot go with the rest of the loadout is greyed out with the stations in the way, and a loadout received with such a mix says it under each station.
 - A slider for the gun, like the one for the fuel, and the estimated take-off weight (empty, fuel and stores; gun and flares not counted), in orange above the recommended maximum.
@@ -159,7 +159,7 @@ Changes merged since the last release, grouped per tool.
 - The Datacard Generator's own HQ and flight package imports, replaced by the common import window of the Flight Configurator and the Route Planner.
 #### Fixed
 - In the export window, the page list no longer shows the PDF and PNG choices above it, so it fits on phones.
-- Computed magnetic variation now follows DCS for every mission date: years up to 1985 use the IGRF model DCS ships (up to 1.2° closer), later years the previous five-year WMM file, as DCS does (0.2° closer in 1990, 1995 … 2025).
+- Computed magnetic variation now follows DCS for every mission date: years up to 1984 use the IGRF model DCS ships (up to 1.2° closer), later years the previous five-year WMM file, as DCS does (0.2° closer in 1990, 1995 … 2025).
 - Changing the language with the briefing import window open keeps the phases you picked; opening the window again starts from the card's own group.
 - A frequency field you had only clicked into now shows a frequency changed meanwhile in the Flight Configurator.
 - A group name, callsign or board number field you had only clicked into now shows a change made meanwhile in the Flight Configurator, instead of writing the old value back.
@@ -184,7 +184,7 @@ Changes merged since the last release, grouped per tool.
 - A lighter top bar: the base map and the units move into **Display ▾**, above what the map shows (that menu's former “Base map” group is now “Overlays”); **Open ▾** opens a route or imports routes, and the Import button leaves the panel. Routes are chosen on one line — the route's name, “+” for a new route, “…” to duplicate or delete — and the next steps (to the datacard, to the briefing, flight package, save, Route Tool) now follow the points instead of closing the Navigation section.
 - **Export ▾** in the top bar exports the image for the briefing or the Route Tool file; the panel now ends after the waypoints. The panel's Save, “To the datacard” and Flight package buttons are gone: save from the top bar, datacards follow routes by themselves, and the flight package is exported from the Flight Configurator. “+ Add a group” as in the Flight Configurator. **Ctrl+S** saves the selected route.
 #### Fixed
-- Computed magnetic variation now follows DCS for every mission date: years up to 1985 use the IGRF model DCS ships (up to 1.2° closer), later years the previous five-year WMM file, as DCS does (0.2° closer in 1990, 1995 … 2025).
+- Computed magnetic variation now follows DCS for every mission date: years up to 1984 use the IGRF model DCS ships (up to 1.2° closer), later years the previous five-year WMM file, as DCS does (0.2° closer in 1990, 1995 … 2025).
 
 ### Field Manual
 #### Added
@@ -193,7 +193,7 @@ Changes merged since the last release, grouped per tool.
 - A "Where to start" page: the two roles, the order of the tools, the work file.
 #### Changed
 - HQ and Recon Station chapters: the Example button.
-- The Route Planner chapter names the magnetic models DCS uses: IGRF up to 1985, then WMM.
+- The Route Planner chapter names the magnetic models DCS uses: IGRF up to 1984, then WMM.
 - The Datacard Generator chapter lists the editor's boxes in their new order, with **Group and crew**.
 - The Flight Configurator chapter: the helicopters' HF radio and the bands.
 - The Datacard Generator chapter: empty blocks are kept.
