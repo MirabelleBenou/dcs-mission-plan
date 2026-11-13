@@ -402,6 +402,7 @@ body[data-theme] {
 .fc-cols > * { min-width: 0; }
 @media (min-width: 1100px) { .fc-cols { grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr); } }
 .fc-block { border: 1px solid var(--khaki); background: rgba(20,24,12,.5); }
+details.fc-block:not([open]) > .fc-bh { border-bottom: 0; }
 #col-presets > .fc-block { margin-top: 16px; }
 .fc-bh { padding: 11px 14px; background: linear-gradient(90deg, var(--olive) 0%, var(--olive-dark) 100%); font-family: var(--f-stencil); font-size: 13px; letter-spacing: 2px; color: var(--amber); border-bottom: 1px solid var(--fc); min-height: 44px; display: flex; align-items: center; gap: 6px; }
 .fc-bh .fc-count { font-family: var(--f-typewriter); font-size: 12px; letter-spacing: 0; color: var(--paper); }
@@ -480,7 +481,6 @@ body[data-theme] {
 .fc-chev { flex: none; width: 0; height: 0; border-left: 7px solid var(--mp-accent); border-top: 5px solid transparent; border-bottom: 5px solid transparent; transition: transform .2s; margin: 0 4px; }
 .fc-fold[aria-expanded="true"] .fc-chev { transform: rotate(90deg); }
 .fc-ftitle { font-family: var(--f-stencil); font-size: 13px; letter-spacing: 1.5px; color: var(--amber); text-transform: uppercase; word-break: break-word; min-width: 0; }
-.fc-foldall { margin-left: auto; }
 /* replié, l'en-tête garde le titre et le résumé du vol sur une ligne (les pastilles de l'appareil et du nombre d'unités passent dans le résumé) */
 .fc-fsum { display: none; flex: 1 1 calc(100% - 24px); min-width: 0; order: 9; margin: -2px 0 2px 24px; font-family: var(--f-typewriter); font-size: 12px; line-height: 1.4; color: var(--khaki-light); overflow-wrap: anywhere; }
 .fc-flight.folded .fc-fsum { display: block; }
@@ -758,8 +758,17 @@ details[open] > .ui-fold-head::before, .ui-fold-head[aria-expanded="true"]::befo
   color: var(--khaki-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 details:not([open]) > .ui-fold-head > .ui-sum:not(:empty), .ui-fold-head[aria-expanded="false"] > .ui-sum:not(:empty) { display: block; }
-.ui-foldall { min-height: 44px; padding: 0 12px; font-size: 11px; white-space: nowrap; }
-.ui-foldbar { display: flex; justify-content: flex-end; margin: 0 0 10px; }
+/* « Tout replier » : une icône à droite de l'en-tête de chaque section du panneau (44 px de large, toute la hauteur de l'en-tête, un filet à sa gauche) ; l'en-tête lui réserve sa place */
+.ui-fa-on.ui-fa-on { position: relative; padding-right: 56px; }
+.ui-fa-box { position: relative; }
+.ui-foldic {
+  position: absolute; top: 0; right: 0; bottom: 0; z-index: 1; width: 44px; min-width: 44px; min-height: 44px; box-sizing: border-box; margin: 0; padding: 0;
+  display: flex; align-items: center; justify-content: center; background: none; border: 0; border-left: 1px solid var(--khaki); border-radius: 0;
+  color: var(--mp-accent, var(--amber)); cursor: pointer; text-transform: none; letter-spacing: 0;
+}
+.ui-foldic:hover { background: rgba(255,255,255,.06); }
+.ui-foldic:focus-visible { outline: 2px solid var(--amber); outline-offset: -3px; }
+.ui-foldic svg { flex: none; width: 18px; height: 18px; pointer-events: none; }
 
 /* ---- boutons segmentés et champs de la fenêtre d'export ---- */
 .ui-field { margin: 0 0 14px; }
@@ -10392,6 +10401,46 @@ function uiSum(head, text) {
   if (s.textContent !== v) s.textContent = v;
 }
 function uiFoldAllLabel(anyOpen) { return uiT(anyOpen ? 'ui.foldall' : 'ui.unfoldall'); }
+/* « Tout replier » : l'icône posée à droite de l'en-tête de chaque section d'un panneau (deux au moins ; une section seule n'en porte pas).
+   heads : les en-têtes du panneau (un <summary>, un <button> enveloppé d'un .ui-fa-box, un en-tête de boîte) ; cfg : { any : une section au moins est ouverte,
+   label(any) : le texte de l'icône (title et aria-label), go() : le geste, qui replie ou déplie toutes les sections du panneau et rappelle uiFoldAll }.
+   Le geste est celui de l'icône seule : l'en-tête ne bascule pas. L'icône garde le focus (elle n'est jamais refaite) ; replié ou déplié, seule son image change. */
+const UIFA_SVG = {
+  fold: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="7 4 12 9 17 4"/><polyline points="7 20 12 15 17 20"/></svg>',
+  unfold: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="7 9 12 4 17 9"/><polyline points="7 15 12 20 17 15"/></svg>'
+};
+function uiFoldAllHost(h) { return (h.parentNode && h.parentNode.classList && h.parentNode.classList.contains('ui-fa-box')) ? h.parentNode : h; }
+function uiFoldAllOff(heads) {
+  Array.prototype.slice.call(heads || []).forEach(h => {
+    if (!h) return;
+    const b = uiFoldAllHost(h).querySelector(':scope > .ui-foldic');
+    if (b) b.remove();
+    h.classList.remove('ui-fa-on');
+  });
+}
+function uiFoldAll(heads, cfg) {
+  const list = Array.prototype.slice.call(heads || []).filter(Boolean);
+  if (list.length < 2) { uiFoldAllOff(list); return; }
+  const state = cfg.any ? 'fold' : 'unfold', lab = cfg.label(!!cfg.any);
+  list.forEach(h => {
+    const host = uiFoldAllHost(h);
+    let b = host.querySelector(':scope > .ui-foldic');
+    if (!b) {
+      b = document.createElement('button'); b.type = 'button'; b.className = 'ui-foldic';
+      b.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); if (b._uiGo) b._uiGo(); });
+      host.appendChild(b);
+    }
+    b._uiGo = cfg.go;
+    if (b.dataset.state !== state) { b.dataset.state = state; b.innerHTML = UIFA_SVG[state]; }
+    if (b.title !== lab) b.title = lab;
+    if (b.getAttribute('aria-label') !== lab) b.setAttribute('aria-label', lab);
+    h.classList.add('ui-fa-on');
+    const cs = getComputedStyle(host);       /* l'icône a la hauteur de l'en-tête, filets compris : un filet sous l'en-tête passe derrière elle */
+    const top = cs.borderTopWidth, bot = cs.borderBottomWidth;
+    b.style.top = top === '0px' ? '' : '-' + top;
+    b.style.bottom = bot === '0px' ? '' : '-' + bot;
+  });
+}
 function uiJoin(parts) { return parts.filter(p => p !== undefined && p !== null && String(p).trim() !== '').map(p => String(p).trim()).join(' · '); }
 
 /* ---- la fenêtre d'export (BG, DG) : format, pages, nom du fichier ----
@@ -11440,6 +11489,8 @@ const I18N = {
   "err.code.unexpected-token": "élément inattendu",
   "err.code.bad-structure": "structure inattendue",
   "sum.route": "route {0} pts",
+  "sum.presets.one": "{0} preset",
+  "sum.presets.many": "{0} presets",
   "sum.radios": "radios {0} canaux",
   "sum.radios.var": "radios variées",
   "sum.loadout": "emport {0}",
@@ -11725,6 +11776,8 @@ const I18N = {
   "err.code.unexpected-token": "unexpected token",
   "err.code.bad-structure": "unexpected structure",
   "sum.route": "route {0} pts",
+  "sum.presets.one": "{0} preset",
+  "sum.presets.many": "{0} presets",
   "sum.radios": "radios {0} channels",
   "sum.radios.var": "radios vary",
   "sum.loadout": "loadout {0}",
@@ -12828,8 +12881,51 @@ function routeViewHtml(f, fi, rp) {
 }
 function routeBlockHtml(su) {
   const f = su.f, rp = rpRead(), choosing = !hasRoute(f) || UI.rtChoose === f.fcId;
-  return `<section class="fc-block" id="blk-route"><div class="fc-bh">${esc(t('sec.route'))} <span class="fc-count">· ${esc(flightLabel(f, su.fi))}</span></div>
-    <div class="fc-bc">${choosing ? routeChooseHtml(f, rp) : routeViewHtml(f, su.fi, rp)}</div></section>`;
+  return boxHtml('route', t('sec.route'), ` <span class="fc-count">· ${esc(flightLabel(f, su.fi))}</span>`, choosing ? routeChooseHtml(f, rp) : routeViewHtml(f, su.fi, rp));
+}
+// ----- Replier les trois boîtes de la colonne de droite (route, emport, presets) -----
+// L'état se garde dans fc_folds_v1 : { route, cmp, pr } (true = ouverte ; profil neuf : les trois ouvertes), hors de l'état du travail : replier n'est pas un changement du travail.
+// Le repli commun (ui_block) : triangle, en-tête de 44 px, et replié une ligne de résumé ; un redessin de la colonne garde le repli.
+const FC_FOLDS = 'fc_folds_v1';
+const BOX_ID = { route: 'blk-route', cmp: 'blk-cmp', pr: 'blk-pr' };
+function boxOpen(id) { return uiFoldOpen(FC_FOLDS, id, true); }
+function boxSum(id) {
+  const su = selUnit();
+  if (id === 'route') {
+    if (!su || !hasRoute(su.f)) return '';
+    const f = su.f, geo = routeGeo(f);
+    return uiJoin([routeTitle(f), ptsLabel(routeKeys(f.route.points).length), geo ? fmtDist(routeNm(geo)) + ' ' + udLabel() : '']);
+  }
+  if (id === 'cmp') return su ? uiJoin([unitLabel(su.f, su.fi, su.u, su.ui), su.u.loadout ? loadoutName(su.u.loadout) : '']) : '';
+  const n = mineCount();
+  return n ? tf(n === 1 ? 'sum.presets.one' : 'sum.presets.many', n) : '';
+}
+function boxHtml(id, title, extra, inner) {
+  const open = boxOpen(id), sum = open ? '' : boxSum(id);
+  return `<details class="fc-block" id="${BOX_ID[id]}" data-box="${id}" data-fold="${open}"${open ? ' open' : ''}><summary class="fc-bh ui-fold-head" aria-expanded="${open}">${esc(title)}${extra}${sum ? `<span class="ui-sum">${esc(sum)}</span>` : ''}</summary>
+    <div class="fc-bc">${inner}</div></details>`;
+}
+function boxEls() { return Array.prototype.slice.call(document.querySelectorAll('#col-right details.fc-block')); }
+// Les résumés des boîtes repliées et les icônes « Tout replier » : après un geste, un redessin, un changement du travail
+function boxSync() {
+  const ds = boxEls();
+  ds.forEach(d => {
+    const h = d.querySelector(':scope > summary');
+    h.setAttribute('aria-expanded', String(d.open));
+    uiSum(h, d.open ? '' : boxSum(d.dataset.box));
+  });
+  uiFoldAll(ds.map(d => d.querySelector(':scope > summary')), { any: ds.some(d => d.open), label: uiFoldAllLabel, go: boxAll });
+}
+function boxAll() {
+  const ds = boxEls(), open = !ds.some(d => d.open), map = {};
+  Object.keys(BOX_ID).forEach(k => { map[k] = open; });
+  uiFoldSaveAll(FC_FOLDS, map);
+  ds.forEach(d => { d.dataset.fold = String(open); if (d.open !== open) d.open = open; });
+  boxSync();
+}
+function boxToggled(d) {
+  if (d.dataset.fold !== String(d.open)) { uiFoldSave(FC_FOLDS, d.dataset.box, d.open); d.dataset.fold = String(d.open); }       // un geste (le rendu pose l'état qu'il lit : rien à écrire)
+  boxSync();
 }
 // Le croquis se dessine à la largeur de la feuille ; la feuille masquée (module caché du shell) a 0 px : le ResizeObserver redessine à son retour.
 function rtDraw() {
@@ -12846,6 +12942,7 @@ function renderRouteBlock() {
   if (!host) return;
   if (RT.ro) { RT.ro.disconnect(); RT.ro = null; }
   host.innerHTML = su ? routeBlockHtml(su) : '';
+  boxSync();
   const paper = document.getElementById('rt-paper');
   if (!paper) return;
   rtDraw();
@@ -13082,17 +13179,21 @@ function flightEl(fi) { return document.querySelector(`#col-left .fc-flight[data
 function unitEl(fi, ui) { return document.querySelector(`#col-left .fc-flight[data-f="${fi}"] .fc-unit[data-u="${ui}"]`); }
 
 function renderLeft() {
-  const foldAll = S.flights.length > 1 ? `<button type="button" class="miz-btn fc-small fc-foldall" id="fc-foldall" data-act="fold-all">${esc(foldAllLabel())}</button>` : '';
   document.getElementById('col-flights').innerHTML = `<section class="fc-block">
-    <div class="fc-bh">${esc(t('sec.flights'))} <span class="fc-count">(${S.flights.length})</span>${foldAll}</div>
+    <div class="fc-bh">${esc(t('sec.flights'))} <span class="fc-count">(${S.flights.length})</span></div>
     <div class="fc-bc">
       ${S.flights.length ? '' : `<p class="ui-note">${esc(t('fl.empty'))}</p>`}
       <div class="fc-list" id="fc-list">${S.flights.map(flightHtml).join('')}</div>
       <div class="miz-btn-row" style="margin-top:0"><button type="button" class="miz-btn primary" data-act="add-flight">${esc(t('fl.add'))}</button></div>
     </div></section>`;
   S.flights.forEach((f, fi) => f.units.forEach((u, ui) => radioPosts(u.type).forEach(r => paintRadioMsg(fi, ui, r))));
+  fcFlightIcons();
 }
-function foldAllLabel() { return t(anyFlightOpen() ? 'fl.foldall' : 'fl.unfoldall'); }
+// « Tout replier » : une icône à droite de l'en-tête de chaque groupe, dès deux groupes (les sous-blocs d'une unité n'en portent pas)
+function fcFlightIcons() {
+  uiFoldAll(S.flights.length > 1 ? Array.prototype.slice.call(document.querySelectorAll('#col-flights .fc-flight > .fc-fhead')) : [], { any: anyFlightOpen(), label: any => t(any ? 'fl.foldall' : 'fl.unfoldall'), go: foldAllFlights });
+}
+function foldAllFlights() { const open = !anyFlightOpen(); foldFreeze(); S.flights.forEach(f => UI.fold.set(f, open ? 'open' : 'closed')); paintFold(); }
 function foldLabel(f, fi, open) { return `${t(open ? 'fl.fold' : 'fl.unfold')} : ${flightLabel(f, fi)}`; }
 
 function flightHtml(f, fi) {
@@ -13210,8 +13311,7 @@ function paintFold() {
     btn.setAttribute('aria-expanded', String(open));
     btn.setAttribute('aria-label', foldLabel(f, fi, open));
   });
-  const all = document.getElementById('fc-foldall');
-  if (all) all.textContent = foldAllLabel();
+  fcFlightIcons();
 }
 // Replier ou déplier une carte d'unité : sans redessiner (la frappe et les volets ouverts restent), l'emport affiché ne change pas.
 function paintUnitFold(fi, ui) {
@@ -13224,6 +13324,7 @@ function paintUnitFold(fi, ui) {
   btn.setAttribute('aria-label', unitFoldLabel(f, fi, u, ui));
 }
 function refreshSummaries() {
+  boxEls().forEach(d => { if (!d.open) uiSum(d.querySelector(':scope > summary'), boxSum(d.dataset.box)); });       // le résumé d'une boîte repliée suit le travail
   S.flights.forEach((f, fi) => {
     const head = flightEl(fi);
     if (!head) return;
@@ -13388,8 +13489,7 @@ function renderRight() {
   const col = document.getElementById('col-right'), su = selUnit();
   UI.loPrev = null;       // une saisie interrompue par le redessin n'a plus de valeur d'avant à rendre
   CMP.small = col.clientWidth < 900;
-  col.innerHTML = `<div id="col-route"></div><section class="fc-block" id="blk-cmp"><div class="fc-bh">${esc(t('sec.cmp'))}</div>
-    <div class="fc-bc">${su && su.u.type === '' ? `<p class="ui-note fc-notype">${esc(t('u.notype'))}</p>` : su ? cmpHtml(su) : `<p class="ui-note">${esc(t(S.flights[S.sel.f] && !S.flights[S.sel.f].units.length ? 'cmp.nounit' : 'cmp.pick'))}</p>`}</div></section><div id="col-presets"></div>`;
+  col.innerHTML = `<div id="col-route"></div>${boxHtml('cmp', t('sec.cmp'), '', su && su.u.type === '' ? `<p class="ui-note fc-notype">${esc(t('u.notype'))}</p>` : su ? cmpHtml(su) : `<p class="ui-note">${esc(t(S.flights[S.sel.f] && !S.flights[S.sel.f].units.length ? 'cmp.nounit' : 'cmp.pick'))}</p>`)}<div id="col-presets"></div>`;
   if (CMP.ro) { CMP.ro.disconnect(); CMP.ro = null; }
   const wrap = document.getElementById('cmp-wrap');
   if (su && su.u.type !== '' && wrap && typeof ResizeObserver === 'function') {      // si la colonne passe de part et d'autre de 900 px (rotation d'une tablette), l'emport se redessine dans l'autre mode
@@ -13708,10 +13808,9 @@ function presetsHtml() {
   const rows = [];
   PAYLOAD_TYPES.forEach(ty => (LIB.mine[ty] || []).forEach((p, i) => rows.push(`<div class="fc-file"><span class="fc-file-n">${esc(presetName(p))}</span><span class="snap-flight-tag">${esc(TYPE_LABEL[ty])}</span>
     <button type="button" class="pk-x" data-act="rm-mine" data-ty="${esc(ty)}" data-i="${i}" aria-label="${esc(t('pr.delete'))}" title="${esc(t('pr.delete'))}">✕</button></div>`)));
-  return `<section class="fc-block" id="blk-pr"><div class="fc-bh">${esc(t('sec.presets'))}</div><div class="fc-bc">
-    <div class="miz-btn-row" style="margin-top:0"><button type="button" class="miz-btn" data-act="load-lua">${esc(t('pr.load'))}</button></div>${lines.join('')}
+  return boxHtml('pr', t('sec.presets'), '', `<div class="miz-btn-row" style="margin-top:0"><button type="button" class="miz-btn" data-act="load-lua">${esc(t('pr.load'))}</button></div>${lines.join('')}
     <div class="fc-h" style="margin-top:0">${esc(tf('pr.mine', mineCount()))}</div>
-    <div class="fc-lib">${rows.length ? rows.join('') : `<p class="ui-note">${esc(t('pr.none'))}</p>`}</div></div></section>`;
+    <div class="fc-lib">${rows.length ? rows.join('') : `<p class="ui-note">${esc(t('pr.none'))}</p>`}</div>`);
 }
 // Des .lua d'exemple : leurs presets rejoignent « Mes presets » sans écran intermédiaire ; un nom déjà pris est ignoré, et le bloc le dit.
 async function loadLuaFiles(files) {
@@ -14078,7 +14177,6 @@ const ACTIONS = {
   'add-flight': () => addFlight(),
   'rm-flight': c => askRemoveFlight(c.fi),
   'fold': c => { setFold(S.flights[c.fi], !flightOpen(S.flights[c.fi], c.fi)); paintFold(); },
-  'fold-all': () => { const open = !anyFlightOpen(); foldFreeze(); S.flights.forEach(f => UI.fold.set(f, open ? 'open' : 'closed')); paintFold(); },
   'add-unit': c => {
     const us = S.flights[c.fi].units, first = !us.length;
     us.push(newUnit(first ? DEFAULT_TYPE : us[us.length - 1].type));
@@ -14093,14 +14191,14 @@ const ACTIONS = {
   'see-route': c => {
     if (S.sel.f !== c.fi) selectUnit(c.fi, 0);
     const b = document.getElementById('blk-route');
-    if (b) b.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    if (b) { if (!b.open) b.open = true; b.scrollIntoView({ block: 'start', behavior: 'smooth' }); }       // « Voir la route » : la boîte repliée s'ouvre
   },
   'copy-radios': c => {
     const f = S.flights[c.fi], src = f.units[c.ui];
     f.units.forEach((u, k) => { if (k !== c.ui && u.type === src.type) { u.radios = clone(src.radios); REFUSED.delete(u); } });       // « Recopier » copie la fiche : jamais un texte refusé, et celui des autres unités s'efface avec leurs valeurs
     renderLeft(); refreshAll();
   },
-  'see-cmp': c => { selectUnit(c.fi, c.ui); const b = document.getElementById('blk-cmp'); if (b && window.innerWidth < 1100) b.scrollIntoView({ block: 'start', behavior: 'smooth' }); },
+  'see-cmp': c => { selectUnit(c.fi, c.ui); const b = document.getElementById('blk-cmp'); if (b && !b.open) b.open = true; if (b && window.innerWidth < 1100) b.scrollIntoView({ block: 'start', behavior: 'smooth' }); },
   'back-unit': () => backToUnit(),
   'cmp-save': () => startSavePreset(),
   'cmp-save-cancel': () => { UI.cmp.saving = false; renderRight(); },
@@ -14263,6 +14361,7 @@ function onChange(e) {
   else if (k === 'coalition') { f.coalition = el.value; if (S.flights.indexOf(f) === S.sel.f) renderRouteBlock(); refreshLiveryLists(fe); refreshAll(); }
 }
 function onToggle(e) {
+  if (e.target && e.target.matches && e.target.matches('details.fc-block')) { boxToggled(e.target); return; }
   const d = e.target, key = d && d.getAttribute && d.tagName === 'DETAILS' ? d.getAttribute('data-key') : null;
   if (!key) return;
   const was = UI.open.has(key);

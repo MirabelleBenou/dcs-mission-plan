@@ -38,6 +38,7 @@ Changes merged since the last release, grouped per tool.
 - **Licence**: from the next release, DCS Mission Plan is licensed under the GNU AGPL-3.0-or-later instead of MIT: any use, commercial included, must publish its source under the same licence, hosted services included; an additional term (section 7(b)) requires every interface to keep the credit line *Based on Mission Plan by MirabelleBenou and the 4th VEAW virtual wing*, now shown at the bottom of the landing page. Releases up to v1.24.0 remain under MIT. The pydcs tables (LGPL-3.0-or-later) and Goldwolf's drawings keep their own terms.
 - One example mission, STEPPE WIND over Cyprus, loaded by group: the **Example ▾** menu of every tool and of the landing page loads it for the mission commander tools (Briefing Generator, Recon Station) or for the flight lead tools (Route Planner, Datacard Generator, Flight Configurator); **Restore** brings back the group's previous work. Your units and heading settings are kept.
 - A mission time is printed in Zulu next to the date (“08:00Z”) on the datacard and on the briefing, in both briefing formats.
+- **Fold all** is an icon at the right of every section header; the button on its own line is gone.
 
 #### Removed
 - The repository no longer ships one particular wing's configuration file, nor six squadron logos that no tool used; the README and the code comments no longer name that wing. Each wing still makes or imports its own configuration in HQ.
@@ -102,6 +103,7 @@ Changes merged since the last release, grouped per tool.
 - Flares and chaff follow the aircraft's total countermeasure capacity instead of their default counts; a value typed out of range is refused and the previous value comes back.
 - Opening a unit's radios also opens its first radio.
 - **Start from** moves under the stations, beside **Keep in my presets…** and **Empty the loadout**; it shows the loadout in place.
+- The **Route**, **Loadout** and **My presets** boxes fold, with a one-line summary.
 
 ### Recon Station
 #### Added
@@ -216,6 +218,7 @@ Changes merged since the last release, grouped per tool.
 - The HQ page follows the new layout: Open .miz, Save .miz, Flight packages and Wing in the top bar; changes add up and are saved once with Save .miz.
 - HQ page: Dynamic Spawn described in its three steps; the outdated “HQ only reads” sentence and the “Commander is coming” note are removed.
 - HQ page: the Dynamic Spawn rules (one aircraft, same coalition, neutral airfields) and Discard changes.
+- The fold-all icon in section headers is described.
 
 ---
 
