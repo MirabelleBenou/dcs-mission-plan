@@ -825,6 +825,8 @@ select[data-tbm-src] {{ display: none !important; }}
       'work.name.title': 'Sauvegarder le travail',
       'work.name.label': 'Nom du fichier',
       'work.opened': 'Travail ouvert : {{0}}',
+      'work.bad': 'illisible, repris à vide : {{0}}',
+      'work.bad.settings': 'réglages',
       'work.err.json': "⚠ Fichier illisible : ce n'est pas du JSON.",
       'work.err.format': "⚠ Ce fichier n'est pas un travail de Mission Plan.",
       'work.err.empty': "⚠ Ce travail est vide : rien n'a changé.",
@@ -871,6 +873,8 @@ select[data-tbm-src] {{ display: none !important; }}
       'work.name.title': 'Save the work',
       'work.name.label': 'File name',
       'work.opened': 'Work opened: {{0}}',
+      'work.bad': 'unreadable, started empty: {{0}}',
+      'work.bad.settings': 'settings',
       'work.err.json': '⚠ Unreadable file: this is not JSON.',
       'work.err.format': '⚠ This file is not a Mission Plan work file.',
       'work.err.empty': '⚠ This work file is empty: nothing has changed.',
@@ -1569,6 +1573,7 @@ function tbmScrolled(e) {{
   function init() {{
     /* La mission d'HQ ne vit que tant que son .miz est ouvert : à son démarrage le shell efface la clé, avant toute lecture et avant qu'un module s'ouvre */
     try {{ localStorage.removeItem('mission_snapshot_v1'); }} catch(e) {{}}
+    suiteMigrateBriefing();                              /* le briefing sous son nom neutre, avant qu'un outil s'ouvre */
     initLang();
     /* Thème : lire localStorage */
     try {{
@@ -1686,6 +1691,16 @@ def main():
         raise SystemExit("[ERREUR] SUITE_GROUPS : l'union des deux groupes et de mp_units_v1, mp_nav_v1 n'est pas exactement SUITE_KEYS — build arrêté")
     check_suite_examples(suite_examples, {g: groups[g]['keys'] for g in groups})
     print('  [OK] groupes de l\'exemple : clés disjointes, union avec mp_units_v1 et mp_nav_v1 = SUITE_KEYS ; fichiers d\'exemple : format, Syria, mêmes clés FR et EN, chaque clé dans un groupe, valeurs JSON')
+    # Les presets d'emport (fc_presets_v1) sont une bibliothèque personnelle, pas une clé de contenu : ni dans SUITE_KEYS, ni dans GS_CONTENT_KEYS, ni dans un groupe, ni dans un fichier d'exemple
+    ex_keys = {k for lang in suite_examples for k in suite_examples[lang]['keys']}
+    if 'fc_presets_v1' in suite_keys or 'fc_presets_v1' in gs_keys or 'fc_presets_v1' in groups['mc']['keys'] + groups['fl']['keys'] or 'fc_presets_v1' in ex_keys:
+        raise SystemExit("[ERREUR] fc_presets_v1 est dans SUITE_KEYS, GS_CONTENT_KEYS, un groupe de l'exemple ou un fichier d'exemple : c'est une bibliothèque personnelle — build arrêté")
+    # Le briefing sous son nom neutre : la clé neuve est dans SUITE_KEYS, l'ancien nom ne figure qu'une fois dans le shell (la constante des deux reprises) et le shell migre avant d'ouvrir un outil
+    if 'briefing_state_v2' not in suite_keys or shell_text.count('khr26') != 1 or shell_text.count("'khr26_briefing_state_v2'") != 1:
+        raise SystemExit("[ERREUR] le briefing n'est pas sous son nom neutre, ou l'ancien nom figure ailleurs que dans sa constante — build arrêté")
+    if "suiteMigrateBriefing();" not in html.split("function init() {", 1)[1].split("initLang();", 1)[0]:
+        raise SystemExit("[ERREUR] init() ne migre pas le briefing avant initLang() — build arrêté")
+    print("  [OK] fc_presets_v1 hors de SUITE_KEYS, GS_CONTENT_KEYS, des groupes et des exemples ; briefing sous briefing_state_v2, ancien nom dans sa seule constante, migré en tête de init()")
     # Les textes de l'exemple : ceux de la table, dans l'accueil (I18N : menu, infobulle, libellé) et dans le toast
     for g in ('mc', 'fl'):
         for lang in ('fr', 'en'):

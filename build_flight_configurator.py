@@ -2001,12 +2001,12 @@ const PARTS = ['route', 'radios', 'loadout', 'livery'];
 const LO_FIELDS = ['fuel', 'flare', 'chaff', 'gun'];
 const MAX_UNITS = 4;
 const SUMMARY_LIVERY_MAX = 24;
-const KEY_THEME = 'theme_v1', KEY_LANG = 'lang_v1', KEY_STATE = 'fc_state_v1', KEY_HQ_MISSION = 'mission_snapshot_v1';
+const KEY_THEME = 'theme_v1', KEY_LANG = 'lang_v1', KEY_STATE = 'fc_state_v1', KEY_HQ_MISSION = 'mission_snapshot_v1', KEY_PRESETS = 'fc_presets_v1';
 const PACKAGE_FORMAT = 'dcs-flight-package-v2', PACKAGE_FORMATS = ['dcs-flight-package-v1', 'dcs-flight-package-v2'];
 
 // L'état. S est le travail en cours : les groupes et le théâtre vivent dans flight_set_v1 (partagée avec le Route Planner, bloc group_store_block.py), le fichier de travail
-// les garde en entier ; une clé de plus sur un groupe ou une unité y survit (le bloc « Départ » du lot suivant). fc_state_v1 ne garde que { v: 2, sel, mine }.
-// LIB.mine : mes presets par type. UI : ce qui ne se garde pas.
+// les garde en entier ; une clé de plus sur un groupe ou une unité y survit (le bloc « Départ » du lot suivant). fc_state_v1 ne garde que { v: 2, sel }.
+// LIB.mine : mes presets par type, gardés à part dans fc_presets_v1 = { v: 1, mine } (voir « Mes presets » plus bas). UI : ce qui ne se garde pas.
 const S = { theatre: 'Caucasus', flights: [], sel: { f: 0, u: 0 } };       // theatre : le théâtre commun de Mission Plan (mp_theatre_v1), toujours un des quatorze ; celui de la fiche des groupes est GS.theatre
 const LIB = { mine: {}, report: null };
 const UI = {
@@ -2122,11 +2122,42 @@ function writeState() {
   try { ok = gsPush(); } catch (e) { ok = false; }
   try { tcAdopt(); } catch (e) { /* l'écran marche sans */ }
   // fc_state_v1 ne perd ses groupes qu'une fois la fiche écrite avec eux : sinon il reste à l'état d'avant (v1, state.flights) et la fiche est retentée à la prochaine écriture
-  try { lsSet(KEY_STATE, JSON.stringify(ok ? { v: 2, sel: S.sel, mine: LIB.mine } : fcV1Doc())); } catch (e) { /* l'écran marche sans */ }
+  try { lsSet(KEY_STATE, JSON.stringify(ok ? { v: 2, sel: S.sel } : fcV1Doc())); } catch (e) { /* l'écran marche sans */ }
+  presetsWrite();
+}
+
+// ----- Mes presets : une bibliothèque personnelle, hors du fichier de travail -----
+// fc_presets_v1 = { v: 1, mine: { <type>: [ { id, name, pylons } ] } }, écrite par ce module seul, à chaque changement de la bibliothèque (enregistrer, charger des .lua, supprimer un preset). Elle n'est ni dans le fichier de travail,
+// ni dans la portée de « Ouvrir », de l'exemple, de « Tout effacer » ou de « Restaurer » (le shell ne la connaît pas). PR.text : le texte que la clé porte, tel que ce module l'a lu ou écrit (rien ne s'écrit s'il n'a pas changé).
+const PR = { text: null };
+function presetsText() { return JSON.stringify({ v: 1, mine: LIB.mine }); }
+function presetsWrite() {
+  const text = presetsText();
+  if (text === PR.text) return;
+  try { localStorage.setItem(KEY_PRESETS, text); PR.text = text; } catch (e) { /* l'écran marche sans : l'écriture est retentée au prochain changement */ }
+}
+// Au démarrage : la bibliothèque est celle de fc_presets_v1 ; les presets que fc_state_v1 porte encore (un état d'avant, un fichier de travail d'avant ouvert) s'y ajoutent sans rien remplacer (mergeMine), et la clé s'écrit si elle a changé.
+function presetsLoad(saved) {
+  let o = null;
+  try { o = JSON.parse(lsGet(KEY_PRESETS) || 'null'); } catch (e) { o = null; }
+  if (isObj(o)) mergeMine(o.mine);
+  PR.text = presetsText();
+  if (isObj(saved)) mergeMine(saved.mine);
+  presetsWrite();
+}
+// Un autre onglet ou une autre copie du module a écrit fc_presets_v1 : la bibliothèque la suit, sans rien réécrire. Une saisie en attente ici garde ses presets (ajoutés, pas remplacés).
+function presetsFollow() {
+  let o = null;
+  try { o = JSON.parse(lsGet(KEY_PRESETS) || 'null'); } catch (e) { o = null; }
+  if (!isObj(o) || !isObj(o.mine)) return;
+  if (!_saveTimer) LIB.mine = {};
+  mergeMine(o.mine);
+  if (!_saveTimer) PR.text = presetsText();
+  try { renderRight(); } catch (e) { /* l'écran marche sans */ }
 }
 // L'état d'avant (v1, groupes compris) ; gsMigrateFailed (une migration a déjà échoué) est gardé : la migration retentée ne refait que l'étape 1
 function fcV1Doc() {
-  const d = { v: 1, state: S, mine: LIB.mine };
+  const d = { v: 1, state: S };
   if (GS.mf) d.gsMigrateFailed = true;
   return d;
 }
@@ -2233,7 +2264,7 @@ function gsAdopt(quiet) {
   gsMarkAll();
   if (gsMarkRaw()) gsFixRaw();       // l'emport brut que la fiche portait est converti et écrit dès l'adoption
   GS.base = {};
-  try { lsSet(KEY_STATE, JSON.stringify({ v: 2, sel: S.sel, mine: LIB.mine })); } catch (e) { /* l'écran marche sans */ }
+  try { lsSet(KEY_STATE, JSON.stringify({ v: 2, sel: S.sel })); } catch (e) { /* l'écran marche sans */ }
   if (!quiet) renderAll();
   return true;
 }
@@ -4245,12 +4276,12 @@ function openFile(file) {
 // Ce que « Ouvrir » photographie pour « Restaurer » : toutes les clés de contenu des outils du Flight Leader (GS_CONTENT_KEYS, bloc des groupes partagés).
 function fcMem() {
   flushWork();
-  return { theatre: S.theatre, flights: clone(S.flights), sel: clone(S.sel), mine: clone(LIB.mine) };
+  return { theatre: S.theatre, flights: clone(S.flights), sel: clone(S.sel) };       // Mes presets n'en font pas partie : « Restaurer » n'y touche pas
 }
 // « Restaurer » : le stockage est déjà revenu à l'octet (bloc d'interface commun) ; le module reprend sa copie et se redessine, sans rien réécrire.
 function fcBack(m) {
   clearTimeout(_saveTimer); _saveTimer = 0;
-  S.theatre = m.theatre; S.flights = clone(m.flights); S.sel = clone(m.sel); LIB.mine = clone(m.mine);
+  S.theatre = m.theatre; S.flights = clone(m.flights); S.sel = clone(m.sel);
   GS.removed = [];
   gsMarkAll();
   UI.exportTried = false; UI.rtChoose = null; UI.clamped = 0;
@@ -4667,8 +4698,8 @@ function init() {
   try { saved = JSON.parse(lsGet(KEY_STATE) || 'null'); } catch (e) { saved = null; }
   const ok = isObj(saved) && (saved.v === 1 || saved.v === 2);
   const sel0 = ok ? (saved.v === 2 ? saved.sel : (isObj(saved.state) ? saved.state.sel : undefined)) : undefined;
+  try { presetsLoad(ok ? saved : null); } catch (e) { /* l'écran marche sans */ }
   try {
-    if (ok) mergeMine(saved.mine);
     if (ok && saved.gsMigrateFailed === true) GS.mf = true;
     gsPrintMerge();       // la fusion : les canaux d'une datacard liée que son groupe n'a pas encore passent au groupe (radioPrint), avant que le module ne lise la fiche
     const had = gsRead() !== null;       // la fiche existait avant ce chargement (sinon la migration vient de la bâtir avec les groupes de l'état d'avant)
@@ -4704,7 +4735,7 @@ function init() {
   window.addEventListener('storage', e => {
     if (e.key === KEY_WING || e.key === null) WL.stale = true;       // les sources de livrée ne se relisent qu'après un évènement de leur clé (ou de clé null), avant de refaire les listes
     if (e.key === KEY_HQ_MISSION || e.key === null) MS.stale = true;
-    routeStorage(e); gsStorage(e); if (e.key === KEY_THEATRE) thFollow(); if (e.key === KEY_UNITS) ukFollow();
+    routeStorage(e); gsStorage(e); if (e.key === KEY_THEATRE) thFollow(); if (e.key === KEY_UNITS) ukFollow(); if (e.key === KEY_PRESETS) presetsFollow();
     if (e.key === KEY_WING || e.key === KEY_HQ_MISSION || e.key === null) { refreshLiveryLists(); refreshSummaries(); }
   });
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushWork(); else { gsPull(); routeTakeover(); } });

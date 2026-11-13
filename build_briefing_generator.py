@@ -3268,7 +3268,7 @@ const DEFAULT_WING_CONFIG = JSON.parse(__DEFAULT_WING_CONFIG__);
    Tablet-ready, offline-first
    ===================================================== */
 
-const STORAGE_KEY = 'khr26_briefing_state_v2';
+const STORAGE_KEY = 'briefing_state_v2';
 const KEY_WING     = 'wing_config_v1';
 const KEY_THEME    = 'theme_v1';
 const KEY_LANG     = 'lang_v1';  // Phase 9 — i18n FR/EN

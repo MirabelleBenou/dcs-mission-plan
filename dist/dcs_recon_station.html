@@ -2880,7 +2880,7 @@ function restoreState() {
 /* Au démarrage du module, les champs vides Msn, DTG et Class se remplissent du briefing en cours (la clé du Briefing Generator, lue à l'instant, jamais réécrite) :
    Msn = opération et mission, DTG = la date du briefing en JJ.MM.AAAA, Class = le libellé de la classification dans la langue de l'outil. Un champ rempli n'est jamais écrasé ;
    Crew reste à saisir (un briefing porte plusieurs groupes). Sans briefing lisible, rien ne change et rien ne s'écrit. */
-const KEY_BRIEFING = 'khr26_briefing_state_v2';
+const KEY_BRIEFING = 'briefing_state_v2';
 function rsBriefingFill() {
   let b = null;
   try { b = JSON.parse(localStorage.getItem(KEY_BRIEFING)); } catch (e) { b = null; }

@@ -1851,7 +1851,7 @@ const KEY_STATE = 'datacard_state_v1';
 const KEY_THEME = 'theme_v1';
 const KEY_LANG = 'lang_v1';
 /* Clé de stockage écrite par le Briefing Generator (identifiant déjà public) ; ici en lecture seule. */
-const KEY_BRIEFING = 'khr26_briefing_state_v2';
+const KEY_BRIEFING = 'briefing_state_v2';
 const KEY_WING = 'wing_config_v1';                // lecture seule : indicatifs des escadrons
 const FORMAT_ID = 'dcs-datacard-v1';
 /* Route Planner : clé de l'état de la route (lecture seule), format du fichier */
@@ -4564,7 +4564,8 @@ function routesOfTheatre(routes, C) {
 const KEY_FLIGHT_SET = 'flight_set_v1', KEY_FLIGHT_SET_BAD = 'flight_set_v1_illisible', FLIGHT_SET_FORMAT = 'dcs-flight-set-v1';
 const GS_KEY_FC = 'fc_state_v1', GS_KEY_ROUTES = 'route_set_v1', GS_KEY_ROUTE = 'route_state_v1', GS_KEY_DG = 'datacard_state_v1', GS_KEY_LAYERS = 'route_layers_v1';
 /* Les clés de contenu des trois outils du Flight Leader (Flight Configurator, Route Planner, Datacard Generator), écrites une seule fois : ce que le geste « Remplacer » (Exemple, ouverture d'un fichier) photographie
-   pour « Restaurer », quel que soit l'outil où l'on est. Les groupes, leurs routes et calques, les datacards, le théâtre, les unités et les réglages de cap communs. Ni la langue, ni le thème, ni les replis. */
+   pour « Restaurer », quel que soit l'outil où l'on est. Les groupes, leurs routes et calques, les datacards, le théâtre, les unités et les réglages de cap communs. Ni la langue, ni le thème, ni les replis.
+   Ni les presets d'emport : fc_presets_v1 (Flight Configurator) est une bibliothèque personnelle, pas une clé de contenu ; elle n'entre dans aucune liste de clés ni portée de « Remplacer ». */
 const GS_CONTENT_KEYS = ['fc_state_v1', 'flight_set_v1', 'flight_set_v1_illisible', 'route_set_v1', 'route_state_v1', 'route_layers_v1', 'datacard_state_v1', 'mp_theatre_v1', 'mp_units_v1', 'mp_nav_v1'];
 /* Un geste « Remplacer » se termine par gsSettled : les autres outils ouverts dans la page suivent le geste par évènement « storage » et, après un court calme, réécrivent leurs copies (les datacards gardent la dernière copie de la route) ;
    « Restaurer » ne compare le stockage à ce qu'il était qu'une fois ce calme passé, sinon il se croirait devant des données changées. À rendre par run (replaceWithRestore attend la promesse) : run: () => { …; return gsSettled(); }. Faux (rien n'a changé) passe tel quel.
@@ -4827,7 +4828,7 @@ function gsMigrate(packFn) {
 /* « Tout effacer » des trois outils du Flight Leader : ce qui est effacé, ce qui reste.
    Effacé : les groupes (flight_set_v1 : une fiche vide, son théâtre gardé ; fc_state_v1 : la sélection revient au premier groupe), les routes de tous les théâtres (route_set_v1 retirée), la route, ses références
    et sa date (route_state_v1), les calques (route_layers_v1 retirée), toutes les datacards (datacard_state_v1 : aucune carte), libres et liées.
-   Reste : les presets d'emport (fc_state_v1.mine), les réglages de route_state_v1 (théâtre, unités, cap, vitesse, boîtes, affichage), le mode et le théâtre du document des datacards, mp_theatre_v1, mp_units_v1, mp_nav_v1,
+   Reste : les presets d'emport (fc_presets_v1), les réglages de route_state_v1 (théâtre, unités, cap, vitesse, boîtes, affichage), le mode et le théâtre du document des datacards, mp_theatre_v1, mp_units_v1, mp_nav_v1,
    la langue, le thème, les replis, l'affichage ; HQ (mission_snapshot_v1), le Briefing Generator, Recon Station et wing_config_v1 ne sont jamais touchés. La copie d'anciens groupes qu'un module a gardée de la fiche
    (flight_set_v1_illisible) est retirée aussi : un groupe effacé ne doit pas revenir de là.
    Les clés qui se lisent s'écrivent d'abord, la fiche en dernier : un module qui suit les évènements « storage » relit les groupes une fois le reste en place. Rend faux si une écriture a échoué. */
@@ -5134,7 +5135,7 @@ function radioPostsOf(type) {
 }
 const IMP_MAX_UNITS = 4;
 const IMP_PARTS = ['route', 'radios', 'loadout', 'livery'];
-const IMP_KEY_HQ = 'mission_snapshot_v1', IMP_KEY_BRIEFING = 'khr26_briefing_state_v2', IMP_KEY_WING = 'wing_config_v1';
+const IMP_KEY_HQ = 'mission_snapshot_v1', IMP_KEY_BRIEFING = 'briefing_state_v2', IMP_KEY_WING = 'wing_config_v1';
 const IMP_HQ_SCHEMAS = ['dcs-mission-snapshot-v1', 'dcs-mission-snapshot-v2'];
 const IMP_PACKAGE_FORMATS = ['dcs-flight-package-v1', 'dcs-flight-package-v2'];
 

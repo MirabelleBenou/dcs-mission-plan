@@ -19,7 +19,10 @@ Une clé absente du stockage n'est pas écrite ; les valeurs sont les chaînes d
 SUITE_KEYS = les clés de contenu des outils du Flight Leader (GS_CONTENT_KEYS de group_store_block.py, dans son ordre) + celle du briefing + celle de Recon Station (sans l'image source).
 L'exemple : un seul, chargé par groupe d'outils (SUITE_GROUPS : « mc », le Mission Commander, et « fl », le Flight Leader). Le build du shell embarque les deux fichiers d'exemple (samples/example_work_fr.json et _en.json,
 au format ci-dessus) dans SUITE_EXAMPLES ({ fr, en }) ; MP_WORK_EXAMPLE(g) remplace les clés du groupe par celles de l'exemple de la langue du shell et rouvre les seuls outils du groupe.
-Hors du fichier : les préférences d'écran (langue, thème, replis, affichage, partages d'écran, calques de carte), la mission d'HQ (mission_snapshot_v1) et la configuration Wing (wing_config_v1).
+Hors du fichier : les préférences d'écran (langue, thème, replis, affichage, partages d'écran, calques de carte), la mission d'HQ (mission_snapshot_v1), la configuration Wing (wing_config_v1)
+et les presets d'emport du Flight Configurator (fc_presets_v1, une bibliothèque personnelle : Ouvrir, Exemple, Tout effacer et Restaurer n'y touchent jamais).
+Ouvrir : une clé de la suite que le fichier ne porte pas est retirée, sauf mp_units_v1 et mp_nav_v1 (les réglages), qui restent telles quelles ; une clé dont la valeur n'est pas un JSON lisible est écrite, et le toast le dit.
+Le briefing vit sous briefing_state_v2 ; le shell migre l'ancien nom au démarrage (suiteMigrateBriefing) et lit un fichier d'avant sous le nom neuf (suiteFileKeys).
 
 Usage (par le build) : from suite_file_block import build_block, build_html, build_css, THEME_VARS
 """
@@ -47,10 +50,21 @@ THEME_VARS = {
 
 _JS = r"""
 const SUITE_FORMAT = 'dcs-mission-plan-work-v1';
-const SUITE_KEYS = ['fc_state_v1', 'flight_set_v1', 'flight_set_v1_illisible', 'route_set_v1', 'route_state_v1', 'route_layers_v1', 'datacard_state_v1', 'mp_theatre_v1', 'mp_units_v1', 'mp_nav_v1', 'khr26_briefing_state_v2', 'recon_state_v1'];
-/* Les deux groupes de l'exemple : leurs outils et leurs clés. mp_units_v1 et mp_nav_v1 (des réglages) ne sont d'aucun groupe : un exemple ne les écrit ni ne les retire. Le build vérifie que les deux listes de clés sont disjointes et que leur union avec ces deux clés est SUITE_KEYS. */
+/* Les clés de contenu : celles que le fichier de travail porte, que « Ouvrir » remplace et que « Restaurer » rend. fc_presets_v1 (« Mes presets » d'emport du Flight Configurator) n'est PAS une clé de contenu : c'est une bibliothèque personnelle, comme wing_config_v1 ;
+   elle reste hors de cette liste, de GS_CONTENT_KEYS (group_store_block.py) et des groupes ci-dessous : ni Ouvrir, ni Exemple, ni Tout effacer, ni Restaurer n'y touchent. */
+const SUITE_KEYS = ['fc_state_v1', 'flight_set_v1', 'flight_set_v1_illisible', 'route_set_v1', 'route_state_v1', 'route_layers_v1', 'datacard_state_v1', 'mp_theatre_v1', 'mp_units_v1', 'mp_nav_v1', 'briefing_state_v2', 'recon_state_v1'];
+/* Les réglages (unités, cap) : un fichier qui les porte les écrit ; un fichier qui ne les porte pas les laisse tels qu'ils sont au stockage (ils ne sont ni retirés, ni photographiés pour « Restaurer »). */
+const SUITE_SETTINGS = ['mp_units_v1', 'mp_nav_v1'];
+/* L'ancien nom de la clé du briefing : il ne sert qu'à deux reprises, le démarrage du shell (suiteMigrateBriefing) et la lecture d'un fichier de travail d'avant (suiteFileKeys). Rien ne l'écrit plus. */
+const SUITE_OLD_BRIEFING_KEY = 'khr26_briefing_state_v2', SUITE_BRIEFING_KEY = 'briefing_state_v2';
+/* Qui montre une clé illisible, pour le toast d'ouverture : l'outil, ou 'settings' pour les réglages communs (unités, cap, théâtre) ; l'ordre des outils est celui de l'accueil.
+   flight_set_v1_illisible n'y est pas : c'est, par construction, la copie d'une fiche qui ne se lit pas. */
+const SUITE_KEY_TOOL = { fc_state_v1: 'fc', flight_set_v1: 'fc', route_set_v1: 'rp', route_state_v1: 'rp', route_layers_v1: 'rp', datacard_state_v1: 'dg', mp_theatre_v1: 'settings', mp_units_v1: 'settings', mp_nav_v1: 'settings', briefing_state_v2: 'bg', recon_state_v1: 'rs' };
+const SUITE_TOOL_ORDER = ['bg', 'rs', 'rp', 'dg', 'fc'];
+const SUITE_TOOL_NAME = { bg: 'Briefing Generator', rs: 'Recon Station', rp: 'Route Planner', dg: 'Datacard Generator', fc: 'Flight Configurator' };
+/* Les deux groupes de l'exemple : leurs outils et leurs clés. mp_units_v1 et mp_nav_v1 (des réglages) ne sont d'aucun groupe : un exemple ne les écrit ni ne les retire ; fc_presets_v1 non plus (voir SUITE_KEYS). Le build vérifie que les deux listes de clés sont disjointes et que leur union avec ces deux clés est SUITE_KEYS. */
 const SUITE_GROUPS = {
-  mc: { tools: ['bg', 'rs'], keys: ['khr26_briefing_state_v2', 'recon_state_v1'] },
+  mc: { tools: ['bg', 'rs'], keys: ['briefing_state_v2', 'recon_state_v1'] },
   fl: { tools: ['rp', 'dg', 'fc'], keys: ['fc_state_v1', 'flight_set_v1', 'flight_set_v1_illisible', 'route_set_v1', 'route_state_v1', 'route_layers_v1', 'datacard_state_v1', 'mp_theatre_v1'] }
 };
 /* Les outils dont l'iframe est retirée quand le travail est remplacé (ils lisent les clés ci-dessus) ; HQ et le Field Manual n'en lisent aucune : ils restent (le .miz d'HQ reste chargé) */
@@ -60,6 +74,38 @@ const SUITE_CALM_MS = 400, SUITE_CALM_MAX_MS = 3000, SUITE_CALM_STEP_MS = 50;
 const SUITE = { restore: null, toastN: 0, name: '', at: 0, from: null, busy: false, give: {} };
 
 function suiteGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+/* Au démarrage du shell, avant qu'un outil s'ouvre : le briefing vit sous son nom neutre. L'ancienne clé seule est copiée à l'octet vers la neuve, puis retirée ; si les deux existent, la neuve gagne et l'ancienne est retirée.
+   Une écriture refusée (stockage plein) ou une copie qui ne se relit pas à l'identique laisse l'ancienne en place : elle n'est retirée qu'une fois la neuve vérifiée, et l'essai est repris au démarrage suivant. */
+function suiteMigrateBriefing() {
+  try {
+    const old = localStorage.getItem(SUITE_OLD_BRIEFING_KEY);
+    if (old === null) return;
+    if (localStorage.getItem(SUITE_BRIEFING_KEY) === null) {
+      localStorage.setItem(SUITE_BRIEFING_KEY, old);
+      if (localStorage.getItem(SUITE_BRIEFING_KEY) !== old) return;
+    }
+    localStorage.removeItem(SUITE_OLD_BRIEFING_KEY);
+  } catch (e) { console.warn('[M·P] migration du briefing : ' + e); }
+}
+/* Les clés d'un fichier de travail, sous les noms d'aujourd'hui : le briefing d'un fichier d'avant (ancien nom) est lu comme la clé neuve ; si le fichier porte les deux, la neuve gagne. */
+function suiteFileKeys(keys) {
+  const k = Object.assign({}, keys);
+  if (typeof k[SUITE_BRIEFING_KEY] !== 'string' && typeof k[SUITE_OLD_BRIEFING_KEY] === 'string') k[SUITE_BRIEFING_KEY] = k[SUITE_OLD_BRIEFING_KEY];
+  delete k[SUITE_OLD_BRIEFING_KEY];
+  return k;
+}
+/* Ce que le toast d'ouverture dit d'un fichier : les clés dont la valeur n'est pas un JSON lisible (elles sont écrites telles quelles, l'outil repart à vide) — les noms des outils sans doublon, dans l'ordre de l'accueil,
+   puis « réglages » pour une clé de réglage commune ; '' si tout se lit. */
+function suiteBadNames(keys) {
+  const who = {};
+  SUITE_KEYS.forEach(k => {
+    if (typeof keys[k] !== 'string' || !SUITE_KEY_TOOL[k]) return;
+    try { JSON.parse(keys[k]); } catch (e) { who[SUITE_KEY_TOOL[k]] = true; }
+  });
+  const names = SUITE_TOOL_ORDER.filter(id => who[id]).map(id => SUITE_TOOL_NAME[id]);
+  if (who.settings) names.push(t('work.bad.settings'));
+  return names.join(' · ');
+}
 function suiteRead(keys) { const o = {}; (keys || SUITE_KEYS).forEach(k => { o[k] = suiteGet(k); }); return o; }
 /* Écrit la table clé → texte ou null, pour les clés de la portée (toutes les clés par défaut) : les clés absentes sont retirées d'abord (de la place se libère), puis les autres sont écrites.
    Une clé hors de la portée n'est ni écrite ni retirée. Faux si une écriture a échoué (stockage plein). */
@@ -270,10 +316,13 @@ window.MP_WORK_OPEN_TEXT = function (text, name) {
   try { o = JSON.parse(text); } catch (e) { console.warn('[M·P] fichier de travail : JSON illisible', e); showToast(t('work.err.json'), { type: 'err' }); return false; }
   const isObj = v => !!v && typeof v === 'object' && !Array.isArray(v);
   if (!isObj(o) || o.format !== SUITE_FORMAT || !isObj(o.keys) || Object.keys(o.keys).some(k => typeof o.keys[k] !== 'string')) { showToast(t('work.err.format'), { type: 'err' }); return false; }
-  if (!SUITE_KEYS.some(k => typeof o.keys[k] === 'string')) { showToast(t('work.err.empty'), { type: 'err' }); return false; }
-  const next = {};
-  SUITE_KEYS.forEach(k => { next[k] = typeof o.keys[k] === 'string' ? o.keys[k] : null; });
-  return !!suiteDo(next, SUITE_KEYS, SUITE_DROP, t('work.opened').replace('{0}', String(name || '')));
+  const fk = suiteFileKeys(o.keys);
+  if (!SUITE_KEYS.some(k => typeof fk[k] === 'string')) { showToast(t('work.err.empty'), { type: 'err' }); return false; }
+  /* Les réglages que le fichier ne porte pas restent au stockage : ils sortent de la portée (ni écrits, ni retirés) ; les autres clés absentes sont retirées */
+  const keys = SUITE_KEYS.filter(k => typeof fk[k] === 'string' || SUITE_SETTINGS.indexOf(k) < 0), next = {};
+  keys.forEach(k => { next[k] = typeof fk[k] === 'string' ? fk[k] : null; });
+  const bad = suiteBadNames(fk);
+  return !!suiteDo(next, keys, SUITE_DROP, t('work.opened').replace('{0}', String(name || '')) + (bad ? ' — ' + t('work.bad').replace('{0}', bad) : ''));
 };
 /* L'exemple d'un groupe : les clés du groupe prennent la valeur de l'exemple de la langue du shell (ou sont retirées si l'exemple ne les porte pas), les outils du groupe seuls sont rouverts ;
    les autres outils gardent leur iframe et leurs clés. */

@@ -56,8 +56,10 @@ Changes merged since the last release, grouped per tool.
 - The open tool takes the keyboard focus, so Ctrl+S reaches it.
 - The mission opened in HQ is shared with the other tools (imports, the magnetic variation year) only while its .miz is open in the board; reloading the board forgets it, so no tool works from an outdated mission.
 - The home page sorts the tools in two frames, Mission Commander (HQ, Briefing Generator, Recon Station) and Flight Leader (Route Planner, Datacard Generator, Flight Configurator), with smaller cards; Open, Save and the Field Manual are in the top bar.
+- An unreadable part of an opened work file is reported, and the briefing is stored under a neutral key (older storage and work files are read as before).
 #### Fixed
 - On phones and tablets, the on-screen keyboard no longer hides the bottom of the open tool.
+- **Open** and **Example** no longer erase the Flight Configurator’s **My presets**, nor the unit and heading settings a work file does not carry.
 
 ### HQ
 #### Added
@@ -105,6 +107,7 @@ Changes merged since the last release, grouped per tool.
 - Opening a unit's radios also opens its first radio.
 - **Start from** moves under the stations, beside **Keep in my presets…** and **Empty the loadout**; it shows the loadout in place.
 - The **Route**, **Loadout** and **My presets** boxes fold, with a one-line summary.
+- **My presets** are kept apart from the work file: Open, Example and Clear all never touch them.
 
 ### Recon Station
 #### Added
@@ -223,6 +226,7 @@ Changes merged since the last release, grouped per tool.
 - HQ page: the Dynamic Spawn rules (one aircraft, same coalition, neutral airfields) and Discard changes.
 - The fold-all icon in section headers is described.
 - The Flight Configurator Display menu and the Datacard Generator fuel line are described.
+- Where your loadout presets are kept is described.
 
 ---
 

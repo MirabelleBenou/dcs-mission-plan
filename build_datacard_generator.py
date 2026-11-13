@@ -1596,7 +1596,7 @@ const KEY_STATE = 'datacard_state_v1';
 const KEY_THEME = 'theme_v1';
 const KEY_LANG = 'lang_v1';
 /* Clé de stockage écrite par le Briefing Generator (identifiant déjà public) ; ici en lecture seule. */
-const KEY_BRIEFING = 'khr26_briefing_state_v2';
+const KEY_BRIEFING = 'briefing_state_v2';
 const KEY_WING = 'wing_config_v1';                // lecture seule : indicatifs des escadrons
 const FORMAT_ID = 'dcs-datacard-v1';
 /* Route Planner : clé de l'état de la route (lecture seule), format du fichier */

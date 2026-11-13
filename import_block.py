@@ -133,7 +133,7 @@ function radioPostsOf(type) {
 }
 const IMP_MAX_UNITS = 4;
 const IMP_PARTS = ['route', 'radios', 'loadout', 'livery'];
-const IMP_KEY_HQ = 'mission_snapshot_v1', IMP_KEY_BRIEFING = 'khr26_briefing_state_v2', IMP_KEY_WING = 'wing_config_v1';
+const IMP_KEY_HQ = 'mission_snapshot_v1', IMP_KEY_BRIEFING = 'briefing_state_v2', IMP_KEY_WING = 'wing_config_v1';
 const IMP_HQ_SCHEMAS = ['dcs-mission-snapshot-v1', 'dcs-mission-snapshot-v2'];
 const IMP_PACKAGE_FORMATS = ['dcs-flight-package-v1', 'dcs-flight-package-v2'];
 
