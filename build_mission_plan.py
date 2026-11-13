@@ -235,6 +235,11 @@ def check_suite_examples(ex, group_keys):
                 raise SystemExit(f"[ERREUR] {f} : la valeur de {k} ne se lit pas en JSON — build arrêté")
     if sorted(ex['fr']['keys']) != sorted(ex['en']['keys']):
         raise SystemExit("[ERREUR] les fichiers d'exemple FR et EN n'ont pas les mêmes clés — build arrêté")
+    # Les presets d'emport sont personnels : le fc_state_v1 d'un exemple ne porte pas de « mine »
+    for lang in ('fr', 'en'):
+        fc = ex[lang]['keys'].get('fc_state_v1')
+        if fc is not None and 'mine' in json.loads(fc):
+            raise SystemExit("[ERREUR] samples/example_work_%s.json : fc_state_v1 porte « mine » (les presets ne sont pas dans un exemple) — build arrêté" % lang)
 
 
 def check_example_tooltips():
