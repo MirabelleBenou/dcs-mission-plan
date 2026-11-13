@@ -2589,8 +2589,6 @@ body {{
 
   <!-- EDITOR -->
   <div class="editor" id="editor-panel" role="complementary">
-    <div class="ui-foldbar"><button type="button" class="ui-btn ui-foldall" id="rs-foldall"></button></div>
-
     <!-- Section Image -->
     <details class="ed-section" data-section="image">
       <summary class="ui-fold-head"><span data-i18n="editor.image.title">IMAGE SOURCE</span></summary>
@@ -3387,7 +3385,7 @@ function collectState() {{
 
 function saveState() {{
   collectState();
-  if (document.getElementById('rs-foldall')) rsFoldRefresh();
+  if (rsSections().length) rsFoldRefresh();
   try {{
     const toSave = Object.assign({{}}, STATE, {{ schema: 2 }});
     localStorage.setItem(KEY_STATE, JSON.stringify(toSave));
@@ -5073,9 +5071,17 @@ function rsSectionSum(id) {{
   if (id === 'classif') return STATE.classification && STATE.classification.enabled ? t('classif.' + rsClassKey(STATE.classification.level)) : '';
   return '';
 }}
+/* L'icône « Tout replier » à droite de l'en-tête de chaque section (une section seule n'en porte pas) */
 function rsFoldLabel() {{
-  const b = document.getElementById('rs-foldall');
-  if (b) b.textContent = uiFoldAllLabel(rsSections().some(d => d.open));
+  const ds = rsSections();
+  uiFoldAll(ds.map(d => d.querySelector(':scope > summary')), {{ any: ds.some(d => d.open), label: uiFoldAllLabel, go: rsFoldAll }});
+}}
+function rsFoldAll() {{
+  const ds = rsSections(), open = !ds.some(d => d.open), map = {{}};
+  ds.forEach(d => {{ map[d.dataset.section] = open; }});
+  uiFoldSaveAll(RS_FOLDS, map);
+  ds.forEach(d => {{ if (d.open !== open) d.open = open; }});
+  rsFoldLabel();
 }}
 function rsFoldRefresh() {{
   rsSections().forEach(d => {{
@@ -5102,13 +5108,6 @@ function rsFoldInit() {{
     uiSum(h, d.open ? '' : rsSectionSum(d.dataset.section));
     rsFoldLabel();
   }}, true);
-  document.getElementById('rs-foldall').addEventListener('click', () => {{
-    const ds = rsSections(), open = !ds.some(d => d.open), map = {{}};
-    ds.forEach(d => {{ map[d.dataset.section] = open; }});
-    uiFoldSaveAll(RS_FOLDS, map);
-    ds.forEach(d => {{ if (d.open !== open) d.open = open; }});
-    rsFoldLabel();
-  }});
 }}
 
 async function init() {{

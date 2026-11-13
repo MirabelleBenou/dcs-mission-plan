@@ -2577,7 +2577,6 @@ body[data-format="full"] [data-fmt="simple"] { display: none !important; }
 
   /* Active section: hide summary, force content visible */
   body[data-active-tab] .ed-section > summary { display: none; }
-  body[data-active-tab] .ui-foldbar { display: none; }
   body[data-active-tab] .ed-section > .ed-content {
     display: flex !important;
     padding: 0;
@@ -2922,8 +2921,6 @@ __CSS__
 
   <!-- ============ EDITOR ============ -->
   <aside class="editor" id="editor">
-    <div class="ui-foldbar"><button type="button" class="ui-btn ui-foldall" id="bg-foldall"></button></div>
-
     <!-- 01 EN-TÊTE (les deux formats) : le même qu'au Datacard Generator -->
     <details class="ed-section" data-section="header">
       <summary class="ui-fold-head"><span data-i18n="editor.header.summary">01 ░ EN-TÊTE</span></summary>
@@ -7861,9 +7858,18 @@ function bgSectionSum(id) {
   }
   return '';
 }
+/* L'icône « Tout replier » à droite de l'en-tête de chaque section du format affiché (une section seule n'en porte pas) */
 function bgFoldLabel() {
-  const b = document.getElementById('bg-foldall');
-  if (b) b.textContent = uiFoldAllLabel(bgFmtSections().some(d => d.open));
+  const on = bgFmtSections();
+  uiFoldAllOff(bgSections().filter(d => on.indexOf(d) < 0).map(d => d.querySelector(':scope > summary')));
+  uiFoldAll(on.map(d => d.querySelector(':scope > summary')), { any: on.some(d => d.open), label: uiFoldAllLabel, go: bgFoldAll });
+}
+function bgFoldAll() {
+  const ds = bgFmtSections(), open = !ds.some(d => d.open), map = {};
+  ds.forEach(d => { map[d.dataset.section] = open; });
+  uiFoldSaveAll(BG_FOLDS, map);
+  ds.forEach(d => { if (d.open !== open) d.open = open; });
+  bgFoldLabel();
 }
 /* Les en-têtes : aria-expanded et résumé (replié seulement) ; appelé à l'ouverture, après un chargement, un changement de langue */
 function bgFoldRefresh() {
@@ -7892,13 +7898,6 @@ function bgFoldInit() {
     uiSum(h, d.open ? '' : bgSectionSum(id));
     bgFoldLabel();
   }, true);
-  document.getElementById('bg-foldall').addEventListener('click', () => {
-    const ds = bgFmtSections(), open = !ds.some(d => d.open), map = {};
-    ds.forEach(d => { map[d.dataset.section] = open; });
-    uiFoldSaveAll(BG_FOLDS, map);
-    ds.forEach(d => { if (d.open !== open) d.open = open; });
-    bgFoldLabel();
-  });
 }
 
 function setActiveTab(tab) {
@@ -8084,6 +8083,7 @@ function placeMetarPanel(fmt) {
 function applyFormatUi() {
   const fmt = (state && state.meta && state.meta.format === 'simple') ? 'simple' : 'full';
   document.body.dataset.format = fmt;
+  bgFoldLabel();       // les icônes « Tout replier » suivent les sections du format affiché
   bgDispSync();
   placeMetarPanel(fmt);
   // l'onglet courant doit exister dans ce mode

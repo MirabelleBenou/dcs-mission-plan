@@ -6443,6 +6443,15 @@ function hqFoldRefresh() {{
     h.setAttribute('aria-expanded', String(d.open));
     uiSum(h, d.open ? '' : hqSectionSum(d.dataset.section));
   }});
+  const ds = hqSections();
+  uiFoldAll(ds.map(d => d.querySelector(':scope > summary')), {{ any: ds.some(d => d.open), label: uiFoldAllLabel, go: hqFoldAll }});       /* « Tout replier » : deux sections, une icône sur chacune */
+}}
+function hqFoldAll() {{
+  const ds = hqSections(), open = !ds.some(d => d.open), map = {{}};
+  ds.forEach(d => {{ map[d.dataset.section] = open; }});
+  uiFoldSaveAll(HQ_FOLDS, map);
+  ds.forEach(d => {{ if (d.open !== open) d.open = open; }});
+  hqFoldRefresh();
 }}
 function hqFoldInit() {{
   hqSections().forEach(d => {{

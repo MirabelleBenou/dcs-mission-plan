@@ -1284,7 +1284,6 @@ div.dc-bl, li.dc-bl, p.dc-bl { height: 24px; border-bottom: 1px dotted var(--dc-
   body:not([data-active-tab="preview"]) .ed-section { display: none; }
 __TAB_SECTION_RULES__
   body[data-active-tab] .ed-section > summary { display: none; }
-  body[data-active-tab] .ui-foldbar { display: none; }
   body[data-active-tab] .ed-section > .ed-content {
     display: flex !important;
     padding: 0;
@@ -6116,9 +6115,10 @@ function sectionHtml(id, idx, c) {
     '<summary class="ui-fold-head" aria-expanded="' + dgFoldOpen(id) + '">' + esc(title) + (sum ? '<span class="ui-sum">' + esc(sum) + '</span>' : '') + '</summary><div class="ed-content"><div class="panel-mobile-header">' + esc(title) + '</div>' +
     SECTION_BUILDERS[id](c) + '</div></details>';
 }
-function dgFoldBarHtml() {
-  const any = SECTION_IDS.some(id => dgFoldOpen(id));
-  return '<div class="ui-foldbar"><button type="button" class="ui-btn ui-foldall" id="dg-foldall" data-foldall="1">' + esc(uiFoldAllLabel(any)) + '</button></div>';
+/* L'icône « Tout replier » à droite de l'en-tête de chaque section (une section seule n'en porte pas) */
+function dgFoldIcons() {
+  const ds = Array.prototype.slice.call(document.querySelectorAll('#ed-sections details.ed-section'));
+  uiFoldAll(ds.map(d => d.querySelector(':scope > summary')), { any: ds.some(d => d.open), label: uiFoldAllLabel, go: dgFoldAll });
 }
 /* Après un geste de repli : la clé, le résumé de la section, le libellé de « Tout replier » */
 function dgFoldSync(d) {
@@ -6129,8 +6129,7 @@ function dgFoldSync(d) {
     h.setAttribute('aria-expanded', String(d.open));
     if (!d.open) uiSum(h, dgSectionSum(id, curCard()));
   }
-  const b = document.getElementById('dg-foldall');
-  if (b) b.textContent = uiFoldAllLabel(Array.prototype.some.call(document.querySelectorAll('#ed-sections details.ed-section'), x => x.open));
+  dgFoldIcons();
 }
 function dgFoldAll() {
   const ds = Array.prototype.slice.call(document.querySelectorAll('#ed-sections details.ed-section'));
@@ -6176,7 +6175,8 @@ function renderEditor(keep) {
   const caret = cand ? [cand.selectionStart, cand.selectionEnd, cand.selectionDirection] : null;
   DG_UI.rendering = true;
   try {
-    document.getElementById('ed-sections').innerHTML = dgFoldBarHtml() + SECTION_IDS.map((id, i) => sectionHtml(id, i, c)).join('');
+    document.getElementById('ed-sections').innerHTML = SECTION_IDS.map((id, i) => sectionHtml(id, i, c)).join('');
+    dgFoldIcons();
     const nw = kept && sel ? ed.querySelector(sel) : null;
     if (nw && nw !== kept && nw.tagName === kept.tagName) {
       nw.replaceWith(kept);
@@ -7282,7 +7282,6 @@ function bindEvents() {
     const d = e.target;
     if (d && d.matches && d.matches('details.ed-section')) dgFoldSync(d);
   }, true);
-  ed.addEventListener('click', e => { if (e.target.closest('[data-foldall]')) dgFoldAll(); });
   DG_TABS.addEventListener('change', () => renderEditor());
   document.getElementById('pack-bar').addEventListener('click', onPackClick);
   document.getElementById('grp-backdrop').addEventListener('click', grpClose);

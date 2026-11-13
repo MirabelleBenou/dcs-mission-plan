@@ -1206,7 +1206,7 @@ __CSS__
   <div class="rp-split" id="rp-split" role="separator" aria-orientation="horizontal" tabindex="0" data-i18n-title="sp.title" data-i18n-aria-label="sp.title" title="Glissez pour agrandir ou réduire la carte ; touchez deux fois pour revenir à la taille d'origine" aria-label="Glissez pour agrandir ou réduire la carte ; touchez deux fois pour revenir à la taille d'origine"><div class="grip"></div></div>
   <aside class="panel" id="panel">
     <div class="ed-section" data-section="route" data-open="true">
-      <button type="button" class="ed-head ui-fold-head" aria-expanded="true"><span class="ed-title" data-i18n="sec.route">Route</span><small id="pt-count"></small></button>
+      <div class="ui-fa-box"><button type="button" class="ed-head ui-fold-head" aria-expanded="true"><span class="ed-title" data-i18n="sec.route">Route</span><small id="pt-count"></small></button></div>
       <div class="ed-body">
         <div class="rs-set">
           <div class="rs-pick">
@@ -1246,7 +1246,7 @@ __CSS__
       </div>
     </div>
     <div class="ed-section" data-section="refs" data-open="false">
-      <button type="button" class="ed-head ui-fold-head" aria-expanded="false"><span class="ed-title" data-i18n="sec.refs">Points de référence</span><small id="ref-count"></small></button>
+      <div class="ui-fa-box"><button type="button" class="ed-head ui-fold-head" aria-expanded="false"><span class="ed-title" data-i18n="sec.refs">Points de référence</span><small id="ref-count"></small></button></div>
       <div class="ed-body">
         <div class="pt-head" id="ref-head" hidden><span>#</span><span data-i18n="th.name">Nom</span><span id="alt-unit2"></span><span data-i18n="th.ref">Réf.</span><span></span></div>
         <div id="refs"></div>
@@ -1254,7 +1254,7 @@ __CSS__
       </div>
     </div>
     <div class="ed-section" data-section="layers" id="sec-layers" data-open="false" hidden>
-      <button type="button" class="ed-head ui-fold-head" aria-expanded="false"><span class="ed-title" data-i18n="sec.layers">Calques</span><small id="layers-count"></small></button>
+      <div class="ui-fa-box"><button type="button" class="ed-head ui-fold-head" aria-expanded="false"><span class="ed-title" data-i18n="sec.layers">Calques</span><small id="layers-count"></small></button></div>
       <div class="ed-body">
         <div id="layers-list"></div>
         <button type="button" class="tb-btn cf-clear" id="btn-layers-clear" data-i18n="layers.removeAll">Retirer tous les calques</button>
@@ -1262,7 +1262,7 @@ __CSS__
       </div>
     </div>
     <div class="ed-section" data-section="nav" data-open="false">
-      <button type="button" class="ed-head ui-fold-head" aria-expanded="false"><span class="ed-title" data-i18n="sec.nav">Navigation</span></button>
+      <div class="ui-fa-box"><button type="button" class="ed-head ui-fold-head" aria-expanded="false"><span class="ed-title" data-i18n="sec.nav">Navigation</span></button></div>
       <div class="ed-body">
         <div class="hdg nav-set">
           <div><div class="lbl" data-i18n="f.lbx">Boîtes de branche</div><span class="tb-group" role="group" data-i18n-aria-label="f.lbx" aria-label="Boîtes de branche"><button type="button" class="tb-btn" data-lbx="none" aria-pressed="false" data-i18n="lbx.none">Aucune</button><button type="button" class="tb-btn" data-lbx="min" aria-pressed="false" data-i18n="lbx.min">Minimale</button><button type="button" class="tb-btn" data-lbx="full" aria-pressed="true" data-i18n="lbx.full">Complète</button></span></div>
@@ -7099,10 +7099,19 @@ function rpSectionSum(id) {
 }
 function rpFoldRefresh() {
   rpFoldSecs().forEach(d => {
-    const h = d.querySelector(':scope > .ed-head'), open = d.dataset.open === 'true';
+    const h = d.querySelector('.ed-head'), open = d.dataset.open === 'true';
     h.setAttribute('aria-expanded', String(open));
     uiSum(h, open ? '' : rpSectionSum(d.dataset.section));
   });
+  const vis = rpFoldSecs().filter(d => !d.hidden);       // « Calques » ne se montre qu'avec des calques : son icône est posée, elle se voit avec lui
+  uiFoldAll(rpFoldSecs().map(d => d.querySelector('.ed-head')), { any: vis.some(d => d.dataset.open === 'true'), label: uiFoldAllLabel, go: rpFoldAll });
+}
+/* L'icône « Tout replier » : les quatre sections du panneau, d'un geste */
+function rpFoldAll() {
+  const open = !rpFoldSecs().filter(d => !d.hidden).some(d => d.dataset.open === 'true'), map = {};
+  rpFoldSecs().forEach(d => { map[d.dataset.section] = open; d.dataset.open = String(open); });
+  uiFoldSaveAll(RP_FOLDS, map);
+  rpFoldRefresh();
 }
 function rpFoldInit() {
   rpFoldSecs().forEach(d => { d.dataset.open = String(uiFoldOpen(RP_FOLDS, d.dataset.section, d.dataset.section === 'route')); });

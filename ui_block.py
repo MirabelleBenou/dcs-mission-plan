@@ -5,8 +5,8 @@ le repli et l'export en une fenêtre, écrits une fois et injectés tels quels d
 
 Quatre textes, identiques à l'octet dans les six dist/ (les deux derniers, la liste au thème de l'interface, y sont posés à la place où chaque module avait sa copie, @@TBM_CSS@@ et @@TBM_JS@@) :
   build_css()   — la feuille : --mp-warn, .ui-modal / .ui-panel (la fenêtre de suite), .ui-btn, .ui-note / .ui-avert / .ui-bandeau,
-                  .ui-fold-head / .ui-sum (le repli), .ui-seg (boutons segmentés), les champs de la fenêtre d'export
-  build_block() — le script : askConfirm, replaceWithRestore, le piège du focus et Échap des fenêtres, l'état du repli (uiFold*),
+                  .ui-fold-head / .ui-sum (le repli) et .ui-foldic (l'icône « Tout replier » de chaque en-tête), .ui-seg (boutons segmentés), les champs de la fenêtre d'export
+  build_block() — le script : askConfirm, replaceWithRestore, le piège du focus et Échap des fenêtres, l'état du repli (uiFold*) et l'icône « Tout replier » (uiFoldAll),
                   la fenêtre d'export (uiExport*)
   build_tbm_css() / build_tbm_block() — le composant des listes déroulantes au thème de l'interface (tbm* : le bouton qui remplace le <select> masqué, le panneau, la liste,
                   la recherche, le clavier, le placement au-dessus du clavier de l'écran) : une seule copie pour HQ, Route Planner, Briefing Generator, Datacard Generator,
@@ -98,8 +98,17 @@ details[open] > .ui-fold-head::before, .ui-fold-head[aria-expanded="true"]::befo
   color: var(--khaki-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 details:not([open]) > .ui-fold-head > .ui-sum:not(:empty), .ui-fold-head[aria-expanded="false"] > .ui-sum:not(:empty) { display: block; }
-.ui-foldall { min-height: 44px; padding: 0 12px; font-size: 11px; white-space: nowrap; }
-.ui-foldbar { display: flex; justify-content: flex-end; margin: 0 0 10px; }
+/* « Tout replier » : une icône à droite de l'en-tête de chaque section du panneau (44 px de large, toute la hauteur de l'en-tête, un filet à sa gauche) ; l'en-tête lui réserve sa place */
+.ui-fa-on.ui-fa-on { position: relative; padding-right: 56px; }
+.ui-fa-box { position: relative; }
+.ui-foldic {
+  position: absolute; top: 0; right: 0; bottom: 0; z-index: 1; width: 44px; min-width: 44px; min-height: 44px; box-sizing: border-box; margin: 0; padding: 0;
+  display: flex; align-items: center; justify-content: center; background: none; border: 0; border-left: 1px solid var(--khaki); border-radius: 0;
+  color: var(--mp-accent, var(--amber)); cursor: pointer; text-transform: none; letter-spacing: 0;
+}
+.ui-foldic:hover { background: rgba(255,255,255,.06); }
+.ui-foldic:focus-visible { outline: 2px solid var(--amber); outline-offset: -3px; }
+.ui-foldic svg { flex: none; width: 18px; height: 18px; pointer-events: none; }
 
 /* ---- boutons segmentés et champs de la fenêtre d'export ---- */
 .ui-field { margin: 0 0 14px; }
@@ -429,6 +438,46 @@ function uiSum(head, text) {
   if (s.textContent !== v) s.textContent = v;
 }
 function uiFoldAllLabel(anyOpen) { return uiT(anyOpen ? 'ui.foldall' : 'ui.unfoldall'); }
+/* « Tout replier » : l'icône posée à droite de l'en-tête de chaque section d'un panneau (deux au moins ; une section seule n'en porte pas).
+   heads : les en-têtes du panneau (un <summary>, un <button> enveloppé d'un .ui-fa-box, un en-tête de boîte) ; cfg : { any : une section au moins est ouverte,
+   label(any) : le texte de l'icône (title et aria-label), go() : le geste, qui replie ou déplie toutes les sections du panneau et rappelle uiFoldAll }.
+   Le geste est celui de l'icône seule : l'en-tête ne bascule pas. L'icône garde le focus (elle n'est jamais refaite) ; replié ou déplié, seule son image change. */
+const UIFA_SVG = {
+  fold: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="7 4 12 9 17 4"/><polyline points="7 20 12 15 17 20"/></svg>',
+  unfold: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="7 9 12 4 17 9"/><polyline points="7 15 12 20 17 15"/></svg>'
+};
+function uiFoldAllHost(h) { return (h.parentNode && h.parentNode.classList && h.parentNode.classList.contains('ui-fa-box')) ? h.parentNode : h; }
+function uiFoldAllOff(heads) {
+  Array.prototype.slice.call(heads || []).forEach(h => {
+    if (!h) return;
+    const b = uiFoldAllHost(h).querySelector(':scope > .ui-foldic');
+    if (b) b.remove();
+    h.classList.remove('ui-fa-on');
+  });
+}
+function uiFoldAll(heads, cfg) {
+  const list = Array.prototype.slice.call(heads || []).filter(Boolean);
+  if (list.length < 2) { uiFoldAllOff(list); return; }
+  const state = cfg.any ? 'fold' : 'unfold', lab = cfg.label(!!cfg.any);
+  list.forEach(h => {
+    const host = uiFoldAllHost(h);
+    let b = host.querySelector(':scope > .ui-foldic');
+    if (!b) {
+      b = document.createElement('button'); b.type = 'button'; b.className = 'ui-foldic';
+      b.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); if (b._uiGo) b._uiGo(); });
+      host.appendChild(b);
+    }
+    b._uiGo = cfg.go;
+    if (b.dataset.state !== state) { b.dataset.state = state; b.innerHTML = UIFA_SVG[state]; }
+    if (b.title !== lab) b.title = lab;
+    if (b.getAttribute('aria-label') !== lab) b.setAttribute('aria-label', lab);
+    h.classList.add('ui-fa-on');
+    const cs = getComputedStyle(host);       /* l'icône a la hauteur de l'en-tête, filets compris : un filet sous l'en-tête passe derrière elle */
+    const top = cs.borderTopWidth, bot = cs.borderBottomWidth;
+    b.style.top = top === '0px' ? '' : '-' + top;
+    b.style.bottom = bot === '0px' ? '' : '-' + bot;
+  });
+}
 function uiJoin(parts) { return parts.filter(p => p !== undefined && p !== null && String(p).trim() !== '').map(p => String(p).trim()).join(' · '); }
 
 /* ---- la fenêtre d'export (BG, DG) : format, pages, nom du fichier ----
