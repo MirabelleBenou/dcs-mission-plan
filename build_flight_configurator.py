@@ -42,6 +42,7 @@ CONTRAST_CSS = r"""
 :where(body[data-theme="cw-nato"]) .tb-brand-short { color: #d5865c; }
 :where(body[data-theme="cw-nato"]) .tb-sel { color: #c49037; }
 :where(body[data-theme="cw-nato"]) #btn-open { color: #c49037; }
+:where(body[data-theme="cw-nato"]) #btn-example { color: #c49037; }
 :where(body[data-theme="cw-nato"]) .fc-bh { color: #dcbe8a; }
 :where(body[data-theme="cw-nato"]) .pk-x { color: #ab9e78; }
 :where(body[data-theme="cw-nato"]) .ed-field label { color: #c79641; }
@@ -450,7 +451,9 @@ I18N_FR = {
     'tb.clear': 'Effacer',
     'tb.clear.tip': 'Tout effacer…',
     'tb.example': 'Exemple',
-    'tb.example.tip': 'Charger l\u2019exemple STEPPE WIND dans les outils du Flight Leader (Route Planner, Datacard Generator, Flight Configurator) ; le travail en cours du groupe se restaure en un geste',
+    'tb.example.tip': 'Charger l\u2019exemple STEPPE WIND',
+    'tb.example.mc': 'Mission Commander \u2014 Briefing Generator, Recon Station',
+    'tb.example.fl': 'Flight Leader \u2014 Route Planner, Datacard Generator, Flight Configurator',
 
     'bar.ok': 'Prêt à exporter : {0}',
     'bar.clamped': '{0} réglage(s) d’emport ramené(s) à la limite ou aux valeurs par défaut de l’appareil.',
@@ -755,7 +758,9 @@ I18N_EN = {
     'tb.clear': 'Clear',
     'tb.clear.tip': 'Clear everything…',
     'tb.example': 'Example',
-    'tb.example.tip': 'Load the STEPPE WIND example into the Flight Leader tools (Route Planner, Datacard Generator, Flight Configurator); the group\u2019s work in progress comes back in one tap',
+    'tb.example.tip': 'Load the STEPPE WIND example',
+    'tb.example.mc': 'Mission Commander \u2014 Briefing Generator, Recon Station',
+    'tb.example.fl': 'Flight Leader \u2014 Route Planner, Datacard Generator, Flight Configurator',
 
     'bar.ok': 'Ready to export: {0}',
     'bar.clamped': '{0} loadout setting(s) brought back to the aircraft limit or default values.',
@@ -1162,15 +1167,18 @@ body {
 .fc-lo-line:empty { display: none; }
 
 /* ---------- le menu « Ouvrir » (lot mp-ui-disposition-b) : le bouton de la barre et son panneau, au style des listes de la barre (tbm-*) ---------- */
-#btn-open { position: relative; color: var(--amber); border-color: var(--amber-dark); padding-right: 12px; }
-#btn-open:hover, #btn-open:focus-visible, #btn-open.dsp-open { border-color: var(--amber); }
-#btn-open .dsp-chev { width: 10px; height: 6px; }
-#btn-open.dsp-open .dsp-chev { transform: rotate(180deg); }
+#btn-open, #btn-example { position: relative; color: var(--amber); border-color: var(--amber-dark); padding-right: 12px; }
+#btn-open:hover, #btn-open:focus-visible, #btn-open.dsp-open, #btn-example:hover, #btn-example:focus-visible, #btn-example.dsp-open { border-color: var(--amber); }
+#btn-open .dsp-chev, #btn-example .dsp-chev { width: 10px; height: 6px; }
+#btn-open.dsp-open .dsp-chev, #btn-example.dsp-open .dsp-chev { transform: rotate(180deg); }
 .dsp-panel { max-height: min(80vh, 600px); min-width: 260px; padding-bottom: 6px; }
 .mn-hint { margin-left: auto; padding-left: 14px; flex: 0 1 auto; min-width: 0; text-align: right; }
 /* rien de coupé : le menu s'élargit à son contenu, dans la largeur de la vue ; au-delà, l'indice passe à la ligne */
 .tbm-panel.mn-panel { max-width: min(560px, calc(100vw - 16px)); }
 .mn-panel .tbm-opt .tbm-txt { flex: 0 0 auto; overflow: visible; text-overflow: clip; }
+/* Exemple ▾ : deux lignes aux libellés entiers, qui passent à la ligne quand l'écran est étroit */
+#ex-panel .tbm-opt { white-space: normal; line-height: 1.3; padding-top: 8px; padding-bottom: 8px; }
+#ex-panel .tbm-opt .tbm-txt { flex: 1 1 auto; min-width: 0; white-space: normal; }
 .mn-opt[aria-disabled="true"] { color: var(--khaki-light); cursor: not-allowed; opacity: .7; }
 .mn-opt[aria-disabled="true"]:hover { background: none; color: var(--khaki-light); }
 .dsp-opt { outline: none; color: var(--khaki-light); }
@@ -1335,8 +1343,8 @@ body[data-theme] {
 @media (max-width: 479px) { .toolbar { gap: 3px; } .tb-btn { width: 34px; min-width: 34px; } .tb-select { max-width: 64px; padding: 0 18px 0 6px; } .tb-lang-btn { min-width: 34px; padding: 0 2px; } }
 /* Le bouton « Ouvrir » reste un bouton de menu (icône + chevron) : à la taille de celui du Route Planner, jamais réduit à la forme d'un bouton à icône seule (mêmes marges intérieures : 12 px, 8 px à gauche sous 521 px) */
 /* « Ouvrir » garde ses marges de bouton de menu en icônes seules (mêmes que celles du Route Planner) */
-.toolbar.tb-st3 #btn-open { width: auto; min-width: 44px; padding-left: 12px; padding-right: 12px; }
-@media (max-width: 520px) { .toolbar.tb-st3 #btn-open { padding-left: 8px; } }
+.toolbar.tb-st3 #btn-open, .toolbar.tb-st3 #btn-example { width: auto; min-width: 44px; padding-left: 12px; padding-right: 12px; }
+@media (max-width: 520px) { .toolbar.tb-st3 #btn-open, .toolbar.tb-st3 #btn-example { padding-left: 8px; } }
 /* La liste du théâtre : le libellé « Théâtre » cède la place sous 760 px (règle commune, bloc d'interface commun ; la liste garde son nom accessible) ; sous 480 px la liste se resserre (texte entier jusqu'à 96 px, puis coupé)
    et la liste du thème de l'interface quitte la barre (le thème se règle au tableau du shell, qui le propage) : sans cela la barre défile de 21 à 28 px à 412 px */
 @media (max-width: 479px) { .tb-sel { padding: 0 20px 0 6px; font-size: 11px; letter-spacing: .5px; background-position: right 6px center; flex: none; max-width: 79px; } .tb-select.tbm-trigger { display: none; } }
@@ -1704,8 +1712,13 @@ FILES = '\n  '.join([
     _btn('save', 'save', '<path d="M5 3h11l4 4v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M8 3v5h7V3"/><rect x="7" y="13" width="10" height="8"/>', ' tb-file', 'work.save.tip'),
     _btn('export', 'export', '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>', ' tb-file'),
 ])
+EXAMPLE_BTN = '''<button type="button" class="tb-btn" id="btn-example" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.example.tip" title="">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+    <span class="tb-btn-label" data-i18n="tb.example">.</span>
+    <svg class="dsp-chev" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg>
+  </button>'''.strip()
 OTHERS = '\n  '.join([
-    _btn('example', 'example', '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/>'),
+    EXAMPLE_BTN,
     _btn('clear', 'clear', '<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>', ' danger'),
 ])
 BODY = BODY.replace('@@FILES@@', FILES).replace('@@OTHERS@@', OTHERS).replace('@@IMPORT_HTML@@\n', build_import_html())
@@ -1715,7 +1728,7 @@ JS_TBM = """
 /* ============= LE MENU « OUVRIR » (lot mp-ui-disposition-b) =============
    Même composant et même aspect que les listes de la barre (tbm-panel dsp-panel, dsp-opt) et que les menus du Route Planner et du Datacard Generator :
    un seul menu ouvert à la fois, avec les listes de la barre. Une ligne par geste, son indice à droite. */
-const MENU_TRIG = '.tbm-trigger, #btn-open';
+const MENU_TRIG = '.tbm-trigger, #btn-open, #btn-example';
 const MN = { cur: null, bound: false };
 
 function mnClose(refocus) {
@@ -1815,6 +1828,14 @@ function mnOutside(e) {
   tbmSwallowNext();
 }
 
+/* « Exemple ▾ » : le même menu dans les cinq outils et à l'accueil, deux lignes, une par groupe */
+function fcExampleMenu(btn) {
+  mnOpen(btn, 'ex-panel', t('tb.example'), {
+    items: [{ k: 'mc', label: t('tb.example.mc') }, { k: 'fl', label: t('tb.example.fl') }],
+    choose: k => workExample(k)
+  });
+}
+
 function mnBind() {
   if (MN.bound) return;
   MN.bound = true;
@@ -1831,6 +1852,9 @@ function mnBind() {
   const opn = document.getElementById('btn-open');
   opn.addEventListener('click', () => { if (MN.cur && MN.cur.btn === opn) mnClose(false); else fcOpenMenu(opn); });
   opn.addEventListener('keydown', e => { if (e.key === 'ArrowDown' && !MN.cur) { e.preventDefault(); fcOpenMenu(opn); } });
+  const exb = document.getElementById('btn-example');
+  exb.addEventListener('click', () => { if (MN.cur && MN.cur.btn === exb) mnClose(false); else fcExampleMenu(exb); });
+  exb.addEventListener('keydown', e => { if (e.key === 'ArrowDown' && !MN.cur) { e.preventDefault(); fcExampleMenu(exb); } });
 }
 
 @@TBM_JS@@
@@ -3980,7 +4004,7 @@ const WORK_FORMAT = 'dcs-mission-plan-work-v1';
 function workSave() { try { parent.MP_WORK_SAVE(); } catch (e) { console.warn('[FC] sauvegarde du travail indisponible', e); } }
 function workOpen() { try { parent.MP_WORK_OPEN(); } catch (e) { console.warn('[FC] ouverture du travail indisponible', e); } }
 function workHand(text, name) { try { parent.MP_WORK_OPEN_TEXT(text, name); } catch (e) { console.warn('[FC] ouverture du travail indisponible', e); } }
-function workExample() { try { window.parent.MP_WORK_EXAMPLE('fl'); } catch (e) { console.warn('[FC] exemple indisponible', e); } }       // l'exemple se charge dans les outils du groupe, par le shell
+function workExample(g) { try { window.parent.MP_WORK_EXAMPLE(g); } catch (e) { console.warn('[FC] exemple indisponible', e); } }       // l'exemple se charge dans les outils du groupe, par le shell
 // Le shell écrit le travail de toute la suite : il demande d'abord à chaque module d'écrire ce qu'il garde en attente (ici, la frappe regroupée sur 400 ms : flushWork).
 window.MP_FLUSH = function () { flushWork(); };
 function openFile(file) {
@@ -4438,7 +4462,6 @@ function bindToolbar() {
   mnBind();       // « Ouvrir ▾ » : une configuration ou des groupes à importer
   on('btn-save', 'click', workSave);
   on('btn-export', 'click', exportFile);
-  on('btn-example', 'click', workExample);
   on('btn-clear', 'click', clearAll);
   const fileIn = (id, fn) => on(id, 'change', e => { const files = Array.prototype.slice.call(e.target.files); e.target.value = ''; fn(files); });
   fileIn('fc-in-lua', loadLuaFiles);

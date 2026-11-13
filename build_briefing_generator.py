@@ -21,6 +21,7 @@ CONTRAST_CSS = r"""
 :where(body[data-theme="cw-nato"]) .tb-brand-short { color: #c49037; }
 :where(body[data-theme="cw-nato"]) #btn-display { color: #c49037; }
 :where(body[data-theme="cw-nato"]) #btn-load { color: #c49037; }
+:where(body[data-theme="cw-nato"]) #btn-example { color: #c49037; }
 :where(body[data-theme="cw-nato"]) .ed-section > summary { color: #dcbe8a; }
 :where(body[data-theme="cw-nato"]) .ed-phase-card .phase-num { color: #eee8d8; }
 :where(body[data-theme="cw-nato"]) .phase-indicator { color: #c49037; }
@@ -480,10 +481,10 @@ body {
 .tb-lang-btn:active { transform: translateY(1px); }
 
 /* Le menu « Affichage » (lot mp-ui-disposition-b) : le format du brief, Standard ou Avancé, en un bouton de la barre et son panneau, au style des listes de la barre (tbm-*) ; même composant qu'au Route Planner et au Datacard Generator */
-#btn-display, #btn-load { position: relative; color: var(--amber); border-color: var(--amber-dark); padding-right: 12px; }
-#btn-display:hover, #btn-display:focus-visible, #btn-display.dsp-open, #btn-load:hover, #btn-load:focus-visible, #btn-load.dsp-open { border-color: var(--amber); }
-#btn-display .dsp-chev, #btn-load .dsp-chev { width: 10px; height: 6px; }
-#btn-display.dsp-open .dsp-chev, #btn-load.dsp-open .dsp-chev { transform: rotate(180deg); }
+#btn-display, #btn-load, #btn-example { position: relative; color: var(--amber); border-color: var(--amber-dark); padding-right: 12px; }
+#btn-display:hover, #btn-display:focus-visible, #btn-display.dsp-open, #btn-load:hover, #btn-load:focus-visible, #btn-load.dsp-open, #btn-example:hover, #btn-example:focus-visible, #btn-example.dsp-open { border-color: var(--amber); }
+#btn-display .dsp-chev, #btn-load .dsp-chev, #btn-example .dsp-chev { width: 10px; height: 6px; }
+#btn-display.dsp-open .dsp-chev, #btn-load.dsp-open .dsp-chev, #btn-example.dsp-open .dsp-chev { transform: rotate(180deg); }
 .dsp-dot { position: absolute; top: -3px; right: -3px; width: 7px; height: 7px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 0 2px var(--olive-deep); pointer-events: none; }
 .dsp-dot[hidden] { display: none; }
 .dsp-panel { max-height: min(80vh, 600px); min-width: 260px; padding-bottom: 6px; }
@@ -497,6 +498,9 @@ body {
 .mn-hint { margin-left: auto; padding-left: 14px; flex: 0 1 auto; min-width: 0; text-align: right; }
 .tbm-panel.mn-panel { max-width: min(560px, calc(100vw - 16px)); }
 .mn-panel .tbm-opt .tbm-txt { flex: 0 0 auto; overflow: visible; text-overflow: clip; }
+/* Exemple ▾ : deux lignes aux libellés entiers, qui passent à la ligne quand l'écran est étroit */
+#ex-panel .tbm-opt { white-space: normal; line-height: 1.3; padding-top: 8px; padding-bottom: 8px; }
+#ex-panel .tbm-opt .tbm-txt { flex: 1 1 auto; min-width: 0; white-space: normal; }
 .mn-sep { height: 1px; margin: 4px 0; background: rgba(168,154,114,.35); }
 .mn-opt + .mn-sep + .mn-opt { border-top: none; }
 .mn-opt[aria-disabled="true"] { color: var(--khaki-light); cursor: not-allowed; opacity: .7; }
@@ -2866,9 +2870,10 @@ __CSS__
     <i class="dsp-dot" id="dsp-dot" hidden></i>
   </button>
   <div class="tb-sep"></div>
-  <button class="tb-btn" id="btn-example" data-i18n-title="toolbar.example.tooltip" title="Charger l’exemple STEPPE WIND dans les outils du Mission Commander (Briefing Generator, Recon Station) ; le travail en cours du groupe se restaure en un geste" data-i18n-aria-label="toolbar.example.tooltip" aria-label="Charger l’exemple STEPPE WIND dans les outils du Mission Commander (Briefing Generator, Recon Station) ; le travail en cours du groupe se restaure en un geste">
+  <button class="tb-btn" id="btn-example" aria-haspopup="menu" aria-expanded="false" data-i18n-title="toolbar.example.tooltip" title="Charger l’exemple STEPPE WIND" data-i18n-aria-label="toolbar.example.tooltip" aria-label="Charger l’exemple STEPPE WIND">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
     <span class="tb-btn-label" data-i18n="toolbar.example">Exemple</span>
+    <svg class="dsp-chev" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg>
   </button>
   <button class="tb-btn danger" id="btn-reset" data-i18n-title="toolbar.reset.tooltip" title="Effacer">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
@@ -3632,7 +3637,9 @@ const I18N = {
     'dsp.format.note':            'Standard : une page de mission et des pages de photos. Avancé : dix sections.',
     'toolbar.example':            'Exemple',
     'toolbar.subtitle':           '░ BRIEFING DE MISSION',
-    'toolbar.example.tooltip':    'Charger l’exemple STEPPE WIND dans les outils du Mission Commander (Briefing Generator, Recon Station) ; le travail en cours du groupe se restaure en un geste',
+    'toolbar.example.tooltip':    'Charger l’exemple STEPPE WIND',
+    'toolbar.example.mc':    'Mission Commander — Briefing Generator, Recon Station',
+    'toolbar.example.fl':    'Flight Leader — Route Planner, Datacard Generator, Flight Configurator',
     // ── Carte du Route Planner (v2.5.0) ──
     'rpmap.title':        'Placer la carte du Route Planner',
     'rpmap.simpleMap':    'Carte — page carte · menaces · cibles',
@@ -4042,7 +4049,9 @@ const I18N = {
     'dsp.format.note':            'Standard: one mission page plus photo pages. Advanced: ten sections.',
     'toolbar.example':            'Example',
     'toolbar.subtitle':           '░ MISSION BRIEFING',
-    'toolbar.example.tooltip':    'Load the STEPPE WIND example into the Mission Commander tools (Briefing Generator, Recon Station); the group’s work in progress comes back in one tap',
+    'toolbar.example.tooltip':    'Load the STEPPE WIND example',
+    'toolbar.example.mc':    'Mission Commander — Briefing Generator, Recon Station',
+    'toolbar.example.fl':    'Flight Leader — Route Planner, Datacard Generator, Flight Configurator',
     // ── Route Planner map (v2.5.0) ──
     'rpmap.title':        'Place the Route Planner map',
     'rpmap.simpleMap':    'Map — map · threats · targets page',
@@ -7716,7 +7725,7 @@ const WORK_FORMAT = 'dcs-mission-plan-work-v1';
 function workSave() { try { parent.MP_WORK_SAVE(); } catch (e) { console.warn('[BG] sauvegarde du travail indisponible', e); } }
 function workOpen() { try { parent.MP_WORK_OPEN(); } catch (e) { console.warn('[BG] ouverture du travail indisponible', e); } }
 function workHand(text, name) { try { parent.MP_WORK_OPEN_TEXT(text, name); } catch (e) { console.warn('[BG] ouverture du travail indisponible', e); } }
-function workExample() { try { window.parent.MP_WORK_EXAMPLE('mc'); } catch (e) { console.warn('[BG] exemple indisponible', e); } }       // l'exemple se charge dans les outils du groupe, par le shell
+function workExample(g) { try { window.parent.MP_WORK_EXAMPLE(g); } catch (e) { console.warn('[BG] exemple indisponible', e); } }       // l'exemple se charge dans les outils du groupe, par le shell
 /* Le shell écrit le travail de toute la suite : il demande d'abord à chaque module d'écrire ce qu'il garde en attente (ici, le briefing dont l'écriture suit le prochain dessin de l'aperçu) */
 window.MP_FLUSH = function () { if (previewTimer) { cancelAnimationFrame(previewTimer); previewTimer = null; persistState(); } };
 
@@ -8546,7 +8555,6 @@ function addTarget() {
 }
 
 function bindSimpleEvents() {
-  document.getElementById('btn-example').addEventListener('click', workExample);
   document.getElementById('s-flight-add').addEventListener('click', () => {
     if (!Array.isArray(state.phases)) state.phases = [];
     state.phases.push(newBlankFlight());
@@ -8613,7 +8621,7 @@ function initToolbarScroll() {
 /* ============= LE MENU « AFFICHAGE » (lot mp-ui-disposition-b) =============
    Même composant et même aspect que les listes de la barre (tbm-panel dsp-panel) et que le menu du Route Planner et du Datacard Generator :
    un seul menu ouvert à la fois, avec les listes de la barre. Le panneau reste ouvert quand on choisit un format. */
-const MENU_TRIG = '.tbm-trigger, #btn-display, #btn-load';
+const MENU_TRIG = '.tbm-trigger, #btn-display, #btn-load, #btn-example';
 const MN = { cur: null, bound: false };
 
 function mnClose(refocus) {
@@ -8727,11 +8735,21 @@ function mnBind() {
     const r = m.btn.getBoundingClientRect();
     if (Math.abs(r.left - m.x0) > 0.5 || Math.abs(r.top - m.y0) > 0.5) mnClose(false);
   }, true);
-  const dsp = document.getElementById('btn-display'), opn = document.getElementById('btn-load');
+  const dsp = document.getElementById('btn-display'), opn = document.getElementById('btn-load'), exb = document.getElementById('btn-example');
   dsp.addEventListener('click', () => { if (MN.cur && MN.cur.btn === dsp) mnClose(false); else bgDisplayOpen(dsp); });
   dsp.addEventListener('keydown', e => { if (e.key === 'ArrowDown' && !MN.cur) { e.preventDefault(); bgDisplayOpen(dsp); } });
   opn.addEventListener('click', () => { if (MN.cur && MN.cur.btn === opn) mnClose(false); else bgOpenMenu(opn); });
   opn.addEventListener('keydown', e => { if (e.key === 'ArrowDown' && !MN.cur) { e.preventDefault(); bgOpenMenu(opn); } });
+  exb.addEventListener('click', () => { if (MN.cur && MN.cur.btn === exb) mnClose(false); else bgExampleMenu(exb); });
+  exb.addEventListener('keydown', e => { if (e.key === 'ArrowDown' && !MN.cur) { e.preventDefault(); bgExampleMenu(exb); } });
+}
+
+/* « Exemple ▾ » : le même menu dans les cinq outils et à l'accueil, deux lignes, une par groupe */
+function bgExampleMenu(btn) {
+  mnOpen(btn, 'ex-panel', t('toolbar.example'), {
+    items: [{ k: 'mc', label: t('toolbar.example.mc') }, { k: 'fl', label: t('toolbar.example.fl') }],
+    choose: k => workExample(k)
+  });
 }
 
 /* « Ouvrir ▾ » : un travail de Mission Plan, ou un briefing */

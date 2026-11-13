@@ -62,15 +62,20 @@ LANDING_CSS = r"""
   border:1px solid var(--paper-edge); padding:5px 14px; border-radius:4px; box-shadow:0 6px 14px rgba(0,0,0,.45); transform:rotate(-1deg);}
 .mp-tab b{font-family:var(--f-sten); font-size:20px; letter-spacing:.04em;}
 .mp-tab small{font-family:var(--f-mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-2);}
-/* Le bouton Exemple du cadre : en miroir de l'onglet, au-dessus du pointillé ; l'apparence de .mp-railbtn, le fond opaque (celui de la barre du haut) pour couper le pointillé */
-.mp-grp-ex{position:absolute; top:-15px; right:22px; z-index:7; background:color-mix(in srgb, var(--board-2) 70%, #000);}
-/* ===== La barre du haut : Ouvrir…, Sauvegarder, Field Manual (icône et texte ; l'icône seule sous 760 px) ===== */
+/* ===== La barre du haut : Ouvrir…, Sauvegarder, Exemple ▾, Field Manual (icône et texte ; l'icône seule sous 760 px) ===== */
 .mp-sep{width:1px; align-self:stretch; background:var(--line); margin:0 2px;}
 .mp-railbtn{display:inline-flex; align-items:center; justify-content:center; gap:7px; box-sizing:border-box; min-width:44px; min-height:44px; padding:7px 12px;
   font-family:var(--f-ui); font-weight:500; font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--amber); background:rgba(0,0,0,.3);
   border:1px solid var(--line); border-radius:4px; cursor:pointer;}
 .mp-railbtn:hover{border-color:var(--amber);}
 .mp-railbtn svg{flex:none;}
+#btn-example .mp-chev{width:10px; height:6px;}
+#btn-example[aria-expanded="true"]{border-color:var(--amber);}
+#btn-example[aria-expanded="true"] .mp-chev{transform:rotate(180deg);}
+/* Le menu Exemple ▾ : le composant des listes de la barre (tbm-panel), deux lignes aux libellés entiers (à l'étroit, ils passent à la ligne) */
+.tbm-panel.mp-ex-panel{max-width:min(560px, calc(100vw - 16px)); outline:none;}
+.mp-ex-panel .tbm-opt{white-space:normal; line-height:1.3; padding-top:8px; padding-bottom:8px;}
+.mp-ex-panel .tbm-opt:focus-visible{background:rgba(255,255,255,.06); color:var(--amber);}
 .rail .theme-sel{min-height:44px;}
 .rail .flag{width:44px; height:44px;}
 @media(max-width:760px){
@@ -83,7 +88,6 @@ LANDING_CSS = r"""
   .mp-railbtn{padding:7px 9px;}
 }
 @media(max-width:900px){
-  .mp-grp{padding:42px 10px 16px;}       /* de la place sous le bouton Exemple (et l'onglet) : les cartes, empilées et inclinées, ne le touchent pas */
   .mp-tab{flex-direction:column; gap:0; padding:4px 12px;}
   .mp-tab b{font-size:16px; white-space:nowrap;}
   .mp-tab small{font-size:9px;}
@@ -182,14 +186,11 @@ def check_suite_colors():
     print('  [OK] couleurs de la fenêtre du nom et du toast : celles des six outils, aux quatre thèmes')
 
 
-# Les textes de l'exemple par groupe (accueil et infobulles des boutons des outils) : une seule table ; les modules en portent chacun la leur, le build les compare à celle-ci
-EX_TIP = {
-    'mc': {'fr': 'Charger l’exemple STEPPE WIND dans les outils du Mission Commander (Briefing Generator, Recon Station)',
-           'en': 'Load the STEPPE WIND example into the Mission Commander tools (Briefing Generator, Recon Station)'},
-    'fl': {'fr': 'Charger l’exemple STEPPE WIND dans les outils du Flight Leader (Route Planner, Datacard Generator, Flight Configurator)',
-           'en': 'Load the STEPPE WIND example into the Flight Leader tools (Route Planner, Datacard Generator, Flight Configurator)'},
-}
-EX_TOOL_SUFFIX = {'fr': ' ; le travail en cours du groupe se restaure en un geste', 'en': '; the group’s work in progress comes back in one tap'}
+# Les textes de l'exemple (accueil et cinq outils) : une seule table, la même en FR et en EN ; les modules en portent chacun la leur, le build les compare à celle-ci
+EX_BTN_TIP = {'fr': 'Charger l’exemple STEPPE WIND', 'en': 'Load the STEPPE WIND example'}
+EX_BTN_LABEL = {'fr': 'Exemple', 'en': 'Example'}
+EX_MENU = {'mc': 'Mission Commander — Briefing Generator, Recon Station',
+           'fl': 'Flight Leader — Route Planner, Datacard Generator, Flight Configurator'}
 EX_TOAST = {'mc': {'fr': 'Exemple STEPPE WIND chargé : Mission Commander', 'en': 'STEPPE WIND example loaded: Mission Commander'},
             'fl': {'fr': 'Exemple STEPPE WIND chargé : Flight Leader', 'en': 'STEPPE WIND example loaded: Flight Leader'}}
 EX_TOOLS = {'bg': 'mc', 'rs': 'mc', 'rp': 'fl', 'dg': 'fl', 'fc': 'fl'}
@@ -237,17 +238,25 @@ def check_suite_examples(ex, group_keys):
 
 
 def check_example_tooltips():
-    """Le bouton Exemple de chaque outil porte, dans la langue de l'outil, le texte du groupe suivi de la phrase du restaurage (la table EX_TIP) ; le build compare au HTML de chaque outil."""
-    for mid, g in EX_TOOLS.items():
+    """Le menu Exemple ▾ de chaque outil : le bouton porte, dans chaque langue, l'infobulle de la table (EX_BTN_TIP), son libellé (EX_BTN_LABEL) et ouvre un menu à deux lignes (EX_MENU, dans cet ordre) ;
+    chaque ligne appelle MP_WORK_EXAMPLE('mc') et ('fl') ; le build compare au HTML de chaque outil. Les textes sont écrits en \\u2019 / \\u2014 dans l'outil qui les met en échappement."""
+    def forms(txt):
+        return {txt, txt.replace('’', '\\u2019').replace('—', '\\u2014')}
+    for mid in EX_TOOLS:
         src = next(m['src'] for m in MODULES if m['id'] == mid)
         with open(os.path.join(SCRIPT_DIR, src), 'r', encoding='utf-8') as fh:
             html = fh.read()
         for lang in ('fr', 'en'):
-            want = EX_TIP[g][lang] + EX_TOOL_SUFFIX[lang]
-            if html.count(want) < 1:
-                raise SystemExit(f"[ERREUR] {src} : l'infobulle de l'exemple ({lang}) n'est pas celle du groupe {g} : « {want} » — build arrêté")
-        if 'MP_WORK_EXAMPLE(\'%s\')' % g not in html:
-            raise SystemExit(f"[ERREUR] {src} : le bouton Exemple n'appelle pas MP_WORK_EXAMPLE('{g}') — build arrêté")
+            for what, want in (('infobulle', EX_BTN_TIP[lang]), ('libellé', EX_BTN_LABEL[lang])) + tuple(('ligne ' + g, EX_MENU[g]) for g in ('mc', 'fl')):
+                n = sum(html.count(w) for w in forms(want))
+                if n < 1 or (what.startswith('ligne') and n < 2):
+                    raise SystemExit(f"[ERREUR] {src} : {what} du menu Exemple ({lang}) absent ou pas dans les deux langues : « {want} » — build arrêté")
+        if 'MP_WORK_EXAMPLE(g)' not in html or 'k => workExample(k)' not in html:
+            raise SystemExit(f"[ERREUR] {src} : le menu Exemple n'appelle pas MP_WORK_EXAMPLE par groupe — build arrêté")
+        if html.count("{ k: 'mc', label: t(") < 1 or html.count("{ k: 'fl', label: t(") < 1 or html.index("k: 'mc'") > html.index("k: 'fl'"):
+            raise SystemExit(f"[ERREUR] {src} : les deux lignes du menu Exemple ne sont pas, dans cet ordre, mc puis fl — build arrêté")
+        if 'btn-example' not in html or 'aria-haspopup="menu"' not in html:
+            raise SystemExit(f"[ERREUR] {src} : le bouton Exemple n'est pas un menu — build arrêté")
 
 
 def encode_file_b64(path):
@@ -614,6 +623,7 @@ select[data-tbm-src] {{ display: none !important; }}
     <div class="ctrl">
       <button type="button" class="mp-railbtn" id="btn-work-open" data-i18n-title="work.open.tip" data-i18n-aria="work.open.tip" title="Ouvrir un travail de Mission Plan (JSON)" aria-label="Ouvrir un travail de Mission Plan (JSON)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 7h6l2 2h10v10H3z"/></svg><span data-i18n="work.open.btn">Ouvrir…</span></button>
       <button type="button" class="mp-railbtn" id="btn-work-save" data-i18n-title="work.save.tip" data-i18n-aria="work.save.tip" title="Sauvegarder tout le travail de Mission Plan (JSON)" aria-label="Sauvegarder tout le travail de Mission Plan (JSON)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 3h12l3 3v15H5z"/><path d="M8 3v6h8V3M8 21v-7h8v7"/></svg><span data-i18n="work.save.btn">Sauvegarder</span></button>
+      <button type="button" class="mp-railbtn" id="btn-example" aria-haspopup="menu" aria-expanded="false" data-i18n-title="ex.tip" data-i18n-aria="ex.tip" title="Charger l’exemple STEPPE WIND" aria-label="Charger l’exemple STEPPE WIND"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg><span data-i18n="ex.btn">Exemple</span><svg class="mp-chev" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg></button>
       <span class="mp-sep" aria-hidden="true"></span>
       <button type="button" class="mp-railbtn" id="btn-fm" data-i18n-title="fm.tip" data-i18n-aria="fm.tip" title="Le manuel de la suite" aria-label="Le manuel de la suite"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H4zM20 4h-6M20 4v14h-6"/></svg><span data-i18n="fm.btn">Field Manual</span></button>
       <select class="theme-sel" id="theme-sel" onchange="setTheme(this.value)" data-i18n-title="theme.sel" title="Thème">
@@ -656,7 +666,6 @@ select[data-tbm-src] {{ display: none !important; }}
            RÈGLE : un module activé plus tard s'insère dans le cadre de son rôle (et dans MODULES, avant le Field Manual). -->
       <div class="mp-grp" id="grp-mc">
         <div class="mp-tab"><b>Mission Commander</b><small data-i18n="grp.mc.sub">prépare la mission</small></div>
-        <button type="button" class="mp-railbtn mp-grp-ex" id="btn-ex-mc" data-i18n-title="grp.ex.mc" data-i18n-aria="grp.ex.mc" title="Charger l’exemple STEPPE WIND dans les outils du Mission Commander (Briefing Generator, Recon Station)" aria-label="Charger l’exemple STEPPE WIND dans les outils du Mission Commander (Briefing Generator, Recon Station)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg><span data-i18n="grp.ex.btn">Exemple</span></button>
         <div class="active-row">
           <div class="print active reveal d1" id="card-hq" style="--card-accent:var(--a-hq)" tabindex="0" role="button" aria-label="HQ">
             <span class="tape"></span><span class="pin tl"></span><span class="pin tr"></span>
@@ -707,7 +716,6 @@ select[data-tbm-src] {{ display: none !important; }}
 
       <div class="mp-grp" id="grp-fl">
         <div class="mp-tab"><b>Flight Leader</b><small data-i18n="grp.fl.sub">prépare son vol</small></div>
-        <button type="button" class="mp-railbtn mp-grp-ex" id="btn-ex-fl" data-i18n-title="grp.ex.fl" data-i18n-aria="grp.ex.fl" title="Charger l’exemple STEPPE WIND dans les outils du Flight Leader (Route Planner, Datacard Generator, Flight Configurator)" aria-label="Charger l’exemple STEPPE WIND dans les outils du Flight Leader (Route Planner, Datacard Generator, Flight Configurator)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg><span data-i18n="grp.ex.btn">Exemple</span></button>
         <div class="active-row">
           <div class="print active reveal d4" id="card-rp" style="--card-accent:var(--a-rp)" tabindex="0" role="button" aria-label="Route Planner">
             <span class="tape"></span><span class="pin tl"></span><span class="pin tr"></span>
@@ -802,9 +810,10 @@ select[data-tbm-src] {{ display: none !important; }}
       ribbon: '// Suite de préparation opérationnelle',
       'grp.mc.sub': 'prépare la mission',
       'grp.fl.sub': 'prépare son vol',
-      'grp.ex.btn': 'Exemple',
-      'grp.ex.mc': "Charger l’exemple STEPPE WIND dans les outils du Mission Commander (Briefing Generator, Recon Station)",
-      'grp.ex.fl': "Charger l’exemple STEPPE WIND dans les outils du Flight Leader (Route Planner, Datacard Generator, Flight Configurator)",
+      'ex.btn': 'Exemple',
+      'ex.tip': "Charger l’exemple STEPPE WIND",
+      'ex.mc': 'Mission Commander — Briefing Generator, Recon Station',
+      'ex.fl': 'Flight Leader — Route Planner, Datacard Generator, Flight Configurator',
       'work.example.mc': 'Exemple STEPPE WIND chargé : Mission Commander',
       'work.example.fl': 'Exemple STEPPE WIND chargé : Flight Leader',
       'work.open.btn': 'Ouvrir…',
@@ -847,9 +856,10 @@ select[data-tbm-src] {{ display: none !important; }}
       ribbon: '// Operational planning suite',
       'grp.mc.sub': 'prepares the mission',
       'grp.fl.sub': 'prepares the flight',
-      'grp.ex.btn': 'Example',
-      'grp.ex.mc': 'Load the STEPPE WIND example into the Mission Commander tools (Briefing Generator, Recon Station)',
-      'grp.ex.fl': 'Load the STEPPE WIND example into the Flight Leader tools (Route Planner, Datacard Generator, Flight Configurator)',
+      'ex.btn': 'Example',
+      'ex.tip': 'Load the STEPPE WIND example',
+      'ex.mc': 'Mission Commander — Briefing Generator, Recon Station',
+      'ex.fl': 'Flight Leader — Route Planner, Datacard Generator, Flight Configurator',
       'work.example.mc': 'STEPPE WIND example loaded: Mission Commander',
       'work.example.fl': 'STEPPE WIND example loaded: Flight Leader',
       'work.open.btn': 'Open…',
@@ -1476,6 +1486,53 @@ function tbmClose(refocus) {{
   if (refocus) m.btn.focus({{ preventScroll: true }});
 }}
 
+/* Exemple ▾ de la barre du haut : le même panneau que les listes (tbm-panel), deux lignes, une par groupe ; il prend la place de TBM.cur (Échap, clic ailleurs, défilement, redimensionnement le ferment comme les listes) */
+function exampleMenuOpen(btn) {{
+  if (TBM.cur) tbmClose(false);
+  const ul = document.createElement('div');
+  ul.className = 'tbm-panel mp-ex-panel';
+  ul.id = 'ex-panel';
+  ul.setAttribute('role', 'menu');
+  ul.setAttribute('aria-label', t('ex.btn'));
+  ul.tabIndex = -1;
+  ['mc', 'fl'].forEach(function(g) {{
+    const row = document.createElement('div');
+    row.className = 'tbm-opt';
+    row.setAttribute('role', 'menuitem');
+    row.tabIndex = -1;
+    row.setAttribute('data-g', g);
+    row.textContent = t('ex.' + g);
+    ul.appendChild(row);
+  }});
+  const m = {{ btn: btn, panel: ul, x0: 0, y0: 0, active: -1 }};
+  ul.addEventListener('click', function(e) {{
+    const row = e.target.closest ? e.target.closest('.tbm-opt') : null;
+    if (!row) return;
+    tbmClose(false);
+    btn.focus({{ preventScroll: true }});
+    if (window.MP_WORK_EXAMPLE) window.MP_WORK_EXAMPLE(row.getAttribute('data-g'));
+  }});
+  ul.addEventListener('keydown', function(e) {{
+    const rows = Array.prototype.slice.call(ul.querySelectorAll('.tbm-opt'));
+    const cur = rows.indexOf(document.activeElement);
+    const go = function(k) {{ if (rows[k]) rows[k].focus({{ preventScroll: true }}); }};
+    const k = e.key;
+    if (k === 'ArrowDown' || k === 'ArrowRight') {{ e.preventDefault(); go(cur < 0 ? 0 : Math.min(rows.length - 1, cur + 1)); }}
+    else if (k === 'ArrowUp' || k === 'ArrowLeft') {{ e.preventDefault(); go(cur < 0 ? rows.length - 1 : Math.max(0, cur - 1)); }}
+    else if (k === 'Home') {{ e.preventDefault(); go(0); }}
+    else if (k === 'End') {{ e.preventDefault(); go(rows.length - 1); }}
+    else if ((k === 'Enter' || k === ' ') && cur >= 0) {{ e.preventDefault(); rows[cur].click(); }}
+    else if (k === 'Escape') {{ e.preventDefault(); e.stopPropagation(); tbmClose(true); }}
+    else if (k === 'Tab') tbmClose(true);
+  }});
+  document.body.appendChild(ul);
+  TBM.cur = m;
+  btn.setAttribute('aria-expanded', 'true');
+  btn.setAttribute('aria-controls', 'ex-panel');
+  tbmPlace(m);
+  ul.focus({{ preventScroll: true }});
+}}
+
 /* Un toucher ou un clic hors de la liste et du bouton la ferme, sans agir ailleurs (le clic qui suit est avalé) ;
    le bouton d'une autre liste ferme celle-ci et s'ouvre ensuite par son propre clic. */
 function tbmOutside(e) {{
@@ -1483,7 +1540,7 @@ function tbmOutside(e) {{
   if (!m) return;
   const t = e.target;
   if (m.panel.contains(t) || m.btn.contains(t)) return;
-  const other = t && t.closest ? t.closest('.tbm-trigger') : null;
+  const other = t && t.closest ? t.closest('.tbm-trigger, .mp-railbtn') : null;
   tbmClose(false);
   if (other) return;
   TBM.swallow = true;
@@ -1541,10 +1598,10 @@ function tbmScrolled(e) {{
     document.getElementById('btn-work-open').addEventListener('click', function() {{ if (window.MP_WORK_OPEN) window.MP_WORK_OPEN(); }});
     document.getElementById('btn-work-save').addEventListener('click', function() {{ if (window.MP_WORK_SAVE) window.MP_WORK_SAVE(); }});
     document.getElementById('btn-fm').addEventListener('click', function() {{ openModule('fm'); }});
-    /* Un bouton Exemple par cadre : l'exemple se charge dans les outils du groupe */
-    ['mc', 'fl'].forEach(function(g) {{
-      document.getElementById('btn-ex-' + g).addEventListener('click', function() {{ if (window.MP_WORK_EXAMPLE) window.MP_WORK_EXAMPLE(g); }});
-    }});
+    /* Exemple ▾ : le menu à deux lignes, une par groupe */
+    var exb = document.getElementById('btn-example');
+    exb.addEventListener('click', function() {{ if (TBM.cur && TBM.cur.btn === exb) tbmClose(false); else exampleMenuOpen(exb); }});
+    exb.addEventListener('keydown', function(e) {{ if (e.key === 'ArrowDown' && !TBM.cur) {{ e.preventDefault(); exampleMenuOpen(exb); }} }});
     /* Ctrl+S / Cmd+S quand le clavier est dans le shell = Sauvegarder (rien sous une fenêtre ou une liste ouverte ; jamais « Enregistrer la page sous ») */
     document.addEventListener('keydown', function(e) {{
       if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey || (e.key !== 's' && e.key !== 'S')) return;
@@ -1585,7 +1642,7 @@ def main():
 
     check_example_tooltips()
     suite_examples = read_suite_examples()
-    print("  [OK] l'infobulle du bouton Exemple des cinq outils est celle de leur groupe (FR, EN)")
+    print("  [OK] le menu Exemple ▾ des cinq outils : infobulle, libellé, deux lignes (mc puis fl), appel de MP_WORK_EXAMPLE par groupe (FR, EN)")
 
     print(f'\n[3/3] Génération {OUT_FILE}…')
     suite_examples_js = json.dumps(suite_examples, ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
@@ -1629,10 +1686,10 @@ def main():
         raise SystemExit("[ERREUR] SUITE_GROUPS : l'union des deux groupes et de mp_units_v1, mp_nav_v1 n'est pas exactement SUITE_KEYS — build arrêté")
     check_suite_examples(suite_examples, {g: groups[g]['keys'] for g in groups})
     print('  [OK] groupes de l\'exemple : clés disjointes, union avec mp_units_v1 et mp_nav_v1 = SUITE_KEYS ; fichiers d\'exemple : format, Syria, mêmes clés FR et EN, chaque clé dans un groupe, valeurs JSON')
-    # Les textes de l'exemple : ceux de la table, dans l'accueil (I18N) et dans le toast
+    # Les textes de l'exemple : ceux de la table, dans l'accueil (I18N : menu, infobulle, libellé) et dans le toast
     for g in ('mc', 'fl'):
         for lang in ('fr', 'en'):
-            for what, want in (('grp.ex.' + g, EX_TIP[g][lang]), ('work.example.' + g, EX_TOAST[g][lang])):
+            for what, want in (('ex.' + g, EX_MENU[g]), ('work.example.' + g, EX_TOAST[g][lang]), ('ex.tip', EX_BTN_TIP[lang]), ('ex.btn', EX_BTN_LABEL[lang])):
                 if shell_text.count(want) < 1:
                     raise SystemExit(f"[ERREUR] le shell ne porte pas le texte {what} ({lang}) de la table — build arrêté")
     # Le toast et les feuilles communes : tels quels dans le shell ; le script de ui_block n'y entre pas

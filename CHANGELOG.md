@@ -36,7 +36,7 @@ Changes merged since the last release, grouped per tool.
 - **Restore** after an example or an opened file brings back everything the flight lead tools had (groups, routes, datacards, theatre, units, settings), whichever tool you are in.
 - A tool no longer opens on its own: opened outside Mission Plan, it only shows a line pointing to the suite. Each tool now writes only the suite's work file; the old briefing, datacard, route and configuration files can still be opened.
 - **Licence**: from the next release, DCS Mission Plan is licensed under the GNU AGPL-3.0-or-later instead of MIT: any use, commercial included, must publish its source under the same licence, hosted services included; an additional term (section 7(b)) requires every interface to keep the credit line *Based on Mission Plan by MirabelleBenou and the 4th VEAW virtual wing*, now shown at the bottom of the landing page. Releases up to v1.24.0 remain under MIT. The pydcs tables (LGPL-3.0-or-later) and Goldwolf's drawings keep their own terms.
-- One example mission, STEPPE WIND over Cyprus, loaded by group: the Example button of the Briefing Generator or the Recon Station fills both mission commander tools; the one of the Route Planner, the Datacard Generator or the Flight Configurator fills the three flight lead tools; **Restore** brings back the group's previous work. Your units and heading settings are kept.
+- One example mission, STEPPE WIND over Cyprus, loaded by group: the **Example ▾** menu of every tool and of the landing page loads it for the mission commander tools (Briefing Generator, Recon Station) or for the flight lead tools (Route Planner, Datacard Generator, Flight Configurator); **Restore** brings back the group's previous work. Your units and heading settings are kept.
 - A mission time is printed in Zulu next to the date (“08:00Z”) on the datacard and on the briefing, in both briefing formats.
 
 #### Removed
@@ -49,7 +49,7 @@ Changes merged since the last release, grouped per tool.
 ### Mission Plan — landing
 #### Added
 - A card for the Flight Configurator, right after HQ.
-- An **Example** button in each group, Mission Commander and Flight Leader, loads the STEPPE WIND example into the group's tools.
+- An **Example ▾** menu in the top bar loads the STEPPE WIND example into the Mission Commander or the Flight Leader tools.
 #### Changed
 - On phones (below 760 px wide), the back button shrinks to an arrow and the wing stamp is hidden, so each tool's top bar fits; a bar that is still too wide scrolls sideways, with a fade on its right edge.
 - The open tool takes the keyboard focus, so Ctrl+S reaches it.

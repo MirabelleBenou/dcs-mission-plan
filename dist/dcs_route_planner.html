@@ -1327,10 +1327,10 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .dsp-seg .tb-btn + .tb-btn { border-left: none; }
 
 /* ---------- le menu « Affichage » (lot rp-v1.12.1) : le bouton de la barre et son panneau, au style des listes de la barre (tbm-*) ---------- */
-#btn-display, #btn-open, #btn-export-menu { position: relative; color: var(--amber); border-color: var(--amber-dark); padding-right: 12px; }
-#btn-display:hover, #btn-display:focus-visible, #btn-display.dsp-open, #btn-open:hover, #btn-open:focus-visible, #btn-open.dsp-open, #btn-export-menu:hover, #btn-export-menu:focus-visible, #btn-export-menu.dsp-open { border-color: var(--amber); }
-#btn-display .dsp-chev, #btn-open .dsp-chev, #btn-export-menu .dsp-chev { width: 10px; height: 6px; }
-#btn-display.dsp-open .dsp-chev, #btn-open.dsp-open .dsp-chev, #btn-export-menu.dsp-open .dsp-chev { transform: rotate(180deg); }
+#btn-display, #btn-open, #btn-example, #btn-export-menu { position: relative; color: var(--amber); border-color: var(--amber-dark); padding-right: 12px; }
+#btn-display:hover, #btn-display:focus-visible, #btn-display.dsp-open, #btn-open:hover, #btn-open:focus-visible, #btn-open.dsp-open, #btn-example:hover, #btn-example:focus-visible, #btn-example.dsp-open, #btn-export-menu:hover, #btn-export-menu:focus-visible, #btn-export-menu.dsp-open { border-color: var(--amber); }
+#btn-display .dsp-chev, #btn-open .dsp-chev, #btn-example .dsp-chev, #btn-export-menu .dsp-chev { width: 10px; height: 6px; }
+#btn-display.dsp-open .dsp-chev, #btn-open.dsp-open .dsp-chev, #btn-example.dsp-open .dsp-chev, #btn-export-menu.dsp-open .dsp-chev { transform: rotate(180deg); }
 .dsp-dot { position: absolute; top: -3px; right: -3px; width: 7px; height: 7px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 0 2px var(--olive-deep); pointer-events: none; }
 .dsp-dot[hidden] { display: none; }
 .dsp-panel { max-height: min(80vh, 600px); min-width: 240px; padding-bottom: 6px; }
@@ -1364,6 +1364,9 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 /* rien de coupé : le menu s'élargit à son contenu, dans la largeur de la vue ; au-delà, l'indice passe à la ligne */
 .tbm-panel.mn-panel { max-width: min(560px, calc(100vw - 16px)); }
 .mn-panel .tbm-opt .tbm-txt { flex: 0 0 auto; overflow: visible; text-overflow: clip; }
+/* Exemple ▾ : deux lignes aux libellés entiers, qui passent à la ligne quand l'écran est étroit */
+#exm-panel .tbm-opt { white-space: normal; line-height: 1.3; padding-top: 8px; padding-bottom: 8px; }
+#exm-panel .tbm-opt .tbm-txt { flex: 1 1 auto; min-width: 0; white-space: normal; }
 .mn-sep { height: 1px; margin: 4px 0; background: rgba(168,154,114,.35); }
 .mn-opt + .mn-sep + .mn-opt { border-top: none; }
 .mn-opt { color: var(--paper); }   /* comme au Datacard Generator : les lignes actives des menus sont à l'encre du papier, la ligne grisée seule s'efface */
@@ -1943,6 +1946,7 @@ html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-
 :where(body[data-theme="cw-nato"]) .rs-pick .tbm-trigger { color: #c49037; }
 :where(body[data-theme="cw-nato"]) #btn-display { color: #c49037; }
 :where(body[data-theme="cw-nato"]) #btn-open { color: #c49037; }
+:where(body[data-theme="cw-nato"]) #btn-example { color: #c49037; }
 :where(body[data-theme="cw-nato"]) #btn-export-menu { color: #c49037; }
 :where(body[data-theme="cw-nato"]) .ed-head { color: #c99a48; }
 :where(body[data-theme="cw-nato"]) .ed-head small { color: #aea17c; }
@@ -2105,9 +2109,10 @@ SOFTWARE.
   <span class="tb-label" data-i18n="tb.theatre">Théâtre</span>
   <select class="tb-sel" id="theatre" data-i18n-aria-label="tb.theatre" aria-label="Théâtre"></select>
   <span class="tb-sep"></span>
-  <button type="button" class="tb-btn" id="btn-example" data-i18n-title="tb.example.tip" title="Charger l’exemple STEPPE WIND dans les outils du Flight Leader (Route Planner, Datacard Generator, Flight Configurator) ; le travail en cours du groupe se restaure en un geste" data-i18n-aria-label="tb.example.tip" aria-label="Charger l’exemple STEPPE WIND dans les outils du Flight Leader (Route Planner, Datacard Generator, Flight Configurator) ; le travail en cours du groupe se restaure en un geste">
+  <button type="button" class="tb-btn" id="btn-example" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.example.tip" title="Charger l’exemple STEPPE WIND" data-i18n-aria-label="tb.example.tip" aria-label="Charger l’exemple STEPPE WIND">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
-    <span class="tb-btn-label solo" data-i18n="tb.example">Exemple</span></button>
+    <span class="tb-btn-label solo" data-i18n="tb.example">Exemple</span>
+    <svg class="dsp-chev" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg></button>
   <button type="button" class="tb-btn danger" id="btn-clear" data-i18n-title="tb.clear.tip" title="Effacer…" data-i18n-aria-label="tb.clear.tip" aria-label="Effacer…">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
     <span class="tb-btn-label solo" data-i18n="tb.clear">Effacer</span></button>
@@ -2731,7 +2736,9 @@ const I18N = {
     'fn.label': 'Nom du fichier',
     'exn.title': 'Exporter la carte',
     'tb.example': 'Exemple',
-    'tb.example.tip': 'Charger l’exemple STEPPE WIND dans les outils du Flight Leader (Route Planner, Datacard Generator, Flight Configurator) ; le travail en cours du groupe se restaure en un geste',
+    'tb.example.tip': 'Charger l’exemple STEPPE WIND',
+    'tb.example.mc': 'Mission Commander — Briefing Generator, Recon Station',
+    'tb.example.fl': 'Flight Leader — Route Planner, Datacard Generator, Flight Configurator',
     'tb.clear': 'Effacer',
     'tb.clear.tip': 'Effacer…',
     'clr.title': 'Effacer',
@@ -3253,7 +3260,9 @@ const I18N = {
     'fn.label': 'File name',
     'exn.title': 'Export the map',
     'tb.example': 'Example',
-    'tb.example.tip': 'Load the STEPPE WIND example into the Flight Leader tools (Route Planner, Datacard Generator, Flight Configurator); the group’s work in progress comes back in one tap',
+    'tb.example.tip': 'Load the STEPPE WIND example',
+    'tb.example.mc': 'Mission Commander — Briefing Generator, Recon Station',
+    'tb.example.fl': 'Flight Leader — Route Planner, Datacard Generator, Flight Configurator',
     'tb.clear': 'Clear',
     'tb.clear.tip': 'Clear…',
     'clr.title': 'Clear',
@@ -12752,7 +12761,7 @@ function dspBind() {
 /* ============= LES MENUS « OUVRIR » ET « … » (lot mp-ui-disposition) =============
    Même composant et même aspect que « Sauvegarder » et « Affichage » (tbm-panel dsp-panel, dsp-opt) : une ligne par geste, son indice à droite ;
    un trait sépare ; un geste qui détruit est en --mp-warn. Un seul menu ouvert à la fois, avec les listes et les autres menus de la barre. */
-const MENU_TRIG = '.tbm-trigger, #btn-display, #btn-open, #btn-export-menu, #rs-more';
+const MENU_TRIG = '.tbm-trigger, #btn-display, #btn-open, #btn-example, #btn-export-menu, #rs-more';
 const MN = { cur: null, bound: false };
 
 function mnClose(refocus) {
@@ -12894,6 +12903,15 @@ function openMenuToggle(btn) {
   });
 }
 
+/* « Exemple ▾ » : le même menu dans les cinq outils et à l'accueil, deux lignes, une par groupe */
+function exampleMenuToggle(btn) {
+  if (MN.cur && MN.cur.btn === btn) { mnClose(false); return; }
+  mnOpen(btn, 'exm-panel', t('tb.example'), [
+    { k: 'mc', label: t('tb.example.mc') },
+    { k: 'fl', label: t('tb.example.fl') }
+  ], k => workExample(k));
+}
+
 /* « … » de la ligne de sélection : Dupliquer, un trait, Supprimer */
 function moreMenuToggle(btn) {
   if (MN.cur && MN.cur.btn === btn) { mnClose(false); return; }
@@ -12955,7 +12973,7 @@ const WORK_FORMAT = 'dcs-mission-plan-work-v1';
 function workSave() { try { parent.MP_WORK_SAVE(); } catch (e) { console.warn('[RP] sauvegarde du travail indisponible', e); } }
 function workOpen() { try { parent.MP_WORK_OPEN(); } catch (e) { console.warn('[RP] ouverture du travail indisponible', e); } }
 function workHand(text, name) { try { parent.MP_WORK_OPEN_TEXT(text, name); } catch (e) { console.warn('[RP] ouverture du travail indisponible', e); } }
-function workExample() { try { window.parent.MP_WORK_EXAMPLE('fl'); } catch (e) { console.warn('[RP] exemple indisponible', e); } }       // l'exemple se charge dans les outils du groupe, par le shell
+function workExample(g) { try { window.parent.MP_WORK_EXAMPLE(g); } catch (e) { console.warn('[RP] exemple indisponible', e); } }       // l'exemple se charge dans les outils du groupe, par le shell
 
 /* ============= VERS LE BRIEFING : LA VUE DE LA CARTE, CADRÉE (lot rp-v1.12.0) ============= */
 /* Le mode cadre pose un cadre 3:2 (ou 2:3) sur la carte ; « Exporter » compose une image JPEG : la zone du cadre rendue par html2canvas
@@ -13532,7 +13550,8 @@ function bindEvents() {
     if (ev.key === 'Escape' && RT_MODALS.some(rtVisible)) { ev.preventDefault(); rtCloseAll(); }
     else rtTrap(ev);
   });
-  $('btn-example').addEventListener('click', workExample);
+  $('btn-example').addEventListener('click', ev => exampleMenuToggle(ev.currentTarget));
+  $('btn-example').addEventListener('keydown', e => { if (e.key === 'ArrowDown' && !MN.cur) { e.preventDefault(); exampleMenuToggle(e.currentTarget); } });
   $('btn-clear').addEventListener('click', ev => openClearModal(ev.currentTarget));
   clrBind();
   expBind();

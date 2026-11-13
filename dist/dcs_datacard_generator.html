@@ -253,10 +253,10 @@ body {
 .tb-sel option { background: var(--olive-dark); color: var(--paper); font-weight: 500; }
 
 /* ---------- les menus « Affichage » et « Ouvrir » (lot mp-ui-disposition ; le menu « Unités » du lot mp-theatre-unique y est entré) : le bouton de la barre et son panneau, au style des listes de la barre (tbm-*) ---------- */
-#btn-display, #btn-json-import { position: relative; color: var(--amber); border-color: var(--amber-dark); padding-right: 12px; }
-#btn-display:hover, #btn-display:focus-visible, #btn-display.dsp-open, #btn-json-import:hover, #btn-json-import:focus-visible, #btn-json-import.dsp-open { border-color: var(--amber); }
-#btn-display .dsp-chev, #btn-json-import .dsp-chev { width: 10px; height: 6px; }
-#btn-display.dsp-open .dsp-chev, #btn-json-import.dsp-open .dsp-chev { transform: rotate(180deg); }
+#btn-display, #btn-json-import, #btn-example { position: relative; color: var(--amber); border-color: var(--amber-dark); padding-right: 12px; }
+#btn-display:hover, #btn-display:focus-visible, #btn-display.dsp-open, #btn-json-import:hover, #btn-json-import:focus-visible, #btn-json-import.dsp-open, #btn-example:hover, #btn-example:focus-visible, #btn-example.dsp-open { border-color: var(--amber); }
+#btn-display .dsp-chev, #btn-json-import .dsp-chev, #btn-example .dsp-chev { width: 10px; height: 6px; }
+#btn-display.dsp-open .dsp-chev, #btn-json-import.dsp-open .dsp-chev, #btn-example.dsp-open .dsp-chev { transform: rotate(180deg); }
 .dsp-dot { position: absolute; top: -3px; right: -3px; width: 7px; height: 7px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 0 2px var(--olive-deep); pointer-events: none; }
 .dsp-dot[hidden] { display: none; }
 .dsp-panel { max-height: min(80vh, 600px); min-width: 260px; padding-bottom: 6px; }
@@ -272,6 +272,9 @@ body {
 /* rien de coupé : le menu s'élargit à son contenu, dans la largeur de la vue ; au-delà, l'indice passe à la ligne */
 .tbm-panel.mn-panel { max-width: min(560px, calc(100vw - 16px)); }
 .mn-panel .tbm-opt .tbm-txt { flex: 0 0 auto; overflow: visible; text-overflow: clip; }
+/* Exemple ▾ : deux lignes aux libellés entiers, qui passent à la ligne quand l'écran est étroit */
+#ex-panel .tbm-opt { white-space: normal; line-height: 1.3; padding-top: 8px; padding-bottom: 8px; }
+#ex-panel .tbm-opt .tbm-txt { flex: 1 1 auto; min-width: 0; white-space: normal; }
 .mn-sep { height: 1px; margin: 4px 0; background: rgba(168,154,114,.35); }
 .mn-opt + .mn-sep + .mn-opt { border-top: none; }
 .mn-opt[aria-disabled="true"] { color: var(--khaki-light); cursor: not-allowed; opacity: .7; }
@@ -1561,6 +1564,7 @@ div.dc-bl, li.dc-bl, p.dc-bl { height: 24px; border-bottom: 1px dotted var(--dc-
 :where(body[data-theme="cw-nato"]) .tb-sel { color: #c49037; }
 :where(body[data-theme="cw-nato"]) #btn-display { color: #c49037; }
 :where(body[data-theme="cw-nato"]) #btn-json-import { color: #c49037; }
+:where(body[data-theme="cw-nato"]) #btn-example { color: #c49037; }
 :where(body[data-theme="cw-nato"]) .pk-trig { color: #c49037; }
 :where(body[data-theme="cw-nato"]) .cr-tag.linked { color: #c49037; }
 :where(body[data-theme="cw-nato"]) .bi-block h3 { color: #c49037; }
@@ -1693,9 +1697,10 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   <span class="tb-label" data-i18n="tb.theatre">Théâtre</span>
   <select class="tb-sel" id="theatre" data-i18n-aria-label="tb.theatre" aria-label="Théâtre"></select>
   <div class="tb-sep"></div>
-  <button class="tb-btn" id="btn-example" data-i18n-title="tb.example.tip" title="Charger l’exemple STEPPE WIND dans les outils du Flight Leader (Route Planner, Datacard Generator, Flight Configurator) ; le travail en cours du groupe se restaure en un geste" data-i18n-aria-label="tb.example.tip" aria-label="Charger l’exemple STEPPE WIND dans les outils du Flight Leader (Route Planner, Datacard Generator, Flight Configurator) ; le travail en cours du groupe se restaure en un geste">
+  <button class="tb-btn" id="btn-example" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.example.tip" title="Charger l’exemple STEPPE WIND" data-i18n-aria-label="tb.example.tip" aria-label="Charger l’exemple STEPPE WIND">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
     <span class="tb-btn-label" data-i18n="tb.example">Exemple</span>
+    <svg class="dsp-chev" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg>
   </button>
   <button class="tb-btn danger" id="btn-reset" data-i18n-title="tb.reset.tip" data-i18n-aria-label="tb.reset.tip" title="Tout effacer…" aria-label="Tout effacer…">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
@@ -1914,7 +1919,9 @@ const I18N = {
     'tb.export': 'Exporter',
     'tb.export.tip': 'Exporter en PDF ou PNG',
     'tb.example': 'Exemple',
-    'tb.example.tip': 'Charger l’exemple STEPPE WIND dans les outils du Flight Leader (Route Planner, Datacard Generator, Flight Configurator) ; le travail en cours du groupe se restaure en un geste',
+    'tb.example.tip': 'Charger l’exemple STEPPE WIND',
+    'tb.example.mc': 'Mission Commander — Briefing Generator, Recon Station',
+    'tb.example.fl': 'Flight Leader — Route Planner, Datacard Generator, Flight Configurator',
     'tb.reset': 'Effacer',
     'tb.reset.tip': 'Tout effacer…',
     'tb.theme.tip': 'Thème graphique',
@@ -2414,7 +2421,9 @@ const I18N = {
     'tb.export': 'Export',
     'tb.export.tip': 'Export to PDF or PNG',
     'tb.example': 'Example',
-    'tb.example.tip': 'Load the STEPPE WIND example into the Flight Leader tools (Route Planner, Datacard Generator, Flight Configurator); the group’s work in progress comes back in one tap',
+    'tb.example.tip': 'Load the STEPPE WIND example',
+    'tb.example.mc': 'Mission Commander — Briefing Generator, Recon Station',
+    'tb.example.fl': 'Flight Leader — Route Planner, Datacard Generator, Flight Configurator',
     'tb.reset': 'Clear',
     'tb.reset.tip': 'Clear everything…',
     'tb.theme.tip': 'Graphic theme',
@@ -9456,7 +9465,7 @@ const WORK_FORMAT = 'dcs-mission-plan-work-v1';
 function workSave() { try { parent.MP_WORK_SAVE(); } catch (e) { console.warn('[DG] sauvegarde du travail indisponible', e); } }
 function workOpen() { try { parent.MP_WORK_OPEN(); } catch (e) { console.warn('[DG] ouverture du travail indisponible', e); } }
 function workHand(text, name) { try { parent.MP_WORK_OPEN_TEXT(text, name); } catch (e) { console.warn('[DG] ouverture du travail indisponible', e); } }
-function workExample() { try { window.parent.MP_WORK_EXAMPLE('fl'); } catch (e) { console.warn('[DG] exemple indisponible', e); } }       // l'exemple se charge dans les outils du groupe, par le shell
+function workExample(g) { try { window.parent.MP_WORK_EXAMPLE(g); } catch (e) { console.warn('[DG] exemple indisponible', e); } }       // l'exemple se charge dans les outils du groupe, par le shell
 /* Le shell écrit le travail de toute la suite : il demande d'abord à chaque module d'écrire ce qu'il garde en attente (ici, la saisie d'un canal d'une carte liée) */
 window.MP_FLUSH = function () { dgTypFlush(); };
 
@@ -10142,7 +10151,6 @@ function bindEvents() {
     }
   });
   document.getElementById('btn-print').addEventListener('click', () => openExportModal());
-  document.getElementById('btn-example').addEventListener('click', workExample);
   document.getElementById('btn-reset').addEventListener('click', resetDoc);
   document.getElementById('theme-select').addEventListener('change', e => applyTheme(e.target.value, true));
   document.getElementById('theatre').addEventListener('change', e => dgSetTheatre(e.target.value));
@@ -10196,7 +10204,7 @@ function bindEvents() {
 /* ============= LES MENUS : « Affichage », « Ouvrir », la liste des cartes et « … » (lot mp-ui-disposition) =============
    Même composant et même aspect que les listes de la barre (tbm-panel dsp-panel, dsp-opt) : un seul menu ouvert à la fois, avec les listes de la barre.
    Les unités viennent du menu « Unités » du lot mp-theatre-unique : trois rangées segmentées (Masse, Distance, Altitude) du menu « Affichage ». */
-const MENU_TRIG = '.tbm-trigger, #btn-display, #btn-json-import, #pk-pick, #pk-more';
+const MENU_TRIG = '.tbm-trigger, #btn-display, #btn-json-import, #btn-example, #pk-pick, #pk-more';
 const MN = { cur: null, bound: false };
 const DG_UN_SEGS = [
   { g: 'mass', l: 'f.mass', opts: [['kg', 'u.kg'], ['lb', 'u.lb']] },
@@ -10335,6 +10343,17 @@ function mnBind() {
   opn.addEventListener('click', () => mnToggle(opn, () => dgOpenMenu(opn)));
   arrow('btn-display', dgDisplayOpen);
   arrow('btn-json-import', dgOpenMenu);
+  const exb = document.getElementById('btn-example');
+  exb.addEventListener('click', () => mnToggle(exb, () => dgExampleMenu(exb)));
+  arrow('btn-example', dgExampleMenu);
+}
+
+/* « Exemple ▾ » : le même menu dans les cinq outils et à l'accueil, deux lignes, une par groupe */
+function dgExampleMenu(btn) {
+  mnOpen(btn, 'ex-panel', t('tb.example'), {
+    items: [{ k: 'mc', label: t('tb.example.mc') }, { k: 'fl', label: t('tb.example.fl') }],
+    choose: k => workExample(k)
+  });
 }
 
 /* ----- « Affichage ▾ » : Datacard Jour · Nuit, puis les unités ----- */

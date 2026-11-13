@@ -88,7 +88,7 @@ Recon Station turns any screenshot into a convincing **reconnaissance analysis p
 - **Editable info block** — 9 fields, bold text, black/white
 - **Classification banner** — top/bottom bars, 4 levels, off by default
 - **Wing logos** — upload manually or pull the shared wing branding from HQ; colour / grey / white modes
-- **Example** — the top-bar button loads the STEPPE WIND example into the Mission Commander tools (this one and the Briefing Generator): a demonstration photo with its markers, shapes, magnifier and info block; **Restore** brings back the previous work, image included
+- **Example ▾** — the top-bar menu's Mission Commander line loads the STEPPE WIND example into the Mission Commander tools (this one and the Briefing Generator): a demonstration photo with its markers, shapes, magnifier and info block; **Restore** brings back the previous work, image included
 
 ### 📖 Field Manual — in detail
 
@@ -147,7 +147,7 @@ The Field Manual is the suite's **built-in documentation**, opened from the boar
 
 No account, no internet required after the first load.
 
-Every tool has an **Example** button, and the landing page has two, one in each frame (Mission Commander, Flight Leader). There is one example, the fictional STEPPE WIND operation over Cyprus, and it loads by group: the Mission Commander button fills the Briefing Generator and the Recon Station, the Flight Leader one fills the Route Planner, the Datacard Generator and the Flight Configurator; **Restore** brings back the group's previous work — the quickest way to see what the suite does.
+Every tool has an **Example ▾** menu, and so does the landing page's top bar, with two lines (Mission Commander, Flight Leader). There is one example, the fictional STEPPE WIND operation over Cyprus, and it loads by group: the Mission Commander line fills the Briefing Generator and the Recon Station, the Flight Leader line fills the Route Planner, the Datacard Generator and the Flight Configurator; **Restore** brings back the group's previous work — the quickest way to see what the suite does.
 
 ## 🛡️ For wing administrators
 

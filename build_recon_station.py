@@ -17,6 +17,7 @@ CONTRAST_CSS = r"""
 /* Contrastes (texte sous 18 px, 4,5 : 1 au moins) : couleur du texte seule, la palette commune ne bouge pas. */
 :where(body[data-theme="cw-nato"]) .tb-brand-short { color: #d47db1; }
 :where(body[data-theme="cw-nato"]) #btn-open { color: #c49037; }
+:where(body[data-theme="cw-nato"]) #btn-example { color: #c49037; }
 :where(body[data-theme="cw-nato"]) .tb-classif { color: #d4847b; }
 :where(body[data-theme="cw-nato"]) .ed-section > summary { color: #dcbe8a; }
 :where(body[data-theme="cw-nato"]) .drop-zone.has-image { color: #7f936f; }
@@ -1448,14 +1449,17 @@ RSD_I18N_EN = r'''    // Touch annotations (lot mp-rs-v1.1.0)
 # ---------- HTML ----------
 RS_MENU_CSS = r"""
 /* ---------- le menu « Ouvrir » : le bouton de la barre et son panneau, au style des listes de la barre (tbm-*) ; même composant qu'au Datacard Generator ---------- */
-#btn-open { position: relative; color: var(--amber); border-color: var(--amber-dark); padding-right: 12px; }
-#btn-open:hover, #btn-open:focus-visible, #btn-open.dsp-open { border-color: var(--amber); }
-#btn-open .dsp-chev { width: 10px; height: 6px; }
-#btn-open.dsp-open .dsp-chev { transform: rotate(180deg); }
+#btn-open, #btn-example { position: relative; color: var(--amber); border-color: var(--amber-dark); padding-right: 12px; }
+#btn-open:hover, #btn-open:focus-visible, #btn-open.dsp-open, #btn-example:hover, #btn-example:focus-visible, #btn-example.dsp-open { border-color: var(--amber); }
+#btn-open .dsp-chev, #btn-example .dsp-chev { width: 10px; height: 6px; }
+#btn-open.dsp-open .dsp-chev, #btn-example.dsp-open .dsp-chev { transform: rotate(180deg); }
 .dsp-panel { max-height: min(80vh, 600px); min-width: 260px; padding-bottom: 6px; }
 .mn-hint { margin-left: auto; padding-left: 14px; flex: 0 1 auto; min-width: 0; text-align: right; }
 .tbm-panel.mn-panel { max-width: min(560px, calc(100vw - 16px)); }
 .mn-panel .tbm-opt .tbm-txt { flex: 0 0 auto; overflow: visible; text-overflow: clip; }
+/* Exemple ▾ : deux lignes aux libellés entiers, qui passent à la ligne quand l'écran est étroit */
+#ex-panel .tbm-opt { white-space: normal; line-height: 1.3; padding-top: 8px; padding-bottom: 8px; }
+#ex-panel .tbm-opt .tbm-txt { flex: 1 1 auto; min-width: 0; white-space: normal; }
 .mn-sep { height: 1px; margin: 4px 0; background: rgba(168,154,114,.35); }
 .mn-opt + .mn-sep + .mn-opt { border-top: none; }
 .mn-opt[aria-disabled="true"] { color: var(--khaki-light); cursor: not-allowed; opacity: .7; }
@@ -1470,11 +1474,11 @@ RS_MENU_JS = r"""
 // Aucune écriture n'est différée : saveState écrit recon_state_v1 tout de suite, à chaque saisie : pas de MP_FLUSH.
 function workSave() { try { parent.MP_WORK_SAVE(); } catch (e) { console.warn('[RS] sauvegarde du travail indisponible', e); } }
 function workOpen() { try { parent.MP_WORK_OPEN(); } catch (e) { console.warn('[RS] ouverture du travail indisponible', e); } }
-function workExample() { try { window.parent.MP_WORK_EXAMPLE('mc'); } catch (e) { console.warn('[RS] exemple indisponible', e); } }       // l'exemple se charge dans les outils du groupe, par le shell
+function workExample(g) { try { window.parent.MP_WORK_EXAMPLE(g); } catch (e) { console.warn('[RS] exemple indisponible', e); } }       // l'exemple se charge dans les outils du groupe, par le shell
 
 // ── Le menu « Ouvrir » : un travail de Mission Plan, ou une image ──
 // Même composant et même aspect que les listes de la barre (tbm-panel dsp-panel, dsp-opt) et que le menu « Ouvrir » du Datacard Generator.
-const MENU_TRIG = '.tbm-trigger, #btn-open';
+const MENU_TRIG = '.tbm-trigger, #btn-open, #btn-example';
 const MN = { cur: null, bound: false };
 
 function mnClose(refocus) {
@@ -1582,6 +1586,14 @@ function rsOpenMenu(btn) {
   });
 }
 
+/* « Exemple ▾ » : le même menu dans les cinq outils et à l'accueil, deux lignes, une par groupe */
+function rsExampleMenu(btn) {
+  mnOpen(btn, 'ex-panel', t('toolbar.example'), {
+    items: [{ k: 'mc', label: t('toolbar.example.mc') }, { k: 'fl', label: t('toolbar.example.fl') }],
+    choose: k => workExample(k)
+  });
+}
+
 function mnBind() {
   if (MN.bound) return;
   MN.bound = true;
@@ -1598,6 +1610,9 @@ function mnBind() {
   const opn = document.getElementById('btn-open');
   opn.addEventListener('click', () => { if (MN.cur && MN.cur.btn === opn) mnClose(false); else rsOpenMenu(opn); });
   opn.addEventListener('keydown', e => { if (e.key === 'ArrowDown' && !MN.cur) { e.preventDefault(); rsOpenMenu(opn); } });
+  const exb = document.getElementById('btn-example');
+  exb.addEventListener('click', () => { if (MN.cur && MN.cur.btn === exb) mnClose(false); else rsExampleMenu(exb); });
+  exb.addEventListener('keydown', e => { if (e.key === 'ArrowDown' && !MN.cur) { e.preventDefault(); rsExampleMenu(exb); } });
   document.getElementById('btn-save').addEventListener('click', workSave);
   /* Ctrl+S (Cmd+S) : le geste du bouton « Sauvegarder », sauf fenêtre ou menu ouvert */
   document.addEventListener('keydown', e => {
@@ -2548,9 +2563,10 @@ body {{
     <span class="tb-btn-label" data-i18n="toolbar.export">Exporter</span>
   </button>
   <div class="tb-sep tb-files-end" aria-hidden="true"></div>
-  <button type="button" class="tb-btn" id="btn-example" data-i18n-title="toolbar.example.tooltip" title="Charger l’exemple STEPPE WIND dans les outils du Mission Commander (Briefing Generator, Recon Station) ; le travail en cours du groupe se restaure en un geste" data-i18n-aria-label="toolbar.example.tooltip" aria-label="Charger l’exemple STEPPE WIND dans les outils du Mission Commander (Briefing Generator, Recon Station) ; le travail en cours du groupe se restaure en un geste">
+  <button type="button" class="tb-btn" id="btn-example" aria-haspopup="menu" aria-expanded="false" data-i18n-title="toolbar.example.tooltip" title="Charger l’exemple STEPPE WIND" data-i18n-aria-label="toolbar.example.tooltip" aria-label="Charger l’exemple STEPPE WIND">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
     <span class="tb-btn-label" data-i18n="toolbar.example">Exemple</span>
+    <svg class="dsp-chev" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg>
   </button>
   <button type="button" class="tb-btn danger" id="btn-reset" data-i18n-title="toolbar.reset.tooltip" title="Effacer" data-i18n-aria-label="toolbar.reset.tooltip" aria-label="Effacer">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
@@ -2867,7 +2883,9 @@ const I18N = {{
     'toolbar.export': 'Exporter',
     'toolbar.export.tooltip': "Exporter l'image (PNG pleine résolution)",
     'toolbar.example': 'Exemple',
-    'toolbar.example.tooltip': "Charger l’exemple STEPPE WIND dans les outils du Mission Commander (Briefing Generator, Recon Station) ; le travail en cours du groupe se restaure en un geste",
+    'toolbar.example.tooltip': 'Charger l’exemple STEPPE WIND',
+    'toolbar.example.mc': 'Mission Commander — Briefing Generator, Recon Station',
+    'toolbar.example.fl': 'Flight Leader — Route Planner, Datacard Generator, Flight Configurator',
     'toolbar.reset': 'Effacer',
     'toolbar.reset.tooltip': 'Effacer',
     'clear.title': 'Effacer le Recon Station ?',
@@ -3038,7 +3056,9 @@ const I18N = {{
     'toolbar.export': 'Export',
     'toolbar.export.tooltip': 'Export the image (full-resolution PNG)',
     'toolbar.example': 'Example',
-    'toolbar.example.tooltip': 'Load the STEPPE WIND example into the Mission Commander tools (Briefing Generator, Recon Station); the group’s work in progress comes back in one tap',
+    'toolbar.example.tooltip': 'Load the STEPPE WIND example',
+    'toolbar.example.mc': 'Mission Commander — Briefing Generator, Recon Station',
+    'toolbar.example.fl': 'Flight Leader — Route Planner, Datacard Generator, Flight Configurator',
     'toolbar.reset': 'Clear',
     'toolbar.reset.tooltip': 'Clear',
     'clear.title': 'Clear the Recon Station?',
@@ -4820,7 +4840,6 @@ function initEvents() {{
   }});
 
   // Exemple
-  document.getElementById('btn-example').addEventListener('click', workExample);
   document.getElementById('btn-reset').addEventListener('click', rsReset);
 
   // Drop zone
