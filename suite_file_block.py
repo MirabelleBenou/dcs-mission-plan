@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Bloc « FICHIER DE TRAVAIL DE LA SUITE » : un seul fichier JSON pour tout le travail de Mission Plan, écrit et lu par le shell seul.
 
-Les outils n'en ont qu'un appel (window.parent.MP_WORK_SAVE(), MP_WORK_OPEN(), MP_WORK_OPEN_TEXT(texte, nom)) et, s'ils diffèrent l'écriture d'une clé du fichier, une fonction
+Les outils n'en ont qu'un appel (window.parent.MP_WORK_SAVE(), MP_WORK_OPEN(), MP_WORK_OPEN_TEXT(texte, nom), MP_WORK_EXAMPLE(groupe)) et, s'ils diffèrent l'écriture d'une clé du fichier, une fonction
 window.MP_FLUSH() que le shell appelle avant de lire le stockage. Le bloc ne s'insère que dans le shell (build_mission_plan.py) ; il ne touche pas au DOM des outils.
 
 Quatre textes :
@@ -17,6 +17,8 @@ Le format (un JSON) :
     "keys": { "<clé>": "<la valeur au stockage, chaîne telle quelle>" } }
 Une clé absente du stockage n'est pas écrite ; les valeurs sont les chaînes du stockage, à l'octet. Le fichier est indenté de deux espaces.
 SUITE_KEYS = les clés de contenu des outils du Flight Leader (GS_CONTENT_KEYS de group_store_block.py, dans son ordre) + celle du briefing + celle de Recon Station (sans l'image source).
+L'exemple : un seul, chargé par groupe d'outils (SUITE_GROUPS : « mc », le Mission Commander, et « fl », le Flight Leader). Le build du shell embarque les deux fichiers d'exemple (samples/example_work_fr.json et _en.json,
+au format ci-dessus) dans SUITE_EXAMPLES ({ fr, en }) ; MP_WORK_EXAMPLE(g) remplace les clés du groupe par celles de l'exemple de la langue du shell et rouvre les seuls outils du groupe.
 Hors du fichier : les préférences d'écran (langue, thème, replis, affichage, partages d'écran, calques de carte), la mission d'HQ (mission_snapshot_v1) et la configuration Wing (wing_config_v1).
 
 Usage (par le build) : from suite_file_block import build_block, build_html, build_css, THEME_VARS
@@ -46,6 +48,11 @@ THEME_VARS = {
 _JS = r"""
 const SUITE_FORMAT = 'dcs-mission-plan-work-v1';
 const SUITE_KEYS = ['fc_state_v1', 'flight_set_v1', 'flight_set_v1_illisible', 'route_set_v1', 'route_state_v1', 'route_layers_v1', 'datacard_state_v1', 'mp_theatre_v1', 'mp_units_v1', 'mp_nav_v1', 'khr26_briefing_state_v2', 'recon_state_v1'];
+/* Les deux groupes de l'exemple : leurs outils et leurs clés. mp_units_v1 et mp_nav_v1 (des réglages) ne sont d'aucun groupe : un exemple ne les écrit ni ne les retire. Le build vérifie que les deux listes de clés sont disjointes et que leur union avec ces deux clés est SUITE_KEYS. */
+const SUITE_GROUPS = {
+  mc: { tools: ['bg', 'rs'], keys: ['khr26_briefing_state_v2', 'recon_state_v1'] },
+  fl: { tools: ['rp', 'dg', 'fc'], keys: ['fc_state_v1', 'flight_set_v1', 'flight_set_v1_illisible', 'route_set_v1', 'route_state_v1', 'route_layers_v1', 'datacard_state_v1', 'mp_theatre_v1'] }
+};
 /* Les outils dont l'iframe est retirée quand le travail est remplacé (ils lisent les clés ci-dessus) ; HQ et le Field Manual n'en lisent aucune : ils restent (le .miz d'HQ reste chargé) */
 const SUITE_DROP = ['bg', 'dg', 'rp', 'fc', 'rs'];
 /* Le calme du stockage, mesuré comme gsSettled (group_store_block.py) : aucune écriture des clés pendant SUITE_CALM_MS, constaté à deux relectures de suite (toutes les SUITE_CALM_STEP_MS), au plus SUITE_CALM_MAX_MS */
@@ -53,12 +60,14 @@ const SUITE_CALM_MS = 400, SUITE_CALM_MAX_MS = 3000, SUITE_CALM_STEP_MS = 50;
 const SUITE = { restore: null, toastN: 0, name: '', at: 0, from: null, busy: false };
 
 function suiteGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
-function suiteRead() { const o = {}; SUITE_KEYS.forEach(k => { o[k] = suiteGet(k); }); return o; }
-/* Écrit la table clé → texte ou null : les clés absentes sont retirées d'abord (de la place se libère), puis les autres sont écrites. Faux si une écriture a échoué (stockage plein). */
-function suiteWriteAll(map) {
+function suiteRead(keys) { const o = {}; (keys || SUITE_KEYS).forEach(k => { o[k] = suiteGet(k); }); return o; }
+/* Écrit la table clé → texte ou null, pour les clés de la portée (toutes les clés par défaut) : les clés absentes sont retirées d'abord (de la place se libère), puis les autres sont écrites.
+   Une clé hors de la portée n'est ni écrite ni retirée. Faux si une écriture a échoué (stockage plein). */
+function suiteWriteAll(map, keys) {
+  const ks = keys || SUITE_KEYS;
   let ok = true;
-  SUITE_KEYS.forEach(k => { if (typeof map[k] !== 'string') { try { localStorage.removeItem(k); } catch (e) { ok = false; } } });
-  SUITE_KEYS.forEach(k => { if (typeof map[k] === 'string') { try { localStorage.setItem(k, map[k]); } catch (e) { ok = false; } } });
+  ks.forEach(k => { if (typeof map[k] !== 'string') { try { localStorage.removeItem(k); } catch (e) { ok = false; } } });
+  ks.forEach(k => { if (typeof map[k] === 'string') { try { localStorage.setItem(k, map[k]); } catch (e) { ok = false; } } });
   return ok;
 }
 /* Chaque outil vivant écrit d'abord sa saisie en attente (MP_FLUSH), puis le stockage est lu */
@@ -187,11 +196,11 @@ function suiteSettled() {
 }
 
 /* ---- remplacer le travail : on fait, on garde l'ancien, un toast « Restaurer » 12 s, jamais de question ---- */
-/* b. les iframes des cinq outils sont retirées (leurs écritures en attente partent d'abord, par MP_FLUSH puis à pagehide) ; c. le stockage est photographié ; d. les clés sont écrites (celles qui manquent sont retirées ;
-   un stockage plein remet la photographie à l'octet) ; e. si l'on était dans l'un de ces outils, il est rouvert, iframe neuve. Rend { ok, snap }. */
-function suiteReplace(next) {
-  const was = activeModule;
-  SUITE_DROP.forEach(id => {
+/* b. les iframes des outils retirés (les cinq par défaut, ceux d'un groupe pour un exemple) partent (leurs écritures en attente d'abord, par MP_FLUSH puis à pagehide) ; c. les clés de la portée (toutes par défaut) sont photographiées ;
+   d. elles sont écrites (celles qui manquent sont retirées ; un stockage plein remet la photographie à l'octet) ; e. si l'on était dans l'un de ces outils, il est rouvert, iframe neuve. Rend { ok, snap }. */
+function suiteReplace(next, tools, keys) {
+  const was = activeModule, drop = tools || SUITE_DROP, ks = keys || SUITE_KEYS;
+  drop.forEach(id => {
     const f = iframes[id];
     if (!f) return;
     suiteFlush(id);
@@ -199,27 +208,48 @@ function suiteReplace(next) {
     delete iframes[id];
     delete barSync[id];
   });
-  const snap = suiteRead();
-  const ok = suiteWriteAll(next);
-  if (!ok) { suiteWriteAll(snap); suiteWriteAll(snap); }
-  if (was && SUITE_DROP.indexOf(was) >= 0) openModule(was);
+  const snap = suiteRead(ks);
+  const ok = suiteWriteAll(next, ks);
+  if (!ok) { suiteWriteAll(snap, ks); suiteWriteAll(snap, ks); }
+  if (was && drop.indexOf(was) >= 0) openModule(was);
   return { ok: ok, snap: snap };
+}
+/* La restauration en attente, si son toast est encore à l'écran */
+function suiteLive() {
+  const toastEl = document.getElementById('toast');
+  return SUITE.restore && SUITE.toastN === showToast._n && toastEl && toastEl.classList.contains('show') ? SUITE.restore : null;
+}
+/* Le remplacement du travail, de l'exemple d'un groupe ou d'un fichier, sans question : { keys, tools } sa portée, next la table des clés de cette portée.
+   Une seule restauration en attente : tant que le toast « Restaurer » d'un premier remplacement est à l'écran, la photographie reste celle d'avant le premier (comme replaceWithRestore) ;
+   la portée de « Restaurer » devient l'union des deux (toutes les clés et les cinq outils si l'un est un fichier). Rend la restauration, ou null si l'écriture a échoué. */
+function suiteDo(next, keys, tools, toast) {
+  const keep = suiteLive();
+  const res = suiteReplace(next, tools, keys);
+  if (!res.ok) { showToast(t('work.err.full'), { type: 'err' }); return null; }
+  const r = { snap: res.snap, keys: keys.slice(), tools: tools.slice(), ref: null, pending: null, n: 0 };
+  if (keep) {
+    SUITE_KEYS.forEach(k => { if (keep.keys.indexOf(k) >= 0 && r.keys.indexOf(k) < 0) r.keys.push(k); });
+    tools = SUITE_DROP.filter(id => keep.tools.indexOf(id) >= 0 || r.tools.indexOf(id) >= 0);
+    r.tools = tools;
+    keep.keys.forEach(k => { r.snap[k] = keep.snap[k]; });
+  }
+  SUITE.restore = r;
+  /* la référence de « Restaurer » : le stockage relu une fois les outils rouverts calmes */
+  suiteTake(r);
+  showToast(toast + ' ·', { action: { label: t('ui.restore'), fn: () => suiteRestore(r) }, ms: 12000 });
+  SUITE.toastN = showToast._n;
+  return r;
 }
 /* La référence de « Restaurer » : prise après le calme, compté à partir de l'appel ; une prise plus récente remplace la précédente (r.n). r.pending est vrai tant qu'une prise est en cours. */
 function suiteTake(r) {
   const n = ++r.n;
   r.pending = suiteSettled().then(() => { if (r.n === n) { r.ref = suiteRead(); r.pending = null; } });
 }
-/* Une restauration est en attente tant que son toast est à l'écran */
-function suiteRestoreLive() {
-  const r = SUITE.restore, el = document.getElementById('toast');
-  return r && SUITE.toastN === showToast._n && el && el.classList.contains('show') ? r : null;
-}
-/* Au « load » de l'iframe d'un des cinq outils (rouverte par l'ouverture ou ouverte ensuite) : ses écritures de démarrage différées partent tout de suite (MP_FLUSH), puis la référence est reprise, calme compté depuis ce load */
+/* Au « load » de l'iframe d'un des outils de la restauration en attente (rouverte par l'ouverture ou ouverte ensuite) : ses écritures de démarrage différées partent tout de suite (MP_FLUSH), puis la référence est reprise,
+   calme compté depuis ce load. Un outil d'un autre groupe ne touche aucune clé de la portée : il ne reprend rien. */
 function suiteOnLoad(id) {
-  if (SUITE_DROP.indexOf(id) < 0) return;
-  const r = suiteRestoreLive();
-  if (!r) return;
+  const r = suiteLive();
+  if (!r || r.tools.indexOf(id) < 0) return;
   suiteFlush(id);
   r.ref = null;
   suiteTake(r);
@@ -232,19 +262,16 @@ window.MP_WORK_OPEN_TEXT = function (text, name) {
   if (!SUITE_KEYS.some(k => typeof o.keys[k] === 'string')) { showToast(t('work.err.empty'), { type: 'err' }); return false; }
   const next = {};
   SUITE_KEYS.forEach(k => { next[k] = typeof o.keys[k] === 'string' ? o.keys[k] : null; });
-  /* Une seule restauration en attente : tant que le toast « Restaurer » d'un premier remplacement est à l'écran, la photographie reste celle d'avant le premier (comme replaceWithRestore) */
-  const toastEl = document.getElementById('toast');
-  const live = !!(SUITE.restore && SUITE.toastN === showToast._n && toastEl && toastEl.classList.contains('show'));
-  const keep = live ? SUITE.restore : null;
-  const res = suiteReplace(next);
-  if (!res.ok) { showToast(t('work.err.full'), { type: 'err' }); return false; }
-  const r = { snap: keep ? keep.snap : res.snap, ref: null, pending: null, n: 0 };
-  SUITE.restore = r;
-  /* la référence de « Restaurer » : le stockage relu une fois les outils rouverts calmes */
-  suiteTake(r);
-  showToast(t('work.opened').replace('{0}', String(name || '')) + ' ·', { action: { label: t('ui.restore'), fn: () => suiteRestore(r) }, ms: 12000 });
-  SUITE.toastN = showToast._n;
-  return true;
+  return !!suiteDo(next, SUITE_KEYS, SUITE_DROP, t('work.opened').replace('{0}', String(name || '')));
+};
+/* L'exemple d'un groupe : les clés du groupe prennent la valeur de l'exemple de la langue du shell (ou sont retirées si l'exemple ne les porte pas), les outils du groupe seuls sont rouverts ;
+   les autres outils gardent leur iframe et leurs clés. */
+window.MP_WORK_EXAMPLE = function (g) {
+  const grp = SUITE_GROUPS[g];
+  if (!grp) { console.warn('[M·P] exemple : groupe inconnu ' + g); return false; }
+  const ex = SUITE_EXAMPLES[CURRENT_LANG === 'en' ? 'en' : 'fr'], next = {};
+  grp.keys.forEach(k => { next[k] = typeof ex.keys[k] === 'string' ? ex.keys[k] : null; });
+  return !!suiteDo(next, grp.keys, grp.tools, t('work.example.' + g));
 };
 window.MP_WORK_OPEN = function () {
   const inp = document.createElement('input');
@@ -264,10 +291,10 @@ window.MP_WORK_OPEN = function () {
 async function suiteRestore(r) {
   if (SUITE.restore !== r) return;
   while (r.pending) { await r.pending; if (SUITE.restore !== r) return; }
-  const now = suiteRead();
-  if (SUITE_KEYS.some(k => now[k] !== r.ref[k])) { SUITE.restore = null; showToast(t('ui.restore.refused'), { type: 'err' }); return; }
+  const now = suiteRead(r.keys);
+  if (r.keys.some(k => now[k] !== r.ref[k])) { SUITE.restore = null; showToast(t('ui.restore.refused'), { type: 'err' }); return; }
   SUITE.restore = null;
-  if (!suiteReplace(r.snap).ok) showToast(t('work.err.full'), { type: 'err' });
+  if (!suiteReplace(r.snap, r.tools, r.keys).ok) showToast(t('work.err.full'), { type: 'err' });
 }
 """
 

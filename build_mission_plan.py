@@ -62,6 +62,8 @@ LANDING_CSS = r"""
   border:1px solid var(--paper-edge); padding:5px 14px; border-radius:4px; box-shadow:0 6px 14px rgba(0,0,0,.45); transform:rotate(-1deg);}
 .mp-tab b{font-family:var(--f-sten); font-size:20px; letter-spacing:.04em;}
 .mp-tab small{font-family:var(--f-mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-2);}
+/* Le bouton Exemple du cadre : en miroir de l'onglet, au-dessus du pointillé ; l'apparence de .mp-railbtn, le fond opaque (celui de la barre du haut) pour couper le pointillé */
+.mp-grp-ex{position:absolute; top:-15px; right:22px; z-index:7; background:color-mix(in srgb, var(--board-2) 70%, #000);}
 /* ===== La barre du haut : Ouvrir…, Sauvegarder, Field Manual (icône et texte ; l'icône seule sous 760 px) ===== */
 .mp-sep{width:1px; align-self:stretch; background:var(--line); margin:0 2px;}
 .mp-railbtn{display:inline-flex; align-items:center; justify-content:center; gap:7px; box-sizing:border-box; min-width:44px; min-height:44px; padding:7px 12px;
@@ -180,6 +182,77 @@ def check_suite_colors():
     print('  [OK] couleurs de la fenêtre du nom et du toast : celles des six outils, aux quatre thèmes')
 
 
+# Les textes de l'exemple par groupe (accueil et infobulles des boutons des outils) : une seule table ; les modules en portent chacun la leur, le build les compare à celle-ci
+EX_TIP = {
+    'mc': {'fr': 'Charger l’exemple STEPPE WIND dans les outils du Mission Commander (Briefing Generator, Recon Station)',
+           'en': 'Load the STEPPE WIND example into the Mission Commander tools (Briefing Generator, Recon Station)'},
+    'fl': {'fr': 'Charger l’exemple STEPPE WIND dans les outils du Flight Leader (Route Planner, Datacard Generator, Flight Configurator)',
+           'en': 'Load the STEPPE WIND example into the Flight Leader tools (Route Planner, Datacard Generator, Flight Configurator)'},
+}
+EX_TOOL_SUFFIX = {'fr': ' ; le travail en cours du groupe se restaure en un geste', 'en': '; the group’s work in progress comes back in one tap'}
+EX_TOAST = {'mc': {'fr': 'Exemple STEPPE WIND chargé : Mission Commander', 'en': 'STEPPE WIND example loaded: Mission Commander'},
+            'fl': {'fr': 'Exemple STEPPE WIND chargé : Flight Leader', 'en': 'STEPPE WIND example loaded: Flight Leader'}}
+EX_TOOLS = {'bg': 'mc', 'rs': 'mc', 'rp': 'fl', 'dg': 'fl', 'fc': 'fl'}
+WORK_FORMAT = 'dcs-mission-plan-work-v1'
+
+
+def read_suite_examples():
+    """Les deux fichiers d'exemple (samples/example_work_fr.json, _en.json), lus tels quels. Rend {fr: objet, en: objet}. Les contrôles sont ceux de check_suite_examples()."""
+    out = {}
+    for lang in ('fr', 'en'):
+        path = os.path.join(SCRIPT_DIR, 'samples', 'example_work_%s.json' % lang)
+        if not os.path.isfile(path):
+            raise SystemExit(f"[ERREUR] Entrée manquante : {path} — build arrêté")
+        with open(path, 'r', encoding='utf-8') as fh:
+            try:
+                out[lang] = json.load(fh)
+            except ValueError as exc:
+                raise SystemExit(f"[ERREUR] samples/example_work_{lang}.json illisible ({exc}) — build arrêté")
+    return out
+
+
+def check_suite_examples(ex, group_keys):
+    """Les fichiers d'exemple : le format du fichier de travail, le théâtre Syria, les mêmes clés en FR et en EN, chaque clé dans un groupe, chaque valeur une chaîne qui se lit en JSON, aucun FOOTHOLD.
+    group_keys : {groupe: [clés]}. Sinon le build s'arrête, en nommant le fichier et la clé."""
+    in_group = {k for ks in group_keys.values() for k in ks}
+    for lang in ('fr', 'en'):
+        f, o = 'samples/example_work_%s.json' % lang, ex[lang]
+        if not isinstance(o, dict) or o.get('format') != WORK_FORMAT:
+            raise SystemExit(f"[ERREUR] {f} : format attendu {WORK_FORMAT} — build arrêté")
+        if o.get('theatre') != 'Syria':
+            raise SystemExit(f"[ERREUR] {f} : theatre attendu Syria ({o.get('theatre')!r}) — build arrêté")
+        if not isinstance(o.get('keys'), dict) or not o['keys']:
+            raise SystemExit(f"[ERREUR] {f} : keys absent ou vide — build arrêté")
+        for k, v in o['keys'].items():
+            if k not in in_group:
+                raise SystemExit(f"[ERREUR] {f} : la clé {k} n'est d'aucun groupe — build arrêté")
+            if not isinstance(v, str):
+                raise SystemExit(f"[ERREUR] {f} : la valeur de {k} n'est pas une chaîne — build arrêté")
+            try:
+                json.loads(v)
+            except ValueError:
+                raise SystemExit(f"[ERREUR] {f} : la valeur de {k} ne se lit pas en JSON — build arrêté")
+        with open(os.path.join(SCRIPT_DIR, f), 'r', encoding='utf-8') as fh:
+            if 'foothold' in fh.read().lower():
+                raise SystemExit(f"[ERREUR] {f} : FOOTHOLD figure dans le fichier — build arrêté")
+    if sorted(ex['fr']['keys']) != sorted(ex['en']['keys']):
+        raise SystemExit("[ERREUR] les fichiers d'exemple FR et EN n'ont pas les mêmes clés — build arrêté")
+
+
+def check_example_tooltips():
+    """Le bouton Exemple de chaque outil porte, dans la langue de l'outil, le texte du groupe suivi de la phrase du restaurage (la table EX_TIP) ; le build compare au HTML de chaque outil."""
+    for mid, g in EX_TOOLS.items():
+        src = next(m['src'] for m in MODULES if m['id'] == mid)
+        with open(os.path.join(SCRIPT_DIR, src), 'r', encoding='utf-8') as fh:
+            html = fh.read()
+        for lang in ('fr', 'en'):
+            want = EX_TIP[g][lang] + EX_TOOL_SUFFIX[lang]
+            if html.count(want) < 1:
+                raise SystemExit(f"[ERREUR] {src} : l'infobulle de l'exemple ({lang}) n'est pas celle du groupe {g} : « {want} » — build arrêté")
+        if 'MP_WORK_EXAMPLE(\'%s\')' % g not in html:
+            raise SystemExit(f"[ERREUR] {src} : le bouton Exemple n'appelle pas MP_WORK_EXAMPLE('{g}') — build arrêté")
+
+
 def encode_file_b64(path):
     abs_path = os.path.join(SCRIPT_DIR, path)
     if not os.path.isfile(abs_path):
@@ -229,7 +302,7 @@ def build_tile_uris(modules):
     return uris
 
 
-def build_html(module_html_js, tile_uris):
+def build_html(module_html_js, tile_uris, suite_examples_js):
     MESSAGES_CSS = build_messages_css()          # le toast : la feuille de messages_block.py, telle quelle (le shell parle par le même toast que les outils)
     UI_CSS = build_ui_css()                      # la feuille de ui_block.py, telle quelle : la fenêtre du nom est une .ui-modal (le shell ne reçoit pas le script de ui_block)
     SUITE_CSS = build_suite_file_css()           # les couleurs de ces deux feuilles, posées sur la fenêtre du nom et sur #toast
@@ -586,6 +659,7 @@ select[data-tbm-src] {{ display: none !important; }}
            RÈGLE : un module activé plus tard s'insère dans le cadre de son rôle (et dans MODULES, avant le Field Manual). -->
       <div class="mp-grp" id="grp-mc">
         <div class="mp-tab"><b>Mission Commander</b><small data-i18n="grp.mc.sub">prépare la mission</small></div>
+        <button type="button" class="mp-railbtn mp-grp-ex" id="btn-ex-mc" data-i18n-title="grp.ex.mc" data-i18n-aria="grp.ex.mc" title="Charger l’exemple STEPPE WIND dans les outils du Mission Commander (Briefing Generator, Recon Station)" aria-label="Charger l’exemple STEPPE WIND dans les outils du Mission Commander (Briefing Generator, Recon Station)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg><span data-i18n="grp.ex.btn">Exemple</span></button>
         <div class="active-row">
           <div class="print active reveal d1" id="card-hq" style="--card-accent:var(--a-hq)" tabindex="0" role="button" aria-label="HQ">
             <span class="tape"></span><span class="pin tl"></span><span class="pin tr"></span>
@@ -636,6 +710,7 @@ select[data-tbm-src] {{ display: none !important; }}
 
       <div class="mp-grp" id="grp-fl">
         <div class="mp-tab"><b>Flight Leader</b><small data-i18n="grp.fl.sub">prépare son vol</small></div>
+        <button type="button" class="mp-railbtn mp-grp-ex" id="btn-ex-fl" data-i18n-title="grp.ex.fl" data-i18n-aria="grp.ex.fl" title="Charger l’exemple STEPPE WIND dans les outils du Flight Leader (Route Planner, Datacard Generator, Flight Configurator)" aria-label="Charger l’exemple STEPPE WIND dans les outils du Flight Leader (Route Planner, Datacard Generator, Flight Configurator)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg><span data-i18n="grp.ex.btn">Exemple</span></button>
         <div class="active-row">
           <div class="print active reveal d4" id="card-rp" style="--card-accent:var(--a-rp)" tabindex="0" role="button" aria-label="Route Planner">
             <span class="tape"></span><span class="pin tl"></span><span class="pin tr"></span>
@@ -711,6 +786,9 @@ select[data-tbm-src] {{ display: none !important; }}
   /* ── Données ──────────────────────────────────────────────── */
   {module_html_js}
 
+  /* Les fichiers d'exemple (samples/example_work_fr.json, samples/example_work_en.json), au format du fichier de travail : l'exemple de chaque groupe, dans la langue du shell */
+  const SUITE_EXAMPLES = {suite_examples_js};
+
   var APP_VERSION = '1.24.0';
   var KEY_LANG  = 'lang_v1';
   var KEY_THEME = 'theme_v1';
@@ -727,6 +805,11 @@ select[data-tbm-src] {{ display: none !important; }}
       ribbon: '// Suite de préparation opérationnelle',
       'grp.mc.sub': 'prépare la mission',
       'grp.fl.sub': 'prépare son vol',
+      'grp.ex.btn': 'Exemple',
+      'grp.ex.mc': "Charger l’exemple STEPPE WIND dans les outils du Mission Commander (Briefing Generator, Recon Station)",
+      'grp.ex.fl': "Charger l’exemple STEPPE WIND dans les outils du Flight Leader (Route Planner, Datacard Generator, Flight Configurator)",
+      'work.example.mc': 'Exemple STEPPE WIND chargé : Mission Commander',
+      'work.example.fl': 'Exemple STEPPE WIND chargé : Flight Leader',
       'work.open.btn': 'Ouvrir…',
       'work.open.tip': 'Ouvrir un travail de Mission Plan (JSON)',
       'work.save.btn': 'Sauvegarder',
@@ -767,6 +850,11 @@ select[data-tbm-src] {{ display: none !important; }}
       ribbon: '// Operational planning suite',
       'grp.mc.sub': 'prepares the mission',
       'grp.fl.sub': 'prepares the flight',
+      'grp.ex.btn': 'Example',
+      'grp.ex.mc': 'Load the STEPPE WIND example into the Mission Commander tools (Briefing Generator, Recon Station)',
+      'grp.ex.fl': 'Load the STEPPE WIND example into the Flight Leader tools (Route Planner, Datacard Generator, Flight Configurator)',
+      'work.example.mc': 'STEPPE WIND example loaded: Mission Commander',
+      'work.example.fl': 'STEPPE WIND example loaded: Flight Leader',
       'work.open.btn': 'Open…',
       'work.open.tip': 'Open a Mission Plan work file (JSON)',
       'work.save.btn': 'Save',
@@ -1456,6 +1544,10 @@ function tbmScrolled(e) {{
     document.getElementById('btn-work-open').addEventListener('click', function() {{ if (window.MP_WORK_OPEN) window.MP_WORK_OPEN(); }});
     document.getElementById('btn-work-save').addEventListener('click', function() {{ if (window.MP_WORK_SAVE) window.MP_WORK_SAVE(); }});
     document.getElementById('btn-fm').addEventListener('click', function() {{ openModule('fm'); }});
+    /* Un bouton Exemple par cadre : l'exemple se charge dans les outils du groupe */
+    ['mc', 'fl'].forEach(function(g) {{
+      document.getElementById('btn-ex-' + g).addEventListener('click', function() {{ if (window.MP_WORK_EXAMPLE) window.MP_WORK_EXAMPLE(g); }});
+    }});
     /* Ctrl+S / Cmd+S quand le clavier est dans le shell = Sauvegarder (rien sous une fenêtre ou une liste ouverte ; jamais « Enregistrer la page sous ») */
     document.addEventListener('keydown', function(e) {{
       if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey || (e.key !== 's' && e.key !== 'S')) return;
@@ -1494,8 +1586,13 @@ def main():
     print('\n[2/3] Encodage images tuiles…')
     tile_uris = build_tile_uris(MODULES)
 
+    check_example_tooltips()
+    suite_examples = read_suite_examples()
+    print("  [OK] l'infobulle du bouton Exemple des cinq outils est celle de leur groupe (FR, EN)")
+
     print(f'\n[3/3] Génération {OUT_FILE}…')
-    html = build_html(module_html_js, tile_uris)
+    suite_examples_js = json.dumps(suite_examples, ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
+    html = build_html(module_html_js, tile_uris, suite_examples_js)
     # La garde du module seul ne figure pas dans le shell lui-même (hors des modules embarqués)
     shell_text = html.replace(module_html_js, '', 1)
     shell_only_body = build_shell_only_block().replace(SHELL_ONLY_BEGIN, '').replace(SHELL_ONLY_END, '').strip()
@@ -1517,6 +1614,30 @@ def main():
     if suite_keys[:len(gs_keys)] != gs_keys or len(suite_keys) != len(gs_keys) + 2:
         raise SystemExit("[ERREUR] SUITE_KEYS n'est pas GS_CONTENT_KEYS (dans son ordre) suivi des deux clés du briefing et de Recon Station — build arrêté")
     print(f'  [OK] SUITE_KEYS = les {len(gs_keys)} clés de GS_CONTENT_KEYS (dans son ordre) + {len(suite_keys) - len(gs_keys)}')
+    # Les groupes de l'exemple : listes de clés disjointes, leur union avec les deux réglages est exactement SUITE_KEYS ; les outils des groupes sont ceux de EX_TOOLS
+    sg = re.search(r"const SUITE_GROUPS = \{(.*?)\n\};", shell_text, re.S)
+    if not sg:
+        raise SystemExit("[ERREUR] SUITE_GROUPS introuvable — build arrêté")
+    groups = {}
+    for g in ('mc', 'fl'):
+        m = re.search(g + r": \{ tools: \[([^\]]*)\], keys: \[([^\]]*)\] \}", sg.group(1))
+        if not m:
+            raise SystemExit(f"[ERREUR] SUITE_GROUPS : le groupe {g} est illisible — build arrêté")
+        groups[g] = {'tools': re.findall(r"'([^']+)'", m.group(1)), 'keys': re.findall(r"'([^']+)'", m.group(2))}
+        if sorted(groups[g]['tools']) != sorted(k for k, v in EX_TOOLS.items() if v == g):
+            raise SystemExit(f"[ERREUR] SUITE_GROUPS : les outils du groupe {g} ne sont pas ceux des boutons Exemple — build arrêté")
+    if set(groups['mc']['keys']) & set(groups['fl']['keys']):
+        raise SystemExit("[ERREUR] SUITE_GROUPS : les clés des deux groupes ne sont pas disjointes — build arrêté")
+    if len(groups['mc']['keys']) + len(groups['fl']['keys']) + 2 != len(suite_keys) or set(groups['mc']['keys']) | set(groups['fl']['keys']) | {'mp_units_v1', 'mp_nav_v1'} != set(suite_keys):
+        raise SystemExit("[ERREUR] SUITE_GROUPS : l'union des deux groupes et de mp_units_v1, mp_nav_v1 n'est pas exactement SUITE_KEYS — build arrêté")
+    check_suite_examples(suite_examples, {g: groups[g]['keys'] for g in groups})
+    print('  [OK] groupes de l\'exemple : clés disjointes, union avec mp_units_v1 et mp_nav_v1 = SUITE_KEYS ; fichiers d\'exemple : format, Syria, mêmes clés FR et EN, chaque clé dans un groupe, valeurs JSON, aucun FOOTHOLD')
+    # Les textes de l'exemple : ceux de la table, dans l'accueil (I18N) et dans le toast
+    for g in ('mc', 'fl'):
+        for lang in ('fr', 'en'):
+            for what, want in (('grp.ex.' + g, EX_TIP[g][lang]), ('work.example.' + g, EX_TOAST[g][lang])):
+                if shell_text.count(want) < 1:
+                    raise SystemExit(f"[ERREUR] le shell ne porte pas le texte {what} ({lang}) de la table — build arrêté")
     # Le toast et les feuilles communes : tels quels dans le shell ; le script de ui_block n'y entre pas
     for what, found in (('le script du toast (messages_block)', shell_text.count(build_messages_block()) == 1),
                         ('la feuille du toast (messages_block)', shell_text.count(build_messages_css()) == 1),

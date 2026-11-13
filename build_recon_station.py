@@ -1470,6 +1470,7 @@ RS_MENU_JS = r"""
 // Aucune écriture n'est différée : saveState écrit recon_state_v1 tout de suite, à chaque saisie : pas de MP_FLUSH.
 function workSave() { try { parent.MP_WORK_SAVE(); } catch (e) { console.warn('[RS] sauvegarde du travail indisponible', e); } }
 function workOpen() { try { parent.MP_WORK_OPEN(); } catch (e) { console.warn('[RS] ouverture du travail indisponible', e); } }
+function workExample() { try { window.parent.MP_WORK_EXAMPLE('mc'); } catch (e) { console.warn('[RS] exemple indisponible', e); } }       // l'exemple se charge dans les outils du groupe, par le shell
 
 // ── Le menu « Ouvrir » : un travail de Mission Plan, ou une image ──
 // Même composant et même aspect que les listes de la barre (tbm-panel dsp-panel, dsp-opt) et que le menu « Ouvrir » du Datacard Generator.
@@ -2547,7 +2548,7 @@ body {{
     <span class="tb-btn-label" data-i18n="toolbar.export">Exporter</span>
   </button>
   <div class="tb-sep tb-files-end" aria-hidden="true"></div>
-  <button type="button" class="tb-btn" id="btn-example" data-i18n-title="toolbar.example.tooltip" title="Ouvrir l'exemple" data-i18n-aria-label="toolbar.example.tooltip" aria-label="Ouvrir l'exemple">
+  <button type="button" class="tb-btn" id="btn-example" data-i18n-title="toolbar.example.tooltip" title="Charger l’exemple STEPPE WIND dans les outils du Mission Commander (Briefing Generator, Recon Station) ; le travail en cours du groupe se restaure en un geste" data-i18n-aria-label="toolbar.example.tooltip" aria-label="Charger l’exemple STEPPE WIND dans les outils du Mission Commander (Briefing Generator, Recon Station) ; le travail en cours du groupe se restaure en un geste">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
     <span class="tb-btn-label" data-i18n="toolbar.example">Exemple</span>
   </button>
@@ -2866,14 +2867,13 @@ const I18N = {{
     'toolbar.export': 'Exporter',
     'toolbar.export.tooltip': "Exporter l'image (PNG pleine résolution)",
     'toolbar.example': 'Exemple',
-    'toolbar.example.tooltip': "Ouvrir l'exemple",
+    'toolbar.example.tooltip': "Charger l’exemple STEPPE WIND dans les outils du Mission Commander (Briefing Generator, Recon Station) ; le travail en cours du groupe se restaure en un geste",
     'toolbar.reset': 'Effacer',
     'toolbar.reset.tooltip': 'Effacer',
     'clear.title': 'Effacer le Recon Station ?',
     'clear.text': 'L\u2019image, ses annotations, la l\u00e9gende et le bloc d\u2019informations seront effac\u00e9s. Le th\u00e8me et la configuration Wing restent.',
     'clear.verb': 'Effacer',
     'clear.toast': 'Recon Station effac\u00e9.',
-    'toast.example-loaded': 'Exemple chargé ✓',
     'msg.exampleUnavailable': '⚠ Exemple indisponible.',
     'editor.image.credit': 'Image : USDA NAIP, domaine public',
     'theme.cw-nato': 'Cold War OTAN',
@@ -3038,14 +3038,13 @@ const I18N = {{
     'toolbar.export': 'Export',
     'toolbar.export.tooltip': 'Export the image (full-resolution PNG)',
     'toolbar.example': 'Example',
-    'toolbar.example.tooltip': 'Open the example',
+    'toolbar.example.tooltip': 'Load the STEPPE WIND example into the Mission Commander tools (Briefing Generator, Recon Station); the group’s work in progress comes back in one tap',
     'toolbar.reset': 'Clear',
     'toolbar.reset.tooltip': 'Clear',
     'clear.title': 'Clear the Recon Station?',
     'clear.text': 'The image, its marks, the legend and the information block will be cleared. The theme and the wing configuration stay.',
     'clear.verb': 'Clear',
     'clear.toast': 'Recon Station cleared.',
-    'toast.example-loaded': 'Example loaded ✓',
     'msg.exampleUnavailable': '⚠ Example unavailable.',
     'editor.image.credit': 'Image: USDA NAIP, public domain',
     'theme.cw-nato': 'Cold War NATO',
@@ -3412,7 +3411,7 @@ function restoreState() {{
     // L'image de l'exemple : l'image source n'est jamais enregistrée ; un état qui porte exampleImage: true la recharge (la même image, la même zone, le même crédit)
     if (saved.exampleImage === true) {{
       STATE.exampleImage = true;
-      if (!SOURCE_READY) rsExampleImage(false);
+      if (!SOURCE_READY) rsExampleImage();
     }} else delete STATE.exampleImage;
     return true;
   }} catch(e) {{ return false; }}
@@ -3498,22 +3497,17 @@ function loadImageFile(file) {{
   reader.readAsDataURL(file);
 }}
 
-// ── Exemple : la photo, ses repères, ses formes, sa loupe et son bloc info (lot mp-exemples-demarrer) ──
-// La composition de la capture du README, en coordonnées relatives à l'image (fractions de la largeur et de la hauteur).
-// L'image est celle du dépôt (samples/rs_example_naip.jpg, USDA NAIP, domaine public) ; le modèle de recon_state_v1 ne change pas.
+// ── Exemple : la photo ──
+// L'exemple de la suite se charge par le shell (le fichier d'exemple du groupe Mission Commander) : la composition (repères, formes, loupe, bloc d'informations) est dans recon_state_v1, qui porte exampleImage: true.
+// L'image est celle du dépôt (samples/rs_example_naip.jpg, USDA NAIP, domaine public) : elle n'est jamais enregistrée, l'état la nomme ; le schéma de recon_state_v1 ne change pas.
 const RS_EXAMPLE_IMG = 'data:image/jpeg;base64,{RS_EXAMPLE_IMG_B64}';
-const RS_EXAMPLE_TEXT = {{
-  fr: {{ target: 'DÉPÔT LOGISTIQUE 7', class_: 'CONFIDENTIEL', legend: ['STOCKAGE POL', 'PARC DE RÉSERVOIRS', 'PARC DE VÉHICULES'] }},
-  en: {{ target: 'LOGISTICS DEPOT 7', class_: 'CONFIDENTIAL', legend: ['POL STORAGE', 'TANK FARM', 'VEHICLE PARK'] }}
-}};
-
-// La photo de l'exemple dans la zone d'image, quand l'état porte exampleImage: true (au démarrage, à la relecture de l'état) ou quand l'exemple se charge (force).
-async function rsExampleImage(force) {{
+// La photo de l'exemple dans la zone d'image, quand l'état porte exampleImage: true (au démarrage, à la relecture de l'état).
+async function rsExampleImage() {{
   const img = new Image();
   try {{
     await new Promise((ok, ko) => {{ img.onload = ok; img.onerror = ko; img.src = RS_EXAMPLE_IMG; }});
   }} catch (e) {{ console.warn('[RS] exemple indisponible', e); showToast(t('msg.exampleUnavailable'), {{ type: 'err' }}); return false; }}
-  if (!force && (!STATE.exampleImage || SOURCE_READY)) return false;     // l'état a changé pendant le chargement : une autre image, ou plus d'image d'exemple
+  if (!STATE.exampleImage || SOURCE_READY) return false;     // l'état a changé pendant le chargement : une autre image, ou plus d'image d'exemple
   SOURCE_IMG   = img;
   SOURCE_READY = true;
   document.getElementById('drop-zone').classList.add('has-image');
@@ -3527,23 +3521,6 @@ async function rsExampleImage(force) {{
   return true;
 }}
 
-function exampleHasWork() {{
-  collectState();
-  const f = STATE.fields;
-  return SOURCE_READY || (STATE.annotations || []).length > 0 ||
-    Object.keys(f).some(k => String(f[k] || '').trim() !== '') ||
-    (STATE.cartouche || []).some(e => String(e.label || '').trim() !== '');
-}}
-
-// L'exemple sur un travail en cours : on le charge sans question, l'ancien est gardé et « Restaurer » le remet (bloc d'interface commun).
-// La copie : l'état (STATE, logos et formes compris), l'image source en mémoire et ce que la zone d'image dit ; la seule clé écrite est recon_state_v1.
-function rsMem() {{
-  collectState();
-  return {{
-    state: structuredClone(STATE), img: SOURCE_IMG, ready: SOURCE_READY,
-    dz: document.getElementById('drop-zone-text').textContent, credit: !document.getElementById('img-credit').hidden
-  }};
-}}
 function rsBack(m) {{
   STATE = structuredClone(m.state);
   SOURCE_IMG = m.img; SOURCE_READY = m.ready;
@@ -3581,56 +3558,6 @@ async function rsReset() {{
   rsBriefingFill();
   showToast(t('clear.toast'), {{ type: 'ok' }});
 }}
-async function loadExample() {{
-  // sans travail en cours : ni question ni « Restaurer »
-  if (!exampleHasWork()) return loadExampleNow(false);
-  return replaceWithRestore({{ keys: [KEY_STATE], mem: rsMem, back: rsBack, msg: t('toast.example-loaded'), run: () => loadExampleNow(true) }});
-}}
-async function loadExampleNow(quiet) {{
-  const tx = RS_EXAMPLE_TEXT[CURRENT_LANG === 'en' ? 'en' : 'fr'];      // la langue de l'interface au moment du clic
-  if (!(await rsExampleImage(true))) return false;
-  STATE.exampleImage = true;                                           // l'état porte l'image : saveState l'écrit, restoreState la recharge
-
-  STATE.fields = {{
-    target: tx.target, coords: 'N35°08.6 E032°49.5', crs: '118°', alt: '',
-    msn: 'STEPPE WIND M3', sensor: 'KS-87', dtg: '22.03.1989', crew: 'RECCE 11', class_: tx.class_
-  }};
-  STATE.cartouche = [
-    {{ label: tx.legend[0], x: 0.7805, y: 0.3995, point: true, target: {{ x: 0.7108, y: 0.4400 }} }},
-    {{ label: tx.legend[1], x: 0.0993, y: 0.2128, point: true }},
-    {{ label: tx.legend[2], x: 0.3101, y: 0.6997, point: true, target: {{ x: 0.3902, y: 0.7793 }} }}
-  ];
-  STATE.annotations = [
-    {{ id: uid(), type: 'rect', x: 0.455, y: 0.425, w: 0.255, h: 0.095, angle: 0, color: 'red' }},
-    {{ id: uid(), type: 'ellipse', cx: 0.4495, cy: 0.815, rx: 0.07, ry: 0.0587, color: 'red' }},
-    {{ id: uid(), type: 'inset', src: {{ x: 0.5, y: 0.4025, w: 0.12, h: 0.09 }}, box: {{ x: 0.02, y: 0.03, w: 0.3, h: 0.225 }}, color: 'white', label: '' }}
-  ];
-  STATE.logoId = 'none';
-  STATE.contrast = 105;
-  STATE.logoMode = 'gray';
-  STATE.textColor = '#000';
-  STATE.markerColor = 'red';
-  STATE.fxVignette = 0; STATE.fxGrain = 0; STATE.fxScanlines = 0;
-  STATE.sensorMode = 'eo';
-  STATE.classification = {{ enabled: false, level: 'unclassified' }};
-
-  applyStateToForm();
-  renderLogoGrid(); renderLogoMode(); renderTextColor(); renderMarkerColor();
-  renderCartoucheEditor(); renderInsetEditor(); renderShapesEditor(); renderLabelEditor();
-  const ce = document.getElementById('classif-enable'), cl = document.getElementById('classif-level');
-  if (ce) ce.checked = false;
-  if (cl) cl.value = STATE.classification.level;
-  rsdSetTool('select');
-  rsdDeselect();
-  saveState();
-  schedulePreview();
-  if (!quiet) showToast(t('toast.example-loaded'), {{ type: 'ok' }});
-  if (window.matchMedia('(max-width: 1100px)').matches) {{
-    const tab = document.querySelector('.tab-btn[data-tab="preview"]');   // petit écran : on montre l'aperçu
-    if (tab) tab.click();
-  }}
-}}
-
 // ── Logo loading ───────────────────────────────────────────────
 const LOGO_MAX_SIZE = 512;   // côté long — préserve les exports haute résolution
 
@@ -4867,7 +4794,7 @@ function initEvents() {{
   }});
 
   // Exemple
-  document.getElementById('btn-example').addEventListener('click', loadExample);
+  document.getElementById('btn-example').addEventListener('click', workExample);
   document.getElementById('btn-reset').addEventListener('click', rsReset);
 
   // Drop zone

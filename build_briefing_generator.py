@@ -2866,7 +2866,7 @@ __CSS__
     <i class="dsp-dot" id="dsp-dot" hidden></i>
   </button>
   <div class="tb-sep"></div>
-  <button class="tb-btn" id="btn-example" data-i18n-title="toolbar.example.tooltip" title="Ouvrir le briefing d'exemple (remplace le briefing en cours)">
+  <button class="tb-btn" id="btn-example" data-i18n-title="toolbar.example.tooltip" title="Charger l’exemple STEPPE WIND dans les outils du Mission Commander (Briefing Generator, Recon Station) ; le travail en cours du groupe se restaure en un geste" data-i18n-aria-label="toolbar.example.tooltip" aria-label="Charger l’exemple STEPPE WIND dans les outils du Mission Commander (Briefing Generator, Recon Station) ; le travail en cours du groupe se restaure en un geste">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
     <span class="tb-btn-label" data-i18n="toolbar.example">Exemple</span>
   </button>
@@ -3632,8 +3632,7 @@ const I18N = {
     'dsp.format.note':            'Standard : une page de mission et des pages de photos. Avancé : dix sections.',
     'toolbar.example':            'Exemple',
     'toolbar.subtitle':           '░ BRIEFING DE MISSION',
-    'toolbar.example.tooltip':    'Ouvrir le briefing d\'exemple (remplace le briefing en cours)',
-    'toast.exampleLoaded':        'Exemple chargé ✓',
+    'toolbar.example.tooltip':    'Charger l’exemple STEPPE WIND dans les outils du Mission Commander (Briefing Generator, Recon Station) ; le travail en cours du groupe se restaure en un geste',
     // ── Carte du Route Planner (v2.5.0) ──
     'rpmap.title':        'Placer la carte du Route Planner',
     'rpmap.simpleMap':    'Carte — page carte · menaces · cibles',
@@ -4043,8 +4042,7 @@ const I18N = {
     'dsp.format.note':            'Standard: one mission page plus photo pages. Advanced: ten sections.',
     'toolbar.example':            'Example',
     'toolbar.subtitle':           '░ MISSION BRIEFING',
-    'toolbar.example.tooltip':    'Open the example briefing (replaces the current one)',
-    'toast.exampleLoaded':        'Example loaded ✓',
+    'toolbar.example.tooltip':    'Load the STEPPE WIND example into the Mission Commander tools (Briefing Generator, Recon Station); the group’s work in progress comes back in one tap',
     // ── Route Planner map (v2.5.0) ──
     'rpmap.title':        'Place the Route Planner map',
     'rpmap.simpleMap':    'Map — map · threats · targets page',
@@ -4256,8 +4254,7 @@ function getAllAircraft() {
   return Array.from(set);
 }
 
-/* DEFAULTS = briefing VIDE (v2.3.0). Le contenu de démonstration est EXAMPLE_BRIEFING
-   (bouton « Exemple »). meta.format : 'simple' (brief simplifié) | 'full' (brief complet). */
+/* DEFAULTS = briefing VIDE (v2.3.0). Le contenu de démonstration est l'exemple de la suite (le bouton « Exemple » le charge par le shell). meta.format : 'simple' (brief simplifié) | 'full' (brief complet). */
 const DEFAULTS = {
   meta: {
     operation: '',
@@ -4282,299 +4279,6 @@ const DEFAULTS = {
   annexes: [],
   roster: { groups: [] },
   photos: []   // brief simplifié : { title, img, caption }
-};
-
-/* Briefing d'exemple (ancienne démonstration). Part en Standard. */
-const EXAMPLE_BRIEFING = {
-  meta: {
-    operation: 'STEPPE WIND',
-    mission: 'M3',
-    date: '1989-03-22',
-    time: '08:00',
-    format: 'simple',
-    classification: 'confidential',
-    docRef: 'SW-M3-1989'
-  },
-  cover: {
-    title: 'OPERATION STEPPE WIND',
-    narrative: "Les forces soviétiques sont à l'origine du déclenchement d'une guerre civile en Syrie et ont assisté les troupes rebelles pour réussir un coup d'État. Une fois le gouvernement tombé, les forces dissidentes ont envahi l'île de Chypre et capturé la quasi-totalité de l'île, sauf la base OTAN d'AKROTIRI.\n\nLes forces de l'OTAN opèrent un déploiement majeur afin d'assister le gouvernement légitime chypriote à reprendre le contrôle total de l'île. Il n'est pas exclu une opération aéro-navale majeure pour « libérer » la Syrie.",
-    mapImage: ''
-  },
-  sitac: {
-    date: '22-03-1989',
-    points: [
-      "La majorité de l'île reste aux mains de l'ennemi",
-      "L'aéroport de PAPHOS a été capturé et ses défenses renforcées",
-      "La FARP POLIS a été capturée mais ses défenses sont fragiles",
-      "L'adversaire utilise l'aéroport d'ERKAN pour ses contre-offensives (CAP/CAS/SEAD)",
-      "Un site de missiles SILKWORM empêche la flotte OTAN de se rapprocher",
-      "Le HQ a renforcé POLIS et AKROTIRI avec une unité SAM ROLAND chacune"
-    ],
-    metar: 'LCRA 221000Z 18002KT 9999 SCT082 20/15 Q1013',
-    mapImage: ''
-  },
-  mission: {
-    objectives: [
-      "Apporter du ravitaillement à POLIS",
-      "Renforcer les défenses de POLIS — Défendre la FARP",
-      "Reconnaître et capturer la zone de KARAVOSTASI",
-      "Missions secondaires possibles (CSAR, S&D)"
-    ],
-    farp: [
-      { icao:'LCRA', name:'Akrotiri', isFarp:false, rwy:'10', atc:true  },
-      { icao:'LCPH', name:'Paphos',   isFarp:false, rwy:'11', atc:true  }
-    ],
-    threats: {
-      tanks: 'T-55 à T-80',
-      apc: 'BRDM-2, BMP-1, BMP-2, BTR-80',
-      aaa: 'ZU-57, ZU-23, ZSU-24, S-60, KS-19',
-      sam: 'Manpads, SA-8, SA-9, SA-13, Avenger',
-      note: 'Pas de SAM longue portée sur Chypre'
-    }
-  },
-  radioPlan: {
-    items: [
-      { id: 'atc',     label: 'ATC',     frequency: '270.00', modulation: 'AM' },
-      { id: 'mission', label: 'MISSION', frequency: '265.00', modulation: 'AM' },
-      { id: 'grp1',    label: 'Groupe 1', frequency: '127.50', modulation: 'AM' },
-      { id: 'grp2',    label: 'Groupe 2', frequency: '135.00', modulation: 'AM' },
-      { id: 'fm1',     label: 'Tactique FM', frequency: '21.50', modulation: 'FM' }
-    ],
-    aircraftPlans: [
-      {
-        aircraft: 'Mi-24P',
-        radios: [
-          {
-            name: 'R-863',
-            channels: [
-              { channel: 0, mode: 'item', itemId: 'grp1' },
-              { channel: 1, mode: 'item', itemId: 'grp2' },
-              { channel: 3, mode: 'item', itemId: 'mission' },
-              { channel: 7, mode: 'item', itemId: 'atc' }
-            ]
-          },
-          {
-            name: 'R-828',
-            channels: [
-              { channel: 0, mode: 'item', itemId: 'fm1' }
-            ]
-          }
-        ],
-        image: ''
-      },
-      {
-        aircraft: 'Mi-8',
-        radios: [
-          {
-            name: 'R-863',
-            channels: [
-              { channel: 4, mode: 'item', itemId: 'mission' },
-              { channel: 8, mode: 'item', itemId: 'atc' }
-            ]
-          },
-          {
-            name: 'R-828',
-            channels: [
-              { channel: 1, mode: 'item', itemId: 'fm1' }
-            ]
-          }
-        ],
-        image: ''
-      }
-    ]
-  },
-  phases: [
-    {
-      title: 'Ravitaillement POLIS',
-      objective: "Ravitailler POLIS en armement pour les Mi-24P",
-      execution: [
-        {text: "TO PAPHOS — Ravitaillement à POLIS pour Mission #2", subtasks: []},
-        {text: "Caisses ATAKA + Roquettes", subtasks: []}
-      ],
-      flightPlan: 'CAP 352° / Distance 34 Km',
-      threatLevel: 'low', notes: '', images: [],
-      squadron: '', aircraft: 'Mi-8', subgroup: 'ANTON'
-    },
-    {
-      title: 'Défense POLIS — Mi-24P',
-      objective: "Les renseignements font état d'un convoi blindé au départ de KARAVOSTASI pour reprendre POLIS",
-      execution: [
-        {text: "TO POLIS", subtasks: []},
-        {text: "Suivre le chemin côtier de POLIS jusque KARAVOSTASI", subtasks: []}
-      ],
-      flightPlan: "Chemin côtier jusqu'à l'IP Mission #3",
-      threatLevel: 'high', notes: 'Route estimée du convoi : voir carte phase 2', images: [],
-      squadron: '', aircraft: 'Mi-24P', subgroup: 'CAESAR'
-    },
-    {
-      title: 'RECO + ASSAUT KARAVOSTASI',
-      objective: "Préparer la capture de la zone par les troupes aéroportées. Destruction des défenses SAM/AAA et des éléments blindés",
-      execution: [
-        {text: "TO POLIS — Retour selon SITAC", subtasks: []},
-        {text: "Rassemblement à l'IP", subtasks: []},
-        {text: "Cibles prioritaires : SAM / AAA", subtasks: ["SA-13", "SA-9", "Manpads"]},
-        {text: "Cibles secondaires : APC / MBT", subtasks: []}
-      ],
-      flightPlan: 'IP : 59° / 32 Km — TGT : 118° / 9 Km',
-      threatLevel: 'high', notes: "Repère : petite île + rivière à 8/9 Km de KARAVOSTASI. Axe d'assaut le long de la côte.",
-      images: [], squadron: '', aircraft: 'Mi-24P', subgroup: ''
-    }
-  ],
-  charts: [
-    { name: 'AKROTIRI (LCRA) — Piste en service : 10', img: '' },
-    { name: 'PAPHOS (LCPH) — Piste en service : 11', img: '' }
-  ],
-  annexes: [],
-  roster: {
-    groups: []   // { missionKey: 'SQN-01||CAESAR||Mi-8', pilots: [{name,aircraft,callsign}] }
-  }
-};
-
-/* Même briefing d'exemple, en anglais : structure, identifiants et valeurs numériques identiques à EXAMPLE_BRIEFING
-   (lot mp-exemples-demarrer). Le bouton « Exemple » charge l'un ou l'autre selon la langue de l'interface au moment du clic. */
-const EXAMPLE_BRIEFING_EN = {
-  meta: {
-    operation: 'STEPPE WIND',
-    mission: 'M3',
-    date: '1989-03-22',
-    time: '08:00',
-    format: 'simple',
-    classification: 'confidential',
-    docRef: 'SW-M3-1989'
-  },
-  cover: {
-    title: 'OPERATION STEPPE WIND',
-    narrative: "Soviet forces instigated the outbreak of a civil war in Syria and helped the rebel troops carry out a coup. Once the government had fallen, the dissident forces invaded the island of Cyprus and captured almost all of it, except the NATO base of AKROTIRI.\n\nNATO forces are mounting a major deployment to help the legitimate Cypriot government regain full control of the island. A major air-naval operation to “free” Syria cannot be ruled out.",
-    mapImage: ''
-  },
-  sitac: {
-    date: '22-03-1989',
-    points: [
-      "Most of the island remains in enemy hands",
-      "PAPHOS airport has been captured and its defences reinforced",
-      "POLIS FARP has been captured but its defences are weak",
-      "The enemy is using ERKAN airport for its counter-offensives (CAP/CAS/SEAD)",
-      "A SILKWORM missile site keeps the NATO fleet from moving closer",
-      "HQ has reinforced POLIS and AKROTIRI with one SAM ROLAND unit each"
-    ],
-    metar: 'LCRA 221000Z 18002KT 9999 SCT082 20/15 Q1013',
-    mapImage: ''
-  },
-  mission: {
-    objectives: [
-      "Bring supplies to POLIS",
-      "Reinforce POLIS defences — Defend the FARP",
-      "Reconnoitre and capture the KARAVOSTASI area",
-      "Possible secondary missions (CSAR, S&D)"
-    ],
-    farp: [
-      { icao:'LCRA', name:'Akrotiri', isFarp:false, rwy:'10', atc:true  },
-      { icao:'LCPH', name:'Paphos',   isFarp:false, rwy:'11', atc:true  }
-    ],
-    threats: {
-      tanks: 'T-55 to T-80',
-      apc: 'BRDM-2, BMP-1, BMP-2, BTR-80',
-      aaa: 'ZU-57, ZU-23, ZSU-24, S-60, KS-19',
-      sam: 'Manpads, SA-8, SA-9, SA-13, Avenger',
-      note: 'No long-range SAM on Cyprus'
-    }
-  },
-  radioPlan: {
-    items: [
-      { id: 'atc',     label: 'ATC',     frequency: '270.00', modulation: 'AM' },
-      { id: 'mission', label: 'MISSION', frequency: '265.00', modulation: 'AM' },
-      { id: 'grp1',    label: 'Group 1', frequency: '127.50', modulation: 'AM' },
-      { id: 'grp2',    label: 'Group 2', frequency: '135.00', modulation: 'AM' },
-      { id: 'fm1',     label: 'Tactical FM', frequency: '21.50', modulation: 'FM' }
-    ],
-    aircraftPlans: [
-      {
-        aircraft: 'Mi-24P',
-        radios: [
-          {
-            name: 'R-863',
-            channels: [
-              { channel: 0, mode: 'item', itemId: 'grp1' },
-              { channel: 1, mode: 'item', itemId: 'grp2' },
-              { channel: 3, mode: 'item', itemId: 'mission' },
-              { channel: 7, mode: 'item', itemId: 'atc' }
-            ]
-          },
-          {
-            name: 'R-828',
-            channels: [
-              { channel: 0, mode: 'item', itemId: 'fm1' }
-            ]
-          }
-        ],
-        image: ''
-      },
-      {
-        aircraft: 'Mi-8',
-        radios: [
-          {
-            name: 'R-863',
-            channels: [
-              { channel: 4, mode: 'item', itemId: 'mission' },
-              { channel: 8, mode: 'item', itemId: 'atc' }
-            ]
-          },
-          {
-            name: 'R-828',
-            channels: [
-              { channel: 1, mode: 'item', itemId: 'fm1' }
-            ]
-          }
-        ],
-        image: ''
-      }
-    ]
-  },
-  phases: [
-    {
-      title: 'Resupply POLIS',
-      objective: "Resupply POLIS with armament for the Mi-24Ps",
-      execution: [
-        {text: "TO PAPHOS — Resupply to POLIS for Mission #2", subtasks: []},
-        {text: "ATAKA crates + Rockets", subtasks: []}
-      ],
-      flightPlan: 'HDG 352° / Distance 34 Km',
-      threatLevel: 'low', notes: '', images: [],
-      squadron: '', aircraft: 'Mi-8', subgroup: 'ANTON'
-    },
-    {
-      title: 'POLIS Defence — Mi-24P',
-      objective: "Intelligence reports an armoured convoy leaving KARAVOSTASI to retake POLIS",
-      execution: [
-        {text: "TO POLIS", subtasks: []},
-        {text: "Follow the coastal route from POLIS to KARAVOSTASI", subtasks: []}
-      ],
-      flightPlan: "Coastal route to the Mission #3 IP",
-      threatLevel: 'high', notes: 'Estimated convoy route: see phase 2 map', images: [],
-      squadron: '', aircraft: 'Mi-24P', subgroup: 'CAESAR'
-    },
-    {
-      title: 'RECON + ASSAULT KARAVOSTASI',
-      objective: "Prepare the area for seizure by airborne troops. Destroy SAM/AAA defences and armoured elements",
-      execution: [
-        {text: "TO POLIS — Return as per SITAC", subtasks: []},
-        {text: "Join up at the IP", subtasks: []},
-        {text: "Priority targets: SAM / AAA", subtasks: ["SA-13", "SA-9", "Manpads"]},
-        {text: "Secondary targets: APC / MBT", subtasks: []}
-      ],
-      flightPlan: 'IP: 59° / 32 Km — TGT: 118° / 9 Km',
-      threatLevel: 'high', notes: "Landmark: small island + river 8/9 Km from KARAVOSTASI. Assault axis along the coast.",
-      images: [], squadron: '', aircraft: 'Mi-24P', subgroup: ''
-    }
-  ],
-  charts: [
-    { name: 'AKROTIRI (LCRA) — Active runway: 10', img: '' },
-    { name: 'PAPHOS (LCPH) — Active runway: 11', img: '' }
-  ],
-  annexes: [],
-  roster: {
-    groups: []
-  }
 };
 
 let state;
@@ -7996,6 +7700,7 @@ const WORK_FORMAT = 'dcs-mission-plan-work-v1';
 function workSave() { try { parent.MP_WORK_SAVE(); } catch (e) { console.warn('[BG] sauvegarde du travail indisponible', e); } }
 function workOpen() { try { parent.MP_WORK_OPEN(); } catch (e) { console.warn('[BG] ouverture du travail indisponible', e); } }
 function workHand(text, name) { try { parent.MP_WORK_OPEN_TEXT(text, name); } catch (e) { console.warn('[BG] ouverture du travail indisponible', e); } }
+function workExample() { try { window.parent.MP_WORK_EXAMPLE('mc'); } catch (e) { console.warn('[BG] exemple indisponible', e); } }       // l'exemple se charge dans les outils du groupe, par le shell
 /* Le shell écrit le travail de toute la suite : il demande d'abord à chaque module d'écrire ce qu'il garde en attente (ici, le briefing dont l'écriture suit le prochain dessin de l'aperçu) */
 window.MP_FLUSH = function () { if (previewTimer) { cancelAnimationFrame(previewTimer); previewTimer = null; persistState(); } };
 
@@ -8394,21 +8099,6 @@ function setFormat(fmt) {
     renderRoster();
   }
   schedulePreview();
-}
-
-function loadExample() {
-  /* « Remplacer » : le briefing d'avant est gardé pour « Restaurer » (le stockage du module et l'état en mémoire) */
-  replaceWithRestore({ keys: [STORAGE_KEY], mem: () => ({ state: structuredClone(state), idx: currentPhaseIdx }),
-    back: m => { state = m.state; currentPhaseIdx = m.idx; renderEditorBindings(); schedulePreview(); persistState(); },
-    msg: t('toast.exampleLoaded'), run: loadExampleNow });
-}
-function loadExampleNow() {
-  state = mergeDeep(structuredClone(DEFAULTS), structuredClone(CURRENT_LANG === 'en' ? EXAMPLE_BRIEFING_EN : EXAMPLE_BRIEFING));   // la langue de l'interface au moment du clic
-  state.meta.format = 'simple';
-  currentPhaseIdx = 0;
-  renderEditorBindings();
-  schedulePreview();
-  persistState();
 }
 
 function newBlankFlight() {
@@ -8840,7 +8530,7 @@ function addTarget() {
 }
 
 function bindSimpleEvents() {
-  document.getElementById('btn-example').addEventListener('click', loadExample);
+  document.getElementById('btn-example').addEventListener('click', workExample);
   document.getElementById('s-flight-add').addEventListener('click', () => {
     if (!Array.isArray(state.phases)) state.phases = [];
     state.phases.push(newBlankFlight());

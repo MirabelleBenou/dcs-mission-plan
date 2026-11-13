@@ -127,20 +127,6 @@ for _th, _list in TW['theatres'].items():
         if not (isinstance(_a, list) and len(_a) == 3 and isinstance(_a[0], str) and _is_num(_a[1]) and _is_num(_a[2])):
             raise SystemExit(f"[ERREUR] towns.json : entrée illisible dans {_th} : {_a!r}")
 
-# Contenu du bouton « Exemple » : document au format dcs-route-v1, copié tel quel. La route d'exemple est celle de la suite : samples/example_route_fr.json et samples/example_route_en.json
-# (la langue de l'interface au moment du clic), lus aussi par le build du Flight Configurator, dont l'exemple suit la même route.
-def _read_example_route(lang):
-    path = os.path.join(HERE, 'samples', 'example_route_%s.json' % lang)
-    if not os.path.isfile(path):
-        raise SystemExit(f"[ERREUR] Entrée manquante : {path} (samples/example_route_{lang}.json attendu)")
-    with open(path, encoding='utf-8', newline='') as f:
-        return f.read()
-
-
-EXAMPLE_ROUTE_JSON = _read_example_route('fr')
-# Même route, en anglais : structure, identifiants et valeurs numériques identiques à la route française.
-EXAMPLE_ROUTE_JSON_EN = _read_example_route('en')
-
 # ============================================================
 # CSS
 # ============================================================
@@ -1164,7 +1150,7 @@ __CSS__
   <span class="tb-label" data-i18n="tb.theatre">Théâtre</span>
   <select class="tb-sel" id="theatre" data-i18n-aria-label="tb.theatre" aria-label="Théâtre"></select>
   <span class="tb-sep"></span>
-  <button type="button" class="tb-btn" id="btn-example" data-i18n-title="tb.example.tip" title="Ouvrir l'exemple" data-i18n-aria-label="tb.example.tip" aria-label="Ouvrir l'exemple">
+  <button type="button" class="tb-btn" id="btn-example" data-i18n-title="tb.example.tip" title="Charger l’exemple STEPPE WIND dans les outils du Flight Leader (Route Planner, Datacard Generator, Flight Configurator) ; le travail en cours du groupe se restaure en un geste" data-i18n-aria-label="tb.example.tip" aria-label="Charger l’exemple STEPPE WIND dans les outils du Flight Leader (Route Planner, Datacard Generator, Flight Configurator) ; le travail en cours du groupe se restaure en un geste">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
     <span class="tb-btn-label solo" data-i18n="tb.example">Exemple</span></button>
   <button type="button" class="tb-btn danger" id="btn-clear" data-i18n-title="tb.clear.tip" title="Effacer…" data-i18n-aria-label="tb.clear.tip" aria-label="Effacer…">
@@ -1996,10 +1982,6 @@ const TOPO_URL = 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png';
 const SAT_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
 const PLACES_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}';
 
-/* Contenu du bouton « Exemple » (document dcs-route-v1) */
-const EXAMPLE_ROUTE = __EXAMPLE_ROUTE__;
-const EXAMPLE_ROUTE_EN = __EXAMPLE_ROUTE_EN__;
-
 /* ============= i18n FR / EN ============= */
 const I18N = {
   fr: {
@@ -2085,7 +2067,7 @@ const I18N = {
     'fn.label': 'Nom du fichier',
     'exn.title': 'Exporter la carte',
     'tb.example': 'Exemple',
-    'tb.example.tip': 'Ouvrir l\'exemple',
+    'tb.example.tip': 'Charger l’exemple STEPPE WIND dans les outils du Flight Leader (Route Planner, Datacard Generator, Flight Configurator) ; le travail en cours du groupe se restaure en un geste',
     'tb.clear': 'Effacer',
     'tb.clear.tip': 'Effacer…',
     'clr.title': 'Effacer',
@@ -2346,7 +2328,6 @@ const I18N = {
     'toast.openedDropped': 'Route ouverte ✓ · {n} points écartés (30 au plus)',
     'zoom.in': 'Zoom avant',
     'zoom.out': 'Zoom arrière',
-    'toast.exampleLoaded': 'Exemple chargé ✓',
     'err.cf': '⚠ Fichier CombatFlite non reconnu.',
     'err.cfBrowser': '⚠ Ce navigateur ne sait pas lire les fichiers CombatFlite.',
     'err.layersQuota': '⚠ Calques trop lourds pour le navigateur : ils ne seront pas gardés après rechargement.',
@@ -2608,7 +2589,7 @@ const I18N = {
     'fn.label': 'File name',
     'exn.title': 'Export the map',
     'tb.example': 'Example',
-    'tb.example.tip': 'Open the example',
+    'tb.example.tip': 'Load the STEPPE WIND example into the Flight Leader tools (Route Planner, Datacard Generator, Flight Configurator); the group’s work in progress comes back in one tap',
     'tb.clear': 'Clear',
     'tb.clear.tip': 'Clear…',
     'clr.title': 'Clear',
@@ -2869,7 +2850,6 @@ const I18N = {
     'toast.openedDropped': 'Route opened ✓ · {n} waypoints dropped (30 at most)',
     'zoom.in': 'Zoom in',
     'zoom.out': 'Zoom out',
-    'toast.exampleLoaded': 'Example loaded ✓',
     'err.cf': '⚠ Unrecognised CombatFlite file.',
     'err.cfBrowser': '⚠ This browser cannot read CombatFlite files.',
     'err.layersQuota': '⚠ Layers too large for the browser: they will not be kept after reload.',
@@ -7799,7 +7779,6 @@ function openRouteFile(file) {
   }, () => rejectMsg('rej.json'));
 }
 
-/* « Exemple » remplace toutes les routes par la route d'exemple */
 /* Ce que « Remplacer » garde pour « Restaurer » : toutes les clés de contenu des outils du Flight Leader (GS_CONTENT_KEYS, bloc des groupes partagés)
    et l'état en mémoire (la route, le jeu de routes, les calques) */
 function rpMem() { syncActive(); return { S: JSON.parse(JSON.stringify(S)), RSET: JSON.parse(JSON.stringify(RSET)), layers: JSON.parse(JSON.stringify(CF_LAYERS)) }; }
@@ -7815,29 +7794,6 @@ function rpBack(m) {
   frameRoute();
   RLD.base = rpSnap();
 }
-function loadExample() {
-  replaceWithRestore({ keys: GS_CONTENT_KEYS, mem: rpMem, back: rpBack, msg: () => t('toast.exampleLoaded') + rpDetachedText(), run: () => gsSettled(loadExampleNow()) });
-}
-function loadExampleNow() {
-  const ex = parseRoute(JSON.parse(JSON.stringify(CURRENT_LANG === 'en' ? EXAMPLE_ROUTE_EN : EXAMPLE_ROUTE))).route;   // la langue de l'interface au moment du clic
-  const ku = mpUnitsRead();
-  if (ku) ex.units = { distance: ku.distance, altitude: ku.altitude };       // l'exemple s'affiche dans les unités partagées et n'écrit pas la clé
-  { const kn = mpNavRead(); if (kn) ex.navDisplay = kn; }       // ... et dans les réglages de cap communs
-  syncActive();
-  const before = rpRids();
-  if (ex.theatre === S.theatre) { RSET.routes = [blankRoute()]; RSET.active = 0; S.name = ''; S.points = RSET.routes[0].points; }       // le travail en cours (les routes de ce théâtre) est remplacé, comme avant
-  else {
-    /* un autre théâtre : les routes du théâtre courant se masquent (gardées), l'exemple entre dans la route active vide de son théâtre, sinon il s'y ajoute (au plafond : il remplace la route active) */
-    rsetSwitch(ex.theatre);
-    if (S.points.length) {
-      if (RSET.routes.length < MAX_ROUTES) { const nb = blankRoute(); nb.theatre = ex.theatre; RSET.routes.push(nb); RSET.active = RSET.routes.length - 1; S.name = ''; S.points = nb.points; }
-      else { RSET.routes[RSET.active] = Object.assign(blankRoute(), { theatre: ex.theatre }); S.name = ''; S.points = RSET.routes[RSET.active].points; }
-    }
-  }
-  setRoute(ex, true);
-  RPD.n = rpDetachGone(before);       /* les routes que l'exemple a remplacées ne sont plus suivies */
-}
-
 /* ============= « EFFACER » : CHOISIR CE QUI S'EFFACE ============= */
 /* Six ensembles, dans cet ordre. Les dessins et les symboles OTAN sont les objets des calques dessinés (source « drawn ») ; les calques importés sont ceux d'un
    fichier CombatFlite. Les routes : la sélectionnée (nom et points ; les groupes qui la suivaient ne la suivent plus) ou toutes (il reste une route vide, sans lien, active ; les groupes qui les suivaient ne les suivent plus). */
@@ -9930,6 +9886,7 @@ const WORK_FORMAT = 'dcs-mission-plan-work-v1';
 function workSave() { try { parent.MP_WORK_SAVE(); } catch (e) { console.warn('[RP] sauvegarde du travail indisponible', e); } }
 function workOpen() { try { parent.MP_WORK_OPEN(); } catch (e) { console.warn('[RP] ouverture du travail indisponible', e); } }
 function workHand(text, name) { try { parent.MP_WORK_OPEN_TEXT(text, name); } catch (e) { console.warn('[RP] ouverture du travail indisponible', e); } }
+function workExample() { try { window.parent.MP_WORK_EXAMPLE('fl'); } catch (e) { console.warn('[RP] exemple indisponible', e); } }       // l'exemple se charge dans les outils du groupe, par le shell
 
 /* ============= VERS LE BRIEFING : LA VUE DE LA CARTE, CADRÉE (lot rp-v1.12.0) ============= */
 /* Le mode cadre pose un cadre 3:2 (ou 2:3) sur la carte ; « Exporter » compose une image JPEG : la zone du cadre rendue par html2canvas
@@ -10506,7 +10463,7 @@ function bindEvents() {
     if (ev.key === 'Escape' && RT_MODALS.some(rtVisible)) { ev.preventDefault(); rtCloseAll(); }
     else rtTrap(ev);
   });
-  $('btn-example').addEventListener('click', loadExample);
+  $('btn-example').addEventListener('click', workExample);
   $('btn-clear').addEventListener('click', ev => openClearModal(ev.currentTarget));
   clrBind();
   expBind();
@@ -10583,24 +10540,9 @@ else init();
 # ASSEMBLAGE
 # ============================================================
 def build():
-    try:
-        example = json.loads(EXAMPLE_ROUTE_JSON)
-    except ValueError as e:
-        raise SystemExit(f"[ERREUR] Route d'exemple illisible : {e}")
-    if example.get('format') != 'dcs-route-v1':
-        raise SystemExit("[ERREUR] La route d'exemple n'est pas au format dcs-route-v1")
-    example_js = json.dumps(example, ensure_ascii=False, indent=2).replace('</', '<\\/')
-    try:
-        example_en = json.loads(EXAMPLE_ROUTE_JSON_EN)
-    except ValueError as e:
-        raise SystemExit(f"[ERREUR] Route d'exemple anglaise illisible : {e}")
-    if example_en.get('format') != 'dcs-route-v1':
-        raise SystemExit("[ERREUR] La route d'exemple anglaise n'est pas au format dcs-route-v1")
-    example_en_js = json.dumps(example_en, ensure_ascii=False, indent=2).replace('</', '<\\/')
-
     airfields_js = json.dumps(AF['theatres'], ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
     towns_js = json.dumps(TW['theatres'], ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
-    js = JS.replace('__EXAMPLE_ROUTE__', example_js).replace('__EXAMPLE_ROUTE_EN__', example_en_js).replace('__AIRFIELDS__', airfields_js).replace('__TOWNS__', towns_js)
+    js = JS.replace('__AIRFIELDS__', airfields_js).replace('__TOWNS__', towns_js)
     js = js.replace('@@GEO_BLOCK@@\n', GEO_BLOCK).replace('@@READNUM_BLOCK@@\n', READNUM_BLOCK).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@ROUTE_PACK_BLOCK@@\n', build_route_pack_block()).replace('@@ROUTE_THEATRE_BLOCK@@\n', build_route_theatre_block()).replace('@@ROUTE_WRITE_BLOCK@@\n', build_route_write_block()).replace('@@GROUP_STORE_BLOCK@@\n', build_group_store_block()).replace('@@RADIO_BLOCK@@\n', build_radio_block()).replace('@@RADIO_BANDS_BLOCK@@\n', build_radio_bands_block()).replace('@@IMPORT_BLOCK@@\n', build_import_block()).replace('@@MESSAGES_BLOCK@@\n', build_messages_block() + build_ui_block())
     js = js.replace('@@TBM_JS@@\n', build_tbm_block())
     if '@@' in js:

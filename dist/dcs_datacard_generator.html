@@ -1693,7 +1693,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   <span class="tb-label" data-i18n="tb.theatre">Théâtre</span>
   <select class="tb-sel" id="theatre" data-i18n-aria-label="tb.theatre" aria-label="Théâtre"></select>
   <div class="tb-sep"></div>
-  <button class="tb-btn" id="btn-example" data-i18n-title="tb.example.tip" title="Ouvrir la datacard d'exemple (remplace le document en cours)">
+  <button class="tb-btn" id="btn-example" data-i18n-title="tb.example.tip" title="Charger l’exemple STEPPE WIND dans les outils du Flight Leader (Route Planner, Datacard Generator, Flight Configurator) ; le travail en cours du groupe se restaure en un geste" data-i18n-aria-label="tb.example.tip" aria-label="Charger l’exemple STEPPE WIND dans les outils du Flight Leader (Route Planner, Datacard Generator, Flight Configurator) ; le travail en cours du groupe se restaure en un geste">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
     <span class="tb-btn-label" data-i18n="tb.example">Exemple</span>
   </button>
@@ -1875,416 +1875,6 @@ const UNIT_CHOICES = { mass: ['kg', 'lb'], distance: ['km', 'nm'], altitude: ['m
 const SECTION_IDS = ['header', 'group', 'mission', 'times', 'nav', 'refs', 'radio', 'fields', 'weather', 'fuel', 'threats', 'meta'];
 const TAB_IDS = SECTION_IDS.concat(['preview']);
 
-/* Contenu du bouton « Exemple » (document dcs-datacard-v1) */
-const EXAMPLE_DOC = {
-  "format": "dcs-datacard-v1",
-  "mode": "day",
-  "cards": [
-    {
-      "meta": {
-        "classification": "confidential",
-        "docRef": "SW-M3-1989",
-        "operation": "STEPPE WIND",
-        "mission": "M3",
-        "date": "1989-03-22",
-        "time": "08:00"
-      },
-      "flight": {
-        "callsign": "CAESAR",
-        "aircraft": "Mi-24P",
-        "count": 2,
-        "task": "CAS / Défense de zone",
-        "threat": "high"
-      },
-      "units": {
-        "mass": "kg",
-        "distance": "km",
-        "altitude": "m"
-      },
-      "mission": {
-        "objective": "Un convoi blindé quitte KARAVOSTASI pour reprendre POLIS : l'intercepter avant la FARP.",
-        "execution": [
-          "Décollage POLIS",
-          "Chemin côtier jusqu'à l'IP",
-          "Priorité SAM / AAA, puis APC / MBT",
-          "RTB POLIS selon SITAC"
-        ]
-      },
-      "times": [
-        {
-          "label": "Mise en route",
-          "value": "09:30"
-        },
-        {
-          "label": "Décollage",
-          "value": "09:45"
-        },
-        {
-          "label": "IP",
-          "value": "10:05"
-        },
-        {
-          "label": "TOT",
-          "value": "10:12"
-        },
-        {
-          "label": "RTB",
-          "value": "10:40"
-        }
-      ],
-      "crew": [
-        {
-          "callsign": "CAESAR 1-1",
-          "pilot": "VIPER",
-          "type": "Mi-24P",
-          "board": "41"
-        },
-        {
-          "callsign": "CAESAR 1-2",
-          "pilot": "FALCON",
-          "type": "Mi-24P",
-          "board": "44"
-        }
-      ],
-      "nav": [
-        {
-          "name": "POLIS FARP",
-          "course": "",
-          "distance": "",
-          "altitude": "",
-          "tos": "09:45",
-          "note": "Départ"
-        },
-        {
-          "name": "CÔTE 1",
-          "course": "252",
-          "distance": "14",
-          "altitude": "50",
-          "tos": "09:53",
-          "note": ""
-        },
-        {
-          "name": "IP",
-          "course": "059",
-          "distance": "32",
-          "altitude": "50",
-          "tos": "10:05",
-          "note": "Île + rivière"
-        },
-        {
-          "name": "TGT KARAVOSTASI",
-          "course": "118",
-          "distance": "9",
-          "altitude": "30",
-          "tos": "10:12",
-          "note": "Axe côtier"
-        },
-        {
-          "name": "POLIS FARP",
-          "course": "296",
-          "distance": "28",
-          "altitude": "100",
-          "tos": "10:40",
-          "note": "RTB"
-        }
-      ],
-      "radios": [
-        {
-          "name": "R-863",
-          "channels": [
-            {
-              "channel": "0",
-              "label": "Groupe 1",
-              "frequency": "127.50",
-              "modulation": "AM"
-            },
-            {
-              "channel": "1",
-              "label": "Groupe 2",
-              "frequency": "135.00",
-              "modulation": "AM"
-            },
-            {
-              "channel": "3",
-              "label": "Mission",
-              "frequency": "265.00",
-              "modulation": "AM"
-            },
-            {
-              "channel": "7",
-              "label": "ATC",
-              "frequency": "270.00",
-              "modulation": "AM"
-            }
-          ]
-        },
-        {
-          "name": "R-828",
-          "channels": [
-            {
-              "channel": "0",
-              "label": "Tactique",
-              "frequency": "21.50",
-              "modulation": "FM"
-            }
-          ]
-        }
-      ],
-      "fields": [
-        {
-          "role": "dep",
-          "icao": "",
-          "name": "POLIS",
-          "runway": "",
-          "frequency": "127.50"
-        },
-        {
-          "role": "arr",
-          "icao": "",
-          "name": "POLIS",
-          "runway": "",
-          "frequency": "127.50"
-        },
-        {
-          "role": "alt",
-          "icao": "LCRA",
-          "name": "Akrotiri",
-          "runway": "10",
-          "frequency": "270.00"
-        }
-      ],
-      "weather": {
-        "metar": "LCRA 221000Z 18002KT 9999 SCT082 20/15 Q1013",
-        "wind": "180/02",
-        "visibility": "≥ 10 km",
-        "qnh": "1013 hPa",
-        "clouds": "SCT 8200 ft"
-      },
-      "fuel": {
-        "joker": "600",
-        "bingo": "450"
-      },
-      "loadout": [
-        "4 × 9M114 Shturm",
-        "2 × B-8V20 (S-8)",
-        "GSh-30-2 · 250 obus"
-      ],
-      "threats": [
-        "SA-13",
-        "SA-9",
-        "MANPADS",
-        "ZSU-23-4",
-        "BMP-2"
-      ],
-      "notes": "Repère : petite île + rivière à 8 km de l'objectif."
-    }
-  ]
-};
-const EXAMPLE_DOC_EN = {
-  "format": "dcs-datacard-v1",
-  "mode": "day",
-  "cards": [
-    {
-      "meta": {
-        "classification": "confidential",
-        "docRef": "SW-M3-1989",
-        "operation": "STEPPE WIND",
-        "mission": "M3",
-        "date": "1989-03-22",
-        "time": "08:00"
-      },
-      "flight": {
-        "callsign": "CAESAR",
-        "aircraft": "Mi-24P",
-        "count": 2,
-        "task": "CAS / Area defence",
-        "threat": "high"
-      },
-      "units": {
-        "mass": "kg",
-        "distance": "km",
-        "altitude": "m"
-      },
-      "mission": {
-        "objective": "An armoured convoy is leaving KARAVOSTASI to retake POLIS: intercept it before it reaches the FARP.",
-        "execution": [
-          "Take-off POLIS",
-          "Coastal route to the IP",
-          "Priority SAM / AAA, then APC / MBT",
-          "RTB POLIS as per SITAC"
-        ]
-      },
-      "times": [
-        {
-          "label": "Start-up",
-          "value": "09:30"
-        },
-        {
-          "label": "Take-off",
-          "value": "09:45"
-        },
-        {
-          "label": "IP",
-          "value": "10:05"
-        },
-        {
-          "label": "TOT",
-          "value": "10:12"
-        },
-        {
-          "label": "RTB",
-          "value": "10:40"
-        }
-      ],
-      "crew": [
-        {
-          "callsign": "CAESAR 1-1",
-          "pilot": "VIPER",
-          "type": "Mi-24P",
-          "board": "41"
-        },
-        {
-          "callsign": "CAESAR 1-2",
-          "pilot": "FALCON",
-          "type": "Mi-24P",
-          "board": "44"
-        }
-      ],
-      "nav": [
-        {
-          "name": "POLIS FARP",
-          "course": "",
-          "distance": "",
-          "altitude": "",
-          "tos": "09:45",
-          "note": "Departure"
-        },
-        {
-          "name": "COAST 1",
-          "course": "252",
-          "distance": "14",
-          "altitude": "50",
-          "tos": "09:53",
-          "note": ""
-        },
-        {
-          "name": "IP",
-          "course": "059",
-          "distance": "32",
-          "altitude": "50",
-          "tos": "10:05",
-          "note": "Island + river"
-        },
-        {
-          "name": "TGT KARAVOSTASI",
-          "course": "118",
-          "distance": "9",
-          "altitude": "30",
-          "tos": "10:12",
-          "note": "Coastal axis"
-        },
-        {
-          "name": "POLIS FARP",
-          "course": "296",
-          "distance": "28",
-          "altitude": "100",
-          "tos": "10:40",
-          "note": "RTB"
-        }
-      ],
-      "radios": [
-        {
-          "name": "R-863",
-          "channels": [
-            {
-              "channel": "0",
-              "label": "Group 1",
-              "frequency": "127.50",
-              "modulation": "AM"
-            },
-            {
-              "channel": "1",
-              "label": "Group 2",
-              "frequency": "135.00",
-              "modulation": "AM"
-            },
-            {
-              "channel": "3",
-              "label": "Mission",
-              "frequency": "265.00",
-              "modulation": "AM"
-            },
-            {
-              "channel": "7",
-              "label": "ATC",
-              "frequency": "270.00",
-              "modulation": "AM"
-            }
-          ]
-        },
-        {
-          "name": "R-828",
-          "channels": [
-            {
-              "channel": "0",
-              "label": "Tactical",
-              "frequency": "21.50",
-              "modulation": "FM"
-            }
-          ]
-        }
-      ],
-      "fields": [
-        {
-          "role": "dep",
-          "icao": "",
-          "name": "POLIS",
-          "runway": "",
-          "frequency": "127.50"
-        },
-        {
-          "role": "arr",
-          "icao": "",
-          "name": "POLIS",
-          "runway": "",
-          "frequency": "127.50"
-        },
-        {
-          "role": "alt",
-          "icao": "LCRA",
-          "name": "Akrotiri",
-          "runway": "10",
-          "frequency": "270.00"
-        }
-      ],
-      "weather": {
-        "metar": "LCRA 221000Z 18002KT 9999 SCT082 20/15 Q1013",
-        "wind": "180/02",
-        "visibility": "≥ 10 km",
-        "qnh": "1013 hPa",
-        "clouds": "SCT 8200 ft"
-      },
-      "fuel": {
-        "joker": "600",
-        "bingo": "450"
-      },
-      "loadout": [
-        "4 × 9M114 Shturm",
-        "2 × B-8V20 (S-8)",
-        "GSh-30-2 · 250 rounds"
-      ],
-      "threats": [
-        "SA-13",
-        "SA-9",
-        "MANPADS",
-        "ZSU-23-4",
-        "BMP-2"
-      ],
-      "notes": "Landmark: small island + river 8 km from the objective."
-    }
-  ]
-};
-
 /* ============= i18n FR / EN ============= */
 const I18N = {
   fr: {
@@ -2324,7 +1914,7 @@ const I18N = {
     'tb.export': 'Exporter',
     'tb.export.tip': 'Exporter en PDF ou PNG',
     'tb.example': 'Exemple',
-    'tb.example.tip': 'Ouvrir la datacard d\'exemple (remplace le document en cours)',
+    'tb.example.tip': 'Charger l’exemple STEPPE WIND dans les outils du Flight Leader (Route Planner, Datacard Generator, Flight Configurator) ; le travail en cours du groupe se restaure en un geste',
     'tb.reset': 'Effacer',
     'tb.reset.tip': 'Tout effacer…',
     'tb.theme.tip': 'Thème graphique',
@@ -2396,7 +1986,6 @@ const I18N = {
     'rad.err.range.f': 'Fréquence {0} : {1} MHz hors de la bande du poste ({2}).',
     'toast.briefFilled': 'Carte « {n} » remplie depuis le briefing (mission, date et heure, terrains, météo)',
     'toast.hqFilled': 'date, heure et météo de la mission reprises',
-    'toast.example': 'Exemple chargé ✓',
     'ft.clear.title': 'Tout effacer ?',
     'ft.clear.text': 'Les groupes, les routes de tous les théâtres, les points de référence, dessins, symboles et calques, et toutes les datacards seront effacés du Flight Configurator, du Route Planner et du Datacard Generator. HQ, le Briefing Generator et Recon Station ne changent pas ; vos presets d’emport, le théâtre, les unités et les réglages restent. Cela ne se défait pas.',
     'ft.clear.verb': 'Tout effacer',
@@ -2825,7 +2414,7 @@ const I18N = {
     'tb.export': 'Export',
     'tb.export.tip': 'Export to PDF or PNG',
     'tb.example': 'Example',
-    'tb.example.tip': 'Open the example datacard (replaces the current document)',
+    'tb.example.tip': 'Load the STEPPE WIND example into the Flight Leader tools (Route Planner, Datacard Generator, Flight Configurator); the group’s work in progress comes back in one tap',
     'tb.reset': 'Clear',
     'tb.reset.tip': 'Clear everything…',
     'tb.theme.tip': 'Graphic theme',
@@ -2897,7 +2486,6 @@ const I18N = {
     'rad.err.range.f': 'Frequency {0}: {1} MHz is outside the radio’s band ({2}).',
     'toast.briefFilled': 'Card “{n}” filled from the briefing (mission, date and time, airfields, weather)',
     'toast.hqFilled': 'mission date, time and weather applied',
-    'toast.example': 'Example loaded ✓',
     'ft.clear.title': 'Clear everything?',
     'ft.clear.text': 'The groups, the routes of every theatre, the reference points, drawings, symbols and layers, and all the datacards will be cleared from the Flight Configurator, the Route Planner and the Datacard Generator. HQ, the Briefing Generator and Recon Station do not change; your loadout presets, the theatre, the units and the settings stay. This cannot be undone.',
     'ft.clear.verb': 'Clear everything',
@@ -9866,6 +9454,7 @@ const WORK_FORMAT = 'dcs-mission-plan-work-v1';
 function workSave() { try { parent.MP_WORK_SAVE(); } catch (e) { console.warn('[DG] sauvegarde du travail indisponible', e); } }
 function workOpen() { try { parent.MP_WORK_OPEN(); } catch (e) { console.warn('[DG] ouverture du travail indisponible', e); } }
 function workHand(text, name) { try { parent.MP_WORK_OPEN_TEXT(text, name); } catch (e) { console.warn('[DG] ouverture du travail indisponible', e); } }
+function workExample() { try { window.parent.MP_WORK_EXAMPLE('fl'); } catch (e) { console.warn('[DG] exemple indisponible', e); } }       // l'exemple se charge dans les outils du groupe, par le shell
 /* Le shell écrit le travail de toute la suite : il demande d'abord à chaque module d'écrire ce qu'il garde en attente (ici, la saisie d'un canal d'une carte liée) */
 window.MP_FLUSH = function () { dgTypFlush(); };
 
@@ -10507,22 +10096,6 @@ function dgBack(m) {
   gsApplyAll(true);
   renderAll();
 }
-function loadExample() {
-  replaceWithRestore({ keys: GS_CONTENT_KEYS, mem: dgMem, back: dgBack, msg: t('toast.example'), run: () => gsSettled(loadExampleNow()) });
-}
-const DG_EXAMPLE_THEATRE = 'Syria';       /* l'exemple raconte STEPPE WIND au-dessus de Chypre : le théâtre de la route d'exemple du Route Planner */
-function loadExampleNow() {
-  dgSetTheatre(DG_EXAMPLE_THEATRE);       /* le geste d'un choix dans la liste de la barre : le document le prend et mp_theatre_v1 s'écrit (une valeur égale n'est pas réécrite) */
-  const linked = doc.cards.filter(c => c.gsId);       /* les groupes de la fiche gardent leurs cartes ; la fiche n'est pas touchée */
-  const ex = normalizeDoc(clone(CURRENT_LANG === 'en' ? EXAMPLE_DOC_EN : EXAMPLE_DOC));   // la langue de l'interface au moment du clic
-  ex.cards = linked.concat(ex.cards);
-  dgSyncRoutes();
-  { const st = rwReadState(), ps = st && Array.isArray(st.refs) ? st.refs.map(p => p && p.pid).filter(p => rwPidValid(p)) : [];       /* la carte d'exemple masque toutes les références de la mission : son aperçu ne dépend pas de l'état */
-    if (ps.length) ex.cards.slice(linked.length).forEach(c => { c.refsOff = ps.slice(); }); }
-  setDoc(ex);
-  curIdx = linked.length;
-  renderAll();
-}
 /* « Tout effacer » : le même pour le Flight Configurator, le Route Planner et le Datacard Generator (gsClearAll, bloc des groupes partagés) ; toutes les datacards, libres et liées, partent ; le mode et le théâtre du document restent */
 async function resetDoc() {
   if (!(await askConfirm({ title: t('ft.clear.title'), text: t('ft.clear.text'), verb: t('ft.clear.verb'), danger: true }))) return;
@@ -10567,7 +10140,7 @@ function bindEvents() {
     }
   });
   document.getElementById('btn-print').addEventListener('click', () => openExportModal());
-  document.getElementById('btn-example').addEventListener('click', loadExample);
+  document.getElementById('btn-example').addEventListener('click', workExample);
   document.getElementById('btn-reset').addEventListener('click', resetDoc);
   document.getElementById('theme-select').addEventListener('change', e => applyTheme(e.target.value, true));
   document.getElementById('theatre').addEventListener('change', e => dgSetTheatre(e.target.value));

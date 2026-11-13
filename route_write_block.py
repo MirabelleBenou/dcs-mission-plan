@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Bloc « ÉCRITURE D'UNE ROUTE » : le seul chemin par lequel un module autre que le Route Planner écrit une route.
 
-Injecté tel quel au Route Planner (qui y prend l'identifiant stable pid : tirage, validité, attribution), au Datacard Generator (qui y écrit) et au Flight Configurator (qui n'y écrit que la route de son exemple).
+Injecté tel quel au Route Planner (qui y prend l'identifiant stable pid : tirage, validité, attribution) et au Datacard Generator (qui y écrit).
 Il lit et réécrit à l'instant (jamais une copie gardée) :
   1. route_set_v1 : la route par son rid (créée si neuve), les autres routes (masquées comprises) et « active » intacts ;
   2. route_state_v1 si cette route est l'active de route_set_v1 (le Route Planner la prend pour source à son chargement) ; les autres champs (unités, vitesse, ui, réglages) intacts ;
