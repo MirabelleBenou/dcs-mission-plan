@@ -1740,45 +1740,6 @@ body {{
   padding-left: max(14px, env(safe-area-inset-left));
   padding-right: max(14px, env(safe-area-inset-right));
 }}
-/* La barre du haut défile dès qu'elle déborde (le bouton Effacer s'ajoute à la barre), un fondu signale le bord qui cache du contenu : la même règle que le Briefing Generator */
-.toolbar {{
-  --fade-w: 22px;
-  --fade-gap: 8px;
-  overflow-x: auto;
-  overflow-y: hidden;
-  flex-wrap: nowrap;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-x: contain;
-  touch-action: pan-x;
-}}
-.toolbar::-webkit-scrollbar {{ display: none; }}
-.toolbar::before, .toolbar::after {{
-  content: '';
-  position: sticky;
-  flex: 0 0 var(--fade-w);
-  width: var(--fade-w);
-  align-self: stretch;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity .15s;
-  z-index: 2;
-}}
-.toolbar::before {{
-  left: 0;
-  margin-right: calc(-1 * (var(--fade-w) + var(--fade-gap)));
-  background: inherit;
-  mask-image: linear-gradient(90deg, #000, transparent);
-  -webkit-mask-image: linear-gradient(90deg, #000, transparent);
-}}
-.toolbar::after {{
-  right: 0;
-  margin-left: calc(-1 * (var(--fade-w) + var(--fade-gap)));
-  background: inherit;
-  mask-image: linear-gradient(270deg, #000, transparent);
-  -webkit-mask-image: linear-gradient(270deg, #000, transparent);
-}}
-.toolbar.fade-l::before, .toolbar.fade-r::after {{ opacity: 1; }}
 .tb-brand {{ display: flex; flex-direction: column; line-height: 1.1; gap: 1px; flex-shrink: 0; }}
 .tb-brand-main {{
   font-family: var(--f-stencil);
@@ -3239,7 +3200,7 @@ const KEY_STATE = 'recon_state_v1';
 const KEY_THEME = 'theme_v1';
 const KEY_LANG  = 'lang_v1';
 
-// L'état d'un profil neuf (aussi celui que « Effacer » rend)
+// L'état d'un profil neuf (ses champs vides sont aussi ceux que « Effacer » rend)
 function rsFreshState() {{
   return {{
     fields: {{
@@ -3577,11 +3538,17 @@ function rsBack(m) {{
   saveState();
   schedulePreview();
 }}
-// Effacer : après confirmation, le module revient à l'état d'un profil neuf (la seule clé écrite est recon_state_v1 ; le thème, la langue et la configuration Wing ne bougent pas),
-// puis, comme au démarrage, les champs Msn, DTG et Class vides se remplissent du briefing en cours
+// Effacer : après confirmation, le contenu seul est vidé (l'image, les annotations, la légende et tous les champs du bloc d'informations) ; les logos importés au module,
+// le contraste, les effets, le mode capteur, les couleurs et la classification du bandeau restent. La seule clé écrite est recon_state_v1 ; le thème, la langue et la configuration Wing ne bougent pas.
+// Puis, comme au démarrage, les champs Msn, DTG et Class vides se remplissent du briefing en cours.
 async function rsReset() {{
   if (!(await askConfirm({{ title: t('clear.title'), text: t('clear.text'), verb: t('clear.verb'), danger: true }}))) return;
-  rsBack({{ state: rsFreshState(), img: null, ready: false, dz: t('editor.image.drop'), credit: false }});
+  collectState();
+  const st = structuredClone(STATE);
+  st.fields = rsFreshState().fields;
+  st.cartouche = [];
+  st.annotations = [];
+  rsBack({{ state: st, img: null, ready: false, dz: t('editor.image.drop'), credit: false }});
   rsBriefingFill();
   showToast(t('clear.toast'), {{ type: 'ok' }});
 }}
@@ -5153,46 +5120,12 @@ function rsFoldInit() {{
   }});
 }}
 
-function revealInToolbar(bar, el) {{
-  if (!bar || !el || bar.scrollWidth <= bar.clientWidth) return;
-  const b = bar.getBoundingClientRect();
-  const r = el.getBoundingClientRect();
-  if (r.left < b.left) bar.scrollLeft += r.left - b.left - 8;
-  else if (r.right > b.right) bar.scrollLeft += r.right - b.right + 8;
-}}
-
-function initToolbarScroll() {{
-  const bar = document.querySelector('.toolbar');
-  if (!bar) return;
-  const update = () => {{
-    const max = bar.scrollWidth - bar.clientWidth;
-    bar.classList.toggle('fade-l', bar.scrollLeft > 1);
-    bar.classList.toggle('fade-r', bar.scrollLeft < max - 1);
-  }};
-  const child = t => {{ while (t && t.parentNode !== bar) t = t.parentNode; return t; }};
-  bar.addEventListener('scroll', update, {{ passive: true }});
-  // Un appui sur un contrôle partiellement visible le ramène entier dans la vue, puis l'active
-  bar.addEventListener('click', e => revealInToolbar(bar, child(e.target)), true);
-  bar.addEventListener('focusin', e => revealInToolbar(bar, child(e.target)));
-  // Molette verticale → défilement horizontal
-  bar.addEventListener('wheel', e => {{
-    if (bar.scrollWidth <= bar.clientWidth) return;
-    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {{ bar.scrollLeft += e.deltaY; e.preventDefault(); }}
-  }}, {{ passive: false }});
-  window.addEventListener('resize', update);
-  if (window.ResizeObserver) new ResizeObserver(update).observe(bar);
-  // Le shell ajoute son bouton de retour et son tampon après le chargement
-  new MutationObserver(update).observe(bar, {{ childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['class'] }});   // les classes de la barre qui se réduit (tb-st1 à tb-st4) changent aussi sa largeur utile
-  update();
-}}
-
 async function init() {{
   loadTheme();
   loadLang();
   TBM.cfg = {{ others: () => mnClose(false), trig: MENU_TRIG }};       // ce que ce module ajoute à la liste commune : le menu « Ouvrir » se ferme avec elle
   initToolbarMenus([['theme-select', () => t('toolbar.theme.tooltip')]]);   // les listes de la barre au thème de l'interface
   mnBind();   // le menu « Ouvrir », « Sauvegarder » et Ctrl+S
-  initToolbarScroll();
   initFormMenus(sel => {{ const l = sel.parentElement && sel.parentElement.querySelector('.ed-label'); return l ? l.textContent.trim() : ''; }});   // les listes des formulaires
 
   const hasState = restoreState();
