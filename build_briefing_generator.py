@@ -4287,6 +4287,7 @@ const EXAMPLE_BRIEFING = {
     operation: 'FOOTHOLD',
     mission: 'M3',
     date: '1989-03-22',
+    time: '08:00',
     format: 'simple',
     classification: 'confidential',
     docRef: 'FH-M3-1989'
@@ -4433,6 +4434,7 @@ const EXAMPLE_BRIEFING_EN = {
     operation: 'FOOTHOLD',
     mission: 'M3',
     date: '1989-03-22',
+    time: '08:00',
     format: 'simple',
     classification: 'confidential',
     docRef: 'FH-M3-1989'

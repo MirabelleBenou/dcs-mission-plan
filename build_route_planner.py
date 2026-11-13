@@ -127,158 +127,19 @@ for _th, _list in TW['theatres'].items():
         if not (isinstance(_a, list) and len(_a) == 3 and isinstance(_a[0], str) and _is_num(_a[1]) and _is_num(_a[2])):
             raise SystemExit(f"[ERREUR] towns.json : entrée illisible dans {_th} : {_a!r}")
 
-# Contenu du bouton « Exemple » : document au format dcs-route-v1, copié tel quel.
-EXAMPLE_ROUTE_JSON = r'''{
-  "format": "dcs-route-v1",
-  "name": "FOOTHOLD M3",
-  "theatre": "Syria",
-  "units": {
-    "distance": "km",
-    "altitude": "m"
-  },
-  "navDisplay": {
-    "ref": "true",
-    "decl": ""
-  },
-  "points": [
-    {
-      "name": "AKROTIRI",
-      "lat": 34.5904,
-      "lon": 32.9878,
-      "alt": 0,
-      "altRef": "MSL"
-    },
-    {
-      "name": "WP1",
-      "lat": 34.662,
-      "lon": 32.67,
-      "alt": 30,
-      "altRef": "AGL"
-    },
-    {
-      "name": "POLIS",
-      "lat": 35.036,
-      "lon": 32.427,
-      "alt": 30,
-      "altRef": "AGL"
-    },
-    {
-      "name": "IP",
-      "lat": 35.12,
-      "lon": 32.605,
-      "alt": 50,
-      "altRef": "AGL"
-    },
-    {
-      "name": "KARAVOSTASI",
-      "lat": 35.142,
-      "lon": 32.822,
-      "alt": 50,
-      "altRef": "AGL"
-    }
-  ],
-  "refs": [
-    {
-      "name": "ÎLE PETRA",
-      "lat": 35.184,
-      "lon": 32.8445,
-      "alt": 0,
-      "altRef": "MSL"
-    },
-    {
-      "name": "PONT KARAVOSTASI",
-      "lat": 35.1395,
-      "lon": 32.8262,
-      "alt": 15,
-      "altRef": "AGL"
-    },
-    {
-      "name": "SA-9 SUSPECT",
-      "lat": 35.121,
-      "lon": 32.87,
-      "alt": 120,
-      "altRef": "MSL"
-    }
-  ]
-}
-'''
+# Contenu du bouton « Exemple » : document au format dcs-route-v1, copié tel quel. La route d'exemple est celle de la suite : samples/example_route_fr.json et samples/example_route_en.json
+# (la langue de l'interface au moment du clic), lus aussi par le build du Flight Configurator, dont l'exemple suit la même route.
+def _read_example_route(lang):
+    path = os.path.join(HERE, 'samples', 'example_route_%s.json' % lang)
+    if not os.path.isfile(path):
+        raise SystemExit(f"[ERREUR] Entrée manquante : {path} (samples/example_route_{lang}.json attendu)")
+    with open(path, encoding='utf-8', newline='') as f:
+        return f.read()
 
-# Même route, en anglais : structure, identifiants et valeurs numériques identiques à EXAMPLE_ROUTE_JSON (lot mp-exemples-demarrer).
-# Le bouton « Exemple » charge l'une ou l'autre selon la langue de l'interface au moment du clic.
-EXAMPLE_ROUTE_JSON_EN = r'''{
-  "format": "dcs-route-v1",
-  "name": "FOOTHOLD M3",
-  "theatre": "Syria",
-  "units": {
-    "distance": "km",
-    "altitude": "m"
-  },
-  "navDisplay": {
-    "ref": "true",
-    "decl": ""
-  },
-  "points": [
-    {
-      "name": "AKROTIRI",
-      "lat": 34.5904,
-      "lon": 32.9878,
-      "alt": 0,
-      "altRef": "MSL"
-    },
-    {
-      "name": "WP1",
-      "lat": 34.662,
-      "lon": 32.67,
-      "alt": 30,
-      "altRef": "AGL"
-    },
-    {
-      "name": "POLIS",
-      "lat": 35.036,
-      "lon": 32.427,
-      "alt": 30,
-      "altRef": "AGL"
-    },
-    {
-      "name": "IP",
-      "lat": 35.12,
-      "lon": 32.605,
-      "alt": 50,
-      "altRef": "AGL"
-    },
-    {
-      "name": "KARAVOSTASI",
-      "lat": 35.142,
-      "lon": 32.822,
-      "alt": 50,
-      "altRef": "AGL"
-    }
-  ],
-  "refs": [
-    {
-      "name": "PETRA ISLAND",
-      "lat": 35.184,
-      "lon": 32.8445,
-      "alt": 0,
-      "altRef": "MSL"
-    },
-    {
-      "name": "KARAVOSTASI BRIDGE",
-      "lat": 35.1395,
-      "lon": 32.8262,
-      "alt": 15,
-      "altRef": "AGL"
-    },
-    {
-      "name": "SUSPECTED SA-9",
-      "lat": 35.121,
-      "lon": 32.87,
-      "alt": 120,
-      "altRef": "MSL"
-    }
-  ]
-}
-'''
+
+EXAMPLE_ROUTE_JSON = _read_example_route('fr')
+# Même route, en anglais : structure, identifiants et valeurs numériques identiques à la route française.
+EXAMPLE_ROUTE_JSON_EN = _read_example_route('en')
 
 # ============================================================
 # CSS

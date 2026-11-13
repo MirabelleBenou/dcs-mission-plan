@@ -5,8 +5,8 @@ Lit les coefficients du World Magnetic Model (NOAA NCEI / British Geological Sur
 1985 à 2025 que DCS World embarque) dans le dossier wmm/ à la racine du dépôt, ceux de l'International Geomagnetic
 Reference Field, 12e génération (IAGA, au format geomag70 de la NOAA ; les époques 1900 à 1985, que DCS World embarque
 aussi) dans le dossier igrf/, et rend le texte JavaScript du bloc : les deux tables compactes de coefficients et les
-fonctions magDecYear, magModel, magVar, magRouteDate et magYearSource. Comme DCS : une année entière jusqu'à 1985 → IGRF au 1er janvier
-de cette année ; plus tard → le WMM de l'époque précédente.
+fonctions magDecYear, magModel, magVar, magRouteDate et magYearSource. Comme DCS : une année entière jusqu'à 1984 → IGRF au 1er janvier
+de cette année ; dès 1985 → le WMM de l'époque (le WMM 1985 pour 1985).
 Les deux builds insèrent ce texte tel quel : le bloc est identique à l'octet dans les deux fichiers de dist/.
 
 Usage (par les builds) : from magvar_block import build_block ; texte = build_block()
@@ -27,7 +27,8 @@ BLOCK_END = '/* ===== FIN DE LA DÉCLINAISON MAGNÉTIQUE ===== */'
 DEGREE = 12                      # degré maximal du modèle (n = 1 … 12 : 90 lignes par fichier)
 EPOCHS = list(range(1985, 2026, 5))
 IGRF_FIRST = 1900                # première époque IGRF embarquée
-IGRF_LAST = 1985                 # dernière année entière calculée en IGRF (et dernière époque embarquée)
+IGRF_YEAR_LAST = 1984            # dernière année entière calculée en IGRF (injectée en MAG_IGRF_LAST) ; dès 1985, le WMM de l'époque
+IGRF_LAST = 1985                 # dernière époque IGRF embarquée (elle sert à interpoler 1980 à 1984, pas à calculer 1985)
 IGRF_EPOCHS = list(range(IGRF_FIRST, IGRF_LAST + 1, 5))
 IGRF_DEGREE = 10                 # degré des époques IGRF de 1900 à 1985 (n = 1 … 10 : 65 termes par époque)
 
@@ -172,15 +173,15 @@ def build_igrf_table():
 
 _JS = r"""
 /* Le modèle est celui des fichiers de DCS World, qui calcule ainsi la déclinaison d'une date de mission :
-   - une année entière Y jusqu'à MAG_IGRF_LAST (1985) : l'IGRF-12 (IAGA ; fichier COF_IGRF/IGRF12.COF), au 1er janvier de Y sans
+   - une année entière Y jusqu'à MAG_IGRF_LAST (1984) : l'IGRF-12 (IAGA ; fichier COF_IGRF/IGRF12.COF), au 1er janvier de Y sans
      la date : coefficients g, h interpolés linéairement entre les deux époques de cinq ans qui encadrent Y (1900 pour les années
      plus anciennes), degré 10. Table MAG_IGRF_TABLE : par époque de 1900 à 1985, 65 termes (n = 1 … 10, m = 0 … n) × deux valeurs
      (g, h) en dixièmes de nT, en base 36 ;
-   - une année entière Y après 1985 : le World Magnetic Model de la NOAA (domaine public ; fichiers Data/MagVar/COF) de l'époque la plus
-     grande strictement inférieure à Y (2020 → WMM 2015, 2025 → WMM 2020, 2026 et après → WMM 2025), à la date exacte : g + ġ·dt, dt = y − époque,
+   - une année entière Y dès 1985 (MAG_IGRF_LAST + 1) : le World Magnetic Model de la NOAA (domaine public ; fichiers Data/MagVar/COF) de l'époque la plus
+     grande strictement inférieure à Y (1985 → WMM 1985, 2020 → WMM 2015, 2025 → WMM 2020, 2026 et après → WMM 2025), à la date exacte : g + ġ·dt, dt = y − époque,
      sans borne. Un jeu de coefficients tous les cinq ans, de 1985.0 à 2025.0 (degré 12). Table MAG_TABLE : par époque, 90 termes
      (n = 1 … 12, m = 0 … n) × quatre valeurs (g, h, ġ, ḣ) en dixièmes de nT et de nT/an, en base 36. */
-const MAG_IGRF_LAST = @@IGRF_LAST@@;
+const MAG_IGRF_LAST = @@IGRF_YEAR_LAST@@;
 const MAG_IGRF_TABLE = @@IGRF_TABLE@@;
 const MAG_IGRF_COEF = {};
 const MAG_EPOCHS = [1985, 1990, 1995, 2000, 2005, 2010, 2015, 2020, 2025];
@@ -342,7 +343,12 @@ function magYearSource(theatre, yearStr, force, routeDate, cardDate) {
 
 def build_block():
     """Le texte du bloc, délimité par ses deux commentaires, sans saut de ligne final."""
-    body = _JS.replace('@@IGRF_LAST@@', str(IGRF_LAST)).replace('@@IGRF_TABLE@@', build_igrf_table()).replace('@@TABLE@@', build_table())
+    if not IGRF_YEAR_LAST < IGRF_LAST:
+        raise SystemExit(f"[ERREUR] IGRF_YEAR_LAST ({IGRF_YEAR_LAST}) doit précéder la dernière époque embarquée IGRF_LAST ({IGRF_LAST})")
+    igrf_table = build_igrf_table()
+    if "\n  %d: '" % IGRF_LAST not in igrf_table:
+        raise SystemExit(f"[ERREUR] l'époque IGRF {IGRF_LAST} manque à la table : elle sert à interpoler 1980 à {IGRF_YEAR_LAST}")
+    body = _JS.replace('@@IGRF_YEAR_LAST@@', str(IGRF_YEAR_LAST)).replace('@@IGRF_TABLE@@', igrf_table).replace('@@TABLE@@', build_table())
     return BLOCK_BEGIN + body + BLOCK_END + '\n'
 
 

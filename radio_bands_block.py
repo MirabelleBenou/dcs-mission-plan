@@ -20,12 +20,14 @@ _JS = r"""
 //   Mi-24P : R-863 (poste 1) 100 à 149,975 et 220 à 399,9 · R-828 (poste 2) 20 à 59,9 · Jadro-1I (poste 3, HF) 2 à 17,999 · guide du Mi-24P, p. 423 (DCS ne donne pas de bande).
 //   Mi-8MT : R-863 100 à 149,975 et 220 à 399,975 · R-828 20 à 59,975 · Jadro-1A (HF) 2 à 17,999 · guide du Mi-8MTV2, p. 169 (pas de fichier DCS).
 //   F-4E-45MC : poste 1 COMM (225 à 399,95) et poste 2 AUX, réception seule (265 à 284,9) · manuel du F-4E, chapitre « UHF Radio ».
-//   Mirage-F1EE : TRAP 136 (118 à 143,975 et 225 à 399,975) et TRAP 137B (225 à 399,975) · manuel du Mirage F1 (3.13).
+//   Mirage-F1EE, F1CE, F1BE : TRAP 136 (118 à 143,975 et 225 à 399,975) et TRAP 137B (225 à 399,975) · manuel du Mirage F1 (3.13).
 const RADIO_BANDS = {
   'Mi-24P': { 1: [[100, 149.975], [220, 399.9]], 2: [[20, 59.9]], 3: [[2, 17.999]] },
   'Mi-8MT': { 1: [[100, 149.975], [220, 399.975]], 2: [[20, 59.975]], 3: [[2, 17.999]] },
   'F-4E-45MC': { 1: [[225, 399.95]], 2: [[265, 284.9]] },
-  'Mirage-F1EE': { 1: [[118, 143.975], [225, 399.975]], 2: [[225, 399.975]] }
+  'Mirage-F1EE': { 1: [[118, 143.975], [225, 399.975]], 2: [[225, 399.975]] },
+  'Mirage-F1CE': { 1: [[118, 143.975], [225, 399.975]], 2: [[225, 399.975]] },
+  'Mirage-F1BE': { 1: [[118, 143.975], [225, 399.975]], 2: [[225, 399.975]] }
 };
 
 // Les postes que la mission ne pré-règle pas, par type : numéro de poste → nombre de fréquences. Leurs fréquences vivent dans la fiche comme les canaux d'un poste pré-réglé

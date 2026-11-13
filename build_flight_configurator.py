@@ -12,6 +12,7 @@ Blocs partagés insérés tels quels (identiques à l'octet dans les modules qui
   payload_rules_block.py — les règles d'emport du Loadout Editor, recopiées au caractère (portes, incompatibilités, exigences, plafond de leurres et de paillettes) ;
                       il lit AIRCRAFT_PYLONS et PAYLOAD_GAME_RULES. Le Flight Configurator seul le reçoit.
   group_store_block.py — la fiche des groupes partagée avec le Route Planner (flight_set_v1) : lecture, écriture groupe par groupe, migration
+  route_write_block.py — l'écriture d'une route (route_set_v1) : le seul chemin par lequel l'exemple du module écrit la route de son groupe ; le Route Planner et le Datacard Generator l'emploient aussi
   import_block.py   — la fenêtre d'import commune au Route Planner (HQ, briefing en cours, fichier) : lit les sources et écrit dans la fiche ; le module en reçoit un rappel
   magvar_block.py, projection_block.py, route_pack_block.py — la déclinaison magnétique, les projections des théâtres de DCS (llToDcs, dcsToLl) et
                       packPoint (le point d'un paquet, le même texte qu'au Route Planner) : le bloc Route en tire les caps magnétiques, le croquis et les points
@@ -104,6 +105,7 @@ from radio_bands_block import build_block as build_radio_bands_block
 from radio_block import build_block as build_radio_block
 from route_pack_block import build_block as build_route_pack_block
 from route_theatre_block import build_block as build_route_theatre_block
+from route_write_block import build_block as build_route_write_block
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 APP_VERSION = "0.1.2"
@@ -454,7 +456,6 @@ I18N_FR = {
     'tb.example': 'Exemple',
     'tb.example.tip': 'Ouvrir l\u2019exemple : deux groupes (deux Mi-24P, deux Mi-8MT) ; le travail en cours se restaure en un geste',
     'toast.example': 'Exemple chargé',
-    'ex.group': 'EXEMPLE',
 
     'bar.ok': 'Prêt à exporter : {0}',
     'bar.clamped': '{0} réglage(s) d’emport ramené(s) à la limite ou aux valeurs par défaut de l’appareil.',
@@ -763,7 +764,6 @@ I18N_EN = {
     'tb.example': 'Example',
     'tb.example.tip': 'Open the example: two groups (two Mi-24P, two Mi-8MT); the work in progress comes back in one tap',
     'toast.example': 'Example loaded',
-    'ex.group': 'EXAMPLE',
 
     'bar.ok': 'Ready to export: {0}',
     'bar.clamped': '{0} loadout setting(s) brought back to the aircraft limit or default values.',
@@ -4057,19 +4057,46 @@ function fcBack(m) {
   renderAll();
   clearTimeout(_saveTimer); _saveTimer = 0;
 }
-// « Exemple » : deux groupes, au geste « Remplacer » (on fait, on garde l'ancien, « Restaurer » 12 s, aucune question) ; chacun est ce que « + groupe » donne, puis le type posé sur ses deux unités.
+// « Exemple » : un seul groupe, CAESAR (deux Mi-24P, camp rouge), au théâtre de l'exemple (Syria), qui suit la route d'exemple de la suite (FOOTHOLD M3, la même que celle du Route Planner) ; au geste « Remplacer »
+// (on fait, on garde l'ancien, « Restaurer » 12 s, aucune question). Le groupe est ce que « + groupe » donne, puis le type posé sur ses deux unités ; sa route s'écrit par le bloc d'écriture d'une route,
+// seul chemin d'écriture de route_set_v1 (une route de même nom et mêmes points y est déjà, celle de l'exemple du Route Planner : le groupe la suit, aucune seconde route).
+// L'exemple est aussi le seul geste, avec l'ouverture d'un fichier, qui écrit le théâtre commun (mp_theatre_v1) : thWriteKey ne réécrit pas une valeur égale, la boucle des autres modules reste coupée.
+const EXAMPLE_ROUTE = @@EXAMPLE_ROUTE@@;
+const EXAMPLE_ROUTE_EN = @@EXAMPLE_ROUTE_EN@@;
+const EXAMPLE_GROUP = 'CAESAR';
+function exampleSamePoints(a, b) {
+  const k = p => [p.name, p.lat, p.lon, p.alt, p.altRef].join('|');
+  return Array.isArray(a) && a.length === b.length && a.every((p, i) => isObj(p) && k(p) === k(b[i]));
+}
+// Le groupe fcId suit la route d'exemple de la langue de l'interface au moment du clic ; la fiche relue, le module reprend le groupe tel qu'elle le porte (route, copie des points, lien)
+function exampleRouteFor(fcId) {
+  const ex = CURRENT_LANG === 'en' ? EXAMPLE_ROUTE_EN : EXAMPLE_ROUTE;
+  const set = rwReadSet(), st = rwReadState();
+  let rid = '';
+  if (set) {
+    rwFresh(set, st);
+    const hit = set.routes.filter(r => routeTheatre(r, rwRefTheatre(st)) === ex.theatre && r.name === ex.name && exampleSamePoints(r.points, ex.points))[0];
+    if (hit) rid = hit.rid;
+  }
+  const res = rid ? rwLinkRoute(fcId, rid) : rwCreateRoute({ name: ex.name, theatre: ex.theatre, points: clone(ex.points), fcId: fcId });
+  if (!res.ok && res.why === 'full') showToast(t('toast.saveFail'), { type: 'err', ms: 6000 });
+  const g = gsRead(), raw = g ? g.flights.filter(x => x.fcId === fcId)[0] : null, nf = raw ? restoreFlight(raw) : null;
+  if (nf) S.flights = S.flights.map(f => (f.fcId === fcId ? nf : f));
+}
 function loadExample() {
   flushWork();
   replaceWithRestore({
     keys: GS_CONTENT_KEYS, mem: fcMem, back: fcBack,
     run: () => {
-      const mk = (type, n) => { const f = newFlight(); f.name = t('ex.group') + ' ' + n; f.coalition = 'red'; f.units = [newUnit(type), newUnit(type)]; return f; };
-      S.flights = [mk('Mi-24P', 1), mk('Mi-8MT', 2)];
+      const f = newFlight(); f.name = EXAMPLE_GROUP; f.coalition = 'red'; f.units = [newUnit('Mi-24P'), newUnit('Mi-24P')];
+      S.flights = [f];
       S.sel = { f: 0, u: 0 };
+      S.theatre = EXAMPLE_ROUTE.theatre; thWriteKey(S.theatre);
       UI.clamped = 0; UI.exportTried = false; UI.rtChoose = null;
       Object.assign(UI.cmp, { saving: false, err: '', st: null });
       clearTimeout(_saveTimer);
-      if (gsReplaceAll(S.theatre, JSON.parse(JSON.stringify(S.flights)))) gsMarkAll();
+      if (gsReplaceAll(S.theatre, JSON.parse(JSON.stringify(S.flights)))) { gsMarkAll(); exampleRouteFor(f.fcId); gsMarkAll(); }
+      thFill();
       renderAll();
       writeState();
       return gsSettled();
@@ -4539,9 +4566,25 @@ def tables_js():
     return out
 
 
+def example_route(lang):
+    """La route d'exemple de la suite (samples/example_route_<lang>.json, lue aussi par le build du Route Planner) : le nom, le théâtre et les points, ce que le groupe d'exemple suit."""
+    path = os.path.join(HERE, 'samples', 'example_route_%s.json' % lang)
+    if not os.path.isfile(path):
+        raise SystemExit("[ERREUR] Entrée manquante : %s (samples/example_route_%s.json attendu)" % (path, lang))
+    with open(path, encoding='utf-8', newline='') as f:
+        try:
+            r = json.load(f)
+        except ValueError as e:
+            raise SystemExit("[ERREUR] Route d'exemple illisible (%s) : %s" % (lang, e))
+    if r.get('format') != 'dcs-route-v1' or not isinstance(r.get('points'), list) or not r['points']:
+        raise SystemExit("[ERREUR] La route d'exemple (%s) n'est pas au format dcs-route-v1 avec des points" % lang)
+    return json.dumps({'name': r['name'], 'theatre': r['theatre'], 'points': r['points']}, ensure_ascii=False, indent=2).replace('</', '<\\/')
+
+
 def app_js():
     """Le script du module : les textes (JSON) sont posés dans JS_APP."""
-    return JS_APP.replace('@@I18N@@', json.dumps({'fr': I18N_FR, 'en': I18N_EN}, ensure_ascii=False, indent=1))
+    return (JS_APP.replace('@@I18N@@', json.dumps({'fr': I18N_FR, 'en': I18N_EN}, ensure_ascii=False, indent=1))
+            .replace('@@EXAMPLE_ROUTE@@', example_route('fr')).replace('@@EXAMPLE_ROUTE_EN@@', example_route('en')))
 
 
 def build_html():
@@ -4551,7 +4594,7 @@ def build_html():
                   .replace('@@OSWALD_500@@', A['OSWALD_500'])
                   .replace('@@OSWALD_700@@', A['OSWALD_700']))
     js = (build_radio_block() + '\n' + build_radio_bands_block() + '\n' + tables_js() + '\n' + build_payload_block() + '\n' + build_payload_rules_block() + '\n' + PAD2_JS + '\n' + COORD_BLOCK + READNUM_BLOCK + build_magvar_block() + '\n' + build_projection_block() + '\n'
-          + build_route_pack_block() + '\n' + build_route_theatre_block() + '\n' + build_group_store_block() + '\n' + build_import_block() + '\n' + build_messages_block() + '\n' + build_ui_block() + '\n' + JS_TBM.replace('@@TBM_JS@@\n', build_tbm_block()) + '\n' + app_js())
+          + build_route_pack_block() + '\n' + build_route_theatre_block() + '\n' + build_group_store_block() + '\n' + build_route_write_block() + '\n' + build_import_block() + '\n' + build_messages_block() + '\n' + build_ui_block() + '\n' + JS_TBM.replace('@@TBM_JS@@\n', build_tbm_block()) + '\n' + app_js())
     return ('<!DOCTYPE html>\n<html lang="fr">\n<head>\n<meta charset="UTF-8">\n'
             '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">\n'
             '<meta name="theme-color" content="#1a1e10">\n<title>Flight Configurator — Mission Plan</title>\n<style>\n'
@@ -4662,7 +4705,7 @@ def check(html):
     ok(not re.search(r'fetch\(|XMLHttpRequest|WebSocket|sendBeacon|<script[^>]*\bsrc=|<link[^>]*href=["\']http', own), 'aucune requête réseau (hors JSZip, qui n\'en fait pas)')
     ok(not re.search(r'font-weight:\s*(600|800|900|bold)|font:\s*(600|800|900|bold)\b', own), 'aucune graisse sans sa face (R295)')
     ok('/* ===== POSTES RADIO (COMME AU COCKPIT) ===== */' in html and '/* ===== EMPORT (PRESETS ET PAYLOAD) ===== */' in html, 'blocs partagés présents')
-    for label, blk in (('bandes et postes non pré-réglés', build_radio_bands_block()), ('déclinaison', build_magvar_block()), ('projections', build_projection_block()), ('points de paquet', build_route_pack_block()), ('théâtre d\'une route', build_route_theatre_block()), ('groupes partagés', build_group_store_block()),
+    for label, blk in (('bandes et postes non pré-réglés', build_radio_bands_block()), ('déclinaison', build_magvar_block()), ('projections', build_projection_block()), ('points de paquet', build_route_pack_block()), ('théâtre d\'une route', build_route_theatre_block()), ('groupes partagés', build_group_store_block()), ('écriture d\'une route', build_route_write_block()),
                        ('import commun (script)', build_import_block()), ('import commun (feuille)', build_import_css()), ('import commun (fenêtre)', build_import_html()),
                        ('messages communs (script)', build_messages_block()), ('messages communs (feuille)', build_messages_css()),
                        ('interface commune (script)', build_ui_block()), ('interface commune (feuille)', build_ui_css())):

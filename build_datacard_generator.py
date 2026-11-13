@@ -172,7 +172,7 @@ EXAMPLE_DOC_JSON = r'''{
         "operation": "FOOTHOLD",
         "mission": "M3",
         "date": "1989-03-22",
-        "time": "10:00 L"
+        "time": "08:00"
       },
       "flight": {
         "callsign": "CAESAR",
@@ -379,7 +379,7 @@ EXAMPLE_DOC_JSON_EN = r'''{
         "operation": "FOOTHOLD",
         "mission": "M3",
         "date": "1989-03-22",
-        "time": "10:00 L"
+        "time": "08:00"
       },
       "flight": {
         "callsign": "CAESAR",
@@ -7639,7 +7639,9 @@ function dgBack(m) {
 function loadExample() {
   replaceWithRestore({ keys: GS_CONTENT_KEYS, mem: dgMem, back: dgBack, msg: t('toast.example'), run: () => gsSettled(loadExampleNow()) });
 }
+const DG_EXAMPLE_THEATRE = 'Syria';       /* l'exemple raconte FOOTHOLD au-dessus de Chypre : le théâtre de la route d'exemple du Route Planner */
 function loadExampleNow() {
+  dgSetTheatre(DG_EXAMPLE_THEATRE);       /* le geste d'un choix dans la liste de la barre : le document le prend et mp_theatre_v1 s'écrit (une valeur égale n'est pas réécrite) */
   const linked = doc.cards.filter(c => c.gsId);       /* les groupes de la fiche gardent leurs cartes ; la fiche n'est pas touchée */
   const ex = normalizeDoc(clone(CURRENT_LANG === 'en' ? EXAMPLE_DOC_EN : EXAMPLE_DOC));   // la langue de l'interface au moment du clic
   ex.cards = linked.concat(ex.cards);

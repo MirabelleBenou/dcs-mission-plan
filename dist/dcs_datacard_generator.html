@@ -1887,7 +1887,7 @@ const EXAMPLE_DOC = {
         "operation": "FOOTHOLD",
         "mission": "M3",
         "date": "1989-03-22",
-        "time": "10:00 L"
+        "time": "08:00"
       },
       "flight": {
         "callsign": "CAESAR",
@@ -2091,7 +2091,7 @@ const EXAMPLE_DOC_EN = {
         "operation": "FOOTHOLD",
         "mission": "M3",
         "date": "1989-03-22",
-        "time": "10:00 L"
+        "time": "08:00"
       },
       "flight": {
         "callsign": "CAESAR",
@@ -4063,15 +4063,15 @@ function readNum(s) {
 
 /* ===== DÉCLINAISON MAGNÉTIQUE (WMM, comme DCS) ===== */
 /* Le modèle est celui des fichiers de DCS World, qui calcule ainsi la déclinaison d'une date de mission :
-   - une année entière Y jusqu'à MAG_IGRF_LAST (1985) : l'IGRF-12 (IAGA ; fichier COF_IGRF/IGRF12.COF), au 1er janvier de Y sans
+   - une année entière Y jusqu'à MAG_IGRF_LAST (1984) : l'IGRF-12 (IAGA ; fichier COF_IGRF/IGRF12.COF), au 1er janvier de Y sans
      la date : coefficients g, h interpolés linéairement entre les deux époques de cinq ans qui encadrent Y (1900 pour les années
      plus anciennes), degré 10. Table MAG_IGRF_TABLE : par époque de 1900 à 1985, 65 termes (n = 1 … 10, m = 0 … n) × deux valeurs
      (g, h) en dixièmes de nT, en base 36 ;
-   - une année entière Y après 1985 : le World Magnetic Model de la NOAA (domaine public ; fichiers Data/MagVar/COF) de l'époque la plus
-     grande strictement inférieure à Y (2020 → WMM 2015, 2025 → WMM 2020, 2026 et après → WMM 2025), à la date exacte : g + ġ·dt, dt = y − époque,
+   - une année entière Y dès 1985 (MAG_IGRF_LAST + 1) : le World Magnetic Model de la NOAA (domaine public ; fichiers Data/MagVar/COF) de l'époque la plus
+     grande strictement inférieure à Y (1985 → WMM 1985, 2020 → WMM 2015, 2025 → WMM 2020, 2026 et après → WMM 2025), à la date exacte : g + ġ·dt, dt = y − époque,
      sans borne. Un jeu de coefficients tous les cinq ans, de 1985.0 à 2025.0 (degré 12). Table MAG_TABLE : par époque, 90 termes
      (n = 1 … 12, m = 0 … n) × quatre valeurs (g, h, ġ, ḣ) en dixièmes de nT et de nT/an, en base 36. */
-const MAG_IGRF_LAST = 1985;
+const MAG_IGRF_LAST = 1984;
 const MAG_IGRF_TABLE = {
   1900: '-6rdy 0 -hqc 19p0 -582 0 mey -86q 74o 8ne 7vw 0 -bc2 -2jo 9ow u 4ew 41a 6rc 0 4ug 1i6 53c -j6 -2sa -1mc 118 -ku -1f4 0 2j4 -1mc 21c eq 1e -96 -nw -yg -4g u hi 0 gy -2i -32 n2 -1oa k -g4 -9q ge a0 -p0 -j6 jg 0 -fa -ci 0 -3m 9g -2s -be -a -5u 7s 50 -3c 1o -64 32 0 28 28 -14 -3w -2i 1y a -3m k 1e -2i 4g 1e -1e 28 -50 28 0 2s -5k a 3w -32 1e 3c -u a -k -k 28 k 2s -a -k -a k -u 0 -14 k k a -1e k -k 1o 1o -14 14 0 0 -k k 14 k 0 0 -1o',
   1905: '-6qs0 0 -hqc 19le -5m8 0 mlc -8do 816 87u 802 0 -bj0 -2r6 9k6 9g 4we 3pc 6sg 0 4ym 1ke 51e -le -2xk -1ju 14k -i2 -1hc 0 2j4 -1hm 1zy fk -a -8w -pu -yq -78 32 h8 0 go -1y -32 nw -1pe 14 -fu -8w fu 8w -pk -im jg 0 -f0 -cs 0 -3w 96 -32 -be 0 -5k 7s 50 -3c 1o -64 32 0 28 28 -14 -46 -2i 1y a -3m k 1e -28 4g 1e -1e 28 -50 28 0 2s -5k a 3w -32 1e 3c -u a -k -k 28 k 2s 0 -k -a k -u 0 -14 k k a -1e k -k 1o 1o -14 14 0 0 -k k 14 k 0 0 -1o',
@@ -4286,11 +4286,10 @@ const RADIO_POSTES = {
   "FA-18C_hornet":{ 1: "AN/ARC-210 (V/UHF - COMM 1)", 2: "AN/ARC-210 (V/UHF - COMM 2)" },
   "JF-17":       { 1: "R&S M3AR (V/UHF - COMM 1)",    2: "R&S M3AR (V/UHF - COMM 2)" },
   // ─── OTAN — Mirage F1 ─────────────────────────────────────────────────
-  "Mirage-F1CE": { 1: "TRAP 138 (UHF - Principale)",  2: "TRAP 139 (V/UHF - Auxiliaire)" },
-  "Mirage-F1BE": { 1: "TRAP 138 (UHF - Principale)",  2: "TRAP 139 (V/UHF - Auxiliaire)" },
-  "Mirage-F1CR": { 1: "TRAP 138 (UHF - Principale)",  2: "TRAP 139 (V/UHF - Auxiliaire)" },
+  "Mirage-F1CE": { 1: "TRAP 136 (V/UHF - Verte)",     2: "TRAP 137B (UHF - Rouge)" },
+  "Mirage-F1BE": { 1: "TRAP 136 (V/UHF - Verte)",     2: "TRAP 137B (UHF - Rouge)" },
+  "Mirage-F1CR": { 1: "TRAP 136 (V/UHF - Verte)",     2: "TRAP 137B (UHF - Rouge)" },
   "Mirage-F1EE": { 1: "TRAP 136 (V/UHF - Verte)",     2: "TRAP 137B (UHF - Rouge)" },
-  "Mirage-F1M":  { 1: "TRAP 136 (V/UHF - Verte)",     2: "TRAP 137B (UHF - Rouge)" },
   "M-2000C":     { 1: "UHF",                            2: "V/UHF" },
   // ─── Attaque / CAS ────────────────────────────────────────────────────
   "A-10C":       { 1: "AN/ARC-186 (VHF AM)", 2: "AN/ARC-164 (UHF)",  3: "AN/ARC-186 (VHF FM)" },
@@ -4342,12 +4341,14 @@ function radioCockpitChannel(type, radioIndex, mizChannel) {
 //   Mi-24P : R-863 (poste 1) 100 à 149,975 et 220 à 399,9 · R-828 (poste 2) 20 à 59,9 · Jadro-1I (poste 3, HF) 2 à 17,999 · guide du Mi-24P, p. 423 (DCS ne donne pas de bande).
 //   Mi-8MT : R-863 100 à 149,975 et 220 à 399,975 · R-828 20 à 59,975 · Jadro-1A (HF) 2 à 17,999 · guide du Mi-8MTV2, p. 169 (pas de fichier DCS).
 //   F-4E-45MC : poste 1 COMM (225 à 399,95) et poste 2 AUX, réception seule (265 à 284,9) · manuel du F-4E, chapitre « UHF Radio ».
-//   Mirage-F1EE : TRAP 136 (118 à 143,975 et 225 à 399,975) et TRAP 137B (225 à 399,975) · manuel du Mirage F1 (3.13).
+//   Mirage-F1EE, F1CE, F1BE : TRAP 136 (118 à 143,975 et 225 à 399,975) et TRAP 137B (225 à 399,975) · manuel du Mirage F1 (3.13).
 const RADIO_BANDS = {
   'Mi-24P': { 1: [[100, 149.975], [220, 399.9]], 2: [[20, 59.9]], 3: [[2, 17.999]] },
   'Mi-8MT': { 1: [[100, 149.975], [220, 399.975]], 2: [[20, 59.975]], 3: [[2, 17.999]] },
   'F-4E-45MC': { 1: [[225, 399.95]], 2: [[265, 284.9]] },
-  'Mirage-F1EE': { 1: [[118, 143.975], [225, 399.975]], 2: [[225, 399.975]] }
+  'Mirage-F1EE': { 1: [[118, 143.975], [225, 399.975]], 2: [[225, 399.975]] },
+  'Mirage-F1CE': { 1: [[118, 143.975], [225, 399.975]], 2: [[225, 399.975]] },
+  'Mirage-F1BE': { 1: [[118, 143.975], [225, 399.975]], 2: [[225, 399.975]] }
 };
 
 // Les postes que la mission ne pré-règle pas, par type : numéro de poste → nombre de fréquences. Leurs fréquences vivent dans la fiche comme les canaux d'un poste pré-réglé
@@ -10500,7 +10501,9 @@ function dgBack(m) {
 function loadExample() {
   replaceWithRestore({ keys: GS_CONTENT_KEYS, mem: dgMem, back: dgBack, msg: t('toast.example'), run: () => gsSettled(loadExampleNow()) });
 }
+const DG_EXAMPLE_THEATRE = 'Syria';       /* l'exemple raconte FOOTHOLD au-dessus de Chypre : le théâtre de la route d'exemple du Route Planner */
 function loadExampleNow() {
+  dgSetTheatre(DG_EXAMPLE_THEATRE);       /* le geste d'un choix dans la liste de la barre : le document le prend et mp_theatre_v1 s'écrit (une valeur égale n'est pas réécrite) */
   const linked = doc.cards.filter(c => c.gsId);       /* les groupes de la fiche gardent leurs cartes ; la fiche n'est pas touchée */
   const ex = normalizeDoc(clone(CURRENT_LANG === 'en' ? EXAMPLE_DOC_EN : EXAMPLE_DOC));   // la langue de l'interface au moment du clic
   ex.cards = linked.concat(ex.cards);
