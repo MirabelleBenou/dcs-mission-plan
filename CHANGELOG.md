@@ -104,6 +104,7 @@ Changes merged since the last release, grouped per tool.
 #### Added
 - **Example** button: loads a demonstration reconnaissance photo with its markers, shapes, magnifier and info block (USDA NAIP aerial image, public domain).
 - Open ▾ (a work file, or an image) and Save, like the other tools.
+- A Clear button, as in the other tools: after a confirmation, the image, its marks, the legend and the information block are emptied.
 #### Changed
 - The top bar no longer overflows on narrow phones.
 - Importing a wing configuration checks the file like HQ and the Briefing Generator, with the same messages.

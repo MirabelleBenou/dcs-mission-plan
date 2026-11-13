@@ -1740,6 +1740,45 @@ body {{
   padding-left: max(14px, env(safe-area-inset-left));
   padding-right: max(14px, env(safe-area-inset-right));
 }}
+/* La barre du haut défile dès qu'elle déborde (le bouton Effacer s'ajoute à la barre), un fondu signale le bord qui cache du contenu : la même règle que le Briefing Generator */
+.toolbar {{
+  --fade-w: 22px;
+  --fade-gap: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  flex-wrap: nowrap;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  touch-action: pan-x;
+}}
+.toolbar::-webkit-scrollbar {{ display: none; }}
+.toolbar::before, .toolbar::after {{
+  content: '';
+  position: sticky;
+  flex: 0 0 var(--fade-w);
+  width: var(--fade-w);
+  align-self: stretch;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .15s;
+  z-index: 2;
+}}
+.toolbar::before {{
+  left: 0;
+  margin-right: calc(-1 * (var(--fade-w) + var(--fade-gap)));
+  background: inherit;
+  mask-image: linear-gradient(90deg, #000, transparent);
+  -webkit-mask-image: linear-gradient(90deg, #000, transparent);
+}}
+.toolbar::after {{
+  right: 0;
+  margin-left: calc(-1 * (var(--fade-w) + var(--fade-gap)));
+  background: inherit;
+  mask-image: linear-gradient(270deg, #000, transparent);
+  -webkit-mask-image: linear-gradient(270deg, #000, transparent);
+}}
+.toolbar.fade-l::before, .toolbar.fade-r::after {{ opacity: 1; }}
 .tb-brand {{ display: flex; flex-direction: column; line-height: 1.1; gap: 1px; flex-shrink: 0; }}
 .tb-brand-main {{
   font-family: var(--f-stencil);
@@ -1843,6 +1882,7 @@ body {{
   border-color: var(--amber);
   color: var(--amber);
 }}
+.toolbar .tb-btn.danger:hover {{ background: var(--rust); border-color: var(--red-faded); color: var(--paper-light); }}
 .toolbar .tb-btn:active {{ transform: translateY(1px); }}
 .toolbar .tb-btn svg {{ width: 16px; height: 16px; flex-shrink: 0; }}
 .tb-spacer {{ flex: 1; }}
@@ -2548,6 +2588,10 @@ body {{
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
     <span class="tb-btn-label" data-i18n="toolbar.example">Exemple</span>
   </button>
+  <button type="button" class="tb-btn danger" id="btn-reset" data-i18n-title="toolbar.reset.tooltip" title="Effacer" data-i18n-aria-label="toolbar.reset.tooltip" aria-label="Effacer">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+    <span class="tb-btn-label" data-i18n="toolbar.reset">Effacer</span>
+  </button>
   <select class="tb-select" id="theme-select" data-i18n-title="toolbar.theme.tooltip" title="Thème graphique">
     <option value="cw-nato"     data-i18n="theme.cw-nato">Cold War OTAN</option>
     <option value="cw-soviet"   data-i18n="theme.cw-soviet">Cold War Soviétique</option>
@@ -2860,6 +2904,12 @@ const I18N = {{
     'toolbar.export.tooltip': "Exporter l'image (PNG pleine résolution)",
     'toolbar.example': 'Exemple',
     'toolbar.example.tooltip': "Ouvrir l'exemple",
+    'toolbar.reset': 'Effacer',
+    'toolbar.reset.tooltip': 'Effacer',
+    'clear.title': 'Effacer le Recon Station ?',
+    'clear.text': 'L\u2019image, ses annotations, la l\u00e9gende et le bloc d\u2019informations seront effac\u00e9s. Le th\u00e8me et la configuration Wing restent.',
+    'clear.verb': 'Effacer',
+    'clear.toast': 'Recon Station effac\u00e9.',
     'toast.example-loaded': 'Exemple chargé ✓',
     'msg.exampleUnavailable': '⚠ Exemple indisponible.',
     'editor.image.credit': 'Image : USDA NAIP, domaine public',
@@ -3026,6 +3076,12 @@ const I18N = {{
     'toolbar.export.tooltip': 'Export the image (full-resolution PNG)',
     'toolbar.example': 'Example',
     'toolbar.example.tooltip': 'Open the example',
+    'toolbar.reset': 'Clear',
+    'toolbar.reset.tooltip': 'Clear',
+    'clear.title': 'Clear the Recon Station?',
+    'clear.text': 'The image, its marks, the legend and the information block will be cleared. The theme and the wing configuration stay.',
+    'clear.verb': 'Clear',
+    'clear.toast': 'Recon Station cleared.',
     'toast.example-loaded': 'Example loaded ✓',
     'msg.exampleUnavailable': '⚠ Example unavailable.',
     'editor.image.credit': 'Image: USDA NAIP, public domain',
@@ -3183,25 +3239,29 @@ const KEY_STATE = 'recon_state_v1';
 const KEY_THEME = 'theme_v1';
 const KEY_LANG  = 'lang_v1';
 
-let STATE = {{
-  fields: {{
-    target: '', coords: '', crs: '', alt: '',
-    msn: '', sensor: '', dtg: '', crew: '', class_: ''
-  }},
-  cartouche: [],
-  logos: [],          // [{{ id, name, b64(dataURL) }}] — logos utilisateur
-  logoId: 'none',     // id dans STATE.logos ou 'none'
-  contrast: 105,
-  logoMode: 'gray',    // 'color' | 'gray' | 'white'  (défaut Gris)
-  textColor: '#fff',   // '#fff' | '#000'
-  markerColor: 'red',  // 'red' | 'black' | 'white'
-  fxVignette: 0,       // 0..100
-  fxGrain: 0,          // 0..100
-  fxScanlines: 0,      // 0..100
-  sensorMode: 'eo',    // R2-C : 'eo' | 'ir-white' | 'ir-black' | 'sar'
-  annotations: [],     // R2-A : insets (loupes)
-  classification: {{ enabled: false, level: 'unclassified' }},  // R2-B Lot 2
-}};
+// L'état d'un profil neuf (aussi celui que « Effacer » rend)
+function rsFreshState() {{
+  return {{
+    fields: {{
+      target: '', coords: '', crs: '', alt: '',
+      msn: '', sensor: '', dtg: '', crew: '', class_: ''
+    }},
+    cartouche: [],
+    logos: [],          // [{{ id, name, b64(dataURL) }}] — logos utilisateur
+    logoId: 'none',     // id dans STATE.logos ou 'none'
+    contrast: 105,
+    logoMode: 'gray',    // 'color' | 'gray' | 'white'  (défaut Gris)
+    textColor: '#fff',   // '#fff' | '#000'
+    markerColor: 'red',  // 'red' | 'black' | 'white'
+    fxVignette: 0,       // 0..100
+    fxGrain: 0,          // 0..100
+    fxScanlines: 0,      // 0..100
+    sensorMode: 'eo',    // R2-C : 'eo' | 'ir-white' | 'ir-black' | 'sar'
+    annotations: [],     // R2-A : insets (loupes)
+    classification: {{ enabled: false, level: 'unclassified' }},  // R2-B Lot 2
+  }};
+}}
+let STATE = rsFreshState();
 
 /* Les six niveaux du Briefing Generator (clés du BG, libellés « classif.* » dans la langue de l'outil) ; une valeur enregistrée avant (UNCLASSIFIED, CONFIDENTIAL, SECRET, TOP SECRET) se relit sur le niveau correspondant */
 const RS_CLASS_KEYS = ['confidential', 'secret', 'top-secret', 'unclassified', 'nato-restricted', 'nato-secret'];
@@ -3516,6 +3576,14 @@ function rsBack(m) {{
   rsdSyncUi();
   saveState();
   schedulePreview();
+}}
+// Effacer : après confirmation, le module revient à l'état d'un profil neuf (la seule clé écrite est recon_state_v1 ; le thème, la langue et la configuration Wing ne bougent pas),
+// puis, comme au démarrage, les champs Msn, DTG et Class vides se remplissent du briefing en cours
+async function rsReset() {{
+  if (!(await askConfirm({{ title: t('clear.title'), text: t('clear.text'), verb: t('clear.verb'), danger: true }}))) return;
+  rsBack({{ state: rsFreshState(), img: null, ready: false, dz: t('editor.image.drop'), credit: false }});
+  rsBriefingFill();
+  showToast(t('clear.toast'), {{ type: 'ok' }});
 }}
 async function loadExample() {{
   // sans travail en cours : ni question ni « Restaurer »
@@ -4814,6 +4882,7 @@ function initEvents() {{
 
   // Exemple
   document.getElementById('btn-example').addEventListener('click', loadExample);
+  document.getElementById('btn-reset').addEventListener('click', rsReset);
 
   // Drop zone
   const dz = document.getElementById('drop-zone');
@@ -5084,12 +5153,46 @@ function rsFoldInit() {{
   }});
 }}
 
+function revealInToolbar(bar, el) {{
+  if (!bar || !el || bar.scrollWidth <= bar.clientWidth) return;
+  const b = bar.getBoundingClientRect();
+  const r = el.getBoundingClientRect();
+  if (r.left < b.left) bar.scrollLeft += r.left - b.left - 8;
+  else if (r.right > b.right) bar.scrollLeft += r.right - b.right + 8;
+}}
+
+function initToolbarScroll() {{
+  const bar = document.querySelector('.toolbar');
+  if (!bar) return;
+  const update = () => {{
+    const max = bar.scrollWidth - bar.clientWidth;
+    bar.classList.toggle('fade-l', bar.scrollLeft > 1);
+    bar.classList.toggle('fade-r', bar.scrollLeft < max - 1);
+  }};
+  const child = t => {{ while (t && t.parentNode !== bar) t = t.parentNode; return t; }};
+  bar.addEventListener('scroll', update, {{ passive: true }});
+  // Un appui sur un contrôle partiellement visible le ramène entier dans la vue, puis l'active
+  bar.addEventListener('click', e => revealInToolbar(bar, child(e.target)), true);
+  bar.addEventListener('focusin', e => revealInToolbar(bar, child(e.target)));
+  // Molette verticale → défilement horizontal
+  bar.addEventListener('wheel', e => {{
+    if (bar.scrollWidth <= bar.clientWidth) return;
+    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {{ bar.scrollLeft += e.deltaY; e.preventDefault(); }}
+  }}, {{ passive: false }});
+  window.addEventListener('resize', update);
+  if (window.ResizeObserver) new ResizeObserver(update).observe(bar);
+  // Le shell ajoute son bouton de retour et son tampon après le chargement
+  new MutationObserver(update).observe(bar, {{ childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['class'] }});   // les classes de la barre qui se réduit (tb-st1 à tb-st4) changent aussi sa largeur utile
+  update();
+}}
+
 async function init() {{
   loadTheme();
   loadLang();
   TBM.cfg = {{ others: () => mnClose(false), trig: MENU_TRIG }};       // ce que ce module ajoute à la liste commune : le menu « Ouvrir » se ferme avec elle
   initToolbarMenus([['theme-select', () => t('toolbar.theme.tooltip')]]);   // les listes de la barre au thème de l'interface
   mnBind();   // le menu « Ouvrir », « Sauvegarder » et Ctrl+S
+  initToolbarScroll();
   initFormMenus(sel => {{ const l = sel.parentElement && sel.parentElement.querySelector('.ed-label'); return l ? l.textContent.trim() : ''; }});   // les listes des formulaires
 
   const hasState = restoreState();
