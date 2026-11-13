@@ -120,7 +120,7 @@ def airfield_icao(facts):
 
 def dg_tables():
     """Les tables que payload_block.py lit (WEAPON_NAMES, AIRCRAFT_PYLONS, AIRCRAFT_LIMITS) et celle des masses à vide (AIRCRAFT_MASSES, pour le poids au décollage), tirées de data/*.json, les mêmes fichiers que ceux du
-    Flight Configurator, et réduites aux types du Flight Configurator (PAYLOAD_TYPES de payload_block.py) : rien n'est recopié à la main. Les index de
+    Flight Configurator, et réduites aux types du Flight Configurator (PAYLOAD_TYPES de payload_block.py), sauf les masses de toutes les armes du fichier des pylônes : rien n'est recopié à la main. Les index de
     pylônes sont renumérotés sur les seuls CLSID gardés ; le nom d'une arme est celui du fichier. Le build s'arrête si un CLSID d'un type du
     Flight Configurator n'a pas de nom."""
     types = json.loads(re.search(r"const PAYLOAD_TYPES = (\[.*?\]);", build_payload_block()).group(1).replace("'", '"'))
@@ -145,7 +145,9 @@ def dg_tables():
     nameless = [c for c in clsids if c not in names]
     if nameless:
         raise SystemExit("[ERREUR] CLSID sans nom dans data/weapon_names.json : " + ", ".join(sorted(set(nameless))[:10]))
-    pylons = {'clsids': clsids, 'weights': [pyl['weights'][orig[c]] for c in clsids], 'types': kept_types}
+    # Les CLSID gardés d'abord (leurs index sont ceux des listes de pylônes), puis tous les autres du fichier : seule leur masse sert (payloadWeaponMass), pour qu'une arme pèse au Datacard Generator comme au Flight Configurator
+    all_clsids = clsids + [c for c in pyl['clsids'] if c not in idx]
+    pylons = {'clsids': all_clsids, 'weights': [pyl['weights'][orig[c]] for c in all_clsids], 'types': kept_types}
     dump = lambda o: json.dumps(o, ensure_ascii=False, separators=(',', ':'))
     out = (dump({c: names[c] for c in sorted(clsids)}), dump(pylons), dump({ty: lim[ty] for ty in types}), dump({ty: masses[ty] for ty in types}))
     assert all('</script' not in x.lower() for x in out)
@@ -3180,7 +3182,9 @@ function normalizeCard(src) {
     if ('count' in fl) c.flight.count = normCount(fl.count);
     if ('threat' in fl) c.flight.threat = THREAT_KEYS.indexOf(fl.threat) !== -1 ? fl.threat : '';
   }
+  c.units = { mass: UNITS_DEFAULT.mass, distance: UNITS_DEFAULT.distance, altitude: UNITS_DEFAULT.altitude };       /* une carte source sans unités est en kg, km, m : setDoc convertit alors ses masses saisies vers la clé */
   const un = src.units;
+  if (!(un && typeof un === 'object')) Object.defineProperty(c, '_noUnits', { value: true, enumerable: false });       /* le fichier ne disait pas ses unités : elles ne deviennent pas la clé à l'ouverture */
   if (un && typeof un === 'object') {
     Object.keys(UNIT_CHOICES).forEach(k => { if (k in un && UNIT_CHOICES[k].indexOf(un[k]) !== -1) c.units[k] = un[k]; });
   }
@@ -3274,7 +3278,9 @@ function normalizeCard(src) {
   const fz = src.frz;
   if (gsIsObj(fz)) c.frz = normFrz(fz);
   if (!c.gsId) syncGroup(c);
-  return dgCanonCard(c);
+  const out = dgCanonCard(c);
+  if (c._noUnits) Object.defineProperty(out, '_noUnits', { value: true, enumerable: false });       /* le drapeau suit la carte rangée */
+  return out;
 }
 
 /* L'ordre des clés d'une carte : celui de newCard(), puis les clés facultatives, chacune à sa place (une clé qui manque et que le module pose plus tard, loadoutFc, ne se range pas en fin d'objet) ; une clé inconnue suit.
@@ -4735,23 +4741,25 @@ function dgFuelView(c) {
   const f = dgFlightOf(c);
   if (f) return dgFuelLots(f);
   const z = !c.gsId && gsIsObj(c.frz) ? c.frz : null;
-  return z && Array.isArray(z.fuel) ? z.fuel : [];
+  return z && Array.isArray(z.fuel) ? z.fuel : null;       /* une copie figée avant ce lot n'a pas de lots : la saisie manuelle */
 }
 const dgGroup = ds => ds.replace(/\B(?=(\d{3})+(?!\d))/g, CURRENT_LANG === 'fr' ? ' ' : ',');       /* le séparateur de milliers de la langue, comme cmpNum au Flight Configurator */
 function dgMassCalc(kg) { return dgGroup(String(Math.round(payloadMassIn(kg, dgU.mass)))); }       /* une valeur calculée, en kg, affichée dans l'unité choisie : l'entier arrondi */
-/* Une masse saisie qui est un nombre (chiffres, espaces de milliers, une décimale à virgule ou point) : sa valeur ; sinon null (un texte comme « plein » ne se convertit pas) */
+/* Une masse saisie qui est un nombre : sa valeur ; sinon null (un texte comme « plein » ne se convertit pas). La même lecture dans les deux langues : un séparateur (virgule, point, espace, espace fine)
+   suivi d'exactement trois chiffres, en groupes, sépare des milliers (« 1,200 », « 1 200 », « 1.200 » valent 1200) ; sinon une seule virgule ou un seul point est la décimale (« 1,5 », « 12,25 »). */
 function dgMassParse(v) {
   const s = String(v == null ? '' : v).trim();
-  return /^(\d{1,3}([ \u00a0\u202f]\d{3})+|\d+)([.,]\d+)?$/.test(s) ? Number(s.replace(/[ \u00a0\u202f]/g, '').replace(',', '.')) : null;
+  const g = s.match(/^([1-9]\d{0,2}(?:[,. \u00a0\u202f]\d{3})+)(?:[.,](\d+))?$/);
+  if (g) return Number(g[1].replace(/\D/g, '') + (g[2] ? '.' + g[2] : ''));
+  const d = s.match(/^(\d+)(?:[.,](\d+))?$/);
+  return d ? Number(d[1] + (d[2] ? '.' + d[2] : '')) : null;
 }
-/* Une masse saisie, affichée : un nombre au format de la langue (« 1 323 », « 1,323 »), un texte tel quel */
+/* Une masse saisie, affichée à l'aperçu : un nombre arrondi à l'entier, au format de la langue (« 1 323 », « 1,323 »), un texte tel quel */
 function dgMassShow(v) {
-  const n = dgMassParse(v), s = String(v).trim();
-  if (n === null) return s;
-  const p = s.replace(/[ \u00a0\u202f]/g, '').replace(',', '.').split('.');
-  return dgGroup(p[0]) + (p.length > 1 ? (CURRENT_LANG === 'fr' ? ',' : '.') + p[1] : '');
+  const n = dgMassParse(v);
+  return n === null ? String(v).trim() : dgGroup(String(Math.round(n)));
 }
-/* La conversion des masses saisies d'une carte (Carburant, Poids, JOKER, BINGO) de l'unité de la carte (c.units.mass) vers `to` : les nombres s'arrondissent à l'entier et s'écrivent en chiffres seuls ; un texte reste tel quel.
+/* La conversion des masses saisies d'une carte (Carburant, Poids, JOKER, BINGO) de l'unité de la carte (c.units.mass) vers `to` : les nombres s'écrivent au dixième (sans « .0 » final), en chiffres et point décimal, pour que l'aller-retour ne dérive pas ; un texte reste tel quel.
    Une seule fonction pour tous les chemins : dgUnitsSet (le menu Affichage, la clé écrite ailleurs, l'ouverture), setDoc (l'exemple, une carte blanche, un fichier ouvert ou importé), dgFollowDocNow (le document relu). Rend vrai si une valeur a bougé. */
 function dgMassConv(c, to) {
   const from = c.units && UNIT_CHOICES.mass.indexOf(c.units.mass) !== -1 ? c.units.mass : 'kg';
@@ -4760,7 +4768,7 @@ function dgMassConv(c, to) {
   ['amount', 'weight', 'joker', 'bingo'].forEach(k => {
     const n = dgMassParse(c.fuel[k]);
     if (n === null) return;
-    c.fuel[k] = String(Math.round(from === 'kg' ? n / PAYLOAD_KG_PER_LB : n * PAYLOAD_KG_PER_LB));
+    c.fuel[k] = String(Math.round((from === 'kg' ? n / PAYLOAD_KG_PER_LB : n * PAYLOAD_KG_PER_LB) * 10) / 10);
     moved = true;
   });
   return moved;
@@ -5567,7 +5575,8 @@ function blkFuel(c) {
     : lots.map(l => ({ k: ['dc.fuelqty', 'dc.weight'], sfx: lots.length > 1 ? ' \u00b7 ' + dgRanks(l.ranks) : '', v: [calc(l.fuel, false), calc(l.weight, l.unc)] }))
   ).concat([{ k: ['dc.joker', 'dc.bingo'], sfx: '', v: [typed(c.fuel.joker), typed(c.fuel.bingo)] }]).filter(r => r.v[0] !== '' || r.v[1] !== '');
   const fcLoad = (c.gsId || dgFrozen(c)) && c.loadoutFc ? dgLoadCardHtml(c) : '';
-  const load = fcLoad ? [''] : c.loadout.filter(hasText);
+  const linked = !!((c.gsId || dgFrozen(c)) && c.loadoutFc);       /* case cochée d'une carte liée ou figée : l'aperçu suit l'éditeur, les lignes saisies ne s'impriment pas */
+  const load = linked ? (fcLoad ? [''] : []) : c.loadout.filter(hasText);
   if (!rows.length && !load.length) return '';
   let b = '<div class="dc-fuelwrap">';
   if (rows.length) {
@@ -6210,7 +6219,7 @@ function dgSectionSum(id, c) {
   }
   if (id === 'weather') return uiJoin([v(c.weather.qnh), v(c.weather.wind)]);
   if (id === 'fuel') {
-    const fu = uiJoin([v(c.fuel.joker) ? t('f.joker') + ' ' + v(c.fuel.joker) : '', v(c.fuel.bingo) ? t('f.bingo') + ' ' + v(c.fuel.bingo) : '']).replace(' · ', ' / ');
+    const fu = [['f.fuelqty', c.fuel.amount], ['f.weight', c.fuel.weight], ['f.joker', c.fuel.joker], ['f.bingo', c.fuel.bingo]].filter(x => v(x[1])).map(x => t(x[0]) + ' ' + v(x[1])).join(' / ');
     const lo = c.loadout.map(v).filter(Boolean);
     return uiJoin([fu, lo.length ? lo[0] + (lo.length > 1 ? ' +' + (lo.length - 1) : '') : '']);
   }
@@ -6731,7 +6740,7 @@ window.MP_FLUSH = function () { dgTypFlush(); };
    groupe (ses champs propres viennent du fichier, ses champs de groupe de la fiche) ; les autres cartes du fichier (libres, ou liées à un groupe que la fiche n'a pas) entrent comme cartes libres,
    et remplacent les cartes libres d'avant. Le mode est celui du fichier. */
 function openDatacards(next) {
-  const u0 = next.cards.length ? next.cards[0].units : null;       /* les unités de la première carte du fichier */
+  const u0 = next.cards.length && !next.cards[0]._noUnits ? next.cards[0].units : null;       /* les unités de la première carte du fichier */
   const g = gsRead(), ids = new Set(g ? g.flights.map(f => f.fcId) : []);
   const mine = new Map(next.cards.filter(c => c.gsId && ids.has(c.gsId)).map(c => [c.gsId, c]));
   const kept = doc.cards.filter(x => x.gsId).map(x => mine.get(x.gsId) || x);

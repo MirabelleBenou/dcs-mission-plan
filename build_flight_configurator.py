@@ -2509,9 +2509,16 @@ function loCheck(type, lo, k, raw, badInput) {
   if (r.bad) return { err: tf('lo.refused.bad', name) };
   if (k === 'gun' && r.v > 100) return { err: tf('lo.refused.bad', name) };
   if (k === 'fuel') {
-    const lim = loLim(type), lb = UMASS === 'lb';
-    const kg = lb ? Math.round(r.v * PAYLOAD_KG_PER_LB * 10) / 10 : r.v;       // une saisie en lb s'écrit en kg arrondi au dixième ; le maximum se juge en kg, sans tolérance
-    if (lim && typeof lim.fuel_max === 'number' && kg > lim.fuel_max) return { err: lb ? tfu('lo.refused.fuel', cmpNum(r.v), cmpNum(payloadMassIn(lim.fuel_max, 'lb'))) : tfu('lo.refused.fuel', fmtMHz(r.v), fmtMHz(lim.fuel_max)) };
+    const lim = loLim(type), lb = UMASS === 'lb', fmax = lim && typeof lim.fuel_max === 'number' ? lim.fuel_max : null;
+    if (lb) {
+      // en lb : la limite est celle qu'affichent la note et l'attribut max (le maximum en kg arrondi à la livre) ; une saisie qui ne la dépasse pas est permise et s'écrit en kg au dixième, sans passer le maximum
+      const lbMax = fmax === null ? null : Math.round(payloadMassIn(fmax, 'lb'));
+      if (lbMax !== null && r.v > lbMax) return { err: tfu('lo.refused.fuel', cmpNum(r.v), cmpNum(lbMax)) };
+      const kg = Math.round(r.v * PAYLOAD_KG_PER_LB * 10) / 10;
+      return { text: String(fmax === null ? kg : Math.min(kg, fmax)) };
+    }
+    const kg = r.v;
+    if (fmax !== null && kg > fmax) return { err: tfu('lo.refused.fuel', fmtMHz(r.v), fmtMHz(fmax)) };
     return { text: String(kg) };
   }
   if (k === 'flare' || k === 'chaff') {
