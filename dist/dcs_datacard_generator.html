@@ -1345,7 +1345,7 @@ div.dc-bl, li.dc-bl, p.dc-bl { height: 24px; border-bottom: 1px dotted var(--dc-
 .dc-lo + .dc-lo { margin-top: 10px; }
 .dc-lo-t { font: 500 15px/1 var(--dc-fo); letter-spacing: .12em; color: var(--dc-acc); padding: 2px 0 6px 0; overflow-wrap: anywhere; }
 .dc-lot td { font: 400 17px/1.25 var(--dc-fm); white-space: normal; overflow-wrap: anywhere; vertical-align: top; text-overflow: clip; }
-.dc-lot td.n, .dc-lot th:first-child { text-align: center; }
+.dc-lot td.n, .dc-lot th:first-child { text-align: left; }
 /* l'impression : la colonne N° prend la largeur de son plus long texte, sans retour à la ligne ; CHARGE prend le reste */
 .dc-lot { table-layout: auto; }
 .dc-lot th:first-child, .dc-lot td.n { width: 1%; white-space: nowrap; overflow-wrap: normal; }
@@ -7572,16 +7572,9 @@ function dgLoadTable(rows, cls) {
     rows.map(r => '<tr><td class="n">' + esc(r.n) + '</td><td class="w">' + esc(r.name) + '</td></tr>').join('') + '</tbody></table>';
 }
 /* L'impression regroupe les stations d'un même groupe qui portent le même libellé en une ligne (le libellé reste celui du jeu) : la colonne N° dit les stations dans
-   l'ordre croissant, une suite d'au moins trois numéros qui se suivent s'écrit « a–b » (demi-cadratin), le reste est séparé par « , » ; la ligne prend la place de sa plus petite station */
+   l'ordre croissant, séparées par « / », sans plage ; la ligne prend la place de sa plus petite station */
 function dgStationText(ns) {
-  const a = ns.slice().sort((x, y) => Number(x) - Number(y)), out = [];
-  for (let i = 0; i < a.length;) {
-    let j = i;
-    while (j + 1 < a.length && Number(a[j + 1]) === Number(a[j]) + 1) j++;
-    if (j - i >= 2) out.push(a[i] + '\u2013' + a[j]); else for (let k = i; k <= j; k++) out.push(a[k]);
-    i = j + 1;
-  }
-  return out.join(', ');
+  return ns.slice().sort((x, y) => Number(x) - Number(y)).join('/');
 }
 function dgLoadPrintRows(rows) {
   const by = new Map();

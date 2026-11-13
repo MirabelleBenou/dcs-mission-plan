@@ -163,7 +163,7 @@ Changes merged since the last release, grouped per tool.
 - Importing a briefing on a linked datacard also takes the task, threat level, threats and notes; importing from HQ takes the mission date, time and weather.
 - The year of the magnetic variation also reads the datacard date, after the date received with the route.
 - A printed loadout table no longer carries the loadout name; unit names are printed only when the datacard has several tables.
-- The **Fuel · Loadout** box spans the page: fuel on one line at the top, then one line per station, stations carrying the same weapon together; **Threats · Notes** moves below it.
+- The **Fuel · Loadout** box spans the page: fuel on one line at the top, then one line per station, stations carrying the same weapon together (1/6, 2/3/4/5); **Threats · Notes** moves below it.
 #### Removed
 - The Datacard Generator's own HQ and flight package imports, replaced by the common import window of the Flight Configurator and the Route Planner.
 #### Fixed
