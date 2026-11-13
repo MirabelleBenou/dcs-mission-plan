@@ -36,7 +36,8 @@ Changes merged since the last release, grouped per tool.
 - **Restore** after an example or an opened file brings back everything the flight lead tools had (groups, routes, datacards, theatre, units, settings), whichever tool you are in.
 - A tool no longer opens on its own: opened outside Mission Plan, it only shows a line pointing to the suite. Each tool now writes only the suite's work file; the old briefing, datacard, route and configuration files can still be opened.
 - **Licence**: from the next release, DCS Mission Plan is licensed under the GNU AGPL-3.0-or-later instead of MIT: any use, commercial included, must publish its source under the same licence, hosted services included; an additional term (section 7(b)) requires every interface to keep the credit line *Based on Mission Plan by MirabelleBenou and the 4th VEAW virtual wing*, now shown at the bottom of the landing page. Releases up to v1.24.0 remain under MIT. The pydcs tables (LGPL-3.0-or-later) and Goldwolf's drawings keep their own terms.
-- The examples tell one mission, FOOTHOLD over Cyprus: the Flight Configurator's example is the CAESAR group of two Mi-24P on the Route Planner's example route, and the Datacard Generator's example sets its theatre; example times are in Zulu.
+- One example mission, STEPPE WIND over Cyprus, loaded by group: the Example button of the Briefing Generator or the Recon Station fills both mission commander tools; the one of the Route Planner, the Datacard Generator or the Flight Configurator fills the three flight lead tools; **Restore** brings back the group's previous work. Your units and heading settings are kept.
+- A mission time is printed in Zulu next to the date (“08:00Z”) on the datacard and on the briefing, in both briefing formats.
 
 #### Removed
 - The repository no longer ships one particular wing's configuration file, nor six squadron logos that no tool used; the README and the code comments no longer name that wing. Each wing still makes or imports its own configuration in HQ.
@@ -48,6 +49,7 @@ Changes merged since the last release, grouped per tool.
 ### Mission Plan — landing
 #### Added
 - A card for the Flight Configurator, right after HQ.
+- An **Example** button in each group, Mission Commander and Flight Leader, loads the STEPPE WIND example into the group's tools.
 #### Changed
 - On phones (below 760 px wide), the back button shrinks to an arrow and the wing stamp is hidden, so each tool's top bar fits; a bar that is still too wide scrolls sideways, with a fade on its right edge.
 - The open tool takes the keyboard focus, so Ctrl+S reaches it.
@@ -84,7 +86,7 @@ Changes merged since the last release, grouped per tool.
 - **Flight Configurator**, a new module: a Flight Lead prepares a flight (identity, radios, loadout built on the aircraft's front view or started from the squadron's presets, livery picked from a list — the game's and the wing's custom ones — and always shown by name: the mission's, else the wing's default, else the first in the list) and exports it as a flight package that HQ applies to the Mission Commander's mission. Each aircraft of a flight has its own type, so a flight can mix types; flight names must be unique per side before export.
 - A **Route** block above the loadout: pick one of the Route Planner's routes for the group (one route per group), then see it as a paper sketch — waypoints, names, numbered legs — with each leg's magnetic heading and distance in NM. When the route changes in the Route Planner, the group follows it; if it is deleted there, the last copy is kept.
 - The Mi-24P's and Mi-8MT's HF radio (Jadro-1I, Jadro-1A), which missions do not preset: up to five frequencies, carried in the flight package and shown on the datacard, never written to the mission by HQ.
-- An Example button that loads the CAESAR group (two Mi-24P) on the FOOTHOLD M3 route, in Syria, with “Restore” for twelve seconds.
+- An Example button that loads the STEPPE WIND example into the flight lead tools: the CAESAR group (two Mi-24P) on the STEPPE WIND M3 route, in Syria, with “Restore” for twelve seconds.
 - Each radio channel has a box to print it on the group's datacard; the Datacard Generator shows the same choice.
 - The loadout follows the Loadout Editor of Mission Tools: the Kord of the Mi-24P on one door only; a weapon that cannot go with the rest of the loadout is greyed out with the stations in the way, and a loadout received with such a mix says it under each station.
 - A slider for the gun, like the one for the fuel, and the estimated take-off weight (empty, fuel and stores; gun and flares not counted), in orange above the recommended maximum.
@@ -112,6 +114,8 @@ Changes merged since the last release, grouped per tool.
 - Classification uses the Briefing Generator's six levels, translated; “Import config” no longer points to the Briefing Generator.
 - **Export** is now in the top bar, and the Export section leaves the panel. In the info block, a value too long for its field is drawn smaller, then cut with “…”, instead of running over the next label.
 - Empty mission, date and classification fields are filled in from the current briefing.
+#### Fixed
+- **Clear** no longer leaves the previous image drawn in the preview.
 
 ### Briefing Generator
 #### Changed
@@ -121,6 +125,7 @@ Changes merged since the last release, grouped per tool.
 - The briefing format moves into **Display ▾**: “Standard” (one mission page plus photo pages, now the default, the example included) or “Advanced” (ten sections); the printed brief no longer names its format, and “OPERATION” follows the interface language. Empty fields hint at what to type instead of showing sample values. **Ctrl+S** saves.
 - Standard: a group without a squadron, and a guest squadron, pick their aircraft type from the list of the game (as in HQ); the Flight Configurator import takes it, and the Standard frequencies by their radio and channel.
 - The map image box says the image can come from the Route Planner.
+- The time field is in both formats.
 #### Removed
 - The Wing tab no longer imports or resets the wing configuration: HQ is where it is set.
 #### Fixed
@@ -185,6 +190,7 @@ Changes merged since the last release, grouped per tool.
 - **Export ▾** in the top bar exports the image for the briefing or the Route Tool file; the panel now ends after the waypoints. The panel's Save, “To the datacard” and Flight package buttons are gone: save from the top bar, datacards follow routes by themselves, and the flight package is exported from the Flight Configurator. “+ Add a group” as in the Flight Configurator. **Ctrl+S** saves the selected route.
 #### Fixed
 - Computed magnetic variation now follows DCS for every mission date: years up to 1984 use the IGRF model DCS ships (up to 1.2° closer), later years the previous five-year WMM file, as DCS does (0.2° closer in 1990, 1995 … 2025).
+- The example no longer leaves an empty untitled route beside it.
 
 ### Field Manual
 #### Added

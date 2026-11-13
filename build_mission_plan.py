@@ -212,7 +212,7 @@ def read_suite_examples():
 
 
 def check_suite_examples(ex, group_keys):
-    """Les fichiers d'exemple : le format du fichier de travail, le théâtre Syria, les mêmes clés en FR et en EN, chaque clé dans un groupe, chaque valeur une chaîne qui se lit en JSON, aucun FOOTHOLD.
+    """Les fichiers d'exemple : le format du fichier de travail, le théâtre Syria, les mêmes clés en FR et en EN, chaque clé dans un groupe, chaque valeur une chaîne qui se lit en JSON, aucun ancien nom d'opération.
     group_keys : {groupe: [clés]}. Sinon le build s'arrête, en nommant le fichier et la clé."""
     in_group = {k for ks in group_keys.values() for k in ks}
     for lang in ('fr', 'en'):
@@ -233,8 +233,8 @@ def check_suite_examples(ex, group_keys):
             except ValueError:
                 raise SystemExit(f"[ERREUR] {f} : la valeur de {k} ne se lit pas en JSON — build arrêté")
         with open(os.path.join(SCRIPT_DIR, f), 'r', encoding='utf-8') as fh:
-            if 'foothold' in fh.read().lower():
-                raise SystemExit(f"[ERREUR] {f} : FOOTHOLD figure dans le fichier — build arrêté")
+            if ('foot' + 'hold') in fh.read().lower():
+                raise SystemExit(f"[ERREUR] {f} : l'ancien nom d'opération figure dans le fichier — build arrêté")
     if sorted(ex['fr']['keys']) != sorted(ex['en']['keys']):
         raise SystemExit("[ERREUR] les fichiers d'exemple FR et EN n'ont pas les mêmes clés — build arrêté")
 
@@ -1631,7 +1631,7 @@ def main():
     if len(groups['mc']['keys']) + len(groups['fl']['keys']) + 2 != len(suite_keys) or set(groups['mc']['keys']) | set(groups['fl']['keys']) | {'mp_units_v1', 'mp_nav_v1'} != set(suite_keys):
         raise SystemExit("[ERREUR] SUITE_GROUPS : l'union des deux groupes et de mp_units_v1, mp_nav_v1 n'est pas exactement SUITE_KEYS — build arrêté")
     check_suite_examples(suite_examples, {g: groups[g]['keys'] for g in groups})
-    print('  [OK] groupes de l\'exemple : clés disjointes, union avec mp_units_v1 et mp_nav_v1 = SUITE_KEYS ; fichiers d\'exemple : format, Syria, mêmes clés FR et EN, chaque clé dans un groupe, valeurs JSON, aucun FOOTHOLD')
+    print('  [OK] groupes de l\'exemple : clés disjointes, union avec mp_units_v1 et mp_nav_v1 = SUITE_KEYS ; fichiers d\'exemple : format, Syria, mêmes clés FR et EN, chaque clé dans un groupe, valeurs JSON, aucun ancien nom d\'opération')
     # Les textes de l'exemple : ceux de la table, dans l'accueil (I18N) et dans le toast
     for g in ('mc', 'fl'):
         for lang in ('fr', 'en'):
