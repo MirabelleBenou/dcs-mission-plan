@@ -1555,6 +1555,8 @@ body[data-theme] {
 @media (max-width: 1099px) { .fc-back { display: inline-flex; align-items: center; } }
 .cmp-top { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; align-items: end; }
 .cmp-top > * { min-width: 0; }
+.cmp-acts { align-items: flex-end; }
+.cmp-acts > .ed-field { flex: 1 1 220px; min-width: 0; }
 .cmp-for { font-family: var(--f-typewriter); font-size: 13px; color: var(--paper-light); word-break: break-word; display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; }
 .fc-lo-line { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-family: var(--f-typewriter); font-size: 11px; color: var(--khaki-light); }
 #cmp-wrap { position: relative; }
@@ -1626,6 +1628,7 @@ body[data-theme] {
   .cmp-list { grid-template-columns: minmax(0, 1fr); }
   .cmp-row { grid-template-columns: 24px minmax(0, 1fr) 70px; gap: 2px 6px; padding: 3px 0; }
   .miz-btn-row .miz-btn { flex: 1 1 100%; justify-content: center; }
+  .cmp-acts > .ed-field { flex-basis: 100%; }
 }
 
 /* R295 : une seule graisse par police embarquée (Oswald 500, Roboto Mono 400, Stardos Stencil 700) */
@@ -3512,22 +3515,27 @@ function cmpHtml(su) {
   const armed = cmpArmed(lo);
   return `<button type="button" class="fc-back" data-act="back-unit">${esc(t('cmp.back'))}</button>
     <div class="cmp-top"><div class="cmp-for"><span id="cmp-for-t">${esc(tf('cmp.for', flightLabel(f, su.fi), unitLabel(f, su.fi, su.u, su.ui)))}</span> <span class="snap-flight-tag">${esc(TYPE_LABEL[ty] || ty)}</span></div>
-      ${fieldHtml(t('cmp.from'), selectHtml('id="cmp-from"', t('cmp.from'), cmpFromOptions(f, lo, su.u), lo ? lo.key : ''))}</div>
+</div>
     <div class="fc-lo-line" id="cmp-lo-line">${cmpLineHtml(lo)}</div>
     ${CMP.view ? cmpDrawingHtml() : `<p class="ui-note">${esc(t('cmp.noview'))}</p>`}
     <div class="cmp-list" id="cmp-list">${CMP.pyl.map(p => cmpRowHtml(p, lo)).join('')}</div>
     <div class="cmp-foot">${CMP.view ? `<label class="pk-chk"><input type="checkbox" id="cmp-sym"${UI.cmp.sym ? ' checked' : ''}> ${esc(t('cmp.sym'))}</label>` : ''}<span class="cmp-tot" id="cmp-total"></span></div>
     ${cmpSettingsHtml(f, su.ui, lo)}
     <p class="ui-note" id="cmp-empty-note"${lo && lo.key === '~empty' && !armed ? '' : ' hidden'}>${esc(t('cmp.emptyNote'))}</p>
-    <div class="miz-btn-row" style="margin-top:0"><button type="button" class="miz-btn primary" data-act="cmp-save"${armed ? '' : ' disabled'}>${esc(t('cmp.save'))}</button>
+    <div class="miz-btn-row cmp-acts" style="margin-top:0">${fieldHtml(t('cmp.from'), selectHtml('id="cmp-from"', t('cmp.from'), cmpFromOptions(f, lo, su.u), cmpFromValue(lo)))}<button type="button" class="miz-btn primary" data-act="cmp-save"${armed ? '' : ' disabled'}>${esc(t('cmp.save'))}</button>
       <button type="button" class="miz-btn" data-act="cmp-clear"${armed ? '' : ' disabled'}>${esc(t('cmp.clear'))}</button></div>
     ${UI.cmp.saving && lo ? cmpSaveHtml() : ''}
     <p class="ui-note">${esc(t('cmp.note'))}</p>`;
 }
-// « Partir de » : rien, l'emport importé ou copié en place, mes presets, « Vide », puis le groupe « Unités du module » :
-// chaque autre unité du même type, tous vols confondus, qui a un emport (clé « u:groupe:unité »).
+// « Partir de » : l'emport en place s'il est composé (des armes sous la clé « ~empty »), rien, l'emport importé ou copié en place, mes presets, « Vide », puis le groupe « Unités du module » :
+// chaque autre unité du même type, tous vols confondus, qui a un emport (clé « u:groupe:unité »). « Emport composé » n'est qu'un affichage (valeur CMP_CUSTOM, sans effet si on la reprend, rien dans l'état) ;
+// « Vide (poser des armes) » reste le geste, toujours dans la liste : le choisir vide l'emport.
+const CMP_CUSTOM = '~custom';
+function cmpFromValue(lo) { return lo && lo.key === '~empty' && cmpArmed(lo) ? CMP_CUSTOM : (lo ? lo.key : ''); }
 function cmpFromOptions(f, lo, unit) {
-  const opts = [{ v: '', l: t('cmp.from.none') }];
+  const opts = [];
+  if (cmpFromValue(lo) === CMP_CUSTOM) opts.push({ v: CMP_CUSTOM, l: t('cmp.custom') });
+  opts.push({ v: '', l: t('cmp.from.none') });
   if (lo && lo.key === 'imp') opts.push({ v: 'imp', l: t('cmp.from.imp') });
   if (lo && lo.key === 'copy') opts.push({ v: 'copy', l: loLabel(lo) });
   presetsFor(unit.type).forEach(p => opts.push({ v: p.key, l: p.label }));
@@ -3546,7 +3554,7 @@ function paintCmpNames() {
   const el = document.getElementById('cmp-for-t');
   if (el) el.textContent = tf('cmp.for', flightLabel(su.f, su.fi), unitLabel(su.f, su.fi, su.u, su.ui));
   const sel = document.getElementById('cmp-from');
-  if (sel) sel.innerHTML = optionsHtml(cmpFromOptions(su.f, su.u.loadout, su.u), su.u.loadout ? su.u.loadout.key : '');
+  if (sel) sel.innerHTML = optionsHtml(cmpFromOptions(su.f, su.u.loadout, su.u), cmpFromValue(su.u.loadout));
 }
 function cmpDrawingHtml() {
   const view = CMP.view, W = view.viewBox[0], H = view.viewBox[1], small = CMP.small;
@@ -3625,9 +3633,10 @@ function cmpUpdate() {
   cmpUpdateTotal();
   // l'étiquette de l'emport, « Partir de », la ligne « emport vide » et les deux boutons suivent l'état (un emport créé par un réglage, un « modifié » qui paraît)
   const armed = cmpArmed(lo), line = document.getElementById('cmp-lo-line'), from = document.getElementById('cmp-from'), note = document.getElementById('cmp-empty-note');
-  const want = lo ? lo.key : '';
+  const want = cmpFromValue(lo);
   if (line) line.innerHTML = cmpLineHtml(lo);
-  if (from && from.value !== want && Array.prototype.some.call(from.options, o => o.value === want)) from.value = want;
+  if (from && (from.options.length > 0 && from.options[0].value === CMP_CUSTOM) !== (want === CMP_CUSTOM)) from.innerHTML = optionsHtml(cmpFromOptions(su.f, lo, su.u), want);       // « Emport composé » paraît avec la première arme, s'efface avec la dernière
+  else if (from && from.value !== want && Array.prototype.some.call(from.options, o => o.value === want)) from.value = want;
   if (note) note.hidden = !(lo && lo.key === '~empty' && !armed);
   const blocked = cmpBlocked(st);       // une station qui porte un conflit ou une exigence non tenue : « Garder dans mes presets » est désactivé, l'export ne l'est pas
   blk.querySelectorAll('[data-act="cmp-save"], [data-act="cmp-clear"]').forEach(b => { b.disabled = !armed || (blocked && b.getAttribute('data-act') === 'cmp-save'); });
@@ -3748,6 +3757,7 @@ function copyLoadout(type, src, from) {
   return lo;
 }
 function cmpBase(key) {
+  if (key === CMP_CUSTOM) return;                // « Emport composé » : l'emport en place, rien à faire
   const su = selUnit();
   if (!su) return;
   const type = su.u.type, prev = su.u.loadout;

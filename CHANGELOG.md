@@ -101,6 +101,7 @@ Changes merged since the last release, grouped per tool.
 - **Open ▾** opens a configuration or imports groups, in place of the separate Open and Import buttons. **Ctrl+S** saves.
 - Flares and chaff follow the aircraft's total countermeasure capacity instead of their default counts; a value typed out of range is refused and the previous value comes back.
 - Opening a unit's radios also opens its first radio.
+- **Start from** moves under the stations, beside **Keep in my presets…** and **Empty the loadout**; it shows the loadout in place.
 
 ### Recon Station
 #### Added
@@ -162,6 +163,7 @@ Changes merged since the last release, grouped per tool.
 - Importing a briefing on a linked datacard also takes the task, threat level, threats and notes; importing from HQ takes the mission date, time and weather.
 - The year of the magnetic variation also reads the datacard date, after the date received with the route.
 - A printed loadout table no longer carries the loadout name; unit names are printed only when the datacard has several tables.
+- The **Fuel · Loadout** box: fuel on one line at the top, the loadout below across the box, stations carrying the same weapon on one line.
 #### Removed
 - The Datacard Generator's own HQ and flight package imports, replaced by the common import window of the Flight Configurator and the Route Planner.
 #### Fixed

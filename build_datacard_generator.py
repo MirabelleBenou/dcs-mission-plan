@@ -1150,9 +1150,10 @@ body {
 .dc-wgrid .wl { font: 500 13px/1 var(--dc-fo); letter-spacing: .12em; text-transform: uppercase; white-space: nowrap; margin-right: calc(8px - .12em); }
 .dc-wgrid .wv { font: 400 19px/1.1 var(--dc-fm); white-space: nowrap; }
 
-/* Carburant · Emport */
-.dc-fuelwrap { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 14px; align-items: start; }
-.dc-fuelwrap.dc-solo { display: block; }
+/* Carburant · Emport : le carburant sur une ligne en haut (JOKER et BINGO côte à côte, une seule valeur reste dans sa moitié), l'emport en dessous sur toute la largeur de la boîte */
+.dc-fuelwrap { min-width: 0; }
+.dc-fuel { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 14px; align-items: start; }
+.dc-fuelwrap > .dc-fuel + * { margin-top: 8px; }
 .dc-fp {
   display: flex; justify-content: space-between; align-items: baseline;
   border-bottom: 1px dotted var(--dc-dot); padding: 2px;
@@ -1180,7 +1181,6 @@ tr.dc-bl td.nt, tr.dc-bl td.md { opacity: 1; }
 tr.dc-bl td { height: 24px; padding-top: 0; padding-bottom: 0; line-height: 22px; border-bottom: 1px dotted var(--dc-ink); }
 div.dc-bl, li.dc-bl, p.dc-bl { height: 24px; border-bottom: 1px dotted var(--dc-ink); margin: 0; overflow: hidden; }
 .dc-wgrid .wp.dc-bl { border-bottom-color: var(--dc-ink); }
-.dc-fblank > .dc-load { grid-column: 1; grid-row: 2; margin-top: 8px; }
 
 
 /* ---------- Barre du haut commune aux sept modules (lot mp-imports-suite) ----------
@@ -1268,6 +1268,9 @@ div.dc-bl, li.dc-bl, p.dc-bl { height: 24px; border-bottom: 1px dotted var(--dc-
 .dc-lo-t { font: 500 15px/1 var(--dc-fo); letter-spacing: .12em; color: var(--dc-acc); padding: 2px 0 6px 0; overflow-wrap: anywhere; }
 .dc-lot td { font: 400 17px/1.25 var(--dc-fm); white-space: normal; overflow-wrap: anywhere; vertical-align: top; text-overflow: clip; }
 .dc-lot td.n, .dc-lot th:first-child { text-align: center; }
+/* l'impression : la colonne N° prend la largeur de son plus long texte, sans retour à la ligne ; CHARGE prend le reste */
+.dc-lot { table-layout: auto; }
+.dc-lot th:first-child, .dc-lot td.n { width: 1%; white-space: nowrap; overflow-wrap: normal; }
 .dc-lo-n { font: 400 15px/1.3 var(--dc-fm); color: var(--dc-hi); margin-top: 6px; }
 
 /* ============ TABLETTE ≤ 1100 px ============ */
@@ -4695,14 +4698,36 @@ function dgLoadView(c) {
 }
 /* Une carte libre née d'une carte liée porte-t-elle une copie figée à montrer ? */
 function dgFrozen(c) { return !c.gsId && gsIsObj(c.frz) && ((Array.isArray(c.frz.radios) && c.frz.radios.length) || (Array.isArray(c.frz.loads) && c.frz.loads.length) || (Array.isArray(c.frz.raw) && c.frz.raw.length)); }
-function dgLoadTable(rows, cls, head) {
-  return '<table class="' + cls + '"><colgroup><col style="width:' + (head ? '40px' : '12%') + '"><col></colgroup><thead><tr><th>' + esc(t('lo.h.n')) + '</th><th>' + esc(t('lo.h.load')) + '</th></tr></thead><tbody>' +
+/* le tableau de l'éditeur : une ligne par station (seule l'impression regroupe, dgLoadPrintTable) */
+function dgLoadTable(rows, cls) {
+  return '<table class="' + cls + '"><colgroup><col style="width:40px"><col></colgroup><thead><tr><th>' + esc(t('lo.h.n')) + '</th><th>' + esc(t('lo.h.load')) + '</th></tr></thead><tbody>' +
     rows.map(r => '<tr><td class="n">' + esc(r.n) + '</td><td class="w">' + esc(r.name) + '</td></tr>').join('') + '</tbody></table>';
+}
+/* L'impression regroupe les stations d'un même groupe qui portent le même libellé en une ligne (le libellé reste celui du jeu) : la colonne N° dit les stations dans
+   l'ordre croissant, une suite d'au moins trois numéros qui se suivent s'écrit « a–b » (demi-cadratin), le reste est séparé par « , » ; la ligne prend la place de sa plus petite station */
+function dgStationText(ns) {
+  const a = ns.slice().sort((x, y) => Number(x) - Number(y)), out = [];
+  for (let i = 0; i < a.length;) {
+    let j = i;
+    while (j + 1 < a.length && Number(a[j + 1]) === Number(a[j]) + 1) j++;
+    if (j - i >= 2) out.push(a[i] + '\u2013' + a[j]); else for (let k = i; k <= j; k++) out.push(a[k]);
+    i = j + 1;
+  }
+  return out.join(', ');
+}
+function dgLoadPrintRows(rows) {
+  const by = new Map();
+  rows.forEach(r => { const k = String(r.name); if (!by.has(k)) by.set(k, { name: r.name, ns: [] }); by.get(k).ns.push(String(r.n)); });
+  return Array.from(by.values()).map(x => ({ n: dgStationText(x.ns), name: x.name, min: Math.min.apply(null, x.ns.map(Number)) })).sort((a, b) => a.min - b.min);
+}
+function dgLoadPrintTable(rows) {
+  return '<table class="dc-tab dc-lot"><thead><tr><th>' + esc(t('lo.h.n')) + '</th><th>' + esc(t('lo.h.load')) + '</th></tr></thead><tbody>' +
+    dgLoadPrintRows(rows).map(r => '<tr><td class="n">' + esc(r.n) + '</td><td class="w">' + esc(r.name) + '</td></tr>').join('') + '</tbody></table>';
 }
 function dgLoadEditorHtml(c) {
   const g = dgLoadView(c);
   let h = '';
-  g.groups.forEach(x => { h += '<div class="lo-grp"><div class="lo-t">' + esc(x.names.join(' · ')) + '</div>' + dgLoadTable(x.rows, 'lo-tab', true) + '</div>'; });
+  g.groups.forEach(x => { h += '<div class="lo-grp"><div class="lo-t">' + esc(x.names.join(' · ')) + '</div>' + dgLoadTable(x.rows, 'lo-tab') + '</div>'; });
   if (!g.groups.length) h += '<div class="ui-note">' + esc(t('lo.empty')) + '</div>';
   if (g.groups.length && g.none.length) h += '<div class="ui-note">' + esc(t('lo.none', { names: g.none.join(', ') })) + '</div>';
   if (g.raw.length) h += '<div class="ui-bandeau err">' + esc(t('lo.raw', { names: g.raw.join(', ') })) + '</div>';
@@ -4711,7 +4736,7 @@ function dgLoadEditorHtml(c) {
 function dgLoadCardHtml(c) {
   const g = dgLoadView(c);
   const titled = g.groups.length > 1;       /* un seul tableau : aucun titre ; plusieurs : les noms des unités seuls */
-  let h = g.groups.map(x => '<div class="dc-lo">' + (titled ? '<div class="dc-lo-t">' + esc(x.names.join(' · ').toUpperCase()) + '</div>' : '') + dgLoadTable(x.rows, 'dc-tab dc-lot', false) + '</div>').join('');
+  let h = g.groups.map(x => '<div class="dc-lo">' + (titled ? '<div class="dc-lo-t">' + esc(x.names.join(' · ').toUpperCase()) + '</div>' : '') + dgLoadPrintTable(x.rows) + '</div>').join('');
   if (g.raw.length) h += '<div class="dc-lo-n">' + esc(t('lo.raw', { names: g.raw.join(', ') })) + '</div>';
   return h;
 }
@@ -5458,7 +5483,7 @@ function blkFuel(c) {
   const load = fcLoad ? [''] : c.loadout.filter(hasText);
   if (!fuelRows.length && !load.length) return '';
   const mu = unitLabel(c, 'mass');
-  let b = '<div class="dc-fuelwrap' + (fuelRows.length && load.length ? '' : ' dc-solo') + '">';
+  let b = '<div class="dc-fuelwrap">';
   if (fuelRows.length) {
     b += '<div class="dc-fuel">' + fuelRows.map(r =>
       '<div class="dc-fp"><span class="fl">' + esc(t(r[0])) + '</span><span class="fv">' + esc(r[1].trim() + ' ' + mu) + '</span></div>').join('') + '</div>';
