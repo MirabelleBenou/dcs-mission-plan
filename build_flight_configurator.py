@@ -1189,7 +1189,7 @@ body {
    à 12 px du bord droit, 8 px sur un champ de moins de 120 px). La liste ouverte garde la police du champ. */
 .fc-lo-line:empty { display: none; }
 
-/* ---------- les menus « Affichage » et « Ouvrir » (lot mp-ui-disposition-b) : le bouton de la barre et son panneau, au style des listes de la barre (tbm-*) ; « Affichage » règle les unités, comme au Datacard Generator ---------- */
+/* ---------- les menus « Affichage » et « Ouvrir » : le bouton de la barre et son panneau, au style des listes de la barre (tbm-*) ; « Affichage » règle les unités, comme au Datacard Generator ---------- */
 #btn-display, #btn-open, #btn-example { position: relative; color: var(--amber); border-color: var(--amber-dark); padding-right: 12px; }
 #btn-display:hover, #btn-display:focus-visible, #btn-display.dsp-open, #btn-open:hover, #btn-open:focus-visible, #btn-open.dsp-open, #btn-example:hover, #btn-example:focus-visible, #btn-example.dsp-open { border-color: var(--amber); }
 #btn-display .dsp-chev, #btn-open .dsp-chev, #btn-example .dsp-chev { width: 10px; height: 6px; }
@@ -1377,6 +1377,9 @@ body[data-theme] {
 /* « Ouvrir » garde ses marges de bouton de menu en icônes seules (mêmes que celles du Route Planner) */
 .toolbar.tb-st3 #btn-display, .toolbar.tb-st3 #btn-open, .toolbar.tb-st3 #btn-example { width: auto; min-width: 44px; padding-left: 12px; padding-right: 12px; }
 @media (max-width: 520px) { .toolbar.tb-st3 #btn-display, .toolbar.tb-st3 #btn-open, .toolbar.tb-st3 #btn-example { padding-left: 8px; } }
+/* « Affichage » à l'icône seule (étape 3 de la réduction de la barre) perd aussi son chevron, comme sous 760 px dans la suite ; à l'étape 4 les boutons se resserrent de 2 px : la barre tient dès 760 px avec lui */
+.toolbar.tb-st3 #btn-display .dsp-chev { display: none; }
+@media (min-width: 480px) { .toolbar.tb-st4 { gap: 6px; } }
 /* La liste du théâtre : le libellé « Théâtre » cède la place sous 760 px (règle commune, bloc d'interface commun ; la liste garde son nom accessible) ; sous 480 px la liste se resserre (texte entier jusqu'à 96 px, puis coupé)
    et la liste du thème de l'interface quitte la barre (le thème se règle au tableau du shell, qui le propage) : sans cela la barre défile de 21 à 28 px à 412 px */
 @media (max-width: 479px) { .tb-sel { padding: 0 20px 0 6px; font-size: 11px; letter-spacing: .5px; background-position: right 6px center; flex: none; max-width: 79px; } .tb-select.tbm-trigger { display: none; } }
@@ -1756,7 +1759,7 @@ EXAMPLE_BTN = '''<button type="button" class="tb-btn" id="btn-example" aria-hasp
   </button>'''.strip()
 DISPLAY_BTN = '''<button type="button" class="tb-btn" id="btn-display" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.display.tip" title="Unités d'affichage" data-i18n-aria-label="tb.display.tip" aria-label="Unités d'affichage">
     <svg class="dsp-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/></svg>
-    <span data-i18n="tb.display">Affichage</span>
+    <span class="tb-btn-label" data-i18n="tb.display">Affichage</span>
     <svg class="dsp-chev" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg>
     <i class="dsp-dot" id="dsp-dot" hidden></i>
   </button>'''.strip()
@@ -2748,7 +2751,7 @@ function ukChoose(g, v) {
 // Un autre module a écrit la clé : les unités affichées la suivent, rien ne s'écrit
 function ukFollow() { const k = ukRead(); ukApply(k.mass, k.distance); }
 // La masse affichée : l'entier arrondi, en kg ou en lb (le kg converti : payloadMassIn)
-function massU() { return t('u.' + UMASS); }
+function massU() { return t(UMASS === 'lb' ? 'u.lb' : 'u.kg'); }
 function massTxt(kg) { return cmpNum(payloadMassIn(kg, UMASS)); }
 // Un texte à « {u} » : l'unité de masse choisie
 function tu(key) { return t(key).replace(/\{u\}/g, massU()); }
@@ -4768,7 +4771,7 @@ def check(html):
             bad += 1
 
     ok(set(I18N_FR) == set(I18N_EN), 'parité FR/EN : %d clés, écart %s' % (len(I18N_FR), sorted(set(I18N_FR) ^ set(I18N_EN))))
-    code = JS_APP + BODY + build_ui_block() + build_tbm_block()      # les textes des blocs communs (ui.*, f.search) comptent comme utilisés
+    code = JS_APP + JS_TBM + BODY + build_ui_block() + build_tbm_block()      # les textes des blocs communs (ui.*, f.search) comptent comme utilisés
     used = set(re.findall(r"\bt(?:f)?\('([a-zA-Z0-9_.\-]+)'", code)) | set(re.findall(r'data-i18n(?:-title)?="([^"]+)"', code))
     used |= set(re.findall(r"key: '([a-z]+\.[a-zA-Z0-9_.]+)'", code))
     prefixed = lambda k: k.startswith(DYNAMIC_KEY_PREFIXES)

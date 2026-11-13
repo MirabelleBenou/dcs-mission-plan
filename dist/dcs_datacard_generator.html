@@ -7645,7 +7645,7 @@ function dgFreeze(f, c) {
   if (fuel.length) z.fuel = fuel;
   return z;
 }
-/* ----- Carburant et poids : une valeur par lot d'appareils identiques (lot mp-fc-affichage) -----
+/* ----- Carburant et poids : une valeur par lot d'appareils identiques -----
    Le carburant emporté et le poids au décollage de chaque unité d'un groupe : payloadTakeoff (payload_block.py), la même règle qu'au Flight Configurator, en kg ; les unités dont le couple (carburant, poids, incertain)
    est le même forment un lot, dans l'ordre des unités. Une unité sans type connu des tables n'en a pas ; un emport brut (payloadIn, pas encore lu par le Flight Configurator) non plus. Rien de cela ne se stocke dans c.fuel :
    une carte liée le calcule, une carte libre née d'une carte liée en garde les lots en kg (c.frz.fuel). L'unité de masse choisie et la langue ne changent que l'affichage. */
