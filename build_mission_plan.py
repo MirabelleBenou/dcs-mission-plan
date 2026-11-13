@@ -1696,7 +1696,8 @@ def main():
     if 'fc_presets_v1' in suite_keys or 'fc_presets_v1' in gs_keys or 'fc_presets_v1' in groups['mc']['keys'] + groups['fl']['keys'] or 'fc_presets_v1' in ex_keys:
         raise SystemExit("[ERREUR] fc_presets_v1 est dans SUITE_KEYS, GS_CONTENT_KEYS, un groupe de l'exemple ou un fichier d'exemple : c'est une bibliothèque personnelle — build arrêté")
     # Le briefing sous son nom neutre : la clé neuve est dans SUITE_KEYS, l'ancien nom ne figure qu'une fois dans le shell (la constante des deux reprises) et le shell migre avant d'ouvrir un outil
-    if 'briefing_state_v2' not in suite_keys or shell_text.count('khr26') != 1 or shell_text.count("'khr26_briefing_state_v2'") != 1:
+    old_name = re.search(r"const SUITE_OLD_BRIEFING_KEY = '([^']+)'", shell_text)
+    if 'briefing_state_v2' not in suite_keys or not old_name or old_name.group(1) in suite_keys or shell_text.count(old_name.group(1)) != 1:
         raise SystemExit("[ERREUR] le briefing n'est pas sous son nom neutre, ou l'ancien nom figure ailleurs que dans sa constante — build arrêté")
     if "suiteMigrateBriefing();" not in html.split("function init() {", 1)[1].split("initLang();", 1)[0]:
         raise SystemExit("[ERREUR] init() ne migre pas le briefing avant initLang() — build arrêté")
