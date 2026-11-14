@@ -43,6 +43,7 @@ Changes merged since the last release, grouped per tool.
 - A mission time is printed in Zulu next to the date (“08:00Z”) on the datacard and on the briefing, in both briefing formats.
 - **Fold all** is an icon at the right of every section header; the button on its own line is gone.
 - An exported document keeps one name whatever the format (PDF or PNG), and kneeboard PNG pages have one size, 2000 × 2828, in the Briefing Generator as in the Datacard Generator.
+- The Briefing Generator takes the weather, date and start time from the mission open in HQ (“Take from HQ mission” in the METAR assistant) and shows the HQ mission line under its toolbar, like the Flight Leader tools; its own .miz import is gone. Recon Station shows the Wing logos set in HQ by itself, with no more export and import of the Wing configuration, and still lets you add your own logos.
 
 #### Removed
 - The repository no longer ships one particular wing's configuration file, nor six squadron logos that no tool used; the README and the code comments no longer name that wing. Each wing still makes or imports its own configuration in HQ.

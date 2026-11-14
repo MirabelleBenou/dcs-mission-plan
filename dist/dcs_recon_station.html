@@ -765,7 +765,14 @@ select[data-tbm-src] { display: none !important; }
   background: rgba(192,137,42,.15);
 }
 .logo-thumb:hover { border-color: var(--khaki-light); }
-.logo-thumb-custom { position: relative; }
+.logo-thumb-custom, .logo-thumb-wing { position: relative; }
+.logo-thumb-mark {
+  position: absolute; left: 0; bottom: 0;
+  padding: 1px 5px;
+  background: var(--olive-dark); color: var(--paper);
+  font-family: var(--f-ui); font-weight: 500; font-size: 10px; line-height: 14px; letter-spacing: 1px;
+  pointer-events: none;
+}
 .logo-thumb-del {
   position: absolute; top: 2px; right: 2px;
   background: rgba(20,10,10,.90);
@@ -1594,9 +1601,6 @@ html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-
         <div class="logo-grid" id="logo-grid"></div>
         <label class="btn-upload-logo" for="file-logo" data-i18n="editor.logo.upload">↑ IMPORTER UN LOGO PNG</label>
         <input type="file" id="file-logo" accept="image/png,image/webp" hidden>
-        <label class="btn-upload-logo" for="file-wing" data-i18n="editor.logo.importWing" style="margin-top:4px">📥 Importer config</label>
-        <input type="file" id="file-wing" accept=".json,application/json" hidden>
-        <p class="ui-note" data-i18n="editor.logo.importWing.note">✦ Édition complète disponible dans HQ</p>
         <div class="logo-mode-label" data-i18n="editor.logo.mode.title">RENDU DU LOGO</div>
         <div class="logo-mode" id="logo-mode" role="group" data-i18n-aria-label="aria.logoMode" aria-label="Rendu du logo">
           <button type="button" data-logo-mode="color" data-i18n="editor.logo.mode.color">COULEUR</button>
@@ -1837,28 +1841,13 @@ const I18N = {
     'msg.notImage': '⚠ Le fichier doit être une image.',
     'msg.imageUnreadable': '⚠ Image illisible.',
     'msg.exportFailed': '⚠ Export impossible.',
-    'msg.jsonUnreadable': '⚠ Fichier illisible : ce n’est pas du JSON.',
-    'msg.notWingConfig': '⚠ Ce fichier n’est pas une configuration wing.',
-    'msg.wingIncomplete': '⚠ Configuration wing incomplète : {0} champ(s) manquant(s) ou invalide(s).',
-    'msg.failed': '⚠ L’opération a échoué.',
     'editor.logo.removeCustom': 'Supprimer le logo importé',
     'editor.logo.none': 'Aucun logo',
     'sum.none': 'Aucun',
     'aria.textColor': 'Couleur du texte',
     'aria.logoMode': 'Rendu du logo',
     'aria.markerColor': 'Couleur des marquages',
-    'editor.logo.importWing': '📥 Importer config',
-    'editor.logo.importWing.note': '✦ Édition complète disponible dans HQ',
-    'toast.noLogoInJson': '⚠ Aucun logo dans ce fichier',
-    'validate.schemaMissing': 'configSchemaVersion doit être 1',
-    'validate.wingMissing': 'Champ wing manquant',
-    'validate.shortNameMissing': 'wing.shortName manquant',
-    'validate.logoInvalid': 'wing.logo doit être une data URL image valide (data:image/…)',
-    'validate.squadronsNotArray': 'squadrons doit être un tableau',
-    'validate.sqIdMissing': '.id manquant',
-    'validate.sqCallsignMissing': '.callsign manquant',
-    'validate.sqAircraftNotArray': '.aircraft doit être un tableau',
-    'toast.logosImported': '{n} logo(s) importé(s) ✓',
+    'editor.logo.wing': 'Wing',
     'editor.fx.title': 'EFFETS',
     'editor.fx.vignette': 'Vignette',
     'editor.fx.grain': 'Grain',
@@ -2069,28 +2058,13 @@ const I18N = {
     'msg.notImage': '⚠ The file must be an image.',
     'msg.imageUnreadable': '⚠ Unreadable image.',
     'msg.exportFailed': '⚠ Export failed.',
-    'msg.jsonUnreadable': '⚠ Unreadable file: this is not JSON.',
-    'msg.notWingConfig': '⚠ This file is not a wing configuration.',
-    'msg.wingIncomplete': '⚠ Incomplete wing configuration: {0} missing or invalid field(s).',
-    'msg.failed': '⚠ The operation failed.',
     'editor.logo.removeCustom': 'Remove imported logo',
     'editor.logo.none': 'No logo',
     'sum.none': 'None',
     'aria.textColor': 'Text color',
     'aria.logoMode': 'Logo rendering',
     'aria.markerColor': 'Marker color',
-    'editor.logo.importWing': '📥 Import config',
-    'editor.logo.importWing.note': '✦ Full editing available in HQ',
-    'toast.noLogoInJson': '⚠ No logo in this file',
-    'validate.schemaMissing': 'configSchemaVersion must be 1',
-    'validate.wingMissing': 'Missing wing field',
-    'validate.shortNameMissing': 'wing.shortName missing',
-    'validate.logoInvalid': 'wing.logo must be a valid image data URL (data:image/…)',
-    'validate.squadronsNotArray': 'squadrons must be an array',
-    'validate.sqIdMissing': '.id missing',
-    'validate.sqCallsignMissing': '.callsign missing',
-    'validate.sqAircraftNotArray': '.aircraft must be an array',
-    'toast.logosImported': '{n} logo(s) imported ✓',
+    'editor.logo.wing': 'Wing',
     'editor.fx.title': 'EFFECTS',
     'editor.fx.vignette': 'Vignette',
     'editor.fx.grain': 'Grain',
@@ -2838,6 +2812,7 @@ function collectState() {
 
 function saveState() {
   collectState();
+  rsWingKeep();       // le logo du Wing choisi est gardé par la composition, aucun autre
   if (rsSections().length) rsFoldRefresh();
   try {
     const toSave = Object.assign({}, STATE, { schema: 2 });
@@ -2860,8 +2835,14 @@ function restoreState() {
     if (Array.isArray(saved.logos)) STATE.logos = saved.logos;
     else if (saved.logoCustom) STATE.logos.push({ id: uid(), name: 'IMPORT', b64: saved.logoCustom });
     if ('logoId' in saved) STATE.logoId = saved.logoId;
-    // Vérifier que logoId existe encore dans STATE.logos
-    if (STATE.logoId !== 'none' && !STATE.logos.find(l => l.id === STATE.logoId)) STATE.logoId = 'none';
+    // Le logo du Wing que la composition garde (le fichier de travail ne porte pas le Wing)
+    const kw = saved.wingLogo;
+    if (kw && typeof kw === 'object' && typeof kw.id === 'string' && kw.id.startsWith('wing:') && typeof kw.b64 === 'string' && kw.b64.startsWith('data:image/'))
+      STATE.wingLogo = { id: kw.id, name: String(kw.name || 'LOGO').slice(0, 24), b64: kw.b64 };
+    else delete STATE.wingLogo;
+    // Vérifier que logoId existe encore (logos à soi, Wing, ou la copie gardée) ; la copie suit le Wing s'il l'a
+    if (STATE.logoId !== 'none' && !rsLogoById(STATE.logoId)) STATE.logoId = 'none';
+    rsWingKeep();
     if ('contrast' in saved) STATE.contrast = saved.contrast;
     if ('logoMode'    in saved) STATE.logoMode    = saved.logoMode;
     if ('fxVignette'  in saved) STATE.fxVignette  = saved.fxVignette;
@@ -3109,73 +3090,63 @@ function loadLogoFile(file) {
   reader.readAsDataURL(file);
 }
 
-// ── Validation d'une config d'escadre : celle d'HQ (mêmes règles, mêmes textes) ───────────
-function validateWingConfig(obj) {
-  const errors = [];
-  if (!obj || typeof obj !== 'object') return { ok: false, errors: [t('validate.schemaMissing')] };
-  if (obj.configSchemaVersion !== 1) errors.push(t('validate.schemaMissing'));
-  if (!obj.wing || typeof obj.wing !== 'object') {
-    errors.push(t('validate.wingMissing'));
-  } else {
-    if (!obj.wing.shortName) errors.push(t('validate.shortNameMissing'));
-    if (!obj.wing.logo || !String(obj.wing.logo).startsWith('data:image/'))
-      errors.push(t('validate.logoInvalid'));
-  }
-  if (!Array.isArray(obj.squadrons)) {
-    errors.push(t('validate.squadronsNotArray'));
-  } else {
-    obj.squadrons.forEach((sq, i) => {
-      if (!sq.id)                      errors.push('squadrons[' + i + ']' + t('validate.sqIdMissing'));
-      if (!sq.callsign)                errors.push('squadrons[' + i + ']' + t('validate.sqCallsignMissing'));
-      if (!Array.isArray(sq.aircraft)) errors.push('squadrons[' + i + ']' + t('validate.sqAircraftNotArray'));
-    });
-  }
-  return errors.length === 0 ? { ok: true } : { ok: false, errors };
-}
-
-// ── Import config wing BG (G2) ────────────────────────────────
-function importWingLogos(file) {
-  const r = new FileReader();
-  r.onload = e => {
-    let cfg;
-    try { cfg = JSON.parse(e.target.result); }
-    catch (err) { console.warn('[RS] configuration wing : JSON illisible', err); showToast(t('msg.jsonUnreadable'), { type: 'err' }); return; }
-    if (!cfg || typeof cfg !== 'object' || cfg.configSchemaVersion !== 1) { showToast(t('msg.notWingConfig'), { type: 'err' }); return; }
-    let check;
-    try { check = validateWingConfig(cfg); }
-    catch (err) { console.warn('[RS] configuration wing : validation impossible', err); showToast(t('msg.notWingConfig'), { type: 'err' }); return; }
-    if (!check.ok) {
-      console.warn('[RS] configuration wing incomplète :', check.errors);
-      showToast(t('msg.wingIncomplete').replace('{0}', check.errors.length), { type: 'err' });
-      return;
-    }
-    try {
-      const added = [];
-      const push = (name, b64) => {
-        if (typeof b64 === 'string' && b64.startsWith('data:image/'))
-          added.push({ id: uid(), name: String(name || 'LOGO').slice(0, 24), b64 });
-      };
-      if (cfg.wing) push(cfg.wing.shortName || 'WING', cfg.wing.logo);
-      (cfg.squadrons || []).forEach(sq => push(sq.id, sq.logo));
-      if (!added.length) { showToast(t('toast.noLogoInJson'), { type: 'err' }); return; }
-      STATE.logos.push(...added);
-      STATE.logoId = added[0].id;
-      saveState(); renderLogoGrid(); schedulePreview();
-      showToast(t('toast.logosImported').replace('{n}', added.length), { type: 'ok' });
-    } catch (err) {
-      console.warn('[RS] configuration wing : enregistrement ou rendu impossible', err);
-      showToast(t('msg.failed'), { type: 'err' });
-    }
+// ── Les logos du Wing : lus de wing_config_v1 (écrite par HQ), jamais recopiés ───────────
+/* Le logo wing principal, puis celui de chaque escadron, nommés comme l'ancien import les nommait (le nom court du Wing, l'identifiant de l'escadron ; 24 caractères au plus). Leurs identifiants
+   (wing:wing, wing:sq:<id>) sont stables : le choix d'un logo du Wing se retrouve après une relecture. Sans configuration lisible (schéma 1), la liste est vide. */
+const KEY_WING = 'wing_config_v1';
+let WING_LOGOS = [];      // [{ id, name, b64 }] : ceux de la configuration du Wing, dans son ordre
+function rsWingRead() {
+  let cfg = null;
+  try { cfg = JSON.parse(localStorage.getItem(KEY_WING)); } catch (e) { cfg = null; }
+  const out = [];
+  if (!cfg || typeof cfg !== 'object' || cfg.configSchemaVersion !== 1) return out;
+  const seen = {};
+  const push = (id, name, b64) => {
+    if (typeof b64 !== 'string' || !b64.startsWith('data:image/')) return;
+    let k = id, n = 1;
+    while (seen[k]) k = id + '#' + (++n);       // deux escadrons de même identifiant : deux logos distincts
+    seen[k] = true;
+    out.push({ id: k, name: String(name || 'LOGO').slice(0, 24), b64 });
   };
-  r.readAsText(file);
+  if (cfg.wing && typeof cfg.wing === 'object') push('wing:wing', cfg.wing.shortName || 'WING', cfg.wing.logo);
+  (Array.isArray(cfg.squadrons) ? cfg.squadrons : []).forEach(sq => { if (sq && typeof sq === 'object') push('wing:sq:' + String(sq.id), sq.id, sq.logo); });
+  return out;
+}
+/* Le logo choisi pour la photo, s'il vient du Wing, est gardé par la composition (STATE.wingLogo, dans recon_state_v1) : le fichier de travail, qui ne porte pas le Wing, rouvre la photo avec lui.
+   Un logo du Wing non choisi n'est jamais recopié. Tant que le Wing l'a, la copie le suit ; s'il n'y est plus, la copie reste ; un autre choix l'efface. */
+function rsWingKeep() {
+  const id = STATE.logoId;
+  if (typeof id === 'string' && id.startsWith('wing:')) {
+    const live = WING_LOGOS.find(l => l.id === id);
+    if (live) STATE.wingLogo = { id: live.id, name: live.name, b64: live.b64 };
+    else if (!(STATE.wingLogo && STATE.wingLogo.id === id)) { STATE.logoId = 'none'; delete STATE.wingLogo; }
+  } else delete STATE.wingLogo;
+}
+/* Relit le Wing (au démarrage et à chaque changement de wing_config_v1) ; vrai si la liste ou le choix ont changé */
+function rsWingLoad() {
+  const before = JSON.stringify([WING_LOGOS, STATE.logoId, STATE.wingLogo || null]);
+  WING_LOGOS = rsWingRead();
+  WING_LOGOS.forEach(l => { const c = LOGO_CACHE[l.id]; if (c && c.src !== l.b64) delete LOGO_CACHE[l.id]; });
+  rsWingKeep();
+  return JSON.stringify([WING_LOGOS, STATE.logoId, STATE.wingLogo || null]) !== before;
+}
+/* Les logos du Wing montrés dans la grille : ceux de la configuration, puis la copie gardée du logo choisi si le Wing ne l'a plus */
+function rsWingList() {
+  const list = WING_LOGOS.slice(), k = STATE.wingLogo;
+  if (k && STATE.logoId === k.id && !list.some(l => l.id === k.id)) list.push(k);
+  return list;
+}
+/* Un logo par son identifiant : à soi, du Wing, ou la copie gardée */
+function rsLogoById(id) {
+  return STATE.logos.find(l => l.id === id) || rsWingList().find(l => l.id === id) || null;
 }
 
 // ── Logo grid render ───────────────────────────────────────────
 function renderLogoGrid() {
   const grid = document.getElementById('logo-grid');
   if (!grid) return;
-  // Construire depuis NONE + STATE.logos (G3)
-  const allLogos = [{ id: 'none', name: 'NONE', b64: null }, ...STATE.logos];
+  // Construire depuis NONE, les logos du Wing, puis les logos à soi (G3)
+  const allLogos = [{ id: 'none', name: 'NONE', b64: null }, ...rsWingList().map(l => Object.assign({ wing: true }, l)), ...STATE.logos];
 
   grid.innerHTML = allLogos.map(lg => {
     const active = STATE.logoId === lg.id ? 'active' : '';
@@ -3184,8 +3155,15 @@ function renderLogoGrid() {
         <div class="logo-thumb-none">∅</div>
       </div>`;
     }
-    // Logos utilisateur : ✕ toujours visible (tactile)
     const src = lg.b64 || '';
+    if (lg.wing) {
+      // Logos du Wing : la marque « Wing », pas de ✕ (ils suivent HQ)
+      return `<div class="logo-thumb logo-thumb-wing ${active}" data-logo-id="${escapeAttr(lg.id)}" data-wing="1" tabindex="0" title="${escapeAttr(lg.name)}">
+        ${src ? `<img src="${escapeAttr(src)}" alt="${escapeAttr(lg.name)}">` : '<div class="logo-thumb-none">?</div>'}
+        <span class="logo-thumb-mark">${escapeAttr(t('editor.logo.wing'))}</span>
+      </div>`;
+    }
+    // Logos utilisateur : ✕ toujours visible (tactile)
     return `<div class="logo-thumb logo-thumb-custom ${active}" data-logo-id="${lg.id}" tabindex="0" title="${lg.name}">
       ${src ? `<img src="${src}" alt="${lg.name}">` : '<div class="logo-thumb-none">?</div>'}
       <button class="logo-thumb-del" data-del-id="${lg.id}"
@@ -4195,7 +4173,7 @@ function getLogoImage() {
   return new Promise(resolve => {
     const id = STATE.logoId;
     if (!id || id === 'none') return resolve(null);
-    const logo = STATE.logos.find(l => l.id === id);
+    const logo = rsLogoById(id);
     if (!logo || !logo.b64) return resolve(null);
     const cached = LOGO_CACHE[id];
     if (cached && cached.complete && cached.naturalWidth) return resolve(cached);
@@ -4397,10 +4375,13 @@ function initEvents() {
     e.target.value = '';
   });
 
-  // G2 : import config wing BG
-  document.getElementById('file-wing').addEventListener('change', e => {
-    if (e.target.files[0]) importWingLogos(e.target.files[0]);
-    e.target.value = '';
+  // Les logos du Wing suivent HQ : un changement de wing_config_v1 se voit sans recharger
+  window.addEventListener('storage', e => {
+    if (e.key !== KEY_WING && e.key !== null) return;
+    if (!rsWingLoad()) return;
+    saveState();
+    renderLogoGrid();
+    schedulePreview();
   });
 
   // Add cartouche row — B1 : entrée enrichie avec coordonnées en cascade
@@ -6295,7 +6276,7 @@ function rsSectionSum(id) {
     return uiJoin([sk ? t('editor.fx.sensor.' + sk) : '', STATE.fxVignette > 0 ? t('editor.fx.vignette') + ' ' + STATE.fxVignette : '', STATE.fxGrain > 0 ? t('editor.fx.grain') + ' ' + STATE.fxGrain : '', STATE.fxScanlines > 0 ? t('editor.fx.scanlines') + ' ' + STATE.fxScanlines : '']);
   }
   if (id === 'info') return v(STATE.fields.target);
-  if (id === 'logo') { const lg = STATE.logos.find(l => l.id === STATE.logoId); return STATE.logoId !== 'none' && lg ? (v(lg.name) || t('sum.none')) : t('sum.none'); }
+  if (id === 'logo') { const lg = rsLogoById(STATE.logoId); return STATE.logoId !== 'none' && lg ? (v(lg.name) || t('sum.none')) : t('sum.none'); }
   if (id === 'cartouche') { const c = (STATE.cartouche || []).find(x => x && v(x.label)); return c ? v(c.label) : ''; }
   if (id === 'classif') return STATE.classification && STATE.classification.enabled ? t('classif.' + rsClassKey(STATE.classification.level)) : '';
   return '';
@@ -6347,6 +6328,7 @@ async function init() {
   mnBind();   // le menu « Ouvrir », « Sauvegarder » et Ctrl+S
   initFormMenus(sel => { const l = sel.parentElement && sel.parentElement.querySelector('.ed-label'); return l ? l.textContent.trim() : ''; });   // les listes des formulaires
 
+  WING_LOGOS = rsWingRead();       // le Wing avant l'état : le logo choisi s'y retrouve
   const hasState = restoreState();
   applyStateToForm();
   rsBriefingFill();
