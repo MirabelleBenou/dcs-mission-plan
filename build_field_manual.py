@@ -9,6 +9,7 @@ import subprocess
 import sys
 import tempfile
 from shell_only_block import build_block as build_shell_only_block
+from ui_block import build_bar_css, build_bar_js
 # La garde du module seul : premier élément du <body> (build_mission_plan.py la vérifie dans le dist/)
 SHELL_ONLY_TAG = '<script data-lang-key="lang_v1">\n' + build_shell_only_block() + '</script>\n'
 
@@ -24,6 +25,9 @@ CONTRAST_CSS = r"""
 """
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+
+BAR_CSS = build_bar_css()      # la séquence de réduction de la barre : la même que celle du bloc d'interface commun (ui_block.py), pas une copie
+BAR_JS = build_bar_js()
 
 APP_VERSION = '1.3.0'
 MODULE_ID   = 'fm'
@@ -1285,18 +1289,16 @@ body {{
 }}
 
 
-/* ---------- Barre du haut commune aux sept modules (lot mp-imports-suite) ----------
-   La marque du Flight Configurator : le titre et son sous-titre à l'accent du module dès 1360 px, le sigle seul en dessous (à toutes les largeurs) ;
-   la version avec le titre ; le tampon de décor dès 1101 px. Seuils mesurés dans le shell avec un tampon d'escadre « TEST WING », en français et en anglais. */
+/* ---------- Barre du haut commune aux sept modules ----------
+   La marque du Field Manual : le titre et son sous-titre à l'accent du module, le sigle (F·M) quand le titre ne tient plus. Aucun seuil de largeur propre au Field Manual : la barre se réduit comme celle des autres outils,
+   par la séquence commune du bloc d'interface (ui_block.py : build_bar_css, build_bar_js), « s'il tient » : le tampon de décor et celui que pose le shell, la version, puis (rien à retirer ici : ni liste, ni Affichage, ni bouton à texte) le titre. */
 .tb-brand-main, .tb-brand-short {{ color: #7E8FA6; }}
 .tb-brand-short {{ display: none; font-family: var(--f-stencil); font-size: 16px; font-weight: 700; letter-spacing: 3px; white-space: nowrap; }}
 .tb-classif {{ font-family: var(--f-stencil); font-weight: 400; font-size: 11px; letter-spacing: 3px; color: var(--red-faded); border: 1px solid var(--red-faded); padding: 4px 10px; white-space: nowrap; flex-shrink: 0; }}
 #btn-lang svg {{ display: block; }}
 .tb-brand-sub {{ font-weight: 500; }}
 .tb-version {{ font-family: 'Roboto Mono', monospace; }}
-@media (max-width: 1359px) {{ .tb-brand-main, .tb-brand-sub, .tb-brand + .tb-sep, .tb-version {{ display: none; }} .tb-brand-short {{ display: inline; }} }}
-@media (max-width: 1100px) {{ .tb-classif {{ display: none; }} }}
-
+{BAR_CSS}
 /* ── ROOT SCROLL ── */
 #fm-root {{
   flex: 1;
@@ -3255,6 +3257,8 @@ function applyI18n() {{
   updateFlag();
   // Libellés du zoom (images et schémas)
   fmZoomRefresh();
+  // La barre se recalcule à la langue (le sous-titre et le drapeau changent)
+  uiBarFit();
 }}
 
 // ── Drapeaux SVG inline ───────────────────────
@@ -3331,6 +3335,8 @@ function onHashChange() {{
 
 {ZOOM_JS}
 
+// ── Réduction de la barre : la séquence commune (ui_block.py) ──
+{BAR_JS}
 // ── Init ──────────────────────────────────────
 function init() {{
   initTheme();
@@ -3405,6 +3411,18 @@ grep_ok('--chapter-accent: #c0892a', '--chapter-accent BG')
 grep_ok('--chapter-accent: #4f7a8e', '--chapter-accent DG')
 grep_ok('--chapter-accent: #D0784A', '--chapter-accent FC')
 grep_ok('class="toolbar"',  'toolbar présent')
+# La barre : la séquence de réduction est celle du bloc d'interface commun (ui_block.py), au caractère ; aucun seuil de largeur propre au manuel
+grep_ok(BAR_CSS, 'barre : la séquence (feuille) est celle du bloc commun')
+grep_ok(BAR_JS,  'barre : la séquence (script) est celle du bloc commun')
+if src.count(BAR_CSS) != 1 or src.count(BAR_JS) != 1:
+    CHECK_ERRORS.append('FAIL barre : la séquence commune n\'est pas en un seul exemplaire')
+grep_absent('max-width: 1359px', 'barre : plus de seuil à 1359 px')
+grep_absent('max-width: 1100px', 'barre : plus de seuil à 1100 px')
+_bar_media = [l for l in src.splitlines() if l.lstrip().startswith('@media') and ('.tb-' in l or '.toolbar' in l)]
+print('  [%s] ABSENT: règle @media qui touche la barre (%d)' % ('OK' if not _bar_media else 'FAIL', len(_bar_media)))
+if _bar_media:
+    CHECK_ERRORS.append('FAIL ABSENT règle @media sur la barre')
+grep_absent('@@BAR', 'emplacement de la séquence résolu')
 grep_ok('id="fm-zoom"',     'fenêtre de zoom présente')
 grep_ok('role="dialog" aria-modal="true"', 'fenêtre de zoom : role=dialog, aria-modal')
 grep_ok('--accent-ink:',    '--accent-ink présent')

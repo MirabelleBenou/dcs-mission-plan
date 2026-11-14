@@ -2568,7 +2568,7 @@ body {{
     <span class="tb-btn-label" data-i18n="toolbar.example">Exemple</span>
     <svg class="dsp-chev" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg>
   </button>
-  <button type="button" class="tb-btn danger" id="btn-reset" data-i18n-title="toolbar.reset.tooltip" title="Effacer" data-i18n-aria-label="toolbar.reset.tooltip" aria-label="Effacer">
+  <button type="button" class="tb-btn danger" id="btn-reset" data-i18n-title="toolbar.reset.tooltip" title="Effacer…" data-i18n-aria-label="toolbar.reset.tooltip" aria-label="Effacer…">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
     <span class="tb-btn-label" data-i18n="toolbar.reset">Effacer</span>
   </button>
@@ -2885,7 +2885,7 @@ const I18N = {{
     'toolbar.example.mc': 'Mission Commander — Briefing Generator, Recon Station',
     'toolbar.example.fl': 'Flight Leader — Route Planner, Datacard Generator, Flight Configurator',
     'toolbar.reset': 'Effacer',
-    'toolbar.reset.tooltip': 'Effacer',
+    'toolbar.reset.tooltip': 'Effacer…',
     'clear.title': 'Effacer le Recon Station ?',
     'clear.text': 'L\u2019image, ses annotations, la l\u00e9gende et le bloc d\u2019informations seront effac\u00e9s. Le th\u00e8me et la configuration Wing restent.',
     'clear.verb': 'Effacer',
@@ -3058,7 +3058,7 @@ const I18N = {{
     'toolbar.example.mc': 'Mission Commander — Briefing Generator, Recon Station',
     'toolbar.example.fl': 'Flight Leader — Route Planner, Datacard Generator, Flight Configurator',
     'toolbar.reset': 'Clear',
-    'toolbar.reset.tooltip': 'Clear',
+    'toolbar.reset.tooltip': 'Clear…',
     'clear.title': 'Clear the Recon Station?',
     'clear.text': 'The image, its marks, the legend and the information block will be cleared. The theme and the wing configuration stay.',
     'clear.verb': 'Clear',

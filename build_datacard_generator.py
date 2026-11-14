@@ -1197,7 +1197,7 @@ div.dc-bl, li.dc-bl, p.dc-bl { height: 24px; border-bottom: 1px dotted var(--dc-
 .tb-lang-btn svg { display: block; }
 .tb-brand-sub { font-weight: 500; }
 .tb-version { font-family: 'Roboto Mono', monospace; }
-/* Le texte des boutons s'affiche s'il tient, sinon l'icône seule : règle commune du bloc d'interface (classes tb-st3, tb-st4) ; ici seulement les marges resserrées */
+/* Le texte des boutons s'affiche s'il tient, sinon l'icône seule : règle commune du bloc d'interface (classes tb-st5, tb-st6) ; ici seulement les marges resserrées */
 @media (max-width: 1617px) { .tb-btn { padding: 0 10px; } }
 @media (max-width: 1250px) {
   /* le sélecteur de thème se resserre */

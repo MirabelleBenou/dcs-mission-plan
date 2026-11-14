@@ -930,8 +930,8 @@ body {{
   background: var(--amber); color: #15120c; border-radius: 9px; font-family: 'Roboto Mono', 'Courier New', monospace; font-weight: 400; font-size: 11px; line-height: 1; letter-spacing: 0;
 }}
 .tb-count[hidden] {{ display: none; }}
-/* sans libellé (sous 1 250 px), la pastille se pose au coin du bouton, dans son cadre : elle ne déborde pas sur le bouton voisin */
-.toolbar.tb-st3 .tb-btn > .tb-count {{ position: absolute; top: 2px; right: 2px; }}
+/* sans libellé (étape 5 de la réduction de la barre), la pastille se pose au coin du bouton, dans son cadre : elle ne déborde pas sur le bouton voisin */
+.toolbar.tb-st5 .tb-btn > .tb-count {{ position: absolute; top: 2px; right: 2px; }}
 
 /* Sans mission : le centre de la page */
 .hq-empty {{ min-height: calc(100vh - 60px - 120px); min-height: calc(100dvh - 60px - 120px); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center; padding: 24px 16px; }}

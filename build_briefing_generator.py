@@ -2536,7 +2536,7 @@ body[data-format="full"] [data-fmt="simple"] { display: none !important; }
 .tb-version { font-family: 'Roboto Mono', monospace; }
 /* Seuils de la barre, mesurés dans le shell avec un tampon d'escadre « TEST WING », en français et en anglais, en paysage et en portrait (lot mp-ui-disposition-b : le format est passé dans « Affichage ») : la barre tient sans défiler dès 590 px, sauf de 760 à 823 px où le tampon
    du shell s'ajoute ; chaque seuil est la plus petite largeur où la barre tient sans défiler avec ce qui précède (le français, plus large, donne le seuil) : le titre, le sous-titre et la version dès 1081 px,
-   le tampon de décor dès 1692 px ; en dessous, le sigle seul. Le texte des boutons s'affiche s'il tient, sinon l'icône seule : règle commune du bloc d'interface (classes tb-st3, tb-st4) ; ici seulement les marges resserrées */
+   le tampon de décor dès 1692 px ; en dessous, le sigle seul. Le texte des boutons s'affiche s'il tient, sinon l'icône seule : règle commune du bloc d'interface (classes tb-st5, tb-st6) ; ici seulement les marges resserrées */
 @media (max-width: 1427px) { .tb-btn { padding: 0 10px; } }
 
 /* ============ RESPONSIVE — TABLET / MOBILE ============ */
@@ -2874,7 +2874,7 @@ __CSS__
     <span class="tb-btn-label" data-i18n="toolbar.example">Exemple</span>
     <svg class="dsp-chev" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg>
   </button>
-  <button class="tb-btn danger" id="btn-reset" data-i18n-title="toolbar.reset.tooltip" title="Effacer">
+  <button class="tb-btn danger" id="btn-reset" data-i18n-title="toolbar.reset.tooltip" title="Effacer…">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
     <span class="tb-btn-label" data-i18n="toolbar.reset">Effacer</span>
   </button>
@@ -3318,7 +3318,7 @@ const I18N = {
     'work.save.tip':          'Sauvegarder tout le travail de Mission Plan (JSON)',
     'work.briefing':          'Ouvrir un briefing…',
     'toolbar.export.tooltip': 'Exporter en PDF ou PNG (kneeboard DCS)',
-    'toolbar.reset.tooltip':  'Effacer',
+    'toolbar.reset.tooltip':  'Effacer…',
     'toolbar.theme.tooltip':  'Thème graphique',
     'toolbar.lang.tooltip':   'Passer en anglais',
     'tab.bar.aria':           'Sections du briefing',
@@ -3730,7 +3730,7 @@ const I18N = {
     'work.save.tip':          'Save all the Mission Plan work (JSON)',
     'work.briefing':          'Open a briefing…',
     'toolbar.export.tooltip': 'Export to PDF or PNG (DCS kneeboard)',
-    'toolbar.reset.tooltip':  'Clear',
+    'toolbar.reset.tooltip':  'Clear…',
     'toolbar.theme.tooltip':  'Graphic theme',
     'toolbar.lang.tooltip':   'Switch to French',
     'tab.bar.aria':           'Briefing sections',

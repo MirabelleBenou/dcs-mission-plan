@@ -1377,12 +1377,11 @@ body[data-theme] {
 @media (max-width: 539px) { .tb-select { max-width: 96px; } }
 @media (max-width: 479px) { .toolbar { gap: 3px; } .tb-btn { width: 34px; min-width: 34px; } .tb-select { max-width: 64px; padding: 0 18px 0 6px; } .tb-lang-btn { min-width: 34px; padding: 0 2px; } }
 /* Le bouton « Ouvrir » reste un bouton de menu (icône + chevron) : à la taille de celui du Route Planner, jamais réduit à la forme d'un bouton à icône seule (mêmes marges intérieures : 12 px, 8 px à gauche sous 521 px) */
-/* « Ouvrir » garde ses marges de bouton de menu en icônes seules (mêmes que celles du Route Planner) */
-.toolbar.tb-st3 #btn-display, .toolbar.tb-st3 #btn-open, .toolbar.tb-st3 #btn-example { width: auto; min-width: 44px; padding-left: 12px; padding-right: 12px; }
-@media (max-width: 520px) { .toolbar.tb-st3 #btn-display, .toolbar.tb-st3 #btn-open, .toolbar.tb-st3 #btn-example { padding-left: 8px; } }
-/* « Affichage » à l'icône seule (étape 3 de la réduction de la barre) perd aussi son chevron, comme sous 760 px dans la suite ; à l'étape 4 les boutons se resserrent de 2 px : la barre tient dès 760 px avec lui */
-.toolbar.tb-st3 #btn-display .dsp-chev { display: none; }
-@media (min-width: 480px) { .toolbar.tb-st4 { gap: 6px; } }
+/* « Ouvrir » garde ses marges de bouton de menu en icônes seules (mêmes que celles du Route Planner) : à l'étape 5 de la réduction de la barre, celle du texte des boutons */
+.toolbar.tb-st5 #btn-display, .toolbar.tb-st5 #btn-open, .toolbar.tb-st5 #btn-example { width: auto; min-width: 44px; padding-left: 12px; padding-right: 12px; }
+@media (max-width: 520px) { .toolbar.tb-st5 #btn-display, .toolbar.tb-st5 #btn-open, .toolbar.tb-st5 #btn-example { padding-left: 8px; } }
+/* « Affichage » à l'icône seule (étape 4 de la réduction de la barre, règle commune) perd aussi son chevron, comme sous 760 px dans la suite ; à l'étape 6 (le sigle) les boutons se resserrent de 2 px : la barre tient dès 760 px avec lui */
+@media (min-width: 480px) { .toolbar.tb-st6 { gap: 6px; } }
 /* La liste du théâtre : le libellé « Théâtre » cède la place sous 760 px (règle commune, bloc d'interface commun ; la liste garde son nom accessible) ; sous 480 px la liste se resserre (texte entier jusqu'à 96 px, puis coupé)
    et la liste du thème de l'interface quitte la barre (le thème se règle au tableau du shell, qui le propage) : sans cela la barre défile de 21 à 28 px à 412 px */
 @media (max-width: 479px) { .tb-sel { padding: 0 20px 0 6px; font-size: 11px; letter-spacing: .5px; background-position: right 6px center; flex: none; max-width: 79px; } .tb-select.tbm-trigger { display: none; } }
@@ -4626,7 +4625,7 @@ function applyI18nStatic() {
   lang.innerHTML = CURRENT_LANG === 'fr' ? FLAG_EN : FLAG_FR;
   lang.title = t('toolbar.lang.tooltip');
   lang.setAttribute('aria-label', t('toolbar.lang.tooltip'));
-  ['open', 'save', 'export', 'example', 'clear'].forEach(k => document.getElementById('btn-' + k).setAttribute('aria-label', t(k === 'open' ? 'tb.open.tip' : (k === 'save' ? 'work.save.tip' : (k === 'example' ? 'tb.example.tip' : 'tb.' + k)))));
+  ['open', 'save', 'export', 'example', 'clear'].forEach(k => document.getElementById('btn-' + k).setAttribute('aria-label', t(k === 'open' ? 'tb.open.tip' : (k === 'save' ? 'work.save.tip' : (k === 'example' ? 'tb.example.tip' : (k === 'clear' ? 'tb.clear.tip' : 'tb.' + k))))));
 }
 /* La langue : le drapeau la change ; le shell l'appelle aussi (un module déjà chargé suit la langue de la suite) */
 function setLang(lang) {
