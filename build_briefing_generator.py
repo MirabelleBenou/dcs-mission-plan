@@ -2770,6 +2770,8 @@ body[data-format="full"] [data-fmt="simple"] { display: none !important; }
     position: relative;
     z-index: 1;
   }
+  /* La ligne de référence reste posée en haut de la page, au-dessus du tampon, comme à l'écran */
+  .page > .doc-meta { position: absolute; }
   .page:last-child, .page.ui-print-last { page-break-after: auto; break-after: auto; }
 
   /* Roster: identical layout in screen and print (same single <table>),
