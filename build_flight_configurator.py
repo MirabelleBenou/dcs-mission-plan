@@ -31,6 +31,7 @@ import sys
 from group_store_block import build_block as build_group_store_block
 from import_block import build_block as build_import_block, build_css as build_import_css, build_html as build_import_html
 from messages_block import build_block as build_messages_block, build_css as build_messages_css
+from mission_line_block import build_block as build_mission_line_block, build_css as build_mission_line_css, verify as mission_line_verify
 from ui_block import build_tbm_css, build_tbm_block, build_block as build_ui_block, build_css as build_ui_css, verify as ui_verify, verify_bar as ui_verify_bar, fingerprint as ui_fingerprint
 from shell_only_block import build_block as build_shell_only_block
 from suite_file_block import build_presets_merge
@@ -1281,7 +1282,7 @@ body {
 /* ======== MAIN LAYOUT ======== */
 .app {
   position: fixed;
-  top: 60px; bottom: 0; left: 0; right: 0;
+  top: var(--mp-top, 60px); bottom: 0; left: 0; right: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
   background: var(--olive-deep);
@@ -2068,6 +2069,7 @@ function thSet(id, fromKey) {
   UI.rtChoose = null;
   tcAdopt();
   routeChanged();
+  mlRefresh();
 }
 // L'autre module a écrit mp_theatre_v1
 function thFollow() {
@@ -2862,6 +2864,8 @@ function declSource(nav, routeDate) {
 }
 // La date reçue avec la route d'un groupe (paquet ou mission de HQ) : '' sans date lisible
 function routeDateOf(f) { return f && f.route ? magRouteDate(f.route.missionDate) : ''; }
+// La ligne de la mission d'HQ (mission_line_block.py) : le théâtre de l'appel de la déclinaison (rTh), la src de cet appel (declSource, que la mission d'HQ ne fait jamais dépendre de la date d'une route) ; sans valeur saisie (manual), la déclinaison est calculée : le croquis est toujours magnétique
+function fcMissionLine() { const ds = declSource(rpRead().state.nav, ''); return { theatre: rTh(), src: ds.manual ? '' : ds.ys.src, calc: !ds.manual }; }
 function declAt(ds, lat, lon) { if (ds.manual) return ds.v; const d = magVar(lat, lon, ds.ys.y); return d === null ? 0 : d; }
 // Les branches : cap initial vrai et distance par legCalc, cap magnétique = cap vrai − déclinaison au départ de la branche (toujours magnétique ici)
 function routeLegs(pts, ds) {
@@ -3577,6 +3581,7 @@ function refreshBar() {
   if (UI.clamped > 0) msg += ' · ' + tf('bar.clamped', UI.clamped);
   bar.textContent = msg;
   tcPaint();
+  mlRefresh();       // la ligne de la mission d'HQ suit le bandeau de théâtre (rTh) comme le reste de la barre
 }
 function refreshAll() { refreshBar(); refreshSummaries(); paintPrintBoxes(); saveWork(); }
 function renderAll() { renderLeft(); renderRight(); refreshBar(); applyI18nStatic(); saveWork(); }
@@ -4734,12 +4739,14 @@ function init() {
   if (taken.changed) writeState();
   renderAll();
   if (taken.changed) showToast(taken.toast, 4500);
+  mlSetup({ lang: () => CURRENT_LANG, read: fcMissionLine, theatreName: theatreName, livery: true });       // la ligne de la mission d'HQ (bloc commun) : ce que le module en prend
   window.addEventListener('pagehide', flushWork);
   window.addEventListener('storage', e => {
     if (e.key === KEY_WING || e.key === null) WL.stale = true;       // les sources de livrée ne se relisent qu'après un évènement de leur clé (ou de clé null), avant de refaire les listes
     if (e.key === KEY_HQ_MISSION || e.key === null) MS.stale = true;
     routeStorage(e); gsStorage(e); if (e.key === KEY_THEATRE) thFollow(); if (e.key === KEY_UNITS) ukFollow(); if (e.key === KEY_PRESETS) presetsFollow();
     if (e.key === KEY_WING || e.key === KEY_HQ_MISSION || e.key === null) { refreshLiveryLists(); refreshSummaries(); }
+    if (e.key === KEY_RP_STATE || e.key === null) mlRefresh();       // l'année et « Forcer » du Route Planner : la ligne de la mission d'HQ les suit
   });
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushWork(); else { gsPull(); routeTakeover(); } });
   PR.loud = true;
@@ -4779,11 +4786,11 @@ def build_html():
                   .replace('@@OSWALD_500@@', A['OSWALD_500'])
                   .replace('@@OSWALD_700@@', A['OSWALD_700']))
     js = (build_radio_block() + '\n' + build_radio_bands_block() + '\n' + tables_js() + '\n' + build_payload_block() + '\n' + build_payload_rules_block() + '\n' + PAD2_JS + '\n' + COORD_BLOCK + READNUM_BLOCK + build_magvar_block() + '\n' + build_projection_block() + '\n'
-          + build_route_pack_block() + '\n' + build_route_theatre_block() + '\n' + build_group_store_block() + '\n' + build_presets_merge() + '\n' + build_import_block() + '\n' + build_messages_block() + '\n' + build_ui_block() + '\n' + JS_TBM.replace('@@TBM_JS@@\n', build_tbm_block()) + '\n' + app_js())
+          + build_route_pack_block() + '\n' + build_route_theatre_block() + '\n' + build_group_store_block() + '\n' + build_presets_merge() + '\n' + build_import_block() + '\n' + build_mission_line_block() + '\n' + build_messages_block() + '\n' + build_ui_block() + '\n' + JS_TBM.replace('@@TBM_JS@@\n', build_tbm_block()) + '\n' + app_js())
     return ('<!DOCTYPE html>\n<html lang="fr">\n<head>\n<meta charset="UTF-8">\n'
             '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">\n'
             '<meta name="theme-color" content="#1a1e10">\n<title>Flight Configurator — Mission Plan</title>\n<style>\n'
-            + fonts + CSS_COMMON.replace('@@TBM_CSS@@\n', build_tbm_css()) + CSS_FC + build_messages_css() + build_ui_css() + build_import_css() + CONTRAST_CSS + '\n</style>\n'
+            + fonts + CSS_COMMON.replace('@@TBM_CSS@@\n', build_tbm_css()) + CSS_FC + build_messages_css() + build_ui_css() + build_import_css() + build_mission_line_css() + CONTRAST_CSS + '\n</style>\n'
             '<!-- JSZip v3.10.1 — embarqué pour lire un paquet .zip -->\n<script>' + A['lib_jszip'] + '</script>\n</head>\n'
             + BODY.replace('@@VERSION@@', APP_VERSION).replace('<body data-theme="cw-nato">\n', '<body data-theme="cw-nato">\n' + SHELL_ONLY_TAG, 1) + '\n<script>\n' + js + '\n</script>\n</body>\n</html>\n')
 
@@ -4892,11 +4899,13 @@ def check(html):
     ok('/* ===== POSTES RADIO (COMME AU COCKPIT) ===== */' in html and '/* ===== EMPORT (PRESETS ET PAYLOAD) ===== */' in html, 'blocs partagés présents')
     for label, blk in (('bandes et postes non pré-réglés', build_radio_bands_block()), ('déclinaison', build_magvar_block()), ('projections', build_projection_block()), ('points de paquet', build_route_pack_block()), ('théâtre d\'une route', build_route_theatre_block()), ('groupes partagés', build_group_store_block()), ('fusion des presets (celle du shell)', build_presets_merge()),
                        ('import commun (script)', build_import_block()), ('import commun (feuille)', build_import_css()), ('import commun (fenêtre)', build_import_html()),
+                       ('ligne de la mission d\'HQ (script)', build_mission_line_block()), ('ligne de la mission d\'HQ (feuille)', build_mission_line_css()),
                        ('messages communs (script)', build_messages_block()), ('messages communs (feuille)', build_messages_css()),
                        ('interface commune (script)', build_ui_block()), ('interface commune (feuille)', build_ui_css())):
         ok(blk in html, 'bloc %s inséré tel quel' % label)
     ok(True, "empreinte du bloc d'interface commun : %s" % ui_fingerprint())
     ui_verify_bar(html)
+    mission_line_verify(html)
     pt, it = re.search(r"const PAYLOAD_TYPES = \[(.*?)\];", build_payload_block()), re.search(r"const IMP_TYPES = \[(.*?)\];", build_import_block())
     ok(bool(pt) and bool(it) and pt.group(1) == it.group(1), 'les types du bloc d\'import sont ceux de PAYLOAD_TYPES')
     ok(COORD_BLOCK + READNUM_BLOCK in html and hashlib.sha256(COORD_BLOCK.encode('utf-8')).hexdigest()[:16] == COORD_SHA16, 'bloc de coordonnées inséré tel quel, empreinte %s' % COORD_SHA16)

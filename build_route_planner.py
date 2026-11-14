@@ -29,6 +29,7 @@ from radio_bands_block import build_block as build_radio_bands_block
 from radio_block import build_block as build_radio_block
 from import_block import build_block as build_import_block, build_css as build_import_css, build_html as build_import_html
 from messages_block import build_block as build_messages_block, build_css as build_messages_css
+from mission_line_block import build_block as build_mission_line_block, build_css as build_mission_line_css, verify as mission_line_verify
 from ui_block import build_tbm_css, build_tbm_block, build_block as build_ui_block, build_css as build_ui_css, verify as ui_verify, verify_bar as ui_verify_bar
 from shell_only_block import build_block as build_shell_only_block
 # La garde du module seul : premier élément du <body> (build_mission_plan.py la vérifie dans le dist/)
@@ -329,7 +330,7 @@ button, input, select { font: inherit; }
 .tb-lang-btn:active { transform: translateY(1px); }
 
 /* ---------- application ---------- */
-.app { position: fixed; top: 60px; bottom: 0; left: 0; right: 0; display: grid; grid-template-columns: 440px 1fr; }
+.app { position: fixed; top: var(--mp-top, 60px); bottom: 0; left: 0; right: 0; display: grid; grid-template-columns: 440px 1fr; }
 .app > .panel { order: -1; }
 .mapwrap { position: relative; z-index: 0; min-width: 0; border-left: 2px solid var(--amber-dark); }
 #map { position: absolute; inset: 0; background: #e8dfc6; }
@@ -1072,7 +1073,7 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 /* ---------- tablette, téléphone : sous 1 100 px de large, dans toutes les orientations, la page ne défile jamais : la carte reste en haut,
    à sa hauteur, et seul le panneau, dessous, défile ---------- */
 @media (max-width: 1099px) {
-  .app { position: fixed; top: 60px; bottom: 0; left: 0; right: 0; padding-top: 0; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+  .app { position: fixed; top: var(--mp-top, 60px); bottom: 0; left: 0; right: 0; padding-top: 0; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
   .mapwrap { height: 58vh; min-height: 340px; min-width: 0; border-left: none; border-bottom: 2px solid var(--amber-dark); }
   .app > .panel { order: 0; }
   .panel { overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; min-height: 0; }
@@ -3634,6 +3635,8 @@ function navIsMag() { return S.navDisplay.ref === 'mag' && (S.navDisplay.mode ==
 function navIsCalc() { return S.navDisplay.ref === 'mag' && S.navDisplay.mode === 'calc'; }
 /* L'année de la route et sa source : la mission de HQ (même théâtre), la date reçue avec la route active (paquet, mission de HQ), la saisie, ou 1985 */
 function navYear() { return magYearSource(S.theatre, S.navDisplay.year, S.navDisplay.force, activeRouteDate()); }
+/* La ligne de la mission d'HQ (mission_line_block.py) : le théâtre courant, la src de navYear() et si la déclinaison est employée (cap magnétique, mode calculé) ; sans elle, la src n'est pas lue */
+function rpMissionLine() { const calc = navIsCalc(); return { theatre: S.theatre, src: calc ? navYear().src : '', calc: calc }; }
 /* La déclinaison (°, + vers l'Est) au point p, ou null en cap vrai ; ys : l'année déjà lue, sinon elle se lit ici */
 function declAt(p, ys) {
   if (S.navDisplay.ref !== 'mag') return null;
@@ -6761,7 +6764,7 @@ function drInit() {
 const KEY_SPLIT = 'rp_split_v1';
 const KEY_SPLIT_LAND = 'rp_split_land_v1';
 const SP_MIN = 220, SP_MIN_LAND = 140, SP_MIN_F = 0.25, SP_MAX_F = 0.85, SP_STEP = 40, SP_DBL_MS = 350, SP_KB_DROP = 120;
-function spTopbar() { const tb = document.querySelector('.toolbar'); return (tb && tb.offsetHeight) || 60; }   /* la hauteur de la barre du haut, lue sur la barre (60 px) */
+function spTopbar() { const a = document.getElementById('app'); return (a && a.getBoundingClientRect().top) || 60; }   /* le haut du contenu, lu sur le contenu : la barre (60 px) et, quand elle est là, la ligne de la mission d'HQ (--mp-top) */
 const SP_PORTRAIT_MQ = '(max-width: 1099px) and ((min-height: 600px) or (orientation: portrait))';
 const SP = { el: null, wrap: null, mq: null, port: null, h: null, hl: null, drag: null, raf: 0, want: 0, last: 0, kb: false, vh: 0 };
 
@@ -7020,6 +7023,7 @@ function syncControls() {
   syncAdd();
   routesRender();
   rlRender();       /* unités, référence de cap, déclinaison, langue : les étiquettes et le bandeau de la règle suivent */
+  mlRefresh();       /* la ligne de la mission d'HQ : théâtre, cap magnétique, mode, année, Forcer */
 }
 
 /* La rangée Déclinaison (en cap magnétique seulement) : Calculée ou Saisie ; en Calculée l'année, Forcer et la ligne de source */
@@ -10282,6 +10286,7 @@ function setLang(lang) {
   if (rtVisible('clr-modal')) clrRender();
   if (impIsOpen()) impRender();
   if (rtVisible('fiche')) ficheRender();
+  mlRefresh();
   expSyncTexts();
   if (DSP.open) dspBuild();
   mnClose(false);
@@ -10475,6 +10480,7 @@ function init() {
   syncTowns();
   { const k = mpTheatreRead(); if (k) mpTheatreFollow(); else mpTheatreWrite(S.theatre); }       /* le théâtre partagé : pris s'il diffère, sinon écrit */
   { const u = mpUnitsRead(); if (u) mpUnitsFollow(); else mpUnitsWrite(); }       /* les unités partagées : prises si elles diffèrent, sinon écrites */
+  mlSetup({ lang: () => CURRENT_LANG, read: rpMissionLine, theatreName: id => THEATRES.some(x => x.id === id) ? t('th.' + id) : String(id), onLayout: () => { spSync(); spResize(); } });       /* la ligne de la mission d'HQ (bloc commun) : ce que le module en prend ; le contenu change de hauteur quand elle paraît */
   persistState();
   /* Les polices embarquées servent au canevas : redessiner la grille une fois chargées */
   if (document.fonts && document.fonts.load) {
@@ -10502,7 +10508,7 @@ def build():
     airfields_js = json.dumps(AF['theatres'], ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
     towns_js = json.dumps(TW['theatres'], ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
     js = JS.replace('__AIRFIELDS__', airfields_js).replace('__TOWNS__', towns_js)
-    js = js.replace('@@GEO_BLOCK@@\n', GEO_BLOCK).replace('@@READNUM_BLOCK@@\n', READNUM_BLOCK).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@ROUTE_PACK_BLOCK@@\n', build_route_pack_block()).replace('@@ROUTE_THEATRE_BLOCK@@\n', build_route_theatre_block()).replace('@@ROUTE_WRITE_BLOCK@@\n', build_route_write_block()).replace('@@GROUP_STORE_BLOCK@@\n', build_group_store_block()).replace('@@RADIO_BLOCK@@\n', build_radio_block()).replace('@@RADIO_BANDS_BLOCK@@\n', build_radio_bands_block()).replace('@@IMPORT_BLOCK@@\n', build_import_block()).replace('@@MESSAGES_BLOCK@@\n', build_messages_block() + build_ui_block())
+    js = js.replace('@@GEO_BLOCK@@\n', GEO_BLOCK).replace('@@READNUM_BLOCK@@\n', READNUM_BLOCK).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@ROUTE_PACK_BLOCK@@\n', build_route_pack_block()).replace('@@ROUTE_THEATRE_BLOCK@@\n', build_route_theatre_block()).replace('@@ROUTE_WRITE_BLOCK@@\n', build_route_write_block()).replace('@@GROUP_STORE_BLOCK@@\n', build_group_store_block()).replace('@@RADIO_BLOCK@@\n', build_radio_block()).replace('@@RADIO_BANDS_BLOCK@@\n', build_radio_bands_block()).replace('@@IMPORT_BLOCK@@\n', build_import_block() + build_mission_line_block()).replace('@@MESSAGES_BLOCK@@\n', build_messages_block() + build_ui_block())
     js = js.replace('@@TBM_JS@@\n', build_tbm_block())
     if '@@' in js:
         raise SystemExit("[ERREUR] Marqueur @@ non remplacé dans le script")
@@ -10518,7 +10524,7 @@ def build():
         raise SystemExit("[ERREUR] lib_milsymbol : la mention de licence MIT n'est plus en tête")
 
     html = HTML.replace('<body data-theme="cw-nato">\n', '<body data-theme="cw-nato">\n' + SHELL_ONLY_TAG, 1)
-    html = html.replace('__CSS__', CSS.replace('@@MESSAGES_CSS@@\n', build_messages_css() + build_ui_css()).replace('@@TBM_CSS@@\n', build_tbm_css()) + build_import_css() + CONTRAST_CSS)
+    html = html.replace('__CSS__', CSS.replace('@@MESSAGES_CSS@@\n', build_messages_css() + build_ui_css()).replace('@@TBM_CSS@@\n', build_tbm_css()) + build_import_css() + build_mission_line_css() + CONTRAST_CSS)
     html = html.replace('__IMPORT_HTML__\n', build_import_html())
     html = html.replace('__LIB_LEAFLET_CSS__', A['lib_leaflet_css'])
     html = html.replace('__LIB_LEAFLET__', lib)
@@ -10533,6 +10539,7 @@ def build():
     # Contrôles de construction
     ui_verify(html)
     ui_verify_bar(html)
+    mission_line_verify(html)
     left = re.findall(r'__[A-Z0-9_]{4,}__', re.sub(r'<script>.*?</script>', '', html, flags=re.S)[:])
     left = [x for x in left if x not in ('__proto__',)]
     if left:

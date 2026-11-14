@@ -49,6 +49,7 @@ Changes merged since the last release, grouped per tool.
 - Magnetic declination in 1985 now uses the WMM 1985, as DCS does (the IGRF up to 1984).
 - Mirage F1CE and F1BE: radio names and frequency bands of the TRAP 136 and TRAP 137B, as in the F1EE.
 - A wing configuration that the browser refuses to store now says so instead of showing it as loaded; an import window says when a file cannot be read.
+- **HQ mission line**: when a mission is open in HQ, the Flight Configurator, the Route Planner and the Datacard Generator show a line under the toolbar with its date, start time and file, and what the tool takes from it — or that it is not used there, when its theatre differs.
 
 ### Mission Plan — landing
 #### Added

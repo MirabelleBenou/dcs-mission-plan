@@ -29,6 +29,7 @@ from payload_block import build_block as build_payload_block
 from aircraft_types_block import build_block as build_aircraft_types_block
 from import_block import build_block as build_import_block, build_css as build_import_css, build_html as build_import_html
 from messages_block import build_block as build_messages_block, build_css as build_messages_css
+from mission_line_block import build_block as build_mission_line_block, build_css as build_mission_line_css, verify as mission_line_verify
 from ui_block import build_tbm_css, build_tbm_block, build_block as build_ui_block, build_css as build_ui_css, verify as ui_verify, verify_bar as ui_verify_bar
 from shell_only_block import build_block as build_shell_only_block
 # La garde du module seul : premier élément du <body> (build_mission_plan.py la vérifie dans le dist/)
@@ -518,7 +519,7 @@ body {
 /* ============ MAIN APP ============ */
 .app {
   position: fixed;
-  top: 60px; bottom: 0; left: 0; right: 0;
+  top: var(--mp-top, 60px); bottom: 0; left: 0; right: 0;
   display: grid;
   grid-template-columns: 460px 1fr;
   background: var(--olive-deep);
@@ -3523,6 +3524,8 @@ function dgFollowNav() {
 }
 /* L'année des caps : celle de la mission (magYearSource, comme au Route Planner), sinon la date reçue avec la route de la carte c (paquet, mission de HQ), sinon la saisie, sinon 1985 */
 function dgNavYear(c) { return magYearSource(dgTheatre(), dgN.year, dgN.force, dgRouteDate(c), c.meta.date); }       /* la date de la datacard passe après celle de la route (elle seule en passe une : le Route Planner et le Flight Configurator n'ont pas de date de carte) */
+/* La ligne de la mission d'HQ (mission_line_block.py) : le théâtre du document, la src de dgNavYear (de la carte courante : la mission d'HQ ne dépend d'aucune date de carte ni de route) et si la déclinaison est employée (cap magnétique, mode calculé) ; sans elle, la src n'est pas lue */
+function dgMissionLine() { const calc = dgN.ref === 'mag' && dgN.mode === 'calc', c = curCard(); return { theatre: dgTheatre(), src: calc && c ? dgNavYear(c).src : '', calc: calc }; }
 /* La date reçue avec la route que suit la carte : celle de la route du jeu (liée, du théâtre commun) ; sans route du jeu, celle de la copie de route du groupe (importée, pas encore reprise par le Route Planner) ; '' sans date lisible */
 function dgRouteDate(c) {
   if (!c) return '';
@@ -6315,6 +6318,7 @@ function renderEditor(keep) {
   } finally { DG_UI.rendering = false; }
   ed.scrollTop = top;
   if (lost) { DG_UI.fk = null; showToast(t('toast.typeLost'), { type: 'err' }); }       /* le point a disparu : la saisie est abandonnée, et on le dit */
+  mlRefresh();       /* la ligne de la mission d'HQ : théâtre, cap magnétique, mode, année, Forcer, langue */
 }
 
 function packTitle() {
@@ -7800,6 +7804,7 @@ function init() {
   initToastPlace();
   setActiveTab('header');
   renderAll();
+  mlSetup({ lang: () => CURRENT_LANG, read: dgMissionLine, theatreName: id => DG_THEATRES.indexOf(id) >= 0 ? t('th.' + id) : String(id), importDetail: true });       /* la ligne de la mission d'HQ (bloc commun) : ce que le module en prend */
   /* Les polices embarquées mesurent autrement que les polices de repli : refaire le découpage une fois chargées. */
   if (document.fonts && document.fonts.load) {
     Promise.all([
@@ -7822,7 +7827,7 @@ else init();
 def build():
     _wn, _pyl, _lim, _mas = dg_tables()
     js = JS.replace('@@WEAPON_NAMES@@', _wn).replace('@@AIRCRAFT_PYLONS@@', _pyl).replace('@@AIRCRAFT_LIMITS@@', _lim).replace('@@AIRCRAFT_MASSES@@', _mas)
-    js = js.replace('@@PAYLOAD_BLOCK@@\n', build_payload_block()).replace('@@AIRCRAFT_TYPES_BLOCK@@\n', build_aircraft_types_block()).replace('@@IMPORT_BLOCK@@\n', build_import_block()).replace('@@MESSAGES_BLOCK@@\n', build_messages_block() + build_ui_block()).replace('@@TBM_JS@@\n', build_tbm_block())
+    js = js.replace('@@PAYLOAD_BLOCK@@\n', build_payload_block()).replace('@@AIRCRAFT_TYPES_BLOCK@@\n', build_aircraft_types_block()).replace('@@IMPORT_BLOCK@@\n', build_import_block() + build_mission_line_block()).replace('@@MESSAGES_BLOCK@@\n', build_messages_block() + build_ui_block()).replace('@@TBM_JS@@\n', build_tbm_block())
     _facts = airfield_facts()
     facts_js = json.dumps(_facts, ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
     js = js.replace('__AIRFIELD_FACTS__', facts_js)
@@ -7831,7 +7836,7 @@ def build():
     js = js.replace('@@ROUTE_PACK_BLOCK@@\n', build_route_pack_block()).replace('@@ROUTE_THEATRE_BLOCK@@\n', build_route_theatre_block()).replace('@@GROUP_STORE_BLOCK@@\n', build_group_store_block()).replace('@@ROUTE_WRITE_BLOCK@@\n', build_route_write_block())
     js = js.replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@RADIO_BLOCK@@\n', build_radio_block()).replace('@@RADIO_BANDS_BLOCK@@\n', build_radio_bands_block()).replace('@@PROJECTION_BLOCK@@\n', build_projection_block())
     html = HTML.replace('<body data-theme="cw-nato">\n', '<body data-theme="cw-nato">\n' + SHELL_ONLY_TAG, 1)
-    html = html.replace('__CSS__', CSS.replace('@@MESSAGES_CSS@@\n', build_messages_css() + build_ui_css()).replace('@@TBM_CSS@@\n', build_tbm_css()) + build_import_css() + CONTRAST_CSS)
+    html = html.replace('__CSS__', CSS.replace('@@MESSAGES_CSS@@\n', build_messages_css() + build_ui_css()).replace('@@TBM_CSS@@\n', build_tbm_css()) + build_import_css() + build_mission_line_css() + CONTRAST_CSS)
     html = html.replace('@@IMPORT_HTML@@\n', build_import_html())
     html = html.replace('__LIB_HTML2CANVAS__', A['lib_html2canvas'])
     html = html.replace('__LIB_JSZIP__', A['lib_jszip'])
@@ -7840,6 +7845,7 @@ def build():
 
     ui_verify(html)
     ui_verify_bar(html)
+    mission_line_verify(html)
     # Contrôles de construction
     pt, it = re.search(r"const PAYLOAD_TYPES = \[(.*?)\];", build_payload_block()), re.search(r"const IMP_TYPES = \[(.*?)\];", build_import_block())
     if not (pt and it and pt.group(1) == it.group(1)):
