@@ -1719,6 +1719,7 @@ const I18N = {{
     'pk.rep.title': 'Compte rendu',
     'pk.rep.ok': '✓ {{0}} ({{1}}) : {{2}}',
     'pk.rep.nothing': '– {{0}} ({{1}}) : rien d’écrit',
+    'pk.rep.nochange': 'Rien à changer : la mission porte déjà ce paquet',
     'pk.rep.absent': '– {{0}} ({{1}}) : absent de la mission, rien écrit',
     'pk.rep.conflict': '⚠ {{0}} : visé par {{1}} et par {{2}} — le dernier chargé l’emporte, rien écrit depuis le premier',
     'pk.rep.fail': '✗ {{0}} ({{1}}) : vérification échouée — {{2}}',
@@ -2145,6 +2146,7 @@ const I18N = {{
     'pk.rep.title': 'Report',
     'pk.rep.ok': '✓ {{0}} ({{1}}): {{2}}',
     'pk.rep.nothing': '– {{0}} ({{1}}): nothing written',
+    'pk.rep.nochange': 'Nothing to change: the mission already carries this package',
     'pk.rep.absent': '– {{0}} ({{1}}): not in the mission, nothing written',
     'pk.rep.conflict': '⚠ {{0}}: targeted by {{1}} and by {{2}} — the last one loaded wins, nothing written from the first',
     'pk.rep.fail': '✗ {{0}} ({{1}}): verification failed — {{2}}',
@@ -4901,6 +4903,39 @@ function pkDoneText(done) {{
   return parts.join(' · ');
 }}
 
+// Une valeur Lua en forme canonique (clés typées, entrées triées : l'ordre et la mise en page du texte n'y comptent pas) ; null si un nœud n'est pas une valeur connue.
+function pkCanon(n) {{
+  if (!n) return null;
+  switch (n.kind) {{
+    case 'number': case 'int': return 'n' + n.value;
+    case 'string': return 's' + JSON.stringify(n.value);
+    case 'bool': case 'ident': return 'b' + n.value;
+    case 'nil': return 'z';
+    case 'table': {{
+      const es = [];
+      for (let i = 0; i < n.entries.length; i++) {{
+        const e = n.entries[i], k = e.key ? pkCanon(e.key) : '#' + i, v = pkCanon(e.value);
+        if (k === null || v === null) return null;
+        es.push(k + '=' + v);
+      }}
+      return '{{' + es.sort().join(',') + '}}';
+    }}
+    default: return null;
+  }}
+}}
+// Une écriture du plan dit-elle déjà ce que dit le texte de la mission à cet endroit ? Même texte, ou même valeur Lua (un tableau réécrit dans une autre mise en page est la même valeur).
+// Dans le doute (une valeur illisible), non : l'écriture a lieu, comme avant.
+function pkPatchSame(text, patch) {{
+  const old = text.slice(patch.pos.start.offset, patch.pos.end.offset), nv = patch.newValueStr;
+  if (old === nv) return true;
+  if (patch.pos.end.offset <= patch.pos.start.offset) return false;
+  try {{
+    const val = src => {{ const ast = DCS_PARSER.parse(DCS_TOKENIZER.tokenize('x = ' + src).tokens); return pkCanon(ast.kind === 'assignment' ? ast.value : null); }};
+    const a = val(old), b = val(nv);
+    return a !== null && a === b;
+  }} catch (e) {{ return false; }}
+}}
+
 // Un geste n'ajoute 1 au compteur que si la mission en mémoire a changé : le texte « mission » ou un autre fichier de l'archive.
 function hqCtxDiffers(a, b) {{
   if (!a || !b) return true;
@@ -4945,7 +4980,7 @@ async function pkApply() {{
     // Copie de travail : le contexte chargé n'est touché qu'après le dernier vol vérifié
     let work = {{ missionText: base.missionText, ast: base.ast, model: base.model, otherFilesMap: base.otherFilesMap, theatre: base.theatre }};
     const lines = [];
-    let applied = 0, absent = 0, warnN = 0, patchesN = 0, started = 0;
+    let applied = 0, absent = 0, warnN = 0, patchesN = 0, started = 0, same = 0;
     for (const s of seq) {{
       const {{ pk, fl }} = s;
       const label = fl.groupName;
@@ -4977,6 +5012,10 @@ async function pkApply() {{
         const built = buildPatchesFromPackage(plan, work);
         if (built.patches.length === 0) {{
           lines.push({{ cls: 'a', text: () => tf('pk.rep.nothing', label, pk.filename) }});
+        }} else if (built.patches.every(pt => pkPatchSame(work.missionText, pt))) {{
+          // Le groupe porte déjà, valeur pour valeur, ce que le paquet écrirait : le texte de la mission ne change pas, rien n'est écrit ni compté
+          same++;
+          lines.push({{ cls: 'a', text: () => tf('pk.rep.nothing', label, pk.filename) }});
         }} else {{
           const patchedSrc = applyPatches(work.missionText, built.patches);
           try {{ retokenizeSafety(patchedSrc); }}
@@ -5004,7 +5043,7 @@ async function pkApply() {{
     }}
     if (patchesN === 0) {{
       _PK_REPORT = {{ lines, total: () => pkTotalText(applied, absent, warnN) }};
-      showToast(t('toast.pkNoChange'));
+      showToast(t(same > 0 ? 'pk.rep.nochange' : 'toast.pkNoChange'));
       return;
     }}
     // La garde : la mission qui serait écrite garde la date et l'heure de départ de celle d'avant, sinon le paquet est refusé et rien ne change (ni l'archive, ni le contexte, ni le compteur de modifications)
