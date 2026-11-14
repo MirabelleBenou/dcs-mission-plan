@@ -3673,6 +3673,7 @@ const I18N = {
     'toast.hqWhat.time': 'heure',
     'metar.hq.btn': 'Reprendre de la mission d’HQ',
     'metar.hq.off': 'Ouvrez un .miz dans HQ',
+    'metar.hq.nowx': 'Pas de météo dans la mission d’HQ',
     'editor.sitac.map':      'Carte SITAC (image)',
     // ── Section 03 MISSION ──
     'editor.mission.summary':      '04 ░ APERÇU MISSION',
@@ -4090,6 +4091,7 @@ const I18N = {
     'toast.hqWhat.time': 'time',
     'metar.hq.btn': 'Take from HQ mission',
     'metar.hq.off': 'Open a .miz in HQ',
+    'metar.hq.nowx': 'No weather in the HQ mission',
     'editor.sitac.map':      'SITAC map (image)',
     // ── Section 03 MISSION ──
     'editor.mission.summary':      '04 ░ MISSION OVERVIEW',
@@ -6464,7 +6466,8 @@ function _readMetarForm() {
 }
 
 /* La mission ouverte dans HQ (mission_snapshot_v1), lue comme la ligne de la mission d'HQ la lit (mlSnap : présente et lisible, sinon rien) :
-   { sn : la lecture de la ligne (date AAAA-MM-JJ lisible ou '', heure en secondes ou -1), sm : sourceMission, wx : weather.raw, le nœud « weather » du .miz en objet ({} s'il manque) } */
+   { sn : la lecture de la ligne (date AAAA-MM-JJ lisible ou '', heure en secondes ou -1), sm : sourceMission, wx : weather.raw, le nœud « weather » du .miz en objet ({} s'il manque),
+   hasWx : la mission porte une météo (un nœud « weather » non vide) ; sans elle, le geste ne remplit que la date et l'heure } */
 function bgHqRead() {
   const sn = mlSnap();
   if (!sn) return null;
@@ -6472,20 +6475,26 @@ function bgHqRead() {
   try { o = JSON.parse(localStorage.getItem(ML_KEY)); } catch (e) { o = null; }
   if (!o || typeof o !== 'object') return null;
   const wx = o.weather && typeof o.weather === 'object' && o.weather.raw && typeof o.weather.raw === 'object' ? o.weather.raw : {};
-  return { sn: sn, sm: o.sourceMission, wx: wx };
+  return { sn: sn, sm: o.sourceMission, wx: wx, hasWx: Object.keys(wx).length > 0 };
 }
 
-/* Le bouton « Reprendre de la mission d'HQ » : grisé, avec sa raison (infobulle et ligne d'aide), tant qu'aucune mission n'est ouverte dans HQ ; l'assistant est rendu à chaque ouverture et la ligne
-   de la mission d'HQ rappelle cette fonction quand elle paraît ou disparaît */
+/* Le bouton « Reprendre de la mission d'HQ » : grisé, avec sa raison (infobulle et ligne d'aide), tant qu'aucune mission n'est ouverte dans HQ, ou que la mission n'a ni météo, ni date, ni heure lisibles ;
+   l'assistant est rendu à chaque ouverture et la ligne de la mission d'HQ rappelle cette fonction quand elle paraît ou disparaît */
 function bgHqSync() {
   const btn = document.getElementById('ma-take-hq'), help = document.getElementById('ma-hq-help');
   if (!btn) return;
-  const on = !!bgHqRead();
+  const hq = bgHqRead();
+  const on = !!hq && (hq.hasWx || hq.sn.date !== '' || hq.sn.time >= 0);
+  const why = hq ? 'metar.hq.nowx' : 'metar.hq.off';
   btn.disabled = !on;
   btn.setAttribute('aria-disabled', on ? 'false' : 'true');
   if (on) { btn.removeAttribute('data-i18n-title'); btn.removeAttribute('title'); }
-  else { btn.setAttribute('data-i18n-title', 'metar.hq.off'); btn.title = t('metar.hq.off'); }
-  if (help) help.hidden = on;
+  else { btn.setAttribute('data-i18n-title', why); btn.title = t(why); }
+  if (help) {       // la ligne d'aide ne porte son texte que si le bouton est grisé (aria-describedby lit même un élément caché)
+    if (on) { help.removeAttribute('data-i18n'); help.textContent = ''; }
+    else { help.setAttribute('data-i18n', why); help.textContent = t(why); }
+    help.hidden = on;
+  }
 }
 
 /* La météo d'une mission (weather.raw, le nœud « weather » du .miz en objet) en paramètres de l'assistant METAR : les conversions de l'ancien import du .miz, lues sur l'objet
@@ -6510,9 +6519,10 @@ function bgHqToParams(hq, icao) {
   const clouds = obj(wx.clouds);
   const presetId = typeof clouds.preset === 'string' ? clouds.preset : '';
   let cloudCover = 'SCT';
-  if (presetId && CLOUD_PRESETS_BG[presetId]) {
+  // (la clé du preset doit être propre à la table : « constructor » ou « toString » ne sont pas des presets ; un preset que la table ne connaît pas laisse la densité décider)
+  if (presetId && Object.prototype.hasOwnProperty.call(CLOUD_PRESETS_BG, presetId)) {
     cloudCover = CLOUD_PRESETS_BG[presetId].replace(/\+RA$/,'').replace(/\+R$/,'');
-  } else if (!presetId) {
+  } else {
     const density = Math.trunc(num(clouds.density, 0));
     if      (density === 0) cloudCover = 'NSC';
     else if (density <= 3)  cloudCover = 'FEW';
@@ -6520,8 +6530,8 @@ function bgHqToParams(hq, icao) {
     else if (density <= 8)  cloudCover = 'BKN';
     else                    cloudCover = 'OVC';
   }
-  // Base nuages : m → ft (1500 ft sans base)
-  const cloudBase = Math.round(num(clouds.base, 457.2) / 0.3048);
+  // Base nuages : en mètres, comme l'assistant la range (le champ « Base ft » la montre en pieds, le METAR en centaines de pieds) ; 457,2 m (1500 ft) sans base
+  const cloudBase = num(clouds.base, 457.2);
   // Brouillard/brume et poussière → phénomènes
   const phenomena = [];
   if (wx.enable_fog === true) {
@@ -6557,37 +6567,51 @@ function bgSetMeta(k, v) {
 
 /* « Reprendre de la mission d'HQ » : remplit l'assistant METAR et la date et l'heure de l'en-tête (au format du Datacard Generator : AAAA-MM-JJ, hh:mm) depuis la mission ouverte dans HQ.
    Une valeur vide se remplit sans rien dire (l'assistant à ses valeurs d'origine compte pour vide) ; une valeur différente passe par « Remplacer » : le toast dit ce qui change (météo, date, heure)
-   et « Restaurer » rend l'assistant, la date et l'heure d'avant. Le champ METAR lui-même n'est écrit que par « Insérer dans METAR ». */
+   et « Restaurer » rend l'assistant, la date et l'heure d'avant. Le champ METAR lui-même n'est écrit que par « Insérer dans METAR ».
+   Une mission sans météo ne touche pas l'assistant : la date et l'heure seules se prennent, et le toast le dit. Une erreur donne le toast d'échec ; l'assistant, la date et l'heure sont rendus tels qu'avant. */
 function bgTakeFromHq() {
   const hq = bgHqRead();
-  if (!hq) { bgHqSync(); return; }
-  const cur = _metarParams || _metarDefaults();
-  const np = bgHqToParams(hq, cur.icao);
-  const line = p => buildMetarString(Object.assign({}, p, { icao: '' }));       // ce que l'assistant écrit, sans l'OACI
-  const st = hq.sn.time < 0 ? -1 : Math.floor(hq.sn.time);
-  const newDate = hq.sn.date, newTime = st < 0 ? '' : String(Math.floor(st / 3600) % 24).padStart(2, '0') + ':' + String(Math.floor((st % 3600) / 60)).padStart(2, '0');
-  const oldDate = String(state.meta.date || '').trim(), oldTime = String(state.meta.time || '').trim();
-  const what = [];
-  if (line(cur) !== line(np) && line(cur) !== line(_metarDefaults())) what.push('wx');
-  if (newDate !== '' && oldDate !== '' && oldDate !== newDate) what.push('date');
-  if (newTime !== '' && oldTime !== '' && oldTime !== newTime) what.push('time');
-  const run = () => {
-    _metarParams = np;
-    if (newDate !== '') bgSetMeta('date', newDate);
-    if (newTime !== '') bgSetMeta('time', newTime);
-    renderMetarAssistant(_metarParams);
-    persistState();       /* écrit tout de suite : « Restaurer » compare le stockage à ce qu'il était à la fin du geste */
-    schedulePreview();
-    return true;
-  };
-  if (!what.length) { run(); return; }
-  replaceWithRestore({
-    keys: [STORAGE_KEY],
-    mem: () => ({ p: JSON.parse(JSON.stringify(cur)), date: state.meta.date, time: state.meta.time }),
-    back: m => { _metarParams = m.p; bgSetMeta('date', m.date); bgSetMeta('time', m.time); renderMetarAssistant(_metarParams); persistState(); schedulePreview(); },
-    msg: t('toast.hqReplaced').replace('{what}', what.map(k => t('toast.hqWhat.' + k)).join(', ')),
-    run
-  });
+  if (!hq || !(hq.hasWx || hq.sn.date !== '' || hq.sn.time >= 0)) { bgHqSync(); return; }
+  const was = { ref: _metarParams, date: state.meta.date, time: state.meta.time };
+  try {
+    const cur = _metarParams || _metarDefaults();
+    const np = hq.hasWx ? bgHqToParams(hq, cur.icao) : null;
+    const line = p => buildMetarString(Object.assign({}, p, { icao: '' }));       // ce que l'assistant écrit, sans l'OACI
+    const st = hq.sn.time < 0 ? -1 : Math.floor(hq.sn.time);
+    const newDate = hq.sn.date, newTime = st < 0 ? '' : String(Math.floor(st / 3600) % 24).padStart(2, '0') + ':' + String(Math.floor((st % 3600) / 60)).padStart(2, '0');
+    const oldDate = String(state.meta.date || '').trim(), oldTime = String(state.meta.time || '').trim();
+    const what = [];
+    if (np && line(cur) !== line(np) && line(cur) !== line(_metarDefaults())) what.push('wx');
+    if (newDate !== '' && oldDate !== '' && oldDate !== newDate) what.push('date');
+    if (newTime !== '' && oldTime !== '' && oldTime !== newTime) what.push('time');
+    const run = () => {
+      if (np) _metarParams = np;
+      if (newDate !== '') bgSetMeta('date', newDate);
+      if (newTime !== '') bgSetMeta('time', newTime);
+      if (np) renderMetarAssistant(_metarParams);
+      persistState();       /* écrit tout de suite : « Restaurer » compare le stockage à ce qu'il était à la fin du geste */
+      schedulePreview();
+      return true;
+    };
+    const noWx = hq.hasWx ? '' : t('metar.hq.nowx');
+    if (!what.length) { run(); if (noWx) showToast(noWx); return; }
+    replaceWithRestore({
+      keys: [STORAGE_KEY],
+      mem: () => ({ p: JSON.parse(JSON.stringify(cur)), date: state.meta.date, time: state.meta.time }),
+      back: m => { _metarParams = m.p; bgSetMeta('date', m.date); bgSetMeta('time', m.time); renderMetarAssistant(_metarParams); persistState(); schedulePreview(); },
+      msg: t('toast.hqReplaced').replace('{what}', what.map(k => t('toast.hqWhat.' + k)).join(', ')) + (noWx ? ' · ' + noWx : ''),
+      run
+    });
+  } catch (e) {
+    console.warn('[BG] reprise de la mission d’HQ :', e);
+    try {
+      _metarParams = was.ref;
+      bgSetMeta('date', was.date); bgSetMeta('time', was.time);
+      if (document.getElementById('ma-take-hq')) renderMetarAssistant(_metarParams || _metarDefaults());
+      persistState();
+    } catch (e2) { console.warn('[BG] retour à l’état d’avant :', e2); }
+    showToast(t('msg.failed'), { type: 'err' });
+  }
 }
 
 /* ============= AÉRODROMES STRUCTURÉS (Partie 1 — 10B-lite) =============

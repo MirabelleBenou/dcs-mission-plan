@@ -3371,6 +3371,24 @@ function saveState() {{
   }} catch(e) {{}}
 }}
 
+/* Les logos à soi relus d'un état ou d'un fichier de travail : des objets {{ id, name, b64 }} de texte, l'image seulement si c'est une « data:image/ » (sinon vide, la grille montre « ? ») ; ce qui n'est pas un objet est ignoré */
+function rsCleanLogos(list) {{
+  return list.filter(l => l && typeof l === 'object').map(l => ({{
+    id: l.id ? String(l.id) : uid(),
+    name: typeof l.name === 'string' ? l.name : String(l.name == null ? '' : l.name),
+    b64: rsImgSrc(l.b64)
+  }}));
+}}
+/* Les doubles de l'ancien « Importer config » : un logo à soi dont l'image est celle d'un logo du Wing montré est retiré, sauf s'il est celui placé sur la photo (logoId). Vrai si la liste a changé */
+function rsDropWingDoubles() {{
+  const wing = new Set(rsWingList().map(l => l.b64).filter(b => b));
+  if (!wing.size) return false;
+  const keep = STATE.logos.filter(l => !(l.b64 && wing.has(l.b64) && l.id !== STATE.logoId));
+  if (keep.length === STATE.logos.length) return false;
+  STATE.logos = keep;
+  return true;
+}}
+
 function restoreState() {{
   const raw = localStorage.getItem(KEY_STATE);
   if (!raw) return false;
@@ -3383,7 +3401,7 @@ function restoreState() {{
       if (typeof e.x !== 'number') {{ e.x = 0.5; e.y = 0.5; e.point = false; }}
     }});
     // G1 migration : ancien logoCustom → STATE.logos
-    if (Array.isArray(saved.logos)) STATE.logos = saved.logos;
+    if (Array.isArray(saved.logos)) STATE.logos = rsCleanLogos(saved.logos);
     else if (saved.logoCustom) STATE.logos.push({{ id: uid(), name: 'IMPORT', b64: saved.logoCustom }});
     if ('logoId' in saved) STATE.logoId = saved.logoId;
     // Le logo du Wing que la composition garde (le fichier de travail ne porte pas le Wing)
@@ -3406,7 +3424,7 @@ function restoreState() {{
       ? saved.sensorMode : 'eo';
     // R2-A migration
     STATE.annotations = Array.isArray(saved.annotations) ? saved.annotations : [];
-    STATE.annotations.forEach(a => {{ if (!a.id) a.id = uid(); }});
+    STATE.annotations.forEach(a => {{ a.id = a.id ? String(a.id) : uid(); }});
     // R2-B Lot 2 : classification (champ absent → défaut)
     if (saved.classification && typeof saved.classification === 'object') {{
       STATE.classification = {{ enabled: !!saved.classification.enabled, level: rsClassKey(saved.classification.level) }};
@@ -3693,6 +3711,10 @@ function rsLogoById(id) {{
 }}
 
 // ── Logo grid render ───────────────────────────────────────────
+/* Une image de logo n'est acceptée que si c'est une image « data:image/ » : sinon vide (la grille montre « ? », la composition n'en charge rien) */
+function rsImgSrc(v) {{
+  return typeof v === 'string' && v.startsWith('data:image/') ? v : '';
+}}
 function renderLogoGrid() {{
   const grid = document.getElementById('logo-grid');
   if (!grid) return;
@@ -3710,14 +3732,16 @@ function renderLogoGrid() {{
     if (lg.wing) {{
       // Logos du Wing : la marque « Wing », pas de ✕ (ils suivent HQ)
       return `<div class="logo-thumb logo-thumb-wing ${{active}}" data-logo-id="${{escapeAttr(lg.id)}}" data-wing="1" tabindex="0" title="${{escapeAttr(lg.name)}}">
-        ${{src ? `<img src="${{escapeAttr(src)}}" alt="${{escapeAttr(lg.name)}}">` : '<div class="logo-thumb-none">?</div>'}}
+        ${{rsImgSrc(src) ? `<img src="${{escapeAttr(rsImgSrc(src))}}" alt="${{escapeAttr(lg.name)}}">` : '<div class="logo-thumb-none">?</div>'}}
         <span class="logo-thumb-mark">${{escapeAttr(t('editor.logo.wing'))}}</span>
       </div>`;
     }}
     // Logos utilisateur : ✕ toujours visible (tactile)
-    return `<div class="logo-thumb logo-thumb-custom ${{active}}" data-logo-id="${{lg.id}}" tabindex="0" title="${{lg.name}}">
-      ${{src ? `<img src="${{src}}" alt="${{lg.name}}">` : '<div class="logo-thumb-none">?</div>'}}
-      <button class="logo-thumb-del" data-del-id="${{lg.id}}"
+    // (id, nom et image viennent d'un fichier ou d'un import : rien n'entre dans le HTML sans échappement, et seule une image « data:image/ » est montrée)
+    const usrc = rsImgSrc(src);
+    return `<div class="logo-thumb logo-thumb-custom ${{active}}" data-logo-id="${{escapeAttr(lg.id)}}" tabindex="0" title="${{escapeAttr(lg.name)}}">
+      ${{usrc ? `<img src="${{escapeAttr(usrc)}}" alt="${{escapeAttr(lg.name)}}">` : '<div class="logo-thumb-none">?</div>'}}
+      <button class="logo-thumb-del" data-del-id="${{escapeAttr(lg.id)}}"
               title="${{t('editor.logo.removeCustom')}}" aria-label="${{t('editor.logo.removeCustom')}}">✕</button>
     </div>`;
   }}).join('');
@@ -3857,19 +3881,19 @@ function renderInsetEditor() {{
   if (insets.length === 0) {{ container.innerHTML = ''; return; }}
   container.innerHTML = insets.map((ins, i) => {{
     const colBtns = ['white','black','red'].map(c =>
-      `<button type="button" class="inset-color-btn${{ins.color===c?' active':''}}" data-inset-id="${{ins.id}}" data-color="${{c}}">${{t('inset.color.'+c)}}</button>`
+      `<button type="button" class="inset-color-btn${{ins.color===c?' active':''}}" data-inset-id="${{escapeAttr(ins.id)}}" data-color="${{c}}">${{t('inset.color.'+c)}}</button>`
     ).join('');
     return `<div class="inset-row">
       <div class="inset-row-header">
         <span class="inset-num">⊞ ${{t('editor.inset.label')}} ${{i+1}}</span>
         <div class="inset-color-group">${{colBtns}}</div>
-        <button class="btn-remove-row btn-remove-inset" data-inset-id="${{ins.id}}"
+        <button class="btn-remove-row btn-remove-inset" data-inset-id="${{escapeAttr(ins.id)}}"
                 aria-label="${{t('editor.inset.remove.aria')}}" title="✕">✕</button>
       </div>
       <div class="inset-label-row">
         <span class="ed-label" style="min-width:44px">${{t('editor.inset.caption')}}</span>
         <input class="inset-label-input" type="text"
-               data-inset-id="${{ins.id}}"
+               data-inset-id="${{escapeAttr(ins.id)}}"
                placeholder="${{t('editor.inset.caption.ph')}}"
                value="${{escapeAttr(ins.label || '')}}">
       </div>
@@ -3912,18 +3936,18 @@ function renderShapesEditor() {{
   container.innerHTML = shapes.map((sh, i) => {{
     const colBtns = ['red','black','white'].map(c =>
       `<button type="button" class="shape-color-btn${{sh.color===c?' active':''}}"
-               data-shape-id="${{sh.id}}" data-color="${{c}}">${{t('inset.color.'+c)}}</button>`
+               data-shape-id="${{escapeAttr(sh.id)}}" data-color="${{c}}">${{t('inset.color.'+c)}}</button>`
     ).join('');
     const polyExtra = sh.type === 'poly' ? `
       <div class="shape-poly-controls">
-        <button class="shape-poly-btn" data-shape-id="${{sh.id}}" data-action="add-pt">+ ${{t('editor.shapes.poly.addpt')}}</button>
-        <button class="shape-poly-btn${{sh.closed?' active':''}}" data-shape-id="${{sh.id}}" data-action="toggle-close">${{sh.closed ? t('editor.shapes.poly.open') : t('editor.shapes.poly.close')}}</button>
+        <button class="shape-poly-btn" data-shape-id="${{escapeAttr(sh.id)}}" data-action="add-pt">+ ${{t('editor.shapes.poly.addpt')}}</button>
+        <button class="shape-poly-btn${{sh.closed?' active':''}}" data-shape-id="${{escapeAttr(sh.id)}}" data-action="toggle-close">${{sh.closed ? t('editor.shapes.poly.open') : t('editor.shapes.poly.close')}}</button>
       </div>` : '';
     return `<div class="shape-row">
       <div class="shape-row-header">
         <span class="shape-badge">${{TYPE_LABELS[sh.type] || sh.type}} ${{i+1}}</span>
         <div class="shape-color-group">${{colBtns}}</div>
-        <button class="btn-remove-row btn-remove-shape" data-shape-id="${{sh.id}}"
+        <button class="btn-remove-row btn-remove-shape" data-shape-id="${{escapeAttr(sh.id)}}"
                 aria-label="${{t('editor.shapes.remove.aria')}}" title="✕">✕</button>
       </div>
       ${{polyExtra}}
@@ -3962,7 +3986,7 @@ function renderShapesEditor() {{
 
 // ── Escape helpers ─────────────────────────────────────────────
 function escapeAttr(str) {{
-  return (str || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return String(str || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }}
 
 // ── renderLabelEditor (R2-B Lot 2) ────────────────────────────
@@ -3975,19 +3999,19 @@ function renderLabelEditor() {{
   container.innerHTML = labels2.map((lb, i) => {{
     const styleBtns = ['stamp','cursive','plain'].map(st2 =>
       `<button type="button" class="shape-color-btn${{lb.style===st2?' active':''}}"
-               data-label-id="${{lb.id}}" data-style="${{st2}}">${{t('editor.label.style.'+st2)}}</button>`
+               data-label-id="${{escapeAttr(lb.id)}}" data-style="${{st2}}">${{t('editor.label.style.'+st2)}}</button>`
     ).join('');
     const colBtns = ['red','black','white'].map(c =>
       `<button type="button" class="shape-color-btn${{lb.color===c?' active':''}}"
-               data-label-id="${{lb.id}}" data-label-color="${{c}}">${{t('inset.color.'+c)}}</button>`
+               data-label-id="${{escapeAttr(lb.id)}}" data-label-color="${{c}}">${{t('inset.color.'+c)}}</button>`
     ).join('');
     return `<div class="shape-row">
       <div class="shape-row-header">
         <span class="shape-badge">LABEL ${{i+1}}</span>
-        <button class="btn-remove-row btn-remove-label" data-label-id="${{lb.id}}"
+        <button class="btn-remove-row btn-remove-label" data-label-id="${{escapeAttr(lb.id)}}"
                 aria-label="${{t('editor.label.remove.aria')}}" title="✕">✕</button>
       </div>
-      <input type="text" class="label-text-input ed-input" data-label-id="${{lb.id}}"
+      <input type="text" class="label-text-input ed-input" data-label-id="${{escapeAttr(lb.id)}}"
              value="${{escapeAttr(lb.text)}}" placeholder="${{escapeAttr(t('editor.label.text.ph'))}}">
       <div class="shape-color-group" style="margin-top:4px">${{styleBtns}}</div>
       <div class="shape-color-group" style="margin-top:4px">${{colBtns}}</div>
@@ -4725,7 +4749,7 @@ function getLogoImage() {{
     const id = STATE.logoId;
     if (!id || id === 'none') return resolve(null);
     const logo = rsLogoById(id);
-    if (!logo || !logo.b64) return resolve(null);
+    if (!logo || !rsImgSrc(logo.b64)) return resolve(null);
     const cached = LOGO_CACHE[id];
     if (cached && cached.complete && cached.naturalWidth) return resolve(cached);
     const img = new Image();
@@ -5128,6 +5152,7 @@ async function init() {{
   const hasState = restoreState();
   applyStateToForm();
   rsBriefingFill();
+  if (hasState && rsDropWingDoubles()) saveState();     // les doubles laissés par l'ancien « Importer config » (après le formulaire : saveState relit ses champs)
   renderLogoGrid();
   renderLogoMode();
   renderTextColor();
@@ -5225,6 +5250,15 @@ grep_present("STATE.logos", "STATE.logos tableau logos")
 grep_present("function rsWingRead()", "les logos du Wing se lisent de wing_config_v1 (rsWingRead)")
 grep_present("function rsWingKeep()", "le logo du Wing choisi est gardé par la composition (rsWingKeep)")
 grep_present("data-wing=", "les logos du Wing portent leur marque dans la grille")
+grep_present("function rsImgSrc(v)", "une image de logo n'est acceptée que si c'est une data:image/ (rsImgSrc)")
+grep_present('data-logo-id="${escapeAttr(lg.id)}" tabindex="0" title="${escapeAttr(lg.name)}"', "la branche des logos à soi échappe l'identifiant et le nom")
+grep_absent('data-logo-id="${lg.id}"', "aucun identifiant de logo n'entre dans le HTML sans échappement")
+grep_absent('title="${lg.name}"', "aucun nom de logo n'entre dans le HTML sans échappement")
+grep_absent('data-inset-id="${ins.id}"', "l'identifiant d'un cadre n'entre pas dans le HTML sans échappement")
+grep_absent('data-shape-id="${sh.id}"', "l'identifiant d'une forme n'entre pas dans le HTML sans échappement")
+grep_absent('data-label-id="${lb.id}"', "l'identifiant d'une étiquette n'entre pas dans le HTML sans échappement")
+grep_present("function rsCleanLogos(list)", "les logos à soi relus d'un état sont nettoyés (rsCleanLogos)")
+grep_present("function rsDropWingDoubles()", "les doubles de l'ancien « Importer config » sont retirés à l'ouverture (rsDropWingDoubles)")
 grep_absent("importWingLogos", "l'import de la configuration du Wing a disparu (importWingLogos)")
 grep_absent('id="file-wing"', "l'entrée de fichier « Importer config » a disparu")
 grep_absent("validateWingConfig", "la validation de la configuration importée a disparu (validateWingConfig)")
