@@ -1694,6 +1694,7 @@ const I18N = {
     'ex.title': 'Exporter la datacard',
     'ex.note.pdf': 'Impression système',
     'ex.note.png': 'Kneeboard DCS · 2000×2828, A4',
+    'ex.png.label': 'PNG · 2 000 × 2 828',
     'ex.pick': 'Choisir…',
     'ex.checkAll': 'Tout cocher',
     'ex.uncheckAll': 'Tout décocher',
@@ -2202,6 +2203,7 @@ const I18N = {
     'ex.title': 'Export the datacard',
     'ex.note.pdf': 'System print',
     'ex.note.png': 'DCS Kneeboard · 2000×2828, A4',
+    'ex.png.label': 'PNG · 2 000 × 2 828',
     'ex.pick': 'Choose…',
     'ex.checkAll': 'Check all',
     'ex.uncheckAll': 'Uncheck all',
@@ -7234,11 +7236,9 @@ function dgExportSel(page) {
   const all = allExportPages();
   return page === 'all' ? all : dgPickedIdx().map(i => all[i]).filter(Boolean);
 }
-function dgExportDefName(fmt, page) {
-  const sel = dgExportSel(page);
-  if (fmt === 'pdf') return fnDefault('datacard_' + fnPart(slug(curCard().flight.callsign), 'doc'), DGX.stamp);
-  if (sel.length === 1) return fnDefault('dc_' + fnPart(sel[0].cs, 'carte') + '_p' + sel[0].page, DGX.stamp);
-  return 'datacards_' + DGX.stamp;
+/* Un document, un nom : le champ « Nom du fichier » sert au PDF (<nom>.pdf) comme au PNG (<nom>.zip, ou <nom>.png pour une seule page) ; son nom par défaut ne dépend ni du format ni des pages */
+function dgExportDefName() {
+  return fnDefault('datacard_' + fnPart(slug(curCard().flight.callsign), 'doc'), DGX.stamp);
 }
 function openExportModal() {
   DGX.stamp = stamp();
@@ -7267,6 +7267,8 @@ function openExportModal() {
     count: page => dgExportSel(page).length,
     clean: cleanFname, go: dgExportGo
   });
+  const pngBtn = document.getElementById('export-fmt-png');
+  if (pngBtn) pngBtn.textContent = t('ex.png.label');       /* la taille des pages PNG, annoncée à côté de « PNG » */
 }
 function closeExportModal() { uiExportClose(); }
 function dgExportGo(o) {

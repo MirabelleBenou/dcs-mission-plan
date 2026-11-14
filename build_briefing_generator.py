@@ -3344,7 +3344,8 @@ const I18N = {
     'modal.export.close':          'Fermer',
     'modal.export.title':          'Exporter le briefing',
     'modal.export.pdf.desc':       'Impression système',
-    'modal.export.png.desc':       'Kneeboard DCS · 1588×2246, A4',
+    'modal.export.png.desc':       'Kneeboard DCS · 2000×2828, A4',
+    'modal.export.png.label':      'PNG · 2 000 × 2 828',
     'modal.export.png.checkAll':   'Tout cocher',
     'modal.export.png.uncheckAll': 'Tout décocher',
     // ── Section 00 META ──
@@ -3756,7 +3757,8 @@ const I18N = {
     'modal.export.close':          'Close',
     'modal.export.title':          'Export the briefing',
     'modal.export.pdf.desc':       'System print',
-    'modal.export.png.desc':       'DCS Kneeboard · 1588×2246, A4',
+    'modal.export.png.desc':       'DCS Kneeboard · 2000×2828, A4',
+    'modal.export.png.label':      'PNG · 2 000 × 2 828',
     'modal.export.png.checkAll':   'Check all',
     'modal.export.png.uncheckAll': 'Uncheck all',
     // ── Section 00 META ──
@@ -7685,11 +7687,11 @@ function fnDefault(base, stamp) {
   return (b ? b + '_' : '') + stamp;
 }
 
-/* Le nom par défaut d'un briefing : celui que propose la fenêtre d'export (PDF) */
-function defaultBriefingName() {
+/* Le nom par défaut d'un briefing : celui que propose la fenêtre d'export, pour le PDF comme pour le PNG */
+function defaultBriefingName(stamp) {
   const op = fnPart((state.meta.operation || 'op').toLowerCase().replace(/\s+/g, '_'), 'op');
   const ms = fnPart((state.meta.mission || 'm').toLowerCase().replace(/\s+/g, '_'), 'm');
-  return fnDefault(`briefing_${op}_${ms}`, fnStamp());
+  return fnDefault(`briefing_${op}_${ms}`, stamp || fnStamp());
 }
 function fallbackDownload(blob, fname, toastMsg) {
   const url = URL.createObjectURL(blob);
@@ -8930,11 +8932,9 @@ function exportPickedIdx() {
   return Array.from(document.querySelectorAll('.export-png-page-cb:checked')).map(function(cb) { return parseInt(cb.dataset.idx, 10); });
 }
 function exportIdx(page) { return page === 'all' ? EXPT.pageEls.map(function(_, i) { return i; }) : exportPickedIdx(); }
-function exportDefName(fmt, page) {
-  if (fmt === 'pdf') return defaultBriefingName();
-  const idx = exportIdx(page);
-  if (idx.length === 1) return 'kb_' + String(idx[0] + 1).padStart(2, '0') + '_' + EXPT.stamp;
-  return 'briefing_kneeboard_' + EXPT.stamp;
+/* Un document, un nom : le champ « Nom du fichier » sert au PDF (<nom>.pdf) comme au PNG (<nom>.zip, ou <nom>.png pour une seule page) ; son nom par défaut ne dépend ni du format ni des pages */
+function exportDefName() {
+  return defaultBriefingName(EXPT.stamp);
 }
 function openExportModal() {
   // S'assurer que l'aperçu est rendu (les .page doivent exister dans le DOM) ; on ne force PAS le mode
@@ -8975,6 +8975,8 @@ function openExportModal() {
     count: function(page) { return exportIdx(page).length; },
     clean: cleanFname, go: exportGo
   });
+  const pngBtn = document.getElementById('export-fmt-png');
+  if (pngBtn) pngBtn.textContent = t('modal.export.png.label');       // la taille des pages PNG, annoncée à côté de « PNG »
 }
 function exportGo(o) {
   const idx = exportIdx(o.page);
@@ -8989,11 +8991,13 @@ function exportGo(o) {
   executePngExport(idx, o.name);
 }
 
-/* ---- Rendu d'une page en PNG A4 en double résolution (1588×2246) ---- */
+/* ---- Rendu d'une page en PNG A4 : 2 000 × 2 828 px, comme le Datacard Generator ---- */
+const PNG_PAGE_CSS_W = 794;        // la largeur de la page A4 à 96 dpi (.page--for-png)
+const PNG_OUT_W = 2000;            // largeur du PNG ; la hauteur, 1123 px de page à la même échelle, tombe à 2 828 px
 
 /* renderPageToPng — version chatF (consolidation post-chatE étape B)
    La classe .page--for-png réplique les règles @media print en CSS standard.
-   html2canvas capture le clone avec scale: 2 explicite → PNG 1588×2246 px exact,
+   html2canvas capture le clone avec une échelle explicite (PNG_OUT_W / 794, une seule échelle pour les deux axes : la mise en page ne change pas) → PNG 2000×2828 px,
    indépendamment du devicePixelRatio de l'appareil (FIX Bug A).
    Plus de second canvas, plus de drawImage, plus de scale 900/794, plus de
    fillRect, plus de cssText bricolé. Le bug de footer disparaît par construction
@@ -9053,7 +9057,7 @@ async function renderPageToPng(pageEl) {
       logging: false,
       useCORS: true,
       allowTaint: false,
-      scale: 2,   // FIX Bug A : échelle fixe (ignore devicePixelRatio) → 1588×2246 px exact (A4 794×1123 ×2)
+      scale: (PNG_OUT_W + 0.01) / PNG_PAGE_CSS_W,   // FIX Bug A : échelle fixe (ignore devicePixelRatio) → 2000×2828 px (A4 794×1123 × 2,5189 ; le canvas arrondit vers le bas, d'où les 0,01 px)
     });
 
     return new Promise(function(resolve, reject) {
