@@ -12,6 +12,8 @@ from aircraft_types_block import build_block as build_aircraft_types_block
 from messages_block import build_block as build_messages_block, build_css as build_messages_css
 from ui_block import build_tbm_css, build_tbm_block, build_block as build_ui_block, build_css as build_ui_css, verify as ui_verify, verify_bar as ui_verify_bar
 from shell_only_block import build_block as build_shell_only_block
+from mission_line_block import build_block as build_mission_line_block, build_css as build_mission_line_css, verify as mission_line_verify
+import magvar_block
 # La garde du module seul : premier élément du <body> (build_mission_plan.py la vérifie dans le dist/)
 SHELL_ONLY_TAG = '<script data-lang-key="lang_v1">\n' + build_shell_only_block() + '</script>\n'
 
@@ -511,7 +513,7 @@ body {
 /* ============ MAIN APP ============ */
 .app {
   position: fixed;
-  top: 60px; bottom: 0; left: 0; right: 0;
+  top: var(--mp-top, 60px); bottom: 0; left: 0; right: 0;
   display: grid;
   grid-template-columns: 460px 1fr;
   background: var(--olive-deep);
@@ -1691,6 +1693,9 @@ body {
   flex-wrap: wrap;
   margin-top: 8px;
 }
+.metar-actions .ed-btn-add:disabled { opacity: .5; cursor: not-allowed; }
+.metar-actions .ed-btn-add:disabled:hover { background: transparent; color: var(--amber); }
+.metar-actions .ed-btn-add:disabled:active { transform: none; }
 .metar-more > summary {
   font-family: var(--f-ui);
   font-size: 11px;
@@ -3381,7 +3386,12 @@ const I18N = {
     'editor.sitac.metar':           'METAR',
     'editor.sitac.metarAssistant':  '🛠 Assistant METAR',
     'toast.metarReplaced': 'METAR remplacé',
-    'toast.metarMizReplaced': 'Champs remplacés par la météo du .miz',
+    'toast.hqReplaced': 'Remplacement par la mission d’HQ : {what}',
+    'toast.hqWhat.wx': 'météo',
+    'toast.hqWhat.date': 'date',
+    'toast.hqWhat.time': 'heure',
+    'metar.hq.btn': 'Reprendre de la mission d’HQ',
+    'metar.hq.off': 'Ouvrez un .miz dans HQ',
     'editor.sitac.map':      'Carte SITAC (image)',
     // ── Section 03 MISSION ──
     'editor.mission.summary':      '04 ░ APERÇU MISSION',
@@ -3485,7 +3495,6 @@ const I18N = {
     'editor.wing.hqHint':        '✦ Édition complète disponible dans HQ',
     'editor.wing.roWing':        'Wing actif',
     'editor.wing.roSquadrons':   'Escadrons enregistrés',
-    'msg.notMiz':                '⚠ Fichier illisible : ce n’est pas un .miz.',
     'msg.failed':                '⚠ L’opération a échoué.',
     'msg.notImage':              '⚠ Le fichier doit être une image.',
     'msg.imageUnreadable':       '⚠ Image illisible.',
@@ -3794,7 +3803,12 @@ const I18N = {
     'editor.sitac.metar':           'METAR',
     'editor.sitac.metarAssistant':  '🛠 METAR Assistant',
     'toast.metarReplaced': 'METAR replaced',
-    'toast.metarMizReplaced': 'Fields replaced with the .miz weather',
+    'toast.hqReplaced': 'Replaced from the HQ mission: {what}',
+    'toast.hqWhat.wx': 'weather',
+    'toast.hqWhat.date': 'date',
+    'toast.hqWhat.time': 'time',
+    'metar.hq.btn': 'Take from HQ mission',
+    'metar.hq.off': 'Open a .miz in HQ',
     'editor.sitac.map':      'SITAC map (image)',
     // ── Section 03 MISSION ──
     'editor.mission.summary':      '04 ░ MISSION OVERVIEW',
@@ -3898,7 +3912,6 @@ const I18N = {
     'editor.wing.hqHint':        '✦ Full editing available in HQ',
     'editor.wing.roWing':        'Active wing',
     'editor.wing.roSquadrons':   'Registered squadrons',
-    'msg.notMiz':                '⚠ Unreadable file: this is not a .miz.',
     'msg.failed':                '⚠ The operation failed.',
     'msg.notImage':              '⚠ The file must be an image.',
     'msg.imageUnreadable':       '⚠ Unreadable image.',
@@ -4218,6 +4231,7 @@ function setLang(lang) {
   rerenderAllDynamic();     // rejoue les sections construites en JS
   updateFlagButton();
   updateDocTitle();
+  mlRefresh();              // la ligne de la mission d'HQ suit la langue
   schedulePreview();
 }
 
@@ -5915,7 +5929,7 @@ const CLOUD_PRESETS_BG = {
   'RainyPreset1':'OVC',  'RainyPreset2':'OVC',  'RainyPreset3':'OVC', 'RainyPreset6':'OVC',
 };
 
-/* ============= ASSISTANT METAR — 10A (formulaire) + 10C (import .miz) ============= */
+/* ============= ASSISTANT METAR — 10A (formulaire) + 10C (la météo de la mission ouverte dans HQ) ============= */
 
 function _randomAirportIcao() {
   const airports = (state.mission.farp || []).filter(a => typeof a === 'object' && !a.isFarp && a.icao);
@@ -6017,6 +6031,16 @@ function parseMetarString(str) {
 
 let _metarParams = null;
 
+/* Les paramètres d'un assistant neuf (sans OACI : il se tire au sort ou se saisit) */
+function _metarDefaults() {
+  return {
+    icao: '', ddhhmm:'', calm:false, vrb:false,
+    windDir:270, windSpd:8, windGust:null,
+    cavok:true, visibility:9999, phenomena:[], cloudCover:'SCT', cloudBase:1500,
+    temp:20, dew:15, qnh:1013, qnhInHg:false
+  };
+}
+
 function openMetarAssistant() {
   const panel = document.getElementById('metar-assistant-panel');
   if (!panel) return;
@@ -6026,12 +6050,8 @@ function openMetarAssistant() {
   const existing = state.sitac && state.sitac.metar;
   let params = existing ? parseMetarString(existing) : null;
   if (!params) {
-    params = {
-      icao: _randomAirportIcao(), ddhhmm:'', calm:false, vrb:false,
-      windDir:270, windSpd:8, windGust:null,
-      cavok:true, visibility:9999, phenomena:[], cloudCover:'SCT', cloudBase:1500,
-      temp:20, dew:15, qnh:1013, qnhInHg:false
-    };
+    params = _metarDefaults();
+    params.icao = _randomAirportIcao();
     if (existing) {
       // Avertir parsing échoué mais ne pas écraser le champ
       console.warn('METAR Assistant: parse failed, starting fresh');
@@ -6096,12 +6116,13 @@ function renderMetarAssistant(p) {
       </details>
       <div class="metar-preview-line">${escapeHtml(preview)}</div>
       <div class="metar-actions">
-        <button type="button" class="ed-btn-add" id="ma-import-miz">📥 Importer .miz</button>
-        <input type="file" id="ma-miz-input" accept=".miz" style="display:none">
+        <button type="button" class="ed-btn-add" id="ma-take-hq" aria-describedby="ma-hq-help" data-i18n="metar.hq.btn">${escapeHtml(t('metar.hq.btn'))}</button>
         <button type="button" class="ed-btn-add" id="ma-insert">✔ Insérer dans METAR</button>
       </div>
+      <p class="ui-note" id="ma-hq-help" data-i18n="metar.hq.off" hidden>${escapeHtml(t('metar.hq.off'))}</p>
     </div>
   `;
+  bgHqSync();
 
   // Wirer les événements
   const update = () => {
@@ -6134,24 +6155,8 @@ function renderMetarAssistant(p) {
     run();
   });
 
-  // Import .miz (10C)
-  document.getElementById('ma-import-miz').addEventListener('click', () => {
-    document.getElementById('ma-miz-input').click();
-  });
-  document.getElementById('ma-miz-input').addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    try {
-      if (_metarParams && (_metarParams.windSpd > 0 || _metarParams.cavok === false)) {
-        /* des champs déjà remplis : « Remplacer » ; l'assistant d'avant est gardé pour « Restaurer » */
-        await replaceWithRestore({ keys: [], mem: () => ({ p: JSON.parse(JSON.stringify(_metarParams)) }), back: m => { _metarParams = m.p; renderMetarAssistant(_metarParams); }, msg: t('toast.metarMizReplaced'), run: () => _importMizToMetar(file) });
-      } else await _importMizToMetar(file);
-    } catch(err) {
-      console.warn('[BG] .miz : import de la météo :', err);
-      showToast(t('msg.failed'), { type: 'err' });
-    }
-    e.target.value = '';
-  });
+  // La météo, la date et l'heure de la mission ouverte dans HQ (10C)
+  document.getElementById('ma-take-hq').addEventListener('click', bgTakeFromHq);
 }
 
 function _readMetarForm() {
@@ -6177,91 +6182,82 @@ function _readMetarForm() {
   };
 }
 
-async function _importMizToMetar(file) {
-  // Lecture JSZip (déjà embarqué)
-  let lua;
-  try {
-    const buf = await file.arrayBuffer();
-    const zip  = await JSZip.loadAsync(buf);
-    const missionFile = zip.file('mission');
-    if (!missionFile) throw new Error('Fichier "mission" absent du .miz');
-    lua = await missionFile.async('string');
-  } catch (e) {
-    console.warn('[BG] .miz illisible :', e);
-    showToast(t('msg.notMiz'), { type: 'err' });
-    return false;
-  }
+/* La mission ouverte dans HQ (mission_snapshot_v1), lue comme la ligne de la mission d'HQ la lit (mlSnap : présente et lisible, sinon rien) :
+   { sn : la lecture de la ligne (date AAAA-MM-JJ lisible ou '', heure en secondes ou -1), sm : sourceMission, wx : weather.raw, le nœud « weather » du .miz en objet ({} s'il manque) } */
+function bgHqRead() {
+  const sn = mlSnap();
+  if (!sn) return null;
+  let o = null;
+  try { o = JSON.parse(localStorage.getItem(ML_KEY)); } catch (e) { o = null; }
+  if (!o || typeof o !== 'object') return null;
+  const wx = o.weather && typeof o.weather === 'object' && o.weather.raw && typeof o.weather.raw === 'object' ? o.weather.raw : {};
+  return { sn: sn, sm: o.sourceMission, wx: wx };
+}
 
-  // --- Parsing par regex tolérantes ---
-  function extractNum(re, def) {
-    const m = lua.match(re);
-    return m ? parseFloat(m[1]) : def;
-  }
-  function extractStr(re, def) {
-    const m = lua.match(re);
-    return m ? m[1] : def;
-  }
+/* Le bouton « Reprendre de la mission d'HQ » : grisé, avec sa raison (infobulle et ligne d'aide), tant qu'aucune mission n'est ouverte dans HQ ; l'assistant est rendu à chaque ouverture et la ligne
+   de la mission d'HQ rappelle cette fonction quand elle paraît ou disparaît */
+function bgHqSync() {
+  const btn = document.getElementById('ma-take-hq'), help = document.getElementById('ma-hq-help');
+  if (!btn) return;
+  const on = !!bgHqRead();
+  btn.disabled = !on;
+  btn.setAttribute('aria-disabled', on ? 'false' : 'true');
+  if (on) { btn.removeAttribute('data-i18n-title'); btn.removeAttribute('title'); }
+  else { btn.setAttribute('data-i18n-title', 'metar.hq.off'); btn.title = t('metar.hq.off'); }
+  if (help) help.hidden = on;
+}
 
+/* La météo d'une mission (weather.raw, le nœud « weather » du .miz en objet) en paramètres de l'assistant METAR : les conversions de l'ancien import du .miz, lues sur l'objet
+   (vent au sol de m/s en kt et de « vers » en « de », QNH de mmHg en hPa, visibilité, température, nuages par preset ou par densité, brouillard, poussière) ; la date du jour et l'heure de départ
+   donnent DDhhmm. icao : celui de l'assistant s'il en a un, sinon un aérodrome du briefing tiré au hasard. */
+function bgHqToParams(hq, icao) {
+  const wx = hq.wx;
+  const obj = v => (v && typeof v === 'object') ? v : {};
+  const num = (v, d) => (typeof v === 'number' && isFinite(v)) ? v : d;
   // Vent : direction (dir au sol → vient de = (dir+180)%360), vitesse m/s → kt
-  const windDirMiz = extractNum(/\["atGround"\][\s\S]*?\["dir"\]\s*=\s*([\d.]+)/, 0);
-  const windSpdMs  = extractNum(/\["atGround"\][\s\S]*?\["speed"\]\s*=\s*([\d.]+)/, 0);
-  const windDir = Math.round((windDirMiz + 180) % 360);
-  const windSpd = Math.round(windSpdMs * 1.944);
-
+  const ground = obj(obj(wx.wind).atGround);
+  const windDir = Math.round((num(ground.dir, 0) + 180) % 360);
+  const windSpd = Math.round(num(ground.speed, 0) * 1.944);
   // QNH : mmHg → hPa
-  const qnhMmhg = extractNum(/\["qnh"\]\s*=\s*([\d.]+)/, 760);
-  const qnh = Math.round(qnhMmhg * 1.333);
-
+  const qnh = Math.round(num(wx.qnh, 760) * 1.333);
   // Visibilité : m ; ≥10000 → CAVOK
-  const visM = extractNum(/\["distance"\]\s*=\s*([\d.]+)/, 9999);
+  const visM = num(obj(wx.visibility).distance, 9999);
   const cavok = visM >= 10000;
-
   // Température °C
-  const temp = Math.round(extractNum(/\["temperature"\]\s*=\s*(-?[\d.]+)/, 15));
-
-  // Nuages : preset → FEW/SCT/BKN/OVC
-  const presetId = extractStr(/\["preset"\]\s*=\s*"([^"]+)"/, '');
+  const temp = Math.round(num(obj(wx.season).temperature, 15));
+  // Nuages : preset → FEW/SCT/BKN/OVC ; sans preset, la densité → couverture approximative
+  const clouds = obj(wx.clouds);
+  const presetId = typeof clouds.preset === 'string' ? clouds.preset : '';
   let cloudCover = 'SCT';
-  let cloudBase  = 1500; // ft par défaut
   if (presetId && CLOUD_PRESETS_BG[presetId]) {
-    const fam = CLOUD_PRESETS_BG[presetId];
-    cloudCover = fam.replace(/\+RA$/,'').replace(/\+R$/,''); // enlever +RA pour code METAR
+    cloudCover = CLOUD_PRESETS_BG[presetId].replace(/\+RA$/,'').replace(/\+R$/,'');
   } else if (!presetId) {
-    // Pas de preset : density → couverture approximative
-    const density = extractNum(/\["density"\]\s*=\s*([\d]+)/, 0);
+    const density = Math.trunc(num(clouds.density, 0));
     if      (density === 0) cloudCover = 'NSC';
     else if (density <= 3)  cloudCover = 'FEW';
     else if (density <= 6)  cloudCover = 'SCT';
     else if (density <= 8)  cloudCover = 'BKN';
     else                    cloudCover = 'OVC';
   }
-  // Base nuages : m → ft
-  const baseM = extractNum(/\["base"\]\s*=\s*([\d.]+)/, 457.2); // ~1500ft
-  cloudBase = Math.round(baseM / 0.3048);
-
-  // Brouillard/brume → phénomènes
+  // Base nuages : m → ft (1500 ft sans base)
+  const cloudBase = Math.round(num(clouds.base, 457.2) / 0.3048);
+  // Brouillard/brume et poussière → phénomènes
   const phenomena = [];
-  const fogEnabled = /\["enable_fog"\]\s*=\s*true/.test(lua);
-  if (fogEnabled) {
-    const fogVis = extractNum(/\["fog"\][\s\S]*?\["visibility"\]\s*=\s*([\d]+)/, 9999);
+  if (wx.enable_fog === true) {
+    const fogVis = Math.trunc(num(obj(wx.fog).visibility, 9999));
     if (fogVis < 1000) phenomena.push('FG');
     else if (fogVis < 5000) phenomena.push('BR');
   }
-  // Dust/Sand
-  if (/\["dust_density"\]\s*=\s*(?!0)/.test(lua)) phenomena.push('DU');
-
-  // Date/heure mission → DDhhmmZ
-  const mDay    = extractNum(/\["Day"\]\s*=\s*([\d]+)/, 1);
-  const startSec = extractNum(/\["start_time"\]\s*=\s*([\d]+)/, 0);
-  const hh = String(Math.floor(startSec/3600)).padStart(2,'0');
-  const mm = String(Math.floor((startSec%3600)/60)).padStart(2,'0');
-  const ddhhmm = String(Math.round(mDay)).padStart(2,'0') + hh + mm;
-
-  // ICAO = aléatoire parmi aérodromes non-FARP du briefing (pas dans le .miz)
-  const icao = _randomAirportIcao() || '';
-
-  const params = {
-    icao, ddhhmm,
+  if (wx.enable_dust && num(wx.dust_density, 0) > 0) phenomena.push('DU');
+  // Date/heure de la mission → DDhhmm
+  const pad = n => String(n).padStart(2, '0');
+  const sm = obj(hq.sm);
+  const dm = /^\d{4}-\d{2}-(\d{2})$/.exec(typeof sm.missionDate === 'string' ? sm.missionDate : '');
+  const day = dm ? +dm[1] : 1;
+  const startSec = (typeof sm.startTime === 'number' && isFinite(sm.startTime) && sm.startTime >= 0) ? Math.floor(sm.startTime) : 0;
+  const ddhhmm = pad(day) + pad(Math.floor(startSec / 3600) % 24) + pad(Math.floor((startSec % 3600) / 60));
+  return {
+    icao: icao || _randomAirportIcao() || '', ddhhmm,
     calm: windSpd === 0, vrb: false,
     windDir, windSpd, windGust: null,
     cavok, visibility: Math.min(visM, 9999),
@@ -6269,9 +6265,48 @@ async function _importMizToMetar(file) {
     temp, dew: Math.max(temp - 5, -30),
     qnh, qnhInHg: false
   };
-  _metarParams = params;
-  renderMetarAssistant(params);
-  return true;
+}
+
+/* Un champ de l'en-tête (date ou heure), dans l'état et dans son champ de saisie */
+function bgSetMeta(k, v) {
+  state.meta[k] = v;
+  document.querySelectorAll('[data-bind="meta.' + k + '"]').forEach(inp => { inp.value = v; });
+  if (k === 'date') bgDateWarn();
+}
+
+/* « Reprendre de la mission d'HQ » : remplit l'assistant METAR et la date et l'heure de l'en-tête (au format du Datacard Generator : AAAA-MM-JJ, hh:mm) depuis la mission ouverte dans HQ.
+   Une valeur vide se remplit sans rien dire (l'assistant à ses valeurs d'origine compte pour vide) ; une valeur différente passe par « Remplacer » : le toast dit ce qui change (météo, date, heure)
+   et « Restaurer » rend l'assistant, la date et l'heure d'avant. Le champ METAR lui-même n'est écrit que par « Insérer dans METAR ». */
+function bgTakeFromHq() {
+  const hq = bgHqRead();
+  if (!hq) { bgHqSync(); return; }
+  const cur = _metarParams || _metarDefaults();
+  const np = bgHqToParams(hq, cur.icao);
+  const line = p => buildMetarString(Object.assign({}, p, { icao: '' }));       // ce que l'assistant écrit, sans l'OACI
+  const st = hq.sn.time < 0 ? -1 : Math.floor(hq.sn.time);
+  const newDate = hq.sn.date, newTime = st < 0 ? '' : String(Math.floor(st / 3600) % 24).padStart(2, '0') + ':' + String(Math.floor((st % 3600) / 60)).padStart(2, '0');
+  const oldDate = String(state.meta.date || '').trim(), oldTime = String(state.meta.time || '').trim();
+  const what = [];
+  if (line(cur) !== line(np) && line(cur) !== line(_metarDefaults())) what.push('wx');
+  if (newDate !== '' && oldDate !== '' && oldDate !== newDate) what.push('date');
+  if (newTime !== '' && oldTime !== '' && oldTime !== newTime) what.push('time');
+  const run = () => {
+    _metarParams = np;
+    if (newDate !== '') bgSetMeta('date', newDate);
+    if (newTime !== '') bgSetMeta('time', newTime);
+    renderMetarAssistant(_metarParams);
+    persistState();       /* écrit tout de suite : « Restaurer » compare le stockage à ce qu'il était à la fin du geste */
+    schedulePreview();
+    return true;
+  };
+  if (!what.length) { run(); return; }
+  replaceWithRestore({
+    keys: [STORAGE_KEY],
+    mem: () => ({ p: JSON.parse(JSON.stringify(cur)), date: state.meta.date, time: state.meta.time }),
+    back: m => { _metarParams = m.p; bgSetMeta('date', m.date); bgSetMeta('time', m.time); renderMetarAssistant(_metarParams); persistState(); schedulePreview(); },
+    msg: t('toast.hqReplaced').replace('{what}', what.map(k => t('toast.hqWhat.' + k)).join(', ')),
+    run
+  });
 }
 
 /* ============= AÉRODROMES STRUCTURÉS (Partie 1 — 10B-lite) =============
@@ -8845,6 +8880,7 @@ function init() {
   bgFoldInit();
   initToolbarScroll();
   bindWingStorageEvent();  // l'onglet Wing n'affiche que ; HQ écrit wing_config_v1 (évènement storage)
+  mlSetup({ lang: () => CURRENT_LANG, takes: true, onLayout: bgHqSync });       // la ligne de la mission d'HQ (bloc commun) : le BG en prend la météo, la date et l'heure ; le bouton de l'assistant METAR suit sa présence (la hauteur du contenu suit --mp-top)
   setActiveTab('header');
   renderPreview();
   initOverflowObserver();  // détection débordement via MutationObserver
@@ -9349,9 +9385,20 @@ _default_wing_config_js = json.dumps(
     json.dumps(_default_wing_config, ensure_ascii=False)
 )
 
+def build_hq_date_block():
+    """La lecture d'une date de mission que la ligne de la mission d'HQ emploie (magRouteDate) : les deux fonctions du bloc de la déclinaison, prises telles quelles (une seule écriture), sans ses tables."""
+    out = []
+    for name in ('magDecYear', 'magRouteDate'):
+        i = magvar_block._JS.find('function %s(' % name)
+        j = magvar_block._JS.find('\n}\n', i)
+        if i < 0 or j < 0:
+            raise SystemExit("[ERREUR] %s introuvable dans magvar_block.py (la ligne de la mission d'HQ lit les dates par lui)" % name)
+        out.append(magvar_block._JS[i:j + 3])
+    return '/* La date d\'une mission d\'HQ (magvar_block.py : magDecYear, magRouteDate, tels quels) */\n' + '\n'.join(out) + '\n'
+
 HTML = HTML.replace('<body data-theme="cw-nato" data-format="simple">\n', '<body data-theme="cw-nato" data-format="simple">\n' + SHELL_ONLY_TAG, 1)
-HTML = HTML.replace('__CSS__', CSS.replace('@@MESSAGES_CSS@@\n', build_messages_css() + build_ui_css()).replace('@@TBM_CSS@@\n', build_tbm_css()) + CONTRAST_CSS)
-HTML = HTML.replace('@@AIRCRAFT_TYPES_BLOCK@@\n', build_aircraft_types_block()).replace('@@MESSAGES_BLOCK@@\n', build_messages_block() + build_ui_block()).replace('@@TBM_JS@@\n', build_tbm_block())
+HTML = HTML.replace('__CSS__', CSS.replace('@@MESSAGES_CSS@@\n', build_messages_css() + build_ui_css()).replace('@@TBM_CSS@@\n', build_tbm_css()) + build_mission_line_css() + CONTRAST_CSS)
+HTML = HTML.replace('@@AIRCRAFT_TYPES_BLOCK@@\n', build_aircraft_types_block()).replace('@@MESSAGES_BLOCK@@\n', build_messages_block() + build_ui_block() + build_hq_date_block() + build_mission_line_block()).replace('@@TBM_JS@@\n', build_tbm_block())
 HTML = HTML.replace('__LIB_HTML2CANVAS__', A['lib_html2canvas'])
 HTML = HTML.replace('__LIB_JSZIP__', A['lib_jszip'])
 
@@ -9390,6 +9437,7 @@ HTML = HTML.replace('__APP_VERSION__', APP_VERSION)
 # Write the final file
 ui_verify(HTML)
 ui_verify_bar(HTML)
+mission_line_verify(HTML, None, None, 1)
 os.makedirs(os.path.join(HERE, 'dist'), exist_ok=True)
 output_path = os.path.join(HERE, 'dist', 'dcs_briefing_generator.html')
 with open(output_path, 'w', encoding='utf-8') as f:

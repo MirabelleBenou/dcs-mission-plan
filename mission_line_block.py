@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Bloc « LIGNE DE LA MISSION D'HQ » : la ligne fixe sous la barre qui dit qu'un .miz est chargé dans HQ, lequel (date, heure de départ, fichier) et ce que l'outil en prend.
-Écrit une fois, injecté tel quel dans le Flight Configurator, le Route Planner et le Datacard Generator.
+Écrit une fois, injecté tel quel dans le Flight Configurator, le Route Planner, le Datacard Generator et le Briefing Generator.
 
-Trois textes, identiques à l'octet dans les trois dist/ :
+Trois textes, identiques à l'octet dans les quatre dist/ :
   build_block() — le script : lecture de mission_snapshot_v1 (la mission d'HQ, lue ici comme le bloc d'import lit la sienne), texte FR et EN, la ligne
   build_css()   — la feuille : la ligne (position, jetons des thèmes), --mp-top (le haut du contenu), l'impression
   verify(html)  — le garde-fou de build
@@ -18,7 +18,10 @@ Le module lui donne, par mlSetup({ lang, read, theatreName, livery, importDetail
   livery          vrai au Flight Configurator seul (l'élément « Livrées »)
   importDetail    vrai au Datacard Generator seul (« (date, heure, météo) » dans l'élément d'import)
   onLayout()      facultatif : rappelé quand la ligne paraît ou disparaît (le contenu change de hauteur)
-et appelle mlRefresh() partout où il refait déjà ce qu'il montre de l'année et de son théâtre.
+  takes           vrai au Briefing Generator seul : il prend de la mission sa météo, sa date et son heure, et n'a ni théâtre ni déclinaison ; la ligne dit alors « Météo, date et heure »
+                  et le fichier seul (sans théâtre entre parenthèses), jamais « autre théâtre » ; read et theatreName ne sont pas demandés
+et appelle mlRefresh() partout où il refait déjà ce qu'il montre de l'année et de son théâtre (le Briefing Generator : à chaque changement de langue).
+Le module peut aussi lire la mission par mlSnap() (la même lecture que la ligne : présente et lisible, ou null).
 
 Il lit magvar_block.py (magRouteDate : la date d'une mission, lisible ou rien).
 
@@ -42,6 +45,7 @@ TEXTS = {
         'liv': ['Livrées ✓', 'Livrées'],
         'imp': ['Import : {n} {u} ✓', '{n} {u}'],
         'impd': ['Import : {n} {u} (date, heure, météo) ✓', '{n} {u}'],
+        'takes': ['Météo, date et heure', 'Météo, date et heure'],
         'one': 'vol',
         'many': 'vols',
         'out': ['Non utilisée ici : autre théâtre', 'Autre théâtre'],
@@ -53,6 +57,7 @@ TEXTS = {
         'liv': ['Liveries ✓', 'Liveries'],
         'imp': ['Import: {n} {u} ✓', '{n} {u}'],
         'impd': ['Import: {n} {u} (date, time, weather) ✓', '{n} {u}'],
+        'takes': ['Weather, date and time', 'Weather, date and time'],
         'one': 'flight',
         'many': 'flights',
         'out': ['Not used here: other theatre', 'Other theatre'],
@@ -118,6 +123,7 @@ function mlSnap() {
 }
 /* Les éléments de droite d'une mission utilisée, dans l'ordre : déclinaison (seulement si le module l'emploie, calculée), livrées (FC), import ; w : 0 large, 1 étroit */
 function mlItems(h, st, sn, tx, w) {
+  if (h.takes) return [tx.takes[w]];
   const items = [];
   if (st.calc && st.src === 'mission') items.push(tx.decl[w]);
   else if (st.calc && st.src === 'forced') items.push(tx.forcee[w]);
@@ -137,17 +143,17 @@ function mlRefresh() {
   const sn = mlSnap();
   if (!sn) { mlShow(false); return; }
   let st = null;
-  try { st = h.read() || null; } catch (e) { st = null; }       /* le module ne dit rien : ni « utilisée » ni « hors », partie droite vide */
+  if (!h.takes) { try { st = h.read() || null; } catch (e) { st = null; } }       /* le module ne dit rien : ni « utilisée » ni « hors », partie droite vide */
   const lang = mlLang(), tx = ML_I18N[lang], wide = !ML.mq || ML.mq.matches, w = wide ? 0 : 1;
-  const used = st ? sn.theatre === st.theatre : null;
+  const used = h.takes ? true : (st ? sn.theatre === st.theatre : null);       /* le module qui prend la météo n'a pas de théâtre : la mission lui sert toujours */
   const right = used === null ? '' : (used ? mlItems(h, st, sn, tx, w).join(' · ') : tx.out[w]);
   let name = sn.theatre;
-  try { name = h.theatreName(sn.theatre) || name; } catch (e) { /* le nom brut */ }
+  if (!h.takes) { try { name = h.theatreName(sn.theatre) || name; } catch (e) { /* le nom brut */ } }
   const dateWide = sn.date === '' ? '' : sn.date.slice(8, 10) + '.' + sn.date.slice(5, 7) + '.' + sn.date.slice(0, 4);
   const dateNarrow = sn.date === '' ? '' : sn.date.slice(8, 10) + '.' + sn.date.slice(5, 7) + '.' + sn.date.slice(2, 4);
   const hhmm = sn.time < 0 ? '' : mlPad(Math.floor(sn.time / 3600) % 24) + ':' + mlPad(Math.floor(sn.time / 60) % 60) + 'Z';
   const when = [wide ? dateWide : dateNarrow, hhmm].filter(x => x !== '').join(' · ');
-  const file = sn.file === '' ? name : sn.file + ' (' + name + ')';
+  const file = h.takes ? sn.file : (sn.file === '' ? name : sn.file + ' (' + name + ')');       /* sans théâtre : le nom du fichier seul, rien s'il n'en a pas */
   /* le texte large complet, quelle que soit la largeur : l'étiquette, date · heure, fichier (théâtre), puis les éléments de droite ou « hors » */
   const aria = [tx.lbl, [dateWide, hhmm].filter(x => x !== '').join(' · '), file, used === null ? '' : (used ? mlItems(h, st, sn, tx, 0).join(' · ') : tx.out[0])].filter(x => x !== '').join(' · ');
   const sig = JSON.stringify([lang, wide, used, when, file, right, aria]);
@@ -164,7 +170,7 @@ function mlRefresh() {
   el.appendChild(dot);
   if (wide) el.appendChild(mlSpan('mp-ml-lbl', tx.lbl));
   if (when !== '') el.appendChild(mlSpan('mp-ml-when', when));
-  if (wide) el.appendChild(mlSpan('mp-ml-file', file));
+  if (wide && file !== '') el.appendChild(mlSpan('mp-ml-file', file));
   if (right !== '') el.appendChild(mlSpan('mp-ml-right', right));
   const sr = document.createElement('span');       /* ce que lit le lecteur d'écran : le texte large complet ; les parties visibles sont masquées au lecteur */
   sr.className = 'mp-ml-sr';
@@ -219,7 +225,8 @@ def verify(html, fn, reads, calls):
     une seule couleur écrite en dur (la surcharge MP-20) ; textes FR et EN de mêmes clés ; la ligne s'initialise une fois ; la fonction que le module donne (fn)
     lit la source de l'année de son propre appel (reads : navYear( au Route Planner, dgNavYear( au Datacard Generator, declSource( au Flight Configurator) ;
     le module rafraîchit la ligne exactement `calls` fois (les appels mlRefresh() hors du bloc) ; magRouteDate, que le bloc lit, est dans la page ;
-    les schémas lus sont ceux de l'import."""
+    les schémas lus sont ceux de l'import. Le module qui prend la météo, la date et l'heure (fn à None : le Briefing Generator) n'a ni lecture d'année ni import : mlSetup reçoit `takes: true`,
+    et ses schémas se comparent à ceux du bloc d'import (import_block.py)."""
     if html.count(build_css()) != 1 or html.count(build_block()) != 1:
         raise SystemExit("[ERREUR] ligne de la mission d'HQ : bloc absent du livrable, modifié ou en double")
     apps = re.findall(r'(?m)^\s*\.app\s*\{[^}]*\}', html)
@@ -228,11 +235,15 @@ def verify(html, fn, reads, calls):
         raise SystemExit("[ERREUR] ligne de la mission d'HQ : une règle .app ne prend pas son haut de var(--mp-top, 60px) : %s" % bad)
     if html.count('mlSetup({') != 1:
         raise SystemExit("[ERREUR] ligne de la mission d'HQ : mlSetup n'est pas appelée exactement une fois")
-    body = _fn_body(html, fn)
-    if not body or reads not in body:
-        raise SystemExit("[ERREUR] ligne de la mission d'HQ : %s ne lit pas %s (corps : %r)" % (fn, reads, body[:120]))
-    if 'read: %s,' % fn not in html:
-        raise SystemExit("[ERREUR] ligne de la mission d'HQ : mlSetup ne reçoit pas %s" % fn)
+    if fn is None:
+        if 'takes: true' not in html[html.find('mlSetup({'):html.find('\n', html.find('mlSetup({'))]:
+            raise SystemExit("[ERREUR] ligne de la mission d'HQ : mlSetup ne reçoit pas takes: true (le module prend la météo, la date et l'heure)")
+    else:
+        body = _fn_body(html, fn)
+        if not body or reads not in body:
+            raise SystemExit("[ERREUR] ligne de la mission d'HQ : %s ne lit pas %s (corps : %r)" % (fn, reads, body[:120]))
+        if 'read: %s,' % fn not in html:
+            raise SystemExit("[ERREUR] ligne de la mission d'HQ : mlSetup ne reçoit pas %s" % fn)
     n = len(re.findall(r'\bmlRefresh\(\)', html)) - len(re.findall(r'\bmlRefresh\(\)', build_block()))
     if n != calls:
         raise SystemExit("[ERREUR] ligne de la mission d'HQ : %d appels mlRefresh() hors du bloc, %d attendus" % (n, calls))
@@ -245,11 +256,16 @@ def verify(html, fn, reads, calls):
         raise SystemExit("[ERREUR] ligne de la mission d'HQ : les textes FR et EN n'ont pas les mêmes clés")
     if 'textContent' not in _JS or 'innerHTML' in _JS:
         raise SystemExit("[ERREUR] ligne de la mission d'HQ : le texte doit s'écrire par textContent seulement")
-    m = re.search(r"const IMP_HQ_SCHEMAS = (\[.*?\]);", html)
+    if fn is None:
+        import import_block
+        m = re.search(r"const IMP_HQ_SCHEMAS = (\[.*?\]);", import_block.build_block())
+    else:
+        m = re.search(r"const IMP_HQ_SCHEMAS = (\[.*?\]);", html)
     m2 = re.search(r"const ML_SCHEMAS = (\[.*?\]);", html)
     if not m or not m2 or m.group(1) != m2.group(1):
         raise SystemExit("[ERREUR] ligne de la mission d'HQ : ses schémas ne sont pas ceux de l'import (IMP_HQ_SCHEMAS)")
-    print("[OK] ligne de la mission d'HQ : bloc inséré tel quel (script %d, feuille %d caractères), .app prend son haut de --mp-top, %s lit %s, %d appels mlRefresh()" % (len(build_block()), len(build_css()), fn, reads, calls))
+    what = "prend la météo, la date et l'heure (takes)" if fn is None else "%s lit %s" % (fn, reads)
+    print("[OK] ligne de la mission d'HQ : bloc inséré tel quel (script %d, feuille %d caractères), .app prend son haut de --mp-top, %s, %d appels mlRefresh()" % (len(build_block()), len(build_css()), what, calls))
 
 
 if __name__ == '__main__':
