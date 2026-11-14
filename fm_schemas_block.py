@@ -113,63 +113,98 @@ TABLE_IDS = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S8', 'S9', 'S10', 'S11', 'S12'
 
 # La légende lettrée de S0 : (lettre, ids, FR, EN). Une lettre = une flèche (ou un groupe de flèches) du schéma.
 S0_LEGEND = [
-    ('a', ['F1'], f'Le .miz d’origine entre dans HQ : Ouvrir .miz, ou le déposer sur la page.',
-                  'The original .miz enters HQ: Open .miz, or drop it on the page.'),
-    ('b', ['F3'], f'HQ écrit le .miz final : Sauvegarder .miz.',
-                  'HQ writes the final .miz: Save .miz.'),
-    ('c', ['F2'], f'Le BG prend la météo d’un .miz : l’assistant METAR.',
-                  'The BG takes the weather of a .miz: the METAR assistant.'),
-    ('d', ['S1'], f'Le Wing, tout seul : HQ → BG, et aussi FC (livrées) et DG (indicatifs).',
-                  'The Wing, by itself: HQ → BG, and also FC (liveries) and DG (call signs).'),
-    ('e', ['F7'], f'La configuration Wing en fichier, de HQ vers RS : Exporter config, puis Importer config.',
-                  'The Wing configuration as a file, from HQ to RS: Export config, then Import config.'),
-    ('f', ['S3'], f'Le BG préremplit RS : opération, date, classification (champs vides seulement).',
-                  'The BG pre-fills RS: operation, date, classification (empty fields only).'),
-    ('g', ['F8'], f'La photo va de RS au BG à la main : exporter le PNG, l’ajouter aux Photos.',
-                  'The photo goes from RS to the BG by hand: export the PNG, add it to Photos.'),
-    ('h', ['F11'], f'Le BG imprime : PDF, ou PNG par page.',
-                   'The BG prints: PDF, or one PNG per page.'),
-    ('i', ['S2'], f'La mission ouverte dans HQ passe au FC, au RP et au DG, tout seule : ce que chacun en prend est dans sa case.',
-                  'The mission open in HQ reaches the FC, the RP and the DG by itself: what each takes is in its box.'),
-    ('j', ['F5', 'F6'], f'HQ exporte les groupes cochés en paquet, que le FC, le RP et le DG lisent par leur fenêtre d’import.',
-                        'HQ exports the ticked groups as a package, which the FC, the RP and the DG read in their import window.'),
-    ('k', ['F4'], f'Le FC exporte le paquet de vol ; HQ l’applique au .miz : le seul retour d’un Flight Leader qui se fusionne.',
-                  'The FC exports the flight package; HQ applies it to the .miz: the only return from a Flight Leader that merges.'),
-    ('l', ['S4', 'S5'], f'Le briefing en cours alimente la fenêtre d’import du FC, du RP et du DG (groupes, plan radio) ; le DG le lit aussi en entier.',
-                        'The current briefing feeds the import window of the FC, the RP and the DG (groups, radio plan); the DG also reads all of it.'),
-    ('m', ['C1'], f'Le RP envoie l’image de la carte au BG : Exporter ▾ › Image pour le briefing, dans la même session.',
-                  'The RP sends the map image to the BG: Export ▾ › Image for the briefing, in the same session.'),
-    ('n', ['S6', 'S10', 'S11', 'S12', 'S13'],
-     f'FC, RP et DG partagent en direct, dans les deux sens : groupes et leurs unités, radios (fréquences, canaux à imprimer), théâtre, unités de mesure, cap (RP, DG). Retirer un groupe retire sa datacard.',
-     'FC, RP and DG share live, both ways: groups and their units, radios (frequencies, channels to print), theatre, measurement units, heading (RP, DG). Removing a group removes its datacard.'),
-    ('o', ['S8', 'S9'], f'Le RP donne ses routes au FC et au DG, et au DG la route active et les points de référence.',
-                        'The RP gives its routes to the FC and the DG, and to the DG the active route and the reference points.'),
-    ('p', ['F9'], f'Le RP lit et écrit le fichier .lua du Route Tool de DCS.',
-                  'The RP reads and writes the .lua file of the DCS Route Tool.'),
-    ('q', ['F10'], f'Le RP ouvre un fichier .cf de CombatFlite (calques).',
-                   'The RP opens a CombatFlite .cf file (layers).'),
-    ('r', ['F12'], f'Le DG exporte la datacard : PNG pour le kneeboard, PDF pour imprimer.',
-                   'The DG exports the datacard: PNG for the kneeboard, PDF for printing.'),
-    ('s', ['C2'], f'Le fichier de travail : Sauvegarder (chaque outil sauf HQ), Ouvrir (remplace tout). Il ne porte ni la mission d’HQ ni le Wing.',
-                  'The work file: Save (every tool except HQ), Open (replaces everything). It carries neither the HQ mission nor the Wing.'),
-    ('t', ['C3'], f'Exemple ▾ charge l’exemple par groupe d’outils.',
-                  'Example ▾ loads the example by group of tools.'),
+    ('a', ['F1'],
+     "Le .miz d’origine entre dans HQ par Ouvrir .miz (ou déposé sur la page) : HQ y lit les groupes Client (nom, coalition, unités avec type, indicatif, livrée, radios et emport, route), la date et l’heure de départ, le théâtre et la météo, pour les montrer, les modifier et les passer aux outils du Flight Leader.",
+     "The original .miz enters HQ through Open .miz (or dropped on the page): HQ reads its Client groups (name, coalition, units with type, call sign, livery, radios and loadout, route), the start date and time, the theatre and the weather, to show them, edit them and pass them on to the Flight Leader tools."),
+    ('b', ['F3'],
+     "HQ écrit le .miz final par Sauvegarder .miz (après Paquets de vol, Supprimer ou Dynamic Spawn) : c’est le fichier que DCS ouvre, avec les groupes modifiés.",
+     "HQ writes the final .miz through Save .miz (after Flight packages, Delete or Dynamic Spawn): it is the file DCS opens, with the edited groups."),
+    ('c', ['F2'],
+     "Le BG lit la météo d’un .miz par l’assistant METAR › Importer .miz : vent au sol, QNH, visibilité, température, nuages, brouillard, jour et heure de départ, pour remplir l’assistant, puis Insérer dans METAR place le METAR dans le briefing.",
+     "The BG reads the weather of a .miz through the METAR assistant › Import .miz: ground wind, QNH, visibility, temperature, clouds, fog, day and start time, to fill the assistant, then Insert into METAR puts the METAR in the briefing."),
+    ('d', ['S1'],
+     "La configuration Wing saisie dans HQ passe sans geste : le BG en prend le logo wing principal et le nom court (en-tête de chaque page, tampon de la barre), le tampon HQ (cachet de réception de la couverture), les escadrons (identifiant, indicatif et appareils pour la liste Escadron de chaque vol, logo escadron en haut à droite de la page du vol, avertissement si un escadron du briefing manque) et, en lecture seule, le nom complet et l’identifiant ; le DG en prend l’indicatif et le premier appareil de l’escadron d’un vol importé du briefing ; le FC, les livrées ajoutées et la livrée par défaut de chaque appareil pour la liste Livrée ; la fenêtre d’import du FC, du RP et du DG, l’indicatif et l’appareil des escadrons pour nommer les groupes pris au briefing ; la barre de chaque outil, le nom court.",
+     "The Wing configuration entered in HQ passes with no gesture: the BG takes the main wing logo and the short name (header of every page, bar stamp), the HQ stamp (receipt stamp of the cover), the squadrons (identifier, call sign and aircraft for each flight’s Squadron list, squadron logo at the top right of the flight page, a warning if a squadron of the briefing is missing) and, read-only, the full name and the identifier; the DG takes the call sign and first aircraft of the squadron of a flight imported from the briefing; the FC takes the added liveries and the default livery of each aircraft for the Livery list; the import window of the FC, the RP and the DG takes the call sign and aircraft of the squadrons to name the groups taken from the briefing; each tool bar takes the short name."),
+    ('e', ['F7'],
+     "La configuration Wing sort de HQ en fichier (Wing › Exporter config) et entre dans RS par Logo › Importer config : RS n’en prend que le logo wing principal (nommé d’après le nom court) et le logo de chaque escadron (nommé d’après son identifiant), ajoutés à sa grille de logos pour la photo.",
+     "The Wing configuration leaves HQ as a file (Wing › Export config) and enters RS through Logo › Import config: RS takes only the main wing logo (named after the short name) and each squadron’s logo (named after its identifier), added to its logo grid for the photo."),
+    ('f', ['S3'],
+     "À l’ouverture de RS, le BG remplit les champs vides Msn (opération et mission), DTG (date du briefing) et Class (classification) du bloc d’informations de la photo, pour ne pas les ressaisir ; un champ déjà rempli n’est jamais écrasé et Crew reste à saisir.",
+     "When RS opens, the BG fills the empty fields Msn (operation and mission), DTG (briefing date) and Class (classification) of the photo’s info block, so they need not be typed again; a field already filled is never overwritten and Crew stays to be typed."),
+    ('g', ['F8'],
+     "La photo ne passe pas toute seule de RS au BG : RS › Exporter écrit un PNG, puis dans le BG la section Photos › ajouter l’image le place dans les pages de photos du briefing.",
+     "The photo does not pass from RS to the BG by itself: RS › Export writes a PNG, then in the BG the Photos section › add the image puts it in the photo pages of the briefing."),
+    ('h', ['F11'],
+     "Le BG imprime son briefing par Exporter : un PDF (impression du navigateur) ou un PNG par page, pour le distribuer.",
+     "The BG prints its briefing through Export: a PDF (browser print) or one PNG per page, to hand it out."),
+    ('i', ['S2'],
+     "La mission ouverte dans HQ passe sans geste au FC, au RP et au DG : leur fenêtre d’import (source Mission chargée dans HQ) en lit, pour chaque groupe Client, le nom, la coalition, les unités (type, indicatif, numéro de bord) et, à cocher, Route, Radios, Emport et Livrée, qu’elle écrit dans la fiche des groupes ; le DG y prend aussi la date, l’heure de départ et la météo (METAR décodé : vent, visibilité, QNH, nuages) pour les cartes des groupes importés ; les trois en tirent l’année de la mission pour la déclinaison magnétique, le FC la livrée de chaque unité dans la mission, et la ligne sous leur barre dit quel .miz est chargé.",
+     "The mission open in HQ passes with no gesture to the FC, the RP and the DG: their import window (source Mission loaded in HQ) reads for each Client group the name, the coalition, the units (type, call sign, tail number) and, to tick, Route, Radios, Loadout and Livery, which it writes into the group sheet; the DG also takes the date, the start time and the weather (decoded METAR: wind, visibility, QNH, clouds) for the cards of the imported groups; all three take the mission year for the magnetic declination, the FC takes the livery of each unit in the mission, and the line under their bar says which .miz is loaded."),
+    ('j', ['F5', 'F6'],
+     "HQ exporte les groupes cochés en paquet (Paquets de vol › Exporter) que le FC, le RP et le DG ouvrent par leur fenêtre d’import (source Fichier) : pour chaque groupe, les mêmes données que depuis la mission, Route, Radios, Emport et Livrée à cocher, pour travailler sans le .miz d’HQ chargé.",
+     "HQ exports the ticked groups as a package (Flight packages › Export) which the FC, the RP and the DG open through their import window (source File): for each group, the same data as from the mission, Route, Radios, Loadout and Livery to tick, to work without the HQ .miz loaded."),
+    ('k', ['F4'],
+     "Le FC exporte le paquet de vol (Exporter) que HQ lit par Paquets de vol › Importer des paquets puis Appliquer à la mission : HQ écrit, dans les groupes du .miz de même nom, les parties cochées (Route, Radios, Emport, Livrée) de chaque unité ; c’est le seul retour d’un Flight Leader qui se fusionne.",
+     "The FC exports the flight package (Export) which HQ reads through Flight packages › Import packages then Apply to the mission: HQ writes, into the .miz groups of the same name, the ticked parts (Route, Radios, Loadout, Livery) of each unit; it is the only return from a Flight Leader that merges."),
+    ('l', ['S4', 'S5'],
+     "Le briefing en cours du BG (même navigateur) est lu par la fenêtre d’import du FC, du RP et du DG (source Briefing en cours) : une ligne par indicatif de vol avec son appareil et son nombre d’unités (le nombre saisi, sinon l’effectif de l’équipage, sinon un) et, pour les radios, au Standard les fréquences de la liste (radio, canal, fréquence), à l’Avancé le plan radio de l’appareil (radios, canaux, fréquences), posées sur le poste de même nom au canal du cockpit indiqué, les autres étant comptées ignorées ; le DG lit en plus tout le briefing (Ouvrir ▾ › Importer… › Briefing en cours) : opération, mission, date, heure, classification, tâche et menace du vol, objectif, étapes, équipage, radios, terrains avec leur piste, METAR décodé, menaces SAM et AAA, notes, pour préremplir ses cartes.",
+     "The BG’s current briefing (same browser) is read by the import window of the FC, the RP and the DG (source Current briefing): one line per flight call sign with its aircraft and its number of units (the typed number, else the crew size, else one) and, for radios, in Standard the frequencies of the list (radio, channel, frequency), in Advanced the aircraft’s radio plan (radios, channels, frequencies), put on the same-name post at the cockpit channel given, the others being counted as ignored; the DG also reads the whole briefing (Open ▾ › Import… › Current briefing): operation, mission, date, time, classification, flight task and threat, objective, steps, crew, radios, airfields with their runway, decoded METAR, SAM and AAA threats, notes, to pre-fill its cards."),
+    ('m', ['C1'],
+     "Le RP envoie l’image de la carte (cadrée, avec échelle, nord et cartouche) au BG par Exporter ▾ › Image pour le briefing… › Exporter, sans fichier et seulement dans la même session ; la fenêtre Placer la carte du Route Planner du BG la pose, au Standard dans la page Carte ou les pages de photos, à l’Avancé en carte de SITAC, de couverture, dans les documents d’une mission ou en annexe.",
+     "The RP sends the map image (framed, with scale, north and cartouche) to the BG through Export ▾ › Image for the briefing… › Export, with no file and only in the same session; the BG’s Place the Route Planner map window puts it, in Standard on the Map page or the photo pages, in Advanced as SITAC map, cover map, in a mission’s documents or as an annex."),
+    ('n', ['S6'],
+     "FC, RP et DG partagent en direct, dans les deux sens, la fiche des groupes : nom, coalition, unités (type, indicatif, numéro de bord, livrée), radios (fréquences et canaux à imprimer), emport et route copiée ; le DG en tire une carte par groupe (indicatif, appareil, nombre, équipage, radios choisies, départ et arrivée), le RP y rattache ses routes par Groupes de la route, le FC la règle unité par unité.",
+     "FC, RP and DG share live, both ways, the group sheet: name, coalition, units (type, call sign, tail number, livery), radios (frequencies and channels to print), loadout and copied route; the DG makes one card per group from it (call sign, aircraft, number, crew, chosen radios, departure and arrival), the RP attaches its routes to it through Route groups, the FC sets it up unit by unit."),
+    ('u', ['S10'],
+     "Les datacards du DG (une carte par groupe, et des cartes libres) sont rangées à part ; Retirer ce groupe au FC retire aussi sa carte du DG, et Supprimer la datacard et le groupe au DG retire le groupe de tous les outils, pour qu’aucune carte ne reste sans groupe.",
+     "The DG datacards (one card per group, and free cards) are stored apart; Remove this group in the FC also removes its card from the DG, and Delete the datacard and the group in the DG removes the group from all tools, so no card is left without a group."),
+    ('v', ['S11'],
+     "Le théâtre choisi dans la barre (Théâtre) du FC, du RP ou du DG vaut pour les trois, pour que les routes, les coordonnées et les groupes parlent de la même carte.",
+     "The theatre chosen in the bar (Theatre) of the FC, the RP or the DG applies to all three, so routes, coordinates and groups refer to the same map."),
+    ('w', ['S12'],
+     "Les unités de mesure choisies dans un des trois (Affichage ▾ › Unités : masse, distance, altitude) s’appliquent aux trois, pour qu’un même chiffre se lise dans la même unité partout.",
+     "The measurement units chosen in one of the three (Display ▾ › Units: mass, distance, altitude) apply to all three, so a figure reads in the same unit everywhere."),
+    ('x', ['S13'],
+     "Les réglages de cap du RP et du DG sont communs (Navigation : cap vrai ou magnétique, déclinaison, année, Forcer), pour que les caps de la route et ceux de la datacard soient identiques.",
+     "The heading settings of the RP and the DG are shared (Navigation: true or magnetic heading, declination, year, Force), so the route’s headings and the datacard’s are identical."),
+    ('o', ['S8'],
+     "Le RP donne ses routes (points, théâtre, date de la mission) sans geste : au FC, qui les propose dans Changer de route et en copie les points dans le groupe ; au DG, qui en fait le tableau Navigation de la carte et renvoie au RP les points qu’on y modifie ou retire.",
+     "The RP gives its routes (points, theatre, mission date) with no gesture: to the FC, which offers them in Change route and copies the points into the group; to the DG, which makes the card’s Navigation table from them and sends back to the RP the points edited or removed there."),
+    ('y', ['S9'],
+     "Le RP donne aussi l’état de la route active et ses réglages sans geste : au DG, la route active, les points de référence, l’affichage des caps et la vitesse sol ; au FC, la vitesse sol (vitesse de chaque point de la route copiée dans le groupe) et l’affichage des caps (déclinaison de la ligne sous la barre).",
+     "The RP also gives the state of the active route and its settings with no gesture: to the DG, the active route, the reference points, the heading display and the ground speed; to the FC, the ground speed (speed of each point of the route copied into the group) and the heading display (declination of the line under the bar)."),
+    ('p', ['F9'],
+     "Le RP lit et écrit le fichier <théâtre>.lua du Route Tool de DCS (Ouvrir ▾ › Ouvrir une route…, Exporter ▾ › Route Tool…) : les points d’une route, 30 au plus, sans les points de référence, pour reprendre une route faite en jeu ou la donner au Route Tool.",
+     "The RP reads and writes the <theatre>.lua file of the DCS Route Tool (Open ▾ › Open a route…, Export ▾ › Route Tool…): the points of a route, 30 at most, without the reference points, to take back a route made in game or give one to the Route Tool."),
+    ('q', ['F10'],
+     "Le RP ouvre un fichier .cf de CombatFlite par Ouvrir ▾ › Ouvrir une route… : ses calques (zones, cercles, points, orbites, boîtes, textes, symboles), à cocher puis Afficher, en lecture seule sur la carte.",
+     "The RP opens a CombatFlite .cf file through Open ▾ › Open a route…: its layers (zones, circles, points, orbits, boxes, texts, symbols), to tick then Show, read-only on the map."),
+    ('r', ['F12'],
+     "Le DG exporte ses datacards par Exporter : un PNG par page (un ZIP s’il y en a plusieurs) pour le kneeboard de DCS, ou un PDF pour imprimer.",
+     "The DG exports its datacards through Export: one PNG per page (a ZIP if there are several) for the DCS kneeboard, or a PDF to print."),
+    ('s', ['C2'],
+     "Le fichier de travail : Sauvegarder (accueil, ou chaque outil sauf HQ) écrit en un JSON le briefing, la composition de RS sans son image source, la fiche des groupes, les routes et leurs calques, les datacards, le théâtre, les unités de mesure et les réglages de cap ; Ouvrir le relit et remplace tout le travail ; il ne porte ni la mission d’HQ, ni la configuration Wing, ni l’image source de RS, ni les presets d’emport du FC, ni les préférences d’écran (langue, thème, replis).",
+     "The work file: Save (home page, or each tool except HQ) writes in one JSON the briefing, the RS composition without its source image, the group sheet, the routes and their layers, the datacards, the theatre, the measurement units and the heading settings; Open reads it back and replaces all the work; it carries neither the HQ mission, nor the Wing configuration, nor the RS source image, nor the FC loadout presets, nor the screen preferences (language, theme, folds)."),
+    ('t', ['C3'],
+     "Exemple ▾ charge l’exemple STEPPE WIND par groupe d’outils, Mission Commander (briefing du BG et composition de RS) ou Flight Leader (groupes, routes, calques, datacards, théâtre), et remplace le travail de ce groupe.",
+     "Example ▾ loads the STEPPE WIND example by tool group, Mission Commander (BG briefing and RS composition) or Flight Leader (groups, routes, layers, datacards, theatre), and replaces the work of that group."),
 ]
 
 S0_STEPS = [
-    (1, f'Mission Commander, HQ : le Wing une fois pour toutes, puis Ouvrir .miz.',
-        'Mission Commander, HQ: the Wing once and for all, then Open .miz.'),
-    (2, f'Mission Commander : le briefing au BG, la photo à RS (puis à la main au BG).',
-        'Mission Commander: the briefing in the BG, the photo in RS (then by hand into the BG).'),
-    (3, f'Sauvegarder le fichier de travail et l’envoyer aux Flight Leaders (avec le .miz s’ils veulent ses groupes).',
-        'Save the work file and send it to the Flight Leaders (with the .miz if they want its groups).'),
-    (4, f'Flight Leader : Ouvrir le fichier, puis le RP, le FC et le DG, qui partagent tout en direct.',
-        'Flight Leader: Open the file, then the RP, the FC and the DG, which share everything live.'),
-    (5, f'Flight Leader : le FC exporte le paquet de vol et le rend au Mission Commander.',
-        'Flight Leader: the FC exports the flight package and hands it back to the Mission Commander.'),
-    (6, f'Mission Commander : dans HQ, Paquets de vol › Appliquer, puis Sauvegarder .miz : le .miz final.',
-        'Mission Commander: in HQ, Flight packages › Apply, then Save .miz: the final .miz.'),
+    (1, "Mission Commander, HQ : saisir le Wing une seule fois (noms, escadrons, indicatifs, appareils, logos, tampon, livrées), pour que le BG, le DG et le FC le reprennent, puis Ouvrir .miz, pour que HQ lise les groupes, la date, l’heure et la météo de la mission et les offre au FC, au RP et au DG.",
+        "Mission Commander, HQ: enter the Wing once (names, squadrons, call signs, aircraft, logos, stamp, liveries), so the BG, the DG and the FC take it up, then Open .miz, so HQ reads the groups, the date, the time and the weather of the mission and offers them to the FC, the RP and the DG."),
+    (2, "Mission Commander, BG puis RS : écrire le briefing (en-tête et escadrons tirés du Wing, METAR d’un .miz), puis composer la photo dans RS (Msn, DTG et Class préremplis du briefing), l’exporter en PNG et l’ajouter à la main aux Photos du BG, pour qu’elle figure dans le briefing imprimé.",
+        "Mission Commander, BG then RS: write the briefing (header and squadrons taken from the Wing, METAR of a .miz), then compose the photo in RS (Msn, DTG and Class pre-filled from the briefing), export it as a PNG and add it by hand to the BG Photos, so it appears in the printed briefing."),
+    (3, "Mission Commander : Sauvegarder le fichier de travail et l’envoyer aux Flight Leaders, pour qu’ils y retrouvent le briefing à importer dans le FC, le RP et le DG (groupes, appareils, nombre d’unités, fréquences du plan radio) ; il ne porte ni la mission d’HQ (joindre le .miz, qu’ils ouvrent dans leur HQ, pour en importer groupes, routes, radios, emport et livrées) ni le Wing (joindre le fichier d’Exporter config, qu’ils importent dans leur HQ : sans lui, un vol d’escadron s’importe sous l’identifiant de l’escadron, sans appareil).",
+        "Mission Commander: Save the work file and send it to the Flight Leaders, so they find in it the briefing to import into the FC, the RP and the DG (groups, aircraft, number of units, radio plan frequencies); it carries neither the HQ mission (attach the .miz, which they open in their HQ, to import its groups, routes, radios, loadout and liveries) nor the Wing (attach the Export config file, which they import into their HQ: without it, a squadron flight is imported under the squadron identifier, without aircraft)."),
+    (4, "Flight Leader : Ouvrir le fichier de travail (il remplace tout le travail du navigateur), puis tracer la route au RP, régler groupes, radios, emport et livrées au FC et composer les datacards au DG : les trois partagent en direct groupes, théâtre, unités de mesure et caps, de sorte qu’un changement fait dans l’un apparaît dans les autres.",
+        "Flight Leader: Open the work file (it replaces all the work in the browser), then draw the route in the RP, set up groups, radios, loadout and liveries in the FC and compose the datacards in the DG: the three share groups, theatre, measurement units and headings live, so a change made in one appears in the others."),
+    (5, "Flight Leader : au FC, Exporter le paquet de vol (par unité route, radios, emport, livrée) et le rendre au Mission Commander, car rouvrir le fichier de travail d’un Flight Leader remplacerait le travail du Mission Commander au lieu de s’y ajouter.",
+        "Flight Leader: in the FC, Export the flight package (per unit route, radios, loadout, livery) and hand it back to the Mission Commander, because reopening a Flight Leader’s work file would replace the Mission Commander’s work instead of adding to it."),
+    (6, "Mission Commander : dans HQ, Paquets de vol › Importer des paquets puis Appliquer à la mission (route, radios, emport et livrée de chaque unité dans les groupes de même nom), puis Sauvegarder .miz, pour obtenir le .miz final que DCS ouvre.",
+        "Mission Commander: in HQ, Flight packages › Import packages then Apply to the mission (route, radios, loadout and livery of each unit in the groups of the same name), then Save .miz, to get the final .miz that DCS opens."),
 ]
+
 
 
 # ═════════════════════════════════════════════════════════════════════════════════
@@ -189,19 +224,28 @@ MODS = {
 # Ce que chaque Flight Leader prend, dans sa case : (ids, [lignes FR], [lignes EN])
 CARDS = {
     'fc': [
-        (['S2'], [f'.miz d’HQ{NF}: groupes,', 'livrées, déclinaison'], ['HQ .miz: groups,', 'liveries, declination']),
-        (['S1'], [f'Wing{NF}: livrées'], ['Wing: liveries']),
-        (['S5'], [f'briefing{NF}: groupes,', 'fréquences'], ['briefing: groups,', 'frequencies']),
+        (['S2'], ['.miz d’HQ : groupes,', 'route, radios, emport,', 'livrée, déclinaison'], ['HQ .miz: groups,', 'route, radios, loadout,', 'livery, declination']),
+        (['S1'], ['Wing : livrées'], ['Wing: liveries']),
+        (['S5'], ['briefing : groupes,', 'fréquences radio'], ['briefing: groups,', 'radio frequencies']),
     ],
     'rp': [
-        (['S2'], [f'.miz d’HQ{NF}: groupes,', 'déclinaison'], ['HQ .miz: groups,', 'declination']),
-        (['S5'], [f'briefing{NF}: groupes'], ['briefing: groups']),
+        (['S2'], ['.miz d’HQ : groupes,', 'route, déclinaison'], ['HQ .miz: groups,', 'route, declination']),
+        (['S5'], ['briefing : groupes'], ['briefing: groups']),
     ],
     'dg': [
-        (['S2'], [f'.miz d’HQ{NF}: groupes,', 'date, heure, météo,', 'déclinaison'], ['HQ .miz: groups,', 'date, time, weather,', 'declination']),
-        (['S1'], [f'Wing{NF}: indicatifs'], ['Wing: call signs']),
-        (['S4', 'S5'], [f'briefing{NF}: tout'], ['briefing: all']),
+        (['S2'], ['.miz d’HQ : groupes,', 'date, heure, météo,', 'déclinaison'], ['HQ .miz: groups,', 'date, time, weather,', 'declination']),
+        (['S1'], ['Wing : indicatifs'], ['Wing: call signs']),
+        (['S4', 'S5'], ['briefing : objectif,', 'étapes, équipage,', 'radios, terrains,', 'météo, menaces'], ['briefing: objective,', 'steps, crew, radios,', 'airfields, weather,', 'threats']),
     ],
+}
+
+
+
+# Ce que les modules du Mission Commander lisent, sous leur nom (deux lignes courtes, le détail est dans la légende)
+SUBS = {
+    'hq': [('lit : .miz d’origine,', 'reads: original .miz,'), ('paquets de vol, Wing', 'flight packages, Wing')],
+    'bg': [('lit : Wing, METAR d’un', 'reads: Wing, METAR of a'), ('.miz, carte RP, photo RS', '.miz, RP map, RS photo')],
+    'rs': [('lit : Msn, DTG, Class', 'reads: Msn, DTG, Class'), ('du BG, logos du Wing', 'of the BG, Wing logos')],
 }
 
 
@@ -255,12 +299,15 @@ class _S:
         self.add(f'<circle class="sv-pill" cx="{_n(x)}" cy="{_n(y)}" r="8.5"/>')
         self.T(x, y + 3.6, 10.5, str(n), cls='sv-pill-t', extra=' font-weight="700"')
 
-    def module(self, key, x, y, w, h, card=False):
+    def module(self, key, x, y, w, h, card=False, sub=None):
         mono, fr, en = MODS[key]
         self.box(x, y, w, h, key)
         cx = x + w / 2
         self.T(cx, y + 22, 16, mono)
         self.T(cx, y + 38, 10, fr, en)
+        if sub:
+            for k, (a, b) in enumerate(sub):
+                self.T(cx, y + 53 + 11 * k, 9, a, b)
         if card:
             ly = y + 46
             self.add(f'<line x1="{_n(x + 10)}" y1="{_n(ly)}" x2="{_n(x + w - 10)}" y2="{_n(ly)}" stroke="currentColor" stroke-width=".6" opacity=".35"/>')
@@ -283,13 +330,13 @@ class _S:
 
 
 def build_s0_wide():
-    s = _S(720, 650, 's0w', 'Le schéma d’ensemble de la suite : qui reçoit quoi, de qui', 'The suite map: who receives what, from whom', 's0-wide')
+    s = _S(720, 690, 's0w', 'Le schéma d’ensemble de la suite : qui reçoit quoi, de qui', 'The suite map: who receives what, from whom', 's0-wide')
     A = s.arrow
     # les cadres, leurs titres (en bas à droite : le haut et la gauche portent des flèches)
     s.frame(8, 62, 588, 184)
     s.T(588, 238, 10.5, 'MISSION COMMANDER', anchor='end', ls=1.5)
-    s.frame(8, 340, 588, 226)
-    s.T(588, 558, 10.5, 'FLIGHT LEADER', anchor='end', ls=1.5)
+    s.frame(8, 340, 588, 270)
+    s.T(588, 602, 10.5, 'FLIGHT LEADER', anchor='end', ls=1.5)
     # « Exemple ▾ » : un jeton par cadre
     for fy, fr, en, ex in ((66, f'Exemple ▾ → BG · RS', 'Example ▾ → BG · RS', ['C3']), (344, 'Exemple ▾ → RP · FC · DG', 'Example ▾ → RP · FC · DG', ['C3'])):
         s.ids.update(ex)
@@ -298,18 +345,18 @@ def build_s0_wide():
     # les six modules
     cols = (41, 227, 413)
     MCy, FLy = 104, 362
-    s.module('hq', cols[0], MCy, 150, 62)
-    s.module('bg', cols[1], MCy, 150, 62)
-    s.module('rs', cols[2], MCy, 150, 62)
-    s.module('fc', cols[0], FLy, 150, 116, card=True)
-    s.module('rp', cols[1], FLy, 150, 116, card=True)
-    s.module('dg', cols[2], FLy, 150, 116, card=True)
+    s.module('hq', cols[0], MCy, 150, 76, sub=SUBS['hq'])
+    s.module('bg', cols[1], MCy, 150, 76, sub=SUBS['bg'])
+    s.module('rs', cols[2], MCy, 150, 76, sub=SUBS['rs'])
+    s.module('fc', cols[0], FLy, 150, 150, card=True)
+    s.module('rp', cols[1], FLy, 150, 150, card=True)
+    s.module('dg', cols[2], FLy, 150, 150, card=True)
     # hors de la suite
     s.ext(41, 8, 150, 30, [('Éditeur de DCS', 'DCS editor')])
     s.ext(282, 8, 150, 30, [('Imprimés · PDF, PNG', 'Printouts · PDF, PNG')], 10)
-    s.ext(187, 596, 100, 34, [('CombatFlite', 'CombatFlite'), ('.cf', '.cf')], 10)
-    s.ext(307, 596, 100, 34, [('Route Tool', 'Route Tool'), ('.lua', '.lua')], 10)
-    s.ext(413, 596, 150, 34, [('Kneeboard · imprimé', 'Kneeboard · printout')], 10)
+    s.ext(187, 640, 100, 34, [('CombatFlite', 'CombatFlite'), ('.cf', '.cf')], 10)
+    s.ext(307, 640, 100, 34, [('Route Tool', 'Route Tool'), ('.lua', '.lua')], 10)
+    s.ext(413, 640, 150, 34, [('Kneeboard · imprimé', 'Kneeboard · printout')], 10)
     # Mission Commander : entrées, sorties
     A(['F1'], 'M80,38 L80,104', True, badge='a', bd=(80, 52))
     A(['F3'], 'M116,104 L116,38', True, badge='b', bd=(116, 52))
@@ -320,11 +367,11 @@ def build_s0_wide():
     A(['S3'], 'M377,126 L413,126', badge='f', bd=(395, 112))
     A(['F8'], 'M413,148 L377,148', True, badge='g', bd=(395, 162))
     # du Mission Commander au Flight Leader
-    A(['S2'], 'M88,166 L88,340', badge='i', bd=(88, 292))
-    A(['F5', 'F6'], 'M128,166 L128,340', True, badge='j', bd=(128, 292))
-    A(['F4'], 'M168,362 L168,166', True, badge='k', bd=(168, 292))
-    A(['S4', 'S5'], 'M262,166 L262,340', badge='l', bd=(262, 292))
-    A(['C1'], 'M342,362 L342,166', badge='m', bd=(342, 292))
+    A(['S2'], 'M88,180 L88,340', badge='i', bd=(88, 292))
+    A(['F5', 'F6'], 'M128,180 L128,340', True, badge='j', bd=(128, 292))
+    A(['F4'], 'M168,362 L168,180', True, badge='k', bd=(168, 292))
+    A(['S4', 'S5'], 'M262,180 L262,340', badge='l', bd=(262, 292))
+    A(['C1'], 'M342,362 L342,180', badge='m', bd=(342, 292))
     # le fichier de travail
     s.ids.add('C2')
     s.add('<g data-ex="C2">')
@@ -336,61 +383,65 @@ def build_s0_wide():
     A(['C2'], 'M659,266 L659,205 L598,205', False, both=True, badge='s', bd=(659, 236))
     A(['C2'], 'M659,328 L659,445 L598,445', False, both=True, badge='s', bd=(659, 390))
     # le Flight Leader : hors de la suite (les flèches passent derrière la barre)
-    A(['F10'], 'M237,596 L237,478', True, badge='q', bd=(237, 574))
-    A(['F9'], 'M357,596 L357,478', True, both=True, badge='p', bd=(357, 574))
-    A(['F12'], 'M450,478 L450,596', True, badge='r', bd=(450, 574))
+    A(['F10'], 'M237,640 L237,512', True, badge='q', bd=(237, 618))
+    A(['F9'], 'M357,640 L357,512', True, both=True, badge='p', bd=(357, 618))
+    A(['F12'], 'M450,512 L450,640', True, badge='r', bd=(450, 618))
     # le Flight Leader : ce qui est partagé, dans les deux sens
     s.ids.update(['S6', 'S10', 'S11', 'S12', 'S13'])
     s.add('<g data-ex="S6 S10 S11 S12 S13">')
-    s.box(41, 498, 522, 40)
-    s.T(302, 514, 10, f'groupes · unités · radios (fréquences, canaux à imprimer)', 'groups · units · radios (frequencies, channels to print)')
-    s.T(302, 529, 10, f'théâtre · unités de mesure · cap (RP, DG)', 'theatre · measurement units · heading (RP, DG)')
+    s.box(41, 532, 522, 44)
+    s.T(302, 550, 10, f'groupes · unités · radios (fréquences, canaux à imprimer)', 'groups · units · radios (frequencies, channels to print)')
+    s.T(302, 566, 10, f'théâtre · unités de mesure · cap (RP, DG) · datacards', 'theatre · measurement units · heading (RP, DG) · datacards')
     s.add('</g>')
     for cx in (116, 302, 488):
-        A(['S6', 'S11', 'S12'], f'M{cx},478 L{cx},498', False, both=True)
-    s.badge_only(['S6', 'S10', 'S11', 'S12', 'S13'], 302 - 150, 498, 'n')
+        A(['S6', 'S11', 'S12'], f'M{cx},512 L{cx},532', False, both=True)
+    for (bx, bl, bids) in ((70, 'n', ['S6']), (160, 'u', ['S10']), (230, 'v', ['S11']), (380, 'w', ['S12']), (440, 'x', ['S13'])):
+        s.badge_only(bids, bx, 532, bl)
     A(['S8', 'S9'], 'M227,440 L191,440', badge='o', bd=(209, 426))
     A(['S8', 'S9'], 'M377,440 L413,440', badge='o', bd=(395, 426))
+    s.badge_only(['S9'], 209, 454, 'y')
+    s.badge_only(['S9'], 395, 454, 'y')
     # les étapes du travail type
-    for (x, y, n) in ((41, 104, 1), (227, 104, 2), (413, 104, 2), (606, 266, 3), (41, 362, 4), (227, 362, 4), (413, 362, 4), (168, 214, 5), (116, 80, 6)):
+    for (x, y, n) in ((41, 104, 1), (227, 104, 2), (413, 104, 2), (606, 266, 3), (41, 362, 4), (227, 362, 4), (413, 362, 4), (168, 220, 5), (116, 80, 6)):
         s.step(x, y, n)
     return s
 
 
 def build_s0_tall():
-    s = _S(320, 1034, 's0t', 'Le schéma d’ensemble de la suite : qui reçoit quoi, de qui', 'The suite map: who receives what, from whom', 's0-tall')
+    s = _S(320, 1146, 's0t', 'Le schéma d’ensemble de la suite : qui reçoit quoi, de qui', 'The suite map: who receives what, from whom', 's0-tall')
     A = s.arrow
     mx, mw = 85, 150
     HQy, BGy, RSy = 92, 192, 292
-    FCy, RPy, DGy = 500, 660, 820
+    FCy, RPy, DGy = 500, 694, 888
+    EXy = 1086
     s.frame(4, 52, 312, 322)
-    s.frame(4, 452, 312, 498)
+    s.frame(4, 452, 312, 606)
     # les titres et le jeton de l'exemple, en tête de cadre
     s.T(30, 66, 10.5, 'MISSION COMMANDER', anchor='start', ls=1.5)
     s.T(84, 466, 10.5, 'FLIGHT LEADER', anchor='start', ls=1.5)
     s.ids.add('C3')
     s.add('<g data-ex="C3">' + sv_text(30, 80, 9.5, 'Exemple ▾ → BG · RS', 'Example ▾ → BG · RS', anchor='start') + '</g>')
     s.add('<g data-ex="C3">' + sv_text(84, 480, 9.5, 'Exemple ▾ → RP · FC · DG', 'Example ▾ → RP · FC · DG', anchor='start') + '</g>')
-    s.module('hq', mx, HQy, mw, 62)
-    s.module('bg', mx, BGy, mw, 62)
-    s.module('rs', mx, RSy, mw, 62)
-    s.module('fc', mx, FCy, mw, 116, card=True)
-    s.module('rp', mx, RPy, mw, 116, card=True)
-    s.module('dg', mx, DGy, mw, 116, card=True)
+    s.module('hq', mx, HQy, mw, 76, sub=SUBS['hq'])
+    s.module('bg', mx, BGy, mw, 76, sub=SUBS['bg'])
+    s.module('rs', mx, RSy, mw, 76, sub=SUBS['rs'])
+    s.module('fc', mx, FCy, mw, 150, card=True)
+    s.module('rp', mx, RPy, mw, 150, card=True)
+    s.module('dg', mx, DGy, mw, 150, card=True)
     s.ext(160, 6, 152, 30, [('Éditeur de DCS', 'DCS editor')])
     s.ext(8, 6, 124, 30, [('Imprimés', 'Printouts')], 10)
-    s.ext(8, 976, 96, 40, [('CombatFlite', 'CombatFlite'), ('.cf', '.cf')], 10)
-    s.ext(112, 976, 96, 40, [('Route Tool', 'Route Tool'), ('.lua', '.lua')], 10)
-    s.ext(216, 976, 96, 40, [('Kneeboard', 'Kneeboard'), ('imprimé', 'printout')], 10)
+    s.ext(8, EXy, 96, 40, [('CombatFlite', 'CombatFlite'), ('.cf', '.cf')], 10)
+    s.ext(112, EXy, 96, 40, [('Route Tool', 'Route Tool'), ('.lua', '.lua')], 10)
+    s.ext(216, EXy, 96, 40, [('Kneeboard', 'Kneeboard'), ('imprimé', 'printout')], 10)
     # Mission Commander : entrées et sorties
     A(['F1'], f'M185,36 L185,{HQy}', True, badge='a', bd=(185, 56))
     A(['F3'], f'M213,{HQy} L213,36', True, badge='b', bd=(213, 48))
     A(['F2'], f'M290,36 L290,{BGy + 10} L{mx + mw},{BGy + 10}', True, badge='c', bd=(290, 130))
     A(['F11'], f'M{mx},{BGy + 20} L20,{BGy + 20} L20,36', True, badge='h', bd=(20, 120))
     A(['F7'], f'M{mx + mw},{HQy + 36} L270,{HQy + 36} L270,{RSy + 30} L{mx + mw},{RSy + 30}', True, badge='e', bd=(270, 270))
-    A(['S1'], f'M{mx + 40},{HQy + 62} L{mx + 40},{BGy}', badge='d', bd=(mx + 40, 177))
-    A(['S3'], f'M{mx + 40},{BGy + 62} L{mx + 40},{RSy}', badge='f', bd=(mx + 40, 277))
-    A(['F8'], f'M{mx + 110},{RSy} L{mx + 110},{BGy + 62}', True, badge='g', bd=(mx + 110, 277))
+    A(['S1'], f'M{mx + 40},{HQy + 76} L{mx + 40},{BGy}', badge='d', bd=(mx + 40, 180))
+    A(['S3'], f'M{mx + 40},{BGy + 76} L{mx + 40},{RSy}', badge='f', bd=(mx + 40, 280))
+    A(['F8'], f'M{mx + 110},{RSy} L{mx + 110},{BGy + 76}', True, badge='g', bd=(mx + 110, 280))
     # du Mission Commander au Flight Leader : le côté gauche
     A(['S2'], f'M{mx},{HQy + 14} L34,{HQy + 14} L34,452', badge='i', bd=(34, 410))
     A(['F5', 'F6'], f'M{mx},{HQy + 24} L50,{HQy + 24} L50,452', True, badge='j', bd=(50, 395))
@@ -408,21 +459,24 @@ def build_s0_tall():
     A(['C2'], f'M{mx + 75},392 L{mx + 75},374', False, both=True, badge='s', bd=(mx + 100, 383))
     A(['C2'], f'M{mx + 75},438 L{mx + 75},452', False, both=True, badge='s', bd=(mx + 100, 445))
     # le Flight Leader : hors de la suite (les flèches passent derrière la barre ou les modules, jamais dessus)
-    A(['F10'], f'M56,976 L56,958 L274,958 L274,{RPy + 90} L{mx + mw},{RPy + 90}', True, badge='q', bd=(110, 958))
-    A(['F9'], f'M160,976 L160,966 L262,966 L262,{RPy + 60} L{mx + mw},{RPy + 60}', True, both=True, badge='p', bd=(212, 966))
-    A(['F12'], f'M{mx + mw},{DGy + 80} L288,{DGy + 80} L288,976', True, badge='r', bd=(288, 940))
+    A(['F10'], f'M56,{EXy} L56,{EXy - 18} L274,{EXy - 18} L274,{RPy + 90} L{mx + mw},{RPy + 90}', True, badge='q', bd=(110, EXy - 18))
+    A(['F9'], f'M160,{EXy} L160,{EXy - 10} L262,{EXy - 10} L262,{RPy + 60} L{mx + mw},{RPy + 60}', True, both=True, badge='p', bd=(212, EXy - 10))
+    A(['F12'], f'M{mx + mw},{DGy + 80} L288,{DGy + 80} L288,{EXy}', True, badge='r', bd=(288, EXy - 40))
     # le Flight Leader : ce qui est partagé, dans les deux sens (la barre à gauche, tournée)
     s.ids.update(['S6', 'S10', 'S11', 'S12', 'S13'])
     s.add('<g data-ex="S6 S10 S11 S12 S13">')
-    s.add('<rect class="sv-box" x="14" y="510" width="22" height="420" rx="3" stroke="currentColor" stroke-width="1.4"/>')
+    s.add('<rect class="sv-box" x="14" y="510" width="22" height="532" rx="3" stroke="currentColor" stroke-width="1.4"/>')
     s.add(sv_text(0, 0, 10, 'groupes · unités · radios · théâtre · unités de mesure · cap',
-                  'groups · units · radios · theatre · measurement units · heading', extra=' transform="translate(29 720) rotate(-90)"'))
+                  'groups · units · radios · theatre · measurement units · heading', extra=' transform="translate(29 776) rotate(-90)"'))
     s.add('</g>')
     for ty in (FCy + 80, RPy + 20, DGy + 80):
         A(['S6', 'S11', 'S12'], f'M{mx},{ty} L36,{ty}', False, both=True)
-    s.badge_only(['S6', 'S10', 'S11', 'S12', 'S13'], 25, 498, 'n')
-    A(['S8', 'S9'], f'M{mx + 110},{RPy} L{mx + 110},{FCy + 116}', badge='o', bd=(mx + 110, 638))
-    A(['S8', 'S9'], f'M{mx + 110},{RPy + 116} L{mx + 110},{DGy}', badge='o', bd=(mx + 110, 798))
+    for (bx, by, bl, bids) in ((25, 498, 'n', ['S6']), (47, 498, 'u', ['S10']), (69, 498, 'v', ['S11']), (25, 476, 'w', ['S12']), (47, 476, 'x', ['S13'])):
+        s.badge_only(bids, bx, by, bl)
+    A(['S8', 'S9'], f'M{mx + 110},{RPy} L{mx + 110},{FCy + 150}', badge='o', bd=(mx + 110, RPy - 22))
+    A(['S8', 'S9'], f'M{mx + 110},{RPy + 150} L{mx + 110},{DGy}', badge='o', bd=(mx + 110, DGy - 22))
+    s.badge_only(['S9'], mx + 127, RPy - 22, 'y')
+    s.badge_only(['S9'], mx + 127, DGy - 22, 'y')
     for (x, y, n) in ((mx, HQy, 1), (mx, BGy, 2), (mx, RSy, 2), (mx, 392, 3), (mx, FCy, 4), (mx, RPy, 4), (mx, DGy, 4), (66, 330, 5), (213, 70, 6)):
         s.step(x, y, n)
     return s
@@ -458,100 +512,183 @@ def s0_html():
 # ═════════════════════════════════════════════════════════════════════════════════
 # Les six panneaux « Reçoit · Donne »
 # ═════════════════════════════════════════════════════════════════════════════════
-# Une ligne : (ids, ce qui passe, de / vers quel outil, par quel geste) en FR puis en EN.
+# Une ligne : (ids, FR, EN) ; FR et EN = (ce qui passe, de / vers quel outil, par quel geste, pour quoi faire)
+_SHEET_FR = "Groupes, unités (type, indicatif, numéro de bord, livrée), radios (fréquences, canaux à imprimer), emport, route copiée"
+_SHEET_EN = "Groups, units (type, call sign, tail number, livery), radios (frequencies, channels to print), loadout, copied route"
+
+def _share(tool):
+    """Les lignes communes des trois outils du Flight Leader, vues de l'outil `tool`."""
+    others = {'fc': ('RP, DG', 'RP, DG'), 'rp': ('FC, DG', 'FC, DG'), 'dg': ('FC, RP', 'FC, RP')}[tool]
+    rows = [
+        (['S6'], (_SHEET_FR, others[0], 'sans geste, dans les deux sens', 'pour que ce que l’un règle se voie dans les autres'),
+                 (_SHEET_EN, others[1], 'no gesture, both ways', 'so what one sets shows in the others')),
+        (['S11'], ('Le théâtre', others[0], 'sans geste, dans les deux sens', 'pour que les trois parlent de la même carte'),
+                  ('The theatre', others[1], 'no gesture, both ways', 'so the three refer to the same map')),
+        (['S12'], ('Les unités de mesure : masse, distance, altitude', others[0], 'Affichage ▾ › Unités, dans les deux sens', 'pour lire les mêmes chiffres dans la même unité'),
+                  ('Measurement units: mass, distance, altitude', others[1], 'Display ▾ › Units, both ways', 'to read the same figures in the same unit')),
+    ]
+    if tool in ('rp', 'dg'):
+        rows.append((['S13'], ('Le cap : vrai ou magnétique, déclinaison, année, Forcer', 'DG' if tool == 'rp' else 'RP', 'réglages de Navigation, dans les deux sens', 'pour que les caps de la route et de la datacard soient identiques'),
+                              ('Heading: true or magnetic, declination, year, Force', 'DG' if tool == 'rp' else 'RP', 'Navigation settings, both ways', 'so the route’s and the datacard’s headings are identical')))
+    return rows
+
+_WORK_IN_FR = ('Le travail rangé : fichier de travail, exemple', 'la suite', 'Ouvrir ▾ › Ouvrir un travail…, Exemple ▾', 'pour reprendre ou démarrer le travail, qui remplace le précédent')
+_WORK_IN_EN = ('Stored work: work file, example', 'the suite', 'Open ▾ › Open a work file…, Example ▾', 'to resume or start the work, which replaces the previous one')
 
 PANELS = {
     'hq': {
         'in': [
-            (['F1'], ('Le .miz d’origine', 'l’éditeur de DCS', 'Ouvrir .miz, ou le déposer'), ('The original .miz', 'the DCS editor', 'Open .miz, or drop it')),
-            (['F4'], ('Les paquets de vol', 'le FC', 'Paquets de vol › Importer'), ('Flight packages', 'the FC', 'Flight packages › Import')),
-            (['F7'], ('Une configuration Wing', 'un autre HQ', 'Wing › Importer config'), ('A Wing configuration', 'another HQ', 'Wing › Import config')),
+            (['F1'], ('Le .miz d’origine : groupes Client (nom, coalition, unités, route, radios, emport, livrée), date, heure de départ, théâtre, météo', 'l’éditeur de DCS', 'Ouvrir .miz, ou le déposer sur la page', 'pour les montrer, les modifier et les offrir au FC, au RP et au DG'),
+                     ('The original .miz: Client groups (name, coalition, units, route, radios, loadout, livery), date, start time, theatre, weather', 'the DCS editor', 'Open .miz, or drop it on the page', 'to show them, edit them and offer them to the FC, the RP and the DG')),
+            (['F4'], ('Un paquet de vol : par unité, route, radios, emport, livrée', 'le FC', 'Paquets de vol › Importer des paquets, puis Appliquer à la mission', 'pour écrire les parties cochées dans les groupes du .miz de même nom'),
+                     ('A flight package: per unit, route, radios, loadout, livery', 'the FC', 'Flight packages › Import packages, then Apply to the mission', 'to write the ticked parts into the .miz groups of the same name')),
+            (['F7'], ('Une configuration Wing : identité, tampon, logos, escadrons, livrées', 'un autre HQ', 'Wing › Importer config', 'pour remplir la fenêtre Wing sans la ressaisir'),
+                     ('A Wing configuration: identity, stamp, logos, squadrons, liveries', 'another HQ', 'Wing › Import config', 'to fill the Wing window without typing it again')),
         ],
         'out': [
-            (['S1'], ('Le Wing', 'BG, FC, DG', 'tout seul'), ('The Wing', 'BG, FC, DG', 'by itself')),
-            (['S2'], ('La mission ouverte', 'FC, RP, DG', 'tout seul'), ('The open mission', 'FC, RP, DG', 'by itself')),
-            (['F5', 'F6'], ('Un paquet des groupes cochés', 'FC, RP, DG', '📦 Exporter, puis leur fenêtre d’import'), ('A package of the ticked groups', 'FC, RP, DG', '📦 Export, then their import window')),
-            (['F7'], ('La configuration Wing', 'RS, un autre HQ', 'Wing › Exporter config'), ('The Wing configuration', 'RS, another HQ', 'Wing › Export config')),
-            (['F3'], ('Le .miz final', 'l’éditeur de DCS', 'Sauvegarder .miz'), ('The final .miz', 'the DCS editor', 'Save .miz')),
+            (['S1'], ('Le Wing : logo et nom court, tampon, escadrons (indicatif, appareils, logo), livrées ajoutées et livrée par défaut', 'BG, DG, FC et la barre de chaque outil', 'sans geste, à chaque saisie de la fenêtre Wing', 'pour l’en-tête et les pages du briefing, les indicatifs des cartes, les listes de livrées et le nom court des barres'),
+                     ('The Wing: logo and short name, stamp, squadrons (call sign, aircraft, logo), added liveries and default livery', 'BG, DG, FC and each tool bar', 'no gesture, at every Wing window entry', 'for the briefing header and pages, the cards’ call signs, the livery lists and the bars’ short name')),
+            (['S2'], ('La mission ouverte : groupes Client (nom, coalition, unités, route, radios, emport, livrée), date, heure de départ, théâtre, météo', 'FC, RP, DG', 'sans geste, jusqu’à Effacer ou la fermeture de la page', 'pour leur fenêtre d’import, la déclinaison, la livrée par défaut du FC, la date, l’heure et la météo des cartes du DG'),
+                     ('The open mission: Client groups (name, coalition, units, route, radios, loadout, livery), date, start time, theatre, weather', 'FC, RP, DG', 'no gesture, until Clear or the page is closed', 'for their import window, the declination, the FC default livery, the date, time and weather of the DG cards')),
+            (['F5', 'F6'], ('Un paquet des groupes cochés : Route, Radios, Emport, Livrée', 'FC, RP, DG, un autre HQ', 'Paquets de vol › Exporter, puis leur fenêtre d’import › Fichier', 'pour travailler sans le .miz d’HQ chargé'),
+                           ('A package of the ticked groups: Route, Radios, Loadout, Livery', 'FC, RP, DG, another HQ', 'Flight packages › Export, then their import window › File', 'to work without the HQ .miz loaded')),
+            (['F7'], ('La configuration Wing', 'RS, un autre HQ', 'Wing › Exporter config', 'pour que RS ajoute les logos à sa photo, ou qu’un autre HQ ait le même Wing'),
+                     ('The Wing configuration', 'RS, another HQ', 'Wing › Export config', 'so RS adds the logos to its photo, or another HQ has the same Wing')),
+            (['F3'], ('Le .miz final', 'l’éditeur de DCS', 'Sauvegarder .miz', 'pour que DCS ouvre la mission avec les paquets appliqués'),
+                     ('The final .miz', 'the DCS editor', 'Save .miz', 'so DCS opens the mission with the packages applied')),
         ],
     },
     'bg': {
         'in': [
-            (['S1'], ('Le Wing', 'HQ', 'tout seul'), ('The Wing', 'HQ', 'by itself')),
-            (['F2'], ('La météo d’un .miz', 'l’éditeur de DCS', 'assistant METAR'), ('The weather of a .miz', 'the DCS editor', 'METAR assistant')),
-            (['C1'], ('L’image de la carte', 'RP', 'Exporter ▾ › Image pour le briefing'), ('The map image', 'RP', 'Export ▾ › Image for the briefing')),
-            (['F8'], ('La photo', 'RS', 'à la main : Photos'), ('The photo', 'RS', 'by hand: Photos')),
-            (['F13'], ('Un ancien briefing', 'un fichier', 'Ouvrir ▾'), ('An old briefing', 'a file', 'Open ▾')),
+            (['S1'], ('Le Wing : logo wing principal, nom court, tampon HQ, escadrons (identifiant, indicatif, appareils, logo) ; en lecture seule, nom complet et identifiant', 'HQ', 'sans geste', 'pour l’en-tête de chaque page, le cachet de la couverture, la liste Escadron et le logo de la page de chaque vol'),
+                     ('The Wing: main wing logo, short name, HQ stamp, squadrons (identifier, call sign, aircraft, logo); read-only, full name and identifier', 'HQ', 'no gesture', 'for every page header, the cover stamp, the Squadron list and the logo of each flight page')),
+            (['F2'], ('La météo d’un .miz : vent au sol, QNH, visibilité, température, nuages, brouillard, jour et heure de départ', 'l’éditeur de DCS', 'assistant METAR › Importer .miz, puis Insérer dans METAR', 'pour remplir l’assistant et obtenir le METAR du briefing'),
+                     ('The weather of a .miz: ground wind, QNH, visibility, temperature, clouds, fog, day and start time', 'the DCS editor', 'METAR assistant › Import .miz, then Insert into METAR', 'to fill the assistant and get the briefing METAR')),
+            (['C1'], ('L’image de la carte : cadrée, avec échelle, nord et cartouche', 'RP, dans la même session', 'RP : Exporter ▾ › Image pour le briefing…, puis BG : Placer', 'pour la carte du briefing : page Carte ou photos au Standard ; SITAC, couverture, documents d’une mission ou annexe à l’Avancé'),
+                     ('The map image: framed, with scale, north and cartouche', 'RP, in the same session', 'RP: Export ▾ › Image for the briefing…, then BG: Place', 'for the briefing map: Map or photo pages in Standard; SITAC, cover, a mission’s documents or annex in Advanced')),
+            (['F8'], ('La photo composée : un PNG', 'RS', 'RS : Exporter, puis BG : Photos › ajouter l’image, à la main', 'pour les pages de photos du briefing'),
+                     ('The composed photo: a PNG', 'RS', 'RS: Export, then BG: Photos › add the image, by hand', 'for the photo pages of the briefing')),
+            (['F13'], ('Un ancien briefing .json', 'un fichier', 'Ouvrir ▾ › Ouvrir un briefing…', 'pour reprendre un briefing déjà écrit'),
+                      ('An old briefing .json', 'a file', 'Open ▾ › Open a briefing…', 'to resume a briefing already written')),
+            (['C2', 'C3'], _WORK_IN_FR, _WORK_IN_EN),
         ],
         'out': [
-            (['S3'], ('Opération, date, classification', 'RS', 'à l’ouverture de RS'), ('Operation, date, classification', 'RS', 'when RS opens')),
-            (['S4'], ('Le briefing en entier', 'DG', 'Importer… › Briefing en cours'), ('The whole briefing', 'DG', 'Import… › Current briefing')),
-            (['S5'], ('Groupes, nombre, type, plan radio', 'FC, RP, DG', 'leur fenêtre d’import'), ('Groups, count, type, radio plan', 'FC, RP, DG', 'their import window')),
-            (['F11'], ('PDF et PNG', 'l’imprimé', 'Exporter'), ('PDF and PNG', 'the printout', 'Export')),
+            (['S3'], ('Opération et mission, date du briefing, classification', 'RS', 'sans geste, à l’ouverture de RS', 'pour préremplir Msn, DTG et Class de la photo, champs vides seulement'),
+                     ('Operation and mission, briefing date, classification', 'RS', 'no gesture, when RS opens', 'to pre-fill the photo’s Msn, DTG and Class, empty fields only')),
+            (['S4'], ('Le briefing : opération, mission, date, heure, classification, tâche et menace de chaque vol, objectif, étapes, équipage, radios, terrains avec piste, METAR, menaces SAM et AAA, notes', 'DG', 'DG : Ouvrir ▾ › Importer… › Briefing en cours', 'pour préremplir une carte par vol'),
+                     ('The briefing: operation, mission, date, time, classification, each flight’s task and threat, objective, steps, crew, radios, airfields with runway, METAR, SAM and AAA threats, notes', 'DG', 'DG: Open ▾ › Import… › Current briefing', 'to pre-fill one card per flight')),
+            (['S5'], ('Les vols : indicatif, appareil, nombre d’unités, plan radio (Standard : fréquences de la liste ; Avancé : plan de chaque appareil)', 'FC, RP, DG', 'leur fenêtre d’import › Briefing en cours', 'pour créer les groupes et poser les fréquences sur les postes radio'),
+                     ('The flights: call sign, aircraft, number of units, radio plan (Standard: frequencies of the list; Advanced: each aircraft’s plan)', 'FC, RP, DG', 'their import window › Current briefing', 'to create the groups and put the frequencies on the radio posts')),
+            (['F11'], ('Le briefing : un PDF, ou un PNG par page', 'l’imprimé', 'Exporter', 'pour le distribuer ou l’imprimer'),
+                      ('The briefing: a PDF, or one PNG per page', 'the printout', 'Export', 'to hand it out or print it')),
+            (['C2'], ('Le briefing', 'le fichier de travail', 'Sauvegarder', 'pour le donner aux Flight Leaders'),
+                     ('The briefing', 'the work file', 'Save', 'to give it to the Flight Leaders')),
         ],
     },
     'rs': {
         'in': [
-            (['S3'], ('Opération, date, classification', 'BG', 'à l’ouverture, champs vides seulement'), ('Operation, date, classification', 'BG', 'when it opens, empty fields only')),
-            (['F7'], ('La configuration Wing (logos)', 'HQ', 'Logo › Importer config'), ('The Wing configuration (logos)', 'HQ', 'Logo › Import config')),
-            (['C2', 'C3', 'F13'], ('Le fichier de travail, l’exemple', 'la suite', 'Ouvrir ▾, Exemple ▾'), ('The work file, the example', 'the suite', 'Open ▾, Example ▾')),
+            (['S3'], ('Msn (opération et mission), DTG (date), Class (classification)', 'BG', 'sans geste, à l’ouverture de RS, champs vides seulement', 'pour ne pas les ressaisir sur la photo'),
+                     ('Msn (operation and mission), DTG (date), Class (classification)', 'BG', 'no gesture, when RS opens, empty fields only', 'so they need not be typed again on the photo')),
+            (['F7'], ('Le logo wing principal et le logo de chaque escadron', 'HQ, par un fichier', 'Logo › Importer config', 'pour les proposer dans la grille de logos de la photo'),
+                     ('The main wing logo and each squadron’s logo', 'HQ, through a file', 'Logo › Import config', 'to offer them in the photo’s logo grid')),
+            (['C2', 'C3'], ('Le travail rangé : fichier de travail, exemple', 'la suite', 'Ouvrir, Exemple', 'pour reprendre ou démarrer le travail, qui remplace le précédent'),
+                           ('Stored work: work file, example', 'the suite', 'Open, Example', 'to resume or start the work, which replaces the previous one')),
         ],
         'out': [
-            (['F8'], ('La photo en PNG', 'BG', 'Exporter, puis à la main'), ('The photo as PNG', 'BG', 'Export, then by hand')),
-            (['C2'], ('Le fichier de travail', 'la suite', 'Sauvegarder'), ('The work file', 'the suite', 'Save')),
+            (['F8'], ('La photo composée : un PNG', 'BG', 'Exporter, puis dans le BG Photos › ajouter l’image, à la main', 'pour les pages de photos du briefing'),
+                     ('The composed photo: a PNG', 'BG', 'Export, then in the BG Photos › add the image, by hand', 'for the photo pages of the briefing')),
+            (['C2'], ('La composition, sans l’image source', 'le fichier de travail', 'Sauvegarder', 'pour la redonner aux autres sans le poids de la capture'),
+                     ('The composition, without the source image', 'the work file', 'Save', 'to give it back to the others without the weight of the capture')),
         ],
     },
     'fc': {
         'in': [
-            (['S2'], ('Groupes : route, radios, emport, livrées', 'HQ', 'Importer des groupes… › mission d’HQ'), ('Groups: route, radios, loadout, liveries', 'HQ', 'Import groups… › HQ mission')),
-            (['S1'], ('Les livrées du Wing', 'HQ', 'tout seul'), ('The Wing liveries', 'HQ', 'by itself')),
-            (['S5'], ('Groupes, plan radio', 'BG', 'Importer des groupes… › briefing en cours'), ('Groups, radio plan', 'BG', 'Import groups… › current briefing')),
-            (['F5', 'F6'], ('Un paquet, un briefing en fichier', 'HQ, un autre FC', 'Importer des groupes… › fichier'), ('A package, a briefing file', 'HQ, another FC', 'Import groups… › file')),
-            (['S8'], ('Les routes', 'RP', 'choisir la route du groupe'), ('The routes', 'RP', 'pick the group’s route')),
-            (['S6', 'S10', 'S11', 'S12'], ('Groupes, unités, radios (fréquences, canaux à imprimer), théâtre, unités de mesure', 'RP, DG', 'tout seul, dans les deux sens'), ('Groups, units, radios (frequencies, channels to print), theatre, measurement units', 'RP, DG', 'by itself, both ways')),
-            (['C2', 'C3', 'F13'], ('Le fichier de travail, l’exemple, un ancien fichier', 'la suite', 'Ouvrir ▾, Exemple ▾'), ('The work file, the example, an old file', 'the suite', 'Open ▾, Example ▾')),
-        ],
+            (['S2'], ('Les groupes de la mission d’HQ : nom, coalition, unités (type, indicatif, numéro de bord) et, à cocher, Route, Radios, Emport, Livrée', 'HQ', 'Importer des groupes… › Mission chargée dans HQ', 'pour créer ou compléter les groupes à régler'),
+                     ('The groups of the HQ mission: name, coalition, units (type, call sign, tail number) and, to tick, Route, Radios, Loadout, Livery', 'HQ', 'Import groups… › Mission loaded in HQ', 'to create or complete the groups to set up')),
+            (['S2'], ('La livrée de chaque unité dans la mission, et l’année de la mission', 'HQ', 'sans geste', 'pour présélectionner la livrée tant que vous n’en choisissez pas, et calculer la déclinaison'),
+                     ('The livery of each unit in the mission, and the mission year', 'HQ', 'no gesture', 'to preselect the livery until you choose one, and compute the declination')),
+            (['S1'], ('Les livrées ajoutées (nom, appareils) et la livrée par défaut de chaque appareil', 'HQ, fenêtre Wing', 'sans geste', 'pour la liste Livrée de chaque unité'),
+                     ('The added liveries (name, aircraft) and each aircraft’s default livery', 'HQ, Wing window', 'no gesture', 'for each unit’s Livery list')),
+            (['S5'], ('Les vols du briefing : indicatif, appareil, nombre d’unités, fréquences du plan radio', 'BG', 'Importer des groupes… › Briefing en cours', 'pour créer les groupes et régler leurs radios'),
+                     ('The briefing flights: call sign, aircraft, number of units, radio plan frequencies', 'BG', 'Import groups… › Current briefing', 'to create the groups and set their radios')),
+            (['F5', 'F6'], ('Un paquet ou un briefing .json ou .zip : mêmes données qu’en source HQ ou BG', 'HQ, un autre FC, BG', 'Importer des groupes… › Fichier', 'pour importer sans la source chargée'),
+                           ('A package or briefing .json or .zip: same data as from the HQ or BG source', 'HQ, another FC, BG', 'Import groups… › File', 'to import without the source loaded')),
+            (['S8'], ('Les routes : points, théâtre, date de la mission', 'RP', 'sans geste, puis Changer de route', 'pour copier la route dans le groupe'),
+                     ('The routes: points, theatre, mission date', 'RP', 'no gesture, then Change route', 'to copy the route into the group')),
+            (['S9'], ('La vitesse sol et l’affichage des caps', 'RP', 'sans geste', 'pour la vitesse de chaque point de la route copiée et la déclinaison de la ligne sous la barre'),
+                     ('The ground speed and the heading display', 'RP', 'no gesture', 'for the speed of each point of the copied route and the declination of the line under the bar')),
+            (['F13'], ('Une ancienne configuration', 'un fichier', 'Ouvrir ▾ › Ouvrir une configuration…', 'pour reprendre une configuration déjà faite'),
+                      ('An old configuration', 'a file', 'Open ▾ › Open a configuration…', 'to resume a configuration already made')),
+            (['C2', 'C3'], _WORK_IN_FR, _WORK_IN_EN),
+        ] + _share('fc'),
         'out': [
-            (['F4'], ('Le paquet de vol', 'HQ', 'Exporter, puis Paquets de vol'), ('The flight package', 'HQ', 'Export, then Flight packages')),
-            (['S6', 'S10', 'S11', 'S12'], ('Groupes, unités, radios (fréquences, canaux à imprimer), théâtre, unités de mesure', 'RP, DG', 'tout seul, dans les deux sens'), ('Groups, units, radios (frequencies, channels to print), theatre, measurement units', 'RP, DG', 'by itself, both ways')),
-            (['C2'], ('Le fichier de travail', 'la suite', 'Sauvegarder'), ('The work file', 'the suite', 'Save')),
-        ],
+            (['F4'], ('Le paquet de vol : groupes avec, par unité, route, radios, emport, livrée', 'HQ', 'Exporter, puis dans HQ Paquets de vol', 'pour écrire ces parties dans le .miz'),
+                     ('The flight package: groups with, per unit, route, radios, loadout, livery', 'HQ', 'Export, then in HQ Flight packages', 'to write these parts into the .miz')),
+            (['S10'], ('Le retrait d’un groupe', 'RP, DG', 'Retirer ce groupe', 'pour le retirer de tous les outils, avec sa datacard'),
+                     ('The removal of a group', 'RP, DG', 'Remove this group', 'to remove it from all tools, with its datacard')),
+            (['C2'], ('Les groupes', 'le fichier de travail', 'Sauvegarder', 'pour les donner au Mission Commander'),
+                     ('The groups', 'the work file', 'Save', 'to give them to the Mission Commander')),
+        ] + _share('fc'),
     },
     'rp': {
         'in': [
-            (['S2'], ('Groupes et routes, la date pour la déclinaison', 'HQ', 'Importer des routes… › mission d’HQ'), ('Groups and routes, the date for the declination', 'HQ', 'Import routes… › HQ mission')),
-            (['S5'], ('Groupes et routes', 'BG', 'Importer des routes… › briefing en cours'), ('Groups and routes', 'BG', 'Import routes… › current briefing')),
-            (['F5', 'F6'], ('Un paquet', 'HQ, FC', 'Importer des routes… › fichier'), ('A package', 'HQ, FC', 'Import routes… › file')),
-            (['F9'], ('Des routes', 'Route Tool de DCS (.lua)', 'Ouvrir ▾ › Ouvrir une route…'), ('Routes', 'DCS Route Tool (.lua)', 'Open ▾ › Open a route…')),
-            (['F10'], ('Des calques', 'CombatFlite (.cf)', 'Ouvrir ▾ › Ouvrir une route…'), ('Layers', 'CombatFlite (.cf)', 'Open ▾ › Open a route…')),
-            (['S6', 'S10', 'S11', 'S12', 'S13'], ('Groupes, unités, radios, théâtre, unités de mesure, cap', 'FC, DG', 'tout seul, dans les deux sens'), ('Groups, units, radios, theatre, measurement units, heading', 'FC, DG', 'by itself, both ways')),
-            (['C2', 'C3', 'F13'], ('Le fichier de travail, l’exemple, un ancien fichier', 'la suite', 'Ouvrir ▾, Exemple ▾'), ('The work file, the example, an old file', 'the suite', 'Open ▾, Example ▾')),
-        ],
+            (['S2'], ('Les groupes de la mission d’HQ avec leur route, et l’année de la mission', 'HQ', 'Importer des routes… › Mission chargée dans HQ', 'pour partir des routes de la mission et calculer les caps magnétiques'),
+                     ('The HQ mission groups with their route, and the mission year', 'HQ', 'Import routes… › Mission loaded in HQ', 'to start from the mission routes and compute magnetic headings')),
+            (['S5'], ('Les vols du briefing : indicatif, appareil, nombre d’unités', 'BG', 'Importer des routes… › Briefing en cours', 'pour créer les groupes auxquels rattacher les routes'),
+                     ('The briefing flights: call sign, aircraft, number of units', 'BG', 'Import routes… › Current briefing', 'to create the groups to attach the routes to')),
+            (['F5', 'F6'], ('Un paquet ou un briefing .json ou .zip : mêmes données qu’en source HQ ou BG', 'HQ, FC, BG', 'Importer des routes… › Fichier', 'pour importer sans la source chargée'),
+                           ('A package or briefing .json or .zip: same data as from the HQ or BG source', 'HQ, FC, BG', 'Import routes… › File', 'to import without the source loaded')),
+            (['F9'], ('Les points d’une route, 30 au plus', 'le Route Tool de DCS, fichier <théâtre>.lua', 'Ouvrir ▾ › Ouvrir une route…', 'pour reprendre une route faite en jeu'),
+                     ('The points of a route, 30 at most', 'the DCS Route Tool, <theatre>.lua file', 'Open ▾ › Open a route…', 'to take back a route made in game')),
+            (['F10'], ('Les calques : zones, cercles, points, orbites, boîtes, textes, symboles', 'CombatFlite, fichier .cf', 'Ouvrir ▾ › Ouvrir une route…, puis Afficher', 'pour les voir en lecture seule sur la carte'),
+                      ('The layers: zones, circles, points, orbits, boxes, texts, symbols', 'CombatFlite, .cf file', 'Open ▾ › Open a route…, then Show', 'to see them read-only on the map')),
+            (['F13'], ('Une ancienne route', 'un fichier', 'Ouvrir ▾ › Ouvrir une route…', 'pour reprendre une route déjà tracée'),
+                      ('An old route', 'a file', 'Open ▾ › Open a route…', 'to resume a route already drawn')),
+            (['C2', 'C3'], _WORK_IN_FR, _WORK_IN_EN),
+        ] + _share('rp'),
         'out': [
-            (['C1'], ('L’image de la carte', 'BG', 'Exporter ▾ › Image pour le briefing'), ('The map image', 'BG', 'Export ▾ › Image for the briefing')),
-            (['S8'], ('Les routes', 'FC, DG', 'tout seul'), ('The routes', 'FC, DG', 'by itself')),
-            (['S9'], ('La route active, les points de réf.', 'DG', 'tout seul'), ('The active route, the reference points', 'DG', 'by itself')),
-            (['S6', 'S10', 'S11', 'S12', 'S13'], ('Groupes, unités, radios, théâtre, unités de mesure, cap', 'FC, DG', 'tout seul, dans les deux sens'), ('Groups, units, radios, theatre, measurement units, heading', 'FC, DG', 'by itself, both ways')),
-            (['F9'], ('Un fichier .lua', 'Route Tool de DCS', 'Exporter ▾ › Route Tool…'), ('A .lua file', 'DCS Route Tool', 'Export ▾ › Route Tool…')),
-            (['C2'], ('Le fichier de travail', 'la suite', 'Sauvegarder'), ('The work file', 'the suite', 'Save')),
-        ],
+            (['C1'], ('L’image de la carte : cadrée, avec échelle, nord et cartouche', 'BG, dans la même session', 'Exporter ▾ › Image pour le briefing… › Exporter', 'pour la carte du briefing'),
+                     ('The map image: framed, with scale, north and cartouche', 'BG, in the same session', 'Export ▾ › Image for the briefing… › Export', 'for the briefing map')),
+            (['S8'], ('Les routes : points, théâtre, date de la mission', 'FC, DG', 'sans geste', 'pour la route copiée du groupe et le tableau Navigation de la carte'),
+                     ('The routes: points, theatre, mission date', 'FC, DG', 'no gesture', 'for the group’s copied route and the card’s Navigation table')),
+            (['S9'], ('La route active, les points de référence, l’affichage des caps, la vitesse sol', 'DG, FC (vitesse sol et caps)', 'sans geste', 'pour la navigation de la carte et la vitesse des points copiés'),
+                     ('The active route, the reference points, the heading display, the ground speed', 'DG, FC (ground speed and headings)', 'no gesture', 'for the card’s navigation and the speed of the copied points')),
+            (['F9'], ('Les points d’une route', 'le Route Tool de DCS', 'Exporter ▾ › Route Tool…', 'pour donner la route au Route Tool, sans les points de référence'),
+                     ('The points of a route', 'the DCS Route Tool', 'Export ▾ › Route Tool…', 'to give the route to the Route Tool, without reference points')),
+            (['C2'], ('Les routes et leurs calques', 'le fichier de travail', 'Sauvegarder', 'pour les donner au Mission Commander'),
+                     ('The routes and their layers', 'the work file', 'Save', 'to give them to the Mission Commander')),
+        ] + _share('rp'),
     },
     'dg': {
         'in': [
-            (['S2'], ('Groupes, date, heure, météo', 'HQ', '… › Importer des groupes'), ('Groups, date, time, weather', 'HQ', '… › Import groups')),
-            (['S1'], ('Les indicatifs des escadrons', 'HQ (Wing)', 'tout seul'), ('The squadron call signs', 'HQ (Wing)', 'by itself')),
-            (['S4', 'S5'], ('Le briefing', 'BG', 'Importer… › Briefing en cours'), ('The briefing', 'BG', 'Import… › Current briefing')),
-            (['F5', 'F6'], ('Un paquet', 'HQ, FC', '… › Importer des groupes › fichier'), ('A package', 'HQ, FC', '… › Import groups › file')),
-            (['S8', 'S9'], ('Les routes, la route active, les points de réf.', 'RP', 'tout seul'), ('The routes, the active route, the reference points', 'RP', 'by itself')),
-            (['S6', 'S10', 'S11', 'S12', 'S13'], ('Groupes, unités, radios (fréquences, canaux à imprimer), théâtre, unités de mesure, cap', 'FC, RP', 'tout seul, dans les deux sens'), ('Groups, units, radios (frequencies, channels to print), theatre, measurement units, heading', 'FC, RP', 'by itself, both ways')),
-            (['C2', 'C3', 'F13'], ('Le fichier de travail, l’exemple, un ancien fichier', 'la suite', 'Ouvrir ▾, Exemple ▾'), ('The work file, the example, an old file', 'the suite', 'Open ▾, Example ▾')),
-        ],
+            (['S2'], ('Les groupes de la mission d’HQ, la date, l’heure de départ, la météo (METAR décodé), l’année de la mission', 'HQ', 'menu … des cartes › Importer des groupes › Mission chargée dans HQ', 'pour créer les cartes et remplir leur date, leur heure et leur météo'),
+                     ('The HQ mission groups, the date, the start time, the weather (decoded METAR), the mission year', 'HQ', 'cards … menu › Import groups › Mission loaded in HQ', 'to create the cards and fill their date, time and weather')),
+            (['S1'], ('L’indicatif et le premier appareil de chaque escadron', 'HQ, fenêtre Wing', 'sans geste', 'pour nommer la carte d’un vol du briefing qui porte un escadron'),
+                     ('Each squadron’s call sign and first aircraft', 'HQ, Wing window', 'no gesture', 'to name the card of a briefing flight that has a squadron')),
+            (['S4', 'S5'], ('Le briefing : opération, mission, date, heure, classification, tâche et menace de chaque vol, objectif, étapes, équipage, radios, terrains avec piste, METAR, menaces SAM et AAA, notes', 'BG', 'Ouvrir ▾ › Importer… › Briefing en cours', 'pour préremplir une carte par vol'),
+                           ('The briefing: operation, mission, date, time, classification, each flight’s task and threat, objective, steps, crew, radios, airfields with runway, METAR, SAM and AAA threats, notes', 'BG', 'Open ▾ › Import… › Current briefing', 'to pre-fill one card per flight')),
+            (['F5', 'F6'], ('Un paquet .json ou .zip : groupes avec route, radios, emport, livrée', 'HQ, FC', 'menu … des cartes › Importer des groupes › Fichier', 'pour créer les cartes sans la mission chargée'),
+                           ('A package .json or .zip: groups with route, radios, loadout, livery', 'HQ, FC', 'cards … menu › Import groups › File', 'to create the cards without the mission loaded')),
+            (['S8'], ('Les routes : points, théâtre, date de la mission', 'RP', 'sans geste', 'pour le tableau Navigation de chaque carte'),
+                     ('The routes: points, theatre, mission date', 'RP', 'no gesture', 'for each card’s Navigation table')),
+            (['S9'], ('La route active, les points de référence, l’affichage des caps, la vitesse sol', 'RP', 'sans geste', 'pour la route active de la carte, ses références et ses caps'),
+                     ('The active route, the reference points, the heading display, the ground speed', 'RP', 'no gesture', 'for the card’s active route, its references and its headings')),
+            (['F13'], ('Une ancienne datacard', 'un fichier', 'Ouvrir ▾ › Ouvrir une datacard…', 'pour reprendre une carte déjà faite'),
+                      ('An old datacard', 'a file', 'Open ▾ › Open a datacard…', 'to resume a card already made')),
+            (['S10'], ('Le retrait d’un groupe', 'FC', 'Retirer ce groupe', 'pour retirer aussi sa datacard'),
+                      ('The removal of a group', 'FC', 'Remove this group', 'to remove its datacard too')),
+            (['C2', 'C3'], _WORK_IN_FR, _WORK_IN_EN),
+        ] + _share('dg'),
         'out': [
-            (['S6', 'S10', 'S11', 'S12', 'S13'], ('Groupes, unités, radios (fréquences, canaux à imprimer), théâtre, unités de mesure, cap', 'FC, RP', 'tout seul, dans les deux sens'), ('Groups, units, radios (frequencies, channels to print), theatre, measurement units, heading', 'FC, RP', 'by itself, both ways')),
-            (['S8'], ('Une navigation modifiée', 'RP, FC', 'tout seul'), ('A modified navigation', 'RP, FC', 'by itself')),
-            (['F12'], ('La datacard en PNG ou PDF', 'kneeboard, imprimé', 'Exporter'), ('The datacard as PNG or PDF', 'kneeboard, printout', 'Export')),
-            (['C2'], ('Le fichier de travail', 'la suite', 'Sauvegarder'), ('The work file', 'the suite', 'Save')),
-        ],
+            (['F12'], ('Les datacards : un PNG par page, un ZIP s’il y en a plusieurs, ou un PDF', 'le kneeboard de DCS, l’imprimé', 'Exporter', 'pour les lire en vol ou les imprimer'),
+                      ('The datacards: one PNG per page, a ZIP if there are several, or a PDF', 'the DCS kneeboard, the printout', 'Export', 'to read them in flight or print them')),
+            (['S8'], ('Une navigation modifiée : un point déplacé, ajouté ou retiré', 'RP, FC', 'sans geste, dans le tableau Navigation', 'pour que la route du RP et la copie du groupe suivent la carte'),
+                     ('A modified navigation: a point moved, added or removed', 'RP, FC', 'no gesture, in the Navigation table', 'so the RP route and the group copy follow the card')),
+            (['S10'], ('Le retrait d’une datacard et de son groupe', 'FC, RP', 'Supprimer la datacard et le groupe', 'pour retirer le groupe de tous les outils'),
+                      ('The removal of a datacard and its group', 'FC, RP', 'Delete the datacard and the group', 'to remove the group from all tools')),
+            (['C2'], ('Les datacards', 'le fichier de travail', 'Sauvegarder', 'pour les donner aux autres'),
+                     ('The datacards', 'the work file', 'Save', 'to give them to the others')),
+        ] + _share('dg'),
     },
 }
 
@@ -566,7 +703,7 @@ def panel_html(tool):
         cols = []
         for key, head in (('in', h_in), ('out', h_out)):
             li = ''.join(
-                f'<li data-ex="{" ".join(r[0])}"><strong>{_esc(T(r[1][i][0]))}</strong> — {_esc(T(r[1][i][1]))} — <span class="rd-g">{_esc(T(r[1][i][2]))}</span></li>'
+                f'<li data-ex="{" ".join(r[0])}"><strong>{_esc(T(r[1][i][0]))}</strong> — {_esc(T(r[1][i][1]))} — <span class="rd-g">{_esc(T(r[1][i][2]))}</span> — {_esc(T(r[1][i][3]))}</li>'
                 for r in ((row[0], (row[1], row[2])) for row in p[key]))
             cols.append(f'<div class="fm-rd-col"><h4>{head}</h4><ul>{li}</ul></div>')
         out.append(f'<div class="fm-rd lang-block" data-lang="{lang}" data-tool="{tool}">{"".join(cols)}</div>')
@@ -674,7 +811,6 @@ def build_bg_svg():
     o.append('          ' + T(183, 142, 9.5, 'Configuration Wing', 'Wing configuration'))
     o.append('          ' + T(183, 154, 8, 'lecture seule', 'read-only'))
     o.append('          ' + sv_tag(130, 128, 106, 'A', 'A'))
-    o.append('          ' + sv_line(64, 108, 64, 126, M))
     o.append('          ' + sv_path('M112,98 C124,110 128,118 136,126', M, op=.8))
     # équipage
     o.append('          ' + sv_box(250, 190, 140, 42))
@@ -755,13 +891,18 @@ def build_rp_screen_svg():
     o.append('<svg viewBox="0 0 720 372" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="L’écran du Route Planner" data-aria-fr="L’écran du Route Planner" data-aria-en="The Route Planner screen">')
     o.append('          ' + sv_defs(M))
     o.append('          ' + sv_title('L’ÉCRAN DU ROUTE PLANNER', 'THE ROUTE PLANNER SCREEN', 24, 32))
-    # la barre du haut : des groupes de boutons, sans leurs libellés exacts
+    # la barre du haut, dans l'ordre de l'écran : Ouvrir, Sauvegarder, Exporter, Affichage, Théâtre, Exemple, Effacer, Thème, langue
     o.append('          ' + sv_box(110, 44, 500, 26))
     o.append('          ' + T(118, 61, 8.5, 'RP', anchor='start', ls=1))
-    for x, w, fr, en in ((146, 96, 'Fichiers', 'Files'), (250, 66, 'Affichage', 'Display'), (324, 66, 'Théâtre', 'Theatre'),
-                         (398, 66, 'Exemple', 'Example'), (472, 66, 'Effacer', 'Clear')):
+    x = 134
+    for w, fr, en in ((50, 'Ouvrir ▾', 'Open ▾'), (64, 'Sauvegarder', 'Save'), (58, 'Exporter ▾', 'Export ▾'), (64, 'Affichage ▾', 'Display ▾'),
+                      (46, 'Théâtre', 'Theatre'), (56, 'Exemple ▾', 'Example ▾'), (46, 'Effacer', 'Clear'), (36, 'Thème', 'Theme')):
         o.append('          ' + f'<rect x="{x}" y="49" width="{w}" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity=".6"/>')
         o.append('          ' + T(x + w / 2, 60.5, 8, fr, en))
+        x += w + 4
+    # le drapeau de la langue : un petit cadre, sans libellé
+    o.append('          ' + f'<rect x="{x}" y="49" width="16" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity=".6"/>')
+    o.append('          ' + f'<rect x="{x + 3}" y="54" width="10" height="7" fill="none" stroke="currentColor" stroke-width="1"/>')
     # la ligne de mission d'HQ, sous la barre
     o.append('          ' + sv_box(110, 74, 500, 14))
     o.append('          ' + T(118, 84, 8, 'Mission d’HQ · ce que l’outil en prend', 'HQ mission · what the tool takes from it', anchor='start'))
@@ -798,9 +939,9 @@ def build_rp_screen_svg():
     # les cinq modes de toucher, en haut à droite de la carte
     modes = [('Point', 'Waypoint'), ('Réf.', 'Ref.'), ('Lire', 'Read'), ('Dessin', 'Draw'), ('Règle', 'Ruler')]
     for i, (fr, en) in enumerate(modes):
-        x = 404 + 40 * i
-        o.append('          ' + sv_box(x, 102, 40, 16, 'rp' if i == 0 else None))
-        o.append('          ' + T(x + 20, 113, 8, fr, en))
+        x = 402 + 41 * i
+        o.append('          ' + sv_box(x, 102, 41, 16, 'rp' if i == 0 else None))
+        o.append('          ' + T(x + 20.5, 113, 8, fr, en))
     # la route : quatre points, une référence
     pts = [(322, 306), (380, 206), (496, 232), (566, 160)]
     o.append('          ' + '<polyline points="' + ' '.join(f'{x},{y}' for x, y in pts) +
