@@ -215,170 +215,10 @@ FC_TILE_SRC = FC_TILE
 # ── Schémas générés (BG « Ce qui alimente quoi » ; DG figure 2) ──────────────────
 # Règle de lisibilité : la couleur d'un module marque (trait, aplat à 20 %), l'encre écrit.
 
-import html as _html
+from fm_schemas_block import (NF, _n, _esc, sv_text, sv_box, sv_pill, sv_tag, sv_line, sv_path, sv_defs, sv_title,
+                              SCHEMAS_CSS, s0_html, build_bg_svg, build_rp_screen_svg, build_dg_anatomy_svg, panel_html, panel_ids, TABLE_IDS)
 
-_NBSP_FINE = ' '   # espace fine insécable (typographie française)
-
-def _n(v):
-    return f'{v:g}'
-
-def _esc(s):
-    return _html.escape(s, quote=False)
-
-def sv_text(x, y, size, fr, en=None, anchor='middle', op=None, ls=None, cls=None, dx=None):
-    """<text> FR puis EN (lang-block) ; un seul <text> si les deux langues sont identiques."""
-    def one(txt, lang):
-        a = f' x="{_n(x)}" y="{_n(y)}" font-size="{_n(size)}"'
-        if anchor != 'start':
-            a += f' text-anchor="{anchor}"'
-        if cls:
-            a += f' class="{cls}{" lang-block" if lang else ""}"'
-        else:
-            a += ' fill="currentColor"'
-            if lang:
-                a += ' class="lang-block"'
-        if lang:
-            a += f' data-lang="{lang}"'
-        if op is not None:
-            a += f' opacity="{op}"'
-        if ls is not None:
-            a += f' letter-spacing="{_n(ls)}"'
-        if dx is not None:
-            a += f' dx="{_n(dx)}"'
-        return f'<text{a}>{_esc(txt)}</text>'
-    if en is None or en == fr:
-        return one(fr, None)
-    return one(fr, 'fr') + '\n          ' + one(en, 'en')
-
-def sv_box(x, y, w, h, mod=None, dashed=False):
-    """Boîte : fond opaque clair (paper-light) ; boîte de module = aplat 20 % + trait 2 px du module."""
-    cls = 'sv-box' + (f' sv-m-{mod}' if mod else '')
-    a = f'<rect class="{cls}" x="{_n(x)}" y="{_n(y)}" width="{_n(w)}" height="{_n(h)}" rx="3"'
-    a += ' stroke-width="2"' if mod else ' stroke="currentColor" stroke-width="1.4"'
-    if dashed:
-        a += ' stroke-dasharray="4 3"'
-    return a + '/>'
-
-def sv_pill(x, y, w, h, fr, en):
-    """Pastille sombre (étiquette de format) et son texte clair."""
-    r = f'<rect class="sv-pill" x="{_n(x)}" y="{_n(y)}" width="{_n(w)}" height="{_n(h)}" rx="2"/>'
-    t = sv_text(x + w / 2, y + 9.6, 8.5, fr, en, cls='sv-pill-t', ls=1, dx=0.5)
-    return r + '\n          ' + t
-
-def sv_tag(bx, by, bw, fr, en):
-    """Étiquette S / A / S·A (Standard / Avancé) à cheval sur le bord haut d'une boîte, près de son coin droit."""
-    w = 26 if len(fr) > 1 else 13
-    return sv_pill(bx + bw - w - 3, by - 6.5, w, 13, fr, en)
-
-def sv_line(x1, y1, x2, y2, marker, dashed=False, sw=1.2, op=.8):
-    d = ' stroke-dasharray="4 3"' if dashed else ''
-    return (f'<line x1="{_n(x1)}" y1="{_n(y1)}" x2="{_n(x2)}" y2="{_n(y2)}" stroke="currentColor" '
-            f'stroke-width="{_n(sw)}" opacity="{_n(op)}"{d} marker-end="url(#{marker})"/>')
-
-def sv_path(dd, marker, dashed=False, sw=1.2, op=.8):
-    d = ' stroke-dasharray="4 3"' if dashed else ''
-    return (f'<path d="{dd}" fill="none" stroke="currentColor" stroke-width="{_n(sw)}" '
-            f'opacity="{_n(op)}"{d} marker-end="url(#{marker})"/>')
-
-def sv_defs(marker):
-    return (f'<defs><marker id="{marker}" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">'
-            f'<path d="M0,0 L7,3.5 L0,7 Z" fill="currentColor" opacity=".8"/></marker></defs>')
-
-def sv_title(fr, en, y, y_rule):
-    return (sv_text(360, y, 13, fr, en, op=.9, ls=3) + '\n          '
-            f'<line x1="120" y1="{_n(y_rule)}" x2="600" y2="{_n(y_rule)}" stroke="currentColor" stroke-width=".6" opacity=".3"/>')
-
-def _build_bg_svg():
-    """Briefing Generator — « Ce qui alimente quoi » (viewBox 720 × 425), complété de la Datacard
-    et des étiquettes S / A (Standard / Avancé)."""
-    M = 'bm'
-    T = sv_text
-    o = []
-    o.append('<svg viewBox="0 0 720 425" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ce qui alimente quoi" data-aria-fr="Ce qui alimente quoi" data-aria-en="What feeds what">')
-    o.append('          ' + sv_defs(M))
-    o.append('          ' + sv_title('CE QUI ALIMENTE QUOI', 'WHAT FEEDS WHAT', 24, 32))
-    # rangée du haut
-    o.append('          ' + sv_box(16, 66, 96, 42, 'hq'))
-    o.append('          ' + T(64, 84, 12, 'HQ'))
-    o.append('          ' + T(64, 98, 8, 'wing_config', op=.9))
-    o.append('          ' + sv_box(156, 66, 96, 42))
-    o.append('          ' + T(204, 91, 11, 'Escadrons', 'Squadrons'))
-    o.append('          ' + sv_tag(156, 66, 96, 'S·A', 'S·A'))
-    o.append('          ' + sv_box(296, 66, 96, 42, 'bg'))
-    o.append('          ' + T(344, 84, 11, 'Missions'))
-    o.append('          ' + T(344, 98, 8, 'groupes', 'groups', op=.9))
-    o.append('          ' + sv_tag(296, 66, 96, 'S·A', 'S·A'))
-    o.append('          ' + sv_box(436, 66, 96, 42))
-    o.append('          ' + T(484, 84, 10, 'Appareil', 'Aircraft'))
-    o.append('          ' + T(484, 98, 8, 'sélectionné', 'selected', op=.9))
-    o.append('          ' + sv_tag(436, 66, 96, 'S·A', 'S·A'))
-    o.append('          ' + sv_box(576, 66, 100, 42))
-    o.append('          ' + T(626, 91, 10.5, 'Plan radio', 'Radio plan'))
-    o.append('          ' + sv_tag(576, 66, 100, 'S·A', 'S·A'))
-    # flèches de la rangée du haut
-    o.append('          ' + sv_line(112, 87, 154, 87, M))
-    o.append('          ' + T(133, 80, 8, 'identité', 'identity', op=.9))
-    o.append('          ' + sv_line(252, 87, 294, 87, M))
-    o.append('          ' + T(273, 80, 8, 'escadron', 'squadron', op=.9))
-    o.append('          ' + sv_line(392, 87, 434, 87, M))
-    o.append('          ' + T(413, 80, 8, 'type', op=.9))
-    o.append('          ' + sv_line(532, 87, 574, 87, M))
-    o.append('          ' + T(553, 80, 8, 'réf radio', 'radio ref', op=.9))
-    # équipage
-    o.append('          ' + sv_box(250, 190, 140, 42))
-    o.append('          ' + T(320, 215, 11, 'Équipage', 'Crew'))
-    o.append('          ' + sv_tag(250, 190, 140, 'A', 'A'))
-    o.append('          ' + sv_path('M204,108 C204,160 270,165 280,189', M, op=.8))
-    o.append('          ' + T(196, 150, 8, 'callsign → indicatifs', 'callsign → call signs', anchor='end', op=.9))
-    o.append('          ' + sv_path('M344,108 C344,150 350,160 350,189', M, op=.8))
-    o.append('          ' + T(356, 150, 8, 'groupes liés', 'linked groups', anchor='start', op=.9))
-    # aérodromes, METAR
-    o.append('          ' + sv_box(40, 296, 150, 42))
-    o.append('          ' + T(115, 315, 10.5, 'Aérodromes / FARP', 'Airfields / FARPs'))
-    o.append('          ' + T(115, 329, 8, 'ICAO', op=.9))
-    o.append('          ' + sv_tag(40, 296, 150, 'S·A', 'S·A'))
-    o.append('          ' + sv_box(250, 296, 120, 42))
-    o.append('          ' + T(310, 321, 11, 'METAR'))
-    o.append('          ' + sv_tag(250, 296, 120, 'S·A', 'S·A'))
-    o.append('          ' + sv_line(190, 317, 248, 317, M))
-    o.append('          ' + T(219, 310, 8, 'pré-rempli', 'pre-filled', op=.9))
-    # métadonnées (trait plein)
-    o.append('          ' + sv_box(470, 296, 160, 42))
-    o.append('          ' + T(550, 315, 10.5, 'Métadonnées', 'Metadata'))
-    o.append('          ' + T(550, 329, 8, 'en-têtes & pieds de page', 'page headers & footers', op=.9))
-    o.append('          ' + sv_tag(470, 296, 160, 'S·A', 'S·A'))
-    # carte, menaces, cibles (Standard et Avancé)
-    o.append('          ' + sv_box(20, 190, 170, 42))
-    o.append('          ' + T(105, 215, 10.5, 'Carte · menaces · cibles', 'Map · threats · targets'))
-    o.append('          ' + sv_tag(20, 190, 170, 'S·A', 'S·A'))
-    # boîtes neuves
-    o.append('          ' + sv_box(40, 360, 190, 36))
-    o.append('          ' + T(135, 382, 10, 'Couverture · charts · annexes', 'Cover · charts · annexes'))
-    o.append('          ' + sv_tag(40, 360, 190, 'A', 'A'))
-    o.append('          ' + sv_box(250, 360, 120, 36))
-    o.append('          ' + T(310, 382, 11, 'Photos'))
-    o.append('          ' + sv_tag(250, 360, 120, 'S', 'S'))
-    # Datacard Generator et les quatre flèches tiretées
-    o.append('          ' + sv_box(470, 190, 170, 42, 'dg'))
-    o.append('          ' + T(555, 208, 11, 'Datacard Generator'))
-    o.append('          ' + T(555, 222, 8, 'une datacard par groupe', 'one datacard per group', op=.9))
-    o.append('          ' + sv_path('M392,100 C432,108 488,140 500,188', M, dashed=True))
-    o.append('          ' + T(458, 140, 8, 'groupes', 'groups', anchor='end', op=.9))
-    o.append('          ' + sv_line(626, 108, 620, 188, M, dashed=True))
-    o.append('          ' + T(628, 152, 8, 'fréquences', 'frequencies', anchor='start', op=.9))
-    o.append('          ' + sv_line(390, 211, 468, 211, M, dashed=True))
-    o.append('          ' + T(429, 204, 8, 'équipage', 'crew', op=.9))
-    o.append('          ' + sv_path('M370,306 C440,300 500,268 520,234', M, dashed=True))
-    o.append('          ' + T(536, 266, 8, 'METAR décodé', 'decoded METAR', anchor='start', op=.9))
-    # la clé
-    o.append('          ' + sv_pill(470, 364, 13, 13, 'S', 'S'))
-    o.append('          ' + T(489, 374, 9, 'Standard', 'Standard', anchor='start'))
-    o.append('          ' + sv_pill(470, 384, 13, 13, 'A', 'A'))
-    o.append('          ' + T(489, 394, 9, 'Avancé', 'Advanced', anchor='start'))
-    o.append('          ' + T(470, 414, 8, f'Tireté{_NBSP_FINE}: lu par le Datacard Generator',
-                              'Dashed: read by the Datacard Generator', anchor='start', op=.9))
-    o.append('        </svg>')
-    return '\n'.join(o)
+_NBSP_FINE = NF   # espace fine insécable (typographie française)
 
 def _build_dg_feed_svg():
     """Datacard Generator — figure 2 « Ce qui alimente la datacard » (viewBox 720 × 380)."""
@@ -450,94 +290,6 @@ def _build_dg_feed_svg():
     o.append('        </svg>')
     return '\n'.join(o)
 
-def _build_rp_screen_svg():
-    """Route Planner — figure 1 « L’écran du Route Planner » (viewBox 720 × 352) : un schéma, pas une capture."""
-    M = 'rps'
-    T = sv_text
-    A = '#7ac97a'
-    o = []
-    o.append('<svg viewBox="0 0 720 352" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="L’écran du Route Planner" data-aria-fr="L’écran du Route Planner" data-aria-en="The Route Planner screen">')
-    o.append('          ' + sv_defs(M))
-    o.append('          ' + sv_title('L’ÉCRAN DU ROUTE PLANNER', 'THE ROUTE PLANNER SCREEN', 24, 32))
-    # la barre du haut
-    o.append('          ' + sv_box(110, 48, 500, 26))
-    o.append('          ' + T(118, 64.5, 8.5, 'R·P', anchor='start', ls=1))
-    o.append('          ' + T(146, 64.5, 8, 'Ouvrir ▾ · Sauvegarder ▾ · Exporter ▾',
-                              'Open ▾ · Save ▾ · Export ▾', anchor='start'))
-    o.append('          ' + T(322, 64.5, 8, 'Affichage ▾', 'Display ▾', anchor='start'))
-    o.append('          ' + T(384, 64.5, 8, 'Théâtre ▾', 'Theatre ▾', anchor='start'))
-    o.append('          ' + T(440, 64.5, 8, 'Exemple · Effacer',
-                              'Example · Clear', anchor='start'))
-    # le panneau et ses sections
-    o.append('          ' + sv_box(110, 80, 160, 260))
-    secs = [
-        (86, 112, 'ROUTE', 'ROUTE', 3, 18),
-        (204, 26, 'POINTS DE RÉFÉRENCE', 'REFERENCE POINTS', 1, 0),
-        (234, 20, 'CALQUES', 'LAYERS', 0, 0),
-        (258, 76, 'NAVIGATION', 'NAVIGATION', 3, 0),
-    ]
-    for (y, h, fr, en, rows, dy) in secs:
-        o.append('          ' + f'<rect x="116" y="{y}" width="148" height="{h}" fill="none" stroke="currentColor" stroke-width="1" opacity=".75"/>')
-        o.append('          ' + T(121, y + 10, 7, fr, en, anchor='start', ls=1, op=.95))
-        for k in range(rows):
-            o.append('          ' + f'<line x1="122" y1="{y + 20 + dy + 9 * k}" x2="258" y2="{y + 20 + dy + 9 * k}" stroke="currentColor" stroke-width="1" opacity=".3"/>')
-    # la ligne de sélection des routes : « 1 · STEPPE WIND ▾ », « + », « … »
-    o.append('          ' + sv_box(122, 98, 100, 13))
-    o.append('          ' + T(128, 107, 6.5, '1 · STEPPE WIND ▾', anchor='start'))
-    o.append('          ' + sv_box(226, 98, 14, 13))
-    o.append('          ' + T(233, 107, 7, '+'))
-    o.append('          ' + sv_box(244, 98, 14, 13))
-    o.append('          ' + T(251, 107, 7, '…'))
-    # la carte, sa grille
-    o.append('          ' + sv_box(276, 80, 334, 260))
-    for x in (336, 396, 456, 516, 576):
-        o.append('          ' + f'<line x1="{x}" y1="81" x2="{x}" y2="339" stroke="currentColor" stroke-width=".8" opacity=".18"/>')
-    for y in (130, 180, 230, 280, 330):
-        o.append('          ' + f'<line x1="277" y1="{y}" x2="609" y2="{y}" stroke="currentColor" stroke-width=".8" opacity=".18"/>')
-    # la loupe de la recherche
-    o.append('          ' + '<rect class="sv-box" x="284" y="88" width="16" height="16" rx="2" stroke="currentColor" stroke-width="1"/>')
-    o.append('          ' + '<circle cx="291" cy="95" r="3.6" fill="none" stroke="currentColor" stroke-width="1.3"/>')
-    o.append('          ' + '<line x1="293.6" y1="97.6" x2="297" y2="101" stroke="currentColor" stroke-width="1.3"/>')
-    # les quatre modes de toucher, en haut à droite de la carte
-    modes = [('Point', 'Waypoint'), ('Réf.', 'Ref.'), ('Lire', 'Read'), ('Dessin', 'Draw')]
-    for i, (fr, en) in enumerate(modes):
-        x = 444 + 40 * i
-        o.append('          ' + sv_box(x, 88, 40, 16, 'rp' if i == 0 else None))
-        o.append('          ' + T(x + 20, 99, 7, fr, en))
-    # la route : quatre points, une référence, une boîte de branche
-    pts = [(322, 296), (380, 196), (496, 222), (566, 146)]
-    o.append('          ' + '<polyline points="' + ' '.join(f'{x},{y}' for x, y in pts) +
-             f'" fill="none" stroke="{A}" stroke-width="3" stroke-linejoin="round"/>')
-    for i, (x, y) in enumerate(pts):
-        o.append('          ' + f'<circle cx="{x}" cy="{y}" r="7" class="sv-box" stroke="currentColor" stroke-width="1.6"/>')
-        o.append('          ' + T(x, y + 2.8, 7.5, str(i)))
-    o.append('          ' + '<rect x="514.5" y="284.5" width="11" height="11" transform="rotate(45 520 290)" fill="currentColor"/>')
-    o.append('          ' + sv_text(520, 292.8, 7, 'A', cls='sv-pill-t'))
-    # la boîte de branche, en maison, sous la branche 1 → 2
-    o.append('          ' + '<path class="sv-box" d="M416,240 L438,230 L460,240 L460,266 L416,266 Z" stroke="currentColor" stroke-width="1.2"/>')
-    o.append('          ' + T(438, 250, 6.5, '094°V', '094°T'))
-    o.append('          ' + T(438, 260, 6.5, '12,4 km', '12.4 km'))
-    # libellés, à gauche
-    o.append('          ' + T(102, 124, 10, 'Panneau', 'Panel', anchor='end'))
-    o.append('          ' + sv_line(105, 121, 128, 121, M))
-    o.append('          ' + T(102, 178, 10, 'Sorties', 'Hand-offs', anchor='end'))
-    o.append('          ' + sv_line(105, 175, 120, 175, M))
-    # libellés, à droite
-    o.append('          ' + T(622, 64, 10, 'Barre du haut', 'Top bar', anchor='start'))
-    o.append('          ' + sv_line(618, 61, 596, 61, M))
-    o.append('          ' + T(622, 99, 10, 'Modes de toucher', 'Tap modes', anchor='start'))
-    o.append('          ' + sv_line(620, 96, 606, 96, M))
-    o.append('          ' + T(622, 152, 10, 'Route', anchor='start'))
-    o.append('          ' + sv_line(618, 149, 576, 147, M))
-    o.append('          ' + T(622, 255, 10, 'Boîte', 'Leg box', anchor='start'))
-    o.append('          ' + T(622, 267, 10, 'de branche', 'per leg', anchor='start'))
-    o.append('          ' + sv_line(618, 258, 463, 258, M))
-    o.append('          ' + T(622, 312, 10, 'Carte', 'Map', anchor='start'))
-    o.append('          ' + sv_line(618, 309, 600, 309, M))
-    o.append('        </svg>')
-    return '\n'.join(o)
-
-
 def _build_rp_feed_svg():
     """Route Planner — figure 2 « Ce qui entre dans le Route Planner, et ce qui en sort » (viewBox 720 × 360)."""
     M = 'rpf'
@@ -585,19 +337,20 @@ def _build_rp_feed_svg():
     return '\n'.join(o)
 
 
-BG_SVG = _build_bg_svg()
+BG_SVG = build_bg_svg()
 DG_FEED_SVG = _build_dg_feed_svg()
-RP_SCREEN_SVG = _build_rp_screen_svg()
+RP_SCREEN_SVG = build_rp_screen_svg()
+DG_ANATOMY_SVG = build_dg_anatomy_svg()
 RP_FEED_SVG = _build_rp_feed_svg()
 
-BG_LEGEND_FR = (f'Fig. 1 — Comment les saisies d’une section alimentent les autres — et la datacard. '
+BG_LEGEND_FR = (f'Fig. 1 — Comment les saisies d’une section alimentent les autres, et ce que lisent les autres outils. '
                 f'S{_NBSP_FINE}: saisi en Standard{_NBSP_FINE}; A{_NBSP_FINE}: en Avancé{_NBSP_FINE}; S·A{_NBSP_FINE}: dans les deux.')
-BG_LEGEND_EN = ('Fig. 1 — How entries in one section feed the others — and the datacard. '
+BG_LEGEND_EN = ('Fig. 1 — How entries in one section feed the others, and what the other tools read. '
                 'S: entered in Standard; A: in Advanced; S·A: in both.')
 
 # ── CSS additionnel : boîtes de schéma, zoom ─────────────────────────────────────
 
-FM_EXTRA_CSS = r'''
+FM_EXTRA_CSS = SCHEMAS_CSS + r'''
 /* ── SCHÉMAS : la couleur du module marque, l'encre écrit ── */
 .sv-box {
   fill: var(--paper-light);
@@ -1126,6 +879,9 @@ function initZoom() {
 '''
 
 # ── HTML principal ───────────────────────────────────────────────────────────────
+
+S0_HTML, S0_IDS = s0_html()
+PANEL_HTML = {t: panel_html(t) for t in ('hq', 'bg', 'rs', 'fc', 'rp', 'dg')}
 
 HTML = f"""<!DOCTYPE html>
 <html lang="fr">
@@ -2029,6 +1785,8 @@ kbd {{
         </div>
       </div>
 
+      {S0_HTML}
+
       <div class="fm-prose">
         <div class="lang-block" data-lang="fr"><p>Mission Plan prépare une mission à deux rôles. Le <strong>Mission Commander</strong> prépare la mission pour toute l’escadre ; chaque <strong>Flight Leader</strong> prépare le vol de son groupe. L’accueil range les outils ainsi, en deux cadres.</p></div>
         <div class="lang-block" data-lang="en"><p>Mission Plan prepares a mission in two roles. The <strong>Mission Commander</strong> prepares the mission for the whole wing; each <strong>Flight Leader</strong> prepares their group’s flight. The home page sorts the tools that way, in two frames.</p></div>
@@ -2100,6 +1858,8 @@ kbd {{
       </div>
 
       <!-- Schéma SVG — anatomie d'une photo recon (où se place chaque élément) -->
+      {PANEL_HTML['rs']}
+
       <div class="fm-schema">
         <svg viewBox="0 0 720 380" xmlns="http://www.w3.org/2000/svg" role="img"
              aria-label="Anatomie d'une photo recon" data-aria-fr="Anatomie d'une photo recon" data-aria-en="Anatomy of a recon photo">
@@ -2284,6 +2044,8 @@ kbd {{
       </div>
 
       <!-- Schéma SVG — flux du hub -->
+      {PANEL_HTML['hq']}
+
       <div class="fm-schema">
         <svg viewBox="0 0 720 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="HQ — le hub de la suite" data-aria-fr="HQ — le hub de la suite" data-aria-en="HQ — the suite’s hub">
           <defs>
@@ -2436,6 +2198,8 @@ kbd {{
       </div>
 
       <!-- Schéma -->
+      {PANEL_HTML['fc']}
+
       <div class="fm-schema">
         <svg viewBox="0 0 720 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Flight Configurator">
           <defs>
@@ -2580,6 +2344,8 @@ kbd {{
       </div>
 
       <!-- Deux formats -->
+      {PANEL_HTML['bg']}
+
       <div class="fm-prose">
         <h3 class="lang-block" data-lang="fr">Deux formats : Standard ou Avancé</h3>
         <h3 class="lang-block" data-lang="en">Two formats: Standard or Advanced</h3>
@@ -2750,113 +2516,10 @@ kbd {{
       </div>
 
       <!-- Schéma SVG : anatomie d’une datacard -->
+      {PANEL_HTML['dg']}
+
       <div class="fm-schema">
-        <svg viewBox="0 0 720 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Anatomie d’une datacard" data-aria-fr="Anatomie d’une datacard" data-aria-en="Anatomy of a datacard">
-          <defs>
-            <marker id="dgl" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="currentColor" opacity=".55"/></marker>
-          </defs>
-          <text x="360" y="26" text-anchor="middle" font-size="13" letter-spacing="3" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">ANATOMIE D’UNE DATACARD</text>
-          <text x="360" y="26" text-anchor="middle" font-size="13" letter-spacing="3" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">ANATOMY OF A DATACARD</text>
-          <line x1="120" y1="34" x2="600" y2="34" stroke="currentColor" stroke-width=".6" opacity=".3"/>
-
-          <!-- La page, ses bandeaux et son en-tête -->
-          <rect class="sv-box" x="270" y="50" width="180" height="255"/>
-          <rect x="270" y="50" width="180" height="8" fill="currentColor" opacity=".85"/>
-          <rect x="270" y="297" width="180" height="8" fill="currentColor" opacity=".85"/>
-          <text x="276" y="80" font-size="17" fill="currentColor">CAESAR</text>
-          <line x1="276" y1="88" x2="350" y2="88" stroke="currentColor" stroke-width="1.4" opacity=".7"/>
-          <text x="444" y="70" text-anchor="end" font-size="9" letter-spacing="1" fill="currentColor">DATACARD</text>
-          <line x1="392" y1="77" x2="444" y2="77" stroke="currentColor" stroke-width="1" opacity=".6"/>
-          <rect x="414" y="83" width="30" height="7" fill="#a83524" opacity=".85"/>
-
-          <!-- Les blocs -->
-          <rect x="274" y="96" width="106" height="44" class="sv-box" stroke="currentColor" stroke-width="1.1"/>
-          <rect x="274" y="96" width="106" height="6" fill="currentColor" opacity=".75"/>
-          <text x="327" y="123.5" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">MISSION</text>
-          <text x="327" y="123.5" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">MISSION</text>
-          <rect x="384" y="96" width="62" height="44" class="sv-box" stroke="currentColor" stroke-width="1.1"/>
-          <rect x="384" y="96" width="62" height="6" fill="currentColor" opacity=".75"/>
-          <text x="415" y="123.5" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">HORAIRES</text>
-          <text x="415" y="123.5" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">TIMES</text>
-          <rect x="274" y="144" width="172" height="24" class="sv-box" stroke="currentColor" stroke-width="1.1"/>
-          <rect x="274" y="144" width="172" height="6" fill="currentColor" opacity=".75"/>
-          <text x="360" y="161.5" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">ÉQUIPAGES</text>
-          <text x="360" y="161.5" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">CREW</text>
-          <rect x="274" y="172" width="172" height="44" class="sv-box" stroke="currentColor" stroke-width="1.1" stroke-dasharray="4 3"/>
-          <rect x="274" y="172" width="172" height="6" fill="currentColor" opacity=".75"/>
-          <text x="360" y="199.5" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">NAVIGATION</text>
-          <text x="360" y="199.5" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">NAVIGATION</text>
-          <rect x="274" y="220" width="90" height="50" class="sv-box" stroke="currentColor" stroke-width="1.1"/>
-          <rect x="274" y="220" width="90" height="6" fill="currentColor" opacity=".75"/>
-          <text x="319" y="250.5" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">RADIO</text>
-          <text x="319" y="250.5" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">RADIO</text>
-          <rect x="368" y="220" width="78" height="23" class="sv-box" stroke="currentColor" stroke-width="1.1"/>
-          <rect x="368" y="220" width="78" height="6" fill="currentColor" opacity=".75"/>
-          <text x="407" y="237" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">TERRAINS</text>
-          <text x="407" y="237" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">AIRFIELDS</text>
-          <rect x="368" y="247" width="78" height="23" class="sv-box" stroke="currentColor" stroke-width="1.1"/>
-          <rect x="368" y="247" width="78" height="6" fill="currentColor" opacity=".75"/>
-          <text x="407" y="264" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">MÉTÉO</text>
-          <text x="407" y="264" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">WEATHER</text>
-          <rect x="274" y="274" width="84" height="19" class="sv-box" stroke="currentColor" stroke-width="1.1"/>
-          <rect x="274" y="274" width="84" height="6" fill="currentColor" opacity=".75"/>
-          <text x="316" y="289" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">CARBURANT · EMPORT</text>
-          <text x="316" y="289" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">FUEL · LOADOUT</text>
-          <rect x="362" y="274" width="84" height="19" class="sv-box" stroke="currentColor" stroke-width="1.1"/>
-          <rect x="362" y="274" width="84" height="6" fill="currentColor" opacity=".75"/>
-          <text x="404" y="289" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">MENACES · NOTES</text>
-          <text x="404" y="289" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">THREATS · NOTES</text>
-          <path d="M270,50 h180 v255 h-180 z" fill="none" stroke="#4f7a8e" stroke-width="2"/>
-
-          <!-- Libellés à gauche -->
-          <line x1="232" y1="54" x2="270" y2="54" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#dgl)"/>
-          <line x1="232" y1="84" x2="270" y2="84" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#dgl)"/>
-          <line x1="232" y1="118" x2="270" y2="118" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#dgl)"/>
-          <line x1="232" y1="156" x2="270" y2="156" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#dgl)"/>
-          <line x1="232" y1="245" x2="270" y2="245" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#dgl)"/>
-          <line x1="232" y1="284" x2="270" y2="284" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#dgl)"/>
-          <g font-size="11" fill="currentColor" text-anchor="end">
-            <text x="226" y="58" class="lang-block" data-lang="fr">Classification · référence · page</text>
-            <text x="226" y="58" class="lang-block" data-lang="en">Classification · reference · page</text>
-            <text x="226" y="88" class="lang-block" data-lang="fr">Indicatif · appareil · tâche</text>
-            <text x="226" y="88" class="lang-block" data-lang="en">Callsign · aircraft · task</text>
-            <text x="226" y="122" class="lang-block" data-lang="fr">Objectif et étapes</text>
-            <text x="226" y="122" class="lang-block" data-lang="en">Objective and steps</text>
-            <text x="226" y="160" class="lang-block" data-lang="fr">Indicatif · pilote · appareil · n°</text>
-            <text x="226" y="160" class="lang-block" data-lang="en">Callsign · pilot · aircraft · no.</text>
-            <text x="226" y="249" class="lang-block" data-lang="fr">Postes et canaux</text>
-            <text x="226" y="249" class="lang-block" data-lang="en">Radios and channels</text>
-            <text x="226" y="288" class="lang-block" data-lang="fr">Carburant · poids · joker · bingo · emport</text>
-            <text x="226" y="288" class="lang-block" data-lang="en">Fuel · weight · joker · bingo · loadout</text>
-          </g>
-
-          <!-- Libellés à droite -->
-          <line x1="488" y1="72" x2="450" y2="72" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#dgl)"/>
-          <line x1="488" y1="118" x2="450" y2="118" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#dgl)"/>
-          <line x1="488" y1="194" x2="450" y2="194" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#dgl)"/>
-          <line x1="488" y1="231" x2="450" y2="231" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#dgl)"/>
-          <line x1="488" y1="258" x2="450" y2="258" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#dgl)"/>
-          <line x1="488" y1="284" x2="450" y2="284" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#dgl)"/>
-          <g font-size="11" fill="currentColor" text-anchor="start">
-            <text x="494" y="76" class="lang-block" data-lang="fr">Opération · date · menace</text>
-            <text x="494" y="76" class="lang-block" data-lang="en">Operation · date · threat</text>
-            <text x="494" y="122" class="lang-block" data-lang="fr">Mise en route → RTB</text>
-            <text x="494" y="122" class="lang-block" data-lang="en">Start-up → RTB</text>
-            <text x="494" class="lang-block" data-lang="fr"><tspan x="494" y="191">Points, caps, distances</tspan> <tspan x="494" y="205">→ page 2 si elle déborde</tspan></text>
-            <text x="494" class="lang-block" data-lang="en"><tspan x="494" y="191">Points, headings, distances</tspan> <tspan x="494" y="205">→ page 2 if it overflows</tspan></text>
-            <text x="494" y="235" class="lang-block" data-lang="fr">DEP · ARR · ALT</text>
-            <text x="494" y="235" class="lang-block" data-lang="en">DEP · ARR · ALT</text>
-            <text x="494" y="262" class="lang-block" data-lang="fr">METAR décodé</text>
-            <text x="494" y="262" class="lang-block" data-lang="en">Decoded METAR</text>
-            <text x="494" y="288" class="lang-block" data-lang="fr">Menaces · notes</text>
-            <text x="494" y="288" class="lang-block" data-lang="en">Threats · notes</text>
-          </g>
-
-          <!-- Libellé du pied -->
-          <line x1="360" y1="336" x2="360" y2="307" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#dgl)"/>
-          <text x="360" y="350" text-anchor="middle" font-size="11" fill="currentColor" class="lang-block" data-lang="fr">Pied : indicatif · opération · classification · page</text>
-          <text x="360" y="350" text-anchor="middle" font-size="11" fill="currentColor" class="lang-block" data-lang="en">Footer: callsign · operation · classification · page</text>
-        </svg>
+        {DG_ANATOMY_SVG}
         <div class="fm-schema-legend">
           <span class="lang-block" data-lang="fr">Fig. 1 — L’anatomie d’une datacard : où se range chaque bloc.</span>
           <span class="lang-block" data-lang="en">Fig. 1 — Anatomy of a datacard: where each block goes.</span>
@@ -3008,6 +2671,8 @@ kbd {{
       </div>
 
       <!-- Figure 1 : l’écran du Route Planner -->
+      {PANEL_HTML['rp']}
+
       <div class="fm-schema">
         {RP_SCREEN_SVG}
         <div class="fm-schema-legend">
