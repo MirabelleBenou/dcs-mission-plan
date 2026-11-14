@@ -40,6 +40,7 @@ Changes merged since the last release, grouped per tool.
 - One example mission, STEPPE WIND over Cyprus, loaded by group: the **Example ▾** menu of every tool and of the landing page loads it for the mission commander tools (Briefing Generator, Recon Station) or for the flight lead tools (Route Planner, Datacard Generator, Flight Configurator); **Restore** brings back the group's previous work. Your units and heading settings are kept.
 - A mission time is printed in Zulu next to the date (“08:00Z”) on the datacard and on the briefing, in both briefing formats.
 - **Fold all** is an icon at the right of every section header; the button on its own line is gone.
+- An exported document keeps one name whatever the format (PDF or PNG), and kneeboard PNG pages have one size, 2000 × 2828, in the Briefing Generator as in the Datacard Generator.
 
 #### Removed
 - The repository no longer ships one particular wing's configuration file, nor six squadron logos that no tool used; the README and the code comments no longer name that wing. Each wing still makes or imports its own configuration in HQ.
@@ -61,6 +62,7 @@ Changes merged since the last release, grouped per tool.
 #### Fixed
 - On phones and tablets, the on-screen keyboard no longer hides the bottom of the open tool.
 - **Open** and **Example** no longer erase the Flight Configurator’s **My presets**, nor the unit and heading settings a work file does not carry.
+- The footer names the suite, DCS Mission Plan; the shell's message no longer covers a tool's bottom bar; no text is smaller than 10 px, on phones and in the Field Manual index included.
 
 ### HQ
 #### Added
@@ -84,6 +86,7 @@ Changes merged since the last release, grouped per tool.
 #### Fixed
 - The interface language is shared with the other tools (HQ kept its own); the language already chosen in HQ is kept.
 - Deleting groups no longer refuses a mission whose group table is written out of key order (for example [18] before [17]), as the DCS editor can leave it; the remaining groups are renumbered by key.
+- Applying a package the mission already carries says there is nothing to change and counts no modification.
 
 ### Flight Configurator
 #### Added
@@ -125,6 +128,7 @@ Changes merged since the last release, grouped per tool.
 #### Fixed
 - **Clear** no longer leaves the previous image drawn in the preview.
 - Restore after an example or an opened work file brings back the image that was loaded.
+- “Import an image to continue” no longer shows when the image is already there.
 
 ### Briefing Generator
 #### Changed
@@ -141,6 +145,7 @@ Changes merged since the last release, grouped per tool.
 #### Fixed
 - In the export window, the page list no longer shows the PDF and PNG choices above it, so it fits on phones.
 - A .miz the METAR assistant cannot read shows a message in the interface language instead of a French-only alert.
+- On the printed briefing, the classification stamp no longer covers the reference line.
 
 ### Datacard Generator
 #### Added

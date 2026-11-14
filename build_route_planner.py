@@ -58,7 +58,6 @@ CONTRAST_CSS = r"""
 :where(body[data-theme="cw-soviet"]) .pt-head span { color: #79866b; }
 :where(body[data-theme="cw-soviet"]) .pt-del { color: #79866b; }
 :where(body[data-theme="cw-soviet"]) .ui-modal .rt-note { color: #879279; }
-:where(body[data-theme="cw-soviet"]) .fn-ext { color: #879279; }
 :where(body[data-theme="modern-nato"]) .ed-head { color: #c6953f; }
 :where(body[data-theme="modern-nato"]) .ed-head small { color: #929fab; }
 :where(body[data-theme="modern-nato"]) .rs-groups { color: #8e9ca7; }
@@ -71,7 +70,6 @@ CONTRAST_CSS = r"""
 :where(body[data-theme="modern-east"]) .pt-head span { color: #7d846c; }
 :where(body[data-theme="modern-east"]) .pt-del { color: #7d846c; }
 :where(body[data-theme="modern-east"]) .ui-modal .rt-note { color: #888e78; }
-:where(body[data-theme="modern-east"]) .fn-ext { color: #888e78; }
 /* lignes des menus de la barre (lot mp-ui-disposition) : le texte neutre des lignes « .dsp-opt » (Affichage, Ouvrir, Enregistrer, « … », listes) atteint 4,5 : 1 dans les quatre thèmes ; les thèmes cw-nato et modern-nato le tenaient déjà */
 :where(body[data-theme="cw-soviet"]) .dsp-opt:not([aria-checked="true"]):not(:hover):not(:focus-visible):not([aria-selected="true"]):not([aria-disabled="true"]):not(.mn-danger) { color: #879279; }
 :where(body[data-theme="modern-east"]) .dsp-opt:not([aria-checked="true"]):not(:hover):not(:focus-visible):not([aria-selected="true"]):not([aria-disabled="true"]):not(.mn-danger) { color: #888e78; }
@@ -707,11 +705,6 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .rt-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin: 0 0 8px; }
 .rt-tools .rt-cnt { margin-left: auto; font-size: 11px; letter-spacing: .3px; color: var(--khaki-light); }
 .rt-tools[hidden] { display: none; }
-.fn-field { margin: 0 0 12px; }
-.fn-field .lbl { margin-bottom: 4px; }
-.fn-row { display: flex; align-items: center; gap: 8px; }
-.fn-row .in { flex: 1 1 auto; min-width: 0; }
-.fn-ext { flex: none; font-family: var(--f-mono); font-weight: 400; font-size: 13px; color: var(--khaki-light); }
 .rt-row .rt-two { display: flex; flex-direction: column; min-width: 0; flex: 1 1 auto; }
 .rt-row .rt-two small { font-size: 11px; color: var(--khaki-light); overflow-wrap: anywhere; }
 .rt-row.off { opacity: .45; cursor: not-allowed; }
@@ -1400,20 +1393,6 @@ __CSS__
 
 __IMPORT_HTML__
 
-<!-- ===== FENÊTRE : EXPORTER LA CARTE — CHOISIR LE NOM DU FICHIER (hors shell) ===== -->
-<div class="ui-modal" id="exn-modal" hidden role="dialog" aria-modal="true" aria-labelledby="exn-title">
-  <div class="ui-backdrop" id="exn-backdrop"></div>
-  <div class="ui-panel" role="document">
-    <button type="button" class="ui-close" id="exn-close" data-i18n-aria-label="modal.close" aria-label="Fermer">&times;</button>
-    <h2 class="ui-title" id="exn-title" data-i18n="exn.title">Exporter la carte</h2>
-    <div class="fn-field"><label class="lbl" for="exn-fname" data-i18n="fn.label">Nom du fichier</label><div class="fn-row"><input class="in" id="exn-fname" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="100"><span class="fn-ext">.jpg</span></div></div>
-    <div class="ui-actions">
-      <button type="button" class="ui-btn" id="exn-cancel" data-i18n="rt.cancel">Annuler</button>
-      <button type="button" class="ui-btn primary" id="exn-go" data-i18n="frame.export">Exporter</button>
-    </div>
-  </div>
-</div>
-
 <!-- ===== FENÊTRE : LA FICHE D'UN AÉRODROME ===== -->
 <div class="rt-modal" id="fiche" hidden role="dialog" aria-modal="true" aria-labelledby="fiche-titre">
   <div class="rt-backdrop" id="fiche-fond"></div>
@@ -2069,8 +2048,6 @@ const I18N = {
     'ex.bg.h': 'PNG',
     'ex.rt': 'Route Tool…',
     'ex.rt.h': '.lua',
-    'fn.label': 'Nom du fichier',
-    'exn.title': 'Exporter la carte',
     'tb.example': 'Exemple',
     'tb.example.tip': 'Charger l’exemple STEPPE WIND',
     'tb.example.mc': 'Mission Commander — Briefing Generator, Recon Station',
@@ -2216,7 +2193,6 @@ const I18N = {
     'cart.unnamed': 'ROUTE SANS NOM',
     'cart.attr': 'Fond :',
     'toast.mapSent': 'Carte envoyée au Briefing Generator.',
-    'toast.mapSaved': 'Image enregistrée : importez-la dans le Briefing Generator (Carte).',
     'toast.mapPartial': 'Le fond vient d\'un autre site : il peut manquer dans l\'image.',
     'toast.mapFail': '⚠ L\'image n\'a pas pu être produite.',
     'tb.rt.off': 'Route Tool indisponible pour ce théâtre',
@@ -2593,8 +2569,6 @@ const I18N = {
     'ex.bg.h': 'PNG',
     'ex.rt': 'Route Tool…',
     'ex.rt.h': '.lua',
-    'fn.label': 'File name',
-    'exn.title': 'Export the map',
     'tb.example': 'Example',
     'tb.example.tip': 'Load the STEPPE WIND example',
     'tb.example.mc': 'Mission Commander — Briefing Generator, Recon Station',
@@ -2740,7 +2714,6 @@ const I18N = {
     'cart.unnamed': 'UNNAMED ROUTE',
     'cart.attr': 'Background:',
     'toast.mapSent': 'Map sent to the Briefing Generator.',
-    'toast.mapSaved': 'Image saved: import it into the Briefing Generator (Map).',
     'toast.mapPartial': 'The background comes from another site: it may be missing from the image.',
     'toast.mapFail': '⚠ The image could not be produced.',
     'tb.rt.off': 'Route Tool not available for this theatre',
@@ -3375,10 +3348,6 @@ function flightTypes(f) {
 function flightTypesLabel(f) { return flightTypes(f).join(' + '); }
 /* « 1 pt », « n pts » */
 function ptsText(n) { return t((CURRENT_LANG === 'fr' ? n <= 1 : n === 1) ? 'hq.pts.1' : 'hq.pts', { n: n }); }
-/* Le nom d'un fichier choisi : sans « .json », accents ôtés, tout ce qui n'est pas lettre, chiffre, _ + - devient « _ » ; vide si rien ne reste */
-function cleanFname(v) {
-  return str(v).trim().replace(/\.json$/i, '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9_+-]+/g, '_').replace(/_{2,}/g, '_').replace(/^_+|_+$/g, '').slice(0, 100);
-}
 /* Le même vol : le même nom (rogné des deux côtés, la casse compte) et le même camp */
 function sameFlight(a, b) { return !!a && !!b && String(a.groupName).trim() === String(b.groupName).trim() && a.coalition === b.coalition; }
 
@@ -8788,7 +8757,7 @@ function bytesToText(bytes) {
 /* ---- Fenêtres : « Ouvrir une route du Route Tool » et « Exporter vers le Route Tool » ---- */
 const RT = { fileName: '', routes: [], theatre: 'Caucasus', sel: 0, opener: null };
 
-const RT_MODALS = ['rt-open-modal', 'rt-export-modal', 'cf-import-modal', 'clr-modal', 'ga-modal', 'imp-modal', 'exn-modal', 'fiche'];
+const RT_MODALS = ['rt-open-modal', 'rt-export-modal', 'cf-import-modal', 'clr-modal', 'ga-modal', 'imp-modal', 'fiche'];
 function rtVisible(id) { return !$(id).hidden; }
 function rtShow(id, opener, focusId) {
   RT.opener = opener || null;
@@ -10177,19 +10146,6 @@ function expCompose(shot, rect) {
   return { canvas: cv, width: W, height: H + EXP_BAND };
 }
 
-/* Le nom par défaut de l'image de la carte, hors shell : carte_<nom de la route>_<horodatage> */
-function expDefaultName() {
-  const sl = cleanFname(S.name).slice(0, 40);
-  return 'carte_' + (sl ? sl + '_' : '') + pkStamp();
-}
-
-function expDataUrlToBlob(url) {
-  const bin = atob(url.slice(url.indexOf(',') + 1));
-  const u8 = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
-  return new Blob([u8], { type: 'image/jpeg' });
-}
-
 /* Le shell qui prend l'image (window.parent.MP_SEND_MAP), ou nul */
 function expShellSend() {
   let send = null;
@@ -10197,44 +10153,25 @@ function expShellSend() {
   return send;
 }
 
-/* L'envoi : par le shell s'il l'offre, sinon le fichier, sous le nom choisi (sans extension) */
-function expDeliver(dataUrl, W, H, partial, fname) {
+/* L'envoi : par le shell, qui prend l'image (l'outil seul n'exporte pas la carte) */
+function expDeliver(dataUrl, W, H, partial) {
   const send = expShellSend();
   const name = S.name, theatre = S.theatre;
   expClose();
-  let msg;
-  if (send) {
-    send.call(window.parent, { dataUrl: dataUrl, name: name, theatre: theatre, width: W, height: H });
-    msg = t('toast.mapSent');
-  } else {
-    fallbackDownload(expDataUrlToBlob(dataUrl), fname + '.jpg', '');
-    msg = t('toast.mapSaved');
-  }
+  if (!send) { showToast(t('toast.mapFail'), { type: 'err' }); return; }
+  send.call(window.parent, { dataUrl: dataUrl, name: name, theatre: theatre, width: W, height: H });
+  let msg = t('toast.mapSent');
   if (partial) msg += ' ' + t('toast.mapPartial');
   showToast(msg, { type: 'ok', ms: partial ? 4500 : 2200 });
 }
 
-/* « Exporter » du cadre : avec le shell, le rendu part tout de suite ; sans lui, la fenêtre du nom du fichier s'ouvre d'abord et le rendu suit son bouton */
-const EXPN = { name: '', at: 0 };
-function expGo(ev) {
-  if (!EXP.on || EXP.busy) return;
-  if (expShellSend()) { expRun(''); return; }
-  EXPN.name = cleanFname(expDefaultName());
-  EXPN.at = performance.now();
-  $('exn-fname').value = EXPN.name;
-  exnSync();
-  rtShow('exn-modal', ev && ev.currentTarget, 'exn-fname');
-  $('exn-fname').select();
-}
-function exnSync() { $('exn-go').disabled = cleanFname(EXPN.name) === ''; }
-function exnGo() {
-  const name = cleanFname(EXPN.name);
-  if (name === '') return;
-  rtHide('exn-modal');
-  expRun(name);
+/* « Exporter » du cadre : le rendu part tout de suite, vers le shell */
+function expGo() {
+  if (!EXP.on || EXP.busy || !expShellSend()) return;
+  expRun();
 }
 
-async function expRun(fname) {
+async function expRun() {
   if (!EXP.on || EXP.busy) return;
   expLayout();
   const rect = EXP.rect;
@@ -10264,18 +10201,12 @@ async function expRun(fname) {
     $('exp-go').disabled = false;
   }
   if (!out) { showToast(t('toast.mapFail'), { type: 'err' }); return; }
-  expDeliver(out.dataUrl, out.width, out.height, partial, fname);
+  expDeliver(out.dataUrl, out.width, out.height, partial);
 }
 
 function expBind() {
   $('exp-cancel').addEventListener('click', () => { if (!EXP.busy) expClose(); });
   $('exp-go').addEventListener('click', expGo);
-  ['exn-close', 'exn-cancel'].forEach(id => $(id).addEventListener('click', () => rtHide('exn-modal')));
-  /* le fond ignore les clics des 400 ms qui suivent l'ouverture : le 2e clic d'un double-clic sur « Exporter » ne ferme pas la fenêtre */
-  $('exn-backdrop').addEventListener('click', () => { if (performance.now() - EXPN.at > 400) rtHide('exn-modal'); });
-  $('exn-go').addEventListener('click', exnGo);
-  $('exn-fname').addEventListener('input', ev => { EXPN.name = ev.target.value; exnSync(); });
-  $('exn-fname').addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); exnGo(); } });
   $('export-bar').addEventListener('click', e => {
     const b = e.target.closest && e.target.closest('[data-exo]');
     if (b) expSetOrient(b.dataset.exo);

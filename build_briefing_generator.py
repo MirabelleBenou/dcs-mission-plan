@@ -4682,16 +4682,6 @@ function getRosterLabelParts(keyOrGroup) {
   return { shortLabel, label, fullLabel };
 }
 
-function getRosterLabel(keyOrGroup) {
-  return getRosterLabelParts(keyOrGroup).label;
-}
-function getRosterFullLabel(keyOrGroup) {
-  return getRosterLabelParts(keyOrGroup).fullLabel;
-}
-function getRosterShortLabel(keyOrGroup) {
-  return getRosterLabelParts(keyOrGroup).shortLabel;
-}
-
 /* ============= ROSTER (ÉQUIPAGE) EDITOR ============= */
 function renderRoster() {
   const list = document.getElementById('roster-groups-list');
@@ -6023,21 +6013,6 @@ function parseMetarString(str) {
     else if (parts[i] && /^A\d{4}$/.test(parts[i])) { p.qnh=parseInt(parts[i++].slice(1))/100; p.qnhInHg=true; }
     return p;
   } catch(e) { return null; }
-}
-
-function _missionDateToDDhhmm(mdate) {
-  // mdate = { Year, Day, Month } + state.missionDate.startTime (secondes depuis minuit)
-  // On extrait DD et hhmm depuis la date mission si disponible
-  try {
-    if (mdate && mdate.Day) {
-      const dd = String(mdate.Day).padStart(2,'0');
-      const sec = mdate.startTime || 0;
-      const hh = String(Math.floor(sec/3600)).padStart(2,'0');
-      const mm = String(Math.floor((sec%3600)/60)).padStart(2,'0');
-      return dd + hh + mm;
-    }
-  } catch(e) {}
-  return '';
 }
 
 let _metarParams = null;

@@ -90,7 +90,7 @@ LANDING_CSS = r"""
 @media(max-width:900px){
   .mp-tab{flex-direction:column; gap:0; padding:4px 12px;}
   .mp-tab b{font-size:16px; white-space:nowrap;}
-  .mp-tab small{font-size:9px;}
+  .mp-tab small{font-size:10px;}
 }
 """
 
@@ -778,8 +778,7 @@ select[data-tbm-src] {{ display: none !important; }}
   </div>
 
   <div class="foot">
-    <span>DCS Mission Suite</span><span class="dot">·</span>
-    <span>Open source · AGPL-3.0</span><span class="dot">·</span>
+    <span>DCS Mission Plan</span><span class="dot">·</span>
     <span id="foot-info">Cold War OTAN</span>
     <span class="right" id="foot-right">Mission Plan</span>
   </div>

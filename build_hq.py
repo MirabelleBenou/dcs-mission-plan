@@ -56,7 +56,7 @@ with open(ASSETS_PATH) as f:
 import base64 as _b64
 # ---------- Patch pipeline (copie verbatim CPE — applyPatches + retokenizeSafety + rebuildMiz) ----------
 _APPLY_PATCHES    = _b64.b64decode('ZnVuY3Rpb24gYXBwbHlQYXRjaGVzKHNyY1RleHQsIHBhdGNoZXMpIHsKICBsZXQgcmVzdWx0ID0gc3JjVGV4dDsKICBmb3IgKGNvbnN0IHAgb2YgcGF0Y2hlcykgewogICAgcmVzdWx0ID0gcmVzdWx0LnN1YnN0cmluZygwLCBwLnBvcy5zdGFydC5vZmZzZXQpICsgcC5uZXdWYWx1ZVN0ciArIHJlc3VsdC5zdWJzdHJpbmcocC5wb3MuZW5kLm9mZnNldCk7CiAgfQogIHJldHVybiByZXN1bHQ7Cn0=').decode('utf-8')
-_RETOKENIZE       = _b64.b64decode('ZnVuY3Rpb24gcmV0b2tlbml6ZVNhZmV0eShwYXRjaGVkU3JjKSB7CiAgY29uc3QgdDAgPSBwZXJmb3JtYW5jZS5ub3coKTsKICBjb25zdCB7IHRva2VucywgZXJyb3JzIH0gPSBEQ1NfVE9LRU5JWkVSLnRva2VuaXplKHBhdGNoZWRTcmMpOwogIGNvbnN0IGVsYXBzZWQgPSBNYXRoLnJvdW5kKHBlcmZvcm1hbmNlLm5vdygpIC0gdDApOwogIGlmIChlcnJvcnMubGVuZ3RoID4gMCkgewogICAgdGhyb3cgbmV3IEVycm9yKCdSZXRva2VuaXplIGZhaWxlZDogJyArIGVycm9yc1swXS5tZXNzYWdlICsgJyBMJyArIChlcnJvcnNbMF0ubGluZSsxKSArICc6QycgKyAoZXJyb3JzWzBdLmNvbCsxKSk7CiAgfQogIGNvbnNvbGUubG9nKCdbU2F2ZV0gUmV0b2tlbml6ZSBPSyA6IDAgZXJyZXVycywgJyArIHRva2Vucy5sZW5ndGgudG9Mb2NhbGVTdHJpbmcoKSArICcgdG9rZW5zLCAnICsgZWxhcHNlZCArICcgbXMnKTsKfQ==').decode('utf-8')
+_RETOKENIZE       = _b64.b64decode('ZnVuY3Rpb24gcmV0b2tlbml6ZVNhZmV0eShwYXRjaGVkU3JjKSB7CiAgY29uc3QgeyBlcnJvcnMgfSA9IERDU19UT0tFTklaRVIudG9rZW5pemUocGF0Y2hlZFNyYyk7CiAgaWYgKGVycm9ycy5sZW5ndGggPiAwKSB7CiAgICB0aHJvdyBuZXcgRXJyb3IoJ1JldG9rZW5pemUgZmFpbGVkOiAnICsgZXJyb3JzWzBdLm1lc3NhZ2UgKyAnIEwnICsgKGVycm9yc1swXS5saW5lKzEpICsgJzpDJyArIChlcnJvcnNbMF0uY29sKzEpKTsKICB9Cn0=').decode('utf-8')
 _REBUILD_MIZ      = _b64.b64decode('YXN5bmMgZnVuY3Rpb24gcmVidWlsZE1peihwYXRjaGVkU3JjLCBtb2RlbCkgewogIGNvbnN0IG5ld1ppcCA9IG5ldyBKU1ppcCgpOwogIG5ld1ppcC5maWxlKCdtaXNzaW9uJywgcGF0Y2hlZFNyYyk7CiAgY29uc3Qgb3RoZXJGaWxlcyA9IG1vZGVsLnNvdXJjZS5taXouX290aGVyRmlsZXNEYXRhOwogIGlmIChvdGhlckZpbGVzKSB7CiAgICBPYmplY3QuZW50cmllcyhvdGhlckZpbGVzKS5mb3JFYWNoKGZ1bmN0aW9uKFtuYW1lLCBkYXRhXSkgeyBuZXdaaXAuZmlsZShuYW1lLCBkYXRhKTsgfSk7CiAgfQogIHJldHVybiBuZXdaaXAuZ2VuZXJhdGVBc3luYyh7IHR5cGU6ICdibG9iJywgY29tcHJlc3Npb246ICdERUZMQVRFJywgY29tcHJlc3Npb25PcHRpb25zOiB7IGxldmVsOiA2IH0gfSk7Cn0=').decode('utf-8')
 
 import base64 as _b64
@@ -3627,7 +3627,6 @@ async function loadMiz(file) {{
       renderSnapshot(snapshot);
       pkRender();
       showToast(t('toast.mizLoaded'), {{ type: 'ok' }});
-      console.log('[HQ P3] Snapshot:', snapshot);
     }} catch(err) {{
       console.warn('[HQ P3] enregistrement ou rendu du .miz :', err);
       showToast(t('msg.failed'), {{ type: 'err' }});
@@ -4337,9 +4336,6 @@ function verifyPatch(patchedSrc, pkg) {{
   if (errors.length > 0) {{
     throw Object.assign(new Error('Auto-vérif post-patch échouée: ' + errors.map(e => e.key + '(' + e.args.map(pkArgText).join(',') + ')').join('; ')), {{ pkErrors: errors }});
   }}
-  const totalChecked = (ov.radios||[]).length + (ov.liveries||[]).length +
-    (repl.route ? 1 : 0) + (repl.payloads||[]).length;
-  console.log('[HQ P4] Auto-vérif OK — ' + totalChecked + ' champ(s) validé(s)');
 }}
 
 // =============================================================
@@ -4401,7 +4397,6 @@ function pkStamp(d) {{
   const p = n => String(n).padStart(2, '0');
   return d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + '-' + p(d.getHours()) + p(d.getMinutes()) + p(d.getSeconds());
 }}
-function pkCleanName(s) {{ return String(s).replace(/[^A-Za-z0-9_-]/g, '_').slice(0, 40); }}
 
 function pkDownload(blob, fname) {{
   const url = URL.createObjectURL(blob);

@@ -4966,7 +4966,6 @@ async function loadMiz(file) {
       renderSnapshot(snapshot);
       pkRender();
       showToast(t('toast.mizLoaded'), { type: 'ok' });
-      console.log('[HQ P3] Snapshot:', snapshot);
     } catch(err) {
       console.warn('[HQ P3] enregistrement ou rendu du .miz :', err);
       showToast(t('msg.failed'), { type: 'err' });
@@ -5469,13 +5468,10 @@ function applyPatches(srcText, patches) {
   return result;
 }
 function retokenizeSafety(patchedSrc) {
-  const t0 = performance.now();
-  const { tokens, errors } = DCS_TOKENIZER.tokenize(patchedSrc);
-  const elapsed = Math.round(performance.now() - t0);
+  const { errors } = DCS_TOKENIZER.tokenize(patchedSrc);
   if (errors.length > 0) {
     throw new Error('Retokenize failed: ' + errors[0].message + ' L' + (errors[0].line+1) + ':C' + (errors[0].col+1));
   }
-  console.log('[Save] Retokenize OK : 0 erreurs, ' + tokens.length.toLocaleString() + ' tokens, ' + elapsed + ' ms');
 }
 async function rebuildMiz(patchedSrc, model) {
   const newZip = new JSZip();
@@ -5698,9 +5694,6 @@ function verifyPatch(patchedSrc, pkg) {
   if (errors.length > 0) {
     throw Object.assign(new Error('Auto-vérif post-patch échouée: ' + errors.map(e => e.key + '(' + e.args.map(pkArgText).join(',') + ')').join('; ')), { pkErrors: errors });
   }
-  const totalChecked = (ov.radios||[]).length + (ov.liveries||[]).length +
-    (repl.route ? 1 : 0) + (repl.payloads||[]).length;
-  console.log('[HQ P4] Auto-vérif OK — ' + totalChecked + ' champ(s) validé(s)');
 }
 
 // =============================================================
@@ -5981,7 +5974,6 @@ function pkStamp(d) {
   const p = n => String(n).padStart(2, '0');
   return d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + '-' + p(d.getHours()) + p(d.getMinutes()) + p(d.getSeconds());
 }
-function pkCleanName(s) { return String(s).replace(/[^A-Za-z0-9_-]/g, '_').slice(0, 40); }
 
 function pkDownload(blob, fname) {
   const url = URL.createObjectURL(blob);
