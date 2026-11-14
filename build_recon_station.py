@@ -3573,18 +3573,19 @@ window.MP_IMG_GIVE = function (m) {{
   RS_IMG_WAIT++;
   img.onerror = rsImgSettled;
   img.onload = () => {{
-    if (SOURCE_READY || STATE.exampleImage) {{ rsImgSettled(); return; }}
-    SOURCE_IMG   = img;
-    SOURCE_READY = true;
-    document.getElementById('img-credit').hidden = true;
-    document.getElementById('drop-zone').classList.add('has-image');
-    document.getElementById('drop-zone-text').textContent = m.dz || (img.naturalWidth + '×' + img.naturalHeight + 'px');
-    document.getElementById('btn-export').disabled = false;
-    document.getElementById('preview-placeholder').hidden = true;
-    document.getElementById('preview-canvas').hidden = false;
-    rsdSyncUi();
-    schedulePreview();
-    rsImgSettled();
+    try {{
+      if (SOURCE_READY || STATE.exampleImage) return;
+      SOURCE_IMG   = img;
+      SOURCE_READY = true;
+      document.getElementById('img-credit').hidden = true;
+      document.getElementById('drop-zone').classList.add('has-image');
+      document.getElementById('drop-zone-text').textContent = m.dz || (img.naturalWidth + '×' + img.naturalHeight + 'px');
+      document.getElementById('btn-export').disabled = false;
+      document.getElementById('preview-placeholder').hidden = true;
+      document.getElementById('preview-canvas').hidden = false;
+      rsdSyncUi();
+      schedulePreview();
+    }} finally {{ rsImgSettled(); }}
   }};
   img.src = m.src;
 }};

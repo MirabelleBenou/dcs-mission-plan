@@ -273,6 +273,8 @@ For code contributions: fork, branch, study the build scripts to understand the 
 - DCS town names and positions from the DCS World maps, © Eagle Dynamics
 - World Magnetic Model coefficients (epochs 1985–2025, the ones DCS World ships) by NOAA NCEI and the British Geological Survey, public domain
 - International Geomagnetic Reference Field, 12th generation (IAGA), in the NOAA geomag70 file DCS World ships, used for years up to 1984
+- Fonts embedded in every tool: Oswald, Stardos Stencil, Caveat and Roboto Mono (SIL Open Font License 1.1), Special Elite (Apache License 2.0), from Google Fonts — licence texts in [`fonts/LICENSES.md`](fonts/LICENSES.md)
+- PNG and ZIP exports: [html2canvas](https://github.com/niklasvh/html2canvas) by Niklas von Hertzen and [JSZip](https://github.com/Stuk/jszip) by Stuart Knightley (MIT)
 - Cold War kraft SVG file provided by Flappie, thanks to him !
 
 ---

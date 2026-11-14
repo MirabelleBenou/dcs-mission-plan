@@ -54,7 +54,7 @@ with open(ASSETS_PATH) as f:
 # Copié depuis dcs_comm_plan_editor.html — DCS_TOKENIZER + DCS_PARSER + DCS_EXTRACTOR
 # Encodé base64 pour éviter les problèmes d'échappement Python
 import base64 as _b64
-# ---------- Patch pipeline (copie verbatim CPE — applyPatches + retokenizeSafety + rebuildMiz) ----------
+# ---------- Patch pipeline (copie de CPE, sans son console.log de sauvegarde — applyPatches + retokenizeSafety + rebuildMiz) ----------
 _APPLY_PATCHES    = _b64.b64decode('ZnVuY3Rpb24gYXBwbHlQYXRjaGVzKHNyY1RleHQsIHBhdGNoZXMpIHsKICBsZXQgcmVzdWx0ID0gc3JjVGV4dDsKICBmb3IgKGNvbnN0IHAgb2YgcGF0Y2hlcykgewogICAgcmVzdWx0ID0gcmVzdWx0LnN1YnN0cmluZygwLCBwLnBvcy5zdGFydC5vZmZzZXQpICsgcC5uZXdWYWx1ZVN0ciArIHJlc3VsdC5zdWJzdHJpbmcocC5wb3MuZW5kLm9mZnNldCk7CiAgfQogIHJldHVybiByZXN1bHQ7Cn0=').decode('utf-8')
 _RETOKENIZE       = _b64.b64decode('ZnVuY3Rpb24gcmV0b2tlbml6ZVNhZmV0eShwYXRjaGVkU3JjKSB7CiAgY29uc3QgeyBlcnJvcnMgfSA9IERDU19UT0tFTklaRVIudG9rZW5pemUocGF0Y2hlZFNyYyk7CiAgaWYgKGVycm9ycy5sZW5ndGggPiAwKSB7CiAgICB0aHJvdyBuZXcgRXJyb3IoJ1JldG9rZW5pemUgZmFpbGVkOiAnICsgZXJyb3JzWzBdLm1lc3NhZ2UgKyAnIEwnICsgKGVycm9yc1swXS5saW5lKzEpICsgJzpDJyArIChlcnJvcnNbMF0uY29sKzEpKTsKICB9Cn0=').decode('utf-8')
 _REBUILD_MIZ      = _b64.b64decode('YXN5bmMgZnVuY3Rpb24gcmVidWlsZE1peihwYXRjaGVkU3JjLCBtb2RlbCkgewogIGNvbnN0IG5ld1ppcCA9IG5ldyBKU1ppcCgpOwogIG5ld1ppcC5maWxlKCdtaXNzaW9uJywgcGF0Y2hlZFNyYyk7CiAgY29uc3Qgb3RoZXJGaWxlcyA9IG1vZGVsLnNvdXJjZS5taXouX290aGVyRmlsZXNEYXRhOwogIGlmIChvdGhlckZpbGVzKSB7CiAgICBPYmplY3QuZW50cmllcyhvdGhlckZpbGVzKS5mb3JFYWNoKGZ1bmN0aW9uKFtuYW1lLCBkYXRhXSkgeyBuZXdaaXAuZmlsZShuYW1lLCBkYXRhKTsgfSk7CiAgfQogIHJldHVybiBuZXdaaXAuZ2VuZXJhdGVBc3luYyh7IHR5cGU6ICdibG9iJywgY29tcHJlc3Npb246ICdERUZMQVRFJywgY29tcHJlc3Npb25PcHRpb25zOiB7IGxldmVsOiA2IH0gfSk7Cn0=').decode('utf-8')

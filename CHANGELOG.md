@@ -13,6 +13,7 @@ Changes merged since the last release, grouped per tool.
 ### All tools
 #### Added
 - One work file for the whole suite: **Save** in any tool (and on the home page) writes the briefing, recon, groups, routes, layers, datacards, theatre and settings into a single `.json`; **Open… › Open a work file…** brings it all back, with **Restore** for a few seconds. The Wing configuration and the mission open in HQ are not part of it.
+- The credits name the fonts embedded in every tool and their licences (SIL OFL 1.1, Apache 2.0), whose texts are now in the repository (`fonts/`); html2canvas and JSZip are credited too.
 #### Changed
 - File buttons use the same words everywhere: **Open** and **Save** for the tool's own file, **Import** and **Export** to exchange with another tool or produce the final document, **Clear** to empty the tool. The Datacard Generator's four file buttons become Open, Import, Save and Export.
 - Every file you save or export asks for its name first, with the usual name filled in; names use one date format everywhere. On tablets, HQ's flight packages and modified .miz now open the share menu, like the other files.
@@ -63,6 +64,7 @@ Changes merged since the last release, grouped per tool.
 - On phones and tablets, the on-screen keyboard no longer hides the bottom of the open tool.
 - **Open** and **Example** no longer erase the Flight Configurator’s **My presets**, nor the unit and heading settings a work file does not carry.
 - The footer names the suite, DCS Mission Plan; the shell's message no longer covers a tool's bottom bar; no text is smaller than 10 px, on phones and in the Field Manual index included.
+- The footer shows the licence again, next to the suite's name.
 
 ### HQ
 #### Added

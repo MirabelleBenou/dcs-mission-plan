@@ -85,7 +85,7 @@ CSS = r"""
   src: url('data:font/woff2;base64,__SPECIAL_ELITE__') format('woff2');
 }
 @font-face {
-  /* Phase X — étape C : Roboto Mono Regular pour les 2 thèmes modernes
+  /* Roboto Mono Regular pour les 2 thèmes modernes
      (subset latin, ~12 KB). Glyphes manquants du subset (░ ▮ ★ etc.)
      resolvent via fallback sur 'Courier New' / 'Courier' / monospace. */
   font-family: 'Roboto Mono';
@@ -111,8 +111,8 @@ CSS = r"""
 
 :root {
   --mp-accent: #c0892a;
-  /* Typography stack — partagée par tous les thèmes (la phase X — étape C
-     redéfinira --f-typewriter sur les thèmes modernes). */
+  /* Typography stack — partagée par tous les thèmes (--f-typewriter est
+     redéfini sur les thèmes modernes). */
   --f-stencil: 'Stardos Stencil', 'Impact', 'Arial Narrow Bold', sans-serif;
   --f-typewriter: 'Special Elite', 'Courier New', 'Courier', monospace;
   --f-condensed: 'Oswald', 'Arial Narrow', sans-serif;
@@ -130,7 +130,7 @@ CSS = r"""
    THÈMES — phase X
    Bascule via <body data-theme="..."> :
      cw-nato (défaut) | cw-soviet | modern-nato | modern-east
-   Le JS de l'étape E posera l'attribut au démarrage via loadTheme().
+   Le JS pose l'attribut au démarrage via loadTheme().
    ============================================ */
 
 /* --- Thème : Cold War OTAN (défaut, valeurs originales préservées) --- */
@@ -213,7 +213,7 @@ body[data-theme="modern-east"] {
   --kraft-bg: url('data:image/svg+xml;base64,__KRAFT_SVG_MODERN_EAST__');
 }
 
-/* Phase X — étape C : police de corps des thèmes modernes
+/* Police de corps des thèmes modernes
    Roboto Mono remplace Special Elite (typewriter) sur les 2 thèmes modernes
    pour un rendu technique/digital. La stack de fallback couvre les glyphes
    absents du subset latin (░ ▮ ★ etc. → fallback sur Courier/monospace). */
@@ -370,7 +370,7 @@ body {
 }
 .tb-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
 
-/* Phase X — étape E : sélecteur de thème graphique
+/* Sélecteur de thème graphique
    Utilise --olive-dark (thématisé) en background pour suivre l'identité
    visuelle de chaque thème, et --amber/--amber-dark (constants) en accent UI.
    Caret custom SVG inline (couleur amber #c0892a, hard-coded car les data:url
@@ -530,7 +530,7 @@ body {
     linear-gradient(180deg, var(--olive-dark) 0%, var(--olive-deep) 100%);
   border-right: 2px solid var(--amber-dark);
   overflow-y: auto;
-  overscroll-behavior: contain;   /* AJOUT chatG : isolation du scroll, prévention reflows en cascade */
+  overscroll-behavior: contain;   /* isolation du scroll, prévention reflows en cascade */
   padding: 16px 16px 80px 16px;
   color: var(--paper);
 }
@@ -541,7 +541,7 @@ body {
 
 /* SECTIONS */
 .ed-section {
-  contain: layout;   /* AJOUT chatG : isolation layout, prévention reflows globaux sur input */
+  contain: layout;   /* isolation layout, prévention reflows globaux sur input */
   margin-bottom: 14px;
   border: 1px solid var(--khaki);
   background: rgba(20, 24, 12, .5);
@@ -998,7 +998,7 @@ body {
 /* ============ PREVIEW ============ */
 .preview-wrap {
   overflow: auto;
-  overscroll-behavior: contain;   /* AJOUT chatG : isolation du scroll, prévention reflows en cascade */
+  overscroll-behavior: contain;   /* isolation du scroll, prévention reflows en cascade */
   background: var(--olive-deep);
   padding: 30px 20px 60px 20px;
 }
@@ -1013,7 +1013,7 @@ body {
 .page {
   font-size: 14px;
   width: 794px;
-  height: 1123px;           /* A4 figée — plus de min-height (chatE étape A) */
+  height: 1123px;           /* A4 figée — plus de min-height */
   max-height: 1123px;
   margin: 0 auto 30px auto;
   background: var(--page-bg);
@@ -1024,7 +1024,7 @@ body {
   color: var(--ink);
   position: relative;
   box-shadow: 0 8px 24px rgba(0,0,0,.5), 0 2px 4px rgba(0,0,0,.3);
-  padding: 28px 36px 50px 36px;  /* bottom 60→50px pour mieux placer le footer (chatE étape A) */
+  padding: 28px 36px 50px 36px;  /* bottom 60→50px pour mieux placer le footer */
   overflow: hidden;
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
@@ -1054,8 +1054,8 @@ body {
   width: 64px; height: 64px;
   /* FIX Bug B : <img> sans object-fit (html2canvas le rend mal), centré et
      contenu dans sa boîte par max-width/max-height. Pas de background-image :
-     html2canvas peint une image de fond à sa taille CSS, puis l'échelle ×2
-     de l'export PNG l'agrandit — logo flou. Une <img> est dessinée depuis sa
+     html2canvas peint une image de fond à sa taille CSS, puis l'échelle de l'export PNG
+     (2 000 px de large, ≈ 2,52) l'agrandit — logo flou. Une <img> est dessinée depuis sa
      source pleine résolution. */
   display: flex;
   align-items: center;
@@ -2104,7 +2104,7 @@ body {
 }
 
 /* ============================================
-   STAMPS — Phase X étape D : variantes thématiques
+   STAMPS — variantes thématiques
    Overrides CSS uniquement, le DOM .stamp-classif reste inchangé.
    Le texte (state.meta.classification) demeure dynamique.
    ============================================ */
@@ -2679,7 +2679,7 @@ body[data-format="full"] [data-fmt="simple"] { display: none !important; }
 .rpmap-replace[hidden] { display: none; }
 
 /* ===========================================================
-   WARNING débordement — aperçu UNIQUEMENT (chatE étape A)
+   WARNING débordement — aperçu UNIQUEMENT
    Bandeau rouge transparent en bas des pages tronquées.
    Masqué en print (CSS only, jamais via JS conditionnel).
    =========================================================== */
@@ -2708,7 +2708,7 @@ body[data-format="full"] [data-fmt="simple"] { display: none !important; }
 }
 
 /* ===========================================================
-   .page--for-png — (chatE étape B)
+   .page--for-png
    Réplique textuellement les règles @media print de .page,
    en CSS standard (sans @media print), pour application
    sur le clone hors-écran lors de l'export PNG.
@@ -2747,7 +2747,7 @@ body[data-format="full"] [data-fmt="simple"] { display: none !important; }
     max-height: 297mm;
     overflow: hidden;
     margin: 0;
-    padding: 7.4mm 9.5mm 13mm 9.5mm;  /* miroir mm du padding écran 28/36/50/36px (chatE étape A) */
+    padding: 7.4mm 9.5mm 13mm 9.5mm;  /* miroir mm du padding écran 28/36/50/36px */
     box-shadow: none;
     page-break-after: always;
     break-after: page;
@@ -2834,9 +2834,9 @@ HTML = r"""<!DOCTYPE html>
 <style>
 __CSS__
 </style>
-<!-- html2canvas v1.4.1 — embarqué pour export PNG kneeboard (étape B) -->
+<!-- html2canvas v1.4.1 — embarqué pour export PNG kneeboard -->
 <script>__LIB_HTML2CANVAS__</script>
-<!-- JSZip v3.10.1 — embarqué pour export ZIP multi-pages (étape B) -->
+<!-- JSZip v3.10.1 — embarqué pour export ZIP multi-pages -->
 <script>__LIB_JSZIP__</script>
 </head>
 <body data-theme="cw-nato" data-format="simple">
@@ -6668,7 +6668,7 @@ function pageHeader(opts) {
   const rightAlt = opts.rightAlt || wingConfig.wing.shortName;
   // FIX Bug B : logos du header = <img> sans object-fit (mal rendu par html2canvas,
   // issues #1322, #2425), dans une boîte flex de taille fixe. Pas de background-image :
-  // html2canvas le peint à sa taille CSS et l'échelle ×2 de l'export PNG le floute.
+  // html2canvas le peint à sa taille CSS et l'échelle de l'export PNG (2 000 px de large, ≈ 2,52) le floute.
   const logoBox = (cls, src, alt) =>
     `<div class="${cls}">${src ? `<img src="${escapeAttr(src)}" alt="${escapeAttr(alt)}">` : ''}</div>`;
   return `
@@ -7073,7 +7073,7 @@ function buildPages() {
             const info = e.info;
             // FIX Bug B : <img> sans object-fit (mal rendu par html2canvas, issues #1322,
             // #2425), dans une boîte flex de taille fixe ; pas de background-image (peint
-            // à sa taille CSS par html2canvas, flou à l'échelle ×2 du PNG).
+            // à sa taille CSS par html2canvas, flou à l'échelle de l'export PNG : 2 000 px de large, ≈ 2,52).
             const logoHtml = info.logo
               ? `<div class="squadron-logo-sm"><img src="${escapeAttr(info.logo)}" alt="${escapeAttr(info.id)}"></div>`
               : `<div class="squadron-logo-guest">INV.</div>`;
@@ -7961,7 +7961,7 @@ function applyWingBranding() {
   if (helpEl) helpEl.firstChild.textContent = '◆ ' + w.shortName + ' ◆';
 }
 
-/* ============= THEME (Phase X — étape E) ============= */
+/* ============= THEME ============= */
 /* Le thème graphique est une préférence utilisateur indépendante du wing
    et du briefing. Stocké en localStorage[KEY_THEME] sous forme d'identifiant
    string. 4 valeurs valides : 'cw-nato' (défaut), 'cw-soviet', 'modern-nato',
@@ -7985,7 +7985,7 @@ function applyTheme(themeId) {
   if (sel) sel.value = themeId;
 }
 
-/* ============= OVERFLOW DETECTION (chatE étape A) =============
+/* ============= OVERFLOW DETECTION =============
    Détecte les pages dont le contenu déborde de la hauteur A4 figée (1123px).
    Un bandeau rouge "⚠ Contenu tronqué" est injecté en aperçu uniquement.
    Il disparaît dynamiquement si l'utilisateur supprime du contenu.
@@ -8847,7 +8847,7 @@ function init() {
   bindWingStorageEvent();  // l'onglet Wing n'affiche que ; HQ écrit wing_config_v1 (évènement storage)
   setActiveTab('header');
   renderPreview();
-  initOverflowObserver();  // chatE étape A : détection débordement via MutationObserver
+  initOverflowObserver();  // détection débordement via MutationObserver
   window.MP_RECEIVE_MAP = receiveRpMap;   // v2.5.0 : la carte du Route Planner, BG déjà ouvert
   takeRpMapAtStart();                      // v2.5.0 : ou envoyée avant l'ouverture du BG
 
@@ -8970,7 +8970,7 @@ function exportGo(o) {
 const PNG_PAGE_CSS_W = 794;        // la largeur de la page A4 à 96 dpi (.page--for-png)
 const PNG_OUT_W = 2000;            // largeur du PNG ; la hauteur, 1123 px de page à la même échelle, tombe à 2 828 px
 
-/* renderPageToPng — version chatF (consolidation post-chatE étape B)
+/* renderPageToPng
    La classe .page--for-png réplique les règles @media print en CSS standard.
    html2canvas capture le clone avec une échelle explicite (PNG_OUT_W / 794, une seule échelle pour les deux axes : la mise en page ne change pas) → PNG 2000×2828 px,
    indépendamment du devicePixelRatio de l'appareil (FIX Bug A).
@@ -9355,7 +9355,7 @@ HTML = HTML.replace('@@AIRCRAFT_TYPES_BLOCK@@\n', build_aircraft_types_block()).
 HTML = HTML.replace('__LIB_HTML2CANVAS__', A['lib_html2canvas'])
 HTML = HTML.replace('__LIB_JSZIP__', A['lib_jszip'])
 
-# ── KRAFT TEXTURES — Phase X étape B ─────────────────────────────────────────
+# ── KRAFT TEXTURES ─────────────────────────────────────────
 # Le SVG kraft d'origine ne contient que 2 couleurs hex : #d6c7a3 (fond, 1×) et
 # #ccbe99 (grain, 139×). On génère 4 variantes thématiques par str.replace pur,
 # encodées en base64 et embarquées via 4 placeholders distincts dans le CSS

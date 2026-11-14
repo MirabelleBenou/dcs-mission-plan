@@ -775,10 +775,12 @@ select[data-tbm-src] {{ display: none !important; }}
   <div id="credits">
     <p>Based on Mission Plan by MirabelleBenou and the 4th VEAW virtual wing — <a href="https://github.com/MirabelleBenou/dcs-mission-plan" target="_blank" rel="noopener">github.com/MirabelleBenou/dcs-mission-plan</a> · <a href="https://github.com/MirabelleBenou/dcs-mission-plan/blob/main/LICENSE" target="_blank" rel="noopener">AGPL-3.0-or-later</a></p>
     <p><span data-i18n="credits.data">Données des appareils et des terrains : </span><a href="https://github.com/pydcs/dcs" target="_blank" rel="noopener">pydcs</a><span data-i18n="credits.rest"> (LGPL-3.0-or-later) · vues de face : Goldwolf, DCS Reference Guide, avec son autorisation</span></p>
+    <p><span data-i18n="credits.fonts">Polices : Oswald, Stardos Stencil, Caveat, Roboto Mono (SIL OFL 1.1), Special Elite (Apache 2.0) · html2canvas, JSZip (MIT) · licences : </span><a href="https://github.com/MirabelleBenou/dcs-mission-plan/blob/main/fonts/LICENSES.md" target="_blank" rel="noopener">fonts/LICENSES.md</a></p>
   </div>
 
   <div class="foot">
     <span>DCS Mission Plan</span><span class="dot">·</span>
+    <span>Open source · AGPL-3.0</span><span class="dot">·</span>
     <span id="foot-info">Cold War OTAN</span>
     <span class="right" id="foot-right">Mission Plan</span>
   </div>
@@ -848,6 +850,7 @@ select[data-tbm-src] {{ display: none !important; }}
       'status.op': 'Opérationnel',
       'credits.data': 'Données des appareils et des terrains : ',
       'credits.rest': ' (LGPL-3.0-or-later) · vues de face : Goldwolf, DCS Reference Guide, avec son autorisation',
+      'credits.fonts': 'Polices : Oswald, Stardos Stencil, Caveat, Roboto Mono (SIL OFL 1.1), Special Elite (Apache 2.0) · html2canvas, JSZip (MIT) · licences : ',
       cta: '▶ Ouvrir le dossier',
       soon: 'À venir',
       loading: 'Chargement',
@@ -896,6 +899,7 @@ select[data-tbm-src] {{ display: none !important; }}
       'status.op': 'Operational',
       'credits.data': 'Aircraft and airfield data: ',
       'credits.rest': ' (LGPL-3.0-or-later) · front views: Goldwolf, DCS Reference Guide, used with permission',
+      'credits.fonts': 'Fonts: Oswald, Stardos Stencil, Caveat, Roboto Mono (SIL OFL 1.1), Special Elite (Apache 2.0) · html2canvas, JSZip (MIT) · licences: ',
       cta: '▶ Open the file',
       soon: 'Coming soon',
       loading: 'Loading',
