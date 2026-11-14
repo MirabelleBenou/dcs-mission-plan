@@ -950,7 +950,7 @@ body.mp-ml-on { --mp-top: 86px; }
   position: fixed; top: 60px; left: 0; right: 0; height: 26px; z-index: 900; box-sizing: border-box; margin: 0; padding: 0 14px;
   display: flex; align-items: center; gap: 10px; overflow: hidden; white-space: nowrap;
   background: var(--olive-dark); border-bottom: 1px solid var(--amber); color: var(--paper);
-  font-size: 11px; line-height: 1;
+  font-size: 11px; line-height: 25px;
 }
 .mp-ml[hidden] { display: none; }
 .mp-ml.narrow { gap: 8px; padding: 0 10px; }
@@ -966,6 +966,7 @@ body.mp-ml-on { --mp-top: 86px; }
 .mp-ml.warn { border-bottom-color: var(--mp-warn); }
 .mp-ml.warn > .mp-ml-dot { background: transparent; border: 2px solid var(--mp-warn); }
 .mp-ml.warn > .mp-ml-lbl, .mp-ml.warn > .mp-ml-right { color: var(--mp-warn); }
+.mp-ml > .mp-ml-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
 @media print { .mp-ml { display: none !important; } }
 /* ===== FIN DE LA FEUILLE DE LA LIGNE ===== */
 
@@ -10213,6 +10214,7 @@ function impGo() {
 
 /* ===== LIGNE DE LA MISSION D'HQ ===== */
 const ML_KEY = 'mission_snapshot_v1';
+const ML_SCHEMAS = ['dcs-mission-snapshot-v1', 'dcs-mission-snapshot-v2'];       /* ceux de l'import (IMP_HQ_SCHEMAS) */
 const ML_I18N = {"fr": {"lbl": "MISSION D’HQ", "decl": ["Déclinaison ✓", "Déclinaison"], "forcee": ["Déclinaison : année forcée", "Décl. forcée"], "liv": ["Livrées ✓", "Livrées"], "imp": ["Import : {n} {u} ✓", "{n} {u}"], "impd": ["Import : {n} {u} (date, heure, météo) ✓", "{n} {u}"], "one": "vol", "many": "vols", "out": ["Non utilisée ici : autre théâtre", "Autre théâtre"]}, "en": {"lbl": "HQ MISSION", "decl": ["Declination ✓", "Declination"], "forcee": ["Declination: year overridden", "Decl. overridden"], "liv": ["Liveries ✓", "Liveries"], "imp": ["Import: {n} {u} ✓", "{n} {u}"], "impd": ["Import: {n} {u} (date, time, weather) ✓", "{n} {u}"], "one": "flight", "many": "flights", "out": ["Not used here: other theatre", "Other theatre"]}};
 const ML = { hooks: null, el: null, mq: null, raw: null, snap: null, sig: '', on: false };
 function mlLang() { try { return ML.hooks.lang() === 'en' ? 'en' : 'fr'; } catch (e) { return 'fr'; } }
@@ -10226,11 +10228,11 @@ function mlSnap() {
     ML.raw = raw; ML.snap = null;
     try {
       const o = JSON.parse(raw), sm = o && typeof o === 'object' ? o.sourceMission : null;
-      if (sm && typeof sm === 'object' && typeof sm.theatre === 'string' && sm.theatre !== '') {
+      if (ML_SCHEMAS.indexOf(o.schema) >= 0 && Array.isArray(o.flights) && sm && typeof sm === 'object' && typeof sm.theatre === 'string' && sm.theatre !== '') {
         ML.snap = {
           theatre: sm.theatre, file: typeof sm.filename === 'string' ? sm.filename : '', date: magRouteDate(sm.missionDate),
           time: (typeof sm.startTime === 'number' && isFinite(sm.startTime) && sm.startTime >= 0) ? sm.startTime : -1,
-          n: Array.isArray(o.flights) ? o.flights.length : 0
+          n: o.flights.length
         };
       }
     } catch (e) { ML.snap = null; }
@@ -10251,17 +10253,17 @@ function mlShow(on) {
   document.body.classList.toggle('mp-ml-on', on);
   if (on !== ML.on) { ML.on = on; if (!on) ML.sig = ''; try { if (ML.hooks.onLayout) ML.hooks.onLayout(); } catch (e) { /* facultatif */ } }
 }
-function mlSpan(cls, text) { const s = document.createElement('span'); s.className = cls; s.textContent = text; return s; }
+function mlSpan(cls, text) { const s = document.createElement('span'); s.className = cls; s.textContent = text; s.setAttribute('aria-hidden', 'true'); return s; }
 function mlRefresh() {
   const h = ML.hooks;
   if (!h || !ML.el) return;
   const sn = mlSnap();
   if (!sn) { mlShow(false); return; }
-  let st = { theatre: '', src: '', calc: false };
-  try { st = h.read() || st; } catch (e) { /* le module ne dit rien : la mission n'est pas dite prise */ }
+  let st = null;
+  try { st = h.read() || null; } catch (e) { st = null; }       /* le module ne dit rien : ni « utilisée » ni « hors », partie droite vide */
   const lang = mlLang(), tx = ML_I18N[lang], wide = !ML.mq || ML.mq.matches, w = wide ? 0 : 1;
-  const used = sn.theatre === st.theatre;
-  const right = used ? mlItems(h, st, sn, tx, w).join(' · ') : tx.out[w];
+  const used = st ? sn.theatre === st.theatre : null;
+  const right = used === null ? '' : (used ? mlItems(h, st, sn, tx, w).join(' · ') : tx.out[w]);
   let name = sn.theatre;
   try { name = h.theatreName(sn.theatre) || name; } catch (e) { /* le nom brut */ }
   const dateWide = sn.date === '' ? '' : sn.date.slice(8, 10) + '.' + sn.date.slice(5, 7) + '.' + sn.date.slice(0, 4);
@@ -10270,13 +10272,13 @@ function mlRefresh() {
   const when = [wide ? dateWide : dateNarrow, hhmm].filter(x => x !== '').join(' · ');
   const file = sn.file === '' ? name : sn.file + ' (' + name + ')';
   /* le texte large complet, quelle que soit la largeur : l'étiquette, date · heure, fichier (théâtre), puis les éléments de droite ou « hors » */
-  const aria = [tx.lbl, [dateWide, hhmm].filter(x => x !== '').join(' · '), file, used ? mlItems(h, st, sn, tx, 0).join(' · ') : tx.out[0]].filter(x => x !== '').join(' · ');
+  const aria = [tx.lbl, [dateWide, hhmm].filter(x => x !== '').join(' · '), file, used === null ? '' : (used ? mlItems(h, st, sn, tx, 0).join(' · ') : tx.out[0])].filter(x => x !== '').join(' · ');
   const sig = JSON.stringify([lang, wide, used, when, file, right, aria]);
   if (sig === ML.sig && !ML.el.hidden) return;
   ML.sig = sig;
   const el = ML.el;
   el.textContent = '';
-  el.classList.toggle('warn', !used);
+  el.classList.toggle('warn', used === false);
   el.classList.toggle('narrow', !wide);
   el.setAttribute('aria-label', aria);
   const dot = document.createElement('span');
@@ -10287,6 +10289,10 @@ function mlRefresh() {
   if (when !== '') el.appendChild(mlSpan('mp-ml-when', when));
   if (wide) el.appendChild(mlSpan('mp-ml-file', file));
   if (right !== '') el.appendChild(mlSpan('mp-ml-right', right));
+  const sr = document.createElement('span');       /* ce que lit le lecteur d'écran : le texte large complet ; les parties visibles sont masquées au lecteur */
+  sr.className = 'mp-ml-sr';
+  sr.textContent = aria;
+  el.appendChild(sr);
   mlShow(true);
 }
 function mlSetup(hooks) {
@@ -11246,10 +11252,16 @@ function tbmScroller(el) {
   }
   return null;
 }
+/* Le haut de la zone utile : le bas de la barre du haut et, quand elle est affichée, celui de la ligne de la mission d'HQ (.mp-ml), le plus bas des deux ; sans ligne (HQ, BG, RS), le bas de la barre seul */
+function tbmTop(vis) {
+  const tb = document.querySelector('header.toolbar'), ml = document.querySelector('.mp-ml');
+  const lo = Math.max(vis.top, tb ? tb.getBoundingClientRect().bottom : 0);
+  return ml && !ml.hidden ? Math.max(lo, ml.getBoundingClientRect().bottom) : lo;
+}
 /* Pendant la recherche : le bouton sorti de la zone visible (clavier, défilement) est ramené au centre de celle-ci, puis la liste se replace */
 function tbmReveal(m) {
-  const r = m.btn.getBoundingClientRect(), vis = tbmVis(), tb = document.querySelector('header.toolbar');
-  const lo = Math.max(vis.top, tb ? tb.getBoundingClientRect().bottom : 0);
+  const r = m.btn.getBoundingClientRect(), vis = tbmVis();
+  const lo = tbmTop(vis);
   if (r.bottom <= vis.bottom - 8 && r.top >= lo) return;
   const d = (r.top + r.height / 2) - (lo + (vis.bottom - lo) / 2), sc = tbmScroller(m.btn);
   if (sc) sc.scrollTop += d; else window.scrollBy(0, d);
@@ -11260,8 +11272,8 @@ function tbmPlace(m, keepDir) {
   let top = r.bottom + 4;
   m.x0 = r.left; m.y0 = r.top;
   if (m.form) {
-    const tb = document.querySelector('header.toolbar'), bar = document.querySelector('.tab-bar');
-    const lo = Math.max(vis.top, tb ? tb.getBoundingClientRect().bottom : 0);
+    const bar = document.querySelector('.tab-bar');
+    const lo = tbmTop(vis);
     let hi = vh;
     if (bar) {
       const bs = getComputedStyle(bar), br = bar.getBoundingClientRect();
@@ -11448,8 +11460,8 @@ function tbmNeed(m) {
 }
 /* Si la place sous le bouton ne suffit pas, le bouton remonte en haut de la zone visible (sous la barre, 8 px) : vrai quand la place sous lui suffit ensuite */
 function tbmFit(m) {
-  const vis = tbmVis(), tb = document.querySelector('header.toolbar'), bar = document.querySelector('.tab-bar');
-  const lo = Math.max(vis.top, tb ? tb.getBoundingClientRect().bottom : 0);
+  const vis = tbmVis(), bar = document.querySelector('.tab-bar');
+  const lo = tbmTop(vis);
   let hi = vis.bottom;
   if (bar) {
     const bs = getComputedStyle(bar), br = bar.getBoundingClientRect();
@@ -12814,13 +12826,15 @@ function livCmp(a, b) { const x = a.toLowerCase(), y = b.toLowerCase(); return x
 // Le nom que le champ affiche : toujours un nom (c'est lui que le paquet emporte). Celui que l'utilisateur a choisi (u.livery) ; sinon, tant qu'il n'a rien
 // choisi (u.livery reste ''), liveryAuto, qui suit la mission ouverte dans HQ et la configuration Wing.
 function liveryValue(u) { return u.livery.trim(); }
-const MS = { stale: true, flights: [] };      // la lecture de mission_snapshot_v1 (la mission ouverte dans HQ) : faite au premier appel, refaite seulement après un évènement storage de sa clé (stale)
+const MS = { stale: true, flights: [], theatre: '' };      // la lecture de mission_snapshot_v1 (la mission ouverte dans HQ) : faite au premier appel, refaite seulement après un évènement storage de sa clé (stale) ; theatre : celui de la mission lue ('' sans mission)
 function missionFlights() {
   if (!MS.stale) return MS.flights;
   MS.stale = false;
   let o = null;
   try { o = JSON.parse(lsGet(KEY_HQ_MISSION) || 'null'); } catch (e) { o = null; }
-  MS.flights = isObj(o) && o.schema === 'dcs-mission-snapshot-v2' && Array.isArray(o.flights) ? o.flights.filter(isObj) : [];
+  const ok = isObj(o) && o.schema === 'dcs-mission-snapshot-v2' && Array.isArray(o.flights);
+  MS.flights = ok ? o.flights.filter(isObj) : [];
+  MS.theatre = ok && isObj(o.sourceMission) && typeof o.sourceMission.theatre === 'string' ? o.sourceMission.theatre : '';
   return MS.flights;
 }
 // La livrée de l'unité dans la mission ouverte dans HQ, comme HQ la retrouve à l'application du paquet : le groupe Client de même nom (rogné, casse exacte) et, si le vol
@@ -12831,6 +12845,7 @@ function missionLivery(f, fi, u, ui) {
   if (fname === '') return '';
   const groups = missionFlights().filter(g => typeof g.groupName === 'string' && g.groupName.trim() === fname && (f.coalition === '' || g.coalition === f.coalition));
   if (groups.length !== 1) return '';
+  if (MS.theatre !== rTh()) return '';       // la mission d'HQ n'est d'un autre théâtre que celui de la fiche : ses livrées ne sont pas celles de cette fiche (la ligne de la mission d'HQ dit alors qu'elle n'est pas utilisée ici)
   const tus = Array.isArray(groups[0].units) ? groups[0].units.filter(isObj) : [], used = new Set(), map = new Array(f.units.length).fill(null);
   f.units.forEach((x, i) => {
     const j = tus.findIndex((tu, k) => !used.has(k) && tu.name === unitLabel(f, fi, x, i));
@@ -12940,12 +12955,18 @@ function fmtNm(v) { const s = (Math.round(v * 10) / 10).toFixed(1); return CURRE
 function routeTitle(f) { return f.routeLink ? (f.routeLink.name.trim() !== '' ? f.routeLink.name : t('route.unnamed')) : t('route.imported'); }
 
 // Ce que le Route Planner a rangé : ses routes (rid vide quand elle n'en a pas encore : le Route Planner en donne un à la prochaine ouverture) et ses réglages (théâtre, vitesse sol, affichage des caps)
+// L'affichage des caps du Route Planner (mode, déclinaison saisie, année, Forcer), normalisé : une seule écriture pour rpRead et pour la ligne de la mission d'HQ
+function rpNavOf(st) {
+  const nd = isObj(st) && isObj(st.navDisplay) ? st.navDisplay : {};
+  return { mode: (nd.mode === 'calc' || nd.mode === 'manual') ? nd.mode : (parseDecl(str(nd.decl)) !== null ? 'manual' : 'calc'), decl: str(nd.decl), year: (typeof nd.year === 'string' && /^\d{1,4}$/.test(nd.year)) ? nd.year : '', force: nd.force === true };
+}
+function rpNav() { return rpNavOf(lsJson(KEY_RP_STATE)); }       // seulement route_state_v1 : sans lire route_set_v1 ni refaire les routes
 function rpRead() {
-  const st = lsJson(KEY_RP_STATE), set = lsJson(KEY_RP_SET), nd = isObj(st) && isObj(st.navDisplay) ? st.navDisplay : {};
+  const st = lsJson(KEY_RP_STATE), set = lsJson(KEY_RP_SET);
   const state = {
     theatre: isObj(st) && typeof st.theatre === 'string' ? st.theatre : '',       // aucun théâtre par défaut : '' = le Route Planner n'a pas encore été ouvert ici
     gs: isObj(st) && isNum(st.groundSpeed) && st.groundSpeed > 0 ? st.groundSpeed : RP_GS_DEFAULT,
-    nav: { mode: (nd.mode === 'calc' || nd.mode === 'manual') ? nd.mode : (parseDecl(str(nd.decl)) !== null ? 'manual' : 'calc'), decl: str(nd.decl), year: (typeof nd.year === 'string' && /^\d{1,4}$/.test(nd.year)) ? nd.year : '', force: nd.force === true }
+    nav: rpNavOf(st)
   };
   const routes = [];
   if (isObj(set) && (set.format === undefined || set.format === RP_SET_FORMAT) && Array.isArray(set.routes)) {
@@ -12992,8 +13013,8 @@ function declSource(nav, routeDate) {
 }
 // La date reçue avec la route d'un groupe (paquet ou mission de HQ) : '' sans date lisible
 function routeDateOf(f) { return f && f.route ? magRouteDate(f.route.missionDate) : ''; }
-// La ligne de la mission d'HQ (mission_line_block.py) : le théâtre de l'appel de la déclinaison (rTh), la src de cet appel (declSource, que la mission d'HQ ne fait jamais dépendre de la date d'une route) ; sans valeur saisie (manual), la déclinaison est calculée : le croquis est toujours magnétique
-function fcMissionLine() { const ds = declSource(rpRead().state.nav, ''); return { theatre: rTh(), src: ds.manual ? '' : ds.ys.src, calc: !ds.manual }; }
+// La ligne de la mission d'HQ (mission_line_block.py) : le théâtre de l'appel de la déclinaison (rTh), la src de cet appel (declSource, que la mission d'HQ ne fait jamais dépendre de la date d'une route) ; la déclinaison n'est calculée (et la ligne ne la dit) que si un groupe a une route et que sa valeur n'est pas saisie (manual) : sans route, le croquis ne prend rien de la déclinaison
+function fcMissionLine() { const ds = declSource(rpNav(), ''); return { theatre: rTh(), src: ds.manual ? '' : ds.ys.src, calc: !ds.manual && S.flights.some(hasRoute) }; }
 function declAt(ds, lat, lon) { if (ds.manual) return ds.v; const d = magVar(lat, lon, ds.ys.y); return d === null ? 0 : d; }
 // Les branches : cap initial vrai et distance par legCalc, cap magnétique = cap vrai − déclinaison au départ de la branche (toujours magnétique ici)
 function routeLegs(pts, ds) {

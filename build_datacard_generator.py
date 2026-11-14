@@ -7845,7 +7845,7 @@ def build():
 
     ui_verify(html)
     ui_verify_bar(html)
-    mission_line_verify(html)
+    mission_line_verify(html, 'dgMissionLine', 'dgNavYear(', 1)
     # Contrôles de construction
     pt, it = re.search(r"const PAYLOAD_TYPES = \[(.*?)\];", build_payload_block()), re.search(r"const IMP_TYPES = \[(.*?)\];", build_import_block())
     if not (pt and it and pt.group(1) == it.group(1)):

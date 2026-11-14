@@ -2686,13 +2686,15 @@ function livCmp(a, b) { const x = a.toLowerCase(), y = b.toLowerCase(); return x
 // Le nom que le champ affiche : toujours un nom (c'est lui que le paquet emporte). Celui que l'utilisateur a choisi (u.livery) ; sinon, tant qu'il n'a rien
 // choisi (u.livery reste ''), liveryAuto, qui suit la mission ouverte dans HQ et la configuration Wing.
 function liveryValue(u) { return u.livery.trim(); }
-const MS = { stale: true, flights: [] };      // la lecture de mission_snapshot_v1 (la mission ouverte dans HQ) : faite au premier appel, refaite seulement après un évènement storage de sa clé (stale)
+const MS = { stale: true, flights: [], theatre: '' };      // la lecture de mission_snapshot_v1 (la mission ouverte dans HQ) : faite au premier appel, refaite seulement après un évènement storage de sa clé (stale) ; theatre : celui de la mission lue ('' sans mission)
 function missionFlights() {
   if (!MS.stale) return MS.flights;
   MS.stale = false;
   let o = null;
   try { o = JSON.parse(lsGet(KEY_HQ_MISSION) || 'null'); } catch (e) { o = null; }
-  MS.flights = isObj(o) && o.schema === 'dcs-mission-snapshot-v2' && Array.isArray(o.flights) ? o.flights.filter(isObj) : [];
+  const ok = isObj(o) && o.schema === 'dcs-mission-snapshot-v2' && Array.isArray(o.flights);
+  MS.flights = ok ? o.flights.filter(isObj) : [];
+  MS.theatre = ok && isObj(o.sourceMission) && typeof o.sourceMission.theatre === 'string' ? o.sourceMission.theatre : '';
   return MS.flights;
 }
 // La livrée de l'unité dans la mission ouverte dans HQ, comme HQ la retrouve à l'application du paquet : le groupe Client de même nom (rogné, casse exacte) et, si le vol
@@ -2703,6 +2705,7 @@ function missionLivery(f, fi, u, ui) {
   if (fname === '') return '';
   const groups = missionFlights().filter(g => typeof g.groupName === 'string' && g.groupName.trim() === fname && (f.coalition === '' || g.coalition === f.coalition));
   if (groups.length !== 1) return '';
+  if (MS.theatre !== rTh()) return '';       // la mission d'HQ n'est d'un autre théâtre que celui de la fiche : ses livrées ne sont pas celles de cette fiche (la ligne de la mission d'HQ dit alors qu'elle n'est pas utilisée ici)
   const tus = Array.isArray(groups[0].units) ? groups[0].units.filter(isObj) : [], used = new Set(), map = new Array(f.units.length).fill(null);
   f.units.forEach((x, i) => {
     const j = tus.findIndex((tu, k) => !used.has(k) && tu.name === unitLabel(f, fi, x, i));
@@ -2812,12 +2815,18 @@ function fmtNm(v) { const s = (Math.round(v * 10) / 10).toFixed(1); return CURRE
 function routeTitle(f) { return f.routeLink ? (f.routeLink.name.trim() !== '' ? f.routeLink.name : t('route.unnamed')) : t('route.imported'); }
 
 // Ce que le Route Planner a rangé : ses routes (rid vide quand elle n'en a pas encore : le Route Planner en donne un à la prochaine ouverture) et ses réglages (théâtre, vitesse sol, affichage des caps)
+// L'affichage des caps du Route Planner (mode, déclinaison saisie, année, Forcer), normalisé : une seule écriture pour rpRead et pour la ligne de la mission d'HQ
+function rpNavOf(st) {
+  const nd = isObj(st) && isObj(st.navDisplay) ? st.navDisplay : {};
+  return { mode: (nd.mode === 'calc' || nd.mode === 'manual') ? nd.mode : (parseDecl(str(nd.decl)) !== null ? 'manual' : 'calc'), decl: str(nd.decl), year: (typeof nd.year === 'string' && /^\d{1,4}$/.test(nd.year)) ? nd.year : '', force: nd.force === true };
+}
+function rpNav() { return rpNavOf(lsJson(KEY_RP_STATE)); }       // seulement route_state_v1 : sans lire route_set_v1 ni refaire les routes
 function rpRead() {
-  const st = lsJson(KEY_RP_STATE), set = lsJson(KEY_RP_SET), nd = isObj(st) && isObj(st.navDisplay) ? st.navDisplay : {};
+  const st = lsJson(KEY_RP_STATE), set = lsJson(KEY_RP_SET);
   const state = {
     theatre: isObj(st) && typeof st.theatre === 'string' ? st.theatre : '',       // aucun théâtre par défaut : '' = le Route Planner n'a pas encore été ouvert ici
     gs: isObj(st) && isNum(st.groundSpeed) && st.groundSpeed > 0 ? st.groundSpeed : RP_GS_DEFAULT,
-    nav: { mode: (nd.mode === 'calc' || nd.mode === 'manual') ? nd.mode : (parseDecl(str(nd.decl)) !== null ? 'manual' : 'calc'), decl: str(nd.decl), year: (typeof nd.year === 'string' && /^\d{1,4}$/.test(nd.year)) ? nd.year : '', force: nd.force === true }
+    nav: rpNavOf(st)
   };
   const routes = [];
   if (isObj(set) && (set.format === undefined || set.format === RP_SET_FORMAT) && Array.isArray(set.routes)) {
@@ -2864,8 +2873,8 @@ function declSource(nav, routeDate) {
 }
 // La date reçue avec la route d'un groupe (paquet ou mission de HQ) : '' sans date lisible
 function routeDateOf(f) { return f && f.route ? magRouteDate(f.route.missionDate) : ''; }
-// La ligne de la mission d'HQ (mission_line_block.py) : le théâtre de l'appel de la déclinaison (rTh), la src de cet appel (declSource, que la mission d'HQ ne fait jamais dépendre de la date d'une route) ; sans valeur saisie (manual), la déclinaison est calculée : le croquis est toujours magnétique
-function fcMissionLine() { const ds = declSource(rpRead().state.nav, ''); return { theatre: rTh(), src: ds.manual ? '' : ds.ys.src, calc: !ds.manual }; }
+// La ligne de la mission d'HQ (mission_line_block.py) : le théâtre de l'appel de la déclinaison (rTh), la src de cet appel (declSource, que la mission d'HQ ne fait jamais dépendre de la date d'une route) ; la déclinaison n'est calculée (et la ligne ne la dit) que si un groupe a une route et que sa valeur n'est pas saisie (manual) : sans route, le croquis ne prend rien de la déclinaison
+function fcMissionLine() { const ds = declSource(rpNav(), ''); return { theatre: rTh(), src: ds.manual ? '' : ds.ys.src, calc: !ds.manual && S.flights.some(hasRoute) }; }
 function declAt(ds, lat, lon) { if (ds.manual) return ds.v; const d = magVar(lat, lon, ds.ys.y); return d === null ? 0 : d; }
 // Les branches : cap initial vrai et distance par legCalc, cap magnétique = cap vrai − déclinaison au départ de la branche (toujours magnétique ici)
 function routeLegs(pts, ds) {
@@ -4905,7 +4914,10 @@ def check(html):
         ok(blk in html, 'bloc %s inséré tel quel' % label)
     ok(True, "empreinte du bloc d'interface commun : %s" % ui_fingerprint())
     ui_verify_bar(html)
-    mission_line_verify(html)
+    mission_line_verify(html, 'fcMissionLine', 'declSource(', 3)
+    fcl = re.search(r'^function fcMissionLine\(\).*$', JS_APP, re.M).group(0)
+    ok('rpRead(' not in fcl and 'rpNav()' in fcl and 'rpNavOf(st)' in fn_body('rpRead'), "la ligne de la mission d'HQ lit seulement l'affichage des caps (rpNav), dont rpRead partage la normalisation (rpNavOf)")
+    ok('rTh()' in fn_body('missionLivery') and 'MS.theatre' in fn_body('missionLivery') and 'MS.theatre' in fn_body('missionFlights'), "missionLivery ne prend la mission d'HQ que si son théâtre est celui de la fiche (rTh)")
     pt, it = re.search(r"const PAYLOAD_TYPES = \[(.*?)\];", build_payload_block()), re.search(r"const IMP_TYPES = \[(.*?)\];", build_import_block())
     ok(bool(pt) and bool(it) and pt.group(1) == it.group(1), 'les types du bloc d\'import sont ceux de PAYLOAD_TYPES')
     ok(COORD_BLOCK + READNUM_BLOCK in html and hashlib.sha256(COORD_BLOCK.encode('utf-8')).hexdigest()[:16] == COORD_SHA16, 'bloc de coordonnées inséré tel quel, empreinte %s' % COORD_SHA16)

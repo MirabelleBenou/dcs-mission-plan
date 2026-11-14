@@ -10539,7 +10539,7 @@ def build():
     # Contrôles de construction
     ui_verify(html)
     ui_verify_bar(html)
-    mission_line_verify(html)
+    mission_line_verify(html, 'rpMissionLine', 'navYear(', 2)
     left = re.findall(r'__[A-Z0-9_]{4,}__', re.sub(r'<script>.*?</script>', '', html, flags=re.S)[:])
     left = [x for x in left if x not in ('__proto__',)]
     if left:

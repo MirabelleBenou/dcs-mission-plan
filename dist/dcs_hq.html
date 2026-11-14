@@ -8336,10 +8336,16 @@ function tbmScroller(el) {
   }
   return null;
 }
+/* Le haut de la zone utile : le bas de la barre du haut et, quand elle est affichée, celui de la ligne de la mission d'HQ (.mp-ml), le plus bas des deux ; sans ligne (HQ, BG, RS), le bas de la barre seul */
+function tbmTop(vis) {
+  const tb = document.querySelector('header.toolbar'), ml = document.querySelector('.mp-ml');
+  const lo = Math.max(vis.top, tb ? tb.getBoundingClientRect().bottom : 0);
+  return ml && !ml.hidden ? Math.max(lo, ml.getBoundingClientRect().bottom) : lo;
+}
 /* Pendant la recherche : le bouton sorti de la zone visible (clavier, défilement) est ramené au centre de celle-ci, puis la liste se replace */
 function tbmReveal(m) {
-  const r = m.btn.getBoundingClientRect(), vis = tbmVis(), tb = document.querySelector('header.toolbar');
-  const lo = Math.max(vis.top, tb ? tb.getBoundingClientRect().bottom : 0);
+  const r = m.btn.getBoundingClientRect(), vis = tbmVis();
+  const lo = tbmTop(vis);
   if (r.bottom <= vis.bottom - 8 && r.top >= lo) return;
   const d = (r.top + r.height / 2) - (lo + (vis.bottom - lo) / 2), sc = tbmScroller(m.btn);
   if (sc) sc.scrollTop += d; else window.scrollBy(0, d);
@@ -8350,8 +8356,8 @@ function tbmPlace(m, keepDir) {
   let top = r.bottom + 4;
   m.x0 = r.left; m.y0 = r.top;
   if (m.form) {
-    const tb = document.querySelector('header.toolbar'), bar = document.querySelector('.tab-bar');
-    const lo = Math.max(vis.top, tb ? tb.getBoundingClientRect().bottom : 0);
+    const bar = document.querySelector('.tab-bar');
+    const lo = tbmTop(vis);
     let hi = vh;
     if (bar) {
       const bs = getComputedStyle(bar), br = bar.getBoundingClientRect();
@@ -8538,8 +8544,8 @@ function tbmNeed(m) {
 }
 /* Si la place sous le bouton ne suffit pas, le bouton remonte en haut de la zone visible (sous la barre, 8 px) : vrai quand la place sous lui suffit ensuite */
 function tbmFit(m) {
-  const vis = tbmVis(), tb = document.querySelector('header.toolbar'), bar = document.querySelector('.tab-bar');
-  const lo = Math.max(vis.top, tb ? tb.getBoundingClientRect().bottom : 0);
+  const vis = tbmVis(), bar = document.querySelector('.tab-bar');
+  const lo = tbmTop(vis);
   let hi = vis.bottom;
   if (bar) {
     const bs = getComputedStyle(bar), br = bar.getBoundingClientRect();
