@@ -951,12 +951,12 @@ function rsdRenderSheet(force) {
 }
 
 /* Tout ce que montre le mode, remis d'aplomb */
-/* Le toast commun (messages_block.py) se pose à 12 px au-dessus de la plus haute des deux commandes du bas, le message de dessin ou la barre de dessin :
-   il ne recouvre jamais une commande. Sans l'une ni l'autre (pas d'image), la variable est ôtée et le toast reste à 20 px du bas. */
+/* Le toast commun (messages_block.py) se pose à 12 px au-dessus de la plus haute des commandes du bas, le message de dessin, la barre de dessin ou la barre d'onglets (tablette, téléphone) :
+   il ne recouvre jamais une commande. Sans aucune des trois, la variable est ôtée et le toast reste à 20 px du bas. */
 const RSD_TOAST_GAP = 12;
 function rsdToastPlace() {
   const root = document.documentElement;
-  const tops = ['rsd-hint', 'rsd-bar'].map(rsd$).filter(el => el && el.getClientRects().length).map(el => el.getBoundingClientRect().top);
+  const tops = ['rsd-hint', 'rsd-bar'].map(rsd$).concat(document.querySelector('.tab-bar')).filter(el => el && el.getClientRects().length).map(el => el.getBoundingClientRect().top);
   if (!tops.length) { root.style.removeProperty('--mp-toast-bottom'); return; }
   const px = Math.round(root.clientHeight - Math.min.apply(null, tops) + RSD_TOAST_GAP) + 'px';
   if (root.style.getPropertyValue('--mp-toast-bottom') !== px) root.style.setProperty('--mp-toast-bottom', px);
@@ -3251,6 +3251,10 @@ function rsClassKey(v) {{ return RS_CLASS_KEYS.indexOf(v) >= 0 ? v : (RS_CLASS_O
 // Source image — non persistée
 let SOURCE_IMG   = null;   // HTMLImageElement chargée
 let SOURCE_READY = false;
+// « Paramètres restaurés — importer une image » : décidé une fois le démarrage fini, image de l'exemple et image rendue par le shell comprises.
+let RS_RESTORED = false;     // l'état a été relu au démarrage et le message n'est pas encore décidé
+let RS_START_DONE = false;   // le démarrage est fini (page chargée, le temps que le shell rende l'image)
+let RS_IMG_WAIT = 0;         // images en route : celle de l'exemple, celle que rend le shell
 const LOGO_CACHE = {{}};    // id → HTMLImageElement déjà chargée
 let RENDER_TOKEN = 0;      // garde-fou de concurrence
 
@@ -3515,16 +3519,33 @@ function loadImageFile(file) {{
   reader.readAsDataURL(file);
 }}
 
+// Le message d'état restauré ne paraît que si aucune image n'est rendue une fois le démarrage fini.
+function rsRestoredToast() {{
+  if (!RS_RESTORED || !RS_START_DONE || RS_IMG_WAIT > 0) return;
+  if (SOURCE_READY) {{ RS_RESTORED = false; return; }}
+  RS_RESTORED = false;
+  showToast(t('toast.state-restored'), 3500);
+}}
+function rsImgSettled() {{
+  RS_IMG_WAIT = Math.max(0, RS_IMG_WAIT - 1);
+  rsRestoredToast();
+}}
+
 // ── Exemple : la photo ──
 // L'exemple de la suite se charge par le shell (le fichier d'exemple du groupe Mission Commander) : la composition (repères, formes, loupe, bloc d'informations) est dans recon_state_v1, qui porte exampleImage: true.
 // L'image est celle du dépôt (samples/rs_example_naip.jpg, USDA NAIP, domaine public) : elle n'est jamais enregistrée, l'état la nomme ; le schéma de recon_state_v1 ne change pas.
 const RS_EXAMPLE_IMG = 'data:image/jpeg;base64,{RS_EXAMPLE_IMG_B64}';
 // La photo de l'exemple dans la zone d'image, quand l'état porte exampleImage: true (au démarrage, à la relecture de l'état).
 async function rsExampleImage() {{
+  RS_IMG_WAIT++;
+  try {{ return await rsExampleImageLoad(); }}
+  finally {{ rsImgSettled(); }}
+}}
+async function rsExampleImageLoad() {{
   const img = new Image();
   try {{
     await new Promise((ok, ko) => {{ img.onload = ok; img.onerror = ko; img.src = RS_EXAMPLE_IMG; }});
-  }} catch (e) {{ console.warn('[RS] exemple indisponible', e); showToast(t('msg.exampleUnavailable'), {{ type: 'err' }}); return false; }}
+  }} catch (e) {{ console.warn('[RS] exemple indisponible', e); RS_RESTORED = false; showToast(t('msg.exampleUnavailable'), {{ type: 'err' }}); return false; }}      // le message d'erreur dit déjà qu'il n'y a pas d'image
   if (!STATE.exampleImage || SOURCE_READY) return false;     // l'état a changé pendant le chargement : une autre image, ou plus d'image d'exemple
   SOURCE_IMG   = img;
   SOURCE_READY = true;
@@ -3549,8 +3570,10 @@ window.MP_IMG_TAKE = function () {{
 window.MP_IMG_GIVE = function (m) {{
   if (!m || typeof m.src !== 'string' || SOURCE_READY || STATE.exampleImage) return;
   const img = new Image();
+  RS_IMG_WAIT++;
+  img.onerror = rsImgSettled;
   img.onload = () => {{
-    if (SOURCE_READY || STATE.exampleImage) return;
+    if (SOURCE_READY || STATE.exampleImage) {{ rsImgSettled(); return; }}
     SOURCE_IMG   = img;
     SOURCE_READY = true;
     document.getElementById('img-credit').hidden = true;
@@ -3561,6 +3584,7 @@ window.MP_IMG_GIVE = function (m) {{
     document.getElementById('preview-canvas').hidden = false;
     rsdSyncUi();
     schedulePreview();
+    rsImgSettled();
   }};
   img.src = m.src;
 }};
@@ -5139,11 +5163,13 @@ async function init() {{
   rsdInit();
   rsFoldInit();
 
-  if (hasState) {{
-    showToast(t('toast.state-restored'), 3500);
-  }}
-
+  RS_RESTORED = hasState;
   await ensureFonts();
+  // Le démarrage est fini à la fin du chargement de la page ; le shell rend l'image de l'outil rouvert juste après (MP_IMG_GIVE) : on lui laisse ce court délai avant de décider du message.
+  if (document.readyState !== 'complete') await new Promise(ok => window.addEventListener('load', ok, {{ once: true }}));
+  await new Promise(ok => setTimeout(ok, 300));
+  RS_START_DONE = true;
+  rsRestoredToast();
 }}
 
 init();

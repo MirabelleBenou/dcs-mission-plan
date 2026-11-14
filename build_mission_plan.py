@@ -1103,6 +1103,7 @@ select[data-tbm-src] {{ display: none !important; }}
       iframe.addEventListener('load', function() {{
         loading.classList.add('hidden');
         if (typeof suiteOnLoad === 'function') suiteOnLoad(id);
+        toastWatch(iframe);
         var doc = iframe.contentDocument;
         /* Injection bouton retour dans .toolbar (pas #app-header — cf. vérif grep) */
         var toolbar = doc && doc.querySelector('.toolbar');
@@ -1166,7 +1167,6 @@ select[data-tbm-src] {{ display: none !important; }}
           var btnLang = doc.getElementById('btn-lang');
           if (btnLang) toolbar.appendChild(btnLang);
         }}
-        console.log('[M·P v' + APP_VERSION + '] Module ' + id + ' chargé');
         try {{ doc.body.setAttribute('data-theme', document.body.getAttribute('data-theme') || 'cw-nato'); }} catch(e) {{}}
         try {{ iframe.contentWindow.focus(); }} catch(e) {{}}       /* l'outil ouvert reçoit le clavier : Ctrl+S lui parvient sans clic */
       }});
@@ -1187,6 +1187,24 @@ select[data-tbm-src] {{ display: none !important; }}
     }}
 
     activeModule = id;
+    toastPlace();
+  }}
+
+  /* Le toast du shell au-dessus de la barre basse de l'outil ouvert : il lit --mp-toast-bottom sur le document de l'outil (même origine ; l'outil la pose quand il a une barre basse visible),
+     à l'affichage du toast et quand elle change (l'observateur de l'iframe ; un outil qui se recharge est ré-observé à son « load »). Sans valeur, ou à l'accueil, le toast reste à 20 px du bas. */
+  function toastPlace() {{
+    var root = document.documentElement, v = '';
+    try {{
+      var f = activeModule && iframes[activeModule], d = f && f.contentDocument;
+      if (d && d.documentElement) v = d.documentElement.style.getPropertyValue('--mp-toast-bottom').trim();
+    }} catch(e) {{}}
+    if (!v) {{ root.style.removeProperty('--mp-toast-bottom'); return; }}
+    if (root.style.getPropertyValue('--mp-toast-bottom') !== v) root.style.setProperty('--mp-toast-bottom', v);
+  }}
+  function toastWatch(iframe) {{
+    try {{ new MutationObserver(toastPlace).observe(iframe.contentDocument.documentElement, {{ attributes: true, attributeFilter: ['style'] }}); }}
+    catch(e) {{ console.warn('[M·P] toast : ' + e); }}
+    toastPlace();
   }}
 
   /* Point d'entrée pour les modules (le Route Planner ouvre le Datacard Generator) */
@@ -1240,6 +1258,7 @@ select[data-tbm-src] {{ display: none !important; }}
     var landing = document.getElementById('landing');
     landing.style.display = '';
     activeModule = null;
+    toastPlace();
     /* Le clavier quitte l'outil qu'on vient de fermer (le clic sur Retour l'y avait laissé) : Ctrl+S au hub est à l'accueil (Sauvegarder), pas à l'outil masqué */
     try {{
       if (document.activeElement && document.activeElement.tagName === 'IFRAME') document.activeElement.blur();
@@ -1628,7 +1647,9 @@ function tbmScrolled(e) {{
       else if (e.key === 'wing_config_v1') {{ refreshWingStamps(); }}
     }});
 
-    console.log('[M·P v' + APP_VERSION + '] Initialisé — langue: ' + CURRENT_LANG);
+    /* Le toast relit la barre basse de l'outil ouvert à son affichage */
+    var toastEl = mpToastEl();
+    new MutationObserver(function() {{ if (toastEl.classList.contains('show')) toastPlace(); }}).observe(toastEl, {{ attributes: true, attributeFilter: ['class'] }});
   }}
 
   document.addEventListener('DOMContentLoaded', init);

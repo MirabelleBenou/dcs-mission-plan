@@ -7757,6 +7757,23 @@ function dgCardMoreOpen(btn) {
 /* ============= DÉMARRAGE ============= */
 @@TBM_JS@@
 
+/* Le toast commun (messages_block.py) se pose 12 px au-dessus de la barre d'onglets du bas quand elle est visible (téléphone, tablette) : il ne la recouvre jamais.
+   Sans barre d'onglets (grand écran), la variable est ôtée et le toast reste à 20 px du bas. Le shell de la suite lit cette variable pour son propre toast. */
+const TOAST_GAP = 12;
+function toastPlace() {
+  const root = document.documentElement, bar = document.getElementById('tab-bar');
+  const r = bar && bar.getClientRects().length ? bar.getBoundingClientRect() : null;
+  if (!r || !r.height) { root.style.removeProperty('--mp-toast-bottom'); return; }
+  const px = Math.round(root.clientHeight - r.top + TOAST_GAP) + 'px';
+  if (root.style.getPropertyValue('--mp-toast-bottom') !== px) root.style.setProperty('--mp-toast-bottom', px);
+}
+function initToastPlace() {
+  const bar = document.getElementById('tab-bar');
+  if (bar && window.ResizeObserver) new ResizeObserver(toastPlace).observe(bar);
+  window.addEventListener('resize', toastPlace);
+  toastPlace();
+}
+
 function init() {
   initLang();
   applyTheme(loadTheme(), false);
@@ -7778,6 +7795,7 @@ function init() {
   const synced = dgSyncRoutes();
   if (doc.theatre !== th0 || synced) persistState(); else persistStateIfChanged();       /* le document tel qu'il se lit maintenant (migration d'une carte d'avant le lot comprise) est gardé, une fois */       /* un théâtre pris (clé partagée, fiche ou route) est gardé */
   bindEvents();
+  initToastPlace();
   setActiveTab('header');
   renderAll();
   /* Les polices embarquées mesurent autrement que les polices de repli : refaire le découpage une fois chargées. */

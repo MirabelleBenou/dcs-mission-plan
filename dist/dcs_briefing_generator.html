@@ -10200,6 +10200,23 @@ function formListLabel(sel) {
   return l ? l.textContent.trim() : '';
 }
 
+/* Le toast commun (messages_block.py) se pose 12 px au-dessus de la barre d'onglets du bas quand elle est visible (téléphone, tablette) : il ne la recouvre jamais.
+   Sans barre d'onglets (grand écran), la variable est ôtée et le toast reste à 20 px du bas. Le shell de la suite lit cette variable pour son propre toast. */
+const TOAST_GAP = 12;
+function toastPlace() {
+  const root = document.documentElement, bar = document.getElementById('tab-bar');
+  const r = bar && bar.getClientRects().length ? bar.getBoundingClientRect() : null;
+  if (!r || !r.height) { root.style.removeProperty('--mp-toast-bottom'); return; }
+  const px = Math.round(root.clientHeight - r.top + TOAST_GAP) + 'px';
+  if (root.style.getPropertyValue('--mp-toast-bottom') !== px) root.style.setProperty('--mp-toast-bottom', px);
+}
+function initToastPlace() {
+  const bar = document.getElementById('tab-bar');
+  if (bar && window.ResizeObserver) new ResizeObserver(toastPlace).observe(bar);
+  window.addEventListener('resize', toastPlace);
+  toastPlace();
+}
+
 function init() {
   initLang();                          // Phase 9 — lire la langue avant tout
   applyTheme(loadTheme());             // poser le thème AVANT le branding (cf. brief E)
@@ -10217,6 +10234,7 @@ function init() {
   bindEditorEvents();
   bindSimpleEvents();    // v2.3.0 : sélecteur de mode, Exemple, éditeur simplifié
   bindTabBar();
+  initToastPlace();
   bgFoldInit();
   initToolbarScroll();
   bindWingStorageEvent();  // l'onglet Wing n'affiche que ; HQ écrit wing_config_v1 (évènement storage)
