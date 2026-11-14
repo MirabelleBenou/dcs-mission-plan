@@ -10237,6 +10237,15 @@ function mlSnap() {
   }
   return ML.snap;
 }
+/* Les éléments de droite d'une mission utilisée, dans l'ordre : déclinaison (seulement si le module l'emploie, calculée), livrées (FC), import ; w : 0 large, 1 étroit */
+function mlItems(h, st, sn, tx, w) {
+  const items = [];
+  if (st.calc && st.src === 'mission') items.push(tx.decl[w]);
+  else if (st.calc && st.src === 'forced') items.push(tx.forcee[w]);
+  if (h.livery) items.push(tx.liv[w]);
+  if (sn.n > 0) items.push(tx[h.importDetail ? 'impd' : 'imp'][w].replace('{n}', String(sn.n)).replace('{u}', sn.n === 1 ? tx.one : tx.many));
+  return items;
+}
 function mlShow(on) {
   if (ML.el) ML.el.hidden = !on;
   document.body.classList.toggle('mp-ml-on', on);
@@ -10252,32 +10261,16 @@ function mlRefresh() {
   try { st = h.read() || st; } catch (e) { /* le module ne dit rien : la mission n'est pas dite prise */ }
   const lang = mlLang(), tx = ML_I18N[lang], wide = !ML.mq || ML.mq.matches, w = wide ? 0 : 1;
   const used = sn.theatre === st.theatre;
-  const items = [];
-  if (used) {
-    if (st.calc && st.src === 'mission') items.push(tx.decl[w]);
-    else if (st.calc && st.src === 'forced') items.push(tx.forcee[w]);
-    if (h.livery) items.push(tx.liv[w]);
-    if (sn.n > 0) items.push(tx[h.importDetail ? 'impd' : 'imp'][w].replace('{n}', String(sn.n)).replace('{u}', sn.n === 1 ? tx.one : tx.many));
-  }
-  const right = used ? items.join(' · ') : tx.out[w];
-  const rightWide = used ? null : tx.out[0];
+  const right = used ? mlItems(h, st, sn, tx, w).join(' · ') : tx.out[w];
   let name = sn.theatre;
   try { name = h.theatreName(sn.theatre) || name; } catch (e) { /* le nom brut */ }
   const dateWide = sn.date === '' ? '' : sn.date.slice(8, 10) + '.' + sn.date.slice(5, 7) + '.' + sn.date.slice(0, 4);
   const dateNarrow = sn.date === '' ? '' : sn.date.slice(8, 10) + '.' + sn.date.slice(5, 7) + '.' + sn.date.slice(2, 4);
   const hhmm = sn.time < 0 ? '' : mlPad(Math.floor(sn.time / 3600) % 24) + ':' + mlPad(Math.floor(sn.time / 60) % 60) + 'Z';
   const when = [wide ? dateWide : dateNarrow, hhmm].filter(x => x !== '').join(' · ');
-  const whenWide = [dateWide, hhmm].filter(x => x !== '').join(' · ');
   const file = sn.file === '' ? name : sn.file + ' (' + name + ')';
   /* le texte large complet, quelle que soit la largeur : l'étiquette, date · heure, fichier (théâtre), puis les éléments de droite ou « hors » */
-  const wideItems = [];
-  if (used) {
-    if (st.calc && st.src === 'mission') wideItems.push(tx.decl[0]);
-    else if (st.calc && st.src === 'forced') wideItems.push(tx.forcee[0]);
-    if (h.livery) wideItems.push(tx.liv[0]);
-    if (sn.n > 0) wideItems.push(tx[h.importDetail ? 'impd' : 'imp'][0].replace('{n}', String(sn.n)).replace('{u}', sn.n === 1 ? tx.one : tx.many));
-  }
-  const aria = [tx.lbl, whenWide, file, used ? wideItems.join(' · ') : rightWide].filter(x => x !== '').join(' · ');
+  const aria = [tx.lbl, [dateWide, hhmm].filter(x => x !== '').join(' · '), file, used ? mlItems(h, st, sn, tx, 0).join(' · ') : tx.out[0]].filter(x => x !== '').join(' · ');
   const sig = JSON.stringify([lang, wide, used, when, file, right, aria]);
   if (sig === ML.sig && !ML.el.hidden) return;
   ML.sig = sig;
