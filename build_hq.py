@@ -859,10 +859,11 @@ body {{
 .wing-action-btn:disabled:hover, .wing-action-btn[aria-disabled="true"]:hover {{ background: rgba(0,0,0,.2); }}
 .wing-action-reset:disabled:hover {{ color: var(--red-stamp); }}
 
-/* Les boîtes des livrées se replient comme les cartes d'escadron : une ligne de tête sous la légende ; repliée, elle porte le résumé et le reste de la boîte est masqué */
-.wing-fold-head.wing-sq-toggle {{ display: flex; flex: none; flex-wrap: nowrap; align-items: center; align-self: auto; width: 100%; min-height: 44px; margin: 0; }}
-.wing-fold-head .ui-sum {{ flex: 1 1 0; margin: 0; padding-left: 0; }}
-.wing-fold:not(.open) > :not(legend):not(.wing-fold-head) {{ display: none; }}
+/* Les boîtes des livrées se replient comme les cartes d'escadron : une ligne de tête sous la légende, dans une carte de même cadre que celle d'un escadron ; repliée, elle porte le résumé et le corps de la carte est masqué */
+.wing-fieldset {{ min-width: 0; }}       /* un <fieldset> ne rétrécit pas sous son contenu : sans cela, le résumé le ferait sortir de la fenêtre */
+.wing-fold-card {{ min-width: 0; }}       /* la boîte est une carte d'escadron (même cadre) dans sa fieldset */
+.wing-fold-head.wing-sq-toggle {{ display: flex; flex: 1 1 auto; flex-wrap: nowrap; align-items: center; min-width: 0; min-height: 44px; margin: 0; padding: 4px 0; }}
+.wing-fold-head .ui-sum {{ flex: 1 1 0; min-width: 0; margin: 0; padding-left: 0; white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }}
 
 /* Size counter */
 .wing-size-counter {{
@@ -1264,18 +1265,26 @@ body[data-theme] {{
         <!-- Livrées custom -->
         <fieldset class="wing-fieldset wing-fold" id="wing-liv-fieldset">
           <legend class="wing-legend" id="wing-liv-legend" data-i18n="wing.liv.title">Livrées custom</legend>
-          <button type="button" class="wing-sq-toggle ui-fold-head wing-fold-head" id="wing-liv-fold" aria-expanded="false" aria-labelledby="wing-liv-legend"></button>
-          <p class="wing-hint wing-liv-hint" data-i18n="wing.liv.hint">Le nom tel qu’il s’écrit dans DCS (celui du dossier de la livrée), et les appareils qui la portent.</p>
-          <div id="wing-liv-list"></div>
-          <button type="button" class="ed-btn-add" id="wing-liv-add" data-i18n="wing.liv.add">+ Ajouter une livrée</button>
+          <div class="wing-sq-card wing-fold-card" id="wing-liv-card">
+            <div class="wing-sq-header"><button type="button" class="wing-sq-toggle ui-fold-head wing-fold-head" id="wing-liv-fold" aria-expanded="false" aria-labelledby="wing-liv-legend"></button></div>
+            <div class="wing-sq-body">
+              <p class="wing-hint wing-liv-hint" data-i18n="wing.liv.hint">Le nom tel qu’il s’écrit dans DCS (celui du dossier de la livrée), et les appareils qui la portent.</p>
+              <div id="wing-liv-list"></div>
+              <button type="button" class="ed-btn-add" id="wing-liv-add" data-i18n="wing.liv.add">+ Ajouter une livrée</button>
+            </div>
+          </div>
         </fieldset>
 
         <!-- Livrée par défaut -->
         <fieldset class="wing-fieldset wing-fold" id="wing-def-fieldset">
           <legend class="wing-legend" id="wing-def-legend" data-i18n="wing.def.title">Livrée par défaut</legend>
-          <button type="button" class="wing-sq-toggle ui-fold-head wing-fold-head" id="wing-def-fold" aria-expanded="false" aria-labelledby="wing-def-legend"></button>
-          <p class="wing-hint wing-def-hint" data-i18n="wing.def.hint">Pour chaque appareil des escadrons, la livrée que le Flight Configurator affiche quand la mission ouverte dans HQ ne lui en donne pas.</p>
-          <div id="wing-def-list"></div>
+          <div class="wing-sq-card wing-fold-card" id="wing-def-card">
+            <div class="wing-sq-header"><button type="button" class="wing-sq-toggle ui-fold-head wing-fold-head" id="wing-def-fold" aria-expanded="false" aria-labelledby="wing-def-legend"></button></div>
+            <div class="wing-sq-body">
+              <p class="wing-hint wing-def-hint" data-i18n="wing.def.hint">Pour chaque appareil des escadrons, la livrée que le Flight Configurator affiche quand la mission ouverte dans HQ ne lui en donne pas.</p>
+              <div id="wing-def-list"></div>
+            </div>
+          </div>
         </fieldset>
 
         <!-- Identit\u00e9 du wing -->
@@ -3001,7 +3010,7 @@ function wingFoldSummary(id) {{
   const set = rows.filter(ty => wingDefOptions(ty).value !== '').length;
   return uiJoin([cnt(rows.length, 'wdef'), set ? cnt(set, 'wdefset') : '']);
 }}
-const WING_FOLDS = [['liv', 'wing-liv-fieldset', 'wing-liv-fold'], ['def', 'wing-def-fieldset', 'wing-def-fold']];
+const WING_FOLDS = [['liv', 'wing-liv-fieldset', 'wing-liv-fold', 'wing-liv-card'], ['def', 'wing-def-fieldset', 'wing-def-fold', 'wing-def-card']];
 function wingFoldRefresh() {{
   WING_FOLDS.forEach(a => {{
     const fs = document.getElementById(a[1]), hd = document.getElementById(a[2]);
@@ -3011,9 +3020,10 @@ function wingFoldRefresh() {{
   }});
 }}
 function wingFoldSet(id, open) {{
-  const a = WING_FOLDS.find(x => x[0] === id), fs = a && document.getElementById(a[1]);
-  if (!fs) return;
+  const a = WING_FOLDS.find(x => x[0] === id), fs = a && document.getElementById(a[1]), card = a && document.getElementById(a[3]);
+  if (!fs || !card) return;
   fs.classList.toggle('open', !!open);
+  card.classList.toggle('open', !!open);       // la carte, comme une carte d'escadron : le corps suit sous la ligne de tête
   wingFoldRefresh();
 }}
 function wingFoldBind() {{
@@ -6864,6 +6874,8 @@ _ia = src.find('function importWingConfig(file) {'); _ib = src.find('\n}\n', _ia
 must_mg(_ia > 0 and 'delete parsed.managedBy;' in src[_ia:_ib] and src[_ia:_ib].index('delete parsed.managedBy;') < src[_ia:_ib].index('validateWingConfig(parsed)'), 'l\u2019import retire managedBy du contenu lu avant de le valider et de l\u2019\u00e9crire')
 must_mg("window.addEventListener('storage', wingOnStorage)" in src and 'function wingOnStorage(e)' in src, 'HQ \u00e9coute storage sur wing_config_v1 (changement \u00e0 chaud)')
 must_mg(all(('id="%s"' % i) in src for i in ('wing-liv-fold', 'wing-def-fold')) and src.count('class="wing-sq-toggle ui-fold-head wing-fold-head"') == 2, 'les deux bo\u00eetes de livr\u00e9es portent leur ligne de t\u00eate .wing-sq-toggle.ui-fold-head')
+must_mg(all(('id="%s"' % i) in src for i in ('wing-liv-card', 'wing-def-card')) and src.count('class="wing-sq-card wing-fold-card"') == 2 and src.count('<div class="wing-sq-header"><button type="button" class="wing-sq-toggle ui-fold-head wing-fold-head"') == 2, 'chaque bo\u00eete de livr\u00e9es est une carte .wing-sq-card (m\u00eame cadre qu\u2019un escadron), t\u00eate dans .wing-sq-header, corps dans .wing-sq-body')
+must_mg('.wing-fieldset { min-width: 0; }' in src and 'overflow-wrap: anywhere; }' in src.split('.wing-fold-head .ui-sum {', 1)[1].split('\n', 1)[0], 'une <fieldset> de la fen\u00eatre Wing a min-width: 0 et le r\u00e9sum\u00e9 replié passe \u00e0 la ligne (rien ne sort de .hq-win-body)')
 _kg = lambda txt: set(_re.findall(r"'(wing\.managed\.[^']+|sum\.wliv\.[^']+|sum\.wdef\.[^']+|sum\.wdefset\.[^']+)':", txt))
 must_mg(_kg(_fr) == _kg(_en) and len(_kg(_fr)) == 10, 'I18N parit\u00e9 wing.managed.*, sum.wliv.*, sum.wdef.*, sum.wdefset.* fr/en (%d cl\u00e9s)' % len(_kg(_fr)))
 must_mg('fournie par {x}\u202f: elle se modifie l\u00e0-bas, pas ici.' in _fr and 'provided by {x}: edit it there, not here.' in _en, 'la note : FR avec U+202F avant les deux-points, EN sans, au caract\u00e8re')
