@@ -8,7 +8,11 @@ The sections per tool, further down, keep the history of each tool up to v1.24.0
 
 ## Unreleased
 
-Nothing yet.
+#### HQ
+- When the Wing configuration is provided by another tool, the Wing window shows it read-only, with a note saying where to edit it; Import, Reset and the Example are then off, Export still works. The custom liveries and default liveries boxes fold like the squadron cards, closed when the page opens.
+
+#### Route Planner
+- **Open ▾ › Open a route or layers…** now says that it also reads CombatFlite layers (.cf).
 
 ---
 

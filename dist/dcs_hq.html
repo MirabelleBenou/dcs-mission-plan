@@ -612,6 +612,22 @@ select[data-tbm-src] { display: none !important; }
 }
 .wing-restore-btn:hover, .wing-restore-btn:focus-visible { background: var(--amber-dark); color: var(--paper-light); }
 .wing-restore-btn[hidden] { display: none; }
+.ed-btn-add[hidden] { display: none; }
+
+/* Configuration fournie par un autre outil : la fenêtre se lit, elle ne se modifie pas */
+.wing-managed-note { margin: 0 0 12px 0; padding: 8px 10px; border-left: 3px solid var(--amber); background: rgba(192,137,42,.08); font-size: 12px; }
+.wing-managed-name { color: var(--amber); font-weight: 700; }
+.wing-managed input:disabled, .wing-managed .tbm-trigger:disabled { opacity: .6; cursor: default; }
+.wing-managed .wing-liv-chk, .wing-managed .ed-img-zone { cursor: default; }
+.wing-managed .ed-img-zone .img-text, .wing-managed .ed-img-zone .img-info { display: none; }
+.wing-action-btn:disabled, .wing-action-btn[aria-disabled="true"] { opacity: .4; cursor: default; }
+.wing-action-btn:disabled:hover, .wing-action-btn[aria-disabled="true"]:hover { background: rgba(0,0,0,.2); }
+.wing-action-reset:disabled:hover { color: var(--red-stamp); }
+
+/* Les boîtes des livrées se replient comme les cartes d'escadron : une ligne de tête sous la légende ; repliée, elle porte le résumé et le reste de la boîte est masqué */
+.wing-fold-head.wing-sq-toggle { display: flex; flex: none; flex-wrap: nowrap; align-items: center; align-self: auto; width: 100%; min-height: 44px; margin: 0; }
+.wing-fold-head .ui-sum { flex: 1 1 0; margin: 0; padding-left: 0; }
+.wing-fold:not(.open) > :not(legend):not(.wing-fold-head) { display: none; }
 
 /* Size counter */
 .wing-size-counter {
@@ -1258,16 +1274,18 @@ body[data-theme] {
         </fieldset>
 
         <!-- Livrées custom -->
-        <fieldset class="wing-fieldset" id="wing-liv-fieldset">
-          <legend class="wing-legend" data-i18n="wing.liv.title">Livrées custom</legend>
+        <fieldset class="wing-fieldset wing-fold" id="wing-liv-fieldset">
+          <legend class="wing-legend" id="wing-liv-legend" data-i18n="wing.liv.title">Livrées custom</legend>
+          <button type="button" class="wing-sq-toggle ui-fold-head wing-fold-head" id="wing-liv-fold" aria-expanded="false" aria-labelledby="wing-liv-legend"></button>
           <p class="wing-hint wing-liv-hint" data-i18n="wing.liv.hint">Le nom tel qu’il s’écrit dans DCS (celui du dossier de la livrée), et les appareils qui la portent.</p>
           <div id="wing-liv-list"></div>
           <button type="button" class="ed-btn-add" id="wing-liv-add" data-i18n="wing.liv.add">+ Ajouter une livrée</button>
         </fieldset>
 
         <!-- Livrée par défaut -->
-        <fieldset class="wing-fieldset" id="wing-def-fieldset">
-          <legend class="wing-legend" data-i18n="wing.def.title">Livrée par défaut</legend>
+        <fieldset class="wing-fieldset wing-fold" id="wing-def-fieldset">
+          <legend class="wing-legend" id="wing-def-legend" data-i18n="wing.def.title">Livrée par défaut</legend>
+          <button type="button" class="wing-sq-toggle ui-fold-head wing-fold-head" id="wing-def-fold" aria-expanded="false" aria-labelledby="wing-def-legend"></button>
           <p class="wing-hint wing-def-hint" data-i18n="wing.def.hint">Pour chaque appareil des escadrons, la livrée que le Flight Configurator affiche quand la mission ouverte dans HQ ne lui en donne pas.</p>
           <div id="wing-def-list"></div>
         </fieldset>
@@ -1433,6 +1451,16 @@ const I18N = {
     'wing.def.hint': 'Pour chaque appareil des escadrons, la livrée que le Flight Configurator affiche quand la mission ouverte dans HQ ne lui en donne pas.',
     'wing.def.first': 'La première de la liste',
     'wing.def.none': 'Aucun appareil des escadrons n’a de livrée connue.',
+    'wing.managed.note': 'Configuration de l’escadre fournie par {x} : elle se modifie là-bas, pas ici.',
+    'wing.managed.tip': 'Configuration fournie par {x}',
+    'sum.wliv.0': 'aucune',
+    'sum.wliv.1': '{n} livrée',
+    'sum.wliv.n': '{n} livrées',
+    'sum.wdef.0': 'aucun',
+    'sum.wdef.1': '{n} appareil',
+    'sum.wdef.n': '{n} appareils',
+    'sum.wdefset.1': '{n} réglée',
+    'sum.wdefset.n': '{n} réglées',
     'fn.save.title': 'Sauvegarder le .miz',
     'fn.save.go': 'Sauvegarder',
     'toast.mizSaved': '.miz sauvegardé ✔',
@@ -1860,6 +1888,16 @@ const I18N = {
     'wing.def.hint': 'For each of the squadrons’ aircraft, the livery the Flight Configurator shows when the mission open in HQ doesn’t give it one.',
     'wing.def.first': 'The first in the list',
     'wing.def.none': 'None of the squadrons’ aircraft has a known livery.',
+    'wing.managed.note': 'Wing configuration provided by {x}: edit it there, not here.',
+    'wing.managed.tip': 'Configuration provided by {x}',
+    'sum.wliv.0': 'none',
+    'sum.wliv.1': '{n} livery',
+    'sum.wliv.n': '{n} liveries',
+    'sum.wdef.0': 'none',
+    'sum.wdef.1': '{n} aircraft',
+    'sum.wdef.n': '{n} aircraft',
+    'sum.wdefset.1': '{n} set',
+    'sum.wdefset.n': '{n} set',
     'fn.save.title': 'Save the .miz',
     'fn.save.go': 'Save',
     'toast.mizSaved': '.miz saved ✔',
@@ -2888,11 +2926,27 @@ function loadWingConfig() {
   return structuredClone(DEFAULT_WING_CONFIG);
 }
 
+// ── Configuration fournie par un autre outil (champ racine `managedBy`) ─────────────────────
+// Une chaîne non vide après trim : la configuration est gérée ailleurs, HQ la montre sans la modifier et n'écrit pas la clé. Toute autre valeur (absente, vide, nombre, objet…) se lit comme absente.
+function wingManagedBy(cfg) {
+  const v = (cfg && typeof cfg === 'object') ? cfg.managedBy : undefined;
+  return typeof v === 'string' ? v.trim() : '';
+}
+// La configuration en stockage, relue à chaque appel (au moment du geste) : le nom de l'outil qui la fournit, ou ''
+function wingStoredManagedBy() {
+  try {
+    const raw = localStorage.getItem(KEY_WING);
+    return raw ? wingManagedBy(JSON.parse(raw)) : '';
+  } catch (e) { return ''; }
+}
+let _WING_MGD = '';       // l'état montré par la fenêtre, fixé à chaque redessin de renderWingEditor
+
 let _wingPersistTimer = null;
 function persistWingConfig() {
   if (_wingPersistTimer) clearTimeout(_wingPersistTimer);
   _wingPersistTimer = setTimeout(() => {
     _wingPersistTimer = null;
+    if (wingStoredManagedBy()) return;       // gérée ailleurs : rien n'écrit la clé
     try {
       localStorage.setItem(KEY_WING, JSON.stringify(wingConfig));
       hqWingOrder();
@@ -2910,6 +2964,7 @@ function persistWingConfig() {
    la configuration reste alors en mémoire, utilisable à l'écran jusqu'au rechargement. */
 function persistWingConfigNow() {
   if (_wingPersistTimer) { clearTimeout(_wingPersistTimer); _wingPersistTimer = null; }
+  if (wingStoredManagedBy()) return false;       // gérée ailleurs : rien n'écrit la clé
   try { localStorage.setItem(KEY_WING, JSON.stringify(wingConfig)); }
   catch(e) { console.warn('[Wing] Erreur persistance :', e); return false; }
   hqWingOrder();
@@ -2937,14 +2992,15 @@ function refreshWingLogoZone() {
   if (url) {
     zone.innerHTML = '<input type="file" accept="image/*" id="wing-logo-input">' +
       '<img src="' + escapeAttr(url) + '" alt="Logo wing">' +
-      '<button type="button" class="img-rm" aria-label="' + t('editor.wing.resetLogoAria') + '">×</button>' +
-      '<span class="img-info">' + t('editor.wing.clickToReplace') + '</span>';
+      (_WING_MGD ? '' : '<button type="button" class="img-rm" aria-label="' + t('editor.wing.resetLogoAria') + '">×</button>' +
+        '<span class="img-info">' + t('editor.wing.clickToReplace') + '</span>');
   } else {
     zone.innerHTML = '<input type="file" accept="image/*" id="wing-logo-input">' +
       '<span class="img-text">' + t('editor.imgZone.tapLogo') + '</span>';
   }
 
   const inp = zone.querySelector('#wing-logo-input');
+  inp.disabled = !!_WING_MGD;
   inp.addEventListener('change', async e => {
     const f = e.target.files[0]; if (!f) return;
     zone.classList.add('wing-logo-loading');
@@ -2986,13 +3042,14 @@ function refreshSqLogoZone(zone, sqIdx) {
   if (url) {
     zone.innerHTML = '<input type="file" accept="image/*">' +
       '<img src="' + escapeAttr(url) + '" alt="' + t('editor.wing.sqLogo') + '">' +
-      '<button type="button" class="img-rm" aria-label="' + t('editor.wing.removeLogoAria') + '">×</button>';
+      (_WING_MGD ? '' : '<button type="button" class="img-rm" aria-label="' + t('editor.wing.removeLogoAria') + '">×</button>');
   } else {
     zone.innerHTML = '<input type="file" accept="image/*">' +
       '<span class="img-text">' + t('editor.imgZone.tapLogo') + '</span>';
   }
 
   const inp = zone.querySelector('input[type=file]');
+  inp.disabled = !!_WING_MGD;
   inp.addEventListener('change', async e => {
     const f = e.target.files[0]; if (!f) return;
     if (!wingConfig.squadrons[sqIdx]) return;
@@ -3077,22 +3134,24 @@ function renderSqAircraftTags(container, sqIdx) {
       flag.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); explain(); } });
       tag.appendChild(flag);
     }
-    const rmBtn = document.createElement('button');
-    rmBtn.type = 'button';
-    rmBtn.setAttribute('aria-label', t('editor.radio.delAircraftAriaLabel'));
-    rmBtn.textContent = '×';
-    rmBtn.addEventListener('click', () => {
-      if (!wingConfig.squadrons[sqIdx]) return;
-      wingConfig.squadrons[sqIdx].aircraft.splice(acIdx, 1);
-      persistWingConfig(); updateWingSizeCounter();
-      renderSqAircraftTags(container, sqIdx);
-      renderWingLiveries();
-    });
-    tag.appendChild(rmBtn);
+    if (!_WING_MGD) {
+      const rmBtn = document.createElement('button');
+      rmBtn.type = 'button';
+      rmBtn.setAttribute('aria-label', t('editor.radio.delAircraftAriaLabel'));
+      rmBtn.textContent = '×';
+      rmBtn.addEventListener('click', () => {
+        if (!wingConfig.squadrons[sqIdx]) return;
+        wingConfig.squadrons[sqIdx].aircraft.splice(acIdx, 1);
+        persistWingConfig(); updateWingSizeCounter();
+        renderSqAircraftTags(container, sqIdx);
+        renderWingLiveries();
+      });
+      tag.appendChild(rmBtn);
+    }
     item.appendChild(tag);
     container.appendChild(item);
 
-    const close = known ? [] : gameAircraftClose(cur);
+    const close = (known || _WING_MGD) ? [] : gameAircraftClose(cur);
     if (close.length) {
       const rep = acMakeSelect('wing-ac-rep', t('editor.wing.ac.replaceNamed').replace('{0}', String(cur)));
       item.classList.add('wing-ac-item-rep');
@@ -3111,6 +3170,7 @@ function renderSqAircraftTags(container, sqIdx) {
     }
   });
 
+  if (_WING_MGD) return;       // gérée ailleurs : ni liste « Ajouter un type… » ni saisie libre
   const addSel = acMakeSelect('wing-ac-add-sel', t('editor.phases.aircraft'));
   addSel.appendChild(acMakeOption('', t('editor.wing.ac.add'), false));
   [['editor.wing.ac.helis', GAME_AIRCRAFT_TYPES.helicopters], ['editor.wing.ac.planes', GAME_AIRCRAFT_TYPES.planes]].forEach(g => {
@@ -3224,8 +3284,8 @@ function renderWingSquadronCard(sqIdx) {
     persistWingConfig(); renderWingSquadrons();
   });
 
-  header.appendChild(toggle); header.appendChild(btnUp);
-  header.appendChild(btnDown); header.appendChild(btnDel);
+  header.appendChild(toggle);
+  if (!_WING_MGD) { header.appendChild(btnUp); header.appendChild(btnDown); header.appendChild(btnDel); }       // gérée ailleurs : ni ↑ ↓ ni ×
   card.appendChild(header);
 
   const body = document.createElement('div');
@@ -3237,6 +3297,7 @@ function renderWingSquadronCard(sqIdx) {
     lbl.innerHTML = escapeHtml(labelText) + (hint ? ' <span class="wing-hint">(' + escapeHtml(hint) + ')</span>' : '');
     const inp = document.createElement('input');
     inp.type = 'text'; inp.value = value || ''; inp.placeholder = placeholder || '';
+    inp.disabled = !!_WING_MGD;
     inp.addEventListener('input', () => {
       if (!wingConfig.squadrons[sqIdx]) return;
       wingConfig.squadrons[sqIdx][fieldName] = inp.value;
@@ -3549,6 +3610,7 @@ function renderWingDefRow(ty) {
   const lbl = document.createElement('span'); lbl.className = 'wing-def-lbl'; lbl.textContent = ty;
   const sel = acMakeSelect('wing-def-sel', ty);
   wingDefFill(sel, ty);
+  sel.disabled = !!_WING_MGD;
   sel.addEventListener('change', () => {
     const v = sel.value;
     if (v === '') {
@@ -3562,6 +3624,7 @@ function renderWingDefRow(ty) {
     }
     persistWingConfig(); updateWingSizeCounter();
     wingDefFill(sel, ty);       // une valeur hors liste qui n'est plus choisie quitte la liste
+    wingFoldRefresh();
   });
   row.appendChild(lbl); row.appendChild(sel);
   return row;
@@ -3582,6 +3645,7 @@ function renderWingDefLiveries() {
     const none = document.createElement('p'); none.className = 'wing-hint wing-def-none'; none.textContent = t('wing.def.none');
     list.appendChild(none);
   }
+  wingFoldRefresh();       // le résumé de la boîte suit la liste
 }
 // ── Livrées custom (wing_config_v1.liveries) ───────────────────
 // Un nom par livrée, tel qu'il s'écrit dans DCS (le dossier de la livrée), et les appareils qui la portent ; le Flight Configurator les lit
@@ -3604,6 +3668,7 @@ function renderWingLivRow(liv, i) {
   const inp = document.createElement('input');
   inp.type = 'text'; inp.id = nameId; inp.maxLength = 80; inp.value = liv.name; inp.placeholder = t('wing.liv.ph');
   inp.autocomplete = 'off'; inp.spellcheck = false;
+  inp.disabled = !!_WING_MGD;
   inp.addEventListener('input', () => {
     liv.name = inp.value;
     persistWingConfig(); updateWingSizeCounter(); renderWingDefLiveries();
@@ -3622,6 +3687,7 @@ function renderWingLivRow(liv, i) {
     types.forEach(ty => {
       const cl = document.createElement('label'); cl.className = 'wing-liv-chk';
       const cb = document.createElement('input'); cb.type = 'checkbox'; cb.value = ty; cb.checked = liv.aircraft.indexOf(ty) >= 0;
+      cb.disabled = !!_WING_MGD;
       cb.addEventListener('change', () => {
         liv.aircraft = Array.prototype.filter.call(ac.querySelectorAll('input[type=checkbox]'), b => b.checked).map(b => b.value);       // dans l'ordre des cases
         persistWingConfig(); updateWingSizeCounter(); renderWingDefLiveries();
@@ -3647,7 +3713,7 @@ function renderWingLivRow(liv, i) {
     const add = document.getElementById('wing-liv-add');
     if (add) add.focus({ preventScroll: true });
   });
-  row.appendChild(rm);
+  if (!_WING_MGD) row.appendChild(rm);       // gérée ailleurs : pas de ✕
   return row;
 }
 
@@ -3659,8 +3725,83 @@ function renderWingLiveries() {
   renderWingDefLiveries();       // la liste d'un type suit les escadrons et les livrées custom
 }
 
+// ── Les deux boîtes de livrées se replient comme les cartes d'escadron ─────────────────────
+// Fermées à l'ouverture de la page ; l'état reste en mémoire seulement (hq_folds_v1 ne porte que les sections de droite). Repliée, la ligne de tête porte le résumé.
+function wingFoldSummary(id) {
+  const cnt = (n, k) => t('sum.' + k + (n === 1 ? '.1' : '.n')).replace('{n}', String(n));
+  if (id === 'liv') {
+    const l = Array.isArray(wingConfig.liveries) ? wingConfig.liveries : [];
+    if (!l.length) return t('sum.wliv.0');
+    return uiJoin([cnt(l.length, 'wliv')].concat(l.map(x => (x && typeof x.name === 'string') ? x.name : '')));
+  }
+  const rows = wingAircraftTypes().filter(ty => liveriesFor(ty).length > 0);       // les lignes que la section affiche
+  if (!rows.length) return t('sum.wdef.0');
+  const set = rows.filter(ty => wingDefOptions(ty).value !== '').length;
+  return uiJoin([cnt(rows.length, 'wdef'), set ? cnt(set, 'wdefset') : '']);
+}
+const WING_FOLDS = [['liv', 'wing-liv-fieldset', 'wing-liv-fold'], ['def', 'wing-def-fieldset', 'wing-def-fold']];
+function wingFoldRefresh() {
+  WING_FOLDS.forEach(a => {
+    const fs = document.getElementById(a[1]), hd = document.getElementById(a[2]);
+    if (!fs || !hd || !wingConfig) return;
+    hd.setAttribute('aria-expanded', String(fs.classList.contains('open')));
+    uiSum(hd, wingFoldSummary(a[0]));
+  });
+}
+function wingFoldSet(id, open) {
+  const a = WING_FOLDS.find(x => x[0] === id), fs = a && document.getElementById(a[1]);
+  if (!fs) return;
+  fs.classList.toggle('open', !!open);
+  wingFoldRefresh();
+}
+function wingFoldBind() {
+  WING_FOLDS.forEach(a => {
+    const hd = document.getElementById(a[2]);
+    if (hd) hd.addEventListener('click', () => wingFoldSet(a[0], !document.getElementById(a[1]).classList.contains('open')));
+  });
+}
+
+// ── La fenêtre en lecture seule quand la configuration vient d'ailleurs ──────────────────
+// L'état se fixe à chaque redessin (_WING_MGD) : la configuration en mémoire, ou celle du stockage (une config gérée mais illisible ne rend pas la fenêtre modifiable).
+function wingApplyManaged() {
+  const x = _WING_MGD, on = x !== '';
+  const modal = document.getElementById('wing-modal');
+  if (modal) modal.classList.toggle('wing-managed', on);
+  const body = modal ? modal.querySelector('.hq-win-body') : null;
+  let note = document.getElementById('wing-managed-note');
+  if (on && body) {
+    if (!note) {
+      note = document.createElement('p'); note.id = 'wing-managed-note'; note.className = 'ui-note wing-managed-note';
+      body.insertBefore(note, body.firstChild);
+    }
+    const parts = t('wing.managed.note').split('{x}');       // le nom s'insère comme du texte
+    note.textContent = '';
+    note.appendChild(document.createTextNode(parts[0]));
+    const nm = document.createElement('span'); nm.className = 'wing-managed-name'; nm.textContent = x;
+    note.appendChild(nm);
+    note.appendChild(document.createTextNode(parts.slice(1).join('{x}')));
+  } else if (note) {
+    note.remove();
+  }
+  ['wing-shortName', 'wing-id', 'wing-fullName', 'wing-appTitle', 'wing-hqStamp'].forEach(id => { const el = document.getElementById(id); if (el) el.disabled = on; });
+  ['wing-sq-add', 'wing-liv-add'].forEach(id => { const el = document.getElementById(id); if (el) el.hidden = on; });
+  const tip = on ? t('wing.managed.tip').split('{x}').join(x) : '';
+  const imp = document.getElementById('wing-import-input'), impLbl = document.querySelector('#wing-modal .wing-action-import');
+  if (imp) imp.disabled = on;
+  if (impLbl) {
+    if (on) { impLbl.setAttribute('aria-disabled', 'true'); impLbl.title = tip; }
+    else { impLbl.removeAttribute('aria-disabled'); impLbl.title = t(impLbl.dataset.i18nTitle); }
+  }
+  const rst = document.getElementById('wing-reset-btn');
+  if (rst) { rst.disabled = on; if (on) rst.title = tip; else rst.removeAttribute('title'); }
+  const ex = document.getElementById('btn-example');
+  if (ex) { ex.disabled = on; ex.title = on ? tip : t(ex.dataset.i18nTitle); }
+}
+
 // ── Render wing editor inputs ──────────────────────────────────
 function renderWingEditor() {
+  _WING_MGD = wingManagedBy(wingConfig) || wingStoredManagedBy();
+  wingApplyManaged();
   const w = wingConfig.wing;
   const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
   setVal('wing-shortName', w.shortName);
@@ -3672,6 +3813,7 @@ function renderWingEditor() {
   renderWingSquadrons();
   updateWingSizeCounter();
   hqWingOrder();
+  refreshRestoreButton();       // « Restaurer » ne se montre jamais sur une configuration gérée
 }
 
 // ── Bind wing editor events (appelé une seule fois à l'init) ───────
@@ -3715,6 +3857,7 @@ function bindWingEditorEvents() {
       if (!Array.isArray(wingConfig.liveries)) wingConfig.liveries = [];
       wingConfig.liveries.push({ name: '', aircraft: [] });
       persistWingConfig(); updateWingSizeCounter();
+      wingFoldSet('liv', true);       // la boîte se déplie sur la livrée ajoutée
       renderWingLiveries();
       const names = document.querySelectorAll('#wing-liv-list .wing-liv-name input');
       if (names.length) names[names.length - 1].focus({ preventScroll: false });
@@ -3734,6 +3877,9 @@ function bindWingEditorEvents() {
 
   const btnReset = document.getElementById('wing-reset-btn');
   if (btnReset) btnReset.addEventListener('click', resetWingConfig);
+
+  wingFoldBind();
+  wingFoldRefresh();
 }
 
 // ── Nom du fichier : la fenêtre commune des écritures de HQ (config wing, paquet de vol, .miz modifié) ──
@@ -3866,7 +4012,9 @@ function exportWingConfig(ev) {
     opener: ev && ev.currentTarget,
     hide: document.getElementById('wing-modal'),
     run: name => {
-      const blob = new Blob([JSON.stringify(wingConfig, null, 2)], { type: 'application/json' });
+      const out = wingManagedBy(wingConfig) ? Object.assign({}, wingConfig) : wingConfig;
+      if (out !== wingConfig) delete out.managedBy;       // une copie qu'on peut emporter et modifier ailleurs : sans la marque
+      const blob = new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' });
       shareOrDownload(blob, name + '.json', 'application/json', 'Config ' + wingConfig.wing.shortName, fallbackDownload);
     }
   });
@@ -3882,8 +4030,10 @@ function fallbackDownload(blob, fname) {
 }
 
 function importWingConfig(file) {
+  if (wingStoredManagedBy()) return;       // gérée ailleurs : rien n'écrit la clé
   const reader = new FileReader();
   reader.onload = () => {
+    if (wingStoredManagedBy()) return;
     let parsed;
     try { parsed = JSON.parse(reader.result); }
     catch (e) { console.warn('[HQ] configuration wing : JSON illisible', e); showToast(t('msg.jsonUnreadable'), { type: 'err' }); return; }
@@ -3923,6 +4073,7 @@ function flushWingPersist() {
   if (!_wingPersistTimer) return;
   clearTimeout(_wingPersistTimer);
   _wingPersistTimer = null;
+  if (wingStoredManagedBy()) return;       // gérée ailleurs : rien n'écrit la clé
   try { localStorage.setItem(KEY_WING, JSON.stringify(wingConfig)); } catch (e) {}
 }
 
@@ -3934,11 +4085,14 @@ function refreshRestoreButton() {
   const b = document.getElementById('wing-restore-btn');
   if (!b) return;
   let has = false;
-  try { has = localStorage.getItem(KEY_WING_BEFORE) !== null; } catch (e) {}
+  if (!_WING_MGD) {
+    try { has = localStorage.getItem(KEY_WING_BEFORE) !== null; } catch (e) {}
+  }
   b.hidden = !has;
 }
 
 function loadWingExample() {
+  if (wingStoredManagedBy()) return;                            // gérée ailleurs : l'Exemple ne remplace rien
   flushWingPersist();                                           // ce qui attend d'être écrit passe d'abord
   const lang = CURRENT_LANG === 'en' ? 'en' : 'fr';             // la langue de l'interface au moment du clic
   const next = JSON.stringify(EXAMPLE_WING_CONFIGS[lang]);
@@ -3961,6 +4115,7 @@ function loadWingExample() {
 }
 
 function restoreWingConfig() {
+  if (wingStoredManagedBy()) return;                            // gérée ailleurs : rien à restaurer, KEY_WING_BEFORE n'est pas lue
   clearTimeout(_wingPersistTimer);
   _wingPersistTimer = null;
   let saved = null;
@@ -3978,11 +4133,22 @@ function restoreWingConfig() {
 }
 
 async function resetWingConfig() {
+  if (wingStoredManagedBy()) return;                            // gérée ailleurs : rien n'écrit la clé
   if (!await askConfirm({ title: t('editor.wing.resetConfirm.title'), text: t('editor.wing.resetConfirm.text'), verb: t('ui.verb.reset'), danger: true })) return;
+  if (wingStoredManagedBy()) return;                            // devenue gérée pendant la question
   wingConfig = structuredClone(DEFAULT_WING_CONFIG);
   localStorage.removeItem(KEY_WING);
   renderWingEditor();
   showToast(t('toast.wingReset'), { type: 'ok' });
+}
+
+// ── Le changement à chaud : un autre outil (ou un autre onglet) réécrit wing_config_v1 ──
+// La configuration est relue, la fenêtre se redessine dans le bon état (gérée ou modifiable) et la barre suit, comme après un import. Rien n'est écrit.
+function wingOnStorage(e) {
+  if (e && e.key !== null && e.key !== KEY_WING) return;
+  if (_wingPersistTimer) { clearTimeout(_wingPersistTimer); _wingPersistTimer = null; }       // une saisie en attente n'écrase pas la configuration venue d'ailleurs
+  wingConfig = loadWingConfig();
+  renderWingEditor();
 }
 
 // ── Toolbar events ─────────────────────────────────────────────
@@ -3994,6 +4160,7 @@ function initToolbarEvents() {
     setLang(CURRENT_LANG === 'fr' ? 'en' : 'fr');
   });
   document.getElementById('btn-example').addEventListener('click', loadWingExample);
+  window.addEventListener('storage', wingOnStorage);
   const btnRestore = document.getElementById('wing-restore-btn');
   if (btnRestore) btnRestore.addEventListener('click', restoreWingConfig);
 }
