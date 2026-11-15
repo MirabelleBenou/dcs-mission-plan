@@ -125,6 +125,10 @@ The Field Manual is the suite's **built-in documentation**, opened from the boar
 
 ![flight-configurator](docs/screenshots/flight_configurator.jpg)
 
+**Flight Configurator, loadout** — each station set on the aircraft's front view, with its weight
+
+![flight-configurator-loadout](docs/screenshots/flight_configurator_loadout.jpg)
+
 **Briefing Generator** — the editor on the left, the printed briefing on the right
 
 ![briefing-generator](docs/screenshots/briefing_generator.jpg)
