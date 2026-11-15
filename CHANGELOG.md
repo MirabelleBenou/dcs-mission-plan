@@ -251,6 +251,9 @@ Changes merged since the last release, grouped per tool.
 - **Tablet & mobile** first-class target (touch, drag, rotation-safe).
 - Wing configuration shared automatically across embedded tools.
 
+### `v9.9.9`
+- Trial entry for the release workflow (branch release/essai-1 only).
+
 ### `v1.24.0`
 #### Added
 - Embeds **Field Manual v1.3.0** — a Route Planner chapter (see below).
