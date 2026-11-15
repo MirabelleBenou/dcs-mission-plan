@@ -1,61 +1,18 @@
 # Changelog
 
-All notable changes to the **DCS Mission Plan** suite.
+All notable changes to the **DCS Mission Plan** suite. Since v2.0.0, the whole suite has one version number: releases are tagged `MP-V<x.y.z>`, and their notes are under *Mission Plan — landing*, below.
 
-The suite bundles several **independently-versioned tools**, so entries are grouped per tool. Versions map to GitHub tags/releases. Format loosely follows [Keep a Changelog](https://keepachangelog.com).
+The sections per tool, further down, keep the history of each tool up to v1.24.0, when every tool still had its own version. Format loosely follows [Keep a Changelog](https://keepachangelog.com).
 
 ---
 
 ## Unreleased
 
-Changes merged since the last release, grouped per tool.
+Nothing yet.
 
-### All tools
-#### Added
-- Releases are published by a workflow: pushing a branch `release/MP-V<x.y.z>` with the release text, the files and a manifest creates the release and its tag (new `.github/workflows/release.yml` and `tools/release.py`). The tools themselves do not change.
-- One work file for the whole suite: **Save** in any tool (and on the home page) writes the briefing, recon, groups, routes, layers, datacards, theatre and settings into a single `.json`; **Open… › Open a work file…** brings it all back, with **Restore** for a few seconds. The Wing configuration and the mission open in HQ are not part of it.
-- The credits name the fonts embedded in every tool and their licences (SIL OFL 1.1, Apache 2.0), whose texts are now in the repository (`fonts/`); html2canvas and JSZip are credited too.
-- **HQ mission line**: when a mission is open in HQ, the Flight Configurator, the Route Planner and the Datacard Generator show a line under the toolbar with its date, start time and file, and what the tool takes from it — or that it is not used there, when its theatre differs.
-#### Changed
-- File buttons use the same words everywhere: **Open** and **Save** for the tool's own file, **Import** and **Export** to exchange with another tool or produce the final document, **Clear** to empty the tool. The Datacard Generator's four file buttons become Open, Import, Save and Export.
-- Every file you save or export asks for its name first, with the usual name filled in; names use one date format everywhere. On tablets, HQ's flight packages and modified .miz now open the share menu, like the other files.
-- Every tool's top bar follows one layout: the tool's name and what it is for (only its initials on narrow screens) in the tool's colour, the file buttons in one order (Open, Save, Import, Export, Example, Clear) with one icon per action, then the version and a drawn language flag (it no longer shows as letters on Windows). The back button uses the same type in every tool, and the dot of the wing stamp takes the tool's colour.
-- On wide screens, each tool shows its own decorative stamp in the top bar, as the Briefing Generator did; it never makes the bar scroll.
-- Flight packages and the mission HQ shares with the other tools now give each aircraft its own type instead of one type per group (formats `dcs-flight-package-v2` and `dcs-mission-snapshot-v2`); files in the previous format still open, their group type applying to every aircraft. The Datacard Generator and the Route Planner show a mixed flight with all its types.
-- A DCS group is now called a group, not a flight, in HQ, the Route Planner, the Datacard Generator, the Flight Configurator, the Briefing Generator's quick brief and the Field Manual (“Link to a group…”, “Check shown groups”…). Format names do not change: a flight package is still a flight package.
-- In HQ and the Datacard Generator, radios are named and ordered as DCS does (A-10C II, C-130J, M-2000C, OH-58D, Gazelles, F-15E, AV-8B), as in Mission Tools; for the Gazelles, only the FM radio, the one missions preset.
-- One message style across the suite: a single toast at the bottom of the screen, with a coloured edge for success (green) and errors (red); errors stay on screen at least five seconds. Errors are told in plain words (“Unreadable file: this is not a .miz.”) instead of the browser's technical message. Switching language no longer shows a message; the flag's tooltip says what it does (“Switch to French”). Labels read by screen readers follow the tool's language.
-- One way to confirm, export and fold across the suite: questions open in the suite's own window and their button says what will happen (“Delete”, “Clear”); loading the example or opening a file over your work no longer asks, it offers “Restore” for twelve seconds instead. Collapsible sections all use the same arrow, in the tool's colour, on the left; the whole header is clickable, a folded section shows a one-line summary, and each tool remembers what you folded. Warnings use one colour in every theme.
-- One toolbar across the suite: 44-pixel buttons, the same fonts, built in (the landing page no longer loads web fonts), six text sizes, readable contrast in every theme, and a visible focus outline for the keyboard. Inside Mission Plan, each tool keeps its language flag and leaves the theme to the landing page; switching language in one tool now carries over to the others. “Side” is now “Coalition” wherever it names the coalition of a group, blue first, in the Field Manual too (the Route Planner’s symbol field keeps “Side”).
-- The empty Recon Station reads at 4.5:1 in the four themes, the heading buttons of the Datacard Generator sit side by side, and its preview area shows the same focus outline as the rest.
-- **Mission date in the flight package**: HQ and the Flight Configurator write the mission's date into the package; an imported route keeps it, and the magnetic declination uses it when no HQ mission of that theatre is loaded. Applying a package never changes the mission's date.
-- The Briefing Generator and the Datacard Generator open on the same **Header**: operation, mission, date (YYYY-MM-DD) and time (Z); classification and document reference move to their last section, folded.
-- On phones, every tool's top bar shows its file buttons first (Open, Save, Export), then its settings; the Route Planner and the Datacard Generator shrink Display to its icon and the theatre to a short name.
-- **Clear** works the same in the Flight Configurator, the Route Planner and the Datacard Generator: after one confirmation it clears the groups, the routes of every theatre and all the datacards of these three tools; HQ, the Briefing Generator and Recon Station are untouched. The Route Planner keeps its finer choices.
-- Deleting a route in the Route Planner removes it from the groups that follow it; removing a group in the Flight Configurator also removes its datacard; a route you named is never replaced by an imported one.
-- Every tool's top bar keeps one order at every width: the file buttons first, then the settings.
-- Every drop-down list in the suite works the same way: a search field on long lists, keyboard navigation, and placement above the on-screen keyboard.
-- Every tool's top bar follows the same rules, the Field Manual included: when space runs short it drops, in this order, the decorative stamp, the version, list labels such as Theatre, the Display label (its icon stays), the button labels and finally the long title; on phones, the theatre shows a short name.
-- The Clear button says what it clears: “Clear everything…” in the Flight Configurator and the Datacard Generator, “Clear…” where it asks what to clear or clears one tool (Route Planner, Briefing Generator, Recon Station).
-- **Restore** after an example or an opened file brings back everything the flight lead tools had (groups, routes, datacards, theatre, units, settings), whichever tool you are in.
-- A tool no longer opens on its own: opened outside Mission Plan, it only shows a line pointing to the suite. Each tool now writes only the suite's work file; the old briefing, datacard, route and configuration files can still be opened.
-- **Licence**: from the next release, DCS Mission Plan is licensed under the GNU AGPL-3.0-or-later instead of MIT: any use, commercial included, must publish its source under the same licence, hosted services included; an additional term (section 7(b)) requires every interface to keep the credit line *Based on Mission Plan by MirabelleBenou and the 4th VEAW virtual wing*, now shown at the bottom of the landing page. Releases up to v1.24.0 remain under MIT. The pydcs tables (LGPL-3.0-or-later) and Goldwolf's drawings keep their own terms.
-- One example mission, STEPPE WIND over Cyprus, loaded by group: the **Example ▾** menu of every tool and of the landing page loads it for the mission commander tools (Briefing Generator, Recon Station) or for the flight lead tools (Route Planner, Datacard Generator, Flight Configurator); **Restore** brings back the group's previous work. Your units and heading settings are kept.
-- A mission time is printed in Zulu next to the date (“08:00Z”) on the datacard and on the briefing, in both briefing formats.
-- **Fold all** is an icon at the right of every section header; the button on its own line is gone.
-- An exported document keeps one name whatever the format (PDF or PNG), and kneeboard PNG pages have one size, 2000 × 2828, in the Briefing Generator as in the Datacard Generator.
-- The Briefing Generator takes the weather, date and start time from the mission open in HQ (“Take from HQ mission” in the METAR assistant) and shows the HQ mission line under its toolbar, like the Flight Leader tools; its own .miz import is gone. Recon Station shows the Wing logos set in HQ by itself, with no more export and import of the Wing configuration, and still lets you add your own logos.
-- The Field Manual is rewritten as a how-to: a “Where to start” page with a map of what each tool takes and gives, the shared gestures (open, save, example, clear, restore) and the common toolbar, then one chapter per tool with what it receives and gives; values the screen already shows are no longer repeated. The Briefing Generator’s display note now counts eleven sections.
+---
 
-#### Removed
-- The repository no longer ships one particular wing's configuration file, nor six squadron logos that no tool used; the README and the code comments no longer name that wing. Each wing still makes or imports its own configuration in HQ.
-#### Fixed
-- Magnetic declination in 1985 now uses the WMM 1985, as DCS does (the IGRF up to 1984).
-- Mirage F1CE and F1BE: radio names and frequency bands of the TRAP 136 and TRAP 137B, as in the F1EE.
-- A wing configuration that the browser refuses to store now says so instead of showing it as loaded; an import window says when a file cannot be read.
-- On a new browser profile, the landing page and its example follow the browser’s language, like the tools; the Briefing Generator’s Wing configuration errors are translated; the toolbar fade of the Briefing Generator, the Datacard Generator and the Route Planner only shows when the bar overflows; Recon Station keeps its image area when you switch language; the Datacard Generator’s French toolbar keeps its stamp at 1,920 pixels.
-
-### Mission Plan — landing
+## Mission Plan — landing
 #### Added
 - A card for the Flight Configurator, right after HQ.
 - An **Example ▾** menu in the top bar loads the STEPPE WIND example into the Mission Commander or the Flight Leader tools.
@@ -250,6 +207,84 @@ Changes merged since the last release, grouped per tool.
 - **Online and offline** — published as a hosted page and as a single offline HTML file.
 - **Tablet & mobile** first-class target (touch, drag, rotation-safe).
 - Wing configuration shared automatically across embedded tools.
+
+### `v2.0.0`
+Mission Plan v2 is one suite with one version number. The home page is now the only way in: a tool opened on its own shows a line pointing to it. All your work lives in one work file that **Save** writes and **Open** reads back. The suite follows a circuit: the Mission Commander prepares the mission (HQ, Briefing Generator, Recon Station), the Flight Leader prepares the flights (Route Planner, Datacard Generator and the new Flight Configurator), and the flights go back to the mission in HQ. The suite is now under the GNU AGPL-3.0 licence.
+
+#### All tools
+- **One work file** for the whole suite: **Save** in any tool, or on the home page, writes the briefing, recon, groups, routes, layers, datacards, theatre and settings into one `.json`. **Open… › Open a work file…** brings it all back, and **Restore** undoes it for a few seconds. A part of a file that cannot be read is reported. The Wing configuration and the mission open in HQ are not part of it. Old briefing, datacard, route and configuration files still open.
+- **One example mission**, STEPPE WIND over Cyprus, loaded by role from the **Example ▾** menu of the home page and of each tool: the Mission Commander line fills the Briefing Generator and Recon Station, the Flight Leader line fills the Route Planner, Datacard Generator and Flight Configurator. It follows the interface language and keeps your units and heading settings.
+- **Groups are shared** by the Flight Configurator, Route Planner and Datacard Generator: create, rename or re-route a group in one and the others follow. A DCS group is now called a group, not a flight; a flight package is still a flight package. Deleting a route removes it from the groups that follow it, removing a group removes its datacard, and a route you named is never replaced by an imported one.
+- **HQ mission line**: when a mission is open in HQ, the Briefing Generator, Flight Configurator, Route Planner and Datacard Generator show a line under the toolbar with its date, start time and file.
+- **One top bar** in every tool, the Field Manual included: the tool's name and purpose, the file buttons in one order (Open, Save, Import, Export, Example, Clear) with one icon each, then the settings and a drawn language flag. When space runs short the bar gives up, in this order, the decorative stamp, list labels, the Display label and the button labels. On phones the file buttons come first. Buttons are 44 pixels high, contrast is readable in every theme, and the keyboard focus is visible.
+- **The same words everywhere**: **Open** and **Save** for the tool's own file, **Import** and **Export** to exchange with another tool or make the final document, **Clear** to empty a tool. In the Flight Configurator, Route Planner and Datacard Generator, Clear empties groups, routes and datacards after one confirmation.
+- **Every file asks for its name** first, with the usual name filled in. A document keeps one name whatever the format, and kneeboard PNG pages have one size, 2000 × 2828, in the Briefing Generator and the Datacard Generator. On tablets, files open the share menu.
+- **One message style**: a single toast at the bottom, green for success and red for errors, which stay at least five seconds. Errors are in plain words.
+- **One way to confirm and fold**: questions open in the suite's own window and their button says what will happen. Loading the example or a file over your work offers **Restore** instead of asking. Sections fold with the same arrow, a folded section shows a one-line summary, and each tool remembers what you folded. **Fold all** is an icon in each section header.
+- Every drop-down list works the same: a search field on long lists, keyboard navigation, placement above the on-screen keyboard. “Side” is now “Coalition”.
+- **Radios** are named and ordered as DCS does (A-10C II, C-130J, M-2000C, OH-58D, Gazelles, F-15E, AV-8B); the Mirage F1CE and F1BE radios are named like the F1EE's.
+- **Magnetic variation follows DCS** for every date: the IGRF model up to 1984, the WMM 1985 for 1985, then each year uses the previous five-year WMM file.
+- An import window says when a file cannot be read. On phones and tablets, the on-screen keyboard no longer hides the bottom of the open tool.
+
+#### Landing page
+- Two frames, **Mission Commander** and **Flight Leader**, with smaller cards. **Open**, **Save**, **Example ▾** and the Field Manual are in the top bar. The open tool takes the keyboard focus, so Ctrl+S reaches it.
+- The foot of the page shows the suite's version, its name and the licence. On a new browser profile, the page and its example follow the browser's language.
+- The credits name the embedded fonts and their licences (SIL OFL 1.1, Apache 2.0), whose texts are in the repository (`fonts/`); html2canvas and JSZip are credited too.
+
+#### HQ
+- **Example** loads a demonstration wing (Task Force Kestrel, three squadrons); your own configuration is kept and **Restore** brings it back.
+- The page is laid out around the mission: **Open .miz**, **Save .miz**, **Flight packages** and **Wing** in the top bar. Changes add up, with a counter, and **Save .miz** checks the mission and downloads it once. **Discard** takes it back to how it was when opened or last saved. **Clear** removes the open mission, with a warning if changes are not saved.
+- **Flight packages**: export groups of the loaded mission (route, radios, loadout, livery) and apply packages to a mission. Each group is found by its name and side; you choose what to apply, and a report lists what was written. A group may mix aircraft types. Packages are recognised by content, not file name. The HF radio of the Mi-24P and Mi-8MT, which missions do not preset, is skipped. Applying a package the mission already carries says there is nothing to change.
+- **Dynamic Spawn**: make a single-aircraft group a template and link it, in three steps, to bases of its coalition that already have it enabled; a panel lists each base offering it.
+- **Delete groups** from the mission: review what still points to them, then save without them. Triggers, tasks and scripts that name them are listed, not changed.
+- **Wing configuration**: pick each squadron's aircraft from the game's 75 flyable types, with “Other type (mod)…”; add custom liveries and a default livery per type. A configuration the browser refuses to store now says so. Radios are named and numbered as in the cockpit.
+
+#### Flight Configurator
+- **New tool.** A Flight Leader prepares a group and exports it as a flight package that HQ applies to the mission. Each aircraft has its own type, so a group can mix types. 
+- **Radios**: every radio of the aircraft, up to five frequencies for the Mi-24P and Mi-8MT HF radio, and a box on each channel to print it on the datacard.
+- **Loadout** built on the aircraft's front view, with the rules of Mission Tools' Loadout Editor: a weapon that cannot go with the rest is greyed out. Sliders for fuel and gun, flares and chaff within the aircraft's capacity, and an estimated take-off weight. Keep your presets under **My presets**: Open, Example and Clear never touch them.
+- A **Route** block shows the Route Planner's route for the group as a paper sketch, with each leg's magnetic heading and distance.
+- **Import** reads the mission in HQ, a briefing or a flight package, with Side, Type and Name filters.
+- The theatre is picked in the top bar and shared with the Route Planner and Datacard Generator.
+
+#### Briefing Generator
+- **Standard** (one mission page plus photo pages, now the default) or **Advanced** (ten sections) is chosen in **Display ▾**. Empty fields hint at what to type instead of showing sample values.
+- The briefing opens on a **Header** (operation, mission, date, time in Zulu); classification and reference move to the last section, folded. The time is printed in Zulu beside the date, on the briefing and on the datacard.
+- **Export** is one window: format, pages and file name. **Take from HQ mission** in the METAR assistant takes weather, date and start time from the mission open in HQ; the tool's own `.miz` import is gone. A `.miz` the assistant cannot read shows a message in the interface language.
+- **Open** only accepts a briefing; any other file is refused and your briefing is kept. The Wing tab no longer imports the wing configuration: HQ is where it is set.
+- In Standard, aircraft are picked from the game's list. The map image can come from the Route Planner. On the printed briefing, the classification stamp no longer covers the reference line.
+
+#### Recon Station
+- **Example** loads a demonstration photo with markers, shapes, magnifier and info block (USDA NAIP aerial image, public domain). **Open ▾**, **Save**, **Export** and **Clear** are in the top bar.
+- It shows the Wing logos set in HQ by itself, and still lets you add your own. Empty mission, date and classification fields come from the current briefing.
+- Classification uses the Briefing Generator's six levels. A value too long for the info block is drawn smaller, then cut with “…”. Messages no longer cover the drawing bar, and the image stays when you switch language.
+
+#### Route Planner
+- **Several routes**, one per group, in a route list; the others are drawn faintly. **Import** (the mission in HQ, a briefing, a flight package `.json` or `.zip`) turns groups into routes with Side, Type and Name filters, bringing their aircraft, radios, loadouts and liveries.
+- **Ruler** mode: tap to measure segment by segment, with heading, distance and total; taps snap to waypoints, reference points and airfields.
+- **Groups…** picks the groups that follow a route, or creates one. **Save** is a menu (selected route, all routes); **Clear** lets you pick what to clear.
+- **Display ▾** holds the base map and the units; **Export ▾** exports the image for the briefing or the Route Tool file.
+- Each route keeps its theatre; switching theatre hides the routes of the others, and they return with it. Theatre, units and course settings are shared with the Datacard Generator.
+
+#### Datacard Generator
+- **One datacard per group**, shared with the Flight Configurator and Route Planner. A group's name, coalition, aircraft and radio frequencies follow on either side. **+** creates a group, “…” offers a free card, and earlier datacards open as free cards.
+- One **Group and crew** box: the group, then one card per aircraft (callsign, type, board number, pilot). When every aircraft has a type, the header reads “2 × Mi-24P · CAS”. Rarely used sections start folded.
+- The datacard keeps all its blocks, even empty ones, so it can be filled in by hand.
+- **Import** reads the mission in HQ, a flight package, a briefing, a route or all routes at once, one datacard each, with filters; you pick the radio channels, and HQ's date, time and weather come with them.
+- **Airfields** are picked from the theatre's list, filling the runway, tower frequency and ICAO code.
+- The navigation is the route's: a waypoint changed here changes in the Route Planner. Fuel and take-off weight come from the Flight Configurator, and changing the mass unit converts them.
+- **Display ▾** holds Day | Night (Jour | Nuit in French) and the units. Export is one window.
+
+#### Field Manual
+- **Rewritten as a how-to**: a “Where to start” page with the two roles, the order of the tools, a map of what each tool takes and gives, the work file and the common gestures; then one chapter per tool.
+- New **Flight Configurator** chapter, and every chapter updated.
+
+#### For maintainers
+- **Releases are published by a workflow.** Pushing a branch `release/MP-V<x.y.z>` with the release text, the files and a manifest runs six checks, then creates the release and its tag. A branch `release/essai-<name>` runs the same checks and creates nothing.
+- Finished branches are deleted by a daily scheduled workflow once they are seven days old.
+- The tags `v2.0.0`, `v2.1.0` and `v2.1.1` come from the Briefing Generator when it was a separate project. The suite's releases are tagged `MP-V<x.y.z>`.
+- The repository no longer ships one wing's configuration file, nor six squadron logos that no tool used.
+- **Licence**: from this release, DCS Mission Plan is licensed under the GNU AGPL-3.0-or-later instead of MIT: any use, commercial included, must publish its source under the same licence, hosted services included. An additional term (section 7(b)) requires every interface to keep the credit line *Based on Mission Plan by MirabelleBenou and the 4th VEAW virtual wing*, shown at the bottom of the landing page. Releases up to v1.24.0 remain under MIT. The pydcs tables (LGPL-3.0-or-later) and Goldwolf's drawings keep their own terms.
 
 ### `v1.24.0`
 #### Added

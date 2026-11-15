@@ -1,12 +1,14 @@
 # DCS Mission Plan
 
+**v2.0.0** — one version for the whole suite; see the [CHANGELOG](./CHANGELOG.md).
+
 <!-- Replace with a screenshot of the landing "situation board" (e.g. docs/screenshots/landing.png) -->
 ![Intro-image](docs/screenshots/landing.jpg)
 > Prepare your DCS World missions end to end — a suite of tools behind one operational landing page. **Use it online, or download a single offline file.**
 
 ![License](https://img.shields.io/badge/license-AGPL--3.0--or--later-blue)
 ![Platform](https://img.shields.io/badge/platform-Web-green)
-![Offline](https://img.shields.io/badge/offline-yes-success)
+![Offline](https://img.shields.io/badge/offline-except%20online%20maps-yellowgreen)
 ![Tablet & mobile](https://img.shields.io/badge/tablet%20%26%20mobile-ready-orange)
 ![Tools](https://img.shields.io/badge/tools-7%20live-brown)
 
@@ -18,9 +20,9 @@
 >
 > 🧭 **Thanks to Flappie!** The Route Planner's **navigation chart** on the Caucasus is his accurate DCS map — see it on **[his website](http://dcsmaps.com/caucasus/openlayers)** or get the **[GeoTIFF on DCS User Files](https://digitalcombatsimulator.com/en/files/3305623/)**.
 
-A single-page **"situation board"** that brings together a suite of mission-prep tools for DCS World virtual pilots and wings — staged like a Cold War operations table. Open the board, pick a tool, prepare your mission. It runs entirely in your browser: **online for those who don't want to download**, or as **one offline HTML file** you can keep, share, and use without internet.
+A single-page **"situation board"** that brings together a suite of mission-prep tools for DCS World virtual pilots and wings — staged like a Cold War operations table. Open the board, pick a tool, prepare your mission. It runs entirely in your browser: **online for those who don't want to download**, or as **one offline HTML file** you can keep, share, and use offline — only the Route Planner's online map backgrounds and airfield chart sheets need a connection.
 
-Developped with the help of Claude AI (I'm not a dev !)
+Developed with the help of Claude AI (I'm not a dev!)
 
 ---
 
@@ -31,7 +33,7 @@ Mission Plan is designed to be used **where you actually fly** — on a tablet n
 - **Touch-first UI** — large tap targets, drag-and-drop, no tiny desktop-only controls
 - **Responsive layout** — split view on tablet/desktop, tabbed view on phone
 - **Rotation-safe** — keeps working when you flip the tablet between landscape and portrait
-- **No install** — open a link or a single file in the mobile browser; works offline once loaded
+- **No install** — open a link or a single file in the mobile browser; works offline once loaded (except the Route Planner's online map backgrounds and airfield chart sheets)
 - **Export on the go** — generate PDF/PNG straight from the device
 
 ## 🧰 The suite
@@ -40,13 +42,13 @@ The landing page presents each tool as a **pinned print** on the board. Active t
 
 | Tool | What it does | Status |
 |------|--------------|--------|
-| **HQ** | Command post — configure your wing once (branding, squadrons), shared with the other tools; experimental `.miz` mission reader/patcher | 🧪 Beta `v0.1.1` |
-| **Flight Configurator** | Prepare a flight for the Mission Commander — identity, radios, loadout built on the aircraft's front view or started from your presets, livery — and export it as a flight package that HQ applies to a mission; Mi-24P, Mi-8MT, F-4E and Mirage F1EE | 🧪 Beta `v0.1.0` |
-| **Briefing Generator** | Mission briefings, full or quick — SITAC, radio plan, airfields, charts, recon photos, map from the Route Planner — PDF & PNG export | ✅ `v2.6.0` |
-| **Recon Station** | Turn a screenshot into a reconnaissance analysis photo — sensor looks, annotations drawn by touch, lossless PNG | ✅ `v1.1.1` |
-| **Field Manual** | In-app documentation for the suite — one illustrated chapter per tool, diagrams, FR/EN, offline | ✅ `v1.3.0` |
-| **Route Planner** | Lay a route on a map — DCS map (by DCS Olympus), Flappie's navigation chart on the Caucasus, topographic or satellite, MGRS grid, place names, DCS towns and airfields, map search — type coordinates or heading & distance, reference points, headings, distances, MGRS & DMS, sent to the datacard; DCS Route Tool import & export; leg boxes, ground speed and minute marks; CombatFlite layers (.cf); draw your own layers by touch — circles, zones and curves, lines, FLOT and corridors, points, text, orbits, kill boxes with their grid; NATO military symbols (APP-6) — units, equipment, aircraft, FARP — filled or outlined, three sizes; magnetic headings with the variation computed like DCS, leg by leg; tap an airfield or heliport to open its chart from DCS Airfield Charts, served by the wing's server; send the framed map view to the Briefing Generator; a Display menu to show or hide the route, reference points, drawings, NATO symbols, imported layers, grid, towns, airfields and places | ✅ `v1.13.1` |
-| **Datacard Generator** | One-page flight datacards for the kneeboard — from scratch, from a briefing or from a route — reference points, day & night, PNG & PDF export; magnetic headings computed like DCS | ✅ `v1.5.1` |
+| **HQ** | Command post — configure your wing once (branding, squadrons), shared with the other tools; experimental `.miz` mission reader/patcher | 🧪 Beta |
+| **Flight Configurator** | Prepare a flight for the Mission Commander — identity, radios, loadout built on the aircraft's front view or started from your presets, livery — and export it as a flight package that HQ applies to a mission; Mi-24P, Mi-8MT, F-4E and Mirage F1EE | 🧪 Beta |
+| **Briefing Generator** | Mission briefings, full or quick — SITAC, radio plan, airfields, charts, recon photos, map from the Route Planner — PDF & PNG export | ✅ |
+| **Recon Station** | Turn a screenshot into a reconnaissance analysis photo — sensor looks, annotations drawn by touch, lossless PNG | ✅ |
+| **Field Manual** | In-app documentation for the suite — one illustrated chapter per tool, diagrams, FR/EN, offline | ✅ |
+| **Route Planner** | Lay a route on a map — DCS map (by DCS Olympus), Flappie's navigation chart on the Caucasus, topographic or satellite, MGRS grid, place names, DCS towns and airfields, map search — type coordinates or heading & distance, reference points, headings, distances, MGRS & DMS, sent to the datacard; DCS Route Tool import & export; leg boxes, ground speed and minute marks; CombatFlite layers (.cf); draw your own layers by touch — circles, zones and curves, lines, FLOT and corridors, points, text, orbits, kill boxes with their grid; NATO military symbols (APP-6) — units, equipment, aircraft, FARP — filled or outlined, three sizes; magnetic headings with the variation computed like DCS, leg by leg; tap an airfield or heliport to open its chart from DCS Airfield Charts, served by the wing's server; send the framed map view to the Briefing Generator; a Display menu to show or hide the route, reference points, drawings, NATO symbols, imported layers, grid, towns, airfields and places | ✅ |
+| **Datacard Generator** | One-page flight datacards for the kneeboard — from scratch, from a briefing or from a route — reference points, day & night, PNG & PDF export; magnetic headings computed like DCS | ✅ |
 
 > Mission Plan is a single HTML file: every tool opens from its home page, and one **Save** writes all the work of the suite into one `.json` file that **Open…** brings back.
 
@@ -65,7 +67,7 @@ The Flight Configurator is the **Flight Lead's** tool: it prepares one or more f
 - **Import** — the mission loaded in HQ or a flight package (`.json` or `.zip`, including the Route Planner's), with four boxes per flight: Route, Radios, Loadout, Livery; the route is carried as is, never drawn
 - **Open / Save** — **Save** writes all the Mission Plan work, your flights included (your loadout presets stay in your browser), into the suite's work file, and **Open ▾ › Open a work file…** brings it back (an old Flight Configurator file still opens); **Export** writes the package (parts left empty stay untouched in HQ)
 - **Reusable loadout engine** — `payload_block.py` reads preset files and builds a `.miz` `payload`, with no DOM and no network; other modules can take it as is
-- **4 themes, FR/EN**, touch-first, fully offline
+- **4 themes, FR/EN**, touch-first, works offline
 
 ### 🚀 Briefing Generator — in detail
 
@@ -92,16 +94,16 @@ Recon Station turns any screenshot into a convincing **reconnaissance analysis p
 
 ### 📖 Field Manual — in detail
 
-The Field Manual is the suite's **built-in documentation**, opened from the board like any other tool — **no internet, no separate guide to download**.
+The Field Manual is the suite's **built-in documentation**, opened from the board like any other tool — **it works offline, with no separate guide to download**.
 
 - **One chapter per tool** — Recon Station, HQ, Flight Configurator, Briefing Generator, Datacard Generator, Route Planner
 - **Diagrams, not screenshots** — each chapter has a hand-drawn-style **SVG schematic** (e.g. *what feeds what* in the Briefing Generator) that adapts to the active theme
 - **"What it's for" first** — plain explanations of each tool's purpose and workflow
-- **4 themes, FR/EN**, fully offline
+- **4 themes, FR/EN**, works offline
 
 ## ✨ Features
 
-- **Online or fully offline** — use the hosted version, or one HTML file with no install, no server, no internet
+- **Online or offline** — use the hosted version, or one HTML file with no install and no server; everything works offline except the Route Planner's online map backgrounds and airfield chart sheets
 - **One landing page** — embeds the live tools; open it, use it, share it
 - **Tablet & mobile first** — see above 📱
 - **4 graphical themes** — Cold War NATO (default), Cold War Soviet, Modern NATO, Modern Eastern Bloc — chosen on the board, carried across the tools
@@ -112,21 +114,21 @@ The Field Manual is the suite's **built-in documentation**, opened from the boar
 
 ## 📸 Screenshots
 
-**The board** — every tool on one page, 4 themes, FR/EN
+**The board** — every tool on one page, two roles, 4 themes, FR/EN
 
-![board](docs/screenshots/board.jpg)
+![landing](docs/screenshots/landing.jpg)
+
+**HQ** — the wing configuration, with the example wing loaded
+
+![hq](docs/screenshots/hq.jpg)
+
+**Flight Configurator** — a group with its units, route sketch and legs, ready to export as a flight package
+
+![flight-configurator](docs/screenshots/flight_configurator.jpg)
 
 **Briefing Generator** — the editor on the left, the printed briefing on the right
 
 ![briefing-generator](docs/screenshots/briefing_generator.jpg)
-
-**Datacard Generator** — a one-page kneeboard datacard, built from scratch or from a briefing or a route
-
-![datacard-generator](docs/screenshots/datacard_generator.jpg)
-
-**Route Planner** — a route with leg boxes and minute marks, an orbit and a kill box drawn by touch
-
-![route-planner](docs/screenshots/route_planner.jpg)
 
 **Recon Station** — numbered targets with their legend, a frame, an ellipse and a magnifier drawn on the image, with the info block
 
@@ -134,20 +136,28 @@ The Field Manual is the suite's **built-in documentation**, opened from the boar
 
 <sub>Recon Station sample image (also the tool's built-in example): USDA National Agriculture Imagery Program (NAIP) aerial photograph, public domain.</sub>
 
+**Route Planner** — a route with leg boxes and minute marks, an orbit and a kill box drawn by touch
+
+![route-planner](docs/screenshots/route_planner.jpg)
+
+**Datacard Generator** — a one-page kneeboard datacard, built from scratch or from a group, a briefing or a route
+
+![datacard-generator](docs/screenshots/datacard_generator.jpg)
+
 ## 🚀 Quick Start
 
 **Option A — online (nothing to download)**
 1. Open **[the hosted version](https://mirabellebenou.github.io/dcs-mission-plan/)** in your browser (works on phone/tablet too)
-2. Pick a tool on the board and go
+2. Open the **Field Manual** from the top bar of the board and read its **Where to start** page (the two roles, the order of the tools, the work file), then pick a tool and go
 
 **Option B — offline file**
 1. Download the latest `dcs_mission_plan.html` from the [Releases](../../releases) page
 2. Open it in any modern browser (Chrome recommended) — on PC or tablet
-3. It keeps working offline; bookmark or "Add to Home Screen" on mobile
+3. It keeps working offline (except the Route Planner's online map backgrounds and airfield chart sheets); bookmark or "Add to Home Screen" on mobile
 
-No account, no internet required after the first load.
+No account needed. Once the page or the file is loaded, everything works offline, except what the Route Planner loads online: its map backgrounds and its airfield chart sheets.
 
-Every tool has an **Example ▾** menu, and so does the landing page's top bar, with two lines (Mission Commander, Flight Leader). There is one example, the fictional STEPPE WIND operation over Cyprus, and it loads by group: the Mission Commander line fills the Briefing Generator and the Recon Station, the Flight Leader line fills the Route Planner, the Datacard Generator and the Flight Configurator; **Restore** brings back the group's previous work — the quickest way to see what the suite does.
+The **Example ▾** menu is in the top bar of the landing page and of the Briefing Generator, Recon Station, Route Planner, Datacard Generator and Flight Configurator; it has two lines (Mission Commander, Flight Leader). There is one example, the fictional STEPPE WIND operation over Cyprus, and it loads by group: the Mission Commander line fills the Briefing Generator and the Recon Station, the Flight Leader line fills the Route Planner, the Datacard Generator and the Flight Configurator; **Restore** brings back the group's previous work — the quickest way to see what the suite does. HQ has its own **Example** button in its top bar, which loads a demonstration wing (Task Force Kestrel); the Field Manual has no example.
 
 ## 🛡️ For wing administrators
 
@@ -161,7 +171,7 @@ The default `MY WING` configuration is generic — replace it with your own.
 
 ## 📓 Changelog
 
-See [CHANGELOG.md](./CHANGELOG.md) for the per-tool version history.
+See [CHANGELOG.md](./CHANGELOG.md) for the release notes (one version for the suite since v2.0.0; the history of each tool up to v1.24.0 is kept below them).
 
 ## 🏗️ Building from source
 
@@ -237,10 +247,10 @@ The workflow checks all of it, creates the release with its files, publishes it 
 ## 🗺️ Roadmap
 
 ### ⏳ Work in Progress
-- ⏳ **HQ** — flight-package / Commander UI, and in-game `.miz` validation (out of beta)
-- ⏳ **Route Planner** — NATO symbols, clock times from a TOT, read routes from a `.miz`, automatic magnetic variation, kneeboard export
-- ⏳ **Datacard Generator** — import waypoints and loadouts from HQ (`.miz`)
-- ⏳ **UI polish** and more themes
+- ⏳ **HQ** — create a group that a mission lacks, from a flight package; in-game `.miz` validation (out of beta)
+- ⏳ **Route Planner** — clock times from a TOT, kneeboard export
+- ⏳ **The suite** — more aircraft types (the Flight Configurator handles four today), and phone ergonomics
+- ⏳ More themes
 
 ### 📋 Planned (Briefing Generator)
 - Auto-save indicator, briefing templates (CAS / CAP / SEAD), URL-based sharing
