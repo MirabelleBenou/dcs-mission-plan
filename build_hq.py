@@ -3300,6 +3300,7 @@ function importWingConfig(file) {{
     try {{ parsed = JSON.parse(reader.result); }}
     catch (e) {{ console.warn('[HQ] configuration wing : JSON illisible', e); showToast(t('msg.jsonUnreadable'), {{ type: 'err' }}); return; }}
     if (!parsed || typeof parsed !== 'object' || parsed.configSchemaVersion !== 1) {{ showToast(t('msg.notWingConfig'), {{ type: 'err' }}); return; }}
+    delete parsed.managedBy;       // un fichier importé ne rend jamais la configuration gérée : seul l'outil qui écrit le stockage pose la marque
     let check;
     try {{ check = validateWingConfig(parsed); }}
     catch (e) {{ console.warn('[HQ] configuration wing : validation impossible', e); showToast(t('msg.notWingConfig'), {{ type: 'err' }}); return; }}
@@ -6858,7 +6859,9 @@ for _m in _re.finditer(r'\n(?:async )?function (\w+)\([^)]*\) \{', src):
             print("      sans garde : " + _m.group(1))
 must_mg(_wr_ok and _wr_n == 6, 'chaque \u00e9criture de wing_config_v1 est gard\u00e9e par wingStoredManagedBy (%d fonctions : persistWingConfig, persistWingConfigNow, flushWingPersist, loadWingExample, restoreWingConfig, resetWingConfig)' % _wr_n)
 must_mg('function wingManagedBy(cfg)' in src and 'function wingStoredManagedBy()' in src, 'la marque se lit par une seule fonction (wingManagedBy)')
-must_mg(not _re.search(r'delete (cfg|parsed|obj)\.managedBy', src), 'validateWingConfig, loadWingConfig et l\u2019import gardent managedBy tel quel')
+must_mg(not _re.search(r'delete (cfg|obj)\.managedBy', src), 'validateWingConfig, loadWingConfig et sanitize gardent managedBy tel quel')
+_ia = src.find('function importWingConfig(file) {'); _ib = src.find('\n}\n', _ia)
+must_mg(_ia > 0 and 'delete parsed.managedBy;' in src[_ia:_ib] and src[_ia:_ib].index('delete parsed.managedBy;') < src[_ia:_ib].index('validateWingConfig(parsed)'), 'l\u2019import retire managedBy du contenu lu avant de le valider et de l\u2019\u00e9crire')
 must_mg("window.addEventListener('storage', wingOnStorage)" in src and 'function wingOnStorage(e)' in src, 'HQ \u00e9coute storage sur wing_config_v1 (changement \u00e0 chaud)')
 must_mg(all(('id="%s"' % i) in src for i in ('wing-liv-fold', 'wing-def-fold')) and src.count('class="wing-sq-toggle ui-fold-head wing-fold-head"') == 2, 'les deux bo\u00eetes de livr\u00e9es portent leur ligne de t\u00eate .wing-sq-toggle.ui-fold-head')
 _kg = lambda txt: set(_re.findall(r"'(wing\.managed\.[^']+|sum\.wliv\.[^']+|sum\.wdef\.[^']+|sum\.wdefset\.[^']+)':", txt))

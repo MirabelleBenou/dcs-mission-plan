@@ -4038,6 +4038,7 @@ function importWingConfig(file) {
     try { parsed = JSON.parse(reader.result); }
     catch (e) { console.warn('[HQ] configuration wing : JSON illisible', e); showToast(t('msg.jsonUnreadable'), { type: 'err' }); return; }
     if (!parsed || typeof parsed !== 'object' || parsed.configSchemaVersion !== 1) { showToast(t('msg.notWingConfig'), { type: 'err' }); return; }
+    delete parsed.managedBy;       // un fichier importé ne rend jamais la configuration gérée : seul l'outil qui écrit le stockage pose la marque
     let check;
     try { check = validateWingConfig(parsed); }
     catch (e) { console.warn('[HQ] configuration wing : validation impossible', e); showToast(t('msg.notWingConfig'), { type: 'err' }); return; }

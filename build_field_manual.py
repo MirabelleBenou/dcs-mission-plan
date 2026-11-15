@@ -2350,6 +2350,12 @@ grep_ok('It always shows a name, and that name is what the package carries.', 'F
 grep_ok('Sous elles, la <strong>livrée par défaut</strong> de chaque appareil', 'HQ : la livrée par défaut de chaque appareil (FR)')
 grep_ok('Below them, each aircraft’s <strong>default livery</strong>', 'HQ : la livrée par défaut de chaque appareil (EN)')
 # Route Planner : le libellé de l'entrée d'Ouvrir ▾ dit qu'elle lit aussi les calques CombatFlite ; HQ : la fenêtre Wing en lecture seule, les boîtes de livrées repliables
+# l'ancien libellé n'est plus cité nulle part dans le manuel rendu : « route » suivi aussitôt de « … » (le nouveau a « ou des calques » / « or layers » entre les deux)
+for _pat, _lg in ((r'Ouvrir une route\s*…', 'FR'), (r'Open a route\s*…', 'EN')):
+    _old = re.findall(_pat, src)
+    print('  [%s] ABSENT: Route Planner : l\'ancien libellé (%s) n\'est plus cité (%d)' % ('OK' if not _old else 'FAIL', _lg, len(_old)))
+    if _old:
+        CHECK_ERRORS.append('FAIL ABSENT ancien libellé Route Planner ' + _lg)
 for _lab, _lg in (('Ouvrir une route ou des calques…', 'FR'), ('Open a route or layers…', 'EN')):
     _n = src.count(_lab)
     print('  [%s] Route Planner : « %s » cité au moins trois fois (%d)' % ('OK' if _n >= 3 else 'ÉCHEC', _lab, _n))
