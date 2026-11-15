@@ -52,6 +52,7 @@ Changes merged since the last release, grouped per tool.
 - Magnetic declination in 1985 now uses the WMM 1985, as DCS does (the IGRF up to 1984).
 - Mirage F1CE and F1BE: radio names and frequency bands of the TRAP 136 and TRAP 137B, as in the F1EE.
 - A wing configuration that the browser refuses to store now says so instead of showing it as loaded; an import window says when a file cannot be read.
+- On a new browser profile, the landing page and its example follow the browser’s language, like the tools; the Briefing Generator’s Wing configuration errors are translated and its toolbar fade only shows when the bar overflows; Recon Station keeps its image area when you switch language; the Datacard Generator’s French toolbar keeps its stamp at 1,920 pixels.
 
 ### Mission Plan — landing
 #### Added
