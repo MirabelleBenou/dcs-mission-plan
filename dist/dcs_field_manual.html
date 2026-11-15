@@ -160,15 +160,6 @@ body {
 
 .tb-sep { width: 1px; height: 28px; background: var(--khaki); opacity: .4; flex-shrink: 0; }
 .tb-spacer { flex: 1; }
-.tb-version {
-  font-family: var(--f-typewriter);
-  font-size: 11px;
-  opacity: .45;
-  color: var(--amber);
-  letter-spacing: .5px;
-  user-select: none;
-  white-space: nowrap;
-}
 
 #btn-lang {
   background: transparent;
@@ -203,7 +194,6 @@ body {
 .tb-classif { font-family: var(--f-stencil); font-weight: 400; font-size: 11px; letter-spacing: 3px; color: var(--red-faded); border: 1px solid var(--red-faded); padding: 4px 10px; white-space: nowrap; flex-shrink: 0; }
 #btn-lang svg { display: block; }
 .tb-brand-sub { font-weight: 500; }
-.tb-version { font-family: 'Roboto Mono', monospace; }
 /* la barre qui manque de place se réduit dans un seul ordre, par la même règle « s'il tient » (uiBarFit, classes tb-st1 à tb-st6, cumulatives) : 1 le tampon de décor (et le tampon posé par le shell), 2 le numéro de version,
    3 le libellé d'une liste de la barre (« Théâtre »), 4 le texte d'Affichage (l'icône seule), 5 le texte des boutons (icônes seules), 6 le titre long, qui passe au sigle court (titre, sous-titre et séparateurs masqués) ;
    aucun seuil de largeur propre à un outil, le Field Manual compris (il prend ce même texte : build_bar_css), ne retire plus rien de cela */
@@ -1015,7 +1005,6 @@ body.zm-open #fm-root { overflow: hidden; }
   <div class="tb-sep" aria-hidden="true"></div>
   <div class="tb-spacer"></div>
   <div class="tb-classif">TRAINING // UNCLASSIFIED</div>
-  <span class="tb-version">v2.0.0</span>
   <button id="btn-lang" aria-label="Passer en anglais" title="Passer en anglais">
     <svg id="flag-svg" viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg">
       <!-- flag FR par défaut -->

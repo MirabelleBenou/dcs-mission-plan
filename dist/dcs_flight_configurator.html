@@ -272,14 +272,6 @@ select[data-tbm-src] { display: none !important; }
 .tb-btn:active { transform: translateY(1px); }
 .tb-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
 .tb-spacer { flex: 1; }
-.tb-version {
-  font-size: 11px;
-  opacity: .45;
-  color: var(--amber);
-  letter-spacing: .5px;
-  user-select: none;
-  white-space: nowrap;
-}
 @media (max-width: 479px) {
   .toolbar { gap: 6px; padding-left: max(8px, env(safe-area-inset-left)); padding-right: max(8px, env(safe-area-inset-right)); }
   .tb-brand { min-width: 0; }
@@ -398,7 +390,6 @@ body[data-theme] {
 
 /* Tampon de décor : le style de celui du Briefing Generator, en anglais dans les deux langues ; il ne s'affiche que quand la barre a la place. */
 .tb-brand-sub { font-weight: 500; }
-.tb-version { font-family: 'Roboto Mono', monospace; }
 .tb-classif { font-family: var(--f-stencil); font-weight: 400; font-size: 11px; letter-spacing: 3px; color: var(--red-faded); border: 1px solid var(--red-faded); padding: 4px 10px; white-space: nowrap; flex-shrink: 0; }
 
 /* ---------- Page : état de l'export, deux colonnes, blocs ---------- */
@@ -1129,7 +1120,6 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   </select>
   <div class="tb-spacer"></div>
   <div class="tb-classif">FLIGHT LEAD // COPY 1</div>
-  <span class="tb-version">v2.0.0</span>
   <button class="tb-lang-btn" id="btn-lang" title="Passer en anglais" aria-label="Passer en anglais"><svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="14" fill="#012169"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#fff" stroke-width="2.8"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#C8102E" stroke-width="1.6"/><rect x="8" width="4" height="14" fill="#fff"/><rect y="5" width="20" height="4" fill="#fff"/><rect x="9" width="2" height="14" fill="#C8102E"/><rect y="6" width="20" height="2" fill="#C8102E"/></svg></button>
 </header>
 

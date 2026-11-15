@@ -682,7 +682,6 @@ select[data-tbm-src] {{ display: none !important; }}
               <div class="cap-row">
                 <span class="logo" style="background:var(--a-hq)">H·Q</span>
                 <span class="ptitle">HQ</span>
-                <span class="pver">v{SUITE_VERSION}</span>
               </div>
               <div class="pdesc" data-i18n="hq.desc">Poste de commandement — configuration Wing, identité escadrons, logos partagés avec tous les modules.</div>
               <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
@@ -697,7 +696,6 @@ select[data-tbm-src] {{ display: none !important; }}
               <div class="cap-row">
                 <span class="logo" style="background:var(--a-bg)">B·G</span>
                 <span class="ptitle">Briefing Generator</span>
-                <span class="pver">v{SUITE_VERSION}</span>
               </div>
               <div class="pdesc" data-i18n="bg.desc">Briefings complets — SITAC, plan radio, aérodromes, charts, annexes — export PDF prêt à partager.</div>
               <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
@@ -712,7 +710,6 @@ select[data-tbm-src] {{ display: none !important; }}
               <div class="cap-row">
                 <span class="logo" style="background:var(--a-rs)">R·S</span>
                 <span class="ptitle">Recon Station</span>
-                <span class="pver">v{SUITE_VERSION}</span>
               </div>
               <div class="pdesc" data-i18n="rs.desc">Transforme une capture en photo d'analyse de reconnaissance — niveaux de gris, annotations au doigt, export PNG pleine résolution.</div>
               <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
@@ -732,7 +729,6 @@ select[data-tbm-src] {{ display: none !important; }}
               <div class="cap-row">
                 <span class="logo" style="background:var(--a-rp)">R·P</span>
                 <span class="ptitle">Route Planner</span>
-                <span class="pver">v{SUITE_VERSION}</span>
               </div>
               <div class="pdesc" data-i18n="rp.desc">Tracé de route sur carte — carte DCS, topographique ou satellite, grille MGRS, villes et aérodromes, recherche ; points de référence ; caps, distances, vitesse sol et minutage ; calques CombatFlite et dessin au doigt (zones, FLOT, couloirs, orbites, boîtes) ; MGRS et DMS, envoyés à la datacard ; import et export du Route Tool de DCS.</div>
               <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
@@ -747,7 +743,6 @@ select[data-tbm-src] {{ display: none !important; }}
               <div class="cap-row">
                 <span class="logo" style="background:var(--a-dg)">D·G</span>
                 <span class="ptitle">Datacard Generator</span>
-                <span class="pver">v{SUITE_VERSION}</span>
               </div>
               <div class="pdesc" data-i18n="dg.desc">Datacards de vol d'une page pour le kneeboard — saisie ou depuis un briefing, day et night, export PNG et PDF.</div>
               <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
@@ -762,7 +757,6 @@ select[data-tbm-src] {{ display: none !important; }}
               <div class="cap-row">
                 <span class="logo" style="background:var(--a-fc)">F·C</span>
                 <span class="ptitle">Flight Configurator</span>
-                <span class="pver">v{SUITE_VERSION}</span>
               </div>
               <div class="pdesc" data-i18n="fc.desc">Assemble un groupe — identité, radios, emport composé sur la vue de face ou tiré de mes presets, livrée — et l'exporte en paquet de vol que HQ applique à une mission.</div>
               <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
@@ -783,6 +777,7 @@ select[data-tbm-src] {{ display: none !important; }}
 
   <div class="foot">
     <span>DCS Mission Plan</span><span class="dot">·</span>
+    <span id="foot-version">v{SUITE_VERSION}</span><span class="dot">·</span>
     <span>Open source · AGPL-3.0</span><span class="dot">·</span>
     <span id="foot-info">Cold War OTAN</span>
     <span class="right" id="foot-right">Mission Plan</span>

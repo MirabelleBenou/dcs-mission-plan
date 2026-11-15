@@ -275,10 +275,6 @@ button, input, select { font: inherit; }
   text-transform: uppercase; white-space: nowrap;
 }
 .tb-spacer { flex: 1 0 0; min-width: 0; margin-left: -10px; }   /* le ressort ne coûte rien à la barre qui défile : entre le thème et le drapeau, l'écart est de 6 px au lieu de 8 */
-.tb-version {
-  font-family: var(--f-typewriter); font-size: 11px; opacity: .45; color: var(--amber); letter-spacing: .5px;
-  user-select: none; white-space: nowrap; flex: none;
-}
 .tb-group { display: inline-flex; flex: none; }
 .tb-btn, .tb-sel {
   font-family: var(--f-ui); font-weight: 700; letter-spacing: 1.5px; font-size: 12px; text-transform: uppercase;
@@ -1053,7 +1049,6 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .tb-classif { font-family: var(--f-stencil); font-weight: 400; font-size: 11px; letter-spacing: 3px; color: var(--red-faded); border: 1px solid var(--red-faded); padding: 4px 10px; white-space: nowrap; flex-shrink: 0; }
 .tb-lang-btn svg { display: block; }
 .tb-brand-sub { font-weight: 500; }
-.tb-version { font-family: 'Roboto Mono', monospace; }
 
 /* ---------- barre du haut : une seule ligne qui défile quand elle déborde (à tout écran : avec « Lieux » et « Aérodromes », elle
    ne tient plus sur un portable) ; un fondu signale le bord qui déborde ---------- */
@@ -1163,7 +1158,6 @@ __CSS__
   </select>
   <div class="tb-spacer"></div>
   <div class="tb-classif">NAV LOG // RESTRICTED</div>
-  <span class="tb-version">v__APP_VERSION__</span>
   <button type="button" class="tb-lang-btn" id="btn-lang" data-i18n-title="tb.lang.tip" title="Passer en anglais" data-i18n-aria-label="tb.lang.tip" aria-label="Passer en anglais"><svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="14" fill="#012169"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#fff" stroke-width="2.8"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#C8102E" stroke-width="1.6"/><rect x="8" width="4" height="14" fill="#fff"/><rect y="5" width="20" height="4" fill="#fff"/><rect x="9" width="2" height="14" fill="#C8102E"/><rect y="6" width="20" height="2" fill="#C8102E"/></svg></button>
 </header>
 

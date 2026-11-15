@@ -484,16 +484,6 @@ body {
 }
 
 .tb-spacer { flex: 1; min-width: 0; }
-.tb-version {
-  font-family: var(--f-typewriter);
-  font-size: 11px;
-  opacity: .45;
-  color: var(--amber);
-  letter-spacing: .5px;
-  user-select: none;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
 .tb-lang-btn {
   background: transparent;
   border: 1px solid var(--khaki);
@@ -1198,7 +1188,6 @@ div.dc-bl, li.dc-bl, p.dc-bl { height: 24px; border-bottom: 1px dotted var(--dc-
 .tb-classif { font-family: var(--f-stencil); font-weight: 400; font-size: 11px; letter-spacing: 2.5px; color: var(--red-faded); border: 1px solid var(--red-faded); padding: 4px 8px; white-space: nowrap; flex-shrink: 0; }   /* interlettrage 2,5 px et non 3, marges 8 et non 10 : la barre pleine en français, avec le tampon « TEST WING », tient à 1 920 px (voir le commentaire des seuils) */
 .tb-lang-btn svg { display: block; }
 .tb-brand-sub { font-weight: 500; }
-.tb-version { font-family: 'Roboto Mono', monospace; }
 /* Le texte des boutons s'affiche s'il tient, sinon l'icône seule : règle commune du bloc d'interface (classes tb-st5, tb-st6) ; ici seulement les marges resserrées */
 @media (max-width: 1617px) { .tb-btn { padding: 0 10px; } }
 @media (max-width: 1250px) {
@@ -1478,7 +1467,6 @@ __CSS__
   </select>
   <div class="tb-spacer"></div>
   <div class="tb-classif">COCKPIT COPY // DO NOT REMOVE</div>
-  <span class="tb-version">v__APP_VERSION__</span>
   <button class="tb-lang-btn" id="btn-lang" data-i18n-title="tb.lang.tip" title="Passer en anglais" data-i18n-aria-label="tb.lang.tip" aria-label="Passer en anglais"><svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="14" fill="#012169"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#fff" stroke-width="2.8"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#C8102E" stroke-width="1.6"/><rect x="8" width="4" height="14" fill="#fff"/><rect y="5" width="20" height="4" fill="#fff"/><rect x="9" width="2" height="14" fill="#C8102E"/><rect y="6" width="20" height="2" fill="#C8102E"/></svg></button>
 </header>
 
