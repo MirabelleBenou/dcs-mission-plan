@@ -1352,8 +1352,6 @@ const DEFAULT_WING_CONFIG = JSON.parse({_default_wing_config_js});
 //  Wing configuration hub — Mission Plan suite
 // =============================================
 
-const APP_VERSION = '{SUITE_VERSION}';
-
 // ── i18n ──────────────────────────────────────────────────────
 const I18N = {{
   fr: {{
@@ -6621,7 +6619,7 @@ def grep_absent(pattern, label):
     return not found
 
 print("\\n-- V\u00e9rifications --")
-grep_present("const APP_VERSION = '" + SUITE_VERSION + "'", 'APP_VERSION = ' + SUITE_VERSION)
+grep_present('DCS HQ v' + SUITE_VERSION, 'en-tête : DCS HQ v' + SUITE_VERSION)
 grep_present('wing_config_v1',  'cl\u00e9 wing_config_v1 pr\u00e9sente')
 grep_present('localStorage.setItem(KEY_WING', '\u00e9criture wing_config_v1')
 grep_present('localStorage.getItem(KEY_WING', 'lecture wing_config_v1')

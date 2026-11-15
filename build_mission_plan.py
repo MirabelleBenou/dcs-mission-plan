@@ -187,7 +187,7 @@ def check_suite_colors():
     print('  [OK] couleurs de la fenêtre du nom et du toast : celles des six outils, aux quatre thèmes')
 
 
-# Les textes de l'exemple (accueil et cinq outils) : une seule table, la même en FR et en EN ; les modules en portent chacun la leur, le build les compare à celle-ci
+# Les textes de l'exemple de l'accueil : une seule table, la même en FR et en EN ; le shell en porte les libellés, le build les compare à celle-ci (les cinq outils n'ont plus de menu Exemple)
 EX_BTN_TIP = {'fr': 'Charger l’exemple STEPPE WIND', 'en': 'Load the STEPPE WIND example'}
 EX_BTN_LABEL = {'fr': 'Exemple', 'en': 'Example'}
 EX_MENU = {'mc': 'Mission Commander — Briefing Generator, Recon Station',
@@ -199,7 +199,7 @@ WORK_FORMAT = 'dcs-mission-plan-work-v1'
 
 
 def read_suite_examples():
-    """Les deux fichiers d'exemple (samples/example_work_fr.json, _en.json), lus tels quels. Rend {fr: objet, en: objet}. Les contrôles sont ceux de check_suite_examples()."""
+    """Les deux fichiers d'exemple (samples/example_work_fr.json, _en.json), lus tels quels, sauf le champ « version » (celui du fichier de travail), qui prend SUITE_VERSION. Rend {fr: objet, en: objet}. Les contrôles sont ceux de check_suite_examples()."""
     out = {}
     for lang in ('fr', 'en'):
         path = os.path.join(SCRIPT_DIR, 'samples', 'example_work_%s.json' % lang)
@@ -245,26 +245,17 @@ def check_suite_examples(ex, group_keys):
             raise SystemExit("[ERREUR] samples/example_work_%s.json : fc_state_v1 porte « mine » (les presets ne sont pas dans un exemple) — build arrêté" % lang)
 
 
-def check_example_tooltips():
-    """Le menu Exemple ▾ de chaque outil : le bouton porte, dans chaque langue, l'infobulle de la table (EX_BTN_TIP), son libellé (EX_BTN_LABEL) et ouvre un menu à deux lignes (EX_MENU, dans cet ordre) ;
-    chaque ligne appelle MP_WORK_EXAMPLE('mc') et ('fl') ; le build compare au HTML de chaque outil. Les textes sont écrits en \\u2019 / \\u2014 dans l'outil qui les met en échappement."""
-    def forms(txt):
-        return {txt, txt.replace('’', '\\u2019').replace('—', '\\u2014')}
+def check_no_example_menu():
+    """Le menu Exemple ▾ n'est que sur l'accueil : aucun des cinq outils (EX_TOOLS) n'en porte le bouton, la fonction, les textes ni l'appel du shell ; un menu revenu arrête le build.
+    HQ garde son propre bouton Example (l'escadre de démonstration) : il n'est pas dans EX_TOOLS."""
+    markers = ('btn-example', 'workExample', 'MP_WORK_EXAMPLE', 'toolbar.example', 'tb.example', 'ExampleMenu')
     for mid in EX_TOOLS:
         src = next(m['src'] for m in MODULES if m['id'] == mid)
         with open(os.path.join(SCRIPT_DIR, src), 'r', encoding='utf-8') as fh:
             html = fh.read()
-        for lang in ('fr', 'en'):
-            for what, want in (('infobulle', EX_BTN_TIP[lang]), ('libellé', EX_BTN_LABEL[lang])) + tuple(('ligne ' + g, EX_MENU[g]) for g in ('mc', 'fl')):
-                n = sum(html.count(w) for w in forms(want))
-                if n < 1 or (what.startswith('ligne') and n < 2):
-                    raise SystemExit(f"[ERREUR] {src} : {what} du menu Exemple ({lang}) absent ou pas dans les deux langues : « {want} » — build arrêté")
-        if 'MP_WORK_EXAMPLE(g)' not in html or 'k => workExample(k)' not in html:
-            raise SystemExit(f"[ERREUR] {src} : le menu Exemple n'appelle pas MP_WORK_EXAMPLE par groupe — build arrêté")
-        if html.count("{ k: 'mc', label: t(") < 1 or html.count("{ k: 'fl', label: t(") < 1 or html.index("k: 'mc'") > html.index("k: 'fl'"):
-            raise SystemExit(f"[ERREUR] {src} : les deux lignes du menu Exemple ne sont pas, dans cet ordre, mc puis fl — build arrêté")
-        if 'btn-example' not in html or 'aria-haspopup="menu"' not in html:
-            raise SystemExit(f"[ERREUR] {src} : le bouton Exemple n'est pas un menu — build arrêté")
+        for mk in markers:
+            if mk in html:
+                raise SystemExit(f"[ERREUR] {src} : le menu Exemple est revenu dans l'outil ({mk}) : il n'est que sur l'accueil — build arrêté")
 
 
 def encode_file_b64(path):
@@ -1676,9 +1667,9 @@ def main():
     print('\n[2/3] Encodage images tuiles…')
     tile_uris = build_tile_uris(MODULES)
 
-    check_example_tooltips()
+    check_no_example_menu()
     suite_examples = read_suite_examples()
-    print("  [OK] le menu Exemple ▾ des cinq outils : infobulle, libellé, deux lignes (mc puis fl), appel de MP_WORK_EXAMPLE par groupe (FR, EN)")
+    print("  [OK] aucun menu Exemple ▾ dans les cinq outils (BG, RS, RP, DG, FC) : il n'est que sur l'accueil")
 
     print(f'\n[3/3] Génération {OUT_FILE}…')
     suite_examples_js = json.dumps(suite_examples, ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')

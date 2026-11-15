@@ -2,7 +2,6 @@
 
 **v2.0.0** — one version for the whole suite; see the [CHANGELOG](./CHANGELOG.md).
 
-<!-- Replace with a screenshot of the landing "situation board" (e.g. docs/screenshots/landing.png) -->
 ![Intro-image](docs/screenshots/landing.jpg)
 > Prepare your DCS World missions end to end — a suite of tools behind one operational landing page. **Use it online, or download a single offline file.**
 
@@ -54,7 +53,7 @@ The landing page presents each tool as a **pinned print** on the board. Active t
 
 ### 🛡️ HQ — your wing, configured once
 
-HQ is the suite's **command post**. Its main job today is the **wing hub**: set your wing name, logo, squadrons and callsigns **once**, and Briefing Generator + Recon Station pick it up automatically. HQ also ships an **experimental `.miz` engine** (read a mission, export a mission snapshot, apply surgical patches) — the advanced flight-package UI is still in development and in-game validation is pending, so HQ is published as **beta**. HQ can also write **Dynamic Spawn** into a mission: mark flights as templates and link them to the airfields, FARPs and ships that already have Dynamic Spawn enabled in the mission editor (HQ never enables it). Its **Example** button loads a demonstration wing; your own configuration is kept and can be restored in one tap.
+HQ is the suite's **command post**. Its main job today is the **wing hub**: set your wing name, logo, squadrons and callsigns **once**, and Briefing Generator + Recon Station pick it up automatically. HQ also ships an **experimental `.miz` engine** (read a mission, export a mission snapshot, apply surgical patches) — HQ applies the Flight Configurator's flight packages to the mission; creating a group the mission lacks, from a package, will come later, and in-game validation is pending, so HQ is published as **beta**. HQ can also write **Dynamic Spawn** into a mission: mark flights as templates and link them to the airfields, FARPs and ships that already have Dynamic Spawn enabled in the mission editor (HQ never enables it). Its **Example** button loads a demonstration wing; your own configuration is kept and can be restored in one tap.
 
 ### ✈️ Flight Configurator — in detail
 
@@ -64,7 +63,7 @@ The Flight Configurator is the **Flight Lead's** tool: it prepares one or more f
 - **Radios** — every radio of the aircraft, one field per channel, frequencies from 0 to 999.999 MHz (the Comm Plan Editor's rule); copy to the other units of the flight
 - **Loadout** — built on the aircraft's **front view**: a weapon list per station, twin stations, total mass, and fuel, flares, chaff and gun brought back to the aircraft's limits; start from **My presets** (loaded from `.lua` preset files, or kept from your own loadouts)
 - **Livery** — free text, with suggestions from the liveries already seen for that aircraft type
-- **Import** — the mission loaded in HQ or a flight package (`.json` or `.zip`, including the Route Planner's), with four boxes per flight: Route, Radios, Loadout, Livery; the route is carried as is, never drawn
+- **Import** — the mission loaded in HQ, a briefing or a flight package (`.json` or `.zip`), with four boxes per flight: Route, Radios, Loadout, Livery; the route is carried as is, never drawn
 - **Open / Save** — **Save** writes all the Mission Plan work, your flights included (your loadout presets stay in your browser), into the suite's work file, and **Open ▾ › Open a work file…** brings it back (an old Flight Configurator file still opens); **Export** writes the package (parts left empty stay untouched in HQ)
 - **Reusable loadout engine** — `payload_block.py` reads preset files and builds a `.miz` `payload`, with no DOM and no network; other modules can take it as is
 - **4 themes, FR/EN**, touch-first, works offline
@@ -90,7 +89,7 @@ Recon Station turns any screenshot into a convincing **reconnaissance analysis p
 - **Editable info block** — 9 fields, bold text, black/white
 - **Classification banner** — top/bottom bars, 4 levels, off by default
 - **Wing logos** — upload manually or pull the shared wing branding from HQ; colour / grey / white modes
-- **Example ▾** — the top-bar menu's Mission Commander line loads the STEPPE WIND example into the Mission Commander tools (this one and the Briefing Generator): a demonstration photo with its markers, shapes, magnifier and info block; **Restore** brings back the previous work, image included
+- **Example** — loaded from the **Example ▾** menu of the landing page (Mission Commander line): a demonstration photo with its markers, shapes, magnifier and info block; **Restore** brings back the previous work, image included
 
 ### 📖 Field Manual — in detail
 
@@ -157,7 +156,7 @@ The Field Manual is the suite's **built-in documentation**, opened from the boar
 
 No account needed. Once the page or the file is loaded, everything works offline, except what the Route Planner loads online: its map backgrounds and its airfield chart sheets.
 
-The **Example ▾** menu is in the top bar of the landing page and of the Briefing Generator, Recon Station, Route Planner, Datacard Generator and Flight Configurator; it has two lines (Mission Commander, Flight Leader). There is one example, the fictional STEPPE WIND operation over Cyprus, and it loads by group: the Mission Commander line fills the Briefing Generator and the Recon Station, the Flight Leader line fills the Route Planner, the Datacard Generator and the Flight Configurator; **Restore** brings back the group's previous work — the quickest way to see what the suite does. HQ has its own **Example** button in its top bar, which loads a demonstration wing (Task Force Kestrel); the Field Manual has no example.
+The **Example ▾** menu is only on the landing page, in its top bar, with two lines (Mission Commander, Flight Leader); the tools have no such menu. There is one example, the fictional STEPPE WIND operation over Cyprus, and it loads by group: the Mission Commander line fills the Briefing Generator and the Recon Station, the Flight Leader line fills the Route Planner, the Datacard Generator and the Flight Configurator; **Restore** brings back the previous work — the quickest way to see what the suite does. HQ has its own **Example** button in its top bar, which loads a demonstration wing (Task Force Kestrel); the Field Manual has no example.
 
 ## 🛡️ For wing administrators
 
