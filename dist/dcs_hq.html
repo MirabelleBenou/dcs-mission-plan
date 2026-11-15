@@ -615,7 +615,7 @@ select[data-tbm-src] { display: none !important; }
 .ed-btn-add[hidden] { display: none; }
 
 /* Configuration fournie par un autre outil : la fenêtre se lit, elle ne se modifie pas */
-.wing-managed-note { margin: 0 0 12px 0; padding: 8px 10px; border-left: 3px solid var(--amber); background: rgba(192,137,42,.08); font-size: 12px; }
+.wing-managed-note { padding: 8px 10px; border-left: 3px solid var(--amber); background: rgba(192,137,42,.08); }
 .wing-managed-name { color: var(--amber); font-weight: 700; }
 .wing-managed input:disabled, .wing-managed .tbm-trigger:disabled { opacity: .6; cursor: default; }
 .wing-managed .wing-liv-chk, .wing-managed .ed-img-zone { cursor: default; }
@@ -1278,7 +1278,7 @@ body[data-theme] {
         <fieldset class="wing-fieldset wing-fold" id="wing-liv-fieldset">
           <legend class="wing-legend" id="wing-liv-legend" data-i18n="wing.liv.title">Livrées custom</legend>
           <div class="wing-sq-card wing-fold-card" id="wing-liv-card">
-            <div class="wing-sq-header"><button type="button" class="wing-sq-toggle ui-fold-head wing-fold-head" id="wing-liv-fold" aria-expanded="false" aria-labelledby="wing-liv-legend"></button></div>
+            <div class="wing-sq-header"><button type="button" class="wing-sq-toggle ui-fold-head wing-fold-head" id="wing-liv-fold" aria-expanded="false" aria-labelledby="wing-liv-legend" aria-describedby="wing-liv-sum"></button></div>
             <div class="wing-sq-body">
               <p class="wing-hint wing-liv-hint" data-i18n="wing.liv.hint">Le nom tel qu’il s’écrit dans DCS (celui du dossier de la livrée), et les appareils qui la portent.</p>
               <div id="wing-liv-list"></div>
@@ -1291,7 +1291,7 @@ body[data-theme] {
         <fieldset class="wing-fieldset wing-fold" id="wing-def-fieldset">
           <legend class="wing-legend" id="wing-def-legend" data-i18n="wing.def.title">Livrée par défaut</legend>
           <div class="wing-sq-card wing-fold-card" id="wing-def-card">
-            <div class="wing-sq-header"><button type="button" class="wing-sq-toggle ui-fold-head wing-fold-head" id="wing-def-fold" aria-expanded="false" aria-labelledby="wing-def-legend"></button></div>
+            <div class="wing-sq-header"><button type="button" class="wing-sq-toggle ui-fold-head wing-fold-head" id="wing-def-fold" aria-expanded="false" aria-labelledby="wing-def-legend" aria-describedby="wing-def-sum"></button></div>
             <div class="wing-sq-body">
               <p class="wing-hint wing-def-hint" data-i18n="wing.def.hint">Pour chaque appareil des escadrons, la livrée que le Flight Configurator affiche quand la mission ouverte dans HQ ne lui en donne pas.</p>
               <div id="wing-def-list"></div>
@@ -3016,6 +3016,7 @@ function refreshWingLogoZone() {
     showToast(t('toast.logoCompressing'));
     try {
       const { dataUrl } = await compressLogoFile(f);
+      if (wingStoredManagedBy()) { zone.classList.remove('wing-logo-loading'); e.target.value = ''; return; }       // devenue gérée pendant la compression : rien ne change
       wingConfig.wing.logo = dataUrl;
       persistWingConfig();
       refreshWingLogoZone(); updateWingSizeCounter();
@@ -3066,6 +3067,7 @@ function refreshSqLogoZone(zone, sqIdx) {
     showToast(t('toast.logoCompressing'));
     try {
       const { dataUrl } = await compressLogoFile(f);
+      if (wingStoredManagedBy()) { zone.classList.remove('wing-logo-loading'); e.target.value = ''; return; }       // devenue gérée pendant la compression : rien ne change
       wingConfig.squadrons[sqIdx].logo = dataUrl;
       persistWingConfig();
       refreshSqLogoZone(zone, sqIdx); updateWingSizeCounter();
@@ -3289,6 +3291,7 @@ function renderWingSquadronCard(sqIdx) {
     const isLast = wingConfig.squadrons.length === 1;
     const extra  = isLast ? '\n\n' + t('delSquadron.lastWarning').trim() : '';
     if (!await askConfirm({ title: t('delSquadron.confirm.title').replace('{id}', sqId), text: t('delSquadron.confirm.text') + extra + t('delSquadron.refWarning'), verb: t('ui.verb.delete'), danger: true })) return;
+    if (wingStoredManagedBy()) return;       // devenue gérée pendant la question : rien ne change
     wingConfig.squadrons.splice(sqIdx, 1);
     persistWingConfig(); renderWingSquadrons();
   });
@@ -3755,6 +3758,8 @@ function wingFoldRefresh() {
     if (!fs || !hd || !wingConfig) return;
     hd.setAttribute('aria-expanded', String(fs.classList.contains('open')));
     uiSum(hd, wingFoldSummary(a[0]));
+    const sm = hd.querySelector(':scope > .ui-sum');
+    if (sm) sm.id = 'wing-' + a[0] + '-sum';       // le résumé est annoncé : aria-describedby de la tête
   });
 }
 function wingFoldSet(id, open) {

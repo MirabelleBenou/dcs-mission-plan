@@ -850,7 +850,7 @@ body {{
 .ed-btn-add[hidden] {{ display: none; }}
 
 /* Configuration fournie par un autre outil : la fenêtre se lit, elle ne se modifie pas */
-.wing-managed-note {{ margin: 0 0 12px 0; padding: 8px 10px; border-left: 3px solid var(--amber); background: rgba(192,137,42,.08); font-size: 12px; }}
+.wing-managed-note {{ padding: 8px 10px; border-left: 3px solid var(--amber); background: rgba(192,137,42,.08); }}
 .wing-managed-name {{ color: var(--amber); font-weight: 700; }}
 .wing-managed input:disabled, .wing-managed .tbm-trigger:disabled {{ opacity: .6; cursor: default; }}
 .wing-managed .wing-liv-chk, .wing-managed .ed-img-zone {{ cursor: default; }}
@@ -1266,7 +1266,7 @@ body[data-theme] {{
         <fieldset class="wing-fieldset wing-fold" id="wing-liv-fieldset">
           <legend class="wing-legend" id="wing-liv-legend" data-i18n="wing.liv.title">Livrées custom</legend>
           <div class="wing-sq-card wing-fold-card" id="wing-liv-card">
-            <div class="wing-sq-header"><button type="button" class="wing-sq-toggle ui-fold-head wing-fold-head" id="wing-liv-fold" aria-expanded="false" aria-labelledby="wing-liv-legend"></button></div>
+            <div class="wing-sq-header"><button type="button" class="wing-sq-toggle ui-fold-head wing-fold-head" id="wing-liv-fold" aria-expanded="false" aria-labelledby="wing-liv-legend" aria-describedby="wing-liv-sum"></button></div>
             <div class="wing-sq-body">
               <p class="wing-hint wing-liv-hint" data-i18n="wing.liv.hint">Le nom tel qu’il s’écrit dans DCS (celui du dossier de la livrée), et les appareils qui la portent.</p>
               <div id="wing-liv-list"></div>
@@ -1279,7 +1279,7 @@ body[data-theme] {{
         <fieldset class="wing-fieldset wing-fold" id="wing-def-fieldset">
           <legend class="wing-legend" id="wing-def-legend" data-i18n="wing.def.title">Livrée par défaut</legend>
           <div class="wing-sq-card wing-fold-card" id="wing-def-card">
-            <div class="wing-sq-header"><button type="button" class="wing-sq-toggle ui-fold-head wing-fold-head" id="wing-def-fold" aria-expanded="false" aria-labelledby="wing-def-legend"></button></div>
+            <div class="wing-sq-header"><button type="button" class="wing-sq-toggle ui-fold-head wing-fold-head" id="wing-def-fold" aria-expanded="false" aria-labelledby="wing-def-legend" aria-describedby="wing-def-sum"></button></div>
             <div class="wing-sq-body">
               <p class="wing-hint wing-def-hint" data-i18n="wing.def.hint">Pour chaque appareil des escadrons, la livrée que le Flight Configurator affiche quand la mission ouverte dans HQ ne lui en donne pas.</p>
               <div id="wing-def-list"></div>
@@ -2560,6 +2560,7 @@ function refreshWingLogoZone() {{
     showToast(t('toast.logoCompressing'));
     try {{
       const {{ dataUrl }} = await compressLogoFile(f);
+      if (wingStoredManagedBy()) {{ zone.classList.remove('wing-logo-loading'); e.target.value = ''; return; }}       // devenue gérée pendant la compression : rien ne change
       wingConfig.wing.logo = dataUrl;
       persistWingConfig();
       refreshWingLogoZone(); updateWingSizeCounter();
@@ -2610,6 +2611,7 @@ function refreshSqLogoZone(zone, sqIdx) {{
     showToast(t('toast.logoCompressing'));
     try {{
       const {{ dataUrl }} = await compressLogoFile(f);
+      if (wingStoredManagedBy()) {{ zone.classList.remove('wing-logo-loading'); e.target.value = ''; return; }}       // devenue gérée pendant la compression : rien ne change
       wingConfig.squadrons[sqIdx].logo = dataUrl;
       persistWingConfig();
       refreshSqLogoZone(zone, sqIdx); updateWingSizeCounter();
@@ -2833,6 +2835,7 @@ function renderWingSquadronCard(sqIdx) {{
     const isLast = wingConfig.squadrons.length === 1;
     const extra  = isLast ? '\\n\\n' + t('delSquadron.lastWarning').trim() : '';
     if (!await askConfirm({{ title: t('delSquadron.confirm.title').replace('{{id}}', sqId), text: t('delSquadron.confirm.text') + extra + t('delSquadron.refWarning'), verb: t('ui.verb.delete'), danger: true }})) return;
+    if (wingStoredManagedBy()) return;       // devenue gérée pendant la question : rien ne change
     wingConfig.squadrons.splice(sqIdx, 1);
     persistWingConfig(); renderWingSquadrons();
   }});
@@ -3017,6 +3020,8 @@ function wingFoldRefresh() {{
     if (!fs || !hd || !wingConfig) return;
     hd.setAttribute('aria-expanded', String(fs.classList.contains('open')));
     uiSum(hd, wingFoldSummary(a[0]));
+    const sm = hd.querySelector(':scope > .ui-sum');
+    if (sm) sm.id = 'wing-' + a[0] + '-sum';       // le résumé est annoncé : aria-describedby de la tête
   }});
 }}
 function wingFoldSet(id, open) {{
@@ -6857,17 +6862,59 @@ def must_mg(cond, label):
     print("  [%s] %s" % ('OK' if cond else '\u00c9CHEC', label))
     if not cond:
         _MG_BAD += 1
-# chaque fonction qui écrit ou efface wing_config_v1 commence par relire la marque dans le stockage
+# chaque écriture ou effacement de wing_config_v1 (toutes les occurrences du source, dans une fonction nommée ou fléchée) est dans une fonction qui relit la marque
+# dans le stockage, par un « if (wingStoredManagedBy())  » du code (commentaires ôtés), placé avant l'écriture et après son dernier await
+def _mg_code(t):
+    t = _re.sub(r'(?<![^\s;{}])/\*.*?\*/', lambda m: _re.sub(r'[^\n]', ' ', m.group(0)), t, flags=_re.S)       # un /* de commentaire suit un blanc ou un ; { } (pas le « image/* » d'une chaîne)
+    return _re.sub(r'(?<![^\s;{}])//[^\n]*', '', t)
+_wlines = src.split('\n')
 _wr_ok, _wr_n = True, 0
-for _m in _re.finditer(r'\n(?:async )?function (\w+)\([^)]*\) \{', src):
-    _e = src.find('\n}\n', _m.end())
-    _body = src[_m.end():_e]
-    if 'localStorage.setItem(KEY_WING,' in _body or 'localStorage.removeItem(KEY_WING)' in _body:
-        _wr_n += 1
-        if 'wingStoredManagedBy()' not in _body:
-            _wr_ok = False
-            print("      sans garde : " + _m.group(1))
-must_mg(_wr_ok and _wr_n == 6, 'chaque \u00e9criture de wing_config_v1 est gard\u00e9e par wingStoredManagedBy (%d fonctions : persistWingConfig, persistWingConfigNow, flushWingPersist, loadWingExample, restoreWingConfig, resetWingConfig)' % _wr_n)
+for _m in _re.finditer(r'(?:set|remove)Item\(\s*(?:KEY_WING\b|[\'"]wing_config_v1[\'"])', src):
+    _wr_n += 1
+    _ln = src.count('\n', 0, _m.start())
+    _ls = src.rfind('\n', 0, _m.start()) + 1
+    _head = src[_ls:_m.start()]
+    _fnl = r'(?:\bfunction\b[^\n]*|=>[^\n]*)\{\s*(?://.*)?$'
+    if _re.search(r'(?:\bfunction\b|=>)[^\n]*\{', _head):
+        _from = _ln
+    else:
+        _ind = len(_wlines[_ln]) - len(_wlines[_ln].lstrip(' '))
+        _from = None
+        for _i in range(_ln - 1, -1, -1):
+            _l = _wlines[_i]
+            if not _l.strip():
+                continue
+            _li = len(_l) - len(_l.lstrip(' '))
+            if _li < _ind:
+                _ind = _li
+                if _re.search(_fnl, _l):
+                    _from = _i
+                    break
+                if _li == 0:
+                    break
+    if _from is None:
+        _wr_ok = False
+        print("      aucune fonction englobante trouvée : ligne %d" % (_ln + 1))
+        continue
+    _scope = _mg_code('\n'.join(_wlines[_from:_ln]) + '\n' + _head)
+    _gs = [g.end() for g in _re.finditer(r'if\s*\(\s*wingStoredManagedBy\(\)\s*\)\s*(?:return\b|\{)', _scope)]
+    _aw = [g.end() for g in _re.finditer(r'\bawait\b', _scope)]
+    if not _gs or (_aw and max(_aw) > max(_gs)):
+        _wr_ok = False
+        print("      écriture sans garde (avant elle, après son dernier await) : ligne %d du HQ rendu" % (_ln + 1))
+must_mg(_wr_ok and _wr_n == 7, 'chaque écriture de wing_config_v1, partout dans le source (%d : persistWingConfig, persistWingConfigNow, flushWingPersist, loadWingExample, restoreWingConfig ×2, resetWingConfig), est dans une fonction, nommée ou fléchée, qui relît wingStoredManagedBy avant elle et après son dernier await' % _wr_n)
+# un geste de la fenêtre Wing qui reprend après un await relit la marque avant de toucher wingConfig (le seul await sans garde : le condensat, qui n'écrit rien)
+_wa0 = src.index("const KEY_WING  = 'wing_config_v1'"); _wa1 = src.index('function wingOnStorage(e) {')
+_wa_ok, _wa_n = True, 0
+for _m in _re.finditer(r'\bawait\b', _mg_code(src[_wa0:_wa1])):
+    _t = _mg_code(src[_wa0:_wa1])
+    if _t[_m.end():_m.end() + 40].lstrip().startswith('crypto.subtle'):
+        continue
+    _wa_n += 1
+    if not _re.search(r'if\s*\(\s*wingStoredManagedBy\(\)\s*\)', _t[_m.end():_m.end() + 420]):
+        _wa_ok = False
+        print("      await sans garde derrière : …" + _t[max(0, _m.start() - 40):_m.end() + 40].replace('\n', ' '))
+must_mg(_wa_ok and _wa_n == 4, 'chaque await d’un geste de la fenêtre Wing (logo du wing, logo d’un escadron, suppression d’un escadron, réinitialisation : %d) est suivi de wingStoredManagedBy avant tout changement de wingConfig' % _wa_n)
 must_mg('function wingManagedBy(cfg)' in src and 'function wingStoredManagedBy()' in src, 'la marque se lit par une seule fonction (wingManagedBy)')
 must_mg(not _re.search(r'delete (cfg|obj)\.managedBy', src), 'validateWingConfig, loadWingConfig et sanitize gardent managedBy tel quel')
 _ia = src.find('function importWingConfig(file) {'); _ib = src.find('\n}\n', _ia)
@@ -6875,6 +6922,7 @@ must_mg(_ia > 0 and 'delete parsed.managedBy;' in src[_ia:_ib] and src[_ia:_ib].
 must_mg("window.addEventListener('storage', wingOnStorage)" in src and 'function wingOnStorage(e)' in src, 'HQ \u00e9coute storage sur wing_config_v1 (changement \u00e0 chaud)')
 must_mg(all(('id="%s"' % i) in src for i in ('wing-liv-fold', 'wing-def-fold')) and src.count('class="wing-sq-toggle ui-fold-head wing-fold-head"') == 2, 'les deux bo\u00eetes de livr\u00e9es portent leur ligne de t\u00eate .wing-sq-toggle.ui-fold-head')
 must_mg(all(('id="%s"' % i) in src for i in ('wing-liv-card', 'wing-def-card')) and src.count('class="wing-sq-card wing-fold-card"') == 2 and src.count('<div class="wing-sq-header"><button type="button" class="wing-sq-toggle ui-fold-head wing-fold-head"') == 2, 'chaque bo\u00eete de livr\u00e9es est une carte .wing-sq-card (m\u00eame cadre qu\u2019un escadron), t\u00eate dans .wing-sq-header, corps dans .wing-sq-body')
+must_mg(all(('aria-describedby="wing-%s-sum"' % k) in src for k in ('liv', 'def')) and "sm.id = 'wing-' + a[0] + '-sum'" in src, 'la t\u00eate de chaque bo\u00eete de livr\u00e9es annonce son r\u00e9sum\u00e9 (aria-describedby vers l\u2019\u00e9l\u00e9ment du r\u00e9sum\u00e9), la carte d\u2019escadron n\u2019est pas touch\u00e9e')
 must_mg('.wing-fieldset { min-width: 0; }' in src and 'overflow-wrap: anywhere; }' in src.split('.wing-fold-head .ui-sum {', 1)[1].split('\n', 1)[0], 'une <fieldset> de la fen\u00eatre Wing a min-width: 0 et le r\u00e9sum\u00e9 replié passe \u00e0 la ligne (rien ne sort de .hq-win-body)')
 _kg = lambda txt: set(_re.findall(r"'(wing\.managed\.[^']+|sum\.wliv\.[^']+|sum\.wdef\.[^']+|sum\.wdefset\.[^']+)':", txt))
 must_mg(_kg(_fr) == _kg(_en) and len(_kg(_fr)) == 10, 'I18N parit\u00e9 wing.managed.*, sum.wliv.*, sum.wdef.*, sum.wdefset.* fr/en (%d cl\u00e9s)' % len(_kg(_fr)))
