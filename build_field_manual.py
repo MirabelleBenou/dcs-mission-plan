@@ -9,6 +9,7 @@ import subprocess
 import sys
 import tempfile
 from shell_only_block import build_block as build_shell_only_block
+from version_block import SUITE_VERSION
 from ui_block import build_bar_css, build_bar_js
 # La garde du module seul : premier élément du <body> (build_mission_plan.py la vérifie dans le dist/)
 SHELL_ONLY_TAG = '<script data-lang-key="lang_v1">\n' + build_shell_only_block() + '</script>\n'
@@ -29,7 +30,6 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 BAR_CSS = build_bar_css()      # la séquence de réduction de la barre : la même que celle du bloc d'interface commun (ui_block.py), pas une copie
 BAR_JS = build_bar_js()
 
-APP_VERSION = '1.3.0'
 MODULE_ID   = 'fm'
 
 # ── Assets ──────────────────────────────────────────────────────────────────────
@@ -1181,7 +1181,7 @@ HTML = f"""<!DOCTYPE html>
 {FONT_CDN}
 <style>
 /* =============================================
-   DCS FIELD MANUAL v{APP_VERSION}
+   DCS FIELD MANUAL v{SUITE_VERSION}
    Documentation module — Mission Plan suite
    ============================================= */
 
@@ -1905,7 +1905,7 @@ kbd {{
   <div class="tb-sep" aria-hidden="true"></div>
   <div class="tb-spacer"></div>
   <div class="tb-classif">TRAINING // UNCLASSIFIED</div>
-  <span class="tb-version">v{APP_VERSION}</span>
+  <span class="tb-version">v{SUITE_VERSION}</span>
   <button id="btn-lang" aria-label="Passer en anglais" title="Passer en anglais">
     <svg id="flag-svg" viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg">
       <!-- flag FR par défaut -->

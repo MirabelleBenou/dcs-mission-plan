@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build unifié — DCS Briefing Generator v2.2.0.
+"""Build unifié — DCS Briefing Generator.
 Produit dist/dcs_briefing_generator.html (fusion build_css.py + build_html.py).
 Usage : python3 build_briefing_generator.py
 """
@@ -9,6 +9,7 @@ import json
 import os
 
 from aircraft_types_block import build_block as build_aircraft_types_block
+from version_block import SUITE_VERSION
 from messages_block import build_block as build_messages_block, build_css as build_messages_css
 from ui_block import build_tbm_css, build_tbm_block, build_block as build_ui_block, build_css as build_ui_css, verify as ui_verify, verify_bar as ui_verify_bar
 from shell_only_block import build_block as build_shell_only_block
@@ -2393,7 +2394,7 @@ body[data-format="full"] [data-fmt="simple"] { display: none !important; }
 @media (max-width: 600px) {
   .ed-radio-item-row.s-row { grid-template-columns: 1fr 80px 60px 44px; }
 }
-/* Sous-rang radio / canal (v2.6.0) : sur toute la largeur de la ligne, sous le ×. */
+/* Sous-rang radio / canal : sur toute la largeur de la ligne, sous le ×. */
 .ed-radio-item-row.s-row .s-sub {
   grid-column: 1 / -1;
   display: grid;
@@ -2817,7 +2818,6 @@ import os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
-APP_VERSION = "2.6.0"
 
 ASSETS_PATH = os.path.join(HERE, 'assets.json')
 if not os.path.isfile(ASSETS_PATH):
@@ -7017,7 +7017,7 @@ function buildSimplePages() {
   }
 
   if (radioItems.length || airfields) {
-    // v2.6.0 — radio et canal facultatifs : une colonne entre le libellé et la fréquence,
+    // radio et canal facultatifs : une colonne entre le libellé et la fréquence,
     // seulement si au moins une ligne affichée en porte un.
     const crText = it => {
       const radio = String(it.radio == null ? '' : it.radio).trim();
@@ -9474,7 +9474,7 @@ for _key, (_fond, _grain) in _kraft_themes.items():
     HTML = HTML.replace(f'__KRAFT_SVG_{_key}__', _b64)
 
 HTML = HTML.replace('__DEFAULT_WING_CONFIG__', _default_wing_config_js)
-HTML = HTML.replace('__APP_VERSION__', APP_VERSION)
+HTML = HTML.replace('__APP_VERSION__', SUITE_VERSION)
 
 # Les messages : toute clé t('…') écrite en toutes lettres existe dans les deux dictionnaires (FR et EN)
 def i18n_verify(html):

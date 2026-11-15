@@ -2582,7 +2582,7 @@ body[data-format="full"] [data-fmt="simple"] { display: none !important; }
 @media (max-width: 600px) {
   .ed-radio-item-row.s-row { grid-template-columns: 1fr 80px 60px 44px; }
 }
-/* Sous-rang radio / canal (v2.6.0) : sur toute la largeur de la ligne, sous le ×. */
+/* Sous-rang radio / canal : sur toute la largeur de la ligne, sous le ×. */
 .ed-radio-item-row.s-row .s-sub {
   grid-column: 1 / -1;
   display: grid;
@@ -3174,7 +3174,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   </select>
   <div class="tb-spacer"></div>
   <div class="tb-classif">CLASSIFIED // FOR EYES ONLY</div>
-  <span class="tb-version">v2.6.0</span>
+  <span class="tb-version">v2.0.0</span>
   <button class="tb-lang-btn" id="btn-lang" data-i18n-title="toolbar.lang.tooltip" title="Passer en anglais" data-i18n-aria-label="toolbar.lang.tooltip" aria-label="Passer en anglais"><svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="14" fill="#012169"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#fff" stroke-width="2.8"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#C8102E" stroke-width="1.6"/><rect x="8" width="4" height="14" fill="#fff"/><rect y="5" width="20" height="4" fill="#fff"/><rect x="9" width="2" height="14" fill="#C8102E"/><rect y="6" width="20" height="2" fill="#C8102E"/></svg></button>
 </header>
 
@@ -7298,7 +7298,7 @@ function buildSimplePages() {
   }
 
   if (radioItems.length || airfields) {
-    // v2.6.0 — radio et canal facultatifs : une colonne entre le libellé et la fréquence,
+    // radio et canal facultatifs : une colonne entre le libellé et la fréquence,
     // seulement si au moins une ligne affichée en porte un.
     const crText = it => {
       const radio = String(it.radio == null ? '' : it.radio).trim();

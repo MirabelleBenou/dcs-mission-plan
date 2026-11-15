@@ -26,6 +26,7 @@ import os
 import re
 import sys
 
+from version_block import SUITE_VERSION
 from shell_only_block import build_block as build_shell_only_block, BLOCK_BEGIN as SHELL_ONLY_BEGIN, BLOCK_END as SHELL_ONLY_END
 from messages_block import build_block as build_messages_block, build_css as build_messages_css
 from ui_block import build_css as build_ui_css, fingerprint as ui_fingerprint
@@ -209,6 +210,8 @@ def read_suite_examples():
                 out[lang] = json.load(fh)
             except ValueError as exc:
                 raise SystemExit(f"[ERREUR] samples/example_work_{lang}.json illisible ({exc}) — build arrêté")
+        if isinstance(out[lang], dict) and 'version' in out[lang]:
+            out[lang]['version'] = SUITE_VERSION    # le fichier d'exemple porte le numéro de la suite (le champ « version » d'un fichier de travail)
     return out
 
 
@@ -679,7 +682,7 @@ select[data-tbm-src] {{ display: none !important; }}
               <div class="cap-row">
                 <span class="logo" style="background:var(--a-hq)">H·Q</span>
                 <span class="ptitle">HQ</span>
-                <span class="pver">v0.1.1</span>
+                <span class="pver">v{SUITE_VERSION}</span>
               </div>
               <div class="pdesc" data-i18n="hq.desc">Poste de commandement — configuration Wing, identité escadrons, logos partagés avec tous les modules.</div>
               <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
@@ -694,7 +697,7 @@ select[data-tbm-src] {{ display: none !important; }}
               <div class="cap-row">
                 <span class="logo" style="background:var(--a-bg)">B·G</span>
                 <span class="ptitle">Briefing Generator</span>
-                <span class="pver">v2.6.0</span>
+                <span class="pver">v{SUITE_VERSION}</span>
               </div>
               <div class="pdesc" data-i18n="bg.desc">Briefings complets — SITAC, plan radio, aérodromes, charts, annexes — export PDF prêt à partager.</div>
               <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
@@ -709,7 +712,7 @@ select[data-tbm-src] {{ display: none !important; }}
               <div class="cap-row">
                 <span class="logo" style="background:var(--a-rs)">R·S</span>
                 <span class="ptitle">Recon Station</span>
-                <span class="pver">v1.1.1</span>
+                <span class="pver">v{SUITE_VERSION}</span>
               </div>
               <div class="pdesc" data-i18n="rs.desc">Transforme une capture en photo d'analyse de reconnaissance — niveaux de gris, annotations au doigt, export PNG pleine résolution.</div>
               <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
@@ -729,7 +732,7 @@ select[data-tbm-src] {{ display: none !important; }}
               <div class="cap-row">
                 <span class="logo" style="background:var(--a-rp)">R·P</span>
                 <span class="ptitle">Route Planner</span>
-                <span class="pver">v1.13.1</span>
+                <span class="pver">v{SUITE_VERSION}</span>
               </div>
               <div class="pdesc" data-i18n="rp.desc">Tracé de route sur carte — carte DCS, topographique ou satellite, grille MGRS, villes et aérodromes, recherche ; points de référence ; caps, distances, vitesse sol et minutage ; calques CombatFlite et dessin au doigt (zones, FLOT, couloirs, orbites, boîtes) ; MGRS et DMS, envoyés à la datacard ; import et export du Route Tool de DCS.</div>
               <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
@@ -744,7 +747,7 @@ select[data-tbm-src] {{ display: none !important; }}
               <div class="cap-row">
                 <span class="logo" style="background:var(--a-dg)">D·G</span>
                 <span class="ptitle">Datacard Generator</span>
-                <span class="pver">v1.5.1</span>
+                <span class="pver">v{SUITE_VERSION}</span>
               </div>
               <div class="pdesc" data-i18n="dg.desc">Datacards de vol d'une page pour le kneeboard — saisie ou depuis un briefing, day et night, export PNG et PDF.</div>
               <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
@@ -759,7 +762,7 @@ select[data-tbm-src] {{ display: none !important; }}
               <div class="cap-row">
                 <span class="logo" style="background:var(--a-fc)">F·C</span>
                 <span class="ptitle">Flight Configurator</span>
-                <span class="pver">v0.1.2</span>
+                <span class="pver">v{SUITE_VERSION}</span>
               </div>
               <div class="pdesc" data-i18n="fc.desc">Assemble un groupe — identité, radios, emport composé sur la vue de face ou tiré de mes presets, livrée — et l'exporte en paquet de vol que HQ applique à une mission.</div>
               <div class="pstatus"><span class="dot"></span> <span data-i18n="status.op">Opérationnel</span></div>
@@ -800,7 +803,7 @@ select[data-tbm-src] {{ display: none !important; }}
   /* Les fichiers d'exemple (samples/example_work_fr.json, samples/example_work_en.json), au format du fichier de travail : l'exemple de chaque groupe, dans la langue du shell */
   const SUITE_EXAMPLES = {suite_examples_js};
 
-  var APP_VERSION = '1.24.0';
+  var APP_VERSION = '{SUITE_VERSION}';
   var KEY_LANG  = 'lang_v1';
   var KEY_THEME = 'theme_v1';
 

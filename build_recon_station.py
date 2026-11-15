@@ -6,6 +6,7 @@ import os
 import base64
 import re
 
+from version_block import SUITE_VERSION
 from messages_block import build_block as build_messages_block, build_css as build_messages_css
 from ui_block import build_tbm_css, build_tbm_block, build_block as build_ui_block, build_css as build_ui_css, verify as ui_verify, verify_bar as ui_verify_bar
 from shell_only_block import build_block as build_shell_only_block
@@ -101,7 +102,6 @@ ASSETS_PATH = os.path.join(HERE, 'assets.json')
 if not os.path.isfile(ASSETS_PATH):
     raise SystemExit(f"[ERREUR] Entrée manquante : {ASSETS_PATH} (assets.json attendu à la racine du dépôt)")
 
-APP_VERSION = "1.1.1"
 
 with open(ASSETS_PATH) as f:
     A = json.load(f)
@@ -1634,7 +1634,7 @@ HTML = f"""<!DOCTYPE html>
 <title>Recon Station — Mission Plan</title>
 <style>
 /* =============================================
-   DCS RECON STATION v{APP_VERSION}
+   DCS RECON STATION v{SUITE_VERSION}
    Canvas-native photo intelligence tool
    ============================================= */
 
@@ -2587,7 +2587,7 @@ body {{
   </select>
   <div class="tb-spacer"></div>
   <div class="tb-classif">IMINT // CONFIDENTIAL</div>
-  <span class="tb-version">v{APP_VERSION}</span>
+  <span class="tb-version">v{SUITE_VERSION}</span>
   <button class="tb-lang-btn" id="btn-lang" title="Passer en anglais" aria-label="Passer en anglais"><svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="14" fill="#012169"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#fff" stroke-width="2.8"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#C8102E" stroke-width="1.6"/><rect x="8" width="4" height="14" fill="#fff"/><rect y="5" width="20" height="4" fill="#fff"/><rect x="9" width="2" height="14" fill="#C8102E"/><rect y="6" width="20" height="2" fill="#C8102E"/></svg></button>
 </header>
 
@@ -2851,11 +2851,11 @@ body {{
 'use strict';
 
 // =============================================================
-//  RECON STATION — v{APP_VERSION}
+//  RECON STATION — v{SUITE_VERSION}
 //  Canvas-native photo intelligence composer
 // =============================================================
 
-const APP_VERSION = '{APP_VERSION}';
+const APP_VERSION = '{SUITE_VERSION}';
 
 // ── i18n ──────────────────────────────────────────────────────
 const I18N = {{

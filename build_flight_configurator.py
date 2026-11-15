@@ -105,12 +105,12 @@ from payload_block import build_block as build_payload_block
 from payload_rules_block import build_block as build_payload_rules_block, NAMES as PAYLOAD_RULES_NAMES
 from projection_block import build_block as build_projection_block
 from radio_bands_block import build_block as build_radio_bands_block
+from version_block import SUITE_VERSION
 from radio_block import build_block as build_radio_block
 from route_pack_block import build_block as build_route_pack_block
 from route_theatre_block import build_block as build_route_theatre_block
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-APP_VERSION = "0.1.2"
 
 with open(os.path.join(HERE, 'assets.json')) as _f:
     A = json.load(_f)
@@ -4801,7 +4801,7 @@ def build_html():
             '<meta name="theme-color" content="#1a1e10">\n<title>Flight Configurator — Mission Plan</title>\n<style>\n'
             + fonts + CSS_COMMON.replace('@@TBM_CSS@@\n', build_tbm_css()) + CSS_FC + build_messages_css() + build_ui_css() + build_import_css() + build_mission_line_css() + CONTRAST_CSS + '\n</style>\n'
             '<!-- JSZip v3.10.1 — embarqué pour lire un paquet .zip -->\n<script>' + A['lib_jszip'] + '</script>\n</head>\n'
-            + BODY.replace('@@VERSION@@', APP_VERSION).replace('<body data-theme="cw-nato">\n', '<body data-theme="cw-nato">\n' + SHELL_ONLY_TAG, 1) + '\n<script>\n' + js + '\n</script>\n</body>\n</html>\n')
+            + BODY.replace('@@VERSION@@', SUITE_VERSION).replace('<body data-theme="cw-nato">\n', '<body data-theme="cw-nato">\n' + SHELL_ONLY_TAG, 1) + '\n<script>\n' + js + '\n</script>\n</body>\n</html>\n')
 
 
 def main():

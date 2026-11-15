@@ -6,6 +6,7 @@ import os
 import base64
 import re
 
+from version_block import SUITE_VERSION
 from radio_bands_block import build_block as build_radio_bands_block
 from radio_block import build_block as build_radio_block
 from messages_block import build_block as build_messages_block, build_css as build_messages_css
@@ -45,7 +46,6 @@ ASSETS_PATH = os.path.join(HERE, 'assets.json')
 if not os.path.isfile(ASSETS_PATH):
     raise SystemExit(f"[ERREUR] Entrée manquante : {ASSETS_PATH} (assets.json attendu à la racine du dépôt)")
 
-APP_VERSION = "0.1.1"
 
 with open(ASSETS_PATH) as f:
     A = json.load(f)
@@ -310,7 +310,7 @@ HTML = f"""<!DOCTYPE html>
 <script>{A["lib_jszip"]}</script>
 <style>
 /* =============================================
-   DCS HQ v{APP_VERSION}
+   DCS HQ v{SUITE_VERSION}
    Wing hub + .miz engine + Mission JSON (P2)
    ============================================= */
 
@@ -1170,7 +1170,7 @@ body[data-theme] {{
   </select>
   <div class="tb-spacer"></div>
   <div class="tb-classif">OPERATIONS // NEED TO KNOW</div>
-  <span class="tb-version">v{APP_VERSION}</span>
+  <span class="tb-version">v{SUITE_VERSION}</span>
   <button class="tb-lang-btn" id="btn-lang" title="Passer en anglais" aria-label="Passer en anglais"><svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="14" fill="#012169"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#fff" stroke-width="2.8"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#C8102E" stroke-width="1.6"/><rect x="8" width="4" height="14" fill="#fff"/><rect y="5" width="20" height="4" fill="#fff"/><rect x="9" width="2" height="14" fill="#C8102E"/><rect y="6" width="20" height="2" fill="#C8102E"/></svg></button>
 </header>
 
@@ -1358,11 +1358,11 @@ const DEFAULT_WING_CONFIG = JSON.parse({_default_wing_config_js});
 'use strict';
 
 // =============================================
-//  DCS HQ v{APP_VERSION}
+//  DCS HQ v{SUITE_VERSION}
 //  Wing configuration hub — Mission Plan suite
 // =============================================
 
-const APP_VERSION = '{APP_VERSION}';
+const APP_VERSION = '{SUITE_VERSION}';
 
 // ── i18n ──────────────────────────────────────────────────────
 const I18N = {{
@@ -6631,7 +6631,7 @@ def grep_absent(pattern, label):
     return not found
 
 print("\\n-- V\u00e9rifications --")
-grep_present('0.1.1',           'APP_VERSION = 0.1.1')
+grep_present("const APP_VERSION = '" + SUITE_VERSION + "'", 'APP_VERSION = ' + SUITE_VERSION)
 grep_present('wing_config_v1',  'cl\u00e9 wing_config_v1 pr\u00e9sente')
 grep_present('localStorage.setItem(KEY_WING', '\u00e9criture wing_config_v1')
 grep_present('localStorage.getItem(KEY_WING', 'lecture wing_config_v1')

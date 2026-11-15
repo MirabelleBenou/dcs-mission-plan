@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build — DCS Datacard Generator v1.5.1.
+"""Build — DCS Datacard Generator.
 
 Produit dist/dcs_datacard_generator.html : un fichier unique, hors ligne, sans
 serveur et sans ressource externe. Les polices et les bibliothèques (html2canvas,
@@ -17,6 +17,7 @@ import shutil
 import subprocess
 import sys
 
+from version_block import SUITE_VERSION
 from magvar_block import build_block as build_magvar_block
 from radio_bands_block import build_block as build_radio_bands_block
 from radio_block import build_block as build_radio_block
@@ -66,7 +67,6 @@ CONTRAST_CSS = r"""
 """
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-APP_VERSION = "1.5.1"
 OUT_PATH = os.path.join(HERE, 'dist', 'dcs_datacard_generator.html')
 ASSETS_PATH = os.path.join(HERE, 'assets.json')
 FACTS_PATH = os.path.join(HERE, 'airfield_facts.json')
@@ -7841,7 +7841,7 @@ def build():
     html = html.replace('@@IMPORT_HTML@@\n', build_import_html())
     html = html.replace('__LIB_HTML2CANVAS__', A['lib_html2canvas'])
     html = html.replace('__LIB_JSZIP__', A['lib_jszip'])
-    html = html.replace('__APP_VERSION__', APP_VERSION)
+    html = html.replace('__APP_VERSION__', SUITE_VERSION)
     html = html.replace('__APP_JS__', js)
 
     ui_verify(html)
@@ -7880,7 +7880,7 @@ def build():
             if os.path.exists(tmp):
                 os.remove(tmp)
     size = os.path.getsize(OUT_PATH)
-    print(f"[OK] {os.path.relpath(OUT_PATH, HERE)} — {size / 1024:.0f} Ko — v{APP_VERSION}")
+    print(f"[OK] {os.path.relpath(OUT_PATH, HERE)} — {size / 1024:.0f} Ko — v{SUITE_VERSION}")
 
 
 if __name__ == '__main__':

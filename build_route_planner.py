@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build — DCS Route Planner v1.13.1.
+"""Build — DCS Route Planner.
 
 Produit dist/dcs_route_planner.html : un fichier unique, hors ligne, sans serveur ;
 seules les tuiles de carte (DCS Olympus, OpenTopoMap, Esri) viennent du réseau, et le
@@ -20,6 +20,7 @@ import shutil
 import subprocess
 import sys
 
+from version_block import SUITE_VERSION
 from magvar_block import build_block as build_magvar_block
 from route_pack_block import build_block as build_route_pack_block
 from route_theatre_block import build_block as build_route_theatre_block
@@ -80,7 +81,6 @@ CONTRAST_CSS = r"""
 """
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-APP_VERSION = "1.13.1"
 OUT_PATH = os.path.join(HERE, 'dist', 'dcs_route_planner.html')
 ASSETS_PATH = os.path.join(HERE, 'assets.json')
 AIRFIELDS_PATH = os.path.join(HERE, 'airfields.json')
@@ -1719,7 +1719,7 @@ JS = r"""
 'use strict';
 
 /* =====================================================
-   ROUTE PLANNER v1.13.1
+   ROUTE PLANNER v__APP_VERSION__
    Une route sur une carte (points posés, saisis par coordonnées
    ou par cap et distance), des points de référence, les noms de lieux,
    les villes et les aérodromes DCS, une recherche sur la carte : caps, distances, vitesse sol et minutage,
@@ -10534,7 +10534,7 @@ def build():
         raise SystemExit("[ERREUR] html2canvas contient </script : impossible de l'embarquer en ligne")
     html = html.replace('__LIB_HTML2CANVAS__', lib_h2c)
     html = html.replace('__APP_JS__', js)
-    html = html.replace('__APP_VERSION__', APP_VERSION)
+    html = html.replace('__APP_VERSION__', SUITE_VERSION)
 
     # Contrôles de construction
     ui_verify(html)
@@ -10567,7 +10567,7 @@ def build():
             if os.path.exists(tmp):
                 os.remove(tmp)
     size = os.path.getsize(OUT_PATH)
-    print(f"[OK] {os.path.relpath(OUT_PATH, HERE)} — {size / 1024:.0f} Ko — v{APP_VERSION}")
+    print(f"[OK] {os.path.relpath(OUT_PATH, HERE)} — {size / 1024:.0f} Ko — v{SUITE_VERSION}")
 
 
 if __name__ == '__main__':
