@@ -3996,6 +3996,15 @@ const I18N = {
     'simple.photosBanner':        'PHOTOS ░ RECONNAISSANCE',
     'simple.photoLabel':          'PHOTO',
     'simple.noPhoto':             '◯ PHOTO MANQUANTE ◯',
+    // ── Contrôle de la configuration d’escadre (validateWingConfig) ──
+    'validate.schemaMissing':     'La configuration n’a pas de numéro de version valide.',
+    'validate.wingMissing':       'La configuration n’a pas d’escadre.',
+    'validate.shortNameMissing':  'L’escadre n’a pas de nom court.',
+    'validate.logoInvalid':       'Le logo de l’escadre est absent ou n’est pas une image.',
+    'validate.squadronsNotArray': 'La configuration n’a pas de liste d’escadrons.',
+    'validate.sqIdMissing':       'escadron {n} : l’identifiant est manquant.',
+    'validate.sqCallsignMissing': 'escadron {n} : l’indicatif est manquant.',
+    'validate.sqAircraftNotArray':'escadron {n} : la liste des appareils est manquante.',
   },
   en: {
     'ui.cancel': 'Cancel',
@@ -4414,6 +4423,15 @@ const I18N = {
     'simple.photosBanner':        'PHOTOS ░ RECONNAISSANCE',
     'simple.photoLabel':          'PHOTO',
     'simple.noPhoto':             '◯ NO PHOTO ◯',
+    // ── Wing configuration check (validateWingConfig) ──
+    'validate.schemaMissing':     'The configuration has no valid version number.',
+    'validate.wingMissing':       'The configuration has no wing.',
+    'validate.shortNameMissing':  'The wing has no short name.',
+    'validate.logoInvalid':       'The wing logo is missing or is not an image.',
+    'validate.squadronsNotArray': 'The configuration has no list of squadrons.',
+    'validate.sqIdMissing':       'squadron {n}: the ID is missing.',
+    'validate.sqCallsignMissing': 'squadron {n}: the callsign is missing.',
+    'validate.sqAircraftNotArray':'squadron {n}: the list of aircraft is missing.',
   }
 };
 
@@ -4682,9 +4700,9 @@ function validateWingConfig(obj) {
     errors.push(t('validate.squadronsNotArray'));
   } else {
     obj.squadrons.forEach((sq, i) => {
-      if (!sq.id)                      errors.push('squadrons[' + i + ']' + t('validate.sqIdMissing'));
-      if (!sq.callsign)                errors.push('squadrons[' + i + ']' + t('validate.sqCallsignMissing'));
-      if (!Array.isArray(sq.aircraft)) errors.push('squadrons[' + i + ']' + t('validate.sqAircraftNotArray'));
+      if (!sq.id)                      errors.push(t('validate.sqIdMissing').replace('{n}', i + 1));
+      if (!sq.callsign)                errors.push(t('validate.sqCallsignMissing').replace('{n}', i + 1));
+      if (!Array.isArray(sq.aircraft)) errors.push(t('validate.sqAircraftNotArray').replace('{n}', i + 1));
     });
   }
   return errors.length === 0 ? { ok: true } : { ok: false, errors };
@@ -9610,8 +9628,8 @@ function initToolbarScroll() {
   }, { passive: false });
   window.addEventListener('resize', update);
   if (window.ResizeObserver) new ResizeObserver(update).observe(bar);
-  // Le shell ajoute son bouton de retour et son tampon après le chargement
-  new MutationObserver(update).observe(bar, { childList: true, subtree: true, characterData: true });
+  // Le shell ajoute son bouton de retour et son tampon après le chargement ; les étapes de la barre (tb-st1…6) passent par des classes : le fondu suit aussi les attributs
+  new MutationObserver(update).observe(bar, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['hidden', 'class', 'style', 'disabled'] });
   update();
 }
 

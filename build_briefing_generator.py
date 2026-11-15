@@ -3715,6 +3715,15 @@ const I18N = {
     'simple.photosBanner':        'PHOTOS ░ RECONNAISSANCE',
     'simple.photoLabel':          'PHOTO',
     'simple.noPhoto':             '◯ PHOTO MANQUANTE ◯',
+    // ── Contrôle de la configuration d’escadre (validateWingConfig) ──
+    'validate.schemaMissing':     'La configuration n’a pas de numéro de version valide.',
+    'validate.wingMissing':       'La configuration n’a pas d’escadre.',
+    'validate.shortNameMissing':  'L’escadre n’a pas de nom court.',
+    'validate.logoInvalid':       'Le logo de l’escadre est absent ou n’est pas une image.',
+    'validate.squadronsNotArray': 'La configuration n’a pas de liste d’escadrons.',
+    'validate.sqIdMissing':       'escadron {n} : l’identifiant est manquant.',
+    'validate.sqCallsignMissing': 'escadron {n} : l’indicatif est manquant.',
+    'validate.sqAircraftNotArray':'escadron {n} : la liste des appareils est manquante.',
   },
   en: {
     'ui.cancel': 'Cancel',
@@ -4133,6 +4142,15 @@ const I18N = {
     'simple.photosBanner':        'PHOTOS ░ RECONNAISSANCE',
     'simple.photoLabel':          'PHOTO',
     'simple.noPhoto':             '◯ NO PHOTO ◯',
+    // ── Wing configuration check (validateWingConfig) ──
+    'validate.schemaMissing':     'The configuration has no valid version number.',
+    'validate.wingMissing':       'The configuration has no wing.',
+    'validate.shortNameMissing':  'The wing has no short name.',
+    'validate.logoInvalid':       'The wing logo is missing or is not an image.',
+    'validate.squadronsNotArray': 'The configuration has no list of squadrons.',
+    'validate.sqIdMissing':       'squadron {n}: the ID is missing.',
+    'validate.sqCallsignMissing': 'squadron {n}: the callsign is missing.',
+    'validate.sqAircraftNotArray':'squadron {n}: the list of aircraft is missing.',
   }
 };
 
@@ -4401,9 +4419,9 @@ function validateWingConfig(obj) {
     errors.push(t('validate.squadronsNotArray'));
   } else {
     obj.squadrons.forEach((sq, i) => {
-      if (!sq.id)                      errors.push('squadrons[' + i + ']' + t('validate.sqIdMissing'));
-      if (!sq.callsign)                errors.push('squadrons[' + i + ']' + t('validate.sqCallsignMissing'));
-      if (!Array.isArray(sq.aircraft)) errors.push('squadrons[' + i + ']' + t('validate.sqAircraftNotArray'));
+      if (!sq.id)                      errors.push(t('validate.sqIdMissing').replace('{n}', i + 1));
+      if (!sq.callsign)                errors.push(t('validate.sqCallsignMissing').replace('{n}', i + 1));
+      if (!Array.isArray(sq.aircraft)) errors.push(t('validate.sqAircraftNotArray').replace('{n}', i + 1));
     });
   }
   return errors.length === 0 ? { ok: true } : { ok: false, errors };
@@ -8651,8 +8669,8 @@ function initToolbarScroll() {
   }, { passive: false });
   window.addEventListener('resize', update);
   if (window.ResizeObserver) new ResizeObserver(update).observe(bar);
-  // Le shell ajoute son bouton de retour et son tampon après le chargement
-  new MutationObserver(update).observe(bar, { childList: true, subtree: true, characterData: true });
+  // Le shell ajoute son bouton de retour et son tampon après le chargement ; les étapes de la barre (tb-st1…6) passent par des classes : le fondu suit aussi les attributs
+  new MutationObserver(update).observe(bar, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['hidden', 'class', 'style', 'disabled'] });
   update();
 }
 
@@ -9458,7 +9476,27 @@ for _key, (_fond, _grain) in _kraft_themes.items():
 HTML = HTML.replace('__DEFAULT_WING_CONFIG__', _default_wing_config_js)
 HTML = HTML.replace('__APP_VERSION__', APP_VERSION)
 
+# Les messages : toute clé t('…') écrite en toutes lettres existe dans les deux dictionnaires (FR et EN)
+def i18n_verify(html):
+    import re
+    i = html.index('const I18N = {')
+    j = html.index('\n};', i)
+    blk = html[i:j]
+    k = blk.index('\n  en: {')
+    kre = re.compile(r"""^\s*(?:'([^'\n]+)'|"([^"\n]+)")\s*:""", re.M)
+    dicts = {'FR': {a or b for a, b in kre.findall(blk[:k])}, 'EN': {a or b for a, b in kre.findall(blk[k:])}}
+    used = {m.group(2) for m in re.finditer(r"""(?<![\w.$])t\(\s*(['"])([A-Za-z0-9_.\-]+)\1\s*[,)]""", html)}
+    bad = False
+    for lang, keys in dicts.items():
+        for key in sorted(used - keys):
+            print("  [FAIL] clé t('%s') absente du dictionnaire %s" % (key, lang))
+            bad = True
+    if bad:
+        raise SystemExit(1)
+    print("  [OK] %d clés t('…') littérales, présentes en FR et en EN" % len(used))
+
 # Write the final file
+i18n_verify(HTML)
 ui_verify(HTML)
 ui_verify_bar(HTML)
 mission_line_verify(HTML, None, None, 1)

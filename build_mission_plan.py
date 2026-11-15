@@ -1010,6 +1010,8 @@ select[data-tbm-src] {{ display: none !important; }}
     try {{
       var stored = localStorage.getItem(KEY_LANG);
       if (stored === 'fr' || stored === 'en') CURRENT_LANG = stored;
+      /* Profil neuf (pas de lang_v1) : la règle des outils (« fr… » → français, sinon anglais). Le shell n'écrit rien : il reprend lang_v1, il ne le pose pas. */
+      else CURRENT_LANG = (navigator.language || 'fr').toLowerCase().startsWith('fr') ? 'fr' : 'en';
     }} catch(e) {{}}
   }}
 

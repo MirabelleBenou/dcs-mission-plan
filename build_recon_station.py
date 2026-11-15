@@ -3316,7 +3316,9 @@ function updateFlagButton() {{
 }}
 
 function applyI18nStatic() {{
+  const dzOn = document.getElementById('drop-zone').classList.contains('has-image');    // une image est posée : la zone garde son texte (nom et taille), pas celui de l'accueil
   document.querySelectorAll('[data-i18n]').forEach(el => {{
+    if (dzOn && el.id === 'drop-zone-text') return;
     el.textContent = t(el.dataset.i18n);
   }});
   document.querySelectorAll('[data-i18n-title]').forEach(el => {{
