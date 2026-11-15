@@ -756,6 +756,9 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 /* rien de coupé : le menu s'élargit à son contenu, dans la largeur de la vue ; au-delà, l'indice passe à la ligne */
 .tbm-panel.mn-panel { max-width: min(560px, calc(100vw - 16px)); }
 .mn-panel .tbm-opt .tbm-txt { flex: 0 0 auto; overflow: visible; text-overflow: clip; }
+/* une ligne trop étroite pour le libellé et son indice : l'indice passe sous le libellé, à droite, sans rien déborder de la ligne */
+.mn-panel .mn-opt { flex-wrap: wrap; align-content: center; row-gap: 0; padding-top: 4px; padding-bottom: 4px; }
+.mn-panel .mn-hint { white-space: normal; overflow-wrap: anywhere; max-width: 100%; box-sizing: border-box; }
 .mn-sep { height: 1px; margin: 4px 0; background: rgba(168,154,114,.35); }
 .mn-opt + .mn-sep + .mn-opt { border-top: none; }
 .mn-opt { color: var(--paper); }   /* comme au Datacard Generator : les lignes actives des menus sont à l'encre du papier, la ligne grisée seule s'efface */
@@ -1748,7 +1751,7 @@ const TICK_END_MIN = 0.05;     /* pas de trait à moins de 3 s du point d'arriv�
 const TICK_CULL_ABOVE = 300;   /* au-delà de ce nombre de traits sur une branche, seuls ceux de l'écran sont dessinés */
 const KEY_LAYERS = 'route_layers_v1';
 const LAYERS_FORMAT = 'dcs-layers-v1';
-const LAYERS_Z = 390;          /* le pane des calques : au-dessus du fond, de la grille et des aérodromes, sous la route, les références et les boîtes */
+const LAYERS_Z = 390;          /* le pane des calques : au-dessus du fond, de la grille et des villes, sous les aérodromes, la route, les références et les boîtes */
 const CF_NAMES_ZOOM = 11;      /* le nom d'un point de calque : à partir du zoom 11 */
 const CF_FILL_K = 0.4;         /* remplissages atténués à 40 % de l'opacité du fichier */
 const NM_M = 1852;
@@ -4164,7 +4167,7 @@ function syncAirfields() {
 }
 
 /* ============= VILLES DCS ============= */
-/* Les villes du théâtre, dans leur panneau « towns » (z-index 370 : au-dessus de la grille, sous les aérodromes et les calques).
+/* Les villes du théâtre, dans leur panneau « towns » (z-index 370 : au-dessus de la grille, sous les calques et les aérodromes).
    À partir du zoom 10, posées sans chevauchement : les villes proches de la route d'abord, puis un ordre stable ; elles évitent aussi
    les points de la route, les références, les boîtes de branche et les aérodromes affichés. Le résultat ne dépend que de la vue,
    de la route et des obstacles. */
@@ -4487,9 +4490,9 @@ function createMap() {
   const pane = map.createPane('mgrs');
   pane.style.zIndex = 350;
   pane.style.pointerEvents = 'none';
-  /* Les aérodromes : au-dessus de la grille, sous les références et la route ; les références : sous les points */
-  map.createPane('airfields').style.zIndex = 380;
-  /* Les villes DCS : au-dessus de la grille, sous les aérodromes (380) et les calques (390) */
+  /* Les aérodromes : au-dessus de la grille, des villes et des calques CombatFlite (390), sous la route et les références ; les références : sous les points */
+  map.createPane('airfields').style.zIndex = 395;
+  /* Les villes DCS : au-dessus de la grille, sous les calques (390) et les aérodromes (395) */
   map.createPane('towns').style.zIndex = 370;
   /* L'anneau de la recherche : au-dessus de tout, sans toucher */
   const ringPane = map.createPane('ring');
@@ -4504,7 +4507,7 @@ function createMap() {
   map.createPane('legticks').style.zIndex = 420;        /* les traits des minutes : au-dessus de la route, sous les références */
   map.createPane('legnums').style.zIndex = 455;
   map.createPane('legboxes').style.zIndex = 620;
-  /* Les calques CombatFlite : au-dessus du fond, de la grille et des aérodromes, sous la route, les références et les boîtes de branche */
+  /* Les calques CombatFlite : au-dessus du fond, de la grille et des villes, sous les aérodromes, la route, les références et les boîtes de branche */
   map.createPane('layers').style.zIndex = LAYERS_Z;
   /* Le mode Dessin : poignées, contour de sélection et tracé en cours, au-dessus des boîtes de branche (620) et sous l'anneau de la recherche (650) */
   map.createPane('drawedit').style.zIndex = 640;
@@ -10506,6 +10509,15 @@ def build():
     ui_verify(html)
     ui_verify_bar(html)
     mission_line_verify(html, 'rpMissionLine', 'navYear(', 2)
+    # Le pane des aérodromes est au-dessus de celui des calques CombatFlite (en mode Lire, un aérodrome dans une zone ouvre sa fiche) et sous la route (overlayPane, 400)
+    _zl = re.search(r'const LAYERS_Z = (\d+);', html)
+    _za = re.search(r"map\.createPane\('airfields'\)\.style\.zIndex = (\d+);", html)
+    if not (_zl and _za and int(_zl.group(1)) < int(_za.group(1)) < 400):
+        raise SystemExit("[ERREUR] le pane « airfields » doit être au-dessus de « layers » (LAYERS_Z) et sous la route (400)")
+    # Les libellés de l'entrée « Ouvrir une route ou des calques… » (FR et EN) disent que les calques CombatFlite s'ouvrent ici
+    for _k in ("'op.route': 'Ouvrir une route ou des calques…'", "'op.route': 'Open a route or layers…'", "'op.route.h': '.json · Route Tool · CombatFlite'"):
+        if _k not in html:
+            raise SystemExit("[ERREUR] libellé du menu Ouvrir absent : " + _k)
     left = re.findall(r'__[A-Z0-9_]{4,}__', re.sub(r'<script>.*?</script>', '', html, flags=re.S)[:])
     left = [x for x in left if x not in ('__proto__',)]
     if left:
