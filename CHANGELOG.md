@@ -12,6 +12,7 @@ Changes merged since the last release, grouped per tool.
 
 ### All tools
 #### Added
+- Releases are published by a workflow: pushing a branch `release/MP-V<x.y.z>` with the release text, the files and a manifest creates the release and its tag (new `.github/workflows/release.yml` and `tools/release.py`). The tools themselves do not change.
 - One work file for the whole suite: **Save** in any tool (and on the home page) writes the briefing, recon, groups, routes, layers, datacards, theatre and settings into a single `.json`; **Open… › Open a work file…** brings it all back, with **Restore** for a few seconds. The Wing configuration and the mission open in HQ are not part of it.
 - The credits name the fonts embedded in every tool and their licences (SIL OFL 1.1, Apache 2.0), whose texts are now in the repository (`fonts/`); html2canvas and JSZip are credited too.
 - **HQ mission line**: when a mission is open in HQ, the Flight Configurator, the Route Planner and the Datacard Generator show a line under the toolbar with its date, start time and file, and what the tool takes from it — or that it is not used there, when its theatre differs.
