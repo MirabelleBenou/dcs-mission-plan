@@ -139,7 +139,7 @@ The Field Manual is the suite's **built-in documentation**, opened from the boar
 
 <sub>Recon Station sample image (also the tool's built-in example): USDA National Agriculture Imagery Program (NAIP) aerial photograph, public domain.</sub>
 
-**Route Planner** — a route with leg boxes and minute marks, an orbit and a kill box drawn by touch
+**Route Planner** — a route on the DCS map, with leg boxes, minute marks and reference points
 
 ![route-planner](docs/screenshots/route_planner.jpg)
 
