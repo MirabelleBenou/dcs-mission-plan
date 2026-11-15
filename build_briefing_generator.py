@@ -9485,7 +9485,9 @@ def i18n_verify(html):
     k = blk.index('\n  en: {')
     kre = re.compile(r"""^\s*(?:'([^'\n]+)'|"([^"\n]+)")\s*:""", re.M)
     dicts = {'FR': {a or b for a, b in kre.findall(blk[:k])}, 'EN': {a or b for a, b in kre.findall(blk[k:])}}
-    used = {m.group(2) for m in re.finditer(r"""(?<![\w.$])t\(\s*(['"])([A-Za-z0-9_.\-]+)\1\s*[,)]""", html)}
+    # Seul le script de l'application est lu (celui du dictionnaire) : html2canvas et JSZip, injectés dans leurs propres balises, restent hors du contrôle
+    app = html[html.rfind('<script>', 0, i):html.index('</script>', i)]
+    used = {m.group(2) for m in re.finditer(r"""(?<![\w.$])t\(\s*(['"])([A-Za-z0-9_.\-]+)\1\s*[,)]""", app)}
     bad = False
     for lang, keys in dicts.items():
         for key in sorted(used - keys):

@@ -1191,10 +1191,11 @@ div.dc-bl, li.dc-bl, p.dc-bl { height: 24px; border-bottom: 1px dotted var(--dc-
    La marque du Flight Configurator : le titre et son sous-titre à l'accent du module dès 1274 px, le sigle seul en dessous (à toutes les largeurs) ;
    la version avec le titre ; le tampon de décor dès 1910 px. Seuils mesurés dans le shell avec un tampon d'escadre « TEST WING », en français et en anglais,
    en paysage et en portrait (lot mp-ui-disposition : Jour | Nuit et les unités sont passés dans « Affichage », « Ouvrir » ouvre une datacard ou importe, le bouton « Briefing » a disparu de la barre,
-   la barre ne défile plus dès 1005 px ; chaque seuil est la plus petite largeur à partir de laquelle la barre tient avec ce qui précède : le français, plus large, donne le seuil). */
+   la barre ne défile plus dès 1005 px ; chaque seuil est la plus petite largeur à partir de laquelle la barre tient avec ce qui précède : le français, plus large, donne le seuil).
+   Avec « TEST WING », en français, la barre pleine faisait 1 930 px (1 926 avec les marges à 8) : elle en fait 1 912 depuis l'interlettrage de .tb-classif à 2,5 px, donc aucune étape à 1 920 px, avec 8 px de marge */
 .tb-brand-main, .tb-brand-short { color: #8fb0c0; }
 .tb-brand-short { display: none; font-family: var(--f-stencil); font-size: 16px; font-weight: 700; letter-spacing: 3px; white-space: nowrap; }
-.tb-classif { font-family: var(--f-stencil); font-weight: 400; font-size: 11px; letter-spacing: 3px; color: var(--red-faded); border: 1px solid var(--red-faded); padding: 4px 8px; white-space: nowrap; flex-shrink: 0; }   /* 8 et non 10 : la barre pleine en français, avec le tampon d'escadre, tient à 1 920 px */
+.tb-classif { font-family: var(--f-stencil); font-weight: 400; font-size: 11px; letter-spacing: 2.5px; color: var(--red-faded); border: 1px solid var(--red-faded); padding: 4px 8px; white-space: nowrap; flex-shrink: 0; }   /* interlettrage 2,5 px et non 3, marges 8 et non 10 : la barre pleine en français, avec le tampon « TEST WING », tient à 1 920 px (voir le commentaire des seuils) */
 .tb-lang-btn svg { display: block; }
 .tb-brand-sub { font-weight: 500; }
 .tb-version { font-family: 'Roboto Mono', monospace; }
@@ -6652,8 +6653,8 @@ function initScrollBar(bar) {
   }, { passive: false });
   window.addEventListener('resize', update);
   if (window.ResizeObserver) new ResizeObserver(update).observe(bar);
-  /* Le shell ajoute son bouton de retour et son tampon après le chargement */
-  new MutationObserver(update).observe(bar, { childList: true, subtree: true, characterData: true });
+  /* Le shell ajoute son bouton de retour et son tampon après le chargement ; les étapes tb-st1…6 passent par des classes : le fondu suit aussi les attributs */
+  new MutationObserver(update).observe(bar, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['hidden', 'class', 'style', 'disabled'] });
   update();
 }
 

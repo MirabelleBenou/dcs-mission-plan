@@ -10247,8 +10247,8 @@ function initScrollBar(bar) {
   }, { passive: false });
   window.addEventListener('resize', update);
   if (window.ResizeObserver) new ResizeObserver(update).observe(bar);
-  /* Le shell ajoute son bouton de retour après le chargement */
-  new MutationObserver(update).observe(bar, { childList: true, subtree: true, characterData: true });
+  /* Le shell ajoute son bouton de retour après le chargement ; les étapes tb-st1…6 passent par des classes : le fondu suit aussi les attributs */
+  new MutationObserver(update).observe(bar, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['hidden', 'class', 'style', 'disabled'] });
   update();
   /* Les polices embarquées changent la largeur des libellés sans évènement de taille */
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(update).catch(() => {});

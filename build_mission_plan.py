@@ -996,6 +996,7 @@ select[data-tbm-src] {{ display: none !important; }}
   function setLang(lang) {{
     if (lang !== 'fr' && lang !== 'en') return;
     CURRENT_LANG = lang;
+    document.documentElement.lang = lang;
     try {{ localStorage.setItem(KEY_LANG, lang); }} catch(e) {{}}
     applyI18n();
     updateFlagBtn();
@@ -1007,12 +1008,11 @@ select[data-tbm-src] {{ display: none !important; }}
   }}
 
   function initLang() {{
-    try {{
-      var stored = localStorage.getItem(KEY_LANG);
-      if (stored === 'fr' || stored === 'en') CURRENT_LANG = stored;
-      /* Profil neuf (pas de lang_v1) : la règle des outils (« fr… » → français, sinon anglais). Le shell n'écrit rien : il reprend lang_v1, il ne le pose pas. */
-      else CURRENT_LANG = (navigator.language || 'fr').toLowerCase().startsWith('fr') ? 'fr' : 'en';
-    }} catch(e) {{}}
+    var stored = null;
+    try {{ stored = localStorage.getItem(KEY_LANG); }} catch(e) {{}}
+    /* Sans lang_v1 (profil neuf, ou stockage qui lève) : la règle des outils (« fr… » → français, sinon anglais). Le shell n'écrit rien : il reprend lang_v1, il ne le pose pas. */
+    CURRENT_LANG = (stored === 'fr' || stored === 'en') ? stored : ((navigator.language || 'fr').toLowerCase().startsWith('fr') ? 'fr' : 'en');
+    document.documentElement.lang = CURRENT_LANG;
   }}
 
   /* ── Module : decode UTF-8 ─────────────────────────────────── */
@@ -1076,6 +1076,7 @@ select[data-tbm-src] {{ display: none !important; }}
       var s = localStorage.getItem(KEY_LANG);
       if ((s === 'fr' || s === 'en') && s !== CURRENT_LANG) {{
         CURRENT_LANG = s;
+        document.documentElement.lang = s;
         applyI18n();
         updateFlagBtn();
         Object.keys(barSync).forEach(function(bid) {{ barSync[bid](); }});
