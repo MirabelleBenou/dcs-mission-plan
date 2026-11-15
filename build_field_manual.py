@@ -216,12 +216,15 @@ FC_TILE_SRC = FC_TILE
 # Règle de lisibilité : la couleur d'un module marque (trait, aplat à 20 %), l'encre écrit.
 
 from fm_schemas_block import (NF, fr_typo, _esc, SCHEMAS_CSS, s0_html, build_bg_svg, build_rp_screen_svg, build_dg_anatomy_svg, panel_html, panel_ids, TABLE_IDS)
+from fm_planches_block import PLANCHES_CSS, PLANCHE_ERRORS, PLATES, build_plate_hq, check_report as planche_report
 
 _NBSP_FINE = NF   # espace fine insécable (typographie française)
 
 BG_SVG = build_bg_svg()
 RP_SCREEN_SVG = build_rp_screen_svg()
 DG_ANATOMY_SVG = build_dg_anatomy_svg()
+# Les planches d'écran : l'écran de l'outil au trait, des bulles numérotées, une légende numérotée ; leurs libellés viennent du dictionnaire de l'outil
+HQ_PLATE_HTML = build_plate_hq()
 
 BG_LEGEND_FR = (f'Fig. 1 — Comment les saisies d’une section alimentent les autres, et ce que lisent les autres outils. '
                 f'S{_NBSP_FINE}: saisi en Standard{_NBSP_FINE}; A{_NBSP_FINE}: en Avancé{_NBSP_FINE}; S·A{_NBSP_FINE}: dans les deux.')
@@ -230,7 +233,7 @@ BG_LEGEND_EN = ('Fig. 1 — How entries in one section feed the others, and what
 
 # ── CSS additionnel : boîtes de schéma, zoom ─────────────────────────────────────
 
-FM_EXTRA_CSS = SCHEMAS_CSS + r'''
+FM_EXTRA_CSS = SCHEMAS_CSS + PLANCHES_CSS + r'''
 /* ── SCHÉMAS : la couleur du module marque, l'encre écrit ── */
 .sv-box {
   fill: var(--paper-light);
@@ -919,18 +922,14 @@ PAGES_SRC['hq'] = [
     ('p', ['HQ fait deux choses. C’est le seul endroit où saisir l’identité de l’escadre, le **Wing**, que les autres outils reprennent. Et il ouvre la mission de DCS (.miz) pour en lire les groupes, la date, l’heure et la météo, les offrir aux autres outils et, à la fin, y réécrire ce que les Flight Leaders ont préparé.'], ['HQ does two things. It is the only place to enter the wing’s identity, the **Wing**, which the other tools take up. And it opens the DCS mission (.miz) to read its groups, date, time and weather, offer them to the other tools and, at the end, write back into it what the Flight Leaders prepared.']),
     ('raw', PANEL_HTML['hq'], ''),
     ('h', "Les gestes", "The gestures"),
-    ('h', "La barre du haut", "The top bar"),
-    ('p', ['**Ouvrir .miz** (ou déposez le fichier n’importe où sur la page), **Sauvegarder .miz**, **Paquets de vol** et **Wing**, puis Exemple et Effacer. **Effacer** retire la mission ouverte, après confirmation : les autres outils ne s’en servent plus, et le Wing ne change pas. Sur grand écran, une mission ouverte range la page sur deux colonnes : les groupes à gauche, les actions à droite.'], ['**Open .miz** (or drop the file anywhere on the page), **Save .miz**, **Flight packages** and **Wing**, then Example and Clear. **Clear** removes the open mission, after a confirmation: the other tools stop using it, and the Wing does not change. On a big screen, an open mission lays the page out in two columns: the groups on the left, the actions on the right.']),
-    ('h', "Les modifications s’additionnent", "Changes add up"),
-    ('p', ['Appliquer des paquets, supprimer des groupes et appliquer un Dynamic Spawn modifient la mission ouverte **sans rien télécharger** : chacun ajoute 1 au compteur de Sauvegarder .miz. **Sauvegarder .miz**, ou Ctrl+S, télécharge le .miz une seule fois ; **Annuler** (↺) abandonne toutes les modifications. La mission ouverte n’est partagée avec les autres outils que tant que son .miz est ouvert : recharger la page l’oublie.'], ['Applying packages, deleting groups and applying a Dynamic Spawn change the open mission **without downloading anything**: each adds 1 to the Save .miz counter. **Save .miz**, or Ctrl+S, downloads the .miz once; **Discard** (↺) drops all the changes. The open mission is shared with the other tools only while its .miz is open: reloading the page forgets it.']),
-    ('h', "Les paquets de vol", "Flight packages"),
-    ('p', ['**Paquets de vol** importe un ou plusieurs paquets rendus par les Flight Leaders ; pour chaque groupe, on choisit ce qui s’applique (route, radios, emport, livrée), puis **Appliquer à la mission**, puis Sauvegarder .miz. HQ retrouve le groupe par son nom et sa coalition. **Exporter**, parmi les actions sur les groupes cochés, fait l’inverse : un paquet de ces groupes, pour un Flight Leader qui n’a pas le .miz.'], ['**Flight packages** imports one or more packages handed back by the Flight Leaders; for each group, you choose what applies (route, radios, loadout, livery), then **Apply to the mission**, then Save .miz. HQ finds the group by its name and coalition. **Export**, among the actions on the ticked groups, does the opposite: a package of those groups, for a Flight Leader who does not have the .miz.']),
+    ('raw', HQ_PLATE_HTML, ''),
     ('h', "Le Wing", "The Wing"),
-    ('p', ['La fenêtre **Wing** décrit l’escadre une fois pour toutes ; le callsign d’un escadron sert de base aux indicatifs automatiques du Briefing Generator, modifiables ensuite. Les **livrées custom** se déclarent aussi ici, avec leurs appareils : le Flight Configurator les propose dans la liste des livrées de chaque type. Sous elles, la **livrée par défaut** de chaque appareil est celle que le Flight Configurator affiche quand la mission d’HQ n’en donne pas ; sans choix, c’est la première de sa liste. Les livrées custom et la livrée par défaut se replient comme les escadrons, et sont fermées à l’ouverture de la page.', 'Tout est sauvegardé à chaque saisie et passe en direct aux autres outils. **Exporter config** écrit un .json, **Importer config** le relit dans un autre HQ, et un bouton réinitialise. Quand la configuration est fournie par un autre outil, la fenêtre la montre sans laisser la modifier : une note dit où elle se modifie, et l’Exemple d’HQ est inactif. Un Flight Leader n’a pas le Wing dans son fichier de travail : pour avoir les escadrons dans son HQ, donnez-lui ce fichier.'], ['The **Wing** window describes the wing once and for all; a squadron’s callsign seeds the Briefing Generator’s automatic call signs, editable afterwards. The wing’s **custom liveries** are declared here too, with their aircraft: the Flight Configurator offers them in each type’s livery list. Below them, each aircraft’s **default livery** is the one the Flight Configurator shows when the mission open in HQ doesn’t give it one; without a choice, it is the first in its list. The custom liveries and the default livery fold like the squadrons, and are closed when the page opens.', 'Everything is saved at every entry and passes live to the other tools. **Export config** writes a .json, **Import config** reads it back in another HQ, and a button resets. When the configuration is provided by another tool, the window shows it without letting you change it: a note says where to edit it, and HQ’s Example is off. A Flight Leader does not get the Wing in their work file: for the squadrons in their HQ, give them this file.']),
-    ('h', "L’exemple", "The example"),
-    ('p', ['**Exemple** ouvre une escadre de démonstration, sans confirmation. Votre configuration est gardée : « Exemple chargé » propose **Restaurer ma configuration** pendant douze secondes, et le même bouton reste en tête de la fenêtre Wing tant que la sauvegarde existe ; un nouveau clic sur Exemple ne la remplace jamais.'], ['**Example** opens a demonstration wing, without a confirmation. Your configuration is kept: “Example loaded” offers **Restore my configuration** for twelve seconds, and the same button stays at the top of the Wing window while the backup exists; a new click on Example never replaces it.']),
+    ('p', ['La fenêtre **Wing** décrit l’escadre une fois pour toutes ; le callsign d’un escadron sert de base aux indicatifs automatiques du Briefing Generator, modifiables ensuite. Les **livrées custom** se déclarent aussi ici, avec leurs appareils : le Flight Configurator les propose dans la liste des livrées de chaque type. Sous elles, la **livrée par défaut** de chaque appareil est celle que le Flight Configurator affiche quand la mission d’HQ n’en donne pas ; sans choix, c’est la première de sa liste. Les livrées custom et la livrée par défaut se replient comme les escadrons, et sont fermées à l’ouverture de la page.', 'Un bouton la réinitialise. Quand la configuration est fournie par un autre outil, la fenêtre la montre sans laisser la modifier : une note dit où elle se modifie, et l’Exemple d’HQ est inactif. Après **Exemple**, **Restaurer ma configuration** reste en tête de la fenêtre tant que la sauvegarde existe ; un nouveau clic sur Exemple ne la remplace jamais. Un Flight Leader n’a pas le Wing dans son fichier de travail : pour avoir les escadrons dans son HQ, donnez-lui le fichier d’**Exporter config**.'],
+          ['The **Wing** window describes the wing once and for all; a squadron’s callsign seeds the Briefing Generator’s automatic call signs, editable afterwards. The wing’s **custom liveries** are declared here too, with their aircraft: the Flight Configurator offers them in each type’s livery list. Below them, each aircraft’s **default livery** is the one the Flight Configurator shows when the mission open in HQ doesn’t give it one; without a choice, it is the first in its list. The custom liveries and the default livery fold like the squadrons, and are closed when the page opens.', 'A button resets it. When the configuration is provided by another tool, the window shows it without letting you change it: a note says where to edit it, and HQ’s Example is off. After **Example**, **Restore my configuration** stays at the top of the window while the backup exists; a new click on Example never replaces it. A Flight Leader does not get the Wing in their work file: for the squadrons in their HQ, give them the **Export config** file.']),
+    ('h', "Les paquets de vol", "Flight packages"),
+    ('p', ['**Appliquer à la mission** modifie la mission ouverte sans rien télécharger, comme Supprimer et Dynamic Spawn : chacun ajoute 1 au compteur de Sauvegarder .miz. La mission ouverte n’est partagée avec les autres outils que tant que son .miz est ouvert : recharger la page l’oublie.'], ['**Apply to the mission** changes the open mission without downloading anything, like Delete and Dynamic Spawn: each adds 1 to the Save .miz counter. The open mission is shared with the other tools only while its .miz is open: reloading the page forgets it.']),
     ('h', "Dynamic Spawn", "Dynamic Spawn"),
-    ('p', ['Cochez des groupes, puis **Dynamic Spawn…** : la fenêtre procède en trois étapes — faire un template du groupe, choisir où il apparaît (aérodromes, FARP, navires), puis le départ moteur tournant de chacun. Seuls sont proposés les lieux dont le Dynamic Spawn est activé dans l’éditeur de mission et dont la liste d’appareils contient le type du template ; la fenêtre dit pourquoi les autres ne le sont pas.'], ['Tick groups, then **Dynamic Spawn…**: the window goes through three steps — making a template of the group, choosing where it appears (airfields, FARPs, ships), then each one’s hot start. Only places whose Dynamic Spawn is enabled in the mission editor and whose aircraft list contains the template’s type are offered; the window says why the others are not.']),
+    ('p', ['Seuls sont proposés les lieux dont le Dynamic Spawn est activé dans l’éditeur de mission et dont la liste d’appareils contient le type du template ; la fenêtre dit pourquoi les autres ne le sont pas.'], ['Only places whose Dynamic Spawn is enabled in the mission editor and whose aircraft list contains the template’s type are offered; the window says why the others are not.']),
 ]
 
 # ── Briefing Generator ───────────────────────────────────────────────────────────
@@ -2375,6 +2374,18 @@ status = 'OK' if fr_count == en_count else 'FAIL'
 print(f'  [{status}] paires lang-block : fr={fr_count} en={en_count}')
 if fr_count != en_count:
     CHECK_ERRORS.append('FAIL paires lang-block')
+
+# Les planches d'écran : chaque libellé dessiné vient du dictionnaire de son outil (lu dans son source), et aucun <text> n'échappe aux deux fonctions
+print('\n-- Planches d\'écran --')
+for _pl in PLATES:
+    print('  [OK] ' + planche_report(_pl))
+for _e in PLANCHE_ERRORS:
+    print('  [FAIL] ' + _e)
+    CHECK_ERRORS.append(_e)
+_np = len(re.findall(r'class="fm-plate"', src))
+print('  [%s] planches posées dans la page : %d, construites : %d' % ('OK' if _np == len(PLATES) else 'FAIL', _np, len(PLATES)))
+if _np != len(PLATES):
+    CHECK_ERRORS.append('FAIL planches posées')
 
 # ── node --check sur TOUS les scripts inline ──────────────────────────────────────
 
