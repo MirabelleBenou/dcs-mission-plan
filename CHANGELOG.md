@@ -44,6 +44,7 @@ Changes merged since the last release, grouped per tool.
 - **Fold all** is an icon at the right of every section header; the button on its own line is gone.
 - An exported document keeps one name whatever the format (PDF or PNG), and kneeboard PNG pages have one size, 2000 × 2828, in the Briefing Generator as in the Datacard Generator.
 - The Briefing Generator takes the weather, date and start time from the mission open in HQ (“Take from HQ mission” in the METAR assistant) and shows the HQ mission line under its toolbar, like the Flight Leader tools; its own .miz import is gone. Recon Station shows the Wing logos set in HQ by itself, with no more export and import of the Wing configuration, and still lets you add your own logos.
+- The Field Manual is rewritten as a how-to: a “Where to start” page with a map of what each tool takes and gives, the shared gestures (open, save, example, clear, restore) and the common toolbar, then one chapter per tool with what it receives and gives; values the screen already shows are no longer repeated. The Briefing Generator’s display note now counts eleven sections.
 
 #### Removed
 - The repository no longer ships one particular wing's configuration file, nor six squadron logos that no tool used; the README and the code comments no longer name that wing. Each wing still makes or imports its own configuration in HQ.

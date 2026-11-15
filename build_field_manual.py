@@ -212,136 +212,16 @@ DG_TILE_SRC = DG_TILE if DG_TILE else "data:image/gif;base64,R0lGODlhAQABAIAAAAA
 RP_TILE_SRC = RP_TILE if RP_TILE else "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
 FC_TILE_SRC = FC_TILE
 
-# ── Schémas générés (BG « Ce qui alimente quoi » ; DG figure 2) ──────────────────
+# ── Schémas générés (BG « Ce qui alimente quoi », écran du RP, anatomie de la datacard) ──
 # Règle de lisibilité : la couleur d'un module marque (trait, aplat à 20 %), l'encre écrit.
 
-from fm_schemas_block import (NF, _n, _esc, sv_text, sv_box, sv_pill, sv_tag, sv_line, sv_path, sv_defs, sv_title,
-                              SCHEMAS_CSS, s0_html, build_bg_svg, build_rp_screen_svg, build_dg_anatomy_svg, panel_html, panel_ids, TABLE_IDS)
+from fm_schemas_block import (NF, fr_typo, _esc, SCHEMAS_CSS, s0_html, build_bg_svg, build_rp_screen_svg, build_dg_anatomy_svg, panel_html, panel_ids, TABLE_IDS)
 
 _NBSP_FINE = NF   # espace fine insécable (typographie française)
 
-def _build_dg_feed_svg():
-    """Datacard Generator — figure 2 « Ce qui alimente la datacard » (viewBox 720 × 380)."""
-    M = 'dgf'
-    T = sv_text
-    o = []
-    o.append('<svg viewBox="0 0 720 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ce qui alimente la datacard" data-aria-fr="Ce qui alimente la datacard" data-aria-en="What feeds the datacard">')
-    o.append('          ' + sv_defs(M))
-    o.append('          ' + sv_title('CE QUI ALIMENTE LA DATACARD', 'WHAT FEEDS THE DATACARD', 26, 34))
-    # Briefing Generator et ses huit lignes
-    o.append('          ' + sv_box(24, 60, 220, 200, 'bg'))
-    o.append('          ' + T(134, 80, 11, 'Briefing Generator'))
-    lines = [
-        ('méta (opération, mission, date)', 'meta (operation, mission, date)'),
-        (f'groupes{_NBSP_FINE}: indicatif, appareil, tâche', 'groups: callsign, aircraft, task'),
-        ('objectif et étapes', 'objective and steps'),
-        ('équipage', 'crew'),
-        ('radio', 'radio'),
-        ('terrains, départ marqué DEP', 'airfields, departure marked DEP'),
-        ('METAR, décodé', 'METAR, decoded'),
-        ('menaces · notes', 'threats · notes'),
-    ]
-    for i, (fr, en) in enumerate(lines):
-        o.append('          ' + T(40, 102 + 20 * i, 9, fr, en, anchor='start', op=.95))
-    # saisie à la main
-    o.append('          ' + sv_box(24, 282, 220, 56))
-    o.append('          ' + T(134, 306, 11, 'Saisie à la main', 'Typed in by hand'))
-    o.append('          ' + T(134, 322, 8, 'horaires · navigation · carburant · emport',
-                              'times · navigation · fuel · loadout', op=.9))
-    # HQ (.miz), tireté
-    o.append('          ' + sv_box(320, 56, 150, 48, dashed=True))
-    o.append('          ' + T(395, 76, 11, 'HQ (.miz)'))
-    o.append('          ' + T(395, 92, 8, 'navigation · emport — à venir', 'navigation · loadout — coming', op=.9))
-    # Datacard Generator
-    o.append('          ' + sv_box(320, 168, 150, 60, 'dg'))
-    o.append('          ' + T(395, 195, 11, 'Datacard Generator'))
-    o.append('          ' + T(395, 212, 8, 'une datacard par groupe', 'one datacard per group', op=.9))
-    # flèches vers la Datacard
-    o.append('          ' + sv_line(244, 170, 318, 192, M))
-    o.append('          ' + T(282, 150, 8, 'un groupe =', 'one group =', op=.9))
-    o.append('          ' + T(282, 160, 8, 'une datacard', 'one datacard', op=.9))
-    o.append('          ' + sv_path('M244,306 C300,306 330,262 350,230', M))
-    o.append('          ' + sv_line(395, 104, 395, 166, M, dashed=True))
-    o.append('          ' + T(401, 140, 8, 'à venir', 'coming', anchor='start', op=.9))
-    # Route Planner (trait plein), sous le Datacard Generator
-    o.append('          ' + sv_box(380, 282, 140, 44, 'rp'))
-    o.append('          ' + T(450, 300, 11, 'Route Planner'))
-    o.append('          ' + T(450, 315, 8, 'navigation · points de réf.', 'navigation · reference points', op=.9))
-    o.append('          ' + sv_line(450, 282, 450, 230, M))
-    # sorties
-    outs = [
-        (112, 'PNG · kneeboard DCS', 'PNG · DCS kneeboard', '2 000 × 2 828 px', '2,000 × 2,828 px'),
-        (178, 'PDF · impression', 'PDF · printing', 'une page A4 par page', 'one A4 sheet per page'),
-        (244, 'JSON · archive, partage', 'JSON · archive, share', None, None),
-    ]
-    for (y, tfr, ten, sfr, sen) in outs:
-        o.append('          ' + sv_box(540, y, 160, 40))
-        if sfr:
-            o.append('          ' + T(620, y + 17, 11, tfr, ten))
-            o.append('          ' + T(620, y + 31, 8, sfr, sen, op=.9))
-        else:
-            o.append('          ' + T(620, y + 24, 11, tfr, ten))
-    o.append('          ' + sv_path('M470,188 C505,188 505,132 538,132', M))
-    o.append('          ' + sv_line(470, 198, 538, 198, M))
-    o.append('          ' + sv_path('M470,208 C505,208 505,264 538,264', M))
-    # note
-    o.append('          ' + T(360, 360, 9, f'Le Briefing Generator ne connaît pas la datacard{_NBSP_FINE}: la lecture va dans un seul sens.',
-                              'The Briefing Generator knows nothing of the datacard: reading goes one way only.', op=.9))
-    o.append('        </svg>')
-    return '\n'.join(o)
-
-def _build_rp_feed_svg():
-    """Route Planner — figure 2 « Ce qui entre dans le Route Planner, et ce qui en sort » (viewBox 720 × 360)."""
-    M = 'rpf'
-    T = sv_text
-    o = []
-    o.append('<svg viewBox="0 0 720 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ce qui entre dans le Route Planner, et ce qui en sort" data-aria-fr="Ce qui entre dans le Route Planner, et ce qui en sort" data-aria-en="What goes into the Route Planner, and what comes out">')
-    o.append('          ' + sv_defs(M))
-    o.append('          ' + sv_title('CE QUI ENTRE, CE QUI SORT', 'WHAT GOES IN, WHAT COMES OUT', 24, 32))
-    o.append('          ' + T(116, 52, 9, 'ENTRE', 'IN', op=.8, ls=2))
-    o.append('          ' + T(604, 52, 9, 'SORT', 'OUT', op=.8, ls=2))
-    ins = [
-        (62, None, 'Route JSON', 'Route JSON', 'route · réf. · calques', 'route · ref. · layers'),
-        (116, None, 'Route Tool de DCS', 'DCS Route Tool', '<théâtre>.lua', '<theatre>.lua'),
-        (170, None, 'CombatFlite (.cf)', 'CombatFlite (.cf)', 'calques', 'layers'),
-        (224, 'hq', 'HQ', 'HQ', 'année de la mission → déclinaison', 'mission year → variation'),
-        (278, None, 'Airfield Charts', 'Airfield Charts', 'fiches des terrains', 'airfield chart sheets'),
-    ]
-    for (y, mod, tfr, ten, sfr, sen) in ins:
-        o.append('          ' + sv_box(16, y, 200, 42, mod))
-        o.append('          ' + T(116, y + 18, 11, tfr, ten))
-        o.append('          ' + T(116, y + 32, 8, sfr, sen, op=.9))
-    # le Route Planner
-    o.append('          ' + sv_box(300, 140, 120, 108, 'rp'))
-    o.append('          ' + T(360, 188, 12, 'Route'))
-    o.append('          ' + T(360, 204, 12, 'Planner'))
-    # flèches d’entrée
-    for (y, ty) in ((83, 158), (137, 176), (191, 194), (245, 212), (299, 230)):
-        o.append('          ' + sv_path(f'M216,{y} C258,{y} 258,{ty} 298,{ty}', M))
-    outs = [
-        (74, 'dg', 'Datacard Generator', 'Datacard Generator', 'navigation · points de réf.', 'navigation · reference points'),
-        (138, 'bg', 'Briefing Generator', 'Briefing Generator', 'image de la carte', 'map image'),
-        (202, None, 'Route Tool de DCS', 'DCS Route Tool', '<théâtre>.lua', '<theatre>.lua'),
-        (266, None, 'JSON', 'JSON', 'route · réf. · calques', 'route · ref. · layers'),
-    ]
-    for (y, mod, tfr, ten, sfr, sen) in outs:
-        o.append('          ' + sv_box(504, y, 200, 42, mod))
-        o.append('          ' + T(604, y + 18, 11, tfr, ten))
-        o.append('          ' + T(604, y + 32, 8, sfr, sen, op=.9))
-    for (y, fy) in ((95, 164), (159, 184), (223, 204), (287, 224)):
-        o.append('          ' + sv_path(f'M420,{fy} C462,{fy} 462,{y} 502,{y}', M))
-    # note
-    o.append('          ' + T(360, 346, 9, f'Hors de la suite{_NBSP_FINE}: la route reste dans le navigateur, la carte s’enregistre en image.',
-                              'Outside the suite: the route stays in the browser, the map is saved as an image.', op=.9))
-    o.append('        </svg>')
-    return '\n'.join(o)
-
-
 BG_SVG = build_bg_svg()
-DG_FEED_SVG = _build_dg_feed_svg()
 RP_SCREEN_SVG = build_rp_screen_svg()
 DG_ANATOMY_SVG = build_dg_anatomy_svg()
-RP_FEED_SVG = _build_rp_feed_svg()
 
 BG_LEGEND_FR = (f'Fig. 1 — Comment les saisies d’une section alimentent les autres, et ce que lisent les autres outils. '
                 f'S{_NBSP_FINE}: saisi en Standard{_NBSP_FINE}; A{_NBSP_FINE}: en Avancé{_NBSP_FINE}; S·A{_NBSP_FINE}: dans les deux.')
@@ -363,6 +243,20 @@ FM_EXTRA_CSS = SCHEMAS_CSS + r'''
 .sv-pill { fill: var(--olive-dark); }
 .sv-pill-t { fill: var(--paper-light); }
 .fm-schema.tall svg { max-height: 425px; }
+
+/* ── La table des gestes de « Par où commencer » ── */
+.fm-gt { width: 100%; border-collapse: collapse; margin: 6px 0 18px; font-size: 13px; line-height: 1.55; }
+.fm-gt th { text-align: left; font-family: var(--f-stencil); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--accent-ink); padding: 6px 8px; border-bottom: 2px solid var(--chapter-accent, var(--fm-accent)); }
+.fm-gt td { vertical-align: top; padding: 8px; border-bottom: 1px solid rgba(0,0,0,.18); color: var(--ink); }
+.fm-gt td:first-child { width: 22%; }
+@media (max-width: 700px) {
+  .fm-gt, .fm-gt tbody, .fm-gt tr, .fm-gt td { display: block; width: 100%; box-sizing: border-box; }
+  .fm-gt thead { display: none; }
+  .fm-gt tr { border-bottom: 1px solid rgba(0,0,0,.18); padding: 6px 0; }
+  .fm-gt td { border: 0; padding: 3px 0; }
+  .fm-gt td:first-child { width: 100%; font-size: 14px; }
+  .fm-gt td[data-h]:not(:first-child)::before { content: attr(data-h) " : "; font-weight: 700; }
+}
 
 /* ── ZOOM : image ou schéma ouvert plein écran ── */
 .fm-zoom-host { position: relative; }
@@ -883,6 +777,486 @@ function initZoom() {
 S0_HTML, S0_IDS = s0_html()
 PANEL_HTML = {t: panel_html(t) for t in ('hq', 'bg', 'rs', 'fc', 'rp', 'dg')}
 
+# ═════════════════════════════════════════════════════════════════════════════════
+# Les pages du manuel : une seule source de texte, FR et EN bloc à bloc
+# ═════════════════════════════════════════════════════════════════════════════════
+# Un bloc = (genre, FR, EN). Genres : h (titre), p (un ou plusieurs paragraphes), ul (liste), note / warn (encadré),
+# tbl (table), raw (HTML tel quel, panneaux et schémas). Les liens : [[page|texte]] (page : hq, bg, rs, fc, rp, dg, start, start:gestes).
+
+def _typo_fr(t):
+    t = t.replace('« ', '«' + _NBSP_FINE).replace(' »', _NBSP_FINE + '»')
+    return fr_typo(t)
+
+def _md(t, fr=False):
+    t = _esc(t)
+    t = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', t)
+    t = re.sub(r'`(.+?)`', r'<code>\1</code>', t)
+    t = re.sub(r'\[\[([\w:]+)\|(.+?)\]\]', r'<a href="#\1" onclick="location.hash=&#39;\1&#39;;return false">\2</a>', t)
+    return _typo_fr(t) if fr else t
+
+def _lb(lang, inner, tag='div'):
+    return f'<{tag} class="lang-block" data-lang="{lang}">{inner}</{tag}>'
+
+def _render(blocks):
+    """Les blocs d'une page en HTML ; chaque bloc écrit FR puis EN (parité exacte)."""
+    out, prose = [], []
+    def flush():
+        if prose:
+            out.append('      <div class="fm-prose">\n        ' + '\n        '.join(prose) + '\n      </div>')
+            prose.clear()
+    for kind, fr, en in blocks:
+        if kind == 'raw':
+            flush(); out.append(fr)
+        elif kind == 'h':
+            prose.append(_lb('fr', _md(fr, True), 'h3')); prose.append(_lb('en', _md(en), 'h3'))
+        elif kind == 'anchor':
+            prose.append(f'<span id="{fr}"></span>')
+        elif kind == 'p':
+            prose.append(_lb('fr', ''.join('<p>' + _md(x, True) + '</p>' for x in fr)))
+            prose.append(_lb('en', ''.join('<p>' + _md(x) + '</p>' for x in en)))
+        elif kind == 'ul':
+            prose.append(_lb('fr', '<ul>' + ''.join('<li>' + _md(x, True) + '</li>' for x in fr) + '</ul>'))
+            prose.append(_lb('en', '<ul>' + ''.join('<li>' + _md(x) + '</li>' for x in en) + '</ul>'))
+        elif kind == 'tbl':
+            def tb(rows, f):
+                head, body = rows[0], rows[1:]
+                return ('<table class="fm-gt"><thead><tr>' + ''.join('<th>' + _md(c, f) + '</th>' for c in head) + '</tr></thead><tbody>'
+                        + ''.join('<tr>' + ''.join('<td data-h="' + _esc(head[i]) + '">' + _md(c, f) + '</td>' for i, c in enumerate(r)) + '</tr>' for r in body)
+                        + '</tbody></table>')
+            prose.append(_lb('fr', tb(fr, True))); prose.append(_lb('en', tb(en, False)))
+        elif kind in ('note', 'warn'):
+            flush()
+            out.append(f'      <div class="fm-callout {kind}">\n        ' + _lb('fr', _md(fr, True)) + '\n        ' + _lb('en', _md(en)) + '\n      </div>')
+    flush()
+    return '\n\n'.join(out)
+
+def _hero(pid, mono, tile, alt):
+    img = f'\n        <img class="fm-hero-img" src="{globals()[tile]}" alt="{alt}" draggable="false">' if tile else ''
+    sub = f'\n            <div class="fm-hero-sub" data-i18n="{pid}.hero.sub">' + '{SUB}' + '</div>' if pid != 'start' else ''
+    return (f'      <div class="fm-hero">{img}\n        <div class="fm-hero-pin" aria-hidden="true"></div>\n        <div class="fm-hero-caption">\n'
+            f'          <div><div class="fm-hero-monogram">{mono}</div></div>\n          <div>\n'
+            f'            <div class="fm-hero-title" data-i18n="{pid}.hero.title">' + '{TITLE}' + f'</div>{sub}\n          </div>\n        </div>\n      </div>')
+
+_HERO_TXT = {
+    'start': ('Par où commencer', None), 'hq': ('HQ — Wing Command Center', 'Configuration escadre centralisée'),
+    'bg': ('Briefing Generator', 'Générateur de briefings multi-sections'), 'rs': ('Recon Station', 'Compositeur photo-renseignement'),
+    'rp': ('Route Planner', 'Routes, navigation et cartes de mission'), 'dg': ('Datacard Generator', 'Datacards de vol pour le kneeboard'),
+    'fc': ('Flight Configurator', 'Un groupe prêt à appliquer : radios, emport, livrée'),
+}
+_ACCENT = {'hq': '#4FB286; --chapter-accent-rgb:79,178,134', 'fc': '#D0784A; --chapter-accent-rgb:208,120,74',
+           'bg': '#c0892a; --chapter-accent-rgb:192,137,42', 'dg': '#4f7a8e; --chapter-accent-rgb:79,122,142',
+           'rp': '#7ac97a; --chapter-accent-rgb:122,201,122'}
+_TILE = {'hq': 'HQ_TILE_SRC', 'bg': 'BG_TILE_SRC', 'rs': 'RS_TILE_SRC', 'rp': 'RP_TILE_SRC', 'dg': 'DG_TILE_SRC', 'fc': 'FC_TILE_SRC'}
+_MONO = {'start': '0', 'hq': 'HQ', 'bg': 'BG', 'rs': 'RS', 'rp': 'RP', 'dg': 'DG', 'fc': 'FC'}
+_ALT = {'hq': 'HQ', 'bg': 'Briefing Generator', 'rs': 'Recon Station', 'rp': 'Route Planner', 'dg': 'Datacard Generator', 'fc': 'Flight Configurator'}
+
+def _page(pid, blocks):
+    style = f' style="--chapter-accent:{_ACCENT[pid]};"' if pid in _ACCENT else ''
+    hero = _hero(pid, _MONO[pid], _TILE.get(pid), _ALT.get(pid, ''))
+    hero = hero.replace('{TITLE}', _esc(_HERO_TXT[pid][0])).replace('{SUB}', _esc(_HERO_TXT[pid][1] or ''))
+    return (f'  <section id="page-{pid}" class="fm-page hidden">\n    <div class="fm-chapter"{style}>\n\n'
+            f'      <button class="fm-back-btn" onclick="navigate(\'index\')" data-i18n="btn.back">◄ Index</button>\n\n{hero}\n\n'
+            + _render(blocks) + f'\n\n    </div><!-- /fm-chapter -->\n  </section><!-- /page-{pid} -->\n')
+
+PAGES_SRC = {}
+
+# ── Par où commencer ─────────────────────────────────────────────────────────────
+PAGES_SRC['start'] = [
+    ('raw', S0_HTML, ''),
+    ('p',
+     ["Mission Plan prépare une mission à deux rôles. Le **Mission Commander** la prépare pour toute l’escadre : HQ (le Wing une fois, puis le .miz de chaque mission), le Briefing Generator (le briefing) et Recon Station (les photos). Chaque **Flight Leader** prépare le vol de son groupe : le Route Planner (la route), le Flight Configurator (radios, emport, livrée, paquet de vol) et le Datacard Generator (la datacard du kneeboard). Le schéma dit ce que chaque outil prend et donne ; chaque chapitre le détaille dans son panneau Reçoit · Donne."],
+     ["Mission Plan prepares a mission in two roles. The **Mission Commander** prepares it for the whole wing: HQ (the Wing once, then the .miz of each mission), the Briefing Generator (the briefing) and Recon Station (the photos). Each **Flight Leader** prepares their group’s flight: the Route Planner (the route), the Flight Configurator (radios, loadout, livery, flight package) and the Datacard Generator (the kneeboard datacard). The diagram says what each tool takes and gives; each chapter details it in its Receives · Gives panel."]),
+    ('h', "Ouvrir Mission Plan", "Opening Mission Plan"),
+    ('p',
+     ["Ouvrez **dcs_mission_plan.html**, ou sa version en ligne : c’est l’accueil, et les six outils s’ouvrent depuis leur carte. Un outil ouvert seul n’affiche qu’une ligne qui renvoie vers Mission Plan, car les échanges de la suite passent par l’accueil. Tout marche sans réseau, sauf les fonds de carte et les fiches d’aérodrome du Route Planner."],
+     ["Open **dcs_mission_plan.html**, or its online version: it is the home page, and the six tools open from their card. A tool opened on its own shows only a line pointing to Mission Plan, because the suite’s exchanges go through the home page. Everything works offline, except the Route Planner’s base maps and airfield sheets."]),
+    ('h', "Le retour au Mission Commander", "The return to the Mission Commander"),
+    ('p',
+     ["Les trois outils du Flight Leader partagent leurs groupes en direct : l’ordre Route Planner, Flight Configurator, Datacard Generator n’est pas imposé, mais pour une datacard complète le Flight Configurator (emport, carburant, poids) passe avant l’export du Datacard Generator. Le seul retour qui se **fusionne** est le paquet de vol du Flight Configurator : rouvrir le fichier de travail d’un Flight Leader remplace tout le travail, un par un, et plusieurs Flight Leaders ne se rassemblent que par leurs paquets."],
+     ["The three Flight Leader tools share their groups live: the order Route Planner, Flight Configurator, Datacard Generator is not imposed, but for a complete datacard the Flight Configurator (loadout, fuel, weight) comes before the Datacard Generator export. The only return that **merges** is the Flight Configurator’s flight package: reopening a Flight Leader’s work file replaces all the work, one at a time, and several Flight Leaders come together only through their packages."]),
+    ('anchor', 'gestes', ''),
+    ('h', "Les gestes, et ce qu’ils gardent", "The gestures, and what they keep"),
+    ('p',
+     ["Les mêmes gestes ont le même sens dans tous les outils. La table dit lesquels remplacent du travail, et ce qui reste."],
+     ["The same gestures mean the same thing in every tool. The table says which ones replace work, and what stays."]),
+    ('tbl',
+     [["Geste", "Ce qu’il fait", "Ce qu’il garde"],
+      ["**Ouvrir…** (accueil), **Ouvrir ▾ › Ouvrir un travail…** (outils)", "Relit un fichier de travail et **remplace tout le travail**.", "Vos presets d’emport, le Wing, la mission d’HQ, la langue et le thème ; vos unités et réglages de cap si le fichier n’en porte pas."],
+      ["**Sauvegarder** (accueil et chaque outil sauf HQ ; Ctrl+S, Cmd+S sur Mac)", "Écrit le fichier de travail de toute la suite : briefing, composition de RS, groupes, routes, calques, datacards. HQ écrit le .miz par **Sauvegarder .miz**.", "Hors du fichier : le Wing, la mission d’HQ, l’image source de RS, les presets d’emport."],
+      ["**Exemple ▾** (accueil et cinq outils ; HQ a son bouton Exemple)", "**Mission Commander** : un briefing et une photo (BG, RS). **Flight Leader** : une route, un groupe et sa datacard (RP, FC, DG). Remplace le travail de ce groupe d’outils, sans question.", "L’autre groupe, vos unités et réglages de cap. Le bouton d’HQ ouvre une escadre de démonstration et garde la vôtre."],
+      ["**Effacer**", "BG : le briefing. RS : l’image, les annotations, la légende et le bloc d’informations. FC, DG, RP : « Tout effacer ? » vide les groupes, les routes, les calques et les datacards des trois outils (au RP, une fenêtre à cocher). HQ : retire la mission ouverte. Après confirmation.", "RS : logos, réglages, Wing. FC, DG, RP : presets, théâtre, unités, réglages. HQ : le Wing."],
+      ["**Restaurer**", "Après un Exemple ou un Ouvrir, un message le propose pendant douze secondes et rend le travail d’avant ; après deux remplacements de suite, l’état d’avant le premier.", "**Refusé** dès que vous avez saisi quelque chose : « Restauration impossible : les données ont changé depuis. »"]],
+     [["Gesture", "What it does", "What it keeps"],
+      ["**Open…** (home page), **Open ▾ › Open a work file…** (tools)", "Reads a work file and **replaces all the work**.", "Your loadout presets, the Wing, the HQ mission, the language and the theme; your units and heading settings if the file carries none."],
+      ["**Save** (home page and every tool except HQ; Ctrl+S, Cmd+S on Mac)", "Writes the work file of the whole suite: briefing, RS composition, groups, routes, layers, datacards. HQ writes the .miz with **Save .miz**.", "Left out of the file: the Wing, the HQ mission, the RS source image, the loadout presets."],
+      ["**Example ▾** (home page and five tools; HQ has its Example button)", "**Mission Commander**: a briefing and a photo (BG, RS). **Flight Leader**: a route, a group and its datacard (RP, FC, DG). Replaces the work of that tool group, without asking.", "The other group, your units and heading settings. HQ’s button opens a demonstration wing and keeps yours."],
+      ["**Clear**", "BG: the briefing. RS: the image, the annotations, the legend and the info block. FC, DG, RP: “Clear all?” empties the groups, routes, layers and datacards of the three tools (in the RP, a window with tick boxes). HQ: removes the open mission. After a confirmation.", "RS: logos, settings, Wing. FC, DG, RP: presets, theatre, units, settings. HQ: the Wing."],
+      ["**Restore**", "After an Example or an Open, a message offers it for twelve seconds and brings back the previous work; after two replacements in a row, the state before the first.", "**Refused** as soon as you have typed something: “Cannot restore: the data has changed since.”"]]),
+    ('p',
+     ["Les fenêtres Sauvegarder et Exporter (RS, BG, DG, paquets de vol) demandent un nom de fichier, proposé et modifiable."],
+     ["The Save and Export windows (RS, BG, DG, flight packages) ask for a file name, proposed and editable."]),
+    ('h', "La fenêtre d’import commune", "The common import window"),
+    ('p',
+     ["Le Flight Configurator (Importer des groupes…), le Route Planner (Importer des routes…) et le Datacard Generator (menu … des cartes › Importer des groupes) ouvrent la même fenêtre. On choisit une source : la mission d’HQ, le briefing en cours ou un fichier (paquet de vol .json ou .zip, briefing). On coche les groupes et, pour chacun, ce qu’il apporte : route, radios, emport, livrée. Un groupe de même nom et de même coalition est complété, sinon il est créé ; les routes d’un autre théâtre ne sont pas importées, et un appareil que la suite ne connaît pas arrive sans type, à choisir."],
+     ["The Flight Configurator (Import groups…), the Route Planner (Import routes…) and the Datacard Generator (cards … menu › Import groups) open the same window. You pick a source: the HQ mission, the current briefing or a file (flight package .json or .zip, briefing). You tick the groups and, for each, what it brings: route, radios, loadout, livery. A group with the same name and coalition is completed, otherwise it is created; routes from another theatre are not imported, and an aircraft the suite does not know arrives without a type, to be chosen."]),
+    ('h', "La barre du haut", "The top bar"),
+    ('p',
+     ["La barre est la même dans les six outils : les boutons de fichier juste après le sigle, puis les réglages. Quand la place manque, les boutons **perdent leur texte par étapes**, Affichage d’abord, puis les boutons de fichier, et gardent leur icône et leur info-bulle ; sous 1 100 px de large, tous sont des icônes. Elle défile au doigt quand elle ne tient pas, un fondu signalant les boutons cachés. L’icône à droite de l’en-tête d’une section **replie ou déplie toutes les sections**, dans les six outils ; sous 1 100 px, l’éditeur du BG et du DG passe en onglets, un par section, plus Aperçu.",
+      "Sous la barre du BG, du FC, du RP et du DG, la **ligne de mission d’HQ** dit quel .miz est ouvert dans HQ, sa date et son heure, et ce que l’outil en prend ; elle passe en rouge, « Non utilisée ici : autre théâtre », quand la mission n’est pas celle du théâtre de l’outil."],
+     ["The bar is the same in all six tools: the file buttons right after the abbreviation, then the settings. When room runs out, the buttons **lose their text in stages**, Display first, then the file buttons, and keep their icon and tooltip; below 1,100 px wide, all of them are icons. It scrolls by finger when it does not fit, a fade showing the hidden buttons. The icon at the right of a section header **folds or unfolds all the sections**, in all six tools; below 1,100 px, the BG and DG editor switches to tabs, one per section, plus Preview.",
+      "Under the bar of the BG, FC, RP and DG, the **HQ mission line** says which .miz is open in HQ, its date and time, and what the tool takes from it; it turns red, “Not used here: other theatre”, when the mission is not on the tool’s theatre."]),
+    ('h', "Lire ce manuel au téléphone", "Reading this manual on a phone"),
+    ('p',
+     ["Touchez un schéma pour l’agrandir ; pincez ou utilisez + pour zoomer. Sur un téléphone, la carte d’ensemble prend une forme verticale."],
+     ["Touch a diagram to enlarge it; pinch or use + to zoom. On a phone, the suite map takes a vertical shape."]),
+]
+
+# ── HQ ───────────────────────────────────────────────────────────────────────────
+PAGES_SRC['hq'] = [
+    ('h', "À quoi ça sert", "What it's for"),
+    ('p',
+     ["HQ fait deux choses. C’est le seul endroit où saisir l’identité de l’escadre, le **Wing**, que le BG, RS, le FC et le DG reprennent. Et il ouvre la mission de DCS (.miz) pour en lire les groupes, la date, l’heure et la météo, les offrir aux autres outils et, à la fin, y réécrire ce que les Flight Leaders ont préparé."],
+     ["HQ does two things. It is the only place to enter the wing’s identity, the **Wing**, which the BG, RS, the FC and the DG take up. And it opens the DCS mission (.miz) to read its groups, date, time and weather, offer them to the other tools and, at the end, write back into it what the Flight Leaders prepared."]),
+    ('raw', PANEL_HTML['hq'], ''),
+    ('h', "Les gestes", "The gestures"),
+    ('h', "La barre du haut", "The top bar"),
+    ('p',
+     ["**Ouvrir .miz** (ou déposez le fichier n’importe où sur la page), **Sauvegarder .miz**, **Paquets de vol** et **Wing**, puis Exemple et Effacer. Tant que le Wing n’est pas configuré, Wing passe en premier, en ambre. **Effacer** retire la mission ouverte, après confirmation : HQ revient à l’écran sans mission, les autres outils ne s’en servent plus et le Wing ne change pas. Une mission ouverte, la page se range sur deux colonnes dès 1 100 px : les groupes à gauche ; à droite, les actions sur les groupes cochés, le panneau Dynamic Spawn, puis la mission source et la météo."],
+     ["**Open .miz** (or drop the file anywhere on the page), **Save .miz**, **Flight packages** and **Wing**, then Example and Clear. Until the Wing is set up, Wing comes first, in amber. **Clear** removes the open mission, after a confirmation: HQ goes back to the screen with no mission, the other tools stop using it and the Wing does not change. With a mission open, the page lays out in two columns from 1,100 px: the groups on the left; on the right, the actions on the ticked groups, the Dynamic Spawn panel, then the source mission and the weather."]),
+    ('h', "Les modifications s’additionnent", "Changes add up"),
+    ('p',
+     ["Appliquer des paquets, supprimer des groupes et appliquer un Dynamic Spawn modifient la mission ouverte **sans rien télécharger** : chacun ajoute 1 au compteur de Sauvegarder .miz. **Sauvegarder .miz**, ou Ctrl+S, télécharge le .miz une seule fois ; **Annuler** (↺) abandonne toutes les modifications. Exporter des groupes attend que les modifications soient sauvegardées. La mission ouverte n’est partagée avec les autres outils que tant que son .miz est ouvert : recharger la page l’oublie."],
+     ["Applying packages, deleting groups and applying a Dynamic Spawn change the open mission **without downloading anything**: each adds 1 to the Save .miz counter. **Save .miz**, or Ctrl+S, downloads the .miz once; **Undo** (↺) drops all the changes. Exporting groups waits until the changes are saved. The open mission is shared with the other tools only while its .miz is open: reloading the page forgets it."]),
+    ('h', "Les paquets de vol", "Flight packages"),
+    ('p',
+     ["**Paquets de vol** importe un ou plusieurs paquets (.json, .zip) rendus par les Flight Leaders ; pour chaque groupe, on choisit ce qui s’applique (route, radios, emport, livrée), puis **Appliquer à la mission**, puis Sauvegarder .miz. HQ retrouve le groupe par son nom et sa coalition. **Exporter**, parmi les actions sur les groupes cochés, fait l’inverse : un paquet de ces groupes, pour un Flight Leader qui n’a pas le .miz."],
+     ["**Flight packages** imports one or more packages (.json, .zip) handed back by the Flight Leaders; for each group, you choose what applies (route, radios, loadout, livery), then **Apply to the mission**, then Save .miz. HQ finds the group by its name and coalition. **Export**, among the actions on the ticked groups, does the opposite: a package of those groups, for a Flight Leader who does not have the .miz."]),
+    ('h', "Le Wing", "The Wing"),
+    ('p',
+     ["La fenêtre **Wing** décrit l’escadre une fois pour toutes : noms, logo, tampon, puis les escadrons (nom, callsign, appareils, logo). Le callsign sert de base aux indicatifs automatiques du Briefing Generator (« ANTON 1-1 »), modifiables ensuite. Les **livrées custom** se déclarent aussi ici, avec leurs appareils : le Flight Configurator les propose dans la liste des livrées de chaque type. Sous elles, la **livrée par défaut** de chaque appareil est celle que le Flight Configurator affiche quand la mission d’HQ n’en donne pas ; sans choix, c’est la première de sa liste.",
+      "Tout est sauvegardé à chaque saisie et passe en direct aux autres outils. **Exporter config** écrit un .json à distribuer, **Importer config** le relit dans un autre HQ, et un bouton réinitialise. Un Flight Leader n’a pas le Wing dans son fichier de travail : pour avoir les escadrons dans son HQ, donnez-lui ce fichier."],
+     ["The **Wing** window describes the wing once and for all: names, logo, stamp, then the squadrons (name, callsign, aircraft, logo). The callsign seeds the Briefing Generator’s automatic call signs (“ANTON 1-1”), editable afterwards. The wing’s **custom liveries** are declared here too, with their aircraft: the Flight Configurator offers them in each type’s livery list. Below them, each aircraft’s **default livery** is the one the Flight Configurator shows when the mission open in HQ doesn’t give it one; without a choice, it is the first in its list.",
+      "Everything is saved at every entry and passes live to the other tools. **Export config** writes a .json to hand out, **Import config** reads it back in another HQ, and a button resets. A Flight Leader does not get the Wing in their work file: for the squadrons in their HQ, give them this file."]),
+    ('h', "L’exemple", "The example"),
+    ('p',
+     ["**Exemple** ouvre une escadre de démonstration, sans confirmation. Votre configuration est gardée : le message « Exemple chargé » propose **Restaurer ma configuration** pendant douze secondes, et le même bouton reste en tête de la fenêtre Wing tant que la sauvegarde existe. Un nouveau clic sur Exemple ne remplace jamais cette sauvegarde."],
+     ["**Example** opens a demonstration wing, without a confirmation. Your configuration is kept: the “Example loaded” message offers **Restore my configuration** for twelve seconds, and the same button stays at the top of the Wing window while the backup exists. A new click on Example never replaces that backup."]),
+    ('h', "Dynamic Spawn", "Dynamic Spawn"),
+    ('p',
+     ["Cochez des groupes, puis **Dynamic Spawn…** : la fenêtre procède en trois étapes, faire un template du groupe, choisir les aérodromes, FARP et navires où il apparaît, puis le départ moteur tournant de chacun. Seuls sont proposés les lieux dont le Dynamic Spawn est activé dans l’éditeur de mission et dont la liste d’appareils contient le type du template ; la fenêtre dit pourquoi les autres ne le sont pas. HQ n’active jamais le Dynamic Spawn et ne crée jamais un type d’appareil : cela se fait dans l’éditeur de mission."],
+     ["Tick groups, then **Dynamic Spawn…**: the window goes through three steps, making a template of the group, choosing the airfields, FARPs and ships where it appears, then each one’s hot start. Only places whose Dynamic Spawn is enabled in the mission editor and whose aircraft list contains the template’s type are offered; the window says why the others are not. HQ never enables Dynamic Spawn and never creates an aircraft type: that is done in the mission editor."]),
+]
+
+# ── Briefing Generator ───────────────────────────────────────────────────────────
+PAGES_SRC['bg'] = [
+    ('h', "À quoi ça sert", "What it's for"),
+    ('p',
+     ["Le Briefing Generator prépare le briefing de la mission, prêt à imprimer ou à emporter en vol, dans l’un de **deux formats** : **Standard**, une page de mission, et **Avancé**, un dossier de plusieurs pages. On remplit les sections dans l’éditeur, on vérifie la mise en page A4 dans l’aperçu, puis on exporte."],
+     ["The Briefing Generator prepares the mission briefing, ready to print or take into the cockpit, in one of **two formats**: **Standard**, one mission page, and **Advanced**, a multi-page file. You fill in the sections in the editor, check the A4 layout in the preview, then export."]),
+    ('raw', PANEL_HTML['bg'], ''),
+    ('raw', f'''      <div class="fm-schema tall">
+        {BG_SVG}
+        <div class="fm-schema-legend">
+          <span class="lang-block" data-lang="fr">{BG_LEGEND_FR}</span>
+          <span class="lang-block" data-lang="en">{BG_LEGEND_EN}</span>
+        </div>
+      </div>''', ''),
+    ('h', "Les gestes", "The gestures"),
+    ('h', "Standard ou Avancé", "Standard or Advanced"),
+    ('p',
+     ["Le menu **Affichage ▾** de la barre choisit le format ; un point ambre sur le bouton signale Avancé. **Changer de format ne perd rien** : seules les sections affichées et les pages produites changent, et ce que vous avez saisi pour l’autre format réapparaît quand vous y revenez."],
+     ["The **Display ▾** menu of the bar chooses the format; an amber dot on the button marks Advanced. **Changing format loses nothing**: only the sections shown and the pages produced change, and what you entered for the other format comes back when you return to it."]),
+    ('h', "Démarrer", "Starting"),
+    ('p',
+     ["L’outil s’ouvre sur une **page blanche**, en Standard ; les champs vides disent en grisé ce qu’on y met, et cet indice n’est ni dans l’aperçu ni à l’export. **Effacer** vide tout le briefing, après confirmation. L’exemple et ses effets sont dans [[start:gestes|Par où commencer]]."],
+     ["The tool opens on a **blank page**, in Standard; empty fields say in grey what goes in them, and that hint is neither in the preview nor in the export. **Clear** empties the whole briefing, after a confirmation. The example and its effects are in [[start:gestes|Where to start]]."]),
+    ('h', "Le brief Standard", "The Standard brief"),
+    ('p',
+     ["Six sections : En-tête, Situation, Mission, Coordination (fréquences, terrains, METAR), Photos et Méta. La date de l’En-tête se saisit en AAAA-MM-JJ ; une autre forme est gardée telle quelle, et le champ prend la couleur d’avertissement. La carte, les menaces et les cibles sont communes aux deux formats.",
+      "La page produite s’intitule « MISSION » : situation, mission et tableau des groupes, fréquences et terrains, météo. Si une carte est chargée ou si des menaces ou des cibles sont saisies, une page « CARTE ░ MENACES ░ CIBLES » suit, puis les pages de photos, deux par page. Un bloc vide n’est pas imprimé, et une page qui déborde se poursuit sur « SUITE »."],
+     ["Six sections: Header, Situation, Mission, Coordination (frequencies, airfields, METAR), Photos and Meta. The Header date is entered as YYYY-MM-DD; another form is kept as it is, and the field takes the warning colour. The map, the threats and the targets are common to both formats.",
+      "The page produced is titled “MISSION”: situation, mission and groups table, frequencies and airfields, weather. If a map is loaded or threats or targets are entered, a “MAP ░ THREATS ░ TARGETS” page follows, then the photo pages, two per page. An empty block is not printed, and a page that overflows continues on “CONT.”."]),
+    ('h', "Le brief Avancé", "The Advanced brief"),
+    ('p',
+     ["Il garde les sections du Standard et en ajoute : couverture, situation tactique, aperçu de mission, plan radio (un plan global et un plan par type d’appareil), missions individuelles, équipage, cartes et annexes. La section **Configuration Wing** est en lecture seule : le Wing se modifie dans HQ. Les indicatifs de l’équipage sont proposés à partir du callsign des escadrons d’HQ, et restent modifiables."],
+     ["It keeps the Standard sections and adds more: cover, tactical situation, mission overview, radio plan (a global plan and one per aircraft type), individual missions, crew, charts and annexes. The **Wing configuration** section is read-only: the Wing is edited in HQ. Crew call signs are proposed from the callsign of HQ’s squadrons, and stay editable."]),
+    ('h', "Le METAR", "The METAR"),
+    ('p',
+     ["L’assistant METAR a deux voies : un formulaire guidé, ou **Reprendre de la mission d’HQ**, qui lit la météo, la date et l’heure de la mission ouverte dans HQ (grisé tant qu’HQ n’a pas de mission), puis **Insérer dans METAR**. Le champ METAR reste modifiable."],
+     ["The METAR assistant has two routes: a guided form, or **Take from HQ mission**, which reads the weather, date and time of the mission open in HQ (greyed out while HQ has no mission), then **Insert into METAR**. The METAR field stays editable."]),
+    ('h', "La carte et la photo", "The map and the photo"),
+    ('p',
+     ["La carte du Route Planner arrive par **Placer la carte du Route Planner**, après l’**Exporter ▾ › Image pour le briefing…** du Route Planner, dans la même session de l’accueil. La photo de Recon Station n’arrive pas toute seule : exportez le PNG dans Recon Station, puis ajoutez l’image dans la section **Photos**."],
+     ["The Route Planner map arrives through **Place the Route Planner map**, after the Route Planner’s **Export ▾ › Image for the briefing…**, in the same home-page session. The Recon Station photo does not arrive by itself: export the PNG in Recon Station, then add the image in the **Photos** section."]),
+    ('h', "Sauvegarder et exporter", "Saving and exporting"),
+    ('p',
+     ["Le briefing est gardé automatiquement dans le navigateur. **Ouvrir ▾ › Ouvrir un briefing…** lit un ancien fichier de briefing, le format choisi voyageant avec lui. Pour exporter, vérifiez la mise en page dans l’Aperçu, puis **Exporter** : l’export porte les pages du format en cours, en PDF (par l’impression du navigateur, Ctrl+P puis « Enregistrer en PDF », y compris sur Android) ou en PNG par page, pour le kneeboard."],
+     ["The briefing is kept automatically in the browser. **Open ▾ › Open a briefing…** reads an old briefing file, the chosen format travelling with it. To export, check the layout in the Preview, then **Export**: the export carries the pages of the current format, as a PDF (through the browser’s print, Ctrl+P then “Save as PDF”, on Android too) or as one PNG per page, for the kneeboard."]),
+]
+
+# ── Recon Station ────────────────────────────────────────────────────────────────
+RS_ANATOMY_HTML = '''      <div class="fm-schema">
+        <svg viewBox="0 0 720 380" xmlns="http://www.w3.org/2000/svg" role="img"
+             aria-label="Anatomie d'une photo recon" data-aria-fr="Anatomie d'une photo recon" data-aria-en="Anatomy of a recon photo">
+          <defs>
+            <marker id="lead" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+              <path d="M0,0 L7,3.5 L0,7 Z" fill="currentColor" opacity=".55"/>
+            </marker>
+            <pattern id="hatch" width="6" height="6" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+              <line x1="0" y1="0" x2="0" y2="6" stroke="#C95A9C" stroke-width="2" opacity=".7"/>
+            </pattern>
+          </defs>
+
+          <text x="360" y="26" text-anchor="middle" font-size="13" letter-spacing="3" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">ANATOMIE D'UNE PHOTO RECON</text>
+          <text x="360" y="26" text-anchor="middle" font-size="13" letter-spacing="3" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">ANATOMY OF A RECON PHOTO</text>
+          <line x1="120" y1="34" x2="600" y2="34" stroke="currentColor" stroke-width=".6" opacity=".3"/>
+
+          <!-- PHOTO (fond sombre, repères clairs) -->
+          <rect x="250" y="64" width="220" height="240" fill="#2b2f26" stroke="currentColor" stroke-width="1.2"/>
+          <rect x="250" y="64"  width="220" height="18" fill="url(#hatch)"/>
+          <rect x="250" y="286" width="220" height="18" fill="url(#hatch)"/>
+          <rect x="258" y="248" width="34" height="24" fill="none" stroke="#e8e3d8" stroke-width="1" opacity=".8"/>
+          <text x="275" y="263" text-anchor="middle" font-size="9" fill="#e8e3d8" opacity=".8">LOGO</text>
+          <rect x="396" y="92" width="66" height="48" fill="none" stroke="#e8e3d8" stroke-width="1" opacity=".85"/>
+          <text x="403" y="106" font-size="9" fill="#e8e3d8" opacity=".85">1 ___</text>
+          <text x="403" y="120" font-size="9" fill="#e8e3d8" opacity=".85">2 ___</text>
+          <text x="403" y="134" font-size="9" fill="#e8e3d8" opacity=".85">3 ___</text>
+          <line x1="331" y1="176" x2="356" y2="160" stroke="#C95A9C" stroke-width="1.6"/>
+          <circle cx="320" cy="182" r="11" fill="none" stroke="#C95A9C" stroke-width="1.8"/>
+          <text x="320" y="186" text-anchor="middle" font-size="11" fill="#C95A9C">1</text>
+          <circle cx="356" cy="160" r="2.2" fill="#C95A9C"/>
+          <rect x="294" y="206" width="30" height="24" fill="none" stroke="#e8e3d8" stroke-dasharray="3 2" stroke-width="1" opacity=".8"/>
+          <rect x="398" y="160" width="64" height="52" fill="none" stroke="#e8e3d8" stroke-width="1.4"/>
+          <line x1="324" y1="212" x2="398" y2="186" stroke="#e8e3d8" stroke-dasharray="3 2" stroke-width="1" opacity=".7"/>
+          <text x="430" y="190" text-anchor="middle" font-size="11" fill="#e8e3d8" opacity=".7">&#8853;</text>
+          <rect x="300" y="250" width="120" height="28" fill="none" stroke="#e8e3d8" stroke-width="1" opacity=".85"/>
+          <text x="360" y="268" text-anchor="middle" font-size="8.5" fill="#e8e3d8" opacity=".85">TGT · COORDS · DTG</text>
+
+          <!-- Labels gauche -->
+          <line x1="214" y1="73"  x2="250" y2="73"  stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#lead)"/>
+          <line x1="214" y1="260" x2="258" y2="260" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#lead)"/>
+          <line x1="214" y1="182" x2="307" y2="182" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#lead)"/>
+          <g font-size="12.5" fill="currentColor" text-anchor="end">
+            <text x="208" y="77"  class="lang-block" data-lang="fr">Bandeau de classification</text>
+            <text x="208" y="77"  class="lang-block" data-lang="en">Classification banner</text>
+            <text x="208" y="264" class="lang-block" data-lang="fr">Logo</text>
+            <text x="208" y="264" class="lang-block" data-lang="en">Logo</text>
+            <text x="208" y="186" class="lang-block" data-lang="fr">Marqueur + amorce</text>
+            <text x="208" y="186" class="lang-block" data-lang="en">Marker + leader line</text>
+          </g>
+
+          <!-- Labels droite -->
+          <line x1="506" y1="108" x2="464" y2="116" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#lead)"/>
+          <line x1="506" y1="186" x2="464" y2="186" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#lead)"/>
+          <g font-size="12.5" fill="currentColor" text-anchor="start">
+            <text x="512" y="112" class="lang-block" data-lang="fr">Cartouche : N° + légende</text>
+            <text x="512" y="112" class="lang-block" data-lang="en">Cartouche: No. + legend</text>
+            <text x="512" y="190" class="lang-block" data-lang="fr">Loupe (agrandissement)</text>
+            <text x="512" y="190" class="lang-block" data-lang="en">Loupe (magnification)</text>
+          </g>
+
+          <!-- Label bas -->
+          <line x1="360" y1="326" x2="360" y2="280" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#lead)"/>
+          <text x="360" y="336" text-anchor="middle" font-size="12.5" fill="currentColor" class="lang-block" data-lang="fr">Bloc d'informations</text>
+          <text x="360" y="336" text-anchor="middle" font-size="12.5" fill="currentColor" class="lang-block" data-lang="en">Information block</text>
+        </svg>
+        <div class="fm-schema-legend">
+          <span class="lang-block" data-lang="fr">Fig. 1 — Où se place chaque élément sur la photo composée.</span>
+          <span class="lang-block" data-lang="en">Fig. 1 — Where each element sits on the composed photo.</span>
+        </div>
+      </div>'''
+PAGES_SRC['rs'] = [
+    ('h', "À quoi ça sert", "What it's for"),
+    ('p',
+     ["Recon Station transforme une capture d’écran DCS, ou n’importe quelle image, en **photo d’analyse de reconnaissance** : on donne à l’image l’allure d’un capteur, puis on pose par-dessus des annotations — cibles, légendes, loupes, bandeau de classification, logos. L’export est un PNG sans perte, à la résolution de la source."],
+     ["Recon Station turns a DCS screenshot, or any image, into a **reconnaissance analysis photo**: you give the image the look of a sensor, then lay annotations over it — targets, legends, loupes, classification banner, logos. The export is a lossless PNG, at the source’s resolution."]),
+    ('raw', PANEL_HTML['rs'], ''),
+    ('raw', RS_ANATOMY_HTML, ''),
+    ('h', "Les gestes", "The gestures"),
+    ('h', "Préparer la photo", "Setting up the photo"),
+    ('p',
+     ["L’image est d’abord convertie en niveaux de gris. **Contraste** accentue ou adoucit les écarts ; **Type d’imagerie** donne l’allure d’un capteur — EO visible, IR blanc chaud, IR noir chaud, SAR — par stylisation du signal, non par mesure ; **Vignette**, **Grain** et **Scanlines**, éteints par défaut, ajoutent l’usure d’un tirage. Recon ne peint jamais d’élément absent de l’image."],
+     ["The image is first converted to greyscale. **Contrast** sharpens or softens the differences; **Imaging type** gives the look of a sensor — visible EO, white-hot IR, black-hot IR, SAR — by stylising the signal, not by measuring; **Vignette**, **Grain** and **Scanlines**, off by default, add the wear of a print. Recon never paints in an element that is not in the image."]),
+    ('h', "Annoter", "Annotating"),
+    ('p',
+     ["**+ Ajouter un marquage** dépose un cercle numéroté, à glisser sur la cible, lié à une ligne de légende du cartouche en haut à droite ; la numérotation se recalcule toute seule, et l’**Amorce** tire un trait jusqu’au point exact de la cible. **+ Ajouter une loupe** réaffiche, agrandie, une portion de l’image traitée ; la zone et la boîte se déplacent et se redimensionnent sans déformer l’image. Cinq formes (ellipse, rectangle, polygone, flèche, crochet) et trois styles d’étiquette se posent au centre, puis se déplacent. Le **bandeau de classification**, deux barres éteintes par défaut, réserve sa place pour ne recouvrir ni le cartouche ni le bloc d’informations ; il est distinct du champ Classification du bloc."],
+     ["**+ Add a marking** drops a numbered circle, to drag onto the target, tied to a legend line of the cartouche at the top right; the numbering recomputes itself, and the **Leader** draws a line to the exact point of the target. **+ Add a loupe** redisplays, enlarged, a portion of the processed image; the zone and the box move and resize without distorting the image. Five shapes (ellipse, rectangle, polygon, arrow, bracket) and three label styles drop at the centre, then move. The **classification banner**, two bars off by default, reserves its room so it covers neither the cartouche nor the info block; it is separate from the info block’s Classification field."]),
+    ('h', "Le bloc d’informations et les logos", "The info block and the logos"),
+    ('p',
+     ["En bas, le **bloc d’informations** (cible, coordonnées, cap, altitude, mission, capteur, DTG, équipage, classification) : les champs vides ne s’impriment pas. À l’ouverture de RS, le briefing du BG préremplit **Msn, DTG et Class** ; un champ déjà rempli n’est jamais écrasé. Les **logos** du Wing d’HQ sont proposés dans la grille Logo, marqués Wing ; vous pouvez en ajouter par une image PNG. Chaque logo se rend en couleur, en niveaux de gris ou en blanc."],
+     ["At the bottom, the **info block** (target, coordinates, heading, altitude, mission, sensor, DTG, crew, classification): empty fields are not printed. When RS opens, the BG briefing pre-fills **Msn, DTG and Class**; a field already filled is never overwritten. The HQ Wing **logos** are offered in the Logo grid, marked Wing; you can add some from a PNG image. Each logo renders in colour, greyscale or white."]),
+    ('h', "Ouvrir, sauvegarder, exporter", "Opening, saving, exporting"),
+    ('p',
+     ["**Ouvrir ▾** (Ouvrir un travail…, Ouvrir une image…) et **Sauvegarder**, Ctrl+S, rangent la composition dans le fichier de travail, **sans l’image source** : après un rechargement de la page, importez de nouveau l’image. **Exporter** propose un nom (la cible et l’heure), que vous pouvez changer, et écrit un PNG sans perte à la résolution de la source ; l’aperçu à l’écran est réduit. Pour mettre la photo au briefing, voir le [[bg|Briefing Generator]]."],
+     ["**Open ▾** (Open a work file…, Open an image…) and **Save**, Ctrl+S, store the composition in the work file, **without the source image**: after a page reload, import the image again. **Export** proposes a name (the target and the time), which you can change, and writes a lossless PNG at the source’s resolution; the on-screen preview is reduced. To put the photo in the briefing, see the [[bg|Briefing Generator]]."]),
+]
+
+# ── Route Planner ────────────────────────────────────────────────────────────────
+PAGES_SRC['rp'] = [
+    ('h', "À quoi ça sert", "What it's for"),
+    ('p',
+     ["Le Route Planner trace la route d’un groupe sur la carte d’un théâtre de DCS et en donne la navigation : caps, distances, temps. On y pose aussi des points de référence et des calques tactiques, on consulte la fiche d’un terrain, puis la route passe au Flight Configurator et au Datacard Generator, la carte au Briefing Generator, et la route peut aller au Route Tool de DCS."],
+     ["The Route Planner draws a group’s route on the map of a DCS theatre and gives its navigation: headings, distances, times. You also place reference points and tactical layers, consult an airfield sheet, then the route goes to the Flight Configurator and the Datacard Generator, the map to the Briefing Generator, and the route can go to the DCS Route Tool."]),
+    ('raw', PANEL_HTML['rp'], ''),
+    ('raw', f'''      <div class="fm-schema">
+        {RP_SCREEN_SVG}
+        <div class="fm-schema-legend">
+          <span class="lang-block" data-lang="fr">Fig. 1 — L’écran du Route Planner : la carte, ses modes de toucher et le panneau.</span>
+          <span class="lang-block" data-lang="en">Fig. 1 — The Route Planner screen: the map, its tap modes, and the panel.</span>
+        </div>
+      </div>''', ''),
+    ('h', "Les gestes", "The gestures"),
+    ('h', "Le théâtre et le fond", "The theatre and the base map"),
+    ('p',
+     ["Le sélecteur **Théâtre** choisit la carte de DCS ; la **Carte DCS** est grisée là où DCS n’en a pas, et la carte de navigation de Flappie n’existe que sur le Caucase. **Affichage ▾** règle le fond, les unités et ce que montre la carte ; un point ambre sur le bouton signale un réglage changé. La loupe, en haut à gauche de la carte, cherche une ville, un aérodrome, un point de la route, une référence ou un objet nommé d’un calque."],
+     ["The **Theatre** selector chooses the DCS map; the **DCS map** is greyed out where DCS has none, and Flappie’s navigation map exists only on the Caucasus. **Display ▾** sets the base map, the units and what the map shows; an amber dot on the button marks a changed setting. The magnifier, at the top left of the map, searches for a city, an airfield, a route point, a reference or a named object of a layer."]),
+    ('h', "Ce que fait un toucher", "What a touch does"),
+    ('p',
+     ["En haut à droite de la carte, cinq modes disent ce que fait un toucher :"],
+     ["At the top right of the map, five modes say what a touch does:"]),
+    ('ul',
+     ["**Point** ajoute un point au bout de la route ;", "**Réf.** pose un point de référence ;", "**Lire** ne pose rien : un aérodrome ouvre sa fiche, un objet d’un calque montre la sienne ;", "**Dessin** ouvre les outils de dessin de vos calques ;", "**Règle** mesure cap et distance sur la carte sans rien poser ; quitter le mode efface la mesure."],
+     ["**Point** adds a point at the end of the route;", "**Ref.** places a reference point;", "**Read** places nothing: an airfield opens its sheet, a layer object shows its own;", "**Draw** opens the drawing tools for your layers;", "**Ruler** measures heading and distance on the map without placing anything; leaving the mode clears the measure."]),
+    ('p',
+     ["En Point et en Réf., un aérodrome touché donne un point à son nom, et une cible de calque devient un point ou une référence."],
+     ["In Point and Ref., a touched airfield gives a point with its name, and a layer target becomes a point or a reference."]),
+    ('h', "Construire la route", "Building the route"),
+    ('p',
+     ["En tête de la section Route, une ligne choisit la route ; **+** en ajoute une, **…** ouvre Dupliquer et Supprimer. Touchez la carte pour ajouter un point, glissez-le pour le déplacer ; le **+** posé sur une branche assez longue y insère un point. Sans toucher la carte, le bloc **Ajouter** place un point par ses coordonnées (MGRS, DMS, DDM, décimal) ou par cap et distance depuis le dernier point. Chaque point a sa ligne : nom, altitude et vitesse facultative.",
+      "**Groupes…** choisit les groupes qui suivent cette route, ou en crée un ; un groupe ne suit qu’une route, et le Flight Configurator voit le même choix. Une route garde son théâtre : en changer masque les routes des autres théâtres, qui reviennent quand on y retourne."],
+     ["At the head of the Route section, a line chooses the route; **+** adds one, **…** opens Duplicate and Delete. Touch the map to add a point, drag it to move it; the **+** on a long enough leg inserts a point there. Without touching the map, the **Add** block places a point by its coordinates (MGRS, DMS, DDM, decimal) or by heading and distance from the last point. Each point has its line: name, altitude and optional speed.",
+      "**Groups…** chooses the groups that follow this route, or creates one; a group follows only one route, and the Flight Configurator sees the same choice. A route keeps its theatre: switching theatre hides the routes of the other theatres, which come back when you return."]),
+    ('h', "Les points de référence", "Reference points"),
+    ('p',
+     ["Les **points de référence** marquent ce qui compte hors de la route : une cible, un repère, un terrain. Posez-les en mode Réf. ou par **+ Réf.** : ce sont des losanges lettrés A, B, C…, que rien ne relie. Ils ne comptent ni dans les branches ni dans le total ; ils passent à la datacard, mais pas au Route Tool de DCS."],
+     ["**Reference points** mark what matters off the route: a target, a landmark, an airfield. Place them in Ref. mode or with **+ Ref.**: they are diamonds lettered A, B, C…, with nothing linking them. They count neither in the legs nor in the total; they go to the datacard, but not to the DCS Route Tool."]),
+    ('h', "La navigation", "Navigation"),
+    ('p',
+     ["Les **boîtes de branche** écrivent la navigation sur la carte, une par branche ; les **traits des minutes** coupent chaque branche toutes les minutes. La section Navigation donne, pour chaque point et chaque branche, cap, temps et distance, et le total ; son titre dit le cap employé. **Cap** : Vrai ou Magnétique. En magnétique, la déclinaison est **Calculée**, d’après la date de la mission d’HQ quand elle existe, ou **Saisie** : la valeur lue en cabine ; **Forcer** impose l’année saisie. Sans valeur saisie, le cap reste vrai et l’avertissement le dit."],
+     ["The **leg boxes** write the navigation on the map, one per leg; the **minute ticks** cut each leg every minute. The Navigation section gives, for each point and each leg, heading, time and distance, and the total; its title says which heading is used. **Heading**: True or Magnetic. In magnetic, the variation is **Calculated**, from the date of the HQ mission when there is one, or **Entered**: the value read in the cockpit; **Force** imposes the entered year. With no value entered, the heading stays true and the warning says so."]),
+    ('h', "La fiche d’un aérodrome", "An airfield sheet"),
+    ('p',
+     ["En mode **Lire**, avec les Aérodromes affichés, touchez un aérodrome : sa fiche s’ouvre, avec les pages d’une chart de DCS Airfield Charts, une par onglet. Elle **vient du réseau**, au toucher : rien n’est téléchargé avant, et un terrain peut n’avoir pas encore de fiche."],
+     ["In **Read** mode, with Airfields shown, touch an airfield: its sheet opens, with the pages of a DCS Airfield Charts chart, one per tab. It **comes from the network**, on touch: nothing is downloaded before, and an airfield may not have a sheet yet."]),
+    ('h', "Dessiner ses calques", "Drawing your layers"),
+    ('p',
+     ["Le mode **Dessin** ouvre une barre au pied de la carte. Son bouton **Calque** dit où vous dessinez : un de vos calques, un nouveau par **+ Calque**, ou une copie modifiable d’un calque CombatFlite par **Copier pour dessiner**. Sans calque, le premier objet en crée un. Les outils vont de Choisir au Symbole OTAN en passant par Cercle, Zone, Ligne, Point, Texte, Orbite et Boîte ; une zone ou une ligne se termine par **Terminer**, et un objet choisi se modifie à ses poignées. La section **Calques** du panneau liste les calques, à cocher pour les montrer. Les calques sont gardés dans le navigateur."],
+     ["**Draw** mode opens a bar at the foot of the map. Its **Layer** button says where you draw: one of your layers, a new one with **+ Layer**, or an editable copy of a CombatFlite layer with **Copy to draw**. With no layer, the first object creates one. The tools run from Select to the NATO Symbol, through Circle, Zone, Line, Point, Text, Orbit and Box; a zone or a line ends with **Finish**, and a selected object is edited by its handles. The **Layers** section of the panel lists the layers, to tick to show them. Layers are kept in the browser."]),
+    ('h', "Les calques CombatFlite", "CombatFlite layers"),
+    ('p',
+     ["**Ouvrir ▾ › Ouvrir une route…** lit aussi un fichier CombatFlite (.cf) : la fenêtre en liste les calques ; cochez ceux à afficher, puis **Afficher**. Si le fichier nomme un théâtre connu, le Route Planner passe sur ce théâtre. Ces calques sont en lecture seule : en mode Lire, un objet touché montre sa fiche et propose → Point de référence. Un fichier .cf ne touche jamais la route."],
+     ["**Open ▾ › Open a route…** also reads a CombatFlite (.cf) file: the window lists its layers; tick the ones to show, then **Show**. If the file names a known theatre, the Route Planner switches to that theatre. These layers are read-only: in Read mode, a touched object shows its sheet and offers → Reference point. A .cf file never touches the route."]),
+    ('h', "Ouvrir, importer, sauvegarder", "Opening, importing, saving"),
+    ('p',
+     ["Le travail est gardé dans le navigateur. **Sauvegarder**, ou Ctrl+S, écrit le fichier de travail de la suite. **Ouvrir ▾ › Ouvrir une route…** reconnaît ce qu’on lui donne : une route JSON, un fichier du Route Tool de DCS ou un fichier CombatFlite. **Importer des routes…** ouvre la [[start:gestes|fenêtre d’import commune]]."],
+     ["The work is kept in the browser. **Save**, or Ctrl+S, writes the suite’s work file. **Open ▾ › Open a route…** recognises what it is given: a JSON route, a DCS Route Tool file or a CombatFlite file. **Import routes…** opens the [[start:gestes|common import window]]."]),
+    ('h', "Le Route Tool de DCS", "The DCS Route Tool"),
+    ('p',
+     ["Le Route Tool range toutes les routes d’une carte dans un fichier `<théâtre>.lua`, dans `Saved Games\\DCS\\Config\\RouteToolPresets`. **Ouvrir une route…** sur ce fichier ouvre une fenêtre : choisissez le théâtre et la route ; elle remplace la route en cours. **Exporter ▾ › Route Tool…** demande un nom, puis ajoute la route à votre fichier, en gardant les vôtres, ou crée un fichier neuf ; copiez-le ensuite dans RouteToolPresets. La ligne est grisée sur un théâtre sans Route Tool."],
+     ["The Route Tool keeps all of a map’s routes in one `<theatre>.lua` file, in `Saved Games\\DCS\\Config\\RouteToolPresets`. **Open a route…** on that file opens a window: choose the theatre and the route; it replaces the current route. **Export ▾ › Route Tool…** asks for a name, then adds the route to your file, keeping yours, or creates a new file; then copy it into RouteToolPresets. The line is greyed out on a theatre with no Route Tool."]),
+    ('h', "L’image pour le briefing", "The image for the briefing"),
+    ('p',
+     ["**Exporter ▾ › Image pour le briefing…** pose sur la carte un cadre d’export, Paysage ou Portrait : déplacez et zoomez la carte sous le cadre, puis **Exporter**. L’image reçoit une échelle, un nord et un cartouche, et part au Briefing Generator de la même session. Un fond venu d’un autre site peut manquer dans l’image : un message le signale."],
+     ["**Export ▾ › Image for the briefing…** places an export frame on the map, Landscape or Portrait: move and zoom the map under the frame, then **Export**. The image gets a scale, a north arrow and a cartouche, and goes to the Briefing Generator in the same session. A base map from another site may be missing from the image: a message says so."]),
+    ('h', "Sur tablette et téléphone", "On tablets and phones"),
+    ('p',
+     ["À partir de 1 100 px de large, le panneau est à gauche et la carte à droite. En dessous, la carte reste fixe au-dessus du panneau, qui seul défile ; une poignée entre les deux agrandit ou réduit la carte, et deux touchers la remettent à sa taille. Quand le clavier de l’écran s’ouvre sur un champ du panneau, la carte se réduit le temps de la saisie."],
+     ["From 1,100 px wide, the panel is on the left and the map on the right. Below that, the map stays fixed above the panel, which alone scrolls; a handle between the two enlarges or reduces the map, and two touches put it back to its size. When the on-screen keyboard opens on a panel field, the map shrinks for the time of the entry."]),
+    ('warn',
+     "Le cap de la règle de l’éditeur — La règle de l’éditeur de mission de DCS mesure un **cap grille**, ni vrai ni magnétique : il diffère du cap du Route Planner, jusqu’à une dizaine de degrés sur la carte Allemagne (guerre froide). Pour comparer, prenez le cap **Vrai** du Route Planner ; l’écart qui reste est la convergence de la grille.",
+     "The editor ruler’s heading — The DCS mission editor’s ruler measures a **grid heading**, neither true nor magnetic: it differs from the Route Planner heading, by up to about ten degrees on the Germany (Cold War) map. To compare, take the Route Planner’s **True** heading; the remaining gap is the grid convergence."),
+    ('note',
+     "Hors ligne — Sans connexion, les fonds de carte et les fiches ne se chargent pas : la carte n’affiche que sa grille, avec le bandeau **Fond indisponible — grille seule**. La route, les références, la navigation et les calques restent utilisables.",
+     "Offline — Without a connection, base maps and sheets do not load: the map shows only its grid, with the **Base map unavailable — grid only** banner. The route, references, navigation and layers stay usable."),
+]
+
+# ── Flight Configurator ──────────────────────────────────────────────────────────
+PAGES_SRC['fc'] = [
+    ('h', "À quoi ça sert", "What it's for"),
+    ('p',
+     ["Le Flight Configurator est l’outil du Flight Leader : il prépare un ou plusieurs **groupes** — identité, radios, emport composé sur la vue de face de l’appareil, livrée — et les exporte en **paquet de vol** que le Mission Commander applique à sa mission avec HQ. Un paquet peut s’appliquer à n’importe quelle mission : HQ retrouve chaque groupe par son nom et sa coalition, chaque partie est facultative, et une partie laissée vide n’est pas touchée."],
+     ["The Flight Configurator is the Flight Leader’s tool: it prepares one or more **groups** — identity, radios, a loadout composed on the aircraft’s front view, livery — and exports them as a **flight package** that the Mission Commander applies to their mission with HQ. A package can be applied to any mission: HQ finds each group by its name and coalition, every part is optional, and a part left empty is not touched."]),
+    ('raw', PANEL_HTML['fc'], ''),
+    ('h', "Les gestes", "The gestures"),
+    ('h', "Les groupes et les unités", "Groups and units"),
+    ('p',
+     ["**Ajoutez un groupe** : nom, coalition, et pour chaque unité son type, son nom, son indicatif, son numéro de bord et sa livrée. Deux groupes d’une même coalition ne portent pas le même nom : l’export est refusé et la barre nomme les doublons. Changer le type d’une unité efface ses radios et son emport, avec confirmation. Un groupe se replie sur un résumé d’une ligne ; l’icône à droite de l’en-tête replie ou déplie tous les groupes. Vos groupes sont partagés avec le Route Planner et le Datacard Generator : un groupe créé ou renommé dans l’un apparaît dans les autres."],
+     ["**Add a group**: name, coalition, and for each unit its type, name, call sign, tail number and livery. Two groups of the same coalition do not share a name: the export is refused and the bar names the duplicates. Changing a unit’s type clears its radios and loadout, with a confirmation. A group folds to a one-line summary; the icon at the right of the header folds or unfolds all the groups. Your groups are shared with the Route Planner and the Datacard Generator: a group created or renamed in one appears in the others."]),
+    ('h', "La route", "The route"),
+    ('p',
+     ["Le bloc **ROUTE** parle du groupe de l’unité choisie. Un groupe n’a qu’une route : on la choisit parmi celles du Route Planner en touchant une vignette, celles que le Route Planner lie à ce groupe d’abord ; **Changer de route** rouvre le choix, **Retirer** la vide. Le groupe garde une copie des points : c’est elle que le paquet porte. La reprise est automatique : quand le Route Planner enregistre, chaque groupe lié reprend les points de sa route et son nom s’ils ont changé ; si la route est supprimée au Route Planner, elle est retirée des groupes qui la suivaient. Si le Route Planner est sur un autre théâtre que le module, rien n’est repris. La route s’affiche en croquis, puis en table des branches : elle se trace au Route Planner."],
+     ["The **ROUTE** block is about the group of the chosen unit. A group has just one route: you pick it from the Route Planner’s routes by touching a thumbnail, those the Route Planner links to this group first; **Change route** reopens the choice, **Remove** empties it. The group keeps a copy of the points: that copy is what the package carries. Following is automatic: when the Route Planner saves, each linked group takes the points of its route and its name if they changed; if the route is deleted in the Route Planner, it is removed from the groups that followed it. If the Route Planner is on a different theatre from the module, nothing is followed. The route is shown as a sketch, then as a leg table: it is drawn in the Route Planner."]),
+    ('h', "Les radios", "The radios"),
+    ('p',
+     ["Pour chaque poste de l’appareil, un champ par canal, numéroté comme au cockpit. Une fréquence se saisit en MHz et doit tomber dans la bande du poste, que le module écrit sous son titre : une valeur hors bande est refusée avec un message qui cite la bande ; une valeur hors bande déjà présente, importée par exemple, est gardée et signalée sans bloquer l’export. **Recopier sur les autres unités du groupe** écrit les mêmes canaux sur les unités du même type. Les hélicoptères ont aussi un poste **HF** : la mission ne le règle pas et HQ ne l’écrit jamais, mais la datacard le reprend. La case devant un canal l’imprime sur la datacard du groupe : le Datacard Generator montre le même choix, mais le paquet de vol ne le porte pas."],
+     ["For each radio of the aircraft, one field per channel, numbered as in the cockpit. A frequency is typed in MHz and must fall inside the radio’s band, which the module writes under its title: an out-of-band value is refused with a message that quotes the band; an out-of-band value already there, imported for instance, is kept and flagged without blocking the export. **Copy to the other units of the group** writes the same channels on the units of the same type. The helicopters also have an **HF** radio: the mission does not set it and HQ never writes it, but the datacard picks it up. The box before a channel prints it on the group’s datacard: the Datacard Generator shows the same choice, but the flight package does not carry it."]),
+    ('h', "L’emport", "The loadout"),
+    ('p',
+     ["L’**unité choisie**, que l’on touche sur sa carte, a son emport affiché à droite : la **vue de face** de l’appareil, avec une case par station et la liste des armes permises. La masse totale et la masse estimée au décollage s’affichent, en orange au-delà du maximum recommandé. **Symétrique** pose sur la station jumelle l’arme miroir. Une arme qui ne peut pas aller avec le reste de l’emport est **grisée** dans la liste, avec les stations qui la gênent ; le Kord du Mi-24P n’a qu’une porte. Dessous, carburant, leurres, paillettes et canon : une valeur tapée hors limite est refusée.",
+      "**Mes presets** : « Garder dans mes presets… » enregistre l’emport sous un nom ; « Charger des presets (.lua) » reprend les fichiers de presets de l’escadre ; « Partir de » propose ces presets et une copie de l’emport d’une autre unité du même type. Les presets vivent dans le navigateur, nulle part ailleurs : ni le fichier de travail, ni Ouvrir, Exemple ou Effacer n’y touchent. Ce qui part dans le paquet, c’est un emport, jamais un preset."],
+     ["The **chosen unit**, which you touch on its card, has its loadout shown on the right: the aircraft’s **front view**, with a cell per station and the list of permitted weapons. The total mass and the estimated take-off weight are shown, in orange above the recommended maximum. **Symmetric** puts the mirror weapon on the twin station. A weapon that cannot go with the rest of the loadout is **greyed out** in the list, with the stations in the way; the Mi-24P’s Kord has one door only. Below, fuel, flares, chaff and gun: a value typed out of range is refused.",
+      "**My presets**: “Keep in my presets…” saves the loadout under a name; “Load presets (.lua)” takes the squadron’s preset files; “Start from” offers those presets and a copy of the loadout of another unit of the same type. Presets live in the browser, nowhere else: neither the work file, nor Open, Example or Clear touch them. What leaves in the package is a loadout, never a preset."]),
+    ('h', "La livrée", "The livery"),
+    ('p',
+     ["Le champ est une liste, celle du type de l’unité : les livrées du jeu et les livrées custom déclarées dans la fenêtre Wing d’HQ. Il affiche toujours un nom, et c’est ce nom que le paquet emporte. Tant que vous n’en choisissez pas, c’est la livrée de l’unité dans la mission ouverte dans HQ, sinon la livrée par défaut du type déclarée dans Wing, sinon la première de la liste. À l’application du paquet, HQ laisse décocher la livrée."],
+     ["The field is a list, the unit type’s: the game’s liveries and the custom liveries declared in HQ’s Wing window. It always shows a name, and that name is what the package carries. Until you choose one, it is the unit’s livery in the mission open in HQ, otherwise the type’s default livery declared in Wing, otherwise the first in the list. When the package is applied, HQ lets you untick the livery."]),
+    ('h', "Importer, sauvegarder, exporter", "Importing, saving, exporting"),
+    ('p',
+     ["**Importer des groupes…** ouvre la [[start:gestes|fenêtre d’import commune]] ; une unité sans type se règle une fois son type choisi. **Ouvrir ▾ › Ouvrir une configuration…** lit encore l’ancien fichier du module, avec vos groupes et « Mes presets ». **Exporter** écrit le paquet de vol : HQ applique ses parties cochées au groupe de même nom et de même coalition, et c’est le seul retour qui se fusionne au Mission Commander. **Retirer ce groupe** le retire de tous les outils, avec sa datacard. Si les groupes sont sur un autre théâtre, un bandeau propose d’y revenir ou de retirer leurs routes."],
+     ["**Import groups…** opens the [[start:gestes|common import window]]; a unit with no type is set up once its type is chosen. **Open ▾ › Open a configuration…** still reads the module’s old file, with your groups and “My presets”. **Export** writes the flight package: HQ applies its ticked parts to the group with the same name and coalition, and it is the only return that merges into the Mission Commander. **Remove this group** removes it from all tools, with its datacard. If the groups are on another theatre, a banner offers to go back there or to remove their routes."]),
+    ('note',
+     "Crédits — Les tables d’armes viennent de **pydcs** (LGPL-3.0-or-later), reprises de Mission Tools ; les dessins de la vue de face sont de **Goldwolf** (DCS Reference Guide), utilisés avec son accord et **hors de la licence AGPL** du dépôt (voir `data/views/LICENSE.md`). Limite : le module écrit l’emport qu’on compose ; il ne dit pas que DCS l’acceptera.",
+     "Credits — The weapon tables come from **pydcs** (LGPL-3.0-or-later), taken from Mission Tools; the front-view drawings are by **Goldwolf** (DCS Reference Guide), used with his permission and **outside the repository’s AGPL licence** (see `data/views/LICENSE.md`). Limit: the module writes the loadout you compose; it does not say that DCS will accept it."),
+]
+
+# ── Datacard Generator ───────────────────────────────────────────────────────────
+PAGES_SRC['dg'] = [
+    ('h', "À quoi ça sert", "What it's for"),
+    ('p',
+     ["Le Datacard Generator produit la **datacard** d’un groupe : une fiche d’une page, au format d’une page de kneeboard, qui réunit ce dont l’équipage a besoin en l’air — indicatif et tâche, horaires, équipages, navigation, radio, terrains, météo, carburant, emport, menaces. On la remplit à la main ou depuis le Briefing Generator, le Flight Configurator et le Route Planner ; on en tient un paquet, une par groupe ; on l’exporte en PNG pour le kneeboard de DCS ou en PDF pour l’imprimer, en version jour ou nuit."],
+     ["The Datacard Generator produces a group’s **datacard**: a one-page sheet, in the format of a kneeboard page, that gathers what the crew needs in the air — call sign and task, timings, crews, navigation, radio, airfields, weather, fuel, loadout, threats. You fill it in by hand or from the Briefing Generator, the Flight Configurator and the Route Planner; you keep a deck of them, one per group; you export it as PNG for the DCS kneeboard or as PDF to print, in day or night version."]),
+    ('raw', PANEL_HTML['dg'], ''),
+    ('raw', f'''      <div class="fm-schema">
+        {DG_ANATOMY_SVG}
+        <div class="fm-schema-legend">
+          <span class="lang-block" data-lang="fr">Fig. 1 — L’anatomie d’une datacard : où se range chaque bloc.</span>
+          <span class="lang-block" data-lang="en">Fig. 1 — Anatomy of a datacard: where each block goes.</span>
+        </div>
+      </div>''', ''),
+    ('h', "Les gestes", "The gestures"),
+    ('h', "Le paquet de cartes", "The deck of cards"),
+    ('p',
+     ["En tête du panneau, une ligne choisit la carte, avec sa pastille **LIÉE** à un groupe, **LIBRE** ou **GROUPE SUPPRIMÉ**. **+** ajoute une datacard liée à un groupe ; **…** ouvre Carte libre, Rattacher à un groupe, Importer des groupes, Une datacard par route, Dupliquer et Supprimer. La dernière carte ne se supprime pas : elle se vide."],
+     ["At the head of the panel, a line chooses the card, with its pill **LINKED** to a group, **FREE** or **GROUP DELETED**. **+** adds a datacard linked to a group; **…** opens Free card, Attach to a group, Import groups, One datacard per route, Duplicate and Delete. The last card cannot be deleted: it is emptied."]),
+    ('h', "Remplir une carte", "Filling in a card"),
+    ('p',
+     ["Les sections de l’éditeur suivent la page : En-tête, Groupe et équipage, Mission, Horaires, Navigation, Points de référence, Radio, Terrains, Météo, Carburant et emport, Menaces et notes, Méta. La **carte d’un groupe** reprend de la fiche des groupes ce que le Flight Configurator règle — unités, radios, emport, carburant et poids — et les champs partagés portent la pastille « FC » ; les canaux à imprimer se cochent ici comme au FC. Une **carte libre** n’est liée à rien : tout y est texte libre, sauf le type des unités. Chaque champ vide dit en grisé ce qu’on y met ; cet indice n’entre jamais dans la datacard. Le nom d’un terrain se choisit dans la liste des aérodromes du théâtre, qui remplit l’OACI, la piste et la fréquence de tour ; DEP et ARR viennent de la route."],
+     ["The editor’s sections follow the page: Header, Group and crew, Mission, Timings, Navigation, Reference points, Radio, Airfields, Weather, Fuel and loadout, Threats and notes, Meta. A **group’s card** takes from the group sheet what the Flight Configurator sets — units, radios, loadout, fuel and weight — and the shared fields carry the “FC” pill; the channels to print are ticked here as in the FC. A **free card** is linked to nothing: everything in it is free text, except the units’ type. Each empty field says in grey what goes in it; that hint never enters the datacard. An airfield’s name is picked from the theatre’s airfield list, which fills the ICAO, the runway and the tower frequency; DEP and ARR come from the route."]),
+    ('h', "La navigation", "Navigation"),
+    ('p',
+     ["La navigation d’une datacard **est une route du Route Planner** : un point saisi, déplacé ou supprimé ici l’est aussi là-bas, et inversement ; l’heure et la note restent à la datacard. Un point sans coordonnées se place par le cap et la distance qui le relient à son voisin. Les points de référence sont ceux du Route Planner ; chaque datacard choisit ceux qu’elle affiche. La liste **Lier à une autre route** lie la carte affichée à une route du Route Planner ; **… › Une datacard par route** en crée une par route d’un coup, grisé tant qu’il n’y a pas deux routes. Les réglages de cap sont communs au Route Planner et au Datacard Generator."],
+     ["A datacard’s navigation **is a Route Planner route**: a point entered, moved or deleted here is so there too, and the other way round; the time and the note stay on the datacard. A point with no coordinates is placed by the heading and distance that link it to its neighbour. The reference points are the Route Planner’s; each datacard chooses the ones it shows. The **Link to another route** list links the displayed card to a Route Planner route; **… › One datacard per route** creates one per route at once, greyed out until there are two routes. The heading settings are common to the Route Planner and the Datacard Generator."]),
+    ('h', "Importer", "Importing"),
+    ('p',
+     ["Les **groupes** (mission d’HQ, paquet de vol, briefing en cours) s’importent par **… › Importer des groupes**, la [[start:gestes|fenêtre d’import commune]] : une carte par groupe, avec, pour la mission d’HQ, la date, l’heure et la météo. **Ouvrir ▾ › Importer…** lit un **briefing**, en cours ou en fichier, et ajoute une datacard par vol coché : méta, indicatif, appareil, tâche, objectif et étapes, équipage, radio, terrains, METAR décodé, menaces et notes ; une ligne Données générales couvre un briefing sans groupe. Elle lit aussi une route ou un jeu de routes depuis un fichier : **Lier la carte à cette route** ou **Nouvelle datacard**. Restent à la main les horaires, et le carburant et l’emport quand le FC ne les donne pas. Une datacard importée vit ensuite seule : modifier le briefing ne la change pas."],
+     ["The **groups** (HQ mission, flight package, current briefing) are imported through **… › Import groups**, the [[start:gestes|common import window]]: one card per group, with, for the HQ mission, the date, time and weather. **Open ▾ › Import…** reads a **briefing**, current or from a file, and adds a datacard per ticked flight: meta, call sign, aircraft, task, objective and steps, crew, radio, airfields, decoded METAR, threats and notes; a General data line covers a briefing with no group. It also reads a route or a set of routes from a file: **Link the card to this route** or **New datacard**. Still to do by hand: the timings, and the fuel and loadout when the FC does not provide them. An imported datacard then lives on its own: changing the briefing does not change it."]),
+    ('h', "Jour ou nuit, unités", "Day or night, units"),
+    ('p',
+     ["**Affichage ▾ › Jour | Nuit** donne à tout le paquet sa version de jour (encre sombre sur papier clair) ou de nuit (tons sourds sur fond sombre, sans blanc pur) ; seule cette bascule compte, les thèmes de l’outil ne changent pas la datacard. Les **unités**, partagées avec le Route Planner et le Flight Configurator, changent les intitulés de la fiche ; les valeurs saisies ne sont pas converties, sauf celles de la ligne carburant. Une date AAAA-MM-JJ s’affiche « 22 MAR 1989 ». Le METAR, saisi ou importé, se décode en vent, visibilité, QNH et nuages, modifiables ensuite."],
+     ["**Display ▾ › Day | Night** gives the whole deck its day version (dark ink on light paper) or night version (muted tones on a dark background, no pure white); only this switch counts, the tool’s themes do not change the datacard. The **units**, shared with the Route Planner and the Flight Configurator, change the sheet’s labels; entered values are not converted, except those of the fuel line. A YYYY-MM-DD date is shown “22 MAR 1989”. The METAR, entered or imported, decodes into wind, visibility, QNH and clouds, editable afterwards."]),
+    ('h', "Quand la page déborde", "When the page overflows"),
+    ('p',
+     ["La fiche garde toutes ses boîtes, même vides, pour être imprimée et complétée à la main. Quand tout ne tient pas, la navigation passe sur une page 2, avec un en-tête réduit. Si la page 1 déborde encore, l’éditeur affiche « Contenu tronqué » : allégez la mission, les notes ou les menaces."],
+     ["The sheet keeps all its boxes, even empty ones, to be printed and completed by hand. When everything does not fit, the navigation moves to a page 2, with a reduced header. If page 1 still overflows, the editor shows “Content truncated”: lighten the mission, the notes or the threats."]),
+    ('h', "Sauvegarder et exporter", "Saving and exporting"),
+    ('p',
+     ["Le paquet est gardé dans le navigateur. **Ouvrir ▾ › Ouvrir une datacard…** lit encore un ancien fichier de datacards, qui remplace le paquet en cours, après confirmation si celui-ci n’est pas vierge. **Exporter** propose le PDF ou le PNG : le PDF passe par l’impression du navigateur, une feuille A4 par page ; le PNG est une image par page au format d’une page de kneeboard, et plusieurs pages partent dans un ZIP. L’export suit la version jour ou nuit affichée."],
+     ["The deck is kept in the browser. **Open ▾ › Open a datacard…** still reads an old datacards file, which replaces the current deck, after a confirmation if it is not blank. **Export** offers PDF or PNG: the PDF goes through the browser’s print, one A4 sheet per page; the PNG is one image per page in the format of a kneeboard page, and several pages leave in a ZIP. The export follows the day or night version shown."]),
+]
+
+
+PAGES_HTML = '\n\n'.join(_page(pid, PAGES_SRC[pid]) for pid in ('start', 'hq', 'bg', 'rs', 'rp', 'dg', 'fc'))
+
 HTML = f"""<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -1298,9 +1672,8 @@ body {{
   letter-spacing: 1px;
   color: var(--khaki);
   text-transform: uppercase;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;        /* la description passe à la ligne au lieu d'être coupée */
+  overflow-wrap: break-word;
 }}
 .fm-plaque-wide .fm-plaque-desc {{ white-space: normal; }}       /* la plaque 0 : sa description passe à la ligne au lieu d'être coupée */
 .fm-plaque-badge {{
@@ -1649,12 +2022,10 @@ kbd {{
       <!-- Intro -->
       <div class="fm-intro">
         <div class="lang-block" data-lang="fr">
-          <p>La suite DCS Mission Plan regroupe des outils de préparation de mission entièrement hors ligne, dans un seul fichier HTML : dcs_mission_plan.html, ou sa version en ligne. Aucune installation, aucune dépendance réseau : on l'ouvre dans le navigateur, et chaque outil s'ouvre depuis son accueil.</p>
-          <p>Ce manuel documente l'utilisation de chaque module : fonctionnalités, interface, flux de travail, et limites à connaître. Il est conçu pour être parcouru chapitre par chapitre, ou consulté ponctuellement.</p>
+          <p>La suite DCS Mission Plan tient dans un seul fichier, dcs_mission_plan.html, ou sa version en ligne : on l’ouvre dans le navigateur, et tout marche sans réseau, sauf les fonds de carte et les fiches d’aérodrome du Route Planner.</p>
         </div>
         <div class="lang-block" data-lang="en">
-          <p>The DCS Mission Plan suite brings together fully offline mission preparation tools in a single HTML file: dcs_mission_plan.html, or its online version. No installation, no network dependency: open it in your browser, and every tool opens from its home page.</p>
-          <p>This manual documents how to use each module: features, interface, workflow, and caveats worth knowing. It is designed to be read chapter by chapter, or consulted as needed.</p>
+          <p>The DCS Mission Plan suite fits in a single file, dcs_mission_plan.html, or its online version: you open it in the browser, and everything works offline, except the Route Planner’s base maps and airfield sheets.</p>
         </div>
       </div>
 
@@ -1669,9 +2040,8 @@ kbd {{
           <div class="fm-plaque-monogram">0</div>
           <div class="fm-plaque-info">
             <div class="fm-plaque-name" data-i18n="index.start.name">Par où commencer</div>
-            <div class="fm-plaque-desc" data-i18n="index.start.desc">Les deux rôles, l'ordre des outils, le fichier de travail</div>
+            <div class="fm-plaque-desc" data-i18n="index.start.desc">Suite, rôles, gestes</div>
           </div>
-          <div class="fm-plaque-badge" data-i18n="index.badge.active">Manuel</div>
         </div>
 
       </div><!-- /fm-plaque-grid -->
@@ -1688,9 +2058,8 @@ kbd {{
           <div class="fm-plaque-monogram">HQ</div>
           <div class="fm-plaque-info">
             <div class="fm-plaque-name">HQ</div>
-            <div class="fm-plaque-desc" data-i18n="index.hq.desc">Wing Command Center — configuration escadre</div>
+            <div class="fm-plaque-desc" data-i18n="index.hq.desc">Wing, .miz, paquets de vol</div>
           </div>
-          <div class="fm-plaque-badge" data-i18n="index.badge.active">Manuel</div>
         </div>
 
         <!-- BG -->
@@ -1701,9 +2070,8 @@ kbd {{
           <div class="fm-plaque-monogram">BG</div>
           <div class="fm-plaque-info">
             <div class="fm-plaque-name">Briefing Generator</div>
-            <div class="fm-plaque-desc" data-i18n="index.bg.desc">Générateur de briefings multi-sections</div>
+            <div class="fm-plaque-desc" data-i18n="index.bg.desc">Briefings Standard et Avancé</div>
           </div>
-          <div class="fm-plaque-badge" data-i18n="index.badge.active">Manuel</div>
         </div>
 
         <!-- RS -->
@@ -1714,9 +2082,8 @@ kbd {{
           <div class="fm-plaque-monogram">RS</div>
           <div class="fm-plaque-info">
             <div class="fm-plaque-name">Recon Station</div>
-            <div class="fm-plaque-desc" data-i18n="index.rs.desc">Compositeur photo-renseignement canvas</div>
+            <div class="fm-plaque-desc" data-i18n="index.rs.desc">Photos de reconnaissance</div>
           </div>
-          <div class="fm-plaque-badge" data-i18n="index.badge.active">Manuel</div>
         </div>
 
       </div><!-- /fm-plaque-grid -->
@@ -1733,9 +2100,8 @@ kbd {{
           <div class="fm-plaque-monogram">RP</div>
           <div class="fm-plaque-info">
             <div class="fm-plaque-name">Route Planner</div>
-            <div class="fm-plaque-desc" data-i18n="index.rp.desc">Planification d'itinéraires</div>
+            <div class="fm-plaque-desc" data-i18n="index.rp.desc">Routes, carte, navigation</div>
           </div>
-          <div class="fm-plaque-badge" data-i18n="index.badge.active">Manuel</div>
         </div>
 
         <!-- DG -->
@@ -1746,9 +2112,8 @@ kbd {{
           <div class="fm-plaque-monogram">DG</div>
           <div class="fm-plaque-info">
             <div class="fm-plaque-name">Datacard Generator</div>
-            <div class="fm-plaque-desc" data-i18n="index.dg.desc">Datacards de vol d’une page</div>
+            <div class="fm-plaque-desc" data-i18n="index.dg.desc">Datacards du kneeboard</div>
           </div>
-          <div class="fm-plaque-badge" data-i18n="index.badge.active">Manuel</div>
         </div>
 
         <!-- FC -->
@@ -1759,9 +2124,8 @@ kbd {{
           <div class="fm-plaque-monogram">FC</div>
           <div class="fm-plaque-info">
             <div class="fm-plaque-name">Flight Configurator</div>
-            <div class="fm-plaque-desc" data-i18n="index.fc.desc">Un groupe prêt à appliquer : radios, emport, livrée</div>
+            <div class="fm-plaque-desc" data-i18n="index.fc.desc">Groupes, radios, emport</div>
           </div>
-          <div class="fm-plaque-badge" data-i18n="index.badge.active">Manuel</div>
         </div>
 
       </div><!-- /fm-plaque-grid -->
@@ -1769,1037 +2133,7 @@ kbd {{
   </section><!-- /page-index -->
 
 
-  <!-- ===== PAGE 0 — Par où commencer ===== -->
-  <section id="page-start" class="fm-page hidden">
-    <div class="fm-chapter">
-
-      <button class="fm-back-btn" onclick="navigate('index')" data-i18n="btn.back">◄ Index</button>
-
-      <div class="fm-hero">
-        <div class="fm-hero-pin" aria-hidden="true"></div>
-        <div class="fm-hero-caption">
-          <div><div class="fm-hero-monogram">0</div></div>
-          <div>
-            <div class="fm-hero-title" data-i18n="start.hero.title">Par où commencer</div>
-          </div>
-        </div>
-      </div>
-
-      {S0_HTML}
-
-      <div class="fm-prose">
-        <div class="lang-block" data-lang="fr"><p>Mission Plan prépare une mission à deux rôles. Le <strong>Mission Commander</strong> prépare la mission pour toute l’escadre ; chaque <strong>Flight Leader</strong> prépare le vol de son groupe. L’accueil range les outils ainsi, en deux cadres.</p></div>
-        <div class="lang-block" data-lang="en"><p>Mission Plan prepares a mission in two roles. The <strong>Mission Commander</strong> prepares the mission for the whole wing; each <strong>Flight Leader</strong> prepares their group’s flight. The home page sorts the tools that way, in two frames.</p></div>
-      </div>
-
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Le Mission Commander</h3>
-        <h3 class="lang-block" data-lang="en">The Mission Commander</h3>
-        <div class="lang-block" data-lang="fr"><p><strong>HQ</strong>, une fois pour toutes : la configuration Wing (escadre, escadrons, logos), que tous les outils reprennent ; puis, pour chaque mission, HQ ouvre le .miz de l’éditeur de DCS. Le <strong>Briefing Generator</strong> écrit le briefing : situation, plan radio, aérodromes, cartes. <strong>Recon Station</strong> prépare les photos de reconnaissance, si la mission en a.</p></div>
-        <div class="lang-block" data-lang="en"><p><strong>HQ</strong>, once and for all: the Wing configuration (wing, squadrons, logos), which every tool picks up; then, for each mission, HQ opens the .miz from the DCS mission editor. The <strong>Briefing Generator</strong> writes the briefing: situation, radio plan, airfields, charts. <strong>Recon Station</strong> prepares the reconnaissance photos, if the mission has any.</p></div>
-      </div>
-
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Le Flight Leader</h3>
-        <h3 class="lang-block" data-lang="en">The Flight Leader</h3>
-        <div class="lang-block" data-lang="fr"><p>Dans l’ordre du cadre : le <strong>Route Planner</strong> trace la route du vol sur la carte ; le <strong>Datacard Generator</strong> en fait la datacard du kneeboard ; le <strong>Flight Configurator</strong> prépare le groupe (radios, emport, livrée) et exporte le <strong>paquet de vol</strong>.</p></div>
-        <div class="lang-block" data-lang="en"><p>In the order of the frame: the <strong>Route Planner</strong> lays the flight’s route on the map; the <strong>Datacard Generator</strong> turns it into the kneeboard datacard; the <strong>Flight Configurator</strong> prepares the group (radios, loadout, livery) and exports the <strong>flight package</strong>.</p></div>
-      </div>
-
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Le travail passe de l’un à l’autre</h3>
-        <h3 class="lang-block" data-lang="en">The work goes from one to the other</h3>
-        <div class="lang-block" data-lang="fr"><p><strong>Sauvegarder</strong> (dans la barre de chaque outil, ou en haut de l’accueil) écrit <strong>tout le travail de Mission Plan</strong> dans un seul fichier .json : briefing, recon, groupes, routes, calques, datacards, théâtre, unités et réglages de cap. Le Mission Commander envoie ce fichier à ses Flight Leaders ; chacun l’ouvre par <strong>Ouvrir…</strong> (en haut de l’accueil, ou Ouvrir ▾ › Ouvrir un travail… dans un outil) et trouve ce que le Mission Commander a préparé. Ouvrir un travail <strong>remplace tout le travail en cours</strong>, sauf vos presets d’emport, et vos unités et réglages de cap quand le fichier n’en porte pas ; le message qui suit propose <strong>Restaurer</strong> pendant quelques secondes. Le fichier ne porte ni la configuration Wing, qui appartient à l’escadre, ni la mission ouverte dans HQ, dont le fichier est le .miz, ni la photo de Recon Station. Le Flight Leader rend au Mission Commander son <strong>paquet de vol</strong>, que HQ applique au .miz.</p></div>
-        <div class="lang-block" data-lang="en"><p><strong>Save</strong> (in every tool’s bar, or at the top of the home page) writes <strong>all the Mission Plan work</strong> into a single .json file: briefing, recon, groups, routes, layers, datacards, theatre, units and heading settings. The Mission Commander sends this file to the Flight Leaders; each opens it with <strong>Open…</strong> (at the top of the home page, or Open ▾ › Open a work file… in a tool) and finds what the Mission Commander has prepared. Opening a work file <strong>replaces all the current work</strong>, except your loadout presets, and your units and heading settings when the file carries none; the message that follows offers <strong>Restore</strong> for a few seconds. The file carries neither the Wing configuration, which belongs to the wing, nor the mission open in HQ, whose file is the .miz, nor the Recon Station photo. The Flight Leader hands the <strong>flight package</strong> back to the Mission Commander, and HQ applies it to the .miz.</p></div>
-      </div>
-
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">L’exemple</h3>
-        <h3 class="lang-block" data-lang="en">The example</h3>
-        <div class="lang-block" data-lang="fr"><p>Chaque outil a un menu <strong>Exemple ▾</strong> (l’icône de feuille de la barre du haut), et la barre de l’accueil, après <strong>Sauvegarder</strong>, a le même, à deux lignes : <strong>Mission Commander</strong> (Briefing Generator, Recon Station) et <strong>Flight Leader</strong> (Route Planner, Datacard Generator, Flight Configurator). C’est le moyen le plus rapide de voir ce que fait la suite. Il n’y a qu’un exemple, l’opération fictive <strong>STEPPE WIND</strong> au-dessus de Chypre, et il se charge <strong>par groupe d’outils</strong>, dans la langue de l’interface au moment du clic. La ligne Mission Commander (celle de l’accueil ou de n’importe quel outil) remplit les deux outils du groupe : le briefing et la photo de reconnaissance. La ligne Flight Leader (de même) remplit les trois : la route STEPPE WIND M3, le groupe CAESAR (deux Mi-24P) qui la suit, sa datacard, dont l’heure s’imprime en Zulu (08:00Z), et le théâtre Syrie. L’exemple <strong>remplace le travail en cours du groupe</strong> et laisse l’autre groupe, vos unités et vos réglages de cap tels qu’ils sont ; le message qui suit propose <strong>Restaurer</strong>, qui rend pendant douze secondes le travail d’avant du groupe. Si l’on enchaîne deux remplacements (deux Exemple, ou un Exemple puis Ouvrir), Restaurer rend l’état d’avant le premier. Celui de HQ est une escadre de démonstration : <strong>HQ garde votre configuration d’escadre</strong> et propose de la restaurer en un geste. Une fois chargé, l’exemple est à vous : changer de langue ensuite ne le retraduit pas. Pour repartir d’une page blanche, <strong>Effacer</strong> vide le Briefing Generator, après confirmation ; au Flight Configurator, au Datacard Generator et au Route Planner, <strong>Tout effacer</strong> efface d’un coup les groupes, les routes et les datacards de ces trois outils, après confirmation.</p></div>
-        <div class="lang-block" data-lang="en"><p>Every tool has an <strong>Example ▾</strong> menu (the sheet icon in the top bar), and the home page’s bar has the same one, after <strong>Save</strong>, with two lines: <strong>Mission Commander</strong> (Briefing Generator, Recon Station) and <strong>Flight Leader</strong> (Route Planner, Datacard Generator, Flight Configurator). It is the quickest way to see what the suite does. There is one example, the fictional operation <strong>STEPPE WIND</strong> over Cyprus, and it loads <strong>by group of tools</strong>, in the interface language at the moment of the click. The Mission Commander line (on the home page or in any tool) fills the group’s two tools: the briefing and the reconnaissance photo. The Flight Leader line (likewise) fills the three: the STEPPE WIND M3 route, the CAESAR group (two Mi-24P) that follows it, its datacard, whose time prints in Zulu (08:00Z), and the Syria theatre. The example <strong>replaces the group’s current work</strong> and leaves the other group, your units and your heading settings as they are; the message that follows offers <strong>Restore</strong>, which brings back the group’s previous work for twelve seconds. If two replacements follow each other (two Examples, or an Example then Open), Restore brings back the state before the first. HQ’s is a demonstration wing: <strong>HQ keeps your wing configuration</strong> and offers to restore it in one tap. Once loaded, the example is yours: switching language afterwards does not translate it again. To start from a blank page, <strong>Clear</strong> empties the Briefing Generator, after confirmation; in the Flight Configurator, the Datacard Generator and the Route Planner, <strong>Clear everything</strong> clears the groups, routes and datacards of these three tools at once, after confirmation.</p></div>
-      </div>
-
-    </div>
-  </section><!-- /page-start -->
-
-
-  <!-- ===== PAGE RS — Chapitre-gabarit : Recon Station ===== -->
-  <section id="page-rs" class="fm-page hidden">
-    <div class="fm-chapter">
-
-      <!-- Retour -->
-      <button class="fm-back-btn" onclick="navigate('index')" data-i18n="btn.back">◄ Index</button>
-
-      <!-- Héros -->
-      <div class="fm-hero">
-        <img class="fm-hero-img" src="{RS_TILE_SRC}" alt="Recon Station" draggable="false">
-        <div class="fm-hero-pin" aria-hidden="true"></div>
-        <div class="fm-hero-caption">
-          <div>
-            <div class="fm-hero-monogram">RS</div>
-          </div>
-          <div>
-            <div class="fm-hero-title" data-i18n="rs.hero.title">Recon Station</div>
-            <div class="fm-hero-sub" data-i18n="rs.hero.sub">Compositeur photo-renseignement</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- À quoi ça sert -->
-      <div class="fm-prose">
-        <h3 data-i18n="rs.whatfor.title">À quoi ça sert</h3>
-        <div class="lang-block" data-lang="fr">
-          <p>Recon Station transforme une capture d'écran DCS — ou n'importe quelle image — en photo d'analyse de reconnaissance, prête à glisser dans un briefing. Le principe : partir d'une vraie image, lui donner l'allure d'un capteur (optique, infrarouge ou radar), puis poser par-dessus une couche d'annotations — cibles, légendes, loupes, bandeau de classification, logos. L'export est un PNG sans perte, à la résolution exacte de la source. Les sections ci-dessous détaillent chaque réglage et son effet.</p>
-        </div>
-        <div class="lang-block" data-lang="en">
-          <p>Recon Station turns a DCS screenshot — or any image — into a reconnaissance analysis photo, ready to drop into a briefing. The idea: start from a real image, give it the look of a sensor (optical, infrared, or radar), then overlay a layer of annotations — targets, legends, loupes, classification banner, logos. Export is a lossless PNG at the source's exact resolution. The sections below detail each control and its effect.</p>
-        </div>
-      </div>
-
-      <!-- Schéma SVG — anatomie d'une photo recon (où se place chaque élément) -->
-      {PANEL_HTML['rs']}
-
-      <div class="fm-schema">
-        <svg viewBox="0 0 720 380" xmlns="http://www.w3.org/2000/svg" role="img"
-             aria-label="Anatomie d'une photo recon" data-aria-fr="Anatomie d'une photo recon" data-aria-en="Anatomy of a recon photo">
-          <defs>
-            <marker id="lead" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
-              <path d="M0,0 L7,3.5 L0,7 Z" fill="currentColor" opacity=".55"/>
-            </marker>
-            <pattern id="hatch" width="6" height="6" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
-              <line x1="0" y1="0" x2="0" y2="6" stroke="#C95A9C" stroke-width="2" opacity=".7"/>
-            </pattern>
-          </defs>
-
-          <text x="360" y="26" text-anchor="middle" font-size="13" letter-spacing="3" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">ANATOMIE D'UNE PHOTO RECON</text>
-          <text x="360" y="26" text-anchor="middle" font-size="13" letter-spacing="3" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">ANATOMY OF A RECON PHOTO</text>
-          <line x1="120" y1="34" x2="600" y2="34" stroke="currentColor" stroke-width=".6" opacity=".3"/>
-
-          <!-- PHOTO (fond sombre, repères clairs) -->
-          <rect x="250" y="64" width="220" height="240" fill="#2b2f26" stroke="currentColor" stroke-width="1.2"/>
-          <rect x="250" y="64"  width="220" height="18" fill="url(#hatch)"/>
-          <rect x="250" y="286" width="220" height="18" fill="url(#hatch)"/>
-          <rect x="258" y="248" width="34" height="24" fill="none" stroke="#e8e3d8" stroke-width="1" opacity=".8"/>
-          <text x="275" y="263" text-anchor="middle" font-size="9" fill="#e8e3d8" opacity=".8">LOGO</text>
-          <rect x="396" y="92" width="66" height="48" fill="none" stroke="#e8e3d8" stroke-width="1" opacity=".85"/>
-          <text x="403" y="106" font-size="9" fill="#e8e3d8" opacity=".85">1 ___</text>
-          <text x="403" y="120" font-size="9" fill="#e8e3d8" opacity=".85">2 ___</text>
-          <text x="403" y="134" font-size="9" fill="#e8e3d8" opacity=".85">3 ___</text>
-          <line x1="331" y1="176" x2="356" y2="160" stroke="#C95A9C" stroke-width="1.6"/>
-          <circle cx="320" cy="182" r="11" fill="none" stroke="#C95A9C" stroke-width="1.8"/>
-          <text x="320" y="186" text-anchor="middle" font-size="11" fill="#C95A9C">1</text>
-          <circle cx="356" cy="160" r="2.2" fill="#C95A9C"/>
-          <rect x="294" y="206" width="30" height="24" fill="none" stroke="#e8e3d8" stroke-dasharray="3 2" stroke-width="1" opacity=".8"/>
-          <rect x="398" y="160" width="64" height="52" fill="none" stroke="#e8e3d8" stroke-width="1.4"/>
-          <line x1="324" y1="212" x2="398" y2="186" stroke="#e8e3d8" stroke-dasharray="3 2" stroke-width="1" opacity=".7"/>
-          <text x="430" y="190" text-anchor="middle" font-size="11" fill="#e8e3d8" opacity=".7">&#8853;</text>
-          <rect x="300" y="250" width="120" height="28" fill="none" stroke="#e8e3d8" stroke-width="1" opacity=".85"/>
-          <text x="360" y="268" text-anchor="middle" font-size="8.5" fill="#e8e3d8" opacity=".85">TGT · COORDS · DTG</text>
-
-          <!-- Labels gauche -->
-          <line x1="214" y1="73"  x2="250" y2="73"  stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#lead)"/>
-          <line x1="214" y1="260" x2="258" y2="260" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#lead)"/>
-          <line x1="214" y1="182" x2="307" y2="182" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#lead)"/>
-          <g font-size="12.5" fill="currentColor" text-anchor="end">
-            <text x="208" y="77"  class="lang-block" data-lang="fr">Bandeau de classification</text>
-            <text x="208" y="77"  class="lang-block" data-lang="en">Classification banner</text>
-            <text x="208" y="264" class="lang-block" data-lang="fr">Logo</text>
-            <text x="208" y="264" class="lang-block" data-lang="en">Logo</text>
-            <text x="208" y="186" class="lang-block" data-lang="fr">Marqueur + amorce</text>
-            <text x="208" y="186" class="lang-block" data-lang="en">Marker + leader line</text>
-          </g>
-
-          <!-- Labels droite -->
-          <line x1="506" y1="108" x2="464" y2="116" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#lead)"/>
-          <line x1="506" y1="186" x2="464" y2="186" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#lead)"/>
-          <g font-size="12.5" fill="currentColor" text-anchor="start">
-            <text x="512" y="112" class="lang-block" data-lang="fr">Cartouche : N° + légende</text>
-            <text x="512" y="112" class="lang-block" data-lang="en">Cartouche: No. + legend</text>
-            <text x="512" y="190" class="lang-block" data-lang="fr">Loupe (agrandissement)</text>
-            <text x="512" y="190" class="lang-block" data-lang="en">Loupe (magnification)</text>
-          </g>
-
-          <!-- Label bas -->
-          <line x1="360" y1="326" x2="360" y2="280" stroke="currentColor" stroke-width="1" opacity=".55" marker-end="url(#lead)"/>
-          <text x="360" y="336" text-anchor="middle" font-size="12.5" fill="currentColor" class="lang-block" data-lang="fr">Bloc d'informations</text>
-          <text x="360" y="336" text-anchor="middle" font-size="12.5" fill="currentColor" class="lang-block" data-lang="en">Information block</text>
-        </svg>
-        <div class="fm-schema-legend">
-          <span class="lang-block" data-lang="fr">Fig. 1 — Où se place chaque élément sur la photo composée.</span>
-          <span class="lang-block" data-lang="en">Fig. 1 — Where each element sits on the composed photo.</span>
-        </div>
-      </div>
-
-      <!-- Référence par fonction -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Préparer la photo</h3>
-        <h3 class="lang-block" data-lang="en">Setting up the photo</h3>
-        <div class="lang-block" data-lang="fr"><p>L'image est d'abord convertie en niveaux de gris. Le curseur <strong>Contraste</strong> accentue ou adoucit les écarts de luminosité. Le sélecteur <strong>Type d'imagerie</strong> applique ensuite l'allure d'un capteur : <strong>EO visible</strong> garde un rendu photographique net ; <strong>IR blanc chaud</strong> fait ressortir les sources chaudes en clair sur fond sombre ; <strong>IR noir chaud</strong> inverse (chaud = sombre) ; <strong>SAR</strong> donne le grain granuleux et le moucheté d'une image radar. Ce sont des stylisations du signal, pas des mesures réelles. Enfin <strong>Vignette</strong>, <strong>Grain</strong> et <strong>Scanlines</strong> (éteints par défaut) ajoutent l'usure d'un tirage : bords assombris, bruit argentique, lignes de balayage. Chaque effet est un curseur d'intensité appliqué en temps réel.</p></div>
-        <div class="lang-block" data-lang="en"><p>The image is first converted to greyscale. The <strong>Contrast</strong> slider sharpens or softens brightness differences. The <strong>Imaging type</strong> selector then applies a sensor look: <strong>EO visible</strong> keeps a crisp photographic render; <strong>IR white-hot</strong> brings hot sources up bright on a dark background; <strong>IR black-hot</strong> inverts it (hot = dark); <strong>SAR</strong> gives the grainy speckle of a radar image. These are signal stylisations, not real measurements. Finally <strong>Vignette</strong>, <strong>Grain</strong>, and <strong>Scanlines</strong> (off by default) add print wear: darkened edges, film noise, scan lines. Each effect is an intensity slider applied in real time.</p></div>
-      </div>
-
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Le bloc d'informations</h3>
-        <h3 class="lang-block" data-lang="en">The information block</h3>
-        <div class="lang-block" data-lang="fr"><p>En bas, centré, un bloc renseigne le contexte de la prise : <strong>Cible, Coordonnées, Cap, Altitude, Mission, Capteur, Date-heure (DTG), Équipage, Classification</strong>. Tous les champs sont libres ; laissez vides ceux qui ne s'appliquent pas. Réglez la couleur du texte en <strong>blanc ou noir</strong> selon que le bas de la photo est sombre ou clair.</p></div>
-        <div class="lang-block" data-lang="en"><p>At the bottom, centred, a block carries the shot's context: <strong>Target, Coordinates, Course, Altitude, Mission, Sensor, Date-time (DTG), Crew, Classification</strong>. All fields are free text; leave blank those that don't apply. Set the text colour <strong>white or black</strong> depending on whether the bottom of the photo is dark or light.</p></div>
-      </div>
-
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Cibles : cartouche et marqueurs</h3>
-        <h3 class="lang-block" data-lang="en">Targets: cartouche and markers</h3>
-        <div class="lang-block" data-lang="fr"><p><strong>« + Ajouter un marquage »</strong> dépose un cercle numéroté que vous faites glisser (souris ou tactile) sur la cible ; le numéro s'inscrit à côté du cercle pour ne pas la masquer. Chaque marqueur est lié à une <strong>ligne de légende</strong> dans le cartouche en haut à droite, et la numérotation se recalcule seule quand vous réordonnez ou supprimez. Couleur <strong>rouge, noir ou blanc</strong>. Activez l'<strong>Amorce</strong> pour tirer un trait du cercle au point exact de la cible (point déplaçable). Pour une ligne de légende sans cercle sur la photo, décochez <strong>« Point visible »</strong>.</p></div>
-        <div class="lang-block" data-lang="en"><p><strong>"+ Add a marking"</strong> drops a numbered circle you drag (mouse or touch) onto the target; the number sits beside the circle so it never hides it. Each marker is tied to a <strong>legend line</strong> in the top-right cartouche, and numbering recomputes itself when you reorder or delete. Colour <strong>red, black, or white</strong>. Turn on the <strong>Leader line</strong> to draw from the circle to the exact target point (draggable). For a legend line with no circle on the photo, untick <strong>"Visible point"</strong>.</p></div>
-      </div>
-
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Loupe</h3>
-        <h3 class="lang-block" data-lang="en">Loupe</h3>
-        <div class="lang-block" data-lang="fr"><p><strong>« + Ajouter une loupe »</strong> ré-affiche, agrandie, une portion de l'image traitée : une petite zone source sur la photo, reliée en pointillés à une boîte zoomée. Zone et boîte se <strong>déplacent et se redimensionnent</strong> (poignée en bas à droite) ; le ratio reste couplé, donc l'image agrandie <strong>n'est jamais déformée</strong>. Bordure blanche, noire ou rouge, et libellé optionnel.</p></div>
-        <div class="lang-block" data-lang="en"><p><strong>"+ Add a loupe"</strong> re-shows a magnified portion of the processed image: a small source area on the photo, linked by a dashed line to a zoomed box. Area and box <strong>move and resize</strong> (bottom-right handle); the ratio stays coupled, so the magnified image is <strong>never distorted</strong>. White, black, or red border, and an optional label.</p></div>
-      </div>
-
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Formes et étiquettes</h3>
-        <h3 class="lang-block" data-lang="en">Shapes and labels</h3>
-        <div class="lang-block" data-lang="fr"><p>Cinq <strong>formes</strong> se posent au centre puis se déplacent : ellipse, rectangle (<strong>pivotable</strong>, poignée dédiée), polygone (points éditables, fermeture), flèche (tête pleine) et crochet. Trois styles d'<strong>étiquette</strong> : <strong>tampon</strong> (boîte pleine, texte inversé), <strong>cursif</strong> (police façon crayon gras) et <strong>nu</strong> (texte simple avec halo de lisibilité). Couleur rouge, noir ou blanc pour chaque élément.</p></div>
-        <div class="lang-block" data-lang="en"><p>Five <strong>shapes</strong> drop at centre then move: ellipse, rectangle (<strong>rotatable</strong>, dedicated handle), polygon (editable points, closing), arrow (solid head), and bracket. Three <strong>label</strong> styles: <strong>stamp</strong> (filled box, inverted text), <strong>cursive</strong> (grease-pencil font), and <strong>plain</strong> (simple text with a legibility halo). Red, black, or white colour per element.</p></div>
-      </div>
-
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Bandeau de classification</h3>
-        <h3 class="lang-block" data-lang="en">Classification banner</h3>
-        <div class="lang-block" data-lang="fr"><p>Deux barres pleine largeur, en <strong>haut et en bas</strong>, éteintes par défaut : <strong>UNCLASSIFIED</strong> (vert), <strong>CONFIDENTIAL</strong> (bleu), <strong>SECRET</strong> (rouge), <strong>TOP SECRET</strong> (orange). Les libellés ne sont <strong>pas traduits</strong> (marquage standard). Ce bandeau est distinct du champ <em>Classification</em> du bloc d'informations ; quand il est actif, la place est réservée pour ne recouvrir ni le cartouche ni le bloc info.</p></div>
-        <div class="lang-block" data-lang="en"><p>Two full-width bars, <strong>top and bottom</strong>, off by default: <strong>UNCLASSIFIED</strong> (green), <strong>CONFIDENTIAL</strong> (blue), <strong>SECRET</strong> (red), <strong>TOP SECRET</strong> (orange). The labels are <strong>not translated</strong> (standard marking). This banner is distinct from the <em>Classification</em> field in the information block; when on, space is reserved so it covers neither the cartouche nor the info block.</p></div>
-      </div>
-
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Logos</h3>
-        <h3 class="lang-block" data-lang="en">Logos</h3>
-        <div class="lang-block" data-lang="fr"><p>Aucun logo par défaut. Ajoutez-en par <strong>upload d'image</strong>, ou <strong>importez une configuration d'escadre</strong> (fichier .json) exportée depuis HQ ou le Briefing Generator : Recon récupère alors le logo d'escadre et ceux des escadrons. Chaque logo est réduit proportionnellement et se rend en <strong>couleur, niveaux de gris (défaut) ou blanc</strong> (silhouette).</p></div>
-        <div class="lang-block" data-lang="en"><p>No logo by default. Add one by <strong>image upload</strong>, or <strong>import a wing configuration</strong> (.json file) exported from HQ or the Briefing Generator: Recon then pulls in the wing logo and the squadron logos. Each logo is scaled down proportionally and renders in <strong>colour, greyscale (default), or white</strong> (silhouette).</p></div>
-      </div>
-
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Essayer l’exemple</h3>
-        <h3 class="lang-block" data-lang="en">Trying the example</h3>
-        <div class="lang-block" data-lang="fr"><p>La ligne <strong>Mission Commander</strong> du menu <strong>Exemple ▾</strong> de la barre du haut (l’icône de feuille) charge l’exemple <strong>STEPPE WIND</strong> du Mission Commander, comme dans le Briefing Generator et dans la barre de l’accueil : le briefing dans le Briefing Generator et, ici, une <strong>photo aérienne libre</strong> (USDA NAIP, domaine public) avec sa composition : trois repères de légende et leurs marqueurs, un cadre, une ellipse, une <strong>loupe</strong> et le bloc d’informations rempli (opération STEPPE WIND), dans la langue de l’interface au moment du clic. Il <strong>remplace le travail en cours</strong> de ces deux outils, même sur un outil vide, et le message qui suit propose <strong>Restaurer</strong>, qui le rend pendant douze secondes, l’image que vous aviez importée comprise. Le <strong>crédit de l’image</strong> s’affiche sous la zone de dépôt tant que cette photo est chargée ; il n’entre pas dans l’export PNG et disparaît dès qu’une autre image est importée. Le bouton <strong>Effacer</strong>, juste après, vide après confirmation l’image, ses annotations, la légende et le bloc d’informations ; les logos, les réglages d’affichage, le thème et la configuration Wing restent.</p></div>
-        <div class="lang-block" data-lang="en"><p>The <strong>Mission Commander</strong> line of the <strong>Example ▾</strong> menu in the top bar (the sheet icon) loads the Mission Commander’s <strong>STEPPE WIND</strong> example, as in the Briefing Generator and in the home page’s bar: the briefing in the Briefing Generator and, here, a <strong>free aerial photograph</strong> (USDA NAIP, public domain) with its composition: three legend entries and their markers, a frame, an ellipse, a <strong>loupe</strong> and the filled-in information block (operation STEPPE WIND), in the interface language at the moment of the click. It <strong>replaces the current work</strong> of these two tools, even on an empty tool, and the message that follows offers <strong>Restore</strong>, which brings it back for twelve seconds, the image you had imported included. The <strong>image credit</strong> shows under the drop zone while that photo is loaded; it never reaches the PNG export and disappears as soon as another image is imported. The <strong>Clear</strong> button, right after it, empties the image, its marks, the legend and the information block, after confirmation; the logos, the display settings, the theme and the wing configuration stay.</p></div>
-      </div>
-
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Exporter</h3>
-        <h3 class="lang-block" data-lang="en">Export</h3>
-        <div class="lang-block" data-lang="fr"><p>Le bouton <strong>Exporter</strong> de la barre du haut produit un <strong>PNG sans perte à la résolution native</strong> de la source, nommé automatiquement d'après la cible et l'horodatage. L'aperçu à l'écran est en résolution réduite : seul le fichier exporté reflète la qualité finale.</p></div>
-        <div class="lang-block" data-lang="en"><p>The <strong>Export</strong> button in the top bar produces a <strong>lossless PNG at the source's native resolution</strong>, auto-named from the target and timestamp. The on-screen preview is lower resolution: only the exported file reflects final quality.</p></div>
-      </div>
-
-            <!-- Callout NOTE -->
-      <div class="fm-callout note">
-        <div class="lang-block" data-lang="fr">Export PNG lossless — L'export produit un fichier PNG aux dimensions exactes de l'image source, sans aucune recompression. La résolution d'aperçu est inférieure ; seul l'export reflète la qualité finale.</div>
-        <div class="lang-block" data-lang="en">Lossless PNG export — The export produces a PNG file at the exact dimensions of the source image, with no recompression. Preview resolution is lower; only the export reflects final quality.</div>
-      </div>
-
-      <!-- Callout WARN -->
-      <div class="fm-callout warn">
-        <div class="lang-block" data-lang="fr">L'image source n'est jamais persistée — Recon Station sauvegarde automatiquement vos paramètres et annotations entre sessions, mais pas l'image elle-même (trop volumineuse pour le stockage local). Après un rechargement de page, vous devrez réimporter votre image source.</div>
-        <div class="lang-block" data-lang="en">The source image is never persisted — Recon Station automatically saves your settings and annotations between sessions, but not the image itself (too large for local storage). After the page is refreshed, you will need to import your source image again.</div>
-      </div>
-
-      <!-- Callout NOTE — principe effet/annotation -->
-      <div class="fm-callout note">
-        <div class="lang-block" data-lang="fr">Effet ou annotation — Recon ne peint jamais d'éléments absents de l'image. Les effets transforment les pixels déjà présents ; les annotations se posent par-dessus sans toucher la photo. Même la loupe ne fait que ré-afficher un agrandissement de l'image traitée — elle n'invente rien.</div>
-        <div class="lang-block" data-lang="en">Effect or annotation — Recon never paints in elements that aren't in the image. Effects transform the pixels already there; annotations sit on top without touching the photo. Even the loupe only re-shows a magnified crop of the processed image — it invents nothing.</div>
-      </div>
-
-    </div><!-- /fm-chapter -->
-  </section><!-- /page-rs -->
-
-
-  <!-- ===== PAGE HQ ===== -->
-  <section id="page-hq" class="fm-page hidden">
-    <div class="fm-chapter" style="--chapter-accent:#4FB286; --chapter-accent-rgb:79,178,134;">
-
-      <button class="fm-back-btn" onclick="navigate('index')" data-i18n="btn.back">◄ Index</button>
-
-      <div class="fm-hero">
-        <img class="fm-hero-img" src="{HQ_TILE_SRC}" alt="HQ" draggable="false">
-        <div class="fm-hero-pin" aria-hidden="true"></div>
-        <div class="fm-hero-caption">
-          <div><div class="fm-hero-monogram">HQ</div></div>
-          <div>
-            <div class="fm-hero-title" data-i18n="hq.hero.title">HQ — Wing Command Center</div>
-            <div class="fm-hero-sub" data-i18n="hq.hero.sub">Configuration escadre centralisée</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- À quoi ça sert -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">À quoi ça sert</h3>
-        <h3 class="lang-block" data-lang="en">What it's for</h3>
-        <div class="lang-block" data-lang="fr"><p>HQ est le <strong>poste de commandement</strong> de la suite : un module de support pour les <strong>Mission Commanders</strong> et les <strong>Flight Leaders</strong>. Il fait deux choses. D'abord, c'est le <strong>seul endroit où définir l'identité de l'escadre</strong> et de ses escadrons ; cette identité est ensuite partagée automatiquement avec les autres modules — le Briefing Generator s'en sert pour son branding et ses escadrons, Recon Station pour ses logos. Ensuite, HQ sait <strong>ouvrir une mission DCS (.miz)</strong> pour en lire les groupes clients, leurs fréquences, leurs livrées et la météo. Réinjecter des modifications dans un .miz (rôle Commander) s'activera avec l'arrivée des modules Flight Lead.</p></div>
-        <div class="lang-block" data-lang="en"><p>HQ is the suite's <strong>command post</strong>: a support module for <strong>Mission Commanders</strong> and <strong>Flight Leaders</strong>. It does two things. First, it is the <strong>single place to define the wing's identity</strong> and its squadrons; that identity is then shared automatically with the other modules — the Briefing Generator uses it for branding and squadrons, Recon Station for its logos. Second, HQ can <strong>open a DCS mission (.miz)</strong> to read its client groups, their frequencies, liveries, and weather. Writing changes back into a .miz (Commander role) will activate when the Flight Lead modules arrive.</p></div>
-      </div>
-
-      <!-- Schéma SVG — flux du hub -->
-      {PANEL_HTML['hq']}
-
-      <div class="fm-schema">
-        <svg viewBox="0 0 720 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="HQ — le hub de la suite" data-aria-fr="HQ — le hub de la suite" data-aria-en="HQ — the suite’s hub">
-          <defs>
-            <marker id="ha" markerWidth="8" markerHeight="8" refX="6.5" refY="3.5" orient="auto"><path d="M0,0 L8,3.5 L0,7 Z" fill="currentColor" opacity=".6"/></marker>
-            <marker id="haf" markerWidth="8" markerHeight="8" refX="6.5" refY="3.5" orient="auto"><path d="M0,0 L8,3.5 L0,7 Z" fill="currentColor" opacity=".35"/></marker>
-          </defs>
-
-          <text x="360" y="26" text-anchor="middle" font-size="13" letter-spacing="3" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">HQ — LE HUB DE LA SUITE</text>
-          <text x="360" y="26" text-anchor="middle" font-size="13" letter-spacing="3" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">HQ — THE SUITE'S HUB</text>
-          <line x1="120" y1="34" x2="600" y2="34" stroke="currentColor" stroke-width=".6" opacity=".3"/>
-
-          <rect class="sv-box" x="48" y="92" width="86" height="42" rx="3" stroke="currentColor" stroke-width="1.2"/>
-          <text x="91" y="112" text-anchor="middle" font-size="12" fill="currentColor">.miz</text>
-          <text x="91" y="126" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9">mission</text>
-          <line x1="134" y1="113" x2="286" y2="113" stroke="currentColor" stroke-width="1.2" opacity=".6" marker-end="url(#ha)"/>
-          <text x="210" y="105" text-anchor="middle" font-size="9" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">ouvrir</text>
-          <text x="210" y="105" text-anchor="middle" font-size="9" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">open</text>
-
-          <rect class="sv-box sv-m-hq" x="288" y="84" width="150" height="64" rx="3" stroke-width="2"/>
-          <text x="363" y="116" text-anchor="middle" font-size="22" fill="currentColor" letter-spacing="2">HQ</text>
-          <text x="363" y="134" text-anchor="middle" font-size="8.5" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">poste de commandement</text>
-          <text x="363" y="134" text-anchor="middle" font-size="8.5" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">command post</text>
-
-          <line x1="438" y1="113" x2="512" y2="113" stroke="currentColor" stroke-width="1.2" opacity=".35" stroke-dasharray="4 3" marker-end="url(#haf)"/>
-          <rect class="sv-box" x="514" y="86" width="172" height="58" rx="3" stroke="currentColor" stroke-width="1" stroke-opacity=".6" stroke-dasharray="4 3"/>
-          <text x="600" y="108" text-anchor="middle" font-size="9.5" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">Snapshot de mission</text>
-          <text x="600" y="108" text-anchor="middle" font-size="9.5" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">Mission snapshot</text>
-          <text x="600" y="124" text-anchor="middle" font-size="9.5" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">→ modules Flight Lead</text>
-          <text x="600" y="124" text-anchor="middle" font-size="9.5" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">→ Flight Lead modules</text>
-          <text x="600" y="137" text-anchor="middle" font-size="8.5" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">(à venir)</text>
-          <text x="600" y="137" text-anchor="middle" font-size="8.5" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">(coming)</text>
-
-          <line x1="363" y1="148" x2="363" y2="196" stroke="currentColor" stroke-width="1.2" opacity=".6" marker-end="url(#ha)"/>
-          <rect class="sv-box" x="250" y="198" width="226" height="32" rx="3" stroke="currentColor" stroke-width="1.4"/>
-          <text x="363" y="214" text-anchor="middle" font-size="11" fill="currentColor">wing_config</text>
-          <text x="363" y="226" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">identité d'escadre partagée</text>
-          <text x="363" y="226" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">shared wing identity</text>
-
-          <line x1="320" y1="230" x2="270" y2="276" stroke="currentColor" stroke-width="1.2" opacity=".6" marker-end="url(#ha)"/>
-          <line x1="406" y1="230" x2="456" y2="276" stroke="currentColor" stroke-width="1.2" opacity=".6" marker-end="url(#ha)"/>
-          <rect class="sv-box sv-m-bg" x="170" y="278" width="140" height="46" rx="3" stroke-width="2"/>
-          <text x="240" y="300" text-anchor="middle" font-size="12" fill="currentColor">Briefing Generator</text>
-          <text x="240" y="315" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">branding + escadrons</text>
-          <text x="240" y="315" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">branding + squadrons</text>
-          <rect class="sv-box sv-m-rs" x="416" y="278" width="140" height="46" rx="3" stroke-width="2"/>
-          <text x="486" y="300" text-anchor="middle" font-size="12" fill="currentColor">Recon Station</text>
-          <text x="486" y="315" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9">logos</text>
-
-          <text x="360" y="352" text-anchor="middle" font-size="9" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">HQ édite — les autres consomment</text>
-          <text x="360" y="352" text-anchor="middle" font-size="9" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">HQ edits — the others consume</text>
-        </svg>
-        <div class="fm-schema-legend">
-          <span class="lang-block" data-lang="fr">Fig. 1 — HQ édite l'identité d'escadre ; les autres modules la consomment.</span>
-          <span class="lang-block" data-lang="en">Fig. 1 — HQ edits the wing identity; the other modules consume it.</span>
-        </div>
-      </div>
-
-      <!-- La page : la barre et les deux colonnes -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">La page : la barre et les deux colonnes</h3>
-        <h3 class="lang-block" data-lang="en">The page: the bar and the two columns</h3>
-        <div class="lang-block" data-lang="fr"><p>La barre du haut porte les gestes de la page : <strong>Ouvrir .miz</strong> (ou déposez le fichier n’importe où sur la page), <strong>Sauvegarder .miz</strong>, <strong>Paquets de vol</strong> et <strong>Wing</strong>, puis <strong>Exemple</strong> et <strong>Effacer</strong>. Tant que votre wing n’est pas configuré, <strong>Wing</strong> passe en premier, devant les boutons de fichier, en ambre ; une fois configuré, il reprend sa place. <strong>Paquets de vol</strong> (importer des paquets, les appliquer à la mission) et <strong>Wing</strong> (les escadrons d’abord, puis l’identité du wing) s’ouvrent chacun dans une fenêtre ; <strong>Exemple</strong> ouvre aussi la fenêtre Wing. <strong>Effacer</strong> retire la mission ouverte, après confirmation (et un avertissement si des modifications ne sont pas sauvegardées) : HQ revient à l’écran sans mission, les autres outils ne s’en servent plus, et la configuration Wing ne change pas ; le bouton est inactif tant qu’aucune mission n’est ouverte. Une mission ouverte, la page se range sur <strong>deux colonnes dès 1 100 px</strong> : à gauche les <strong>groupes</strong> (filtres et cases à cocher) ; à droite, <strong>collées en haut</strong> de la vue, les actions sur les groupes cochés (<strong>Exporter</strong>, <strong>Supprimer</strong>, <strong>Dynamic Spawn…</strong>), le panneau Dynamic Spawn, puis la mission source et la météo. En dessous de 1 100 px, une seule colonne, la droite d’abord.</p></div>
-        <div class="lang-block" data-lang="en"><p>The top bar carries the page’s actions: <strong>Open .miz</strong> (or drop the file anywhere on the page), <strong>Save .miz</strong>, <strong>Flight packages</strong> and <strong>Wing</strong>, then <strong>Example</strong> and <strong>Clear</strong>. Until your wing is set up, <strong>Wing</strong> comes first, ahead of the file buttons, in amber; once it is set up, it goes back to its place. <strong>Flight packages</strong> (import packages, apply them to the mission) and <strong>Wing</strong> (the squadrons first, then the wing’s identity) each open in a window; <strong>Example</strong> also opens the Wing window. <strong>Clear</strong> removes the open mission, after confirmation (with a warning if changes are not saved): HQ goes back to the empty screen, the other tools stop using the mission, and the Wing configuration does not change; the button is inactive until a mission is open. Once a mission is open, the page lays out in <strong>two columns from 1,100 px</strong>: the <strong>groups</strong> on the left (filters and tick boxes); on the right, <strong>pinned to the top</strong> of the view, the actions on the checked groups (<strong>Export</strong>, <strong>Delete</strong>, <strong>Dynamic Spawn…</strong>), the Dynamic Spawn panel, then the source mission and the weather. Below 1,100 px there is one column, the right-hand one first.</p></div>
-      </div>
-
-      <!-- Les modifications s'additionnent -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Les modifications s’additionnent, puis se sauvegardent une fois</h3>
-        <h3 class="lang-block" data-lang="en">Changes add up, then are saved once</h3>
-        <div class="lang-block" data-lang="fr"><p>Appliquer des paquets, supprimer des groupes et appliquer un Dynamic Spawn <strong>modifient la mission ouverte</strong> sans rien télécharger : chacun ajoute 1 au <strong>compteur</strong> de <strong>Sauvegarder .miz</strong> (la pastille ambre). <strong>Sauvegarder .miz</strong> — ou <strong>Ctrl+S</strong> — vérifie une dernière fois le texte de la mission et télécharge le .miz <strong>une seule fois</strong>. <strong>Annuler</strong> (la flèche ↺), à côté de <strong>Sauvegarder .miz</strong> tant qu’il reste des modifications, les abandonne toutes : la mission revient à son état à l’ouverture ou à la dernière sauvegarde. Ouvrir un autre .miz avant de sauvegarder demande confirmation, et quitter la page prévient. <strong>Exporter</strong> des groupes attend que les modifications soient sauvegardées : le paquet porte l’empreinte de la mission sauvegardée. La mission ouverte n’est partagée avec les autres modules que tant que son .miz est ouvert : un rechargement de la page l’oublie, et HQ repart vide.</p></div>
-        <div class="lang-block" data-lang="en"><p>Applying packages, deleting groups and applying a Dynamic Spawn <strong>change the open mission</strong> without downloading anything: each adds 1 to the <strong>counter</strong> on <strong>Save .miz</strong> (the amber badge). <strong>Save .miz</strong> — or <strong>Ctrl+S</strong> — checks the mission text one last time and downloads the .miz <strong>once</strong>. <strong>Discard</strong> (the ↺ arrow), next to <strong>Save .miz</strong> while there are unsaved changes, drops them all: the mission goes back to how it was when opened or last saved. Opening another .miz before saving asks for confirmation, and leaving the page warns you. <strong>Export</strong> of groups waits until the changes are saved: the package carries the saved mission’s fingerprint. The open mission is shared with the other tools only while its .miz is open: a page reload forgets it, and HQ starts empty.</p></div>
-      </div>
-
-      <!-- Créateur de Wing : identité -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Le créateur de Wing — l'identité de l'escadre</h3>
-        <h3 class="lang-block" data-lang="en">The Wing builder — the wing's identity</h3>
-        <div class="lang-block" data-lang="fr"><p>C'est ici que vous décrivez votre escadre, une fois pour toutes : <strong>Nom court</strong> et <strong>Nom complet</strong> ; <strong>Titre d'application</strong> (le titre affiché en tête des briefings) ; <strong>Logo d'escadre</strong> (une image, réduite automatiquement) ; <strong>Tampon HQ</strong> (la mention tamponnée, type « HQ ░ MON ESCADRE »). Chaque champ se répercute sur le branding des autres modules.</p></div>
-        <div class="lang-block" data-lang="en"><p>This is where you describe your wing, once and for all: <strong>Short name</strong> and <strong>Full name</strong>; <strong>App title</strong> (the title shown at the top of briefings); <strong>Wing logo</strong> (an image, scaled down automatically); <strong>HQ stamp</strong> (the stamped line, e.g. "HQ ░ MY WING"). Each field flows through to the other modules' branding.</p></div>
-      </div>
-
-      <!-- Créateur de Wing : escadrons -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Les escadrons</h3>
-        <h3 class="lang-block" data-lang="en">The squadrons</h3>
-        <div class="lang-block" data-lang="fr"><p>Ajoutez autant d'escadrons que nécessaire. Pour chacun : <strong>nom</strong>, <strong>surnom</strong> (optionnel), <strong>callsign</strong> (l'identité radio, ex. FRANKEN), <strong>appareils</strong> (ex. Mi-24P, Mi-8) et <strong>logo</strong>. Le callsign sert de base aux indicatifs automatiques des pilotes dans le Briefing Generator (ex. « ANTON 1-1 »), toujours modifiables ensuite.</p><p>Les <strong>livrées custom</strong> de l’escadre se déclarent aussi ici : un nom par livrée, tel qu’il s’écrit dans DCS (le nom de son dossier), et les appareils qui la portent, parmi ceux des escadrons. Le Flight Configurator les propose dans la liste des livrées de chaque type, avec celles du jeu. Sous elles, la <strong>livrée par défaut</strong> de chaque appareil est celle que le Flight Configurator affiche quand la mission ouverte dans HQ ne lui en donne pas ; sans choix, c’est la première de sa liste.</p></div>
-        <div class="lang-block" data-lang="en"><p>Add as many squadrons as needed. For each: <strong>name</strong>, <strong>nickname</strong> (optional), <strong>callsign</strong> (the radio identity, e.g. FRANKEN), <strong>aircraft</strong> (e.g. Mi-24P, Mi-8), and <strong>logo</strong>. The callsign seeds the pilots' automatic call signs in the Briefing Generator (e.g. "ANTON 1-1"), always editable afterwards.</p><p>The wing’s <strong>custom liveries</strong> are declared here too: one name per livery, as DCS writes it (its folder name), and the aircraft that wear it, among the squadrons’ ones. The Flight Configurator offers them in each type’s livery list, next to the game’s own. Below them, each aircraft’s <strong>default livery</strong> is the one the Flight Configurator shows when the mission open in HQ doesn’t give it one; without a choice, it is the first in its list.</p></div>
-      </div>
-
-      <!-- Le bouton Exemple -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Essayer l’exemple</h3>
-        <h3 class="lang-block" data-lang="en">Trying the example</h3>
-        <div class="lang-block" data-lang="fr"><p>Le bouton <strong>Exemple</strong> de la barre du haut (l’icône de feuille) ouvre une <strong>escadre de démonstration</strong> : la Task Force Kestrel, avec ses trois escadrons et leurs logos, dans la langue de l’interface au moment du clic, sans confirmation. Comme la configuration d’escadre est partagée par toute la suite, <strong>la vôtre est gardée</strong> : le message « Exemple chargé » propose <strong>Restaurer ma configuration</strong> pendant douze secondes, et tant que la sauvegarde existe, le même bouton figure en tête de la fenêtre <strong>Wing</strong>. Restaurer remet votre configuration telle qu’elle était et efface la sauvegarde ; si vous n’en aviez pas encore, la démonstration disparaît. Un nouveau clic sur Exemple ne remplace jamais la sauvegarde, même si vous avez modifié la démonstration entre-temps : seul Restaurer la supprime. L’ouverture d’une mission et le Mission Commander ne bougent pas.</p></div>
-        <div class="lang-block" data-lang="en"><p>The <strong>Example</strong> button in the top bar (the sheet icon) opens a <strong>demonstration wing</strong>: Task Force Kestrel, with its three squadrons and their logos, in the interface language at the moment of the click, without confirmation. Because the wing configuration is shared by the whole suite, <strong>yours is kept</strong>: the “Example loaded” message offers <strong>Restore my configuration</strong> for twelve seconds, and as long as the backup exists the same button sits at the top of the <strong>Wing</strong> window. Restoring puts your configuration back exactly as it was and deletes the backup; if you had none yet, the demonstration goes away. Clicking Example again never replaces the backup, even if you edited the demonstration in the meantime: only Restore deletes it. Opening a mission and the Mission Commander are untouched.</p></div>
-      </div>
-
-      <!-- Créateur de Wing : partager -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Partager la configuration</h3>
-        <h3 class="lang-block" data-lang="en">Sharing the configuration</h3>
-        <div class="lang-block" data-lang="fr"><p>Tout est <strong>sauvegardé automatiquement</strong> à chaque modification, et propagé en direct aux autres modules. <strong>Exportez</strong> la configuration en fichier <code>.json</code> pour la distribuer à l'escadre ; chacun l'<strong>importe</strong> pour retrouver exactement le même branding. Un bouton <strong>réinitialise</strong> au wing par défaut.</p></div>
-        <div class="lang-block" data-lang="en"><p>Everything is <strong>saved automatically</strong> on every change, and propagated live to the other modules. <strong>Export</strong> the configuration as a <code>.json</code> file to hand it to the wing; everyone <strong>imports</strong> it to get exactly the same branding. A button <strong>resets</strong> to the default wing.</p></div>
-      </div>
-
-      <!-- Ouvrir une mission -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Ouvrir une mission</h3>
-        <h3 class="lang-block" data-lang="en">Opening a mission</h3>
-        <div class="lang-block" data-lang="fr"><p>HQ ouvre un <strong>.miz</strong> et en extrait un <strong>instantané en lecture seule</strong> : les groupes clients (hélicoptères et avions pilotables), présentés par leur <strong>callsign</strong>, avec leurs fréquences radio, la fréquence de groupe, la livrée et la météo de la mission. L'instantané est partagé avec les autres modules et exportable.</p></div>
-        <div class="lang-block" data-lang="en"><p>HQ opens a <strong>.miz</strong> and extracts a <strong>read-only snapshot</strong>: the client groups (player-flyable helicopters and planes), shown by their <strong>callsign</strong>, with their radio frequencies, group frequency, livery, and the mission weather. The snapshot is shared with the other modules and exportable.</p></div>
-      </div>
-
-      <!-- Dynamic Spawn écrit -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Dynamic Spawn</h3>
-        <h3 class="lang-block" data-lang="en">Dynamic Spawn</h3>
-        <div class="lang-block" data-lang="fr"><p>HQ peut écrire le Dynamic Spawn dans la mission : cochez des groupes dans la liste, puis <strong>Dynamic Spawn…</strong>. La fenêtre procède en trois étapes : <strong>Faire un template</strong> du groupe, puis choisir, pour son type d’appareil, les aérodromes, FARP et navires où il apparaît, puis le départ moteur tournant de chacun. <strong>Prérequis :</strong> seuls les aérodromes, FARP et navires dont le Dynamic Spawn est activé dans l’éditeur de mission, et dont la liste d’appareils contient le type du template, sont proposés pour un template ; la fenêtre dit pourquoi les autres ne sont pas proposés (« Pourquoi d’autres bases n’apparaissent pas ? »). Un template ne compte qu’un appareil et ne se lie qu’aux bases de son camp ; un aérodrome neutre peut le recevoir, et passe alors au camp du template. HQ n’active jamais le Dynamic Spawn et ne crée jamais un type d’appareil : cela se fait dans l’éditeur de mission. Retirer un template remet à zéro ses liens ; un lieu déjà lié à un autre template pour ce type est signalé, et le lien est remplacé si vous le cochez. HQ ne modifie que les fichiers <code>mission</code> et <code>warehouses</code> du .miz, les relit avant de rendre le fichier, et signale dans le compte rendu un template de plusieurs appareils ou une coalition différente entre le template et le lieu, à vérifier dans DCS.</p></div>
-        <div class="lang-block" data-lang="en"><p>HQ can write Dynamic Spawn into the mission: check groups in the list, then <strong>Dynamic Spawn…</strong>. The window works in three steps: <strong>Make a template</strong> of the group, then choose, for its aircraft type, the airfields, FARPs and ships where it appears, then the hot start of each. <strong>Prerequisite:</strong> only airfields, FARPs and ships that have Dynamic Spawn enabled in the mission editor, and whose aircraft list contains the template’s type, are offered for a template; the window says why the others are not offered (“Why are other bases missing?”). A template has a single aircraft and links only to bases of its coalition; a neutral airfield can take it, and then joins the template’s coalition. HQ never enables Dynamic Spawn and never creates an aircraft type: that is done in the mission editor. Removing a template resets its links to zero; a place already linked to another template for that type is flagged, and the link is replaced if you check it. HQ only changes the .miz’s <code>mission</code> and <code>warehouses</code> files, reads them back before handing over the file, and reports in the summary a template of more than one aircraft or a different coalition between the template and the place, to be checked in DCS.</p></div>
-      </div>
-
-    </div><!-- /fm-chapter -->
-  </section><!-- /page-hq -->
-
-
-  <!-- ===== PAGE FC ===== -->
-  <section id="page-fc" class="fm-page hidden">
-    <div class="fm-chapter" style="--chapter-accent:#D0784A; --chapter-accent-rgb:208,120,74;">
-
-      <button class="fm-back-btn" onclick="navigate('index')" data-i18n="btn.back">◄ Index</button>
-
-      <div class="fm-hero">
-        <img class="fm-hero-img" src="{FC_TILE_SRC}" alt="Flight Configurator" draggable="false">
-        <div class="fm-hero-pin" aria-hidden="true"></div>
-        <div class="fm-hero-caption">
-          <div><div class="fm-hero-monogram">F·C</div></div>
-          <div>
-            <div class="fm-hero-title" data-i18n="fc.hero.title">Flight Configurator</div>
-            <div class="fm-hero-sub" data-i18n="fc.hero.sub">Un groupe prêt à appliquer : radios, emport, livrée</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- À quoi ça sert -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">À quoi ça sert</h3>
-        <h3 class="lang-block" data-lang="en">What it's for</h3>
-        <div class="lang-block" data-lang="fr"><p>Le Flight Configurator est l'outil du <strong>Flight Lead</strong> : il prépare <strong>un ou plusieurs groupes</strong> — identité (nom du groupe, coalition, jusqu'à quatre unités dont <strong>chacune a son propre type d'appareil</strong>), <strong>radios</strong>, <strong>emport</strong> composé sur la vue de face de l'appareil ou repris d'un preset, <strong>livrée</strong> — et les exporte en <strong>paquet de vol</strong> que le <strong>Mission Commander</strong> applique à sa mission avec HQ. Quatre appareils : <strong>Mi-24P</strong>, <strong>Mi-8MT</strong>, <strong>F-4E-45MC</strong> et <strong>Mirage F1EE</strong>.</p><p>Le module ne suppose rien de la mission cible : un paquet peut s'appliquer à <strong>n'importe quelle mission</strong> (HQ retrouve chaque groupe par son <strong>nom</strong>, espaces de bord ignorés, et sa <strong>coalition</strong> ; le type n'y entre pas : il sert à ne poser radios, emport et livrée que sur les unités de même type). Un groupe peut donc mélanger des appareils. Chaque partie est facultative ; une partie laissée vide n'est pas touchée par HQ.</p></div>
-        <div class="lang-block" data-lang="en"><p>The Flight Configurator is the <strong>Flight Lead</strong>'s tool: it prepares <strong>one or more groups</strong> — identity (group name, coalition, up to four units, <strong>each with its own aircraft type</strong>), <strong>radios</strong>, <strong>loadout</strong> built on the aircraft's front view or started from a preset, <strong>livery</strong> — and exports them as a <strong>flight package</strong> that the <strong>Mission Commander</strong> applies to the mission with HQ. Four aircraft: <strong>Mi-24P</strong>, <strong>Mi-8MT</strong>, <strong>F-4E-45MC</strong> and <strong>Mirage F1EE</strong>.</p><p>The module assumes nothing about the target mission: a package can be applied to <strong>any mission</strong> (HQ finds each group by its <strong>name</strong>, spaces at either end ignored, and its <strong>coalition</strong>; the type does not enter into it: it decides which units receive radios, loadout and livery, those of the same type only). A group can therefore mix aircraft. Every part is optional; a part left empty is not touched by HQ.</p></div>
-      </div>
-
-      <!-- Schéma -->
-      {PANEL_HTML['fc']}
-
-      <div class="fm-schema">
-        <svg viewBox="0 0 720 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Flight Configurator">
-          <defs>
-            <marker id="fca" markerWidth="8" markerHeight="8" refX="6.5" refY="3.5" orient="auto"><path d="M0,0 L8,3.5 L0,7 Z" fill="currentColor" opacity=".6"/></marker>
-          </defs>
-          <text x="360" y="26" text-anchor="middle" font-size="13" letter-spacing="3" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">DU GROUPE AU PAQUET</text>
-          <text x="360" y="26" text-anchor="middle" font-size="13" letter-spacing="3" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">FROM GROUP TO PACKAGE</text>
-          <line x1="150" y1="34" x2="570" y2="34" stroke="currentColor" stroke-width=".6" opacity=".3"/>
-
-          <rect class="sv-box" x="30" y="70" width="150" height="44" rx="3" stroke="currentColor" stroke-width="1.2"/>
-          <text x="105" y="90" text-anchor="middle" font-size="10.5" fill="currentColor" class="lang-block" data-lang="fr">Mission chargée dans HQ</text>
-          <text x="105" y="90" text-anchor="middle" font-size="10.5" fill="currentColor" class="lang-block" data-lang="en">Mission loaded in HQ</text>
-          <text x="105" y="105" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">un modèle possible</text>
-          <text x="105" y="105" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">one possible model</text>
-          <rect class="sv-box" x="30" y="136" width="150" height="44" rx="3" stroke="currentColor" stroke-width="1.2"/>
-          <text x="105" y="156" text-anchor="middle" font-size="10.5" fill="currentColor" class="lang-block" data-lang="fr">Paquet de vol</text>
-          <text x="105" y="156" text-anchor="middle" font-size="10.5" fill="currentColor" class="lang-block" data-lang="en">Flight package</text>
-          <text x="105" y="171" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9">.json · .zip</text>
-          <line x1="180" y1="92" x2="268" y2="124" stroke="currentColor" stroke-width="1.2" opacity=".6" marker-end="url(#fca)"/>
-          <line x1="180" y1="158" x2="268" y2="132" stroke="currentColor" stroke-width="1.2" opacity=".6" marker-end="url(#fca)"/>
-          <text x="224" y="86" text-anchor="middle" font-size="9" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">Importer</text>
-          <text x="224" y="86" text-anchor="middle" font-size="9" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">Import</text>
-
-          <rect class="sv-box" x="270" y="92" width="180" height="76" rx="3" stroke="#D0784A" stroke-width="2"/>
-          <text x="360" y="124" text-anchor="middle" font-size="16" fill="currentColor" letter-spacing="1.5">Flight Configurator</text>
-          <text x="360" y="142" text-anchor="middle" font-size="8.5" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">identité · radios · emport · livrée</text>
-          <text x="360" y="142" text-anchor="middle" font-size="8.5" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">identity · radios · loadout · livery</text>
-          <text x="360" y="156" text-anchor="middle" font-size="8.5" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">route du Route Planner, reprise</text>
-          <text x="360" y="156" text-anchor="middle" font-size="8.5" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">Route Planner route, kept in step</text>
-
-          <line x1="450" y1="130" x2="538" y2="130" stroke="currentColor" stroke-width="1.2" opacity=".6" marker-end="url(#fca)"/>
-          <text x="494" y="122" text-anchor="middle" font-size="9" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">Exporter</text>
-          <text x="494" y="122" text-anchor="middle" font-size="9" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">Export</text>
-          <rect class="sv-box sv-m-hq" x="540" y="100" width="150" height="60" rx="3" stroke-width="2"/>
-          <text x="615" y="126" text-anchor="middle" font-size="14" fill="currentColor" letter-spacing="2">HQ</text>
-          <text x="615" y="144" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">applique le paquet à la mission</text>
-          <text x="615" y="144" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">applies the package to the mission</text>
-
-          <rect class="sv-box" x="270" y="214" width="180" height="40" rx="3" stroke="currentColor" stroke-width="1" stroke-opacity=".6" stroke-dasharray="4 3"/>
-          <text x="360" y="231" text-anchor="middle" font-size="10" fill="currentColor" class="lang-block" data-lang="fr">Mes presets</text>
-          <text x="360" y="231" text-anchor="middle" font-size="10" fill="currentColor" class="lang-block" data-lang="en">My presets</text>
-          <text x="360" y="245" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="fr">.lua chargés, emports gardés</text>
-          <text x="360" y="245" text-anchor="middle" font-size="8" fill="currentColor" opacity=".9" class="lang-block" data-lang="en">loaded .lua, kept loadouts</text>
-          <line x1="360" y1="214" x2="360" y2="172" stroke="currentColor" stroke-width="1.2" opacity=".6" stroke-dasharray="4 3" marker-end="url(#fca)"/>
-        </svg>
-        <div class="fm-schema-legend">
-          <span class="lang-block" data-lang="fr">Fig. 1 — On importe, on complète, on exporte un paquet ; HQ l'applique. Les presets ne partent jamais dans le paquet : seul l'emport y est écrit.</span>
-          <span class="lang-block" data-lang="en">Fig. 1 — Import, complete, export a package; HQ applies it. Presets never leave in the package: only the loadout is written.</span>
-        </div>
-      </div>
-
-      <!-- Les groupes -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Les groupes et les unités</h3>
-        <h3 class="lang-block" data-lang="en">Groups and units</h3>
-        <div class="lang-block" data-lang="fr"><p><strong>Ajoutez un groupe</strong> : nom du groupe, coalition, et pour chaque unité son <strong>type</strong> (en tête de sa carte), son nom, son indicatif, son numéro de bord et sa livrée, choisie dans la liste du type : celles du jeu et les livrées custom déclarées dans Wing (HQ). Une unité ajoutée prend le type de la dernière du groupe ; changer le type d'une unité efface ses radios et son emport (une confirmation si elle en a) ; sa livrée reste si le nouveau type l’a, sinon le champ reprend la livrée par défaut. Deux groupes d'une même coalition ne portent pas le même nom : l'export est refusé tant que c'est le cas, et la barre nomme les doublons. Un groupe se <strong>replie</strong> (titre et résumé sur une ligne : « 2 × Mi-24P · route 4 pts · radios 6 canaux · emport … », ou « 1 × Mi-24P + 1 × Mi-8MT » pour un groupe mixte) ; l'icône à droite de l'en-tête d'un groupe replie (ou déplie) tous les groupes, et dès qu'il y a plus de deux groupes, seul celui sur lequel vous travaillez reste déplié. Chaque groupe garde un identifiant interne stable qui n'est jamais écrit dans le paquet. Vos groupes sont partagés avec le Route Planner : un groupe créé ou renommé dans l'un apparaît dans l'autre.</p><p>La <strong>route</strong> d'un groupe vient soit du choix d'une route du Route Planner, dans le bloc ROUTE, soit d'un import (paquet du Route Planner, mission de HQ). La carte du groupe la résume sur une ligne avec un petit croquis ; le détail et le retrait sont au bloc ROUTE (voir « La route »).</p></div>
-        <div class="lang-block" data-lang="en"><p><strong>Add a group</strong>: group name, coalition, and for each unit its <strong>type</strong> (at the head of its card), name, call sign, onboard number and livery, picked from the type’s list: the game’s and the custom liveries declared in Wing (HQ). A unit you add takes the type of the group's last one; changing a unit's type clears its radios and loadout (with a confirmation if it has any); its livery stays if the new type has it, otherwise the field goes back to the default one. Two groups of the same coalition do not share a name: the export is refused while they do, and the bar names the duplicates. A group <strong>folds</strong> (title and a one-line summary: “2 × Mi-24P · route 4 pts · radios 6 channels · loadout …”, or “1 × Mi-24P + 1 × Mi-8MT” for a mixed group); the icon at the right of a group’s header folds (or unfolds) every group, and as soon as there are more than two groups only the one you are working on stays open. Each group keeps a stable internal identifier that is never written to the package. Your groups are shared with the Route Planner: a group created or renamed in one appears in the other.</p><p>A group's <strong>route</strong> comes either from picking a Route Planner route in the ROUTE block, or from an import (Route Planner package, HQ mission). The group card sums it up on one line with a small sketch; the detail and the removal are in the ROUTE block (see “The route”).</p></div>
-      </div>
-
-      <!-- La route -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">La route</h3>
-        <h3 class="lang-block" data-lang="en">The route</h3>
-        <div class="lang-block" data-lang="fr"><p>Le bloc <strong>ROUTE</strong>, le premier de la colonne de droite (au-dessus d'EMPORT), parle du groupe de l'unité choisie. <strong>Un groupe n'a qu'une seule route</strong> : on la choisit parmi celles du Route Planner (deux points au moins) en touchant une vignette, les routes que le Route Planner lie à ce groupe d'abord, les autres ensuite ; « Changer de route » rouvre le choix, « Retirer » vide la route. Le groupe garde la copie des points : c'est elle que le paquet porte, comme avant. Le lien avec la route du Route Planner (l'identifiant stable que chaque route y reçoit) reste dans le navigateur et dans le fichier de travail, <strong>jamais dans le paquet</strong> ; une route importée par la fenêtre d'import remplace celle du groupe et coupe ce lien.</p><p>La route s'affiche en <strong>croquis sur papier</strong> (points de navigation, leurs noms, sens de la route, nord, échelle) et, dessous, en <strong>table des branches</strong> : le cap <strong>magnétique</strong> et la distance de chaque branche (en NM ou en km, selon l'unité partagée), et le total. Le cap est le cap vrai moins la déclinaison au départ de la branche : la valeur saisie au Route Planner quand elle y est en mode manuel, sinon le calcul à la date de la mission chargée dans HQ, sinon à l'année du Route Planner, sinon à 1985 ; la note sous la table dit laquelle. Le croquis n'est qu'un rappel, sans interaction : <strong>la route se trace au Route Planner</strong>.</p><p><strong>La reprise est automatique</strong> : à l'ouverture du module, quand le Route Planner enregistre et au retour sur l'onglet, chaque groupe lié reprend les points de sa route s'ils ont changé, et son nom (un message le dit). Si la route est supprimée au Route Planner, elle est retirée des groupes qui la suivaient (leur route, leur lien et son nom) ; si elle n'a plus deux points, le groupe garde sa dernière copie et son lien, et le bloc le dit ; si elle revient, la reprise reprend. Si le Route Planner est sur un autre théâtre que le module, ou n'a pas encore été ouvert sur cet appareil, rien n'est repris.</p></div>
-        <div class="lang-block" data-lang="en"><p>The <strong>ROUTE</strong> block, the first in the right-hand column (above LOADOUT), is about the group of the chosen unit. <strong>A group has just one route</strong>: you pick it from the Route Planner's routes (two points at least) by touching a thumbnail, the routes the Route Planner links to this group first, the others after; “Change route” reopens the choice, “Remove” empties the route. The group keeps its copy of the points: that copy is what the package carries, as before. The link with the Route Planner route (the stable identifier each route gets there) stays in the browser and in the working file, <strong>never in the package</strong>; a route imported through the import window replaces the group's route and cuts that link.</p><p>The route is shown as a <strong>paper sketch</strong> (waypoints, their names, direction of travel, north, scale) and, below it, as a <strong>leg table</strong>: each leg's <strong>magnetic</strong> heading and distance (in NM or km, as per the shared unit), and the total. The heading is the true heading minus the variation at the start of the leg: the value typed in the Route Planner when it is in manual mode there, otherwise the calculation at the date of the mission loaded in HQ, otherwise at the Route Planner's year, otherwise at 1985; the note under the table says which. The sketch is only a reminder, with no interaction: <strong>the route is drawn in the Route Planner</strong>.</p><p><strong>The route follows automatically</strong>: when the module opens, when the Route Planner saves and when you return to the tab, each linked group takes the points of its route if they changed, and its name (a message says so). If the route is deleted in the Route Planner, it is removed from the groups that followed it (their route, their link and its name); if it no longer has two points, the group keeps its last copy and its link, and the block says so; if the route comes back, it is followed again. If the Route Planner is on a different theatre from the module, or has not been opened on this device yet, nothing is followed.</p></div>
-      </div>
-
-      <!-- La barre -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Ouvrir, Sauvegarder, Importer, Exporter, Effacer</h3>
-        <h3 class="lang-block" data-lang="en">Open, Save, Import, Export, Clear</h3>
-        <div class="lang-block" data-lang="fr"><p><strong>Sauvegarder</strong> écrit le <strong>fichier de travail</strong> de toute la suite (voir « Par où commencer »), que <strong>Ouvrir ▾ › Ouvrir un travail…</strong> rouvre ; <strong>Ouvrir ▾ › Ouvrir une configuration…</strong> lit encore l’ancien fichier de travail du module (un <code>.json</code> qui porte vos groupes et « Mes presets »). <kbd>Ctrl</kbd>+<kbd>S</kbd> (<kbd>Cmd</kbd>+<kbd>S</kbd> sur Mac) fait le même geste que <strong>Sauvegarder</strong>. Au Flight Configurator, <strong>Ouvrir ▾ › Importer des groupes…</strong> ouvre la même fenêtre que <strong>Ouvrir ▾ › Importer des routes…</strong> au Route Planner : la mission chargée dans HQ, le briefing en cours du Briefing Generator, ou un fichier (paquet de vol <code>.json</code> ou <code>.zip</code>, briefing). Cochez les groupes et, pour chacun, ce qu'il apporte (route, radios, emport, livrée). Un groupe de même nom (majuscules comprises) et de même coalition est complété, sinon il est créé ; une route importée devient une route du Route Planner. Du briefing viennent les groupes, leur nombre d'appareils, leur type (pour un groupe sans escadron, l'appareil choisi au brief Standard) et le plan radio de leur type (au brief Standard, les fréquences avec leur radio et leur canal) ; un appareil que la suite ne connaît pas sous ce nom arrive sans type, à choisir. Une unité sans type se règle une fois son type choisi ; le paquet ne s'exporte qu'une fois chaque type choisi. <strong>Exporter</strong> écrit le paquet pour le Mission Commander ; <strong>Effacer</strong> demande confirmation, puis efface les groupes, les routes de tous les théâtres, les dessins, symboles et calques du Route Planner et toutes les datacards : le Flight Configurator, le Route Planner et le Datacard Generator d’un coup (vos presets, le théâtre, les unités et les réglages restent ; HQ, le Briefing Generator et Recon Station ne changent pas). Retirer un groupe (✕) le retire aussi du Route Planner et du Datacard Generator, sa datacard comprise. Une source chargée se replie en une ligne (« changer » la rouvre) pour laisser la place à la liste. Le théâtre se choisit dans la barre, comme au Route Planner et au Datacard Generator, et les trois le partagent. Le menu Affichage règle les unités de masse (kg ou lb) et de distance (km ou NM), partagées avec le Route Planner et le Datacard Generator. Si les groupes sont sur un autre théâtre, un bandeau propose d’y revenir ou de retirer leurs routes.</p></div>
-        <div class="lang-block" data-lang="en"><p><strong>Save</strong> writes the <strong>work file</strong> of the whole suite (see “Where to start”), which <strong>Open ▾ › Open a work file…</strong> brings back; <strong>Open ▾ › Open a configuration…</strong> still reads the module's old working file (a <code>.json</code> that carries your groups and “My presets”). <kbd>Ctrl</kbd>+<kbd>S</kbd> (<kbd>Cmd</kbd>+<kbd>S</kbd> on a Mac) does the same as <strong>Save</strong>. In the Flight Configurator, <strong>Open ▾ › Import groups…</strong> opens the same window as <strong>Open ▾ › Import routes…</strong> in the Route Planner: the mission loaded in HQ, the Briefing Generator's current briefing, or a file (flight package <code>.json</code> or <code>.zip</code>, briefing). Tick the groups and, for each, what it brings (route, radios, loadout, livery). A group with the same name (case included) and coalition is completed, otherwise it is created; an imported route becomes a Route Planner route. A briefing brings its groups, their number of aircraft, their type (for a group without a squadron, the aircraft picked in the Standard brief) and the radio plan of their type (in the Standard brief, the frequencies with their radio and channel); an aircraft the suite does not know by that name arrives without a type, to be picked. A unit without a type is set up once its type is picked; the package exports only once every type is picked. <strong>Export</strong> writes the package for the Mission Commander; <strong>Clear</strong> asks for confirmation, then clears the groups, the routes of every theatre, the Route Planner’s drawings, symbols and layers, and all the datacards: the Flight Configurator, the Route Planner and the Datacard Generator at once (your presets, the theatre, the units and the settings stay; HQ, the Briefing Generator and Recon Station do not change). Removing a group (✕) removes it from the Route Planner and the Datacard Generator too, its datacard included. A loaded source folds into one line (“change” reopens it) to leave room for the list. The theatre is picked in the toolbar, as in the Route Planner and the Datacard Generator, and all three share it. The Display menu sets the mass (kg or lb) and distance (km or NM) units, shared with the Route Planner and the Datacard Generator. If the groups are on another theatre, a banner offers to go back to it or to remove their routes.</p></div>
-      </div>
-
-      <!-- Radios -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Les radios</h3>
-        <h3 class="lang-block" data-lang="en">Radios</h3>
-        <div class="lang-block" data-lang="fr"><p>Pour chaque poste de l'appareil, un champ par canal, numéroté comme au cockpit (le R-863 et le R-828 pour les deux hélicoptères, deux postes pour le F-4E et le Mirage). Les deux hélicoptères ont aussi leur poste HF, que la mission ne pré-règle pas (Jadro-1I sur le Mi-24P, Jadro-1A sur le Mi-8MT) : jusqu'à cinq fréquences, sans numéro de canal, que la datacard reprend et que HQ n'écrit jamais dans la mission. Une fréquence se saisit en MHz et doit tomber dans <strong>la bande du poste</strong>, que le module écrit <strong>sous le titre de chaque poste</strong> : R-863 de 100 à 149,975 et de 220 à 399,9 MHz, R-828 de 20 à 59,9 MHz, Jadro-1I de 2 à 17,999 MHz (Mi-24P) ; R-863 de 100 à 149,975 et de 220 à 399,975 MHz, R-828 de 20 à 59,975 MHz, Jadro-1A de 2 à 17,999 MHz (Mi-8MT) ; poste COMM de 225 à 399,95 MHz et poste AUX (réception seule) de 265 à 284,9 MHz (F-4E) ; TRAP 136 de 118 à 143,975 et de 225 à 399,975 MHz, TRAP 137B de 225 à 399,975 MHz (Mirage F1). Une valeur hors bande ou qui n'est pas un nombre est <strong>refusée avec un message qui cite la bande</strong> ; une fréquence hors bande déjà présente (importée, ou saisie avant un changement de bande) est gardée et signalée, sans bloquer l'export. « Recopier sur les autres unités du groupe » écrit les mêmes canaux et fréquences sur les autres unités <strong>du même type</strong> (sans autre unité de ce type, le bouton est inactif). Un canal vide n'est pas écrit ; les modulations ne le sont pas non plus. Une case devant chaque canal l'imprime sur la datacard du groupe (elle ne s'active que si une unité de ce type a une fréquence sur ce canal) : le Datacard Generator montre le même choix, le fichier de travail le garde avec le groupe, et le paquet de vol ne le porte pas.</p></div>
-        <div class="lang-block" data-lang="en"><p>For each radio of the aircraft, one field per channel, numbered as in the cockpit (the R-863 and R-828 for the two helicopters, two radios for the F-4E and the Mirage). The two helicopters also have their HF radio, which missions do not preset (Jadro-1I on the Mi-24P, Jadro-1A on the Mi-8MT): up to five frequencies, with no channel number, that the datacard shows and that HQ never writes to the mission. A frequency is typed in MHz and must fall inside <strong>the radio's band</strong>, which the module writes <strong>under each radio's title</strong>: R-863 from 100 to 149.975 and from 220 to 399.9 MHz, R-828 from 20 to 59.9 MHz, Jadro-1I from 2 to 17.999 MHz (Mi-24P); R-863 from 100 to 149.975 and from 220 to 399.975 MHz, R-828 from 20 to 59.975 MHz, Jadro-1A from 2 to 17.999 MHz (Mi-8MT); COMM radio from 225 to 399.95 MHz and AUX radio (receive only) from 265 to 284.9 MHz (F-4E); TRAP 136 from 118 to 143.975 and from 225 to 399.975 MHz, TRAP 137B from 225 to 399.975 MHz (Mirage F1). A value outside the band, or that is not a number, is <strong>refused with a message that quotes the band</strong>; an out-of-band frequency already there (imported, or typed before a band changed) is kept and flagged, without blocking the export. “Copy to the other units of the group” writes the same channels and frequencies on the other units <strong>of the same type</strong> (with no other unit of that type, the button is inactive). An empty channel is not written; modulations are not written either. A box before each channel prints it on the group's datacard (it is only active when a unit of that type has a frequency on that channel): the Datacard Generator shows the same choice, the working file keeps it with the group, and the flight package does not carry it.</p></div>
-      </div>
-
-      <!-- Emport -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">L'emport</h3>
-        <h3 class="lang-block" data-lang="en">The loadout</h3>
-        <div class="lang-block" data-lang="fr"><p>L'<strong>unité choisie</strong> (touchez sa carte : elle est marquée ; il y en a toujours une dès qu'il y a un groupe) a son emport affiché à droite, sans bouton : la <strong>vue de face</strong> de l'appareil, avec une case et un trait pointillé par station. Sur écran étroit, « Voir l'emport ↓ » y mène. Voici ce que montre la vue : une case et un trait pointillé par station, une liste d'armes permises par station, la <strong>masse totale</strong>, puis la masse estimée <strong>au décollage</strong> (à vide, carburant et charges ; canon et leurres non comptés), en orange au-delà du maximum recommandé. « Symétrique » pose sur la station jumelle l'arme miroir (la même, sinon sa variante gauche/droite, sinon l'unique arme de même nom) ; la jumelle est dite en clair sous la liste, et la ligne « pas d'équivalent » le dit quand il n'y en a pas ; un <strong>réglage d'arme</strong> (code laser, fusée…) suit sa station tant que l'arme n'est pas changée. L'emport suit la règle du Loadout Editor de Mission Tools : le Kord du Mi-24P n'a qu'<strong>une seule porte</strong> ; une arme qui ne peut pas aller avec le reste de l'emport est <strong>grisée</strong> dans la liste, avec les stations qui la gênent ; un emport reçu avec un tel mélange le dit sous chaque station, et « Garder dans mes presets… » reste inactif tant que ces stations ne sont pas corrigées. Quand une même arme existe en deux versions, gauche et droite (le Kord du Mi-24P, les armes du F-4E), son nom se termine par <strong>« (gauche) »</strong> ou <strong>« (droite) »</strong> ; les tables ne changent pas, seul l'affichage. Dessous, le carburant, les leurres, les paillettes et le canon, <strong>visibles dès qu'une unité est choisie</strong>, avec ou sans arme : aux valeurs de son emport, sinon à celles de la table. Le carburant et le canon ont chacun, sous leur champ, une <strong>barre de 0 à 100 %</strong> : la déplacer écrit la valeur (le carburant en kg, arrondis au kg), taper la valeur la déplace ; le paquet ne garde que les valeurs. Régler une unité « non renseigné » lui donne un <strong>emport vide</strong> qui porte ces réglages (HQ les posera sans arme, et une ligne le dit). Les leurres et les paillettes se partagent la <strong>capacité totale</strong> de l'appareil (leurres + paillettes ≤ total), et non plus leurs nombres par défaut. Une valeur <strong>tapée</strong> hors limite est <strong>refusée</strong> : la valeur d'avant revient, avec un message. Une valeur <strong>reçue</strong> (import, fichier, restauration) hors de la table de l'appareil est <strong>ramenée à sa limite</strong> (0 pour une valeur négative), la ligne d'état en donne le nombre ; des leurres et des paillettes qui dépassent ensemble la capacité reprennent les valeurs par défaut du type. Un type qui ne porte pas de paillettes (le Mi-8MT) a son champ Paillettes grisé, à 0 : un emport reçu avec des paillettes les voit ramenées à 0. Un champ <strong>vidé</strong> n'est pas une saisie : la valeur d'avant revient, sans message. Modifier une station ne demande aucun nom de preset.</p><p><strong>Mes presets</strong> (sous l'emport) : « Garder dans mes presets… » enregistre l'emport composé sous un nom (le bouton, comme « Vider l'emport », n'agit que si une station porte une arme) ; « Charger des presets (.lua) » reprend les fichiers de presets de l'escadre, qui deviennent des points de départ dans « Partir de » (un nom déjà pris est ignoré, et le bloc le dit). « Partir de » propose aussi, après les presets, le groupe <strong>« Unités du module »</strong> : chaque autre unité <strong>du même type</strong>, tous groupes confondus, qui a un emport (« Copier : Groupe · Unité ») ; le choix <strong>recopie</strong> stations, réglages d'armes, carburant, leurres, paillettes et canon, l'emport porte l'étiquette « copié de … » (puis « modifié » s'il change), et <strong>aucun lien ne reste</strong> avec l'unité source. Mes presets vivent dans le navigateur, <strong>nulle part ailleurs</strong> : ils ne partent pas dans le fichier de travail, et Ouvrir, Exemple ou Tout effacer n'y touchent pas. <strong>Ce qui part dans le paquet, c'est un emport, jamais un preset</strong>.</p></div>
-        <div class="lang-block" data-lang="en"><p>The <strong>chosen unit</strong> (touch its card: it is marked; one is always chosen as soon as there is a group) has its loadout shown on the right, with no button: the aircraft's <strong>front view</strong>. On a narrow screen, “See the loadout ↓” leads there. What the view shows: a cell and a dotted leader per station, a list of permitted weapons per station, the <strong>total mass</strong>, then the estimated <strong>take-off weight</strong> (empty, fuel and stores; gun and flares not counted), in orange above the recommended maximum. “Symmetric” puts the mirror weapon on the twin station (the same one, else its left/right variant, else the only weapon with the same name); the twin is named in plain words under the list, and the “no equivalent” line says so when there is none; a <strong>weapon setting</strong> (laser code, fuze…) follows its station as long as the weapon is not changed. The loadout follows the Loadout Editor rule of Mission Tools: the Mi-24P's Kord has <strong>one door only</strong>; a weapon that cannot go with the rest of the loadout is <strong>greyed out</strong> in the list, with the stations in the way; a loadout received with such a mix says it under each station, and “Keep in my presets…” stays inactive until those stations are fixed. When the same weapon exists in two versions, left and right (the Mi-24P's Kord, the F-4E's weapons), its name ends with <strong>“(left)”</strong> or <strong>“(right)”</strong>; the tables do not change, only the display. Below, fuel, flares, chaff and gun, <strong>shown as soon as a unit is chosen</strong>, with or without a weapon: at the values of its loadout, otherwise those of the table. Fuel and gun each have, under their field, a <strong>0 to 100 % bar</strong>: moving it writes the value (fuel in kg, rounded to the kg), typing the value moves it; the package keeps only the values. Setting a “not set” unit gives it an <strong>empty loadout</strong> that carries those values (HQ will set them with no weapon, and a line says so). Flares and chaff share the aircraft's <strong>total capacity</strong> (flares + chaff ≤ total), instead of their default counts. A value you <strong>type</strong> out of range is <strong>refused</strong>: the previous value comes back, with a message. A value <strong>received</strong> (import, file, restore) outside the aircraft's table is <strong>brought back to its limit</strong> (0 for a negative value), the status line gives the count; flares and chaff that together exceed the capacity take the type's default values. A type that carries no chaff (the Mi-8MT) has its Chaff field greyed out, at 0: a loadout received with chaff has it brought back to 0. An <strong>emptied</strong> field is not an entry: the previous value comes back, with no message. Changing a station never asks for a preset name.</p><p><strong>My presets</strong> (under the loadout): “Keep in my presets…” saves the composed loadout under a name (the button, like “Empty the loadout”, only acts when a station holds a weapon); “Load presets (.lua)” takes the squadron's preset files, which become starting points in “Start from” (a name already taken is ignored, and the block says so). “Start from” also offers, after the presets, the <strong>“Module units”</strong> group: every other unit <strong>of the same type</strong>, in any group, that has a loadout (“Copy: Group · Unit”); the choice <strong>copies</strong> stations, weapon settings, fuel, flares, chaff and gun, the loadout is labelled “copied from …” (then “modified” if it changes), and <strong>no link remains</strong> with the source unit. My presets live in the browser, <strong>nowhere else</strong>: they are not saved in the work file, and Open, Example or Clear all never touch them. <strong>What leaves in the package is a loadout, never a preset</strong>.</p></div>
-      </div>
-
-      <!-- Livrée -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">La livrée</h3>
-        <h3 class="lang-block" data-lang="en">Livery</h3>
-        <div class="lang-block" data-lang="fr"><p>Le champ est une <strong>liste</strong>, celle du type de l’unité : les livrées du jeu et les <strong>livrées custom</strong> déclarées pour ce type dans la fenêtre Wing d’HQ, en une seule liste triée. Il affiche toujours un nom, et c’est ce nom que le paquet emporte. Tant que vous n’en choisissez pas, c’est, dans l’ordre : la livrée de l’unité dans la mission ouverte dans HQ (même groupe, de même nom et de même coalition, comme à l’application du paquet), sinon la <strong>livrée par défaut</strong> du type déclarée dans Wing, sinon la première de la liste ; ce nom suit la mission et Wing. À l’application du paquet, HQ laisse décocher la livrée. Une livrée venue d’un import ou d’une configuration, absente de la liste, reste affichée et choisie telle quelle ; une livrée qui ne diffère d’un nom de la liste que par la casse y est reconnue et garde son écriture.</p></div>
-        <div class="lang-block" data-lang="en"><p>The field is a <strong>list</strong>, the unit type’s: the game’s liveries and the <strong>custom liveries</strong> declared for that type in HQ’s Wing window, in one sorted list. It always shows a name, and that name is what the package carries. Until you pick one, it is, in this order: the unit’s livery in the mission open in HQ (same group, same name and side, as when the package is applied), otherwise the type’s <strong>default livery</strong> declared in Wing, otherwise the first in the list; that name follows the mission and Wing. When the package is applied, HQ lets you untick the livery. A livery that came from an import or a configuration and is not in the list stays shown and selected as it is; one that differs from a listed name only by case is recognised there and keeps its spelling.</p></div>
-      </div>
-
-      <!-- Paquet -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Le paquet</h3>
-        <h3 class="lang-block" data-lang="en">The package</h3>
-        <div class="lang-block" data-lang="fr"><p>Un fichier <code>.json</code> de format <code>dcs-flight-package-v2</code>, nommé <code>paquet_&lt;1er groupe&gt;_&lt;horodatage&gt;.json</code> comme celui de HQ. Par groupe : nom du groupe (sans espaces de bord), coalition, route, et par unité nom, <strong>type</strong>, indicatif, livrée, radios, <code>payload</code> ; le groupe n'a pas de type. Un paquet de l'ancien format (<code>v1</code>, un type au groupe) se lit encore : son type vaut pour chacune de ses unités. Une partie non renseignée sort en <strong><code>null</code></strong> : HQ n'y touche pas. Le paquet ne nomme aucune mission source. HQ applique aujourd'hui les radios, l'emport, la livrée et la route ; l'indicatif et le numéro de bord voyagent déjà, mais HQ ne les applique pas encore.</p></div>
-        <div class="lang-block" data-lang="en"><p>A <code>.json</code> file of format <code>dcs-flight-package-v2</code>, named <code>paquet_&lt;first group&gt;_&lt;timestamp&gt;.json</code> like HQ's. Per group: group name (trimmed), coalition, route, and per unit name, <strong>type</strong>, call sign, livery, radios, <code>payload</code>; the group has no type. A package in the previous format (<code>v1</code>, one type per group) still opens: its type applies to each of its units. A part left blank is written as <strong><code>null</code></strong>: HQ does not touch it. The package names no source mission. HQ applies radios, loadout, livery and route today; the call sign and onboard number already travel, but HQ does not apply them yet.</p></div>
-      </div>
-
-      <!-- Crédits et limites -->
-      <div class="fm-callout note">
-        <div class="lang-block" data-lang="fr">Crédits : les tables d'armes viennent de <strong>pydcs</strong> (LGPL-3.0-or-later), reprises de Mission Tools ; les dessins de la vue de face sont de <strong>Goldwolf</strong> (DCS Reference Guide), utilisés avec son accord et <strong>hors de la licence AGPL</strong> du dépôt (voir <code>data/views/LICENSE.md</code>). Limite : le module n'applique aucune règle d'emport — il écrit ce qu'on compose, il ne dit pas que DCS l'acceptera.</div>
-        <div class="lang-block" data-lang="en">Credits: the weapon tables come from <strong>pydcs</strong> (LGPL-3.0-or-later), taken from Mission Tools; the front-view drawings are by <strong>Goldwolf</strong> (DCS Reference Guide), used with his permission and <strong>outside the repository's AGPL licence</strong> (see <code>data/views/LICENSE.md</code>). Limit: the module applies no loadout rule — it writes what you compose, it does not say that DCS will accept it.</div>
-      </div>
-
-    </div><!-- /fm-chapter -->
-  </section><!-- /page-fc -->
-
-
-  <!-- ===== PAGE BG ===== -->
-  <section id="page-bg" class="fm-page hidden">
-    <div class="fm-chapter" style="--chapter-accent:#c0892a; --chapter-accent-rgb:192,137,42;">
-
-      <button class="fm-back-btn" onclick="navigate('index')" data-i18n="btn.back">◄ Index</button>
-
-      <div class="fm-hero">
-        <img class="fm-hero-img" src="{BG_TILE_SRC}" alt="Briefing Generator" draggable="false">
-        <div class="fm-hero-pin" aria-hidden="true"></div>
-        <div class="fm-hero-caption">
-          <div><div class="fm-hero-monogram">BG</div></div>
-          <div>
-            <div class="fm-hero-title" data-i18n="bg.hero.title">Briefing Generator</div>
-            <div class="fm-hero-sub" data-i18n="bg.hero.sub">Générateur de briefings multi-sections</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- À quoi ça sert -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">À quoi ça sert</h3>
-        <h3 class="lang-block" data-lang="en">What it’s for</h3>
-        <div class="lang-block" data-lang="fr"><p>Le Briefing Generator prépare le briefing d’une mission, prêt à imprimer ou à emporter en vol, dans l’un de <strong>deux formats</strong>. Le <strong>brief Standard</strong> tient sur <strong>une page</strong> — situation, mission et tableau des groupes, fréquences, terrains, météo —, suivie s’il y a lieu d’une page « carte, menaces, cibles » et de pages de photos. Le <strong>brief Avancé</strong> est un dossier <strong>multi-pages</strong> : couverture, situation tactique, aperçu de mission, plan radio, missions individuelles, équipage, cartes et annexes. On remplit des sections dans l’éditeur, on vérifie la mise en page A4 dans l’aperçu, puis on exporte en <strong>PDF</strong> ou en <strong>PNG par page</strong> (genouillères). L’identité d’escadre (logo, noms, escadrons) est <strong>héritée de HQ</strong>. Quatre thèmes, tout hors-ligne.</p></div>
-        <div class="lang-block" data-lang="en"><p>The Briefing Generator prepares a mission briefing, ready to print or take into the cockpit, in one of <strong>two formats</strong>. The <strong>Standard brief</strong> fits on <strong>one page</strong> — situation, mission and groups table, frequencies, airfields, weather —, followed when needed by a “map, threats, targets” page and by photo pages. The <strong>Advanced brief</strong> is a <strong>multi-page</strong> file: cover, tactical situation, mission overview, radio plan, individual missions, crew, charts, and annexes. You fill sections in the editor, check the A4 layout in the preview, then export to <strong>PDF</strong> or <strong>per-page PNG</strong> (kneeboards). The wing identity (logo, names, squadrons) is <strong>inherited from HQ</strong>. Four themes, fully offline.</p></div>
-      </div>
-
-      <!-- Deux formats -->
-      {PANEL_HTML['bg']}
-
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Deux formats : Standard ou Avancé</h3>
-        <h3 class="lang-block" data-lang="en">Two formats: Standard or Advanced</h3>
-        <div class="lang-block" data-lang="fr"><p>Le menu <strong>Affichage ▾</strong> de la barre du haut choisit le format : <strong>Standard</strong> — une page de mission et des pages de photos — ou <strong>Avancé</strong> — dix sections. Un point ambré sur le bouton signale <strong>Avancé</strong>. Le document imprimé ne nomme pas son format. Changer de format <strong>ne perd rien</strong> : seules les sections affichées et les pages produites changent ; ce que vous avez saisi pour l’autre format reste dans le briefing et réapparaît quand vous y revenez. Un briefing sauvegardé avant l’arrivée des deux formats s’ouvre en <strong>Avancé</strong>.</p></div>
-        <div class="lang-block" data-lang="en"><p>The <strong>Display ▾</strong> menu in the top bar picks the format: <strong>Standard</strong> — one mission page plus photo pages — or <strong>Advanced</strong> — ten sections. An amber dot on the button flags <strong>Advanced</strong>. The printed document does not name its format. Switching <strong>loses nothing</strong>: only the sections shown and the pages produced change; what you entered for the other format stays in the briefing and comes back when you switch again. A briefing saved before the two formats existed opens as <strong>Advanced</strong>.</p></div>
-      </div>
-
-      <!-- Démarrer -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Démarrer : page blanche ou exemple</h3>
-        <h3 class="lang-block" data-lang="en">Getting started: blank page or example</h3>
-        <div class="lang-block" data-lang="fr"><p>L’outil s’ouvre sur un <strong>briefing vide</strong>, en <strong>Standard</strong>. La ligne <strong>Mission Commander</strong> du menu <strong>Exemple ▾</strong> charge l’exemple <strong>STEPPE WIND</strong> du Mission Commander dans le Briefing Generator et dans Recon Station : un briefing de démonstration, lui aussi en Standard (passez en Avancé pour voir toutes les sections), et la photo de reconnaissance, pour voir ce que la suite sait faire ; il remplace le travail en cours de ces deux outils, sans question, et le message qui suit propose <strong>Restaurer</strong> pendant douze secondes. Il se charge dans la langue de l’interface au moment du clic : changer de langue ensuite ne le retraduit pas. <strong>Effacer</strong> vide tout le briefing, après confirmation, pour repartir d’une page blanche. Les champs vides disent en grisé <strong>ce qu’on y met</strong> (« Nom de l’opération », « hh:mm »…) ; cet indice n’apparaît ni dans l’aperçu ni à l’export.</p></div>
-        <div class="lang-block" data-lang="en"><p>The tool opens on an <strong>empty briefing</strong>, in <strong>Standard</strong>. The <strong>Mission Commander</strong> line of the <strong>Example ▾</strong> menu loads the Mission Commander’s <strong>STEPPE WIND</strong> example into the Briefing Generator and the Recon Station: a demonstration briefing, also in Standard (switch to Advanced to see every section), and the reconnaissance photo, to show what the suite can do; it replaces the current work of these two tools, without a question, and the message that follows offers <strong>Restore</strong> for twelve seconds. It loads in the interface language at the moment of the click: switching language afterwards does not translate it again. <strong>Clear</strong> clears the whole briefing, after confirmation, to start from a blank page. Empty fields show in grey <strong>what to type there</strong> (“Operation name”, “hh:mm”…); that hint never appears in the preview or the export.</p></div>
-      </div>
-
-      <!-- Schéma SVG -->
-      <div class="fm-schema tall">
-        {BG_SVG}
-        <div class="fm-schema-legend">
-          <span class="lang-block" data-lang="fr">{BG_LEGEND_FR}</span>
-          <span class="lang-block" data-lang="en">{BG_LEGEND_EN}</span>
-        </div>
-      </div>
-
-      <!-- Le brief Standard -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Le brief Standard</h3>
-        <h3 class="lang-block" data-lang="en">The Standard brief</h3>
-        <div class="lang-block" data-lang="fr"><p>Six sections. <strong>En-tête</strong> : opération, mission, date et <strong>Heure (Z)</strong>. <strong>Situation</strong> : la situation, en points, la <strong>carte</strong> et les <strong>menaces</strong> (chars, APC, AAA, SAM, et une note). <strong>Mission</strong> : les objectifs, puis les <strong>groupes</strong> — pour chacun l’escadron (ou un escadron invité), l’appareil — pris dans la liste du jeu, comme dans HQ, pour un groupe sans escadron ou un escadron invité — et le sous-groupe, la <strong>Tâche</strong>, le <strong>Nombre</strong> d’appareils et le <strong>Départ</strong> —, puis les <strong>cibles</strong> — pour chacune un numéro, la nature, la position et une remarque. <strong>Coordination</strong> : les fréquences, les terrains et le METAR, avec son assistant. <strong>Photos</strong> : pour chaque photo, un titre, l’image et une légende. <strong>Méta</strong> : la classification et la référence du document, en dernière section, repliée. L’<strong>En-tête</strong> est le même qu’au Datacard Generator : la date s’y saisit sous la forme AAAA-MM-JJ ; une saisie d’une autre forme est gardée telle quelle et le champ prend la couleur d’avertissement. La carte et les menaces sont celles du brief Avancé, et les cibles sont partagées par les deux formats : ce qui est saisi d’un côté se retrouve de l’autre.</p></div>
-        <div class="lang-block" data-lang="en"><p>Six sections. <strong>Header</strong>: operation, mission, date, and <strong>Time (Z)</strong>. <strong>Situation</strong>: the situation, as bullet points, the <strong>map</strong>, and the <strong>threats</strong> (tanks, APC, AAA, SAM, and a note). <strong>Mission</strong>: the objectives, then the <strong>groups</strong> — for each, the squadron (or a guest squadron), the aircraft — picked from the game’s list, as in HQ, for a group without a squadron or a guest squadron — and the subgroup, the <strong>Task</strong>, the aircraft <strong>Count</strong>, and the <strong>Departure</strong> —, then the <strong>targets</strong> — for each, a number, its type, its position, and a remark. <strong>Coordination</strong>: frequencies, airfields, and the METAR, with its assistant. <strong>Photos</strong>: for each photo, a title, the image, and a caption. <strong>Meta</strong>: the classification and the document reference, in the last section, folded. The <strong>Header</strong> is the same as in the Datacard Generator: the date is typed as YYYY-MM-DD; an entry of any other form is kept as typed and the field takes the warning colour. The map and the threats are those of the Advanced brief, and the targets are shared by both formats: what you enter on one side shows up on the other.</p></div>
-      </div>
-
-      <!-- La page Standard -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">La page Standard</h3>
-        <h3 class="lang-block" data-lang="en">The Standard page</h3>
-        <div class="lang-block" data-lang="fr"><p>Le brief Standard produit <strong>une page de mission</strong> : un bandeau « MISSION » suivi du code de mission, de la date et de l’heure, la <strong>Situation</strong>, la <strong>Mission</strong> avec le <strong>tableau des groupes</strong> (Groupe, Appareil, Tâche, Départ — « 2× F-16C » quand le nombre est renseigné ; un groupe sans escadron y imprime l’appareil choisi), les <strong>Fréquences</strong> et les <strong>Terrains</strong> côte à côte, puis la <strong>Météo</strong>. Vient ensuite, si une carte est chargée ou si des menaces ou des cibles sont saisies, une page <strong>« CARTE ░ MENACES ░ CIBLES »</strong> : la carte, les menaces — une ligne par catégorie renseignée — et le <strong>tableau des cibles</strong> (N°, Nature, Position, Remarque) ; son bandeau ne nomme que ce qu’elle porte. Un bloc vide ne s’affiche pas, et une page qui déborde se poursuit sur la page suivante : « SUITE » pour la mission, le nom de ce qu’elle porte pour la page carte, menaces, cibles. Suivent, s’il y a des photos, des <strong>pages de photos</strong>, deux par page, sous le bandeau « PHOTOS ░ RECONNAISSANCE ». La carte peut venir du Route Planner : son menu <strong>Exporter ▾ › Image pour le briefing…</strong> l’y envoie, cadrée, avec son échelle et son nord.</p></div>
-        <div class="lang-block" data-lang="en"><p>The Standard brief produces <strong>one mission page</strong>: a “MISSION” banner followed by the mission code, date, and time, the <strong>Situation</strong>, the <strong>Mission</strong> with the <strong>groups table</strong> (Group, Aircraft, Task, Departure — “2× F-16C” when the count is filled in; a group without a squadron prints the aircraft picked there), <strong>Frequencies</strong> and <strong>Airfields</strong> side by side, then the <strong>Weather</strong>. Next comes, if a map is loaded or threats or targets are entered, a <strong>“MAP ░ THREATS ░ TARGETS”</strong> page: the map, the threats — one line per category filled in — and the <strong>targets table</strong> (No., Type, Position, Remarks); its banner names only what it holds. An empty block is not shown, and a page that overflows continues on the next page: “CONT.” for the mission, the name of what it holds for the map, threats, targets page. If there are photos, <strong>photo pages</strong> follow, two per page, under the “PHOTOS ░ RECONNAISSANCE” banner. The map can come from the Route Planner: its <strong>Export ▾ › Image for the briefing…</strong> menu sends it there, framed, with its scale and north arrow.</p></div>
-      </div>
-
-      <!-- Le brief Avancé, section par section -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Le brief Avancé, section par section</h3>
-        <h3 class="lang-block" data-lang="en">The Advanced brief, section by section</h3>
-        <div class="lang-block" data-lang="fr"><p>Le brief Avancé garde toutes ses sections, décrites ci-dessous ; elles n’apparaissent qu’en Avancé.</p></div>
-        <div class="lang-block" data-lang="en"><p>The Advanced brief keeps all its sections, described below; they only appear in Advanced.</p></div>
-      </div>
-
-      <!-- Métadonnées & couverture -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Le squelette : métadonnées &amp; couverture</h3>
-        <h3 class="lang-block" data-lang="en">The skeleton: metadata &amp; cover</h3>
-        <div class="lang-block" data-lang="fr"><p>L’<strong>En-tête</strong> (opération, mission, date) et les <strong>Métadonnées</strong> (classification, référence du document) alimentent l’en-tête et le pied de toutes les pages. La <strong>Couverture</strong> porte le titre, un narratif d’introduction et une carte du théâtre.</p></div>
-        <div class="lang-block" data-lang="en"><p>The <strong>Header</strong> (operation, mission, date) and the <strong>Metadata</strong> (classification, document reference) feed the header and footer of every page. The <strong>Cover</strong> carries the title, an intro narrative, and a theatre map.</p></div>
-      </div>
-
-      <!-- SITAC -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Situation tactique (SITAC)</h3>
-        <h3 class="lang-block" data-lang="en">Tactical situation (SITAC)</h3>
-        <div class="lang-block" data-lang="fr"><p>Décrivez la situation par points, ajoutez une carte tactique, et renseignez le <strong>METAR</strong>. L’<strong>Assistant METAR</strong> vous évite la saisie à la main : soit un formulaire guidé (vent, visibilité, nuages, QNH, température…), soit l’<strong>import d’un .miz</strong> dont il extrait automatiquement la météo de la mission. Le champ METAR reste éditable librement.</p></div>
-        <div class="lang-block" data-lang="en"><p>Describe the situation as bullet points, add a tactical map, and fill in the <strong>METAR</strong>. The <strong>METAR Assistant</strong> spares you manual entry: either a guided form (wind, visibility, clouds, QNH, temperature…), or <strong>importing a .miz</strong> from which it extracts the mission weather automatically. The METAR field stays freely editable.</p></div>
-      </div>
-
-      <!-- Aperçu mission -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Aperçu de mission</h3>
-        <h3 class="lang-block" data-lang="en">Mission overview</h3>
-        <div class="lang-block" data-lang="fr"><p>Objectifs, <strong>cibles</strong>, menaces, et une liste structurée d’<strong>aérodromes &amp; FARP</strong> : pour chacun, code <strong>ICAO</strong>, bascule <strong>FARP</strong>, nom, piste en service ou cap, et case <strong>ATC</strong>. Chaque entrée se range proprement dans l’aperçu. Les cibles — numéro, nature, position, remarque — forment un tableau sous les objectifs, s’il y en a ; les menaces tiennent sur une ligne par catégorie.</p></div>
-        <div class="lang-block" data-lang="en"><p>Objectives, <strong>targets</strong>, threats, and a structured list of <strong>airfields &amp; FARPs</strong>: for each, <strong>ICAO</strong> code, <strong>FARP</strong> toggle, name, active runway or heading, and an <strong>ATC</strong> box. Each entry lays out cleanly in the preview. The targets — number, type, position, remark — form a table under the objectives, if there are any; the threats take one line per category.</p></div>
-      </div>
-
-      <!-- Plan radio -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Plan radio</h3>
-        <h3 class="lang-block" data-lang="en">Radio plan</h3>
-        <div class="lang-block" data-lang="fr"><p>Un plan <strong>global</strong> (nombre d’entrées illimité ; jusqu’à six retenues à l’aperçu) plus des plans <strong>par appareil</strong>, avec une référence radio propre à chaque type. De quoi cadrer fréquences et canaux pour toute la formation.</p></div>
-        <div class="lang-block" data-lang="en"><p>A <strong>global</strong> plan (unlimited entries; up to six shown in the preview) plus <strong>per-aircraft</strong> plans, with a radio reference specific to each type. Everything you need to set frequencies and channels for the whole formation.</p></div>
-      </div>
-
-      <!-- Missions individuelles -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Missions individuelles</h3>
-        <h3 class="lang-block" data-lang="en">Individual missions</h3>
-        <div class="lang-block" data-lang="fr"><p>Autant de missions que nécessaire, parcourues par les flèches (ajouter, dupliquer, réordonner, supprimer). Chacune : titre, escadron, appareil et sous-groupe, objectif, <strong>étapes d’exécution</strong> ordonnables (avec sous-tâches), plan de vol, niveau de menace, notes et images.</p></div>
-        <div class="lang-block" data-lang="en"><p>As many missions as needed, browsed with arrows (add, duplicate, reorder, delete). Each one: title, squadron, aircraft and subgroup, objective, orderable <strong>execution steps</strong> (with sub-tasks), flight plan, threat level, notes, and images.</p></div>
-      </div>
-
-      <!-- Équipage -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Équipage</h3>
-        <h3 class="lang-block" data-lang="en">Crew</h3>
-        <div class="lang-block" data-lang="fr"><p>Constituez les groupes de pilotes rattachés aux missions. Les indicatifs sont proposés automatiquement à partir du callsign de l’escadron (ex. « ANTON 1-1 ») et restent modifiables.</p></div>
-        <div class="lang-block" data-lang="en"><p>Build the pilot groups attached to the missions. Call signs are suggested automatically from the squadron callsign (e.g. “ANTON 1-1”) and stay editable.</p></div>
-      </div>
-
-      <!-- Charts & Annexes -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Charts &amp; annexes</h3>
-        <h3 class="lang-block" data-lang="en">Charts &amp; annexes</h3>
-        <div class="lang-block" data-lang="fr"><p><strong>Charts</strong> : une liste illimitée de cartes d’aéroport (image + titre). <strong>Annexes</strong> : des pages libres illimitées pour tout ce qui ne rentre pas ailleurs. Les images trop lourdes sont recompressées automatiquement.</p></div>
-        <div class="lang-block" data-lang="en"><p><strong>Charts</strong>: an unlimited list of airfield charts (image + title). <strong>Annexes</strong>: unlimited free pages for anything that doesn’t fit elsewhere. Oversized images are recompressed automatically.</p></div>
-      </div>
-
-      <!-- Identité d’escadre HQ — CALLOUT -->
-      <div class="fm-callout note">
-        <div class="lang-block" data-lang="fr">L’escadre se gère dans HQ — la création et la modification de l’escadre (logo, noms, escadrons) se font désormais dans le module HQ. Ici, l’onglet Wing n’affiche plus que le branding hérité, en lecture seule, et se met à jour automatiquement quand HQ change.</div>
-        <div class="lang-block" data-lang="en">The wing lives in HQ — creating and editing the wing (logo, names, squadrons) now happens in the HQ module. Here, the Wing tab only shows the inherited branding, read-only, and updates automatically when HQ changes.</div>
-      </div>
-
-      <!-- Sauvegarder & reprendre -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Sauvegarder &amp; reprendre</h3>
-        <h3 class="lang-block" data-lang="en">Save &amp; resume</h3>
-        <div class="lang-block" data-lang="fr"><p>Le briefing est <strong>sauvegardé automatiquement</strong> dans le navigateur. <strong>Sauvegarder</strong> l’écrit, avec tout le travail de Mission Plan, dans un fichier <code>.json</code> pour l’archiver, le partager ou le reprendre sur une autre machine ; <strong>Ouvrir ▾ › Ouvrir un travail…</strong> le relit, et <strong>Ouvrir ▾ › Ouvrir un briefing…</strong> lit encore un ancien fichier de briefing. Le format choisi voyage avec le fichier. <kbd>Ctrl</kbd>+<kbd>S</kbd> (<kbd>Cmd</kbd>+<kbd>S</kbd> sur Mac) fait le même geste que <strong>Sauvegarder</strong>.</p></div>
-        <div class="lang-block" data-lang="en"><p>The briefing is <strong>saved automatically</strong> in the browser. <strong>Save</strong> writes it, with all the Mission Plan work, to a <code>.json</code> file to archive, share, or resume it on another machine; <strong>Open ▾ › Open a work file…</strong> reads it back, and <strong>Open ▾ › Open a briefing…</strong> still reads an old briefing file. The chosen format travels with the file. <kbd>Ctrl</kbd>+<kbd>S</kbd> (<kbd>Cmd</kbd>+<kbd>S</kbd> on a Mac) does the same as <strong>Save</strong>.</p></div>
-      </div>
-
-      <!-- Exporter -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Exporter le briefing</h3>
-        <h3 class="lang-block" data-lang="en">Exporting the briefing</h3>
-        <div class="lang-block" data-lang="fr"><p>Vérifiez la mise en page dans l’<strong>Aperçu</strong>, puis <strong>Exporter</strong> : l’export porte les pages du format en cours. Le <strong>PDF</strong> passe par l’impression du navigateur (<kbd>Ctrl</kbd>+<kbd>P</kbd> → « Enregistrer en PDF »), y compris sur Android. L’<strong>export PNG</strong> produit une image par page, idéale en genouillère.</p></div>
-        <div class="lang-block" data-lang="en"><p>Check the layout in the <strong>Preview</strong>, then <strong>Export</strong>: the export carries the pages of the current format. The <strong>PDF</strong> goes through the browser’s print (<kbd>Ctrl</kbd>+<kbd>P</kbd> → “Save as PDF”), including on Android. The <strong>PNG export</strong> produces one image per page, ideal as a kneeboard.</p></div>
-      </div>
-
-      <!-- La barre du haut sur tablette et téléphone -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">La barre du haut sur tablette et téléphone</h3>
-        <h3 class="lang-block" data-lang="en">The top bar on tablets and phones</h3>
-        <div class="lang-block" data-lang="fr"><p>La barre de chaque outil garde le <strong>même ordre à toutes les largeurs</strong> : les <strong>boutons de fichier</strong> (Ouvrir, Sauvegarder, Exporter) juste après le sigle, puis les réglages. Sur un téléphone (sous 760 px), le Route Planner et le Datacard Generator réduisent Affichage à son icône et le théâtre à un nom court, sans rien déplacer. Quand la barre du haut ne tient pas dans la largeur, elle <strong>défile</strong> au doigt, à la molette ou au pavé tactile ; un <strong>fondu</strong> sur un bord signale qu’il reste des boutons de ce côté. Toucher un bouton à moitié visible le ramène en entier avant de l’activer. Jusqu’à 1 100 px de large, l’éditeur passe en <strong>onglets</strong> : un par section, plus <strong>Aperçu</strong>.</p></div>
-        <div class="lang-block" data-lang="en"><p>Each tool’s bar keeps the <strong>same order at every width</strong>: the <strong>file buttons</strong> (Open, Save, Export) right after the short name, then the settings. On a phone (below 760 px), the Route Planner and the Datacard Generator shrink Display to its icon and the theatre to a short name, without moving anything. When the top bar doesn’t fit the width, it <strong>scrolls</strong> by finger, mouse wheel, or touchpad; a <strong>fade</strong> on one edge shows there are more buttons that way. Tapping a half-visible button brings it fully into view before activating it. Up to 1,100 px wide, the editor switches to <strong>tabs</strong>: one per section, plus <strong>Preview</strong>.</p></div>
-      </div>
-
-      <!-- Et la datacard ? -->
-      <div class="fm-callout note">
-        <div class="lang-block" data-lang="fr">Et la datacard ? — Le Briefing Generator ne connaît pas la datacard : c’est le <strong>Datacard Generator</strong> qui lit le briefing, en cours ou en fichier, et en tire une datacard par groupe. <a href="#dg">Voir son chapitre</a>.</div>
-        <div class="lang-block" data-lang="en">What about the datacard? — The Briefing Generator knows nothing of the datacard: the <strong>Datacard Generator</strong> reads the briefing, current or from a file, and turns each group into a datacard. <a href="#dg">See its chapter</a>.</div>
-      </div>
-
-    </div><!-- /fm-chapter -->
-  </section><!-- /page-bg -->
-
-  <!-- ===== PAGE DG ===== -->
-  <section id="page-dg" class="fm-page hidden">
-    <div class="fm-chapter" style="--chapter-accent:#4f7a8e; --chapter-accent-rgb:79,122,142;">
-
-      <button class="fm-back-btn" onclick="navigate('index')" data-i18n="btn.back">◄ Index</button>
-
-      <div class="fm-hero">
-        <img class="fm-hero-img" src="{DG_TILE_SRC}" alt="Datacard Generator" draggable="false">
-        <div class="fm-hero-pin" aria-hidden="true"></div>
-        <div class="fm-hero-caption">
-          <div><div class="fm-hero-monogram">DG</div></div>
-          <div>
-            <div class="fm-hero-title" data-i18n="dg.hero.title">Datacard Generator</div>
-            <div class="fm-hero-sub" data-i18n="dg.hero.sub">Datacards de vol pour le kneeboard</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- À quoi ça sert -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">À quoi ça sert</h3>
-        <h3 class="lang-block" data-lang="en">What it’s for</h3>
-        <div class="lang-block" data-lang="fr"><p>Le Datacard Generator produit la <strong>datacard d’un groupe</strong> : une fiche d’une page, au format d’une page de kneeboard, qui réunit ce dont l’équipage a besoin en l’air — indicatif et tâche, horaires, équipages, navigation, radio, terrains, météo, carburant, emport, menaces. On la remplit <strong>à la main</strong> ou <strong>depuis le Briefing Generator</strong> ; on en tient un <strong>paquet</strong>, une par groupe de la mission ; on l’exporte en <strong>PNG</strong> pour le kneeboard de DCS ou en <strong>PDF</strong> pour l’imprimer, en version <strong>jour</strong> ou <strong>nuit</strong>.</p></div>
-        <div class="lang-block" data-lang="en"><p>The Datacard Generator produces a <strong>group’s datacard</strong>: a one-page sheet, the size of a kneeboard page, that gathers what the crew needs in the air — callsign and task, times, crew, navigation, radio, airfields, weather, fuel, loadout, threats. You fill it <strong>by hand</strong> or <strong>from the Briefing Generator</strong>; you keep a <strong>deck</strong> of them, one per group in the mission; you export to <strong>PNG</strong> for the DCS kneeboard or to <strong>PDF</strong> for printing, in a <strong>day</strong> or <strong>night</strong> version.</p></div>
-      </div>
-
-      <!-- Schéma SVG : anatomie d’une datacard -->
-      {PANEL_HTML['dg']}
-
-      <div class="fm-schema">
-        {DG_ANATOMY_SVG}
-        <div class="fm-schema-legend">
-          <span class="lang-block" data-lang="fr">Fig. 1 — L’anatomie d’une datacard : où se range chaque bloc.</span>
-          <span class="lang-block" data-lang="en">Fig. 1 — Anatomy of a datacard: where each block goes.</span>
-        </div>
-      </div>
-
-      <!-- Le paquet de datacards -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Le paquet de datacards</h3>
-        <h3 class="lang-block" data-lang="en">The datacard deck</h3>
-        <div class="lang-block" data-lang="fr"><p>Le document est un <strong>paquet</strong> de datacards, une par groupe. En tête du panneau, une ligne choisit la carte : « CAESAR ▾ », avec sa pastille <strong>LIÉE</strong>, <strong>LIBRE</strong> ou <strong>GROUPE SUPPRIMÉ</strong>, ouvre la liste, qui range les cartes sous <strong>Liées aux groupes du FC</strong> et <strong>Libres</strong> ; deux cartes de même nom s’y lisent « CAESAR » et « CAESAR · 2 ». <strong>+</strong> ajoute une datacard liée à un groupe ; <strong>…</strong> ouvre <strong>Carte libre</strong>, <strong>Rattacher à un groupe</strong>, <strong>Importer des groupes</strong>, <strong>Une datacard par route</strong>, <strong>Dupliquer</strong> et <strong>Supprimer</strong> ; dessous, « résumé de la carte — 2 / 3 » donne le rang de la carte choisie et le total. L’aperçu montre la carte courante. La dernière carte ne se supprime pas : elle se vide.</p></div>
-        <div class="lang-block" data-lang="en"><p>The document is a <strong>deck</strong> of datacards, one per group. At the top of the panel, one line picks the card: “CAESAR ▾”, with its tag <strong>LINKED</strong>, <strong>FREE</strong> or <strong>GROUP DELETED</strong>, opens the list, which sorts the cards under <strong>Linked to FC groups</strong> and <strong>Free</strong>; two cards of the same name read “CAESAR” and “CAESAR · 2” there. <strong>+</strong> adds a datacard linked to a group; <strong>…</strong> opens <strong>Free card</strong>, <strong>Attach to a group</strong>, <strong>Import groups</strong>, <strong>One datacard per route</strong>, <strong>Duplicate</strong> and <strong>Delete</strong>; below, “card summary — 2 / 3” gives the rank of the chosen card and the total. The preview shows the current card. The last card can’t be deleted: it is cleared instead.</p></div>
-      </div>
-
-      <!-- Remplir une datacard -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Remplir une datacard</h3>
-        <h3 class="lang-block" data-lang="en">Filling in a datacard</h3>
-        <div class="lang-block" data-lang="fr"><p>Douze sections, dans l’ordre de l’éditeur : <strong>En-tête</strong> (opération, mission, date, <strong>Heure (Z)</strong> : le même qu’au Briefing Generator, ouvert) ; <strong>Groupe et équipage</strong> (nom du groupe, appareil, nombre, tâche, niveau de menace, puis une carte par unité : type, indicatif, numéro de bord, pilote ; l’appareil et le nombre se déduisent des unités dès que chacune a un type, et se lisent alors sans se modifier ; l’en-tête de la fiche en tire le groupe, « 2 × Mi-24P · CAS » ou « 1 × Mi-24P + 1 × Mi-8MT · CAS » ; une unité sans type s’y lit « ? » : « 2 × Mi-24P + 1 × ? ») ; <strong>Mission</strong> (objectif et étapes) ; <strong>Horaires</strong> (mise en route, décollage, IP, TOT et RTB proposés, modifiables) ; <strong>Navigation</strong> (jusqu’à 30 points : coordonnées, cap, distance, altitude, heure, note ; affichage en cap / distance, en MGRS ou en degrés, minutes, secondes, cap vrai ou magnétique ; un point sans coordonnées se place par le cap et la distance qui le relient au point voisin placé, avant ou après lui) ; <strong>Points de référence</strong> ; <strong>Radio</strong> (jusqu’à 4 postes de 20 canaux) ; <strong>Terrains</strong> (départ, arrivée, dégagement) ; <strong>Météo</strong> ; <strong>Carburant et emport</strong> (carburant, poids, joker, bingo, lignes d’emport) ; <strong>Menaces et notes</strong> ; <strong>Méta</strong> (classification, référence), en dernière section, repliée. La ligne carburant porte le carburant emporté et le poids au décollage de chaque appareil (repris du Flight Configurator, ou saisis sur une carte libre), puis JOKER et BINGO ; changer l'unité de masse convertit ces valeurs. Une icône à droite de l’en-tête de chaque section replie ou déplie toutes les sections du panneau. La datacard d’un groupe a les mêmes sections, dans le même ordre ; la coalition s’y ajoute, et les champs partagés avec le Flight Configurator portent la pastille « FC ». Sur la datacard d’un groupe, la <strong>Radio</strong> vient du Flight Configurator : les fréquences sont les siennes, et les canaux à imprimer se cochent ici comme là-bas (le choix appartient au groupe), leur nom et leur modulation se saisissent à la datacard et s’écrivent dans le groupe un instant après la frappe (400 ms) et à la sortie du champ ; les canaux qu’une datacard avait déjà et que son groupe n’a pas (rattachement à un groupe, ouverture d’un fichier de datacards, chargement) s’ajoutent au groupe, qui garde sa valeur pour un canal qu’il a déjà ; une datacard née d’un groupe montre d’emblée l’emport du Flight Configurator (la case « Emport du Flight Configurator » se décoche pour saisir les lignes à la main) ; les unités qui ont les mêmes stations chargées partagent un tableau d'emport : un seul tableau s'imprime sans titre, plusieurs sont titrés par les noms de leurs unités, sans nom d'emport. Sur une carte libre, tout est <strong>texte libre</strong>, sauf le type d’une unité, qui se choisit dans la liste des types du jeu (« Autre type (mod)… » ouvre la saisie libre) ; une unité ajoutée prend le type de celle du dessus. Chaque champ vide dit en grisé ce qu’on y met ; cet indice n’entre jamais dans la datacard. Le théâtre se choisit dans la barre, comme au Route Planner, et les trois modules le partagent : le changer dans l’un le change dans les autres ; le nom d’un terrain se choisit dans la liste des aérodromes de ce théâtre, avec une recherche : l’OACI (le code d’aujourd’hui, quand il est connu), la piste et la fréquence de tour prennent alors les valeurs de cet aérodrome, en remplaçant les précédentes ; la piste se choisit dans la liste de ses sens, celui face au vent de la Météo étant proposé d’abord ; « Autre… » vide les trois cases pour une saisie libre ; DEP et ARR viennent de la route et ne remplissent que des cases vides. La navigation d’une datacard est une route du Route Planner : un point saisi, déplacé ou supprimé ici l’est aussi là-bas, et inversement ; l’heure et la note restent à la datacard. Le cap et la distance se calculent, ou se saisissent pour placer le point. Les réglages de cap (vrai ou magnétique, déclinaison, année) sont communs à la mission. L’année de la déclinaison vient, dans cet ordre, de la mission d’HQ, de la date reçue avec la route, de la date (champ <strong>Date</strong>) de la datacard, de l’année saisie, sinon 1985. Les points de référence sont ceux du Route Planner, communs à la mission ; chaque datacard choisit ceux qu’elle affiche.</p></div>
-        <div class="lang-block" data-lang="en"><p>Twelve sections, in the order of the editor: <strong>Header</strong> (operation, mission, date, <strong>Time (Z)</strong>: the same as in the Briefing Generator, open); <strong>Group and crew</strong> (group name, aircraft, count, task, threat level, then one card per aircraft: type, callsign, board number, pilot; the aircraft and the count follow the aircraft as soon as each one has a type, and are then read-only; the sheet’s header draws the group from them, “2 × Mi-24P · CAS” or “1 × Mi-24P + 1 × Mi-8MT · CAS”; a unit without a type reads “?” there: “2 × Mi-24P + 1 × ?”); <strong>Mission</strong> (objective and steps); <strong>Times</strong> (start-up, take-off, IP, TOT, and RTB suggested, editable); <strong>Navigation</strong> (up to 30 points: coordinates, heading, distance, altitude, time, note; shown as heading / distance, MGRS or degrees, minutes, seconds, true or magnetic heading; a waypoint without coordinates is placed by the heading and distance linking it to a placed neighbour, before or after it); <strong>Reference points</strong>; <strong>Radio</strong> (up to 4 radios of 20 channels); <strong>Airfields</strong> (departure, arrival, alternate); <strong>Weather</strong>; <strong>Fuel and loadout</strong> (fuel, weight, joker, bingo, loadout lines); <strong>Threats and notes</strong>; <strong>Meta</strong> (classification, reference), the last section, folded. The fuel line shows each aircraft's fuel load and take-off weight (from the Flight Configurator, or typed on a free card), then JOKER and BINGO; changing the mass unit converts these values. An icon at the right of each section header folds or unfolds all the sections of the panel. A group’s datacard has the same sections, in the same order; the coalition is added, and the fields shared with the Flight Configurator carry the “FC” badge. On a group’s datacard, the <strong>Radio</strong> comes from the Flight Configurator: the frequencies are its own, and the channels to print are ticked here as there (the choice belongs to the group), their name and modulation are typed on the datacard and written to the group a moment after you type (400 ms) and when you leave the field; the channels a datacard already had and its group lacks (attaching to a group, opening a datacards file, loading) are added to the group, which keeps its own value for a channel it already has; a datacard born from a group shows the Flight Configurator loadout from the start (untick the “Loadout from the Flight Configurator” box to type the lines by hand); units with the same stations loaded share one loadout table: a single table prints with no title, several are titled with the names of their units, with no loadout name. On a free card, everything is <strong>free text</strong>, except a unit’s type, which is picked from the game’s aircraft list (“Other type (mod)…” opens free entry); an added unit takes the type of the one above. Each empty field shows in grey what to put there; that hint never makes it onto the datacard. The theatre is chosen in the bar, as in the Route Planner, and all three modules share it: changing it in one changes it in the others; an airfield’s name is picked from that theatre’s airfield list, with a search: the ICAO code (today’s, when known), runway and tower frequency then take that airfield’s values, replacing the previous ones; the runway is picked from the list of its ends, the one facing the Weather wind first; “Other…” clears the three boxes for free entry; DEP and ARR come from the route and only fill empty boxes. A datacard's navigation is a Route Planner route: a waypoint entered, moved or removed here is also changed there, and the other way round; time and note stay with the datacard. Course and distance are computed, or typed to place the waypoint. Course settings (true or magnetic, variation, year) are shared by the whole mission. The variation year comes, in this order, from the HQ mission, the date received with the route, the datacard’s <strong>Date</strong> field, the typed year, otherwise 1985. Reference points are the Route Planner's, shared by the whole mission; each datacard chooses which ones it shows.</p></div>
-      </div>
-
-      <!-- Depuis le briefing -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Depuis le briefing</h3>
-        <h3 class="lang-block" data-lang="en">From the briefing</h3>
-        <div class="lang-block" data-lang="fr"><p><strong>Ouvrir ▾ › Importer…</strong> ouvre une fenêtre à deux sources : le <strong>Briefing en cours</strong> — celui que le Briefing Generator a enregistré dans ce navigateur, grisé s’il n’y en a pas — ou un <strong>Fichier JSON (briefing ou route)</strong>. La fenêtre liste les <strong>groupes</strong> du briefing, tous cochés, et une ligne <strong>Données générales (sans groupe)</strong>, cochée d’office quand le briefing n’a aucun groupe : c’est le cas d’un brief Standard qui ne porte que des fréquences, des terrains et un METAR. <strong>Importer</strong> ajoute une datacard par ligne cochée, à la fin du paquet ; une datacard vierge laissée seule est remplacée. Un fichier de briefing ouvert par <strong>Ouvrir ▾ › Ouvrir une datacard…</strong> ouvre la même fenêtre.</p></div>
-        <div class="lang-block" data-lang="en"><p><strong>Open ▾ › Import…</strong> opens a window with two sources: the <strong>Current briefing</strong> — the one the Briefing Generator saved in this browser, greyed out if there is none — or a <strong>JSON file (briefing or route)</strong>. The window lists the briefing’s <strong>groups</strong>, all ticked, and a <strong>General data (no group)</strong> line, ticked by default when the briefing has no groups: that is the case of a Standard brief that only carries frequencies, airfields, and a METAR. <strong>Import</strong> adds one datacard per ticked line, at the end of the deck; a lone blank datacard is replaced. A briefing file opened with <strong>Open ▾ › Open a datacard…</strong> opens the same window.</p></div>
-      </div>
-
-      <!-- Ce que l’import remplit -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Ce que l’import remplit</h3>
-        <h3 class="lang-block" data-lang="en">What the import fills in</h3>
-        <div class="lang-block" data-lang="fr"><p>Pour chaque groupe : la méta du briefing ; l’<strong>indicatif</strong> (le sous-groupe, sinon l’indicatif de l’escadron), l’appareil, le nombre (celui du groupe, sinon le nombre de pilotes de son équipage), la tâche et la menace ; l’objectif et les étapes, sous-tâches comprises ; l’<strong>équipage</strong> du groupe ; la <strong>radio</strong>, depuis le plan de son appareil, ou à défaut un poste « Fréquences » qui reprend toutes les fréquences du briefing ; les <strong>terrains</strong>, le terrain de départ marqué DEP ; le <strong>METAR</strong>, décodé ; les menaces SAM et AAA ; les notes. Restent à remplir à la main : les <strong>horaires</strong>, la <strong>navigation</strong> (sauf à la prendre au Route Planner), le <strong>carburant</strong> et l’<strong>emport</strong>. La datacard importée vit ensuite seule : modifier le briefing ne la change pas. Sur une datacard liée affichée, le briefing la remplit de la même façon pour ce qui n’est pas un groupe (mission, date et heure, terrains, météo) et lui apporte aussi la tâche, le niveau de menace, les menaces et les notes de la ligne choisie, sans rien effacer quand le briefing n’en dit rien. La mission d’HQ importée par <strong>… › Importer des groupes</strong> reprend en plus, sur la datacard de chaque groupe importé, la date, l’heure et la météo de la mission ; les autres datacards ne changent pas.</p></div>
-        <div class="lang-block" data-lang="en"><p>For each group: the briefing’s meta; the <strong>callsign</strong> (the subgroup, otherwise the squadron callsign), the aircraft, the count (the group’s own, otherwise the number of pilots in its crew), the task, and the threat; the objective and the steps, sub-tasks included; the group’s <strong>crew</strong>; the <strong>radio</strong>, from its aircraft’s plan, or failing that a “Frequencies” radio carrying every frequency in the briefing; the <strong>airfields</strong>, with the departure field marked DEP; the <strong>METAR</strong>, decoded; the SAM and AAA threats; the notes. Left to fill in by hand: <strong>times</strong>, <strong>navigation</strong> (unless you take it from the Route Planner), <strong>fuel</strong>, and <strong>loadout</strong>. Once imported, the datacard lives on its own: changing the briefing doesn’t change it. On a linked datacard on display, the briefing fills it the same way for what is not a group (mission, date and time, airfields, weather) and also brings the task, threat level, threats and notes of the chosen line, erasing nothing when the briefing has none. The HQ mission imported by <strong>… › Import groups</strong> also brings, onto the datacard of each imported group, the mission’s date, time and weather; the other datacards do not change.</p></div>
-      </div>
-
-      <!-- Depuis le Route Planner -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Depuis le Route Planner</h3>
-        <h3 class="lang-block" data-lang="en">From the Route Planner</h3>
-        <div class="lang-block" data-lang="fr"><p><strong>Ouvrir ▾ › Importer…</strong> lit aussi une route, ou un jeu de routes, depuis un fichier JSON, par la source <strong>Fichier JSON (briefing ou route)</strong> ou par <strong>Ouvrir ▾ › Ouvrir une datacard…</strong>. La fenêtre montre le nom de la route et son nombre de points, puis deux choix : <strong>Lier la carte à cette route</strong> — la navigation de la datacard affichée devient cette route — ou <strong>Nouvelle datacard</strong>, ajoutée au paquet ; un jeu de routes ajoute <strong>Toutes les routes (n), une datacard par route</strong>. La navigation est la route elle-même, avec les coordonnées MGRS et l’altitude de ses points ; les réglages de cap (vrai ou magnétique, déclinaison, année) sont communs au Route Planner et au Datacard Generator, et l’année vient de la mission d’HQ, de la date reçue avec la route, de la date de la datacard (champ <strong>Date</strong>) ou de l’année saisie, dans cet ordre ; <strong>Forcer</strong> donne la priorité à l’année saisie. Pour suivre une route que le Route Planner garde dans ce navigateur, la datacard a sa propre liste <strong>Lier à une autre route</strong> : choisir une route la lie à la datacard affichée ; <strong>… › Une datacard par route</strong> crée d’un coup une datacard par route du Route Planner (grisé tant qu’il n’y a pas deux routes).</p></div>
-        <div class="lang-block" data-lang="en"><p><strong>Open ▾ › Import…</strong> also reads a route, or a route set, from a JSON file, through the <strong>JSON file (briefing or route)</strong> source or through <strong>Open ▾ › Open a datacard…</strong>. The window shows the route’s name and its number of waypoints, then two choices: <strong>Link the card to this route</strong> — the navigation of the datacard shown becomes this route — or <strong>New datacard</strong>, added to the deck; a route set adds <strong>All routes (n), one datacard per route</strong>. Navigation is the route itself, with the MGRS coordinates and altitude of its waypoints; course settings (true or magnetic, variation, year) are shared by the Route Planner and the Datacard Generator, and the year comes from the HQ mission, the date received with the route, the datacard’s <strong>Date</strong> field or the typed year, in that order; <strong>Force</strong> gives the typed year priority. To follow a route the Route Planner keeps in this browser, the datacard has its own <strong>Link to another route</strong> list: picking a route links it to the datacard shown; <strong>… › One datacard per route</strong> creates one datacard per Route Planner route in one go (greyed out until there are two routes).</p></div>
-      </div>
-
-      <!-- Figure 2 : ce qui alimente la datacard -->
-      <div class="fm-schema">
-        {DG_FEED_SVG}
-        <div class="fm-schema-legend">
-          <span class="lang-block" data-lang="fr">Fig. 2 — Ce qui alimente la datacard, et ce qu’elle produit.</span>
-          <span class="lang-block" data-lang="en">Fig. 2 — What feeds the datacard, and what it produces.</span>
-        </div>
-      </div>
-
-      <!-- Day ou Night -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Jour ou Nuit</h3>
-        <h3 class="lang-block" data-lang="en">Day or Night</h3>
-        <div class="lang-block" data-lang="fr"><p>Le choix <strong>Jour | Nuit</strong>, dans le menu <strong>Affichage ▾</strong>, groupe <strong>Datacard</strong>, donne à tout le paquet sa version de <strong>jour</strong> — encre sombre sur papier clair — ou de <strong>nuit</strong> — tons sourds sur fond sombre, sans aucun blanc pur, pour ne pas éblouir dans un cockpit de nuit. Les thèmes de l’outil ne changent rien à la datacard : seule cette bascule compte.</p></div>
-        <div class="lang-block" data-lang="en"><p>The <strong>Day | Night</strong> choice, in the <strong>Display ▾</strong> menu, <strong>Datacard</strong> group, gives the whole deck its <strong>day</strong> version — dark ink on light paper — or its <strong>night</strong> version — muted tones on a dark background, with no pure white, so as not to dazzle in a night cockpit. The tool’s themes change nothing on the datacard: only this switch counts.</p></div>
-      </div>
-
-      <!-- Unités, dates et METAR -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Unités, dates et METAR</h3>
-        <h3 class="lang-block" data-lang="en">Units, dates, and METAR</h3>
-        <div class="lang-block" data-lang="fr"><p>Les unités (masse <strong>kg</strong> ou <strong>lb</strong>, distance <strong>km</strong> ou <strong>NM</strong>, altitude <strong>m</strong> ou <strong>ft</strong>) changent les intitulés et les suffixes de la fiche ; les valeurs saisies ne sont pas converties, sauf les masses de la ligne carburant (carburant, poids, joker, bingo), qui le sont au changement de la masse. Une date saisie au format AAAA-MM-JJ s’affiche « 22 MAR 1989 » ; toute autre forme s’affiche telle quelle. Le <strong>METAR</strong>, saisi ou importé, se décode tout seul en vent, visibilité, QNH et nuages, qui restent modifiables ensuite ; la météo garde les conventions du METAR, quelles que soient les unités de la carte. Les unités (masse, distance, altitude) se choisissent dans le menu <strong>Affichage ▾</strong>, groupe <strong>Unités</strong>, valent pour toutes les cartes et sont partagées avec le Route Planner.</p></div>
-        <div class="lang-block" data-lang="en"><p>Units (mass <strong>kg</strong> or <strong>lb</strong>, distance <strong>km</strong> or <strong>NM</strong>, altitude <strong>m</strong> or <strong>ft</strong>) change the sheet’s headings and suffixes; the values you entered are not converted, except the masses on the fuel line (fuel, weight, joker, bingo), which are converted when the mass unit changes. A date entered as YYYY-MM-DD shows as “22 MAR 1989”; any other form shows as typed. The <strong>METAR</strong>, typed or imported, decodes itself into wind, visibility, QNH, and clouds, which stay editable afterwards; the weather keeps METAR conventions, whatever the card’s units. Units (mass, distance, altitude) are picked in the <strong>Display ▾</strong> menu, <strong>Units</strong> group, apply to every card and are shared with the Route Planner.</p></div>
-      </div>
-
-      <!-- Quand la page déborde -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Quand la page déborde</h3>
-        <h3 class="lang-block" data-lang="en">When the page overflows</h3>
-        <div class="lang-block" data-lang="fr"><p>La fiche garde toujours toutes ses boîtes, même vides, pour être imprimée et complétée à la main : une boîte vide montre ses titres et quelques lignes à remplir, et une valeur absente d’une rangée remplie s’écrit « — ». Quand tout ne tient pas sur la page, la <strong>navigation passe sur une page 2</strong>, avec un en-tête réduit « DATACARD · NAVIGATION ».</p></div>
-        <div class="lang-block" data-lang="en"><p>The sheet always keeps all its blocks, even empty ones, so it can be printed and filled in by hand: an empty block shows its headings and a few lines to fill in, and a missing value in a filled row reads “—”. When everything doesn’t fit on the page, <strong>navigation moves to a page 2</strong>, with a reduced “DATACARD · NAVIGATION” header.</p></div>
-      </div>
-
-      <!-- Sauvegarder & reprendre -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Sauvegarder &amp; reprendre</h3>
-        <h3 class="lang-block" data-lang="en">Save &amp; resume</h3>
-        <div class="lang-block" data-lang="fr"><p>Le paquet est <strong>sauvegardé automatiquement</strong> dans le navigateur. <strong>Sauvegarder</strong> l’écrit, avec tout le travail de Mission Plan, en fichier pour l’archiver ou le partager (<kbd>Ctrl</kbd>+<kbd>S</kbd>, <kbd>Cmd</kbd>+<kbd>S</kbd> sur Mac, fait le même geste) ; <strong>Ouvrir ▾ › Ouvrir un travail…</strong> le rouvre ; <strong>Ouvrir ▾ › Ouvrir une datacard…</strong> lit encore un ancien fichier de datacards, qui remplace le paquet en cours, après confirmation si celui-ci n’est pas vierge. La ligne <strong>Flight Leader</strong> du menu <strong>Exemple ▾</strong> charge l’exemple <strong>STEPPE WIND</strong> du Flight Leader dans le Route Planner, le Datacard Generator et le Flight Configurator : la datacard de démonstration du groupe CAESAR (opération STEPPE WIND, heure 08:00Z) sur la route STEPPE WIND M3, au théâtre Syrie ; il remplace le travail en cours de ces trois outils et le message qui suit propose <strong>Restaurer</strong> pendant douze secondes ; <strong>Effacer</strong> efface toutes les datacards, libres et liées, et avec elles les groupes et les routes du Flight Configurator et du Route Planner (le théâtre, les unités et les réglages restent). Effacer demande confirmation ; Exemple n’en demande aucune, et Restaurer le défait.</p></div>
-        <div class="lang-block" data-lang="en"><p>The deck is <strong>saved automatically</strong> in the browser. <strong>Save</strong> writes it, with all the Mission Plan work, to a file to archive or share it (<kbd>Ctrl</kbd>+<kbd>S</kbd>, <kbd>Cmd</kbd>+<kbd>S</kbd> on a Mac, does the same); <strong>Open ▾ › Open a work file…</strong> reopens it; <strong>Open ▾ › Open a datacard…</strong> still reads an old datacards file, which replaces the current deck, after confirmation unless that deck is blank. The <strong>Flight Leader</strong> line of the <strong>Example ▾</strong> menu loads the Flight Leader’s <strong>STEPPE WIND</strong> example into the Route Planner, the Datacard Generator and the Flight Configurator: the demonstration datacard of the CAESAR group (operation STEPPE WIND, time 08:00Z) on the STEPPE WIND M3 route, in the Syria theatre; it replaces the current work of these three tools and the message that follows offers <strong>Restore</strong> for twelve seconds; <strong>Clear</strong> clears all the datacards, free and linked, and with them the groups and routes of the Flight Configurator and the Route Planner (the theatre, the units and the settings stay). Clear asks for confirmation; Example asks for none, and Restore undoes it.</p></div>
-      </div>
-
-      <!-- Exporter -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Exporter</h3>
-        <h3 class="lang-block" data-lang="en">Export</h3>
-        <div class="lang-block" data-lang="fr"><p><strong>Exporter</strong> propose le <strong>PDF</strong> ou le <strong>PNG</strong>. Le PDF passe par l’impression du navigateur : chaque page de chaque datacard occupe une feuille <strong>A4</strong> entière, couleurs de fond comprises. Le PNG produit une image de <strong>2 000 × 2 828 px</strong> par page, au format d’une page de kneeboard ; vous choisissez les pages, et plusieurs pages partent dans un fichier ZIP. L’export suit la version jour ou nuit affichée.</p></div>
-        <div class="lang-block" data-lang="en"><p><strong>Export</strong> offers <strong>PDF</strong> or <strong>PNG</strong>. The PDF goes through the browser’s print: each page of each datacard takes up a whole <strong>A4</strong> sheet, background colours included. The PNG produces a <strong>2,000 × 2,828 px</strong> image per page, the size of a kneeboard page; you pick the pages, and several pages go out in a ZIP file. The export follows the day or night version on display.</p></div>
-      </div>
-
-      <!-- Sur tablette et téléphone -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Sur tablette et téléphone</h3>
-        <h3 class="lang-block" data-lang="en">On tablets and phones</h3>
-        <div class="lang-block" data-lang="fr"><p>Jusqu’à 1 100 px de large, l’éditeur passe en <strong>onglets à icône</strong>, un par section, plus <strong>Aperçu</strong>. La barre du haut défile au doigt quand elle ne tient pas ; un fondu sur un bord signale les boutons cachés.</p></div>
-        <div class="lang-block" data-lang="en"><p>Up to 1,100 px wide, the editor switches to <strong>icon tabs</strong>, one per section, plus <strong>Preview</strong>. The top bar scrolls by finger when it doesn’t fit; a fade on one edge shows the hidden buttons.</p></div>
-      </div>
-
-      <!-- Tout est générique -->
-      <div class="fm-callout note">
-        <div class="lang-block" data-lang="fr">Tout est générique — Le Datacard Generator ne contient aucune table d’appareils, de radios ou d’emports : ce que vous saisissez s’affiche tel quel. Il sert donc à tout appareil, sans mise à jour quand un module DCS change.</div>
-        <div class="lang-block" data-lang="en">Everything is generic — The Datacard Generator holds no table of aircraft, radios, or loadouts: what you type shows as typed. It therefore works for any aircraft, with no update needed when a DCS module changes.</div>
-      </div>
-
-      <!-- Contenu tronqué -->
-      <div class="fm-callout warn">
-        <div class="lang-block" data-lang="fr">Contenu tronqué — Si la page 1 déborde encore une fois la navigation passée en page 2, l’éditeur affiche « Contenu tronqué ». Allégez alors la mission, les notes ou les menaces : la fiche ne se réduit pas d’elle-même.</div>
-        <div class="lang-block" data-lang="en">Content truncated — If page 1 still overflows once navigation has moved to page 2, the editor shows “Content truncated”. Trim the mission, notes, or threats: the sheet doesn’t shrink on its own.</div>
-      </div>
-
-      <!-- À venir -->
-      <div class="fm-callout note">
-        <div class="lang-block" data-lang="fr">À venir — L’import des points de navigation et de l’emport depuis HQ (mission <code>.miz</code>) est prévu dans une prochaine version.</div>
-        <div class="lang-block" data-lang="en">Coming — Importing navigation points and loadouts from HQ (<code>.miz</code> mission) is planned for a future version.</div>
-      </div>
-
-    </div><!-- /fm-chapter -->
-  </section><!-- /page-dg -->
-
-  <!-- ===== PAGE RP ===== -->
-  <section id="page-rp" class="fm-page hidden">
-    <div class="fm-chapter" style="--chapter-accent:#7ac97a; --chapter-accent-rgb:122,201,122;">
-
-      <button class="fm-back-btn" onclick="navigate('index')" data-i18n="btn.back">◄ Index</button>
-
-      <div class="fm-hero">
-        <img class="fm-hero-img" src="{RP_TILE_SRC}" alt="Route Planner" draggable="false">
-        <div class="fm-hero-pin" aria-hidden="true"></div>
-        <div class="fm-hero-caption">
-          <div><div class="fm-hero-monogram">RP</div></div>
-          <div>
-            <div class="fm-hero-title" data-i18n="rp.hero.title">Route Planner</div>
-            <div class="fm-hero-sub" data-i18n="rp.hero.sub">Routes, navigation et cartes de mission</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- À quoi ça sert -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">À quoi ça sert</h3>
-        <h3 class="lang-block" data-lang="en">What it’s for</h3>
-        <div class="lang-block" data-lang="fr"><p>Le Route Planner trace la <strong>route d’un groupe</strong> sur la carte d’un théâtre de DCS et en donne la <strong>navigation</strong> : caps, distances, temps. Vous y posez des <strong>points de référence</strong> et des <strong>calques</strong> tactiques, vous consultez la <strong>fiche d’un terrain</strong>, puis vous passez la route au <strong>Datacard Generator</strong>, la carte au <strong>Briefing Generator</strong>, ou la route au <strong>Route Tool</strong> de DCS. Les routes se modifient aussi depuis le Datacard Generator, et les réglages de cap sont partagés avec lui.</p></div>
-        <div class="lang-block" data-lang="en"><p>The Route Planner lays a <strong>group’s route</strong> on the map of a DCS theatre and gives you its <strong>navigation</strong>: headings, distances, times. You add <strong>reference points</strong> and tactical <strong>layers</strong>, you look up an <strong>airfield’s chart sheet</strong>, then you pass the route to the <strong>Datacard Generator</strong>, the map to the <strong>Briefing Generator</strong>, or the route to the DCS <strong>Route Tool</strong>. Routes can also be edited from the Datacard Generator, and course settings are shared with it.</p></div>
-      </div>
-
-      <!-- Figure 1 : l’écran du Route Planner -->
-      {PANEL_HTML['rp']}
-
-      <div class="fm-schema">
-        {RP_SCREEN_SVG}
-        <div class="fm-schema-legend">
-          <span class="lang-block" data-lang="fr">Fig. 1 — L’écran du Route Planner : la carte, ses modes de toucher et le panneau.</span>
-          <span class="lang-block" data-lang="en">Fig. 1 — The Route Planner screen: the map, its tap modes, and the panel.</span>
-        </div>
-      </div>
-
-      <!-- Le théâtre et le fond de carte -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Le théâtre et le fond de carte</h3>
-        <h3 class="lang-block" data-lang="en">Theatre and base map</h3>
-        <div class="lang-block" data-lang="fr"><p>Le sélecteur <strong>Théâtre</strong> choisit la carte de DCS : Caucase, Allemagne (guerre froide), Syrie, Golfe Persique, Normandie, Manche, Nevada, Mariannes, Mariannes 1944, Kola, Sinaï, Irak, Afghanistan, Atlantique Sud. Le groupe <strong>Fond</strong>, en tête du menu <strong>Affichage ▾</strong>, propose <strong>Carte DCS</strong>, <strong>Topo</strong>, <strong>Satellite</strong> et <strong>Grille</strong>, et, sur le Caucase seulement, la <strong>Carte de navigation (Flappie)</strong> : elle n’apparaît pas dans la rangée sur les autres théâtres. Là où DCS n’a pas de carte, le bouton <strong>Carte DCS</strong> se grise, et son info-bulle dit <strong>Carte DCS — absente de ce théâtre</strong>. Les crédits de chaque fond restent affichés au pied de la carte.</p><p>Sous le fond, le groupe <strong>Unités</strong> règle la <strong>Distance</strong> (km ou NM) et l’<strong>Altitude</strong> (m ou ft). Puis, sous <strong>Afficher sur la carte</strong>, le menu dit ce que montre la carte, en trois groupes. <strong>Mission</strong> : <strong>Route</strong>, <strong>Points de réf.</strong> ; <strong>Calques</strong> : <strong>Dessins</strong>, <strong>Symboles OTAN</strong>, <strong>Calques importés</strong> ; <strong>Repères</strong> : <strong>Grille MGRS</strong>, <strong>Villes</strong>, <strong>Aérodromes</strong>, <strong>Lieux (Esri)</strong>. Les villes s’affichent à partir du zoom 10 ; elles sont grisées sur la carte de Flappie, qui les écrit déjà. Les aérodromes et les villes sont grisés sur un théâtre qui n’en a pas. Ce qui est masqué n’est ni dessiné ni touchable ; un point ambre sur le bouton signale un réglage du menu qui n’est plus celui d’origine, un fond autre que Topo ou des unités autres que km et m compris.</p><p>La loupe, en haut à gauche de la carte, ouvre la <strong>recherche</strong> : une ville, un aérodrome ou une hélistation, un point de la route, une référence, ou un objet nommé d’un calque affiché. Choisir un résultat centre la carte dessus.</p></div>
-        <div class="lang-block" data-lang="en"><p>The <strong>Theatre</strong> selector picks the DCS map: Caucasus, Cold War Germany, Syria, Persian Gulf, Normandy, The Channel, Nevada, Mariana Islands, Mariana Islands WWII, Kola, Sinai, Iraq, Afghanistan, South Atlantic. The <strong>Base map</strong> group, at the top of the <strong>Display ▾</strong> menu, offers <strong>DCS map</strong>, <strong>Topo</strong>, <strong>Satellite</strong> and <strong>Grid</strong>, and, on the Caucasus only, the <strong>Navigation chart (Flappie)</strong>: it does not appear in the row on other theatres. Where DCS has no map, the <strong>DCS map</strong> button is greyed out, and its tooltip reads <strong>DCS map — not available for this theatre</strong>. Each background’s credits stay shown at the foot of the map.</p><p>Under the base map, the <strong>Units</strong> group sets <strong>Distance</strong> (km or NM) and <strong>Altitude</strong> (m or ft). Then, under <strong>Show on the map</strong>, the menu sets what the map shows, in three groups. <strong>Mission</strong>: <strong>Route</strong>, <strong>Ref. points</strong>; <strong>Layers</strong>: <strong>Drawings</strong>, <strong>NATO symbols</strong>, <strong>Imported layers</strong>; <strong>Overlays</strong>: <strong>MGRS grid</strong>, <strong>Towns</strong>, <strong>Airfields</strong>, <strong>Places (Esri)</strong>. Towns show from zoom 10; they are greyed out on Flappie’s chart, which already prints them. Airfields and towns are greyed out on a theatre that has none. What is hidden is neither drawn nor tappable; an amber dot on the button means a setting of the menu is no longer the original one, a base map other than Topo or units other than km and m included.</p><p>The magnifier, at the top left of the map, opens the <strong>search</strong>: a town, an airfield or a heliport, a waypoint, a reference point, or a named item in a shown layer. Picking a result centres the map on it.</p></div>
-      </div>
-
-      <!-- Ce que fait un toucher -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Ce que fait un toucher</h3>
-        <h3 class="lang-block" data-lang="en">What a tap does</h3>
-        <div class="lang-block" data-lang="fr"><p>En haut à droite de la carte, quatre modes disent ce que fait un toucher :</p><ul><li><strong>Point</strong> — ajoute un point au bout de la route ;</li><li><strong>Réf.</strong> — pose un point de référence ;</li><li><strong>Lire</strong> — ne pose rien : un aérodrome ouvre sa fiche, un objet d’un calque montre la sienne ;</li><li><strong>Dessin</strong> — ouvre les outils de dessin de vos propres calques.</li></ul><p>En <strong>Point</strong> et en <strong>Réf.</strong>, un aérodrome touché donne un point à son nom, en capitales ; une cible d’un calque (un point ou un symbole) devient de même un point de la route ou une référence. Un mode qui modifie quelque chose le rend visible s’il était masqué dans <strong>Affichage</strong>.</p></div>
-        <div class="lang-block" data-lang="en"><p>At the top right of the map, four modes set what a tap does:</p><ul><li><strong>Waypoint</strong> — adds a waypoint at the end of the route;</li><li><strong>Ref.</strong> — places a reference point;</li><li><strong>Read</strong> — places nothing: an airfield opens its chart sheet, a layer item shows its own card;</li><li><strong>Draw</strong> — opens the tools for drawing your own layers.</li></ul><p>In <strong>Waypoint</strong> and <strong>Ref.</strong> modes, a tapped airfield gives a point named after it, in capitals; a target in a layer (a point or a symbol) likewise becomes a waypoint or a reference point. A mode that edits something makes it visible if it was hidden under <strong>Display</strong>.</p></div>
-      </div>
-
-      <!-- Construire la route -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Construire la route</h3>
-        <h3 class="lang-block" data-lang="en">Building the route</h3>
-        <div class="lang-block" data-lang="fr"><p>En tête de la section <strong>Route</strong>, une ligne choisit la route : « 1 · STEPPE WIND M3 ▾ » ouvre la liste des routes du théâtre ; <strong>+</strong> ajoute une route ; <strong>…</strong> ouvre <strong>Dupliquer</strong> et <strong>Supprimer</strong> ; dessous, « 1 / 1 routes » donne le rang de la route choisie et le total. Il y a 12 routes au plus : <strong>+</strong> se grise alors, et son info-bulle le dit.</p><p>Touchez la carte pour ajouter un point ; glissez un point pour le déplacer ; le « + » posé sur une branche assez longue insère un point ; il ne paraît qu’en modes <strong>Point</strong> et <strong>Réf.</strong> La route compte <strong>30 points</strong> au plus. Sans toucher la carte, le bloc <strong>Ajouter</strong> place un point par ses <strong>Coordonnées</strong> — MGRS, DMS, DDM ou décimal — ou par <strong>Cap et distance</strong> depuis le dernier point, le cap s’entendant comme celui de la navigation, vrai ou magnétique ; <strong>+ Point</strong> l’ajoute à la route, <strong>+ Réf.</strong> en fait une référence.</p><p>Chaque point a sa ligne dans la section <strong>Route</strong> : un <strong>Nom</strong>, une altitude et sa référence, <strong>SOL</strong> ou <strong>MER</strong>, une vitesse (laissée vide, c’est la vitesse sol de la route ; le point de départ n’en a pas), et × pour le supprimer. Les unités, km ou NM, m ou ft, se choisissent dans le menu <strong>Affichage ▾</strong>, groupe <strong>Unités</strong>. Le champ <strong>Nom de la route</strong> donne son nom à la route. <strong>Groupes…</strong> choisit les groupes qui suivent cette route, ou en crée un ; un groupe ne suit qu'une route. Le Flight Configurator voit le même choix, et ce qu'il change se voit ici. La ligne <strong>Flight Leader</strong> du menu <strong>Exemple ▾</strong> charge l’exemple <strong>STEPPE WIND</strong> du Flight Leader : la route de démonstration STEPPE WIND M3, seule route du théâtre Syrie, que suit le groupe CAESAR du Flight Configurator, avec sa datacard ; il <strong>remplace le travail en cours</strong> de ces trois outils et le message qui suit propose <strong>Restaurer</strong>, qui le rend pendant douze secondes. <strong>Effacer</strong> ouvre une fenêtre : cochez ce qui s’efface (la route sélectionnée, toutes les routes du théâtre, les références, les dessins, les symboles, les calques importés), puis <strong>Effacer la sélection</strong> ; <strong>Tout effacer</strong> demande confirmation et efface, du Route Planner, du Flight Configurator et du Datacard Generator, les groupes, les routes de tous les théâtres, les références, dessins, symboles et calques, et toutes les datacards. Une route qui disparaît (<strong>Supprimer</strong>, <strong>Effacer la sélection</strong>, <strong>Exemple</strong>, l’ouverture d’un jeu de routes) est aussi retirée des groupes qui la suivent. Les unités sont partagées avec le Datacard Generator. Chaque route garde son théâtre : en changer masque les routes des autres théâtres, qui reviennent quand on y retourne. Le fichier de travail garde le théâtre de chaque route : à l’ouverture, chaque route retrouve le sien, et ouvrir un travail, ou un ancien jeu de routes, remplace toutes les routes, de tous les théâtres.</p></div>
-        <div class="lang-block" data-lang="en"><p>At the top of the <strong>Route</strong> section, one line picks the route: “1 · STEPPE WIND M3 ▾” opens the list of the theatre’s routes; <strong>+</strong> adds a route; <strong>…</strong> opens <strong>Duplicate</strong> and <strong>Delete</strong>; below, “1 / 1 routes” gives the rank of the chosen route and the total. There are 12 routes at most: <strong>+</strong> is then greyed out, and its tooltip says so.</p><p>Tap the map to add a waypoint; drag a waypoint to move it; the “+” placed on a long enough leg inserts a waypoint; it only shows in <strong>Waypoint</strong> and <strong>Ref.</strong> modes. The route holds <strong>30 waypoints</strong> at most. Without tapping the map, the <strong>Add</strong> block places a point by its <strong>Coordinates</strong> — MGRS, DMS, DDM or decimal — or by <strong>Heading and distance</strong> from the last waypoint, the heading being read like the navigation’s, true or magnetic; <strong>+ Waypoint</strong> adds it to the route, <strong>+ Ref.</strong> makes it a reference point.</p><p>Each waypoint has its row in the <strong>Route</strong> section: a <strong>Name</strong>, an altitude and its reference, <strong>AGL</strong> or <strong>MSL</strong>, a speed (left empty, it is the route’s ground speed; the starting point has none), and × to delete it. Units, km or NM, m or ft, are chosen in the <strong>Display ▾</strong> menu, <strong>Units</strong> group. The <strong>Route name</strong> field names the route. <strong>Groups…</strong> picks the groups that follow this route, or creates one; a group follows one route. The Flight Configurator sees the same choice, and what it changes shows here. The <strong>Flight Leader</strong> line of the <strong>Example ▾</strong> menu loads the Flight Leader’s <strong>STEPPE WIND</strong> example: the demonstration route STEPPE WIND M3, the only route in the Syria theatre, followed by the Flight Configurator’s CAESAR group, with its datacard; it <strong>replaces the current work</strong> of these three tools and the message that follows offers <strong>Restore</strong>, which brings it back for twelve seconds. <strong>Clear</strong> opens a window: tick what is cleared (the selected route, all the theatre’s routes, the references, the drawings, the symbols, the imported layers), then <strong>Clear selected</strong>; <strong>Clear all</strong> asks for confirmation and clears, from the Route Planner, the Flight Configurator and the Datacard Generator, the groups, the routes of every theatre, the references, drawings, symbols and layers, and all the datacards. A route that disappears (<strong>Delete</strong>, <strong>Clear selected</strong>, <strong>Example</strong>, opening a route set) is removed from the groups that follow it too. Units are shared with the Datacard Generator. Each route keeps its theatre: switching theatre hides the other theatres' routes, which come back when you return. The work file keeps each route's theatre: on opening, every route returns to its own, and opening a work file, or an old route set, replaces all routes, on every theatre.</p></div>
-      </div>
-
-      <!-- Les points de référence -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Les points de référence</h3>
-        <h3 class="lang-block" data-lang="en">Reference points</h3>
-        <div class="lang-block" data-lang="fr"><p>Les <strong>Points de référence</strong> marquent ce qui compte hors de la route : une cible, un repère, un terrain. Il y en a <strong>12</strong> au plus. Posez-les en mode <strong>Réf.</strong> ou par <strong>+ Réf.</strong> ; glissez-les pour les déplacer. Sur la carte, chacun est un losange à sa lettre, A, B, C…, sans trait qui les relie. Dans la navigation, ils viennent après le total, sous <strong>POINTS DE RÉFÉRENCE</strong>, avec leurs coordonnées : ils ne comptent ni dans les branches ni dans le total. Ils passent à la datacard, mais pas au Route Tool de DCS.</p></div>
-        <div class="lang-block" data-lang="en"><p><strong>Reference points</strong> mark what matters off the route: a target, a landmark, an airfield. There are <strong>12</strong> at most. Place them in <strong>Ref.</strong> mode or with <strong>+ Ref.</strong>; drag them to move them. On the map, each is a diamond with its letter, A, B, C…, with no line joining them. In the navigation, they come after the total, under <strong>REFERENCE POINTS</strong>, with their coordinates: they count neither in the legs nor in the total. They go to the datacard, but not to the DCS Route Tool.</p></div>
-      </div>
-
-      <!-- Le tracé et les boîtes de branche -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Le tracé et les boîtes de branche</h3>
-        <h3 class="lang-block" data-lang="en">The track and leg boxes</h3>
-        <div class="lang-block" data-lang="fr"><p>Les <strong>Boîtes de branche</strong> écrivent la navigation sur la carte, une boîte par branche. <strong>Aucune</strong> : une simple étiquette « cap · distance » sur les branches assez longues. <strong>Minimale</strong> : le cap et la distance. <strong>Complète</strong> : en plus, la vitesse, l’altitude d’arrivée, l’ETE et le nom du point d’arrivée. Glissez une boîte pour la déplacer ; une branche trop courte à l’écran n’en a pas.</p><p>La <strong>Vitesse sol</strong> de la route vaut pour chaque branche dont le point n’a pas sa propre vitesse ; elle fait les temps. Les <strong>Traits des minutes</strong> coupent chaque branche toutes les minutes, ou toutes les cinq minutes quand elle est trop serrée, avec leurs chiffres. <strong>Tracé</strong> et <strong>Traits des minutes</strong> se montrent en <strong>Couleur</strong> ou en <strong>Noir</strong>.</p></div>
-        <div class="lang-block" data-lang="en"><p><strong>Leg boxes</strong> write the navigation on the map, one box per leg. <strong>None</strong>: a plain “heading · distance” label on long enough legs. <strong>Minimal</strong>: heading and distance. <strong>Full</strong>: also speed, arrival altitude, ETE, and the name of the arrival waypoint. Drag a box to move it; a leg too short on screen gets none.</p><p>The route’s <strong>Ground speed</strong> applies to every leg whose waypoint has no speed of its own; it sets the times. <strong>Minute marks</strong> cut each leg every minute, or every five minutes when it is too tight, with their numbers. <strong>Route line</strong> and <strong>Minute marks</strong> show in <strong>Colour</strong> or in <strong>Black</strong>.</p></div>
-      </div>
-
-      <!-- Navigation : cap vrai ou magnétique -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Navigation : cap vrai ou magnétique</h3>
-        <h3 class="lang-block" data-lang="en">Navigation: true or magnetic heading</h3>
-        <div class="lang-block" data-lang="fr"><p>Le tableau de la section <strong>Navigation</strong> donne, pour chaque point, son <strong>N°</strong>, son nom et son altitude (<strong>Point · alt.</strong>), ses coordonnées MGRS et DMS, et entre deux points la branche : cap, vitesse, ETE et distance (<strong>MGRS · DMS / cap · distance</strong>). Le <strong>TOTAL</strong> donne la distance et le temps de la route. Le titre du tableau dit le cap employé.</p><p><strong>Cap</strong> : <strong>Vrai</strong> ou <strong>Magnétique</strong>. En magnétique, la <strong>Déclinaison</strong> est <strong>Calculée</strong> ou <strong>Saisie</strong>.</p><ul><li><strong>Calculée</strong> — le modèle magnétique de DCS lui-même, les coefficients que DCS embarque : IGRF pour une année jusqu’à 1984, puis les WMM de 1985 à 2025. Elle s’applique <strong>par branche, au point de départ de la branche</strong> : chaque point montre sa VAR, et le titre en donne l’étendue. L’année est celle de la mission chargée dans HQ pour le même théâtre ; sinon la date reçue avec la route, quand elle vient d’un paquet ou de la mission d’HQ ; sinon l’<strong>Année</strong> saisie ; sinon 1985. Le bouton <strong>Forcer</strong> n’apparaît que si une mission de HQ du même théâtre est chargée, ou si la route a reçu une date ; tant qu’il n’est pas enfoncé, l’<strong>Année</strong> reste celle-là. Enfoncé, il n’agit qu’avec une <strong>Année</strong> valide saisie, de 1900 à 2099 : la mission est alors ignorée. Sous les réglages, une étiquette dit la source de l’année : <strong>MISSION</strong>, <strong>PAQUET</strong>, <strong>FORCÉE</strong>, <strong>SAISIE</strong> ou <strong>PAR DÉFAUT</strong>.</li><li><strong>Saisie</strong> — une seule valeur, <strong>Déclinaison (°)</strong>, en degrés, + vers l’Est, lue en cabine : au CDU de l’A-10C (POSINFO), au DED du F-16 (MVAR) ou à l’HSI du F/A-18. Sans valeur, le cap reste vrai, et l’avertissement le dit : <strong>Déclinaison manquante : cap vrai affiché</strong>.</li></ul></div>
-        <div class="lang-block" data-lang="en"><p>The table in the <strong>Navigation</strong> section gives, for each waypoint, its <strong>No.</strong>, its name and altitude (<strong>Waypoint · alt.</strong>), its MGRS and DMS coordinates, and between two waypoints the leg: heading, speed, ETE, and distance (<strong>MGRS · DMS / heading · distance</strong>). The <strong>TOTAL</strong> gives the route’s distance and time. The table’s title states the heading used.</p><p><strong>Heading</strong>: <strong>True</strong> or <strong>Magnetic</strong>. In magnetic, the <strong>Variation</strong> is <strong>Computed</strong> or <strong>Entered</strong>.</p><ul><li><strong>Computed</strong> — DCS’s own magnetic model, the coefficients DCS ships: IGRF for years up to 1984, then the WMM of 1985 to 2025. It applies <strong>per leg, at the leg’s start point</strong>: each waypoint shows its VAR, and the title gives the range. The year is that of the mission loaded in HQ for the same theatre; otherwise the date received with the route, when it came from a package or the HQ mission; otherwise the <strong>Year</strong> you type; otherwise 1985. The <strong>Override</strong> button only appears when an HQ mission for the same theatre is loaded, or when the route received a date; until it is pressed, the <strong>Year</strong> stays that one. Pressed, it only acts with a valid <strong>Year</strong> typed, from 1900 to 2099: the mission is then ignored. Below the settings, a tag states where the year comes from: <strong>MISSION</strong>, <strong>PACKAGE</strong>, <strong>OVERRIDDEN</strong>, <strong>ENTERED</strong>, or <strong>DEFAULT</strong>.</li><li><strong>Entered</strong> — a single value, <strong>Variation (°)</strong>, in degrees, + East, read in the cockpit: on the A-10C CDU (POSINFO), the F-16 DED (MVAR) or the F/A-18 HSI. With no value, the heading stays true, and a warning says so: <strong>Variation missing: true heading shown</strong>.</li></ul></div>
-      </div>
-
-      <!-- La fiche d’un aérodrome -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">La fiche d’un aérodrome</h3>
-        <h3 class="lang-block" data-lang="en">An airfield’s chart sheet</h3>
-        <div class="lang-block" data-lang="fr"><p>En mode <strong>Lire</strong>, avec les <strong>Aérodromes</strong> affichés, touchez un aérodrome ou une hélistation : sa <strong>fiche</strong> s’ouvre. Elle montre les pages d’une chart de DCS Airfield Charts, une par onglet ; pour une <strong>Hélistation</strong>, les pages du répertoire qui la portent. Pincez pour zoomer, touchez deux fois pour recadrer ; à la souris, la molette zoome. L’édition des charts est rappelée en pied. Rien n’est téléchargé avant votre toucher. Trois replis : <strong>Pas de fiche</strong> — le terrain n’en a pas encore ; <strong>Fiches indisponibles</strong> — le serveur des fiches ne répond pas ; <strong>Page indisponible</strong> — une page ne se charge pas.</p></div>
-        <div class="lang-block" data-lang="en"><p>In <strong>Read</strong> mode, with <strong>Airfields</strong> shown, tap an airfield or a heliport: its <strong>chart sheet</strong> opens. It shows the pages of a DCS Airfield Charts chart, one per tab; for a <strong>Heliport</strong>, the directory pages that list it. Pinch to zoom, double-tap to reframe; with a mouse, the wheel zooms. The charts’ edition is shown at the foot. Nothing is downloaded before your tap. Three fallbacks: <strong>No sheet</strong> — the airfield has none yet; <strong>Sheets unavailable</strong> — the sheet server does not answer; <strong>Page unavailable</strong> — a page does not load.</p></div>
-      </div>
-
-      <!-- Dessiner ses calques -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Dessiner ses calques</h3>
-        <h3 class="lang-block" data-lang="en">Drawing your own layers</h3>
-        <div class="lang-block" data-lang="fr"><p>Le mode <strong>Dessin</strong> ouvre une barre au pied de la carte. Son bouton <strong>Calque</strong> dit où vous dessinez ; touché, il ouvre <strong>Dessiner dans</strong> : choisir un de vos calques, en créer un par <strong>+ Calque</strong>, ou faire une copie modifiable d’un calque CombatFlite par <strong>Copier pour dessiner</strong>. Sans calque, le premier objet en crée un. Les outils :</p><ul><li><strong>Choisir</strong> — touchez un objet pour le modifier ;</li><li><strong>Cercle</strong> — un toucher pour le centre, le rayon à la poignée ; rayon, altitude max., trait et intérieur ;</li><li><strong>Zone</strong> — un toucher par sommet ; <strong>Tracé</strong> <strong>Droit</strong> ou <strong>Courbe</strong> ;</li><li><strong>Ligne</strong> — un toucher par sommet ; <strong>Type</strong> <strong>Ligne</strong>, <strong>FLOT</strong> (avec son <strong>Côté ennemi</strong>, que l’on inverse) ou <strong>Couloir</strong> (avec sa largeur) ;</li><li><strong>Point</strong> — une cible, un DMPI, un point de sortie, une zone de poser ou un autre point ;</li><li><strong>Texte</strong> — <strong>Sans fond</strong> ou sur <strong>Fond blanc</strong> ;</li><li><strong>Orbite</strong> — l’entrée puis la sortie ; largeur, virage, mission, fréquence, altitudes ;</li><li><strong>Boîte</strong> — le début puis la fin de son axe ; longueur, largeur, grille, altitudes ;</li><li><strong>Symbole</strong> — un symbole militaire OTAN : <strong>Camp</strong>, <strong>Style</strong>, <strong>Taille</strong>, le symbole et sa <strong>Désignation</strong> ; pour une unité, aussi <strong>Échelon</strong> et <strong>Formation</strong>.</li></ul><p>Une zone ou une ligne se termine par <strong>Terminer</strong>. Le bouton <strong>Réglages</strong> règle d’avance l’objet à venir, couleur comprise. Un objet choisi se modifie à ses poignées ; sa barre propose <strong>Sommet</strong> (retirer le sommet choisi), <strong>Réglages</strong>, <strong>Copier</strong>, <strong>Suppr.</strong> (avec confirmation) et <strong>OK</strong>. La section <strong>Calques</strong> du panneau liste les calques, à cocher pour les montrer ; × retire un calque, <strong>Retirer tous les calques</strong> les retire tous. Les calques sont gardés dans le navigateur.</p></div>
-        <div class="lang-block" data-lang="en"><p><strong>Draw</strong> mode opens a bar at the foot of the map. Its <strong>Layer</strong> button tells you where you draw; tapped, it opens <strong>Draw in</strong>: pick one of your layers, create one with <strong>+ Layer</strong>, or make an editable copy of a CombatFlite layer with <strong>Copy to draw</strong>. With no layer, the first item creates one. The tools:</p><ul><li><strong>Select</strong> — tap an item to edit it;</li><li><strong>Circle</strong> — one tap for the centre, the radius by the handle; radius, max altitude, line and fill;</li><li><strong>Zone</strong> — one tap per vertex; <strong>Shape</strong> <strong>Straight</strong> or <strong>Curve</strong>;</li><li><strong>Line</strong> — one tap per vertex; <strong>Type</strong> <strong>Line</strong>, <strong>FLOT</strong> (with its <strong>Enemy side</strong>, which you flip) or <strong>Corridor</strong> (with its width);</li><li><strong>Point</strong> — a target, a DMPI, an exit point, an LZ, or another point;</li><li><strong>Text</strong> — <strong>No background</strong> or on a <strong>White background</strong>;</li><li><strong>Orbit</strong> — the entry then the exit; width, turn, mission, frequency, altitudes;</li><li><strong>Box</strong> — the start then the end of its axis; length, width, grid, altitudes;</li><li><strong>Symbol</strong> — a NATO military symbol: <strong>Side</strong>, <strong>Style</strong>, <strong>Size</strong>, the symbol and its <strong>Designation</strong>; for a unit, also <strong>Echelon</strong> and <strong>Higher formation</strong>.</li></ul><p>A zone or a line ends with <strong>Finish</strong>. The <strong>Settings</strong> button sets up the coming item in advance, colour included. A selected item is edited by its handles; its bar offers <strong>Vertex</strong> (remove the selected vertex), <strong>Settings</strong>, <strong>Copy</strong>, <strong>Delete</strong> (with confirmation) and <strong>OK</strong>. The panel’s <strong>Layers</strong> section lists the layers, ticked to show them; × removes a layer, <strong>Remove all layers</strong> removes them all. Layers are kept in the browser.</p></div>
-      </div>
-
-      <!-- Les calques CombatFlite -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Les calques CombatFlite</h3>
-        <h3 class="lang-block" data-lang="en">CombatFlite layers</h3>
-        <div class="lang-block" data-lang="fr"><p><strong>Ouvrir ▾ › Ouvrir une route…</strong> lit aussi un fichier CombatFlite <code>.cf</code>. La fenêtre <strong>Calques CombatFlite</strong> en liste les calques, avec leurs objets : cochez ceux à afficher, puis <strong>Afficher</strong>. Si le fichier nomme un théâtre connu, le Route Planner passe sur ce théâtre. Ces calques s’affichent <strong>en lecture seule</strong>. En mode <strong>Lire</strong>, un objet touché montre sa fiche, selon l’objet : nom, rayon d’un cercle, altitudes, fréquence d’une orbite ; un point ou un symbole montre aussi son MGRS et propose <strong>→ Point de référence</strong>. En <strong>Point</strong> ou en <strong>Réf.</strong>, une cible touchée devient un point ou une référence. Un fichier <code>.cf</code> ne touche jamais la route ; un fichier JSON qui porte des calques sans route ajoute ses calques et laisse la route en place.</p></div>
-        <div class="lang-block" data-lang="en"><p><strong>Open ▾ › Open a route…</strong> also reads a CombatFlite <code>.cf</code> file. The <strong>CombatFlite layers</strong> window lists its layers, with their items: tick the ones to show, then <strong>Show</strong>. If the file names a known theatre, the Route Planner switches to it. These layers are <strong>read-only</strong>. In <strong>Read</strong> mode, a tapped item shows its card, depending on the item: name, a circle’s radius, altitudes, an orbit’s frequency; a point or a symbol also shows its MGRS and offers <strong>→ Reference point</strong>. In <strong>Waypoint</strong> or <strong>Ref.</strong> mode, a tapped target becomes a waypoint or a reference point. A <code>.cf</code> file never touches the route; a JSON file that carries layers but no route adds its layers and leaves the route as it is.</p></div>
-      </div>
-
-      <!-- Figure 2 : ce qui entre, ce qui sort -->
-      <div class="fm-schema">
-        {RP_FEED_SVG}
-        <div class="fm-schema-legend">
-          <span class="lang-block" data-lang="fr">Fig. 2 — Ce qui entre dans le Route Planner, et ce qui en sort.</span>
-          <span class="lang-block" data-lang="en">Fig. 2 — What goes into the Route Planner, and what comes out.</span>
-        </div>
-      </div>
-
-      <!-- Fin du panneau, export vers le briefing -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Exporter vers le briefing</h3>
-        <h3 class="lang-block" data-lang="en">Export to the briefing</h3>
-        <div class="lang-block" data-lang="fr"><p>La section <strong>Route</strong> finit sur le bloc <strong>Ajouter</strong>. Les datacards suivent leurs routes d’elles-mêmes : au Datacard Generator, la liste <strong>Lier à une autre route</strong> de la carte la lie à une route. Le paquet de vol ne s’exporte plus d’ici : c’est le Flight Configurator qui l’exporte.</p><p><strong>Exporter ▾ › Image pour le briefing…</strong> pose sur la carte un <strong>cadre d’export</strong>, <strong>Paysage</strong> ou <strong>Portrait</strong>. Déplacez et zoomez la carte sous le cadre, puis <strong>Exporter</strong> : l’image de la carte reçoit une échelle, une flèche du nord et un cartouche — le nom de la route et son théâtre, le crédit du fond. Dans la suite, elle part au Briefing Generator. <strong>Annuler</strong> ferme le cadre. Un fond venu d’un autre site peut manquer dans l’image : un message le signale.</p></div>
-        <div class="lang-block" data-lang="en"><p>The <strong>Route</strong> section ends on the <strong>Add</strong> block. Datacards follow their routes by themselves: in the Datacard Generator, the card’s <strong>Link to another route</strong> list links it to a route. The flight package is no longer exported from here: the Flight Configurator exports it.</p><p><strong>Export ▾ › Image for the briefing…</strong> lays an <strong>export frame</strong> on the map, <strong>Landscape</strong> or <strong>Portrait</strong>. Pan and zoom the map under the frame, then <strong>Export</strong>: the map image gets a scale, a north arrow and a title strip — the route’s name and theatre, the background’s credit. Within the suite, it goes to the Briefing Generator. <strong>Cancel</strong> closes the frame. A background from another site may be missing from the image: a message says so.</p></div>
-      </div>
-
-      <!-- Ouvrir, sauvegarder, Route Tool de DCS -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Ouvrir, sauvegarder, Route Tool de DCS</h3>
-        <h3 class="lang-block" data-lang="en">Open, save, DCS Route Tool</h3>
-        <div class="lang-block" data-lang="fr"><p>La route est gardée dans le navigateur : elle vous attend à la prochaine ouverture. <strong>Sauvegarder ▾</strong>, en haut, écrit la route sélectionnée ou toutes les routes en fichier JSON, avec leurs points de référence et leurs réglages ; <kbd>Ctrl</kbd>+<kbd>S</kbd> (<kbd>Cmd</kbd>+<kbd>S</kbd> sur Mac) sauvegarde la route sélectionnée. Quand des calques sont présents, la fenêtre de sauvegarde demande ce que le fichier emporte : <strong>La route</strong> et chacun des calques, à cocher. <strong>Ouvrir ▾ › Ouvrir une route…</strong> reconnaît ce qu’on lui donne : une route JSON, qui remplace la route en cours, après confirmation si une route est en cours ; un fichier du Route Tool de DCS ; un fichier CombatFlite.</p><p>Au Route Planner, <strong>Ouvrir ▾ › Importer des routes…</strong> ouvre la même fenêtre que <strong>Ouvrir ▾ › Importer des groupes…</strong> au Flight Configurator : la mission chargée dans HQ, le briefing en cours du Briefing Generator, ou un fichier (paquet de vol <code>.json</code> ou <code>.zip</code>, briefing). Cochez les groupes et, pour chacun, ce qu'il apporte (route, radios, emport, livrée). Un groupe de même nom (majuscules comprises) et de même coalition est complété, sinon il est créé ; une route importée devient une route du Route Planner. Du briefing viennent les groupes, leur nombre d'appareils, leur type (pour un groupe sans escadron, l'appareil choisi au brief Standard) et le plan radio de leur type (au brief Standard, les fréquences avec leur radio et leur canal) ; un appareil que la suite ne connaît pas sous ce nom arrive sans type, à choisir.</p><p>Le <strong>Route Tool</strong> de DCS range toutes les routes d’une carte dans un seul fichier, <code>&lt;théâtre&gt;.lua</code>, dans <code>Saved Games\\DCS\\Config\\RouteToolPresets</code>. Ouvert, ce fichier donne la fenêtre <strong>Ouvrir une route du Route Tool</strong> : choisissez le théâtre, prérempli d’après le nom du fichier, et la route, puis <strong>Ouvrir la route</strong> : elle remplace la route en cours, vide les points de référence et passe sur le théâtre choisi. <strong>Exporter ▾ › Route Tool…</strong> demande le <strong>Nom de la route dans le Route Tool</strong>, puis propose <strong>Ajouter à mon fichier &lt;théâtre&gt;.lua…</strong>, qui vous fait choisir votre fichier et y ajoute la route, en gardant les vôtres, ou <strong>Créer un fichier neuf</strong>, qui ne contient que cette route. Un nom déjà pris est changé, et le message le dit. Copiez ensuite le fichier dans <code>RouteToolPresets</code> : il remplace l’ancien. Le Route Tool n’existe pas pour tous les théâtres — Irak, Afghanistan et Mariannes 1944 en sont privés — et la ligne est alors grisée.</p></div>
-        <div class="lang-block" data-lang="en"><p>The route is kept in the browser: it is waiting for you the next time you open the tool. <strong>Save ▾</strong>, at the top, writes the selected route or all the routes to a JSON file, with their reference points and settings; <kbd>Ctrl</kbd>+<kbd>S</kbd> (<kbd>Cmd</kbd>+<kbd>S</kbd> on a Mac) saves the selected route. When layers are present, the save window asks what the file takes: <strong>The route</strong> and each layer, to tick. <strong>Open ▾ › Open a route…</strong> recognises what you give it: a JSON route, which replaces the current route, after confirmation if a route is in progress; a DCS Route Tool file; a CombatFlite file.</p><p>In the Route Planner, <strong>Open ▾ › Import routes…</strong> opens the same window as <strong>Open ▾ › Import groups…</strong> in the Flight Configurator: the mission loaded in HQ, the Briefing Generator's current briefing, or a file (flight package <code>.json</code> or <code>.zip</code>, briefing). Tick the groups and, for each, what it brings (route, radios, loadout, livery). A group with the same name (case included) and coalition is completed, otherwise it is created; an imported route becomes a Route Planner route. A briefing brings its groups, their number of aircraft, their type (for a group without a squadron, the aircraft picked in the Standard brief) and the radio plan of their type (in the Standard brief, the frequencies with their radio and channel); an aircraft the suite does not know by that name arrives without a type, to be picked.</p><p>The DCS <strong>Route Tool</strong> keeps all routes of a map in one file, <code>&lt;theatre&gt;.lua</code>, in <code>Saved Games\\DCS\\Config\\RouteToolPresets</code>. Opened, that file brings up the <strong>Open a Route Tool route</strong> window: pick the theatre, pre-filled from the file name, and the route, then <strong>Open route</strong>: it replaces the current route, clears the reference points, and switches to the chosen theatre. <strong>Export ▾ › Route Tool…</strong> asks for the <strong>Route name in the Route Tool</strong>, then offers <strong>Add to my &lt;theatre&gt;.lua file…</strong>, which has you pick your file and adds the route to it, keeping yours, or <strong>Create a new file</strong>, which holds only this route. A name already taken is changed, and the message says so. Then copy the file into <code>RouteToolPresets</code>: it replaces the old one. The Route Tool does not exist for every theatre — Iraq, Afghanistan and Mariana Islands WWII lack it — and the row is then greyed out.</p></div>
-      </div>
-
-      <!-- Sur tablette et téléphone -->
-      <div class="fm-prose">
-        <h3 class="lang-block" data-lang="fr">Sur tablette et téléphone</h3>
-        <h3 class="lang-block" data-lang="en">On tablets and phones</h3>
-        <div class="lang-block" data-lang="fr"><p>À partir de 1 100 px de large, le panneau est à gauche et la carte à droite. En dessous, quelle que soit l’orientation, la carte reste fixe au-dessus du panneau, et seul le panneau défile. Entre les deux, une poignée se glisse pour agrandir ou réduire la carte ; deux touchers la remettent à sa taille d’origine. La hauteur choisie est gardée, une pour le portrait, une pour le paysage. Quand le clavier de l’écran s’ouvre sur un champ du panneau, la carte se réduit le temps de la saisie.</p></div>
-        <div class="lang-block" data-lang="en"><p>From 1,100 px wide, the panel sits on the left and the map on the right. Below that, whatever the orientation, the map stays fixed above the panel, and only the panel scrolls. Between the two, a handle drags to enlarge or shrink the map; a double-tap restores its original size. The chosen height is kept, one for portrait, one for landscape. When the on-screen keyboard opens on a panel field, the map shrinks while you type.</p></div>
-      </div>
-
-      <!-- Le cap de la règle de l’éditeur -->
-      <div class="fm-callout warn">
-        <div class="lang-block" data-lang="fr">Le cap de la règle de l’éditeur — La règle de l’éditeur de mission de DCS mesure un <strong>cap grille</strong> : il se rapporte au nord de la grille de la carte, et n’est ni vrai ni magnétique. Il diffère donc du cap du Route Planner, jusqu’à une dizaine de degrés sur la carte Allemagne (guerre froide). Pour comparer, prenez le cap <strong>Vrai</strong> du Route Planner. L’écart qui reste est la convergence de la grille : nulle sur le méridien central de la carte, de plus en plus forte à mesure qu’on s’en éloigne.</div>
-        <div class="lang-block" data-lang="en">The editor ruler’s heading — The DCS mission editor’s ruler measures a <strong>grid heading</strong>: it refers to the map grid’s north, and is neither true nor magnetic. It therefore differs from the Route Planner’s heading, by up to about ten degrees on the Cold War Germany map. To compare, take the Route Planner’s <strong>True</strong> heading. The gap that remains is the grid convergence: zero on the map’s central meridian, growing as you move away from it.</div>
-      </div>
-
-      <!-- Hors ligne -->
-      <div class="fm-callout note">
-        <div class="lang-block" data-lang="fr">Hors ligne — Sans connexion, les fonds de carte et les fiches ne se chargent pas : la carte n’affiche plus que sa grille, avec le bandeau <strong>Fond indisponible — grille seule</strong> ; le choix du <strong>Fond</strong> ne change pas. La route, les références, la navigation et les calques restent utilisables.</div>
-        <div class="lang-block" data-lang="en">Offline — Without a connection, base maps and chart sheets do not load: the map shows only its grid, with the <strong>Map unavailable — grid only</strong> banner; the <strong>Base map</strong> choice does not change. The route, reference points, navigation, and layers stay usable.</div>
-      </div>
-
-    </div><!-- /fm-chapter -->
-  </section><!-- /page-rp -->
+{PAGES_HTML}
 
 
 </main><!-- /fm-root -->
@@ -2818,15 +2152,14 @@ var I18N = {{
     'brand.name':       'Field Manual',
     'brand.sub':        '░ MANUEL OPÉRATIONNEL',
     'index.start.name': 'Par où commencer',
-    'index.start.desc': "Les deux rôles, l'ordre des outils, le fichier de travail",
+    'index.start.desc': "Suite, rôles, gestes",
     'start.hero.title': 'Par où commencer',
-    'index.badge.active': 'Manuel',
-    'index.hq.desc':    'Wing Command Center — configuration escadre',
-    'index.fc.desc':    'Un groupe prêt à appliquer : radios, emport, livrée',
-    'index.bg.desc':    'Générateur de briefings multi-sections',
-    'index.rs.desc':    'Compositeur photo-renseignement canvas',
-    'index.rp.desc':    "Planification d\u2019itin\u00e9raires",
-    'index.dg.desc':    'Datacards de vol d’une page',
+    'index.hq.desc': "Wing, .miz, paquets de vol",
+    'index.fc.desc': "Groupes, radios, emport",
+    'index.bg.desc': "Briefings Standard et Avancé",
+    'index.rs.desc': "Photos de reconnaissance",
+    'index.rp.desc': "Routes, carte, navigation",
+    'index.dg.desc': "Datacards du kneeboard",
     'index.soon':       'À VENIR',
     'btn.back':         '◄ Index',
     'rs.hero.title':    'Recon Station',
@@ -2855,15 +2188,14 @@ var I18N = {{
     'brand.name':       'Field Manual',
     'brand.sub':        '░ OPERATIONAL MANUAL',
     'index.start.name': 'Where to start',
-    'index.start.desc': 'The two roles, the order of the tools, the work file',
+    'index.start.desc': 'Suite, roles, gestures',
     'start.hero.title': 'Where to start',
-    'index.badge.active': 'Manual',
-    'index.hq.desc':    'Wing Command Center — wing configuration',
-    'index.fc.desc':    'A group ready to apply: radios, loadout, livery',
-    'index.bg.desc':    'Multi-section briefing generator',
-    'index.rs.desc':    'Canvas photo-intelligence composer',
-    'index.rp.desc':    'Route planning',
-    'index.dg.desc':    'One-page flight datacards',
+    'index.hq.desc':    'Wing, .miz, flight packages',
+    'index.fc.desc':    'Groups, radios, loadout',
+    'index.bg.desc':    'Standard and Advanced briefings',
+    'index.rs.desc':    'Reconnaissance photos',
+    'index.rp.desc':    'Routes, map, navigation',
+    'index.dg.desc':    'Kneeboard datacards',
     'index.soon':       'COMING',
     'btn.back':         '◄ Index',
     'rs.hero.title':    'Recon Station',
@@ -2972,7 +2304,7 @@ function initTheme() {{
 // ── Routing hash ──────────────────────────────
 var PAGES = ['index', 'start', 'rs', 'hq', 'fc', 'bg', 'dg', 'rp'];
 
-function showPage(id) {{
+function showPage(id, anchor) {{
   if (PAGES.indexOf(id) === -1) id = 'index';
   PAGES.forEach(function(pid) {{
     var el = document.getElementById('page-' + pid);
@@ -2985,6 +2317,11 @@ function showPage(id) {{
   }});
   var root = document.getElementById('fm-root');
   if (root) root.scrollTop = 0;
+  // Une ancre (#start:gestes) : on descend jusqu'à l'élément de la page
+  if (anchor) {{
+    var tgt = document.querySelector('#page-' + id + ' [id="' + anchor + '"]');
+    if (tgt && tgt.scrollIntoView) tgt.scrollIntoView();
+  }}
   // Persister la dernière page
   try {{ localStorage.setItem(KEY_STATE, JSON.stringify({{page: id}})); }} catch(e) {{}}
 }}
@@ -2994,8 +2331,8 @@ function navigate(id) {{
 }}
 
 function onHashChange() {{
-  var hash = location.hash.replace('#', '') || 'index';
-  showPage(hash);
+  var hash = (location.hash.replace('#', '') || 'index').split(':');
+  showPage(hash[0], hash[1]);
 }}
 
 {ZOOM_JS}
@@ -3091,7 +2428,17 @@ grep_absent('@@BAR', 'emplacement de la séquence résolu')
 grep_ok('id="fm-zoom"',     'fenêtre de zoom présente')
 grep_ok('role="dialog" aria-modal="true"', 'fenêtre de zoom : role=dialog, aria-modal')
 grep_ok('--accent-ink:',    '--accent-ink présent')
-grep_ok('id="dgf"',         'figure 2 DG : marqueur propre')
+# Les schémas de flux (HQ, RP, DG, FC) sont retirés avec leur code : leurs contrôles de marqueur propre sont remplacés par ceux des schémas redessinés
+grep_ok('id="bm"',          'schéma BG : marqueur propre')
+grep_ok('id="rps"',         'schéma écran du RP : marqueur propre')
+grep_ok('id="dga"',         'schéma anatomie de la datacard : marqueur propre')
+grep_absent('id="dgf"',     'figure 2 DG (flux) retirée')
+grep_absent('Du groupe au paquet', 'schéma de flux du FC retiré')
+grep_absent('LE HUB DE LA SUITE',  'schéma de flux d\'HQ retiré')
+grep_ok('id="gestes"',      'Par où commencer : la table des gestes a son ancre')
+grep_ok('class="fm-gt"',    'Par où commencer : la table des gestes')
+grep_ok('Restauration impossible', 'Par où commencer : Restaurer refusé (FR)')
+grep_ok('Cannot restore: the data has changed since.', 'Par où commencer : Restaurer refusé (EN)')
 grep_ok('viewBox="0 0 720 425"', 'schéma BG refait (720 × 425)')
 grep_absent('MT_onModuleSave', 'MT_onModuleSave absent')
 grep_absent('app-header',      'app-header absent')
