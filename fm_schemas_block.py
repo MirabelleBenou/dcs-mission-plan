@@ -953,7 +953,7 @@ def build_bg_svg():
     o.append('          ' + sv_line(390, 221, 468, 221, M, dashed=True))
     o.append('          ' + T(429, 214, 8, 'équipage', 'crew'))
     o.append('          ' + sv_path('M300,296 C380,262 480,268 520,244', M, dashed=True))
-    o.append('          ' + T(425, 284, 8, 'METAR décodé', 'decoded METAR'))
+    o.append('          ' + T(440, 277, 8, 'METAR décodé', 'decoded METAR'))
     # la clé
     o.append('          ' + sv_pill(612, 364, 13, 13, 'S', 'S'))
     o.append('          ' + T(630, 374, 9, 'Standard', 'Standard', anchor='start'))
@@ -1007,7 +1007,7 @@ def build_rp_screen_svg():
     o.append('          ' + sv_box(226, 116, 15, 15))
     o.append('          ' + T(233.5, 127, 8.5, '+'))
     o.append('          ' + sv_box(245, 116, 15, 15))
-    o.append('          ' + T(252.5, 127, 8.5, '…'))
+    o.append('          ' + ''.join(f'<circle cx="{cx}" cy="123.5" r="1.3" fill="currentColor"/>' for cx in (248.5, 252.5, 256.5)))
     # la carte, sa grille
     o.append('          ' + sv_box(276, 94, 334, 262))
     for x in (336, 396, 456, 516, 576):
@@ -1023,9 +1023,9 @@ def build_rp_screen_svg():
     # les cinq modes de toucher, en haut à droite de la carte
     modes = [('Point', 'Waypoint'), ('Réf.', 'Ref.'), ('Lire', 'Read'), ('Dessin', 'Draw'), ('Règle', 'Ruler')]
     for i, (fr, en) in enumerate(modes):
-        x = 402 + 41 * i
-        o.append('          ' + sv_box(x, 102, 41, 16, 'rp' if i == 0 else None))
-        o.append('          ' + T(x + 20.5, 113, 8, fr, en))
+        x = 378 + 46 * i
+        o.append('          ' + sv_box(x, 102, 46, 16, 'rp' if i == 0 else None))
+        o.append('          ' + T(x + 23, 113, 8, fr, en))
     # la route : quatre points, une référence
     pts = [(322, 306), (380, 206), (496, 232), (566, 160)]
     o.append('          ' + '<polyline points="' + ' '.join(f'{x},{y}' for x, y in pts) +
