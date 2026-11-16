@@ -252,22 +252,6 @@ FM_EXTRA_CSS = SCHEMAS_CSS + PLANCHES_CSS + r'''
 .sv-pill-t { fill: var(--paper-light); }
 .fm-schema.tall svg { max-height: 425px; }
 
-/* ── La table des gestes de « Par où commencer » ── */
-.fm-gt { width: 100%; border-collapse: collapse; margin: 6px 0 18px; font-size: 13px; line-height: 1.55; }
-.fm-gt th { text-align: left; font-family: var(--f-stencil); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--accent-ink); padding: 6px 8px; border-bottom: 2px solid var(--chapter-accent, var(--fm-accent)); }
-.fm-gt td { vertical-align: top; padding: 8px; border-bottom: 1px solid rgba(0,0,0,.18); color: var(--ink); }
-.fm-gt td:first-child { width: 22%; }
-@media (max-width: 700px) {
-  .fm-gt, .fm-gt tbody, .fm-gt tr, .fm-gt td { display: block; width: 100%; box-sizing: border-box; }
-  .fm-gt thead { display: none; }
-  .fm-gt tr { border-bottom: 1px solid rgba(0,0,0,.18); padding: 6px 0; }
-  .fm-gt td { border: 0; padding: 3px 0; }
-  .fm-gt td:first-child { width: 100%; font-size: 14px; }
-  .fm-gt td[data-h]:not(:first-child)::before { font-weight: 700; }
-  body[lang="fr"] .fm-gt td[data-h]:not(:first-child)::before { content: attr(data-h) "\202F: "; }
-  body[lang="en"] .fm-gt td[data-h]:not(:first-child)::before { content: attr(data-h) ": "; }
-}
-
 /* ── ZOOM : image ou schéma ouvert plein écran ── */
 .fm-zoom-host { position: relative; }
 [data-zoomable] { cursor: zoom-in; }
@@ -793,7 +777,7 @@ PANEL_HTML = {t: panel_html(t) for t in ('hq', 'bg', 'rs', 'rp', 'dg', 'fc')}
 # Les pages du manuel : une seule source de texte, FR et EN bloc à bloc
 # ═════════════════════════════════════════════════════════════════════════════════
 # Un bloc = (genre, FR, EN). Genres : h (titre), p (un ou plusieurs paragraphes), ul (liste), note / warn (encadré),
-# tbl (table), raw (HTML tel quel, panneaux et schémas). Les liens : [[page|texte]] (page : hq, bg, rs, fc, rp, dg, start, start:gestes).
+# raw (HTML tel quel, panneaux et schémas). Les liens : [[page|texte]] (page : hq, bg, rs, fc, rp, dg, start, start:gestes).
 
 def _typo_fr(t):
     t = t.replace('« ', '«' + _NBSP_FINE).replace(' »', _NBSP_FINE + '»')
@@ -834,13 +818,6 @@ def _render(blocks, pid):
         elif kind == 'ul':
             prose.append(_lb('fr', '<ul>' + ''.join('<li>' + _md(x, True) + '</li>' for x in fr) + '</ul>'))
             prose.append(_lb('en', '<ul>' + ''.join('<li>' + _md(x) + '</li>' for x in en) + '</ul>'))
-        elif kind == 'tbl':
-            def tb(rows, f):
-                head, body = rows[0], rows[1:]
-                return ('<table class="fm-gt"><thead><tr>' + ''.join('<th>' + _md(c, f) + '</th>' for c in head) + '</tr></thead><tbody>'
-                        + ''.join('<tr>' + ''.join('<td data-h="' + _esc(head[i]) + '">' + _md(c, f) + '</td>' for i, c in enumerate(r)) + '</tr>' for r in body)
-                        + '</tbody></table>')
-            prose.append(_lb('fr', tb(fr, True))); prose.append(_lb('en', tb(en, False)))
         elif kind in ('note', 'warn'):
             flush()
             out.append(f'      <div class="fm-callout {kind}">\n        ' + _lb('fr', _md(fr, True)) + '\n        ' + _lb('en', _md(en)) + '\n      </div>')

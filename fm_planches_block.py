@@ -503,6 +503,23 @@ class Plate:
                 f'data-aria-fr="{_q(aria_fr)}" data-aria-en="{_q(aria_en)}">\n          ' + sv_defs(marker))
 
     # ── la légende numérotée ─────────────────────────────────────────────────────
+    def _body(self, t, lang):
+        """Le corps d'une ligne de légende : un texte, ou une suite de textes et de libellés de l'outil (L), écrits tels que l'écran les affiche."""
+        if isinstance(t, str):
+            return t
+        out = ''
+        for x in t:
+            if isinstance(x, str):
+                out += x
+            else:
+                if x.kind != 'L':
+                    PLANCHE_ERRORS.append('FAIL planche %s : le corps d’une légende n’admet que du texte et des libellés de l’outil' % self.pid)
+                    continue
+                a, b = self._label(x)
+                out += a if lang == 'fr' else b
+                self.counts['L'] += 1
+        return out
+
     def legend_html(self, rows):
         """rows : (n, parties du titre, texte FR, texte EN). Le titre en gras est un libellé de l'outil ou un titre du manuel."""
         li = []
@@ -511,6 +528,7 @@ class Plate:
             if kind not in ('L', 'M'):
                 PLANCHE_ERRORS.append('FAIL planche %s : le titre en gras de la légende (ligne %s) doit être un libellé de l’outil ou un titre du manuel : « %s »' % (self.pid, n, fr))
             self.counts[kind] += 1
+            tf, te = self._body(tf, 'fr'), self._body(te, 'en')
             li.append(f'<li><span class="pl-n">{n}</span><span class="lang-block" data-lang="fr"><b>{_esc(fr_typo(fr))}</b> — {_esc(fr_typo(tf))}</span>'
                       f'<span class="lang-block" data-lang="en"><b>{_esc(en)}</b> — {_esc(te)}</span></li>')
         return '<ol class="pl-legend">' + ''.join(li) + '</ol>'
@@ -1470,7 +1488,7 @@ def _rp_map(P, x0, y0, x1, y1, scale=1.0, narrow=False):
     # un point de référence et un aérodrome
     rx, ry = at(.30, .20)
     o.append(f'<path d="M{_n(rx)},{_n(ry - 7)} l7,7 l-7,7 l-7,-7 z" class="sv-box" stroke="currentColor" stroke-width="1.2"/>')
-    o.append(P.text(rx, ry + 3, 7.5 if narrow else 8, D('A'), extra=' font-weight="700"'))
+    o.append(P.text(rx, ry + 3, 8, D('A'), extra=' font-weight="700"'))
     if not narrow:
         o.append(P.text(rx + 11, ry + 3, 8, D('ÎLE PETRA'), anchor='start', op=.85))
     ax, ay = at(.16, .74)
@@ -1502,9 +1520,9 @@ def _rp_map(P, x0, y0, x1, y1, scale=1.0, narrow=False):
         o.append(P.text(px, py + 3, 8, D(str(n)), extra=' font-weight="700"'))
         if narrow:
             continue                       # au téléphone, les numéros seuls
-        if n == 0:
+        if n in (0, 4):                    # sous le numéro (le nom de 4 sortait du cadre à droite, à côté)
             o.append(P.text(px, py + 19, 8, D(name), op=.9))
-        elif n in (1, 4):
+        elif n == 1:
             o.append(P.text(px + 11, py + 3, 8, D(name), anchor='start', op=.9))
     anc['route'] = (pts[0][2] + 7.5, pts[0][3])
     # la boîte de la branche 3 → 4
@@ -1975,8 +1993,8 @@ def _bg_legend_rows():
          'l’outil s’ouvre sur une page blanche, en Standard ; les champs vides disent en grisé ce qu’on y met, et cet indice n’est ni dans l’aperçu ni à l’export. Une date qui n’a pas la forme attendue est gardée telle quelle, et le champ prend la couleur d’avertissement.',
          'the tool opens on a blank page, in Standard; empty fields say in grey what goes in them, and that hint is neither in the preview nor in the export. A date that does not have the expected form is kept as it is, and the field takes the warning colour.'),
         (7, [L('bg', 'editor.simple.situation.summary')],
-         'la carte, les menaces et les cibles sont communes aux deux formats : si une carte est chargée, ou si des menaces ou des cibles sont saisies, une page de carte suit, puis les pages de photos.',
-         'the map, the threats and the targets are common to both formats: if a map is loaded, or threats or targets are entered, a map page follows, then the photo pages.'),
+         ['un point de situation par ligne, ✕ le retire, « ', L('bg', 'editor.sitac.addPoint'), ' » en ajoute un, puis le champ ', L('bg', 'editor.simple.map'), ' plus bas dans la section. La carte, les menaces et les cibles sont communes aux deux formats : si une carte est chargée, ou si des menaces ou des cibles sont saisies, une page de carte suit, puis les pages de photos.'],
+         ['one situation point per line, ✕ removes it, “', L('bg', 'editor.sitac.addPoint'), '” adds one, then the ', L('bg', 'editor.simple.map'), ' field further down in the section. The map, the threats and the targets are common to both formats: if a map is loaded, or threats or targets are entered, a map page follows, then the photo pages.']),
         (8, [M('Les autres sections', 'The other sections')],
          'Mission, Coordination, Photos et Métadonnées : chacune se replie par l’icône à droite de son en-tête. Au téléphone, l’éditeur passe en onglets.',
          'Mission, Coordination, Photos and Metadata: each folds by the icon at the right of its header. On a phone, the editor switches to tabs.'),
