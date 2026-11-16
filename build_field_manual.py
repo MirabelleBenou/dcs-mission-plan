@@ -913,7 +913,7 @@ def build_toc():
             rows.append('    ' + _a_go(f'{pid}:{pid}-{n}', 'fmnav-sec',
                                        _lb('fr', _plain(_md(f, True)), 'span') + _lb('en', _plain(_md(e)), 'span')))
     return ('<div class="fmnav-ov" id="fmnav-ov" aria-hidden="true" onclick="fmTocSet(false,false)"></div>\n'
-            '<nav class="fmnav-panel" id="fmnav-panel" data-i18n-aria-label="nav.contents" aria-label="Sommaire">\n'
+            '<nav class="fmnav-panel" id="fmnav-panel" inert data-i18n-aria-label="nav.contents" aria-label="Sommaire">\n'
             '  <div class="fmnav-head"><span data-i18n="nav.contents">Sommaire</span>'
             '<button type="button" id="fmnav-x" class="tb-btn fmnav-x" onclick="fmTocSet(false,true)" data-i18n-aria-label="nav.close" aria-label="Fermer le sommaire" data-i18n-title="nav.close" title="Fermer le sommaire">×</button></div>\n'
             + '\n'.join(rows) + '\n</nav>')
@@ -1432,11 +1432,11 @@ body.fmnav-open .fmnav-ov {{ display: block; }}
   border-top: 3px solid var(--amber); border-left: 1px solid var(--amber-dark);
   box-shadow: 0 12px 28px rgba(0,0,0,.55), 0 2px 0 rgba(0,0,0,.35);
   scrollbar-width: thin; scrollbar-color: var(--amber-dark) transparent;
-  visibility: hidden; transform: translateX(105%); transition: transform .18s ease-out, visibility 0s linear .18s;
+  transform: translateX(calc(100% + 48px)); transition: transform .18s ease-out;   /* fermé : hors de la vue, ombre comprise (elle porte à gauche de 38 px) ; l'attribut inert l'ôte du clavier */
 }}
-body.fmnav-open .fmnav-panel {{ visibility: visible; transform: none; transition: transform .18s ease-out, visibility 0s linear 0s; }}
+body.fmnav-open .fmnav-panel {{ transform: none; }}
 @media (prefers-reduced-motion: reduce) {{
-  .fmnav-panel, body.fmnav-open .fmnav-panel {{ transition: none; }}
+  .fmnav-panel {{ transition: none; }}
 }}
 @media print {{
   .fmnav-panel, .fmnav-ov {{ display: none !important; }}
@@ -2391,15 +2391,12 @@ function fmTocIsOpen() {{ return document.body.classList.contains('fmnav-open');
 
 // Ouvre ou ferme le panneau ; focus sur × à l'ouverture, sur le bouton Sommaire à la fermeture si back
 function fmTocSet(open, back) {{
-  var b = document.getElementById('btn-toc'), x = document.getElementById('fmnav-x');
-  if (!b || !x || open === fmTocIsOpen()) return;
+  var b = document.getElementById('btn-toc'), x = document.getElementById('fmnav-x'), p = document.getElementById('fmnav-panel');
+  if (!b || !x || !p || open === fmTocIsOpen()) return;
   document.body.classList.toggle('fmnav-open', open);
   b.setAttribute('aria-expanded', open ? 'true' : 'false');
-  if (open) {{
-    // la visibilité passe à visible sans délai (feuille) : × est focalisable dès l'image suivante
-    requestAnimationFrame(function() {{ x.focus(); }});
-  }} else if (back) b.focus();
-  else if (document.getElementById('fmnav-panel').contains(document.activeElement)) document.activeElement.blur();   // le panneau se masque : le focus ne reste pas dans un élément caché
+  p.inert = !open;            // fermé : inert (hors du clavier et des aides techniques) ; ouvert : le focus de × se donne aussitôt, une fois
+  if (open) x.focus(); else if (back) b.focus();
 }}
 
 // Un lien du sommaire ou du bas de chapitre (le manuel est dans un cadre srcdoc : jamais de href seul) ; le même hash ne déclenche pas hashchange
@@ -2579,6 +2576,8 @@ for _id in ('btn-index', 'btn-toc'):
 grep_ok('aria-controls="fmnav-panel" aria-expanded="false"', 'Sommaire : aria-controls et aria-expanded')
 grep_ok('<nav class="fmnav-panel" id="fmnav-panel"', 'sommaire : le panneau est dans le HTML du build')
 grep_ok('id="fmnav-x"', 'sommaire : le bouton ×')
+grep_ok('<nav class="fmnav-panel" id="fmnav-panel" inert', 'sommaire : fermé, le panneau est inert')
+grep_absent('visibility: hidden; transform: translateX', 'sommaire : plus de visibility sur le panneau')
 grep_absent('fm-back-btn', 'l\'ancien bouton « ◄ Index » de la page (et sa règle)')
 grep_absent('btn.back', 'la clé btn.back (plus lue)')
 _rows = re.findall(r'<a class="fmnav-ch" href="#(\w+)"', src)
