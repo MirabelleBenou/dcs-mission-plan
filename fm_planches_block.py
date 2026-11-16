@@ -387,6 +387,8 @@ PLANCHES_CSS = r'''
 .fm-plate-fig .pl-tall { display: none; }
 @media (max-width: 700px) { .fm-plate-fig .pl-wide { display: none; } .fm-plate-fig .pl-tall { display: block; } .fm-plate { padding: 10px; } }
 .fm-plate-fig svg circle.sv-box { fill: var(--paper-light); }
+/* la vue de face du Mi-24P (data/aircraft_views.json) : encre de la planche, fond de papier */
+.fm-plate-fig svg .pl-view-bg { fill: var(--paper-light); }
 .pl-legend { list-style: none; margin: 14px 0 10px; padding: 0 0 0 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 22px; color: var(--ink); }
 @media (max-width: 700px) { .pl-legend { grid-template-columns: 1fr; } }
 .pl-legend li { display: flex; gap: 8px; align-items: baseline; font-size: 13px; line-height: 1.45; opacity: .9; margin-bottom: 4px; }
@@ -686,6 +688,30 @@ def _fc_radios(P, ux, uw, ry, recopy):
     return o, ry2
 
 
+_VIEWS = {}
+
+
+def aircraft_front_view(ac):
+    """La vue de face d'un appareil, telle que le Flight Configurator l'affiche : lue dans data/aircraft_views.json (lecture seule), recolorée à l'encre de la planche.
+    Renvoie (groupe SVG sans son cadre, largeur, hauteur) ; une structure inattendue (autres couleurs, autre nombre de tracés) arrête le build."""
+    if ac not in _VIEWS:
+        try:
+            import json
+            with open(os.path.join(HERE, 'data', 'aircraft_views.json'), encoding='utf-8') as fh:
+                raw = json.load(fh)[ac]['svg']
+            m = re.match(r'\s*<svg\b[^>]*viewBox="0 0 ([\d.]+) ([\d.]+)"[^>]*>(.*)</svg>\s*$', raw, flags=re.S)
+            body = m.group(3)
+            cols = set(re.findall(r'(?:fill|stroke)="(#[0-9a-fA-F]+)"', body))
+            if len(re.findall(r'<path\b', body)) != 4 or cols != {'#ffffff', '#241f21'} or re.search(r'<(?!/?path\b)\w', body):
+                raise ValueError('structure inattendue (tracés, couleurs ou éléments)')
+            body = body.replace('fill="#ffffff"', 'class="pl-view-bg"').replace('stroke="#241f21"', 'stroke="currentColor"')
+            _VIEWS[ac] = (body, float(m.group(1)), float(m.group(2)))
+        except Exception as e:     # noqa: BLE001
+            PLANCHE_ERRORS.append('FAIL planche fc : la vue de face de %s ne se lit pas dans data/aircraft_views.json (%s)' % (ac, e))
+            _VIEWS[ac] = ('', 344.34, 270.792)
+    return _VIEWS[ac]
+
+
 def _fc_loadout_block(P, x, y, w, narrow):
     """Le bloc EMPORT : l'unité choisie, la vue de face, deux stations, Symétrique, la masse, carburant et le reste, Partir de et Garder. Renvoie (SVG, hauteur, ancres)."""
     o = [sv_box(x, y, w, 0)]          # le cadre est posé en dernier (hauteur connue)
@@ -694,29 +720,33 @@ def _fc_loadout_block(P, x, y, w, narrow):
     o.append(P.text(x + 8, y + 38, 8, D('CAESAR · CAESAR-1'), anchor='start'))
     s, _w = P.pill(x + 8 + 4.9 * 17 + 6, y + 30, [D('Mi-24P')])
     o.append(s)
-    # la vue de face : voilure, fuselage, six stations numérotées
-    cx = x + w / 2
-    wl = y + 64
-    o.append(f'<line x1="{_n(x + 24)}" y1="{_n(wl)}" x2="{_n(x + w - 24)}" y2="{_n(wl)}" stroke="currentColor" stroke-width="1.2" opacity=".6"/>')
-    o.append(f'<ellipse cx="{_n(cx)}" cy="{_n(wl - 4)}" rx="14" ry="10" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".6"/>')
+    # la vue de face du Mi-24P, celle de la production, puis les six stations numérotées de 6 à 1
+    body, vw0, vh0 = aircraft_front_view('Mi-24P')
+    vw = 150 if not narrow else 128
+    k = vw / vw0
+    vh = vh0 * k
+    vt = y + 44
+    o.append(f'<g transform="translate({_n(x + (w - vw) / 2)},{_n(vt)}) scale({_n(k)})" opacity=".85">{body}</g>')
+    wl = vt + vh + 6
     for k in range(6):
         px = x + 30 + k * (w - 60) / 5
-        o.append(f'<rect x="{_n(px - 6)}" y="{_n(wl + 2)}" width="12" height="9" fill="none" stroke="currentColor" stroke-width="1" opacity=".7"/>')
-        o.append(P.text(px, wl + 22, 8, D(str(6 - k)), op=.7))
+        o.append(f'<rect x="{_n(px - 6)}" y="{_n(wl)}" width="12" height="9" fill="none" stroke="currentColor" stroke-width="1" opacity=".7"/>')
+        o.append(P.text(px, wl + 20, 8, D(str(6 - k)), op=.7))
+    dy = wl + 30 - (y + 94)
     # deux stations dans la liste
-    sy = y + 94
+    sy = y + 94 + dy
     fw = w - 18 - 54
     for k, (n, arme, kg) in enumerate((('1', '2 x 9M114 Shturm', '104 kg'), ('2', 'B-8V20A - 20 x S-8KOM', '348 kg'))):
         yy = sy + k * 18
         o.append(P.text(x + 8, yy + 11, 8, D(n), anchor='start', op=.8))
         o.append(P.field(x + 18, yy, fw, 15, [D(arme)], size=8))
         o.append(P.text(x + w - 8, yy + 11, 8, D(kg), anchor='end', op=.75))
-    sym = y + 138
+    sym = y + 138 + dy
     o.append(P.tick(x + 8, sym, True))
     o.append(P.text(x + 20, sym + 7, 8, L('fc', 'cmp.sym'), anchor='start'))
     o.append(P.text(x + 8, sym + 24, 8, L('fc', 'cmp.mass'), D(' 1 600 kg'), anchor='start', op=.8))
     # carburant, leurres, paillettes, canon : deux par rangée (un libellé comme « Carburant (kg) » ne tient pas dans le quart de la largeur au corps 8)
-    fy = y + 168
+    fy = y + 168 + dy
     fwid = (w - 16 - 6) / 2
     last = None
     for k, (lab, val) in enumerate(((L('fc', 'lo.fuel', args={'u': 'kg'}), '1701'), (L('fc', 'lo.flare'), '192'), (L('fc', 'lo.chaff'), '0'), (L('fc', 'lo.gun'), '100'))):

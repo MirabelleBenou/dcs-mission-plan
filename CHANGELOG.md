@@ -15,6 +15,9 @@ The sections per tool, further down, keep the history of each tool up to v1.24.0
 - **Open ▾ › Open a route or layers…** now says that it also reads CombatFlite layers (.cf).
 - In Read mode, an airfield inside a CombatFlite zone opens its chart sheet again, instead of the zone's sheet.
 
+#### Field Manual
+- The HQ, Flight Configurator and Datacard Generator chapters now open their gestures with a drawing of the screen: numbered bubbles point to each area, and the numbered legend below says what it does; on a phone, a tall version of the drawing. The windows without a drawing (HQ's Wing, flight packages, Dynamic Spawn) keep a short text after the legend. The build checks that every label drawn exists in its tool.
+
 ---
 
 ## Mission Plan — landing
