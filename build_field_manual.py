@@ -787,7 +787,7 @@ def _md(t, fr=False):
     t = _esc(t)
     t = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', t)
     t = re.sub(r'`(.+?)`', r'<code>\1</code>', t)
-    t = re.sub(r'\[\[([\w:]+)\|(.+?)\]\]', r'<a href="#\1" onclick="location.hash=&#39;\1&#39;;return false">\2</a>', t)
+    t = re.sub(r'\[\[([\w:-]+)\|(.+?)\]\]', r'<a href="#\1" onclick="location.hash=&#39;\1&#39;;return false">\2</a>', t)
     return _typo_fr(t) if fr else t
 
 def _lb(lang, inner, tag='div'):
@@ -931,8 +931,8 @@ PAGES_SRC['start'] = [
     ('p', ['Les trois outils du Flight Leader partagent leurs groupes en direct : leur ordre n’est pas imposé, mais pour une datacard complète le Flight Configurator (emport, carburant, poids) passe avant l’export du Datacard Generator. Le seul retour qui se **fusionne** est le paquet de vol du Flight Configurator : rouvrir le fichier de travail d’un Flight Leader remplace tout le travail, et plusieurs Flight Leaders ne se rassemblent que par leurs paquets.'], ['The three Flight Leader tools share their groups live: their order is not imposed, but for a complete datacard the Flight Configurator (loadout, fuel, weight) comes before the Datacard Generator export. The only return that **merges** is the Flight Configurator’s flight package: reopening a Flight Leader’s work file replaces all the work, and several Flight Leaders come together only through their packages.']),
     ('h', "Les gestes, et ce qu’ils gardent", "The gestures, and what they keep"),
     ('p',
-     ["Les mêmes gestes ont le même sens dans tous les outils. La planche dit lesquels remplacent du travail, et ce qui reste."],
-     ["The same gestures mean the same thing in every tool. The drawing says which ones replace work, and what stays."]),
+     ["Les mêmes gestes ont le même sens dans tous les outils. La planche, puis les lignes qui la suivent, disent lesquels remplacent du travail, et ce qui reste."],
+     ["The same gestures mean the same thing in every tool. The drawing, then the lines that follow it, say which ones replace work, and what stays."]),
     ('raw', START_PLATE_HTML, ''),
     ('p',
      ["**Effacer**, après confirmation : au BG, il vide le briefing ; à RS, l’image, les annotations, la légende et le bloc d’informations ; au RP, au DG et au FC, « Tout effacer ? » vide les groupes, les routes, les calques et les datacards des trois outils (au RP, une fenêtre à cocher) ; à HQ, il retire la mission ouverte. Il garde : à RS, les logos, les réglages, le Wing ; au RP, au DG et au FC, les presets, le théâtre, les unités, les réglages ; à HQ, le Wing.",
@@ -1102,8 +1102,8 @@ PAGES_SRC['rp'] = [
      ["**Open ▾ › Open a route or layers…** also reads a CombatFlite (.cf) file: the window lists its layers; tick the ones to show, then **Show**.  These layers are read-only: in Read mode, a touched object shows its sheet and offers → Reference point. A .cf file never touches the route."]),
     ('h', "Ouvrir, importer, sauvegarder", "Opening, importing, saving"),
     ('p',
-     ["Le travail est gardé dans le navigateur. **Sauvegarder**, ou Ctrl+S, écrit le fichier de travail de la suite. **Ouvrir ▾ › Ouvrir une route ou des calques…** reconnaît ce qu’on lui donne : une route JSON, un fichier du Route Tool de DCS ou un fichier CombatFlite. **Importer des routes…** ouvre la [[start:gestes|fenêtre d’import commune]]."],
-     ["The work is kept in the browser. **Save**, or Ctrl+S, writes the suite’s work file. **Open ▾ › Open a route or layers…** recognises what it is given: a JSON route, a DCS Route Tool file or a CombatFlite file. **Import routes…** opens the [[start:gestes|common import window]]."]),
+     ["Le travail est gardé dans le navigateur. **Sauvegarder**, ou Ctrl+S, écrit le fichier de travail de la suite. **Ouvrir ▾ › Ouvrir une route ou des calques…** reconnaît ce qu’on lui donne : une route JSON, un fichier du Route Tool de DCS ou un fichier CombatFlite. **Importer des routes…** ouvre la [[start:start-4|fenêtre d’import commune]]."],
+     ["The work is kept in the browser. **Save**, or Ctrl+S, writes the suite’s work file. **Open ▾ › Open a route or layers…** recognises what it is given: a JSON route, a DCS Route Tool file or a CombatFlite file. **Import routes…** opens the [[start:start-4|common import window]]."]),
     ('h', "Le Route Tool de DCS", "The DCS Route Tool"),
     ('p', ['Le Route Tool range toutes les routes d’une carte dans un fichier <théâtre>.lua, dans `Saved Games\\DCS\\Config\\RouteToolPresets`. **Ouvrir une route ou des calques…** sur ce fichier ouvre une fenêtre : choisissez le théâtre et la route ; elle remplace la route en cours. **Exporter ▾ › Route Tool…** demande un nom, puis ajoute la route à votre fichier, ou crée un fichier neuf ; copiez-le ensuite dans RouteToolPresets. La ligne est grisée sur un théâtre sans Route Tool.'], ['The Route Tool keeps all of a map’s routes in a <theatre>.lua file, in `Saved Games\\DCS\\Config\\RouteToolPresets`. **Open a route or layers…** on that file opens a window: choose the theatre and the route; it replaces the current route. **Export ▾ › Route Tool…** asks for a name, then adds the route to your file, or creates a new file; copy it afterwards into RouteToolPresets. The line is greyed out on a theatre with no Route Tool.']),
     ('h', "L’image pour le briefing", "The image for the briefing"),
@@ -1139,7 +1139,7 @@ PAGES_SRC['dg'] = [
     ('h', "La navigation", "Navigation"),
     ('p', ['Un point sans coordonnées se place par cap et distance depuis son voisin. Les points de référence sont ceux du Route Planner ; chaque datacard choisit ceux qu’elle affiche. **Lier à une autre route** lie la carte affichée à une route du Route Planner ; … › **Une datacard par route** en crée une par route d’un coup. Les réglages de cap sont communs au Route Planner et au Datacard Generator.'], ['A point with no coordinates is placed by heading and distance from its neighbour. The reference points are the Route Planner’s; each datacard chooses which ones it shows. **Link to another route** links the displayed card to a Route Planner route; … › **One datacard per route** creates one per route at once. The heading settings are shared by the Route Planner and the Datacard Generator.']),
     ('h', "Importer", "Importing"),
-    ('p', ['Les **groupes** (mission d’HQ, paquet de vol, briefing en cours) s’importent par … › **Importer des groupes**, la [[start:gestes|fenêtre d’import commune]] : une carte par groupe, avec, pour la mission d’HQ, la date, l’heure et la météo. **Ouvrir ▾ › Importer…** lit un **briefing**, en cours ou en fichier, et ajoute une datacard par vol coché, avec tout ce que le briefing en dit ; une ligne Données générales couvre un briefing sans groupe. Elle lit aussi une route ou un jeu de routes depuis un fichier : **Lier la carte à cette route** ou **Nouvelle datacard**. Restent à la main les horaires, et le carburant et l’emport quand le FC ne les donne pas. Une datacard importée vit ensuite seule : modifier le briefing ne la change pas.'], ['The **groups** (HQ mission, flight package, current briefing) are imported through … › **Import groups**, the [[start:gestes|common import window]]: one card per group, with, for the HQ mission, the date, time and weather. **Open ▾ › Import…** reads a **briefing**, current or from a file, and adds a datacard per ticked flight, with everything the briefing says about it; a General data line covers a briefing with no group. It also reads a route or a set of routes from a file: **Link the card to this route** or **New datacard**. Still to do by hand: the timings, and the fuel and loadout when the FC does not provide them. An imported datacard then lives on its own: changing the briefing does not change it.']),
+    ('p', ['Les **groupes** (mission d’HQ, paquet de vol, briefing en cours) s’importent par … › **Importer des groupes**, la [[start:start-4|fenêtre d’import commune]] : une carte par groupe, avec, pour la mission d’HQ, la date, l’heure et la météo. **Ouvrir ▾ › Importer…** lit un **briefing**, en cours ou en fichier, et ajoute une datacard par vol coché, avec tout ce que le briefing en dit ; une ligne Données générales couvre un briefing sans groupe. Elle lit aussi une route ou un jeu de routes depuis un fichier : **Lier la carte à cette route** ou **Nouvelle datacard**. Restent à la main les horaires, et le carburant et l’emport quand le FC ne les donne pas. Une datacard importée vit ensuite seule : modifier le briefing ne la change pas.'], ['The **groups** (HQ mission, flight package, current briefing) are imported through … › **Import groups**, the [[start:start-4|common import window]]: one card per group, with, for the HQ mission, the date, time and weather. **Open ▾ › Import…** reads a **briefing**, current or from a file, and adds a datacard per ticked flight, with everything the briefing says about it; a General data line covers a briefing with no group. It also reads a route or a set of routes from a file: **Link the card to this route** or **New datacard**. Still to do by hand: the timings, and the fuel and loadout when the FC does not provide them. An imported datacard then lives on its own: changing the briefing does not change it.']),
     ('h', "Quand la page déborde", "When the page overflows"),
     ('p',
      ["La fiche garde toutes ses boîtes, même vides, pour être imprimée et complétée à la main. Quand tout ne tient pas, la navigation passe sur une page 2, avec un en-tête réduit. Si la page 1 déborde encore, l’éditeur affiche « Contenu tronqué » : allégez le contenu."],
@@ -1167,8 +1167,8 @@ PAGES_SRC['fc'] = [
      ["The field is a list, the unit type’s: the game’s liveries and the custom liveries declared in HQ’s Wing window. It always shows a name, and that name is what the package carries. Until you choose one, it is the unit’s livery in the mission open in HQ, otherwise the type’s default livery declared in Wing, otherwise the first in the list. When the package is applied, HQ lets you untick the livery."]),
     ('h', "Importer", "Importing"),
     ('p',
-     ["**Importer des groupes…** ouvre la [[start:gestes|fenêtre d’import commune]] ; une unité sans type se règle une fois son type choisi. **Ouvrir ▾ › Ouvrir une configuration…** lit encore l’ancien fichier du module, avec vos groupes et « Mes presets ». Si les groupes sont sur un autre théâtre, un bandeau propose d’y revenir ou de retirer leurs routes."],
-     ["**Import groups…** opens the [[start:gestes|common import window]]; a unit with no type is set up once its type is chosen. **Open ▾ › Open a configuration…** still reads the module’s old file, with your groups and “My presets”. If the groups are on another theatre, a banner offers to go back there or to remove their routes."]),
+     ["**Importer des groupes…** ouvre la [[start:start-4|fenêtre d’import commune]] ; une unité sans type se règle une fois son type choisi. **Ouvrir ▾ › Ouvrir une configuration…** lit encore l’ancien fichier du module, avec vos groupes et « Mes presets ». Si les groupes sont sur un autre théâtre, un bandeau propose d’y revenir ou de retirer leurs routes."],
+     ["**Import groups…** opens the [[start:start-4|common import window]]; a unit with no type is set up once its type is chosen. **Open ▾ › Open a configuration…** still reads the module’s old file, with your groups and “My presets”. If the groups are on another theatre, a banner offers to go back there or to remove their routes."]),
     ('note',
      "Crédits — Les tables d’armes viennent de **pydcs** (LGPL-3.0-or-later), reprises de Mission Tools ; les dessins de la vue de face sont de **Goldwolf** (DCS Reference Guide), utilisés avec son accord et **hors de la licence AGPL** du dépôt (voir `data/views/LICENSE.md`). Limite : le module écrit l’emport qu’on compose ; il ne dit pas que DCS l’acceptera.",
      "Credits — The weapon tables come from **pydcs** (LGPL-3.0-or-later), taken from Mission Tools; the front-view drawings are by **Goldwolf** (DCS Reference Guide), used with his permission and **outside the repository’s AGPL licence** (see `data/views/LICENSE.md`). Limit: the module writes the loadout you compose; it does not say that DCS will accept it."),
@@ -2319,6 +2319,14 @@ function showPage(id, anchor) {{
   // Une ancre (#start:gestes) : on descend jusqu'à l'élément de la page
   if (anchor) {{
     var tgt = document.querySelector('#page-' + id + ' [id="' + anchor + '"]');
+    // Une ancre qui n'est pas celle d'un titre (la planche de l'accueil) : on descend jusqu'au titre de sa section, juste au-dessus, pour qu'il se lise sous la barre
+    if (tgt && !new RegExp('^' + id + '-[0-9]+$').test(anchor)) {{
+      var cs = document.querySelectorAll('#page-' + id + ' [id^="' + id + '-"]'), pv = null;
+      for (var ci = 0; ci < cs.length; ci++) {{
+        if (/^[a-z]+-[0-9]+$/.test(cs[ci].id) && (tgt.compareDocumentPosition(cs[ci]) & 2)) pv = cs[ci];
+      }}
+      if (pv) tgt = pv;
+    }}
     if (tgt && tgt.scrollIntoView) tgt.scrollIntoView();
   }}
   // Persister la dernière page

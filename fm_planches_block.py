@@ -106,48 +106,105 @@ _EXPR0, _EXPR1 = '\ue000', '\ue001'      # entourent le rang d'une expression d'
 
 
 def _bound_once_strings(tree):
-    """Les noms du premier niveau liés une seule fois (hors corps de fonction ou de classe), à un littéral de chaîne : {nom: texte}."""
+    """Les noms liés une seule fois dans tout le module, à n'importe quelle portée, et à un littéral de chaîne : {nom: texte}.
+    Lient un nom : une affectation (simple, augmentée, annotée, morse), global, nonlocal, une cible de for, with, import, except, un paramètre, un def ou une class."""
     count, val = {}, {}
 
-    def bind(name, value=None):
+    def bind(name):
         count[name] = count.get(name, 0) + 1
-        if isinstance(value, ast.Constant) and isinstance(value.value, str):
-            val[name] = value.value
+    for n in ast.walk(tree):
+        if isinstance(n, ast.Name) and isinstance(n.ctx, (ast.Store, ast.Del)):
+            bind(n.id)
+        elif isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            bind(n.name)
+        elif isinstance(n, ast.arg):
+            bind(n.arg)
+        elif isinstance(n, (ast.Import, ast.ImportFrom)):
+            for al in n.names:
+                bind((al.asname or al.name).split('.')[0])
+        elif isinstance(n, (ast.Global, ast.Nonlocal)):
+            for nm in n.names:
+                bind(nm)
+        elif isinstance(n, ast.ExceptHandler) and n.name:
+            bind(n.name)
+        elif isinstance(n, ast.AugAssign) and isinstance(n.target, ast.Name):
+            bind(n.target.id)            # une affectation augmentée lie le nom une fois de plus
+    for n in ast.walk(tree):
+        if isinstance(n, ast.Assign) and len(n.targets) == 1 and isinstance(n.targets[0], ast.Name) \
+                and isinstance(n.value, ast.Constant) and isinstance(n.value.value, str):
+            val[n.targets[0].id] = n.value.value
+    return {k: v for k, v in val.items() if count.get(k) == 1}
 
-    def visit(node):
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
-            bind(node.name)
-            return
-        if isinstance(node, ast.Lambda):
-            return
-        if isinstance(node, ast.Assign):
-            for t in node.targets:
-                for n in ast.walk(t):
-                    if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Store):
-                        bind(n.id, node.value if isinstance(t, ast.Name) else None)
-            visit(node.value)
-            return
-        elif isinstance(node, (ast.Import, ast.ImportFrom)):
-            for a in node.names:
-                bind((a.asname or a.name).split('.')[0])
-        elif isinstance(node, ast.Name) and isinstance(node.ctx, (ast.Store, ast.Del)):
-            bind(node.id)
-        for ch in ast.iter_child_nodes(node):
-            visit(ch)
-    for st in tree.body:
-        visit(st)
-    return {k: v for k, v in val.items() if count[k] == 1}
+
+def _retouches(tree, fstr, dict_text):
+    """Les retouches, après la f-string, de la variable qui la reçoit. Seule est permise X = X.replace(a, b[, n]) (ou une chaîne de .replace sur X) où a est une chaîne littérale
+    absente du texte lu du dictionnaire. Renvoie les messages d'erreur."""
+    scope = tree
+    recv = None
+    for n in ast.walk(tree):
+        if isinstance(n, (ast.Module, ast.FunctionDef, ast.AsyncFunctionDef)):
+            for st in ast.walk(n):
+                if isinstance(st, ast.Assign) and st.value is fstr and len(st.targets) == 1 and isinstance(st.targets[0], ast.Name):
+                    recv, scope = st.targets[0].id, n
+    if recv is None:
+        return []
+    errs = []
+
+    def root(e):
+        while True:
+            if isinstance(e, ast.Call):
+                e = e.func
+            elif isinstance(e, ast.Attribute):
+                e = e.value
+            else:
+                return e
+
+    def chain_ok(e, line):
+        """e : X ou X.replace(a, b[, n])[.replace(…)] ; renvoie True si la chaîne est permise (messages ajoutés sinon)."""
+        ok = True
+        while isinstance(e, ast.Call):
+            f = e.func
+            if not (isinstance(f, ast.Attribute) and f.attr == 'replace' and 2 <= len(e.args) <= 3 and not e.keywords):
+                errs.append('ligne %d : %s est retouché autrement que par .replace(a, b[, n])' % (line, recv))
+                return False
+            a = e.args[0]
+            if not (isinstance(a, ast.Constant) and isinstance(a.value, str)):
+                errs.append('ligne %d : %s.replace(…) dont le premier argument n’est pas une chaîne littérale : %s' % (line, recv, ast.unparse(a)[:60]))
+                ok = False
+            elif a.value in dict_text:
+                errs.append('ligne %d : %s.replace(%r, …) : ce texte est dans le dictionnaire' % (line, recv, a.value[:60]))
+                ok = False
+            e = f.value
+        return ok and isinstance(e, ast.Name) and e.id == recv
+    inner = set()
+    for n in ast.walk(scope):
+        if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute) and isinstance(n.func.value, ast.Call):
+            inner.add(id(n.func.value))
+    for n in ast.walk(scope):
+        if getattr(n, 'lineno', 0) <= fstr.lineno:
+            continue
+        if isinstance(n, ast.Assign) and n.value is not fstr and any(isinstance(t, ast.Name) and t.id == recv for t in n.targets):
+            r = root(n.value)
+            if len(n.targets) != 1 or not (isinstance(n.value, ast.Call) and isinstance(r, ast.Name) and r.id == recv):
+                errs.append('ligne %d : %s est ré-affecté autrement que par %s = %s.replace(a, b)' % (n.lineno, recv, recv, recv))
+        elif isinstance(n, ast.AugAssign) and isinstance(n.target, ast.Name) and n.target.id == recv:
+            errs.append('ligne %d : %s est retouché par une affectation augmentée' % (n.lineno, recv))
+        elif isinstance(n, ast.Call) and id(n) not in inner and isinstance(n.func, ast.Attribute):
+            r = root(n.func)
+            if isinstance(r, ast.Name) and r.id == recv:
+                chain_ok(n, n.lineno)
+    return errs
 
 
 def _js_texts(tree):
     """Les textes JS que le source Python écrit : chaque littéral de chaîne (la valeur que Python lui donne) et chaque f-string (ses parties constantes, « {{ » déjà « { » ;
-    ses valeurs {NOM} remplacées par la chaîne littérale du premier niveau de ce nom). Toute autre expression est remplacée par un repère, avec son texte. Renvoie [(texte, [expressions])]."""
+    ses valeurs {NOM} remplacées par la chaîne littérale du premier niveau de ce nom). Toute autre expression est remplacée par un repère, avec son texte. Renvoie [(texte, [expressions], nœud)]."""
     top = _bound_once_strings(tree)
     inner = {id(v) for n in ast.walk(tree) if isinstance(n, ast.JoinedStr) for v in n.values}
     out = []
     for n in ast.walk(tree):
         if isinstance(n, ast.Constant) and isinstance(n.value, str) and id(n) not in inner:
-            out.append((n.value, []))
+            out.append((n.value, [], n))
         elif isinstance(n, ast.JoinedStr):
             parts, exprs = [], []
             for v in n.values:
@@ -158,7 +215,7 @@ def _js_texts(tree):
                 else:
                     parts.append(_EXPR0 + str(len(exprs)) + _EXPR1)
                     exprs.append('{' + ast.unparse(v.value) + '}')
-            out.append((''.join(parts), exprs))
+            out.append((''.join(parts), exprs, n))
     return out
 
 
@@ -167,17 +224,24 @@ def _read_js_dicts(src):
     Le texte JS est celui que Python écrit : les chaînes constantes (littéral brut, ou parties constantes d'une f-string, où « {{ » est déjà « { » ; une valeur {NOM} y est le littéral du premier
     niveau de ce nom). Une autre expression dans le dictionnaire est une erreur. L'objet se lit clé par clé (fr ou en, « : », « { », le bloc, puis « , » ou « } ») :
     exactement les deux clés, une fois chacune, dans n'importe quel ordre."""
-    hits = [(js, ex) for js, ex in _js_texts(ast.parse(src)) if _DECL.search(js)]
+    tree = ast.parse(src)
+    hits = [(js, ex, nd) for js, ex, nd in _js_texts(tree) if _DECL.search(js)]
     if len(hits) != 1:
         raise ValueError('const I18N : %d occurrence(s) dans le source, une attendue' % len(hits))
-    js, exprs = hits[0]
+    js, exprs, node = hits[0]
 
     def show(t):
         return re.sub(_EXPR0 + r'(\d+)' + _EXPR1, lambda m: exprs[int(m.group(1))], t)
     try:
-        return _read_i18n_object(js, show)
+        fr, en, span = _read_i18n_object(js, show)
     except ValueError as e:
         raise ValueError(show(str(e))) from None
+    if isinstance(node, ast.JoinedStr):
+        dict_text = span + '\n' + '\n'.join(list(fr) + list(fr.values()) + list(en) + list(en.values()))
+        errs = _retouches(tree, node, dict_text)
+        if errs:
+            raise ValueError('const I18N : la f-string est retouchée après coup : ' + ' ; '.join(errs))
+    return fr, en
 
 
 def _read_i18n_object(js, show):
@@ -208,7 +272,7 @@ def _read_i18n_object(js, show):
     k = re.search(_EXPR0 + r'(\d+)' + _EXPR1, span)
     if k:
         raise ValueError('const I18N : une expression qui n’est pas une chaîne littérale du premier niveau dans le dictionnaire : ' + show(k.group(0)))
-    return found['fr'], found['en']
+    return found['fr'], found['en'], span
 
 
 def _read_py_dicts(src):
@@ -276,6 +340,8 @@ def _q(t):
     return html.escape(t, quote=True)
 
 
+_EXTRA = re.compile(r'^(?:\s+[A-Za-z_:][\w:.-]*="[^"<>]*")+$')
+_WORDS = re.compile(r'[\s░·]+')
 _NORM = re.compile(r'[\W_]+')
 
 
@@ -287,6 +353,9 @@ def _norm(t):
 D_EXCEPTIONS = {
     # la pastille de coalition de l'instantané affiche la valeur brute du groupe (fl.coalition), pas le libellé traduit de pk.flt.red
     ('hq', 'Red'): 'valeur brute de coalition affichée par l’outil, pas le libellé du filtre',
+    ('hq', 'red'): 'le même, par mot (K1) : valeur brute de coalition affichée par l’outil',
+    # le nom de la mission d'exemple, STEPPE WIND, est une donnée ; « wind » est aussi un libellé de météo du dictionnaire du DG
+    ('dg', 'wind'): 'mot du nom de la mission d’exemple STEPPE WIND, pas le libellé de la météo',
     # le sigle court de la barre téléphone est écrit en dur dans l'outil (build_hq.py, tb-brand-short), hors dictionnaire ; sa norme tombe sur « HQ »
     ('hq', 'H·Q'): 'sigle écrit en dur dans l’outil, non traduit',
     # valeur d'exemple de la ligne Paillettes : le reste du gabarit « {0} % » une fois l'argument retiré
@@ -320,6 +389,8 @@ class Plate:
     # ── un libellé de l'outil, dans les deux langues ─────────────────────────────
     def _slot(self, v, li):
         """La valeur d'un gabarit {0} : un texte, ou une partie L / D (un libellé de l'outil, une donnée d'exemple) qui se lit dans la langue demandée."""
+        if isinstance(v, (list, tuple)) and v and all(isinstance(x, _Part) for x in v):
+            return ''.join(self._slot(x, li) for x in v)
         if isinstance(v, _Part):
             if v.kind == 'D':
                 self._check_d(v)
@@ -382,6 +453,11 @@ class Plate:
                 self._dseen.add((self.pid, p.fr))
                 PLANCHE_ERRORS.append('FAIL planche %s : la donnée d’exemple « %s » est une valeur du dictionnaire de l’outil : écrivez-la par L (ou ajoutez une exception motivée)' % (self.pid, p.fr))
                 break
+            for w in _WORDS.split(txt):
+                nw = _norm(w)
+                if len(nw) >= 2 and nw in self._dvals and (self.pid, nw) not in D_EXCEPTIONS and (self.pid, p.fr, nw) not in self._dseen:
+                    self._dseen.add((self.pid, p.fr, nw))
+                    PLANCHE_ERRORS.append('FAIL planche %s : la donnée d’exemple « %s » porte le mot « %s », une valeur du dictionnaire de l’outil : écrivez le libellé par L, accolé à la donnée (ou ajoutez une exception motivée, une par planche et par mot)' % (self.pid, p.fr, w))
 
     def resolve(self, parts):
         """(FR, EN, genre) d'une suite de parties ; le genre est L s'il y a un libellé de l'outil, M pour un titre du manuel, D sinon."""
@@ -402,9 +478,23 @@ class Plate:
         kind = 'L' if 'L' in kinds else ('M' if 'M' in kinds else 'D')
         return fr, en, kind
 
-    def text(self, x, y, size, *parts, _m=False, **kw):
+    def text(self, x, y, size, *parts, **kw):
+        if '_m' in kw:
+            kw.pop('_m')
+            PLANCHE_ERRORS.append('FAIL planche %s : _m n’est pas un argument de text() : un titre du manuel s’écrit par les titres de planche' % self.pid)
+        return self._text(x, y, size, parts, False, kw)
+
+    def _title_text(self, x, y, size, *parts, **kw):
+        """Le seul chemin d'un titre du manuel dans un <text> : les titres de planche."""
+        return self._text(x, y, size, parts, True, kw)
+
+    def _text(self, x, y, size, parts, _m, kw):
         """Un <text> (FR puis EN) de la planche, écrit par le genre de ses parties. Le genre M (titre du manuel) n'y entre que par les titres de planche (_m)."""
         fr, en, kind = self.resolve(parts)
+        ex = kw.get('extra', '')
+        if ex and not _EXTRA.match(ex):
+            PLANCHE_ERRORS.append('FAIL planche %s : extra= n’accepte que des attributs (nom="valeur", sans < ni >) : %r' % (self.pid, ex))
+            kw = {k: v for k, v in kw.items() if k != 'extra'}
         if kind == 'M' and not _m:
             PLANCHE_ERRORS.append('FAIL planche %s : un titre du manuel ne s’écrit que comme titre de planche ou titre de légende : « %s »' % (self.pid, fr))
         if {p.kind for p in parts} >= {'L', 'D'} and fr not in self.mixed:
@@ -490,35 +580,48 @@ class Plate:
 
     def title_wide(self, fr, en, y, y_rule):
         """Le titre de la variante large (viewBox 720) et son filet."""
-        return (self.text(360, y, 13, M(fr, en), op=.9, ls=3, _m=True) + '\n          '
+        return (self._title_text(360, y, 13, M(fr, en), op=.9, ls=3) + '\n          '
                 f'<line x1="120" y1="{_n(y_rule)}" x2="600" y2="{_n(y_rule)}" stroke="currentColor" stroke-width=".6" opacity=".3"/>')
 
     def title_tall(self, fr, en, sub_fr, sub_en, w=360):
         """Le titre de la variante haute et son sous-titre."""
-        return (self.text(w / 2, 22, 12, M(fr, en), op=.9, ls=2.5, _m=True) + '\n          '
-                + self.text(w / 2, 38, 8.5, M(sub_fr, sub_en), op=.7, _m=True))
+        return (self._title_text(w / 2, 22, 12, M(fr, en), op=.9, ls=2.5) + '\n          '
+                + self._title_text(w / 2, 38, 8.5, M(sub_fr, sub_en), op=.7))
 
     def svg_open(self, cls, w, h, aria_fr, aria_en, marker):
         return (f'<svg class="{cls}" viewBox="0 0 {w} {h}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="{_q(aria_fr)}" '
                 f'data-aria-fr="{_q(aria_fr)}" data-aria-en="{_q(aria_en)}">\n          ' + sv_defs(marker))
 
     # ── la légende numérotée ─────────────────────────────────────────────────────
-    def _body(self, t, lang):
-        """Le corps d'une ligne de légende : un texte, ou une suite de textes et de libellés de l'outil (L), écrits tels que l'écran les affiche."""
-        if isinstance(t, str):
-            return t
-        out = ''
-        for x in t:
-            if isinstance(x, str):
-                out += x
-            else:
-                if x.kind != 'L':
-                    PLANCHE_ERRORS.append('FAIL planche %s : le corps d’une légende n’admet que du texte et des libellés de l’outil' % self.pid)
-                    continue
-                a, b = self._label(x)
-                out += a if lang == 'fr' else b
-                self.counts['L'] += 1
-        return out
+    def _bodies(self, n, tf, te):
+        """Les corps FR et EN d'une ligne de légende : un texte, ou une suite de textes et de libellés de l'outil (L), écrits tels que l'écran les affiche.
+        Les deux langues portent la même suite de libellés (mêmes clés, même ordre) ; chaque libellé est lu et compté une fois."""
+        if isinstance(tf, str) and isinstance(te, str):
+            return tf, te
+        lf = [x for x in ([tf] if isinstance(tf, str) else tf) if not isinstance(x, str)]
+        le = [x for x in ([te] if isinstance(te, str) else te) if not isinstance(x, str)]
+        for x in lf + le:
+            if x.kind != 'L':
+                PLANCHE_ERRORS.append('FAIL planche %s : le corps d’une légende n’admet que du texte et des libellés de l’outil (ligne %s)' % (self.pid, n))
+                return '?', '?'
+        kf, ke = [(x.tool, x.key) for x in lf], [(x.tool, x.key) for x in le]
+        if kf != ke:
+            PLANCHE_ERRORS.append('FAIL planche %s : légende ligne %s : le corps FR et le corps EN ne citent pas les mêmes libellés de l’outil, dans le même ordre (FR %s, EN %s)'
+                                  % (self.pid, n, [k for _t, k in kf], [k for _t, k in ke]))
+            return '?', '?'
+        res = [self._label(x) for x in lf]
+        self.counts['L'] += len(lf)
+
+        def build(t, li):
+            out, k = '', 0
+            for x in ([t] if isinstance(t, str) else t):
+                if isinstance(x, str):
+                    out += x
+                else:
+                    out += res[k][li]
+                    k += 1
+            return out
+        return build(tf, 0), build(te, 1)
 
     def legend_html(self, rows):
         """rows : (n, parties du titre, texte FR, texte EN). Le titre en gras est un libellé de l'outil ou un titre du manuel."""
@@ -528,7 +631,7 @@ class Plate:
             if kind not in ('L', 'M'):
                 PLANCHE_ERRORS.append('FAIL planche %s : le titre en gras de la légende (ligne %s) doit être un libellé de l’outil ou un titre du manuel : « %s »' % (self.pid, n, fr))
             self.counts[kind] += 1
-            tf, te = self._body(tf, 'fr'), self._body(te, 'en')
+            tf, te = self._bodies(n, tf, te)
             li.append(f'<li><span class="pl-n">{n}</span><span class="lang-block" data-lang="fr"><b>{_esc(fr_typo(fr))}</b> — {_esc(fr_typo(tf))}</span>'
                       f'<span class="lang-block" data-lang="en"><b>{_esc(en)}</b> — {_esc(te)}</span></li>')
         return '<ol class="pl-legend">' + ''.join(li) + '</ol>'
@@ -778,8 +881,8 @@ def _hq_legend_rows():
          'Exporter (un paquet, pour un Flight Leader qui n’a pas le .miz), Supprimer, et Dynamic Spawn… en trois étapes : le template, les lieux d’apparition, le départ moteur tournant.',
          'Export (a package, for a Flight Leader without the .miz), Delete, and Dynamic Spawn… in three steps: the template, the spawn places, the hot start.'),
         (12, [L('hq', 'snap.sourceMission')],
-         'le fichier, le théâtre, la date, l’heure de départ, la météo et son METAR, l’empreinte du .miz. Chaque section se replie par l’icône à droite de son en-tête.',
-         'the file, theatre, date, start time, the weather and its METAR, the .miz fingerprint. Each section folds by the icon at the right of its header.'),
+         ['le fichier, le théâtre, la date, l’heure de départ, la météo et son METAR, l’empreinte du .miz. L’icône à droite d’un en-tête, « ', L('hq', 'ui.foldall'), ' » ou « ', L('hq', 'ui.unfoldall'), ' », replie toutes les sections ou les déplie toutes.'],
+         ['the file, theatre, date, start time, the weather and its METAR, the .miz fingerprint. The icon at the right of a header, “', L('hq', 'ui.foldall'), '” or “', L('hq', 'ui.unfoldall'), '”, folds all the sections or unfolds them all.']),
     ]
 
 
@@ -809,9 +912,9 @@ def _toolbar_wide(P, X0, X1, tool, sub_key, buttons):
     return o, bx
 
 
-def _head(P, x, y, w, parts, fold=True):
-    """L'en-tête d'un bloc : chevron, titre, icône de repli ; y est le haut du bloc."""
-    o = [chev(x + 8, y + 10), P.text(x + 20, y + 15, 8.5, *parts, anchor='start')]
+def _head(P, x, y, w, parts, fold=True, chevron=True):
+    """L'en-tête d'un bloc : chevron, titre, icône de repli ; y est le haut du bloc. Au téléphone, ni chevron ni icône : le titre seul."""
+    o = [chev(x + 8, y + 10), P.text(x + 20, y + 15, 8.5, *parts, anchor='start')] if chevron else [P.text(x + 8, y + 15, 8.5, *parts, anchor='start')]
     if fold:
         o.append(fold_icon(x + w - 18, y + 8))
     return o
@@ -844,7 +947,7 @@ def _fc_group_head(P, gx, gy, gw):
 
 
 def _fc_route_line(P, x, y):
-    return P.text(x, y, 8, L('fc', 'route.line', args=(D('STEPPE WIND M3'), L('fc', 'route.pts.many', args=('6',)), D('153,7 km', '153.7 km'))), anchor='start', op=.8)
+    return P.text(x, y, 8, L('fc', 'route.line', args=(D('STEPPE WIND M3'), L('fc', 'route.pts.many', args=('6',)), [D('153,7 ', '153.7 '), L('fc', 'u.km')])), anchor='start', op=.8)
 
 
 def _fc_unit_head(P, ux, uy, uw, n):
@@ -922,15 +1025,15 @@ def _fc_loadout_block(P, x, y, w, narrow):
     # deux stations dans la liste
     sy = y + 94 + dy
     fw = w - 18 - 54
-    for k, (n, arme, kg) in enumerate((('1', '2 x 9M114 Shturm', '104 kg'), ('2', 'B-8V20A - 20 x S-8KOM', '348 kg'))):
+    for k, (n, arme, kg) in enumerate((('1', '2 x 9M114 Shturm', '104'), ('2', 'B-8V20A - 20 x S-8KOM', '348'))):
         yy = sy + k * 18
         o.append(P.text(x + 8, yy + 11, 8, D(n), anchor='start', op=.8))
         o.append(P.field(x + 18, yy, fw, 15, [D(arme)], size=8))
-        o.append(P.text(x + w - 8, yy + 11, 8, D(kg), anchor='end', op=.75))
+        o.append(P.text(x + w - 8, yy + 11, 8, D(kg + ' '), L('fc', 'u.kg'), anchor='end', op=.75))
     sym = y + 138 + dy
     o.append(P.tick(x + 8, sym, True))
     o.append(P.text(x + 20, sym + 7, 8, L('fc', 'cmp.sym'), anchor='start'))
-    o.append(P.text(x + 8, sym + 24, 8, L('fc', 'cmp.mass'), D(' 1 600 kg'), anchor='start', op=.8))
+    o.append(P.text(x + 8, sym + 24, 8, L('fc', 'cmp.mass'), D(' 1 600 '), L('fc', 'u.kg'), anchor='start', op=.8))
     # carburant, leurres, paillettes, canon : deux par rangée (un libellé comme « Carburant (kg) » ne tient pas dans le quart de la largeur au corps 8)
     fy = y + 168 + dy
     fwid = (w - 16 - 6) / 2
@@ -1007,7 +1110,7 @@ def _fc_wide(P):
     o += _head(P, R0, CT, rw, [L('fc', 'sec.route'), D(' · CAESAR')])
     o.append(_rule(R0, R1, CT + 24))
     o.append(P.text(R0 + 8, CT + 40, 8.5, D('STEPPE WIND M3'), anchor='start'))
-    o.append(P.text(R0 + 8, CT + 52, 8, L('fc', 'route.from.rp'), D(' · '), L('fc', 'route.pts.many', args=('6',)), D(' · 153,7 km', ' · 153.7 km'), anchor='start', op=.75))
+    o.append(P.text(R0 + 8, CT + 52, 8, L('fc', 'route.from.rp'), D(' · '), L('fc', 'route.pts.many', args=('6',)), D(' · 153,7 ', ' · 153.7 '), L('fc', 'u.km'), anchor='start', op=.75))
     o.append(P.btn(R1 - 8 - 44, CT + 29, 44, 15, [L('fc', 'route.remove')], size=8))
     o.append(P.btn(R1 - 8 - 44 - 4 - 88, CT + 29, 88, 15, [L('fc', 'route.change')], size=8))
     o.append(P.text(R0 + 8, CT + 71, 8, L('fc', 'route.col.leg'), anchor='start', op=.6))
@@ -1015,7 +1118,7 @@ def _fc_wide(P):
     o.append(P.text(R1 - 8, CT + 71, 8, L('fc', 'route.col.dist'), anchor='end', op=.6))
     o.append(P.text(R0 + 8, CT + 84, 8, D('1   AKROTIRI → WP1'), anchor='start', op=.8))
     o.append(P.text(R0 + 160, CT + 84, 8, D('282°'), anchor='end', op=.8))
-    o.append(P.text(R1 - 8, CT + 84, 8, D('30,1 km', '30.1 km'), anchor='end', op=.8))
+    o.append(P.text(R1 - 8, CT + 84, 8, D('30,1 ', '30.1 '), L('fc', 'u.km'), anchor='end', op=.8))
     ey0 = CT + 102
     lo, EH, anc = _fc_loadout_block(P, R0, ey0, rw, False)
     o += lo
@@ -1106,7 +1209,7 @@ def _fc_tall(P):
     o += _head(P, X0, RT, w, [L('fc', 'sec.route'), D(' · CAESAR')])
     o.append(_rule(X0, X1, RT + 24))
     o.append(P.text(X0 + 8, RT + 38, 8.5, D('STEPPE WIND M3'), anchor='start'))
-    o.append(P.text(X0 + 8, RT + 49, 8, L('fc', 'route.from.rp'), D(' · '), L('fc', 'route.pts.many', args=('6',)), D(' · 153,7 km', ' · 153.7 km'), anchor='start', op=.75))
+    o.append(P.text(X0 + 8, RT + 49, 8, L('fc', 'route.from.rp'), D(' · '), L('fc', 'route.pts.many', args=('6',)), D(' · 153,7 ', ' · 153.7 '), L('fc', 'u.km'), anchor='start', op=.75))
     o.append(P.btn(X0 + 8, RT + 54, 88, 15, [L('fc', 'route.change')], size=8))
     o.append(P.btn(X0 + 100, RT + 54, 44, 15, [L('fc', 'route.remove')], size=8))
     ET = RT + 80
@@ -1379,8 +1482,8 @@ def _dg_legend_rows():
          'ouvre les autres actions sur les cartes. La dernière carte ne se supprime pas : elle se vide.',
          'opens the other actions on the cards. The last card cannot be deleted: it is emptied.'),
         (6, [M('Les sections de l’éditeur', 'The editor sections')],
-         'suivent la page. Chacune se replie par l’icône à droite de son en-tête.',
-         'follow the page. Each folds by the icon at the right of its header.'),
+         ['suivent la page. L’icône à droite d’un en-tête, « ', L('dg', 'ui.foldall'), ' » ou « ', L('dg', 'ui.unfoldall'), ' », replie toutes les sections ou les déplie toutes.'],
+         ['follow the page. The icon at the right of a header, “', L('dg', 'ui.foldall'), '” or “', L('dg', 'ui.unfoldall'), '”, folds all the sections or unfolds them all.']),
         (7, [M('La pastille FC', 'The FC badge')],
          'marque les champs partagés : la carte d’un groupe reprend de la fiche des groupes ce que le Flight Configurator règle — unités, radios, emport, carburant et poids.',
          'marks the shared fields: a group’s card takes from the group sheet what the Flight Configurator sets — units, radios, loadout, fuel and weight.'),
@@ -1490,7 +1593,7 @@ def _rp_map(P, x0, y0, x1, y1, scale=1.0, narrow=False):
     o.append(f'<path d="M{_n(rx)},{_n(ry - 7)} l7,7 l-7,7 l-7,-7 z" class="sv-box" stroke="currentColor" stroke-width="1.2"/>')
     o.append(P.text(rx, ry + 3, 8, D('A'), extra=' font-weight="700"'))
     if not narrow:
-        o.append(P.text(rx + 11, ry + 3, 8, D('ÎLE PETRA'), anchor='start', op=.85))
+        o.append(P.text(rx + 11, ry + 3, 8, D('ÎLE PETRA', 'PETRA ISLAND'), anchor='start', op=.85))
     ax, ay = at(.16, .74)
     o.append(f'<circle cx="{_n(ax)}" cy="{_n(ay)}" r="3.6" fill="none" stroke="currentColor" stroke-width="1"/><circle cx="{_n(ax)}" cy="{_n(ay)}" r="1.1" fill="currentColor"/>')
     o.append(P.text(ax + 7, ay + 3, 8, D('Paphos'), anchor='start', op=.7))
@@ -1531,7 +1634,7 @@ def _rp_map(P, x0, y0, x1, y1, scale=1.0, narrow=False):
     bx_, by_ = (mx_ - 4, my_ - bh - 26) if not narrow else (mx_ + 6, my_ + 16)
     o.append(f'<line x1="{_n(bx_ + 12)}" y1="{_n(by_ + (0 if narrow else bh))}" x2="{_n(mx_)}" y2="{_n(my_)}" stroke="currentColor" stroke-width=".8" opacity=".6"/>')
     o.append(sv_box(bx_, by_, bw, bh))
-    for i, parts in enumerate(([D('083°V', '083°T')], [D('19,9 km', '19.9 km')], [D('220 km/h')], [L('rp', 'lb.ete'), D(' 05:25')])):
+    for i, parts in enumerate(([D('083'), L('rp', 'lb.true')], [D('19,9 ', '19.9 '), L('rp', 'u.km')], [D('220 '), L('rp', 'u.kmh')], [L('rp', 'lb.ete'), D(' 05:25')])):
         o.append(P.text(bx_ + bw / 2, by_ + 11 + i * 10, 8, *parts))
     anc['box'] = (bx_ + bw, by_ + 14)
     return o, anc
@@ -1725,7 +1828,7 @@ def _rp_tall(P):
     # ── les bulles ──────────────────────────────────────────────────────────────
     o.append(P.bubble(11, 30, anc['loupe'][1], X0, anc['loupe'][1]))
     o.append(P.bubble(12, 330, anc['modes'][1], anc['modes'][0], anc['modes'][1]))
-    o.append(P.bubble(14, 330, anc['box'][1], X1, anc['box'][1]))
+    o.append(P.bubble(14, 330, anc['box'][1], anc['box'][0], anc['box'][1]))
     o.append(P.bubble(13, 330, anc['route'][1], anc['route'][0], anc['route'][1]))
     o.append(P.bubble(6, 30, y1 + 8, a, y1 + 8))
     o.append(P.bubble(7, 30, y4 + 8, a, y4 + 8))
@@ -1752,8 +1855,8 @@ def _rp_legend_rows():
          'choisit la carte de DCS. Une route garde son théâtre : en changer masque les routes des autres théâtres, qui reviennent quand on y retourne.',
          'chooses the DCS map. A route keeps its theatre: changing it hides the other theatres’ routes, which come back when you return.'),
         (5, [L('rp', 'tb.clear')],
-         'efface au choix la route sélectionnée, toutes les routes, les points de référence ou les dessins.',
-         'clears, as you choose, the selected route, all routes, the reference points or the drawings.'),
+         ['efface au choix : ', L('rp', 'clr.one'), ', ', L('rp', 'clr.routes'), ', ', L('rp', 'clr.refs'), ', ', L('rp', 'clr.draw'), ', ', L('rp', 'clr.sym'), ' ou ', L('rp', 'clr.layers'), '.'],
+         ['clears, as you choose: ', L('rp', 'clr.one'), ', ', L('rp', 'clr.routes'), ', ', L('rp', 'clr.refs'), ', ', L('rp', 'clr.draw'), ', ', L('rp', 'clr.sym'), ' or ', L('rp', 'clr.layers'), '.']),
         (6, [L('rp', 'sec.route')],
          'en tête, une ligne choisit la route ; + en ajoute une, jusqu’à 12, et … ouvre Dupliquer et Supprimer.',
          'at the top, a row chooses the route; + adds one, up to 12, and … opens Duplicate and Delete.'),
@@ -1767,14 +1870,14 @@ def _rp_legend_rows():
          'place un point par ses coordonnées (MGRS, DMS, DDM ou décimal) ou par cap et distance depuis le dernier point ; + Réf. en fait un point de référence.',
          'places a waypoint by its coordinates (MGRS, DMS, DDM or decimal) or by heading and distance from the last waypoint; + Ref. makes it a reference point.'),
         (10, [M('Les autres sections', 'The other sections')],
-         'Points de référence, Calques, Navigation : chacune se replie par l’icône à droite de son en-tête. Voir plus bas.',
-         'Reference points, Layers, Navigation: each folds by the icon at the right of its header. See below.'),
+         ['Points de référence, Calques, Navigation. L’icône à droite d’un en-tête, « ', L('rp', 'ui.foldall'), ' » ou « ', L('rp', 'ui.unfoldall'), ' », replie toutes les sections ou les déplie toutes. Voir plus bas.'],
+         ['Reference points, Layers, Navigation. The icon at the right of a header, “', L('rp', 'ui.foldall'), '” or “', L('rp', 'ui.unfoldall'), '”, folds all the sections or unfolds them all. See below.']),
         (11, [L('rp', 'sr.title')],
          'la loupe cherche un lieu ou un objet nommé.',
          'the magnifier looks for a named place or object.'),
         (12, [L('rp', 'tap.title')],
          'Point ajoute un point au bout de la route ; Réf. pose un point de référence ; Lire ne pose rien : un aérodrome ouvre sa fiche, un objet d’un calque montre la sienne ; Dessin ouvre les outils de dessin de vos calques ; Règle mesure cap et distance sans rien poser, et quitter le mode efface la mesure. En Point et en Réf., un aérodrome touché donne un point à son nom.',
-         'Waypoint adds a waypoint at the end of the route; Ref. places a reference point; Read places nothing: an airfield opens its sheet, a layer object shows its own; Draw opens the drawing tools of your layers; Ruler measures heading and distance without placing anything, and leaving the mode clears the measure. In Waypoint and Ref., a tapped airfield gives a waypoint its name.'),
+         'Waypoint adds a waypoint at the end of the route; Ref. places a reference point; Read places nothing: an airfield opens its sheet, a layer object shows its own; Draw opens the drawing tools of your layers; Ruler measures heading and distance without placing anything, and leaving the mode clears the measure. In Waypoint and Ref., a tapped airfield gives the waypoint its name.'),
         (13, [M('La route', 'The route')],
          'glissez un point pour le déplacer ; le + posé sur une branche assez longue y insère un point. Les traits des minutes coupent la route toutes les minutes.',
          'drag a waypoint to move it; the + on a long enough leg inserts a waypoint there. The minute ticks cut the route every minute.'),
@@ -1829,9 +1932,9 @@ def _bg_editor(P, x, y, w):
     o += _head(P, x, y2, w, [L('bg', 'editor.simple.situation.summary')])
     o.append(_rule(x, x + w, y2 + 24))
     o.append(P.text(a, y2 + 38, 8, L('bg', 'editor.sitac.points', up=True), anchor='start', op=.75))
-    for k, txt in enumerate(('La majorité de l’île reste…', 'L’aéroport de PAPHOS a été…')):
+    for k, txt in enumerate((('La majorité de l’île reste…', 'Most of the island remains…'), ('L’aéroport de PAPHOS a été…', 'PAPHOS airport has been…'))):
         yy = y2 + 44 + k * 22
-        o.append(P.field(a, yy, aw - 22, 18, [D(txt)]))
+        o.append(P.field(a, yy, aw - 22, 18, [D(*txt)]))
         o.append(P.btn(a + aw - 18, yy, 18, 18, [D('✕')]))
     o.append(P.btn(a, y2 + 44 + 2 * 22, aw, 18, [L('bg', 'editor.sitac.addPoint')]))
     anc['sit'] = y2 + 12
@@ -1858,7 +1961,7 @@ def _bg_page(P, x, y, w, h):
     o.append(_bars(x + w / 2 - 34, cy + 38, 68, 1))
     cy += 50
     o.append(f'<rect class="sv-pill" x="{_n(ix)}" y="{_n(cy)}" width="{_n(iw)}" height="14" rx="1.5"/>')
-    o.append(P.text(x + w / 2, cy + 10, 8, D('MISSION M3 ░ 22/03/1989 ░ 08:00Z'), cls='sv-pill-t'))
+    o.append(P.text(x + w / 2, cy + 10, 8, L('bg', 'simple.hdr.mission'), D(' M3 ░ 22/03/1989 ░ 08:00Z'), cls='sv-pill-t'))
     cy += 22
     for key, n in (('simple.situation', 3), ('simple.mission', 2)):
         o.append(f'<rect x="{_n(ix)}" y="{_n(cy)}" width="{_n(iw)}" height="13" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/>')
@@ -1936,7 +2039,7 @@ def _bg_tall(P):
         x += bw + 6
     # l'onglet En-tête, seul visible : sa section et ses quatre champs
     o.append(sv_box(X0, 100, w, 22))
-    o += _head(P, X0, 100, w, [L('bg', 'editor.header.summary')])
+    o += _head(P, X0, 100, w, [L('bg', 'editor.header.summary')], fold=False, chevron=False)
     a, aw = X0 + 10, w - 20
     for k, (lab, val) in enumerate((('editor.meta.operation', 'STEPPE WIND'), ('editor.meta.missionCode', 'M3'), ('editor.meta.date', '1989-03-22'), ('editor.meta.time', '08:00'))):
         o.append(P.lfield(a, 130 + k * 32, aw, [L('bg', lab)], [D(val)]))
@@ -1975,11 +2078,11 @@ def _bg_tall(P):
 def _bg_legend_rows():
     return [
         (1, [L('bg', 'toolbar.load', add='▾')],
-         'Ouvrir un briefing… lit un ancien fichier de briefing, le format choisi voyageant avec lui.',
-         'Open a briefing… reads an old briefing file, the chosen format travelling with it.'),
+         [L('bg', 'work.open'), ' lit un fichier de travail de la suite ; ', L('bg', 'work.briefing'), ' lit un ancien fichier de briefing, le format choisi voyageant avec lui.'],
+         [L('bg', 'work.open'), ' reads a suite work file; ', L('bg', 'work.briefing'), ' reads an old briefing file, the chosen format travelling with it.']),
         (2, [L('bg', 'toolbar.save')],
-         'le briefing est gardé automatiquement dans le navigateur.',
-         'the briefing is kept automatically in the browser.'),
+         ['écrit le fichier de travail de toute la suite (« ', L('bg', 'work.save.tip'), ' », Ctrl+S) ; le briefing est en plus gardé automatiquement dans le navigateur (« ', L('bg', 'editor.autoSave'), ' »).'],
+         ['writes the work file of the whole suite (“', L('bg', 'work.save.tip'), '”, Ctrl+S); the briefing is also kept automatically in the browser (“', L('bg', 'editor.autoSave'), '”).']),
         (3, [L('bg', 'toolbar.export')],
          'vérifiez d’abord la mise en page dans l’aperçu. L’export porte les pages du format en cours, en PDF (par l’impression du navigateur, Ctrl+P puis « Enregistrer en PDF », y compris sur Android) ou en PNG par page.',
          'check the layout in the preview first. The export carries the pages of the current format, as a PDF (through the browser’s print, Ctrl+P then “Save as PDF”, on Android too) or as one PNG per page.'),
@@ -1996,8 +2099,8 @@ def _bg_legend_rows():
          ['un point de situation par ligne, ✕ le retire, « ', L('bg', 'editor.sitac.addPoint'), ' » en ajoute un, puis le champ ', L('bg', 'editor.simple.map'), ' plus bas dans la section. La carte, les menaces et les cibles sont communes aux deux formats : si une carte est chargée, ou si des menaces ou des cibles sont saisies, une page de carte suit, puis les pages de photos.'],
          ['one situation point per line, ✕ removes it, “', L('bg', 'editor.sitac.addPoint'), '” adds one, then the ', L('bg', 'editor.simple.map'), ' field further down in the section. The map, the threats and the targets are common to both formats: if a map is loaded, or threats or targets are entered, a map page follows, then the photo pages.']),
         (8, [M('Les autres sections', 'The other sections')],
-         'Mission, Coordination, Photos et Métadonnées : chacune se replie par l’icône à droite de son en-tête. Au téléphone, l’éditeur passe en onglets.',
-         'Mission, Coordination, Photos and Metadata: each folds by the icon at the right of its header. On a phone, the editor switches to tabs.'),
+         ['Mission, Coordination, Photos et Métadonnées. L’icône à droite d’un en-tête, « ', L('bg', 'ui.foldall'), ' » ou « ', L('bg', 'ui.unfoldall'), ' », replie toutes les sections ou les déplie toutes. Au téléphone, l’éditeur passe en onglets.'],
+         ['Mission, Coordination, Photos and Metadata. The icon at the right of a header, “', L('bg', 'ui.foldall'), '” or “', L('bg', 'ui.unfoldall'), '”, folds all the sections or unfolds them all. On a phone, the editor switches to tabs.']),
         (9, [M('L’aperçu', 'The preview')],
          'la page de mission : situation, mission et groupes, fréquences, terrains et météo. Un bloc vide n’est pas imprimé, et une page qui déborde se poursuit sur la suivante.',
          'the mission page: situation, mission and groups, frequencies, airfields and weather. An empty block is not printed, and a page that overflows continues on the next one.'),
@@ -2032,7 +2135,7 @@ def _rs_panel(P, x, y, w):
     o += _head(P, x, y, w, [L('rs', 'editor.image.title')])
     o.append(_rule(x, x + w, y + 24))
     o.append(_rp_rect(a, y + 30, aw, 42, op=.7, dash=True))
-    o.append(P.text(a + aw / 2, y + 48, 8, D('RS_EXAMPLE_NAIP.JPG — 1200×800 PX')))
+    o.append(P.text(a + aw / 2, y + 48, 8, D('RS_EXAMPLE_NAIP.JPG — 1200×800PX')))
     o.append(P.text(a + aw / 2, y + 62, 8, L('rs', 'editor.image.drop.hint', up=True), op=.65))
     o.append(P.text(a + aw / 2, y + 84, 8, L('rs', 'editor.image.credit'), op=.6))
     o.append(P.btn(a, y + 90, aw, 16, [L('rs', 'editor.image.replace')]))
@@ -2078,9 +2181,9 @@ def _rs_canvas(P, x, y, w, h):
     tw = 108
     tx0, ty0 = px + ph_w - tw - 6, py + 6
     o.append(sv_box(tx0, ty0, tw, 38))
-    for k, (n, txt) in enumerate((('1', 'STOCKAGE POL'), ('2', 'PARC DE RÉSERVOIRS'), ('3', 'PARC DE VÉHICULES'))):
+    for k, (n, txt) in enumerate((('1', ('STOCKAGE POL', 'POL STORAGE')), ('2', ('PARC DE RÉSERVOIRS', 'TANK FARM')), ('3', ('PARC DE VÉHICULES', 'VEHICLE PARK')))):
         o.append(P.text(tx0 + 6, ty0 + 12 + k * 11, 8, D(n), anchor='start', op=.8))
-        o.append(P.text(tx0 + 16, ty0 + 12 + k * 11, 8, D(txt), anchor='start', op=.85))
+        o.append(P.text(tx0 + 16, ty0 + 12 + k * 11, 8, D(*txt), anchor='start', op=.85))
     anc['table'] = (tx0 + tw, ty0 + 19)
     iw, ih = 96, 52
     ix0, iy0 = px + ph_w - iw - 6, py + ph_h - ih - 6
@@ -2094,19 +2197,19 @@ def _rs_canvas(P, x, y, w, h):
     o.append(_bars(px + 8, py + ph_h - 28, 110, 3, gap=9))
     # la barre des outils du bas
     ty = y + h - 40
-    o.append(sv_box(x + 6, ty, w - 12, 32))
+    o.append(sv_box(x + 3, ty, w - 6, 32))
     lens = [max(len(P.resolve([L('rs', k, up=True)])[0]), len(P.resolve([L('rs', k, up=True)])[1])) for k in _RS_TOOLS]
-    widths = [8 + 4.8 * n for n in lens]
-    k_ = (w - 24) / sum(widths)
+    widths = [6 + 5.0 * n for n in lens]
+    k_ = (w - 12) / sum(widths)
     widths = [v * k_ for v in widths]
-    cx0 = x + 12
+    cx0 = x + 6
     for k, (key, bw) in enumerate(zip(_RS_TOOLS, widths)):
         if k == 0:
             o.append(_rp_active(P, cx0 + 1, ty + 4, bw - 2, 24, [L('rs', key, up=True)]))
         else:
             o.append(P.btn(cx0 + 1, ty + 4, bw - 2, 24, [L('rs', key, up=True)], op=.5))
         cx0 += bw
-    anc['bar'] = (x + w - 6, ty + 16)
+    anc['bar'] = (x + w - 3, ty + 16)
     return o, anc
 
 
@@ -2166,28 +2269,23 @@ def _rs_tall(P):
     o.append(f'<rect x="{_n(X0 + 3)}" y="{_n(TT + 3)}" width="{_n(w / 2 - 4)}" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/>')
     o.append(P.text(X0 + w / 4, TT + 18, 8.5, L('rs', 'tab.editor')))
     o.append(P.text(X0 + 3 * w / 4, TT + 18, 8.5, L('rs', 'tab.preview')))
-    CY = TT + 36
-    CH = 189 + 24 + 40
-    cv, canc = _rs_canvas(P, X0, CY, w, CH)
-    o += cv
     for n, k in ((1, 'open'), (2, 'save'), (3, 'export')):
         cx = bx[k][0] + bx[k][1] / 2
         o.append(P.bubble(n, cx, 46, cx, 66))
-    for n, k in ((4, 'image'), (5, 'render'), (6, 'editor.fx.title'), (7, 'editor.info.title'), (8, 'editor.logo.title'), (9, 'editor.shapes.title'), (10, 'editor.classif.title')):
+    for n, k in ((4, 'image'), (5, 'render'), (6, 'editor.fx.title'), (7, 'editor.info.title'), (8, 'editor.logo.title'), (9, 'editor.shapes.title'), (10, 'editor.classif.title'),
+                 (11, 'editor.cartouche.title')):
         o.append(P.bubble(n, 14, anc[k], X0, anc[k]))
-    for n, k in ((11, 'table'), (12, 'inset'), (13, 'bar')):
-        o.append(P.bubble(n, 346, canc[k][1], canc[k][0], canc[k][1]))
     o.append('</g>')
     o.append('</svg>')
-    o[0] = P.svg_open('pl-tall', W, CY + CH + 12 + 12, 'L’écran de Recon Station au téléphone : le panneau de l’éditeur et l’aperçu', 'The Recon Station screen on a phone: the editor panel and the preview', 'rst')
+    o[0] = P.svg_open('pl-tall', W, TT + 28 + 12 + 8, 'L’écran de Recon Station au téléphone : le panneau de l’éditeur, onglet Éditeur', 'The Recon Station screen on a phone: the editor panel, Editor tab', 'rst')
     return '\n          '.join(o)
 
 
 def _rs_legend_rows():
     return [
         (1, [L('rs', 'toolbar.open', add='▾')],
-         'propose Ouvrir un travail… et Ouvrir une image…',
-         'offers Open a work file… and Open an image…'),
+         ['propose ', L('rs', 'work.open'), ' et ', L('rs', 'work.image')],
+         ['offers ', L('rs', 'work.open'), ' and ', L('rs', 'work.image')]),
         (2, [L('rs', 'toolbar.save')],
          'Ctrl+S range la composition dans le fichier de travail, sans l’image source : après un rechargement de la page, importez de nouveau l’image.',
          'Ctrl+S stores the composition in the work file, without the source image: after a page reload, import the image again.'),
@@ -2198,17 +2296,17 @@ def _rs_legend_rows():
          'l’image est d’abord convertie en niveaux de gris.',
          'the image is first converted to greyscale.'),
         (5, [L('rs', 'editor.render.title')],
-         'Contraste accentue ou adoucit les écarts.',
-         'Contrast sharpens or softens the differences.'),
+         [L('rs', 'editor.render.contrast'), ' accentue ou adoucit les écarts.'],
+         [L('rs', 'editor.render.contrast'), ' sharpens or softens the differences.']),
         (6, [L('rs', 'editor.fx.title')],
-         'Imagerie donne l’allure d’un capteur, par stylisation du signal et non par mesure ; Vignette, Grain et Scanlines, éteints par défaut, ajoutent l’usure d’un tirage. Recon ne peint jamais d’élément absent de l’image.',
-         'Imagery gives the look of a sensor, by stylising the signal and not by measurement; Vignette, Grain and Scanlines, off by default, add the wear of a print. Recon never paints an element that is not in the image.'),
+         [L('rs', 'editor.fx.sensor'), ' donne l’allure d’un capteur, par stylisation du signal et non par mesure ; ', L('rs', 'editor.fx.vignette'), ', ', L('rs', 'editor.fx.grain'), ' et ', L('rs', 'editor.fx.scanlines'), ', éteints par défaut, ajoutent l’usure d’un tirage. Recon ne peint jamais d’élément absent de l’image.'],
+         [L('rs', 'editor.fx.sensor'), ' gives the look of a sensor, by stylising the signal and not by measurement; ', L('rs', 'editor.fx.vignette'), ', ', L('rs', 'editor.fx.grain'), ' and ', L('rs', 'editor.fx.scanlines'), ', off by default, add the wear of a print. Recon never paints an element that is not in the image.']),
         (7, [L('rs', 'editor.info.title')],
          'se pose en bas de la photo : les champs vides ne s’impriment pas. À l’ouverture de RS, le briefing du BG préremplit le bloc ; un champ déjà rempli n’est jamais écrasé.',
          'sits at the bottom of the photo: empty fields are not printed. When RS opens, the BG’s briefing pre-fills the block; a field already filled is never overwritten.'),
         (8, [L('rs', 'editor.logo.title')],
-         'les logos du Wing d’HQ sont proposés dans la grille, marqués Wing ; vous pouvez en ajouter par une image PNG, et chaque logo se rend en couleur, en niveaux de gris ou en blanc.',
-         'the HQ Wing logos are offered in the grid, marked Wing; you can add some from a PNG image, and each logo renders in colour, greyscale or white.'),
+         ['les logos du Wing d’HQ sont proposés dans la grille, marqués ', L('rs', 'editor.logo.wing'), ' ; vous pouvez en ajouter par une image PNG, et chaque logo se rend en couleur, en niveaux de gris ou en blanc.'],
+         ['the HQ Wing logos are offered in the grid, marked ', L('rs', 'editor.logo.wing'), '; you can add some from a PNG image, and each logo renders in colour, greyscale or white.']),
         (9, [L('rs', 'editor.shapes.title')],
          'les formes et les étiquettes se posent au centre, puis se déplacent.',
          'shapes and labels are placed at the centre, then moved.'),
@@ -2216,14 +2314,14 @@ def _rs_legend_rows():
          'le bandeau de classification, éteint par défaut, réserve sa place pour ne recouvrir ni le cartouche ni le bloc d’informations ; il est distinct du champ Classification du bloc.',
          'the classification banner, off by default, reserves its place so as not to cover the cartouche or the information block; it is separate from the block’s Classification field.'),
         (11, [L('rs', 'editor.cartouche.add')],
-         'dépose un cercle numéroté, à glisser sur la cible, lié à une ligne de légende du cartouche ; la numérotation se recalcule toute seule, et l’Amorce tire un trait jusqu’au point exact de la cible.',
-         'drops a numbered circle, to drag onto the target, tied to a legend line of the cartouche; the numbering recalculates by itself, and the Leader draws a line to the exact point of the target.'),
+         ['dépose un cercle numéroté, à glisser sur la cible, lié à une ligne de légende du cartouche ; la numérotation se recalcule toute seule, et ', L('rs', 'editor.cartouche.amorce'), ' tire un trait jusqu’au point exact de la cible.'],
+         ['drops a numbered circle, to drag onto the target, tied to a legend line of the cartouche; the numbering recalculates by itself, and ', L('rs', 'editor.cartouche.amorce'), ' draws a line to the exact point of the target.']),
         (12, [L('rs', 'editor.inset.add')],
          'réaffiche, agrandie, une portion de l’image traitée ; la zone et la boîte se déplacent et se redimensionnent sans déformer l’image.',
          'redisplays, enlarged, a portion of the processed image; the zone and the box move and resize without distorting the image.'),
         (13, [M('La barre du bas', 'The bottom bar')],
-         'annote la photo directement, au toucher : Choisir, Cadre, Ellipse, Tracé, Flèche, Crochet, Texte, Loupe.',
-         'annotates the photo directly, by touch: Select, Frame, Ellipse, Polyline, Arrow, Bracket, Text, Loupe.'),
+         ['annote la photo directement, au toucher : ' + ''] + sum([[L('rs', k, up=True), ', '] for k in _RS_TOOLS[:-1]], [])[:-1] + [' et ', L('rs', _RS_TOOLS[-1], up=True), '.'],
+         ['annotates the photo directly, by touch: '] + sum([[L('rs', k, up=True), ', '] for k in _RS_TOOLS[:-1]], [])[:-1] + [' and ', L('rs', _RS_TOOLS[-1], up=True), '.']),
     ]
 
 
@@ -2350,7 +2448,7 @@ def _start_tall(P):
     y = my + 46
     for gk, cards in _ST_CARDS:
         o.append(f'<rect x="{X0}" y="{y}" width="{w}" height="104" rx="3" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="5 3" opacity=".55"/>')
-        o.append(sv_box(X0 + 8, y - 9, 200, 18))
+        o.append(sv_box(X0 + 8, y - 9, 246, 18))
         nm = 'Mission Commander' if gk == 'mc' else 'Flight Leader'
         o.append(P.text(X0 + 14, y + 3.5, 8.5, D(nm), anchor='start', extra=' font-weight="700"'))
         o.append(P.text(X0 + 14 + 5.6 * len(nm) + 8, y + 3.5, 8, L('mp', 'grp.%s.sub' % gk, up=True), anchor='start', op=.7))
