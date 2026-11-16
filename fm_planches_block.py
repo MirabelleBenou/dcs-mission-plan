@@ -50,8 +50,8 @@ def _js_str_at(s, i):
                 out.append(chr(int(s[i + 2:i + 6], 16)))
                 i += 6
                 continue
-            if n in 'xU':
-                raise ValueError('échappement JS non lu : \\' + n)
+            if n in 'xUrbfv0\n\r':
+                raise ValueError('échappement JS non lu : \\' + (n if n.isalnum() else 'fin de ligne'))
             out.append({'n': '\n', 't': '\t'}.get(n, n))
             i += 2
             continue
@@ -68,7 +68,7 @@ _PLUS = re.compile(r'\s*\+')
 
 
 def _parse_js_block(txt):
-    """Les entrées « clé: 'valeur' » d'un bloc d'objet JS, jusqu'à son « } » fermant ; tout autre contenu est une erreur."""
+    """Les entrées « clé: 'valeur' » d'un bloc d'objet JS (txt commence après son « { »), jusqu'à son « } » fermant ; tout autre contenu est une erreur. Renvoie (dict, indice après le « } »)."""
     d = {}
     i = 0
     n = len(txt)
@@ -77,7 +77,7 @@ def _parse_js_block(txt):
         if i >= n:
             raise ValueError('bloc non refermé')
         if txt[i] == '}':
-            return d
+            return d, i + 1
         if txt[i] in '\'"':
             k, i = _js_str_at(txt, i)
         else:
@@ -101,16 +101,36 @@ def _parse_js_block(txt):
 
 def _read_js_dicts(src):
     """Le dictionnaire « const I18N = { fr: {…}, en: {…} } » d'un outil dont le source Python porte le JS dans une chaîne.
-    Le texte JS est celui que Python écrit : les chaînes constantes (littéral brut, ou parties constantes d'une f-string, où « {{ » est déjà « { »)."""
-    hits = [n.value for n in ast.walk(ast.parse(src))
-            if isinstance(n, ast.Constant) and isinstance(n.value, str) and 'const I18N = {' in n.value and 'en: {' in n.value]
+    Le texte JS est celui que Python écrit : les chaînes constantes (littéral brut, ou parties constantes d'une f-string, où « {{ » est déjà « { »).
+    L'objet se lit clé par clé (fr ou en, « : », « { », le bloc, puis « , » ou « } ») : exactement les deux clés, une fois chacune, dans n'importe quel ordre."""
+    hits = [n.value for n in ast.walk(ast.parse(src)) if isinstance(n, ast.Constant) and isinstance(n.value, str)
+            and re.search(r'const I18N = \{\s*(?:fr|en)\s*:\s*\{', n.value)]
     if len(hits) != 1:
         raise ValueError('const I18N : %d occurrence(s) dans le source, une attendue' % len(hits))
     js = hits[0]
-    i = js.index('const I18N = {')
-    j = js.index('fr: {', i)
-    k = js.index('en: {', j)
-    return _parse_js_block(js[j + 5:k]), _parse_js_block(js[k + 5:])
+    i = re.search(r'const I18N = \{', js).end()
+    found = {}
+    while True:
+        i = _SKIP.match(js, i).end()
+        if js[i] == '}':
+            break
+        m = _IDENT.match(js, i)
+        if not m or m.group(0) not in ('fr', 'en'):
+            raise ValueError('const I18N : clé « fr » ou « en » attendue, lu : ' + js[i:i + 20])
+        if m.group(0) in found:
+            raise ValueError('const I18N : clé « %s » en double' % m.group(0))
+        c = _COLON.match(js, m.end())
+        if not c or js[c.end()] != '{':
+            raise ValueError('const I18N : « : { » attendu après ' + m.group(0))
+        found[m.group(0)], i = _parse_js_block(js[c.end() + 1:])
+        i += c.end() + 1
+        t = re.compile(r'\s*').match(js, i).end()
+        if js[t] not in ',}':
+            raise ValueError('const I18N : « , » ou « } » attendu après le bloc ' + m.group(0))
+        i = t
+    if set(found) != {'fr', 'en'}:
+        raise ValueError('const I18N : les deux clés fr et en sont attendues')
+    return found['fr'], found['en']
 
 
 def _read_py_dicts(src):
@@ -131,6 +151,10 @@ def tool_dicts(tool, root=None):
     """(FR, EN) du dictionnaire de l'outil, ou None si son source ne se lit pas (l'erreur est inscrite une fois)."""
     if tool in _DICTS:
         return _DICTS[tool]
+    if tool not in TOOL_SOURCES:
+        PLANCHE_ERRORS.append('FAIL planche : outil inconnu « %s »' % tool)
+        _DICTS[tool] = None
+        return None
     path = os.path.join(root or HERE, TOOL_SOURCES[tool])
     try:
         with open(path, encoding='utf-8') as f:
@@ -169,6 +193,29 @@ def M(fr, en):
     return _Part('M', fr=fr, en=en)
 
 
+def _q(t):
+    """Un texte pour un attribut : guillemets échappés."""
+    return html.escape(t, quote=True)
+
+
+_NORM = re.compile(r'[\W_]+')
+
+
+def _norm(t):
+    return _NORM.sub('', t.casefold())
+
+
+# Les données d'exemple qui tombent, par hasard, sur une valeur du dictionnaire de l'outil : (planche, texte français) → raison. Rien d'autre.
+D_EXCEPTIONS = {
+    # la pastille de coalition de l'instantané affiche la valeur brute du groupe (fl.coalition), pas le libellé traduit de pk.flt.red
+    ('hq', 'Red'): 'valeur brute de coalition affichée par l’outil, pas le libellé du filtre',
+    # le sigle court de la barre téléphone est écrit en dur dans l'outil (build_hq.py, tb-brand-short), hors dictionnaire ; sa norme tombe sur « HQ »
+    ('hq', 'H·Q'): 'sigle écrit en dur dans l’outil, non traduit',
+    # valeur d'exemple de la ligne Paillettes : le reste du gabarit « {0} % » une fois l'argument retiré
+    ('fc', '0'): 'nombre d’exemple, égal au résidu du gabarit lo.pct',
+}
+
+
 _ICON = re.compile(r'^[^\w\s…]+\s+')
 _SLOT = re.compile(r'\{(\w+)\}')
 
@@ -182,6 +229,9 @@ class Plate:
         self.emitted = []       # les sorties de sv_text, telles que posées dans le SVG
         self.refs = set()       # (outil, clé) lus
         self.counts = {'L': 0, 'D': 0, 'M': 0}
+        self.mixed = []         # les <text> qui accolent une donnée à un libellé de l'outil (relecture, sans arrêt)
+        self._dvals = None
+        self._dseen = set()
         PLATES.append(self)
 
     def _err(self, tool, key, msg):
@@ -191,12 +241,17 @@ class Plate:
     def _slot(self, v, li):
         """La valeur d'un gabarit {0} : un texte, ou une partie L / D (un libellé de l'outil, une donnée d'exemple) qui se lit dans la langue demandée."""
         if isinstance(v, _Part):
+            if v.kind == 'D':
+                self._check_d(v)
             return (self._label(v) if v.kind == 'L' else (v.fr, v.en))[li]
         return str(v)
 
     def _label(self, p):
         out = []
         self.refs.add((p.tool, p.key))
+        if p.tool not in self.tools:
+            self._err(p.tool, p.key, 'cet outil n’est pas celui de la planche (%s)' % ', '.join(TOOL_NAMES.get(t, t) for t in self.tools))
+            return '?', '?'
         dd = tool_dicts(p.tool)
         for li, lang in ((0, 'FR'), (1, 'EN')):
             if dd is None:
@@ -232,6 +287,22 @@ class Plate:
             out.append(t)
         return out[0], out[1]
 
+    def _check_d(self, p):
+        """Une donnée d'exemple qui égale (ponctuation, espaces et casse ignorés) une valeur FR ou EN du dictionnaire de l'outil de la planche est un libellé écrit en clair : erreur, sauf exception écrite dans D_EXCEPTIONS."""
+        if self._dvals is None:
+            self._dvals = set()
+            for t in self.tools:
+                dd = tool_dicts(t)
+                for d in (dd or ()):
+                    self._dvals |= {_norm(v) for v in d.values()}
+            self._dvals.discard('')
+        for txt in (p.fr, p.en):
+            n = _norm(txt)
+            if n and n in self._dvals and (self.pid, p.fr) not in D_EXCEPTIONS and (self.pid, p.fr) not in self._dseen:
+                self._dseen.add((self.pid, p.fr))
+                PLANCHE_ERRORS.append('FAIL planche %s : la donnée d’exemple « %s » est une valeur du dictionnaire de l’outil : écrivez-la par L (ou ajoutez une exception motivée)' % (self.pid, p.fr))
+                break
+
     def resolve(self, parts):
         """(FR, EN, genre) d'une suite de parties ; le genre est L s'il y a un libellé de l'outil, M pour un titre du manuel, D sinon."""
         fr, en, kinds = '', '', set()
@@ -240,17 +311,24 @@ class Plate:
                 a, b = self._label(p)
             else:
                 a, b = p.fr, p.en
+                if p.kind == 'D':
+                    self._check_d(p)
             fr += a
             en += b
             kinds.add(p.kind)
         if 'M' in kinds and kinds != {'M'}:
-            raise ValueError('un titre du manuel ne se mêle à rien d’autre')
+            PLANCHE_ERRORS.append('FAIL planche %s : un titre du manuel ne se mêle à rien d’autre : « %s »' % (self.pid, fr))
+            kinds = {'L'}
         kind = 'L' if 'L' in kinds else ('M' if 'M' in kinds else 'D')
         return fr, en, kind
 
-    def text(self, x, y, size, *parts, **kw):
-        """Un <text> (FR puis EN) de la planche, écrit par le genre de ses parties."""
+    def text(self, x, y, size, *parts, _m=False, **kw):
+        """Un <text> (FR puis EN) de la planche, écrit par le genre de ses parties. Le genre M (titre du manuel) n'y entre que par les titres de planche (_m)."""
         fr, en, kind = self.resolve(parts)
+        if kind == 'M' and not _m:
+            PLANCHE_ERRORS.append('FAIL planche %s : un titre du manuel ne s’écrit que comme titre de planche ou titre de légende : « %s »' % (self.pid, fr))
+        if {p.kind for p in parts} >= {'L', 'D'} and fr not in self.mixed:
+            self.mixed.append(fr)
         s = sv_text(x, y, size, fr, None if en == fr else en, **kw)
         self.emitted.append(s)
         self.counts[kind] += 1
@@ -262,7 +340,13 @@ class Plate:
         rest = '\n'.join(svgs)
         for s in self.emitted:
             rest = rest.replace(s, '', 1)
-        for t in re.findall(r'<text\b[^>]*>(.*?)</text>', rest, flags=re.S):
+        if re.search(r'<foreignObject\b', '\n'.join(svgs), flags=re.I):
+            PLANCHE_ERRORS.append('FAIL planche %s : foreignObject refusé dans une planche' % self.pid)
+        n_open = len(re.findall(r'<text\b', '\n'.join(svgs), flags=re.I))
+        n_emit = sum(len(re.findall(r'<text\b', e, flags=re.I)) for e in self.emitted)
+        if n_open != n_emit:
+            PLANCHE_ERRORS.append('FAIL planche %s : %d <text> ouvrants dans les SVG, %d écrits par les deux fonctions' % (self.pid, n_open, n_emit))
+        for t in re.findall(r'<text\b[^>]*>(.*?)</text>', rest, flags=re.S | re.I):
             PLANCHE_ERRORS.append('FAIL planche %s : un <text> n’est passé par aucune des deux fonctions (libellé de l’outil, donnée d’exemple) : « %s »'
                                   % (self.pid, html.unescape(t)))
 
@@ -326,17 +410,17 @@ class Plate:
 
     def title_wide(self, fr, en, y, y_rule):
         """Le titre de la variante large (viewBox 720) et son filet."""
-        return (self.text(360, y, 13, M(fr, en), op=.9, ls=3) + '\n          '
+        return (self.text(360, y, 13, M(fr, en), op=.9, ls=3, _m=True) + '\n          '
                 f'<line x1="120" y1="{_n(y_rule)}" x2="600" y2="{_n(y_rule)}" stroke="currentColor" stroke-width=".6" opacity=".3"/>')
 
     def title_tall(self, fr, en, sub_fr, sub_en, w=360):
         """Le titre de la variante haute et son sous-titre."""
-        return (self.text(w / 2, 22, 12, M(fr, en), op=.9, ls=2.5) + '\n          '
-                + self.text(w / 2, 38, 8.5, M(sub_fr, sub_en), op=.7))
+        return (self.text(w / 2, 22, 12, M(fr, en), op=.9, ls=2.5, _m=True) + '\n          '
+                + self.text(w / 2, 38, 8.5, M(sub_fr, sub_en), op=.7, _m=True))
 
     def svg_open(self, cls, w, h, aria_fr, aria_en, marker):
-        return (f'<svg class="{cls}" viewBox="0 0 {w} {h}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="{_esc(aria_fr)}" '
-                f'data-aria-fr="{_esc(aria_fr)}" data-aria-en="{_esc(aria_en)}">\n          ' + sv_defs(marker))
+        return (f'<svg class="{cls}" viewBox="0 0 {w} {h}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="{_q(aria_fr)}" '
+                f'data-aria-fr="{_q(aria_fr)}" data-aria-en="{_q(aria_en)}">\n          ' + sv_defs(marker))
 
     # ── la légende numérotée ─────────────────────────────────────────────────────
     def legend_html(self, rows):
@@ -344,6 +428,8 @@ class Plate:
         li = []
         for n, title, tf, te in rows:
             fr, en, kind = self.resolve(title)
+            if kind not in ('L', 'M'):
+                PLANCHE_ERRORS.append('FAIL planche %s : le titre en gras de la légende (ligne %s) doit être un libellé de l’outil ou un titre du manuel : « %s »' % (self.pid, n, fr))
             self.counts[kind] += 1
             li.append(f'<li><span class="pl-n">{n}</span><span class="lang-block" data-lang="fr"><b>{_esc(fr_typo(fr))}</b> — {_esc(fr_typo(tf))}</span>'
                       f'<span class="lang-block" data-lang="en"><b>{_esc(en)}</b> — {_esc(te)}</span></li>')
@@ -353,7 +439,7 @@ class Plate:
         """La planche : le cadre, la figure zoomable (variante large, variante haute, « Fig. 1 — … »), puis la légende numérotée."""
         return (f'<div class="fm-plate">\n        <div class="fm-schema fm-plate-fig">\n          {wide}\n          {tall}\n'
                 f'          <div class="fm-schema-legend">'
-                f'<span class="lang-block" data-lang="fr">{_esc(cap_fr)}</span>'
+                f'<span class="lang-block" data-lang="fr">{_esc(fr_typo(cap_fr))}</span>'
                 f'<span class="lang-block" data-lang="en">{_esc(cap_en)}</span></div>\n        </div>\n'
                 f'        {legend}\n      </div>')
 
@@ -701,10 +787,12 @@ def aircraft_front_view(ac):
                 raw = json.load(fh)[ac]['svg']
             m = re.match(r'\s*<svg\b[^>]*viewBox="0 0 ([\d.]+) ([\d.]+)"[^>]*>(.*)</svg>\s*$', raw, flags=re.S)
             body = m.group(3)
-            cols = set(re.findall(r'(?:fill|stroke)="(#[0-9a-fA-F]+)"', body))
-            if len(re.findall(r'<path\b', body)) != 4 or cols != {'#ffffff', '#241f21'} or re.search(r'<(?!/?path\b)\w', body):
-                raise ValueError('structure inattendue (tracés, couleurs ou éléments)')
-            body = body.replace('fill="#ffffff"', 'class="pl-view-bg"').replace('stroke="#241f21"', 'stroke="currentColor"')
+            vals = {v.lower() for v in re.findall(r'\b(?:fill|stroke)="([^"]*)"', body)}
+            if (len(re.findall(r'<path\b', body)) != 4 or not {'#ffffff', '#241f21'} <= vals or not vals <= {'#ffffff', '#241f21', 'none'}
+                    or re.search(r'\bstyle\s*=', body, flags=re.I) or re.search(r'<(?!/?path\b)\w', body)):
+                raise ValueError('structure inattendue (tracés, couleurs, style ou éléments)')
+            body = re.sub(r'fill="#ffffff"', 'class="pl-view-bg"', body, flags=re.I)
+            body = re.sub(r'stroke="#241f21"', 'stroke="currentColor"', body, flags=re.I)
             _VIEWS[ac] = (body, float(m.group(1)), float(m.group(2)))
         except Exception as e:     # noqa: BLE001
             PLANCHE_ERRORS.append('FAIL planche fc : la vue de face de %s ne se lit pas dans data/aircraft_views.json (%s)' % (ac, e))
@@ -1069,7 +1157,7 @@ def _dg_wide(P):
             y += 24
         elif key == 'radio':
             body.append(P.text(E0 + 14, y + 11, 8, L('dg', 'rt.title', args={'type': 'MI-24P'}), anchor='start', op=.7))
-            body.append(P.text(E0 + 14, y + 28, 8, D('CH 0'), anchor='start', op=.8))
+            body.append(P.text(E0 + 14, y + 28, 8, L('dg', 'rt.ch', args={'n': '0'}), anchor='start', op=.8))
             body.append(P.field(E0 + 42, y + 17, 60, 15, [D('127.500')], size=8))
             body.append(P.tick(E0 + 110, y + 20.5, True))
             body.append(P.text(E0 + 121, y + 28, 8, L('dg', 'rt.on'), anchor='start', op=.8))
@@ -1186,10 +1274,10 @@ def _dg_legend_rows():
         (3, [M('Le paquet de cartes', 'The deck of cards')],
          'une ligne choisit la carte, avec sa pastille LIÉE à un groupe, LIBRE ou GROUPE SUPPRIMÉ.',
          'a row chooses the card, with its badge LINKED to a group, FREE or GROUP DELETED.'),
-        (4, [D('+')],
+        (4, [M('+', '+')],
          'ajoute une datacard liée à un groupe.',
          'adds a datacard linked to a group.'),
-        (5, [D('…')],
+        (5, [M('…', '…')],
          'ouvre les autres actions sur les cartes. La dernière carte ne se supprime pas : elle se vide.',
          'opens the other actions on the cards. The last card cannot be deleted: it is emptied.'),
         (6, [M('Les sections de l’éditeur', 'The editor sections')],

@@ -537,7 +537,8 @@ function zmOpen(el) {
   var label = '';
   var nat = null, img = null;
   if (zm.schema) {
-    var svg = el.querySelector('svg');
+    var svgs = Array.prototype.slice.call(el.querySelectorAll('svg'));
+    var svg = svgs.filter(function (v) { return v.getClientRects().length; })[0] || svgs[0];   // le premier SVG affiché : au téléphone, la variante haute
     label = svg ? (svg.getAttribute('aria-label') || '') : '';
     zm.box.appendChild(zmCloneSchema(el));
   } else {
@@ -2377,6 +2378,8 @@ if fr_count != en_count:
 print('\n-- Planches d\'écran --')
 for _pl in PLATES:
     print('  [OK] ' + planche_report(_pl))
+    for _m in _pl.mixed:
+        print('        texte mixte (donnée + libellé), à relire : ' + _m)
 for _e in PLANCHE_ERRORS:
     print('  [FAIL] ' + _e)
     CHECK_ERRORS.append(_e)
