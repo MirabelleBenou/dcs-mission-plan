@@ -1434,7 +1434,7 @@ body.fmnav-open .fmnav-ov {{ display: block; }}
   scrollbar-width: thin; scrollbar-color: var(--amber-dark) transparent;
   visibility: hidden; transform: translateX(105%); transition: transform .18s ease-out, visibility 0s linear .18s;
 }}
-body.fmnav-open .fmnav-panel {{ visibility: visible; transform: none; transition: transform .18s ease-out, visibility 0s; }}
+body.fmnav-open .fmnav-panel {{ visibility: visible; transform: none; transition: transform .18s ease-out; }}
 @media (prefers-reduced-motion: reduce) {{
   .fmnav-panel, body.fmnav-open .fmnav-panel {{ transition: none; }}
 }}
@@ -2395,7 +2395,15 @@ function fmTocSet(open, back) {{
   if (!b || !x || open === fmTocIsOpen()) return;
   document.body.classList.toggle('fmnav-open', open);
   b.setAttribute('aria-expanded', open ? 'true' : 'false');
-  if (open) x.focus(); else if (back) b.focus();
+  if (open) {{
+    // le panneau vient de devenir visible : le navigateur ne le rend focalisable qu'après quelques images, on réessaie jusqu'à ce que × ait le focus
+    var tries = 0;
+    (function focusX() {{
+      x.focus();
+      if (document.activeElement !== x && tries++ < 12 && fmTocIsOpen()) setTimeout(focusX, 25);
+    }})();
+  }} else if (back) b.focus();
+  else if (document.getElementById('fmnav-panel').contains(document.activeElement)) document.activeElement.blur();   // le panneau se masque : le focus ne reste pas dans un élément caché
 }}
 
 // Un lien du sommaire ou du bas de chapitre (le manuel est dans un cadre srcdoc : jamais de href seul) ; le même hash ne déclenche pas hashchange
