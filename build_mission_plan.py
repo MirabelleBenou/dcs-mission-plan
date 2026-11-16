@@ -844,6 +844,7 @@ select[data-tbm-src] {{ display: none !important; }}
       soon: 'À venir',
       loading: 'Chargement',
       back: '◄ Mission Plan',
+      'back.tip': 'Retour à l’accueil de Mission Plan',
       'theme.cwnato': 'Cold War OTAN',
       'theme.cwsoviet': 'Cold War Soviétique',
       'theme.modernnato': 'OTAN moderne',
@@ -893,6 +894,7 @@ select[data-tbm-src] {{ display: none !important; }}
       soon: 'Coming soon',
       loading: 'Loading',
       back: '◄ Mission Plan',
+      'back.tip': 'Back to the Mission Plan home',
       'theme.cwnato': 'Cold War NATO',
       'theme.cwsoviet': 'Cold War Soviet',
       'theme.modernnato': 'Modern NATO',
@@ -1013,8 +1015,8 @@ select[data-tbm-src] {{ display: none !important; }}
   }}
 
   /* ── Barre d'un outil dans le shell ────────────────────────── */
-  /* Remet à jour, dans le document de l'outil : le bouton retour (flèche seule sous 760 px, avec son nom en aria-label et
-     title ; texte entier au-delà) et le fondu du bord droit (barre qui défile et qui n'est pas au bout). Rappelée au
+  /* Remet à jour, dans le document de l'outil : le bouton retour (flèche seule sous 760 px, avec son nom en aria-label ;
+     texte entier au-delà ; l'infobulle, toujours, dit où il mène) et le fondu du bord droit (barre qui défile et qui n'est pas au bout). Rappelée au
      défilement de la barre, au redimensionnement, aux changements de la barre (langue de l'outil) et au changement de
      langue du shell. */
   function mpBindToolbar(iframe, toolbar, back) {{
@@ -1030,8 +1032,8 @@ select[data-tbm-src] {{ display: none !important; }}
         var txt = compact ? arrow : full;
         if (back.textContent !== txt) back.textContent = txt;
         if (back.getAttribute('aria-label') !== name) back.setAttribute('aria-label', name);
-        if (compact) {{ if (back.title !== name) back.title = name; }}
-        else if (back.hasAttribute('title')) back.removeAttribute('title');
+        var tip = t('back.tip');
+        if (back.title !== tip) back.title = tip;
         var g = win.getComputedStyle(toolbar).columnGap;
         g = (g && g !== 'normal') ? g : '0px';
         if (toolbar.style.getPropertyValue('--mp-fade-gap') !== g) toolbar.style.setProperty('--mp-fade-gap', g);

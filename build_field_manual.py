@@ -529,6 +529,7 @@ function zmCloneSchema(el) {
 }
 
 function zmOpen(el) {
+  if (typeof fmTocSet === 'function') fmTocSet(false, false);   // le zoom ne cohabite pas avec le sommaire
   zm.opener = el;
   zm.schema = el.classList.contains('fm-schema');
   zm.box.innerHTML = '';
@@ -805,9 +806,10 @@ def _md(t, fr=False):
 def _lb(lang, inner, tag='div'):
     return f'<{tag} class="lang-block" data-lang="{lang}">{inner}</{tag}>'
 
-def _render(blocks):
-    """Les blocs d'une page en HTML ; chaque bloc écrit FR puis EN (parité exacte)."""
+def _render(blocks, pid):
+    """Les blocs d'une page en HTML ; chaque bloc écrit FR puis EN (parité exacte). Avant chaque titre h3, une ancre commune aux deux langues <pid>-<n> (n : rang du h3 dans la page)."""
     out, prose = [], []
+    n_h3 = 0
     def flush():
         if prose:
             out.append('      <div class="fm-prose">\n        ' + '\n        '.join(prose) + '\n      </div>')
@@ -816,6 +818,8 @@ def _render(blocks):
         if kind == 'raw':
             flush(); out.append(fr)
         elif kind == 'h':
+            n_h3 += 1
+            prose.append(f'<span id="{pid}-{n_h3}"></span>')
             prose.append(_lb('fr', _md(fr, True), 'h3')); prose.append(_lb('en', _md(en), 'h3'))
         elif kind == 'h4':
             prose.append(_lb('fr', _md(fr, True), 'h4')); prose.append(_lb('en', _md(en), 'h4'))
@@ -860,23 +864,79 @@ _TILE = {'hq': 'HQ_TILE_SRC', 'bg': 'BG_TILE_SRC', 'rs': 'RS_TILE_SRC', 'rp': 'R
 _MONO = {'start': '0', 'hq': 'HQ', 'bg': 'BG', 'rs': 'RS', 'rp': 'RP', 'dg': 'DG', 'fc': 'FC'}
 _ALT = {'hq': 'HQ', 'bg': 'Briefing Generator', 'rs': 'Recon Station', 'rp': 'Route Planner', 'dg': 'Datacard Generator', 'fc': 'Flight Configurator'}
 
+def _levels(pid, blocks):
+    """Les blocs d'une page, titres au bon niveau : sous « Les gestes », les sous-sections prennent un niveau en dessous (h4)."""
+    if pid == 'start':
+        return list(blocks)
+    seen, nb = False, []
+    for k, f, e in blocks:
+        if k == 'h' and f == 'Les gestes':
+            seen = True
+        elif k == 'h' and seen:
+            k = 'h4'
+        nb.append((k, f, e))
+    return nb
+
+# Les pages du manuel, dans l'ordre (le même que PAGES du script) ; le sommaire et le bas de chapitre en sont tirés
+_ORDER = ['index', 'start', 'hq', 'bg', 'rs', 'rp', 'dg', 'fc']
+_ACCENT_HEX = {pid: v.split(';')[0] for pid, v in _ACCENT.items()}
+_ACCENT_HEX['rs'] = '#C95A9C'     # RS : l'accent est posé par la feuille (#page-rs), non par _ACCENT ; un contrôle du build relit l'accord
+
+def _plain(h):
+    return re.sub(r'<[^>]+>', '', h)
+
+def _a_go(target, cls, inner, extra=''):
+    """Un lien du manuel vers une page ou une section. Le manuel tourne dans un cadre srcdoc : un href="#…" seul se résout contre l'adresse du shell
+    et le recharge dans le cadre ; fmGo() pose le hash (comme les liens du texte), le href reste pour l'accessibilité."""
+    return f'<a class="{cls}" href="#{target}" onclick="fmGo(&#39;{target}&#39;);return false"{extra}>{inner}</a>'
+
+def _title_span(pid):
+    """Le titre d'une page, tel que le dictionnaire le donne (index : nav.index)."""
+    key = 'nav.index' if pid == 'index' else f'{pid}.hero.title'
+    return f'<span data-i18n="{key}">' + _esc('Index' if pid == 'index' else _HERO_TXT[pid][0]) + '</span>'
+
+def build_toc():
+    """Le panneau de sommaire : une ligne par page, sous chacune une ligne par titre h3, générés depuis PAGES_SRC."""
+    rows = []
+    for pid in _ORDER:
+        sty = f' style="--a:{_ACCENT_HEX.get(pid, "var(--fm-accent)")}"'
+        code = '' if pid == 'index' else _MONO[pid]
+        rows.append('    ' + _a_go(pid, 'fmnav-ch', f'<span class="fmnav-code">{code}</span><span class="fmnav-t">' + _title_span(pid) + '</span>',
+                                   f' data-page="{pid}"{sty}'))
+        if pid == 'index':
+            continue
+        n = 0
+        for k, f, e in _levels(pid, PAGES_SRC[pid]):
+            if k != 'h':
+                continue
+            n += 1
+            rows.append('    ' + _a_go(f'{pid}:{pid}-{n}', 'fmnav-sec',
+                                       _lb('fr', _plain(_md(f, True)), 'span') + _lb('en', _plain(_md(e)), 'span')))
+    return ('<div class="fmnav-ov" id="fmnav-ov" aria-hidden="true" onclick="fmTocSet(false,false)"></div>\n'
+            '<nav class="fmnav-panel" id="fmnav-panel" data-i18n-aria-label="nav.contents" aria-label="Sommaire">\n'
+            '  <div class="fmnav-head"><span data-i18n="nav.contents">Sommaire</span>'
+            '<button type="button" id="fmnav-x" class="tb-btn fmnav-x" onclick="fmTocSet(false,true)" data-i18n-aria-label="nav.close" aria-label="Fermer le sommaire" data-i18n-title="nav.close" title="Fermer le sommaire">×</button></div>\n'
+            + '\n'.join(rows) + '\n</nav>')
+
+def build_pn(pid):
+    """Le bas de chapitre : le chapitre précédent et le suivant (ordre de _ORDER ; « Par où commencer » n'a pas de précédent, le FC pas de suivant)."""
+    i = _ORDER.index(pid)
+    def box(j, cls, key, label):
+        if j < 1 or j >= len(_ORDER):
+            return '<span></span>'
+        q = _ORDER[j]
+        return _a_go(q, cls, f'<span class="fmnav-k" data-i18n="{key}">{label}</span><span class="fmnav-n">{_MONO[q]} · ' + _title_span(q) + '</span>')
+    return ('\n      <div class="fmnav-pn">' + box(i - 1, 'fmnav-pv', 'nav.prev', '◄ Chapitre précédent')
+            + box(i + 1, 'fmnav-nx', 'nav.next', 'Chapitre suivant ►') + '</div>\n')
+
 def _page(pid, blocks):
-    if pid != 'start':
-        # sous « Les gestes », les sous-sections prennent un niveau de titre en dessous (h4)
-        seen, nb = False, []
-        for k, f, e in blocks:
-            if k == 'h' and f == 'Les gestes':
-                seen = True
-            elif k == 'h' and seen:
-                k = 'h4'
-            nb.append((k, f, e))
-        blocks = nb
+    blocks = _levels(pid, blocks)
     style = f' style="--chapter-accent:{_ACCENT[pid]};"' if pid in _ACCENT else ''
     hero = _hero(pid, _MONO[pid], _TILE.get(pid), _ALT.get(pid, ''))
     hero = hero.replace('{TITLE}', _esc(_HERO_TXT[pid][0])).replace('{SUB}', _esc(_HERO_TXT[pid][1] or ''))
     return (f'  <section id="page-{pid}" class="fm-page hidden">\n    <div class="fm-chapter"{style}>\n\n'
-            f'      <button class="fm-back-btn" onclick="navigate(\'index\')" data-i18n="btn.back">◄ Index</button>\n\n{hero}\n\n'
-            + _render(blocks) + f'\n\n    </div><!-- /fm-chapter -->\n  </section><!-- /page-{pid} -->\n')
+            f'{hero}\n\n'
+            + _render(blocks, pid) + '\n' + build_pn(pid) + f'\n    </div><!-- /fm-chapter -->\n  </section><!-- /page-{pid} -->\n')
 
 PAGES_SRC = {}
 
@@ -914,6 +974,9 @@ PAGES_SRC['start'] = [
     ('h', "La barre du haut", "The top bar"),
     ('p', ['La barre est la même dans les six outils : les boutons de fichier juste après le sigle, puis les réglages. Quand la place manque, les boutons **perdent leur texte par étapes**, Affichage d’abord, et gardent leur icône et leur info-bulle ; au téléphone ou à la tablette, tous sont des icônes. Elle défile au doigt quand elle ne tient pas. L’icône à droite de l’en-tête d’une section **replie ou déplie toutes les sections**, dans les six outils ; au téléphone ou à la tablette, l’éditeur du BG et du DG passe en onglets.', 'Sous la barre du BG, du RP, du DG et du FC, la **ligne de mission d’HQ** dit quel .miz est ouvert dans HQ, sa date et son heure, et ce que l’outil en prend. Au RP, au DG et au FC, elle passe en rouge, « Non utilisée ici : autre théâtre », quand la mission n’est pas celle du théâtre de l’outil ; au BG, jamais.'], ['The bar is the same in all six tools: the file buttons right after the abbreviation, then the settings. When room runs out, the buttons **lose their text in stages**, Display first, and keep their icon and tooltip; on a phone or tablet, all of them are icons. It scrolls by finger when it does not fit. The icon at the right of a section header **folds or unfolds all the sections**, in all six tools; on a phone or tablet, the BG and DG editor switches to tabs.', 'Under the bar of the BG, RP, DG and FC, the **HQ mission line** says which .miz is open in HQ, its date and time, and what the tool takes from it. In the RP, DG and FC it turns red, “Not used here: other theatre”, when the mission is not on the tool’s theatre; in the BG, never.']),
     ('h', "Lire ce manuel au téléphone", "Reading this manual on a phone"),
+    ('p',
+     ["**Index** et **Sommaire**, dans la barre, restent à portée de main : Index ramène à la page d’entrée du manuel, Sommaire ouvre la liste de ses pages et de leurs sections, et un toucher y mène. En bas de chaque chapitre, le précédent et le suivant. **◄ Mission Plan** quitte le manuel."],
+     ["**Index** and **Contents**, in the bar, stay within reach: Index goes back to the manual’s front page, Contents opens the list of its pages and their sections, and one touch takes you there. At the bottom of each chapter, the previous one and the next one. **◄ Mission Plan** leaves the manual."]),
     ('p',
      ["Touchez un schéma pour l’agrandir ; pincez ou utilisez + pour zoomer. Sur un téléphone, la carte d’ensemble prend une forme verticale."],
      ["Touch a diagram to enlarge it; pinch or use + to zoom. On a phone, the suite map takes a vertical shape."]),
@@ -1168,6 +1231,7 @@ PAGES_SRC['fc'] = [
      "Credits — The weapon tables come from **pydcs** (LGPL-3.0-or-later), taken from Mission Tools; the front-view drawings are by **Goldwolf** (DCS Reference Guide), used with his permission and **outside the repository’s AGPL licence** (see `data/views/LICENSE.md`). Limit: the module writes the loadout you compose; it does not say that DCS will accept it."),
 ]
 
+TOC_HTML = build_toc()
 PAGES_HTML = '\n\n'.join(_page(pid, PAGES_SRC[pid]) for pid in ('start', 'hq', 'bg', 'rs', 'rp', 'dg', 'fc'))
 
 HTML = f"""<!DOCTYPE html>
@@ -1323,9 +1387,87 @@ body {{
 }}
 
 
+/* Le bouton commun de la barre, recopié du Datacard Generator (build_datacard_generator.py) : le Field Manual n'en avait que les règles de réduction. Le 44 px est celui de la barre commune (ui_block.py) */
+.tb-btn {{
+  font-family: var(--f-ui);
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  font-size: 12px;
+  text-transform: uppercase;
+  background: transparent;
+  color: var(--paper);
+  border: 1px solid var(--khaki);
+  padding: 0 14px;
+  height: 40px;
+  min-width: 44px;
+  cursor: pointer;
+  transition: all .15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}}
+.tb-btn:hover, .tb-btn:focus-visible {{
+  background: var(--olive);
+  border-color: var(--amber);
+  color: var(--amber);
+}}
+.tb-btn:active {{ transform: translateY(1px); }}
+.tb-btn svg {{ width: 16px; height: 16px; flex-shrink: 0; }}
+.tb-btn[hidden] {{ display: none; }}
+.toolbar .tb-btn {{ min-height: 44px; }}
+.toolbar .tb-sep + .tb-btn {{ margin-left: 4px; }}
+/* Sommaire ouvert : le style du survol, comme un bouton à menu ouvert */
+#btn-toc[aria-expanded="true"] {{ background: var(--olive); border-color: var(--amber); color: var(--amber); }}
+
+/* ---------- Le panneau de sommaire : la matière des listes de la suite (ui_block.py, .tbm-panel, .tbm-head, .tbm-opt) ---------- */
+.fmnav-ov {{ position: fixed; inset: 60px 0 0 0; z-index: 998; display: none; background: rgba(10,12,6,.35); }}
+body.fmnav-open .fmnav-ov {{ display: block; }}
+.fmnav-panel {{
+  position: fixed; top: 60px; right: 0; bottom: 0; z-index: 999;
+  width: min(380px, calc(100vw - 32px)); box-sizing: border-box; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; padding: 0 0 32px;
+  background: linear-gradient(180deg, var(--olive-dark) 0%, var(--olive-deep) 100%);
+  border-top: 3px solid var(--amber); border-left: 1px solid var(--amber-dark);
+  box-shadow: 0 12px 28px rgba(0,0,0,.55), 0 2px 0 rgba(0,0,0,.35);
+  scrollbar-width: thin; scrollbar-color: var(--amber-dark) transparent;
+  visibility: hidden; transform: translateX(105%); transition: transform .18s ease-out, visibility 0s linear .18s;
+}}
+body.fmnav-open .fmnav-panel {{ visibility: visible; transform: none; transition: transform .18s ease-out, visibility 0s; }}
+@media (prefers-reduced-motion: reduce) {{
+  .fmnav-panel, body.fmnav-open .fmnav-panel {{ transition: none; }}
+}}
+@media print {{
+  .fmnav-panel, .fmnav-ov {{ display: none !important; }}
+}}
+.fmnav-head {{
+  display: flex; align-items: center; justify-content: space-between; padding: 8px 8px 8px 14px; margin-bottom: 2px;
+  border-bottom: 1px solid rgba(168,154,114,.25);
+  font-family: var(--f-ui); font-weight: 500; font-size: 10px; letter-spacing: 1.8px; text-transform: uppercase; color: var(--khaki-light);
+}}
+.fmnav-x {{ font-size: 16px; padding: 0; width: 44px; height: 44px; }}
+.fmnav-ch, .fmnav-sec {{ position: relative; box-sizing: border-box; text-decoration: none; color: var(--paper); }}
+.fmnav-ch {{
+  display: grid; grid-template-columns: 40px minmax(0, 1fr); align-items: center; min-height: 44px; margin-top: 8px; padding: 0 14px 0 17px;
+  font-family: var(--f-ui); font-weight: 700; font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase;
+}}
+.fmnav-t {{ min-width: 0; overflow-wrap: anywhere; }}
+.fmnav-code {{ font-family: var(--f-stencil); font-weight: 700; font-size: 13px; letter-spacing: 1px; color: color-mix(in srgb, var(--a) 62%, #f2e8cf); }}
+.fmnav-sec {{
+  display: flex; align-items: center; min-height: 40px; padding: 4px 14px 4px 57px;
+  font-family: var(--f-ui); font-weight: 500; font-size: 13px; letter-spacing: .3px; text-transform: none;
+  border-top: 1px solid rgba(168,154,114,.14); overflow-wrap: anywhere;
+}}
+.fmnav-sec > .lang-block {{ min-width: 0; }}
+.fmnav-ch:hover, .fmnav-sec:hover, .fmnav-ch:focus-visible, .fmnav-sec:focus-visible {{ background: var(--olive); color: var(--amber); }}
+.fmnav-ch:focus-visible, .fmnav-sec:focus-visible {{ outline-offset: -2px; }}
+.fmnav-ch[aria-current="page"] {{ color: var(--amber); font-weight: 700; }}
+.fmnav-ch[aria-current="page"]::before {{ content: ''; position: absolute; left: 0; top: 6px; bottom: 6px; width: 3px; background: var(--amber); }}
+
 /* ---------- Barre du haut commune aux sept modules ----------
    La marque du Field Manual : le titre et son sous-titre à l'accent du module, le sigle (F·M) quand le titre ne tient plus. Aucun seuil de largeur propre au Field Manual : la barre se réduit comme celle des autres outils,
-   par la séquence commune du bloc d'interface (ui_block.py : build_bar_css, build_bar_js), « s'il tient » : le tampon de décor et celui que pose le shell, la version, puis (rien à retirer ici : ni liste, ni Affichage, ni bouton à texte) le titre. */
+   par la séquence commune du bloc d'interface (ui_block.py : build_bar_css, build_bar_js), « s'il tient » : le tampon de décor et celui que pose le shell, la version, puis (rien à retirer ici : ni liste ni Affichage ; mais deux boutons à texte, Index et Sommaire, qui perdent leur libellé à l'étape 5) le titre. */
 .tb-brand-main, .tb-brand-short {{ color: #7E8FA6; }}
 .tb-brand-short {{ display: none; font-family: var(--f-stencil); font-size: 16px; font-weight: 700; letter-spacing: 3px; white-space: nowrap; }}
 .tb-classif {{ font-family: var(--f-stencil); font-weight: 400; font-size: 11px; letter-spacing: 3px; color: var(--red-faded); border: 1px solid var(--red-faded); padding: 4px 10px; white-space: nowrap; flex-shrink: 0; }}
@@ -1605,24 +1747,17 @@ body {{
   padding: 32px 24px 80px;
 }}
 
-/* Bouton retour index */
-.fm-back-btn {{
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-family: var(--f-ui);
-  font-size: 11px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--fm-accent);
-  background: transparent;
-  border: 1px solid var(--fm-accent);
-  padding: 6px 14px;
-  cursor: pointer;
-  margin-bottom: 28px;
-  transition: all .12s;
+/* Bas de chapitre : le chapitre précédent et le suivant (le style de l'ancien bouton « ◄ Index » : bord à l'accent du manuel, libellé Oswald) */
+.fmnav-pn {{ display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--fm-accent); }}
+.fmnav-pn a {{ display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; text-decoration: none; border: 1px solid var(--fm-accent); transition: all .12s; }}
+.fmnav-pn a:hover {{ background: rgba(126,143,166,.12); }}
+.fmnav-nx {{ text-align: right; align-items: flex-end; }}
+.fmnav-k {{ font-family: var(--f-ui); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--fm-accent-dark); }}
+.fmnav-n {{ font-family: var(--f-stencil); font-size: 13px; letter-spacing: 1.5px; color: var(--accent-ink); overflow-wrap: anywhere; }}
+@media (max-width: 759px) {{
+  .fmnav-pn {{ grid-template-columns: 1fr; gap: 10px; }}
+  .fmnav-pn > span:empty {{ display: none; }}
 }}
-.fm-back-btn:hover {{ background: rgba(126,143,166,.12); }}
 
 /* ── HERO ── */
 .fm-hero {{
@@ -1891,6 +2026,14 @@ kbd {{
     <span class="tb-brand-sub" data-i18n="brand.sub">░ MANUEL OPÉRATIONNEL</span>
   </div>
   <div class="tb-sep" aria-hidden="true"></div>
+  <button type="button" id="btn-index" class="tb-btn" onclick="navigate('index')" data-i18n-title="nav.index.tip" title="Retour à l’index du manuel" data-i18n-aria-label="nav.index.tip" aria-label="Retour à l’index du manuel">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+    <span class="tb-btn-label" data-i18n="nav.index">Index</span>
+  </button>
+  <button type="button" id="btn-toc" class="tb-btn" onclick="fmTocSet(!fmTocIsOpen(),false)" aria-controls="fmnav-panel" aria-expanded="false" data-i18n-title="nav.contents.tip" title="Toutes les pages du manuel et leurs sections" data-i18n-aria-label="nav.contents.tip" aria-label="Toutes les pages du manuel et leurs sections">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+    <span class="tb-btn-label" data-i18n="nav.contents">Sommaire</span>
+  </button>
   <div class="tb-spacer"></div>
   <div class="tb-classif">TRAINING // UNCLASSIFIED</div>
   <button id="btn-lang" aria-label="Passer en anglais" title="Passer en anglais">
@@ -1902,6 +2045,9 @@ kbd {{
     </svg>
   </button>
 </header>
+
+<!-- ======== SOMMAIRE (panneau) ======== -->
+{TOC_HTML}
 
 <!-- ======== MAIN ROOT ======== -->
 <main id="fm-root">
@@ -2055,7 +2201,13 @@ var I18N = {{
     'index.rp.desc': "Routes, carte, navigation",
     'index.dg.desc': "Datacards du kneeboard",
     'index.soon':       'À VENIR',
-    'btn.back':         '◄ Index',
+    'nav.index':        'Index',
+    'nav.index.tip':    'Retour à l’index du manuel',
+    'nav.contents':     'Sommaire',
+    'nav.contents.tip': 'Toutes les pages du manuel et leurs sections',
+    'nav.close':        'Fermer le sommaire',
+    'nav.prev':         '◄ Chapitre précédent',
+    'nav.next':         'Chapitre suivant ►',
     'rs.hero.title':    'Recon Station',
     'rs.hero.sub':      'Compositeur photo-renseignement',
     'rs.whatfor.title': 'À quoi ça sert',
@@ -2091,7 +2243,13 @@ var I18N = {{
     'index.rp.desc':    'Routes, map, navigation',
     'index.dg.desc':    'Kneeboard datacards',
     'index.soon':       'COMING',
-    'btn.back':         '◄ Index',
+    'nav.index':        'Index',
+    'nav.index.tip':    'Back to the manual’s index',
+    'nav.contents':     'Contents',
+    'nav.contents.tip': 'Every page of the manual and its sections',
+    'nav.close':        'Close the contents',
+    'nav.prev':         '◄ Previous chapter',
+    'nav.next':         'Next chapter ►',
     'rs.hero.title':    'Recon Station',
     'rs.hero.sub':      'Photo-intelligence composer',
     'rs.whatfor.title': 'What it does',
@@ -2132,6 +2290,9 @@ function applyI18n() {{
   }});
   document.querySelectorAll('[data-i18n-title]').forEach(function(el) {{
     el.title = t(el.getAttribute('data-i18n-title'));
+  }});
+  document.querySelectorAll('[data-i18n-aria-label]').forEach(function(el) {{
+    el.setAttribute('aria-label', t(el.getAttribute('data-i18n-aria-label')));
   }});
   // Les titres des schémas (aria-label) suivent la langue
   document.querySelectorAll('svg[data-aria-fr]').forEach(function(el) {{
@@ -2200,6 +2361,7 @@ var PAGES = ['index', 'start', 'hq', 'bg', 'rs', 'rp', 'dg', 'fc'];
 
 function showPage(id, anchor) {{
   if (PAGES.indexOf(id) === -1) id = 'index';
+  fmTocSync(id);
   PAGES.forEach(function(pid) {{
     var el = document.getElementById('page-' + pid);
     if (!el) return;
@@ -2224,6 +2386,33 @@ function navigate(id) {{
   location.hash = '#' + id;
 }}
 
+// ── Sommaire (panneau) et liens de page ───────
+function fmTocIsOpen() {{ return document.body.classList.contains('fmnav-open'); }}
+
+// Ouvre ou ferme le panneau ; focus sur × à l'ouverture, sur le bouton Sommaire à la fermeture si back
+function fmTocSet(open, back) {{
+  var b = document.getElementById('btn-toc'), x = document.getElementById('fmnav-x');
+  if (!b || !x || open === fmTocIsOpen()) return;
+  document.body.classList.toggle('fmnav-open', open);
+  b.setAttribute('aria-expanded', open ? 'true' : 'false');
+  if (open) x.focus(); else if (back) b.focus();
+}}
+
+// Un lien du sommaire ou du bas de chapitre (le manuel est dans un cadre srcdoc : jamais de href seul) ; le même hash ne déclenche pas hashchange
+function fmGo(h) {{
+  fmTocSet(false, false);
+  if (location.hash === '#' + h) onHashChange(); else location.hash = '#' + h;
+}}
+
+// La page affichée : Index absent de l'index, aria-current sur la seule ligne de la page
+function fmTocSync(id) {{
+  var bi = document.getElementById('btn-index');
+  if (bi) bi.hidden = (id === 'index');
+  document.querySelectorAll('.fmnav-ch').forEach(function(a) {{
+    if (a.getAttribute('data-page') === id) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+  }});
+}}
+
 function onHashChange() {{
   var hash = (location.hash.replace('#', '') || 'index').split(':');
   showPage(hash[0], hash[1]);
@@ -2242,7 +2431,11 @@ function init() {{
 
   document.getElementById('btn-lang').addEventListener('click', toggleLang);
 
+  window.addEventListener('hashchange', function() {{ fmTocSet(false, false); }});
   window.addEventListener('hashchange', onHashChange);
+  document.addEventListener('keydown', function(e) {{
+    if (e.key === 'Escape' && fmTocIsOpen() && !document.body.classList.contains('zm-open')) {{ e.preventDefault(); fmTocSet(false, true); }}
+  }});
   onHashChange();
 }}
 
@@ -2365,6 +2558,52 @@ grep_ok('Les livrées custom et la livrée par défaut se replient comme les esc
 grep_ok('The custom liveries and the default livery fold like the squadrons, and are closed when the page opens.', 'HQ : les boîtes de livrées se replient (EN)')
 grep_absent('Inchangée', 'plus d\'« Inchangée » dans le manuel')
 grep_absent('Unchanged', 'plus d\'« Unchanged » dans le manuel')
+
+# La navigation du manuel : Index et Sommaire dans la barre, le panneau de sommaire, une ancre par h3, le bas de chapitre ; l'ancien bouton « ◄ Index » n'existe plus
+print('\n-- Navigation (barre, sommaire, bas de chapitre) --')
+_hdr = src[src.index('<header class="toolbar">'):src.index('</header>')]
+_ord = [_hdr.find(k) for k in ('class="tb-brand"', 'class="tb-sep"', 'id="btn-index"', 'id="btn-toc"', 'class="tb-spacer"', 'class="tb-classif"', 'id="btn-lang"')]
+print('  [%s] barre : sigle, séparateur, Index, Sommaire, espace, classification, langue, dans cet ordre' % ('OK' if all(x >= 0 for x in _ord) and _ord == sorted(_ord) else 'FAIL'))
+if not (all(x >= 0 for x in _ord) and _ord == sorted(_ord)):
+    CHECK_ERRORS.append('FAIL barre : ordre')
+for _id in ('btn-index', 'btn-toc'):
+    _b = re.search(r'<button type="button" id="' + _id + r'" class="tb-btn"[^>]*>.*?</button>', _hdr, re.S)
+    _ok = bool(_b) and '<svg' in _b.group(0) and 'class="tb-btn-label"' in _b.group(0) and 'aria-label=' in _b.group(0) and 'title=' in _b.group(0)
+    print('  [%s] bouton %s : tb-btn, icône SVG, libellé, infobulle, aria-label' % ('OK' if _ok else 'FAIL', _id))
+    if not _ok:
+        CHECK_ERRORS.append('FAIL bouton ' + _id)
+grep_ok('aria-controls="fmnav-panel" aria-expanded="false"', 'Sommaire : aria-controls et aria-expanded')
+grep_ok('<nav class="fmnav-panel" id="fmnav-panel"', 'sommaire : le panneau est dans le HTML du build')
+grep_ok('id="fmnav-x"', 'sommaire : le bouton ×')
+grep_absent('fm-back-btn', 'l\'ancien bouton « ◄ Index » de la page (et sa règle)')
+grep_absent('btn.back', 'la clé btn.back (plus lue)')
+_rows = re.findall(r'<a class="fmnav-ch" href="#(\w+)"', src)
+print('  [%s] sommaire : huit lignes de page, dans l\'ordre de PAGES (%s)' % ('OK' if _rows == _ORDER else 'FAIL', ','.join(_rows)))
+if _rows != _ORDER:
+    CHECK_ERRORS.append('FAIL sommaire : lignes de page')
+_h3 = {pid: len(re.findall(r'<h3 class="lang-block" data-lang="fr"', re.search(r'<section id="page-' + pid + r'".*?<!-- /page-' + pid + ' -->', src, re.S).group(0))) for pid in _ORDER[1:]}
+_anc = re.findall(r'<span id="(\w+)-(\d+)"></span>', src)
+_sec = re.findall(r'<a class="fmnav-sec" href="#(\w+):(\w+-\d+)"', src)
+_okanc = all(sorted(int(n) for p_, n in _anc if p_ == pid) == list(range(1, _h3[pid] + 1)) for pid in _ORDER[1:]) and len(_anc) == len(set(_anc)) == sum(_h3.values())
+_oksec = [(a, b) for a, b in _sec] == [(a, f'{a}-{n}') for a, n in _anc] or sorted(_sec) == sorted((p_, f'{p_}-{n}') for p_, n in _anc)
+print('  [%s] une ancre <page>-<n> par titre h3 (%d), une seule fois chacune' % ('OK' if _okanc else 'FAIL', sum(_h3.values())))
+print('  [%s] sommaire : une ligne de section par ancre (%d)' % ('OK' if _oksec else 'FAIL', len(_sec)))
+if not _okanc: CHECK_ERRORS.append('FAIL ancres des h3')
+if not _oksec: CHECK_ERRORS.append('FAIL lignes de section')
+_pn = len(re.findall(r'<div class="fmnav-pn">', src))
+print('  [%s] bas de chapitre : une paire de cases par page sauf l\'index (%d)' % ('OK' if _pn == 7 else 'FAIL', _pn))
+if _pn != 7: CHECK_ERRORS.append('FAIL bas de chapitre')
+_i = [m.start() for m in re.finditer(r'<div class="fmnav-pn">', src)]
+_lastchild = all(re.match(r'<div class="fmnav-pn">.*?</div>\s*</div><!-- /fm-chapter -->', src[k:], re.S) for k in _i)
+print('  [%s] bas de chapitre : dernier enfant de .fm-chapter' % ('OK' if _lastchild else 'FAIL'))
+if not _lastchild: CHECK_ERRORS.append('FAIL bas de chapitre : place')
+# la couleur d'accent du sigle au sommaire est celle de la page (la feuille #page-xx)
+_bad = [_pid for _pid, _hex in _ACCENT_HEX.items() if not re.search(r'#page-' + _pid + r'\s*\{\s*--chapter-accent:\s*' + re.escape(_hex) + ';', src)]
+if _bad:
+    CHECK_ERRORS.append('FAIL accent des sigles du sommaire : ' + ','.join(_bad))
+print('  [%s] accents des sigles du sommaire = ceux des chapitres' % ('OK' if not _bad else 'FAIL ' + ','.join(_bad)))
+grep_ok('id="fmnav-ov"', 'sommaire : le voile')
+grep_ok('data-i18n-aria-label="nav.close"', 'sommaire : × nommé (FR/EN)')
 
 # Vérifier les paires lang-block
 fr_count = src.count('data-lang="fr"')
