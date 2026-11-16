@@ -217,7 +217,6 @@ body {
 .tb-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
 .tb-btn[hidden] { display: none; }
 .toolbar .tb-btn { min-height: 44px; }
-.toolbar .tb-sep + .tb-btn { margin-left: 4px; }
 /* Sommaire ouvert : le style du survol, comme un bouton à menu ouvert */
 #btn-toc[aria-expanded="true"] { background: var(--olive); border-color: var(--amber); color: var(--amber); }
 
@@ -260,7 +259,7 @@ body.fmnav-open .fmnav-panel { transform: none; }
 }
 .fmnav-sec > .lang-block { min-width: 0; }
 .fmnav-ch:hover, .fmnav-sec:hover, .fmnav-ch:focus-visible, .fmnav-sec:focus-visible { background: var(--olive); color: var(--amber); }
-.fmnav-ch:focus-visible, .fmnav-sec:focus-visible { outline-offset: -2px; }
+a.fmnav-ch:focus-visible, a.fmnav-sec:focus-visible { outline-offset: -2px; }
 .fmnav-ch[aria-current="page"] { color: var(--amber); font-weight: 700; }
 .fmnav-ch[aria-current="page"]::before { content: ''; position: absolute; left: 0; top: 6px; bottom: 6px; width: 3px; background: var(--amber); }
 
@@ -286,6 +285,7 @@ body.fmnav-open .fmnav-panel { transform: none; }
 .toolbar.tb-st6 .tb-brand-short { display: inline; }
 
 /* ── ROOT SCROLL ── */
+#fm-root:focus { outline: none; }
 #fm-root {
   flex: 1;
   min-height: 0;
@@ -563,7 +563,7 @@ body.fmnav-open .fmnav-panel { transform: none; }
 .fmnav-pn a { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; text-decoration: none; border: 1px solid var(--fm-accent); transition: all .12s; }
 .fmnav-pn a:hover { background: rgba(126,143,166,.12); }
 .fmnav-nx { text-align: right; align-items: flex-end; }
-.fmnav-k { font-family: var(--f-ui); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--fm-accent-dark); }
+.fmnav-k { font-family: var(--f-ui); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--ink-faded); }
 .fmnav-n { font-family: var(--f-stencil); font-size: 13px; letter-spacing: 1.5px; color: var(--accent-ink); overflow-wrap: anywhere; }
 @media (max-width: 759px) {
   .fmnav-pn { grid-template-columns: 1fr; gap: 10px; }
@@ -1092,7 +1092,7 @@ body.zm-open #fm-root { overflow: hidden; }
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
     <span class="tb-btn-label" data-i18n="nav.index">Index</span>
   </button>
-  <button type="button" id="btn-toc" class="tb-btn" onclick="fmTocSet(!fmTocIsOpen(),false)" aria-controls="fmnav-panel" aria-expanded="false" data-i18n-title="nav.contents.tip" title="Toutes les pages du manuel et leurs sections" data-i18n-aria-label="nav.contents.tip" aria-label="Toutes les pages du manuel et leurs sections">
+  <button type="button" id="btn-toc" class="tb-btn" onclick="fmTocSet(!fmTocIsOpen(),false)" aria-controls="fmnav-panel" aria-expanded="false" data-i18n-title="nav.contents.tip" title="Sommaire — toutes les pages du manuel et leurs sections" data-i18n-aria-label="nav.contents.tip" aria-label="Sommaire — toutes les pages du manuel et leurs sections">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
     <span class="tb-btn-label" data-i18n="nav.contents">Sommaire</span>
   </button>
@@ -1141,7 +1141,7 @@ body.zm-open #fm-root { overflow: hidden; }
 </nav>
 
 <!-- ======== MAIN ROOT ======== -->
-<main id="fm-root">
+<main id="fm-root" tabindex="-1">
 
   <!-- ===== PAGE INDEX ===== -->
   <section id="page-index" class="fm-page">
@@ -3410,7 +3410,7 @@ var I18N = {
     'nav.index':        'Index',
     'nav.index.tip':    'Retour à l’index du manuel',
     'nav.contents':     'Sommaire',
-    'nav.contents.tip': 'Toutes les pages du manuel et leurs sections',
+    'nav.contents.tip': 'Sommaire — toutes les pages du manuel et leurs sections',
     'nav.close':        'Fermer le sommaire',
     'nav.prev':         '◄ Chapitre précédent',
     'nav.next':         'Chapitre suivant ►',
@@ -3452,7 +3452,7 @@ var I18N = {
     'nav.index':        'Index',
     'nav.index.tip':    'Back to the manual’s index',
     'nav.contents':     'Contents',
-    'nav.contents.tip': 'Every page of the manual and its sections',
+    'nav.contents.tip': 'Contents — every page of the manual and its sections',
     'nav.close':        'Close the contents',
     'nav.prev':         '◄ Previous chapter',
     'nav.next':         'Next chapter ►',
@@ -3602,19 +3602,30 @@ function fmTocSet(open, back) {
   document.body.classList.toggle('fmnav-open', open);
   b.setAttribute('aria-expanded', open ? 'true' : 'false');
   p.inert = !open;            // fermé : inert (hors du clavier et des aides techniques) ; ouvert : le focus de × se donne aussitôt, une fois
-  if (open) x.focus(); else if (back) b.focus();
+  if (open) {
+    var cur = p.querySelector('[aria-current]');      // la page courante est en vue dans le panneau
+    if (cur) cur.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    x.focus({ preventScroll: true });
+  } else if (back) b.focus();
 }
 
 // Un lien du sommaire ou du bas de chapitre (le manuel est dans un cadre srcdoc : jamais de href seul) ; le même hash ne déclenche pas hashchange
 function fmGo(h) {
   fmTocSet(false, false);
   if (location.hash === '#' + h) onHashChange(); else location.hash = '#' + h;
+  // le panneau devenu inert ne garde pas le focus : il revient au contenu du manuel (au clavier, le lecteur est dans la page)
+  var r = document.getElementById('fm-root');
+  if (r) r.focus({ preventScroll: true });
 }
 
 // La page affichée : Index absent de l'index, aria-current sur la seule ligne de la page
 function fmTocSync(id) {
   var bi = document.getElementById('btn-index');
-  if (bi) bi.hidden = (id === 'index');
+  if (bi) {
+    var had = (document.activeElement === bi);
+    bi.hidden = (id === 'index');
+    if (had && bi.hidden) { var tb = document.getElementById('btn-toc'); if (tb) tb.focus(); }   // Index se masque : le focus ne tombe pas sur body
+  }
   document.querySelectorAll('.fmnav-ch').forEach(function(a) {
     if (a.getAttribute('data-page') === id) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
   });

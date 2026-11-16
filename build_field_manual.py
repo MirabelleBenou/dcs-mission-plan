@@ -879,6 +879,7 @@ def _levels(pid, blocks):
 
 # Les pages du manuel, dans l'ordre (le même que PAGES du script) ; le sommaire et le bas de chapitre en sont tirés
 _ORDER = ['index', 'start', 'hq', 'bg', 'rs', 'rp', 'dg', 'fc']
+PAGES_JS = str(_ORDER)     # la liste PAGES du script est générée d'ici : une seule liste des pages
 _ACCENT_HEX = {pid: v.split(';')[0] for pid, v in _ACCENT.items()}
 _ACCENT_HEX['rs'] = '#C95A9C'     # RS : l'accent est posé par la feuille (#page-rs), non par _ACCENT ; un contrôle du build relit l'accord
 
@@ -1418,7 +1419,6 @@ body {{
 .tb-btn svg {{ width: 16px; height: 16px; flex-shrink: 0; }}
 .tb-btn[hidden] {{ display: none; }}
 .toolbar .tb-btn {{ min-height: 44px; }}
-.toolbar .tb-sep + .tb-btn {{ margin-left: 4px; }}
 /* Sommaire ouvert : le style du survol, comme un bouton à menu ouvert */
 #btn-toc[aria-expanded="true"] {{ background: var(--olive); border-color: var(--amber); color: var(--amber); }}
 
@@ -1461,7 +1461,7 @@ body.fmnav-open .fmnav-panel {{ transform: none; }}
 }}
 .fmnav-sec > .lang-block {{ min-width: 0; }}
 .fmnav-ch:hover, .fmnav-sec:hover, .fmnav-ch:focus-visible, .fmnav-sec:focus-visible {{ background: var(--olive); color: var(--amber); }}
-.fmnav-ch:focus-visible, .fmnav-sec:focus-visible {{ outline-offset: -2px; }}
+a.fmnav-ch:focus-visible, a.fmnav-sec:focus-visible {{ outline-offset: -2px; }}
 .fmnav-ch[aria-current="page"] {{ color: var(--amber); font-weight: 700; }}
 .fmnav-ch[aria-current="page"]::before {{ content: ''; position: absolute; left: 0; top: 6px; bottom: 6px; width: 3px; background: var(--amber); }}
 
@@ -1475,6 +1475,7 @@ body.fmnav-open .fmnav-panel {{ transform: none; }}
 .tb-brand-sub {{ font-weight: 500; }}
 {BAR_CSS}
 /* ── ROOT SCROLL ── */
+#fm-root:focus {{ outline: none; }}
 #fm-root {{
   flex: 1;
   min-height: 0;
@@ -1752,7 +1753,7 @@ body.fmnav-open .fmnav-panel {{ transform: none; }}
 .fmnav-pn a {{ display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; text-decoration: none; border: 1px solid var(--fm-accent); transition: all .12s; }}
 .fmnav-pn a:hover {{ background: rgba(126,143,166,.12); }}
 .fmnav-nx {{ text-align: right; align-items: flex-end; }}
-.fmnav-k {{ font-family: var(--f-ui); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--fm-accent-dark); }}
+.fmnav-k {{ font-family: var(--f-ui); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--ink-faded); }}
 .fmnav-n {{ font-family: var(--f-stencil); font-size: 13px; letter-spacing: 1.5px; color: var(--accent-ink); overflow-wrap: anywhere; }}
 @media (max-width: 759px) {{
   .fmnav-pn {{ grid-template-columns: 1fr; gap: 10px; }}
@@ -2030,7 +2031,7 @@ kbd {{
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
     <span class="tb-btn-label" data-i18n="nav.index">Index</span>
   </button>
-  <button type="button" id="btn-toc" class="tb-btn" onclick="fmTocSet(!fmTocIsOpen(),false)" aria-controls="fmnav-panel" aria-expanded="false" data-i18n-title="nav.contents.tip" title="Toutes les pages du manuel et leurs sections" data-i18n-aria-label="nav.contents.tip" aria-label="Toutes les pages du manuel et leurs sections">
+  <button type="button" id="btn-toc" class="tb-btn" onclick="fmTocSet(!fmTocIsOpen(),false)" aria-controls="fmnav-panel" aria-expanded="false" data-i18n-title="nav.contents.tip" title="Sommaire — toutes les pages du manuel et leurs sections" data-i18n-aria-label="nav.contents.tip" aria-label="Sommaire — toutes les pages du manuel et leurs sections">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
     <span class="tb-btn-label" data-i18n="nav.contents">Sommaire</span>
   </button>
@@ -2050,7 +2051,7 @@ kbd {{
 {TOC_HTML}
 
 <!-- ======== MAIN ROOT ======== -->
-<main id="fm-root">
+<main id="fm-root" tabindex="-1">
 
   <!-- ===== PAGE INDEX ===== -->
   <section id="page-index" class="fm-page">
@@ -2204,7 +2205,7 @@ var I18N = {{
     'nav.index':        'Index',
     'nav.index.tip':    'Retour à l’index du manuel',
     'nav.contents':     'Sommaire',
-    'nav.contents.tip': 'Toutes les pages du manuel et leurs sections',
+    'nav.contents.tip': 'Sommaire — toutes les pages du manuel et leurs sections',
     'nav.close':        'Fermer le sommaire',
     'nav.prev':         '◄ Chapitre précédent',
     'nav.next':         'Chapitre suivant ►',
@@ -2246,7 +2247,7 @@ var I18N = {{
     'nav.index':        'Index',
     'nav.index.tip':    'Back to the manual’s index',
     'nav.contents':     'Contents',
-    'nav.contents.tip': 'Every page of the manual and its sections',
+    'nav.contents.tip': 'Contents — every page of the manual and its sections',
     'nav.close':        'Close the contents',
     'nav.prev':         '◄ Previous chapter',
     'nav.next':         'Next chapter ►',
@@ -2357,7 +2358,7 @@ function initTheme() {{
 }}
 
 // ── Routing hash ──────────────────────────────
-var PAGES = ['index', 'start', 'hq', 'bg', 'rs', 'rp', 'dg', 'fc'];
+var PAGES = {PAGES_JS};
 
 function showPage(id, anchor) {{
   if (PAGES.indexOf(id) === -1) id = 'index';
@@ -2396,19 +2397,30 @@ function fmTocSet(open, back) {{
   document.body.classList.toggle('fmnav-open', open);
   b.setAttribute('aria-expanded', open ? 'true' : 'false');
   p.inert = !open;            // fermé : inert (hors du clavier et des aides techniques) ; ouvert : le focus de × se donne aussitôt, une fois
-  if (open) x.focus(); else if (back) b.focus();
+  if (open) {{
+    var cur = p.querySelector('[aria-current]');      // la page courante est en vue dans le panneau
+    if (cur) cur.scrollIntoView({{ block: 'nearest', inline: 'nearest' }});
+    x.focus({{ preventScroll: true }});
+  }} else if (back) b.focus();
 }}
 
 // Un lien du sommaire ou du bas de chapitre (le manuel est dans un cadre srcdoc : jamais de href seul) ; le même hash ne déclenche pas hashchange
 function fmGo(h) {{
   fmTocSet(false, false);
   if (location.hash === '#' + h) onHashChange(); else location.hash = '#' + h;
+  // le panneau devenu inert ne garde pas le focus : il revient au contenu du manuel (au clavier, le lecteur est dans la page)
+  var r = document.getElementById('fm-root');
+  if (r) r.focus({{ preventScroll: true }});
 }}
 
 // La page affichée : Index absent de l'index, aria-current sur la seule ligne de la page
 function fmTocSync(id) {{
   var bi = document.getElementById('btn-index');
-  if (bi) bi.hidden = (id === 'index');
+  if (bi) {{
+    var had = (document.activeElement === bi);
+    bi.hidden = (id === 'index');
+    if (had && bi.hidden) {{ var tb = document.getElementById('btn-toc'); if (tb) tb.focus(); }}   // Index se masque : le focus ne tombe pas sur body
+  }}
   document.querySelectorAll('.fmnav-ch').forEach(function(a) {{
     if (a.getAttribute('data-page') === id) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
   }});
@@ -2577,7 +2589,10 @@ grep_ok('aria-controls="fmnav-panel" aria-expanded="false"', 'Sommaire : aria-co
 grep_ok('<nav class="fmnav-panel" id="fmnav-panel"', 'sommaire : le panneau est dans le HTML du build')
 grep_ok('id="fmnav-x"', 'sommaire : le bouton ×')
 grep_ok('<nav class="fmnav-panel" id="fmnav-panel" inert', 'sommaire : fermé, le panneau est inert')
-grep_absent('visibility: hidden; transform: translateX', 'sommaire : plus de visibility sur le panneau')
+_pr = re.findall(r'(?:body\.fmnav-open )?\.fmnav-panel\s*\{[^}]*\}', src)
+print('  [%s] sommaire : aucune déclaration visibility dans les règles du panneau (%d règles lues)' % ('OK' if _pr and not any('visibility' in r_ for r_ in _pr) else 'FAIL', len(_pr)))
+if not _pr or any('visibility' in r_ for r_ in _pr):
+    CHECK_ERRORS.append('FAIL visibility sur le panneau')
 grep_absent('fm-back-btn', 'l\'ancien bouton « ◄ Index » de la page (et sa règle)')
 grep_absent('btn.back', 'la clé btn.back (plus lue)')
 _rows = re.findall(r'<a class="fmnav-ch" href="#(\w+)"', src)
@@ -2588,8 +2603,11 @@ _h3 = {pid: len(re.findall(r'<h3 class="lang-block" data-lang="fr"', re.search(r
 _anc = re.findall(r'<span id="(\w+)-(\d+)"></span>', src)
 _sec = re.findall(r'<a class="fmnav-sec" href="#(\w+):(\w+-\d+)"', src)
 _okanc = all(sorted(int(n) for p_, n in _anc if p_ == pid) == list(range(1, _h3[pid] + 1)) for pid in _ORDER[1:]) and len(_anc) == len(set(_anc)) == sum(_h3.values())
-_oksec = [(a, b) for a, b in _sec] == [(a, f'{a}-{n}') for a, n in _anc] or sorted(_sec) == sorted((p_, f'{p_}-{n}') for p_, n in _anc)
-print('  [%s] une ancre <page>-<n> par titre h3 (%d), une seule fois chacune' % ('OK' if _okanc else 'FAIL', sum(_h3.values())))
+_oksec = [(a, b) for a, b in _sec] == [(a, f'{a}-{n}') for a, n in _anc]
+# le texte FR / EN de chaque ligne de section est celui du h3 qui suit son ancre
+_h3s = re.findall(r'<span id="(\w+-\d+)"></span>\s*<h3 class="lang-block" data-lang="fr">(.*?)</h3>\s*<h3 class="lang-block" data-lang="en">(.*?)</h3>', src, re.S)
+_lines = re.findall(r'<a class="fmnav-sec" href="#\w+:(\w+-\d+)"[^>]*><span class="lang-block" data-lang="fr">(.*?)</span><span class="lang-block" data-lang="en">(.*?)</span></a>', src, re.S)
+_oksec = _oksec and len(_h3s) == len(_lines) == len(_sec) and all(a == b and _plain(c) == d and _plain(e) == f for (a, c, e), (b, d, f) in zip(_h3s, _lines))
 print('  [%s] sommaire : une ligne de section par ancre (%d)' % ('OK' if _oksec else 'FAIL', len(_sec)))
 if not _okanc: CHECK_ERRORS.append('FAIL ancres des h3')
 if not _oksec: CHECK_ERRORS.append('FAIL lignes de section')
