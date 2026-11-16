@@ -1684,14 +1684,194 @@ body.zm-open #fm-root { overflow: hidden; }
         <h3 class="lang-block" data-lang="en">The return to the Mission Commander</h3>
         <div class="lang-block" data-lang="fr"><p>Les trois outils du Flight Leader partagent leurs groupes en direct : leur ordre n’est pas imposé, mais pour une datacard complète le Flight Configurator (emport, carburant, poids) passe avant l’export du Datacard Generator. Le seul retour qui se <strong>fusionne</strong> est le paquet de vol du Flight Configurator : rouvrir le fichier de travail d’un Flight Leader remplace tout le travail, et plusieurs Flight Leaders ne se rassemblent que par leurs paquets.</p></div>
         <div class="lang-block" data-lang="en"><p>The three Flight Leader tools share their groups live: their order is not imposed, but for a complete datacard the Flight Configurator (loadout, fuel, weight) comes before the Datacard Generator export. The only return that <strong>merges</strong> is the Flight Configurator’s flight package: reopening a Flight Leader’s work file replaces all the work, and several Flight Leaders come together only through their packages.</p></div>
-        <span id="gestes"></span>
         <span id="start-3"></span>
         <h3 class="lang-block" data-lang="fr">Les gestes, et ce qu’ils gardent</h3>
         <h3 class="lang-block" data-lang="en">The gestures, and what they keep</h3>
-        <div class="lang-block" data-lang="fr"><p>Les mêmes gestes ont le même sens dans tous les outils. La table dit lesquels remplacent du travail, et ce qui reste.</p></div>
-        <div class="lang-block" data-lang="en"><p>The same gestures mean the same thing in every tool. The table says which ones replace work, and what stays.</p></div>
-        <div class="lang-block" data-lang="fr"><table class="fm-gt"><thead><tr><th>Geste</th><th>Ce qu’il fait</th><th>Ce qu’il garde</th></tr></thead><tbody><tr><td data-h="Geste"><strong>Ouvrir…</strong> (accueil), <strong>Ouvrir ▾ › Ouvrir un travail…</strong> (outils)</td><td data-h="Ce qu’il fait">Relit un fichier de travail et <strong>remplace tout le travail</strong>.</td><td data-h="Ce qu’il garde">Vos presets d’emport, le Wing, la mission d’HQ, la langue et le thème ; vos unités et réglages de cap si le fichier n’en porte pas.</td></tr><tr><td data-h="Geste"><strong>Sauvegarder</strong> (accueil et chaque outil sauf HQ ; Ctrl+S, Cmd+S sur Mac)</td><td data-h="Ce qu’il fait">Écrit le fichier de travail de toute la suite : briefing, composition de RS, groupes, routes, calques, datacards. HQ écrit le .miz par <strong>Sauvegarder .miz</strong>.</td><td data-h="Ce qu’il garde">Hors du fichier : le Wing, la mission d’HQ, l’image source de RS, les presets d’emport.</td></tr><tr><td data-h="Geste"><strong>Exemple ▾</strong> (barre de l’accueil, seulement : les outils n’ont pas ce menu ; HQ a son bouton Exemple)</td><td data-h="Ce qu’il fait">Deux lignes. <strong>Mission Commander</strong> : un briefing et une photo (BG, RS). <strong>Flight Leader</strong> : une route, un groupe et sa datacard (RP, DG, FC). Remplace le travail de ce groupe d’outils, sans question.</td><td data-h="Ce qu’il garde">L’autre groupe, vos unités et réglages de cap. Le bouton d’HQ ouvre une escadre de démonstration et garde la vôtre.</td></tr><tr><td data-h="Geste"><strong>Effacer</strong></td><td data-h="Ce qu’il fait">BG : le briefing. RS : l’image, les annotations, la légende et le bloc d’informations. RP, DG, FC : « Tout effacer ? » vide les groupes, les routes, les calques et les datacards des trois outils (au RP, une fenêtre à cocher). HQ : retire la mission ouverte. Après confirmation.</td><td data-h="Ce qu’il garde">RS : logos, réglages, Wing. RP, DG, FC : presets, théâtre, unités, réglages. HQ : le Wing.</td></tr><tr><td data-h="Geste"><strong>Restaurer</strong></td><td data-h="Ce qu’il fait">Après un Exemple ou un Ouvrir, un message le propose pendant douze secondes et rend le travail d’avant ; après deux remplacements de suite, l’état d’avant le premier.</td><td data-h="Ce qu’il garde"><strong>Refusé</strong> dès que vous avez saisi quelque chose : « Restauration impossible : les données ont changé depuis. »</td></tr></tbody></table></div>
-        <div class="lang-block" data-lang="en"><table class="fm-gt"><thead><tr><th>Gesture</th><th>What it does</th><th>What it keeps</th></tr></thead><tbody><tr><td data-h="Gesture"><strong>Open…</strong> (home page), <strong>Open ▾ › Open a work file…</strong> (tools)</td><td data-h="What it does">Reads a work file and <strong>replaces all the work</strong>.</td><td data-h="What it keeps">Your loadout presets, the Wing, the HQ mission, the language and the theme; your units and heading settings if the file carries none.</td></tr><tr><td data-h="Gesture"><strong>Save</strong> (home page and every tool except HQ; Ctrl+S, Cmd+S on Mac)</td><td data-h="What it does">Writes the work file of the whole suite: briefing, RS composition, groups, routes, layers, datacards. HQ writes the .miz with <strong>Save .miz</strong>.</td><td data-h="What it keeps">Left out of the file: the Wing, the HQ mission, the RS source image, the loadout presets.</td></tr><tr><td data-h="Gesture"><strong>Example ▾</strong> (home page top bar only: the tools have no such menu; HQ has its Example button)</td><td data-h="What it does">Two lines. <strong>Mission Commander</strong>: a briefing and a photo (BG, RS). <strong>Flight Leader</strong>: a route, a group and its datacard (RP, DG, FC). Replaces the work of that tool group, without asking.</td><td data-h="What it keeps">The other group, your units and heading settings. HQ’s button opens a demonstration wing and keeps yours.</td></tr><tr><td data-h="Gesture"><strong>Clear</strong></td><td data-h="What it does">BG: the briefing. RS: the image, the annotations, the legend and the info block. RP, DG, FC: “Clear everything?” empties the groups, routes, layers and datacards of the three tools (in the RP, a window with tick boxes). HQ: removes the open mission. After a confirmation.</td><td data-h="What it keeps">RS: logos, settings, Wing. RP, DG, FC: presets, theatre, units, settings. HQ: the Wing.</td></tr><tr><td data-h="Gesture"><strong>Restore</strong></td><td data-h="What it does">After an Example or an Open, a message offers it for twelve seconds and brings back the previous work; after two replacements in a row, the state before the first.</td><td data-h="What it keeps"><strong>Refused</strong> as soon as you have typed something: “Cannot restore: the data has changed since.”</td></tr></tbody></table></div>
+        <div class="lang-block" data-lang="fr"><p>Les mêmes gestes ont le même sens dans tous les outils. La planche dit lesquels remplacent du travail, et ce qui reste.</p></div>
+        <div class="lang-block" data-lang="en"><p>The same gestures mean the same thing in every tool. The drawing says which ones replace work, and what stays.</p></div>
+      </div>
+
+<div class="fm-plate" id="gestes">
+        <div class="fm-schema fm-plate-fig">
+          <svg class="pl-wide" viewBox="0 0 720 466" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="L’accueil de Mission Plan, avec le menu Exemple ouvert" data-aria-fr="L’accueil de Mission Plan, avec le menu Exemple ouvert" data-aria-en="The Mission Plan home page, with the Example menu open">
+          <defs><marker id="stw" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto-start-reverse"><path d="M0,0 L7,3.5 L0,7 Z" fill="currentColor" opacity=".8"/></marker></defs>
+          <text x="360" y="24" font-size="13" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.9" letter-spacing="3">L’ACCUEIL DE MISSION PLAN</text>
+          <text x="360" y="24" font-size="13" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en" opacity="0.9" letter-spacing="3">THE MISSION PLAN HOME PAGE</text>
+          <line x1="120" y1="32" x2="600" y2="32" stroke="currentColor" stroke-width=".6" opacity=".3"/>
+          <g transform="translate(0,22)">
+          <rect class="sv-box" x="40" y="44" width="640" height="28" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <rect class="sv-box" x="46" y="49" width="120" height="18" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <text x="106" y="61" font-size="8" text-anchor="middle" fill="currentColor">DCS · MISSION PLAN</text>
+          <rect x="180" y="49" width="52" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/><text x="206" y="61" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">Ouvrir…</text>
+          <text x="206" y="61" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">Open…</text>
+          <rect x="238" y="49" width="66" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/><text x="271" y="61" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">Sauvegarder</text>
+          <text x="271" y="61" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">Save</text>
+          <rect x="310" y="49" width="64" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/><text x="342" y="61" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">Exemple ▾</text>
+          <text x="342" y="61" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">Example ▾</text>
+          <rect x="380" y="49" width="74" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/><text x="417" y="61" font-size="8" text-anchor="middle" fill="currentColor">Field Manual</text>
+          <rect x="460" y="49" width="104" height="18" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="465" y="61" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.85">Cold War OTAN ▾</text>
+          <text x="465" y="61" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.85">Cold War NATO ▾</text>
+          <rect x="575" y="53.5" width="14" height="9" fill="none" stroke="currentColor" stroke-width="1.1"/><path d="M575,58 h14 M582,53.5 v9" stroke="currentColor" stroke-width="1.1"/>
+          <rect class="sv-box" x="310" y="74" width="370" height="36" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <text x="318" y="88" font-size="8" fill="currentColor">Mission Commander — Briefing Generator, Recon Station</text>
+          <text x="318" y="103" font-size="8" fill="currentColor">Flight Leader — Route Planner, Datacard Generator, Flight Configurator</text>
+          <line x1="310" y1="92" x2="680" y2="92" stroke="currentColor" stroke-width=".6" opacity=".3"/>
+          <rect class="sv-box" x="50" y="84" width="190" height="40" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <text x="58" y="97" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.7">// Suite de préparation opérationnelle</text>
+          <text x="58" y="97" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.7">// Operational planning suite</text>
+          <text x="58" y="117" font-size="15" fill="currentColor" font-weight="700">MISSION PLAN</text>
+          <rect x="40" y="138" width="640" height="136" rx="3" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="5 3" opacity=".55"/>
+          <rect class="sv-box" x="54" y="129" width="224" height="18" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <text x="60" y="141.5" font-size="8.5" fill="currentColor" font-weight="700">Mission Commander</text>
+          <text x="163.2" y="141.5" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.7">PRÉPARE LA MISSION</text>
+          <text x="163.2" y="141.5" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.7">PREPARES THE MISSION</text>
+          <rect class="sv-box" x="52" y="156" width="197.333" height="106" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <rect x="58" y="162" width="185.333" height="44" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>
+          <path d="M58,200 l55.6,-20 l46.3333,12 l40.7733,-16 l42.6267,24" fill="none" stroke="currentColor" stroke-width=".8" opacity=".4"/>
+          <rect class="sv-pill" x="60" y="212" width="24.2" height="11" rx="1.5"/><text x="72.1" y="220.4" font-size="8" text-anchor="middle" class="sv-pill-t">H·Q</text>
+          <text x="90.2" y="221" font-size="8.5" fill="currentColor" font-weight="700">HQ</text>
+          <line x1="60" y1="232" x2="241.333" y2="232" stroke="currentColor" stroke-width="5" opacity=".12"/>
+          <rect x="60" y="240" width="181.333" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/><text x="150.667" y="251" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">▶ OUVRIR LE DOSSIER</text>
+          <text x="150.667" y="251" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">▶ OPEN THE FILE</text>
+          <rect class="sv-box" x="261.333" y="156" width="197.333" height="106" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <rect x="267.333" y="162" width="185.333" height="44" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>
+          <path d="M267.333,200 l55.6,-20 l46.3333,12 l40.7733,-16 l42.6267,24" fill="none" stroke="currentColor" stroke-width=".8" opacity=".4"/>
+          <rect class="sv-pill" x="269.333" y="212" width="24.2" height="11" rx="1.5"/><text x="281.433" y="220.4" font-size="8" text-anchor="middle" class="sv-pill-t">B·G</text>
+          <text x="299.533" y="221" font-size="8.5" fill="currentColor" font-weight="700">Briefing Generator</text>
+          <line x1="269.333" y1="232" x2="450.667" y2="232" stroke="currentColor" stroke-width="5" opacity=".12"/>
+          <rect x="269.333" y="240" width="181.333" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/><text x="360" y="251" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">▶ OUVRIR LE DOSSIER</text>
+          <text x="360" y="251" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">▶ OPEN THE FILE</text>
+          <rect class="sv-box" x="470.667" y="156" width="197.333" height="106" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <rect x="476.667" y="162" width="185.333" height="44" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>
+          <path d="M476.667,200 l55.6,-20 l46.3333,12 l40.7733,-16 l42.6267,24" fill="none" stroke="currentColor" stroke-width=".8" opacity=".4"/>
+          <rect class="sv-pill" x="478.667" y="212" width="24.2" height="11" rx="1.5"/><text x="490.767" y="220.4" font-size="8" text-anchor="middle" class="sv-pill-t">R·S</text>
+          <text x="508.867" y="221" font-size="8.5" fill="currentColor" font-weight="700">Recon Station</text>
+          <line x1="478.667" y1="232" x2="660" y2="232" stroke="currentColor" stroke-width="5" opacity=".12"/>
+          <rect x="478.667" y="240" width="181.333" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/><text x="569.333" y="251" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">▶ OUVRIR LE DOSSIER</text>
+          <text x="569.333" y="251" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">▶ OPEN THE FILE</text>
+          <rect x="40" y="288" width="640" height="136" rx="3" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="5 3" opacity=".55"/>
+          <rect class="sv-box" x="54" y="279" width="224" height="18" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <text x="60" y="291.5" font-size="8.5" fill="currentColor" font-weight="700">Flight Leader</text>
+          <text x="140.8" y="291.5" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.7">PRÉPARE SON VOL</text>
+          <text x="140.8" y="291.5" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.7">PREPARES THE FLIGHT</text>
+          <rect class="sv-box" x="52" y="306" width="197.333" height="106" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <rect x="58" y="312" width="185.333" height="44" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>
+          <path d="M58,350 l55.6,-20 l46.3333,12 l40.7733,-16 l42.6267,24" fill="none" stroke="currentColor" stroke-width=".8" opacity=".4"/>
+          <rect class="sv-pill" x="60" y="362" width="24.2" height="11" rx="1.5"/><text x="72.1" y="370.4" font-size="8" text-anchor="middle" class="sv-pill-t">R·P</text>
+          <text x="90.2" y="371" font-size="8.5" fill="currentColor" font-weight="700">Route Planner</text>
+          <line x1="60" y1="382" x2="241.333" y2="382" stroke="currentColor" stroke-width="5" opacity=".12"/>
+          <rect x="60" y="390" width="181.333" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/><text x="150.667" y="401" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">▶ OUVRIR LE DOSSIER</text>
+          <text x="150.667" y="401" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">▶ OPEN THE FILE</text>
+          <rect class="sv-box" x="261.333" y="306" width="197.333" height="106" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <rect x="267.333" y="312" width="185.333" height="44" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>
+          <path d="M267.333,350 l55.6,-20 l46.3333,12 l40.7733,-16 l42.6267,24" fill="none" stroke="currentColor" stroke-width=".8" opacity=".4"/>
+          <rect class="sv-pill" x="269.333" y="362" width="24.2" height="11" rx="1.5"/><text x="281.433" y="370.4" font-size="8" text-anchor="middle" class="sv-pill-t">D·G</text>
+          <text x="299.533" y="371" font-size="8.5" fill="currentColor" font-weight="700">Datacard Generator</text>
+          <line x1="269.333" y1="382" x2="450.667" y2="382" stroke="currentColor" stroke-width="5" opacity=".12"/>
+          <rect x="269.333" y="390" width="181.333" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/><text x="360" y="401" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">▶ OUVRIR LE DOSSIER</text>
+          <text x="360" y="401" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">▶ OPEN THE FILE</text>
+          <rect class="sv-box" x="470.667" y="306" width="197.333" height="106" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <rect x="476.667" y="312" width="185.333" height="44" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>
+          <path d="M476.667,350 l55.6,-20 l46.3333,12 l40.7733,-16 l42.6267,24" fill="none" stroke="currentColor" stroke-width=".8" opacity=".4"/>
+          <rect class="sv-pill" x="478.667" y="362" width="24.2" height="11" rx="1.5"/><text x="490.767" y="370.4" font-size="8" text-anchor="middle" class="sv-pill-t">F·C</text>
+          <text x="508.867" y="371" font-size="8.5" fill="currentColor" font-weight="700">Flight Configurator</text>
+          <line x1="478.667" y1="382" x2="660" y2="382" stroke="currentColor" stroke-width="5" opacity=".12"/>
+          <rect x="478.667" y="390" width="181.333" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/><text x="569.333" y="401" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">▶ OUVRIR LE DOSSIER</text>
+          <text x="569.333" y="401" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">▶ OPEN THE FILE</text>
+          <line x1="206" y1="28" x2="206" y2="49" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="206" cy="49" r="1.8" fill="currentColor"/><circle class="sv-box" cx="206" cy="28" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="206" y="31.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">1</text>
+          <line x1="271" y1="28" x2="271" y2="49" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="271" cy="49" r="1.8" fill="currentColor"/><circle class="sv-box" cx="271" cy="28" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="271" y="31.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">2</text>
+          <line x1="342" y1="28" x2="342" y2="49" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="342" cy="49" r="1.8" fill="currentColor"/><circle class="sv-box" cx="342" cy="28" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="342" y="31.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">3</text>
+          <line x1="704" y1="83" x2="680" y2="83" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="680" cy="83" r="1.8" fill="currentColor"/><circle class="sv-box" cx="704" cy="83" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="704" y="86.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">4</text>
+          <line x1="704" y1="100" x2="680" y2="100" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="680" cy="100" r="1.8" fill="currentColor"/><circle class="sv-box" cx="704" cy="100" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="704" y="103.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">5</text>
+          </g>
+          </svg>
+          <svg class="pl-tall" viewBox="0 0 360 436" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="L’accueil de Mission Plan au téléphone" data-aria-fr="L’accueil de Mission Plan au téléphone" data-aria-en="The Mission Plan home page on a phone">
+          <defs><marker id="stt" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto-start-reverse"><path d="M0,0 L7,3.5 L0,7 Z" fill="currentColor" opacity=".8"/></marker></defs>
+          <text x="180" y="22" font-size="12" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.9" letter-spacing="2.5">L’ACCUEIL DE MISSION PLAN</text>
+          <text x="180" y="22" font-size="12" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en" opacity="0.9" letter-spacing="2.5">THE MISSION PLAN HOME PAGE</text>
+          <text x="180" y="38" font-size="8.5" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.7">au téléphone</text>
+          <text x="180" y="38" font-size="8.5" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en" opacity="0.7">on a phone</text>
+          <g transform="translate(0,12)">
+          <rect class="sv-box" x="30" y="56" width="300" height="22" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <text x="180" y="71" font-size="8" text-anchor="middle" fill="currentColor">DCS · MISSION PLAN</text>
+          <rect class="sv-box" x="30" y="108" width="300" height="30" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <rect x="36" y="112" width="28" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/>
+          <path d="M44,119 h4 l1.5,1.5 h6.5 v7 h-12 z" fill="none" stroke="currentColor" stroke-width="1.1"/>
+          <rect x="70" y="112" width="28" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/>
+          <rect x="79" y="118" width="10" height="10" rx="1" fill="none" stroke="currentColor" stroke-width="1.1"/><rect x="81.5" y="118" width="5" height="3" fill="none" stroke="currentColor" stroke-width=".9"/>
+          <rect x="104" y="112" width="40" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/>
+          <path d="M115,118 h5.5 l2.5,2.5 v7.5 h-8 z M117,123 h4 M117,125.5 h4" fill="none" stroke="currentColor" stroke-width="1.1"/>
+          <path d="M133,122 l3,3 l3,-3" fill="none" stroke="currentColor" stroke-width="1"/>
+          <rect x="150" y="112" width="28" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/>
+          <path d="M158,119 h5 a1,1 0 0 1 1,1 v7 h-6 z M170,119 h-5 a1,1 0 0 0 -1,1 v7 h6 z" fill="none" stroke="currentColor" stroke-width="1.1"/>
+          <rect x="184" y="112" width="96" height="22" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="189" y="126" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.85">Cold War OTAN ▾</text>
+          <text x="189" y="126" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.85">Cold War NATO ▾</text>
+          <rect x="286" y="112" width="28" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/>
+          <rect x="293" y="118.5" width="14" height="9" fill="none" stroke="currentColor" stroke-width="1.1"/><path d="M293,123 h14 M300,118.5 v9" stroke="currentColor" stroke-width="1.1"/>
+          <rect class="sv-box" x="30" y="142" width="300" height="36" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <line x1="38" y1="153" x2="288" y2="153" stroke="currentColor" stroke-width="5" opacity=".12"/>
+          <line x1="38" y1="168" x2="308" y2="168" stroke="currentColor" stroke-width="5" opacity=".12"/>
+          <rect x="30" y="188" width="300" height="104" rx="3" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="5 3" opacity=".55"/>
+          <rect class="sv-box" x="38" y="179" width="200" height="18" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <text x="44" y="191.5" font-size="8.5" fill="currentColor" font-weight="700">Mission Commander</text>
+          <text x="147.2" y="191.5" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.7">PRÉPARE LA MISSION</text>
+          <text x="147.2" y="191.5" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.7">PREPARES THE MISSION</text>
+          <rect class="sv-box" x="38" y="202" width="284" height="25" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <rect x="42" y="206" width="30" height="17" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>
+          <rect class="sv-pill" x="78" y="209" width="24.2" height="11" rx="1.5"/><text x="90.1" y="217.4" font-size="8" text-anchor="middle" class="sv-pill-t">H·Q</text>
+          <text x="107.2" y="218" font-size="8" fill="currentColor" font-weight="700">HQ</text>
+          <rect x="218" y="206" width="100" height="17" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/><text x="268" y="217.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">▶ OUVRIR LE DOSSIER</text>
+          <text x="268" y="217.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">▶ OPEN THE FILE</text>
+          <rect class="sv-box" x="38" y="231" width="284" height="25" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <rect x="42" y="235" width="30" height="17" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>
+          <rect class="sv-pill" x="78" y="238" width="24.2" height="11" rx="1.5"/><text x="90.1" y="246.4" font-size="8" text-anchor="middle" class="sv-pill-t">B·G</text>
+          <text x="107.2" y="247" font-size="8" fill="currentColor" font-weight="700">Briefing Generator</text>
+          <rect x="218" y="235" width="100" height="17" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/><text x="268" y="246.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">▶ OUVRIR LE DOSSIER</text>
+          <text x="268" y="246.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">▶ OPEN THE FILE</text>
+          <rect class="sv-box" x="38" y="260" width="284" height="25" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <rect x="42" y="264" width="30" height="17" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>
+          <rect class="sv-pill" x="78" y="267" width="24.2" height="11" rx="1.5"/><text x="90.1" y="275.4" font-size="8" text-anchor="middle" class="sv-pill-t">R·S</text>
+          <text x="107.2" y="276" font-size="8" fill="currentColor" font-weight="700">Recon Station</text>
+          <rect x="218" y="264" width="100" height="17" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/><text x="268" y="275.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">▶ OUVRIR LE DOSSIER</text>
+          <text x="268" y="275.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">▶ OPEN THE FILE</text>
+          <rect x="30" y="302" width="300" height="104" rx="3" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="5 3" opacity=".55"/>
+          <rect class="sv-box" x="38" y="293" width="200" height="18" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <text x="44" y="305.5" font-size="8.5" fill="currentColor" font-weight="700">Flight Leader</text>
+          <text x="124.8" y="305.5" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.7">PRÉPARE SON VOL</text>
+          <text x="124.8" y="305.5" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.7">PREPARES THE FLIGHT</text>
+          <rect class="sv-box" x="38" y="316" width="284" height="25" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <rect x="42" y="320" width="30" height="17" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>
+          <rect class="sv-pill" x="78" y="323" width="24.2" height="11" rx="1.5"/><text x="90.1" y="331.4" font-size="8" text-anchor="middle" class="sv-pill-t">R·P</text>
+          <text x="107.2" y="332" font-size="8" fill="currentColor" font-weight="700">Route Planner</text>
+          <rect x="218" y="320" width="100" height="17" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/><text x="268" y="331.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">▶ OUVRIR LE DOSSIER</text>
+          <text x="268" y="331.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">▶ OPEN THE FILE</text>
+          <rect class="sv-box" x="38" y="345" width="284" height="25" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <rect x="42" y="349" width="30" height="17" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>
+          <rect class="sv-pill" x="78" y="352" width="24.2" height="11" rx="1.5"/><text x="90.1" y="360.4" font-size="8" text-anchor="middle" class="sv-pill-t">D·G</text>
+          <text x="107.2" y="361" font-size="8" fill="currentColor" font-weight="700">Datacard Generator</text>
+          <rect x="218" y="349" width="100" height="17" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/><text x="268" y="360.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">▶ OUVRIR LE DOSSIER</text>
+          <text x="268" y="360.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">▶ OPEN THE FILE</text>
+          <rect class="sv-box" x="38" y="374" width="284" height="25" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <rect x="42" y="378" width="30" height="17" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>
+          <rect class="sv-pill" x="78" y="381" width="24.2" height="11" rx="1.5"/><text x="90.1" y="389.4" font-size="8" text-anchor="middle" class="sv-pill-t">F·C</text>
+          <text x="107.2" y="390" font-size="8" fill="currentColor" font-weight="700">Flight Configurator</text>
+          <rect x="218" y="378" width="100" height="17" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/><text x="268" y="389.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">▶ OUVRIR LE DOSSIER</text>
+          <text x="268" y="389.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">▶ OPEN THE FILE</text>
+          <line x1="50" y1="96" x2="50" y2="112" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="50" cy="112" r="1.8" fill="currentColor"/><circle class="sv-box" cx="50" cy="96" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="50" y="99.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">1</text>
+          <line x1="84" y1="96" x2="84" y2="112" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="84" cy="112" r="1.8" fill="currentColor"/><circle class="sv-box" cx="84" cy="96" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="84" y="99.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">2</text>
+          <line x1="124" y1="96" x2="124" y2="112" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="124" cy="112" r="1.8" fill="currentColor"/><circle class="sv-box" cx="124" cy="96" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="124" y="99.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">3</text>
+          <line x1="346" y1="153" x2="330" y2="153" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="330" cy="153" r="1.8" fill="currentColor"/><circle class="sv-box" cx="346" cy="153" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="346" y="156.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">4</text>
+          <line x1="346" y1="168" x2="330" y2="168" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="330" cy="168" r="1.8" fill="currentColor"/><circle class="sv-box" cx="346" cy="168" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="346" y="171.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">5</text>
+          </g>
+          </svg>
+          <div class="fm-schema-legend"><span class="lang-block" data-lang="fr">Fig. 2 — L’accueil de Mission Plan, le menu Exemple ouvert : la barre, les deux lignes de l’exemple, les deux groupes d’outils.</span><span class="lang-block" data-lang="en">Fig. 2 — The Mission Plan home page with the Example menu open: the bar, the two example lines, the two tool groups.</span></div>
+        </div>
+        <ol class="pl-legend"><li><span class="pl-n">1</span><span class="lang-block" data-lang="fr"><b>Ouvrir…</b> — à l’accueil ; dans les outils, Ouvrir ▾ › Ouvrir un travail… relit un fichier de travail et remplace tout le travail. Il garde : vos presets d’emport, le Wing, la mission d’HQ, la langue et le thème ; vos unités et réglages de cap si le fichier n’en porte pas.</span><span class="lang-block" data-lang="en"><b>Open…</b> — on the home page; in the tools, Open ▾ › Open a work file… reads a work file and replaces all the work. It keeps: your loadout presets, the Wing, the HQ mission, the language and the theme; your units and heading settings if the file carries none.</span></li><li><span class="pl-n">2</span><span class="lang-block" data-lang="fr"><b>Sauvegarder</b> — à l’accueil et dans chaque outil sauf HQ ; Ctrl+S, Cmd+S sur Mac. Écrit le fichier de travail de toute la suite : briefing, composition de RS, groupes, routes, calques, datacards. HQ écrit le .miz par Sauvegarder .miz. Hors du fichier : le Wing, la mission d’HQ, l’image source de RS, les presets d’emport.</span><span class="lang-block" data-lang="en"><b>Save</b> — on the home page and in every tool except HQ; Ctrl+S, Cmd+S on Mac. Writes the work file of the whole suite: briefing, RS composition, groups, routes, layers, datacards. HQ writes the .miz with Save .miz. Left out of the file: the Wing, the HQ mission, the RS source image, the loadout presets.</span></li><li><span class="pl-n">3</span><span class="lang-block" data-lang="fr"><b>Exemple ▾</b> — dans la barre de l’accueil, seulement : les outils n’ont pas ce menu ; HQ a son bouton Exemple. Deux lignes, qui remplacent le travail de ce groupe d’outils, sans question. Il garde l’autre groupe, vos unités et réglages de cap. Le bouton d’HQ ouvre une escadre de démonstration et garde la vôtre.</span><span class="lang-block" data-lang="en"><b>Example ▾</b> — in the home page bar only: the tools have no such menu; HQ has its Example button. Two lines, which replace the work of that tool group, without asking. It keeps the other group, your units and heading settings. HQ’s button opens a demonstration wing and keeps yours.</span></li><li><span class="pl-n">4</span><span class="lang-block" data-lang="fr"><b>Mission Commander — Briefing Generator, Recon Station</b> — un briefing et une photo.</span><span class="lang-block" data-lang="en"><b>Mission Commander — Briefing Generator, Recon Station</b> — a briefing and a photo.</span></li><li><span class="pl-n">5</span><span class="lang-block" data-lang="fr"><b>Flight Leader — Route Planner, Datacard Generator, Flight Configurator</b> — une route, un groupe et sa datacard.</span><span class="lang-block" data-lang="en"><b>Flight Leader — Route Planner, Datacard Generator, Flight Configurator</b> — a route, a group and its datacard.</span></li></ol>
+      </div>
+
+      <div class="fm-prose">
+        <div class="lang-block" data-lang="fr"><p><strong>Effacer</strong>, après confirmation : au BG, il vide le briefing ; à RS, l’image, les annotations, la légende et le bloc d’informations ; au RP, au DG et au FC, « Tout effacer ? » vide les groupes, les routes, les calques et les datacards des trois outils (au RP, une fenêtre à cocher) ; à HQ, il retire la mission ouverte. Il garde : à RS, les logos, les réglages, le Wing ; au RP, au DG et au FC, les presets, le théâtre, les unités, les réglages ; à HQ, le Wing.</p><p><strong>Restaurer</strong> : après un Exemple ou un Ouvrir, un message le propose pendant douze secondes et rend le travail d’avant ; après deux remplacements de suite, l’état d’avant le premier. Il est <strong>refusé</strong> dès que vous avez saisi quelque chose : « Restauration impossible : les données ont changé depuis. »</p></div>
+        <div class="lang-block" data-lang="en"><p><strong>Clear</strong>, after a confirmation: in the BG, it empties the briefing; in RS, the image, the annotations, the legend and the info block; in the RP, DG and FC, “Clear everything?” empties the groups, routes, layers and datacards of the three tools (in the RP, a window with tick boxes); in HQ, it removes the open mission. It keeps: in RS, the logos, settings, Wing; in the RP, DG and FC, the presets, theatre, units, settings; in HQ, the Wing.</p><p><strong>Restore</strong>: after an Example or an Open, a message offers it for twelve seconds and brings back the previous work; after two replacements in a row, the state before the first. It is <strong>refused</strong> as soon as you have typed something: “Cannot restore: the data has changed since.”</p></div>
         <div class="lang-block" data-lang="fr"><p>Les fenêtres Sauvegarder et Exporter (RS, BG, DG, paquets de vol) demandent un nom de fichier, proposé et modifiable.</p></div>
         <div class="lang-block" data-lang="en"><p>The Save and Export windows (RS, BG, DG, flight packages) ask for a file name, proposed and editable.</p></div>
         <span id="start-4"></span>
@@ -2204,18 +2384,185 @@ body.zm-open #fm-root { overflow: hidden; }
         <span id="bg-2"></span>
         <h3 class="lang-block" data-lang="fr">Les gestes</h3>
         <h3 class="lang-block" data-lang="en">The gestures</h3>
-        <h4 class="lang-block" data-lang="fr">Standard ou Avancé</h4>
-        <h4 class="lang-block" data-lang="en">Standard or Advanced</h4>
-        <div class="lang-block" data-lang="fr"><p>Le menu <strong>Affichage ▾</strong> de la barre choisit le format ; un point ambre sur le bouton signale Avancé. <strong>Changer de format ne perd rien</strong> : seules les sections affichées et les pages produites changent, et ce que vous avez saisi pour l’autre format revient quand vous y retournez.</p></div>
-        <div class="lang-block" data-lang="en"><p>The <strong>Display ▾</strong> menu of the bar chooses the format; an amber dot on the button marks Advanced. <strong>Changing format loses nothing</strong>: only the sections shown and the pages produced change, and what you entered for the other format comes back when you return to it.</p></div>
-        <h4 class="lang-block" data-lang="fr">Démarrer</h4>
-        <h4 class="lang-block" data-lang="en">Starting</h4>
-        <div class="lang-block" data-lang="fr"><p>L’outil s’ouvre sur une <strong>page blanche</strong>, en Standard ; les champs vides disent en grisé ce qu’on y met, et cet indice n’est ni dans l’aperçu ni à l’export. <strong>Effacer</strong> vide tout le briefing, après confirmation. L’exemple et ses effets sont dans <a href="#start:gestes" onclick="location.hash=&#39;start:gestes&#39;;return false">Par où commencer</a>.</p></div>
-        <div class="lang-block" data-lang="en"><p>The tool opens on a <strong>blank page</strong>, in Standard; empty fields say in grey what goes in them, and that hint is neither in the preview nor in the export. <strong>Clear</strong> empties the whole briefing, after a confirmation. The example and its effects are in <a href="#start:gestes" onclick="location.hash=&#39;start:gestes&#39;;return false">Where to start</a>.</p></div>
-        <h4 class="lang-block" data-lang="fr">Le brief Standard</h4>
-        <h4 class="lang-block" data-lang="en">The Standard brief</h4>
-        <div class="lang-block" data-lang="fr"><p>Le brief Standard est une page de mission : situation, mission et groupes, fréquences, terrains et météo. Une date qui n’a pas la forme attendue est gardée telle quelle, et le champ prend la couleur d’avertissement. La carte, les menaces et les cibles sont communes aux deux formats : si une carte est chargée, ou si des menaces ou des cibles sont saisies, une page de carte suit, puis les pages de photos. Un bloc vide n’est pas imprimé, et une page qui déborde se poursuit sur la suivante.</p></div>
-        <div class="lang-block" data-lang="en"><p>The Standard brief is one mission page: situation, mission and groups, frequencies, airfields and weather. A date that does not have the expected form is kept as it is, and the field takes the warning colour. The map, the threats and the targets are common to both formats: if a map is loaded, or threats or targets are entered, a map page follows, then the photo pages. An empty block is not printed, and a page that overflows continues on the next one.</p></div>
+      </div>
+
+<div class="fm-plate">
+        <div class="fm-schema fm-plate-fig">
+          <svg class="pl-wide" viewBox="0 0 720 437" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="L’écran du Briefing Generator, en Standard" data-aria-fr="L’écran du Briefing Generator, en Standard" data-aria-en="The Briefing Generator screen, in Standard">
+          <defs><marker id="bgw" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto-start-reverse"><path d="M0,0 L7,3.5 L0,7 Z" fill="currentColor" opacity=".8"/></marker></defs>
+          <text x="360" y="24" font-size="13" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.9" letter-spacing="3">L’ÉCRAN DU BRIEFING GENERATOR</text>
+          <text x="360" y="24" font-size="13" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en" opacity="0.9" letter-spacing="3">THE BRIEFING GENERATOR SCREEN</text>
+          <line x1="120" y1="32" x2="600" y2="32" stroke="currentColor" stroke-width=".6" opacity=".3"/>
+          <g transform="translate(0,22)">
+          <rect class="sv-box" x="110" y="44" width="500" height="28" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <text x="118" y="62" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.7" letter-spacing="0.6">░ BRIEFING DE MISSION</text>
+          <text x="118" y="62" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.7" letter-spacing="0.6">░ MISSION BRIEFING</text>
+          <rect x="232" y="49" width="56" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/><text x="260" y="61" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">Ouvrir ▾</text>
+          <text x="260" y="61" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">Open ▾</text>
+          <rect x="292" y="49" width="68" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/><text x="326" y="61" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">Sauvegarder</text>
+          <text x="326" y="61" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">Save</text>
+          <rect x="364" y="49" width="54" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/><text x="391" y="61" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">Exporter</text>
+          <text x="391" y="61" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">Export</text>
+          <rect x="422" y="49" width="66" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/><text x="455" y="61" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">Affichage ▾</text>
+          <text x="455" y="61" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">Display ▾</text>
+          <rect x="492" y="49" width="48" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/><text x="516" y="61" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">Effacer</text>
+          <text x="516" y="61" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">Clear</text>
+          <rect class="sv-box" x="110" y="82" width="226" height="96" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <path d="M118,92 l6,0 l-3,5 z" fill="currentColor" opacity=".8"/>
+          <text x="130" y="97" font-size="8.5" fill="currentColor" class="lang-block" data-lang="fr">01 ░ EN-TÊTE</text>
+          <text x="130" y="97" font-size="8.5" fill="currentColor" class="lang-block" data-lang="en">01 ░ HEADER</text>
+          <path d="M318,89 l4,3.5 l4,-3.5 M318,100 l4,-3.5 l4,3.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <line x1="110" y1="106" x2="336" y2="106" stroke="currentColor" stroke-width=".6" opacity=".4"/>
+          <text x="118" y="120" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.75">Opération</text>
+          <text x="118" y="120" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.75">Operation</text><rect x="118" y="123" width="102" height="15" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="123" y="133.5" font-size="8" fill="currentColor" opacity="0.85">STEPPE WIND</text>
+          <text x="226" y="120" font-size="8" fill="currentColor" opacity="0.75">Mission</text><rect x="226" y="123" width="102" height="15" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="231" y="133.5" font-size="8" fill="currentColor" opacity="0.85">M3</text>
+          <text x="118" y="152" font-size="8" fill="currentColor" opacity="0.75">Date</text><rect x="118" y="155" width="102" height="15" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="123" y="165.5" font-size="8" fill="currentColor" opacity="0.85">1989-03-22</text>
+          <text x="226" y="152" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.75">Heure (Z)</text>
+          <text x="226" y="152" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.75">Time (Z)</text><rect x="226" y="155" width="102" height="15" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="231" y="165.5" font-size="8" fill="currentColor" opacity="0.85">08:00</text>
+          <rect class="sv-box" x="110" y="184" width="226" height="110" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <path d="M118,194 l6,0 l-3,5 z" fill="currentColor" opacity=".8"/>
+          <text x="130" y="199" font-size="8.5" fill="currentColor">02 ░ SITUATION</text>
+          <path d="M318,191 l4,3.5 l4,-3.5 M318,202 l4,-3.5 l4,3.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <line x1="110" y1="208" x2="336" y2="208" stroke="currentColor" stroke-width=".6" opacity=".4"/>
+          <text x="118" y="222" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.75">POINTS DE SITUATION</text>
+          <text x="118" y="222" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.75">SITREP POINTS</text>
+          <rect x="118" y="228" width="188" height="18" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="123" y="240" font-size="8" fill="currentColor" opacity="0.85">La majorité de l’île reste…</text>
+          <rect x="310" y="228" width="18" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/><text x="319" y="240" font-size="8" text-anchor="middle" fill="currentColor">✕</text>
+          <rect x="118" y="250" width="188" height="18" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="123" y="262" font-size="8" fill="currentColor" opacity="0.85">L’aéroport de PAPHOS a été…</text>
+          <rect x="310" y="250" width="18" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/><text x="319" y="262" font-size="8" text-anchor="middle" fill="currentColor">✕</text>
+          <rect x="118" y="272" width="210" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/><text x="223" y="284" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">+ Ajouter un point</text>
+          <text x="223" y="284" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">+ Add point</text>
+          <rect x="110" y="300" width="226" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/>
+          <path d="M119,308 l5,3 l-5,3 z" fill="currentColor" opacity=".8"/>
+          <text x="130" y="314.5" font-size="8.5" fill="currentColor">03 ░ MISSION</text>
+          <path d="M318,305 l4,3.5 l4,-3.5 M318,316 l4,-3.5 l4,3.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <rect x="110" y="327" width="226" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/>
+          <path d="M119,335 l5,3 l-5,3 z" fill="currentColor" opacity=".8"/>
+          <text x="130" y="341.5" font-size="8.5" fill="currentColor">04 ░ COORDINATION</text>
+          <path d="M318,332 l4,3.5 l4,-3.5 M318,343 l4,-3.5 l4,3.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <rect x="110" y="354" width="226" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/>
+          <path d="M119,362 l5,3 l-5,3 z" fill="currentColor" opacity=".8"/>
+          <text x="130" y="368.5" font-size="8.5" fill="currentColor">05 ░ PHOTOS</text>
+          <path d="M318,359 l4,3.5 l4,-3.5 M318,370 l4,-3.5 l4,3.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <rect x="110" y="381" width="226" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/>
+          <path d="M119,389 l5,3 l-5,3 z" fill="currentColor" opacity=".8"/>
+          <text x="130" y="395.5" font-size="8.5" fill="currentColor" class="lang-block" data-lang="fr">06 ░ MÉTADONNÉES</text>
+          <text x="130" y="395.5" font-size="8.5" fill="currentColor" class="lang-block" data-lang="en">06 ░ METADATA</text>
+          <path d="M318,386 l4,3.5 l4,-3.5 M318,397 l4,-3.5 l4,3.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <rect class="sv-box" x="344" y="82" width="266" height="321" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <rect x="352" y="90" width="250" height="305" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".5"/>
+          <line x1="427" y1="98" x2="527" y2="98" stroke="currentColor" stroke-width="5" opacity=".12"/>
+          <rect x="423" y="103" width="108" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.8"/><text x="477" y="112.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">CONFIDENTIEL DÉFENSE</text>
+          <text x="477" y="112.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">CONFIDENTIAL</text>
+          <circle cx="372" cy="122" r="11" fill="none" stroke="currentColor" stroke-width="1.1" opacity=".6"/>
+          <circle cx="582" cy="122" r="11" fill="none" stroke="currentColor" stroke-width="1.1" opacity=".6"/>
+          <line x1="433" y1="126" x2="521" y2="126" stroke="currentColor" stroke-width="5" opacity=".12"/>
+          <line x1="443" y1="136" x2="511" y2="136" stroke="currentColor" stroke-width="5" opacity=".12"/>
+          <rect class="sv-pill" x="360" y="148" width="234" height="14" rx="1.5"/>
+          <text x="477" y="158" font-size="8" text-anchor="middle" class="sv-pill-t">MISSION M3 ░ 22/03/1989 ░ 08:00Z</text>
+          <rect x="360" y="170" width="234" height="13" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/>
+          <text x="477" y="179.5" font-size="8" text-anchor="middle" fill="currentColor" letter-spacing="1.2">SITUATION</text>
+          <line x1="366" y1="194" x2="588" y2="194" stroke="currentColor" stroke-width="5" opacity=".12"/><line x1="366" y1="203" x2="588" y2="203" stroke="currentColor" stroke-width="5" opacity=".12"/><line x1="366" y1="212" x2="588" y2="212" stroke="currentColor" stroke-width="5" opacity=".12"/>
+          <rect x="360" y="224" width="234" height="13" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/>
+          <text x="477" y="233.5" font-size="8" text-anchor="middle" fill="currentColor" letter-spacing="1.2">MISSION</text>
+          <line x1="366" y1="248" x2="588" y2="248" stroke="currentColor" stroke-width="5" opacity=".12"/><line x1="366" y1="257" x2="588" y2="257" stroke="currentColor" stroke-width="5" opacity=".12"/>
+          <line x1="360" y1="269" x2="594" y2="269" stroke="currentColor" stroke-width="1" opacity=".6"/>
+          <line x1="364" y1="279" x2="590" y2="279" stroke="currentColor" stroke-width="5" opacity=".12"/><line x1="364" y1="289" x2="590" y2="289" stroke="currentColor" stroke-width="5" opacity=".12"/><line x1="364" y1="299" x2="590" y2="299" stroke="currentColor" stroke-width="5" opacity=".12"/>
+          <rect x="360" y="311" width="113" height="13" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/>
+          <text x="416.5" y="320.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr" letter-spacing="1">FRÉQUENCES</text>
+          <text x="416.5" y="320.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en" letter-spacing="1">FREQUENCIES</text>
+          <line x1="364" y1="335" x2="469" y2="335" stroke="currentColor" stroke-width="5" opacity=".12"/><line x1="364" y1="344" x2="469" y2="344" stroke="currentColor" stroke-width="5" opacity=".12"/><line x1="364" y1="353" x2="469" y2="353" stroke="currentColor" stroke-width="5" opacity=".12"/>
+          <rect x="481" y="311" width="113" height="13" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/>
+          <text x="537.5" y="320.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr" letter-spacing="1">TERRAINS</text>
+          <text x="537.5" y="320.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en" letter-spacing="1">AIRFIELDS</text>
+          <line x1="485" y1="335" x2="590" y2="335" stroke="currentColor" stroke-width="5" opacity=".12"/><line x1="485" y1="344" x2="590" y2="344" stroke="currentColor" stroke-width="5" opacity=".12"/><line x1="485" y1="353" x2="590" y2="353" stroke="currentColor" stroke-width="5" opacity=".12"/>
+          <rect x="360" y="365" width="234" height="13" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/>
+          <text x="477" y="374.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr" letter-spacing="1.2">MÉTÉO</text>
+          <text x="477" y="374.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en" letter-spacing="1.2">WEATHER</text>
+          <line x1="366" y1="389" x2="588" y2="389" stroke="currentColor" stroke-width="5" opacity=".12"/>
+          <line x1="260" y1="28" x2="260" y2="49" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="260" cy="49" r="1.8" fill="currentColor"/><circle class="sv-box" cx="260" cy="28" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="260" y="31.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">1</text>
+          <line x1="326" y1="28" x2="326" y2="49" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="326" cy="49" r="1.8" fill="currentColor"/><circle class="sv-box" cx="326" cy="28" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="326" y="31.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">2</text>
+          <line x1="391" y1="28" x2="391" y2="49" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="391" cy="49" r="1.8" fill="currentColor"/><circle class="sv-box" cx="391" cy="28" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="391" y="31.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">3</text>
+          <line x1="455" y1="28" x2="455" y2="49" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="455" cy="49" r="1.8" fill="currentColor"/><circle class="sv-box" cx="455" cy="28" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="455" y="31.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">4</text>
+          <line x1="516" y1="28" x2="516" y2="49" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="516" cy="49" r="1.8" fill="currentColor"/><circle class="sv-box" cx="516" cy="28" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="516" y="31.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">5</text>
+          <line x1="80" y1="94" x2="110" y2="94" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="110" cy="94" r="1.8" fill="currentColor"/><circle class="sv-box" cx="80" cy="94" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="80" y="97.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">6</text>
+          <line x1="80" y1="196" x2="110" y2="196" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="110" cy="196" r="1.8" fill="currentColor"/><circle class="sv-box" cx="80" cy="196" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="80" y="199.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">7</text>
+          <line x1="80" y1="311" x2="110" y2="311" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="110" cy="311" r="1.8" fill="currentColor"/><circle class="sv-box" cx="80" cy="311" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="80" y="314.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">8</text>
+          <line x1="640" y1="104" x2="610" y2="104" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="610" cy="104" r="1.8" fill="currentColor"/><circle class="sv-box" cx="640" cy="104" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="640" y="107.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">9</text>
+          </g>
+          </svg>
+          <svg class="pl-tall" viewBox="0 0 360 368.5" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="L’écran du Briefing Generator au téléphone, en Standard" data-aria-fr="L’écran du Briefing Generator au téléphone, en Standard" data-aria-en="The Briefing Generator screen on a phone, in Standard">
+          <defs><marker id="bgt" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto-start-reverse"><path d="M0,0 L7,3.5 L0,7 Z" fill="currentColor" opacity=".8"/></marker></defs>
+          <text x="180" y="22" font-size="12" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.9" letter-spacing="2.5">L’ÉCRAN DU BRIEFING GENERATOR</text>
+          <text x="180" y="22" font-size="12" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en" opacity="0.9" letter-spacing="2.5">THE BRIEFING GENERATOR SCREEN</text>
+          <text x="180" y="38" font-size="8.5" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.7">au téléphone</text>
+          <text x="180" y="38" font-size="8.5" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en" opacity="0.7">on a phone</text>
+          <g transform="translate(0,12)">
+          <rect class="sv-box" x="30" y="62" width="300" height="30" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <rect x="34" y="66" width="20" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/><text x="44" y="80" font-size="8" text-anchor="middle" fill="currentColor">◄</text>
+          <text x="60" y="81" font-size="8.5" fill="currentColor" font-weight="700">B·G</text>
+          <rect x="92" y="66" width="30" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/>
+          <path d="M95,73 h4 l1.5,1.5 h6.5 v7 h-12 z" fill="none" stroke="currentColor" stroke-width="1.1"/>
+          <path d="M111,76 l3,3 l3,-3" fill="none" stroke="currentColor" stroke-width="1"/>
+          <rect x="128" y="66" width="24" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/>
+          <rect x="135" y="72" width="10" height="10" rx="1" fill="none" stroke="currentColor" stroke-width="1.1"/><rect x="137.5" y="72" width="5" height="3" fill="none" stroke="currentColor" stroke-width=".9"/>
+          <rect x="158" y="66" width="24" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/>
+          <path d="M170,79 v-8 m-3,3 l3,-3 l3,3 M164,77 v5 h12 v-5" fill="none" stroke="currentColor" stroke-width="1.1"/>
+          <rect x="188" y="66" width="24" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/>
+          <path d="M193,77 q7,-7 14,0 q-7,7 -14,0 z" fill="none" stroke="currentColor" stroke-width="1.1"/><circle cx="200" cy="77" r="2" fill="currentColor"/>
+          <rect x="218" y="66" width="24" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/>
+          <path d="M225,74 h10 M228,74 v-2 h4 v2 M226,74 l.8,8 h6.4 l.8,-8" fill="none" stroke="currentColor" stroke-width="1.1"/>
+          <rect class="sv-box" x="30" y="100" width="300" height="22" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <path d="M38,110 l6,0 l-3,5 z" fill="currentColor" opacity=".8"/>
+          <text x="50" y="115" font-size="8.5" fill="currentColor" class="lang-block" data-lang="fr">01 ░ EN-TÊTE</text>
+          <text x="50" y="115" font-size="8.5" fill="currentColor" class="lang-block" data-lang="en">01 ░ HEADER</text>
+          <path d="M312,107 l4,3.5 l4,-3.5 M312,118 l4,-3.5 l4,3.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <text x="40" y="138" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.75">Opération</text>
+          <text x="40" y="138" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.75">Operation</text><rect x="40" y="141" width="280" height="15" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="45" y="151.5" font-size="8" fill="currentColor" opacity="0.85">STEPPE WIND</text>
+          <text x="40" y="170" font-size="8" fill="currentColor" opacity="0.75">Mission</text><rect x="40" y="173" width="280" height="15" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="45" y="183.5" font-size="8" fill="currentColor" opacity="0.85">M3</text>
+          <text x="40" y="202" font-size="8" fill="currentColor" opacity="0.75">Date</text><rect x="40" y="205" width="280" height="15" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="45" y="215.5" font-size="8" fill="currentColor" opacity="0.85">1989-03-22</text>
+          <text x="40" y="234" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.75">Heure (Z)</text>
+          <text x="40" y="234" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.75">Time (Z)</text><rect x="40" y="237" width="280" height="15" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="45" y="247.5" font-size="8" fill="currentColor" opacity="0.85">08:00</text>
+          <text x="180" y="270" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.65">Sauvegarde locale automatique</text>
+          <text x="180" y="270" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en" opacity="0.65">Automatic local save</text>
+          <rect class="sv-box" x="30" y="284" width="300" height="40" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <rect x="31.5" y="287" width="37.7345" height="34" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/>
+          <text x="50.3673" y="300" font-size="9" text-anchor="middle" fill="currentColor">▤</text>
+          <text x="50.3673" y="315" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">En-tête</text>
+          <text x="50.3673" y="315" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">Header</text>
+          <text x="96.0546" y="300" font-size="9" text-anchor="middle" fill="currentColor">▣</text>
+          <text x="96.0546" y="315" font-size="8" text-anchor="middle" fill="currentColor">Situation</text>
+          <text x="141.742" y="300" font-size="9" text-anchor="middle" fill="currentColor">✈</text>
+          <text x="141.742" y="315" font-size="8" text-anchor="middle" fill="currentColor">Mission</text>
+          <text x="194.858" y="300" font-size="9" text-anchor="middle" fill="currentColor">☎</text>
+          <text x="194.858" y="315" font-size="8" text-anchor="middle" fill="currentColor">Coordination</text>
+          <text x="245.499" y="300" font-size="9" text-anchor="middle" fill="currentColor">▨</text>
+          <text x="245.499" y="315" font-size="8" text-anchor="middle" fill="currentColor">Photos</text>
+          <text x="276.327" y="300" font-size="9" text-anchor="middle" fill="currentColor">⚙</text>
+          <text x="276.327" y="315" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">Méta</text>
+          <text x="276.327" y="315" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">Meta</text>
+          <text x="309.633" y="300" font-size="9" text-anchor="middle" fill="currentColor">◈</text>
+          <text x="309.633" y="315" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">Aperçu</text>
+          <text x="309.633" y="315" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">Preview</text>
+          <line x1="107" y1="46" x2="107" y2="66" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="107" cy="66" r="1.8" fill="currentColor"/><circle class="sv-box" cx="107" cy="46" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="107" y="49.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">1</text>
+          <line x1="140" y1="46" x2="140" y2="66" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="140" cy="66" r="1.8" fill="currentColor"/><circle class="sv-box" cx="140" cy="46" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="140" y="49.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">2</text>
+          <line x1="170" y1="46" x2="170" y2="66" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="170" cy="66" r="1.8" fill="currentColor"/><circle class="sv-box" cx="170" cy="46" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="170" y="49.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">3</text>
+          <line x1="200" y1="46" x2="200" y2="66" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="200" cy="66" r="1.8" fill="currentColor"/><circle class="sv-box" cx="200" cy="46" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="200" y="49.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">4</text>
+          <line x1="230" y1="46" x2="230" y2="66" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="230" cy="66" r="1.8" fill="currentColor"/><circle class="sv-box" cx="230" cy="46" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="230" y="49.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">5</text>
+          <line x1="14" y1="111" x2="30" y2="111" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="30" cy="111" r="1.8" fill="currentColor"/><circle class="sv-box" cx="14" cy="111" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="14" y="114.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">6</text>
+          <line x1="96.0546" y1="342" x2="96.0546" y2="324" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="96.0546" cy="324" r="1.8" fill="currentColor"/><circle class="sv-box" cx="96.0546" cy="342" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="96.0546" y="345.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">7</text>
+          <line x1="145.742" y1="342" x2="141.742" y2="324" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="141.742" cy="324" r="1.8" fill="currentColor"/><circle class="sv-box" cx="145.742" cy="342" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="145.742" y="345.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">8</text>
+          <line x1="309.633" y1="342" x2="309.633" y2="324" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="309.633" cy="324" r="1.8" fill="currentColor"/><circle class="sv-box" cx="309.633" cy="342" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="309.633" y="345.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">9</text>
+          </g>
+          </svg>
+          <div class="fm-schema-legend"><span class="lang-block" data-lang="fr">Fig. 2 — L’écran du Briefing Generator en Standard : la barre, l’éditeur par sections, puis l’aperçu de la page de mission.</span><span class="lang-block" data-lang="en">Fig. 2 — The Briefing Generator screen in Standard: the bar, the editor by sections, then the preview of the mission page.</span></div>
+        </div>
+        <ol class="pl-legend"><li><span class="pl-n">1</span><span class="lang-block" data-lang="fr"><b>Ouvrir ▾</b> — Ouvrir un briefing… lit un ancien fichier de briefing, le format choisi voyageant avec lui.</span><span class="lang-block" data-lang="en"><b>Open ▾</b> — Open a briefing… reads an old briefing file, the chosen format travelling with it.</span></li><li><span class="pl-n">2</span><span class="lang-block" data-lang="fr"><b>Sauvegarder</b> — le briefing est gardé automatiquement dans le navigateur.</span><span class="lang-block" data-lang="en"><b>Save</b> — the briefing is kept automatically in the browser.</span></li><li><span class="pl-n">3</span><span class="lang-block" data-lang="fr"><b>Exporter</b> — vérifiez d’abord la mise en page dans l’aperçu. L’export porte les pages du format en cours, en PDF (par l’impression du navigateur, Ctrl+P puis « Enregistrer en PDF », y compris sur Android) ou en PNG par page.</span><span class="lang-block" data-lang="en"><b>Export</b> — check the layout in the preview first. The export carries the pages of the current format, as a PDF (through the browser’s print, Ctrl+P then “Save as PDF”, on Android too) or as one PNG per page.</span></li><li><span class="pl-n">4</span><span class="lang-block" data-lang="fr"><b>Affichage ▾</b> — choisit le format, Standard ou Avancé ; un point ambre sur le bouton signale Avancé. Changer de format ne perd rien : seules les sections affichées et les pages produites changent, et ce que vous avez saisi pour l’autre format revient quand vous y retournez.</span><span class="lang-block" data-lang="en"><b>Display ▾</b> — chooses the format, Standard or Advanced; an amber dot on the button marks Advanced. Changing format loses nothing: only the sections shown and the pages produced change, and what you entered for the other format comes back when you return to it.</span></li><li><span class="pl-n">5</span><span class="lang-block" data-lang="fr"><b>Effacer</b> — vide tout le briefing, après confirmation.</span><span class="lang-block" data-lang="en"><b>Clear</b> — empties the whole briefing, after a confirmation.</span></li><li><span class="pl-n">6</span><span class="lang-block" data-lang="fr"><b>01 ░ EN-TÊTE</b> — l’outil s’ouvre sur une page blanche, en Standard ; les champs vides disent en grisé ce qu’on y met, et cet indice n’est ni dans l’aperçu ni à l’export. Une date qui n’a pas la forme attendue est gardée telle quelle, et le champ prend la couleur d’avertissement.</span><span class="lang-block" data-lang="en"><b>01 ░ HEADER</b> — the tool opens on a blank page, in Standard; empty fields say in grey what goes in them, and that hint is neither in the preview nor in the export. A date that does not have the expected form is kept as it is, and the field takes the warning colour.</span></li><li><span class="pl-n">7</span><span class="lang-block" data-lang="fr"><b>02 ░ SITUATION</b> — la carte, les menaces et les cibles sont communes aux deux formats : si une carte est chargée, ou si des menaces ou des cibles sont saisies, une page de carte suit, puis les pages de photos.</span><span class="lang-block" data-lang="en"><b>02 ░ SITUATION</b> — the map, the threats and the targets are common to both formats: if a map is loaded, or threats or targets are entered, a map page follows, then the photo pages.</span></li><li><span class="pl-n">8</span><span class="lang-block" data-lang="fr"><b>Les autres sections</b> — Mission, Coordination, Photos et Métadonnées : chacune se replie par l’icône à droite de son en-tête. Au téléphone, l’éditeur passe en onglets.</span><span class="lang-block" data-lang="en"><b>The other sections</b> — Mission, Coordination, Photos and Metadata: each folds by the icon at the right of its header. On a phone, the editor switches to tabs.</span></li><li><span class="pl-n">9</span><span class="lang-block" data-lang="fr"><b>L’aperçu</b> — la page de mission : situation, mission et groupes, fréquences, terrains et météo. Un bloc vide n’est pas imprimé, et une page qui déborde se poursuit sur la suivante.</span><span class="lang-block" data-lang="en"><b>The preview</b> — the mission page: situation, mission and groups, frequencies, airfields and weather. An empty block is not printed, and a page that overflows continues on the next one.</span></li></ol>
+      </div>
+
+      <div class="fm-prose">
+        <div class="lang-block" data-lang="fr"><p>L’exemple et ses effets sont dans <a href="#start:gestes" onclick="location.hash=&#39;start:gestes&#39;;return false">Par où commencer</a>.</p></div>
+        <div class="lang-block" data-lang="en"><p>The example and its effects are in <a href="#start:gestes" onclick="location.hash=&#39;start:gestes&#39;;return false">Where to start</a>.</p></div>
         <h4 class="lang-block" data-lang="fr">Le brief Avancé</h4>
         <h4 class="lang-block" data-lang="en">The Advanced brief</h4>
         <div class="lang-block" data-lang="fr"><p>Le brief Avancé garde l’En-tête et la Méta du Standard ; toutes ses autres sections lui sont propres. La section <strong>Configuration Wing</strong> est en lecture seule : le Wing se modifie dans HQ. Les indicatifs de l’équipage sont proposés à partir du callsign des escadrons d’HQ, et restent modifiables.</p></div>
@@ -2228,10 +2575,6 @@ body.zm-open #fm-root { overflow: hidden; }
         <h4 class="lang-block" data-lang="en">The map and the photo</h4>
         <div class="lang-block" data-lang="fr"><p>La carte du Route Planner arrive par <strong>Placer la carte du Route Planner</strong>, après l’<strong>Exporter ▾ › Image pour le briefing…</strong> du Route Planner, dans la même session de l’accueil. La photo de Recon Station n’arrive pas toute seule : exportez le PNG dans Recon Station, puis ajoutez l’image dans la section <strong>Photos</strong>.</p></div>
         <div class="lang-block" data-lang="en"><p>The Route Planner map arrives through <strong>Place the Route Planner map</strong>, after the Route Planner’s <strong>Export ▾ › Image for the briefing…</strong>, in the same home-page session. The Recon Station photo does not arrive by itself: export the PNG in Recon Station, then add the image in the <strong>Photos</strong> section.</p></div>
-        <h4 class="lang-block" data-lang="fr">Sauvegarder et exporter</h4>
-        <h4 class="lang-block" data-lang="en">Saving and exporting</h4>
-        <div class="lang-block" data-lang="fr"><p>Le briefing est gardé automatiquement dans le navigateur. <strong>Ouvrir ▾ › Ouvrir un briefing…</strong> lit un ancien fichier de briefing, le format choisi voyageant avec lui. Pour exporter, vérifiez la mise en page dans l’Aperçu, puis <strong>Exporter</strong> : l’export porte les pages du format en cours, en PDF (par l’impression du navigateur, Ctrl+P puis « Enregistrer en PDF », y compris sur Android) ou en PNG par page.</p></div>
-        <div class="lang-block" data-lang="en"><p>The briefing is kept automatically in the browser. <strong>Open ▾ › Open a briefing…</strong> reads an old briefing file, the chosen format travelling with it. To export, check the layout in the Preview, then <strong>Export</strong>: the export carries the pages of the current format, as a PDF (through the browser’s print, Ctrl+P then “Save as PDF”, on Android too) or as one PNG per page.</p></div>
       </div>
 
       <div class="fmnav-pn"><a class="fmnav-pv" href="#hq" onclick="fmGo(&#39;hq&#39;);return false"><span class="fmnav-k" data-i18n="nav.prev">◄ Chapitre précédent</span><span class="fmnav-n">HQ · <span data-i18n="hq.hero.title">HQ — Wing Command Center</span></span></a><a class="fmnav-nx" href="#rs" onclick="fmGo(&#39;rs&#39;);return false"><span class="fmnav-k" data-i18n="nav.next">Chapitre suivant ►</span><span class="fmnav-n">RS · <span data-i18n="rs.hero.title">Recon Station</span></span></a></div>
@@ -2341,22 +2684,320 @@ body.zm-open #fm-root { overflow: hidden; }
         <span id="rs-2"></span>
         <h3 class="lang-block" data-lang="fr">Les gestes</h3>
         <h3 class="lang-block" data-lang="en">The gestures</h3>
-        <h4 class="lang-block" data-lang="fr">Préparer la photo</h4>
-        <h4 class="lang-block" data-lang="en">Setting up the photo</h4>
-        <div class="lang-block" data-lang="fr"><p>L’image est d’abord convertie en niveaux de gris. <strong>Contraste</strong> accentue ou adoucit les écarts ; <strong>Imagerie</strong> donne l’allure d’un capteur, par stylisation du signal et non par mesure ; <strong>Vignette</strong>, <strong>Grain</strong> et <strong>Scanlines</strong>, éteints par défaut, ajoutent l’usure d’un tirage. Recon ne peint jamais d’élément absent de l’image.</p></div>
-        <div class="lang-block" data-lang="en"><p>The image is first converted to greyscale. <strong>Contrast</strong> sharpens or softens the differences; <strong>Imagery</strong> gives the look of a sensor, by stylising the signal and not by measurement; <strong>Vignette</strong>, <strong>Grain</strong> and <strong>Scanlines</strong>, off by default, add the wear of a print. Recon never paints an element that is not in the image.</p></div>
-        <h4 class="lang-block" data-lang="fr">Annoter</h4>
-        <h4 class="lang-block" data-lang="en">Annotating</h4>
-        <div class="lang-block" data-lang="fr"><p><strong>+ AJOUTER UN MARQUAGE</strong> dépose un cercle numéroté, à glisser sur la cible, lié à une ligne de légende du cartouche ; la numérotation se recalcule toute seule, et l’Amorce tire un trait jusqu’au point exact de la cible. <strong>+ AJOUTER UNE LOUPE</strong> réaffiche, agrandie, une portion de l’image traitée ; la zone et la boîte se déplacent et se redimensionnent sans déformer l’image. Les formes et les étiquettes se posent au centre, puis se déplacent. Le bandeau de classification, éteint par défaut, réserve sa place pour ne recouvrir ni le cartouche ni le bloc d’informations ; il est distinct du champ Classification du bloc.</p></div>
-        <div class="lang-block" data-lang="en"><p><strong>+ ADD MARKER</strong> drops a numbered circle, to drag onto the target, tied to a legend line of the cartouche; the numbering recalculates by itself, and the <strong>Leader</strong> draws a line to the exact point of the target. <strong>+ ADD MAGNIFIER</strong> redisplays, enlarged, a portion of the processed image; the zone and the box move and resize without distorting the image. Shapes and labels are placed at the centre, then moved. The classification banner, off by default, reserves its place so as not to cover the cartouche or the information block; it is separate from the block’s Classification field.</p></div>
-        <h4 class="lang-block" data-lang="fr">Le bloc d’informations et les logos</h4>
-        <h4 class="lang-block" data-lang="en">The info block and the logos</h4>
-        <div class="lang-block" data-lang="fr"><p>En bas, le <strong>bloc d’informations</strong> : les champs vides ne s’impriment pas. À l’ouverture de RS, le briefing du BG préremplit le bloc ; un champ déjà rempli n’est jamais écrasé. Les logos du Wing d’HQ sont proposés dans la grille Logo, marqués Wing ; vous pouvez en ajouter par une image PNG, et chaque logo se rend en couleur, en niveaux de gris ou en blanc.</p></div>
-        <div class="lang-block" data-lang="en"><p>At the bottom, the <strong>information block</strong>: empty fields are not printed. When RS opens, the BG’s briefing pre-fills the block; a field already filled is never overwritten. The HQ Wing logos are offered in the Logo grid, marked Wing; you can add some from a PNG image, and each logo renders in colour, greyscale or white.</p></div>
-        <h4 class="lang-block" data-lang="fr">Ouvrir, sauvegarder, exporter</h4>
-        <h4 class="lang-block" data-lang="en">Opening, saving, exporting</h4>
-        <div class="lang-block" data-lang="fr"><p><strong>Ouvrir ▾</strong> (Ouvrir un travail…, Ouvrir une image…) et <strong>Sauvegarder</strong>, Ctrl+S, rangent la composition dans le fichier de travail, sans l’image source : après un rechargement de la page, importez de nouveau l’image. <strong>Exporter</strong> propose un nom (la cible et l’heure), que vous pouvez changer, et écrit un PNG sans perte à la résolution de la source ; l’aperçu à l’écran est réduit. Pour mettre la photo au briefing, voir le <a href="#bg" onclick="location.hash=&#39;bg&#39;;return false">Briefing Generator</a>.</p></div>
-        <div class="lang-block" data-lang="en"><p><strong>Open ▾</strong> (Open a work file…, Open an image…) and <strong>Save</strong>, Ctrl+S, store the composition in the work file, without the source image: after a page reload, import the image again. <strong>Export</strong> proposes a name (the target and the time), which you can change, and writes a lossless PNG at the source’s resolution; the on-screen preview is reduced. To put the photo in the briefing, see the <a href="#bg" onclick="location.hash=&#39;bg&#39;;return false">Briefing Generator</a>.</p></div>
+      </div>
+
+<div class="fm-plate">
+        <div class="fm-schema fm-plate-fig">
+          <svg class="pl-wide" viewBox="0 0 720 509" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="L’écran de Recon Station, une photo annotée" data-aria-fr="L’écran de Recon Station, une photo annotée" data-aria-en="The Recon Station screen, with an annotated photo">
+          <defs><marker id="rsw" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto-start-reverse"><path d="M0,0 L7,3.5 L0,7 Z" fill="currentColor" opacity=".8"/></marker></defs>
+          <text x="360" y="24" font-size="13" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.9" letter-spacing="3">L’ÉCRAN DE RECON STATION</text>
+          <text x="360" y="24" font-size="13" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en" opacity="0.9" letter-spacing="3">THE RECON STATION SCREEN</text>
+          <line x1="120" y1="32" x2="600" y2="32" stroke="currentColor" stroke-width=".6" opacity=".3"/>
+          <g transform="translate(0,22)">
+          <rect class="sv-box" x="110" y="44" width="500" height="28" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <text x="118" y="62" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.7" letter-spacing="0.6">░ RENSEIGNEMENT</text>
+          <text x="118" y="62" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.7" letter-spacing="0.6">░ INTELLIGENCE</text>
+          <rect x="214" y="49" width="56" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/><text x="242" y="61" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">Ouvrir ▾</text>
+          <text x="242" y="61" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">Open ▾</text>
+          <rect x="274" y="49" width="68" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/><text x="308" y="61" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">Sauvegarder</text>
+          <text x="308" y="61" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">Save</text>
+          <rect x="346" y="49" width="54" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/><text x="373" y="61" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">Exporter</text>
+          <text x="373" y="61" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">Export</text>
+          <rect x="404" y="49" width="48" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/><text x="428" y="61" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">Effacer</text>
+          <text x="428" y="61" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">Clear</text>
+          <rect class="sv-box" x="110" y="82" width="190" height="114" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <path d="M118,92 l6,0 l-3,5 z" fill="currentColor" opacity=".8"/>
+          <text x="130" y="97" font-size="8.5" fill="currentColor" class="lang-block" data-lang="fr">IMAGE SOURCE</text>
+          <text x="130" y="97" font-size="8.5" fill="currentColor" class="lang-block" data-lang="en">SOURCE IMAGE</text>
+          <path d="M282,89 l4,3.5 l4,-3.5 M282,100 l4,-3.5 l4,3.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <line x1="110" y1="106" x2="300" y2="106" stroke="currentColor" stroke-width=".6" opacity=".4"/>
+          <rect x="118" y="112" width="174" height="42" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7" stroke-dasharray="3 2"/>
+          <text x="205" y="130" font-size="8" text-anchor="middle" fill="currentColor">RS_EXAMPLE_NAIP.JPG — 1200×800 PX</text>
+          <text x="205" y="144" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.65">PNG · JPEG — CLIQUER POUR PARCOURIR</text>
+          <text x="205" y="144" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en" opacity="0.65">PNG · JPEG — CLICK TO BROWSE</text>
+          <text x="205" y="166" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.6">Image : USDA NAIP, domaine public</text>
+          <text x="205" y="166" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en" opacity="0.6">Image: USDA NAIP, public domain</text>
+          <rect x="118" y="172" width="174" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/><text x="205" y="183" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">↺ REMPLACER L’IMAGE</text>
+          <text x="205" y="183" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">↺ REPLACE IMAGE</text>
+          <rect class="sv-box" x="110" y="202" width="190" height="56" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <path d="M118,212 l6,0 l-3,5 z" fill="currentColor" opacity=".8"/>
+          <text x="130" y="217" font-size="8.5" fill="currentColor" class="lang-block" data-lang="fr">RENDU</text>
+          <text x="130" y="217" font-size="8.5" fill="currentColor" class="lang-block" data-lang="en">RENDER</text>
+          <path d="M282,209 l4,3.5 l4,-3.5 M282,220 l4,-3.5 l4,3.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <line x1="110" y1="226" x2="300" y2="226" stroke="currentColor" stroke-width=".6" opacity=".4"/>
+          <text x="118" y="243" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.75">CONTRASTE</text>
+          <text x="118" y="243" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.75">CONTRAST</text>
+          <line x1="170" y1="240" x2="258" y2="240" stroke="currentColor" stroke-width="1.2" opacity=".55"/>
+          <circle class="sv-box" cx="196.4" cy="240" r="4" stroke="currentColor" stroke-width="1.2"/>
+          <text x="292" y="243" font-size="8" text-anchor="end" fill="currentColor" opacity="0.75">105%</text>
+          <rect x="110" y="264" width="190" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/>
+          <path d="M119,272 l5,3 l-5,3 z" fill="currentColor" opacity=".8"/>
+          <text x="130" y="278.5" font-size="8.5" fill="currentColor" class="lang-block" data-lang="fr">COULEUR DU TEXTE</text>
+          <text x="130" y="278.5" font-size="8.5" fill="currentColor" class="lang-block" data-lang="en">TEXT COLOR</text>
+          <path d="M282,269 l4,3.5 l4,-3.5 M282,280 l4,-3.5 l4,3.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <rect x="110" y="291" width="190" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/>
+          <path d="M119,299 l5,3 l-5,3 z" fill="currentColor" opacity=".8"/>
+          <text x="130" y="305.5" font-size="8.5" fill="currentColor" class="lang-block" data-lang="fr">EFFETS</text>
+          <text x="130" y="305.5" font-size="8.5" fill="currentColor" class="lang-block" data-lang="en">EFFECTS</text>
+          <path d="M282,296 l4,3.5 l4,-3.5 M282,307 l4,-3.5 l4,3.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <rect x="110" y="318" width="190" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/>
+          <path d="M119,326 l5,3 l-5,3 z" fill="currentColor" opacity=".8"/>
+          <text x="130" y="332.5" font-size="8.5" fill="currentColor" class="lang-block" data-lang="fr">BLOC D’INFORMATIONS</text>
+          <text x="130" y="332.5" font-size="8.5" fill="currentColor" class="lang-block" data-lang="en">INFO BLOCK</text>
+          <path d="M282,323 l4,3.5 l4,-3.5 M282,334 l4,-3.5 l4,3.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <rect x="110" y="345" width="190" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/>
+          <path d="M119,353 l5,3 l-5,3 z" fill="currentColor" opacity=".8"/>
+          <text x="130" y="359.5" font-size="8.5" fill="currentColor">LOGO</text>
+          <path d="M282,350 l4,3.5 l4,-3.5 M282,361 l4,-3.5 l4,3.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <rect x="110" y="372" width="190" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/>
+          <path d="M119,380 l5,3 l-5,3 z" fill="currentColor" opacity=".8"/>
+          <text x="130" y="386.5" font-size="8.5" fill="currentColor" class="lang-block" data-lang="fr">CARTOUCHE</text>
+          <text x="130" y="386.5" font-size="8.5" fill="currentColor" class="lang-block" data-lang="en">LEGEND</text>
+          <path d="M282,377 l4,3.5 l4,-3.5 M282,388 l4,-3.5 l4,3.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <rect x="110" y="399" width="190" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/>
+          <path d="M119,407 l5,3 l-5,3 z" fill="currentColor" opacity=".8"/>
+          <text x="130" y="413.5" font-size="8.5" fill="currentColor" class="lang-block" data-lang="fr">FORMES</text>
+          <text x="130" y="413.5" font-size="8.5" fill="currentColor" class="lang-block" data-lang="en">SHAPES</text>
+          <path d="M282,404 l4,3.5 l4,-3.5 M282,415 l4,-3.5 l4,3.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <rect x="110" y="426" width="190" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/>
+          <path d="M119,434 l5,3 l-5,3 z" fill="currentColor" opacity=".8"/>
+          <text x="130" y="440.5" font-size="8.5" fill="currentColor" class="lang-block" data-lang="fr">COULEUR DES MARQUAGES</text>
+          <text x="130" y="440.5" font-size="8.5" fill="currentColor" class="lang-block" data-lang="en">MARKER COLOR</text>
+          <path d="M282,431 l4,3.5 l4,-3.5 M282,442 l4,-3.5 l4,3.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <rect x="110" y="453" width="190" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/>
+          <path d="M119,461 l5,3 l-5,3 z" fill="currentColor" opacity=".8"/>
+          <text x="130" y="467.5" font-size="8.5" fill="currentColor">CLASSIFICATION</text>
+          <path d="M282,458 l4,3.5 l4,-3.5 M282,469 l4,-3.5 l4,3.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <rect class="sv-box" x="308" y="82" width="302" height="393" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <rect x="316" y="163.167" width="286" height="190.667" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".8"/>
+          <rect x="326" y="177.167" width="50" height="30" rx="1" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>
+          <rect x="386" y="173.167" width="40" height="24" rx="1" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>
+          <rect x="434" y="177.167" width="46" height="28" rx="1" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>
+          <rect x="330" y="223.167" width="36" height="34" rx="1" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>
+          <rect x="378" y="229.167" width="30" height="26" rx="1" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>
+          <rect x="416" y="275.167" width="44" height="26" rx="1" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>
+          <rect x="330" y="273.167" width="40" height="30" rx="1" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>
+          <rect x="512" y="233.167" width="30" height="30" rx="1" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>
+          <rect x="552" y="229.167" width="36" height="40" rx="1" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>
+          <rect x="466" y="303.167" width="20" height="30" rx="1" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>
+          <rect x="414" y="235.167" width="76" height="28" fill="none" stroke="currentColor" stroke-width="1.6"/>
+          <ellipse cx="366" cy="295.167" rx="28" ry="13" fill="none" stroke="currentColor" stroke-width="1.6"/>
+          <line x1="522" y1="215.167" x2="490" y2="243.167" stroke="currentColor" stroke-width="1.2" opacity=".8"/>
+          <circle class="sv-box" cx="522" cy="215.167" r="6.5" stroke="currentColor" stroke-width="1.4"/>
+          <text x="522" y="217.967" font-size="8" text-anchor="middle" fill="currentColor" font-weight="700">1</text>
+          <line x1="434" y1="219.167" x2="446" y2="235.167" stroke="currentColor" stroke-width="1.2" opacity=".8"/>
+          <circle class="sv-box" cx="434" cy="219.167" r="6.5" stroke="currentColor" stroke-width="1.4"/>
+          <text x="434" y="221.967" font-size="8" text-anchor="middle" fill="currentColor" font-weight="700">2</text>
+          <line x1="344" y1="263.167" x2="354" y2="283.167" stroke="currentColor" stroke-width="1.2" opacity=".8"/>
+          <circle class="sv-box" cx="344" cy="263.167" r="6.5" stroke="currentColor" stroke-width="1.4"/>
+          <text x="344" y="265.967" font-size="8" text-anchor="middle" fill="currentColor" font-weight="700">3</text>
+          <rect class="sv-box" x="488" y="169.167" width="108" height="38" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <text x="494" y="181.167" font-size="8" fill="currentColor" opacity="0.8">1</text>
+          <text x="504" y="181.167" font-size="8" fill="currentColor" opacity="0.85">STOCKAGE POL</text>
+          <text x="494" y="192.167" font-size="8" fill="currentColor" opacity="0.8">2</text>
+          <text x="504" y="192.167" font-size="8" fill="currentColor" opacity="0.85">PARC DE RÉSERVOIRS</text>
+          <text x="494" y="203.167" font-size="8" fill="currentColor" opacity="0.8">3</text>
+          <text x="504" y="203.167" font-size="8" fill="currentColor" opacity="0.85">PARC DE VÉHICULES</text>
+          <rect x="450" y="275.167" width="14" height="10" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="3 2" opacity=".8"/>
+          <line x1="464" y1="281.167" x2="500" y2="303.833" stroke="currentColor" stroke-width="1" stroke-dasharray="3 2" opacity=".7"/>
+          <rect class="sv-box" x="500" y="295.833" width="96" height="52" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <circle cx="534" cy="323.833" r="11" fill="none" stroke="currentColor" stroke-width="1.4"/>
+          <text x="534" y="326.833" font-size="8" text-anchor="middle" fill="currentColor" font-weight="700">2</text>
+          <line x1="556" y1="313.833" x2="588" y2="313.833" stroke="currentColor" stroke-width="5" opacity=".12"/><line x1="556" y1="322.833" x2="588" y2="322.833" stroke="currentColor" stroke-width="5" opacity=".12"/><line x1="556" y1="331.833" x2="588" y2="331.833" stroke="currentColor" stroke-width="5" opacity=".12"/>
+          <line x1="324" y1="325.833" x2="434" y2="325.833" stroke="currentColor" stroke-width="5" opacity=".12"/><line x1="324" y1="334.833" x2="434" y2="334.833" stroke="currentColor" stroke-width="5" opacity=".12"/><line x1="324" y1="343.833" x2="434" y2="343.833" stroke="currentColor" stroke-width="5" opacity=".12"/>
+          <rect class="sv-box" x="314" y="435" width="290" height="32" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <rect class="sv-pill" x="321" y="439" width="36.0421" height="24" rx="1.5"/><text x="339.021" y="454" font-size="8" text-anchor="middle" class="sv-pill-t lang-block" data-lang="fr">CHOISIR</text>
+          <text x="339.021" y="454" font-size="8" text-anchor="middle" class="sv-pill-t lang-block" data-lang="en">SELECT</text>
+          <rect x="359.042" y="439" width="27.2632" height="24" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5"/><text x="372.674" y="454" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">CADRE</text>
+          <text x="372.674" y="454" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">FRAME</text>
+          <rect x="388.305" y="439" width="36.0421" height="24" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5"/><text x="406.326" y="454" font-size="8" text-anchor="middle" fill="currentColor">ELLIPSE</text>
+          <rect x="426.347" y="439" width="40.4316" height="24" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5"/><text x="446.563" y="454" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">TRACÉ</text>
+          <text x="446.563" y="454" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">POLYLINE</text>
+          <rect x="468.779" y="439" width="31.6526" height="24" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5"/><text x="484.605" y="454" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">FLÈCHE</text>
+          <text x="484.605" y="454" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">ARROW</text>
+          <rect x="502.432" y="439" width="36.0421" height="24" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5"/><text x="520.453" y="454" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">CROCHET</text>
+          <text x="520.453" y="454" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">BRACKET</text>
+          <rect x="540.474" y="439" width="27.2632" height="24" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5"/><text x="554.105" y="454" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">TEXTE</text>
+          <text x="554.105" y="454" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">TEXT</text>
+          <rect x="569.737" y="439" width="27.2632" height="24" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5"/><text x="583.368" y="454" font-size="8" text-anchor="middle" fill="currentColor">LOUPE</text>
+          <line x1="242" y1="28" x2="242" y2="49" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="242" cy="49" r="1.8" fill="currentColor"/><circle class="sv-box" cx="242" cy="28" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="242" y="31.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">1</text>
+          <line x1="308" y1="28" x2="308" y2="49" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="308" cy="49" r="1.8" fill="currentColor"/><circle class="sv-box" cx="308" cy="28" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="308" y="31.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">2</text>
+          <line x1="373" y1="28" x2="373" y2="49" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="373" cy="49" r="1.8" fill="currentColor"/><circle class="sv-box" cx="373" cy="28" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="373" y="31.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">3</text>
+          <line x1="80" y1="94" x2="110" y2="94" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="110" cy="94" r="1.8" fill="currentColor"/><circle class="sv-box" cx="80" cy="94" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="80" y="97.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">4</text>
+          <line x1="80" y1="214" x2="110" y2="214" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="110" cy="214" r="1.8" fill="currentColor"/><circle class="sv-box" cx="80" cy="214" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="80" y="217.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">5</text>
+          <line x1="80" y1="302" x2="110" y2="302" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="110" cy="302" r="1.8" fill="currentColor"/><circle class="sv-box" cx="80" cy="302" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="80" y="305.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">6</text>
+          <line x1="80" y1="329" x2="110" y2="329" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="110" cy="329" r="1.8" fill="currentColor"/><circle class="sv-box" cx="80" cy="329" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="80" y="332.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">7</text>
+          <line x1="80" y1="356" x2="110" y2="356" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="110" cy="356" r="1.8" fill="currentColor"/><circle class="sv-box" cx="80" cy="356" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="80" y="359.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">8</text>
+          <line x1="80" y1="410" x2="110" y2="410" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="110" cy="410" r="1.8" fill="currentColor"/><circle class="sv-box" cx="80" cy="410" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="80" y="413.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">9</text>
+          <line x1="80" y1="464" x2="110" y2="464" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="110" cy="464" r="1.8" fill="currentColor"/><circle class="sv-box" cx="80" cy="464" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="80" y="467.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">10</text>
+          <line x1="640" y1="188.167" x2="596" y2="188.167" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="596" cy="188.167" r="1.8" fill="currentColor"/><circle class="sv-box" cx="640" cy="188.167" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="640" y="191.367" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">11</text>
+          <line x1="640" y1="321.833" x2="596" y2="321.833" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="596" cy="321.833" r="1.8" fill="currentColor"/><circle class="sv-box" cx="640" cy="321.833" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="640" y="325.033" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">12</text>
+          <line x1="640" y1="451" x2="604" y2="451" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="604" cy="451" r="1.8" fill="currentColor"/><circle class="sv-box" cx="640" cy="451" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="640" y="454.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">13</text>
+          </g>
+          </svg>
+          <svg class="pl-tall" viewBox="0 0 360 814" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="L’écran de Recon Station au téléphone : le panneau de l’éditeur et l’aperçu" data-aria-fr="L’écran de Recon Station au téléphone : le panneau de l’éditeur et l’aperçu" data-aria-en="The Recon Station screen on a phone: the editor panel and the preview">
+          <defs><marker id="rst" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto-start-reverse"><path d="M0,0 L7,3.5 L0,7 Z" fill="currentColor" opacity=".8"/></marker></defs>
+          <text x="180" y="22" font-size="12" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.9" letter-spacing="2.5">L’ÉCRAN DE RECON STATION</text>
+          <text x="180" y="22" font-size="12" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en" opacity="0.9" letter-spacing="2.5">THE RECON STATION SCREEN</text>
+          <text x="180" y="38" font-size="8.5" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.7">au téléphone</text>
+          <text x="180" y="38" font-size="8.5" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en" opacity="0.7">on a phone</text>
+          <g transform="translate(0,12)">
+          <rect class="sv-box" x="30" y="62" width="300" height="30" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <rect x="34" y="66" width="20" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/><text x="44" y="80" font-size="8" text-anchor="middle" fill="currentColor">◄</text>
+          <text x="60" y="81" font-size="8.5" fill="currentColor" font-weight="700">R·S</text>
+          <rect x="142" y="66" width="30" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/>
+          <path d="M145,73 h4 l1.5,1.5 h6.5 v7 h-12 z" fill="none" stroke="currentColor" stroke-width="1.1"/>
+          <path d="M161,76 l3,3 l3,-3" fill="none" stroke="currentColor" stroke-width="1"/>
+          <rect x="180" y="66" width="24" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/>
+          <rect x="187" y="72" width="10" height="10" rx="1" fill="none" stroke="currentColor" stroke-width="1.1"/><rect x="189.5" y="72" width="5" height="3" fill="none" stroke="currentColor" stroke-width=".9"/>
+          <rect x="212" y="66" width="24" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/>
+          <path d="M224,79 v-8 m-3,3 l3,-3 l3,3 M218,77 v5 h12 v-5" fill="none" stroke="currentColor" stroke-width="1.1"/>
+          <rect x="244" y="66" width="24" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/>
+          <path d="M251,74 h10 M254,74 v-2 h4 v2 M252,74 l.8,8 h6.4 l.8,-8" fill="none" stroke="currentColor" stroke-width="1.1"/>
+          <rect class="sv-box" x="30" y="100" width="300" height="114" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <path d="M38,110 l6,0 l-3,5 z" fill="currentColor" opacity=".8"/>
+          <text x="50" y="115" font-size="8.5" fill="currentColor" class="lang-block" data-lang="fr">IMAGE SOURCE</text>
+          <text x="50" y="115" font-size="8.5" fill="currentColor" class="lang-block" data-lang="en">SOURCE IMAGE</text>
+          <path d="M312,107 l4,3.5 l4,-3.5 M312,118 l4,-3.5 l4,3.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <line x1="30" y1="124" x2="330" y2="124" stroke="currentColor" stroke-width=".6" opacity=".4"/>
+          <rect x="38" y="130" width="284" height="42" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7" stroke-dasharray="3 2"/>
+          <text x="180" y="148" font-size="8" text-anchor="middle" fill="currentColor">RS_EXAMPLE_NAIP.JPG — 1200×800 PX</text>
+          <text x="180" y="162" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.65">PNG · JPEG — CLIQUER POUR PARCOURIR</text>
+          <text x="180" y="162" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en" opacity="0.65">PNG · JPEG — CLICK TO BROWSE</text>
+          <text x="180" y="184" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.6">Image : USDA NAIP, domaine public</text>
+          <text x="180" y="184" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en" opacity="0.6">Image: USDA NAIP, public domain</text>
+          <rect x="38" y="190" width="284" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/><text x="180" y="201" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">↺ REMPLACER L’IMAGE</text>
+          <text x="180" y="201" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">↺ REPLACE IMAGE</text>
+          <rect class="sv-box" x="30" y="220" width="300" height="56" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <path d="M38,230 l6,0 l-3,5 z" fill="currentColor" opacity=".8"/>
+          <text x="50" y="235" font-size="8.5" fill="currentColor" class="lang-block" data-lang="fr">RENDU</text>
+          <text x="50" y="235" font-size="8.5" fill="currentColor" class="lang-block" data-lang="en">RENDER</text>
+          <path d="M312,227 l4,3.5 l4,-3.5 M312,238 l4,-3.5 l4,3.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <line x1="30" y1="244" x2="330" y2="244" stroke="currentColor" stroke-width=".6" opacity=".4"/>
+          <text x="38" y="261" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.75">CONTRASTE</text>
+          <text x="38" y="261" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.75">CONTRAST</text>
+          <line x1="90" y1="258" x2="288" y2="258" stroke="currentColor" stroke-width="1.2" opacity=".55"/>
+          <circle class="sv-box" cx="149.4" cy="258" r="4" stroke="currentColor" stroke-width="1.2"/>
+          <text x="322" y="261" font-size="8" text-anchor="end" fill="currentColor" opacity="0.75">105%</text>
+          <rect x="30" y="282" width="300" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/>
+          <path d="M39,290 l5,3 l-5,3 z" fill="currentColor" opacity=".8"/>
+          <text x="50" y="296.5" font-size="8.5" fill="currentColor" class="lang-block" data-lang="fr">COULEUR DU TEXTE</text>
+          <text x="50" y="296.5" font-size="8.5" fill="currentColor" class="lang-block" data-lang="en">TEXT COLOR</text>
+          <path d="M312,287 l4,3.5 l4,-3.5 M312,298 l4,-3.5 l4,3.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <rect x="30" y="309" width="300" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/>
+          <path d="M39,317 l5,3 l-5,3 z" fill="currentColor" opacity=".8"/>
+          <text x="50" y="323.5" font-size="8.5" fill="currentColor" class="lang-block" data-lang="fr">EFFETS</text>
+          <text x="50" y="323.5" font-size="8.5" fill="currentColor" class="lang-block" data-lang="en">EFFECTS</text>
+          <path d="M312,314 l4,3.5 l4,-3.5 M312,325 l4,-3.5 l4,3.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <rect x="30" y="336" width="300" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/>
+          <path d="M39,344 l5,3 l-5,3 z" fill="currentColor" opacity=".8"/>
+          <text x="50" y="350.5" font-size="8.5" fill="currentColor" class="lang-block" data-lang="fr">BLOC D’INFORMATIONS</text>
+          <text x="50" y="350.5" font-size="8.5" fill="currentColor" class="lang-block" data-lang="en">INFO BLOCK</text>
+          <path d="M312,341 l4,3.5 l4,-3.5 M312,352 l4,-3.5 l4,3.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <rect x="30" y="363" width="300" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/>
+          <path d="M39,371 l5,3 l-5,3 z" fill="currentColor" opacity=".8"/>
+          <text x="50" y="377.5" font-size="8.5" fill="currentColor">LOGO</text>
+          <path d="M312,368 l4,3.5 l4,-3.5 M312,379 l4,-3.5 l4,3.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <rect x="30" y="390" width="300" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/>
+          <path d="M39,398 l5,3 l-5,3 z" fill="currentColor" opacity=".8"/>
+          <text x="50" y="404.5" font-size="8.5" fill="currentColor" class="lang-block" data-lang="fr">CARTOUCHE</text>
+          <text x="50" y="404.5" font-size="8.5" fill="currentColor" class="lang-block" data-lang="en">LEGEND</text>
+          <path d="M312,395 l4,3.5 l4,-3.5 M312,406 l4,-3.5 l4,3.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <rect x="30" y="417" width="300" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/>
+          <path d="M39,425 l5,3 l-5,3 z" fill="currentColor" opacity=".8"/>
+          <text x="50" y="431.5" font-size="8.5" fill="currentColor" class="lang-block" data-lang="fr">FORMES</text>
+          <text x="50" y="431.5" font-size="8.5" fill="currentColor" class="lang-block" data-lang="en">SHAPES</text>
+          <path d="M312,422 l4,3.5 l4,-3.5 M312,433 l4,-3.5 l4,3.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <rect x="30" y="444" width="300" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/>
+          <path d="M39,452 l5,3 l-5,3 z" fill="currentColor" opacity=".8"/>
+          <text x="50" y="458.5" font-size="8.5" fill="currentColor" class="lang-block" data-lang="fr">COULEUR DES MARQUAGES</text>
+          <text x="50" y="458.5" font-size="8.5" fill="currentColor" class="lang-block" data-lang="en">MARKER COLOR</text>
+          <path d="M312,449 l4,3.5 l4,-3.5 M312,460 l4,-3.5 l4,3.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <rect x="30" y="471" width="300" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/>
+          <path d="M39,479 l5,3 l-5,3 z" fill="currentColor" opacity=".8"/>
+          <text x="50" y="485.5" font-size="8.5" fill="currentColor">CLASSIFICATION</text>
+          <path d="M312,476 l4,3.5 l4,-3.5 M312,487 l4,-3.5 l4,3.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <rect class="sv-box" x="30" y="501" width="300" height="28" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <rect x="33" y="504" width="146" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/>
+          <text x="105" y="519" font-size="8.5" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">ÉDITEUR</text>
+          <text x="105" y="519" font-size="8.5" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">EDITOR</text>
+          <text x="255" y="519" font-size="8.5" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">APERÇU</text>
+          <text x="255" y="519" font-size="8.5" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">PREVIEW</text>
+          <rect class="sv-box" x="30" y="537" width="300" height="253" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <rect x="38" y="548.833" width="284" height="189.333" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".8"/>
+          <rect x="48" y="562.833" width="50" height="30" rx="1" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>
+          <rect x="108" y="558.833" width="40" height="24" rx="1" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>
+          <rect x="156" y="562.833" width="46" height="28" rx="1" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>
+          <rect x="52" y="608.833" width="36" height="34" rx="1" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>
+          <rect x="100" y="614.833" width="30" height="26" rx="1" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>
+          <rect x="138" y="660.833" width="44" height="26" rx="1" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>
+          <rect x="52" y="658.833" width="40" height="30" rx="1" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>
+          <rect x="234" y="618.833" width="30" height="30" rx="1" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>
+          <rect x="274" y="614.833" width="36" height="40" rx="1" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>
+          <rect x="188" y="688.833" width="20" height="30" rx="1" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>
+          <rect x="136" y="620.833" width="76" height="28" fill="none" stroke="currentColor" stroke-width="1.6"/>
+          <ellipse cx="88" cy="680.833" rx="28" ry="13" fill="none" stroke="currentColor" stroke-width="1.6"/>
+          <line x1="244" y1="600.833" x2="212" y2="628.833" stroke="currentColor" stroke-width="1.2" opacity=".8"/>
+          <circle class="sv-box" cx="244" cy="600.833" r="6.5" stroke="currentColor" stroke-width="1.4"/>
+          <text x="244" y="603.633" font-size="8" text-anchor="middle" fill="currentColor" font-weight="700">1</text>
+          <line x1="156" y1="604.833" x2="168" y2="620.833" stroke="currentColor" stroke-width="1.2" opacity=".8"/>
+          <circle class="sv-box" cx="156" cy="604.833" r="6.5" stroke="currentColor" stroke-width="1.4"/>
+          <text x="156" y="607.633" font-size="8" text-anchor="middle" fill="currentColor" font-weight="700">2</text>
+          <line x1="66" y1="648.833" x2="76" y2="668.833" stroke="currentColor" stroke-width="1.2" opacity=".8"/>
+          <circle class="sv-box" cx="66" cy="648.833" r="6.5" stroke="currentColor" stroke-width="1.4"/>
+          <text x="66" y="651.633" font-size="8" text-anchor="middle" fill="currentColor" font-weight="700">3</text>
+          <rect class="sv-box" x="208" y="554.833" width="108" height="38" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <text x="214" y="566.833" font-size="8" fill="currentColor" opacity="0.8">1</text>
+          <text x="224" y="566.833" font-size="8" fill="currentColor" opacity="0.85">STOCKAGE POL</text>
+          <text x="214" y="577.833" font-size="8" fill="currentColor" opacity="0.8">2</text>
+          <text x="224" y="577.833" font-size="8" fill="currentColor" opacity="0.85">PARC DE RÉSERVOIRS</text>
+          <text x="214" y="588.833" font-size="8" fill="currentColor" opacity="0.8">3</text>
+          <text x="224" y="588.833" font-size="8" fill="currentColor" opacity="0.85">PARC DE VÉHICULES</text>
+          <rect x="172" y="660.833" width="14" height="10" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="3 2" opacity=".8"/>
+          <line x1="186" y1="666.833" x2="220" y2="688.167" stroke="currentColor" stroke-width="1" stroke-dasharray="3 2" opacity=".7"/>
+          <rect class="sv-box" x="220" y="680.167" width="96" height="52" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <circle cx="254" cy="708.167" r="11" fill="none" stroke="currentColor" stroke-width="1.4"/>
+          <text x="254" y="711.167" font-size="8" text-anchor="middle" fill="currentColor" font-weight="700">2</text>
+          <line x1="276" y1="698.167" x2="308" y2="698.167" stroke="currentColor" stroke-width="5" opacity=".12"/><line x1="276" y1="707.167" x2="308" y2="707.167" stroke="currentColor" stroke-width="5" opacity=".12"/><line x1="276" y1="716.167" x2="308" y2="716.167" stroke="currentColor" stroke-width="5" opacity=".12"/>
+          <line x1="46" y1="710.167" x2="156" y2="710.167" stroke="currentColor" stroke-width="5" opacity=".12"/><line x1="46" y1="719.167" x2="156" y2="719.167" stroke="currentColor" stroke-width="5" opacity=".12"/><line x1="46" y1="728.167" x2="156" y2="728.167" stroke="currentColor" stroke-width="5" opacity=".12"/>
+          <rect class="sv-box" x="36" y="750" width="288" height="32" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <rect class="sv-pill" x="43" y="754" width="35.7684" height="24" rx="1.5"/><text x="60.8842" y="769" font-size="8" text-anchor="middle" class="sv-pill-t lang-block" data-lang="fr">CHOISIR</text>
+          <text x="60.8842" y="769" font-size="8" text-anchor="middle" class="sv-pill-t lang-block" data-lang="en">SELECT</text>
+          <rect x="80.7684" y="754" width="27.0526" height="24" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5"/><text x="94.2947" y="769" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">CADRE</text>
+          <text x="94.2947" y="769" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">FRAME</text>
+          <rect x="109.821" y="754" width="35.7684" height="24" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5"/><text x="127.705" y="769" font-size="8" text-anchor="middle" fill="currentColor">ELLIPSE</text>
+          <rect x="147.589" y="754" width="40.1263" height="24" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5"/><text x="167.653" y="769" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">TRACÉ</text>
+          <text x="167.653" y="769" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">POLYLINE</text>
+          <rect x="189.716" y="754" width="31.4105" height="24" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5"/><text x="205.421" y="769" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">FLÈCHE</text>
+          <text x="205.421" y="769" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">ARROW</text>
+          <rect x="223.126" y="754" width="35.7684" height="24" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5"/><text x="241.011" y="769" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">CROCHET</text>
+          <text x="241.011" y="769" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">BRACKET</text>
+          <rect x="260.895" y="754" width="27.0526" height="24" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5"/><text x="274.421" y="769" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">TEXTE</text>
+          <text x="274.421" y="769" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">TEXT</text>
+          <rect x="289.947" y="754" width="27.0526" height="24" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5"/><text x="303.474" y="769" font-size="8" text-anchor="middle" fill="currentColor">LOUPE</text>
+          <line x1="157" y1="46" x2="157" y2="66" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="157" cy="66" r="1.8" fill="currentColor"/><circle class="sv-box" cx="157" cy="46" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="157" y="49.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">1</text>
+          <line x1="192" y1="46" x2="192" y2="66" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="192" cy="66" r="1.8" fill="currentColor"/><circle class="sv-box" cx="192" cy="46" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="192" y="49.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">2</text>
+          <line x1="224" y1="46" x2="224" y2="66" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="224" cy="66" r="1.8" fill="currentColor"/><circle class="sv-box" cx="224" cy="46" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="224" y="49.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">3</text>
+          <line x1="14" y1="112" x2="30" y2="112" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="30" cy="112" r="1.8" fill="currentColor"/><circle class="sv-box" cx="14" cy="112" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="14" y="115.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">4</text>
+          <line x1="14" y1="232" x2="30" y2="232" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="30" cy="232" r="1.8" fill="currentColor"/><circle class="sv-box" cx="14" cy="232" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="14" y="235.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">5</text>
+          <line x1="14" y1="320" x2="30" y2="320" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="30" cy="320" r="1.8" fill="currentColor"/><circle class="sv-box" cx="14" cy="320" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="14" y="323.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">6</text>
+          <line x1="14" y1="347" x2="30" y2="347" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="30" cy="347" r="1.8" fill="currentColor"/><circle class="sv-box" cx="14" cy="347" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="14" y="350.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">7</text>
+          <line x1="14" y1="374" x2="30" y2="374" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="30" cy="374" r="1.8" fill="currentColor"/><circle class="sv-box" cx="14" cy="374" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="14" y="377.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">8</text>
+          <line x1="14" y1="428" x2="30" y2="428" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="30" cy="428" r="1.8" fill="currentColor"/><circle class="sv-box" cx="14" cy="428" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="14" y="431.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">9</text>
+          <line x1="14" y1="482" x2="30" y2="482" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="30" cy="482" r="1.8" fill="currentColor"/><circle class="sv-box" cx="14" cy="482" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="14" y="485.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">10</text>
+          <line x1="346" y1="573.833" x2="316" y2="573.833" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="316" cy="573.833" r="1.8" fill="currentColor"/><circle class="sv-box" cx="346" cy="573.833" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="346" y="577.033" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">11</text>
+          <line x1="346" y1="706.167" x2="316" y2="706.167" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="316" cy="706.167" r="1.8" fill="currentColor"/><circle class="sv-box" cx="346" cy="706.167" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="346" y="709.367" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">12</text>
+          <line x1="346" y1="766" x2="324" y2="766" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="324" cy="766" r="1.8" fill="currentColor"/><circle class="sv-box" cx="346" cy="766" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="346" y="769.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">13</text>
+          </g>
+          </svg>
+          <div class="fm-schema-legend"><span class="lang-block" data-lang="fr">Fig. 2 — L’écran de Recon Station avec l’exemple : la barre, le panneau, la photo annotée et la barre des outils du bas.</span><span class="lang-block" data-lang="en">Fig. 2 — The Recon Station screen with the example: the bar, the panel, the annotated photo and the bottom tool bar.</span></div>
+        </div>
+        <ol class="pl-legend"><li><span class="pl-n">1</span><span class="lang-block" data-lang="fr"><b>Ouvrir ▾</b> — propose Ouvrir un travail… et Ouvrir une image…</span><span class="lang-block" data-lang="en"><b>Open ▾</b> — offers Open a work file… and Open an image…</span></li><li><span class="pl-n">2</span><span class="lang-block" data-lang="fr"><b>Sauvegarder</b> — Ctrl+S range la composition dans le fichier de travail, sans l’image source : après un rechargement de la page, importez de nouveau l’image.</span><span class="lang-block" data-lang="en"><b>Save</b> — Ctrl+S stores the composition in the work file, without the source image: after a page reload, import the image again.</span></li><li><span class="pl-n">3</span><span class="lang-block" data-lang="fr"><b>Exporter</b> — propose un nom (la cible et l’heure), que vous pouvez changer, et écrit un PNG sans perte à la résolution de la source ; l’aperçu à l’écran est réduit.</span><span class="lang-block" data-lang="en"><b>Export</b> — proposes a name (the target and the time), which you can change, and writes a lossless PNG at the source’s resolution; the on-screen preview is reduced.</span></li><li><span class="pl-n">4</span><span class="lang-block" data-lang="fr"><b>IMAGE SOURCE</b> — l’image est d’abord convertie en niveaux de gris.</span><span class="lang-block" data-lang="en"><b>SOURCE IMAGE</b> — the image is first converted to greyscale.</span></li><li><span class="pl-n">5</span><span class="lang-block" data-lang="fr"><b>RENDU</b> — Contraste accentue ou adoucit les écarts.</span><span class="lang-block" data-lang="en"><b>RENDER</b> — Contrast sharpens or softens the differences.</span></li><li><span class="pl-n">6</span><span class="lang-block" data-lang="fr"><b>EFFETS</b> — Imagerie donne l’allure d’un capteur, par stylisation du signal et non par mesure ; Vignette, Grain et Scanlines, éteints par défaut, ajoutent l’usure d’un tirage. Recon ne peint jamais d’élément absent de l’image.</span><span class="lang-block" data-lang="en"><b>EFFECTS</b> — Imagery gives the look of a sensor, by stylising the signal and not by measurement; Vignette, Grain and Scanlines, off by default, add the wear of a print. Recon never paints an element that is not in the image.</span></li><li><span class="pl-n">7</span><span class="lang-block" data-lang="fr"><b>BLOC D’INFORMATIONS</b> — se pose en bas de la photo : les champs vides ne s’impriment pas. À l’ouverture de RS, le briefing du BG préremplit le bloc ; un champ déjà rempli n’est jamais écrasé.</span><span class="lang-block" data-lang="en"><b>INFO BLOCK</b> — sits at the bottom of the photo: empty fields are not printed. When RS opens, the BG’s briefing pre-fills the block; a field already filled is never overwritten.</span></li><li><span class="pl-n">8</span><span class="lang-block" data-lang="fr"><b>LOGO</b> — les logos du Wing d’HQ sont proposés dans la grille, marqués Wing ; vous pouvez en ajouter par une image PNG, et chaque logo se rend en couleur, en niveaux de gris ou en blanc.</span><span class="lang-block" data-lang="en"><b>LOGO</b> — the HQ Wing logos are offered in the grid, marked Wing; you can add some from a PNG image, and each logo renders in colour, greyscale or white.</span></li><li><span class="pl-n">9</span><span class="lang-block" data-lang="fr"><b>FORMES</b> — les formes et les étiquettes se posent au centre, puis se déplacent.</span><span class="lang-block" data-lang="en"><b>SHAPES</b> — shapes and labels are placed at the centre, then moved.</span></li><li><span class="pl-n">10</span><span class="lang-block" data-lang="fr"><b>CLASSIFICATION</b> — le bandeau de classification, éteint par défaut, réserve sa place pour ne recouvrir ni le cartouche ni le bloc d’informations ; il est distinct du champ Classification du bloc.</span><span class="lang-block" data-lang="en"><b>CLASSIFICATION</b> — the classification banner, off by default, reserves its place so as not to cover the cartouche or the information block; it is separate from the block’s Classification field.</span></li><li><span class="pl-n">11</span><span class="lang-block" data-lang="fr"><b>+ AJOUTER UN MARQUAGE</b> — dépose un cercle numéroté, à glisser sur la cible, lié à une ligne de légende du cartouche ; la numérotation se recalcule toute seule, et l’Amorce tire un trait jusqu’au point exact de la cible.</span><span class="lang-block" data-lang="en"><b>+ ADD MARKER</b> — drops a numbered circle, to drag onto the target, tied to a legend line of the cartouche; the numbering recalculates by itself, and the Leader draws a line to the exact point of the target.</span></li><li><span class="pl-n">12</span><span class="lang-block" data-lang="fr"><b>+ AJOUTER UNE LOUPE</b> — réaffiche, agrandie, une portion de l’image traitée ; la zone et la boîte se déplacent et se redimensionnent sans déformer l’image.</span><span class="lang-block" data-lang="en"><b>+ ADD MAGNIFIER</b> — redisplays, enlarged, a portion of the processed image; the zone and the box move and resize without distorting the image.</span></li><li><span class="pl-n">13</span><span class="lang-block" data-lang="fr"><b>La barre du bas</b> — annote la photo directement, au toucher : Choisir, Cadre, Ellipse, Tracé, Flèche, Crochet, Texte, Loupe.</span><span class="lang-block" data-lang="en"><b>The bottom bar</b> — annotates the photo directly, by touch: Select, Frame, Ellipse, Polyline, Arrow, Bracket, Text, Loupe.</span></li></ol>
+      </div>
+
+      <div class="fm-prose">
+        <div class="lang-block" data-lang="fr"><p>Pour mettre la photo au briefing, voir le <a href="#bg" onclick="location.hash=&#39;bg&#39;;return false">Briefing Generator</a>.</p></div>
+        <div class="lang-block" data-lang="en"><p>To put the photo in the briefing, see the <a href="#bg" onclick="location.hash=&#39;bg&#39;;return false">Briefing Generator</a>.</p></div>
       </div>
 
       <div class="fmnav-pn"><a class="fmnav-pv" href="#bg" onclick="fmGo(&#39;bg&#39;);return false"><span class="fmnav-k" data-i18n="nav.prev">◄ Chapitre précédent</span><span class="fmnav-n">BG · <span data-i18n="bg.hero.title">Briefing Generator</span></span></a><a class="fmnav-nx" href="#rp" onclick="fmGo(&#39;rp&#39;);return false"><span class="fmnav-k" data-i18n="nav.next">Chapitre suivant ►</span><span class="fmnav-n">RP · <span data-i18n="rp.hero.title">Route Planner</span></span></a></div>

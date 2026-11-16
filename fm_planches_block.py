@@ -291,6 +291,8 @@ D_EXCEPTIONS = {
     ('hq', 'H·Q'): 'sigle écrit en dur dans l’outil, non traduit',
     # valeur d'exemple de la ligne Paillettes : le reste du gabarit « {0} % » une fois l'argument retiré
     ('fc', '0'): 'nombre d’exemple, égal au résidu du gabarit lo.pct',
+    # le titre du bandeau de l'accueil est écrit en dur dans le shell ; sa norme tombe sur le bouton de retour « ◄ Mission Plan » (clé back)
+    ('start', 'MISSION PLAN'): 'titre du bandeau écrit en dur dans l’accueil, distinct du bouton de retour',
 }
 
 
@@ -513,9 +515,9 @@ class Plate:
                       f'<span class="lang-block" data-lang="en"><b>{_esc(en)}</b> — {_esc(te)}</span></li>')
         return '<ol class="pl-legend">' + ''.join(li) + '</ol>'
 
-    def figure_html(self, wide, tall, cap_fr, cap_en, legend):
-        """La planche : le cadre, la figure zoomable (variante large, variante haute, « Fig. 1 — … »), puis la légende numérotée."""
-        return (f'<div class="fm-plate">\n        <div class="fm-schema fm-plate-fig">\n          {wide}\n          {tall}\n'
+    def figure_html(self, wide, tall, cap_fr, cap_en, legend, anchor=None):
+        """La planche : le cadre, la figure zoomable (variante large, variante haute, « Fig. 1 — … »), puis la légende numérotée ; anchor : l'ancre de la planche."""
+        return (f'<div class="fm-plate"' + (f' id="{anchor}"' if anchor else '') + f'>\n        <div class="fm-schema fm-plate-fig">\n          {wide}\n          {tall}\n'
                 f'          <div class="fm-schema-legend">'
                 f'<span class="lang-block" data-lang="fr">{_esc(fr_typo(cap_fr))}</span>'
                 f'<span class="lang-block" data-lang="en">{_esc(cap_en)}</span></div>\n        </div>\n'
@@ -1773,3 +1775,613 @@ def build_plate_rp():
     return P.figure_html(wide, tall,
                          'Fig. 1 — L’écran du Route Planner, la route de l’exemple ouverte : la barre, le panneau de la route, puis la carte et ses modes de toucher.',
                          'Fig. 1 — The Route Planner screen with the example route open: the bar, the route panel, then the map and its tap modes.', legend)
+
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# La planche du Briefing Generator : l'éditeur Standard et l'aperçu de la page de mission
+# ═════════════════════════════════════════════════════════════════════════════════
+
+def _sec_closed(P, tool, x, y, w, key):
+    """Une section repliée : cadre, chevron fermé, titre, icône de repli."""
+    return [_rp_rect(x, y, w, 22, op=.7), _rp_chev_closed(x + 9, y + 8), P.text(x + 20, y + 14.5, 8.5, L(tool, key), anchor='start'), fold_icon(x + w - 18, y + 6)]
+
+
+def _bg_closed(P, x, y, w, key):
+    return _sec_closed(P, 'bg', x, y, w, key)
+
+
+def _bg_editor(P, x, y, w):
+    """L'éditeur de la variante large : « En-tête » et « Situation » ouvertes, les quatre autres repliées. Renvoie (SVG, hauteur, ancres)."""
+    o, anc = [], {}
+    a, aw, hw = x + 8, w - 16, (w - 16 - 6) / 2
+    # 01 En-tête, ouverte
+    h1 = 24 + 6 + 26 + 6 + 26 + 8
+    o.append(sv_box(x, y, w, h1))
+    o += _head(P, x, y, w, [L('bg', 'editor.header.summary')])
+    o.append(_rule(x, x + w, y + 24))
+    o.append(P.lfield(a, y + 30, hw, [L('bg', 'editor.meta.operation')], [D('STEPPE WIND')]))
+    o.append(P.lfield(a + hw + 6, y + 30, hw, [L('bg', 'editor.meta.missionCode')], [D('M3')]))
+    o.append(P.lfield(a, y + 62, hw, [L('bg', 'editor.meta.date')], [D('1989-03-22')]))
+    o.append(P.lfield(a + hw + 6, y + 62, hw, [L('bg', 'editor.meta.time')], [D('08:00')]))
+    anc['head'] = y + 12
+    # 02 Situation, ouverte
+    y2 = y + h1 + 6
+    h2 = 24 + 12 + 2 * 22 + 22 + 8
+    o.append(sv_box(x, y2, w, h2))
+    o += _head(P, x, y2, w, [L('bg', 'editor.simple.situation.summary')])
+    o.append(_rule(x, x + w, y2 + 24))
+    o.append(P.text(a, y2 + 38, 8, L('bg', 'editor.sitac.points', up=True), anchor='start', op=.75))
+    for k, txt in enumerate(('La majorité de l’île reste…', 'L’aéroport de PAPHOS a été…')):
+        yy = y2 + 44 + k * 22
+        o.append(P.field(a, yy, aw - 22, 18, [D(txt)]))
+        o.append(P.btn(a + aw - 18, yy, 18, 18, [D('✕')]))
+    o.append(P.btn(a, y2 + 44 + 2 * 22, aw, 18, [L('bg', 'editor.sitac.addPoint')]))
+    anc['sit'] = y2 + 12
+    # 03 à 06, repliées
+    y3 = y2 + h2 + 6
+    for k, key in enumerate(('editor.simple.mission.summary', 'editor.simple.coord.summary', 'editor.simple.photos.summary', 'editor.meta.summarySimple')):
+        o += _bg_closed(P, x, y3 + k * 27, w, key)
+    anc['others'] = y3 + 11
+    return o, y3 + 4 * 27 - 5 - y, anc
+
+
+def _bg_page(P, x, y, w, h):
+    """L'aperçu : la page de mission au trait, le contenu en traits gris, les titres de bloc écrits."""
+    o = [sv_box(x, y, w, h)]
+    px, pw = x + 8, w - 16
+    o.append(f'<rect x="{_n(px)}" y="{_n(y + 8)}" width="{_n(pw)}" height="{_n(h - 16)}" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".5"/>')
+    ix, iw = px + 8, pw - 16
+    cy = y + 16
+    o.append(_bars(x + w / 2 - 50, cy, 100, 1))                                        # la ligne de référence
+    o.append(P.btn(x + w / 2 - 54, cy + 5, 108, 13, [L('bg', 'classif.confidential')], op=.8))
+    for cx in (ix + 12, ix + iw - 12):                                                   # les deux logos
+        o.append(f'<circle cx="{_n(cx)}" cy="{_n(cy + 24)}" r="11" fill="none" stroke="currentColor" stroke-width="1.1" opacity=".6"/>')
+    o.append(_bars(x + w / 2 - 44, cy + 28, 88, 1))
+    o.append(_bars(x + w / 2 - 34, cy + 38, 68, 1))
+    cy += 50
+    o.append(f'<rect class="sv-pill" x="{_n(ix)}" y="{_n(cy)}" width="{_n(iw)}" height="14" rx="1.5"/>')
+    o.append(P.text(x + w / 2, cy + 10, 8, D('MISSION M3 ░ 22/03/1989 ░ 08:00Z'), cls='sv-pill-t'))
+    cy += 22
+    for key, n in (('simple.situation', 3), ('simple.mission', 2)):
+        o.append(f'<rect x="{_n(ix)}" y="{_n(cy)}" width="{_n(iw)}" height="13" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/>')
+        o.append(P.text(x + w / 2, cy + 9.5, 8, L('bg', key, up=True), ls=1.2))
+        o.append(_bars(ix + 6, cy + 24, iw - 12, n, gap=9))
+        cy += 13 + 8 + n * 9 + 6
+    o.append(f'<line x1="{_n(ix)}" y1="{_n(cy)}" x2="{_n(ix + iw)}" y2="{_n(cy)}" stroke="currentColor" stroke-width="1" opacity=".6"/>')   # le tableau des groupes
+    o.append(_bars(ix + 4, cy + 10, iw - 8, 3, gap=10))
+    cy += 42
+    cw = (iw - 8) / 2
+    for k, (key, n) in enumerate((('simple.freq', 3), ('simple.airfields', 3))):
+        bx = ix + k * (cw + 8)
+        o.append(f'<rect x="{_n(bx)}" y="{_n(cy)}" width="{_n(cw)}" height="13" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/>')
+        o.append(P.text(bx + cw / 2, cy + 9.5, 8, L('bg', key, up=True), ls=1))
+        o.append(_bars(bx + 4, cy + 24, cw - 8, n, gap=9))
+    cy += 13 + 8 + 3 * 9 + 6
+    o.append(f'<rect x="{_n(ix)}" y="{_n(cy)}" width="{_n(iw)}" height="13" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/>')
+    o.append(P.text(x + w / 2, cy + 9.5, 8, L('bg', 'simple.weather', up=True), ls=1.2))
+    o.append(_bars(ix + 6, cy + 24, iw - 12, 1))
+    return o
+
+
+def _bg_wide(P):
+    o = ['']
+    o.append(P.title_wide('L’ÉCRAN DU BRIEFING GENERATOR', 'THE BRIEFING GENERATOR SCREEN', 24, 32))
+    o.append('<g transform="translate(0,22)">')
+    X0, X1 = 110, 610
+    o += [sv_box(X0, 44, X1 - X0, 28), P.text(X0 + 8, 62, 8, L('bg', 'toolbar.subtitle'), anchor='start', op=.7, ls=.6)]
+    bx, x = {}, X0 + 122
+    for key, w, parts in (('open', 56, [L('bg', 'toolbar.load', add='▾')]), ('save', 68, [L('bg', 'toolbar.save')]), ('export', 54, [L('bg', 'toolbar.export')]),
+                          ('display', 66, [L('bg', 'toolbar.display', add='▾')]), ('clear', 48, [L('bg', 'toolbar.reset')])):
+        o.append(P.btn(x, 49, w, 18, parts))
+        bx[key] = (x, w)
+        x += w + 4
+    CT = 82
+    E1 = 336
+    ed, EH, anc = _bg_editor(P, X0, CT, E1 - X0)
+    o += ed
+    o += _bg_page(P, E1 + 8, CT, X1 - E1 - 8, EH)
+    for n, k in ((1, 'open'), (2, 'save'), (3, 'export'), (4, 'display'), (5, 'clear')):
+        cx = bx[k][0] + bx[k][1] / 2
+        o.append(P.bubble(n, cx, 28, cx, 49))
+    o.append(P.bubble(6, 80, anc['head'], X0, anc['head']))
+    o.append(P.bubble(7, 80, anc['sit'], X0, anc['sit']))
+    o.append(P.bubble(8, 80, anc['others'], X0, anc['others']))
+    o.append(P.bubble(9, 640, CT + 22, X1, CT + 22))
+    o.append('</g>')
+    o.append('</svg>')
+    o[0] = P.svg_open('pl-wide', 720, CT + EH + 22 + 12, 'L’écran du Briefing Generator, en Standard', 'The Briefing Generator screen, in Standard', 'bgw')
+    return '\n          '.join(o)
+
+
+def _ico_trash(cx, cy):
+    return (f'<path d="M{_n(cx - 5)},{_n(cy - 3)} h10 M{_n(cx - 2)},{_n(cy - 3)} v-2 h4 v2 M{_n(cx - 4)},{_n(cy - 3)} l.8,8 h6.4 l.8,-8" fill="none" stroke="currentColor" stroke-width="1.1"/>')
+
+
+def _bg_tall(P):
+    W = 360
+    o = ['']
+    o.append(P.title_tall('L’ÉCRAN DU BRIEFING GENERATOR', 'THE BRIEFING GENERATOR SCREEN', 'au téléphone', 'on a phone'))
+    o.append('<g transform="translate(0,12)">')
+    X0, X1 = 30, 330
+    w = X1 - X0
+    o.append(sv_box(X0, 62, w, 30))
+    o.append(P.btn(X0 + 4, 66, 20, 22, [D('◄')]))
+    o.append(P.text(X0 + 30, 81, 8.5, D('B·G'), anchor='start', extra=' font-weight="700"'))
+    bx, x = {}, X0 + 62
+    for key, bw, ico, chv in (('open', 30, _rp_ico_folder, True), ('save', 24, _rp_ico_disk, False), ('export', 24, _rp_ico_export, False),
+                              ('display', 24, _rp_ico_eye, False), ('clear', 24, _ico_trash, False)):
+        o.append(P.btn(x, 66, bw, 22))
+        o.append(ico(x + (9 if chv else bw / 2), 77))
+        if chv:
+            o.append(_rp_ico_chev(x + 19, 76))
+        bx[key] = (x, bw)
+        x += bw + 6
+    # l'onglet En-tête, seul visible : sa section et ses quatre champs
+    o.append(sv_box(X0, 100, w, 22))
+    o += _head(P, X0, 100, w, [L('bg', 'editor.header.summary')])
+    a, aw = X0 + 10, w - 20
+    for k, (lab, val) in enumerate((('editor.meta.operation', 'STEPPE WIND'), ('editor.meta.missionCode', 'M3'), ('editor.meta.date', '1989-03-22'), ('editor.meta.time', '08:00'))):
+        o.append(P.lfield(a, 130 + k * 32, aw, [L('bg', lab)], [D(val)]))
+    o.append(P.text(X0 + w / 2, 270, 8, L('bg', 'editor.autoSave'), op=.65))
+    # la barre d'onglets : une largeur par libellé, pictogramme au-dessus
+    TT = 284
+    o.append(sv_box(X0, TT, w, 40))
+    tabs = (('▤', 'tab.header', True), ('▣', 'tab.simple.situation', False), ('✈', 'tab.mission', False), ('☎', 'tab.simple.coord', False),
+            ('▨', 'tab.simple.photos', False), ('⚙', 'tab.meta', False), ('◈', 'tab.preview', False))
+    lens = [max(len(P.resolve([L('bg', key)])[0]), len(P.resolve([L('bg', key)])[1])) for _g, key, _c in tabs]
+    widths = [6 + 4.9 * n for n in lens]
+    k_ = w / sum(widths)
+    widths = [v * k_ for v in widths]
+    tx, cxs = X0, {}
+    for (g, key, cur), tw in zip(tabs, widths):
+        cx = tx + tw / 2
+        if cur:
+            o.append(f'<rect x="{_n(tx + 1.5)}" y="{_n(TT + 3)}" width="{_n(tw - 3)}" height="34" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/>')
+        o.append(P.text(cx, TT + 16, 9, D(g)))
+        o.append(P.text(cx, TT + 31, 8, L('bg', key)))
+        cxs[key] = cx
+        tx += tw
+    for n, k in ((1, 'open'), (2, 'save'), (3, 'export'), (4, 'display'), (5, 'clear')):
+        cx = bx[k][0] + bx[k][1] / 2
+        o.append(P.bubble(n, cx, 46, cx, 66))
+    o.append(P.bubble(6, 14, 111, X0, 111))
+    o.append(P.bubble(7, cxs['tab.simple.situation'], TT + 58, cxs['tab.simple.situation'], TT + 40))
+    o.append(P.bubble(8, cxs['tab.mission'] + 4, TT + 58, cxs['tab.mission'], TT + 40))
+    o.append(P.bubble(9, cxs['tab.preview'], TT + 58, cxs['tab.preview'], TT + 40))
+    o.append('</g>')
+    o.append('</svg>')
+    o[0] = P.svg_open('pl-tall', W, TT + 58 + 8.5 + 12 + 6, 'L’écran du Briefing Generator au téléphone, en Standard', 'The Briefing Generator screen on a phone, in Standard', 'bgt')
+    return '\n          '.join(o)
+
+
+def _bg_legend_rows():
+    return [
+        (1, [L('bg', 'toolbar.load', add='▾')],
+         'Ouvrir un briefing… lit un ancien fichier de briefing, le format choisi voyageant avec lui.',
+         'Open a briefing… reads an old briefing file, the chosen format travelling with it.'),
+        (2, [L('bg', 'toolbar.save')],
+         'le briefing est gardé automatiquement dans le navigateur.',
+         'the briefing is kept automatically in the browser.'),
+        (3, [L('bg', 'toolbar.export')],
+         'vérifiez d’abord la mise en page dans l’aperçu. L’export porte les pages du format en cours, en PDF (par l’impression du navigateur, Ctrl+P puis « Enregistrer en PDF », y compris sur Android) ou en PNG par page.',
+         'check the layout in the preview first. The export carries the pages of the current format, as a PDF (through the browser’s print, Ctrl+P then “Save as PDF”, on Android too) or as one PNG per page.'),
+        (4, [L('bg', 'toolbar.display', add='▾')],
+         'choisit le format, Standard ou Avancé ; un point ambre sur le bouton signale Avancé. Changer de format ne perd rien : seules les sections affichées et les pages produites changent, et ce que vous avez saisi pour l’autre format revient quand vous y retournez.',
+         'chooses the format, Standard or Advanced; an amber dot on the button marks Advanced. Changing format loses nothing: only the sections shown and the pages produced change, and what you entered for the other format comes back when you return to it.'),
+        (5, [L('bg', 'toolbar.reset')],
+         'vide tout le briefing, après confirmation.',
+         'empties the whole briefing, after a confirmation.'),
+        (6, [L('bg', 'editor.header.summary')],
+         'l’outil s’ouvre sur une page blanche, en Standard ; les champs vides disent en grisé ce qu’on y met, et cet indice n’est ni dans l’aperçu ni à l’export. Une date qui n’a pas la forme attendue est gardée telle quelle, et le champ prend la couleur d’avertissement.',
+         'the tool opens on a blank page, in Standard; empty fields say in grey what goes in them, and that hint is neither in the preview nor in the export. A date that does not have the expected form is kept as it is, and the field takes the warning colour.'),
+        (7, [L('bg', 'editor.simple.situation.summary')],
+         'la carte, les menaces et les cibles sont communes aux deux formats : si une carte est chargée, ou si des menaces ou des cibles sont saisies, une page de carte suit, puis les pages de photos.',
+         'the map, the threats and the targets are common to both formats: if a map is loaded, or threats or targets are entered, a map page follows, then the photo pages.'),
+        (8, [M('Les autres sections', 'The other sections')],
+         'Mission, Coordination, Photos et Métadonnées : chacune se replie par l’icône à droite de son en-tête. Au téléphone, l’éditeur passe en onglets.',
+         'Mission, Coordination, Photos and Metadata: each folds by the icon at the right of its header. On a phone, the editor switches to tabs.'),
+        (9, [M('L’aperçu', 'The preview')],
+         'la page de mission : situation, mission et groupes, fréquences, terrains et météo. Un bloc vide n’est pas imprimé, et une page qui déborde se poursuit sur la suivante.',
+         'the mission page: situation, mission and groups, frequencies, airfields and weather. An empty block is not printed, and a page that overflows continues on the next one.'),
+    ]
+
+
+def build_plate_bg():
+    """La planche du Briefing Generator (Standard) : le HTML (cadre, figure zoomable, légende) ; ses libellés viennent du dictionnaire du BG."""
+    P = Plate('bg', ['bg'])
+    wide, tall = _bg_wide(P), _bg_tall(P)
+    legend = P.legend_html(_bg_legend_rows())
+    P.verify(wide, tall)
+    return P.figure_html(wide, tall,
+                         'Fig. 2 — L’écran du Briefing Generator en Standard : la barre, l’éditeur par sections, puis l’aperçu de la page de mission.',
+                         'Fig. 2 — The Briefing Generator screen in Standard: the bar, the editor by sections, then the preview of the mission page.', legend)
+
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# La planche de Recon Station : le panneau, la photo annotée, la barre du bas
+# ═════════════════════════════════════════════════════════════════════════════════
+
+_RS_FOLDED = ('editor.text.title', 'editor.fx.title', 'editor.info.title', 'editor.logo.title', 'editor.cartouche.title', 'editor.shapes.title',
+              'editor.marker.color', 'editor.classif.title')
+
+
+def _rs_panel(P, x, y, w):
+    """Le panneau : « Image source » et « Rendu » ouverts, les huit autres repliés. Renvoie (SVG, bas, ancres {clé: y de l'en-tête})."""
+    o, anc = [], {}
+    a, aw = x + 8, w - 16
+    h1 = 114
+    o.append(sv_box(x, y, w, h1))
+    o += _head(P, x, y, w, [L('rs', 'editor.image.title')])
+    o.append(_rule(x, x + w, y + 24))
+    o.append(_rp_rect(a, y + 30, aw, 42, op=.7, dash=True))
+    o.append(P.text(a + aw / 2, y + 48, 8, D('RS_EXAMPLE_NAIP.JPG — 1200×800 PX')))
+    o.append(P.text(a + aw / 2, y + 62, 8, L('rs', 'editor.image.drop.hint', up=True), op=.65))
+    o.append(P.text(a + aw / 2, y + 84, 8, L('rs', 'editor.image.credit'), op=.6))
+    o.append(P.btn(a, y + 90, aw, 16, [L('rs', 'editor.image.replace')]))
+    anc['image'] = y + 12
+    y2 = y + h1 + 6
+    o.append(sv_box(x, y2, w, 56))
+    o += _head(P, x, y2, w, [L('rs', 'editor.render.title')])
+    o.append(_rule(x, x + w, y2 + 24))
+    o.append(P.text(a, y2 + 41, 8, L('rs', 'editor.render.contrast'), anchor='start', op=.75))
+    sx0, sx1 = a + 52, a + aw - 34
+    o.append(f'<line x1="{_n(sx0)}" y1="{_n(y2 + 38)}" x2="{_n(sx1)}" y2="{_n(y2 + 38)}" stroke="currentColor" stroke-width="1.2" opacity=".55"/>')
+    o.append(f'<circle class="sv-box" cx="{_n(sx0 + (sx1 - sx0) * .3)}" cy="{_n(y2 + 38)}" r="4" stroke="currentColor" stroke-width="1.2"/>')
+    o.append(P.text(a + aw, y2 + 41, 8, D('105%'), anchor='end', op=.75))
+    anc['render'] = y2 + 12
+    y3 = y2 + 56 + 6
+    for k, key in enumerate(_RS_FOLDED):
+        o += _sec_closed(P, 'rs', x, y3 + k * 27, w, key)
+        anc[key] = y3 + k * 27 + 11
+    return o, y3 + len(_RS_FOLDED) * 27 - 5, anc
+
+
+_RS_TOOLS = ('rsd.tool.select', 'rsd.tool.rect', 'rsd.tool.ellipse', 'rsd.tool.poly', 'rsd.tool.arrow', 'rsd.tool.bracket', 'rsd.tool.label', 'rsd.tool.inset')
+
+
+def _rs_canvas(P, x, y, w, h):
+    """La zone de la photo : la photo en aplat au trait et ses annotations, puis la barre des outils du bas. Renvoie (SVG, ancres)."""
+    o, anc = [sv_box(x, y, w, h)], {}
+    ph_w = w - 16
+    ph_h = ph_w * 2 / 3
+    px = x + 8
+    py = y + (h - 40 - ph_h) / 2
+    o.append(f'<rect x="{_n(px)}" y="{_n(py)}" width="{_n(ph_w)}" height="{_n(ph_h)}" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".8"/>')
+    for bx, by, bw, bh in ((10, 14, 50, 30), (70, 10, 40, 24), (118, 14, 46, 28), (14, 60, 36, 34), (62, 66, 30, 26), (100, 112, 44, 26), (14, 110, 40, 30),
+                           (196, 70, 30, 30), (236, 66, 36, 40), (150, 140, 20, 30)):
+        o.append(f'<rect x="{_n(px + bx)}" y="{_n(py + by)}" width="{_n(bw)}" height="{_n(bh)}" rx="1" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>')
+    # annotations : un cadre, une ellipse, trois marquages numérotés, une loupe, le cartouche, le bloc d'informations
+    o.append(f'<rect x="{_n(px + 98)}" y="{_n(py + 72)}" width="76" height="28" fill="none" stroke="currentColor" stroke-width="1.6"/>')
+    o.append(f'<ellipse cx="{_n(px + 50)}" cy="{_n(py + 132)}" rx="28" ry="13" fill="none" stroke="currentColor" stroke-width="1.6"/>')
+    for n, (cx, cy, tx, ty) in enumerate(((px + 206, py + 52, px + 174, py + 80), (px + 118, py + 56, px + 130, py + 72), (px + 28, py + 100, px + 38, py + 120)), 1):
+        o.append(f'<line x1="{_n(cx)}" y1="{_n(cy)}" x2="{_n(tx)}" y2="{_n(ty)}" stroke="currentColor" stroke-width="1.2" opacity=".8"/>')
+        o.append(f'<circle class="sv-box" cx="{_n(cx)}" cy="{_n(cy)}" r="6.5" stroke="currentColor" stroke-width="1.4"/>')
+        o.append(P.text(cx, cy + 2.8, 8, D(str(n)), extra=' font-weight="700"'))
+    tw = 108
+    tx0, ty0 = px + ph_w - tw - 6, py + 6
+    o.append(sv_box(tx0, ty0, tw, 38))
+    for k, (n, txt) in enumerate((('1', 'STOCKAGE POL'), ('2', 'PARC DE RÉSERVOIRS'), ('3', 'PARC DE VÉHICULES'))):
+        o.append(P.text(tx0 + 6, ty0 + 12 + k * 11, 8, D(n), anchor='start', op=.8))
+        o.append(P.text(tx0 + 16, ty0 + 12 + k * 11, 8, D(txt), anchor='start', op=.85))
+    anc['table'] = (tx0 + tw, ty0 + 19)
+    iw, ih = 96, 52
+    ix0, iy0 = px + ph_w - iw - 6, py + ph_h - ih - 6
+    o.append(f'<rect x="{_n(px + 134)}" y="{_n(py + 112)}" width="14" height="10" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="3 2" opacity=".8"/>')
+    o.append(f'<line x1="{_n(px + 148)}" y1="{_n(py + 118)}" x2="{_n(ix0)}" y2="{_n(iy0 + 8)}" stroke="currentColor" stroke-width="1" stroke-dasharray="3 2" opacity=".7"/>')
+    o.append(sv_box(ix0, iy0, iw, ih))
+    o.append(f'<circle cx="{_n(ix0 + 34)}" cy="{_n(iy0 + 28)}" r="11" fill="none" stroke="currentColor" stroke-width="1.4"/>')
+    o.append(P.text(ix0 + 34, iy0 + 31, 8, D('2'), extra=' font-weight="700"'))
+    o.append(_bars(ix0 + 56, iy0 + 18, 32, 3, gap=9))
+    anc['inset'] = (ix0 + iw, iy0 + ih / 2)
+    o.append(_bars(px + 8, py + ph_h - 28, 110, 3, gap=9))
+    # la barre des outils du bas
+    ty = y + h - 40
+    o.append(sv_box(x + 6, ty, w - 12, 32))
+    lens = [max(len(P.resolve([L('rs', k, up=True)])[0]), len(P.resolve([L('rs', k, up=True)])[1])) for k in _RS_TOOLS]
+    widths = [8 + 4.8 * n for n in lens]
+    k_ = (w - 24) / sum(widths)
+    widths = [v * k_ for v in widths]
+    cx0 = x + 12
+    for k, (key, bw) in enumerate(zip(_RS_TOOLS, widths)):
+        if k == 0:
+            o.append(_rp_active(P, cx0 + 1, ty + 4, bw - 2, 24, [L('rs', key, up=True)]))
+        else:
+            o.append(P.btn(cx0 + 1, ty + 4, bw - 2, 24, [L('rs', key, up=True)], op=.5))
+        cx0 += bw
+    anc['bar'] = (x + w - 6, ty + 16)
+    return o, anc
+
+
+def _rs_wide(P):
+    o = ['']
+    o.append(P.title_wide('L’ÉCRAN DE RECON STATION', 'THE RECON STATION SCREEN', 24, 32))
+    o.append('<g transform="translate(0,22)">')
+    X0, X1 = 110, 610
+    o += [sv_box(X0, 44, X1 - X0, 28), P.text(X0 + 8, 62, 8, L('rs', 'toolbar.subtitle'), anchor='start', op=.7, ls=.6)]
+    bx, x = {}, X0 + 104
+    for key, w, parts in (('open', 56, [L('rs', 'toolbar.open', add='▾')]), ('save', 68, [L('rs', 'toolbar.save')]), ('export', 54, [L('rs', 'toolbar.export')]),
+                          ('clear', 48, [L('rs', 'toolbar.reset')])):
+        o.append(P.btn(x, 49, w, 18, parts))
+        bx[key] = (x, w)
+        x += w + 4
+    CT = 82
+    pn, PE, anc = _rs_panel(P, X0, CT, 190)
+    o += pn
+    cv, canc = _rs_canvas(P, 308, CT, X1 - 308, PE - CT)
+    o += cv
+    for n, k in ((1, 'open'), (2, 'save'), (3, 'export')):
+        cx = bx[k][0] + bx[k][1] / 2
+        o.append(P.bubble(n, cx, 28, cx, 49))
+    for n, k in ((4, 'image'), (5, 'render'), (6, 'editor.fx.title'), (7, 'editor.info.title'), (8, 'editor.logo.title'), (9, 'editor.shapes.title'), (10, 'editor.classif.title')):
+        o.append(P.bubble(n, 80, anc[k], X0, anc[k]))
+    o.append(P.bubble(11, 640, canc['table'][1], canc['table'][0], canc['table'][1]))
+    o.append(P.bubble(12, 640, canc['inset'][1], canc['inset'][0], canc['inset'][1]))
+    o.append(P.bubble(13, 640, canc['bar'][1], canc['bar'][0], canc['bar'][1]))
+    o.append('</g>')
+    o.append('</svg>')
+    o[0] = P.svg_open('pl-wide', 720, PE + 22 + 12, 'L’écran de Recon Station, une photo annotée', 'The Recon Station screen, with an annotated photo', 'rsw')
+    return '\n          '.join(o)
+
+
+def _rs_tall(P):
+    W = 360
+    o = ['']
+    o.append(P.title_tall('L’ÉCRAN DE RECON STATION', 'THE RECON STATION SCREEN', 'au téléphone', 'on a phone'))
+    o.append('<g transform="translate(0,12)">')
+    X0, X1 = 30, 330
+    w = X1 - X0
+    o.append(sv_box(X0, 62, w, 30))
+    o.append(P.btn(X0 + 4, 66, 20, 22, [D('◄')]))
+    o.append(P.text(X0 + 30, 81, 8.5, D('R·S'), anchor='start', extra=' font-weight="700"'))
+    bx, x = {}, X0 + 112
+    for key, bw, ico, chv in (('open', 30, _rp_ico_folder, True), ('save', 24, _rp_ico_disk, False), ('export', 24, _rp_ico_export, False), ('clear', 24, _ico_trash, False)):
+        o.append(P.btn(x, 66, bw, 22))
+        o.append(ico(x + (9 if chv else bw / 2), 77))
+        if chv:
+            o.append(_rp_ico_chev(x + 19, 76))
+        bx[key] = (x, bw)
+        x += bw + 8
+    pn, PE, anc = _rs_panel(P, X0, 100, w)
+    o += pn
+    TT = PE + 8
+    o.append(sv_box(X0, TT, w, 28))
+    o.append(f'<rect x="{_n(X0 + 3)}" y="{_n(TT + 3)}" width="{_n(w / 2 - 4)}" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/>')
+    o.append(P.text(X0 + w / 4, TT + 18, 8.5, L('rs', 'tab.editor')))
+    o.append(P.text(X0 + 3 * w / 4, TT + 18, 8.5, L('rs', 'tab.preview')))
+    CY = TT + 36
+    CH = 189 + 24 + 40
+    cv, canc = _rs_canvas(P, X0, CY, w, CH)
+    o += cv
+    for n, k in ((1, 'open'), (2, 'save'), (3, 'export')):
+        cx = bx[k][0] + bx[k][1] / 2
+        o.append(P.bubble(n, cx, 46, cx, 66))
+    for n, k in ((4, 'image'), (5, 'render'), (6, 'editor.fx.title'), (7, 'editor.info.title'), (8, 'editor.logo.title'), (9, 'editor.shapes.title'), (10, 'editor.classif.title')):
+        o.append(P.bubble(n, 14, anc[k], X0, anc[k]))
+    for n, k in ((11, 'table'), (12, 'inset'), (13, 'bar')):
+        o.append(P.bubble(n, 346, canc[k][1], canc[k][0], canc[k][1]))
+    o.append('</g>')
+    o.append('</svg>')
+    o[0] = P.svg_open('pl-tall', W, CY + CH + 12 + 12, 'L’écran de Recon Station au téléphone : le panneau de l’éditeur et l’aperçu', 'The Recon Station screen on a phone: the editor panel and the preview', 'rst')
+    return '\n          '.join(o)
+
+
+def _rs_legend_rows():
+    return [
+        (1, [L('rs', 'toolbar.open', add='▾')],
+         'propose Ouvrir un travail… et Ouvrir une image…',
+         'offers Open a work file… and Open an image…'),
+        (2, [L('rs', 'toolbar.save')],
+         'Ctrl+S range la composition dans le fichier de travail, sans l’image source : après un rechargement de la page, importez de nouveau l’image.',
+         'Ctrl+S stores the composition in the work file, without the source image: after a page reload, import the image again.'),
+        (3, [L('rs', 'toolbar.export')],
+         'propose un nom (la cible et l’heure), que vous pouvez changer, et écrit un PNG sans perte à la résolution de la source ; l’aperçu à l’écran est réduit.',
+         'proposes a name (the target and the time), which you can change, and writes a lossless PNG at the source’s resolution; the on-screen preview is reduced.'),
+        (4, [L('rs', 'editor.image.title')],
+         'l’image est d’abord convertie en niveaux de gris.',
+         'the image is first converted to greyscale.'),
+        (5, [L('rs', 'editor.render.title')],
+         'Contraste accentue ou adoucit les écarts.',
+         'Contrast sharpens or softens the differences.'),
+        (6, [L('rs', 'editor.fx.title')],
+         'Imagerie donne l’allure d’un capteur, par stylisation du signal et non par mesure ; Vignette, Grain et Scanlines, éteints par défaut, ajoutent l’usure d’un tirage. Recon ne peint jamais d’élément absent de l’image.',
+         'Imagery gives the look of a sensor, by stylising the signal and not by measurement; Vignette, Grain and Scanlines, off by default, add the wear of a print. Recon never paints an element that is not in the image.'),
+        (7, [L('rs', 'editor.info.title')],
+         'se pose en bas de la photo : les champs vides ne s’impriment pas. À l’ouverture de RS, le briefing du BG préremplit le bloc ; un champ déjà rempli n’est jamais écrasé.',
+         'sits at the bottom of the photo: empty fields are not printed. When RS opens, the BG’s briefing pre-fills the block; a field already filled is never overwritten.'),
+        (8, [L('rs', 'editor.logo.title')],
+         'les logos du Wing d’HQ sont proposés dans la grille, marqués Wing ; vous pouvez en ajouter par une image PNG, et chaque logo se rend en couleur, en niveaux de gris ou en blanc.',
+         'the HQ Wing logos are offered in the grid, marked Wing; you can add some from a PNG image, and each logo renders in colour, greyscale or white.'),
+        (9, [L('rs', 'editor.shapes.title')],
+         'les formes et les étiquettes se posent au centre, puis se déplacent.',
+         'shapes and labels are placed at the centre, then moved.'),
+        (10, [L('rs', 'editor.classif.title')],
+         'le bandeau de classification, éteint par défaut, réserve sa place pour ne recouvrir ni le cartouche ni le bloc d’informations ; il est distinct du champ Classification du bloc.',
+         'the classification banner, off by default, reserves its place so as not to cover the cartouche or the information block; it is separate from the block’s Classification field.'),
+        (11, [L('rs', 'editor.cartouche.add')],
+         'dépose un cercle numéroté, à glisser sur la cible, lié à une ligne de légende du cartouche ; la numérotation se recalcule toute seule, et l’Amorce tire un trait jusqu’au point exact de la cible.',
+         'drops a numbered circle, to drag onto the target, tied to a legend line of the cartouche; the numbering recalculates by itself, and the Leader draws a line to the exact point of the target.'),
+        (12, [L('rs', 'editor.inset.add')],
+         'réaffiche, agrandie, une portion de l’image traitée ; la zone et la boîte se déplacent et se redimensionnent sans déformer l’image.',
+         'redisplays, enlarged, a portion of the processed image; the zone and the box move and resize without distorting the image.'),
+        (13, [M('La barre du bas', 'The bottom bar')],
+         'annote la photo directement, au toucher : Choisir, Cadre, Ellipse, Tracé, Flèche, Crochet, Texte, Loupe.',
+         'annotates the photo directly, by touch: Select, Frame, Ellipse, Polyline, Arrow, Bracket, Text, Loupe.'),
+    ]
+
+
+def build_plate_rs():
+    """La planche de Recon Station : le HTML (cadre, figure zoomable, légende) ; ses libellés viennent du dictionnaire de RS."""
+    P = Plate('rs', ['rs'])
+    wide, tall = _rs_wide(P), _rs_tall(P)
+    legend = P.legend_html(_rs_legend_rows())
+    P.verify(wide, tall)
+    return P.figure_html(wide, tall,
+                         'Fig. 2 — L’écran de Recon Station avec l’exemple : la barre, le panneau, la photo annotée et la barre des outils du bas.',
+                         'Fig. 2 — The Recon Station screen with the example: the bar, the panel, the annotated photo and the bottom tool bar.', legend)
+
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# La planche de l'accueil de Mission Plan : la barre, le menu Exemple, les deux groupes d'outils
+# ═════════════════════════════════════════════════════════════════════════════════
+
+_ST_CARDS = (('mc', (('H·Q', 'HQ'), ('B·G', 'Briefing Generator'), ('R·S', 'Recon Station'))),
+             ('fl', (('R·P', 'Route Planner'), ('D·G', 'Datacard Generator'), ('F·C', 'Flight Configurator'))))
+
+
+def _ico_doc(cx, cy):
+    return (f'<path d="M{_n(cx - 4)},{_n(cy - 5)} h5.5 l2.5,2.5 v7.5 h-8 z M{_n(cx - 2)},{_n(cy)} h4 M{_n(cx - 2)},{_n(cy + 2.5)} h4" fill="none" stroke="currentColor" stroke-width="1.1"/>')
+
+
+def _ico_book(cx, cy):
+    return (f'<path d="M{_n(cx - 6)},{_n(cy - 4)} h5 a1,1 0 0 1 1,1 v7 h-6 z M{_n(cx + 6)},{_n(cy - 4)} h-5 a1,1 0 0 0 -1,1 v7 h6 z" fill="none" stroke="currentColor" stroke-width="1.1"/>')
+
+
+def _ico_flag(cx, cy):
+    return (f'<rect x="{_n(cx - 7)}" y="{_n(cy - 4.5)}" width="14" height="9" fill="none" stroke="currentColor" stroke-width="1.1"/>'
+            f'<path d="M{_n(cx - 7)},{_n(cy)} h14 M{_n(cx)},{_n(cy - 4.5)} v9" stroke="currentColor" stroke-width="1.1"/>')
+
+
+def _st_card(P, x, y, w, sigle, name, tool, h=106):
+    o = [sv_box(x, y, w, h)]
+    o.append(f'<rect x="{_n(x + 6)}" y="{_n(y + 6)}" width="{_n(w - 12)}" height="44" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>')
+    o.append(f'<path d="M{_n(x + 6)},{_n(y + 44)} l{_n((w - 12) * .3)},-20 l{_n((w - 12) * .25)},12 l{_n((w - 12) * .22)},-16 l{_n((w - 12) * .23)},24" fill="none" stroke="currentColor" stroke-width=".8" opacity=".4"/>')
+    pl, pw = P.pill(x + 8, y + 56, [D(sigle)])
+    o.append(pl)
+    o.append(P.text(x + 8 + pw + 6, y + 65, 8.5, D(name), anchor='start', extra=' font-weight="700"'))
+    o.append(_bars(x + 8, y + 76, w - 16, 1))
+    o.append(P.btn(x + 8, y + 84, w - 16, 16, [L('mp', 'cta', up=True)], op=.7))
+    return o
+
+
+def _start_wide(P):
+    o = ['']
+    o.append(P.title_wide('L’ACCUEIL DE MISSION PLAN', 'THE MISSION PLAN HOME PAGE', 24, 32))
+    o.append('<g transform="translate(0,22)">')
+    X0, X1 = 40, 680
+    o += [sv_box(X0, 44, X1 - X0, 28), sv_box(X0 + 6, 49, 120, 18), P.text(X0 + 66, 61, 8, D('DCS · MISSION PLAN'))]
+    bx, x = {}, 180
+    for key, w, parts in (('open', 52, [L('mp', 'work.open.btn')]), ('save', 66, [L('mp', 'work.save.btn')]), ('ex', 64, [L('mp', 'ex.btn', add='▾')])):
+        o.append(P.btn(x, 49, w, 18, parts))
+        bx[key] = (x, w)
+        x += w + 6
+    o.append(P.btn(x, 49, 74, 18, [L('mp', 'fm.btn')]))
+    x += 80
+    o.append(P.field(x, 49, 104, 18, [L('mp', 'theme.cwnato', add='▾')]))
+    x += 110
+    o.append(_ico_flag(x + 12, 58))
+    # le menu Exemple, ouvert
+    mx, my, mw = bx['ex'][0], 74, X1 - bx['ex'][0]
+    o.append(sv_box(mx, my, mw, 36))
+    o.append(P.text(mx + 8, my + 14, 8, L('mp', 'ex.mc'), anchor='start'))
+    o.append(P.text(mx + 8, my + 29, 8, L('mp', 'ex.fl'), anchor='start'))
+    o.append(f'<line x1="{_n(mx)}" y1="{_n(my + 18)}" x2="{_n(mx + mw)}" y2="{_n(my + 18)}" stroke="currentColor" stroke-width=".6" opacity=".3"/>')
+    # le bandeau
+    o.append(sv_box(X0 + 10, 84, 190, 40))
+    o.append(P.text(X0 + 18, 97, 8, L('mp', 'ribbon'), anchor='start', op=.7))
+    o.append(P.text(X0 + 18, 117, 15, D('MISSION PLAN'), anchor='start', extra=' font-weight="700"'))
+    # les deux groupes
+    y = 138
+    for gk, cards in _ST_CARDS:
+        o.append(f'<rect x="{X0}" y="{y}" width="{X1 - X0}" height="136" rx="3" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="5 3" opacity=".55"/>')
+        o.append(sv_box(X0 + 14, y - 9, 224, 18))
+        nm = 'Mission Commander' if gk == 'mc' else 'Flight Leader'
+        o.append(P.text(X0 + 20, y + 3.5, 8.5, D(nm), anchor='start', extra=' font-weight="700"'))
+        o.append(P.text(X0 + 20 + 5.6 * len(nm) + 8, y + 3.5, 8, L('mp', 'grp.%s.sub' % gk, up=True), anchor='start', op=.7))
+        cw = (X1 - X0 - 24 - 24) / 3
+        for k, (sg, name) in enumerate(cards):
+            o += _st_card(P, X0 + 12 + k * (cw + 12), y + 18, cw, sg, name, gk)
+        y += 150
+    for n, k in ((1, 'open'), (2, 'save'), (3, 'ex')):
+        cx = bx[k][0] + bx[k][1] / 2
+        o.append(P.bubble(n, cx, 28, cx, 49))
+    o.append(P.bubble(4, 704, my + 9, X1, my + 9))
+    o.append(P.bubble(5, 704, my + 26, X1, my + 26))
+    o.append('</g>')
+    o.append('</svg>')
+    o[0] = P.svg_open('pl-wide', 720, y + 22 + 6, 'L’accueil de Mission Plan, avec le menu Exemple ouvert', 'The Mission Plan home page, with the Example menu open', 'stw')
+    return '\n          '.join(o)
+
+
+def _start_tall(P):
+    W = 360
+    o = ['']
+    o.append(P.title_tall('L’ACCUEIL DE MISSION PLAN', 'THE MISSION PLAN HOME PAGE', 'au téléphone', 'on a phone'))
+    o.append('<g transform="translate(0,12)">')
+    X0, X1 = 30, 330
+    w = X1 - X0
+    o.append(sv_box(X0, 56, w, 22))
+    o.append(P.text(X0 + w / 2, 71, 8, D('DCS · MISSION PLAN')))
+    IY = 108
+    o.append(sv_box(X0, IY, w, 30))
+    bx, x = {}, X0 + 6
+    for key, bw, ico in (('open', 28, _rp_ico_folder), ('save', 28, _rp_ico_disk), ('ex', 40, _ico_doc), ('fm', 28, _ico_book)):
+        o.append(P.btn(x, IY + 4, bw, 22))
+        o.append(ico(x + (bw / 2 - (5 if key == 'ex' else 0)), IY + 15))
+        if key == 'ex':
+            o.append(_rp_ico_chev(x + 29, IY + 14))
+        bx[key] = (x, bw)
+        x += bw + 6
+    o.append(P.field(x, IY + 4, 96, 22, [L('mp', 'theme.cwnato', add='▾')]))
+    x += 102
+    o.append(P.btn(x, IY + 4, 28, 22))
+    o.append(_ico_flag(x + 14, IY + 15))
+    mx, my, mw = X0, IY + 34, w
+    o.append(sv_box(mx, my, mw, 36))
+    o.append(_bars(mx + 8, my + 11, 250, 1))
+    o.append(_bars(mx + 8, my + 26, 270, 1))
+    y = my + 46
+    for gk, cards in _ST_CARDS:
+        o.append(f'<rect x="{X0}" y="{y}" width="{w}" height="104" rx="3" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="5 3" opacity=".55"/>')
+        o.append(sv_box(X0 + 8, y - 9, 200, 18))
+        nm = 'Mission Commander' if gk == 'mc' else 'Flight Leader'
+        o.append(P.text(X0 + 14, y + 3.5, 8.5, D(nm), anchor='start', extra=' font-weight="700"'))
+        o.append(P.text(X0 + 14 + 5.6 * len(nm) + 8, y + 3.5, 8, L('mp', 'grp.%s.sub' % gk, up=True), anchor='start', op=.7))
+        for k, (sg, name) in enumerate(cards):
+            ry = y + 14 + k * 29
+            o.append(sv_box(X0 + 8, ry, w - 16, 25))
+            o.append(f'<rect x="{_n(X0 + 12)}" y="{_n(ry + 4)}" width="30" height="17" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>')
+            pl, pw = P.pill(X0 + 48, ry + 7, [D(sg)])
+            o.append(pl)
+            o.append(P.text(X0 + 48 + pw + 5, ry + 16, 8, D(name), anchor='start', extra=' font-weight="700"'))
+            o.append(P.btn(X1 - 8 - 104, ry + 4, 100, 17, [L('mp', 'cta', up=True)], op=.7))
+        y += 114
+    for n, k in ((1, 'open'), (2, 'save'), (3, 'ex')):
+        cx = bx[k][0] + bx[k][1] / 2
+        o.append(P.bubble(n, cx, IY - 12, cx, IY + 4))
+    o.append(P.bubble(4, 346, my + 11, X1, my + 11))
+    o.append(P.bubble(5, 346, my + 26, X1, my + 26))
+    o.append('</g>')
+    o.append('</svg>')
+    o[0] = P.svg_open('pl-tall', W, y + 12 + 8, 'L’accueil de Mission Plan au téléphone', 'The Mission Plan home page on a phone', 'stt')
+    return '\n          '.join(o)
+
+
+def _start_legend_rows():
+    return [
+        (1, [L('mp', 'work.open.btn')],
+         'à l’accueil ; dans les outils, Ouvrir ▾ › Ouvrir un travail… relit un fichier de travail et remplace tout le travail. Il garde : vos presets d’emport, le Wing, la mission d’HQ, la langue et le thème ; vos unités et réglages de cap si le fichier n’en porte pas.',
+         'on the home page; in the tools, Open ▾ › Open a work file… reads a work file and replaces all the work. It keeps: your loadout presets, the Wing, the HQ mission, the language and the theme; your units and heading settings if the file carries none.'),
+        (2, [L('mp', 'work.save.btn')],
+         'à l’accueil et dans chaque outil sauf HQ ; Ctrl+S, Cmd+S sur Mac. Écrit le fichier de travail de toute la suite : briefing, composition de RS, groupes, routes, calques, datacards. HQ écrit le .miz par Sauvegarder .miz. Hors du fichier : le Wing, la mission d’HQ, l’image source de RS, les presets d’emport.',
+         'on the home page and in every tool except HQ; Ctrl+S, Cmd+S on Mac. Writes the work file of the whole suite: briefing, RS composition, groups, routes, layers, datacards. HQ writes the .miz with Save .miz. Left out of the file: the Wing, the HQ mission, the RS source image, the loadout presets.'),
+        (3, [L('mp', 'ex.btn', add='▾')],
+         'dans la barre de l’accueil, seulement : les outils n’ont pas ce menu ; HQ a son bouton Exemple. Deux lignes, qui remplacent le travail de ce groupe d’outils, sans question. Il garde l’autre groupe, vos unités et réglages de cap. Le bouton d’HQ ouvre une escadre de démonstration et garde la vôtre.',
+         'in the home page bar only: the tools have no such menu; HQ has its Example button. Two lines, which replace the work of that tool group, without asking. It keeps the other group, your units and heading settings. HQ’s button opens a demonstration wing and keeps yours.'),
+        (4, [L('mp', 'ex.mc')],
+         'un briefing et une photo.',
+         'a briefing and a photo.'),
+        (5, [L('mp', 'ex.fl')],
+         'une route, un groupe et sa datacard.',
+         'a route, a group and its datacard.'),
+    ]
+
+
+def build_plate_start():
+    """La planche de l'accueil : le HTML (cadre avec l'ancre « gestes », figure zoomable, légende) ; ses libellés viennent du dictionnaire de Mission Plan."""
+    P = Plate('start', ['mp'])
+    wide, tall = _start_wide(P), _start_tall(P)
+    legend = P.legend_html(_start_legend_rows())
+    P.verify(wide, tall)
+    return P.figure_html(wide, tall,
+                         'Fig. 2 — L’accueil de Mission Plan, le menu Exemple ouvert : la barre, les deux lignes de l’exemple, les deux groupes d’outils.',
+                         'Fig. 2 — The Mission Plan home page with the Example menu open: the bar, the two example lines, the two tool groups.', legend, anchor='gestes')

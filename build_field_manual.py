@@ -216,7 +216,7 @@ FC_TILE_SRC = FC_TILE
 # Règle de lisibilité : la couleur d'un module marque (trait, aplat à 20 %), l'encre écrit.
 
 from fm_schemas_block import (NF, fr_typo, _esc, SCHEMAS_CSS, s0_html, build_bg_svg, build_dg_anatomy_svg, panel_html, panel_ids, TABLE_IDS)
-from fm_planches_block import PLANCHES_CSS, PLANCHE_ERRORS, PLATES, build_plate_hq, build_plate_fc, build_plate_dg, build_plate_rp, check_report as planche_report
+from fm_planches_block import PLANCHES_CSS, PLANCHE_ERRORS, PLATES, build_plate_hq, build_plate_fc, build_plate_dg, build_plate_rp, build_plate_bg, build_plate_rs, build_plate_start, check_report as planche_report
 
 _NBSP_FINE = NF   # espace fine insécable (typographie française)
 
@@ -227,6 +227,9 @@ HQ_PLATE_HTML = build_plate_hq()
 FC_PLATE_HTML = build_plate_fc()
 DG_PLATE_HTML = build_plate_dg()
 RP_PLATE_HTML = build_plate_rp()
+BG_PLATE_HTML = build_plate_bg()
+RS_PLATE_HTML = build_plate_rs()
+START_PLATE_HTML = build_plate_start()
 
 BG_LEGEND_FR = (f'Fig. 1 — Comment les saisies d’une section alimentent les autres, et ce que lisent les autres outils. '
                 f'S{_NBSP_FINE}: saisi en Standard{_NBSP_FINE}; A{_NBSP_FINE}: en Avancé{_NBSP_FINE}; S·A{_NBSP_FINE}: dans les deux.')
@@ -949,24 +952,16 @@ PAGES_SRC['start'] = [
     ('p', ['Ouvrez **dcs_mission_plan.html**, ou sa version en ligne : c’est l’accueil, et les six outils s’ouvrent depuis leur carte. Un outil ouvert seul n’affiche qu’une ligne qui renvoie vers Mission Plan : les échanges passent par l’accueil. Tout marche sans réseau, sauf les fonds de carte et les fiches d’aérodrome du Route Planner.'], ['Open **dcs_mission_plan.html**, or its online version: it is the home page, and the six tools open from their card. A tool opened on its own shows only a line pointing to Mission Plan: the exchanges go through the home page. Everything works offline, except the Route Planner’s base maps and airfield sheets.']),
     ('h', "Le retour au Mission Commander", "The return to the Mission Commander"),
     ('p', ['Les trois outils du Flight Leader partagent leurs groupes en direct : leur ordre n’est pas imposé, mais pour une datacard complète le Flight Configurator (emport, carburant, poids) passe avant l’export du Datacard Generator. Le seul retour qui se **fusionne** est le paquet de vol du Flight Configurator : rouvrir le fichier de travail d’un Flight Leader remplace tout le travail, et plusieurs Flight Leaders ne se rassemblent que par leurs paquets.'], ['The three Flight Leader tools share their groups live: their order is not imposed, but for a complete datacard the Flight Configurator (loadout, fuel, weight) comes before the Datacard Generator export. The only return that **merges** is the Flight Configurator’s flight package: reopening a Flight Leader’s work file replaces all the work, and several Flight Leaders come together only through their packages.']),
-    ('anchor', 'gestes', ''),
     ('h', "Les gestes, et ce qu’ils gardent", "The gestures, and what they keep"),
     ('p',
-     ["Les mêmes gestes ont le même sens dans tous les outils. La table dit lesquels remplacent du travail, et ce qui reste."],
-     ["The same gestures mean the same thing in every tool. The table says which ones replace work, and what stays."]),
-    ('tbl',
-     [["Geste", "Ce qu’il fait", "Ce qu’il garde"],
-      ["**Ouvrir…** (accueil), **Ouvrir ▾ › Ouvrir un travail…** (outils)", "Relit un fichier de travail et **remplace tout le travail**.", "Vos presets d’emport, le Wing, la mission d’HQ, la langue et le thème ; vos unités et réglages de cap si le fichier n’en porte pas."],
-      ["**Sauvegarder** (accueil et chaque outil sauf HQ ; Ctrl+S, Cmd+S sur Mac)", "Écrit le fichier de travail de toute la suite : briefing, composition de RS, groupes, routes, calques, datacards. HQ écrit le .miz par **Sauvegarder .miz**.", "Hors du fichier : le Wing, la mission d’HQ, l’image source de RS, les presets d’emport."],
-      ["**Exemple ▾** (barre de l’accueil, seulement : les outils n’ont pas ce menu ; HQ a son bouton Exemple)", "Deux lignes. **Mission Commander** : un briefing et une photo (BG, RS). **Flight Leader** : une route, un groupe et sa datacard (RP, DG, FC). Remplace le travail de ce groupe d’outils, sans question.", "L’autre groupe, vos unités et réglages de cap. Le bouton d’HQ ouvre une escadre de démonstration et garde la vôtre."],
-      ["**Effacer**", "BG : le briefing. RS : l’image, les annotations, la légende et le bloc d’informations. RP, DG, FC : « Tout effacer ? » vide les groupes, les routes, les calques et les datacards des trois outils (au RP, une fenêtre à cocher). HQ : retire la mission ouverte. Après confirmation.", "RS : logos, réglages, Wing. RP, DG, FC : presets, théâtre, unités, réglages. HQ : le Wing."],
-      ["**Restaurer**", "Après un Exemple ou un Ouvrir, un message le propose pendant douze secondes et rend le travail d’avant ; après deux remplacements de suite, l’état d’avant le premier.", "**Refusé** dès que vous avez saisi quelque chose : « Restauration impossible : les données ont changé depuis. »"]],
-     [["Gesture", "What it does", "What it keeps"],
-      ["**Open…** (home page), **Open ▾ › Open a work file…** (tools)", "Reads a work file and **replaces all the work**.", "Your loadout presets, the Wing, the HQ mission, the language and the theme; your units and heading settings if the file carries none."],
-      ["**Save** (home page and every tool except HQ; Ctrl+S, Cmd+S on Mac)", "Writes the work file of the whole suite: briefing, RS composition, groups, routes, layers, datacards. HQ writes the .miz with **Save .miz**.", "Left out of the file: the Wing, the HQ mission, the RS source image, the loadout presets."],
-      ["**Example ▾** (home page top bar only: the tools have no such menu; HQ has its Example button)", "Two lines. **Mission Commander**: a briefing and a photo (BG, RS). **Flight Leader**: a route, a group and its datacard (RP, DG, FC). Replaces the work of that tool group, without asking.", "The other group, your units and heading settings. HQ’s button opens a demonstration wing and keeps yours."],
-      ["**Clear**", "BG: the briefing. RS: the image, the annotations, the legend and the info block. RP, DG, FC: “Clear everything?” empties the groups, routes, layers and datacards of the three tools (in the RP, a window with tick boxes). HQ: removes the open mission. After a confirmation.", "RS: logos, settings, Wing. RP, DG, FC: presets, theatre, units, settings. HQ: the Wing."],
-      ["**Restore**", "After an Example or an Open, a message offers it for twelve seconds and brings back the previous work; after two replacements in a row, the state before the first.", "**Refused** as soon as you have typed something: “Cannot restore: the data has changed since.”"]]),
+     ["Les mêmes gestes ont le même sens dans tous les outils. La planche dit lesquels remplacent du travail, et ce qui reste."],
+     ["The same gestures mean the same thing in every tool. The drawing says which ones replace work, and what stays."]),
+    ('raw', START_PLATE_HTML, ''),
+    ('p',
+     ["**Effacer**, après confirmation : au BG, il vide le briefing ; à RS, l’image, les annotations, la légende et le bloc d’informations ; au RP, au DG et au FC, « Tout effacer ? » vide les groupes, les routes, les calques et les datacards des trois outils (au RP, une fenêtre à cocher) ; à HQ, il retire la mission ouverte. Il garde : à RS, les logos, les réglages, le Wing ; au RP, au DG et au FC, les presets, le théâtre, les unités, les réglages ; à HQ, le Wing.",
+      "**Restaurer** : après un Exemple ou un Ouvrir, un message le propose pendant douze secondes et rend le travail d’avant ; après deux remplacements de suite, l’état d’avant le premier. Il est **refusé** dès que vous avez saisi quelque chose : « Restauration impossible : les données ont changé depuis. »"],
+     ["**Clear**, after a confirmation: in the BG, it empties the briefing; in RS, the image, the annotations, the legend and the info block; in the RP, DG and FC, “Clear everything?” empties the groups, routes, layers and datacards of the three tools (in the RP, a window with tick boxes); in HQ, it removes the open mission. It keeps: in RS, the logos, settings, Wing; in the RP, DG and FC, the presets, theatre, units, settings; in HQ, the Wing.",
+      "**Restore**: after an Example or an Open, a message offers it for twelve seconds and brings back the previous work; after two replacements in a row, the state before the first. It is **refused** as soon as you have typed something: “Cannot restore: the data has changed since.”"]),
     ('p',
      ["Les fenêtres Sauvegarder et Exporter (RS, BG, DG, paquets de vol) demandent un nom de fichier, proposé et modifiable."],
      ["The Save and Export windows (RS, BG, DG, flight packages) ask for a file name, proposed and editable."]),
@@ -1012,14 +1007,8 @@ PAGES_SRC['bg'] = [
         </div>
       </div>''', ''),
     ('h', "Les gestes", "The gestures"),
-    ('h', "Standard ou Avancé", "Standard or Advanced"),
-    ('p', ['Le menu **Affichage ▾** de la barre choisit le format ; un point ambre sur le bouton signale Avancé. **Changer de format ne perd rien** : seules les sections affichées et les pages produites changent, et ce que vous avez saisi pour l’autre format revient quand vous y retournez.'], ['The **Display ▾** menu of the bar chooses the format; an amber dot on the button marks Advanced. **Changing format loses nothing**: only the sections shown and the pages produced change, and what you entered for the other format comes back when you return to it.']),
-    ('h', "Démarrer", "Starting"),
-    ('p',
-     ["L’outil s’ouvre sur une **page blanche**, en Standard ; les champs vides disent en grisé ce qu’on y met, et cet indice n’est ni dans l’aperçu ni à l’export. **Effacer** vide tout le briefing, après confirmation. L’exemple et ses effets sont dans [[start:gestes|Par où commencer]]."],
-     ["The tool opens on a **blank page**, in Standard; empty fields say in grey what goes in them, and that hint is neither in the preview nor in the export. **Clear** empties the whole briefing, after a confirmation. The example and its effects are in [[start:gestes|Where to start]]."]),
-    ('h', "Le brief Standard", "The Standard brief"),
-    ('p', ['Le brief Standard est une page de mission : situation, mission et groupes, fréquences, terrains et météo. Une date qui n’a pas la forme attendue est gardée telle quelle, et le champ prend la couleur d’avertissement. La carte, les menaces et les cibles sont communes aux deux formats : si une carte est chargée, ou si des menaces ou des cibles sont saisies, une page de carte suit, puis les pages de photos. Un bloc vide n’est pas imprimé, et une page qui déborde se poursuit sur la suivante.'], ['The Standard brief is one mission page: situation, mission and groups, frequencies, airfields and weather. A date that does not have the expected form is kept as it is, and the field takes the warning colour. The map, the threats and the targets are common to both formats: if a map is loaded, or threats or targets are entered, a map page follows, then the photo pages. An empty block is not printed, and a page that overflows continues on the next one.']),
+    ('raw', BG_PLATE_HTML, ''),
+    ('p', ['L’exemple et ses effets sont dans [[start:gestes|Par où commencer]].'], ['The example and its effects are in [[start:gestes|Where to start]].']),
     ('h', "Le brief Avancé", "The Advanced brief"),
     ('p', ['Le brief Avancé garde l’En-tête et la Méta du Standard ; toutes ses autres sections lui sont propres. La section **Configuration Wing** est en lecture seule : le Wing se modifie dans HQ. Les indicatifs de l’équipage sont proposés à partir du callsign des escadrons d’HQ, et restent modifiables.'], ['The Advanced brief keeps the Standard’s Header and Meta; all its other sections are its own. The **Wing configuration** section is read-only: the Wing is edited in HQ. Crew call signs are proposed from the callsign of HQ’s squadrons, and stay editable.']),
     ('h', "Le METAR", "The METAR"),
@@ -1030,8 +1019,6 @@ PAGES_SRC['bg'] = [
     ('p',
      ["La carte du Route Planner arrive par **Placer la carte du Route Planner**, après l’**Exporter ▾ › Image pour le briefing…** du Route Planner, dans la même session de l’accueil. La photo de Recon Station n’arrive pas toute seule : exportez le PNG dans Recon Station, puis ajoutez l’image dans la section **Photos**."],
      ["The Route Planner map arrives through **Place the Route Planner map**, after the Route Planner’s **Export ▾ › Image for the briefing…**, in the same home-page session. The Recon Station photo does not arrive by itself: export the PNG in Recon Station, then add the image in the **Photos** section."]),
-    ('h', "Sauvegarder et exporter", "Saving and exporting"),
-    ('p', ['Le briefing est gardé automatiquement dans le navigateur. **Ouvrir ▾ › Ouvrir un briefing…** lit un ancien fichier de briefing, le format choisi voyageant avec lui. Pour exporter, vérifiez la mise en page dans l’Aperçu, puis **Exporter** : l’export porte les pages du format en cours, en PDF (par l’impression du navigateur, Ctrl+P puis « Enregistrer en PDF », y compris sur Android) ou en PNG par page.'], ['The briefing is kept automatically in the browser. **Open ▾ › Open a briefing…** reads an old briefing file, the chosen format travelling with it. To export, check the layout in the Preview, then **Export**: the export carries the pages of the current format, as a PDF (through the browser’s print, Ctrl+P then “Save as PDF”, on Android too) or as one PNG per page.']),
 ]
 
 # ── Recon Station ────────────────────────────────────────────────────────────────
@@ -1111,14 +1098,8 @@ PAGES_SRC['rs'] = [
     ('raw', PANEL_HTML['rs'], ''),
     ('raw', RS_ANATOMY_HTML, ''),
     ('h', "Les gestes", "The gestures"),
-    ('h', "Préparer la photo", "Setting up the photo"),
-    ('p', ['L’image est d’abord convertie en niveaux de gris. **Contraste** accentue ou adoucit les écarts ; **Imagerie** donne l’allure d’un capteur, par stylisation du signal et non par mesure ; **Vignette**, **Grain** et **Scanlines**, éteints par défaut, ajoutent l’usure d’un tirage. Recon ne peint jamais d’élément absent de l’image.'], ['The image is first converted to greyscale. **Contrast** sharpens or softens the differences; **Imagery** gives the look of a sensor, by stylising the signal and not by measurement; **Vignette**, **Grain** and **Scanlines**, off by default, add the wear of a print. Recon never paints an element that is not in the image.']),
-    ('h', "Annoter", "Annotating"),
-    ('p', ['**+ AJOUTER UN MARQUAGE** dépose un cercle numéroté, à glisser sur la cible, lié à une ligne de légende du cartouche ; la numérotation se recalcule toute seule, et l’Amorce tire un trait jusqu’au point exact de la cible. **+ AJOUTER UNE LOUPE** réaffiche, agrandie, une portion de l’image traitée ; la zone et la boîte se déplacent et se redimensionnent sans déformer l’image. Les formes et les étiquettes se posent au centre, puis se déplacent. Le bandeau de classification, éteint par défaut, réserve sa place pour ne recouvrir ni le cartouche ni le bloc d’informations ; il est distinct du champ Classification du bloc.'], ['**+ ADD MARKER** drops a numbered circle, to drag onto the target, tied to a legend line of the cartouche; the numbering recalculates by itself, and the **Leader** draws a line to the exact point of the target. **+ ADD MAGNIFIER** redisplays, enlarged, a portion of the processed image; the zone and the box move and resize without distorting the image. Shapes and labels are placed at the centre, then moved. The classification banner, off by default, reserves its place so as not to cover the cartouche or the information block; it is separate from the block’s Classification field.']),
-    ('h', "Le bloc d’informations et les logos", "The info block and the logos"),
-    ('p', ['En bas, le **bloc d’informations** : les champs vides ne s’impriment pas. À l’ouverture de RS, le briefing du BG préremplit le bloc ; un champ déjà rempli n’est jamais écrasé. Les logos du Wing d’HQ sont proposés dans la grille Logo, marqués Wing ; vous pouvez en ajouter par une image PNG, et chaque logo se rend en couleur, en niveaux de gris ou en blanc.'], ['At the bottom, the **information block**: empty fields are not printed. When RS opens, the BG’s briefing pre-fills the block; a field already filled is never overwritten. The HQ Wing logos are offered in the Logo grid, marked Wing; you can add some from a PNG image, and each logo renders in colour, greyscale or white.']),
-    ('h', "Ouvrir, sauvegarder, exporter", "Opening, saving, exporting"),
-    ('p', ['**Ouvrir ▾** (Ouvrir un travail…, Ouvrir une image…) et **Sauvegarder**, Ctrl+S, rangent la composition dans le fichier de travail, sans l’image source : après un rechargement de la page, importez de nouveau l’image. **Exporter** propose un nom (la cible et l’heure), que vous pouvez changer, et écrit un PNG sans perte à la résolution de la source ; l’aperçu à l’écran est réduit. Pour mettre la photo au briefing, voir le [[bg|Briefing Generator]].'], ['**Open ▾** (Open a work file…, Open an image…) and **Save**, Ctrl+S, store the composition in the work file, without the source image: after a page reload, import the image again. **Export** proposes a name (the target and the time), which you can change, and writes a lossless PNG at the source’s resolution; the on-screen preview is reduced. To put the photo in the briefing, see the [[bg|Briefing Generator]].']),
+    ('raw', RS_PLATE_HTML, ''),
+    ('p', ['Pour mettre la photo au briefing, voir le [[bg|Briefing Generator]].'], ['To put the photo in the briefing, see the [[bg|Briefing Generator]].']),
 ]
 
 # ── Route Planner ────────────────────────────────────────────────────────────────
@@ -2518,8 +2499,8 @@ grep_ok('id="dga"',         'schéma anatomie de la datacard : marqueur propre')
 grep_absent('id="dgf"',     'figure 2 DG (flux) retirée')
 grep_absent('Du groupe au paquet', 'schéma de flux du FC retiré')
 grep_absent('LE HUB DE LA SUITE',  'schéma de flux d\'HQ retiré')
-grep_ok('id="gestes"',      'Par où commencer : la table des gestes a son ancre')
-grep_ok('class="fm-gt"',    'Par où commencer : la table des gestes')
+grep_ok('class="fm-plate" id="gestes"', 'Par où commencer : la planche des gestes a son ancre')
+grep_ok('Les gestes, et ce qu’ils gardent', 'Par où commencer : la section des gestes')
 grep_ok('Restauration impossible', 'Par où commencer : Restaurer refusé (FR)')
 grep_ok('Cannot restore: the data has changed since.', 'Par où commencer : Restaurer refusé (EN)')
 grep_ok('viewBox="0 0 720 425"', 'schéma BG refait (720 × 425)')
