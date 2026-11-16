@@ -8,6 +8,19 @@ The sections per tool, further down, keep the history of each tool up to v1.24.0
 
 ## Unreleased
 
+---
+
+## Mission Plan — landing
+
+- Operational **"situation board" landing page** that embeds the live tools (HQ, Briefing Generator, Recon Station) in isolated frames and stages the upcoming ones as *Coming soon*.
+- **4 themes** (Cold War NATO / Soviet, Modern NATO / Eastern Bloc) and **FR/EN** carried across the whole suite from the board.
+- **Online and offline** — published as a hosted page and as a single offline HTML file.
+- **Tablet & mobile** first-class target (touch, drag, rotation-safe).
+- Wing configuration shared automatically across embedded tools.
+
+### `v2.1.0`
+A small release after v2.0.0: the Field Manual now draws every screen of the suite, and a few fixes in HQ and the Route Planner.
+
 #### HQ
 - When the Wing configuration is provided by another tool, the Wing window shows it read-only, with a note saying where to edit it; Import, Reset and the Example are then off, Export still works. The custom liveries and default liveries boxes fold like the squadron cards, closed when the page opens.
 
@@ -18,16 +31,6 @@ The sections per tool, further down, keep the history of each tool up to v1.24.0
 #### Field Manual
 - Every tool chapter, and the home page in "Where to start", now opens its gestures with a drawing of the screen: numbered bubbles point to each area, and the numbered legend below says what it does; on a phone, a tall version of the drawing. The windows without a drawing (HQ's Wing, flight packages, Dynamic Spawn) keep a short text after the legend. The build checks that every label drawn exists in its tool.
 - The manual's top bar now has Index and Contents: Contents opens a panel listing every page and its sections, one touch away; each chapter ends with the previous and next chapters. The in-page Index button is gone, and Mission Plan's back button says, in its tooltip, that it leads to the Mission Plan home.
-
----
-
-## Mission Plan — landing
-
-- Operational **"situation board" landing page** that embeds the live tools (HQ, Briefing Generator, Recon Station) in isolated frames and stages the upcoming ones as *Coming soon*.
-- **4 themes** (Cold War NATO / Soviet, Modern NATO / Eastern Bloc) and **FR/EN** carried across the whole suite from the board.
-- **Online and offline** — published as a hosted page and as a single offline HTML file.
-- **Tablet & mobile** first-class target (touch, drag, rotation-safe).
-- Wing configuration shared automatically across embedded tools.
 
 ### `v2.0.0`
 Mission Plan v2 is one suite with one version number. The home page is now the only way in: a tool opened on its own shows a line pointing to it. All your work lives in one work file that **Save** writes and **Open** reads back. The suite follows a circuit: the Mission Commander prepares the mission (HQ, Briefing Generator, Recon Station), the Flight Leader prepares the flights (Route Planner, Datacard Generator and the new Flight Configurator), and the flights go back to the mission in HQ. The suite is now under the GNU AGPL-3.0 licence.

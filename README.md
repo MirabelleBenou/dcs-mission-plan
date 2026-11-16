@@ -1,6 +1,6 @@
 # DCS Mission Plan
 
-**v2.0.0** — one version for the whole suite; see the [CHANGELOG](./CHANGELOG.md).
+**v2.1.0** — one version for the whole suite; see the [CHANGELOG](./CHANGELOG.md).
 
 ![Intro-image](docs/screenshots/landing.jpg)
 > Prepare your DCS World missions end to end — a suite of tools behind one operational landing page. **Use it online, or download a single offline file.**
