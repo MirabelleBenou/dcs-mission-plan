@@ -2391,173 +2391,360 @@ body.zm-open #fm-root { overflow: hidden; }
 <div class="fm-rd lang-block" data-lang="fr" data-tool="rp"><div class="fm-rd-col"><h4>Reçoit</h4><ul><li data-ex="S2"><strong>Avec le .miz ouvert dans HQ : les groupes de la mission avec leur route</strong> — HQ — <span class="rd-g">Importer des routes… › Mission chargée dans HQ</span> — pour partir des routes de la mission</li><li data-ex="F5 F6"><strong>Ou, sans .miz : un paquet exporté d’HQ, ou un ancien fichier de briefing (.json)</strong> — HQ, FC — <span class="rd-g">Importer des routes… › Fichier</span> — pour importer sans le .miz</li><li data-ex="S5"><strong>Les vols du briefing</strong> — BG — <span class="rd-g">Importer des routes… › Briefing en cours</span> — pour créer les groupes des routes</li><li data-ex="F9"><strong>Les points d’une route</strong> — le Route Tool de DCS, fichier &lt;théâtre&gt;.lua — <span class="rd-g">Ouvrir ▾ › Ouvrir une route ou des calques…</span> — pour reprendre une route de DCS</li><li data-ex="F10"><strong>Les calques d’un fichier CombatFlite</strong> — CombatFlite, fichier .cf — <span class="rd-g">Ouvrir ▾ › Ouvrir une route ou des calques…, puis Afficher</span> — pour les voir sur la carte</li><li data-ex="F13"><strong>Une ancienne route</strong> — un fichier — <span class="rd-g">Ouvrir ▾ › Ouvrir une route ou des calques…</span> — pour reprendre une route déjà tracée</li><li data-ex="C2 C3"><strong>Le travail rangé : fichier de travail, exemple</strong> — la suite — <span class="rd-g">Ouvrir ▾ › Ouvrir un travail…, Exemple ▾</span> — pour reprendre le travail</li><li data-ex="S6"><strong>Groupes, unités, radios, emport, route copiée</strong> — DG, FC — <span class="rd-g">sans geste, dans les deux sens</span> — pour que les trois se suivent</li></ul></div><div class="fm-rd-col"><h4>Donne</h4><ul><li data-ex="C1"><strong>L’image de la carte</strong> — BG, dans la même session — <span class="rd-g">Exporter ▾ › Image pour le briefing… › Exporter</span> — pour la carte du briefing</li><li data-ex="S8"><strong>Les routes : points</strong> — DG, FC — <span class="rd-g">sans geste</span> — pour le groupe et la carte</li><li data-ex="S9"><strong>La route active et les points de référence</strong> — DG — <span class="rd-g">sans geste</span> — pour la carte</li><li data-ex="F9"><strong>Les points d’une route</strong> — le Route Tool de DCS — <span class="rd-g">Exporter ▾ › Route Tool…</span> — pour donner la route au Route Tool</li><li data-ex="C2"><strong>Les routes et leurs calques</strong> — le fichier de travail — <span class="rd-g">Sauvegarder</span> — pour le reprendre ou le passer</li><li data-ex="S6"><strong>Groupes, unités, radios, emport, route copiée</strong> — DG, FC — <span class="rd-g">sans geste, dans les deux sens</span> — pour que les trois se suivent</li></ul></div></div>
       <div class="fm-rd lang-block" data-lang="en" data-tool="rp"><div class="fm-rd-col"><h4>Receives</h4><ul><li data-ex="S2"><strong>With the .miz open in HQ: the mission groups with their route</strong> — HQ — <span class="rd-g">Import routes… › Mission loaded in HQ</span> — to start from the mission routes</li><li data-ex="F5 F6"><strong>Or, without the .miz: a package exported from HQ, or an old briefing file (.json)</strong> — HQ, FC — <span class="rd-g">Import routes… › File</span> — to import without the .miz</li><li data-ex="S5"><strong>The briefing flights</strong> — BG — <span class="rd-g">Import routes… › Current briefing</span> — to create the route groups</li><li data-ex="F9"><strong>The points of a route</strong> — the DCS Route Tool, &lt;theatre&gt;.lua file — <span class="rd-g">Open ▾ › Open a route or layers…</span> — to take back a route from DCS</li><li data-ex="F10"><strong>The layers of a CombatFlite file</strong> — CombatFlite, .cf file — <span class="rd-g">Open ▾ › Open a route or layers…, then Show</span> — to see them on the map</li><li data-ex="F13"><strong>An old route</strong> — a file — <span class="rd-g">Open ▾ › Open a route or layers…</span> — to resume a route already drawn</li><li data-ex="C2 C3"><strong>Stored work: work file, example</strong> — the suite — <span class="rd-g">Open ▾ › Open a work file…, Example ▾</span> — to resume the work</li><li data-ex="S6"><strong>Groups, units, radios, loadout, copied route</strong> — DG, FC — <span class="rd-g">no gesture, both ways</span> — so the three follow each other</li></ul></div><div class="fm-rd-col"><h4>Gives</h4><ul><li data-ex="C1"><strong>The map image</strong> — BG, in the same session — <span class="rd-g">Export ▾ › Image for the briefing… › Export</span> — for the briefing map</li><li data-ex="S8"><strong>The routes: points</strong> — DG, FC — <span class="rd-g">no gesture</span> — for the group and the card</li><li data-ex="S9"><strong>The active route and the reference points</strong> — DG — <span class="rd-g">no gesture</span> — for the card</li><li data-ex="F9"><strong>The points of a route</strong> — the DCS Route Tool — <span class="rd-g">Export ▾ › Route Tool…</span> — to give the route to the Route Tool</li><li data-ex="C2"><strong>The routes and their layers</strong> — the work file — <span class="rd-g">Save</span> — to resume it or pass it on</li><li data-ex="S6"><strong>Groups, units, radios, loadout, copied route</strong> — DG, FC — <span class="rd-g">no gesture, both ways</span> — so the three follow each other</li></ul></div></div>
 
-      <div class="fm-schema">
-        <svg viewBox="0 0 720 372" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="L’écran du Route Planner" data-aria-fr="L’écran du Route Planner" data-aria-en="The Route Planner screen">
-          <defs><marker id="rps" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto-start-reverse"><path d="M0,0 L7,3.5 L0,7 Z" fill="currentColor" opacity=".8"/></marker></defs>
-          <text x="360" y="24" font-size="13" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.9" letter-spacing="3">L’ÉCRAN DU ROUTE PLANNER</text>
-          <text x="360" y="24" font-size="13" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en" opacity="0.9" letter-spacing="3">THE ROUTE PLANNER SCREEN</text>
-          <line x1="120" y1="32" x2="600" y2="32" stroke="currentColor" stroke-width=".6" opacity=".3"/>
-          <rect class="sv-box" x="110" y="44" width="500" height="26" rx="3" stroke="currentColor" stroke-width="1.4"/>
-          <text x="118" y="61" font-size="8.5" fill="currentColor" letter-spacing="1">RP</text>
-          <rect x="134" y="49" width="50" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity=".6"/>
-          <text x="159" y="60.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">Ouvrir ▾</text>
-          <text x="159" y="60.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">Open ▾</text>
-          <rect x="188" y="49" width="64" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity=".6"/>
-          <text x="220" y="60.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">Sauvegarder</text>
-          <text x="220" y="60.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">Save</text>
-          <rect x="256" y="49" width="58" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity=".6"/>
-          <text x="285" y="60.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">Exporter ▾</text>
-          <text x="285" y="60.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">Export ▾</text>
-          <rect x="318" y="49" width="64" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity=".6"/>
-          <text x="350" y="60.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">Affichage ▾</text>
-          <text x="350" y="60.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">Display ▾</text>
-          <rect x="386" y="49" width="46" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity=".6"/>
-          <text x="409" y="60.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">Théâtre</text>
-          <text x="409" y="60.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">Theatre</text>
-          <rect x="436" y="49" width="56" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity=".6"/>
-          <text x="464" y="60.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">Exemple ▾</text>
-          <text x="464" y="60.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">Example ▾</text>
-          <rect x="496" y="49" width="46" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity=".6"/>
-          <text x="519" y="60.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">Effacer</text>
-          <text x="519" y="60.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">Clear</text>
-          <rect x="546" y="49" width="36" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity=".6"/>
-          <text x="564" y="60.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">Thème</text>
-          <text x="564" y="60.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">Theme</text>
-          <rect x="586" y="49" width="16" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity=".6"/>
-          <rect x="589" y="54" width="10" height="7" fill="none" stroke="currentColor" stroke-width="1"/>
-          <rect class="sv-box" x="110" y="74" width="500" height="14" rx="3" stroke="currentColor" stroke-width="1.4"/>
-          <text x="118" y="84" font-size="8" fill="currentColor" class="lang-block" data-lang="fr">Mission d’HQ · ce que l’outil en prend</text>
-          <text x="118" y="84" font-size="8" fill="currentColor" class="lang-block" data-lang="en">HQ mission · what the tool takes from it</text>
-          <rect class="sv-box" x="110" y="94" width="160" height="262" rx="3" stroke="currentColor" stroke-width="1.4"/>
-          <rect x="116" y="100" width="148" height="118" fill="none" stroke="currentColor" stroke-width="1" opacity=".75"/>
-          <text x="121" y="111" font-size="8" fill="currentColor">01 Route</text>
-          <line x1="122" y1="140" x2="258" y2="140" stroke="currentColor" stroke-width="1" opacity=".3"/>
-          <line x1="122" y1="154" x2="258" y2="154" stroke="currentColor" stroke-width="1" opacity=".3"/>
-          <line x1="122" y1="168" x2="258" y2="168" stroke="currentColor" stroke-width="1" opacity=".3"/>
-          <rect x="116" y="222" width="148" height="28" fill="none" stroke="currentColor" stroke-width="1" opacity=".75"/>
-          <text x="121" y="233" font-size="8" fill="currentColor" class="lang-block" data-lang="fr">02 Points de référence</text>
-          <text x="121" y="233" font-size="8" fill="currentColor" class="lang-block" data-lang="en">02 Reference points</text>
-          <rect x="116" y="254" width="148" height="28" fill="none" stroke="currentColor" stroke-width="1" opacity=".75"/>
-          <text x="121" y="265" font-size="8" fill="currentColor" class="lang-block" data-lang="fr">03 Calques</text>
-          <text x="121" y="265" font-size="8" fill="currentColor" class="lang-block" data-lang="en">03 Layers</text>
-          <rect x="116" y="286" width="148" height="64" fill="none" stroke="currentColor" stroke-width="1" opacity=".75"/>
-          <text x="121" y="297" font-size="8" fill="currentColor">04 Navigation</text>
-          <line x1="122" y1="326" x2="258" y2="326" stroke="currentColor" stroke-width="1" opacity=".3"/>
-          <line x1="122" y1="340" x2="258" y2="340" stroke="currentColor" stroke-width="1" opacity=".3"/>
-          <path d="M252,103 l4,4 l4,-4 M252,110 l4,-4 l4,4" fill="none" stroke="currentColor" stroke-width="1.2"/>
-          <rect class="sv-box" x="122" y="116" width="100" height="15" rx="3" stroke="currentColor" stroke-width="1.4"/>
-          <text x="128" y="127" font-size="8" fill="currentColor">Route ▾</text>
-          <rect class="sv-box" x="226" y="116" width="15" height="15" rx="3" stroke="currentColor" stroke-width="1.4"/>
-          <text x="233.5" y="127" font-size="8.5" text-anchor="middle" fill="currentColor">+</text>
-          <rect class="sv-box" x="245" y="116" width="15" height="15" rx="3" stroke="currentColor" stroke-width="1.4"/>
-          <circle cx="248.5" cy="123.5" r="1.3" fill="currentColor"/><circle cx="252.5" cy="123.5" r="1.3" fill="currentColor"/><circle cx="256.5" cy="123.5" r="1.3" fill="currentColor"/>
-          <rect class="sv-box" x="276" y="94" width="334" height="262" rx="3" stroke="currentColor" stroke-width="1.4"/>
-          <line x1="336" y1="95" x2="336" y2="355" stroke="currentColor" stroke-width=".8" opacity=".18"/>
-          <line x1="396" y1="95" x2="396" y2="355" stroke="currentColor" stroke-width=".8" opacity=".18"/>
-          <line x1="456" y1="95" x2="456" y2="355" stroke="currentColor" stroke-width=".8" opacity=".18"/>
-          <line x1="516" y1="95" x2="516" y2="355" stroke="currentColor" stroke-width=".8" opacity=".18"/>
-          <line x1="576" y1="95" x2="576" y2="355" stroke="currentColor" stroke-width=".8" opacity=".18"/>
-          <line x1="277" y1="140" x2="609" y2="140" stroke="currentColor" stroke-width=".8" opacity=".18"/>
-          <line x1="277" y1="190" x2="609" y2="190" stroke="currentColor" stroke-width=".8" opacity=".18"/>
-          <line x1="277" y1="240" x2="609" y2="240" stroke="currentColor" stroke-width=".8" opacity=".18"/>
-          <line x1="277" y1="290" x2="609" y2="290" stroke="currentColor" stroke-width=".8" opacity=".18"/>
-          <line x1="277" y1="340" x2="609" y2="340" stroke="currentColor" stroke-width=".8" opacity=".18"/>
-          <rect class="sv-box" x="284" y="102" width="16" height="30" rx="2" stroke="currentColor" stroke-width="1"/>
-          <text x="292" y="113" font-size="9" text-anchor="middle" fill="currentColor">+</text><text x="292" y="126" font-size="9" text-anchor="middle" fill="currentColor">−</text>
-          <rect class="sv-box" x="284" y="138" width="16" height="16" rx="2" stroke="currentColor" stroke-width="1"/>
-          <circle cx="291" cy="145" r="3.6" fill="none" stroke="currentColor" stroke-width="1.3"/>
-          <line x1="293.6" y1="147.6" x2="297" y2="151" stroke="currentColor" stroke-width="1.3"/>
-          <rect class="sv-box sv-m-rp" x="378" y="102" width="46" height="16" rx="3" stroke-width="2"/>
-          <text x="401" y="113" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">Point</text>
-          <text x="401" y="113" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">Waypoint</text>
-          <rect class="sv-box" x="424" y="102" width="46" height="16" rx="3" stroke="currentColor" stroke-width="1.4"/>
-          <text x="447" y="113" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">Réf.</text>
-          <text x="447" y="113" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">Ref.</text>
-          <rect class="sv-box" x="470" y="102" width="46" height="16" rx="3" stroke="currentColor" stroke-width="1.4"/>
-          <text x="493" y="113" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">Lire</text>
-          <text x="493" y="113" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">Read</text>
-          <rect class="sv-box" x="516" y="102" width="46" height="16" rx="3" stroke="currentColor" stroke-width="1.4"/>
-          <text x="539" y="113" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">Dessin</text>
-          <text x="539" y="113" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">Draw</text>
-          <rect class="sv-box" x="562" y="102" width="46" height="16" rx="3" stroke="currentColor" stroke-width="1.4"/>
-          <text x="585" y="113" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">Règle</text>
-          <text x="585" y="113" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">Ruler</text>
-          <polyline points="322,306 380,206 496,232 566,160" fill="none" stroke="#7ac97a" stroke-width="3" stroke-linejoin="round"/>
-          <circle cx="322" cy="306" r="8" class="sv-box" stroke="currentColor" stroke-width="1.6"/>
-          <text x="322" y="309" font-size="8" text-anchor="middle" fill="currentColor">0</text>
-          <circle cx="380" cy="206" r="8" class="sv-box" stroke="currentColor" stroke-width="1.6"/>
-          <text x="380" y="209" font-size="8" text-anchor="middle" fill="currentColor">1</text>
-          <circle cx="496" cy="232" r="8" class="sv-box" stroke="currentColor" stroke-width="1.6"/>
-          <text x="496" y="235" font-size="8" text-anchor="middle" fill="currentColor">2</text>
-          <circle cx="566" cy="160" r="8" class="sv-box" stroke="currentColor" stroke-width="1.6"/>
-          <text x="566" y="163" font-size="8" text-anchor="middle" fill="currentColor">3</text>
-          <rect x="514" y="296" width="12" height="12" transform="rotate(45 520 302)" fill="currentColor"/>
-          <text x="520" y="305" font-size="8" text-anchor="middle" class="sv-pill-t">A</text>
-          <path class="sv-box" d="M410,252 L440,240 L470,252 L470,284 L410,284 Z" stroke="currentColor" stroke-width="1.2"/>
-          <text x="440" y="266" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">cap</text>
-          <text x="440" y="266" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">course</text>
-          <text x="440" y="277" font-size="8" text-anchor="middle" fill="currentColor">dist.</text>
-          <text x="102" y="150" font-size="10" text-anchor="end" fill="currentColor" class="lang-block" data-lang="fr">Panneau</text>
-          <text x="102" y="150" font-size="10" text-anchor="end" fill="currentColor" class="lang-block" data-lang="en">Panel</text>
-          <line x1="105" y1="147" x2="128" y2="147" stroke="currentColor" stroke-width="1.2" opacity="0.8" marker-end="url(#rps)"/>
-          <text x="102" y="238" font-size="10" text-anchor="end" fill="currentColor">Sections</text>
-          <text x="102" y="250" font-size="10" text-anchor="end" fill="currentColor" class="lang-block" data-lang="fr">repliables</text>
-          <text x="102" y="250" font-size="10" text-anchor="end" fill="currentColor" class="lang-block" data-lang="en">foldable</text>
-          <line x1="105" y1="244" x2="120" y2="244" stroke="currentColor" stroke-width="1.2" opacity="0.8" marker-end="url(#rps)"/>
-          <text x="622" y="58" font-size="10" fill="currentColor" class="lang-block" data-lang="fr">Barre du haut</text>
-          <text x="622" y="58" font-size="10" fill="currentColor" class="lang-block" data-lang="en">Top bar</text>
-          <line x1="618" y1="55" x2="596" y2="55" stroke="currentColor" stroke-width="1.2" opacity="0.8" marker-end="url(#rps)"/>
-          <text x="622" y="84" font-size="10" fill="currentColor" class="lang-block" data-lang="fr">Mission d’HQ</text>
-          <text x="622" y="84" font-size="10" fill="currentColor" class="lang-block" data-lang="en">HQ mission</text>
-          <line x1="618" y1="81" x2="598" y2="81" stroke="currentColor" stroke-width="1.2" opacity="0.8" marker-end="url(#rps)"/>
-          <text x="622" y="114" font-size="10" fill="currentColor" class="lang-block" data-lang="fr">Modes de toucher</text>
-          <text x="622" y="114" font-size="10" fill="currentColor" class="lang-block" data-lang="en">Tap modes</text>
-          <line x1="620" y1="111" x2="606" y2="111" stroke="currentColor" stroke-width="1.2" opacity="0.8" marker-end="url(#rps)"/>
-          <text x="622" y="166" font-size="10" fill="currentColor">Route</text>
-          <line x1="618" y1="163" x2="576" y2="161" stroke="currentColor" stroke-width="1.2" opacity="0.8" marker-end="url(#rps)"/>
-          <text x="622" y="270" font-size="10" fill="currentColor" class="lang-block" data-lang="fr">Boîte</text>
-          <text x="622" y="270" font-size="10" fill="currentColor" class="lang-block" data-lang="en">Leg box</text>
-          <text x="622" y="282" font-size="10" fill="currentColor" class="lang-block" data-lang="fr">de branche</text>
-          <text x="622" y="282" font-size="10" fill="currentColor" class="lang-block" data-lang="en">per leg</text>
-          <line x1="618" y1="272" x2="473" y2="268" stroke="currentColor" stroke-width="1.2" opacity="0.8" marker-end="url(#rps)"/>
-          <text x="622" y="330" font-size="10" fill="currentColor" class="lang-block" data-lang="fr">Carte</text>
-          <text x="622" y="330" font-size="10" fill="currentColor" class="lang-block" data-lang="en">Map</text>
-          <line x1="618" y1="327" x2="600" y2="327" stroke="currentColor" stroke-width="1.2" opacity="0.8" marker-end="url(#rps)"/>
-        </svg>
-        <div class="fm-schema-legend">
-          <span class="lang-block" data-lang="fr">Fig. 1 — L’écran du Route Planner : la carte, ses modes de toucher et le panneau.</span>
-          <span class="lang-block" data-lang="en">Fig. 1 — The Route Planner screen: the map, its tap modes, and the panel.</span>
-        </div>
-      </div>
-
       <div class="fm-prose">
         <span id="rp-2"></span>
         <h3 class="lang-block" data-lang="fr">Les gestes</h3>
         <h3 class="lang-block" data-lang="en">The gestures</h3>
-        <h4 class="lang-block" data-lang="fr">Le théâtre et le fond</h4>
-        <h4 class="lang-block" data-lang="en">The theatre and the base map</h4>
-        <div class="lang-block" data-lang="fr"><p>Le sélecteur <strong>Théâtre</strong> choisit la carte de DCS ; la <strong>Carte DCS</strong> est grisée là où DCS n’en a pas, et la carte de navigation de Flappie n’existe que sur le Caucase. <strong>Affichage ▾</strong> règle le fond, les unités et ce que montre la carte ; un point ambre sur le bouton signale un réglage changé. La loupe, en haut à gauche de la carte, cherche un lieu ou un objet nommé.</p></div>
-        <div class="lang-block" data-lang="en"><p>The <strong>Theatre</strong> selector chooses the DCS map; the <strong>DCS map</strong> is greyed out where DCS has none, and Flappie’s navigation map exists only on the Caucasus. <strong>Display ▾</strong> sets the base map, the units and what the map shows; an amber dot on the button marks a changed setting. The magnifier, at the top left of the map, searches for a place or a named object.</p></div>
-        <h4 class="lang-block" data-lang="fr">Ce que fait un toucher</h4>
-        <h4 class="lang-block" data-lang="en">What a touch does</h4>
-        <div class="lang-block" data-lang="fr"><p>En haut à droite de la carte, cinq modes disent ce que fait un toucher :</p></div>
-        <div class="lang-block" data-lang="en"><p>At the top right of the map, five modes say what a tap does:</p></div>
-        <div class="lang-block" data-lang="fr"><ul><li><strong>Point</strong> ajoute un point au bout de la route ;</li><li><strong>Réf.</strong> pose un point de référence ;</li><li><strong>Lire</strong> ne pose rien : un aérodrome ouvre sa fiche, un objet d’un calque montre la sienne ;</li><li><strong>Dessin</strong> ouvre les outils de dessin de vos calques ;</li><li><strong>Règle</strong> mesure cap et distance sur la carte sans rien poser ; quitter le mode efface la mesure.</li></ul></div>
-        <div class="lang-block" data-lang="en"><ul><li><strong>Waypoint</strong> adds a point at the end of the route;</li><li><strong>Ref.</strong> places a reference point;</li><li><strong>Read</strong> places nothing: an airfield opens its sheet, a layer object shows its own;</li><li><strong>Draw</strong> opens the drawing tools for your layers;</li><li><strong>Ruler</strong> measures heading and distance on the map without placing anything; leaving the mode clears the measurement.</li></ul></div>
-        <div class="lang-block" data-lang="fr"><p>En Point et en Réf., un aérodrome touché donne un point à son nom.</p></div>
-        <div class="lang-block" data-lang="en"><p>In Point and Ref., a touched airfield gives a point with its name.</p></div>
-        <h4 class="lang-block" data-lang="fr">Construire la route</h4>
-        <h4 class="lang-block" data-lang="en">Building the route</h4>
-        <div class="lang-block" data-lang="fr"><p>En tête de la section Route, une ligne choisit la route ; + en ajoute une, … ouvre Dupliquer et Supprimer. Touchez la carte pour ajouter un point, glissez-le pour le déplacer ; le + posé sur une branche assez longue y insère un point. Le bloc Ajouter place un point par ses coordonnées ou par cap et distance.</p><p><strong>Groupes…</strong> choisit les groupes qui suivent cette route, ou en crée un ; un groupe ne suit qu’une route, et le Flight Configurator voit le même choix. Une route garde son théâtre : en changer masque les routes des autres théâtres, qui reviennent quand on y retourne.</p></div>
-        <div class="lang-block" data-lang="en"><p>At the top of the Route section, a row chooses the route; + adds one, … opens Duplicate and Delete. Tap the map to add a point, drag it to move it; the + on a long enough leg inserts a point there. The Add block places a point by its coordinates or by heading and distance.</p><p><strong>Groups…</strong> chooses the groups that follow this route, or creates one; a group follows only one route, and the Flight Configurator sees the same choice. A route keeps its theatre: changing theatre hides the routes of the other theatres, which come back when you return.</p></div>
+      </div>
+
+<div class="fm-plate">
+        <div class="fm-schema fm-plate-fig">
+          <svg class="pl-wide" viewBox="0 0 720 518" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="L’écran du Route Planner, une route ouverte" data-aria-fr="L’écran du Route Planner, une route ouverte" data-aria-en="The Route Planner screen, with a route open">
+          <defs><marker id="rpw" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto-start-reverse"><path d="M0,0 L7,3.5 L0,7 Z" fill="currentColor" opacity=".8"/></marker></defs>
+          <text x="360" y="24" font-size="13" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.9" letter-spacing="3">L’ÉCRAN DU ROUTE PLANNER</text>
+          <text x="360" y="24" font-size="13" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en" opacity="0.9" letter-spacing="3">THE ROUTE PLANNER SCREEN</text>
+          <line x1="120" y1="32" x2="600" y2="32" stroke="currentColor" stroke-width=".6" opacity=".3"/>
+          <g transform="translate(0,22)">
+          <rect class="sv-box" x="110" y="44" width="500" height="28" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <text x="118" y="62" font-size="8" fill="currentColor" opacity="0.7" letter-spacing="0.6">░ NAVIGATION</text>
+          <rect x="184" y="49" width="50" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/><text x="209" y="61" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">Ouvrir ▾</text>
+          <text x="209" y="61" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">Open ▾</text>
+          <rect x="238" y="49" width="60" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/><text x="268" y="61" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">Sauvegarder</text>
+          <text x="268" y="61" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">Save</text>
+          <rect x="302" y="49" width="52" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/><text x="328" y="61" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">Exporter ▾</text>
+          <text x="328" y="61" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">Export ▾</text>
+          <rect x="358" y="49" width="58" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/><text x="387" y="61" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">Affichage ▾</text>
+          <text x="387" y="61" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">Display ▾</text>
+          <text x="424" y="61" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.6">THÉÂTRE</text>
+          <text x="424" y="61" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.6">THEATRE</text>
+          <rect x="466" y="49" width="52" height="18" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="471" y="61" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.85">Syrie ▾</text>
+          <text x="471" y="61" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.85">Syria ▾</text>
+          <rect x="524" y="49" width="46" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/><text x="547" y="61" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">Effacer</text>
+          <text x="547" y="61" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">Clear</text>
+          <line x1="209" y1="30" x2="209" y2="49" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="209" cy="49" r="1.8" fill="currentColor"/><circle class="sv-box" cx="209" cy="30" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="209" y="33.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">1</text>
+          <line x1="328" y1="30" x2="328" y2="49" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="328" cy="49" r="1.8" fill="currentColor"/><circle class="sv-box" cx="328" cy="30" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="328" y="33.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">2</text>
+          <line x1="387" y1="30" x2="387" y2="49" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="387" cy="49" r="1.8" fill="currentColor"/><circle class="sv-box" cx="387" cy="30" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="387" y="33.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">3</text>
+          <line x1="492" y1="30" x2="492" y2="49" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="492" cy="49" r="1.8" fill="currentColor"/><circle class="sv-box" cx="492" cy="30" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="492" y="33.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">4</text>
+          <line x1="547" y1="30" x2="547" y2="49" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="547" cy="49" r="1.8" fill="currentColor"/><circle class="sv-box" cx="547" cy="30" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="547" y="33.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">5</text>
+          <path d="M118,91 l6,0 l-3,5 z" fill="currentColor" opacity=".8"/>
+          <text x="130" y="96.5" font-size="8.5" fill="currentColor">01 ░ Route</text>
+          <text x="302" y="96.5" font-size="8" text-anchor="end" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.7">6 points</text>
+          <text x="302" y="96.5" font-size="8" text-anchor="end" fill="currentColor" class="lang-block" data-lang="en" opacity="0.7">6 waypoints</text>
+          <path d="M312,87 l4,3.5 l4,-3.5 M312,98 l4,-3.5 l4,3.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <line x1="110" y1="104" x2="330" y2="104" stroke="currentColor" stroke-width=".6" opacity=".4"/>
+          <rect x="118" y="112" width="140" height="16" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="123" y="123" font-size="8" fill="currentColor" opacity="0.85">1 · STEPPE WIND M3</text>
+          <path d="M247,118.5 l6,0 l-3,4 z" fill="currentColor" opacity=".7"/>
+          <rect x="262" y="112" width="26" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/><text x="275" y="123" font-size="9" text-anchor="middle" fill="currentColor">+</text>
+          <rect x="292" y="112" width="26" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/><text x="305" y="123" font-size="9" text-anchor="middle" fill="currentColor">…</text>
+          <text x="118" y="140" font-size="8" fill="currentColor" opacity="0.65">1 / 1 routes</text>
+          <text x="118" y="156" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.75">Nom de la route</text>
+          <text x="118" y="156" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.75">Route name</text><rect x="118" y="159" width="204" height="15" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="123" y="169.5" font-size="8" fill="currentColor" opacity="0.85">STEPPE WIND M3</text>
+          <text x="118" y="186" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.75">GROUPES</text>
+          <text x="118" y="186" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.75">GROUPS</text>
+          <text x="166" y="186" font-size="8.5" fill="currentColor">CAESAR</text>
+          <rect x="118" y="192" width="204" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/><text x="220" y="203" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">Groupes…</text>
+          <text x="220" y="203" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">Groups…</text>
+          <text x="118" y="222" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.7">N°</text>
+          <text x="118" y="222" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.7">No.</text>
+          <text x="138" y="222" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.7">Nom</text>
+          <text x="138" y="222" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.7">Name</text>
+          <text x="202" y="222" font-size="8" fill="currentColor" opacity="0.7">Alt. (m)</text>
+          <text x="240" y="222" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.7">Vit. km/h</text>
+          <text x="240" y="222" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.7">Spd km/h</text>
+          <text x="286" y="222" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.7">Réf.</text>
+          <text x="286" y="222" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.7">Ref.</text>
+          <rect x="118" y="228" width="15" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="123" y="237" font-size="8" fill="currentColor" opacity="0.85">0</text>
+          <rect x="138" y="228" width="60" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="143" y="237" font-size="8" fill="currentColor" opacity="0.85">AKROTIRI</text>
+          <rect x="202" y="228" width="34" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="207" y="237" font-size="8" fill="currentColor" opacity="0.85">0</text>
+          <rect x="240" y="228" width="42" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.45" stroke-dasharray="3 2"/>
+          <text x="261" y="237" font-size="8" text-anchor="middle" fill="currentColor" opacity="0.6">—</text>
+          <rect x="286" y="228" width="26" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="291" y="237" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.85">MER</text>
+          <text x="291" y="237" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.85">MSL</text>
+          <text x="320" y="237" font-size="8" text-anchor="middle" fill="currentColor" opacity="0.7">✕</text>
+          <rect x="118" y="243" width="15" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="123" y="252" font-size="8" fill="currentColor" opacity="0.85">1</text>
+          <rect x="138" y="243" width="60" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="143" y="252" font-size="8" fill="currentColor" opacity="0.85">WP1</text>
+          <rect x="202" y="243" width="34" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="207" y="252" font-size="8" fill="currentColor" opacity="0.85">30</text>
+          <rect x="240" y="243" width="42" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="245" y="252" font-size="8" fill="currentColor" opacity="0.85">220</text>
+          <rect x="286" y="243" width="26" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="291" y="252" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.85">SOL</text>
+          <text x="291" y="252" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.85">AGL</text>
+          <text x="320" y="252" font-size="8" text-anchor="middle" fill="currentColor" opacity="0.7">✕</text>
+          <rect x="118" y="258" width="15" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="123" y="267" font-size="8" fill="currentColor" opacity="0.85">2</text>
+          <rect x="138" y="258" width="60" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="143" y="267" font-size="8" fill="currentColor" opacity="0.85">POLIS</text>
+          <rect x="202" y="258" width="34" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="207" y="267" font-size="8" fill="currentColor" opacity="0.85">30</text>
+          <rect x="240" y="258" width="42" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="245" y="267" font-size="8" fill="currentColor" opacity="0.85">220</text>
+          <rect x="286" y="258" width="26" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="291" y="267" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.85">SOL</text>
+          <text x="291" y="267" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.85">AGL</text>
+          <text x="320" y="267" font-size="8" text-anchor="middle" fill="currentColor" opacity="0.7">✕</text>
+          <rect x="118" y="273" width="15" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="123" y="282" font-size="8" fill="currentColor" opacity="0.85">3</text>
+          <rect x="138" y="273" width="60" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="143" y="282" font-size="8" fill="currentColor" opacity="0.85">IP</text>
+          <rect x="202" y="273" width="34" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="207" y="282" font-size="8" fill="currentColor" opacity="0.85">50</text>
+          <rect x="240" y="273" width="42" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="245" y="282" font-size="8" fill="currentColor" opacity="0.85">220</text>
+          <rect x="286" y="273" width="26" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="291" y="282" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.85">SOL</text>
+          <text x="291" y="282" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.85">AGL</text>
+          <text x="320" y="282" font-size="8" text-anchor="middle" fill="currentColor" opacity="0.7">✕</text>
+          <rect x="118" y="288" width="15" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="123" y="297" font-size="8" fill="currentColor" opacity="0.85">4</text>
+          <rect x="138" y="288" width="60" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="143" y="297" font-size="8" fill="currentColor" opacity="0.85">KARAVOSTASI</text>
+          <rect x="202" y="288" width="34" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="207" y="297" font-size="8" fill="currentColor" opacity="0.85">50</text>
+          <rect x="240" y="288" width="42" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="245" y="297" font-size="8" fill="currentColor" opacity="0.85">220</text>
+          <rect x="286" y="288" width="26" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="291" y="297" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.85">SOL</text>
+          <text x="291" y="297" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.85">AGL</text>
+          <text x="320" y="297" font-size="8" text-anchor="middle" fill="currentColor" opacity="0.7">✕</text>
+          <rect x="118" y="303" width="15" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="123" y="312" font-size="8" fill="currentColor" opacity="0.85">5</text>
+          <rect x="138" y="303" width="60" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="143" y="312" font-size="8" fill="currentColor" opacity="0.85">POLIS</text>
+          <rect x="202" y="303" width="34" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="207" y="312" font-size="8" fill="currentColor" opacity="0.85">0</text>
+          <rect x="240" y="303" width="42" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="245" y="312" font-size="8" fill="currentColor" opacity="0.85">220</text>
+          <rect x="286" y="303" width="26" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="291" y="312" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.85">SOL</text>
+          <text x="291" y="312" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.85">AGL</text>
+          <text x="320" y="312" font-size="8" text-anchor="middle" fill="currentColor" opacity="0.7">✕</text>
+          <text x="118" y="332" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.75">AJOUTER</text>
+          <text x="118" y="332" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.75">ADD</text>
+          <rect class="sv-pill" x="118" y="338" width="100" height="15" rx="1.5"/><text x="168" y="348.5" font-size="8" text-anchor="middle" class="sv-pill-t lang-block" data-lang="fr">Coordonnées</text>
+          <text x="168" y="348.5" font-size="8" text-anchor="middle" class="sv-pill-t lang-block" data-lang="en">Coordinates</text>
+          <rect x="222" y="338" width="100" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/><text x="272" y="348.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">Cap et distance</text>
+          <text x="272" y="348.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">Heading and distance</text>
+          <rect x="118" y="358" width="204" height="15" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="123" y="368.5" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.85">MGRS, DMS, DDM ou décimal</text>
+          <text x="123" y="368.5" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.85">MGRS, DMS, DDM or decimal</text>
+          <rect x="118" y="378" width="100" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/><text x="168" y="388.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">+ Point</text>
+          <text x="168" y="388.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">+ Waypoint</text>
+          <rect x="222" y="378" width="100" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/><text x="272" y="388.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">+ Réf.</text>
+          <text x="272" y="388.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">+ Ref.</text>
+          <rect x="110" y="82" width="220" height="320" rx="2" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".8"/>
+          <rect x="110" y="408" width="220" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/>
+          <path d="M119,416 l5,3 l-5,3 z" fill="currentColor" opacity=".8"/>
+          <text x="130" y="422.5" font-size="8.5" fill="currentColor" class="lang-block" data-lang="fr">02 ░ Points de référence</text>
+          <text x="130" y="422.5" font-size="8.5" fill="currentColor" class="lang-block" data-lang="en">02 ░ Reference points</text>
+          <path d="M312,413 l4,3.5 l4,-3.5 M312,424 l4,-3.5 l4,3.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <rect x="110" y="435" width="220" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/>
+          <path d="M119,443 l5,3 l-5,3 z" fill="currentColor" opacity=".8"/>
+          <text x="130" y="449.5" font-size="8.5" fill="currentColor" class="lang-block" data-lang="fr">03 ░ Calques</text>
+          <text x="130" y="449.5" font-size="8.5" fill="currentColor" class="lang-block" data-lang="en">03 ░ Layers</text>
+          <path d="M312,440 l4,3.5 l4,-3.5 M312,451 l4,-3.5 l4,3.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <rect x="110" y="462" width="220" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/>
+          <path d="M119,470 l5,3 l-5,3 z" fill="currentColor" opacity=".8"/>
+          <text x="130" y="476.5" font-size="8.5" fill="currentColor">04 ░ Navigation</text>
+          <path d="M312,467 l4,3.5 l4,-3.5 M312,478 l4,-3.5 l4,3.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <rect x="336" y="82" width="274" height="402" rx="2" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.8"/>
+          <line x1="356" y1="82" x2="356" y2="484" stroke="currentColor" stroke-width=".5" opacity=".18"/>
+          <line x1="396" y1="82" x2="396" y2="484" stroke="currentColor" stroke-width=".5" opacity=".18"/>
+          <line x1="436" y1="82" x2="436" y2="484" stroke="currentColor" stroke-width=".5" opacity=".18"/>
+          <line x1="476" y1="82" x2="476" y2="484" stroke="currentColor" stroke-width=".5" opacity=".18"/>
+          <line x1="516" y1="82" x2="516" y2="484" stroke="currentColor" stroke-width=".5" opacity=".18"/>
+          <line x1="556" y1="82" x2="556" y2="484" stroke="currentColor" stroke-width=".5" opacity=".18"/>
+          <line x1="596" y1="82" x2="596" y2="484" stroke="currentColor" stroke-width=".5" opacity=".18"/>
+          <line x1="336" y1="102" x2="610" y2="102" stroke="currentColor" stroke-width=".5" opacity=".18"/>
+          <line x1="336" y1="142" x2="610" y2="142" stroke="currentColor" stroke-width=".5" opacity=".18"/>
+          <line x1="336" y1="182" x2="610" y2="182" stroke="currentColor" stroke-width=".5" opacity=".18"/>
+          <line x1="336" y1="222" x2="610" y2="222" stroke="currentColor" stroke-width=".5" opacity=".18"/>
+          <line x1="336" y1="262" x2="610" y2="262" stroke="currentColor" stroke-width=".5" opacity=".18"/>
+          <line x1="336" y1="302" x2="610" y2="302" stroke="currentColor" stroke-width=".5" opacity=".18"/>
+          <line x1="336" y1="342" x2="610" y2="342" stroke="currentColor" stroke-width=".5" opacity=".18"/>
+          <line x1="336" y1="382" x2="610" y2="382" stroke="currentColor" stroke-width=".5" opacity=".18"/>
+          <line x1="336" y1="422" x2="610" y2="422" stroke="currentColor" stroke-width=".5" opacity=".18"/>
+          <line x1="336" y1="462" x2="610" y2="462" stroke="currentColor" stroke-width=".5" opacity=".18"/>
+          <rect x="342" y="88" width="16" height="30" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/>
+          <line x1="344" y1="103" x2="356" y2="103" stroke="currentColor" stroke-width=".6" opacity=".5"/>
+          <text x="350" y="99" font-size="9" text-anchor="middle" fill="currentColor">+</text>
+          <text x="350" y="114" font-size="9" text-anchor="middle" fill="currentColor">−</text>
+          <rect x="342" y="124" width="16" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/>
+          <circle cx="349" cy="131" r="3.2" fill="none" stroke="currentColor" stroke-width="1.1"/><line x1="351.4" y1="133.4" x2="354" y2="136" stroke="currentColor" stroke-width="1.3"/>
+          <rect class="sv-box" x="413.9" y="86" width="192.1" height="20" rx="2" stroke="currentColor" stroke-width="1"/>
+          <rect class="sv-pill" x="415.9" y="88" width="50.4" height="16" rx="1.5"/><text x="441.1" y="99" font-size="8" text-anchor="middle" class="sv-pill-t lang-block" data-lang="fr">POINT</text>
+          <text x="441.1" y="99" font-size="8" text-anchor="middle" class="sv-pill-t lang-block" data-lang="en">WAYPOINT</text>
+          <rect x="467.3" y="88" width="29.2" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5"/><text x="481.9" y="99" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">RÉF.</text>
+          <text x="481.9" y="99" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">REF.</text>
+          <rect x="497.5" y="88" width="29.2" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5"/><text x="512.1" y="99" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">LIRE</text>
+          <text x="512.1" y="99" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">READ</text>
+          <rect x="527.7" y="88" width="39.8" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5"/><text x="547.6" y="99" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">DESSIN</text>
+          <text x="547.6" y="99" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">DRAW</text>
+          <rect x="568.5" y="88" width="34.5" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5"/><text x="585.75" y="99" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">RÈGLE</text>
+          <text x="585.75" y="99" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">RULER</text>
+          <path d="M418.2,155.4 l7,7 l-7,7 l-7,-7 z" class="sv-box" stroke="currentColor" stroke-width="1.2"/>
+          <text x="418.2" y="165.4" font-size="8" text-anchor="middle" fill="currentColor" font-weight="700">A</text>
+          <text x="429.2" y="165.4" font-size="8" fill="currentColor" opacity="0.85">ÎLE PETRA</text>
+          <circle cx="379.84" cy="379.48" r="3.6" fill="none" stroke="currentColor" stroke-width="1"/><circle cx="379.84" cy="379.48" r="1.1" fill="currentColor"/>
+          <text x="386.84" y="382.48" font-size="8" fill="currentColor" opacity="0.7">Paphos</text>
+          <path d="M571.64,431.74 L473,415.66 L404.5,278.98 L462.04,238.78 L555.2,202.6 L404.5,278.98" fill="none" stroke="currentColor" stroke-width="2.2" opacity=".75"/>
+          <line x1="464.047" y1="406.724" x2="471.199" y2="403.14" stroke="currentColor" stroke-width="1" opacity=".7"/>
+          <line x1="458.671" y1="395.996" x2="465.823" y2="392.412" stroke="currentColor" stroke-width="1" opacity=".7"/>
+          <line x1="453.294" y1="385.268" x2="460.446" y2="381.684" stroke="currentColor" stroke-width="1" opacity=".7"/>
+          <line x1="447.918" y1="374.54" x2="455.07" y2="370.955" stroke="currentColor" stroke-width="1" opacity=".7"/>
+          <line x1="442.541" y1="363.812" x2="449.693" y2="360.227" stroke="currentColor" stroke-width="1" opacity=".7"/>
+          <line x1="437.164" y1="353.084" x2="444.316" y2="349.499" stroke="currentColor" stroke-width="1" opacity=".7"/>
+          <line x1="431.788" y1="342.356" x2="438.94" y2="338.771" stroke="currentColor" stroke-width="1" opacity=".7"/>
+          <line x1="426.411" y1="331.627" x2="433.563" y2="328.043" stroke="currentColor" stroke-width="1" opacity=".7"/>
+          <line x1="421.034" y1="320.899" x2="428.187" y2="317.315" stroke="currentColor" stroke-width="1" opacity=".7"/>
+          <line x1="415.658" y1="310.171" x2="422.81" y2="306.587" stroke="currentColor" stroke-width="1" opacity=".7"/>
+          <line x1="410.281" y1="299.443" x2="417.433" y2="295.859" stroke="currentColor" stroke-width="1" opacity=".7"/>
+          <circle class="sv-box" cx="522.32" cy="423.7" r="4.2" stroke="currentColor" stroke-width="1"/>
+          <text x="522.32" y="426.5" font-size="8" text-anchor="middle" fill="currentColor">+</text>
+          <circle class="sv-box" cx="571.64" cy="431.74" r="7.5" stroke="currentColor" stroke-width="1.6"/>
+          <text x="571.64" y="434.74" font-size="8" text-anchor="middle" fill="currentColor" font-weight="700">0</text>
+          <text x="571.64" y="450.74" font-size="8" text-anchor="middle" fill="currentColor" opacity="0.9">AKROTIRI</text>
+          <circle class="sv-box" cx="473" cy="415.66" r="7.5" stroke="currentColor" stroke-width="1.6"/>
+          <text x="473" y="418.66" font-size="8" text-anchor="middle" fill="currentColor" font-weight="700">1</text>
+          <text x="484" y="418.66" font-size="8" fill="currentColor" opacity="0.9">WP1</text>
+          <circle class="sv-box" cx="462.04" cy="238.78" r="7.5" stroke="currentColor" stroke-width="1.6"/>
+          <text x="462.04" y="241.78" font-size="8" text-anchor="middle" fill="currentColor" font-weight="700">3</text>
+          <circle class="sv-box" cx="555.2" cy="202.6" r="7.5" stroke="currentColor" stroke-width="1.6"/>
+          <text x="555.2" y="205.6" font-size="8" text-anchor="middle" fill="currentColor" font-weight="700">4</text>
+          <text x="566.2" y="205.6" font-size="8" fill="currentColor" opacity="0.9">KARAVOSTASI</text>
+          <circle class="sv-box" cx="404.5" cy="278.98" r="7.5" stroke="currentColor" stroke-width="1.6"/>
+          <text x="404.5" y="281.98" font-size="8" text-anchor="middle" fill="currentColor" font-weight="700">5</text>
+          <line x1="516.62" y1="194.69" x2="508.62" y2="220.69" stroke="currentColor" stroke-width=".8" opacity=".6"/>
+          <rect class="sv-box" x="504.62" y="148.69" width="54" height="46" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <text x="531.62" y="159.69" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">083°V</text>
+          <text x="531.62" y="159.69" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">083°T</text>
+          <text x="531.62" y="169.69" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">19,9 km</text>
+          <text x="531.62" y="169.69" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">19.9 km</text>
+          <text x="531.62" y="179.69" font-size="8" text-anchor="middle" fill="currentColor">220 km/h</text>
+          <text x="531.62" y="189.69" font-size="8" text-anchor="middle" fill="currentColor">ETE 05:25</text>
+          <line x1="92" y1="120" x2="118" y2="120" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="118" cy="120" r="1.8" fill="currentColor"/><circle class="sv-box" cx="92" cy="120" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="92" y="123.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">6</text>
+          <line x1="92" y1="200" x2="118" y2="200" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="118" cy="200" r="1.8" fill="currentColor"/><circle class="sv-box" cx="92" cy="200" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="92" y="203.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">7</text>
+          <line x1="92" y1="234" x2="118" y2="234" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="118" cy="234" r="1.8" fill="currentColor"/><circle class="sv-box" cx="92" cy="234" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="92" y="237.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">8</text>
+          <line x1="92" y1="345.5" x2="118" y2="345.5" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="118" cy="345.5" r="1.8" fill="currentColor"/><circle class="sv-box" cx="92" cy="345.5" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="92" y="348.7" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">9</text>
+          <line x1="92" y1="419" x2="110" y2="419" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="110" cy="419" r="1.8" fill="currentColor"/><circle class="sv-box" cx="92" cy="419" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="92" y="422.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">10</text>
+          <line x1="380" y1="132" x2="358" y2="132" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="358" cy="132" r="1.8" fill="currentColor"/><circle class="sv-box" cx="380" cy="132" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="380" y="135.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">11</text>
+          <line x1="632" y1="96" x2="604" y2="96" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="604" cy="96" r="1.8" fill="currentColor"/><circle class="sv-box" cx="632" cy="96" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="632" y="99.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">12</text>
+          <line x1="632" y1="431.74" x2="579.14" y2="431.74" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="579.14" cy="431.74" r="1.8" fill="currentColor"/><circle class="sv-box" cx="632" cy="431.74" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="632" y="434.94" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">13</text>
+          <line x1="632" y1="162.69" x2="558.62" y2="162.69" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="558.62" cy="162.69" r="1.8" fill="currentColor"/><circle class="sv-box" cx="632" cy="162.69" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="632" y="165.89" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">14</text>
+          </g>
+          </svg>
+          <svg class="pl-tall" viewBox="0 0 360 502" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="L’écran du Route Planner au téléphone, une route ouverte" data-aria-fr="L’écran du Route Planner au téléphone, une route ouverte" data-aria-en="The Route Planner screen on a phone, with a route open">
+          <defs><marker id="rpt" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto-start-reverse"><path d="M0,0 L7,3.5 L0,7 Z" fill="currentColor" opacity=".8"/></marker></defs><defs><linearGradient id="rpt-fade" x1="0" x2="1"><stop offset="0" stop-color="var(--paper-light)" stop-opacity="0"/><stop offset="1" stop-color="var(--paper-light)" stop-opacity="1"/></linearGradient></defs>
+          <text x="180" y="22" font-size="12" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.9" letter-spacing="2.5">L’ÉCRAN DU ROUTE PLANNER</text>
+          <text x="180" y="22" font-size="12" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en" opacity="0.9" letter-spacing="2.5">THE ROUTE PLANNER SCREEN</text>
+          <text x="180" y="38" font-size="8.5" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.7">au téléphone</text>
+          <text x="180" y="38" font-size="8.5" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en" opacity="0.7">on a phone</text>
+          <g transform="translate(0,12)">
+          <rect class="sv-box" x="62" y="62" width="236" height="30" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <rect x="66" y="66" width="20" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/><text x="76" y="80" font-size="8" text-anchor="middle" fill="currentColor">◄</text>
+          <text x="92" y="81" font-size="8.5" fill="currentColor" font-weight="700">R·P</text>
+          <rect x="116" y="66" width="28" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/>
+          <path d="M119,73 h4 l1.5,1.5 h6.5 v7 h-12 z" fill="none" stroke="currentColor" stroke-width="1.1"/>
+          <path d="M134,76 l3,3 l3,-3" fill="none" stroke="currentColor" stroke-width="1"/>
+          <rect x="148" y="66" width="22" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/>
+          <rect x="154" y="72" width="10" height="10" rx="1" fill="none" stroke="currentColor" stroke-width="1.1"/><rect x="156.5" y="72" width="5" height="3" fill="none" stroke="currentColor" stroke-width=".9"/>
+          <rect x="174" y="66" width="28" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/>
+          <path d="M183,79 v-8 m-3,3 l3,-3 l3,3 M177,77 v5 h12 v-5" fill="none" stroke="currentColor" stroke-width="1.1"/>
+          <path d="M192,76 l3,3 l3,-3" fill="none" stroke="currentColor" stroke-width="1"/>
+          <rect x="206" y="66" width="22" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/>
+          <path d="M210,77 q7,-7 14,0 q-7,7 -14,0 z" fill="none" stroke="currentColor" stroke-width="1.1"/><circle cx="217" cy="77" r="2" fill="currentColor"/>
+          <rect x="232" y="66" width="62" height="22" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="237" y="80" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.85">SYRIE</text>
+          <text x="237" y="80" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.85">SYRIA</text>
+          <rect x="282" y="63" width="14" height="28" fill="url(#rpt-fade)" stroke="none"/>
+          <line x1="130" y1="48" x2="130" y2="66" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="130" cy="66" r="1.8" fill="currentColor"/><circle class="sv-box" cx="130" cy="48" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="130" y="51.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">1</text>
+          <line x1="188" y1="48" x2="188" y2="66" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="188" cy="66" r="1.8" fill="currentColor"/><circle class="sv-box" cx="188" cy="48" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="188" y="51.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">2</text>
+          <line x1="217" y1="48" x2="217" y2="66" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="217" cy="66" r="1.8" fill="currentColor"/><circle class="sv-box" cx="217" cy="48" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="217" y="51.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">3</text>
+          <line x1="263" y1="48" x2="263" y2="66" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="263" cy="66" r="1.8" fill="currentColor"/><circle class="sv-box" cx="263" cy="48" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="263" y="51.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">4</text>
+          <rect x="62" y="98" width="236" height="220" rx="2" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.8"/>
+          <line x1="78" y1="98" x2="78" y2="318" stroke="currentColor" stroke-width=".5" opacity=".18"/>
+          <line x1="110" y1="98" x2="110" y2="318" stroke="currentColor" stroke-width=".5" opacity=".18"/>
+          <line x1="142" y1="98" x2="142" y2="318" stroke="currentColor" stroke-width=".5" opacity=".18"/>
+          <line x1="174" y1="98" x2="174" y2="318" stroke="currentColor" stroke-width=".5" opacity=".18"/>
+          <line x1="206" y1="98" x2="206" y2="318" stroke="currentColor" stroke-width=".5" opacity=".18"/>
+          <line x1="238" y1="98" x2="238" y2="318" stroke="currentColor" stroke-width=".5" opacity=".18"/>
+          <line x1="270" y1="98" x2="270" y2="318" stroke="currentColor" stroke-width=".5" opacity=".18"/>
+          <line x1="62" y1="114" x2="298" y2="114" stroke="currentColor" stroke-width=".5" opacity=".18"/>
+          <line x1="62" y1="146" x2="298" y2="146" stroke="currentColor" stroke-width=".5" opacity=".18"/>
+          <line x1="62" y1="178" x2="298" y2="178" stroke="currentColor" stroke-width=".5" opacity=".18"/>
+          <line x1="62" y1="210" x2="298" y2="210" stroke="currentColor" stroke-width=".5" opacity=".18"/>
+          <line x1="62" y1="242" x2="298" y2="242" stroke="currentColor" stroke-width=".5" opacity=".18"/>
+          <line x1="62" y1="274" x2="298" y2="274" stroke="currentColor" stroke-width=".5" opacity=".18"/>
+          <line x1="62" y1="306" x2="298" y2="306" stroke="currentColor" stroke-width=".5" opacity=".18"/>
+          <rect x="68" y="104" width="16" height="30" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/>
+          <line x1="70" y1="119" x2="82" y2="119" stroke="currentColor" stroke-width=".6" opacity=".5"/>
+          <text x="76" y="115" font-size="9" text-anchor="middle" fill="currentColor">+</text>
+          <text x="76" y="130" font-size="9" text-anchor="middle" fill="currentColor">−</text>
+          <rect x="68" y="140" width="16" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/>
+          <circle cx="75" cy="147" r="3.2" fill="none" stroke="currentColor" stroke-width="1.1"/><line x1="77.4" y1="149.4" x2="80" y2="152" stroke="currentColor" stroke-width="1.3"/>
+          <rect class="sv-box" x="101.9" y="102" width="192.1" height="20" rx="2" stroke="currentColor" stroke-width="1"/>
+          <rect class="sv-pill" x="103.9" y="104" width="50.4" height="16" rx="1.5"/><text x="129.1" y="115" font-size="8" text-anchor="middle" class="sv-pill-t lang-block" data-lang="fr">POINT</text>
+          <text x="129.1" y="115" font-size="8" text-anchor="middle" class="sv-pill-t lang-block" data-lang="en">WAYPOINT</text>
+          <rect x="155.3" y="104" width="29.2" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5"/><text x="169.9" y="115" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">RÉF.</text>
+          <text x="169.9" y="115" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">REF.</text>
+          <rect x="185.5" y="104" width="29.2" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5"/><text x="200.1" y="115" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">LIRE</text>
+          <text x="200.1" y="115" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">READ</text>
+          <rect x="215.7" y="104" width="39.8" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5"/><text x="235.6" y="115" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">DESSIN</text>
+          <text x="235.6" y="115" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">DRAW</text>
+          <rect x="256.5" y="104" width="34.5" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5"/><text x="273.75" y="115" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">RÈGLE</text>
+          <text x="273.75" y="115" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">RULER</text>
+          <path d="M132.8,135 l7,7 l-7,7 l-7,-7 z" class="sv-box" stroke="currentColor" stroke-width="1.2"/>
+          <text x="132.8" y="145" font-size="7.5" text-anchor="middle" fill="currentColor" font-weight="700">A</text>
+          <circle cx="99.76" cy="260.8" r="3.6" fill="none" stroke="currentColor" stroke-width="1"/><circle cx="99.76" cy="260.8" r="1.1" fill="currentColor"/>
+          <text x="106.76" y="263.8" font-size="8" fill="currentColor" opacity="0.7">Paphos</text>
+          <path d="M264.96,289.4 L180,280.6 L121,205.8 L170.56,183.8 L250.8,164 L121,205.8" fill="none" stroke="currentColor" stroke-width="2.2" opacity=".75"/>
+          <line x1="170.914" y1="275.54" x2="177.195" y2="270.585" stroke="currentColor" stroke-width="1" opacity=".7"/>
+          <line x1="164.969" y1="268.002" x2="171.25" y2="263.048" stroke="currentColor" stroke-width="1" opacity=".7"/>
+          <line x1="159.023" y1="260.465" x2="165.305" y2="255.51" stroke="currentColor" stroke-width="1" opacity=".7"/>
+          <line x1="153.078" y1="252.927" x2="159.359" y2="247.973" stroke="currentColor" stroke-width="1" opacity=".7"/>
+          <line x1="147.133" y1="245.39" x2="153.414" y2="240.436" stroke="currentColor" stroke-width="1" opacity=".7"/>
+          <line x1="141.187" y1="237.852" x2="147.469" y2="232.898" stroke="currentColor" stroke-width="1" opacity=".7"/>
+          <line x1="135.242" y1="230.315" x2="141.523" y2="225.361" stroke="currentColor" stroke-width="1" opacity=".7"/>
+          <line x1="129.297" y1="222.778" x2="135.578" y2="217.823" stroke="currentColor" stroke-width="1" opacity=".7"/>
+          <circle class="sv-box" cx="222.48" cy="285" r="4.2" stroke="currentColor" stroke-width="1"/>
+          <text x="222.48" y="287.8" font-size="8" text-anchor="middle" fill="currentColor">+</text>
+          <circle class="sv-box" cx="264.96" cy="289.4" r="7.5" stroke="currentColor" stroke-width="1.6"/>
+          <text x="264.96" y="292.4" font-size="8" text-anchor="middle" fill="currentColor" font-weight="700">0</text>
+          <circle class="sv-box" cx="180" cy="280.6" r="7.5" stroke="currentColor" stroke-width="1.6"/>
+          <text x="180" y="283.6" font-size="8" text-anchor="middle" fill="currentColor" font-weight="700">1</text>
+          <circle class="sv-box" cx="170.56" cy="183.8" r="7.5" stroke="currentColor" stroke-width="1.6"/>
+          <text x="170.56" y="186.8" font-size="8" text-anchor="middle" fill="currentColor" font-weight="700">3</text>
+          <circle class="sv-box" cx="250.8" cy="164" r="7.5" stroke="currentColor" stroke-width="1.6"/>
+          <text x="250.8" y="167" font-size="8" text-anchor="middle" fill="currentColor" font-weight="700">4</text>
+          <circle class="sv-box" cx="121" cy="205.8" r="7.5" stroke="currentColor" stroke-width="1.6"/>
+          <text x="121" y="208.8" font-size="8" text-anchor="middle" fill="currentColor" font-weight="700">5</text>
+          <line x1="228.68" y1="189.9" x2="210.68" y2="173.9" stroke="currentColor" stroke-width=".8" opacity=".6"/>
+          <rect class="sv-box" x="216.68" y="189.9" width="50" height="44" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <text x="241.68" y="200.9" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">083°V</text>
+          <text x="241.68" y="200.9" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">083°T</text>
+          <text x="241.68" y="210.9" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">19,9 km</text>
+          <text x="241.68" y="210.9" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">19.9 km</text>
+          <text x="241.68" y="220.9" font-size="8" text-anchor="middle" fill="currentColor">220 km/h</text>
+          <text x="241.68" y="230.9" font-size="8" text-anchor="middle" fill="currentColor">ETE 05:25</text>
+          <rect x="62" y="320" width="236" height="12" fill="none" stroke="currentColor" stroke-width=".6" opacity=".35"/>
+          <path d="M166,324 h28 M166,328 h28" stroke="currentColor" stroke-width="1.1" opacity=".7"/>
+          <path d="M70,347 l6,0 l-3,5 z" fill="currentColor" opacity=".8"/>
+          <text x="82" y="352.5" font-size="8.5" fill="currentColor">01 ░ Route</text>
+          <text x="270" y="352.5" font-size="8" text-anchor="end" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.7">6 points</text>
+          <text x="270" y="352.5" font-size="8" text-anchor="end" fill="currentColor" class="lang-block" data-lang="en" opacity="0.7">6 waypoints</text>
+          <path d="M280,343 l4,3.5 l4,-3.5 M280,354 l4,-3.5 l4,3.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <line x1="62" y1="360" x2="298" y2="360" stroke="currentColor" stroke-width=".6" opacity=".4"/>
+          <rect x="70" y="368" width="156" height="16" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="75" y="379" font-size="8" fill="currentColor" opacity="0.85">1 · STEPPE WIND M3</text>
+          <path d="M215,374.5 l6,0 l-3,4 z" fill="currentColor" opacity=".7"/>
+          <rect x="230" y="368" width="26" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/><text x="243" y="379" font-size="9" text-anchor="middle" fill="currentColor">+</text>
+          <rect x="260" y="368" width="26" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/><text x="273" y="379" font-size="9" text-anchor="middle" fill="currentColor">…</text>
+          <text x="70" y="396" font-size="8" fill="currentColor" opacity="0.65">1 / 1 routes</text>
+          <text x="70" y="412" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.75">Nom de la route</text>
+          <text x="70" y="412" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.75">Route name</text><rect x="70" y="415" width="220" height="15" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="75" y="425.5" font-size="8" fill="currentColor" opacity="0.85">STEPPE WIND M3</text>
+          <text x="70" y="442" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.75">GROUPES</text>
+          <text x="70" y="442" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.75">GROUPS</text>
+          <text x="118" y="442" font-size="8.5" fill="currentColor">CAESAR</text>
+          <rect x="70" y="448" width="220" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/><text x="180" y="459" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">Groupes…</text>
+          <text x="180" y="459" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">Groups…</text>
+          <path d="M62,478 V338 H298 V478" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".8"/>
+          <line x1="62" y1="478" x2="298" y2="478" stroke="currentColor" stroke-width="1" stroke-dasharray="3 3" opacity=".5"/>
+          <line x1="30" y1="148" x2="62" y2="148" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="62" cy="148" r="1.8" fill="currentColor"/><circle class="sv-box" cx="30" cy="148" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="30" y="151.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">11</text>
+          <line x1="330" y1="112" x2="292" y2="112" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="292" cy="112" r="1.8" fill="currentColor"/><circle class="sv-box" cx="330" cy="112" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="330" y="115.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">12</text>
+          <line x1="330" y1="203.9" x2="298" y2="203.9" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="298" cy="203.9" r="1.8" fill="currentColor"/><circle class="sv-box" cx="330" cy="203.9" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="330" y="207.1" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">14</text>
+          <line x1="330" y1="289.4" x2="272.46" y2="289.4" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="272.46" cy="289.4" r="1.8" fill="currentColor"/><circle class="sv-box" cx="330" cy="289.4" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="330" y="292.6" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">13</text>
+          <line x1="30" y1="376" x2="70" y2="376" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="70" cy="376" r="1.8" fill="currentColor"/><circle class="sv-box" cx="30" cy="376" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="30" y="379.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">6</text>
+          <line x1="30" y1="456" x2="70" y2="456" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="70" cy="456" r="1.8" fill="currentColor"/><circle class="sv-box" cx="30" cy="456" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="30" y="459.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">7</text>
+          </g>
+          </svg>
+          <div class="fm-schema-legend"><span class="lang-block" data-lang="fr">Fig. 1 — L’écran du Route Planner, la route de l’exemple ouverte : la barre, le panneau de la route, puis la carte et ses modes de toucher.</span><span class="lang-block" data-lang="en">Fig. 1 — The Route Planner screen with the example route open: the bar, the route panel, then the map and its tap modes.</span></div>
+        </div>
+        <ol class="pl-legend"><li><span class="pl-n">1</span><span class="lang-block" data-lang="fr"><b>Ouvrir ▾</b> — Ouvrir un travail… lit un fichier de travail de la suite ; Ouvrir une route ou des calques… reconnaît une route JSON, un fichier du Route Tool de DCS ou un fichier CombatFlite ; Importer des routes… ouvre la fenêtre d’import commune.</span><span class="lang-block" data-lang="en"><b>Open ▾</b> — Open a work file… reads a suite work file; Open a route or layers… recognises a JSON route, a DCS Route Tool file or a CombatFlite file; Import routes… opens the common import window.</span></li><li><span class="pl-n">2</span><span class="lang-block" data-lang="fr"><b>Exporter ▾</b> — Image pour le briefing… et Route Tool… : voir plus bas. La ligne Route Tool est grisée sur un théâtre sans Route Tool.</span><span class="lang-block" data-lang="en"><b>Export ▾</b> — Image for the briefing… and Route Tool…: see below. The Route Tool line is greyed out on a theatre without a Route Tool.</span></li><li><span class="pl-n">3</span><span class="lang-block" data-lang="fr"><b>Affichage ▾</b> — règle le fond, les unités et ce que montre la carte ; un point ambre sur le bouton signale un réglage changé. La Carte DCS est grisée là où DCS n’en a pas, et la carte de navigation de Flappie n’existe que sur le Caucase.</span><span class="lang-block" data-lang="en"><b>Display ▾</b> — sets the base map, the units and what the map shows; an amber dot on the button flags a changed setting. The DCS map is greyed out where DCS has none, and Flappie’s navigation chart exists only on the Caucasus.</span></li><li><span class="pl-n">4</span><span class="lang-block" data-lang="fr"><b>Théâtre</b> — choisit la carte de DCS. Une route garde son théâtre : en changer masque les routes des autres théâtres, qui reviennent quand on y retourne.</span><span class="lang-block" data-lang="en"><b>Theatre</b> — chooses the DCS map. A route keeps its theatre: changing it hides the other theatres’ routes, which come back when you return.</span></li><li><span class="pl-n">5</span><span class="lang-block" data-lang="fr"><b>Effacer</b> — efface au choix la route sélectionnée, toutes les routes, les points de référence ou les dessins.</span><span class="lang-block" data-lang="en"><b>Clear</b> — clears, as you choose, the selected route, all routes, the reference points or the drawings.</span></li><li><span class="pl-n">6</span><span class="lang-block" data-lang="fr"><b>Route</b> — en tête, une ligne choisit la route ; + en ajoute une, jusqu’à 12, et … ouvre Dupliquer et Supprimer.</span><span class="lang-block" data-lang="en"><b>Route</b> — at the top, a row chooses the route; + adds one, up to 12, and … opens Duplicate and Delete.</span></li><li><span class="pl-n">7</span><span class="lang-block" data-lang="fr"><b>Groupes…</b> — choisit les groupes qui suivent cette route, ou en crée un ; un groupe ne suit qu’une route, et le Flight Configurator voit le même choix.</span><span class="lang-block" data-lang="en"><b>Groups…</b> — chooses the groups that follow this route, or creates one; a group follows only one route, and the Flight Configurator sees the same choice.</span></li><li><span class="pl-n">8</span><span class="lang-block" data-lang="fr"><b>Les points</b> — un par ligne : nom, altitude, vitesse et référence de l’altitude, SOL ou MER ; ✕ retire le point.</span><span class="lang-block" data-lang="en"><b>The waypoints</b> — one per row: name, altitude, speed and altitude reference, AGL or MSL; ✕ removes the waypoint.</span></li><li><span class="pl-n">9</span><span class="lang-block" data-lang="fr"><b>Ajouter</b> — place un point par ses coordonnées (MGRS, DMS, DDM ou décimal) ou par cap et distance depuis le dernier point ; + Réf. en fait un point de référence.</span><span class="lang-block" data-lang="en"><b>Add</b> — places a waypoint by its coordinates (MGRS, DMS, DDM or decimal) or by heading and distance from the last waypoint; + Ref. makes it a reference point.</span></li><li><span class="pl-n">10</span><span class="lang-block" data-lang="fr"><b>Les autres sections</b> — Points de référence, Calques, Navigation : chacune se replie par l’icône à droite de son en-tête. Voir plus bas.</span><span class="lang-block" data-lang="en"><b>The other sections</b> — Reference points, Layers, Navigation: each folds by the icon at the right of its header. See below.</span></li><li><span class="pl-n">11</span><span class="lang-block" data-lang="fr"><b>Rechercher sur la carte</b> — la loupe cherche un lieu ou un objet nommé.</span><span class="lang-block" data-lang="en"><b>Search the map</b> — the magnifier looks for a named place or object.</span></li><li><span class="pl-n">12</span><span class="lang-block" data-lang="fr"><b>Ce que fait un toucher sur la carte</b> — Point ajoute un point au bout de la route ; Réf. pose un point de référence ; Lire ne pose rien : un aérodrome ouvre sa fiche, un objet d’un calque montre la sienne ; Dessin ouvre les outils de dessin de vos calques ; Règle mesure cap et distance sans rien poser, et quitter le mode efface la mesure. En Point et en Réf., un aérodrome touché donne un point à son nom.</span><span class="lang-block" data-lang="en"><b>What a tap on the map does</b> — Waypoint adds a waypoint at the end of the route; Ref. places a reference point; Read places nothing: an airfield opens its sheet, a layer object shows its own; Draw opens the drawing tools of your layers; Ruler measures heading and distance without placing anything, and leaving the mode clears the measure. In Waypoint and Ref., a tapped airfield gives a waypoint its name.</span></li><li><span class="pl-n">13</span><span class="lang-block" data-lang="fr"><b>La route</b> — glissez un point pour le déplacer ; le + posé sur une branche assez longue y insère un point. Les traits des minutes coupent la route toutes les minutes.</span><span class="lang-block" data-lang="en"><b>The route</b> — drag a waypoint to move it; the + on a long enough leg inserts a waypoint there. The minute ticks cut the route every minute.</span></li><li><span class="pl-n">14</span><span class="lang-block" data-lang="fr"><b>Boîtes de branche</b> — écrivent la navigation sur la carte, une par branche : cap, distance, vitesse et ETE.</span><span class="lang-block" data-lang="en"><b>Leg boxes</b> — write the navigation on the map, one per leg: heading, distance, speed and ETE.</span></li></ol>
+      </div>
+
+      <div class="fm-prose">
         <h4 class="lang-block" data-lang="fr">Les points de référence</h4>
         <h4 class="lang-block" data-lang="en">Reference points</h4>
         <div class="lang-block" data-lang="fr"><p>Les <strong>points de référence</strong> marquent ce qui compte hors de la route : une cible, un repère, un terrain. Posez-les en mode Réf. ou par + Réf. ; ils ne comptent ni dans les branches ni dans le total, passent à la datacard, mais pas au Route Tool de DCS.</p></div>
         <div class="lang-block" data-lang="en"><p><strong>Reference points</strong> mark what matters off the route: a target, a landmark, an airfield. Place them in Ref. mode or with + Ref.; they count neither in the legs nor in the total, and go to the datacard but not to the DCS Route Tool.</p></div>
         <h4 class="lang-block" data-lang="fr">La navigation</h4>
         <h4 class="lang-block" data-lang="en">Navigation</h4>
-        <div class="lang-block" data-lang="fr"><p>Les <strong>boîtes de branche</strong> écrivent la navigation sur la carte, une par branche ; les traits des minutes la coupent toutes les minutes. La section Navigation donne cap, temps et distance de chaque branche, et le total ; son titre dit le cap employé. Cap : Vrai ou Magnétique. En magnétique, la déclinaison est <strong>Calculée</strong>, d’après la date de la mission d’HQ quand elle existe, ou <strong>Saisie</strong> ; <strong>Forcer</strong> impose l’année saisie. Sans valeur saisie, le cap reste vrai et l’avertissement le dit.</p></div>
-        <div class="lang-block" data-lang="en"><p>The <strong>leg boxes</strong> write the navigation on the map, one per leg; the <strong>minute ticks</strong> cut it every minute. The Navigation section gives each leg’s heading, time and distance, and the total; its title says which heading is used. Heading: True or Magnetic. In magnetic, the variation is <strong>Computed</strong>, from the HQ mission date when there is one, or <strong>Entered</strong>; <strong>Override</strong> imposes the entered year. With no value entered, the heading stays true and the warning says so.</p></div>
+        <div class="lang-block" data-lang="fr"><p>La section Navigation donne cap, temps et distance de chaque branche, et le total ; son titre dit le cap employé. Cap : Vrai ou Magnétique. En magnétique, la déclinaison est <strong>Calculée</strong>, d’après la date de la mission d’HQ quand elle existe, ou <strong>Saisie</strong> ; <strong>Forcer</strong> impose l’année saisie. Sans valeur saisie, le cap reste vrai et l’avertissement le dit.</p></div>
+        <div class="lang-block" data-lang="en"><p>The Navigation section gives each leg’s heading, time and distance, and the total; its title says which heading is used. Heading: True or Magnetic. In magnetic, the variation is <strong>Computed</strong>, from the HQ mission date when there is one, or <strong>Entered</strong>; <strong>Override</strong> imposes the entered year. With no value entered, the heading stays true and the warning says so.</p></div>
         <h4 class="lang-block" data-lang="fr">La fiche d’un aérodrome</h4>
         <h4 class="lang-block" data-lang="en">An airfield sheet</h4>
         <div class="lang-block" data-lang="fr"><p>En mode <strong>Lire</strong>, avec les Aérodromes affichés, touchez un aérodrome : sa fiche s’ouvre, avec les pages d’une chart de DCS Airfield Charts. Elle <strong>vient du réseau</strong>, au toucher, et un terrain peut n’avoir pas encore de fiche.</p></div>

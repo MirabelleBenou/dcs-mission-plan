@@ -212,21 +212,21 @@ DG_TILE_SRC = DG_TILE if DG_TILE else "data:image/gif;base64,R0lGODlhAQABAIAAAAA
 RP_TILE_SRC = RP_TILE if RP_TILE else "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
 FC_TILE_SRC = FC_TILE
 
-# ── Schémas générés (BG « Ce qui alimente quoi », écran du RP, anatomie de la datacard) ──
+# ── Schémas générés (BG « Ce qui alimente quoi », anatomie de la datacard) ──
 # Règle de lisibilité : la couleur d'un module marque (trait, aplat à 20 %), l'encre écrit.
 
-from fm_schemas_block import (NF, fr_typo, _esc, SCHEMAS_CSS, s0_html, build_bg_svg, build_rp_screen_svg, build_dg_anatomy_svg, panel_html, panel_ids, TABLE_IDS)
-from fm_planches_block import PLANCHES_CSS, PLANCHE_ERRORS, PLATES, build_plate_hq, build_plate_fc, build_plate_dg, check_report as planche_report
+from fm_schemas_block import (NF, fr_typo, _esc, SCHEMAS_CSS, s0_html, build_bg_svg, build_dg_anatomy_svg, panel_html, panel_ids, TABLE_IDS)
+from fm_planches_block import PLANCHES_CSS, PLANCHE_ERRORS, PLATES, build_plate_hq, build_plate_fc, build_plate_dg, build_plate_rp, check_report as planche_report
 
 _NBSP_FINE = NF   # espace fine insécable (typographie française)
 
 BG_SVG = build_bg_svg()
-RP_SCREEN_SVG = build_rp_screen_svg()
 DG_ANATOMY_SVG = build_dg_anatomy_svg()
 # Les planches d'écran : l'écran de l'outil au trait, des bulles numérotées, une légende numérotée ; leurs libellés viennent du dictionnaire de l'outil
 HQ_PLATE_HTML = build_plate_hq()
 FC_PLATE_HTML = build_plate_fc()
 DG_PLATE_HTML = build_plate_dg()
+RP_PLATE_HTML = build_plate_rp()
 
 BG_LEGEND_FR = (f'Fig. 1 — Comment les saisies d’une section alimentent les autres, et ce que lisent les autres outils. '
                 f'S{_NBSP_FINE}: saisi en Standard{_NBSP_FINE}; A{_NBSP_FINE}: en Avancé{_NBSP_FINE}; S·A{_NBSP_FINE}: dans les deux.')
@@ -1126,28 +1126,12 @@ PAGES_SRC['rp'] = [
     ('h', "À quoi ça sert", "What it's for"),
     ('p', ['Le Route Planner trace la route d’un groupe sur la carte d’un théâtre de DCS et en donne la navigation : caps, distances, temps. On y pose aussi des points de référence et des calques tactiques, et on consulte la fiche d’un terrain.'], ['The Route Planner draws a group’s route on the map of a DCS theatre and gives its navigation: headings, distances, times. You also place reference points and tactical layers, and consult an airfield sheet.']),
     ('raw', PANEL_HTML['rp'], ''),
-    ('raw', f'''      <div class="fm-schema">
-        {RP_SCREEN_SVG}
-        <div class="fm-schema-legend">
-          <span class="lang-block" data-lang="fr">Fig. 1 — L’écran du Route Planner : la carte, ses modes de toucher et le panneau.</span>
-          <span class="lang-block" data-lang="en">Fig. 1 — The Route Planner screen: the map, its tap modes, and the panel.</span>
-        </div>
-      </div>''', ''),
     ('h', "Les gestes", "The gestures"),
-    ('h', "Le théâtre et le fond", "The theatre and the base map"),
-    ('p', ['Le sélecteur **Théâtre** choisit la carte de DCS ; la **Carte DCS** est grisée là où DCS n’en a pas, et la carte de navigation de Flappie n’existe que sur le Caucase. **Affichage ▾** règle le fond, les unités et ce que montre la carte ; un point ambre sur le bouton signale un réglage changé. La loupe, en haut à gauche de la carte, cherche un lieu ou un objet nommé.'], ['The **Theatre** selector chooses the DCS map; the **DCS map** is greyed out where DCS has none, and Flappie’s navigation map exists only on the Caucasus. **Display ▾** sets the base map, the units and what the map shows; an amber dot on the button marks a changed setting. The magnifier, at the top left of the map, searches for a place or a named object.']),
-    ('h', "Ce que fait un toucher", "What a touch does"),
-    ('p', ['En haut à droite de la carte, cinq modes disent ce que fait un toucher :'], ['At the top right of the map, five modes say what a tap does:']),
-    ('ul', ['**Point** ajoute un point au bout de la route ;', '**Réf.** pose un point de référence ;', '**Lire** ne pose rien : un aérodrome ouvre sa fiche, un objet d’un calque montre la sienne ;', '**Dessin** ouvre les outils de dessin de vos calques ;', '**Règle** mesure cap et distance sur la carte sans rien poser ; quitter le mode efface la mesure.'], ['**Waypoint** adds a point at the end of the route;', '**Ref.** places a reference point;', '**Read** places nothing: an airfield opens its sheet, a layer object shows its own;', '**Draw** opens the drawing tools for your layers;', '**Ruler** measures heading and distance on the map without placing anything; leaving the mode clears the measurement.']),
-    ('p',
-     ["En Point et en Réf., un aérodrome touché donne un point à son nom."],
-     ["In Point and Ref., a touched airfield gives a point with its name."]),
-    ('h', "Construire la route", "Building the route"),
-    ('p', ['En tête de la section Route, une ligne choisit la route ; + en ajoute une, … ouvre Dupliquer et Supprimer. Touchez la carte pour ajouter un point, glissez-le pour le déplacer ; le + posé sur une branche assez longue y insère un point. Le bloc Ajouter place un point par ses coordonnées ou par cap et distance.', '**Groupes…** choisit les groupes qui suivent cette route, ou en crée un ; un groupe ne suit qu’une route, et le Flight Configurator voit le même choix. Une route garde son théâtre : en changer masque les routes des autres théâtres, qui reviennent quand on y retourne.'], ['At the top of the Route section, a row chooses the route; + adds one, … opens Duplicate and Delete. Tap the map to add a point, drag it to move it; the + on a long enough leg inserts a point there. The Add block places a point by its coordinates or by heading and distance.', '**Groups…** chooses the groups that follow this route, or creates one; a group follows only one route, and the Flight Configurator sees the same choice. A route keeps its theatre: changing theatre hides the routes of the other theatres, which come back when you return.']),
+    ('raw', RP_PLATE_HTML, ''),
     ('h', "Les points de référence", "Reference points"),
     ('p', ['Les **points de référence** marquent ce qui compte hors de la route : une cible, un repère, un terrain. Posez-les en mode Réf. ou par + Réf. ; ils ne comptent ni dans les branches ni dans le total, passent à la datacard, mais pas au Route Tool de DCS.'], ['**Reference points** mark what matters off the route: a target, a landmark, an airfield. Place them in Ref. mode or with + Ref.; they count neither in the legs nor in the total, and go to the datacard but not to the DCS Route Tool.']),
     ('h', "La navigation", "Navigation"),
-    ('p', ['Les **boîtes de branche** écrivent la navigation sur la carte, une par branche ; les traits des minutes la coupent toutes les minutes. La section Navigation donne cap, temps et distance de chaque branche, et le total ; son titre dit le cap employé. Cap : Vrai ou Magnétique. En magnétique, la déclinaison est **Calculée**, d’après la date de la mission d’HQ quand elle existe, ou **Saisie** ; **Forcer** impose l’année saisie. Sans valeur saisie, le cap reste vrai et l’avertissement le dit.'], ['The **leg boxes** write the navigation on the map, one per leg; the **minute ticks** cut it every minute. The Navigation section gives each leg’s heading, time and distance, and the total; its title says which heading is used. Heading: True or Magnetic. In magnetic, the variation is **Computed**, from the HQ mission date when there is one, or **Entered**; **Override** imposes the entered year. With no value entered, the heading stays true and the warning says so.']),
+    ('p', ['La section Navigation donne cap, temps et distance de chaque branche, et le total ; son titre dit le cap employé. Cap : Vrai ou Magnétique. En magnétique, la déclinaison est **Calculée**, d’après la date de la mission d’HQ quand elle existe, ou **Saisie** ; **Forcer** impose l’année saisie. Sans valeur saisie, le cap reste vrai et l’avertissement le dit.'], ['The Navigation section gives each leg’s heading, time and distance, and the total; its title says which heading is used. Heading: True or Magnetic. In magnetic, the variation is **Computed**, from the HQ mission date when there is one, or **Entered**; **Override** imposes the entered year. With no value entered, the heading stays true and the warning says so.']),
     ('h', "La fiche d’un aérodrome", "An airfield sheet"),
     ('p',
      ["En mode **Lire**, avec les Aérodromes affichés, touchez un aérodrome : sa fiche s’ouvre, avec les pages d’une chart de DCS Airfield Charts. Elle **vient du réseau**, au toucher, et un terrain peut n’avoir pas encore de fiche."],
@@ -2530,7 +2514,6 @@ grep_ok('role="dialog" aria-modal="true"', 'fenêtre de zoom : role=dialog, aria
 grep_ok('--accent-ink:',    '--accent-ink présent')
 # Les schémas de flux (HQ, RP, DG, FC) sont retirés avec leur code : leurs contrôles de marqueur propre sont remplacés par ceux des schémas redessinés
 grep_ok('id="bm"',          'schéma BG : marqueur propre')
-grep_ok('id="rps"',         'schéma écran du RP : marqueur propre')
 grep_ok('id="dga"',         'schéma anatomie de la datacard : marqueur propre')
 grep_absent('id="dgf"',     'figure 2 DG (flux) retirée')
 grep_absent('Du groupe au paquet', 'schéma de flux du FC retiré')
@@ -2609,6 +2592,7 @@ _h3s = re.findall(r'<span id="(\w+-\d+)"></span>\s*<h3 class="lang-block" data-l
 _lines = re.findall(r'<a class="fmnav-sec" href="#\w+:(\w+-\d+)"[^>]*><span class="lang-block" data-lang="fr">(.*?)</span><span class="lang-block" data-lang="en">(.*?)</span></a>', src, re.S)
 _oksec = _oksec and len(_h3s) == len(_lines) == len(_sec) and all(a == b and _plain(c) == d and _plain(e) == f for (a, c, e), (b, d, f) in zip(_h3s, _lines))
 print('  [%s] sommaire : une ligne de section par ancre (%d)' % ('OK' if _oksec else 'FAIL', len(_sec)))
+print('  [%s] ancres des h3 : une par titre, numérotées de 1 à n dans chaque page (%d)' % ('OK' if _okanc else 'FAIL', len(_anc)))
 if not _okanc: CHECK_ERRORS.append('FAIL ancres des h3')
 if not _oksec: CHECK_ERRORS.append('FAIL lignes de section')
 _pn = len(re.findall(r'<div class="fmnav-pn">', src))

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Bloc « SCHÉMAS DU FIELD MANUAL » : les outils de dessin des schémas (boîtes, flèches, textes FR/EN), le schéma d'ensemble des échanges
 (S0, une variante large et une variante en hauteur pour le téléphone), sa légende, les six panneaux « Reçoit · Donne », puis les schémas
-redessinés du Briefing Generator, du Route Planner et de la datacard.
+redessinés du Briefing Generator et de la datacard.
 
 Règle de lisibilité : la couleur d'un module marque son cadre, l'encre écrit ; aucun texte de schéma sous le corps 8.
 
@@ -957,104 +957,6 @@ def build_bg_svg():
     o.append('          ' + T(630, 394, 9, 'Avancé', 'Advanced', anchor='start'))
     o.append('          ' + T(16, 416, 8.5, f'Tireté{NF}: lu par la fenêtre d’import ou par le Datacard Generator',
                               'Dashed: read by the import window or the Datacard Generator', anchor='start'))
-    o.append('        </svg>')
-    return '\n'.join(o)
-
-
-def build_rp_screen_svg():
-    """Route Planner — « L'écran du Route Planner » (viewBox 720 × 372), redessiné à l'écran du jour : barre, ligne de mission d'HQ,
-    panneau en sections repliables, cinq modes de toucher, route, boîte de branche. Aucun libellé exact, aucun texte sous le corps 8."""
-    M = 'rps'
-    T = sv_text
-    A = '#7ac97a'
-    o = []
-    o.append('<svg viewBox="0 0 720 372" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="L’écran du Route Planner" data-aria-fr="L’écran du Route Planner" data-aria-en="The Route Planner screen">')
-    o.append('          ' + sv_defs(M))
-    o.append('          ' + sv_title('L’ÉCRAN DU ROUTE PLANNER', 'THE ROUTE PLANNER SCREEN', 24, 32))
-    # la barre du haut, dans l'ordre de l'écran : Ouvrir, Sauvegarder, Exporter, Affichage, Théâtre, Exemple, Effacer, Thème, langue
-    o.append('          ' + sv_box(110, 44, 500, 26))
-    o.append('          ' + T(118, 61, 8.5, 'RP', anchor='start', ls=1))
-    x = 134
-    for w, fr, en in ((50, 'Ouvrir ▾', 'Open ▾'), (64, 'Sauvegarder', 'Save'), (58, 'Exporter ▾', 'Export ▾'), (64, 'Affichage ▾', 'Display ▾'),
-                      (46, 'Théâtre', 'Theatre'), (56, 'Exemple ▾', 'Example ▾'), (46, 'Effacer', 'Clear'), (36, 'Thème', 'Theme')):
-        o.append('          ' + f'<rect x="{x}" y="49" width="{w}" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity=".6"/>')
-        o.append('          ' + T(x + w / 2, 60.5, 8, fr, en))
-        x += w + 4
-    # le drapeau de la langue : un petit cadre, sans libellé
-    o.append('          ' + f'<rect x="{x}" y="49" width="16" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity=".6"/>')
-    o.append('          ' + f'<rect x="{x + 3}" y="54" width="10" height="7" fill="none" stroke="currentColor" stroke-width="1"/>')
-    # la ligne de mission d'HQ, sous la barre
-    o.append('          ' + sv_box(110, 74, 500, 14))
-    o.append('          ' + T(118, 84, 8, 'Mission d’HQ · ce que l’outil en prend', 'HQ mission · what the tool takes from it', anchor='start'))
-    # le panneau et ses sections numérotées, repliables
-    o.append('          ' + sv_box(110, 94, 160, 262))
-    secs = [(100, 118, '01 Route', '01 Route', 3), (222, 28, '02 Points de référence', '02 Reference points', 0),
-            (254, 28, '03 Calques', '03 Layers', 0), (286, 64, '04 Navigation', '04 Navigation', 2)]
-    for (y, h, fr, en, rows) in secs:
-        o.append('          ' + f'<rect x="116" y="{y}" width="148" height="{h}" fill="none" stroke="currentColor" stroke-width="1" opacity=".75"/>')
-        o.append('          ' + T(121, y + 11, 8, fr, en, anchor='start'))
-        for k in range(rows):
-            o.append('          ' + f'<line x1="122" y1="{y + 40 + 14 * k}" x2="258" y2="{y + 40 + 14 * k}" stroke="currentColor" stroke-width="1" opacity=".3"/>')
-    # Tout replier : l'icône à droite de l'en-tête
-    o.append('          ' + '<path d="M252,103 l4,4 l4,-4 M252,110 l4,-4 l4,4" fill="none" stroke="currentColor" stroke-width="1.2"/>')
-    # la ligne de sélection des routes
-    o.append('          ' + sv_box(122, 116, 100, 15))
-    o.append('          ' + T(128, 127, 8, 'Route ▾', 'Route ▾', anchor='start'))
-    o.append('          ' + sv_box(226, 116, 15, 15))
-    o.append('          ' + T(233.5, 127, 8.5, '+'))
-    o.append('          ' + sv_box(245, 116, 15, 15))
-    o.append('          ' + ''.join(f'<circle cx="{cx}" cy="123.5" r="1.3" fill="currentColor"/>' for cx in (248.5, 252.5, 256.5)))
-    # la carte, sa grille
-    o.append('          ' + sv_box(276, 94, 334, 262))
-    for x in (336, 396, 456, 516, 576):
-        o.append('          ' + f'<line x1="{x}" y1="95" x2="{x}" y2="355" stroke="currentColor" stroke-width=".8" opacity=".18"/>')
-    for y in (140, 190, 240, 290, 340):
-        o.append('          ' + f'<line x1="277" y1="{y}" x2="609" y2="{y}" stroke="currentColor" stroke-width=".8" opacity=".18"/>')
-    # zoom et loupe, à gauche de la carte
-    o.append('          ' + '<rect class="sv-box" x="284" y="102" width="16" height="30" rx="2" stroke="currentColor" stroke-width="1"/>')
-    o.append('          ' + T(292, 113, 9, '+') + T(292, 126, 9, '−'))
-    o.append('          ' + '<rect class="sv-box" x="284" y="138" width="16" height="16" rx="2" stroke="currentColor" stroke-width="1"/>')
-    o.append('          ' + '<circle cx="291" cy="145" r="3.6" fill="none" stroke="currentColor" stroke-width="1.3"/>')
-    o.append('          ' + '<line x1="293.6" y1="147.6" x2="297" y2="151" stroke="currentColor" stroke-width="1.3"/>')
-    # les cinq modes de toucher, en haut à droite de la carte
-    modes = [('Point', 'Waypoint'), ('Réf.', 'Ref.'), ('Lire', 'Read'), ('Dessin', 'Draw'), ('Règle', 'Ruler')]
-    for i, (fr, en) in enumerate(modes):
-        x = 378 + 46 * i
-        o.append('          ' + sv_box(x, 102, 46, 16, 'rp' if i == 0 else None))
-        o.append('          ' + T(x + 23, 113, 8, fr, en))
-    # la route : quatre points, une référence
-    pts = [(322, 306), (380, 206), (496, 232), (566, 160)]
-    o.append('          ' + '<polyline points="' + ' '.join(f'{x},{y}' for x, y in pts) +
-             f'" fill="none" stroke="{A}" stroke-width="3" stroke-linejoin="round"/>')
-    for i, (x, y) in enumerate(pts):
-        o.append('          ' + f'<circle cx="{x}" cy="{y}" r="8" class="sv-box" stroke="currentColor" stroke-width="1.6"/>')
-        o.append('          ' + T(x, y + 3, 8, str(i)))
-    o.append('          ' + '<rect x="514" y="296" width="12" height="12" transform="rotate(45 520 302)" fill="currentColor"/>')
-    o.append('          ' + sv_text(520, 305, 8, 'A', cls='sv-pill-t'))
-    # la boîte de branche, sous la branche 1 → 2
-    o.append('          ' + '<path class="sv-box" d="M410,252 L440,240 L470,252 L470,284 L410,284 Z" stroke="currentColor" stroke-width="1.2"/>')
-    o.append('          ' + T(440, 266, 8, 'cap', 'course'))
-    o.append('          ' + T(440, 277, 8, 'dist.', 'dist.'))
-    # libellés, à gauche
-    o.append('          ' + T(102, 150, 10, 'Panneau', 'Panel', anchor='end'))
-    o.append('          ' + sv_line(105, 147, 128, 147, M))
-    o.append('          ' + T(102, 238, 10, 'Sections', 'Sections', anchor='end'))
-    o.append('          ' + T(102, 250, 10, 'repliables', 'foldable', anchor='end'))
-    o.append('          ' + sv_line(105, 244, 120, 244, M))
-    # libellés, à droite
-    o.append('          ' + T(622, 58, 10, 'Barre du haut', 'Top bar', anchor='start'))
-    o.append('          ' + sv_line(618, 55, 596, 55, M))
-    o.append('          ' + T(622, 84, 10, 'Mission d’HQ', 'HQ mission', anchor='start'))
-    o.append('          ' + sv_line(618, 81, 598, 81, M))
-    o.append('          ' + T(622, 114, 10, 'Modes de toucher', 'Tap modes', anchor='start'))
-    o.append('          ' + sv_line(620, 111, 606, 111, M))
-    o.append('          ' + T(622, 166, 10, 'Route', anchor='start'))
-    o.append('          ' + sv_line(618, 163, 576, 161, M))
-    o.append('          ' + T(622, 270, 10, 'Boîte', 'Leg box', anchor='start'))
-    o.append('          ' + T(622, 282, 10, 'de branche', 'per leg', anchor='start'))
-    o.append('          ' + sv_line(618, 272, 473, 268, M))
-    o.append('          ' + T(622, 330, 10, 'Carte', 'Map', anchor='start'))
-    o.append('          ' + sv_line(618, 327, 600, 327, M))
     o.append('        </svg>')
     return '\n'.join(o)
 

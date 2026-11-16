@@ -29,8 +29,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 PLANCHE_ERRORS = []
 PLATES = []          # les planches construites, pour le compte rendu du build
 
-TOOL_SOURCES = {'hq': 'build_hq.py', 'fc': 'build_flight_configurator.py', 'dg': 'build_datacard_generator.py'}
-TOOL_NAMES = {'hq': 'HQ', 'fc': 'Flight Configurator', 'dg': 'Datacard Generator'}
+TOOL_SOURCES = {'hq': 'build_hq.py', 'fc': 'build_flight_configurator.py', 'dg': 'build_datacard_generator.py',
+                'rp': 'build_route_planner.py', 'bg': 'build_briefing_generator.py', 'rs': 'build_recon_station.py', 'mp': 'build_mission_plan.py'}
+TOOL_NAMES = {'hq': 'HQ', 'fc': 'Flight Configurator', 'dg': 'Datacard Generator',
+              'rp': 'Route Planner', 'bg': 'Briefing Generator', 'rs': 'Recon Station', 'mp': 'Mission Plan'}
 
 
 # ═════════════════════════════════════════════════════════════════════════════════
@@ -99,16 +101,88 @@ def _parse_js_block(txt):
         d[k] = v
 
 
+_DECL = re.compile(r'(?:const|var) I18N = \{\s*(?:fr|en)\s*:\s*\{')
+_EXPR0, _EXPR1 = '\ue000', '\ue001'      # entourent le rang d'une expression d'une f-string qui n'est pas une chaîne littérale du premier niveau
+
+
+def _bound_once_strings(tree):
+    """Les noms du premier niveau liés une seule fois (hors corps de fonction ou de classe), à un littéral de chaîne : {nom: texte}."""
+    count, val = {}, {}
+
+    def bind(name, value=None):
+        count[name] = count.get(name, 0) + 1
+        if isinstance(value, ast.Constant) and isinstance(value.value, str):
+            val[name] = value.value
+
+    def visit(node):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            bind(node.name)
+            return
+        if isinstance(node, ast.Lambda):
+            return
+        if isinstance(node, ast.Assign):
+            for t in node.targets:
+                for n in ast.walk(t):
+                    if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Store):
+                        bind(n.id, node.value if isinstance(t, ast.Name) else None)
+            visit(node.value)
+            return
+        elif isinstance(node, (ast.Import, ast.ImportFrom)):
+            for a in node.names:
+                bind((a.asname or a.name).split('.')[0])
+        elif isinstance(node, ast.Name) and isinstance(node.ctx, (ast.Store, ast.Del)):
+            bind(node.id)
+        for ch in ast.iter_child_nodes(node):
+            visit(ch)
+    for st in tree.body:
+        visit(st)
+    return {k: v for k, v in val.items() if count[k] == 1}
+
+
+def _js_texts(tree):
+    """Les textes JS que le source Python écrit : chaque littéral de chaîne (la valeur que Python lui donne) et chaque f-string (ses parties constantes, « {{ » déjà « { » ;
+    ses valeurs {NOM} remplacées par la chaîne littérale du premier niveau de ce nom). Toute autre expression est remplacée par un repère, avec son texte. Renvoie [(texte, [expressions])]."""
+    top = _bound_once_strings(tree)
+    inner = {id(v) for n in ast.walk(tree) if isinstance(n, ast.JoinedStr) for v in n.values}
+    out = []
+    for n in ast.walk(tree):
+        if isinstance(n, ast.Constant) and isinstance(n.value, str) and id(n) not in inner:
+            out.append((n.value, []))
+        elif isinstance(n, ast.JoinedStr):
+            parts, exprs = [], []
+            for v in n.values:
+                if isinstance(v, ast.Constant):
+                    parts.append(v.value)
+                elif isinstance(v.value, ast.Name) and v.value.id in top and v.conversion == -1 and v.format_spec is None:
+                    parts.append(top[v.value.id])
+                else:
+                    parts.append(_EXPR0 + str(len(exprs)) + _EXPR1)
+                    exprs.append('{' + ast.unparse(v.value) + '}')
+            out.append((''.join(parts), exprs))
+    return out
+
+
 def _read_js_dicts(src):
-    """Le dictionnaire « const I18N = { fr: {…}, en: {…} } » d'un outil dont le source Python porte le JS dans une chaîne.
-    Le texte JS est celui que Python écrit : les chaînes constantes (littéral brut, ou parties constantes d'une f-string, où « {{ » est déjà « { »).
-    L'objet se lit clé par clé (fr ou en, « : », « { », le bloc, puis « , » ou « } ») : exactement les deux clés, une fois chacune, dans n'importe quel ordre."""
-    hits = [n.value for n in ast.walk(ast.parse(src)) if isinstance(n, ast.Constant) and isinstance(n.value, str)
-            and re.search(r'const I18N = \{\s*(?:fr|en)\s*:\s*\{', n.value)]
+    """Le dictionnaire « const I18N = { fr: {…}, en: {…} } » (ou « var ») d'un outil dont le source Python porte le JS dans une chaîne ou une f-string.
+    Le texte JS est celui que Python écrit : les chaînes constantes (littéral brut, ou parties constantes d'une f-string, où « {{ » est déjà « { » ; une valeur {NOM} y est le littéral du premier
+    niveau de ce nom). Une autre expression dans le dictionnaire est une erreur. L'objet se lit clé par clé (fr ou en, « : », « { », le bloc, puis « , » ou « } ») :
+    exactement les deux clés, une fois chacune, dans n'importe quel ordre."""
+    hits = [(js, ex) for js, ex in _js_texts(ast.parse(src)) if _DECL.search(js)]
     if len(hits) != 1:
         raise ValueError('const I18N : %d occurrence(s) dans le source, une attendue' % len(hits))
-    js = hits[0]
-    i = re.search(r'const I18N = \{', js).end()
+    js, exprs = hits[0]
+
+    def show(t):
+        return re.sub(_EXPR0 + r'(\d+)' + _EXPR1, lambda m: exprs[int(m.group(1))], t)
+    try:
+        return _read_i18n_object(js, show)
+    except ValueError as e:
+        raise ValueError(show(str(e))) from None
+
+
+def _read_i18n_object(js, show):
+    start = _DECL.search(js)
+    i = re.compile(r'(?:const|var) I18N = \{').match(js, start.start()).end()
     found = {}
     while True:
         i = _SKIP.match(js, i).end()
@@ -130,6 +204,10 @@ def _read_js_dicts(src):
         i = t
     if set(found) != {'fr', 'en'}:
         raise ValueError('const I18N : les deux clés fr et en sont attendues')
+    span = js[start.start():i + 1]
+    k = re.search(_EXPR0 + r'(\d+)' + _EXPR1, span)
+    if k:
+        raise ValueError('const I18N : une expression qui n’est pas une chaîne littérale du premier niveau dans le dictionnaire : ' + show(k.group(0)))
     return found['fr'], found['en']
 
 
@@ -1313,3 +1391,385 @@ def build_plate_dg():
     return P.figure_html(wide, tall,
                          'Fig. 2 — L’éditeur du Datacard Generator, une carte ouverte : la barre du paquet, les sections, puis l’aperçu de la page.',
                          'Fig. 2 — The Datacard Generator editor with a card open: the deck bar, the sections, then the page preview.', legend)
+
+
+# ═════════════════════════════════════════════════════════════════════════════════
+# La planche du Route Planner : l'écran, une route ouverte
+# ═════════════════════════════════════════════════════════════════════════════════
+
+# La route de l'exemple, en coordonnées réduites (0..1) du cadre de la carte : n, nom, u, v
+_RP_PTS = [(0, 'AKROTIRI', .86, .87), (1, 'WP1', .50, .83), (2, 'POLIS', .25, .49), (3, 'IP', .46, .39),
+       (4, 'KARAVOSTASI', .80, .30), (5, 'POLIS', .25, .49)]
+_RP_ROWS = [('AKROTIRI', '0', '—', 'ref.MSL'), ('WP1', '30', '220', 'ref.AGL'), ('POLIS', '30', '220', 'ref.AGL'),
+        ('IP', '50', '220', 'ref.AGL'), ('KARAVOSTASI', '50', '220', 'ref.AGL'), ('POLIS', '0', '220', 'ref.AGL')]
+_RP_MODES = (('tap.wp', 30), ('tap.ref', 26), ('tap.read', 26), ('tap.draw', 34), ('tap.ruler', 32))
+
+
+def _rp_rect(x, y, w, h, op=.7, sw=1, dash=False):
+    d = ' stroke-dasharray="3 2"' if dash else ''
+    return f'<rect x="{_n(x)}" y="{_n(y)}" width="{_n(w)}" height="{_n(h)}" rx="2" fill="none" stroke="currentColor" stroke-width="{sw}" opacity="{op}"{d}/>'
+
+
+def _rp_chev_closed(x, y):
+    return f'<path d="M{_n(x)},{_n(y)} l5,3 l-5,3 z" fill="currentColor" opacity=".8"/>'
+
+
+def _rp_active(P, x, y, w, h, parts, size=8):
+    """Bouton actif (mode Point, onglet Coordonnées) : l'aplat des pastilles."""
+    return (f'<rect class="sv-pill" x="{_n(x)}" y="{_n(y)}" width="{_n(w)}" height="{_n(h)}" rx="1.5"/>'
+            + P.text(x + w / 2, y + h / 2 + 3, size, *parts, cls='sv-pill-t'))
+
+
+def _rp_magnifier(cx, cy, r=3.2):
+    return (f'<circle cx="{_n(cx - 1)}" cy="{_n(cy - 1)}" r="{_n(r)}" fill="none" stroke="currentColor" stroke-width="1.1"/>'
+            f'<line x1="{_n(cx + 1.4)}" y1="{_n(cy + 1.4)}" x2="{_n(cx + 4)}" y2="{_n(cy + 4)}" stroke="currentColor" stroke-width="1.3"/>')
+
+
+def _rp_map(P, x0, y0, x1, y1, scale=1.0, narrow=False):
+    """La carte : cadre, grille, zoom, loupe, modes de toucher, référence, aérodrome, route, boîte de branche. Renvoie (SVG, ancres)."""
+    o, anc = [], {}
+    w, h = x1 - x0, y1 - y0
+    o.append(_rp_rect(x0, y0, w, h, op=.8, sw=1.2))
+    step = 40 * scale
+    gx = x0 + step / 2
+    while gx < x1:
+        o.append(f'<line x1="{_n(gx)}" y1="{_n(y0)}" x2="{_n(gx)}" y2="{_n(y1)}" stroke="currentColor" stroke-width=".5" opacity=".18"/>')
+        gx += step
+    gy = y0 + step / 2
+    while gy < y1:
+        o.append(f'<line x1="{_n(x0)}" y1="{_n(gy)}" x2="{_n(x1)}" y2="{_n(gy)}" stroke="currentColor" stroke-width=".5" opacity=".18"/>')
+        gy += step
+    # zoom et loupe, en haut à gauche
+    o.append(P.btn(x0 + 6, y0 + 6, 16, 30))
+    o.append(f'<line x1="{_n(x0 + 8)}" y1="{_n(y0 + 21)}" x2="{_n(x0 + 20)}" y2="{_n(y0 + 21)}" stroke="currentColor" stroke-width=".6" opacity=".5"/>')
+    o.append(P.text(x0 + 14, y0 + 17, 9, D('+')))
+    o.append(P.text(x0 + 14, y0 + 32, 9, D('−')))
+    o.append(P.btn(x0 + 6, y0 + 42, 16, 16))
+    o.append(_rp_magnifier(x0 + 14, y0 + 50))
+    anc['loupe'] = (x0 + 22, y0 + 50)
+    # les cinq modes de toucher, en haut à droite
+    widths = []
+    for key, _w in _RP_MODES:              # la largeur suit le plus long des deux libellés, FR ou EN
+        fr, en, _k = P.resolve([L('rp', key, up=True)])
+        widths.append(max(26, 9 + 5.3 * max(len(fr), len(en))))
+    mw = sum(widths)
+    mx = x1 - 6 - mw
+    o.append(f'<rect class="sv-box" x="{_n(mx - 2)}" y="{_n(y0 + 4)}" width="{_n(mw + 4)}" height="20" rx="2" stroke="currentColor" stroke-width="1"/>')
+    for i, ((key, _w), mwi) in enumerate(zip(_RP_MODES, widths)):
+        if i == 0:
+            o.append(_rp_active(P, mx, y0 + 6, mwi - 1, 16, [L('rp', key, up=True)]))
+        else:
+            o.append(P.btn(mx, y0 + 6, mwi - 1, 16, [L('rp', key, up=True)], op=.5))
+        mx += mwi
+    anc['modes'] = (x1 - 6, y0 + 14)
+
+    def at(u, v):
+        return x0 + u * w, y0 + v * h
+    # un point de référence et un aérodrome
+    rx, ry = at(.30, .20)
+    o.append(f'<path d="M{_n(rx)},{_n(ry - 7)} l7,7 l-7,7 l-7,-7 z" class="sv-box" stroke="currentColor" stroke-width="1.2"/>')
+    o.append(P.text(rx, ry + 3, 7.5 if narrow else 8, D('A'), extra=' font-weight="700"'))
+    if not narrow:
+        o.append(P.text(rx + 11, ry + 3, 8, D('ÎLE PETRA'), anchor='start', op=.85))
+    ax, ay = at(.16, .74)
+    o.append(f'<circle cx="{_n(ax)}" cy="{_n(ay)}" r="3.6" fill="none" stroke="currentColor" stroke-width="1"/><circle cx="{_n(ax)}" cy="{_n(ay)}" r="1.1" fill="currentColor"/>')
+    o.append(P.text(ax + 7, ay + 3, 8, D('Paphos'), anchor='start', op=.7))
+    # la route
+    pts = [(n, name) + at(u, v) for n, name, u, v in _RP_PTS]
+    path = ' '.join(('M' if i == 0 else 'L') + f'{_n(p[2])},{_n(p[3])}' for i, p in enumerate(pts))
+    o.append(f'<path d="{path}" fill="none" stroke="currentColor" stroke-width="2.2" opacity=".75"/>')
+    # traits des minutes sur la branche 1 → 2
+    (_a, _b, x1p, y1p), (_c, _d, x2p, y2p) = pts[1], pts[2]
+    dx, dy = x2p - x1p, y2p - y1p
+    ln = (dx * dx + dy * dy) ** .5
+    nx, ny = -dy / ln * 4, dx / ln * 4
+    k = 1
+    while k * 12 * scale < ln - 10:
+        t = k * 12 * scale / ln
+        cx, cy = x1p + dx * t, y1p + dy * t
+        o.append(f'<line x1="{_n(cx - nx)}" y1="{_n(cy - ny)}" x2="{_n(cx + nx)}" y2="{_n(cy + ny)}" stroke="currentColor" stroke-width="1" opacity=".7"/>')
+        k += 1
+    # le + d'insertion, sur la branche 0 → 1
+    ix, iy = (pts[0][2] + pts[1][2]) / 2, (pts[0][3] + pts[1][3]) / 2
+    o.append(f'<circle class="sv-box" cx="{_n(ix)}" cy="{_n(iy)}" r="4.2" stroke="currentColor" stroke-width="1"/>')
+    o.append(P.text(ix, iy + 2.8, 8, D('+')))
+    for n, name, px, py in pts:
+        if n == 2:
+            continue                       # sous le 5, comme à l'écran
+        o.append(f'<circle class="sv-box" cx="{_n(px)}" cy="{_n(py)}" r="7.5" stroke="currentColor" stroke-width="1.6"/>')
+        o.append(P.text(px, py + 3, 8, D(str(n)), extra=' font-weight="700"'))
+        if narrow:
+            continue                       # au téléphone, les numéros seuls
+        if n == 0:
+            o.append(P.text(px, py + 19, 8, D(name), op=.9))
+        elif n in (1, 4):
+            o.append(P.text(px + 11, py + 3, 8, D(name), anchor='start', op=.9))
+    anc['route'] = (pts[0][2] + 7.5, pts[0][3])
+    # la boîte de la branche 3 → 4
+    mx_, my_ = (pts[3][2] + pts[4][2]) / 2, (pts[3][3] + pts[4][3]) / 2
+    bw, bh = (54, 46) if not narrow else (50, 44)
+    bx_, by_ = (mx_ - 4, my_ - bh - 26) if not narrow else (mx_ + 6, my_ + 16)
+    o.append(f'<line x1="{_n(bx_ + 12)}" y1="{_n(by_ + (0 if narrow else bh))}" x2="{_n(mx_)}" y2="{_n(my_)}" stroke="currentColor" stroke-width=".8" opacity=".6"/>')
+    o.append(sv_box(bx_, by_, bw, bh))
+    for i, parts in enumerate(([D('083°V', '083°T')], [D('19,9 km', '19.9 km')], [D('220 km/h')], [L('rp', 'lb.ete'), D(' 05:25')])):
+        o.append(P.text(bx_ + bw / 2, by_ + 11 + i * 10, 8, *parts))
+    anc['box'] = (bx_ + bw, by_ + 14)
+    return o, anc
+
+
+def _rp_section_closed(P, x, y, w, n, key):
+    return [_rp_rect(x, y, w, 22, op=.7), _rp_chev_closed(x + 9, y + 8), P.text(x + 20, y + 14.5, 8.5, D('%02d ░ ' % n), L('rp', key), anchor='start'),
+            fold_icon(x + w - 18, y + 6)]
+
+
+def _rp_route_head(P, x, y, w):
+    o = [chev(x + 8, y + 9), P.text(x + 20, y + 14.5, 8.5, D('01 ░ '), L('rp', 'sec.route'), anchor='start'),
+         P.text(x + w - 28, y + 14.5, 8, L('rp', 'sec.points', args={'n': '6'}), anchor='end', op=.7), fold_icon(x + w - 18, y + 6),
+         f'<line x1="{_n(x)}" y1="{_n(y + 22)}" x2="{_n(x + w)}" y2="{_n(y + 22)}" stroke="currentColor" stroke-width=".6" opacity=".4"/>']
+    return o
+
+
+def _rp_route_select(P, a, y, w):
+    """La ligne qui choisit la route : liste, +, …"""
+    lw = w - 64
+    return [P.field(a, y, lw, 16, [D('1 · STEPPE WIND M3')]), f'<path d="M{_n(a + lw - 11)},{_n(y + 6.5)} l6,0 l-3,4 z" fill="currentColor" opacity=".7"/>',
+            P.btn(a + lw + 4, y, 26, 16, [D('+')], size=9), P.btn(a + lw + 34, y, 26, 16, [D('…')], size=9)]
+
+
+def _rp_wide(P):
+    o = ['']
+    o.append(P.title_wide('L’ÉCRAN DU ROUTE PLANNER', 'THE ROUTE PLANNER SCREEN', 24, 32))
+    o.append('<g transform="translate(0,22)">')
+    X0, X1 = 110, 610
+    # ── la barre du haut ────────────────────────────────────────────────────────
+    o += [sv_box(X0, 44, X1 - X0, 28), P.text(X0 + 8, 62, 8, L('rp', 'tb.subtitle'), anchor='start', op=.7, ls=.6)]
+    bx, x = {}, X0 + 74
+    for key, w, parts in (('open', 50, [L('rp', 'tb.open', add='▾')]), ('save', 60, [L('rp', 'tb.save')]),
+                          ('export', 52, [L('rp', 'tb.export', add='▾')]), ('display', 58, [L('rp', 'tb.display', add='▾')])):
+        o.append(P.btn(x, 49, w, 18, parts))
+        bx[key] = (x, w)
+        x += w + 4
+    o.append(P.text(x + 4, 61, 8, L('rp', 'tb.theatre', up=True), anchor='start', op=.6))
+    tx = x + 46
+    o.append(P.field(tx, 49, 52, 18, [L('rp', 'th.Syria', add='▾')]))
+    bx['theatre'] = (tx, 52)
+    o.append(P.btn(tx + 58, 49, 46, 18, [L('rp', 'tb.clear')]))
+    bx['clear'] = (tx + 58, 46)
+    for n, key in ((1, 'open'), (2, 'export'), (3, 'display'), (4, 'theatre'), (5, 'clear')):
+        cx = bx[key][0] + bx[key][1] / 2
+        o.append(P.bubble(n, cx, 30, cx, 49))
+    # ── le panneau ──────────────────────────────────────────────────────────────
+    CT = 82
+    PX0, PX1 = X0, 330
+    a, aw = PX0 + 8, PX1 - PX0 - 16
+    o += _rp_route_head(P, PX0, CT, PX1 - PX0)
+    y1 = CT + 30
+    o += _rp_route_select(P, a, y1, aw)
+    o.append(P.text(a, y1 + 28, 8, L('rp', 'rs.count', args={'a': '1', 'n': '1'}), anchor='start', op=.65))
+    y2 = y1 + 36
+    o.append(P.lfield(a, y2, aw, [L('rp', 'f.name')], [D('STEPPE WIND M3')]))
+    y3 = y2 + 38
+    o.append(P.text(a, y3, 8, L('rp', 'rs.groups', up=True), anchor='start', op=.75))
+    o.append(P.text(a + 48, y3, 8.5, D('CAESAR'), anchor='start'))
+    y4 = y3 + 6
+    o.append(P.btn(a, y4, aw, 16, [L('rp', 'rs.assign')]))
+    y5 = y4 + 30
+    cols = ((0, [L('rp', 'th.no')]), (20, [L('rp', 'th.name')]), (84, [L('rp', 'th.alt', args={'u': 'm'})]),
+            (122, [L('rp', 'th.spd.kmh')]), (168, [L('rp', 'th.ref')]))
+    for dx, parts in cols:
+        o.append(P.text(a + dx, y5, 8, *parts, anchor='start', op=.7))
+    y6 = y5 + 6
+    for i, (name, alt, spd, ref) in enumerate(_RP_ROWS):
+        yy = y6 + i * 15
+        o.append(P.field(a, yy, 15, 12, [D(str(i))]))
+        o.append(P.field(a + 20, yy, 60, 12, [D(name)]))
+        o.append(P.field(a + 84, yy, 34, 12, [D(alt)]))
+        if spd == '—':
+            o.append(_rp_rect(a + 122, yy, 42, 12, op=.45, dash=True))
+            o.append(P.text(a + 143, yy + 9, 8, D('—'), op=.6))
+        else:
+            o.append(P.field(a + 122, yy, 42, 12, [D(spd)]))
+        o.append(P.field(a + 168, yy, 26, 12, [L('rp', ref)]))
+        o.append(P.text(a + aw - 2, yy + 9, 8, D('✕'), op=.7))
+    y7 = y6 + len(_RP_ROWS) * 15 + 14
+    o.append(P.text(a, y7, 8, L('rp', 'add.title', up=True), anchor='start', op=.75))
+    y8 = y7 + 6
+    hw = (aw - 4) / 2
+    o.append(_rp_active(P, a, y8, hw, 15, [L('rp', 'add.coord')]))
+    o.append(P.btn(a + hw + 4, y8, hw, 15, [L('rp', 'add.hd')]))
+    y9 = y8 + 20
+    o.append(P.field(a, y9, aw, 15, [L('rp', 'add.coord.ph')]))
+    y10 = y9 + 20
+    o.append(P.btn(a, y10, hw, 15, [L('rp', 'add.wp')]))
+    o.append(P.btn(a + hw + 4, y10, hw, 15, [L('rp', 'add.ref')]))
+    rEnd = y10 + 24
+    o.append(f'<rect x="{PX0}" y="{CT}" width="{PX1 - PX0}" height="{_n(rEnd - CT)}" rx="2" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".8"/>')
+    sy = rEnd + 6
+    for k, (n, key) in enumerate(((2, 'sec.refs'), (3, 'sec.layers'), (4, 'sec.nav'))):
+        o += _rp_section_closed(P, PX0, sy + k * 27, PX1 - PX0, n, key)
+    PE = sy + 3 * 27 - 5
+    # ── la carte ────────────────────────────────────────────────────────────────
+    MX0, MX1 = PX1 + 6, X1
+    mp, anc = _rp_map(P, MX0, CT, MX1, PE)
+    o += mp
+    # ── les bulles du panneau et de la carte ────────────────────────────────────
+    o.append(P.bubble(6, 92, y1 + 8, a, y1 + 8))
+    o.append(P.bubble(7, 92, y4 + 8, a, y4 + 8))
+    o.append(P.bubble(8, 92, y6 + 6, a, y6 + 6))
+    o.append(P.bubble(9, 92, y8 + 7.5, a, y8 + 7.5))
+    o.append(P.bubble(10, 92, sy + 11, PX0, sy + 11))
+    o.append(P.bubble(11, anc['loupe'][0] + 22, anc['loupe'][1], anc['loupe'][0], anc['loupe'][1]))
+    o.append(P.bubble(12, 632, anc['modes'][1], anc['modes'][0], anc['modes'][1]))
+    o.append(P.bubble(13, 632, anc['route'][1], anc['route'][0], anc['route'][1]))
+    o.append(P.bubble(14, 632, anc['box'][1], anc['box'][0], anc['box'][1]))
+    o.append('</g>')
+    o.append('</svg>')
+    o[0] = P.svg_open('pl-wide', 720, PE + 22 + 12, 'L’écran du Route Planner, une route ouverte', 'The Route Planner screen, with a route open', 'rpw')
+    return '\n          '.join(o)
+
+
+# Les pictogrammes de la barre du téléphone (au trait)
+def _rp_ico_folder(cx, cy):
+    return f'<path d="M{_n(cx - 6)},{_n(cy - 4)} h4 l1.5,1.5 h6.5 v7 h-12 z" fill="none" stroke="currentColor" stroke-width="1.1"/>'
+
+
+def _rp_ico_disk(cx, cy):
+    return (f'<rect x="{_n(cx - 5)}" y="{_n(cy - 5)}" width="10" height="10" rx="1" fill="none" stroke="currentColor" stroke-width="1.1"/>'
+            f'<rect x="{_n(cx - 2.5)}" y="{_n(cy - 5)}" width="5" height="3" fill="none" stroke="currentColor" stroke-width=".9"/>')
+
+
+def _rp_ico_export(cx, cy):
+    return (f'<path d="M{_n(cx)},{_n(cy + 2)} v-8 m-3,3 l3,-3 l3,3 M{_n(cx - 6)},{_n(cy)} v5 h12 v-5" fill="none" stroke="currentColor" stroke-width="1.1"/>')
+
+
+def _rp_ico_eye(cx, cy):
+    return (f'<path d="M{_n(cx - 7)},{_n(cy)} q7,-7 14,0 q-7,7 -14,0 z" fill="none" stroke="currentColor" stroke-width="1.1"/>'
+            f'<circle cx="{_n(cx)}" cy="{_n(cy)}" r="2" fill="currentColor"/>')
+
+
+def _rp_ico_chev(x, y):
+    return f'<path d="M{_n(x)},{_n(y)} l3,3 l3,-3" fill="none" stroke="currentColor" stroke-width="1"/>'
+
+
+def _rp_tall(P):
+    W = 360
+    o = ['']
+    o.append(P.title_tall('L’ÉCRAN DU ROUTE PLANNER', 'THE ROUTE PLANNER SCREEN', 'au téléphone', 'on a phone'))
+    o.append('<g transform="translate(0,12)">')
+    X0, X1 = 62, 298
+    w = X1 - X0
+    # ── la barre : pictogrammes seuls, Effacer hors de l'écran (la barre défile) ──
+    o.append(sv_box(X0, 62, w, 30))
+    o.append(P.btn(X0 + 4, 66, 20, 22, [D('◄')]))
+    o.append(P.text(X0 + 30, 81, 8.5, L('rp', 'app.short'), anchor='start', extra=' font-weight="700"'))
+    bx = {}
+    x = X0 + 54
+    for key, bw, ico, chv in (('open', 28, _rp_ico_folder, True), ('save', 22, _rp_ico_disk, False), ('export', 28, _rp_ico_export, True), ('display', 22, _rp_ico_eye, False)):
+        o.append(P.btn(x, 66, bw, 22))
+        o.append(ico(x + (9 if chv else bw / 2), 77))
+        if chv:
+            o.append(_rp_ico_chev(x + 18, 76))
+        bx[key] = (x, bw)
+        x += bw + 4
+    o.append(P.field(x, 66, X1 - 4 - x, 22, [L('rp', 'th.Syria', up=True)]))
+    bx['theatre'] = (x, X1 - 4 - x)
+    o.append(f'<rect x="{_n(X1 - 16)}" y="63" width="14" height="28" fill="url(#rpt-fade)" stroke="none"/>')
+    for n, key in ((1, 'open'), (2, 'export'), (3, 'display'), (4, 'theatre')):
+        cx = bx[key][0] + bx[key][1] / 2
+        o.append(P.bubble(n, cx, 48, cx, 66))
+    # ── la carte, fixe en haut ───────────────────────────────────────────────────
+    MT, MB = 98, 318
+    mp, anc = _rp_map(P, X0, MT, X1, MB, scale=.8, narrow=True)
+    o += mp
+    # la poignée entre la carte et le panneau
+    o.append(f'<rect x="{X0}" y="{MB + 2}" width="{w}" height="12" fill="none" stroke="currentColor" stroke-width=".6" opacity=".35"/>')
+    o.append(f'<path d="M{_n(X0 + w / 2 - 14)},{MB + 6} h28 M{_n(X0 + w / 2 - 14)},{MB + 10} h28" stroke="currentColor" stroke-width="1.1" opacity=".7"/>')
+    # ── le panneau, qui seul défile ─────────────────────────────────────────────
+    PT = MB + 20
+    a, aw = X0 + 8, w - 16
+    o += _rp_route_head(P, X0, PT, w)
+    y1 = PT + 30
+    o += _rp_route_select(P, a, y1, aw)
+    o.append(P.text(a, y1 + 28, 8, L('rp', 'rs.count', args={'a': '1', 'n': '1'}), anchor='start', op=.65))
+    y2 = y1 + 36
+    o.append(P.lfield(a, y2, aw, [L('rp', 'f.name')], [D('STEPPE WIND M3')]))
+    y3 = y2 + 38
+    o.append(P.text(a, y3, 8, L('rp', 'rs.groups', up=True), anchor='start', op=.75))
+    o.append(P.text(a + 48, y3, 8.5, D('CAESAR'), anchor='start'))
+    y4 = y3 + 6
+    o.append(P.btn(a, y4, aw, 16, [L('rp', 'rs.assign')]))
+    PE = y4 + 30
+    # le panneau continue : bords ouverts en pointillé
+    o.append(f'<path d="M{X0},{_n(PE)} V{PT} H{X1} V{_n(PE)}" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".8"/>')
+    o.append(f'<line x1="{X0}" y1="{_n(PE)}" x2="{X1}" y2="{_n(PE)}" stroke="currentColor" stroke-width="1" stroke-dasharray="3 3" opacity=".5"/>')
+    # ── les bulles ──────────────────────────────────────────────────────────────
+    o.append(P.bubble(11, 30, anc['loupe'][1], X0, anc['loupe'][1]))
+    o.append(P.bubble(12, 330, anc['modes'][1], anc['modes'][0], anc['modes'][1]))
+    o.append(P.bubble(14, 330, anc['box'][1], X1, anc['box'][1]))
+    o.append(P.bubble(13, 330, anc['route'][1], anc['route'][0], anc['route'][1]))
+    o.append(P.bubble(6, 30, y1 + 8, a, y1 + 8))
+    o.append(P.bubble(7, 30, y4 + 8, a, y4 + 8))
+    o.append('</g>')
+    o.append('</svg>')
+    o[0] = (P.svg_open('pl-tall', W, PE + 12 + 12, 'L’écran du Route Planner au téléphone, une route ouverte', 'The Route Planner screen on a phone, with a route open', 'rpt')
+            + '<defs><linearGradient id="rpt-fade" x1="0" x2="1"><stop offset="0" stop-color="var(--paper-light)" stop-opacity="0"/>'
+              '<stop offset="1" stop-color="var(--paper-light)" stop-opacity="1"/></linearGradient></defs>')
+    return '\n          '.join(o)
+
+
+def _rp_legend_rows():
+    return [
+        (1, [L('rp', 'tb.open', add='▾')],
+         'Ouvrir un travail… lit un fichier de travail de la suite ; Ouvrir une route ou des calques… reconnaît une route JSON, un fichier du Route Tool de DCS ou un fichier CombatFlite ; Importer des routes… ouvre la fenêtre d’import commune.',
+         'Open a work file… reads a suite work file; Open a route or layers… recognises a JSON route, a DCS Route Tool file or a CombatFlite file; Import routes… opens the common import window.'),
+        (2, [L('rp', 'tb.export', add='▾')],
+         'Image pour le briefing… et Route Tool… : voir plus bas. La ligne Route Tool est grisée sur un théâtre sans Route Tool.',
+         'Image for the briefing… and Route Tool…: see below. The Route Tool line is greyed out on a theatre without a Route Tool.'),
+        (3, [L('rp', 'tb.display', add='▾')],
+         'règle le fond, les unités et ce que montre la carte ; un point ambre sur le bouton signale un réglage changé. La Carte DCS est grisée là où DCS n’en a pas, et la carte de navigation de Flappie n’existe que sur le Caucase.',
+         'sets the base map, the units and what the map shows; an amber dot on the button flags a changed setting. The DCS map is greyed out where DCS has none, and Flappie’s navigation chart exists only on the Caucasus.'),
+        (4, [L('rp', 'tb.theatre')],
+         'choisit la carte de DCS. Une route garde son théâtre : en changer masque les routes des autres théâtres, qui reviennent quand on y retourne.',
+         'chooses the DCS map. A route keeps its theatre: changing it hides the other theatres’ routes, which come back when you return.'),
+        (5, [L('rp', 'tb.clear')],
+         'efface au choix la route sélectionnée, toutes les routes, les points de référence ou les dessins.',
+         'clears, as you choose, the selected route, all routes, the reference points or the drawings.'),
+        (6, [L('rp', 'sec.route')],
+         'en tête, une ligne choisit la route ; + en ajoute une, jusqu’à 12, et … ouvre Dupliquer et Supprimer.',
+         'at the top, a row chooses the route; + adds one, up to 12, and … opens Duplicate and Delete.'),
+        (7, [L('rp', 'rs.assign')],
+         'choisit les groupes qui suivent cette route, ou en crée un ; un groupe ne suit qu’une route, et le Flight Configurator voit le même choix.',
+         'chooses the groups that follow this route, or creates one; a group follows only one route, and the Flight Configurator sees the same choice.'),
+        (8, [M('Les points', 'The waypoints')],
+         'un par ligne : nom, altitude, vitesse et référence de l’altitude, SOL ou MER ; ✕ retire le point.',
+         'one per row: name, altitude, speed and altitude reference, AGL or MSL; ✕ removes the waypoint.'),
+        (9, [L('rp', 'add.title')],
+         'place un point par ses coordonnées (MGRS, DMS, DDM ou décimal) ou par cap et distance depuis le dernier point ; + Réf. en fait un point de référence.',
+         'places a waypoint by its coordinates (MGRS, DMS, DDM or decimal) or by heading and distance from the last waypoint; + Ref. makes it a reference point.'),
+        (10, [M('Les autres sections', 'The other sections')],
+         'Points de référence, Calques, Navigation : chacune se replie par l’icône à droite de son en-tête. Voir plus bas.',
+         'Reference points, Layers, Navigation: each folds by the icon at the right of its header. See below.'),
+        (11, [L('rp', 'sr.title')],
+         'la loupe cherche un lieu ou un objet nommé.',
+         'the magnifier looks for a named place or object.'),
+        (12, [L('rp', 'tap.title')],
+         'Point ajoute un point au bout de la route ; Réf. pose un point de référence ; Lire ne pose rien : un aérodrome ouvre sa fiche, un objet d’un calque montre la sienne ; Dessin ouvre les outils de dessin de vos calques ; Règle mesure cap et distance sans rien poser, et quitter le mode efface la mesure. En Point et en Réf., un aérodrome touché donne un point à son nom.',
+         'Waypoint adds a waypoint at the end of the route; Ref. places a reference point; Read places nothing: an airfield opens its sheet, a layer object shows its own; Draw opens the drawing tools of your layers; Ruler measures heading and distance without placing anything, and leaving the mode clears the measure. In Waypoint and Ref., a tapped airfield gives a waypoint its name.'),
+        (13, [M('La route', 'The route')],
+         'glissez un point pour le déplacer ; le + posé sur une branche assez longue y insère un point. Les traits des minutes coupent la route toutes les minutes.',
+         'drag a waypoint to move it; the + on a long enough leg inserts a waypoint there. The minute ticks cut the route every minute.'),
+        (14, [L('rp', 'f.lbx')],
+         'écrivent la navigation sur la carte, une par branche : cap, distance, vitesse et ETE.',
+         'write the navigation on the map, one per leg: heading, distance, speed and ETE.'),
+    ]
+
+
+def build_plate_rp():
+    """La planche du Route Planner : le HTML (cadre, figure zoomable, légende) ; ses libellés viennent du dictionnaire du RP."""
+    P = Plate('rp', ['rp'])
+    wide, tall = _rp_wide(P), _rp_tall(P)
+    legend = P.legend_html(_rp_legend_rows())
+    P.verify(wide, tall)
+    return P.figure_html(wide, tall,
+                         'Fig. 1 — L’écran du Route Planner, la route de l’exemple ouverte : la barre, le panneau de la route, puis la carte et ses modes de toucher.',
+                         'Fig. 1 — The Route Planner screen with the example route open: the bar, the route panel, then the map and its tap modes.', legend)
