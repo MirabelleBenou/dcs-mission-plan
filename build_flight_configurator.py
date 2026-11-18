@@ -548,6 +548,8 @@ I18N_FR = {
     'u.title': 'Unité {0}',
     'u.fold': 'Replier l’unité',
     'u.unfold': 'Déplier l’unité',
+    'u.foldall': 'Replier toutes les unités',
+    'u.unfoldall': 'Déplier toutes les unités',
     'u.add': '+ Ajouter une unité ({0}/4)',
     'u.type.confirm.title': 'Changer le type de {0} ?',
     'u.type.confirm.text': 'Ses radios et son emport seront effacés.',
@@ -863,6 +865,8 @@ I18N_EN = {
     'u.title': 'Unit {0}',
     'u.fold': 'Fold the unit',
     'u.unfold': 'Unfold the unit',
+    'u.foldall': 'Fold all units',
+    'u.unfoldall': 'Unfold all units',
     'u.add': '+ Add a unit ({0}/4)',
     'u.type.confirm.title': 'Change the type of {0}?',
     'u.type.confirm.text': 'Its radios and loadout will be erased.',
@@ -3387,10 +3391,26 @@ function renderLeft() {
     </div></section>`;
   S.flights.forEach((f, fi) => f.units.forEach((u, ui) => radioPosts(u.type).forEach(r => paintRadioMsg(fi, ui, r))));
   fcFlightIcons();
+  S.flights.forEach((f, fi) => fcUnitIcons(fi));
 }
 // « Tout replier » : une icône à droite de l'en-tête de chaque groupe, dès deux groupes (les sous-blocs d'une unité n'en portent pas)
 function fcFlightIcons() {
   uiFoldAll(S.flights.length > 1 ? Array.prototype.slice.call(document.querySelectorAll('#col-flights .fc-flight > .fc-fhead')) : [], { any: anyFlightOpen(), label: any => t(any ? 'fl.foldall' : 'fl.unfoldall'), go: foldAllFlights });
+}
+// « Tout replier » d'un groupe : la même icône à droite de l'en-tête de chaque carte d'unité, dès deux unités dans le groupe (une unité seule n'en porte pas) ; elle replie ou déplie les unités de ce groupe seulement
+function anyUnitOpen(f) { return f.units.some(u => !u.folded); }
+function fcUnitIcons(fi) {
+  const f = S.flights[fi], el = f && flightEl(fi);
+  if (!el) return;
+  uiFoldAll(f.units.length > 1 ? Array.prototype.slice.call(el.querySelectorAll('.fc-unit > .fc-uhead')) : [], { any: anyUnitOpen(f), label: any => t(any ? 'u.foldall' : 'u.unfoldall'), go: () => foldAllUnits(fi) });
+}
+function foldAllUnits(fi) {
+  const f = S.flights[fi];
+  if (!f) return;
+  const fold = anyUnitOpen(f);
+  f.units.forEach(u => { u.folded = fold; });
+  f.units.forEach((u, ui) => paintUnitFold(fi, ui));
+  saveWork();
 }
 function foldAllFlights() { const open = !anyFlightOpen(); foldFreeze(); S.flights.forEach(f => UI.fold.set(f, open ? 'open' : 'closed')); paintFold(); }
 function foldLabel(f, fi, open) { return `${t(open ? 'fl.fold' : 'fl.unfold')} : ${flightLabel(f, fi)}`; }
@@ -3521,6 +3541,7 @@ function paintUnitFold(fi, ui) {
   const btn = el.querySelector('.fc-ufold');
   btn.setAttribute('aria-expanded', String(!u.folded));
   btn.setAttribute('aria-label', unitFoldLabel(f, fi, u, ui));
+  fcUnitIcons(fi);
 }
 function refreshSummaries() {
   boxEls().forEach(d => { if (!d.open) uiSum(d.querySelector(':scope > summary'), boxSum(d.dataset.box)); });       // le résumé d'une boîte repliée suit le travail
@@ -4564,7 +4585,7 @@ function openFirstPost(sub) {
 }
 function onFocusIn(e) {
   const ue = e.target.closest ? e.target.closest('.fc-unit') : null;
-  if (ue && !(e.target.matches && e.target.matches('[data-act="rm-unit"], [data-act="fold-unit"]'))) selectUnit(Number(ue.closest('.fc-flight').getAttribute('data-f')), Number(ue.getAttribute('data-u')));
+  if (ue && !(e.target.matches && e.target.matches('[data-act="rm-unit"], [data-act="fold-unit"], .ui-foldic'))) selectUnit(Number(ue.closest('.fc-flight').getAttribute('data-f')), Number(ue.getAttribute('data-u')));
 }
 
 // ----- Barre, langue, thème -----

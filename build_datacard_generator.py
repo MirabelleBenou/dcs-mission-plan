@@ -1952,8 +1952,7 @@ const I18N = {
     'f.nav.year': 'Année',
     'f.nav.altref': 'Réf.',
     'f.ref.on': 'Sur cette datacard',
-    'nav.common': 'Commun à la mission',
-    'nav.common.help': 'réglé ici ou au Route Planner, partout le même',
+    'nav.common': 'Pour toute la mission',
     'nav.rule': 'Cap ou distance saisis : le point se déplace depuis le précédent. Coordonnée saisie : cap et distance recalculés. Tout s’écrit dans la route ; l’heure et la note restent à la datacard.',
     'nr.k': 'Route',
     'nr.tag': 'Route Planner',
@@ -2457,8 +2456,7 @@ const I18N = {
     'f.nav.year': 'Year',
     'f.nav.altref': 'Ref.',
     'f.ref.on': 'On this datacard',
-    'nav.common': 'Common to the mission',
-    'nav.common.help': 'set here or in the Route Planner, the same everywhere',
+    'nav.common': 'For the whole mission',
     'nav.rule': 'Heading or distance typed: the waypoint moves from the previous one. Coordinate typed: heading and distance are recomputed. Everything is written to the route; time and note stay with the datacard.',
     'nr.k': 'Route',
     'nr.tag': 'Route Planner',
@@ -5465,25 +5463,30 @@ function radioTable(radios) {
     '<thead><tr><th>' + esc(t('dc.h.ch')) + '</th><th>' + esc(t('dc.h.use')) + '</th><th>' + esc(t('dc.h.freq')) + '</th><th></th></tr></thead>' +
     '<tbody>' + rows + '</tbody></table>';
 }
+/* Les postes propres à une carte libre (jamais ceux d'une carte liée : ses canaux viennent du groupe, dgRadioBoxes), avec les seules rangées qui portent un texte : la source commune de l'aperçu et du résumé de la boîte Radio repliée */
+function dgRadioOwn(c) {
+  return c.gsId ? [] : c.radios.map(r => ({
+    name: r.name,
+    ch: r.channels.filter(x => anyText(x, ['channel', 'label', 'frequency', 'modulation']))
+  })).filter(r => hasText(r.name) || r.ch.length);
+}
+/* Le nombre de canaux que l'aperçu imprime pour la carte (le bloc Radio : les encadrés du groupe, puis les postes propres) */
+function dgRadioCount(c) {
+  return dgRadioBoxes(c).reduce((n, b) => n + b.posts.reduce((m, p) => m + p.ch.length, 0), 0) + dgRadioOwn(c).reduce((n, r) => n + r.ch.length, 0);
+}
 function blkRadio(c) {
   /* carte liée (ou carte libre née d'une carte liée : sa copie figée) : un encadré « RADIO — <TYPE> » par type qui a au moins un canal coché */
   const boxes = dgRadioBoxes(c).map(b => blockHtml('radio', b.title, radioTable(b.posts), 'dc-bbt'));
   const boxHtml = boxes.length > 1 ? '<div class="dc-col">' + boxes.join('') + '</div>' : (boxes[0] || '');
   if (c.gsId) return boxHtml;
-  const radios = c.radios.map(r => ({
-    name: r.name,
-    ch: r.channels.filter(x => anyText(x, ['channel', 'label', 'frequency', 'modulation']))
-  })).filter(r => hasText(r.name) || r.ch.length);
+  const radios = dgRadioOwn(c);
   if (!radios.length) return boxHtml;
   return boxHtml + blockHtml('radio', t('dc.b.radio'), radioTable(radios), 'dc-bbt');
 }
 
 /* Les postes de la page Radios : chacun avec son en-tête, ses canaux sur 3 colonnes (lecture colonne par colonne : 1-7, 8-14, 15-20) */
 function blkRadioPage(c) {
-  const own = c.gsId ? [] : c.radios.map(r => ({
-    name: r.name,
-    ch: r.channels.filter(x => anyText(x, ['channel', 'label', 'frequency', 'modulation']))
-  }));
+  const own = dgRadioOwn(c);
   const radios = dgRadioBoxes(c).reduce((a, b) => a.concat(b.posts.map(p => ({ name: b.title + ' · ' + p.name, ch: p.ch }))), []).concat(own).filter(r => hasText(r.name) || r.ch.length);
   if (!radios.length) return '';
   const head = '<thead><tr><th>' + esc(t('dc.h.ch')) + '</th><th>' + esc(t('dc.h.use')) + '</th><th>' + esc(t('dc.h.freq')) + '</th><th></th></tr></thead>';
@@ -5937,9 +5940,11 @@ function fSegD(labelKey, attr, value, options) {
 
 function navSettingsHtml(c) {
   const nd = c.navDisplay, mag = dgN.ref === 'mag', calc = dgN.mode === 'calc';
-  let h = '<div class="ed-navset-tag"><span class="cr-tag linked">' + esc(t('nav.common')) + '</span><span class="ui-note">' + esc(t('nav.common.help')) + '</span></div>' +
-    '<div class="ed-field-row three ed-navset">' +
-    fSelect('f.nav.display', 'navDisplay.mode', nd.mode, [['course', t('nav.mode.course')], ['mgrs', t('nav.mode.mgrs')], ['dms', t('nav.mode.dms')]]) +
+  /* L'ordre de la rangée : Affichage (propre à la datacard), puis la pastille « pour toute la mission », qui ne marque que Cap et Déclinaison (mp_nav_v1) et leurs champs */
+  let h = '<div class="ed-field-row ed-navset">' +
+    fSelect('f.nav.display', 'navDisplay.mode', nd.mode, [['course', t('nav.mode.course')], ['mgrs', t('nav.mode.mgrs')], ['dms', t('nav.mode.dms')]]) + '</div>' +
+    '<div class="ed-navset-tag"><span class="cr-tag linked">' + esc(t('nav.common')) + '</span></div>' +
+    '<div class="ed-field-row ed-navset">' +
     fSegD('f.nav.ref', 'ref', dgN.ref, [['true', t('nav.ref.true')], ['mag', t('nav.ref.mag')]]) +
     (mag ? fSelectD('f.nav.vmode', 'mode', dgN.mode, [['calc', t('nav.vmode.calc')], ['manual', t('nav.vmode.manual')]]) : '<div class="ed-field"></div>') + '</div>';
   if (mag && !calc) {
@@ -6188,7 +6193,7 @@ function dgSectionSum(id, c) {
     return uiJoin([c.nav.length ? navPts(c.nav.length) : '', info.state === 'linked' && hasText(info.name) ? info.name.trim() : '']);
   }
   if (id === 'refs') return c.refs.length ? t('nr.ref', { m: c.refs.length }) : '';
-  if (id === 'radio') return cnt(Array.prototype.concat.apply([], c.radios.map(r => (Array.isArray(r.channels) ? r.channels : []))), 'sum.chan.1', 'sum.chan.n');
+  if (id === 'radio') { const n = dgRadioCount(c); return n ? t(n === 1 ? 'sum.chan.1' : 'sum.chan.n', { n: n }) : ''; }
   if (id === 'fields') {
     const f = role => { const x = c.fields.find(y => y && y.role === role); return x ? (v(x.icao) || v(x.name)) : ''; };
     const d = f('dep'), a = f('arr');

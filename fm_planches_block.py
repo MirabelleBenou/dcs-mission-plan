@@ -951,7 +951,7 @@ def _fc_route_line(P, x, y):
 
 
 def _fc_unit_head(P, ux, uy, uw, n):
-    return [chev(ux + 7, uy + 7), P.text(ux + 19, uy + 12, 8.5, L('fc', 'u.title', args=(n,)), anchor='start'), P.text(ux + uw - 10, uy + 12, 8.5, D('✕'), op=.7)]
+    return [chev(ux + 7, uy + 7), P.text(ux + 19, uy + 12, 8.5, L('fc', 'u.title', args=(n,)), anchor='start'), P.text(ux + uw - 30, uy + 12, 8.5, D('✕'), op=.7), fold_icon(ux + uw - 18, uy + 4)]
 
 
 def _fc_radios(P, ux, uw, ry, recopy):
@@ -1253,8 +1253,8 @@ def _fc_legend_rows():
          'et la coalition identifient le groupe. Deux groupes d’une même coalition ne portent pas le même nom : l’export est refusé.',
          'and the coalition identify the group. Two groups of the same coalition do not share a name: the export is refused.'),
         (5, [L('fc', 'u.title', args=('1',))],
-         'son type, son nom, son indicatif, son numéro de bord et sa livrée. Changer le type d’une unité efface ses radios et son emport, avec confirmation.',
-         'its type, its name, its call sign, its tail number and its livery. Changing a unit’s type clears its radios and loadout, with confirmation.'),
+         ['son type, son nom, son indicatif, son numéro de bord et sa livrée. Changer le type d’une unité efface ses radios et son emport, avec confirmation. Dans un groupe de deux unités ou plus, l’icône à droite de l’en-tête, « ', L('fc', 'u.foldall'), ' » ou « ', L('fc', 'u.unfoldall'), ' », replie ou déplie toutes les unités du groupe.'],
+         ['its type, its name, its call sign, its tail number and its livery. Changing a unit’s type clears its radios and loadout, with confirmation. In a group of two units or more, the icon at the right of the header, “', L('fc', 'u.foldall'), '” or “', L('fc', 'u.unfoldall'), '”, folds or unfolds all the units of the group.']),
         (6, [L('fc', 'u.livery')],
          'une liste, celle du type de l’unité. Ce qu’elle affiche tant que vous n’avez rien choisi est dit plus bas, dans La livrée.',
          'a list, the unit type’s. What it shows until you choose is told below, in The livery.'),
@@ -1526,6 +1526,7 @@ _RP_PTS = [(0, 'AKROTIRI', .86, .87), (1, 'WP1', .50, .83), (2, 'POLIS', .25, .4
 _RP_ROWS = [('AKROTIRI', '0', '—', 'ref.MSL'), ('WP1', '30', '220', 'ref.AGL'), ('POLIS', '30', '220', 'ref.AGL'),
         ('IP', '50', '220', 'ref.AGL'), ('KARAVOSTASI', '50', '220', 'ref.AGL'), ('POLIS', '0', '220', 'ref.AGL')]
 _RP_MODES = (('tap.wp', 30), ('tap.ref', 26), ('tap.read', 26), ('tap.draw', 34), ('tap.ruler', 32))
+_RP_MODE_ON = 2          # le mode actif à l'ouverture : Lire
 
 
 def _rp_rect(x, y, w, h, op=.7, sw=1, dash=False):
@@ -1579,7 +1580,7 @@ def _rp_map(P, x0, y0, x1, y1, scale=1.0, narrow=False):
     mx = x1 - 6 - mw
     o.append(f'<rect class="sv-box" x="{_n(mx - 2)}" y="{_n(y0 + 4)}" width="{_n(mw + 4)}" height="20" rx="2" stroke="currentColor" stroke-width="1"/>')
     for i, ((key, _w), mwi) in enumerate(zip(_RP_MODES, widths)):
-        if i == 0:
+        if i == _RP_MODE_ON:
             o.append(_rp_active(P, mx, y0 + 6, mwi - 1, 16, [L('rp', key, up=True)]))
         else:
             o.append(P.btn(mx, y0 + 6, mwi - 1, 16, [L('rp', key, up=True)], op=.5))
@@ -1876,8 +1877,8 @@ def _rp_legend_rows():
          'la loupe cherche un lieu ou un objet nommé.',
          'the magnifier looks for a named place or object.'),
         (12, [L('rp', 'tap.title')],
-         'Point ajoute un point au bout de la route ; Réf. pose un point de référence ; Lire ne pose rien : un aérodrome ouvre sa fiche, un objet d’un calque montre la sienne ; Dessin ouvre les outils de dessin de vos calques ; Règle mesure cap et distance sans rien poser, et quitter le mode efface la mesure. En Point et en Réf., un aérodrome touché donne un point à son nom.',
-         'Waypoint adds a waypoint at the end of the route; Ref. places a reference point; Read places nothing: an airfield opens its sheet, a layer object shows its own; Draw opens the drawing tools of your layers; Ruler measures heading and distance without placing anything, and leaving the mode clears the measure. In Waypoint and Ref., a tapped airfield gives the waypoint its name.'),
+         'Le Route Planner s’ouvre en Lire, qui ne pose rien : choisissez Point pour poser la route. Point ajoute un point au bout de la route ; Réf. pose un point de référence ; Lire ne pose rien : un aérodrome ouvre sa fiche, un objet d’un calque montre la sienne ; Dessin ouvre les outils de dessin de vos calques ; Règle mesure cap et distance sans rien poser, et quitter le mode efface la mesure. En Point et en Réf., un aérodrome touché donne un point à son nom.',
+         'The Route Planner opens in Read, which places nothing: choose Waypoint to lay the route. Waypoint adds a waypoint at the end of the route; Ref. places a reference point; Read places nothing: an airfield opens its sheet, a layer object shows its own; Draw opens the drawing tools of your layers; Ruler measures heading and distance without placing anything, and leaving the mode clears the measure. In Waypoint and Ref., a tapped airfield gives the waypoint its name.'),
         (13, [M('La route', 'The route')],
          'glissez un point pour le déplacer ; le + posé sur une branche assez longue y insère un point. Les traits des minutes coupent la route toutes les minutes.',
          'drag a waypoint to move it; the + on a long enough leg inserts a waypoint there. The minute ticks cut the route every minute.'),

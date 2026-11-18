@@ -1307,15 +1307,9 @@ body[data-theme] {{
             <input type="text" id="wing-fullName" maxlength="120" data-i18n-placeholder="ph.wing.fullName">
           </div>
 
-          <div class="ed-field-row" style="margin-bottom:10px">
-            <div class="ed-field">
-              <label data-i18n="editor.wing.appTitle">Titre de l\u2019application</label>
-              <input type="text" id="wing-appTitle" maxlength="60" data-i18n-placeholder="ph.wing.appTitle">
-            </div>
-            <div class="ed-field">
-              <label data-i18n="editor.wing.hqStamp">Tampon HQ <span class="wing-hint">(couverture)</span></label>
-              <input type="text" id="wing-hqStamp" maxlength="60" data-i18n-placeholder="ph.wing.hqStamp">
-            </div>
+          <div class="ed-field" style="margin-bottom:10px">
+            <label data-i18n="editor.wing.hqStamp">Tampon HQ <span class="wing-hint">(couverture)</span></label>
+            <input type="text" id="wing-hqStamp" maxlength="60" data-i18n-placeholder="ph.wing.hqStamp">
           </div>
 
           <div class="ed-field">
@@ -1468,7 +1462,6 @@ const I18N = {{
     'ph.wing.shortName': 'Nom court affiché dans la barre',
     'ph.wing.id': 'Identifiant, sans espace ni /',
     'ph.wing.fullName': 'Nom complet du wing',
-    'ph.wing.appTitle': 'Titre affiché en haut de l\\'application',
     'ph.wing.hqStamp': 'Texte du tampon de la couverture',
     'ph.sq.id': 'Identifiant, sans espace ni /',
     'ph.sq.callsign': 'Indicatif radio de l\\'escadron',
@@ -1485,7 +1478,6 @@ const I18N = {{
     'editor.wing.shortName':    'Nom court (toolbar, branding)',
     'editor.wing.id':           'Identifiant (sans espace ni /)',
     'editor.wing.fullName':     'Nom complet',
-    'editor.wing.appTitle':     "Titre de l\u2019application",
     'editor.wing.hqStamp':      'Tampon HQ (couverture)',
     'editor.wing.logo':         'Logo wing principal',
     'editor.wing.squadrons':    'Escadrons',
@@ -1905,7 +1897,6 @@ const I18N = {{
     'ph.wing.shortName': 'Short name shown in the toolbar',
     'ph.wing.id': 'Identifier, no spaces or /',
     'ph.wing.fullName': 'Full name of the wing',
-    'ph.wing.appTitle': 'Title shown at the top of the application',
     'ph.wing.hqStamp': 'Text of the cover stamp',
     'ph.sq.id': 'Identifier, no spaces or /',
     'ph.sq.callsign': 'Radio callsign of the squadron',
@@ -1922,7 +1913,6 @@ const I18N = {{
     'editor.wing.shortName':    'Short name (toolbar, branding)',
     'editor.wing.id':           'Identifier (no spaces or /)',
     'editor.wing.fullName':     'Full name',
-    'editor.wing.appTitle':     'Application title',
     'editor.wing.hqStamp':      'HQ stamp (cover)',
     'editor.wing.logo':         'Main wing logo',
     'editor.wing.squadrons':    'Squadrons',
@@ -3060,7 +3050,7 @@ function wingApplyManaged() {{
   }} else if (note) {{
     note.remove();
   }}
-  ['wing-shortName', 'wing-id', 'wing-fullName', 'wing-appTitle', 'wing-hqStamp'].forEach(id => {{ const el = document.getElementById(id); if (el) el.disabled = on; }});
+  ['wing-shortName', 'wing-id', 'wing-fullName', 'wing-hqStamp'].forEach(id => {{ const el = document.getElementById(id); if (el) el.disabled = on; }});
   ['wing-sq-add', 'wing-liv-add'].forEach(id => {{ const el = document.getElementById(id); if (el) el.hidden = on; }});
   const tip = on ? t('wing.managed.tip').split('{{x}}').join(x) : '';
   const imp = document.getElementById('wing-import-input'), impLbl = document.querySelector('#wing-modal .wing-action-import');
@@ -3084,7 +3074,6 @@ function renderWingEditor() {{
   setVal('wing-shortName', w.shortName);
   setVal('wing-id',        w.id);
   setVal('wing-fullName',  w.fullName);
-  setVal('wing-appTitle',  w.appTitle);
   setVal('wing-hqStamp',   w.hqStamp);
   refreshWingLogoZone();
   renderWingSquadrons();
@@ -3099,7 +3088,6 @@ function bindWingEditorEvents() {{
     ['wing-shortName', 'shortName'],
     ['wing-id',        'id'       ],
     ['wing-fullName',  'fullName' ],
-    ['wing-appTitle',  'appTitle' ],
     ['wing-hqStamp',   'hqStamp'  ]
   ].forEach(([elId, field]) => {{
     const inp = document.getElementById(elId);
@@ -6809,7 +6797,6 @@ grep_present('localStorage.getItem(KEY_WING', 'lecture wing_config_v1')
 grep_present('wing-shortName',  'champ wing-shortName')
 grep_present('wing-id"',        'champ wing-id')
 grep_present('wing-fullName',   'champ wing-fullName')
-grep_present('wing-appTitle',   'champ wing-appTitle')
 grep_present('wing-hqStamp',    'champ wing-hqStamp')
 grep_present('wing-logo-input', 'champ wing-logo-input')
 grep_present("const KEY_LANG  = 'lang_v1'", 'cl\u00e9 langue lang_v1 (celle des autres outils)')

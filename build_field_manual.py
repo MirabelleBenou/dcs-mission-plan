@@ -787,7 +787,7 @@ def _md(t, fr=False):
     t = _esc(t)
     t = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', t)
     t = re.sub(r'`(.+?)`', r'<code>\1</code>', t)
-    t = re.sub(r'\[\[([\w:-]+)\|(.+?)\]\]', r'<a href="#\1" onclick="location.hash=&#39;\1&#39;;return false">\2</a>', t)
+    t = re.sub(r'\[\[([\w:-]+)\|(.+?)\]\]', r'<a class="fm-lnk" href="#\1" onclick="location.hash=&#39;\1&#39;;return false">\2</a>', t)
     return _typo_fr(t) if fr else t
 
 def _lb(lang, inner, tag='div'):
@@ -1843,7 +1843,7 @@ body[lang="fr"] .lang-block[data-lang="en"] {{ display: none; }}
   color: var(--red-stamp);
 }}
 
-.fm-callout a {{
+.fm-callout a, a.fm-lnk {{
   color: var(--accent-ink);
   text-decoration: underline;
   text-decoration-color: var(--chapter-accent, var(--fm-accent));
