@@ -22,6 +22,7 @@ import sys
 
 from version_block import SUITE_VERSION
 from magvar_block import build_block as build_magvar_block
+from diss_block import build_block as build_diss_block, verify as diss_verify
 from route_pack_block import build_block as build_route_pack_block
 from route_theatre_block import build_block as build_route_theatre_block
 from route_write_block import build_block as build_route_write_block
@@ -413,6 +414,10 @@ table.nav .co { display: block; font-size: 12px; }
 table.nav .co.alt { font-family: var(--f-mono); font-weight: 400; letter-spacing: 0; color: #463f30; }
 table.nav .co.dms { color: #463f30; }
 table.nav td.r { text-align: right; white-space: nowrap; }
+table.nav .co.diss { font-weight: 700; color: #1f1c16; }      /* la ligne DISS-15 d'un point : deux valeurs, jamais coupées à l'intérieur (.dv) */
+table.nav .co.diss .dv { white-space: nowrap; }
+.sheet-diss { border-top: 1px solid rgba(240,232,214,.35); }
+.sheet-diss[hidden] { display: none; }
 .total { display: flex; justify-content: space-between; padding: 8px 12px; font-weight: 700; letter-spacing: 1.5px; font-size: 12px;
   border-top: 2px solid #1f1c16; }
 .total b { font-family: var(--f-mono); font-weight: 400; font-size: 13px; letter-spacing: 0; }
@@ -1255,6 +1260,7 @@ __CSS__
         </div>
         <div class="hdg">
           <div><div class="lbl" data-i18n="f.ref">Cap</div><span class="tb-group" role="group"><button type="button" class="tb-btn" data-ref="true" aria-pressed="true" data-i18n="ref.true">Vrai</button><button type="button" class="tb-btn" data-ref="mag" aria-pressed="false" data-i18n="ref.mag">Magnétique</button></span></div>
+          <div><div class="lbl" data-i18n="f.diss">DISS-15</div><span class="tb-group" role="group" data-i18n-aria-label="f.diss" aria-label="DISS-15"><button type="button" class="tb-btn" data-diss="off" aria-pressed="true" data-i18n="diss.off">Masquer</button><button type="button" class="tb-btn" data-diss="on" aria-pressed="false" data-i18n="diss.on">Afficher</button></span></div>
         </div>
         <div id="dv-wrap" hidden>
           <div class="hdg dv-row">
@@ -1269,6 +1275,7 @@ __CSS__
         </div>
         <div class="sheet">
           <div class="sheet-top"><span id="nav-title"></span></div>
+          <div class="sheet-top sheet-diss" id="nav-diss" hidden><span id="nav-diss-t"></span></div>
           <table class="nav">
             <thead><tr><th scope="col" data-i18n="nav.th.no">N°</th><th scope="col" data-i18n="nav.th.pt">Point · alt.</th><th scope="col" colspan="2" data-i18n="nav.th.co">MGRS · DMS / cap · distance</th></tr></thead>
             <tbody id="nav-body"></tbody>
@@ -2142,6 +2149,15 @@ const I18N = {
     'f.decl.ph': '+4,5',
     'nav.decl.help': 'en degrés, + vers l\'Est\u202f; lue au CDU de l\'A-10C (POSINFO), au DED du F-16 (MVAR) ou à l\'HSI du F/A-18',
     'nav.decl.warn': 'Déclinaison manquante\u202f: cap vrai affiché',
+    'f.diss': 'DISS-15',
+    'diss.off': 'Masquer',
+    'diss.on': 'Afficher',
+    'nav.diss.grid': 'DISS-15 000 · NORD GRILLE · KM-2 {d}°',
+    'nav.diss.grid0': 'DISS-15 000 · NORD GRILLE',
+    'nav.diss.mag': 'DISS-15 000 · NORD MAGNÉTIQUE {d}°',
+    'nav.diss.mag0': 'DISS-15 000 · NORD MAGNÉTIQUE',
+    'nav.diss.type': 'DISS-15 : Mi-24P et Mi-8MTV2 seulement',
+    'nav.diss.theatre': 'DISS-15 : pas de grille DCS sur ce théâtre',
     'nav.title.true': 'NAVIGATION — CAP VRAI',
     'nav.title.mag': 'NAVIGATION — CAP MAGNÉTIQUE (DÉCL. {d}°)',
     'nav.title.calc': 'NAVIGATION — CAP MAGNÉTIQUE · VAR {a} ({min} à {max}°)',
@@ -2659,6 +2675,15 @@ const I18N = {
     'f.decl.ph': '+4.5',
     'nav.decl.help': 'in degrees, + East; read on the A-10C CDU (POSINFO), the F-16 DED (MVAR) or the F/A-18 HSI',
     'nav.decl.warn': 'Variation missing: true heading shown',
+    'f.diss': 'DISS-15',
+    'diss.off': 'Hide',
+    'diss.on': 'Show',
+    'nav.diss.grid': 'DISS-15 000 · GRID NORTH · KM-2 {d}°',
+    'nav.diss.grid0': 'DISS-15 000 · GRID NORTH',
+    'nav.diss.mag': 'DISS-15 000 · MAGNETIC NORTH {d}°',
+    'nav.diss.mag0': 'DISS-15 000 · MAGNETIC NORTH',
+    'nav.diss.type': 'DISS-15: Mi-24P and Mi-8MTV2 only',
+    'nav.diss.theatre': 'DISS-15: no DCS grid on this theatre',
     'nav.title.true': 'NAVIGATION — TRUE HEADING',
     'nav.title.mag': 'NAVIGATION — MAGNETIC HEADING (VAR {d}°)',
     'nav.title.calc': 'NAVIGATION — MAGNETIC HEADING · VAR {a} ({min} to {max}°)',
@@ -3074,6 +3099,7 @@ const $ = id => document.getElementById(id);
 @@READNUM_BLOCK@@
 
 @@MAGVAR_BLOCK@@
+@@DISS_BLOCK@@
 /* ============= MODÈLE ============= */
 function defaultState() {
   return {
@@ -3091,7 +3117,7 @@ let S = defaultState();
 let sel = -1;                 /* point sélectionné (non enregistré) */
 let selR = -1;                /* point de référence sélectionné (non enregistré) */
 const KEY_DISPLAY = 'rp_display_v1';
-const DISP = { routes: 'all', refs: true, draw: true, sym: true, cf: true };     /* ce que le menu « Affichage » montre ; gardé dans rp_display_v1, jamais dans route_state_v1 ; routes : 'none' | 'active' | 'all' */
+const DISP = { routes: 'all', refs: true, draw: true, sym: true, cf: true, diss: false };     /* ce que le menu « Affichage » montre ; gardé dans rp_display_v1, jamais dans route_state_v1 ; routes : 'none' | 'active' | 'all' */
 const ROUTES_SHOW = ['none', 'active', 'all'];
 function routeShown() { return DISP.routes !== 'none'; }
 let tapMode = 'read';         /* ce que fait un toucher sur la carte : 'read' (ouvre les fiches des calques, ne pose rien : le mode de chaque ouverture), 'wp' (pose un point), 'ref' (pose une référence), 'draw' (dessine dans un calque) ou 'ruler' (mesure sur la carte, ne pose rien) — non enregistré */
@@ -6942,8 +6968,43 @@ function dvSrcHtml(ys) {
   return h + '<br>' + esc(t('dv.src.model', { e: magModel(ys.y) }));
 }
 
+/* Le DISS-15 de la route active (bloc partagé diss_block.py). Le type : celui de la première unité du premier groupe qui suit la route active (groupsOfRoute) ; sans groupe, sans unité ou sans type, vide (règle du Mi-24P).
+   Rend { ok: true, kind: 'grid' | 'mag' } ou { ok: false, why: 'type' | 'theatre' } (le type est regardé d'abord) */
+function rpDissType() {
+  const r = RSET && RSET.routes[RSET.active], g = r ? groupsOfRoute(r.rid)[0] : null;
+  const u = g && Array.isArray(g.units) ? g.units.filter(gsIsObj)[0] : null;
+  return u && typeof u.type === 'string' ? u.type : '';
+}
+function rpDiss() {
+  const kind = dissKind(rpDissType());
+  if (kind === null) return { ok: false, why: 'type' };
+  if (!dissTheatreOk(S.theatre)) return { ok: false, why: 'theatre' };
+  return { ok: true, kind: kind };
+}
+/* D0 au premier point o : la saisie lisible du cap magnétique, sinon le modèle à l'année de la route (navYear, comme le reste de la navigation) */
+function rpDissD0(o) {
+  const man = S.navDisplay.ref === 'mag' && S.navDisplay.mode === 'manual' ? parseDecl(S.navDisplay.decl) : null;
+  return dissD0(o.lat, o.lon, man, man == null ? navYear().y : 0);
+}
+/* Ce que la feuille montre du DISS-15 : une signature, pour la redessiner quand le type d'une unité, le groupe ou le théâtre change sans que rien d'autre ne bouge */
+const NAVD = { sig: '' };
+function rpDissSig() { if (!DISP.diss) return 'off'; const d = rpDiss(); return d.ok ? d.kind : d.why; }
+
 function renderNav() {
   $('nav-title').textContent = navTitle();
+  /* DISS-15 : sous le titre, la ligne du nord et de la valeur à régler (ou la raison du refus) ; sous chaque point, ses deux valeurs */
+  const dsd = DISP.diss ? rpDiss() : null;
+  let dv = null;
+  const band = $('nav-diss');
+  NAVD.sig = rpDissSig();
+  if (!dsd) band.hidden = true;
+  else if (!dsd.ok) { band.hidden = false; $('nav-diss-t').textContent = t('nav.diss.' + dsd.why); }
+  else {
+    const o = S.points[0], d0 = o ? rpDissD0(o) : null;
+    dv = dissRows(S.theatre, S.points, dissRot(dsd.kind, d0), CURRENT_LANG);
+    band.hidden = false;
+    $('nav-diss-t').textContent = t('nav.diss.' + dsd.kind + (d0 == null ? '0' : ''), { d: d0 == null ? '' : fmtVar(d0) });
+  }
   const tm = timing();
   const calc = navIsCalc(), ys = calc ? navYear() : null;
   let rows = '';
@@ -6954,7 +7015,8 @@ function renderNav() {
     }
     rows += '<tr><td class="n">' + i + '</td><td class="nm">' + esc(p.name) + '<span class="co alt">' + esc(altText(p)) + '</span><span class="co alt tm">' + esc(t('nav.t', { t: fmtElapsed(tm.el[i]) })) + '</span>' +
       (calc ? '<span class="co alt dv-leg">' + esc(t('nav.var', { v: fmtVar(declAt(p, ys)) })) + '</span>' : '') + '</td>' +
-      '<td colspan="2"><span class="co">' + esc(toMGRS(p.lat, p.lon)) + '</span><span class="co dms">' + esc(toDMS(p.lat, p.lon)) + '</span></td></tr>';
+      '<td colspan="2"><span class="co">' + esc(toMGRS(p.lat, p.lon)) + '</span><span class="co dms">' + esc(toDMS(p.lat, p.lon)) + '</span>' +
+      (dv && dv[i] ? '<span class="co diss"><span class="dv">' + esc(dv[i].fwd) + '</span> · <span class="dv">' + esc(dv[i].right) + '</span></span>' : '') + '</td></tr>';
   });
   $('nav-body').innerHTML = rows;
   $('nav-total').textContent = t('nav.total.v', { d: fmtDist(tm.km), t: fmtElapsed(tm.sec) });
@@ -6991,6 +7053,7 @@ function syncControls() {
     b.setAttribute('aria-pressed', on ? 'true' : 'false');
   });
   mark('data-ref', S.navDisplay.ref);
+  mark('data-diss', DISP.diss ? 'on' : 'off');
   mark('data-lbx', S.legBoxes);
   mark('data-trc', S.ui.trace);
   mark('data-tck', S.ui.ticks);
@@ -7983,6 +8046,7 @@ function routesRender() {
   const fl = $('rs-groups'), names = groupLabels(r.rid);
   fl.className = 'rs-groups' + (names.length ? '' : ' none');
   fl.innerHTML = names.length ? '<b>' + esc(t('rs.groups')) + '</b><em>' + esc(names.join(' · ')) + '</em>' : esc(t('rs.nogroup'));
+  if (NAVD.sig && rpDissSig() !== NAVD.sig) renderNav();       /* le groupe de la route, ou le type de sa première unité, a changé dans la fiche partagée : la feuille DISS-15 suit */
   dspSync();
 }
 
@@ -9328,7 +9392,7 @@ function loadDisplay() {
   } catch (e) { /* valeurs par défaut */ }
 }
 function saveDisplay() {
-  try { localStorage.setItem(KEY_DISPLAY, JSON.stringify({ routes: DISP.routes, refs: DISP.refs, draw: DISP.draw, sym: DISP.sym, cf: DISP.cf })); } catch (e) { /* stockage indisponible */ }
+  try { localStorage.setItem(KEY_DISPLAY, JSON.stringify({ routes: DISP.routes, refs: DISP.refs, draw: DISP.draw, sym: DISP.sym, cf: DISP.cf, diss: DISP.diss })); } catch (e) { /* stockage indisponible */ }
 }
 
 /* L'état d'une ligne : cochée, grisée, info-bulle */
@@ -10275,6 +10339,10 @@ function bindEvents() {
     S.navDisplay.ref = b.dataset.ref === 'mag' ? 'mag' : 'true';
     persistState(); renderNav(); drawRoute(); syncControls();
   }));
+  document.querySelectorAll('[data-diss]').forEach(b => b.addEventListener('click', () => {
+    DISP.diss = b.dataset.diss === 'on';
+    saveDisplay(); renderNav(); syncControls();
+  }));
   document.querySelectorAll('[data-lbx]').forEach(b => b.addEventListener('click', () => {
     S.legBoxes = LEGBOX_IDS.indexOf(b.dataset.lbx) !== -1 ? b.dataset.lbx : 'full';
     persistState(); drawDecor(); syncControls();
@@ -10479,7 +10547,7 @@ def build():
     airfields_js = json.dumps(AF['theatres'], ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
     towns_js = json.dumps(TW['theatres'], ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
     js = JS.replace('__AIRFIELDS__', airfields_js).replace('__TOWNS__', towns_js)
-    js = js.replace('@@GEO_BLOCK@@\n', GEO_BLOCK).replace('@@READNUM_BLOCK@@\n', READNUM_BLOCK).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@ROUTE_PACK_BLOCK@@\n', build_route_pack_block()).replace('@@ROUTE_THEATRE_BLOCK@@\n', build_route_theatre_block()).replace('@@ROUTE_WRITE_BLOCK@@\n', build_route_write_block()).replace('@@GROUP_STORE_BLOCK@@\n', build_group_store_block()).replace('@@RADIO_BLOCK@@\n', build_radio_block()).replace('@@RADIO_BANDS_BLOCK@@\n', build_radio_bands_block()).replace('@@IMPORT_BLOCK@@\n', build_import_block() + build_mission_line_block()).replace('@@MESSAGES_BLOCK@@\n', build_messages_block() + build_ui_block())
+    js = js.replace('@@GEO_BLOCK@@\n', GEO_BLOCK).replace('@@READNUM_BLOCK@@\n', READNUM_BLOCK).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@DISS_BLOCK@@\n', build_diss_block()).replace('@@ROUTE_PACK_BLOCK@@\n', build_route_pack_block()).replace('@@ROUTE_THEATRE_BLOCK@@\n', build_route_theatre_block()).replace('@@ROUTE_WRITE_BLOCK@@\n', build_route_write_block()).replace('@@GROUP_STORE_BLOCK@@\n', build_group_store_block()).replace('@@RADIO_BLOCK@@\n', build_radio_block()).replace('@@RADIO_BANDS_BLOCK@@\n', build_radio_bands_block()).replace('@@IMPORT_BLOCK@@\n', build_import_block() + build_mission_line_block()).replace('@@MESSAGES_BLOCK@@\n', build_messages_block() + build_ui_block())
     js = js.replace('@@TBM_JS@@\n', build_tbm_block())
     if '@@' in js:
         raise SystemExit("[ERREUR] Marqueur @@ non remplacé dans le script")
@@ -10510,6 +10578,7 @@ def build():
     # Contrôles de construction
     ui_verify(html)
     ui_verify_bar(html)
+    diss_verify(js, 'Route Planner')
     mission_line_verify(html, 'rpMissionLine', 'navYear(', 2)
     # Le pane des aérodromes est au-dessus de celui des calques CombatFlite (en mode Lire, un aérodrome dans une zone ouvre sa fiche) et sous la route (overlayPane, 400)
     _zl = re.search(r'const LAYERS_Z = (\d+);', html)

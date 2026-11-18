@@ -935,13 +935,14 @@ def _bars(x, y, w, n=1, gap=10):
 # ═════════════════════════════════════════════════════════════════════════════════
 
 def _fc_group_head(P, gx, gy, gw):
-    """Ligne titre d'un groupe : repli, nom, pastilles (type, unités), retrait."""
+    """Ligne titre d'un groupe : repli, nom, pastilles (type, unités), l'icône « Tout replier » (dès un groupe), retrait."""
     o = [chev(gx + 8, gy + 8), P.text(gx + 20, gy + 13, 8.5, D('CAESAR'), anchor='start')]
     px = gx + 20 + 6.2 * 6
     s, w1 = P.pill(px, gy + 4, [D('Mi-24P')])
     o.append(s)
     s, w2 = P.pill(px + w1 + 4, gy + 4, [L('fc', 'fl.units.many', args=('2',))])
     o.append(s)
+    o.append(fold_icon(gx + gw - 32, gy + 5))
     o.append(P.text(gx + gw - 12, gy + 13, 8.5, D('✕'), op=.7))
     return o
 
@@ -1247,8 +1248,8 @@ def _fc_legend_rows():
          'vos groupes sont partagés avec le Route Planner et le Datacard Generator : un groupe créé ou renommé dans l’un apparaît dans les autres.',
          'your groups are shared with the Route Planner and the Datacard Generator: a group created or renamed in one appears in the others.'),
         (3, [M('Un groupe', 'A group')],
-         'sa carte se replie par la flèche à gauche de son nom ; ✕ le retire de tous les outils.',
-         'its card folds by the arrow at the left of its name; ✕ removes it from all tools.'),
+         ['sa carte se replie par la flèche à gauche de son nom ; ✕ le retire de tous les outils. L’icône à droite de l’en-tête, « ', L('fc', 'fl.foldall'), ' » ou « ', L('fc', 'fl.unfoldall'), ' », replie ou déplie tous les groupes, même un seul.'],
+         ['its card folds by the arrow at the left of its name; ✕ removes it from all tools. The icon at the right of the header, “', L('fc', 'fl.foldall'), '” or “', L('fc', 'fl.unfoldall'), '”, folds or unfolds all the groups, even a single one.']),
         (4, [L('fc', 'fl.name')],
          'et la coalition identifient le groupe. Deux groupes d’une même coalition ne portent pas le même nom : l’export est refusé.',
          'and the coalition identify the group. Two groups of the same coalition do not share a name: the export is refused.'),

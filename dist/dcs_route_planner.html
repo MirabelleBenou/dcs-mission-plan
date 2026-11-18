@@ -1013,6 +1013,10 @@ table.nav .co { display: block; font-size: 12px; }
 table.nav .co.alt { font-family: var(--f-mono); font-weight: 400; letter-spacing: 0; color: #463f30; }
 table.nav .co.dms { color: #463f30; }
 table.nav td.r { text-align: right; white-space: nowrap; }
+table.nav .co.diss { font-weight: 700; color: #1f1c16; }      /* la ligne DISS-15 d'un point : deux valeurs, jamais coupées à l'intérieur (.dv) */
+table.nav .co.diss .dv { white-space: nowrap; }
+.sheet-diss { border-top: 1px solid rgba(240,232,214,.35); }
+.sheet-diss[hidden] { display: none; }
 .total { display: flex; justify-content: space-between; padding: 8px 12px; font-weight: 700; letter-spacing: 1.5px; font-size: 12px;
   border-top: 2px solid #1f1c16; }
 .total b { font-family: var(--f-mono); font-weight: 400; font-size: 13px; letter-spacing: 0; }
@@ -2249,6 +2253,7 @@ SOFTWARE.
         </div>
         <div class="hdg">
           <div><div class="lbl" data-i18n="f.ref">Cap</div><span class="tb-group" role="group"><button type="button" class="tb-btn" data-ref="true" aria-pressed="true" data-i18n="ref.true">Vrai</button><button type="button" class="tb-btn" data-ref="mag" aria-pressed="false" data-i18n="ref.mag">Magnétique</button></span></div>
+          <div><div class="lbl" data-i18n="f.diss">DISS-15</div><span class="tb-group" role="group" data-i18n-aria-label="f.diss" aria-label="DISS-15"><button type="button" class="tb-btn" data-diss="off" aria-pressed="true" data-i18n="diss.off">Masquer</button><button type="button" class="tb-btn" data-diss="on" aria-pressed="false" data-i18n="diss.on">Afficher</button></span></div>
         </div>
         <div id="dv-wrap" hidden>
           <div class="hdg dv-row">
@@ -2263,6 +2268,7 @@ SOFTWARE.
         </div>
         <div class="sheet">
           <div class="sheet-top"><span id="nav-title"></span></div>
+          <div class="sheet-top sheet-diss" id="nav-diss" hidden><span id="nav-diss-t"></span></div>
           <table class="nav">
             <thead><tr><th scope="col" data-i18n="nav.th.no">N°</th><th scope="col" data-i18n="nav.th.pt">Point · alt.</th><th scope="col" colspan="2" data-i18n="nav.th.co">MGRS · DMS / cap · distance</th></tr></thead>
             <tbody id="nav-body"></tbody>
@@ -2845,6 +2851,15 @@ const I18N = {
     'f.decl.ph': '+4,5',
     'nav.decl.help': 'en degrés, + vers l\'Est\u202f; lue au CDU de l\'A-10C (POSINFO), au DED du F-16 (MVAR) ou à l\'HSI du F/A-18',
     'nav.decl.warn': 'Déclinaison manquante\u202f: cap vrai affiché',
+    'f.diss': 'DISS-15',
+    'diss.off': 'Masquer',
+    'diss.on': 'Afficher',
+    'nav.diss.grid': 'DISS-15 000 · NORD GRILLE · KM-2 {d}°',
+    'nav.diss.grid0': 'DISS-15 000 · NORD GRILLE',
+    'nav.diss.mag': 'DISS-15 000 · NORD MAGNÉTIQUE {d}°',
+    'nav.diss.mag0': 'DISS-15 000 · NORD MAGNÉTIQUE',
+    'nav.diss.type': 'DISS-15 : Mi-24P et Mi-8MTV2 seulement',
+    'nav.diss.theatre': 'DISS-15 : pas de grille DCS sur ce théâtre',
     'nav.title.true': 'NAVIGATION — CAP VRAI',
     'nav.title.mag': 'NAVIGATION — CAP MAGNÉTIQUE (DÉCL. {d}°)',
     'nav.title.calc': 'NAVIGATION — CAP MAGNÉTIQUE · VAR {a} ({min} à {max}°)',
@@ -3362,6 +3377,15 @@ const I18N = {
     'f.decl.ph': '+4.5',
     'nav.decl.help': 'in degrees, + East; read on the A-10C CDU (POSINFO), the F-16 DED (MVAR) or the F/A-18 HSI',
     'nav.decl.warn': 'Variation missing: true heading shown',
+    'f.diss': 'DISS-15',
+    'diss.off': 'Hide',
+    'diss.on': 'Show',
+    'nav.diss.grid': 'DISS-15 000 · GRID NORTH · KM-2 {d}°',
+    'nav.diss.grid0': 'DISS-15 000 · GRID NORTH',
+    'nav.diss.mag': 'DISS-15 000 · MAGNETIC NORTH {d}°',
+    'nav.diss.mag0': 'DISS-15 000 · MAGNETIC NORTH',
+    'nav.diss.type': 'DISS-15: Mi-24P and Mi-8MTV2 only',
+    'nav.diss.theatre': 'DISS-15: no DCS grid on this theatre',
     'nav.title.true': 'NAVIGATION — TRUE HEADING',
     'nav.title.mag': 'NAVIGATION — MAGNETIC HEADING (VAR {d}°)',
     'nav.title.calc': 'NAVIGATION — MAGNETIC HEADING · VAR {a} ({min} to {max}°)',
@@ -4061,8 +4085,8 @@ function uiSum(head, text) {
   if (s.textContent !== v) s.textContent = v;
 }
 function uiFoldAllLabel(anyOpen) { return uiT(anyOpen ? 'ui.foldall' : 'ui.unfoldall'); }
-/* « Tout replier » : l'icône posée à droite de l'en-tête de chaque section d'un panneau (deux au moins ; une section seule n'en porte pas).
-   heads : les en-têtes du panneau (un <summary>, un <button> enveloppé d'un .ui-fa-box, un en-tête de boîte) ; cfg : { any : une section au moins est ouverte,
+/* « Tout replier » : l'icône posée à droite de l'en-tête de chaque section d'un panneau (deux au moins ; une section seule n'en porte pas, sauf si le panneau demande un seuil d'un : cfg.min).
+   heads : les en-têtes du panneau (un <summary>, un <button> enveloppé d'un .ui-fa-box, un en-tête de boîte) ; cfg : { any : une section au moins est ouverte, min : le nombre d'en-têtes à partir duquel l'icône paraît (2 par défaut),
    label(any) : le texte de l'icône (title et aria-label), go() : le geste, qui replie ou déplie toutes les sections du panneau et rappelle uiFoldAll }.
    Le geste est celui de l'icône seule : l'en-tête ne bascule pas. L'icône garde le focus (elle n'est jamais refaite) ; replié ou déplié, seule son image change. */
 const UIFA_SVG = {
@@ -4080,7 +4104,7 @@ function uiFoldAllOff(heads) {
 }
 function uiFoldAll(heads, cfg) {
   const list = Array.prototype.slice.call(heads || []).filter(Boolean);
-  if (list.length < 2) { uiFoldAllOff(list); return; }
+  if (list.length < (cfg.min || 2)) { uiFoldAllOff(list); return; }
   const state = cfg.any ? 'fold' : 'unfold', lab = cfg.label(!!cfg.any);
   list.forEach(h => {
     const host = uiFoldAllHost(h);
@@ -4705,6 +4729,56 @@ function magYearSource(theatre, yearStr, force, routeDate, cardDate) {
   return { src: 'default', y: magDecYear('1985'), year: '1985', file: '', date: '' };
 }
 /* ===== FIN DE LA DÉCLINAISON MAGNÉTIQUE ===== */
+/* ===== VALEURS DU DISS-15 (Mi-24P, Mi-8MTV2) ===== */
+/* Les valeurs du DISS-15 du point p depuis l'origine o (le point 000, premier point de la route) :
+   { fwd, right } en km, fwd > 0 en avant, right > 0 à droite.
+   rot : le nord de l'axe « avant » de l'appareil quand l'angle de carte vaut 000, en degrés depuis le nord de la grille
+   de DCS, + vers l'Est : 0 si le cap de l'appareil est le cap grille (Mi-24P, KM-2 réglé), la déclinaison au point 000
+   s'il est magnétique (Mi-8MTV2). A : l'angle de carte (0 par défaut). Les écarts se prennent sur la grille de DCS
+   (llToDcs : x au nord, y à l'est), jamais sur le cap géodésique. */
+function dissXY(theatre, o, p, rot, A) {
+  const a = llToDcs(theatre, o.lat, o.lon), b = llToDcs(theatre, p.lat, p.lon);
+  const dx = (b.x - a.x) / 1000, dy = (b.y - a.y) / 1000;
+  const r = ((rot || 0) + (A || 0)) * Math.PI / 180;
+  return { fwd: dx * Math.cos(r) + dy * Math.sin(r), right: -dx * Math.sin(r) + dy * Math.cos(r), dx: dx, dy: dy };
+}
+/* Au dixième de km, la moitié s'éloigne de zéro ; le côté se lit sur la valeur arrondie (aucun côté pour 0,0) */
+function dissRound(v) { const r = Math.round(Math.abs(v) * 10) / 10; return v < 0 ? -r : r; }
+
+/* Le nord de l'appareil : 'grid' (Mi-24P, et type vide), 'mag' (Mi-8MT, Mi-8MTV2), null (tout autre type : pas de DISS-15) ;
+   le type se compare rogné, sans la casse */
+function dissKind(type) {
+  const s = typeof type === 'string' ? type.trim().toLowerCase() : '';
+  if (s === '' || s === 'mi-24p') return 'grid';
+  if (s === 'mi-8mt' || s === 'mi-8mtv2') return 'mag';
+  return null;
+}
+/* Le théâtre a une grille de DCS : ses paramètres sont dans TM_PARAMS (ni Iraq, ni Afghanistan, ni MarianaIslandsWWII) */
+function dissTheatreOk(th) { return typeof th === 'string' && Object.prototype.hasOwnProperty.call(TM_PARAMS, th); }
+/* D0, la déclinaison (°, + vers l'Est) au premier point : la valeur saisie quand le cap magnétique est en Saisie et lisible (manual : un nombre, sinon null) ;
+   sinon (cap vrai, ou magnétique calculée) la déclinaison du modèle à l'année y (décimale : magYearSource(...).y), comme le reste de la navigation */
+function dissD0(lat, lon, manual, y) { return typeof manual === 'number' && isFinite(manual) ? manual : magVar(lat, lon, y); }
+/* Le nord de l'axe « avant » pour l'appareil : 0 (nord de la grille) ou D0 (nord magnétique) */
+function dissRot(kind, d0) { return kind === 'mag' ? d0 : 0; }
+/* Le texte d'une valeur, le seul endroit où il s'écrit : « AV 52,8 », « AR 3,0 », « G 48,3 », « D 2,1 » (EN : FWD, AFT, L, R ; point décimal) ; « 0,0 » sans côté.
+   axis : 'fwd' (avant, arrière) ou 'right' (droite, gauche) ; lang : 'fr' ou 'en' */
+function dissText(v, axis, lang) {
+  const fr = lang === 'fr', r = dissRound(v), n = Math.abs(r).toFixed(1), num = fr ? n.replace('.', ',') : n;
+  if (r === 0) return num;
+  const side = axis === 'fwd' ? (r > 0 ? (fr ? 'AV' : 'FWD') : (fr ? 'AR' : 'AFT')) : (r > 0 ? (fr ? 'D' : 'R') : (fr ? 'G' : 'L'));
+  return side + ' ' + num;
+}
+/* Les deux textes d'un point p depuis l'origine o : { fwd, right } ; rot et lang comme ci-dessus ; angle de carte 000 */
+function dissCells(theatre, o, p, rot, lang) {
+  const d = dissXY(theatre, o, p, rot, 0);
+  return { fwd: dissText(d.fwd, 'fwd', lang), right: dissText(d.right, 'right', lang) };
+}
+/* Les textes de chaque point de pts (des { lat, lon } ou null : un point sans position) ; l'origine est le premier ; sans position à l'origine, rien nulle part */
+function dissRows(theatre, pts, rot, lang) {
+  const o = pts.length ? pts[0] : null;
+  return pts.map(p => (o && p) ? dissCells(theatre, o, p, rot, lang) : null);
+}
+/* ===== FIN DES VALEURS DU DISS-15 ===== */
 /* ============= MODÈLE ============= */
 function defaultState() {
   return {
@@ -4722,7 +4796,7 @@ let S = defaultState();
 let sel = -1;                 /* point sélectionné (non enregistré) */
 let selR = -1;                /* point de référence sélectionné (non enregistré) */
 const KEY_DISPLAY = 'rp_display_v1';
-const DISP = { routes: 'all', refs: true, draw: true, sym: true, cf: true };     /* ce que le menu « Affichage » montre ; gardé dans rp_display_v1, jamais dans route_state_v1 ; routes : 'none' | 'active' | 'all' */
+const DISP = { routes: 'all', refs: true, draw: true, sym: true, cf: true, diss: false };     /* ce que le menu « Affichage » montre ; gardé dans rp_display_v1, jamais dans route_state_v1 ; routes : 'none' | 'active' | 'all' */
 const ROUTES_SHOW = ['none', 'active', 'all'];
 function routeShown() { return DISP.routes !== 'none'; }
 let tapMode = 'read';         /* ce que fait un toucher sur la carte : 'read' (ouvre les fiches des calques, ne pose rien : le mode de chaque ouverture), 'wp' (pose un point), 'ref' (pose une référence), 'draw' (dessine dans un calque) ou 'ruler' (mesure sur la carte, ne pose rien) — non enregistré */
@@ -8849,8 +8923,43 @@ function dvSrcHtml(ys) {
   return h + '<br>' + esc(t('dv.src.model', { e: magModel(ys.y) }));
 }
 
+/* Le DISS-15 de la route active (bloc partagé diss_block.py). Le type : celui de la première unité du premier groupe qui suit la route active (groupsOfRoute) ; sans groupe, sans unité ou sans type, vide (règle du Mi-24P).
+   Rend { ok: true, kind: 'grid' | 'mag' } ou { ok: false, why: 'type' | 'theatre' } (le type est regardé d'abord) */
+function rpDissType() {
+  const r = RSET && RSET.routes[RSET.active], g = r ? groupsOfRoute(r.rid)[0] : null;
+  const u = g && Array.isArray(g.units) ? g.units.filter(gsIsObj)[0] : null;
+  return u && typeof u.type === 'string' ? u.type : '';
+}
+function rpDiss() {
+  const kind = dissKind(rpDissType());
+  if (kind === null) return { ok: false, why: 'type' };
+  if (!dissTheatreOk(S.theatre)) return { ok: false, why: 'theatre' };
+  return { ok: true, kind: kind };
+}
+/* D0 au premier point o : la saisie lisible du cap magnétique, sinon le modèle à l'année de la route (navYear, comme le reste de la navigation) */
+function rpDissD0(o) {
+  const man = S.navDisplay.ref === 'mag' && S.navDisplay.mode === 'manual' ? parseDecl(S.navDisplay.decl) : null;
+  return dissD0(o.lat, o.lon, man, man == null ? navYear().y : 0);
+}
+/* Ce que la feuille montre du DISS-15 : une signature, pour la redessiner quand le type d'une unité, le groupe ou le théâtre change sans que rien d'autre ne bouge */
+const NAVD = { sig: '' };
+function rpDissSig() { if (!DISP.diss) return 'off'; const d = rpDiss(); return d.ok ? d.kind : d.why; }
+
 function renderNav() {
   $('nav-title').textContent = navTitle();
+  /* DISS-15 : sous le titre, la ligne du nord et de la valeur à régler (ou la raison du refus) ; sous chaque point, ses deux valeurs */
+  const dsd = DISP.diss ? rpDiss() : null;
+  let dv = null;
+  const band = $('nav-diss');
+  NAVD.sig = rpDissSig();
+  if (!dsd) band.hidden = true;
+  else if (!dsd.ok) { band.hidden = false; $('nav-diss-t').textContent = t('nav.diss.' + dsd.why); }
+  else {
+    const o = S.points[0], d0 = o ? rpDissD0(o) : null;
+    dv = dissRows(S.theatre, S.points, dissRot(dsd.kind, d0), CURRENT_LANG);
+    band.hidden = false;
+    $('nav-diss-t').textContent = t('nav.diss.' + dsd.kind + (d0 == null ? '0' : ''), { d: d0 == null ? '' : fmtVar(d0) });
+  }
   const tm = timing();
   const calc = navIsCalc(), ys = calc ? navYear() : null;
   let rows = '';
@@ -8861,7 +8970,8 @@ function renderNav() {
     }
     rows += '<tr><td class="n">' + i + '</td><td class="nm">' + esc(p.name) + '<span class="co alt">' + esc(altText(p)) + '</span><span class="co alt tm">' + esc(t('nav.t', { t: fmtElapsed(tm.el[i]) })) + '</span>' +
       (calc ? '<span class="co alt dv-leg">' + esc(t('nav.var', { v: fmtVar(declAt(p, ys)) })) + '</span>' : '') + '</td>' +
-      '<td colspan="2"><span class="co">' + esc(toMGRS(p.lat, p.lon)) + '</span><span class="co dms">' + esc(toDMS(p.lat, p.lon)) + '</span></td></tr>';
+      '<td colspan="2"><span class="co">' + esc(toMGRS(p.lat, p.lon)) + '</span><span class="co dms">' + esc(toDMS(p.lat, p.lon)) + '</span>' +
+      (dv && dv[i] ? '<span class="co diss"><span class="dv">' + esc(dv[i].fwd) + '</span> · <span class="dv">' + esc(dv[i].right) + '</span></span>' : '') + '</td></tr>';
   });
   $('nav-body').innerHTML = rows;
   $('nav-total').textContent = t('nav.total.v', { d: fmtDist(tm.km), t: fmtElapsed(tm.sec) });
@@ -8898,6 +9008,7 @@ function syncControls() {
     b.setAttribute('aria-pressed', on ? 'true' : 'false');
   });
   mark('data-ref', S.navDisplay.ref);
+  mark('data-diss', DISP.diss ? 'on' : 'off');
   mark('data-lbx', S.legBoxes);
   mark('data-trc', S.ui.trace);
   mark('data-tck', S.ui.ticks);
@@ -9890,6 +10001,7 @@ function routesRender() {
   const fl = $('rs-groups'), names = groupLabels(r.rid);
   fl.className = 'rs-groups' + (names.length ? '' : ' none');
   fl.innerHTML = names.length ? '<b>' + esc(t('rs.groups')) + '</b><em>' + esc(names.join(' · ')) + '</em>' : esc(t('rs.nogroup'));
+  if (NAVD.sig && rpDissSig() !== NAVD.sig) renderNav();       /* le groupe de la route, ou le type de sa première unité, a changé dans la fiche partagée : la feuille DISS-15 suit */
   dspSync();
 }
 
@@ -12583,7 +12695,7 @@ function loadDisplay() {
   } catch (e) { /* valeurs par défaut */ }
 }
 function saveDisplay() {
-  try { localStorage.setItem(KEY_DISPLAY, JSON.stringify({ routes: DISP.routes, refs: DISP.refs, draw: DISP.draw, sym: DISP.sym, cf: DISP.cf })); } catch (e) { /* stockage indisponible */ }
+  try { localStorage.setItem(KEY_DISPLAY, JSON.stringify({ routes: DISP.routes, refs: DISP.refs, draw: DISP.draw, sym: DISP.sym, cf: DISP.cf, diss: DISP.diss })); } catch (e) { /* stockage indisponible */ }
 }
 
 /* L'état d'une ligne : cochée, grisée, info-bulle */
@@ -13529,6 +13641,10 @@ function bindEvents() {
   document.querySelectorAll('[data-ref]').forEach(b => b.addEventListener('click', () => {
     S.navDisplay.ref = b.dataset.ref === 'mag' ? 'mag' : 'true';
     persistState(); renderNav(); drawRoute(); syncControls();
+  }));
+  document.querySelectorAll('[data-diss]').forEach(b => b.addEventListener('click', () => {
+    DISP.diss = b.dataset.diss === 'on';
+    saveDisplay(); renderNav(); syncControls();
   }));
   document.querySelectorAll('[data-lbx]').forEach(b => b.addEventListener('click', () => {
     S.legBoxes = LEGBOX_IDS.indexOf(b.dataset.lbx) !== -1 ? b.dataset.lbx : 'full';

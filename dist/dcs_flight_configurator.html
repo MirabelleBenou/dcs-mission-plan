@@ -10593,8 +10593,8 @@ function uiSum(head, text) {
   if (s.textContent !== v) s.textContent = v;
 }
 function uiFoldAllLabel(anyOpen) { return uiT(anyOpen ? 'ui.foldall' : 'ui.unfoldall'); }
-/* « Tout replier » : l'icône posée à droite de l'en-tête de chaque section d'un panneau (deux au moins ; une section seule n'en porte pas).
-   heads : les en-têtes du panneau (un <summary>, un <button> enveloppé d'un .ui-fa-box, un en-tête de boîte) ; cfg : { any : une section au moins est ouverte,
+/* « Tout replier » : l'icône posée à droite de l'en-tête de chaque section d'un panneau (deux au moins ; une section seule n'en porte pas, sauf si le panneau demande un seuil d'un : cfg.min).
+   heads : les en-têtes du panneau (un <summary>, un <button> enveloppé d'un .ui-fa-box, un en-tête de boîte) ; cfg : { any : une section au moins est ouverte, min : le nombre d'en-têtes à partir duquel l'icône paraît (2 par défaut),
    label(any) : le texte de l'icône (title et aria-label), go() : le geste, qui replie ou déplie toutes les sections du panneau et rappelle uiFoldAll }.
    Le geste est celui de l'icône seule : l'en-tête ne bascule pas. L'icône garde le focus (elle n'est jamais refaite) ; replié ou déplié, seule son image change. */
 const UIFA_SVG = {
@@ -10612,7 +10612,7 @@ function uiFoldAllOff(heads) {
 }
 function uiFoldAll(heads, cfg) {
   const list = Array.prototype.slice.call(heads || []).filter(Boolean);
-  if (list.length < 2) { uiFoldAllOff(list); return; }
+  if (list.length < (cfg.min || 2)) { uiFoldAllOff(list); return; }
   const state = cfg.any ? 'fold' : 'unfold', lab = cfg.label(!!cfg.any);
   list.forEach(h => {
     const host = uiFoldAllHost(h);
@@ -13541,9 +13541,9 @@ function renderLeft() {
   fcFlightIcons();
   S.flights.forEach((f, fi) => fcUnitIcons(fi));
 }
-// « Tout replier » : une icône à droite de l'en-tête de chaque groupe, dès deux groupes (les sous-blocs d'une unité n'en portent pas)
+// « Tout replier » : une icône à droite de l'en-tête de chaque groupe, dès un groupe (min : 1 ; les sous-blocs d'une unité n'en portent pas)
 function fcFlightIcons() {
-  uiFoldAll(S.flights.length > 1 ? Array.prototype.slice.call(document.querySelectorAll('#col-flights .fc-flight > .fc-fhead')) : [], { any: anyFlightOpen(), label: any => t(any ? 'fl.foldall' : 'fl.unfoldall'), go: foldAllFlights });
+  uiFoldAll(Array.prototype.slice.call(document.querySelectorAll('#col-flights .fc-flight > .fc-fhead')), { min: 1, any: anyFlightOpen(), label: any => t(any ? 'fl.foldall' : 'fl.unfoldall'), go: foldAllFlights });
 }
 // « Tout replier » d'un groupe : la même icône à droite de l'en-tête de chaque carte d'unité, dès deux unités dans le groupe (une unité seule n'en porte pas) ; elle replie ou déplie les unités de ce groupe seulement
 function anyUnitOpen(f) { return f.units.some(u => !u.folded); }

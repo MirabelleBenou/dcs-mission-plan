@@ -22,6 +22,7 @@ from magvar_block import build_block as build_magvar_block
 from radio_bands_block import build_block as build_radio_bands_block
 from radio_block import build_block as build_radio_block
 from projection_block import build_block as build_projection_block
+from diss_block import build_block as build_diss_block, verify as diss_verify
 from group_store_block import build_block as build_group_store_block
 from route_pack_block import build_block as build_route_pack_block
 from route_theatre_block import build_block as build_route_theatre_block
@@ -1917,6 +1918,9 @@ const I18N = {
     'f.nav.note': 'Note',
     'f.nav.display': 'Affichage',
     'nav.mode.course': 'Cap / distance',
+    'nav.mode.diss': 'Cap / distance + DISS',
+    'nav.mode.diss.type': 'Mi-24P et Mi-8MTV2 seulement',
+    'nav.mode.diss.theatre': 'pas de grille DCS sur ce théâtre',
     'nav.mode.mgrs': 'MGRS',
     'nav.mode.dms': 'DMS',
     'f.nav.ref': 'Cap',
@@ -2004,6 +2008,12 @@ const I18N = {
     'dc.b.nav.mag': 'NAVIGATION · CAP MAGNÉTIQUE · DÉCL. {d}° {h}',
     'dc.b.nav.calc': 'NAVIGATION · CAP MAGNÉTIQUE · VAR {a} ({min} à {max}°)',
     'dc.b.nav.calc1': 'NAVIGATION · CAP MAGNÉTIQUE · VAR {a} ({v}°)',
+    'dc.h.diss.fwd': 'DISS AV/AR',
+    'dc.h.diss.side': 'DISS G/D',
+    'dc.b.nav.diss.grid': 'DISS-15 000 · NORD GRILLE · KM-2 {d}°',
+    'dc.b.nav.diss.grid0': 'DISS-15 000 · NORD GRILLE',
+    'dc.b.nav.diss.mag': 'DISS-15 000 · NORD MAGNÉTIQUE {d}°',
+    'dc.b.nav.diss.mag0': 'DISS-15 000 · NORD MAGNÉTIQUE',
     'f.radio.name': 'Poste',
     'f.radio.channel': 'Canal',
     'f.radio.label': 'Usage',
@@ -2421,6 +2431,9 @@ const I18N = {
     'f.nav.note': 'Note',
     'f.nav.display': 'Display',
     'nav.mode.course': 'Heading / distance',
+    'nav.mode.diss': 'Heading / distance + DISS',
+    'nav.mode.diss.type': 'Mi-24P and Mi-8MTV2 only',
+    'nav.mode.diss.theatre': 'no DCS grid on this theatre',
     'nav.mode.mgrs': 'MGRS',
     'nav.mode.dms': 'DMS',
     'f.nav.ref': 'Heading',
@@ -2508,6 +2521,12 @@ const I18N = {
     'dc.b.nav.mag': 'NAVIGATION · MAGNETIC HEADING · VAR {d}° {h}',
     'dc.b.nav.calc': 'NAVIGATION · MAGNETIC HEADING · VAR {a} ({min} to {max}°)',
     'dc.b.nav.calc1': 'NAVIGATION · MAGNETIC HEADING · VAR {a} ({v}°)',
+    'dc.h.diss.fwd': 'DISS FWD/AFT',
+    'dc.h.diss.side': 'DISS L/R',
+    'dc.b.nav.diss.grid': 'DISS-15 000 · GRID NORTH · KM-2 {d}°',
+    'dc.b.nav.diss.grid0': 'DISS-15 000 · GRID NORTH',
+    'dc.b.nav.diss.mag': 'DISS-15 000 · MAGNETIC NORTH {d}°',
+    'dc.b.nav.diss.mag0': 'DISS-15 000 · MAGNETIC NORTH',
     'f.radio.name': 'Radio',
     'f.radio.channel': 'Channel',
     'f.radio.label': 'Use',
@@ -2704,7 +2723,7 @@ function pad2(n) { return String(n).padStart(2, '0'); }
 /* ============= COORDONNÉES DE NAVIGATION ============= */
 /* Datum WGS84. Lecture : MGRS, degrés-minutes-secondes, degrés-minutes décimales, degrés décimaux.
    Conversions : série de Krüger (ordre 4) ; cap initial du grand cercle et distance haversine (R = 6 371,0088 km). */
-const NAV_MODES = ['course', 'mgrs', 'dms'];
+const NAV_MODES = ['course', 'diss', 'mgrs', 'dms'];
 const NAV_REFS = ['true', 'mag'];
 const NAV_R_KM = 6371.0088;
 const NAV_NM_KM = 1.852;
@@ -3000,6 +3019,7 @@ function readNum(s) {
 @@RADIO_BLOCK@@
 @@RADIO_BANDS_BLOCK@@
 @@PROJECTION_BLOCK@@
+@@DISS_BLOCK@@
 /* La déclinaison des caps d'une datacard : null (cap vrai, ou saisie illisible) ; { decl } saisie ; { calc: true, y } calculée,
    y étant l'année décimale de magYearSource (la mission d'HQ, la date de la route, la date de la datacard, l'année saisie, sinon 1985, le 1er juillet) */
 function navVar(c) {
@@ -5334,17 +5354,40 @@ function fmtDecl(v) {
 /* Colonnes du bloc Navigation selon l'affichage (largeurs en px ; la dernière colonne, la note, prend le reste) */
 const NAV_COLS = {
   course: [50, 288, 90, 108, 89, 136],
+  diss:   [50, 186, 72, 80, 136, 120, 84, 112],
   mgrs:   [50, 262, 236, 84, 100],
   dms:    [50, 224, 290, 84, 100]
 };
 
+/* Le DISS-15 d'une carte (bloc partagé diss_block.py) : le type de la carte (carte liée : la première unité du groupe ; carte libre : la première ligne d'équipage qui porte un type ; sinon vide, règle du Mi-24P),
+   puis { ok: true, kind: 'grid' | 'mag' } ou { ok: false, why: 'type' | 'theatre' } (le type est regardé d'abord) */
+function dgDissType(c) {
+  if (c.gsId && dgFlightOf(c)) return afCardType(c);
+  const r = c.crew.find(x => hasText(x.type));
+  return r ? r.type : '';
+}
+function dgDiss(c) {
+  const kind = dissKind(dgDissType(c));
+  if (kind === null) return { ok: false, why: 'type' };
+  if (!dissTheatreOk(dgTheatre())) return { ok: false, why: 'theatre' };
+  return { ok: true, kind: kind };
+}
+/* L'affichage imprimé : une carte en « diss » qui n'a plus le DISS-15 (type ou théâtre changé) garde son choix mais s'imprime en « Cap / distance » ; elle y revient dès que le type ou le théâtre le permet */
+function dgNavMode(c) { const m = c.navDisplay.mode; return m === 'diss' && !dgDiss(c).ok ? 'course' : m; }
+/* D0 au premier point o : la saisie lisible du cap magnétique, sinon le modèle à l'année de la mission (magYearSource, comme le reste de la navigation) */
+function dgDissD0(c, o) {
+  const nv = navVar(c);
+  return dissD0(o.lat, o.lon, nv && !nv.calc ? nv.decl : null, nv && nv.calc ? nv.y : dgNavYear(c).y);
+}
+
 /* L'en-tête du tableau de navigation selon l'affichage ; hc : l'intitulé de la colonne du cap (mode « course ») */
 function navHead(c, mode, hc) {
   const du = unitLabel(c, 'distance'), au = unitLabel(c, 'altitude');
-  if (mode === 'course') {
+  if (mode === 'course' || mode === 'diss') {
     return '<th>#</th><th>' + esc(t('dc.h.point')) + '</th>' +
       '<th class="r">' + esc(hc) + '</th>' +
       '<th class="r">' + esc(t('dc.h.dist', { u: du })) + '</th>' +
+      (mode === 'diss' ? '<th class="r">' + esc(t('dc.h.diss.fwd')) + '</th><th class="r">' + esc(t('dc.h.diss.side')) + '</th>' : '') +
       '<th class="r">' + esc(t('dc.h.alt', { u: au })) + '</th>' +
       '<th class="r">' + esc(t('dc.h.tos')) + '</th>' +
       '<th>' + esc(t('dc.h.note')) + '</th>';
@@ -5362,20 +5405,20 @@ function colsHtml(widths, altIdx, body) {
   return '<colgroup>' + widths.map((w, i) => '<col style="width:' + (wide && i === altIdx ? w + ALR_EXTRA : w) + 'px">').join('') + '<col></colgroup>';
 }
 function navTable(mode, head, body) {
-  const cols = colsHtml(NAV_COLS[mode], mode === 'course' ? 4 : 3, body);
-  return '<table class="dc-tab dc-nav' + (mode === 'course' ? '' : ' dc-navc') + '">' + cols +
+  const cols = colsHtml(NAV_COLS[mode], mode === 'diss' ? 6 : (mode === 'course' ? 4 : 3), body);
+  return '<table class="dc-tab dc-nav' + (mode === 'course' || mode === 'diss' ? '' : ' dc-navc') + '">' + cols +
     '<thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody></table>';
 }
 
 function blkNav(c) {
   const rows = navRows(c);
   if (!rows.length) return '';
-  const nd = c.navDisplay, mode = nd.mode;
+  const mode = dgNavMode(c);
   const legs = navLegs(c);
   const shown = [];
   c.nav.forEach((r, i) => { if (anyText(r, NAV_KEYS)) shown.push({ r: r, g: legs[i] }); });
   let title = t('dc.b.nav'), head, body;
-  if (mode === 'course') {
+  if (mode === 'course' || mode === 'diss') {
     const calcAny = shown.some(x => x.g.calc);
     const nv = navVar(c);
     if (calcAny) {
@@ -5389,10 +5432,17 @@ function blkNav(c) {
     }
     const hc = calcAny ? t(nv ? 'dc.h.course.m' : 'dc.h.course.t') : t('dc.h.course');
     head = navHead(c, mode, hc);
+    let dv = null;       /* le DISS-15 : les textes de chaque ligne montrée (null : pas de position) ; l'origine est la première ligne montrée */
+    if (mode === 'diss') {
+      const pos = shown.map(x => x.g.pt || x.g.est), kind = dgDiss(c).kind, d0 = pos[0] ? dgDissD0(c, pos[0]) : null;
+      dv = dissRows(dgTheatre(), pos, dissRot(kind, d0), CURRENT_LANG);
+      title += ' · ' + t('dc.b.nav.diss.' + kind + (d0 == null ? '0' : ''), { d: d0 == null ? '' : fmtVar(d0) });
+    }
     body = shown.map((x, i) => {
       const r = x.r, k = x.g.calc;
       return '<tr><td class="m ix">' + i + '</td><td class="nm">' + esc(r.name) + '</td>' +
         '<td class="m r">' + (k ? esc(k.cap) : dash(r.course)) + '</td><td class="m r">' + (k ? esc(k.dist) : dash(r.distance)) + '</td>' +
+        (dv ? '<td class="m r">' + (dv[i] ? esc(dv[i].fwd) : '—') + '</td><td class="m r">' + (dv[i] ? esc(dv[i].right) : '—') + '</td>' : '') +
         '<td class="m r">' + altCell(r, c) + '</td><td class="m r">' + dash(r.tos) + '</td>' +
         '<td class="nt">' + esc(r.note) + '</td></tr>';
     }).join('');
@@ -5611,9 +5661,9 @@ function blkCrewBlank(c) {
 }
 
 function blkNavBlank(c) {
-  const mode = c.navDisplay.mode;
+  const mode = dgNavMode(c);
   const head = navHead(c, mode, t('dc.h.course'));
-  const cells = mode === 'course' ? ['m ix', 'nm', 'm r', 'm r', 'm r', 'm r', 'nt'] : ['m ix', 'nm', 'm cc', 'm r', 'm r', 'nt'];
+  const cells = mode === 'course' ? ['m ix', 'nm', 'm r', 'm r', 'm r', 'm r', 'nt'] : mode === 'diss' ? ['m ix', 'nm', 'm r', 'm r', 'm r', 'm r', 'm r', 'm r', 'nt'] : ['m ix', 'nm', 'm cc', 'm r', 'm r', 'nt'];
   return blockHtml('nav', t('dc.b.nav'), navTable(mode, head, blankRows(BLANK_ROWS.nav, cells)), 'dc-bbt');
 }
 
@@ -5881,7 +5931,7 @@ function fArea(labelKey, path, value) {
 }
 function fSelect(labelKey, path, value, options) {
   return '<div class="ed-field"><label>' + esc(t(labelKey)) + '</label><select data-path="' + path + '">' +
-    options.map(o => '<option value="' + esc(o[0]) + '"' + (o[0] === value ? ' selected' : '') + '>' + esc(o[1]) + '</option>').join('') +
+    options.map(o => '<option value="' + esc(o[0]) + '"' + (o[0] === value ? ' selected' : '') + (o[2] ? ' disabled' : '') + '>' + esc(o[1]) + '</option>').join('') +
     '</select></div>';
 }
 
@@ -5938,10 +5988,10 @@ function fSegD(labelKey, attr, value, options) {
 }
 
 function navSettingsHtml(c) {
-  const nd = c.navDisplay, mag = dgN.ref === 'mag', calc = dgN.mode === 'calc';
+  const nd = c.navDisplay, mag = dgN.ref === 'mag', calc = dgN.mode === 'calc', di = dgDiss(c);
   /* L'ordre de la rangée : Affichage (propre à la datacard), puis la pastille « pour toute la mission », qui ne marque que Cap et Déclinaison (mp_nav_v1) et leurs champs */
   let h = '<div class="ed-field-row ed-navset">' +
-    fSelect('f.nav.display', 'navDisplay.mode', nd.mode, [['course', t('nav.mode.course')], ['mgrs', t('nav.mode.mgrs')], ['dms', t('nav.mode.dms')]]) + '</div>' +
+    fSelect('f.nav.display', 'navDisplay.mode', nd.mode, [['course', t('nav.mode.course')], ['diss', t('nav.mode.diss') + (di.ok ? '' : ' — ' + t('nav.mode.diss.' + di.why)), !di.ok], ['mgrs', t('nav.mode.mgrs')], ['dms', t('nav.mode.dms')]]) + '</div>' +
     '<div class="ed-navset-tag"><span class="cr-tag linked">' + esc(t('nav.common')) + '</span></div>' +
     '<div class="ed-field-row ed-navset">' +
     fSegD('f.nav.ref', 'ref', dgN.ref, [['true', t('nav.ref.true')], ['mag', t('nav.ref.mag')]]) +
@@ -7798,7 +7848,7 @@ def build():
     icao_js = json.dumps(airfield_icao(_facts), ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
     js = js.replace('__AIRFIELD_ICAO__', icao_js)
     js = js.replace('@@ROUTE_PACK_BLOCK@@\n', build_route_pack_block()).replace('@@ROUTE_THEATRE_BLOCK@@\n', build_route_theatre_block()).replace('@@GROUP_STORE_BLOCK@@\n', build_group_store_block()).replace('@@ROUTE_WRITE_BLOCK@@\n', build_route_write_block())
-    js = js.replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@RADIO_BLOCK@@\n', build_radio_block()).replace('@@RADIO_BANDS_BLOCK@@\n', build_radio_bands_block()).replace('@@PROJECTION_BLOCK@@\n', build_projection_block())
+    js = js.replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@RADIO_BLOCK@@\n', build_radio_block()).replace('@@RADIO_BANDS_BLOCK@@\n', build_radio_bands_block()).replace('@@PROJECTION_BLOCK@@\n', build_projection_block()).replace('@@DISS_BLOCK@@\n', build_diss_block())
     html = HTML.replace('<body data-theme="cw-nato">\n', '<body data-theme="cw-nato">\n' + SHELL_ONLY_TAG, 1)
     html = html.replace('__CSS__', CSS.replace('@@MESSAGES_CSS@@\n', build_messages_css() + build_ui_css()).replace('@@TBM_CSS@@\n', build_tbm_css()) + build_import_css() + build_mission_line_css() + CONTRAST_CSS)
     html = html.replace('@@IMPORT_HTML@@\n', build_import_html())
@@ -7808,6 +7858,7 @@ def build():
 
     ui_verify(html)
     ui_verify_bar(html)
+    diss_verify(js, 'Datacard Generator')
     mission_line_verify(html, 'dgMissionLine', 'dgNavYear(', 1)
     # Contrôles de construction
     pt, it = re.search(r"const PAYLOAD_TYPES = \[(.*?)\];", build_payload_block()), re.search(r"const IMP_TYPES = \[(.*?)\];", build_import_block())

@@ -3397,9 +3397,9 @@ function renderLeft() {
   fcFlightIcons();
   S.flights.forEach((f, fi) => fcUnitIcons(fi));
 }
-// « Tout replier » : une icône à droite de l'en-tête de chaque groupe, dès deux groupes (les sous-blocs d'une unité n'en portent pas)
+// « Tout replier » : une icône à droite de l'en-tête de chaque groupe, dès un groupe (min : 1 ; les sous-blocs d'une unité n'en portent pas)
 function fcFlightIcons() {
-  uiFoldAll(S.flights.length > 1 ? Array.prototype.slice.call(document.querySelectorAll('#col-flights .fc-flight > .fc-fhead')) : [], { any: anyFlightOpen(), label: any => t(any ? 'fl.foldall' : 'fl.unfoldall'), go: foldAllFlights });
+  uiFoldAll(Array.prototype.slice.call(document.querySelectorAll('#col-flights .fc-flight > .fc-fhead')), { min: 1, any: anyFlightOpen(), label: any => t(any ? 'fl.foldall' : 'fl.unfoldall'), go: foldAllFlights });
 }
 // « Tout replier » d'un groupe : la même icône à droite de l'en-tête de chaque carte d'unité, dès deux unités dans le groupe (une unité seule n'en porte pas) ; elle replie ou déplie les unités de ce groupe seulement
 function anyUnitOpen(f) { return f.units.some(u => !u.folded); }
