@@ -951,7 +951,7 @@ def _fc_route_line(P, x, y):
 
 
 def _fc_unit_head(P, ux, uy, uw, n):
-    return [chev(ux + 7, uy + 7), P.text(ux + 19, uy + 12, 8.5, L('fc', 'u.title', args=(n,)), anchor='start'), P.text(ux + uw - 30, uy + 12, 8.5, D('✕'), op=.7), fold_icon(ux + uw - 18, uy + 4)]
+    return [chev(ux + 7, uy + 7), P.text(ux + 19, uy + 12, 8.5, L('fc', 'u.title', args=(n,)), anchor='start'), fold_icon(ux + uw - 30, uy + 4), P.text(ux + uw - 10, uy + 12, 8.5, D('✕'), op=.7)]
 
 
 def _fc_radios(P, ux, uw, ry, recopy):

@@ -259,9 +259,9 @@ body.fmnav-open .fmnav-panel { transform: none; }
 }
 .fmnav-sec > .lang-block { min-width: 0; }
 /* Les mêmes tons que les listes de la suite (ui_block.py, .tbm-head, .tbm-opt) : contraste de 4,5 au moins, haut et bas du dégradé, quatre thèmes */
-.fmnav-ch:hover, .fmnav-sec:hover, .fmnav-ch:focus-visible, .fmnav-sec:focus-visible { background: color-mix(in srgb, var(--olive) 75%, #000); color: color-mix(in srgb, var(--amber) 70%, #fff); }
+.fmnav-ch:hover, .fmnav-sec:hover, .fmnav-ch:focus-visible, .fmnav-sec:focus-visible { background: var(--olive); color: color-mix(in srgb, var(--amber) 55%, #fff); }
 a.fmnav-ch:focus-visible, a.fmnav-sec:focus-visible { outline-offset: -2px; }
-.fmnav-ch[aria-current="page"] { color: color-mix(in srgb, var(--amber) 70%, #fff); font-weight: 700; }
+.fmnav-ch[aria-current="page"] { color: color-mix(in srgb, var(--amber) 55%, #fff); font-weight: 700; }
 .fmnav-ch[aria-current="page"]::before { content: ''; position: absolute; left: 0; top: 6px; bottom: 6px; width: 3px; background: var(--amber); }
 
 /* ---------- Barre du haut commune aux sept modules ----------
@@ -3804,8 +3804,8 @@ body.zm-open #fm-root { overflow: hidden; }
           <path d="M131,205 l6,0 l-3,5 z" fill="currentColor" opacity=".8"/>
           <text x="143" y="210" font-size="8.5" fill="currentColor" class="lang-block" data-lang="fr">Unité 1</text>
           <text x="143" y="210" font-size="8.5" fill="currentColor" class="lang-block" data-lang="en">Unit 1</text>
-          <text x="306" y="210" font-size="8.5" text-anchor="middle" fill="currentColor" opacity="0.7">✕</text>
-          <path d="M318,201 l4,3.5 l4,-3.5 M318,212 l4,-3.5 l4,3.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <path d="M306,201 l4,3.5 l4,-3.5 M306,212 l4,-3.5 l4,3.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <text x="326" y="210" font-size="8.5" text-anchor="middle" fill="currentColor" opacity="0.7">✕</text>
           <text x="132" y="224" font-size="8" fill="currentColor" opacity="0.75">Type</text><rect x="132" y="227" width="62" height="15" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="137" y="237.5" font-size="8" fill="currentColor" opacity="0.85">Mi-24P</text>
           <text x="198" y="224" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.75">Nom</text>
           <text x="198" y="224" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.75">Name</text><rect x="198" y="227" width="62" height="15" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="203" y="237.5" font-size="8" fill="currentColor" opacity="0.85">CAESAR-1</text>
@@ -3843,8 +3843,8 @@ body.zm-open #fm-root { overflow: hidden; }
           <path d="M131,400 l6,0 l-3,5 z" fill="currentColor" opacity=".8"/>
           <text x="143" y="405" font-size="8.5" fill="currentColor" class="lang-block" data-lang="fr">Unité 2</text>
           <text x="143" y="405" font-size="8.5" fill="currentColor" class="lang-block" data-lang="en">Unit 2</text>
-          <text x="306" y="405" font-size="8.5" text-anchor="middle" fill="currentColor" opacity="0.7">✕</text>
-          <path d="M318,396 l4,3.5 l4,-3.5 M318,407 l4,-3.5 l4,3.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <path d="M306,396 l4,3.5 l4,-3.5 M306,407 l4,-3.5 l4,3.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <text x="326" y="405" font-size="8.5" text-anchor="middle" fill="currentColor" opacity="0.7">✕</text>
           <rect x="124" y="415" width="128" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/><text x="188" y="425.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">+ Ajouter une unité (2/4)</text>
           <text x="188" y="425.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">+ Add a unit (2/4)</text>
           <rect x="118" y="444" width="124" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/><text x="180" y="455" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">+ Ajouter un groupe</text>
@@ -3989,8 +3989,8 @@ body.zm-open #fm-root { overflow: hidden; }
           <path d="M83,227 l6,0 l-3,5 z" fill="currentColor" opacity=".8"/>
           <text x="95" y="232" font-size="8.5" fill="currentColor" class="lang-block" data-lang="fr">Unité 1</text>
           <text x="95" y="232" font-size="8.5" fill="currentColor" class="lang-block" data-lang="en">Unit 1</text>
-          <text x="254" y="232" font-size="8.5" text-anchor="middle" fill="currentColor" opacity="0.7">✕</text>
-          <path d="M266,223 l4,3.5 l4,-3.5 M266,234 l4,-3.5 l4,3.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <path d="M254,223 l4,3.5 l4,-3.5 M254,234 l4,-3.5 l4,3.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <text x="274" y="232" font-size="8.5" text-anchor="middle" fill="currentColor" opacity="0.7">✕</text>
           <text x="84" y="246" font-size="8" fill="currentColor" opacity="0.75">Type</text><rect x="84" y="249" width="92" height="15" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="89" y="259.5" font-size="8" fill="currentColor" opacity="0.85">Mi-24P</text>
           <text x="184" y="246" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.75">Nom</text>
           <text x="184" y="246" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.75">Name</text><rect x="184" y="249" width="92" height="15" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="189" y="259.5" font-size="8" fill="currentColor" opacity="0.85">CAESAR-1</text>
@@ -4012,8 +4012,8 @@ body.zm-open #fm-root { overflow: hidden; }
           <path d="M83,369 l6,0 l-3,5 z" fill="currentColor" opacity=".8"/>
           <text x="95" y="374" font-size="8.5" fill="currentColor" class="lang-block" data-lang="fr">Unité 2</text>
           <text x="95" y="374" font-size="8.5" fill="currentColor" class="lang-block" data-lang="en">Unit 2</text>
-          <text x="254" y="374" font-size="8.5" text-anchor="middle" fill="currentColor" opacity="0.7">✕</text>
-          <path d="M266,365 l4,3.5 l4,-3.5 M266,376 l4,-3.5 l4,3.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <path d="M254,365 l4,3.5 l4,-3.5 M254,376 l4,-3.5 l4,3.5" fill="none" stroke="currentColor" stroke-width="1.2"/>
+          <text x="274" y="374" font-size="8.5" text-anchor="middle" fill="currentColor" opacity="0.7">✕</text>
           <rect x="76" y="384" width="128" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/><text x="140" y="394.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">+ Ajouter une unité (2/4)</text>
           <text x="140" y="394.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">+ Add a unit (2/4)</text>
           <rect x="70" y="413" width="124" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/><text x="132" y="424" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">+ Ajouter un groupe</text>

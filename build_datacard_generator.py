@@ -722,7 +722,7 @@ body {
 .ed-btn-add.sm { min-height: 44px; padding: 6px 10px; font-size: 11px; }
 .ed-btn-add.on { background: var(--olive); color: var(--paper-light); }
 /* Cap : le segmenté commun (.ui-seg, 44 px) */
-/* La route d'une datacard (lot mp-dg-nav-route) : le bandeau de la section Navigation, la pastille « Commun à la mission » */
+/* La route d'une datacard (lot mp-dg-nav-route) : le bandeau de la section Navigation, la pastille « Pour toute la mission » des réglages (Cap et Déclinaison) */
 .nav-route { border-left: 3px solid var(--amber); background: rgba(0,0,0,.18); padding: 8px 10px; margin: 0 0 10px; display: grid; gap: 6px; }
 .nav-route.none { border-left-style: dashed; border-left-color: var(--khaki); }
 .nav-route.full { border-left-color: var(--red-stamp); }
@@ -734,7 +734,6 @@ body {
 .nav-route .nr-link > label { display: none; }
 .nav-route .nr-link .tbm-trigger { background: transparent; border: 1px dashed var(--amber); color: var(--amber); font-family: var(--f-ui); font-weight: 700; letter-spacing: 1.5px; font-size: 11px; text-transform: uppercase; min-height: 44px; justify-self: start; width: auto; max-width: 100%; }
 .ed-navset-tag { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; }
-.ed-navset-tag .ui-note { margin: 0; }
 /* une référence décochée : seul le reste de la ligne est atténué (la case et son libellé restent à pleine opacité, lisibles) */
 .ref-off > .li-grid { opacity: .55; }
 .dv-file { font-weight: 700; }

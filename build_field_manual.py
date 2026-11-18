@@ -1403,9 +1403,9 @@ body.fmnav-open .fmnav-panel {{ transform: none; }}
 }}
 .fmnav-sec > .lang-block {{ min-width: 0; }}
 /* Les mêmes tons que les listes de la suite (ui_block.py, .tbm-head, .tbm-opt) : contraste de 4,5 au moins, haut et bas du dégradé, quatre thèmes */
-.fmnav-ch:hover, .fmnav-sec:hover, .fmnav-ch:focus-visible, .fmnav-sec:focus-visible {{ background: color-mix(in srgb, var(--olive) 75%, #000); color: color-mix(in srgb, var(--amber) 70%, #fff); }}
+.fmnav-ch:hover, .fmnav-sec:hover, .fmnav-ch:focus-visible, .fmnav-sec:focus-visible {{ background: var(--olive); color: color-mix(in srgb, var(--amber) 55%, #fff); }}
 a.fmnav-ch:focus-visible, a.fmnav-sec:focus-visible {{ outline-offset: -2px; }}
-.fmnav-ch[aria-current="page"] {{ color: color-mix(in srgb, var(--amber) 70%, #fff); font-weight: 700; }}
+.fmnav-ch[aria-current="page"] {{ color: color-mix(in srgb, var(--amber) 55%, #fff); font-weight: 700; }}
 .fmnav-ch[aria-current="page"]::before {{ content: ''; position: absolute; left: 0; top: 6px; bottom: 6px; width: 3px; background: var(--amber); }}
 
 /* ---------- Barre du haut commune aux sept modules ----------
