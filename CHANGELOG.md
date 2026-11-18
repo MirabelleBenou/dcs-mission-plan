@@ -16,6 +16,7 @@ The sections per tool, further down, keep the history of each tool up to v1.24.0
 - The Wing window offers the game liveries of every aircraft type found in DCS (68 types), not only the four of the Flight Configurator.
 
 #### Flight Configurator
+- Groundwork for every aircraft of the game: the mass, front-view and radio band tables now cover every type known to Mission Tools (167, 45 and 26 types). Nothing changes yet on screen.
 - In a group of two units or more, the icon at the right of a unit’s header folds or unfolds all the units of the group.
 
 #### Route Planner
