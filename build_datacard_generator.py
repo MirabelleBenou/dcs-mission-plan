@@ -5354,7 +5354,7 @@ function fmtDecl(v) {
 /* Colonnes du bloc Navigation selon l'affichage (largeurs en px ; la dernière colonne, la note, prend le reste) */
 const NAV_COLS = {
   course: [50, 288, 90, 108, 89, 136],
-  diss:   [50, 186, 72, 80, 136, 120, 84, 112],
+  diss:   [50, 164, 72, 80, 136, 120, 84, 90],
   mgrs:   [50, 262, 236, 84, 100],
   dms:    [50, 224, 290, 84, 100]
 };
@@ -7872,9 +7872,9 @@ def build():
     ui_verify(html)
     ui_verify_bar(html)
     diss_verify(js, 'Datacard Generator')
-    if not re.search(r"const NAV_MODES = \['course', 'diss', ", js) or len(re.findall(r"'nav\.mode\.diss': '", js)) != 2 or len(re.findall(r"'dc\.b\.nav\.diss\.mag0': '", js)) != 2 or not re.search(r"diss:   \[50, 186, 72, 80, 136, 120, 84, 112\]", js):
+    if not re.search(r"const NAV_MODES = \['course', 'diss', ", js) or len(re.findall(r"'nav\.mode\.diss': '", js)) != 2 or len(re.findall(r"'dc\.b\.nav\.diss\.mag0': '", js)) != 2 or not re.search(r"diss:   \[50, 164, 72, 80, 136, 120, 84, 90\]", js):
         raise SystemExit("[ERREUR] Datacard Generator : l'affichage « Cap / distance + DISS » (mode, libellés FR et EN, colonnes) n'est pas complet")
-    print("[OK] Datacard Generator : affichage « Cap / distance + DISS » (mode 'diss', libellés FR et EN, colonnes 50·186·72·80·136·120·84·112)")
+    print("[OK] Datacard Generator : affichage « Cap / distance + DISS » (mode 'diss', libellés FR et EN, colonnes 50·164·72·80·136·120·84·90)")
     mission_line_verify(html, 'dgMissionLine', 'dgNavYear(', 1)
     # Contrôles de construction
     pt, it = re.search(r"const PAYLOAD_TYPES = \[(.*?)\];", build_payload_block()), re.search(r"const IMP_TYPES = \[(.*?)\];", build_import_block())

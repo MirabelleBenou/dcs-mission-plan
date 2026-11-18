@@ -8482,7 +8482,7 @@ function fmtDecl(v) {
 /* Colonnes du bloc Navigation selon l'affichage (largeurs en px ; la dernière colonne, la note, prend le reste) */
 const NAV_COLS = {
   course: [50, 288, 90, 108, 89, 136],
-  diss:   [50, 186, 72, 80, 136, 120, 84, 112],
+  diss:   [50, 164, 72, 80, 136, 120, 84, 90],
   mgrs:   [50, 262, 236, 84, 100],
   dms:    [50, 224, 290, 84, 100]
 };
@@ -11037,6 +11037,7 @@ function tbmAttach(sel, labelFn, mode, fit) {
 function tbmSync(m) {
   const sel = m.sel, o = sel.options, i = sel.selectedIndex;
   let txt = i >= 0 && o[i] ? o[i].label : '';
+  if (txt && o[i].disabled && txt.indexOf(' — ') > 0) txt = txt.slice(0, txt.indexOf(' — '));       /* option grisée choisie : le libellé seul, la note reste à la liste ouverte */
   const full = txt;
   if (txt && TBM.cfg.short) txt = TBM.cfg.short(sel, o[i]) || txt;       /* le libellé abrégé du module (le théâtre au téléphone) */
   if (m.lbl.textContent !== txt) m.lbl.textContent = txt;

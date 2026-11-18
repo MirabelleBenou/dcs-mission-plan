@@ -2858,8 +2858,8 @@ const I18N = {
     'nav.diss.grid0': 'DISS-15 000 · NORD GRILLE',
     'nav.diss.mag': 'DISS-15 000 · NORD MAGNÉTIQUE {d}°',
     'nav.diss.mag0': 'DISS-15 000 · NORD MAGNÉTIQUE',
-    'nav.diss.type': 'DISS-15 : Mi-24P et Mi-8MTV2 seulement',
-    'nav.diss.theatre': 'DISS-15 : pas de grille DCS sur ce théâtre',
+    'nav.diss.type': 'DISS-15\u202f: Mi-24P et Mi-8MTV2 seulement',
+    'nav.diss.theatre': 'DISS-15\u202f: pas de grille DCS sur ce théâtre',
     'nav.title.true': 'NAVIGATION — CAP VRAI',
     'nav.title.mag': 'NAVIGATION — CAP MAGNÉTIQUE (DÉCL. {d}°)',
     'nav.title.calc': 'NAVIGATION — CAP MAGNÉTIQUE · VAR {a} ({min} à {max}°)',
@@ -13912,6 +13912,7 @@ function tbmAttach(sel, labelFn, mode, fit) {
 function tbmSync(m) {
   const sel = m.sel, o = sel.options, i = sel.selectedIndex;
   let txt = i >= 0 && o[i] ? o[i].label : '';
+  if (txt && o[i].disabled && txt.indexOf(' — ') > 0) txt = txt.slice(0, txt.indexOf(' — '));       /* option grisée choisie : le libellé seul, la note reste à la liste ouverte */
   const full = txt;
   if (txt && TBM.cfg.short) txt = TBM.cfg.short(sel, o[i]) || txt;       /* le libellé abrégé du module (le théâtre au téléphone) */
   if (m.lbl.textContent !== txt) m.lbl.textContent = txt;
