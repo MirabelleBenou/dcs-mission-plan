@@ -531,6 +531,7 @@ select[data-tbm-src] { display: none !important; }
 .ed-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .ed-field-row.three { grid-template-columns: 1fr 1fr 1fr; }
 .ed-navset { margin-bottom: 6px; }
+.ed-field-row.ed-navset-one { grid-template-columns: 1fr; }
 /* le Cap : les deux boutons côte à côte dans leur colonne, sans déborder (le segmenté commun ne change pas ailleurs) */
 .ed-navset .ui-seg { flex-wrap: nowrap; }
 .ed-navset .ui-seg-btn { flex: 1 1 auto; min-width: 0; padding: 0 6px; }
@@ -9118,7 +9119,7 @@ function fSegD(labelKey, attr, value, options) {
 function navSettingsHtml(c) {
   const nd = c.navDisplay, mag = dgN.ref === 'mag', calc = dgN.mode === 'calc', di = dgDiss(c);
   /* L'ordre de la rangée : Affichage (propre à la datacard), puis la pastille « pour toute la mission », qui ne marque que Cap et Déclinaison (mp_nav_v1) et leurs champs */
-  let h = '<div class="ed-field-row ed-navset">' +
+  let h = '<div class="ed-field-row ed-navset ed-navset-one">' +
     fSelect('f.nav.display', 'navDisplay.mode', nd.mode, [['course', t('nav.mode.course')], ['diss', t('nav.mode.diss') + (di.ok ? '' : ' — ' + t('nav.mode.diss.' + di.why)), !di.ok], ['mgrs', t('nav.mode.mgrs')], ['dms', t('nav.mode.dms')]]) + '</div>' +
     '<div class="ed-navset-tag"><span class="cr-tag linked">' + esc(t('nav.common')) + '</span></div>' +
     '<div class="ed-field-row ed-navset">' +
