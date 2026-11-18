@@ -13496,6 +13496,8 @@ function applyTheme(id, persist) {
   if (persist) { try { localStorage.setItem(KEY_THEME, id); } catch (e) { /* ignore */ } }
 }
 
+/* Le shell réaffiche le Route Planner (retour de l'accueil) : le mode de toucher revient à Lire, sauf pendant le cadre d'export, qui garde la carte en lecture et rend le mode d'avant à sa fermeture */
+function mpOnShow() { if (!EXP.on) setTapMode('read'); }
 function setLang(lang) {
   if (lang !== 'fr' && lang !== 'en') return;
   if (lang === CURRENT_LANG) return;

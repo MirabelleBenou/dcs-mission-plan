@@ -1479,7 +1479,10 @@ details.fc-block:not([open]) > .fc-bh { border-bottom: 0; }
 .fc-nounit { display: flex; align-items: center; min-height: 44px; box-sizing: border-box; border: 1px dashed rgba(128,116,84,.6); border-left: 3px solid var(--amber-dark); padding: 6px 10px; font-family: var(--f-typewriter); font-size: 12px; color: var(--khaki-light); cursor: pointer; }
 .fc-nounit.sel { border-left-color: var(--fc); background: var(--fc-dim); box-shadow: 0 0 0 1px var(--fc); color: var(--paper); }
 .fc-uhead { margin-bottom: 6px; }
-.fc-uhead > .ui-foldic { top: -4px; bottom: -4px; }       /* l'en-tête d'une unité fait 36 px, l'icône commune 44 : elle déborde de 4 px de chaque côté, comme la flèche de repli */
+.fc-uhead.ui-fa-on.ui-fa-on { padding-right: 0; }
+/* L'icône des unités se pose avant le ✕, qui reste le dernier élément à droite de l'en-tête ; l'en-tête fait 36 px, l'icône commune 44 : elle déborde de 4 px de chaque côté, comme la flèche de repli */
+.fc-uhead > .ui-foldic { position: static; order: 1; flex: none; margin: -4px 0 -4px auto; }
+.fc-uhead.ui-fa-on .pk-x { order: 2; margin-left: 0; }
 /* la flèche de l'unité : le dessin de celle du groupe (.fc-chev), une cible de 44 px ; repliée, la carte garde son en-tête et une ligne de résumé */
 .fc-ufold { display: flex; align-items: center; justify-content: center; flex: none; min-width: 44px; min-height: 44px; margin: -8px 0 -8px -12px; padding: 0; background: none; border: 0; cursor: pointer; color: inherit; }
 .fc-ufold:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
