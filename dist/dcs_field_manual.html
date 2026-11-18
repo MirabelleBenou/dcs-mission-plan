@@ -242,7 +242,7 @@ body.fmnav-open .fmnav-panel { transform: none; }
 .fmnav-head {
   display: flex; align-items: center; justify-content: space-between; padding: 8px 8px 8px 14px; margin-bottom: 2px;
   border-bottom: 1px solid rgba(168,154,114,.25);
-  font-family: var(--f-ui); font-weight: 500; font-size: 10px; letter-spacing: 1.8px; text-transform: uppercase; color: var(--khaki-light);
+  font-family: var(--f-ui); font-weight: 500; font-size: 10px; letter-spacing: 1.8px; text-transform: uppercase; color: color-mix(in srgb, var(--paper) 72%, var(--olive-dark));
 }
 .fmnav-x { font-size: 16px; padding: 0; width: 44px; height: 44px; }
 .fmnav-ch, .fmnav-sec { position: relative; box-sizing: border-box; text-decoration: none; color: var(--paper); }
@@ -258,9 +258,10 @@ body.fmnav-open .fmnav-panel { transform: none; }
   border-top: 1px solid rgba(168,154,114,.14); overflow-wrap: anywhere;
 }
 .fmnav-sec > .lang-block { min-width: 0; }
-.fmnav-ch:hover, .fmnav-sec:hover, .fmnav-ch:focus-visible, .fmnav-sec:focus-visible { background: var(--olive); color: var(--amber); }
+/* Les mêmes tons que les listes de la suite (ui_block.py, .tbm-head, .tbm-opt) : contraste de 4,5 au moins, haut et bas du dégradé, quatre thèmes */
+.fmnav-ch:hover, .fmnav-sec:hover, .fmnav-ch:focus-visible, .fmnav-sec:focus-visible { background: color-mix(in srgb, var(--olive) 75%, #000); color: color-mix(in srgb, var(--amber) 70%, #fff); }
 a.fmnav-ch:focus-visible, a.fmnav-sec:focus-visible { outline-offset: -2px; }
-.fmnav-ch[aria-current="page"] { color: var(--amber); font-weight: 700; }
+.fmnav-ch[aria-current="page"] { color: color-mix(in srgb, var(--amber) 70%, #fff); font-weight: 700; }
 .fmnav-ch[aria-current="page"]::before { content: ''; position: absolute; left: 0; top: 6px; bottom: 6px; width: 3px; background: var(--amber); }
 
 /* ---------- Barre du haut commune aux sept modules ----------

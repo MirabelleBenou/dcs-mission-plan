@@ -627,7 +627,7 @@ select[data-tbm-src] { display: none !important; }
 @keyframes tbm-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
 .tbm-head {
   font-family: var(--f-ui); font-weight: 500; font-size: 10px; letter-spacing: 1.8px; text-transform: uppercase;
-  color: var(--khaki-light); padding: 8px 14px 6px; border-bottom: 1px solid rgba(168,154,114,.25); margin-bottom: 2px;
+  color: color-mix(in srgb, var(--paper) 72%, var(--olive-dark)); padding: 8px 14px 6px; border-bottom: 1px solid rgba(168,154,114,.25); margin-bottom: 2px;
 }
 .tbm-opt {
   position: relative; display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 16px 0 18px;
@@ -637,9 +637,10 @@ select[data-tbm-src] { display: none !important; }
 .tbm-opt + .tbm-opt { border-top: 1px solid rgba(168,154,114,.14); }
 .tbm-list .tbm-group { margin-top: 2px; border-top: 1px solid rgba(168,154,114,.25); list-style: none; }
 .tbm-opt .tbm-mark { width: 7px; height: 7px; flex: none; transform: rotate(45deg); border: 1px solid var(--khaki); }
-.tbm-opt.active, .tbm-opt:hover { background: var(--olive); color: var(--amber); }
+/* Lisibilité (WCAG 4,5 au moins, haut et bas du dégradé, quatre thèmes) : l'en-tête, la ligne choisie et la ligne survolée prennent un ton dérivé des variables du thème (aucune ne change) ; l'accent ambre reste celui du liseré, du losange et du filet du panneau */
+.tbm-opt.active, .tbm-opt:hover { background: color-mix(in srgb, var(--olive) 75%, #000); color: color-mix(in srgb, var(--amber) 70%, #fff); }
 .tbm-opt.active .tbm-mark, .tbm-opt:hover .tbm-mark { border-color: var(--amber); }
-.tbm-opt[aria-selected="true"] { color: var(--amber); font-weight: 700; }
+.tbm-opt[aria-selected="true"] { color: color-mix(in srgb, var(--amber) 70%, #fff); font-weight: 700; }
 .tbm-opt[aria-selected="true"]::before { content: ''; position: absolute; left: 0; top: 6px; bottom: 6px; width: 3px; background: var(--amber); }
 .tbm-opt[aria-selected="true"] .tbm-mark { background: var(--amber); border-color: var(--amber); }
 .tbm-opt[aria-disabled="true"] { color: var(--khaki); cursor: not-allowed; background: none; }
