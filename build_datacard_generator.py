@@ -6384,6 +6384,19 @@ function renderAll(keep) {
 function touch() {
   persistState();
   renderPreview();
+  dgDissSync(curCard());
+}
+/* Le choix « Cap / distance + DISS » de l'éditeur suit le type de la carte (une ligne d'équipage change) : son option se grise ou se dégrise sur place, sans refaire l'éditeur ; le théâtre refait l'éditeur lui-même */
+function dgDissSync(c) {
+  const sel = document.querySelector('#editor select[data-path="navDisplay.mode"]');
+  const o = sel && c ? Array.prototype.find.call(sel.options, x => x.value === 'diss') : null;
+  if (!o) return;
+  const di = dgDiss(c), lab = t('nav.mode.diss') + (di.ok ? '' : ' — ' + t('nav.mode.diss.' + di.why));
+  if (o.disabled === !di.ok && o.textContent === lab) return;
+  o.disabled = !di.ok;
+  o.textContent = lab;
+  const m = TBM.map.get(sel);
+  if (m) tbmSync(m);
 }
 
 function syncMetar(c) {
@@ -7859,6 +7872,9 @@ def build():
     ui_verify(html)
     ui_verify_bar(html)
     diss_verify(js, 'Datacard Generator')
+    if not re.search(r"const NAV_MODES = \['course', 'diss', ", js) or len(re.findall(r"'nav\.mode\.diss': '", js)) != 2 or len(re.findall(r"'dc\.b\.nav\.diss\.mag0': '", js)) != 2 or not re.search(r"diss:   \[50, 186, 72, 80, 136, 120, 84, 112\]", js):
+        raise SystemExit("[ERREUR] Datacard Generator : l'affichage « Cap / distance + DISS » (mode, libellés FR et EN, colonnes) n'est pas complet")
+    print("[OK] Datacard Generator : affichage « Cap / distance + DISS » (mode 'diss', libellés FR et EN, colonnes 50·186·72·80·136·120·84·112)")
     mission_line_verify(html, 'dgMissionLine', 'dgNavYear(', 1)
     # Contrôles de construction
     pt, it = re.search(r"const PAYLOAD_TYPES = \[(.*?)\];", build_payload_block()), re.search(r"const IMP_TYPES = \[(.*?)\];", build_import_block())

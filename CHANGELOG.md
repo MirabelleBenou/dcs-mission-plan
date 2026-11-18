@@ -27,6 +27,18 @@ The sections per tool, further down, keep the history of each tool up to v1.24.0
 #### Field Manual
 - Links in the text take the manual’s ink instead of the browser’s blue; the Route Planner and Flight Configurator drawings show the new behaviour.
 
+#### Flight Configurator
+- The icon at the right of a group’s header folds or unfolds all the groups, now even when there is only one.
+
+#### Route Planner
+- For a Mi-24P or a Mi-8MTV2, the Navigation section can show each waypoint’s DISS-15 values (forward or aft, left or right, in km from the first waypoint, map angle 000), with the north and the KM-2 value to set.
+
+#### Datacard Generator
+- New “Heading / distance + DISS” display for Mi-24P and Mi-8MTV2 datacards: each waypoint’s DISS-15 values next to heading and distance; the block title tells the map angle, the north and the KM-2 value.
+
+#### Field Manual
+- The Route Planner and Datacard Generator chapters explain the DISS-15 values; the Flight Configurator drawing shows the fold icon on a single group.
+
 ---
 
 ## Mission Plan — landing

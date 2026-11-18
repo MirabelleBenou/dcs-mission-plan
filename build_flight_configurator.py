@@ -4905,6 +4905,8 @@ def check(html):
     pt, it = re.search(r"const PAYLOAD_TYPES = \[(.*?)\];", build_payload_block()), re.search(r"const IMP_TYPES = \[(.*?)\];", build_import_block())
     ok(bool(pt) and bool(it) and pt.group(1) == it.group(1), 'les types du bloc d\'import sont ceux de PAYLOAD_TYPES')
     ok(COORD_BLOCK + READNUM_BLOCK in html and hashlib.sha256(COORD_BLOCK.encode('utf-8')).hexdigest()[:16] == COORD_SHA16, 'bloc de coordonnées inséré tel quel, empreinte %s' % COORD_SHA16)
+    ok(re.search(r"function fcFlightIcons\(\) \{\s*uiFoldAll\(Array\.prototype\.slice\.call\(document\.querySelectorAll\('#col-flights \.fc-flight > \.fc-fhead'\)\), \{ min: 1, ", JS_APP) is not None, "« Tout replier » des groupes : l'icône dès un groupe (fcFlightIcons passe min: 1, sans condition sur le nombre de groupes)")
+    ok(re.search(r"function fcUnitIcons\(fi\) \{.*?uiFoldAll\(f\.units\.length > 1 \? [^\n]*\{ any: anyUnitOpen\(f\)", JS_APP, re.S) is not None and 'cfg.min || 2' in build_ui_block(), "« Tout replier » : deux par défaut (uiFoldAll), les unités d'un groupe gardent deux (aucun min)")
     if bad:
         sys.exit(1)
 

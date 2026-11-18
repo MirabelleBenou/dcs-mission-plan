@@ -9512,6 +9512,19 @@ function renderAll(keep) {
 function touch() {
   persistState();
   renderPreview();
+  dgDissSync(curCard());
+}
+/* Le choix « Cap / distance + DISS » de l'éditeur suit le type de la carte (une ligne d'équipage change) : son option se grise ou se dégrise sur place, sans refaire l'éditeur ; le théâtre refait l'éditeur lui-même */
+function dgDissSync(c) {
+  const sel = document.querySelector('#editor select[data-path="navDisplay.mode"]');
+  const o = sel && c ? Array.prototype.find.call(sel.options, x => x.value === 'diss') : null;
+  if (!o) return;
+  const di = dgDiss(c), lab = t('nav.mode.diss') + (di.ok ? '' : ' — ' + t('nav.mode.diss.' + di.why));
+  if (o.disabled === !di.ok && o.textContent === lab) return;
+  o.disabled = !di.ok;
+  o.textContent = lab;
+  const m = TBM.map.get(sel);
+  if (m) tbmSync(m);
 }
 
 function syncMetar(c) {

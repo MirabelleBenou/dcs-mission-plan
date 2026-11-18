@@ -10579,6 +10579,9 @@ def build():
     ui_verify(html)
     ui_verify_bar(html)
     diss_verify(js, 'Route Planner')
+    if len(re.findall(r'data-diss="(?:on|off)"', html)) != 2 or len(re.findall(r"'nav\.diss\.theatre': '", js)) != 2 or 'diss: DISP.diss' not in js or 'diss: false' not in js:
+        raise SystemExit("[ERREUR] Route Planner : le réglage DISS-15 (boutons Masquer / Afficher, libellés FR et EN, rp_display_v1.diss) n'est pas complet")
+    print("[OK] Route Planner : réglage DISS-15 (Masquer / Afficher, libellés FR et EN, gardé dans rp_display_v1)")
     mission_line_verify(html, 'rpMissionLine', 'navYear(', 2)
     # Le pane des aérodromes est au-dessus de celui des calques CombatFlite (en mode Lire, un aérodrome dans une zone ouvre sa fiche) et sous la route (overlayPane, 400)
     _zl = re.search(r'const LAYERS_Z = (\d+);', html)
