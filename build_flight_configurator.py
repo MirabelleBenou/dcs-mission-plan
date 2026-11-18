@@ -4848,12 +4848,12 @@ def check(html):
     for lang, tx in (('FR', I18N_FR), ('EN', I18N_EN)):
         have = {k[5:] for k in tx if k.startswith('rule.')}
         ok(have == ids, "textes rule.* (%s) : un par règle, aucun de trop (écart %s)" % (lang, sorted(have ^ ids)))
-    # les livrées par défaut : exactement les types du FC, chaque type avec des noms de texte, sans doublon à la casse près
+    # les livrées par défaut : chaque type du FC a sa liste (la table peut porter d'autres types, HQ s'en sert), des noms de texte, sans doublon à la casse près
     with open(os.path.join(HERE, 'data', 'liveries_default.json'), encoding='utf-8') as f:
         liv = json.load(f)
     ptm = re.search(r"const PAYLOAD_TYPES = \[(.*?)\];", html)
     ptypes = re.findall(r"'([^']+)'", ptm.group(1)) if ptm else []
-    ok(bool(ptypes) and sorted(liv) == sorted(ptypes), 'livrées par défaut : exactement les types de PAYLOAD_TYPES (%s)' % ', '.join('%s %d' % (k, len(v)) for k, v in sorted(liv.items())))
+    ok(bool(ptypes) and all(isinstance(liv.get(k), list) and liv[k] for k in ptypes), 'livrées par défaut : chaque type de PAYLOAD_TYPES a sa liste (%s) ; %d types dans la table' % (', '.join('%s %d' % (k, len(liv[k])) for k in sorted(ptypes) if k in liv), len(liv)))
     ok(all(isinstance(v, list) and v and all(isinstance(n, str) and n.strip() == n and n for n in v) and len({n.lower() for n in v}) == len(v) for v in liv.values()), 'livrées par défaut : des noms non vides, sans espace de bout ni doublon à la casse près')
     ok('input[data-k="livery"]' not in html and 'data-k="livery" role="combobox"' not in html, 'le champ Livrée est une liste, plus un texte libre')
     ok(not re.search(r'\blvOpen\b|\blvItems\b|\blvChoose\b|\blvClose\b|\bisLiveryField\b|\bseenLiv\b|u\.livery\.ph', html), 'plus de panneau de suggestions de livrée ni de suggestions tirées des paquets, de la mission d\'HQ ou des autres unités')

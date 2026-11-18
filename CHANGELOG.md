@@ -13,6 +13,7 @@ The sections per tool, further down, keep the history of each tool up to v1.24.0
 
 #### HQ
 - The Wing window no longer has an “Application title” field, which no tool used; a Wing configuration that has one still opens and keeps it.
+- The Wing window offers the game liveries of every aircraft type found in DCS (63 types), not only the four of the Flight Configurator.
 
 #### Flight Configurator
 - In a group of two units or more, the icon at the right of a unit’s header folds or unfolds all the units of the group.
