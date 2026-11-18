@@ -8,6 +8,25 @@ The sections per tool, further down, keep the history of each tool up to v1.24.0
 
 ## Unreleased
 
+#### All tools
+- Drop-down lists are easier to read: their header, the chosen line and the line under the pointer have stronger contrast in every theme.
+
+#### HQ
+- The Wing window no longer has an “Application title” field, which no tool used; a Wing configuration that has one still opens and keeps it.
+
+#### Flight Configurator
+- In a group of two units or more, the icon at the right of a unit’s header folds or unfolds all the units of the group.
+
+#### Route Planner
+- The Route Planner opens in Read mode, so a tap on the map no longer adds a waypoint by mistake; choose Waypoint to lay the route.
+
+#### Datacard Generator
+- The folded Radio section shows how many channels the datacard prints, like the other sections.
+- In the Navigation settings, “For the whole mission” now marks only Heading and Variation, shared with the Route Planner; Display stays per datacard.
+
+#### Field Manual
+- Links in the text take the manual’s ink instead of the browser’s blue; the Route Planner and Flight Configurator drawings show the new behaviour.
+
 ---
 
 ## Mission Plan — landing
