@@ -1671,6 +1671,10 @@ const I18N = {
     'f.search': 'Rechercher…',
     'f.noaf': 'Aucun aérodrome',
     'f.norwy': 'Aucun sens',
+    'f.rwy.rec': 'recommandée',
+    'f.rwy.tail': 'vent arrière',
+    'f.rwy.warn': '⚠ Vent arrière de {n} kt sur la {rwy} — face au vent : {best}.',
+    'f.rwy.warn1': '⚠ Vent arrière de {n} kt sur la {rwy}.',
     'tb.lang.tip': 'Passer en anglais',
     'theme.cw-nato': 'Cold War OTAN',
     'theme.cw-soviet': 'Cold War Soviétique',
@@ -2186,6 +2190,10 @@ const I18N = {
     'f.search': 'Search…',
     'f.noaf': 'No airfield',
     'f.norwy': 'No runway end',
+    'f.rwy.rec': 'recommended',
+    'f.rwy.tail': 'tailwind',
+    'f.rwy.warn': '⚠ {n} kt tailwind on runway {rwy} — into the wind: {best}.',
+    'f.rwy.warn1': '⚠ {n} kt tailwind on runway {rwy}.',
     'tb.lang.tip': 'Switch to French',
     'theme.cw-nato': 'Cold War NATO',
     'theme.cw-soviet': 'Cold War Soviet',
@@ -4371,22 +4379,77 @@ function afWindDir(w) {
   const m = /^(\d{3})\/(\d+)/.exec(str(w).trim());
   return m && parseInt(m[2], 10) > 0 ? parseInt(m[1], 10) : -1;
 }
-/* Le sens proposé : celui dont le cap (son numéro × 10°) fait le plus petit écart d'angle avec le vent, le premier à égalité ; sans vent lisible, le premier ; '' sans sens */
-function afPickEnd(ends, wind) {
-  if (!ends.length) return '';
-  const dir = afWindDir(wind);
-  if (dir < 0) return ends[0];
-  let best = ends[0], bd = Infinity;
+/* Le vent de la boîte Météo comme { dir, spd } (degrés, nœuds, sans rafales), ou null : mêmes règles qu'afWindDir (vitesse nulle, VRB/…, calme, vide ou autre : pas de vent lisible) */
+function afWindVec(w) {
+  const m = /^(\d{3})\/(\d+)/.exec(str(w).trim()), spd = m ? parseInt(m[2], 10) : 0;
+  return m && spd > 0 ? { dir: parseInt(m[1], 10), spd: spd } : null;
+}
+/* La règle de la piste et du vent, une seule fois : pour chaque sens de l'aérodrome (rangée des faits row) qui a un numéro, la composante de face du vent moyen (kt) sur son cap vrai
+   (numéro × 10° + déclinaison du DG à l'aérodrome, pour l'année des caps de la carte c) et sa composante arrière arrondie au kt ; rec est le sens à la plus forte composante de face, le premier à égalité.
+   Rend null sans vent lisible ou sans sens à numéro : ni repère ni avertissement. Tout se calcule à l'affichage, rien n'est écrit dans l'état. */
+function afRwyModel(row, c) {
+  const w = afWindVec(c.weather.wind), ends = row ? afEnds(row) : [];
+  if (!w || !ends.length) return null;
+  const decl = magVar(row[1], row[2], dgNavYear(c).y), list = [];
   ends.forEach(e => {
     const n = /^\d+/.exec(e);
     if (!n) return;
-    const d = Math.abs(parseInt(n[0], 10) * 10 - dir) % 360, g = Math.min(d, 360 - d);
-    if (g < bd) { bd = g; best = e; }
+    const head = w.spd * Math.cos((w.dir - (parseInt(n[0], 10) * 10 + decl)) * Math.PI / 180);
+    list.push({ end: e, head: head, tail: Math.round(-head) });
   });
-  return best;
+  if (!list.length) return null;
+  let rec = list[0];
+  list.forEach(x => { if (x.head > rec.head) rec = x; });
+  return { ends: list, rec: rec.end, get: e => list.find(x => x.end === e) || null };
+}
+/* Le sens proposé : la « recommandée » de la règle ; sans vent lisible, le premier sens ; '' sans sens */
+function afPickEnd(row, c) {
+  const ends = afEnds(row);
+  if (!ends.length) return '';
+  const m = afRwyModel(row, c);
+  return m ? m.rec : ends[0];
+}
+/* Le texte d'une option de sens : le sens et son repère (« recommandée », « vent arrière »), le sens seul sinon ; la valeur de l'option reste le sens */
+function afRwyLabel(e, m) {
+  const x = m ? m.get(e) : null;
+  if (!x) return e;
+  if (e === m.rec) return e + ' · ' + t('f.rwy.rec');
+  return x.tail >= 1 ? e + ' · ' + t('f.rwy.tail') : e;
+}
+/* L'avertissement sous la rangée : le sens choisi (liste, ou champ libre s'il est un sens de l'aérodrome) a une composante arrière arrondie d'au moins 1 kt ; '' sinon (nom libre, aérodrome sans sens, valeur qui n'est pas un sens) */
+function afWarnText(f, c) {
+  const hit = AF_UI.other.has(f) ? null : afFind(f.name);
+  if (!hit) return '';
+  const m = afRwyModel(hit, c), x = m ? m.get(f.runway) : null;
+  if (!x || x.tail < 1) return '';
+  return t(x.end === m.rec ? 'f.rwy.warn1' : 'f.rwy.warn', { n: x.tail, rwy: x.end, best: m.rec });
+}
+function afWarnHtml(f, i) { const w = afWarnText(f, curCard()); return w ? '<div class="ui-note ui-avert" data-afwarn="' + i + '">' + esc(w) + '</div>' : ''; }
+/* Repères et avertissement des rangées suivent le vent, la date, le théâtre, le nom et le sens, sur place (sans refaire l'éditeur : le curseur reste) ; seul l'affichage change, jamais fields[i].runway */
+function afRwySync() {
+  const c = curCard(), ed = document.getElementById('editor');
+  if (!c || !ed) return;
+  ed.querySelectorAll('select[data-afr]').forEach(sel => {
+    const i = parseInt(sel.dataset.afr, 10), f = c.fields[i], li = sel.closest('.li');
+    if (!f || !li) return;
+    const hit = AF_UI.other.has(f) ? null : afFind(f.name), m = hit ? afRwyModel(hit, c) : null;
+    let ch = false;
+    Array.prototype.forEach.call(sel.options, o => {
+      if (o.value === '' || o.value === '@other') return;
+      const lab = afRwyLabel(o.value, m);
+      if (o.textContent !== lab) { o.textContent = lab; ch = true; }
+    });
+    if (ch) { const tb = TBM.map.get(sel); if (tb) tbmSync(tb); }
+    const w = afWarnText(f, c), old = li.querySelector('[data-afwarn]');
+    if (old && (!w || old.textContent !== w)) old.remove();
+    if (w && !li.querySelector('[data-afwarn]')) {
+      const grid = sel.closest('.li-grid');
+      if (grid) grid.insertAdjacentHTML('afterend', afWarnHtml(f, i));
+    }
+  });
 }
 /* Ce que le jeu donne pour un aérodrome (rangée des faits du théâtre du document) : l'OACI, la piste (le sens proposé face au vent de la carte) et la fréquence (MHz, comme la boîte Radio) ; '' quand le jeu n'a rien */
-function afGame(row, c) { return { icao: afIcao(dgTheatre(), row[0]), rwy: afPickEnd(afEnds(row), c.weather.wind), freq: row[4] ? dgFreqStr(afTowerHz(row[4], c) / 1e6) : '' }; }
+function afGame(row, c) { return { icao: afIcao(dgTheatre(), row[0]), rwy: afPickEnd(row, c), freq: row[4] ? dgFreqStr(afTowerHz(row[4], c) / 1e6) : '' }; }
 /* Le nom se vide ou passe en champ libre : l'OACI, la piste et la fréquence se vident, saisies à la main comprises */
 function afClearGame(f) { f.icao = ''; f.runway = ''; f.frequency = ''; }
 /* Pose le nom de la rangée. Par défaut (un choix dans la liste) l'OACI, la piste et la fréquence prennent les valeurs du jeu et remplacent les précédentes, saisies à la main comprises ;
@@ -4478,7 +4541,8 @@ function afRwyHtml(f, i) {
   const other = cur === '@other';
   const opt = (v, l, x) => '<option value="' + esc(v) + '"' + (v === cur ? ' selected' : '') + (x || '') + '>' + esc(l) + '</option>';
   let o = cur === '' ? opt('', t('f.field.pick')) : '';
-  ends.forEach(e => { o += opt(e, e); });
+  const m = afRwyModel(hit, curCard());
+  ends.forEach(e => { o += opt(e, afRwyLabel(e, m)); });
   o += opt('@other', t('f.field.other'), ' data-keep');
   return '<div class="ed-field" data-rwcell><label>' + esc(t('f.field.runway')) + '</label><select data-afr="' + i + '" data-search data-search-empty="' + esc(t('f.norwy')) + '">' + o + '</select>' + (other ? afRwyFreeInput(i, f) : '') + '</div>';
 }
@@ -6184,7 +6248,7 @@ const SECTION_BUILDERS = {
     fSelect('f.field.role', 'fields.' + i + '.role', f.role, [['', t('role.none')], ['dep', t('dc.role.dep')], ['arr', t('dc.role.arr')], ['alt', t('dc.role.alt')]]) +
     fInput('f.field.icao', 'fields.' + i + '.icao', f.icao) + '</div>' +
     '<div class="li-grid gs">' + afNameHtml(f, i) + '</div>' +
-    '<div class="li-grid g2">' + afRwyHtml(f, i) + fInput('f.field.frequency', 'fields.' + i + '.frequency', f.frequency) + '</div>', 'add.field'),
+    '<div class="li-grid g2">' + afRwyHtml(f, i) + fInput('f.field.frequency', 'fields.' + i + '.frequency', f.frequency) + '</div>' + afWarnHtml(f, i), 'add.field'),
 
   weather: c =>
     fInput('f.metar', 'weather.metar', c.weather.metar) +
@@ -6408,6 +6472,7 @@ function touch() {
   persistState();
   renderPreview();
   dgDissSync(curCard());
+  afRwySync();
 }
 /* Le choix « Cap / distance + DISS » de l'éditeur suit le type de la carte (une ligne d'équipage change) : son option se grise ou se dégrise sur place, sans refaire l'éditeur ; le théâtre refait l'éditeur lui-même */
 function dgDissSync(c) {

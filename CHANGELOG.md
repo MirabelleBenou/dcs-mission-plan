@@ -42,6 +42,7 @@ The sections per tool, further down, keep the history of each tool up to v1.24.0
 - In the Navigation settings, “For the whole mission” now marks only Heading and Variation, shared with the Route Planner; Display stays per datacard.
 - A crew line can take any of the 75 types, from the same grouped list with search.
 - On a free datacard, the aircraft type of a crew line can be searched.
+- The airfield's runway list now marks the runway into the wind and those with a tailwind, from the Weather box; a runway chosen with a tailwind of 1 kt or more is flagged under its row.
 
 #### Field Manual
 - Links in the text take the manual’s ink instead of the browser’s blue; the Route Planner and Flight Configurator drawings show the new behaviour.
