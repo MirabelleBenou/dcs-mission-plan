@@ -1034,6 +1034,14 @@ body[data-theme] {
 .pk-found { color: var(--pk-ok); }
 .pk-absent { color: var(--mp-warn); }
 .pk-parts { display: flex; flex-wrap: wrap; column-gap: 16px; margin-top: 2px; }
+.pk-create { margin: 4px 0 2px; }
+.pk-create .pk-chk { color: var(--amber); }
+.pk-cfields { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 4px 0 4px 26px; align-items: center; }
+.pk-cfields .pk-flt-f { flex: 1 1 190px; }
+.pk-cfields .pk-flt-f.pk-cstart { flex: 1 1 250px; }
+.pk-chint { margin: 0 0 4px 26px; font-family: var(--f-typewriter); font-size: 11px; color: var(--khaki-light); }
+.pk-parts.pk-in { margin-left: 26px; }
+.pk-why, .pk-chint.pk-why { font-family: var(--f-typewriter); font-size: 11px; letter-spacing: 0; color: var(--mp-warn); }
 .pk-rep {
   font-family: var(--f-typewriter); font-size: 11px; color: var(--paper); line-height: 1.55;
   display: flex; flex-direction: column; gap: 5px; word-break: break-word;
@@ -1716,6 +1724,30 @@ const I18N = {
     'pk.remove': 'Retirer ce paquet',
     'pk.found': '→ trouvé',
     'pk.absent': 'absent de la mission',
+    'pk.absentCreate': 'absent de la mission → à créer',
+    'pk.create': 'Créer ce vol dans la mission',
+    'pk.cf.pick': '— à choisir —',
+    'pk.cf.country': 'Pays',
+    'pk.cf.start': 'Départ',
+    'pk.cf.air': 'En vol, au 1er point',
+    'pk.cf.ground': 'Au sol, au 1er point',
+    'pk.cf.hintAir': '1er point de la route : {0} m {1}, {2} km/h',
+    'pk.cf.hintGround': '1er point de la route : posé au sol à cet endroit, moteurs arrêtés',
+    'pk.cf.baro': 'baro',
+    'pk.cf.agl': 'sol',
+    'pk.cf.locked': 'la route est le départ du vol créé',
+    'pk.why.noRoute': 'absent de la mission · pas de route : ne peut pas être créé (choisir une route au Flight Configurator)',
+    'pk.why.mixed': 'absent de la mission · hélicoptères et avions mêlés : ne peut pas être créé (un groupe DCS est l’un ou l’autre)',
+    'pk.why.unknownType': 'absent de la mission · type inconnu de la suite : ne peut pas être créé',
+    'pk.why.noCountry': 'absent de la mission · aucun pays de cette coalition dans la mission : ne peut pas être créé',
+    'pk.rep.created': '+ {0} ({1}) : créé — {2}, {3} au 1er point, {4}',
+    'pk.rep.startAir': 'en vol',
+    'pk.rep.startGround': 'au sol',
+    'pk.rep.noSide': '{0} : coalition à choisir, rien écrit',
+    'pk.rep.why': '– {0} ({1}) : {2}',
+    'pk.rep.createdN.one': '{0} créé',
+    'pk.rep.createdN.many': '{0} créés',
+    'pk.e.created': 'groupe créé introuvable à la relecture',
     'pk.replacedBy': '⚠ remplacé par {0}',
     'pk.part.route': 'Route',
     'pk.part.radios': 'Radios',
@@ -2152,6 +2184,30 @@ const I18N = {
     'pk.remove': 'Remove this package',
     'pk.found': '→ found',
     'pk.absent': 'not in the mission',
+    'pk.absentCreate': 'not in the mission → to create',
+    'pk.create': 'Create this flight in the mission',
+    'pk.cf.pick': '— choose —',
+    'pk.cf.country': 'Country',
+    'pk.cf.start': 'Start',
+    'pk.cf.air': 'In the air, at waypoint 1',
+    'pk.cf.ground': 'On the ground, at waypoint 1',
+    'pk.cf.hintAir': 'Waypoint 1 of the route: {0} m {1}, {2} km/h',
+    'pk.cf.hintGround': 'Waypoint 1 of the route: placed on the ground there, engines off',
+    'pk.cf.baro': 'baro',
+    'pk.cf.agl': 'AGL',
+    'pk.cf.locked': 'the route is the start of the created flight',
+    'pk.why.noRoute': 'not in the mission · no route: cannot be created (pick a route in the Flight Configurator)',
+    'pk.why.mixed': 'not in the mission · helicopters and airplanes mixed: cannot be created (a DCS group is one or the other)',
+    'pk.why.unknownType': 'not in the mission · aircraft type unknown to the suite: cannot be created',
+    'pk.why.noCountry': 'not in the mission · no country of this coalition in the mission: cannot be created',
+    'pk.rep.created': '+ {0} ({1}): created — {2}, {3} at waypoint 1, {4}',
+    'pk.rep.startAir': 'in the air',
+    'pk.rep.startGround': 'on the ground',
+    'pk.rep.noSide': '{0}: coalition to choose, nothing written',
+    'pk.rep.why': '– {0} ({1}): {2}',
+    'pk.rep.createdN.one': '{0} created',
+    'pk.rep.createdN.many': '{0} created',
+    'pk.e.created': 'created group not found when read back',
     'pk.replacedBy': '⚠ replaced by {0}',
     'pk.part.route': 'Route',
     'pk.part.radios': 'Radios',
@@ -7974,6 +8030,10 @@ function gameAircraftClose(name) {
   return all.filter((ty, i) => lens[i] === best);
 }
 /* ===== FIN DES TYPES D'APPAREILS DU JEU ===== */
+/* AIRCRAFT_TEMPLATES:BEGIN */
+// Gabarits des types volables (data/aircraft_templates.json) : heli, task_default, fuel_max, chaff, flare, radio_frequency, length, width, property_defaults, panel_radio.
+const AIRCRAFT_TEMPLATES = {"AH-64D_BLK_II":{"heli":true,"task_default":"CAS","fuel_max":1140,"chaff":30,"flare":60,"radio_frequency":225,"length":17.87,"width":14.63,"property_defaults":{"PltNVG":true,"CpgNVG":true,"FlareBurstCount":1,"FlareBurstInterval":0,"FlareSalvoCount":0,"FlareSalvoInterval":0,"FlareProgramDelay":3,"OverrideIFF":0,"TrackAirTargets":true,"NetCrewControlPriority":0,"AIDisabled":false,"HumanOrchestra":false},"panel_radio":{"1":{"1":127.5,"2":135,"3":136,"4":127,"5":125,"6":121,"7":141,"8":128,"9":126,"10":137},"2":{"1":225,"2":240,"3":255,"4":270,"5":285,"6":300,"7":325,"8":350,"9":375,"10":390},"3":{"1":30,"2":30.01,"3":30.015,"4":30.02,"5":30.025,"6":30.03,"7":30.035,"8":30.04,"9":30.045,"10":30.05},"4":{"1":30,"2":30.01,"3":30.015,"4":30.02,"5":30.025,"6":30.03,"7":30.035,"8":30.04,"9":30.045,"10":30.05}}},"CH-47Fbl1":{"heli":true,"task_default":"Transport","fuel_max":3054.592,"chaff":120,"flare":120,"radio_frequency":251,"length":28.3,"width":18.3,"property_defaults":{"DustProtectionDevices":false,"NetCrewControlPriority":0},"panel_radio":{"1":{"1":31.5,"2":45.7,"3":57,"4":38,"5":30,"6":32,"7":40,"8":50,"9":55.5,"10":39.9,"11":41.5,"12":75.7,"13":33,"14":38,"15":42,"16":51.5,"17":50,"18":79,"19":51.5,"20":34.9},"2":{"1":305,"2":264,"3":265,"4":256,"5":254,"6":250,"7":270,"8":257,"9":255,"10":262,"11":259,"12":268,"13":269,"14":260,"15":263,"16":261,"17":267,"18":251,"19":253,"20":266},"3":{"1":30,"2":30.01,"3":30.015,"4":30.02,"5":30.025,"6":30.03,"7":30.035,"8":30.04,"9":30.045,"10":30.05}}},"Ka-50":{"heli":true,"task_default":"CAS","fuel_max":1450,"chaff":0,"flare":128,"radio_frequency":124,"length":15.84,"width":14.4,"panel_radio":{"1":{"1":21.5,"2":25.7,"3":27,"4":28,"5":30,"6":32,"7":40,"8":50,"9":55.5,"10":59.9},"2":{"1":0.625,"2":0.303,"3":0.289,"4":0.591,"5":0.408,"6":0.803,"7":0.443,"8":0.215,"9":0.525,"10":1.065,"11":0.718,"12":0.35,"13":0.583,"14":0.283,"15":0.995,"16":1.21}}},"Ka-50_3":{"heli":true,"task_default":"CAS","fuel_max":1450,"chaff":0,"flare":128,"radio_frequency":124,"length":15.84,"width":14.4,"property_defaults":{"modification":"Ka-50_3","Helmet_mounted_device":0,"ExhaustScreen":true,"Realistic_INS":1,"IMU_alignment_type":3},"panel_radio":{"1":{"1":21.5,"2":25.7,"3":27,"4":28,"5":30,"6":32,"7":40,"8":50,"9":55.5,"10":59.9},"2":{"1":0.625,"2":0.303,"3":0.289,"4":0.591,"5":0.408,"6":0.803,"7":0.443,"8":0.215,"9":0.525,"10":1.065,"11":0.718,"12":0.35,"13":0.583,"14":0.283,"15":0.995,"16":1.21}}},"Mi-24P":{"heli":true,"task_default":"CAS","fuel_max":1701,"chaff":0,"flare":192,"length":20.953,"width":17.3,"radio_frequency":251,"property_defaults":{"LeftEngineResource":90,"RightEngineResource":90,"ExhaustScreen":true,"NS430allow":true,"PilotNVG":true,"OperatorNVG":true,"R60equipment":true,"OverrideIFF":0,"GunnersAISkill":90,"SimplifiedAI":false,"HideAngleBoxes":false,"TrackAirTargets":true,"NetCrewControlPriority":0,"HumanOrchestra":false},"panel_radio":{"1":{"1":127.5,"2":135,"3":136,"4":127,"5":125,"6":121,"7":141,"8":128,"9":126,"10":133,"11":130,"12":129,"13":123,"14":131,"15":134,"16":132,"17":138,"18":122,"19":124,"20":137},"2":{"1":21.5,"2":25.7,"3":27,"4":28,"5":30,"6":32,"7":40,"8":50,"9":55.5,"10":59.9}}},"Mi-8MT":{"heli":true,"task_default":"Transport","fuel_max":1929,"chaff":0,"flare":128,"length":25.942,"width":21.33,"radio_frequency":251,"property_defaults":{"ExhaustScreen":true,"LeftEngineResource":90,"RightEngineResource":90,"AdditionalArmor":true,"CargoHalfdoor":true,"GunnersAISkill":90,"NetCrewControlPriority":0,"HumanOrchestra":false,"NS430allow":true},"panel_radio":{"1":{"1":127.5,"2":135,"3":136,"4":127,"5":125,"6":121,"7":141,"8":128,"9":126,"10":133,"11":130,"12":129,"13":123,"14":131,"15":134,"16":132,"17":138,"18":122,"19":124,"20":137},"2":{"1":21.5,"2":25.7,"3":27,"4":28,"5":30,"6":32,"7":40,"8":50,"9":55.5,"10":59.9}}},"OH58D":{"heli":true,"task_default":"AFAC","fuel_max":333.69,"chaff":0,"flare":30,"radio_frequency":116,"length":10.2,"width":10.668,"property_defaults":{"NetCrewControlPriority":0,"Remove_doors":true,"PDU":false,"AllowHidePDU":true,"Rifles":true,"MMS_removal":false,"Rapid_Deployment_Gear":false,"ALQ144":false,"importDrawings":true,"tacNet":1},"panel_radio":{"1":{"1":260,"2":225,"3":230,"4":240,"5":250,"6":260,"7":270,"8":280,"9":290,"10":300,"11":310,"12":320,"13":330,"14":340,"15":350,"16":360,"17":370,"18":380,"19":390,"20":395},"2":{"1":131,"2":116,"3":118,"4":120,"5":122,"6":124,"7":126,"8":128,"9":130,"10":132,"11":134,"12":136,"13":138,"14":140,"15":142,"16":144,"17":146,"18":148,"19":150,"20":151},"3":{"1":30,"2":40.4,"3":30,"4":32,"5":36,"6":38,"7":42,"8":44,"9":48,"10":50,"11":54,"12":56,"13":60,"14":62,"15":66,"16":68,"17":72,"18":74,"19":78,"20":80,"21":84},"4":{"1":30,"2":40.4,"3":30,"4":32,"5":36,"6":38,"7":42,"8":44,"9":48,"10":50,"11":54,"12":56,"13":60,"14":62,"15":66,"16":68,"17":72,"18":74,"19":78,"20":80,"21":84}}},"SA342L":{"heli":true,"task_default":"CAS","fuel_max":416.33,"chaff":0,"flare":32,"radio_frequency":124,"length":11.97,"width":10.5,"property_defaults":{"NS430allow":true,"SA342RemoveDoors":false,"RemoveTablet":false},"panel_radio":{"1":{"1":30,"2":31,"3":32,"4":33,"5":40,"6":41,"7":42,"8":50}}},"SA342M":{"heli":true,"task_default":"CAS","fuel_max":416.33,"chaff":0,"flare":32,"radio_frequency":124,"length":11.97,"width":10.5,"property_defaults":{"NS430allow":true,"RemoveTablet":false},"panel_radio":{"1":{"1":30,"2":31,"3":32,"4":33,"5":40,"6":41,"7":42,"8":50}}},"SA342Minigun":{"heli":true,"task_default":"CAS","fuel_max":416.33,"chaff":0,"flare":32,"radio_frequency":124,"length":11.97,"width":10.5,"property_defaults":{"NS430allow":true,"RemoveTablet":false},"panel_radio":{"1":{"1":30,"2":31,"3":32,"4":33,"5":40,"6":41,"7":42,"8":50}}},"SA342Mistral":{"heli":true,"task_default":"Escort","fuel_max":416.33,"chaff":0,"flare":32,"radio_frequency":124,"length":11.97,"width":10.5,"property_defaults":{"NS430allow":true,"RemoveTablet":false},"panel_radio":{"1":{"1":30,"2":31,"3":32,"4":33,"5":40,"6":41,"7":42,"8":50}}},"UH-1H":{"heli":true,"task_default":"Transport","fuel_max":631,"chaff":0,"flare":60,"radio_frequency":251,"length":17.62,"width":14.7,"property_defaults":{"ExhaustScreen":true,"GunnersAISkill":90,"EngineResource":90,"SoloFlight":false,"NetCrewControlPriority":0},"panel_radio":{"1":{"1":251,"2":264,"3":265,"4":256,"5":254,"6":250,"7":270,"8":257,"9":255,"10":262,"11":259,"12":268,"13":269,"14":260,"15":263,"16":261,"17":267,"18":251,"19":253,"20":266}}},"A-10A":{"heli":false,"task_default":"CAS","fuel_max":5029,"chaff":240,"flare":120,"radio_frequency":124,"length":16.26,"width":17.53,"property_defaults":{}},"A-10C":{"heli":false,"task_default":"CAS","fuel_max":5029,"chaff":240,"flare":120,"length":16.26,"width":17.53,"radio_frequency":251,"property_defaults":{},"panel_radio":{"1":{"1":127.5,"2":135,"3":136,"4":127,"5":125,"6":121,"7":141,"8":128,"9":126,"10":133,"11":130,"12":129,"13":123,"14":131,"15":134,"16":132,"17":138,"18":122,"19":124,"20":137},"2":{"1":305,"2":264,"3":265,"4":256,"5":254,"6":250,"7":270,"8":257,"9":255,"10":262,"11":259,"12":268,"13":269,"14":260,"15":263,"16":261,"17":267,"18":251,"19":253,"20":266},"3":{"1":31.5,"2":45.7,"3":57,"4":38,"5":30,"6":32,"7":40,"8":50,"9":55.5,"10":39.9,"11":41.5,"12":75.7,"13":33,"14":38,"15":42,"16":51.5,"17":50,"18":79,"19":51.5,"20":34.9}}},"A-10C_2":{"heli":false,"task_default":"CAS","fuel_max":5029,"chaff":240,"flare":240,"length":16.26,"width":17.53,"radio_frequency":251,"property_defaults":{"HelmetMountedDevice":1},"panel_radio":{"1":{"1":305,"2":264,"3":265,"4":256,"5":254,"6":250,"7":270,"8":257,"9":255,"10":262,"11":259,"12":268,"13":269,"14":260,"15":263,"16":261,"17":267,"18":251,"19":253,"20":266,"21":54,"22":32.5,"23":42,"24":37.5,"25":54},"2":{"1":305,"2":264,"3":265,"4":256,"5":254,"6":250,"7":270,"8":257,"9":255,"10":262,"11":259,"12":268,"13":269,"14":260,"15":263,"16":261,"17":267,"18":251,"19":253,"20":266},"3":{"1":31.5,"2":45.7,"3":57,"4":38,"5":30,"6":32,"7":40,"8":50,"9":55.5,"10":39.9,"11":41.5,"12":75.7,"13":33,"14":38,"15":42,"16":51.5,"17":50,"18":79,"19":51.5,"20":34.9}}},"AJS37":{"heli":false,"task_default":"Ground Attack","fuel_max":4476,"chaff":1080,"flare":72,"radio_frequency":305,"length":16.3,"width":10.6,"property_defaults":{"Rb04GroupTarget":3,"Rb04VinkelHopp":0,"WeapSafeHeight":1,"MissionGeneratorSetting":0},"panel_radio":{"1":{"1":305,"2":264,"3":265,"4":256,"5":254,"6":250,"7":270,"8":257,"9":255,"10":262,"11":259,"12":268,"13":269,"14":260,"15":263,"16":261,"17":267,"18":251,"19":253,"20":266,"21":305,"22":264,"23":265,"24":256,"25":254,"26":250,"27":270,"28":257,"29":255,"30":262,"31":259,"32":268,"33":269,"34":260,"35":263,"36":261,"37":267,"38":251,"39":253,"40":266,"41":305,"42":264,"43":265,"44":125,"45":121,"46":141,"47":121.5}}},"AV8BNA":{"heli":false,"task_default":"CAS","fuel_max":3519.423,"chaff":60,"flare":120,"radio_frequency":243,"length":14.12,"width":9.24,"property_defaults":{"LoadWater":true,"MountNVG":false,"ClockTime":1,"RocketBurst":1,"EWDispenserTFL":1,"EWDispenserTFR":1,"EWDispenserTBL":2,"EWDispenserTBR":2,"EWDispenserBL":2,"EWDispenserBR":2,"LaserCode100":6,"LaserCode10":8,"LaserCode1":8,"GBULaserCode100":6,"GBULaserCode10":8,"GBULaserCode1":8,"AAR_Zone1":0,"AAR_Zone2":0,"AAR_Zone3":0},"panel_radio":{"1":{"1":177,"2":264,"3":265,"4":256,"5":254,"6":250,"7":270,"8":257,"9":255,"10":262,"11":259,"12":268,"13":269,"14":260,"15":263,"16":261,"17":267,"18":251,"19":253,"20":266,"21":133,"22":257.8,"23":122.1,"24":123.3,"25":344,"26":385},"2":{"1":133,"2":257.8,"3":122.1,"4":123.3,"5":344,"6":385,"7":130,"8":385.4,"9":139,"10":140,"11":134,"12":132,"13":131,"14":129,"15":138,"16":121,"17":126,"18":125,"19":128,"20":122,"21":123,"22":124,"23":135,"24":136,"25":141,"26":127},"3":{"1":177,"2":264,"3":265,"4":256,"5":254,"6":250,"7":270,"8":257,"9":255,"10":262,"11":259,"12":268,"13":269,"14":260,"15":263,"16":261,"17":267,"18":251,"19":253,"20":266,"21":133,"22":257.8,"23":122.1,"24":123.3,"25":344,"26":385,"27":133,"28":257.8,"29":122.1,"30":123.3}}},"Bf-109K-4":{"heli":false,"task_default":"CAP","fuel_max":296,"radio_frequency":40,"length":12.13,"width":10.5,"property_defaults":{"MW50TankContents":1,"Flare_Gun":1},"panel_radio":{"1":{"1":39,"2":40,"3":41,"4":42,"5":38}}},"C-101CC":{"heli":false,"task_default":"CAS","fuel_max":1796,"radio_frequency":225,"length":12.25,"width":10.6,"property_defaults":{"SoloFlight":false,"NetCrewControlPriority":1,"MountIFRHood":false,"CameraRecorder":false,"SightSunFilter":false,"NS430allow":1},"panel_radio":{"1":{"1":225,"2":258,"3":260,"4":270,"5":255,"6":259,"7":262,"8":257,"9":253,"10":263,"11":267,"12":254,"13":264,"14":266,"15":265,"16":252,"17":268,"18":271,"19":275,"20":281,"21":285}}},"C-101EB":{"heli":false,"task_default":"Reconnaissance","fuel_max":1796,"radio_frequency":225,"length":12.25,"width":10.6,"property_defaults":{"SoloFlight":false,"NetCrewControlPriority":1,"MountIFRHood":false,"NS430allow":1,"SmokeOnGround":false},"panel_radio":{"1":{"1":225,"2":258,"3":260,"4":270,"5":255,"6":259,"7":262,"8":257,"9":253,"10":263,"11":267,"12":254,"13":264,"14":266,"15":265,"16":252,"17":268,"18":271,"19":275,"20":285}}},"C-130J-30":{"heli":false,"task_default":"Transport","fuel_max":19692,"chaff":220,"flare":200,"radio_frequency":305,"length":44.36,"width":40.41,"property_defaults":{"NetCrewControlPriority":0,"pre_flight_complete":false,"ramp_down":false,"save_custom_data":true,"allow_air_load":false,"allow_moab":true},"panel_radio":{"1":{"1":305,"2":259,"3":265,"4":256,"5":254,"6":250,"7":270,"8":257,"9":255,"10":262,"11":275,"12":252,"13":269,"14":260,"15":263,"16":261,"17":267,"18":251,"19":253,"20":266},"2":{"1":130,"2":131,"3":121,"4":116,"5":117,"6":118,"7":119,"8":120,"9":121,"10":122}}},"Christen Eagle II":{"heli":false,"task_default":"Nothing","fuel_max":71,"radio_frequency":305,"length":5.6388,"width":11.594846,"property_defaults":{"SoloFlight":false,"NetCrewControlPriority":1,"NS430allow":true},"panel_radio":{"1":{"1":305,"2":264,"3":265,"4":256,"5":254,"6":250,"7":270,"8":257,"9":255,"10":262,"11":259,"12":268,"13":269,"14":260,"15":263,"16":261,"17":267,"18":251,"19":253,"20":266}}},"F-100D":{"heli":false,"task_default":"Ground Attack","fuel_max":3505.4,"radio_frequency":254,"length":14.351,"width":11.811,"property_defaults":{"PROBE_OPTION":0,"BURNER_OPTION":0,"CARTRIDGE_OPTION":false,"RHAW_OPTION":false,"SWITCH_OPTION":0},"panel_radio":{"1":{"1":225,"2":226,"3":227,"4":228,"5":229,"6":230,"7":231,"8":232,"9":233,"10":234,"11":235,"12":236,"13":237,"14":238,"15":239,"16":240,"17":241,"18":242,"19":243,"20":244}}},"F-14A-135-GR":{"heli":false,"task_default":"Intercept","fuel_max":7348,"chaff":140,"flare":60,"radio_frequency":124,"length":16.6,"width":10.15,"property_defaults":{"M61BURST":2,"ALE39Loadout":0,"INSAlignmentStored":false,"TacanChannel":0,"TacanBand":0,"IlsChannel":1,"KY28Key":1,"RefuelingProbeCoverRemoved":false,"TCS":0},"panel_radio":{"1":{"1":225,"2":258,"3":260,"4":270,"5":255,"6":259,"7":262,"8":257,"9":253,"10":263,"11":267,"12":254,"13":264,"14":266,"15":265,"16":252,"17":268,"18":269,"19":268,"20":269},"2":{"1":225,"2":258,"3":260,"4":270,"5":255,"6":259,"7":262,"8":257,"9":253,"10":263,"11":267,"12":254,"13":264,"14":266,"15":265,"16":252,"17":268,"18":269,"19":268,"20":269,"21":225,"22":258,"23":260,"24":270,"25":255,"26":259,"27":262,"28":257,"29":253,"30":263}}},"F-14A-135-GR-Early":{"heli":false,"task_default":"Intercept","fuel_max":7348,"chaff":140,"flare":60,"radio_frequency":124,"length":16.6,"width":10.15,"property_defaults":{"M61BURST":2,"ALE39Loadout":0,"INSAlignmentStored":false,"TacanChannel":0,"TacanBand":0,"IlsChannel":1,"KY28Key":1,"RefuelingProbeCoverRemoved":false,"TCS":0},"panel_radio":{"1":{"1":225,"2":258,"3":260,"4":270,"5":255,"6":259,"7":262,"8":257,"9":253,"10":263,"11":267,"12":254,"13":264,"14":266,"15":265,"16":252,"17":268,"18":269,"19":268,"20":269},"2":{"1":225,"2":258,"3":260,"4":270,"5":255,"6":259,"7":262,"8":257,"9":253,"10":263,"11":267,"12":254,"13":264,"14":266,"15":265,"16":252,"17":268,"18":269,"19":268,"20":269,"21":225,"22":258,"23":260,"24":270,"25":255,"26":259,"27":262,"28":257,"29":253,"30":263}}},"F-14A-95-GR":{"heli":false,"task_default":"Intercept","fuel_max":7348,"chaff":140,"flare":60,"radio_frequency":124,"length":16.6,"width":10.15,"property_defaults":{"M61BURST":2,"ALE39Loadout":0,"INSAlignmentStored":false,"TacanChannel":0,"TacanBand":0,"IlsChannel":1,"KY28Key":1,"RefuelingProbeCoverRemoved":false},"panel_radio":{"1":{"1":225,"2":258,"3":260,"4":270,"5":255,"6":259,"7":262,"8":257,"9":253,"10":263,"11":267,"12":254,"13":264,"14":266,"15":265,"16":252,"17":268,"18":269,"19":268,"20":269},"2":{"1":225,"2":258,"3":260,"4":270,"5":255,"6":259,"7":262,"8":257,"9":253,"10":263,"11":267,"12":254,"13":264,"14":266,"15":265,"16":252,"17":268,"18":269,"19":268,"20":269,"21":225,"22":258,"23":260,"24":270,"25":255,"26":259,"27":262,"28":257,"29":253,"30":263}}},"F-14B":{"heli":false,"task_default":"Intercept","fuel_max":7348,"chaff":140,"flare":60,"radio_frequency":124,"length":16.6,"width":10.15,"property_defaults":{"M61BURST":0,"ALE39Loadout":0,"INSAlignmentStored":false,"TacanChannel":0,"TacanBand":0,"IlsChannel":1,"KY28Key":1,"RefuelingProbeCoverRemoved":false},"panel_radio":{"1":{"1":225,"2":258,"3":260,"4":270,"5":255,"6":259,"7":262,"8":257,"9":253,"10":263,"11":267,"12":254,"13":264,"14":266,"15":265,"16":252,"17":268,"18":269,"19":268,"20":269},"2":{"1":225,"2":258,"3":260,"4":270,"5":255,"6":259,"7":262,"8":257,"9":253,"10":263,"11":267,"12":254,"13":264,"14":266,"15":265,"16":252,"17":268,"18":269,"19":268,"20":269,"21":225,"22":258,"23":260,"24":270,"25":255,"26":259,"27":262,"28":257,"29":253,"30":263}}},"F-14BU":{"heli":false,"task_default":"Intercept","fuel_max":7348,"chaff":140,"flare":60,"radio_frequency":124,"length":16.6,"width":10.15,"property_defaults":{"M61BURST":0,"ALE39Loadout":0,"INSAlignmentStored":false,"TacanChannel":0,"TacanBand":0,"IlsChannel":1,"KY28Key":1,"RefuelingProbeCoverRemoved":false},"panel_radio":{"1":{"1":225,"2":258,"3":260,"4":270,"5":255,"6":259,"7":262,"8":257,"9":253,"10":263,"11":267,"12":254,"13":264,"14":266,"15":265,"16":252,"17":268,"18":269,"19":268,"20":269},"2":{"1":225,"2":258,"3":260,"4":270,"5":255,"6":259,"7":262,"8":257,"9":253,"10":263,"11":267,"12":254,"13":264,"14":266,"15":265,"16":252,"17":268,"18":269,"19":268,"20":269,"21":225,"22":258,"23":260,"24":270,"25":255,"26":259,"27":262,"28":257,"29":253,"30":263}}},"F-15C":{"heli":false,"task_default":"CAP","fuel_max":6103,"chaff":120,"flare":60,"radio_frequency":124,"length":19.43,"width":13.05,"property_defaults":{}},"F-15ESE":{"heli":false,"task_default":"Ground Attack","fuel_max":10245.529841878,"chaff":120,"flare":60,"radio_frequency":243,"length":19.43,"width":13.05,"property_defaults":{"MountNVG":false,"needsGCAlign":false,"InitAirborneTime":0,"InitAlertStatus":false,"Sta2LaserCode":688,"LCFTLaserCode":688,"Sta5LaserCode":688,"RCFTLaserCode":688,"Sta8LaserCode":688,"SoloFlight":false,"NetCrewControlPriority":0,"HumanOrchestra":false},"panel_radio":{"1":{"1":266,"2":264,"3":265,"4":256,"5":254,"6":250,"7":270,"8":257,"9":255,"10":262,"11":259,"12":268,"13":269,"14":260,"15":263,"16":261,"17":267,"18":251,"19":253,"20":266},"2":{"1":133,"2":257.8,"3":122.1,"4":123.3,"5":344,"6":385,"7":130,"8":385.4,"9":139,"10":140,"11":134,"12":132,"13":131,"14":129,"15":138,"16":121,"17":126,"18":125,"19":128,"20":122,"21":123,"22":124,"23":135,"24":136,"25":141,"26":127,"27":127,"28":127,"29":127,"30":127,"31":123,"32":124,"33":135,"34":136,"35":141,"36":127,"37":127,"38":127,"39":127,"40":127}}},"F-16C_50":{"heli":false,"task_default":"CAP","fuel_max":3249,"chaff":60,"flare":60,"radio_frequency":305,"length":14.52,"width":9.45,"property_defaults":{"LAU3ROF":0,"HelmetMountedDevice":1},"panel_radio":{"1":{"1":305,"2":264,"3":265,"4":256,"5":254,"6":250,"7":270,"8":257,"9":255,"10":262,"11":259,"12":268,"13":269,"14":260,"15":263,"16":261,"17":267,"18":251,"19":253,"20":266},"2":{"1":127,"2":135,"3":136,"4":127,"5":125,"6":121,"7":141,"8":128,"9":126,"10":133,"11":130,"12":139,"13":140,"14":131,"15":134,"16":132,"17":138,"18":122,"19":124,"20":137}}},"F-4E-45MC":{"heli":false,"task_default":"CAP","fuel_max":5510.5,"chaff":120,"flare":30,"radio_frequency":305,"length":19.2,"width":11.7,"property_defaults":{"Quality":100,"Wear":0,"UseReferenceAircraft":0,"INSAlignmentStored":true,"PersistentAircraftKey":"","IsModifiedJesterAllowed":true,"IsNvgAllowed":true,"IsEfbAllowed":true,"CombatTreeSpoofable":0,"TacanChannel":0,"TacanBand":0,"VORILSFrequencyMHZ":108,"VORILSFrequencyDecimalMHZ":0,"KY28Key":1,"ChaffDoubleDispense":false,"IffMode2Digit1":0,"IffMode2Digit2":0,"IffMode2Digit3":0,"IffMode2Digit4":0,"LaserCodeDigit1":1,"LaserCodeDigit2":6,"LaserCodeDigit3":8,"LaserCodeDigit4":8},"panel_radio":{"1":{"1":305,"2":264,"3":265,"4":256,"5":254,"6":250,"7":270,"8":257,"9":255,"10":262,"11":259,"12":268,"13":269,"14":260,"15":263,"16":261,"17":267,"18":251},"2":{"1":284,"2":283,"3":265,"4":281,"5":280,"6":279,"7":270,"8":277,"9":276,"10":275,"11":274,"12":268,"13":269,"14":271,"15":278,"16":273,"17":267,"18":272,"19":282,"20":266}}},"F-5E-3":{"heli":false,"task_default":"CAP","fuel_max":2046,"chaff":30,"flare":15,"radio_frequency":305,"length":14.68,"width":8.53,"property_defaults":{"LAU3ROF":0,"LAU68ROF":0,"ChaffBurst":0,"ChaffSalvo":0,"ChaffBurstInt":0,"ChaffSalvoInt":0,"FlareBurst":0,"FlareBurstInt":0},"panel_radio":{"1":{"1":305,"2":264,"3":265,"4":256,"5":254,"6":250,"7":270,"8":257,"9":255,"10":262,"11":259,"12":268,"13":269,"14":260,"15":263,"16":261,"17":267,"18":251,"19":253,"20":266}}},"F-5E-3_FC":{"heli":false,"task_default":"CAP","fuel_max":2046,"chaff":30,"flare":15,"radio_frequency":305,"length":14.68,"width":8.53},"F-86F Sabre":{"heli":false,"task_default":"CAP","fuel_max":1282,"radio_frequency":225,"length":11.43,"width":11.9,"panel_radio":{"1":{"1":225,"2":258,"3":260,"4":270,"5":255,"6":259,"7":262,"8":257,"9":253,"10":263,"11":267,"12":254,"13":264,"14":266,"15":265,"16":252,"17":268,"18":269}}},"F-86F_FC":{"heli":false,"task_default":"CAP","fuel_max":1282,"radio_frequency":225,"length":11.43,"width":11.9,"panel_radio":{"1":{"1":225,"2":258,"3":260,"4":270,"5":255,"6":259,"7":262,"8":257,"9":253,"10":263,"11":267,"12":254,"13":264,"14":266,"15":265,"16":252,"17":268,"18":269}}},"F4U-1D":{"heli":false,"task_default":"Intercept","fuel_max":662,"chaff":0,"flare":0,"radio_frequency":124,"length":10.31,"width":12.49,"property_defaults":{"F4U_CustomGunsFiringPattern":false,"F4U_GunsConvergence_Inner":2,"F4U_GunsConvergence_Mid":2,"F4U_GunsConvergence_Outer":2},"panel_radio":{"1":{"1":124,"2":121,"3":122,"4":123},"2":{"1":124,"2":121,"3":122,"4":123,"5":124,"6":125}}},"FA-18C_hornet":{"heli":false,"task_default":"CAP","fuel_max":4900,"chaff":60,"flare":60,"radio_frequency":305,"length":17.07,"width":11.43,"property_defaults":{"OuterBoard":0,"InnerBoard":0,"HelmetMountedDevice":1},"panel_radio":{"1":{"1":305,"2":264,"3":265,"4":256,"5":254,"6":250,"7":270,"8":257,"9":255,"10":262,"11":259,"12":268,"13":269,"14":260,"15":263,"16":261,"17":267,"18":251,"19":253,"20":266},"2":{"1":305,"2":264,"3":265,"4":256,"5":254,"6":250,"7":270,"8":257,"9":255,"10":262,"11":259,"12":268,"13":269,"14":260,"15":263,"16":261,"17":267,"18":251,"19":253,"20":266}}},"FW-190A8":{"heli":false,"task_default":"CAP","fuel_max":409,"radio_frequency":38.4,"length":12.13,"width":10.5,"property_defaults":{"FW_MW50TankContents":0},"panel_radio":{"1":{"1":39,"2":40,"3":41,"4":42,"5":38}}},"FW-190D9":{"heli":false,"task_default":"CAP","fuel_max":388,"radio_frequency":38.4,"length":12.13,"width":10.5,"property_defaults":{"FW_MW50TankContents":1},"panel_radio":{"1":{"1":39,"2":40,"3":41,"4":42,"5":38}}},"Hawk":{"heli":false,"task_default":"CAP","fuel_max":1272,"radio_frequency":127.5,"length":11.98,"width":9.418,"panel_radio":{"1":{"1":225,"2":258,"3":260,"4":270,"5":255,"6":259,"7":262,"8":257,"9":253,"10":263,"11":267,"12":254,"13":264,"14":266,"15":265,"16":252,"17":268,"18":269}}},"I-16":{"heli":false,"task_default":"CAP","fuel_max":191,"radio_frequency":124,"length":6.13,"width":9.004,"property_defaults":{"landingTorch":false},"panel_radio":{"1":{"1":105,"2":124,"3":131,"4":139}}},"J-11A":{"heli":false,"task_default":"CAP","fuel_max":9400,"chaff":96,"flare":96,"radio_frequency":127.5,"length":21.935,"width":14.7},"JF-17":{"heli":false,"task_default":"CAP","fuel_max":2325,"chaff":36,"flare":32,"radio_frequency":243,"length":14.25,"width":8.5,"property_defaults":{"LaserCode100":6,"LaserCode10":8,"LaserCode1":8,"AARProbe":false,"EW_Database_Target1":1,"EW_Database_Target2":1,"EW_Database_Target3":1,"EW_Database_Target4":1},"panel_radio":{"1":{"1":108,"2":108.5,"3":109,"4":109.5,"5":110,"6":110.5,"7":111,"8":111.5,"9":112,"10":112.5,"11":113,"12":113.5,"13":114,"14":114.5,"15":115,"16":115.5,"17":116,"18":116.5,"19":117,"20":117.5}}},"L-39C":{"heli":false,"task_default":"CAS","fuel_max":980,"chaff":0,"flare":0,"radio_frequency":305,"length":12.13,"width":9.12,"property_defaults":{"SoloFlight":false,"NetCrewControlPriority":1,"NS430allow":true,"DismountIFRHood":false,"DismountGunSight":false},"panel_radio":{"1":{"1":305,"2":264,"3":265,"4":256,"5":254,"6":250,"7":270,"8":257,"9":255,"10":262,"11":259,"12":268,"13":269,"14":260,"15":263,"16":261,"17":267,"18":251,"19":253,"20":266}}},"L-39ZA":{"heli":false,"task_default":"CAS","fuel_max":980,"chaff":0,"flare":0,"radio_frequency":305,"length":12.13,"width":9.12,"property_defaults":{"SoloFlight":false,"NetCrewControlPriority":1,"NS430allow":true,"DismountIFRHood":false},"panel_radio":{"1":{"1":305,"2":264,"3":265,"4":256,"5":254,"6":250,"7":270,"8":257,"9":255,"10":262,"11":259,"12":268,"13":269,"14":260,"15":263,"16":261,"17":267,"18":251,"19":253,"20":266}}},"La-7":{"heli":false,"task_default":"CAP","fuel_max":333,"radio_frequency":124,"length":8.6,"width":9.8,"property_defaults":{},"panel_radio":{"1":{"1":105,"2":124,"3":131,"4":139}}},"M-2000C":{"heli":false,"task_default":"CAP","fuel_max":3165,"chaff":234,"flare":64,"length":14.36,"width":9.13,"radio_frequency":251,"property_defaults":{"WpBullseye":0,"ForceINSRules":false,"ReadyALCM":true,"ReadyQRA":false,"LoadNVGCase":false,"InitHotDrift":0,"EnableTAF":true},"panel_radio":{"1":{"1":305,"2":264,"3":265,"4":256,"5":254,"6":250,"7":270,"8":257,"9":255,"10":262,"11":259,"12":268,"13":269,"14":260,"15":263,"16":261,"17":267,"18":252,"19":253,"20":266},"2":{"1":129,"2":135,"3":136,"4":127,"5":125,"6":121,"7":141,"8":128,"9":126,"10":133,"11":130,"12":139,"13":140,"14":131,"15":134,"16":132,"17":138,"18":122,"19":124,"20":137}}},"MB-339A":{"heli":false,"task_default":"CAS","fuel_max":626,"radio_frequency":124,"length":12.13,"width":10.5,"property_defaults":{"SoloFlight":false,"MountBlindHood":false,"SAAB_RGS_2_Gunsight":true,"Teledyne_TCS_116_2":false,"SAAB_RGS_2_Gunsight_Repeater":false,"DEFA_553_Burst":0.5,"EnableCutOff":false,"RocketRippleTiming":62,"BombsRippleTiming":300,"NetCrewControlPriority":1},"panel_radio":{"1":{"1":317.5,"2":257.8,"3":385.4,"4":344,"5":362.3,"6":340.3,"7":364.2,"8":267.15,"9":369.5,"10":279.4,"11":337.95,"12":292.7,"13":344.5,"14":315.7,"15":370.15,"16":338.825,"17":360.775,"18":307.8,"19":261,"20":291.15},"2":{"1":225,"2":258,"3":260,"4":270,"5":255,"6":259,"7":262,"8":257,"9":253,"10":263,"11":267,"12":254,"13":264,"14":266,"15":265,"16":252,"17":268,"18":269,"19":268,"20":269,"21":225,"22":258,"23":260,"24":270,"25":255,"26":259,"27":262,"28":257,"29":253,"30":263}}},"MB-339APAN":{"heli":false,"task_default":"Reconnaissance","fuel_max":626,"radio_frequency":124,"length":12.13,"width":10.5,"property_defaults":{"SoloFlight":false,"UnlimitedSmoke":false,"NetCrewControlPriority":1},"panel_radio":{"1":{"1":317.5,"2":257.8,"3":385.4,"4":344,"5":362.3,"6":340.3,"7":364.2,"8":267.15,"9":369.5,"10":279.4,"11":337.95,"12":292.7,"13":344.5,"14":315.7,"15":370.15,"16":338.825,"17":360.775,"18":307.8,"19":261,"20":291.15},"2":{"1":225,"2":258,"3":260,"4":270,"5":255,"6":259,"7":262,"8":257,"9":253,"10":263,"11":267,"12":254,"13":264,"14":266,"15":265,"16":252,"17":268,"18":269,"19":268,"20":269,"21":225,"22":258,"23":260,"24":270,"25":255,"26":259,"27":262,"28":257,"29":253,"30":263}}},"MiG-15bis":{"heli":false,"task_default":"CAP","fuel_max":1172,"radio_frequency":3.75,"length":10.11,"width":10.08},"MiG-15bis_FC":{"heli":false,"task_default":"CAP","fuel_max":1172,"radio_frequency":3.75,"length":10.11,"width":10.08},"MiG-19P":{"heli":false,"task_default":"CAP","fuel_max":1800,"radio_frequency":124,"length":13.025,"width":9,"property_defaults":{"MountSIRENA":false,"MissileToneVolume":5,"NAV_Initial_Hdg":0,"ADF_FAR_Frequency":625,"ADF_NEAR_Frequency":303,"ADF_Selected_Frequency":1},"panel_radio":{"1":{"1":121,"2":124,"3":122,"4":125,"5":127,"6":135}}},"MiG-21Bis":{"heli":false,"task_default":"CAP","fuel_max":2280,"chaff":18,"flare":40,"radio_frequency":124,"length":14.5,"width":7.154,"panel_radio":{"1":{"1":124,"2":150,"3":121,"4":131,"5":141,"6":126,"7":130,"8":133,"9":122,"10":124,"11":134,"12":125,"13":135,"14":137,"15":136,"16":123,"17":132,"18":127,"19":129,"20":138}}},"MiG-29 Fulcrum":{"heli":false,"task_default":"CAP","fuel_max":3376,"chaff":30,"flare":30,"radio_frequency":124,"length":20.32,"width":11.36,"property_defaults":{"HUDLanguage":0,"AvionicsLanguage":0,"AvionicsUnits":0,"Realistic_INS":1,"IMU_alignment_type":1,"SPOMode":1,"NS430allow":true,"HelmetMountedDevice":1},"panel_radio":{"1":{"1":124,"2":264,"3":265,"4":256,"5":254,"6":250,"7":270,"8":257,"9":255,"10":262,"11":259,"12":268,"13":269,"14":260,"15":263,"16":261,"17":267,"18":258,"19":253,"20":266},"2":{"1":0.625,"2":0.303,"3":0.525,"4":1.065,"5":0.489,"6":0.995,"7":0.87,"8":0.49}}},"MiG-29A":{"heli":false,"task_default":"CAP","fuel_max":3376,"chaff":30,"flare":30,"radio_frequency":124,"length":20.32,"width":11.36},"MiG-29G":{"heli":false,"task_default":"CAP","fuel_max":3376,"chaff":30,"flare":30,"radio_frequency":124,"length":20.32,"width":11.36},"MiG-29S":{"heli":false,"task_default":"CAP","fuel_max":3493,"chaff":30,"flare":30,"radio_frequency":124,"length":20.32,"width":11.36},"Mirage-F1BE":{"heli":false,"task_default":"CAP","fuel_max":3045,"chaff":30,"flare":15,"radio_frequency":127.5,"length":15.3,"width":8.4,"property_defaults":{"RadarCoverSettings":1,"MissSimplLock":1,"ChaffMultiNumber":1,"ChaffMultiTime":1,"ChaffProgramNumber":1,"ChaffProgramTime":1,"FlareMultiNumber":1,"FlareMultiTime":1,"GunBurstSettings":1,"RocketBurstF1":1,"RocketBurstF4":1,"IFFMode4Disabled":1,"SoloFlight":false,"NetCrewControlPriority":1},"panel_radio":{"1":{"1":118,"2":119.25,"3":122,"4":126.5,"5":127,"6":129,"7":131,"8":133,"9":141,"10":250.5,"11":251,"12":253,"13":254,"14":257,"15":260,"16":261,"17":262,"18":263,"19":267,"20":270},"2":{"1":225,"2":230,"3":240,"4":250.5,"5":251,"6":256,"7":257,"8":262,"9":263,"10":267,"11":270,"12":254,"13":264,"14":266,"15":265,"16":252,"17":268,"18":271,"19":275,"20":360}}},"Mirage-F1CE":{"heli":false,"task_default":"CAP","fuel_max":3356,"chaff":30,"flare":15,"radio_frequency":127.5,"length":15.3,"width":8.4,"property_defaults":{"RadarCoverSettings":1,"MissSimplLock":1,"ChaffMultiNumber":1,"ChaffMultiTime":1,"ChaffProgramNumber":1,"ChaffProgramTime":1,"FlareMultiNumber":1,"FlareMultiTime":1,"GunBurstSettings":1,"RocketBurstF1":1,"RocketBurstF4":1,"IFFMode4Disabled":1},"panel_radio":{"1":{"1":118,"2":119.25,"3":122,"4":126.5,"5":127,"6":129,"7":131,"8":133,"9":141,"10":250.5,"11":251,"12":253,"13":254,"14":257,"15":260,"16":261,"17":262,"18":263,"19":267,"20":270},"2":{"1":225,"2":230,"3":240,"4":250.5,"5":251,"6":256,"7":257,"8":262,"9":263,"10":267,"11":270,"12":254,"13":264,"14":266,"15":265,"16":252,"17":268,"18":271,"19":275,"20":360}}},"Mirage-F1EE":{"heli":false,"task_default":"CAP","fuel_max":3246,"chaff":30,"flare":15,"radio_frequency":127.5,"length":15.3,"width":8.4,"property_defaults":{"RadarCoverSettings":1,"MissSimplLock":1,"ChaffMultiNumber":1,"ChaffMultiTime":1,"ChaffProgramNumber":1,"ChaffProgramTime":1,"FlareMultiNumber":1,"FlareMultiTime":1,"GunBurstSettings":1,"RocketBurstF1":1,"RocketBurstF4":1,"IFFMode4Disabled":1,"INSStartMode":1,"RWR_type":"ALR_300"},"panel_radio":{"1":{"1":118,"2":119.25,"3":122,"4":126.5,"5":127,"6":129,"7":131,"8":133,"9":141,"10":250.5,"11":251,"12":253,"13":254,"14":257,"15":260,"16":261,"17":262,"18":263,"19":267,"20":270},"2":{"1":225,"2":230,"3":240,"4":250.5,"5":251,"6":256,"7":257,"8":262,"9":263,"10":267,"11":270,"12":254,"13":264,"14":266,"15":265,"16":252,"17":268,"18":271,"19":275,"20":360}}},"MosquitoFBMkVI":{"heli":false,"task_default":"CAP","fuel_max":1483.1,"radio_frequency":124,"length":12.34,"width":16.3,"property_defaults":{"SoloFlight":false,"Flare_Gun":1,"ResinLights":0.15},"panel_radio":{"1":{"1":105,"2":124,"3":131,"4":139,"5":108.9},"2":{"1":9.255,"2":8,"3":7.71,"4":6.872,"5":5.955,"6":5.85,"7":5.75,"8":5.65},"3":{"1":5.25,"2":5,"3":4.75,"4":4.5,"5":4.25,"6":3.25,"7":3.012,"8":3.011},"4":{"1":0.444,"2":0.421,"3":0.303,"4":0.3,"5":0.27,"6":0.26,"7":0.25,"8":0.24}}},"P-47D-30":{"heli":false,"task_default":"CAP","fuel_max":1007,"radio_frequency":124,"length":11,"width":12.42,"property_defaults":{"WaterTankContents":1},"panel_radio":{"1":{"1":105,"2":124,"3":131,"4":139},"2":{"1":108.9}}},"P-47D-30bl1":{"heli":false,"task_default":"CAP","fuel_max":1007,"radio_frequency":124,"length":11,"width":12.42,"property_defaults":{"WaterTankContents":1},"panel_radio":{"1":{"1":105,"2":124,"3":131,"4":139},"2":{"1":108.9}}},"P-47D-40":{"heli":false,"task_default":"CAP","fuel_max":1007,"radio_frequency":124,"length":11,"width":12.42,"property_defaults":{"WaterTankContents":1},"panel_radio":{"1":{"1":105,"2":124,"3":131,"4":139},"2":{"1":108.9}}},"P-51D":{"heli":false,"task_default":"CAS","fuel_max":732,"radio_frequency":124,"length":12.13,"width":9.12,"panel_radio":{"1":{"1":105,"2":124,"3":131,"4":139},"2":{"1":108.9}}},"P-51D-30-NA":{"heli":false,"task_default":"CAS","fuel_max":732,"radio_frequency":124,"length":12.13,"width":9.12,"panel_radio":{"1":{"1":105,"2":124,"3":131,"4":139},"2":{"1":108.9}}},"SpitfireLFMkIX":{"heli":false,"task_default":"CAP","fuel_max":277.59853044,"radio_frequency":124,"length":12.13,"width":11.25,"panel_radio":{"1":{"1":105,"2":124,"3":131,"4":139,"5":108.9}}},"SpitfireLFMkIXCW":{"heli":false,"task_default":"CAP","fuel_max":277.59853044,"radio_frequency":124,"length":12.13,"width":11.25,"panel_radio":{"1":{"1":105,"2":124,"3":131,"4":139,"5":108.9}}},"Su-25":{"heli":false,"task_default":"CAS","fuel_max":2835,"chaff":128,"flare":128,"radio_frequency":124,"length":15.36,"width":14.35},"Su-25T":{"heli":false,"task_default":"CAS","fuel_max":3790,"chaff":128,"flare":128,"radio_frequency":124,"length":15.35,"width":14.36},"Su-27":{"heli":false,"task_default":"CAP","fuel_max":9400,"chaff":96,"flare":96,"radio_frequency":127.5,"length":21.935,"width":14.7},"Su-33":{"heli":false,"task_default":"CAP","fuel_max":9500,"chaff":48,"flare":48,"radio_frequency":124,"length":21.18,"width":14.7},"TF-51D":{"heli":false,"task_default":"Reconnaissance","fuel_max":501,"radio_frequency":124,"length":12.13,"width":9.12,"panel_radio":{"1":{"1":105,"2":124,"3":131,"4":139},"2":{"1":108.9}}},"Yak-52":{"heli":false,"task_default":"AFAC","fuel_max":87.84,"radio_frequency":132,"length":7.745,"width":9.3,"property_defaults":{"SoloFlight":false,"PropellorType":0,"NetCrewControlPriority":0},"panel_radio":{"1":{"1":0.625,"2":0.303,"3":0.289,"4":0.591,"5":0.408,"6":0.803,"7":0.443,"8":0.215}}}};
+/* AIRCRAFT_TEMPLATES:END */
 // Poste et canal comme au cockpit : un argument pkRadio (type, poste) ou pkChan (type, poste, canal du .miz) se lit à l'affichage
 // (nom du poste, à défaut « Poste n » ; numéro de canal du cockpit) ; le reste des messages garde le numéro du .miz
 function pkRadioLabel(type, n) { return radioPosteName(type, n) || tf('snap.radio.name', n); }
@@ -8194,6 +8254,9 @@ function pkNormalize(obj, filename) {
       name:     typeof u.name === 'string' ? u.name : '',
       type:     unitTypeOf(v1 ? f : null, u),      // v1 : le type du vol, pour les unités qui n'ont pas le leur
       liveryId: (typeof u.liveryId === 'string' && u.liveryId !== '') ? u.liveryId : null,
+      callsign: (typeof u.callsign === 'number' && isFinite(u.callsign)) ? u.callsign : ((u.callsign && typeof u.callsign === 'object' && !Array.isArray(u.callsign)) ? u.callsign : null),
+      onboardNum: typeof u.onboardNum === 'string' ? u.onboardNum.trim() : '',
+      addProp:  (u.AddPropAircraft && typeof u.AddPropAircraft === 'object' && !Array.isArray(u.AddPropAircraft)) ? u.AddPropAircraft : null,
       radios:   (Array.isArray(u.radios) ? u.radios : [])
         .filter(r => r && pkNum(r.radioIndex) !== null && r.channels && typeof r.channels === 'object')
         .filter(r => !radioFreeCount(unitTypeOf(v1 ? f : null, u), r.radioIndex))      // un poste que la mission ne pré-règle pas (le poste HF des deux hélicoptères) : ignoré, rien n'est écrit ni dit
@@ -8210,6 +8273,7 @@ function pkNormalize(obj, filename) {
     flights.push({
       groupName: f.groupName, types: types,
       coalition: typeof f.coalition === 'string' ? f.coalition : '',
+      groupFrequency: pkNum(f.groupFrequency),
       route: route, units: units,
       chk: { route: true, radios: true, loadout: true, livery: true },
     });
@@ -8268,6 +8332,303 @@ async function pkLoadFiles(files) {
   showToast((bad ? '⚠ ' : '') + msg, { type: bad ? 'err' : 'ok', ms: (bad || skipped) ? 6000 : 3000 });
 }
 
+// ---------- CRÉATION D'UN VOL ABSENT ----------
+// Un vol du paquet que la mission n'a pas peut être créé par HQ : un groupe neuf, à la suite de ceux du pays choisi, avec la route du paquet,
+// le départ en vol ou au sol au 1er point, et les gabarits par type (AIRCRAFT_TEMPLATES, data/aircraft_templates.json).
+const PK_SIDES = ['red', 'blue', 'neutrals'];
+const PK_SPEED_HELI = 50, PK_SPEED_PLANE = 150;      // m/s, quand le 1er point du paquet n'en porte pas
+function pkSideOf(c) { return PK_SIDES.indexOf(c) >= 0 ? c : ''; }
+function pkTpl(type) { return (typeof type === 'string' && Object.prototype.hasOwnProperty.call(AIRCRAFT_TEMPLATES, type)) ? AIRCRAFT_TEMPLATES[type] : null; }
+function pkRoutePoint(route, k) { return route && route[k] && typeof route[k] === 'object' ? route[k] : null; }
+
+// Les pays d'une coalition de la mission, dans l'ordre du .miz, par leur name : [{ name, node, clients }] ; clients = les groupes plane/helicopter dont une unité est Client ou Player
+function pkSideCountries(ctx, side) {
+  const out = [];
+  const sn = side ? _astGetKey(_astGetKey(delRoot(ctx.ast), 'coalition'), side) : null;
+  const cl = sn ? _astGetKey(sn, 'country') : null;
+  if (!cl || cl.kind !== 'table') return out;
+  for (const ce of cl.entries) {
+    const nm = dynStr(_astGetKey(ce.value, 'name'));
+    if (nm === null || nm === '') continue;
+    let clients = 0;
+    for (const cat of ['plane', 'helicopter']) {
+      const gl = _astGetKey(_astGetKey(ce.value, cat), 'group');
+      if (!gl || gl.kind !== 'table') continue;
+      for (const ge of gl.entries) {
+        const us = _astGetKey(ge.value, 'units');
+        if (us && us.kind === 'table' && us.entries.some(ue => { const s = dynStr(_astGetKey(ue.value, 'skill')); return s === 'Client' || s === 'Player'; })) clients++;
+      }
+    }
+    out.push({ name: nm, node: ce.value, clients: clients });
+  }
+  return out;
+}
+// Le pays prérempli : celui qui porte le plus de groupes de joueurs ; à égalité, ou sans aucun, le premier de la liste
+function pkDefaultCountry(list) {
+  let best = null;
+  for (const c of list) if (best === null || c.clients > best.clients) best = c;
+  return best ? best.name : '';
+}
+
+// L'état de création d'un vol absent (non trouvé, non multiple) : why (la raison de ne pas le créer, ou null), canCreate, et les choix gardés tant que le paquet est chargé
+function pkCreateState(ctx, fl) {
+  if (fl.create === undefined) {
+    fl.create = false;
+    fl.side = pkSideOf(fl.coalition);
+    fl.sideFixed = fl.side !== '';      // la coalition vient du paquet : rien à demander
+    fl.country = '';
+    fl.start = 'air';
+  }
+  fl.why = null;
+  fl.heli = false;
+  const types = [];
+  fl.units.forEach(u => { if (types.indexOf(u.type) < 0) types.push(u.type); });
+  if (!pkRoutePoint(fl.route, '1')) fl.why = 'noRoute';
+  else if (!types.length || types.some(ty => !pkTpl(ty))) fl.why = 'unknownType';
+  else {
+    const hs = types.map(ty => !!pkTpl(ty).heli);
+    if (hs.some(x => x !== hs[0])) fl.why = 'mixed';
+    else fl.heli = hs[0];
+  }
+  fl.countries = [];
+  if (!fl.why && fl.side) {
+    fl.countries = pkSideCountries(ctx, fl.side).map(c => c.name);
+    if (!fl.countries.length) fl.why = 'noCountry';
+    else if (fl.countries.indexOf(fl.country) < 0) fl.country = pkDefaultCountry(pkSideCountries(ctx, fl.side));
+  }
+  if (!fl.side) fl.country = '';
+  fl.canCreate = !fl.why;
+  // Proposé dans la fenêtre : un vol qu'on peut créer ; ou dont seule manque la coalition choisie (aucun pays dans celle que la personne a prise : elle peut en changer)
+  fl.offer = fl.canCreate || (fl.why === 'noCountry' && !fl.sideFixed);
+}
+
+// Le 1er point en vol : altitude, type d'altitude et vitesse (m/s) du paquet ; ce qu'il ne porte pas prend une valeur de repli (un point au sol, à 0 m, ne sert pas de départ en vol)
+function pkAirStart(fl) {
+  const p = pkRoutePoint(fl.route, '1') || {};
+  const alt = (typeof p.alt === 'number' && isFinite(p.alt) && p.alt > 0) ? p.alt : (fl.heli ? 100 : 1000);
+  const altType = (p.alt_type === 'BARO' || p.alt_type === 'RADIO') ? p.alt_type : (fl.heli ? 'RADIO' : 'BARO');
+  const speed = (typeof p.speed === 'number' && isFinite(p.speed) && p.speed > 0) ? p.speed : (fl.heli ? PK_SPEED_HELI : PK_SPEED_PLANE);
+  return { alt: alt, altType: altType, speed: speed };
+}
+function pkStartHint(fl) {
+  if (fl.start === 'ground') return t('pk.cf.hintGround');
+  const a = pkAirStart(fl);
+  return tf('pk.cf.hintAir', Math.round(a.alt), t(a.altType === 'RADIO' ? 'pk.cf.agl' : 'pk.cf.baro'), Math.round(a.speed * 3.6));
+}
+
+// Les identifiants et les indicatifs de la mission (tous les groupes : le plus grand groupId et unitId ; les indicatifs des unités volantes)
+function pkMissionScan(ctx) {
+  const sc = { maxG: 0, maxU: 0, maxNum: 0, enfield: new Set() };
+  delEachList(ctx.ast, DEL_ALL_CATS, L => {
+    for (const ge of L.list.entries) {
+      const gid = dynNum(_astGetKey(ge.value, 'groupId'));
+      if (gid !== null && gid > sc.maxG) sc.maxG = gid;
+      const us = _astGetKey(ge.value, 'units');
+      if (!us || us.kind !== 'table') continue;
+      for (const ue of us.entries) {
+        const uid = dynNum(_astGetKey(ue.value, 'unitId'));
+        if (uid !== null && uid > sc.maxU) sc.maxU = uid;
+        if (L.cat !== 'plane' && L.cat !== 'helicopter') continue;
+        const cs = _astGetKey(ue.value, 'callsign');
+        if (!cs) continue;
+        if (cs.kind === 'number') { if (cs.value > sc.maxNum) sc.maxNum = cs.value; }
+        else if (cs.kind === 'table') {
+          const nm = dynStr(_astGetKey(cs, 'name')), m = nm === null ? null : /^Enfield(\d+)\d$/.exec(nm);
+          if (m) sc.enfield.add(Number(m[1]));
+        }
+      }
+    }
+  });
+  return sc;
+}
+// Le pays choisi a-t-il déjà des unités volantes à indicatif nombre ?
+function pkCountryHasNumberCallsign(countryNode) {
+  for (const cat of ['plane', 'helicopter']) {
+    const gl = _astGetKey(_astGetKey(countryNode, cat), 'group');
+    if (!gl || gl.kind !== 'table') continue;
+    for (const ge of gl.entries) {
+      const us = _astGetKey(ge.value, 'units');
+      if (us && us.kind === 'table' && us.entries.some(ue => { const cs = _astGetKey(ue.value, 'callsign'); return !!cs && cs.kind === 'number'; })) return true;
+    }
+  }
+  return false;
+}
+
+// Le groupe (objet JS) d'un vol à créer ; { group, warns, side, country, nUnits }. L'état de la mission (work) donne les identifiants et les indicatifs.
+function pkBuildGroup(work, fl) {
+  const warns = [];
+  const label = fl.groupName;
+  const air = fl.start !== 'ground';
+  const first = pkTpl(fl.units[0].type);
+  const sc = pkMissionScan(work);
+  const cn = pkSideCountries(work, fl.side).find(c => c.name === fl.country);
+  if (!cn) throw Object.assign(new Error('country not found'), { pkErrors: [{ key: 'pk.e.created', args: [] }] });
+
+  // La route : les points du paquet, dans l'ordre ; le 1er est réécrit selon le départ
+  const keys = Object.keys(fl.route).filter(k => /^\d+$/.test(k) && fl.route[k] && typeof fl.route[k] === 'object').sort((a, b) => Number(a) - Number(b));
+  const a0 = pkAirStart(fl);
+  const defSpeed = fl.heli ? PK_SPEED_HELI : PK_SPEED_PLANE;
+  const pts = {};
+  keys.forEach((k, i) => {
+    const pt = {};
+    for (const [kk, v] of Object.entries(fl.route[k])) {
+      if (i === 0 && (kk === 'airdromeId' || kk === 'helipadId' || kk === 'linkUnit')) continue;      // le point 1 ne part plus d'un terrain ni d'un parking
+      pt[kk] = JSON.parse(JSON.stringify(v));
+    }
+    if (i === 0) {
+      if (air) { pt.type = 'Turning Point'; pt.action = 'Turning Point'; pt.alt = a0.alt; pt.alt_type = a0.altType; pt.speed = a0.speed; }
+      else { pt.type = 'TakeOffGround'; pt.action = 'From Ground Area'; pt.alt = 0; pt.alt_type = 'RADIO'; pt.speed = 0; }
+    } else {
+      if (typeof pt.speed !== 'number' || !isFinite(pt.speed)) pt.speed = defSpeed;
+      if (typeof pt.alt === 'number' && pt.alt_type !== 'BARO' && pt.alt_type !== 'RADIO') pt.alt_type = fl.heli ? 'RADIO' : 'BARO';
+    }
+    if (!pt.task || typeof pt.task !== 'object') pt.task = { id: 'ComboTask', params: { tasks: {} } };
+    pt.ETA = 0;
+    pt.ETA_locked = i === 0;
+    pt.speed_locked = true;
+    pt.formation_template = '';
+    if (typeof pt.name !== 'string') pt.name = '';
+    pts[i + 1] = pt;
+  });
+  const p1 = pts[1], p2 = pts[2] || null;
+  if (!isFinite(p1.x) || !isFinite(p1.y)) throw Object.assign(new Error('point 1'), { pkErrors: [{ key: 'pk.e.created', args: [] }] });
+  const heading = p2 && isFinite(p2.x) && isFinite(p2.y) ? Math.atan2(p2.y - p1.y, p2.x - p1.x) : 0;
+  const fx = Math.cos(heading), fy = Math.sin(heading), rx = -Math.sin(heading), ry = Math.cos(heading);      // l'avant et la droite (x vers le nord, y vers l'est)
+
+  // Les indicatifs : un nombre (pays qui en a déjà, ou côté rouge) ou une table « Enfield »
+  const numCall = pkCountryHasNumberCallsign(cn.node) || fl.side === 'red';
+  let enf = 1;
+  while (sc.enfield.has(enf)) enf++;
+  const baseNum = (sc.maxNum > 0 ? sc.maxNum : 100) + 1;
+
+  const units = {};
+  fl.units.forEach((u, i) => {
+    const tpl = pkTpl(u.type);
+    const unitId = sc.maxU + 1 + i;
+    const d = air ? i * 50 : i * ((tpl.width || 0) + 10);
+    const x = air ? p1.x - d * fx + d * rx : p1.x + d * rx;
+    const y = air ? p1.y - d * fy + d * ry : p1.y + d * ry;
+    const unit = { type: u.type, unitId: unitId, skill: 'Client', name: u.name !== '' ? u.name : label + '-' + (i + 1) };
+    // Livrée : celle du paquet (partie cochée), sinon la livrée par défaut du type, sinon aucune
+    if (fl.chk.livery && fl.avail.livery && u.liveryId) unit.livery_id = u.liveryId;
+    else if (Object.prototype.hasOwnProperty.call(LIVERIES_DEFAULT, u.type) && LIVERIES_DEFAULT[u.type].length) unit.livery_id = LIVERIES_DEFAULT[u.type][0];
+    unit.onboard_num = (typeof u.onboardNum === 'string' && u.onboardNum !== '') ? u.onboardNum : String(unitId).padStart(3, '0').slice(-3);
+    if (typeof u.callsign === 'number' && isFinite(u.callsign)) unit.callsign = u.callsign;
+    else if (u.callsign && typeof u.callsign === 'object') unit.callsign = JSON.parse(JSON.stringify(u.callsign));
+    else if (numCall) unit.callsign = baseNum + i;
+    else unit.callsign = { 1: 1, 2: enf, 3: i + 1, name: 'Enfield' + enf + (i + 1) };
+    unit.x = x; unit.y = y; unit.heading = heading; unit.psi = -heading;
+    unit.alt = p1.alt; unit.alt_type = p1.alt_type; unit.speed = p1.speed;
+    unit.hardpoint_racks = true;
+    if (tpl.heli) unit.ropeLength = 15;
+    // Radios : les canaux du paquet par-dessus les défauts du type ; un type sans panel_radio n'en a pas
+    if (tpl.panel_radio) {
+      const radio = {};
+      for (const [post, def] of Object.entries(tpl.panel_radio)) radio[post] = { channels: Object.assign({}, def) };
+      if (fl.chk.radios && fl.avail.radios) {
+        for (const r of u.radios) {
+          const rr = radio[String(r.radioIndex)];
+          if (!rr) { warns.push({ key: 'pk.w.radio', args: [label, pkRadioArg(u.type, r.radioIndex), unit.name] }); continue; }
+          for (const [c, fr] of Object.entries(r.channels)) {
+            if (Object.prototype.hasOwnProperty.call(rr.channels, c)) rr.channels[c] = fr;
+            else warns.push({ key: 'pk.w.chan', args: [label, pkChanArg(u.type, r.radioIndex, c), pkRadioArg(u.type, r.radioIndex), unit.name] });
+          }
+        }
+      }
+      unit.Radio = radio;
+    }
+    const prop = (u.addProp && typeof u.addProp === 'object') ? u.addProp : tpl.property_defaults;
+    if (prop && Object.keys(prop).length) unit.AddPropAircraft = JSON.parse(JSON.stringify(prop));
+    // Emport : celui du paquet (partie cochée), sinon celui par défaut du type
+    if (fl.chk.loadout && fl.avail.loadout && u.payload) unit.payload = JSON.parse(JSON.stringify(u.payload));
+    else unit.payload = { pylons: {}, fuel: tpl.fuel_max || 0, flare: tpl.flare || 0, chaff: tpl.chaff || 0, gun: 100 };
+    units[i + 1] = unit;
+  });
+
+  const group = {
+    groupId: sc.maxG + 1, name: label, task: first.task_default || 'Nothing', taskSelected: true, tasks: {},
+    communication: true, radioSet: false, hidden: false, hiddenOnMFD: false, hiddenOnPlanner: false, uncontrolled: false,
+    start_time: 0, frequency: (typeof fl.groupFrequency === 'number' && isFinite(fl.groupFrequency)) ? fl.groupFrequency : (first.radio_frequency || 251),
+    modulation: 0, x: p1.x, y: p1.y, route: { points: pts }, units: units
+  };
+  return { group: group, warns: warns, country: cn.name, nUnits: fl.units.length };
+}
+
+// Insère une entrée à la suite de celles d'une table (nœud de l'arbre), indentée comme ses voisines ; rend les écritures (applyPatches)
+function pkInsertEntry(text, node, key, value) {
+  const patches = [];
+  const ls = o => text.lastIndexOf('\n', o - 1) + 1;
+  const lead = o => /^[ \t]*/.exec(text.slice(ls(o)))[0];            // l'indentation de la ligne qui porte l'offset
+  const bare = o => /^[ \t]*$/.test(text.slice(ls(o), o));            // l'offset est le premier signe de sa ligne
+  const closeOff = node.pos.end.offset - 1;
+  if (node.kind !== 'table' || text.charAt(closeOff) !== '}') throw Object.assign(new Error('insert'), { pkErrors: [{ key: 'pk.e.created', args: [] }] });
+  const ks = luaKey(key);
+  const entry = (ei, unit) => {
+    const raw = serializeLua(value, 0);
+    if (raw === null) throw Object.assign(new Error('serialize'), { pkErrors: [{ key: 'pk.e.created', args: [] }] });
+    const body = raw.split('\n').map((ln, i) => { if (i === 0) return ln; const n = /^\t*/.exec(ln)[0].length; return ei + unit.repeat(n) + ln.slice(n); }).join('\n');
+    return ei + ks + ' = ' + body + ', -- end of ' + ks + '\n';
+  };
+  if (!node.entries.length) {
+    const base = lead(node.pos.start.offset);
+    patches.push({ pos: node.pos, newValueStr: '{\n' + entry(base + '\t', '\t') + base + '}' });
+    return patches;
+  }
+  const last = node.entries[node.entries.length - 1];
+  const base = bare(closeOff) ? lead(closeOff) : lead(node.pos.start.offset);
+  const ei = bare(last.keyPos.start.offset) ? lead(last.keyPos.start.offset) : base + '\t';
+  const unit = (ei.length > base.length && ei.indexOf(base) === 0) ? ei.slice(base.length) : '\t';
+  const lastEnd = last.valuePos.end.offset;
+  const comma = /[,;]/.test(text.slice(lastEnd, closeOff).replace(/--[^\n]*/g, ''));
+  // L'insertion : au début de la ligne de l'accolade fermante si elle est seule sur sa ligne, sinon juste avant elle ; la virgule qui manque après la dernière entrée va avec elle si les deux points se confondent
+  const at = bare(closeOff) ? ls(closeOff) : closeOff;
+  const body = bare(closeOff) ? entry(ei, unit) : '\n' + entry(ei, unit) + base;
+  if (!comma && lastEnd === at) patches.push({ pos: { start: { offset: at }, end: { offset: at } }, newValueStr: ',' + body });
+  else {
+    if (!comma) patches.push({ pos: { start: { offset: lastEnd }, end: { offset: lastEnd } }, newValueStr: ',' });
+    patches.push({ pos: { start: { offset: at }, end: { offset: at } }, newValueStr: body });
+  }
+  return patches;
+}
+
+// Crée le vol dans la mission de travail : insère le groupe, relit le texte écrit, vérifie qu'on retrouve le groupe par son nom et ses identifiants, et rend la nouvelle mission de travail
+function pkCreateFlight(work, fl) {
+  const built = pkBuildGroup(work, fl);
+  const g = built.group, cat = fl.heli ? 'helicopter' : 'plane';
+  const cn = pkSideCountries(work, fl.side).find(c => c.name === fl.country).node;
+  const catNode = _astGetKey(cn, cat);
+  let patches;
+  if (!catNode) patches = pkInsertEntry(work.missionText, cn, cat, { group: { 1: g } });
+  else if (catNode.kind !== 'table') throw Object.assign(new Error('category'), { pkErrors: [{ key: 'pk.e.created', args: [] }] });
+  else {
+    const gl = _astGetKey(catNode, 'group');
+    if (!gl) patches = pkInsertEntry(work.missionText, catNode, 'group', { 1: g });
+    else {
+      let n = 0;
+      for (const e of gl.entries) if (e.key && e.key.kind === 'int' && e.key.value > n) n = e.key.value;
+      patches = pkInsertEntry(work.missionText, gl, n + 1, g);
+    }
+  }
+  patches.sort((a, b) => b.pos.start.offset - a.pos.start.offset);
+  const patchedSrc = applyPatches(work.missionText, patches);
+  try { retokenizeSafety(patchedSrc); }
+  catch (e) { console.warn('[HQ] relecture du texte écrit :', e); throw Object.assign(e, { pkErrors: [{ key: 'pk.e.retok', args: [] }] }); }
+  const { tokens: rTk } = DCS_TOKENIZER.tokenize(patchedSrc);
+  const rAst = DCS_PARSER.parse(rTk);
+  const rModel = DCS_EXTRACTOR.extract(rAst, patchedSrc, _mizFilename || '', work.otherFilesMap, patchedSrc.split('\n'));
+  const next = { missionText: patchedSrc, ast: rAst, model: rModel, otherFilesMap: work.otherFilesMap, theatre: work.theatre };
+  // Le groupe se retrouve par son nom (et sa coalition) et par ses identifiants, valeur pour valeur
+  const found = pkMatchGroups(next, g.name, fl.side);
+  let node = null;
+  delEachList(rAst, DEL_FLIGHT_CATS, L => { for (const e of L.list.entries) if (dynNum(_astGetKey(e.value, 'groupId')) === g.groupId) node = e.value; });
+  const ids = found.length === 1 ? found[0].units.map(u => u.unitId).sort((a, b) => a - b).join(',') : '';
+  const want = Object.values(g.units).map(u => u.unitId).sort((a, b) => a - b).join(',');
+  if (found.length !== 1 || found[0].group.groupId !== g.groupId || ids !== want || !node || !deepEqValues(g, astToValue(node))) {
+    throw Object.assign(new Error('created group not read back'), { pkErrors: [{ key: 'pk.e.created', args: [] }] });
+  }
+  return { next: next, nPatches: patches.length, warns: built.warns, country: built.country, nUnits: built.nUnits };
+}
+
 // ---------- ÉTAT : recherche des vols, conflits, parties disponibles ----------
 function pkComputeState() {
   const ctx = _HQ_MIZ_CONTEXT;
@@ -8286,6 +8647,8 @@ function pkComputeState() {
         loadout: fl.units.some(u => !!u.payload),
         livery:  fl.units.some(u => !!u.liveryId),
       };
+      if (ctx && !fl.found && !fl.multi) pkCreateState(ctx, fl);
+      else { fl.why = null; fl.canCreate = false; fl.offer = false; }
       seq.push({ pk, fl });
     }
   }
@@ -8338,15 +8701,35 @@ function pkRender() {
       pk.flights.forEach((fl, fi) => {
         html += '<div class="pk-flight"><div class="pk-flight-head">' + h(fl.groupName) +
           (fl.types.length ? ' <span class="snap-flight-tag">' + h(fl.types.map(gameAircraftName).join(' + ')) + '</span> ' : ' ') +
-          (!ctx ? '' : fl.found ? '<span class="pk-found">' + h(t('pk.found')) + '</span>' : fl.multi ? '' : '<span class="pk-absent">' + h(t('pk.absent')) + '</span>') +
+          (!ctx ? '' : fl.found ? '<span class="pk-found">' + h(t('pk.found')) + '</span>' : fl.multi ? '' :
+            (fl.why && !fl.offer) ? '<span class="pk-why">' + h(t('pk.why.' + fl.why)) + '</span>' :
+            '<span class="pk-absent">' + h(t(fl.offer ? 'pk.absentCreate' : 'pk.absent')) + '</span>') +
           '</div>';
+        const mk = ' data-pk="' + pk.id + '" data-fi="' + fi + '"';
+        const mkOn = !!ctx && !fl.found && !fl.multi && fl.offer && fl.create;      // la case « Créer » est cochée
+        if (ctx && !fl.found && !fl.multi && fl.offer) {
+          html += '<div class="pk-create"><label class="pk-chk"><input type="checkbox" data-pkc="create"' + mk + (fl.create ? ' checked' : '') + (busy ? ' disabled' : '') + '>' + h(t('pk.create')) + '</label></div>';
+          if (fl.create) {
+            const sel = (kind, label, opts, val, dis, cls) => '<label class="pk-flt-f' + (cls ? ' ' + cls : '') + '"><span>' + h(label) + '</span><select data-pkc="' + kind + '"' + mk + ((dis || busy) ? ' disabled' : '') + '>' +
+              opts.map(o => '<option value="' + h(o[0]) + '"' + (o[0] === val ? ' selected' : '') + '>' + h(o[1]) + '</option>').join('') + '</select></label>';
+            html += '<div class="pk-cfields">';
+            if (!fl.sideFixed) html += sel('side', t('pk.flt.side'), [['', t('pk.cf.pick')], ['red', t('pk.flt.red')], ['blue', t('pk.flt.blue')]], fl.side, false);
+            html += sel('country', t('pk.cf.country'), fl.countries.length ? fl.countries.map(c => [c, c]) : [['', '—']], fl.country, !fl.side || !fl.countries.length);
+            html += sel('start', t('pk.cf.start'), [['air', t('pk.cf.air')], ['ground', t('pk.cf.ground')]], fl.start, false, 'pk-cstart');
+            html += '</div>';
+            if (fl.why) html += '<div class="pk-chint pk-why">' + h(t('pk.why.' + fl.why)) + '</div>';
+            else html += '<div class="pk-chint">' + h(pkStartHint(fl)) + '</div>';
+          }
+        }
         if (fl.multi) html += '<div class="ui-avert">⚠ ' + h(tf('pk.w.multi', fl.groupName, fl.multi)) + '</div>';
         if (fl.supBy) html += '<div class="ui-avert">' + h(tf('pk.replacedBy', fl.supBy.filename)) + '</div>';
-        html += '<div class="pk-parts">';
+        html += '<div class="pk-parts' + (mkOn ? ' pk-in' : '') + '">';
         for (const part of PK_PARTS) {
-          const on = !!ctx && fl.found && !fl.supBy && fl.avail[part];
-          html += '<label class="pk-chk' + (on ? '' : ' off') + '"><input type="checkbox" data-pk="' + pk.id + '" data-fi="' + fi + '" data-part="' + part + '"' +
-            ((on && fl.chk[part]) ? ' checked' : '') + ((on && !busy) ? '' : ' disabled') + '>' + h(t('pk.part.' + part)) + '</label>';
+          // Un vol à créer : la route est son départ (cochée, figée) ; les autres parties se cochent selon ce que le paquet porte
+          const mkRoute = mkOn && fl.canCreate && part === 'route';
+          const on = (!!ctx && fl.found && !fl.supBy && fl.avail[part]) || (mkOn && fl.canCreate && fl.avail[part] && part !== 'route');
+          html += '<label class="pk-chk' + ((on || mkRoute) ? '' : ' off') + '"' + (mkRoute ? ' title="' + h(t('pk.cf.locked')) + '"' : '') + '><input type="checkbox" data-pk="' + pk.id + '" data-fi="' + fi + '" data-part="' + part + '"' +
+            (mkRoute ? ' checked' : ((on && fl.chk[part]) ? ' checked' : '')) + ((on && !busy) ? '' : ' disabled') + '>' + h(t('pk.part.' + part)) + '</label>';
         }
         html += '</div></div>';
       });
@@ -8356,7 +8739,7 @@ function pkRender() {
   }
 
   const applyBtn = document.getElementById('pk-apply-btn');
-  if (applyBtn) applyBtn.disabled = _PK_BUSY || !(ctx && seq.some(s => s.fl.found && !s.fl.supBy));
+  if (applyBtn) applyBtn.disabled = _PK_BUSY || !(ctx && seq.some(s => (s.fl.found && !s.fl.supBy) || (s.fl.create && s.fl.offer)));
 
   const repEl = document.getElementById('pk-report');
   if (repEl) {
@@ -8576,12 +8959,12 @@ async function pkApply() {
     showToast(t('toast.pkApplying'), 120000);
     await pkYield();      // l'état occupé et le toast sont peints avant le premier vol
     const seq = pkComputeState();
-    const total = seq.filter(s => s.fl.found && !s.fl.supBy).length;
+    const total = seq.filter(s => (s.fl.found && !s.fl.supBy) || (s.fl.create && s.fl.canCreate)).length;
     const base = _HQ_MIZ_CONTEXT;
     // Copie de travail : le contexte chargé n'est touché qu'après le dernier vol vérifié
     let work = { missionText: base.missionText, ast: base.ast, model: base.model, otherFilesMap: base.otherFilesMap, theatre: base.theatre };
     const lines = [];
-    let applied = 0, absent = 0, warnN = 0, patchesN = 0, started = 0, same = 0;
+    let applied = 0, absent = 0, warnN = 0, patchesN = 0, started = 0, same = 0, created = 0;
     for (const s of seq) {
       const { pk, fl } = s;
       const label = fl.groupName;
@@ -8590,6 +8973,45 @@ async function pkApply() {
           warnN++;
           const n = fl.multi;
           lines.push({ cls: 'w', text: () => '⚠ ' + tf('pk.w.multi', label, n) });
+        } else if (fl.create && fl.offer) {
+          // Un vol absent, à créer : même tour que les vols trouvés, sur la même copie de travail
+          if (!fl.canCreate) {
+            absent++;
+            const why = fl.why;
+            lines.push({ cls: 'a', text: () => tf('pk.rep.why', label, pk.filename, t('pk.why.' + why)) });
+            continue;
+          }
+          if (!fl.side) {
+            absent++;
+            lines.push({ cls: 'w', text: () => '⚠ ' + tf('pk.rep.noSide', label) });
+            continue;
+          }
+          if (pkMatchGroups(work, fl.groupName, fl.side).length) {
+            // le même vol vient d'être créé plus haut (un autre paquet) : rien n'est écrit
+            lines.push({ cls: 'a', text: () => tf('pk.rep.nothing', label, pk.filename) });
+            continue;
+          }
+          if (started++ > 0) {
+            showToast(tf('toast.pkApplyingN', started, total), 120000);
+            await pkYield();
+          }
+          try {
+            const made = pkCreateFlight(work, fl);
+            work = made.next;
+            created++; patchesN += made.nPatches;
+            const country = made.country, startKey = fl.start === 'ground' ? 'pk.rep.startGround' : 'pk.rep.startAir', nU = made.nUnits;
+            lines.push({ cls: 'ok', text: () => tf('pk.rep.created', label, pk.filename, country, t(startKey), tn('pk.rep.units', nU)) });
+            for (const w of made.warns) {
+              warnN++;
+              lines.push({ cls: 'w', text: () => '⚠ ' + tf.apply(null, [w.key].concat(w.args)) });
+            }
+          } catch (err) {
+            throw Object.assign(err, { pkFlight: label, pkFile: pk.filename });
+          }
+        } else if (fl.why && !fl.offer) {
+          absent++;
+          const why = fl.why;
+          lines.push({ cls: 'a', text: () => tf('pk.rep.why', label, pk.filename, t('pk.why.' + why)) });
         } else {
           absent++;
           lines.push({ cls: 'a', text: () => tf('pk.rep.absent', label, pk.filename) });
@@ -8643,7 +9065,7 @@ async function pkApply() {
       }
     }
     if (patchesN === 0) {
-      _PK_REPORT = { lines, total: () => pkTotalText(applied, absent, warnN) };
+      _PK_REPORT = { lines, total: () => pkTotalText(applied, absent, warnN, created) };
       showToast(t(same > 0 ? 'pk.rep.nochange' : 'toast.pkNoChange'));
       return;
     }
@@ -8662,8 +9084,8 @@ async function pkApply() {
     HQ_SNAPSHOT = snap;
     if (changed) _HQ_DIRTY += 1;
     renderSnapshot(HQ_SNAPSHOT);
-    _PK_REPORT = { lines, total: () => pkTotalText(applied, absent, warnN) };
-    showToast(tn('pk.rep.applied', applied) + ' ✔', { type: 'ok' });
+    _PK_REPORT = { lines, total: () => pkTotalText(applied, absent, warnN, created) };
+    showToast((applied || !created ? tn('pk.rep.applied', applied) : '') + (applied && created ? ' · ' : '') + (created ? tn('pk.rep.createdN', created) : '') + ' ✔', { type: 'ok' });
   } catch (err) {
     console.error('[HQ] application des paquets:', err);
     const fe = err || {};
@@ -8678,8 +9100,8 @@ async function pkApply() {
   }
 }
 
-function pkTotalText(applied, absent, warnN) {
-  return tn('pk.rep.applied', applied) + ' · ' + tn('pk.rep.absentN', absent) + ' · ' + tn('pk.rep.warnN', warnN);
+function pkTotalText(applied, absent, warnN, created) {
+  return tn('pk.rep.applied', applied) + (created ? ' · ' + tn('pk.rep.createdN', created) : '') + ' · ' + tn('pk.rep.absentN', absent) + ' · ' + tn('pk.rep.warnN', warnN);
 }
 
 // ---------- SUPPRESSION DE VOLS ----------
@@ -9751,7 +10173,22 @@ function initPackagesUI() {
     });
     listEl.addEventListener('change', e => {
       const cb = e.target;
-      if (_PK_BUSY || !cb || !cb.getAttribute || !cb.hasAttribute('data-part')) return;
+      if (_PK_BUSY || !cb || !cb.getAttribute) return;
+      const kind = cb.getAttribute('data-pkc');
+      if (kind) {
+        // un vol absent à créer : la case « Créer », la coalition, le pays, le départ
+        const pk0 = _PK_LIST.find(p => p.id === Number(cb.getAttribute('data-pk')));
+        const fl0 = pk0 && pk0.flights[Number(cb.getAttribute('data-fi'))];
+        if (!fl0) return;
+        if (kind === 'create') fl0.create = cb.checked;
+        else if (kind === 'side') { fl0.side = pkSideOf(cb.value); fl0.country = ''; }
+        else if (kind === 'country') fl0.country = cb.value;
+        else if (kind === 'start') fl0.start = cb.value === 'ground' ? 'ground' : 'air';
+        pkRender();
+        if (kind === 'create') { const again = listEl.querySelector('input[data-pkc="create"][data-pk="' + cb.getAttribute('data-pk') + '"][data-fi="' + cb.getAttribute('data-fi') + '"]'); if (again) again.focus(); }
+        return;
+      }
+      if (!cb.hasAttribute('data-part')) return;
       const pk = _PK_LIST.find(p => p.id === Number(cb.getAttribute('data-pk')));
       const fl = pk && pk.flights[Number(cb.getAttribute('data-fi'))];
       if (fl) fl.chk[cb.getAttribute('data-part')] = cb.checked;

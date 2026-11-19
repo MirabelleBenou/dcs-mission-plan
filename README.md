@@ -53,7 +53,7 @@ The landing page presents each tool as a **pinned print** on the board. Active t
 
 ### 🛡️ HQ — your wing, configured once
 
-HQ is the suite's **command post**. Its main job today is the **wing hub**: set your wing name, logo, squadrons and callsigns **once**, and Briefing Generator + Recon Station pick it up automatically. HQ also ships an **experimental `.miz` engine** (read a mission, export a mission snapshot, apply surgical patches) — HQ applies the Flight Configurator's flight packages to the mission; creating a group the mission lacks, from a package, will come later, and in-game validation is pending, so HQ is published as **beta**. HQ can also write **Dynamic Spawn** into a mission: mark flights as templates and link them to the airfields, FARPs and ships that already have Dynamic Spawn enabled in the mission editor (HQ never enables it). Its **Example** button loads a demonstration wing; your own configuration is kept and can be restored in one tap.
+HQ is the suite's **command post**. Its main job today is the **wing hub**: set your wing name, logo, squadrons and callsigns **once**, and Briefing Generator + Recon Station pick it up automatically. HQ also ships an **experimental `.miz` engine** (read a mission, export a mission snapshot, apply surgical patches) — HQ applies the Flight Configurator's flight packages to the mission, and creates a flight the mission lacks, from its package; in-game validation is pending, so HQ is published as **beta**. HQ can also write **Dynamic Spawn** into a mission: mark flights as templates and link them to the airfields, FARPs and ships that already have Dynamic Spawn enabled in the mission editor (HQ never enables it). Its **Example** button loads a demonstration wing; your own configuration is kept and can be restored in one tap.
 
 ### ✈️ Flight Configurator — in detail
 
@@ -250,7 +250,7 @@ The workflow checks all of it, creates the release with its files, publishes it 
 ## 🗺️ Roadmap
 
 ### ⏳ Work in Progress
-- ⏳ **HQ** — create a group that a mission lacks, from a flight package; in-game `.miz` validation (out of beta)
+- ⏳ **HQ** — in-game `.miz` validation (out of beta)
 - ⏳ **Route Planner** — clock times from a TOT, kneeboard export
 - ⏳ **The suite** — more aircraft types (the Flight Configurator handles four today), and phone ergonomics
 - ⏳ More themes

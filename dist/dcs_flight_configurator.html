@@ -15697,6 +15697,7 @@ const I18N = {
   "tb.clear.tip": "Tout effacer…",
   "bar.ok": "Prêt à exporter : {0}",
   "bar.clamped": "{0} réglage(s) d’emport ramené(s) à la limite ou aux valeurs par défaut de l’appareil.",
+  "bar.noroute": "{0} : sans route, HQ ne pourra pas créer ce vol s’il manque à la mission",
   "bar.bad.freq": "Export impossible : {0} fréquence(s) à corriger dans les radios.",
   "bar.theatre.conflict": "Export impossible : les groupes sont sur {0}, Mission Plan sur {1} (voir le bandeau).",
   "bar.route.theatre": "Export impossible : la route du groupe {0} est sur {1}, Mission Plan sur {2}.",
@@ -16005,6 +16006,7 @@ const I18N = {
   "tb.clear.tip": "Clear everything…",
   "bar.ok": "Ready to export: {0}",
   "bar.clamped": "{0} loadout setting(s) brought back to the aircraft limit or default values.",
+  "bar.noroute": "{0}: no route, HQ will not be able to create this flight if the mission lacks it",
   "bar.bad.freq": "Cannot export: {0} frequency(ies) to fix in the radios.",
   "bar.theatre.conflict": "Cannot export: the groups are on {0}, Mission Plan on {1} (see the banner).",
   "bar.route.theatre": "Cannot export: group {0}'s route is on {1}, Mission Plan on {2}.",
@@ -17917,6 +17919,8 @@ function refreshBar() {
   const empty = !S.flights.length;
   let msg = issues.length ? (empty && !UI.exportTried ? t('bar.start') : issues.map(i => tf(i.key, ...i.args)).join(' ')) : tf('bar.ok', packageFileName() + '.json');
   if (UI.clamped > 0) msg += ' · ' + tf('bar.clamped', UI.clamped);
+  // Un vol sans route (le paquet porterait route: null) : HQ ne pourra pas le créer s'il manque à la mission ; l'export n'est pas bloqué
+  S.flights.forEach((f, fi) => { if (!f.route || !f.route.points || !f.route.points['1']) msg += ' · ' + tf('bar.noroute', flightLabel(f, fi)); });
   bar.textContent = msg;
   tcPaint();
   mlRefresh();       // la ligne de la mission d'HQ suit le bandeau de théâtre (rTh) comme le reste de la barre
