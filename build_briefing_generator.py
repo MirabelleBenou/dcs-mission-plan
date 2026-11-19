@@ -1791,6 +1791,9 @@ body {
   font-weight: 400;
   letter-spacing: 1px;
 }
+/* Le nom de la radio (liste ou champ de texte) à gauche, le × à droite, sur la même ligne */
+.ed-radio-name { flex: 1; min-width: 0; }
+.ed-radio-block-head .ed-btn-icon { flex: none; }
 .ed-channels-list {
   display: flex;
   flex-direction: column;
@@ -3401,6 +3404,9 @@ const I18N = {
     'editor.radio.helpAircraft': 'Pour chaque appareil, configurez les radios et leurs canaux. Si une image est fournie, elle remplace la table générée.',
     'editor.radio.customName':   'Nom personnalisé',
     'editor.radio.radioName':    'Nom de la radio',
+    'editor.radio.none':         '— Aucune —',
+    'editor.radio.noRadio':      'Aucune radio',
+    'editor.radio.other':        'Autre radio…',
     'editor.radio.labelEx':      'Libellé',
     'editor.radio.freqLabel':    'Fréq.',
     'editor.radio.chLabel':      'Ch.',
@@ -3824,6 +3830,9 @@ const I18N = {
     'editor.radio.helpAircraft': 'For each aircraft, configure radios and their channels. If an image is provided, it replaces the generated table.',
     'editor.radio.customName':   'Custom name',
     'editor.radio.radioName':    'Radio name',
+    'editor.radio.none':         '— None —',
+    'editor.radio.noRadio':      'No radio',
+    'editor.radio.other':        'Other radio…',
     'editor.radio.labelEx':      'Label',
     'editor.radio.freqLabel':    'Freq.',
     'editor.radio.chLabel':      'Ch.',
@@ -4310,7 +4319,7 @@ function loadState() {
       state = mergeDeep(structuredClone(DEFAULTS), parsed);
       // Migration classification : legacy texte → clé canonique (v2.2.0)
       if (state.meta && state.meta.classification) {
-        const migrated = CLASSIF_LEGACY_MAP[state.meta.classification];
+        const migrated = Object.prototype.hasOwnProperty.call(CLASSIF_LEGACY_MAP, state.meta.classification) ? CLASSIF_LEGACY_MAP[state.meta.classification] : null;
         if (migrated) state.meta.classification = migrated;
       }
       if (Array.isArray(state.phases)) {
@@ -4894,7 +4903,7 @@ function resolveAircraftRadioKey(name) {
   if (Object.prototype.hasOwnProperty.call(RADIO_POSTES, name)) return name;
   const norm = _normalizeAcft(name);
   // 2. Alias
-  if (AIRCRAFT_RADIO_ALIAS[norm]) return AIRCRAFT_RADIO_ALIAS[norm];
+  if (Object.prototype.hasOwnProperty.call(AIRCRAFT_RADIO_ALIAS, norm)) return AIRCRAFT_RADIO_ALIAS[norm];
   // 3. Sous-chaîne heuristique (clé contient le nom ou inversement)
   const normLow = norm;
   for (const key of Object.keys(RADIO_POSTES)) {
@@ -5100,10 +5109,12 @@ function renderRadioAircrafts() {
         wrap.style.display = 'none';
         plans[ai].aircraft = acSel.value;
       }
+      renderAircraftRadios(card.querySelector(`[data-radios-list="${ai}"]`), ai);       // les radios de cette carte seulement
       schedulePreview();
     });
     card.querySelector(`[data-ap-custom="${ai}"]`).addEventListener('input', e => {
       plans[ai].aircraft = e.target.value;
+      renderAircraftRadios(card.querySelector(`[data-radios-list="${ai}"]`), ai);
       schedulePreview();
     });
 
@@ -5132,7 +5143,7 @@ function renderRadioAircrafts() {
     card.querySelector(`[data-radio-add="${ai}"]`).addEventListener('click', () => {
       if (!plans[ai].radios) plans[ai].radios = [];
       if (plans[ai].radios.length >= RADIO_RADIOS_MAX) return;
-      plans[ai].radios.push({ name: '', channels: [] }); // champ vide → combobox datalist (P0)
+      plans[ai].radios.push({ name: '', channels: [] }); // nom vide → « — Aucune — » dans la liste
       renderRadioAircrafts();
       schedulePreview();
     });
@@ -5141,30 +5152,91 @@ function renderRadioAircrafts() {
   });
 }
 
+/* Le nom d'une radio : la liste de la suite (recherche). Options : « — Aucune — », les postes de l'appareil (sinon le catalogue), le nom enregistré hors liste (à part, choisi, il part dès qu'on en choisit une autre),
+   « Autre radio… » (data-keep) : la liste devient un champ de texte sur place (Entrée ou sortie valide, Échap rend la valeur d'avant). RADIO_NAME.r : la radio dont la saisie est ouverte (elle survit à un redessin) ; .prev : son nom d'avant. */
+const RADIO_NAME = { r: null, prev: '' };
+function radioNameField(ap, r) {
+  const label = t('editor.radio.radioName');
+  const get = () => typeof r.name === 'string' ? r.name : '';
+  const wrap = document.createElement('div');
+  wrap.className = 'ed-radio-name';
+  const opt = (v, l, off) => { const o = document.createElement('option'); o.value = v; o.textContent = l; if (off) o.setAttribute('data-r-off', ''); return o; };
+  const focusList = () => setTimeout(() => {
+    const s = wrap.querySelector('select'), m = s && TBM.map.get(s);
+    if (m && m.btn) m.btn.focus({ preventScroll: true }); else if (s) s.focus({ preventScroll: true });
+  }, 0);
+  const posts = () => Array.from(new Set(getRadiosForAircraft(ap.aircraft) || getRadioCatalogue()));
+  const paintList = () => {
+    wrap.innerHTML = '';
+    const cur = get(), list = posts();
+    const sel = document.createElement('select');
+    sel.className = 'ed-radio-name-sel';
+    sel.setAttribute('data-r-name', '');
+    sel.setAttribute('data-search', '');
+    sel.setAttribute('data-search-empty', t('editor.radio.noRadio'));
+    sel.setAttribute('aria-label', label);
+    sel.appendChild(opt('', t('editor.radio.none')));
+    list.forEach(n => sel.appendChild(opt(n, n)));
+    if (cur.trim() !== '' && list.indexOf(cur) < 0) sel.appendChild(opt(cur, cur, true));
+    const other = opt('__other__', t('editor.radio.other'));
+    other.setAttribute('data-keep', '');
+    sel.appendChild(other);
+    wrap.appendChild(sel);
+    sel.value = cur.trim() === '' ? '' : cur;
+    sel.addEventListener('change', () => {
+      if (sel.value === '__other__') { RADIO_NAME.r = r; RADIO_NAME.prev = get(); paintInput(); return; }
+      const stale = !!sel.querySelector('option[data-r-off]') && !sel.options[sel.selectedIndex].hasAttribute('data-r-off');       // le nom hors liste qu'on quitte part
+      r.name = sel.value;
+      schedulePreview();
+      if (stale) { paintList(); focusList(); }
+    });
+  };
+  const paintInput = back => {
+    wrap.innerHTML = '';
+    const inp = document.createElement('input');
+    inp.type = 'text'; inp.maxLength = 60; inp.autocomplete = 'off'; inp.spellcheck = false;
+    inp.className = 'ed-radio-name-other';
+    inp.setAttribute('aria-label', label);
+    inp.placeholder = label;
+    const cur = get();
+    inp.value = back || (cur.trim() !== '' && posts().indexOf(cur) < 0) ? cur : '';
+    wrap.appendChild(inp);
+    let done = false;
+    const leave = cancel => {       // le texte (sans espaces autour) devient le nom, Échap rend la valeur d'avant
+      if (done) return;
+      done = true;
+      RADIO_NAME.r = null;
+      r.name = cancel ? RADIO_NAME.prev : inp.value.trim();
+      schedulePreview();
+      paintList();
+    };
+    inp.addEventListener('input', () => { r.name = inp.value; schedulePreview(); });
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); leave(false); focusList(); }
+      else if (e.key === 'Escape') { e.preventDefault(); leave(true); focusList(); }
+    });
+    inp.addEventListener('blur', () => setTimeout(() => { if (inp.isConnected) leave(false); }, 0));       // ôté par un redessin : rien ne se valide
+    setTimeout(() => inp.focus({ preventScroll: true }), 0);
+  };
+  if (RADIO_NAME.r === r) paintInput(true); else paintList();
+  return wrap;
+}
+
 function renderAircraftRadios(container, ai) {
   const ap = state.radioPlan.aircraftPlans[ai];
   container.innerHTML = '';
   (ap.radios || []).forEach((r, ri) => {
     const block = document.createElement('div');
     block.className = 'ed-radio-block';
-    // Combobox nom radio : filtré par appareil ou catalogue complet (B.4)
-    const dlId = `dl-radio-${ai}-${ri}`;
-    const radioOptions = getRadiosForAircraft(ap.aircraft) || getRadioCatalogue();
-    const datalistHtml = `<datalist id="${dlId}">${radioOptions.map(n => `<option value="${escapeAttr(n)}">`).join('')}</datalist>`;
     block.innerHTML = `
       <div class="ed-radio-block-head">
-        ${datalistHtml}
-        <input type="text" list="${dlId}" data-r-name placeholder="${t('editor.radio.radioName')}">
         <button type="button" class="ed-btn-icon" data-r-rm aria-label="${t('editor.radio.delChanAriaLabel')}">×</button>
       </div>
       <div data-channels-list class="ed-channels-list"></div>
       <button type="button" class="ed-btn-add ed-btn-add-sm" data-channel-add>${t('editor.radio.addChannel')}</button>
     `;
-    block.querySelector('[data-r-name]').value = r.name || '';
-    block.querySelector('[data-r-name]').addEventListener('input', e => {
-      r.name = e.target.value;
-      schedulePreview();
-    });
+    const head = block.querySelector('.ed-radio-block-head');
+    head.insertBefore(radioNameField(ap, r), head.firstChild);
     block.querySelector('[data-r-rm]').addEventListener('click', () => {
       ap.radios.splice(ri, 1);
       renderRadioAircrafts();
@@ -5604,7 +5676,7 @@ function normalizeThreatLevel(lvl) {
   // Déjà canonique
   if (lvl === 'low' || lvl === 'moderate' || lvl === 'high') return lvl;
   // Migration exacte depuis la table
-  if (THREAT_LEGACY_MAP[lvl]) return THREAT_LEGACY_MAP[lvl];
+  if (Object.prototype.hasOwnProperty.call(THREAT_LEGACY_MAP, lvl)) return THREAT_LEGACY_MAP[lvl];
   // Correspondance floue (anciens briefings) — normalisation accentuée
   const k = lvl.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   if (k.includes('elev') || k.includes('danger') || k.includes('important') || k.includes('critiqu')) return 'high';
@@ -6726,8 +6798,8 @@ function renderRadioSummary() {
 
 function renderRadioTable(ap) {
   ensureRadioPlanShape();
-  const itemsById = {};
-  state.radioPlan.items.forEach(it => { itemsById[it.id] = it; });
+  const itemsById = new Map();
+  state.radioPlan.items.forEach(it => { itemsById.set(String(it.id), it); });
   const radios = (ap.radios || []).filter(r => r.name || (r.channels && r.channels.length));
   if (radios.length === 0) {
     return '<div class="empty-placeholder">' + t('preview.noRadioConfig') + '</div>';
@@ -6755,7 +6827,7 @@ function renderRadioTable(ap) {
               <td class="ch-custom-label">${escapeHtml(ch.label || '')}</td>
             </tr>`;
           }
-          const it = itemsById[ch.itemId];
+          const it = itemsById.get(String(ch.itemId));
           if (it) {
             return `<tr>
               <td class="ch-num">CH ${escapeHtml(String(ch.channel ?? ''))}</td>
@@ -7705,7 +7777,7 @@ function loadJsonFile(file) {
       state = mergeDeep(structuredClone(DEFAULTS), parsed);
       // Migration classification : legacy texte → clé canonique (v2.2.0)
       if (state.meta && state.meta.classification) {
-        const migrated = CLASSIF_LEGACY_MAP[state.meta.classification];
+        const migrated = Object.prototype.hasOwnProperty.call(CLASSIF_LEGACY_MAP, state.meta.classification) ? CLASSIF_LEGACY_MAP[state.meta.classification] : null;
         if (migrated) state.meta.classification = migrated;
       }
       if (Array.isArray(state.phases)) {
@@ -8782,6 +8854,7 @@ function bgDisplayOpen(btn) {
 function formListLabel(sel) {
   if (sel.hasAttribute('data-ri-mod') || sel.hasAttribute('data-ch-mod')) return t('select.modulation');
   if (sel.hasAttribute('data-ch-item')) return t('select.radioItem');
+  if (sel.hasAttribute('data-r-name')) return t('editor.radio.radioName');
   const f = sel.closest('.ed-field, .metar-field'), l = f && f.querySelector('label');
   return l ? l.textContent.trim() : '';
 }
@@ -9420,11 +9493,19 @@ for _pat, _lab in [
     ("label + (g.aircraft ? ' — ' + gameAircraftName(g.aircraft) : '')", "le libellé d'un groupe porte le nom du type"),
     ("const aircraftLabel = s.aircraft.map(gameAircraftName).join(' / ');", "les appareils d'une escadrille se lisent sous leur nom"),
     ('<span class="sq-ac">${escapeHtml(gameAircraftName(info.aircraft))}</span>', "la puce d'escadre de l'imprimé porte le nom du type"),
+    ("sel.setAttribute('data-search-empty', t('editor.radio.noRadio'));", "le nom d'une radio d'un plan radio est une liste de la suite avec recherche (texte sans résultat)"),
+    ("other.setAttribute('data-keep', '');\n    sel.appendChild(other);\n    wrap.appendChild(sel);", "« Autre radio… » du nom d'une radio reste malgré la recherche (data-keep)"),
+    ("Object.prototype.hasOwnProperty.call(AIRCRAFT_RADIO_ALIAS, norm)", "l'alias d'appareil se lit seulement si sa clé est propre à la table (« constructor », « __proto__ »)"),
+    ("renderAircraftRadios(card.querySelector(`[data-radios-list=\"${ai}\"]`), ai);       // les radios de cette carte seulement", "changer l'appareil d'un plan redessine les radios de sa carte seulement"),
 ]:
     if _pat not in HTML:
         print("  [FAIL] " + _lab)
         raise SystemExit(1)
     print("  [OK] " + _lab)
+if '<datalist' in HTML or 'createElement(\'datalist\')' in HTML:
+    print("  [FAIL] une <datalist> (la liste blanche du navigateur) est revenue dans le Briefing Generator")
+    raise SystemExit(1)
+print("  [OK] aucune <datalist> dans le Briefing Generator")
 if "Math.round(num(clouds.base, 457.2) / 0.3048)" in HTML:
     print("  [FAIL] la base des nuages ne se range plus en pieds")
     raise SystemExit(1)

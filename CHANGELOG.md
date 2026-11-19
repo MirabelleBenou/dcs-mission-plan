@@ -26,6 +26,9 @@ The sections per tool, further down, keep the history of each tool up to v1.24.0
 #### Briefing Generator
 - Aircraft types are shown under their designation, like in the other tools; the briefing still stores the game’s type name.
 - The radios offered for each aircraft are the same as in the Flight Configurator and the Datacard Generator (ten types had different radio names).
+- The name of a radio in a radio plan is picked from the suite’s own list, with search, instead of the browser’s list; “Other radio…” still lets you type any name, and a name typed earlier stays.
+- Changing the aircraft of a radio plan updates the radios offered at once.
+- A custom aircraft name such as “constructor” no longer stops the radio plan editor from showing.
 
 #### Route Planner
 - The Route Planner opens in Read mode, so a tap on the map no longer adds a waypoint by mistake; choose Waypoint to lay the route.
