@@ -482,6 +482,8 @@ body {
 .ed-field .tbm-trigger.tbm-field.tbm-narrow { padding-right: 26px; background-position: right 8px center; transition: none; }
 .ed-field .tbm-trigger.tbm-field .tbm-lbl { margin: 0; padding: 0; line-height: 22px; }
 .ed-field .tbm-trigger.tbm-field .tbm-lbl::after { display: none; }
+/* l'avertissement vent arrière sous la rangée d'un terrain : la couleur d'alerte du thème, que la note du thème (même poids, plus loin dans la feuille) ne reprend pas */
+.ui-note.ui-avert { color: var(--mp-warn); }
 .ed-field .tbm-trigger.tbm-field:focus-visible,
 .ed-field .tbm-trigger.tbm-field.tbm-trigger-open {
  border-left-color: var(--red-stamp); background-color: #ece0c2; box-shadow: 0 0 0 1px var(--amber);
