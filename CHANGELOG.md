@@ -19,6 +19,7 @@ The sections per tool, further down, keep the history of each tool up to v1.24.0
 - The “Add a type…” list of the Wing window can be searched.
 - A flight of a package that the mission lacks can now be created: tick “Create this flight in the mission”, pick the country (and the coalition if the package has none) and start in the air or on the ground at the route’s first waypoint. A flight without a route, or mixing helicopters and airplanes, is not created and HQ says why.
 - A created flight now starts as the Flight Configurator set it: on its stands, cold or engines running, or at the route's first waypoint. A stand already taken in the mission is replaced by the nearest free one that fits, which you can change.
+- Applying a flight package keeps what the Flight Configurator does not set in a unit’s loadout: the gun ammunition belt chosen in the mission editor and the restricted weapons stay as they were.
 
 #### Flight Configurator
 - In a group of two units or more, the icon at the right of a unit’s header folds or unfolds all the units of the group.

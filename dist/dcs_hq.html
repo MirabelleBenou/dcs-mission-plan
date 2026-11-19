@@ -7619,6 +7619,7 @@ function buildPatchesFromPackage(pkg, ctx) {
 
   // P4.3 — replacements.route et replacements.payloads[]
   const repl = pkg.replacements || {};
+  let rpTarget;   // la table de la mission déjà chargée, lue une fois au premier payload
 
   // replacements.route → remplacer source[pointsPos] par serializeLua(route.points)
   if (repl.route && repl.route.points !== undefined) {
@@ -7649,10 +7650,16 @@ function buildPatchesFromPackage(pkg, ctx) {
       warnings.push({ key: 'pk.w.dup', args: [pp.start.offset] });
       continue;
     }
-    const lua = serializeLua(pOv.payload);
+    // Le payload écrit : celui de l'unité cible, dont les clés réglées par le FC prennent la valeur du paquet (pkMergePayload)
+    if (rpTarget === undefined) rpTarget = _extractRouteAndPayloads(ctx.ast, fl.groupId);
+    const tn = rpTarget && rpTarget.unitPayloads ? rpTarget.unitPayloads[pOv.unitId] : null;
+    let cur = null;
+    try { if (tn && tn.payloadNode && luaTableReproducible(tn.payloadNode)) cur = astToValue(tn.payloadNode); } catch (e) { cur = null; }
+    const merged = pkMergePayload(cur, pOv.payload);
+    const lua = serializeLua(merged);
     if (lua === null) { warnings.push({ key: 'pk.w.serialize', args: [] }); continue; }
     seenOffsets.add(pp.start.offset);
-    patches.push({ pos: pp, newValueStr: lua });
+    patches.push({ pos: pp, newValueStr: lua, payloadUnitId: pOv.unitId, payloadWritten: merged });
   }
 
   // Tri offset décroissant (obligatoire pour splice sans décalage)
@@ -7663,7 +7670,7 @@ function buildPatchesFromPackage(pkg, ctx) {
 
 // P3.3 — Auto-vérif post-patch (re-extraction du texte écrit → chaque valeur écrite est relue et comparée en valeur)
 // En cas d'écart : Error portant pkErrors = [{ key, args }] (textes par t())
-function verifyPatch(patchedSrc, pkg) {
+function verifyPatch(patchedSrc, pkg, patches) {
   const ov = pkg.overrides || {};
   const errors = [];
   let vAst, vModel;
@@ -7713,7 +7720,9 @@ function verifyPatch(patchedSrc, pkg) {
       errors.push({ key: 'pk.e.payloadGone', args: [pOv.unitId] });
       continue;
     }
-    if (!deepEqValues(pOv.payload, astToValue(rpCheck.unitPayloads[pOv.unitId].payloadNode))) {
+    // La valeur attendue est le payload écrit (la fusion) quand les écritures sont données ; à défaut, celui du plan
+    const wr = (patches || []).find(pt => pt.payloadUnitId === pOv.unitId && pt.payloadWritten !== undefined);
+    if (!deepEqValues(wr ? wr.payloadWritten : pOv.payload, astToValue(rpCheck.unitPayloads[pOv.unitId].payloadNode))) {
       errors.push({ key: 'pk.e.payload', args: [pOv.unitId] });
     }
   }
@@ -8580,6 +8589,24 @@ function pkClean(v) {
   }
   return v;
 }
+// Le payload à écrire pour une unité cible : celui de la cible, dont les cinq clés que le Flight Configurator règle (pylons, fuel, flare, chaff, gun)
+// prennent la valeur du paquet quand il la porte ; toute autre clé de la cible reste telle quelle ; une autre clé du paquet absente de la cible s'ajoute.
+// pylons se remplace en entier. Aucun argument n'est modifié. Cible null ou illisible : le paquet tel quel.
+const PK_FC_KEYS = ['pylons', 'fuel', 'flare', 'chaff', 'gun'];
+function pkMergePayload(target, pack) {
+  const copy = v => (v === undefined ? v : JSON.parse(JSON.stringify(v)));
+  const isObj = v => v !== null && typeof v === 'object' && !Array.isArray(v);
+  if (!isObj(target) || !isObj(pack)) return copy(pack);
+  const has = (o, k) => Object.prototype.hasOwnProperty.call(o, k) && o[k] !== undefined && o[k] !== null;
+  const out = copy(target);
+  for (const k of PK_FC_KEYS) if (has(pack, k)) out[k] = copy(pack[k]);
+  for (const k of Object.keys(pack)) {
+    if (k === '__proto__' || k === 'constructor' || k === 'prototype') continue;
+    if (PK_FC_KEYS.indexOf(k) >= 0 || !has(pack, k) || Object.prototype.hasOwnProperty.call(out, k)) continue;
+    out[k] = copy(pack[k]);
+  }
+  return out;
+}
 // La livrée par défaut du type dans la configuration Wing (defaultLiveries), lue comme le Flight Configurator : elle vaut si elle est dans la liste du type, à la casse près, et s'écrit alors comme la liste ; sinon ''
 function pkWingLivery(type) {
   const defs = wingConfig && wingDefIsObj(wingConfig.defaultLiveries) ? wingConfig.defaultLiveries : null;
@@ -9361,7 +9388,7 @@ async function pkApply() {
           const patchedSrc = applyPatches(work.missionText, built.patches);
           try { retokenizeSafety(patchedSrc); }
           catch (e) { console.warn('[HQ] relecture du texte écrit :', e); throw Object.assign(e, { pkErrors: [{ key: 'pk.e.retok', args: [] }] }); }
-          verifyPatch(patchedSrc, plan);
+          verifyPatch(patchedSrc, plan, built.patches);
           // Contexte réextrait après chaque vol
           const { tokens: rTk } = DCS_TOKENIZER.tokenize(patchedSrc);
           const rAst = DCS_PARSER.parse(rTk);
