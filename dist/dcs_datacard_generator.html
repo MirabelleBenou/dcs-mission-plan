@@ -7654,30 +7654,34 @@ function afRwyLabel(e, m) {
 function afWarnText(f, c) {
   const hit = AF_UI.other.has(f) ? null : afFind(f.name);
   if (!hit) return '';
-  const m = afRwyModel(hit, c), x = m ? m.get(f.runway) : null;
+  const m = afRwyModel(hit, c), x = m ? m.get(str(f.runway).trim()) : null;       /* le sens saisi se reconnaît sans espaces de tête ni de fin ; la valeur gardée ne change pas */
   if (!x || x.tail < 1) return '';
   return t(x.end === m.rec ? 'f.rwy.warn1' : 'f.rwy.warn', { n: x.tail, rwy: x.end, best: m.rec });
 }
-function afWarnHtml(f, i) { const w = afWarnText(f, curCard()); return w ? '<div class="ui-note ui-avert" data-afwarn="' + i + '">' + esc(w) + '</div>' : ''; }
+function afWarnHtml(f, i) { const w = afWarnText(f, curCard()); return w ? '<div class="ui-note ui-avert" role="status" data-afwarn="' + i + '">' + esc(w) + '</div>' : ''; }
 /* Repères et avertissement des rangées suivent le vent, la date, le théâtre, le nom et le sens, sur place (sans refaire l'éditeur : le curseur reste) ; seul l'affichage change, jamais fields[i].runway */
 function afRwySync() {
   const c = curCard(), ed = document.getElementById('editor');
   if (!c || !ed) return;
-  ed.querySelectorAll('select[data-afr]').forEach(sel => {
-    const i = parseInt(sel.dataset.afr, 10), f = c.fields[i], li = sel.closest('.li');
+  ed.querySelectorAll('[data-rwcell]').forEach(cell => {
+    const sel = cell.querySelector('select[data-afr]'), inp = cell.querySelector('[data-path$=".runway"]');
+    const key = sel ? sel.dataset.afr : (inp && /^fields\.(\d+)\.runway$/.exec(inp.dataset.path) ? /^fields\.(\d+)\.runway$/.exec(inp.dataset.path)[1] : '');
+    const i = parseInt(key, 10), f = c.fields[i], li = cell.closest('.li');
     if (!f || !li) return;
-    const hit = AF_UI.other.has(f) ? null : afFind(f.name), m = hit ? afRwyModel(hit, c) : null;
-    let ch = false;
-    Array.prototype.forEach.call(sel.options, o => {
-      if (o.value === '' || o.value === '@other') return;
-      const lab = afRwyLabel(o.value, m);
-      if (o.textContent !== lab) { o.textContent = lab; ch = true; }
-    });
-    if (ch) { const tb = TBM.map.get(sel); if (tb) tbmSync(tb); }
-    const w = afWarnText(f, c), old = li.querySelector('[data-afwarn]');
+    if (sel) {
+      const hit = AF_UI.other.has(f) ? null : afFind(f.name), m = hit ? afRwyModel(hit, c) : null;
+      let ch = false;
+      Array.prototype.forEach.call(sel.options, o => {
+        if (o.value === '' || o.value === '@other') return;
+        const lab = afRwyLabel(o.value, m);
+        if (o.textContent !== lab) { o.textContent = lab; ch = true; }
+      });
+      if (ch) { const tb = TBM.map.get(sel); if (tb) tbmSync(tb); }
+    }
+    const w = afWarnText(f, c), old = li.querySelector('[data-afwarn]');       /* une rangée sans liste des sens (nom libre, vide, aérodrome sans sens) n'a aucune note */
     if (old && (!w || old.textContent !== w)) old.remove();
     if (w && !li.querySelector('[data-afwarn]')) {
-      const grid = sel.closest('.li-grid');
+      const grid = cell.closest('.li-grid');
       if (grid) grid.insertAdjacentHTML('afterend', afWarnHtml(f, i));
     }
   });

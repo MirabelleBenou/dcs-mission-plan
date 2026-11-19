@@ -67,3 +67,82 @@ def test_no_readable_wind_gives_no_mark():
     out = run("""const r = {}; ['VRB/05', '000/00', 'CALME', 'CALM', '', 'abc', null].forEach(w => { r[String(w)] = show(AKR, w); }); console.log(JSON.stringify(r));""")
     for w, v in out.items():
         assert v['pick'] == '10' and v['labels'] == ['10', '28'] and v['tail'] is None, w         # sans vent lisible : le premier sens, les sens seuls
+
+
+# ---------- la note (afWarnText) ----------
+WARN_PRELUDE = PRELUDE + '\n' + '\n'.join([
+    "const AF_UI = { other: new Set() };",
+    "const ROWS = { Akrotiri: AKR, Nellis: NEL, Naqoura: ['Naqoura', 'A', 0, []], Solo: ['Solo', 'A', 0, ['10']] };",
+    "function afFind(n) { return Object.prototype.hasOwnProperty.call(ROWS, n) ? ROWS[n] : null; }",
+    "Object.assign(T, { 'f.rwy.warn': 'W {n} {rwy} {best}', 'f.rwy.warn1': 'W1 {n} {rwy}' });",
+    "function t(k, v) { let s = T[k]; if (v) Object.keys(v).forEach(x => { s = s.split('{' + x + '}').join(String(v[x])); }); return s; }",
+    fn('afWarnText'),
+    "const W = (name, rwy, wind) => afWarnText({ name: name, runway: rwy }, card(wind));",
+])
+
+
+@needs_node
+def test_warning_text_states():
+    out = run_w("""console.log(JSON.stringify({
+      tail: W('Akrotiri', '10', '280/08'), into: W('Akrotiri', '28', '280/08'), one: W('Akrotiri', '28', '190/10'),
+      trimmed: W('Akrotiri', ' 10 ', '280/08'), notEnd: W('Akrotiri', '99', '280/08'), empty: W('Akrotiri', '', '280/08'),
+      free: W('Zzz', '10', '280/08'), blank: W('', '', '280/08'), noRwy: W('Naqoura', '10', '280/08'), calm: W('Akrotiri', '10', 'CALME'),
+      solo: W('Solo', '10', '280/08'), nellis: W('Nellis', '21R', '030/15') }));""")
+    assert out['tail'] == 'W 8 10 28'
+    assert out['into'] == '' and out['notEnd'] == '' and out['empty'] == ''
+    assert out['one'] == 'W 1 28 10'
+    assert out['trimmed'] == out['tail']               # Q2 : sans les espaces de tête et de fin
+    assert out['free'] == '' and out['blank'] == '' and out['noRwy'] == '' and out['calm'] == ''      # Q1 : aucune note hors rangée à liste des sens
+    assert out['solo'] == 'W1 8 10'                    # le sens est lui-même la recommandée
+    assert out['nellis'] == 'W 15 21R 03L'
+
+
+def run_w(body):
+    r = subprocess.run([NODE, '-e', WARN_PRELUDE + '\n' + body], capture_output=True, text=True, timeout=60)
+    assert r.returncode == 0, r.stderr
+    return json.loads(r.stdout)
+
+
+# ---------- Q1 : la note suit l'état de sa rangée (DOM, dans le shell) ----------
+CHROMIUM = Path('/opt/pw-browsers/chromium')
+try:
+    import playwright.sync_api  # noqa: F401
+    HAS_PW = CHROMIUM.exists()
+except ImportError:
+    HAS_PW = False
+
+
+@pytest.mark.skipif(not HAS_PW, reason='playwright ou chromium absent')
+def test_stale_note_is_removed_when_the_row_loses_its_runway_list():
+    from playwright.sync_api import sync_playwright
+    shell = 'file://' + str(ROOT / 'dist' / 'dcs_mission_plan.html')
+    with sync_playwright() as p:
+        br = p.chromium.launch(executable_path=str(CHROMIUM), args=['--no-sandbox'])
+        try:
+            def fresh():
+                pg = br.new_page(viewport={'width': 1280, 'height': 900})
+                pg.route('**/*', lambda r: r.continue_() if r.request.url.startswith(('file:', 'data:', 'blob:')) else r.abort())
+                pg.goto(shell, wait_until='commit'); pg.wait_for_timeout(2500)
+                pg.evaluate("MP_WORK_EXAMPLE('fl')"); pg.wait_for_timeout(2500)
+                pg.evaluate("MP_OPEN_MODULE('dg')"); pg.wait_for_timeout(2500)
+                return pg, pg.frames[1]
+            wind = """(w)=>{const e=document.querySelector('[data-path="weather.wind"]'); e.value=w; e.dispatchEvent(new Event('input',{bubbles:true}));}"""
+            pick = """(v)=>{const s=document.querySelector('select[data-af="0"]'); s.value=v; s.dispatchEvent(new Event('input',{bubbles:true})); s.dispatchEvent(new Event('change',{bubbles:true}));}"""
+            count = "()=>document.querySelectorAll('#editor [data-afwarn=\"0\"]').length"
+            for gesture in ('@other', '', 'Naqoura'):
+                pg, f = fresh()
+                f.evaluate(wind, '280/08'); pg.wait_for_timeout(150)
+                assert f.evaluate(count) == 1
+                f.evaluate(pick, gesture); pg.wait_for_timeout(200)
+                assert f.evaluate(count) == 0, gesture
+                for w in ('100/12', '280/08'):
+                    f.evaluate(wind, w); pg.wait_for_timeout(150)
+                    assert f.evaluate(count) == 0, (gesture, w)
+                f.evaluate(pick, 'Akrotiri'); pg.wait_for_timeout(200)
+                assert f.evaluate("()=>curCard().fields[0].runway") == '28' and f.evaluate(count) == 0
+                f.evaluate("()=>{const s=document.querySelector('select[data-afr=\"0\"]'); s.value='10'; s.dispatchEvent(new Event('input',{bubbles:true})); s.dispatchEvent(new Event('change',{bubbles:true}));}"); pg.wait_for_timeout(200)
+                assert f.evaluate(count) == 1
+                assert f.evaluate("()=>document.querySelector('#editor [data-afwarn=\"0\"]').getAttribute('role')") == 'status'
+                pg.close()
+        finally:
+            br.close()
