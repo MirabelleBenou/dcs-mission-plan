@@ -5152,8 +5152,7 @@ function renderRadioAircrafts() {
   });
 }
 
-/* Le nom d'une radio : la liste de la suite (recherche). Options : « — Aucune — », les postes de l'appareil (sinon le catalogue), le nom enregistré hors liste (à part, choisi, il part dès qu'on en choisit une autre),
-   « Autre radio… » (data-keep) : la liste devient un champ de texte sur place (Entrée ou sortie valide, Échap rend la valeur d'avant). RADIO_NAME.r : la radio dont la saisie est ouverte (elle survit à un redessin) ; .prev : son nom d'avant. */
+/* Le nom d'une radio : la liste de la suite ; « Autre radio… » ouvre un champ de texte sur place. RADIO_NAME.r : la radio dont la saisie est ouverte (elle survit à un redessin). */
 const RADIO_NAME = { r: null, prev: '' };
 function radioNameField(ap, r) {
   const label = t('editor.radio.radioName');
@@ -5185,7 +5184,7 @@ function radioNameField(ap, r) {
     sel.value = cur.trim() === '' ? '' : cur;
     sel.addEventListener('change', () => {
       if (sel.value === '__other__') { RADIO_NAME.r = r; RADIO_NAME.prev = get(); paintInput(); return; }
-      const stale = !!sel.querySelector('option[data-r-off]') && !sel.options[sel.selectedIndex].hasAttribute('data-r-off');       // le nom hors liste qu'on quitte part
+      const stale = !!sel.querySelector('option[data-r-off]') && !sel.options[sel.selectedIndex].hasAttribute('data-r-off');
       r.name = sel.value;
       schedulePreview();
       if (stale) { paintList(); focusList(); }
@@ -5202,7 +5201,7 @@ function radioNameField(ap, r) {
     inp.value = back || (cur.trim() !== '' && posts().indexOf(cur) < 0) ? cur : '';
     wrap.appendChild(inp);
     let done = false;
-    const leave = cancel => {       // le texte (sans espaces autour) devient le nom, Échap rend la valeur d'avant
+    const leave = cancel => {
       if (done) return;
       done = true;
       RADIO_NAME.r = null;
