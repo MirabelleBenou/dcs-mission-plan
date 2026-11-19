@@ -55,12 +55,12 @@ const RADIO_BANDS = {
 // (radios[poste][1 à n]) mais sans numéro de canal, et HQ ne les écrit jamais dans la mission.
 const RADIO_FREE = { 'Mi-24P': { 3: 5 }, 'Mi-8MT': { 3: 5 } };
 
-// La bande d'un poste : [[bas, haut], …] ; [] si le type ou le poste n'est pas connu.
+// La bande d'un poste : [[bas, haut], …] ; [] si le type ou le poste n'est pas connu (bande non contrôlée : radioInBand l'accepte toute).
 function radioBand(type, r) {
   return Object.prototype.hasOwnProperty.call(RADIO_BANDS, type) && Object.prototype.hasOwnProperty.call(RADIO_BANDS[type], r) ? RADIO_BANDS[type][r] : [];
 }
-// Dans la bande = dans l'un de ses intervalles, bornes comprises.
-function radioInBand(band, v) { return band.some(b => v >= b[0] - 1e-9 && v <= b[1] + 1e-9); }
+// Dans la bande = dans l'un de ses intervalles, bornes comprises. Une bande inconnue ([] : un type ou un poste sans bande) ne refuse rien : la fréquence est libre, la bande n'est pas contrôlée.
+function radioInBand(band, v) { return band.length === 0 || band.some(b => v >= b[0] - 1e-9 && v <= b[1] + 1e-9); }
 // Le nombre de fréquences d'un poste que la mission ne pré-règle pas ; 0 pour tout autre poste (pré-réglé, ou inconnu).
 function radioFreeCount(type, r) {
   return Object.prototype.hasOwnProperty.call(RADIO_FREE, type) && Object.prototype.hasOwnProperty.call(RADIO_FREE[type], r) ? RADIO_FREE[type][r] : 0;

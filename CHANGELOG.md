@@ -10,6 +10,8 @@ The sections per tool, further down, keep the history of each tool up to v1.24.0
 
 #### All tools
 - Drop-down lists are easier to read: their header, the chosen line and the line under the pointer have stronger contrast in every theme.
+- Aircraft types are shown under their designation (F/A-18C rather than FA-18C_hornet); packages, missions and the work file still store the game’s type name.
+- Type lists are grouped (helicopters, then planes) and can be searched.
 
 #### HQ
 - The Wing window no longer has an “Application title” field, which no tool used; a Wing configuration that has one still opens and keeps it.
@@ -18,6 +20,8 @@ The sections per tool, further down, keep the history of each tool up to v1.24.0
 #### Flight Configurator
 - Groundwork for every aircraft of the game: the mass, front-view and radio band tables now cover every type known to Mission Tools (167, 45 and 26 types). Nothing changes yet on screen.
 - In a group of two units or more, the icon at the right of a unit’s header folds or unfolds all the units of the group.
+- Every flyable aircraft of the game (75 types) can now be configured, imported and kept as a preset, not only the Mi-24P, Mi-8MTV2, F-4E and Mirage F1EE. What a type lacks is said on screen: no radio preset in the mission editor, radio band not checked, no loadout, no front view, no game livery.
+- Each radio offers as many channels as the mission editor writes for the type.
 
 #### Route Planner
 - The Route Planner opens in Read mode, so a tap on the map no longer adds a waypoint by mistake; choose Waypoint to lay the route.
@@ -25,6 +29,7 @@ The sections per tool, further down, keep the history of each tool up to v1.24.0
 #### Datacard Generator
 - The folded Radio section shows how many channels the datacard prints, like the other sections.
 - In the Navigation settings, “For the whole mission” now marks only Heading and Variation, shared with the Route Planner; Display stays per datacard.
+- A crew line can take any of the 75 types, from the same grouped list with search.
 
 #### Field Manual
 - Links in the text take the manual’s ink instead of the browser’s blue; the Route Planner and Flight Configurator drawings show the new behaviour.

@@ -29,6 +29,7 @@ from route_write_block import build_block as build_route_write_block
 from group_store_block import build_block as build_group_store_block
 from radio_bands_block import build_block as build_radio_bands_block
 from radio_block import build_block as build_radio_block
+from aircraft_types_block import build_block as build_aircraft_types_block
 from import_block import build_block as build_import_block, build_css as build_import_css, build_html as build_import_html
 from messages_block import build_block as build_messages_block, build_css as build_messages_css
 from mission_line_block import build_block as build_mission_line_block, build_css as build_mission_line_css, verify as mission_line_verify
@@ -3353,7 +3354,7 @@ function flightTypes(f) {
   if (!us.length && f && typeof f.aircraftType === 'string' && f.aircraftType !== '') out.push(f.aircraftType);
   return out;
 }
-function flightTypesLabel(f) { return flightTypes(f).join(' + '); }
+function flightTypesLabel(f) { return flightTypes(f).map(gameAircraftName).join(' + '); }
 /* « 1 pt », « n pts » */
 function ptsText(n) { return t((CURRENT_LANG === 'fr' ? n <= 1 : n === 1) ? 'hq.pts.1' : 'hq.pts', { n: n }); }
 /* Le même vol : le même nom (rogné des deux côtés, la casse compte) et le même camp */
@@ -8250,6 +8251,8 @@ function rpImported(res) {
 
 @@RADIO_BANDS_BLOCK@@
 
+@@AIRCRAFT_TYPES_BLOCK@@
+
 @@IMPORT_BLOCK@@
 
 /* ============= GROUPES DE LA ROUTE (la fiche partagée flight_set_v1) =============
@@ -10547,7 +10550,7 @@ def build():
     airfields_js = json.dumps(AF['theatres'], ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
     towns_js = json.dumps(TW['theatres'], ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
     js = JS.replace('__AIRFIELDS__', airfields_js).replace('__TOWNS__', towns_js)
-    js = js.replace('@@GEO_BLOCK@@\n', GEO_BLOCK).replace('@@READNUM_BLOCK@@\n', READNUM_BLOCK).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@DISS_BLOCK@@\n', build_diss_block()).replace('@@ROUTE_PACK_BLOCK@@\n', build_route_pack_block()).replace('@@ROUTE_THEATRE_BLOCK@@\n', build_route_theatre_block()).replace('@@ROUTE_WRITE_BLOCK@@\n', build_route_write_block()).replace('@@GROUP_STORE_BLOCK@@\n', build_group_store_block()).replace('@@RADIO_BLOCK@@\n', build_radio_block()).replace('@@RADIO_BANDS_BLOCK@@\n', build_radio_bands_block()).replace('@@IMPORT_BLOCK@@\n', build_import_block() + build_mission_line_block()).replace('@@MESSAGES_BLOCK@@\n', build_messages_block() + build_ui_block())
+    js = js.replace('@@GEO_BLOCK@@\n', GEO_BLOCK).replace('@@READNUM_BLOCK@@\n', READNUM_BLOCK).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@DISS_BLOCK@@\n', build_diss_block()).replace('@@ROUTE_PACK_BLOCK@@\n', build_route_pack_block()).replace('@@ROUTE_THEATRE_BLOCK@@\n', build_route_theatre_block()).replace('@@ROUTE_WRITE_BLOCK@@\n', build_route_write_block()).replace('@@GROUP_STORE_BLOCK@@\n', build_group_store_block()).replace('@@RADIO_BLOCK@@\n', build_radio_block()).replace('@@RADIO_BANDS_BLOCK@@\n', build_radio_bands_block()).replace('@@AIRCRAFT_TYPES_BLOCK@@\n', build_aircraft_types_block()).replace('@@IMPORT_BLOCK@@\n', build_import_block() + build_mission_line_block()).replace('@@MESSAGES_BLOCK@@\n', build_messages_block() + build_ui_block())
     js = js.replace('@@TBM_JS@@\n', build_tbm_block())
     if '@@' in js:
         raise SystemExit("[ERREUR] Marqueur @@ non remplacé dans le script")

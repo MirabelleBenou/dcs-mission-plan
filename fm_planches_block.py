@@ -18,6 +18,7 @@ Usage (par build_field_manual.py) : from fm_planches_block import *
 """
 import ast
 import html
+import json
 import os
 import re
 
@@ -687,13 +688,19 @@ PLANCHES_CSS = r'''
 # La planche d'HQ : l'écran, une mission ouverte
 # ═════════════════════════════════════════════════════════════════════════════════
 
+def aircraft_name(ty):
+    """Le nom sous lequel la suite montre un type d'appareil (data/aircraft_names.json, la même table que toutes les listes) : une planche qui montre un type le montre sous son nom, jamais sous son nom de .miz."""
+    with open(os.path.join(HERE, 'data', 'aircraft_names.json'), encoding='utf-8') as fh:
+        return json.load(fh)['names'][ty]
+
+
 def _hq_cards(P, x, w, y, gap):
     """Les trois groupes d'exemple : (SVG, [(y, h)])."""
     o, cards = [], []
     for name, typ, coal, units in (('Caesar 1', 'Mi-24P', 'Red', ['Caesar 1-1', 'Caesar 1-2']),
                                    ('Anton 2', 'Mi-8MT', 'Red', ['Anton 2-1', 'Anton 2-2']),
                                    ('Viper 1', 'F-16C_50', 'Blue', ['Viper 1-1', 'Viper 1-2'])):
-        s, h = P.group_card(x, y, w, name, typ, coal, units, [D('2 '), L('hq', 'snap.units')])
+        s, h = P.group_card(x, y, w, name, aircraft_name(typ), coal, units, [D('2 '), L('hq', 'snap.units')])
         o.append(s)
         cards.append((y, h))
         y += h + gap

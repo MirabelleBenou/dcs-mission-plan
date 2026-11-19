@@ -13,6 +13,7 @@ Les modules qui l'utilisent insèrent ce texte tel quel : le bloc est identique 
 Usage (par les builds) : from payload_block import build_block ; texte = build_block()
 """
 
+import json
 import os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -25,11 +26,12 @@ _JS = r"""
 //   AIRCRAFT_LIMITS { type: { fuel_max, flare, chaff, charge_total, flare_charge_size, chaff_charge_size } }
 // Le bloc ne les contient pas : ce sont les mêmes constantes que celles du Loadout Editor, qui peut donc le reprendre tel quel.
 
-// Les quatre types gérés (liste fermée). Tout autre type d'un fichier UnitPayloads se lit mais ne s'offre à aucun vol.
-const PAYLOAD_TYPES = ['Mi-24P', 'Mi-8MT', 'F-4E-45MC', 'Mirage-F1EE'];
+// Les types gérés : les types volables du jeu (data/aircraft_types.json, pydcs 1.0.0), hélicoptères puis avions, dans l'ordre du fichier. Tout autre type (un mod) d'un fichier UnitPayloads se lit mais ne s'offre à aucun vol.
+const PAYLOAD_TYPES = @@TYPES@@;
 
 // Forme du `payload` d'un .miz, par type : clés fixes en plus de chaff, flare, fuel, gun et pylons (mesurées sur des .miz d'exemple).
 //   ammo_type : valeur écrite · restricted : table écrite (vide) · fuelAsString : le carburant du .miz est un texte
+// Un type absent de la table n'a aucune clé fixe mesurée : payloadShape lui rend la forme sans clé fixe (celle du Mirage F1EE).
 const PAYLOAD_SHAPE = {
   'Mi-24P':      { ammo_type: 1, restricted: {}, fuelAsString: false },
   'Mi-8MT':      { fuelAsString: true },
@@ -42,6 +44,7 @@ const PAYLOAD_SHAPE = {
 const PAYLOAD_EXTRA = { 'F-4E-45MC': { clsid: '<CLEAN>', name: '<CLEAN> (clean pylon)', pylons: [2, 3, 4, 10, 11, 12] } };
 
 const payloadHas = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+function payloadShape(type) { return payloadHas(PAYLOAD_SHAPE, type) ? PAYLOAD_SHAPE[type] : {}; }
 const payloadIdx = new Map(AIRCRAFT_PYLONS.clsids.map((c, i) => [c, i]));
 
 // Pylônes d'un type : [{ n, allowed: [CLSID…] }] dans l'ordre numérique ; null si la table ne connaît pas le type.
@@ -362,7 +365,7 @@ function payloadClamp(v, lo, hi) {
 function buildPayload(type, pylons, opts) {
   if (PAYLOAD_TYPES.indexOf(type) < 0) throw new Error('unsupported type: ' + type);
   const d = payloadDefaults(type), o = opts || {};
-  const shape = PAYLOAD_SHAPE[type];
+  const shape = payloadShape(type);
   const fuel = payloadClamp(o.fuel === undefined || o.fuel === null || o.fuel === '' ? d.fuel : o.fuel, 0, d.fuel);
   const p = {};
   if (Object.prototype.hasOwnProperty.call(shape, 'ammo_type')) p.ammo_type = shape.ammo_type;
@@ -384,9 +387,19 @@ function buildPayload(type, pylons, opts) {
 """
 
 
+def types_js():
+    """La liste PAYLOAD_TYPES en JavaScript : les types volables de data/aircraft_types.json (hélicoptères puis avions), entre apostrophes, sur une ligne."""
+    with open(os.path.join(HERE, 'data', 'aircraft_types.json'), encoding='utf-8') as f:
+        t = json.load(f)
+    ids = t['helicopters'] + t['planes']
+    if len(ids) != 75 or len(set(ids)) != len(ids):
+        raise SystemExit("[ERREUR] data/aircraft_types.json : 75 types distincts attendus, %d trouvés" % len(ids))
+    return '[' + ', '.join("'%s'" % i for i in ids) + ']'
+
+
 def build_block():
     """Le texte du bloc, délimité par ses deux commentaires, avec un saut de ligne final."""
-    return BLOCK_BEGIN + _JS + BLOCK_END + '\n'
+    return BLOCK_BEGIN + _JS.replace('@@TYPES@@', types_js()) + BLOCK_END + '\n'
 
 
 if __name__ == '__main__':

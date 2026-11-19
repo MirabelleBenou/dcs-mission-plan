@@ -14,6 +14,10 @@ Le module lui donne sa langue et ses rappels par impSetup({ lang, before, onImpo
 Usage (par les builds) : from import_block import build_block, build_css, build_html
 """
 
+import json
+import os
+
+HERE = os.path.dirname(os.path.abspath(__file__))
 BLOCK_BEGIN = '/* ===== IMPORT COMMUN (HQ, briefing, fichier) ===== */'
 BLOCK_END = '/* ===== FIN DE L\'IMPORT COMMUN ===== */'
 CSS_BEGIN = '/* ===== IMPORT COMMUN : feuille ===== */'
@@ -115,11 +119,11 @@ _HTML = r"""
 """
 
 _JS = r"""
-/* Les types que la suite gère, et les canaux par poste (sonde des .miz) : les postes que la mission pré-règle. Le poste HF des deux hélicoptères, que la mission ne pré-règle pas, est dans RADIO_FREE (radio_bands_block.py). */
-const IMP_TYPES = ['Mi-24P', 'Mi-8MT', 'F-4E-45MC', 'Mirage-F1EE'];
-const IMP_TYPE_LABEL = { 'Mi-24P': 'Mi-24P', 'Mi-8MT': 'Mi-8MT', 'F-4E-45MC': 'F-4E-45MC', 'Mirage-F1EE': 'Mirage F1EE' };
+/* Les types que la suite gère (les types volables du jeu, ceux de PAYLOAD_TYPES) et les canaux par poste : les postes que la mission pré-règle et le nombre de canaux que l'éditeur de mission écrit pour chacun (data/aircraft_radios.json,
+   pydcs 1.0.0) ; un type sans poste programmable a une entrée vide. Le poste HF des deux hélicoptères, que la mission ne pré-règle pas, est dans RADIO_FREE (radio_bands_block.py). Le nom d'un type à l'écran est gameAircraftName (aircraft_types_block.py). */
+const IMP_TYPES = @@TYPES@@;
 const IMP_DEFAULT_TYPE = 'Mi-24P';
-const RADIO_CHANNELS = { 'Mi-24P': { 1: 20, 2: 10 }, 'Mi-8MT': { 1: 20, 2: 10 }, 'F-4E-45MC': { 1: 18, 2: 20 }, 'Mirage-F1EE': { 1: 20, 2: 20 } };
+const RADIO_CHANNELS = @@CHANNELS@@;
 /* Les postes d'un type, par numéro : ceux que la mission pré-règle (RADIO_CHANNELS, un canal par entrée) puis ceux qu'elle ne pré-règle pas (RADIO_FREE, une fréquence par entrée, sans numéro de canal).
    radioSlotsOf donne le nombre d'entrées d'un poste (0 : le poste n'existe pas) ; radioPostsOf les numéros de poste du type, dans l'ordre. */
 function radioSlotsOf(type, r) {
@@ -198,7 +202,7 @@ const IMP_I18N = {
     'rej.zip': 'Archive illisible : pas de package.json à la racine.',
     'rej.noTheatre': 'Le paquet n’a pas de théâtre.',
     'rej.noFlight': 'Aucun groupe lisible dans ce fichier.',
-    'rej.noManaged': 'Aucun groupe d’un appareil géré ici (Mi-24P, Mi-8MT, F-4E, Mirage F1) dans ce paquet : rien n’a changé.',
+    'rej.noManaged': 'Aucun groupe d’un appareil du jeu de base dans ce paquet : rien n’a changé.',
     'rej.format': 'Format « {0} » non pris en charge ici (attendu : {1}).',
     'rej.unknown': 'inconnu',
     'rej.skip': '{0} groupe(s) illisible(s) ignoré(s).',
@@ -264,7 +268,7 @@ const IMP_I18N = {
     'rej.zip': 'Unreadable archive: no package.json at the root.',
     'rej.noTheatre': 'The package has no theatre.',
     'rej.noFlight': 'No readable group in this file.',
-    'rej.noManaged': 'No group of an aircraft handled here (Mi-24P, Mi-8MT, F-4E, Mirage F1) in this package: nothing has changed.',
+    'rej.noManaged': 'No group of a base-game aircraft in this package: nothing has changed.',
     'rej.format': 'Format “{0}” is not supported here (expected: {1}).',
     'rej.unknown': 'unknown',
     'rej.skip': '{0} unreadable group(s) skipped.',
@@ -615,7 +619,7 @@ function impMergeRadios(unit, type, radios, fromHq) {
 }
 /* Un changement de type d'une unité du groupe : ses radios et son emport (qui se lisent selon le type) sont vidés, un avertissement le dit s'il y en avait */
 function impRetype(st, target, fi, k, u, ty) {
-  if (impRadioCount(u) > 0 || u.loadout || u.payloadIn) st.warn.push(impTf('imp.retype', impGroupLabel(target, fi), impUnitLabel(target, fi, u, k), IMP_TYPE_LABEL[u.type] || u.type, IMP_TYPE_LABEL[ty] || ty));
+  if (impRadioCount(u) > 0 || u.loadout || u.payloadIn) st.warn.push(impTf('imp.retype', impGroupLabel(target, fi), impUnitLabel(target, fi, u, k), gameAircraftName(u.type), gameAircraftName(ty)));
   u.type = ty; u.radios = {}; u.loadout = null;
   delete u.payloadIn;
 }
@@ -864,7 +868,7 @@ function impRowHtml(cur, i, g, I, routeOff) {
     return '<label class="imp-chk' + (on ? '' : ' off') + '"><input type="checkbox" data-imp-part="' + p + '" data-imp-i="' + i + '"' + (on && r.chk[p] ? ' checked' : '') + (on ? '' : ' disabled') + '>' + impEsc(impT('imp.part.' + p)) + '</label>';
   }).join('');
   return '<div class="imp-flight' + (r.ok ? '' : ' off') + '"><label class="imp-fh"><input type="checkbox" data-imp-flight="' + i + '"' + (r.on && r.ok ? ' checked' : '') + (r.ok ? '' : ' disabled') + '>'
-    + '<span class="imp-nm">' + impEsc(r.name !== '' ? r.name : (r.title || '—')) + '</span>' + (r.types.length ? '<span class="imp-tag">' + impEsc(r.types.join(' + ')) + '</span>' : '')
+    + '<span class="imp-nm">' + impEsc(r.name !== '' ? r.name : (r.title || '—')) + '</span>' + (r.types.length ? '<span class="imp-tag">' + impEsc(r.types.map(gameAircraftName).join(' + ')) + '</span>' : '')
     + '<span class="imp-n">' + impEsc(state) + '</span></label><div class="imp-parts">' + parts + '</div></div>';
 }
 function impListHtml(cur) {
@@ -882,7 +886,7 @@ function impFlightsHtml(I, cur) {
   const opt = (v, l, sel) => '<option value="' + impEsc(v) + '"' + (v === sel ? ' selected' : '') + '>' + impEsc(l) + '</option>';
   return (cur.skipped ? '<div class="imp-note top">⚠ ' + impEsc(impTf('rej.skip', cur.skipped)) + '</div>' : '')
     + '<div class="imp-filters"><div><label class="imp-lbl" for="imp-side">' + impEsc(impT('imp.side')) + '</label><select class="imp-sel" id="imp-side" aria-label="' + impEsc(impT('imp.side')) + '">' + sides.map(x => opt(x[0], x[1], I.side)).join('') + '</select></div>'
-    + '<div><label class="imp-lbl" for="imp-type">' + impEsc(impT('imp.type')) + '</label><select class="imp-sel" id="imp-type" aria-label="' + impEsc(impT('imp.type')) + '">' + opt('all', impT('imp.all'), I.type) + types.map(x => opt(x, x, I.type)).join('') + '</select></div>'
+    + '<div><label class="imp-lbl" for="imp-type">' + impEsc(impT('imp.type')) + '</label><select class="imp-sel" id="imp-type" aria-label="' + impEsc(impT('imp.type')) + '">' + opt('all', impT('imp.all'), I.type) + types.map(x => opt(x, gameAircraftName(x), I.type)).join('') + '</select></div>'
     + '<div class="nm"><label class="imp-lbl" for="imp-name">' + impEsc(impT('imp.name')) + '</label><input class="imp-in" id="imp-name" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" value="' + impEsc(I.name) + '"></div></div>'
     + '<div class="imp-bulk"><button type="button" class="imp-filebtn" data-act="imp-check-shown">' + impEsc(impT('imp.checkshown')) + '</button><button type="button" class="imp-filebtn" data-act="imp-uncheck-all">' + impEsc(impT('imp.uncheckall')) + '</button><span class="imp-cnt" id="imp-count" aria-live="polite">' + impEsc(impCountText(cur)) + '</span></div>'
     + '<div class="imp-list" id="imp-list">' + impListHtml(cur) + '</div>'
@@ -933,9 +937,34 @@ function impGo() {
 """
 
 
+# Les canaux par poste des quatre types que la suite gérait avant l'ouverture aux 75 types : la table de pydcs doit les rendre à l'identique.
+_CHANNELS_BASE = {'Mi-24P': {'1': 20, '2': 10}, 'Mi-8MT': {'1': 20, '2': 10}, 'F-4E-45MC': {'1': 18, '2': 20}, 'Mirage-F1EE': {'1': 20, '2': 20}}
+
+
+def tables_js(types_path=None, radios_path=None):
+    """(IMP_TYPES, RADIO_CHANNELS) en JavaScript. Les types : ceux de data/aircraft_types.json, hélicoptères puis avions. Les canaux : data/aircraft_radios.json, une entrée par type ({} sans poste programmable).
+    Le build s'arrête si la table des radios n'a pas exactement les types de la table des types, ou si l'un des quatre types d'avant ne rend pas ses valeurs."""
+    with open(types_path or os.path.join(HERE, 'data', 'aircraft_types.json'), encoding='utf-8') as f:
+        t = json.load(f)
+    ids = t['helicopters'] + t['planes']
+    with open(radios_path or os.path.join(HERE, 'data', 'aircraft_radios.json'), encoding='utf-8') as f:
+        rd = json.load(f).get('types')
+    if not isinstance(rd, dict) or list(rd) != ids:
+        raise SystemExit("[ERREUR] aircraft_radios.json : les types ne sont pas ceux de aircraft_types.json, dans le même ordre")
+    for ty, posts in _CHANNELS_BASE.items():
+        if rd[ty] != posts:
+            raise SystemExit("[ERREUR] aircraft_radios.json : %s rend %s, la base avait %s" % (ty, rd[ty], posts))
+    for ty in ids:
+        if not isinstance(rd[ty], dict) or not all(k.isdigit() and isinstance(v, int) and v > 0 for k, v in rd[ty].items()):
+            raise SystemExit("[ERREUR] aircraft_radios.json : postes illisibles pour %s" % ty)
+    channels = '{ ' + ', '.join("'%s': { %s }" % (ty, ', '.join('%s: %d' % (k, v) for k, v in rd[ty].items())) if rd[ty] else "'%s': {}" % ty for ty in ids) + ' }'
+    return '[' + ', '.join("'%s'" % i for i in ids) + ']', channels
+
+
 def build_block():
     """Le script du bloc, délimité par ses deux commentaires, terminé par un saut de ligne."""
-    return BLOCK_BEGIN + _JS + BLOCK_END + '\n'
+    types, channels = tables_js()
+    return BLOCK_BEGIN + _JS.replace('@@TYPES@@', types).replace('@@CHANNELS@@', channels) + BLOCK_END + '\n'
 
 
 def build_css():

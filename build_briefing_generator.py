@@ -8196,7 +8196,7 @@ function simpleAcField(i, isGuest) {
     [['editor.wing.ac.helis', GAME_AIRCRAFT_TYPES.helicopters], ['editor.wing.ac.planes', GAME_AIRCRAFT_TYPES.planes]].forEach(g => {
       const og = document.createElement('optgroup');
       og.label = t(g[0]);
-      g[1].forEach(ty => og.appendChild(opt(ty, ty)));
+      g[1].forEach(ty => og.appendChild(opt(ty, gameAircraftName(ty))));
       sel.appendChild(og);
     });
     const ogMod = document.createElement('optgroup');

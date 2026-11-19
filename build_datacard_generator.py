@@ -119,6 +119,10 @@ def airfield_icao(facts):
     return d['theatres']
 
 
+# Le seul type volable sans pylône dans data/aircraft_pylons.json (un avion d'entraînement sans emport) : sa table de pylônes n'a pas d'entrée.
+NO_PYLON_TYPES = ['TF-51D']
+
+
 def dg_tables():
     """Les tables que payload_block.py lit (WEAPON_NAMES, AIRCRAFT_PYLONS, AIRCRAFT_LIMITS) et celle des masses à vide (AIRCRAFT_MASSES, pour le poids au décollage), tirées de data/*.json, les mêmes fichiers que ceux du
     Flight Configurator, et réduites aux types du Flight Configurator (PAYLOAD_TYPES de payload_block.py), sauf les masses de toutes les armes du fichier des pylônes : rien n'est recopié à la main. Les index de
@@ -137,8 +141,12 @@ def dg_tables():
     idx = {}
     kept_types = {}
     for ty in types:
-        if ty not in pyl['types'] or ty not in lim or ty not in masses:
+        if (ty not in pyl['types'] and ty not in NO_PYLON_TYPES) or ty not in lim or ty not in masses:
             raise SystemExit("[ERREUR] Type du Flight Configurator absent des tables de data/ : " + ty)
+        if ty in NO_PYLON_TYPES and ty in pyl['types']:
+            raise SystemExit("[ERREUR] Le type " + ty + " est dans NO_PYLON_TYPES (sans pylône) mais data/aircraft_pylons.json lui en donne")
+        if ty in NO_PYLON_TYPES:
+            continue       # sans pylône : aucune entrée (payloadPylons rend null), ni emport ni arme ; la masse et le carburant restent
         kept_types[ty] = {}
         for n, lst in pyl['types'][ty].items():
             kept_types[ty][n] = [idx.setdefault(pyl['clsids'][i], len(idx)) for i in lst]
@@ -1715,6 +1723,7 @@ const I18N = {
     'toast.jsonLoaded': 'Datacards chargées ✓',
     'frz.note': 'Copie de ce que le groupe donnait à cette carte avant qu\'elle devienne libre : lecture seule.',
     'u.type.pick': '— à choisir —',
+    'u.type.none': 'Aucun appareil',
     'ac.helis': 'Hélicoptères',
     'ac.planes': 'Avions',
     'ac.mods': 'Hors jeu de base',
@@ -1722,6 +1731,7 @@ const I18N = {
     'ac.flag': 'hors jeu de base',
     'sum.type.pick': 'type à choisir',
     'rad.err.nan': 'Canal {0} : « {1} » n’est pas une fréquence.',
+    'rad.band.none': 'bande non contrôlée pour ce type',
     'rad.err.range': 'Canal {0} : {1} MHz hors de la bande du poste ({2}).',
     'rad.err.nan.f': 'Fréquence {0} : « {1} » n’est pas une fréquence.',
     'rad.err.range.f': 'Fréquence {0} : {1} MHz hors de la bande du poste ({2}).',
@@ -2228,6 +2238,7 @@ const I18N = {
     'toast.jsonLoaded': 'Datacards loaded ✓',
     'frz.note': 'A copy of what the group gave this card before it became free: read only.',
     'u.type.pick': '— to pick —',
+    'u.type.none': 'No aircraft',
     'ac.helis': 'Helicopters',
     'ac.planes': 'Airplanes',
     'ac.mods': 'Not in the base game',
@@ -2235,6 +2246,7 @@ const I18N = {
     'ac.flag': 'not in the base game',
     'sum.type.pick': 'type to pick',
     'rad.err.nan': 'Channel {0}: “{1}” is not a frequency.',
+    'rad.band.none': 'band not checked for this type',
     'rad.err.range': 'Channel {0}: {1} MHz is outside the radio’s band ({2}).',
     'rad.err.nan.f': 'Frequency {0}: “{1}” is not a frequency.',
     'rad.err.range.f': 'Frequency {0}: {1} MHz is outside the radio’s band ({2}).',
@@ -4099,7 +4111,6 @@ async function dgLinkSelect(c, rid) {
    le rang de l'unité dans le groupe, la fiche n'ayant pas d'identifiant d'unité), les temps, la météo, le carburant, les notes, la navigation, la copie
    des canaux affichés (radioSel : « type|poste|canal » → { on, label, mod } ; le choix, le nom et la modulation sont ceux du groupe, radioPrint, et la fusion de gsApplyAll y ajoute ce que la carte a de plus) et le choix de l'emport (loadoutFc). */
 const DG_UNIT_TYPES = PAYLOAD_TYPES;
-const DG_TYPE_LABEL = IMP_TYPE_LABEL;
 const DG_MAX_UNITS = IMP_MAX_UNITS;
 const DG_UI = { free: {}, other: null };       /* état d'écran : les canaux libres montrés, par « type|poste » ; other : l'unité d'une carte libre dont le type se saisit (« Autre type (mod)… ») */
 let DGG = { flights: [], theatre: '', stable: '', shown: '', pend: false };       /* stable : la fiche lue ; shown : la fiche que l'écran montre ; pend : un évènement « storage » attend sa relecture */
@@ -4110,7 +4121,7 @@ function dgFlightLabel(f, fi) { return dgStr(f.name).trim() || t('fl.untitled', 
 function dgUnits(f) { return (Array.isArray(f.units) ? f.units : []).filter(gsIsObj); }
 function dgUnitDefault(f, fi, ui) { return dgFlightLabel(f, fi) + '-' + (ui + 1); }
 function dgUnitLabel(f, fi, ui) { const u = dgUnits(f)[ui]; return dgCs(u.callsign).trim() || dgStr(u.name).trim() || dgUnitDefault(f, fi, ui); }
-function dgTypeLabel(ty) { return ty === '' ? t('sum.type.pick') : (Object.prototype.hasOwnProperty.call(DG_TYPE_LABEL, ty) ? DG_TYPE_LABEL[ty] : ty); }
+function dgTypeLabel(ty) { return ty === '' ? t('sum.type.pick') : gameAircraftName(ty); }
 function dgFlightPos(id) { return DGG.flights.findIndex(f => f.fcId === id); }
 function dgFlightOf(c) { return c && c.gsId ? (DGG.flights.find(f => f.fcId === c.gsId) || null) : null; }
 /* Le nom d'une carte dans la liste : l'indicatif ; sans lui, une carte liée prend le nom que le groupe a dans la fiche (« Groupe 4 », comme au Flight Configurator) */
@@ -4211,7 +4222,7 @@ function dgUnitHasData(u) { return impRadioCount(u) > 0 || gsIsObj(u.loadout) ||
 
 /* Les champs Appareil et Nombre du groupe et les indicatifs par défaut suivent la fiche, sans refaire l'éditeur (le curseur reste en place) */
 function dgSyncFields(c) {
-  [['aircraft', c.flight.aircraft], ['count', c.flight.count == null ? '' : String(c.flight.count)]].forEach(p => {
+  [['aircraft', dgAircraftShown(c)], ['count', c.flight.count == null ? '' : String(c.flight.count)]].forEach(p => {
     const el = document.querySelector('#editor [data-path="flight.' + p[0] + '"]');
     if (el && el.value !== p[1]) el.value = p[1];
   });
@@ -4292,7 +4303,7 @@ function dgRemoveUnitDo(c, i) {
    partage : c'est la règle des fréquences du groupe. Un poste que la mission ne pré-règle pas (RADIO_FREE : le poste HF des deux hélicoptères) n'a pas de numéro de canal. */
 function dgPostFree(ty, r) { return radioFreeCount(ty, Number(r)) > 0; }
 function dgFmtMHz(v) { return String(v).replace('.', CURRENT_LANG === 'fr' ? ',' : '.'); }
-function dgBandText(ty, r) { return radioBand(ty, Number(r)).map(b => dgFmtMHz(b[0]) + '–' + dgFmtMHz(b[1])).join(' · ') + ' MHz'; }
+function dgBandText(ty, r) { const b = radioBand(ty, Number(r)); return b.length ? b.map(x => dgFmtMHz(x[0]) + '–' + dgFmtMHz(x[1])).join(' · ') + ' MHz' : t('rad.band.none'); }
 /* Le message d'une fréquence déjà dans la fiche qui n'est pas dans la bande de son poste (ou n'est pas un nombre) ; '' si elle est bonne ou vide. Elle reste dans la fiche : le champ la signale seulement. */
 function dgFreqIssue(ty, r, c, raw) {
   const p = dgParseFreq(raw), free = dgPostFree(ty, r), n = free ? c : radioCockpitChannel(ty, Number(r), c);
@@ -4826,6 +4837,13 @@ function dgLoadCardHtml(c) {
 /* ----- Éditeur d'une carte liée ----- */
 function shLabel(key) { return esc(t(key)) + ' <span class="sh" title="' + esc(t('sh.tip')) + '">FC</span>'; }
 function fShared(labelKey, inner) { return '<div class="ed-field"><label>' + shLabel(labelKey) + '</label>' + inner + '</div>'; }
+/* La liste du type d'une unité de carte liée : « à choisir » en tête pour une unité sans type (que l'import commun produit pour un type inconnu, comme au Flight Configurator), puis deux groupes (Hélicoptères, Avions : l'ordre de DG_UNIT_TYPES)
+   et une recherche ; chaque option porte le nom du type (gameAircraftName), sa valeur est le nom du .miz. */
+function dgTypeSelect(gsKey, value) {
+  const heli = GAME_AIRCRAFT_TYPES.helicopters, grp = (label, test) => '<optgroup label="' + esc(label) + '">' + DG_UNIT_TYPES.filter(test).map(ty => '<option value="' + esc(ty) + '"' + (ty === value ? ' selected' : '') + '>' + esc(dgTypeLabel(ty)) + '</option>').join('') + '</optgroup>';
+  return '<select data-gs="' + gsKey + '" data-search data-search-empty="' + esc(t('u.type.none')) + '">' + (value === '' ? '<option value="" selected>' + esc(t('u.type.pick')) + '</option>' : '') +
+    grp(t('ac.helis'), ty => heli.indexOf(ty) >= 0) + grp(t('ac.planes'), ty => heli.indexOf(ty) < 0) + '</select>';
+}
 function selShared(gsKey, value, options) {
   return '<select data-gs="' + gsKey + '">' + options.map(o => '<option value="' + esc(o[0]) + '"' + (o[0] === value ? ' selected' : '') + '>' + esc(o[1]) + '</option>').join('') + '</select>';
 }
@@ -4837,7 +4855,7 @@ function dgFreeTypeField(c, i, x) {
   if (DG_UI.other && DG_UI.other.c === c && DG_UI.other.i === i) {
     return '<div class="ed-field"><label>' + esc(t('f.crew.type')) + '</label><input type="text" data-path="' + path + '" data-dg-other="' + i + '" value="' + esc(dgTypeOff(cur) ? cur : '') + '"' + phAttr(path) + ' autocomplete="off" spellcheck="false" maxlength="60"></div>';
   }
-  const grp = (label, names) => '<optgroup label="' + esc(label) + '">' + names.map(n => '<option value="' + esc(n) + '"' + (n === cur ? ' selected' : '') + '>' + esc(n) + '</option>').join('') + '</optgroup>';
+  const grp = (label, names) => '<optgroup label="' + esc(label) + '">' + names.map(n => '<option value="' + esc(n) + '"' + (n === cur ? ' selected' : '') + '>' + esc(gameAircraftName(n)) + '</option>').join('') + '</optgroup>';
   const off = dgTypeOff(cur);
   return '<div class="ed-field"><label>' + esc(t('f.crew.type')) + '</label><select data-path="' + path + '" data-dg-type="' + i + '">' +
     '<option value=""' + (cur === '' ? ' selected' : '') + '>' + esc(t('u.type.pick')) + '</option>' +
@@ -4859,7 +4877,7 @@ function groupBoxHtml(c) {
     '<div class="ed-field-row">' +
     (lk ? fShared('f.group.name', '<input type="text" data-gs="name" value="' + esc(dgStr(f.name)) + '" placeholder="' + esc(t('fl.name.ph')) + '" autocomplete="off" spellcheck="false">') + fShared('f.coalition', selShared('coalition', gsSide(f.coalition), coal))
       : fInput('f.group.name', 'flight.callsign', c.flight.callsign) + (c.gsGone && c.gsSide ? '<div class="ed-field"><label>' + esc(t('f.coalition')) + '</label><input type="text" value="' + esc(t('coal.' + c.gsSide)) + '" readonly tabindex="-1"></div>' : '<div class="ed-field"></div>')) + '</div>' +
-    '<div class="ed-field-row">' + fInput('f.aircraft', 'flight.aircraft', c.flight.aircraft, ro) +
+    '<div class="ed-field-row">' + fInput('f.aircraft', 'flight.aircraft', dgAircraftShown(c), ro) +
     fInput('f.count', 'flight.count', c.flight.count == null ? '' : String(c.flight.count), ' inputmode="numeric"' + ro) + '</div>' +
     '<div class="ed-field-row">' + fInput('f.task', 'flight.task', c.flight.task) + thr + '</div>';
   if (!lk) {
@@ -4877,14 +4895,12 @@ function groupBoxHtml(c) {
       '<button type="button" class="ed-btn-add" data-act="add" data-list="crew"' + (c.crew.length >= LIMITS.crew ? ' disabled' : '') + '>' + esc(t('cr.add', { n: c.crew.length, max: LIMITS.crew })) + '</button>';
   }
   const units = dgUnits(f), fi = dgFlightPos(f.fcId);
-  const opts = DG_UNIT_TYPES.map(ty => [ty, dgTypeLabel(ty)]);
   const rows = c.crew.map((x, i) => {
     const u = units[i] || {};
-    const uo = dgStr(u.type) === '' ? [['', t('u.type.pick')]].concat(opts) : opts;       /* une unité sans type (que l'import commun produit pour un type inconnu) : « à choisir », comme au Flight Configurator */
     return '<div class="li li-u" data-unit="' + i + '"><div class="li-main">' +
       '<div class="li-uh"><span class="li-ut">' + esc(t('cr.unit', { n: i + 1 })) + '</span><span class="snap-tag">' + esc(dgTypeLabel(dgStr(u.type))) + '</span></div>' +
       '<div class="li-grid g2">' +
-      fShared('f.crew.type', selShared('u.' + i + '.type', dgStr(u.type), uo)) +
+      fShared('f.crew.type', dgTypeSelect('u.' + i + '.type', dgStr(u.type))) +
       fShared('f.crew.callsign', '<input type="text" data-gs="u.' + i + '.callsign" value="' + esc(dgCs(u.callsign)) + '" placeholder="' + esc(dgUnitDefault(f, fi, i)) + '" autocomplete="off" spellcheck="false">') + '</div>' +
       '<div class="li-grid g2">' +
       fShared('f.crew.board', '<input type="text" data-gs="u.' + i + '.onboard" value="' + esc(dgStr(u.onboard)) + '" autocomplete="off" spellcheck="false">') +
@@ -5282,6 +5298,12 @@ function partialGroup(c) {
   });
   return { types: types, unknown: unknown };
 }
+/* Le champ Appareil d'une carte dont le groupe est déduit des lignes d'équipage ou lu dans la fiche (lecture seule) : les types enregistrés (c.flight.aircraft, les noms du .miz joints par « + ») sous leur nom d'affichage ;
+   le texte d'une carte libre (saisi à la main) reste tel quel. La valeur enregistrée ne change pas. */
+function dgAircraftShown(c) {
+  const a = c.flight.aircraft;
+  return (c.gsId || deduceGroup(c) || partialGroup(c)) ? a.split(' + ').map(gameAircraftName).join(' + ') : a;
+}
 /* Quand le groupe se déduit, la carte enregistre l'appareil et le nombre déduits */
 function syncGroup(c) {
   const d = deduceGroup(c);
@@ -5340,7 +5362,7 @@ function blkCrew(c) {
   const hd = crewHead(withCrew), cols = hd.cols, h = hd.h;
   const body = rows.map(r =>
     '<tr><td class="nm">' + esc(r.callsign || r.dflt || '') + '</td><td class="m">' + esc(r.pilot) + '</td>' +
-    (withCrew ? '<td class="m">' + esc(r.type) + '</td>' : '') +
+    (withCrew ? '<td class="m">' + esc(gameAircraftName(r.type)) + '</td>' : '') +
     '<td class="m">' + esc(r.board) + '</td></tr>').join('');
   return blockHtml('crew', t('dc.b.crew'),
     '<table class="dc-tab dc-crew"><colgroup>' + cols + '</colgroup><thead><tr>' + h + '</tr></thead><tbody>' + body + '</tbody></table>', 'dc-bbt');
@@ -5716,9 +5738,9 @@ function rowHtml(cls, cells) {
 /* Le groupe de l'en-tête : déduit des lignes, chaque type avec son nombre (« 1 × Mi-24P + 1 × Mi-8MT ») ; sinon « n × A », « A » seul, « GROUPE DE n », ou rien */
 function groupText(c) {
   const d = deduceGroup(c);
-  if (d) return d.types.map(x => x[1] + ' \u00d7 ' + x[0]).join(' + ');
+  if (d) return d.types.map(x => x[1] + ' \u00d7 ' + gameAircraftName(x[0])).join(' + ');
   const p = partialGroup(c);
-  if (p) return p.types.map(x => x[1] + ' \u00d7 ' + x[0]).join(' + ') + ' + ' + p.unknown + ' \u00d7 ?';
+  if (p) return p.types.map(x => x[1] + ' \u00d7 ' + gameAircraftName(x[0])).join(' + ') + ' + ' + p.unknown + ' \u00d7 ?';
   const a = c.flight.aircraft.trim(), n = c.flight.count;
   if (hasText(a)) return (n != null && a.indexOf('+') < 0) ? n + ' \u00d7 ' + a : a;
   return n != null ? t('dc.flightOf', { n: n }) : '';
@@ -6413,7 +6435,7 @@ function syncMetar(c) {
 /* Les champs Appareil et Nombre du groupe suivent les lignes d'équipage, sans refaire l'éditeur (le curseur reste en place) */
 function syncGroupEditor(c) {
   const ded = !!deduceGroup(c), lock = ded || !!partialGroup(c);       /* partiel : les champs restent en lecture seule, l'aperçu imprimé dit déjà « n × ? » */
-  [['aircraft', c.flight.aircraft], ['count', c.flight.count == null ? '' : String(c.flight.count)]].forEach(p => {
+  [['aircraft', dgAircraftShown(c)], ['count', c.flight.count == null ? '' : String(c.flight.count)]].forEach(p => {
     const el = document.querySelector('#editor [data-path="flight.' + p[0] + '"]');
     if (!el) return;
     if (ded && el.value !== p[1]) el.value = p[1];

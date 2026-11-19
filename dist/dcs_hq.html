@@ -3121,7 +3121,7 @@ function renderSqAircraftTags(container, sqIdx) {
     const tag = document.createElement('span');
     tag.className = 'wing-ac-tag';
     const label = document.createElement('span');
-    label.textContent = cur;
+    label.textContent = gameAircraftName(cur);
     tag.appendChild(label);
     const known = gameAircraftIsType(cur);
     if (!known) {
@@ -3155,10 +3155,10 @@ function renderSqAircraftTags(container, sqIdx) {
 
     const close = (known || _WING_MGD) ? [] : gameAircraftClose(cur);
     if (close.length) {
-      const rep = acMakeSelect('wing-ac-rep', t('editor.wing.ac.replaceNamed').replace('{0}', String(cur)));
+      const rep = acMakeSelect('wing-ac-rep', t('editor.wing.ac.replaceNamed').replace('{0}', gameAircraftName(String(cur))));
       item.classList.add('wing-ac-item-rep');
       rep.appendChild(acMakeOption('', t('editor.wing.ac.replace'), false));
-      close.forEach(ty => rep.appendChild(acMakeOption(ty, ty, has(ty))));
+      close.forEach(ty => rep.appendChild(acMakeOption(ty, gameAircraftName(ty), has(ty))));
       rep.addEventListener('change', () => {
         const v = rep.value;
         if (!v || !wingConfig.squadrons[sqIdx] || wingConfig.squadrons[sqIdx].aircraft[acIdx] !== cur) return;
@@ -3178,7 +3178,7 @@ function renderSqAircraftTags(container, sqIdx) {
   [['editor.wing.ac.helis', GAME_AIRCRAFT_TYPES.helicopters], ['editor.wing.ac.planes', GAME_AIRCRAFT_TYPES.planes]].forEach(g => {
     const og = document.createElement('optgroup');
     og.label = t(g[0]);
-    g[1].forEach(ty => og.appendChild(acMakeOption(ty, ty, has(ty))));
+    g[1].forEach(ty => og.appendChild(acMakeOption(ty, gameAircraftName(ty), has(ty))));
     addSel.appendChild(og);
   });
   const ogMod = document.createElement('optgroup');
@@ -5369,8 +5369,8 @@ function wingDefFill(sel, ty) {
 function renderWingDefRow(ty) {
   const row = document.createElement('div');
   row.className = 'wing-def-row';
-  const lbl = document.createElement('span'); lbl.className = 'wing-def-lbl'; lbl.textContent = ty;
-  const sel = acMakeSelect('wing-def-sel', ty);
+  const lbl = document.createElement('span'); lbl.className = 'wing-def-lbl'; lbl.textContent = gameAircraftName(ty);
+  const sel = acMakeSelect('wing-def-sel', gameAircraftName(ty));
   wingDefFill(sel, ty);
   sel.disabled = !!_WING_MGD;
   sel.addEventListener('change', () => {
@@ -5454,7 +5454,7 @@ function renderWingLivRow(liv, i) {
         liv.aircraft = Array.prototype.filter.call(ac.querySelectorAll('input[type=checkbox]'), b => b.checked).map(b => b.value);       // dans l'ordre des cases
         persistWingConfig(); updateWingSizeCounter(); renderWingDefLiveries();
       });
-      const tx = document.createElement('span'); tx.textContent = ty;
+      const tx = document.createElement('span'); tx.textContent = gameAircraftName(ty);
       cl.appendChild(cb); cl.appendChild(tx);
       ac.appendChild(cl);
     });
@@ -6815,7 +6815,7 @@ function dynPanelHtml() {
     html += '</div><div class="dyn-links">';
     const parts = [];
     for (const l of r.w.links) {
-      let txt = h(l.type + ' → ' + (l.status === 'absent' ? String(l.groupId) : l.gname));
+      let txt = h(gameAircraftName(l.type) + ' → ' + (l.status === 'absent' ? String(l.groupId) : l.gname));
       if (l.status !== 'ok') txt += ' <span class="ui-avert">⚠ ' + h(t(l.status === 'absent' ? 'dyn.groupGone' : 'dyn.notTemplate')) + '</span>';
       parts.push('<span class="dyn-link">' + txt + '</span>');
     }
@@ -7192,7 +7192,7 @@ function renderSnapshot(snap) {
     opt('all', t('pk.flt.all'), _PK_FLT.side) + opt('blue', t('pk.flt.blue'), _PK_FLT.side) + opt('red', t('pk.flt.red'), _PK_FLT.side) +
     (hasNeutral ? opt('neutrals', t('pk.flt.neutrals'), _PK_FLT.side) : '') + '</select></label>';
   html += '<label class="pk-flt-f"><span>' + h(t('pk.flt.type')) + '</span><select id="pk-f-type">' +
-    opt('all', t('pk.flt.all'), _PK_FLT.type) + types.map(x => opt(x, x, _PK_FLT.type)).join('') + '</select></label>';
+    opt('all', t('pk.flt.all'), _PK_FLT.type) + types.map(x => opt(x, gameAircraftName(x), _PK_FLT.type)).join('') + '</select></label>';
   html += '<label class="pk-flt-f pk-flt-name"><span>' + h(t('pk.flt.name')) + '</span><input type="text" id="pk-f-name" autocomplete="off" autocapitalize="off" spellcheck="false" value="' + h(_PK_FLT.name) + '"></label>';
   html += '</div>';
   html += '<div class="pk-flt-row">';
@@ -7631,7 +7631,7 @@ function flightTypes(f) {
   if (!us.length && f && typeof f.aircraftType === 'string' && f.aircraftType !== '') out.push(f.aircraftType);      // un vol v1 sans unité garde son aircraftType
   return out;
 }
-function flightTypesLabel(f) { return flightTypes(f).join(' + '); }
+function flightTypesLabel(f) { return flightTypes(f).map(gameAircraftName).join(' + '); }
 // Dans la liste des vols : les types, et à défaut la catégorie (hélicoptère, avion).
 function flightTypeKeys(f) { const x = flightTypes(f); return x.length ? x : (f.category ? [f.category] : []); }
 const PK_PARTS  = ['route', 'radios', 'loadout', 'livery'];
@@ -7760,12 +7760,12 @@ const RADIO_BANDS = {
 // (radios[poste][1 à n]) mais sans numéro de canal, et HQ ne les écrit jamais dans la mission.
 const RADIO_FREE = { 'Mi-24P': { 3: 5 }, 'Mi-8MT': { 3: 5 } };
 
-// La bande d'un poste : [[bas, haut], …] ; [] si le type ou le poste n'est pas connu.
+// La bande d'un poste : [[bas, haut], …] ; [] si le type ou le poste n'est pas connu (bande non contrôlée : radioInBand l'accepte toute).
 function radioBand(type, r) {
   return Object.prototype.hasOwnProperty.call(RADIO_BANDS, type) && Object.prototype.hasOwnProperty.call(RADIO_BANDS[type], r) ? RADIO_BANDS[type][r] : [];
 }
-// Dans la bande = dans l'un de ses intervalles, bornes comprises.
-function radioInBand(band, v) { return band.some(b => v >= b[0] - 1e-9 && v <= b[1] + 1e-9); }
+// Dans la bande = dans l'un de ses intervalles, bornes comprises. Une bande inconnue ([] : un type ou un poste sans bande) ne refuse rien : la fréquence est libre, la bande n'est pas contrôlée.
+function radioInBand(band, v) { return band.length === 0 || band.some(b => v >= b[0] - 1e-9 && v <= b[1] + 1e-9); }
 // Le nombre de fréquences d'un poste que la mission ne pré-règle pas ; 0 pour tout autre poste (pré-réglé, ou inconnu).
 function radioFreeCount(type, r) {
   return Object.prototype.hasOwnProperty.call(RADIO_FREE, type) && Object.prototype.hasOwnProperty.call(RADIO_FREE[type], r) ? RADIO_FREE[type][r] : 0;
@@ -7854,6 +7854,90 @@ const GAME_AIRCRAFT_TYPES = {
     "Yak-52"
   ]
 };
+
+// Le nom d'affichage de chaque type (la désignation : data/aircraft_names.json), par son nom dans un .miz. Il ne sert qu'à l'affichage : la valeur écrite (paquet, fichier de travail, .miz, configuration Wing, presets) reste le nom du .miz.
+const GAME_AIRCRAFT_NAMES = {
+  "AH-64D_BLK_II": "AH-64D",
+  "CH-47Fbl1": "CH-47F",
+  "Ka-50": "Ka-50",
+  "Ka-50_3": "Ka-50 III",
+  "Mi-24P": "Mi-24P",
+  "Mi-8MT": "Mi-8MTV2",
+  "OH58D": "OH-58D",
+  "SA342L": "SA342L",
+  "SA342M": "SA342M",
+  "SA342Minigun": "SA342 Minigun",
+  "SA342Mistral": "SA342 Mistral",
+  "UH-1H": "UH-1H",
+  "A-10A": "A-10A",
+  "A-10C": "A-10C",
+  "A-10C_2": "A-10C II",
+  "AJS37": "AJS-37",
+  "AV8BNA": "AV-8B N/A",
+  "Bf-109K-4": "Bf 109 K-4",
+  "C-101CC": "C-101CC",
+  "C-101EB": "C-101EB",
+  "C-130J-30": "C-130J-30",
+  "Christen Eagle II": "Christen Eagle II",
+  "F-100D": "F-100D",
+  "F-14A-135-GR": "F-14A (135-GR)",
+  "F-14A-135-GR-Early": "F-14A (135-GR, early)",
+  "F-14A-95-GR": "F-14A (95-GR)",
+  "F-14B": "F-14B",
+  "F-14BU": "F-14B(U)",
+  "F-15C": "F-15C",
+  "F-15ESE": "F-15E",
+  "F-16C_50": "F-16C",
+  "F-4E-45MC": "F-4E",
+  "F-5E-3": "F-5E",
+  "F-5E-3_FC": "F-5E (FC)",
+  "F-86F Sabre": "F-86F",
+  "F-86F_FC": "F-86F (FC)",
+  "F4U-1D": "F4U-1D",
+  "FA-18C_hornet": "F/A-18C",
+  "FW-190A8": "Fw 190 A-8",
+  "FW-190D9": "Fw 190 D-9",
+  "Hawk": "Hawk T.1A",
+  "I-16": "I-16",
+  "J-11A": "J-11A",
+  "JF-17": "JF-17",
+  "L-39C": "L-39C",
+  "L-39ZA": "L-39ZA",
+  "La-7": "La-7",
+  "M-2000C": "Mirage 2000C",
+  "MB-339A": "MB-339A",
+  "MB-339APAN": "MB-339A PAN",
+  "MiG-15bis": "MiG-15bis",
+  "MiG-15bis_FC": "MiG-15bis (FC)",
+  "MiG-19P": "MiG-19P",
+  "MiG-21Bis": "MiG-21bis",
+  "MiG-29 Fulcrum": "MiG-29",
+  "MiG-29A": "MiG-29A (FC)",
+  "MiG-29G": "MiG-29G (FC)",
+  "MiG-29S": "MiG-29S (FC)",
+  "Mirage-F1BE": "Mirage F1BE",
+  "Mirage-F1CE": "Mirage F1CE",
+  "Mirage-F1EE": "Mirage F1EE",
+  "MosquitoFBMkVI": "Mosquito FB Mk VI",
+  "P-47D-30": "P-47D-30",
+  "P-47D-30bl1": "P-47D-30 (early)",
+  "P-47D-40": "P-47D-40",
+  "P-51D": "P-51D-25-NA",
+  "P-51D-30-NA": "P-51D-30-NA",
+  "SpitfireLFMkIX": "Spitfire LF Mk IX",
+  "SpitfireLFMkIXCW": "Spitfire LF Mk IX CW",
+  "Su-25": "Su-25",
+  "Su-25T": "Su-25T",
+  "Su-27": "Su-27",
+  "Su-33": "Su-33",
+  "TF-51D": "TF-51D",
+  "Yak-52": "Yak-52"
+};
+
+// Le nom à afficher pour un type ; un nom hors de la table (un type de mod, '') s'affiche tel quel.
+function gameAircraftName(id) {
+  return Object.prototype.hasOwnProperty.call(GAME_AIRCRAFT_NAMES, id) ? GAME_AIRCRAFT_NAMES[id] : id;
+}
 
 // Nom exactement dans la table (casse comprise).
 function gameAircraftIsType(name) {
@@ -8248,7 +8332,7 @@ function pkRender() {
       }
       pk.flights.forEach((fl, fi) => {
         html += '<div class="pk-flight"><div class="pk-flight-head">' + h(fl.groupName) +
-          (fl.types.length ? ' <span class="snap-flight-tag">' + h(fl.types.join(' + ')) + '</span> ' : ' ') +
+          (fl.types.length ? ' <span class="snap-flight-tag">' + h(fl.types.map(gameAircraftName).join(' + ')) + '</span> ' : ' ') +
           (!ctx ? '' : fl.found ? '<span class="pk-found">' + h(t('pk.found')) + '</span>' : fl.multi ? '' : '<span class="pk-absent">' + h(t('pk.absent')) + '</span>') +
           '</div>';
         if (fl.multi) html += '<div class="ui-avert">⚠ ' + h(tf('pk.w.multi', fl.groupName, fl.multi)) + '</div>';
@@ -8362,7 +8446,7 @@ function pkPlanFlight(ctx, pk, fl, tg) {
     const wants = (fl.chk.radios && fl.avail.radios && u.radios.length > 0) || (fl.chk.loadout && fl.avail.loadout && !!u.payload) || (fl.chk.livery && fl.avail.livery && !!u.liveryId);
     if (!wants) return;
     okType[i] = false;
-    warns.push({ key: 'pk.w.type', args: [name, tu.name, tu.type || '?', u.type || '?'] });
+    warns.push({ key: 'pk.w.type', args: [name, tu.name, tu.type ? gameAircraftName(tu.type) : '?', u.type ? gameAircraftName(u.type) : '?'] });
   });
   if (fl.chk.radios && fl.avail.radios) {
     fl.units.forEach((u, i) => {
@@ -8871,7 +8955,7 @@ function delAnalyze(ctx, ids) {
   for (const f of flights) K += f.trig.length + f.trigScript.length + f.task.length + f.script.length + f.zone.length;
   return { flights: flights, K: K, M: wh.links.length, badWh: wh.unreadable };
 }
-function delDynText(f) { return tf('pk.del.dyn', f.dyn.map(d => d.name + ' (' + d.type + ')').join(', ')); }
+function delDynText(f) { return tf('pk.del.dyn', f.dyn.map(d => d.name + ' (' + gameAircraftName(d.type) + ')').join(', ')); }
 function delRefLines(f) {
   const out = [];
   for (const r of f.trig) out.push(tf('pk.del.trig', r.comment, r.pred));
@@ -9012,7 +9096,7 @@ function dsxGroupUnits(ast) {
 function dsxFlightInfo(f, gu) {
   const g = gu && gu[f.groupId];
   const type = (g && g.type) || unitTypeOf(f, (f.units || [])[0]) || '';
-  return { gid: f.groupId, name: f.groupName || '—', type: type, cat: f.category === 'helicopter' ? 'helicopters' : 'planes',
+  return { gid: f.groupId, name: f.groupName || '—', type: type, label: gameAircraftName(type), cat: f.category === 'helicopter' ? 'helicopters' : 'planes',
     tk: (f.category === 'helicopter' ? 'helicopters' : 'planes') + '|' + type, side: f.coalition || '', units: g ? g.n : (f.units || []).length };
 }
 function dsxTplName(gid) { const f = HQ_SNAPSHOT.flights.find(x => x.groupId === gid); return f ? (f.groupName || String(gid)) : String(gid); }
@@ -9027,7 +9111,7 @@ function dsxInsertFirst(text, g, fname) {
 }
 function dsxInsertLink(text, nd, gid, wname) {
   const ie = nd.init;
-  if (!ie) throw delErr('dyn.w.e.init', wname, nd.type);
+  if (!ie) throw delErr('dyn.w.e.init', wname, gameAircraftName(nd.type));
   const ks = ie.keyPos.start.offset, end = ie.valuePos.end.offset, ls = text.lastIndexOf('\n', ks - 1) + 1, pre = text.slice(ls, ks), nl = text.indexOf('\n', end);
   if (!/^[ \t]*$/.test(pre) || nl < 0 || !/^\s*[,;]?\s*(--[^\n]*)?$/.test(text.slice(end, nl))) throw delErr('dyn.w.e.indentWh', wname);
   const eol = text.charAt(nl - 1) === '\r' ? '\r\n' : '\n';
@@ -9252,7 +9336,7 @@ function dsxVerify(base, DS, plan, mAst, wText, wRootNew, work) {
     for (const w of DS.wh.whs) for (const tk of Object.keys(w.types)) {
       const nd = w.types[tk], fin = plan.expLink[w.key + '|' + tk];
       const exp = fin === undefined ? nd.gid : fin, k = w.key + '|' + tk;
-      if ((after[k] || 0) !== exp) throw delErr('dyn.w.e.links', dynWhName(w), nd.type);
+      if ((after[k] || 0) !== exp) throw delErr('dyn.w.e.links', dynWhName(w), gameAircraftName(nd.type));
     }
     // les camps relus : celui attendu pour chaque entrepôt (le nouveau pour un aérodrome neutre passé à un camp, l'ancien pour tous les autres)
     const sideAfter = {};
@@ -9292,9 +9376,9 @@ function dsxBody() {
   for (const f of DSX.flights) {
     const gid = String(f.gid), on = !!st.tmpl[f.gid];
     html += '<div class="dsx-card" data-dsx-gid="' + h(gid) + '"><div class="dsx-head"><span class="dsx-name">' + h(f.name) + '</span>' +
-      '<span class="snap-flight-tag">' + h(f.type) + '</span><span class="snap-flight-tag">' + h(t('pk.flt.' + f.side, f.side)) + '</span>' +
+      '<span class="snap-flight-tag">' + h(f.label) + '</span><span class="snap-flight-tag">' + h(t('pk.flt.' + f.side, f.side)) + '</span>' +
       (on ? '<span class="dsx-badge">' + h(t('dyn.w.badge')) + '</span>' : '') + '</div>';
-    const help = '<span class="dsx-help">' + h(tf('dyn.w.help1', f.type)) + '</span>';
+    const help = '<span class="dsx-help">' + h(tf('dyn.w.help1', f.label)) + '</span>';
     // plus d'un appareil : un template n'en a qu'un (le groupe ordinaire ne devient pas template ; le template existant ne se garde que tel quel, ou se retire)
     const multi = f.units > 1;
     const multiLine = multi ? '<div class="ui-avert" data-dsx-multi="' + h(gid) + '">' + h(tf(DSX.wasT[f.gid] ? 'dyn.w.multi2' : 'dyn.w.multi1', f.units)) + '</div>' : '';
@@ -9303,14 +9387,14 @@ function dsxBody() {
       let in1 = '';
       if (DSX.wasT[f.gid]) {
         if (DSX.was[f.gid] && DSX.was[f.gid].length) {
-          in1 += '<div class="ui-avert" data-dsx-unlink="1">' + h(tf('dyn.w.unlink', DSX.was[f.gid].map(x => x.name + ' (' + x.type + ')').join(', '))) + '</div>';
+          in1 += '<div class="ui-avert" data-dsx-unlink="1">' + h(tf('dyn.w.unlink', DSX.was[f.gid].map(x => x.name + ' (' + gameAircraftName(x.type) + ')').join(', '))) + '</div>';
           if (DSX.wh.state === 'unreadable') in1 += '<div class="ui-avert" data-dsx-error="1">⚠ ' + h(t('dyn.w.unmarkBad')) + '</div>';
         } else if (DSX.wh.state === 'unreadable') {
           in1 += '<div class="ui-avert" data-dsx-error="1">⚠ ' + h(t('dyn.w.unmarkBad')) + '</div>';
         }
         in1 += '<button type="button" class="ui-btn dsx-btn" data-dsx-make="' + h(gid) + '">' + h(t('dyn.w.keep')) + '</button>' + multiLine;
       } else {
-        in1 += '<div class="dsx-help"><b>' + h(t('dyn.w.plain')) + '</b> ' + h(tf('dyn.w.help1', f.type)) + '</div>' +
+        in1 += '<div class="dsx-help"><b>' + h(t('dyn.w.plain')) + '</b> ' + h(tf('dyn.w.help1', f.label)) + '</div>' +
           '<button type="button" class="ui-btn primary dsx-btn" data-dsx-make="' + h(gid) + '"' + (multi ? ' disabled' : '') + '>' + h(t('dyn.w.make')) + '</button>' + multiLine;
       }
       html += step(1, t('dyn.w.s1'), in1, false);
@@ -9344,10 +9428,10 @@ function dsxBody() {
         r += '</div>';
         if (offside) r += '<div class="ui-avert" data-dsx-offside="1">' + h(t('dyn.w.offside')) + '</div>';
         for (const grp of sideClash) if (grp.some(x => x.f === f && x.w === w)) r += '<div class="ui-avert" data-dsx-sideclash="1">' + h(tf('dyn.w.sideclash', dynWhName(w))) + '</div>';
-        for (const grp of clash) if (grp.length > 1 && grp.some(x => x.f === f && x.w === w)) r += '<div class="ui-avert" data-dsx-clash="1">' + h(tf('dyn.w.clash', dynWhName(w), f.type)) + '</div>';
+        for (const grp of clash) if (grp.length > 1 && grp.some(x => x.f === f && x.w === w)) r += '<div class="ui-avert" data-dsx-clash="1">' + h(tf('dyn.w.clash', dynWhName(w), f.label)) + '</div>';
         return r;
       };
-      const pk = (key, list) => list.length ? '<div class="dsx-sub">' + h(tf(key, f.type)) + '</div>' + list.map(row).join('') : '';
+      const pk = (key, list) => list.length ? '<div class="dsx-sub">' + h(tf(key, f.label)) + '</div>' + list.map(row).join('') : '';
       in2 += pk('dyn.w.pk1', offs.filter(w => w.types[f.tk].gid === f.gid));
       in2 += pk('dyn.w.pk2', offs.filter(w => w.types[f.tk].gid && w.types[f.tk].gid !== f.gid));
       in2 += pk('dyn.w.pk3', offs.filter(w => !w.types[f.tk].gid));
@@ -9359,12 +9443,12 @@ function dsxBody() {
         if (rest) who += (who ? tf('dyn.w.offMore', String(rest)) : tf('dyn.w.offOnly', String(rest)));
         in2 += '<p data-dsx-off="1">' + h(tf('dyn.w.off', who)) + '</p>';
       }
-      if (noType.length) in2 += '<p data-dsx-off="1">' + h(tf('dyn.w.notype', f.type, noType.map(dynWhName).sort(dynCmp).join(', '))) + '</p>';
+      if (noType.length) in2 += '<p data-dsx-off="1">' + h(tf('dyn.w.notype', f.label, noType.map(dynWhName).sort(dynCmp).join(', '))) + '</p>';
       const bySide = DSX.sideOut[f.gid] || [];
       if (bySide.length) in2 += '<p data-dsx-side="1">' + h(tf('dyn.w.side', bySide.map(dynWhName).sort(dynCmp).join(', '))) + '</p>';
       in2 += '</details>';
     }
-    html += step(2, okWh ? tf('dyn.w.s2', f.type, picked.length, offs.length) : tf('dyn.w.s2nocount', f.type), in2, false);
+    html += step(2, okWh ? tf('dyn.w.s2', f.label, picked.length, offs.length) : tf('dyn.w.s2nocount', f.label), in2, false);
     // 3 · moteur tournant : une ligne par base cochée qui porte le réglage
     let in3 = '';
     const hotRows = picked.filter(w => w.hotNode);
@@ -9510,12 +9594,12 @@ async function dsxApply() {
     // Le compte rendu : les six compteurs, une ligne par changement, puis les signalements
     const nm = f => f.name, S = s => t('pk.flt.' + s, s);
     const lines = [{ cls: 'ok', text: () => [tn('dyn.w.rep.n', plan.N), tn('dyn.w.rep.m', plan.M), tn('dyn.w.rep.k', plan.K), tn('dyn.w.rep.l', plan.L), tn('dyn.w.rep.h', plan.H), tn('dyn.w.rep.s', plan.S)].join(' · ') }];
-    for (const m of plan.marks) lines.push({ cls: 'a', text: () => tf(m.on ? 'dyn.w.rep.mark' : 'dyn.w.rep.unmark', nm(m.f), m.f.type) });
+    for (const m of plan.marks) lines.push({ cls: 'a', text: () => tf(m.on ? 'dyn.w.rep.mark' : 'dyn.w.rep.unmark', nm(m.f), m.f.label) });
     for (const l of plan.links) {
       const wn = () => dynWhName(l.w);
-      if (l.to === 0) lines.push({ cls: 'a', text: () => tf('dyn.w.rep.unlink', dsxTplNameOf(l.from), wn(), l.type) });
-      else if (l.from === 0) lines.push({ cls: 'a', text: () => tf('dyn.w.rep.link', dsxTplNameOf(l.to), wn(), l.type) });
-      else lines.push({ cls: 'a', text: () => tf('dyn.w.rep.repl', dsxTplNameOf(l.to), wn(), l.type, dsxTplNameOf(l.from)) });
+      if (l.to === 0) lines.push({ cls: 'a', text: () => tf('dyn.w.rep.unlink', dsxTplNameOf(l.from), wn(), gameAircraftName(l.type)) });
+      else if (l.from === 0) lines.push({ cls: 'a', text: () => tf('dyn.w.rep.link', dsxTplNameOf(l.to), wn(), gameAircraftName(l.type)) });
+      else lines.push({ cls: 'a', text: () => tf('dyn.w.rep.repl', dsxTplNameOf(l.to), wn(), gameAircraftName(l.type), dsxTplNameOf(l.from)) });
     }
     for (const x of plan.hots) lines.push({ cls: 'a', text: () => tf(x.on ? 'dyn.w.rep.hotOn' : 'dyn.w.rep.hotOff', dynWhName(x.w)) });
     for (const x of plan.sides) lines.push({ cls: 'a', text: () => tf('dyn.w.rep.side', dynWhName(x.w), S(x.side)) });
@@ -10129,7 +10213,7 @@ function tbmOpen(m) {
   ul.tabIndex = -1;
   let real = 0;
   for (let k = 0; k < opts.length; k++) if (opts[k].value !== '' && !opts[k].hasAttribute('data-keep')) real++;
-  m.q = null; m.none = null; m.noneLi = null; m.bar = null; m.list = ul; m.lis = [];
+  m.q = null; m.none = null; m.noneLi = null; m.bar = null; m.list = ul; m.lis = []; m.heads = [];
   if (m.search) {
     /* le champ de recherche est un combobox hors de la listbox (modèle ARIA) ; sans aucune option à chercher, pas de champ : seule la ligne neutre le dit */
     if (real > 0) {
@@ -10178,8 +10262,10 @@ function tbmOpen(m) {
         gh.setAttribute('role', 'presentation');
         gh.textContent = og.label;
         ul.appendChild(gh);
+        m.heads.push({ li: gh, from: k, to: k });       /* la recherche masque ce titre quand aucune option de son groupe ne reste */
       }
     }
+    if (og) m.heads[m.heads.length - 1].to = k;
     li.className = 'tbm-opt';
     if (o.hasAttribute('data-keep')) li.setAttribute('data-keep', '');
     li.id = 'tbm-' + m.uid + '-' + k;
@@ -10248,6 +10334,11 @@ function tbmFilter(m) {
     const show = q === '' || keep || (o[k].value !== '' && tbmNorm(o[k].label).indexOf(q) >= 0);
     li.classList.toggle('tbm-off', !show);
     if (q !== '' && !keep && show) { n++; if (first < 0) first = k; }
+  });
+  m.heads.forEach(h => {       /* pendant une recherche, le titre d'un groupe dont aucune option ne reste se masque ; il revient quand la recherche s'efface */
+    let any = false;
+    for (let k = h.from; k <= h.to; k++) if (!m.lis[k].classList.contains('tbm-off')) { any = true; break; }
+    h.li.classList.toggle('tbm-off', q !== '' && !any);
   });
   const none = q !== '' && n === 0;
   m.none.textContent = none ? m.empty : '';       /* la ligne sans résultat est annoncée (aria-live) quand son texte apparaît */

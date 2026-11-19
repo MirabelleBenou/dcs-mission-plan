@@ -101,6 +101,7 @@ CONTRAST_CSS = r"""
 """
 from magvar_block import build_block as build_magvar_block
 from payload_block import build_block as build_payload_block
+from aircraft_types_block import build_block as build_aircraft_types_block
 from payload_rules_block import build_block as build_payload_rules_block, NAMES as PAYLOAD_RULES_NAMES
 from projection_block import build_block as build_projection_block
 from radio_bands_block import build_block as build_radio_bands_block
@@ -688,6 +689,13 @@ I18N_FR = {
     'sum.livery.var': 'livrées variées',
     'sum.type.pick': 'type à choisir',
     'u.type.pick': '— à choisir —',
+    'u.type.none': 'Aucun appareil',
+    'ac.helis': 'Hélicoptères',
+    'ac.planes': 'Avions',
+    'u.livery.none': 'Pas de livrée du jeu pour ce type : la liste ne porte que les livrées déclarées dans la fenêtre Wing de HQ.',
+    'rad.none': 'Aucun poste radio n’est programmable dans l’éditeur de mission pour ce type : pas de radios à régler ici.',
+    'rad.band.none': 'bande non contrôlée pour ce type',
+    'cmp.nopylon': 'Ce type n’a pas d’emport : ni station, ni arme. Le carburant, les leurres et la masse restent réglés ici.',
     'u.notype': 'Choisissez le type de l’appareil pour régler ses radios, son emport et sa livrée.',
     'bar.no.type': 'Export impossible : choisissez le type de chaque appareil ({0}, unité {1}).',
 
@@ -1005,6 +1013,13 @@ I18N_EN = {
     'sum.livery.var': 'liveries vary',
     'sum.type.pick': 'type to pick',
     'u.type.pick': '— to pick —',
+    'u.type.none': 'No aircraft',
+    'ac.helis': 'Helicopters',
+    'ac.planes': 'Airplanes',
+    'u.livery.none': 'No game livery for this type: the list only holds the liveries declared in the Wing window of HQ.',
+    'rad.none': 'No radio is programmable in the mission editor for this type: no radios to set here.',
+    'rad.band.none': 'band not checked for this type',
+    'cmp.nopylon': 'This type has no loadout: no station, no weapon. Fuel, countermeasures and weight are still set here.',
     'u.notype': 'Pick the aircraft type to set its radios, loadout and livery.',
     'bar.no.type': 'Cannot export: pick each aircraft’s type ({0}, unit {1}).',
 
@@ -1961,7 +1976,7 @@ const str = v => (typeof v === 'string' ? v : '');
 const clone = o => JSON.parse(JSON.stringify(o));
 const has = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
 
-const TYPE_LABEL = { 'Mi-24P': 'Mi-24P', 'Mi-8MT': 'Mi-8MT', 'F-4E-45MC': 'F-4E-45MC', 'Mirage-F1EE': 'Mirage F1EE' };
+// Le nom d'un type à l'écran est gameAircraftName (aircraft_types_block.py : la désignation, « F/A-18C » pour FA-18C_hornet) ; la valeur écrite reste le nom du .miz.
 // Canaux par poste (sonde des .miz) : RADIO_CHANNELS est défini par le bloc d'import commun, qui donne aussi radioPostsOf et radioSlotsOf (les postes pré-réglés, puis le poste HF des deux hélicoptères,
 // que la mission ne pré-règle pas : cinq fréquences, sans numéro de canal). Les bandes de chaque poste (RADIO_BANDS) et ces postes non pré-réglés (RADIO_FREE) sont ceux de radio_bands_block.py,
 // que le Datacard Generator partage ; les noms des postes sont ceux de radio_block.py.
@@ -2386,11 +2401,11 @@ function flightTypes(f) {
   if (!us.length && isObj(f) && typeof f.aircraftType === 'string' && f.aircraftType !== '') out.push(f.aircraftType);
   return out;
 }
-function flightTypesLabel(f) { return flightTypes(f).join(' + '); }
+function flightTypesLabel(f) { return flightTypes(f).map(gameAircraftName).join(' + '); }
 // Les types d'un vol du module, dans l'ordre des unités, distincts, avec le nom d'affichage de chacun.
 function modTypes(f) { const out = []; f.units.forEach(u => { if (out.indexOf(u.type) < 0) out.push(u.type); }); return out; }
 // Le nom d'un type ; '' (une unité sans type, à choisir) se dit « type à choisir ».
-function typeLabel(x) { return x === '' ? t('sum.type.pick') : (TYPE_LABEL[x] || x); }
+function typeLabel(x) { return x === '' ? t('sum.type.pick') : gameAircraftName(x); }
 function modTypesLabel(f) { return modTypes(f).map(typeLabel).join(' + '); }
 // Un nom de vol se compare rogné des deux côtés ; la casse compte (« Hind 1 » et « HIND 1 » sont deux vols).
 function nameKey(s) { return String(s).trim(); }
@@ -2441,10 +2456,11 @@ function fmtMHz(v) { return String(v).replace('.', CURRENT_LANG === 'fr' ? ',' :
 // La bande d'un poste : radioBand (radio_bands_block.py), [[bas, haut], …] ; dans la bande = dans l'un de ses intervalles (bornes comprises).
 function inBand(band, v) { return radioInBand(band, v); }
 // La bande en clair, comme sous le titre du poste, de la forme « bas–haut · bas–haut MHz ».
-function bandText(type, r) { return radioBand(type, r).map(b => fmtMHz(b[0]) + '–' + fmtMHz(b[1])).join(' · ') + ' MHz'; }
-// Les attributs min et max d'un champ : la bande la plus large du poste.
+function bandText(type, r) { const b = radioBand(type, r); return b.length ? b.map(x => fmtMHz(x[0]) + '–' + fmtMHz(x[1])).join(' · ') + ' MHz' : t('rad.band.none'); }
+// Les attributs min et max d'un champ : la bande la plus large du poste ; null (ni min ni max) quand la bande n'est pas connue.
 function bandHull(type, r) {
   const b = radioBand(type, r);
+  if (!b.length) return null;
   return [Math.min.apply(null, b.map(x => x[0])), Math.max.apply(null, b.map(x => x[1]))];
 }
 // Défauts d'un poste : { first (le premier message), bad (les canaux fautifs), block (ceux dont le champ montre un texte refusé : ils bloquent l'export) }. Une fréquence hors de la bande du poste ou non numérique est signalée ;
@@ -2489,6 +2505,8 @@ function chargeRule(cl) {
   return t('set.charge').replace('{fs}', w(cl.fs)).replace('{cs}', w(cl.cs)).replace('{n}', cl.total);
 }
 // Un type porte des paillettes quand la charge qu'on en donne (chargeLimit) pèse quelque chose (cs > 0) ; sans plafond dans la table, quand son nombre par défaut est au-dessus de 0.
+// Le canon : une donnée par type, le plein par défaut (payloadDefaults.gun, un nombre) ; un type sans cette donnée n'a pas de curseur ni de champ canon.
+function loHasGun(type) { return typeof payloadDefaults(type).gun === 'number'; }
 function loCarriesChaff(type) {
   const cl = chargeLimit(loLim(type));
   return cl ? cl.cs > 0 : payloadDefaults(type).chaff > 0;
@@ -3378,7 +3396,7 @@ function inputHtml(attrs, value, placeholder) {
   return `<input type="text" autocomplete="off" spellcheck="false" ${attrs} value="${esc(value)}"${placeholder ? ` placeholder="${esc(placeholder)}"` : ''}>`;
 }
 function numberInputHtml(attrs, value, min, max, step) {
-  return `<input type="number" autocomplete="off" inputmode="${step === '1' ? 'numeric' : 'decimal'}" min="${min}" max="${max}" step="${step}" ${attrs} value="${esc(value)}">`;
+  return `<input type="number" autocomplete="off" inputmode="${step === '1' ? 'numeric' : 'decimal'}"${min === null ? '' : ` min="${min}"`}${max === null ? '' : ` max="${max}"`} step="${step}" ${attrs} value="${esc(value)}">`;
 }
 function openAttr(key) { return UI.open.has(key) ? ' open' : ''; }
 function unitsLabel(n) { return tf(n < 2 ? 'fl.units.one' : 'fl.units.many', n); }
@@ -3440,6 +3458,11 @@ function flightFieldsHtml(f) {
     ${fieldHtml(t('fl.coalition'), selectHtml('data-k="coalition"', t('fl.coalition'), coalitions, f.coalition))}</div>`;
 }
 
+// Les options de la liste des types : « à choisir » en tête pour une unité sans type, puis deux groupes (hélicoptères, avions : l'ordre de PAYLOAD_TYPES), chaque option au nom de gameAircraftName ; la valeur est le nom du .miz.
+function typeOptions(cur) {
+  const heli = GAME_AIRCRAFT_TYPES.helicopters;
+  return (cur === '' ? [{ v: '', l: t('u.type.pick') }] : []).concat(PAYLOAD_TYPES.map(x => ({ g: t(heli.indexOf(x) >= 0 ? 'ac.helis' : 'ac.planes'), v: x, l: gameAircraftName(x) })));
+}
 function unitHtml(f, fi, u, ui) {
   const at = `data-u="${ui}"`, rk = `f${fi}u${ui}r`, n = radioCount(f, u);
   return `<div class="fc-unit${S.sel.f === fi && S.sel.u === ui ? ' sel' : ''}${u.folded ? ' folded' : ''}" data-u="${ui}">
@@ -3447,18 +3470,22 @@ function unitHtml(f, fi, u, ui) {
       ${f.units.length > 1 ? `<button type="button" class="pk-x" data-act="rm-unit" aria-label="${esc(t('u.remove'))}" title="${esc(t('u.remove'))}">✕</button>` : ''}</div>
     <div class="fc-usum" data-sum="unit">${esc(unitSummary(f, fi, u, ui))}</div>
     <div class="fc-ubody"${u.folded ? ' hidden' : ''}><div class="fc-row4">
-      ${fieldHtml(t('u.type'), selectHtml(`${at} data-k="utype"`, t('u.type'), (u.type === '' ? [{ v: '', l: t('u.type.pick') }] : []).concat(PAYLOAD_TYPES.map(x => ({ v: x, l: TYPE_LABEL[x] || x }))), u.type))}
+      ${fieldHtml(t('u.type'), selectHtml(`${at} data-k="utype" data-search data-search-empty="${esc(t('u.type.none'))}"`, t('u.type'), typeOptions(u.type), u.type))}
       ${fieldHtml(t('u.name'), inputHtml(`${at} data-k="uname"`, u.name, unitDefaultName(f, fi, ui)))}
       ${fieldHtml(t('u.callsign'), inputHtml(`${at} data-k="callsign"`, u.callsign, t('u.opt')))}
       ${fieldHtml(t('u.onboard'), inputHtml(`${at} data-k="onboard"`, u.onboard, t('u.opt')))}
       ${u.type === '' ? '' : fieldHtml(t('u.livery'), selectHtml(`${at} data-k="livery" data-repick`, t('u.livery'), liveryOptions(f, fi, u, ui), liveryShown(f, fi, u, ui)))}
     </div>
-    ${u.type === '' ? `<p class="ui-note fc-notype">${esc(t('u.notype'))}</p>` : unitSettingsHtml(f, fi, u, ui, rk, at)}
+    ${u.type === '' ? `<p class="ui-note fc-notype">${esc(t('u.notype'))}</p>` : (impHas(LIVERIES_DEFAULT, u.type) ? '' : `<p class="ui-note fc-noliv">${esc(t('u.livery.none'))}</p>`) + unitSettingsHtml(f, fi, u, ui, rk, at)}
   </div></div>`;
 }
 function unitSettingsHtml(f, fi, u, ui, rk, at) {
-  return `<details class="fc-sub" data-key="${rk}"${openAttr(rk)}><summary class="ui-fold-head" aria-expanded="${UI.open.has(rk)}">${esc(t('u.radios'))} <span class="fc-sum" data-sum="radios">${esc(radiosSummary(f, u))}</span></summary>
-      <div class="fc-subc">${radiosHtml(f, fi, u, ui)}</div></details>
+  // Un type sans poste programmable dans l'éditeur de mission (radioPosts vide) n'a pas de boîte Radios : une ligne le dit à sa place.
+  const radios = radioPosts(u.type).length
+    ? `<details class="fc-sub" data-key="${rk}"${openAttr(rk)}><summary class="ui-fold-head" aria-expanded="${UI.open.has(rk)}">${esc(t('u.radios'))} <span class="fc-sum" data-sum="radios">${esc(radiosSummary(f, u))}</span></summary>
+      <div class="fc-subc">${radiosHtml(f, fi, u, ui)}</div></details>`
+    : `<p class="ui-note fc-norad">${esc(t('rad.none'))}</p>`;
+  return `${radios}
     <div class="fc-lo-sum"><span class="fc-lo-k">${esc(t('u.loadout'))}</span><span class="fc-lo-v" data-sum="loadout">${esc(loadoutName(u.loadout))}</span>
       <button type="button" class="fc-see" ${at} data-act="see-cmp">${esc(t('u.see'))}</button></div>`;
 }
@@ -3474,7 +3501,7 @@ function radiosHtml(f, fi, u, ui) {
     for (let c = 1; c <= n; c++) {
       const pk2 = printKey(ty, r, c), pon = printOn(f, pk2), pshow = printShown(f, ty, r, c);
       chans += `<div class="fc-ch"><div class="pk-chk${pon || pshow ? '' : ' off'}"><label title="${esc(t('rad.print'))}"><input type="checkbox" data-u="${ui}" data-r="${r}" data-c="${c}" data-k="prn" aria-label="${esc(t('rad.print'))}"${pon ? ' checked' : ''}${pon || pshow ? '' : ' disabled'}></label><label style="cursor:default">${esc(free ? tf('rad.freq', c) : tf('rad.ch', radioCockpitChannel(ty, r, c)))}</label></div>`
-        + numberInputHtml(`data-u="${ui}" data-r="${r}" data-c="${c}" data-k="chan" placeholder="—"`, chanShown(u, r, c), hull[0], hull[1], '0.001') + '</div>';
+        + numberInputHtml(`data-u="${ui}" data-r="${r}" data-c="${c}" data-k="chan" placeholder="—"`, chanShown(u, r, c), hull ? hull[0] : null, hull ? hull[1] : null, '0.001') + '</div>';
     }
     return `<details class="fc-post" data-key="${pk}"${openAttr(pk)}><summary class="ui-fold-head" aria-expanded="${UI.open.has(pk)}"><span class="fc-ptop">${esc(radioPosteName(ty, r) || 'R' + r)} ${free ? '' : `<span class="fc-sum">${esc(tf('rad.chans', n))}</span>`}<span class="fc-sum fc-flag" data-flag="${r}"></span></span><span class="fc-band" data-band="${r}">${esc(bandText(ty, r))}</span></summary>
       <div class="fc-postc"><div class="fc-chans">${chans}</div><div class="fc-msg" id="rm-${fi}-${ui}-${r}"></div></div></details>`;
@@ -3741,10 +3768,10 @@ function cmpHtml(su) {
   CMP.pairs = CMP.view ? cmpPairs(CMP.view) : {};
   const armed = cmpArmed(lo);
   return `<button type="button" class="fc-back" data-act="back-unit">${esc(t('cmp.back'))}</button>
-    <div class="cmp-top"><div class="cmp-for"><span id="cmp-for-t">${esc(tf('cmp.for', flightLabel(f, su.fi), unitLabel(f, su.fi, su.u, su.ui)))}</span> <span class="snap-flight-tag">${esc(TYPE_LABEL[ty] || ty)}</span></div>
+    <div class="cmp-top"><div class="cmp-for"><span id="cmp-for-t">${esc(tf('cmp.for', flightLabel(f, su.fi), unitLabel(f, su.fi, su.u, su.ui)))}</span> <span class="snap-flight-tag">${esc(gameAircraftName(ty))}</span></div>
 </div>
     <div class="fc-lo-line" id="cmp-lo-line">${cmpLineHtml(lo)}</div>
-    ${CMP.view ? cmpDrawingHtml() : `<p class="ui-note">${esc(t('cmp.noview'))}</p>`}
+    ${CMP.pyl.length === 0 ? `<p class="ui-note cmp-nopylon">${esc(t('cmp.nopylon'))}</p>` : (CMP.view ? cmpDrawingHtml() : `<p class="ui-note">${esc(t('cmp.noview'))}</p>`)}
     <div class="cmp-list" id="cmp-list">${CMP.pyl.map(p => cmpRowHtml(p, lo)).join('')}</div>
     <div class="cmp-foot">${CMP.view ? `<label class="pk-chk"><input type="checkbox" id="cmp-sym"${UI.cmp.sym ? ' checked' : ''}> ${esc(t('cmp.sym'))}</label>` : ''}<span class="cmp-tot" id="cmp-total"></span></div>
     ${cmpSettingsHtml(f, su.ui, lo)}
@@ -3824,7 +3851,7 @@ function cmpSettingsHtml(f, ui, lo) {
   const note = k => k === 'fuel' ? tf('lo.max', fmtMHz(UMASS === 'lb' ? Math.round(payloadMassIn(d.fuel, 'lb')) : d.fuel)) : (k === 'gun' ? tf('lo.max', d.gun) : (cl ? chargeRule(cl) : tf('lo.max', d[k])));
   const field = (k, step, disabled) => fieldHtml(`${loName(k)} · ${note(k)}`,
     numberInputHtml(`${at} data-k="${k}"${disabled ? ' disabled' : ''}`, loShow(k, val(k)), 0, k === 'fuel' ? loShow(k, String(loFieldMax(type, k))) : loFieldMax(type, k), step) + (BAR_KEYS.indexOf(k) >= 0 ? bar(k) : ''));
-  return `<div class="fc-set">${field('fuel', 'any')}${field('flare', '1')}${field('chaff', '1', !loCarriesChaff(type))}${field('gun', '1')}</div>`;
+  return `<div class="fc-set">${field('fuel', 'any')}${field('flare', '1')}${field('chaff', '1', !loCarriesChaff(type))}${loHasGun(type) ? field('gun', '1') : ''}</div>`;
 }
 function cmpSaveHtml() {
   const C = UI.cmp;
@@ -4002,7 +4029,7 @@ function cmpSaveGo() {
   const fail = msg => { C.err = msg; const e = document.getElementById('cmp-save-msg'); if (e) e.textContent = msg; };
   const pylons = cleanPylons(lo.pylons);
   if (!name) return fail(t('cmp.save.err.name'));
-  if ((LIB.mine[type] || []).some(p => presetName(p) === name)) return fail(tf('cmp.save.err.dup', TYPE_LABEL[type]));
+  if ((LIB.mine[type] || []).some(p => presetName(p) === name)) return fail(tf('cmp.save.err.dup', gameAircraftName(type)));
   if (!Object.keys(pylons).length) return fail(t('cmp.save.err.none'));
   const preset = { id: newPresetId(), name: name, pylons: pylons };
   (LIB.mine[type] = LIB.mine[type] || []).push(preset);
@@ -4023,7 +4050,7 @@ function presetsHtml() {
     rep.errors.forEach(e => lines.push(`<div class="ui-avert">⚠ ${esc(e)}</div>`));
   }
   const rows = [];
-  PAYLOAD_TYPES.forEach(ty => (LIB.mine[ty] || []).forEach((p, i) => rows.push(`<div class="fc-file"><span class="fc-file-n">${esc(presetName(p))}</span><span class="snap-flight-tag">${esc(TYPE_LABEL[ty])}</span>
+  PAYLOAD_TYPES.forEach(ty => (LIB.mine[ty] || []).forEach((p, i) => rows.push(`<div class="fc-file"><span class="fc-file-n">${esc(presetName(p))}</span><span class="snap-flight-tag">${esc(gameAircraftName(ty))}</span>
     <button type="button" class="pk-x" data-act="rm-mine" data-ty="${esc(ty)}" data-i="${i}" aria-label="${esc(t('pr.delete'))}" title="${esc(t('pr.delete'))}">✕</button></div>`)));
   return boxHtml('pr', t('sec.presets'), '', `<div class="miz-btn-row" style="margin-top:0"><button type="button" class="miz-btn" data-act="load-lua">${esc(t('pr.load'))}</button></div>${lines.join('')}
     <div class="fc-h" style="margin-top:0">${esc(tf('pr.mine', mineCount()))}</div>
@@ -4778,7 +4805,7 @@ def build_html():
                   .replace('@@STARDOS_700@@', A['STARDOS_700'])
                   .replace('@@OSWALD_500@@', A['OSWALD_500'])
                   .replace('@@OSWALD_700@@', A['OSWALD_700']))
-    js = (build_radio_block() + '\n' + build_radio_bands_block() + '\n' + tables_js() + '\n' + build_payload_block() + '\n' + build_payload_rules_block() + '\n' + PAD2_JS + '\n' + COORD_BLOCK + READNUM_BLOCK + build_magvar_block() + '\n' + build_projection_block() + '\n'
+    js = (build_radio_block() + '\n' + build_radio_bands_block() + '\n' + build_aircraft_types_block() + '\n' + tables_js() + '\n' + build_payload_block() + '\n' + build_payload_rules_block() + '\n' + PAD2_JS + '\n' + COORD_BLOCK + READNUM_BLOCK + build_magvar_block() + '\n' + build_projection_block() + '\n'
           + build_route_pack_block() + '\n' + build_route_theatre_block() + '\n' + build_group_store_block() + '\n' + build_presets_merge() + '\n' + build_import_block() + '\n' + build_mission_line_block() + '\n' + build_messages_block() + '\n' + build_ui_block() + '\n' + JS_TBM.replace('@@TBM_JS@@\n', build_tbm_block()) + '\n' + app_js())
     return ('<!DOCTYPE html>\n<html lang="fr">\n<head>\n<meta charset="UTF-8">\n'
             '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">\n'
@@ -4797,6 +4824,9 @@ def main():
     print('[OK] dcs_flight_configurator.html written (%d KB)' % (os.path.getsize(out) // 1024))
     check(html)
 
+
+# Les sept warbirds qui n'ont aucune livrée du jeu dans data/liveries_default.json (le module n'est pas installé là où la table a été relevée) : la liste de leurs livrées ne porte que celles de la fenêtre Wing de HQ.
+NO_GAME_LIVERIES = ['MosquitoFBMkVI', 'P-47D-30', 'P-47D-30bl1', 'P-47D-40', 'P-51D-30-NA', 'SpitfireLFMkIX', 'SpitfireLFMkIXCW']
 
 # Familles de textes choisies par programme : « lo.* », « tb.* », « theme.* », « err.code.* », « th.* » (les théâtres)
 DYNAMIC_KEY_PREFIXES = ('lo.', 'tb.', 'theme.', 'err.code.', 'th.', 'rule.')
@@ -4853,7 +4883,8 @@ def check(html):
         liv = json.load(f)
     ptm = re.search(r"const PAYLOAD_TYPES = \[(.*?)\];", html)
     ptypes = re.findall(r"'([^']+)'", ptm.group(1)) if ptm else []
-    ok(bool(ptypes) and all(isinstance(liv.get(k), list) and liv[k] for k in ptypes), 'livrées par défaut : chaque type de PAYLOAD_TYPES a sa liste (%s) ; %d types dans la table' % (', '.join('%s %d' % (k, len(liv[k])) for k in sorted(ptypes) if k in liv), len(liv)))
+    nolv = [k for k in ptypes if not (isinstance(liv.get(k), list) and liv[k])]
+    ok(bool(ptypes) and sorted(nolv) == sorted(NO_GAME_LIVERIES), 'livrées par défaut : chaque type de PAYLOAD_TYPES (%d) a sa liste, sauf les sept warbirds sans livrée du jeu (%s) ; %d types dans la table' % (len(ptypes), ', '.join(sorted(nolv)), len(liv)))
     ok(all(isinstance(v, list) and v and all(isinstance(n, str) and n.strip() == n and n for n in v) and len({n.lower() for n in v}) == len(v) for v in liv.values()), 'livrées par défaut : des noms non vides, sans espace de bout ni doublon à la casse près')
     ok('input[data-k="livery"]' not in html and 'data-k="livery" role="combobox"' not in html, 'le champ Livrée est une liste, plus un texte libre')
     ok(not re.search(r'\blvOpen\b|\blvItems\b|\blvChoose\b|\blvClose\b|\bisLiveryField\b|\bseenLiv\b|u\.livery\.ph', html), 'plus de panneau de suggestions de livrée ni de suggestions tirées des paquets, de la mission d\'HQ ou des autres unités')
@@ -4896,6 +4927,7 @@ def check(html):
                        ('messages communs (script)', build_messages_block()), ('messages communs (feuille)', build_messages_css()),
                        ('interface commune (script)', build_ui_block()), ('interface commune (feuille)', build_ui_css())):
         ok(blk in html, 'bloc %s inséré tel quel' % label)
+    ok(build_aircraft_types_block() in html and html.count('const GAME_AIRCRAFT_NAMES') == 1 and 'TYPE_LABEL' not in html, "table des types et des noms du jeu insérée tel quel, une fois ; plus de TYPE_LABEL")
     ok(True, "empreinte du bloc d'interface commun : %s" % ui_fingerprint())
     ui_verify_bar(html)
     mission_line_verify(html, 'fcMissionLine', 'declSource(', 3)

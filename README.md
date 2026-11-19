@@ -42,7 +42,7 @@ The landing page presents each tool as a **pinned print** on the board. Active t
 | Tool | What it does | Status |
 |------|--------------|--------|
 | **HQ** | Command post — configure your wing once (branding, squadrons), shared with the other tools; experimental `.miz` mission reader/patcher | 🧪 Beta |
-| **Flight Configurator** | Prepare a flight for the Mission Commander — identity, radios, loadout built on the aircraft's front view or started from your presets, livery — and export it as a flight package that HQ applies to a mission; Mi-24P, Mi-8MT, F-4E and Mirage F1EE | 🧪 Beta |
+| **Flight Configurator** | Prepare a flight for the Mission Commander — identity, radios, loadout built on the aircraft's front view or started from your presets, livery — and export it as a flight package that HQ applies to a mission; every flyable aircraft of the game (75 types) | 🧪 Beta |
 | **Briefing Generator** | Mission briefings, full or quick — SITAC, radio plan, airfields, charts, recon photos, map from the Route Planner — PDF & PNG export | ✅ |
 | **Recon Station** | Turn a screenshot into a reconnaissance analysis photo — sensor looks, annotations drawn by touch, lossless PNG | ✅ |
 | **Field Manual** | In-app documentation for the suite — one illustrated chapter per tool, diagrams, FR/EN, offline | ✅ |
@@ -57,7 +57,7 @@ HQ is the suite's **command post**. Its main job today is the **wing hub**: set 
 
 ### ✈️ Flight Configurator — in detail
 
-The Flight Configurator is the **Flight Lead's** tool: it prepares one or more flights and exports them as a **flight package** (`dcs-flight-package-v2`; the v1 packages are still read) that the Mission Commander applies to a mission with HQ. It runs for the **Mi-24P, Mi-8MT, F-4E-45MC and Mirage F1EE**.
+The Flight Configurator is the **Flight Lead's** tool: it prepares one or more flights and exports them as a **flight package** (`dcs-flight-package-v2`; the v1 packages are still read) that the Mission Commander applies to a mission with HQ. It runs for **every flyable aircraft of the game** (75 types).
 
 - **Flights** — group name, aircraft, coalition, up to four units (name, call sign, onboard number, livery); flights fold into a one-line summary
 - **Radios** — every radio of the aircraft, one field per channel, frequencies from 0 to 999.999 MHz (the Comm Plan Editor's rule); copy to the other units of the flight

@@ -260,8 +260,8 @@ function wingDefFill(sel, ty) {
 function renderWingDefRow(ty) {
   const row = document.createElement('div');
   row.className = 'wing-def-row';
-  const lbl = document.createElement('span'); lbl.className = 'wing-def-lbl'; lbl.textContent = ty;
-  const sel = acMakeSelect('wing-def-sel', ty);
+  const lbl = document.createElement('span'); lbl.className = 'wing-def-lbl'; lbl.textContent = gameAircraftName(ty);
+  const sel = acMakeSelect('wing-def-sel', gameAircraftName(ty));
   wingDefFill(sel, ty);
   sel.disabled = !!_WING_MGD;
   sel.addEventListener('change', () => {
@@ -2664,7 +2664,7 @@ function renderSqAircraftTags(container, sqIdx) {{
     const tag = document.createElement('span');
     tag.className = 'wing-ac-tag';
     const label = document.createElement('span');
-    label.textContent = cur;
+    label.textContent = gameAircraftName(cur);
     tag.appendChild(label);
     const known = gameAircraftIsType(cur);
     if (!known) {{
@@ -2698,10 +2698,10 @@ function renderSqAircraftTags(container, sqIdx) {{
 
     const close = (known || _WING_MGD) ? [] : gameAircraftClose(cur);
     if (close.length) {{
-      const rep = acMakeSelect('wing-ac-rep', t('editor.wing.ac.replaceNamed').replace('{{0}}', String(cur)));
+      const rep = acMakeSelect('wing-ac-rep', t('editor.wing.ac.replaceNamed').replace('{{0}}', gameAircraftName(String(cur))));
       item.classList.add('wing-ac-item-rep');
       rep.appendChild(acMakeOption('', t('editor.wing.ac.replace'), false));
-      close.forEach(ty => rep.appendChild(acMakeOption(ty, ty, has(ty))));
+      close.forEach(ty => rep.appendChild(acMakeOption(ty, gameAircraftName(ty), has(ty))));
       rep.addEventListener('change', () => {{
         const v = rep.value;
         if (!v || !wingConfig.squadrons[sqIdx] || wingConfig.squadrons[sqIdx].aircraft[acIdx] !== cur) return;
@@ -2721,7 +2721,7 @@ function renderSqAircraftTags(container, sqIdx) {{
   [['editor.wing.ac.helis', GAME_AIRCRAFT_TYPES.helicopters], ['editor.wing.ac.planes', GAME_AIRCRAFT_TYPES.planes]].forEach(g => {{
     const og = document.createElement('optgroup');
     og.label = t(g[0]);
-    g[1].forEach(ty => og.appendChild(acMakeOption(ty, ty, has(ty))));
+    g[1].forEach(ty => og.appendChild(acMakeOption(ty, gameAircraftName(ty), has(ty))));
     addSel.appendChild(og);
   }});
   const ogMod = document.createElement('optgroup');
@@ -2956,7 +2956,7 @@ function renderWingLivRow(liv, i) {{
         liv.aircraft = Array.prototype.filter.call(ac.querySelectorAll('input[type=checkbox]'), b => b.checked).map(b => b.value);       // dans l'ordre des cases
         persistWingConfig(); updateWingSizeCounter(); renderWingDefLiveries();
       }});
-      const tx = document.createElement('span'); tx.textContent = ty;
+      const tx = document.createElement('span'); tx.textContent = gameAircraftName(ty);
       cl.appendChild(cb); cl.appendChild(tx);
       ac.appendChild(cl);
     }});
@@ -3716,7 +3716,7 @@ function dynPanelHtml() {{
     html += '</div><div class="dyn-links">';
     const parts = [];
     for (const l of r.w.links) {{
-      let txt = h(l.type + ' → ' + (l.status === 'absent' ? String(l.groupId) : l.gname));
+      let txt = h(gameAircraftName(l.type) + ' → ' + (l.status === 'absent' ? String(l.groupId) : l.gname));
       if (l.status !== 'ok') txt += ' <span class="ui-avert">⚠ ' + h(t(l.status === 'absent' ? 'dyn.groupGone' : 'dyn.notTemplate')) + '</span>';
       parts.push('<span class="dyn-link">' + txt + '</span>');
     }}
@@ -4093,7 +4093,7 @@ function renderSnapshot(snap) {{
     opt('all', t('pk.flt.all'), _PK_FLT.side) + opt('blue', t('pk.flt.blue'), _PK_FLT.side) + opt('red', t('pk.flt.red'), _PK_FLT.side) +
     (hasNeutral ? opt('neutrals', t('pk.flt.neutrals'), _PK_FLT.side) : '') + '</select></label>';
   html += '<label class="pk-flt-f"><span>' + h(t('pk.flt.type')) + '</span><select id="pk-f-type">' +
-    opt('all', t('pk.flt.all'), _PK_FLT.type) + types.map(x => opt(x, x, _PK_FLT.type)).join('') + '</select></label>';
+    opt('all', t('pk.flt.all'), _PK_FLT.type) + types.map(x => opt(x, gameAircraftName(x), _PK_FLT.type)).join('') + '</select></label>';
   html += '<label class="pk-flt-f pk-flt-name"><span>' + h(t('pk.flt.name')) + '</span><input type="text" id="pk-f-name" autocomplete="off" autocapitalize="off" spellcheck="false" value="' + h(_PK_FLT.name) + '"></label>';
   html += '</div>';
   html += '<div class="pk-flt-row">';
@@ -4513,7 +4513,7 @@ function flightTypes(f) {{
   if (!us.length && f && typeof f.aircraftType === 'string' && f.aircraftType !== '') out.push(f.aircraftType);      // un vol v1 sans unité garde son aircraftType
   return out;
 }}
-function flightTypesLabel(f) {{ return flightTypes(f).join(' + '); }}
+function flightTypesLabel(f) {{ return flightTypes(f).map(gameAircraftName).join(' + '); }}
 // Dans la liste des vols : les types, et à défaut la catégorie (hélicoptère, avion).
 function flightTypeKeys(f) {{ const x = flightTypes(f); return x.length ? x : (f.category ? [f.category] : []); }}
 const PK_PARTS  = ['route', 'radios', 'loadout', 'livery'];
@@ -4890,7 +4890,7 @@ function pkRender() {{
       }}
       pk.flights.forEach((fl, fi) => {{
         html += '<div class="pk-flight"><div class="pk-flight-head">' + h(fl.groupName) +
-          (fl.types.length ? ' <span class="snap-flight-tag">' + h(fl.types.join(' + ')) + '</span> ' : ' ') +
+          (fl.types.length ? ' <span class="snap-flight-tag">' + h(fl.types.map(gameAircraftName).join(' + ')) + '</span> ' : ' ') +
           (!ctx ? '' : fl.found ? '<span class="pk-found">' + h(t('pk.found')) + '</span>' : fl.multi ? '' : '<span class="pk-absent">' + h(t('pk.absent')) + '</span>') +
           '</div>';
         if (fl.multi) html += '<div class="ui-avert">⚠ ' + h(tf('pk.w.multi', fl.groupName, fl.multi)) + '</div>';
@@ -5004,7 +5004,7 @@ function pkPlanFlight(ctx, pk, fl, tg) {{
     const wants = (fl.chk.radios && fl.avail.radios && u.radios.length > 0) || (fl.chk.loadout && fl.avail.loadout && !!u.payload) || (fl.chk.livery && fl.avail.livery && !!u.liveryId);
     if (!wants) return;
     okType[i] = false;
-    warns.push({{ key: 'pk.w.type', args: [name, tu.name, tu.type || '?', u.type || '?'] }});
+    warns.push({{ key: 'pk.w.type', args: [name, tu.name, tu.type ? gameAircraftName(tu.type) : '?', u.type ? gameAircraftName(u.type) : '?'] }});
   }});
   if (fl.chk.radios && fl.avail.radios) {{
     fl.units.forEach((u, i) => {{
@@ -5513,7 +5513,7 @@ function delAnalyze(ctx, ids) {{
   for (const f of flights) K += f.trig.length + f.trigScript.length + f.task.length + f.script.length + f.zone.length;
   return {{ flights: flights, K: K, M: wh.links.length, badWh: wh.unreadable }};
 }}
-function delDynText(f) {{ return tf('pk.del.dyn', f.dyn.map(d => d.name + ' (' + d.type + ')').join(', ')); }}
+function delDynText(f) {{ return tf('pk.del.dyn', f.dyn.map(d => d.name + ' (' + gameAircraftName(d.type) + ')').join(', ')); }}
 function delRefLines(f) {{
   const out = [];
   for (const r of f.trig) out.push(tf('pk.del.trig', r.comment, r.pred));
@@ -5654,7 +5654,7 @@ function dsxGroupUnits(ast) {{
 function dsxFlightInfo(f, gu) {{
   const g = gu && gu[f.groupId];
   const type = (g && g.type) || unitTypeOf(f, (f.units || [])[0]) || '';
-  return {{ gid: f.groupId, name: f.groupName || '—', type: type, cat: f.category === 'helicopter' ? 'helicopters' : 'planes',
+  return {{ gid: f.groupId, name: f.groupName || '—', type: type, label: gameAircraftName(type), cat: f.category === 'helicopter' ? 'helicopters' : 'planes',
     tk: (f.category === 'helicopter' ? 'helicopters' : 'planes') + '|' + type, side: f.coalition || '', units: g ? g.n : (f.units || []).length }};
 }}
 function dsxTplName(gid) {{ const f = HQ_SNAPSHOT.flights.find(x => x.groupId === gid); return f ? (f.groupName || String(gid)) : String(gid); }}
@@ -5669,7 +5669,7 @@ function dsxInsertFirst(text, g, fname) {{
 }}
 function dsxInsertLink(text, nd, gid, wname) {{
   const ie = nd.init;
-  if (!ie) throw delErr('dyn.w.e.init', wname, nd.type);
+  if (!ie) throw delErr('dyn.w.e.init', wname, gameAircraftName(nd.type));
   const ks = ie.keyPos.start.offset, end = ie.valuePos.end.offset, ls = text.lastIndexOf('\\n', ks - 1) + 1, pre = text.slice(ls, ks), nl = text.indexOf('\\n', end);
   if (!/^[ \\t]*$/.test(pre) || nl < 0 || !/^\\s*[,;]?\\s*(--[^\\n]*)?$/.test(text.slice(end, nl))) throw delErr('dyn.w.e.indentWh', wname);
   const eol = text.charAt(nl - 1) === '\\r' ? '\\r\\n' : '\\n';
@@ -5894,7 +5894,7 @@ function dsxVerify(base, DS, plan, mAst, wText, wRootNew, work) {{
     for (const w of DS.wh.whs) for (const tk of Object.keys(w.types)) {{
       const nd = w.types[tk], fin = plan.expLink[w.key + '|' + tk];
       const exp = fin === undefined ? nd.gid : fin, k = w.key + '|' + tk;
-      if ((after[k] || 0) !== exp) throw delErr('dyn.w.e.links', dynWhName(w), nd.type);
+      if ((after[k] || 0) !== exp) throw delErr('dyn.w.e.links', dynWhName(w), gameAircraftName(nd.type));
     }}
     // les camps relus : celui attendu pour chaque entrepôt (le nouveau pour un aérodrome neutre passé à un camp, l'ancien pour tous les autres)
     const sideAfter = {{}};
@@ -5934,9 +5934,9 @@ function dsxBody() {{
   for (const f of DSX.flights) {{
     const gid = String(f.gid), on = !!st.tmpl[f.gid];
     html += '<div class="dsx-card" data-dsx-gid="' + h(gid) + '"><div class="dsx-head"><span class="dsx-name">' + h(f.name) + '</span>' +
-      '<span class="snap-flight-tag">' + h(f.type) + '</span><span class="snap-flight-tag">' + h(t('pk.flt.' + f.side, f.side)) + '</span>' +
+      '<span class="snap-flight-tag">' + h(f.label) + '</span><span class="snap-flight-tag">' + h(t('pk.flt.' + f.side, f.side)) + '</span>' +
       (on ? '<span class="dsx-badge">' + h(t('dyn.w.badge')) + '</span>' : '') + '</div>';
-    const help = '<span class="dsx-help">' + h(tf('dyn.w.help1', f.type)) + '</span>';
+    const help = '<span class="dsx-help">' + h(tf('dyn.w.help1', f.label)) + '</span>';
     // plus d'un appareil : un template n'en a qu'un (le groupe ordinaire ne devient pas template ; le template existant ne se garde que tel quel, ou se retire)
     const multi = f.units > 1;
     const multiLine = multi ? '<div class="ui-avert" data-dsx-multi="' + h(gid) + '">' + h(tf(DSX.wasT[f.gid] ? 'dyn.w.multi2' : 'dyn.w.multi1', f.units)) + '</div>' : '';
@@ -5945,14 +5945,14 @@ function dsxBody() {{
       let in1 = '';
       if (DSX.wasT[f.gid]) {{
         if (DSX.was[f.gid] && DSX.was[f.gid].length) {{
-          in1 += '<div class="ui-avert" data-dsx-unlink="1">' + h(tf('dyn.w.unlink', DSX.was[f.gid].map(x => x.name + ' (' + x.type + ')').join(', '))) + '</div>';
+          in1 += '<div class="ui-avert" data-dsx-unlink="1">' + h(tf('dyn.w.unlink', DSX.was[f.gid].map(x => x.name + ' (' + gameAircraftName(x.type) + ')').join(', '))) + '</div>';
           if (DSX.wh.state === 'unreadable') in1 += '<div class="ui-avert" data-dsx-error="1">⚠ ' + h(t('dyn.w.unmarkBad')) + '</div>';
         }} else if (DSX.wh.state === 'unreadable') {{
           in1 += '<div class="ui-avert" data-dsx-error="1">⚠ ' + h(t('dyn.w.unmarkBad')) + '</div>';
         }}
         in1 += '<button type="button" class="ui-btn dsx-btn" data-dsx-make="' + h(gid) + '">' + h(t('dyn.w.keep')) + '</button>' + multiLine;
       }} else {{
-        in1 += '<div class="dsx-help"><b>' + h(t('dyn.w.plain')) + '</b> ' + h(tf('dyn.w.help1', f.type)) + '</div>' +
+        in1 += '<div class="dsx-help"><b>' + h(t('dyn.w.plain')) + '</b> ' + h(tf('dyn.w.help1', f.label)) + '</div>' +
           '<button type="button" class="ui-btn primary dsx-btn" data-dsx-make="' + h(gid) + '"' + (multi ? ' disabled' : '') + '>' + h(t('dyn.w.make')) + '</button>' + multiLine;
       }}
       html += step(1, t('dyn.w.s1'), in1, false);
@@ -5986,10 +5986,10 @@ function dsxBody() {{
         r += '</div>';
         if (offside) r += '<div class="ui-avert" data-dsx-offside="1">' + h(t('dyn.w.offside')) + '</div>';
         for (const grp of sideClash) if (grp.some(x => x.f === f && x.w === w)) r += '<div class="ui-avert" data-dsx-sideclash="1">' + h(tf('dyn.w.sideclash', dynWhName(w))) + '</div>';
-        for (const grp of clash) if (grp.length > 1 && grp.some(x => x.f === f && x.w === w)) r += '<div class="ui-avert" data-dsx-clash="1">' + h(tf('dyn.w.clash', dynWhName(w), f.type)) + '</div>';
+        for (const grp of clash) if (grp.length > 1 && grp.some(x => x.f === f && x.w === w)) r += '<div class="ui-avert" data-dsx-clash="1">' + h(tf('dyn.w.clash', dynWhName(w), f.label)) + '</div>';
         return r;
       }};
-      const pk = (key, list) => list.length ? '<div class="dsx-sub">' + h(tf(key, f.type)) + '</div>' + list.map(row).join('') : '';
+      const pk = (key, list) => list.length ? '<div class="dsx-sub">' + h(tf(key, f.label)) + '</div>' + list.map(row).join('') : '';
       in2 += pk('dyn.w.pk1', offs.filter(w => w.types[f.tk].gid === f.gid));
       in2 += pk('dyn.w.pk2', offs.filter(w => w.types[f.tk].gid && w.types[f.tk].gid !== f.gid));
       in2 += pk('dyn.w.pk3', offs.filter(w => !w.types[f.tk].gid));
@@ -6001,12 +6001,12 @@ function dsxBody() {{
         if (rest) who += (who ? tf('dyn.w.offMore', String(rest)) : tf('dyn.w.offOnly', String(rest)));
         in2 += '<p data-dsx-off="1">' + h(tf('dyn.w.off', who)) + '</p>';
       }}
-      if (noType.length) in2 += '<p data-dsx-off="1">' + h(tf('dyn.w.notype', f.type, noType.map(dynWhName).sort(dynCmp).join(', '))) + '</p>';
+      if (noType.length) in2 += '<p data-dsx-off="1">' + h(tf('dyn.w.notype', f.label, noType.map(dynWhName).sort(dynCmp).join(', '))) + '</p>';
       const bySide = DSX.sideOut[f.gid] || [];
       if (bySide.length) in2 += '<p data-dsx-side="1">' + h(tf('dyn.w.side', bySide.map(dynWhName).sort(dynCmp).join(', '))) + '</p>';
       in2 += '</details>';
     }}
-    html += step(2, okWh ? tf('dyn.w.s2', f.type, picked.length, offs.length) : tf('dyn.w.s2nocount', f.type), in2, false);
+    html += step(2, okWh ? tf('dyn.w.s2', f.label, picked.length, offs.length) : tf('dyn.w.s2nocount', f.label), in2, false);
     // 3 · moteur tournant : une ligne par base cochée qui porte le réglage
     let in3 = '';
     const hotRows = picked.filter(w => w.hotNode);
@@ -6152,12 +6152,12 @@ async function dsxApply() {{
     // Le compte rendu : les six compteurs, une ligne par changement, puis les signalements
     const nm = f => f.name, S = s => t('pk.flt.' + s, s);
     const lines = [{{ cls: 'ok', text: () => [tn('dyn.w.rep.n', plan.N), tn('dyn.w.rep.m', plan.M), tn('dyn.w.rep.k', plan.K), tn('dyn.w.rep.l', plan.L), tn('dyn.w.rep.h', plan.H), tn('dyn.w.rep.s', plan.S)].join(' · ') }}];
-    for (const m of plan.marks) lines.push({{ cls: 'a', text: () => tf(m.on ? 'dyn.w.rep.mark' : 'dyn.w.rep.unmark', nm(m.f), m.f.type) }});
+    for (const m of plan.marks) lines.push({{ cls: 'a', text: () => tf(m.on ? 'dyn.w.rep.mark' : 'dyn.w.rep.unmark', nm(m.f), m.f.label) }});
     for (const l of plan.links) {{
       const wn = () => dynWhName(l.w);
-      if (l.to === 0) lines.push({{ cls: 'a', text: () => tf('dyn.w.rep.unlink', dsxTplNameOf(l.from), wn(), l.type) }});
-      else if (l.from === 0) lines.push({{ cls: 'a', text: () => tf('dyn.w.rep.link', dsxTplNameOf(l.to), wn(), l.type) }});
-      else lines.push({{ cls: 'a', text: () => tf('dyn.w.rep.repl', dsxTplNameOf(l.to), wn(), l.type, dsxTplNameOf(l.from)) }});
+      if (l.to === 0) lines.push({{ cls: 'a', text: () => tf('dyn.w.rep.unlink', dsxTplNameOf(l.from), wn(), gameAircraftName(l.type)) }});
+      else if (l.from === 0) lines.push({{ cls: 'a', text: () => tf('dyn.w.rep.link', dsxTplNameOf(l.to), wn(), gameAircraftName(l.type)) }});
+      else lines.push({{ cls: 'a', text: () => tf('dyn.w.rep.repl', dsxTplNameOf(l.to), wn(), gameAircraftName(l.type), dsxTplNameOf(l.from)) }});
     }}
     for (const x of plan.hots) lines.push({{ cls: 'a', text: () => tf(x.on ? 'dyn.w.rep.hotOn' : 'dyn.w.rep.hotOff', dynWhName(x.w)) }});
     for (const x of plan.sides) lines.push({{ cls: 'a', text: () => tf('dyn.w.rep.side', dynWhName(x.w), S(x.side)) }});
@@ -6838,7 +6838,7 @@ must(_kd(_fr) == _kd(_en) and len(_kd(_fr)) == 5, 'I18N parit\u00e9 wing.def.* e
 must(all(('t(\'%s\')' % k) in src or ('data-i18n="%s"' % k) in src for k in ('wing.def.title', 'wing.def.hint', 'wing.def.first', 'wing.def.none', 'validate.defaultLiveriesInvalid')), 'chaque texte de la section est utilis\u00e9')
 _fr_txt = lambda k: _re.search(r"'%s': '((?:[^'\\]|\\.)*)'" % _re.escape(k), _fr).group(1)
 must(all(('data-i18n="%s">%s<' % (k, _fr_txt(k))) in src for k in ('wing.def.title', 'wing.def.hint')), 'le texte français de la section, dans la page, est celui du dictionnaire (légende et indice)')
-must('.wing-def-row {' in src and '.wing-def-lbl {' in src and "acMakeSelect('wing-def-sel', ty)" in src, 'la liste d\'une ligne est celle du thème de l\'éditeur du Wing (acMakeSelect), la ligne a sa feuille')
+must('.wing-def-row {' in src and '.wing-def-lbl {' in src and "acMakeSelect('wing-def-sel', gameAircraftName(ty))" in src, 'la liste d\'une ligne est celle du thème de l\'éditeur du Wing (acMakeSelect), la ligne a sa feuille')
 if _DEF_BAD:
     sys.exit(1)
 

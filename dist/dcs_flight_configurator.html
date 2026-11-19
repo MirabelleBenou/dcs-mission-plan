@@ -1282,17 +1282,216 @@ const RADIO_BANDS = {
 // (radios[poste][1 à n]) mais sans numéro de canal, et HQ ne les écrit jamais dans la mission.
 const RADIO_FREE = { 'Mi-24P': { 3: 5 }, 'Mi-8MT': { 3: 5 } };
 
-// La bande d'un poste : [[bas, haut], …] ; [] si le type ou le poste n'est pas connu.
+// La bande d'un poste : [[bas, haut], …] ; [] si le type ou le poste n'est pas connu (bande non contrôlée : radioInBand l'accepte toute).
 function radioBand(type, r) {
   return Object.prototype.hasOwnProperty.call(RADIO_BANDS, type) && Object.prototype.hasOwnProperty.call(RADIO_BANDS[type], r) ? RADIO_BANDS[type][r] : [];
 }
-// Dans la bande = dans l'un de ses intervalles, bornes comprises.
-function radioInBand(band, v) { return band.some(b => v >= b[0] - 1e-9 && v <= b[1] + 1e-9); }
+// Dans la bande = dans l'un de ses intervalles, bornes comprises. Une bande inconnue ([] : un type ou un poste sans bande) ne refuse rien : la fréquence est libre, la bande n'est pas contrôlée.
+function radioInBand(band, v) { return band.length === 0 || band.some(b => v >= b[0] - 1e-9 && v <= b[1] + 1e-9); }
 // Le nombre de fréquences d'un poste que la mission ne pré-règle pas ; 0 pour tout autre poste (pré-réglé, ou inconnu).
 function radioFreeCount(type, r) {
   return Object.prototype.hasOwnProperty.call(RADIO_FREE, type) && Object.prototype.hasOwnProperty.call(RADIO_FREE[type], r) ? RADIO_FREE[type][r] : 0;
 }
 /* ===== FIN DES BANDES ET DES POSTES NON PRÉ-RÉGLÉS ===== */
+
+/* ===== TYPES D'APPAREILS DU JEU ===== */
+// Types jouables du jeu de base (pydcs 1.0.0), par leur nom dans un .miz ; l'ordre est celui de la table.
+const GAME_AIRCRAFT_TYPES = {
+  "helicopters": [
+    "AH-64D_BLK_II",
+    "CH-47Fbl1",
+    "Ka-50",
+    "Ka-50_3",
+    "Mi-24P",
+    "Mi-8MT",
+    "OH58D",
+    "SA342L",
+    "SA342M",
+    "SA342Minigun",
+    "SA342Mistral",
+    "UH-1H"
+  ],
+  "planes": [
+    "A-10A",
+    "A-10C",
+    "A-10C_2",
+    "AJS37",
+    "AV8BNA",
+    "Bf-109K-4",
+    "C-101CC",
+    "C-101EB",
+    "C-130J-30",
+    "Christen Eagle II",
+    "F-100D",
+    "F-14A-135-GR",
+    "F-14A-135-GR-Early",
+    "F-14A-95-GR",
+    "F-14B",
+    "F-14BU",
+    "F-15C",
+    "F-15ESE",
+    "F-16C_50",
+    "F-4E-45MC",
+    "F-5E-3",
+    "F-5E-3_FC",
+    "F-86F Sabre",
+    "F-86F_FC",
+    "F4U-1D",
+    "FA-18C_hornet",
+    "FW-190A8",
+    "FW-190D9",
+    "Hawk",
+    "I-16",
+    "J-11A",
+    "JF-17",
+    "L-39C",
+    "L-39ZA",
+    "La-7",
+    "M-2000C",
+    "MB-339A",
+    "MB-339APAN",
+    "MiG-15bis",
+    "MiG-15bis_FC",
+    "MiG-19P",
+    "MiG-21Bis",
+    "MiG-29 Fulcrum",
+    "MiG-29A",
+    "MiG-29G",
+    "MiG-29S",
+    "Mirage-F1BE",
+    "Mirage-F1CE",
+    "Mirage-F1EE",
+    "MosquitoFBMkVI",
+    "P-47D-30",
+    "P-47D-30bl1",
+    "P-47D-40",
+    "P-51D",
+    "P-51D-30-NA",
+    "SpitfireLFMkIX",
+    "SpitfireLFMkIXCW",
+    "Su-25",
+    "Su-25T",
+    "Su-27",
+    "Su-33",
+    "TF-51D",
+    "Yak-52"
+  ]
+};
+
+// Le nom d'affichage de chaque type (la désignation : data/aircraft_names.json), par son nom dans un .miz. Il ne sert qu'à l'affichage : la valeur écrite (paquet, fichier de travail, .miz, configuration Wing, presets) reste le nom du .miz.
+const GAME_AIRCRAFT_NAMES = {
+  "AH-64D_BLK_II": "AH-64D",
+  "CH-47Fbl1": "CH-47F",
+  "Ka-50": "Ka-50",
+  "Ka-50_3": "Ka-50 III",
+  "Mi-24P": "Mi-24P",
+  "Mi-8MT": "Mi-8MTV2",
+  "OH58D": "OH-58D",
+  "SA342L": "SA342L",
+  "SA342M": "SA342M",
+  "SA342Minigun": "SA342 Minigun",
+  "SA342Mistral": "SA342 Mistral",
+  "UH-1H": "UH-1H",
+  "A-10A": "A-10A",
+  "A-10C": "A-10C",
+  "A-10C_2": "A-10C II",
+  "AJS37": "AJS-37",
+  "AV8BNA": "AV-8B N/A",
+  "Bf-109K-4": "Bf 109 K-4",
+  "C-101CC": "C-101CC",
+  "C-101EB": "C-101EB",
+  "C-130J-30": "C-130J-30",
+  "Christen Eagle II": "Christen Eagle II",
+  "F-100D": "F-100D",
+  "F-14A-135-GR": "F-14A (135-GR)",
+  "F-14A-135-GR-Early": "F-14A (135-GR, early)",
+  "F-14A-95-GR": "F-14A (95-GR)",
+  "F-14B": "F-14B",
+  "F-14BU": "F-14B(U)",
+  "F-15C": "F-15C",
+  "F-15ESE": "F-15E",
+  "F-16C_50": "F-16C",
+  "F-4E-45MC": "F-4E",
+  "F-5E-3": "F-5E",
+  "F-5E-3_FC": "F-5E (FC)",
+  "F-86F Sabre": "F-86F",
+  "F-86F_FC": "F-86F (FC)",
+  "F4U-1D": "F4U-1D",
+  "FA-18C_hornet": "F/A-18C",
+  "FW-190A8": "Fw 190 A-8",
+  "FW-190D9": "Fw 190 D-9",
+  "Hawk": "Hawk T.1A",
+  "I-16": "I-16",
+  "J-11A": "J-11A",
+  "JF-17": "JF-17",
+  "L-39C": "L-39C",
+  "L-39ZA": "L-39ZA",
+  "La-7": "La-7",
+  "M-2000C": "Mirage 2000C",
+  "MB-339A": "MB-339A",
+  "MB-339APAN": "MB-339A PAN",
+  "MiG-15bis": "MiG-15bis",
+  "MiG-15bis_FC": "MiG-15bis (FC)",
+  "MiG-19P": "MiG-19P",
+  "MiG-21Bis": "MiG-21bis",
+  "MiG-29 Fulcrum": "MiG-29",
+  "MiG-29A": "MiG-29A (FC)",
+  "MiG-29G": "MiG-29G (FC)",
+  "MiG-29S": "MiG-29S (FC)",
+  "Mirage-F1BE": "Mirage F1BE",
+  "Mirage-F1CE": "Mirage F1CE",
+  "Mirage-F1EE": "Mirage F1EE",
+  "MosquitoFBMkVI": "Mosquito FB Mk VI",
+  "P-47D-30": "P-47D-30",
+  "P-47D-30bl1": "P-47D-30 (early)",
+  "P-47D-40": "P-47D-40",
+  "P-51D": "P-51D-25-NA",
+  "P-51D-30-NA": "P-51D-30-NA",
+  "SpitfireLFMkIX": "Spitfire LF Mk IX",
+  "SpitfireLFMkIXCW": "Spitfire LF Mk IX CW",
+  "Su-25": "Su-25",
+  "Su-25T": "Su-25T",
+  "Su-27": "Su-27",
+  "Su-33": "Su-33",
+  "TF-51D": "TF-51D",
+  "Yak-52": "Yak-52"
+};
+
+// Le nom à afficher pour un type ; un nom hors de la table (un type de mod, '') s'affiche tel quel.
+function gameAircraftName(id) {
+  return Object.prototype.hasOwnProperty.call(GAME_AIRCRAFT_NAMES, id) ? GAME_AIRCRAFT_NAMES[id] : id;
+}
+
+// Nom exactement dans la table (casse comprise).
+function gameAircraftIsType(name) {
+  return GAME_AIRCRAFT_TYPES.helicopters.indexOf(name) >= 0 || GAME_AIRCRAFT_TYPES.planes.indexOf(name) >= 0;
+}
+
+// Nom réduit : minuscules, rien d'autre que les lettres a-z et les chiffres.
+function gameAircraftReduce(name) {
+  return String(name).toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+// Types proches d'un nom, dans l'ordre de la table (hélicoptères, puis avions) ; [] si le nom est dans la table.
+// 1. même nom réduit ; 2. sinon le plus long début commun des noms réduits, au moins 3 caractères (tous les types qui l'atteignent).
+function gameAircraftClose(name) {
+  if (gameAircraftIsType(name)) return [];
+  const all = GAME_AIRCRAFT_TYPES.helicopters.concat(GAME_AIRCRAFT_TYPES.planes);
+  const r = gameAircraftReduce(name);
+  const same = all.filter(ty => gameAircraftReduce(ty) === r);
+  if (same.length) return same;
+  let best = 0;
+  const lens = all.map(ty => {
+    const q = gameAircraftReduce(ty);
+    let n = 0;
+    while (n < r.length && n < q.length && r.charAt(n) === q.charAt(n)) n++;
+    if (n > best) best = n;
+    return n;
+  });
+  if (best < 3) return [];
+  return all.filter((ty, i) => lens[i] === best);
+}
+/* ===== FIN DES TYPES D'APPAREILS DU JEU ===== */
 
 /* WEAPON_NAMES:BEGIN */
 const WEAPON_NAMES = {
@@ -11716,11 +11915,12 @@ const PAYLOAD_GAME_RULES = {"A-10A":{"r":[],"x":[["5",[8,302,376,396,485,489,490
 //   AIRCRAFT_LIMITS { type: { fuel_max, flare, chaff, charge_total, flare_charge_size, chaff_charge_size } }
 // Le bloc ne les contient pas : ce sont les mêmes constantes que celles du Loadout Editor, qui peut donc le reprendre tel quel.
 
-// Les quatre types gérés (liste fermée). Tout autre type d'un fichier UnitPayloads se lit mais ne s'offre à aucun vol.
-const PAYLOAD_TYPES = ['Mi-24P', 'Mi-8MT', 'F-4E-45MC', 'Mirage-F1EE'];
+// Les types gérés : les types volables du jeu (data/aircraft_types.json, pydcs 1.0.0), hélicoptères puis avions, dans l'ordre du fichier. Tout autre type (un mod) d'un fichier UnitPayloads se lit mais ne s'offre à aucun vol.
+const PAYLOAD_TYPES = ['AH-64D_BLK_II', 'CH-47Fbl1', 'Ka-50', 'Ka-50_3', 'Mi-24P', 'Mi-8MT', 'OH58D', 'SA342L', 'SA342M', 'SA342Minigun', 'SA342Mistral', 'UH-1H', 'A-10A', 'A-10C', 'A-10C_2', 'AJS37', 'AV8BNA', 'Bf-109K-4', 'C-101CC', 'C-101EB', 'C-130J-30', 'Christen Eagle II', 'F-100D', 'F-14A-135-GR', 'F-14A-135-GR-Early', 'F-14A-95-GR', 'F-14B', 'F-14BU', 'F-15C', 'F-15ESE', 'F-16C_50', 'F-4E-45MC', 'F-5E-3', 'F-5E-3_FC', 'F-86F Sabre', 'F-86F_FC', 'F4U-1D', 'FA-18C_hornet', 'FW-190A8', 'FW-190D9', 'Hawk', 'I-16', 'J-11A', 'JF-17', 'L-39C', 'L-39ZA', 'La-7', 'M-2000C', 'MB-339A', 'MB-339APAN', 'MiG-15bis', 'MiG-15bis_FC', 'MiG-19P', 'MiG-21Bis', 'MiG-29 Fulcrum', 'MiG-29A', 'MiG-29G', 'MiG-29S', 'Mirage-F1BE', 'Mirage-F1CE', 'Mirage-F1EE', 'MosquitoFBMkVI', 'P-47D-30', 'P-47D-30bl1', 'P-47D-40', 'P-51D', 'P-51D-30-NA', 'SpitfireLFMkIX', 'SpitfireLFMkIXCW', 'Su-25', 'Su-25T', 'Su-27', 'Su-33', 'TF-51D', 'Yak-52'];
 
 // Forme du `payload` d'un .miz, par type : clés fixes en plus de chaff, flare, fuel, gun et pylons (mesurées sur des .miz d'exemple).
 //   ammo_type : valeur écrite · restricted : table écrite (vide) · fuelAsString : le carburant du .miz est un texte
+// Un type absent de la table n'a aucune clé fixe mesurée : payloadShape lui rend la forme sans clé fixe (celle du Mirage F1EE).
 const PAYLOAD_SHAPE = {
   'Mi-24P':      { ammo_type: 1, restricted: {}, fuelAsString: false },
   'Mi-8MT':      { fuelAsString: true },
@@ -11733,6 +11933,7 @@ const PAYLOAD_SHAPE = {
 const PAYLOAD_EXTRA = { 'F-4E-45MC': { clsid: '<CLEAN>', name: '<CLEAN> (clean pylon)', pylons: [2, 3, 4, 10, 11, 12] } };
 
 const payloadHas = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+function payloadShape(type) { return payloadHas(PAYLOAD_SHAPE, type) ? PAYLOAD_SHAPE[type] : {}; }
 const payloadIdx = new Map(AIRCRAFT_PYLONS.clsids.map((c, i) => [c, i]));
 
 // Pylônes d'un type : [{ n, allowed: [CLSID…] }] dans l'ordre numérique ; null si la table ne connaît pas le type.
@@ -12053,7 +12254,7 @@ function payloadClamp(v, lo, hi) {
 function buildPayload(type, pylons, opts) {
   if (PAYLOAD_TYPES.indexOf(type) < 0) throw new Error('unsupported type: ' + type);
   const d = payloadDefaults(type), o = opts || {};
-  const shape = PAYLOAD_SHAPE[type];
+  const shape = payloadShape(type);
   const fuel = payloadClamp(o.fuel === undefined || o.fuel === null || o.fuel === '' ? d.fuel : o.fuel, 0, d.fuel);
   const p = {};
   if (Object.prototype.hasOwnProperty.call(shape, 'ammo_type')) p.ammo_type = shape.ammo_type;
@@ -13326,11 +13527,11 @@ function presetsMerge(dst, src, types, newId) {
 /* ===== FIN DE LA FUSION DES PRESETS D'EMPORT ===== */
 
 /* ===== IMPORT COMMUN (HQ, briefing, fichier) ===== */
-/* Les types que la suite gère, et les canaux par poste (sonde des .miz) : les postes que la mission pré-règle. Le poste HF des deux hélicoptères, que la mission ne pré-règle pas, est dans RADIO_FREE (radio_bands_block.py). */
-const IMP_TYPES = ['Mi-24P', 'Mi-8MT', 'F-4E-45MC', 'Mirage-F1EE'];
-const IMP_TYPE_LABEL = { 'Mi-24P': 'Mi-24P', 'Mi-8MT': 'Mi-8MT', 'F-4E-45MC': 'F-4E-45MC', 'Mirage-F1EE': 'Mirage F1EE' };
+/* Les types que la suite gère (les types volables du jeu, ceux de PAYLOAD_TYPES) et les canaux par poste : les postes que la mission pré-règle et le nombre de canaux que l'éditeur de mission écrit pour chacun (data/aircraft_radios.json,
+   pydcs 1.0.0) ; un type sans poste programmable a une entrée vide. Le poste HF des deux hélicoptères, que la mission ne pré-règle pas, est dans RADIO_FREE (radio_bands_block.py). Le nom d'un type à l'écran est gameAircraftName (aircraft_types_block.py). */
+const IMP_TYPES = ['AH-64D_BLK_II', 'CH-47Fbl1', 'Ka-50', 'Ka-50_3', 'Mi-24P', 'Mi-8MT', 'OH58D', 'SA342L', 'SA342M', 'SA342Minigun', 'SA342Mistral', 'UH-1H', 'A-10A', 'A-10C', 'A-10C_2', 'AJS37', 'AV8BNA', 'Bf-109K-4', 'C-101CC', 'C-101EB', 'C-130J-30', 'Christen Eagle II', 'F-100D', 'F-14A-135-GR', 'F-14A-135-GR-Early', 'F-14A-95-GR', 'F-14B', 'F-14BU', 'F-15C', 'F-15ESE', 'F-16C_50', 'F-4E-45MC', 'F-5E-3', 'F-5E-3_FC', 'F-86F Sabre', 'F-86F_FC', 'F4U-1D', 'FA-18C_hornet', 'FW-190A8', 'FW-190D9', 'Hawk', 'I-16', 'J-11A', 'JF-17', 'L-39C', 'L-39ZA', 'La-7', 'M-2000C', 'MB-339A', 'MB-339APAN', 'MiG-15bis', 'MiG-15bis_FC', 'MiG-19P', 'MiG-21Bis', 'MiG-29 Fulcrum', 'MiG-29A', 'MiG-29G', 'MiG-29S', 'Mirage-F1BE', 'Mirage-F1CE', 'Mirage-F1EE', 'MosquitoFBMkVI', 'P-47D-30', 'P-47D-30bl1', 'P-47D-40', 'P-51D', 'P-51D-30-NA', 'SpitfireLFMkIX', 'SpitfireLFMkIXCW', 'Su-25', 'Su-25T', 'Su-27', 'Su-33', 'TF-51D', 'Yak-52'];
 const IMP_DEFAULT_TYPE = 'Mi-24P';
-const RADIO_CHANNELS = { 'Mi-24P': { 1: 20, 2: 10 }, 'Mi-8MT': { 1: 20, 2: 10 }, 'F-4E-45MC': { 1: 18, 2: 20 }, 'Mirage-F1EE': { 1: 20, 2: 20 } };
+const RADIO_CHANNELS = { 'AH-64D_BLK_II': { 1: 10, 2: 10, 4: 10, 3: 10 }, 'CH-47Fbl1': { 1: 20, 2: 20, 3: 10 }, 'Ka-50': { 1: 10, 2: 16 }, 'Ka-50_3': { 1: 10, 2: 16 }, 'Mi-24P': { 1: 20, 2: 10 }, 'Mi-8MT': { 1: 20, 2: 10 }, 'OH58D': { 1: 20, 2: 20, 4: 21, 3: 21 }, 'SA342L': { 1: 8 }, 'SA342M': { 1: 8 }, 'SA342Minigun': { 1: 8 }, 'SA342Mistral': { 1: 8 }, 'UH-1H': { 1: 20 }, 'A-10A': {}, 'A-10C': { 1: 20, 2: 20, 3: 20 }, 'A-10C_2': { 1: 25, 2: 20, 3: 20 }, 'AJS37': { 1: 47 }, 'AV8BNA': { 1: 26, 2: 26, 3: 30 }, 'Bf-109K-4': { 1: 5 }, 'C-101CC': { 1: 21 }, 'C-101EB': { 1: 20 }, 'C-130J-30': { 1: 20, 2: 10 }, 'Christen Eagle II': { 1: 20 }, 'F-100D': { 1: 20 }, 'F-14A-135-GR': { 1: 20, 2: 30 }, 'F-14A-135-GR-Early': { 1: 20, 2: 30 }, 'F-14A-95-GR': { 1: 20, 2: 30 }, 'F-14B': { 1: 20, 2: 30 }, 'F-14BU': { 1: 20, 2: 30 }, 'F-15C': {}, 'F-15ESE': { 1: 20, 2: 40 }, 'F-16C_50': { 1: 20, 2: 20 }, 'F-4E-45MC': { 1: 18, 2: 20 }, 'F-5E-3': { 1: 20 }, 'F-5E-3_FC': {}, 'F-86F Sabre': { 1: 18 }, 'F-86F_FC': { 1: 18 }, 'F4U-1D': { 1: 4, 2: 6 }, 'FA-18C_hornet': { 1: 20, 2: 20 }, 'FW-190A8': { 1: 5 }, 'FW-190D9': { 1: 5 }, 'Hawk': { 1: 18 }, 'I-16': { 1: 4 }, 'J-11A': {}, 'JF-17': { 1: 20 }, 'L-39C': { 1: 20 }, 'L-39ZA': { 1: 20 }, 'La-7': { 1: 4 }, 'M-2000C': { 1: 20, 2: 20 }, 'MB-339A': { 1: 20, 2: 30 }, 'MB-339APAN': { 1: 20, 2: 30 }, 'MiG-15bis': {}, 'MiG-15bis_FC': {}, 'MiG-19P': { 1: 6 }, 'MiG-21Bis': { 1: 20 }, 'MiG-29 Fulcrum': { 1: 20, 2: 8 }, 'MiG-29A': {}, 'MiG-29G': {}, 'MiG-29S': {}, 'Mirage-F1BE': { 1: 20, 2: 20 }, 'Mirage-F1CE': { 1: 20, 2: 20 }, 'Mirage-F1EE': { 1: 20, 2: 20 }, 'MosquitoFBMkVI': { 1: 5, 2: 8, 4: 8, 3: 8 }, 'P-47D-30': { 1: 4, 2: 1 }, 'P-47D-30bl1': { 1: 4, 2: 1 }, 'P-47D-40': { 1: 4, 2: 1 }, 'P-51D': { 1: 4, 2: 1 }, 'P-51D-30-NA': { 1: 4, 2: 1 }, 'SpitfireLFMkIX': { 1: 5 }, 'SpitfireLFMkIXCW': { 1: 5 }, 'Su-25': {}, 'Su-25T': {}, 'Su-27': {}, 'Su-33': {}, 'TF-51D': { 1: 4, 2: 1 }, 'Yak-52': { 1: 8 } };
 /* Les postes d'un type, par numéro : ceux que la mission pré-règle (RADIO_CHANNELS, un canal par entrée) puis ceux qu'elle ne pré-règle pas (RADIO_FREE, une fréquence par entrée, sans numéro de canal).
    radioSlotsOf donne le nombre d'entrées d'un poste (0 : le poste n'existe pas) ; radioPostsOf les numéros de poste du type, dans l'ordre. */
 function radioSlotsOf(type, r) {
@@ -13409,7 +13610,7 @@ const IMP_I18N = {
     'rej.zip': 'Archive illisible : pas de package.json à la racine.',
     'rej.noTheatre': 'Le paquet n’a pas de théâtre.',
     'rej.noFlight': 'Aucun groupe lisible dans ce fichier.',
-    'rej.noManaged': 'Aucun groupe d’un appareil géré ici (Mi-24P, Mi-8MT, F-4E, Mirage F1) dans ce paquet : rien n’a changé.',
+    'rej.noManaged': 'Aucun groupe d’un appareil du jeu de base dans ce paquet : rien n’a changé.',
     'rej.format': 'Format « {0} » non pris en charge ici (attendu : {1}).',
     'rej.unknown': 'inconnu',
     'rej.skip': '{0} groupe(s) illisible(s) ignoré(s).',
@@ -13475,7 +13676,7 @@ const IMP_I18N = {
     'rej.zip': 'Unreadable archive: no package.json at the root.',
     'rej.noTheatre': 'The package has no theatre.',
     'rej.noFlight': 'No readable group in this file.',
-    'rej.noManaged': 'No group of an aircraft handled here (Mi-24P, Mi-8MT, F-4E, Mirage F1) in this package: nothing has changed.',
+    'rej.noManaged': 'No group of a base-game aircraft in this package: nothing has changed.',
     'rej.format': 'Format “{0}” is not supported here (expected: {1}).',
     'rej.unknown': 'unknown',
     'rej.skip': '{0} unreadable group(s) skipped.',
@@ -13826,7 +14027,7 @@ function impMergeRadios(unit, type, radios, fromHq) {
 }
 /* Un changement de type d'une unité du groupe : ses radios et son emport (qui se lisent selon le type) sont vidés, un avertissement le dit s'il y en avait */
 function impRetype(st, target, fi, k, u, ty) {
-  if (impRadioCount(u) > 0 || u.loadout || u.payloadIn) st.warn.push(impTf('imp.retype', impGroupLabel(target, fi), impUnitLabel(target, fi, u, k), IMP_TYPE_LABEL[u.type] || u.type, IMP_TYPE_LABEL[ty] || ty));
+  if (impRadioCount(u) > 0 || u.loadout || u.payloadIn) st.warn.push(impTf('imp.retype', impGroupLabel(target, fi), impUnitLabel(target, fi, u, k), gameAircraftName(u.type), gameAircraftName(ty)));
   u.type = ty; u.radios = {}; u.loadout = null;
   delete u.payloadIn;
 }
@@ -14075,7 +14276,7 @@ function impRowHtml(cur, i, g, I, routeOff) {
     return '<label class="imp-chk' + (on ? '' : ' off') + '"><input type="checkbox" data-imp-part="' + p + '" data-imp-i="' + i + '"' + (on && r.chk[p] ? ' checked' : '') + (on ? '' : ' disabled') + '>' + impEsc(impT('imp.part.' + p)) + '</label>';
   }).join('');
   return '<div class="imp-flight' + (r.ok ? '' : ' off') + '"><label class="imp-fh"><input type="checkbox" data-imp-flight="' + i + '"' + (r.on && r.ok ? ' checked' : '') + (r.ok ? '' : ' disabled') + '>'
-    + '<span class="imp-nm">' + impEsc(r.name !== '' ? r.name : (r.title || '—')) + '</span>' + (r.types.length ? '<span class="imp-tag">' + impEsc(r.types.join(' + ')) + '</span>' : '')
+    + '<span class="imp-nm">' + impEsc(r.name !== '' ? r.name : (r.title || '—')) + '</span>' + (r.types.length ? '<span class="imp-tag">' + impEsc(r.types.map(gameAircraftName).join(' + ')) + '</span>' : '')
     + '<span class="imp-n">' + impEsc(state) + '</span></label><div class="imp-parts">' + parts + '</div></div>';
 }
 function impListHtml(cur) {
@@ -14093,7 +14294,7 @@ function impFlightsHtml(I, cur) {
   const opt = (v, l, sel) => '<option value="' + impEsc(v) + '"' + (v === sel ? ' selected' : '') + '>' + impEsc(l) + '</option>';
   return (cur.skipped ? '<div class="imp-note top">⚠ ' + impEsc(impTf('rej.skip', cur.skipped)) + '</div>' : '')
     + '<div class="imp-filters"><div><label class="imp-lbl" for="imp-side">' + impEsc(impT('imp.side')) + '</label><select class="imp-sel" id="imp-side" aria-label="' + impEsc(impT('imp.side')) + '">' + sides.map(x => opt(x[0], x[1], I.side)).join('') + '</select></div>'
-    + '<div><label class="imp-lbl" for="imp-type">' + impEsc(impT('imp.type')) + '</label><select class="imp-sel" id="imp-type" aria-label="' + impEsc(impT('imp.type')) + '">' + opt('all', impT('imp.all'), I.type) + types.map(x => opt(x, x, I.type)).join('') + '</select></div>'
+    + '<div><label class="imp-lbl" for="imp-type">' + impEsc(impT('imp.type')) + '</label><select class="imp-sel" id="imp-type" aria-label="' + impEsc(impT('imp.type')) + '">' + opt('all', impT('imp.all'), I.type) + types.map(x => opt(x, gameAircraftName(x), I.type)).join('') + '</select></div>'
     + '<div class="nm"><label class="imp-lbl" for="imp-name">' + impEsc(impT('imp.name')) + '</label><input class="imp-in" id="imp-name" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" value="' + impEsc(I.name) + '"></div></div>'
     + '<div class="imp-bulk"><button type="button" class="imp-filebtn" data-act="imp-check-shown">' + impEsc(impT('imp.checkshown')) + '</button><button type="button" class="imp-filebtn" data-act="imp-uncheck-all">' + impEsc(impT('imp.uncheckall')) + '</button><span class="imp-cnt" id="imp-count" aria-live="polite">' + impEsc(impCountText(cur)) + '</span></div>'
     + '<div class="imp-list" id="imp-list">' + impListHtml(cur) + '</div>'
@@ -15026,7 +15227,7 @@ function tbmOpen(m) {
   ul.tabIndex = -1;
   let real = 0;
   for (let k = 0; k < opts.length; k++) if (opts[k].value !== '' && !opts[k].hasAttribute('data-keep')) real++;
-  m.q = null; m.none = null; m.noneLi = null; m.bar = null; m.list = ul; m.lis = [];
+  m.q = null; m.none = null; m.noneLi = null; m.bar = null; m.list = ul; m.lis = []; m.heads = [];
   if (m.search) {
     /* le champ de recherche est un combobox hors de la listbox (modèle ARIA) ; sans aucune option à chercher, pas de champ : seule la ligne neutre le dit */
     if (real > 0) {
@@ -15075,8 +15276,10 @@ function tbmOpen(m) {
         gh.setAttribute('role', 'presentation');
         gh.textContent = og.label;
         ul.appendChild(gh);
+        m.heads.push({ li: gh, from: k, to: k });       /* la recherche masque ce titre quand aucune option de son groupe ne reste */
       }
     }
+    if (og) m.heads[m.heads.length - 1].to = k;
     li.className = 'tbm-opt';
     if (o.hasAttribute('data-keep')) li.setAttribute('data-keep', '');
     li.id = 'tbm-' + m.uid + '-' + k;
@@ -15145,6 +15348,11 @@ function tbmFilter(m) {
     const show = q === '' || keep || (o[k].value !== '' && tbmNorm(o[k].label).indexOf(q) >= 0);
     li.classList.toggle('tbm-off', !show);
     if (q !== '' && !keep && show) { n++; if (first < 0) first = k; }
+  });
+  m.heads.forEach(h => {       /* pendant une recherche, le titre d'un groupe dont aucune option ne reste se masque ; il revient quand la recherche s'efface */
+    let any = false;
+    for (let k = h.from; k <= h.to; k++) if (!m.lis[k].classList.contains('tbm-off')) { any = true; break; }
+    h.li.classList.toggle('tbm-off', q !== '' && !any);
   });
   const none = q !== '' && n === 0;
   m.none.textContent = none ? m.empty : '';       /* la ligne sans résultat est annoncée (aria-live) quand son texte apparaît */
@@ -15695,6 +15903,13 @@ const I18N = {
   "sum.livery.var": "livrées variées",
   "sum.type.pick": "type à choisir",
   "u.type.pick": "— à choisir —",
+  "u.type.none": "Aucun appareil",
+  "ac.helis": "Hélicoptères",
+  "ac.planes": "Avions",
+  "u.livery.none": "Pas de livrée du jeu pour ce type : la liste ne porte que les livrées déclarées dans la fenêtre Wing de HQ.",
+  "rad.none": "Aucun poste radio n’est programmable dans l’éditeur de mission pour ce type : pas de radios à régler ici.",
+  "rad.band.none": "bande non contrôlée pour ce type",
+  "cmp.nopylon": "Ce type n’a pas d’emport : ni station, ni arme. Le carburant, les leurres et la masse restent réglés ici.",
   "u.notype": "Choisissez le type de l’appareil pour régler ses radios, son emport et sa livrée.",
   "bar.no.type": "Export impossible : choisissez le type de chaque appareil ({0}, unité {1}).",
   "msg.jsonUnreadable": "⚠ Fichier illisible : ce n’est pas du JSON.",
@@ -15990,6 +16205,13 @@ const I18N = {
   "sum.livery.var": "liveries vary",
   "sum.type.pick": "type to pick",
   "u.type.pick": "— to pick —",
+  "u.type.none": "No aircraft",
+  "ac.helis": "Helicopters",
+  "ac.planes": "Airplanes",
+  "u.livery.none": "No game livery for this type: the list only holds the liveries declared in the Wing window of HQ.",
+  "rad.none": "No radio is programmable in the mission editor for this type: no radios to set here.",
+  "rad.band.none": "band not checked for this type",
+  "cmp.nopylon": "This type has no loadout: no station, no weapon. Fuel, countermeasures and weight are still set here.",
   "u.notype": "Pick the aircraft type to set its radios, loadout and livery.",
   "bar.no.type": "Cannot export: pick each aircraft’s type ({0}, unit {1}).",
   "msg.jsonUnreadable": "⚠ Unreadable file: this is not JSON.",
@@ -16051,7 +16273,7 @@ const str = v => (typeof v === 'string' ? v : '');
 const clone = o => JSON.parse(JSON.stringify(o));
 const has = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
 
-const TYPE_LABEL = { 'Mi-24P': 'Mi-24P', 'Mi-8MT': 'Mi-8MT', 'F-4E-45MC': 'F-4E-45MC', 'Mirage-F1EE': 'Mirage F1EE' };
+// Le nom d'un type à l'écran est gameAircraftName (aircraft_types_block.py : la désignation, « F/A-18C » pour FA-18C_hornet) ; la valeur écrite reste le nom du .miz.
 // Canaux par poste (sonde des .miz) : RADIO_CHANNELS est défini par le bloc d'import commun, qui donne aussi radioPostsOf et radioSlotsOf (les postes pré-réglés, puis le poste HF des deux hélicoptères,
 // que la mission ne pré-règle pas : cinq fréquences, sans numéro de canal). Les bandes de chaque poste (RADIO_BANDS) et ces postes non pré-réglés (RADIO_FREE) sont ceux de radio_bands_block.py,
 // que le Datacard Generator partage ; les noms des postes sont ceux de radio_block.py.
@@ -16476,11 +16698,11 @@ function flightTypes(f) {
   if (!us.length && isObj(f) && typeof f.aircraftType === 'string' && f.aircraftType !== '') out.push(f.aircraftType);
   return out;
 }
-function flightTypesLabel(f) { return flightTypes(f).join(' + '); }
+function flightTypesLabel(f) { return flightTypes(f).map(gameAircraftName).join(' + '); }
 // Les types d'un vol du module, dans l'ordre des unités, distincts, avec le nom d'affichage de chacun.
 function modTypes(f) { const out = []; f.units.forEach(u => { if (out.indexOf(u.type) < 0) out.push(u.type); }); return out; }
 // Le nom d'un type ; '' (une unité sans type, à choisir) se dit « type à choisir ».
-function typeLabel(x) { return x === '' ? t('sum.type.pick') : (TYPE_LABEL[x] || x); }
+function typeLabel(x) { return x === '' ? t('sum.type.pick') : gameAircraftName(x); }
 function modTypesLabel(f) { return modTypes(f).map(typeLabel).join(' + '); }
 // Un nom de vol se compare rogné des deux côtés ; la casse compte (« Hind 1 » et « HIND 1 » sont deux vols).
 function nameKey(s) { return String(s).trim(); }
@@ -16531,10 +16753,11 @@ function fmtMHz(v) { return String(v).replace('.', CURRENT_LANG === 'fr' ? ',' :
 // La bande d'un poste : radioBand (radio_bands_block.py), [[bas, haut], …] ; dans la bande = dans l'un de ses intervalles (bornes comprises).
 function inBand(band, v) { return radioInBand(band, v); }
 // La bande en clair, comme sous le titre du poste, de la forme « bas–haut · bas–haut MHz ».
-function bandText(type, r) { return radioBand(type, r).map(b => fmtMHz(b[0]) + '–' + fmtMHz(b[1])).join(' · ') + ' MHz'; }
-// Les attributs min et max d'un champ : la bande la plus large du poste.
+function bandText(type, r) { const b = radioBand(type, r); return b.length ? b.map(x => fmtMHz(x[0]) + '–' + fmtMHz(x[1])).join(' · ') + ' MHz' : t('rad.band.none'); }
+// Les attributs min et max d'un champ : la bande la plus large du poste ; null (ni min ni max) quand la bande n'est pas connue.
 function bandHull(type, r) {
   const b = radioBand(type, r);
+  if (!b.length) return null;
   return [Math.min.apply(null, b.map(x => x[0])), Math.max.apply(null, b.map(x => x[1]))];
 }
 // Défauts d'un poste : { first (le premier message), bad (les canaux fautifs), block (ceux dont le champ montre un texte refusé : ils bloquent l'export) }. Une fréquence hors de la bande du poste ou non numérique est signalée ;
@@ -16579,6 +16802,8 @@ function chargeRule(cl) {
   return t('set.charge').replace('{fs}', w(cl.fs)).replace('{cs}', w(cl.cs)).replace('{n}', cl.total);
 }
 // Un type porte des paillettes quand la charge qu'on en donne (chargeLimit) pèse quelque chose (cs > 0) ; sans plafond dans la table, quand son nombre par défaut est au-dessus de 0.
+// Le canon : une donnée par type, le plein par défaut (payloadDefaults.gun, un nombre) ; un type sans cette donnée n'a pas de curseur ni de champ canon.
+function loHasGun(type) { return typeof payloadDefaults(type).gun === 'number'; }
 function loCarriesChaff(type) {
   const cl = chargeLimit(loLim(type));
   return cl ? cl.cs > 0 : payloadDefaults(type).chaff > 0;
@@ -17468,7 +17693,7 @@ function inputHtml(attrs, value, placeholder) {
   return `<input type="text" autocomplete="off" spellcheck="false" ${attrs} value="${esc(value)}"${placeholder ? ` placeholder="${esc(placeholder)}"` : ''}>`;
 }
 function numberInputHtml(attrs, value, min, max, step) {
-  return `<input type="number" autocomplete="off" inputmode="${step === '1' ? 'numeric' : 'decimal'}" min="${min}" max="${max}" step="${step}" ${attrs} value="${esc(value)}">`;
+  return `<input type="number" autocomplete="off" inputmode="${step === '1' ? 'numeric' : 'decimal'}"${min === null ? '' : ` min="${min}"`}${max === null ? '' : ` max="${max}"`} step="${step}" ${attrs} value="${esc(value)}">`;
 }
 function openAttr(key) { return UI.open.has(key) ? ' open' : ''; }
 function unitsLabel(n) { return tf(n < 2 ? 'fl.units.one' : 'fl.units.many', n); }
@@ -17530,6 +17755,11 @@ function flightFieldsHtml(f) {
     ${fieldHtml(t('fl.coalition'), selectHtml('data-k="coalition"', t('fl.coalition'), coalitions, f.coalition))}</div>`;
 }
 
+// Les options de la liste des types : « à choisir » en tête pour une unité sans type, puis deux groupes (hélicoptères, avions : l'ordre de PAYLOAD_TYPES), chaque option au nom de gameAircraftName ; la valeur est le nom du .miz.
+function typeOptions(cur) {
+  const heli = GAME_AIRCRAFT_TYPES.helicopters;
+  return (cur === '' ? [{ v: '', l: t('u.type.pick') }] : []).concat(PAYLOAD_TYPES.map(x => ({ g: t(heli.indexOf(x) >= 0 ? 'ac.helis' : 'ac.planes'), v: x, l: gameAircraftName(x) })));
+}
 function unitHtml(f, fi, u, ui) {
   const at = `data-u="${ui}"`, rk = `f${fi}u${ui}r`, n = radioCount(f, u);
   return `<div class="fc-unit${S.sel.f === fi && S.sel.u === ui ? ' sel' : ''}${u.folded ? ' folded' : ''}" data-u="${ui}">
@@ -17537,18 +17767,22 @@ function unitHtml(f, fi, u, ui) {
       ${f.units.length > 1 ? `<button type="button" class="pk-x" data-act="rm-unit" aria-label="${esc(t('u.remove'))}" title="${esc(t('u.remove'))}">✕</button>` : ''}</div>
     <div class="fc-usum" data-sum="unit">${esc(unitSummary(f, fi, u, ui))}</div>
     <div class="fc-ubody"${u.folded ? ' hidden' : ''}><div class="fc-row4">
-      ${fieldHtml(t('u.type'), selectHtml(`${at} data-k="utype"`, t('u.type'), (u.type === '' ? [{ v: '', l: t('u.type.pick') }] : []).concat(PAYLOAD_TYPES.map(x => ({ v: x, l: TYPE_LABEL[x] || x }))), u.type))}
+      ${fieldHtml(t('u.type'), selectHtml(`${at} data-k="utype" data-search data-search-empty="${esc(t('u.type.none'))}"`, t('u.type'), typeOptions(u.type), u.type))}
       ${fieldHtml(t('u.name'), inputHtml(`${at} data-k="uname"`, u.name, unitDefaultName(f, fi, ui)))}
       ${fieldHtml(t('u.callsign'), inputHtml(`${at} data-k="callsign"`, u.callsign, t('u.opt')))}
       ${fieldHtml(t('u.onboard'), inputHtml(`${at} data-k="onboard"`, u.onboard, t('u.opt')))}
       ${u.type === '' ? '' : fieldHtml(t('u.livery'), selectHtml(`${at} data-k="livery" data-repick`, t('u.livery'), liveryOptions(f, fi, u, ui), liveryShown(f, fi, u, ui)))}
     </div>
-    ${u.type === '' ? `<p class="ui-note fc-notype">${esc(t('u.notype'))}</p>` : unitSettingsHtml(f, fi, u, ui, rk, at)}
+    ${u.type === '' ? `<p class="ui-note fc-notype">${esc(t('u.notype'))}</p>` : (impHas(LIVERIES_DEFAULT, u.type) ? '' : `<p class="ui-note fc-noliv">${esc(t('u.livery.none'))}</p>`) + unitSettingsHtml(f, fi, u, ui, rk, at)}
   </div></div>`;
 }
 function unitSettingsHtml(f, fi, u, ui, rk, at) {
-  return `<details class="fc-sub" data-key="${rk}"${openAttr(rk)}><summary class="ui-fold-head" aria-expanded="${UI.open.has(rk)}">${esc(t('u.radios'))} <span class="fc-sum" data-sum="radios">${esc(radiosSummary(f, u))}</span></summary>
-      <div class="fc-subc">${radiosHtml(f, fi, u, ui)}</div></details>
+  // Un type sans poste programmable dans l'éditeur de mission (radioPosts vide) n'a pas de boîte Radios : une ligne le dit à sa place.
+  const radios = radioPosts(u.type).length
+    ? `<details class="fc-sub" data-key="${rk}"${openAttr(rk)}><summary class="ui-fold-head" aria-expanded="${UI.open.has(rk)}">${esc(t('u.radios'))} <span class="fc-sum" data-sum="radios">${esc(radiosSummary(f, u))}</span></summary>
+      <div class="fc-subc">${radiosHtml(f, fi, u, ui)}</div></details>`
+    : `<p class="ui-note fc-norad">${esc(t('rad.none'))}</p>`;
+  return `${radios}
     <div class="fc-lo-sum"><span class="fc-lo-k">${esc(t('u.loadout'))}</span><span class="fc-lo-v" data-sum="loadout">${esc(loadoutName(u.loadout))}</span>
       <button type="button" class="fc-see" ${at} data-act="see-cmp">${esc(t('u.see'))}</button></div>`;
 }
@@ -17564,7 +17798,7 @@ function radiosHtml(f, fi, u, ui) {
     for (let c = 1; c <= n; c++) {
       const pk2 = printKey(ty, r, c), pon = printOn(f, pk2), pshow = printShown(f, ty, r, c);
       chans += `<div class="fc-ch"><div class="pk-chk${pon || pshow ? '' : ' off'}"><label title="${esc(t('rad.print'))}"><input type="checkbox" data-u="${ui}" data-r="${r}" data-c="${c}" data-k="prn" aria-label="${esc(t('rad.print'))}"${pon ? ' checked' : ''}${pon || pshow ? '' : ' disabled'}></label><label style="cursor:default">${esc(free ? tf('rad.freq', c) : tf('rad.ch', radioCockpitChannel(ty, r, c)))}</label></div>`
-        + numberInputHtml(`data-u="${ui}" data-r="${r}" data-c="${c}" data-k="chan" placeholder="—"`, chanShown(u, r, c), hull[0], hull[1], '0.001') + '</div>';
+        + numberInputHtml(`data-u="${ui}" data-r="${r}" data-c="${c}" data-k="chan" placeholder="—"`, chanShown(u, r, c), hull ? hull[0] : null, hull ? hull[1] : null, '0.001') + '</div>';
     }
     return `<details class="fc-post" data-key="${pk}"${openAttr(pk)}><summary class="ui-fold-head" aria-expanded="${UI.open.has(pk)}"><span class="fc-ptop">${esc(radioPosteName(ty, r) || 'R' + r)} ${free ? '' : `<span class="fc-sum">${esc(tf('rad.chans', n))}</span>`}<span class="fc-sum fc-flag" data-flag="${r}"></span></span><span class="fc-band" data-band="${r}">${esc(bandText(ty, r))}</span></summary>
       <div class="fc-postc"><div class="fc-chans">${chans}</div><div class="fc-msg" id="rm-${fi}-${ui}-${r}"></div></div></details>`;
@@ -17831,10 +18065,10 @@ function cmpHtml(su) {
   CMP.pairs = CMP.view ? cmpPairs(CMP.view) : {};
   const armed = cmpArmed(lo);
   return `<button type="button" class="fc-back" data-act="back-unit">${esc(t('cmp.back'))}</button>
-    <div class="cmp-top"><div class="cmp-for"><span id="cmp-for-t">${esc(tf('cmp.for', flightLabel(f, su.fi), unitLabel(f, su.fi, su.u, su.ui)))}</span> <span class="snap-flight-tag">${esc(TYPE_LABEL[ty] || ty)}</span></div>
+    <div class="cmp-top"><div class="cmp-for"><span id="cmp-for-t">${esc(tf('cmp.for', flightLabel(f, su.fi), unitLabel(f, su.fi, su.u, su.ui)))}</span> <span class="snap-flight-tag">${esc(gameAircraftName(ty))}</span></div>
 </div>
     <div class="fc-lo-line" id="cmp-lo-line">${cmpLineHtml(lo)}</div>
-    ${CMP.view ? cmpDrawingHtml() : `<p class="ui-note">${esc(t('cmp.noview'))}</p>`}
+    ${CMP.pyl.length === 0 ? `<p class="ui-note cmp-nopylon">${esc(t('cmp.nopylon'))}</p>` : (CMP.view ? cmpDrawingHtml() : `<p class="ui-note">${esc(t('cmp.noview'))}</p>`)}
     <div class="cmp-list" id="cmp-list">${CMP.pyl.map(p => cmpRowHtml(p, lo)).join('')}</div>
     <div class="cmp-foot">${CMP.view ? `<label class="pk-chk"><input type="checkbox" id="cmp-sym"${UI.cmp.sym ? ' checked' : ''}> ${esc(t('cmp.sym'))}</label>` : ''}<span class="cmp-tot" id="cmp-total"></span></div>
     ${cmpSettingsHtml(f, su.ui, lo)}
@@ -17914,7 +18148,7 @@ function cmpSettingsHtml(f, ui, lo) {
   const note = k => k === 'fuel' ? tf('lo.max', fmtMHz(UMASS === 'lb' ? Math.round(payloadMassIn(d.fuel, 'lb')) : d.fuel)) : (k === 'gun' ? tf('lo.max', d.gun) : (cl ? chargeRule(cl) : tf('lo.max', d[k])));
   const field = (k, step, disabled) => fieldHtml(`${loName(k)} · ${note(k)}`,
     numberInputHtml(`${at} data-k="${k}"${disabled ? ' disabled' : ''}`, loShow(k, val(k)), 0, k === 'fuel' ? loShow(k, String(loFieldMax(type, k))) : loFieldMax(type, k), step) + (BAR_KEYS.indexOf(k) >= 0 ? bar(k) : ''));
-  return `<div class="fc-set">${field('fuel', 'any')}${field('flare', '1')}${field('chaff', '1', !loCarriesChaff(type))}${field('gun', '1')}</div>`;
+  return `<div class="fc-set">${field('fuel', 'any')}${field('flare', '1')}${field('chaff', '1', !loCarriesChaff(type))}${loHasGun(type) ? field('gun', '1') : ''}</div>`;
 }
 function cmpSaveHtml() {
   const C = UI.cmp;
@@ -18092,7 +18326,7 @@ function cmpSaveGo() {
   const fail = msg => { C.err = msg; const e = document.getElementById('cmp-save-msg'); if (e) e.textContent = msg; };
   const pylons = cleanPylons(lo.pylons);
   if (!name) return fail(t('cmp.save.err.name'));
-  if ((LIB.mine[type] || []).some(p => presetName(p) === name)) return fail(tf('cmp.save.err.dup', TYPE_LABEL[type]));
+  if ((LIB.mine[type] || []).some(p => presetName(p) === name)) return fail(tf('cmp.save.err.dup', gameAircraftName(type)));
   if (!Object.keys(pylons).length) return fail(t('cmp.save.err.none'));
   const preset = { id: newPresetId(), name: name, pylons: pylons };
   (LIB.mine[type] = LIB.mine[type] || []).push(preset);
@@ -18113,7 +18347,7 @@ function presetsHtml() {
     rep.errors.forEach(e => lines.push(`<div class="ui-avert">⚠ ${esc(e)}</div>`));
   }
   const rows = [];
-  PAYLOAD_TYPES.forEach(ty => (LIB.mine[ty] || []).forEach((p, i) => rows.push(`<div class="fc-file"><span class="fc-file-n">${esc(presetName(p))}</span><span class="snap-flight-tag">${esc(TYPE_LABEL[ty])}</span>
+  PAYLOAD_TYPES.forEach(ty => (LIB.mine[ty] || []).forEach((p, i) => rows.push(`<div class="fc-file"><span class="fc-file-n">${esc(presetName(p))}</span><span class="snap-flight-tag">${esc(gameAircraftName(ty))}</span>
     <button type="button" class="pk-x" data-act="rm-mine" data-ty="${esc(ty)}" data-i="${i}" aria-label="${esc(t('pr.delete'))}" title="${esc(t('pr.delete'))}">✕</button></div>`)));
   return boxHtml('pr', t('sec.presets'), '', `<div class="miz-btn-row" style="margin-top:0"><button type="button" class="miz-btn" data-act="load-lua">${esc(t('pr.load'))}</button></div>${lines.join('')}
     <div class="fc-h" style="margin-top:0">${esc(tf('pr.mine', mineCount()))}</div>
