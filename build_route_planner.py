@@ -27,6 +27,7 @@ from route_pack_block import build_block as build_route_pack_block
 from route_theatre_block import build_block as build_route_theatre_block
 from route_write_block import build_block as build_route_write_block
 from group_store_block import build_block as build_group_store_block
+from public_host_block import build_block as build_public_host_block
 from radio_bands_block import build_block as build_radio_bands_block
 from radio_block import build_block as build_radio_block
 from aircraft_types_block import build_block as build_aircraft_types_block
@@ -1947,8 +1948,7 @@ const DCS_LEVELS = {
   'alt-Normandy':              [[1, 11, 1], [12, 13, 12], [13, 14, 13], [14, 15, 14], [15, 17, 15]]
 };
 const DCS_URL = 'https://maps.dcsolympus.com/maps/{key}/{z}/{x}/{y}.png';
-/* Adresse publique des tuiles servies par l'hôte de la suite : nos couches, et une copie des tuiles de DCS Olympus avec leur accord */
-const PUBLIC_TILES = 'https://dcs-tools-4thveaw.tail777510.ts.net/tuiles/';
+@@PUBLIC_HOST_BLOCK@@
 /* Nos couches, proposées en plus de « Carte DCS » sur le théâtre qu'elles couvrent : identifiant du fond, théâtre, chemin sous l'adresse
    publique, niveau natif, emprise [[sud, ouest], [nord, est]] (aucune tuile demandée hors de l'emprise). Couche ordinaire : ni miroir ni Olympus. */
 const OUR_LAYERS = {
@@ -10550,7 +10550,7 @@ def build():
     airfields_js = json.dumps(AF['theatres'], ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
     towns_js = json.dumps(TW['theatres'], ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
     js = JS.replace('__AIRFIELDS__', airfields_js).replace('__TOWNS__', towns_js)
-    js = js.replace('@@GEO_BLOCK@@\n', GEO_BLOCK).replace('@@READNUM_BLOCK@@\n', READNUM_BLOCK).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@DISS_BLOCK@@\n', build_diss_block()).replace('@@ROUTE_PACK_BLOCK@@\n', build_route_pack_block()).replace('@@ROUTE_THEATRE_BLOCK@@\n', build_route_theatre_block()).replace('@@ROUTE_WRITE_BLOCK@@\n', build_route_write_block()).replace('@@GROUP_STORE_BLOCK@@\n', build_group_store_block()).replace('@@RADIO_BLOCK@@\n', build_radio_block()).replace('@@RADIO_BANDS_BLOCK@@\n', build_radio_bands_block()).replace('@@AIRCRAFT_TYPES_BLOCK@@\n', build_aircraft_types_block()).replace('@@IMPORT_BLOCK@@\n', build_import_block() + build_mission_line_block()).replace('@@MESSAGES_BLOCK@@\n', build_messages_block() + build_ui_block())
+    js = js.replace('@@GEO_BLOCK@@\n', GEO_BLOCK).replace('@@READNUM_BLOCK@@\n', READNUM_BLOCK).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@DISS_BLOCK@@\n', build_diss_block()).replace('@@PUBLIC_HOST_BLOCK@@\n', build_public_host_block()).replace('@@ROUTE_PACK_BLOCK@@\n', build_route_pack_block()).replace('@@ROUTE_THEATRE_BLOCK@@\n', build_route_theatre_block()).replace('@@ROUTE_WRITE_BLOCK@@\n', build_route_write_block()).replace('@@GROUP_STORE_BLOCK@@\n', build_group_store_block()).replace('@@RADIO_BLOCK@@\n', build_radio_block()).replace('@@RADIO_BANDS_BLOCK@@\n', build_radio_bands_block()).replace('@@AIRCRAFT_TYPES_BLOCK@@\n', build_aircraft_types_block()).replace('@@IMPORT_BLOCK@@\n', build_import_block() + build_mission_line_block()).replace('@@MESSAGES_BLOCK@@\n', build_messages_block() + build_ui_block())
     js = js.replace('@@TBM_JS@@\n', build_tbm_block())
     if '@@' in js:
         raise SystemExit("[ERREUR] Marqueur @@ non remplacé dans le script")
