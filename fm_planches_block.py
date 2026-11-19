@@ -958,6 +958,19 @@ def _fc_route_line(P, x, y):
     return P.text(x, y, 8, L('fc', 'route.line', args=(D('STEPPE WIND M3'), L('fc', 'route.pts.many', args=('6',)), [D('153,7 ', '153.7 '), L('fc', 'u.km')])), anchor='start', op=.8)
 
 
+def _fc_departure(P, x, y, w):
+    """Les deux champs de départ d'un groupe (lot vol-parking) : la base, puis le départ sur la place ; chacun sur sa ligne. Renvoie (SVG, y de la fin)."""
+    o = [P.lfield(x, y, w, [L('fc', 'fp.base')], [L('fc', 'fp.base.opt', args=('Akrotiri', D('0,0', '0.0')))]),
+         P.lfield(x, y + 29, w, [L('fc', 'fp.start')], [L('fc', 'fp.start.parking')])]
+    return o, y + 29 + 26
+
+
+def _fc_stand(P, x, y, w):
+    """La place d'une unité : la liste (l'identifiant, le genre, la longueur) et le bouton Plan."""
+    return (P.lfield(x, y, w - 48, [L('fc', 'fp.place')], [L('fc', 'fp.place.opt', args=('H1', L('fc', 'fp.kind.heli'), '30'))])
+            + P.btn(x + w - 42, y + 11, 42, 15, [L('fc', 'fp.plan')], size=8))
+
+
 def _fc_unit_head(P, ux, uy, uw, n):
     return [chev(ux + 7, uy + 7), P.text(ux + 19, uy + 12, 8.5, L('fc', 'u.title', args=(n,)), anchor='start'), fold_icon(ux + uw - 30, uy + 4), P.text(ux + uw - 10, uy + 12, 8.5, D('✕'), op=.7)]
 
@@ -1079,9 +1092,11 @@ def _fc_wide(P):
     # ── colonne de gauche : les groupes ──────────────────────────────────────────
     L0, L1 = X0, 350
     gx, gw, gy = L0 + 8, L1 - L0 - 16, CT + 30
-    ux, uw, uy = gx + 6, gw - 12, gy + 68
+    dep, dep_end = _fc_departure(P, gx + 8, gy + 68, gw - 16)
+    ux, uw, uy = gx + 6, gw - 12, dep_end + 8
     fy, fy2 = uy + 18, uy + 47
-    ry = fy2 + 48
+    fy3 = fy2 + 29
+    ry = fy3 + 48
     rs, ry2 = _fc_radios(P, ux, uw, ry, True)
     ey = ry2 + 26
     UH = ey + 8 - uy
@@ -1097,6 +1112,7 @@ def _fc_wide(P):
     o.append(P.lfield(gx + 8, gy + 22, 104, [L('fc', 'fl.name')], [D('CAESAR')]))
     o.append(P.lfield(gx + 118, gy + 22, 98, [L('fc', 'fl.coalition')], [L('fc', 'fl.coalition.red')]))
     o.append(_fc_route_line(P, gx + 8, gy + 60))
+    o += dep
     o.append(f'<rect x="{_n(ux)}" y="{_n(uy)}" width="{_n(uw)}" height="{_n(UH)}" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/>')
     o += _fc_unit_head(P, ux, uy, uw, '1')
     o.append(P.lfield(ux + 8, fy, 62, [L('fc', 'u.type')], [D('Mi-24P')]))
@@ -1104,6 +1120,7 @@ def _fc_wide(P):
     o.append(P.lfield(ux + 140, fy, 62, [L('fc', 'u.callsign')], [D('CAESAR 1-1')]))
     o.append(P.lfield(ux + 8, fy2, 62, [L('fc', 'u.onboard')], [D('41')]))
     o.append(P.lfield(ux + 74, fy2, 128, [L('fc', 'u.livery')], [D('262nd_SHQ_USSR')]))
+    o.append(_fc_stand(P, ux + 8, fy3, 194))
     o += rs
     o.append(P.text(ux + 8, ey, 8, L('fc', 'u.loadout'), anchor='start', op=.7))
     o.append(P.text(ux + 46, ey, 8, L('fc', 'cmp.custom'), anchor='start'))
@@ -1143,16 +1160,18 @@ def _fc_wide(P):
     o.append(P.bubble(2, 80, CT + 12, L0, CT + 12))
     o.append(P.bubble(3, 80, gy + 8, gx, gy + 8))
     o.append(P.bubble(4, 80, gy + 41, gx + 8, gy + 41))
-    o.append(P.bubble(5, 80, uy + 8, ux, uy + 8))
-    o.append(P.bubble(6, ux + 138, fy2 + 26 + 12, ux + 138, fy2 + 26))
-    o.append(P.bubble(7, 80, ry - 3, ux, ry - 3))
-    o.append(P.bubble(8, 80, ry2 + 7, ux + 8, ry2 + 7))
-    o.append(P.bubble(9, 80, addg + 8, gx, addg + 8))
-    o.append(P.bubble(10, 640, CT + 12, R1, CT + 12))
-    o.append(P.bubble(11, 640, anc['head'], R1, anc['head']))
-    o.append(P.bubble(12, 640, anc['sym'][1], anc['sym'][0], anc['sym'][1]))
-    o.append(P.bubble(13, 640, anc['fuel'][1], anc['fuel'][0], anc['fuel'][1]))
-    o.append(P.bubble(14, 640, anc['save'][1], anc['save'][0], anc['save'][1]))
+    o.append(P.bubble(5, 80, gy + 68 + 18, gx + 8, gy + 68 + 18))
+    o.append(P.bubble(6, 80, uy + 8, ux, uy + 8))
+    o.append(P.bubble(7, ux + uw + 5, fy2 + 18, ux + 202, fy2 + 18))      # à droite de la livrée : dessous, la place
+    o.append(P.bubble(8, 80, fy3 + 18, ux + 8, fy3 + 18))
+    o.append(P.bubble(9, 80, ry - 3, ux, ry - 3))
+    o.append(P.bubble(10, 80, ry2 + 7, ux + 8, ry2 + 7))
+    o.append(P.bubble(11, 80, addg + 8, gx, addg + 8))
+    o.append(P.bubble(12, 640, CT + 12, R1, CT + 12))
+    o.append(P.bubble(13, 640, anc['head'], R1, anc['head']))
+    o.append(P.bubble(14, 640, anc['sym'][1], anc['sym'][0], anc['sym'][1]))
+    o.append(P.bubble(15, 640, anc['fuel'][1], anc['fuel'][0], anc['fuel'][1]))
+    o.append(P.bubble(16, 640, anc['save'][1], anc['save'][0], anc['save'][1]))
     o.append('</g>')
     o.append('</svg>')
     return '\n          '.join(o)
@@ -1179,9 +1198,11 @@ def _fc_tall(P):
     # le bloc des groupes
     GT = 122
     gx, gw, gy = X0 + 8, w - 16, GT + 30
-    ux, uw, uy = gx + 6, gw - 12, gy + 68
+    dep, dep_end = _fc_departure(P, gx + 8, gy + 68, gw - 16)
+    ux, uw, uy = gx + 6, gw - 12, dep_end + 8
     fy, fy2, fy3 = uy + 18, uy + 47, uy + 76
-    ry = fy3 + 26 + 14
+    fy4 = fy3 + 29
+    ry = fy4 + 26 + 14
     ey = ry + 14
     UH = ey + 8 - uy
     u2y = uy + UH + 4
@@ -1196,6 +1217,7 @@ def _fc_tall(P):
     o.append(P.lfield(gx + 8, gy + 22, 98, [L('fc', 'fl.name')], [D('CAESAR')]))
     o.append(P.lfield(gx + 112, gy + 22, 100, [L('fc', 'fl.coalition')], [L('fc', 'fl.coalition.red')]))
     o.append(_fc_route_line(P, gx + 8, gy + 60))
+    o += dep
     o.append(f'<rect x="{_n(ux)}" y="{_n(uy)}" width="{_n(uw)}" height="{_n(UH)}" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/>')
     o += _fc_unit_head(P, ux, uy, uw, '1')
     o.append(P.lfield(ux + 8, fy, 92, [L('fc', 'u.type')], [D('Mi-24P')]))
@@ -1203,6 +1225,7 @@ def _fc_tall(P):
     o.append(P.lfield(ux + 8, fy2, 92, [L('fc', 'u.callsign')], [D('CAESAR 1-1')]))
     o.append(P.lfield(ux + 108, fy2, 92, [L('fc', 'u.onboard')], [D('41')]))
     o.append(P.lfield(ux + 8, fy3, 192, [L('fc', 'u.livery')], [D('262nd_SHQ_USSR')]))
+    o.append(_fc_stand(P, ux + 8, fy4, 192))
     rs, _ = _fc_radios(P, ux, uw, ry, False)
     o += rs
     o.append(P.text(ux + 8, ey, 8, L('fc', 'u.loadout'), anchor='start', op=.7))
@@ -1232,15 +1255,17 @@ def _fc_tall(P):
     o.append(P.bubble(2, 30, GT + 12, X0, GT + 12))
     o.append(P.bubble(3, 30, gy + 8, gx, gy + 8))
     o.append(P.bubble(4, 30, gy + 41, gx + 8, gy + 41))
-    o.append(P.bubble(5, 30, uy + 8, ux, uy + 8))
-    o.append(P.bubble(6, 30, fy3 + 16, ux + 8, fy3 + 16))
-    o.append(P.bubble(7, 30, ry - 3, ux, ry - 3))
-    o.append(P.bubble(9, 30, addg + 8, gx, addg + 8))
-    o.append(P.bubble(10, 30, RT + 12, X0, RT + 12))
-    o.append(P.bubble(11, 30, anc['head'], X0, anc['head']))
-    o.append(P.bubble(12, 30, anc['sym'][1], anc['sym'][0], anc['sym'][1]))
-    o.append(P.bubble(13, 30, anc['fuel'][1], X0 + 8, anc['fuel'][1]))
-    o.append(P.bubble(14, 330, anc['save'][1], anc['save'][0], anc['save'][1]))
+    o.append(P.bubble(5, 30, gy + 68 + 18, gx + 8, gy + 68 + 18))
+    o.append(P.bubble(6, 30, uy + 8, ux, uy + 8))
+    o.append(P.bubble(7, 30, fy3 + 16, ux + 8, fy3 + 16))
+    o.append(P.bubble(8, 30, fy4 + 18, ux + 8, fy4 + 18))
+    o.append(P.bubble(9, 30, ry - 3, ux, ry - 3))
+    o.append(P.bubble(11, 30, addg + 8, gx, addg + 8))
+    o.append(P.bubble(12, 30, RT + 12, X0, RT + 12))
+    o.append(P.bubble(13, 30, anc['head'], X0, anc['head']))
+    o.append(P.bubble(14, 30, anc['sym'][1], anc['sym'][0], anc['sym'][1]))
+    o.append(P.bubble(15, 30, anc['fuel'][1], X0 + 8, anc['fuel'][1]))
+    o.append(P.bubble(16, 330, anc['save'][1], anc['save'][0], anc['save'][1]))
     o.append('</g>')
     o.append('</svg>')
     return '\n          '.join(o)
@@ -1260,34 +1285,40 @@ def _fc_legend_rows():
         (4, [L('fc', 'fl.name')],
          'et la coalition identifient le groupe. Deux groupes d’une même coalition ne portent pas le même nom : l’export est refusé.',
          'and the coalition identify the group. Two groups of the same coalition do not share a name: the export is refused.'),
-        (5, [L('fc', 'u.title', args=('1',))],
+        (5, [L('fc', 'fp.base')],
+         ['la base d’où part le groupe, rangée par distance du point 1 de la route ; « Aucune » le laisse partir du point 1. « ', L('fc', 'fp.start'), ' » dit comment : sur la place, à froid ou moteurs en route, quand il y a une base ; en vol ou au sol au point 1 sinon. Le paquet porte la base, le départ et les places qui prennent l’appareil du groupe.'],
+         ['the base the group starts from, listed by distance from waypoint 1 of the route; “None” lets it start at waypoint 1. “', L('fc', 'fp.start'), '” tells how: on the stand, cold or with engines running, when there is a base; in the air or on the ground at waypoint 1 otherwise. The package carries the base, the start and the stands that fit the group’s aircraft.']),
+        (6, [L('fc', 'u.title', args=('1',))],
          ['son type, son nom, son indicatif, son numéro de bord et sa livrée. Changer le type d’une unité efface ses radios et son emport, avec confirmation. Dans un groupe de deux unités ou plus, l’icône à droite de l’en-tête, « ', L('fc', 'u.foldall'), ' » ou « ', L('fc', 'u.unfoldall'), ' », replie ou déplie toutes les unités du groupe.'],
          ['its type, its name, its call sign, its tail number and its livery. Changing a unit’s type clears its radios and loadout, with confirmation. In a group of two units or more, the icon at the right of the header, “', L('fc', 'u.foldall'), '” or “', L('fc', 'u.unfoldall'), '”, folds or unfolds all the units of the group.']),
-        (6, [L('fc', 'u.livery')],
+        (7, [L('fc', 'u.livery')],
          'une liste, celle du type de l’unité. Ce qu’elle affiche tant que vous n’avez rien choisi est dit plus bas, dans La livrée.',
          'a list, the unit type’s. What it shows until you choose is told below, in The livery.'),
-        (7, [L('fc', 'u.radios')],
+        (8, [L('fc', 'fp.place')],
+         ['la place de l’unité sur la base : une liste des places qui prennent son appareil, ou « ', L('fc', 'fp.plan'), ' », le plan de l’aérodrome de DCS Airfield Charts avec les places dessus. Une place prise par une autre unité du Flight Configurator n’est plus offerte ; si elle est prise dans la mission, HQ propose une place libre.'],
+         ['the unit’s stand on the base: a list of the stands that take its aircraft, or “', L('fc', 'fp.plan'), '”, the airfield map from DCS Airfield Charts with the stands on it. A stand taken by another unit of the Flight Configurator is no longer offered; if it is taken in the mission, HQ offers a free one.']),
+        (9, [L('fc', 'u.radios')],
          'pour chaque poste de l’appareil, un champ par canal, numéroté comme au cockpit. La case devant un canal l’imprime sur la datacard du groupe : le Datacard Generator montre le même choix, mais le paquet de vol ne le porte pas.',
          'for each radio of the aircraft, one field per channel, numbered as in the cockpit. The box in front of a channel prints it on the group’s datacard: the Datacard Generator shows the same choice, but the flight package does not carry it.'),
-        (8, [L('fc', 'rad.copy')],
+        (10, [L('fc', 'rad.copy')],
          'écrit les mêmes canaux sur les unités du même type.',
          'writes the same channels on the units of the same type.'),
-        (9, [L('fc', 'fl.add')],
+        (11, [L('fc', 'fl.add')],
          'ajoute un groupe, avec son nom, sa coalition et ses unités.',
          'adds a group, with its name, its coalition and its units.'),
-        (10, [L('fc', 'sec.route')],
+        (12, [L('fc', 'sec.route')],
          'le bloc parle du groupe de l’unité choisie. Changer de route rouvre le choix, Retirer la vide.',
          'the block is about the chosen unit’s group. Change route reopens the choice, Remove empties it.'),
-        (11, [L('fc', 'sec.cmp')],
+        (13, [L('fc', 'sec.cmp')],
          'l’unité choisie, que l’on touche sur sa carte, a son emport affiché ici : la vue de face de l’appareil, avec une case par station et la liste des armes permises. La masse totale et la masse estimée au décollage s’affichent, en orange au-delà du maximum recommandé.',
          'the chosen unit, which you tap on its card, has its loadout shown here: the aircraft’s front view, with one box per station and the list of permitted weapons. The total mass and the estimated take-off mass are shown, in orange beyond the recommended maximum.'),
-        (12, [L('fc', 'cmp.sym')],
+        (14, [L('fc', 'cmp.sym')],
          'pose sur la station jumelle l’arme miroir. Une arme qui ne peut pas aller avec le reste est grisée, avec les stations qui la gênent ; le Kord du Mi-24P n’a qu’une porte.',
          'places the mirror weapon on the twin station. A weapon that cannot go with the rest is greyed out, with the stations that obstruct it; the Mi-24P’s Kord has only one door.'),
-        (13, [L('fc', 'lo.fuel', args={'u': 'kg'}), D(', '), L('fc', 'lo.flare'), D(', '), L('fc', 'lo.chaff'), D(', '), L('fc', 'lo.gun')],
+        (15, [L('fc', 'lo.fuel', args={'u': 'kg'}), D(', '), L('fc', 'lo.flare'), D(', '), L('fc', 'lo.chaff'), D(', '), L('fc', 'lo.gun')],
          'une valeur tapée hors limite est refusée.',
          'a typed value out of range is refused.'),
-        (14, [L('fc', 'cmp.save')],
+        (16, [L('fc', 'cmp.save')],
          'enregistre l’emport sous un nom ; « Charger des presets (.lua) » reprend les fichiers de presets de l’escadre ; « Partir de » propose ces presets et une copie de l’emport d’une autre unité du même type.',
          'saves the loadout under a name; “Load presets (.lua)” takes up the wing’s preset files; “Start from” offers those presets and a copy of another unit’s loadout of the same type.'),
     ]

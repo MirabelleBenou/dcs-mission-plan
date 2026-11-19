@@ -42,7 +42,7 @@ The landing page presents each tool as a **pinned print** on the board. Active t
 | Tool | What it does | Status |
 |------|--------------|--------|
 | **HQ** | Command post — configure your wing once (branding, squadrons), shared with the other tools; experimental `.miz` mission reader/patcher | 🧪 Beta |
-| **Flight Configurator** | Prepare a flight for the Mission Commander — identity, radios, loadout built on the aircraft's front view or started from your presets, livery — and export it as a flight package that HQ applies to a mission; every flyable aircraft of the game (75 types) | 🧪 Beta |
+| **Flight Configurator** | Prepare a flight for the Mission Commander — identity, radios, loadout built on the aircraft's front view or started from your presets, livery — and export it as a flight package that HQ applies to a mission; the departure airfield and the stand of each aircraft, on the airfield map; every flyable aircraft of the game (75 types) | 🧪 Beta |
 | **Briefing Generator** | Mission briefings, full or quick — SITAC, radio plan, airfields, charts, recon photos, map from the Route Planner — PDF & PNG export | ✅ |
 | **Recon Station** | Turn a screenshot into a reconnaissance analysis photo — sensor looks, annotations drawn by touch, lossless PNG | ✅ |
 | **Field Manual** | In-app documentation for the suite — one illustrated chapter per tool, diagrams, FR/EN, offline | ✅ |
@@ -53,16 +53,17 @@ The landing page presents each tool as a **pinned print** on the board. Active t
 
 ### 🛡️ HQ — your wing, configured once
 
-HQ is the suite's **command post**. Its main job today is the **wing hub**: set your wing name, logo, squadrons and callsigns **once**, and Briefing Generator + Recon Station pick it up automatically. HQ also ships an **experimental `.miz` engine** (read a mission, export a mission snapshot, apply surgical patches) — HQ applies the Flight Configurator's flight packages to the mission, and creates a flight the mission lacks, from its package; in-game validation is pending, so HQ is published as **beta**. HQ can also write **Dynamic Spawn** into a mission: mark flights as templates and link them to the airfields, FARPs and ships that already have Dynamic Spawn enabled in the mission editor (HQ never enables it). Its **Example** button loads a demonstration wing; your own configuration is kept and can be restored in one tap.
+HQ is the suite's **command post**. Its main job today is the **wing hub**: set your wing name, logo, squadrons and callsigns **once**, and Briefing Generator + Recon Station pick it up automatically. HQ also ships an **experimental `.miz` engine** (read a mission, export a mission snapshot, apply surgical patches) — HQ applies the Flight Configurator's flight packages to the mission, and creates a flight the mission lacks, from its package, on its stands when the package says so; in-game validation is pending, so HQ is published as **beta**. HQ can also write **Dynamic Spawn** into a mission: mark flights as templates and link them to the airfields, FARPs and ships that already have Dynamic Spawn enabled in the mission editor (HQ never enables it). Its **Example** button loads a demonstration wing; your own configuration is kept and can be restored in one tap.
 
 ### ✈️ Flight Configurator — in detail
 
-The Flight Configurator is the **Flight Lead's** tool: it prepares one or more flights and exports them as a **flight package** (`dcs-flight-package-v2`; the v1 packages are still read) that the Mission Commander applies to a mission with HQ. It runs for **every flyable aircraft of the game** (75 types).
+The Flight Configurator is the **Flight Lead's** tool: it prepares one or more flights and exports them as a **flight package** (`dcs-flight-package-v2`; the v1 packages are still read) that the Mission Commander applies to a mission with HQ. It runs for **every flyable aircraft of the game** (75 types). A flight can carry its **departure** (`departure`: the start, the base and the stands that fit the aircraft) and each unit its **stand** (`stand`: parking number, name and position); a package without them is read as before, and HQ writes them into the flight it creates.
 
 - **Flights** — group name, aircraft, coalition, up to four units (name, call sign, onboard number, livery); flights fold into a one-line summary
 - **Radios** — every radio of the aircraft, one field per channel, frequencies from 0 to 999.999 MHz (the Comm Plan Editor's rule); copy to the other units of the flight
 - **Loadout** — built on the aircraft's **front view**: a weapon list per station, twin stations, total mass, and fuel, flares, chaff and gun brought back to the aircraft's limits; start from **My presets** (loaded from `.lua` preset files, or kept from your own loadouts)
 - **Livery** — free text, with suggestions from the liveries already seen for that aircraft type
+- **Departure** — the base (listed by distance from the route's first waypoint), the start (on the stand, cold or engines running; or in the air or on the ground at the first waypoint) and a stand for each aircraft, from a list of the stands that fit it or on the airfield map drawn by DCS Airfield Charts; a stand taken by another aircraft of the flight is not offered
 - **Import** — the mission loaded in HQ, a briefing or a flight package (`.json` or `.zip`), with four boxes per flight: Route, Radios, Loadout, Livery; the route is carried as is, never drawn
 - **Open / Save** — **Save** writes all the Mission Plan work, your flights included (your loadout presets stay in your browser), into the suite's work file, and **Open ▾ › Open a work file…** brings it back (an old Flight Configurator file still opens); **Export** writes the package (parts left empty stay untouched in HQ)
 - **Reusable loadout engine** — `payload_block.py` reads preset files and builds a `.miz` `payload`, with no DOM and no network; other modules can take it as is
@@ -223,6 +224,7 @@ The output `dist/dcs_mission_plan.html` is the distributable (and the file publi
 ├── assets.json                    # Embedded fonts, libraries, kraft texture (base64)
 ├── airfields.json                 # DCS airfield & helipad positions (from pydcs)
 ├── airdromes.json                 # DCS airfield names and ids per theatre (from pydcs, via DCS Airfield Charts)
+├── public_host_block.py           # Shared address of the suite's public files (Route Planner, Flight Configurator), no DOM
 ├── towns.json                     # DCS town names & positions (from the DCS World maps)
 ├── data/                          # Flight Configurator tables (weapons, pylons, limits, front views from Mission Tools), HQ's aircraft types, and their licences
 ├── wmm/                          # World Magnetic Model coefficients 1985–2025 (NOAA, public domain)
@@ -286,6 +288,7 @@ For code contributions: fork, branch, study the build scripts to understand the 
 - NATO military symbols drawn with **[milsymbol](https://github.com/spatialillusions/milsymbol)** by Måns Beckman (MIT)
 - DCS airfield & helipad names and positions, and the DCS map projections, from **[pydcs](https://github.com/pydcs/dcs)** (LGPL-3.0-or-later); place-name overlay © Esri, HERE, Garmin, OpenStreetMap contributors
 - Airfield names and ids: pydcs, via DCS Airfield Charts
+- Flight Configurator: the airfield stands (`data/parkings.json`, from pydcs, LGPL-3.0-or-later) and the airfield maps drawn under them, from **DCS Airfield Charts**
 - Datacard Generator: today's ICAO codes of the airfields from **[OurAirports](https://ourairports.com/)** (public domain), matched by position, via DCS Airfield Charts (`airfield_icao.json`)
 - Flight Configurator: weapon names, permitted weapons per station, masses and aircraft limits from **[pydcs](https://github.com/pydcs/dcs)** (LGPL-3.0-or-later, `data/COPYING.LESSER`), taken from Mission Tools; the front-view aircraft drawings are by **Goldwolf** (DCS Reference Guide), used with his permission and **not** under this repository's AGPL licence — see `data/views/LICENSE.md`
 - HQ: the game's flyable aircraft types offered for a squadron, from **[pydcs](https://github.com/pydcs/dcs)** 1.0.0 (LGPL-3.0-or-later, `data/aircraft_types.json`)

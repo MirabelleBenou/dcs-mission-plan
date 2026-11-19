@@ -18,12 +18,14 @@ The sections per tool, further down, keep the history of each tool up to v1.24.0
 - The Wing window offers the game liveries of every aircraft type found in DCS (68 types), not only the four of the Flight Configurator.
 - The “Add a type…” list of the Wing window can be searched.
 - A flight of a package that the mission lacks can now be created: tick “Create this flight in the mission”, pick the country (and the coalition if the package has none) and start in the air or on the ground at the route’s first waypoint. A flight without a route, or mixing helicopters and airplanes, is not created and HQ says why.
+- A created flight now starts as the Flight Configurator set it: on its stands, cold or engines running, or at the route's first waypoint. A stand already taken in the mission is replaced by the nearest free one that fits, which you can change.
 
 #### Flight Configurator
 - In a group of two units or more, the icon at the right of a unit’s header folds or unfolds all the units of the group.
 - Every flyable aircraft of the game (75 types) can now be configured, imported and kept as a preset, not only the Mi-24P, Mi-8MTV2, F-4E and Mirage F1EE. What a type lacks is said on screen: no radio preset in the mission editor, radio band not checked, no loadout, no front view, no game livery.
 - Each radio offers as many channels as the mission editor writes for the type.
 - Exporting a flight without a route now warns that HQ will not be able to create it if the mission lacks it.
+- Each flight can now start from an airfield: pick the departure base, the start (on the stand, cold or engines running; or at the route's first waypoint) and a stand for each aircraft, from a list or on the airfield map drawn by DCS Airfield Charts.
 
 #### Briefing Generator
 - Aircraft types are shown under their designation, like in the other tools; the briefing still stores the game’s type name.
