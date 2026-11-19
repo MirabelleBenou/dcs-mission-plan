@@ -4857,11 +4857,11 @@ function dgFreeTypeField(c, i, x) {
   }
   const grp = (label, names) => '<optgroup label="' + esc(label) + '">' + names.map(n => '<option value="' + esc(n) + '"' + (n === cur ? ' selected' : '') + '>' + esc(gameAircraftName(n)) + '</option>').join('') + '</optgroup>';
   const off = dgTypeOff(cur);
-  return '<div class="ed-field"><label>' + esc(t('f.crew.type')) + '</label><select data-path="' + path + '" data-dg-type="' + i + '">' +
+  return '<div class="ed-field"><label>' + esc(t('f.crew.type')) + '</label><select data-path="' + path + '" data-dg-type="' + i + '" data-search data-search-empty="' + esc(t('u.type.none')) + '">' +
     '<option value=""' + (cur === '' ? ' selected' : '') + '>' + esc(t('u.type.pick')) + '</option>' +
     grp(t('ac.helis'), GAME_AIRCRAFT_TYPES.helicopters) + grp(t('ac.planes'), GAME_AIRCRAFT_TYPES.planes) +
     '<optgroup label="' + esc(t('ac.mods')) + '">' + (off ? '<option value="' + esc(cur) + '" data-dg-mod selected>' + esc(cur) + '</option>' : '') +
-    '<option value="__other__">' + esc(t('ac.other')) + '</option></optgroup></select></div>';
+    '<option value="__other__" data-keep>' + esc(t('ac.other')) + '</option></optgroup></select></div>';
 }
 
 /* La boîte « Groupe et équipage », la même pour une carte liée et une carte libre : le groupe (nom, coalition, appareil, nombre, tâche, menace), puis une ligne par unité

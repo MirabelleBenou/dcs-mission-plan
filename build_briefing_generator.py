@@ -9,6 +9,7 @@ import json
 import os
 
 from aircraft_types_block import build_block as build_aircraft_types_block
+from radio_block import build_block as build_radio_block
 from messages_block import build_block as build_messages_block, build_css as build_messages_css
 from ui_block import build_tbm_css, build_tbm_block, build_block as build_ui_block, build_css as build_ui_css, verify as ui_verify, verify_bar as ui_verify_bar
 from shell_only_block import build_block as build_shell_only_block
@@ -4682,7 +4683,7 @@ function getRosterLabelParts(keyOrGroup) {
 
   // Short label for auto-callsign: subgroup if defined, else id
   const shortLabel = identifier || g.id;
-  const fullLabel = label + (g.aircraft ? ' — ' + g.aircraft : '');
+  const fullLabel = label + (g.aircraft ? ' — ' + gameAircraftName(g.aircraft) : '');
 
   return { shortLabel, label, fullLabel };
 }
@@ -4820,67 +4821,8 @@ const RADIO_AIRCRAFT_MAX = 6;
 const RADIO_RADIOS_MAX = 3;
 const RADIO_CHANNELS_MAX = 12;
 
-/* ============= BASE RADIO PAR APPAREIL (copie depuis Comm Plan Editor) =============
-   Synchroniser si CPE fait évoluer sa ACFT_RADIO_MAP.
-   Clé = type DCS, valeur = {slot: "Nom radio (bande)"}. */
-const ACFT_RADIO_MAP = {
-  // ─── Soviétiques / Russes ─────────────────────────────────────────────
-  "Mi-24P":      { 1: "R-863 (VHF/UHF)",   2: "R-828 (VHF FM)",      3: "Jadro-1I (HF)" },
-  "Mi-8MT":      { 1: "R-863 (VHF/UHF)",   2: "R-828 (VHF FM)",      3: "Jadro-1A (HF)" },
-  "Ka-50_3":     { 1: "R-800L1 (VHF/UHF)", 2: "R-828 (VHF FM)" },
-  "MiG-29A":     { 1: "R-862 (VHF/UHF)" },
-  "MiG-29S":     { 1: "R-862 (VHF/UHF)" },
-  "MiG-29G":     { 1: "R-862 (VHF/UHF)" },
-  "MiG-29 Fulcrum": { 1: "R-862 (VHF/UHF)" },
-  "MiG-21Bis":   { 1: "R-832M (VHF/UHF)" },
-  "MiG-15bis":   { 1: "RSI-6K (HF)" },
-  "Su-25T":      { 1: "R-862 (VHF/UHF)" },
-  "Su-27":       { 1: "R-862 (VHF/UHF)" },
-  "Su-33":       { 1: "R-862 (VHF/UHF)" },
-  // ─── OTAN — chasseurs ─────────────────────────────────────────────────
-  "F-5E-3":      { 1: "AN/ARC-164 (UHF)" },
-  "F-4E-45MC":   { 1: "AN/ARC-164(V) (UHF COMM)",     2: "AN/ARC-164 (UHF AUX)" },
-  "F-14B":       { 1: "AN/ARC-159 (UHF - COMM 1)",    2: "AN/ARC-182 (V/UHF - COMM 2)" },
-  "F-14A-135-GR":{ 1: "AN/ARC-159 (UHF - COMM 1)",    2: "AN/ARC-182 (V/UHF - COMM 2)" },
-  "F-14A-135-GR-Early": { 1: "AN/ARC-159 (UHF - COMM 1)", 2: "AN/ARC-182 (V/UHF - COMM 2)" },
-  "F-15C":       { 1: "AN/ARC-164 (UHF)" },
-  "F-15ESE":     { 1: "AN/ARC-164 (UHF - COMM 1)",    2: "AN/ARC-186 (V/UHF - COMM 2)" },
-  "F-16C_50":    { 1: "AN/ARC-164 (UHF - COMM 1)",    2: "AN/ARC-222 (V/UHF - COMM 2)" },
-  "FA-18C_hornet":{ 1: "AN/ARC-210 (V/UHF - COMM 1)", 2: "AN/ARC-210 (V/UHF - COMM 2)" },
-  "JF-17":       { 1: "R&S M3AR (V/UHF - COMM 1)",    2: "R&S M3AR (V/UHF - COMM 2)" },
-  // ─── OTAN — Mirage F1 ─────────────────────────────────────────────────
-  "Mirage-F1CE": { 1: "TRAP 136 (V/UHF - Verte)",     2: "TRAP 137B (UHF - Rouge)" },
-  "Mirage-F1BE": { 1: "TRAP 136 (V/UHF - Verte)",     2: "TRAP 137B (UHF - Rouge)" },
-  "Mirage-F1CR": { 1: "TRAP 136 (V/UHF - Verte)",     2: "TRAP 137B (UHF - Rouge)" },
-  "Mirage-F1EE": { 1: "TRAP 136 (V/UHF - Verte)",     2: "TRAP 137B (UHF - Rouge)" },
-  "M-2000C":     { 1: "TRT ERA 7000 (V/UHF)",          2: "TRT ERA 7200 (UHF Auxiliaire)" },
-  // ─── Attaque / CAS ────────────────────────────────────────────────────
-  "A-10C":       { 1: "AN/ARC-186 (VHF AM)", 2: "AN/ARC-164 (UHF)",  3: "AN/ARC-186 (VHF FM)" },
-  "A-10C_2":     { 1: "AN/ARC-186 (VHF AM)", 2: "AN/ARC-164 (UHF)",  3: "AN/ARC-186 (VHF FM)" },
-  "AV8BNA":      { 1: "AN/ARC-210 (V/UHF - COMM 1)", 2: "AN/ARC-210 (V/UHF - COMM 2)" },
-  // ─── Hélicoptères OTAN ────────────────────────────────────────────────
-  "AH-64D_BLK_II": {
-    1: "AN/ARC-186 (VHF - COMM 1)", 2: "AN/ARC-164 (UHF - COMM 2)",
-    3: "AN/ARC-201D (FM1 - COMM 3)", 4: "AN/ARC-201D (FM2 - COMM 4)",
-    5: "AN/ARC-220 (HF - COMM 5)"
-  },
-  "CH-47Fbl1": {
-    1: "AN/ARC-186 (VHF AM/FM)", 2: "AN/ARC-164 (UHF AM)",
-    3: "AN/ARC-201D (VHF FM1)", 4: "AN/ARC-201D (VHF FM2)", 5: "AN/ARC-220 (HF)"
-  },
-  "UH-1H":       { 1: "AN/ARC-134 (VHF AM)", 2: "AN/ARC-131 (VHF FM)", 3: "AN/ARC-51BX (UHF)" },
-  "OH58D":       { 1: "AN/ARC-186 (VHF AM/FM)", 2: "AN/ARC-164 (UHF)", 3: "AN/ARC-201 (VHF FM)" },
-  // ─── Hélicoptères français — Gazelles ─────────────────────────────────
-  "SA342L":      { 1: "Manta TRAP 138 (V/UHF)", 2: "Manta TRAP 139 (V/UHF)" },
-  "SA342M":      { 1: "Manta TRAP 138 (V/UHF)", 2: "Manta TRAP 139 (V/UHF)" },
-  "SA342Minigun":{ 1: "Manta TRAP 138 (V/UHF)", 2: "Manta TRAP 139 (V/UHF)" },
-  "SA342Mistral":{ 1: "Manta TRAP 138 (V/UHF)", 2: "Manta TRAP 139 (V/UHF)" },
-  // ─── Transport ────────────────────────────────────────────────────────
-  "C-130J-30":   { 1: "AN/ARC-210 (V/UHF - COMM 1)", 2: "AN/ARC-210 (V/UHF - COMM 2)" },
-  "Hercules":    { 1: "AN/ARC-164 (UHF)", 2: "AN/ARC-186 (VHF)" },
-};
-
-/* Alias libellé BG (libre) → clé DCS de ACFT_RADIO_MAP.
+@@RADIO_BLOCK@@
+/* Alias libellé BG (libre) → clé DCS de RADIO_POSTES (radio_block.py, la table du Comm Plan Editor, la même que celle du Flight Configurator et du Datacard Generator).
    Normalisation : toLowerCase().trim(), espaces/tirets condensés en espace simple.
    Priorité : exact → alias → sous-chaîne → null. */
 const AIRCRAFT_RADIO_ALIAS = {
@@ -4949,13 +4891,13 @@ function _normalizeAcft(name) {
 function resolveAircraftRadioKey(name) {
   if (!name) return null;
   // 1. Match exact
-  if (ACFT_RADIO_MAP[name]) return name;
+  if (Object.prototype.hasOwnProperty.call(RADIO_POSTES, name)) return name;
   const norm = _normalizeAcft(name);
   // 2. Alias
   if (AIRCRAFT_RADIO_ALIAS[norm]) return AIRCRAFT_RADIO_ALIAS[norm];
   // 3. Sous-chaîne heuristique (clé contient le nom ou inversement)
   const normLow = norm;
-  for (const key of Object.keys(ACFT_RADIO_MAP)) {
+  for (const key of Object.keys(RADIO_POSTES)) {
     const keyNorm = _normalizeAcft(key);
     if (keyNorm.includes(normLow) || normLow.includes(keyNorm)) return key;
   }
@@ -4965,7 +4907,7 @@ function resolveAircraftRadioKey(name) {
 // Catalogue complet dédupliqué + trié (repli appareil non reconnu)
 function getRadioCatalogue() {
   const set = new Set();
-  for (const slots of Object.values(ACFT_RADIO_MAP)) {
+  for (const slots of Object.values(RADIO_POSTES)) {
     for (const name of Object.values(slots)) set.add(name);
   }
   return Array.from(set).sort();
@@ -4975,7 +4917,7 @@ function getRadioCatalogue() {
 function getRadiosForAircraft(name) {
   const key = resolveAircraftRadioKey(name);
   if (!key) return null;
-  return Object.values(ACFT_RADIO_MAP[key]);
+  return Object.values(RADIO_POSTES[key]);
 }
 
 function genId(prefix) {
@@ -5112,7 +5054,7 @@ function renderRadioAircrafts() {
       <button type="button" class="phase-rm" data-ap-rm="${ai}">${t('editor.imgCard.remove')}</button>
       <div class="ed-field"><label>${t('editor.phases.aircraft')}</label>
         <select data-ap-aircraft="${ai}">
-          ${getAllAircraft().map(a => `<option value="${escapeAttr(a)}">${escapeHtml(a)}</option>`).join('')}
+          ${getAllAircraft().map(a => `<option value="${escapeAttr(a)}">${escapeHtml(gameAircraftName(a))}</option>`).join('')}
           <option value="__custom__">${t('select.customAircraft')}</option>
         </select>
       </div>
@@ -5407,7 +5349,7 @@ function renderPhaseEditor() {
   // Build squadron options — known + guest option
   const sqOptions = [`<option value="">${t('select.noSquadron')}</option>`]
     .concat(wingConfig.squadrons.map(s => {
-      const aircraftLabel = s.aircraft.length === 1 ? s.aircraft[0] : s.aircraft.join(' / ');
+      const aircraftLabel = s.aircraft.map(gameAircraftName).join(' / ');
       return `<option value="${s.id}">${escapeHtml(s.id)} ${escapeHtml(s.callsign)} — ${escapeHtml(aircraftLabel)}</option>`;
     }))
     .concat([`<option value="__guest__">${t('editor.phases.guestOption')}</option>`])
@@ -5419,7 +5361,7 @@ function renderPhaseEditor() {
 
   let aircraftSelectorHtml = '';
   if (showAircraftSelector) {
-    const acOpts = selectedSq.aircraft.map(a => `<option value="${escapeAttr(a)}">${escapeHtml(a)}</option>`).join('');
+    const acOpts = selectedSq.aircraft.map(a => `<option value="${escapeAttr(a)}">${escapeHtml(gameAircraftName(a))}</option>`).join('');
     aircraftSelectorHtml = `
       <div class="ed-field"><label>${t('editor.phases.aircraft')}</label>
         <select id="pf-aircraft">${acOpts}</select>
@@ -6890,7 +6832,7 @@ function simpleFlightRows() {
     /* une ligne sans escadre lisible (sans escadre, escadre invitée sans nom ni appareil, escadre absente de la configuration Wing) mais avec un sous-groupe imprime ce sous-groupe seul ; sans rien, « — » */
     const vol = info ? getRosterLabelParts(info).shortLabel : phaseBareSubgroup(ph);
     /* un groupe sans escadron imprime l'appareil choisi (ph.aircraft) ; un groupe d'escadron ou invité garde le sien */
-    const acft = (info && info.aircraft && info.aircraft !== '?') ? info.aircraft : ((!info && ph.squadron !== '__guest__' && typeof ph.aircraft === 'string') ? ph.aircraft.trim() : '');
+    const acft = gameAircraftName((info && info.aircraft && info.aircraft !== '?') ? info.aircraft : ((!info && ph.squadron !== '__guest__' && typeof ph.aircraft === 'string') ? ph.aircraft.trim() : ''));
     const n = parseInt(ph.count, 10);
     const app = (Number.isInteger(n) && n >= 1) ? (acft ? n + '× ' + acft : n + '×') : acft;
     return [vol, app, ph.title || '', ph.departure || ''];
@@ -7132,7 +7074,7 @@ function buildPages() {
                 ${logoHtml}
                 <div class="squadron-info">
                   <strong>${escapeHtml(info.id)} ░ ${escapeHtml(primaryName)}</strong>
-                  <div class="squadron-aircraft">${escapeHtml(info.aircraft)}</div>
+                  <div class="squadron-aircraft">${escapeHtml(gameAircraftName(info.aircraft))}</div>
                   <div class="squadron-phases">${e.phases.length > 1 ? t('preview.missionPlural') : t('preview.missionSingular')} ${e.phases.join(', ')}</div>
                 </div>
               </div>`;
@@ -7180,7 +7122,7 @@ function buildPages() {
         const info = getMissionGroups().find(x => x.key === g.missionKey);
         return `<th colspan="2" class="rmt-group-head">
           <span class="rmt-group-name">${escapeHtml(parts.label)}</span>
-          ${info && info.aircraft ? `<span class="rmt-group-aircraft">${escapeHtml(info.aircraft)}</span>` : ''}
+          ${info && info.aircraft ? `<span class="rmt-group-aircraft">${escapeHtml(gameAircraftName(info.aircraft))}</span>` : ''}
         </th>`;
       };
 
@@ -7257,7 +7199,7 @@ function buildPages() {
         <div class="squadron-chip">
           <span class="sq-id">${escapeHtml(info.id)}</span>
           <span class="sq-cs">${escapeHtml(nameToShow)}</span>
-          <span class="sq-ac">${escapeHtml(info.aircraft)}</span>
+          <span class="sq-ac">${escapeHtml(gameAircraftName(info.aircraft))}</span>
         </div>`;
     } else if (phaseBareSubgroup(ph)) {
       /* sans escadre lisible : la puce ne porte que le sous-groupe */
@@ -7379,7 +7321,7 @@ function buildPages() {
       if (ph.squadron === '__guest__' && ph.guestSquadron && ph.guestSquadron.aircraft) {
         const key = ph.guestSquadron.aircraft.toLowerCase();
         if (!guestAircraftMap.has(key)) {
-          guestAircraftMap.set(key, { name: ph.guestSquadron.name || ph.guestSquadron.aircraft });
+          guestAircraftMap.set(key, { name: ph.guestSquadron.name || gameAircraftName(ph.guestSquadron.aircraft) });
         }
       }
     });
@@ -7423,15 +7365,15 @@ function buildPages() {
     function renderRadioAnnexePage(titleLabel, logoSrc, logoAlt, plans) {
       const bodyContent = plans.length === 1
         ? `
-          <div class="p-subsection">${escapeHtml(plans[0].aircraft)}</div>
-          ${plans[0].image ? imgFrame(plans[0].aircraft + ' — RADIO', plans[0].image) : renderRadioTable(plans[0])}
+          <div class="p-subsection">${escapeHtml(gameAircraftName(plans[0].aircraft))}</div>
+          ${plans[0].image ? imgFrame(gameAircraftName(plans[0].aircraft) + ' — RADIO', plans[0].image) : renderRadioTable(plans[0])}
         `
         : `
           <div class="p-2col">
             ${plans.map(ap => `
               <div>
-                <div class="p-subsection">${escapeHtml(ap.aircraft)}</div>
-                ${ap.image ? imgFrame(ap.aircraft + ' — RADIO', ap.image) : renderRadioTable(ap)}
+                <div class="p-subsection">${escapeHtml(gameAircraftName(ap.aircraft))}</div>
+                ${ap.image ? imgFrame(gameAircraftName(ap.aircraft) + ' — RADIO', ap.image) : renderRadioTable(ap)}
               </div>
             `).join('')}
           </div>
@@ -7467,13 +7409,13 @@ function buildPages() {
             <div class="p-section">${t('preview.radioAnnex')}</div>
             <div class="p-2col">
               <div>
-                <div class="p-subsection">${escapeHtml(ap1.aircraft || t('editor.phases.aircraftSigle'))}</div>
-                ${ap1.image ? imgFrame(ap1.aircraft + ' — RADIO', ap1.image) : renderRadioTable(ap1)}
+                <div class="p-subsection">${escapeHtml(gameAircraftName(ap1.aircraft) || t('editor.phases.aircraftSigle'))}</div>
+                ${ap1.image ? imgFrame(gameAircraftName(ap1.aircraft) + ' — RADIO', ap1.image) : renderRadioTable(ap1)}
               </div>
               <div>
                 ${ap2 ? `
-                  <div class="p-subsection">${escapeHtml(ap2.aircraft || t('editor.phases.aircraftSigle'))}</div>
-                  ${ap2.image ? imgFrame(ap2.aircraft + ' — RADIO', ap2.image) : renderRadioTable(ap2)}
+                  <div class="p-subsection">${escapeHtml(gameAircraftName(ap2.aircraft) || t('editor.phases.aircraftSigle'))}</div>
+                  ${ap2.image ? imgFrame(gameAircraftName(ap2.aircraft) + ' — RADIO', ap2.image) : renderRadioTable(ap2)}
                 ` : ''}
               </div>
             </div>
@@ -8263,7 +8205,7 @@ function renderSimpleFlights() {
 
   const sqOptions = [`<option value="">${t('select.noSquadron')}</option>`]
     .concat(wingConfig.squadrons.map(s => {
-      const aircraftLabel = s.aircraft.length === 1 ? s.aircraft[0] : s.aircraft.join(' / ');
+      const aircraftLabel = s.aircraft.map(gameAircraftName).join(' / ');
       return `<option value="${escapeAttr(s.id)}">${escapeHtml(s.id)} ${escapeHtml(s.callsign)} — ${escapeHtml(aircraftLabel)}</option>`;
     }))
     .concat([`<option value="__guest__">${t('editor.phases.guestOption')}</option>`])
@@ -8279,7 +8221,7 @@ function renderSimpleFlights() {
     const noSq = !isGuest && !selectedSq;       // un groupe sans escadron choisit son appareil dans la liste du jeu
     const aircraftHtml = showAircraft ? `
       <div class="ed-field"><label>${t('editor.phases.aircraft')}</label>
-        <select class="fl-aircraft">${selectedSq.aircraft.map(a => `<option value="${escapeAttr(a)}">${escapeHtml(a)}</option>`).join('')}</select>
+        <select class="fl-aircraft">${selectedSq.aircraft.map(a => `<option value="${escapeAttr(a)}">${escapeHtml(gameAircraftName(a))}</option>`).join('')}</select>
       </div>` : (noSq ? '<div data-ac-slot="p"></div>' : '');
     const guestHtml = isGuest ? `
       <div class="ed-guest-fields">
@@ -9400,7 +9342,7 @@ def build_hq_date_block():
 
 HTML = HTML.replace('<body data-theme="cw-nato" data-format="simple">\n', '<body data-theme="cw-nato" data-format="simple">\n' + SHELL_ONLY_TAG, 1)
 HTML = HTML.replace('__CSS__', CSS.replace('@@MESSAGES_CSS@@\n', build_messages_css() + build_ui_css()).replace('@@TBM_CSS@@\n', build_tbm_css()) + build_mission_line_css() + CONTRAST_CSS)
-HTML = HTML.replace('@@AIRCRAFT_TYPES_BLOCK@@\n', build_aircraft_types_block()).replace('@@MESSAGES_BLOCK@@\n', build_messages_block() + build_ui_block() + build_hq_date_block() + build_mission_line_block()).replace('@@TBM_JS@@\n', build_tbm_block())
+HTML = HTML.replace('@@AIRCRAFT_TYPES_BLOCK@@\n', build_aircraft_types_block()).replace('@@RADIO_BLOCK@@\n', build_radio_block()).replace('@@MESSAGES_BLOCK@@\n', build_messages_block() + build_ui_block() + build_hq_date_block() + build_mission_line_block()).replace('@@TBM_JS@@\n', build_tbm_block())
 HTML = HTML.replace('__LIB_HTML2CANVAS__', A['lib_html2canvas'])
 HTML = HTML.replace('__LIB_JSZIP__', A['lib_jszip'])
 
@@ -9458,6 +9400,11 @@ def i18n_verify(html):
 
 # Write the final file
 i18n_verify(HTML)
+# Les postes radio : le bloc de radio_block.py, tel quel (comme au Flight Configurator et au Datacard Generator), sans copie à la main
+if build_radio_block() not in HTML or 'ACFT_RADIO_MAP' in HTML:
+    print("  [FAIL] les postes radio ne sont pas ceux de radio_block.py (bloc absent ou copie à la main restante)")
+    raise SystemExit(1)
+print("  [OK] postes radio : bloc de radio_block.py inséré tel quel, pas de copie à la main")
 ui_verify(HTML)
 ui_verify_bar(HTML)
 mission_line_verify(HTML, None, None, 1)

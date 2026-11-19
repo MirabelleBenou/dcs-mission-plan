@@ -16,12 +16,16 @@ The sections per tool, further down, keep the history of each tool up to v1.24.0
 #### HQ
 - The Wing window no longer has an “Application title” field, which no tool used; a Wing configuration that has one still opens and keeps it.
 - The Wing window offers the game liveries of every aircraft type found in DCS (68 types), not only the four of the Flight Configurator.
+- The “Add a type…” list of the Wing window can be searched.
 
 #### Flight Configurator
-- Groundwork for every aircraft of the game: the mass, front-view and radio band tables now cover every type known to Mission Tools (167, 45 and 26 types). Nothing changes yet on screen.
 - In a group of two units or more, the icon at the right of a unit’s header folds or unfolds all the units of the group.
 - Every flyable aircraft of the game (75 types) can now be configured, imported and kept as a preset, not only the Mi-24P, Mi-8MTV2, F-4E and Mirage F1EE. What a type lacks is said on screen: no radio preset in the mission editor, radio band not checked, no loadout, no front view, no game livery.
 - Each radio offers as many channels as the mission editor writes for the type.
+
+#### Briefing Generator
+- Aircraft types are shown under their designation, like in the other tools; the briefing still stores the game’s type name.
+- The radios offered for each aircraft are the same as in the Flight Configurator and the Datacard Generator (ten types had different radio names).
 
 #### Route Planner
 - The Route Planner opens in Read mode, so a tap on the map no longer adds a waypoint by mistake; choose Waypoint to lay the route.
@@ -30,6 +34,7 @@ The sections per tool, further down, keep the history of each tool up to v1.24.0
 - The folded Radio section shows how many channels the datacard prints, like the other sections.
 - In the Navigation settings, “For the whole mission” now marks only Heading and Variation, shared with the Route Planner; Display stays per datacard.
 - A crew line can take any of the 75 types, from the same grouped list with search.
+- On a free datacard, the aircraft type of a crew line can be searched.
 
 #### Field Manual
 - Links in the text take the manual’s ink instead of the browser’s blue; the Route Planner and Flight Configurator drawings show the new behaviour.

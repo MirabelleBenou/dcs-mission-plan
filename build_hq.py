@@ -1514,6 +1514,7 @@ const I18N = {{
     'editor.wing.ac.planes':    'Avions',
     'editor.wing.ac.mods':      'Hors jeu de base',
     'editor.wing.ac.other':     'Autre type (mod)\u2026',
+    'editor.wing.ac.none':      'Aucun type',
     'editor.wing.ac.modPh': 'Type tel qu\\'il s\\'écrit dans le .miz',
     'editor.wing.ac.modAdd':    'Ajouter ce type',
     'editor.wing.ac.flag':      'hors jeu de base',
@@ -1949,6 +1950,7 @@ const I18N = {{
     'editor.wing.ac.planes':    'Airplanes',
     'editor.wing.ac.mods':      'Not in the base game',
     'editor.wing.ac.other':     'Other type (mod)\u2026',
+    'editor.wing.ac.none':      'No type',
     'editor.wing.ac.modPh': 'Type as written in the .miz',
     'editor.wing.ac.modAdd':    'Add this type',
     'editor.wing.ac.flag':      'not in the base game',
@@ -2717,6 +2719,8 @@ function renderSqAircraftTags(container, sqIdx) {{
 
   if (_WING_MGD) return;       // gérée ailleurs : ni liste « Ajouter un type… » ni saisie libre
   const addSel = acMakeSelect('wing-ac-add-sel', t('editor.phases.aircraft'));
+  addSel.setAttribute('data-search', '');
+  addSel.setAttribute('data-search-empty', t('editor.wing.ac.none'));
   addSel.appendChild(acMakeOption('', t('editor.wing.ac.add'), false));
   [['editor.wing.ac.helis', GAME_AIRCRAFT_TYPES.helicopters], ['editor.wing.ac.planes', GAME_AIRCRAFT_TYPES.planes]].forEach(g => {{
     const og = document.createElement('optgroup');
@@ -2726,7 +2730,9 @@ function renderSqAircraftTags(container, sqIdx) {{
   }});
   const ogMod = document.createElement('optgroup');
   ogMod.label = t('editor.wing.ac.mods');
-  ogMod.appendChild(acMakeOption('__other__', t('editor.wing.ac.other'), false));
+  const otherOpt = acMakeOption('__other__', t('editor.wing.ac.other'), false);
+  otherOpt.setAttribute('data-keep', '');
+  ogMod.appendChild(otherOpt);
   addSel.appendChild(ogMod);
   container.appendChild(addSel);
 
@@ -4081,7 +4087,6 @@ function renderSnapshot(snap) {{
   // À gauche : les groupes (en-tête, filtres, liste)
   html = '<div class="hq-groups"><div class="pk-fwrap">';
   html += '<div class="snap-header">' + h(t('snap.flights')) + ' (' + snap.flights.length + ')</div>';
-  const fKey = (f) => flightTypeKeys(f).join(' + ');
   const hasNeutral = snap.flights.some(f => f.coalition === 'neutrals');
   const types = Array.from(new Set(snap.flights.reduce((acc, f) => acc.concat(flightTypeKeys(f)), []))).sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
   if (_PK_FLT.type !== 'all' && types.indexOf(_PK_FLT.type) < 0) _PK_FLT.type = 'all';
