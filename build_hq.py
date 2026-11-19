@@ -1087,6 +1087,11 @@ body[data-theme] {{
 .pk-cfields {{ display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 4px 0 4px 26px; align-items: center; }}
 .pk-cfields .pk-flt-f {{ flex: 1 1 190px; }}
 .pk-cfields .pk-flt-f.pk-cstart {{ flex: 1 1 250px; }}
+.pk-dep {{ margin: 0 0 4px 26px; font-family: var(--f-typewriter); font-size: 12px; color: var(--paper); overflow-wrap: anywhere; }}
+.pk-stl {{ display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin: 0 0 4px 26px; }}
+.pk-stt {{ flex: 1 1 200px; min-width: 0; font-family: var(--f-typewriter); font-size: 12px; color: var(--paper); overflow-wrap: anywhere; }}
+.pk-stt.pk-why {{ color: var(--mp-warn); }}
+.pk-stl .pk-flt-f.pk-stsel {{ flex: 1 1 190px; max-width: 260px; }}
 .pk-chint {{ margin: 0 0 4px 26px; font-family: var(--f-typewriter); font-size: 11px; color: var(--khaki-light); }}
 .pk-parts.pk-in {{ margin-left: 26px; }}
 .pk-why, .pk-chint.pk-why {{ font-family: var(--f-typewriter); font-size: 11px; letter-spacing: 0; color: var(--mp-warn); }}
@@ -1716,6 +1721,15 @@ const I18N = {{
     'pk.cf.pick': '— à choisir —',
     'pk.cf.country': 'Pays',
     'pk.cf.start': 'Départ',
+    'pk.cf.dep': 'Départ (Flight Configurator) : {{0}}',
+    'pk.dep.cold': '{{0}}, sur la place, à froid',
+    'pk.dep.hot': '{{0}}, sur la place, moteurs en route',
+    'pk.st.ok': '{{0}} : {{1}}',
+    'pk.st.taken': '{{0}} : {{1}} prise dans la mission',
+    'pk.st.none': '{{0}} : sans place',
+    'pk.st.free': 'Place libre',
+    'pk.st.opt': '{{0}} · {{1}} m',
+    'pk.why.noStand': 'absent de la mission · aucune place libre à {{0}} : ne peut pas être créé',
     'pk.cf.air': 'En vol, au 1er point',
     'pk.cf.ground': 'Au sol, au 1er point',
     'pk.cf.hintAir': '1er point de la route : {{0}} m {{1}}, {{2}} km/h',
@@ -1736,6 +1750,9 @@ const I18N = {{
     'pk.w.callsign': '{{0}} : indicatif {{1}} non reconnu, remplacé par {{2}}',
     'pk.w.pointBad': '{{0}} : point {{1}} sans x/y, retiré',
     'pk.rep.created': '+ {{0}} ({{1}}) : créé — {{2}}, {{3}} au 1er point, {{4}}',
+    'pk.rep.createdStand': '+ {{0}} ({{1}}) : créé — {{2}}, sur la place à {{3}} ({{4}}), {{5}}, {{6}}',
+    'pk.rep.cold': 'à froid',
+    'pk.rep.hot': 'moteurs en route',
     'pk.rep.startAir': 'en vol',
     'pk.rep.startGround': 'au sol',
     'pk.rep.noSide': '{{0}} : coalition à choisir, rien écrit',
@@ -2184,6 +2201,15 @@ const I18N = {{
     'pk.cf.pick': '— choose —',
     'pk.cf.country': 'Country',
     'pk.cf.start': 'Start',
+    'pk.cf.dep': 'Start (Flight Configurator): {{0}}',
+    'pk.dep.cold': '{{0}}, on the stand, cold',
+    'pk.dep.hot': '{{0}}, on the stand, engines running',
+    'pk.st.ok': '{{0}}: {{1}}',
+    'pk.st.taken': '{{0}}: {{1}} taken in the mission',
+    'pk.st.none': '{{0}}: no stand',
+    'pk.st.free': 'Free stand',
+    'pk.st.opt': '{{0}} · {{1}} m',
+    'pk.why.noStand': 'not in the mission · no free stand at {{0}}: cannot be created',
     'pk.cf.air': 'In the air, at waypoint 1',
     'pk.cf.ground': 'On the ground, at waypoint 1',
     'pk.cf.hintAir': 'Waypoint 1 of the route: {{0}} m {{1}}, {{2}} km/h',
@@ -2204,6 +2230,9 @@ const I18N = {{
     'pk.w.callsign': '{{0}}: callsign {{1}} not recognised, replaced by {{2}}',
     'pk.w.pointBad': '{{0}}: waypoint {{1}} without x/y, removed',
     'pk.rep.created': '+ {{0}} ({{1}}): created — {{2}}, {{3}} at waypoint 1, {{4}}',
+    'pk.rep.createdStand': '+ {{0}} ({{1}}): created — {{2}}, on the stand at {{3}} ({{4}}), {{5}}, {{6}}',
+    'pk.rep.cold': 'cold',
+    'pk.rep.hot': 'engines running',
     'pk.rep.startAir': 'in the air',
     'pk.rep.startGround': 'on the ground',
     'pk.rep.noSide': '{{0}}: coalition to choose, nothing written',
@@ -4805,6 +4834,24 @@ function pkYield() {{
 // ---------- LECTURE D'UN PAQUET ----------
 function pkNum(v) {{ return (typeof v === 'number' && isFinite(v)) ? v : null; }}
 
+// Une place du paquet (Flight Configurator) : {{ n (parking), id (parking_id), x, y }} ou null si elle n'est pas lisible
+function pkStandOf(v) {{
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return null;
+  if (!Number.isInteger(v.parking) || v.parking < 0 || typeof v.parking_id !== 'string' || v.parking_id === '' || pkNum(v.x) === null || pkNum(v.y) === null) return null;
+  return {{ n: v.parking, id: v.parking_id, x: v.x, y: v.y }};
+}}
+// Le départ d'un vol du paquet : {{ start, airdromeId, airdrome, x, y, stands }} pour un départ sur la place (parking, parkingHot) ; {{ start }} pour air et ground ; null (le lot A) si absent ou illisible
+function pkDepartureOf(d) {{
+  if (!d || typeof d !== 'object' || Array.isArray(d)) return null;
+  if (d.start === 'air' || d.start === 'ground') return {{ start: d.start }};
+  if (d.start !== 'parking' && d.start !== 'parkingHot') return null;
+  if (!Number.isInteger(d.airdromeId) || pkNum(d.x) === null || pkNum(d.y) === null) return null;
+  const seen = new Set(), stands = [];
+  (Array.isArray(d.stands) ? d.stands : []).forEach(v => {{ const s = pkStandOf(v); if (s && !seen.has(s.n)) {{ seen.add(s.n); stands.push(s); }} }});
+  return {{ start: d.start, airdromeId: d.airdromeId, airdrome: (typeof d.airdrome === 'string' && d.airdrome !== '') ? d.airdrome : String(d.airdromeId), x: d.x, y: d.y, stands: stands }};
+}}
+function pkOnStand(fl) {{ return !!fl.dep && (fl.dep.start === 'parking' || fl.dep.start === 'parkingHot'); }}
+
 // Un fichier refusé dit pourquoi, avec les mêmes textes que le Route Planner, le Datacard Generator et le Briefing Generator.
 // Un vol illisible (sans groupName en chaîne, et en v1 sans aircraftType en chaîne) est ignoré et compté (skipped) ; sans théâtre ou sans aucun vol lisible, le paquet est refusé.
 function pkNormalize(obj, filename) {{
@@ -4837,6 +4884,8 @@ function pkNormalize(obj, filename) {{
           return {{ radioIndex: r.radioIndex, channels }};
         }}),
       payload:  (u.payload && typeof u.payload === 'object') ? u.payload : null,
+      stand:    pkStandOf(u.stand),      // la place demandée par le Flight Configurator, ou null
+      pick:     null,                    // la place choisie dans la liste des places libres (lot vol-parking), le temps que le paquet est chargé
     }}));
     const types = [];
     units.forEach(u => {{ if (u.type !== '' && types.indexOf(u.type) < 0) types.push(u.type); }});
@@ -4846,6 +4895,7 @@ function pkNormalize(obj, filename) {{
       coalition: typeof f.coalition === 'string' ? f.coalition : '',
       groupFrequency: pkNum(f.groupFrequency),
       route: route, units: units,
+      dep: pkDepartureOf(f.departure),      // le départ du Flight Configurator (lot vol-parking), ou null : le lot A inchangé
       chk: {{ route: true, radios: true, loadout: true, livery: true }},
     }});
   }}
@@ -4967,8 +5017,10 @@ function pkCreateState(ctx, fl, pk, sc) {{
     fl.country = '';
     fl.start = 'air';
   }}
+  if (fl.dep) fl.start = fl.dep.start;      // le départ vient du Flight Configurator : rien à demander (parking et parkingHot : sur la place, voir pkStandPlan)
   fl.why = null;
   fl.whyArgs = [];
+  fl.sp = null;
   fl.heli = false;
   const types = [];
   fl.units.forEach(u => {{ if (types.indexOf(u.type) < 0) types.push(u.type); }});
@@ -5021,7 +5073,7 @@ function pkCsOfNode(cs) {{
   return m ? {{ rank: PK_CALLSIGNS.indexOf(m[1]) + 1, vol: Number(m[2]) }} : null;
 }}
 function pkMissionScan(ctx) {{
-  const sc = {{ maxG: 0, maxU: 0, maxNum: 0, cs: new Set(), groups: new Set(), units: new Set() }};
+  const sc = {{ maxG: 0, maxU: 0, maxNum: 0, cs: new Set(), groups: new Set(), units: new Set(), air: [] }};      // air : la position de chaque appareil de la mission (unités des groupes avion et hélicoptère, objets statiques avion et hélicoptère), de toutes les coalitions
   delEachList(ctx.ast, DEL_ALL_CATS, L => {{
     for (const ge of L.list.entries) {{
       const gid = dynNum(_astGetKey(ge.value, 'groupId'));
@@ -5035,6 +5087,11 @@ function pkMissionScan(ctx) {{
         if (uid !== null && uid > sc.maxU) sc.maxU = uid;
         const un = dynStr(_astGetKey(ue.value, 'name'));
         if (un !== null) sc.units.add(pkNameKey(un));
+        const ax = dynNum(_astGetKey(ue.value, 'x')), ay = dynNum(_astGetKey(ue.value, 'y'));
+        if (ax !== null && ay !== null) {{
+          if (L.cat === 'plane' || L.cat === 'helicopter') sc.air.push({{ x: ax, y: ay }});
+          else if (L.cat === 'static') {{ const sk = dynStr(_astGetKey(ue.value, 'category')); if (sk === 'Planes' || sk === 'Helicopters') sc.air.push({{ x: ax, y: ay }}); }}
+        }}
         if (L.cat !== 'plane' && L.cat !== 'helicopter') continue;
         const cs = _astGetKey(ue.value, 'callsign');
         if (!cs) continue;
@@ -5140,7 +5197,9 @@ function pkCallsigns(fl, sc, form, label, warns) {{
 function pkBuildGroup(work, fl) {{
   const warns = [];
   const label = pkNameKey(fl.groupName);
-  const air = fl.start !== 'ground';
+  const onStand = fl.start === 'parking' || fl.start === 'parkingHot';      // départ du Flight Configurator sur la place : fl.sp (pkStandPlan) donne la place de chaque unité
+  if (onStand && (!fl.dep || !fl.sp || fl.sp.length !== fl.units.length || fl.sp.some(e => !e.chosen))) throw Object.assign(new Error('stands'), {{ pkErrors: [{{ key: 'pk.e.created', args: [] }}] }});
+  const air = fl.start === 'air';
   const first = pkTpl(fl.units[0].type);
   const sc = pkMissionScan(work);
   const cn = pkSideCountries(work, fl.side).find(c => c.name === fl.country);
@@ -5152,6 +5211,15 @@ function pkBuildGroup(work, fl) {{
   const defSpeed = fl.heli ? PK_SPEED_HELI : PK_SPEED_PLANE;
   const pts = {{}};
   let nPts = 0;
+  // Sur la place, le point 1 est celui de la place (TakeOffParking) ; le point 1 du paquet est remplacé s'il est à moins de 3 000 m de la base, sinon gardé en point 2
+  const pk1 = keys.find(k => pkIsNum(fl.route[k].x) && pkIsNum(fl.route[k].y));
+  const replaceFirst = onStand && pk1 !== undefined && Math.hypot(fl.route[pk1].x - fl.dep.x, fl.route[pk1].y - fl.dep.y) < 3000;
+  if (onStand) {{
+    const hot = fl.start === 'parkingHot', s1 = fl.sp[0].chosen;
+    pts[++nPts] = {{ type: hot ? 'TakeOffParkingHot' : 'TakeOffParking', action: hot ? 'From Parking Area Hot' : 'From Parking Area', airdromeId: fl.dep.airdromeId, x: s1.x, y: s1.y,
+      alt: 0, alt_type: 'BARO', speed: 0, task: {{ id: 'ComboTask', params: {{ tasks: {{}} }} }}, ETA: 0, ETA_locked: true, speed_locked: true, formation_template: '', name: '' }};
+  }}
+  let firstSeen = false;
   keys.forEach(k => {{
     const raw = pkClean(fl.route[k]);
     if (!pkIsNum(raw.x) || !pkIsNum(raw.y)) {{
@@ -5159,14 +5227,22 @@ function pkBuildGroup(work, fl) {{
       warns.push({{ key: 'pk.w.pointBad', args: [label, k] }});
       return;
     }}
+    const isFirst = !firstSeen;      // le premier point lisible du paquet
+    firstSeen = true;
+    if (isFirst && replaceFirst) return;
     const i = nPts++;
     const pt = {{}};
     for (const [kk, v] of Object.entries(raw)) {{
       if (kk === 'linkUnit' || kk === 'helipadId') {{ warns.push({{ key: 'pk.w.pointRef', args: [label, k, kk, v] }}); continue; }}      // ils désignent des unités de la mission du paquet
-      if (i === 0 && kk === 'airdromeId') continue;      // le point 1 ne part plus d'un terrain
+      if (isFirst && kk === 'airdromeId') continue;      // le point 1 ne part plus d'un terrain
       pt[kk] = v;
     }}
-    if (i === 0) {{
+    if (isFirst && onStand) {{      // le point 1 du paquet, gardé en point 2 : un point de passage en vol, aux valeurs de départ en vol du paquet à défaut des siennes
+      pt.type = 'Turning Point'; pt.action = 'Turning Point';
+      if (!(typeof pt.alt === 'number' && isFinite(pt.alt) && pt.alt > 0)) pt.alt = a0.alt;
+      if (pt.alt_type !== 'BARO' && pt.alt_type !== 'RADIO') pt.alt_type = a0.altType;
+      if (!(typeof pt.speed === 'number' && isFinite(pt.speed) && pt.speed > 0)) pt.speed = a0.speed;
+    }} else if (i === 0) {{
       if (air) {{ pt.type = 'Turning Point'; pt.action = 'Turning Point'; pt.alt = a0.alt; pt.alt_type = a0.altType; pt.speed = a0.speed; }}
       else {{ pt.type = 'TakeOffGround'; pt.action = 'From Ground Area'; pt.alt = 0; pt.alt_type = 'RADIO'; pt.speed = 0; }}
     }} else {{
@@ -5183,7 +5259,7 @@ function pkBuildGroup(work, fl) {{
   }});
   const p1 = pts[1], p2 = pts[2] || null;
   if (!p1) throw Object.assign(new Error('point 1'), {{ pkErrors: [{{ key: 'pk.e.created', args: [] }}] }});
-  const heading = p2 && isFinite(p2.x) && isFinite(p2.y) ? Math.atan2(p2.y - p1.y, p2.x - p1.x) : 0;
+  const heading = !onStand && p2 && isFinite(p2.x) && isFinite(p2.y) ? Math.atan2(p2.y - p1.y, p2.x - p1.x) : 0;      // sur la place, le cap est celui que DCS donne à la place (0 écrit, comme pydcs)
   const fx = Math.cos(heading), fy = Math.sin(heading), rx = -Math.sin(heading), ry = Math.cos(heading);      // l'avant et la droite (x vers le nord, y vers l'est)
 
   // Les indicatifs : ceux du paquet, sinon dans la forme du pays choisi (nombre ou table)
@@ -5202,8 +5278,15 @@ function pkBuildGroup(work, fl) {{
     else {{ const lv = pkWingLivery(u.type); if (lv !== '') unit.livery_id = lv; }}
     unit.onboard_num = (typeof u.onboardNum === 'string' && u.onboardNum !== '') ? u.onboardNum : String(unitId).padStart(3, '0').slice(-3);
     unit.callsign = csList[i];
-    unit.x = x; unit.y = y; unit.heading = heading; unit.psi = -heading;
-    unit.alt = p1.alt; unit.alt_type = p1.alt_type; unit.speed = p1.speed;
+    if (onStand) {{      // pydcs (flight_group_from_airport) : la place de l'unité, au sol, à l'arrêt
+      const st = fl.sp[i].chosen;
+      unit.x = st.x; unit.y = st.y; unit.heading = 0; unit.psi = 0;
+      unit.alt = 0; unit.alt_type = 'BARO'; unit.speed = 0;
+      unit.parking = st.n; unit.parking_id = st.id;
+    }} else {{
+      unit.x = x; unit.y = y; unit.heading = heading; unit.psi = -heading;
+      unit.alt = p1.alt; unit.alt_type = p1.alt_type; unit.speed = p1.speed;
+    }}
     unit.hardpoint_racks = true;
     if (tpl.heli) unit.ropeLength = 15;
     // Radios : les canaux du paquet par-dessus les défauts du type ; un type sans panel_radio n'en a pas
@@ -5234,7 +5317,7 @@ function pkBuildGroup(work, fl) {{
     frequency: (typeof fl.groupFrequency === 'number' && isFinite(fl.groupFrequency)) ? fl.groupFrequency : (first.radio_frequency || 251),
     modulation: 0, x: p1.x, y: p1.y, route: {{ points: pts }}, units: units
   }});
-  return {{ group: group, warns: warns, country: cn.name, nUnits: fl.units.length }};
+  return {{ group: group, warns: warns, country: cn.name, nUnits: fl.units.length, stands: onStand ? fl.sp.map(e => e.chosen.id) : null }};
 }}
 
 // Insère une entrée à la suite de celles d'une table (nœud de l'arbre), indentée comme ses voisines ; rend les écritures (applyPatches)
@@ -5309,7 +5392,52 @@ function pkCreateFlight(work, fl) {{
   if (found.length !== 1 || found[0].group.groupId !== g.groupId || ids !== want || !node || !deepEqValues(g, astToValue(node))) {{
     throw Object.assign(new Error('created group not read back'), {{ pkErrors: [{{ key: 'pk.e.created', args: [] }}] }});
   }}
-  return {{ next: next, nPatches: patches.length, warns: built.warns, country: built.country, nUnits: built.nUnits }};
+  return {{ next: next, nPatches: patches.length, warns: built.warns, country: built.country, nUnits: built.nUnits, stands: built.stands }};
+}}
+
+// ---------- Les places des vols créés sur une base (lot vol-parking) ----------
+// Une place est prise quand un appareil de la mission (unité d'un groupe avion ou hélicoptère, objet statique avion ou hélicoptère, toutes coalitions) est à moins de 10 m de son centre : jugée par la position, jamais par l'index (R423).
+const PK_STAND_R = 10;
+function pkStandKey(fl, s) {{ return fl.dep.airdromeId + ':' + s.n; }}
+function pkStandTaken(sc, s) {{ return sc.air.some(a => Math.hypot(a.x - s.x, a.y - s.y) < PK_STAND_R); }}
+function pkStandNat(a, b) {{ return a.s.id.localeCompare(b.s.id, 'en', {{ numeric: true }}); }}
+// Le plan des places de chaque vol à créer sur une base, dans l'ordre du paquet : par unité {{ req (la place demandée), taken (prise dans la mission ou retenue plus haut), chosen, cands (les places libres, la plus proche en tête) }}.
+// Une unité dont la place est libre la garde. Une unité dont la place est prise, ou sans place, reçoit la plus proche des places libres du paquet (de la place demandée ; sans place, de celle de l'unité d'avant, sinon de la base),
+// que la personne change dans la liste (u.pick). Sont exclues : les places de la mission, celles que les unités d'avant retiennent, celles que les unités d'après demandent. Un vol dont une unité n'a plus aucune place libre : why = noStand.
+function pkStandPlan(seq, sc) {{
+  const later = new Map();      // clé de place → le nombre d'unités, pas encore passées, qui la demandent
+  const eligible = fl => fl.create && fl.canCreate && !fl.supBy && pkOnStand(fl);
+  seq.forEach(x => {{ if (eligible(x.fl)) x.fl.units.forEach(u => {{ if (u.stand) {{ const k = pkStandKey(x.fl, u.stand); later.set(k, (later.get(k) || 0) + 1); }} }}); }});
+  const retained = new Set();
+  seq.forEach(x => {{
+    const fl = x.fl;
+    if (!eligible(fl)) return;
+    const mine = [], plan = [];
+    let prev = null, fail = false;
+    fl.units.forEach(u => {{
+      if (u.stand) {{ const k = pkStandKey(fl, u.stand); later.set(k, later.get(k) - 1); }}      // ce qui reste dans later : les demandes des unités d'après
+      const req = u.stand, e = {{ req: req, taken: false, chosen: null, cands: null }};
+      e.taken = !!req && (pkStandTaken(sc, req) || retained.has(pkStandKey(fl, req)));
+      if (req && !e.taken) e.chosen = req;
+      else {{
+        const ref = req || prev || {{ x: fl.dep.x, y: fl.dep.y }};
+        e.cands = fl.dep.stands
+          .filter(s => !pkStandTaken(sc, s) && !retained.has(pkStandKey(fl, s)) && !(later.get(pkStandKey(fl, s)) > 0))
+          .map(s => ({{ s: s, d: Math.hypot(s.x - ref.x, s.y - ref.y) }}))
+          .sort((a, b) => a.d - b.d || pkStandNat(a, b));
+        const c = e.cands.find(c => c.s.n === u.pick) || e.cands[0];
+        e.chosen = c ? c.s : null;
+      }}
+      if (!e.chosen) fail = true;
+      else {{ const k = pkStandKey(fl, e.chosen); retained.add(k); mine.push(k); prev = e.chosen; }}
+      plan.push(e);
+    }});
+    fl.sp = plan;
+    if (fail) {{      // le vol ne sera pas créé : ce qu'il retenait est rendu
+      mine.forEach(k => retained.delete(k));
+      fl.why = 'noStand'; fl.whyArgs = [fl.dep.airdrome]; fl.canCreate = false; fl.offer = true;
+    }}
+  }});
 }}
 
 // ---------- ÉTAT : recherche des vols, conflits, parties disponibles ----------
@@ -5354,10 +5482,31 @@ function pkComputeState() {{
     const w = lastAbs.get(pkNameKey(s.fl.groupName));
     if (w !== s) {{ s.fl.supBy = w.pk; s.fl.canCreate = false; }}
   }}
+  if (ctx && scan !== null) pkStandPlan(seq, scan);
   return seq;
 }}
 
 // ---------- RENDU ----------
+// Le départ du Flight Configurator, en texte : « En vol, au 1er point », « Akrotiri, sur la place, à froid »
+function pkDepText(fl) {{
+  if (fl.dep.start === 'air') return t('pk.cf.air');
+  if (fl.dep.start === 'ground') return t('pk.cf.ground');
+  return tf(fl.dep.start === 'parkingHot' ? 'pk.dep.hot' : 'pk.dep.cold', fl.dep.airdrome);
+}}
+// Une ligne par unité d'un vol sur la place : « CAESAR-2 : H2 » ; une place prise, ou aucune : la raison et la liste des places libres (la plus proche en tête, choisie)
+function pkStandLinesHtml(fl, mk, busy) {{
+  const h = escapeHtml;
+  let html = '';
+  fl.sp.forEach((e, ui) => {{
+    const name = pkUnitName(fl, fl.units[ui], ui);
+    if (!e.cands) {{ html += '<div class="pk-stl"><span class="pk-stt">' + h(tf('pk.st.ok', name, e.chosen.id)) + '</span></div>'; return; }}
+    const txt = e.req ? tf('pk.st.taken', name, e.req.id) : tf('pk.st.none', name);
+    const opts = e.cands.map(c => '<option value="' + c.s.n + '"' + (e.chosen && c.s.n === e.chosen.n ? ' selected' : '') + '>' + h(tf('pk.st.opt', c.s.id, Math.round(c.d))) + '</option>').join('');
+    html += '<div class="pk-stl"><span class="pk-stt' + (e.req ? ' pk-why' : '') + '">' + h(txt) + '</span>' +
+      (e.cands.length ? '<label class="pk-flt-f pk-stsel"><span>' + h(t('pk.st.free')) + '</span><select data-pkc="stand" data-u="' + ui + '"' + mk + (busy ? ' disabled' : '') + '>' + opts + '</select></label>' : '') + '</div>';
+  }});
+  return html;
+}}
 function pkRender() {{
   const seq = pkComputeState();
   const ctx = _HQ_MIZ_CONTEXT;
@@ -5409,10 +5558,12 @@ function pkRender() {{
             html += '<div class="pk-cfields">';
             if (!fl.sideFixed) html += sel('side', t('pk.flt.side'), [['', t('pk.cf.pick')], ['red', t('pk.flt.red')], ['blue', t('pk.flt.blue')]], fl.side, false);
             html += sel('country', t('pk.cf.country'), fl.countries.length ? fl.countries.map(c => [c, c]) : [['', '—']], fl.country, !fl.side || !fl.countries.length);
-            html += sel('start', t('pk.cf.start'), [['air', t('pk.cf.air')], ['ground', t('pk.cf.ground')]], fl.start, false, 'pk-cstart');
+            if (!fl.dep) html += sel('start', t('pk.cf.start'), [['air', t('pk.cf.air')], ['ground', t('pk.cf.ground')]], fl.start, false, 'pk-cstart');
             html += '</div>';
+            if (fl.dep) html += '<div class="pk-dep">' + h(tf('pk.cf.dep', pkDepText(fl))) + '</div>';      // le départ vient du Flight Configurator : une ligne, pas de liste
             if (fl.why) html += '<div class="pk-chint pk-why">' + h(pkWhyText(fl.why, fl.whyArgs)) + '</div>';
-            else html += '<div class="pk-chint">' + h(pkStartHint(fl)) + '</div>';
+            else if (!pkOnStand(fl)) html += '<div class="pk-chint">' + h(pkStartHint(fl)) + '</div>';
+            if (pkOnStand(fl) && fl.sp) html += pkStandLinesHtml(fl, mk, busy);
           }}
         }}
         if (fl.multi) html += '<div class="ui-avert">⚠ ' + h(tf('pk.w.multi', fl.groupName, fl.multi)) + '</div>';
@@ -5706,7 +5857,10 @@ async function pkApply() {{
             work = made.next;
             created++; patchesN += made.nPatches;
             const country = made.country, startKey = fl.start === 'ground' ? 'pk.rep.startGround' : 'pk.rep.startAir', nU = made.nUnits;
-            lines.push({{ cls: 'ok', text: () => tf('pk.rep.created', label, pk.filename, country, t(startKey), tn('pk.rep.units', nU)) }});
+            if (made.stands) {{      // sur la place : « Russia, sur la place à Akrotiri (H4, H2), à froid, 2 unités »
+              const ids = made.stands.join(', '), baseName = fl.dep.airdrome, how = fl.start === 'parkingHot' ? 'pk.rep.hot' : 'pk.rep.cold';
+              lines.push({{ cls: 'ok', text: () => tf('pk.rep.createdStand', label, pk.filename, country, baseName, ids, t(how), tn('pk.rep.units', nU)) }});
+            }} else lines.push({{ cls: 'ok', text: () => tf('pk.rep.created', label, pk.filename, country, t(startKey), tn('pk.rep.units', nU)) }});
             for (const w of made.warns) {{
               warnN++;
               lines.push({{ cls: 'w', text: () => '⚠ ' + tf.apply(null, [w.key].concat(w.args)) }});
@@ -6890,6 +7044,7 @@ function initPackagesUI() {{
         else if (kind === 'side') {{ fl0.side = pkSideOf(cb.value); fl0.country = ''; }}
         else if (kind === 'country') fl0.country = cb.value;
         else if (kind === 'start') fl0.start = cb.value === 'ground' ? 'ground' : 'air';
+        else if (kind === 'stand') {{ const u0 = fl0.units[Number(cb.getAttribute('data-u'))]; if (u0) u0.pick = Number(cb.value); }}
         pkRender();
         if (kind === 'create') {{ const again = listEl.querySelector('input[data-pkc="create"][data-pk="' + cb.getAttribute('data-pk') + '"][data-fi="' + cb.getAttribute('data-fi') + '"]'); if (again) again.focus(); }}
         return;
