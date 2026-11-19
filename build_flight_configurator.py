@@ -2188,10 +2188,12 @@ function thSet(id, fromKey) {
   const sel = document.getElementById('theatre');
   if (sel && sel.value !== id) sel.value = id;
   const changed = id !== S.theatre;
+  fpStampBases();       // une base d'avant le lot est celle du théâtre où l'on lisait les bases jusqu'ici
+  fpDropStale();        // une base choisie ailleurs que là où les bases se lisent maintenant ne revient pas avec le retour sur son théâtre
   S.theatre = id;
   if (!fromKey) thWriteKey(id);
   if (!changed) return;
-  fpClearAll();       // base et places d'un théâtre ne valent pas pour un autre (routeChanged les redessine)
+  fpDropStale();        // base et places d'un théâtre ne valent pas pour un autre : elles tombent quand le théâtre où se lisent les bases change (routeChanged les redessine) ; le bandeau les garde tant que la fiche reste sur le sien
   UI.rtChoose = null;
   tcAdopt();
   routeChanged();
@@ -2231,10 +2233,12 @@ function tcBack() {
 function tcKeep() {
   const tc = tcConflict(), g = gsRead();
   if (!tc || !g) return;
+  fpStampBases();       // avant que la fiche change de théâtre : une base d'avant le lot est celle de la fiche
   g.flights.forEach(raw => { delete raw.route; delete raw.routeLink; });
   if (!gsWrite(S.theatre, g.flights)) return;
   S.flights.forEach(f => { f.route = null; delete f.routeLink; GS.seen[f.fcId] = gsStable(f); });
   GS.theatre = S.theatre;
+  fpDropStale();        // la fiche prend le théâtre de l'écran : les bases choisies dans l'autre tombent (écrites par commitNow)
   UI.rtChoose = null;
   renderAll();
   commitNow();
@@ -2503,6 +2507,7 @@ function restoreFlight(f) {       // un groupe sans fcId en reçoit un par resto
   nf.route = (isObj(f.route) && isObj(f.route.points)) ? gsRouteCopy(f.route.points, f.route.missionDate) : null;       // la date reçue avec la route (missionDate) la suit
   if (nf.route && isObj(f.routeLink) && ridOk(f.routeLink.rid)) nf.routeLink = { rid: f.routeLink.rid, name: str(f.routeLink.name) };       // le lien avec le Route Planner ne se garde que s'il y a une route
   nf.base = Number.isInteger(f.base) && f.base >= 0 ? f.base : null;       // la base de départ (airdromeId) et le départ : une valeur illisible redevient le défaut
+  nf.baseTh = nf.base !== null && thOk(f.baseTh) ? f.baseTh : '';       // le théâtre où la base a été choisie ('' : un groupe d'avant, lu comme le théâtre où l'on lit les bases)
   nf.start = FP_STARTS.indexOf(f.start) >= 0 ? f.start : 'air';
   if (nf.base === null && (nf.start === 'parking' || nf.start === 'parkingHot')) nf.start = 'air';
   else if (nf.base !== null && (nf.start === 'air' || nf.start === 'ground')) nf.start = 'parking';
@@ -2538,7 +2543,7 @@ function newId() { return gsNewId(); }       // l'identifiant d'un groupe est ce
 const DEFAULT_TYPE = 'Mi-24P';      // la première unité d'un vol neuf ; une unité ajoutée prend le type de la dernière de son vol
 // newUnit(type) et csText(v) sont définis par le bloc d'import commun ; sans type donné, le type par défaut (Mi-24P) ; '' : une unité sans type.
 function fcNewUnit(type) { const u = newUnit(type); u.stand = null; return u; }       // une unité du module porte toujours sa place (null : aucune)
-function newFlight() { return { fcId: newId(), name: '', coalition: '', route: null, base: null, start: 'air', units: [fcNewUnit()] }; }
+function newFlight() { return { fcId: newId(), name: '', coalition: '', route: null, base: null, baseTh: '', start: 'air', units: [fcNewUnit()] }; }
 
 function flightLabel(f, fi) { return f.name.trim() || tf('fl.title', fi + 1); }
 // Le type d'une unité d'un vol lu (paquet ou mission, v1 ou v2) : le sien, sinon, en v1, celui du vol (aircraftType) ; '' si aucun.
@@ -3549,12 +3554,13 @@ function fpTheatre(th) {
   FP.th[th] = T;
   return T;
 }
-function fpBaseOf(f) { return isObj(f) && Number.isInteger(f.base) ? (fpTheatre(rTh()).byId[f.base] || null) : null; }
+// Une base ne vaut que dans le théâtre où elle a été choisie (baseTh) ; un groupe d'avant le lot (baseTh vide) se lit comme choisi dans le théâtre courant. Une base d'un autre théâtre : le groupe est lu sans base.
+function fpBaseOf(f) { return isObj(f) && Number.isInteger(f.base) && (!thOk(f.baseTh) || f.baseTh === rTh()) ? (fpTheatre(rTh()).byId[f.base] || null) : null; }
 function fpStartOf(f) {       // le départ qui vaut : avec une base, sur la place (à froid par défaut) ; sans base, en vol ou au sol
   if (fpBaseOf(f)) return f.start === 'parkingHot' ? 'parkingHot' : 'parking';
   return f.start === 'ground' ? 'ground' : 'air';
 }
-function fpStandOf(f, u) { const b = fpBaseOf(f); return b && Number.isInteger(u.stand) && has(b.byN, u.stand) ? b.byN[u.stand] : null; }
+function fpStandOf(f, u) { const b = fpBaseOf(f), s = b && Number.isInteger(u.stand) && has(b.byN, u.stand) ? b.byN[u.stand] : null; return s && fpFits(s, u.type) ? s : null; }       // une place que le type de l'unité ne prend pas ne compte pas : sans place
 function fpAc(type) { return has(PARKINGS.aircraft, type) ? PARKINGS.aircraft[type] : null; }       // [hélico 0/1, longueur, largeur, hauteur]
 function fpIsHeli(type) { const a = fpAc(type); return a ? a[0] === 1 : GAME_AIRCRAFT_TYPES.helicopters.indexOf(type) >= 0; }
 // La règle de pydcs : un hélicoptère sur une place marquée hélico, un avion sur une place marquée avion, l'appareil plus petit que la place en longueur, largeur et hauteur (hauteur inconnue : non comparée) ;
@@ -3670,6 +3676,7 @@ function fpSetBase(f, v) {
   if (id !== null && !Number.isInteger(id)) return;
   if (id === (Number.isInteger(f.base) ? f.base : null)) return;
   f.base = id;
+  f.baseTh = id === null ? '' : rTh();
   f.units.forEach(u => { u.stand = null; });
   if (id === null) f.start = 'air'; else if (f.start === 'air' || f.start === 'ground') f.start = 'parking';
   refreshAll();
@@ -3685,14 +3692,20 @@ function fpSetStand(f, u, v) {
   refreshAll();
 }
 // Une unité dont l'appareil change garde sa place seulement si elle prend encore ce type
-function fpKeepStand(f, u) { const s = fpStandOf(f, u); if (s && !fpFits(s, u.type)) u.stand = null; }
-// Un autre théâtre : les groupes perdent base et places (celles d'un théâtre ne valent pas pour un autre)
-function fpClearAll() {
+function fpKeepStand(f, u) { const b = fpBaseOf(f), s = b && Number.isInteger(u.stand) && has(b.byN, u.stand) ? b.byN[u.stand] : null; if (s && !fpFits(s, u.type)) u.stand = null; }
+// Un groupe d'avant le lot porte une base sans théâtre : avant que le théâtre où se lisent les bases change, la base prend celui d'aujourd'hui (elle sera alors lue pour ce qu'elle est, d'un autre théâtre)
+function fpStampBases() { S.flights.forEach(f => { if (f.base !== null && !thOk(f.baseTh)) f.baseTh = rTh(); }); }
+// Les groupes dont la base a été choisie dans un autre théâtre que celui où l'on lit les bases (rTh) perdent base et places (celles d'un théâtre ne valent pas pour un autre) ; rend vrai si un groupe a changé
+function fpDropStale() {
+  let any = false;
   S.flights.forEach(f => {
-    f.base = null;
+    if (f.base === null || !thOk(f.baseTh) || f.baseTh === rTh()) return;
+    f.base = null; f.baseTh = '';
     if (f.start === 'parking' || f.start === 'parkingHot') f.start = 'air';
     f.units.forEach(u => { u.stand = null; });
+    any = true;
   });
+  return any;
 }
 // Ce que le paquet porte du départ : { start, airdromeId, airdrome, x, y, stands } ; sans base les quatre autres clés à null et stands []
 function fpDepartureOut(f) {
@@ -3712,7 +3725,7 @@ function fpCarryDepartures(flights, src, pkg) {
     used.add(g.fcId);
     const d = raw.departure, b = Number.isInteger(d.airdromeId) && has(T.byId, d.airdromeId) && (d.start === 'parking' || d.start === 'parkingHot') ? T.byId[d.airdromeId] : null;
     if (b) {
-      g.base = b.id; g.start = d.start;
+      g.base = b.id; g.baseTh = src.theatre; g.start = d.start;
       row.units.forEach((ru, k) => { const st = isObj(ru) && isObj(ru.stand) ? ru.stand : null; if (g.units[k] && st && Number.isInteger(st.parking) && has(b.byN, st.parking)) g.units[k].stand = st.parking; });
     } else if (d.start === 'ground') g.start = 'ground';
   });
@@ -4922,6 +4935,7 @@ function openFile(file) {
           warn = built.warn.join(' · ');
         }
         if (fth !== '') { S.theatre = fth; thWriteKey(fth); }
+        fpDropStale();
         S.sel = { f: 0, u: 0 };                    // la première unité du premier groupe ouvert
         UI.exportTried = false;
         UI.rtChoose = null;
@@ -5390,6 +5404,7 @@ function init() {
   { const k0 = ukRead(); UMASS = k0.mass; UDIST = k0.distance; dspSync(); }
   thFill();
   tcAdopt();
+  fpDropStale();       // une base choisie dans un autre théâtre que celui où l'on lit les bases (le théâtre commun a changé le module fermé) tombe : elle n'est lue nulle part, et rien ne la ramène
   TBM.cfg = { others: () => mnClose(false), trig: MENU_TRIG, fitTitle: true, short: (sel, o) => sel.id === 'theatre' && uiBarCompact() ? (TH_SHORT[CURRENT_LANG] || {})[o.value] : '' };       // ce que ce module ajoute à la liste commune
   initToolbarMenus([['theme-select', () => t('toolbar.theme.tooltip')], ['theatre', () => t('tb.theatre'), undefined, true]]);       // la liste du théâtre : le bouton prend la largeur de l'option choisie, comme au Datacard Generator
   initFormMenus(sel => sel.getAttribute('aria-label') || '');

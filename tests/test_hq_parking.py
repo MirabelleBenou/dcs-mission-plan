@@ -37,10 +37,10 @@ def const_line(name):
 
 
 PRELUDE = '\n'.join([
-    "function t(k) { return k; }",
+    "function t(k) { return k; }", "function escapeHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;'); }",
     "function tf(k) { return [k].concat(Array.prototype.slice.call(arguments, 1)).join('|'); }",
     const_line('PK_STAND_R'), const_line('PK_CALLSIGNS'), const_line('PK_CS_RE'), const_line('DEL_ALL_CATS'), const_line('PK_SPEED_HELI'),
-    fn('pkNum'), fn('pkStandOf'), fn('pkDepartureOf'), fn('pkOnStand'), fn('pkStandKey'), fn('pkStandTaken'), fn('pkStandNat'), fn('pkStandPlan'),
+    fn('pkNum'), fn('pkStandOf'), fn('pkDepartureOf'), fn('pkOnStand'), fn('pkStandKey'), fn('pkStandTaken'), fn('pkStandNat'), fn('pkStandPlan'), fn('pkStandLinesHtml'),
     fn('pkNameKey'), fn('pkIsNum'), fn('pkRoutePoint'), fn('pkClean'), fn('pkUnitName'), fn('pkAirStart'), fn('pkGroupFlags'), fn('pkCsOfNode'),
     fn('_astGetKey'), fn('dynNum'), fn('dynStr'), fn('delRoot'), fn('delEachList'), fn('pkMissionScan'), fn('pkBuildGroup'),
     # une arborescence Lua fabriquée : des tables, des nombres et des chaînes, comme le lecteur du .miz les donne
@@ -124,7 +124,7 @@ STANDS = """
   const byId = id => S.find(s => s.id === id);
   const dep = (start) => ({ start: start || 'parking', airdromeId: 44, airdrome: 'Akrotiri', x: 0, y: 0, stands: S.slice() });
   const U = (req, pick) => ({ name: '', type: 'Mi-24P', stand: req ? byId(req) : null, pick: pick === undefined ? null : pick });
-  const F = (name, units, o) => Object.assign({ groupName: name, dep: dep(), units: units, create: true, canCreate: true, supBy: null, why: null, whyArgs: [], offer: true, sp: null }, o || {});
+  const F = (name, units, o) => Object.assign({ groupName: name, dep: dep(), units: units, create: true, canCreate: true, side: 'red', supBy: null, why: null, whyArgs: [], offer: true, sp: null }, o || {});
   const ids = f => f.sp ? f.sp.map(e => e.chosen && e.chosen.id) : null;
   const seqOf = fs => fs.map(fl => ({ pk: {}, fl: fl }));
 """
@@ -213,6 +213,50 @@ def test_plan_ignores_what_is_not_a_flight_to_create_on_a_stand():
       console.log(JSON.stringify({ sp: [air, lotA, off, sup, bad].map(f => f.sp), ok: ids(ok) }));
     """)
     assert out['sp'] == [None] * 5 and out['ok'] == ['H1']      # aucun d'eux ne retient H1
+
+
+# ----- Addendum 1 : place hors du paquet (Q3), vol sans coalition (Q4), place retenue par un vol du paquet (Q5) -----
+def test_plan_a_requested_stand_the_package_does_not_list_is_no_stand():
+    out = run(STANDS + """
+      const sc = { air: [] };
+      const dd = dep(); dd.stands = S.filter(s => s.id !== 'A1');       // la liste du paquet : le vol n'a plus A1 (le type ne la prend pas)
+      const a = F('A', [U('H1'), U('A1')], { dep: dd });
+      pkStandPlan(seqOf([a]), sc);
+      console.log(JSON.stringify({ ids: ids(a), req: a.sp.map(e => e.req && e.req.id), taken: a.sp.map(e => e.taken), cands: a.sp[1].cands.map(c => c.s.id) }));
+    """)
+    assert out['ids'] == ['H1', 'H2']          # A1 n'est pas demandée : « sans place », la plus proche de la place de l'unité d'avant (H1 retenue : H2)
+    assert out['req'] == ['H1', None] and out['taken'] == [False, False] and 'A1' not in out['cands']
+
+
+def test_plan_a_flight_without_a_side_holds_nothing_and_excludes_nothing():
+    out = run(STANDS + """
+      const sc = { air: [{ x: 0, y: 0 }] };
+      const a = F('A', [U('H1'), U('H2')]), b = F('B', [U('H3')], { side: '' });       // B est coché mais sans coalition : l'application ne le crée pas
+      pkStandPlan(seqOf([a, b]), sc);
+      const r = { a: ids(a), first: a.sp[0].cands.map(c => [c.s.id, Math.round(c.d)]), b: ids(b) };
+      const c = F('C', [U('H3')], { side: '' }), d = F('D', [U('H3')]);       // C passe avant D : ne retient pas H3
+      pkStandPlan(seqOf([c, d]), sc);
+      r.d = ids(d); r.dTaken = d.sp[0].taken; r.c = ids(c);
+      console.log(JSON.stringify(r));
+    """)
+    assert out['a'] == ['H3', 'H2'] and out['first'][0] == ['H3', 60]       # H3 n'est plus demandée par B : la variante du cadrage
+    assert out['b'] == ['H4']                                                 # son plan est montré : H3 est retenue par A, qui sera créé, B s'en voit proposer une autre
+    assert out['d'] == ['H3'] and out['dTaken'] is False and out['c'] == ['H3']
+
+
+def test_plan_a_stand_held_by_an_earlier_flight_of_the_package_says_so():
+    out = run(STANDS + """
+      const sc = { air: [{ x: 0, y: 0 }] };
+      const a = F('CAESAR', [U('H3')]), b = F('HIND 2', [U('H3')]), c = F('MIS', [U('H1')]);
+      pkStandPlan(seqOf([a, b, c]), sc);
+      const lines = fl => fl.sp.map((e, ui) => [e.req && e.req.id, e.heldBy, e.taken]);
+      const html = fl => pkStandLinesHtml(fl, '', false).replace(/<select.*?<\\/select>/g, '');
+      console.log(JSON.stringify({ b: lines(b), c: lines(c), hb: html(b), hc: html(c), hok: html(a) }));
+    """)
+    assert out['b'] == [['H3', 'CAESAR', True]] and out['c'] == [['H1', None, True]]      # H1 : prise dans la mission, H3 : retenue par CAESAR
+    assert 'pk.st.held|' in out['hb'] and 'CAESAR' in out['hb'] and 'pk.st.taken' not in out['hb']
+    assert 'pk.st.taken|' in out['hc'] and 'pk.st.held' not in out['hc']
+    assert 'pk.st.ok|' in out['hok']
 
 
 # ----- l'écriture -----

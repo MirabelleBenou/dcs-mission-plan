@@ -135,11 +135,12 @@ PRELUDE = '\n'.join([
     "const isObj = o => !!o && typeof o === 'object' && !Array.isArray(o);",
     "const GAME_AIRCRAFT_TYPES = { helicopters: ['HeliUnknown'], airplanes: ['PlaneUnknown'] };",
     "let TH = 'Alpha'; function rTh() { return TH; }",
+    "const thOk = id => ['Alpha', 'Beta', 'Nowhere'].indexOf(id) >= 0;",
     "let S = { flights: [] }; function refreshAll() {}",
     "function flightTypes(f) { const o = []; f.units.forEach(u => { if (u.type && o.indexOf(u.type) < 0) o.push(u.type); }); return o; }",
     const_line('FP_STARTS'), const_line('FP'),
     fn('fpTheatre'), fn('fpBaseOf'), fn('fpStartOf'), fn('fpStandOf'), fn('fpAc'), fn('fpIsHeli'), fn('fpFits'), fn('fpNat'), fn('fpGroupStands'), fn('fpTakenBy'),
-    fn('fpSetBase'), fn('fpSetStart'), fn('fpSetStand'), fn('fpKeepStand'), fn('fpClearAll'), fn('fpDepartureOut'), fn('fpStandOut'), fn('fpCarryDepartures'),
+    fn('fpSetBase'), fn('fpSetStart'), fn('fpSetStand'), fn('fpKeepStand'), fn('fpStampBases'), fn('fpDropStale'), fn('fpDepartureOut'), fn('fpStandOut'), fn('fpCarryDepartures'),
     "function U(type, stand) { return { type: type, stand: stand === undefined ? null : stand }; }",
     "function F(name, base, start, units) { return { fcId: name, name: name, base: base, start: start, units: units }; }",
 ])
@@ -186,8 +187,14 @@ def test_state_changes_keep_the_group_coherent():
       fpSetBase(f, '7'); r.sameBase = f.units[1].stand;                                          // la même base : rien ne bouge
       fpSetBase(f, '8'); r.other = [f.base, f.start, f.units.map(u => u.stand)];
       fpSetBase(f, ''); r.cleared = [f.base, f.start];
-      const g = F('H', 7, 'parkingHot', [U('HeliA', 1)]); S.flights = [f, g];
-      fpClearAll(); r.all = S.flights.map(x => [x.base, x.start, x.units.map(u => u.stand)]);
+      r.th = f.baseTh;
+      const g = F('H', 7, 'parkingHot', [U('HeliA', 1)]);              // un groupe d'avant le lot : sans baseTh
+      const k = F('K', 7, 'parking', [U('HeliA', 1)]); k.baseTh = 'Alpha';
+      S.flights = [f, g, k];
+      fpStampBases(); r.stamped = S.flights.map(x => x.baseTh);
+      TH = 'Beta'; r.noneNow = S.flights.map(x => fpBaseOf(x));         // lus d'un autre théâtre : sans base
+      r.dropped = fpDropStale(); r.all = S.flights.map(x => [x.base, x.baseTh, x.start, x.units.map(u => u.stand)]);
+      TH = 'Alpha'; r.back = S.flights.map(x => fpBaseOf(x));
       console.log(JSON.stringify(r));
     """)
     assert out['none'] == [None, 'air']
@@ -197,7 +204,11 @@ def test_state_changes_keep_the_group_coherent():
     assert out['keptB1'] == 3 and out['droppedH1'] is None and out['sameBase'] == 3
     assert out['other'] == [8, 'parkingHot', [None, None]]       # une autre base : les places sont vidées, le départ reste
     assert out['cleared'] == [None, 'air']
-    assert out['all'] == [[None, 'air', [None, None]], [None, 'air', [None]]]
+    assert out['th'] == ''       # « Aucune » : plus de théâtre de base
+    assert out['stamped'] == ['', 'Alpha', 'Alpha']      # f est sans base : rien à dater ; g (d'avant le lot) prend le théâtre de lecture ; k l'a déjà
+    assert out['noneNow'] == [None, None, None] and out['dropped'] is True
+    assert out['all'] == [[None, '', 'air', [None, None]], [None, '', 'air', [None]], [None, '', 'air', [None]]]
+    assert out['back'] == [None, None, None]       # le retour sur le théâtre d'origine ne les ramène pas
 
 
 @needs_node
@@ -277,8 +288,8 @@ def test_restore_flight_reads_junk_as_default():
     stubs = '\n'.join([
         "const isObj = o => !!o && typeof o === 'object' && !Array.isArray(o);", "const str = v => (typeof v === 'string' ? v : '');",
         "const MAX_UNITS = 8, PAYLOAD_TYPES = ['HeliA', 'PlaneA'];", const_line('FP_STARTS'), "const UNIT_KEYS = ['type', 'name', 'callsign', 'csRaw', 'onboard', 'livery', 'folded', 'radios', 'loadout', 'payloadIn', 'stand'];",
-        "function newId() { return 'id'; }", "function newUnit(type) { return { type: type, name: '', callsign: '', onboard: '', livery: '', radios: {}, loadout: null, folded: false }; }",
-        "function fcNewUnit(type) { const u = newUnit(type); u.stand = null; return u; }", "function newFlight() { return { fcId: 'n', name: '', coalition: '', route: null, base: null, start: 'air', units: [] }; }",
+        "const thOk = id => ['Alpha', 'Beta'].indexOf(id) >= 0;", "function newId() { return 'id'; }", "function newUnit(type) { return { type: type, name: '', callsign: '', onboard: '', livery: '', radios: {}, loadout: null, folded: false }; }",
+        "function fcNewUnit(type) { const u = newUnit(type); u.stand = null; return u; }", "function newFlight() { return { fcId: 'n', name: '', coalition: '', route: null, base: null, baseTh: '', start: 'air', units: [] }; }",
         "function gsRouteCopy(p) { return { points: p }; }", "function ridOk() { return false; }", "function loBring() {}", "function loSnap() { return {}; }", "function loadoutFromPayload() { return null; }",
         fn('restoreFlight')])
     r = subprocess.run([NODE, '-e', stubs + """
@@ -296,6 +307,8 @@ def test_restore_flight_reads_junk_as_default():
       out.standJunk = show(mk(7, 'parking', 'a'));
       out.standNeg = show(mk(7, 'parking', -2));
       out.standNoBase = show(mk(null, 'ground', 3));      // la place n'a de sens que dans une base
+      const th = (base, bt) => restoreFlight({ fcId: 'x', name: 'G', base: base, baseTh: bt, units: [{ type: 'HeliA' }] }).baseTh;
+      out.th = [th(7, 'Alpha'), th(7, 'Beta'), th(7, 'Nowhere'), th(7, 5), th(7, undefined), th(null, 'Alpha')];       // le théâtre de la base : gardé s'il est lisible, sinon vide ; sans base, vide
       console.log(JSON.stringify(out));
     """], capture_output=True, text=True, timeout=60)
     assert r.returncode == 0, r.stderr
@@ -306,3 +319,71 @@ def test_restore_flight_reads_junk_as_default():
     assert o['airWithBase'] == [7, 'parking', 3] and o['junkStart'] == [7, 'parking', 3]
     assert o['standJunk'] == [7, 'parking', None] and o['standNeg'] == [7, 'parking', None]
     assert o['standNoBase'] == [None, 'ground', None]
+
+
+# ---------- Addendum 1 : une base ne vaut que dans son théâtre (Q1, Q2), une place qui ne prend plus le type ne compte pas (Q3) ----------
+@needs_node
+def test_base_is_read_only_in_the_theatre_it_was_chosen_in():
+    out = run("""
+      const r = {};
+      const f = F('G', null, 'air', [U('HeliA'), U('HeliA')]); S.flights = [f];
+      fpSetBase(f, '7'); fpSetStand(f, f.units[0], '1');
+      r.chosen = [f.base, f.baseTh, fpBaseOf(f).name, fpStandOut(f, f.units[0]).parking_id, fpDepartureOut(f).airdromeId];
+      TH = 'Beta';       // le théâtre où l'on lit les bases a changé (clé commune passée à un autre théâtre, FC fermé) : le groupe est sans base partout
+      r.beta = [fpBaseOf(f), fpStartOf(f), fpStandOf(f, f.units[0]), fpStandOut(f, f.units[0]), fpDepartureOut(f), fpGroupStands(f, fpTheatre('Alpha').byId[7]).length > 0];
+      r.dropped = fpDropStale(); r.after = [f.base, f.baseTh, f.start, f.units.map(u => u.stand)];
+      TH = 'Alpha'; r.back = [fpBaseOf(f), fpStandOf(f, f.units[0])];        // le retour ne les ramène pas : elles sont tombées
+      r.droppedAgain = fpDropStale();
+      console.log(JSON.stringify(r));
+    """)
+    assert out['chosen'] == [7, 'Alpha', 'Base Sept', 'H1', 7]
+    assert out['beta'][:3] == [None, 'air', None] and out['beta'][3] is None
+    assert out['beta'][4] == {'start': 'air', 'airdromeId': None, 'airdrome': None, 'x': None, 'y': None, 'stands': []}
+    assert out['dropped'] is True and out['after'] == [None, '', 'air', [None, None]]
+    assert out['back'] == [None, None] and out['droppedAgain'] is False
+
+
+@needs_node
+def test_legacy_group_without_theatre_is_read_in_the_current_one_and_stamped_before_a_change():
+    out = run("""
+      const r = {};
+      const g = F('G', 7, 'parkingHot', [U('HeliA', 1)]);          // un groupe d'avant le lot, ou livré avant l'addendum : base sans baseTh
+      S.flights = [g];
+      r.read = [fpBaseOf(g).name, fpStandOf(g, g.units[0]).id, fpStartOf(g)];
+      r.noDrop = fpDropStale();                                      // sans théâtre de base, rien n'est périmé
+      fpStampBases(); r.stamp = g.baseTh;
+      TH = 'Beta'; r.dropped = fpDropStale(); r.after = [g.base, g.start, g.units[0].stand];
+      console.log(JSON.stringify(r));
+    """)
+    assert out['read'] == ['Base Sept', 'H1', 'parkingHot'] and out['noDrop'] is False and out['stamp'] == 'Alpha'
+    assert out['dropped'] is True and out['after'] == [None, 'air', None]
+
+
+@needs_node
+def test_base_kept_while_the_theatre_where_bases_are_read_does_not_change():
+    out = run("""
+      const r = {};
+      const f = F('G', null, 'air', [U('HeliA')]); S.flights = [f];
+      fpSetBase(f, '7'); fpSetStand(f, f.units[0], '1');
+      // le bandeau : l'écran passe à Beta, la fiche reste sur Alpha, rTh() lit toujours Alpha ; « Revenir à Alpha » ne change pas rTh()
+      fpStampBases(); r.d1 = fpDropStale(); r.d2 = fpDropStale();
+      r.kept = [f.base, f.baseTh, fpStandOf(f, f.units[0]).id];
+      console.log(JSON.stringify(r));
+    """)
+    assert out['d1'] is False and out['d2'] is False and out['kept'] == [7, 'Alpha', 'H1']
+
+
+@needs_node
+def test_a_stand_the_type_does_not_take_counts_as_no_stand():
+    out = run("""
+      const r = {};
+      const f = F('G', 7, 'parking', [U('HeliA', 1), U('HeliA', 3)]); S.flights = [f];
+      r.before = f.units.map(u => fpStandOut(f, u) && fpStandOut(f, u).parking_id);
+      f.units[0].type = 'PlaneA';           // retypé hors du module (l'import d'un groupe existant) : H1 est une place d'hélico
+      r.after = [fpStandOf(f, f.units[0]), fpStandOut(f, f.units[0])];
+      r.takenFree = [...fpTakenBy(fpBaseOf(f), f.units[1]).keys()];       // elle ne retient plus rien
+      r.stored = f.units[0].stand;         // la valeur écrite reste : seule la lecture l'ignore
+      r.sum = fpGroupStands(f, fpBaseOf(f)).map(s => s.id);
+      console.log(JSON.stringify(r));
+    """)
+    assert out['before'] == ['H1', 'B1'] and out['after'] == [None, None] and out['takenFree'] == [] and out['stored'] == 1

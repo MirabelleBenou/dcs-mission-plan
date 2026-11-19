@@ -1726,6 +1726,7 @@ const I18N = {{
     'pk.dep.hot': '{{0}}, sur la place, moteurs en route',
     'pk.st.ok': '{{0}} : {{1}}',
     'pk.st.taken': '{{0}} : {{1}} prise dans la mission',
+    'pk.st.held': '{{0}} : {{1}} retenue par {{2}}',
     'pk.st.none': '{{0}} : sans place',
     'pk.st.free': 'Place libre',
     'pk.st.opt': '{{0}} · {{1}} m',
@@ -2206,6 +2207,7 @@ const I18N = {{
     'pk.dep.hot': '{{0}}, on the stand, engines running',
     'pk.st.ok': '{{0}}: {{1}}',
     'pk.st.taken': '{{0}}: {{1}} taken in the mission',
+    'pk.st.held': '{{0}}: {{1}} taken by {{2}}',
     'pk.st.none': '{{0}}: no stand',
     'pk.st.free': 'Free stand',
     'pk.st.opt': '{{0}} · {{1}} m',
@@ -5407,17 +5409,24 @@ function pkStandNat(a, b) {{ return a.s.id.localeCompare(b.s.id, 'en', {{ numeri
 function pkStandPlan(seq, sc) {{
   const later = new Map();      // clé de place → le nombre d'unités, pas encore passées, qui la demandent
   const eligible = fl => fl.create && fl.canCreate && !fl.supBy && pkOnStand(fl);
-  seq.forEach(x => {{ if (eligible(x.fl)) x.fl.units.forEach(u => {{ if (u.stand) {{ const k = pkStandKey(x.fl, u.stand); later.set(k, (later.get(k) || 0) + 1); }} }}); }});
-  const retained = new Set();
+  // Seuls les vols que l'application créera retiennent des places et pèsent sur les autres (real) : un vol coché sans coalition (fl.side vide) n'est pas créé, son plan n'est que montré.
+  // Une place demandée que le paquet ne donne pas dans departure.stands compte pour « sans place ».
+  const real = fl => eligible(fl) && !!fl.side;
+  const reqOf = (fl, u) => (u.stand && fl.dep.stands.some(s => s.n === u.stand.n)) ? u.stand : null;
+  seq.forEach(x => {{ if (real(x.fl)) x.fl.units.forEach(u => {{ const r = reqOf(x.fl, u); if (r) {{ const k = pkStandKey(x.fl, r); later.set(k, (later.get(k) || 0) + 1); }} }}); }});
+  const retained = new Map();      // clé de place → le nom du groupe qui la retient
   seq.forEach(x => {{
     const fl = x.fl;
     if (!eligible(fl)) return;
-    const mine = [], plan = [];
+    const keeps = real(fl), mine = [], plan = [];
     let prev = null, fail = false;
     fl.units.forEach(u => {{
-      if (u.stand) {{ const k = pkStandKey(fl, u.stand); later.set(k, later.get(k) - 1); }}      // ce qui reste dans later : les demandes des unités d'après
-      const req = u.stand, e = {{ req: req, taken: false, chosen: null, cands: null }};
-      e.taken = !!req && (pkStandTaken(sc, req) || retained.has(pkStandKey(fl, req)));
+      const req = reqOf(fl, u);
+      if (req && keeps) {{ const k = pkStandKey(fl, req); later.set(k, later.get(k) - 1); }}      // ce qui reste dans later : les demandes des unités d'après
+      const e = {{ req: req, taken: false, heldBy: null, chosen: null, cands: null }};
+      const inMission = !!req && pkStandTaken(sc, req);
+      if (req && !inMission && retained.has(pkStandKey(fl, req))) e.heldBy = retained.get(pkStandKey(fl, req));      // libre dans la mission, retenue par une unité d'un vol d'avant (ou d'avant dans ce vol)
+      e.taken = inMission || e.heldBy !== null;
       if (req && !e.taken) e.chosen = req;
       else {{
         const ref = req || prev || {{ x: fl.dep.x, y: fl.dep.y }};
@@ -5429,7 +5438,7 @@ function pkStandPlan(seq, sc) {{
         e.chosen = c ? c.s : null;
       }}
       if (!e.chosen) fail = true;
-      else {{ const k = pkStandKey(fl, e.chosen); retained.add(k); mine.push(k); prev = e.chosen; }}
+      else {{ const k = pkStandKey(fl, e.chosen); if (keeps) {{ retained.set(k, fl.groupName); mine.push(k); }} prev = e.chosen; }}
       plan.push(e);
     }});
     fl.sp = plan;
@@ -5500,7 +5509,7 @@ function pkStandLinesHtml(fl, mk, busy) {{
   fl.sp.forEach((e, ui) => {{
     const name = pkUnitName(fl, fl.units[ui], ui);
     if (!e.cands) {{ html += '<div class="pk-stl"><span class="pk-stt">' + h(tf('pk.st.ok', name, e.chosen.id)) + '</span></div>'; return; }}
-    const txt = e.req ? tf('pk.st.taken', name, e.req.id) : tf('pk.st.none', name);
+    const txt = e.req ? (e.heldBy !== null ? tf('pk.st.held', name, e.req.id, e.heldBy) : tf('pk.st.taken', name, e.req.id)) : tf('pk.st.none', name);
     const opts = e.cands.map(c => '<option value="' + c.s.n + '"' + (e.chosen && c.s.n === e.chosen.n ? ' selected' : '') + '>' + h(tf('pk.st.opt', c.s.id, Math.round(c.d))) + '</option>').join('');
     html += '<div class="pk-stl"><span class="pk-stt' + (e.req ? ' pk-why' : '') + '">' + h(txt) + '</span>' +
       (e.cands.length ? '<label class="pk-flt-f pk-stsel"><span>' + h(t('pk.st.free')) + '</span><select data-pkc="stand" data-u="' + ui + '"' + mk + (busy ? ' disabled' : '') + '>' + opts + '</select></label>' : '') + '</div>';
