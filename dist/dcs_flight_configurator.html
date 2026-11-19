@@ -17919,8 +17919,8 @@ function refreshBar() {
   const empty = !S.flights.length;
   let msg = issues.length ? (empty && !UI.exportTried ? t('bar.start') : issues.map(i => tf(i.key, ...i.args)).join(' ')) : tf('bar.ok', packageFileName() + '.json');
   if (UI.clamped > 0) msg += ' · ' + tf('bar.clamped', UI.clamped);
-  // Un vol sans route (le paquet porterait route: null) : HQ ne pourra pas le créer s'il manque à la mission ; l'export n'est pas bloqué
-  S.flights.forEach((f, fi) => { if (!f.route || !f.route.points || !f.route.points['1']) msg += ' · ' + tf('bar.noroute', flightLabel(f, fi)); });
+  // Un vol sans route (le paquet porterait route: null) : HQ ne pourra pas le créer s'il manque à la mission ; l'export n'est pas bloqué. Le message n'est dit que quand l'export est possible, à la suite du message « Prêt à exporter » : jamais à côté d'un message qui le bloque
+  if (issues.length === 0) S.flights.forEach((f, fi) => { if (!f.route || !f.route.points || !f.route.points['1']) msg += ' · ' + tf('bar.noroute', flightLabel(f, fi)); });
   bar.textContent = msg;
   tcPaint();
   mlRefresh();       // la ligne de la mission d'HQ suit le bandeau de théâtre (rTh) comme le reste de la barre
