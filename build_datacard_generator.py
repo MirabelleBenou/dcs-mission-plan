@@ -1731,7 +1731,7 @@ const I18N = {
     'ac.flag': 'hors jeu de base',
     'sum.type.pick': 'type à choisir',
     'rad.err.nan': 'Canal {0} : « {1} » n’est pas une fréquence.',
-    'rad.band.none': 'bande non contrôlée pour ce type',
+    'rad.none': 'Aucun poste radio n’est programmable dans l’éditeur de mission pour ce type : pas de radios à régler ici.',
     'rad.err.range': 'Canal {0} : {1} MHz hors de la bande du poste ({2}).',
     'rad.err.nan.f': 'Fréquence {0} : « {1} » n’est pas une fréquence.',
     'rad.err.range.f': 'Fréquence {0} : {1} MHz hors de la bande du poste ({2}).',
@@ -2246,7 +2246,7 @@ const I18N = {
     'ac.flag': 'not in the base game',
     'sum.type.pick': 'type to pick',
     'rad.err.nan': 'Channel {0}: “{1}” is not a frequency.',
-    'rad.band.none': 'band not checked for this type',
+    'rad.none': 'No radio is programmable in the mission editor for this type: no radios to set here.',
     'rad.err.range': 'Channel {0}: {1} MHz is outside the radio’s band ({2}).',
     'rad.err.nan.f': 'Frequency {0}: “{1}” is not a frequency.',
     'rad.err.range.f': 'Frequency {0}: {1} MHz is outside the radio’s band ({2}).',
@@ -4303,7 +4303,7 @@ function dgRemoveUnitDo(c, i) {
    partage : c'est la règle des fréquences du groupe. Un poste que la mission ne pré-règle pas (RADIO_FREE : le poste HF des deux hélicoptères) n'a pas de numéro de canal. */
 function dgPostFree(ty, r) { return radioFreeCount(ty, Number(r)) > 0; }
 function dgFmtMHz(v) { return String(v).replace('.', CURRENT_LANG === 'fr' ? ',' : '.'); }
-function dgBandText(ty, r) { const b = radioBand(ty, Number(r)); return b.length ? b.map(x => dgFmtMHz(x[0]) + '–' + dgFmtMHz(x[1])).join(' · ') + ' MHz' : t('rad.band.none'); }
+function dgBandText(ty, r) { const b = radioBand(ty, Number(r)); return b.length ? b.map(x => dgFmtMHz(x[0]) + '–' + dgFmtMHz(x[1])).join(' · ') + ' MHz' : ''; }       /* une bande vide n'est jamais « hors bande » (radioInBand) : le message de bande n'est pas montré pour elle */
 /* Le message d'une fréquence déjà dans la fiche qui n'est pas dans la bande de son poste (ou n'est pas un nombre) ; '' si elle est bonne ou vide. Elle reste dans la fiche : le champ la signale seulement. */
 function dgFreqIssue(ty, r, c, raw) {
   const p = dgParseFreq(raw), free = dgPostFree(ty, r), n = free ? c : radioCockpitChannel(ty, Number(r), c);
@@ -4938,7 +4938,7 @@ function radioLinkedHtml(c) {
       return '<div class="rt-post"><div class="rt-ph">' + esc(p.name) + '</div>' + (rows || '<div class="ui-note">' + esc(t('rt.nofreq')) + '</div>') + more + '</div>';
     }).join('');
     return '<section class="rt-box" data-rtype="' + esc(m.type) + '"><h4 class="rt-h"><span class="rt-t">' + esc(t('rt.title', { type: dgTypeLabel(m.type).toUpperCase() })) + '</span>' +
-      '<span class="rt-u">' + esc(t(m.units.length < 2 ? 'rt.units.1' : 'rt.units', { n: m.units.length, names: names })) + '</span></h4>' + posts + '</section>';
+      '<span class="rt-u">' + esc(t(m.units.length < 2 ? 'rt.units.1' : 'rt.units', { n: m.units.length, names: names })) + '</span></h4>' + (m.posts.length ? posts : '<div class="ui-note">' + esc(t('rad.none')) + '</div>') + '</section>';
   }).join('');
 }
 function cardSummary(x) {
@@ -5298,12 +5298,12 @@ function partialGroup(c) {
   });
   return { types: types, unknown: unknown };
 }
-/* Le champ Appareil d'une carte dont le groupe est déduit des lignes d'équipage ou lu dans la fiche (lecture seule) : les types enregistrés (c.flight.aircraft, les noms du .miz joints par « + ») sous leur nom d'affichage ;
-   le texte d'une carte libre (saisi à la main) reste tel quel. La valeur enregistrée ne change pas. */
-function dgAircraftShown(c) {
-  const a = c.flight.aircraft;
-  return (c.gsId || deduceGroup(c) || partialGroup(c)) ? a.split(' + ').map(gameAircraftName).join(' + ') : a;
+/* Le texte de l'appareil montré, au champ Appareil comme à l'imprimé : chaque partie séparée par « + » qui est un des types du jeu (un id du .miz) s'affiche sous son nom ; un texte libre reste tel qu'il est tapé
+   (les espaces et les « + » aussi). La valeur enregistrée ne change pas : les ids, ou le texte tapé. */
+function dgNameParts(a) {
+  return String(a).replace(/[^+]+/g, part => { const m = /^(\s*)([\s\S]*?)(\s*)$/.exec(part); return m[1] + gameAircraftName(m[2]) + m[3]; });
 }
+function dgAircraftShown(c) { return dgNameParts(c.flight.aircraft); }
 /* Quand le groupe se déduit, la carte enregistre l'appareil et le nombre déduits */
 function syncGroup(c) {
   const d = deduceGroup(c);
@@ -5741,7 +5741,7 @@ function groupText(c) {
   if (d) return d.types.map(x => x[1] + ' \u00d7 ' + gameAircraftName(x[0])).join(' + ');
   const p = partialGroup(c);
   if (p) return p.types.map(x => x[1] + ' \u00d7 ' + gameAircraftName(x[0])).join(' + ') + ' + ' + p.unknown + ' \u00d7 ?';
-  const a = c.flight.aircraft.trim(), n = c.flight.count;
+  const a = dgAircraftShown(c).trim(), n = c.flight.count;
   if (hasText(a)) return (n != null && a.indexOf('+') < 0) ? n + ' \u00d7 ' + a : a;
   return n != null ? t('dc.flightOf', { n: n }) : '';
 }
@@ -6259,7 +6259,7 @@ function dgSectionSum(id, c) {
     const vals = c.times.map(x => v(x.value)).filter(Boolean);
     return vals.length > 1 ? vals[0] + ' → ' + vals[vals.length - 1] : (vals[0] || '');
   }
-  if (id === 'group') return uiJoin([v(c.flight.callsign), partialGroup(c) ? groupText(c) : (c.flight.count ? c.flight.count + ' × ' : '') + v(c.flight.aircraft)]);
+  if (id === 'group') return uiJoin([v(c.flight.callsign), partialGroup(c) ? groupText(c) : (c.flight.count ? c.flight.count + ' × ' : '') + v(dgAircraftShown(c))]);
   if (id === 'nav') {
     const info = dgRouteInfo(c, dgRouteSet());
     return uiJoin([c.nav.length ? navPts(c.nav.length) : '', info.state === 'linked' && hasText(info.name) ? info.name.trim() : '']);
@@ -6438,7 +6438,7 @@ function syncGroupEditor(c) {
   [['aircraft', dgAircraftShown(c)], ['count', c.flight.count == null ? '' : String(c.flight.count)]].forEach(p => {
     const el = document.querySelector('#editor [data-path="flight.' + p[0] + '"]');
     if (!el) return;
-    if (ded && el.value !== p[1]) el.value = p[1];
+    if ((ded || (p[0] === 'aircraft' && el !== document.activeElement)) && el.value !== p[1]) el.value = p[1];       /* aussi quand les types sont remis à « à choisir » : le champ dit ce que dit l'imprimé */
     el.readOnly = lock;
     if (lock) el.title = t('f.group.deduced'); else el.removeAttribute('title');
   });

@@ -4109,7 +4109,7 @@ function renderSnapshot(snap) {{
     html += '<label class="pk-chk"><input type="checkbox" data-pk-export="' + h(String(fl.groupId)) + '"' +
       (_PK_EXPORT_SEL.has(fl.groupId) ? ' checked' : '') + '>' + h(fl.groupName || '—') + '</label>';
     if (dynT && dynT[fl.groupId]) html += ' <span class="snap-flight-tag" data-dyn-template="1">' + h(t('dyn.tmpl')) + '</span>';
-    html += ' <span class="snap-flight-tag">' + h(fKey(fl)) + '</span>';
+    html += ' <span class="snap-flight-tag">' + h(flightTypeKeys(fl).map(gameAircraftName).join(' + ')) + '</span>';
     html += ' <span class="snap-flight-tag">' + h(fl.coalition || '') + '</span>';
     html += ' <span class="snap-flight-tag">' + h(String(fl.units.length)) + ' ' + h(fl.units.length === 1 ? t('snap.unit') : t('snap.units')) + '</span>';
     html += '</div>';

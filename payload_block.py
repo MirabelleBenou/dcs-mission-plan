@@ -119,10 +119,15 @@ function payloadWeaponSide(type, clsid) {
   return payloadHas(c, name) && c[name] > 1 ? side : '';
 }
 
-// Réglages par défaut hors pylônes : carburant maximum, leurres et paillettes de AIRCRAFT_LIMITS, canon plein.
+// Réglages par défaut hors pylônes : carburant maximum, leurres et paillettes de AIRCRAFT_LIMITS, canon plein. Une limite inconnue (null dans la table : warbirds, entraîneurs, chasseurs anciens) n'est jamais
+// reprise telle quelle : leurres et paillettes valent 0, le carburant 0 aussi ; payloadKnown dit si la table la donne.
+function payloadKnown(type, k) {
+  const l = AIRCRAFT_LIMITS[type], f = k === 'fuel' ? 'fuel_max' : k;
+  return !!l && typeof l[f] === 'number';
+}
 function payloadDefaults(type) {
-  const l = AIRCRAFT_LIMITS[type];
-  return { fuel: l.fuel_max, flare: l.flare, chaff: l.chaff, gun: 100 };
+  const l = AIRCRAFT_LIMITS[type], n = f => (typeof l[f] === 'number' ? l[f] : 0);
+  return { fuel: n('fuel_max'), flare: n('flare'), chaff: n('chaff'), gun: 100 };
 }
 
 // La livre, en kilogrammes : les données restent en kg, l'unité de masse choisie ne change que l'affichage (payloadMassIn). Une valeur en lb s'affiche en entier arrondi.
@@ -155,10 +160,10 @@ function payloadTakeoff(type, fuel, stations, masses) {
 }
 
 // Le plus grand nombre de leurres (k = 'flare') ou de paillettes (k = 'chaff') que l'appareil porte à lui seul : charge_total ÷ taille d'une charge ; le nombre par défaut si la table ne donne pas
-// la capacité. Les deux ensemble (flares × flare_charge_size + chaff × chaff_charge_size ≤ charge_total) se jugent ailleurs (saisie, import, lecture d'un emport) : buildPayload ne borne que chaque nombre.
+// la capacité (0 quand la table ne donne ni l'un ni l'autre). Les deux ensemble (flares × flare_charge_size + chaff × chaff_charge_size ≤ charge_total) se jugent ailleurs (saisie, import, lecture d'un emport) : buildPayload ne borne que chaque nombre.
 function payloadCountMax(type, k) {
   const l = AIRCRAFT_LIMITS[type], size = l[k + '_charge_size'];
-  return (typeof l.charge_total === 'number' && typeof size === 'number' && size > 0) ? Math.floor(l.charge_total / size) : l[k];
+  return (typeof l.charge_total === 'number' && typeof size === 'number' && size > 0) ? Math.floor(l.charge_total / size) : payloadDefaults(type)[k];
 }
 
 // ---------------------------------------------------------------------------------------------------------------

@@ -563,12 +563,15 @@ I18N_FR = {
     'u.opt': 'facultatif',
     'u.radios': 'Radios',
     'u.radios.sum': '{0} postes',
+    'u.radios.sum.one': '{0} poste',
     'u.radios.set': '{0} canaux réglés',
+    'u.radios.set.one': '{0} canal réglé',
     'u.loadout': 'Emport',
     'u.loadout.none': 'non renseigné — HQ n’y touchera pas',
     'u.see': 'Voir l’emport ↓',
 
     'rad.chans': '{0} canaux',
+    'rad.chans.one': '{0} canal',
     'rad.ch': 'CH {0}',
     'rad.hint': 'Fréquences en MHz, dans la bande de chaque poste (virgule ou point). Les modulations ne sont pas écrites. Un canal vide n’est pas écrit.',
     'rad.print': "Imprimer ce canal sur la datacard du groupe",
@@ -646,6 +649,8 @@ I18N_FR = {
     'lo.chaff': 'Paillettes',
     'lo.gun': 'Canon (%)',
     'lo.max': 'max {0}',
+    'lo.none.cm': 'Pas de leurres ni de paillettes connus pour ce type.',
+    'lo.none.one': 'Pas de limite connue pour : {0}.',
     'lo.pct': '{0} %',
     'lo.fuelbar': 'Carburant (%)',
     'set.charge': 'leurres{fs} + paillettes{cs} ≤ {n}',
@@ -681,6 +686,7 @@ I18N_FR = {
     'sum.presets.one': '{0} preset',
     'sum.presets.many': '{0} presets',
     'sum.radios': 'radios {0} canaux',
+    'sum.radios.one': 'radios {0} canal',
     'sum.radios.var': 'radios variées',
     'sum.loadout': 'emport {0}',
     'sum.loadout.custom': 'emport composé',
@@ -887,12 +893,15 @@ I18N_EN = {
     'u.opt': 'optional',
     'u.radios': 'Radios',
     'u.radios.sum': '{0} radios',
+    'u.radios.sum.one': '{0} radio',
     'u.radios.set': '{0} channels set',
+    'u.radios.set.one': '{0} channel set',
     'u.loadout': 'Loadout',
     'u.loadout.none': 'not set — HQ will not touch it',
     'u.see': 'See the loadout ↓',
 
     'rad.chans': '{0} channels',
+    'rad.chans.one': '{0} channel',
     'rad.ch': 'CH {0}',
     'rad.hint': 'Frequencies in MHz, within each radio’s band (comma or dot). Modulations are not written. An empty channel is not written.',
     'rad.print': "Print this channel on the group's datacard",
@@ -970,6 +979,8 @@ I18N_EN = {
     'lo.chaff': 'Chaff',
     'lo.gun': 'Gun (%)',
     'lo.max': 'max {0}',
+    'lo.none.cm': 'No flares or chaff known for this type.',
+    'lo.none.one': 'No known limit for: {0}.',
     'lo.pct': '{0}%',
     'lo.fuelbar': 'Fuel (%)',
     'set.charge': 'flares{fs} + chaff{cs} ≤ {n}',
@@ -1005,6 +1016,7 @@ I18N_EN = {
     'sum.presets.one': '{0} preset',
     'sum.presets.many': '{0} presets',
     'sum.radios': 'radios {0} channels',
+    'sum.radios.one': 'radios {0} channel',
     'sum.radios.var': 'radios vary',
     'sum.loadout': 'loadout {0}',
     'sum.loadout.custom': 'composed loadout',
@@ -2568,8 +2580,11 @@ function loCheck(type, lo, k, raw, badInput) {
 function loBring(type, get, set) {
   let moved = 0;
   ['fuel', 'gun'].forEach(k => { const c = clampNum(get(k), 0, loLimit(type, k), k !== 'fuel'); if (c.v !== null) { set(k, c.v); moved += c.n; } });
-  const d = payloadDefaults(type), f = clampNum(get('flare'), 0, Infinity, true);
-  let h = clampNum(get('chaff'), 0, Infinity, true);
+  const d = payloadDefaults(type);
+  // une limite inconnue de la table (null) : le réglage vaut 0, jamais « null » ni un texte reçu ; il ne compte comme bougé que s'il portait un nombre non nul
+  const zero = k => { const n = loNumber(get(k)); return { v: '0', n: (n !== undefined && n !== 0) ? 1 : 0 }; };
+  const f = payloadKnown(type, 'flare') ? clampNum(get('flare'), 0, Infinity, true) : zero('flare');
+  let h = payloadKnown(type, 'chaff') ? clampNum(get('chaff'), 0, Infinity, true) : zero('chaff');
   if (!loCarriesChaff(type) && h.v !== null) h = { v: '0', n: (h.n || h.v !== '0') ? 1 : 0 };       // un type sans paillettes n'en garde pas : l'emport et l'export disent la même valeur
   const cur = (c, k) => { if (c.v !== null) return Number(c.v); const n = loNumber(get(k)); return n === undefined ? d[k] : n; };
   if (loChargeOver(type, cur(f, 'flare'), cur(h, 'chaff'))) { set('flare', String(d.flare)); set('chaff', String(d.chaff)); moved += 1; }
@@ -3252,7 +3267,7 @@ function flightSummary(f, fi) {
   const points = f.route ? routePoints(f.route.points).length : 0;
   if (points) parts.push(tf('sum.route', points));
   const radios = f.units.map(u => radioCount(f, u));
-  if (radios.some(n => n > 0)) parts.push(commonOrVaried(radios, n => tf('sum.radios', n), t('sum.radios.var')));
+  if (radios.some(n => n > 0)) parts.push(commonOrVaried(radios, n => tf(n === 1 ? 'sum.radios.one' : 'sum.radios', n), t('sum.radios.var')));
   const loadouts = f.units.map(u => (u.loadout ? loadoutSummary(u.loadout) : ''));
   if (loadouts.some(x => x !== '')) parts.push(commonOrVaried(loadouts, x => x, t('sum.loadout.var')));
   const liveries = f.units.map((u, ui) => liveryShown(f, fi, u, ui));
@@ -3491,7 +3506,7 @@ function unitSettingsHtml(f, fi, u, ui, rk, at) {
 }
 function radiosSummary(f, u) {
   const n = radioCount(f, u);
-  return n ? tf('u.radios.set', n) : tf('u.radios.sum', radioPosts(u.type).length);
+  return n ? tf(n === 1 ? 'u.radios.set.one' : 'u.radios.set', n) : (radioPosts(u.type).length === 1 ? tf('u.radios.sum.one', 1) : tf('u.radios.sum', radioPosts(u.type).length));
 }
 function radiosHtml(f, fi, u, ui) {
   const ty = u.type;
@@ -3503,7 +3518,7 @@ function radiosHtml(f, fi, u, ui) {
       chans += `<div class="fc-ch"><div class="pk-chk${pon || pshow ? '' : ' off'}"><label title="${esc(t('rad.print'))}"><input type="checkbox" data-u="${ui}" data-r="${r}" data-c="${c}" data-k="prn" aria-label="${esc(t('rad.print'))}"${pon ? ' checked' : ''}${pon || pshow ? '' : ' disabled'}></label><label style="cursor:default">${esc(free ? tf('rad.freq', c) : tf('rad.ch', radioCockpitChannel(ty, r, c)))}</label></div>`
         + numberInputHtml(`data-u="${ui}" data-r="${r}" data-c="${c}" data-k="chan" placeholder="—"`, chanShown(u, r, c), hull ? hull[0] : null, hull ? hull[1] : null, '0.001') + '</div>';
     }
-    return `<details class="fc-post" data-key="${pk}"${openAttr(pk)}><summary class="ui-fold-head" aria-expanded="${UI.open.has(pk)}"><span class="fc-ptop">${esc(radioPosteName(ty, r) || 'R' + r)} ${free ? '' : `<span class="fc-sum">${esc(tf('rad.chans', n))}</span>`}<span class="fc-sum fc-flag" data-flag="${r}"></span></span><span class="fc-band" data-band="${r}">${esc(bandText(ty, r))}</span></summary>
+    return `<details class="fc-post" data-key="${pk}"${openAttr(pk)}><summary class="ui-fold-head" aria-expanded="${UI.open.has(pk)}"><span class="fc-ptop">${esc(radioPosteName(ty, r) || 'R' + r)} ${free ? '' : `<span class="fc-sum">${esc(tf(n === 1 ? 'rad.chans.one' : 'rad.chans', n))}</span>`}<span class="fc-sum fc-flag" data-flag="${r}"></span></span><span class="fc-band" data-band="${r}">${esc(bandText(ty, r))}</span></summary>
       <div class="fc-postc"><div class="fc-chans">${chans}</div><div class="fc-msg" id="rm-${fi}-${ui}-${r}"></div></div></details>`;
   }).join('');
   const sameType = f.units.some((x, k) => k !== ui && x.type === ty);       // « Recopier » ne va qu'aux unités du même type : sans elles, le bouton est inactif
@@ -3851,7 +3866,11 @@ function cmpSettingsHtml(f, ui, lo) {
   const note = k => k === 'fuel' ? tf('lo.max', fmtMHz(UMASS === 'lb' ? Math.round(payloadMassIn(d.fuel, 'lb')) : d.fuel)) : (k === 'gun' ? tf('lo.max', d.gun) : (cl ? chargeRule(cl) : tf('lo.max', d[k])));
   const field = (k, step, disabled) => fieldHtml(`${loName(k)} · ${note(k)}`,
     numberInputHtml(`${at} data-k="${k}"${disabled ? ' disabled' : ''}`, loShow(k, val(k)), 0, k === 'fuel' ? loShow(k, String(loFieldMax(type, k))) : loFieldMax(type, k), step) + (BAR_KEYS.indexOf(k) >= 0 ? bar(k) : ''));
-  return `<div class="fc-set">${field('fuel', 'any')}${field('flare', '1')}${field('chaff', '1', !loCarriesChaff(type))}${loHasGun(type) ? field('gun', '1') : ''}</div>`;
+  // Une limite inconnue (null dans la table) : le champ n'apparaît pas et une note le dit ; l'emport y écrit 0 (payloadDefaults)
+  const unk = ['flare', 'chaff'].filter(k => !payloadKnown(type, k));
+  const none = unk.length === 2 ? t('lo.none.cm') : (unk.length === 1 ? tf('lo.none.one', loName(unk[0])) : '');
+  return `<div class="fc-set">${payloadKnown(type, 'fuel') ? field('fuel', 'any') : ''}${payloadKnown(type, 'flare') ? field('flare', '1') : ''}${payloadKnown(type, 'chaff') ? field('chaff', '1', !loCarriesChaff(type)) : ''}${loHasGun(type) ? field('gun', '1') : ''}</div>`
+    + (none ? `<p class="ui-note fc-nocm">${esc(none)}</p>` : '');
 }
 function cmpSaveHtml() {
   const C = UI.cmp;
