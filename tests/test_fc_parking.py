@@ -387,3 +387,23 @@ def test_a_stand_the_type_does_not_take_counts_as_no_stand():
       console.log(JSON.stringify(r));
     """)
     assert out['before'] == ['H1', 'B1'] and out['after'] == [None, None] and out['takenFree'] == [] and out['stored'] == 1
+
+
+# ---------- Addendum 2 : « Ouvrir » juge les bases du fichier contre le théâtre du fichier (R1) ----------
+@needs_node
+def test_drop_stale_can_judge_against_the_theatre_of_an_opened_file():
+    out = run("""
+      const r = {};
+      TH = 'Beta';       // la fiche portait un autre théâtre avant l'ouverture : rTh() lit encore l'ancien
+      const a = F('A', 7, 'parking', [U('HeliA', 1)]), b = F('B', 7, 'parkingHot', [U('HeliA', 3)]), c = F('C', 7, 'parking', [U('HeliA', 1)]);
+      a.baseTh = 'Alpha'; b.baseTh = 'Alpha'; c.baseTh = 'Beta';        // les deux premiers viennent d'un fichier Alpha ; c, d'un fichier incohérent
+      S.flights = [a, b, c];
+      r.dropped = fpDropStale('Alpha');
+      r.after = S.flights.map(x => [x.base, x.baseTh, x.start, x.units.map(u => u.stand)]);
+      const d = F('D', 7, 'parking', [U('HeliA', 1)]); d.baseTh = 'Alpha'; S.flights = [d];
+      r.byDefault = fpDropStale();            // sans argument : contre rTh() (Beta), comme avant
+      console.log(JSON.stringify(r));
+    """)
+    assert out['dropped'] is True
+    assert out['after'] == [[7, 'Alpha', 'parking', [1]], [7, 'Alpha', 'parkingHot', [3]], [None, '', 'air', [None]]]
+    assert out['byDefault'] is True

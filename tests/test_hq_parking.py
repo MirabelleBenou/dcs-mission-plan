@@ -259,6 +259,26 @@ def test_plan_a_stand_held_by_an_earlier_flight_of_the_package_says_so():
     assert 'pk.st.ok|' in out['hok']
 
 
+def test_plan_a_flight_without_a_side_does_not_put_two_of_its_units_on_one_stand():
+    out = run(STANDS + """
+      const sc = { air: [{ x: 0, y: 0 }] };       // un appareil de la mission sur H1
+      const mk = side => [F('A', [U('H1'), U('H2')], { side: side }), F('B', [U('H3')])];
+      const r = {};
+      [ '', 'red' ].forEach(side => {
+        const [a, b] = mk(side);
+        pkStandPlan(seqOf([a, b]), sc);
+        r[side || 'none'] = { a: ids(a), b: ids(b), first: a.sp[0].cands.map(c => [c.s.id, Math.round(c.d)]) };
+      });
+      const x = F('X', [U('H2'), U('H2')], { side: '' }), y = F('Y', [U('H2')]);      // deux unités de X demandent H2 : la seconde ne la prend pas, et X ne la retient pas pour Y
+      pkStandPlan(seqOf([x, y]), sc);
+      r.same = { x: ids(x), y: ids(y), held: x.sp[1].heldBy, taken: x.sp.map(e => e.taken) };
+      console.log(JSON.stringify(r));
+    """)
+    assert out['none'] == out['red']                                  # sans coalition ou avec : les mêmes propositions
+    assert out['none']['a'] == ['H4', 'H2'] and out['none']['first'][0] == ['H4', 81]
+    assert out['same']['x'] == ['H2', 'H4'] and out['same']['y'] == ['H2'] and out['same']['held'] == 'X' and out['same']['taken'] == [False, True]
+
+
 # ----- l'écriture -----
 BUILD = """
   const fl = (o) => Object.assign({ groupName: 'CAESAR', side: 'red', country: 'Russia', heli: true, start: 'parking', dep: { start: 'parking', airdromeId: 44, airdrome: 'Akrotiri', x: -35778.63, y: -268906.12, stands: [] },

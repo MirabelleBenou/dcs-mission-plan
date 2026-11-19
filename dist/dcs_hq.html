@@ -8864,26 +8864,30 @@ function pkStandPlan(seq, sc) {
     const fl = x.fl;
     if (!eligible(fl)) return;
     const keeps = real(fl), mine = [], plan = [];
+    // Un vol qui ne sera pas créé ne retient rien pour les autres, mais ses propres unités ne se partagent pas une place : ses demandes à venir et ses choix sont tenus à part (own*)
+    const ownLater = new Map(), ownRet = new Set();
+    if (!keeps) fl.units.forEach(u => { const r = reqOf(fl, u); if (r) { const k = pkStandKey(fl, r); ownLater.set(k, (ownLater.get(k) || 0) + 1); } });
+    const heldNow = k => retained.has(k) || ownRet.has(k), laterNow = k => (later.get(k) || 0) + (ownLater.get(k) || 0);
     let prev = null, fail = false;
     fl.units.forEach(u => {
       const req = reqOf(fl, u);
-      if (req && keeps) { const k = pkStandKey(fl, req); later.set(k, later.get(k) - 1); }      // ce qui reste dans later : les demandes des unités d'après
+      if (req) { const k = pkStandKey(fl, req); if (keeps) later.set(k, later.get(k) - 1); else ownLater.set(k, ownLater.get(k) - 1); }      // ce qui reste dans later : les demandes des unités d'après
       const e = { req: req, taken: false, heldBy: null, chosen: null, cands: null };
       const inMission = !!req && pkStandTaken(sc, req);
-      if (req && !inMission && retained.has(pkStandKey(fl, req))) e.heldBy = retained.get(pkStandKey(fl, req));      // libre dans la mission, retenue par une unité d'un vol d'avant (ou d'avant dans ce vol)
+      if (req && !inMission && heldNow(pkStandKey(fl, req))) e.heldBy = retained.has(pkStandKey(fl, req)) ? retained.get(pkStandKey(fl, req)) : fl.groupName;      // libre dans la mission, retenue par une unité d'un vol d'avant (ou d'avant dans ce vol)
       e.taken = inMission || e.heldBy !== null;
       if (req && !e.taken) e.chosen = req;
       else {
         const ref = req || prev || { x: fl.dep.x, y: fl.dep.y };
         e.cands = fl.dep.stands
-          .filter(s => !pkStandTaken(sc, s) && !retained.has(pkStandKey(fl, s)) && !(later.get(pkStandKey(fl, s)) > 0))
+          .filter(s => !pkStandTaken(sc, s) && !heldNow(pkStandKey(fl, s)) && !(laterNow(pkStandKey(fl, s)) > 0))
           .map(s => ({ s: s, d: Math.hypot(s.x - ref.x, s.y - ref.y) }))
           .sort((a, b) => a.d - b.d || pkStandNat(a, b));
         const c = e.cands.find(c => c.s.n === u.pick) || e.cands[0];
         e.chosen = c ? c.s : null;
       }
       if (!e.chosen) fail = true;
-      else { const k = pkStandKey(fl, e.chosen); if (keeps) { retained.set(k, fl.groupName); mine.push(k); } prev = e.chosen; }
+      else { const k = pkStandKey(fl, e.chosen); if (keeps) { retained.set(k, fl.groupName); mine.push(k); } else ownRet.add(k); prev = e.chosen; }
       plan.push(e);
     });
     fl.sp = plan;

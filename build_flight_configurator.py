@@ -3696,10 +3696,11 @@ function fpKeepStand(f, u) { const b = fpBaseOf(f), s = b && Number.isInteger(u.
 // Un groupe d'avant le lot porte une base sans théâtre : avant que le théâtre où se lisent les bases change, la base prend celui d'aujourd'hui (elle sera alors lue pour ce qu'elle est, d'un autre théâtre)
 function fpStampBases() { S.flights.forEach(f => { if (f.base !== null && !thOk(f.baseTh)) f.baseTh = rTh(); }); }
 // Les groupes dont la base a été choisie dans un autre théâtre que celui où l'on lit les bases (rTh) perdent base et places (celles d'un théâtre ne valent pas pour un autre) ; rend vrai si un groupe a changé
-function fpDropStale() {
+function fpDropStale(th) {       // th : le théâtre contre lequel on juge (rTh() par défaut) ; « Ouvrir » juge les groupes du fichier contre le théâtre du fichier
+  const here = th === undefined ? rTh() : th;
   let any = false;
   S.flights.forEach(f => {
-    if (f.base === null || !thOk(f.baseTh) || f.baseTh === rTh()) return;
+    if (f.base === null || !thOk(f.baseTh) || f.baseTh === here) return;
     f.base = null; f.baseTh = '';
     if (f.start === 'parking' || f.start === 'parkingHot') f.start = 'air';
     f.units.forEach(u => { u.stand = null; });
@@ -4935,7 +4936,7 @@ function openFile(file) {
           warn = built.warn.join(' · ');
         }
         if (fth !== '') { S.theatre = fth; thWriteKey(fth); }
-        fpDropStale();
+        fpDropStale(S.theatre);       // les groupes du fichier se jugent contre le théâtre du fichier : la fiche, qui portait un autre théâtre avant l'ouverture (rTh() lit alors l'ancien), n'y fait rien tomber
         S.sel = { f: 0, u: 0 };                    // la première unité du premier groupe ouvert
         UI.exportTried = false;
         UI.rtChoose = null;
