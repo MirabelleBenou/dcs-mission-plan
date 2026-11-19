@@ -29,6 +29,7 @@ import subprocess
 import sys
 
 from group_store_block import build_block as build_group_store_block
+from public_host_block import build_block as build_public_host_block
 from import_block import build_block as build_import_block, build_css as build_import_css, build_html as build_import_html
 from messages_block import build_block as build_messages_block, build_css as build_messages_css
 from mission_line_block import build_block as build_mission_line_block, build_css as build_mission_line_css, verify as mission_line_verify
@@ -415,7 +416,7 @@ function readNum(s) {
 # Les tables : (nom de la constante, fichier de data/)
 TABLES = [('WEAPON_NAMES', 'weapon_names.json'), ('AIRCRAFT_LIMITS', 'aircraft_limits.json'),
           ('AIRCRAFT_PYLONS', 'aircraft_pylons.json'), ('AIRCRAFT_VIEWS', 'aircraft_views.json'), ('LIVERIES_DEFAULT', 'liveries_default.json'),
-          ('AIRCRAFT_MASSES', 'aircraft_masses.json'), ('PAYLOAD_GAME_RULES', 'loadout_rules.json')]
+          ('AIRCRAFT_MASSES', 'aircraft_masses.json'), ('PAYLOAD_GAME_RULES', 'loadout_rules.json'), ('PARKINGS', 'parkings.json')]
 
 # ---------- Textes (FR et EN : le build vérifie la parité et que chaque clé sert) ----------
 I18N_FR = {
@@ -465,6 +466,59 @@ I18N_FR = {
     'bar.ok': 'Prêt à exporter : {0}',
     'bar.clamped': '{0} réglage(s) d’emport ramené(s) à la limite ou aux valeurs par défaut de l’appareil.',
     'bar.noroute': '{0} : sans route, HQ ne pourra pas créer ce vol s’il manque à la mission',
+    'bar.nostand': '{0} : {1} sans place, HQ prendra une place libre',
+    'fp.base': 'Base de départ',
+    'fp.base.none': 'Aucune — départ au 1er point de la route',
+    'fp.base.near': 'Par distance du point 1 de la route',
+    'fp.base.opt': '{0} · {1} km',
+    'fp.base.nores': 'Aucune base de ce nom',
+    'fp.start': 'Départ',
+    'fp.start.parking': 'Sur la place, à froid',
+    'fp.start.hot': 'Sur la place, moteurs en route',
+    'fp.start.air': 'En vol, au 1er point',
+    'fp.start.ground': 'Au sol, au 1er point',
+    'fp.places': 'Places',
+    'fp.planBtn': 'Plan {0}{1} ▸',
+    'fp.of.v': 'd’',
+    'fp.of.c': 'de ',
+    'fp.art.a': 'un ',
+    'fp.art.an': 'un ',
+    'fp.sum.one': '{0} place {1}{2} prend {3}',
+    'fp.sum.many': '{0} places {1}{2} prennent {3}',
+    'fp.sum.all.one': '{0} place {1}{2} prend tous les types du groupe',
+    'fp.sum.all.many': '{0} places {1}{2} prennent tous les types du groupe',
+    'fp.sum.none': ' · aucune choisie',
+    'fp.sum.chosen.one': ' · {0} choisie : {1}',
+    'fp.sum.chosen.many': ' · {0} choisies : {1}',
+    'fp.place': 'Place',
+    'fp.place.pick': 'À choisir',
+    'fp.place.free': 'Libres et compatibles',
+    'fp.place.mine': 'Prises par le vol',
+    'fp.place.other': 'Prises par un autre groupe',
+    'fp.place.by': '{0} · unité {1}',
+    'fp.place.byg': '{0} · {1}, unité {2}',
+    'fp.place.opt': '{0} · {1} · {2} m',
+    'fp.kind.heli': 'hélico',
+    'fp.kind.plane': 'avion',
+    'fp.kind.both': 'avion/hélico',
+    'fp.plan': 'Plan',
+    'fp.plan.title': '{0} — place de l’unité {1} ({2})',
+    'fp.plan.head': '{0} · {1} places',
+    'fp.plan.out': 'Dézoomer',
+    'fp.plan.in': 'Zoomer',
+    'fp.plan.all': 'Tout',
+    'fp.plan.mine': 'Ma place',
+    'fp.lg.free': 'libre, compatible',
+    'fp.lg.cur': 'cette unité',
+    'fp.lg.other': 'autre unité du vol',
+    'fp.lg.no': 'trop petite ou avions seuls',
+    'fp.lg.no.p': 'trop petite ou hélicoptères seuls',
+    'fp.lg.taken': 'prise par un autre groupe',
+    'fp.plan.hint': 'Touchez une place compatible. Si la place est prise dans la mission du MC, HQ proposera une place libre et compatible.',
+    'fp.plan.credit': 'Plan : DCS Airfield Charts',
+    'fp.plan.nochart': 'Plan de Charts indisponible : les places seules.',
+    'fp.take': 'Prendre {0}',
+    'fp.take.none': 'Prendre',
     'bar.bad.freq': 'Export impossible : {0} fréquence(s) à corriger dans les radios.',
     'bar.theatre.conflict': "Export impossible : les groupes sont sur {0}, Mission Plan sur {1} (voir le bandeau).",
     'bar.route.theatre': "Export impossible : la route du groupe {0} est sur {1}, Mission Plan sur {2}.",
@@ -796,6 +850,59 @@ I18N_EN = {
     'bar.ok': 'Ready to export: {0}',
     'bar.clamped': '{0} loadout setting(s) brought back to the aircraft limit or default values.',
     'bar.noroute': '{0}: no route, HQ will not be able to create this flight if the mission lacks it',
+    'bar.nostand': '{0}: {1} has no stand, HQ will take a free one',
+    'fp.base': 'Departure base',
+    'fp.base.none': 'None — start at the route’s first waypoint',
+    'fp.base.near': 'By distance from waypoint 1',
+    'fp.base.opt': '{0} · {1} km',
+    'fp.base.nores': 'No base of that name',
+    'fp.start': 'Start',
+    'fp.start.parking': 'On the stand, cold',
+    'fp.start.hot': 'On the stand, engines running',
+    'fp.start.air': 'In the air, at waypoint 1',
+    'fp.start.ground': 'On the ground, at waypoint 1',
+    'fp.places': 'Stands',
+    'fp.planBtn': 'Map of {1} ▸',
+    'fp.of.v': '',
+    'fp.of.c': '',
+    'fp.art.a': 'a ',
+    'fp.art.an': 'an ',
+    'fp.sum.one': '{0} {2} stand takes {3}',
+    'fp.sum.many': '{0} {2} stands take {3}',
+    'fp.sum.all.one': '{0} {2} stand takes every type of the group',
+    'fp.sum.all.many': '{0} {2} stands take every type of the group',
+    'fp.sum.none': ' · none chosen',
+    'fp.sum.chosen.one': ' · {0} chosen: {1}',
+    'fp.sum.chosen.many': ' · {0} chosen: {1}',
+    'fp.place': 'Stand',
+    'fp.place.pick': 'To choose',
+    'fp.place.free': 'Free and compatible',
+    'fp.place.mine': 'Taken by the flight',
+    'fp.place.other': 'Taken by another group',
+    'fp.place.by': '{0} · unit {1}',
+    'fp.place.byg': '{0} · {1}, unit {2}',
+    'fp.place.opt': '{0} · {1} · {2} m',
+    'fp.kind.heli': 'heli',
+    'fp.kind.plane': 'plane',
+    'fp.kind.both': 'plane/heli',
+    'fp.plan': 'Map',
+    'fp.plan.title': '{0} — stand for unit {1} ({2})',
+    'fp.plan.head': '{0} · {1} stands',
+    'fp.plan.out': 'Zoom out',
+    'fp.plan.in': 'Zoom in',
+    'fp.plan.all': 'All',
+    'fp.plan.mine': 'My stand',
+    'fp.lg.free': 'free, compatible',
+    'fp.lg.cur': 'this unit',
+    'fp.lg.other': 'other unit of the flight',
+    'fp.lg.no': 'too small or planes only',
+    'fp.lg.no.p': 'too small or helicopters only',
+    'fp.lg.taken': 'taken by another group',
+    'fp.plan.hint': 'Tap a compatible stand. If the stand is taken in the MC’s mission, HQ will offer a free compatible stand.',
+    'fp.plan.credit': 'Map: DCS Airfield Charts',
+    'fp.plan.nochart': 'Charts map unavailable: stands only.',
+    'fp.take': 'Take {0}',
+    'fp.take.none': 'Take',
     'bar.bad.freq': 'Cannot export: {0} frequency(ies) to fix in the radios.',
     'bar.theatre.conflict': "Cannot export: the groups are on {0}, Mission Plan on {1} (see the banner).",
     'bar.route.theatre': "Cannot export: group {0}'s route is on {1}, Mission Plan on {2}.",
@@ -1684,6 +1791,27 @@ details.fc-block:not([open]) > .fc-bh { border-bottom: 0; }
   .cmp-acts > .ed-field { flex-basis: 100%; }
 }
 
+/* ---------- Base de départ et places (lot mp-hq-vol-parking) ---------- */
+.ed-field[hidden] { display: none; }
+.fp-row { margin-top: 10px; }
+.fp-sum { margin: 6px 0 0; }
+.fp-btn { min-height: 44px; margin: 0; flex: none; justify-content: center; }
+.fp-places .fp-btn { width: 100%; text-align: center; }
+.fp-unit { grid-column: 1 / -1; }
+.fp-pl { display: flex; gap: 6px; align-items: stretch; }
+.fp-pl-sel { flex: 1; min-width: 0; }
+.fp-zoom { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; margin-bottom: 6px; }
+.fp-zoom .ui-btn { min-width: 44px; padding: 0 12px; background: rgba(231,220,193,.92); color: #2b2a22; border-color: #2b2a22; border-radius: 2px; }
+.fp-zoom .ui-btn:hover:not(:disabled) { background: #fff4d6; color: #2b2a22; border-color: #2b2a22; }
+.fp-zoom .ui-btn[aria-pressed="true"] { background: #2b2a22; color: #e7dcc1; }
+.fp-zoom .ui-btn:disabled { opacity: .45; }
+.fp-map { background: #e7dcc1; border: 1px solid #6f6955; }
+.fp-svg { display: block; touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; background: #e7dcc1; }
+.fp-legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 10px; font-size: 12px; color: var(--paper); }
+.fp-legend svg { vertical-align: middle; margin-right: 6px; }
+.fp-help, .fp-credit { margin-top: 8px; }
+@media (max-width: 599px) { .fp-row > .ed-field { grid-column: 1 / -1; } }
+
 /* R295 : une seule graisse par police embarquée (Oswald 500, Roboto Mono 400, Stardos Stencil 700) */
 b, strong { font-weight: 400; }
 """
@@ -2063,6 +2191,7 @@ function thSet(id, fromKey) {
   S.theatre = id;
   if (!fromKey) thWriteKey(id);
   if (!changed) return;
+  fpClearAll();       // base et places d'un théâtre ne valent pas pour un autre (routeChanged les redessine)
   UI.rtChoose = null;
   tcAdopt();
   routeChanged();
@@ -2358,7 +2487,7 @@ function gsStorage(e) {
 function gsPackFn(r, th) { return gsPackRoute(r, th, rpRead().state.gs); }
 // Un échec d'écriture de la fiche (stockage plein), dit une fois par série d'échecs
 function gsOnSaveFail() { showToast(tf('toast.gsFull'), { type: 'err', ms: 6000 }); }
-const UNIT_KEYS = ['type', 'name', 'callsign', 'csRaw', 'onboard', 'livery', 'folded', 'radios', 'loadout', 'payloadIn'];       // payloadIn : l'emport brut d'un import, converti ici et jamais gardé
+const UNIT_KEYS = ['type', 'name', 'callsign', 'csRaw', 'onboard', 'livery', 'folded', 'radios', 'loadout', 'payloadIn', 'stand'];       // payloadIn : l'emport brut d'un import, converti ici et jamais gardé
 // Un vol de l'état : en v1 (fc_state_v1, fichier de travail d'avant) le type est au vol et chaque unité le prend ; en v2 chaque unité porte le sien.
 // Un vol dont une unité a un type non vide hors de PAYLOAD_TYPES est écarté ; une unité sans type ('' : à choisir) et un groupe sans unité (né au Route Planner) sont valides.
 function restoreFlight(f) {       // un groupe sans fcId en reçoit un par restoreState (gsLegacyIds) ; ici un identifiant au hasard seulement en dernier recours
@@ -2373,9 +2502,14 @@ function restoreFlight(f) {       // un groupe sans fcId en reçoit un par resto
   nf.coalition = (f.coalition === 'blue' || f.coalition === 'red') ? f.coalition : '';
   nf.route = (isObj(f.route) && isObj(f.route.points)) ? gsRouteCopy(f.route.points, f.route.missionDate) : null;       // la date reçue avec la route (missionDate) la suit
   if (nf.route && isObj(f.routeLink) && ridOk(f.routeLink.rid)) nf.routeLink = { rid: f.routeLink.rid, name: str(f.routeLink.name) };       // le lien avec le Route Planner ne se garde que s'il y a une route
+  nf.base = Number.isInteger(f.base) && f.base >= 0 ? f.base : null;       // la base de départ (airdromeId) et le départ : une valeur illisible redevient le défaut
+  nf.start = FP_STARTS.indexOf(f.start) >= 0 ? f.start : 'air';
+  if (nf.base === null && (nf.start === 'parking' || nf.start === 'parkingHot')) nf.start = 'air';
+  else if (nf.base !== null && (nf.start === 'air' || nf.start === 'ground')) nf.start = 'parking';
   nf.units = rawUnits.map((u, i) => {
-    const nu = newUnit(types[i]);
+    const nu = fcNewUnit(types[i]);
     nu.name = str(u.name); nu.callsign = str(u.callsign); nu.csRaw = u.csRaw; nu.onboard = str(u.onboard); nu.livery = str(u.livery);
+    nu.stand = nf.base !== null && Number.isInteger(u.stand) && u.stand >= 0 ? u.stand : null;       // la place (parking) dans la base du groupe
     nu.folded = u.folded === true;          // carte repliée : un état d'écran, gardé avec le travail, jamais dans le paquet
     nu.radios = isObj(u.radios) ? u.radios : {};
     Object.keys(u).forEach(k => { if (UNIT_KEYS.indexOf(k) < 0) nu[k] = u[k]; });       // une clé inconnue d'une unité est gardée telle quelle
@@ -2385,7 +2519,7 @@ function restoreFlight(f) {       // un groupe sans fcId en reçoit un par resto
     if (isObj(u.payloadIn) && nu.type !== '') { const lo = loadoutFromPayload(nu.type, u.payloadIn); if (lo) nu.loadout = lo; }       // l'emport brut d'un import (bloc d'import commun) devient l'emport « importé », limites comprises
     return nu;
   });
-  if (!nf.units.length && PAYLOAD_TYPES.indexOf(f.type) >= 0) nf.units.push(newUnit(f.type));       // un vol d'avant (le type au vol, sans unité) reprend une unité ; un groupe sans unité en reste sans
+  if (!nf.units.length && PAYLOAD_TYPES.indexOf(f.type) >= 0) nf.units.push(fcNewUnit(f.type));       // un vol d'avant (le type au vol, sans unité) reprend une unité ; un groupe sans unité en reste sans
   return nf;
 }
 function restoreState(st) {
@@ -2403,7 +2537,8 @@ function newId() { return gsNewId(); }       // l'identifiant d'un groupe est ce
 // Chaque vol porte un fcId stable, jamais écrit dans le paquet : un vol renommé reste le même vol pour les liens avec le Route Planner et le Datacard Generator.
 const DEFAULT_TYPE = 'Mi-24P';      // la première unité d'un vol neuf ; une unité ajoutée prend le type de la dernière de son vol
 // newUnit(type) et csText(v) sont définis par le bloc d'import commun ; sans type donné, le type par défaut (Mi-24P) ; '' : une unité sans type.
-function newFlight() { return { fcId: newId(), name: '', coalition: '', route: null, units: [newUnit()] }; }
+function fcNewUnit(type) { const u = newUnit(type); u.stand = null; return u; }       // une unité du module porte toujours sa place (null : aucune)
+function newFlight() { return { fcId: newId(), name: '', coalition: '', route: null, base: null, start: 'air', units: [fcNewUnit()] }; }
 
 function flightLabel(f, fi) { return f.name.trim() || tf('fl.title', fi + 1); }
 // Le type d'une unité d'un vol lu (paquet ou mission, v1 ou v2) : le sien, sinon, en v1, celui du vol (aircraftType) ; '' si aucun.
@@ -3372,9 +3507,11 @@ function buildPackage() {
     flights: S.flights.map((f, fi) => ({
       groupName: f.name.trim(), coalition: f.coalition || null, groupFrequency: null,
       route: f.route ? { points: clone(f.route.points) } : null,
+      departure: fpDepartureOut(f),
       units: f.units.map((u, ui) => {
         const o = { name: unitLabel(f, fi, u, ui), type: u.type, callsign: csValue(u), liveryId: liveryShown(f, fi, u, ui) || null, radios: unitRadiosOut(f, u), payload: unitPayloadOut(f, u) };
         if (u.onboard.trim()) o.onboardNum = u.onboard.trim();
+        o.stand = fpStandOut(f, u);
         return o;
       })
     }))
@@ -3394,6 +3531,479 @@ function setFold(f, open) { foldFreeze(); UI.fold.set(f, open ? 'open' : 'closed
 function anyFlightOpen() { return S.flights.some((f, fi) => flightOpen(f, fi)); }
 
 
+// ---------- Base de départ et place de chaque appareil (lot mp-hq-vol-parking) ----------
+// PARKINGS (data/parkings.json, de DCS Airfield Charts) : les places de chaque base de chaque théâtre. Un groupe porte base (l'airdromeId d'une base du théâtre, ou null) et start (air, ground, parking,
+// parkingHot) ; une unité porte stand (le parking d'une place de cette base, ou null). Tout reste dans le groupe : le stockage, la fiche des groupes et le fichier de travail les portent comme le reste.
+// Une valeur illisible redevient le défaut (restoreFlight), jamais une erreur ; une base ou une place que le théâtre n'a pas est lue comme « aucune » (fpBaseOf, fpStandOf).
+const FP_STARTS = ['air', 'ground', 'parking', 'parkingHot'];
+const FP = { th: {}, plan: null, idx: new Map(), svg: new Map(), seqN: 0 };
+// Les bases d'un théâtre, rangées une fois : { list, byId } ; une base : { id, name, x, y, st: [place], byN } ; une place : { n (parking), id (parking_id), x, y, m (marques : 1 hélico, 2 avion), l, w, h (null si inconnue) }
+function fpTheatre(th) {
+  if (has(FP.th, th)) return FP.th[th];
+  const raw = has(PARKINGS.theatres, th) ? PARKINGS.theatres[th] : [], T = { list: [], byId: {} };
+  raw.forEach(r => {
+    const b = { id: r[0], name: r[1], x: r[2], y: r[3], st: [], byN: {} };
+    r[4].forEach(p => { const s = { n: p[0], id: p[1], x: p[2], y: p[3], m: p[4], l: p[5], w: p[6], h: p[7] }; b.st.push(s); b.byN[s.n] = s; });
+    T.list.push(b); T.byId[b.id] = b;
+  });
+  FP.th[th] = T;
+  return T;
+}
+function fpBaseOf(f) { return isObj(f) && Number.isInteger(f.base) ? (fpTheatre(rTh()).byId[f.base] || null) : null; }
+function fpStartOf(f) {       // le départ qui vaut : avec une base, sur la place (à froid par défaut) ; sans base, en vol ou au sol
+  if (fpBaseOf(f)) return f.start === 'parkingHot' ? 'parkingHot' : 'parking';
+  return f.start === 'ground' ? 'ground' : 'air';
+}
+function fpStandOf(f, u) { const b = fpBaseOf(f); return b && Number.isInteger(u.stand) && has(b.byN, u.stand) ? b.byN[u.stand] : null; }
+function fpAc(type) { return has(PARKINGS.aircraft, type) ? PARKINGS.aircraft[type] : null; }       // [hélico 0/1, longueur, largeur, hauteur]
+function fpIsHeli(type) { const a = fpAc(type); return a ? a[0] === 1 : GAME_AIRCRAFT_TYPES.helicopters.indexOf(type) >= 0; }
+// La règle de pydcs : un hélicoptère sur une place marquée hélico, un avion sur une place marquée avion, l'appareil plus petit que la place en longueur, largeur et hauteur (hauteur inconnue : non comparée) ;
+// un type que la table ne connaît pas : les seules marques.
+function fpFits(s, type) {
+  if (typeof type !== 'string' || type === '') return false;
+  if (!(s.m & (fpIsHeli(type) ? 1 : 2))) return false;
+  const a = fpAc(type);
+  return !a || (s.l > a[1] && s.w > a[2] && (s.h === null || a[3] === null || s.h > a[3]));
+}
+function fpNat(a, b) { return a.id.localeCompare(b.id, 'en', { numeric: true }); }
+function fpKind(s) { return t(s.m === 3 ? 'fp.kind.both' : (s.m === 1 ? 'fp.kind.heli' : 'fp.kind.plane')); }
+function fpStandLabel(s) { return tf('fp.place.opt', s.id, fpKind(s), Math.round(s.l)); }
+// « d'Akrotiri », « de Paphos » : la préposition du français (aucune en anglais, où le texte dit « of » lui-même)
+function fpPre(name) { return t(/^[AEIOUY]/.test(String(name).normalize('NFD').charAt(0).toUpperCase()) ? 'fp.of.v' : 'fp.of.c'); }
+function fpArt(type) { return t(/^[AEFHILMNORSX](?![a-z])/.test(gameAircraftName(type)) ? 'fp.art.an' : 'fp.art.a'); }
+function fpOne(n) { return CURRENT_LANG === 'fr' ? n < 2 : n === 1; }
+// Le point 1 de la route du groupe (x nord, y est, en mètres du jeu), ou null
+function fpP1(f) {
+  if (!f.route || !isObj(f.route.points)) return null;
+  const k = routeKeys(f.route.points)[0], p = k === undefined ? null : f.route.points[k];
+  return isObj(p) && isNum(p.x) && isNum(p.y) ? p : null;
+}
+// Les places d'une base que tous les types du groupe prennent
+function fpGroupStands(f, b) { const ty = flightTypes(f); return ty.length ? b.st.filter(s => ty.every(x => fpFits(s, x))) : []; }
+// Les places de b prises par une autre unité (de n'importe quel groupe) : n → { f, fi, ui }
+function fpTakenBy(b, u) {
+  const m = new Map();
+  S.flights.forEach((g, gi) => {
+    if (fpBaseOf(g) !== b) return;
+    g.units.forEach((v, vi) => { const s = v === u ? null : fpStandOf(g, v); if (s && !m.has(s.n)) m.set(s.n, { f: g, fi: gi, ui: vi }); });
+  });
+  return m;
+}
+function fpBaseOptions(f) {
+  const T = fpTheatre(rTh()), p1 = fpP1(f), opts = [{ v: '', l: t('fp.base.none') }];
+  const list = T.list.filter(b => b.st.length);
+  if (p1) {
+    list.map(b => ({ b: b, d: Math.hypot(b.x - p1.x, b.y - p1.y) / 1000 })).sort((a, c) => a.d - c.d || fpNat(a.b, c.b))
+      .forEach(x => opts.push({ g: t('fp.base.near'), v: String(x.b.id), l: tf('fp.base.opt', x.b.name, fmtNm(x.d)) }));
+  } else list.slice().sort((a, c) => a.name.localeCompare(c.name, 'en', { numeric: true }) || a.id - c.id).forEach(b => opts.push({ v: String(b.id), l: b.name }));
+  return opts;
+}
+function fpStartOptions(hasBase) {
+  return hasBase ? [{ v: 'parking', l: t('fp.start.parking') }, { v: 'parkingHot', l: t('fp.start.hot') }] : [{ v: 'air', l: t('fp.start.air') }, { v: 'ground', l: t('fp.start.ground') }];
+}
+// Les options de « Place » d'une unité : À choisir, les places libres qui lui conviennent (celle qu'elle tient en tout cas), puis, inactives, celles que d'autres unités ont prises
+function fpPlaceOptions(f, fi, u, ui) {
+  const b = fpBaseOf(f), opts = [{ v: '', l: t('fp.place.pick') }];
+  if (!b) return opts;
+  const taken = fpTakenBy(b, u), cur = fpStandOf(f, u);
+  b.st.filter(s => (fpFits(s, u.type) && !taken.has(s.n)) || (cur && s.n === cur.n)).sort(fpNat).forEach(s => opts.push({ g: t('fp.place.free'), v: String(s.n), l: fpStandLabel(s) }));
+  const mine = [], other = [];
+  b.st.filter(s => taken.has(s.n) && fpFits(s, u.type) && !(cur && s.n === cur.n)).sort(fpNat).forEach(s => { const o = taken.get(s.n); (o.f === f ? mine : other).push({ s: s, o: o }); });
+  mine.forEach(x => opts.push({ g: t('fp.place.mine'), v: '~' + x.s.n, off: true, l: tf('fp.place.by', x.s.id, x.o.ui + 1) }));
+  other.forEach(x => opts.push({ g: t('fp.place.other'), v: '~' + x.s.n, off: true, l: tf('fp.place.byg', x.s.id, flightLabel(x.o.f, x.o.fi), x.o.ui + 1) }));
+  return opts;
+}
+// La ligne de compte sous le bouton du plan : « 32 places d'Akrotiri prennent un Mi-24P · 2 choisies : H1, H2 »
+function fpSummary(f) {
+  const b = fpBaseOf(f), ty = flightTypes(f);
+  if (!b || !ty.length) return '';
+  const n = fpGroupStands(f, b).length, one = fpOne(n);
+  const head = ty.length === 1 ? tf(one ? 'fp.sum.one' : 'fp.sum.many', n, fpPre(b.name), b.name, fpArt(ty[0]) + gameAircraftName(ty[0])) : tf(one ? 'fp.sum.all.one' : 'fp.sum.all.many', n, fpPre(b.name), b.name);
+  const ids = f.units.map(u => fpStandOf(f, u)).filter(Boolean).map(s => s.id);
+  return head + (ids.length ? tf(ids.length === 1 ? 'fp.sum.chosen.one' : 'fp.sum.chosen.many', ids.length, ids.join(', ')) : t('fp.sum.none'));
+}
+function fpGroupHtml(f, fi) {
+  const b = fpBaseOf(f), sum = fpSummary(f);
+  return `<div class="fc-row3 fp-row">${fieldHtml(t('fp.base'), selectHtml(`data-k="fbase" data-search data-search-empty="${esc(t('fp.base.nores'))}"`, t('fp.base'), fpBaseOptions(f), b ? String(b.id) : ''))}
+    ${fieldHtml(t('fp.start'), selectHtml('data-k="fstart"', t('fp.start'), fpStartOptions(!!b), fpStartOf(f)))}
+    <div class="ed-field fp-places"${b ? '' : ' hidden'}><label>${esc(t('fp.places'))}</label><button type="button" class="ui-btn fp-btn fp-planbtn" data-act="fp-plan-g">${esc(b ? tf('fp.planBtn', fpPre(b.name), b.name) : '')}</button></div></div>
+    <p class="ui-note fp-sum"${b && sum ? '' : ' hidden'}>${esc(sum)}</p>`;
+}
+function fpUnitHtml(f, fi, u, ui) {
+  if (u.type === '') return '';
+  const b = fpBaseOf(f), cur = fpStandOf(f, u);
+  return `<div class="ed-field fp-unit"${b ? '' : ' hidden'}><label>${esc(t('fp.place'))}</label><div class="fp-pl"><div class="fp-pl-sel">${selectHtml(`data-u="${ui}" data-k="fstand"`, t('fp.place'), fpPlaceOptions(f, fi, u, ui), cur ? String(cur.n) : '')}</div>`
+    + `<button type="button" class="ui-btn fp-btn" data-act="fp-plan-u" data-u="${ui}">${esc(t('fp.plan'))}</button></div></div>`;
+}
+// Une liste dont les options changent : réécrite seulement si son texte a changé (le bouton thémé et son focus restent en place)
+function fpSetOptions(sel, opts, value) {
+  const html = optionsHtml(opts, value);
+  if (sel.getAttribute('data-sig') !== html) { sel.innerHTML = html; sel.setAttribute('data-sig', html); }
+  if (sel.value !== value) sel.value = value;
+}
+// Après tout geste : les listes, le bouton et la ligne de compte de chaque groupe, et la « Place » de chaque unité, relues de l'état (une place prise par une unité d'un autre groupe n'est plus offerte)
+function fpSync() {
+  S.flights.forEach((f, fi) => {
+    const el = flightEl(fi);
+    if (!el) return;
+    const b = fpBaseOf(f), sum = fpSummary(f);
+    const bs = el.querySelector('select[data-k="fbase"]'), ss = el.querySelector('select[data-k="fstart"]');
+    if (bs) fpSetOptions(bs, fpBaseOptions(f), b ? String(b.id) : '');
+    if (ss) fpSetOptions(ss, fpStartOptions(!!b), fpStartOf(f));
+    const pf = el.querySelector('.fp-places'), pb = pf && pf.querySelector('button');
+    if (pf) pf.hidden = !b;
+    if (pb && b) { const txt = tf('fp.planBtn', fpPre(b.name), b.name); if (pb.textContent !== txt) pb.textContent = txt; }
+    const sm = el.querySelector('.fp-sum');
+    if (sm) { sm.hidden = !(b && sum); if (sm.textContent !== sum) sm.textContent = sum; }
+    f.units.forEach((u, ui) => {
+      const ue = unitEl(fi, ui), fld = ue && ue.querySelector('.fp-unit'), sel = fld && fld.querySelector('select[data-k="fstand"]');
+      if (!fld) return;
+      fld.hidden = !b;
+      const cur = fpStandOf(f, u);
+      if (sel && b) fpSetOptions(sel, fpPlaceOptions(f, fi, u, ui), cur ? String(cur.n) : '');
+    });
+  });
+}
+// Choisir une base : le départ passe sur la place s'il était en vol ou au sol ; « Aucune » le remet en vol ; les places du groupe sont vidées
+function fpSetBase(f, v) {
+  const id = v === '' ? null : Number(v);
+  if (id !== null && !Number.isInteger(id)) return;
+  if (id === (Number.isInteger(f.base) ? f.base : null)) return;
+  f.base = id;
+  f.units.forEach(u => { u.stand = null; });
+  if (id === null) f.start = 'air'; else if (f.start === 'air' || f.start === 'ground') f.start = 'parking';
+  refreshAll();
+}
+function fpSetStart(f, v) {
+  const ok = fpBaseOf(f) ? ['parking', 'parkingHot'] : ['air', 'ground'];
+  if (ok.indexOf(v) < 0) return;
+  f.start = v;
+  refreshAll();
+}
+function fpSetStand(f, u, v) {
+  if (/^\d+$/.test(v)) { const b = fpBaseOf(f), n = Number(v); if (b && has(b.byN, n)) u.stand = n; } else if (v === '') u.stand = null;
+  refreshAll();
+}
+// Une unité dont l'appareil change garde sa place seulement si elle prend encore ce type
+function fpKeepStand(f, u) { const s = fpStandOf(f, u); if (s && !fpFits(s, u.type)) u.stand = null; }
+// Un autre théâtre : les groupes perdent base et places (celles d'un théâtre ne valent pas pour un autre)
+function fpClearAll() {
+  S.flights.forEach(f => {
+    f.base = null;
+    if (f.start === 'parking' || f.start === 'parkingHot') f.start = 'air';
+    f.units.forEach(u => { u.stand = null; });
+  });
+}
+// Ce que le paquet porte du départ : { start, airdromeId, airdrome, x, y, stands } ; sans base les quatre autres clés à null et stands []
+function fpDepartureOut(f) {
+  const b = fpBaseOf(f), start = fpStartOf(f);
+  if (!b) return { start: start, airdromeId: null, airdrome: null, x: null, y: null, stands: [] };
+  return { start: start, airdromeId: b.id, airdrome: b.name, x: b.x, y: b.y, stands: fpGroupStands(f, b).map(s => ({ parking: s.n, parking_id: s.id, x: s.x, y: s.y })) };
+}
+function fpStandOut(f, u) { const s = fpStandOf(f, u); return s ? { parking: s.n, parking_id: s.id, x: s.x, y: s.y } : null; }
+// Ouvrir un paquet : le départ et les places que ses vols portent passent aux groupes construits par l'import commun (lus d'après le théâtre du paquet ; ce qui ne s'y trouve pas est laissé aux défauts)
+function fpCarryDepartures(flights, src, pkg) {
+  if (!has(PARKINGS.theatres, src.theatre) || !Array.isArray(pkg.flights)) return;
+  const T = fpTheatre(src.theatre), raws = pkg.flights.filter(isObj), used = new Set();
+  src.rows.filter(r => r.managed).forEach(row => {
+    const raw = raws.find(r => r.groupName === row.name && (!row.units.length || (Array.isArray(r.units) && r.units.indexOf(row.units[0]) >= 0)));
+    const g = flights.find(x => x.name === row.name.trim() && !used.has(x.fcId));
+    if (!raw || !g || !isObj(raw.departure)) return;
+    used.add(g.fcId);
+    const d = raw.departure, b = Number.isInteger(d.airdromeId) && has(T.byId, d.airdromeId) && (d.start === 'parking' || d.start === 'parkingHot') ? T.byId[d.airdromeId] : null;
+    if (b) {
+      g.base = b.id; g.start = d.start;
+      row.units.forEach((ru, k) => { const st = isObj(ru) && isObj(ru.stand) ? ru.stand : null; if (g.units[k] && st && Number.isInteger(st.parking) && has(b.byN, st.parking)) g.units[k].stand = st.parking; });
+    } else if (d.start === 'ground') g.start = 'ground';
+  });
+}
+
+// ----- Le plan d'une base -----
+// Une fenêtre : le plan de DCS Airfield Charts dessous (servi par l'hôte de la suite, contrat dcs-plans-v1 : PUBLIC_TILES + « plans/<théâtre>/index.json » et les plans à côté), les places dessus ; une place se touche pour la prendre.
+// Le plan est lu une fois par session (un échec n'est pas retenu), filtré (aucun texte, aucun lien, aucun script) et posé sous les places ; sans plan, les places seules.
+const FP_PLANS = PUBLIC_TILES + 'plans/', FP_PLANS_FORMAT = 'dcs-plans-v1';
+const FP_WHEEL = 1.15, FP_TAP = 6, FP_HIT = 22, FP_KMAX = 12, FP_FIT_MAX = 6, FP_NEAR = 330, FP_SVG_MAX = 3000000, FP_NODES_MAX = 60000;
+const FP_OK_EL = ['svg', 'g', 'path', 'polygon', 'polyline', 'rect', 'circle', 'line'];
+const FP_OK_AT = ['d', 'points', 'x', 'y', 'width', 'height', 'cx', 'cy', 'r', 'rx', 'ry', 'x1', 'y1', 'x2', 'y2', 'fill', 'stroke', 'stroke-width', 'fill-rule', 'opacity', 'transform'];
+const FP_INK = '#2b2a22', FP_RED = '#a8382c', FP_DIM = '#6f6955', FP_PAPER = '#e7dcc1';
+const FP_NS = 'http://www.w3.org/2000/svg';
+function fpPlanIndex(th) {
+  if (FP.idx.has(th)) return FP.idx.get(th);
+  let p;
+  try {
+    p = fetch(FP_PLANS + encodeURIComponent(th) + '/index.json', { cache: 'no-cache' })
+      .then(r => { if (!r.ok) throw new Error('http'); return r.json(); })
+      .then(j => { if (!isObj(j) || j.format !== FP_PLANS_FORMAT || !isObj(j.plans)) throw new Error('format'); return j; });
+  } catch (e) { p = Promise.reject(e); }
+  FP.idx.set(th, p);
+  p.catch(() => { if (FP.idx.get(th) === p) FP.idx.delete(th); });
+  return p;
+}
+// Le SVG lu, ne gardant que les formes et les attributs de dessin : un <g> neuf, ou null
+function fpCleanSvg(text) {
+  if (typeof text !== 'string' || text.length > FP_SVG_MAX) return null;
+  let doc;
+  try { doc = new DOMParser().parseFromString(text, 'image/svg+xml'); } catch (e) { return null; }
+  const root = doc.documentElement;
+  if (!root || root.localName !== 'svg' || root.namespaceURI !== FP_NS || doc.getElementsByTagName('parsererror').length) return null;
+  const g = document.createElementNS(FP_NS, 'g');
+  let n = 0;
+  const walk = (src, dst) => {
+    Array.prototype.forEach.call(src.children, c => {
+      if (c.namespaceURI !== FP_NS || FP_OK_EL.indexOf(c.localName) < 0 || ++n > FP_NODES_MAX) return;
+      const e = document.createElementNS(FP_NS, c.localName);
+      Array.prototype.forEach.call(c.attributes, a => { if (a.namespaceURI === null && FP_OK_AT.indexOf(a.name) >= 0 && !/url\s*\(|javascript:|[<>]/i.test(a.value)) e.setAttribute(a.name, a.value); });
+      dst.appendChild(e);
+      walk(c, e);
+    });
+  };
+  walk(root, g);
+  return g.firstChild ? g : null;
+}
+// Le plan d'une base : { g, S, OX, OY } ou null (pas d'index, pas d'entrée, une erreur : les points seuls)
+function fpPlanFor(th, baseId) {
+  return fpPlanIndex(th).then(idx => {
+    const e = has(idx.plans, String(baseId)) ? idx.plans[String(baseId)] : null;
+    if (!isObj(e) || typeof e.fichier !== 'string' || !/^[\w.\-]+\.svg$/.test(e.fichier) || !isNum(e.S) || e.S <= 0 || !isNum(e.OX) || !isNum(e.OY)) return null;
+    const url = FP_PLANS + encodeURIComponent(th) + '/' + e.fichier;
+    if (!FP.svg.has(url)) {
+      const p = fetch(url).then(r => { if (!r.ok) throw new Error('http'); return r.text(); }).then(x => { const g = fpCleanSvg(x); if (!g) throw new Error('svg'); return g; });
+      FP.svg.set(url, p);
+      p.catch(() => { if (FP.svg.get(url) === p) FP.svg.delete(url); });
+    }
+    return FP.svg.get(url).then(g => ({ g: g.cloneNode(true), S: e.S, OX: e.OX, OY: e.OY }));
+  }).catch(() => null);
+}
+// Le repère du plan : E = y (est), D = −x (sud), en mètres du jeu ; le nord est en haut. Un point (E, D) tombe à l'écran en (mx + (E − cE)·k, my + (D − cD)·k), k en pixels par mètre.
+function fpPlanFit(PL, pts) {
+  const es = pts.map(p => p.y), ds = pts.map(p => -p.x);
+  const e0 = Math.min.apply(null, es), e1 = Math.max.apply(null, es), d0 = Math.min.apply(null, ds), d1 = Math.max.apply(null, ds);
+  const aw = PL.W - 30 - 2 * PL.pad, ah = PL.H - 40 - 2 * PL.pad - 26;
+  PL.k = Math.min(aw / Math.max(e1 - e0, 1), ah / Math.max(d1 - d0, 1), FP_FIT_MAX);
+  PL.cE = (e0 + e1) / 2; PL.cD = (d0 + d1) / 2;
+  fpPlanClamp(PL);
+}
+function fpPlanClamp(PL) {
+  PL.k = Math.max(PL.kMin, Math.min(Math.max(FP_KMAX, PL.kAll), PL.k));
+  PL.cE = Math.max(PL.bb[0] - 150, Math.min(PL.bb[1] + 150, PL.cE));
+  PL.cD = Math.max(PL.bb[2] - 150, Math.min(PL.bb[3] + 150, PL.cD));
+}
+function fpPlanView(PL, mode) {
+  const b = PL.b, cur = PL.cur;
+  PL.mode = mode;
+  if (mode === 'mine' && cur) fpPlanFit(PL, b.st.filter(s => Math.hypot(s.x - cur.x, s.y - cur.y) < FP_NEAR));
+  else { PL.mode = 'all'; fpPlanFit(PL, b.st); }
+}
+function fpPlanZoomAt(PL, sx, sy, ratio) {
+  const E = PL.cE + (sx - PL.mx) / PL.k, D = PL.cD + (sy - PL.my) / PL.k;
+  PL.k = Math.max(PL.kMin, Math.min(Math.max(FP_KMAX, PL.kAll), PL.k * ratio));
+  PL.cE = E - (sx - PL.mx) / PL.k; PL.cD = D - (sy - PL.my) / PL.k;
+  PL.mode = 'free';
+  fpPlanClamp(PL);
+}
+function fpPlanSize(PL) {
+  const wrap = PL.el.querySelector('.fp-map');
+  PL.W = Math.max(240, Math.round(wrap.clientWidth || 360));
+  PL.H = Math.max(260, Math.min(PL.W < 600 ? 470 : 500, window.innerHeight - 380));
+  PL.pad = PL.W < 600 ? 24 : 40;
+  PL.mx = 30 + (PL.W - 30) / 2; PL.my = 40 + (PL.H - 40) / 2;
+}
+const fpNum = (v, d) => String(Math.round(v * Math.pow(10, d)) / Math.pow(10, d));
+function fpPlanDraw() {
+  const PL = FP.plan;
+  if (!PL) return;
+  const { W, H, k } = PL, sx = s => PL.mx + (s.y - PL.cE) * k, sy = s => PL.my + (-s.x - PL.cD) * k;
+  const svg = PL.svg;
+  svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H); svg.setAttribute('height', String(H));
+  if (PL.chart) {
+    const a = k / PL.chart.S;
+    PL.chartG.setAttribute('transform', 'matrix(' + fpNum(a, 6) + ',0,0,' + fpNum(a, 6) + ',' + fpNum(PL.mx - (PL.chart.OX / PL.chart.S + PL.cE) * k, 4) + ',' + fpNum(PL.my - (PL.chart.OY / PL.chart.S + PL.cD) * k, 4) + ')');
+  }
+  const taken = PL.taken, mark = PL.pick !== null ? PL.pick : (PL.cur ? PL.cur.n : null), big = k > 1.5, R = big ? 1.6 : 1;
+  const inView = (x, y) => x > 4 && x < W - 4 && y > 34 && y < H - 4;
+  const others = {};
+  PL.f.units.forEach((v, vi) => { const s = v === PL.u ? null : fpStandOf(PL.f, v); if (s) others[s.n] = vi + 1; });
+  const boxes = [], pts = [];
+  boxes.push([6, 8, 220, 32]);
+  const lbl = (x, y, txt, fs, col) => {
+    const w = txt.length * fs * 0.62, h = fs;
+    const tries = [[9, -6], [9, h + 2], [-9 - w, -6], [-9 - w, h + 2], [-w / 2, -12], [-w / 2, h + 12]];
+    for (let i = 0; i < tries.length; i++) {
+      const d = tries[i], b = [x + d[0], y + d[1] - h, x + d[0] + w, y + d[1]];
+      if (b[0] > 2 && b[2] < W - 4 && b[1] > 34 && b[3] < H - 4 && !boxes.some(o => b[0] < o[2] && b[2] > o[0] && b[1] < o[3] && b[3] > o[1])) { boxes.push(b); return '<text x="' + fpNum(x + d[0], 1) + '" y="' + fpNum(y + d[1], 1) + '" font-size="' + fs + '" fill="' + col + '">' + esc(txt) + '</text>'; }
+    }
+    return '';
+  };
+  // les places : rouge (cette unité), noire numérotée (une autre unité du vol), claire touchable (libre et compatible), grise (incompatible ou prise)
+  const view = PL.b.st.map(s => {
+    const x = sx(s), y = sy(s);
+    let kind = 'no';
+    if (s.n === mark) kind = 'cur';
+    else if (has(others, s.n)) kind = 'unit';
+    else if (fpFits(s, PL.u.type) && !taken.has(s.n)) kind = 'free';
+    return { s: s, x: x, y: y, kind: kind };
+  }).filter(v => inView(v.x, v.y));
+  view.forEach(v => boxes.push([v.x - 7 * R, v.y - 7 * R, v.x + 7 * R, v.y + 7 * R]));
+  let marks = '', labels = '';
+  ['cur', 'unit', 'free', 'no'].forEach(kd => view.filter(v => v.kind === kd).forEach(v => {
+    if (kd === 'cur') labels += lbl(v.x + 6 * R, v.y, tf('fp.place.by', v.s.id, PL.ui + 1), 16, FP_RED);
+    else if (kd === 'unit') labels += lbl(v.x + 3 * R, v.y, v.s.id, 13, FP_INK);
+    else if (kd === 'free') labels += lbl(v.x + 2 * R, v.y, v.s.id, big ? 13 : 12, FP_INK);
+    else if (big) labels += lbl(v.x, v.y, v.s.id, 12, FP_DIM);
+  }));
+  ['no', 'free', 'unit', 'cur'].forEach(kd => view.filter(v => v.kind === kd).forEach(v => {
+    const a = 'data-n="' + v.s.n + '" data-id="' + esc(v.s.id) + '" data-kind="' + kd + '"', cx = fpNum(v.x, 2), cy = fpNum(v.y, 2);
+    if (kd === 'no') marks += '<g class="fp-st" ' + a + '><circle cx="' + cx + '" cy="' + cy + '" r="' + (4 * R) + '" fill="none" stroke="' + FP_DIM + '" stroke-width="1.2"/></g>';
+    else if (kd === 'free') { marks += '<g class="fp-st" ' + a + ' style="cursor:pointer"><circle class="fp-hit" cx="' + cx + '" cy="' + cy + '" r="' + FP_HIT + '" fill="transparent"/><circle cx="' + cx + '" cy="' + cy + '" r="' + (5.5 * R) + '" fill="' + FP_PAPER + '" stroke="' + FP_INK + '" stroke-width="2"/></g>'; pts.push({ n: v.s.n, x: v.x, y: v.y }); }
+    else if (kd === 'unit') marks += '<g class="fp-st" ' + a + '><circle cx="' + cx + '" cy="' + cy + '" r="' + (9 * R) + '" fill="' + FP_INK + '"/><text x="' + cx + '" y="' + fpNum(v.y + 4 * R, 1) + '" font-size="' + fpNum(11 * R, 1) + '" fill="' + FP_PAPER + '" text-anchor="middle">' + others[v.s.n] + '</text></g>';
+    else { marks += '<g class="fp-st" ' + a + '><circle cx="' + cx + '" cy="' + cy + '" r="' + (13 * R) + '" fill="' + FP_RED + '" fill-opacity=".18" stroke="' + FP_RED + '" stroke-width="2.4"/><circle cx="' + cx + '" cy="' + cy + '" r="' + (6.5 * R) + '" fill="' + FP_RED + '"/></g>'; }
+  }));
+  PL.hits = pts;
+  const steps = [5, 10, 20, 50, 100, 200, 500, 1000, 2000], sc = steps.filter(m => m * k >= 50).concat([2000])[0], msc = sc * k;
+  const head = tf('fp.plan.head', PL.b.name, PL.b.st.length).toUpperCase();
+  PL.over.innerHTML = '<rect x="6" y="8" width="' + fpNum(Math.min(W - 12, head.length * 8.4 + 16), 1) + '" height="24" fill="' + FP_PAPER + '" opacity=".92"/><rect x="10" y="' + (H - 34) + '" width="' + fpNum(msc + 64, 1) + '" height="26" fill="' + FP_PAPER + '" opacity=".92"/>'
+    + '<text x="14" y="24" font-size="13" fill="' + FP_INK + '">' + esc(head) + '</text>'
+    + '<g transform="translate(26,44)"><line x1="0" y1="34" x2="0" y2="2" stroke="' + FP_INK + '" stroke-width="1.5"/><path d="M-5,10 L0,0 L5,10" fill="none" stroke="' + FP_INK + '" stroke-width="1.5"/><text x="0" y="52" font-size="13" text-anchor="middle" fill="' + FP_INK + '">N</text></g>'
+    + marks + labels
+    + '<g class="fp-scale" transform="translate(14,' + (H - 16) + ')"><line x1="0" y1="0" x2="' + fpNum(msc, 1) + '" y2="0" stroke="' + FP_INK + '" stroke-width="2"/><line x1="0" y1="-5" x2="0" y2="0" stroke="' + FP_INK + '"/><line x1="' + fpNum(msc, 1) + '" y1="-5" x2="' + fpNum(msc, 1) + '" y2="0" stroke="' + FP_INK + '"/><text x="' + fpNum(msc + 8, 1) + '" y="4" font-size="12" fill="' + FP_INK + '">' + sc + ' m</text></g>';
+  // les boutons : la vue courante est appuyée ; « Ma place » demande une place
+  PL.el.querySelectorAll('.fp-zoom [data-z="all"], .fp-zoom [data-z="mine"]').forEach(b => b.setAttribute('aria-pressed', String(PL.mode === b.getAttribute('data-z'))));
+  const mine = PL.el.querySelector('.fp-zoom [data-z="mine"]');
+  if (mine) mine.disabled = !PL.cur;
+  const sel = PL.pick !== null ? PL.b.byN[PL.pick] : PL.cur, take = PL.el.querySelector('.fp-take');
+  take.textContent = sel ? tf('fp.take', sel.id) : t('fp.take.none');
+  take.disabled = PL.pick === null;
+}
+function fpPlanFrame() { const PL = FP.plan; if (!PL || PL.raf) return; PL.raf = requestAnimationFrame(() => { if (FP.plan === PL) { PL.raf = 0; fpPlanDraw(); } }); }
+function fpPlanOpen(fi, ui) {
+  const f = S.flights[fi], u = f && f.units[ui], b = f && fpBaseOf(f);
+  if (!u || !b || u.type === '' || !b.st.length) return;
+  fpPlanClose();
+  const cur = fpStandOf(f, u), opener = document.activeElement;
+  const el = document.createElement('div');
+  el.className = 'ui-modal'; el.id = 'fp-plan'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-labelledby', 'fp-plan-title');
+  const heliU = fpIsHeli(u.type), title = tf('fp.plan.title', b.name, ui + 1, gameAircraftName(u.type));
+  const dot = inner => '<svg width="22" height="22" viewBox="-11 -11 22 22" aria-hidden="true">' + inner + '</svg>';
+  const anyOther = S.flights.some(g => g !== f && fpBaseOf(g) === b && g.units.some(v => fpStandOf(g, v)));
+  const lg = (d, txt) => '<span>' + dot(d) + esc(txt) + '</span>';
+  el.innerHTML = '<div class="ui-backdrop"></div><div class="ui-panel ui-wide" role="document"><button type="button" class="ui-close" aria-label="' + esc(t('ui.close')) + '">×</button><h2 class="ui-title" id="fp-plan-title">' + esc(title) + '</h2>'
+    + '<div class="fp-zoom"><button type="button" class="ui-btn" data-z="out" aria-label="' + esc(t('fp.plan.out')) + '">−</button><button type="button" class="ui-btn" data-z="in" aria-label="' + esc(t('fp.plan.in')) + '">+</button>'
+    + '<button type="button" class="ui-btn" data-z="all" aria-pressed="false">' + esc(t('fp.plan.all')) + '</button><button type="button" class="ui-btn" data-z="mine" aria-pressed="false">' + esc(t('fp.plan.mine')) + '</button></div>'
+    + '<div class="fp-map"><svg class="fp-svg" width="100%" role="img" aria-label="' + esc(title) + '" font-family="\'Roboto Mono\', monospace"><g class="fp-chart" opacity=".9"></g><g class="fp-over"></g></svg></div>'
+    + '<div class="fp-legend">'
+    + lg('<circle r="5.5" fill="' + FP_PAPER + '" stroke="' + FP_INK + '" stroke-width="2"/>', t('fp.lg.free'))
+    + lg('<circle r="9" fill="' + FP_RED + '" fill-opacity=".25" stroke="' + FP_RED + '" stroke-width="2"/><circle r="4.5" fill="' + FP_RED + '"/>', t('fp.lg.cur'))
+    + lg('<circle r="8" fill="' + FP_INK + '"/><text y="4" font-size="10" fill="' + FP_PAPER + '" text-anchor="middle">2</text>', t('fp.lg.other'))
+    + lg('<circle r="4" fill="none" stroke="' + FP_DIM + '" stroke-width="1.2"/>', t(heliU ? 'fp.lg.no' : 'fp.lg.no.p'))
+    + (anyOther ? lg('<circle r="4" fill="none" stroke="' + FP_DIM + '" stroke-width="1.2"/><path d="M-3,-3 L3,3 M3,-3 L-3,3" stroke="' + FP_DIM + '" stroke-width="1.2"/>', t('fp.lg.taken')) : '')
+    + '</div><p class="ui-note fp-help">' + esc(t('fp.plan.hint')) + '</p><p class="ui-note fp-credit" hidden></p>'
+    + '<div class="ui-actions"><button type="button" class="ui-btn fp-cancel">' + esc(t('ui.cancel')) + '</button><button type="button" class="ui-btn primary fp-take" disabled></button></div></div>';
+  document.body.appendChild(el);
+  const PL = FP.plan = { el: el, f: f, u: u, ui: ui, b: b, cur: cur, pick: null, taken: fpTakenBy(b, u), opener: opener, seq: 0, raf: 0, chart: null, chartG: el.querySelector('.fp-chart'), over: el.querySelector('.fp-over'), svg: el.querySelector('.fp-svg'),
+    ptrs: new Map(), g: null, mode: 'all', k: 1, cE: 0, cD: 0, kAll: 1, kMin: 0.1, bb: [0, 0, 0, 0], hits: [] };
+  fpPlanSize(PL);
+  const es = b.st.map(s => s.y), ds = b.st.map(s => -s.x);
+  PL.bb = [Math.min.apply(null, es), Math.max.apply(null, es), Math.min.apply(null, ds), Math.max.apply(null, ds)];
+  fpPlanFit(PL, b.st);
+  PL.kAll = PL.k; PL.kMin = PL.k * 0.6;
+  fpPlanView(PL, cur ? 'mine' : 'all');
+  fpPlanDraw();
+  fpPlanBind(PL);
+  el.querySelector('.fp-cancel').focus({ preventScroll: true });
+  // le plan de Charts : demandé à l'ouverture ; les places seules tant qu'il n'est pas là, ou s'il ne vient pas
+  const seq = ++FP.seqN;
+  PL.seq = seq;
+  fpPlanFor(rTh(), b.id).then(c => {
+    if (FP.plan !== PL || PL.seq !== seq) return;
+    const credit = PL.el.querySelector('.fp-credit');
+    if (c) { PL.chart = c; PL.chartG.appendChild(c.g); credit.textContent = t('fp.plan.credit'); fpPlanDraw(); }
+    else credit.textContent = t('fp.plan.nochart');
+    credit.hidden = false;
+  });
+}
+function fpPlanClose() {
+  const PL = FP.plan;
+  if (!PL) return;
+  FP.plan = null;
+  if (PL.raf) cancelAnimationFrame(PL.raf);
+  window.removeEventListener('resize', PL.onResize);
+  PL.el.remove();
+  if (PL.opener && PL.opener.focus && PL.opener.isConnected && !PL.opener.disabled) { try { PL.opener.focus({ preventScroll: true }); } catch (e) { /* ignore */ } }
+}
+function fpPlanTake() {
+  const PL = FP.plan;
+  if (!PL || PL.pick === null) return;
+  const f = PL.f, u = PL.u, b = PL.b, n = PL.pick;
+  if (S.flights.indexOf(f) < 0 || f.units.indexOf(u) < 0 || fpBaseOf(f) !== b || fpTakenBy(b, u).has(n)) { fpPlanClose(); return; }
+  fpPlanClose();
+  u.stand = n;
+  refreshAll();
+}
+function fpPlanBind(PL) {
+  const el = PL.el, svg = PL.svg;
+  const at = e => { const r = svg.getBoundingClientRect(); return { x: (e.clientX - r.left) * (PL.W / (r.width || PL.W)), y: (e.clientY - r.top) * (PL.H / (r.height || PL.H)) }; };
+  el.querySelector('.ui-close').addEventListener('click', fpPlanClose);
+  el.querySelector('.fp-cancel').addEventListener('click', fpPlanClose);
+  el.querySelector('.ui-backdrop').addEventListener('click', fpPlanClose);
+  el.querySelector('.fp-take').addEventListener('click', fpPlanTake);
+  el.querySelector('.fp-zoom').addEventListener('click', e => {
+    const b = e.target.closest ? e.target.closest('[data-z]') : null;
+    if (!b || b.disabled) return;
+    const z = b.getAttribute('data-z');
+    if (z === 'in') fpPlanZoomAt(PL, PL.mx, PL.my, 1.4); else if (z === 'out') fpPlanZoomAt(PL, PL.mx, PL.my, 1 / 1.4); else fpPlanView(PL, z);
+    fpPlanDraw();
+  });
+  svg.addEventListener('wheel', e => {
+    e.preventDefault();
+    const p = at(e);
+    fpPlanZoomAt(PL, p.x, p.y, e.deltaY < 0 ? FP_WHEEL : 1 / FP_WHEEL);
+    fpPlanFrame();
+  }, { passive: false });
+  svg.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    try { svg.setPointerCapture(e.pointerId); } catch (x) { /* ignore */ }
+    const p = at(e);
+    PL.ptrs.set(e.pointerId, p);
+    PL.g = PL.ptrs.size === 1 ? { x0: p.x, y0: p.y, moved: false, target: e.target } : { moved: true };
+    if (PL.ptrs.size === 2) { const q = Array.from(PL.ptrs.values()); PL.pinch = { d: Math.hypot(q[0].x - q[1].x, q[0].y - q[1].y), x: (q[0].x + q[1].x) / 2, y: (q[0].y + q[1].y) / 2 }; }
+  });
+  svg.addEventListener('pointermove', e => {
+    if (!PL.ptrs.has(e.pointerId)) return;
+    const p = at(e), old = PL.ptrs.get(e.pointerId);
+    PL.ptrs.set(e.pointerId, p);
+    if (PL.ptrs.size === 2 && PL.pinch) {
+      const q = Array.from(PL.ptrs.values()), d = Math.hypot(q[0].x - q[1].x, q[0].y - q[1].y), mx = (q[0].x + q[1].x) / 2, my = (q[0].y + q[1].y) / 2;
+      PL.cE -= (mx - PL.pinch.x) / PL.k; PL.cD -= (my - PL.pinch.y) / PL.k;
+      if (PL.pinch.d > 0 && d > 0) fpPlanZoomAt(PL, mx, my, d / PL.pinch.d);
+      PL.mode = 'free';
+      PL.pinch = { d: d, x: mx, y: my };
+      fpPlanClamp(PL); fpPlanFrame();
+      return;
+    }
+    if (PL.ptrs.size !== 1 || !PL.g) return;
+    if (!PL.g.moved && Math.hypot(p.x - PL.g.x0, p.y - PL.g.y0) <= FP_TAP) return;
+    PL.g.moved = true;
+    PL.cE -= (p.x - old.x) / PL.k; PL.cD -= (p.y - old.y) / PL.k;
+    PL.mode = 'free';
+    fpPlanClamp(PL); fpPlanFrame();
+  });
+  const up = e => {
+    if (!PL.ptrs.has(e.pointerId)) return;
+    const p = at(e), tap = PL.ptrs.size === 1 && PL.g && !PL.g.moved && e.type === 'pointerup';
+    PL.ptrs.delete(e.pointerId);
+    if (PL.ptrs.size < 2) PL.pinch = null;
+    if (!PL.ptrs.size) PL.g = null;
+    if (!tap) return;
+    let best = null, bd = FP_HIT + 0.01;
+    PL.hits.forEach(h => { const d = Math.hypot(h.x - p.x, h.y - p.y); if (d < bd) { bd = d; best = h; } });
+    if (best) { PL.pick = best.n; fpPlanDraw(); }
+  };
+  svg.addEventListener('pointerup', up);
+  svg.addEventListener('pointercancel', up);
+  PL.onResize = () => { if (FP.plan !== PL) return; const k0 = PL.k, e0 = PL.cE, d0 = PL.cD, m0 = PL.mode; fpPlanSize(PL); if (m0 === 'free') { PL.k = k0; PL.cE = e0; PL.cD = d0; } else fpPlanView(PL, m0); fpPlanDraw(); };
+  window.addEventListener('resize', PL.onResize);
+}
+
 // ---------- 3. Colonne des vols ----------
 // Une option peut porter `g` (le titre de son groupe) : les options consécutives de même `g` sont rendues dans un <optgroup>.
 function optionsHtml(options, value) {
@@ -3401,7 +4011,7 @@ function optionsHtml(options, value) {
   options.forEach(o => {
     const g = o.g || null;
     if (g !== open) { if (open !== null) out += '</optgroup>'; if (g !== null) out += `<optgroup label="${esc(g)}">`; open = g; }
-    out += `<option value="${esc(o.v)}"${String(o.v) === String(value) ? ' selected' : ''}>${esc(o.l)}</option>`;
+    out += `<option value="${esc(o.v)}"${String(o.v) === String(value) ? ' selected' : ''}${o.off ? ' disabled' : ''}>${esc(o.l)}</option>`;
   });
   return out + (open !== null ? '</optgroup>' : '');
 }
@@ -3464,7 +4074,7 @@ function flightHtml(f, fi) {
       <div class="fc-fsum">${esc(flightSummary(f, fi))}</div>
     </div>
     <div class="fc-fbody"${open ? '' : ' hidden'}>
-      ${flightFieldsHtml(f)}<div class="fc-depart" hidden></div>${routeHtml(f)}
+      ${flightFieldsHtml(f)}${routeHtml(f)}${fpGroupHtml(f, fi)}
       <div class="fc-units">${f.units.length ? f.units.map((u, ui) => unitHtml(f, fi, u, ui)).join('') : `<div class="fc-nounit${S.sel.f === fi ? ' sel' : ''}" data-nounit="1">${esc(t('fl.nounit'))}</div>`}</div>
       ${f.units.length < MAX_UNITS ? `<div class="miz-btn-row"><button type="button" class="miz-btn" data-act="add-unit">${esc(tf('u.add', f.units.length))}</button></div>` : ''}
     </div></div>`;
@@ -3492,6 +4102,7 @@ function unitHtml(f, fi, u, ui) {
       ${fieldHtml(t('u.callsign'), inputHtml(`${at} data-k="callsign"`, u.callsign, t('u.opt')))}
       ${fieldHtml(t('u.onboard'), inputHtml(`${at} data-k="onboard"`, u.onboard, t('u.opt')))}
       ${u.type === '' ? '' : fieldHtml(t('u.livery'), selectHtml(`${at} data-k="livery" data-repick`, t('u.livery'), liveryOptions(f, fi, u, ui), liveryShown(f, fi, u, ui)))}
+      ${fpUnitHtml(f, fi, u, ui)}
     </div>
     ${u.type === '' ? `<p class="ui-note fc-notype">${esc(t('u.notype'))}</p>` : (impHas(LIVERIES_DEFAULT, u.type) ? '' : `<p class="ui-note fc-noliv">${esc(t('u.livery.none'))}</p>`) + unitSettingsHtml(f, fi, u, ui, rk, at)}
   </div></div>`;
@@ -3619,11 +4230,12 @@ function refreshBar() {
   if (UI.clamped > 0) msg += ' · ' + tf('bar.clamped', UI.clamped);
   // Un vol sans route (le paquet porterait route: null) : HQ ne pourra pas le créer s'il manque à la mission ; l'export n'est pas bloqué. Le message n'est dit que quand l'export est possible, à la suite du message « Prêt à exporter » : jamais à côté d'un message qui le bloque
   if (issues.length === 0) S.flights.forEach((f, fi) => { if (!f.route || !f.route.points || !f.route.points['1']) msg += ' · ' + tf('bar.noroute', flightLabel(f, fi)); });
+  if (issues.length === 0) S.flights.forEach((f, fi) => { if (fpBaseOf(f)) f.units.forEach((u, ui) => { if (u.type !== '' && !fpStandOf(f, u)) msg += ' · ' + tf('bar.nostand', flightLabel(f, fi), unitLabel(f, fi, u, ui)); }); });       // une unité sans place sur un groupe à base : l'export passe, HQ prendra une place libre
   bar.textContent = msg;
   tcPaint();
   mlRefresh();       // la ligne de la mission d'HQ suit le bandeau de théâtre (rTh) comme le reste de la barre
 }
-function refreshAll() { refreshBar(); refreshSummaries(); paintPrintBoxes(); saveWork(); }
+function refreshAll() { fpSync(); refreshBar(); refreshSummaries(); paintPrintBoxes(); saveWork(); }
 function renderAll() { renderLeft(); renderRight(); refreshBar(); applyI18nStatic(); saveWork(); }
 
 function selectUnit(fi, ui) {
@@ -4305,6 +4917,7 @@ function openFile(file) {
           UI.clamped = 0;
           ignored = res.src.rows.filter(f => !f.managed).length;
           const built = impBuildGroups(res.src.rows.filter(f => f.managed), res.src);
+          fpCarryDepartures(built.flights, res.src, o);       // la base, le départ et les places du paquet
           restoreState({ flights: built.flights, sel: { f: 0, u: 0 } });       // l'emport brut (payloadIn) est converti par restoreFlight
           warn = built.warn.join(' · ');
         }
@@ -4436,10 +5049,12 @@ const ACTIONS = {
   'fold': c => { setFold(S.flights[c.fi], !flightOpen(S.flights[c.fi], c.fi)); paintFold(); },
   'add-unit': c => {
     const us = S.flights[c.fi].units, first = !us.length;
-    us.push(newUnit(first ? DEFAULT_TYPE : us[us.length - 1].type));
+    us.push(fcNewUnit(first ? DEFAULT_TYPE : us[us.length - 1].type));
     if (first && S.sel.f === c.fi) { S.sel.u = 0; renderAll(); } else { renderLeft(); refreshAll(); }       // la première unité d'un groupe choisi : la colonne de droite change aussi
   },
   'rm-unit': c => removeUnit(c.fi, c.ui),
+  'fp-plan-g': c => fpPlanOpen(c.fi, S.sel.f === c.fi ? S.sel.u : 0),
+  'fp-plan-u': c => fpPlanOpen(c.fi, c.ui),
   'fold-unit': c => { const u = S.flights[c.fi].units[c.ui]; u.folded = !u.folded; paintUnitFold(c.fi, c.ui); saveWork(); },
   'route-pick': c => routePick(c.b.getAttribute('data-rid')),
   'route-change': () => { const su = selUnit(); if (su) { UI.rtChoose = su.f.fcId; renderRouteBlock(); } },
@@ -4485,6 +5100,7 @@ function onInput(e) {
   if (!k) return;
   if (k === 'cmp-name') { UI.cmp.name = el.value; return; }
   if (k === 'prn') return;       // la case s'écrit au « change » (onChange)
+  if (k === 'fbase' || k === 'fstart' || k === 'fstand') return;       // une liste de la base et des places : au « change »
   const fe = el.closest('.fc-flight'), fi = fe ? Number(fe.getAttribute('data-f')) : -1, f = S.flights[fi];
   const u = f && el.hasAttribute('data-u') ? f.units[Number(el.getAttribute('data-u'))] : null;
   if (k === 'name') { f.name = el.value; paintFlightName(f, fi, fe); paintCmpNames(); if (fi === S.sel.f) renderRouteBlock(); refreshLiveryLists(fe); }
@@ -4594,7 +5210,7 @@ async function changeUnitType(f, fi, ui, el) {
   if (!u || nt === u.type || PAYLOAD_TYPES.indexOf(nt) < 0) return;
   if ((radioCount(f, u) > 0 || !!u.loadout) && !await askConfirm({ title: tf('u.type.confirm.title', unitLabel(f, fi, u, ui)), text: t('u.type.confirm.text'), verb: t('ui.verb.change'), danger: true })) { el.value = u.type; return; }
   if (u.type === nt || f.units[ui] !== u) return;
-  u.type = nt; u.radios = {}; u.loadout = null; REFUSED.delete(u);
+  u.type = nt; u.radios = {}; u.loadout = null; REFUSED.delete(u); fpKeepStand(f, u);
   const lv = u.livery.trim().toLowerCase();
   if (!liveriesFor(nt).some(n => n.toLowerCase() === lv)) u.livery = '';       // une livrée choisie que le nouveau type n'a pas (à la casse et aux espaces de bout près) s'efface : l'unité reprend son défaut
   Object.assign(UI.cmp, { saving: false, err: '', st: null });
@@ -4613,6 +5229,9 @@ function onChange(e) {
     const pu = f && f.units[Number(el.getAttribute('data-u'))];
     if (pu) { printSet(f, printKey(pu.type, Number(el.getAttribute('data-r')), Number(el.getAttribute('data-c'))), el.checked); paintPrintBoxes(); refreshAll(); }
   }
+  else if (k === 'fbase') fpSetBase(f, el.value);
+  else if (k === 'fstart') fpSetStart(f, el.value);
+  else if (k === 'fstand') { const fu = f.units[Number(el.getAttribute('data-u'))]; if (fu) fpSetStand(f, fu, el.value); }
   else if (k === 'utype') changeUnitType(f, Number(fe.getAttribute('data-f')), Number(el.getAttribute('data-u')), el);
   else if (k === 'livery') { const u = f.units[Number(el.getAttribute('data-u'))]; if (u) { const ui = Number(el.getAttribute('data-u')); u.livery = el.value; fillLiverySelect(el, f, Number(fe.getAttribute('data-f')), u, ui); refreshAll(); } }
   else if (k === 'coalition') { f.coalition = el.value; if (S.flights.indexOf(f) === S.sel.f) renderRouteBlock(); refreshLiveryLists(fe); refreshAll(); }
@@ -4829,7 +5448,7 @@ def build_html():
                   .replace('@@OSWALD_500@@', A['OSWALD_500'])
                   .replace('@@OSWALD_700@@', A['OSWALD_700']))
     js = (build_radio_block() + '\n' + build_radio_bands_block() + '\n' + build_aircraft_types_block() + '\n' + tables_js() + '\n' + build_payload_block() + '\n' + build_payload_rules_block() + '\n' + PAD2_JS + '\n' + COORD_BLOCK + READNUM_BLOCK + build_magvar_block() + '\n' + build_projection_block() + '\n'
-          + build_route_pack_block() + '\n' + build_route_theatre_block() + '\n' + build_group_store_block() + '\n' + build_presets_merge() + '\n' + build_import_block() + '\n' + build_mission_line_block() + '\n' + build_messages_block() + '\n' + build_ui_block() + '\n' + JS_TBM.replace('@@TBM_JS@@\n', build_tbm_block()) + '\n' + app_js())
+          + build_route_pack_block() + '\n' + build_route_theatre_block() + '\n' + build_group_store_block() + '\n' + build_presets_merge() + '\n' + build_import_block() + '\n' + build_mission_line_block() + '\n' + build_messages_block() + '\n' + build_ui_block() + '\n' + JS_TBM.replace('@@TBM_JS@@\n', build_tbm_block()) + '\n' + build_public_host_block() + '\n' + app_js())
     return ('<!DOCTYPE html>\n<html lang="fr">\n<head>\n<meta charset="UTF-8">\n'
             '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">\n'
             '<meta name="theme-color" content="#1a1e10">\n<title>Flight Configurator — Mission Plan</title>\n<style>\n'
@@ -4941,7 +5560,12 @@ def check(html):
         os.remove(tmp)
         ok(r.returncode == 0, 'node --check du script %d%s' % (i + 1, '' if r.returncode == 0 else ' : ' + r.stderr[:300]))
     own = html.replace(A['lib_jszip'], '')
-    ok(not re.search(r'fetch\(|XMLHttpRequest|WebSocket|sendBeacon|<script[^>]*\bsrc=|<link[^>]*href=["\']http', own), 'aucune requête réseau (hors JSZip, qui n\'en fait pas)')
+    ok(not re.search(r'XMLHttpRequest|WebSocket|sendBeacon|<script[^>]*\bsrc=|<link[^>]*href=["\']http', own), 'aucune requête réseau (hors JSZip, qui n\'en fait pas)')
+    # la seule lecture du réseau : les plans des aérodromes (contrat dcs-plans-v1), à l'adresse publique de la suite, par fpPlanIndex (l'index) et fpPlanFor (le plan) ; rien n'est lu avant l'ouverture d'un plan
+    nf = re.findall(r'\bfetch\(', own)
+    ok(len(nf) == 2 and 'fetch(FP_PLANS + encodeURIComponent(th)' in fn_body('fpPlanIndex') and 'fetch(url)' in fn_body('fpPlanFor') and "const url = FP_PLANS + encodeURIComponent(th) + '/' + e.fichier;" in fn_body('fpPlanFor')
+       and "const FP_PLANS = PUBLIC_TILES + 'plans/'" in own, 'seul accès au réseau : fetch des plans de DCS Airfield Charts (fpPlanIndex, fpPlanFor), sous PUBLIC_TILES + « plans/ »')
+    ok(JS_APP.count('fpPlanFor(') == 2 and 'fpPlanFor(rTh(), b.id)' in fn_body('fpPlanOpen') and JS_APP.count('fpPlanIndex(') == 2 and 'fpPlanIndex(th).then' in fn_body('fpPlanFor'), "les plans ne sont demandés que par l'ouverture d'un plan (fpPlanOpen → fpPlanFor → fpPlanIndex)")
     ok(not re.search(r'font-weight:\s*(600|800|900|bold)|font:\s*(600|800|900|bold)\b', own), 'aucune graisse sans sa face (R295)')
     ok('/* ===== POSTES RADIO (COMME AU COCKPIT) ===== */' in html and '/* ===== EMPORT (PRESETS ET PAYLOAD) ===== */' in html, 'blocs partagés présents')
     for label, blk in (('bandes et postes non pré-réglés', build_radio_bands_block()), ('déclinaison', build_magvar_block()), ('projections', build_projection_block()), ('points de paquet', build_route_pack_block()), ('théâtre d\'une route', build_route_theatre_block()), ('groupes partagés', build_group_store_block()), ('fusion des presets (celle du shell)', build_presets_merge()),
