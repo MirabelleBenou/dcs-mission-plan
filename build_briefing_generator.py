@@ -9416,6 +9416,10 @@ for _pat, _lab in [
     ("hasWx: Object.keys(wx).length > 0", "la mission sans météo se reconnaît (hasWx)"),
     ("'metar.hq.nowx': 'Pas de météo dans la mission d’HQ'", "le message « pas de météo » en français"),
     ("'metar.hq.nowx': 'No weather in the HQ mission'", "le message « pas de météo » en anglais"),
+    ("<option value=\"${escapeAttr(a)}\">${escapeHtml(gameAircraftName(a))}</option>`).join('')}\n          <option value=\"__custom__\">", "la liste « Appareil » d'un plan radio montre le nom du type (la valeur reste l'id)"),
+    ("label + (g.aircraft ? ' — ' + gameAircraftName(g.aircraft) : '')", "le libellé d'un groupe porte le nom du type"),
+    ("const aircraftLabel = s.aircraft.map(gameAircraftName).join(' / ');", "les appareils d'une escadrille se lisent sous leur nom"),
+    ('<span class="sq-ac">${escapeHtml(gameAircraftName(info.aircraft))}</span>', "la puce d'escadre de l'imprimé porte le nom du type"),
 ]:
     if _pat not in HTML:
         print("  [FAIL] " + _lab)

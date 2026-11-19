@@ -7905,6 +7905,9 @@ def build():
         raise SystemExit("[ERREUR] Les types du bloc d'import ne sont pas ceux de PAYLOAD_TYPES")
     if build_aircraft_types_block() not in js or 'const GAME_AIRCRAFT_TYPES' not in js:
         raise SystemExit("[ERREUR] Le bloc des types d'appareils du jeu n'est pas embarqué tel quel")
+    if 'data-dg-type="\' + i + \'" data-search data-search-empty="\' + esc(t(\'u.type.none\'))' not in js or '<option value="__other__" data-keep>' not in js:
+        raise SystemExit("[ERREUR] Le type d'une ligne d'équipage de la carte libre n'a pas sa recherche (data-search, data-search-empty) ou son « Autre type (mod)… » n'est pas en data-keep")
+    print("[OK] Datacard Generator : le type d'une ligne d'équipage de la carte libre se cherche (« Autre type (mod)… » reste)")
     left = re.findall(r'__[A-Z0-9_]{4,}__', re.sub(r'<script>.*?</script>', '', html, flags=re.S)[:])
     left = [x for x in left if x not in ('__proto__',)]
     if left:
