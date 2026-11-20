@@ -1271,7 +1271,7 @@ html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-
    au mur, une fenêtre ou un menu du shell est le niveau 1. L'historique (history.state : { mp: niveau, tool: id ou null } ; l'entrée du mur, nulle ou { mp: 0 }) est tenu ici, par le shell seul : aucun outil n'y touche.
    Règle, quel que soit le chemin : l'entrée courante dit le niveau affiché, et il n'y a jamais plus de deux entrées au-dessus de celle du mur. Le niveau affiché se lit sur le DOM (NAV_LEVELS) : un MutationObserver sur le shell et sur
    chaque outil chargé ; une entrée s'ajoute à l'ouverture d'un niveau et se consomme (history.go) à sa fermeture, par n'importe quel geste (croix, Échap, choix, toucher au-dehors, code, « ◄ »).
-   Le retour du navigateur ferme le niveau du dessus comme Échap (un keydown Échap envoyé au document de l'outil, par le chemin de l'outil), ramène de l'outil au mur comme « ◄ », et quitte la page depuis le mur.
+   Le retour du navigateur ferme le niveau du dessus (une fenêtre par sa croix, un menu par un keydown Échap envoyé à son élément), ramène de l'outil au mur comme « ◄ », et quitte la page depuis le mur.
    NAV.h = le nombre d'entrées qu'on tient pour posées au-dessus du mur ; NAV.pending = les traversées que le shell a lui-même demandées (leur popstate n'est pas un geste de l'utilisateur). */
 var NAV = { h: 0, pending: 0, timer: 0, booting: false, ok: true, queued: false, base: '', wallY: 0 };
 
@@ -1292,8 +1292,9 @@ function navLevel() {
 }
 function navDepth() { return (activeModule ? 1 : 0) + (navLevel() ? 1 : 0); }
 
-/* Fermer le niveau du dessus comme Échap : le shell d'abord (ses fenêtres sont au-dessus de l'outil), puis l'outil. Le keydown part de l'élément du niveau (fenêtre ou panneau) : il remonte au document et à la fenêtre de l'outil,
-   où chaque outil l'écoute (le bloc d'interface clique la croix de la fenêtre du dessus, les menus ferment). Si le niveau est encore là : la croix du dessus ; sinon on rend faux. */
+/* Fermer le niveau du dessus. Une fenêtre (.ui-modal, .rt-modal) se ferme par sa croix (la question #ui-confirm par son bouton Annuler), jamais par Échap : l'Échap synthétique remonterait au gestionnaire du document
+   de l'outil (au Recon Station il remet l'outil de dessin à « sélection »). Un menu ou un panneau (.tbm-panel, recherche, calques, zoom, sommaire) ferme par Échap, envoyé de son élément : il remonte au document et à la fenêtre de l'outil,
+   où les menus l'écoutent. Le shell d'abord (ses fenêtres sont au-dessus de l'outil), puis l'outil. Si le niveau est encore là : on rend faux. */
 function navTopEl(doc, id) {
   var c = doc.getElementById('ui-confirm');
   if (c && !c.hidden) return c;
@@ -1310,12 +1311,15 @@ function navCloseTop() {
     var el = navTopEl(doc, id);
     if (!el) continue;
     try {
-      var W = doc.defaultView;
-      el.dispatchEvent(new W.KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', keyCode: 27, which: 27, bubbles: true, cancelable: true }));
+      if (el.matches('.ui-modal, .rt-modal')) {
+        var no = el.id === 'ui-confirm' ? doc.getElementById('ui-confirm-cancel') : null;
+        var x = no && !no.hidden && no.offsetParent !== null ? no : el.querySelector('.ui-close, .rt-close');
+        if (x) x.click();
+      } else {
+        var W = doc.defaultView;
+        el.dispatchEvent(new W.KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', keyCode: 27, which: 27, bubbles: true, cancelable: true }));
+      }
     } catch (e) { /* le document de l'outil ne répond pas */ }
-    if (navClosed(el, id)) return true;
-    var x = el.querySelector('.ui-close, .rt-close');
-    if (x) { try { x.click(); } catch (e) { /* sans croix */ } }
     return navClosed(el, id);
   }
   return false;
@@ -1370,14 +1374,35 @@ function navWatch(doc) {
     new MutationObserver(navQueue).observe(doc.documentElement, { subtree: true, childList: true, attributes: true, attributeFilter: ['hidden', 'class', 'style', 'aria-expanded'] });
   } catch (e) { console.warn('[M·P] niveaux : ' + e); }
 }
-/* Un outil qui change de page par son adresse interne (le Field Manual : location.hash) ajouterait des entrées à l'historique de la suite : ces changements d'adresse remplacent l'entrée au lieu d'en ajouter (API de navigation) */
+/* Un outil qui change de page par son adresse interne (le Field Manual : location.hash) ajouterait des entrées à l'historique de la suite : ces changements d'adresse remplacent l'entrée au lieu d'en ajouter.
+   Avec l'API de navigation : le changement est annulé et rejoué en location.replace. Sans elle (Safari avant 26.2, Firefox avant 147, vieux WebView) : le shell prend les clics sur les liens d'ancre du manuel, en capture,
+   et enveloppe ses fonctions de page (fmGo, navigate) pour passer par le même location.replace. */
+function navFmReplace(w, id) { w.location.replace(w.location.href.split('#')[0] + '#' + id); }
+function navFmGo(w, id) {
+  if (w.location.hash === '#' + id) { if (w.onHashChange) w.onHashChange(); } else navFmReplace(w, id);
+  var r = w.document.getElementById('fm-root');
+  if (r) { try { r.focus({ preventScroll: true }); } catch (e) { /* sans focus */ } }
+}
 function navFrame(iframe) {
   try {
     var w = iframe.contentWindow;
-    if (w && w.navigation && w.navigation.addEventListener) w.navigation.addEventListener('navigate', function (e) {
-      if (e.cancelable && e.navigationType === 'push' && e.hashChange && e.destination && e.destination.sameDocument) { e.preventDefault(); w.location.replace(e.destination.url); }
-    });
-  } catch (e) { /* sans API de navigation, l'outil garde ses entrées */ }
+    if (!w) return;
+    if (w.navigation && w.navigation.addEventListener) {
+      w.navigation.addEventListener('navigate', function (e) {
+        if (e.cancelable && e.navigationType === 'push' && e.hashChange && e.destination && e.destination.sameDocument) { e.preventDefault(); w.location.replace(e.destination.url); }
+      });
+    } else if (typeof w.fmGo === 'function') {
+      w.fmGo = function (h) { navFmGo(w, h); };
+      w.navigate = function (id) { navFmReplace(w, id); };
+      w.document.addEventListener('click', function (e) {
+        var a = e.target && e.target.closest ? e.target.closest('a[href^="#"]') : null;
+        var h = a ? a.getAttribute('href').slice(1) : '';
+        if (!h) return;
+        e.preventDefault(); e.stopPropagation();
+        navFmGo(w, h);
+      }, true);
+    }
+  } catch (e) { /* l'outil garde ses entrées */ }
 }
 
 /* Le retour du navigateur (ou « Avancer ») : l'entrée où l'on arrive dit un niveau E ; on le met d'accord avec ce qui est affiché */
@@ -1393,12 +1418,15 @@ function navPop(ev) {
   if (NAV.booting) { navBoot(); return; }
   if (E === NAV.h) { navFix(); return; }
   if (E > NAV.h) { navGo(NAV.h - E); return; }                        /* « Avancer » sur une entrée qui décrit plus que ce qui est affiché : un retour en silence, rien n'est rouvert */
-  NAV.h = E;                                                          /* un retour : le niveau du dessus se ferme comme Échap, ou l'outil ramène au mur comme « ◄ » */
-  for (var g = 0; g < 4; g++) {
+  var skipped = NAV.h - E;                                            /* un retour : le niveau du dessus se ferme, ou l'outil ramène au mur comme « ◄ » */
+  NAV.h = E;
+  for (var g = 0; g < 12; g++) {                                      /* le navigateur a pu sauter plusieurs entrées (appui long, history.go(-2)) : les niveaux se ferment un à un jusqu'à l'entrée d'arrivée */
     var lvl = navLevel();
     if (((activeModule ? 1 : 0) + (lvl ? 1 : 0)) <= E) break;
-    if (lvl) { navCloseTop(); if (navLevel()) break; }               /* une fenêtre reste ouverte dessous : navSync rétablit l'entrée du niveau 2 */
-    else goHub();
+    if (lvl) {
+      var shut = navCloseTop();
+      if (navLevel()) { if (skipped >= 2 && shut) continue; break; }  /* un seul retour : une fenêtre reste dessous, navSync rétablit l'entrée du niveau 2 */
+    } else goHub();
   }
   navSync();
 }

@@ -53,8 +53,13 @@ def browser():
         br.close()
 
 
-def new_page(br, w=412, h=900, touch=True, url=SHELL):
+NO_NAV_API = "if (window.top !== window) { try { Object.defineProperty(window, 'navigation', { value: undefined, configurable: true }); } catch (e) {} }"
+
+
+def new_page(br, w=412, h=900, touch=True, url=SHELL, no_nav_api=False):
     ctx = br.new_context(viewport={'width': w, 'height': h}, has_touch=touch, is_mobile=touch)
+    if no_nav_api:                                  # les cadres des outils sans l'API de navigation (Safari avant 26.2, Firefox avant 147) ; le shell la garde, pour lire ses entrées
+        ctx.add_init_script(NO_NAV_API)
     pg = ctx.new_page()
     errs = []
     pg.on('pageerror', lambda e: errs.append(str(e)))
@@ -307,6 +312,102 @@ def test_the_field_manual_pages_do_not_add_entries(browser):
     assert not s['level'] and s['idx'] == base['idx'] + 1 and s['n'] - 1 - base['idx'] <= 2
     back(pg, 900)
     assert state(pg)['wall']
+    pg.context.close()
+
+
+@needs_pw
+def test_the_field_manual_pages_do_not_add_entries_without_the_navigation_api(browser):
+    pg = new_page(browser, 412, no_nav_api=True)
+    open_tool(pg, 'fm')
+    assert tool_win(pg, 'fm', 'typeof navigation') == 'undefined'
+    base = state(pg)
+    tool_win(pg, 'fm', "document.getElementById('btn-toc').click()")
+    pg.wait_for_timeout(500)
+    tool_win(pg, 'fm', "document.querySelectorAll('#fmnav-panel a.fmnav-ch')[2].click()")      # le sommaire, puis le lien du bas de chapitre, un lien du texte, navigate(), le sommaire encore
+    pg.wait_for_timeout(900)
+    assert tool_win(pg, 'fm', 'location.hash') == '#hq'
+    tool_win(pg, 'fm', "(document.querySelector('.fmnav-pn a.fmnav-nx:not([hidden])') || document.querySelector('.fmnav-pn a')).click()")
+    pg.wait_for_timeout(900)
+    tool_win(pg, 'fm', "(document.querySelector('a.fm-lnk') || { click() {} }).click()")
+    pg.wait_for_timeout(900)
+    tool_win(pg, 'fm', "navigate('index')")
+    pg.wait_for_timeout(700)
+    assert tool_win(pg, 'fm', 'location.hash') == '#index'
+    tool_win(pg, 'fm', "document.getElementById('btn-toc').click()")
+    pg.wait_for_timeout(500)
+    tool_win(pg, 'fm', "document.querySelectorAll('#fmnav-panel a.fmnav-ch')[1].click()")
+    pg.wait_for_timeout(900)
+    s = state(pg)
+    assert s['state'] == {'mp': 1, 'tool': 'fm'} and not s['level']
+    assert s['idx'] == base['idx'] and s['n'] == base['n'] + 1                 # seule reste l'entrée « en avant » du niveau 2 consommé : aucune page n'a ajouté d'entrée
+    assert pg.evaluate('navigation.entries().filter(e => e.getState() && e.getState().mp === 0).length') == 0     # aucune entrée {mp:0} en double
+    back(pg, 900)
+    assert state(pg)['wall'] and state(pg)['state'] is None
+    back(pg, 900)
+    assert pg.url == 'about:blank'
+    assert pg.errs == []
+    pg.context.close()
+
+
+@needs_pw
+def test_the_arrow_after_field_manual_pages_goes_back_to_the_wall_without_the_navigation_api(browser):
+    pg = new_page(browser, 412, no_nav_api=True)
+    open_tool(pg, 'fm')
+    for k in (1, 2, 3):
+        tool_win(pg, 'fm', "document.getElementById('btn-toc').click()")
+        pg.wait_for_timeout(400)
+        tool_win(pg, 'fm', "document.querySelectorAll('#fmnav-panel a.fmnav-ch')[%d].click()" % k)
+        pg.wait_for_timeout(700)
+    go_hub_by_arrow(pg, 'fm')
+    pg.wait_for_timeout(500)
+    s = state(pg)
+    assert s['wall'] and s['state'] is None
+    back(pg, 900)
+    assert pg.url == 'about:blank'
+    pg.context.close()
+
+
+@needs_pw
+def test_a_window_closes_by_its_cross_never_by_escape(browser):
+    pg = new_page(browser, 412)
+    open_tool(pg, 'rs')
+    tool_win(pg, 'rs', "SOURCE_READY = true; RSD.tool = 'rect'; rsdSyncUi(); 1")            # une image, l'outil de dessin Rectangle
+    tool_win(pg, 'rs', "document.getElementById('btn-reset').click()")
+    pg.wait_for_timeout(600)
+    assert tool_win(pg, 'rs', "document.getElementById('ui-confirm').hidden") is False
+    back(pg, 900)
+    assert tool_win(pg, 'rs', "document.getElementById('ui-confirm').hidden") is True
+    assert tool_win(pg, 'rs', 'RSD.tool') == 'rect'                                         # Échap l'aurait remis à « select »
+    assert tool_win(pg, 'rs', 'SOURCE_READY') is True                                        # rien d'effacé
+    back(pg, 900)
+    assert state(pg)['wall']
+    pg.context.close()
+
+
+@needs_pw
+@pytest.mark.parametrize('tid, opener, win', [
+    ('hq', "document.getElementById('btn-wing').click()", 'wing-modal'),
+    ('fc', "document.getElementById('btn-export').click()", 'fn-modal'),
+])
+def test_a_back_that_skips_two_entries_closes_the_levels_one_by_one_down_to_the_wall(browser, tid, opener, win):
+    pg = new_page(browser, 412)
+    if tid == 'fc':                                    # le Flight Configurator exporte une fois une mission chargée
+        pg.evaluate("MP_WORK_EXAMPLE('mc')")
+        pg.wait_for_timeout(1500)
+        pg.evaluate("MP_WORK_EXAMPLE('fl')")
+        pg.wait_for_timeout(2000)
+    open_tool(pg, tid)
+    tool_win(pg, tid, opener)
+    pg.wait_for_timeout(600)
+    tool_win(pg, tid, "askConfirm({ title: 'Q', text: 't', verb: 'OK', danger: true }); 1")
+    pg.wait_for_timeout(500)
+    assert tool_win(pg, tid, "document.getElementById('%s').hidden" % win) is False
+    assert state(pg)['state'] == {'mp': 2, 'tool': tid}
+    pg.evaluate('history.go(-2)')
+    pg.wait_for_timeout(1500)
+    s = state(pg)
+    assert s['wall'] and s['state'] is None and not s['level']
+    assert pg.errs == []
     pg.context.close()
 
 
