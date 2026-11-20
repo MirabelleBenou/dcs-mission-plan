@@ -83,9 +83,9 @@ def test_datacard_generator_gives_the_same_mass_as_the_flight_configurator():
             fc.evaluate("document.querySelector('.mp-back-injected').click()"); pg.wait_for_timeout(500)
             pg.evaluate("MP_OPEN_MODULE('dg')"); pg.wait_for_timeout(2500)
             dg = pg.query_selector('#iframe-dg').content_frame()
-            dgw = dg.evaluate("(() => { const out = []; (typeof dgGroups === 'function' ? dgGroups() : []).forEach(g => (g.units || []).forEach(u => { const lo = u.loadout; out.push(payloadTakeoff(dgStr(u.type), lo ? dgLoFuel(lo.fuel) : undefined, lo && gsIsObj(lo.pylons) ? lo.pylons : {}, AIRCRAFT_MASSES, { gun: lo ? dgLoFuel(lo.gun) : undefined, props: gsIsObj(u.addPropIn) ? u.addPropIn : u.props }).takeoff); })); return out; })()")
-            assert fcw and all(isinstance(x, (int, float)) for x in fcw)
-            if dgw:                                                    # le DG lit les mêmes unités
-                assert dgw == pytest.approx(fcw)
+            lots = dg.evaluate("DGG.flights.map(f => dgFuelLots(f))")
+            dgw = sorted(l['weight'] for fl in lots for l in fl for _ in l['ranks'])
+            assert len(fcw) == 2 and fcw[0] != fcw[1] and fcw[1] - fcw[0] == pytest.approx(160)       # l'option décochée de la première unité seule
+            assert dgw == pytest.approx(sorted(fcw))                                                    # le DG donne les mêmes poids que le FC, unité pour unité
         finally:
             br.close()
