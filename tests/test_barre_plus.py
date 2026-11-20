@@ -213,7 +213,7 @@ def test_le_texte_commun_est_le_meme_dans_les_huit_livrables():
         html = (ROOT / 'dist' / f).read_text(encoding='utf-8')
         assert BAR in html, f
         assert html.count('function uiBarMore(') == 1, f
-    # le shell embarque les outils sous leur forme codée (base64 de leur HTML) : on les décode et le texte y est, une fois par outil (six outils dans le mur)
+    # le shell embarque les outils sous leur forme codée (base64 de leur HTML) : on les décode et le texte y est, une fois par outil (les sept du mur)
     shell = (ROOT / 'dist' / 'dcs_mission_plan.html').read_text(encoding='utf-8')
     vus = 0
     for blob in re.findall(r'[A-Za-z0-9+/=]{20000,}', shell):
@@ -224,7 +224,7 @@ def test_le_texte_commun_est_le_meme_dans_les_huit_livrables():
         if 'function uiBarFit(' in html:
             assert BAR in html and html.count('function uiBarMore(') == 1
             vus += 1
-    assert vus >= 6, vus
+    assert vus == 7, vus
 
 
 def test_l_etape_8_serre_tout_espace_entre_enfants_a_2_px():
