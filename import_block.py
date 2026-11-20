@@ -620,7 +620,7 @@ function impMergeRadios(unit, type, radios, fromHq) {
 }
 /* Un changement de type d'une unité du groupe : ses radios, son emport et ses options d'équipement (qui se lisent selon le type) sont vidés, un avertissement le dit s'il y en avait */
 function impRetype(st, target, fi, k, u, ty) {
-  if (impRadioCount(u) > 0 || u.loadout || u.payloadIn) st.warn.push(impTf('imp.retype', impGroupLabel(target, fi), impUnitLabel(target, fi, u, k), gameAircraftName(u.type), gameAircraftName(ty)));
+  if (impRadioCount(u) > 0 || u.loadout || u.payloadIn || (gsIsObj(u.props) && Object.keys(u.props).length > 0)) st.warn.push(impTf('imp.retype', impGroupLabel(target, fi), impUnitLabel(target, fi, u, k), gameAircraftName(u.type), gameAircraftName(ty)));
   u.type = ty; u.radios = {}; u.loadout = null;
   delete u.payloadIn; delete u.addPropIn;       // les options d'équipement se lisent aussi selon le type (le Flight Configurator a ses props ; le Route Planner n'en a pas)
   if (gsIsObj(u.props)) u.props = {};

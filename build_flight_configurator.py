@@ -2711,10 +2711,10 @@ function fcPropsRead(type, raw) {
 }
 // Les options d'un type avec leur valeur : un booléen (case) ou l'id d'une valeur (liste) ; toutes, dans l'ordre du jeu.
 function eqValue(o, props) { const c = payloadOptionChoice(o, props); return o.kind === 'list' ? (c.value ? c.value.id : o.def) : c.on; }
-// L'AddPropAircraft d'une unité pour le paquet : toutes les options de la table avec leur valeur, puis les clés hors table gardées ; absent (null) pour un type sans option.
+// L'AddPropAircraft d'une unité pour le paquet : toutes les options de la table avec leur valeur, puis les clés hors table gardées ; absent (null) pour un type sans option ni clé gardée (une unité dont props porte des clés hors table les exporte même si son type n'a pas d'option dans la table).
 function unitPropsOut(u) {
   const opts = eqOptions(u.type);
-  if (!opts.length) return null;
+  if (!opts.length && !Object.keys(isObj(u.props) ? u.props : {}).length) return null;
   const out = {}, ids = {};
   opts.forEach(o => { out[o.id] = eqValue(o, u.props); ids[o.id] = true; });
   Object.keys(isObj(u.props) ? u.props : {}).forEach(k => { if (!has(ids, k)) out[k] = u.props[k]; });
@@ -3043,7 +3043,7 @@ function ukChoose(g, v) {
 function ukFollow() { const k = ukRead(); ukApply(k.mass, k.distance); }
 // L'unité de masse affichée, kg ou lb (les données restent en kg ; le kg converti : payloadMassIn)
 function massU() { return t(UMASS === 'lb' ? 'u.lb' : 'u.kg'); }
-// L'entier arrondi : la masse d'une station et celle des emports.
+// L'entier arrondi : la masse d'une station.
 function massInt(kg) { return cmpNum(payloadMassIn(kg, UMASS)); }
 // Une masse à l'écran : en kg, au dixième près (207,5 ; 12 399,5), en lb entière ; l'espace des milliers et la virgule suivent la langue.
 function massTxt(kg) {
@@ -4665,9 +4665,9 @@ function cmpUpdateTotal() {
   if (w.takeoff !== null) {
     takeoff = `<span class="${Math.round(w.takeoff) > w.max ? 'cmp-over' : ''}">` + esc(t('cmp.takeoff')).replace('{y}', esc(massTxt(w.takeoff) + ' ' + u + q)).replace('{max}', esc(massTxt(w.max))).replace(/\{u\}/g, esc(u)) + '</span>';
   }
-  el.innerHTML = `${esc(t('cmp.mass'))} <b>${esc(massInt(w.loadout) + ' ' + u + q)}</b>${takeoff}`;
+  el.innerHTML = `${esc(t('cmp.mass'))} <b>${esc(massTxt(w.loadout) + ' ' + u + q)}</b>${takeoff}`;
   if (!det) return;
-  det.textContent = w.takeoff === null ? '' : t('cmp.d.empty') + ' ' + massTxt(w.empty) + (eqOptions(su.u.type).length ? t('cmp.d.eq') : '') + ' + ' + t('cmp.d.fuel') + ' ' + massTxt(w.fuel) + ' + ' + t('cmp.d.stores') + ' ' + massInt(w.loadout) + q
+  det.textContent = w.takeoff === null ? '' : t('cmp.d.empty') + ' ' + massTxt(w.empty) + (eqOptions(su.u.type).length ? t('cmp.d.eq') : '') + ' + ' + t('cmp.d.fuel') + ' ' + massTxt(w.fuel) + ' + ' + t('cmp.d.stores') + ' ' + massTxt(w.loadout) + q
     + (loHasGun(su.u.type) ? ' + ' + t('cmp.d.rounds') + ' ' + massTxt(w.ammo) : '') + (w.wdf > 0 ? ' + ' + t('cmp.d.tank') + ' ' + massTxt(w.wdf) : '') + t('cmp.d.tail');
 }
 // La ligne sous la liste : la station jumelle n'y figure que si « Symétrique » est cochée ; la puce « réglages » quand l'arme en porte.
@@ -5329,7 +5329,7 @@ function commitLoadoutField(k, el) {
 async function changeUnitType(f, fi, ui, el) {
   const u = f.units[ui], nt = el.value;
   if (!u || nt === u.type || PAYLOAD_TYPES.indexOf(nt) < 0) return;
-  if ((radioCount(f, u) > 0 || !!u.loadout) && !await askConfirm({ title: tf('u.type.confirm.title', unitLabel(f, fi, u, ui)), text: t('u.type.confirm.text'), verb: t('ui.verb.change'), danger: true })) { el.value = u.type; return; }
+  if ((radioCount(f, u) > 0 || !!u.loadout || (isObj(u.props) && Object.keys(u.props).length > 0)) && !await askConfirm({ title: tf('u.type.confirm.title', unitLabel(f, fi, u, ui)), text: t('u.type.confirm.text'), verb: t('ui.verb.change'), danger: true })) { el.value = u.type; return; }
   if (u.type === nt || f.units[ui] !== u) return;
   u.type = nt; u.radios = {}; u.loadout = null; u.props = {}; REFUSED.delete(u); fpKeepStand(f, u);
   const lv = u.livery.trim().toLowerCase();

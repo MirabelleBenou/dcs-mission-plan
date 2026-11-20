@@ -1056,10 +1056,10 @@ def _fc_loadout_block(P, x, y, w, narrow):
     o.append(P.text(x + 20, sym + 7, 8, L('fc', 'cmp.sym'), anchor='start'))
     # la masse des emports, la masse au décollage, puis la ligne de détail (l'écran la replie sur la largeur du bloc)
     ml = sym + 24
-    o.append(P.text(x + 8, ml, 8, L('fc', 'cmp.mass'), D(' 1 600 '), L('fc', 'u.kg'), anchor='start', op=.8))
-    o.append(P.text(x + 8, ml + 11, 8, L('fc', 'cmp.takeoff', args={'y': [D('12 399,5 ', '12,399.5 '), L('fc', 'u.kg')], 'max': D('11 500', '11,500'), 'u': L('fc', 'u.kg')}), anchor='start', op=.8))
+    o.append(P.text(x + 8, ml, 8, L('fc', 'cmp.mass'), D(' 1 599,6 ', ' 1,599.6 '), L('fc', 'u.kg'), anchor='start', op=.8))
+    o.append(P.text(x + 8, ml + 11, 8, L('fc', 'cmp.takeoff', args={'y': [D('12 399,1 ', '12,399.1 '), L('fc', 'u.kg')], 'max': D('11 500', '11,500'), 'u': L('fc', 'u.kg')}), anchor='start', op=.8))
     o.append(P.text(x + 8, ml + 22, 7, L('fc', 'cmp.d.empty'), D(' 8 891', ' 8,891'), L('fc', 'cmp.d.eq'), D(' + '), L('fc', 'cmp.d.fuel'), D(' 1 701', ' 1,701'), anchor='start', op=.6))
-    o.append(P.text(x + 8, ml + 31, 7, D('+ '), L('fc', 'cmp.d.stores'), D(' 1 600', ' 1,600'), D(' + '), L('fc', 'cmp.d.rounds'), D(' 207,5', ' 207.5'), anchor='start', op=.6))
+    o.append(P.text(x + 8, ml + 31, 7, D('+ '), L('fc', 'cmp.d.stores'), D(' 1 599,6', ' 1,599.6'), D(' + '), L('fc', 'cmp.d.rounds'), D(' 207,5', ' 207.5'), anchor='start', op=.6))
     o.append(P.text(x + 8, ml + 40, 7, L('fc', 'cmp.d.tail'), anchor='start', op=.6))
     # carburant, leurres, paillettes sur une rangée ; le canon, son libellé dit la masse des obus au plein, sur la sienne
     fy = ml + 50

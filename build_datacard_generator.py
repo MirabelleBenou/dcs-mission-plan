@@ -4232,7 +4232,7 @@ function dgPut(id, mut) {
 }
 function dgUnitsOf(nf) { return (Array.isArray(nf.units) ? nf.units : []).filter(gsIsObj); }
 /* Une unité qui porte des fréquences ou un emport (règle du Flight Configurator : changer son type ou la retirer les perd, avec confirmation) */
-function dgUnitHasData(u) { return impRadioCount(u) > 0 || gsIsObj(u.loadout) || gsIsObj(u.payloadIn); }
+function dgUnitHasData(u) { return impRadioCount(u) > 0 || gsIsObj(u.loadout) || gsIsObj(u.payloadIn) || (gsIsObj(u.props) && Object.keys(u.props).length > 0); }
 
 /* Les champs Appareil et Nombre du groupe et les indicatifs par défaut suivent la fiche, sans refaire l'éditeur (le curseur reste en place) */
 function dgSyncFields(c) {

@@ -172,10 +172,57 @@ MISSION = r'''mission =
     }, -- end of ["coalition"]
 } -- end of mission
 '''
-def make(path):
+def _unit(uid, name, typ, extra=''):
+    return f'''                                    [{uid % 10}] =
+                                    {{
+                                        ["unitId"] = {uid},
+                                        ["name"] = "{name}",
+                                        ["type"] = "{typ}",
+                                        ["skill"] = "Client",
+                                        ["x"] = 100,
+                                        ["y"] = 200,
+                                        ["alt"] = 500,
+                                        ["callsign"] = {{ [1] = 1, [2] = 1, [3] = 1, ["name"] = "Enfield11", }},
+                                        ["onboard_num"] = "0{uid}",
+                                        ["livery_id"] = "standard",
+                                        ["payload"] = {{ ["pylons"] = {{}}, ["fuel"] = 1000, ["flare"] = 0, ["chaff"] = 0, ["gun"] = 100, }}, -- end of ["payload"]
+{extra}                                    }}, -- end of [{uid % 10}]
+'''
+
+
+def _group(gid, name, units):
+    return f'''                            [{gid}] =
+                            {{
+                                ["groupId"] = {gid},
+                                ["name"] = "{name}",
+                                ["task"] = "Transport",
+                                ["frequency"] = 251,
+                                ["modulation"] = 0,
+                                ["x"] = 100,
+                                ["y"] = 200,
+                                ["route"] = {{ ["points"] = {{ [1] = {{ ["type"] = "Turning Point", ["action"] = "Turning Point", ["x"] = 100, ["y"] = 200, ["alt"] = 500, ["alt_type"] = "BARO", ["speed"] = 50, ["task"] = {{ ["id"] = "ComboTask", ["params"] = {{ ["tasks"] = {{}}, }}, }}, }}, }}, }},
+                                ["units"] =
+                                {{
+{units}                                }},
+                            }},
+'''
+
+
+def _props(**kw):
+    body = ''.join('                                            ["%s"] = %s,\n' % (k, 'true' if v is True else 'false' if v is False else v) for k, v in kw.items())
+    return '                                        ["AddPropAircraft"] =\n                                        {\n' + body + '                                        }, -- end of ["AddPropAircraft"]\n'
+
+
+def make(path, mixed=False):
+    """mixed : deux groupes de plus, MIXED (un Mi-8MT puis un Mi-24P à ExhaustScreen = false) et SAME (deux Mi-8MT à AdditionalArmor = false)."""
+    text = MISSION
+    if mixed:
+        tail = '                        },\n                    },\n                },\n            },\n        },\n        ["red"] ='
+        assert text.count(tail) == 1
+        add = (_group(3, 'MIXED', _unit(31, 'MIX-1', 'Mi-8MT', _props(CargoHalfdoor=True)) + _unit(32, 'MIX-2', 'Mi-24P', _props(ExhaustScreen=False)))
+               + _group(4, 'SAME', _unit(41, 'SAM-1', 'Mi-8MT', _props(AdditionalArmor=False)) + _unit(42, 'SAM-2', 'Mi-8MT', _props(AdditionalArmor=False))))
+        text = text.replace(tail, add + tail)
     with zipfile.ZipFile(path, 'w', zipfile.ZIP_DEFLATED) as z:
-        z.writestr('mission', MISSION)
+        z.writestr('mission', text)
         z.writestr('theatre', 'Syria')
         z.writestr('options', 'options = {}\n')
-if __name__ == '__main__':
-    make(sys.argv[1])

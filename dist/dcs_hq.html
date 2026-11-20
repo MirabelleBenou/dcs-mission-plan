@@ -9055,8 +9055,8 @@ function pkBuildGroup(work, fl) {
       }
       unit.Radio = radio;
     }
-    // Options d'équipement : celles par défaut du gabarit du type, les clés du paquet (partie Emport cochée) par-dessus
-    const prop = Object.assign({}, tpl.property_defaults, (fl.chk.loadout && fl.avail.loadout && u.addProp && typeof u.addProp === 'object') ? pkClean(u.addProp) : {});
+    // Options d'équipement : celles par défaut du gabarit du type, les clés du paquet par-dessus (partie Emport cochée et unité du paquet avec emport : les options suivent l'emport)
+    const prop = Object.assign({}, tpl.property_defaults, (fl.chk.loadout && fl.avail.loadout && u.payload && u.addProp && typeof u.addProp === 'object') ? pkClean(u.addProp) : {});
     if (Object.keys(prop).length) unit.AddPropAircraft = JSON.parse(JSON.stringify(prop));
     // Emport : celui du paquet (partie cochée), sinon celui par défaut du type
     if (fl.chk.loadout && fl.avail.loadout && u.payload) unit.payload = pkClean(u.payload);
@@ -9468,10 +9468,10 @@ function pkPlanFlight(ctx, pk, fl, tg) {
       if (tu.payloadPos) { plan.replacements.payloads.push({ unitId: tu.unitId, payload: u.payload }); done.payload++; }
       else warns.push({ key: 'pk.w.payload', args: [name, tu.name] });
     });
-    // Les options d'équipement du paquet (AddPropAircraft), avec l'emport : l'unité garde celles de la mission que le paquet ne nomme pas
+    // Les options d'équipement du paquet (AddPropAircraft) suivent l'emport : pas d'emport, pas d'options ; l'unité garde celles de la mission que le paquet ne nomme pas
     fl.units.forEach((u, i) => {
       const tu = map[i];
-      if (!tu || !okType[i] || !u.addProp) return;
+      if (!tu || !okType[i] || !u.payload || !u.addProp) return;
       const ap = pkClean(u.addProp);
       if (Object.keys(ap).length) plan.replacements.addProps.push({ unitId: tu.unitId, addProp: ap });
     });

@@ -54,7 +54,7 @@ def props_of(miz_path, unit):
     return out
 
 
-def open_hq(p, tmp_path):
+def open_hq(p, tmp_path, mixed=False, package=None):
     shell = 'file://' + str(ROOT / 'dist' / 'dcs_mission_plan.html')
     br = p.chromium.launch(executable_path=str(CHROMIUM), args=['--no-sandbox'])
     ctx = br.new_context(viewport={'width': 1280, 'height': 900}, locale='en-US', accept_downloads=True)
@@ -64,9 +64,9 @@ def open_hq(p, tmp_path):
     pg.click('#card-hq'); pg.wait_for_timeout(1500)
     hq = pg.query_selector('#iframe-hq').content_frame()
     miz = tmp_path / 'essai.miz'
-    miz_fixture.make(str(miz))
+    miz_fixture.make(str(miz), mixed)
     pkg = tmp_path / 'paquet.json'
-    pkg.write_text(json.dumps(PACKAGE), encoding='utf-8')
+    pkg.write_text(json.dumps(package or PACKAGE), encoding='utf-8')
     hq.set_input_files('#miz-file-input', str(miz)); pg.wait_for_timeout(2500)
     return br, pg, hq, pkg
 
@@ -124,3 +124,41 @@ def test_applied_with_the_loadout_part(tmp_path):
     # vol créé : le gabarit du type, les clés du paquet par-dessus
     created = props_of(out2, 'NEWBIRD-1')
     assert created['CargoHalfdoor'] is False and created['AdditionalArmor'] is True and created['ExhaustScreen'] is True and 'RightEngineResource' in created
+
+
+def unit(name, typ, payload, props):
+    # sans emport, sans livrée : seules ses options pourraient s'écrire (une livrée à écrire sur un autre type refuserait déjà l'unité)
+    return {'name': name, 'type': typ, 'callsign': 'Enfield11', 'liveryId': 'standard' if payload else None, 'radios': None, 'payload': payload, 'stand': None, 'AddPropAircraft': props}
+
+
+LOAD = {'chaff': 0, 'flare': 0, 'fuel': '1929', 'gun': 100, 'pylons': {}}
+
+
+def two_unit_flight(name, units):
+    f = flight(name, 'x', 'Mi-8MT', LOAD, {})
+    f['units'] = units
+    return f
+
+
+@needs_pw
+def test_options_follow_the_loadout_a_unit_without_one_writes_nothing(tmp_path):
+    """Une unité du paquet sans emport n'écrit pas ses options : ni sur une unité d'un autre type, ni sur une du même type (celles de la mission restent)."""
+    from playwright.sync_api import sync_playwright
+    package = dict(PACKAGE, flights=[
+        two_unit_flight('MIXED', [unit('MIX-1', 'Mi-8MT', LOAD, {'CargoHalfdoor': False}),
+                                  unit('MIX-2', 'Mi-8MT', None, {'ExhaustScreen': True, 'AdditionalArmor': True})]),
+        two_unit_flight('SAME', [unit('SAM-1', 'Mi-8MT', LOAD, {'AdditionalArmor': True}),
+                                 unit('SAM-2', 'Mi-8MT', None, {'AdditionalArmor': True, 'CargoHalfdoor': False})])])
+    with sync_playwright() as p:
+        br, pg, hq, pkg = open_hq(p, tmp_path, mixed=True, package=package)
+        try:
+            hq.set_input_files('#pk-file-input', str(pkg)); pg.wait_for_timeout(1500)
+            hq.evaluate("document.getElementById('pk-apply-btn').click()"); pg.wait_for_timeout(3000)
+            out = tmp_path / 'sortie.miz'
+            save_miz(pg, hq, out)
+        finally:
+            br.close()
+    assert props_of(out, 'MIX-1') == {'CargoHalfdoor': False}            # le paquet par-dessus la mission
+    assert props_of(out, 'MIX-2') == {'ExhaustScreen': False}            # un Mi-24P : ni écrasé ni complété par les options d'un Mi-8MT
+    assert props_of(out, 'SAM-1') == {'AdditionalArmor': True}
+    assert props_of(out, 'SAM-2') == {'AdditionalArmor': False}          # même type sans emport : l'AddPropAircraft de la mission est inchangé
