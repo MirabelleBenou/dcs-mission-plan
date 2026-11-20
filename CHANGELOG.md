@@ -21,6 +21,7 @@ The sections per tool, further down, keep the history of each tool up to v1.24.0
 - A flight of a package that the mission lacks can now be created: tick “Create this flight in the mission”, pick the country (and the coalition if the package has none) and start in the air or on the ground at the route’s first waypoint. A flight without a route, or mixing helicopters and airplanes, is not created and HQ says why.
 - A created flight now starts as the Flight Configurator set it: on its stands, cold or engines running, or at the route's first waypoint. A stand already taken in the mission is replaced by the nearest free one that fits, which you can change.
 - Applying a flight package keeps what the Flight Configurator does not set in a unit’s loadout: the gun ammunition belt chosen in the mission editor and the restricted weapons stay as they were.
+- Equipment options set in the Flight Configurator are written to each aircraft, in found and created flights; the mission's own options go to the Flight Configurator with the loadout.
 
 #### Flight Configurator
 - In a group of two units or more, the icon at the right of a unit’s header folds or unfolds all the units of the group.
@@ -28,6 +29,7 @@ The sections per tool, further down, keep the history of each tool up to v1.24.0
 - Each radio offers as many channels as the mission editor writes for the type.
 - Exporting a flight without a route now warns that HQ will not be able to create it if the mission lacks it.
 - Each flight can now start from an airfield: pick the departure base, the start (on the stand, cold or engines running; or at the route's first waypoint) and a stand for each aircraft, from a list or on the airfield map drawn by DCS Airfield Charts.
+- The take-off mass now adds up like the DCS mission editor: gun rounds at the gun percentage, and the aircraft's equipment options (IR exhaust suppressors, extra armour, cargo door, water or MW-50 tanks, solo flight…), which you can now set for each aircraft. The gun field only shows on aircraft that have a gun (#6).
 
 #### Briefing Generator
 - Aircraft types are shown under their designation, like in the other tools; the briefing still stores the game’s type name.
@@ -45,6 +47,7 @@ The sections per tool, further down, keep the history of each tool up to v1.24.0
 - A crew line can take any of the 75 types, from the same grouped list with search.
 - On a free datacard, the aircraft type of a crew line can be searched.
 - The airfield's runway list now marks the runway into the wind and those with a tailwind, from the Weather box; a runway chosen with a tailwind of 1 kt or more is flagged under its row.
+- The take-off mass follows the same rule as the Flight Configurator: gun rounds and equipment options count.
 
 #### Field Manual
 - Links in the text take the manual’s ink instead of the browser’s blue; the Route Planner and Flight Configurator drawings show the new behaviour.

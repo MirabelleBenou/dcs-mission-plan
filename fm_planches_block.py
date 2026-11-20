@@ -1054,26 +1054,36 @@ def _fc_loadout_block(P, x, y, w, narrow):
     sym = y + 138 + dy
     o.append(P.tick(x + 8, sym, True))
     o.append(P.text(x + 20, sym + 7, 8, L('fc', 'cmp.sym'), anchor='start'))
-    o.append(P.text(x + 8, sym + 24, 8, L('fc', 'cmp.mass'), D(' 1 600 '), L('fc', 'u.kg'), anchor='start', op=.8))
-    # carburant, leurres, paillettes, canon : deux par rangée (un libellé comme « Carburant (kg) » ne tient pas dans le quart de la largeur au corps 8)
-    fy = y + 168 + dy
-    fwid = (w - 16 - 6) / 2
-    last = None
-    for k, (lab, val) in enumerate(((L('fc', 'lo.fuel', args={'u': 'kg'}), '1701'), (L('fc', 'lo.flare'), '192'), (L('fc', 'lo.chaff'), '0'), (L('fc', 'lo.gun'), '100'))):
-        fx = x + 8 + (k % 2) * (fwid + 6)
-        fyy = fy + (k // 2) * 29
-        o.append(P.lfield(fx, fyy, fwid, [lab], [D(val)], size=8))
-        if k == 3:
-            last = (fx + fwid, fyy + 18)
+    # la masse des emports, la masse au décollage, puis la ligne de détail (l'écran la replie sur la largeur du bloc)
+    ml = sym + 24
+    o.append(P.text(x + 8, ml, 8, L('fc', 'cmp.mass'), D(' 1 600 '), L('fc', 'u.kg'), anchor='start', op=.8))
+    o.append(P.text(x + 8, ml + 11, 8, L('fc', 'cmp.takeoff', args={'y': [D('12 399,5 ', '12,399.5 '), L('fc', 'u.kg')], 'max': D('11 500', '11,500'), 'u': L('fc', 'u.kg')}), anchor='start', op=.8))
+    o.append(P.text(x + 8, ml + 22, 7, L('fc', 'cmp.d.empty'), D(' 8 891', ' 8,891'), L('fc', 'cmp.d.eq'), D(' + '), L('fc', 'cmp.d.fuel'), D(' 1 701', ' 1,701'), anchor='start', op=.6))
+    o.append(P.text(x + 8, ml + 31, 7, D('+ '), L('fc', 'cmp.d.stores'), D(' 1 600', ' 1,600'), D(' + '), L('fc', 'cmp.d.rounds'), D(' 207,5', ' 207.5'), anchor='start', op=.6))
+    o.append(P.text(x + 8, ml + 40, 7, L('fc', 'cmp.d.tail'), anchor='start', op=.6))
+    # carburant, leurres, paillettes sur une rangée ; le canon, son libellé dit la masse des obus au plein, sur la sienne
+    fy = ml + 50
+    fw3 = (w - 16 - 12) / 3
+    for k, (lab, val) in enumerate(((L('fc', 'lo.fuel', args={'u': 'kg'}), '1701'), (L('fc', 'lo.flare'), '192'), (L('fc', 'lo.chaff'), '0'))):
+        o.append(P.lfield(x + 8 + k * (fw3 + 6), fy, fw3, [lab], [D(val)], size=8))
+    gy2 = fy + 29
+    o.append(P.lfield(x + 8, gy2, w - 16, [L('fc', 'lo.gunfull', args={'0': D('207,5', '207.5'), 'u': L('fc', 'u.kg')})], [D('100')], size=8))
+    last = (x + w - 8, gy2 + 18)
+    # l'équipement : le titre, puis la case de l'option du Mi-24P
+    ey = gy2 + 36
+    o.append(P.text(x + 8, ey + 7, 8, L('fc', 'eq.title'), anchor='start', op=.75))
+    o.append(P.tick(x + 8, ey + 14, True))
+    o.append(P.text(x + 20, ey + 21, 8, D('Écran IR des tuyères · 160 ', 'IR exhaust screen · 160 '), L('fc', 'u.kg'), anchor='start', op=.85))
+    eqa = (x + w - 8, ey + 4)
     # Partir de, Garder dans mes presets…
-    py = fy + 64
+    py = ey + 36
     sel = 96 if not narrow else 84
     o.append(P.lfield(x + 8, py, sel, [L('fc', 'cmp.from')], [L('fc', 'cmp.custom')], size=8))
     gw_ = 128 if not narrow else 118
     o.append(P.btn(x + 8 + sel + 6, py + 11, gw_, 15, [L('fc', 'cmp.save')], size=8))
     h = py + 34 - y
     o[0] = sv_box(x, y, w, h)
-    anc = {'head': y + 12, 'sym': (x + 20 + 4.6 * 10 + 4, sym + 4), 'fuel': last, 'save': (x + 8 + sel + 6 + gw_, py + 18)}
+    anc = {'head': y + 12, 'sym': (x + 20 + 4.6 * 10 + 4, sym + 4), 'fuel': last, 'eq': eqa, 'save': (x + 8 + sel + 6 + gw_, py + 18)}
     return o, h, anc
 
 
@@ -1171,7 +1181,8 @@ def _fc_wide(P):
     o.append(P.bubble(13, 640, anc['head'], R1, anc['head']))
     o.append(P.bubble(14, 640, anc['sym'][1], anc['sym'][0], anc['sym'][1]))
     o.append(P.bubble(15, 640, anc['fuel'][1], anc['fuel'][0], anc['fuel'][1]))
-    o.append(P.bubble(16, 640, anc['save'][1], anc['save'][0], anc['save'][1]))
+    o.append(P.bubble(16, 640, anc['eq'][1], anc['eq'][0], anc['eq'][1]))
+    o.append(P.bubble(17, 640, anc['save'][1], anc['save'][0], anc['save'][1]))
     o.append('</g>')
     o.append('</svg>')
     return '\n          '.join(o)
@@ -1265,7 +1276,8 @@ def _fc_tall(P):
     o.append(P.bubble(13, 30, anc['head'], X0, anc['head']))
     o.append(P.bubble(14, 30, anc['sym'][1], anc['sym'][0], anc['sym'][1]))
     o.append(P.bubble(15, 30, anc['fuel'][1], X0 + 8, anc['fuel'][1]))
-    o.append(P.bubble(16, 330, anc['save'][1], anc['save'][0], anc['save'][1]))
+    o.append(P.bubble(16, 330, anc['eq'][1], anc['eq'][0], anc['eq'][1]))
+    o.append(P.bubble(17, 330, anc['save'][1], anc['save'][0], anc['save'][1]))
     o.append('</g>')
     o.append('</svg>')
     return '\n          '.join(o)
@@ -1310,15 +1322,18 @@ def _fc_legend_rows():
          'le bloc parle du groupe de l’unité choisie. Changer de route rouvre le choix, Retirer la vide.',
          'the block is about the chosen unit’s group. Change route reopens the choice, Remove empties it.'),
         (13, [L('fc', 'sec.cmp')],
-         'l’unité choisie, que l’on touche sur sa carte, a son emport affiché ici : la vue de face de l’appareil, avec une case par station et la liste des armes permises. La masse totale et la masse estimée au décollage s’affichent, en orange au-delà du maximum recommandé.',
-         'the chosen unit, which you tap on its card, has its loadout shown here: the aircraft’s front view, with one box per station and the list of permitted weapons. The total mass and the estimated take-off mass are shown, in orange beyond the recommended maximum.'),
+         'l’unité choisie, que l’on touche sur sa carte, a son emport affiché ici : la vue de face de l’appareil, avec une case par station et la liste des armes permises. La masse des emports et la masse au décollage s’affichent, en orange au-delà du maximum recommandé ; dessous, une ligne dit chaque terme de la somme, calculée comme l’éditeur de DCS : l’appareil à vide avec ses options d’équipement, le carburant, les emports, les obus du canon au pourcentage choisi, et la cuve de certains avions. Les leurres et les paillettes ne pèsent rien.',
+         'the chosen unit, which you tap on its card, has its loadout shown here: the aircraft’s front view, with one box per station and the list of permitted weapons. The loadout mass and the take-off mass are shown, in orange beyond the recommended maximum; below, a line gives each term of the sum, worked out like the DCS editor: the empty aircraft with its equipment options, the fuel, the stores, the gun rounds at the chosen percentage, and the tank of some aircraft. Flares and chaff weigh nothing.'),
         (14, [L('fc', 'cmp.sym')],
          'pose sur la station jumelle l’arme miroir. Une arme qui ne peut pas aller avec le reste est grisée, avec les stations qui la gênent ; le Kord du Mi-24P n’a qu’une porte.',
          'places the mirror weapon on the twin station. A weapon that cannot go with the rest is greyed out, with the stations that obstruct it; the Mi-24P’s Kord has only one door.'),
         (15, [L('fc', 'lo.fuel', args={'u': 'kg'}), D(', '), L('fc', 'lo.flare'), D(', '), L('fc', 'lo.chaff'), D(', '), L('fc', 'lo.gun')],
-         'une valeur tapée hors limite est refusée.',
-         'a typed value out of range is refused.'),
-        (16, [L('fc', 'cmp.save')],
+         'une valeur tapée hors limite est refusée. Le champ du canon n’existe que pour un appareil qui en a un ; son libellé dit la masse des obus au plein, et le pourcentage choisi la fait compter dans la masse au décollage.',
+         'a typed value out of range is refused. The gun field only exists for an aircraft that has a gun; its label gives the rounds’ mass when full, and the percentage you choose makes it count in the take-off mass.'),
+        (16, [L('fc', 'eq.title')],
+         ['une case par option que l’éditeur de DCS donne à l’appareil (écran IR des tuyères, blindage, demi-porte cargo…), avec sa masse ; une liste pour les options à plusieurs valeurs, comme le réservoir du Bf 109. Un geste recalcule la masse au même instant. Le paquet de vol porte ces options pour chaque unité (AddPropAircraft) et HQ les écrit dans la mission ; un appareil sans option n’a pas ce bloc.'],
+         ['one box per option that the DCS editor gives the aircraft (IR exhaust screen, extra armour, cargo half-door…), with its mass; a list for the options with several values, like the Bf 109’s tank. A gesture recomputes the mass at once. The flight package carries these options for each unit (AddPropAircraft) and HQ writes them to the mission; an aircraft without options does not have this block.']),
+        (17, [L('fc', 'cmp.save')],
          'enregistre l’emport sous un nom ; « Charger des presets (.lua) » reprend les fichiers de presets de l’escadre ; « Partir de » propose ces presets et une copie de l’emport d’une autre unité du même type.',
          'saves the loadout under a name; “Load presets (.lua)” takes up the wing’s preset files; “Start from” offers those presets and a copy of another unit’s loadout of the same type.'),
     ]

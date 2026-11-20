@@ -1792,6 +1792,8 @@ details.fc-block:not([open]) > .fc-bh { border-bottom: 0; }
 .fc-chip { font-family: var(--f-ui); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; padding: 1px 6px; border: 1px solid var(--khaki); color: var(--khaki-light); white-space: nowrap; }
 .fc-set { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
 .fc-eq { margin-top: 14px; }
+.fc-eq .pk-chk { font-family: var(--f-typewriter); font-weight: 400; font-size: 12px; letter-spacing: 0; text-transform: none; color: var(--paper-light); gap: 8px; }
+.fc-eq .pk-chk::before { content: none; }
 .fc-eq-list { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 6px 22px; margin-top: 2px; }
 .fc-eq-list > .ed-field { flex: 0 1 280px; min-width: 0; }
 .cmp-detail { opacity: .85; margin: 2px 0 8px; }
@@ -3039,7 +3041,7 @@ function ukChoose(g, v) {
 }
 // Un autre module a écrit la clé : les unités affichées la suivent, rien ne s'écrit
 function ukFollow() { const k = ukRead(); ukApply(k.mass, k.distance); }
-// La masse affichée : l'entier arrondi, en kg ou en lb (le kg converti : payloadMassIn)
+// L'unité de masse affichée, kg ou lb (les données restent en kg ; le kg converti : payloadMassIn)
 function massU() { return t(UMASS === 'lb' ? 'u.lb' : 'u.kg'); }
 // Une masse à l'écran : en kg, au dixième près (207,5 ; 12 399,5), en lb entière ; l'espace des milliers et la virgule suivent la langue.
 function massTxt(kg) {
