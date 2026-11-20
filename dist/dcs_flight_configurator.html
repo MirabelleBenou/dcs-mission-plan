@@ -849,9 +849,11 @@ html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-
 .toolbar.tb-st6 .tb-brand-main, .toolbar.tb-st6 .tb-brand-sub, .toolbar.tb-st6 .tb-sep, .toolbar.tb-st6 > .tb-sep.tb-files-end { display: none; }
 .toolbar.tb-st6 .tb-brand-short { display: inline; }
 /* 7 « ⋯ » : si, les six étapes prises, la barre déborde encore, un bouton « ⋯ » paraît au bout droit et ce qui suit le groupe des fichiers et Affichage part dans son menu, le dernier d'abord (data-mp-off : masqué, rien d'autre ne change : id, écouteurs et état restent ceux de l'élément) ;
-   8 les écarts à 2 px et les marges de la barre à 4 px, seulement si tout ce qui peut partir est parti et que la barre déborde encore. Tant que « ⋯ » est là et que tout tient, la barre ne défile pas et ne montre pas de fondu. */
+   8 tout espace entre enfants à 2 px (écarts, marge du ressort, marge de ◄) et la marge intérieure de la barre à 2 px, seulement si tout ce qui peut partir est parti et que la barre déborde encore. Tant que « ⋯ » est là et que tout tient, la barre ne défile pas et ne montre pas de fondu. */
 .toolbar [data-mp-off] { display: none !important; }
-.toolbar.tb-st8 { column-gap: 2px !important; padding-left: 4px !important; padding-right: 4px !important; }
+/* à l'étape 8, tout espace entre deux enfants vaut 2 px : l'écart, la marge du ressort (celle, négative, du Route Planner comprise) et celle de ◄ posée par le shell ; la marge intérieure de la barre vaut 2 px de chaque côté */
+.toolbar.tb-st8 { column-gap: 2px !important; padding-left: 2px !important; padding-right: 2px !important; }
+.toolbar.tb-st8 > * { margin-left: 0 !important; margin-right: 0 !important; }
 .toolbar.tb-st7 { overflow: visible; }
 .toolbar.tb-st7.tb-over { overflow-x: auto; overflow-y: hidden; }
 .toolbar.tb-st7:not(.tb-over)::before, .toolbar.tb-st7:not(.tb-over)::after { display: none !important; }
@@ -14564,7 +14566,7 @@ const UIBAR = { mq: null };
 /* ---- la réduction de la barre : une seule séquence. Elle part de l'état le plus complet et retire, tant que son contenu déborde (scrollWidth > clientWidth), l'étape suivante : 1 le tampon, 2 la version, 3 le libellé d'une liste de la barre (« Théâtre »),
    4 le texte d'Affichage (l'icône seule), 5 le texte des boutons, 6 le titre long. Un outil qui n'a pas l'élément d'une étape (pas de liste, pas d'Affichage) la passe : rien à retirer, la séquence reste la même pour tous.
    Si, les six prises, la barre déborde encore : 7 un bouton « ⋯ » paraît au bout droit et ce qui suit le groupe des fichiers (le dernier enfant qui est .tb-file, .tb-files-end ou #btn-display ; ◄, le sigle et ce groupe ne partent jamais) part dans son menu, un élément à la fois,
-   le dernier de la barre d'abord, jusqu'à ce que tout tienne, « ⋯ » compris ; 8 si tout ce qui peut partir est parti et que la barre déborde encore, les écarts passent à 2 px et les marges de la barre à 4 px.
+   le dernier de la barre d'abord, jusqu'à ce que tout tienne, « ⋯ » compris ; 8 si tout ce qui peut partir est parti et que la barre déborde encore, tout espace entre enfants passe à 2 px (écarts, marge du ressort, marge de ◄) et la marge intérieure de la barre à 2 px.
    Un élément parti n'est que masqué (data-mp-off) : son id, ses écouteurs et son état restent les siens ; sa ligne du menu fait ce qu'il fait.
    Elle s'arrête dès que tout tient. La décision se prend toujours en repartant de l'état complet (classes retirées, éléments remis, ainsi que le fondu du shell, mp-fade-r, sans transition le temps de la mesure) : elle ne dépend que de la largeur, de la langue et du contenu,
    jamais de l'état d'avant, donc pas de bascule en boucle ; une fenêtre plus étroite ne montre jamais plus. Sous 760 px, les six étapes sont toujours prises.

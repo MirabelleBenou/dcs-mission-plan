@@ -63,7 +63,7 @@ bar.appendChild = e => { e.parentNode = bar; bar.children.push(e); return e; };
 bar.querySelectorAll = sel => bar.children.filter(e => e.matches(sel));
 Object.defineProperty(bar, 'clientWidth', { get: () => bar.cw });
 Object.defineProperty(bar, 'scrollWidth', { get: () => {
-  const t8 = bar.classList.contains('tb-st8'), gap = t8 ? 2 : 8, pad = t8 ? 4 : 14;
+  const t8 = bar.classList.contains('tb-st8'), gap = t8 ? 2 : 8, pad = t8 ? 2 : 14;
   const vis = bar.children.filter(e => shown(e) && width(e, bar) > 0);
   const own = pad * 2 + vis.reduce((a, e) => a + width(e, bar), 0) + gap * Math.max(0, vis.length - 1);
   return bar.classList.contains('tb-st7') && !bar.classList.contains('tb-over') ? Math.max(bar.cw, own - pad) : Math.max(bar.cw, own);     /* overflow: visible : la marge de fin ne compte pas */
@@ -204,3 +204,12 @@ def test_le_texte_commun_est_le_meme_dans_les_huit_livrables():
         assert html.count('function uiBarMore(') == 1, f
     # le shell embarque les outils : le texte y est aussi, sous leur forme codée, donc seul le fichier existe à vérifier
     assert (ROOT / 'dist' / 'dcs_mission_plan.html').exists()
+
+
+def test_l_etape_8_serre_tout_espace_entre_enfants_a_2_px():
+    from ui_block import build_bar_css
+    css = build_bar_css()
+    assert '.toolbar.tb-st8 { column-gap: 2px !important; padding-left: 2px !important; padding-right: 2px !important; }' in css
+    assert '.toolbar.tb-st8 > * { margin-left: 0 !important; margin-right: 0 !important; }' in css      # ressort (marge négative du RP comprise) et ◄ (marge posée par le shell)
+    for f in ('dcs_hq.html', 'dcs_route_planner.html', 'dcs_field_manual.html'):
+        assert css in (ROOT / 'dist' / f).read_text(encoding='utf-8'), f
