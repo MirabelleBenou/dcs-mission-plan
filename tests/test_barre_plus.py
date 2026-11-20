@@ -44,19 +44,21 @@ class El {
   get previousElementSibling() { const k = this.parentNode.children, i = k.indexOf(this); return i > 0 ? k[i - 1] : null; }
   get nextElementSibling() { const k = this.parentNode.children, i = k.indexOf(this); return i >= 0 && i < k.length - 1 ? k[i + 1] : null; }
   addEventListener() {} querySelector() { return null; } remove() {}
+  getBoundingClientRect() { return rectOf(this); }
   get hidden() { return !!this.hid; }
   get isConnected() { return true; }
   set textContent(v) { this._t = v; } get textContent() { return this._t || ''; }
 }
+let FRAC = 0;                                  /* une part fractionnaire ajoutée à la largeur des boutons et des listes (le texte réel n'a pas de largeur entière) */
 function width(e, bar) {                     /* la largeur d'un enfant à l'étape où se trouve la barre */
   const c = n => bar.classList.contains(n);
-  if (e.classList.contains('tb-label')) return c('tb-st3') ? 0 : 60;
+  if (e.classList.contains('tb-label')) return c('tb-st3') ? 0 : 60 + FRAC;
   if (e.classList.contains('tb-brand')) return c('tb-st6') ? 34 : 220;
   if (e.classList.contains('tb-sep') || e.classList.contains('tb-files-end')) return c('tb-st6') ? 0 : 1;
   if (e.classList.contains('tb-more-btn') || e.classList.contains('tb-lang-btn') || e.classList.contains('mp-back-injected')) return 44;
-  if (e.classList.contains('tbm-trigger')) return 80;
-  if (e.id === 'btn-display') return c('tb-st4') ? 44 : 120;
-  if (e.classList.contains('tb-btn')) return c('tb-st5') ? 44 : 130;
+  if (e.classList.contains('tbm-trigger')) return 80 + FRAC;
+  if (e.id === 'btn-display') return c('tb-st4') ? 44 : 120 + FRAC;
+  if (e.classList.contains('tb-btn')) return c('tb-st5') ? 44 : 130 + FRAC;
   return e.w;
 }
 function shown(e) { return !('data-mp-off' in e.attrs) && !e.hid && !e.baseNone; }
@@ -75,9 +77,16 @@ function content() {                         /* le bord droit du dernier enfant 
 }
 Object.defineProperty(bar, 'scrollWidth', { get: () => {
   const { pad } = pads(), own = content() + pad;
-  /* barre défilante (celle du shell) : la marge de fin compte ; « visible » (tb-nos, posé une fois la décision prise) : elle ne compte pas */
-  return bar.classList.contains('tb-nos') ? Math.max(bar.cw, own - pad) : Math.max(bar.cw, own);
+  /* barre défilante (celle du shell) : la marge de fin compte ; « visible » (tb-nos, posé une fois la décision prise) : elle ne compte pas ; comme le vrai, scrollWidth est arrondi à l'entier */
+  return Math.round(bar.classList.contains('tb-nos') ? Math.max(bar.cw, own - pad) : Math.max(bar.cw, own));
 } });
+/* les positions, au sous-pixel : les enfants affichés (largeur non nulle) se suivent, la marge de début puis les écarts */
+function rectOf(e) {
+  const { gap, pad } = pads(); let x = pad;
+  for (const k of bar.children) { if (!shown(k) || width(k, bar) <= 0) continue; if (k === e) return { left: x, right: x + width(k, bar), width: width(k, bar) }; x += width(k, bar) + gap; }
+  return { left: 0, right: 0, width: 0 };
+}
+bar.getBoundingClientRect = () => ({ left: 0, right: bar.cw, width: bar.cw });
 function build(kind) {
   const L = [['button', '', ['mp-back-injected'], 44], ['div', '', ['tb-brand'], 220], ['button', 'btn-open', ['tb-btn', 'tb-file'], 130], ['button', 'btn-save', ['tb-btn', 'tb-file'], 130],
     ['button', 'btn-export', ['tb-btn', 'tb-file'], 130], ['div', '', ['tb-sep', 'tb-files-end'], 1], ['button', 'btn-display', ['tb-btn'], 120]];
@@ -89,7 +98,8 @@ function build(kind) {
 }
 globalThis.document = { activeElement: null, querySelector: s => s === '.toolbar' ? bar : null, readyState: 'complete', documentElement: { lang: 'fr' }, createElement: t => new El(t, '', [], 0), addEventListener() {}, body: { appendChild() {} } };
 globalThis.window = { matchMedia: q => ({ matches: bar.narrow }), addEventListener() {} };
-globalThis.getComputedStyle = e => ({ display: shown(e) ? 'block' : 'none', color: '' });
+globalThis.getComputedStyle = e => e === bar ? { paddingRight: pads().pad + 'px', paddingLeft: pads().pad + 'px', borderRightWidth: '0px', borderLeftWidth: '0px', display: 'flex', color: '' }
+  : ({ display: shown(e) && width(e, bar) > 0 ? 'block' : 'none', marginRight: '0px', color: '' });
 bar.cw = 1000; bar.narrow = false;
 build(process.env.KIND || 'normal');
 """
@@ -302,6 +312,61 @@ console.log(JSON.stringify(r));""")
     assert out['langue_parti'] and out['apres']['off'] == out['avant']['off'], out
 
 
+@needs_node
+def test_la_decision_des_etapes_7_et_8_se_prend_au_sous_pixel():
+    """Addendum 3, point 2 : scrollWidth est arrondi à l'entier ; un « ⋯ » qui entre de 0,02 à 0,34 px dans la marge de fin tenait pour la base. La décision des étapes 7 et 8 se prend sur les positions,
+    sans arrondi : le bord droit de « ⋯ » (et du dernier enfant) laisse la marge de fin entière, au sous-pixel, à toute largeur et quelle que soit la part fractionnaire des largeurs de texte."""
+    out = run(SNAP + """
+const r = [];
+for (const f of [0, 0.11, 0.25, 0.37, 0.5, 0.63, 0.9]) {
+  FRAC = f;
+  for (let w = 700; w >= 250; w -= 1) { const s = fit(w, true); r.push([f, w, s, Math.round(content() + pads().pad) <= bar.cw]); }
+}
+console.log(JSON.stringify(r));""")
+    vus = favorise = 0
+    for f, w, s, arrondi in out:
+        if s['st7'] and not s['over']:
+            vus += 1
+            assert s['end'] >= s['padEnd'] - 1e-9, (f, w, s)          # au sous-pixel : la marge de fin est entière
+            assert s['nos'], (f, w, s)
+        if s['st7'] and s['over']:
+            assert s['st8'] and not s['nos'], (f, w, s)                  # il ne tient pas même serré : « tb-over »
+    assert vus > 500, vus
+    # la barre fabriquée sait montrer l'écart : des largeurs où l'arrondi de scrollWidth aurait fait tenir un « ⋯ » entré dans la marge
+    out2 = run(SNAP + """
+const r = [];
+for (const f of [0.11, 0.37, 0.5]) {
+  FRAC = f;
+  for (let w = 700; w >= 250; w -= 1) {
+    const s = fit(w, true);
+    if (!s.st7) continue;
+    /* l'état juste avant le dernier départ : si c'était l'arrondi qui décidait, serait-on resté plus tôt ? */
+    r.push([f, w, s.end, s.padEnd]);
+  }
+}
+console.log(JSON.stringify(r));""")
+    assert any(0 <= end - pad < 1 for f, w, end, pad in out2), 'la barre fabriquée ne passe par aucune largeur où l\'arrondi compterait'
+
+
+@needs_node
+def test_la_decision_a_une_signature_stable():
+    """Addendum 3, point 1 : un recalcul qui garde la même décision (les mêmes éléments dans « ⋯ », la même étape) laisse le menu ouvert ; la signature (UIMORE.sig) le dit."""
+    out = run(SNAP + """
+const r = { stable: [], par_largeur: {} };
+for (let w = 700; w >= 330; w -= 1) {
+  const a = fit(w, true), s1 = UIMORE.sig; fit(w, true); const s2 = UIMORE.sig; fit(w, true); const s3 = UIMORE.sig;
+  r.stable.push([w, s1 === s2 && s2 === s3]);
+  r.par_largeur[w] = s1;
+}
+r.sans_more = (() => { fit(1400, false); return UIMORE.sig; })();
+console.log(JSON.stringify(r));""")
+    assert all(ok for w, ok in out['stable']), [w for w, ok in out['stable'] if not ok]
+    sigs = [out['par_largeur'][str(w)] for w in range(700, 329, -1)]
+    assert len(set(sigs)) >= 4, set(sigs)                                  # elle change avec la décision (étape, éléments partis, étape 8)
+    assert any(a == b for a, b in zip(sigs, sigs[1:])), 'elle ne change pas à chaque largeur'
+    assert out['sans_more'].endswith(':'), out['sans_more']                # sans « ⋯ » : aucun élément parti
+
+
 # ---------- le menu « ⋯ » dans un vrai DOM (Chromium) : une barre fabriquée avec la feuille et les scripts communs de ui_block ----------
 CHROMIUM = Path('/opt/pw-browsers/chromium')
 try:
@@ -314,7 +379,7 @@ FLAG = '<svg viewBox="0 0 20 14" width="20" height="14"><rect width="7" height="
 ICON = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>'
 
 
-def page_html():
+def page_html(extra=''):
     from ui_block import build_bar_css, build_bar_js, build_tbm_block, build_tbm_css
     css = ('<style>:root{--olive-dark:#2c2a1e;--olive-deep:#1f1d14;--olive:#3a3726;--amber:#c0892a;--amber-dark:#8a6420;--paper:#d8c9a5;--khaki:#807454;--khaki-light:#b8a878;--f-ui:sans-serif;--f-typewriter:monospace}'
            'body{margin:0;background:#1f1d14;color:#d8c9a5;font:13px sans-serif}'
@@ -341,7 +406,7 @@ def page_html():
           'document.getElementById("btn-display").addEventListener("click", () => window.clicks.display++);\n'
           'document.getElementById("btn-lang").addEventListener("click", () => window.clicks.lang++);\n'
           'initToolbarMenus([["theatre", () => "Théâtre", undefined, true]]);\n</script>'
-          '<script>' + build_bar_js() + '</script>')
+          + extra + '<script>' + build_bar_js() + '</script>')
     return '<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' + css + '</head><body>' + body + js + '</body></html>'
 
 
@@ -417,6 +482,155 @@ def test_le_menu_dans_un_vrai_dom():
             # 7 : le shell déplace #btn-lang en fin de barre : « ⋯ » revient au bout
             pg.evaluate("() => { const tb = document.querySelector('.toolbar'); tb.appendChild(document.getElementById('btn-lang')); }"); pg.wait_for_timeout(500)
             assert pg.evaluate(state)['last']
+            assert not errs, errs
+            c.close()
+        finally:
+            br.close()
+
+
+FAKE_DSP = r"""<script>
+/* ce que font Affichage, Ouvrir, Exporter dans les modules : un menu qui se ferme au toucher hors de lui (dspOutside, mnOutside) et avale le clic qui suit, sauf sur un de leurs déclencheurs (MENU_TRIG) */
+window.dsp = { open: false, panel: null };
+const dspBtn = document.getElementById('btn-display');
+const dspClose = () => { if (dsp.panel) dsp.panel.remove(); dsp.panel = null; dsp.open = false; dspBtn.setAttribute('aria-expanded', 'false'); };
+dspBtn.addEventListener('click', () => {
+  if (dsp.open) { dspClose(); return; }
+  dsp.panel = document.createElement('div'); dsp.panel.id = 'fake-dsp'; dsp.panel.style.cssText = 'position:fixed;top:300px;left:10px;width:200px;height:120px;background:#2c2a1e;z-index:50';
+  document.body.appendChild(dsp.panel); dsp.open = true; dspBtn.setAttribute('aria-expanded', 'true');
+});
+document.addEventListener('pointerdown', e => {
+  if (!dsp.open) return;
+  const t = e.target;
+  if (dsp.panel.contains(t) || dspBtn.contains(t)) return;
+  const other = t && t.closest ? t.closest('.tbm-trigger, #btn-display') : null;
+  dspClose();
+  if (other) return;
+  tbmSwallowNext();
+}, true);
+</script>"""
+
+
+@pytest.mark.skipif(not HAS_PW, reason='playwright ou chromium absent')
+def test_le_menu_reste_ouvert_tant_que_la_decision_est_la_meme():
+    """Addendum 3, point 1 : un recalcul (police chargée, attribut reposé à la même valeur, contenu de la barre sans effet sur la décision) ne ferme pas le menu « ⋯ » ni la liste ouverte depuis lui ;
+    une décision qui change, le redimensionnement, les gestes prévus le ferment ; un menu resté ouvert pendant que « ⋯ » se déplace reste aligné sur lui."""
+    from playwright.sync_api import sync_playwright
+    html = page_html()
+    with sync_playwright() as p:
+        br = p.chromium.launch(executable_path=str(CHROMIUM), args=['--no-sandbox'])
+        try:
+            def fresh(w=345):
+                c = br.new_context(viewport={'width': w, 'height': 640}, has_touch=True, is_mobile=True)
+                pg = c.new_page()
+                errs = []
+                pg.on('pageerror', lambda e: errs.append(str(e)))
+                pg.set_content(html)
+                pg.wait_for_timeout(500)
+                return c, pg, errs
+            panel = "() => !!document.querySelector('.tb-more-panel')"
+            liste = "() => !!document.querySelector('.tbm-panel:not(.tb-more-panel)')"
+            align = "() => { const p = document.querySelector('.tb-more-panel'); if (!p) return null; return Math.abs(p.getBoundingClientRect().right - document.querySelector('.tb-more-btn').getBoundingClientRect().right); }"
+            align_liste = "() => { const p = document.querySelector('.tbm-panel:not(.tb-more-panel)'); if (!p) return null; return Math.abs(p.getBoundingClientRect().right - document.querySelector('.tb-more-btn').getBoundingClientRect().right); }"
+            noop = ("() => { const e = document.getElementById('btn-open'); e.setAttribute('hidden', ''); e.removeAttribute('hidden'); "
+                    "const d = document.getElementById('btn-display'); d.setAttribute('style', d.getAttribute('style') || ''); d.hidden = false; }")
+            c, pg, errs = fresh(345)
+            sig0 = pg.evaluate("() => UIMORE.sig")
+            pg.locator('.tb-more-btn').tap(); pg.wait_for_timeout(300)
+            assert pg.evaluate(panel)
+            # un recalcul sans changement : la police des lignes qui finit de charger, un attribut reposé à la même valeur (plusieurs fois)
+            for _ in range(3):
+                pg.evaluate("() => document.fonts.dispatchEvent(new Event('loadingdone'))"); pg.wait_for_timeout(120)
+                pg.evaluate(noop); pg.wait_for_timeout(120)
+            pg.wait_for_timeout(600)
+            assert pg.evaluate(panel) and pg.evaluate("() => UIMORE.sig") == sig0
+            assert pg.evaluate("() => document.querySelector('.tb-more-btn').getAttribute('aria-expanded')") == 'true'
+            # le texte d'une ligne change sans que la décision change : la ligne se refait, le menu reste ouvert
+            pg.evaluate("() => { document.querySelector('#btn-clear').disabled = true; }"); pg.wait_for_timeout(400)
+            assert pg.evaluate(panel) and pg.evaluate("() => document.querySelector('.tb-more-panel li[aria-disabled=true]') !== null")
+            pg.evaluate("() => { document.querySelector('#btn-clear').disabled = false; }"); pg.wait_for_timeout(400)
+            assert pg.evaluate(panel) and pg.evaluate("() => document.querySelector('.tb-more-panel li[aria-disabled=true]') === null")
+            # « ⋯ » se déplace pendant que la décision reste la même : le menu reste aligné sur lui
+            x0 = pg.evaluate("() => document.querySelector('.tb-more-btn').getBoundingClientRect().right")
+            pg.evaluate("() => { document.querySelector('.toolbar').style.paddingRight = '18px'; }"); pg.wait_for_timeout(500)
+            x1 = pg.evaluate("() => document.querySelector('.tb-more-btn').getBoundingClientRect().right")
+            assert pg.evaluate("() => UIMORE.sig") == sig0 and x1 < x0 - 3, (x0, x1)
+            assert pg.evaluate(panel) and pg.evaluate(align) <= 0.5
+            pg.evaluate("() => { document.querySelector('.toolbar').style.paddingRight = ''; }"); pg.wait_for_timeout(500)
+            assert pg.evaluate(panel) and pg.evaluate(align) <= 0.5
+            # une décision qui change (un élément sort de « ⋯ ») ferme le menu
+            pg.evaluate("() => { document.getElementById('btn-clear').style.display = 'none'; }"); pg.wait_for_timeout(500)
+            assert not pg.evaluate(panel), 'la décision a changé : le menu se ferme'
+            assert pg.evaluate("() => document.querySelector('.tb-more-btn').getAttribute('aria-expanded')") == 'false'
+            pg.evaluate("() => { document.getElementById('btn-clear').style.display = ''; }"); pg.wait_for_timeout(500)
+            # le redimensionnement ferme le menu
+            pg.locator('.tb-more-btn').tap(); pg.wait_for_timeout(300)
+            assert pg.evaluate(panel)
+            pg.set_viewport_size({'width': 346, 'height': 640}); pg.wait_for_timeout(500)
+            assert not pg.evaluate(panel), 'le redimensionnement ferme le menu'
+            # la liste ouverte depuis le menu suit la même règle : elle reste (et reste alignée sur « ⋯ »), puis se ferme quand la décision change
+            pg.locator('.tb-more-btn').tap(); pg.wait_for_timeout(300)
+            pg.locator('.tb-more-panel li', has_text='Théâtre').first.tap(); pg.wait_for_timeout(400)
+            assert pg.evaluate(liste) and not pg.evaluate(panel)
+            for _ in range(3):
+                pg.evaluate("() => document.fonts.dispatchEvent(new Event('loadingdone'))"); pg.wait_for_timeout(120)
+                pg.evaluate(noop); pg.wait_for_timeout(120)
+            pg.wait_for_timeout(500)
+            assert pg.evaluate(liste), 'la liste ouverte depuis « ⋯ » reste ouverte tant que la décision est la même'
+            pg.evaluate("() => { document.querySelector('.toolbar').style.paddingRight = '18px'; }"); pg.wait_for_timeout(500)
+            assert pg.evaluate(liste) and pg.evaluate(align_liste) <= 0.5
+            pg.evaluate("() => { document.querySelector('.toolbar').style.paddingRight = ''; }"); pg.wait_for_timeout(500)
+            pg.evaluate("() => { document.getElementById('btn-clear').style.display = 'none'; }"); pg.wait_for_timeout(500)
+            assert not pg.evaluate(liste), 'la décision a changé : la liste se ferme aussi'
+            pg.evaluate("() => { document.getElementById('btn-clear').style.display = ''; }"); pg.wait_for_timeout(500)
+            # le redimensionnement ferme la liste (comme avant)
+            pg.locator('.tb-more-btn').tap(); pg.wait_for_timeout(300)
+            pg.locator('.tb-more-panel li', has_text='Théâtre').first.tap(); pg.wait_for_timeout(400)
+            assert pg.evaluate(liste)
+            pg.set_viewport_size({'width': 345, 'height': 640}); pg.wait_for_timeout(500)
+            assert not pg.evaluate(liste) and not pg.evaluate(panel)
+            assert not errs, errs
+            c.close()
+        finally:
+            br.close()
+
+
+@pytest.mark.skipif(not HAS_PW, reason='playwright ou chromium absent')
+def test_un_toucher_sur_more_avec_un_menu_de_module_ouvert_ouvre_le_menu_du_premier_coup():
+    """Addendum 3, point 3 : le menu d'un module (Affichage, Ouvrir, Exporter) ouvert, un toucher sur « ⋯ » ferme ce menu et ouvre « ⋯ » du premier coup (tbmSwallowClick laisse passer « ⋯ ») ;
+    un toucher ailleurs reste avalé."""
+    from playwright.sync_api import sync_playwright
+    html = page_html(FAKE_DSP)
+    with sync_playwright() as p:
+        br = p.chromium.launch(executable_path=str(CHROMIUM), args=['--no-sandbox'])
+        try:
+            c = br.new_context(viewport={'width': 345, 'height': 640}, has_touch=True, is_mobile=True)
+            pg = c.new_page()
+            errs = []
+            pg.on('pageerror', lambda e: errs.append(str(e)))
+            pg.set_content(html); pg.wait_for_timeout(500)
+            panel = "() => !!document.querySelector('.tb-more-panel')"
+            dsp = "() => !!document.getElementById('fake-dsp')"
+            assert pg.evaluate("() => !!document.querySelector('.tb-more-btn') && document.querySelector('.tb-more-btn').getBoundingClientRect().width > 0")
+            pg.locator('#btn-display').tap(); pg.wait_for_timeout(300)
+            assert pg.evaluate(dsp)
+            pg.locator('.tb-more-btn').tap(); pg.wait_for_timeout(400)
+            assert not pg.evaluate(dsp) and pg.evaluate(panel), 'le menu du module se ferme, « ⋯ » s\'ouvre du premier coup'
+            assert pg.evaluate("() => document.querySelector('.tb-more-btn').getAttribute('aria-expanded')") == 'true'
+            pg.wait_for_timeout(1000)
+            assert pg.evaluate(panel)
+            # le menu du module ouvert, un toucher ailleurs (la sonde) : le menu se ferme, le clic est avalé (comme avant)
+            pg.locator('.tb-more-btn').tap(); pg.wait_for_timeout(300)                          # ferme « ⋯ »
+            pg.locator('#btn-display').tap(); pg.wait_for_timeout(300)
+            assert pg.evaluate(dsp)
+            pg.locator('#probe').tap(); pg.wait_for_timeout(500)
+            assert not pg.evaluate(dsp) and pg.evaluate("() => window.clicks.probe") == 0
+            pg.locator('#probe').tap(); pg.wait_for_timeout(300)
+            assert pg.evaluate("() => window.clicks.probe") == 1
+            # le clic avalé ne reste pas armé : « ⋯ » s'ouvre au toucher suivant, puis se referme au suivant
+            pg.locator('.tb-more-btn').tap(); pg.wait_for_timeout(300)
+            assert pg.evaluate(panel)
+            pg.locator('.tb-more-btn').tap(); pg.wait_for_timeout(300)
+            assert not pg.evaluate(panel)
             assert not errs, errs
             c.close()
         finally:
