@@ -1821,7 +1821,7 @@ def _rp_tall(P):
     o.append('<g transform="translate(0,12)">')
     X0, X1 = 62, 298
     w = X1 - X0
-    # ── la barre : pictogrammes seuls, Effacer hors de l'écran (la barre défile) ──
+    # ── la barre : pictogrammes seuls, « ⋯ » au bout droit (le théâtre, Effacer et la langue sont dans son menu) ──
     o.append(sv_box(X0, 62, w, 30))
     o.append(P.btn(X0 + 4, 66, 20, 22, [D('◄')]))
     o.append(P.text(X0 + 30, 81, 8.5, L('rp', 'app.short'), anchor='start', extra=' font-weight="700"'))
@@ -1834,10 +1834,9 @@ def _rp_tall(P):
             o.append(_rp_ico_chev(x + 18, 76))
         bx[key] = (x, bw)
         x += bw + 4
-    o.append(P.field(x, 66, X1 - 4 - x, 22, [L('rp', 'th.Syria', up=True)]))
-    bx['theatre'] = (x, X1 - 4 - x)
-    o.append(f'<rect x="{_n(X1 - 16)}" y="63" width="14" height="28" fill="url(#rpt-fade)" stroke="none"/>')
-    for n, key in ((1, 'open'), (2, 'export'), (3, 'display'), (4, 'theatre')):
+    o.append(P.btn(X1 - 4 - 22, 66, 22, 22, [D('⋯')]))
+    bx['more'] = (X1 - 4 - 22, 22)
+    for n, key in ((1, 'open'), (2, 'export'), (3, 'display'), (4, 'more')):
         cx = bx[key][0] + bx[key][1] / 2
         o.append(P.bubble(n, cx, 48, cx, 66))
     # ── la carte, fixe en haut ───────────────────────────────────────────────────
@@ -1874,9 +1873,7 @@ def _rp_tall(P):
     o.append(P.bubble(7, 30, y4 + 8, a, y4 + 8))
     o.append('</g>')
     o.append('</svg>')
-    o[0] = (P.svg_open('pl-tall', W, PE + 12 + 12, 'L’écran du Route Planner au téléphone, une route ouverte', 'The Route Planner screen on a phone, with a route open', 'rpt')
-            + '<defs><linearGradient id="rpt-fade" x1="0" x2="1"><stop offset="0" stop-color="var(--paper-light)" stop-opacity="0"/>'
-              '<stop offset="1" stop-color="var(--paper-light)" stop-opacity="1"/></linearGradient></defs>')
+    o[0] = P.svg_open('pl-tall', W, PE + 12 + 12, 'L’écran du Route Planner au téléphone, une route ouverte', 'The Route Planner screen on a phone, with a route open', 'rpt')
     return '\n          '.join(o)
 
 
@@ -1892,8 +1889,8 @@ def _rp_legend_rows():
          'règle le fond, les unités et ce que montre la carte ; un point ambre sur le bouton signale un réglage changé. La Carte DCS est grisée là où DCS n’en a pas, et la carte de navigation de Flappie n’existe que sur le Caucase.',
          'sets the base map, the units and what the map shows; an amber dot on the button flags a changed setting. The DCS map is greyed out where DCS has none, and Flappie’s navigation chart exists only on the Caucasus.'),
         (4, [L('rp', 'tb.theatre')],
-         'choisit la carte de DCS. Une route garde son théâtre : en changer masque les routes des autres théâtres, qui reviennent quand on y retourne.',
-         'chooses the DCS map. A route keeps its theatre: changing it hides the other theatres’ routes, which come back when you return.'),
+         'choisit la carte de DCS (au téléphone, sous « ⋯ », avec Effacer et la langue). Une route garde son théâtre : en changer masque les routes des autres théâtres, qui reviennent quand on y retourne.',
+         'chooses the DCS map (on a phone, under “⋯”, with Clear and the language). A route keeps its theatre: changing it hides the other theatres’ routes, which come back when you return.'),
         (5, [L('rp', 'tb.clear')],
          ['efface au choix : ', L('rp', 'clr.one'), ', ', L('rp', 'clr.routes'), ', ', L('rp', 'clr.refs'), ', ', L('rp', 'clr.draw'), ', ', L('rp', 'clr.sym'), ' ou ', L('rp', 'clr.layers'), '.'],
          ['clears, as you choose: ', L('rp', 'clr.one'), ', ', L('rp', 'clr.routes'), ', ', L('rp', 'clr.refs'), ', ', L('rp', 'clr.draw'), ', ', L('rp', 'clr.sym'), ' or ', L('rp', 'clr.layers'), '.']),

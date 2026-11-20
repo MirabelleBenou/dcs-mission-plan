@@ -865,7 +865,7 @@ a[href]:focus-visible, [tabindex]:focus-visible, [role="button"]:focus-visible {
 /* dans la suite, le module laisse le thème à l'accueil : sa liste de thème n'est pas là (le drapeau reste) */
 html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-controls="tbm-list-theme-select"], html.mp-in-shell [aria-controls="tbm-list-theme"] { display: none !important; }
 /* la barre qui manque de place se réduit dans un seul ordre, par la même règle « s'il tient » (uiBarFit, classes tb-st1 à tb-st6, cumulatives) : 1 le tampon de décor (et le tampon posé par le shell), 2 le numéro de version,
-   3 le libellé d'une liste de la barre (« Théâtre »), 4 le texte d'Affichage (l'icône seule), 5 le texte des boutons (icônes seules), 6 le titre long, qui passe au sigle court (titre, sous-titre et séparateurs masqués) ;
+   3 le libellé d'une liste de la barre (« Théâtre »), 4 le texte d'Affichage (l'icône seule), 5 le texte des boutons (icônes seules), 6 le titre long, qui passe au sigle court (titre, sous-titre et séparateurs masqués), 7 « ⋯ » et 8 les écarts serrés (voir plus bas) ;
    aucun seuil de largeur propre à un outil, le Field Manual compris (il prend ce même texte : build_bar_css), ne retire plus rien de cela */
 .toolbar.tb-fit, .toolbar.tb-fit * { transition: none !important; }
 .toolbar.tb-st1 .tb-classif, .toolbar.tb-st1 .mp-wing-stamp { display: none; }
@@ -876,6 +876,27 @@ html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-
 .toolbar.tb-st5 .tb-btn { padding: 0 10px; width: auto; }
 .toolbar.tb-st6 .tb-brand-main, .toolbar.tb-st6 .tb-brand-sub, .toolbar.tb-st6 .tb-sep, .toolbar.tb-st6 > .tb-sep.tb-files-end { display: none; }
 .toolbar.tb-st6 .tb-brand-short { display: inline; }
+/* 7 « ⋯ » : si, les six étapes prises, la barre déborde encore, un bouton « ⋯ » paraît au bout droit et ce qui suit le groupe des fichiers et Affichage part dans son menu, le dernier d'abord (data-mp-off : masqué, rien d'autre ne change : id, écouteurs et état restent ceux de l'élément) ;
+   8 les écarts à 2 px et les marges de la barre à 4 px, seulement si tout ce qui peut partir est parti et que la barre déborde encore. Tant que « ⋯ » est là et que tout tient, la barre ne défile pas et ne montre pas de fondu. */
+.toolbar [data-mp-off] { display: none !important; }
+.toolbar.tb-st8 { column-gap: 2px !important; padding-left: 4px !important; padding-right: 4px !important; }
+.toolbar.tb-st7 { overflow: visible; }
+.toolbar.tb-st7.tb-over { overflow-x: auto; overflow-y: hidden; }
+.toolbar.tb-st7:not(.tb-over)::before, .toolbar.tb-st7:not(.tb-over)::after { display: none !important; }
+.toolbar .tb-btn.tb-more-btn {
+  box-sizing: border-box; flex: 0 0 44px; width: 44px !important; min-width: 44px !important; height: 44px !important; min-height: 44px !important;
+  padding: 0 !important; margin-left: auto; display: inline-flex; align-items: center; justify-content: center;
+  font-size: 22px; line-height: 1; letter-spacing: 0; text-transform: none;
+}
+.toolbar .tb-btn.tb-more-btn[aria-expanded="true"] { border-color: var(--amber) !important; color: var(--amber); }
+.tbm-panel.tb-more-panel { right: auto; }
+.tb-more-panel .tbm-opt { gap: 12px; padding: 0 16px 0 14px; }
+.tb-more-panel .tbm-txt { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.tb-more-ic { flex: none; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; }
+.tb-more-ic svg { display: block; flex: none; }
+.tb-more-ic .tbm-mark { margin: 0; }
+.tb-more-ic svg:not([viewBox="0 0 20 14"]) { width: 18px; height: 18px; }
+.tb-more-chev { flex: none; margin-left: auto; padding-left: 14px; color: var(--khaki); }
 /* la barre au téléphone : sous 760 px, le seuil de la suite, les six étapes de la séquence ci-dessus sont prises ; ces deux règles disent, dès la première peinture et sans attendre le script, ce que les étapes 3 et 4 disent déjà
    (même rendu, elles ne changent rien de plus). Le libellé d'une liste de la barre (« Théâtre ») est masqué (la liste garde son nom accessible) ;
    dans la suite, un bouton de réglage à texte et à icône (Affichage) n'a plus que l'icône (son infobulle et son nom accessible gardent son nom : uiBarDisplaySync) */
@@ -1912,6 +1933,8 @@ const I18N = {
     'ui.restore.refused': 'Restauration impossible : les données ont changé depuis.',
     'ui.foldall': 'Tout replier',
     'ui.unfoldall': 'Tout déplier',
+    'ui.more': 'Autres commandes',
+    'ui.more.lang': 'Langue',
     'ui.fmt': 'Format',
     'ui.pages': 'Pages',
     'ui.fname': 'Nom du fichier',
@@ -2431,6 +2454,8 @@ const I18N = {
     'ui.restore.refused': 'Cannot restore: the data has changed since.',
     'ui.foldall': 'Fold all',
     'ui.unfoldall': 'Unfold all',
+    'ui.more': 'More commands',
+    'ui.more.lang': 'Language',
     'ui.fmt': 'Format',
     'ui.pages': 'Pages',
     'ui.fname': 'File name',
@@ -3083,23 +3108,150 @@ try { if (window.self !== window.top) document.documentElement.classList.add('mp
 const UIBAR = { mq: null };
 /* ---- la réduction de la barre : une seule séquence. Elle part de l'état le plus complet et retire, tant que son contenu déborde (scrollWidth > clientWidth), l'étape suivante : 1 le tampon, 2 la version, 3 le libellé d'une liste de la barre (« Théâtre »),
    4 le texte d'Affichage (l'icône seule), 5 le texte des boutons, 6 le titre long. Un outil qui n'a pas l'élément d'une étape (pas de liste, pas d'Affichage) la passe : rien à retirer, la séquence reste la même pour tous.
-   Elle s'arrête dès que tout tient. La décision se prend toujours en repartant de l'état complet (classes retirées, ainsi que le fondu du shell, mp-fade-r, sans transition le temps de la mesure) : elle ne dépend que de la largeur, de la langue et du contenu,
+   Si, les six prises, la barre déborde encore : 7 un bouton « ⋯ » paraît au bout droit et ce qui suit le groupe des fichiers (le dernier enfant qui est .tb-file, .tb-files-end ou #btn-display ; ◄, le sigle et ce groupe ne partent jamais) part dans son menu, un élément à la fois,
+   le dernier de la barre d'abord, jusqu'à ce que tout tienne, « ⋯ » compris ; 8 si tout ce qui peut partir est parti et que la barre déborde encore, les écarts passent à 2 px et les marges de la barre à 4 px.
+   Un élément parti n'est que masqué (data-mp-off) : son id, ses écouteurs et son état restent les siens ; sa ligne du menu fait ce qu'il fait.
+   Elle s'arrête dès que tout tient. La décision se prend toujours en repartant de l'état complet (classes retirées, éléments remis, ainsi que le fondu du shell, mp-fade-r, sans transition le temps de la mesure) : elle ne dépend que de la largeur, de la langue et du contenu,
    jamais de l'état d'avant, donc pas de bascule en boucle ; une fenêtre plus étroite ne montre jamais plus. Sous 760 px, les six étapes sont toujours prises.
-   Recalculée au chargement, après les polices, au redimensionnement, au changement de langue et quand le contenu de la barre change (un bouton, un tampon qui apparaît). Ce texte est aussi celui du Field Manual (build_bar_js). ---- */
+   Recalculée au chargement, après les polices, au redimensionnement, au changement de langue et quand le contenu de la barre change (un bouton, un tampon qui apparaît) ; le menu de « ⋯ » se ferme alors. Ce texte est aussi celui du Field Manual (build_bar_js). ---- */
 const UISTEPS = ['tb-st1', 'tb-st2', 'tb-st3', 'tb-st4', 'tb-st5', 'tb-st6'];
+const UIMORE = { btn: null, panel: null, units: [], bound: false };
 function uiBarStep(bar, k) { UISTEPS.forEach((c, i) => bar.classList.toggle(c, i < k)); }
+function uiBarLang() { let l = ''; try { l = typeof CURRENT_LANG !== 'undefined' ? CURRENT_LANG : ''; } catch (e) { l = ''; } if (l !== 'fr' && l !== 'en') l = (document.documentElement.lang || 'fr').slice(0, 2).toLowerCase(); return l === 'en' ? 'en' : 'fr'; }
+function uiBarT(key, fr, en) { try { const v = t(key); if (v !== undefined && v !== key) return v; } catch (e) { /* sans t() : le texte de repli */ } return uiBarLang() === 'en' ? en : fr; }
+/* l'étape 7 : ce qui peut partir = les enfants visibles de la barre après le groupe des fichiers (et Affichage) : un bouton, une liste (le bouton qui remplace le <select> masqué, avec son libellé s'il en a un), le bouton de langue */
+function uiBarUnits(bar) {
+  const kids = Array.prototype.slice.call(bar.children), out = [];
+  let from = -1;
+  kids.forEach((e, i) => { if (e.matches('.tb-file, .tb-files-end, #btn-display')) from = i; });
+  if (from < 0) return out;
+  for (let i = from + 1; i < kids.length; i++) {
+    const e = kids[i];
+    if (e.tagName !== 'BUTTON' || e === UIMORE.btn || getComputedStyle(e).display === 'none') continue;
+    if (e.id === 'btn-lang' || e.classList.contains('tb-lang-btn')) out.push({ kind: 'lang', el: e, els: [e] });
+    else if (e.classList.contains('tbm-trigger')) {
+      const p = e.previousElementSibling, lab = p && p.classList.contains('tb-label') ? p : null, sel = e.nextElementSibling;
+      out.push({ kind: 'list', el: e, els: lab ? [lab, e] : [e], lab: lab, sel: sel && sel.tagName === 'SELECT' ? sel : null });
+    } else if (e.classList.contains('tb-btn')) out.push({ kind: 'btn', el: e, els: [e] });
+  }
+  return out;
+}
+function uiBarMoreBtn(bar) {
+  if (UIMORE.btn && UIMORE.btn.parentNode === bar) return UIMORE.btn;
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'tb-btn tb-more-btn'; b.textContent = '⋯';
+  b.setAttribute('aria-haspopup', 'menu'); b.setAttribute('aria-expanded', 'false'); b.setAttribute('data-mp-off', '');
+  b.addEventListener('click', ev => { ev.stopPropagation(); if (UIMORE.panel) uiBarMoreClose(); else uiBarMoreOpen(); });
+  if (!UIMORE.bound) {
+    UIMORE.bound = true;
+    document.addEventListener('pointerdown', ev => { if (UIMORE.panel && !UIMORE.panel.contains(ev.target) && !(UIMORE.btn && UIMORE.btn.contains(ev.target))) uiBarMoreClose(); }, true);
+    document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && UIMORE.panel) { ev.stopPropagation(); uiBarMoreClose(); } }, true);
+  }
+  bar.appendChild(b);
+  UIMORE.btn = b;
+  return b;
+}
+function uiBarMoreClose() {
+  if (UIMORE.panel) { UIMORE.panel.remove(); UIMORE.panel = null; }
+  if (UIMORE.btn) UIMORE.btn.setAttribute('aria-expanded', 'false');
+}
+function uiBarMoreRow(icon, text, chev, disabled, onclick) {
+  const li = document.createElement('li'); li.className = 'tbm-opt'; li.setAttribute('role', 'menuitem');
+  const ic = document.createElement('span'); ic.className = 'tb-more-ic';
+  if (icon) ic.appendChild(icon); else { const m = document.createElement('span'); m.className = 'tbm-mark'; ic.appendChild(m); }
+  const tx = document.createElement('span'); tx.className = 'tbm-txt'; tx.textContent = text;
+  li.appendChild(ic); li.appendChild(tx);
+  if (chev) { const c = document.createElement('span'); c.className = 'tb-more-chev'; c.setAttribute('aria-hidden', 'true'); c.textContent = '▸'; li.appendChild(c); }
+  if (disabled) li.setAttribute('aria-disabled', 'true');
+  li.addEventListener('click', ev => { ev.stopPropagation(); if (!disabled) onclick(); });
+  return li;
+}
+function uiBarFlag(u) {
+  const cur = uiBarLang();
+  let svg = null;
+  try { svg = typeof FLAG_FR !== 'undefined' && typeof FLAG_EN !== 'undefined' ? (cur === 'fr' ? FLAG_FR : FLAG_EN) : null; } catch (e) { svg = null; }
+  if (svg) { const d = document.createElement('div'); d.innerHTML = svg; return d.firstElementChild; }
+  const own = u.el.querySelector('svg'); return own ? own.cloneNode(true) : null;
+}
+function uiBarMoreOpen() {
+  const b = UIMORE.btn;
+  if (UIMORE.panel || !b || b.hasAttribute('data-mp-off') || !UIMORE.units.length) return;
+  const panel = document.createElement('div'); panel.className = 'tbm-panel tb-more-panel'; panel.setAttribute('role', 'menu');
+  const ul = document.createElement('ul'); ul.className = 'tbm-list'; panel.appendChild(ul);
+  const pass = (u, after) => { uiBarMoreClose(); try { b.focus({ preventScroll: true }); } catch (e) { /* sans focus */ } after(); };
+  UIMORE.units.forEach(u => {
+    const e = u.el;
+    if (u.kind === 'lang') {
+      ul.appendChild(uiBarMoreRow(uiBarFlag(u), uiBarT('ui.more.lang', 'Langue', 'Language') + (uiBarLang() === 'en' ? ': ' : ' : ') + uiBarLang().toUpperCase(), false, e.disabled, () => pass(u, () => e.click())));
+    } else if (u.kind === 'list') {
+      const o = u.sel && u.sel.options[u.sel.selectedIndex], name = (u.lab ? u.lab.textContent : e.getAttribute('aria-label') || '').trim();
+      const val = o ? (o.label || o.text) : e.textContent.trim();
+      ul.appendChild(uiBarMoreRow(null, name + (uiBarLang() === 'en' ? ': ' : ' : ') + val, true, e.disabled, () => pass(u, () => {
+        e.click();                                     /* la même liste au thème : elle s'ouvre sous « ⋯ » (le bouton de la liste est masqué) */
+        const p = typeof TBM !== 'undefined' && TBM.cur ? TBM.cur.panel : null;
+        if (p) uiBarMorePlace(p);
+      })));
+    } else {
+      const lab = e.querySelector('.tb-btn-label'), svg = e.querySelector('svg'); let ic = null;
+      if (svg) { ic = svg.cloneNode(true); ic.style.color = getComputedStyle(e).color; }
+      const text = (lab ? lab.textContent : (e.getAttribute('aria-label') || e.title || e.textContent)).trim();
+      ul.appendChild(uiBarMoreRow(ic, text, e.getAttribute('aria-haspopup') === 'menu', e.disabled, () => pass(u, () => e.click())));
+    }
+  });
+  document.body.appendChild(panel);
+  UIMORE.panel = panel;
+  uiBarMorePlace(panel);
+  b.setAttribute('aria-expanded', 'true');
+}
+/* sous « ⋯ », aligné sur son bord droit, entier dans l'écran (8 px des bords), jamais coupé par la barre (le panneau est posé en fin de <body>) */
+function uiBarMorePlace(p) {
+  const r = UIMORE.btn.getBoundingClientRect(), vw = document.documentElement.clientWidth, vh = window.innerHeight, w = p.getBoundingClientRect().width, top = Math.round(r.bottom + 2);
+  p.style.top = top + 'px';
+  p.style.maxHeight = Math.max(60, Math.min(0.62 * vh, 440, vh - top - 8)) + 'px';
+  p.style.left = Math.max(8, Math.min(vw - w - 8, Math.round(r.right - w))) + 'px';
+}
+function uiBarMoreReset(bar) {
+  uiBarMoreClose();
+  Array.prototype.forEach.call(bar.querySelectorAll('[data-mp-off]'), e => e.removeAttribute('data-mp-off'));
+  if (UIMORE.btn) UIMORE.btn.setAttribute('data-mp-off', '');
+  bar.classList.remove('tb-st7', 'tb-st8', 'tb-over');
+  UIMORE.units = [];
+}
+const uiBarFits = bar => bar.scrollWidth <= bar.clientWidth;
+function uiBarMore(bar) {
+  const units = uiBarUnits(bar);
+  if (!units.length) return;
+  const b = uiBarMoreBtn(bar);
+  b.removeAttribute('data-mp-off');
+  b.setAttribute('aria-label', uiBarT('ui.more', 'Autres commandes', 'More commands'));
+  b.title = uiBarT('ui.more', 'Autres commandes', 'More commands');
+  bar.classList.add('tb-st7');
+  bar.classList.remove('mp-fade-r');
+  let n = units.length, fit = false;
+  while (n > 0) {
+    n--;
+    units[n].els.forEach(e => e.setAttribute('data-mp-off', ''));
+    if (uiBarFits(bar)) { fit = true; break; }
+  }
+  if (!fit) { bar.classList.add('tb-st8'); fit = uiBarFits(bar); }       /* tout ce qui peut partir est parti : les écarts se serrent */
+  bar.classList.toggle('tb-over', !fit);
+  UIMORE.units = units.slice(n);
+  if (fit) bar.scrollLeft = 0;
+}
 function uiBarFit() {
   const bar = document.querySelector('.toolbar');
   if (!bar || !bar.clientWidth) return;                 /* un outil masqué (largeur nulle) garde son état */
   let k = UISTEPS.length;
   const fade = bar.classList.contains('mp-fade-r');
   bar.classList.add('tb-fit');                          /* sans transition le temps de la mesure : la largeur lue est celle de l'état final, jamais celle d'une animation en cours */
+  uiBarMoreReset(bar);                                  /* l'état complet : rien de parti, ni « ⋯ », ni écarts serrés */
   if (!(window.matchMedia && window.matchMedia('(max-width: 759px)').matches)) {
     bar.classList.remove('mp-fade-r');
     for (k = 0; k < UISTEPS.length; k++) { uiBarStep(bar, k); if (bar.scrollWidth <= bar.clientWidth) break; }
     if (fade) bar.classList.add('mp-fade-r');
   }
   uiBarStep(bar, k);
+  if (k === UISTEPS.length && bar.scrollWidth > bar.clientWidth) uiBarMore(bar);       /* étapes 7 et 8 : « ⋯ », puis les écarts */
   void bar.scrollWidth;                                 /* l'état final est calculé avant le retour des transitions : rien ne s'anime */
   bar.classList.remove('tb-fit');
   if (typeof uiBarDisplaySync === 'function') uiBarDisplaySync();     /* Affichage réduit à l'icône (étape 4) : son infobulle et son nom accessible suivent */

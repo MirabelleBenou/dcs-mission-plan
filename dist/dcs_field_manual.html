@@ -273,7 +273,7 @@ a.fmnav-ch:focus-visible, a.fmnav-sec:focus-visible { outline-offset: -2px; }
 #btn-lang svg { display: block; }
 .tb-brand-sub { font-weight: 500; }
 /* la barre qui manque de place se réduit dans un seul ordre, par la même règle « s'il tient » (uiBarFit, classes tb-st1 à tb-st6, cumulatives) : 1 le tampon de décor (et le tampon posé par le shell), 2 le numéro de version,
-   3 le libellé d'une liste de la barre (« Théâtre »), 4 le texte d'Affichage (l'icône seule), 5 le texte des boutons (icônes seules), 6 le titre long, qui passe au sigle court (titre, sous-titre et séparateurs masqués) ;
+   3 le libellé d'une liste de la barre (« Théâtre »), 4 le texte d'Affichage (l'icône seule), 5 le texte des boutons (icônes seules), 6 le titre long, qui passe au sigle court (titre, sous-titre et séparateurs masqués), 7 « ⋯ » et 8 les écarts serrés (voir plus bas) ;
    aucun seuil de largeur propre à un outil, le Field Manual compris (il prend ce même texte : build_bar_css), ne retire plus rien de cela */
 .toolbar.tb-fit, .toolbar.tb-fit * { transition: none !important; }
 .toolbar.tb-st1 .tb-classif, .toolbar.tb-st1 .mp-wing-stamp { display: none; }
@@ -284,6 +284,27 @@ a.fmnav-ch:focus-visible, a.fmnav-sec:focus-visible { outline-offset: -2px; }
 .toolbar.tb-st5 .tb-btn { padding: 0 10px; width: auto; }
 .toolbar.tb-st6 .tb-brand-main, .toolbar.tb-st6 .tb-brand-sub, .toolbar.tb-st6 .tb-sep, .toolbar.tb-st6 > .tb-sep.tb-files-end { display: none; }
 .toolbar.tb-st6 .tb-brand-short { display: inline; }
+/* 7 « ⋯ » : si, les six étapes prises, la barre déborde encore, un bouton « ⋯ » paraît au bout droit et ce qui suit le groupe des fichiers et Affichage part dans son menu, le dernier d'abord (data-mp-off : masqué, rien d'autre ne change : id, écouteurs et état restent ceux de l'élément) ;
+   8 les écarts à 2 px et les marges de la barre à 4 px, seulement si tout ce qui peut partir est parti et que la barre déborde encore. Tant que « ⋯ » est là et que tout tient, la barre ne défile pas et ne montre pas de fondu. */
+.toolbar [data-mp-off] { display: none !important; }
+.toolbar.tb-st8 { column-gap: 2px !important; padding-left: 4px !important; padding-right: 4px !important; }
+.toolbar.tb-st7 { overflow: visible; }
+.toolbar.tb-st7.tb-over { overflow-x: auto; overflow-y: hidden; }
+.toolbar.tb-st7:not(.tb-over)::before, .toolbar.tb-st7:not(.tb-over)::after { display: none !important; }
+.toolbar .tb-btn.tb-more-btn {
+  box-sizing: border-box; flex: 0 0 44px; width: 44px !important; min-width: 44px !important; height: 44px !important; min-height: 44px !important;
+  padding: 0 !important; margin-left: auto; display: inline-flex; align-items: center; justify-content: center;
+  font-size: 22px; line-height: 1; letter-spacing: 0; text-transform: none;
+}
+.toolbar .tb-btn.tb-more-btn[aria-expanded="true"] { border-color: var(--amber) !important; color: var(--amber); }
+.tbm-panel.tb-more-panel { right: auto; }
+.tb-more-panel .tbm-opt { gap: 12px; padding: 0 16px 0 14px; }
+.tb-more-panel .tbm-txt { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.tb-more-ic { flex: none; width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; }
+.tb-more-ic svg { display: block; flex: none; }
+.tb-more-ic .tbm-mark { margin: 0; }
+.tb-more-ic svg:not([viewBox="0 0 20 14"]) { width: 18px; height: 18px; }
+.tb-more-chev { flex: none; margin-left: auto; padding-left: 14px; color: var(--khaki); }
 
 /* ── ROOT SCROLL ── */
 #fm-root:focus { outline: none; }
@@ -1867,8 +1888,8 @@ body.zm-open #fm-root { overflow: hidden; }
         <span id="start-5"></span>
         <h3 class="lang-block" data-lang="fr">La barre du haut</h3>
         <h3 class="lang-block" data-lang="en">The top bar</h3>
-        <div class="lang-block" data-lang="fr"><p>La barre est la même dans les six outils : les boutons de fichier juste après le sigle, puis les réglages. Quand la place manque, les boutons <strong>perdent leur texte par étapes</strong>, Affichage d’abord, et gardent leur icône et leur info-bulle ; au téléphone ou à la tablette, tous sont des icônes. Elle défile au doigt quand elle ne tient pas. L’icône à droite de l’en-tête d’une section <strong>replie ou déplie toutes les sections</strong>, dans les six outils ; au téléphone ou à la tablette, l’éditeur du BG et du DG passe en onglets.</p><p>Sous la barre du BG, du RP, du DG et du FC, la <strong>ligne de mission d’HQ</strong> dit quel .miz est ouvert dans HQ, sa date et son heure, et ce que l’outil en prend. Au RP, au DG et au FC, elle passe en rouge, « Non utilisée ici : autre théâtre », quand la mission n’est pas celle du théâtre de l’outil ; au BG, jamais.</p></div>
-        <div class="lang-block" data-lang="en"><p>The bar is the same in all six tools: the file buttons right after the abbreviation, then the settings. When room runs out, the buttons <strong>lose their text in stages</strong>, Display first, and keep their icon and tooltip; on a phone or tablet, all of them are icons. It scrolls by finger when it does not fit. The icon at the right of a section header <strong>folds or unfolds all the sections</strong>, in all six tools; on a phone or tablet, the BG and DG editor switches to tabs.</p><p>Under the bar of the BG, RP, DG and FC, the <strong>HQ mission line</strong> says which .miz is open in HQ, its date and time, and what the tool takes from it. In the RP, DG and FC it turns red, “Not used here: other theatre”, when the mission is not on the tool’s theatre; in the BG, never.</p></div>
+        <div class="lang-block" data-lang="fr"><p>La barre est la même dans les six outils : les boutons de fichier juste après le sigle, puis les réglages. Quand la place manque, les boutons <strong>perdent leur texte par étapes</strong>, Affichage d’abord, et gardent leur icône et leur info-bulle ; au téléphone ou à la tablette, tous sont des icônes. Quand elle ne tient toujours pas, au téléphone, les réglages qui suivent les boutons de fichier et Affichage passent dans « ⋯ », au bout à droite, en commençant par le dernier. L’icône à droite de l’en-tête d’une section <strong>replie ou déplie toutes les sections</strong>, dans les six outils ; au téléphone ou à la tablette, l’éditeur du BG et du DG passe en onglets.</p><p>Sous la barre du BG, du RP, du DG et du FC, la <strong>ligne de mission d’HQ</strong> dit quel .miz est ouvert dans HQ, sa date et son heure, et ce que l’outil en prend. Au RP, au DG et au FC, elle passe en rouge, « Non utilisée ici : autre théâtre », quand la mission n’est pas celle du théâtre de l’outil ; au BG, jamais.</p></div>
+        <div class="lang-block" data-lang="en"><p>The bar is the same in all six tools: the file buttons right after the abbreviation, then the settings. When room runs out, the buttons <strong>lose their text in stages</strong>, Display first, and keep their icon and tooltip; on a phone or tablet, all of them are icons. When it still does not fit, on a phone, the settings after the file buttons and Display move into “⋯”, at the right end, starting with the last one. The icon at the right of a section header <strong>folds or unfolds all the sections</strong>, in all six tools; on a phone or tablet, the BG and DG editor switches to tabs.</p><p>Under the bar of the BG, RP, DG and FC, the <strong>HQ mission line</strong> says which .miz is open in HQ, its date and time, and what the tool takes from it. In the RP, DG and FC it turns red, “Not used here: other theatre”, when the mission is not on the tool’s theatre; in the BG, never.</p></div>
         <span id="start-6"></span>
         <h3 class="lang-block" data-lang="fr">Lire ce manuel au téléphone</h3>
         <h3 class="lang-block" data-lang="en">Reading this manual on a phone</h3>
@@ -3188,7 +3209,7 @@ body.zm-open #fm-root { overflow: hidden; }
           </g>
           </svg>
           <svg class="pl-tall" viewBox="0 0 360 502" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="L’écran du Route Planner au téléphone, une route ouverte" data-aria-fr="L’écran du Route Planner au téléphone, une route ouverte" data-aria-en="The Route Planner screen on a phone, with a route open">
-          <defs><marker id="rpt" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto-start-reverse"><path d="M0,0 L7,3.5 L0,7 Z" fill="currentColor" opacity=".8"/></marker></defs><defs><linearGradient id="rpt-fade" x1="0" x2="1"><stop offset="0" stop-color="var(--paper-light)" stop-opacity="0"/><stop offset="1" stop-color="var(--paper-light)" stop-opacity="1"/></linearGradient></defs>
+          <defs><marker id="rpt" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto-start-reverse"><path d="M0,0 L7,3.5 L0,7 Z" fill="currentColor" opacity=".8"/></marker></defs>
           <text x="180" y="22" font-size="12" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.9" letter-spacing="2.5">L’ÉCRAN DU ROUTE PLANNER</text>
           <text x="180" y="22" font-size="12" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en" opacity="0.9" letter-spacing="2.5">THE ROUTE PLANNER SCREEN</text>
           <text x="180" y="38" font-size="8.5" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.7">au téléphone</text>
@@ -3207,13 +3228,11 @@ body.zm-open #fm-root { overflow: hidden; }
           <path d="M192,76 l3,3 l3,-3" fill="none" stroke="currentColor" stroke-width="1"/>
           <rect x="206" y="66" width="22" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/>
           <path d="M210,77 q7,-7 14,0 q-7,7 -14,0 z" fill="none" stroke="currentColor" stroke-width="1.1"/><circle cx="217" cy="77" r="2" fill="currentColor"/>
-          <rect x="232" y="66" width="62" height="22" rx="1.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/><text x="237" y="80" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.85">SYRIE</text>
-          <text x="237" y="80" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.85">SYRIA</text>
-          <rect x="282" y="63" width="14" height="28" fill="url(#rpt-fade)" stroke="none"/>
+          <rect x="272" y="66" width="22" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/><text x="283" y="80" font-size="8" text-anchor="middle" fill="currentColor">⋯</text>
           <line x1="130" y1="48" x2="130" y2="66" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="130" cy="66" r="1.8" fill="currentColor"/><circle class="sv-box" cx="130" cy="48" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="130" y="51.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">1</text>
           <line x1="188" y1="48" x2="188" y2="66" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="188" cy="66" r="1.8" fill="currentColor"/><circle class="sv-box" cx="188" cy="48" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="188" y="51.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">2</text>
           <line x1="217" y1="48" x2="217" y2="66" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="217" cy="66" r="1.8" fill="currentColor"/><circle class="sv-box" cx="217" cy="48" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="217" y="51.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">3</text>
-          <line x1="263" y1="48" x2="263" y2="66" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="263" cy="66" r="1.8" fill="currentColor"/><circle class="sv-box" cx="263" cy="48" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="263" y="51.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">4</text>
+          <line x1="283" y1="48" x2="283" y2="66" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="283" cy="66" r="1.8" fill="currentColor"/><circle class="sv-box" cx="283" cy="48" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="283" y="51.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">4</text>
           <rect x="62" y="98" width="236" height="220" rx="2" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.8"/>
           <line x1="78" y1="98" x2="78" y2="318" stroke="currentColor" stroke-width=".5" opacity=".18"/>
           <line x1="110" y1="98" x2="110" y2="318" stroke="currentColor" stroke-width=".5" opacity=".18"/>
@@ -3311,7 +3330,7 @@ body.zm-open #fm-root { overflow: hidden; }
           </svg>
           <div class="fm-schema-legend"><span class="lang-block" data-lang="fr">Fig. 1 — L’écran du Route Planner, la route de l’exemple ouverte : la barre, le panneau de la route, puis la carte et ses modes de toucher.</span><span class="lang-block" data-lang="en">Fig. 1 — The Route Planner screen with the example route open: the bar, the route panel, then the map and its tap modes.</span></div>
         </div>
-        <ol class="pl-legend"><li><span class="pl-n">1</span><span class="lang-block" data-lang="fr"><b>Ouvrir ▾</b> — Ouvrir un travail… lit un fichier de travail de la suite ; Ouvrir une route ou des calques… reconnaît une route JSON, un fichier du Route Tool de DCS ou un fichier CombatFlite ; Importer des routes… ouvre la fenêtre d’import commune.</span><span class="lang-block" data-lang="en"><b>Open ▾</b> — Open a work file… reads a suite work file; Open a route or layers… recognises a JSON route, a DCS Route Tool file or a CombatFlite file; Import routes… opens the common import window.</span></li><li><span class="pl-n">2</span><span class="lang-block" data-lang="fr"><b>Exporter ▾</b> — Image pour le briefing… et Route Tool… : voir plus bas. La ligne Route Tool est grisée sur un théâtre sans Route Tool.</span><span class="lang-block" data-lang="en"><b>Export ▾</b> — Image for the briefing… and Route Tool…: see below. The Route Tool line is greyed out on a theatre without a Route Tool.</span></li><li><span class="pl-n">3</span><span class="lang-block" data-lang="fr"><b>Affichage ▾</b> — règle le fond, les unités et ce que montre la carte ; un point ambre sur le bouton signale un réglage changé. La Carte DCS est grisée là où DCS n’en a pas, et la carte de navigation de Flappie n’existe que sur le Caucase.</span><span class="lang-block" data-lang="en"><b>Display ▾</b> — sets the base map, the units and what the map shows; an amber dot on the button flags a changed setting. The DCS map is greyed out where DCS has none, and Flappie’s navigation chart exists only on the Caucasus.</span></li><li><span class="pl-n">4</span><span class="lang-block" data-lang="fr"><b>Théâtre</b> — choisit la carte de DCS. Une route garde son théâtre : en changer masque les routes des autres théâtres, qui reviennent quand on y retourne.</span><span class="lang-block" data-lang="en"><b>Theatre</b> — chooses the DCS map. A route keeps its theatre: changing it hides the other theatres’ routes, which come back when you return.</span></li><li><span class="pl-n">5</span><span class="lang-block" data-lang="fr"><b>Effacer</b> — efface au choix : La route sélectionnée, Toutes les routes, Les points de référence, Les dessins, Les symboles OTAN ou Les calques importés.</span><span class="lang-block" data-lang="en"><b>Clear</b> — clears, as you choose: The selected route, All routes, Reference points, Drawings, NATO symbols or Imported layers.</span></li><li><span class="pl-n">6</span><span class="lang-block" data-lang="fr"><b>Route</b> — en tête, une ligne choisit la route ; + en ajoute une, jusqu’à 12, et … ouvre Dupliquer et Supprimer.</span><span class="lang-block" data-lang="en"><b>Route</b> — at the top, a row chooses the route; + adds one, up to 12, and … opens Duplicate and Delete.</span></li><li><span class="pl-n">7</span><span class="lang-block" data-lang="fr"><b>Groupes…</b> — choisit les groupes qui suivent cette route, ou en crée un ; un groupe ne suit qu’une route, et le Flight Configurator voit le même choix.</span><span class="lang-block" data-lang="en"><b>Groups…</b> — chooses the groups that follow this route, or creates one; a group follows only one route, and the Flight Configurator sees the same choice.</span></li><li><span class="pl-n">8</span><span class="lang-block" data-lang="fr"><b>Les points</b> — un par ligne : nom, altitude, vitesse et référence de l’altitude, SOL ou MER ; ✕ retire le point.</span><span class="lang-block" data-lang="en"><b>The waypoints</b> — one per row: name, altitude, speed and altitude reference, AGL or MSL; ✕ removes the waypoint.</span></li><li><span class="pl-n">9</span><span class="lang-block" data-lang="fr"><b>Ajouter</b> — place un point par ses coordonnées (MGRS, DMS, DDM ou décimal) ou par cap et distance depuis le dernier point ; + Réf. en fait un point de référence.</span><span class="lang-block" data-lang="en"><b>Add</b> — places a waypoint by its coordinates (MGRS, DMS, DDM or decimal) or by heading and distance from the last waypoint; + Ref. makes it a reference point.</span></li><li><span class="pl-n">10</span><span class="lang-block" data-lang="fr"><b>Les autres sections</b> — Points de référence, Calques, Navigation. L’icône à droite d’un en-tête, « Tout replier » ou « Tout déplier », replie toutes les sections ou les déplie toutes. Voir plus bas.</span><span class="lang-block" data-lang="en"><b>The other sections</b> — Reference points, Layers, Navigation. The icon at the right of a header, “Fold all” or “Unfold all”, folds all the sections or unfolds them all. See below.</span></li><li><span class="pl-n">11</span><span class="lang-block" data-lang="fr"><b>Rechercher sur la carte</b> — la loupe cherche un lieu ou un objet nommé.</span><span class="lang-block" data-lang="en"><b>Search the map</b> — the magnifier looks for a named place or object.</span></li><li><span class="pl-n">12</span><span class="lang-block" data-lang="fr"><b>Ce que fait un toucher sur la carte</b> — Le Route Planner s’ouvre en Lire, qui ne pose rien : choisissez Point pour poser la route. Point ajoute un point au bout de la route ; Réf. pose un point de référence ; Lire ne pose rien : un aérodrome ouvre sa fiche, un objet d’un calque montre la sienne ; Dessin ouvre les outils de dessin de vos calques ; Règle mesure cap et distance sans rien poser, et quitter le mode efface la mesure. En Point et en Réf., un aérodrome touché donne un point à son nom.</span><span class="lang-block" data-lang="en"><b>What a tap on the map does</b> — The Route Planner opens in Read, which places nothing: choose Waypoint to lay the route. Waypoint adds a waypoint at the end of the route; Ref. places a reference point; Read places nothing: an airfield opens its sheet, a layer object shows its own; Draw opens the drawing tools of your layers; Ruler measures heading and distance without placing anything, and leaving the mode clears the measure. In Waypoint and Ref., a tapped airfield gives the waypoint its name.</span></li><li><span class="pl-n">13</span><span class="lang-block" data-lang="fr"><b>La route</b> — glissez un point pour le déplacer ; le + posé sur une branche assez longue y insère un point. Les traits des minutes coupent la route toutes les minutes.</span><span class="lang-block" data-lang="en"><b>The route</b> — drag a waypoint to move it; the + on a long enough leg inserts a waypoint there. The minute ticks cut the route every minute.</span></li><li><span class="pl-n">14</span><span class="lang-block" data-lang="fr"><b>Boîtes de branche</b> — écrivent la navigation sur la carte, une par branche : cap, distance, vitesse et ETE.</span><span class="lang-block" data-lang="en"><b>Leg boxes</b> — write the navigation on the map, one per leg: heading, distance, speed and ETE.</span></li></ol>
+        <ol class="pl-legend"><li><span class="pl-n">1</span><span class="lang-block" data-lang="fr"><b>Ouvrir ▾</b> — Ouvrir un travail… lit un fichier de travail de la suite ; Ouvrir une route ou des calques… reconnaît une route JSON, un fichier du Route Tool de DCS ou un fichier CombatFlite ; Importer des routes… ouvre la fenêtre d’import commune.</span><span class="lang-block" data-lang="en"><b>Open ▾</b> — Open a work file… reads a suite work file; Open a route or layers… recognises a JSON route, a DCS Route Tool file or a CombatFlite file; Import routes… opens the common import window.</span></li><li><span class="pl-n">2</span><span class="lang-block" data-lang="fr"><b>Exporter ▾</b> — Image pour le briefing… et Route Tool… : voir plus bas. La ligne Route Tool est grisée sur un théâtre sans Route Tool.</span><span class="lang-block" data-lang="en"><b>Export ▾</b> — Image for the briefing… and Route Tool…: see below. The Route Tool line is greyed out on a theatre without a Route Tool.</span></li><li><span class="pl-n">3</span><span class="lang-block" data-lang="fr"><b>Affichage ▾</b> — règle le fond, les unités et ce que montre la carte ; un point ambre sur le bouton signale un réglage changé. La Carte DCS est grisée là où DCS n’en a pas, et la carte de navigation de Flappie n’existe que sur le Caucase.</span><span class="lang-block" data-lang="en"><b>Display ▾</b> — sets the base map, the units and what the map shows; an amber dot on the button flags a changed setting. The DCS map is greyed out where DCS has none, and Flappie’s navigation chart exists only on the Caucasus.</span></li><li><span class="pl-n">4</span><span class="lang-block" data-lang="fr"><b>Théâtre</b> — choisit la carte de DCS (au téléphone, sous « ⋯ », avec Effacer et la langue). Une route garde son théâtre : en changer masque les routes des autres théâtres, qui reviennent quand on y retourne.</span><span class="lang-block" data-lang="en"><b>Theatre</b> — chooses the DCS map (on a phone, under “⋯”, with Clear and the language). A route keeps its theatre: changing it hides the other theatres’ routes, which come back when you return.</span></li><li><span class="pl-n">5</span><span class="lang-block" data-lang="fr"><b>Effacer</b> — efface au choix : La route sélectionnée, Toutes les routes, Les points de référence, Les dessins, Les symboles OTAN ou Les calques importés.</span><span class="lang-block" data-lang="en"><b>Clear</b> — clears, as you choose: The selected route, All routes, Reference points, Drawings, NATO symbols or Imported layers.</span></li><li><span class="pl-n">6</span><span class="lang-block" data-lang="fr"><b>Route</b> — en tête, une ligne choisit la route ; + en ajoute une, jusqu’à 12, et … ouvre Dupliquer et Supprimer.</span><span class="lang-block" data-lang="en"><b>Route</b> — at the top, a row chooses the route; + adds one, up to 12, and … opens Duplicate and Delete.</span></li><li><span class="pl-n">7</span><span class="lang-block" data-lang="fr"><b>Groupes…</b> — choisit les groupes qui suivent cette route, ou en crée un ; un groupe ne suit qu’une route, et le Flight Configurator voit le même choix.</span><span class="lang-block" data-lang="en"><b>Groups…</b> — chooses the groups that follow this route, or creates one; a group follows only one route, and the Flight Configurator sees the same choice.</span></li><li><span class="pl-n">8</span><span class="lang-block" data-lang="fr"><b>Les points</b> — un par ligne : nom, altitude, vitesse et référence de l’altitude, SOL ou MER ; ✕ retire le point.</span><span class="lang-block" data-lang="en"><b>The waypoints</b> — one per row: name, altitude, speed and altitude reference, AGL or MSL; ✕ removes the waypoint.</span></li><li><span class="pl-n">9</span><span class="lang-block" data-lang="fr"><b>Ajouter</b> — place un point par ses coordonnées (MGRS, DMS, DDM ou décimal) ou par cap et distance depuis le dernier point ; + Réf. en fait un point de référence.</span><span class="lang-block" data-lang="en"><b>Add</b> — places a waypoint by its coordinates (MGRS, DMS, DDM or decimal) or by heading and distance from the last waypoint; + Ref. makes it a reference point.</span></li><li><span class="pl-n">10</span><span class="lang-block" data-lang="fr"><b>Les autres sections</b> — Points de référence, Calques, Navigation. L’icône à droite d’un en-tête, « Tout replier » ou « Tout déplier », replie toutes les sections ou les déplie toutes. Voir plus bas.</span><span class="lang-block" data-lang="en"><b>The other sections</b> — Reference points, Layers, Navigation. The icon at the right of a header, “Fold all” or “Unfold all”, folds all the sections or unfolds them all. See below.</span></li><li><span class="pl-n">11</span><span class="lang-block" data-lang="fr"><b>Rechercher sur la carte</b> — la loupe cherche un lieu ou un objet nommé.</span><span class="lang-block" data-lang="en"><b>Search the map</b> — the magnifier looks for a named place or object.</span></li><li><span class="pl-n">12</span><span class="lang-block" data-lang="fr"><b>Ce que fait un toucher sur la carte</b> — Le Route Planner s’ouvre en Lire, qui ne pose rien : choisissez Point pour poser la route. Point ajoute un point au bout de la route ; Réf. pose un point de référence ; Lire ne pose rien : un aérodrome ouvre sa fiche, un objet d’un calque montre la sienne ; Dessin ouvre les outils de dessin de vos calques ; Règle mesure cap et distance sans rien poser, et quitter le mode efface la mesure. En Point et en Réf., un aérodrome touché donne un point à son nom.</span><span class="lang-block" data-lang="en"><b>What a tap on the map does</b> — The Route Planner opens in Read, which places nothing: choose Waypoint to lay the route. Waypoint adds a waypoint at the end of the route; Ref. places a reference point; Read places nothing: an airfield opens its sheet, a layer object shows its own; Draw opens the drawing tools of your layers; Ruler measures heading and distance without placing anything, and leaving the mode clears the measure. In Waypoint and Ref., a tapped airfield gives the waypoint its name.</span></li><li><span class="pl-n">13</span><span class="lang-block" data-lang="fr"><b>La route</b> — glissez un point pour le déplacer ; le + posé sur une branche assez longue y insère un point. Les traits des minutes coupent la route toutes les minutes.</span><span class="lang-block" data-lang="en"><b>The route</b> — drag a waypoint to move it; the + on a long enough leg inserts a waypoint there. The minute ticks cut the route every minute.</span></li><li><span class="pl-n">14</span><span class="lang-block" data-lang="fr"><b>Boîtes de branche</b> — écrivent la navigation sur la carte, une par branche : cap, distance, vitesse et ETE.</span><span class="lang-block" data-lang="en"><b>Leg boxes</b> — write the navigation on the map, one per leg: heading, distance, speed and ETE.</span></li></ol>
       </div>
 
       <div class="fm-prose">
@@ -4836,23 +4855,150 @@ function initZoom() {
 // ── Réduction de la barre : la séquence commune (ui_block.py) ──
 /* ---- la réduction de la barre : une seule séquence. Elle part de l'état le plus complet et retire, tant que son contenu déborde (scrollWidth > clientWidth), l'étape suivante : 1 le tampon, 2 la version, 3 le libellé d'une liste de la barre (« Théâtre »),
    4 le texte d'Affichage (l'icône seule), 5 le texte des boutons, 6 le titre long. Un outil qui n'a pas l'élément d'une étape (pas de liste, pas d'Affichage) la passe : rien à retirer, la séquence reste la même pour tous.
-   Elle s'arrête dès que tout tient. La décision se prend toujours en repartant de l'état complet (classes retirées, ainsi que le fondu du shell, mp-fade-r, sans transition le temps de la mesure) : elle ne dépend que de la largeur, de la langue et du contenu,
+   Si, les six prises, la barre déborde encore : 7 un bouton « ⋯ » paraît au bout droit et ce qui suit le groupe des fichiers (le dernier enfant qui est .tb-file, .tb-files-end ou #btn-display ; ◄, le sigle et ce groupe ne partent jamais) part dans son menu, un élément à la fois,
+   le dernier de la barre d'abord, jusqu'à ce que tout tienne, « ⋯ » compris ; 8 si tout ce qui peut partir est parti et que la barre déborde encore, les écarts passent à 2 px et les marges de la barre à 4 px.
+   Un élément parti n'est que masqué (data-mp-off) : son id, ses écouteurs et son état restent les siens ; sa ligne du menu fait ce qu'il fait.
+   Elle s'arrête dès que tout tient. La décision se prend toujours en repartant de l'état complet (classes retirées, éléments remis, ainsi que le fondu du shell, mp-fade-r, sans transition le temps de la mesure) : elle ne dépend que de la largeur, de la langue et du contenu,
    jamais de l'état d'avant, donc pas de bascule en boucle ; une fenêtre plus étroite ne montre jamais plus. Sous 760 px, les six étapes sont toujours prises.
-   Recalculée au chargement, après les polices, au redimensionnement, au changement de langue et quand le contenu de la barre change (un bouton, un tampon qui apparaît). Ce texte est aussi celui du Field Manual (build_bar_js). ---- */
+   Recalculée au chargement, après les polices, au redimensionnement, au changement de langue et quand le contenu de la barre change (un bouton, un tampon qui apparaît) ; le menu de « ⋯ » se ferme alors. Ce texte est aussi celui du Field Manual (build_bar_js). ---- */
 const UISTEPS = ['tb-st1', 'tb-st2', 'tb-st3', 'tb-st4', 'tb-st5', 'tb-st6'];
+const UIMORE = { btn: null, panel: null, units: [], bound: false };
 function uiBarStep(bar, k) { UISTEPS.forEach((c, i) => bar.classList.toggle(c, i < k)); }
+function uiBarLang() { let l = ''; try { l = typeof CURRENT_LANG !== 'undefined' ? CURRENT_LANG : ''; } catch (e) { l = ''; } if (l !== 'fr' && l !== 'en') l = (document.documentElement.lang || 'fr').slice(0, 2).toLowerCase(); return l === 'en' ? 'en' : 'fr'; }
+function uiBarT(key, fr, en) { try { const v = t(key); if (v !== undefined && v !== key) return v; } catch (e) { /* sans t() : le texte de repli */ } return uiBarLang() === 'en' ? en : fr; }
+/* l'étape 7 : ce qui peut partir = les enfants visibles de la barre après le groupe des fichiers (et Affichage) : un bouton, une liste (le bouton qui remplace le <select> masqué, avec son libellé s'il en a un), le bouton de langue */
+function uiBarUnits(bar) {
+  const kids = Array.prototype.slice.call(bar.children), out = [];
+  let from = -1;
+  kids.forEach((e, i) => { if (e.matches('.tb-file, .tb-files-end, #btn-display')) from = i; });
+  if (from < 0) return out;
+  for (let i = from + 1; i < kids.length; i++) {
+    const e = kids[i];
+    if (e.tagName !== 'BUTTON' || e === UIMORE.btn || getComputedStyle(e).display === 'none') continue;
+    if (e.id === 'btn-lang' || e.classList.contains('tb-lang-btn')) out.push({ kind: 'lang', el: e, els: [e] });
+    else if (e.classList.contains('tbm-trigger')) {
+      const p = e.previousElementSibling, lab = p && p.classList.contains('tb-label') ? p : null, sel = e.nextElementSibling;
+      out.push({ kind: 'list', el: e, els: lab ? [lab, e] : [e], lab: lab, sel: sel && sel.tagName === 'SELECT' ? sel : null });
+    } else if (e.classList.contains('tb-btn')) out.push({ kind: 'btn', el: e, els: [e] });
+  }
+  return out;
+}
+function uiBarMoreBtn(bar) {
+  if (UIMORE.btn && UIMORE.btn.parentNode === bar) return UIMORE.btn;
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'tb-btn tb-more-btn'; b.textContent = '⋯';
+  b.setAttribute('aria-haspopup', 'menu'); b.setAttribute('aria-expanded', 'false'); b.setAttribute('data-mp-off', '');
+  b.addEventListener('click', ev => { ev.stopPropagation(); if (UIMORE.panel) uiBarMoreClose(); else uiBarMoreOpen(); });
+  if (!UIMORE.bound) {
+    UIMORE.bound = true;
+    document.addEventListener('pointerdown', ev => { if (UIMORE.panel && !UIMORE.panel.contains(ev.target) && !(UIMORE.btn && UIMORE.btn.contains(ev.target))) uiBarMoreClose(); }, true);
+    document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && UIMORE.panel) { ev.stopPropagation(); uiBarMoreClose(); } }, true);
+  }
+  bar.appendChild(b);
+  UIMORE.btn = b;
+  return b;
+}
+function uiBarMoreClose() {
+  if (UIMORE.panel) { UIMORE.panel.remove(); UIMORE.panel = null; }
+  if (UIMORE.btn) UIMORE.btn.setAttribute('aria-expanded', 'false');
+}
+function uiBarMoreRow(icon, text, chev, disabled, onclick) {
+  const li = document.createElement('li'); li.className = 'tbm-opt'; li.setAttribute('role', 'menuitem');
+  const ic = document.createElement('span'); ic.className = 'tb-more-ic';
+  if (icon) ic.appendChild(icon); else { const m = document.createElement('span'); m.className = 'tbm-mark'; ic.appendChild(m); }
+  const tx = document.createElement('span'); tx.className = 'tbm-txt'; tx.textContent = text;
+  li.appendChild(ic); li.appendChild(tx);
+  if (chev) { const c = document.createElement('span'); c.className = 'tb-more-chev'; c.setAttribute('aria-hidden', 'true'); c.textContent = '▸'; li.appendChild(c); }
+  if (disabled) li.setAttribute('aria-disabled', 'true');
+  li.addEventListener('click', ev => { ev.stopPropagation(); if (!disabled) onclick(); });
+  return li;
+}
+function uiBarFlag(u) {
+  const cur = uiBarLang();
+  let svg = null;
+  try { svg = typeof FLAG_FR !== 'undefined' && typeof FLAG_EN !== 'undefined' ? (cur === 'fr' ? FLAG_FR : FLAG_EN) : null; } catch (e) { svg = null; }
+  if (svg) { const d = document.createElement('div'); d.innerHTML = svg; return d.firstElementChild; }
+  const own = u.el.querySelector('svg'); return own ? own.cloneNode(true) : null;
+}
+function uiBarMoreOpen() {
+  const b = UIMORE.btn;
+  if (UIMORE.panel || !b || b.hasAttribute('data-mp-off') || !UIMORE.units.length) return;
+  const panel = document.createElement('div'); panel.className = 'tbm-panel tb-more-panel'; panel.setAttribute('role', 'menu');
+  const ul = document.createElement('ul'); ul.className = 'tbm-list'; panel.appendChild(ul);
+  const pass = (u, after) => { uiBarMoreClose(); try { b.focus({ preventScroll: true }); } catch (e) { /* sans focus */ } after(); };
+  UIMORE.units.forEach(u => {
+    const e = u.el;
+    if (u.kind === 'lang') {
+      ul.appendChild(uiBarMoreRow(uiBarFlag(u), uiBarT('ui.more.lang', 'Langue', 'Language') + (uiBarLang() === 'en' ? ': ' : ' : ') + uiBarLang().toUpperCase(), false, e.disabled, () => pass(u, () => e.click())));
+    } else if (u.kind === 'list') {
+      const o = u.sel && u.sel.options[u.sel.selectedIndex], name = (u.lab ? u.lab.textContent : e.getAttribute('aria-label') || '').trim();
+      const val = o ? (o.label || o.text) : e.textContent.trim();
+      ul.appendChild(uiBarMoreRow(null, name + (uiBarLang() === 'en' ? ': ' : ' : ') + val, true, e.disabled, () => pass(u, () => {
+        e.click();                                     /* la même liste au thème : elle s'ouvre sous « ⋯ » (le bouton de la liste est masqué) */
+        const p = typeof TBM !== 'undefined' && TBM.cur ? TBM.cur.panel : null;
+        if (p) uiBarMorePlace(p);
+      })));
+    } else {
+      const lab = e.querySelector('.tb-btn-label'), svg = e.querySelector('svg'); let ic = null;
+      if (svg) { ic = svg.cloneNode(true); ic.style.color = getComputedStyle(e).color; }
+      const text = (lab ? lab.textContent : (e.getAttribute('aria-label') || e.title || e.textContent)).trim();
+      ul.appendChild(uiBarMoreRow(ic, text, e.getAttribute('aria-haspopup') === 'menu', e.disabled, () => pass(u, () => e.click())));
+    }
+  });
+  document.body.appendChild(panel);
+  UIMORE.panel = panel;
+  uiBarMorePlace(panel);
+  b.setAttribute('aria-expanded', 'true');
+}
+/* sous « ⋯ », aligné sur son bord droit, entier dans l'écran (8 px des bords), jamais coupé par la barre (le panneau est posé en fin de <body>) */
+function uiBarMorePlace(p) {
+  const r = UIMORE.btn.getBoundingClientRect(), vw = document.documentElement.clientWidth, vh = window.innerHeight, w = p.getBoundingClientRect().width, top = Math.round(r.bottom + 2);
+  p.style.top = top + 'px';
+  p.style.maxHeight = Math.max(60, Math.min(0.62 * vh, 440, vh - top - 8)) + 'px';
+  p.style.left = Math.max(8, Math.min(vw - w - 8, Math.round(r.right - w))) + 'px';
+}
+function uiBarMoreReset(bar) {
+  uiBarMoreClose();
+  Array.prototype.forEach.call(bar.querySelectorAll('[data-mp-off]'), e => e.removeAttribute('data-mp-off'));
+  if (UIMORE.btn) UIMORE.btn.setAttribute('data-mp-off', '');
+  bar.classList.remove('tb-st7', 'tb-st8', 'tb-over');
+  UIMORE.units = [];
+}
+const uiBarFits = bar => bar.scrollWidth <= bar.clientWidth;
+function uiBarMore(bar) {
+  const units = uiBarUnits(bar);
+  if (!units.length) return;
+  const b = uiBarMoreBtn(bar);
+  b.removeAttribute('data-mp-off');
+  b.setAttribute('aria-label', uiBarT('ui.more', 'Autres commandes', 'More commands'));
+  b.title = uiBarT('ui.more', 'Autres commandes', 'More commands');
+  bar.classList.add('tb-st7');
+  bar.classList.remove('mp-fade-r');
+  let n = units.length, fit = false;
+  while (n > 0) {
+    n--;
+    units[n].els.forEach(e => e.setAttribute('data-mp-off', ''));
+    if (uiBarFits(bar)) { fit = true; break; }
+  }
+  if (!fit) { bar.classList.add('tb-st8'); fit = uiBarFits(bar); }       /* tout ce qui peut partir est parti : les écarts se serrent */
+  bar.classList.toggle('tb-over', !fit);
+  UIMORE.units = units.slice(n);
+  if (fit) bar.scrollLeft = 0;
+}
 function uiBarFit() {
   const bar = document.querySelector('.toolbar');
   if (!bar || !bar.clientWidth) return;                 /* un outil masqué (largeur nulle) garde son état */
   let k = UISTEPS.length;
   const fade = bar.classList.contains('mp-fade-r');
   bar.classList.add('tb-fit');                          /* sans transition le temps de la mesure : la largeur lue est celle de l'état final, jamais celle d'une animation en cours */
+  uiBarMoreReset(bar);                                  /* l'état complet : rien de parti, ni « ⋯ », ni écarts serrés */
   if (!(window.matchMedia && window.matchMedia('(max-width: 759px)').matches)) {
     bar.classList.remove('mp-fade-r');
     for (k = 0; k < UISTEPS.length; k++) { uiBarStep(bar, k); if (bar.scrollWidth <= bar.clientWidth) break; }
     if (fade) bar.classList.add('mp-fade-r');
   }
   uiBarStep(bar, k);
+  if (k === UISTEPS.length && bar.scrollWidth > bar.clientWidth) uiBarMore(bar);       /* étapes 7 et 8 : « ⋯ », puis les écarts */
   void bar.scrollWidth;                                 /* l'état final est calculé avant le retour des transitions : rien ne s'anime */
   bar.classList.remove('tb-fit');
   if (typeof uiBarDisplaySync === 'function') uiBarDisplaySync();     /* Affichage réduit à l'icône (étape 4) : son infobulle et son nom accessible suivent */

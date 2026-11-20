@@ -12,6 +12,7 @@ The sections per tool, further down, keep the history of each tool up to v1.24.0
 - Drop-down lists are easier to read: their header, the chosen line and the line under the pointer have stronger contrast in every theme.
 - Aircraft types are shown under their designation (F/A-18C rather than FA-18C_hornet); packages, missions and the work file still store the game’s type name.
 - Type lists are grouped (helicopters, then planes) and can be searched.
+- On a phone, the toolbar no longer scrolls: what does not fit moves into a “⋯” menu at its right end, last item first; the back arrow, the abbreviation, the file buttons and Display always stay.
 
 #### HQ
 - The Wing window no longer has an “Application title” field, which no tool used; a Wing configuration that has one still opens and keeps it.
