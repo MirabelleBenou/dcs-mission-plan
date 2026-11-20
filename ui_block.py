@@ -44,12 +44,14 @@ _BAR_CSS = r"""/* la barre qui manque de place se réduit dans un seul ordre, pa
 .toolbar.tb-st6 .tb-brand-main, .toolbar.tb-st6 .tb-brand-sub, .toolbar.tb-st6 .tb-sep, .toolbar.tb-st6 > .tb-sep.tb-files-end { display: none; }
 .toolbar.tb-st6 .tb-brand-short { display: inline; }
 /* 7 « ⋯ » : si, les six étapes prises, la barre déborde encore, un bouton « ⋯ » paraît au bout droit et ce qui suit le groupe des fichiers et Affichage part dans son menu, le dernier d'abord (data-mp-off : masqué, rien d'autre ne change : id, écouteurs et état restent ceux de l'élément) ;
-   8 tout espace entre enfants à 2 px (écarts, marge du ressort, marge de ◄) et la marge intérieure de la barre à 2 px, seulement si tout ce qui peut partir est parti et que la barre déborde encore. Tant que « ⋯ » est là et que tout tient, la barre ne défile pas et ne montre pas de fondu. */
+   8 tout espace entre enfants à 2 px (écarts, marge du ressort, marge de ◄) et la marge intérieure de la barre à 2 px, seulement si tout ce qui peut partir est parti et que la barre déborde encore. Tant que « ⋯ » est là et que tout tient, la barre ne défile pas et ne montre pas de fondu.
+   La décision des étapes 7 et 8 se prend barre défilante, comme celle des étapes 1 à 6 (marge de fin comprise dans scrollWidth) ; « visible » (tb-nos) ne se pose qu'une fois la décision prise et que tout tient. */
 .toolbar [data-mp-off] { display: none !important; }
 /* à l'étape 8, tout espace entre deux enfants vaut 2 px : l'écart, la marge du ressort (celle, négative, du Route Planner comprise) et celle de ◄ posée par le shell ; la marge intérieure de la barre vaut 2 px de chaque côté */
 .toolbar.tb-st8 { column-gap: 2px !important; padding-left: 2px !important; padding-right: 2px !important; }
 .toolbar.tb-st8 > * { margin-left: 0 !important; margin-right: 0 !important; }
-.toolbar.tb-st7 { overflow: visible; }
+.toolbar.tb-st7 { overflow-x: auto; overflow-y: hidden; }
+.toolbar.tb-st7.tb-nos { overflow: visible; }
 .toolbar.tb-st7.tb-over { overflow-x: auto; overflow-y: hidden; }
 .toolbar.tb-st7:not(.tb-over)::before, .toolbar.tb-st7:not(.tb-over)::after { display: none !important; }
 .toolbar .tb-btn.tb-more-btn {
@@ -70,11 +72,12 @@ _BAR_CSS = r"""/* la barre qui manque de place se réduit dans un seul ordre, pa
 
 _BAR_JS = r"""/* ---- la réduction de la barre : une seule séquence. Elle part de l'état le plus complet et retire, tant que son contenu déborde (scrollWidth > clientWidth), l'étape suivante : 1 le tampon, 2 la version, 3 le libellé d'une liste de la barre (« Théâtre »),
    4 le texte d'Affichage (l'icône seule), 5 le texte des boutons, 6 le titre long. Un outil qui n'a pas l'élément d'une étape (pas de liste, pas d'Affichage) la passe : rien à retirer, la séquence reste la même pour tous.
+   La mesure se fait barre défilante (celle du shell), marge de fin comprise ; « ⋯ » reste le dernier enfant de la barre (le shell déplace #btn-lang en fin de barre au chargement de l'outil).
    Si, les six prises, la barre déborde encore : 7 un bouton « ⋯ » paraît au bout droit et ce qui suit le groupe des fichiers (le dernier enfant qui est .tb-file, .tb-files-end ou #btn-display ; ◄, le sigle et ce groupe ne partent jamais) part dans son menu, un élément à la fois,
    le dernier de la barre d'abord, jusqu'à ce que tout tienne, « ⋯ » compris ; 8 si tout ce qui peut partir est parti et que la barre déborde encore, tout espace entre enfants passe à 2 px (écarts, marge du ressort, marge de ◄) et la marge intérieure de la barre à 2 px.
    Un élément parti n'est que masqué (data-mp-off) : son id, ses écouteurs et son état restent les siens ; sa ligne du menu fait ce qu'il fait.
    Elle s'arrête dès que tout tient. La décision se prend toujours en repartant de l'état complet (classes retirées, éléments remis, ainsi que le fondu du shell, mp-fade-r, sans transition le temps de la mesure) : elle ne dépend que de la largeur, de la langue et du contenu,
-   jamais de l'état d'avant, donc pas de bascule en boucle ; une fenêtre plus étroite ne montre jamais plus. Sous 760 px, les six étapes sont toujours prises.
+   jamais de l'état d'avant, donc pas de bascule en boucle ; une fenêtre plus étroite ne garde jamais plus dans la barre qu'une plus large, sauf une exception préexistante : la marge intérieure des modules passe de 8 à 14 px à 480 px, si bien que HQ et FC, à 471-479 px, tiennent sans « ⋯ » alors qu'à 480 px il paraît. Sous 760 px, les six étapes sont toujours prises.
    Recalculée au chargement, après les polices, au redimensionnement, au changement de langue et quand le contenu de la barre change (un bouton, un tampon qui apparaît) ; le menu de « ⋯ » se ferme alors. Ce texte est aussi celui du Field Manual (build_bar_js). ---- */
 const UISTEPS = ['tb-st1', 'tb-st2', 'tb-st3', 'tb-st4', 'tb-st5', 'tb-st6'];
 const UIMORE = { btn: null, panel: null, units: [], bound: false };
@@ -101,17 +104,26 @@ function uiBarUnits(bar) {
 function uiBarMoreBtn(bar) {
   if (UIMORE.btn && UIMORE.btn.parentNode === bar) return UIMORE.btn;
   const b = document.createElement('button');
-  b.type = 'button'; b.className = 'tb-btn tb-more-btn'; b.textContent = '⋯';
+  b.type = 'button'; b.className = 'tb-btn tb-more-btn'; b.id = 'tb-more-btn'; b.textContent = '⋯';
   b.setAttribute('aria-haspopup', 'menu'); b.setAttribute('aria-expanded', 'false'); b.setAttribute('data-mp-off', '');
   b.addEventListener('click', ev => { ev.stopPropagation(); if (UIMORE.panel) uiBarMoreClose(); else uiBarMoreOpen(); });
   if (!UIMORE.bound) {
     UIMORE.bound = true;
-    document.addEventListener('pointerdown', ev => { if (UIMORE.panel && !UIMORE.panel.contains(ev.target) && !(UIMORE.btn && UIMORE.btn.contains(ev.target))) uiBarMoreClose(); }, true);
+    document.addEventListener('pointerdown', uiBarMoreOutside, true);
     document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && UIMORE.panel) { ev.stopPropagation(); uiBarMoreClose(); } }, true);
   }
   bar.appendChild(b);
   UIMORE.btn = b;
   return b;
+}
+/* un toucher hors du menu (et hors de « ⋯ », qui le bascule lui-même) le ferme sans agir sur ce qu'il touche : le clic qui suit est avalé (tbmSwallowNext, comme pour les listes), sauf sur le déclencheur d'une liste, qui s'ouvre par son propre clic */
+function uiBarMoreOutside(ev) {
+  if (!UIMORE.panel) return;
+  const t = ev.target;
+  if (UIMORE.panel.contains(t) || (UIMORE.btn && UIMORE.btn.contains(t))) return;
+  uiBarMoreClose();
+  const other = t && t.closest ? t.closest('.tbm-trigger') : null;
+  if (!other && typeof tbmSwallowNext === 'function') tbmSwallowNext();
 }
 function uiBarMoreClose() {
   if (UIMORE.panel) { UIMORE.panel.remove(); UIMORE.panel = null; }
@@ -138,8 +150,8 @@ function uiBarFlag(u) {
 function uiBarMoreOpen() {
   const b = UIMORE.btn;
   if (UIMORE.panel || !b || b.hasAttribute('data-mp-off') || !UIMORE.units.length) return;
-  const panel = document.createElement('div'); panel.className = 'tbm-panel tb-more-panel'; panel.setAttribute('role', 'menu');
-  const ul = document.createElement('ul'); ul.className = 'tbm-list'; panel.appendChild(ul);
+  const panel = document.createElement('div'); panel.className = 'tbm-panel tb-more-panel';
+  const ul = document.createElement('ul'); ul.className = 'tbm-list'; ul.setAttribute('role', 'menu'); ul.setAttribute('aria-labelledby', b.id); panel.appendChild(ul);       /* le menu est la liste elle-même, nommée par « ⋯ » */
   const pass = (u, after) => { uiBarMoreClose(); try { b.focus({ preventScroll: true }); } catch (e) { /* sans focus */ } after(); };
   UIMORE.units.forEach(u => {
     const e = u.el;
@@ -155,7 +167,7 @@ function uiBarMoreOpen() {
       })));
     } else {
       const lab = e.querySelector('.tb-btn-label'), svg = e.querySelector('svg'); let ic = null;
-      if (svg) { ic = svg.cloneNode(true); ic.style.color = getComputedStyle(e).color; }
+      if (svg) { ic = svg.cloneNode(true); if (!e.disabled) ic.style.color = getComputedStyle(e).color; }       /* une ligne grisée l'est entière : l'icône garde la couleur de la ligne */
       const text = (lab ? lab.textContent : (e.getAttribute('aria-label') || e.title || e.textContent)).trim();
       ul.appendChild(uiBarMoreRow(ic, text, e.getAttribute('aria-haspopup') === 'menu', e.disabled, () => pass(u, () => e.click())));
     }
@@ -165,18 +177,22 @@ function uiBarMoreOpen() {
   uiBarMorePlace(panel);
   b.setAttribute('aria-expanded', 'true');
 }
-/* sous « ⋯ », aligné sur son bord droit, entier dans l'écran (8 px des bords), jamais coupé par la barre (le panneau est posé en fin de <body>) */
+/* sous « ⋯ », aligné sur son bord droit, entier dans l'écran, à la marge de la barre des bords (celle de son remplissage : 2 px à l'étape 8), jamais coupé par la barre (le panneau est posé en fin de <body>) */
 function uiBarMorePlace(p) {
-  const r = UIMORE.btn.getBoundingClientRect(), vw = document.documentElement.clientWidth, vh = window.innerHeight, w = p.getBoundingClientRect().width, top = Math.round(r.bottom + 2);
+  const bar = UIMORE.btn.parentNode, cs = bar ? getComputedStyle(bar) : null;
+  const ml = cs ? parseFloat(cs.paddingLeft) || 0 : 8, mr = cs ? parseFloat(cs.paddingRight) || 0 : 8;
+  const r = UIMORE.btn.getBoundingClientRect(), vw = document.documentElement.clientWidth, vh = window.innerHeight, top = Math.round(r.bottom + 2);
   p.style.top = top + 'px';
   p.style.maxHeight = Math.max(60, Math.min(0.62 * vh, 440, vh - top - 8)) + 'px';
-  p.style.left = Math.max(8, Math.min(vw - w - 8, Math.round(r.right - w))) + 'px';
+  p.style.maxWidth = Math.min(340, vw - ml - mr) + 'px';
+  const w = p.getBoundingClientRect().width;
+  p.style.left = Math.max(ml, Math.min(vw - mr - w, r.right - w)) + 'px';
 }
 function uiBarMoreReset(bar) {
   uiBarMoreClose();
   Array.prototype.forEach.call(bar.querySelectorAll('[data-mp-off]'), e => e.removeAttribute('data-mp-off'));
   if (UIMORE.btn) UIMORE.btn.setAttribute('data-mp-off', '');
-  bar.classList.remove('tb-st7', 'tb-st8', 'tb-over');
+  bar.classList.remove('tb-st7', 'tb-st8', 'tb-over', 'tb-nos');
   UIMORE.units = [];
 }
 const uiBarFits = bar => bar.scrollWidth <= bar.clientWidth;
@@ -187,8 +203,7 @@ function uiBarMore(bar) {
   b.removeAttribute('data-mp-off');
   b.setAttribute('aria-label', uiBarT('ui.more', 'Autres commandes', 'More commands'));
   b.title = uiBarT('ui.more', 'Autres commandes', 'More commands');
-  bar.classList.add('tb-st7');
-  bar.classList.remove('mp-fade-r');
+  bar.classList.add('tb-st7');                           /* la barre défile encore (feuille) : la mesure est celle de la base, marge de fin comprise */
   let n = units.length, fit = false;
   while (n > 0) {
     n--;
@@ -196,26 +211,30 @@ function uiBarMore(bar) {
     if (uiBarFits(bar)) { fit = true; break; }
   }
   if (!fit) { bar.classList.add('tb-st8'); fit = uiBarFits(bar); }       /* tout ce qui peut partir est parti : les écarts se serrent */
-  bar.classList.toggle('tb-over', !fit);
-  UIMORE.units = units.slice(n);
   if (fit) bar.scrollLeft = 0;
+  bar.classList.toggle('tb-over', !fit);
+  bar.classList.toggle('tb-nos', fit);                   /* la décision est prise et tout tient : la barre ne défile plus */
+  UIMORE.units = units.slice(n);
 }
 function uiBarFit() {
   const bar = document.querySelector('.toolbar');
   if (!bar || !bar.clientWidth) return;                 /* un outil masqué (largeur nulle) garde son état */
   let k = UISTEPS.length;
+  const more = UIMORE.btn && UIMORE.btn.parentNode === bar ? UIMORE.btn : null, focused = !!more && document.activeElement === more;
+  if (more && bar.lastElementChild !== more) bar.appendChild(more);       /* « ⋯ » reste le dernier enfant de la barre (le shell déplace #btn-lang après lui) */
   const fade = bar.classList.contains('mp-fade-r');
   bar.classList.add('tb-fit');                          /* sans transition le temps de la mesure : la largeur lue est celle de l'état final, jamais celle d'une animation en cours */
   uiBarMoreReset(bar);                                  /* l'état complet : rien de parti, ni « ⋯ », ni écarts serrés */
+  bar.classList.remove('mp-fade-r');                    /* le fondu du shell n'entre pas dans la mesure, sous 760 px comme au-dessus : la décision ne lit pas l'état d'avant */
   if (!(window.matchMedia && window.matchMedia('(max-width: 759px)').matches)) {
-    bar.classList.remove('mp-fade-r');
     for (k = 0; k < UISTEPS.length; k++) { uiBarStep(bar, k); if (bar.scrollWidth <= bar.clientWidth) break; }
-    if (fade) bar.classList.add('mp-fade-r');
   }
   uiBarStep(bar, k);
   if (k === UISTEPS.length && bar.scrollWidth > bar.clientWidth) uiBarMore(bar);       /* étapes 7 et 8 : « ⋯ », puis les écarts */
+  if (fade && !bar.classList.contains('tb-st7')) bar.classList.add('mp-fade-r');       /* hors de l'étape 7, le fondu du shell revient comme il était */
   void bar.scrollWidth;                                 /* l'état final est calculé avant le retour des transitions : rien ne s'anime */
   bar.classList.remove('tb-fit');
+  if (focused && more.isConnected && !more.hasAttribute('data-mp-off') && document.activeElement !== more) { try { more.focus({ preventScroll: true }); } catch (e) { /* sans focus */ } }       /* le recalcul ne prend pas le focus à « ⋯ » */
   if (typeof uiBarDisplaySync === 'function') uiBarDisplaySync();     /* Affichage réduit à l'icône (étape 4) : son infobulle et son nom accessible suivent */
 }
 function uiBarFitInit() {
@@ -1283,7 +1302,11 @@ function tbmClose(refocus) {
   m.active = -1;
   m.btn.classList.remove('tbm-trigger-open');
   m.btn.setAttribute('aria-expanded', 'false');
-  if (refocus) m.btn.focus({ preventScroll: true });
+  if (refocus) {
+    const gone = m.btn.closest('[data-mp-off]');       /* le déclencheur d'origine est masqué (parti sous « ⋯ ») : le focus revient à « ⋯ » */
+    const f = gone && typeof UIMORE !== 'undefined' && UIMORE.btn && !UIMORE.btn.hasAttribute('data-mp-off') ? UIMORE.btn : m.btn;
+    f.focus({ preventScroll: true });
+  }
 }
 
 /* Un toucher ou un clic hors de la liste et du bouton la ferme, sans agir ailleurs (le clic qui suit est avalé) ;
@@ -1293,7 +1316,7 @@ function tbmOutside(e) {
   if (!m) return;
   const t = e.target;
   if (m.panel.contains(t) || m.btn.contains(t)) return;
-  const other = t && t.closest ? t.closest(TBM.cfg.trig || '.tbm-trigger') : null;
+  const other = t && t.closest ? t.closest((TBM.cfg.trig || '.tbm-trigger') + ', .tb-more-btn') : null;       /* « ⋯ » en est un : un toucher dessus, liste ouverte, ouvre le menu du premier coup */
   tbmClose(false);
   if (other) return;
   tbmSwallowNext();
