@@ -287,9 +287,9 @@ def test_opening_a_package_carries_the_departure():
 def test_restore_flight_reads_junk_as_default():
     stubs = '\n'.join([
         "const isObj = o => !!o && typeof o === 'object' && !Array.isArray(o);", "const str = v => (typeof v === 'string' ? v : '');",
-        "const MAX_UNITS = 8, PAYLOAD_TYPES = ['HeliA', 'PlaneA'];", const_line('FP_STARTS'), "const UNIT_KEYS = ['type', 'name', 'callsign', 'csRaw', 'onboard', 'livery', 'folded', 'radios', 'loadout', 'payloadIn', 'stand'];",
+        "const MAX_UNITS = 8, PAYLOAD_TYPES = ['HeliA', 'PlaneA'];", const_line('FP_STARTS'), "const UNIT_KEYS = ['type', 'name', 'callsign', 'csRaw', 'onboard', 'livery', 'folded', 'radios', 'loadout', 'payloadIn', 'stand', 'props', 'addPropIn'];",
         "const thOk = id => ['Alpha', 'Beta'].indexOf(id) >= 0;", "function newId() { return 'id'; }", "function newUnit(type) { return { type: type, name: '', callsign: '', onboard: '', livery: '', radios: {}, loadout: null, folded: false }; }",
-        "function fcNewUnit(type) { const u = newUnit(type); u.stand = null; return u; }", "function newFlight() { return { fcId: 'n', name: '', coalition: '', route: null, base: null, baseTh: '', start: 'air', units: [] }; }",
+        "function fcNewUnit(type) { const u = newUnit(type); u.stand = null; u.props = {}; return u; }", "function fcPropsRead(type, raw) { return isObj(raw) ? raw : {}; }", "function newFlight() { return { fcId: 'n', name: '', coalition: '', route: null, base: null, baseTh: '', start: 'air', units: [] }; }",
         "function gsRouteCopy(p) { return { points: p }; }", "function ridOk() { return false; }", "function loBring() {}", "function loSnap() { return {}; }", "function loadoutFromPayload() { return null; }",
         fn('restoreFlight')])
     r = subprocess.run([NODE, '-e', stubs + """

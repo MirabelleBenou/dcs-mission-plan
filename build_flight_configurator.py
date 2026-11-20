@@ -655,7 +655,14 @@ I18N_FR = {
     'cmp.offTable': '(hors table)',
     'cmp.sym': 'Symétrique',
     'cmp.mass': 'Masse des emports :',
-    'cmp.takeoff': ' · Au décollage, carburant {f} {u} : {y} (max {max} {u})',
+    'cmp.takeoff': ' · Au décollage : {y} (max {max} {u})',
+    'cmp.d.empty': 'à vide',
+    'cmp.d.eq': ' (équipement compris)',
+    'cmp.d.fuel': 'carburant',
+    'cmp.d.stores': 'emports',
+    'cmp.d.rounds': 'obus',
+    'cmp.d.tank': 'cuve',
+    'cmp.d.tail': ' — comme l’éditeur de DCS ; les leurres ne pèsent rien',
     'cmp.oneOf': 'Une seule porte : retiré de la station {0}',
     'cmp.clash': 'incompatible avec {0}',
     'cmp.rule': 'Incompatible avec la station {0} : {1}',
@@ -705,6 +712,9 @@ I18N_FR = {
     'lo.flare': 'Leurres',
     'lo.chaff': 'Paillettes',
     'lo.gun': 'Canon (%)',
+    'lo.gunfull': 'Canon (%) · plein {0} {u}',
+    'eq.title': 'Équipement · options de l’éditeur de DCS',
+    'eq.full': 'au plein',
     'lo.max': 'max {0}',
     'lo.none.cm': 'Pas de leurres ni de paillettes connus pour ce type.',
     'lo.none.one': 'Pas de limite connue pour : {0}.',
@@ -1040,8 +1050,15 @@ I18N_EN = {
     'cmp.none': '— empty —',
     'cmp.offTable': '(not in table)',
     'cmp.sym': 'Symmetric',
-    'cmp.mass': 'Loadout weight:',
-    'cmp.takeoff': ' · Take-off, fuel {f} {u}: {y} (max {max} {u})',
+    'cmp.mass': 'Loadout mass:',
+    'cmp.takeoff': ' · Take-off: {y} (max {max} {u})',
+    'cmp.d.empty': 'empty',
+    'cmp.d.eq': ' (equipment incl.)',
+    'cmp.d.fuel': 'fuel',
+    'cmp.d.stores': 'stores',
+    'cmp.d.rounds': 'rounds',
+    'cmp.d.tank': 'tank',
+    'cmp.d.tail': ' — as the DCS editor; countermeasures weigh nothing',
     'cmp.oneOf': 'One door only: removed from station {0}',
     'cmp.clash': 'clashes with {0}',
     'cmp.rule': 'Clashes with station {0}: {1}',
@@ -1091,6 +1108,9 @@ I18N_EN = {
     'lo.flare': 'Flares',
     'lo.chaff': 'Chaff',
     'lo.gun': 'Gun (%)',
+    'lo.gunfull': 'Gun (%) · full {0} {u}',
+    'eq.title': 'Equipment · DCS editor options',
+    'eq.full': 'when full',
     'lo.max': 'max {0}',
     'lo.none.cm': 'No flares or chaff known for this type.',
     'lo.none.one': 'No known limit for: {0}.',
@@ -1771,6 +1791,11 @@ details.fc-block:not([open]) > .fc-bh { border-bottom: 0; }
 .cmp-tot .cmp-over { color: var(--mp-warn); }
 .fc-chip { font-family: var(--f-ui); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; padding: 1px 6px; border: 1px solid var(--khaki); color: var(--khaki-light); white-space: nowrap; }
 .fc-set { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
+.fc-eq { margin-top: 14px; }
+.fc-eq-list { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 6px 22px; margin-top: 2px; }
+.fc-eq-list > .ed-field { flex: 0 1 280px; min-width: 0; }
+.cmp-detail { opacity: .85; margin: 2px 0 8px; }
+@media (max-width: 599px) { .fc-eq-list { flex-direction: column; align-items: stretch; } .fc-eq-list > * { flex: 0 0 auto; width: 100%; } }
 .fc-set .ed-field label { font-size: 10px; letter-spacing: 1.2px; }
 .fc-actions .miz-btn { min-height: 44px; width: 100%; justify-content: center; }
 .fc-editor { border: 1px solid var(--fc); border-top: 3px solid var(--fc); background: var(--olive-dark); padding: 12px; display: flex; flex-direction: column; gap: 10px; }
@@ -2337,14 +2362,14 @@ function gsMarkAll() {
 }
 // Une unité de la fiche qui porte encore un emport brut (payloadIn, écrit par le Route Planner à son import) : restoreFlight l'a converti ; GS.seen garde alors le texte lu tel quel.
 // Rend vrai s'il y a un groupe à réécrire : gsFixRaw le fait.
-function gsHasRawLoadout(raw) { return isObj(raw) && Array.isArray(raw.units) && raw.units.some(u => isObj(u) && isObj(u.payloadIn)); }
+function gsHasRawLoadout(raw) { return isObj(raw) && Array.isArray(raw.units) && raw.units.some(u => isObj(u) && (isObj(u.payloadIn) || isObj(u.addPropIn))); }
 function gsMarkRaw() {
   const g = gsRead();
   let any = false;
   if (g) g.flights.forEach(raw => { if (gsHasRawLoadout(raw) && has(GS.seen, raw.fcId)) { GS.seen[raw.fcId] = gsStable(raw); any = true; } });
   return any;
 }
-// Écrit la conversion : la fiche est relue à l'instant, et dans chaque groupe qui porte un emport brut seuls les champs loadout et payloadIn des unités concernées changent
+// Écrit la conversion : la fiche est relue à l'instant, et dans chaque groupe qui porte un emport brut seuls les champs loadout, payloadIn, props et addPropIn des unités concernées changent
 // (jamais route, routeLink ni un autre champ, qu'une copie plus ancienne du module aurait périmés). Un groupe que la fiche a changé depuis la lecture est laissé : son événement storage
 // ramènera le module. Rend faux si une écriture a échoué (GS.seen garde alors le texte brut : la prochaine écriture du module reprend la conversion).
 function gsFixRaw() {
@@ -2360,6 +2385,7 @@ function gsFixRaw() {
     out.units.forEach(u => {
       if (!isObj(u)) return;
       const mu = f.units[i++];
+      if (isObj(u.addPropIn)) { u.props = mu && isObj(mu.props) ? clone(mu.props) : {}; delete u.addPropIn; }       // l'AddPropAircraft brut devient les props de l'unité
       if (!isObj(u.payloadIn)) return;
       u.loadout = mu && mu.loadout ? clone(mu.loadout) : null;
       delete u.payloadIn;
@@ -2495,7 +2521,7 @@ function gsStorage(e) {
 function gsPackFn(r, th) { return gsPackRoute(r, th, rpRead().state.gs); }
 // Un échec d'écriture de la fiche (stockage plein), dit une fois par série d'échecs
 function gsOnSaveFail() { showToast(tf('toast.gsFull'), { type: 'err', ms: 6000 }); }
-const UNIT_KEYS = ['type', 'name', 'callsign', 'csRaw', 'onboard', 'livery', 'folded', 'radios', 'loadout', 'payloadIn', 'stand'];       // payloadIn : l'emport brut d'un import, converti ici et jamais gardé
+const UNIT_KEYS = ['type', 'name', 'callsign', 'csRaw', 'onboard', 'livery', 'folded', 'radios', 'loadout', 'payloadIn', 'stand', 'props', 'addPropIn'];       // payloadIn : l'emport brut d'un import, converti ici et jamais gardé ; addPropIn : l'AddPropAircraft brut d'un import, rangé dans props ici et jamais gardé
 // Un vol de l'état : en v1 (fc_state_v1, fichier de travail d'avant) le type est au vol et chaque unité le prend ; en v2 chaque unité porte le sien.
 // Un vol dont une unité a un type non vide hors de PAYLOAD_TYPES est écarté ; une unité sans type ('' : à choisir) et un groupe sans unité (né au Route Planner) sont valides.
 function restoreFlight(f) {       // un groupe sans fcId en reçoit un par restoreState (gsLegacyIds) ; ici un identifiant au hasard seulement en dernier recours
@@ -2522,6 +2548,7 @@ function restoreFlight(f) {       // un groupe sans fcId en reçoit un par resto
     nu.folded = u.folded === true;          // carte repliée : un état d'écran, gardé avec le travail, jamais dans le paquet
     nu.radios = isObj(u.radios) ? u.radios : {};
     Object.keys(u).forEach(k => { if (UNIT_KEYS.indexOf(k) < 0) nu[k] = u[k]; });       // une clé inconnue d'une unité est gardée telle quelle
+    nu.props = fcPropsRead(nu.type, isObj(u.addPropIn) ? u.addPropIn : u.props);       // les options d'équipement : un import (addPropIn) remplace ; une valeur hors règle redevient le défaut, une clé hors table est gardée
     nu.loadout = (isObj(u.loadout) && isObj(u.loadout.pylons)) ? u.loadout : null;
     if (nu.loadout) loBring(nu.type, k => nu.loadout[k], (k, v) => { nu.loadout[k] = v; });       // un fichier de travail édité : jamais de valeur hors règle
     if (nu.loadout && !nu.loadout.base && !nu.loadout.modified && nu.loadout.key !== '~empty') nu.loadout.base = loSnap(nu.loadout);      // un emport d'avant le lot, non modifié : son contenu présent est sa source     // un fichier de travail édité : jamais de valeur négative
@@ -2546,7 +2573,7 @@ function newId() { return gsNewId(); }       // l'identifiant d'un groupe est ce
 // Chaque vol porte un fcId stable, jamais écrit dans le paquet : un vol renommé reste le même vol pour les liens avec le Route Planner et le Datacard Generator.
 const DEFAULT_TYPE = 'Mi-24P';      // la première unité d'un vol neuf ; une unité ajoutée prend le type de la dernière de son vol
 // newUnit(type) et csText(v) sont définis par le bloc d'import commun ; sans type donné, le type par défaut (Mi-24P) ; '' : une unité sans type.
-function fcNewUnit(type) { const u = newUnit(type); u.stand = null; return u; }       // une unité du module porte toujours sa place (null : aucune)
+function fcNewUnit(type) { const u = newUnit(type); u.stand = null; u.props = {}; return u; }       // une unité du module porte toujours sa place (null : aucune) et ses options d'équipement (props : { id: valeur } ; {} : les défauts du jeu)
 function newFlight() { return { fcId: newId(), name: '', coalition: '', route: null, base: null, baseTh: '', start: 'air', units: [fcNewUnit()] }; }
 
 function flightLabel(f, fi) { return f.name.trim() || tf('fl.title', fi + 1); }
@@ -2663,8 +2690,68 @@ function chargeRule(cl) {
   return t('set.charge').replace('{fs}', w(cl.fs)).replace('{cs}', w(cl.cs)).replace('{n}', cl.total);
 }
 // Un type porte des paillettes quand la charge qu'on en donne (chargeLimit) pèse quelque chose (cs > 0) ; sans plafond dans la table, quand son nombre par défaut est au-dessus de 0.
-// Le canon : une donnée par type, le plein par défaut (payloadDefaults.gun, un nombre) ; un type sans cette donnée n'a pas de curseur ni de champ canon.
-function loHasGun(type) { return typeof payloadDefaults(type).gun === 'number'; }
+// Le canon : un type n'a de curseur et de champ canon que s'il a des obus (AmmoWeight de la table des masses > 0), comme l'éditeur de DCS ; le plein par défaut est payloadDefaults.gun (100).
+function loHasGun(type) { return has(AIRCRAFT_MASSES, type) && AIRCRAFT_MASSES[type].ammo > 0; }
+// ----- Équipement : les options d'appareil de l'éditeur de DCS (AddPropAircraft) -----
+// La table des masses (data/aircraft_masses.json) porte, pour un type qui en a, la liste de ses options qui pèsent : une case (kind 'check', def : booléen, weight ou weightWhenOn) ou une liste (kind 'list', def : l'id d'une valeur,
+// values : { id, label, weightWhenOn ou weightDependentOfFuel }). Une unité porte props = { id: valeur } : une case est un booléen, une liste l'id d'une valeur ; ce qui manque vaut le défaut du jeu.
+// La masse est celle de payloadTakeoff (payload_block.py), le même calcul que l'éditeur et le Datacard Generator.
+function eqOptions(type) { return has(AIRCRAFT_MASSES, type) && Array.isArray(AIRCRAFT_MASSES[type].options) ? AIRCRAFT_MASSES[type].options : []; }
+// Une valeur lue (état, fichier de travail, import) : hors règle (case non booléenne, id de liste inconnu), l'option redevient son défaut (la clé s'en va) ; une clé que la table ne connaît pas est gardée telle quelle.
+function fcPropsRead(type, raw) {
+  const out = isObj(raw) ? clone(raw) : {};
+  eqOptions(type).forEach(o => {
+    if (!has(out, o.id)) return;
+    const v = out[o.id];
+    if (o.kind === 'list' ? !o.values.some(x => x.id === v) : typeof v !== 'boolean') delete out[o.id];
+  });
+  return out;
+}
+// Les options d'un type avec leur valeur : un booléen (case) ou l'id d'une valeur (liste) ; toutes, dans l'ordre du jeu.
+function eqValue(o, props) { const c = payloadOptionChoice(o, props); return o.kind === 'list' ? (c.value ? c.value.id : o.def) : c.on; }
+// L'AddPropAircraft d'une unité pour le paquet : toutes les options de la table avec leur valeur, puis les clés hors table gardées ; absent (null) pour un type sans option.
+function unitPropsOut(u) {
+  const opts = eqOptions(u.type);
+  if (!opts.length) return null;
+  const out = {}, ids = {};
+  opts.forEach(o => { out[o.id] = eqValue(o, u.props); ids[o.id] = true; });
+  Object.keys(isObj(u.props) ? u.props : {}).forEach(k => { if (!has(ids, k)) out[k] = u.props[k]; });
+  return out;
+}
+const EQ_FR = {
+  ExhaustScreen: 'Écran IR des tuyères', AdditionalArmor: 'Blindage additionnel', CargoHalfdoor: 'Demi-porte cargo', DustProtectionDevices: 'Filtres à sable (EAPS)',
+  'Remove doors': 'Portes retirées', PDU: 'Afficheur pilote (PDU)', 'MMS removal': 'Viseur de mât retiré (MMS)', ALQ144: 'Brouilleur IR AN/ALQ-144', LoadWater: 'Eau embarquée (500 lb)',
+  MW50TankContents: 'Réservoir MW / carburant', FW_MW50TankContents: 'Réservoir MW / carburant', WaterTankContents: 'Réservoir d’eau', SoloFlight: 'Vol solo',
+  needsGCAlign: 'Avion froid : alignement GC requis', InitAlertStatus: 'Avion froid en alerte', landingTorch: 'Phare d’atterrissage', AARProbe: 'Perche de ravitaillement retirée',
+  MountSIRENA: 'Détecteur SPO-2 Sirena monté'
+};
+const EQ_VAL_FR = { Empty: 'Vide', 'MW-50 Mix': 'Mélange MW-50', 'B-4 Gasoline': 'Essence B-4', 'Additional fuel': 'Carburant supplémentaire', Water: 'Eau' };
+function eqLabel(o) { return CURRENT_LANG === 'fr' && has(EQ_FR, o.id) ? EQ_FR[o.id] : o.label; }
+function eqValLabel(v) { return CURRENT_LANG === 'fr' && has(EQ_VAL_FR, v.label) ? EQ_VAL_FR[v.label] : v.label; }
+function eqMass(kg) { return (kg < 0 ? '−' : '') + massTxt(Math.abs(kg)); }       // signée : « −80 kg »
+function eqHtml(f, ui) {
+  const u = f.units[ui], opts = eqOptions(u.type);
+  if (!opts.length) return '';
+  const at = `data-u="${ui}"`, un = massU();
+  const items = opts.map(o => {
+    const val = eqValue(o, u.props);
+    if (o.kind === 'check') {
+      return `<label class="pk-chk"><input type="checkbox" data-eq="${esc(o.id)}" ${at}${val ? ' checked' : ''}> ${esc(eqLabel(o) + ' · ' + eqMass((o.weight || 0) + (o.weightWhenOn || 0)) + ' ' + un)}</label>`;
+    }
+    const choices = o.values.map(v => ({ v: String(v.id), l: eqValLabel(v) + ' · ' + eqMass(v.weightDependentOfFuel !== undefined ? v.weightDependentOfFuel : (v.weightWhenOn || 0)) + ' ' + un + (v.weightDependentOfFuel !== undefined ? ' ' + t('eq.full') : '') }));
+    return fieldHtml(eqLabel(o), selectHtml(`data-eq="${esc(o.id)}" ${at}`, eqLabel(o), choices, String(val)));
+  });
+  return `<div class="ed-field fc-eq"><label>${esc(t('eq.title'))}</label><div class="fc-eq-list">${items.join('')}</div></div>`;
+}
+// Un geste sur une option : la valeur s'écrit dans les props de l'unité choisie ; la masse suit au même instant, le travail est gardé.
+function eqChange(el) {
+  const su = selUnit(), id = el.getAttribute('data-eq'), o = su ? eqOptions(su.u.type).filter(x => x.id === id)[0] : null;
+  if (!o) return;
+  if (!isObj(su.u.props)) su.u.props = {};
+  su.u.props[id] = o.kind === 'list' ? Number(el.value) : el.checked;
+  cmpUpdateTotal();
+  refreshAll();
+}
 function loCarriesChaff(type) {
   const cl = chargeLimit(loLim(type));
   return cl ? cl.cs > 0 : payloadDefaults(type).chaff > 0;
@@ -2954,7 +3041,12 @@ function ukChoose(g, v) {
 function ukFollow() { const k = ukRead(); ukApply(k.mass, k.distance); }
 // La masse affichée : l'entier arrondi, en kg ou en lb (le kg converti : payloadMassIn)
 function massU() { return t(UMASS === 'lb' ? 'u.lb' : 'u.kg'); }
-function massTxt(kg) { return cmpNum(payloadMassIn(kg, UMASS)); }
+// Une masse à l'écran : en kg, au dixième près (207,5 ; 12 399,5), en lb entière ; l'espace des milliers et la virgule suivent la langue.
+function massTxt(kg) {
+  const v = payloadMassIn(kg, UMASS), r = UMASS === 'lb' ? Math.round(v) : Math.round(v * 10) / 10, neg = r < 0, a = Math.abs(r);
+  const ip = Math.floor(a), fp = Math.round((a - ip) * 10);
+  return (neg ? '-' : '') + cmpNum(ip) + (fp > 0 ? (CURRENT_LANG === 'fr' ? ',' : '.') + fp : '');
+}
 // Un texte à « {u} » : l'unité de masse choisie
 function tu(key) { return t(key).replace(/\{u\}/g, massU()); }
 function tfu(key, ...args) { return tf(key, ...args).replace(/\{u\}/g, massU()); }
@@ -3521,6 +3613,8 @@ function buildPackage() {
         const o = { name: unitLabel(f, fi, u, ui), type: u.type, callsign: csValue(u), liveryId: liveryShown(f, fi, u, ui) || null, radios: unitRadiosOut(f, u), payload: unitPayloadOut(f, u) };
         if (u.onboard.trim()) o.onboardNum = u.onboard.trim();
         o.stand = fpStandOut(f, u);
+        const ap = unitPropsOut(u);
+        if (ap) o.AddPropAircraft = ap;       // les options d'équipement de l'éditeur de DCS : toutes celles du type, valeur explicite, puis les clés hors table gardées
         return o;
       })
     }))
@@ -4423,6 +4517,7 @@ function cmpHtml(su) {
     ${CMP.pyl.length === 0 ? `<p class="ui-note cmp-nopylon">${esc(t('cmp.nopylon'))}</p>` : (CMP.view ? cmpDrawingHtml() : `<p class="ui-note">${esc(t('cmp.noview'))}</p>`)}
     <div class="cmp-list" id="cmp-list">${CMP.pyl.map(p => cmpRowHtml(p, lo)).join('')}</div>
     <div class="cmp-foot">${CMP.view ? `<label class="pk-chk"><input type="checkbox" id="cmp-sym"${UI.cmp.sym ? ' checked' : ''}> ${esc(t('cmp.sym'))}</label>` : ''}<span class="cmp-tot" id="cmp-total"></span></div>
+    <div class="cmp-tot cmp-detail" id="cmp-detail"></div>
     ${cmpSettingsHtml(f, su.ui, lo)}
     <p class="ui-note" id="cmp-empty-note"${lo && lo.key === '~empty' && !armed ? '' : ' hidden'}>${esc(t('cmp.emptyNote'))}</p>
     <div class="miz-btn-row cmp-acts" style="margin-top:0">${fieldHtml(t('cmp.from'), selectHtml('id="cmp-from"', t('cmp.from'), cmpFromOptions(f, lo, su.u), cmpFromValue(lo)))}<button type="button" class="miz-btn primary" data-act="cmp-save"${armed ? '' : ' disabled'}>${esc(t('cmp.save'))}</button>
@@ -4498,13 +4593,13 @@ function cmpSettingsHtml(f, ui, lo) {
   };
   const cl = chargeLimit(loLim(type));
   const note = k => k === 'fuel' ? tf('lo.max', fmtMHz(UMASS === 'lb' ? Math.round(payloadMassIn(d.fuel, 'lb')) : d.fuel)) : (k === 'gun' ? tf('lo.max', d.gun) : (cl ? chargeRule(cl) : tf('lo.max', d[k])));
-  const field = (k, step, disabled) => fieldHtml(`${loName(k)} · ${note(k)}`,
+  const field = (k, step, disabled) => fieldHtml(k === 'gun' ? tfu('lo.gunfull', massTxt(AIRCRAFT_MASSES[type].ammo)) : `${loName(k)} · ${note(k)}`,
     numberInputHtml(`${at} data-k="${k}"${disabled ? ' disabled' : ''}`, loShow(k, val(k)), 0, k === 'fuel' ? loShow(k, String(loFieldMax(type, k))) : loFieldMax(type, k), step) + (BAR_KEYS.indexOf(k) >= 0 ? bar(k) : ''));
   // Une limite inconnue (null dans la table) : le champ n'apparaît pas et une note le dit ; l'emport y écrit 0 (payloadDefaults)
   const unk = ['flare', 'chaff'].filter(k => !payloadKnown(type, k));
   const none = unk.length === 2 ? t('lo.none.cm') : (unk.length === 1 ? tf('lo.none.one', loName(unk[0])) : '');
   return `<div class="fc-set">${payloadKnown(type, 'fuel') ? field('fuel', 'any') : ''}${payloadKnown(type, 'flare') ? field('flare', '1') : ''}${payloadKnown(type, 'chaff') ? field('chaff', '1', !loCarriesChaff(type)) : ''}${loHasGun(type) ? field('gun', '1') : ''}</div>`
-    + (none ? `<p class="ui-note fc-nocm">${esc(none)}</p>` : '');
+    + (none ? `<p class="ui-note fc-nocm">${esc(none)}</p>` : '') + eqHtml(f, ui);
 }
 function cmpSaveHtml() {
   const C = UI.cmp;
@@ -4553,20 +4648,23 @@ function cmpUpdate() {
 }
 // Le carburant de l'unité pour la masse au décollage : son champ (l'emport) s'il se lit comme un nombre ; sinon rien, et payloadTakeoff prend le plein du type (une unité sans emport).
 function cmpFuelIn(u) { return u.loadout ? loNumber(u.loadout.fuel) : undefined; }
-// Sous la liste : la masse des emports de l'unité choisie (une arme sans masse connue rend la somme incertaine : « + ? ») puis, comme au Loadout Editor, la masse au décollage :
-// à vide + carburant de l'unité + emports (le canon et les leurres ne comptent pas) ; « + ? » si une arme n'a pas de masse connue ; en orange au-dessus du maximum recommandé, sans jamais rien bloquer.
-// Un type absent de AIRCRAFT_MASSES : pas de ligne. Le calcul est payloadTakeoff (payload_block.py), le même qu'au Datacard Generator ; il se fait en kg, sans arrondi, et l'unité choisie ne change que le texte
-// (le orange se juge en kg, comme toujours : il ne dépend pas de l'unité).
+// Sous la liste : la masse des emports de l'unité choisie (une arme sans masse connue rend la somme incertaine : « + ? ») puis la masse au décollage, comme l'éditeur de mission de DCS : à vide (avec les options
+// d'équipement de l'unité) + carburant de l'unité + emports + obus du canon (au pourcentage de l'emport) + masse liée au carburant (cuve du Bf 109) ; les leurres ne pèsent rien. En orange au-dessus du maximum
+// recommandé, sans jamais rien bloquer. La ligne de détail dessous reste toujours visible. Un type absent de AIRCRAFT_MASSES : pas de masse au décollage. Le calcul est payloadTakeoff (payload_block.py), le même qu'au
+// Datacard Generator ; il se fait en kg, sans arrondi, et l'unité choisie ne change que le texte (le orange se juge en kg, comme toujours : il ne dépend pas de l'unité).
 function cmpUpdateTotal() {
-  const su = selUnit(), el = document.getElementById('cmp-total');
+  const su = selUnit(), el = document.getElementById('cmp-total'), det = document.getElementById('cmp-detail');
   if (!su || !el || su.u.type === '') return;
-  const w = payloadTakeoff(su.u.type, cmpFuelIn(su.u), cmpStations(su.u.loadout), AIRCRAFT_MASSES);
+  const lo = su.u.loadout, w = payloadTakeoff(su.u.type, cmpFuelIn(su.u), cmpStations(lo), AIRCRAFT_MASSES, { gun: lo ? loNumber(lo.gun) : undefined, props: su.u.props });
   const u = massU(), q = w.unknown ? ' + ?' : '';
   let takeoff = '';
   if (w.takeoff !== null) {
-    takeoff = `<span class="${Math.round(w.takeoff) > w.max ? 'cmp-over' : ''}">` + esc(t('cmp.takeoff')).replace('{f}', esc(massTxt(w.fuel))).replace('{y}', esc(massTxt(w.takeoff) + ' ' + u + q)).replace('{max}', esc(massTxt(w.max))).replace(/\{u\}/g, esc(u)) + '</span>';
+    takeoff = `<span class="${Math.round(w.takeoff) > w.max ? 'cmp-over' : ''}">` + esc(t('cmp.takeoff')).replace('{y}', esc(massTxt(w.takeoff) + ' ' + u + q)).replace('{max}', esc(massTxt(w.max))).replace(/\{u\}/g, esc(u)) + '</span>';
   }
   el.innerHTML = `${esc(t('cmp.mass'))} <b>${esc(massTxt(w.loadout) + ' ' + u + q)}</b>${takeoff}`;
+  if (!det) return;
+  det.textContent = w.takeoff === null ? '' : t('cmp.d.empty') + ' ' + massTxt(w.empty) + (eqOptions(su.u.type).length ? t('cmp.d.eq') : '') + ' + ' + t('cmp.d.fuel') + ' ' + massTxt(w.fuel) + ' + ' + t('cmp.d.stores') + ' ' + massTxt(w.loadout) + q
+    + (loHasGun(su.u.type) ? ' + ' + t('cmp.d.rounds') + ' ' + massTxt(w.ammo) : '') + (w.wdf > 0 ? ' + ' + t('cmp.d.tank') + ' ' + massTxt(w.wdf) : '') + t('cmp.d.tail');
 }
 // La ligne sous la liste : la station jumelle n'y figure que si « Symétrique » est cochée ; la puce « réglages » quand l'arme en porte.
 function cmpUpdateSub(row, hasSettings, noMirror) {
@@ -5229,7 +5327,7 @@ async function changeUnitType(f, fi, ui, el) {
   if (!u || nt === u.type || PAYLOAD_TYPES.indexOf(nt) < 0) return;
   if ((radioCount(f, u) > 0 || !!u.loadout) && !await askConfirm({ title: tf('u.type.confirm.title', unitLabel(f, fi, u, ui)), text: t('u.type.confirm.text'), verb: t('ui.verb.change'), danger: true })) { el.value = u.type; return; }
   if (u.type === nt || f.units[ui] !== u) return;
-  u.type = nt; u.radios = {}; u.loadout = null; REFUSED.delete(u); fpKeepStand(f, u);
+  u.type = nt; u.radios = {}; u.loadout = null; u.props = {}; REFUSED.delete(u); fpKeepStand(f, u);
   const lv = u.livery.trim().toLowerCase();
   if (!liveriesFor(nt).some(n => n.toLowerCase() === lv)) u.livery = '';       // une livrée choisie que le nouveau type n'a pas (à la casse et aux espaces de bout près) s'efface : l'unité reprend son défaut
   Object.assign(UI.cmp, { saving: false, err: '', st: null });
@@ -5239,6 +5337,7 @@ function onChange(e) {
   const el = e.target, k = el.getAttribute && el.getAttribute('data-k');
   if (el.id === 'cmp-from') { cmpBase(el.value); return; }
   if (el.id === 'cmp-sym') { UI.cmp.sym = el.checked; cmpUpdate(); return; }
+  if (el.hasAttribute && el.hasAttribute('data-eq')) { eqChange(el); return; }
   if (el.classList && el.classList.contains('cmp-sel')) { cmpChoose(el.getAttribute('data-st'), el.value); return; }
   if (!k) return;
   if (k === 'fuel-bar' || k === 'gun-bar') return;

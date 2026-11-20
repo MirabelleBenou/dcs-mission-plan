@@ -134,13 +134,36 @@ function payloadDefaults(type) {
 const PAYLOAD_KG_PER_LB = 0.45359237;
 function payloadMassIn(kg, unit) { return unit === 'lb' ? kg / PAYLOAD_KG_PER_LB : kg; }
 
-// Le poids au décollage d'une unité, la même règle au Flight Configurator et au Datacard Generator : à vide (la table des masses `masses`, { type: { empty, max } }, passée en argument : le bloc
-// ne la porte pas) + carburant + masse des emports. `fuel` : le carburant de l'unité en kg (un nombre) ; sinon le plein du type (payloadDefaults) ; sans plein dans AIRCRAFT_LIMITS, pas de carburant.
-// `stations` : { station: CLSID } ou { station: { CLSID } } ; seules comptent les stations du type, dans l'ordre numérique ; le canon et les leurres ne comptent pas. Une arme sans masse connue rend
-// le total incertain (unknown) : la somme est celle des armes connues. Rend { loadout, unknown, fuel, empty, max, takeoff } en kg : fuel, empty, max et takeoff valent null quand la table ne les donne pas
-// (un type absent de `masses` : ni poids ni maximum ; un type sans carburant : pas de poids). Rien n'est arrondi.
-function payloadTakeoff(type, fuel, stations, masses) {
-  const out = { loadout: 0, unknown: false, fuel: null, empty: null, max: null, takeoff: null };
+// Le poids au décollage d'une unité, la même règle au Flight Configurator et au Datacard Generator : celle de l'éditeur de mission de DCS (me_payload.updateTotalWeight, relevée dans le jeu).
+//   total = à vide + carburant + emports + obus + masse liée au carburant
+//   à vide  = masses[type].empty + Σ des options d'appareil : une case cochée ajoute son weightWhenOn (0 s'il manque), une case décochée retire son weight (0 s'il manque : cette masse est déjà dans
+//             le vide du jeu) ; une liste ajoute le weightWhenOn de la valeur choisie. La valeur d'une option est props[id], sinon le défaut du jeu (def) ; une valeur hors de la table (case non booléenne, id
+//             de liste inconnu, type inconnu) vaut le défaut.
+//   obus    = masses[type].ammo × canon ÷ 100 (le plein de tous les canons de l'appareil ; canon borné à 0–100, illisible : 100)
+//   liée au carburant (wdf) = Σ weightDependentOfFuel des valeurs choisies × min(1, 0,1 + carburant ÷ plein du type) (le plein : payloadDefaults ; la cuve MW-50 du Bf 109 K-4)
+//   Les leurres (leurres et paillettes) ne pèsent rien dans l'éditeur.
+// `masses` : { type: { empty, max, ammo, options? } } (data/aircraft_masses.json), passée en argument : le bloc ne la porte pas. `opts` facultatif : { gun, props } ; sans `opts`, canon 100 % et options par défaut.
+// `fuel` : le carburant de l'unité en kg (un nombre) ; sinon le plein du type (payloadDefaults) ; sans plein dans AIRCRAFT_LIMITS, pas de carburant.
+// `stations` : { station: CLSID } ou { station: { CLSID } } ; seules comptent les stations du type, dans l'ordre numérique. Une arme sans masse connue rend le total incertain (unknown) : la somme est celle des armes connues.
+// Rend { loadout, unknown, fuel, empty, max, takeoff, ammo, wdf, options } en kg : fuel, empty, max et takeoff valent null quand la table ne les donne pas (un type absent de `masses` : ni poids ni maximum ; un type
+// sans carburant : pas de poids) ; `empty` comprend les options, `options` en est la somme. Rien n'est arrondi.
+function payloadNum(v) { return (typeof v === 'number' && isFinite(v)) ? v : 0; }
+// La valeur choisie d'une option : { on } pour une case, { value } (l'objet de la liste) pour une liste ; le défaut du jeu si `props` ne donne pas une valeur permise.
+function payloadOptionChoice(o, props) {
+  const has = props && typeof props === 'object' && payloadHas(props, o.id);
+  if (o.kind === 'list') {
+    const vs = Array.isArray(o.values) ? o.values : [];
+    const pick = id => vs.find(v => v.id === id);
+    return { value: (has && pick(props[o.id])) || pick(o.def) || null };
+  }
+  return { on: (has && typeof props[o.id] === 'boolean') ? props[o.id] : o.def === true };
+}
+function payloadGunPct(gun) {
+  const n = typeof gun === 'string' && gun.trim() !== '' ? Number(gun) : gun;
+  return (typeof n === 'number' && isFinite(n)) ? Math.min(100, Math.max(0, n)) : 100;
+}
+function payloadTakeoff(type, fuel, stations, masses, opts) {
+  const out = { loadout: 0, unknown: false, fuel: null, empty: null, max: null, takeoff: null, ammo: 0, wdf: 0, options: 0 };
   (payloadPylons(type) || []).forEach(p => {
     const v = stations ? stations[p.n] : '';
     const clsid = typeof v === 'string' ? v : (v && typeof v.CLSID === 'string' ? v.CLSID : '');
@@ -152,9 +175,20 @@ function payloadTakeoff(type, fuel, stations, masses) {
   if (f === null && payloadHas(AIRCRAFT_LIMITS, type)) f = payloadDefaults(type).fuel;
   out.fuel = f;
   if (masses && payloadHas(masses, type)) {
-    out.empty = masses[type].empty;
-    out.max = masses[type].max;
-    if (f !== null) out.takeoff = out.empty + f + out.loadout;
+    const t = masses[type], props = opts && opts.props;
+    const full = payloadHas(AIRCRAFT_LIMITS, type) ? payloadDefaults(type).fuel : 0;
+    const share = (f !== null && full > 0) ? Math.min(1, 0.1 + f / full) : 1;
+    let wdf = 0;
+    (Array.isArray(t.options) ? t.options : []).forEach(o => {
+      const c = payloadOptionChoice(o, props);
+      if (o.kind === 'list') { if (c.value) { out.options += payloadNum(c.value.weightWhenOn); wdf += payloadNum(c.value.weightDependentOfFuel); } }
+      else out.options += c.on ? payloadNum(o.weightWhenOn) : -payloadNum(o.weight);
+    });
+    out.empty = t.empty + out.options;
+    out.max = t.max;
+    out.ammo = payloadNum(t.ammo) * payloadGunPct(opts && opts.gun) / 100;
+    out.wdf = f !== null ? wdf * share : 0;
+    if (f !== null) out.takeoff = out.empty + f + out.loadout + out.ammo + out.wdf;
   }
   return out;
 }

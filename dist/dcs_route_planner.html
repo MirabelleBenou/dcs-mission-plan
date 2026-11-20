@@ -11609,6 +11609,7 @@ function impMergeUnit(st, target, fi, k, iu, chk, src, fromHq) {
   if (chk.radios && Array.isArray(iu.radios)) impMergeRadios(u, u.type, iu.radios, fromHq);
   if (chk.loadout && gsIsObj(iu.payload) && gsIsObj(iu.payload.pylons)) {
     const conv = st.convert && u.type !== '' ? IMP.hooks.loadoutFrom : null;
+    u.addPropIn = impClone(gsIsObj(iu.addProp) ? iu.addProp : (gsIsObj(iu.AddPropAircraft) ? iu.AddPropAircraft : {}));       // l'AddPropAircraft de la source, brut, avec l'emport (une unité sans option : les défauts du jeu)
     if (conv) { u.loadout = conv(u.type, impClone(iu.payload)) || null; delete u.payloadIn; }       // le module convertit : l'emport s'écrit tel qu'il le garde, jamais d'état intermédiaire
     else { u.payloadIn = impClone(iu.payload); u.loadout = null; }       // brut : le Flight Configurator le convertit à la lecture de la fiche
   }

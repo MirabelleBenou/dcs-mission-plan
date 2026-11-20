@@ -3925,7 +3925,8 @@ function _astGetKey(node, key) {{
 }}
 
 // _extractFromAst : extrait route.pointsPos, payload par groupId + unitId depuis l'AST
-// Retourne: {{ pointsNode, pointsPos, unitPayloads: {{unitId: {{payloadNode, payloadPos}}}} }}
+// Retourne: {{ pointsNode, pointsPos, unitPayloads: {{unitId: {{payloadNode, payloadPos}}}}, unitAddProps: {{unitId: {{addPropNode, unitNode}}}} }}
+// (addPropNode : le nœud AddPropAircraft de l'unité, null s'il n'y en a pas ; unitNode : la table de l'unité, où l'on en crée un)
 function _extractRouteAndPayloads(ast, targetGroupId) {{
   const missionTable = ast.kind === 'assignment' ? ast.value : ast;
   const coalition = _astGetKey(missionTable, 'coalition');
@@ -3949,6 +3950,7 @@ function _extractRouteAndPayloads(ast, targetGroupId) {{
           const route = _astGetKey(g, 'route');
           const pointsNode = route ? _astGetKey(route, 'points') : null;
           const unitPayloads = {{}};
+          const unitAddProps = {{}};
           const units = _astGetKey(g, 'units');
           if (units) {{
             for (const ue of units.entries) {{
@@ -3958,12 +3960,14 @@ function _extractRouteAndPayloads(ast, targetGroupId) {{
               if (uid && payloadNode) {{
                 unitPayloads[uid.value] = {{ payloadNode, payloadPos: payloadNode.pos }};
               }}
+              if (uid) unitAddProps[uid.value] = {{ addPropNode: _astGetKey(u, 'AddPropAircraft'), unitNode: u }};
             }}
           }}
           return {{
             pointsNode,
             pointsPos: pointsNode ? pointsNode.pos : null,
             unitPayloads,
+            unitAddProps,
           }};
         }}
       }}
@@ -4115,9 +4119,12 @@ async function buildMissionSnapshot(ast, model, missionText, filename, theatre) 
     const unitsFull = units.map(u => {{
       const payData = rpData && rpData.unitPayloads && rpData.unitPayloads[u.unitId];
       const payloadFull = payData ? astToValue(payData.payloadNode) : null;
+      // Les options d'équipement de l'appareil (AddPropAircraft), telles que la mission les porte ; la clé est absente quand la mission n'en a pas
+      const apData = rpData && rpData.unitAddProps && rpData.unitAddProps[u.unitId];
+      const apFull = apData && apData.addPropNode ? astToValue(apData.addPropNode) : undefined;
       return Object.assign({{}}, u, {{
         payload: payloadFull || {{ summary: '' }},
-      }});
+      }}, (apFull && typeof apFull === 'object' && !Array.isArray(apFull)) ? {{ addProp: apFull }} : {{}});
     }});
     return {{
       groupId:        g.groupId,
@@ -4548,6 +4555,34 @@ function buildPatchesFromPackage(pkg, ctx) {{
     patches.push({{ pos: pp, newValueStr: lua, payloadUnitId: pOv.unitId, payloadWritten: merged }});
   }}
 
+  // replacements.addProps[] → AddPropAircraft par unité : celui de la mission, dont les clés du paquet prennent la valeur du paquet ; les autres clés restent, la table est créée si l'unité n'en avait pas
+  for (const aOv of (repl.addProps || [])) {{
+    const found = findUnitById(aOv.unitId, ctx);
+    if (!found) {{ warnings.push({{ key: 'pk.w.unitGone', args: [aOv.unitId] }}); continue; }}
+    if (rpTarget === undefined) rpTarget = _extractRouteAndPayloads(ctx.ast, fl.groupId);
+    const an = rpTarget && rpTarget.unitAddProps ? rpTarget.unitAddProps[aOv.unitId] : null;
+    if (!an || !an.unitNode) {{ warnings.push({{ key: 'pk.w.unitGone', args: [aOv.unitId] }}); continue; }}
+    let cur = {{}};
+    if (an.addPropNode) {{
+      try {{ cur = luaTableReproducible(an.addPropNode) ? astToValue(an.addPropNode) : null; }} catch (e) {{ cur = null; }}
+      if (!cur || typeof cur !== 'object' || Array.isArray(cur)) {{ warnings.push({{ key: 'pk.w.serialize', args: [] }}); continue; }}
+    }}
+    const merged = Object.assign({{}}, cur, aOv.addProp);
+    const lua = serializeLua(merged);
+    if (lua === null) {{ warnings.push({{ key: 'pk.w.serialize', args: [] }}); continue; }}
+    let mine;
+    if (an.addPropNode) {{
+      if (seenOffsets.has(an.addPropNode.pos.start.offset)) {{ warnings.push({{ key: 'pk.w.dup', args: [an.addPropNode.pos.start.offset] }}); continue; }}
+      seenOffsets.add(an.addPropNode.pos.start.offset);
+      mine = [{{ pos: an.addPropNode.pos, newValueStr: lua }}];
+    }} else {{
+      try {{ mine = pkInsertEntry(ctx.missionText, an.unitNode, 'AddPropAircraft', merged); }}
+      catch (e) {{ warnings.push({{ key: 'pk.w.serialize', args: [] }}); continue; }}
+    }}
+    mine[0].addPropUnitId = aOv.unitId; mine[0].addPropWritten = merged;
+    mine.forEach(function(pt) {{ patches.push(pt); }});
+  }}
+
   // Tri offset décroissant (obligatoire pour splice sans décalage)
   patches.sort(function(a, b) {{ return b.pos.start.offset - a.pos.start.offset; }});
 
@@ -4611,6 +4646,14 @@ function verifyPatch(patchedSrc, pkg, patches) {{
     if (!deepEqValues(wr ? wr.payloadWritten : pOv.payload, astToValue(rpCheck.unitPayloads[pOv.unitId].payloadNode))) {{
       errors.push({{ key: 'pk.e.payload', args: [pOv.unitId] }});
     }}
+  }}
+
+  // Vérifier replacements.addProps, en valeur : l'AddPropAircraft relu de chaque unité est celui qui devait être écrit
+  for (const aOv of (repl.addProps || [])) {{
+    const wr = (patches || []).find(pt => pt.addPropUnitId === aOv.unitId && pt.addPropWritten !== undefined);
+    if (!wr) continue;       // rien n'a été écrit pour cette unité (un avertissement l'a dit)
+    const an = rpCheck && rpCheck.unitAddProps ? rpCheck.unitAddProps[aOv.unitId] : null;
+    if (!an || !an.addPropNode || !deepEqValues(wr.addPropWritten, astToValue(an.addPropNode))) errors.push({{ key: 'pk.e.payload', args: [aOv.unitId] }});
   }}
 
   if (errors.length > 0) {{
@@ -5338,8 +5381,9 @@ function pkBuildGroup(work, fl) {{
       }}
       unit.Radio = radio;
     }}
-    const prop = (u.addProp && typeof u.addProp === 'object') ? pkClean(u.addProp) : tpl.property_defaults;
-    if (prop && Object.keys(prop).length) unit.AddPropAircraft = JSON.parse(JSON.stringify(prop));
+    // Options d'équipement : celles par défaut du gabarit du type, les clés du paquet (partie Emport cochée) par-dessus
+    const prop = Object.assign({{}}, tpl.property_defaults, (fl.chk.loadout && fl.avail.loadout && u.addProp && typeof u.addProp === 'object') ? pkClean(u.addProp) : {{}});
+    if (Object.keys(prop).length) unit.AddPropAircraft = JSON.parse(JSON.stringify(prop));
     // Emport : celui du paquet (partie cochée), sinon celui par défaut du type
     if (fl.chk.loadout && fl.avail.loadout && u.payload) unit.payload = pkClean(u.payload);
     else unit.payload = {{ pylons: {{}}, fuel: tpl.fuel_max || 0, flare: tpl.flare || 0, chaff: tpl.chaff || 0, gun: 100 }};
@@ -5664,7 +5708,7 @@ function pkPlanFlight(ctx, pk, fl, tg) {{
   const warns = [];                       // {{ key, args }}
   const done = {{ route: 0, chan: 0, radioUnits: 0, payload: 0, livery: 0 }};
   const name = fl.groupName;
-  const plan = {{ flight: {{ groupId: tg.group.groupId }}, overrides: {{ radios: [], liveries: [] }}, replacements: {{ payloads: [] }} }};
+  const plan = {{ flight: {{ groupId: tg.group.groupId }}, overrides: {{ radios: [], liveries: [] }}, replacements: {{ payloads: [], addProps: [] }} }};
 
   // Les unités : par name exact, sinon par rang
   const used = new Set();
@@ -5749,6 +5793,13 @@ function pkPlanFlight(ctx, pk, fl, tg) {{
       if (!tu || !okType[i] || !u.payload) return;
       if (tu.payloadPos) {{ plan.replacements.payloads.push({{ unitId: tu.unitId, payload: u.payload }}); done.payload++; }}
       else warns.push({{ key: 'pk.w.payload', args: [name, tu.name] }});
+    }});
+    // Les options d'équipement du paquet (AddPropAircraft), avec l'emport : l'unité garde celles de la mission que le paquet ne nomme pas
+    fl.units.forEach((u, i) => {{
+      const tu = map[i];
+      if (!tu || !okType[i] || !u.addProp) return;
+      const ap = pkClean(u.addProp);
+      if (Object.keys(ap).length) plan.replacements.addProps.push({{ unitId: tu.unitId, addProp: ap }});
     }});
   }}
   if (fl.chk.livery && fl.avail.livery) {{

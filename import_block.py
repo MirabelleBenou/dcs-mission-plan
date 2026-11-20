@@ -8,6 +8,7 @@ Trois textes, identiques à l'octet dans les deux dist/ :
 
 Le bloc écrit dans la fiche (group_store_block.py : relire, changer le seul groupe touché, gsPutFlight), jamais dans l'état d'un module. L'emport importé s'écrit en une fois : si le module donne un rappel loadoutFrom(type, payload) (le Flight Configurator), l'emport est écrit déjà converti ;
 sinon (le Route Planner) il est écrit brut, unité.payloadIn, avec loadout: null, et le Flight Configurator le convertit à la lecture de la fiche en ne changeant que ces champs.
+Les options d'équipement de l'appareil (AddPropAircraft : `addProp` d'une unité de la mission d'HQ, `AddPropAircraft` d'une unité de paquet) suivent l'emport, dans les deux cas, en brut : unité.addPropIn ({} sans option : les défauts du jeu), à côté de payloadIn ; le Flight Configurator le range dans les props de l'unité à la lecture de la fiche et le retire. Le Route Planner ne le lit pas.
 Il lit magvar_block.py (magRouteDate : la date de la mission d'une source, qui naît sur la route importée) et group_store_block.py (gsRead, gsPutFlight, gsNewId, gsNameKey, gsSide, gsEnsure, gsSetTheatre, gsJson, gsIsObj) radio_block.py (RADIO_POSTES, RADIO_FIRST_CHANNEL) et radio_bands_block.py (RADIO_FREE, radioFreeCount : les postes que la mission ne pré-règle pas).
 Le module lui donne sa langue et ses rappels par impSetup({ lang, before, onImported, toast, loadoutFrom }) ; il ouvre la fenêtre par impOpen().
 
@@ -638,6 +639,7 @@ function impMergeUnit(st, target, fi, k, iu, chk, src, fromHq) {
   if (chk.radios && Array.isArray(iu.radios)) impMergeRadios(u, u.type, iu.radios, fromHq);
   if (chk.loadout && gsIsObj(iu.payload) && gsIsObj(iu.payload.pylons)) {
     const conv = st.convert && u.type !== '' ? IMP.hooks.loadoutFrom : null;
+    u.addPropIn = impClone(gsIsObj(iu.addProp) ? iu.addProp : (gsIsObj(iu.AddPropAircraft) ? iu.AddPropAircraft : {}));       // l'AddPropAircraft de la source, brut, avec l'emport (une unité sans option : les défauts du jeu)
     if (conv) { u.loadout = conv(u.type, impClone(iu.payload)) || null; delete u.payloadIn; }       // le module convertit : l'emport s'écrit tel qu'il le garde, jamais d'état intermédiaire
     else { u.payloadIn = impClone(iu.payload); u.loadout = null; }       // brut : le Flight Configurator le convertit à la lecture de la fiche
   }

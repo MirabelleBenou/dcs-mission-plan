@@ -3486,7 +3486,7 @@ function setDoc(next) {
 const WEAPON_NAMES = @@WEAPON_NAMES@@;
 const AIRCRAFT_PYLONS = @@AIRCRAFT_PYLONS@@;
 const AIRCRAFT_LIMITS = @@AIRCRAFT_LIMITS@@;
-const AIRCRAFT_MASSES = @@AIRCRAFT_MASSES@@;       /* les masses à vide et maximales des types du Flight Configurator (data/aircraft_masses.json) : le poids au décollage, payloadTakeoff */
+const AIRCRAFT_MASSES = @@AIRCRAFT_MASSES@@;       /* les masses à vide, maximales et des obus des types du Flight Configurator, et leurs options d'équipement (data/aircraft_masses.json) : le poids au décollage, payloadTakeoff */
 @@PAYLOAD_BLOCK@@
 @@AIRCRAFT_TYPES_BLOCK@@
 /* ============= LA NAVIGATION EST LA ROUTE (lot mp-dg-nav-route) =============
@@ -4276,7 +4276,7 @@ async function dgChangeType(c, i, el) {
     if (!(await askConfirm({ title: t('u.type.confirm.title', vars), text: t('u.type.confirm.text', vars), verb: t('ui.verb.change'), danger: true }))) { renderEditor(); return; }
     if (doc.cards.indexOf(c) < 0) return;
   }
-  dgPut(c.gsId, nf => { const x = dgUnitsOf(nf)[i]; if (!x) return false; x.type = nt; x.radios = {}; x.loadout = null; delete x.payloadIn; });
+  dgPut(c.gsId, nf => { const x = dgUnitsOf(nf)[i]; if (!x) return false; x.type = nt; x.radios = {}; x.loadout = null; delete x.payloadIn; delete x.props; delete x.addPropIn; });
   renderEditor(); renderPack(); renderPreview();
 }
 /* Une unité de plus (du type de la dernière, comme au Flight Configurator) */
@@ -4789,14 +4789,15 @@ function dgFreeze(f, c) {
 /* ----- Carburant et poids : une valeur par lot d'appareils identiques -----
    Le carburant emporté et le poids au décollage de chaque unité d'un groupe : payloadTakeoff (payload_block.py), la même règle qu'au Flight Configurator, en kg ; les unités dont le couple (carburant, poids, incertain)
    est le même forment un lot, dans l'ordre des unités. Une unité sans type connu des tables n'en a pas ; un emport brut (payloadIn, pas encore lu par le Flight Configurator) non plus. Rien de cela ne se stocke dans c.fuel :
-   une carte liée le calcule, une carte libre née d'une carte liée en garde les lots en kg (c.frz.fuel). L'unité de masse choisie et la langue ne changent que l'affichage. */
+   une carte liée le calcule, une carte libre née d'une carte liée en garde les lots en kg (c.frz.fuel). L'unité de masse choisie et la langue ne changent que l'affichage.
+   La règle est celle de l'éditeur de DCS : les obus du canon (au pourcentage de l'emport) et les options d'équipement de l'unité (props, ou addPropIn pas encore rangé par le Flight Configurator) comptent ; les leurres ne pèsent rien. */
 function dgLoFuel(v) { const x = String(v == null ? '' : v).trim().replace(',', '.'); return /^-?\d+(\.\d+)?$/.test(x) ? Number(x) : undefined; }       /* le carburant de l'emport, lu comme le Flight Configurator (loNumber) */
 function dgFuelLots(f) {
   const lots = [];
   dgUnits(f).forEach((u, i) => {
     const lo = gsIsObj(u.loadout) ? u.loadout : null;
     if (!lo && gsIsObj(u.payloadIn)) return;
-    const w = payloadTakeoff(dgStr(u.type), lo ? dgLoFuel(lo.fuel) : undefined, lo && gsIsObj(lo.pylons) ? lo.pylons : {}, AIRCRAFT_MASSES);
+    const w = payloadTakeoff(dgStr(u.type), lo ? dgLoFuel(lo.fuel) : undefined, lo && gsIsObj(lo.pylons) ? lo.pylons : {}, AIRCRAFT_MASSES, { gun: lo ? dgLoFuel(lo.gun) : undefined, props: gsIsObj(u.addPropIn) ? u.addPropIn : u.props });
     if (w.fuel === null && w.takeoff === null) return;
     const l = lots.find(x => x.fuel === w.fuel && x.weight === w.takeoff && x.unc === w.unknown);
     if (l) l.ranks.push(i + 1); else lots.push({ ranks: [i + 1], fuel: w.fuel, weight: w.takeoff, unc: w.unknown });
