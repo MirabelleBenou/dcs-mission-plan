@@ -3043,6 +3043,8 @@ function ukChoose(g, v) {
 function ukFollow() { const k = ukRead(); ukApply(k.mass, k.distance); }
 // L'unité de masse affichée, kg ou lb (les données restent en kg ; le kg converti : payloadMassIn)
 function massU() { return t(UMASS === 'lb' ? 'u.lb' : 'u.kg'); }
+// L'entier arrondi : la masse d'une station et celle des emports.
+function massInt(kg) { return cmpNum(payloadMassIn(kg, UMASS)); }
 // Une masse à l'écran : en kg, au dixième près (207,5 ; 12 399,5), en lb entière ; l'espace des milliers et la virgule suivent la langue.
 function massTxt(kg) {
   const v = payloadMassIn(kg, UMASS), r = UMASS === 'lb' ? Math.round(v) : Math.round(v * 10) / 10, neg = r < 0, a = Math.abs(r);
@@ -4629,7 +4631,7 @@ function cmpUpdate() {
       oo.hidden = !on;
     }
     const mass = clsid === '' ? 0 : payloadWeaponMass(clsid);
-    row.querySelector('.cmp-kg').textContent = clsid === '' ? '' : (mass === null ? '—' : massTxt(mass) + ' ' + massU());
+    row.querySelector('.cmp-kg').textContent = clsid === '' ? '' : (mass === null ? '—' : massInt(mass) + ' ' + massU());
     row.classList.toggle('sel', C.st === n);
     cmpUpdateSub(row, lo && lo.pylons[n] && lo.pylons[n].settings !== undefined, cmpNoMirror(lo, n, clsid));
     cmpUpdateCell(blk.querySelector(`.cmp-st[data-st="${n}"]`), clsid, C.st === n);
@@ -4663,9 +4665,9 @@ function cmpUpdateTotal() {
   if (w.takeoff !== null) {
     takeoff = `<span class="${Math.round(w.takeoff) > w.max ? 'cmp-over' : ''}">` + esc(t('cmp.takeoff')).replace('{y}', esc(massTxt(w.takeoff) + ' ' + u + q)).replace('{max}', esc(massTxt(w.max))).replace(/\{u\}/g, esc(u)) + '</span>';
   }
-  el.innerHTML = `${esc(t('cmp.mass'))} <b>${esc(massTxt(w.loadout) + ' ' + u + q)}</b>${takeoff}`;
+  el.innerHTML = `${esc(t('cmp.mass'))} <b>${esc(massInt(w.loadout) + ' ' + u + q)}</b>${takeoff}`;
   if (!det) return;
-  det.textContent = w.takeoff === null ? '' : t('cmp.d.empty') + ' ' + massTxt(w.empty) + (eqOptions(su.u.type).length ? t('cmp.d.eq') : '') + ' + ' + t('cmp.d.fuel') + ' ' + massTxt(w.fuel) + ' + ' + t('cmp.d.stores') + ' ' + massTxt(w.loadout) + q
+  det.textContent = w.takeoff === null ? '' : t('cmp.d.empty') + ' ' + massTxt(w.empty) + (eqOptions(su.u.type).length ? t('cmp.d.eq') : '') + ' + ' + t('cmp.d.fuel') + ' ' + massTxt(w.fuel) + ' + ' + t('cmp.d.stores') + ' ' + massInt(w.loadout) + q
     + (loHasGun(su.u.type) ? ' + ' + t('cmp.d.rounds') + ' ' + massTxt(w.ammo) : '') + (w.wdf > 0 ? ' + ' + t('cmp.d.tank') + ' ' + massTxt(w.wdf) : '') + t('cmp.d.tail');
 }
 // La ligne sous la liste : la station jumelle n'y figure que si « Symétrique » est cochée ; la puce « réglages » quand l'arme en porte.
