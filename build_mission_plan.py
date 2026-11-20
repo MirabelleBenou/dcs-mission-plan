@@ -307,12 +307,189 @@ def build_tile_uris(modules):
     return uris
 
 
+# ── La navigation de la suite : l'historique du navigateur, tenu par le shell seul ───────────────────────────────────────────────
+# Texte brut (pas un f-string) : posé dans le gabarit par {NAV_JS}.
+NAV_JS_SRC = r"""/* ── Le geste retour du téléphone : un niveau à la fois ────────────────────────────────────────────────────────────────
+   Niveaux : 0 le mur (l'accueil) ; 1 un outil affiché (les six outils et le Field Manual) ; 2 au-dessus de l'outil, une fenêtre ou un menu ouvert (un seul niveau, quel que soit le nombre de fenêtres empilées) ;
+   au mur, une fenêtre ou un menu du shell est le niveau 1. L'historique (history.state : { mp: niveau, tool: id ou null } ; l'entrée du mur, nulle ou { mp: 0 }) est tenu ici, par le shell seul : aucun outil n'y touche.
+   Règle, quel que soit le chemin : l'entrée courante dit le niveau affiché, et il n'y a jamais plus de deux entrées au-dessus de celle du mur. Le niveau affiché se lit sur le DOM (NAV_LEVELS) : un MutationObserver sur le shell et sur
+   chaque outil chargé ; une entrée s'ajoute à l'ouverture d'un niveau et se consomme (history.go) à sa fermeture, par n'importe quel geste (croix, Échap, choix, toucher au-dehors, code, « ◄ »).
+   Le retour du navigateur ferme le niveau du dessus comme Échap (un keydown Échap envoyé au document de l'outil, par le chemin de l'outil), ramène de l'outil au mur comme « ◄ », et quitte la page depuis le mur.
+   NAV.h = le nombre d'entrées qu'on tient pour posées au-dessus du mur ; NAV.pending = les traversées que le shell a lui-même demandées (leur popstate n'est pas un geste de l'utilisateur). */
+var NAV = { h: 0, pending: 0, timer: 0, booting: false, ok: true, queued: false, base: '', wallY: 0 };
+
+/* La table unique : ce qui dit « un niveau est ouvert » dans un document (l'état tel que le DOM le montre). Commun au shell et à chaque outil : une fenêtre .ui-modal visible (#ui-confirm compris, et #mp-work-modal au shell),
+   et un panneau .tbm-panel (liste au thème, « ⋯ », panneaux MN des barres et DSP du Route Planner, Exemple ▾ du shell : tous posés en fin de <body> et retirés à la fermeture). Propre à un outil : */
+var NAV_COMMON = ['.ui-modal:not([hidden])', '.tbm-panel'];
+var NAV_OWN = {
+  rp: ['#fiche:not([hidden])', '#sr-panel:not([hidden])', '#dr-pop:not([hidden])'],      /* la fiche d'aérodrome (.rt-modal), la recherche, la liste des calques du dessin */
+  fm: ['#fm-zoom:not([hidden])', 'body.fmnav-open']                                        /* le zoom d'un schéma, le panneau du sommaire */
+};
+function navSel(id) { return NAV_COMMON.concat(NAV_OWN[id] || []).join(', '); }
+function navOpenIn(doc, id) { try { return !!doc.querySelector(navSel(id)); } catch (e) { return false; } }
+function navToolDoc() { try { return activeModule && iframes[activeModule] ? iframes[activeModule].contentDocument : null; } catch (e) { return null; } }
+function navLevel() {
+  if (navOpenIn(document, 'shell')) return true;
+  var d = navToolDoc();
+  return !!d && navOpenIn(d, activeModule);
+}
+function navDepth() { return (activeModule ? 1 : 0) + (navLevel() ? 1 : 0); }
+
+/* Fermer le niveau du dessus comme Échap : le shell d'abord (ses fenêtres sont au-dessus de l'outil), puis l'outil. Le keydown part de l'élément du niveau (fenêtre ou panneau) : il remonte au document et à la fenêtre de l'outil,
+   où chaque outil l'écoute (le bloc d'interface clique la croix de la fenêtre du dessus, les menus ferment). Si le niveau est encore là : la croix du dessus ; sinon on rend faux. */
+function navTopEl(doc, id) {
+  var c = doc.getElementById('ui-confirm');
+  if (c && !c.hidden) return c;
+  var l = doc.querySelectorAll(navSel(id));
+  return l.length ? l[l.length - 1] : null;
+}
+function navClosed(el, id) { return !el.isConnected || !el.matches(navSel(id)); }
+function navCloseTop() {
+  var pairs = [[document, 'shell']], td = navToolDoc();
+  if (td) pairs.push([td, activeModule]);
+  for (var i = 0; i < pairs.length; i++) {
+    var doc = pairs[i][0], id = pairs[i][1];
+    if (!navOpenIn(doc, id)) continue;
+    var el = navTopEl(doc, id);
+    if (!el) continue;
+    try {
+      var W = doc.defaultView;
+      el.dispatchEvent(new W.KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', keyCode: 27, which: 27, bubbles: true, cancelable: true }));
+    } catch (e) { /* le document de l'outil ne répond pas */ }
+    if (navClosed(el, id)) return true;
+    var x = el.querySelector('.ui-close, .rt-close');
+    if (x) { try { x.click(); } catch (e) { /* sans croix */ } }
+    return navClosed(el, id);
+  }
+  return false;
+}
+
+/* L'état et l'adresse que dit un niveau : l'adresse est #<id> dès qu'un outil est affiché, rien d'autre (au mur, celle de la page, sans #) */
+function navState(n) { return n === 0 ? { mp: 0 } : { mp: n, tool: activeModule || null }; }
+function navAddr(n) { return n > 0 && activeModule ? NAV.base + '#' + activeModule : NAV.base; }
+function navPush(n) { try { history.pushState(navState(n), '', navAddr(n)); } catch (e) { NAV.ok = false; } }
+function navFix() {                          /* l'entrée courante dit le niveau et l'outil affichés (un outil à un autre sans le mur : l'entrée est remplacée, non ajoutée) */
+  if (!NAV.ok) return;
+  try {
+    var st = history.state, n = NAV.h, want = navState(n), cur = st && typeof st.mp === 'number' ? st.mp : 0;
+    var same = cur === n && (n === 0 || st.tool === want.tool) && (location.hash === (n > 0 && activeModule ? '#' + activeModule : ''));
+    if (!same) history.replaceState(want, '', navAddr(n));
+  } catch (e) { NAV.ok = false; }
+}
+function navGo(delta) {                      /* une traversée demandée par le shell : sa popstate n'est pas un geste */
+  NAV.pending++;
+  clearTimeout(NAV.timer);
+  NAV.timer = setTimeout(navStuck, 1500);
+  try { history.go(delta); } catch (e) { NAV.pending = 0; NAV.ok = false; }
+}
+function navStuck() {                        /* aucune popstate n'est venue (pas d'entrée où aller) : on repart de ce qu'on voit */
+  if (!NAV.pending) return;
+  NAV.pending = 0;
+  if (NAV.booting) {
+    NAV.booting = false;
+    try { history.replaceState({ mp: 0 }, '', NAV.base); } catch (e) { NAV.ok = false; }
+    NAV.h = 0;
+  }
+  navSync();
+}
+
+/* Le niveau affiché contre les entrées posées : une entrée de plus pour chaque niveau ouvert, une traversée de moins pour chaque niveau fermé */
+function navSync() {
+  if (!NAV.ok || NAV.pending > 0 || NAV.booting) return;
+  var d = navDepth();
+  if (d > NAV.h) { while (NAV.h < d) { NAV.h++; navPush(NAV.h); } }
+  else if (d < NAV.h) { var n = NAV.h - d; NAV.h = d; navGo(-n); }
+  else navFix();
+}
+function navQueue() {
+  if (NAV.queued) return;
+  NAV.queued = true;
+  var run = function () { if (!NAV.queued) return; NAV.queued = false; navSync(); };
+  (window.requestAnimationFrame || setTimeout)(run);
+  setTimeout(run, 150);
+}
+function navWatch(doc) {
+  try {
+    new MutationObserver(navQueue).observe(doc.documentElement, { subtree: true, childList: true, attributes: true, attributeFilter: ['hidden', 'class', 'style', 'aria-expanded'] });
+  } catch (e) { console.warn('[M·P] niveaux : ' + e); }
+}
+/* Un outil qui change de page par son adresse interne (le Field Manual : location.hash) ajouterait des entrées à l'historique de la suite : ces changements d'adresse remplacent l'entrée au lieu d'en ajouter (API de navigation) */
+function navFrame(iframe) {
+  try {
+    var w = iframe.contentWindow;
+    if (w && w.navigation && w.navigation.addEventListener) w.navigation.addEventListener('navigate', function (e) {
+      if (e.cancelable && e.navigationType === 'push' && e.hashChange && e.destination && e.destination.sameDocument) { e.preventDefault(); w.location.replace(e.destination.url); }
+    });
+  } catch (e) { /* sans API de navigation, l'outil garde ses entrées */ }
+}
+
+/* Le retour du navigateur (ou « Avancer ») : l'entrée où l'on arrive dit un niveau E ; on le met d'accord avec ce qui est affiché */
+function navPop(ev) {
+  var st = ev.state, E = st && typeof st.mp === 'number' ? st.mp : 0;
+  if (NAV.pending > 0) {
+    NAV.pending--;
+    if (NAV.pending > 0) return;
+    clearTimeout(NAV.timer);
+    if (NAV.booting) { navBoot(); return; }
+    if (E === NAV.h) { navFix(); navSync(); return; }
+  }
+  if (NAV.booting) { navBoot(); return; }
+  if (E === NAV.h) { navFix(); return; }
+  if (E > NAV.h) { navGo(NAV.h - E); return; }                        /* « Avancer » sur une entrée qui décrit plus que ce qui est affiché : un retour en silence, rien n'est rouvert */
+  NAV.h = E;                                                          /* un retour : le niveau du dessus se ferme comme Échap, ou l'outil ramène au mur comme « ◄ » */
+  for (var g = 0; g < 4; g++) {
+    var lvl = navLevel();
+    if (((activeModule ? 1 : 0) + (lvl ? 1 : 0)) <= E) break;
+    if (lvl) { navCloseTop(); if (navLevel()) break; }               /* une fenêtre reste ouverte dessous : navSync rétablit l'entrée du niveau 2 */
+    else goHub();
+  }
+  navSync();
+}
+
+/* Au chargement : une entrée de niveau restaurée par le navigateur (rechargement) se corrige ; #<id> connu : le mur, puis l'outil ([mur, outil]) ; inconnu : le mur, adresse nettoyée */
+function navBoot() {
+  var st = history.state, E = st && typeof st.mp === 'number' ? st.mp : 0;
+  var id = E > 0 ? ((st && st.tool) || '') : (location.hash || '').replace(/^#/, '');
+  var known = !!(id && MODULE_HTML[id]);
+  NAV.booting = false;
+  try {
+    if (E === 0) {
+      if (location.hash || (st && st.mp !== 0)) history.replaceState({ mp: 0 }, '', NAV.base);
+      NAV.h = 0;
+      if (known) openModule(id);
+      return;
+    }
+    if (E === 1 && known) { NAV.h = 1; openModule(id); return; }       /* l'entrée restaurée devient celle de l'outil : [mur, outil] */
+    if (history.length > 1) { NAV.h = E; NAV.booting = true; navGo(-1); return; }   /* une entrée de fenêtre, ou d'un outil inconnu : un retour, puis on recommence ; rien n'est rouvert */
+    history.replaceState({ mp: 0 }, '', NAV.base);
+    NAV.h = 0;
+  } catch (e) { NAV.ok = false; if (known) openModule(id); }
+}
+
+/* La question avant de quitter : tant qu'une mission d'HQ est ouverte (mission_snapshot_v1 dans le stockage, que le shell efface au démarrage), le navigateur demande avant de quitter, de recharger ou de s'en aller */
+function navMissionOpen() { try { return localStorage.getItem('mission_snapshot_v1') !== null; } catch (e) { return false; } }
+function navInit() {
+  NAV.base = location.href.split('#')[0];
+  try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch (e) { /* le défilement du mur est rendu par le shell */ }
+  window.addEventListener('popstate', navPop);
+  window.addEventListener('beforeunload', function (e) {
+    if (!navMissionOpen()) return;
+    e.preventDefault();
+    e.returnValue = '';
+  });
+  navWatch(document);
+  navBoot();
+}
+"""
+
+
 def build_html(module_html_js, tile_uris, suite_examples_js):
     MESSAGES_CSS = build_messages_css()          # le toast : la feuille de messages_block.py, telle quelle (le shell parle par le même toast que les outils)
     UI_CSS = build_ui_css()                      # la feuille de ui_block.py, telle quelle : la fenêtre du nom est une .ui-modal (le shell ne reçoit pas le script de ui_block)
     SUITE_CSS = build_suite_file_css()           # les couleurs de ces deux feuilles, posées sur la fenêtre du nom et sur #toast
     MESSAGES_JS = build_messages_block()
     SUITE_JS = build_suite_file_block()
+    NAV_JS = NAV_JS_SRC
     SUITE_HTML = build_suite_file_html()
     tile_hq = tile_uris.get('hq', '')
     tile_bg = tile_uris.get('bg', '')
@@ -371,7 +548,7 @@ button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-
 a[href]:focus-visible, [tabindex]:focus-visible, [role="button"]:focus-visible {{
   outline: 2px solid var(--amber); outline-offset: 2px;
 }}
-html,body{{height:100%;}}
+html,body{{height:100%; overscroll-behavior-y:none;}}
 body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); min-height:100vh; overflow-x:hidden; transition:background .5s ease;}}
 .app{{position:relative; z-index:3; min-height:100vh; display:flex; flex-direction:column;}}
 
@@ -1081,6 +1258,7 @@ select[data-tbm-src] {{ display: none !important; }}
       return;
     }}
     adoptStoredLang();
+    if (!activeModule) NAV.wallY = window.pageYOffset || document.documentElement.scrollTop || 0;     /* le mur rend ce défilement au retour */
     document.getElementById('landing').style.display = 'none';
     var mv = document.getElementById('module-view');
     mv.style.display = 'block';
@@ -1102,6 +1280,8 @@ select[data-tbm-src] {{ display: none !important; }}
         if (typeof suiteOnLoad === 'function') suiteOnLoad(id);
         toastWatch(iframe);
         var doc = iframe.contentDocument;
+        navWatch(doc);                                                    /* un niveau ouvert dans l'outil (fenêtre, menu) : l'historique le suit */
+        navFrame(iframe);
         /* Injection bouton retour dans .toolbar (pas #app-header — cf. vérif grep) */
         var toolbar = doc && doc.querySelector('.toolbar');
         if (toolbar && !toolbar.querySelector('.mp-back-injected')) {{
@@ -1119,7 +1299,8 @@ select[data-tbm-src] {{ display: none !important; }}
             var tbs = doc.createElement('style');
             tbs.id = 'mp-toolbar-style';
             tbs.textContent =
-                '.toolbar{{overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;}}'
+                'html,body{{overscroll-behavior-y:none;}}'
+              + '.toolbar{{overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;}}'
               + '.toolbar::-webkit-scrollbar{{display:none;}}'
               + '.toolbar.mp-fade-r::after{{content:"";position:sticky;right:0;flex:0 0 28px;width:28px;align-self:stretch;'
               + 'margin-left:calc(-28px - var(--mp-fade-gap,0px));pointer-events:none;opacity:1;z-index:2;background:inherit;'
@@ -1190,6 +1371,7 @@ select[data-tbm-src] {{ display: none !important; }}
 
     activeModule = id;
     toastPlace();
+    navSync();                                                          /* une entrée à l'ouverture depuis le mur ; d'un outil à un autre, l'entrée est remplacée */
   }}
 
   /* Le toast du shell au-dessus de la barre basse de l'outil ouvert : il lit --mp-toast-bottom sur le document de l'outil (même origine ; l'outil la pose quand il a une barre basse visible),
@@ -1260,6 +1442,7 @@ select[data-tbm-src] {{ display: none !important; }}
     var landing = document.getElementById('landing');
     landing.style.display = '';
     activeModule = null;
+    try {{ window.scrollTo(0, NAV.wallY); }} catch(e) {{}}               /* le mur retrouve le défilement qu'il avait à l'ouverture de l'outil */
     toastPlace();
     /* Le clavier quitte l'outil qu'on vient de fermer (le clic sur Retour l'y avait laissé) : Ctrl+S au hub est à l'accueil (Sauvegarder), pas à l'outil masqué */
     try {{
@@ -1275,8 +1458,10 @@ select[data-tbm-src] {{ display: none !important; }}
       var storedLang = localStorage.getItem(KEY_LANG);
       if (storedLang && storedLang !== CURRENT_LANG) setLang(storedLang);
     }} catch(e) {{}}
+    navSync();                                                          /* « ◄ » consomme l'entrée de l'outil (et celle du niveau 2 s'il y en avait une) */
   }}
 
+{NAV_JS}
 {MESSAGES_JS}
 {SUITE_JS}
 /* ============= LISTES DE LA BARRE — thème de l'interface (lot mp-ui-listes) =============
@@ -1652,6 +1837,7 @@ function tbmScrolled(e) {{
     /* Le toast relit la barre basse de l'outil ouvert à son affichage */
     var toastEl = mpToastEl();
     new MutationObserver(function() {{ if (toastEl.classList.contains('show')) toastPlace(); }}).observe(toastEl, {{ attributes: true, attributeFilter: ['class'] }});
+    navInit();                                                          /* l'historique, la question avant de quitter, l'adresse #<id> */
   }}
 
   document.addEventListener('DOMContentLoaded', init);

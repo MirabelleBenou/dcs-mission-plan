@@ -13,6 +13,7 @@ The sections per tool, further down, keep the history of each tool up to v1.24.0
 - Aircraft types are shown under their designation (F/A-18C rather than FA-18C_hornet); packages, missions and the work file still store the game’s type name.
 - Type lists are grouped (helicopters, then planes) and can be searched.
 - On a phone, the toolbar no longer scrolls: what does not fit moves into a “⋯” menu at its right end, last item first; the back arrow, the abbreviation, the file buttons and Display always stay.
+- On a phone, the back gesture or button closes one level at a time: an open menu or window first, then the tool, back to the suite's home screen; only from the home screen does it leave Mission Plan. The address names the open tool, so reloading reopens it. Pull-to-refresh is off.
 
 #### HQ
 - The Wing window no longer has an “Application title” field, which no tool used; a Wing configuration that has one still opens and keeps it.
@@ -22,6 +23,7 @@ The sections per tool, further down, keep the history of each tool up to v1.24.0
 - A created flight now starts as the Flight Configurator set it: on its stands, cold or engines running, or at the route's first waypoint. A stand already taken in the mission is replaced by the nearest free one that fits, which you can change.
 - Applying a flight package keeps what the Flight Configurator does not set in a unit’s loadout: the gun ammunition belt chosen in the mission editor and the restricted weapons stay as they were.
 - Equipment options set in the Flight Configurator are written to each aircraft, in found and created flights; the mission's own options go to the Flight Configurator with the loadout.
+- While a mission is open, the browser asks before the page is closed, reloaded or left: the mission is not kept after that.
 
 #### Flight Configurator
 - In a group of two units or more, the icon at the right of a unit’s header folds or unfolds all the units of the group.
