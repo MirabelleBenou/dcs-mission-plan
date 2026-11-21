@@ -2558,6 +2558,20 @@ html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-
   .toolbar .tb-label { display: none; }
   html.mp-in-shell #btn-display > span, html.mp-in-shell #btn-display > .dsp-chev { display: none; }
 }
+/* ---- au doigt : 44 px, et des champs de 16 px au téléphone (charte C4 ; ce que le bloc dit ici vaut pour les sept outils et pour l'accueil, qui en prend la feuille) ----
+   Sous « pointer: coarse » seulement : la souris ne change pas. La règle grandit la zone de toucher, pas le dessin (un bouton-icône garde son icône, centrée : min-height et min-width,
+   pas de height ni de padding). Exclus : cases à cocher et boutons radio (leur libellé, s'il se touche, compte), liens dans une phrase (a[href] n'y est pas), repères de la carte du Route Planner (Leaflet),
+   lignes d'un menu ouvert (déjà à 44 px). Une règle d'un module qui l'emporte par sa spécificité est corrigée dans le module, sous la même condition. */
+@media (pointer: coarse) {
+  :where(button:not(.leaflet-marker-icon), [role="button"]:not(.leaflet-marker-icon), [role="tab"], .tbm-trigger, summary, select, textarea,
+    input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"])) { min-width: 44px; min-height: 44px; }
+}
+/* au téléphone (sous 760 px, le seuil de la suite), le texte des champs est à 16 px : un iPhone zoomerait sur la page à la saisie sinon ; les listes des barres (.toolbar, le rail de l'accueil) ne sont pas des champs.
+   :is() prend la spécificité de son argument le plus fort (celui des :not de input) pour toute la liste : la taille de la suite l'emporte sur les 11 à 13 px des modules, textarea comprise */
+@media (pointer: coarse) and (max-width: 759px) {
+  :is(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="range"]):not([type="file"]):not([type="color"]):not([type="button"]):not([type="submit"]):not([type="image"]), select, textarea,
+    .tbm-trigger:not(.toolbar .tbm-trigger):not(.rail .tbm-trigger)) { font-size: 16px; }
+}
 /* MP-20 begin */
 /* Contrastes (texte sous 18 px, 4,5 : 1 au moins) : couleur du texte seule, la palette commune ne bouge pas. */
 :where(body[data-theme="cw-nato"]) .ui-lbl { color: #c49037; }
