@@ -10,8 +10,8 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from test_relief_rp import (CHANGELOG_LINE, DOC, PT, ROOT, SHELL, Bench, browser, menu, needs_pw, open_rp, theatre, tick_relief, tile_ll)  # noqa: E402,F401
 
-LINE = ('- With Relief on, in Read mode, tapping or clicking an imported layer shows the ground elevation instead of opening the layer\'s details; '
-        'untick Relief to read them.')
+LINE = ('- With it on, the ground elevation is shown next to the mouse pointer (on a phone, tap the map in Read mode), in the altitude unit you chose; '
+        'in Read mode, tapping or clicking an imported layer shows the elevation instead of the layer\'s details — untick Relief to read them.')
 CENTER = tile_ll(1228, 819, .5, .5)                    # le centre de la vue (zoom 11) ; la zone l'entoure, le point est à droite
 TAG = """(() => { const b = document.getElementById('rp-alt'), x = document.getElementById('rp-alt-x'); return { tag: !!b && !b.hidden, ring: !!x && !x.hidden, text: b ? b.textContent : '' }; })()"""
 FICHE = "document.querySelectorAll('.leaflet-popup.cf-popup').length"
@@ -83,8 +83,8 @@ def point_dx(fr):
 
 def test_texts():
     log = (ROOT / 'CHANGELOG.md').read_text(encoding='utf-8')
-    unreleased = log.split('## Unreleased', 1)[1].split('\n---\n', 1)[0]
-    rp = unreleased.split('#### Route Planner', 1)[1].split('####', 1)[0]
+    unreleased = log.split('\n## Unreleased\n', 1)[1].split('\n## ', 1)[0]
+    rp = unreleased.split('\n### Route Planner\n', 1)[1].split('\n### ', 1)[0]
     lines = rp.strip().splitlines()
     assert lines.index(CHANGELOG_LINE) + 1 == lines.index(LINE) and rp.count(LINE) == 1 and unreleased.count(LINE) == 1
     fm = (ROOT / 'build_field_manual.py').read_text(encoding='utf-8')

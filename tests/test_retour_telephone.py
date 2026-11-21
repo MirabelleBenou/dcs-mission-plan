@@ -23,9 +23,9 @@ needs_pw = pytest.mark.skipif(not HAS_PW, reason='playwright ou chromium absent'
 SHELL = 'file://' + str(ROOT / 'dist' / 'dcs_mission_plan.html')
 TOOLS = ['hq', 'bg', 'rs', 'rp', 'dg', 'fc', 'fm']
 
-TEXT_ALL = ("- On a phone, the back gesture or button closes one level at a time: an open menu or window first, then the tool, back to the suite's home screen; "
-            "only from the home screen does it leave Mission Plan. The address names the open tool, so reloading reopens it. Pull-to-refresh is off.")
-TEXT_HQ = "- While a mission is open, the browser asks before the page is closed, reloaded or left: the mission is not kept after that."
+TEXT_ALL_1 = "- The back gesture or button closes an open menu or window first, then the tool, back to the suite's home screen; only from the home screen does it leave Mission Plan."
+TEXT_ALL_2 = "- The address names the open tool, so reloading reopens it. Pull-to-refresh is off."
+TEXT_HQ = "- The browser asks before the page is closed, reloaded or left: the mission is not kept after that."
 TEXT_FM_FR = ("Au téléphone, le geste retour ferme un niveau à la fois : d’abord le menu ou la fenêtre ouverts, puis l’outil, qui ramène à l’accueil de la suite ; "
               "depuis l’accueil seulement, il quitte Mission Plan. Tant qu’une mission d’HQ est ouverte, le navigateur demande avant de quitter ou de recharger la page.")
 TEXT_FM_EN = ("On a phone, the back gesture closes one level at a time: first the open menu or window, then the tool, which takes you back to the suite’s home screen; "
@@ -34,9 +34,11 @@ TEXT_FM_EN = ("On a phone, the back gesture closes one level at a time: first th
 
 def test_texts_are_where_the_lot_says():
     log = (ROOT / 'CHANGELOG.md').read_text(encoding='utf-8')
-    unreleased = log.split('## Unreleased', 1)[1].split('\n---\n', 1)[0]
-    assert TEXT_ALL in unreleased.split('#### HQ', 1)[0]
-    assert TEXT_HQ in unreleased.split('#### HQ', 1)[1].split('#### Flight Configurator', 1)[0]
+    unreleased = log.split('\n## Unreleased\n', 1)[1].split('\n## ', 1)[0]
+    all_tools = unreleased.split('\n### All tools\n', 1)[1].split('\n### ', 1)[0].splitlines()
+    assert all_tools.index(TEXT_ALL_1) + 1 == all_tools.index(TEXT_ALL_2)
+    hq = unreleased.split('\n### HQ\n', 1)[1].split('\n### ', 1)[0]
+    assert hq.count(TEXT_HQ) == 1 and unreleased.count(TEXT_HQ) == 1
     fm = (ROOT / 'build_field_manual.py').read_text(encoding='utf-8')
     i = fm.index('"La barre du haut", "The top bar"')
     j = fm.index('"Lire ce manuel au téléphone"', i)

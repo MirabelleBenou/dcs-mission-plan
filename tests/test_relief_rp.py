@@ -31,8 +31,7 @@ DOC = {'format': 'dcs-relief-tiles-v1', 'theatre': 'Syria', 'edition': 'test', '
        'layers': {'hillshade': {'path': 'hillshade/{z}/{x}/{y}.webp'},
                   'elevation': {'path': 'elevation/{z}/{x}/{y}.png', 'encoding': 'terrain-rgb', 'base_m': -10000, 'step_m': 0.1}},
        'attribution': 'test', 'source': 'test', 'tiles_per_zoom': {}}
-CHANGELOG_LINE = ('- New “Relief” option in the Display menu: the terrain as DCS sees it, shaded in relief over any base map, on Caucasus, Cold War Germany and Syria. '
-                  'With it on, the ground elevation is shown next to the mouse pointer (on a phone, tap the map in Read mode), in the altitude unit you chose.')
+CHANGELOG_LINE = '- New “Relief” option in the Display menu: the terrain as DCS sees it, shaded in relief over any base map, on Caucasus, Cold War Germany and Syria.'
 README_TAIL = 'terrain relief © DCS World, Eagle Dynamics SA, read in the game (non-commercial use)'
 ATTR_FR = 'Relief : DCS World, Eagle Dynamics SA (usage non commercial)'
 ATTR_EN = 'Relief: DCS World, Eagle Dynamics SA (non-commercial use)'
@@ -144,9 +143,10 @@ def theatre(fr, pg, tid):
 
 def test_texts_are_where_the_lot_says():
     log = (ROOT / 'CHANGELOG.md').read_text(encoding='utf-8')
-    unreleased = log.split('## Unreleased', 1)[1].split('\n---\n', 1)[0]
-    rp = unreleased.split('#### Route Planner', 1)[1].split('####', 1)[0]
+    unreleased = log.split('\n## Unreleased\n', 1)[1].split('\n## ', 1)[0]
+    rp = unreleased.split('\n### Route Planner\n', 1)[1].split('\n### ', 1)[0]
     assert rp.count(CHANGELOG_LINE) == 1 and unreleased.count(CHANGELOG_LINE) == 1
+    assert rp.strip().splitlines()[rp.strip().splitlines().index(CHANGELOG_LINE) - 1] == '**Relief**'
     readme = (ROOT / 'README.md').read_text(encoding='utf-8')
     assert [ln for ln in readme.splitlines() if 'satellite imagery' in ln and ln.endswith(README_TAIL)]
     fm = (ROOT / 'build_field_manual.py').read_text(encoding='utf-8')
