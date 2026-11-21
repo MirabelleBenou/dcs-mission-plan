@@ -1073,6 +1073,7 @@ select[data-tbm-src] {{ display: none !important; }}
       loading: 'Chargement',
       back: '◄ Mission Plan',
       'back.tip': 'Retour à l’accueil de Mission Plan',
+      'switch.name': 'Changer d’outil',
       'theme.cwnato': 'Cold War OTAN',
       'theme.cwsoviet': 'Cold War Soviétique',
       'theme.modernnato': 'OTAN moderne',
@@ -1123,6 +1124,7 @@ select[data-tbm-src] {{ display: none !important; }}
       loading: 'Loading',
       back: '◄ Mission Plan',
       'back.tip': 'Back to the Mission Plan home',
+      'switch.name': 'Switch tool',
       'theme.cwnato': 'Cold War NATO',
       'theme.cwsoviet': 'Cold War Soviet',
       'theme.modernnato': 'Modern NATO',
@@ -1247,6 +1249,26 @@ select[data-tbm-src] {{ display: none !important; }}
      texte entier au-delà ; l'infobulle, toujours, dit où il mène) et le fondu du bord droit (barre qui défile et qui n'est pas au bout). Rappelée au
      défilement de la barre, au redimensionnement, aux changements de la barre (langue de l'outil) et au changement de
      langue du shell. */
+  /* La liste des outils que donne le shell à la marque de la barre (uiSwitchSet, ui_block.py) : « ◄ Mission Plan », puis les outils dans l'ordre de MODULES, groupés comme les cadres de l'accueil (le titre de
+     chaque cadre est lu sur le mur), un filet et ceux qui n'ont pas de carte (le Field Manual) ; le carré de chaque ligne est à l'accent de l'outil (--a-<id>) ; cur = l'outil dont c'est la barre. */
+  var SWITCH_NAMES = {{ fm: 'Field Manual' }};
+  function switchCfg(cur) {{
+    var items = [{{ kind: 'back', text: t('back'), run: goHub }}], root = getComputedStyle(document.documentElement), grp = null, sep = false;
+    Object.keys(MODULE_HTML).forEach(function(mid) {{
+      if (!MODULE_HTML[mid]) return;
+      var card = document.getElementById('card-' + mid), box = card && card.closest ? card.closest('.mp-grp') : null;
+      var head = box ? box.querySelector('.mp-tab b') : null, ttl = card ? card.querySelector('.ptitle') : null;
+      if (box && head && head.textContent !== grp) {{ grp = head.textContent; items.push({{ kind: 'group', text: grp }}); }}
+      if (!box && !sep) {{ sep = true; items.push({{ kind: 'sep' }}); }}
+      items.push({{
+        kind: 'tool', text: (ttl ? ttl.textContent : SWITCH_NAMES[mid] || mid.toUpperCase()).trim(),
+        color: (root.getPropertyValue('--a-' + mid) || '').trim() || '#c0892a', current: mid === cur,
+        run: function() {{ openModule(mid); }}
+      }});
+    }});
+    return {{ name: t('switch.name'), items: items }};
+  }}
+
   function mpBindToolbar(iframe, toolbar, back) {{
     var doc = iframe.contentDocument, win = iframe.contentWindow, queued = false;
     function sync() {{
@@ -1262,6 +1284,7 @@ select[data-tbm-src] {{ display: none !important; }}
         if (back.getAttribute('aria-label') !== name) back.setAttribute('aria-label', name);
         var tip = t('back.tip');
         if (back.title !== tip) back.title = tip;
+        if (typeof win.uiSwitchSet === 'function') win.uiSwitchSet(switchCfg(iframe.id.replace(/^iframe-/, '')));      /* la marque de la barre ouvre la liste des outils */
         var g = win.getComputedStyle(toolbar).columnGap;
         g = (g && g !== 'normal') ? g : '0px';
         if (toolbar.style.getPropertyValue('--mp-fade-gap') !== g) toolbar.style.setProperty('--mp-fade-gap', g);

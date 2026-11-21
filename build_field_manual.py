@@ -10,7 +10,7 @@ import sys
 import tempfile
 from shell_only_block import build_block as build_shell_only_block
 from version_block import SUITE_VERSION
-from ui_block import build_bar_css, build_bar_js
+from ui_block import build_bar_css, build_bar_js, build_tbm_css
 # La garde du module seul : premier élément du <body> (build_mission_plan.py la vérifie dans le dist/)
 SHELL_ONLY_TAG = '<script data-lang-key="lang_v1">\n' + build_shell_only_block() + '</script>\n'
 
@@ -29,6 +29,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 
 BAR_CSS = build_bar_css()      # la séquence de réduction de la barre : la même que celle du bloc d'interface commun (ui_block.py), pas une copie
 BAR_JS = build_bar_js()
+TBM_CSS = build_tbm_css()      # la matière des listes (.tbm-panel, .tbm-opt) : le Field Manual n'a pas de liste de barre, mais la liste des outils (uiSwitchSet) la prend
 
 MODULE_ID   = 'fm'
 
@@ -949,6 +950,9 @@ PAGES_SRC['start'] = [
     ('p',
      ["Au téléphone, le geste retour ferme un niveau à la fois : d’abord le menu ou la fenêtre ouverts, puis l’outil, qui ramène à l’accueil de la suite ; depuis l’accueil seulement, il quitte Mission Plan. Tant qu’une mission d’HQ est ouverte, le navigateur demande avant de quitter ou de recharger la page."],
      ["On a phone, the back gesture closes one level at a time: first the open menu or window, then the tool, which takes you back to the suite’s home screen; only from the home screen does it leave Mission Plan. While an HQ mission is open, the browser asks before leaving or reloading the page."]),
+    ('p',
+     ["Le nom de l’outil, ou son sigle, au début de la barre, ouvre la liste des outils (▾), dans l’ordre de l’accueil, l’outil ouvert marqué : un toucher de plus ouvre un autre outil, qui garde son travail. En tête de la liste, **◄ Mission Plan** ramène à l’accueil."],
+     ["The tool’s name, or its abbreviation, at the start of the bar opens the list of tools (▾), in the home screen’s order, the open tool marked: one more touch opens another tool, which keeps its work. At the top of the list, **◄ Mission Plan** goes back to the home screen."]),
     ('h', "Lire ce manuel au téléphone", "Reading this manual on a phone"),
     ('p',
      ["**Index** et **Sommaire**, dans la barre, restent à portée de main : Index ramène à la page d’entrée du manuel, Sommaire ouvre la liste de ses pages et de leurs sections, et un toucher y mène. En bas de chaque chapitre, le précédent et le suivant. **◄ Mission Plan** quitte le manuel."],
@@ -1446,6 +1450,7 @@ a.fmnav-ch:focus-visible, a.fmnav-sec:focus-visible {{ outline-offset: -2px; }}
 .tb-classif {{ font-family: var(--f-stencil); font-weight: 400; font-size: 11px; letter-spacing: 3px; color: var(--red-faded); border: 1px solid var(--red-faded); padding: 4px 10px; white-space: nowrap; flex-shrink: 0; }}
 #btn-lang svg {{ display: block; }}
 .tb-brand-sub {{ font-weight: 500; }}
+{TBM_CSS}
 {BAR_CSS}
 /* ── ROOT SCROLL ── */
 #fm-root:focus {{ outline: none; }}

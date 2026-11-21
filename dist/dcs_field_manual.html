@@ -272,6 +272,66 @@ a.fmnav-ch:focus-visible, a.fmnav-sec:focus-visible { outline-offset: -2px; }
 .tb-classif { font-family: var(--f-stencil); font-weight: 400; font-size: 11px; letter-spacing: 3px; color: var(--red-faded); border: 1px solid var(--red-faded); padding: 4px 10px; white-space: nowrap; flex-shrink: 0; }
 #btn-lang svg { display: block; }
 .tb-brand-sub { font-weight: 500; }
+/* ===== LISTES AU THÈME DE L'INTERFACE : feuille ===== */
+/* ---------- Listes de la barre au thème de l'interface ----------
+   Le <select> reste dans la page, masqué ; un bouton de mêmes classes prend sa place (voir initToolbarMenus). */
+select[data-tbm-src] { display: none !important; }
+.tbm-trigger { display: inline-block; text-align: left; white-space: nowrap; }
+.tbm-lbl { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; padding: 4px 0; margin: -3.25px 0 -2.75px; pointer-events: none; }
+.tbm-lbl::after { content: attr(data-w); display: block; height: 0; overflow: hidden; visibility: hidden; white-space: pre; }
+@supports (width: calc-size(max-content, round(up, size, 1px))) { .tbm-lbl::after { width: calc-size(max-content, round(up, size, 1px)); } }
+.tbm-trigger-open { border-color: var(--amber) !important; }
+.tbm-panel {
+  position: fixed; z-index: 10500; min-width: 180px; max-width: min(340px, calc(100vw - 16px));
+  max-height: min(62vh, 440px); overflow-y: auto; overscroll-behavior: contain;
+  background: linear-gradient(180deg, var(--olive-dark) 0%, var(--olive-deep) 100%);
+  border: 1px solid var(--amber-dark); border-top: 3px solid var(--amber);
+  box-shadow: 0 12px 28px rgba(0,0,0,.55), 0 2px 0 rgba(0,0,0,.35);
+  padding: 4px 0; margin: 0; list-style: none; scrollbar-width: thin; scrollbar-color: var(--amber-dark) transparent;
+  transform-origin: top left; animation: tbm-in .12s ease-out;
+}
+@keyframes tbm-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+.tbm-head {
+  font-family: var(--f-ui); font-weight: 500; font-size: 10px; letter-spacing: 1.8px; text-transform: uppercase;
+  color: color-mix(in srgb, var(--paper) 72%, var(--olive-dark)); padding: 8px 14px 6px; border-bottom: 1px solid rgba(168,154,114,.25); margin-bottom: 2px;
+}
+.tbm-opt {
+  position: relative; display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 16px 0 18px;
+  font-family: var(--f-ui); font-weight: 500; font-size: 13px; letter-spacing: 1.3px; text-transform: uppercase;
+  color: var(--paper); cursor: pointer; white-space: nowrap; user-select: none;
+}
+.tbm-opt + .tbm-opt { border-top: 1px solid rgba(168,154,114,.14); }
+.tbm-list .tbm-group { margin-top: 2px; border-top: 1px solid rgba(168,154,114,.25); list-style: none; }
+.tbm-opt .tbm-mark { width: 7px; height: 7px; flex: none; transform: rotate(45deg); border: 1px solid var(--khaki); }
+/* Lisibilité (WCAG 4,5 au moins, haut et bas du dégradé, quatre thèmes) : l'en-tête, la ligne choisie et la ligne survolée prennent un ton dérivé des variables du thème (aucune ne change) ; l'accent ambre reste celui du liseré, du losange et du filet du panneau */
+.tbm-opt.active, .tbm-opt:hover { background: var(--olive); color: color-mix(in srgb, var(--amber) 55%, #fff); }
+.tbm-opt.active .tbm-mark, .tbm-opt:hover .tbm-mark { border-color: var(--amber); }
+.tbm-opt[aria-selected="true"] { color: color-mix(in srgb, var(--amber) 55%, #fff); font-weight: 700; }
+.tbm-opt[aria-selected="true"]::before { content: ''; position: absolute; left: 0; top: 6px; bottom: 6px; width: 3px; background: var(--amber); }
+.tbm-opt[aria-selected="true"] .tbm-mark { background: var(--amber); border-color: var(--amber); }
+.tbm-opt[aria-disabled="true"] { color: var(--khaki); cursor: not-allowed; background: none; }
+.tbm-opt[aria-disabled="true"] .tbm-mark { border-style: dashed; border-color: var(--khaki); background: none; }
+.tbm-opt[aria-disabled="true"] .tbm-note { color: var(--khaki); font-size: 10px; letter-spacing: 1px; margin-left: auto; padding-left: 14px; }
+.tbm-off { display: none !important; }
+/* La recherche en tête d'une liste (option data-search du <select>) : collée en haut du panneau qui défile */
+.tbm-list { margin: 0; padding: 0; list-style: none; outline: none; }
+.tbm-search { position: sticky; top: 0; z-index: 2; padding: 6px 10px; background: var(--olive-dark); border-bottom: 1px solid rgba(168,154,114,.25); }
+.tbm-q { display: block; width: 100%; min-height: 36px; box-sizing: border-box; padding: 6px 10px; font-family: var(--f-typewriter); font-size: 13px; letter-spacing: .2px; color: #1f1c16; background: rgba(216, 201, 165, .92); border: 1px solid var(--khaki); border-left: 3px solid var(--amber-dark); border-radius: 0; outline: none; }
+.tbm-q:focus { border-left-color: var(--red-stamp); box-shadow: 0 0 0 1px var(--amber); }
+.tbm-q::placeholder { color: #6b6450; opacity: 1; }
+.tbm-none { margin: 0; padding: 0; list-style: none; cursor: default; }
+.tbm-msg { font-family: var(--f-typewriter); font-size: 13px; color: var(--khaki-light); }
+.tbm-msg:not(:empty) { padding: 12px 18px; }
+@media (prefers-reduced-motion: reduce) { .tbm-panel { animation: none; } }
+@media print { .tbm-panel { display: none; } }
+.tbm-panel.tbm-p-field { max-width: calc(100vw - 16px); }
+.tbm-panel.tbm-p-field .tbm-opt {
+  font-family: var(--f-typewriter); font-weight: 400; font-size: 13px; letter-spacing: .2px; text-transform: none;
+}
+.tbm-panel.tbm-p-field .tbm-opt[aria-selected="true"] { font-weight: 400; }
+.tbm-panel.tbm-up { border-top: 1px solid var(--amber-dark); border-bottom: 3px solid var(--amber); transform-origin: bottom left; }
+/* ===== FIN DE LA FEUILLE DES LISTES ===== */
+
 /* la barre qui manque de place se réduit dans un seul ordre, par la même règle « s'il tient » (uiBarFit, classes tb-st1 à tb-st6, cumulatives) : 1 le tampon de décor (et le tampon posé par le shell), 2 le numéro de version,
    3 le libellé d'une liste de la barre (« Théâtre »), 4 le texte d'Affichage (l'icône seule), 5 le texte des boutons (icônes seules), 6 le titre long, qui passe au sigle court (titre, sous-titre et séparateurs masqués), 7 « ⋯ » et 8 les écarts serrés (voir plus bas) ;
    aucun seuil de largeur propre à un outil, le Field Manual compris (il prend ce même texte : build_bar_css), ne retire plus rien de cela */
@@ -311,6 +371,21 @@ a.fmnav-ch:focus-visible, a.fmnav-sec:focus-visible { outline-offset: -2px; }
 .tb-more-chev { flex: none; margin-left: auto; padding-left: 14px; color: var(--khaki); }
 .tb-more-col { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; justify-content: center; padding: 4px 0; }
 .tb-more-why { margin-top: 2px; font-family: var(--f-ui); font-weight: 500; font-size: 12px; line-height: 1.3; letter-spacing: 0; text-transform: none; white-space: normal; color: var(--paper); }
+/* Changer d'outil (uiSwitchSet) : la marque de la barre (.tb-brand : le sigle, ou le titre et son sous-titre) devient un bouton, suivie de « ▾ » (khaki ; ambre liste ouverte, comme « ⋯ ») ; 44 px de haut au moins, la largeur de la marque et du chevron ; le dessin du titre et du sigle ne change pas */
+.toolbar .tb-brand.tb-switch { position: relative; box-sizing: border-box; min-width: 0; min-height: 44px; justify-content: center; padding-right: 7px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.toolbar .tb-brand.tb-switch::after { content: '▾'; position: absolute; right: 0; top: 50%; transform: translateY(-50%); font-family: var(--f-ui); font-weight: 700; font-size: 10px; line-height: 1; color: var(--khaki); pointer-events: none; }
+.toolbar .tb-brand.tb-switch[aria-expanded="true"]::after { color: var(--amber); }
+.toolbar .tb-brand.tb-switch .tb-brand-short { margin-right: -3px; }       /* l'espacement des lettres qui suit le dernier signe du sigle (3 px) est rendu au chevron : le sigle ne bouge pas */
+.toolbar .tb-brand.tb-switch:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+.tbm-panel.tb-sw-panel { right: auto; }
+.tb-sw-panel .tbm-opt { gap: 12px; padding: 0 16px 0 14px; outline: none; }
+.tb-sw-panel .tbm-txt { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.tb-sw-panel .tbm-opt.active, .tb-sw-panel .tbm-opt:focus-visible { background: var(--olive); color: color-mix(in srgb, var(--amber) 55%, #fff); }
+.tb-sw-panel .tbm-opt:focus-visible { outline: 2px solid var(--amber); outline-offset: -2px; }
+.tb-sw-sq { display: block; flex: none; width: 10px; height: 10px; }
+.tb-sw-sep { list-style: none; height: 0; margin: 2px 0; border-top: 1px solid rgba(168,154,114,.25); }
+.tb-sw-cur { color: color-mix(in srgb, var(--amber) 55%, #fff); font-weight: 700; }
+.tb-sw-cur .tbm-mark { margin-left: auto; background: var(--amber); border-color: var(--amber); }
 
 /* ── ROOT SCROLL ── */
 #fm-root:focus { outline: none; }
@@ -1895,6 +1970,8 @@ body.zm-open #fm-root { overflow: hidden; }
         <div class="lang-block" data-lang="en"><p>The bar is the same in all six tools: the file buttons right after the abbreviation, then the settings. When room runs out, the buttons <strong>lose their text in stages</strong>, Display first, and keep their icon and tooltip; on a phone or tablet, all of them are icons. When it still does not fit, on a phone, the settings after the file buttons and Display move into “⋯”, at the right end, starting with the last one. The icon at the right of a section header <strong>folds or unfolds all the sections</strong>, in all six tools; on a phone or tablet, the BG and DG editor switches to tabs.</p><p>Under the bar of the BG, RP, DG and FC, the <strong>HQ mission line</strong> says which .miz is open in HQ, its date and time, and what the tool takes from it. In the RP, DG and FC it turns red, “Not used here: other theatre”, when the mission is not on the tool’s theatre; in the BG, never.</p></div>
         <div class="lang-block" data-lang="fr"><p>Au téléphone, le geste retour ferme un niveau à la fois : d’abord le menu ou la fenêtre ouverts, puis l’outil, qui ramène à l’accueil de la suite ; depuis l’accueil seulement, il quitte Mission Plan. Tant qu’une mission d’HQ est ouverte, le navigateur demande avant de quitter ou de recharger la page.</p></div>
         <div class="lang-block" data-lang="en"><p>On a phone, the back gesture closes one level at a time: first the open menu or window, then the tool, which takes you back to the suite’s home screen; only from the home screen does it leave Mission Plan. While an HQ mission is open, the browser asks before leaving or reloading the page.</p></div>
+        <div class="lang-block" data-lang="fr"><p>Le nom de l’outil, ou son sigle, au début de la barre, ouvre la liste des outils (▾), dans l’ordre de l’accueil, l’outil ouvert marqué : un toucher de plus ouvre un autre outil, qui garde son travail. En tête de la liste, <strong>◄ Mission Plan</strong> ramène à l’accueil.</p></div>
+        <div class="lang-block" data-lang="en"><p>The tool’s name, or its abbreviation, at the start of the bar opens the list of tools (▾), in the home screen’s order, the open tool marked: one more touch opens another tool, which keeps its work. At the top of the list, <strong>◄ Mission Plan</strong> goes back to the home screen.</p></div>
         <span id="start-6"></span>
         <h3 class="lang-block" data-lang="fr">Lire ce manuel au téléphone</h3>
         <h3 class="lang-block" data-lang="en">Reading this manual on a phone</h3>
@@ -4955,7 +5032,7 @@ function uiBarMoreOutside(ev) {
   const t = ev.target;
   if (UIMORE.panel.contains(t) || (UIMORE.btn && UIMORE.btn.contains(t))) return;
   uiBarMoreClose();
-  const other = t && t.closest ? t.closest('.tbm-trigger') : null;
+  const other = t && t.closest ? t.closest('.tbm-trigger, .tb-switch') : null;       /* la marque ouvre la liste des outils par son propre clic */
   if (!other && typeof tbmSwallowNext === 'function') tbmSwallowNext();
 }
 function uiBarMoreClose() {
@@ -5035,6 +5112,7 @@ function uiBarMoreFill(ul) {
 function uiBarMoreOpen() {
   const b = UIMORE.btn;
   if (UIMORE.panel || !b || b.hasAttribute('data-mp-off') || !UIMORE.units.length) return;
+  uiSwClose(false);                                      /* la liste des outils ouverte se ferme */
   const panel = document.createElement('div'); panel.className = 'tbm-panel tb-more-panel';
   const ul = document.createElement('ul'); ul.className = 'tbm-list'; ul.setAttribute('role', 'menu'); ul.setAttribute('aria-labelledby', b.id); panel.appendChild(ul);       /* le menu est la liste elle-même, nommée par « ⋯ » */
   uiBarMoreFill(ul);
@@ -5136,6 +5214,7 @@ function uiBarFit() {
   bar.classList.remove('tb-fit');
   if (UIMORE.panel || uiBarListPanel()) uiBarMoreSettle(UIMORE.sig === before);       /* le menu ouvert reste ouvert tant que la décision est la même */
   if (focused && more.isConnected && !more.hasAttribute('data-mp-off') && document.activeElement !== more) { try { more.focus({ preventScroll: true }); } catch (e) { /* sans focus */ } }       /* le recalcul ne prend pas le focus à « ⋯ » */
+  if (UISW.panel && UISW.brand && UISW.brand.isConnected) uiSwPlace(UISW.panel);       /* la liste des outils ouverte reste sous la marque */
   if (typeof uiBarDisplaySync === 'function') uiBarDisplaySync();     /* Affichage réduit à l'icône (étape 4) : son infobulle et son nom accessible suivent */
 }
 function uiBarFitInit() {
@@ -5149,6 +5228,137 @@ function uiBarFitInit() {
     .observe(bar, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['hidden', 'class', 'style', 'disabled'] });
   try { if (document.fonts) { document.fonts.ready.then(later); document.fonts.addEventListener('loadingdone', later); } } catch (e) { /* sans polices : les mesures suivent */ }
   uiBarFit();
+}
+/* ---- changer d'outil depuis la barre : la marque (.tb-brand) est le bouton, « ▾ » à sa suite (feuille : tb-switch). Le shell donne le geste : au chargement de l'outil, puis à chaque changement de la barre ou de la langue, il appelle
+   uiSwitchSet({ name, items }) ; items = [{ kind: 'back' | 'group' | 'tool' | 'sep', text, color, current, run }], dans l'ordre de l'accueil (le shell le lit : MODULES et ses deux cadres). Le panneau est un .tbm-panel (niveau 2 du shell, comme « ⋯ »).
+   Gestes : toucher la marque ouvre ou ferme ; un toucher au-dehors, Échap, Tab et le redimensionnement la ferment (Échap rend le focus à la marque) ; elle ferme « ⋯ » et toute liste ouverte, et l'inverse ;
+   au clavier : Entrée, Espace ou ↓ ouvrent (le focus va à la première ligne), flèches, Début et Fin parcourent les lignes (les titres sont sautés), Entrée choisit. Choisir ferme la liste puis fait ce que dit la ligne (le shell ouvre l'outil : chargé s'il ne l'était pas, tel quel sinon). ---- */
+const UISW = { brand: null, panel: null, items: [], name: '', key: '', rows: [], x0: 0, y0: 0, swallow: false, bound: false };
+function uiSwitchSet(cfg) {
+  const bar = uiBarEl(), brand = bar ? bar.querySelector('.tb-brand') : null;
+  if (!brand || !cfg || !cfg.items || !cfg.items.length) return;
+  const key = (cfg.name || '') + '\n' + cfg.items.map(it => [it.kind, it.text, it.color, it.current ? 1 : 0].join('|')).join('\n');
+  if (UISW.brand === brand && UISW.key === key) return;
+  UISW.items = cfg.items; UISW.name = cfg.name || ''; UISW.key = key;
+  if (UISW.brand !== brand) {
+    UISW.brand = brand;
+    brand.addEventListener('click', ev => { ev.stopPropagation(); if (UISW.panel) uiSwClose(false); else uiSwOpen(false); });
+    brand.addEventListener('keydown', ev => {
+      if (ev.altKey || ev.ctrlKey || ev.metaKey) return;
+      if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); if (UISW.panel) uiSwClose(false); else uiSwOpen(true); }
+      else if (ev.key === 'ArrowDown' && !UISW.panel) { ev.preventDefault(); uiSwOpen(true); }
+    });
+    if (!UISW.bound) {
+      UISW.bound = true;
+      document.addEventListener('pointerdown', uiSwOutside, true);
+      document.addEventListener('keydown', uiSwKeydown, true);
+      window.addEventListener('click', uiSwSwallowClick, true);
+      window.addEventListener('resize', () => uiSwClose(false));
+      window.addEventListener('scroll', ev => {
+        if (!UISW.panel || !UISW.brand || (ev.target && ev.target.nodeType && UISW.panel.contains(ev.target))) return;
+        const r = UISW.brand.getBoundingClientRect();
+        if (Math.abs(r.left - UISW.x0) > 0.5 || Math.abs(r.top - UISW.y0) > 0.5) uiSwClose(false);       /* la marque a bougé (la barre défile) : la liste se ferme */
+      }, true);
+    }
+  }
+  brand.classList.add('tb-switch');
+  brand.setAttribute('role', 'button'); brand.setAttribute('tabindex', '0');
+  brand.setAttribute('aria-haspopup', 'menu'); brand.setAttribute('aria-expanded', UISW.panel ? 'true' : 'false');
+  brand.setAttribute('aria-label', UISW.name); brand.title = UISW.name;
+  if (UISW.panel) { UISW.panel.setAttribute('aria-label', UISW.name); uiSwFill(UISW.panel.firstChild); uiSwPlace(UISW.panel); }
+}
+function uiSwFill(ul) {
+  while (ul.firstChild) ul.removeChild(ul.firstChild);
+  UISW.rows = [];
+  UISW.items.forEach(it => {
+    const li = document.createElement('li');
+    if (it.kind === 'group') { li.className = 'tbm-head tbm-group'; li.setAttribute('role', 'presentation'); li.textContent = it.text; ul.appendChild(li); return; }
+    if (it.kind === 'sep') { li.className = 'tb-sw-sep'; li.setAttribute('role', 'separator'); ul.appendChild(li); return; }
+    li.className = 'tbm-opt' + (it.current ? ' tb-sw-cur' : ''); li.setAttribute('role', 'menuitem'); li.tabIndex = -1;
+    if (it.kind === 'tool') {
+      const ic = document.createElement('span'); ic.className = 'tb-more-ic';
+      const sq = document.createElement('span'); sq.className = 'tb-sw-sq'; sq.style.background = it.color || 'var(--amber)'; ic.appendChild(sq); li.appendChild(ic);
+    }
+    const tx = document.createElement('span'); tx.className = 'tbm-txt'; tx.textContent = it.text; li.appendChild(tx);
+    if (it.current) { li.setAttribute('aria-current', 'page'); const m = document.createElement('span'); m.className = 'tbm-mark'; m.setAttribute('aria-hidden', 'true'); li.appendChild(m); }
+    li.addEventListener('click', ev => { ev.stopPropagation(); uiSwChoose(it); });
+    ul.appendChild(li);
+    UISW.rows.push({ el: li, it: it });
+  });
+}
+function uiSwOpen(focus) {
+  const b = UISW.brand;
+  if (UISW.panel || !b || !UISW.items.length) return;
+  uiBarMoreClose();                                      /* « ⋯ » et toute liste ouverte se ferment */
+  if (typeof tbmClose === 'function') tbmClose(false);
+  if (typeof fmTocSet === 'function') fmTocSet(false, false);
+  const panel = document.createElement('div'); panel.className = 'tbm-panel tb-sw-panel';
+  const ul = document.createElement('ul'); ul.className = 'tbm-list'; ul.setAttribute('role', 'menu'); ul.setAttribute('aria-label', UISW.name); panel.appendChild(ul);
+  uiSwFill(ul);
+  document.body.appendChild(panel);
+  UISW.panel = panel;
+  const r = b.getBoundingClientRect(); UISW.x0 = r.left; UISW.y0 = r.top;
+  uiSwPlace(panel);
+  b.setAttribute('aria-expanded', 'true');
+  if (focus && UISW.rows.length) uiSwActive(0);
+}
+function uiSwClose(refocus) {
+  if (UISW.panel) { UISW.panel.remove(); UISW.panel = null; }
+  if (!UISW.brand) return;
+  UISW.brand.setAttribute('aria-expanded', 'false');
+  if (refocus) { try { UISW.brand.focus({ preventScroll: true }); } catch (e) { /* sans focus */ } }
+}
+/* sous la marque, aligné sur son bord gauche, entier dans l'écran, à la marge de la barre des bords ; hauteur maximale : la fenêtre sous le panneau, moins 8 px */
+function uiSwPlace(p) {
+  const b = UISW.brand, bar = b.parentNode, cs = bar ? getComputedStyle(bar) : null;
+  const ml = cs ? parseFloat(cs.paddingLeft) || 0 : 8, mr = cs ? parseFloat(cs.paddingRight) || 0 : 8;
+  const r = b.getBoundingClientRect(), vw = document.documentElement.clientWidth, vh = window.innerHeight, top = Math.round(r.bottom + 2);
+  p.style.top = top + 'px';
+  p.style.maxHeight = Math.max(60, vh - top - 8) + 'px';
+  p.style.maxWidth = Math.min(340, vw - ml - mr) + 'px';
+  const w = p.getBoundingClientRect().width;
+  p.style.left = Math.max(ml, Math.min(vw - mr - w, r.left)) + 'px';
+}
+function uiSwChoose(it) {
+  uiSwClose(false);
+  if (it.kind === 'tool' && it.current) { try { UISW.brand.focus({ preventScroll: true }); } catch (e) { /* sans focus */ } return; }
+  try { if (typeof it.run === 'function') it.run(); } catch (e) { console.warn('[M·P] changer d’outil : ' + e); }
+}
+function uiSwActive(k) {
+  const n = UISW.rows.length;
+  if (!n) return;
+  k = ((k % n) + n) % n;
+  UISW.rows.forEach((r, i) => r.el.classList.toggle('active', i === k));
+  try { UISW.rows[k].el.focus({ preventScroll: true }); } catch (e) { /* sans focus */ }
+}
+function uiSwKeydown(ev) {
+  if (!UISW.panel) return;
+  const k = ev.key, cur = UISW.rows.findIndex(r => r.el === document.activeElement);
+  if (k === 'Escape') { ev.stopPropagation(); ev.preventDefault(); uiSwClose(true); }
+  else if (k === 'ArrowDown') { ev.preventDefault(); ev.stopPropagation(); uiSwActive(cur + 1); }
+  else if (k === 'ArrowUp') { ev.preventDefault(); ev.stopPropagation(); uiSwActive(cur < 0 ? -1 : cur - 1); }
+  else if (k === 'Home') { ev.preventDefault(); ev.stopPropagation(); uiSwActive(0); }
+  else if (k === 'End') { ev.preventDefault(); ev.stopPropagation(); uiSwActive(-1); }
+  else if ((k === 'Enter' || k === ' ') && cur >= 0) { ev.preventDefault(); ev.stopPropagation(); uiSwChoose(UISW.rows[cur].it); }
+  else if (k === 'Tab') uiSwClose(true);       /* le focus revient à la marque, puis Tab le porte plus loin */
+}
+/* un toucher hors de la liste (et hors de la marque, qui la bascule elle-même) la ferme sans agir sur ce qu'il touche : le clic qui suit est avalé, sauf sur « ⋯ » et sur le bouton d'une liste, qui s'ouvrent par leur propre clic */
+function uiSwOutside(ev) {
+  if (!UISW.panel) return;
+  const t = ev.target;
+  if (UISW.panel.contains(t) || (UISW.brand && UISW.brand.contains(t))) return;
+  uiSwClose(false);
+  if (t && t.closest && t.closest('.tbm-trigger, .tb-more-btn')) return;
+  UISW.swallow = true;
+  const rel = () => { document.removeEventListener('pointerup', rel, true); document.removeEventListener('pointercancel', rel, true); setTimeout(() => { UISW.swallow = false; }, 350); };
+  document.addEventListener('pointerup', rel, true);
+  document.addEventListener('pointercancel', rel, true);
+}
+function uiSwSwallowClick(ev) {
+  if (!UISW.swallow) return;
+  UISW.swallow = false;
+  ev.stopPropagation();
+  ev.preventDefault();
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', uiBarFitInit); else uiBarFitInit();
 

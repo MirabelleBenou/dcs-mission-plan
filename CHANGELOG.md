@@ -16,7 +16,7 @@ Further down, *Before v2.0.0* keeps the history of each tool up to v1.24.0, when
 ### All tools
 
 **Build number on the hosted version**
-- Between two releases, the bottom of the home screen shows the build number, `MP-V2.1.0+3` for this one; a downloaded release shows none.
+- Between two releases, the bottom of the home screen shows the build number, `MP-V2.1.0+4` for this one; a downloaded release shows none.
 
 **Easier-to-read drop-down lists**
 - Their header, the chosen line and the line under the pointer have stronger contrast in every theme.
@@ -38,6 +38,9 @@ Further down, *Before v2.0.0* keeps the history of each tool up to v1.24.0, when
 
 **Greyed-out commands say why**
 - In the “⋯” menu, a command that cannot be used shows the reason under it, such as HQ’s Example when the Wing configuration is provided by another tool.
+
+**Switch tools from the toolbar**
+- The tool’s name or abbreviation at the start of the toolbar, with ▾, opens the list of tools in the home screen’s order, the open one marked; one more touch opens another tool, which keeps its work.
 
 ### Home screen
 
