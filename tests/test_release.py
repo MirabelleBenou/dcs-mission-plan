@@ -17,7 +17,7 @@ import release  # noqa: E402
 REPO = 'owner/suite'
 TOKEN = 'ghs_TOPSECRETTOKEN0123456789'
 TITRE = 'MP-V2.0.0 — 16 November 2026'
-CHANGELOG = '# Changelog\n\n## Unreleased\n\n## Mission Plan — landing\n\n- x\n\n### `v2.0.0`\n#### Added\n- y\n\n## HQ\n\n### `v1.0.0`\n'
+CHANGELOG = '# Changelog\n\n## Unreleased\n\n## MP-V2.0.0 — 2026-11-16\n\n**x**\n- y\n\n## Before v2.0.0 — one version per tool\n\n### HQ\n\n#### `v1.0.0`\n'
 HTML = b'<!DOCTYPE html><html>not really a page but bytes</html>'
 
 
@@ -204,8 +204,8 @@ DEFAUTS = [
     ('2-fichier-hors-release', {'hors_release': True}, '2'),
     ('2-commit-pas-tete-de-main', {'main_avance': True}, '2'),
     ('3-changelog-sans-section', {'changelog': '# Changelog\n\n## Unreleased\n'}, '3'),
-    ('3-titre-hors-section-landing', {'changelog': '# Changelog\n\n## Mission Plan — landing\n\n### `v1.24.0`\n\n## HQ\n\n### `v2.0.0`\n'}, '3'),
-    ('3-titre-d-une-autre-version', {'changelog': '# Changelog\n\n## Mission Plan — landing\n\n### `v1.24.0`\n'}, '3'),
+    ('3-titre-sous-un-autre-niveau', {'changelog': '# Changelog\n\n## Before v2.0.0 — one version per tool\n\n### MP-V2.0.0 — 2026-11-16\n'}, '3'),
+    ('3-titre-d-une-autre-version', {'changelog': '# Changelog\n\n## MP-V1.24.0 — 2026-11-01\n'}, '3'),
     ('5-fichier-en-trop', {'extra_asset': 'dcs_extra.html'}, '5'),
     ('5-nom-invalide', {'assets': {'mauvais nom.html': HTML}}, '5'),
     ('6-notes-vides', {'notes': '  \n'}, '6'),
@@ -495,38 +495,90 @@ def test_joints_supprimes_apres_echec_au_televersement(tmp_path, monkeypatch):
 # ------------------------------------------------------------------ adaptations Mission Plan (A2, A3)
 
 def _cl(section):
-    return f'# Changelog\n\n## Unreleased\n\n## Mission Plan — landing\n\n{section}'
+    return f'# Changelog\n\n## Unreleased\n\n{section}'
 
 
-def test_a2_titre_dans_la_section_landing_et_unreleased_ne_gene_pas(tmp_path):
-    deps, api, origin, c, br = monte(tmp_path, changelog='# Changelog\n\n## Unreleased\n\n### All tools\n\n## Mission Plan — landing\n\n### `v2.0.0`\n\n## HQ\n')
+def test_a2_titre_apres_unreleased_ne_gene_pas(tmp_path):
+    deps, api, origin, c, br = monte(tmp_path, changelog='# Changelog\n\n## Unreleased\n\n**All tools**\n- x\n\n## MP-V2.0.0 — 2026-11-16\n\n## Before v2.0.0 — one version per tool\n')
     assert release.run(deps, br) == 0
 
 
-def test_a2_titre_dans_la_derniere_section_du_fichier(tmp_path):
-    deps, api, origin, c, br = monte(tmp_path, changelog=_cl('- x\n\n### `v2.0.0`\n'))
+def test_a2_titre_dans_la_derniere_ligne_du_fichier(tmp_path):
+    deps, api, origin, c, br = monte(tmp_path, changelog=_cl('- x\n\n## MP-V2.0.0 — 2026-11-16\n'))
     assert release.run(deps, br) == 0
 
 
-def test_a2_message_titre_hors_section(tmp_path):
-    deps, api, origin, c, br = monte(tmp_path, changelog='# Changelog\n\n## Mission Plan — landing\n\n## HQ\n\n### `v2.0.0`\n')
-    assert release.run(deps, br) == 1
-    f = sur_origin(origin, br, '.release/FAILED.md')
-    assert 'CHANGELOG.md at the commit has no line "### `v2.0.0`" in the section "## Mission Plan — landing"' in f
-    assert api.writes == []
+def test_a2_message_succes_donne_la_date_lue(tmp_path):
+    deps, api, origin, c, br = monte(tmp_path)
+    assert release._controle_changelog(deps, {'tag': 'MP-V2.0.0', 'commit': c}) == 'CHANGELOG line ## MP-V2.0.0 \u2014 2026-11-16 found'
 
 
-def test_a2_message_section_absente(tmp_path):
+def test_a2_message_titre_absent(tmp_path):
     deps, api, origin, c, br = monte(tmp_path, changelog='# Changelog\n\n## HQ\n\n### `v2.0.0`\n')
     assert release.run(deps, br) == 1
-    assert 'CHANGELOG.md at the commit has no section "## Mission Plan — landing"' in sur_origin(origin, br, '.release/FAILED.md')
+    assert 'CHANGELOG.md at the commit has no line "## MP-V2.0.0 \u2014 YYYY-MM-DD"' in sur_origin(origin, br, '.release/FAILED.md')
     assert api.writes == []
 
 
 def test_a2_titre_exact_seulement(tmp_path):
-    deps, api, origin, c, br = monte(tmp_path, changelog=_cl('### `v2.0.0` extra\n#### `v2.0.0`\n'))
+    deps, api, origin, c, br = monte(tmp_path, changelog=_cl('## MP-V2.0.0 — 2026-11-16 extra\n### MP-V2.0.0 — 2026-11-16\n## MP-V2.0.0 — 2026-11-16x\n'))
     assert release.run(deps, br) == 1
     assert 'Control or step: 3' in sur_origin(origin, br, '.release/FAILED.md')
+
+
+# ------------------------------------------------------------------ le format commun du CHANGELOG et le numero de dev (R791)
+
+def test_ancien_format_landing_refuse_au_controle_3(tmp_path):
+    ancien = '# Changelog\n\n## Unreleased\n\n## Mission Plan \u2014 landing\n\n### `v2.1.0`\n#### Added\n- y\n'
+    deps, api, origin, c, br = monte(tmp_path, branche='release/MP-V2.1.0', tag='MP-V2.1.0', changelog=ancien)
+    assert release.run(deps, br) == 1
+    f = sur_origin(origin, br, '.release/FAILED.md')
+    assert 'Control or step: 3' in f and 'has no line "## MP-V2.1.0 \u2014 YYYY-MM-DD"' in f
+    assert api.writes == []
+
+
+def test_titre_sans_date_valide_refuse_au_controle_3(tmp_path):
+    cl = '# Changelog\n\n## Unreleased\n\n## MP-V2.1.0 \u2014 soon\n\n- y\n'
+    deps, api, origin, c, br = monte(tmp_path, branche='release/MP-V2.1.0', tag='MP-V2.1.0', changelog=cl)
+    assert release.run(deps, br) == 1
+    f = sur_origin(origin, br, '.release/FAILED.md')
+    assert 'Control or step: 3' in f and 'has no line "## MP-V2.1.0 \u2014 YYYY-MM-DD"' in f
+    assert api.writes == []
+
+
+def test_date_impossible_refusee_au_controle_3(tmp_path):
+    cl = '# Changelog\n\n## MP-V2.0.0 \u2014 2026-13-45\n'
+    deps, api, origin, c, br = monte(tmp_path, changelog=cl)
+    assert release.run(deps, br) == 1
+    assert 'Control or step: 3' in sur_origin(origin, br, '.release/FAILED.md')
+
+
+DEV = b'<!DOCTYPE html><html><span id="foot-version" data-dev-build>MP-V2.1.0+2</span></html>'
+
+
+def test_fichier_avec_numero_de_dev_refuse_au_controle_5(tmp_path):
+    deps, api, origin, c, br = monte(tmp_path, assets={'dcs_mission_plan.html': DEV})
+    assert release.run(deps, br) == 1
+    f = sur_origin(origin, br, '.release/FAILED.md')
+    assert 'Control or step: 5' in f
+    assert 'asset dcs_mission_plan.html carries a development build number (set DEV_BUILD = 0 in version_block.py and rebuild)' in f
+    assert api.writes == []
+
+
+def test_fichier_en_morceaux_avec_numero_de_dev_refuse_au_controle_5(tmp_path, monkeypatch):
+    data = b'<!DOCTYPE html>' + bytes(range(256)) * 40 + b'<span data-dev-build>' + b'tail'
+    i = data.index(b'data-dev') + 4   # la coupure tombe au milieu de la chaine
+    monkeypatch.setattr(sys.modules[__name__], 'GROS', data)
+    deps, api, origin, br, rt = monte_morceaux(tmp_path, monkeypatch, parts=[data[:i], data[i:]])
+    assert release.run(deps, br) == 1
+    t = (deps.root / '.release' / 'FAILED.md').read_text(encoding='utf-8')
+    assert 'Control or step: 5' in t and f'asset {NOM_GROS} carries a development build number' in t
+    assert api.writes == [] and list(rt.iterdir()) == []
+
+
+def test_fichier_sans_numero_de_dev_passe_au_controle_5(tmp_path):
+    deps, api, origin, c, br = monte(tmp_path, assets={'dcs_mission_plan.html': HTML})
+    assert release.run(deps, br) == 0
 
 
 def test_a3_dcs_mission_plan_html_passe(tmp_path):

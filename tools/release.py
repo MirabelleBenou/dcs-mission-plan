@@ -3,7 +3,7 @@
 
   python3 tools/release.py        lit GITHUB_REPOSITORY, GITHUB_REF_NAME, GITHUB_TOKEN ; code 0 si tout va bien, 1 sinon
 
-Branche release/MP-V<x.y.z> : publication. Branche release/essai-<nom> : les memes controles, rien n'est cree.
+Branche release/MP-V<x.y.z> : publication (le CHANGELOG du commit a une ligne `## MP-V<x.y.z> — AAAA-MM-JJ` ; un fichier qui porte un numero de dev, `data-dev-build`, est refuse). Branche release/essai-<nom> : les memes controles, rien n'est cree.
 Un fichier trop gros pour un push arrive en morceaux <nom>.part001, .part002... : ils sont joints hors du depot, le fichier joint est controle puis televerse.
 Sans .release/manifest.json sur la branche : rien n'est fait. Le git et l'API passent par l'objet Deps, que les tests remplacent.
 Le jeton n'est jamais ecrit : tout texte sorti (journal, FAILED.md, CHECK.md) passe par Deps.scrub.
@@ -27,6 +27,7 @@ API_DEFAUT = 'https://api.github.com'
 BOT_NOM = 'github-actions[bot]'
 BOT_MAIL = '41898283+github-actions[bot]@users.noreply.github.com'
 TAILLE_MAX = 2 * 1024 ** 3
+MARQUE_DEV = b'data-dev-build'    # le numero de dev que seul un build non publie porte
 RELEASE_DIR = '.release'
 CLES_MANIFESTE = ('tag', 'title', 'commit', 'assets')
 CLES_ASSET = ('name', 'size', 'sha256')
@@ -206,21 +207,15 @@ def _controle_changelog(deps, m):
     p = deps.git.run('show', f'{m["commit"]}:CHANGELOG.md', check=False)
     if p.returncode != 0:
         raise Echec('3', 'CHANGELOG.md not found at the commit')
-    section = None
+    prefixe = f'## {m["tag"]} \u2014 '
     for l in p.stdout.splitlines():
-        if l == '## Mission Plan — landing':
-            section = []
-        elif section is not None and l.startswith('## '):
-            break
-        elif section is not None:
-            section.append(l)
-    if section is None:
-        raise Echec('3', 'CHANGELOG.md at the commit has no section "## Mission Plan — landing"')
-    version = m['tag'][len('MP-V'):]
-    titre = f'### `v{version}`'
-    if titre not in section:
-        raise Echec('3', f'CHANGELOG.md at the commit has no line "{titre}" in the section "## Mission Plan — landing"')
-    return f'CHANGELOG line {titre} found for {m["tag"]}'
+        if l.startswith(prefixe) and re.fullmatch(r'[0-9]{4}-[0-9]{2}-[0-9]{2}', l[len(prefixe):]):
+            try:
+                time.strptime(l[len(prefixe):], '%Y-%m-%d')
+            except ValueError:
+                continue
+            return f'CHANGELOG line {l} found'
+    raise Echec('3', f'CHANGELOG.md at the commit has no line "## {m["tag"]} \u2014 YYYY-MM-DD"')
 
 
 def _controle_tag(deps, m):
@@ -252,6 +247,20 @@ def _sha256(chemin):
         for bloc in iter(lambda: f.read(1 << 20), b''):
             h.update(bloc)
     return h.hexdigest()
+
+
+def _contient(chemin, marque):
+    """Vrai si le fichier contient la chaine d'octets `marque` (lecture par blocs, la jonction des blocs est couverte)."""
+    reste = b''
+    with open(chemin, 'rb') as f:
+        while True:
+            bloc = f.read(1 << 20)
+            if not bloc:
+                return False
+            tampon = reste + bloc
+            if marque in tampon:
+                return True
+            reste = tampon[-(len(marque) - 1):]
 
 
 def _morceaux(dossier, nom):
@@ -312,6 +321,8 @@ def _controle_assets(deps, m):
             raise Echec('5', f'asset {n} is 2 GiB or more')
         if _sha256(f) != a['sha256']:
             raise Echec('5', f'asset {n}: SHA-256 differs from the manifest')
+        if _contient(f, MARQUE_DEV):
+            raise Echec('5', f'asset {n} carries a development build number (set DEV_BUILD = 0 in version_block.py and rebuild)')
     en_trop = sorted(p.name for p in dossier.iterdir() if p.name not in attendus) if dossier.is_dir() else []
     if en_trop:
         raise Echec('5', f'files in {RELEASE_DIR}/assets/ not listed in the manifest: {", ".join(en_trop[:5])}')

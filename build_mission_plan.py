@@ -26,7 +26,7 @@ import os
 import re
 import sys
 
-from version_block import SUITE_VERSION
+from version_block import SUITE_VERSION, DEV_BUILD
 from shell_only_block import build_block as build_shell_only_block, BLOCK_BEGIN as SHELL_ONLY_BEGIN, BLOCK_END as SHELL_ONLY_END
 from messages_block import build_block as build_messages_block, build_css as build_messages_css
 from ui_block import build_css as build_ui_css, fingerprint as ui_fingerprint
@@ -113,6 +113,12 @@ MODULES = [
 ]
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Le numéro de dev : un entier >= 0 (pas un booléen), sinon le build s'arrête avant d'écrire quoi que ce soit
+if type(DEV_BUILD) is not int or DEV_BUILD < 0:
+    raise SystemExit(f"[ERREUR] DEV_BUILD de version_block.py doit être un entier >= 0 ({DEV_BUILD!r}) — build arrêté")
+FOOT_VERSION = (f'<span id="foot-version" data-dev-build>MP-V{SUITE_VERSION}+{DEV_BUILD}</span>' if DEV_BUILD > 0
+                else f'<span id="foot-version">v{SUITE_VERSION}</span>')
 
 # Les polices : celles de la suite, embarquées (octets d'assets.json) ; la page n'appelle aucune police distante
 with open(os.path.join(SCRIPT_DIR, 'assets.json')) as _f:
@@ -973,7 +979,7 @@ select[data-tbm-src] {{ display: none !important; }}
 
   <div class="foot">
     <span>DCS Mission Plan</span><span class="dot">·</span>
-    <span id="foot-version">v{SUITE_VERSION}</span><span class="dot">·</span>
+    {FOOT_VERSION}<span class="dot">·</span>
     <span>Open source · AGPL-3.0</span><span class="dot">·</span>
     <span id="foot-info">Cold War OTAN</span>
     <span class="right" id="foot-right">Mission Plan</span>
