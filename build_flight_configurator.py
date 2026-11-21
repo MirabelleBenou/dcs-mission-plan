@@ -1785,6 +1785,13 @@ details.fc-block:not([open]) > .fc-bh { border-bottom: 0; }
 /* une arme au nom long passe sur deux lignes au lieu d'être coupée */
 .cmp-row .fc-sel.tbm-trigger.tbm-field { display: flex; align-items: center; line-height: 1.25; padding-top: 5px; padding-bottom: 5px; min-height: 40px; }
 .cmp-row .fc-sel.tbm-trigger.tbm-field .tbm-lbl { line-height: 1.25; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; text-overflow: clip; }
+/* au doigt : 44 px (la disposition ne change pas) */
+@media (pointer: coarse) {
+  .pk-x { min-width: 44px; min-height: 44px; }
+  .fc-see { min-height: 44px; }
+  .fc-back { min-height: 44px; }
+  .cmp-row .fc-sel.tbm-trigger.tbm-field { min-height: 44px; }
+}
 .cmp-foot { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 18px; padding-top: 4px; }
 .cmp-tot { font-family: var(--f-typewriter); font-size: 12px; color: var(--khaki-light); }
 .cmp-tot b { color: var(--paper-light); white-space: nowrap; }

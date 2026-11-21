@@ -1357,6 +1357,11 @@ __TAB_SECTION_RULES__
   .rc-extra { grid-template-columns: 1fr; }
 }
 
+/* au doigt, au téléphone : les champs étroits des grilles de lignes (horaires…) gardent leur valeur entière à 16 px, en prenant moins de marge de chaque côté */
+@media (pointer: coarse) and (max-width: 759px) {
+  .li-grid .ed-field input[type=text], .li-grid .ed-field input[type=number] { padding-left: 8px; padding-right: 6px; }
+}
+
 /* ============ IMPRESSION : une feuille A4 portrait par page de datacard ============ */
 #print-root { display: none; }
 #measure-root {

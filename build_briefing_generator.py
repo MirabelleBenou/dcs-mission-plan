@@ -2377,6 +2377,7 @@ body[data-format="full"] [data-fmt="simple"] { display: none !important; }
 
 .ed-card-bar { display: flex; justify-content: flex-end; gap: 6px; }
 .ed-card-bar .ed-btn-icon { min-width: 40px; min-height: 36px; font-size: 16px; }
+@media (pointer: coarse) { .ed-card-bar .ed-btn-icon { min-width: 44px; min-height: 44px; } }
 .ed-btn-icon.neutral { background: var(--olive); border-color: var(--khaki); }
 .ed-btn-icon.neutral:hover { background: var(--olive-dark); }
 .ed-btn-icon:disabled { opacity: .35; cursor: not-allowed; }
@@ -2399,6 +2400,12 @@ body[data-format="full"] [data-fmt="simple"] { display: none !important; }
   text-align: center;
 }
 .ed-radio-item-row.s-row .s-sub input { min-width: 0; width: 100%; }
+/* au doigt, au téléphone : les champs étroits (nom de la tactique, modulation, code OACI) gardent leur valeur entière à 16 px, en prenant moins de marge de chaque côté */
+@media (pointer: coarse) and (max-width: 759px) {
+  .ed-radio-item-row.s-row input { padding-left: 8px; padding-right: 6px; }
+  .ed-radio-item-row.s-row .tbm-trigger.tbm-field.tbm-narrow { padding-left: 8px; padding-right: 20px; }
+  .ed-airfield-row input.af-icao { padding-left: 6px; padding-right: 4px; }
+}
 
 /* Pages du brief simplifié : tableau des vols, photos */
 .p-flights {

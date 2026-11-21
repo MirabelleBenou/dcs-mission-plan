@@ -2489,10 +2489,8 @@ def _start_tall(P):
             o.append(_rp_ico_chev(x + 29, IY + 14))
         bx[key] = (x, bw)
         x += bw + 6
-    o.append(P.field(x, IY + 4, 96, 22, [L('mp', 'theme.cwnato', add='▾')]))
-    x += 102
-    o.append(P.btn(x, IY + 4, 28, 22))
-    o.append(_ico_flag(x + 14, IY + 15))
+    # au téléphone, le thème et la langue sont sous « ⋯ », au bout droit de la barre
+    o.append(P.btn(X1 - 6 - 28, IY + 4, 28, 22, [D('⋯')]))
     mx, my, mw = X0, IY + 34, w
     o.append(sv_box(mx, my, mw, 36))
     o.append(_bars(mx + 8, my + 11, 250, 1))

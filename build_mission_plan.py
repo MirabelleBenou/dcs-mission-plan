@@ -29,7 +29,8 @@ import sys
 from version_block import SUITE_VERSION, DEV_BUILD
 from shell_only_block import build_block as build_shell_only_block, BLOCK_BEGIN as SHELL_ONLY_BEGIN, BLOCK_END as SHELL_ONLY_END
 from messages_block import build_block as build_messages_block, build_css as build_messages_css
-from ui_block import build_css as build_ui_css, fingerprint as ui_fingerprint
+from ui_block import build_css as build_ui_css, build_bar_js, fingerprint as ui_fingerprint
+BAR_JS_TEXT = build_bar_js()
 from suite_file_block import build_presets_merge, build_block as build_suite_file_block, build_html as build_suite_file_html, build_css as build_suite_file_css, THEME_VARS as SUITE_THEME_VARS
 import group_store_block
 
@@ -79,11 +80,26 @@ LANDING_CSS = r"""
 .mp-ex-panel .tbm-opt:focus-visible{background:rgba(255,255,255,.06); color:color-mix(in srgb, var(--amber) 55%, #fff);}
 .rail .theme-sel{min-height:44px;}
 .rail .flag{width:44px; height:44px;}
+/* La barre se réduit comme celle des outils : la séquence de ui_block.py (uiBarFit, build_bar_js) pose tb-st1 à tb-st8 sur .ctrl quand il manque de place ;
+   ici, 1 le tampon « Classified » part, 5 les boutons n'ont plus que leur icône, 7 « ⋯ » prend ce qui suit le groupe des fichiers (langue, puis Thème, puis Manuel : le dernier d'abord), 8 les écarts se serrent.
+   Les noms ne sont jamais coupés ni mis sur deux lignes : ce qui ne tient pas passe à l'étape suivante. */
+.rail .ctrl{min-width:0;}
+.rail .ctrl > *{flex:none;}
+.rail .mp-railbtn{white-space:nowrap;}
+.rail .ctrl [data-mp-off]{display:none !important;}
+.rail .ctrl.tb-st1 .classif{display:none;}
+.rail .ctrl.tb-st5 .mp-railbtn span{display:none;}
+.rail .ctrl.tb-st5 .mp-railbtn{padding:7px 9px;}
+.rail .ctrl.tb-st8{column-gap:2px;}
+.rail .ctrl.tb-st8 > *{margin-left:0 !important; margin-right:0 !important;}
+.rail .tb-more-btn{box-sizing:border-box; width:44px; min-width:44px; height:44px; padding:0; margin-left:auto; display:inline-flex; align-items:center; justify-content:center;
+  font-family:var(--f-ui); font-weight:500; font-size:22px; line-height:1; letter-spacing:0; color:var(--amber); background:rgba(0,0,0,.3); border:1px solid var(--line); border-radius:4px; cursor:pointer;}
+.rail .tb-more-btn:hover, .rail .tb-more-btn[aria-expanded="true"]{border-color:var(--amber);}
 @media(max-width:760px){
   .rail{padding:11px 12px; gap:10px;}
   .rail .spacer{display:none;}
   .rail .ctrl{flex:1 1 100%; min-width:0;}
-  .rail .ctrl .theme-sel{flex:1 1 0; min-width:0; overflow:hidden;}
+  .rail .ctrl .flag{margin-left:auto;}
   .rail .classif{display:none;}
   .mp-railbtn span{display:none;}
   .mp-railbtn{padding:7px 9px;}
@@ -520,6 +536,7 @@ function navInit() {
 def build_html(module_html_js, tile_uris, suite_examples_js):
     MESSAGES_CSS = build_messages_css()          # le toast : la feuille de messages_block.py, telle quelle (le shell parle par le même toast que les outils)
     UI_CSS = build_ui_css()                      # la feuille de ui_block.py, telle quelle : la fenêtre du nom est une .ui-modal (le shell ne reçoit pas le script de ui_block)
+    BAR_JS = build_bar_js()                      # la séquence de réduction de la barre et le menu « ⋯ » de ui_block.py, tels quels : le rail de l'accueil les prend (la part « barre » du script du bloc, comme le Field Manual)
     SUITE_CSS = build_suite_file_css()           # les couleurs de ces deux feuilles, posées sur la fenêtre du nom et sur #toast
     MESSAGES_JS = build_messages_block()
     SUITE_JS = build_suite_file_block()
@@ -831,18 +848,18 @@ select[data-tbm-src] {{ display: none !important; }}
     <div class="plate"><span class="mark">DCS · MISSION PLAN</span></div>
     <div class="spacer"></div>
     <div class="ctrl">
-      <button type="button" class="mp-railbtn" id="btn-work-open" data-i18n-title="work.open.tip" data-i18n-aria="work.open.tip" title="Ouvrir un travail de Mission Plan (JSON)" aria-label="Ouvrir un travail de Mission Plan (JSON)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 7h6l2 2h10v10H3z"/></svg><span data-i18n="work.open.btn">Ouvrir…</span></button>
-      <button type="button" class="mp-railbtn" id="btn-work-save" data-i18n-title="work.save.tip" data-i18n-aria="work.save.tip" title="Sauvegarder tout le travail de Mission Plan (JSON)" aria-label="Sauvegarder tout le travail de Mission Plan (JSON)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 3h12l3 3v15H5z"/><path d="M8 3v6h8V3M8 21v-7h8v7"/></svg><span data-i18n="work.save.btn">Sauvegarder</span></button>
-      <button type="button" class="mp-railbtn" id="btn-example" aria-haspopup="menu" aria-expanded="false" data-i18n-title="ex.tip" data-i18n-aria="ex.tip" title="Charger l’exemple STEPPE WIND" aria-label="Charger l’exemple STEPPE WIND"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg><span data-i18n="ex.btn">Exemple</span><svg class="mp-chev" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg></button>
-      <span class="mp-sep" aria-hidden="true"></span>
-      <button type="button" class="mp-railbtn" id="btn-fm" data-i18n-title="fm.tip" data-i18n-aria="fm.tip" title="Le manuel de la suite" aria-label="Le manuel de la suite"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H4zM20 4h-6M20 4v14h-6"/></svg><span data-i18n="fm.btn">Field Manual</span></button>
+      <button type="button" class="mp-railbtn tb-file" id="btn-work-open" data-i18n-title="work.open.tip" data-i18n-aria="work.open.tip" title="Ouvrir un travail de Mission Plan (JSON)" aria-label="Ouvrir un travail de Mission Plan (JSON)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 7h6l2 2h10v10H3z"/></svg><span data-i18n="work.open.btn">Ouvrir…</span></button>
+      <button type="button" class="mp-railbtn tb-file" id="btn-work-save" data-i18n-title="work.save.tip" data-i18n-aria="work.save.tip" title="Sauvegarder tout le travail de Mission Plan (JSON)" aria-label="Sauvegarder tout le travail de Mission Plan (JSON)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 3h12l3 3v15H5z"/><path d="M8 3v6h8V3M8 21v-7h8v7"/></svg><span data-i18n="work.save.btn">Sauvegarder</span></button>
+      <button type="button" class="mp-railbtn tb-file" id="btn-example" aria-haspopup="menu" aria-expanded="false" data-i18n-title="ex.tip" data-i18n-aria="ex.tip" title="Charger l’exemple STEPPE WIND" aria-label="Charger l’exemple STEPPE WIND"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg><span data-i18n="ex.btn">Exemple</span><svg class="mp-chev" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg></button>
+      <span class="mp-sep tb-files-end" aria-hidden="true"></span>
+      <button type="button" class="mp-railbtn tb-btn" id="btn-fm" data-i18n-title="fm.tip" data-i18n-aria="fm.tip" title="Le manuel de la suite" aria-label="Le manuel de la suite"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H4zM20 4h-6M20 4v14h-6"/></svg><span class="tb-btn-label" data-i18n="fm.btn">Field Manual</span></button>
       <select class="theme-sel" id="theme-sel" onchange="setTheme(this.value)" data-i18n-title="theme.sel" title="Thème">
         <option value="cw-nato" data-i18n="theme.cwnato">Cold War OTAN</option>
         <option value="cw-soviet" data-i18n="theme.cwsoviet">Cold War Soviétique</option>
         <option value="modern-nato" data-i18n="theme.modernnato">OTAN moderne</option>
         <option value="modern-east" data-i18n="theme.moderneast">Bloc Est moderne</option>
       </select>
-      <button class="flag" id="flag-btn" title="Passer en anglais" aria-label="Passer en anglais"><svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="14" fill="#012169"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#fff" stroke-width="2.8"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#C8102E" stroke-width="1.6"/><rect x="8" width="4" height="14" fill="#fff"/><rect y="5" width="20" height="4" fill="#fff"/><rect x="9" width="2" height="14" fill="#C8102E"/><rect y="6" width="20" height="2" fill="#C8102E"/></svg></button>
+      <button class="flag tb-lang-btn" id="flag-btn" title="Passer en anglais" aria-label="Passer en anglais"><svg viewBox="0 0 20 14" width="22" height="15" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="14" fill="#012169"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#fff" stroke-width="2.8"/><path d="M0,0 L20,14 M20,0 L0,14" stroke="#C8102E" stroke-width="1.6"/><rect x="8" width="4" height="14" fill="#fff"/><rect y="5" width="20" height="4" fill="#fff"/><rect x="9" width="2" height="14" fill="#C8102E"/><rect y="6" width="20" height="2" fill="#C8102E"/></svg></button>
       <span class="classif" id="classif">Classified // Eyes Only</span>
     </div>
   </div>
@@ -1789,9 +1806,14 @@ function tbmOutside(e) {{
   if (!m) return;
   const t = e.target;
   if (m.panel.contains(t) || m.btn.contains(t)) return;
-  const other = t && t.closest ? t.closest('.tbm-trigger, .mp-railbtn') : null;
+  const other = t && t.closest ? t.closest('.tbm-trigger, .mp-railbtn, .tb-more-btn') : null;
   tbmClose(false);
   if (other) return;
+  tbmSwallowNext();
+}}
+
+/* Le clic qui suit le toucher en cours est avalé (celui qui a fermé une liste ou le menu « ⋯ » n'agit pas sur ce qu'il touche) ; appelée aussi par le menu « ⋯ » (uiBarMoreOutside) */
+function tbmSwallowNext() {{
   TBM.swallow = true;
   const rel = () => {{ document.removeEventListener('pointerup', rel, true); document.removeEventListener('pointercancel', rel, true); setTimeout(() => {{ TBM.swallow = false; }}, 350); }};
   document.addEventListener('pointerup', rel, true);
@@ -1814,6 +1836,7 @@ function tbmScrolled(e) {{
   if (Math.abs(r.left - m.x0) > 0.5 || Math.abs(r.top - m.y0) > 0.5) tbmClose(false);
 }}
 
+{BAR_JS}
   /* ── Init ───────────────────────────────────────────────────── */
   function init() {{
     /* La mission d'HQ ne vit que tant que son .miz est ouvert : à son démarrage le shell efface la clé, avant toute lecture et avant qu'un module s'ouvre */
@@ -1970,6 +1993,8 @@ def main():
                         ('les couleurs de la fenêtre du nom et du toast', shell_text.count(build_suite_file_css()) == 1)):
         if not found:
             raise SystemExit(f"[ERREUR] {what} ne figure pas une fois, tel quel, dans le shell — build arrêté")
+    if shell_text.count(BAR_JS_TEXT) != 1 or shell_text.count('function uiBarMore(') != 1:
+        raise SystemExit("[ERREUR] la séquence de la barre et le menu « ⋯ » (build_bar_js) ne figurent pas une fois, tels quels, dans le shell — build arrêté")
     if 'function askConfirm' in shell_text or 'function uiConfirmEl' in shell_text:
         raise SystemExit("[ERREUR] le script de ui_block figure dans le shell (il n'en prend que la feuille) — build arrêté")
     print(f'  [OK] toast et feuille de ui_block identiques à leurs blocs ; le script de ui_block n\'est pas dans le shell (empreinte {ui_fingerprint()})')

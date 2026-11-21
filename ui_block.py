@@ -68,6 +68,8 @@ _BAR_CSS = r"""/* la barre qui manque de place se réduit dans un seul ordre, pa
 .tb-more-ic .tbm-mark { margin: 0; }
 .tb-more-ic svg:not([viewBox="0 0 20 14"]) { width: 18px; height: 18px; }
 .tb-more-chev { flex: none; margin-left: auto; padding-left: 14px; color: var(--khaki); }
+.tb-more-col { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; justify-content: center; padding: 4px 0; }
+.tb-more-why { margin-top: 2px; font-family: var(--f-ui); font-weight: 500; font-size: 12px; line-height: 1.3; letter-spacing: 0; text-transform: none; white-space: normal; color: var(--khaki); }
 """
 
 _BAR_JS = r"""/* ---- la réduction de la barre : une seule séquence. Elle part de l'état le plus complet et retire, tant que son contenu déborde (scrollWidth > clientWidth), l'étape suivante : 1 le tampon, 2 la version, 3 le libellé d'une liste de la barre (« Théâtre »),
@@ -83,6 +85,8 @@ _BAR_JS = r"""/* ---- la réduction de la barre : une seule séquence. Elle part
    il reste aligné sur « ⋯ », ses lignes se refont si leur texte ou leur état change ; il se ferme quand la décision change, au redimensionnement de la fenêtre et aux gestes du menu. Ce texte est aussi celui du Field Manual (build_bar_js). ---- */
 const UISTEPS = ['tb-st1', 'tb-st2', 'tb-st3', 'tb-st4', 'tb-st5', 'tb-st6'];
 const UIMORE = { btn: null, panel: null, list: null, units: [], sig: '', bound: false };
+/* la barre : celle de l'outil (.toolbar) ; à l'accueil, qui n'a pas de .toolbar, le groupe de commandes du rail (.rail .ctrl) : même code, même séquence */
+function uiBarEl() { return document.querySelector('.toolbar') || document.querySelector('.rail .ctrl'); }
 function uiBarStep(bar, k) { UISTEPS.forEach((c, i) => bar.classList.toggle(c, i < k)); }
 function uiBarLang() { let l = ''; try { l = typeof CURRENT_LANG !== 'undefined' ? CURRENT_LANG : ''; } catch (e) { l = ''; } if (l !== 'fr' && l !== 'en') l = (document.documentElement.lang || 'fr').slice(0, 2).toLowerCase(); return l === 'en' ? 'en' : 'fr'; }
 function uiBarT(key, fr, en) { try { const v = t(key); if (v !== undefined && v !== key) return v; } catch (e) { /* sans t() : le texte de repli */ } return uiBarLang() === 'en' ? en : fr; }
@@ -139,12 +143,17 @@ function uiBarListPanel() {
   UIMORE.list = null;
   return null;
 }
-function uiBarMoreRow(icon, text, chev, disabled, onclick) {
+function uiBarMoreRow(icon, text, chev, disabled, onclick, why) {
   const li = document.createElement('li'); li.className = 'tbm-opt'; li.setAttribute('role', 'menuitem');
   const ic = document.createElement('span'); ic.className = 'tb-more-ic';
   if (icon) ic.appendChild(icon); else { const m = document.createElement('span'); m.className = 'tbm-mark'; ic.appendChild(m); }
   const tx = document.createElement('span'); tx.className = 'tbm-txt'; tx.textContent = text;
-  li.appendChild(ic); li.appendChild(tx);
+  li.appendChild(ic);
+  if (disabled && why) {                                 /* une ligne grisée dit pourquoi : la raison (le title de l'élément), sous le texte, en plus petit */
+    const col = document.createElement('span'); col.className = 'tb-more-col';
+    const w = document.createElement('span'); w.className = 'tb-more-why'; w.textContent = why;
+    col.appendChild(tx); col.appendChild(w); li.appendChild(col);
+  } else li.appendChild(tx);
   if (chev) { const c = document.createElement('span'); c.className = 'tb-more-chev'; c.setAttribute('aria-hidden', 'true'); c.textContent = '▸'; li.appendChild(c); }
   if (disabled) li.setAttribute('aria-disabled', 'true');
   li.addEventListener('click', ev => { ev.stopPropagation(); if (!disabled) onclick(); });
@@ -168,8 +177,14 @@ function uiBarMoreText(u) {
   const lab = e.querySelector('.tb-btn-label');
   return (lab ? lab.textContent : (e.getAttribute('aria-label') || e.title || e.textContent)).trim();
 }
-/* ce que montre le menu (les textes et les lignes grisées) : s'il change sans que la décision change, les lignes se refont ; sinon elles restent */
-function uiBarMoreKey() { return uiBarLang() + '\n' + UIMORE.units.map(u => uiBarMoreText(u) + (u.el.disabled ? '\u0001' : '')).join('\n'); }
+/* la raison d'une ligne grisée : le title de l'élément, quand il diffère du texte de la ligne (« Configuration fournie par … » sous « Exemple ») ; rien pour une ligne active */
+function uiBarMoreWhy(u) {
+  if (!u.el.disabled) return '';
+  const ti = (u.el.title || '').trim();
+  return ti && ti !== uiBarMoreText(u) ? ti : '';
+}
+/* ce que montre le menu (les textes, les lignes grisées et leur raison) : s'il change sans que la décision change, les lignes se refont ; sinon elles restent */
+function uiBarMoreKey() { return uiBarLang() + '\n' + UIMORE.units.map(u => uiBarMoreText(u) + (u.el.disabled ? '\u0001' + uiBarMoreWhy(u) : '')).join('\n'); }
 function uiBarMoreFill(ul) {
   const b = UIMORE.btn;
   while (ul.firstChild) ul.removeChild(ul.firstChild);
@@ -177,17 +192,17 @@ function uiBarMoreFill(ul) {
   UIMORE.units.forEach(u => {
     const e = u.el, text = uiBarMoreText(u);
     if (u.kind === 'lang') {
-      ul.appendChild(uiBarMoreRow(uiBarFlag(u), text, false, e.disabled, () => pass(u, () => e.click())));
+      ul.appendChild(uiBarMoreRow(uiBarFlag(u), text, false, e.disabled, () => pass(u, () => e.click()), uiBarMoreWhy(u)));
     } else if (u.kind === 'list') {
       ul.appendChild(uiBarMoreRow(null, text, true, e.disabled, () => pass(u, () => {
         e.click();                                     /* la même liste au thème : elle s'ouvre sous « ⋯ » (le bouton de la liste est masqué) */
         const p = typeof TBM !== 'undefined' && TBM.cur ? TBM.cur.panel : null;
         if (p) { UIMORE.list = p; uiBarMorePlace(p); }
-      })));
+      }), uiBarMoreWhy(u)));
     } else {
       const svg = e.querySelector('svg'); let ic = null;
       if (svg) { ic = svg.cloneNode(true); if (!e.disabled) ic.style.color = getComputedStyle(e).color; }       /* une ligne grisée l'est entière : l'icône garde la couleur de la ligne */
-      ul.appendChild(uiBarMoreRow(ic, text, e.getAttribute('aria-haspopup') === 'menu', e.disabled, () => pass(u, () => e.click())));
+      ul.appendChild(uiBarMoreRow(ic, text, e.getAttribute('aria-haspopup') === 'menu', e.disabled, () => pass(u, () => e.click()), uiBarMoreWhy(u)));
     }
   });
 }
@@ -275,7 +290,7 @@ function uiBarMore(bar) {
   UIMORE.units = units.slice(n);
 }
 function uiBarFit() {
-  const bar = document.querySelector('.toolbar');
+  const bar = uiBarEl();
   if (!bar || !bar.clientWidth) return;                 /* un outil masqué (largeur nulle) garde son état */
   let k = UISTEPS.length;
   const more = UIMORE.btn && UIMORE.btn.parentNode === bar ? UIMORE.btn : null, focused = !!more && document.activeElement === more;
@@ -298,7 +313,7 @@ function uiBarFit() {
   if (typeof uiBarDisplaySync === 'function') uiBarDisplaySync();     /* Affichage réduit à l'icône (étape 4) : son infobulle et son nom accessible suivent */
 }
 function uiBarFitInit() {
-  const bar = document.querySelector('.toolbar');
+  const bar = uiBarEl();
   if (!bar) return;
   let queued = false;
   const later = () => { if (queued) return; queued = true; Promise.resolve().then(() => { queued = false; uiBarFit(); }); };

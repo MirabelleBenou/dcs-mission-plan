@@ -1094,6 +1094,25 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
   table.nav { font-size: 11px; }
   .tb-btn { padding: 0 8px; min-width: 40px; }
 }
+
+/* ---------- au doigt : 44 px (le bloc d'interface commun pose min-height et min-width à spécificité zéro ; ce que ce module disait plus bas l'emporte et se corrige ici, sous la même condition) ---------- */
+@media (pointer: coarse) {
+  .in { min-height: 44px; }                                         /* les champs du panneau, ceux des lignes de point comprises (la hauteur seule : leurs largeurs sont celles de la base) */
+  .tb-btn, .tapmode .tb-btn { min-width: 44px; }                    /* la barre des modes (Point · Réf. · Lire · Dessin · Règle) */
+  .pt-num, .pt-del { min-width: 0; }                                /* la ligne de point se redessine plus tard : hauteur de 44 px, largeurs de la base (n° et ✕ restent sous 44 de large) */
+}
+/* la poignée entre la carte et le panneau : 44 px de haut, son trait au centre (flex), inchangé */
+@media (pointer: coarse) and (max-width: 1099px) {
+  .app { grid-template-rows: auto 44px minmax(0, 1fr) !important; }
+  .rp-split { height: 44px; }
+}
+/* jusqu'à 759 px les champs de la ligne de point gardent la taille de texte de la base : les 16 px de la suite n'y tiendraient pas à côté des colonnes fixes (un nom serait coupé) */
+@media (pointer: coarse) and (max-width: 759px) {
+  .pt-row .in { font-size: 13px !important; }
+  .pt-row select.in, .pt-row .in.tbm-trigger { font-size: 12px !important; }
+  /* la liste des routes : à 16 px le nom de la route est coupé de 4 px à 390 ; un peu moins de marge, sans changer la disposition */
+  .rs-pick .tbm-trigger { padding: 0 32px 0 10px; }
+}
 """
 CSS = CSS.replace('__STARDOS_400__', A['STARDOS_400'])
 CSS = CSS.replace('__STARDOS_700__', A['STARDOS_700'])
