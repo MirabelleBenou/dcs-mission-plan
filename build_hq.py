@@ -3175,7 +3175,10 @@ function wingApplyManaged() {{
   const rst = document.getElementById('wing-reset-btn');
   if (rst) {{ rst.disabled = on; if (on) rst.title = tip; else rst.removeAttribute('title'); }}
   const ex = document.getElementById('btn-example');
-  if (ex) {{ ex.disabled = on; ex.title = on ? tip : t(ex.dataset.i18nTitle); }}
+  if (ex) {{
+    ex.disabled = on; ex.title = on ? tip : t(ex.dataset.i18nTitle);
+    if (on) ex.setAttribute('data-mp-why', tip); else ex.removeAttribute('data-mp-why');       // la raison que montre la ligne grisée du menu « ⋯ »
+  }}
 }}
 
 // ── Render wing editor inputs ──────────────────────────────────

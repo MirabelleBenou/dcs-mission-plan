@@ -22,12 +22,12 @@ SHELL = 'file://' + str(ROOT / 'dist' / 'dcs_mission_plan.html')
 
 TEXT_TOUCH = ("**Easier to touch with a finger**\n"
               "- On a touch screen, every button, list and field is at least 44 px tall and wide; with a mouse nothing changes.\n"
-              "- On a phone, fields use 16 px text, so the page no longer zooms in when you type.\n")
+              "- On a phone, fields use 16 px text, so the page no longer zooms in when you type (the Route Planner’s waypoint rows still use smaller text).\n")
 TEXT_WHY = ("**Greyed-out commands say why**\n"
             "- In the “⋯” menu, a command that cannot be used shows the reason under it, such as HQ’s Example when the Wing configuration is provided by another tool.\n")
 TEXT_HOME = ("### Home screen\n\n"
              "**The top bar fits on a phone**\n"
-             "- What does not fit moves into a “⋯” menu at its right end, language first, as in the tools; the theme name is no longer cut.\n")
+             "- What does not fit, theme and language, moves into a “⋯” menu at its right end, as in the tools; the theme name is no longer cut.\n")
 TEXT_RP = ("**Map controls for the finger**\n"
            "- On a touch screen, zoom, search and the Point · Ref. · Read · Draw · Ruler modes are 44 px, and so is the handle between map and panel.\n")
 
@@ -71,7 +71,9 @@ def test_the_common_stylesheet_has_the_finger_rules_under_coarse_pointers_only()
     assert 'font-size: 16px' in block16 and ':is(' in block16
     # la règle des 44 px n'existe qu'une fois, dans la requête « pointeur grossier » (l'autre 44 px de la feuille est le bouton « ⋯ », déjà là avant le lot)
     assert src.count('{ min-width: 44px; min-height: 44px; }') == 1 and src.index('{ min-width: 44px; min-height: 44px; }') < src.index('@media (pointer: coarse) and (max-width: 759px)')
-    assert '.tb-more-why' in src and 'var(--khaki)' in src[src.index('.tb-more-why'):src.index('.tb-more-why') + 200]
+    assert '.tb-more-why' in src and 'color: var(--paper)' in src[src.index('.tb-more-why'):src.index('.tb-more-why') + 300]      # la raison se lit : la couleur du texte du menu
+    assert ':not(.leaflet-container *)' in block44 and block44.startswith('@media (pointer: coarse) {\n  :where(')           # rien dans une carte Leaflet, à spécificité nulle
+    assert 'getAttribute(\'data-mp-why\')' in src and 'u.el.title' not in src[src.index('function uiBarMoreWhy'):src.index('function uiBarMoreWhy') + 400]
 
 
 def test_the_route_planner_rules_are_for_the_finger_alone():
@@ -199,9 +201,12 @@ def test_a_command_that_cannot_be_used_says_why_under_its_text(browser, lang):
     pg.wait_for_timeout(500)
     rows = f.evaluate("""() => [...document.querySelectorAll('.tb-more-panel .tbm-opt')].map(li => ({ txt: li.innerText.replace(/\\s+/g, ' ').trim().toUpperCase(),
         off: li.getAttribute('aria-disabled') === 'true', why: (li.querySelector('.tb-more-why') || {}).innerText || '',
-        size: li.querySelector('.tb-more-why') ? getComputedStyle(li.querySelector('.tb-more-why')).fontSize : '' }))""")
+        size: li.querySelector('.tb-more-why') ? getComputedStyle(li.querySelector('.tb-more-why')).fontSize : '',
+        color: li.querySelector('.tb-more-why') ? getComputedStyle(li.querySelector('.tb-more-why')).color : '' }))""")
+    pap = f.evaluate("() => { const t = document.createElement('span'); t.style.color = 'var(--paper)'; document.body.appendChild(t); const c = getComputedStyle(t).color; t.remove(); return c; }")
     ex = [x for x in rows if x['txt'].startswith(('EXEMPLE', 'EXAMPLE'))][0]
     assert ex['off'] and ex['size'] == '12px'
+    assert ex['color'] == pap                                                   # la raison prend la couleur du texte du menu, pas le gris des lignes grisées
     assert ex['why'] == ('Configuration fournie par Another Tool' if lang == 'fr' else 'Configuration provided by Another Tool')
     # un toucher sur la ligne grisée n'ouvre rien et laisse le menu ouvert
     idx = rows.index(ex)
@@ -211,6 +216,9 @@ def test_a_command_that_cannot_be_used_says_why_under_its_text(browser, lang):
     assert f.evaluate("() => !!document.querySelector('.tb-more-panel')")
     # les lignes actives n'ont pas de seconde ligne
     assert all(not x['why'] for x in rows if not x['off'])
+    # « Effacer » grisé (aucune mission) a un title mais aucune raison donnée : pas de seconde ligne
+    clear = [x for x in rows if x['txt'].startswith(('EFFACER', 'CLEAR'))][0]
+    assert clear['off'] and clear['why'] == ''
     assert pg.errs == []
 
 
@@ -266,3 +274,67 @@ def test_on_a_phone_fields_are_16_px_and_with_a_mouse_they_are_not_touched(brows
     sizes = g.evaluate("""() => [...document.querySelectorAll('input[type=text], select')].filter(e => e.getBoundingClientRect().width > 0).map(e => parseFloat(getComputedStyle(e).fontSize))""")
     assert sizes and max(sizes) < 16
     assert pg.errs == [] and pg2.errs == []
+
+
+def _open(pg, tid, wait=2600):
+    pg.evaluate("(id) => openModule(id)", tid)
+    pg.wait_for_selector('#iframe-' + tid, state='attached')
+    pg.wait_for_timeout(wait)
+    return pg.query_selector('#iframe-' + tid).content_frame()
+
+
+@needs_pw
+@pytest.mark.parametrize('w,h', [(345, 590), (412, 915)])
+def test_the_briefing_generator_bottom_tabs_keep_their_content_floor_and_the_phase_bar_has_44_px_columns(browser, w, h):
+    pg = new_page(browser, w, h, True)
+    f = _open(pg, 'bg')
+    r = f.evaluate("""() => { const bs = [...document.querySelectorAll('.tab-bar button')].filter(b => b.getBoundingClientRect().width > 0);
+        return { n: bs.length, floor: [...new Set(bs.map(b => getComputedStyle(b).minWidth))],
+          spill: bs.filter(b => { const r = b.getBoundingClientRect(), g = document.createRange(); g.selectNodeContents(b); return [...g.getClientRects()].some(q => q.width > 0 && (r.left - q.left > 1 || q.right - r.right > 1)); }).map(b => b.innerText.trim()),
+          widths: bs.map(b => Math.round(b.getBoundingClientRect().width * 10) / 10) }; }""")
+    assert r['n'] >= 4 and r['floor'] == ['auto'] and r['spill'] == []             # le texte reste dans sa case ; les onglets ne sont pas égalisés par un plancher de 44 px
+    f.evaluate("() => { setFormat('full'); }")
+    pg.wait_for_timeout(600)
+    f.evaluate("() => { document.querySelector('.tab-bar button[data-tab=\"phases\"]').click(); }")
+    pg.wait_for_timeout(800)
+    p = f.evaluate("""() => { const bar = [...document.querySelectorAll('.phase-bar')].find(b => b.getBoundingClientRect().width > 0);
+        const cols = getComputedStyle(bar).gridTemplateColumns.split(' ').map(parseFloat);
+        return { cols: cols, over: [...bar.children].some((c, i) => i < cols.length && c.getBoundingClientRect().width > cols[i] + 0.5) }; }""")
+    assert p['cols'][0] == 44 and p['cols'][2:] == [44, 44, 44, 44] and p['cols'][1] >= 40 and not p['over']
+    assert pg.errs == []
+
+
+@needs_pw
+def test_the_recon_station_sliders_are_44_px_tall_and_draw_their_rail_on_the_track(browser):
+    pg = new_page(browser, 412, 915, True)
+    f = _open(pg, 'rs')
+    r = f.evaluate("""() => { const e = document.getElementById('contrast-slider'); const cs = getComputedStyle(e); return { minH: cs.minHeight, bg: cs.backgroundColor }; }""")
+    assert r['minH'] == '44px' and r['bg'] == 'rgba(0, 0, 0, 0)'                      # l'élément ne porte plus le dessin
+    # la piste (4 px, khaki, 2 px d'arrondi) et le pouce recentré : le CSS du module (le rendu est comparé au pixel près à la base par le banc du lot)
+    src = (ROOT / 'build_recon_station.py').read_text(encoding='utf-8')
+    blk = src[src.index('@media (pointer: coarse) {{\n  .ed-slider {{ background: transparent; }}'):]
+    blk = blk[:blk.index('}}\n\n')]
+    assert '::-webkit-slider-runnable-track {{ height: 4px; background: var(--khaki); border-radius: 2px; }}' in blk
+    assert '::-moz-range-track {{ height: 4px; background: var(--khaki); border-radius: 2px; }}' in blk
+    assert '::-webkit-slider-thumb {{ margin-top: -5px; }}' in blk
+    pg2 = new_page(browser, 1280, 800, False)                                          # à la souris, la base : le rail est sur l'élément, 4 px
+    g = _open(pg2, 'rs')
+    m = g.evaluate("""() => { const e = document.getElementById('contrast-slider'); const cs = getComputedStyle(e); return { h: cs.height, minH: cs.minHeight, bg: cs.backgroundColor }; }""")
+    assert m['h'] == '4px' and m['minH'] != '44px' and m['bg'] != 'rgba(0, 0, 0, 0)'
+    assert pg.errs == [] and pg2.errs == []
+
+
+@needs_pw
+def test_the_44_px_rule_does_not_reach_inside_a_map_except_the_controls_the_route_planner_asks_for(browser):
+    pg = new_page(browser, 412, 915, True)
+    f = _open(pg, 'rp', 2800)
+    r = f.evaluate("""() => { const m = document.querySelector('.leaflet-container');
+        const mk = (tag, role) => { const e = document.createElement(tag); if (role) e.setAttribute('role', role); e.textContent = 'x'; m.appendChild(e); const h = getComputedStyle(e).minHeight; e.remove(); return h; };
+        const out = document.createElement('button'); out.textContent = 'x'; document.body.appendChild(out); const outside = getComputedStyle(out).minHeight; out.remove();
+        const R = e => { const q = e.getBoundingClientRect(); return [Math.round(q.width), Math.round(q.height)]; };
+        return { inButton: mk('button'), inRole: mk('a', 'button'), inSelect: mk('select'), outside: outside,
+          zoom: R(document.querySelector('.leaflet-control-zoom-in')), search: R(document.querySelector('.rp-search-btn')), modes: [...document.querySelectorAll('#tapmode .tb-btn')].map(b => R(b)[1]) }; }""")
+    assert r['inButton'] != '44px' and r['inRole'] != '44px' and r['inSelect'] != '44px'      # un bouton, une croix de fiche (a role=button) ou une liste dans la carte : la règle ne les atteint pas
+    assert r['outside'] == '44px'                                                              # hors de la carte, elle joue
+    assert r['zoom'] == [44, 44] and r['search'] == [44, 44] and r['modes'] == [44] * 5       # les commandes que le RP demande
+    assert pg.errs == []

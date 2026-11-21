@@ -1099,6 +1099,8 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 @media (pointer: coarse) {
   .in { min-height: 44px; }                                         /* les champs du panneau, ceux des lignes de point comprises (la hauteur seule : leurs largeurs sont celles de la base) */
   .tb-btn, .tapmode .tb-btn { min-width: 44px; }                    /* la barre des modes (Point · Réf. · Lire · Dessin · Règle) */
+  /* les commandes de la carte (dans .leaflet-container, que la règle commune n'atteint pas) : le zoom, le bouton de recherche (son champ et sa croix sont déjà à 44 px) et la barre des modes */
+  .leaflet-control-zoom a, .rp-search-btn, .tapmode .tb-btn { min-width: 44px; min-height: 44px; }
   .pt-num, .pt-del { min-width: 0; }                                /* la ligne de point se redessine plus tard : hauteur de 44 px, largeurs de la base (n° et ✕ restent sous 44 de large) */
 }
 /* la poignée entre la carte et le panneau : 44 px de haut, son trait au centre (flex), inchangé */

@@ -34,7 +34,7 @@ Further down, *Before v2.0.0* keeps the history of each tool up to v1.24.0, when
 
 **Easier to touch with a finger**
 - On a touch screen, every button, list and field is at least 44 px tall and wide; with a mouse nothing changes.
-- On a phone, fields use 16 px text, so the page no longer zooms in when you type.
+- On a phone, fields use 16 px text, so the page no longer zooms in when you type (the Route Planner’s waypoint rows still use smaller text).
 
 **Greyed-out commands say why**
 - In the “⋯” menu, a command that cannot be used shows the reason under it, such as HQ’s Example when the Wing configuration is provided by another tool.
@@ -42,7 +42,7 @@ Further down, *Before v2.0.0* keeps the history of each tool up to v1.24.0, when
 ### Home screen
 
 **The top bar fits on a phone**
-- What does not fit moves into a “⋯” menu at its right end, language first, as in the tools; the theme name is no longer cut.
+- What does not fit, theme and language, moves into a “⋯” menu at its right end, as in the tools; the theme name is no longer cut.
 
 ### HQ
 

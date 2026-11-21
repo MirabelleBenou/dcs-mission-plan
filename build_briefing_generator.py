@@ -2636,6 +2636,12 @@ body[data-format="full"] [data-fmt="simple"] { display: none !important; }
   .phase-bar { grid-template-columns: 40px 1fr 40px 40px 40px 40px; }
 }
 
+/* au doigt : la barre des onglets du bas garde son plancher de contenu (le min-width: 44px du bloc commun, à spécificité nulle, remplacerait le min-width: auto des boutons en flex : onglets égaux, texte qui sort de sa case) ; la barre de phases passe à des colonnes de 44 px */
+@media (pointer: coarse) {
+  .tab-bar button { min-width: auto; }
+  .phase-bar { grid-template-columns: 44px 1fr 44px 44px 44px 44px; }
+}
+
 /* ============= EXPORT : la liste à cases des pages (« Choisir… ») ; la fenêtre est celle du bloc d'interface commun ============= */
 .export-png-actions-top { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
 .export-png-list { max-height: 280px; overflow-y: auto; border: 1px solid var(--khaki); padding: 2px 10px; background: rgba(0, 0, 0, 0.18); }

@@ -1989,6 +1989,13 @@ body {{
   background: var(--amber);
   cursor: pointer;
 }}
+/* au doigt : le curseur prend 44 px de haut (bloc commun) ; le rail ne se dessine plus sur l'élément mais sur la piste (4 px), le pouce reste centré dessus : même rendu qu'avant */
+@media (pointer: coarse) {{
+  .ed-slider {{ background: transparent; }}
+  .ed-slider::-webkit-slider-runnable-track {{ height: 4px; background: var(--khaki); border-radius: 2px; }}
+  .ed-slider::-moz-range-track {{ height: 4px; background: var(--khaki); border-radius: 2px; }}
+  .ed-slider::-webkit-slider-thumb {{ margin-top: -5px; }}
+}}
 
 /* Drop zone */
 .drop-zone {{ font-weight: 500;

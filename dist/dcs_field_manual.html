@@ -310,7 +310,7 @@ a.fmnav-ch:focus-visible, a.fmnav-sec:focus-visible { outline-offset: -2px; }
 .tb-more-ic svg:not([viewBox="0 0 20 14"]) { width: 18px; height: 18px; }
 .tb-more-chev { flex: none; margin-left: auto; padding-left: 14px; color: var(--khaki); }
 .tb-more-col { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; justify-content: center; padding: 4px 0; }
-.tb-more-why { margin-top: 2px; font-family: var(--f-ui); font-weight: 500; font-size: 12px; line-height: 1.3; letter-spacing: 0; text-transform: none; white-space: normal; color: var(--khaki); }
+.tb-more-why { margin-top: 2px; font-family: var(--f-ui); font-weight: 500; font-size: 12px; line-height: 1.3; letter-spacing: 0; text-transform: none; white-space: normal; color: var(--paper); }
 
 /* ── ROOT SCROLL ── */
 #fm-root:focus { outline: none; }
@@ -5005,9 +5005,9 @@ function uiBarMoreText(u) {
 }
 /* la raison d'une ligne grisée : le title de l'élément, quand il diffère du texte de la ligne (« Configuration fournie par … » sous « Exemple ») ; rien pour une ligne active */
 function uiBarMoreWhy(u) {
+  /* la raison d'une commande grisée : l'attribut data-mp-why, posé par le code qui la grise (le title décrit la commande, il n'est pas lu) */
   if (!u.el.disabled) return '';
-  const ti = (u.el.title || '').trim();
-  return ti && ti !== uiBarMoreText(u) ? ti : '';
+  return (u.el.getAttribute('data-mp-why') || '').trim();
 }
 /* ce que montre le menu (les textes, les lignes grisées et leur raison) : s'il change sans que la décision change, les lignes se refont ; sinon elles restent */
 function uiBarMoreKey() { return uiBarLang() + '\n' + UIMORE.units.map(u => uiBarMoreText(u) + (u.el.disabled ? '\u0001' + uiBarMoreWhy(u) : '')).join('\n'); }
