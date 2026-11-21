@@ -2820,7 +2820,7 @@ const I18N = {
     'attr.topo': 'Données © <a href="https://www.openstreetmap.org/copyright">contributeurs OpenStreetMap</a>, SRTM · style © <a href="https://opentopomap.org">OpenTopoMap</a> (CC-BY-SA)',
     'attr.sat': 'Esri, Maxar, Earthstar Geographics, and the GIS User Community',
     'attr.places': 'Lieux © Esri, HERE, Garmin, OpenStreetMap contributors',
-    'attr.relief': 'Relief : DCS World, Eagle Dynamics SA — altitude du terrain lue dans le jeu. Usage non commercial.',
+    'attr.relief': 'Relief : DCS World, Eagle Dynamics SA (usage non commercial)',
     'dsp.relief': 'Relief',
     'dsp.relief.tip': 'Relief du terrain, relevé dans DCS',
     'dsp.relief.off': 'Relief — absent de ce théâtre',
@@ -3355,7 +3355,7 @@ const I18N = {
     'attr.topo': 'Map data © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>, SRTM · style © <a href="https://opentopomap.org">OpenTopoMap</a> (CC-BY-SA)',
     'attr.sat': 'Esri, Maxar, Earthstar Geographics, and the GIS User Community',
     'attr.places': 'Places © Esri, HERE, Garmin, OpenStreetMap contributors',
-    'attr.relief': 'Relief: DCS World, Eagle Dynamics SA — terrain elevation read in the game. Non-commercial use only.',
+    'attr.relief': 'Relief: DCS World, Eagle Dynamics SA (non-commercial use)',
     'dsp.relief': 'Relief',
     'dsp.relief.tip': 'Terrain relief, read in DCS',
     'dsp.relief.off': 'Relief — not available for this theatre',
@@ -6373,8 +6373,12 @@ const RE = {
   toasted: new Set(),          /* les théâtres dont l'échec a déjà eu son toast */
   tiles: new Map(),            /* adresse de la tuile d'altitude → promesse de ses octets RGBA (ou null) */
   layer: null, meta: null, id: '', key: '', seq: 0,
-  canvas: null, raf: 0, ev: null, stamp: 0, pend: '', shown: null
+  canvas: null, raf: 0, ev: null, stamp: 0, pend: '', shown: null,
+  touch: false,                /* le type du dernier pointerdown sur la carte : vrai pour un doigt ou un stylet, faux pour la souris */
+  dwell: 0, dwellX: 0, dwellY: 0       /* l'attente du pointeur sur un pixel avant de demander une tuile absente du cache */
 };
+const RELIEF_DWELL = 150;      /* ms : le pointeur reste sur le même pixel avant qu'une tuile d'altitude absente du cache se demande */
+const RELIEF_LAT = 85.05;      /* les latitudes de bounds restent dans le Web Mercator */
 
 function reliefTheatre(id) { return RELIEF_THEATRES.indexOf(id) !== -1; }
 
@@ -6384,10 +6388,12 @@ function reliefClean(j) {
   const num = v => typeof v === 'number' && isFinite(v);
   const pathOk = v => typeof v === 'string' && ['{z}', '{x}', '{y}'].every(k => v.indexOf(k) >= 0) && v.indexOf('..') < 0 && v.indexOf(':') < 0;
   if (!isObj(j) || j.format !== RELIEF_FORMAT) return null;
+  if (j.tileSize !== 256) return null;
   if (!Number.isInteger(j.minZoom) || !Number.isInteger(j.maxNativeZoom) || j.minZoom < 0 || j.minZoom > j.maxNativeZoom || j.maxNativeZoom > 22) return null;
   const b = j.bounds;
   if (!Array.isArray(b) || b.length !== 2 || !b.every(c => Array.isArray(c) && c.length === 2 && c.every(num))) return null;
   if (!(b[0][0] < b[1][0] && b[0][1] < b[1][1])) return null;
+  if (b[0][0] < -RELIEF_LAT || b[1][0] > RELIEF_LAT) return null;
   const ls = j.layers;
   if (!isObj(ls) || !isObj(ls.hillshade) || !isObj(ls.elevation)) return null;
   const hs = ls.hillshade, el = ls.elevation;
@@ -6444,47 +6450,54 @@ function reliefDrop() {
   if (RE.layer) map.removeLayer(RE.layer);
   RE.layer = null; RE.meta = null; RE.id = '';
   RE.stamp++; RE.pend = ''; RE.shown = null;
+  reliefDwellStop();
   reliefAltRender();
 }
 
-/* Une tuile d'altitude : une seule demande par tuile, même pour des appels simultanés ; en échec (absente, erreur, CORS), elle est gardée comme vide */
+/* Une tuile d'altitude : une seule demande par tuile, même pour des appels simultanés ; en échec (absente, erreur, CORS), elle est gardée comme vide.
+   Lue par fetch (CORS) puis createImageBitmap sans conversion de couleur ni prémultiplication, pour que les octets R, G, B soient ceux du fichier. */
 function reliefTile(url) {
   if (RE.tiles.has(url)) return RE.tiles.get(url);
-  const p = new Promise(res => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
+  const p = fetch(url, { mode: 'cors' })
+    .then(r => (r.ok ? r.blob() : null))
+    .then(blob => (blob ? createImageBitmap(blob, { colorSpaceConversion: 'none', premultiplyAlpha: 'none' }) : null))
+    .then(bm => {
+      if (!bm) return null;
       try {
+        if (bm.width !== 256 || bm.height !== 256) return null;
         if (!RE.canvas) { RE.canvas = document.createElement('canvas'); RE.canvas.width = 256; RE.canvas.height = 256; }
         const cx = RE.canvas.getContext('2d', { willReadFrequently: true });
         cx.clearRect(0, 0, 256, 256);
-        cx.drawImage(img, 0, 0);
-        res(cx.getImageData(0, 0, 256, 256).data);
-      } catch (e) { res(null); }
-    };
-    img.onerror = () => res(null);
-    img.src = url;
-  });
+        cx.drawImage(bm, 0, 0);
+        return cx.getImageData(0, 0, 256, 256).data;
+      } catch (e) { return null; } finally { if (bm.close) bm.close(); }
+    })
+    .catch(() => null);
   RE.tiles.set(url, p);
   while (RE.tiles.size > RELIEF_CACHE) RE.tiles.delete(RE.tiles.keys().next().value);
   return p;
 }
 
-/* L'altitude du sol (mètres, non arrondie) au point, ou null : hors des bornes, hors carte (alpha 0), tuile vide, relief non posé.
-   Terrain-RGB : h = base + (R × 65536 + G × 256 + B) × pas ; la tuile est celle du niveau natif le plus fin qui contient le point */
-function reliefAltAt(lat, lon) {
+/* La tuile et le pixel du point, au niveau natif le plus fin ; null hors des bornes ou sans relief posé */
+function reliefLoc(lat, lon) {
   const m = RE.meta;
-  if (!m || !RE.layer || typeof lat !== 'number' || typeof lon !== 'number' || !isFinite(lat) || !isFinite(lon)) return Promise.resolve(null);
+  if (!m || !RE.layer || typeof lat !== 'number' || typeof lon !== 'number' || !isFinite(lat) || !isFinite(lon)) return null;
   const b = m.bounds;
-  if (lat < b[0][0] || lat > b[1][0] || lon < b[0][1] || lon > b[1][1]) return Promise.resolve(null);
+  if (lat < b[0][0] || lat > b[1][0] || lon < b[0][1] || lon > b[1][1]) return null;
   const z = m.maxNativeZoom, n = Math.pow(2, z), sn = Math.sin(lat * Math.PI / 180);
   const x = (lon + 180) / 360 * n, y = (0.5 - Math.log((1 + sn) / (1 - sn)) / (4 * Math.PI)) * n;
   const tx = Math.floor(x), ty = Math.floor(y);
-  const px = Math.min(255, Math.floor((x - tx) * 256)), py = Math.min(255, Math.floor((y - ty) * 256));
-  const url = RELIEF_BASE + RE.id + '/' + fillTile(m.elev, z, tx, ty);
-  return reliefTile(url).then(d => {
+  return { url: RELIEF_BASE + RE.id + '/' + fillTile(m.elev, z, tx, ty), px: Math.min(255, Math.floor((x - tx) * 256)), py: Math.min(255, Math.floor((y - ty) * 256)) };
+}
+
+/* L'altitude du sol (mètres, non arrondie) au point, ou null : hors des bornes, hors carte (alpha 0), tuile vide, relief non posé.
+   Terrain-RGB : h = base + (R × 65536 + G × 256 + B) × pas ; la tuile est celle du niveau natif le plus fin qui contient le point ; sans délai */
+function reliefAltAt(lat, lon) {
+  const loc = reliefLoc(lat, lon), m = RE.meta;
+  if (!loc) return Promise.resolve(null);
+  return reliefTile(loc.url).then(d => {
     if (!d) return null;
-    const i = (py * 256 + px) * 4;
+    const i = (loc.py * 256 + loc.px) * 4;
     if (d[i + 3] === 0) return null;
     return m.base + (d[i] * 65536 + d[i + 1] * 256 + d[i + 2]) * m.step;
   });
@@ -6539,6 +6552,8 @@ function reliefAltRender() {
 }
 
 function reliefLive() { return !!RE.layer && !!RE.meta && RE.key === S.theatre && !!DISP.relief; }
+/* Sous le minZoom de relief.json (zoom de la carte strictement inférieur), rien ne se lit */
+function reliefReadable() { return reliefLive() && map.getZoom() >= RE.meta.minZoom; }
 
 /* Une lecture au point ; sa valeur ne s'affiche que si aucune autre lecture ne l'a remplacée entre-temps */
 function reliefQuery(kind, ll, pt) {
@@ -6552,20 +6567,38 @@ function reliefQuery(kind, ll, pt) {
   });
 }
 
-/* La souris : au plus une lecture par image, dans tous les modes */
+/* Le cartouche de la souris part (et l'attente d'une tuile avec lui) */
+function reliefMouseHide() {
+  reliefDwellStop();
+  if (RE.pend === 'mouse') { RE.stamp++; RE.pend = ''; }
+  if (RE.shown && RE.shown.kind === 'mouse') { RE.shown = null; reliefAltRender(); }
+}
+function reliefDwellStop() { if (RE.dwell) { clearTimeout(RE.dwell); RE.dwell = 0; } }
+
+/* La souris : au plus une lecture par image, dans tous les modes. Une tuile d'altitude déjà en cache (ou déjà demandée) répond tout de suite ;
+   une tuile absente du cache ne se demande que lorsque le pointeur est resté RELIEF_DWELL ms au même pixel : un mouvement avant annule l'attente,
+   une requête déjà partie n'est pas annulée */
 function reliefFlush() {
   RE.raf = 0;
   const ev = RE.ev;
-  if (!ev || !reliefLive()) return;
-  reliefQuery('mouse', map.mouseEventToLatLng(ev), map.mouseEventToContainerPoint(ev));
+  if (!ev) return;
+  if (!reliefReadable()) { reliefMouseHide(); return; }
+  const ll = map.mouseEventToLatLng(ev), pt = map.mouseEventToContainerPoint(ev), loc = reliefLoc(ll.lat, ll.lng);
+  if (!loc || RE.tiles.has(loc.url)) { reliefDwellStop(); reliefQuery('mouse', ll, pt); return; }
+  reliefMouseHide();       /* ce qui était montré n'est plus la valeur du pointeur */
+  RE.dwellX = Math.round(ev.clientX); RE.dwellY = Math.round(ev.clientY);
+  RE.dwell = setTimeout(() => {
+    RE.dwell = 0;
+    if (RE.ev === ev && reliefReadable()) reliefQuery('mouse', ll, pt);
+  }, RELIEF_DWELL);
 }
 function reliefSchedule() { if (!RE.raf) RE.raf = requestAnimationFrame(reliefFlush); }
 
-/* Le toucher, en mode Lire seulement (appelé par onMapClick pour un toucher qui n'ouvre rien) : l'événement d'origine n'est pas une souris */
+/* Le toucher, en mode Lire seulement (appelé par onMapClick pour un toucher qui n'ouvre rien) : le type est celui du dernier pointerdown de la carte
+   (l'événement click ne compte pas : sous Safari macOS il ne porte pas de pointerType) ; la lecture est immédiate */
 function reliefTap(ev) {
-  const oe = ev.originalEvent;
-  if (oe && oe.pointerType === 'mouse') return;
-  if (!reliefLive()) return;
+  if (!RE.touch) return;
+  if (!reliefReadable()) return;
   reliefQuery('touch', ev.latlng, ev.containerPoint);
 }
 
@@ -6577,19 +6610,26 @@ function reliefTouchHide() {
 
 function reliefBind() {
   const host = map.getContainer();
+  /* tout pointerdown qui n'est pas une souris masque d'abord le cartouche et l'anneau du toucher (en capture : avant les marqueurs, les calques, les routes) */
+  host.addEventListener('pointerdown', ev => {
+    RE.touch = ev.pointerType !== 'mouse';
+    if (RE.touch) reliefTouchHide();
+  }, true);
   host.addEventListener('pointermove', ev => {
-    if (ev.pointerType !== 'mouse' || !reliefLive()) return;
+    if (ev.pointerType !== 'mouse') return;
+    if (ev.target && ev.target.closest && ev.target.closest('.leaflet-control-container')) { RE.ev = null; reliefMouseHide(); return; }       /* sur un contrôle de la carte : rien */
+    if (!reliefLive()) return;
     RE.ev = ev;
-    reliefSchedule();
+    if (RE.dwell && (RE.dwellX !== Math.round(ev.clientX) || RE.dwellY !== Math.round(ev.clientY))) reliefDwellStop();
+    if (!RE.dwell) reliefSchedule();
   });
   host.addEventListener('pointerleave', ev => {
     if (ev.pointerType !== 'mouse') return;       /* un toucher finit aussi par un pointerleave : il ne masque pas le cartouche du toucher */
     RE.ev = null;
-    if (RE.pend === 'mouse') { RE.stamp++; RE.pend = ''; }
-    if (RE.shown && RE.shown.kind === 'mouse') { RE.shown = null; reliefAltRender(); }
+    reliefMouseHide();
   });
   map.on('movestart zoomstart', reliefTouchHide);
-  map.on('moveend', () => { if (RE.ev && reliefLive()) reliefSchedule(); });       /* la carte a bougé sous un pointeur immobile (molette, boutons) : la valeur se relit */
+  map.on('moveend', () => { if (RE.ev) { reliefDwellStop(); reliefSchedule(); } });       /* la carte a bougé sous un pointeur immobile (molette, boutons), ou le zoom passe sous minZoom : la valeur se relit */
 }
 
 /* Les aérodromes du théâtre choisi, dans leur panneau (au-dessus de la grille, sous les références et la route).
@@ -7509,7 +7549,7 @@ function addAt(lat, lon, name) {
 function onMapClick(ev) {
   if (tapMode === 'draw') { drMapClick(ev); return; }
   if (tapMode === 'ruler') { rlTap(ev.latlng); return; }
-  if (tapMode === 'read') reliefTap(ev);       /* un toucher qui n'ouvre rien : l'altitude du sol (relief) ; la souris l'a déjà au pointeur */
+  if (tapMode === 'read' && !SR.open) reliefTap(ev);       /* un toucher qui n'ouvre rien (et qui ne ferme pas la recherche) : l'altitude du sol (relief) ; la souris l'a déjà au pointeur */
   addAt(ev.latlng.lat, ev.latlng.lng);
 }
 
@@ -14004,6 +14044,7 @@ function expOpen() {
   if (EXP.on) return;
   EXP.on = true;
   EXP.prevTap = tapMode;
+  reliefMouseHide(); reliefTouchHide();       /* le cartouche d'altitude et l'anneau n'entrent jamais dans l'image */
   map.closePopup();
   setTapMode('read', true);
   $('export-layer').hidden = false;
@@ -14132,7 +14173,7 @@ function expShoot(rect) {
       const c = el.classList;
       return c.contains('leaflet-control-container') || c.contains('leaflet-drawedit-pane') || c.contains('leaflet-ring-pane') ||
         c.contains('leaflet-popup-pane') || c.contains('ins-icon') || c.contains('sr-panel') ||
-        el.id === 'export-layer' || el.id === 'export-frame' || el.id === 'export-bar';
+        el.id === 'export-layer' || el.id === 'export-frame' || el.id === 'export-bar' || el.id === 'rp-alt' || el.id === 'rp-alt-x';
     }
   });
 }

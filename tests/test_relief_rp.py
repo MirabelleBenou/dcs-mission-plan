@@ -34,8 +34,8 @@ DOC = {'format': 'dcs-relief-tiles-v1', 'theatre': 'Syria', 'edition': 'test', '
 CHANGELOG_LINE = ('- New “Relief” option in the Display menu: the terrain as DCS sees it, shaded in relief over any base map, on Caucasus, Cold War Germany and Syria. '
                   'With it on, the ground elevation is shown next to the mouse pointer (on a phone, tap the map in Read mode), in the altitude unit you chose.')
 README_TAIL = 'terrain relief © DCS World, Eagle Dynamics SA, read in the game (non-commercial use)'
-ATTR_FR = 'Relief : DCS World, Eagle Dynamics SA — altitude du terrain lue dans le jeu. Usage non commercial.'
-ATTR_EN = 'Relief: DCS World, Eagle Dynamics SA — terrain elevation read in the game. Non-commercial use only.'
+ATTR_FR = 'Relief : DCS World, Eagle Dynamics SA (usage non commercial)'
+ATTR_EN = 'Relief: DCS World, Eagle Dynamics SA (non-commercial use)'
 
 
 def png(w, h, pixel):
@@ -69,6 +69,7 @@ def tile_ll(tx, ty, fx, fy, z=11):
 class Bench:
     def __init__(self):
         self.log = []
+        self.doc = DOC                                       # le relief.json de Syria, que les tests peuvent changer
 
     def handler(self, route):
         url = route.request.url
@@ -79,7 +80,7 @@ class Bench:
         if url.startswith(PT + 'relief/'):
             rest = url[len(PT + 'relief/'):]
             if rest == 'Syria/relief.json':
-                return route.fulfill(status=200, headers={**cors, 'Content-Type': 'application/json'}, body=json.dumps(DOC))
+                return route.fulfill(status=200, headers={**cors, 'Content-Type': 'application/json'}, body=json.dumps(self.doc))
             if rest == 'Caucasus/relief.json':
                 return route.fulfill(status=200, headers={**cors, 'Content-Type': 'application/json'}, body=json.dumps({**DOC, 'format': 'other'}))
             if rest.startswith('Syria/hillshade/'):
@@ -250,9 +251,7 @@ def test_elevation_is_read_from_the_terrain_rgb_tile_and_kept_in_a_small_cache(b
     assert ask(*tile_ll(1231, 820, .5, .5)) is not None
     assert ask(33.10, 35.60) is None and ask(34.80, 35.90) is None and ask(33.8, 37.0) is None and ask(33.8, 35.1) is None      # hors des bornes
     # une seule requête par tuile, même pour des appels simultanés
-    fr.evaluate("""() => { window.__srcs = []; const d = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, 'src');       /* les demandes d'image : le navigateur peut servir une image déjà vue sans requête */
-        Object.defineProperty(HTMLImageElement.prototype, 'src', { set(v) { window.__srcs.push(v); d.set.call(this, v); }, get() { return d.get.call(this); } }); }""")
-    asked = lambda t: len([u for u in fr.evaluate("window.__srcs") if u.endswith('/elevation/11/%d/%d.png' % t)])
+    asked = lambda t: len([u for u in pg.bench.relief('elevation') if u.endswith('/elevation/11/%d/%d.png' % t)])       # A6 : par fetch, le cache du navigateur ne cache plus ces requêtes
     la, lo = tile_ll(1229, 819, .25, .25)
     both = fr.evaluate("([a, b]) => Promise.all([__RP.reliefAltAt(a, b), __RP.reliefAltAt(a, b), __RP.reliefAltAt(a, b)])", [la, lo])
     assert len(both) == 3 and all(abs(v - elev_at(64, 64)) < 1e-6 for v in both)
@@ -376,5 +375,166 @@ def test_relief_never_changes_the_fallback_and_credits_its_source_only_while_sho
     fr.evaluate("__RP.setBase()")
     pg.wait_for_timeout(5500)
     assert fr.evaluate("__RP.inFallback") is True                                                  # le même repli sans Relief
+    assert pg.errs == []
+    pg.context.close()
+
+
+def tap_at(pg, fr, dx, dy):
+    box = fr.frame_element().bounding_box()
+    mb = fr.evaluate("(() => { const r = __RP.map.getContainer().getBoundingClientRect(); return { l: r.left, t: r.top, w: r.width, h: r.height }; })()")
+    pg.touchscreen.tap(box['x'] + mb['l'] + mb['w'] / 2 + dx, box['y'] + mb['t'] + mb['h'] / 2 + dy)
+    pg.wait_for_timeout(500)
+
+
+TAG = """(() => { const b = document.getElementById('rp-alt'), x = document.getElementById('rp-alt-x'); return { tag: !!b && !b.hidden, ring: !!x && !x.hidden, text: b ? b.textContent : '' }; })()"""
+
+
+@needs_pw
+def test_nothing_is_read_below_min_zoom_and_an_absent_tile_waits_for_the_pointer(browser):
+    pg, fr = open_rp(browser)
+    tick_relief(fr, pg)
+    box_ = lambda: (fr.frame_element().bounding_box(), fr.evaluate("(() => { const r = __RP.map.getContainer().getBoundingClientRect(); return { l: r.left, t: r.top, w: r.width, h: r.height }; })()"))
+    fr.evaluate("__RP.map.setView([33.95, 36.05], 8, {animate:false})")                           # minZoom 8 : le plus bas zoom où la carte se lit ; le centre des bornes
+    pg.wait_for_timeout(800)
+    box, mb = box_()
+    n0 = len(pg.bench.relief('elevation'))
+    for k in range(40):                                                                           # 40 positions espacées de 20 px, sans pause
+        pg.mouse.move(box['x'] + mb['l'] + mb['w'] / 2 - 780 + 20 * k, box['y'] + mb['t'] + mb['h'] / 2)       # de loin à gauche jusqu'au centre : les huit dernières positions sont dans les bornes
+    assert len(pg.bench.relief('elevation')) - n0 <= 1
+    pg.wait_for_timeout(300)                                                                      # puis une pause : la tuile du dernier pixel se demande
+    assert len(pg.bench.relief('elevation')) - n0 == 1
+    assert fr.evaluate(TAG)['tag'] is True
+    # sous minZoom : rien, ni cartouche ni requête, à la souris comme au toucher
+    fr.evaluate("__RP.map.setView([33.85, 35.95], 5, {animate:false})")
+    pg.wait_for_timeout(600)
+    n0 = len(pg.bench.relief('elevation'))
+    pg.mouse.move(box['x'] + mb['l'] + 300, box['y'] + mb['t'] + 300)
+    pg.mouse.move(box['x'] + mb['l'] + 310, box['y'] + mb['t'] + 305)
+    pg.wait_for_timeout(500)
+    assert fr.evaluate(TAG)['tag'] is False and len(pg.bench.relief('elevation')) == n0
+    fr.evaluate("__RP.map.setView([33.85, 35.95], 7, {animate:false})")
+    pg.wait_for_timeout(300)
+    pg.mouse.move(box['x'] + mb['l'] + 320, box['y'] + mb['t'] + 310)
+    pg.wait_for_timeout(500)
+    assert fr.evaluate(TAG)['tag'] is False and len(pg.bench.relief('elevation')) == n0
+    assert pg.errs == []
+    pg.context.close()
+
+
+@needs_pw
+def test_touch_below_min_zoom_reads_nothing(browser):
+    pg, fr = open_rp(browser, w=412, h=900, touch=True)
+    tick_relief(fr, pg)
+    fr.evaluate("__RP.map.setView([33.85, 35.95], 6, {animate:false})")
+    pg.wait_for_timeout(600)
+    n0 = len(pg.bench.relief('elevation'))
+    tap_at(pg, fr, 0, 0)
+    assert fr.evaluate(TAG)['tag'] is False and fr.evaluate(TAG)['ring'] is False and len(pg.bench.relief('elevation')) == n0
+    pg.context.close()
+
+
+@needs_pw
+def test_a_touch_on_a_marker_clears_the_tag_and_opens_the_sheet_and_a_touch_closing_the_search_shows_none(browser):
+    pg, fr = open_rp(browser, w=412, h=900, touch=True)
+    tick_relief(fr, pg)
+    la, lo = 33.852, 35.987                                                                       # Rayak
+    fr.evaluate("([a, b]) => __RP.map.setView([a, b], 11, {animate:false})", [la, lo])
+    pg.wait_for_timeout(1000)
+    tap_at(pg, fr, -50, 40)
+    assert fr.evaluate(TAG)['tag'] is True and fr.evaluate(TAG)['ring'] is True
+    tap_at(pg, fr, 0, 0)                                                                          # le marqueur de l'aérodrome
+    assert fr.evaluate(TAG)['tag'] is False and fr.evaluate(TAG)['ring'] is False
+    assert fr.evaluate("rtVisible('fiche')") is True
+    fr.evaluate("document.getElementById('fiche-fermer').click()")
+    pg.wait_for_timeout(400)
+    fr.evaluate("document.querySelector('.rp-search-btn').click()")                               # la recherche ouverte : un toucher sur la carte la ferme, sans cartouche
+    pg.wait_for_timeout(300)
+    assert fr.evaluate("SR.open") is True
+    tap_at(pg, fr, -50, 40)
+    assert fr.evaluate("SR.open") is False and fr.evaluate(TAG)['tag'] is False
+    assert pg.errs == []
+    pg.context.close()
+
+
+@needs_pw
+def test_the_kind_of_a_click_comes_from_the_last_pointerdown(browser):
+    pg, fr = open_rp(browser)
+    tick_relief(fr, pg)
+    fr.evaluate("([a, b]) => __RP.map.setView([a, b], 11, {animate:false})", tile_ll(1228, 819, .25, .25))
+    pg.wait_for_timeout(800)
+    click = """(type) => { const h = __RP.map.getContainer(), r = h.getBoundingClientRect(), o = { clientX: r.left + r.width / 2 - 40, clientY: r.top + r.height / 2 + 40, bubbles: true };
+        h.dispatchEvent(new PointerEvent('pointerdown', { ...o, pointerType: type })); h.dispatchEvent(new MouseEvent('click', o)); }"""     # le click ne porte aucun pointerType
+    fr.evaluate(click, 'mouse')
+    pg.wait_for_timeout(500)
+    assert fr.evaluate(TAG)['ring'] is False and fr.evaluate(TAG)['tag'] is False                 # souris : pas d'anneau
+    fr.evaluate(click, 'touch')
+    pg.wait_for_timeout(500)
+    assert fr.evaluate(TAG)['ring'] is True and fr.evaluate(TAG)['tag'] is True                   # doigt : le cartouche et l'anneau
+    assert pg.errs == []
+    pg.context.close()
+
+
+@needs_pw
+def test_the_pointer_on_a_map_control_hides_the_tag(browser):
+    pg, fr = open_rp(browser)
+    tick_relief(fr, pg)
+    fr.evaluate("([a, b]) => __RP.map.setView([a, b], 11, {animate:false})", tile_ll(1228, 819, .25, .25))
+    pg.wait_for_timeout(800)
+    box = fr.frame_element().bounding_box()
+    mb = fr.evaluate("(() => { const r = __RP.map.getContainer().getBoundingClientRect(); return { l: r.left, t: r.top, w: r.width, h: r.height }; })()")
+    pg.mouse.move(box['x'] + mb['l'] + mb['w'] / 2, box['y'] + mb['t'] + mb['h'] / 2)
+    pg.wait_for_timeout(600)
+    assert fr.evaluate(TAG)['tag'] is True
+    for sel in ('.leaflet-control-zoom-in', '.leaflet-control-attribution'):
+        r = fr.evaluate("(s) => { const b = document.querySelector(s).getBoundingClientRect(); return [b.left + b.width / 2, b.top + b.height / 2]; }", sel)
+        pg.mouse.move(box['x'] + mb['w'] / 2 + mb['l'], box['y'] + mb['t'] + mb['h'] / 2)
+        pg.wait_for_timeout(500)
+        assert fr.evaluate(TAG)['tag'] is True
+        pg.mouse.move(box['x'] + r[0], box['y'] + r[1])
+        pg.wait_for_timeout(500)
+        assert fr.evaluate(TAG)['tag'] is False
+    assert pg.errs == []
+    pg.context.close()
+
+
+@needs_pw
+def test_a_description_with_another_tile_size_or_latitudes_off_the_mercator_is_unreadable(browser):
+    pg, fr = open_rp(browser)
+    pg.bench.doc = {**DOC, 'tileSize': 512}
+    tick_relief(fr, pg)
+    pg.wait_for_timeout(500)
+    assert fr.evaluate("__toasts") == ['⚠ Relief indisponible : la description reçue du serveur est illisible.'] and fr.evaluate("!!__RP.reliefLayer") is False
+    tick_relief(fr, pg)
+    tick_relief(fr, pg)                                                                           # décocher puis recocher : pas de second toast
+    pg.wait_for_timeout(500)
+    assert len(fr.evaluate("__toasts")) == 1
+    pg.context.close()
+    pg, fr = open_rp(browser)
+    pg.bench.doc = {**DOC, 'bounds': [[33.15, 35.15], [85.1, 36.95]]}
+    tick_relief(fr, pg)
+    pg.wait_for_timeout(500)
+    assert len(fr.evaluate("__toasts")) == 1 and fr.evaluate("!!__RP.reliefLayer") is False
+    pg.context.close()
+
+
+@needs_pw
+def test_the_export_leaves_the_tag_and_the_ring_out_of_the_image(browser):
+    pg, fr = open_rp(browser, w=412, h=900, touch=True)
+    pg.evaluate("window.MP_SEND_MAP = (o) => { window.__sent = o; }")
+    tick_relief(fr, pg)
+    fr.evaluate("([a, b]) => __RP.map.setView([a, b], 11, {animate:false})", tile_ll(1228, 819, .25, .25))
+    pg.wait_for_timeout(1000)
+    tap_at(pg, fr, -50, 40)
+    assert fr.evaluate(TAG)['tag'] is True
+    fr.evaluate("expOpen()")                                                                      # l'ouverture du cadre les efface
+    pg.wait_for_timeout(300)
+    assert fr.evaluate(TAG)['tag'] is False
+    tap_at(pg, fr, -60, 60)                                                                       # un toucher dans le cadre les montre de nouveau (le cadre garde la carte en lecture)
+    fr.evaluate("""() => { const o = window.html2canvas; window.__ign = null; window.html2canvas = function (el, opts) {
+        window.__ign = ['rp-alt', 'rp-alt-x'].map(id => opts.ignoreElements(document.getElementById(id))); return o.apply(this, arguments); }; }""")
+    fr.evaluate("expGo()")
+    pg.wait_for_timeout(5000)
+    assert fr.evaluate("window.__ign") == [True, True]                                            # le rendu les ignore
+    assert pg.evaluate("!!window.__sent") is True
     assert pg.errs == []
     pg.context.close()
