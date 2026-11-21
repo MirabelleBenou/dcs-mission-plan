@@ -42,6 +42,7 @@ The sections per tool, further down, keep the history of each tool up to v1.24.0
 
 #### Route Planner
 - The Route Planner opens in Read mode, so a tap on the map no longer adds a waypoint by mistake; choose Waypoint to lay the route.
+- New “Relief” option in the Display menu: the terrain as DCS sees it, shaded in relief over any base map, on Caucasus, Cold War Germany and Syria. With it on, the ground elevation is shown next to the mouse pointer (on a phone, tap the map in Read mode), in the altitude unit you chose.
 
 #### Datacard Generator
 - The folded Radio section shows how many channels the datacard prints, like the other sections.

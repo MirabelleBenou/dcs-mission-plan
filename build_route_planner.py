@@ -336,6 +336,12 @@ button, input, select { font: inherit; }
   radial-gradient(ellipse at 30% 20%, rgba(255,255,255,.35), transparent 60%),
   repeating-linear-gradient(0deg, rgba(120,100,60,.035) 0 2px, transparent 2px 5px), #e6dcc2; }
 #map.grid-only .leaflet-tile-pane { visibility: hidden; }
+/* l'altitude du sol au pointeur (lot mp-relief-rp) : au-dessus des panneaux de Leaflet (400), sous ses contrôles (800) ; ne touche rien */
+#rp-alt { position: absolute; left: 0; top: 0; z-index: 500; pointer-events: none; font: 500 12px var(--f-ui); letter-spacing: .03em; padding: 4px 8px; background: rgba(26,28,20,.88); color: #e8dcb8; border: 1px solid var(--amber); border-radius: 2px; white-space: nowrap; }
+#rp-alt[hidden], #rp-alt-x[hidden] { display: none; }
+#rp-alt .rp-alt-l { opacity: .75; }
+#rp-alt b { font-weight: 700; }
+#rp-alt-x { position: absolute; left: 0; top: 0; z-index: 500; pointer-events: none; width: 14px; height: 14px; box-sizing: border-box; border: 2px solid var(--amber); border-radius: 50%; }
 .panel { overflow-y: auto; padding: 16px; background: var(--olive-deep); counter-reset: sec; }
 
 /* bandeau de repli */
@@ -2088,6 +2094,13 @@ const I18N = {
     'attr.topo': 'Données © <a href="https://www.openstreetmap.org/copyright">contributeurs OpenStreetMap</a>, SRTM · style © <a href="https://opentopomap.org">OpenTopoMap</a> (CC-BY-SA)',
     'attr.sat': 'Esri, Maxar, Earthstar Geographics, and the GIS User Community',
     'attr.places': 'Lieux © Esri, HERE, Garmin, OpenStreetMap contributors',
+    'attr.relief': 'Relief : DCS World, Eagle Dynamics SA — altitude du terrain lue dans le jeu. Usage non commercial.',
+    'dsp.relief': 'Relief',
+    'dsp.relief.tip': 'Relief du terrain, relevé dans DCS',
+    'dsp.relief.off': 'Relief — absent de ce théâtre',
+    'relief.err.net': '⚠ Relief indisponible : le serveur des tuiles ne répond pas.',
+    'relief.err.fmt': '⚠ Relief indisponible : la description reçue du serveur est illisible.',
+    'relief.alt': 'Alt. sol',
     'fallback': 'Fond indisponible — grille seule',
     'sec.route': 'Route',
     'sec.points': '{n} points',
@@ -2616,6 +2629,13 @@ const I18N = {
     'attr.topo': 'Map data © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>, SRTM · style © <a href="https://opentopomap.org">OpenTopoMap</a> (CC-BY-SA)',
     'attr.sat': 'Esri, Maxar, Earthstar Geographics, and the GIS User Community',
     'attr.places': 'Places © Esri, HERE, Garmin, OpenStreetMap contributors',
+    'attr.relief': 'Relief: DCS World, Eagle Dynamics SA — terrain elevation read in the game. Non-commercial use only.',
+    'dsp.relief': 'Relief',
+    'dsp.relief.tip': 'Terrain relief, read in DCS',
+    'dsp.relief.off': 'Relief — not available for this theatre',
+    'relief.err.net': '⚠ Relief unavailable: the tile server does not answer.',
+    'relief.err.fmt': '⚠ Relief unavailable: the description received from the server cannot be read.',
+    'relief.alt': 'Ground',
     'fallback': 'Map unavailable — grid only',
     'sec.route': 'Route',
     'sec.points': '{n} waypoints',
@@ -3122,7 +3142,7 @@ let S = defaultState();
 let sel = -1;                 /* point sélectionné (non enregistré) */
 let selR = -1;                /* point de référence sélectionné (non enregistré) */
 const KEY_DISPLAY = 'rp_display_v1';
-const DISP = { routes: 'all', refs: true, draw: true, sym: true, cf: true, diss: false };     /* ce que le menu « Affichage » montre ; gardé dans rp_display_v1, jamais dans route_state_v1 ; routes : 'none' | 'active' | 'all' */
+const DISP = { routes: 'all', refs: true, draw: true, sym: true, cf: true, diss: false, relief: false };     /* ce que le menu « Affichage » montre ; gardé dans rp_display_v1, jamais dans route_state_v1 ; routes : 'none' | 'active' | 'all' */
 const ROUTES_SHOW = ['none', 'active', 'all'];
 function routeShown() { return DISP.routes !== 'none'; }
 let tapMode = 'read';         /* ce que fait un toucher sur la carte : 'read' (ouvre les fiches des calques, ne pose rien : le mode de chaque ouverture), 'wp' (pose un point), 'ref' (pose une référence), 'draw' (dessine dans un calque) ou 'ruler' (mesure sur la carte, ne pose rien) — non enregistré */
@@ -4153,6 +4173,242 @@ function syncPlaces() {
   }
 }
 
+/* ============= LE RELIEF DE DCS (lot mp-relief-rp) =============
+   La case « Relief » du menu Affichage (DISP.relief, dans rp_display_v1) pose, sur Caucasus, GermanyCW et Syria, l'ombrage du terrain relevé dans DCS au-dessus du
+   fond choisi (panneau « relief », 250 : au-dessus des fonds, sous les noms de lieux et la grille), et fait lire l'altitude du sol au pointeur (souris), ou au toucher
+   en mode Lire. Contrat du serveur (dcs-relief-tiles-v1) : PUBLIC_TILES + « relief/<théâtre>/relief.json », puis les tuiles d'ombrage et d'altitude (Terrain-RGB) que
+   le document nomme ; les bornes se relisent dans le document, jamais en dur. Rien n'est embarqué ni gardé : la description et les tuiles d'altitude vivent en mémoire.
+   Les tuiles du relief ne sont pas celles du fond : les compteurs du repli (baseLayers) ne les voient pas. */
+const RELIEF_THEATRES = ['Caucasus', 'GermanyCW', 'Syria'];
+const RELIEF_FORMAT = 'dcs-relief-tiles-v1';
+const RELIEF_BASE = PUBLIC_TILES + 'relief/';
+const RELIEF_CACHE = 64;       /* tuiles d'altitude gardées au plus ; la plus ancienne sort la première */
+const RELIEF_GAP = 14;         /* le cartouche : à 14 px du point */
+const RELIEF_EDGE = 4;         /* et à 4 px au moins du bord de la carte, sinon il passe de l'autre côté */
+const RE = {
+  descs: new Map(),            /* théâtre → promesse de la description valide (ou de son échec) ; une fois par théâtre et par ouverture du module */
+  toasted: new Set(),          /* les théâtres dont l'échec a déjà eu son toast */
+  tiles: new Map(),            /* adresse de la tuile d'altitude → promesse de ses octets RGBA (ou null) */
+  layer: null, meta: null, id: '', key: '', seq: 0,
+  canvas: null, raf: 0, ev: null, stamp: 0, pend: '', shown: null
+};
+
+function reliefTheatre(id) { return RELIEF_THEATRES.indexOf(id) !== -1; }
+
+/* La description lue du serveur, ou null si elle est illisible */
+function reliefClean(j) {
+  const isObj = v => !!v && typeof v === 'object' && !Array.isArray(v);
+  const num = v => typeof v === 'number' && isFinite(v);
+  const pathOk = v => typeof v === 'string' && ['{z}', '{x}', '{y}'].every(k => v.indexOf(k) >= 0) && v.indexOf('..') < 0 && v.indexOf(':') < 0;
+  if (!isObj(j) || j.format !== RELIEF_FORMAT) return null;
+  if (!Number.isInteger(j.minZoom) || !Number.isInteger(j.maxNativeZoom) || j.minZoom < 0 || j.minZoom > j.maxNativeZoom || j.maxNativeZoom > 22) return null;
+  const b = j.bounds;
+  if (!Array.isArray(b) || b.length !== 2 || !b.every(c => Array.isArray(c) && c.length === 2 && c.every(num))) return null;
+  if (!(b[0][0] < b[1][0] && b[0][1] < b[1][1])) return null;
+  const ls = j.layers;
+  if (!isObj(ls) || !isObj(ls.hillshade) || !isObj(ls.elevation)) return null;
+  const hs = ls.hillshade, el = ls.elevation;
+  if (!pathOk(hs.path) || !pathOk(el.path) || el.encoding !== 'terrain-rgb' || !num(el.base_m) || !num(el.step_m) || !(el.step_m > 0)) return null;
+  return { minZoom: j.minZoom, maxNativeZoom: j.maxNativeZoom, bounds: [[b[0][0], b[0][1]], [b[1][0], b[1][1]]], hill: hs.path, elev: el.path, base: el.base_m, step: el.step_m };
+}
+
+/* La description d'un théâtre : une seule lecture par théâtre et par ouverture ; l'échec est gardé, avec sa nature ('net' ou 'fmt') */
+function reliefDesc(id) {
+  if (RE.descs.has(id)) return RE.descs.get(id);
+  let p;
+  try {
+    p = fetch(RELIEF_BASE + encodeURIComponent(id) + '/relief.json', { cache: 'no-cache' })
+      .then(r => (r.status === 200 ? r.text() : Promise.reject({ kind: 'net' })), () => Promise.reject({ kind: 'net' }))
+      .then(txt => {
+        let j = null;
+        try { j = JSON.parse(txt); } catch (e) { j = null; }
+        const m = reliefClean(j);
+        if (!m) throw { kind: 'fmt' };
+        return m;
+      });
+  } catch (e) { p = Promise.reject({ kind: 'net' }); }
+  RE.descs.set(id, p);
+  return p;
+}
+
+/* La couche d'ombrage suit la case et le théâtre : posée au premier besoin, retirée quand on décoche ou qu'on passe sur un théâtre sans relief ;
+   un échec n'est annoncé qu'une fois par théâtre et par ouverture (la case reste cochée, rien ne s'affiche) */
+function syncRelief() {
+  if (!mapCreated) return;
+  const want = DISP.relief && reliefTheatre(S.theatre) ? S.theatre : '';
+  if (want === RE.key) return;
+  RE.key = want;
+  const seq = ++RE.seq;
+  reliefDrop();
+  if (!want) return;
+  reliefDesc(want).then(m => { if (seq === RE.seq) reliefAdd(want, m); }, e => {
+    if (seq !== RE.seq || RE.toasted.has(want)) return;
+    RE.toasted.add(want);
+    showToast(t(e && e.kind === 'fmt' ? 'relief.err.fmt' : 'relief.err.net'), { type: 'err' });
+  });
+}
+
+function reliefAdd(id, m) {
+  RE.meta = m; RE.id = id;
+  RE.layer = L.tileLayer(RELIEF_BASE + id + '/' + m.hill, {
+    pane: 'relief', minZoom: m.minZoom, minNativeZoom: m.minZoom, maxNativeZoom: m.maxNativeZoom, maxZoom: 18,
+    bounds: m.bounds, crossOrigin: 'anonymous', attribution: t('attr.relief')
+  });
+  RE.layer.addTo(map);
+}
+
+function reliefDrop() {
+  if (RE.layer) map.removeLayer(RE.layer);
+  RE.layer = null; RE.meta = null; RE.id = '';
+  RE.stamp++; RE.pend = ''; RE.shown = null;
+  reliefAltRender();
+}
+
+/* Une tuile d'altitude : une seule demande par tuile, même pour des appels simultanés ; en échec (absente, erreur, CORS), elle est gardée comme vide */
+function reliefTile(url) {
+  if (RE.tiles.has(url)) return RE.tiles.get(url);
+  const p = new Promise(res => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        if (!RE.canvas) { RE.canvas = document.createElement('canvas'); RE.canvas.width = 256; RE.canvas.height = 256; }
+        const cx = RE.canvas.getContext('2d', { willReadFrequently: true });
+        cx.clearRect(0, 0, 256, 256);
+        cx.drawImage(img, 0, 0);
+        res(cx.getImageData(0, 0, 256, 256).data);
+      } catch (e) { res(null); }
+    };
+    img.onerror = () => res(null);
+    img.src = url;
+  });
+  RE.tiles.set(url, p);
+  while (RE.tiles.size > RELIEF_CACHE) RE.tiles.delete(RE.tiles.keys().next().value);
+  return p;
+}
+
+/* L'altitude du sol (mètres, non arrondie) au point, ou null : hors des bornes, hors carte (alpha 0), tuile vide, relief non posé.
+   Terrain-RGB : h = base + (R × 65536 + G × 256 + B) × pas ; la tuile est celle du niveau natif le plus fin qui contient le point */
+function reliefAltAt(lat, lon) {
+  const m = RE.meta;
+  if (!m || !RE.layer || typeof lat !== 'number' || typeof lon !== 'number' || !isFinite(lat) || !isFinite(lon)) return Promise.resolve(null);
+  const b = m.bounds;
+  if (lat < b[0][0] || lat > b[1][0] || lon < b[0][1] || lon > b[1][1]) return Promise.resolve(null);
+  const z = m.maxNativeZoom, n = Math.pow(2, z), sn = Math.sin(lat * Math.PI / 180);
+  const x = (lon + 180) / 360 * n, y = (0.5 - Math.log((1 + sn) / (1 - sn)) / (4 * Math.PI)) * n;
+  const tx = Math.floor(x), ty = Math.floor(y);
+  const px = Math.min(255, Math.floor((x - tx) * 256)), py = Math.min(255, Math.floor((y - ty) * 256));
+  const url = RELIEF_BASE + RE.id + '/' + fillTile(m.elev, z, tx, ty);
+  return reliefTile(url).then(d => {
+    if (!d) return null;
+    const i = (py * 256 + px) * 4;
+    if (d[i + 3] === 0) return null;
+    return m.base + (d[i] * 65536 + d[i + 1] * 256 + d[i + 2]) * m.step;
+  });
+}
+
+/* Le cartouche « Alt. sol » (#rp-alt) et l'anneau du toucher (#rp-alt-x), dans le conteneur de la carte */
+function reliefBox() {
+  let b = $('rp-alt');
+  if (!b) {
+    const host = map.getContainer();
+    b = document.createElement('div');
+    b.id = 'rp-alt'; b.hidden = true;
+    host.appendChild(b);
+    const x = document.createElement('div');
+    x.id = 'rp-alt-x'; x.hidden = true;
+    host.appendChild(x);
+  }
+  return b;
+}
+
+/* RE.shown : { kind: 'mouse' | 'touch', h, pt } ; réécrit au changement de langue et d'unité, replacé à chaque fois : 14 px à droite et sous le point,
+   de l'autre côté (14 px) s'il dépasse de 4 px le bord droit ou le bord bas, et jamais hors de la carte */
+function reliefAltRender() {
+  if (!mapCreated) return;
+  const s = RE.shown;
+  if (!s) {
+    const b0 = $('rp-alt');
+    if (b0) { b0.hidden = true; $('rp-alt-x').hidden = true; }
+    return;
+  }
+  const b = reliefBox(), x = $('rp-alt-x');
+  b.textContent = '';
+  const l = document.createElement('span');
+  l.className = 'rp-alt-l';
+  l.textContent = t('relief.alt');
+  const v = document.createElement('b');
+  v.textContent = altValue(s.h) + ' ' + t(S.units.altitude === 'ft' ? 'u.ft' : 'u.m');
+  b.appendChild(l);
+  b.appendChild(document.createTextNode(' '));
+  b.appendChild(v);
+  b.hidden = false;
+  const host = map.getContainer(), W = host.clientWidth, H = host.clientHeight, w = b.offsetWidth, h = b.offsetHeight;
+  let left = s.pt.x + RELIEF_GAP, top = s.pt.y + RELIEF_GAP;
+  if (left + w > W - RELIEF_EDGE) left = s.pt.x - RELIEF_GAP - w;
+  if (top + h > H - RELIEF_EDGE) top = s.pt.y - RELIEF_GAP - h;
+  left = Math.max(0, Math.min(left, W - w));
+  top = Math.max(0, Math.min(top, H - h));
+  b.style.left = Math.round(left) + 'px';
+  b.style.top = Math.round(top) + 'px';
+  x.hidden = s.kind !== 'touch';
+  if (!x.hidden) { x.style.left = Math.round(s.pt.x - 7) + 'px'; x.style.top = Math.round(s.pt.y - 7) + 'px'; }
+}
+
+function reliefLive() { return !!RE.layer && !!RE.meta && RE.key === S.theatre && !!DISP.relief; }
+
+/* Une lecture au point ; sa valeur ne s'affiche que si aucune autre lecture ne l'a remplacée entre-temps */
+function reliefQuery(kind, ll, pt) {
+  const stamp = ++RE.stamp;
+  RE.pend = kind;
+  reliefAltAt(ll.lat, ll.lng).then(h => {
+    if (stamp !== RE.stamp) return;
+    RE.pend = '';
+    RE.shown = h === null || !reliefLive() ? null : { kind: kind, h: h, pt: { x: pt.x, y: pt.y } };
+    reliefAltRender();
+  });
+}
+
+/* La souris : au plus une lecture par image, dans tous les modes */
+function reliefFlush() {
+  RE.raf = 0;
+  const ev = RE.ev;
+  if (!ev || !reliefLive()) return;
+  reliefQuery('mouse', map.mouseEventToLatLng(ev), map.mouseEventToContainerPoint(ev));
+}
+function reliefSchedule() { if (!RE.raf) RE.raf = requestAnimationFrame(reliefFlush); }
+
+/* Le toucher, en mode Lire seulement (appelé par onMapClick pour un toucher qui n'ouvre rien) : l'événement d'origine n'est pas une souris */
+function reliefTap(ev) {
+  const oe = ev.originalEvent;
+  if (oe && oe.pointerType === 'mouse') return;
+  if (!reliefLive()) return;
+  reliefQuery('touch', ev.latlng, ev.containerPoint);
+}
+
+/* Le cartouche du toucher part au début d'un déplacement ou d'un zoom, et au changement de mode */
+function reliefTouchHide() {
+  if (RE.pend === 'touch') { RE.stamp++; RE.pend = ''; }
+  if (RE.shown && RE.shown.kind === 'touch') { RE.shown = null; reliefAltRender(); }
+}
+
+function reliefBind() {
+  const host = map.getContainer();
+  host.addEventListener('pointermove', ev => {
+    if (ev.pointerType !== 'mouse' || !reliefLive()) return;
+    RE.ev = ev;
+    reliefSchedule();
+  });
+  host.addEventListener('pointerleave', ev => {
+    if (ev.pointerType !== 'mouse') return;       /* un toucher finit aussi par un pointerleave : il ne masque pas le cartouche du toucher */
+    RE.ev = null;
+    if (RE.pend === 'mouse') { RE.stamp++; RE.pend = ''; }
+    if (RE.shown && RE.shown.kind === 'mouse') { RE.shown = null; reliefAltRender(); }
+  });
+  map.on('movestart zoomstart', reliefTouchHide);
+  map.on('moveend', () => { if (RE.ev && reliefLive()) reliefSchedule(); });       /* la carte a bougé sous un pointeur immobile (molette, boutons) : la valeur se relit */
+}
+
 /* Les aérodromes du théâtre choisi, dans leur panneau (au-dessus de la grille, sous les références et la route).
    Tous les marqueurs sont portés par la couche ; le zoom décide de ce qui se dessine (classes du panneau, CSS). */
 function airfieldsOf(theatre) { return Object.prototype.hasOwnProperty.call(AIRFIELDS, theatre) ? AIRFIELDS[theatre] : null; }
@@ -4486,11 +4742,17 @@ function refreshAttribution() {
     placesLayer.options.attribution = t('attr.places');
     ctl.addAttribution(placesLayer.options.attribution);
   }
+  if (RE.layer) {
+    ctl.removeAttribution(RE.layer.options.attribution);
+    RE.layer.options.attribution = t('attr.relief');
+    ctl.addAttribution(RE.layer.options.attribution);
+  }
   baseLayers.forEach(l => {
     ctl.removeAttribution(l.options.attribution);
     l.options.attribution = attrText(S.ui.layer);
     ctl.addAttribution(l.options.attribution);
   });
+  reliefAltRender();
 }
 
 function createMap() {
@@ -4517,6 +4779,10 @@ function createMap() {
   const placesPane = map.createPane('places');
   placesPane.style.zIndex = 300;
   placesPane.style.pointerEvents = 'none';
+  /* Le relief de DCS : au-dessus des fonds, sous les noms de lieux (300) et la grille ; ne touche rien */
+  const reliefPane = map.createPane('relief');
+  reliefPane.style.zIndex = 250;
+  reliefPane.style.pointerEvents = 'none';
   /* Le canevas de la grille : au-dessus des tuiles, sous la route */
   const pane = map.createPane('mgrs');
   pane.style.zIndex = 350;
@@ -4564,6 +4830,7 @@ function createMap() {
   createRulerBar();
   createSearchControl();
   map.on('click', onMapClick);
+  reliefBind();
   /* Le conteneur change de taille (fenêtre, rotation, iframe rendue visible par le shell) */
   const wrap = $('map');
   const onSize = () => {
@@ -5059,6 +5326,7 @@ function addAt(lat, lon, name) {
 function onMapClick(ev) {
   if (tapMode === 'draw') { drMapClick(ev); return; }
   if (tapMode === 'ruler') { rlTap(ev.latlng); return; }
+  if (tapMode === 'read') reliefTap(ev);       /* un toucher qui n'ouvre rien : l'altitude du sol (relief) ; la souris l'a déjà au pointeur */
   addAt(ev.latlng.lat, ev.latlng.lng);
 }
 
@@ -7052,6 +7320,8 @@ function baseRows() {
 /* Les contrôles de la barre et du panneau reflètent l'état */
 function syncControls() {
   $('theatre').value = S.theatre;
+  syncRelief();
+  reliefAltRender();      /* la langue et l'unité d'altitude se relisent au cartouche */
   const mark = (attr, val) => document.querySelectorAll('[' + attr + ']').forEach(b => {
     const on = b.getAttribute(attr) === val;
     b.classList.toggle('on', on);
@@ -7413,6 +7683,7 @@ function setTapMode(m, keep) {
   if (tapMode !== was || shown.length) {
     if (map) map.closePopup();
     if (tapMode !== was) {
+      reliefTouchHide();
       if (was === 'draw') drExit();
       if (tapMode === 'draw') drEnter();
       if (was === 'ruler' && !EXP.on) RL.pts.length = 0;       /* quitter la règle l'efface ; le cadre de l'export la masque seulement (rlOn), elle revient avec lui */
@@ -9374,6 +9645,7 @@ function cfImportGo() {
    les cinq premières lignes vivent dans rp_display_v1, les quatre autres dans S.ui (route_state_v1, comme avant). */
 const DSP = { open: false, panel: null, x0: 0, y0: 0 };
 const DSP_ROWS = [
+  { g: '', k: 'relief', l: 'dsp.relief' },       /* la première ligne sous le titre, sans sous-titre à elle */
   { g: 'mission', k: 'routes', l: 'dsp.routes', seg: true, n: () => String(RSET.routes.length) },
   { g: 'mission', k: 'refs', l: 'dsp.refs', n: () => String(S.refs.length) },
   { g: 'layers', k: 'draw', l: 'dsp.draw' },
@@ -9399,11 +9671,15 @@ function loadDisplay() {
   } catch (e) { /* valeurs par défaut */ }
 }
 function saveDisplay() {
-  try { localStorage.setItem(KEY_DISPLAY, JSON.stringify({ routes: DISP.routes, refs: DISP.refs, draw: DISP.draw, sym: DISP.sym, cf: DISP.cf, diss: DISP.diss })); } catch (e) { /* stockage indisponible */ }
+  try { localStorage.setItem(KEY_DISPLAY, JSON.stringify({ routes: DISP.routes, refs: DISP.refs, draw: DISP.draw, sym: DISP.sym, cf: DISP.cf, diss: DISP.diss, relief: DISP.relief })); } catch (e) { /* stockage indisponible */ }
 }
 
 /* L'état d'une ligne : cochée, grisée, info-bulle */
 function dspState(k) {
+  if (k === 'relief') {
+    const has = reliefTheatre(S.theatre);
+    return { on: has && !!DISP.relief, off: !has, tip: t(has ? 'dsp.relief.tip' : 'dsp.relief.off') };
+  }
   if (k === 'grid') return { on: !!S.ui.grid, off: false, tip: t('tb.grid') };
   if (k === 'places') return { on: !!S.ui.places, off: false, tip: t('tb.places.tip') };
   if (k === 'towns') {
@@ -9420,7 +9696,7 @@ function dspState(k) {
 /* Le point ambre : au moins un réglage du panneau n'est pas à sa valeur par défaut (fond Topo, km et m, tout affiché, sauf Lieux masqué) */
 function dspChanged() {
   return !(DISP.routes === 'all' && DISP.refs && DISP.draw && DISP.sym && DISP.cf && S.ui.grid && S.ui.towns && S.ui.airfields) || !!S.ui.places
-    || S.ui.layer !== 'topo' || S.units.distance !== 'km' || S.units.altitude !== 'm';
+    || S.ui.layer !== 'topo' || S.units.distance !== 'km' || S.units.altitude !== 'm' || !!DISP.relief;
 }
 
 function dspSync() {
@@ -9674,6 +9950,11 @@ function dspToggle(k) {
     saveDisplay();
     if (k === 'refs') drawRefs();
     else drawLayers();
+  } else if (k === 'relief') {
+    if (!reliefTheatre(S.theatre)) return;
+    DISP.relief = !DISP.relief;
+    saveDisplay();
+    syncRelief();
   } else if (k === 'grid') {
     S.ui.grid = !S.ui.grid;
     persistState();
@@ -10523,6 +10804,7 @@ function init() {
   setBase();
   syncPlaces();
   syncAirfields();
+  syncRelief();
   syncTowns();
   { const k = mpTheatreRead(); if (k) mpTheatreFollow(); else mpTheatreWrite(S.theatre); }       /* le théâtre partagé : pris s'il diffère, sinon écrit */
   { const u = mpUnitsRead(); if (u) mpUnitsFollow(); else mpUnitsWrite(); }       /* les unités partagées : prises si elles diffèrent, sinon écrites */
@@ -10537,7 +10819,7 @@ function init() {
     ]).then(() => document.fonts.ready).then(() => { scheduleGrid(); twWidths.clear(); syncTowns(); }).catch(() => {});
   }
   window.__RP = { map: map, get decorGroup() { return decorGroup; }, timing: timing, get S() { return S; }, drawGrid: drawGrid, setBase: setBase, get baseLayers() { return baseLayers; }, get inFallback() { return inFallback; },
-    get placesLayer() { return placesLayer; }, get airfieldLayer() { return afLayer; }, get tapMode() { return tapMode; },
+    get placesLayer() { return placesLayer; }, get reliefLayer() { return RE.layer; }, reliefAltAt: reliefAltAt, get airfieldLayer() { return afLayer; }, get tapMode() { return tapMode; },
     get townsLayer() { return twLayer; }, townsReport: townsReport, get search() { return SR; },
     get layers() { return CF_LAYERS; }, get layersGroup() { return cfGroup; }, get routes() { syncActive(); return RSET; }, get othersGroup() { return othersGroup; }, get draw() { return DR; }, get split() { return SP; }, get ruler() { return RL; } };
 }
