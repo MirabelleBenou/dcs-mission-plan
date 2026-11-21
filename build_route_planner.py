@@ -10871,6 +10871,13 @@ def build():
     if len(re.findall(r'data-diss="(?:on|off)"', html)) != 2 or len(re.findall(r"'nav\.diss\.theatre': '", js)) != 2 or 'diss: DISP.diss' not in js or 'diss: false' not in js:
         raise SystemExit("[ERREUR] Route Planner : le réglage DISS-15 (boutons Masquer / Afficher, libellés FR et EN, rp_display_v1.diss) n'est pas complet")
     print("[OK] Route Planner : réglage DISS-15 (Masquer / Afficher, libellés FR et EN, gardé dans rp_display_v1)")
+    # Le relief de DCS : la table des théâtres, le panneau, la ligne du menu (la première, sans sous-titre) et ses textes FR et EN, le réglage d'écran
+    if ("const RELIEF_THEATRES = ['Caucasus', 'GermanyCW', 'Syria'];" not in js or "reliefPane.style.zIndex = 250;" not in js
+            or "{ g: '', k: 'relief', l: 'dsp.relief' }," not in js or "relief: DISP.relief })" not in js or '|| !!DISP.relief;' not in js
+            or len(re.findall(r"'attr\.relief': '", js)) != 2 or len(re.findall(r"'relief\.err\.(?:net|fmt)': '\u26a0 ", js)) != 4
+            or js.index("{ g: '', k: 'relief'") > js.index("{ g: 'mission', k: 'routes'")):
+        raise SystemExit("[ERREUR] Route Planner : la case Relief (théâtres, panneau, ligne du menu, textes FR et EN, rp_display_v1) n'est pas complète")
+    print("[OK] Route Planner : case Relief (trois théâtres, panneau 250, première ligne du menu, textes FR et EN, gardée dans rp_display_v1)")
     mission_line_verify(html, 'rpMissionLine', 'navYear(', 2)
     # Le pane des aérodromes est au-dessus de celui des calques CombatFlite (en mode Lire, un aérodrome dans une zone ouvre sa fiche) et sous la route (overlayPane, 400)
     _zl = re.search(r'const LAYERS_Z = (\d+);', html)
