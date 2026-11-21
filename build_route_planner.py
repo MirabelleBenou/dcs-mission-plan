@@ -4192,6 +4192,7 @@ const RE = {
   layer: null, meta: null, id: '', key: '', seq: 0,
   canvas: null, raf: 0, ev: null, stamp: 0, pend: '', shown: null,
   touch: false,                /* le type du dernier pointerdown sur la carte : vrai pour un doigt ou un stylet, faux pour la souris */
+  live: false,       /* la dernière valeur de reliefLive() vue par reliefLiveSync */
   dwell: 0, dwellX: 0, dwellY: 0       /* l'attente du pointeur sur un pixel avant de demander une tuile absente du cache */
 };
 const RELIEF_DWELL = 150;      /* ms : le pointeur reste sur le même pixel avant qu'une tuile d'altitude absente du cache se demande */
@@ -4261,6 +4262,7 @@ function reliefAdd(id, m) {
     bounds: m.bounds, crossOrigin: 'anonymous', attribution: t('attr.relief')
   });
   RE.layer.addTo(map);
+  reliefLiveSync();
 }
 
 function reliefDrop() {
@@ -4269,6 +4271,7 @@ function reliefDrop() {
   RE.stamp++; RE.pend = ''; RE.shown = null;
   reliefDwellStop();
   reliefAltRender();
+  reliefLiveSync();
 }
 
 /* Une tuile d'altitude : une seule demande par tuile, même pour des appels simultanés ; en échec (absente, erreur, CORS), elle est gardée comme vide.
@@ -4369,6 +4372,15 @@ function reliefAltRender() {
 }
 
 function reliefLive() { return !!RE.layer && !!RE.meta && RE.key === S.theatre && !!DISP.relief; }
+/* Quand reliefLive() change de valeur (case, relief.json arrivé ou en échec, théâtre), les calques se redessinent : ils ne se touchent plus avec Relief actif ;
+   une fiche de calque ouverte se ferme quand Relief devient actif. En dehors du mode Lire, les calques se dessinent pareil : rien à refaire. */
+function reliefLiveSync() {
+  const now = reliefLive();
+  if (now === RE.live) return;
+  RE.live = now;
+  if (now && map && map._popup && map._popup.options && map._popup.options.className === 'cf-popup') map.closePopup();
+  if (tapMode === 'read') drawLayers();
+}
 /* Sous le minZoom de relief.json (zoom de la carte strictement inférieur), rien ne se lit */
 function reliefReadable() { return reliefLive() && map.getZoom() >= RE.meta.minZoom; }
 
@@ -5512,7 +5524,11 @@ function cfMean(pts) {
 }
 
 /* Le style commun : contour à la couleur, à lineOpacity, d'au moins 1,5 px ; tirets selon dash ; remplissage (cfFill) à 0,4 × fillOpacity */
-function cfReading() { return tapMode === 'read'; }
+/* Un calque importé ne se touche qu'en mode Lire et sans Relief actif : avec Relief actif (reliefLive), il se dessine comme dans les autres modes, sans fiche
+   ni trait de touche, et le toucher passe à la carte (l'altitude du sol). Ce prédicat ne sert qu'à rendre les calques touchables. */
+function cfReading() { return tapMode === 'read' && !reliefLive(); }
+/* Un marqueur de calque (point, symbole) : en mode Lire avec Relief actif, il ne fait rien et laisse passer le toucher ; dans les autres modes il agit comme un aérodrome */
+function cfMarkerInert() { return tapMode === 'read' && reliefLive(); }
 
 function cfPathStyle(it, extra) {
   const o = { pane: 'layers', interactive: cfReading(), color: it.color, opacity: typeof it.lineOpacity === 'number' ? it.lineOpacity : 1, weight: Math.max(1.5, it.lineWidth || 2), fill: false,
@@ -5620,10 +5636,10 @@ function cfSymbolSvg(kind, color) {
 }
 
 function cfDrawPoint(it) {
-  const mk = L.marker([it.lat, it.lon], { pane: 'layers', zIndexOffset: 100000, keyboard: false, title: it.name,
+  const mk = L.marker([it.lat, it.lon], { pane: 'layers', interactive: !cfMarkerInert(), zIndexOffset: 100000, keyboard: false, title: it.name,
     icon: L.divIcon({ className: 'cf-pt-icon', iconSize: [18, 18], iconAnchor: [9, 9], popupAnchor: [0, -11], html: cfSymbolSvg(it.kind, it.color) }) });
   if (cfReading()) cfBindPopup(mk, it);
-  else mk.on('click', ev => { L.DomEvent.stop(ev); addFromAirfield(it.lat, it.lon, it.name); });   /* une cible agit comme un aérodrome */
+  else if (!cfMarkerInert()) mk.on('click', ev => { L.DomEvent.stop(ev); addFromAirfield(it.lat, it.lon, it.name); });   /* une cible agit comme un aérodrome */
   mk.addTo(cfGroup);
   cfTagEl(mk, it);
   cfPointMarks.push({ mk: mk, name: it.name });
@@ -5634,10 +5650,10 @@ function cfDrawSymbol(it) {
   let sy;
   try { sy = new ms.Symbol(it.sidc, symOpts(it.sidc, it.style, symPx(it.size), it.name, it.formation)); } catch (e) { return; }
   const z = sy.getSize(), a = sy.getAnchor();
-  const mk = L.marker([it.lat, it.lon], { pane: 'layers', zIndexOffset: 100000, keyboard: false, title: it.name,
+  const mk = L.marker([it.lat, it.lon], { pane: 'layers', interactive: !cfMarkerInert(), zIndexOffset: 100000, keyboard: false, title: it.name,
     icon: L.divIcon({ className: 'ms-ic', iconSize: [z.width, z.height], iconAnchor: [a.x, a.y], popupAnchor: [0, -Math.round(a.y)], html: sy.asSVG() }) });
   if (cfReading()) cfBindPopup(mk, it);
-  else mk.on('click', ev => { L.DomEvent.stop(ev); addFromAirfield(it.lat, it.lon, hasText(it.name) ? it.name : symLabel(it.sidc)); });   /* comme un aérodrome */
+  else if (!cfMarkerInert()) mk.on('click', ev => { L.DomEvent.stop(ev); addFromAirfield(it.lat, it.lon, hasText(it.name) ? it.name : symLabel(it.sidc)); });   /* comme un aérodrome */
   mk.addTo(cfGroup);
   cfTagEl(mk, it);
 }
@@ -10918,7 +10934,8 @@ def build():
             or len(re.findall(r"'attr\.relief': '", js)) != 2 or len(re.findall(r"'relief\.err\.(?:net|fmt)': '\u26a0 ", js)) != 4
             or js.index("{ g: '', k: 'relief'") > js.index("{ g: 'mission', k: 'routes'")
             or "createImageBitmap(blob, { colorSpaceConversion: 'none', premultiplyAlpha: 'none' })" not in js or "j.tileSize !== 256" not in js
-            or "el.id === 'rp-alt' || el.id === 'rp-alt-x'" not in js or "const RELIEF_DWELL = 150;" not in js):
+            or "el.id === 'rp-alt' || el.id === 'rp-alt-x'" not in js or "const RELIEF_DWELL = 150;" not in js
+            or "function cfReading() { return tapMode === 'read' && !reliefLive(); }" not in js or "function reliefLiveSync() {" not in js or js.count('reliefLiveSync();') != 2):
         raise SystemExit("[ERREUR] Route Planner : la case Relief (théâtres, panneau, ligne du menu, textes FR et EN, rp_display_v1) n'est pas complète")
     print("[OK] Route Planner : case Relief (trois théâtres, panneau 250, première ligne du menu, textes FR et EN, gardée dans rp_display_v1)")
     mission_line_verify(html, 'rpMissionLine', 'navYear(', 2)
