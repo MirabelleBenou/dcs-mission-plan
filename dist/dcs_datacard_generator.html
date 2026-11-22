@@ -486,8 +486,6 @@ select[data-tbm-src] { display: none !important; }
   display: flex; flex-direction: column; gap: 14px;
   min-width: 0;
 }
-.panel-mobile-header { display: none; }
-
 .ed-field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
 .ed-field label {
   font-family: var(--f-ui);
@@ -672,55 +670,7 @@ select[data-tbm-src] { display: none !important; }
 }
 .dc-warn[hidden] { display: none; }
 
-/* ============ ONGLETS (tablette) ============ */
-.tab-bar {
-  display: none;
-  position: fixed;
-  bottom: 0; left: 0; right: 0;
-  background: linear-gradient(180deg, var(--olive-dark) 0%, var(--olive-deep) 100%);
-  border-top: 2px solid var(--amber-dark);
-  padding: 6px 4px;
-  padding-bottom: max(6px, env(safe-area-inset-bottom));
-  z-index: 999;
-  gap: 2px;
-}
-.tab-bar button {
-  flex: 1 1 0;
-  min-width: 0;
-  background: transparent;
-  border: 1px solid transparent;
-  color: var(--khaki-light);
-  font-family: var(--f-ui);
-  font-weight: 700;
-  font-size: 10px;
-  letter-spacing: .3px;
-  line-height: 1.15;
-  text-transform: uppercase;
-  padding: 6px 2px;
-  min-height: 54px;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  text-align: center;
-  overflow: hidden;
-  white-space: nowrap;
-  transition: all .15s;
-}
-.tab-bar button .tab-ico {
-  font-size: 16px;
-  line-height: 1;
-  font-family: var(--f-stencil);
-  font-weight: 700;
-}
-.tab-bar button.current {
-  background: var(--olive);
-  color: var(--amber);
-  border-color: var(--amber-dark);
-}
-.tab-bar button:active { transform: translateY(1px); }
+/* ============ ONGLETS (téléphone, tablette) : la barre du bas est celle du bloc d'interface commun (ui_block.py, .ui-tabbar) ============ */
 
 /* ===== MESSAGES COMMUNS : feuille du toast ===== */
 .toast {
@@ -966,6 +916,32 @@ html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-
 :where(body[data-theme="modern-east"]) .ui-ext { color: #888e78; }
 :where(body[data-theme="modern-east"]) .ui-sum { color: #9da28f; }
 /* MP-20 end */
+/* ---- la barre d'onglets du bas (téléphone et tablette : jusqu'à 1 100 px ; au-dessus, elle n'existe pas) : un seul style, une seule hauteur (68 px, plus la zone sûre du bas), des onglets de même largeur sans défilement ni fondu ;
+   pictogramme au-dessus, libellé dessous sur une ligne, entier. Le module pose <nav class="ui-tabbar" role="tablist"> et ses boutons <button role="tab" data-tab> (.tab-ico, puis le libellé) ; uiTabsMark() marque l'onglet courant ;
+   le toast se pose au-dessus (toastPlace). Les sections d'un onglet se montrent par les règles du module ; une section seule dans son onglet porte data-solo (uiTabsSolo) : ni en-tête, ni bordure, toujours ouverte ---- */
+.ui-tabbar { display: none; }
+@media (max-width: 1100px) {
+  .ui-tabbar {
+    display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 999;
+    box-sizing: border-box; height: calc(68px + env(safe-area-inset-bottom, 0px));
+    padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px)); gap: 2px; overflow: hidden;
+    background: linear-gradient(180deg, var(--olive-dark) 0%, var(--olive-deep) 100%);
+    border-top: 2px solid var(--amber-dark);
+  }
+  .ui-tabbar > [role="tab"] {
+    flex: 1 1 0; min-width: auto; min-height: 44px; box-sizing: border-box; overflow: hidden; white-space: nowrap;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-align: center;
+    background: transparent; border: 1px solid transparent; color: var(--khaki-light); cursor: pointer; transition: all .15s;
+    font-family: var(--f-ui); font-weight: 700; font-size: 10px; letter-spacing: .3px; line-height: 1.15; text-transform: uppercase; padding: 6px 2px;
+  }
+  .ui-tabbar > [role="tab"] .tab-ico { font-family: var(--f-stencil); font-weight: 700; font-size: 16px; line-height: 1; }
+  .ui-tabbar > [role="tab"].current { background: var(--olive); color: var(--amber); border-color: var(--amber-dark); }
+  .ui-tabbar > [role="tab"]:active { transform: translateY(1px); }
+  .ed-section[data-solo] { border: none; }
+  .ed-section[data-solo] > summary { display: none; }
+  .ed-section[data-solo] > .ed-content { display: flex !important; padding: 0; padding-top: 8px; }
+}
+@media print { .ui-tabbar { display: none !important; } }
 /* ===== FIN DE LA FEUILLE DE L'INTERFACE COMMUNE ===== */
 
 /* ============ FENÊTRES : l'export, « Sauvegarder » et les groupes sont des .ui-modal (bloc d'interface commun) ; ici ce qui reste au module ============ */
@@ -1417,49 +1393,39 @@ div.dc-bl, li.dc-bl, p.dc-bl { height: 24px; border-bottom: 1px dotted var(--dc-
   .tb-btn { padding: 0 8px; }
   .tb-select { max-width: 120px; padding: 0 26px 0 8px; text-overflow: ellipsis; overflow: hidden; }
 
-  .app { grid-template-columns: 1fr; bottom: 68px; }
+  .app { grid-template-columns: 1fr; bottom: calc(68px + env(safe-area-inset-bottom, 0px)); }
   .app .editor, .app .preview-wrap { display: none; }
   body[data-active-tab="preview"] .preview-wrap { display: block; }
   body:not([data-active-tab="preview"]) .editor { display: block; }
   body:not([data-active-tab="preview"]) .ed-section { display: none; }
-  body[data-active-tab="header"] .ed-section[data-section="header"],
-  body[data-active-tab="group"] .ed-section[data-section="group"],
+  body[data-active-tab="mission"] .ed-section[data-section="header"],
   body[data-active-tab="mission"] .ed-section[data-section="mission"],
-  body[data-active-tab="times"] .ed-section[data-section="times"],
+  body[data-active-tab="mission"] .ed-section[data-section="times"] {
+    display: block;
+  }
+  body[data-active-tab="group"] .ed-section[data-section="group"] {
+    display: block;
+  }
   body[data-active-tab="nav"] .ed-section[data-section="nav"],
-  body[data-active-tab="refs"] .ed-section[data-section="refs"],
-  body[data-active-tab="radio"] .ed-section[data-section="radio"],
-  body[data-active-tab="fields"] .ed-section[data-section="fields"],
+  body[data-active-tab="nav"] .ed-section[data-section="refs"],
+  body[data-active-tab="nav"] .ed-section[data-section="fields"] {
+    display: block;
+  }
+  body[data-active-tab="radio"] .ed-section[data-section="radio"] {
+    display: block;
+  }
   body[data-active-tab="weather"] .ed-section[data-section="weather"],
-  body[data-active-tab="fuel"] .ed-section[data-section="fuel"],
-  body[data-active-tab="threats"] .ed-section[data-section="threats"],
+  body[data-active-tab="weather"] .ed-section[data-section="fuel"],
+  body[data-active-tab="weather"] .ed-section[data-section="threats"] {
+    display: block;
+  }
   body[data-active-tab="meta"] .ed-section[data-section="meta"] {
     display: block;
-    border: none;
   }
-  body[data-active-tab] .ed-section > summary { display: none; }
-  body[data-active-tab] .ed-section > .ed-content {
-    display: flex !important;
-    padding: 0;
-    padding-top: 8px;
-  }
-  .panel-mobile-header {
-    display: flex !important;
-    background: linear-gradient(90deg, var(--olive) 0%, var(--olive-dark) 100%);
-    padding: 12px 14px;
-    font-family: var(--f-stencil);
-    font-weight: 700;
-    font-size: 13px;
-    letter-spacing: 2px;
-    color: var(--amber);
-    border-bottom: 1px solid var(--amber-dark);
-    margin: -2px 0 6px 0;
-  }
-  .tab-bar { display: flex; }
   .preview-wrap { padding: 16px 8px 30px 8px; }
 
-  /* Barre du haut et barre d'onglets : une seule ligne, qui défile au doigt ; un fondu signale le bord qui déborde */
-  .toolbar, .tab-bar {
+  /* Barre du haut : une seule ligne, qui défile au doigt ; un fondu signale le bord qui déborde */
+  .toolbar {
     --fade-w: 22px;
     overflow-x: auto;
     overflow-y: hidden;
@@ -1470,10 +1436,9 @@ div.dc-bl, li.dc-bl, p.dc-bl { height: 24px; border-bottom: 1px dotted var(--dc-
     touch-action: pan-x;
   }
   .toolbar { --fade-gap: 8px; }
-  .tab-bar { --fade-gap: 2px; }
-  .toolbar::-webkit-scrollbar, .tab-bar::-webkit-scrollbar { display: none; }
+  .toolbar::-webkit-scrollbar { display: none; }
   .toolbar > * { flex-shrink: 0; }
-  .toolbar::before, .toolbar::after, .tab-bar::before, .tab-bar::after {
+  .toolbar::before, .toolbar::after {
     content: '';
     position: sticky;
     flex: 0 0 var(--fade-w);
@@ -1484,23 +1449,22 @@ div.dc-bl, li.dc-bl, p.dc-bl { height: 24px; border-bottom: 1px dotted var(--dc-
     transition: opacity .15s;
     z-index: 2;
   }
-  .toolbar::before, .tab-bar::before {
+  .toolbar::before {
     left: 0;
     margin-right: calc(-1 * (var(--fade-w) + var(--fade-gap)));
     background: inherit;
     mask-image: linear-gradient(90deg, #000, transparent);
     -webkit-mask-image: linear-gradient(90deg, #000, transparent);
   }
-  .toolbar::after, .tab-bar::after {
+  .toolbar::after {
     right: 0;
     margin-left: calc(-1 * (var(--fade-w) + var(--fade-gap)));
     background: inherit;
     mask-image: linear-gradient(270deg, #000, transparent);
     -webkit-mask-image: linear-gradient(270deg, #000, transparent);
   }
-  .toolbar.fade-l::before, .tab-bar.fade-l::before,
-  .toolbar.fade-r::after, .tab-bar.fade-r::after { opacity: 1; }
-  .tab-bar button { flex: 1 0 auto; min-width: 56px; padding: 6px 8px; }
+  .toolbar.fade-l::before,
+  .toolbar.fade-r::after { opacity: 1; }
 }
 @media (max-width: 600px) {
   .tb-btn { padding: 0 6px; min-width: 38px; height: 38px; }
@@ -1883,20 +1847,14 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 </div>
 
 <!-- ===== ONGLETS (tablette) ===== -->
-<nav class="tab-bar" id="tab-bar" role="tablist" aria-label="Datacard Generator" data-i18n-aria-label="app.title">
-  <button type="button" data-tab="header" role="tab"><span class="tab-ico">▤</span><span data-i18n="sec.header">En-tête</span></button>
-  <button type="button" data-tab="group" role="tab"><span class="tab-ico">✈</span><span data-i18n="tab.group">Groupe</span></button>
-  <button type="button" data-tab="mission" role="tab"><span class="tab-ico">▣</span><span data-i18n="sec.mission">Mission</span></button>
-  <button type="button" data-tab="times" role="tab"><span class="tab-ico">⏱</span><span data-i18n="sec.times">Horaires</span></button>
-  <button type="button" data-tab="nav" role="tab"><span class="tab-ico">🧭</span><span data-i18n="sec.nav">Navigation</span></button>
-  <button type="button" data-tab="refs" role="tab"><span class="tab-ico">◆</span><span data-i18n="sec.refs">Points de référence</span></button>
-  <button type="button" data-tab="radio" role="tab"><span class="tab-ico">📻</span><span data-i18n="sec.radio">Radio</span></button>
-  <button type="button" data-tab="fields" role="tab"><span class="tab-ico">🛬</span><span data-i18n="sec.fields">Terrains</span></button>
-  <button type="button" data-tab="weather" role="tab"><span class="tab-ico">☁</span><span data-i18n="sec.weather">Météo</span></button>
-  <button type="button" data-tab="fuel" role="tab"><span class="tab-ico">⛽</span><span data-i18n="tab.fuel">Carburant</span></button>
-  <button type="button" data-tab="threats" role="tab"><span class="tab-ico">⚠</span><span data-i18n="tab.threats">Menaces</span></button>
-  <button type="button" data-tab="meta" role="tab"><span class="tab-ico">⚙</span><span data-i18n="sec.meta">Méta</span></button>
-  <button type="button" data-tab="preview" role="tab"><span class="tab-ico">◈</span><span data-i18n="sec.preview">Aperçu</span></button>
+<nav class="tab-bar ui-tabbar" id="tab-bar" role="tablist" aria-label="Datacard Generator" data-i18n-aria-label="app.title">
+  <button type="button" data-tab="mission" role="tab" aria-selected="false"><span class="tab-ico">▣</span><span data-i18n="tab.mission">Mission</span></button>
+  <button type="button" data-tab="group" role="tab" aria-selected="false"><span class="tab-ico">✈</span><span data-i18n="tab.group">Groupe</span></button>
+  <button type="button" data-tab="nav" role="tab" aria-selected="false"><span class="tab-ico">🧭</span><span data-i18n="tab.nav">Nav.</span></button>
+  <button type="button" data-tab="radio" role="tab" aria-selected="false"><span class="tab-ico">📻</span><span data-i18n="tab.radio">Radio</span></button>
+  <button type="button" data-tab="weather" role="tab" aria-selected="false"><span class="tab-ico">☁</span><span data-i18n="tab.weather">Météo</span></button>
+  <button type="button" data-tab="meta" role="tab" aria-selected="false"><span class="tab-ico">⚙</span><span data-i18n="tab.meta">Méta</span></button>
+  <button type="button" data-tab="preview" role="tab" aria-selected="false"><span class="tab-ico">◈</span><span data-i18n="tab.preview">Aperçu</span></button>
 </nav>
 
 <!-- ===== FENÊTRE : GROUPES (nouvelle datacard, rattacher, supprimer) ===== -->
@@ -1964,7 +1922,9 @@ const THREAT_LEGACY_MAP = {
 const THREAT_KEYS = ['', 'low', 'moderate', 'high'];
 const UNIT_CHOICES = { mass: ['kg', 'lb'], distance: ['km', 'nm'], altitude: ['m', 'ft'] };
 const SECTION_IDS = ['header', 'group', 'mission', 'times', 'nav', 'refs', 'radio', 'fields', 'weather', 'fuel', 'threats', 'meta'];
-const TAB_IDS = SECTION_IDS.concat(['preview']);
+/* Les sept onglets de la barre du bas (jusqu'à 1100 px) et les sections de chacun : la même table que les règles d'affichage de la feuille (TAB_SECTIONS du build) */
+const DG_TAB_SECTIONS = {"mission":["header","mission","times"],"group":["group"],"nav":["nav","refs","fields"],"radio":["radio"],"weather":["weather","fuel","threats"],"meta":["meta"]};
+const TAB_IDS = Object.keys(DG_TAB_SECTIONS).concat(['preview']);
 
 /* ============= i18n FR / EN ============= */
 const I18N = {
@@ -2194,9 +2154,13 @@ const I18N = {
     'sec.fuel': 'Carburant et emport',
     'sec.threats': 'Menaces et notes',
     'sec.preview': 'Aperçu',
-    'tab.fuel': 'Carburant',
     'tab.group': 'Groupe',
-    'tab.threats': 'Menaces',
+    'tab.mission': 'Mission',
+    'tab.nav': 'Nav.',
+    'tab.radio': 'Radio',
+    'tab.weather': 'Météo',
+    'tab.meta': 'Méta',
+    'tab.preview': 'Aperçu',
     'ph.meta.docRef': 'Référence du document',
     'ph.meta.operation': 'Nom de l\'opération',
     'ph.meta.mission': 'Code mission',
@@ -2715,9 +2679,13 @@ const I18N = {
     'sec.fuel': 'Fuel and loadout',
     'sec.threats': 'Threats and notes',
     'sec.preview': 'Preview',
-    'tab.fuel': 'Fuel',
     'tab.group': 'Group',
-    'tab.threats': 'Threats',
+    'tab.mission': 'Mission',
+    'tab.nav': 'Nav.',
+    'tab.radio': 'Radio',
+    'tab.weather': 'Weather',
+    'tab.meta': 'Meta',
+    'tab.preview': 'Preview',
     'ph.meta.docRef': 'Document reference',
     'ph.meta.operation': 'Operation name',
     'ph.meta.mission': 'Mission code',
@@ -3200,12 +3168,14 @@ function uiBarMoreBtn(bar) {
   return b;
 }
 /* un toucher hors du menu (et hors de « ⋯ », qui le bascule lui-même) le ferme sans agir sur ce qu'il touche : le clic qui suit est avalé (tbmSwallowNext, comme pour les listes), sauf sur le déclencheur d'une liste, qui s'ouvre par son propre clic */
+/* les déclencheurs des menus de la barre (ceux du module, TBM.cfg.trig ; le Sommaire du Field Manual) : un toucher sur l'un d'eux, « ⋯ » ou la liste des outils ouverts, les ferme et ouvre ce menu d'un seul geste (son propre clic passe) */
+function uiBarTrig() { return ((typeof TBM !== 'undefined' && TBM.cfg && TBM.cfg.trig) || '.tbm-trigger') + ', #btn-toc'; }
 function uiBarMoreOutside(ev) {
   if (!UIMORE.panel) return;
   const t = ev.target;
   if (UIMORE.panel.contains(t) || (UIMORE.btn && UIMORE.btn.contains(t))) return;
   uiBarMoreClose();
-  const other = t && t.closest ? t.closest('.tbm-trigger, .tb-switch') : null;       /* la marque ouvre la liste des outils par son propre clic */
+  const other = t && t.closest ? t.closest(uiBarTrig() + ', .tb-switch') : null;       /* la marque ouvre la liste des outils par son propre clic ; un autre menu de la barre, par le sien */
   if (!other && typeof tbmSwallowNext === 'function') tbmSwallowNext();
 }
 function uiBarMoreClose() {
@@ -3407,10 +3377,20 @@ function uiBarFitInit() {
    Gestes : toucher la marque ouvre ou ferme ; un toucher au-dehors, Échap, Tab et le redimensionnement la ferment (Échap rend le focus à la marque) ; elle ferme « ⋯ » et toute liste ouverte, et l'inverse ;
    au clavier : Entrée, Espace ou ↓ ouvrent (le focus va à la première ligne), flèches, Début et Fin parcourent les lignes (les titres sont sautés), Entrée choisit. Choisir ferme la liste puis fait ce que dit la ligne (le shell ouvre l'outil : chargé s'il ne l'était pas, tel quel sinon). ---- */
 const UISW = { brand: null, panel: null, items: [], name: '', key: '', rows: [], x0: 0, y0: 0, swallow: false, bound: false };
+/* le texte que la marque affiche : ses parties qui ne sont pas masquées (le titre et son sous-titre, ou le sigle, selon l'étape de la barre), sans « ▾ » (c'est un pseudo-élément) */
+function uiSwShown(brand) {
+  const parts = [];
+  Array.prototype.forEach.call(brand.children, c => {
+    if (getComputedStyle(c).display === 'none') return;
+    const x = (c.textContent || '').replace(/\s+/g, ' ').trim();
+    if (x) parts.push(x);
+  });
+  return parts.length ? parts.join(' ') : (brand.children.length ? '' : (brand.textContent || '').replace(/\s+/g, ' ').trim());
+}
 function uiSwitchSet(cfg) {
   const bar = uiBarEl(), brand = bar ? bar.querySelector('.tb-brand') : null;
   if (!brand || !cfg || !cfg.items || !cfg.items.length) return;
-  const key = (cfg.name || '') + '\n' + cfg.items.map(it => [it.kind, it.text, it.color, it.current ? 1 : 0].join('|')).join('\n');
+  const shown = uiSwShown(brand), key = (cfg.name || '') + '\n' + (cfg.suffix || '') + '\n' + shown + '\n' + cfg.items.map(it => [it.kind, it.text, it.color, it.current ? 1 : 0].join('|')).join('\n');
   if (UISW.brand === brand && UISW.key === key) return;
   UISW.items = cfg.items; UISW.name = cfg.name || ''; UISW.key = key;
   if (UISW.brand !== brand) {
@@ -3437,7 +3417,7 @@ function uiSwitchSet(cfg) {
   brand.classList.add('tb-switch');
   brand.setAttribute('role', 'button'); brand.setAttribute('tabindex', '0');
   brand.setAttribute('aria-haspopup', 'menu'); brand.setAttribute('aria-expanded', UISW.panel ? 'true' : 'false');
-  brand.setAttribute('aria-label', UISW.name); brand.title = UISW.name;
+  brand.setAttribute('aria-label', shown ? shown + (cfg.suffix || ', ' + UISW.name) : UISW.name); brand.title = UISW.name;       /* le nom accessible contient le texte affiché (WCAG 2.5.3) : le sigle ou le titre, sans « ▾ » ; l'infobulle dit l'action */
   if (UISW.panel) { UISW.panel.setAttribute('aria-label', UISW.name); uiSwFill(UISW.panel.firstChild); uiSwPlace(UISW.panel); }
 }
 function uiSwFill(ul) {
@@ -3521,7 +3501,7 @@ function uiSwOutside(ev) {
   const t = ev.target;
   if (UISW.panel.contains(t) || (UISW.brand && UISW.brand.contains(t))) return;
   uiSwClose(false);
-  if (t && t.closest && t.closest('.tbm-trigger, .tb-more-btn')) return;
+  if (t && t.closest && t.closest(uiBarTrig() + ', .tb-more-btn')) return;       /* « ⋯ » et les menus de la barre s'ouvrent par leur propre clic, en un seul geste */
   UISW.swallow = true;
   const rel = () => { document.removeEventListener('pointerup', rel, true); document.removeEventListener('pointercancel', rel, true); setTimeout(() => { UISW.swallow = false; }, 350); };
   document.addEventListener('pointerup', rel, true);
@@ -3767,6 +3747,33 @@ function uiFoldAll(heads, cfg) {
   });
 }
 function uiJoin(parts) { return parts.filter(p => p !== undefined && p !== null && String(p).trim() !== '').map(p => String(p).trim()).join(' · '); }
+
+/* ---- la barre d'onglets du bas : l'onglet courant (classe current, aria-selected sur lui seul), la section seule d'un onglet (data-solo), le toast au-dessus de la barre ---- */
+function uiTabsMark(id) {
+  document.querySelectorAll('.ui-tabbar > [role="tab"]').forEach(b => {
+    const on = b.dataset.tab === id;
+    b.classList.toggle('current', on);
+    b.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
+}
+/* all : les sections de l'éditeur ; solo : celles qui sont seules dans leur onglet (au format affiché) */
+function uiTabsSolo(all, solo) { all.forEach(d => { if (solo.indexOf(d) >= 0) d.setAttribute('data-solo', ''); else d.removeAttribute('data-solo'); }); }
+/* Le toast commun (messages_block.py) se pose 12 px au-dessus de la barre d'onglets du bas quand elle est visible (téléphone, tablette) : il ne la recouvre jamais.
+   Sans barre d'onglets (grand écran), la variable est ôtée et le toast reste à 20 px du bas. Le shell de la suite lit cette variable pour son propre toast. */
+const TOAST_GAP = 12;
+function toastPlace() {
+  const root = document.documentElement, bar = document.querySelector('.ui-tabbar');
+  const r = bar && bar.getClientRects().length ? bar.getBoundingClientRect() : null;
+  if (!r || !r.height) { root.style.removeProperty('--mp-toast-bottom'); return; }
+  const px = Math.round(root.clientHeight - r.top + TOAST_GAP) + 'px';
+  if (root.style.getPropertyValue('--mp-toast-bottom') !== px) root.style.setProperty('--mp-toast-bottom', px);
+}
+function initToastPlace() {
+  const bar = document.querySelector('.ui-tabbar');
+  if (bar && window.ResizeObserver) new ResizeObserver(toastPlace).observe(bar);
+  window.addEventListener('resize', toastPlace);
+  toastPlace();
+}
 
 /* ---- la fenêtre d'export (BG, DG) : format, pages, nom du fichier ----
    cfg : modal (id de la fenêtre), title, note { pdf, png }, pages [{ id, label, dis }], page (le choix de départ), pick (élément montré sous les pages quand page === 'pick'),
@@ -9998,11 +10005,18 @@ Object.keys(LINKED_BUILDERS).forEach(id => {
 
 /* L'éditeur suit l'ordre de SECTION_IDS (En-tête, Groupe, Mission, …), pour une carte liée comme pour une carte libre ; ce n'est plus l'ordre des blocs de l'aperçu imprimé, que l'impression garde */
 /* Le repli : l'état se garde (dg_folds_v1 : { section: true (ouverte) | false (repliée) }) ; le profil neuf replie Méta, Terrains, Carburant et emport, Menaces et notes.
-   En mode onglets (≤ 1100 px) la section de l'onglet est ouverte sans rien écrire dans la clé. */
+   En mode onglets (≤ 1100 px) le repli a son propre état, dg_folds_tabs_v1 (préférence d'écran, hors du fichier de travail comme dg_folds_v1), tout ouvert par défaut : un geste de l'un ne touche pas l'autre ;
+   une section seule dans son onglet est toujours ouverte, sans rien écrire ; ouvrir un onglet n'écrit rien. */
 const DG_FOLDS = 'dg_folds_v1';
+const DG_FOLDS_TABS = 'dg_folds_tabs_v1';
 const DG_FOLD_DEF = { header: true, meta: false, mission: true, times: true, group: true, nav: true, refs: true, radio: true, fields: false, weather: true, fuel: false, threats: false };
 const DG_TABS = window.matchMedia('(max-width: 1100px)');
-function dgFoldOpen(id) { return DG_TABS.matches ? true : uiFoldOpen(DG_FOLDS, id, DG_FOLD_DEF[id] !== false); }
+const DG_SOLO = [].concat.apply([], Object.keys(DG_TAB_SECTIONS).map(k => DG_TAB_SECTIONS[k].length === 1 ? DG_TAB_SECTIONS[k] : []));       /* les sections seules dans leur onglet */
+function dgFoldKey() { return DG_TABS.matches ? DG_FOLDS_TABS : DG_FOLDS; }
+function dgFoldOpen(id) {
+  if (!DG_TABS.matches) return uiFoldOpen(DG_FOLDS, id, DG_FOLD_DEF[id] !== false);
+  return DG_SOLO.indexOf(id) >= 0 || uiFoldOpen(DG_FOLDS_TABS, id, true);
+}
 
 /* La ligne de résumé d'une section repliée : les valeurs saisies, séparées par « · » ; rien si la section est vide */
 function dgSectionSum(id, c) {
@@ -10039,20 +10053,28 @@ function dgSectionSum(id, c) {
 function sectionHtml(id, idx, c) {
   const title = pad2(idx + 1) + ' ░ ' + t('sec.' + id);
   const sum = dgSectionSum(id, c);
-  return '<details class="ed-section" data-section="' + id + '" data-fold="' + dgFoldOpen(id) + '"' + (dgFoldOpen(id) ? ' open' : '') + '>' +
-    '<summary class="ui-fold-head" aria-expanded="' + dgFoldOpen(id) + '">' + esc(title) + (sum ? '<span class="ui-sum">' + esc(sum) + '</span>' : '') + '</summary><div class="ed-content"><div class="panel-mobile-header">' + esc(title) + '</div>' +
+  return '<details class="ed-section" data-section="' + id + '" data-fold="' + dgFoldOpen(id) + '"' + (dgFoldOpen(id) ? ' open' : '') + (DG_SOLO.indexOf(id) >= 0 ? ' data-solo' : '') + '>' +
+    '<summary class="ui-fold-head" aria-expanded="' + dgFoldOpen(id) + '">' + esc(title) + (sum ? '<span class="ui-sum">' + esc(sum) + '</span>' : '') + '</summary><div class="ed-content">' +
     SECTION_BUILDERS[id](c) + '</div></details>';
+}
+/* Les sections que « Tout replier » ordonne : toutes au grand écran ; en mode onglets, celles de l'onglet ouvert */
+function dgFoldSet() {
+  const all = Array.prototype.slice.call(document.querySelectorAll('#ed-sections details.ed-section'));
+  if (!DG_TABS.matches) return all;
+  const ids = DG_TAB_SECTIONS[document.body.dataset.activeTab] || [];
+  return all.filter(d => ids.indexOf(d.dataset.section) >= 0);
 }
 /* L'icône « Tout replier » à droite de l'en-tête de chaque section (une section seule n'en porte pas) */
 function dgFoldIcons() {
-  const ds = Array.prototype.slice.call(document.querySelectorAll('#ed-sections details.ed-section'));
+  const ds = dgFoldSet(), all = Array.prototype.slice.call(document.querySelectorAll('#ed-sections details.ed-section'));
+  uiFoldAllOff(all.filter(d => ds.indexOf(d) < 0).map(d => d.querySelector(':scope > summary')));
   uiFoldAll(ds.map(d => d.querySelector(':scope > summary')), { any: ds.some(d => d.open), label: uiFoldAllLabel, go: dgFoldAll });
 }
 /* Après un geste de repli : la clé, le résumé de la section, le libellé de « Tout replier » */
 function dgFoldSync(d) {
   if (d) {
     const id = d.dataset.section;
-    if (!DG_TABS.matches && d.dataset.fold !== String(d.open)) { uiFoldSave(DG_FOLDS, id, d.open); d.dataset.fold = String(d.open); }       /* un geste (le rendu, lui, pose l'état qu'il lit : rien à écrire) */
+    if (d.dataset.fold !== String(d.open)) { uiFoldSave(dgFoldKey(), id, d.open); d.dataset.fold = String(d.open); }       /* un geste, écrit dans l'état du mode en cours (le rendu, lui, pose l'état qu'il lit : rien à écrire) */
     const h = d.querySelector(':scope > summary');
     h.setAttribute('aria-expanded', String(d.open));
     if (!d.open) uiSum(h, dgSectionSum(id, curCard()));
@@ -10060,10 +10082,10 @@ function dgFoldSync(d) {
   dgFoldIcons();
 }
 function dgFoldAll() {
-  const ds = Array.prototype.slice.call(document.querySelectorAll('#ed-sections details.ed-section'));
+  const ds = dgFoldSet();
   const open = !ds.some(x => x.open), map = {};
   ds.forEach(x => { map[x.dataset.section] = open; });
-  uiFoldSaveAll(DG_FOLDS, map);
+  uiFoldSaveAll(dgFoldKey(), map);
   ds.forEach(x => { if (x.open !== open) x.open = open; });
   dgFoldSync(null);
 }
@@ -10432,17 +10454,16 @@ function packAct(act, btn) {
 
 /* ----- Onglets (tablette) ----- */
 function setActiveTab(id) {
-  if (TAB_IDS.indexOf(id) === -1) id = 'header';
+  if (TAB_IDS.indexOf(id) === -1) id = TAB_IDS[0];
   document.body.dataset.activeTab = id;
-  document.querySelectorAll('#tab-bar button').forEach(b => b.classList.toggle('current', b.dataset.tab === id));
+  uiTabsMark(id);
   if (id === 'preview') applyPreviewScale();
-  const cur = document.querySelector('#tab-bar button.current');
-  if (cur) revealInScroller(document.getElementById('tab-bar'), cur);
+  dgFoldIcons();       /* « Tout replier » suit les sections de l'onglet */
   const ed = document.getElementById('editor');
   if (ed) ed.scrollTop = 0;
 }
 
-/* ----- Barres défilantes (barre du haut et onglets, sous 1 100 px) ----- */
+/* ----- Barre du haut défilante (sous 1 100 px) ----- */
 function revealInScroller(bar, el) {
   if (!bar || !el || bar.scrollWidth <= bar.clientWidth) return;
   const b = bar.getBoundingClientRect();
@@ -11272,7 +11293,6 @@ function bindEvents() {
 
   document.querySelectorAll('#tab-bar button').forEach(b => b.addEventListener('click', () => setActiveTab(b.dataset.tab)));
   initScrollBar(document.querySelector('.toolbar'));
-  initScrollBar(document.getElementById('tab-bar'));
 
   /* Passage depuis le Route Planner (même origine : l'évènement vient d'un autre document) */
   window.addEventListener('storage', e => { if (e.key === KEY_THEATRE || e.key === KEY_UNITS || e.key === KEY_NAV) dgFollowDocNow(); if (e.key === KEY_THEATRE) dgFollowTheatre(); if (e.key === KEY_UNITS) dgFollowUnits(); if (e.key === KEY_NAV) dgFollowNav(); if (e.key === KEY_STATE) dgFollowDoc(); if (e.key === KEY_THEATRE || e.key === KEY_ROUTE || e.key === KEY_ROUTESET || e.key === KEY_NAV || e.key === null) dgRoutesChanged(); if (e.key === 'mission_snapshot_v1') { renderEditor(true); renderPreview(); } dgStorage(e); });
@@ -11902,7 +11922,7 @@ function tbmPlace(m, keepDir) {
   let top = r.bottom + 4;
   m.x0 = r.left; m.y0 = r.top;
   if (m.form) {
-    const bar = document.querySelector('.tab-bar');
+    const bar = document.querySelector('.ui-tabbar, .tab-bar');
     const lo = tbmTop(vis);
     let hi = vh;
     if (bar) {
@@ -12095,7 +12115,7 @@ function tbmNeed(m) {
 }
 /* Si la place sous le bouton ne suffit pas, le bouton remonte en haut de la zone visible (sous la barre, 8 px) : vrai quand la place sous lui suffit ensuite */
 function tbmFit(m) {
-  const vis = tbmVis(), bar = document.querySelector('.tab-bar');
+  const vis = tbmVis(), bar = document.querySelector('.ui-tabbar, .tab-bar');
   const lo = tbmTop(vis);
   let hi = vis.bottom;
   if (bar) {
@@ -12146,22 +12166,7 @@ function tbmScrolled(e) {
 }
 /* ===== FIN DES LISTES AU THÈME DE L'INTERFACE ===== */
 
-/* Le toast commun (messages_block.py) se pose 12 px au-dessus de la barre d'onglets du bas quand elle est visible (téléphone, tablette) : il ne la recouvre jamais.
-   Sans barre d'onglets (grand écran), la variable est ôtée et le toast reste à 20 px du bas. Le shell de la suite lit cette variable pour son propre toast. */
-const TOAST_GAP = 12;
-function toastPlace() {
-  const root = document.documentElement, bar = document.getElementById('tab-bar');
-  const r = bar && bar.getClientRects().length ? bar.getBoundingClientRect() : null;
-  if (!r || !r.height) { root.style.removeProperty('--mp-toast-bottom'); return; }
-  const px = Math.round(root.clientHeight - r.top + TOAST_GAP) + 'px';
-  if (root.style.getPropertyValue('--mp-toast-bottom') !== px) root.style.setProperty('--mp-toast-bottom', px);
-}
-function initToastPlace() {
-  const bar = document.getElementById('tab-bar');
-  if (bar && window.ResizeObserver) new ResizeObserver(toastPlace).observe(bar);
-  window.addEventListener('resize', toastPlace);
-  toastPlace();
-}
+/* Le toast se pose au-dessus de la barre d'onglets du bas : toastPlace() et initToastPlace(), dans le bloc d'interface commun (ui_block.py) */
 
 function init() {
   initLang();
@@ -12185,7 +12190,7 @@ function init() {
   if (doc.theatre !== th0 || synced) persistState(); else persistStateIfChanged();       /* le document tel qu'il se lit maintenant (migration d'une carte d'avant le lot comprise) est gardé, une fois */       /* un théâtre pris (clé partagée, fiche ou route) est gardé */
   bindEvents();
   initToastPlace();
-  setActiveTab('header');
+  setActiveTab(TAB_IDS[0]);
   renderAll();
   mlSetup({ lang: () => CURRENT_LANG, read: dgMissionLine, theatreName: id => DG_THEATRES.indexOf(id) >= 0 ? t('th.' + id) : String(id), importDetail: true });       /* la ligne de la mission d'HQ (bloc commun) : ce que le module en prend */
   /* Les polices embarquées mesurent autrement que les polices de repli : refaire le découpage une fois chargées. */

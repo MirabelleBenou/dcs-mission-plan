@@ -1466,7 +1466,7 @@ def _dg_wide(P):
 
 def _dg_tall(P):
     W = 360
-    o = [P.svg_open('pl-tall', W, 395, 'L’écran du Datacard Generator au téléphone, une carte ouverte', 'The Datacard Generator screen on a phone, with a card open', 'dgt')]
+    o = [P.svg_open('pl-tall', W, 383, 'L’écran du Datacard Generator au téléphone, une carte ouverte', 'The Datacard Generator screen on a phone, with a card open', 'dgt')]
     o.append(P.title_tall('L’ÉCRAN DU DATACARD GENERATOR', 'THE DATACARD GENERATOR SCREEN', 'au téléphone', 'on a phone'))
     o.append('<g transform="translate(0,12)">')
     X0, X1 = 62, 298
@@ -1482,28 +1482,24 @@ def _dg_tall(P):
         o.append(P.text(x + 13, 81, 9, D(glyph)))
         ic[key] = x + 13
         x += 30
-    # la barre du paquet, puis le panneau ouvert : l'onglet Groupe
+    # la barre du paquet, puis le panneau ouvert : l'onglet Groupe, une section seule (ni en-tête, ni titre)
     PT = 112
     o.append(sv_box(X0, PT, w, 54))
     pb, anc, _y = _dg_pack_bar(P, X0, PT, w)
     o += pb
-    o.append(sv_box(X0, PT + 60, w, 118))
-    o.append(P.text(X0 + 10, PT + 76, 8, D('02 ░ '), L('dg', 'sec.group'), anchor='start'))
-    fy = PT + 84
+    o.append(sv_box(X0, PT + 60, w, 106))
+    fy = PT + 72
     o.append(P.lfield(X0 + 10, fy, 98, [L('dg', 'f.group.name')], [D('CAESAR')], badge=True))
     o.append(P.lfield(X0 + 118, fy, 106, [L('dg', 'f.coalition')], [L('dg', 'coal.red')], badge=True))
     o.append(P.lfield(X0 + 10, fy + 29, 98, [L('dg', 'f.aircraft')], [D('Mi-24P')]))
     o.append(P.lfield(X0 + 118, fy + 29, 106, [L('dg', 'f.count')], [D('2')]))
     o.append(P.lfield(X0 + 10, fy + 58, 98, [L('dg', 'f.task')], [D('CAS')]))
     o.append(P.lfield(X0 + 118, fy + 58, 106, [L('dg', 'f.threat')], [L('dg', 'thr.high')]))
-    # la barre d'onglets : la largeur de chaque onglet suit son libellé
-    TT = PT + 188
+    # la barre d'onglets : sept onglets de même largeur, pictogramme au-dessus
+    TT = PT + 176
     o.append(sv_box(X0, TT, w, 40))
-    tabs = (('▤', 'sec.header', False), ('✈', 'tab.group', True), ('▣', 'sec.mission', False), ('⏱', 'sec.times', False), ('⌖', 'sec.nav', False))
-    lens = [len(P.resolve([L('dg', key)])[0]) for _g, key, _c in tabs]
-    widths = [12 + 4.6 * n for n in lens]
-    k_ = w / sum(widths)
-    widths = [x_ * k_ for x_ in widths]
+    tabs = (('▣', 'tab.mission', False), ('✈', 'tab.group', True), ('⌖', 'tab.nav', False), ('☎', 'tab.radio', False), ('☁', 'tab.weather', False), ('⚙', 'tab.meta', False), ('◈', 'tab.preview', False))
+    widths = [w / len(tabs)] * len(tabs)
     tx, navx = X0, None
     for (g, key, cur), tw in zip(tabs, widths):
         cx = tx + tw / 2
@@ -1511,7 +1507,7 @@ def _dg_tall(P):
             o.append(f'<rect x="{_n(tx + 2)}" y="{_n(TT + 3)}" width="{_n(tw - 4)}" height="34" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/>')
         o.append(P.text(cx, TT + 16, 9, D(g)))
         o.append(P.text(cx, TT + 31, 8, L('dg', key)))
-        if key == 'sec.nav':
+        if key == 'tab.nav':
             navx = cx
         tx += tw
     o.append(P.bubble(1, ic['export'], 44, ic['export'], 67))
@@ -1545,8 +1541,8 @@ def _dg_legend_rows():
          'ouvre les autres actions sur les cartes. La dernière carte ne se supprime pas : elle se vide.',
          'opens the other actions on the cards. The last card cannot be deleted: it is emptied.'),
         (6, [M('Les sections de l’éditeur', 'The editor sections')],
-         ['suivent la page. L’icône à droite d’un en-tête, « ', L('dg', 'ui.foldall'), ' » ou « ', L('dg', 'ui.unfoldall'), ' », replie toutes les sections ou les déplie toutes.'],
-         ['follow the page. The icon at the right of a header, “', L('dg', 'ui.foldall'), '” or “', L('dg', 'ui.unfoldall'), '”, folds all the sections or unfolds them all.']),
+         ['suivent la page. L’icône à droite d’un en-tête, « ', L('dg', 'ui.foldall'), ' » ou « ', L('dg', 'ui.unfoldall'), ' », replie toutes les sections ou les déplie toutes. Au téléphone et à la tablette, l’éditeur passe en sept onglets au bas de l’écran ; un onglet qui regroupe plusieurs sections les montre chacune, repliable.'],
+         ['follow the page. The icon at the right of a header, “', L('dg', 'ui.foldall'), '” or “', L('dg', 'ui.unfoldall'), '”, folds all the sections or unfolds them all. On a phone or tablet, the editor switches to seven tabs at the bottom of the screen; a tab that groups several sections shows each of them, foldable.']),
         (7, [M('La pastille FC', 'The FC badge')],
          'marque les champs partagés : la carte d’un groupe reprend de la fiche des groupes ce que le Flight Configurator règle — unités, radios, emport, carburant et poids.',
          'marks the shared fields: a group’s card takes from the group sheet what the Flight Configurator sets — units, radios, loadout, fuel and weight.'),
@@ -2102,22 +2098,17 @@ def _bg_tall(P):
             o.append(_rp_ico_chev(x + 19, 76))
         bx[key] = (x, bw)
         x += bw + 6
-    # l'onglet En-tête, seul visible : sa section et ses quatre champs
-    o.append(sv_box(X0, 100, w, 22))
-    o += _head(P, X0, 100, w, [L('bg', 'editor.header.summary')], fold=False, chevron=False)
+    # l'onglet En-tête, seul visible : sa section seule (ni en-tête de section, ni titre) et ses quatre champs
     a, aw = X0 + 10, w - 20
     for k, (lab, val) in enumerate((('editor.meta.operation', 'STEPPE WIND'), ('editor.meta.missionCode', 'M3'), ('editor.meta.date', '1989-03-22'), ('editor.meta.time', '08:00'))):
-        o.append(P.lfield(a, 130 + k * 32, aw, [L('bg', lab)], [D(val)]))
-    o.append(P.text(X0 + w / 2, 270, 8, L('bg', 'editor.autoSave'), op=.65))
-    # la barre d'onglets : une largeur par libellé, pictogramme au-dessus
-    TT = 284
+        o.append(P.lfield(a, 106 + k * 32, aw, [L('bg', lab)], [D(val)]))
+    o.append(P.text(X0 + w / 2, 246, 8, L('bg', 'editor.autoSave'), op=.65))
+    # la barre d'onglets : sept onglets de même largeur, pictogramme au-dessus
+    TT = 260
     o.append(sv_box(X0, TT, w, 40))
-    tabs = (('▤', 'tab.header', True), ('▣', 'tab.simple.situation', False), ('✈', 'tab.mission', False), ('☎', 'tab.simple.coord', False),
+    tabs = (('▤', 'tab.header', True), ('▣', 'tab.sitac', False), ('✈', 'tab.mission', False), ('☎', 'tab.coord', False),
             ('▨', 'tab.simple.photos', False), ('⚙', 'tab.meta', False), ('◈', 'tab.preview', False))
-    lens = [max(len(P.resolve([L('bg', key)])[0]), len(P.resolve([L('bg', key)])[1])) for _g, key, _c in tabs]
-    widths = [6 + 4.9 * n for n in lens]
-    k_ = w / sum(widths)
-    widths = [v * k_ for v in widths]
+    widths = [w / len(tabs)] * len(tabs)
     tx, cxs = X0, {}
     for (g, key, cur), tw in zip(tabs, widths):
         cx = tx + tw / 2
@@ -2130,8 +2121,8 @@ def _bg_tall(P):
     for n, k in ((1, 'open'), (2, 'save'), (3, 'export'), (4, 'display'), (5, 'clear')):
         cx = bx[k][0] + bx[k][1] / 2
         o.append(P.bubble(n, cx, 46, cx, 66))
-    o.append(P.bubble(6, 14, 111, X0, 111))
-    o.append(P.bubble(7, cxs['tab.simple.situation'], TT + 58, cxs['tab.simple.situation'], TT + 40))
+    o.append(P.bubble(6, 14, 120, X0 + 10, 120))
+    o.append(P.bubble(7, cxs['tab.sitac'], TT + 58, cxs['tab.sitac'], TT + 40))
     o.append(P.bubble(8, cxs['tab.mission'] + 4, TT + 58, cxs['tab.mission'], TT + 40))
     o.append(P.bubble(9, cxs['tab.preview'], TT + 58, cxs['tab.preview'], TT + 40))
     o.append('</g>')
@@ -2164,8 +2155,8 @@ def _bg_legend_rows():
          ['un point de situation par ligne, ✕ le retire, « ', L('bg', 'editor.sitac.addPoint'), ' » en ajoute un, puis le champ ', L('bg', 'editor.simple.map'), ' plus bas dans la section. La carte, les menaces et les cibles sont communes aux deux formats : si une carte est chargée, ou si des menaces ou des cibles sont saisies, une page de carte suit, puis les pages de photos.'],
          ['one situation point per line, ✕ removes it, “', L('bg', 'editor.sitac.addPoint'), '” adds one, then the ', L('bg', 'editor.simple.map'), ' field further down in the section. The map, the threats and the targets are common to both formats: if a map is loaded, or threats or targets are entered, a map page follows, then the photo pages.']),
         (8, [M('Les autres sections', 'The other sections')],
-         ['Mission, Coordination, Photos et Métadonnées. L’icône à droite d’un en-tête, « ', L('bg', 'ui.foldall'), ' » ou « ', L('bg', 'ui.unfoldall'), ' », replie toutes les sections ou les déplie toutes. Au téléphone, l’éditeur passe en onglets.'],
-         ['Mission, Coordination, Photos and Metadata. The icon at the right of a header, “', L('bg', 'ui.foldall'), '” or “', L('bg', 'ui.unfoldall'), '”, folds all the sections or unfolds them all. On a phone, the editor switches to tabs.']),
+         ['Mission, Coordination, Photos et Métadonnées. L’icône à droite d’un en-tête, « ', L('bg', 'ui.foldall'), ' » ou « ', L('bg', 'ui.unfoldall'), ' », replie toutes les sections ou les déplie toutes. Au téléphone et à la tablette, l’éditeur passe en sept onglets au bas de l’écran ; au format Avancé, un onglet regroupe plusieurs sections, chacune repliable.'],
+         ['Mission, Coordination, Photos and Metadata. The icon at the right of a header, “', L('bg', 'ui.foldall'), '” or “', L('bg', 'ui.unfoldall'), '”, folds all the sections or unfolds them all. On a phone or tablet, the editor switches to seven tabs at the bottom of the screen; in Advanced, a tab groups several sections, each of them foldable.']),
         (9, [M('L’aperçu', 'The preview')],
          'la page de mission : situation, mission et groupes, fréquences, terrains et météo. Un bloc vide n’est pas imprimé, et une page qui déborde se poursuit sur la suivante.',
          'the mission page: situation, mission and groups, frequencies, airfields and weather. An empty block is not printed, and a page that overflows continues on the next one.'),

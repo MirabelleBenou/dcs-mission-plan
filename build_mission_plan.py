@@ -1074,6 +1074,7 @@ select[data-tbm-src] {{ display: none !important; }}
       back: '◄ Mission Plan',
       'back.tip': 'Retour à l’accueil de Mission Plan',
       'switch.name': 'Changer d’outil',
+      'switch.suffix': ', changer d’outil',
       'theme.cwnato': 'Cold War OTAN',
       'theme.cwsoviet': 'Cold War Soviétique',
       'theme.modernnato': 'OTAN moderne',
@@ -1125,6 +1126,7 @@ select[data-tbm-src] {{ display: none !important; }}
       back: '◄ Mission Plan',
       'back.tip': 'Back to the Mission Plan home',
       'switch.name': 'Switch tool',
+      'switch.suffix': ', switch tool',
       'theme.cwnato': 'Cold War NATO',
       'theme.cwsoviet': 'Cold War Soviet',
       'theme.modernnato': 'Modern NATO',
@@ -1266,7 +1268,7 @@ select[data-tbm-src] {{ display: none !important; }}
         run: function() {{ openModule(mid); }}
       }});
     }});
-    return {{ name: t('switch.name'), items: items }};
+    return {{ name: t('switch.name'), suffix: t('switch.suffix'), items: items }};       /* name : l'infobulle ; suffix : ce qui suit le texte affiché de la marque dans son nom accessible (uiSwitchSet) */
   }}
 
   function mpBindToolbar(iframe, toolbar, back) {{
@@ -1274,6 +1276,7 @@ select[data-tbm-src] {{ display: none !important; }}
     function sync() {{
       queued = false;
       try {{
+        adoptStoredLang();       /* le drapeau de l'outil vient de changer la langue (lang_v1) : le nom de la marque, son infobulle et la liste la suivent aussitôt */
         var full = t('back');
         var cut = full.indexOf(' ');
         var arrow = cut > 0 ? full.slice(0, cut) : full;
@@ -1325,6 +1328,8 @@ select[data-tbm-src] {{ display: none !important; }}
       }}
     }} catch(e) {{}}
   }}
+
+  window.addEventListener('storage', function(e) {{ if (e.key === KEY_LANG || e.key === null) adoptStoredLang(); }});       /* un outil change la langue par son drapeau : le shell la reprend aussitôt, sans attendre un changement d'outil */
 
   function openModule(id) {{
     if (!MODULE_HTML[id]) {{

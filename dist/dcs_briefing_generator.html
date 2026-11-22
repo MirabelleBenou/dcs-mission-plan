@@ -2327,50 +2327,7 @@ body[data-theme="modern-east"] .stamp-classif::after {
 }
 .roster-pilot-row input { min-width: 0; }
 
-/* ============ TAB BAR — active tab roster ============ */
-.tab-bar {
-  display: none;
-  position: fixed;
-  bottom: 0; left: 0; right: 0;
-  background: linear-gradient(180deg, var(--olive-dark) 0%, var(--olive-deep) 100%);
-  border-top: 2px solid var(--amber-dark);
-  padding: 6px 4px;
-  padding-bottom: max(6px, env(safe-area-inset-bottom));
-  z-index: 999;
-  gap: 2px;
-}
-.tab-bar button {
-  flex: 1;
-  background: transparent;
-  border: 1px solid transparent;
-  color: var(--khaki-light);
-  font-family: var(--f-condensed);
-  font-weight: 700;
-  font-size: 10px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  padding: 6px 2px;
-  min-height: 54px;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  transition: all .15s;
-}
-.tab-bar button .tab-ico {
-  font-size: 16px;
-  line-height: 1;
-  font-family: var(--f-stencil);
-  font-weight: 700;
-}
-.tab-bar button.current {
-  background: var(--olive);
-  color: var(--amber);
-  border-color: var(--amber-dark);
-}
-.tab-bar button:active { transform: translateY(1px); }
+/* ============ TAB BAR : la barre d'onglets du bas (jusqu'à 1100 px) est celle du bloc d'interface commun (ui_block.py, .ui-tabbar) ============ */
 
 /* ===== MESSAGES COMMUNS : feuille du toast ===== */
 .toast {
@@ -2616,6 +2573,32 @@ html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-
 :where(body[data-theme="modern-east"]) .ui-ext { color: #888e78; }
 :where(body[data-theme="modern-east"]) .ui-sum { color: #9da28f; }
 /* MP-20 end */
+/* ---- la barre d'onglets du bas (téléphone et tablette : jusqu'à 1 100 px ; au-dessus, elle n'existe pas) : un seul style, une seule hauteur (68 px, plus la zone sûre du bas), des onglets de même largeur sans défilement ni fondu ;
+   pictogramme au-dessus, libellé dessous sur une ligne, entier. Le module pose <nav class="ui-tabbar" role="tablist"> et ses boutons <button role="tab" data-tab> (.tab-ico, puis le libellé) ; uiTabsMark() marque l'onglet courant ;
+   le toast se pose au-dessus (toastPlace). Les sections d'un onglet se montrent par les règles du module ; une section seule dans son onglet porte data-solo (uiTabsSolo) : ni en-tête, ni bordure, toujours ouverte ---- */
+.ui-tabbar { display: none; }
+@media (max-width: 1100px) {
+  .ui-tabbar {
+    display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 999;
+    box-sizing: border-box; height: calc(68px + env(safe-area-inset-bottom, 0px));
+    padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px)); gap: 2px; overflow: hidden;
+    background: linear-gradient(180deg, var(--olive-dark) 0%, var(--olive-deep) 100%);
+    border-top: 2px solid var(--amber-dark);
+  }
+  .ui-tabbar > [role="tab"] {
+    flex: 1 1 0; min-width: auto; min-height: 44px; box-sizing: border-box; overflow: hidden; white-space: nowrap;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-align: center;
+    background: transparent; border: 1px solid transparent; color: var(--khaki-light); cursor: pointer; transition: all .15s;
+    font-family: var(--f-ui); font-weight: 700; font-size: 10px; letter-spacing: .3px; line-height: 1.15; text-transform: uppercase; padding: 6px 2px;
+  }
+  .ui-tabbar > [role="tab"] .tab-ico { font-family: var(--f-stencil); font-weight: 700; font-size: 16px; line-height: 1; }
+  .ui-tabbar > [role="tab"].current { background: var(--olive); color: var(--amber); border-color: var(--amber-dark); }
+  .ui-tabbar > [role="tab"]:active { transform: translateY(1px); }
+  .ed-section[data-solo] { border: none; }
+  .ed-section[data-solo] > summary { display: none; }
+  .ed-section[data-solo] > .ed-content { display: flex !important; padding: 0; padding-top: 8px; }
+}
+@media print { .ui-tabbar { display: none !important; } }
 /* ===== FIN DE LA FEUILLE DE L'INTERFACE COMMUNE ===== */
 
 /* ============ BRIEF COMPLET / SIMPLIFIÉ (v2.3.0) ============ */
@@ -2795,7 +2778,7 @@ body[data-format="full"] [data-fmt="simple"] { display: none !important; }
 
   .app {
     grid-template-columns: 1fr;
-    bottom: 68px;
+    bottom: calc(68px + env(safe-area-inset-bottom, 0px));
   }
   .app .editor, .app .preview-wrap {
     display: none;
@@ -2804,49 +2787,25 @@ body[data-format="full"] [data-fmt="simple"] { display: none !important; }
   body[data-active-tab="preview"] .preview-wrap { display: block; }
   body:not([data-active-tab="preview"]) .editor { display: block; }
 
-  /* Hide non-active editor sections */
+  /* Hide non-active editor sections ; each tab shows its own sections (BG_TABS of the build) */
   body:not([data-active-tab="preview"]) .ed-section { display: none; }
+  body[data-active-tab="header"] .ed-section[data-section="header"],
   body[data-active-tab="s-situation"] .ed-section[data-section="s-situation"],
   body[data-active-tab="s-mission"] .ed-section[data-section="s-mission"],
   body[data-active-tab="s-coord"] .ed-section[data-section="s-coord"],
   body[data-active-tab="s-photos"] .ed-section[data-section="s-photos"],
-  body[data-active-tab="header"] .ed-section[data-section="header"],
   body[data-active-tab="meta"] .ed-section[data-section="meta"],
-  body[data-active-tab="cover"] .ed-section[data-section="cover"],
+  body[data-active-tab="header"] .ed-section[data-section="cover"],
   body[data-active-tab="sitac"] .ed-section[data-section="sitac"],
   body[data-active-tab="mission"] .ed-section[data-section="mission"],
+  body[data-active-tab="mission"] .ed-section[data-section="phases"],
+  body[data-active-tab="mission"] .ed-section[data-section="roster"],
   body[data-active-tab="radio"] .ed-section[data-section="radio"],
-  body[data-active-tab="phases"] .ed-section[data-section="phases"],
-  body[data-active-tab="roster"] .ed-section[data-section="roster"],
-  body[data-active-tab="charts"] .ed-section[data-section="charts"],
+  body[data-active-tab="annexes"] .ed-section[data-section="charts"],
   body[data-active-tab="annexes"] .ed-section[data-section="annexes"],
-  body[data-active-tab="wing"] .ed-section[data-section="wing"] {
+  body[data-active-tab="meta"] .ed-section[data-section="wing"] {
     display: block;
-    border: none;
   }
-
-  /* Active section: hide summary, force content visible */
-  body[data-active-tab] .ed-section > summary { display: none; }
-  body[data-active-tab] .ed-section > .ed-content {
-    display: flex !important;
-    padding: 0;
-    padding-top: 8px;
-  }
-
-  /* Show panel header instead */
-  .panel-mobile-header {
-    display: flex !important;
-    background: linear-gradient(90deg, var(--olive) 0%, var(--olive-dark) 100%);
-    padding: 12px 14px;
-    font-family: var(--f-stencil);
-    font-size: 13px;
-    letter-spacing: 2px;
-    color: var(--amber);
-    border-bottom: 1px solid var(--amber-dark);
-    margin: -16px -16px 12px -16px;
-  }
-
-  .tab-bar { display: flex; }
 
   /* Preview adapts: scale to fit width */
   .preview-wrap { padding: 16px 8px 30px 8px; }
@@ -2858,8 +2817,6 @@ body[data-format="full"] [data-fmt="simple"] { display: none !important; }
     min-height: auto;
   }
 }
-.panel-mobile-header { display: none; }
-
 /* Mode desktop sur tablette paysage / petits écrans (Xiaomi Pad 6, iPad Pro, etc.)
    Comprime la toolbar pour qu'elle tienne sur les viewports 1100-1366px
    sans changer la bascule UX desktop ↔ tablette.
@@ -2877,16 +2834,13 @@ body[data-format="full"] [data-fmt="simple"] { display: none !important; }
 @media (max-width: 600px) {
   .tb-btn { padding: 0 8px; min-width: 40px; height: 38px; }
   .tb-btn svg { width: 14px; height: 14px; }
-  .tab-bar button { font-size: 10px; min-height: 50px; }
-  .tab-bar button .tab-ico { font-size: 13px; }
   .editor { padding: 12px 12px 24px 12px; }
   .ed-field-row { grid-template-columns: 1fr; }
   .phase-bar { grid-template-columns: 40px 1fr 40px 40px 40px 40px; }
 }
 
-/* au doigt : la barre des onglets du bas garde son plancher de contenu (le min-width: 44px du bloc commun, à spécificité nulle, remplacerait le min-width: auto des boutons en flex : onglets égaux, texte qui sort de sa case) ; la barre de phases passe à des colonnes de 44 px */
+/* au doigt : la barre de phases passe à des colonnes de 44 px */
 @media (pointer: coarse) {
-  .tab-bar button { min-width: auto; }
   .phase-bar { grid-template-columns: 44px 1fr 44px 44px 44px 44px; }
 }
 
@@ -3268,7 +3222,6 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <details class="ed-section" data-section="header">
       <summary class="ui-fold-head"><span data-i18n="editor.header.summary">01 ░ EN-TÊTE</span></summary>
       <div class="ed-content">
-        <div class="panel-mobile-header" data-i18n="editor.header.summary">01 ░ EN-TÊTE</div>
         <div class="ed-field-row">
           <div class="ed-field"><label data-i18n="editor.meta.operation">Opération</label><input data-bind="meta.operation" type="text" placeholder="Nom de l'opération" data-i18n-placeholder="placeholder.operation"></div>
           <div class="ed-field"><label data-i18n="editor.meta.missionCode">Mission</label><input data-bind="meta.mission" type="text" placeholder="Code mission" data-i18n-placeholder="placeholder.missionCode"></div>
@@ -3284,7 +3237,6 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <details class="ed-section" data-section="s-situation" data-fmt="simple">
       <summary class="ui-fold-head"><span data-i18n="editor.simple.situation.summary">02 ░ SITUATION</span></summary>
       <div class="ed-content">
-        <div class="panel-mobile-header" data-i18n="editor.simple.situation.summary">02 ░ SITUATION</div>
         <div class="ed-field">
           <label data-i18n="editor.sitac.points">Points de situation</label>
           <div class="ed-list" data-list="sitac.points"></div>
@@ -3314,7 +3266,6 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <details class="ed-section" data-section="s-mission" data-fmt="simple">
       <summary class="ui-fold-head"><span data-i18n="editor.simple.mission.summary">03 ░ MISSION</span></summary>
       <div class="ed-content">
-        <div class="panel-mobile-header" data-i18n="editor.simple.mission.summary">03 ░ MISSION</div>
         <div class="ed-field">
           <label data-i18n="editor.mission.objectives">Objectifs principaux</label>
           <div class="ed-list" data-list="mission.objectives"></div>
@@ -3337,7 +3288,6 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <details class="ed-section" data-section="s-coord" data-fmt="simple">
       <summary class="ui-fold-head"><span data-i18n="editor.simple.coord.summary">04 ░ COORDINATION</span></summary>
       <div class="ed-content">
-        <div class="panel-mobile-header" data-i18n="editor.simple.coord.summary">04 ░ COORDINATION</div>
         <div class="ed-field">
           <label data-i18n="simple.freq">Fréquences</label>
           <div id="s-radio-items-list"></div>
@@ -3363,7 +3313,6 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <details class="ed-section" data-section="s-photos" data-fmt="simple">
       <summary class="ui-fold-head"><span data-i18n="editor.simple.photos.summary">05 ░ PHOTOS</span></summary>
       <div class="ed-content">
-        <div class="panel-mobile-header" data-i18n="editor.simple.photos.summary">05 ░ PHOTOS</div>
         <div class="ed-img-list" id="s-photos-list"></div>
         <button type="button" class="ed-btn-add" id="s-photo-add" data-i18n="editor.simple.addPhoto">+ Ajouter une photo</button>
       </div>
@@ -3373,7 +3322,6 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <details class="ed-section" data-section="cover" data-fmt="full">
       <summary class="ui-fold-head"><span data-i18n="editor.cover.summary">02 ░ OPÉRATION (COUVERTURE)</span></summary>
       <div class="ed-content">
-        <div class="panel-mobile-header" data-i18n="editor.cover.summaryShort">02 ░ OPÉRATION</div>
         <div class="ed-field"><label data-i18n="editor.cover.title">Titre opération</label><input data-bind="cover.title" type="text" placeholder="Titre de l'opération" data-i18n-placeholder="placeholder.coverTitle"></div>
         <div class="ed-field"><label data-i18n="editor.cover.narrative">Récit / Contexte</label><textarea data-bind="cover.narrative" rows="6"></textarea></div>
         <div class="ed-field">
@@ -3390,7 +3338,6 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <details class="ed-section" data-section="sitac" data-fmt="full">
       <summary class="ui-fold-head"><span data-i18n="editor.sitac.summary">03 ░ SITAC</span></summary>
       <div class="ed-content">
-        <div class="panel-mobile-header" data-i18n="editor.sitac.summary">03 ░ SITAC</div>
         <div class="ed-field"><label data-i18n="editor.sitac.date">Date SITAC (affichée)</label><input data-bind="sitac.date" type="text" placeholder="Date affichée" data-i18n-placeholder="placeholder.sitacDate"></div>
         <div class="ed-field">
           <label data-i18n="editor.sitac.points">Points de situation</label>
@@ -3425,7 +3372,6 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <details class="ed-section" data-section="mission" data-fmt="full">
       <summary class="ui-fold-head"><span data-i18n="editor.mission.summary">04 ░ APERÇU MISSION</span></summary>
       <div class="ed-content">
-        <div class="panel-mobile-header" data-i18n="editor.mission.summary">04 ░ APERÇU MISSION</div>
         <div class="ed-field">
           <label data-i18n="editor.mission.objectives">Objectifs principaux</label>
           <div class="ed-list" data-list="mission.objectives"></div>
@@ -3457,7 +3403,6 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <details class="ed-section" data-section="radio" data-fmt="full">
       <summary class="ui-fold-head"><span data-i18n="editor.radio.summary">05 ░ PLAN RADIO</span></summary>
       <div class="ed-content">
-        <div class="panel-mobile-header" data-i18n="editor.radio.summary">05 ░ PLAN RADIO</div>
         <div class="ed-field">
           <label data-i18n="editor.radio.items">Items radio (max 6) — affichés sur la page 3</label>
           <div id="radio-items-list"></div>
@@ -3477,7 +3422,6 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <details class="ed-section" data-section="phases" data-fmt="full">
       <summary class="ui-fold-head"><span data-i18n="editor.phases.summary">06 ░ MISSIONS</span></summary>
       <div class="ed-content">
-        <div class="panel-mobile-header" data-i18n="editor.phases.summary">06 ░ MISSIONS</div>
         <div class="phase-bar">
           <button type="button" id="phase-prev" data-i18n-title="editor.phases.prev" title="Mission précédente">◄</button>
           <div class="phase-indicator" id="phase-indicator">—</div>
@@ -3496,7 +3440,6 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <details class="ed-section" data-section="roster" data-fmt="full">
       <summary class="ui-fold-head"><span data-i18n="editor.roster.summary">07 ░ ÉQUIPAGE</span></summary>
       <div class="ed-content">
-        <div class="panel-mobile-header" data-i18n="editor.roster.summary">07 ░ ÉQUIPAGE</div>
         <div class="ui-note" style="margin-bottom:10px;" data-i18n="editor.roster.help">
           Définissez les pilotes par groupe ou sous-groupe. Une page d'ordre de bataille sera générée après l'aperçu mission si au moins un pilote est renseigné.
         </div>
@@ -3509,7 +3452,6 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <details class="ed-section" data-section="charts" data-fmt="full">
       <summary class="ui-fold-head"><span data-i18n="editor.charts.summary">08 ░ CHARTS</span></summary>
       <div class="ed-content">
-        <div class="panel-mobile-header" data-i18n="editor.charts.summary">08 ░ CHARTS</div>
         <div id="charts-list"></div>
         <button type="button" class="ed-btn-add" id="chart-add" data-i18n="editor.charts.add">+ Ajouter une chart</button>
       </div>
@@ -3519,7 +3461,6 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <details class="ed-section" data-section="annexes" data-fmt="full">
       <summary class="ui-fold-head"><span data-i18n="editor.annexes.summary">09 ░ ANNEXES</span></summary>
       <div class="ed-content">
-        <div class="panel-mobile-header" data-i18n="editor.annexes.summary">09 ░ ANNEXES</div>
         <div id="annexes-list"></div>
         <button type="button" class="ed-btn-add" id="annexe-add" data-i18n="editor.annexes.add">+ Ajouter une annexe</button>
       </div>
@@ -3529,7 +3470,6 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <details class="ed-section" data-section="wing" data-fmt="full">
       <summary class="ui-fold-head"><span data-i18n="editor.wing.summary">10 ░ CONFIGURATION WING</span></summary>
       <div class="ed-content">
-        <div class="panel-mobile-header" data-i18n="editor.wing.summaryShort">10 ░ CONFIG WING</div>
 
         <!-- Informations wing courantes (read-only) -->
         <div id="wing-ro-info" class="wing-ro-info"></div>
@@ -3543,7 +3483,6 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <details class="ed-section" data-section="meta">
       <summary class="ui-fold-head"><span data-fmt="simple" data-i18n="editor.meta.summarySimple">06 ░ MÉTADONNÉES</span><span data-fmt="full" data-i18n="editor.meta.summary">11 ░ MÉTADONNÉES</span></summary>
       <div class="ed-content">
-        <div class="panel-mobile-header"><span data-fmt="simple" data-i18n="editor.meta.summarySimple">06 ░ MÉTADONNÉES</span><span data-fmt="full" data-i18n="editor.meta.summary">11 ░ MÉTADONNÉES</span></div>
         <div class="ed-field"><label data-i18n="editor.meta.classification">Classification</label>
             <select data-bind="meta.classification">
               <option value="confidential"    data-i18n="classif.confidential">CONFIDENTIEL DÉFENSE</option>
@@ -3574,23 +3513,18 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 </div>
 
 <!-- ============ MOBILE TAB BAR ============ -->
-<nav class="tab-bar" id="tab-bar" role="tablist" data-i18n-aria-label="tab.bar.aria" aria-label="Sections du briefing">
-  <button type="button" data-tab="header" role="tab"><span class="tab-ico">▤</span><span data-i18n="tab.header">En-tête</span></button>
-  <button type="button" data-tab="s-situation" data-fmt="simple" role="tab"><span class="tab-ico">▣</span><span data-i18n="tab.simple.situation">Situation</span></button>
-  <button type="button" data-tab="s-mission" data-fmt="simple" role="tab"><span class="tab-ico">✈</span><span data-i18n="tab.mission">Mission</span></button>
-  <button type="button" data-tab="s-coord" data-fmt="simple" role="tab"><span class="tab-ico">📻</span><span data-i18n="tab.simple.coord">Coordination</span></button>
-  <button type="button" data-tab="s-photos" data-fmt="simple" role="tab"><span class="tab-ico">🖼</span><span data-i18n="tab.simple.photos">Photos</span></button>
-  <button type="button" data-tab="cover" data-fmt="full" role="tab"><span class="tab-ico">◉</span><span data-i18n="tab.cover">Couv.</span></button>
-  <button type="button" data-tab="sitac" data-fmt="full" role="tab"><span class="tab-ico">▣</span><span data-i18n="tab.sitac">SITAC</span></button>
-  <button type="button" data-tab="mission" data-fmt="full" role="tab"><span class="tab-ico">✈</span><span data-i18n="tab.mission">Mission</span></button>
-  <button type="button" data-tab="radio" data-fmt="full" role="tab"><span class="tab-ico">📻</span><span data-i18n="tab.radio">Radio</span></button>
-  <button type="button" data-tab="phases" data-fmt="full" role="tab"><span class="tab-ico">⊕</span><span data-i18n="tab.phases">Missions</span></button>
-  <button type="button" data-tab="roster" data-fmt="full" role="tab"><span class="tab-ico">👤</span><span data-i18n="tab.roster">Équipage</span></button>
-  <button type="button" data-tab="charts" data-fmt="full" role="tab"><span class="tab-ico">🗺</span><span data-i18n="tab.charts">Charts</span></button>
-  <button type="button" data-tab="annexes" data-fmt="full" role="tab"><span class="tab-ico">📎</span><span data-i18n="tab.annexes">Annexes</span></button>
-  <button type="button" data-tab="wing" data-fmt="full" role="tab"><span class="tab-ico">🛡</span><span data-i18n="tab.wing">Wing</span></button>
-  <button type="button" data-tab="meta" role="tab"><span class="tab-ico">⚙</span><span data-i18n="tab.meta">Méta</span></button>
-  <button type="button" data-tab="preview" role="tab"><span class="tab-ico">◈</span><span data-i18n="tab.preview">Aperçu</span></button>
+<nav class="tab-bar ui-tabbar" id="tab-bar" role="tablist" data-i18n-aria-label="tab.bar.aria" aria-label="Sections du briefing">
+  <button type="button" data-tab="header" role="tab" aria-selected="false"><span class="tab-ico">▤</span><span data-i18n="tab.header">En-tête</span></button>
+  <button type="button" data-tab="s-situation" data-fmt="simple" role="tab" aria-selected="false"><span class="tab-ico">▣</span><span data-i18n="tab.sitac">Sitac</span></button>
+  <button type="button" data-tab="sitac" data-fmt="full" role="tab" aria-selected="false"><span class="tab-ico">▣</span><span data-i18n="tab.sitac">Sitac</span></button>
+  <button type="button" data-tab="s-mission" data-fmt="simple" role="tab" aria-selected="false"><span class="tab-ico">✈</span><span data-i18n="tab.mission">Mission</span></button>
+  <button type="button" data-tab="mission" data-fmt="full" role="tab" aria-selected="false"><span class="tab-ico">✈</span><span data-i18n="tab.mission">Mission</span></button>
+  <button type="button" data-tab="s-coord" data-fmt="simple" role="tab" aria-selected="false"><span class="tab-ico">📻</span><span data-i18n="tab.coord">Coord.</span></button>
+  <button type="button" data-tab="radio" data-fmt="full" role="tab" aria-selected="false"><span class="tab-ico">📻</span><span data-i18n="tab.coord">Coord.</span></button>
+  <button type="button" data-tab="s-photos" data-fmt="simple" role="tab" aria-selected="false"><span class="tab-ico">🖼</span><span data-i18n="tab.simple.photos">Photos</span></button>
+  <button type="button" data-tab="annexes" data-fmt="full" role="tab" aria-selected="false"><span class="tab-ico">📎</span><span data-i18n="tab.annexes">Annexes</span></button>
+  <button type="button" data-tab="meta" role="tab" aria-selected="false"><span class="tab-ico">⚙</span><span data-i18n="tab.meta">Méta</span></button>
+  <button type="button" data-tab="preview" role="tab" aria-selected="false"><span class="tab-ico">◈</span><span data-i18n="tab.preview">Aperçu</span></button>
 </nav>
 
 <!-- ============ EMBEDDED WING CONFIG (generic default) ============ -->
@@ -3673,15 +3607,10 @@ const I18N = {
     // ── Tab bar ──
     'tab.header':  'En-tête',
     'tab.meta':    'Méta',
-    'tab.cover':   'Couv.',
-    'tab.sitac':   'SITAC',
+    'tab.sitac':   'Sitac',
     'tab.mission': 'Mission',
-    'tab.radio':   'Radio',
-    'tab.phases':  'Missions',
-    'tab.roster':  'Équipage',
-    'tab.charts':  'Charts',
+    'tab.coord':   'Coord.',
     'tab.annexes': 'Annexes',
-    'tab.wing':    'Wing',
     'tab.preview': 'Aperçu',
     // ── Modale export ──
     'modal.export.close':          'Fermer',
@@ -4000,8 +3929,6 @@ const I18N = {
     'rpmap.place':        'Placer',
     'toast.rpmapPlaced':  'Carte placée.',
     'toast.storageFull':  '⚠ Mémoire du navigateur pleine : le briefing n\'est plus enregistré.',
-    'tab.simple.situation':       'Situation',
-    'tab.simple.coord':           'Coordination',
     'tab.simple.photos':          'Photos',
     'editor.meta.time':           'Heure (Z)',
     'editor.simple.situation.summary': '02 ░ SITUATION',
@@ -4101,15 +4028,10 @@ const I18N = {
     // ── Tab bar ──
     'tab.header':  'Header',
     'tab.meta':    'Meta',
-    'tab.cover':   'Cover',
-    'tab.sitac':   'SITAC',
+    'tab.sitac':   'Sitac',
     'tab.mission': 'Mission',
-    'tab.radio':   'Radio',
-    'tab.phases':  'Missions',
-    'tab.roster':  'Crew',
-    'tab.charts':  'Charts',
+    'tab.coord':   'Coord.',
     'tab.annexes': 'Annexes',
-    'tab.wing':    'Wing',
     'tab.preview': 'Preview',
     // ── Export modal ──
     'modal.export.close':          'Close',
@@ -4428,8 +4350,6 @@ const I18N = {
     'rpmap.place':        'Place',
     'toast.rpmapPlaced':  'Map placed.',
     'toast.storageFull':  '⚠ Browser storage full: the briefing is no longer being saved.',
-    'tab.simple.situation':       'Situation',
-    'tab.simple.coord':           'Coordination',
     'tab.simple.photos':          'Photos',
     'editor.meta.time':           'Time (Z)',
     'editor.simple.situation.summary': '02 ░ SITUATION',
@@ -4666,6 +4586,8 @@ const DEFAULTS = {
 let state;
 let currentPhaseIdx = 0;
 let activeTab = 'header';
+/* Les sept onglets de chaque format (jusqu'à 1100 px) et les sections que chacun montre, dans l'ordre de l'éditeur ; « preview » s'ajoute au bout. La même table que les règles d'affichage de la feuille (BG_TABS du build). */
+const BG_TABS = {"simple":[["header",["header"]],["s-situation",["s-situation"]],["s-mission",["s-mission"]],["s-coord",["s-coord"]],["s-photos",["s-photos"]],["meta",["meta"]]],"full":[["header",["header","cover"]],["sitac",["sitac"]],["mission",["mission","phases","roster"]],["radio",["radio"]],["annexes",["charts","annexes"]],["meta",["wing","meta"]]]};
 
 /* ============= STATE / PERSISTENCE ============= */
 function loadState() {
@@ -8445,12 +8367,14 @@ function uiBarMoreBtn(bar) {
   return b;
 }
 /* un toucher hors du menu (et hors de « ⋯ », qui le bascule lui-même) le ferme sans agir sur ce qu'il touche : le clic qui suit est avalé (tbmSwallowNext, comme pour les listes), sauf sur le déclencheur d'une liste, qui s'ouvre par son propre clic */
+/* les déclencheurs des menus de la barre (ceux du module, TBM.cfg.trig ; le Sommaire du Field Manual) : un toucher sur l'un d'eux, « ⋯ » ou la liste des outils ouverts, les ferme et ouvre ce menu d'un seul geste (son propre clic passe) */
+function uiBarTrig() { return ((typeof TBM !== 'undefined' && TBM.cfg && TBM.cfg.trig) || '.tbm-trigger') + ', #btn-toc'; }
 function uiBarMoreOutside(ev) {
   if (!UIMORE.panel) return;
   const t = ev.target;
   if (UIMORE.panel.contains(t) || (UIMORE.btn && UIMORE.btn.contains(t))) return;
   uiBarMoreClose();
-  const other = t && t.closest ? t.closest('.tbm-trigger, .tb-switch') : null;       /* la marque ouvre la liste des outils par son propre clic */
+  const other = t && t.closest ? t.closest(uiBarTrig() + ', .tb-switch') : null;       /* la marque ouvre la liste des outils par son propre clic ; un autre menu de la barre, par le sien */
   if (!other && typeof tbmSwallowNext === 'function') tbmSwallowNext();
 }
 function uiBarMoreClose() {
@@ -8652,10 +8576,20 @@ function uiBarFitInit() {
    Gestes : toucher la marque ouvre ou ferme ; un toucher au-dehors, Échap, Tab et le redimensionnement la ferment (Échap rend le focus à la marque) ; elle ferme « ⋯ » et toute liste ouverte, et l'inverse ;
    au clavier : Entrée, Espace ou ↓ ouvrent (le focus va à la première ligne), flèches, Début et Fin parcourent les lignes (les titres sont sautés), Entrée choisit. Choisir ferme la liste puis fait ce que dit la ligne (le shell ouvre l'outil : chargé s'il ne l'était pas, tel quel sinon). ---- */
 const UISW = { brand: null, panel: null, items: [], name: '', key: '', rows: [], x0: 0, y0: 0, swallow: false, bound: false };
+/* le texte que la marque affiche : ses parties qui ne sont pas masquées (le titre et son sous-titre, ou le sigle, selon l'étape de la barre), sans « ▾ » (c'est un pseudo-élément) */
+function uiSwShown(brand) {
+  const parts = [];
+  Array.prototype.forEach.call(brand.children, c => {
+    if (getComputedStyle(c).display === 'none') return;
+    const x = (c.textContent || '').replace(/\s+/g, ' ').trim();
+    if (x) parts.push(x);
+  });
+  return parts.length ? parts.join(' ') : (brand.children.length ? '' : (brand.textContent || '').replace(/\s+/g, ' ').trim());
+}
 function uiSwitchSet(cfg) {
   const bar = uiBarEl(), brand = bar ? bar.querySelector('.tb-brand') : null;
   if (!brand || !cfg || !cfg.items || !cfg.items.length) return;
-  const key = (cfg.name || '') + '\n' + cfg.items.map(it => [it.kind, it.text, it.color, it.current ? 1 : 0].join('|')).join('\n');
+  const shown = uiSwShown(brand), key = (cfg.name || '') + '\n' + (cfg.suffix || '') + '\n' + shown + '\n' + cfg.items.map(it => [it.kind, it.text, it.color, it.current ? 1 : 0].join('|')).join('\n');
   if (UISW.brand === brand && UISW.key === key) return;
   UISW.items = cfg.items; UISW.name = cfg.name || ''; UISW.key = key;
   if (UISW.brand !== brand) {
@@ -8682,7 +8616,7 @@ function uiSwitchSet(cfg) {
   brand.classList.add('tb-switch');
   brand.setAttribute('role', 'button'); brand.setAttribute('tabindex', '0');
   brand.setAttribute('aria-haspopup', 'menu'); brand.setAttribute('aria-expanded', UISW.panel ? 'true' : 'false');
-  brand.setAttribute('aria-label', UISW.name); brand.title = UISW.name;
+  brand.setAttribute('aria-label', shown ? shown + (cfg.suffix || ', ' + UISW.name) : UISW.name); brand.title = UISW.name;       /* le nom accessible contient le texte affiché (WCAG 2.5.3) : le sigle ou le titre, sans « ▾ » ; l'infobulle dit l'action */
   if (UISW.panel) { UISW.panel.setAttribute('aria-label', UISW.name); uiSwFill(UISW.panel.firstChild); uiSwPlace(UISW.panel); }
 }
 function uiSwFill(ul) {
@@ -8766,7 +8700,7 @@ function uiSwOutside(ev) {
   const t = ev.target;
   if (UISW.panel.contains(t) || (UISW.brand && UISW.brand.contains(t))) return;
   uiSwClose(false);
-  if (t && t.closest && t.closest('.tbm-trigger, .tb-more-btn')) return;
+  if (t && t.closest && t.closest(uiBarTrig() + ', .tb-more-btn')) return;       /* « ⋯ » et les menus de la barre s'ouvrent par leur propre clic, en un seul geste */
   UISW.swallow = true;
   const rel = () => { document.removeEventListener('pointerup', rel, true); document.removeEventListener('pointercancel', rel, true); setTimeout(() => { UISW.swallow = false; }, 350); };
   document.addEventListener('pointerup', rel, true);
@@ -9012,6 +8946,33 @@ function uiFoldAll(heads, cfg) {
   });
 }
 function uiJoin(parts) { return parts.filter(p => p !== undefined && p !== null && String(p).trim() !== '').map(p => String(p).trim()).join(' · '); }
+
+/* ---- la barre d'onglets du bas : l'onglet courant (classe current, aria-selected sur lui seul), la section seule d'un onglet (data-solo), le toast au-dessus de la barre ---- */
+function uiTabsMark(id) {
+  document.querySelectorAll('.ui-tabbar > [role="tab"]').forEach(b => {
+    const on = b.dataset.tab === id;
+    b.classList.toggle('current', on);
+    b.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
+}
+/* all : les sections de l'éditeur ; solo : celles qui sont seules dans leur onglet (au format affiché) */
+function uiTabsSolo(all, solo) { all.forEach(d => { if (solo.indexOf(d) >= 0) d.setAttribute('data-solo', ''); else d.removeAttribute('data-solo'); }); }
+/* Le toast commun (messages_block.py) se pose 12 px au-dessus de la barre d'onglets du bas quand elle est visible (téléphone, tablette) : il ne la recouvre jamais.
+   Sans barre d'onglets (grand écran), la variable est ôtée et le toast reste à 20 px du bas. Le shell de la suite lit cette variable pour son propre toast. */
+const TOAST_GAP = 12;
+function toastPlace() {
+  const root = document.documentElement, bar = document.querySelector('.ui-tabbar');
+  const r = bar && bar.getClientRects().length ? bar.getBoundingClientRect() : null;
+  if (!r || !r.height) { root.style.removeProperty('--mp-toast-bottom'); return; }
+  const px = Math.round(root.clientHeight - r.top + TOAST_GAP) + 'px';
+  if (root.style.getPropertyValue('--mp-toast-bottom') !== px) root.style.setProperty('--mp-toast-bottom', px);
+}
+function initToastPlace() {
+  const bar = document.querySelector('.ui-tabbar');
+  if (bar && window.ResizeObserver) new ResizeObserver(toastPlace).observe(bar);
+  window.addEventListener('resize', toastPlace);
+  toastPlace();
+}
 
 /* ---- la fenêtre d'export (BG, DG) : format, pages, nom du fichier ----
    cfg : modal (id de la fenêtre), title, note { pdf, png }, pages [{ id, label, dis }], page (le choix de départ), pick (élément montré sous les pages quand page === 'pick'),
@@ -9414,10 +9375,23 @@ const LOGO_MAX_SIZE = 256;
 
 /* ============= REPLI DES SECTIONS (bg_folds_v1) =============
    L'état se garde : { section: true (ouverte) | false (repliée) }. Défauts du profil neuf : l'En-tête (première section) ouvert, Métadonnées (dernière section) repliée ; les autres comme avant.
-   Sous 1 100 px (onglets), la section de l'onglet est ouverte sans rien écrire dans la clé. */
+   Sous 1 100 px (onglets), le repli a son propre état (bg_folds_tabs_v1, plus bas). */
 const BG_FOLDS = 'bg_folds_v1';
 const BG_FOLD_DEF = { header: true, 's-situation': true, 's-mission': true, 's-coord': true, 's-photos': true, cover: false, sitac: false, mission: false, radio: true, phases: true, roster: false, charts: false, annexes: false, wing: false, meta: false };
 function bgTabMode() { return window.innerWidth <= MOBILE_BREAKPOINT; }
+function bgFmt() { return document.body.dataset.format === 'simple' ? 'simple' : 'full'; }
+function bgTabIds(fmt) { return BG_TABS[fmt].map(x => x[0]).concat(['preview']); }
+function bgTabOf(tab) { const e = BG_TABS[bgFmt()].filter(x => x[0] === tab)[0]; return e ? e[1] : []; }       /* les sections d'un onglet, au format affiché */
+function bgSoloIds() { return [].concat.apply([], BG_TABS[bgFmt()].map(x => x[1].length === 1 ? x[1] : [])); }       /* les sections seules dans leur onglet */
+/* En mode onglets le repli a son propre état, bg_folds_tabs_v1 (préférence d'écran, hors du fichier de travail, comme bg_folds_v1), tout ouvert par défaut sauf Méta : un geste de l'un ne touche pas l'autre ;
+   une section seule dans son onglet est toujours ouverte, sans rien écrire ; ouvrir un onglet n'écrit rien. */
+const BG_FOLDS_TABS = 'bg_folds_tabs_v1';
+const BG_TAB_DEF = { meta: false };
+function bgFoldKey() { return bgTabMode() ? BG_FOLDS_TABS : BG_FOLDS; }
+function bgFoldWant(id) {
+  if (!bgTabMode()) return uiFoldOpen(BG_FOLDS, id, BG_FOLD_DEF[id]);
+  return bgSoloIds().indexOf(id) >= 0 || uiFoldOpen(BG_FOLDS_TABS, id, BG_TAB_DEF[id] !== false);
+}
 function bgSections() { return Array.prototype.slice.call(document.querySelectorAll('#editor > details.ed-section')); }
 function bgFmtSections() { const f = document.body.dataset.format; return bgSections().filter(d => !d.dataset.fmt || d.dataset.fmt === f); }
 
@@ -9443,16 +9417,23 @@ function bgSectionSum(id) {
   }
   return '';
 }
-/* L'icône « Tout replier » à droite de l'en-tête de chaque section du format affiché (une section seule n'en porte pas) */
-function bgFoldLabel() {
+/* Les sections que « Tout replier » ordonne : celles du format affiché ; en mode onglets, celles de l'onglet ouvert */
+function bgFoldSet() {
   const on = bgFmtSections();
+  if (!bgTabMode()) return on;
+  const ids = bgTabOf(activeTab);
+  return on.filter(d => ids.indexOf(d.dataset.section) >= 0);
+}
+/* L'icône « Tout replier » à droite de l'en-tête de chaque section ordonnée (une section seule n'en porte pas) */
+function bgFoldLabel() {
+  const on = bgFoldSet();
   uiFoldAllOff(bgSections().filter(d => on.indexOf(d) < 0).map(d => d.querySelector(':scope > summary')));
   uiFoldAll(on.map(d => d.querySelector(':scope > summary')), { any: on.some(d => d.open), label: uiFoldAllLabel, go: bgFoldAll });
 }
 function bgFoldAll() {
-  const ds = bgFmtSections(), open = !ds.some(d => d.open), map = {};
+  const ds = bgFoldSet(), open = !ds.some(d => d.open), map = {};
   ds.forEach(d => { map[d.dataset.section] = open; });
-  uiFoldSaveAll(BG_FOLDS, map);
+  uiFoldSaveAll(bgFoldKey(), map);
   ds.forEach(d => { if (d.open !== open) d.open = open; });
   bgFoldLabel();
 }
@@ -9465,18 +9446,25 @@ function bgFoldRefresh() {
   });
   bgFoldLabel();
 }
-function bgFoldInit() {
+/* Pose l'état de repli du mode en cours (grand écran ou onglets) et les sections seules de leur onglet ; au chargement, au changement de format, au passage de 1100 px */
+function bgFoldApply() {
   bgSections().forEach(d => {
-    const id = d.dataset.section, o = uiFoldOpen(BG_FOLDS, id, BG_FOLD_DEF[id]);
+    const o = bgFoldWant(d.dataset.section);
     d.dataset.fold = String(o);
     if (d.open !== o) d.open = o;
   });
+  const solo = bgSoloIds();
+  uiTabsSolo(bgSections(), bgSections().filter(d => solo.indexOf(d.dataset.section) >= 0));
   bgFoldRefresh();
+}
+function bgFoldInit() {
+  bgFoldApply();
+  window.matchMedia('(max-width: ' + MOBILE_BREAKPOINT + 'px)').addEventListener('change', bgFoldApply);
   document.getElementById('editor').addEventListener('toggle', e => {
     const d = e.target;
     if (!d || !d.matches || !d.matches('details.ed-section')) return;
     const id = d.dataset.section;
-    if (!bgTabMode() && d.dataset.fold !== String(d.open)) uiFoldSave(BG_FOLDS, id, d.open);       /* un geste ; l'onglet du téléphone ouvre sans écrire */
+    if (d.dataset.fold !== String(d.open)) uiFoldSave(bgFoldKey(), id, d.open);       /* un geste, écrit dans l'état du mode en cours */
     d.dataset.fold = String(d.open);
     const h = d.querySelector(':scope > summary');
     h.setAttribute('aria-expanded', String(d.open));
@@ -9488,17 +9476,8 @@ function bgFoldInit() {
 function setActiveTab(tab) {
   activeTab = tab;
   document.body.dataset.activeTab = tab;
-  document.querySelectorAll('.tab-bar button').forEach(b => {
-    b.classList.toggle('current', b.dataset.tab === tab);
-  });
-  // On mobile, force the matching <details> to be open
-  if (window.innerWidth <= MOBILE_BREAKPOINT) {
-    document.querySelectorAll('.ed-section').forEach(s => {
-      if (s.dataset.section === tab) {
-        s.setAttribute('open', '');
-      }
-    });
-  }
+  uiTabsMark(tab);
+  bgFoldLabel();       // « Tout replier » suit les sections de l'onglet
   // Reset scroll on tab change
   if (tab === 'preview') {
     document.getElementById('preview-wrap').scrollTop = 0;
@@ -9668,13 +9647,15 @@ function placeMetarPanel(fmt) {
 function applyFormatUi() {
   const fmt = (state && state.meta && state.meta.format === 'simple') ? 'simple' : 'full';
   document.body.dataset.format = fmt;
-  bgFoldLabel();       // les icônes « Tout replier » suivent les sections du format affiché
+  bgFoldApply();       // l'état de repli, les sections seules de leur onglet et les icônes « Tout replier » suivent le format affiché
   bgDispSync();
   placeMetarPanel(fmt);
-  // l'onglet courant doit exister dans ce mode
-  const tabBtn = document.querySelector('.tab-bar button[data-tab="' + activeTab + '"]');
-  const shared = activeTab === 'header' || activeTab === 'meta' || activeTab === 'preview';
-  if (!shared && !(tabBtn && tabBtn.dataset.fmt === fmt)) setActiveTab('header');
+  // l'onglet courant doit exister dans ce format : sinon l'onglet de même place dans l'autre (la 4e : Coord. ↔ Coord. ; la 5e : Photos ↔ Annexes)
+  const ids = bgTabIds(fmt);
+  if (ids.indexOf(activeTab) < 0) {
+    const k = bgTabIds(fmt === 'simple' ? 'full' : 'simple').indexOf(activeTab);
+    setActiveTab(ids[k >= 0 ? k : 0]);
+  }
 }
 
 function renderSimpleEditor() {
@@ -10728,7 +10709,7 @@ function tbmPlace(m, keepDir) {
   let top = r.bottom + 4;
   m.x0 = r.left; m.y0 = r.top;
   if (m.form) {
-    const bar = document.querySelector('.tab-bar');
+    const bar = document.querySelector('.ui-tabbar, .tab-bar');
     const lo = tbmTop(vis);
     let hi = vh;
     if (bar) {
@@ -10921,7 +10902,7 @@ function tbmNeed(m) {
 }
 /* Si la place sous le bouton ne suffit pas, le bouton remonte en haut de la zone visible (sous la barre, 8 px) : vrai quand la place sous lui suffit ensuite */
 function tbmFit(m) {
-  const vis = tbmVis(), bar = document.querySelector('.tab-bar');
+  const vis = tbmVis(), bar = document.querySelector('.ui-tabbar, .tab-bar');
   const lo = tbmTop(vis);
   let hi = vis.bottom;
   if (bar) {
@@ -10980,22 +10961,7 @@ function formListLabel(sel) {
   return l ? l.textContent.trim() : '';
 }
 
-/* Le toast commun (messages_block.py) se pose 12 px au-dessus de la barre d'onglets du bas quand elle est visible (téléphone, tablette) : il ne la recouvre jamais.
-   Sans barre d'onglets (grand écran), la variable est ôtée et le toast reste à 20 px du bas. Le shell de la suite lit cette variable pour son propre toast. */
-const TOAST_GAP = 12;
-function toastPlace() {
-  const root = document.documentElement, bar = document.getElementById('tab-bar');
-  const r = bar && bar.getClientRects().length ? bar.getBoundingClientRect() : null;
-  if (!r || !r.height) { root.style.removeProperty('--mp-toast-bottom'); return; }
-  const px = Math.round(root.clientHeight - r.top + TOAST_GAP) + 'px';
-  if (root.style.getPropertyValue('--mp-toast-bottom') !== px) root.style.setProperty('--mp-toast-bottom', px);
-}
-function initToastPlace() {
-  const bar = document.getElementById('tab-bar');
-  if (bar && window.ResizeObserver) new ResizeObserver(toastPlace).observe(bar);
-  window.addEventListener('resize', toastPlace);
-  toastPlace();
-}
+/* Le toast se pose au-dessus de la barre d'onglets du bas : toastPlace() et initToastPlace(), dans le bloc d'interface commun (ui_block.py) */
 
 function init() {
   initLang();                          // Phase 9 — lire la langue avant tout
