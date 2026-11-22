@@ -715,6 +715,7 @@ def _hq_wide(P):
     # la barre du haut, dans l'ordre de l'écran
     o.append(sv_box(X0, 44, X1 - X0, 28))
     o.append(P.text(X0 + 10, 62, 9, L('hq', 'toolbar.title'), ls=1, anchor='start'))
+    o.append(_brand_chev(P, X0 + 27))
     bx = {}
     x = X0 + 32
     for key, w, parts in (('wing', 40, [L('hq', 'tb.wing')]), ('open', 62, [L('hq', 'tb.open')]), ('save', 82, [L('hq', 'tb.save')]),
@@ -795,6 +796,7 @@ def _hq_tall(P):
     o.append(sv_box(X0, 62, X1 - X0, 30))
     o.append(P.text(X0 + 10, 81, 8.5, D('◄'), anchor='start'))
     o.append(P.text(X0 + 34, 81, 8.5, D('H·Q')))
+    o.append(_brand_chev(P, X0 + 44.5, 81))
     ic = {}
     x = X0 + 52
     for key, glyph in (('wing', '⛉'), ('open', '▭'), ('save', '▣'), ('pk', '◫'), ('ex', '▤'), ('clr', '⌫')):
@@ -908,9 +910,15 @@ def build_plate_hq():
 # Aides communes aux planches du Flight Configurator et du Datacard Generator
 # ═════════════════════════════════════════════════════════════════════════════════
 
+def _brand_chev(P, x, y=62):
+    """Le « ▾ » de la marque de la barre (la liste des outils s'ouvre par la marque) : un petit signe de plus, aux mêmes couleurs que les boutons."""
+    return P.text(x, y, 6.5, D('▾'), anchor='start', op=.8)
+
+
 def _toolbar_wide(P, X0, X1, tool, sub_key, buttons):
     """La barre du haut de la variante large : cadre, sous-titre de l'outil, boutons. Renvoie (SVG, {clé: (x, largeur)})."""
     o = [sv_box(X0, 44, X1 - X0, 28), P.text(X0 + 8, 62, 8, L(tool, sub_key), anchor='start', op=.7, ls=.6)]
+    o.append(_brand_chev(P, X0 + 96))
     bx, x = {}, X0 + 104
     for key, w, parts in buttons:
         o.append(P.btn(x, 49, w, 18, parts))
@@ -1466,6 +1474,7 @@ def _dg_tall(P):
     o.append(sv_box(X0, 62, w, 30))
     o.append(P.text(X0 + 10, 81, 8.5, D('◄'), anchor='start'))
     o.append(P.text(X0 + 34, 81, 8.5, L('dg', 'app.short')))
+    o.append(_brand_chev(P, X0 + 44.5, 81))
     ic = {}
     x = X0 + 52
     for key, glyph in (('open', '▭'), ('save', '▣'), ('export', '⇪'), ('display', '◐'), ('clear', '⌫')):
@@ -1721,7 +1730,8 @@ def _rp_wide(P):
     X0, X1 = 110, 610
     # ── la barre du haut ────────────────────────────────────────────────────────
     o += [sv_box(X0, 44, X1 - X0, 28), P.text(X0 + 8, 62, 8, L('rp', 'tb.subtitle'), anchor='start', op=.7, ls=.6)]
-    bx, x = {}, X0 + 74
+    o.append(_brand_chev(P, X0 + 74))
+    bx, x = {}, X0 + 84
     for key, w, parts in (('open', 50, [L('rp', 'tb.open', add='▾')]), ('save', 60, [L('rp', 'tb.save')]),
                           ('export', 52, [L('rp', 'tb.export', add='▾')]), ('display', 58, [L('rp', 'tb.display', add='▾')])):
         o.append(P.btn(x, 49, w, 18, parts))
@@ -1840,8 +1850,9 @@ def _rp_tall(P):
     o.append(sv_box(X0, 62, w, 30))
     o.append(P.btn(X0 + 4, 66, 20, 22, [D('◄')]))
     o.append(P.text(X0 + 30, 81, 8.5, L('rp', 'app.short'), anchor='start', extra=' font-weight="700"'))
+    o.append(_brand_chev(P, X0 + 52.5, 81))
     bx = {}
-    x = X0 + 54
+    x = X0 + 62
     for key, bw, ico, chv in (('open', 28, _rp_ico_folder, True), ('save', 22, _rp_ico_disk, False), ('export', 28, _rp_ico_export, True), ('display', 22, _rp_ico_eye, False)):
         o.append(P.btn(x, 66, bw, 22))
         o.append(ico(x + (9 if chv else bw / 2), 77))
@@ -2042,6 +2053,7 @@ def _bg_wide(P):
     o.append('<g transform="translate(0,22)">')
     X0, X1 = 110, 610
     o += [sv_box(X0, 44, X1 - X0, 28), P.text(X0 + 8, 62, 8, L('bg', 'toolbar.subtitle'), anchor='start', op=.7, ls=.6)]
+    o.append(_brand_chev(P, X0 + 114))
     bx, x = {}, X0 + 122
     for key, w, parts in (('open', 56, [L('bg', 'toolbar.load', add='▾')]), ('save', 68, [L('bg', 'toolbar.save')]), ('export', 54, [L('bg', 'toolbar.export')]),
                           ('display', 66, [L('bg', 'toolbar.display', add='▾')]), ('clear', 48, [L('bg', 'toolbar.reset')])):
@@ -2080,6 +2092,7 @@ def _bg_tall(P):
     o.append(sv_box(X0, 62, w, 30))
     o.append(P.btn(X0 + 4, 66, 20, 22, [D('◄')]))
     o.append(P.text(X0 + 30, 81, 8.5, D('B·G'), anchor='start', extra=' font-weight="700"'))
+    o.append(_brand_chev(P, X0 + 53, 81))
     bx, x = {}, X0 + 62
     for key, bw, ico, chv in (('open', 30, _rp_ico_folder, True), ('save', 24, _rp_ico_disk, False), ('export', 24, _rp_ico_export, False),
                               ('display', 24, _rp_ico_eye, False), ('clear', 24, _ico_trash, False)):
@@ -2271,6 +2284,7 @@ def _rs_wide(P):
     o.append('<g transform="translate(0,22)">')
     X0, X1 = 110, 610
     o += [sv_box(X0, 44, X1 - X0, 28), P.text(X0 + 8, 62, 8, L('rs', 'toolbar.subtitle'), anchor='start', op=.7, ls=.6)]
+    o.append(_brand_chev(P, X0 + 96))
     bx, x = {}, X0 + 104
     for key, w, parts in (('open', 56, [L('rs', 'toolbar.open', add='▾')]), ('save', 68, [L('rs', 'toolbar.save')]), ('export', 54, [L('rs', 'toolbar.export')]),
                           ('clear', 48, [L('rs', 'toolbar.reset')])):
@@ -2306,6 +2320,7 @@ def _rs_tall(P):
     o.append(sv_box(X0, 62, w, 30))
     o.append(P.btn(X0 + 4, 66, 20, 22, [D('◄')]))
     o.append(P.text(X0 + 30, 81, 8.5, D('R·S'), anchor='start', extra=' font-weight="700"'))
+    o.append(_brand_chev(P, X0 + 53, 81))
     bx, x = {}, X0 + 112
     for key, bw, ico, chv in (('open', 30, _rp_ico_folder, True), ('save', 24, _rp_ico_disk, False), ('export', 24, _rp_ico_export, False), ('clear', 24, _ico_trash, False)):
         o.append(P.btn(x, 66, bw, 22))

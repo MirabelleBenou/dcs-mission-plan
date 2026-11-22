@@ -74,6 +74,8 @@ _BAR_CSS = r"""/* la barre qui manque de place se réduit dans un seul ordre, pa
 .toolbar .tb-brand.tb-switch { position: relative; box-sizing: border-box; min-width: 0; min-height: 44px; justify-content: center; padding-right: 7px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .toolbar .tb-brand.tb-switch::after { content: '▾'; position: absolute; right: 0; top: 50%; transform: translateY(-50%); font-family: var(--f-ui); font-weight: 700; font-size: 10px; line-height: 1; color: var(--khaki); pointer-events: none; }
 .toolbar .tb-brand.tb-switch[aria-expanded="true"]::after { color: var(--amber); }
+.toolbar .tb-brand.tb-switch { margin-right: -7px; }       /* en titre, le chevron vit dans l'écart qui sépare la marque de l'élément suivant : largeur nette zéro */
+.toolbar.tb-st6 .tb-brand.tb-switch { margin-right: 0; }       /* au sigle, le chevron coûte 4 px (l'espacement des lettres du sigle lui est rendu, ci-dessous) */
 .toolbar .tb-brand.tb-switch .tb-brand-short { margin-right: -3px; }       /* l'espacement des lettres qui suit le dernier signe du sigle (3 px) est rendu au chevron : le sigle ne bouge pas */
 .toolbar .tb-brand.tb-switch:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
 .tbm-panel.tb-sw-panel { right: auto; }

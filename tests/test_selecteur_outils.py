@@ -156,7 +156,7 @@ def test_choosing_a_tool_shows_it_with_its_work_and_adds_one_entry_only(browser)
     assert top > 0
     pick(pg, dg, 'Flight Configurator')
     s = nav(pg)
-    assert s['active'] == 'fc' and s['shown'] == ['fc'] and s['state'] == {'mp': 1, 'tool': 'fc'} and s['hash'] == '#fc' and s['idx'] - base['idx'] <= 2
+    assert s['active'] == 'fc' and s['shown'] == ['fc'] and s['state'] == {'mp': 1, 'tool': 'fc'} and s['hash'] == '#fc' and s['idx'] - base['idx'] == 1
     fc = pg.query_selector('#iframe-fc').content_frame()
     pick(pg, fc, 'Route Planner')
     pick(pg, pg.query_selector('#iframe-rp').content_frame(), 'Datacard Generator')
@@ -237,12 +237,28 @@ def test_keyboard_and_mouse_and_the_more_menu(browser):
     assert not pg.errs
 
 
+GAP = """() => { const b = document.querySelector('.toolbar .tb-brand'); let n = b.nextElementSibling; while (n && getComputedStyle(n).display === 'none') n = n.nextElementSibling;
+    return Math.round((n.getBoundingClientRect().left - b.getBoundingClientRect().right) * 100) / 100; }"""
+
+
 @needs_pw
-def test_the_mark_adds_no_toolbar_step_at_1280(browser):
-    pg = shell(browser, 1280, 800, touch=False)
+@pytest.mark.parametrize('lang', ['fr', 'en'])
+def test_the_mark_adds_no_toolbar_step_at_1280(browser, lang):
+    pg = shell(browser, 1280, 800, touch=False, lang=lang)
     for tid in ORDER:
         fr = open_card(pg, tid, 1800)
         pg.wait_for_timeout(500)
         top = fr.evaluate("""() => { const bar = document.querySelector('.toolbar'); return bar.classList.contains('tb-st8') ? 8 : bar.classList.contains('tb-st7') ? 7 : [...bar.classList].filter(x => /^tb-st[1-6]$/.test(x)).length; }""")
         assert top <= BASE_STEPS_1280[tid], (tid, top)
+        assert fr.evaluate(GAP) >= 0.5, tid          # la zone de la marque ne chevauche pas l'élément suivant
+        to_wall(pg)
+
+
+@needs_pw
+def test_the_mark_does_not_overlap_the_next_element_on_a_tablet(browser):
+    pg = shell(browser, 820, 1180)
+    for tid in ORDER:
+        fr = open_card(pg, tid, 1800)
+        pg.wait_for_timeout(400)
+        assert fr.evaluate(GAP) >= 0.5, tid
         to_wall(pg)
