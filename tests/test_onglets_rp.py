@@ -283,6 +283,22 @@ def drag(pg, fr, dy):
     pg.wait_for_timeout(300)
 
 
+def reopen(pg):
+    """Recharge la page ; le shell rouvre l'outil par l'adresse. On attend que le Route Planner soit prêt et que sa carte ait cessé de bouger, sans durée fixe."""
+    pg.reload(wait_until='commit')
+    pg.wait_for_function("() => { const f = document.getElementById('iframe-rp'); return !!f && !!f.contentWindow && !!f.contentWindow.__RP && f.contentDocument.getElementById('rp-split'); }", timeout=90000)
+    fr = pg.query_selector('#iframe-rp').content_frame()
+    last, same = None, 0
+    for _ in range(80):
+        h = fr.evaluate("() => document.querySelector('.mapwrap').getBoundingClientRect().height")
+        same = same + 1 if h == last else 0
+        last = h
+        if same >= 4:
+            break
+        pg.wait_for_timeout(250)
+    return fr
+
+
 KEYS = "() => [localStorage.getItem('rp_split_v1'), localStorage.getItem('rp_split_land_v1')]"
 
 
@@ -297,26 +313,17 @@ def test_the_handle_drags_remembers_clamps_and_resets(browser, w, h, H, em, ep, 
     assert abs(m1 - (m0 + 40)) <= 1
     keys = fr.evaluate(KEYS)
     assert keys[key] is not None and abs(float(keys[key]) - m1) <= 1 and keys[1 - key] is None
-    pg.reload(wait_until='commit')                                        # elle survit à un rechargement : le shell rouvre l'outil
-    pg.wait_for_function("() => typeof window.MP_WORK_EXAMPLE === 'function'", timeout=60000)
-    pg.wait_for_timeout(2500)
-    fr = pg.query_selector('#iframe-rp').content_frame() if pg.query_selector('#iframe-rp') else open_card(pg, 'rp')
+    fr = reopen(pg)
     assert abs(fr.evaluate(GEOM)['map']['h'] - m1) <= 1
     # 9 999 : 85 % de H ; 50 : la borne basse
     fr.evaluate("(k) => { localStorage.setItem(k, '9999'); }", 'rp_split_v1' if key == 0 else 'rp_split_land_v1')
     fr.evaluate("() => window.dispatchEvent(new Event('resize'))")
     pg.wait_for_timeout(300)
     # la lecture de la clé se fait au chargement : on recharge l'outil
-    pg.reload(wait_until='commit')
-    pg.wait_for_function("() => typeof window.MP_WORK_EXAMPLE === 'function'", timeout=60000)
-    pg.wait_for_timeout(2500)
-    fr = pg.query_selector('#iframe-rp').content_frame() if pg.query_selector('#iframe-rp') else open_card(pg, 'rp')
+    fr = reopen(pg)
     assert abs(fr.evaluate(GEOM)['map']['h'] - 0.85 * H) <= 1
     fr.evaluate("(k) => { localStorage.setItem(k, '50'); }", 'rp_split_v1' if key == 0 else 'rp_split_land_v1')
-    pg.reload(wait_until='commit')
-    pg.wait_for_function("() => typeof window.MP_WORK_EXAMPLE === 'function'", timeout=60000)
-    pg.wait_for_timeout(2500)
-    fr = pg.query_selector('#iframe-rp').content_frame() if pg.query_selector('#iframe-rp') else open_card(pg, 'rp')
+    fr = reopen(pg)
     assert abs(fr.evaluate(GEOM)['map']['h'] - max(140 if key else 220, 0.25 * H)) <= 1
     # deux touchers : le partage du tableau, la clé effacée
     off = pg.evaluate("() => { const r = document.getElementById('iframe-rp').getBoundingClientRect(); return [r.left, r.top]; }")
