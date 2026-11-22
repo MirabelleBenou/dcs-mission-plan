@@ -456,13 +456,11 @@ def test_le_menu_dans_un_vrai_dom():
             ok = [i for i in m['items'] if i['dis'] != 'true' and i['icol']]
             assert ok, m
             pg.evaluate("() => { document.getElementById('btn-clear').disabled = false; }"); pg.wait_for_timeout(300)
-            # 2 : un toucher hors du menu le ferme sans agir ; Affichage et la sonde ne reçoivent pas le clic ; le toucher suivant agit
+            # 2 : « ⋯ » ouvert, un toucher sur un autre menu de la barre (Affichage) ferme « ⋯ » et ouvre ce menu, en un seul geste (son clic passe : ici il compte 1) ; la sonde, elle, ne reçoit pas le clic de fermeture
             if not pg.evaluate(panel):
                 pg.locator('.tb-more-btn').tap(); pg.wait_for_timeout(300)
             pg.locator('#btn-display').tap(); pg.wait_for_timeout(500)
-            assert not pg.evaluate(panel) and pg.evaluate(clicks)['display'] == 0, pg.evaluate(clicks)
-            pg.locator('#btn-display').tap(); pg.wait_for_timeout(300)
-            assert pg.evaluate(clicks)['display'] == 1
+            assert not pg.evaluate(panel) and pg.evaluate(clicks)['display'] == 1, pg.evaluate(clicks)
             pg.locator('.tb-more-btn').tap(); pg.wait_for_timeout(300)
             pg.locator('#probe').tap(); pg.wait_for_timeout(500)
             assert not pg.evaluate(panel) and pg.evaluate(clicks)['probe'] == 0
