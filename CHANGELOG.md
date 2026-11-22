@@ -16,7 +16,7 @@ Further down, *Before v2.0.0* keeps the history of each tool up to v1.24.0, when
 ### All tools
 
 **Build number on the hosted version**
-- Between two releases, the bottom of the home screen shows the build number, `MP-V2.1.0+5` for this one; a downloaded release shows none.
+- Between two releases, the bottom of the home screen shows the build number, `MP-V2.1.0+6` for this one; a downloaded release shows none.
 
 **Easier-to-read drop-down lists**
 - Their header, the chosen line and the line under the pointer have stronger contrast in every theme.
@@ -34,7 +34,7 @@ Further down, *Before v2.0.0* keeps the history of each tool up to v1.24.0, when
 
 **Easier to touch with a finger**
 - On a touch screen, every button, list and field is at least 44 px tall and wide; with a mouse nothing changes.
-- On a phone, fields use 16 px text, so the page no longer zooms in when you type (the Route Planner’s waypoint rows still use smaller text).
+- On a phone, fields use 16 px text, so the page no longer zooms in when you type (between 520 and 760 px wide, the Route Planner’s waypoint rows still use smaller text).
 
 **Greyed-out commands say why**
 - In the “⋯” menu, a command that cannot be used shows the reason under it, such as HQ’s Example when the Wing configuration is provided by another tool.
@@ -131,6 +131,10 @@ Further down, *Before v2.0.0* keeps the history of each tool up to v1.24.0, when
 
 **Map controls for the finger**
 - On a touch screen, zoom, search and the Point · Ref. · Read · Draw · Ruler modes are 44 px, and so is the handle between map and panel.
+
+**Tabs at the bottom on a phone**
+- On a phone or tablet, the map stays in view above the panel, which now has four tabs at the bottom of the screen — Route, Ref., Layers and Nav. — in the same bar as the Briefing and Datacard Generators; map and panel start at about half the screen each, and the handle still resizes them.
+- Below 520 px wide, a waypoint row takes two lines, the name on the first, altitude, speed and reference on the second; with a finger, its text is 16 px.
 
 ### Datacard Generator
 

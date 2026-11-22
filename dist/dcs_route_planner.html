@@ -1849,9 +1849,9 @@ html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-
 }
 .rp-drawing .leaflet-layers-pane, .rp-drawing .leaflet-layers-pane * { pointer-events: none !important; }
 
-/* la séparation carte / panneau : sous 1 100 px de large, dans toutes les orientations (la carte reste fixe, seul le panneau défile) */
+/* la séparation carte / panneau : jusqu'à 1 100 px de large, dans toutes les orientations (la carte reste fixe, seul le panneau défile) */
 .rp-split { display: none; }
-@media (max-width: 1099px) {
+@media (max-width: 1100px) {
   .app { grid-template-rows: auto 26px minmax(0, 1fr) !important; }
   .mapwrap { border-bottom: none !important; }
   .rp-split { display: flex; align-items: center; justify-content: center; height: 26px; cursor: row-resize; touch-action: none; user-select: none;
@@ -1944,14 +1944,26 @@ html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-
 .toolbar::after { right: 0; margin-left: calc(-1 * (var(--fade-w) + var(--fade-gap))); background: inherit; mask-image: linear-gradient(270deg, #000, transparent); -webkit-mask-image: linear-gradient(270deg, #000, transparent); }
 .toolbar.fade-l::before, .toolbar.fade-r::after { opacity: 1; }
 
-/* ---------- tablette, téléphone : sous 1 100 px de large, dans toutes les orientations, la page ne défile jamais : la carte reste en haut,
-   à sa hauteur, et seul le panneau, dessous, défile ---------- */
-@media (max-width: 1099px) {
-  .app { position: fixed; top: var(--mp-top, 60px); bottom: 0; left: 0; right: 0; padding-top: 0; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
-  .mapwrap { height: 58vh; min-height: 340px; min-width: 0; border-left: none; border-bottom: 2px solid var(--amber-dark); }
+/* ---------- tablette, téléphone : jusqu'à 1 100 px de large (le seuil de la barre d'onglets commune), dans toutes les orientations, la page ne défile jamais :
+   de haut en bas la carte (toujours visible), la poignée, le panneau, la barre d'onglets du bas (68 px, .ui-tabbar du bloc commun). La hauteur de la carte est posée par spSync (52 % de la place
+   entre le haut du contenu et la barre, moins la poignée, bornée) ; seul le panneau défile, et il montre la section de l'onglet ouvert, seule (data-active-tab sur le body) ---------- */
+@media (max-width: 1100px) {
+  .app { position: fixed; top: var(--mp-top, 60px); bottom: calc(68px + env(safe-area-inset-bottom, 0px)); left: 0; right: 0; padding-top: 0; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+  .mapwrap { height: 40vh; min-height: 0; min-width: 0; border-left: none; border-bottom: 2px solid var(--amber-dark); }
   .app > .panel { order: 0; }
   .panel { overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; min-height: 0; }
+  /* un onglet montre sa section, seule : ni en-tête, ni icône « Tout replier », le contenu toujours visible (même replié au grand écran : rp_folds_v1 n'est ni lu ni écrit ici) ;
+     la boîte reste en place, ses filets invisibles, pour que les largeurs des lignes soient celles d'aujourd'hui */
+  #panel > .ed-section { display: none; border-color: transparent; background: none; margin-bottom: 0; }
+  body[data-active-tab="route"] #panel > .ed-section[data-section="route"],
+  body[data-active-tab="refs"] #panel > .ed-section[data-section="refs"],
+  body[data-active-tab="layers"] #panel > .ed-section[data-section="layers"],
+  body[data-active-tab="nav"] #panel > .ed-section[data-section="nav"] { display: block; }
+  #panel > .ed-section > .ui-fa-box { display: none; }
+  #panel > .ed-section > .ed-body { display: block; }
 }
+/* « Calques » sans calque : la note qui dit comment en avoir, et pas de « Retirer tous les calques » */
+#layers-empty[hidden], #btn-layers-clear[hidden] { display: none; }
 @media (max-width: 520px) {
   .pt-row, .pt-head { grid-template-columns: 28px 1fr 62px 80px 30px; gap: 4px; }
   .pt-row.pts, .pt-head.pts { grid-template-columns: 28px minmax(0, 1fr) 62px 54px 64px 30px; }
@@ -1960,6 +1972,29 @@ html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-
   .panel { padding: 10px; }
   table.nav { font-size: 11px; }
   .tb-btn { padding: 0 8px; min-width: 40px; }
+}
+/* sous 520 px la ligne de point (.pt-row.pts et son en-tête seulement) passe sur deux lignes : le nom en haut, entre le n° et ✕ ; dessous l'altitude, la vitesse et la référence en trois colonnes égales ;
+   le n° et ✕ font 44 px de large et prennent les deux lignes ; un filet pointillé sépare deux points. La ligne des points de référence ne change pas. */
+@media (max-width: 519.98px) {
+  .pt-row.pts, .pt-head.pts { grid-template-columns: 44px repeat(3, minmax(0, 1fr)) 44px; gap: 4px; }
+  .pt-row.pts > .pt-num { grid-column: 1; grid-row: 1 / span 2; height: auto; align-self: stretch; }
+  .pt-row.pts > .pt-del { grid-column: 5; grid-row: 1 / span 2; height: auto; align-self: stretch; }
+  .pt-row.pts > input[data-k="name"] { grid-column: 2 / span 3; grid-row: 1; }
+  .pt-row.pts > input[data-k="alt"] { grid-column: 2; grid-row: 2; }
+  .pt-row.pts > input[data-k="gs"] { grid-column: 3; grid-row: 2; }
+  .pt-row.pts > .tbm-trigger { grid-column: 4; grid-row: 2; }
+  .pt-row.pts + .pt-row.pts { border-top: 1px dashed var(--khaki); padding-top: 6px; }
+  .pt-head.pts > :nth-child(1) { grid-column: 1; grid-row: 1; }
+  .pt-head.pts > :nth-child(2) { grid-column: 2 / span 3; grid-row: 1; }
+  .pt-head.pts > :nth-child(3) { grid-column: 2; grid-row: 2; }
+  .pt-head.pts > :nth-child(4) { grid-column: 3; grid-row: 2; }
+  .pt-head.pts > :nth-child(5) { grid-column: 4; grid-row: 2; }
+  .pt-head.pts > :nth-child(6) { grid-column: 5; grid-row: 1; }
+}
+/* sous 520 px la ligne de point passe sur deux lignes : au doigt, le texte de ses champs et de sa liste est à 16 px (la page ne zoome plus pendant la saisie) ; la ligne des points de référence garde le sien */
+@media (pointer: coarse) and (max-width: 519.98px) {
+  .pt-row.pts .in { font-size: 16px !important; }
+  .pt-row.pts select.in, .pt-row.pts .in.tbm-trigger { font-size: 16px !important; }
 }
 
 /* ---------- au doigt : 44 px (le bloc d'interface commun pose min-height et min-width à spécificité zéro ; ce que ce module disait plus bas l'emporte et se corrige ici, sous la même condition) ---------- */
@@ -1971,11 +2006,11 @@ html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-
   .pt-num, .pt-del { min-width: 0; }                                /* la ligne de point se redessine plus tard : hauteur de 44 px, largeurs de la base (n° et ✕ restent sous 44 de large) */
 }
 /* la poignée entre la carte et le panneau : 44 px de haut, son trait au centre (flex), inchangé */
-@media (pointer: coarse) and (max-width: 1099px) {
+@media (pointer: coarse) and (max-width: 1100px) {
   .app { grid-template-rows: auto 44px minmax(0, 1fr) !important; }
   .rp-split { height: 44px; }
 }
-/* jusqu'à 759 px les champs de la ligne de point gardent la taille de texte de la base : les 16 px de la suite n'y tiendraient pas à côté des colonnes fixes (un nom serait coupé) */
+/* de 520 à 759 px les champs de la ligne de point gardent la taille de texte de la base : les 16 px de la suite n'y tiendraient pas à côté des colonnes fixes (un nom serait coupé) ; sous 520 px la ligne est sur deux lignes (plus bas) */
 @media (pointer: coarse) and (max-width: 759px) {
   .pt-row .in { font-size: 13px !important; }
   .pt-row select.in, .pt-row .in.tbm-trigger { font-size: 12px !important; }
@@ -2348,6 +2383,7 @@ SOFTWARE.
     <div class="ed-section" data-section="layers" id="sec-layers" data-open="false" hidden>
       <div class="ui-fa-box"><button type="button" class="ed-head ui-fold-head" aria-expanded="false"><span class="ed-title" data-i18n="sec.layers">Calques</span><small id="layers-count"></small></button></div>
       <div class="ed-body">
+        <p class="ui-note" id="layers-empty" data-i18n="layers.empty" hidden>Aucun calque. Ouvrir ▾ › Ouvrir une route ou des calques… lit un fichier CombatFlite ; le mode Dessin crée les vôtres.</p>
         <div id="layers-list"></div>
         <button type="button" class="tb-btn cf-clear" id="btn-layers-clear" data-i18n="layers.removeAll">Retirer tous les calques</button>
         <p class="ui-note" data-i18n="layers.help">En mode Lire, touchez un objet pour lire sa fiche. En mode Point ou Réf., une cible touchée devient un point de la route ou une référence. En mode Dessin, vous créez et modifiez vos propres calques.</p>
@@ -2394,6 +2430,14 @@ SOFTWARE.
     </div>
   </aside>
 </main>
+
+<!-- ===== ONGLETS DU PANNEAU (jusqu'à 1 100 px) : la barre du bas est celle du bloc d'interface commun (ui_block.py, .ui-tabbar) ===== -->
+<nav class="ui-tabbar" id="tab-bar" role="tablist" data-i18n-aria-label="tab.bar.aria" aria-label="Panneau du Route Planner">
+  <button type="button" data-tab="route" role="tab" aria-selected="false"><span class="tab-ico">⟿</span><span data-i18n="tab.route">Route</span></button>
+  <button type="button" data-tab="refs" role="tab" aria-selected="false"><span class="tab-ico">◆</span><span data-i18n="tab.refs">Réf.</span></button>
+  <button type="button" data-tab="layers" role="tab" aria-selected="false"><span class="tab-ico">▧</span><span data-i18n="tab.layers">Calques</span></button>
+  <button type="button" data-tab="nav" role="tab" aria-selected="false"><span class="tab-ico">🧭</span><span data-i18n="tab.nav">Nav.</span></button>
+</nav>
 
 <!-- ===== FENÊTRE : OUVRIR UNE ROUTE DU ROUTE TOOL ===== -->
 <div class="ui-modal" id="rt-open-modal" hidden role="dialog" aria-modal="true" aria-labelledby="rt-open-title">
@@ -3165,6 +3209,12 @@ const I18N = {
     'layers.count.n': '{n} calques',
     'layers.remove': 'Retirer ce calque',
     'layers.removeAll': 'Retirer tous les calques',
+    'layers.empty': 'Aucun calque. Ouvrir ▾ › Ouvrir une route ou des calques… lit un fichier CombatFlite ; le mode Dessin crée les vôtres.',
+    'tab.bar.aria': 'Panneau du Route Planner',
+    'tab.route': 'Route',
+    'tab.refs': 'Réf.',
+    'tab.layers': 'Calques',
+    'tab.nav': 'Nav.',
     'layers.help': 'En mode Lire, touchez un objet pour lire sa fiche. En mode Point ou Réf., une cible touchée devient un point de la route ou une référence. En mode Dessin, vous créez et modifiez vos propres calques.',
     'confirm.layer.title': 'Retirer le calque « {name} » ?',
     'confirm.layer.text': 'Ses éléments seront retirés de la carte. Cela ne se défait pas.',
@@ -3700,6 +3750,12 @@ const I18N = {
     'layers.count.n': '{n} layers',
     'layers.remove': 'Remove this layer',
     'layers.removeAll': 'Remove all layers',
+    'layers.empty': 'No layers. Open ▾ › Open a route or layers… reads a CombatFlite file; Draw mode creates your own.',
+    'tab.bar.aria': 'Route Planner panel',
+    'tab.route': 'Route',
+    'tab.refs': 'Ref.',
+    'tab.layers': 'Layers',
+    'tab.nav': 'Nav.',
     'layers.help': 'In Read mode, tap an item to read it. In Waypoint or Ref. mode, a tapped target becomes a waypoint or a reference point. In Draw mode, you create and edit your own layers.',
     'confirm.layer.title': 'Remove layer “{name}”?',
     'confirm.layer.text': 'Its items will be removed from the map. This cannot be undone.',
@@ -7352,10 +7408,10 @@ function createMap() {
   window.addEventListener('resize', onSize);
 }
 
-/* Sous 1 100 px de large (la page ne défile jamais), un champ du panneau qui prend le focus est amené en vue dans le panneau, y compris
+/* Jusqu'à 1 100 px de large (la page ne défile jamais), un champ du panneau qui prend le focus est amené en vue dans le panneau, y compris
    après le redimensionnement du viewport visuel (clavier virtuel) ; la hauteur de la carte pendant le clavier : voir spKbCheck */
 function revealPanelField(el) {
-  if (!window.matchMedia || !window.matchMedia('(max-width: 1099px)').matches) return;
+  if (!window.matchMedia || !window.matchMedia('(max-width: 1100px)').matches) return;
   const go = () => { try { el.scrollIntoView({ block: 'center', inline: 'nearest' }); } catch (e) { /* ignore */ } };
   go();
   const vv = window.visualViewport;
@@ -9546,24 +9602,28 @@ function drInit() {
   });
 }
 
-/* ============= LA SÉPARATION CARTE / PANNEAU (sous 1 100 px de large) =============
-   La carte reste fixe dans toutes les orientations (la page ne défile jamais, le panneau défile seul) ; deux mémoires : en portrait (sous 1 100 px
-   de large, à partir de 600 px de haut ou toute fenêtre plus haute que large : le clavier virtuel ne la fait pas changer de mémoire) la clé
-   rp_split_v1, bornée à partir de 220 px ; en paysage bas la clé rp_split_land_v1, bornée à partir de 140 px ; dans les deux cas la borne haute
-   est 85 % de la hauteur de la fenêtre moins la barre du haut (sa hauteur, lue sur la barre). Pendant le clavier virtuel (un champ du panneau a le focus et la fenêtre
-   a perdu plus de 120 px), la carte passe à sa borne basse, sans rien écrire en mémoire. */
+/* ============= LA SÉPARATION CARTE / PANNEAU (jusqu'à 1 100 px de large) =============
+   La carte reste fixe dans toutes les orientations (la page ne défile jamais, le panneau défile seul) ; de haut en bas : la carte, la poignée, le panneau, la barre d'onglets du bas.
+   H est la place entre le haut du contenu (#app : sous la barre du haut et la ligne de la mission d'HQ) et le haut de la barre d'onglets, moins la poignée. Départ : la carte prend 52 % de H ;
+   les bornes se comptent sur ce même H : au moins le plus grand de 220 px (140 en paysage) et de 25 % de H, au plus 85 % de H ; le départ est borné de même. Deux mémoires : en portrait (jusqu'à 1 100 px
+   de large, à partir de 600 px de haut ou toute fenêtre plus haute que large : le clavier virtuel ne la fait pas changer de mémoire) la clé rp_split_v1 ; en paysage bas la clé rp_split_land_v1.
+   Pendant le clavier virtuel (un champ du panneau a le focus et la fenêtre a perdu plus de 120 px), la carte passe à sa borne basse, sans rien écrire en mémoire. */
 const KEY_SPLIT = 'rp_split_v1';
 const KEY_SPLIT_LAND = 'rp_split_land_v1';
-const SP_MIN = 220, SP_MIN_LAND = 140, SP_MIN_F = 0.25, SP_MAX_F = 0.85, SP_STEP = 40, SP_DBL_MS = 350, SP_KB_DROP = 120;
+const SP_MIN = 220, SP_MIN_LAND = 140, SP_MIN_F = 0.25, SP_MAX_F = 0.85, SP_DEF_F = 0.52, SP_STEP = 40, SP_DBL_MS = 350, SP_KB_DROP = 120;
 function spTopbar() { const a = document.getElementById('app'); return (a && a.getBoundingClientRect().top) || 60; }   /* le haut du contenu, lu sur le contenu : la barre (60 px) et, quand elle est là, la ligne de la mission d'HQ (--mp-top) */
-const SP_PORTRAIT_MQ = '(max-width: 1099px) and ((min-height: 600px) or (orientation: portrait))';
+const SP_PORTRAIT_MQ = '(max-width: 1100px) and ((min-height: 600px) or (orientation: portrait))';
 const SP = { el: null, wrap: null, mq: null, port: null, h: null, hl: null, drag: null, raf: 0, want: 0, last: 0, kb: false, vh: 0 };
 
 function spLand() { return !SP.port.matches; }
 function spGet() { return spLand() ? SP.hl : SP.h; }
 function spPut(h) { if (spLand()) SP.hl = h; else SP.h = h; }
+function spPlace() {      /* H : #app va du haut du contenu au haut de la barre d'onglets ; on retire la poignée */
+  const a = document.getElementById('app');
+  return Math.max(0, (a ? a.getBoundingClientRect().height : window.innerHeight - spTopbar()) - (SP.el ? SP.el.getBoundingClientRect().height : 0));
+}
 function spBounds() {
-  const H = window.innerHeight - spTopbar();
+  const H = spPlace();
   return [Math.max(spLand() ? SP_MIN_LAND : SP_MIN, SP_MIN_F * H), SP_MAX_F * H];
 }
 function spClamp(h) { const b = spBounds(); return Math.max(b[0], Math.min(b[1], h)); }
@@ -9596,12 +9656,12 @@ function spLoad(key) {
   return null;
 }
 
-/* Sous 1 100 px de large : la hauteur retenue de la mise en page courante, bornée, ou sa hauteur d'origine ; au-dessus : celle de la base */
+/* Jusqu'à 1 100 px de large : la hauteur retenue de la mise en page courante, bornée, ou le partage de départ (52 % de H, borné) ; au-dessus : celle de la base */
 function spSync() {
   if (!SP.el) return;
   const h = spGet();
   if (SP.mq.matches && SP.kb) spApply(spBounds()[0]);      /* clavier virtuel : la borne basse, rien en mémoire */
-  else if (SP.mq.matches && h != null) spApply(spClamp(h));
+  else if (SP.mq.matches) spApply(spClamp(h != null ? h : SP_DEF_F * spPlace()));
   else spClear();
 }
 
@@ -9626,17 +9686,17 @@ function spSet(h) {
   spSave();
 }
 
-function spReset() {
+function spReset() {      /* le partage de départ, la mémoire de cette orientation effacée */
   spPut(null);
-  spClear();
   spForget();
+  spSync();
 }
 
 function spInit() {
   SP.el = $('rp-split');
   SP.wrap = document.querySelector('.mapwrap');
   if (!SP.el || !SP.wrap) return;
-  SP.mq = window.matchMedia('(max-width: 1099px)');
+  SP.mq = window.matchMedia('(max-width: 1100px)');
   SP.port = window.matchMedia(SP_PORTRAIT_MQ);
   SP.h = spLoad(KEY_SPLIT);
   SP.hl = spLoad(KEY_SPLIT_LAND);
@@ -9684,7 +9744,27 @@ function spInit() {
   const onChange = () => { spKbCheck(); spSync(); };
   [SP.mq, SP.port].forEach(m => { if (m.addEventListener) m.addEventListener('change', onChange); else if (m.addListener) m.addListener(onChange); });
   window.addEventListener('resize', onChange);
+  const app = document.getElementById('app');
+  if (app && window.ResizeObserver) new ResizeObserver(() => spSync()).observe(app);      /* l'outil redevient visible dans le shell, la ligne de la mission d'HQ paraît : le partage se refait */
   spSync();
+}
+
+/* ============= LES ONGLETS DU PANNEAU (jusqu'à 1 100 px) =============
+   La barre du bas est celle du bloc commun (ui_block.py) ; un onglet montre sa section, seule (les règles sont dans le CSS, sur body[data-active-tab]). L'onglet ouvert vit en mémoire, rien n'est écrit :
+   l'outil reste chargé dans le shell, on le retrouve au retour ; au chargement, Route. Un mode de toucher de la carte ne change jamais l'onglet, et l'inverse. */
+const RP_TABS = ['route', 'refs', 'layers', 'nav'];
+function rpSetTab(id) {
+  if (RP_TABS.indexOf(id) < 0) id = RP_TABS[0];
+  const changed = document.body.dataset.activeTab !== id;
+  document.body.dataset.activeTab = id;
+  uiTabsMark(id);
+  const p = document.getElementById('panel');
+  if (changed && p) p.scrollTop = 0;
+}
+function rpTabsInit() {
+  document.querySelectorAll('#tab-bar [role="tab"]').forEach(b => b.addEventListener('click', () => rpSetTab(b.dataset.tab)));
+  rpSetTab('route');
+  initToastPlace();      /* le toast se pose 12 px au-dessus de la barre (C6) */
 }
 
 /* ============= PANNEAU ============= */
@@ -13651,6 +13731,8 @@ function layersChanged() {
 function renderLayers() {
   const n = CF_LAYERS.length;
   $('sec-layers').hidden = !n;
+  $('layers-empty').hidden = n > 0;                     /* jusqu'à 1 100 px l'onglet Calques est toujours là : sans calque, la note dit comment en avoir */
+  $('btn-layers-clear').hidden = n === 0;
   $('layers-count').textContent = t(n === 1 ? 'layers.count.1' : 'layers.count.n', { n: n });
   rpFoldRefresh();
   $('layers-list').innerHTML = CF_LAYERS.map(l =>
@@ -15453,6 +15535,7 @@ function init() {
   rpFoldInit();
   drInit();
   spInit();
+  rpTabsInit();
   renderAll();
   adoptNotice(gsAdoptRoutes({}));      /* les routes que des groupes de la fiche portent déjà, avant le cadrage */
   drawLayers();

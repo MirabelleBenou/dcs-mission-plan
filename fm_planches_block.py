@@ -1869,11 +1869,10 @@ def _rp_tall(P):
     # la poignée entre la carte et le panneau
     o.append(f'<rect x="{X0}" y="{MB + 2}" width="{w}" height="12" fill="none" stroke="currentColor" stroke-width=".6" opacity=".35"/>')
     o.append(f'<path d="M{_n(X0 + w / 2 - 14)},{MB + 6} h28 M{_n(X0 + w / 2 - 14)},{MB + 10} h28" stroke="currentColor" stroke-width="1.1" opacity=".7"/>')
-    # ── le panneau, qui seul défile ─────────────────────────────────────────────
+    # ── le panneau : l'onglet Route, une section seule (ni en-tête « 01 Route », ni icône « Tout replier »), qui seul défile ──
     PT = MB + 20
     a, aw = X0 + 8, w - 16
-    o += _rp_route_head(P, X0, PT, w)
-    y1 = PT + 30
+    y1 = PT + 10
     o += _rp_route_select(P, a, y1, aw)
     o.append(P.text(a, y1 + 28, 8, L('rp', 'rs.count', args={'a': '1', 'n': '1'}), anchor='start', op=.65))
     y2 = y1 + 36
@@ -1883,10 +1882,20 @@ def _rp_tall(P):
     o.append(P.text(a + 48, y3, 8.5, D('CAESAR'), anchor='start'))
     y4 = y3 + 6
     o.append(P.btn(a, y4, aw, 16, [L('rp', 'rs.assign')]))
-    PE = y4 + 30
-    # le panneau continue : bords ouverts en pointillé
-    o.append(f'<path d="M{X0},{_n(PE)} V{PT} H{X1} V{_n(PE)}" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".8"/>')
-    o.append(f'<line x1="{X0}" y1="{_n(PE)}" x2="{X1}" y2="{_n(PE)}" stroke="currentColor" stroke-width="1" stroke-dasharray="3 3" opacity=".5"/>')
+    TT = y4 + 28      # le bas du panneau touche le haut de la barre d'onglets
+    o.append(f'<path d="M{X0},{_n(TT)} V{PT} H{X1} V{_n(TT)}" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".8"/>')
+    # ── la barre d'onglets : quatre onglets de même largeur, pictogramme au-dessus, Route courant ──
+    o.append(sv_box(X0, TT, w, 40))
+    tabs = (('⟿', 'tab.route', True), ('◆', 'tab.refs', False), ('▧', 'tab.layers', False), ('⌖', 'tab.nav', False))
+    tw, tx = w / len(tabs), X0
+    for g, key, cur in tabs:
+        cx = tx + tw / 2
+        if cur:
+            o.append(f'<rect x="{_n(tx + 2)}" y="{_n(TT + 3)}" width="{_n(tw - 4)}" height="34" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/>')
+        o.append(P.text(cx, TT + 16, 9, D(g)))
+        o.append(P.text(cx, TT + 31, 8, L('rp', key)))
+        tx += tw
+    PE = TT + 40
     # ── les bulles ──────────────────────────────────────────────────────────────
     o.append(P.bubble(11, 30, anc['loupe'][1], X0, anc['loupe'][1]))
     o.append(P.bubble(12, 330, anc['modes'][1], anc['modes'][0], anc['modes'][1]))
@@ -1894,6 +1903,7 @@ def _rp_tall(P):
     o.append(P.bubble(13, 330, anc['route'][1], anc['route'][0], anc['route'][1]))
     o.append(P.bubble(6, 30, y1 + 8, a, y1 + 8))
     o.append(P.bubble(7, 30, y4 + 8, a, y4 + 8))
+    o.append(P.bubble(10, 30, TT + 20, X0, TT + 20))
     o.append('</g>')
     o.append('</svg>')
     o[0] = P.svg_open('pl-tall', W, PE + 12 + 12, 'L’écran du Route Planner au téléphone, une route ouverte', 'The Route Planner screen on a phone, with a route open', 'rpt')
@@ -1930,8 +1940,8 @@ def _rp_legend_rows():
          'place un point par ses coordonnées (MGRS, DMS, DDM ou décimal) ou par cap et distance depuis le dernier point ; + Réf. en fait un point de référence.',
          'places a waypoint by its coordinates (MGRS, DMS, DDM or decimal) or by heading and distance from the last waypoint; + Ref. makes it a reference point.'),
         (10, [M('Les autres sections', 'The other sections')],
-         ['Points de référence, Calques, Navigation. L’icône à droite d’un en-tête, « ', L('rp', 'ui.foldall'), ' » ou « ', L('rp', 'ui.unfoldall'), ' », replie toutes les sections ou les déplie toutes. Voir plus bas.'],
-         ['Reference points, Layers, Navigation. The icon at the right of a header, “', L('rp', 'ui.foldall'), '” or “', L('rp', 'ui.unfoldall'), '”, folds all the sections or unfolds them all. See below.']),
+         ['Points de référence, Calques, Navigation. L’icône à droite d’un en-tête, « ', L('rp', 'ui.foldall'), ' » ou « ', L('rp', 'ui.unfoldall'), ' », replie toutes les sections ou les déplie toutes. Voir plus bas. Au téléphone et à la tablette, chaque section a son onglet au bas de l’écran.'],
+         ['Reference points, Layers, Navigation. The icon at the right of a header, “', L('rp', 'ui.foldall'), '” or “', L('rp', 'ui.unfoldall'), '”, folds all the sections or unfolds them all. See below. On a phone or tablet, each section has its own tab at the bottom of the screen.']),
         (11, [L('rp', 'sr.title')],
          'la loupe cherche un lieu ou un objet nommé.',
          'the magnifier looks for a named place or object.'),

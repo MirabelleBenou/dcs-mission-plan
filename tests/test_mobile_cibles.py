@@ -22,7 +22,7 @@ SHELL = 'file://' + str(ROOT / 'dist' / 'dcs_mission_plan.html')
 
 TEXT_TOUCH = ("**Easier to touch with a finger**\n"
               "- On a touch screen, every button, list and field is at least 44 px tall and wide; with a mouse nothing changes.\n"
-              "- On a phone, fields use 16 px text, so the page no longer zooms in when you type (the Route Planner’s waypoint rows still use smaller text).\n")
+              "- On a phone, fields use 16 px text, so the page no longer zooms in when you type (between 520 and 760 px wide, the Route Planner’s waypoint rows still use smaller text).\n")
 TEXT_WHY = ("**Greyed-out commands say why**\n"
             "- In the “⋯” menu, a command that cannot be used shows the reason under it, such as HQ’s Example when the Wing configuration is provided by another tool.\n")
 TEXT_HOME = ("### Home screen\n\n"
@@ -30,6 +30,9 @@ TEXT_HOME = ("### Home screen\n\n"
              "- What does not fit, theme and language, moves into a “⋯” menu at its right end, as in the tools; the theme name is no longer cut.\n")
 TEXT_RP = ("**Map controls for the finger**\n"
            "- On a touch screen, zoom, search and the Point · Ref. · Read · Draw · Ruler modes are 44 px, and so is the handle between map and panel.\n")
+TEXT_RP_TABS = ("**Tabs at the bottom on a phone**\n"
+                "- On a phone or tablet, the map stays in view above the panel, which now has four tabs at the bottom of the screen — Route, Ref., Layers and Nav. — in the same bar as the Briefing and Datacard Generators; map and panel start at about half the screen each, and the handle still resizes them.\n"
+                "- Below 520 px wide, a waypoint row takes two lines, the name on the first, altitude, speed and reference on the second; with a finger, its text is 16 px.\n")
 
 
 def _unreleased():
@@ -49,16 +52,16 @@ def test_the_changelog_says_what_the_lot_says_where_it_says_it():
     assert (TEXT_TOUCH + '\n' + TEXT_WHY.rstrip('\n')) in all_tools and all_tools.index(TEXT_TOUCH) < all_tools.index(TEXT_WHY)       # le lot mp-mobile-selecteur ajoute son entrée après celle-ci
     assert '\n' + TEXT_HOME in u and u.count(TEXT_HOME) == 1
     rp = _section(u, 'Route Planner')
-    assert rp.rstrip('\n').endswith(TEXT_RP.rstrip('\n'))
+    assert rp.rstrip('\n').endswith((TEXT_RP + '\n' + TEXT_RP_TABS).rstrip('\n'))                 # l'entrée du lot mp-mobile-rp-onglets suit aussitôt celle-ci et termine la rubrique
     assert u.count(TEXT_TOUCH) == 1 and u.count(TEXT_WHY) == 1 and u.count(TEXT_RP) == 1
 
 
-def test_the_dev_build_is_5_and_the_changelog_says_so():
+def test_the_dev_build_is_6_and_the_changelog_says_so():
     import version_block
-    assert version_block.DEV_BUILD == 5
+    assert version_block.DEV_BUILD == 6
     log = (ROOT / 'CHANGELOG.md').read_text(encoding='utf-8')
     assert '`MP-V2.1.0+3` is the third update since 2.1.0' in log          # la phrase d'en-tête, que le lot ne touche pas
-    assert 'for this one;' in log and '`MP-V2.1.0+5` for this one' in log
+    assert 'for this one;' in log and '`MP-V2.1.0+6` for this one' in log
 
 
 def test_the_common_stylesheet_has_the_finger_rules_under_coarse_pointers_only():
