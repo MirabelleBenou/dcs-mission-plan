@@ -24,6 +24,10 @@ BASE_STEPS_1280 = {'hq': 1, 'bg': 1, 'rs': 0, 'rp': 1, 'dg': 1, 'fc': 1, 'fm': 0
 
 CHANGELOG_ENTRY = ("**Switch tools from the toolbar**\n"
                    "- The tool’s name or abbreviation at the start of the toolbar, with ▾, opens the list of tools in the home screen’s order, the open one marked; one more touch opens another tool, which keeps its work.")
+ENTRY_TABS = ("**Seven tabs at the bottom on a phone**\n"
+              "- In the Briefing Generator and the Datacard Generator, the editor’s tabs all fit at the bottom of the screen, seven of the same width, in both formats of the briefing; a tab that groups several sections shows each of them, foldable, without repeating its title.")
+ENTRY_TOUCHES = ("**Switching tools: finishing touches**\n"
+                 "- With the list of tools or “⋯” open, a touch on another menu of the toolbar opens it; the tool’s name follows a language change at once and screen readers hear the name shown.")
 FM_FR = ("Le nom de l’outil, ou son sigle, au début de la barre, ouvre la liste des outils (▾), dans l’ordre de l’accueil, l’outil ouvert marqué : un toucher de plus ouvre un autre outil, qui garde son travail. "
          "En tête de la liste, **◄ Mission Plan** ramène à l’accueil.")
 FM_EN = ("The tool’s name, or its abbreviation, at the start of the bar opens the list of tools (▾), in the home screen’s order, the open tool marked: one more touch opens another tool, which keeps its work. "
@@ -35,8 +39,8 @@ def test_texts_are_where_the_lot_says():
     log = (ROOT / 'CHANGELOG.md').read_text(encoding='utf-8')
     unreleased = log.split('\n## Unreleased\n', 1)[1].split('\n## ', 1)[0]
     all_tools = unreleased.split('\n### All tools\n', 1)[1].split('\n### ', 1)[0].rstrip('\n')
-    assert all_tools.endswith('\n\n' + CHANGELOG_ENTRY)
-    assert 'MP-V2.1.0+4` for this one' in all_tools and 'MP-V2.1.0+3' not in all_tools
+    assert all_tools.endswith('\n\n' + CHANGELOG_ENTRY + '\n\n' + ENTRY_TABS + '\n\n' + ENTRY_TOUCHES)       # le lot mp-mobile-onglets ajoute ses deux entrées après celle-ci
+    assert 'MP-V2.1.0+5` for this one' in all_tools and 'MP-V2.1.0+3' not in all_tools
     fm = (ROOT / 'build_field_manual.py').read_text(encoding='utf-8')
     i = fm.index('"La barre du haut", "The top bar"')
     j = fm.index('"Lire ce manuel au téléphone"', i)
@@ -44,8 +48,8 @@ def test_texts_are_where_the_lot_says():
     assert seg.count(FM_FR) == 1 and seg.count(FM_EN) == 1
     assert seg.index(FM_BACK_FR) < seg.index(FM_FR) and seg.index('On a phone, the back gesture') < seg.index(FM_EN)
     assert seg[seg.index(FM_BACK_FR):seg.index(FM_FR)].count("('p',") == 1            # le paragraphe neuf suit aussitôt celui du geste retour
-    assert re.search(r'^DEV_BUILD = 4$', (ROOT / 'version_block.py').read_text(encoding='utf-8'), re.M)
-    assert 'MP-V2.1.0+4' in (ROOT / 'dist' / 'dcs_mission_plan.html').read_text(encoding='utf-8')
+    assert re.search(r'^DEV_BUILD = 5$', (ROOT / 'version_block.py').read_text(encoding='utf-8'), re.M)
+    assert 'MP-V2.1.0+5' in (ROOT / 'dist' / 'dcs_mission_plan.html').read_text(encoding='utf-8')
 
 
 @pytest.fixture(scope='module')
@@ -113,10 +117,10 @@ def test_the_mark_is_a_button_and_the_list_fits_without_scrolling(browser):
     for tid in ORDER:
         fr = open_card(pg, tid)
         b = fr.evaluate("""() => { const e = document.querySelector('.toolbar .tb-brand'), r = e.getBoundingClientRect(), bar = document.querySelector('.toolbar').getBoundingClientRect();
-            return { role: e.getAttribute('role'), hp: e.getAttribute('aria-haspopup'), ex: e.getAttribute('aria-expanded'), name: e.getAttribute('aria-label'), title: e.title, tab: e.tabIndex, h: r.height,
+            return { vis: [...e.children].filter(c => getComputedStyle(c).display !== 'none').map(c => c.textContent.trim()).join(' '), role: e.getAttribute('role'), hp: e.getAttribute('aria-haspopup'), ex: e.getAttribute('aria-expanded'), name: e.getAttribute('aria-label'), title: e.title, tab: e.tabIndex, h: r.height,
                      inside: r.left >= bar.left && r.right <= bar.right, over: document.querySelector('.toolbar').classList.contains('tb-over'), sw: [document.querySelector('.toolbar').scrollWidth, document.querySelector('.toolbar').clientWidth],
                      prev: e.previousElementSibling && e.previousElementSibling.className } }""")
-        assert b['role'] == 'button' and b['hp'] == 'menu' and b['ex'] == 'false' and b['name'] == 'Changer d’outil' and b['title'] == 'Changer d’outil' and b['tab'] == 0, (tid, b)
+        assert b['role'] == 'button' and b['hp'] == 'menu' and b['ex'] == 'false' and b['name'] == b['vis'] + ', changer d’outil' and b['title'] == 'Changer d’outil' and b['tab'] == 0, (tid, b)
         assert b['h'] >= 43.99 and b['inside'] and not b['over'] and b['sw'][0] <= b['sw'][1], (tid, b)
         fr.locator('.toolbar .tb-brand').tap()
         pg.wait_for_timeout(350)
@@ -148,7 +152,7 @@ def test_choosing_a_tool_shows_it_with_its_work_and_adds_one_entry_only(browser)
     dg = pg.query_selector('#iframe-dg').content_frame()
     dg.locator('[data-path="meta.operation"]').fill('OPERATION TEST 42')
     dg.evaluate("() => document.querySelector('[data-path=\"meta.operation\"]').dispatchEvent(new Event('change', { bubbles: true }))")
-    dg.evaluate("() => document.querySelectorAll('#tab-bar [role=tab]')[6].click()")
+    dg.evaluate("() => document.querySelectorAll('#tab-bar [role=tab]')[3].click()")
     pg.wait_for_timeout(400)
     dg.evaluate("() => { document.getElementById('editor').scrollTop = 300; }")
     pg.wait_for_timeout(250)
@@ -162,7 +166,7 @@ def test_choosing_a_tool_shows_it_with_its_work_and_adds_one_entry_only(browser)
     pick(pg, pg.query_selector('#iframe-rp').content_frame(), 'Datacard Generator')
     dg = pg.query_selector('#iframe-dg').content_frame()
     assert dg.evaluate("() => document.querySelector('[data-path=\"meta.operation\"]').value") == 'OPERATION TEST 42'
-    assert dg.evaluate("() => [Math.round(document.getElementById('editor').scrollTop), [...document.querySelectorAll('#tab-bar [role=tab]')].findIndex(t => t.classList.contains('current'))]") == [top, 6]
+    assert dg.evaluate("() => [Math.round(document.getElementById('editor').scrollTop), [...document.querySelectorAll('#tab-bar [role=tab]')].findIndex(t => t.classList.contains('current'))]") == [top, 3]
     # la ligne de l'outil ouvert ne fait que fermer ; liste ouverte, le retour ne ferme qu'elle
     idx0 = nav(pg)['idx']
     pick(pg, dg, 'Datacard Generator')

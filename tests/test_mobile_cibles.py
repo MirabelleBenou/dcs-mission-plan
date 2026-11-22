@@ -53,12 +53,12 @@ def test_the_changelog_says_what_the_lot_says_where_it_says_it():
     assert u.count(TEXT_TOUCH) == 1 and u.count(TEXT_WHY) == 1 and u.count(TEXT_RP) == 1
 
 
-def test_the_dev_build_is_4_and_the_changelog_says_so():
+def test_the_dev_build_is_5_and_the_changelog_says_so():
     import version_block
-    assert version_block.DEV_BUILD == 4
+    assert version_block.DEV_BUILD == 5
     log = (ROOT / 'CHANGELOG.md').read_text(encoding='utf-8')
     assert '`MP-V2.1.0+3` is the third update since 2.1.0' in log          # la phrase d'en-tête, que le lot ne touche pas
-    assert 'for this one;' in log and '`MP-V2.1.0+4` for this one' in log
+    assert 'for this one;' in log and '`MP-V2.1.0+5` for this one' in log
 
 
 def test_the_common_stylesheet_has_the_finger_rules_under_coarse_pointers_only():
@@ -295,7 +295,7 @@ def test_the_briefing_generator_bottom_tabs_keep_their_content_floor_and_the_pha
     assert r['n'] >= 4 and r['floor'] == ['auto'] and r['spill'] == []             # le texte reste dans sa case ; les onglets ne sont pas égalisés par un plancher de 44 px
     f.evaluate("() => { setFormat('full'); }")
     pg.wait_for_timeout(600)
-    f.evaluate("() => { document.querySelector('.tab-bar button[data-tab=\"phases\"]').click(); }")
+    f.evaluate("() => { document.querySelector('.tab-bar button[data-tab=\"mission\"]').click(); }")
     pg.wait_for_timeout(800)
     p = f.evaluate("""() => { const bar = [...document.querySelectorAll('.phase-bar')].find(b => b.getBoundingClientRect().width > 0);
         const cols = getComputedStyle(bar).gridTemplateColumns.split(' ').map(parseFloat);

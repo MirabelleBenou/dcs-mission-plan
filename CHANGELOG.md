@@ -16,7 +16,7 @@ Further down, *Before v2.0.0* keeps the history of each tool up to v1.24.0, when
 ### All tools
 
 **Build number on the hosted version**
-- Between two releases, the bottom of the home screen shows the build number, `MP-V2.1.0+4` for this one; a downloaded release shows none.
+- Between two releases, the bottom of the home screen shows the build number, `MP-V2.1.0+5` for this one; a downloaded release shows none.
 
 **Easier-to-read drop-down lists**
 - Their header, the chosen line and the line under the pointer have stronger contrast in every theme.
@@ -41,6 +41,12 @@ Further down, *Before v2.0.0* keeps the history of each tool up to v1.24.0, when
 
 **Switch tools from the toolbar**
 - The tool’s name or abbreviation at the start of the toolbar, with ▾, opens the list of tools in the home screen’s order, the open one marked; one more touch opens another tool, which keeps its work.
+
+**Seven tabs at the bottom on a phone**
+- In the Briefing Generator and the Datacard Generator, the editor’s tabs all fit at the bottom of the screen, seven of the same width, in both formats of the briefing; a tab that groups several sections shows each of them, foldable, without repeating its title.
+
+**Switching tools: finishing touches**
+- With the list of tools or “⋯” open, a touch on another menu of the toolbar opens it; the tool’s name follows a language change at once and screen readers hear the name shown.
 
 ### Home screen
 
