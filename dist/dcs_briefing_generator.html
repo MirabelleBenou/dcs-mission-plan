@@ -2772,6 +2772,9 @@ body[data-format="full"] [data-fmt="simple"] { display: none !important; }
    le tampon de décor dès 1692 px ; en dessous, le sigle seul. Le texte des boutons s'affiche s'il tient, sinon l'icône seule : règle commune du bloc d'interface (classes tb-st5, tb-st6) ; ici seulement les marges resserrées */
 @media (max-width: 1427px) { .tb-btn { padding: 0 10px; } }
 
+/* Titres courts de section : visibles seulement en mode onglets (≤ 1100 px) */
+.ttl-short { display: none; }
+
 /* ============ RESPONSIVE — TABLET / MOBILE ============ */
 @media (max-width: 1100px) {
   .tb-btn { padding: 0 10px; }
@@ -2786,6 +2789,10 @@ body[data-format="full"] [data-fmt="simple"] { display: none !important; }
   /* Show only the active panel zone */
   body[data-active-tab="preview"] .preview-wrap { display: block; }
   body:not([data-active-tab="preview"]) .editor { display: block; }
+
+  /* Section titles: the short one (Opération, Config Wing) up to 1100 px */
+  .ttl-long { display: none; }
+  .ttl-short { display: inline; }
 
   /* Hide non-active editor sections ; each tab shows its own sections (BG_TABS of the build) */
   body:not([data-active-tab="preview"]) .ed-section { display: none; }
@@ -3320,7 +3327,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
     <!-- 01 COVER -->
     <details class="ed-section" data-section="cover" data-fmt="full">
-      <summary class="ui-fold-head"><span data-i18n="editor.cover.summary">02 ░ OPÉRATION (COUVERTURE)</span></summary>
+      <summary class="ui-fold-head"><span class="ttl-long" data-i18n="editor.cover.summary">02 ░ OPÉRATION (COUVERTURE)</span><span class="ttl-short" data-i18n="editor.cover.summaryShort">02 ░ OPÉRATION</span></summary>
       <div class="ed-content">
         <div class="ed-field"><label data-i18n="editor.cover.title">Titre opération</label><input data-bind="cover.title" type="text" placeholder="Titre de l'opération" data-i18n-placeholder="placeholder.coverTitle"></div>
         <div class="ed-field"><label data-i18n="editor.cover.narrative">Récit / Contexte</label><textarea data-bind="cover.narrative" rows="6"></textarea></div>
@@ -3468,7 +3475,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
     <!-- 10 WING — read-only consumer (édition dans HQ) -->
     <details class="ed-section" data-section="wing" data-fmt="full">
-      <summary class="ui-fold-head"><span data-i18n="editor.wing.summary">10 ░ CONFIGURATION WING</span></summary>
+      <summary class="ui-fold-head"><span class="ttl-long" data-i18n="editor.wing.summary">10 ░ CONFIGURATION WING</span><span class="ttl-short" data-i18n="editor.wing.summaryShort">10 ░ CONFIG WING</span></summary>
       <div class="ed-content">
 
         <!-- Informations wing courantes (read-only) -->
@@ -8367,14 +8374,21 @@ function uiBarMoreBtn(bar) {
   return b;
 }
 /* un toucher hors du menu (et hors de « ⋯ », qui le bascule lui-même) le ferme sans agir sur ce qu'il touche : le clic qui suit est avalé (tbmSwallowNext, comme pour les listes), sauf sur le déclencheur d'une liste, qui s'ouvre par son propre clic */
-/* les déclencheurs des menus de la barre (ceux du module, TBM.cfg.trig ; le Sommaire du Field Manual) : un toucher sur l'un d'eux, « ⋯ » ou la liste des outils ouverts, les ferme et ouvre ce menu d'un seul geste (son propre clic passe) */
+/* les déclencheurs des menus de la barre du haut (ceux du module, TBM.cfg.trig, s'ils sont dans la .toolbar ; le Sommaire du Field Manual) : un toucher sur l'un d'eux, « ⋯ » ou la liste des outils ouverts, les ferme et ouvre ce menu d'un seul geste (son propre clic passe).
+   Un bouton du contenu (la barre du paquet, le choix de route) n'en est pas un : il ne fait que fermer ; les listes au thème (.tbm-trigger) gardent leur geste d'avant. */
 function uiBarTrig() { return ((typeof TBM !== 'undefined' && TBM.cfg && TBM.cfg.trig) || '.tbm-trigger') + ', #btn-toc'; }
+function uiBarMenuTrig(t) {
+  if (!t || !t.closest) return null;
+  if (t.closest('.tbm-trigger')) return t.closest('.tbm-trigger');
+  const e = t.closest(uiBarTrig());
+  return e && e.closest('.toolbar') ? e : null;
+}
 function uiBarMoreOutside(ev) {
   if (!UIMORE.panel) return;
   const t = ev.target;
   if (UIMORE.panel.contains(t) || (UIMORE.btn && UIMORE.btn.contains(t))) return;
   uiBarMoreClose();
-  const other = t && t.closest ? t.closest(uiBarTrig() + ', .tb-switch') : null;       /* la marque ouvre la liste des outils par son propre clic ; un autre menu de la barre, par le sien */
+  const other = t && t.closest ? (t.closest('.tb-switch') || uiBarMenuTrig(t)) : null;       /* la marque ouvre la liste des outils par son propre clic ; un autre menu de la barre, par le sien */
   if (!other && typeof tbmSwallowNext === 'function') tbmSwallowNext();
 }
 function uiBarMoreClose() {
@@ -8581,10 +8595,10 @@ function uiSwShown(brand) {
   const parts = [];
   Array.prototype.forEach.call(brand.children, c => {
     if (getComputedStyle(c).display === 'none') return;
-    const x = (c.textContent || '').replace(/\s+/g, ' ').trim();
+    const x = (c.textContent || '').replace(/░/g, ' ').replace(/\s+/g, ' ').trim();       /* « ░ » est un décor : le nom l'entend comme une espace */
     if (x) parts.push(x);
   });
-  return parts.length ? parts.join(' ') : (brand.children.length ? '' : (brand.textContent || '').replace(/\s+/g, ' ').trim());
+  return parts.length ? parts.join(' ') : (brand.children.length ? '' : (brand.textContent || '').replace(/░/g, ' ').replace(/\s+/g, ' ').trim());
 }
 function uiSwitchSet(cfg) {
   const bar = uiBarEl(), brand = bar ? bar.querySelector('.tb-brand') : null;
@@ -8700,7 +8714,7 @@ function uiSwOutside(ev) {
   const t = ev.target;
   if (UISW.panel.contains(t) || (UISW.brand && UISW.brand.contains(t))) return;
   uiSwClose(false);
-  if (t && t.closest && t.closest(uiBarTrig() + ', .tb-more-btn')) return;       /* « ⋯ » et les menus de la barre s'ouvrent par leur propre clic, en un seul geste */
+  if (t && t.closest && (uiBarMenuTrig(t) || t.closest('.tb-more-btn'))) return;       /* « ⋯ » et les menus de la barre s'ouvrent par leur propre clic, en un seul geste */
   UISW.swallow = true;
   const rel = () => { document.removeEventListener('pointerup', rel, true); document.removeEventListener('pointercancel', rel, true); setTimeout(() => { UISW.swallow = false; }, 350); };
   document.addEventListener('pointerup', rel, true);

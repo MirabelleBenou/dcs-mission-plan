@@ -117,7 +117,7 @@ def test_the_mark_is_a_button_and_the_list_fits_without_scrolling(browser):
     for tid in ORDER:
         fr = open_card(pg, tid)
         b = fr.evaluate("""() => { const e = document.querySelector('.toolbar .tb-brand'), r = e.getBoundingClientRect(), bar = document.querySelector('.toolbar').getBoundingClientRect();
-            return { vis: [...e.children].filter(c => getComputedStyle(c).display !== 'none').map(c => c.textContent.trim()).join(' '), role: e.getAttribute('role'), hp: e.getAttribute('aria-haspopup'), ex: e.getAttribute('aria-expanded'), name: e.getAttribute('aria-label'), title: e.title, tab: e.tabIndex, h: r.height,
+            return { vis: [...e.children].filter(c => getComputedStyle(c).display !== 'none').map(c => c.textContent.replace(/░/g, ' ').replace(/\\s+/g, ' ').trim()).join(' '), role: e.getAttribute('role'), hp: e.getAttribute('aria-haspopup'), ex: e.getAttribute('aria-expanded'), name: e.getAttribute('aria-label'), title: e.title, tab: e.tabIndex, h: r.height,
                      inside: r.left >= bar.left && r.right <= bar.right, over: document.querySelector('.toolbar').classList.contains('tb-over'), sw: [document.querySelector('.toolbar').scrollWidth, document.querySelector('.toolbar').clientWidth],
                      prev: e.previousElementSibling && e.previousElementSibling.className } }""")
         assert b['role'] == 'button' and b['hp'] == 'menu' and b['ex'] == 'false' and b['name'] == b['vis'] + ', changer d’outil' and b['title'] == 'Changer d’outil' and b['tab'] == 0, (tid, b)

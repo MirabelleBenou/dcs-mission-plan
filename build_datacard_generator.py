@@ -6307,7 +6307,7 @@ function dgSectionSum(id, c) {
 function sectionHtml(id, idx, c) {
   const title = pad2(idx + 1) + ' ░ ' + t('sec.' + id);
   const sum = dgSectionSum(id, c);
-  return '<details class="ed-section" data-section="' + id + '" data-fold="' + dgFoldOpen(id) + '"' + (dgFoldOpen(id) ? ' open' : '') + (DG_SOLO.indexOf(id) >= 0 ? ' data-solo' : '') + '>' +
+  return '<details class="ed-section" data-section="' + id + '" data-fold="' + dgFoldOpen(id) + '"' + (dgFoldOpen(id) ? ' open' : '') + '>' +
     '<summary class="ui-fold-head" aria-expanded="' + dgFoldOpen(id) + '">' + esc(title) + (sum ? '<span class="ui-sum">' + esc(sum) + '</span>' : '') + '</summary><div class="ed-content">' +
     SECTION_BUILDERS[id](c) + '</div></details>';
 }
@@ -6380,6 +6380,7 @@ function renderEditor(keep) {
   DG_UI.rendering = true;
   try {
     document.getElementById('ed-sections').innerHTML = SECTION_IDS.map((id, i) => sectionHtml(id, i, c)).join('');
+    uiTabsSolo(Array.prototype.slice.call(document.querySelectorAll('#ed-sections details.ed-section')), Array.prototype.slice.call(document.querySelectorAll('#ed-sections details.ed-section')).filter(d => DG_SOLO.indexOf(d.dataset.section) >= 0));       /* les sections seules dans leur onglet : le bloc commun les marque, comme au BG */
     dgFoldIcons();
     const nw = kept && sel ? ed.querySelector(sel) : null;
     if (nw && nw !== kept && nw.tagName === kept.tagName) {

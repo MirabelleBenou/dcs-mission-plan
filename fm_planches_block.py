@@ -1497,10 +1497,11 @@ def _dg_tall(P):
     o.append(P.lfield(X0 + 118, fy + 58, 106, [L('dg', 'f.threat')], [L('dg', 'thr.high')]))
     # la barre d'onglets : sept onglets de même largeur, pictogramme au-dessus
     TT = PT + 176
-    o.append(sv_box(X0, TT, w, 40))
+    TX0, TX1 = 24, 336       # la barre d'onglets est plus large que le panneau : chaque libellé tient dans sa cellule avec 2 unités au moins de chaque côté
+    o.append(sv_box(TX0, TT, TX1 - TX0, 40))
     tabs = (('▣', 'tab.mission', False), ('✈', 'tab.group', True), ('⌖', 'tab.nav', False), ('☎', 'tab.radio', False), ('☁', 'tab.weather', False), ('⚙', 'tab.meta', False), ('◈', 'tab.preview', False))
-    widths = [w / len(tabs)] * len(tabs)
-    tx, navx = X0, None
+    widths = [(TX1 - TX0) / len(tabs)] * len(tabs)
+    tx, navx = TX0, None
     for (g, key, cur), tw in zip(tabs, widths):
         cx = tx + tw / 2
         if cur:
@@ -1515,7 +1516,7 @@ def _dg_tall(P):
     o.append(P.bubble(3, 30, anc['pick'][1], anc['pick'][0], anc['pick'][1]))
     o.append(P.bubble(4, anc['plus'][0], 102, anc['plus'][0], anc['plus'][1]))
     o.append(P.bubble(5, anc['more'][0], 102, anc['more'][0], anc['more'][1]))
-    o.append(P.bubble(6, 30, TT + 20, X0, TT + 20))
+    o.append(P.bubble(6, 11, TT + 20, TX0, TT + 20))
     o.append(P.bubble(7, 30, fy + 16, X0 + 10, fy + 16))
     o.append(P.bubble(8, navx, TT + 58, navx, TT + 40))
     o.append('</g>')

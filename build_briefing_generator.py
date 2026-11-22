@@ -2498,6 +2498,9 @@ body[data-format="full"] [data-fmt="simple"] { display: none !important; }
    le tampon de décor dès 1692 px ; en dessous, le sigle seul. Le texte des boutons s'affiche s'il tient, sinon l'icône seule : règle commune du bloc d'interface (classes tb-st5, tb-st6) ; ici seulement les marges resserrées */
 @media (max-width: 1427px) { .tb-btn { padding: 0 10px; } }
 
+/* Titres courts de section : visibles seulement en mode onglets (≤ 1100 px) */
+.ttl-short { display: none; }
+
 /* ============ RESPONSIVE — TABLET / MOBILE ============ */
 @media (max-width: 1100px) {
   .tb-btn { padding: 0 10px; }
@@ -2512,6 +2515,10 @@ body[data-format="full"] [data-fmt="simple"] { display: none !important; }
   /* Show only the active panel zone */
   body[data-active-tab="preview"] .preview-wrap { display: block; }
   body:not([data-active-tab="preview"]) .editor { display: block; }
+
+  /* Section titles: the short one (Opération, Config Wing) up to 1100 px */
+  .ttl-long { display: none; }
+  .ttl-short { display: inline; }
 
   /* Hide non-active editor sections ; each tab shows its own sections (BG_TABS of the build) */
   body:not([data-active-tab="preview"]) .ed-section { display: none; }
@@ -2951,7 +2958,7 @@ __CSS__
 
     <!-- 01 COVER -->
     <details class="ed-section" data-section="cover" data-fmt="full">
-      <summary class="ui-fold-head"><span data-i18n="editor.cover.summary">02 ░ OPÉRATION (COUVERTURE)</span></summary>
+      <summary class="ui-fold-head"><span class="ttl-long" data-i18n="editor.cover.summary">02 ░ OPÉRATION (COUVERTURE)</span><span class="ttl-short" data-i18n="editor.cover.summaryShort">02 ░ OPÉRATION</span></summary>
       <div class="ed-content">
         <div class="ed-field"><label data-i18n="editor.cover.title">Titre opération</label><input data-bind="cover.title" type="text" placeholder="Titre de l'opération" data-i18n-placeholder="placeholder.coverTitle"></div>
         <div class="ed-field"><label data-i18n="editor.cover.narrative">Récit / Contexte</label><textarea data-bind="cover.narrative" rows="6"></textarea></div>
@@ -3099,7 +3106,7 @@ __CSS__
 
     <!-- 10 WING — read-only consumer (édition dans HQ) -->
     <details class="ed-section" data-section="wing" data-fmt="full">
-      <summary class="ui-fold-head"><span data-i18n="editor.wing.summary">10 ░ CONFIGURATION WING</span></summary>
+      <summary class="ui-fold-head"><span class="ttl-long" data-i18n="editor.wing.summary">10 ░ CONFIGURATION WING</span><span class="ttl-short" data-i18n="editor.wing.summaryShort">10 ░ CONFIG WING</span></summary>
       <div class="ed-content">
 
         <!-- Informations wing courantes (read-only) -->

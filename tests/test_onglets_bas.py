@@ -182,11 +182,36 @@ def test_a_touch_on_another_toolbar_menu_opens_it_and_the_name_follows_the_langu
     assert f.evaluate("() => !document.querySelector('.tb-sw-panel') && document.getElementById('btn-open').getAttribute('aria-expanded') === 'true'")
     f.evaluate("() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))")
     pg.wait_for_timeout(250)
-    name = "() => { const b = document.querySelector('.toolbar .tb-brand'); return [b.getAttribute('aria-label'), b.title, [...b.children].filter(c => getComputedStyle(c).display !== 'none').map(c => c.textContent.trim()).join(' ')]; }"
+    name = "() => { const b = document.querySelector('.toolbar .tb-brand'); return [b.getAttribute('aria-label'), b.title, [...b.children].filter(c => getComputedStyle(c).display !== 'none').map(c => c.textContent.replace(/░/g, ' ').replace(/\\s+/g, ' ').trim()).join(' ')]; }"
     a = f.evaluate(name)
     assert a[0] == a[2] + ', changer d’outil' and a[1] == 'Changer d’outil'
     f.evaluate("() => document.getElementById('btn-lang').click()")
     pg.wait_for_timeout(500)
     b = f.evaluate(name)
     assert b[0] == b[2] + ', switch tool' and b[1] == 'Switch tool'
+    assert pg.errs == []
+
+
+TOUCH = "(s) => { const e = document.querySelector(s); e.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerType: 'touch' })); e.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerType: 'touch' })); e.click(); }"       # la liste ouverte recouvre parfois le bouton : le geste est envoyé au bouton lui-même
+
+
+@needs_pw
+@pytest.mark.parametrize('tool,trig', [('rp', '#rs-more'), ('dg', '#pk-pick'), ('dg', '#pk-more')])
+def test_a_content_button_does_not_open_from_an_open_list_or_more(browser, tool, trig):
+    pg = shell(browser, 412, 915)
+    f = open_card(pg, tool)
+    st = "(s) => { const e = document.querySelector(s); return [e.getAttribute('aria-expanded'), !!document.querySelector('.tb-sw-panel'), !!document.querySelector('.tb-more-panel'), [...document.querySelectorAll('.tbm-panel:not(.tb-sw-panel):not(.tb-more-panel)')].filter(x => x.getClientRects().length).length]; }"
+    f.locator('.toolbar .tb-brand').tap()
+    pg.wait_for_timeout(350)
+    f.evaluate(TOUCH, trig)
+    pg.wait_for_timeout(500)
+    a = f.evaluate(st, trig)
+    assert a[0] in (None, 'false') and not a[1] and a[3] == 0, a
+    f.locator('#tb-more-btn').tap()
+    pg.wait_for_timeout(350)
+    assert f.evaluate("() => !!document.querySelector('.tb-more-panel')")
+    f.evaluate(TOUCH, trig)
+    pg.wait_for_timeout(500)
+    b = f.evaluate(st, trig)
+    assert b[0] in (None, 'false') and not b[2] and b[3] == 0, b
     assert pg.errs == []
