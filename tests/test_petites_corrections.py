@@ -67,16 +67,21 @@ def test_point_ref_dropped_keys_and_unchanged_found_flight_key():
     assert "'pk.w.pointRef': '{0}: point {1}: refers to a unit of the package’s mission ({2} = {3}) — check it'" in hq
 
 
+ALL_TOOLS_2 = ["**Fixed: “⋯” on very narrow screens**\n- Below 345 px wide, after the toolbar was scrolled, “⋯” could end up off the screen; it now stays in view.",
+               "**Menus easier to read from the keyboard**\n- In the toolbar's menus, the line reached with the arrow keys now has enough contrast in every theme."]
 CHANGELOG = {
     '### HQ': ["**The Wing button keeps its place**\n- The Wing button now always sits between Flight packages and Example, whether or not the wing is set up; until it is, the button stays highlighted.",
               "**A clearer warning on a created flight**\n- When a package creates a flight, a waypoint that pointed to a unit of the package’s mission is reported as removed, no longer as to be checked."],
-    '### Flight Configurator': ["**Folded groups stay folded**\n- A group you fold, on its own or with Fold all, is still folded when you come back or reload."],
+    '### Flight Configurator': ["**Folded groups stay folded**\n- A group you fold, on its own or with Fold all, is still folded when you come back or reload.", "**Fixed: countermeasure limits without chaff**\n- For an aircraft that carries no chaff, such as the Mi-8MT, the limit now reads “max 128” instead of a formula with “chaff × 0”.",
+                                    "**The Kord on both doors is reported**\n- A Mi-24P loadout received with something on both doors — from a file, a preset or a copy — now shows the conflict under both doors, like any other rule."],
     '### Briefing Generator': ["**Restore after opening a briefing**\n- Open a briefing… now offers Restore for 12 seconds, like the other tools: it brings back the briefing you had before.",
                                "**Fixed: briefing files are read safely**\n- A briefing file, or a briefing kept by the browser, can no longer change how the page works through special keys such as __proto__."],
-    '### Route Planner': ["**“Clear everything”, as in the other tools**\n- In English, the button of the Clear window now reads “Clear everything”."],
+    '### Route Planner': ["**“Clear everything”, as in the other tools**\n- In English, the button of the Clear window now reads “Clear everything”.",
+                          "**Fixed: the map height after typing**\n- On a phone, moving the handle while the on-screen keyboard is open no longer keeps the map small once the keyboard closes."],
     '### Datacard Generator': ["**Fixed: a free card kept its last aircraft**\n- When every crew line of a free card goes back to “to pick”, the Aircraft and Count fields empty instead of keeping the last aircraft found."],
     '### Field Manual': ["**The HQ screen drawn with the Wing button in its place**\n- The two drawings of the HQ screen show the toolbar in its new order.",
-                         "**The home screen drawn with its insignia**\n- The two drawings of the home screen show the insignia and the family's icon."],
+                         "**The home screen drawn with its insignia**\n- The two drawings of the home screen show the insignia and the family's icon.",
+                         "**The phone drawing of the home screen in the right order**\n- The title plate now sits under the toolbar buttons, as on screen."],
 }
 
 
@@ -86,9 +91,9 @@ def test_changelog_entries_end_their_sections():
     for head, entries in CHANGELOG.items():
         sec = unreleased.split('\n' + head + '\n', 1)[1].split('\n### ', 1)[0].rstrip('\n')
         assert sec.endswith('\n\n'.join(entries)), head
-    assert 'MP-V2.1.0+9` for this one' in unreleased and 'MP-V2.1.0+8' not in log
+    assert 'MP-V2.1.0+10` for this one' in unreleased and 'MP-V2.1.0+8' not in log
     all_tools = unreleased.split('\n### All tools\n', 1)[1].split('\n### ', 1)[0]
-    assert all_tools.rstrip('\n').endswith('a wing still on the former “WG” logo shows the new one and still counts as not set up.')
+    assert all_tools.rstrip('\n').endswith('a wing still on the former “WG” logo shows the new one and still counts as not set up.\n\n' + '\n\n'.join(ALL_TOOLS_2))
 
 
 def test_hq_legend_numbers_follow_the_toolbar():

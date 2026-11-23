@@ -16,8 +16,8 @@ except ImportError:
     HAS_PW = False
 needs_pw = pytest.mark.skipif(not HAS_PW, reason='playwright ou chromium absent')
 SHELL = 'file://' + str(ROOT / 'dist' / 'dcs_mission_plan.html')
-# Le contexte neuf a un stockage vide : l'amorce pose la langue si elle manque et n'efface rien. (L'ancienne amorce, gardée par sessionStorage, appelait localStorage.clear() quand la garde se lisait vide
-# après un rechargement sous charge : toutes les clés partaient ensemble, avec celle de la poignée.)
+# Le contexte neuf a un stockage vide : l'amorce pose la langue si elle manque et n'efface rien. (Si le stockage repart vide à un rechargement, toutes les clés ensemble, avec celle de la poignée, ce n'est pas l'amorce
+# ni l'application : c'est le contexte en mémoire du banc, que `reopen` remet comme il était avant de juger.)
 SEED = "(() => { try { if (localStorage.getItem('lang_v1') === null) localStorage.setItem('lang_v1', '@@'); } catch (e) {} })();"
 
 TABS = {'fr': [('route', '⟿', 'Route'), ('refs', '◆', 'Réf.'), ('layers', '▧', 'Calques'), ('nav', '🧭', 'Nav.')],
@@ -52,8 +52,8 @@ def test_the_texts_are_where_the_lot_says():
     rp = u.split('\n### Route Planner\n', 1)[1].split('\n### ', 1)[0].split('\n\n**“Clear everything”')[0]
     assert u.count(LOG_TABS) == 1 and rp.rstrip('\n').endswith('\n\n' + LOG_TABS.rstrip('\n'))             # à la fin de la rubrique, une ligne vide avant
     assert u.count(LOG_PAREN) == 1 and '(the Route Planner’s waypoint rows still use smaller text)' not in log
-    assert u.count('`MP-V2.1.0+9` for this one') == 1 and '+5' not in u
-    assert re.search(r'^DEV_BUILD = 9$', (ROOT / 'version_block.py').read_text(encoding='utf-8'), re.M)
+    assert u.count('`MP-V2.1.0+10` for this one') == 1 and '+5' not in u
+    assert re.search(r'^DEV_BUILD = 10$', (ROOT / 'version_block.py').read_text(encoding='utf-8'), re.M)
     fm = (ROOT / 'build_field_manual.py').read_text(encoding='utf-8')
     assert fm.count(FM_FR) == 1 and fm.count(FM_EN) == 1 and 'qui seul défile' not in fm[fm.index('"Sur tablette et téléphone"'):fm.index('"Sur tablette et téléphone"') + 900]
     pl = (ROOT / 'fm_planches_block.py').read_text(encoding='utf-8')

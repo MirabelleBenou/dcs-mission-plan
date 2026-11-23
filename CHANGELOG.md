@@ -16,7 +16,7 @@ Further down, *Before v2.0.0* keeps the history of each tool up to v1.24.0, when
 ### All tools
 
 **Build number on the hosted version**
-- Between two releases, the bottom of the home screen shows the build number, `MP-V2.1.0+9` for this one; a downloaded release shows none.
+- Between two releases, the bottom of the home screen shows the build number, `MP-V2.1.0+10` for this one; a downloaded release shows none.
 
 **Easier-to-read drop-down lists**
 - Their header, the chosen line and the line under the pointer have stronger contrast in every theme.
@@ -54,6 +54,12 @@ Further down, *Before v2.0.0* keeps the history of each tool up to v1.24.0, when
 **The Squadron Ready Room family insignia**
 - Every page of the suite carries the family's icon in the browser tab and when pinned to a phone's home screen.
 - The default wing logo, in HQ and the Briefing Generator, is now the Squadron Ready Room insignia; a wing still on the former “WG” logo shows the new one and still counts as not set up.
+
+**Fixed: “⋯” on very narrow screens**
+- Below 345 px wide, after the toolbar was scrolled, “⋯” could end up off the screen; it now stays in view.
+
+**Menus easier to read from the keyboard**
+- In the toolbar's menus, the line reached with the arrow keys now has enough contrast in every theme.
 
 ### Home screen
 
@@ -122,6 +128,12 @@ Further down, *Before v2.0.0* keeps the history of each tool up to v1.24.0, when
 **Folded groups stay folded**
 - A group you fold, on its own or with Fold all, is still folded when you come back or reload.
 
+**Fixed: countermeasure limits without chaff**
+- For an aircraft that carries no chaff, such as the Mi-8MT, the limit now reads “max 128” instead of a formula with “chaff × 0”.
+
+**The Kord on both doors is reported**
+- A Mi-24P loadout received with something on both doors — from a file, a preset or a copy — now shows the conflict under both doors, like any other rule.
+
 ### Briefing Generator
 
 **Aircraft types under their designation**
@@ -165,6 +177,9 @@ Further down, *Before v2.0.0* keeps the history of each tool up to v1.24.0, when
 **“Clear everything”, as in the other tools**
 - In English, the button of the Clear window now reads “Clear everything”.
 
+**Fixed: the map height after typing**
+- On a phone, moving the handle while the on-screen keyboard is open no longer keeps the map small once the keyboard closes.
+
 ### Datacard Generator
 
 **DISS-15 values on Mi-24P and Mi-8MTV2 datacards**
@@ -201,6 +216,9 @@ Further down, *Before v2.0.0* keeps the history of each tool up to v1.24.0, when
 
 **The home screen drawn with its insignia**
 - The two drawings of the home screen show the insignia and the family's icon.
+
+**The phone drawing of the home screen in the right order**
+- The title plate now sits under the toolbar buttons, as on screen.
 
 ## MP-V2.1.0 — 2026-11-16
 A small release after v2.0.0: the Field Manual now draws every screen of the suite, and a few fixes in HQ and the Route Planner.

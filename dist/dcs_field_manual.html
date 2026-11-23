@@ -306,8 +306,8 @@ select[data-tbm-src] { display: none !important; }
 .tbm-list .tbm-group { margin-top: 2px; border-top: 1px solid rgba(168,154,114,.25); list-style: none; }
 .tbm-opt .tbm-mark { width: 7px; height: 7px; flex: none; transform: rotate(45deg); border: 1px solid var(--khaki); }
 /* Lisibilité (WCAG 4,5 au moins, haut et bas du dégradé, quatre thèmes) : l'en-tête, la ligne choisie et la ligne survolée prennent un ton dérivé des variables du thème (aucune ne change) ; l'accent ambre reste celui du liseré, du losange et du filet du panneau */
-.tbm-opt.active, .tbm-opt:hover { background: var(--olive); color: color-mix(in srgb, var(--amber) 55%, #fff); }
-.tbm-opt.active .tbm-mark, .tbm-opt:hover .tbm-mark { border-color: var(--amber); }
+.tbm-opt.active, .tbm-opt:hover, .tbm-opt:focus-visible { background: var(--olive); color: color-mix(in srgb, var(--amber) 55%, #fff); }
+.tbm-opt.active .tbm-mark, .tbm-opt:hover .tbm-mark, .tbm-opt:focus-visible .tbm-mark { border-color: var(--amber); }
 .tbm-opt[aria-selected="true"] { color: color-mix(in srgb, var(--amber) 55%, #fff); font-weight: 700; }
 .tbm-opt[aria-selected="true"]::before { content: ''; position: absolute; left: 0; top: 6px; bottom: 6px; width: 3px; background: var(--amber); }
 .tbm-opt[aria-selected="true"] .tbm-mark { background: var(--amber); border-color: var(--amber); }
@@ -1878,7 +1878,7 @@ body.zm-open #fm-root { overflow: hidden; }
           <line x1="704" y1="100" x2="680" y2="100" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="680" cy="100" r="1.8" fill="currentColor"/><circle class="sv-box" cx="704" cy="100" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="704" y="103.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">5</text>
           </g>
           </svg>
-          <svg class="pl-tall" viewBox="0 0 360 478" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="L’accueil de Mission Plan au téléphone" data-aria-fr="L’accueil de Mission Plan au téléphone" data-aria-en="The Mission Plan home page on a phone">
+          <svg class="pl-tall" viewBox="0 0 360 498" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="L’accueil de Mission Plan au téléphone" data-aria-fr="L’accueil de Mission Plan au téléphone" data-aria-en="The Mission Plan home page on a phone">
           <defs><marker id="stt" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto-start-reverse"><path d="M0,0 L7,3.5 L0,7 Z" fill="currentColor" opacity=".8"/></marker></defs>
           <text x="180" y="22" font-size="12" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.9" letter-spacing="2.5">L’ACCUEIL DE MISSION PLAN</text>
           <text x="180" y="22" font-size="12" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en" opacity="0.9" letter-spacing="2.5">THE MISSION PLAN HOME PAGE</text>
@@ -1888,76 +1888,76 @@ body.zm-open #fm-root { overflow: hidden; }
           <rect class="sv-box" x="30" y="56" width="300" height="22" rx="3" stroke="currentColor" stroke-width="1.4"/>
           <text x="186" y="71" font-size="8" text-anchor="middle" fill="currentColor">DCS · MISSION PLAN</text>
           <circle cx="136" cy="67" r="5" fill="none" stroke="currentColor" stroke-width="1.1"/><circle cx="136" cy="67" r="1.6" fill="currentColor"/>
-          <rect class="sv-box" x="40" y="96" width="190" height="34" rx="3" stroke="currentColor" stroke-width="1.4"/>
-          <text x="48" y="107" font-size="7" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.7">// Suite de préparation opérationnelle</text>
-          <text x="48" y="107" font-size="7" fill="currentColor" class="lang-block" data-lang="en" opacity="0.7">// Operational planning suite</text>
-          <text x="48" y="124" font-size="13" fill="currentColor" font-weight="700">MISSION PLAN</text>
-          <circle cx="224" cy="98" r="18" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width="1.2"/><circle cx="224" cy="98" r="12.24" fill="none" stroke="currentColor" stroke-width=".8"/><circle cx="224" cy="98" r="3.24" fill="currentColor"/>
-          <rect class="sv-box" x="30" y="150" width="300" height="30" rx="3" stroke="currentColor" stroke-width="1.4"/>
-          <rect x="36" y="154" width="28" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/>
-          <path d="M44,161 h4 l1.5,1.5 h6.5 v7 h-12 z" fill="none" stroke="currentColor" stroke-width="1.1"/>
-          <rect x="70" y="154" width="28" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/>
-          <rect x="79" y="160" width="10" height="10" rx="1" fill="none" stroke="currentColor" stroke-width="1.1"/><rect x="81.5" y="160" width="5" height="3" fill="none" stroke="currentColor" stroke-width=".9"/>
-          <rect x="104" y="154" width="40" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/>
-          <path d="M115,160 h5.5 l2.5,2.5 v7.5 h-8 z M117,165 h4 M117,167.5 h4" fill="none" stroke="currentColor" stroke-width="1.1"/>
-          <path d="M133,164 l3,3 l3,-3" fill="none" stroke="currentColor" stroke-width="1"/>
-          <rect x="150" y="154" width="28" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/>
-          <path d="M158,161 h5 a1,1 0 0 1 1,1 v7 h-6 z M170,161 h-5 a1,1 0 0 0 -1,1 v7 h6 z" fill="none" stroke="currentColor" stroke-width="1.1"/>
-          <rect x="296" y="154" width="28" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/><text x="310" y="168" font-size="8" text-anchor="middle" fill="currentColor">⋯</text>
-          <rect class="sv-box" x="30" y="184" width="300" height="36" rx="3" stroke="currentColor" stroke-width="1.4"/>
-          <line x1="38" y1="195" x2="288" y2="195" stroke="currentColor" stroke-width="5" opacity=".12"/>
-          <line x1="38" y1="210" x2="308" y2="210" stroke="currentColor" stroke-width="5" opacity=".12"/>
-          <rect x="30" y="230" width="300" height="104" rx="3" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="5 3" opacity=".55"/>
-          <rect class="sv-box" x="38" y="221" width="246" height="18" rx="3" stroke="currentColor" stroke-width="1.4"/>
-          <text x="44" y="233.5" font-size="8.5" fill="currentColor" font-weight="700">Mission Commander</text>
-          <text x="147.2" y="233.5" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.7">PRÉPARE LA MISSION</text>
-          <text x="147.2" y="233.5" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.7">PREPARES THE MISSION</text>
-          <rect class="sv-box" x="38" y="244" width="284" height="25" rx="3" stroke="currentColor" stroke-width="1.4"/>
-          <rect x="42" y="248" width="30" height="17" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>
-          <rect class="sv-pill" x="78" y="251" width="24.2" height="11" rx="1.5"/><text x="90.1" y="259.4" font-size="8" text-anchor="middle" class="sv-pill-t">H·Q</text>
-          <text x="107.2" y="260" font-size="8" fill="currentColor" font-weight="700">HQ</text>
-          <rect x="218" y="248" width="100" height="17" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/><text x="268" y="259.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">▶ OUVRIR LE DOSSIER</text>
-          <text x="268" y="259.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">▶ OPEN THE FILE</text>
-          <rect class="sv-box" x="38" y="273" width="284" height="25" rx="3" stroke="currentColor" stroke-width="1.4"/>
-          <rect x="42" y="277" width="30" height="17" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>
-          <rect class="sv-pill" x="78" y="280" width="24.2" height="11" rx="1.5"/><text x="90.1" y="288.4" font-size="8" text-anchor="middle" class="sv-pill-t">B·G</text>
-          <text x="107.2" y="289" font-size="8" fill="currentColor" font-weight="700">Briefing Generator</text>
-          <rect x="218" y="277" width="100" height="17" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/><text x="268" y="288.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">▶ OUVRIR LE DOSSIER</text>
-          <text x="268" y="288.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">▶ OPEN THE FILE</text>
-          <rect class="sv-box" x="38" y="302" width="284" height="25" rx="3" stroke="currentColor" stroke-width="1.4"/>
-          <rect x="42" y="306" width="30" height="17" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>
-          <rect class="sv-pill" x="78" y="309" width="24.2" height="11" rx="1.5"/><text x="90.1" y="317.4" font-size="8" text-anchor="middle" class="sv-pill-t">R·S</text>
-          <text x="107.2" y="318" font-size="8" fill="currentColor" font-weight="700">Recon Station</text>
-          <rect x="218" y="306" width="100" height="17" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/><text x="268" y="317.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">▶ OUVRIR LE DOSSIER</text>
-          <text x="268" y="317.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">▶ OPEN THE FILE</text>
-          <rect x="30" y="344" width="300" height="104" rx="3" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="5 3" opacity=".55"/>
-          <rect class="sv-box" x="38" y="335" width="246" height="18" rx="3" stroke="currentColor" stroke-width="1.4"/>
-          <text x="44" y="347.5" font-size="8.5" fill="currentColor" font-weight="700">Flight Leader</text>
-          <text x="124.8" y="347.5" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.7">PRÉPARE SON VOL</text>
-          <text x="124.8" y="347.5" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.7">PREPARES THE FLIGHT</text>
-          <rect class="sv-box" x="38" y="358" width="284" height="25" rx="3" stroke="currentColor" stroke-width="1.4"/>
-          <rect x="42" y="362" width="30" height="17" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>
-          <rect class="sv-pill" x="78" y="365" width="24.2" height="11" rx="1.5"/><text x="90.1" y="373.4" font-size="8" text-anchor="middle" class="sv-pill-t">R·P</text>
-          <text x="107.2" y="374" font-size="8" fill="currentColor" font-weight="700">Route Planner</text>
-          <rect x="218" y="362" width="100" height="17" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/><text x="268" y="373.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">▶ OUVRIR LE DOSSIER</text>
-          <text x="268" y="373.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">▶ OPEN THE FILE</text>
-          <rect class="sv-box" x="38" y="387" width="284" height="25" rx="3" stroke="currentColor" stroke-width="1.4"/>
-          <rect x="42" y="391" width="30" height="17" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>
-          <rect class="sv-pill" x="78" y="394" width="24.2" height="11" rx="1.5"/><text x="90.1" y="402.4" font-size="8" text-anchor="middle" class="sv-pill-t">D·G</text>
-          <text x="107.2" y="403" font-size="8" fill="currentColor" font-weight="700">Datacard Generator</text>
-          <rect x="218" y="391" width="100" height="17" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/><text x="268" y="402.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">▶ OUVRIR LE DOSSIER</text>
-          <text x="268" y="402.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">▶ OPEN THE FILE</text>
-          <rect class="sv-box" x="38" y="416" width="284" height="25" rx="3" stroke="currentColor" stroke-width="1.4"/>
-          <rect x="42" y="420" width="30" height="17" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>
-          <rect class="sv-pill" x="78" y="423" width="24.2" height="11" rx="1.5"/><text x="90.1" y="431.4" font-size="8" text-anchor="middle" class="sv-pill-t">F·C</text>
-          <text x="107.2" y="432" font-size="8" fill="currentColor" font-weight="700">Flight Configurator</text>
-          <rect x="218" y="420" width="100" height="17" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/><text x="268" y="431.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">▶ OUVRIR LE DOSSIER</text>
-          <text x="268" y="431.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">▶ OPEN THE FILE</text>
-          <line x1="50" y1="138" x2="50" y2="154" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="50" cy="154" r="1.8" fill="currentColor"/><circle class="sv-box" cx="50" cy="138" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="50" y="141.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">1</text>
-          <line x1="84" y1="138" x2="84" y2="154" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="84" cy="154" r="1.8" fill="currentColor"/><circle class="sv-box" cx="84" cy="138" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="84" y="141.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">2</text>
-          <line x1="124" y1="138" x2="124" y2="154" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="124" cy="154" r="1.8" fill="currentColor"/><circle class="sv-box" cx="124" cy="138" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="124" y="141.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">3</text>
-          <line x1="346" y1="195" x2="330" y2="195" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="330" cy="195" r="1.8" fill="currentColor"/><circle class="sv-box" cx="346" cy="195" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="346" y="198.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">4</text>
-          <line x1="346" y1="210" x2="330" y2="210" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="330" cy="210" r="1.8" fill="currentColor"/><circle class="sv-box" cx="346" cy="210" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="346" y="213.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">5</text>
+          <rect class="sv-box" x="30" y="106" width="300" height="30" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <rect x="36" y="110" width="28" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/>
+          <path d="M44,117 h4 l1.5,1.5 h6.5 v7 h-12 z" fill="none" stroke="currentColor" stroke-width="1.1"/>
+          <rect x="70" y="110" width="28" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/>
+          <rect x="79" y="116" width="10" height="10" rx="1" fill="none" stroke="currentColor" stroke-width="1.1"/><rect x="81.5" y="116" width="5" height="3" fill="none" stroke="currentColor" stroke-width=".9"/>
+          <rect x="104" y="110" width="40" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/>
+          <path d="M115,116 h5.5 l2.5,2.5 v7.5 h-8 z M117,121 h4 M117,123.5 h4" fill="none" stroke="currentColor" stroke-width="1.1"/>
+          <path d="M133,120 l3,3 l3,-3" fill="none" stroke="currentColor" stroke-width="1"/>
+          <rect x="150" y="110" width="28" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/>
+          <path d="M158,117 h5 a1,1 0 0 1 1,1 v7 h-6 z M170,117 h-5 a1,1 0 0 0 -1,1 v7 h6 z" fill="none" stroke="currentColor" stroke-width="1.1"/>
+          <rect x="296" y="110" width="28" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.65"/><text x="310" y="124" font-size="8" text-anchor="middle" fill="currentColor">⋯</text>
+          <rect class="sv-box" x="30" y="140" width="300" height="36" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <line x1="38" y1="151" x2="288" y2="151" stroke="currentColor" stroke-width="5" opacity=".12"/>
+          <line x1="38" y1="166" x2="308" y2="166" stroke="currentColor" stroke-width="5" opacity=".12"/>
+          <rect class="sv-box" x="40" y="196" width="190" height="34" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <text x="48" y="207" font-size="7" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.7">// Suite de préparation opérationnelle</text>
+          <text x="48" y="207" font-size="7" fill="currentColor" class="lang-block" data-lang="en" opacity="0.7">// Operational planning suite</text>
+          <text x="48" y="224" font-size="13" fill="currentColor" font-weight="700">MISSION PLAN</text>
+          <circle cx="224" cy="198" r="18" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width="1.2"/><circle cx="224" cy="198" r="12.24" fill="none" stroke="currentColor" stroke-width=".8"/><circle cx="224" cy="198" r="3.24" fill="currentColor"/>
+          <rect x="30" y="250" width="300" height="104" rx="3" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="5 3" opacity=".55"/>
+          <rect class="sv-box" x="38" y="241" width="246" height="18" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <text x="44" y="253.5" font-size="8.5" fill="currentColor" font-weight="700">Mission Commander</text>
+          <text x="147.2" y="253.5" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.7">PRÉPARE LA MISSION</text>
+          <text x="147.2" y="253.5" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.7">PREPARES THE MISSION</text>
+          <rect class="sv-box" x="38" y="264" width="284" height="25" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <rect x="42" y="268" width="30" height="17" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>
+          <rect class="sv-pill" x="78" y="271" width="24.2" height="11" rx="1.5"/><text x="90.1" y="279.4" font-size="8" text-anchor="middle" class="sv-pill-t">H·Q</text>
+          <text x="107.2" y="280" font-size="8" fill="currentColor" font-weight="700">HQ</text>
+          <rect x="218" y="268" width="100" height="17" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/><text x="268" y="279.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">▶ OUVRIR LE DOSSIER</text>
+          <text x="268" y="279.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">▶ OPEN THE FILE</text>
+          <rect class="sv-box" x="38" y="293" width="284" height="25" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <rect x="42" y="297" width="30" height="17" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>
+          <rect class="sv-pill" x="78" y="300" width="24.2" height="11" rx="1.5"/><text x="90.1" y="308.4" font-size="8" text-anchor="middle" class="sv-pill-t">B·G</text>
+          <text x="107.2" y="309" font-size="8" fill="currentColor" font-weight="700">Briefing Generator</text>
+          <rect x="218" y="297" width="100" height="17" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/><text x="268" y="308.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">▶ OUVRIR LE DOSSIER</text>
+          <text x="268" y="308.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">▶ OPEN THE FILE</text>
+          <rect class="sv-box" x="38" y="322" width="284" height="25" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <rect x="42" y="326" width="30" height="17" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>
+          <rect class="sv-pill" x="78" y="329" width="24.2" height="11" rx="1.5"/><text x="90.1" y="337.4" font-size="8" text-anchor="middle" class="sv-pill-t">R·S</text>
+          <text x="107.2" y="338" font-size="8" fill="currentColor" font-weight="700">Recon Station</text>
+          <rect x="218" y="326" width="100" height="17" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/><text x="268" y="337.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">▶ OUVRIR LE DOSSIER</text>
+          <text x="268" y="337.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">▶ OPEN THE FILE</text>
+          <rect x="30" y="364" width="300" height="104" rx="3" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="5 3" opacity=".55"/>
+          <rect class="sv-box" x="38" y="355" width="246" height="18" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <text x="44" y="367.5" font-size="8.5" fill="currentColor" font-weight="700">Flight Leader</text>
+          <text x="124.8" y="367.5" font-size="8" fill="currentColor" class="lang-block" data-lang="fr" opacity="0.7">PRÉPARE SON VOL</text>
+          <text x="124.8" y="367.5" font-size="8" fill="currentColor" class="lang-block" data-lang="en" opacity="0.7">PREPARES THE FLIGHT</text>
+          <rect class="sv-box" x="38" y="378" width="284" height="25" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <rect x="42" y="382" width="30" height="17" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>
+          <rect class="sv-pill" x="78" y="385" width="24.2" height="11" rx="1.5"/><text x="90.1" y="393.4" font-size="8" text-anchor="middle" class="sv-pill-t">R·P</text>
+          <text x="107.2" y="394" font-size="8" fill="currentColor" font-weight="700">Route Planner</text>
+          <rect x="218" y="382" width="100" height="17" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/><text x="268" y="393.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">▶ OUVRIR LE DOSSIER</text>
+          <text x="268" y="393.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">▶ OPEN THE FILE</text>
+          <rect class="sv-box" x="38" y="407" width="284" height="25" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <rect x="42" y="411" width="30" height="17" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>
+          <rect class="sv-pill" x="78" y="414" width="24.2" height="11" rx="1.5"/><text x="90.1" y="422.4" font-size="8" text-anchor="middle" class="sv-pill-t">D·G</text>
+          <text x="107.2" y="423" font-size="8" fill="currentColor" font-weight="700">Datacard Generator</text>
+          <rect x="218" y="411" width="100" height="17" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/><text x="268" y="422.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">▶ OUVRIR LE DOSSIER</text>
+          <text x="268" y="422.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">▶ OPEN THE FILE</text>
+          <rect class="sv-box" x="38" y="436" width="284" height="25" rx="3" stroke="currentColor" stroke-width="1.4"/>
+          <rect x="42" y="440" width="30" height="17" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>
+          <rect class="sv-pill" x="78" y="443" width="24.2" height="11" rx="1.5"/><text x="90.1" y="451.4" font-size="8" text-anchor="middle" class="sv-pill-t">F·C</text>
+          <text x="107.2" y="452" font-size="8" fill="currentColor" font-weight="700">Flight Configurator</text>
+          <rect x="218" y="440" width="100" height="17" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.7"/><text x="268" y="451.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="fr">▶ OUVRIR LE DOSSIER</text>
+          <text x="268" y="451.5" font-size="8" text-anchor="middle" fill="currentColor" class="lang-block" data-lang="en">▶ OPEN THE FILE</text>
+          <line x1="50" y1="94" x2="50" y2="110" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="50" cy="110" r="1.8" fill="currentColor"/><circle class="sv-box" cx="50" cy="94" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="50" y="97.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">1</text>
+          <line x1="84" y1="94" x2="84" y2="110" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="84" cy="110" r="1.8" fill="currentColor"/><circle class="sv-box" cx="84" cy="94" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="84" y="97.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">2</text>
+          <line x1="124" y1="94" x2="124" y2="110" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="124" cy="110" r="1.8" fill="currentColor"/><circle class="sv-box" cx="124" cy="94" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="124" y="97.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">3</text>
+          <line x1="346" y1="151" x2="330" y2="151" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="330" cy="151" r="1.8" fill="currentColor"/><circle class="sv-box" cx="346" cy="151" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="346" y="154.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">4</text>
+          <line x1="346" y1="166" x2="330" y2="166" stroke="currentColor" stroke-width="1" opacity=".8"/><circle cx="330" cy="166" r="1.8" fill="currentColor"/><circle class="sv-box" cx="346" cy="166" r="8.5" stroke="currentColor" stroke-width="1.4"/><text x="346" y="169.2" font-size="9" text-anchor="middle" fill="currentColor" font-weight="700">5</text>
           </g>
           </svg>
           <div class="fm-schema-legend"><span class="lang-block" data-lang="fr">Fig. 2 — L’accueil de Mission Plan, le menu Exemple ouvert : la barre, les deux lignes de l’exemple, les deux groupes d’outils.</span><span class="lang-block" data-lang="en">Fig. 2 — The Mission Plan home page with the Example menu open: the bar, the two example lines, the two tool groups.</span></div>
@@ -5199,7 +5199,7 @@ function uiBarMoreReset(bar) {                          /* le menu ouvert n'est 
   bar.classList.remove('tb-st7', 'tb-st8', 'tb-over', 'tb-nos');
   UIMORE.units = [];
 }
-/* la mesure des étapes 7 et 8, au sous-pixel : le bord droit du dernier enfant affiché (sa marge comprise) et la marge de fin de la barre, contre sa largeur utile ; scrollWidth et clientWidth, entiers, arrondiraient en faveur de la barre */
+/* la mesure des étapes 7 et 8, au sous-pixel : le bord droit du dernier enfant affiché (sa marge comprise, compté depuis le début du contenu : le défilement de la barre s'y ajoute) et la marge de fin de la barre, contre sa largeur utile ; scrollWidth et clientWidth, entiers, arrondiraient en faveur de la barre */
 function uiBarFitsExact(bar) {
   const cs = getComputedStyle(bar), r = bar.getBoundingClientRect();
   const brd = parseFloat(cs.borderRightWidth) || 0, pr = parseFloat(cs.paddingRight) || 0;
@@ -5209,6 +5209,7 @@ function uiBarFitsExact(bar) {
     if (s.display === 'none') return;
     end = Math.max(end, e.getBoundingClientRect().right + (parseFloat(s.marginRight) || 0));
   });
+  end += bar.scrollLeft;                                /* en coordonnées du contenu : une barre défilée ramène ses enfants vers la gauche de ce qu'elle a défilé */
   return end + pr <= r.right - brd + 0.001;
 }
 function uiBarMore(bar) {

@@ -1,13 +1,23 @@
-"""L'insigne de la famille Squadron Ready Room (MP-V2.1.0+9) : les fichiers de brand/, leurs URL data: dans les pages de dist/, les liens d'onglet,
+"""L'insigne de la famille Squadron Ready Room (MP-V2.1.0+10) : les fichiers de brand/, leurs URL data: dans les pages de dist/, les liens d'onglet,
 l'accueil (plaque, écusson, signature), l'ancien logo « WG » lu comme le nouveau, le README, les licences et le CHANGELOG. Lecture des fichiers, sans navigateur."""
 import base64
 import hashlib
+import json
 import re
 from pathlib import Path
+
+import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 BRAND = ROOT / 'brand'
 DIST = ROOT / 'dist'
+CHROMIUM = Path('/opt/pw-browsers/chromium')
+try:
+    import playwright.sync_api  # noqa: F401
+    HAS_PW = CHROMIUM.exists()
+except ImportError:
+    HAS_PW = False
+needs_pw = pytest.mark.skipif(not HAS_PW, reason='playwright ou chromium absent')
 
 SHA256 = {
     'insigne-mission-plan.svg': '26de5e2afb19d1feeb391e5385e619b9fd9a649a9e48001297c72cae6e5bcd36',
@@ -82,8 +92,8 @@ def test_shell_home_screen():
     # l'insigne de la Ready Room : une fois, dans le script de l'écusson
     assert html.count("var MP_CREST_RR = '" + url('insigne-ready-room.svg') + "';") == 1
     assert "'crest.wingAlt': 'Emblème de l’escadre'" in html and "'crest.wingAlt': 'Wing emblem'" in html
-    assert 'MP-V2.1.0+9' in html
-    assert re.search(r'^DEV_BUILD = 9$', (ROOT / 'version_block.py').read_text(encoding='utf-8'), re.M)
+    assert 'MP-V2.1.0+10' in html
+    assert re.search(r'^DEV_BUILD = 10$', (ROOT / 'version_block.py').read_text(encoding='utf-8'), re.M)
 
 
 def test_former_wg_logo_is_kept_once_each():
@@ -98,10 +108,12 @@ def test_former_wg_logo_is_kept_once_each():
         if f.name in ('brand_block.py', 'test_marque.py'):
             continue
         assert old not in f.read_text(encoding='utf-8'), f.name
-    rr = url('insigne-ready-room.svg')
+    master = (BRAND / 'insigne-ready-room.svg').read_bytes()
     for n in ('dcs_hq', 'dcs_briefing_generator'):
         h = page(n)
-        assert h.count(rr.replace('\\', '\\\\')) >= 1 or rr in h, n
+        # le logo par défaut du Wing, dans la configuration écrite par défaut (une chaîne de script : les guillemets y sont protégés) : décodé, c'est le fichier de brand/, à l'octet
+        m = re.findall(r'\\"appTitle\\": \\"(?:[^"\\]|\\u[0-9a-f]{4})*\\", \\"logo\\": \\"data:image/svg\+xml;base64,([A-Za-z0-9+/=]+)\\"', h)
+        assert len(m) == 1 and base64.b64decode(m[0]) == master, n
         assert 'function wingLegacyLogo(cfg)' in h and h.count('const LEGACY_WG_LOGO = ') == 1, n
 
 
@@ -115,9 +127,12 @@ def test_readme_licences_changelog():
     log = (ROOT / 'CHANGELOG.md').read_text(encoding='utf-8')
     unreleased = log.split('\n## Unreleased\n', 1)[1].split('\n## ', 1)[0]
     entries = {
-        '### All tools': ["**The Squadron Ready Room family insignia**\n- Every page of the suite carries the family's icon in the browser tab and when pinned to a phone's home screen.\n- The default wing logo, in HQ and the Briefing Generator, is now the Squadron Ready Room insignia; a wing still on the former “WG” logo shows the new one and still counts as not set up."],
+        '### All tools': ["**The Squadron Ready Room family insignia**\n- Every page of the suite carries the family's icon in the browser tab and when pinned to a phone's home screen.\n- The default wing logo, in HQ and the Briefing Generator, is now the Squadron Ready Room insignia; a wing still on the former “WG” logo shows the new one and still counts as not set up.",
+                         "**Fixed: “⋯” on very narrow screens**\n- Below 345 px wide, after the toolbar was scrolled, “⋯” could end up off the screen; it now stays in view.",
+                         "**Menus easier to read from the keyboard**\n- In the toolbar's menus, the line reached with the arrow keys now has enough contrast in every theme."],
         '### Home screen': ["**The Mission Plan insignia**\n- The home screen shows the Mission Plan insignia beside its title — on a phone, as a seal on the title's corner — and the family's icon in the top bar; when the Squadron Ready Room opens Mission Plan, your wing's emblem takes its place.\n- A *Squadron Ready Room family* line sits above the credits."],
-        '### Field Manual': ["**The home screen drawn with its insignia**\n- The two drawings of the home screen show the insignia and the family's icon."],
+        '### Field Manual': ["**The home screen drawn with its insignia**\n- The two drawings of the home screen show the insignia and the family's icon.",
+                         "**The phone drawing of the home screen in the right order**\n- The title plate now sits under the toolbar buttons, as on screen."],
     }
     for head_, es in entries.items():
         sec = unreleased.split('\n' + head_ + '\n', 1)[1].split('\n### ', 1)[0].rstrip('\n')
@@ -132,3 +147,41 @@ def test_fm_planches_draw_picto_and_crest():
         svg = fm[i:fm.index('</svg>', i)]
         assert svg.count('r="5" fill="none"') == 1, aria       # le pictogramme de la plaque de la barre
         assert svg.count('opacity=".10" stroke="currentColor" stroke-width="1.2"') == 1, aria   # l'écusson
+
+
+# ----- L'écusson de l'accueil, dans le shell : ce que montre la plaque du titre selon le stockage, et sa taille selon la largeur -----
+PNG_1PX = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='
+CREST_CASES = [
+    ('virgin storage', None, 'mp'),
+    ('managedBy and a PNG logo', {'managedBy': 'RR', 'wing': {'logo': PNG_1PX, 'fullName': 'Test Wing'}}, 'wing'),
+    ('managedBy and an https: logo', {'managedBy': 'RR', 'wing': {'logo': 'https://example.org/logo.png'}}, 'rr'),
+    ('HQ wing without managedBy', {'wing': {'logo': PNG_1PX, 'fullName': 'Test Wing'}}, 'mp'),
+]
+
+
+@pytest.fixture(scope='module')
+def browser():
+    from playwright.sync_api import sync_playwright
+    with sync_playwright() as p:
+        br = p.chromium.launch(executable_path=str(CHROMIUM), args=['--no-sandbox'])
+        yield br
+        br.close()
+
+
+@needs_pw
+@pytest.mark.parametrize('label,cfg,source', CREST_CASES)
+def test_the_home_crest_shows_what_the_storage_says_at_three_sizes(browser, label, cfg, source):
+    for w, size in ((345, '64px'), (412, '72px'), (1440, '120px')):
+        ctx = browser.new_context(viewport={'width': w, 'height': 900})
+        seed = "(() => { try { if (localStorage.getItem('lang_v1') === null) localStorage.setItem('lang_v1', 'en'); } catch (e) {} })();"
+        ctx.add_init_script(seed + ("localStorage.setItem('wing_config_v1', %s);" % json.dumps(json.dumps(cfg)) if cfg else ''))
+        ctx.route('**/*', lambda r: r.continue_() if r.request.url.startswith(('file:', 'data:', 'blob:')) else r.abort())
+        pg = ctx.new_page()
+        pg.goto('file://' + str(DIST / 'dcs_mission_plan.html'), wait_until='commit')
+        pg.wait_for_function("() => !!document.getElementById('mp-crest') && !!document.getElementById('card-hq')", timeout=60000)
+        pg.wait_for_timeout(900)
+        got = pg.evaluate("() => { const e = document.getElementById('mp-crest'); return [e.getAttribute('data-source'), getComputedStyle(e).width, e.getAttribute('src').slice(0, 14)]; }")
+        assert got[0] == source and got[1] == size, (label, w, got)
+        if source == 'wing':
+            assert got[2] == 'data:image/png'
+        ctx.close()

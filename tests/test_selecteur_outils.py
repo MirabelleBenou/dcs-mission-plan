@@ -31,6 +31,8 @@ ENTRY_TOUCHES = ("**Switching tools: finishing touches**\n"
 ENTRY_INSIGNIA = ("**The Squadron Ready Room family insignia**\n"
                   "- Every page of the suite carries the family's icon in the browser tab and when pinned to a phone's home screen.\n"
                   "- The default wing logo, in HQ and the Briefing Generator, is now the Squadron Ready Room insignia; a wing still on the former “WG” logo shows the new one and still counts as not set up.")
+ENTRY_NARROW = "**Fixed: “⋯” on very narrow screens**\n- Below 345 px wide, after the toolbar was scrolled, “⋯” could end up off the screen; it now stays in view."
+ENTRY_MENUS = "**Menus easier to read from the keyboard**\n- In the toolbar's menus, the line reached with the arrow keys now has enough contrast in every theme."
 ENTRY_KEYBOARD = ("**The tab bar steps aside for the keyboard**\n"
                   "- On a phone, while the on-screen keyboard is open, the tab bar at the bottom of the Briefing Generator, the Datacard Generator and the Route Planner hides, so the field you type in stays in view; in the Route Planner, a search on the map gets the whole height.")
 FM_FR = ("Le nom de l’outil, ou son sigle, au début de la barre, ouvre la liste des outils (▾), dans l’ordre de l’accueil, l’outil ouvert marqué : un toucher de plus ouvre un autre outil, qui garde son travail. "
@@ -44,8 +46,8 @@ def test_texts_are_where_the_lot_says():
     log = (ROOT / 'CHANGELOG.md').read_text(encoding='utf-8')
     unreleased = log.split('\n## Unreleased\n', 1)[1].split('\n## ', 1)[0]
     all_tools = unreleased.split('\n### All tools\n', 1)[1].split('\n### ', 1)[0].rstrip('\n')
-    assert all_tools.endswith('\n\n' + CHANGELOG_ENTRY + '\n\n' + ENTRY_TABS + '\n\n' + ENTRY_TOUCHES + '\n\n' + ENTRY_KEYBOARD + '\n\n' + ENTRY_INSIGNIA)       # le lot mp-mobile-onglets ajoute ses deux entrées après celle-ci ; le lot du clavier la sienne, qui termine la rubrique
-    assert 'MP-V2.1.0+9` for this one' in all_tools and 'MP-V2.1.0+3' not in all_tools
+    assert all_tools.endswith('\n\n' + CHANGELOG_ENTRY + '\n\n' + ENTRY_TABS + '\n\n' + ENTRY_TOUCHES + '\n\n' + ENTRY_KEYBOARD + '\n\n' + ENTRY_INSIGNIA + '\n\n' + ENTRY_NARROW + '\n\n' + ENTRY_MENUS)       # le lot mp-mobile-onglets ajoute ses deux entrées après celle-ci ; le lot du clavier la sienne, qui termine la rubrique
+    assert 'MP-V2.1.0+10` for this one' in all_tools and 'MP-V2.1.0+3' not in all_tools
     fm = (ROOT / 'build_field_manual.py').read_text(encoding='utf-8')
     i = fm.index('"La barre du haut", "The top bar"')
     j = fm.index('"Lire ce manuel au téléphone"', i)
@@ -53,8 +55,8 @@ def test_texts_are_where_the_lot_says():
     assert seg.count(FM_FR) == 1 and seg.count(FM_EN) == 1
     assert seg.index(FM_BACK_FR) < seg.index(FM_FR) and seg.index('On a phone, the back gesture') < seg.index(FM_EN)
     assert seg[seg.index(FM_BACK_FR):seg.index(FM_FR)].count("('p',") == 1            # le paragraphe neuf suit aussitôt celui du geste retour
-    assert re.search(r'^DEV_BUILD = 9$', (ROOT / 'version_block.py').read_text(encoding='utf-8'), re.M)
-    assert 'MP-V2.1.0+9' in (ROOT / 'dist' / 'dcs_mission_plan.html').read_text(encoding='utf-8')
+    assert re.search(r'^DEV_BUILD = 10$', (ROOT / 'version_block.py').read_text(encoding='utf-8'), re.M)
+    assert 'MP-V2.1.0+10' in (ROOT / 'dist' / 'dcs_mission_plan.html').read_text(encoding='utf-8')
 
 
 @pytest.fixture(scope='module')
