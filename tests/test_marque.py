@@ -1,4 +1,4 @@
-"""L'insigne de la famille Squadron Ready Room (MP-V2.1.0+10) : les fichiers de brand/, leurs URL data: dans les pages de dist/, les liens d'onglet,
+"""L'insigne de la famille Squadron Ready Room (MP-V2.1.0+11) : les fichiers de brand/, leurs URL data: dans les pages de dist/, les liens d'onglet,
 l'accueil (plaque, écusson, signature), l'ancien logo « WG » lu comme le nouveau, le README, les licences et le CHANGELOG. Lecture des fichiers, sans navigateur."""
 import base64
 import hashlib
@@ -92,8 +92,8 @@ def test_shell_home_screen():
     # l'insigne de la Ready Room : une fois, dans le script de l'écusson
     assert html.count("var MP_CREST_RR = '" + url('insigne-ready-room.svg') + "';") == 1
     assert "'crest.wingAlt': 'Emblème de l’escadre'" in html and "'crest.wingAlt': 'Wing emblem'" in html
-    assert 'MP-V2.1.0+10' in html
-    assert re.search(r'^DEV_BUILD = 10$', (ROOT / 'version_block.py').read_text(encoding='utf-8'), re.M)
+    assert 'MP-V2.1.0+11' in html
+    assert re.search(r'^DEV_BUILD = 11$', (ROOT / 'version_block.py').read_text(encoding='utf-8'), re.M)
 
 
 def test_former_wg_logo_is_kept_once_each():

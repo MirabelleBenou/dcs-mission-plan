@@ -16,7 +16,7 @@ Further down, *Before v2.0.0* keeps the history of each tool up to v1.24.0, when
 ### All tools
 
 **Build number on the hosted version**
-- Between two releases, the bottom of the home screen shows the build number, `MP-V2.1.0+10` for this one; a downloaded release shows none.
+- Between two releases, the bottom of the home screen shows the build number, `MP-V2.1.0+11` for this one; a downloaded release shows none.
 
 **Easier-to-read drop-down lists**
 - Their header, the chosen line and the line under the pointer have stronger contrast in every theme.
@@ -179,6 +179,9 @@ Further down, *Before v2.0.0* keeps the history of each tool up to v1.24.0, when
 
 **Fixed: the map height after typing**
 - On a phone, moving the handle while the on-screen keyboard is open no longer keeps the map small once the keyboard closes.
+
+**Threat data**
+- The data of the game's air defence systems is ready for the coming threats layer; nothing visible changes.
 
 ### Datacard Generator
 
