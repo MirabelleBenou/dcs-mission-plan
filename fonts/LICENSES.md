@@ -13,3 +13,5 @@ The five fonts below are embedded as base64 in every tool and in the offline fil
 The Apache licence file of Special Elite carries no copyright line; the one shown for it is taken from the font itself (name table, ID 0).
 
 Source: [google/fonts](https://github.com/google/fonts), commit `29b4ec6df2522a8aee279414b78a07910b065874`.
+
+Squadron Ready Room insignia: original artwork of the project; lettering from Oswald (SIL Open Font License 1.1), converted to outlines. The insignia files are in [`../brand/`](../brand/).

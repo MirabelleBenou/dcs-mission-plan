@@ -2426,6 +2426,17 @@ def _ico_flag(cx, cy):
             f'<path d="M{_n(cx - 7)},{_n(cy)} h14 M{_n(cx)},{_n(cy - 4.5)} v9" stroke="currentColor" stroke-width="1.1"/>')
 
 
+def _ico_picto(cx, cy):
+    return (f'<circle cx="{_n(cx)}" cy="{_n(cy)}" r="5" fill="none" stroke="currentColor" stroke-width="1.1"/>'
+            f'<circle cx="{_n(cx)}" cy="{_n(cy)}" r="1.6" fill="currentColor"/>')
+
+
+def _ico_crest(cx, cy, r):
+    return (f'<circle cx="{_n(cx)}" cy="{_n(cy)}" r="{_n(r)}" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width="1.2"/>'
+            f'<circle cx="{_n(cx)}" cy="{_n(cy)}" r="{_n(r * .68)}" fill="none" stroke="currentColor" stroke-width=".8"/>'
+            f'<circle cx="{_n(cx)}" cy="{_n(cy)}" r="{_n(r * .18)}" fill="currentColor"/>')
+
+
 def _st_card(P, x, y, w, sigle, name, tool, h=106):
     o = [sv_box(x, y, w, h)]
     o.append(f'<rect x="{_n(x + 6)}" y="{_n(y + 6)}" width="{_n(w - 12)}" height="44" fill="currentColor" opacity=".10" stroke="currentColor" stroke-width=".6"/>')
@@ -2443,7 +2454,8 @@ def _start_wide(P):
     o.append(P.title_wide('L’ACCUEIL DE MISSION PLAN', 'THE MISSION PLAN HOME PAGE', 24, 32))
     o.append('<g transform="translate(0,22)">')
     X0, X1 = 40, 680
-    o += [sv_box(X0, 44, X1 - X0, 28), sv_box(X0 + 6, 49, 120, 18), P.text(X0 + 66, 61, 8, D('DCS · MISSION PLAN'))]
+    o += [sv_box(X0, 44, X1 - X0, 28), sv_box(X0 + 6, 49, 120, 18), P.text(X0 + 68, 61, 8, D('DCS · MISSION PLAN'))]
+    o.append(_ico_picto(X0 + 15, 58))        # le pictogramme de la famille, avant le nom de l'outil
     bx, x = {}, 180
     for key, w, parts in (('open', 52, [L('mp', 'work.open.btn')]), ('save', 66, [L('mp', 'work.save.btn')]), ('ex', 64, [L('mp', 'ex.btn', add='▾')])):
         o.append(P.btn(x, 49, w, 18, parts))
@@ -2464,6 +2476,7 @@ def _start_wide(P):
     o.append(sv_box(X0 + 10, 84, 190, 40))
     o.append(P.text(X0 + 18, 97, 8, L('mp', 'ribbon'), anchor='start', op=.7))
     o.append(P.text(X0 + 18, 117, 15, D('MISSION PLAN'), anchor='start', extra=' font-weight="700"'))
+    o.append(_ico_crest(X0 + 200 + 14 + 20, 92, 20))      # l'insigne, à droite de la plaque du titre
     # les deux groupes
     y = 138
     for gk, cards in _ST_CARDS:
@@ -2495,8 +2508,14 @@ def _start_tall(P):
     X0, X1 = 30, 330
     w = X1 - X0
     o.append(sv_box(X0, 56, w, 22))
-    o.append(P.text(X0 + w / 2, 71, 8, D('DCS · MISSION PLAN')))
-    IY = 108
+    o.append(P.text(X0 + w / 2 + 6, 71, 8, D('DCS · MISSION PLAN')))
+    o.append(_ico_picto(X0 + w / 2 - 44, 67))        # le pictogramme de la famille, avant le nom de l'outil
+    # la plaque du titre, et l'insigne en sceau sur son coin haut-droit
+    o.append(sv_box(X0 + 10, 96, 190, 34))
+    o.append(P.text(X0 + 18, 107, 7, L('mp', 'ribbon'), anchor='start', op=.7))
+    o.append(P.text(X0 + 18, 124, 13, D('MISSION PLAN'), anchor='start', extra=' font-weight="700"'))
+    o.append(_ico_crest(X0 + 10 + 190 + 12 - 18, 96 - 16 + 18, 18))
+    IY = 150
     o.append(sv_box(X0, IY, w, 30))
     bx, x = {}, X0 + 6
     for key, bw, ico in (('open', 28, _rp_ico_folder), ('save', 28, _rp_ico_disk), ('ex', 40, _ico_doc), ('fm', 28, _ico_book)):

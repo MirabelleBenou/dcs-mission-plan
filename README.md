@@ -1,3 +1,5 @@
+![Mission Plan — part of the Squadron Ready Room family](brand/banniere-mission-plan.png)
+
 # DCS Mission Plan
 
 **v2.1.0** — one version for the whole suite; see the [CHANGELOG](./CHANGELOG.md).
@@ -227,12 +229,14 @@ The output `dist/dcs_mission_plan.html` is the distributable (and the file publi
 ├── airfields.json                 # DCS airfield & helipad positions (from pydcs)
 ├── airdromes.json                 # DCS airfield names and ids per theatre (from pydcs, via DCS Airfield Charts)
 ├── public_host_block.py           # Shared address of the suite's public files (Route Planner, Flight Configurator), no DOM
+├── brand_block.py                 # Shared family insignia block (reads brand/): tab icons, insignia data URLs, no DOM
 ├── towns.json                     # DCS town names & positions (from the DCS World maps)
 ├── data/                          # Flight Configurator tables (weapons, pylons, limits, front views from Mission Tools), HQ's aircraft types, and their licences
 ├── wmm/                          # World Magnetic Model coefficients 1985–2025 (NOAA, public domain)
 ├── igrf/                         # IGRF-12 coefficients 1900–2015 (IAGA, as shipped by DCS World)
 ├── tiles/                         # Board tiles (512² WebP): hq, bg, rs, fm, rp, kg, fc
 ├── docs/screenshots/              # README images
+├── brand/                         # Squadron Ready Room family insignia: tab icons, insignia, banner (copies of the family's master files)
 ├── CHANGELOG.md
 ├── README.md
 └── LICENSE
@@ -299,6 +303,7 @@ For code contributions: fork, branch, study the build scripts to understand the 
 - World Magnetic Model coefficients (epochs 1985–2025, the ones DCS World ships) by NOAA NCEI and the British Geological Survey, public domain
 - International Geomagnetic Reference Field, 12th generation (IAGA), in the NOAA geomag70 file DCS World ships, used for years up to 1984
 - Fonts embedded in every tool: Oswald, Stardos Stencil, Caveat and Roboto Mono (SIL Open Font License 1.1), Special Elite (Apache License 2.0), from Google Fonts — licence texts in [`fonts/LICENSES.md`](fonts/LICENSES.md)
+- Squadron Ready Room insignia: original artwork of the project; lettering from Oswald (SIL Open Font License 1.1), converted to outlines.
 - PNG and ZIP exports: [html2canvas](https://github.com/niklasvh/html2canvas) by Niklas von Hertzen and [JSZip](https://github.com/Stuk/jszip) by Stuart Knightley (MIT)
 - Cold War kraft SVG file provided by Flappie, thanks to him !
 

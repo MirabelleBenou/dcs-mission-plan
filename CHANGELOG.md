@@ -16,7 +16,7 @@ Further down, *Before v2.0.0* keeps the history of each tool up to v1.24.0, when
 ### All tools
 
 **Build number on the hosted version**
-- Between two releases, the bottom of the home screen shows the build number, `MP-V2.1.0+8` for this one; a downloaded release shows none.
+- Between two releases, the bottom of the home screen shows the build number, `MP-V2.1.0+9` for this one; a downloaded release shows none.
 
 **Easier-to-read drop-down lists**
 - Their header, the chosen line and the line under the pointer have stronger contrast in every theme.
@@ -51,10 +51,18 @@ Further down, *Before v2.0.0* keeps the history of each tool up to v1.24.0, when
 **The tab bar steps aside for the keyboard**
 - On a phone, while the on-screen keyboard is open, the tab bar at the bottom of the Briefing Generator, the Datacard Generator and the Route Planner hides, so the field you type in stays in view; in the Route Planner, a search on the map gets the whole height.
 
+**The Squadron Ready Room family insignia**
+- Every page of the suite carries the family's icon in the browser tab and when pinned to a phone's home screen.
+- The default wing logo, in HQ and the Briefing Generator, is now the Squadron Ready Room insignia; a wing still on the former “WG” logo shows the new one and still counts as not set up.
+
 ### Home screen
 
 **The top bar fits on a phone**
 - What does not fit, theme and language, moves into a “⋯” menu at its right end, as in the tools; the theme name is no longer cut.
+
+**The Mission Plan insignia**
+- The home screen shows the Mission Plan insignia beside its title — on a phone, as a seal on the title's corner — and the family's icon in the top bar; when the Squadron Ready Room opens Mission Plan, your wing's emblem takes its place.
+- A *Squadron Ready Room family* line sits above the credits.
 
 ### HQ
 
@@ -190,6 +198,9 @@ Further down, *Before v2.0.0* keeps the history of each tool up to v1.24.0, when
 
 **The HQ screen drawn with the Wing button in its place**
 - The two drawings of the HQ screen show the toolbar in its new order.
+
+**The home screen drawn with its insignia**
+- The two drawings of the home screen show the insignia and the family's icon.
 
 ## MP-V2.1.0 — 2026-11-16
 A small release after v2.0.0: the Field Manual now draws every screen of the suite, and a few fixes in HQ and the Route Planner.

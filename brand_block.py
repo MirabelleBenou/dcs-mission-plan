@@ -6,8 +6,8 @@ image devient une URL data: au build, aucune requête réseau n'est ajoutée.
 
 Ce que le bloc donne :
   data_url(nom)              l'URL data: d'un fichier de brand/ (data:image/svg+xml;base64,… ; data:image/x-icon;base64,… ; data:image/png;base64,…)
-  tab_icons_html()           les trois liens d'icône d'onglet, dans cet ordre : favicon.ico, favicon.svg, apple-touch-icon.png
-  add_tab_icons(html)        les trois liens posés juste après </title> (une seule fois, sinon le build s'arrête)
+  tab_icons_html(touch)      les liens d'icône d'onglet : favicon.ico, favicon.svg, et avec touch=True apple-touch-icon.png (le shell seul)
+  add_tab_icons(html, touch) les liens posés juste après </title> (une seule fois, sinon le build s'arrête)
   INSIGNE_MP, INSIGNE_RR, PICTO   les URL data: de l'insigne de Mission Plan, de l'insigne générique (Ready Room) et du pictogramme
   LEGACY_WG_LOGO_DATAURL     l'ancien logo « WG » par défaut du Wing (voir plus bas)
 
@@ -43,21 +43,24 @@ LEGACY_WG_LOGO_DATAURL = (
 )
 
 
-def tab_icons_html():
-    """Les trois liens d'icône d'onglet : le .ico (16, 32, 48), le .svg, l'apple-touch-icon (180)."""
-    return ('<link rel="icon" type="image/x-icon" sizes="16x16 32x32 48x48" href="' + data_url('favicon.ico') + '">\n'
-            '<link rel="icon" type="image/svg+xml" href="' + data_url('favicon.svg') + '">\n'
-            '<link rel="apple-touch-icon" sizes="180x180" href="' + data_url('apple-touch-icon.png') + '">\n')
+def tab_icons_html(touch=False):
+    """Les liens d'icône d'onglet : le .ico (16, 32, 48), puis le .svg ; avec touch=True, l'apple-touch-icon (180) en plus (le shell seul : c'est la page qu'on épingle à l'écran d'accueil)."""
+    out = ('<link rel="icon" type="image/x-icon" sizes="16x16 32x32 48x48" href="' + data_url('favicon.ico') + '">\n'
+           '<link rel="icon" type="image/svg+xml" href="' + data_url('favicon.svg') + '">\n')
+    if touch:
+        out += '<link rel="apple-touch-icon" sizes="180x180" href="' + data_url('apple-touch-icon.png') + '">\n'
+    return out
 
 
 _TITLE_RX = re.compile(r'<title>[^<]*</title>\n')
 
 
-def add_tab_icons(html):
-    """Pose les trois liens juste après l'élément <title> de l'en-tête (le premier du fichier) ; le build s'arrête s'il n'y en a pas, ou si les liens y sont déjà."""
-    if 'rel="apple-touch-icon"' in html[:html.find('</head>')]:
+def add_tab_icons(html, touch=False):
+    """Pose les liens juste après l'élément <title> de l'en-tête (le premier du fichier) ; le build s'arrête s'il n'y en a pas, ou si les liens y sont déjà."""
+    head_end = html.find('</head>')
+    if 'rel="icon"' in html[:head_end]:
         raise SystemExit('[ERREUR] les icônes d\'onglet figurent déjà dans l\'en-tête — build arrêté')
     m = _TITLE_RX.search(html)
-    if not m or m.start() > html.find('</head>'):
+    if not m or m.start() > head_end:
         raise SystemExit('[ERREUR] <title> introuvable dans l\'en-tête, les icônes d\'onglet ne peuvent pas être posées — build arrêté')
-    return html[:m.end()] + tab_icons_html() + html[m.end():]
+    return html[:m.end()] + tab_icons_html(touch) + html[m.end():]

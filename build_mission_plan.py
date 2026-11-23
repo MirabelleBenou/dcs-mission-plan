@@ -550,7 +550,7 @@ def build_html(module_html_js, tile_uris, suite_examples_js):
     tile_dg = tile_uris.get('dg', '')
     tile_fc = tile_uris.get('fc', '')
 
-    return f'''<!DOCTYPE html>
+    return brand_tab_icons(f'''<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
@@ -611,6 +611,7 @@ body{{font-family:var(--f-body); background:var(--board-2); color:var(--paper); 
   background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.3));}}
 .plate .mark{{font-family:var(--f-sten); font-size:16px; letter-spacing:.05em; color:var(--amber);}}
 .plate .sub{{font-family:var(--f-mono); font-size:10px; letter-spacing:.24em; color:var(--accent); text-transform:uppercase;}}
+.plate .mp-plate-picto{{vertical-align:-6px; margin-right:10px;}}
 .rail .spacer{{flex:1;}}
 .ctrl{{display:flex; align-items:center; gap:8px;}}
 .seg{{display:inline-flex; border:1px solid var(--line); border-radius:var(--rad); overflow:hidden;}}
@@ -694,6 +695,17 @@ select[data-tbm-src] {{ display: none !important; }}
 .tab .ribbon{{font-family:var(--f-mono); font-size:10px; letter-spacing:.26em; color:var(--ink-2); text-transform:uppercase;}}
 .tab h1{{font-family:var(--f-sten); font-size:clamp(28px,4.8vw,48px); line-height:.9; letter-spacing:.02em; color:var(--ink); margin-top:4px;}}
 .tab h1 .x{{color:var(--stamp);}}
+/* L'insigne de Mission Plan, ou l'emblème de l'escadre quand la Ready Room ouvre Mission Plan (mpCrestRefresh) : posé sur la plaque du titre, en absolu, à toutes les largeurs ; il garde ses couleurs sur tous les thèmes */
+#mp-crest{{position:absolute; left:calc(100% + 18px); top:-14px; width:120px; height:120px; object-fit:contain; transform:rotate(7deg); filter:drop-shadow(2px 4px 6px rgba(0,0,0,.6)); z-index:3;}}
+@media(max-width:759px){{
+  /* au téléphone : en sceau sur le coin haut-droit de la plaque ; seul le sur-titre s'écarte de lui (taille de l'écusson moins 6 px) */
+  #mp-crest{{left:auto; right:-12px; top:-16px; width:64px; height:64px;}}
+  .tab .ribbon{{padding-right:58px;}}
+}}
+@media(min-width:400px) and (max-width:759px){{
+  #mp-crest{{width:72px; height:72px;}}
+  .tab .ribbon{{padding-right:66px;}}
+}}
 .note{{display:flex; border:1px solid var(--line); border-radius:var(--rad); overflow:hidden; background:rgba(0,0,0,.32); transform:rotate(.6deg);}}
 .note .cell{{padding:8px 13px; border-right:1px solid var(--line);}} .note .cell:last-child{{border-right:none;}}
 .note .k{{font-family:var(--f-mono); font-size:10px; letter-spacing:.18em; color:var(--accent); text-transform:uppercase; display:block;}}
@@ -810,6 +822,8 @@ select[data-tbm-src] {{ display: none !important; }}
   overflow-wrap:anywhere;}}
 #credits p + p{{margin-top:3px;}}
 #credits a{{color:inherit; text-decoration:underline;}}
+#credits .mp-signature{{text-align:center; font:500 12px var(--f-ui); letter-spacing:2.5px; text-transform:uppercase; color:#C9A64A; margin:0 0 8px; opacity:.9;}}
+#credits .mp-signature img{{vertical-align:-4px; margin-right:8px;}}
 
 /* ===== PIED ===== */
 .foot{{padding:13px 24px; border-top:1px solid var(--line); display:flex; gap:14px; align-items:center; flex-wrap:wrap; position:relative; z-index:6;
@@ -846,7 +860,7 @@ select[data-tbm-src] {{ display: none !important; }}
 
   <!-- RAIL -->
   <div class="rail reveal d1">
-    <div class="plate"><span class="mark">DCS · MISSION PLAN</span></div>
+    <div class="plate"><span class="mark"><img class="mp-plate-picto" src="{PICTO}" alt="" width="24" height="24">DCS · MISSION PLAN</span></div>
     <div class="spacer"></div>
     <div class="ctrl">
       <button type="button" class="mp-railbtn tb-file" id="btn-work-open" data-i18n-title="work.open.tip" data-i18n-aria="work.open.tip" title="Ouvrir un travail de Mission Plan (JSON)" aria-label="Ouvrir un travail de Mission Plan (JSON)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 7h6l2 2h10v10H3z"/></svg><span data-i18n="work.open.btn">Ouvrir…</span></button>
@@ -883,6 +897,7 @@ select[data-tbm-src] {{ display: none !important; }}
       <div class="tab reveal d2">
         <div class="ribbon" data-i18n="ribbon">// Suite de préparation opérationnelle</div>
         <h1>MISSION <span class="x">PLAN</span></h1>
+        <img id="mp-crest" src="{INSIGNE_MP}" alt="Mission Plan" data-source="mp">
       </div>
     </div>
 
@@ -990,6 +1005,7 @@ select[data-tbm-src] {{ display: none !important; }}
   </div>
 
   <div id="credits">
+    <div class="mp-signature"><img src="{PICTO}" alt="" width="18" height="18">Squadron Ready Room family</div>
     <p>Based on Mission Plan by MirabelleBenou and the 4th VEAW virtual wing — <a href="https://github.com/MirabelleBenou/dcs-mission-plan" target="_blank" rel="noopener">github.com/MirabelleBenou/dcs-mission-plan</a> · <a href="https://github.com/MirabelleBenou/dcs-mission-plan/blob/main/LICENSE" target="_blank" rel="noopener">AGPL-3.0-or-later</a></p>
     <p><span data-i18n="credits.data">Données des appareils et des terrains : </span><a href="https://github.com/pydcs/dcs" target="_blank" rel="noopener">pydcs</a><span data-i18n="credits.rest"> (LGPL-3.0-or-later) · vues de face : Goldwolf, DCS Reference Guide, avec son autorisation</span></p>
     <p><span data-i18n="credits.fonts">Polices : Oswald, Stardos Stencil, Caveat, Roboto Mono (SIL OFL 1.1), Special Elite (Apache 2.0) · html2canvas, JSZip (MIT) · licences : </span><a href="https://github.com/MirabelleBenou/dcs-mission-plan/blob/main/fonts/LICENSES.md" target="_blank" rel="noopener">fonts/LICENSES.md</a></p>
@@ -1066,6 +1082,7 @@ select[data-tbm-src] {{ display: none !important; }}
       'fc.desc': "Assemble un groupe — identité, radios, emport composé sur la vue de face ou tiré de mes presets, livrée — et l'exporte en paquet de vol que HQ applique à une mission.",
       'rp.desc': 'Tracé de route sur carte — carte DCS, topographique ou satellite, grille MGRS, villes et aérodromes, recherche ; points de référence ; caps, distances, vitesse sol et minutage ; calques CombatFlite et dessin au doigt (zones, FLOT, couloirs, orbites, boîtes) ; MGRS et DMS, envoyés à la datacard ; import et export du Route Tool de DCS.',
       'status.op': 'Opérationnel',
+      'crest.wingAlt': 'Emblème de l\u2019escadre',
       'credits.data': 'Données des appareils et des terrains : ',
       'credits.rest': ' (LGPL-3.0-or-later) · vues de face : Goldwolf, DCS Reference Guide, avec son autorisation',
       'credits.fonts': 'Polices : Oswald, Stardos Stencil, Caveat, Roboto Mono (SIL OFL 1.1), Special Elite (Apache 2.0) · html2canvas, JSZip (MIT) · licences : ',
@@ -1118,6 +1135,7 @@ select[data-tbm-src] {{ display: none !important; }}
       'fc.desc': "Assembles a group — identity, radios, loadout built on the front view or started from my presets, livery — and exports it as a flight package that HQ applies to a mission.",
       'rp.desc': 'Lay a route on a map — DCS, topographic or satellite, MGRS grid, towns and airfields, search; reference points; headings, distances, ground speed and minute marks; CombatFlite layers and touch drawing (zones, FLOT, corridors, orbits, boxes); MGRS and DMS, sent to the datacard; DCS Route Tool import and export.',
       'status.op': 'Operational',
+      'crest.wingAlt': 'Wing emblem',
       'credits.data': 'Aircraft and airfield data: ',
       'credits.rest': ' (LGPL-3.0-or-later) · front views: Goldwolf, DCS Reference Guide, used with permission',
       'credits.fonts': 'Fonts: Oswald, Stardos Stencil, Caveat, Roboto Mono (SIL OFL 1.1), Special Elite (Apache 2.0) · html2canvas, JSZip (MIT) · licences: ',
@@ -1202,6 +1220,52 @@ select[data-tbm-src] {{ display: none !important; }}
     /* Bouton chargement */
     var loadEl = document.getElementById('module-loading');
     if (loadEl) loadEl.textContent = t('loading') + '…';
+    mpCrestRefresh();
+  }}
+
+  /* ── L'écusson de l'accueil ─────────────────────────────────────
+     Par défaut l'insigne de Mission Plan. Ouvert par la Ready Room (wing_config_v1 porte managedBy, une chaîne non vide) : le logo de l'escadre s'il est une image
+     data: reconnue, sinon l'insigne de la Ready Room. Un Wing sans managedBy ne change rien. Clé absente, JSON invalide, autre schéma d'URL, stockage refusé :
+     l'insigne de Mission Plan. Une image qui ne se charge pas : retour à l'insigne de Mission Plan, une seule fois. Rien n'est écrit dans wing_config_v1. */
+  var MP_CREST_RR = '{INSIGNE_RR}';
+  var MP_CREST_MP = null;
+  var MP_CREST_KINDS = ['png', 'jpeg', 'webp', 'gif', 'svg+xml'];
+  function mpCrestLogoOk(u) {{
+    return typeof u === 'string' && MP_CREST_KINDS.some(function(k) {{ var pre = 'data:image/' + k; return u.indexOf(pre + ';') === 0 || u.indexOf(pre + ',') === 0; }});
+  }}
+  function mpCrestRead() {{
+    try {{
+      var raw = localStorage.getItem('wing_config_v1');
+      if (!raw) return null;
+      var c = JSON.parse(raw);
+      if (!c || typeof c !== 'object' || typeof c.managedBy !== 'string' || !c.managedBy.trim()) return null;
+      var w = (c.wing && typeof c.wing === 'object') ? c.wing : {{}};
+      return {{
+        logo: mpCrestLogoOk(w.logo) ? w.logo : '',
+        full: (typeof w.fullName === 'string') ? w.fullName : '',
+        short: (typeof w.shortName === 'string') ? w.shortName : ''
+      }};
+    }} catch (e) {{ return null; }}
+  }}
+  function mpCrestSet(el, source, src, alt) {{
+    if (el.getAttribute('src') !== src) el.setAttribute('src', src);
+    el.setAttribute('alt', alt);
+    el.setAttribute('data-source', source);
+  }}
+  function mpCrestRefresh() {{
+    var el = document.getElementById('mp-crest');
+    if (!el) return;
+    if (MP_CREST_MP === null) {{
+      MP_CREST_MP = el.getAttribute('src');
+      el.addEventListener('error', function() {{
+        if (el.getAttribute('data-source') === 'mp') return;       /* une seule fois : l'insigne de Mission Plan ne se remplace pas lui-même */
+        mpCrestSet(el, 'mp', MP_CREST_MP, 'Mission Plan');
+      }});
+    }}
+    var m = mpCrestRead();
+    if (!m) mpCrestSet(el, 'mp', MP_CREST_MP, 'Mission Plan');
+    else if (m.logo) mpCrestSet(el, 'wing', m.logo, m.full.trim() ? m.full : (m.short.trim() ? m.short : t('crest.wingAlt')));
+    else mpCrestSet(el, 'rr', MP_CREST_RR, 'Squadron Ready Room');
   }}
 
   /* Les drapeaux sont dessinés (ils ne s'affichent pas en lettres sous Windows) ; le bouton montre la langue vers laquelle il bascule */
@@ -1918,6 +1982,7 @@ function tbmScrolled(e) {{
     window.addEventListener('storage', function(e) {{
       if (e.key === KEY_THEME && e.newValue && THEMES[e.newValue]) {{ setTheme(e.newValue); }}
       else if (e.key === 'wing_config_v1') {{ refreshWingStamps(); }}
+      if (e.key === 'wing_config_v1' || e.key === null) mpCrestRefresh();
     }});
 
     /* Le toast relit la barre basse de l'outil ouvert à son affichage */
@@ -1929,7 +1994,7 @@ function tbmScrolled(e) {{
   document.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
-</html>'''
+</html>''', touch=True)
 
 
 def main():
