@@ -2672,7 +2672,7 @@ const I18N = {
     'clr.layers': 'Imported layers',
     'clr.routes.1': '{n} route',
     'clr.routes.n': '{n} routes',
-    'clr.all': 'Clear all',
+    'clr.all': 'Clear everything',
     'clr.go': 'Clear selected',
     'toast.cleared': 'Cleared: {list}',
     'toast.groupsDetached': '{n} group(s) no longer have a route.',

@@ -16,7 +16,7 @@ Further down, *Before v2.0.0* keeps the history of each tool up to v1.24.0, when
 ### All tools
 
 **Build number on the hosted version**
-- Between two releases, the bottom of the home screen shows the build number, `MP-V2.1.0+7` for this one; a downloaded release shows none.
+- Between two releases, the bottom of the home screen shows the build number, `MP-V2.1.0+8` for this one; a downloaded release shows none.
 
 **Easier-to-read drop-down lists**
 - Their header, the chosen line and the line under the pointer have stronger contrast in every theme.
@@ -82,6 +82,12 @@ Further down, *Before v2.0.0* keeps the history of each tool up to v1.24.0, when
 **A warning before leaving with a mission open**
 - The browser asks before the page is closed, reloaded or left: the mission is not kept after that.
 
+**The Wing button keeps its place**
+- The Wing button now always sits between Flight packages and Example, whether or not the wing is set up; until it is, the button stays highlighted.
+
+**A clearer warning on a created flight**
+- When a package creates a flight, a waypoint that pointed to a unit of the package’s mission is reported as removed, no longer as to be checked.
+
 ### Flight Configurator
 
 **Every flyable aircraft of the game (75 types)**
@@ -105,6 +111,9 @@ Further down, *Before v2.0.0* keeps the history of each tool up to v1.24.0, when
 **A warning when exporting a flight without a route**
 - HQ will not be able to create it if the mission lacks it.
 
+**Folded groups stay folded**
+- A group you fold, on its own or with Fold all, is still folded when you come back or reload.
+
 ### Briefing Generator
 
 **Aircraft types under their designation**
@@ -119,6 +128,12 @@ Further down, *Before v2.0.0* keeps the history of each tool up to v1.24.0, when
 
 **Fixed: a custom aircraft name hid the radio plan editor**
 - A name such as “constructor” no longer stops the radio plan editor from showing.
+
+**Restore after opening a briefing**
+- Open a briefing… now offers Restore for 12 seconds, like the other tools: it brings back the briefing you had before.
+
+**Fixed: briefing files are read safely**
+- A briefing file, or a briefing kept by the browser, can no longer change how the page works through special keys such as __proto__.
 
 ### Route Planner
 
@@ -138,6 +153,9 @@ Further down, *Before v2.0.0* keeps the history of each tool up to v1.24.0, when
 **Tabs at the bottom on a phone**
 - On a phone or tablet, the map stays in view above the panel, which now has four tabs at the bottom of the screen — Route, Ref., Layers and Nav. — in the same bar as the Briefing and Datacard Generators; map and panel start at about half the screen each, and the handle still resizes them.
 - Below 520 px wide, a waypoint row takes two lines, the name on the first, altitude, speed and reference on the second; with a finger, its text is 16 px.
+
+**“Clear everything”, as in the other tools**
+- In English, the button of the Clear window now reads “Clear everything”.
 
 ### Datacard Generator
 
@@ -159,6 +177,9 @@ Further down, *Before v2.0.0* keeps the history of each tool up to v1.24.0, when
 **“For the whole mission” marks only Heading and Variation**
 - In the Navigation settings, these two are shared with the Route Planner; Display stays per datacard.
 
+**Fixed: a free card kept its last aircraft**
+- When every crew line of a free card goes back to “to pick”, the Aircraft and Count fields empty instead of keeping the last aircraft found.
+
 ### Field Manual
 
 **Links in the manual’s ink**
@@ -166,6 +187,9 @@ Further down, *Before v2.0.0* keeps the history of each tool up to v1.24.0, when
 
 **DISS-15 explained**
 - The Route Planner and Datacard Generator chapters explain the DISS-15 values; the Flight Configurator drawing shows the fold icon on a single group.
+
+**The HQ screen drawn with the Wing button in its place**
+- The two drawings of the HQ screen show the toolbar in its new order.
 
 ## MP-V2.1.0 — 2026-11-16
 A small release after v2.0.0: the Field Manual now draws every screen of the suite, and a few fixes in HQ and the Route Planner.

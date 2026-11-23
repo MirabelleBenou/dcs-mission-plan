@@ -1425,7 +1425,7 @@ const I18N = {{
     'hq.empty.hint': 'ou déposez le fichier ici · configurez d\\'abord votre wing (Wing, en haut)',
     'hq.checked.one': 'Sur {{0}} groupe coché',
     'hq.checked.many': 'Sur {{0}} groupes cochés',
-    'hq.open.title': 'Ouvrir un autre .miz ?',
+    'hq.open.title': 'Ouvrir un autre .miz ?',
     'hq.open.text.one': 'La modification pas encore sauvegardée sera perdue.',
     'hq.open.text.many': 'Les {{0}} modifications pas encore sauvegardées seront perdues.',
     'hq.open.verb': 'Ouvrir',
@@ -1434,7 +1434,7 @@ const I18N = {{
     'hq.clear.verb': 'Retirer',
     'hq.keep': 'Garder les modifications',
     'hq.revert': 'Annuler les modifications',
-    'hq.revert.title': 'Annuler les modifications ?',
+    'hq.revert.title': 'Annuler les modifications ?',
     'hq.revert.text.one': 'La modification pas encore sauvegardée sera perdue : HQ revient à la mission telle qu’elle était à l’ouverture ou à la dernière sauvegarde.',
     'hq.revert.text.many': 'Les {{0}} modifications pas encore sauvegardées seront perdues : HQ revient à la mission telle qu’elle était à l’ouverture ou à la dernière sauvegarde.',
     'hq.revert.verb': 'Annuler les modifications',
@@ -1613,7 +1613,7 @@ const I18N = {{
     'dyn.w.pk2': 'Liées à un autre template — cocher le remplace',
     'dyn.w.pk3': 'Sans template {{0}}',
     'dyn.w.today': 'aujourd’hui : {{0}}',
-    'dyn.w.why': 'Pourquoi d’autres bases n’apparaissent pas ?',
+    'dyn.w.why': 'Pourquoi d’autres bases n’apparaissent pas ?',
     'dyn.w.help3': 'Réglage de la base : il vaut pour tous les appareils qui y apparaissent par Dynamic Spawn.',
     'dyn.w.hotline': '{{0}} — moteur tournant',
     'dyn.w.hotnone': 'Cocher une base à l’étape 2.',
@@ -1857,6 +1857,7 @@ const I18N = {{
     'pk.w.prefix': '{{0}} : {{1}}',
     'pk.w.departure': '{{0}} : départ de la mission conservé — le paquet part d’ailleurs',
     'pk.w.pointRef': '{{0}} : point {{1}} : référence à une unité de la mission du paquet ({{2}} = {{3}}) — à vérifier',
+    'pk.w.pointRefDropped': '{{0}} : point {{1}} : référence à une unité de la mission du paquet ({{2}} = {{3}}) — retirée',
     'pk.w.routeEmpty': '{{0}} : la route du groupe n’a pas de point dans le .miz, route du paquet écrite en entier',
     'pk.w.p1Fixed': '{{0}} : le point 1 de la mission ne peut pas être réécrit tel quel, route non écrite',
     'pk.e.reparse': 'texte écrit illisible',
@@ -2340,6 +2341,7 @@ const I18N = {{
     'pk.w.prefix': '{{0}}: {{1}}',
     'pk.w.departure': '{{0}}: mission departure kept — the package starts elsewhere',
     'pk.w.pointRef': '{{0}}: point {{1}}: refers to a unit of the package’s mission ({{2}} = {{3}}) — check it',
+    'pk.w.pointRefDropped': '{{0}}: point {{1}}: refers to a unit of the package’s mission ({{2}} = {{3}}) — removed',
     'pk.w.routeEmpty': '{{0}}: the group’s route has no point in the .miz, the package’s route is written in full',
     'pk.w.p1Fixed': '{{0}}: the mission’s point 1 cannot be rewritten as it is, route not written',
     'pk.e.reparse': 'written text unreadable',
@@ -5312,7 +5314,7 @@ function pkBuildGroup(work, fl) {{
     const i = nPts++;
     const pt = {{}};
     for (const [kk, v] of Object.entries(raw)) {{
-      if (kk === 'linkUnit' || kk === 'helipadId') {{ warns.push({{ key: 'pk.w.pointRef', args: [label, k, kk, v] }}); continue; }}      // ils désignent des unités de la mission du paquet
+      if (kk === 'linkUnit' || kk === 'helipadId') {{ warns.push({{ key: 'pk.w.pointRefDropped', args: [label, k, kk, v] }}); continue; }}      // ils désignent des unités de la mission du paquet
       if (isFirst && kk === 'airdromeId') continue;      // le point 1 ne part plus d'un terrain
       pt[kk] = v;
     }}
@@ -7213,20 +7215,15 @@ function wingConfigured() {{
   try {{ v = JSON.parse(raw); }} catch (e) {{ return false; }}
   return !deepEqValues(v, DEFAULT_WING_CONFIG);
 }}
-/* « Wing » en premier (juste après le sigle, devant les boutons de fichier) et au dessin du bouton principal tant que le wing n'est pas configuré ; à sa place sinon.
-   Le seul déplacement de la barre : il ne dépend pas de la largeur. */
+/* « Wing » reste à sa place, celle du HTML (après le séparateur des fichiers, devant « Exemple »), que le wing soit configuré ou non : rien ne se déplace.
+   Tant que le wing n'est pas configuré, le bouton garde la classe du bouton principal (il reste mis en avant). */
 function hqWingOrder() {{
-  const b = hqEl('btn-wing'), ex = hqEl('btn-example');
-  const brand = document.querySelector('header.toolbar > .tb-brand');
-  if (!b || !ex || !brand) return;
-  const cfg = wingConfigured();
-  b.classList.toggle('primary', !cfg);
-  b.classList.toggle('tb-lead', !cfg);
-  if (!cfg) {{ if (brand.nextElementSibling !== b) brand.after(b); }}
-  else if (b.nextElementSibling !== ex) ex.before(b);
+  const b = hqEl('btn-wing');
+  if (!b) return;
+  b.classList.toggle('primary', !wingConfigured());
 }}
 
-/* « Annuler » suit toujours « Sauvegarder .miz », quel que soit l'ordre que pose hqWingOrder() */
+/* « Annuler » suit toujours « Sauvegarder .miz », quel que soit l'état du wing */
 function hqRevertPlace() {{
   const rv = hqEl('btn-revert'), sv = hqEl('btn-save');
   if (rv && sv && sv.nextElementSibling !== rv) sv.after(rv);

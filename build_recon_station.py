@@ -2862,7 +2862,7 @@ const I18N = {{
     'toolbar.export.tooltip': "Exporter l'image (PNG pleine résolution)",
     'toolbar.reset': 'Effacer',
     'toolbar.reset.tooltip': 'Effacer…',
-    'clear.title': 'Effacer le Recon Station ?',
+    'clear.title': 'Effacer le Recon Station ?',
     'clear.text': 'L\u2019image, ses annotations, la l\u00e9gende et le bloc d\u2019informations seront effac\u00e9s. Le th\u00e8me et la configuration Wing restent.',
     'clear.verb': 'Effacer',
     'clear.toast': 'Recon Station effac\u00e9.',

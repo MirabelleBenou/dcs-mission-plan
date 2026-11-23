@@ -5327,6 +5327,14 @@ function syncGroup(c) {
   if (d) { c.flight.aircraft = d.aircraft; c.flight.count = d.count; }
   return !!d;
 }
+/* Une carte libre dont les lignes d'équipage donnaient un groupe (déduit ou partiel) et n'en donnent plus (tous les types remis à « à choisir », ou les lignes vidées) perd l'appareil et le nombre déduits :
+   groupWas(c) se lit avant le changement des lignes, groupDrop(c, was) après ; un appareil tapé à la main sur une carte qui n'a jamais été déduite ne change pas. Rend vrai si les champs ont été vidés. */
+function groupWas(c) { return !c.gsId && !!(deduceGroup(c) || partialGroup(c)); }
+function groupDrop(c, was) {
+  if (!was || c.gsId || deduceGroup(c) || partialGroup(c)) return false;
+  c.flight.aircraft = ''; c.flight.count = null;
+  return true;
+}
 function navRows(c) { return c.nav.filter(r => anyText(r, NAV_KEYS)); }
 /* Points de référence : une rangée dont aucun champ n'est rempli n'existe pas pour le bloc. */
 const REF_KEYS = ['name', 'coord', 'altitude', 'note'];
@@ -6467,12 +6475,12 @@ function syncMetar(c) {
 }
 
 /* Les champs Appareil et Nombre du groupe suivent les lignes d'équipage, sans refaire l'éditeur (le curseur reste en place) */
-function syncGroupEditor(c) {
+function syncGroupEditor(c, cleared) {
   const ded = !!deduceGroup(c), lock = ded || !!partialGroup(c);       /* partiel : les champs restent en lecture seule, l'aperçu imprimé dit déjà « n × ? » */
   [['aircraft', dgAircraftShown(c)], ['count', c.flight.count == null ? '' : String(c.flight.count)]].forEach(p => {
     const el = document.querySelector('#editor [data-path="flight.' + p[0] + '"]');
     if (!el) return;
-    if ((ded || (p[0] === 'aircraft' && el !== document.activeElement)) && el.value !== p[1]) el.value = p[1];       /* aussi quand les types sont remis à « à choisir » : le champ dit ce que dit l'imprimé */
+    if ((ded || cleared || (p[0] === 'aircraft' && el !== document.activeElement)) && el.value !== p[1]) el.value = p[1];       /* aussi quand les types sont remis à « à choisir » : le champ dit ce que dit l'imprimé */
     el.readOnly = lock;
     if (lock) el.title = t('f.group.deduced'); else el.removeAttribute('title');
   });
@@ -6506,8 +6514,9 @@ function dgTypePick(c, el) {
     return;
   }
   const stale = !!el.querySelector('option[data-dg-mod]') && !el.options[el.selectedIndex].hasAttribute('data-dg-mod');       /* la valeur hors jeu de base qu'on quitte ne reste pas dans la liste */
+  const was = groupWas(c);
   setPath(c, 'crew.' + i + '.type', el.value);
-  syncGroup(c); syncGroupEditor(c);
+  syncGroup(c); syncGroupEditor(c, groupDrop(c, was));
   dgFlagSync(i, el.value);
   touch();
   if (stale) { renderEditor(); dgTypeFocus(i); }
@@ -6578,13 +6587,14 @@ function onEditorInput(e) {
   if (e.type === 'change' && el.tagName !== 'SELECT') return;
   const c = curCard();
   if (el.tagName === 'SELECT' && el.dataset.dgType !== undefined) { dgTypePick(c, el); return; }        /* le type d'une unité de carte libre : la liste des types du jeu */
+  const was = /^crew\./.test(path) ? groupWas(c) : false;
   if (path === 'flight.count') setPath(c, path, normCount(el.value));
   else setPath(c, path, el.value);
   if (path === 'weather.metar') syncMetar(c);
   if (path === 'flight.callsign') updatePackTitle();
   if (path === 'meta.date') dgYearSync(c);
   if (path === 'meta.date') { const b = dgDateBad(el.value); el.classList.toggle('bad', b); if (b) el.setAttribute('aria-invalid', 'true'); else el.removeAttribute('aria-invalid'); }
-  if (/^crew\./.test(path) && !c.gsId) { syncGroup(c); syncGroupEditor(c); }
+  if (/^crew\./.test(path) && !c.gsId) { syncGroup(c); syncGroupEditor(c, groupDrop(c, was)); }
   if (el.dataset.dgOther !== undefined) dgFlagSync(el.dataset.dgOther, el.value);
   if (/^nav(Display)?\./.test(path)) syncNavEditor();
   if (/^refs\./.test(path)) syncRefsEditor();
@@ -6649,6 +6659,7 @@ function onEditorClick(e) {
   const spec = listSpec(path);
   if (!Array.isArray(arr) || !spec) return;
   let focusIdx = -1;
+  const was = path === 'crew' ? groupWas(c) : false;
   if (path === 'crew') DG_UI.other = null;
   if (act === 'add') {
     if (arr.length >= spec.max) return;
@@ -6663,7 +6674,7 @@ function onEditorClick(e) {
   } else if (act === 'down' && i < arr.length - 1) {
     const tmp = arr[i + 1]; arr[i + 1] = arr[i]; arr[i] = tmp;
   } else return;
-  if (path === 'crew') syncGroup(c);
+  if (path === 'crew') { syncGroup(c); groupDrop(c, was); }
   renderEditor();
   touch();
   if (focusIdx >= 0) {

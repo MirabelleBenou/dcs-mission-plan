@@ -3382,7 +3382,7 @@ const I18N = {
     'editor.roster.addGroup': '+ Ajouter un groupe',
     'editor.roster.noGroup':  'Aucun groupe. Toucher « + Ajouter un groupe ».',
     'editor.roster.noPilot':  'Aucun pilote.',
-    'editor.roster.delGroupConfirm': 'Supprimer ce groupe ?',
+    'editor.roster.delGroupConfirm': 'Supprimer ce groupe ?',
     'editor.roster.pilotPlaceholder':    'Nom / indicatif pilote',
     'editor.roster.callsignPlaceholder': 'Indicatif',
     'editor.roster.pilotsLabel': 'Pilotes',
@@ -4340,8 +4340,10 @@ function loadWingConfig() {
   return structuredClone(DEFAULT_WING_CONFIG);
 }
 
+/* La fusion d'un objet lu (fichier, stockage) dans les défauts : à tout niveau, les clés __proto__, constructor et prototype sont ignorées, jamais copiées ni fusionnées. */
 function mergeDeep(target, source) {
   for (const k of Object.keys(source || {})) {
+    if (k === '__proto__' || k === 'constructor' || k === 'prototype') continue;
     if (source[k] && typeof source[k] === 'object' && !Array.isArray(source[k])) {
       target[k] = mergeDeep(target[k] || {}, source[k]);
     } else {
@@ -7689,62 +7691,65 @@ function loadJsonFile(file) {
     try { parsed = JSON.parse(reader.result); } catch (e) { console.warn('[BG] briefing : JSON illisible', e); showToast(t('rej.json'), { type: 'err' }); return; }
     if (parsed && typeof parsed === 'object' && !Array.isArray(parsed) && parsed.format === WORK_FORMAT) { workHand(reader.result, file.name); return; }       /* un travail de Mission Plan : le shell l'ouvre */
     if (!isBriefingObject(parsed)) { rejectNotBriefing(parsed); return; }
-    try {
-      state = mergeDeep(structuredClone(DEFAULTS), parsed);
-      // Migration classification : legacy texte → clé canonique (v2.2.0)
-      if (state.meta && state.meta.classification) {
-        const migrated = Object.prototype.hasOwnProperty.call(CLASSIF_LEGACY_MAP, state.meta.classification) ? CLASSIF_LEGACY_MAP[state.meta.classification] : null;
-        if (migrated) state.meta.classification = migrated;
-      }
-      if (Array.isArray(state.phases)) {
-        state.phases.forEach(ph => {
-          ph.execution = normalizeExecution(ph.execution);
-          normalizePhaseImages(ph);
-          ph.threatLevel = normalizeThreatLevel(ph.threatLevel);
-        });
-      }
-      applyLoadedFormat(parsed);
-      normalizePhotos(state);
-      normalizeTargets(state);
-      currentPhaseIdx = 0;
-
-      // v2.1.1 : recompresse silencieusement les images trop lourdes (briefings v2.1.0 et antérieurs)
-      const recompressed = await recompressOversizedImagesInState(state);
-      if (recompressed > 0) {
-        persistState();  // re-sauvegarde immédiate avec les images optimisées
-      }
-
-      renderEditorBindings();
-      schedulePreview();
-      // 5.2 — Warn about squadron IDs referenced by this briefing but absent from current wing
-      if (Array.isArray(state.phases)) {
-        const knownIds = new Set((wingConfig.squadrons || []).map(sq => sq.id));
-        const missingIds = [...new Set(
-          state.phases
-            .map(ph => ph.squadron)
-            .filter(id => id && id !== '__guest__' && !knownIds.has(id))
-        )];
-        if (missingIds.length > 0) {
-          const MAX_SHOWN = 3;
-          const shown = missingIds.slice(0, MAX_SHOWN).join(', ');
-          const extra = missingIds.length > MAX_SHOWN ? ` (+${missingIds.length - MAX_SHOWN})` : '';
-          showToast(t('toast.missingSquadrons').replace('{0}', missingIds.length).replace('{1}', shown + extra), { type: 'err' });
-        } else {
-          showToast(t('toast.briefingLoaded'), { type: 'ok' });
+    /* « Remplacer » : le briefing d'avant est gardé, « Restaurer » le rend (12 s) ; un seul toast dit le chargement, les escadrons absents et les images recompressées */
+    const tail = [];
+    const run = async () => {
+      try {
+        state = mergeDeep(structuredClone(DEFAULTS), parsed);
+        // Migration classification : legacy texte → clé canonique (v2.2.0)
+        if (state.meta && state.meta.classification) {
+          const migrated = Object.prototype.hasOwnProperty.call(CLASSIF_LEGACY_MAP, state.meta.classification) ? CLASSIF_LEGACY_MAP[state.meta.classification] : null;
+          if (migrated) state.meta.classification = migrated;
         }
-      } else {
-        showToast(t('toast.briefingLoaded'), { type: 'ok' });
+        if (Array.isArray(state.phases)) {
+          state.phases.forEach(ph => {
+            ph.execution = normalizeExecution(ph.execution);
+            normalizePhaseImages(ph);
+            ph.threatLevel = normalizeThreatLevel(ph.threatLevel);
+          });
+        }
+        applyLoadedFormat(parsed);
+        normalizePhotos(state);
+        normalizeTargets(state);
+        currentPhaseIdx = 0;
+
+        // v2.1.1 : recompresse silencieusement les images trop lourdes (briefings v2.1.0 et antérieurs)
+        const recompressed = await recompressOversizedImagesInState(state);
+
+        renderEditorBindings();
+        schedulePreview();
+        persistState();       /* écrit tout de suite : « Restaurer » compare le stockage à ce qu'il était à la fin du geste */
+        // 5.2 — Warn about squadron IDs referenced by this briefing but absent from current wing
+        if (Array.isArray(state.phases)) {
+          const knownIds = new Set((wingConfig.squadrons || []).map(sq => sq.id));
+          const missingIds = [...new Set(
+            state.phases
+              .map(ph => ph.squadron)
+              .filter(id => id && id !== '__guest__' && !knownIds.has(id))
+          )];
+          if (missingIds.length > 0) {
+            const MAX_SHOWN = 3;
+            const shown = missingIds.slice(0, MAX_SHOWN).join(', ');
+            const extra = missingIds.length > MAX_SHOWN ? ` (+${missingIds.length - MAX_SHOWN})` : '';
+            tail.push(t('toast.missingSquadrons').replace('{0}', missingIds.length).replace('{1}', shown + extra));
+          }
+        }
+        if (recompressed > 0) tail.push(t('toast.briefingOptimized').replace('{n}', recompressed));
+        return true;
+      } catch (e) {
+        console.warn('[BG] chargement du briefing :', e);
+        showToast(t('msg.failed'), { type: 'err' });
+        return false;
       }
-      // Toast supplémentaire si recompression effectuée
-      if (recompressed > 0) {
-        setTimeout(() => {
-          showToast(t('toast.briefingOptimized').replace('{n}', recompressed), { type: 'ok' });
-        }, 1500);
-      }
-    } catch (e) {
-      console.warn('[BG] chargement du briefing :', e);
-      showToast(t('msg.failed'), { type: 'err' });
-    }
+    };
+    const idx = currentPhaseIdx;
+    replaceWithRestore({
+      keys: [STORAGE_KEY],
+      mem: () => { window.MP_FLUSH(); return { state: structuredClone(state), idx: idx }; },
+      back: m => { state = m.state; currentPhaseIdx = m.idx; renderEditorBindings(); schedulePreview(); persistState(); },
+      msg: () => [t('toast.briefingLoaded')].concat(tail).join(' · '),
+      run: run
+    });
   };
   reader.onerror = () => showToast(t('toast.fileUnreadable'), { type: 'err' });
   reader.readAsText(file);

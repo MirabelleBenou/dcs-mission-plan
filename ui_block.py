@@ -709,8 +709,8 @@ try { if (window.self !== window.top) document.documentElement.classList.add('mp
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
 })();
 
-/* ---- la barre : le même ordre à toutes les largeurs, écrit dans le HTML de chaque module (retour, sigle, .tb-lead s'il y en a un, les boutons de fichier .tb-file,
-   le séparateur .tb-files-end, puis le reste) ; rien ne se déplace selon la largeur. Seul HQ déplace son « Wing » (.tb-lead tant que le wing n'est pas configuré), et pas selon la largeur.
+/* ---- la barre : le même ordre à toutes les largeurs, écrit dans le HTML de chaque module (retour, sigle, les boutons de fichier .tb-file,
+   le séparateur .tb-files-end, puis le reste) ; rien ne se déplace, ni selon la largeur ni selon l'état d'un outil (le « Wing » d'HQ reste à sa place).
    Ce qui suit ne sert qu'à raccourcir sans déplacer : la réduction de la barre est écrite une fois, dans la feuille et dans la séquence ci-dessus (sous 760 px : les six étapes sont prises) ;
    uiBarDisplaySync() tient l'infobulle et le nom accessible d'Affichage ; le passage de 760 px, dans les deux sens, est suivi sans rechargement (uiBarChanged() du module, s'il en a une). ---- */
 const UIBAR = { mq: null };

@@ -718,9 +718,9 @@ def _hq_wide(P):
     o.append(_brand_chev(P, X0 + 27))
     bx = {}
     x = X0 + 32
-    for key, w, parts in (('wing', 40, [L('hq', 'tb.wing')]), ('open', 62, [L('hq', 'tb.open')]), ('save', 82, [L('hq', 'tb.save')]),
+    for key, w, parts in (('open', 62, [L('hq', 'tb.open')]), ('save', 82, [L('hq', 'tb.save')]),
                           ('undo', 16, [D('↺')]), ('pk', 70, [L('hq', 'tb.pk')]), ('sep', 0, None),
-                          ('ex', 48, [L('hq', 'toolbar.example')]), ('clr', 46, [L('hq', 'tb.clear')])):
+                          ('wing', 40, [L('hq', 'tb.wing')]), ('ex', 48, [L('hq', 'toolbar.example')]), ('clr', 46, [L('hq', 'tb.clear')])):
         if key == 'sep':
             o.append(f'<line x1="{_n(x + 2)}" y1="50" x2="{_n(x + 2)}" y2="66" stroke="currentColor" stroke-width="1" opacity=".35"/>')
             x += 8
@@ -774,7 +774,7 @@ def _hq_wide(P):
     def mid(k):
         x, w = bx[k]
         return x + w / 2
-    for n, k in ((1, 'wing'), (2, 'open'), (3, 'save'), (4, 'undo'), (5, 'pk'), (6, 'ex'), (7, 'clr')):
+    for n, k in ((1, 'open'), (2, 'save'), (3, 'undo'), (4, 'pk'), (5, 'wing'), (6, 'ex'), (7, 'clr')):
         o.append(P.bubble(n, mid(k), 28, mid(k), 49))
     o.append(P.bubble(8, 80, 116, L0 + 8, 116))
     o.append(P.bubble(9, 80, 138, L0 + 8, 138))
@@ -792,14 +792,14 @@ def _hq_tall(P):
     o.append(P.title_tall('L’ÉCRAN D’HQ', 'THE HQ SCREEN', 'au téléphone', 'on a phone'))
     o.append('<g transform="translate(0,12)">')
     X0, X1 = 62, 298
-    # la barre : flèche, sigle, six icônes
+    # la barre : flèche, sigle, six icônes (dans l'ordre de l'écran : « Wing » après Paquets de vol)
     o.append(sv_box(X0, 62, X1 - X0, 30))
     o.append(P.text(X0 + 10, 81, 8.5, D('◄'), anchor='start'))
     o.append(P.text(X0 + 34, 81, 8.5, D('H·Q')))
     o.append(_brand_chev(P, X0 + 44.5, 81))
     ic = {}
     x = X0 + 52
-    for key, glyph in (('wing', '⛉'), ('open', '▭'), ('save', '▣'), ('pk', '◫'), ('ex', '▤'), ('clr', '⌫')):
+    for key, glyph in (('open', '▭'), ('save', '▣'), ('pk', '◫'), ('wing', '⛉'), ('ex', '▤'), ('clr', '⌫')):
         o.append(P.btn(x, 67, 26, 20))
         o.append(P.text(x + 13, 81, 9, D(glyph)))
         ic[key] = x + 13
@@ -841,7 +841,7 @@ def _hq_tall(P):
     cs, _cards = _hq_cards(P, X0 + 8, X1 - X0 - 16, yy, 8)
     o += cs
     # bulles : la barre au-dessus, le reste dans les marges
-    for n, k in ((1, 'wing'), (2, 'open'), (3, 'save'), (5, 'pk'), (6, 'ex'), (7, 'clr')):
+    for n, k in ((1, 'open'), (2, 'save'), (4, 'pk'), (5, 'wing'), (6, 'ex'), (7, 'clr')):
         o.append(P.bubble(n, ic[k], 44, ic[k], 67))
     o.append(P.bubble(11, 30, y11, X0, y11))
     o.append(P.bubble(12, 30, y12, X0, y12))
@@ -856,21 +856,21 @@ def _hq_tall(P):
 # La légende d'HQ : (n, titre, texte FR, texte EN). Le titre est un libellé de l'outil, ou un titre du manuel.
 def _hq_legend_rows():
     return [
-        (1, [L('hq', 'tb.wing')],
-         'la fenêtre de l’escadre : escadrons, callsigns, logos, livrées custom et livrée par défaut. Sauvegardée à chaque saisie, lue par tous les outils ; Exporter config et Importer config passent d’un HQ à l’autre. En lecture seule quand un autre outil la fournit.',
-         'the wing’s window: squadrons, callsigns, logos, custom liveries and default livery. Saved on every entry, read by every tool; Export config and Import config carry it from one HQ to another. Read-only when another tool provides it.'),
-        (2, [L('hq', 'tb.open')],
+        (1, [L('hq', 'tb.open')],
          'ou déposez le fichier n’importe où sur la page : ses groupes Client, sa date, son heure et sa météo passent aux autres outils, tant que le .miz reste ouvert.',
          'or drop the file anywhere on the page: its Client groups, date, time and weather go to the other tools, as long as the .miz stays open.'),
-        (3, [L('hq', 'tb.save')],
+        (2, [L('hq', 'tb.save')],
          'le compteur dit les modifications en attente (paquets appliqués, groupes supprimés, Dynamic Spawn) ; un seul téléchargement pour toutes. Ctrl+S.',
          'the counter tells the pending changes (packages applied, groups deleted, Dynamic Spawn); one download for all of them. Ctrl+S.'),
-        (4, [L('hq', 'tb.revert'), D(' ↺')],
+        (3, [L('hq', 'tb.revert'), D(' ↺')],
          'abandonne toutes les modifications en attente.',
          'drops all the pending changes.'),
-        (5, [L('hq', 'tb.pk')],
+        (4, [L('hq', 'tb.pk')],
          'importe les paquets rendus par les Flight Leaders ; pour chaque groupe, cochez route, radios, emport, livrée, puis Appliquer à la mission. HQ retrouve le groupe par son nom et sa coalition.',
          'imports the packages handed back by the Flight Leaders; for each group, tick route, radios, loadout, livery, then Apply to the mission. HQ finds the group by its name and coalition.'),
+        (5, [L('hq', 'tb.wing')],
+         'la fenêtre de l’escadre : escadrons, callsigns, logos, livrées custom et livrée par défaut. Sauvegardée à chaque saisie, lue par tous les outils ; Exporter config et Importer config passent d’un HQ à l’autre. En lecture seule quand un autre outil la fournit.',
+         'the wing’s window: squadrons, callsigns, logos, custom liveries and default livery. Saved on every entry, read by every tool; Export config and Import config carry it from one HQ to another. Read-only when another tool provides it.'),
         (6, [L('hq', 'toolbar.example')],
          'une escadre de démonstration, sans confirmation ; votre configuration est gardée, Restaurer ma configuration la rend.',
          'a demonstration wing, without a confirmation; your configuration is kept, Restore my configuration brings it back.'),
