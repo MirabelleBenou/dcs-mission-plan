@@ -27,6 +27,7 @@ import re
 import sys
 
 from version_block import SUITE_VERSION, DEV_BUILD
+from brand_block import add_tab_icons as brand_tab_icons, INSIGNE_MP, INSIGNE_RR, PICTO
 from shell_only_block import build_block as build_shell_only_block, BLOCK_BEGIN as SHELL_ONLY_BEGIN, BLOCK_END as SHELL_ONLY_END
 from messages_block import build_block as build_messages_block, build_css as build_messages_css
 from ui_block import build_css as build_ui_css, build_bar_js, fingerprint as ui_fingerprint

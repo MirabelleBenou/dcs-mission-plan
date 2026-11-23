@@ -37,6 +37,7 @@ CONTRAST_CSS = r"""
 """
 from aircraft_types_block import build_block as build_aircraft_types_block
 from shell_only_block import build_block as build_shell_only_block
+from brand_block import add_tab_icons as brand_tab_icons, INSIGNE_RR, LEGACY_WG_LOGO_DATAURL
 
 # La garde du module seul : premier élément du <body> (build_mission_plan.py la vérifie dans le dist/)
 SHELL_ONLY_TAG = '<script data-lang-key="lang_v1">\n' + build_shell_only_block() + '</script>\n'
@@ -75,18 +76,7 @@ KRAFT_SOV   = _kraft_variant(A['KRAFT_SVG'], '#d4c075', '#c8b060')
 KRAFT_MNATO = _kraft_variant(A['KRAFT_SVG'], '#e4dfd2', '#d8d4c8')
 KRAFT_MEAST = _kraft_variant(A['KRAFT_SVG'], '#c8c1b2', '#bcb5a6')
 
-# ---------- Generic SVG logos (identiques à BG) ----------
-_GENERIC_WING_LOGO_SVG = '''\
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-  <circle cx="128" cy="128" r="115" fill="#d4c598"/>
-  <circle cx="128" cy="128" r="115" fill="none" stroke="#a8945e" stroke-width="14"/>
-  <circle cx="128" cy="128" r="90" fill="none" stroke="#a8945e" stroke-width="5"/>
-  <circle cx="128" cy="128" r="70" fill="none" stroke="#a8945e" stroke-width="2"/>
-  <text x="128" y="158" text-anchor="middle"
-        font-family="Arial Black, Arial, sans-serif"
-        font-weight="900" font-size="86" fill="#2a3038" letter-spacing="-3">WG</text>
-</svg>'''
-
+# ---------- Logos génériques (le Wing : l'insigne de la famille ; les escadrons : « 01 », identique à BG) ----------
 _GENERIC_SQN_LOGO_SVG = '''\
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
   <circle cx="128" cy="128" r="115" fill="#d4c598"/>
@@ -98,10 +88,7 @@ _GENERIC_SQN_LOGO_SVG = '''\
         font-weight="900" font-size="86" fill="#2a3038" letter-spacing="-3">01</text>
 </svg>'''
 
-_GENERIC_WING_LOGO_DATAURL = (
-    'data:image/svg+xml;base64,' +
-    base64.b64encode(_GENERIC_WING_LOGO_SVG.encode('utf-8')).decode('ascii')
-)
+_GENERIC_WING_LOGO_DATAURL = INSIGNE_RR       # le logo par défaut du Wing : l'insigne générique de la famille (brand_block.py)
 _GENERIC_SQN_LOGO_DATAURL = (
     'data:image/svg+xml;base64,' +
     base64.b64encode(_GENERIC_SQN_LOGO_SVG.encode('utf-8')).decode('ascii')
@@ -134,6 +121,7 @@ _default_wing_config = build_default_wing_config()
 _default_wing_config_js = json.dumps(
     json.dumps(_default_wing_config, ensure_ascii=False)
 )
+_legacy_wg_logo_js = json.dumps(LEGACY_WG_LOGO_DATAURL)     # l'ancien « WG » par défaut : lu comme le nouveau (voir wingLegacyLogo)
 
 # ---------- Escadre de démonstration (bouton « Exemple », lot mp-exemples-demarrer) ----------
 # Quatre écussons ronds, SVG sobres, palette olive et ambre de la suite : pour l'escadre un faucon géométrique
@@ -1378,6 +1366,12 @@ body[data-theme] {{
 <!-- DEFAULT WING CONFIG -->
 <script>
 const DEFAULT_WING_CONFIG = JSON.parse({_default_wing_config_js});
+/* L'ancien logo « WG » par défaut du Wing : un wing.logo égal à l'octet à cette URL se lit comme le nouveau défaut (en mémoire seulement ; le stockage n'est réécrit que par un geste). */
+const LEGACY_WG_LOGO = {_legacy_wg_logo_js};
+function wingLegacyLogo(cfg) {{
+  if (cfg && typeof cfg === 'object' && cfg.wing && typeof cfg.wing === 'object' && cfg.wing.logo === LEGACY_WG_LOGO) cfg.wing.logo = DEFAULT_WING_CONFIG.wing.logo;
+  return cfg;
+}}
 </script>
 
 <!-- APPLICATION -->
@@ -2573,7 +2567,7 @@ function loadWingConfig() {{
       sanitizeWingLiveries(parsed);
       sanitizeWingDefaultLiveries(parsed);
       const check = validateWingConfig(parsed);
-      if (check.ok) return parsed;
+      if (check.ok) return wingLegacyLogo(parsed);
       console.warn('[Wing] Config localStorage invalide \u2014 utilisation du d\u00e9faut :', check.errors);
     }}
   }} catch(e) {{ console.warn('[Wing] Lecture localStorage \u00e9chou\u00e9e :', e); }}
@@ -3431,7 +3425,7 @@ function importWingConfig(file) {{
       return;
     }}
     try {{
-      wingConfig = parsed;
+      wingConfig = wingLegacyLogo(parsed);
       const saved = persistWingConfigNow();
       renderWingEditor();
       if (saved) showToast(t('toast.wingLoaded') + escapeHtml(wingConfig.wing.shortName), {{ type: 'ok' }});
@@ -7213,7 +7207,7 @@ function wingConfigured() {{
   if (raw === null) return false;
   let v;
   try {{ v = JSON.parse(raw); }} catch (e) {{ return false; }}
-  return !deepEqValues(v, DEFAULT_WING_CONFIG);
+  return !deepEqValues(wingLegacyLogo(v), DEFAULT_WING_CONFIG);
 }}
 /* « Wing » reste à sa place, celle du HTML (après le séparateur des fichiers, devant « Exemple »), que le wing soit configuré ou non : rien ne se déplace.
    Tant que le wing n'est pas configuré, le bouton garde la classe du bouton principal (il reste mis en avant). */
@@ -7613,6 +7607,7 @@ HTML_FINAL = (HTML
     .replace('@@DYN_AIRDROMES@@', _DYN_AIRDROMES_JS)
 )
 
+HTML_FINAL = brand_tab_icons(HTML_FINAL)
 ui_verify(HTML_FINAL)
 ui_verify_bar(HTML_FINAL)
 os.makedirs(os.path.join(HERE, 'dist'), exist_ok=True)

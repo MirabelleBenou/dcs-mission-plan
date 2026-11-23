@@ -15,6 +15,7 @@ from ui_block import build_tbm_css, build_tbm_block, build_block as build_ui_blo
 from shell_only_block import build_block as build_shell_only_block
 from mission_line_block import build_block as build_mission_line_block, build_css as build_mission_line_css, verify as mission_line_verify
 import magvar_block
+from brand_block import add_tab_icons as brand_tab_icons, INSIGNE_RR, LEGACY_WG_LOGO_DATAURL
 # La garde du module seul : premier élément du <body> (build_mission_plan.py la vérifie dans le dist/)
 SHELL_ONLY_TAG = '<script data-lang-key="lang_v1">\n' + build_shell_only_block() + '</script>\n'
 
@@ -3172,6 +3173,12 @@ __CSS__
    A wing's own config is imported in HQ.
    See `wing_config.json` schema in DOCS for the full format. */
 const DEFAULT_WING_CONFIG = JSON.parse(__DEFAULT_WING_CONFIG__);
+/* The former default "WG" logo: a wing.logo equal to it, byte for byte, is read as the new default (in memory only; storage is rewritten by HQ, on a gesture). */
+const LEGACY_WG_LOGO = __LEGACY_WG_LOGO__;
+function wingLegacyLogo(cfg) {
+  if (cfg && typeof cfg === 'object' && cfg.wing && typeof cfg.wing === 'object' && cfg.wing.logo === LEGACY_WG_LOGO) cfg.wing.logo = DEFAULT_WING_CONFIG.wing.logo;
+  return cfg;
+}
 </script>
 
 <!-- ============ APPLICATION ============ -->
@@ -4333,7 +4340,7 @@ function loadWingConfig() {
     if (raw) {
       const parsed = JSON.parse(raw);
       const check = validateWingConfig(parsed);
-      if (check.ok) return parsed;
+      if (check.ok) return wingLegacyLogo(parsed);
       console.warn('[Wing] Config localStorage invalide — utilisation du défaut :', check.errors);
     }
   } catch(e) { console.warn('[Wing] Lecture localStorage échouée :', e); }
@@ -9251,20 +9258,10 @@ document.addEventListener('DOMContentLoaded', function bindRpMapModal() {
 """
 
 # ── Generic SVG logos (hardcoded, option C) ──────────────────────────────────
+# The default wing logo is the family's generic insignia (brand_block.py); the squadron logo is the "01" disc below.
 # These are the default wing/squadron logos for the generic "MY WING" config.
 # They are embedded as base64 data URLs so the app has no external dependencies.
 # Colors: #a8945e (kaki accent) · #2a3038 (anthracite) · #d4c598 (kraft beige)
-
-_GENERIC_WING_LOGO_SVG = '''\
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-  <circle cx="128" cy="128" r="115" fill="#d4c598"/>
-  <circle cx="128" cy="128" r="115" fill="none" stroke="#a8945e" stroke-width="14"/>
-  <circle cx="128" cy="128" r="90" fill="none" stroke="#a8945e" stroke-width="5"/>
-  <circle cx="128" cy="128" r="70" fill="none" stroke="#a8945e" stroke-width="2"/>
-  <text x="128" y="158" text-anchor="middle"
-        font-family="Arial Black, Arial, sans-serif"
-        font-weight="900" font-size="86" fill="#2a3038" letter-spacing="-3">WG</text>
-</svg>'''
 
 _GENERIC_SQN_LOGO_SVG = '''\
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
@@ -9277,10 +9274,7 @@ _GENERIC_SQN_LOGO_SVG = '''\
         font-weight="900" font-size="86" fill="#2a3038" letter-spacing="-3">01</text>
 </svg>'''
 
-_GENERIC_WING_LOGO_DATAURL = (
-    'data:image/svg+xml;base64,' +
-    base64.b64encode(_GENERIC_WING_LOGO_SVG.encode('utf-8')).decode('ascii')
-)
+_GENERIC_WING_LOGO_DATAURL = INSIGNE_RR       # the default wing logo: the family's generic insignia (brand_block.py)
 _GENERIC_SQN_LOGO_DATAURL = (
     'data:image/svg+xml;base64,' +
     base64.b64encode(_GENERIC_SQN_LOGO_SVG.encode('utf-8')).decode('ascii')
@@ -9381,6 +9375,7 @@ for _key, (_fond, _grain) in _kraft_themes.items():
     HTML = HTML.replace(f'__KRAFT_SVG_{_key}__', _b64)
 
 HTML = HTML.replace('__DEFAULT_WING_CONFIG__', _default_wing_config_js)
+HTML = HTML.replace('__LEGACY_WG_LOGO__', json.dumps(LEGACY_WG_LOGO_DATAURL))
 
 # Les messages : toute clé t('…') écrite en toutes lettres existe dans les deux dictionnaires (FR et EN)
 def i18n_verify(html):
@@ -9441,6 +9436,7 @@ print("  [OK] aucune <datalist> dans le Briefing Generator")
 if "Math.round(num(clouds.base, 457.2) / 0.3048)" in HTML:
     print("  [FAIL] la base des nuages ne se range plus en pieds")
     raise SystemExit(1)
+HTML = brand_tab_icons(HTML)
 os.makedirs(os.path.join(HERE, 'dist'), exist_ok=True)
 output_path = os.path.join(HERE, 'dist', 'dcs_briefing_generator.html')
 with open(output_path, 'w', encoding='utf-8') as f:

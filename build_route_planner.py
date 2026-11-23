@@ -36,6 +36,7 @@ from messages_block import build_block as build_messages_block, build_css as bui
 from mission_line_block import build_block as build_mission_line_block, build_css as build_mission_line_css, verify as mission_line_verify
 from ui_block import build_tbm_css, build_tbm_block, build_block as build_ui_block, build_css as build_ui_css, verify as ui_verify, verify_bar as ui_verify_bar
 from shell_only_block import build_block as build_shell_only_block
+from brand_block import add_tab_icons as brand_tab_icons
 # La garde du module seul : premier élément du <body> (build_mission_plan.py la vérifie dans le dist/)
 SHELL_ONLY_TAG = '<script data-lang-key="lang_v1">\n' + build_shell_only_block() + '</script>\n'
 
@@ -11027,6 +11028,7 @@ def build():
         raise SystemExit("[ERREUR] lib_milsymbol : la mention de licence MIT n'est plus en tête")
 
     html = HTML.replace('<body data-theme="cw-nato">\n', '<body data-theme="cw-nato">\n' + SHELL_ONLY_TAG, 1)
+    html = brand_tab_icons(html)
     html = html.replace('__CSS__', CSS.replace('@@MESSAGES_CSS@@\n', build_messages_css() + build_ui_css()).replace('@@TBM_CSS@@\n', build_tbm_css()) + build_import_css() + build_mission_line_css() + CONTRAST_CSS)
     html = html.replace('__IMPORT_HTML__\n', build_import_html())
     html = html.replace('__LIB_LEAFLET_CSS__', A['lib_leaflet_css'])

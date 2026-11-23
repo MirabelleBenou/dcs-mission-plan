@@ -9,6 +9,7 @@ import subprocess
 import sys
 import tempfile
 from shell_only_block import build_block as build_shell_only_block
+from brand_block import add_tab_icons as brand_tab_icons
 from version_block import SUITE_VERSION
 from ui_block import build_bar_css, build_bar_js, build_tbm_css
 # La garde du module seul : premier élément du <body> (build_mission_plan.py la vérifie dans le dist/)
@@ -2447,6 +2448,7 @@ document.addEventListener('DOMContentLoaded', init);
 # ── Écriture ─────────────────────────────────────────────────────────────────────
 
 HTML = HTML.replace('<body data-theme="cw-nato">\n', '<body data-theme="cw-nato">\n' + SHELL_ONLY_TAG, 1)
+HTML = brand_tab_icons(HTML)
 
 os.makedirs(os.path.join(HERE, 'dist'), exist_ok=True)
 OUTPUT_PATH = os.path.join(HERE, 'dist', 'dcs_field_manual.html')

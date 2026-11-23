@@ -35,6 +35,7 @@ from messages_block import build_block as build_messages_block, build_css as bui
 from mission_line_block import build_block as build_mission_line_block, build_css as build_mission_line_css, verify as mission_line_verify
 from ui_block import build_tbm_css, build_tbm_block, build_block as build_ui_block, build_css as build_ui_css, verify as ui_verify, verify_bar as ui_verify_bar, fingerprint as ui_fingerprint
 from shell_only_block import build_block as build_shell_only_block
+from brand_block import add_tab_icons as brand_tab_icons
 from suite_file_block import build_presets_merge
 # La garde du module seul : premier élément du <body> (build_mission_plan.py la vérifie dans le dist/)
 SHELL_ONLY_TAG = '<script data-lang-key="lang_v1">\n' + build_shell_only_block() + '</script>\n'
@@ -5594,7 +5595,7 @@ def build_html():
                   .replace('@@OSWALD_700@@', A['OSWALD_700']))
     js = (build_radio_block() + '\n' + build_radio_bands_block() + '\n' + build_aircraft_types_block() + '\n' + tables_js() + '\n' + build_payload_block() + '\n' + build_payload_rules_block() + '\n' + PAD2_JS + '\n' + COORD_BLOCK + READNUM_BLOCK + build_magvar_block() + '\n' + build_projection_block() + '\n'
           + build_route_pack_block() + '\n' + build_route_theatre_block() + '\n' + build_group_store_block() + '\n' + build_presets_merge() + '\n' + build_import_block() + '\n' + build_mission_line_block() + '\n' + build_messages_block() + '\n' + build_ui_block() + '\n' + JS_TBM.replace('@@TBM_JS@@\n', build_tbm_block()) + '\n' + build_public_host_block() + '\n' + app_js())
-    return ('<!DOCTYPE html>\n<html lang="fr">\n<head>\n<meta charset="UTF-8">\n'
+    return brand_tab_icons('<!DOCTYPE html>\n<html lang="fr">\n<head>\n<meta charset="UTF-8">\n'
             '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">\n'
             '<meta name="theme-color" content="#1a1e10">\n<title>Flight Configurator — Mission Plan</title>\n<style>\n'
             + fonts + CSS_COMMON.replace('@@TBM_CSS@@\n', build_tbm_css()) + CSS_FC + build_messages_css() + build_ui_css() + build_import_css() + build_mission_line_css() + CONTRAST_CSS + '\n</style>\n'
