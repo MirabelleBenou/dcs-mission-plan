@@ -16,7 +16,7 @@ Further down, *Before v2.0.0* keeps the history of each tool up to v1.24.0, when
 ### All tools
 
 **Build number on the hosted version**
-- Between two releases, the bottom of the home screen shows the build number, `MP-V2.1.0+6` for this one; a downloaded release shows none.
+- Between two releases, the bottom of the home screen shows the build number, `MP-V2.1.0+7` for this one; a downloaded release shows none.
 
 **Easier-to-read drop-down lists**
 - Their header, the chosen line and the line under the pointer have stronger contrast in every theme.
@@ -47,6 +47,9 @@ Further down, *Before v2.0.0* keeps the history of each tool up to v1.24.0, when
 
 **Switching tools: finishing touches**
 - With the list of tools or “⋯” open, a touch on another menu of the toolbar opens it; the tool’s name follows a language change at once and screen readers hear the name shown.
+
+**The tab bar steps aside for the keyboard**
+- On a phone, while the on-screen keyboard is open, the tab bar at the bottom of the Briefing Generator, the Datacard Generator and the Route Planner hides, so the field you type in stays in view; in the Route Planner, a search on the map gets the whole height.
 
 ### Home screen
 

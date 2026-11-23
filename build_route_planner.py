@@ -1094,6 +1094,7 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
   body[data-active-tab="nav"] #panel > .ed-section[data-section="nav"] { display: block; }
   #panel > .ed-section > .ui-fa-box { display: none; }
   #panel > .ed-section > .ed-body { display: block; }
+  body.rp-kbmap #panel { display: none; }
 }
 /* « Calques » sans calque : la note qui dit comment en avoir, et pas de « Retirer tous les calques » */
 #layers-empty[hidden], #btn-layers-clear[hidden] { display: none; }
@@ -4975,7 +4976,7 @@ function createMap() {
 }
 
 /* Jusqu'à 1 100 px de large (la page ne défile jamais), un champ du panneau qui prend le focus est amené en vue dans le panneau, y compris
-   après le redimensionnement du viewport visuel (clavier virtuel) ; la hauteur de la carte pendant le clavier : voir spKbCheck */
+   après le redimensionnement du viewport visuel (clavier virtuel) ; la hauteur de la carte pendant le clavier : voir spSync */
 function revealPanelField(el) {
   if (!window.matchMedia || !window.matchMedia('(max-width: 1100px)').matches) return;
   const go = () => { try { el.scrollIntoView({ block: 'center', inline: 'nearest' }); } catch (e) { /* ignore */ } };
@@ -7173,13 +7174,15 @@ function drInit() {
    H est la place entre le haut du contenu (#app : sous la barre du haut et la ligne de la mission d'HQ) et le haut de la barre d'onglets, moins la poignée. Départ : la carte prend 52 % de H ;
    les bornes se comptent sur ce même H : au moins le plus grand de 220 px (140 en paysage) et de 25 % de H, au plus 85 % de H ; le départ est borné de même. Deux mémoires : en portrait (jusqu'à 1 100 px
    de large, à partir de 600 px de haut ou toute fenêtre plus haute que large : le clavier virtuel ne la fait pas changer de mémoire) la clé rp_split_v1 ; en paysage bas la clé rp_split_land_v1.
-   Pendant le clavier virtuel (un champ du panneau a le focus et la fenêtre a perdu plus de 120 px), la carte passe à sa borne basse, sans rien écrire en mémoire. */
+   Pendant le clavier de l'écran (un champ de saisie a le focus et la fenêtre visible a perdu plus de 120 px : la détection est celle du bloc commun, UIKB ; la barre d'onglets se cache), rien n'est écrit en mémoire ;
+   H' est la place entre le haut de #app et le bas de la fenêtre visible, poignée déduite : sur un champ du panneau, la carte prend min(sa borne basse, H' − 100), jamais moins de 60 px (le panneau garde 100 px
+   si la fenêtre le permet) ; sur un champ de la carte (la recherche de la loupe), toute la hauteur H', le panneau à 0 ; quand le clavier se ferme, la hauteur gardée revient. */
 const KEY_SPLIT = 'rp_split_v1';
 const KEY_SPLIT_LAND = 'rp_split_land_v1';
-const SP_MIN = 220, SP_MIN_LAND = 140, SP_MIN_F = 0.25, SP_MAX_F = 0.85, SP_DEF_F = 0.52, SP_STEP = 40, SP_DBL_MS = 350, SP_KB_DROP = 120;
+const SP_MIN = 220, SP_MIN_LAND = 140, SP_MIN_F = 0.25, SP_MAX_F = 0.85, SP_DEF_F = 0.52, SP_STEP = 40, SP_DBL_MS = 350, SP_KB_PANEL = 100, SP_KB_MIN = 60;
 function spTopbar() { const a = document.getElementById('app'); return (a && a.getBoundingClientRect().top) || 60; }   /* le haut du contenu, lu sur le contenu : la barre (60 px) et, quand elle est là, la ligne de la mission d'HQ (--mp-top) */
 const SP_PORTRAIT_MQ = '(max-width: 1100px) and ((min-height: 600px) or (orientation: portrait))';
-const SP = { el: null, wrap: null, mq: null, port: null, h: null, hl: null, drag: null, raf: 0, want: 0, last: 0, kb: false, vh: 0 };
+const SP = { el: null, wrap: null, mq: null, port: null, h: null, hl: null, drag: null, raf: 0, want: 0, last: 0 };
 
 function spLand() { return !SP.port.matches; }
 function spGet() { return spLand() ? SP.hl : SP.h; }
@@ -7222,29 +7225,32 @@ function spLoad(key) {
   return null;
 }
 
-/* Jusqu'à 1 100 px de large : la hauteur retenue de la mise en page courante, bornée, ou le partage de départ (52 % de H, borné) ; au-dessus : celle de la base */
+/* Le clavier de l'écran est ouvert (bloc commun) et le champ qui a le focus est dans le panneau ('panel') ou dans la carte ('map') ; sinon '' (une fenêtre, par exemple : la mise en page ne change pas) */
+function spKbKind() {
+  if (!UIKB.on) return '';
+  const a = document.activeElement;
+  if (!a || !a.closest) return '';
+  return a.closest('.mapwrap') ? 'map' : a.closest('#panel') ? 'panel' : '';
+}
+
+/* Jusqu'à 1 100 px de large : la hauteur retenue de la mise en page courante, bornée, ou le partage de départ (52 % de H, borné) ; clavier ouvert : voir plus haut, rien en mémoire ; au-dessus : celle de la base */
 function spSync() {
   if (!SP.el) return;
-  const h = spGet();
-  if (SP.mq.matches && SP.kb) spApply(spBounds()[0]);      /* clavier virtuel : la borne basse, rien en mémoire */
+  const h = spGet(), kb = SP.mq.matches ? spKbKind() : '';
+  document.body.classList.toggle('rp-kbmap', kb === 'map');         /* champ de la carte : le panneau est à 0 (sa marge intérieure ne le laisserait pas à moins de 20 px) */
+  if (kb === 'map') spApply(spPlace());
+  else if (kb === 'panel') spApply(Math.max(SP_KB_MIN, Math.min(spBounds()[0], spPlace() - SP_KB_PANEL)));
   else if (SP.mq.matches) spApply(spClamp(h != null ? h : SP_DEF_F * spPlace()));
   else spClear();
 }
 
-/* Le clavier virtuel : un champ du panneau a le focus et la fenêtre a perdu plus de 120 px depuis le dernier repos ; la carte passe à sa borne
-   basse, le champ est amené dans la partie visible du panneau ; la hauteur gardée revient dès que le champ est quitté ou que la hauteur revient */
-function spKbCheck() {
-  if (!SP.el) return;
-  const a = document.activeElement;
-  const field = !!(a && a.closest && a.closest('#panel') && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName));
-  const on = SP.mq.matches && field && SP.vh - window.innerHeight > SP_KB_DROP;
-  if (!on && !SP.kb) { if (!field || window.innerHeight > SP.vh) SP.vh = window.innerHeight; return; }      /* au repos : la hauteur de référence suit la fenêtre */
-  if (on === SP.kb) return;
-  SP.kb = on;
-  if (!on && window.innerHeight > SP.vh - SP_KB_DROP) SP.vh = window.innerHeight;
-  spSync();
-  if (on) { const go = () => { try { a.scrollIntoView({ block: 'center', inline: 'nearest' }); } catch (e) { /* ignore */ } }; go(); setTimeout(go, 60); }
+/* Le champ du panneau qui a le focus pendant le clavier est amené dans la partie visible du panneau */
+function spKbReveal() {
+  if (spKbKind() !== 'panel') return;
+  const a = document.activeElement, go = () => { try { a.scrollIntoView({ block: 'center', inline: 'nearest' }); } catch (e) { /* ignore */ } };
+  go(); setTimeout(go, 60);
 }
+function spKbSync() { uiKbCheck(); spSync(); spKbReveal(); }
 
 function spSet(h) {
   spPut(Math.round(spClamp(h)));
@@ -7306,11 +7312,13 @@ function spInit() {
     e.preventDefault();
     spSet(spHeight() + (e.key === 'ArrowDown' ? SP_STEP : -SP_STEP));
   });
-  SP.vh = window.innerHeight;
-  const onChange = () => { spKbCheck(); spSync(); };
+  const onChange = () => { uiKbCheck(); spSync(); };
   [SP.mq, SP.port].forEach(m => { if (m.addEventListener) m.addEventListener('change', onChange); else if (m.addListener) m.addListener(onChange); });
   window.addEventListener('resize', onChange);
   const app = document.getElementById('app');
+  document.addEventListener('focusin', spKbSync);          /* le focus passe d'un champ du panneau à la carte (ou l'inverse) : la mise en page suit ; le bloc commun a déjà regardé si le clavier est ouvert */
+  document.addEventListener('focusout', () => setTimeout(spKbSync, 0));
+  uiKbOnChange(() => { spSync(); spKbReveal(); });
   if (app && window.ResizeObserver) new ResizeObserver(() => spSync()).observe(app);      /* l'outil redevient visible dans le shell, la ligne de la mission d'HQ paraît : le partage se refait */
   spSync();
 }
@@ -7998,6 +8006,13 @@ function srPlace() {
   const top = p.getBoundingClientRect().top - map.getContainer().getBoundingClientRect().top;
   const list = $('sr-list');
   list.style.maxHeight = Math.max(44, sz.y - top - 44 - 4 - 12) + 'px';
+  /* clavier de l'écran ouvert, la carte n'a que la place qui reste : si la liste n'y montre pas quatre lignes, le panneau remonte sous la barre des modes (sans plus s'aligner sur la loupe) */
+  const tm = document.querySelector('.tapmode');
+  if (UIKB.on && tm && tm.getClientRects().length && sz.y - top - 44 - 4 - 12 < 4 * 44) {
+    const mt = map.getContainer().getBoundingClientRect().top, cb = (p.offsetParent || map.getContainer()).getBoundingClientRect().top;
+    const want = tm.getBoundingClientRect().bottom + 6;                          /* le haut voulu, dans l'écran */
+    if (want < p.getBoundingClientRect().top) { p.style.top = (want - cb) + 'px'; list.style.maxHeight = Math.max(44, sz.y - (want - mt) - 44 - 4 - 12) + 'px'; }
+  }
 }
 
 function srRender() {
@@ -10843,9 +10858,8 @@ function bindEvents() {
   routesBind();
   $('panel').addEventListener('focusin', ev => {
     const el = ev.target;
-    if (el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) { spKbCheck(); revealPanelField(el); }
+    if (el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) revealPanelField(el);
   });
-  $('panel').addEventListener('focusout', () => setTimeout(spKbCheck, 0));
   const pts = $('pts');
   pts.addEventListener('input', ev => onRowInput(ev, 'wp'));
   pts.addEventListener('change', ev => onRowChange(ev, 'wp'));

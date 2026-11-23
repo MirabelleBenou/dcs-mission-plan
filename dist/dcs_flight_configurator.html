@@ -976,6 +976,9 @@ html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-
   .ed-section[data-solo] { border: none; }
   .ed-section[data-solo] > summary { display: none; }
   .ed-section[data-solo] > .ed-content { display: flex !important; padding: 0; padding-top: 8px; }
+  /* le clavier de l'écran est ouvert (uiKbCheck pose html.ui-kb) : la barre se cache et le contenu (.app) reprend sa place, jusqu'au bas de la fenêtre visible */
+  html.ui-kb .ui-tabbar { display: none; }
+  html.ui-kb .app { bottom: var(--ui-kb-bottom, 0px); }
 }
 @media print { .ui-tabbar { display: none !important; } }
 /* ===== FIN DE LA FEUILLE DE L'INTERFACE COMMUNE ===== */
@@ -15241,10 +15244,50 @@ function toastPlace() {
   const px = Math.round(root.clientHeight - r.top + TOAST_GAP) + 'px';
   if (root.style.getPropertyValue('--mp-toast-bottom') !== px) root.style.setProperty('--mp-toast-bottom', px);
 }
+/* ---- le clavier de l'écran est ouvert : une seule détection pour la suite (BG, DG, RP) ----
+   Un champ de saisie (input texte, recherche, nombre…, textarea) a le focus ET la hauteur visible a baissé de plus de 120 px depuis le repos, à largeur égale.
+   Hauteur visible : visualViewport.height (rendue à l'échelle 1 : un zoom au pincement ne la fait pas baisser), sinon innerHeight. Le repos suit la fenêtre tant qu'aucun champ n'a le focus ;
+   un changement de largeur (orientation comprise) le remet. Ouvert : html.ui-kb (la barre d'onglets se cache, le toast retombe à 20 px du bas) et --ui-kb-bottom (la part du bas de la fenêtre que le clavier recouvre
+   sans réduire la fenêtre, 0 sinon). uiKbOnChange(fn) : fn(ouvert) à chaque changement. */
+const UIKB = { rest: 0, w: 0, on: false, subs: [], ready: false };
+const UIKB_DROP = 120;
+function uiKbVis() { const v = window.visualViewport; return v ? v.height * v.scale : window.innerHeight; }
+function uiKbIsField(el) {
+  if (!el || !el.tagName) return false;
+  if (el.tagName === 'TEXTAREA') return true;
+  return el.tagName === 'INPUT' && /^(text|search|number|tel|email|url|password)$/.test(el.type);
+}
+function uiKbCheck() {
+  const w = window.innerWidth, vis = uiKbVis(), field = uiKbIsField(document.activeElement);
+  if (w !== UIKB.w) { UIKB.w = w; UIKB.rest = vis; }
+  const on = field && UIKB.rest - vis > UIKB_DROP;
+  if (!on && (!field || vis > UIKB.rest)) UIKB.rest = vis;
+  const root = document.documentElement, v = window.visualViewport;
+  if (on) {
+    const px = v && v.scale === 1 ? Math.max(0, Math.round(window.innerHeight - v.offsetTop - v.height)) + 'px' : '0px';
+    if (root.style.getPropertyValue('--ui-kb-bottom') !== px) root.style.setProperty('--ui-kb-bottom', px);
+  } else if (root.style.getPropertyValue('--ui-kb-bottom')) root.style.removeProperty('--ui-kb-bottom');
+  if (on === UIKB.on) return;
+  UIKB.on = on;
+  root.classList.toggle('ui-kb', on);
+  toastPlace();
+  UIKB.subs.forEach(f => f(on));
+}
+function uiKbOnChange(fn) { UIKB.subs.push(fn); }
+function uiKbInit() {
+  if (UIKB.ready) return;
+  UIKB.ready = true;
+  window.addEventListener('resize', uiKbCheck);
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', uiKbCheck);
+  document.addEventListener('focusin', uiKbCheck);
+  document.addEventListener('focusout', () => setTimeout(uiKbCheck, 0));
+  uiKbCheck();
+}
 function initToastPlace() {
   const bar = document.querySelector('.ui-tabbar');
   if (bar && window.ResizeObserver) new ResizeObserver(toastPlace).observe(bar);
   window.addEventListener('resize', toastPlace);
+  uiKbInit();
   toastPlace();
 }
 

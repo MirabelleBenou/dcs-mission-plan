@@ -2,6 +2,7 @@
 le partage carte / panneau, la ligne de point sur deux lignes sous 520 px, le toast au-dessus de la barre. Joué sur le shell construit (dist/dcs_mission_plan.html,
 chromium, aucun réseau) ; les contrôles passent par le DOM, jamais par une capture."""
 import re
+import warnings
 from pathlib import Path
 
 import pytest
@@ -15,7 +16,9 @@ except ImportError:
     HAS_PW = False
 needs_pw = pytest.mark.skipif(not HAS_PW, reason='playwright ou chromium absent')
 SHELL = 'file://' + str(ROOT / 'dist' / 'dcs_mission_plan.html')
-SEED = "(() => { try { if (!sessionStorage.getItem('seeded')) { sessionStorage.setItem('seeded', '1'); localStorage.clear(); localStorage.setItem('lang_v1', '@@'); } } catch (e) {} })();"
+# Le contexte neuf a un stockage vide : l'amorce pose la langue si elle manque et n'efface rien. (L'ancienne amorce, gardée par sessionStorage, appelait localStorage.clear() quand la garde se lisait vide
+# après un rechargement sous charge : toutes les clés partaient ensemble, avec celle de la poignée.)
+SEED = "(() => { try { if (localStorage.getItem('lang_v1') === null) localStorage.setItem('lang_v1', '@@'); } catch (e) {} })();"
 
 TABS = {'fr': [('route', '⟿', 'Route'), ('refs', '◆', 'Réf.'), ('layers', '▧', 'Calques'), ('nav', '🧭', 'Nav.')],
         'en': [('route', '⟿', 'Route'), ('refs', '◆', 'Ref.'), ('layers', '▧', 'Layers'), ('nav', '🧭', 'Nav.')]}
@@ -49,8 +52,8 @@ def test_the_texts_are_where_the_lot_says():
     rp = u.split('\n### Route Planner\n', 1)[1].split('\n### ', 1)[0]
     assert u.count(LOG_TABS) == 1 and rp.rstrip('\n').endswith('\n\n' + LOG_TABS.rstrip('\n'))             # à la fin de la rubrique, une ligne vide avant
     assert u.count(LOG_PAREN) == 1 and '(the Route Planner’s waypoint rows still use smaller text)' not in log
-    assert u.count('`MP-V2.1.0+6` for this one') == 1 and '+5' not in u
-    assert re.search(r'^DEV_BUILD = 6$', (ROOT / 'version_block.py').read_text(encoding='utf-8'), re.M)
+    assert u.count('`MP-V2.1.0+7` for this one') == 1 and '+5' not in u
+    assert re.search(r'^DEV_BUILD = 7$', (ROOT / 'version_block.py').read_text(encoding='utf-8'), re.M)
     fm = (ROOT / 'build_field_manual.py').read_text(encoding='utf-8')
     assert fm.count(FM_FR) == 1 and fm.count(FM_EN) == 1 and 'qui seul défile' not in fm[fm.index('"Sur tablette et téléphone"'):fm.index('"Sur tablette et téléphone"') + 900]
     pl = (ROOT / 'fm_planches_block.py').read_text(encoding='utf-8')
@@ -193,7 +196,10 @@ def test_a_tab_shows_its_section_alone_and_writes_nothing(browser):
     folds = fr.evaluate("() => localStorage.getItem('rp_folds_v1')")
     assert folds and '"route":false' in folds.replace(' ', '')
     pg.set_viewport_size({'width': 412, 'height': 915})
-    pg.wait_for_timeout(700)
+    pg.wait_for_timeout(1200)
+    whole = "() => JSON.stringify(Object.keys(localStorage).sort().map(k => [k, localStorage.getItem(k)]))"
+    snap = fr.evaluate(whole)
+    assert 'rp_folds_v1' in snap
     for tid in ('route', 'refs', 'layers', 'nav'):
         tab(fr, tid)
         secs = fr.evaluate(SECS)
@@ -211,6 +217,7 @@ def test_a_tab_shows_its_section_alone_and_writes_nothing(browser):
     tab(fr, 'route')
     assert fr.evaluate("() => document.getElementById('panel').scrollTop") == 0
     assert fr.evaluate("() => localStorage.getItem('rp_folds_v1')") == folds
+    assert fr.evaluate(whole) == snap                                                 # changer d'onglet n'écrit rien : tout localStorage, à l'octet, comme avant les quatre onglets
     assert pg.errs == []
 
 
@@ -236,6 +243,7 @@ def test_the_open_tab_is_kept_when_leaving_the_tool_and_coming_back(browser):
 def test_the_layers_tab_without_a_layer_and_with_one(browser, lang):
     pg, fr = rp(browser, 345, 590, True, lang)
     tab(fr, 'layers')
+    assert fr.evaluate("() => document.body.dataset.activeTab") == 'layers'
     info = fr.evaluate("""() => { const sec = document.getElementById('sec-layers'), n = document.getElementById('layers-empty'), c = document.getElementById('btn-layers-clear'), hp = sec.querySelector('[data-i18n="layers.help"]');
       return { shown: sec.getClientRects().length > 0, note: n.textContent, noteShown: n.getClientRects().length > 0, clear: c.getClientRects().length > 0, help: hp.textContent.slice(0, 40), helpShown: hp.getClientRects().length > 0,
                order: n.compareDocumentPosition(hp) & Node.DOCUMENT_POSITION_FOLLOWING ? 'note-then-help' : 'help-first', first: sec.querySelector('.ed-body').firstElementChild.id }; }""")
@@ -247,7 +255,14 @@ def test_the_layers_tab_without_a_layer_and_with_one(browser, lang):
     pg.wait_for_timeout(600)
     info = fr.evaluate("""() => ({ rows: document.querySelectorAll('#layers-list .cf-row').length, note: document.getElementById('layers-empty').getClientRects().length > 0, clear: document.getElementById('btn-layers-clear').getClientRects().length > 0,
       tab: document.body.dataset.activeTab })""")
-    assert info['rows'] == 1 and not info['note'] and info['clear']
+    assert info['rows'] == 1 and not info['note'] and info['clear'] and info['tab'] == 'layers'
+    fr.evaluate("() => document.querySelector('#layers-list .cf-del').click()")                  # on retire le dernier calque : la question, puis la note revient et le bouton part
+    pg.wait_for_timeout(300)
+    fr.evaluate("() => document.getElementById('ui-confirm-ok').click()")
+    pg.wait_for_timeout(500)
+    info = fr.evaluate("""() => ({ rows: document.querySelectorAll('#layers-list .cf-row').length, note: document.getElementById('layers-empty').getClientRects().length > 0, noteText: document.getElementById('layers-empty').textContent,
+      clear: document.getElementById('btn-layers-clear').getClientRects().length > 0, tab: document.body.dataset.activeTab, shown: document.getElementById('sec-layers').getClientRects().length > 0 })""")
+    assert info == {'rows': 0, 'note': True, 'noteText': EMPTY[lang], 'clear': False, 'tab': 'layers', 'shown': True}
     assert pg.errs == []
     pg2, fr2 = rp(browser, 1280, 800, False, lang)
     assert fr2.evaluate("() => document.getElementById('sec-layers').getClientRects().length") == 0         # grand écran, sans calque : masquée, comme à la base
@@ -257,15 +272,17 @@ def test_the_layers_tab_without_a_layer_and_with_one(browser, lang):
 def test_a_touch_mode_never_changes_the_tab(browser):
     pg, fr = rp(browser, 412, 915)
     n0 = fr.evaluate("() => __RP.S.refs.length")
+    tab(fr, 'nav')
+    assert fr.evaluate("() => document.body.dataset.activeTab") == 'nav'
     # le mode Réf. se choisit dans la barre de la carte ; on le prend par son bouton
     fr.evaluate("() => { const b = [...document.querySelectorAll('.tapmode .tb-btn')].find(x => /^(Réf\\.|Ref\\.)$/.test(x.textContent.trim())); b.click(); }")
     pg.wait_for_timeout(300)
-    assert fr.evaluate("() => __RP.tapMode") == 'ref'
+    assert fr.evaluate("() => __RP.tapMode") == 'ref' and fr.evaluate("() => document.body.dataset.activeTab") == 'nav'      # le mode posé depuis Nav. : l'onglet ne change pas
     box = fr.evaluate("() => { const r = document.getElementById('map').getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; }")
     off = pg.evaluate("() => { const r = document.getElementById('iframe-rp').getBoundingClientRect(); return [r.left, r.top]; }")
     pg.touchscreen.tap(box[0] + off[0] - 60, box[1] + off[1] + 60)
     pg.wait_for_timeout(500)
-    assert fr.evaluate("() => __RP.S.refs.length") == n0 + 1 and fr.evaluate("() => document.body.dataset.activeTab") == 'route'
+    assert fr.evaluate("() => __RP.S.refs.length") == n0 + 1 and fr.evaluate("() => document.body.dataset.activeTab") == 'nav'
     tab(fr, 'refs')
     assert fr.evaluate("() => __RP.tapMode") == 'ref'                                    # et l'inverse : un onglet ne change pas le mode
     assert pg.errs == []
@@ -283,11 +300,26 @@ def drag(pg, fr, dy):
     pg.wait_for_timeout(300)
 
 
+LS_DUMP = "() => JSON.stringify(Object.keys(localStorage).map(k => [k, localStorage.getItem(k)]))"
+LS_PUT = "(d) => { JSON.parse(d).forEach(kv => localStorage.setItem(kv[0], kv[1])); }"
+LS_LOST = "(d) => { const had = JSON.parse(d).map(kv => kv[0]).filter(k => /^(briefing_state_v2|datacard_state_v1|fc_state_v1|recon_state_v1)$/.test(k)); return had.length > 0 && had.every(k => localStorage.getItem(k) === null); }"
+
+
 def reopen(pg):
-    """Recharge la page ; le shell rouvre l'outil par l'adresse. On attend que le Route Planner soit prêt et que sa carte ait cessé de bouger, sans durée fixe."""
-    pg.reload(wait_until='commit')
-    pg.wait_for_function("() => { const f = document.getElementById('iframe-rp'); return !!f && !!f.contentWindow && !!f.contentWindow.__RP && f.contentDocument.getElementById('rp-split'); }", timeout=90000)
-    fr = pg.query_selector('#iframe-rp').content_frame()
+    """Recharge la page ; le shell rouvre l'outil par l'adresse. On attend que le Route Planner soit prêt et que sa carte ait cessé de bouger, sans durée fixe.
+    Le contexte du banc est en mémoire : de temps en temps Chromium y perd tout localStorage à un rechargement (aucun clear() ni removeItem() de l'application, vérifié en les enveloppant ; le stockage
+    repart vide, toutes les clés ensemble). Un vrai navigateur garde le stockage : on le remet comme il était et on recharge, au plus trois fois, avant de juger le comportement de l'outil."""
+    snap = pg.evaluate(LS_DUMP)
+    fr = None
+    for _ in range(3):
+        pg.reload(wait_until='commit')
+        pg.wait_for_function("() => { const f = document.getElementById('iframe-rp'); return !!f && !!f.contentWindow && !!f.contentWindow.__RP && f.contentDocument.getElementById('rp-split'); }", timeout=90000)
+        fr = pg.query_selector('#iframe-rp').content_frame()
+        if not pg.evaluate(LS_LOST, snap):
+            break
+        pg.evaluate(LS_PUT, snap)                                                  # le banc a perdu le stockage : on le remet et on recharge
+        warnings.warn('bench: localStorage lost across a reload, restored')
+    assert not pg.evaluate(LS_LOST, snap), 'localStorage lost three reloads in a row'
     last, same = None, 0
     for _ in range(80):
         h = fr.evaluate("() => document.querySelector('.mapwrap').getBoundingClientRect().height")
@@ -335,22 +367,115 @@ def test_the_handle_drags_remembers_clamps_and_resets(browser, w, h, H, em, ep, 
     assert pg.errs == []
 
 
-@needs_pw
-def test_the_on_screen_keyboard_shrinks_the_map_to_its_low_bound(browser):
-    pg, fr = rp(browser, 412, 915)
-    drag(pg, fr, 40)
-    kept = fr.evaluate(GEOM)['map']['h']
-    fr.evaluate("() => document.getElementById('route-name').focus()")
-    pg.set_viewport_size({'width': 412, 'height': 715})
+KBM = """() => { const r = s => { const e = document.querySelector(s); if (!e || !e.getClientRects().length) return null; const b = e.getBoundingClientRect(); return { top: b.top, bottom: b.bottom, h: b.height }; };
+  const bar = document.getElementById('tab-bar'), f = document.activeElement;
+  return { vh: innerHeight, app: r('#app'), map: r('.mapwrap'), split: r('#rp-split'), panel: r('#panel'), bar: bar && bar.getClientRects().length ? r('#tab-bar') : null,
+    barDisplay: bar ? getComputedStyle(bar).display : null, field: f && f.id ? r('#' + f.id) : null, kb: document.documentElement.classList.contains('ui-kb'),
+    toast: getComputedStyle(document.documentElement).getPropertyValue('--mp-toast-bottom').trim() }; }"""
+KB_WINDOWS = [(345, 590, 200), (360, 640, 260), (412, 915, 330), (915, 412, 200)]
+
+
+def kb_open(pg, fr, field, w, h, d):
+    """Le clavier de l'écran, simulé : le champ prend le focus, la fenêtre visible perd d pixels."""
+    fr.evaluate("(id) => document.getElementById(id).focus()", field)
+    pg.wait_for_timeout(200)
+    pg.set_viewport_size({'width': w, 'height': h - d})
     pg.wait_for_timeout(900)
-    g = fr.evaluate(GEOM)
-    f = fr.evaluate("() => { const r = document.getElementById('route-name').getBoundingClientRect(), p = document.getElementById('panel').getBoundingClientRect(); return [r.top >= p.top - 0.5 && r.bottom <= p.bottom + 0.5, p.height]; }")
-    assert abs(g['map']['h'] - 220) <= 1 and f[0] and f[1] > 100
+
+
+def kb_close(pg, fr, w, h):
     fr.evaluate("() => document.activeElement.blur()")
+    pg.wait_for_timeout(400)
+    pg.set_viewport_size({'width': w, 'height': h})
+    pg.wait_for_timeout(800)
+
+
+def kb_expected_map(g, land):
+    """Règle 4 : H' va du haut de #app au bas de la fenêtre visible, poignée retirée ; carte = min(borne basse, H' - 100), jamais moins de 60 px."""
+    hp = g['vh'] - g['app']['top'] - g['split']['h']
+    low = max(140 if land else 220, 0.25 * hp)
+    return hp, max(60, min(low, hp - 100))
+
+
+@needs_pw
+@pytest.mark.parametrize('w,h,d', KB_WINDOWS)
+def test_the_keyboard_on_a_panel_field_hides_the_bar_keeps_the_field_in_view_and_gives_back_the_state(browser, w, h, d):
+    pg, fr = rp(browser, w, h)
+    drag(pg, fr, 30)                                                              # une hauteur gardée : elle doit revenir
+    before, keys = fr.evaluate(KBM), fr.evaluate(KEYS)
+    assert before['bar'] is not None and before['barDisplay'] != 'none'
+    assert keys[0 if h > w else 1] is not None
+    kb_open(pg, fr, 'route-name', w, h, d)
+    g = fr.evaluate(KBM)
+    hp, em = kb_expected_map(g, w > h)
+    assert g['kb'] and g['vh'] == h - d and g['bar'] is None and g['barDisplay'] == 'none'
+    assert abs(g['map']['h'] - em) <= 1 and abs(g['panel']['h'] - (hp - em)) <= 1
+    f = g['field']
+    assert f and f['top'] >= g['panel']['top'] - 1 and f['bottom'] <= g['panel']['bottom'] + 1 and f['bottom'] <= g['vh'] and f['top'] >= 0     # le champ entier est dans le panneau visible, au-dessus du bas de la fenêtre
+    fr.evaluate("() => showToast('Essai')")                                       # le toast suit : à 20 px du bas de la fenêtre visible
+    fr.wait_for_timeout(400)
+    t = fr.evaluate(TOAST)
+    assert t and abs(t['gap'] - 20) <= 1
+    assert fr.evaluate(KEYS) == keys                                              # rien n'est écrit pendant le clavier
+    kb_close(pg, fr, w, h)
+    a = fr.evaluate(KBM)
+    assert not a['kb'] and a['bar'] and abs(a['bar']['top'] - before['bar']['top']) <= 1 and a['toast'] == before['toast']
+    assert abs(a['map']['h'] - before['map']['h']) <= 1 and abs(a['panel']['h'] - before['panel']['h']) <= 1 and abs(a['app']['bottom'] - before['app']['bottom']) <= 1
+    assert fr.evaluate(KEYS) == keys
+    assert pg.errs == []
+
+
+@needs_pw
+@pytest.mark.parametrize('w,h,d', [(345, 590, 200), (360, 640, 260)])
+def test_the_map_search_gets_the_whole_height_with_at_least_three_whole_results(browser, w, h, d):
+    pg, fr = rp(browser, w, h)
+    before, keys = fr.evaluate(KBM), fr.evaluate(KEYS)
+    fr.evaluate("() => document.querySelector('.rp-search-btn').click()")
+    pg.wait_for_timeout(300)
+    fr.evaluate("() => { const i = document.getElementById('sr-in'); i.focus(); i.value = 'al'; i.dispatchEvent(new Event('input', { bubbles: true })); }")
     pg.wait_for_timeout(500)
-    pg.set_viewport_size({'width': 412, 'height': 915})
-    pg.wait_for_timeout(700)
-    assert abs(fr.evaluate(GEOM)['map']['h'] - kept) <= 1                         # elle revient, la hauteur gardée n'a pas bougé
+    pg.set_viewport_size({'width': w, 'height': h - d})
+    pg.wait_for_timeout(900)
+    g = fr.evaluate(KBM)
+    hp = g['vh'] - g['app']['top'] - g['split']['h']
+    assert g['bar'] is None and abs(g['map']['h'] - hp) <= 1 and g['split'] and g['panel'] is None          # toute la hauteur H' à la carte, le panneau à 0, la poignée reste
+    rows = fr.evaluate("""() => { const l = document.getElementById('sr-list'), lr = l.getBoundingClientRect();
+      return { rows: [...l.querySelectorAll('.sr-row[data-i]')].map(e => { const b = e.getBoundingClientRect(); return b.top >= lr.top - 0.5 && b.bottom <= lr.bottom + 0.5 && b.top >= 0 && b.bottom <= innerHeight; }), top: lr.top, bottom: lr.bottom, vh: innerHeight }; }""")
+    assert rows['rows'].count(True) >= 3, rows
+    assert fr.evaluate(KEYS) == keys                                              # rien n'est écrit pendant le clavier
+    kb_close(pg, fr, w, h)
+    a = fr.evaluate(KBM)
+    assert a['bar'] and abs(a['map']['h'] - before['map']['h']) <= 1 and abs(a['panel']['h'] - before['panel']['h']) <= 1 and abs(a['bar']['top'] - before['bar']['top']) <= 1
+    assert pg.errs == []
+
+
+@needs_pw
+@pytest.mark.parametrize('tid,field', [('dg', None), ('bg', None)])
+def test_the_keyboard_hides_the_bar_of_the_datacard_and_briefing_generators_then_gives_it_back(browser, tid, field):
+    pg = shell(browser, 345, 590)
+    f = open_card(pg, tid)
+    pick = """() => { const e = [...document.querySelectorAll('#editor input[type=text], #editor input:not([type]), #editor textarea')].find(x => x.getClientRects().length && !x.disabled && !x.readOnly);
+      if (!e) return null; if (!e.id) e.id = 'kb-probe'; e.scrollIntoView({ block: 'center' }); e.focus(); return e.id; }"""
+    bar = "() => { const b = document.getElementById('tab-bar'); return [getComputedStyle(b).display, b.getClientRects().length > 0, getComputedStyle(document.documentElement).getPropertyValue('--mp-toast-bottom').trim()]; }"
+    assert f.evaluate(bar)[1]
+    toast0 = f.evaluate(bar)[2]
+    assert f.evaluate(pick)
+    pg.wait_for_timeout(200)
+    pg.set_viewport_size({'width': 345, 'height': 390})
+    pg.wait_for_timeout(900)
+    assert f.evaluate("() => document.activeElement.tagName") in ('INPUT', 'TEXTAREA')
+    b = f.evaluate(bar)
+    assert b[0] == 'none' and not b[1] and f.evaluate("() => document.documentElement.classList.contains('ui-kb')")
+    f.evaluate("() => showToast('Essai')")                                       # le toast du shell : à 20 px du bas de la fenêtre visible
+    pg.wait_for_timeout(450)
+    t = pg.evaluate("() => { const e = document.getElementById('toast'), r = e.getBoundingClientRect(); return { show: e.classList.contains('show'), gap: innerHeight - r.bottom }; }")
+    assert t['show'] and abs(t['gap'] - 20) <= 1, t
+    f.evaluate("() => document.activeElement.blur()")
+    pg.wait_for_timeout(400)
+    pg.set_viewport_size({'width': 345, 'height': 590})
+    pg.wait_for_timeout(800)
+    b = f.evaluate(bar)
+    assert b[0] != 'none' and b[1] and b[2] == toast0 and not f.evaluate("() => document.documentElement.classList.contains('ui-kb')")
     assert pg.errs == []
 
 
@@ -409,7 +534,7 @@ def test_the_waypoint_row_keeps_one_line_from_520_px(browser, w, h):
     m = fr.evaluate(ROW)
     assert abs(m['name']['t'] - m['alt']['t']) <= 1 and abs(m['alt']['t'] - m['ref']['t']) <= 1 and m['row']['h'] <= 46
     assert m['num']['w'] <= 31 and m['del']['w'] <= 35 and m['fs']['name'] == '13px' and m['fs']['ref'] == '12px'
-    if w == 716:                                                              # les largeurs de cdp/base.json à 716
+    if w == 716:                                                              # les largeurs de la version d'avant à 716
         assert abs(m['name']['w'] - 374) <= 1 and abs(m['alt']['w'] - 58) <= 1 and abs(m['gs']['w'] - 62) <= 1 and abs(m['ref']['w'] - 66) <= 1
     assert all(d != 'dashed' for d in m['dash'])
     assert pg.errs == []
@@ -440,4 +565,48 @@ def test_the_toast_stays_20_px_from_the_bottom_with_a_mouse(browser):
     fr.wait_for_timeout(400)
     t = fr.evaluate(TOAST)
     assert t and abs(t['gap'] - 20) <= 1
+    assert pg.errs == []
+
+
+# au-dessus de 1 100 px : les valeurs de la version d'avant (1280 x 800, souris) : la ligne de point (étiquette, largeur, hauteur, décalage haut, taille du texte) et les sections (id, masquée, repli, hauteur)
+BASE_PTROW = [['button.pt-num', 30, 40, 0, None], ['input:name', 98, 40, 0, '13px'], ['input:alt', 58, 40, 0, '13px'], ['input:gs', 62, 40, 0, '13px'], ['button.in', 66, 40, 0, '13px'], ['select:altRef', 0, 0, None, '13px'], ['button.pt-del', 34, 40, 0, None]]
+BASE_SECS = {'fr': [['route', False, 'true', 852], ['refs', False, 'false', 64], ['layers', True, 'false', 0], ['nav', False, 'false', 64]],
+             'en': [['route', False, 'true', 837], ['refs', False, 'false', 64], ['layers', True, 'false', 0], ['nav', False, 'false', 64]]}
+PTROW = """() => { const row = document.querySelector('#pts .pt-row.pts'), rr = row.getBoundingClientRect();
+  return { cells: [...row.children].map(c => { const r = c.getBoundingClientRect(), i = c.matches('.in') ? c : c.querySelector('.in');
+      return [c.tagName.toLowerCase() + (c.dataset.k ? ':' + c.dataset.k : (c.className ? '.' + String(c.className).split(' ')[0] : '')), Math.round(r.width * 10) / 10, Math.round(r.height), c.dataset.k === 'altRef' ? null : Math.round(r.top - rr.top), i ? getComputedStyle(i).fontSize : null]; }),
+    h: Math.round(rr.height), secs: [...document.querySelectorAll('#panel > .ed-section')].map(s => [s.dataset.section, s.hidden, s.dataset.open, Math.round(s.getBoundingClientRect().height)]) }; }"""
+
+
+@needs_pw
+@pytest.mark.parametrize('lang', ['fr', 'en'])
+def test_above_1100_px_the_waypoint_row_and_the_folds_are_those_of_the_base(browser, lang):
+    pg, fr = rp(browser, 1280, 800, False, lang)
+    m = fr.evaluate(PTROW)
+    assert m['h'] == 40 and len(m['cells']) == len(BASE_PTROW)
+    for got, exp in zip(m['cells'], BASE_PTROW):
+        assert got[0] == exp[0] and abs(got[1] - exp[1]) <= 1 and got[2] == exp[2] and got[3] == exp[3] and got[4] == exp[4], (got, exp)
+    for got, exp in zip(m['secs'], BASE_SECS[lang]):
+        assert got[:3] == exp[:3] and abs(got[3] - exp[3]) <= 1, (got, exp)
+    assert len(m['secs']) == 4 and pg.errs == []
+
+
+REFROWS = """() => { const rows = [...document.querySelectorAll('#refs .pt-row')];
+  return rows.map(row => { const rr = row.getBoundingClientRect(); return { h: rr.height, cells: [...row.children].filter(c => c.getClientRects().length).map(c => { const r = c.getBoundingClientRect(); return [r.top - rr.top, r.height, r.left - rr.left, r.width]; }), w: rr.width, sw: row.scrollWidth, cw: row.clientWidth }; }); }"""
+
+
+@needs_pw
+@pytest.mark.parametrize('w,h,touch', [(345, 590, True), (412, 915, True), (400, 800, False)])
+def test_every_reference_point_row_stays_on_one_line_below_520_px(browser, w, h, touch):
+    pg, fr = rp(browser, w, h, touch)
+    for i in range(4):
+        fr.evaluate("(i) => { addRef(35 + i * 0.1, 36 + i * 0.1, 'REF' + i); }", i)
+    pg.wait_for_timeout(300)
+    tab(fr, 'refs')                                                               # la barre d'onglets est là jusqu'à 1 100 px, souris ou doigt
+    rows = fr.evaluate(REFROWS)
+    assert len(rows) >= 4
+    for r in rows:
+        tops = [round(c[0]) for c in r['cells']]
+        assert len(r['cells']) >= 4 and max(tops) - min(tops) <= 1 and r['h'] <= 50 and r['sw'] <= r['cw'] + 1, r          # une seule ligne : les cellules à la même hauteur, la ligne à une cellule de haut, rien qui déborde
+        assert all(c[1] <= 48 for c in r['cells'])
     assert pg.errs == []
