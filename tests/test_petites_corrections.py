@@ -134,6 +134,26 @@ def test_merge_deep_ignores_the_dangerous_keys_at_every_level():
     assert o['meta'] == {'title': 'T', 'classification': 'c'} and o['sitac'] == {'metar': 'M'} and o['phases'] == [{'title': 'A'}]
 
 
+@needs_node
+def test_merge_deep_never_descends_into_an_inherited_key():
+    src = merge_deep_source() + r"""
+    const nativeCall = Object.prototype.hasOwnProperty.call, nativeToString = ({}).toString;
+    const defaults = { meta: { title: 'd' }, sitac: { metar: '' } };
+    const a = mergeDeep(JSON.parse(JSON.stringify(defaults)), JSON.parse('{"hasOwnProperty":{"call":1},"meta":{"title":"T"}}'));
+    const b = mergeDeep(JSON.parse(JSON.stringify(defaults)), JSON.parse('{"toString":{"x":1},"sitac":{"metar":"M"}}'));
+    const c = mergeDeep({ list: [1], meta: { title: 'd' } }, JSON.parse('{"list":{"a":1},"meta":{"title":"U","sub":{"k":2}}}'));
+    console.log(JSON.stringify({ call: Object.prototype.hasOwnProperty.call === nativeCall, ts: ({}).toString === nativeToString, tsType: typeof ({}).toString, hasCall: typeof Object.prototype.hasOwnProperty.call,
+      a: a, b: b, c: c, own: [Object.prototype.hasOwnProperty.call(a, 'hasOwnProperty'), Object.prototype.hasOwnProperty.call(b, 'toString')] }));
+    """
+    r = subprocess.run([NODE, '-e', src], capture_output=True, text=True, timeout=60)
+    assert r.returncode == 0, r.stderr
+    o = json.loads(r.stdout)
+    assert o['call'] and o['ts'] and o['tsType'] == 'function' and o['hasCall'] == 'function'
+    assert o['a'] == {'meta': {'title': 'T'}, 'sitac': {'metar': ''}, 'hasOwnProperty': {'call': 1}} and o['own'] == [True, True]
+    assert o['b'] == {'meta': {'title': 'd'}, 'sitac': {'metar': 'M'}, 'toString': {'x': 1}}
+    assert o['c'] == {'list': {'a': 1}, 'meta': {'title': 'U', 'sub': {'k': 2}}}
+
+
 # ---------- le banc du navigateur ----------
 SEED = "(() => { try { if (!sessionStorage.getItem('seeded')) { sessionStorage.setItem('seeded', '1'); localStorage.clear(); localStorage.setItem('lang_v1', '@@LANG@@'); } } catch (e) {} })();"
 
@@ -269,6 +289,45 @@ def test_bg_proto_key_in_a_file_or_in_storage_pollutes_nothing(browser):
         bg.evaluate("""() => localStorage.setItem('briefing_state_v2', '{"meta":{"title":"S","operation":"OpS"},"phases":[{"title":"Z"}],"__proto__":{"polluS":1},"constructor":{"prototype":{"polluC":1}}}')""")
         bg.evaluate("() => loadState()")
         assert bg.evaluate("() => [({}).polluS, ({}).polluC, state.meta.operation, state.phases[0].title]") == [None, None, 'OpS', 'Z']
+        assert errs == []
+    finally:
+        ctx.close()
+
+
+@needs_pw
+def test_bg_inherited_keys_in_a_file_leave_the_native_functions_alone(browser):
+    ctx, pg, errs = shell(browser, 'fr')
+    try:
+        bg = open_tool(pg, 'bg')
+        check = "() => [Object.prototype.hasOwnProperty.call === window.__call, ({}).toString === window.__ts, typeof ({}).toString]"
+        bg.evaluate("() => { window.__call = Object.prototype.hasOwnProperty.call; window.__ts = ({}).toString; }")
+        load_bg(bg, '{"meta":{"title":"H1","operation":"OpH1"},"phases":[{"title":"Q"}],"hasOwnProperty":{"call":1}}', 1000)
+        assert bg.evaluate("() => state.meta.operation") == 'OpH1' and bg.evaluate(check) == [True, True, 'function']
+        load_bg(bg, '{"meta":{"title":"H2","operation":"OpH2"},"phases":[{"title":"Q"}],"toString":{"x":1}}', 1000)
+        assert bg.evaluate("() => state.meta.operation") == 'OpH2' and bg.evaluate(check) == [True, True, 'function']
+        load_bg(bg, BRIEF, 1000)                                            # un briefing normal s'ouvre encore
+        assert bg.evaluate("() => [state.meta.operation, state.phases[0].title]") == ['OpSonde', 'P1']
+        assert errs == []
+    finally:
+        ctx.close()
+
+
+@needs_pw
+def test_bg_an_error_in_the_middle_brings_back_the_briefing_and_its_toast_comes_last(browser):
+    ctx, pg, errs = shell(browser, 'fr')
+    try:
+        examples(pg)
+        bg = open_tool(pg, 'bg')
+        load_bg(bg, BRIEF, 1200)                                            # un briefing A ouvert : « Briefing chargé ✓ · Restaurer »
+        assert bg.evaluate(TOAST)['action'] == 'Restaurer'
+        bg.wait_for_timeout(500)
+        before, js = bg.evaluate(STO), bg.evaluate("() => JSON.stringify(state)")
+        op = bg.evaluate("() => document.querySelector('[data-bind=\"meta.operation\"]').value")
+        load_bg(bg, '{"meta":{},"phases":[null]}', 1500)
+        t = bg.evaluate(TOAST)
+        assert t['show'] and t['action'] is None and t['text'].startswith('⚠') and t['text'] == bg.evaluate("() => t('msg.failed')")   # l'erreur, pas « Restaurer »
+        assert bg.evaluate("() => JSON.stringify(state)") == js and bg.evaluate(STO) == before
+        assert bg.evaluate("() => document.querySelector('[data-bind=\"meta.operation\"]').value") == op == 'OpSonde'      # l'éditeur montre le briefing d'avant
         assert errs == []
     finally:
         ctx.close()
@@ -443,6 +502,32 @@ def test_fc_folded_group_stays_folded_after_a_reload(browser):
         fc.evaluate("() => document.querySelector('.fc-flight[data-f=\"0\"] .fc-fold').click()")
         fc.wait_for_timeout(400)
         assert json.loads(fc.evaluate("() => localStorage.getItem('fc_folds_v1')")) == {'g:' + fcid: False, 'route': False}
+        assert errs == []
+    finally:
+        ctx.close()
+
+
+@needs_pw
+def test_fc_restore_after_opening_a_configuration_brings_back_the_fold(browser):
+    ctx, pg, errs = shell(browser, 'fr')
+    try:
+        examples(pg)
+        fc = open_tool(pg, 'fc')
+        fc.evaluate("() => document.querySelector('.fc-flight[data-f=\"0\"] .fc-fold').click()")
+        fc.wait_for_timeout(400)
+        assert fc.evaluate(OPEN) == [False]
+        cfg = fc.evaluate("""() => { const f = JSON.parse(JSON.stringify(S.flights[0])); f.fcId = 'autre-groupe-1'; f.name = 'AUTRE';
+          return JSON.stringify({ fc: { state: { theatre: S.theatre, flights: [f], sel: { f: 0, u: 0 } } } }); }""")
+        fc.evaluate("([txt]) => openFile(new File([txt], 'config.json', { type: 'application/json' }))", [cfg])
+        fc.wait_for_timeout(2500)
+        assert fc.evaluate("() => S.flights.map(f => f.name)") == ['AUTRE']
+        assert fc.evaluate(OPEN) == [True]                                  # le groupe du fichier suit la règle (un seul groupe : ouvert)
+        t = fc.evaluate(TOAST)
+        assert t['action'] == 'Restaurer'
+        fc.evaluate("() => document.querySelector('#toast .toast-action').click()")
+        fc.wait_for_timeout(1500)
+        assert fc.evaluate("() => S.flights.length") == 1 and fc.evaluate("() => S.flights[0].name") != 'AUTRE'
+        assert fc.evaluate(OPEN) == [False]                                 # comme après un rechargement : replié
         assert errs == []
     finally:
         ctx.close()

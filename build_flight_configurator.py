@@ -5088,6 +5088,7 @@ function fcMem() {
 function fcBack(m) {
   clearTimeout(_saveTimer); _saveTimer = 0;
   S.theatre = m.theatre; S.flights = clone(m.flights); S.sel = clone(m.sel);
+  foldLoad();       // le repli choisi des groupes se relit de fc_folds_v1, comme à l'ouverture
   GS.removed = [];
   gsMarkAll();
   UI.exportTried = false; UI.rtChoose = null; UI.clamped = 0;

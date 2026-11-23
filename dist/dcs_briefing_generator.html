@@ -4712,12 +4712,14 @@ function loadWingConfig() {
   return structuredClone(DEFAULT_WING_CONFIG);
 }
 
-/* La fusion d'un objet lu (fichier, stockage) dans les défauts : à tout niveau, les clés __proto__, constructor et prototype sont ignorées, jamais copiées ni fusionnées. */
+/* La fusion d'un objet lu (fichier, stockage) dans les défauts : à tout niveau, les clés __proto__, constructor et prototype sont ignorées, jamais copiées ni fusionnées ;
+   la fusion ne descend que dans une clé propre de la cible qui est un objet (une clé héritée, hasOwnProperty ou toString, repart d'un objet neuf). */
 function mergeDeep(target, source) {
   for (const k of Object.keys(source || {})) {
     if (k === '__proto__' || k === 'constructor' || k === 'prototype') continue;
     if (source[k] && typeof source[k] === 'object' && !Array.isArray(source[k])) {
-      target[k] = mergeDeep(target[k] || {}, source[k]);
+      const cur = (Object.prototype.hasOwnProperty.call(target, k) && target[k] && typeof target[k] === 'object' && !Array.isArray(target[k])) ? target[k] : {};
+      target[k] = mergeDeep(cur, source[k]);
     } else {
       target[k] = source[k];
     }
@@ -9341,6 +9343,7 @@ function loadJsonFile(file) {
     /* « Remplacer » : le briefing d'avant est gardé, « Restaurer » le rend (12 s) ; un seul toast dit le chargement, les escadrons absents et les images recompressées */
     const tail = [];
     const run = async () => {
+      const keepState = state, keepIdx = currentPhaseIdx;
       try {
         state = mergeDeep(structuredClone(DEFAULTS), parsed);
         // Migration classification : legacy texte → clé canonique (v2.2.0)
@@ -9385,7 +9388,9 @@ function loadJsonFile(file) {
         return true;
       } catch (e) {
         console.warn('[BG] chargement du briefing :', e);
-        showToast(t('msg.failed'), { type: 'err' });
+        state = keepState; currentPhaseIdx = keepIdx;       /* une erreur au milieu : le briefing d'avant revient, le stockage n'a pas été écrit */
+        try { renderEditorBindings(); schedulePreview(); } catch (e2) { console.warn('[BG] redessin après un échec :', e2); }
+        setTimeout(() => showToast(t('msg.failed'), { type: 'err' }), 0);       /* en dernier : il ne reste pas sous le toast « Restaurer » d'un geste précédent */
         return false;
       }
     };
