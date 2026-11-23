@@ -75,7 +75,8 @@ CHANGELOG = {
                                "**Fixed: briefing files are read safely**\n- A briefing file, or a briefing kept by the browser, can no longer change how the page works through special keys such as __proto__."],
     '### Route Planner': ["**“Clear everything”, as in the other tools**\n- In English, the button of the Clear window now reads “Clear everything”."],
     '### Datacard Generator': ["**Fixed: a free card kept its last aircraft**\n- When every crew line of a free card goes back to “to pick”, the Aircraft and Count fields empty instead of keeping the last aircraft found."],
-    '### Field Manual': ["**The HQ screen drawn with the Wing button in its place**\n- The two drawings of the HQ screen show the toolbar in its new order."],
+    '### Field Manual': ["**The HQ screen drawn with the Wing button in its place**\n- The two drawings of the HQ screen show the toolbar in its new order.",
+                         "**The home screen drawn with its insignia**\n- The two drawings of the home screen show the insignia and the family's icon."],
 }
 
 

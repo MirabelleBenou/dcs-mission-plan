@@ -28,6 +28,9 @@ ENTRY_TABS = ("**Seven tabs at the bottom on a phone**\n"
               "- In the Briefing Generator and the Datacard Generator, the editor’s tabs all fit at the bottom of the screen, seven of the same width, in both formats of the briefing; a tab that groups several sections shows each of them, foldable, without repeating its title.")
 ENTRY_TOUCHES = ("**Switching tools: finishing touches**\n"
                  "- With the list of tools or “⋯” open, a touch on another menu of the toolbar opens it; the tool’s name follows a language change at once and screen readers hear the name shown.")
+ENTRY_INSIGNIA = ("**The Squadron Ready Room family insignia**\n"
+                  "- Every page of the suite carries the family's icon in the browser tab and when pinned to a phone's home screen.\n"
+                  "- The default wing logo, in HQ and the Briefing Generator, is now the Squadron Ready Room insignia; a wing still on the former “WG” logo shows the new one and still counts as not set up.")
 ENTRY_KEYBOARD = ("**The tab bar steps aside for the keyboard**\n"
                   "- On a phone, while the on-screen keyboard is open, the tab bar at the bottom of the Briefing Generator, the Datacard Generator and the Route Planner hides, so the field you type in stays in view; in the Route Planner, a search on the map gets the whole height.")
 FM_FR = ("Le nom de l’outil, ou son sigle, au début de la barre, ouvre la liste des outils (▾), dans l’ordre de l’accueil, l’outil ouvert marqué : un toucher de plus ouvre un autre outil, qui garde son travail. "
@@ -41,7 +44,7 @@ def test_texts_are_where_the_lot_says():
     log = (ROOT / 'CHANGELOG.md').read_text(encoding='utf-8')
     unreleased = log.split('\n## Unreleased\n', 1)[1].split('\n## ', 1)[0]
     all_tools = unreleased.split('\n### All tools\n', 1)[1].split('\n### ', 1)[0].rstrip('\n')
-    assert all_tools.endswith('\n\n' + CHANGELOG_ENTRY + '\n\n' + ENTRY_TABS + '\n\n' + ENTRY_TOUCHES + '\n\n' + ENTRY_KEYBOARD)       # le lot mp-mobile-onglets ajoute ses deux entrées après celle-ci ; le lot du clavier la sienne, qui termine la rubrique
+    assert all_tools.endswith('\n\n' + CHANGELOG_ENTRY + '\n\n' + ENTRY_TABS + '\n\n' + ENTRY_TOUCHES + '\n\n' + ENTRY_KEYBOARD + '\n\n' + ENTRY_INSIGNIA)       # le lot mp-mobile-onglets ajoute ses deux entrées après celle-ci ; le lot du clavier la sienne, qui termine la rubrique
     assert 'MP-V2.1.0+9` for this one' in all_tools and 'MP-V2.1.0+3' not in all_tools
     fm = (ROOT / 'build_field_manual.py').read_text(encoding='utf-8')
     i = fm.index('"La barre du haut", "The top bar"')
