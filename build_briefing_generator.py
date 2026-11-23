@@ -497,7 +497,7 @@ body {
 .mn-opt[aria-disabled="true"] { color: var(--khaki-light); cursor: not-allowed; opacity: .7; }
 .mn-opt[aria-disabled="true"]:hover { background: none; color: var(--khaki-light); }
 .dsp-opt { outline: none; color: var(--khaki-light); }
-.dsp-opt:focus-visible { background: var(--olive); color: var(--amber); }
+.dsp-opt:focus-visible { background: var(--olive); color: color-mix(in srgb, var(--amber) 55%, #fff); }
 
 /* ============ MAIN APP ============ */
 .app {

@@ -10,7 +10,7 @@ from version_block import SUITE_VERSION
 from messages_block import build_block as build_messages_block, build_css as build_messages_css
 from ui_block import build_tbm_css, build_tbm_block, build_block as build_ui_block, build_css as build_ui_css, verify as ui_verify, verify_bar as ui_verify_bar
 from shell_only_block import build_block as build_shell_only_block
-from brand_block import tab_icons_html as brand_tab_icons_html
+from brand_block import add_tab_icons as brand_tab_icons
 # La garde du module seul : premier élément du <body> (build_mission_plan.py la vérifie dans le dist/)
 SHELL_ONLY_TAG = '<script data-lang-key="lang_v1">\n' + build_shell_only_block() + '</script>\n'
 
@@ -1462,7 +1462,7 @@ RS_MENU_CSS = r"""
 .mn-opt[aria-disabled="true"] { color: var(--khaki-light); cursor: not-allowed; opacity: .7; }
 .mn-opt[aria-disabled="true"]:hover { background: none; color: var(--khaki-light); }
 .dsp-opt { outline: none; color: var(--khaki-light); }
-.dsp-opt:focus-visible { background: var(--olive); color: var(--amber); }
+.dsp-opt:focus-visible { background: var(--olive); color: color-mix(in srgb, var(--amber) 55%, #fff); }
 """
 
 RS_MENU_JS = r"""
@@ -5165,12 +5165,12 @@ OUTPUT_PATH = os.path.join(HERE, 'dist', 'dcs_recon_station.html')
 
 HTML = HTML.replace('<body data-theme="cw-nato">\n', '<body data-theme="cw-nato">\n' + SHELL_ONLY_TAG, 1)
 HTML = HTML.replace('@@MESSAGES_CSS@@\n', build_messages_css() + build_ui_css()).replace('@@MESSAGES_BLOCK@@\n', build_messages_block() + build_ui_block()).replace('@@TBM_CSS@@\n', build_tbm_css()).replace('@@TBM_JS@@\n', build_tbm_block())
-HTML = HTML.replace('<title>Recon Station — Mission Plan</title>\n', '<title>Recon Station — Mission Plan</title>\n' + brand_tab_icons_html(), 1)       # les icônes d'onglet de la famille (brand_block.py)
-ui_verify(HTML)
-ui_verify_bar(HTML)
+PAGE = brand_tab_icons(HTML)       # les icônes d'onglet de la famille (brand_block.py) : le build s'arrête si le titre attendu manque ; la page est une autre variable que HTML, que le Field Manual lit comme le gabarit
+ui_verify(PAGE)
+ui_verify_bar(PAGE)
 
 with open(OUTPUT_PATH, 'w', encoding='utf-8') as f:
-    f.write(HTML)
+    f.write(PAGE)
 
 print(f"[OK] dcs_recon_station.html written ({os.path.getsize(OUTPUT_PATH)//1024} KB)")
 

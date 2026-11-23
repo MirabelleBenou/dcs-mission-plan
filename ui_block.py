@@ -284,7 +284,7 @@ function uiBarMoreReset(bar) {                          /* le menu ouvert n'est 
   bar.classList.remove('tb-st7', 'tb-st8', 'tb-over', 'tb-nos');
   UIMORE.units = [];
 }
-/* la mesure des étapes 7 et 8, au sous-pixel : le bord droit du dernier enfant affiché (sa marge comprise) et la marge de fin de la barre, contre sa largeur utile ; scrollWidth et clientWidth, entiers, arrondiraient en faveur de la barre */
+/* la mesure des étapes 7 et 8, au sous-pixel : le bord droit du dernier enfant affiché (sa marge comprise, compté depuis le début du contenu : le défilement de la barre s'y ajoute) et la marge de fin de la barre, contre sa largeur utile ; scrollWidth et clientWidth, entiers, arrondiraient en faveur de la barre */
 function uiBarFitsExact(bar) {
   const cs = getComputedStyle(bar), r = bar.getBoundingClientRect();
   const brd = parseFloat(cs.borderRightWidth) || 0, pr = parseFloat(cs.paddingRight) || 0;
@@ -294,6 +294,7 @@ function uiBarFitsExact(bar) {
     if (s.display === 'none') return;
     end = Math.max(end, e.getBoundingClientRect().right + (parseFloat(s.marginRight) || 0));
   });
+  end += bar.scrollLeft;                                /* en coordonnées du contenu : une barre défilée ramène ses enfants vers la gauche de ce qu'elle a défilé */
   return end + pr <= r.right - brd + 0.001;
 }
 function uiBarMore(bar) {
@@ -1161,8 +1162,8 @@ select[data-tbm-src] { display: none !important; }
 .tbm-list .tbm-group { margin-top: 2px; border-top: 1px solid rgba(168,154,114,.25); list-style: none; }
 .tbm-opt .tbm-mark { width: 7px; height: 7px; flex: none; transform: rotate(45deg); border: 1px solid var(--khaki); }
 /* Lisibilité (WCAG 4,5 au moins, haut et bas du dégradé, quatre thèmes) : l'en-tête, la ligne choisie et la ligne survolée prennent un ton dérivé des variables du thème (aucune ne change) ; l'accent ambre reste celui du liseré, du losange et du filet du panneau */
-.tbm-opt.active, .tbm-opt:hover { background: var(--olive); color: color-mix(in srgb, var(--amber) 55%, #fff); }
-.tbm-opt.active .tbm-mark, .tbm-opt:hover .tbm-mark { border-color: var(--amber); }
+.tbm-opt.active, .tbm-opt:hover, .tbm-opt:focus-visible { background: var(--olive); color: color-mix(in srgb, var(--amber) 55%, #fff); }
+.tbm-opt.active .tbm-mark, .tbm-opt:hover .tbm-mark, .tbm-opt:focus-visible .tbm-mark { border-color: var(--amber); }
 .tbm-opt[aria-selected="true"] { color: color-mix(in srgb, var(--amber) 55%, #fff); font-weight: 700; }
 .tbm-opt[aria-selected="true"]::before { content: ''; position: absolute; left: 0; top: 6px; bottom: 6px; width: 3px; background: var(--amber); }
 .tbm-opt[aria-selected="true"] .tbm-mark { background: var(--amber); border-color: var(--amber); }

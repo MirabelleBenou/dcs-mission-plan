@@ -62,8 +62,8 @@ CONTRAST_CSS = r"""
 :where(body[data-theme="modern-east"]) .nav-route .nr-k { color: #7f866e; }
 :where(body[data-theme="modern-east"]) .nav-route .nr-sub { color: #7f866e; }
 /* lignes des menus de la barre (lot mp-ui-disposition) : le texte neutre des lignes « .dsp-opt » (Affichage, Ouvrir, Enregistrer, « … », listes) atteint 4,5 : 1 dans les quatre thèmes ; les thèmes cw-nato et modern-nato le tenaient déjà */
-:where(body[data-theme="cw-soviet"]) .dsp-opt:not([aria-checked="true"]):not(:hover):not(:focus-visible):not([aria-selected="true"]):not([aria-disabled="true"]):not(.mn-danger) { color: #879279; }
-:where(body[data-theme="modern-east"]) .dsp-opt:not([aria-checked="true"]):not(:hover):not(:focus-visible):not([aria-selected="true"]):not([aria-disabled="true"]):not(.mn-danger) { color: #888e78; }
+:where(body[data-theme="cw-soviet"]) .dsp-opt:not([aria-checked="true"]):not(:hover):not(:focus-visible):not(.active):not([aria-selected="true"]):not([aria-disabled="true"]):not(.mn-danger) { color: #879279; }
+:where(body[data-theme="modern-east"]) .dsp-opt:not([aria-checked="true"]):not(:hover):not(:focus-visible):not(.active):not([aria-selected="true"]):not([aria-disabled="true"]):not(.mn-danger) { color: #888e78; }
 /* MP-20 end */
 """
 
@@ -448,7 +448,7 @@ body {
 .dsp-sub:not(:first-of-type) { border-top: 1px solid rgba(168,154,114,.25); margin-top: 4px; }
 .dsp-opt { outline: none; color: var(--khaki-light); }
 .dsp-opt[aria-checked="true"] { color: var(--paper); }
-.dsp-opt:focus-visible { background: var(--olive); color: var(--amber); }
+.dsp-opt:focus-visible { background: var(--olive); color: color-mix(in srgb, var(--amber) 55%, #fff); }
 .dsp-box { position: relative; width: 15px; height: 15px; flex: none; box-sizing: border-box; border: 1.5px solid var(--khaki); }
 .dsp-opt[aria-checked="true"] .dsp-box { background: var(--amber); border-color: var(--amber); }
 .dsp-opt[aria-checked="true"] .dsp-box::after { content: ''; position: absolute; left: 3.5px; top: 0.5px; width: 4px; height: 8px; box-sizing: border-box;
@@ -460,7 +460,7 @@ body {
 .dsp-sub:not(:first-of-type) { border-top: 1px solid rgba(168,154,114,.25); margin-top: 4px; }
 .dsp-opt { outline: none; color: var(--khaki-light); }
 .dsp-opt[aria-checked="true"] { color: var(--paper); }
-.dsp-opt:focus-visible { background: var(--olive); color: var(--amber); }
+.dsp-opt:focus-visible { background: var(--olive); color: color-mix(in srgb, var(--amber) 55%, #fff); }
 .dsp-box { position: relative; width: 15px; height: 15px; flex: none; box-sizing: border-box; border: 1.5px solid var(--khaki); }
 .dsp-opt[aria-checked="true"] .dsp-box { background: var(--amber); border-color: var(--amber); }
 .dsp-opt[aria-checked="true"] .dsp-box::after { content: ''; position: absolute; left: 3.5px; top: 0.5px; width: 4px; height: 8px; box-sizing: border-box;

@@ -654,8 +654,8 @@ select[data-tbm-src] {{ display: none !important; }}
 }}
 .tbm-opt + .tbm-opt {{ border-top: 1px solid var(--line); }}
 .tbm-opt .tbm-mark {{ width: 7px; height: 7px; flex: none; transform: rotate(45deg); border: 1px solid var(--accent); }}
-.tbm-opt.active, .tbm-opt:hover {{ background: rgba(255,255,255,.06); color: color-mix(in srgb, var(--amber) 55%, #fff); }}
-.tbm-opt.active .tbm-mark, .tbm-opt:hover .tbm-mark {{ border-color: var(--amber); }}
+.tbm-opt.active, .tbm-opt:hover, .tbm-opt:focus-visible {{ background: rgba(255,255,255,.06); color: color-mix(in srgb, var(--amber) 55%, #fff); }}
+.tbm-opt.active .tbm-mark, .tbm-opt:hover .tbm-mark, .tbm-opt:focus-visible .tbm-mark {{ border-color: var(--amber); }}
 .tbm-opt[aria-selected="true"] {{ color: color-mix(in srgb, var(--amber) 55%, #fff); }}
 .tbm-opt[aria-selected="true"]::before {{ content: ''; position: absolute; left: 0; top: 6px; bottom: 6px; width: 3px; background: var(--amber); }}
 .tbm-opt[aria-selected="true"] .tbm-mark {{ background: var(--amber); border-color: var(--amber); }}
