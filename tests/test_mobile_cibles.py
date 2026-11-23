@@ -51,7 +51,7 @@ def test_the_changelog_says_what_the_lot_says_where_it_says_it():
     all_tools = _section(u, 'All tools')
     assert (TEXT_TOUCH + '\n' + TEXT_WHY.rstrip('\n')) in all_tools and all_tools.index(TEXT_TOUCH) < all_tools.index(TEXT_WHY)       # le lot mp-mobile-selecteur ajoute son entrée après celle-ci
     assert '\n' + TEXT_HOME in u and u.count(TEXT_HOME) == 1
-    rp = _section(u, 'Route Planner')
+    rp = _section(u, 'Route Planner').split('\n\n**“Clear everything”')[0]
     assert rp.rstrip('\n').endswith((TEXT_RP + '\n' + TEXT_RP_TABS).rstrip('\n'))                 # l'entrée du lot mp-mobile-rp-onglets suit aussitôt celle-ci et termine la rubrique
     assert u.count(TEXT_TOUCH) == 1 and u.count(TEXT_WHY) == 1 and u.count(TEXT_RP) == 1
 
