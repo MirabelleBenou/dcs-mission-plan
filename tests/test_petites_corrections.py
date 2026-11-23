@@ -384,13 +384,27 @@ def work_text(pg):
     return re.sub(r'"createdAt": "[^"]*"', '"createdAt": ""', pg.evaluate("() => suiteWorkText()"))
 
 
+LS_DUMP = "() => JSON.stringify(Object.keys(localStorage).map(k => [k, localStorage.getItem(k)]))"
+LS_PUT = "(d) => { JSON.parse(d).forEach(kv => localStorage.setItem(kv[0], kv[1])); }"
+
+
 def reopen_fc(pg):
-    pg.reload(wait_until='commit')
-    pg.wait_for_function("() => typeof window.MP_WORK_EXAMPLE === 'function' && !!document.getElementById('card-hq')", timeout=60000)
-    pg.wait_for_timeout(1300)
-    pg.wait_for_selector('#iframe-fc', state='attached', timeout=30000)
-    pg.wait_for_timeout(2600)
-    fr = pg.query_selector('#iframe-fc').content_frame()
+    """Recharge la page ; le shell rouvre l'outil par l'adresse. Le contexte du banc est en mémoire : de temps en temps Chromium y perd tout localStorage à un rechargement
+    (aucun clear() de l'application) ; un vrai navigateur le garde : on remet le stockage comme il était et on recharge, au plus trois fois."""
+    snap = pg.evaluate(LS_DUMP)
+    fr = None
+    for _ in range(3):
+        pg.reload(wait_until='commit')
+        pg.wait_for_function("() => typeof window.MP_WORK_EXAMPLE === 'function' && !!document.getElementById('card-hq')", timeout=60000)
+        pg.wait_for_timeout(1300)
+        if pg.evaluate("() => localStorage.getItem('fc_state_v1') === null") and '"fc_state_v1"' in snap:
+            pg.evaluate(LS_PUT, snap)
+            continue
+        pg.wait_for_selector('#iframe-fc', state='attached', timeout=30000)
+        pg.wait_for_timeout(2600)
+        fr = pg.query_selector('#iframe-fc').content_frame()
+        break
+    assert fr is not None, 'localStorage lost three reloads in a row'
     fr.wait_for_function("() => typeof S !== 'undefined' && S.flights && S.flights.length > 0", timeout=30000)
     return fr
 
