@@ -240,7 +240,7 @@ function payloadGameIndex(type) {
 // Les règles écrites (PAYLOAD_RULES) et celles du jeu (PAYLOAD_GAME_RULES, id « game », dans les deux sens) ; une station déjà en conflit par une règle écrite n'en reçoit pas d'autre.
 // La forme « rack » (le Mi-24P) juge l'emport entier, c posé en n : symétrique (rack 1 = rack 4 et rack 2 = rack 3, le vide comptant) il suit la table sym, sinon asym ; une paire de familles différentes de la table est interdite (bombes : seulement si la bombe est en station 3 ou 4) ;
 // les conflits sont les stations en paire interdite avec n, et celles dont la paire n'était pas interdite dans l'emport reçu et le devient, c rendant l'emport asymétrique.
-// Une règle du jeu entre deux stations d'un même groupe de PAYLOAD_ONE_OF (les portes du Mi-24P) n'est pas rendue : le groupe dit déjà la même contrainte (l'autre station est vidée, avec son message).
+// Une règle du jeu entre deux stations d'un même groupe de PAYLOAD_ONE_OF (les portes du Mi-24P) n'est pas rendue : le groupe la dit lui-même, par la règle « oneof » (deux portes occupées).
 // Fonction pure : ni DOM, ni t(), ni stockage.
 function payloadRuleConflicts(type, st, n, c) {
   if (typeof c !== 'string' || c === '' || typeof type !== 'string') return [];
@@ -305,6 +305,8 @@ function payloadRuleConflicts(type, st, n, c) {
       });
     }
   });
+  // La porte unique (PAYLOAD_ONE_OF : le Kord du Mi-24P) : `c` en `n` et un contenu dans une autre station du groupe, c'est la règle « oneof » ; le geste (cmpChoose) vide l'autre porte et n'en tient pas compte.
+  payloadOneOfOthers(type, n).forEach(m => { if (payloadHas(st, m) && typeof st[m] === 'string' && st[m] !== '') put(m, 'oneof'); });
   if (game) {
     const gi = payloadGameIndex(type), ci = payloadClsidIdx(c);
     const have = new Set(out.map(x => x.st));

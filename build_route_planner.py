@@ -76,8 +76,8 @@ CONTRAST_CSS = r"""
 :where(body[data-theme="modern-east"]) .pt-del { color: #7d846c; }
 :where(body[data-theme="modern-east"]) .ui-modal .rt-note { color: #888e78; }
 /* lignes des menus de la barre (lot mp-ui-disposition) : le texte neutre des lignes « .dsp-opt » (Affichage, Ouvrir, Enregistrer, « … », listes) atteint 4,5 : 1 dans les quatre thèmes ; les thèmes cw-nato et modern-nato le tenaient déjà */
-:where(body[data-theme="cw-soviet"]) .dsp-opt:not([aria-checked="true"]):not(:hover):not(:focus-visible):not([aria-selected="true"]):not([aria-disabled="true"]):not(.mn-danger) { color: #879279; }
-:where(body[data-theme="modern-east"]) .dsp-opt:not([aria-checked="true"]):not(:hover):not(:focus-visible):not([aria-selected="true"]):not([aria-disabled="true"]):not(.mn-danger) { color: #888e78; }
+:where(body[data-theme="cw-soviet"]) .dsp-opt:not([aria-checked="true"]):not(:hover):not(:focus-visible):not(.active):not([aria-selected="true"]):not([aria-disabled="true"]):not(.mn-danger) { color: #879279; }
+:where(body[data-theme="modern-east"]) .dsp-opt:not([aria-checked="true"]):not(:hover):not(:focus-visible):not(.active):not([aria-selected="true"]):not([aria-disabled="true"]):not(.mn-danger) { color: #888e78; }
 :where(body[data-theme="cw-soviet"]) .dsp-n { color: #879279; }
 :where(body[data-theme="modern-east"]) .dsp-n { color: #888e78; }
 /* MP-20 end */
@@ -744,7 +744,7 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .dsp-sub:not(:first-of-type) { border-top: 1px solid rgba(168,154,114,.25); margin-top: 4px; }
 .dsp-opt { outline: none; color: var(--khaki-light); }
 .dsp-opt[aria-checked="true"] { color: var(--paper); }
-.dsp-opt:focus-visible { background: var(--olive); color: var(--amber); }
+.dsp-opt:focus-visible { background: var(--olive); color: color-mix(in srgb, var(--amber) 55%, #fff); }
 .dsp-box { position: relative; width: 15px; height: 15px; flex: none; box-sizing: border-box; border: 1.5px solid var(--khaki); }
 .dsp-opt[aria-checked="true"] .dsp-box { background: var(--amber); border-color: var(--amber); }
 .dsp-opt[aria-checked="true"] .dsp-box::after { content: ''; position: absolute; left: 3.5px; top: 0.5px; width: 4px; height: 8px; box-sizing: border-box;
@@ -7177,7 +7177,8 @@ function drInit() {
    de large, à partir de 600 px de haut ou toute fenêtre plus haute que large : le clavier virtuel ne la fait pas changer de mémoire) la clé rp_split_v1 ; en paysage bas la clé rp_split_land_v1.
    Pendant le clavier de l'écran (un champ de saisie a le focus et la fenêtre visible a perdu plus de 120 px : la détection est celle du bloc commun, UIKB ; la barre d'onglets se cache), rien n'est écrit en mémoire ;
    H' est la place entre le haut de #app et le bas de la fenêtre visible, poignée déduite : sur un champ du panneau, la carte prend min(sa borne basse, H' − 100), jamais moins de 60 px (le panneau garde 100 px
-   si la fenêtre le permet) ; sur un champ de la carte (la recherche de la loupe), toute la hauteur H', le panneau à 0 ; quand le clavier se ferme, la hauteur gardée revient. */
+   si la fenêtre le permet) ; sur un champ de la carte (la recherche de la loupe), toute la hauteur H', le panneau à 0 ; quand le clavier se ferme, la hauteur gardée revient.
+   Glisser la poignée ou la toucher deux fois pendant le clavier ne change pas la hauteur gardée (la carte bouge à l'écran, rien n'est écrit). */
 const KEY_SPLIT = 'rp_split_v1';
 const KEY_SPLIT_LAND = 'rp_split_land_v1';
 const SP_MIN = 220, SP_MIN_LAND = 140, SP_MIN_F = 0.25, SP_MAX_F = 0.85, SP_DEF_F = 0.52, SP_STEP = 40, SP_DBL_MS = 350, SP_KB_PANEL = 100, SP_KB_MIN = 60;
@@ -7279,7 +7280,7 @@ function spInit() {
   };
   SP.el.addEventListener('pointerdown', e => {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
-    SP.drag = { id: e.pointerId, y0: e.clientY, h0: spHeight(), moved: false };
+    SP.drag = { id: e.pointerId, y0: e.clientY, h0: spHeight(), moved: false, kb: UIKB.on };
     SP.want = SP.drag.h0;
     try { SP.el.setPointerCapture(e.pointerId); } catch (x) { /* ignore */ }
     SP.el.classList.add('on');
@@ -7300,6 +7301,7 @@ function spInit() {
     SP.drag = null;
     SP.el.classList.remove('on');
     try { SP.el.releasePointerCapture(e.pointerId); } catch (x) { /* ignore */ }
+    if (d.kb || UIKB.on) { SP.last = 0; return; }      /* clavier de l'écran ouvert : la hauteur vue est celle du clavier, jamais la hauteur gardée ; rien n'est écrit (la carte bouge à l'écran, la hauteur gardée revient à la fermeture du clavier) */
     if (d.moved) { spPut(SP.want); spSave(); SP.last = 0; return; }
     if (e.type !== 'pointerup') return;
     const now = performance.now();

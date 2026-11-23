@@ -2510,12 +2510,7 @@ def _start_tall(P):
     o.append(sv_box(X0, 56, w, 22))
     o.append(P.text(X0 + w / 2 + 6, 71, 8, D('DCS · MISSION PLAN')))
     o.append(_ico_picto(X0 + w / 2 - 44, 67))        # le pictogramme de la famille, avant le nom de l'outil
-    # la plaque du titre, et l'insigne en sceau sur son coin haut-droit
-    o.append(sv_box(X0 + 10, 96, 190, 34))
-    o.append(P.text(X0 + 18, 107, 7, L('mp', 'ribbon'), anchor='start', op=.7))
-    o.append(P.text(X0 + 18, 124, 13, D('MISSION PLAN'), anchor='start', extra=' font-weight="700"'))
-    o.append(_ico_crest(X0 + 10 + 190 + 12 - 18, 96 - 16 + 18, 18))
-    IY = 150
+    IY = 106        # la rangée de boutons suit la barre ; la plaque du titre vient après elle et son menu (comme à l'écran)
     o.append(sv_box(X0, IY, w, 30))
     bx, x = {}, X0 + 6
     for key, bw, ico in (('open', 28, _rp_ico_folder), ('save', 28, _rp_ico_disk), ('ex', 40, _ico_doc), ('fm', 28, _ico_book)):
@@ -2531,7 +2526,13 @@ def _start_tall(P):
     o.append(sv_box(mx, my, mw, 36))
     o.append(_bars(mx + 8, my + 11, 250, 1))
     o.append(_bars(mx + 8, my + 26, 270, 1))
-    y = my + 46
+    # la plaque du titre, sous la rangée de boutons (et sous le menu ouvert, pour qu'il ne la cache pas), et l'insigne en sceau sur son coin haut-droit
+    PY = my + 36 + 20
+    o.append(sv_box(X0 + 10, PY, 190, 34))
+    o.append(P.text(X0 + 18, PY + 11, 7, L('mp', 'ribbon'), anchor='start', op=.7))
+    o.append(P.text(X0 + 18, PY + 28, 13, D('MISSION PLAN'), anchor='start', extra=' font-weight="700"'))
+    o.append(_ico_crest(X0 + 10 + 190 + 12 - 18, PY - 16 + 18, 18))
+    y = PY + 34 + 20
     for gk, cards in _ST_CARDS:
         o.append(f'<rect x="{X0}" y="{y}" width="{w}" height="104" rx="3" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="5 3" opacity=".55"/>')
         o.append(sv_box(X0 + 8, y - 9, 246, 18))

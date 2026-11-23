@@ -97,8 +97,8 @@ CONTRAST_CSS = r"""
 :where(body[data-theme="cw-soviet"]) .rt-cm { color: #768367; }
 :where(body[data-theme="modern-east"]) .rt-cm { color: #7a8269; }
 /* lignes des menus de la barre (lot mp-ui-disposition-b) : le texte neutre des lignes « .dsp-opt » (Ouvrir) atteint 4,5 : 1 dans les quatre thèmes ; les thèmes cw-nato et modern-nato le tenaient déjà */
-:where(body[data-theme="cw-soviet"]) .dsp-opt:not([aria-checked="true"]):not(:hover):not(:focus-visible):not([aria-selected="true"]):not([aria-disabled="true"]) { color: #879279; }
-:where(body[data-theme="modern-east"]) .dsp-opt:not([aria-checked="true"]):not(:hover):not(:focus-visible):not([aria-selected="true"]):not([aria-disabled="true"]) { color: #888e78; }
+:where(body[data-theme="cw-soviet"]) .dsp-opt:not([aria-checked="true"]):not(:hover):not(:focus-visible):not(.active):not([aria-selected="true"]):not([aria-disabled="true"]) { color: #879279; }
+:where(body[data-theme="modern-east"]) .dsp-opt:not([aria-checked="true"]):not(:hover):not(:focus-visible):not(.active):not([aria-selected="true"]):not([aria-disabled="true"]) { color: #888e78; }
 /* MP-20 end */
 """
 from magvar_block import build_block as build_magvar_block
@@ -672,6 +672,7 @@ I18N_FR = {
     'cmp.others': '{0} autres',
     'cmp.blocked': 'Corrigez les stations signalées pour garder cet emport dans vos presets',
     'rule.game': "l'éditeur de mission de DCS refuse ce mélange",
+    'rule.oneof': 'une seule porte porte le Kord',
     'rule.ajs37-mix': "une seule arme air-sol à la fois sur l'AJS37, sauf l'AKAN avec la RB 75 ou la RB 05",
     'rule.mig21-ecm': "le SPS-141 ou l'ASO-2, pas les deux",
     'rule.mi24-guv': 'seul le GUV resterait utilisable',
@@ -722,8 +723,10 @@ I18N_FR = {
     'lo.pct': '{0} %',
     'lo.fuelbar': 'Carburant (%)',
     'set.charge': 'leurres{fs} + paillettes{cs} ≤ {n}',
+    'set.charge.fl': 'leurres × {k} ≤ {n}',
+    'set.charge.ch': 'paillettes × {k} ≤ {n}',
     'lo.refused.fuel': '⚠ Au-delà du maximum : carburant {0} {u}, limite {1} {u}',
-    'lo.refused.charge': '⚠ Au-delà du maximum : leurres{0} + paillettes{1} ≤ {2} ({3} demandé)',
+    'lo.refused.charge': '⚠ Au-delà du maximum : {0} ({1} demandé)',
     'lo.refused.bad': '⚠ Valeur invalide : {0}',
     'lo.imported': 'emport importé',
     'lo.src.mine': 'mes presets',
@@ -1068,6 +1071,7 @@ I18N_EN = {
     'cmp.others': '{0} others',
     'cmp.blocked': 'Fix the flagged stations to keep this loadout in your presets',
     'rule.game': 'the DCS mission editor does not allow this combination',
+    'rule.oneof': 'only one door carries the Kord',
     'rule.ajs37-mix': 'one air-to-ground weapon at a time on the AJS37, except the AKAN with the RB 75 or the RB 05',
     'rule.mig21-ecm': 'the SPS-141 or the ASO-2, not both',
     'rule.mi24-guv': 'only the GUV pod would remain usable',
@@ -1118,8 +1122,10 @@ I18N_EN = {
     'lo.pct': '{0}%',
     'lo.fuelbar': 'Fuel (%)',
     'set.charge': 'flares{fs} + chaff{cs} ≤ {n}',
+    'set.charge.fl': 'flares × {k} ≤ {n}',
+    'set.charge.ch': 'chaff × {k} ≤ {n}',
     'lo.refused.fuel': '⚠ Above the maximum: fuel {0} {u}, limit {1} {u}',
-    'lo.refused.charge': '⚠ Above the maximum: flares{0} + chaff{1} ≤ {2} ({3} requested)',
+    'lo.refused.charge': '⚠ Above the maximum: {0} ({1} requested)',
     'lo.refused.bad': '⚠ Invalid value: {0}',
     'lo.imported': 'imported loadout',
     'lo.src.mine': 'my presets',
@@ -1370,7 +1376,7 @@ body {
 .mn-opt[aria-disabled="true"] { color: var(--khaki-light); cursor: not-allowed; opacity: .7; }
 .mn-opt[aria-disabled="true"]:hover { background: none; color: var(--khaki-light); }
 .dsp-opt { outline: none; color: var(--khaki-light); }
-.dsp-opt:focus-visible { background: var(--olive); color: var(--amber); }
+.dsp-opt:focus-visible { background: var(--olive); color: color-mix(in srgb, var(--amber) 55%, #fff); }
 .tb-lang-btn {
   background: transparent;
   border: 1px solid var(--khaki);
@@ -2696,8 +2702,14 @@ function loFieldMax(type, k) {
   return payloadCountMax(type, k);
 }
 // « leurres + paillettes ≤ 192 » ; quand une charge pèse plus d'une unité : « leurres × 2 + paillettes ≤ 180 »
+// Une charge de taille nulle (un type sans paillettes, ou sans leurres) ne s'écrit jamais « × 0 » : la règle ne parle que de l'autre ; les deux nulles : « max 0 ».
 function chargeRule(cl) {
   const w = k => k === 1 ? '' : ' × ' + k;
+  if (cl.fs === 0 && cl.cs === 0) return tf('lo.max', 0);
+  if (cl.cs === 0 || cl.fs === 0) {
+    const k = cl.cs === 0 ? cl.fs : cl.cs;
+    return k === 1 ? tf('lo.max', cl.total) : t(cl.cs === 0 ? 'set.charge.fl' : 'set.charge.ch').replace('{k}', k).replace('{n}', cl.total);
+  }
   return t('set.charge').replace('{fs}', w(cl.fs)).replace('{cs}', w(cl.cs)).replace('{n}', cl.total);
 }
 // Un type porte des paillettes quand la charge qu'on en donne (chargeLimit) pèse quelque chose (cs > 0) ; sans plafond dans la table, quand son nombre par défaut est au-dessus de 0.
@@ -2812,8 +2824,7 @@ function loCheck(type, lo, k, raw, badInput) {
     const other = k === 'flare' ? 'chaff' : 'flare', o = lo ? loNumber(lo[other]) : undefined, ov = o === undefined ? d[other] : o;
     const over = loChargeOver(type, k === 'flare' ? r.v : ov, k === 'flare' ? ov : r.v);
     if (over) {
-      const w = n => n === 1 ? '' : ' × ' + n;
-      return { err: tf('lo.refused.charge', w(over.cl.fs), w(over.cl.cs), over.cl.total, String(Math.round(over.used * 100) / 100)) };
+      return { err: tf('lo.refused.charge', chargeRule(over.cl), String(Math.round(over.used * 100) / 100)) };
     }
   }
   return { text: String(r.v) };
@@ -4445,13 +4456,15 @@ const cmpOptBase = new WeakMap();
 function cmpTwin(n) {
   return (UI.cmp.sym && CMP.view && has(CMP.pairs, n)) ? (CMP.pyl.filter(x => x.n === CMP.pairs[n])[0] || null) : null;
 }
+// Les conflits d'un choix, sans la porte unique (« oneof ») : le choix d'une porte vide l'autre (cmpChoose), il ne se refuse ni ne se grise jamais pour elle ; seul un emport reçu la porte (cmpRuleText, cmpBlocked).
+const cmpConflicts = (st, n, c) => payloadRuleConflicts(CMP.type, st, n, c).filter(x => x.rule !== 'oneof');
 // Les conflits de la situation (A) : `c` en `n` ET le miroir `m` sur la jumelle `tw` (emport simulé) : [{ st, rule }]
 function cmpClashPair(st, n, c, tw, m) {
   const sim = Object.assign({}, st);
   sim[n] = c; sim[tw.n] = m;
-  const out = payloadRuleConflicts(CMP.type, sim, n, c);
+  const out = cmpConflicts(sim, n, c);
   // un conflit du miroir avec le choix lui-même est porté par la jumelle
-  payloadRuleConflicts(CMP.type, sim, tw.n, m).forEach(x => {
+  cmpConflicts(sim, tw.n, m).forEach(x => {
     const e = { st: x.st === String(n) ? tw.n : x.st, rule: x.rule };
     if (!out.some(y => y.st === e.st && y.rule === e.rule)) out.push(e);
   });
@@ -4465,10 +4478,10 @@ function cmpChoiceClash(st, n, c) {
   if (c === '' || !cmpRuled()) return [];
   const tw = cmpTwin(n);
   const m = tw ? payloadMirrorClsid(c, tw.allowed) : '';
-  if (!tw || m === '') return payloadRuleConflicts(CMP.type, st, n, c);
+  if (!tw || m === '') return cmpConflicts(st, n, c);
   const a = cmpClashPair(st, n, c, tw, m);
   if (!a.length) return [];
-  return payloadRuleConflicts(CMP.type, st, n, c).length ? a : [];
+  return cmpConflicts(st, n, c).length ? a : [];
 }
 // Une exigence : la station et les armes dont l'une est exigée (trois au plus ; au-delà, les deux premières et le nombre des autres)
 function cmpNeedText(m) {
@@ -5656,7 +5669,7 @@ def check(html):
     # les textes « rule.* » : exactement l'id « game » et les ids des règles écrites (PAYLOAD_RULES), en FR comme en EN
     mrules = re.search(r'const PAYLOAD_RULES = (\{.*?\})\n;', rules_blk, re.S)
     rules = json.loads(mrules.group(1)) if mrules else {}
-    ids = {'game'}
+    ids = {'game', 'oneof'}
     for lst in rules.values():
         for r in lst:
             if r.get('k') == 'rack':       # la règle de rack ne rend que les ids de ses matrices (sym, asym, bombs), jamais le sien
