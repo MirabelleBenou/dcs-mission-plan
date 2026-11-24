@@ -35,6 +35,38 @@ def _int_literal(node):
     return isinstance(node, ast.Constant) and type(node.value) is int
 
 
+WATCHED = ('id', 'detection_range', 'threat_range')
+BLOCKS = (ast.If, ast.For, ast.AsyncFor, ast.While, ast.With, ast.AsyncWith, ast.Try, getattr(ast, 'TryStar', ast.Try), ast.Match if hasattr(ast, 'Match') else ast.If)
+
+
+def _watched_in(node):
+    """Les noms surveillés qu'un nœud (cible d'affectation) nomme, où que ce soit : tuple, liste, étoile."""
+    return sorted({n.id for n in ast.walk(node) if isinstance(n, ast.Name) and n.id in WATCHED})
+
+
+def _refuse_unreadable(cls_name, st):
+    """Refuse toute forme d'affectation de id, detection_range ou threat_range que la lecture simple (une cible, un nom, au niveau de la classe) ne sait pas lire."""
+    if isinstance(st, ast.Assign):
+        names = sorted({w for t in st.targets for w in _watched_in(t)})
+        if names and not (len(st.targets) == 1 and isinstance(st.targets[0], ast.Name)):
+            raise SystemExit('[ERREUR] type %s : %s affecté par une affectation à plusieurs cibles ou à un tuple, qu\'on ne sait pas lire' % (cls_name, ', '.join(names)))
+    elif isinstance(st, ast.AugAssign):
+        names = _watched_in(st.target)
+        if names:
+            raise SystemExit('[ERREUR] type %s : %s modifié par une affectation augmentée, qu\'on ne sait pas lire' % (cls_name, ', '.join(names)))
+    elif isinstance(st, BLOCKS):
+        names = set()
+        for n in ast.walk(st):
+            if isinstance(n, ast.Assign):
+                names.update(w for t in n.targets for w in _watched_in(t))
+            elif isinstance(n, (ast.AugAssign, ast.AnnAssign)):
+                names.update(_watched_in(n.target))
+            elif isinstance(n, ast.NamedExpr):
+                names.update(_watched_in(n.target))
+        if names:
+            raise SystemExit('[ERREUR] type %s : %s affecté dans un bloc (if, for, while, with, try, match), qu\'on ne sait pas lire' % (cls_name, ', '.join(sorted(names))))
+
+
 def read_air_defence(root):
     """Lit dcs/vehicles.py par ast.parse (jamais exécuté) : la classe de tête AirDefence et ses classes imbriquées ; refuse ce qu'il ne sait pas lire."""
     with open(root + '/dcs/vehicles.py', encoding='utf-8') as f:
@@ -56,6 +88,7 @@ def read_air_defence(root):
             raise SystemExit('[ERREUR] type %s : sa base (%s) n\'est pas %s, un héritage qu\'on ne sait pas lire' % (cls.name, ', '.join(str(b) for b in bases) or 'aucune', BASE_CLASS))
         seen = {}
         for st in cls.body:
+            _refuse_unreadable(cls.name, st)
             if isinstance(st, ast.Assign) and len(st.targets) == 1 and isinstance(st.targets[0], ast.Name):
                 key, val = st.targets[0].id, st.value
             elif isinstance(st, ast.AnnAssign) and isinstance(st.target, ast.Name) and st.value is not None:

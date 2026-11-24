@@ -330,3 +330,46 @@ def test_input_and_delivered_tables_agree():
 def test_no_page_embeds_the_threats_yet():
     for p in (ROOT / 'dist').glob('*.html'):
         assert 'dcs-threats-v1' not in p.read_text(encoding='utf-8'), p.name
+
+
+# ---------- les formes d'affectation qu'on ne sait pas lire (addendum 2) ----------
+@pytest.mark.parametrize('lines, name', [
+    ('        id = "gun"\n        detection_range = threat_range = 2000\n', 'detection_range'),
+    ('        id = "gun"\n        threat_range, detection_range = 2000, 0\n', 'detection_range'),
+    ('        id = "gun"\n        (threat_range, other) = (2000, 1)\n', 'threat_range'),
+    ('        id = "gun"\n        [detection_range, threat_range] = [0, 2000]\n', 'detection_range'),
+    ('        id = other = "gun"\n        threat_range = 2000\n', 'id'),
+    ('        id, extra = "gun", 1\n        threat_range = 2000\n', 'id'),
+    ('        a = b = threat_range = 2000\n        id = "gun"\n', 'threat_range'),
+])
+def test_refuses_a_multi_target_or_tuple_assignment_naming_a_watched_key(tmp_path, lines, name):
+    refuse_text(tmp_path, one_type(lines), 'Gun', name, 'plusieurs cibles ou à un tuple')
+
+
+@pytest.mark.parametrize('lines, name', [
+    (GOOD + '        threat_range += 1000\n', 'threat_range'),
+    (GOOD + '        detection_range -= 1\n', 'detection_range'),
+    (GOOD + '        id += "x"\n', 'id'),
+])
+def test_refuses_an_augmented_assignment_of_a_watched_key(tmp_path, lines, name):
+    refuse_text(tmp_path, one_type(lines), 'Gun', name, 'affectation augmentée')
+
+
+@pytest.mark.parametrize('block', [
+    '        if True:\n            threat_range = 3000\n',
+    '        for _ in range(1):\n            detection_range = 3000\n',
+    '        while False:\n            threat_range = 3000\n',
+    '        with ctx():\n            threat_range = 3000\n',
+    '        try:\n            threat_range = 3000\n        except Exception:\n            pass\n',
+    '        try:\n            pass\n        finally:\n            detection_range = 1\n',
+    '        if True:\n            pass\n        else:\n            id = "other"\n',
+    '        if True:\n            threat_range += 1\n',
+    '        if True:\n            (threat_range, x) = (1, 2)\n',
+])
+def test_refuses_a_watched_key_assigned_in_a_block(tmp_path, block):
+    refuse_text(tmp_path, one_type('        id = "gun"\n        threat_range = 2000\n' + block), 'Gun', 'dans un bloc')
+
+
+def test_a_block_that_assigns_other_names_is_not_refused(tmp_path):
+    v = one_type(GOOD + '        if True:\n            other = 1\n        tag = other_tag = 3\n        count += 1\n')
+    assert json.loads(run(tmp_path, gun_table(), vehicles=v).read_text(encoding='utf-8'))['systems'][0]['fire_m'] == 2000

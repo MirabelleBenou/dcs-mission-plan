@@ -2136,7 +2136,11 @@ body.mp-ml-on { --mp-top: 86px; }
 #rp-thr .thr-r { margin-top: 6px; }
 #rp-thr .thr-r label { font-size: 12px; }
 #rp-thr .thr-r b { font-weight: 700; font-size: 13px; }
-#rp-thr input[type="range"] { display: block; width: 100%; height: 22px; margin: 2px 0 0; padding: 0; accent-color: var(--amber); cursor: pointer; }
+#rp-thr input[type="range"] { -webkit-appearance: none; appearance: none; display: block; width: 100%; height: 22px; margin: 2px 0 0; padding: 0; background: transparent; accent-color: var(--amber); cursor: pointer; }
+#rp-thr input[type="range"]::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; background: rgba(232,220,184,.35); }
+#rp-thr input[type="range"]::-moz-range-track { height: 4px; border-radius: 2px; background: rgba(232,220,184,.35); }
+#rp-thr input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; box-sizing: border-box; width: 16px; height: 16px; margin-top: -6px; border: 0; border-radius: 50%; background: var(--amber); }
+#rp-thr input[type="range"]::-moz-range-thumb { -moz-appearance: none; appearance: none; box-sizing: border-box; width: 16px; height: 16px; border: 0; border-radius: 50%; background: var(--amber); }
 #rp-thr .thr-ticks { position: relative; height: 14px; margin: 0 0 6px; }
 #rp-thr .thr-tk { position: absolute; top: 0; transform: translateX(-50%); font-size: 10px; line-height: 14px; white-space: nowrap; }
 #rp-thr .thr-leg { display: flex; flex-wrap: wrap; gap: 3px 14px; font-size: 11px; line-height: 15px; }
@@ -2146,7 +2150,7 @@ body.mp-ml-on { --mp-top: 86px; }
 #rp-thr .thr-sw.fire { height: 0; border-top: 2px solid #c8102e; }
 #rp-thr .thr-sw.det { height: 0; border-top: 2px dashed #c8102e; }
 #rp-thr .thr-sw.halo { height: 7px; background: #ffd400; }
-#rp-thr.thr-pill { display: flex; align-items: center; gap: 8px; width: auto; height: 44px; padding: 0 0 0 10px; bottom: 10px; left: 8px; }
+#rp-thr.thr-pill { display: flex; align-items: center; gap: 8px; width: auto; height: 44px; padding: 0 0 0 10px; bottom: 10px; left: 8px; border: 0; box-shadow: inset 0 0 0 1px var(--amber); }
 #rp-thr.thr-pill .thr-v { font-weight: 700; font-size: 13px; white-space: nowrap; }
 #rp-thr.thr-pill .thr-src { font-size: 11px; }
 #rp-thr .thr-b { flex: none; box-sizing: border-box; width: 44px; height: 44px; margin: 0; padding: 0; border: 0; border-left: 1px solid rgba(232,220,184,.35); border-radius: 0; background: transparent;
@@ -2994,8 +2998,10 @@ const I18N = {
     'dr.f.threat': 'Système',
     'thr.none': 'Aucun',
     'thr.unknown': '{id} (inconnu)',
-    'thr.info.fire': 'Tir {fire} · détection {det} · {ceil} · capteur : {sensor}',
-    'thr.info.radar': 'Détection {det} · {ceil} · capteur : {sensor}',
+    'thr.p.fire': 'Tir {v}',
+    'thr.p.det': 'détection {v}',
+    'thr.p.tail': '{ceil} · capteur : {sensor}',
+    'thr.other': '{n} (autre nature)',
     'thr.ceil': 'plafond {v}',
     'thr.ceil.none': 'plafond non connu',
     'thr.sensor.search': 'radar de veille',
@@ -3562,8 +3568,10 @@ const I18N = {
     'dr.f.threat': 'System',
     'thr.none': 'None',
     'thr.unknown': '{id} (unknown)',
-    'thr.info.fire': 'Fire {fire} · detection {det} · {ceil} · sensor: {sensor}',
-    'thr.info.radar': 'Detection {det} · {ceil} · sensor: {sensor}',
+    'thr.p.fire': 'Fire {v}',
+    'thr.p.det': 'detection {v}',
+    'thr.p.tail': '{ceil} · sensor: {sensor}',
+    'thr.other': '{n} (other kind)',
     'thr.ceil': 'ceiling {v}',
     'thr.ceil.none': 'ceiling not known',
     'thr.sensor.search': 'search radar',
@@ -7148,8 +7156,12 @@ const THR = {
 };
 
 function thrNature(sidc) { return typeof sidc === 'string' && sidc.length >= 10 ? (THR_NATURE[symCode(sidc)] || '') : ''; }
-/* Un symbole porte une menace : du camp Ennemi, d'une des trois natures, avec un champ « threat » */
-function thrCarries(it) { return !!it && it.type === 'symbol' && it.sidc[1] === 'H' && !!thrNature(it.sidc) && typeof it.threat === 'string' && it.threat !== ''; }
+/* Un symbole porte une menace : du camp Ennemi, d'une des trois natures, avec un champ « threat » dont le système a la nature du symbole */
+function thrCarries(it) {
+  if (!it || it.type !== 'symbol' || it.sidc[1] !== 'H' || !thrNature(it.sidc) || typeof it.threat !== 'string' || it.threat === '') return false;
+  const sys = THR_BY_ID[it.threat];
+  return !sys || sys.kind === thrNature(it.sidc);       /* le système d'une autre nature (venu d'un fichier) ne se dessine pas */
+}
 function thrSysName(sys) { return CURRENT_LANG === 'fr' ? sys.name_fr : sys.name_en; }
 function thrSteps() { return THR_STEPS[S.units.altitude === 'ft' ? 'ft' : 'm']; }
 function thrStepM(rank) { const v = thrSteps()[rank]; return S.units.altitude === 'ft' ? v * FT_M : v; }
@@ -7177,9 +7189,12 @@ function thrInfoLine(it) {
   const sys = typeof it.threat === 'string' ? THR_BY_ID[it.threat] : null;
   if (!sys) return '';
   const ceil = sys.ceiling_m == null ? t('thr.ceil.none') : t('thr.ceil', { v: thrAlt(sys.ceiling_m) });
-  const sensor = t('thr.sensor.' + sys.sensor);
-  if (sys.kind === 'radar') return t('thr.info.radar', { det: fmtDist(sys.detect_m / 1000), ceil: ceil, sensor: sensor });
-  return t('thr.info.fire', { fire: fmtDist(sys.fire_m / 1000), det: fmtDist(sys.detect_m / 1000), ceil: ceil, sensor: sensor });
+  const parts = [];
+  if (sys.kind !== 'radar' && sys.fire_m > 0) parts.push(t('thr.p.fire', { v: fmtDist(sys.fire_m / 1000) }));
+  if (sys.detect_m > 0) parts.push(t('thr.p.det', { v: fmtDist(sys.detect_m / 1000) }));
+  parts.push(t('thr.p.tail', { ceil: ceil, sensor: t('thr.sensor.' + sys.sensor) }));
+  const first = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
+  return [first].concat(parts.slice(1)).join(' · ');
 }
 function thrFieldHtml(it) {
   const kind = thrNature(it.sidc), cur = typeof it.threat === 'string' ? it.threat : '';
@@ -7187,7 +7202,7 @@ function thrFieldHtml(it) {
   let o = '<option value=""' + (cur === '' ? ' selected' : '') + '>' + esc(t('thr.none')) + '</option>';
   if (cur !== '' && !list.some(s => s.id === cur)) {
     const sys = THR_BY_ID[cur];
-    o += '<option value="' + esc(cur) + '" selected>' + esc(sys ? thrSysName(sys) : t('thr.unknown', { id: cur })) + '</option>';
+    o += '<option value="' + esc(cur) + '" selected>' + esc(sys ? t('thr.other', { n: thrSysName(sys) }) : t('thr.unknown', { id: cur })) + '</option>';
   }
   list.forEach(s => { o += '<option value="' + esc(s.id) + '"' + (cur === s.id ? ' selected' : '') + '>' + esc(thrSysName(s)) + '</option>'; });
   return '<select id="dr-f-threat" data-f="threat">' + o + '</select><div class="dr-thr-info" id="dr-f-threat-info">' + esc(thrInfoLine(it)) + '</div>';
@@ -7252,6 +7267,7 @@ function thrReadGround(th, meta, z, px0, py0, side) {
   const want = [];
   for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) {
     if (tx < 0 || ty < 0 || tx >= lim || ty >= lim) continue;
+    if ((tx + 1) * 256 <= xmin || tx * 256 >= xmax || (ty + 1) * 256 <= ymin || ty * 256 >= ymax) continue;       /* une tuile hors des bornes du relief : pas de requête, le sol y vaut 0 */
     want.push({ tx: tx, ty: ty, p: thrTile(thrTileUrl(th, meta, z, tx, ty), meta) });
   }
   return Promise.all(want.map(w => w.p)).then(arr => {
@@ -7326,19 +7342,23 @@ function thrCalc(m) {
 }
 function thrWorkerSrc() { return thrCalc.toString() + '\nself.onmessage = function (e) { var r = thrCalc(e.data); self.postMessage(r, [r.buffer]); };'; }
 /* Dans un Worker (fait d'un Blob) ; si le Worker manque, lève ou échoue, le même code tourne sur la page */
-function thrRunCalc(msg, noWorker) {
+function thrRunCalc(msg, noWorker, job) {
   const t0 = performance.now();
   const inline = () => ({ hv: thrCalc(msg), worker: false, ms: performance.now() - t0 });
-  if (noWorker || typeof Worker !== 'function' || typeof Blob !== 'function' || !window.URL || !URL.createObjectURL) return Promise.resolve(inline());
-  return new Promise(res => {
+  return new Promise((res, rej) => {
     let w = null, done = false;
-    const fail = () => { if (done) return; done = true; try { if (w) w.terminate(); } catch (e) { /* ignore */ } res(inline()); };
+    const page = () => { try { res(inline()); } catch (e) { rej(e); } };       /* le calcul de la page qui lève : la promesse échoue, elle ne reste jamais pendante */
+    if (noWorker || typeof Worker !== 'function' || typeof Blob !== 'function' || !window.URL || !URL.createObjectURL) { page(); return; }
+    const kill = () => { try { if (w) w.terminate(); } catch (e) { /* ignore */ } w = null; };
+    const fail = () => { if (done) return; done = true; kill(); if (job) job.cancel = null; page(); };
+    if (job) job.cancel = () => { if (done) return; done = true; kill(); job.cancel = null; rej(new Error('cancelled')); };      /* un calcul périmé : son Worker s'arrête */
     try {
       if (!THR.blob) THR.blob = URL.createObjectURL(new Blob([thrWorkerSrc()], { type: 'text/javascript' }));
       w = new Worker(THR.blob);
-      w.onmessage = ev => { if (done) return; done = true; w.terminate(); res({ hv: ev.data, worker: true, ms: performance.now() - t0 }); };
+      w.onmessage = ev => { if (done) return; done = true; kill(); if (job) job.cancel = null; res({ hv: ev.data, worker: true, ms: performance.now() - t0 }); };
       w.onerror = ev => { if (ev && ev.preventDefault) ev.preventDefault(); fail(); };
-      w.postMessage(msg);
+      const copy = msg.g.slice();       /* le Worker reçoit une copie du sol, transférée ; la page garde le sien */
+      w.postMessage(Object.assign({}, msg, { g: copy }), [copy.buffer]);
     } catch (e) { fail(); }
   });
 }
@@ -7349,7 +7369,7 @@ function thrLevel(meta, lat, R) {
   return meta.minZoom;
 }
 /* La grille d'une menace a = { sys, it: { lat, lon }, R } ; opt.noWorker : le calcul sur la page */
-function thrBuildGrid(a, th, meta, opt) {
+function thrBuildGrid(a, th, meta, opt, job) {
   const lat = a.it.lat, lon = a.it.lon, R = a.R, z = thrLevel(meta, lat, R), n = 256 * Math.pow(2, z);
   const cx = Math.floor((lon + 180) / 360 * n), cy = Math.floor(thrMercV(lat) * n);
   const mpp = thrMpp(lat, z), K = Math.ceil(R / mpp), side = 2 * K + 1, px0 = cx - K, py0 = cy - K;
@@ -7357,7 +7377,7 @@ function thrBuildGrid(a, th, meta, opt) {
   return thrReadGround(th, meta, z, px0, py0, side).then(rd => {
     const gs = rd.g[K * side + K], zs = gs + THREATS.sensor_height_m[a.sys.sensor];
     const msg = { g: rd.g, side: side, K: K, mpp: mpp, R: R, zs: zs };
-    return thrRunCalc(msg, !!(opt && opt.noWorker)).then(r => {
+    return thrRunCalc(msg, !!(opt && opt.noWorker), job).then(r => {
       return { sys: a.sys, lat: lat, lon: lon, z: z, side: side, K: K, px0: px0, py0: py0, mpp: mpp, R: R, gs: gs, zs: zs, g: rd.g, hv: r.hv,
         ceil: a.sys.ceiling_m, tiles: rd.tiles, worker: r.worker, calcMs: r.ms, ms: performance.now() - t0 };
     });
@@ -7369,7 +7389,7 @@ function thrStartGrid(a, th, meta) {
   if (THR.grids.has(key) || THR.jobs.has(key) || THR.bad.has(key)) return;
   const job = { key: key };
   THR.jobs.set(key, job);
-  thrBuildGrid(a, th, meta).then(gr => {
+  thrBuildGrid(a, th, meta, null, job).then(gr => {
     if (THR.jobs.get(key) !== job) return;           /* périmé : la menace a cessé d'être active, ou le théâtre a changé */
     THR.jobs.delete(key);
     THR.grids.set(key, gr);
@@ -7425,13 +7445,14 @@ function thrZoneSync() {
   const list = THR.state === 'ok' ? thrReady() : [];
   if (!list.length) {
     if (THR.zone) { map.removeLayer(THR.zone); THR.zone = null; THR.zoneSig = ''; }
+    THR.paint = { H: 0, list: [] };       /* aucune grille retirée ne reste référencée */
     return;
   }
   const H = thrH(), sig = THR.ver + '|' + H + '|' + list.map(g => g.sys.id + g.lat + g.lon).join(';');
   THR.paint = { H: H, list: list };
   if (!THR.zone) {
     THR.zoneSig = sig;
-    THR.zone = new (thrZoneClass())({ pane: 'threats', zIndex: -1, tileSize: 256, minZoom: 3, maxZoom: 18, updateWhenIdle: false, keepBuffer: 2 });
+    THR.zone = new (thrZoneClass())({ pane: 'threats', zIndex: -1, tileSize: 256, minZoom: 3, maxZoom: 18, updateWhenIdle: false, keepBuffer: 2, attribution: t('attr.relief') });
     THR.zone.addTo(map);
   } else if (sig !== THR.zoneSig) {
     THR.zoneSig = sig;
@@ -7478,10 +7499,16 @@ function thrLegSamples(a, b) {
     return { s: s, lat: p.lat, lon: p.lon, w: w };
   }) };
 }
-function thrRouteWanted() { return DISP.threats && routeShown() && S.points.length > 1 && THR.state === 'ok' && THR.act.length > 0 && THR.act.every(a => THR.grids.has(a.key)); }
+/* Les menaces qui jugent la route : celles dont la grille est prête (une menace en échec est seulement écartée) */
+function thrRouteActs() { return THR.act.filter(a => !THR.bad.has(a.key)); }
+function thrRouteWanted() {
+  if (!(DISP.threats && routeShown() && S.points.length > 1 && THR.state === 'ok' && THR.jobs.size === 0)) return false;
+  const acts = thrRouteActs();
+  return acts.length > 0 && acts.every(a => THR.grids.has(a.key));
+}
 function thrRouteSig() {
   if (!thrRouteWanted()) return 'off';
-  return JSON.stringify([S.theatre, THR.ver, THR.act.map(a => a.key + '|' + a.name), S.points.map(p => [p.lat, p.lon, p.alt, p.altRef])]);
+  return JSON.stringify([S.theatre, THR.ver, thrRouteActs().map(a => a.key + '|' + a.name), S.points.map(p => [p.lat, p.lon, p.alt, p.altRef])]);
 }
 function thrRouteSync() {
   const sig = thrRouteSig();
@@ -7493,7 +7520,7 @@ function thrRouteSync() {
   THR.routeTimer = setTimeout(() => { thrRouteCompute(seq); }, 60);
 }
 function thrRouteCompute(seq) {
-  const th = S.theatre, meta = THR.desc && THR.desc.meta, pts = S.points.map(p => ({ lat: p.lat, lon: p.lon, alt: p.alt, altRef: p.altRef })), acts = THR.act.slice();
+  const th = S.theatre, meta = THR.desc && THR.desc.meta, pts = S.points.map(p => ({ lat: p.lat, lon: p.lon, alt: p.alt, altRef: p.altRef })), acts = thrRouteActs();
   const grids = acts.map(a => THR.grids.get(a.key));
   if (!meta || grids.some(g => !g)) return;
   const legs = [null];
@@ -7506,7 +7533,9 @@ function thrRouteCompute(seq) {
   const want = new Map();
   if (needGround) {
     const z = meta.maxNativeZoom, n = 256 * Math.pow(2, z);
+    const bb = meta.bounds;
     legs.forEach(lg => { if (lg) lg.list.forEach(sp => {
+      if (sp.lat < bb[0][0] || sp.lat > bb[1][0] || sp.lon < bb[0][1] || sp.lon > bb[1][1]) return;       /* hors des bornes : le sol vaut 0 sans lecture */
       const tx = Math.floor((sp.lon + 180) / 360 * n / 256), ty = Math.floor(thrMercV(sp.lat) * n / 256);
       const u = thrTileUrl(th, meta, z, tx, ty);
       if (!want.has(u)) want.set(u, thrTile(u, meta));
@@ -7680,7 +7709,7 @@ function thrSync() {
   const keys = new Set(act.map(a => a.key));
   let changed = false;
   THR.grids.forEach((g, k) => { if (!keys.has(k) || state !== 'ok') { THR.grids.delete(k); changed = true; } });
-  THR.jobs.forEach((j, k) => { if (!keys.has(k) || state !== 'ok') THR.jobs.delete(k); });
+  THR.jobs.forEach((j, k) => { if (!keys.has(k) || state !== 'ok') { if (j.cancel) j.cancel(); THR.jobs.delete(k); } });
   THR.bad.forEach(k => { if (!keys.has(k) || state !== 'ok') THR.bad.delete(k); });
   if (changed) THR.ver++;
   if (state === 'ok') act.forEach(a => thrStartGrid(a, th, THR.desc.meta));
@@ -8038,6 +8067,11 @@ function refreshAttribution() {
     ctl.removeAttribution(RE.layer.options.attribution);
     RE.layer.options.attribution = t('attr.relief');
     ctl.addAttribution(RE.layer.options.attribution);
+  }
+  if (THR.zone) {       /* la zone des menaces est faite du relief de DCS : le même crédit, une seule fois quand le Relief est posé aussi */
+    ctl.removeAttribution(THR.zone.options.attribution);
+    THR.zone.options.attribution = t('attr.relief');
+    ctl.addAttribution(THR.zone.options.attribution);
   }
   baseLayers.forEach(l => {
     ctl.removeAttribution(l.options.attribution);

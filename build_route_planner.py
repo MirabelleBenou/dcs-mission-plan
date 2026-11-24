@@ -2175,8 +2175,10 @@ const I18N = {
     'dr.f.threat': 'Système',
     'thr.none': 'Aucun',
     'thr.unknown': '{id} (inconnu)',
-    'thr.info.fire': 'Tir {fire} · détection {det} · {ceil} · capteur : {sensor}',
-    'thr.info.radar': 'Détection {det} · {ceil} · capteur : {sensor}',
+    'thr.p.fire': 'Tir {v}',
+    'thr.p.det': 'détection {v}',
+    'thr.p.tail': '{ceil} · capteur : {sensor}',
+    'thr.other': '{n} (autre nature)',
     'thr.ceil': 'plafond {v}',
     'thr.ceil.none': 'plafond non connu',
     'thr.sensor.search': 'radar de veille',
@@ -2743,8 +2745,10 @@ const I18N = {
     'dr.f.threat': 'System',
     'thr.none': 'None',
     'thr.unknown': '{id} (unknown)',
-    'thr.info.fire': 'Fire {fire} · detection {det} · {ceil} · sensor: {sensor}',
-    'thr.info.radar': 'Detection {det} · {ceil} · sensor: {sensor}',
+    'thr.p.fire': 'Fire {v}',
+    'thr.p.det': 'detection {v}',
+    'thr.p.tail': '{ceil} · sensor: {sensor}',
+    'thr.other': '{n} (other kind)',
     'thr.ceil': 'ceiling {v}',
     'thr.ceil.none': 'ceiling not known',
     'thr.sensor.search': 'search radar',
@@ -4935,6 +4939,11 @@ function refreshAttribution() {
     ctl.removeAttribution(RE.layer.options.attribution);
     RE.layer.options.attribution = t('attr.relief');
     ctl.addAttribution(RE.layer.options.attribution);
+  }
+  if (THR.zone) {       /* la zone des menaces est faite du relief de DCS : le même crédit, une seule fois quand le Relief est posé aussi */
+    ctl.removeAttribution(THR.zone.options.attribution);
+    THR.zone.options.attribution = t('attr.relief');
+    ctl.addAttribution(THR.zone.options.attribution);
   }
   baseLayers.forEach(l => {
     ctl.removeAttribution(l.options.attribution);
