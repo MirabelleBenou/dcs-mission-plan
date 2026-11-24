@@ -400,7 +400,7 @@ def test_sheet_info_line_choice_units_and_unknown_values(browser):
     assert info() == ''
     pick('sa-6')
     assert fr.evaluate("CF_LAYERS[0].items[0].threat") == 'sa-6'
-    assert info() == f'Tir 25,0 km · détection 70,0 km · plafond 8{NBSP}500 m · capteur : radar de conduite de tir'
+    assert info() == f'Tir 25,0 km · détection 70,0 km · plafond 8{NBSP}000 m · capteur : radar de conduite de tir'
     pick('sa-15-m2')
     assert info() == 'Tir 16,0 km · détection 32,0 km · plafond non connu · capteur : radar de conduite de tir'
     pick('igla')
@@ -408,10 +408,10 @@ def test_sheet_info_line_choice_units_and_unknown_values(browser):
     pick('sa-6')
     fr.evaluate("unChoose('nm'); unChoose('ft')")
     open_sheet(fr, 't0')
-    assert info() == f'Tir 13,5 NM · détection 37,8 NM · plafond 27{NBSP}887 ft · capteur : radar de conduite de tir'
+    assert info() == f'Tir 13,5 NM · détection 37,8 NM · plafond 26{NBSP}247 ft · capteur : radar de conduite de tir'
     fr.evaluate("setLang('en')")
     open_sheet(fr, 't0')
-    assert info() == 'Fire 13.5 NM · detection 37.8 NM · ceiling 27,887 ft · sensor: fire-control radar'
+    assert info() == 'Fire 13.5 NM · detection 37.8 NM · ceiling 26,247 ft · sensor: fire-control radar'
     fr.evaluate("setLang('fr'); unChoose('km'); unChoose('m')")
     # un radar : sans tir
     open_sheet(fr, 't1')
@@ -528,11 +528,11 @@ def test_height_is_kept_read_back_in_ft_and_the_last_step_follows_the_ceilings(b
     fr.evaluate("setLang('fr'); unChoose('m')")
     # le dernier rang offert : le premier qui atteint le plus grand plafond connu ; sans plafond connu, le rang 12 ; jamais moins que le rang 12 (6 000 m ; 20 000 ft)
     top = lambda items: (setup(fr, items), fr.evaluate("__RP.thrTop()"))[1]
-    assert top([sym(0, 'sa-8'), sym(1, 'sa-5', *east(fr, T_LAT, T_LON, 1))]) == 18                       # 30 000 m
+    assert top([sym(0, 'sa-8'), sym(1, 'sa-5', *east(fr, T_LAT, T_LON, 1))]) == 18                       # 40 000 m : au-delà du dernier rang (30 000 m), le dernier rang
     assert top([sym(0, 'stinger')]) == 12 and top([sym(0, 'stinger'), sym(1, 'sa-19', *east(fr, T_LAT, T_LON, 1))]) == 12
-    assert top([sym(0, 'sa-6')]) == 14
+    assert top([sym(0, 'sa-6')]) == 13                                                                     # 8 000 m : le rang 13 (8 000 m)
     fr.evaluate("unChoose('ft')")
-    assert fr.evaluate("__RP.thrTop()") == 14                                                              # 8 500 m : 33 000 ft
+    assert fr.evaluate("__RP.thrTop()") == 14                                                              # 8 000 m : 26 000 ft n'y atteint pas, 33 000 ft si
     for items, want in (([sym(0, 'stinger')], 12), ([sym(0, 'sa-19')], 12), ([sym(0, 'sa-8')], 12), ([sym(0, 'sa-5')], 18)):                  # en ft aussi
         assert top(items) == want
     assert fr.evaluate("[thrStepM(12), thrSteps()[12]]") == [20000 * fr.evaluate("FT_M"), 20000]
@@ -804,7 +804,7 @@ def test_field_manual_page_section_and_table():
             sep = NBSP if lang == 'fr' else ','
             assert r[4] == ('—' if s['ceiling_m'] is None else format(s['ceiling_m'], ',').replace(',', sep))
     by = {r[0]: r for r in re.findall(r'<tr><th scope="row" class="s">(.*?)</th><td>(.*?)</td><td class="n">(.*?)</td><td class="n">(.*?)</td><td class="n">(.*?)</td><td>(.*?)</td></tr>', tables[0][1], re.S)}
-    assert by['SA-6 Kub Gainful'][2:5] == ('25,0', '70,0', '8' + NBSP + '500')
+    assert by['SA-6 Kub Gainful'][2:5] == ('25,0', '70,0', '8' + NBSP + '000')
     assert by['1L13 Nebo Box Spring'][2] == '—' and by['Stinger (MANPADS)'][4] == '—'
     assert 'overflow-x: auto' in fm[fm.index('.fm-tbl-wrap {'):fm.index('.fm-tbl-wrap {') + 200]
 
@@ -822,7 +822,7 @@ def test_field_manual_rp_plate_does_not_show_the_threats_and_the_page_holds_no_d
     emb = json.loads(re.search(r'const THREATS = (\{.*?\});\n', rp).group(1))
     assert list(emb) == ['sensor_height_m', 'systems'] and len(emb['systems']) == 57 and emb['sensor_height_m'] == d['sensor_height_m']
     assert all(list(s) == ['id', 'name_fr', 'name_en', 'kind', 'sensor', 'fire_m', 'detect_m', 'ceiling_m'] for s in emb['systems'])
-    assert not re.search(r'goldwolf|"gap"|gap_threshold', re.search(r'const THREATS = .*?;\n', rp).group(0), re.I)
+    assert not re.search(r'goldwolf|whiskey|"gap"|gap_threshold', re.search(r'const THREATS = .*?;\n', rp).group(0), re.I)
 
 
 def test_dictionaries_hold_every_new_key_in_both_languages():
@@ -1192,3 +1192,12 @@ def test_field_manual_rp_threats_gives_the_checked_height_range():
     rp = fm[fm.index('<section id="page-rp"'):fm.index('<!-- /page-rp -->')]
     assert 'au téléphone, c’est une pastille avec <strong>−</strong> et <strong>+</strong>. Elle va de 0 à 20 000 ft (6 000 m) au moins, plus haut si un système affiché a un plafond plus haut\u202f; au-dessus de son plafond, un système ne teinte plus.' in rp
     assert 'on a phone it is a pill with <strong>−</strong> and <strong>+</strong>. It goes from 0 to 20,000 ft (6,000 m) at least, higher if a system shown has a higher ceiling; above its ceiling, a system no longer tints.' in rp
+
+
+def test_field_manual_rp_threats_credits_both_guides():
+    fm = (ROOT / 'dist' / 'dcs_field_manual.html').read_text(encoding='utf-8')
+    rp = fm[fm.index('<section id="page-rp"'):fm.index('<!-- /page-rp -->')]
+    assert 'les plafonds viennent du DCS SAM Threat Guide de [107th] Whiskey 188 (V2.1, relevé dans les fichiers du jeu) et, pour les systèmes qu’il ne couvre pas, du DCS Threats Guide de Goldwolf\u202f; nous les remercions tous deux.' in rp
+    assert 'the ceilings come from [107th] Whiskey 188’s DCS SAM Threat Guide (V2.1, taken from the game’s files) and, for the systems it does not cover, from Goldwolf’s DCS Threats Guide, with thanks to both.' in rp
+    assert 'les plafonds viennent du DCS Threats Guide de Goldwolf, que nous remercions.' not in rp
+    assert 'the ceilings come from Goldwolf’s DCS Threats Guide, with thanks.' not in rp

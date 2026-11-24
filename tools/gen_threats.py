@@ -12,7 +12,8 @@ import sys
 
 SOURCE = ("pydcs 1.0.0 (LGPL-3.0-or-later) — dcs/vehicles.py, AirDefence: detection_range and threat_range of each unit type, "
           "grouped into systems; Goldwolf, DCS Threats Guide (beta v1, 17 August 2026), range and ceiling of each system's fiche, "
-          "credited to its author.")
+          "credited to its author; [107th] Whiskey 188, DCS SAM Threat Guide (V2.1, freeware, values taken from the game's files), "
+          "max altitude of each fiche, preferred to Goldwolf's ceiling, credited to its author.")
 SENSOR_HEIGHT_M = {"search": 10, "fire-control": 5, "shooter": 2}
 GAP_THRESHOLD = 0.1
 KINDS = ('sam', 'aaa', 'radar')
@@ -145,6 +146,19 @@ def main(root, table_path, out_path):
         goldwolf = None
         ceiling_m = None
         gap = False
+        whiskey = None
+        if 'whiskey' in s:
+            w = s['whiskey']
+            if not isinstance(w, dict):
+                raise SystemExit('[ERREUR] système %s : whiskey n\'est pas un objet' % sid)
+            extra = sorted(k for k in w if k not in ('ceiling_ft', 'page'))
+            if extra:
+                raise SystemExit('[ERREUR] système %s : clé inconnue dans whiskey (%s)' % (sid, ', '.join(extra)))
+            for key in ('ceiling_ft', 'page'):
+                v = w.get(key)
+                if type(v) is not int or v <= 0:
+                    raise SystemExit('[ERREUR] système %s : whiskey.%s absent, non entier ou <= 0 (%r)' % (sid, key, v))
+            whiskey = {'ceiling_m': round(w['ceiling_ft'] * 0.3048), 'page': w['page']}
         if g:
             goldwolf = {'range_m': round(g['range_km'] * 1000), 'ceiling_m': round(g['ceiling_km'] * 1000), 'page': g['page']}
             ceiling_m = goldwolf['ceiling_m']
@@ -152,10 +166,12 @@ def main(root, table_path, out_path):
             if ref <= 0:
                 raise SystemExit('[ERREUR] portée de référence nulle pour le système %s : écart non calculable' % sid)
             gap = abs(goldwolf['range_m'] - ref) / ref > GAP_THRESHOLD
+        if whiskey:
+            ceiling_m = whiskey['ceiling_m']
         out_systems.append({
             'id': sid, 'name_en': s['name_en'], 'name_fr': s['name_fr'], 'kind': s['kind'], 'sensor': s['sensor'],
             'pieces': list(s['pieces']), 'fire_m': fire_m, 'detect_m': detect_m, 'ceiling_m': ceiling_m,
-            'goldwolf': goldwolf, 'gap': gap,
+            'goldwolf': goldwolf, 'whiskey': whiskey, 'gap': gap,
         })
     orphans = sorted(t for t, v in types.items() if (v['detection_range'] or v['threat_range']) and t not in used)
     if orphans:

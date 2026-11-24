@@ -1,6 +1,6 @@
 {
  "format": "dcs-threats-v1",
- "source": "pydcs 1.0.0 (LGPL-3.0-or-later) — dcs/vehicles.py, AirDefence: detection_range and threat_range of each unit type, grouped into systems; Goldwolf, DCS Threats Guide (beta v1, 17 August 2026), range and ceiling of each system's fiche, credited to its author.",
+ "source": "pydcs 1.0.0 (LGPL-3.0-or-later) — dcs/vehicles.py, AirDefence: detection_range and threat_range of each unit type, grouped into systems; Goldwolf, DCS Threats Guide (beta v1, 17 August 2026), range and ceiling of each system's fiche, credited to its author; [107th] Whiskey 188, DCS SAM Threat Guide (V2.1, freeware, values taken from the game's files), max altitude of each fiche, preferred to Goldwolf's ceiling, credited to its author.",
  "sensor_height_m": {
   "search": 10,
   "fire-control": 5,
@@ -28,6 +28,10 @@
     "ceiling_m": 25000,
     "page": 8
    },
+   "whiskey": {
+    "ceiling_m": 25000,
+    "page": 1
+   },
    "gap": true
   },
   {
@@ -43,11 +47,15 @@
    ],
    "fire_m": 18000,
    "detect_m": 160000,
-   "ceiling_m": 20000,
+   "ceiling_m": 18000,
    "goldwolf": {
     "range_m": 22000,
     "ceiling_m": 20000,
     "page": 8
+   },
+   "whiskey": {
+    "ceiling_m": 18000,
+    "page": 2
    },
    "gap": true
   },
@@ -65,11 +73,15 @@
    ],
    "fire_m": 255000,
    "detect_m": 400000,
-   "ceiling_m": 30000,
+   "ceiling_m": 40000,
    "goldwolf": {
     "range_m": 131000,
     "ceiling_m": 30000,
     "page": 8
+   },
+   "whiskey": {
+    "ceiling_m": 40000,
+    "page": 3
    },
    "gap": true
   },
@@ -85,11 +97,15 @@
    ],
    "fire_m": 25000,
    "detect_m": 70000,
-   "ceiling_m": 8500,
+   "ceiling_m": 8000,
    "goldwolf": {
     "range_m": 35000,
     "ceiling_m": 8500,
     "page": 8
+   },
+   "whiskey": {
+    "ceiling_m": 8000,
+    "page": 4
    },
    "gap": true
   },
@@ -104,11 +120,15 @@
    ],
    "fire_m": 10300,
    "detect_m": 30000,
-   "ceiling_m": 5100,
+   "ceiling_m": 5000,
    "goldwolf": {
     "range_m": 14000,
     "ceiling_m": 5100,
     "page": 8
+   },
+   "whiskey": {
+    "ceiling_m": 5000,
+    "page": 5
    },
    "gap": true
   },
@@ -130,11 +150,15 @@
    ],
    "fire_m": 120000,
    "detect_m": 160000,
-   "ceiling_m": 45000,
+   "ceiling_m": 25000,
    "goldwolf": {
     "range_m": 63000,
     "ceiling_m": 45000,
     "page": 9
+   },
+   "whiskey": {
+    "ceiling_m": 25000,
+    "page": 7
    },
    "gap": true
   },
@@ -151,11 +175,15 @@
    ],
    "fire_m": 50000,
    "detect_m": 100000,
-   "ceiling_m": 14000,
+   "ceiling_m": 22000,
    "goldwolf": {
     "range_m": 45000,
     "ceiling_m": 14000,
     "page": 9
+   },
+   "whiskey": {
+    "ceiling_m": 22000,
+    "page": 10
    },
    "gap": false
   },
@@ -170,11 +198,15 @@
    ],
    "fire_m": 12000,
    "detect_m": 25000,
-   "ceiling_m": 12000,
+   "ceiling_m": 6000,
    "goldwolf": {
     "range_m": 18500,
     "ceiling_m": 12000,
     "page": 9
+   },
+   "whiskey": {
+    "ceiling_m": 6000,
+    "page": 13
    },
    "gap": true
   },
@@ -191,6 +223,7 @@
    "detect_m": 32000,
    "ceiling_m": null,
    "goldwolf": null,
+   "whiskey": null,
    "gap": false
   },
   {
@@ -204,11 +237,15 @@
    ],
    "fire_m": 8000,
    "detect_m": 18000,
-   "ceiling_m": 3600,
+   "ceiling_m": 3500,
    "goldwolf": {
     "range_m": 10000,
     "ceiling_m": 3600,
     "page": 9
+   },
+   "whiskey": {
+    "ceiling_m": 3500,
+    "page": 15
    },
    "gap": true
   },
@@ -229,6 +266,7 @@
     "ceiling_m": 10000,
     "page": 9
    },
+   "whiskey": null,
    "gap": false
   },
   {
@@ -246,11 +284,15 @@
    ],
    "fire_m": 45000,
    "detect_m": 90000,
-   "ceiling_m": 14000,
+   "ceiling_m": 18000,
    "goldwolf": {
     "range_m": 26000,
     "ceiling_m": 14000,
     "page": 10
+   },
+   "whiskey": {
+    "ceiling_m": 18000,
+    "page": 21
    },
    "gap": true
   },
@@ -270,11 +312,15 @@
    ],
    "fire_m": 100000,
    "detect_m": 160000,
-   "ceiling_m": 25000,
+   "ceiling_m": 24240,
    "goldwolf": {
     "range_m": 80000,
     "ceiling_m": 25000,
     "page": 11
+   },
+   "whiskey": {
+    "ceiling_m": 24240,
+    "page": 22
    },
    "gap": true
   },
@@ -292,11 +338,15 @@
    ],
    "fire_m": 15000,
    "detect_m": 50000,
-   "ceiling_m": 21000,
+   "ceiling_m": 25999,
    "goldwolf": {
     "range_m": 22000,
     "ceiling_m": 21000,
     "page": 11
+   },
+   "whiskey": {
+    "ceiling_m": 25999,
+    "page": 24
    },
    "gap": true
   },
@@ -319,6 +369,7 @@
     "ceiling_m": 6000,
     "page": 10
    },
+   "whiskey": null,
    "gap": false
   },
   {
@@ -334,11 +385,15 @@
    ],
    "fire_m": 15000,
    "detect_m": 30000,
-   "ceiling_m": 6000,
+   "ceiling_m": 5500,
    "goldwolf": {
     "range_m": 15000,
     "ceiling_m": 6000,
     "page": 8
+   },
+   "whiskey": {
+    "ceiling_m": 5500,
+    "page": 19
    },
    "gap": false
   },
@@ -359,6 +414,10 @@
     "range_m": 7400,
     "ceiling_m": 6000,
     "page": 11
+   },
+   "whiskey": {
+    "ceiling_m": 6000,
+    "page": 23
    },
    "gap": false
   },
@@ -381,6 +440,10 @@
     "ceiling_m": 3000,
     "page": 11
    },
+   "whiskey": {
+    "ceiling_m": 3000,
+    "page": 20
+   },
    "gap": true
   },
   {
@@ -394,11 +457,15 @@
    ],
    "fire_m": 4200,
    "detect_m": 5000,
-   "ceiling_m": 3600,
+   "ceiling_m": 3500,
    "goldwolf": {
     "range_m": 4600,
     "ceiling_m": 3600,
     "page": 12
+   },
+   "whiskey": {
+    "ceiling_m": 3500,
+    "page": 6
    },
    "gap": false
   },
@@ -413,11 +480,15 @@
    ],
    "fire_m": 5000,
    "detect_m": 8000,
-   "ceiling_m": 3600,
+   "ceiling_m": 3500,
    "goldwolf": {
     "range_m": 5500,
     "ceiling_m": 3600,
     "page": 9
+   },
+   "whiskey": {
+    "ceiling_m": 3500,
+    "page": 12
    },
    "gap": false
   },
@@ -434,6 +505,7 @@
    "detect_m": 10000,
    "ceiling_m": null,
    "goldwolf": null,
+   "whiskey": null,
    "gap": false
   },
   {
@@ -449,6 +521,7 @@
    "detect_m": 8000,
    "ceiling_m": null,
    "goldwolf": null,
+   "whiskey": null,
    "gap": false
   },
   {
@@ -468,6 +541,7 @@
     "ceiling_m": 3600,
     "page": 12
    },
+   "whiskey": null,
    "gap": false
   },
   {
@@ -485,6 +559,7 @@
    "detect_m": 5000,
    "ceiling_m": null,
    "goldwolf": null,
+   "whiskey": null,
    "gap": false
   },
   {
@@ -502,6 +577,7 @@
    "detect_m": 5000,
    "ceiling_m": null,
    "goldwolf": null,
+   "whiskey": null,
    "gap": false
   },
   {
@@ -518,6 +594,7 @@
    "detect_m": 5000,
    "ceiling_m": null,
    "goldwolf": null,
+   "whiskey": null,
    "gap": false
   },
   {
@@ -537,6 +614,7 @@
     "ceiling_m": 2000,
     "page": 9
    },
+   "whiskey": null,
    "gap": false
   },
   {
@@ -563,6 +641,7 @@
     "ceiling_m": 3000,
     "page": 12
    },
+   "whiskey": null,
    "gap": true
   },
   {
@@ -578,6 +657,7 @@
    "detect_m": 5000,
    "ceiling_m": null,
    "goldwolf": null,
+   "whiskey": null,
    "gap": false
   },
   {
@@ -598,6 +678,7 @@
     "ceiling_m": 3000,
     "page": 12
    },
+   "whiskey": null,
    "gap": true
   },
   {
@@ -614,6 +695,7 @@
    "detect_m": 55000,
    "ceiling_m": null,
    "goldwolf": null,
+   "whiskey": null,
    "gap": false
   },
   {
@@ -633,6 +715,7 @@
     "ceiling_m": 3000,
     "page": 9
    },
+   "whiskey": null,
    "gap": false
   },
   {
@@ -652,6 +735,7 @@
     "ceiling_m": 1500,
     "page": 9
    },
+   "whiskey": null,
    "gap": false
   },
   {
@@ -671,6 +755,7 @@
     "ceiling_m": 1500,
     "page": 10
    },
+   "whiskey": null,
    "gap": false
   },
   {
@@ -690,6 +775,7 @@
     "ceiling_m": 3000,
     "page": 12
    },
+   "whiskey": null,
    "gap": true
   },
   {
@@ -709,6 +795,7 @@
     "ceiling_m": 3000,
     "page": 12
    },
+   "whiskey": null,
    "gap": true
   },
   {
@@ -724,6 +811,7 @@
    "detect_m": 0,
    "ceiling_m": null,
    "goldwolf": null,
+   "whiskey": null,
    "gap": false
   },
   {
@@ -743,6 +831,7 @@
    "detect_m": 30000,
    "ceiling_m": null,
    "goldwolf": null,
+   "whiskey": null,
    "gap": false
   },
   {
@@ -759,6 +848,7 @@
    "detect_m": 30000,
    "ceiling_m": null,
    "goldwolf": null,
+   "whiskey": null,
    "gap": false
   },
   {
@@ -774,6 +864,7 @@
    "detect_m": 0,
    "ceiling_m": null,
    "goldwolf": null,
+   "whiskey": null,
    "gap": false
   },
   {
@@ -789,6 +880,7 @@
    "detect_m": 0,
    "ceiling_m": null,
    "goldwolf": null,
+   "whiskey": null,
    "gap": false
   },
   {
@@ -804,6 +896,7 @@
    "detect_m": 10000,
    "ceiling_m": null,
    "goldwolf": null,
+   "whiskey": null,
    "gap": false
   },
   {
@@ -819,6 +912,7 @@
    "detect_m": 10000,
    "ceiling_m": null,
    "goldwolf": null,
+   "whiskey": null,
    "gap": false
   },
   {
@@ -835,6 +929,7 @@
    "detect_m": 10000,
    "ceiling_m": null,
    "goldwolf": null,
+   "whiskey": null,
    "gap": false
   },
   {
@@ -854,6 +949,7 @@
     "ceiling_m": 20000,
     "page": 8
    },
+   "whiskey": null,
    "gap": true
   },
   {
@@ -869,6 +965,7 @@
    "detect_m": 400000,
    "ceiling_m": null,
    "goldwolf": null,
+   "whiskey": null,
    "gap": false
   },
   {
@@ -886,6 +983,7 @@
    "detect_m": 463000,
    "ceiling_m": null,
    "goldwolf": null,
+   "whiskey": null,
    "gap": false
   },
   {
@@ -905,6 +1003,7 @@
     "ceiling_m": 25000,
     "page": 10
    },
+   "whiskey": null,
    "gap": true
   },
   {
@@ -920,6 +1019,7 @@
    "detect_m": 400000,
    "ceiling_m": null,
    "goldwolf": null,
+   "whiskey": null,
    "gap": false
   },
   {
@@ -939,6 +1039,7 @@
     "ceiling_m": 45000,
     "page": 10
    },
+   "whiskey": null,
    "gap": true
   },
   {
@@ -958,6 +1059,7 @@
     "ceiling_m": 45000,
     "page": 10
    },
+   "whiskey": null,
    "gap": true
   },
   {
@@ -978,6 +1080,7 @@
     "ceiling_m": 45000,
     "page": 11
    },
+   "whiskey": null,
    "gap": true
   },
   {
@@ -997,6 +1100,7 @@
     "ceiling_m": 14000,
     "page": 11
    },
+   "whiskey": null,
    "gap": true
   },
   {
@@ -1016,6 +1120,7 @@
     "ceiling_m": 8000,
     "page": 10
    },
+   "whiskey": null,
    "gap": true
   },
   {
@@ -1035,6 +1140,7 @@
     "ceiling_m": 2000,
     "page": 10
    },
+   "whiskey": null,
    "gap": true
   },
   {
@@ -1050,6 +1156,7 @@
    "detect_m": 160000,
    "ceiling_m": null,
    "goldwolf": null,
+   "whiskey": null,
    "gap": false
   },
   {
@@ -1065,6 +1172,7 @@
    "detect_m": 60000,
    "ceiling_m": null,
    "goldwolf": null,
+   "whiskey": null,
    "gap": false
   }
  ]

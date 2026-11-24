@@ -22,6 +22,10 @@
     "range_km": 48,
     "ceiling_km": 25,
     "page": 8
+   },
+   "whiskey": {
+    "ceiling_ft": 82021,
+    "page": 1
    }
   },
   {
@@ -39,6 +43,10 @@
     "range_km": 22,
     "ceiling_km": 20,
     "page": 8
+   },
+   "whiskey": {
+    "ceiling_ft": 59055,
+    "page": 2
    }
   },
   {
@@ -57,6 +65,10 @@
     "range_km": 131,
     "ceiling_km": 30,
     "page": 8
+   },
+   "whiskey": {
+    "ceiling_ft": 131233,
+    "page": 3
    }
   },
   {
@@ -73,6 +85,10 @@
     "range_km": 35,
     "ceiling_km": 8.5,
     "page": 8
+   },
+   "whiskey": {
+    "ceiling_ft": 26247,
+    "page": 4
    }
   },
   {
@@ -88,6 +104,10 @@
     "range_km": 14,
     "ceiling_km": 5.1,
     "page": 8
+   },
+   "whiskey": {
+    "ceiling_ft": 16404,
+    "page": 5
    }
   },
   {
@@ -110,6 +130,10 @@
     "range_km": 63,
     "ceiling_km": 45,
     "page": 9
+   },
+   "whiskey": {
+    "ceiling_ft": 82020,
+    "page": 7
    }
   },
   {
@@ -127,6 +151,10 @@
     "range_km": 45,
     "ceiling_km": 14,
     "page": 9
+   },
+   "whiskey": {
+    "ceiling_ft": 72178,
+    "page": 10
    }
   },
   {
@@ -142,6 +170,10 @@
     "range_km": 18.5,
     "ceiling_km": 12,
     "page": 9
+   },
+   "whiskey": {
+    "ceiling_ft": 19685,
+    "page": 13
    }
   },
   {
@@ -168,6 +200,10 @@
     "range_km": 10,
     "ceiling_km": 3.6,
     "page": 9
+   },
+   "whiskey": {
+    "ceiling_ft": 11483,
+    "page": 15
    }
   },
   {
@@ -202,6 +238,10 @@
     "range_km": 26,
     "ceiling_km": 14,
     "page": 10
+   },
+   "whiskey": {
+    "ceiling_ft": 59055,
+    "page": 21
    }
   },
   {
@@ -222,6 +262,10 @@
     "range_km": 80,
     "ceiling_km": 25,
     "page": 11
+   },
+   "whiskey": {
+    "ceiling_ft": 79528,
+    "page": 22
    }
   },
   {
@@ -240,6 +284,10 @@
     "range_km": 22,
     "ceiling_km": 21,
     "page": 11
+   },
+   "whiskey": {
+    "ceiling_ft": 85300,
+    "page": 24
    }
   },
   {
@@ -274,6 +322,10 @@
     "range_km": 15,
     "ceiling_km": 6,
     "page": 8
+   },
+   "whiskey": {
+    "ceiling_ft": 18045,
+    "page": 19
    }
   },
   {
@@ -290,6 +342,10 @@
     "range_km": 7.4,
     "ceiling_km": 6,
     "page": 11
+   },
+   "whiskey": {
+    "ceiling_ft": 19685,
+    "page": 23
    }
   },
   {
@@ -307,6 +363,10 @@
     "range_km": 9.2,
     "ceiling_km": 3,
     "page": 11
+   },
+   "whiskey": {
+    "ceiling_ft": 9843,
+    "page": 20
    }
   },
   {
@@ -322,6 +382,10 @@
     "range_km": 4.6,
     "ceiling_km": 3.6,
     "page": 12
+   },
+   "whiskey": {
+    "ceiling_ft": 11483,
+    "page": 6
    }
   },
   {
@@ -337,6 +401,10 @@
     "range_km": 5.5,
     "ceiling_km": 3.6,
     "page": 9
+   },
+   "whiskey": {
+    "ceiling_ft": 11483,
+    "page": 12
    }
   },
   {

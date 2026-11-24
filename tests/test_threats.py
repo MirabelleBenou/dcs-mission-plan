@@ -68,14 +68,17 @@ class Fortification:
 '''
 
 
-def system(sid, pieces, kind='sam', sensor='fire-control', goldwolf=None):
-    return {'id': sid, 'name_en': sid.upper(), 'name_fr': sid.upper(), 'kind': kind, 'sensor': sensor,
-            'pieces': pieces, 'goldwolf': goldwolf}
+def system(sid, pieces, kind='sam', sensor='fire-control', goldwolf=None, whiskey=None):
+    s = {'id': sid, 'name_en': sid.upper(), 'name_fr': sid.upper(), 'kind': kind, 'sensor': sensor,
+         'pieces': pieces, 'goldwolf': goldwolf}
+    if whiskey is not None:
+        s['whiskey'] = whiskey
+    return s
 
 
 def base_table():
     return {'source': 'x', 'excluded': ['light'], 'systems': [
-        system('big', ['big ln', 'big sr'], goldwolf={'range_km': 35, 'ceiling_km': 8.5, 'page': 8}),
+        system('big', ['big ln', 'big sr'], goldwolf={'range_km': 35, 'ceiling_km': 8.5, 'page': 8}, whiskey={'ceiling_ft': 26247, 'page': 4}),
         system('small', ['small "ln"'], goldwolf={'range_km': 5.5, 'ceiling_km': 3.6, 'page': 9}),
         system('gun', ['gun'], kind='aaa', sensor='shooter'),
         system('radar', ['radar'], kind='radar', sensor='search', goldwolf={'range_km': 220, 'ceiling_km': 20, 'page': 8}),
@@ -99,11 +102,31 @@ def systems(tmp_path, table):
 
 def test_largest_of_the_pieces_and_the_goldwolf_values(tmp_path):
     s = systems(tmp_path, base_table())
-    assert (s['big']['fire_m'], s['big']['detect_m'], s['big']['ceiling_m']) == (25000, 70000, 8500)
+    assert (s['big']['fire_m'], s['big']['detect_m'], s['big']['ceiling_m']) == (25000, 70000, 8000)
     assert s['big']['goldwolf'] == {'range_m': 35000, 'ceiling_m': 8500, 'page': 8}
     assert s['big']['pieces'] == ['big ln', 'big sr']
     assert (s['small']['fire_m'], s['small']['detect_m']) == (5000, 10000)
     assert s['gun']['goldwolf'] is None and s['gun']['ceiling_m'] is None and s['gun']['gap'] is False
+
+
+def test_ceiling_is_whiskeys_converted_else_goldwolfs_else_null(tmp_path):
+    s = systems(tmp_path, base_table())
+    assert s['big']['ceiling_m'] == 8000 and s['big']['goldwolf']['ceiling_m'] == 8500       # les deux : Whiskey
+    assert s['big']['whiskey'] == {'ceiling_m': 8000, 'page': 4}
+    assert s['small']['ceiling_m'] == 3600 and s['small']['whiskey'] is None                  # Goldwolf seul
+    assert s['gun']['ceiling_m'] is None and s['gun']['whiskey'] is None                      # ni l'un ni l'autre
+    assert s['big']['gap'] is True                       # l'écart reste mesuré sur la portée de Goldwolf (35 km contre 25 km)
+
+
+def test_whiskey_feet_are_converted_and_rounded_to_the_metre(tmp_path):
+    t = base_table()
+    t['systems'][0]['whiskey'] = {'ceiling_ft': 82021, 'page': 1}
+    assert systems(tmp_path, t)['big']['whiskey'] == {'ceiling_m': 25000, 'page': 1}
+    t['systems'][0]['whiskey'] = {'ceiling_ft': 9843, 'page': 20}
+    w = systems(tmp_path, t)['big']['whiskey']
+    assert w['ceiling_m'] == 3000 and isinstance(w['ceiling_m'], int)
+    t['systems'][0]['whiskey'] = {'ceiling_ft': 1, 'page': 1}
+    assert systems(tmp_path, t)['big']['whiskey']['ceiling_m'] == 0
 
 
 def test_km_are_rounded_to_the_metre(tmp_path):
@@ -141,7 +164,7 @@ def test_output_layout_and_two_runs_are_byte_identical(tmp_path):
     assert list(d) == ['format', 'source', 'sensor_height_m', 'gap_threshold', 'systems']
     assert d['format'] == 'dcs-threats-v1' and d['gap_threshold'] == 0.1
     assert d['sensor_height_m'] == {'search': 10, 'fire-control': 5, 'shooter': 2}
-    assert list(d['systems'][0]) == ['id', 'name_en', 'name_fr', 'kind', 'sensor', 'pieces', 'fire_m', 'detect_m', 'ceiling_m', 'goldwolf', 'gap']
+    assert list(d['systems'][0]) == ['id', 'name_en', 'name_fr', 'kind', 'sensor', 'pieces', 'fire_m', 'detect_m', 'ceiling_m', 'goldwolf', 'whiskey', 'gap']
     assert [s['id'] for s in d['systems']] == ['big', 'small', 'gun', 'radar']
     assert b'\\u' not in a
 
@@ -150,6 +173,29 @@ def refuse(tmp_path, table, text):
     with pytest.raises(SystemExit) as e:
         run(tmp_path, table)
     assert text in str(e.value)
+
+
+@pytest.mark.parametrize('whiskey, needle', [
+    ({'page': 4}, 'ceiling_ft'),
+    ({'ceiling_ft': 26247}, 'page'),
+    ({'ceiling_ft': 26247.5, 'page': 4}, 'ceiling_ft'),
+    ({'ceiling_ft': '26247', 'page': 4}, 'ceiling_ft'),
+    ({'ceiling_ft': True, 'page': 4}, 'ceiling_ft'),
+    ({'ceiling_ft': 0, 'page': 4}, 'ceiling_ft'),
+    ({'ceiling_ft': -5, 'page': 4}, 'ceiling_ft'),
+    ({'ceiling_ft': 26247, 'page': 4.0}, 'page'),
+    ({'ceiling_ft': 26247, 'page': '4'}, 'page'),
+    ({'ceiling_ft': 26247, 'page': 0}, 'page'),
+    ({'ceiling_ft': 26247, 'page': -1}, 'page'),
+    ({'ceiling_ft': 26247, 'page': 4, 'range_km': 3}, 'range_km'),
+    ({'ceiling_ft': 26247, 'page': 4, 'ceiling_m': 8000}, 'ceiling_m'),
+])
+def test_refuses_a_bad_whiskey_block(tmp_path, whiskey, needle):
+    t = base_table()
+    t['systems'][0]['whiskey'] = whiskey
+    with pytest.raises(SystemExit) as e:
+        run(tmp_path, t)
+    assert 'big' in str(e.value) and needle in str(e.value)
 
 
 def test_refuses_a_piece_missing_from_pydcs(tmp_path):
@@ -280,17 +326,19 @@ INPUT = json.loads((ROOT / 'tools' / 'threat_systems.json').read_text(encoding='
 def test_delivered_table_format():
     assert DATA['format'] == 'dcs-threats-v1' and DATA['gap_threshold'] == 0.1
     assert DATA['sensor_height_m'] == {'search': 10, 'fire-control': 5, 'shooter': 2}
-    assert 'Goldwolf' in DATA['source'] and 'pydcs 1.0.0' in DATA['source']
+    assert 'Goldwolf' in DATA['source'] and 'Whiskey 188' in DATA['source'] and 'pydcs 1.0.0' in DATA['source']
     assert len(DATA['systems']) == 57
     ids = [s['id'] for s in DATA['systems']]
     assert len(set(ids)) == 57
     for s in DATA['systems']:
         assert s['kind'] in ('sam', 'aaa', 'radar') and s['sensor'] in DATA['sensor_height_m']
         assert isinstance(s['fire_m'], int) and isinstance(s['detect_m'], int) and s['pieces']
-        assert (s['goldwolf'] is None) == (s['ceiling_m'] is None)
-        if s['goldwolf']:
+        assert (s['goldwolf'] is None and s['whiskey'] is None) == (s['ceiling_m'] is None)
+        if s['whiskey']:
+            assert s['ceiling_m'] == s['whiskey']['ceiling_m']
+        elif s['goldwolf']:
             assert s['ceiling_m'] == s['goldwolf']['ceiling_m']
-        else:
+        if not s['goldwolf']:
             assert s['gap'] is False
     assert sum(1 for s in DATA['systems'] if s['gap']) == 24
 
@@ -298,8 +346,9 @@ def test_delivered_table_format():
 def test_delivered_table_known_values():
     by = {s['id']: s for s in DATA['systems']}
     sa6 = by['sa-6']
-    assert (sa6['fire_m'], sa6['detect_m'], sa6['ceiling_m'], sa6['gap']) == (25000, 70000, 8500, True)
+    assert (sa6['fire_m'], sa6['detect_m'], sa6['ceiling_m'], sa6['gap']) == (25000, 70000, 8000, True)
     assert sa6['goldwolf'] == {'range_m': 35000, 'ceiling_m': 8500, 'page': 8}
+    assert sa6['whiskey'] == {'ceiling_m': 8000, 'page': 4}
     assert by['sa-22']['gap'] is False
     assert by['1l13']['detect_m'] == 300000 and by['1l13']['gap'] is True
 
@@ -325,6 +374,23 @@ def test_input_and_delivered_tables_agree():
             assert d['goldwolf'] is None
         else:
             assert d['goldwolf'] == {'range_m': round(g['range_km'] * 1000), 'ceiling_m': round(g['ceiling_km'] * 1000), 'page': g['page']}
+        w = i.get('whiskey')
+        if w is None:
+            assert d['whiskey'] is None
+        else:
+            assert d['whiskey'] == {'ceiling_m': round(w['ceiling_ft'] * 0.3048), 'page': w['page']}
+            assert d['ceiling_m'] == d['whiskey']['ceiling_m']
+        if w is None and g is not None:
+            assert d['ceiling_m'] == d['goldwolf']['ceiling_m']
+        if w is None and g is None:
+            assert d['ceiling_m'] is None
+        assert list(d) == ['id', 'name_en', 'name_fr', 'kind', 'sensor', 'pieces', 'fire_m', 'detect_m', 'ceiling_m', 'goldwolf', 'whiskey', 'gap']
+
+
+def test_the_17_whiskey_systems():
+    got = {s['id']: (s['whiskey']['ceiling_m'], s['whiskey']['page']) for s in DATA['systems'] if s['whiskey']}
+    assert len(got) == 17 and len(DATA['systems']) == 57
+    assert got['sa-15'] == (6000, 13) and got['sa-6'] == (8000, 4) and got['sa-10'] == (25000, 7) and got['sa-5'] == (40000, 3)
 
 
 def test_no_page_embeds_the_threats_yet():

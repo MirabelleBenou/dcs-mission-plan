@@ -16,7 +16,7 @@ Further down, *Before v2.0.0* keeps the history of each tool up to v1.24.0, when
 ### All tools
 
 **Build number on the hosted version**
-- Between two releases, the bottom of the home screen shows the build number, `MP-V2.1.0+13` for this one; a downloaded release shows none.
+- Between two releases, the bottom of the home screen shows the build number, `MP-V2.1.0+14` for this one; a downloaded release shows none.
 
 **Easier-to-read drop-down lists**
 - Their header, the chosen line and the line under the pointer have stronger contrast in every theme.
@@ -184,6 +184,7 @@ Further down, *Before v2.0.0* keeps the history of each tool up to v1.24.0, when
 - A hostile SAM, AAA or radar symbol can be given its system, among the game’s 57 air defence systems; with Threats ticked in Display, the map shows where an aircraft at the checked height above the ground is seen and within firing range, masked by DCS’s relief, with the firing and detection ranges. On a theatre without relief, only the ranges are drawn.
 - Where the route is seen at its planned altitude, it is outlined in yellow, and the navigation sheet says by which threat and over what distance.
 - The checked height goes up to 20,000 ft (6,000 m) at least, whatever the ceilings; above a system’s ceiling, that system no longer tints.
+- Ceilings now come from Whiskey 188’s DCS SAM Threat Guide, taken from the game’s files, for the systems it covers; otherwise from Goldwolf’s DCS Threats Guide.
 
 ### Datacard Generator
 
