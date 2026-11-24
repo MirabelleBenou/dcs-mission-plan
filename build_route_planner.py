@@ -10200,6 +10200,7 @@ function dspSetRoutes(v) {
   DISP.routes = v;
   saveDisplay();
   drawRoute();
+  thrSync();       /* des routes masquées : ni halo, ni ligne de navigation */
   dspSync();
 }
 
@@ -10247,6 +10248,7 @@ function dspReveal(mode) {
   if (!shown.length) return shown;
   shown.forEach(k => { if (k === 'route') DISP.routes = 'all'; else DISP[k] = true; });
   saveDisplay();
+  thrSync();
   dspSync();
   return shown;
 }

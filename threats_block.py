@@ -95,7 +95,7 @@ def build_block(d=None):
 
 CSS = r"""
 /* la couche des menaces (lot mp-rp-menaces-couche) */
-#rp-thr { position: absolute; left: 10px; bottom: 28px; z-index: 500; box-sizing: border-box; width: 360px; max-width: calc(100% - 20px); padding: 7px 10px 8px;
+#rp-thr { position: absolute; left: 10px; bottom: 28px; z-index: 500; box-sizing: border-box; width: 420px; max-width: calc(100% - 20px); padding: 7px 10px 8px;
   font: 500 12px/1.3 var(--f-ui); letter-spacing: .03em; background: rgba(26,28,20,.92); color: #e8dcb8; border: 1px solid var(--amber); border-radius: 2px; }
 #rp-thr[hidden] { display: none; }
 #rp-thr .thr-h, #rp-thr .thr-r { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
