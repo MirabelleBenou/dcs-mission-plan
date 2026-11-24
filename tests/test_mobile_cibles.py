@@ -61,7 +61,7 @@ def test_the_dev_build_is_7_and_the_changelog_says_so():
     assert version_block.DEV_BUILD == 12
     log = (ROOT / 'CHANGELOG.md').read_text(encoding='utf-8')
     assert '`MP-V2.1.0+3` is the third update since 2.1.0' in log          # la phrase d'en-tête, que le lot ne touche pas
-    assert 'for this one;' in log and '`MP-V2.1.0+12` for this one' in log
+    assert 'for this one;' in log and '`MP-V2.1.0+13` for this one' in log
 
 
 def test_the_common_stylesheet_has_the_finger_rules_under_coarse_pointers_only():

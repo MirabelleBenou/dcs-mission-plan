@@ -47,7 +47,7 @@ def test_texts_are_where_the_lot_says():
     unreleased = log.split('\n## Unreleased\n', 1)[1].split('\n## ', 1)[0]
     all_tools = unreleased.split('\n### All tools\n', 1)[1].split('\n### ', 1)[0].rstrip('\n')
     assert all_tools.endswith('\n\n' + CHANGELOG_ENTRY + '\n\n' + ENTRY_TABS + '\n\n' + ENTRY_TOUCHES + '\n\n' + ENTRY_KEYBOARD + '\n\n' + ENTRY_INSIGNIA + '\n\n' + ENTRY_NARROW + '\n\n' + ENTRY_MENUS)       # le lot mp-mobile-onglets ajoute ses deux entrées après celle-ci ; le lot du clavier la sienne, qui termine la rubrique
-    assert 'MP-V2.1.0+12` for this one' in all_tools and 'MP-V2.1.0+3' not in all_tools
+    assert 'MP-V2.1.0+13` for this one' in all_tools and 'MP-V2.1.0+3' not in all_tools
     fm = (ROOT / 'build_field_manual.py').read_text(encoding='utf-8')
     i = fm.index('"La barre du haut", "The top bar"')
     j = fm.index('"Lire ce manuel au téléphone"', i)
@@ -56,7 +56,7 @@ def test_texts_are_where_the_lot_says():
     assert seg.index(FM_BACK_FR) < seg.index(FM_FR) and seg.index('On a phone, the back gesture') < seg.index(FM_EN)
     assert seg[seg.index(FM_BACK_FR):seg.index(FM_FR)].count("('p',") == 1            # le paragraphe neuf suit aussitôt celui du geste retour
     assert re.search(r'^DEV_BUILD = 12$', (ROOT / 'version_block.py').read_text(encoding='utf-8'), re.M)
-    assert 'MP-V2.1.0+12' in (ROOT / 'dist' / 'dcs_mission_plan.html').read_text(encoding='utf-8')
+    assert 'MP-V2.1.0+13' in (ROOT / 'dist' / 'dcs_mission_plan.html').read_text(encoding='utf-8')
 
 
 @pytest.fixture(scope='module')

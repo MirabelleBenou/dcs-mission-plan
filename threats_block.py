@@ -144,11 +144,11 @@ const THR_NATURE = { 'GPEWMS--': 'sam', 'GPEWAH--': 'aaa', 'GPESR---': 'radar' }
 const THR_BY_ID = {};
 THREATS.systems.forEach(s => { THR_BY_ID[s.id] = s; });
 const THR_STEPS = {
-  m: [0, 15, 30, 60, 100, 150, 300, 500, 1000, 2000, 3000, 5000, 8000, 10000, 15000, 20000, 25000, 30000],
-  ft: [0, 50, 100, 200, 300, 500, 1000, 1500, 3000, 6500, 10000, 16000, 26000, 33000, 50000, 65000, 82000, 100000]
+  m: [0, 15, 30, 60, 100, 150, 300, 500, 1000, 2000, 3000, 4500, 6000, 8000, 10000, 15000, 20000, 25000, 30000],
+  ft: [0, 50, 100, 200, 300, 500, 1000, 1500, 3000, 6500, 10000, 15000, 20000, 26000, 33000, 50000, 65000, 82000, 100000]
 };
 const THR_RANK_DEF = 2;        /* la hauteur vérifiée au départ : 30 m (100 ft) */
-const THR_RANK_NOCEIL = 9;     /* le dernier rang offert sans plafond connu : 2 000 m (6 500 ft) */
+const THR_RANK_MIN = 12;       /* le dernier rang offert au moins : 6 000 m (20 000 ft) */
 const THR_TILES_MAX = 512;     /* tuiles d'altitude gardées au plus, dans un cache qui n'est pas celui du relief */
 const THR_PX_MAX = 1024;       /* le rayon d'une grille, en pixels, au niveau choisi */
 const THR_RAY_STEP = 0.5;      /* un échantillon tous les 0,5 pixel le long d'un rayon */
@@ -181,13 +181,13 @@ function thrCarries(it) {
 function thrSysName(sys) { return CURRENT_LANG === 'fr' ? sys.name_fr : sys.name_en; }
 function thrSteps() { return THR_STEPS[S.units.altitude === 'ft' ? 'ft' : 'm']; }
 function thrStepM(rank) { const v = thrSteps()[rank]; return S.units.altitude === 'ft' ? v * FT_M : v; }
-/* Le dernier rang offert : le premier dont la hauteur atteint le plus grand plafond connu des menaces actives ; sans plafond connu, le rang 9 */
+/* Le dernier rang offert : le premier dont la hauteur atteint le plus grand plafond connu des menaces actives ; jamais moins que le rang 12 (6 000 m ; 20 000 ft) ; sans plafond connu, le rang 12 */
 function thrTop() {
   let ceil = -1;
   THR.act.forEach(a => { if (a.sys.ceiling_m != null && a.sys.ceiling_m > ceil) ceil = a.sys.ceiling_m; });
-  if (ceil < 0) return THR_RANK_NOCEIL;
+  if (ceil < 0) return THR_RANK_MIN;
   const n = thrSteps().length;
-  for (let i = 0; i < n; i++) if (thrStepM(i) >= ceil) return i;
+  for (let i = 0; i < n; i++) if (thrStepM(i) >= ceil) return Math.max(i, THR_RANK_MIN);
   return n - 1;
 }
 /* Le rang gardé n'est pas réécrit quand il dépasse le dernier rang offert : la hauteur employée est celle de ce dernier rang */

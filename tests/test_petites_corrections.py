@@ -78,7 +78,7 @@ CHANGELOG = {
                                "**Fixed: briefing files are read safely**\n- A briefing file, or a briefing kept by the browser, can no longer change how the page works through special keys such as __proto__."],
     '### Route Planner': ["**“Clear everything”, as in the other tools**\n- In English, the button of the Clear window now reads “Clear everything”.",
                           "**Fixed: the map height after typing**\n- On a phone, moving the handle while the on-screen keyboard is open no longer keeps the map small once the keyboard closes.",
-                          "**Threats layer**\n- A hostile SAM, AAA or radar symbol can be given its system, among the game’s 57 air defence systems; with Threats ticked in Display, the map shows where an aircraft at the checked height above the ground is seen and within firing range, masked by DCS’s relief, with the firing and detection ranges. On a theatre without relief, only the ranges are drawn.\n- Where the route is seen at its planned altitude, it is outlined in yellow, and the navigation sheet says by which threat and over what distance."],
+                          "**Threats layer**\n- A hostile SAM, AAA or radar symbol can be given its system, among the game’s 57 air defence systems; with Threats ticked in Display, the map shows where an aircraft at the checked height above the ground is seen and within firing range, masked by DCS’s relief, with the firing and detection ranges. On a theatre without relief, only the ranges are drawn.\n- Where the route is seen at its planned altitude, it is outlined in yellow, and the navigation sheet says by which threat and over what distance.\n- The checked height goes up to 20,000 ft (6,000 m) at least, whatever the ceilings; above a system’s ceiling, that system no longer tints."],
     '### Datacard Generator': ["**Fixed: a free card kept its last aircraft**\n- When every crew line of a free card goes back to “to pick”, the Aircraft and Count fields empty instead of keeping the last aircraft found."],
     '### Field Manual': ["**The HQ screen drawn with the Wing button in its place**\n- The two drawings of the HQ screen show the toolbar in its new order.",
                          "**The home screen drawn with its insignia**\n- The two drawings of the home screen show the insignia and the family's icon.",
@@ -93,7 +93,7 @@ def test_changelog_entries_end_their_sections():
     for head, entries in CHANGELOG.items():
         sec = unreleased.split('\n' + head + '\n', 1)[1].split('\n### ', 1)[0].rstrip('\n')
         assert sec.endswith('\n\n'.join(entries)), head
-    assert 'MP-V2.1.0+12` for this one' in unreleased and 'MP-V2.1.0+8' not in log
+    assert 'MP-V2.1.0+13` for this one' in unreleased and 'MP-V2.1.0+8' not in log
     all_tools = unreleased.split('\n### All tools\n', 1)[1].split('\n### ', 1)[0]
     assert all_tools.rstrip('\n').endswith('a wing still on the former “WG” logo shows the new one and still counts as not set up.\n\n' + '\n\n'.join(ALL_TOOLS_2))
 

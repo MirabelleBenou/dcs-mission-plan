@@ -244,7 +244,7 @@ def test_zone_is_painted_at_the_checked_height_above_the_visibility_height(brows
     col = TCOL + dx
     for rank, painted in ((6, False), (7, True), (11, True), (12, False)):                  # 300 m : non ; 500 m : oui
         set_rank(fr, pg, rank)
-        assert fr.evaluate("__RP.thr.paint.H") == [0, 15, 30, 60, 100, 150, 300, 500, 1000, 2000, 3000, 5000, 8000][rank]
+        assert fr.evaluate("__RP.thr.paint.H") == [0, 15, 30, 60, 100, 150, 300, 500, 1000, 2000, 3000, 4500, 6000][rank]
         assert tile_alpha(fr, col, 128) == (110 if painted else 0), rank
     set_rank(fr, pg, 2)
     assert tile_alpha(fr, 70, 128) == 110                                      # à l'ouest, vu au ras du sol
@@ -257,14 +257,14 @@ def test_zone_is_painted_at_the_checked_height_above_the_visibility_height(brows
 @needs_pw
 def test_ceiling_cuts_the_zone_and_changing_the_height_does_not_recompute_the_grids(browser):
     pg, fr = open_rp(browser)
-    setup(fr, [sym(0, 'sa-19')])                                               # plafond 3 600 m : le dernier rang offert est 5 000 m
+    setup(fr, [sym(0, 'sa-19')])                                               # plafond 3 600 m : le dernier rang offert est le rang 12 (6 000 m), jamais moins
     view_threat(fr, pg)
-    assert fr.evaluate("__RP.thr.paint.H") == 30 and fr.evaluate("__RP.thrTop()") == 11
+    assert fr.evaluate("__RP.thr.paint.H") == 30 and fr.evaluate("__RP.thrTop()") == 12
     n0 = len(pg.bench.log)
     ver = fr.evaluate("__RP.thr.ver")
     set_rank(fr, pg, 10)                                                       # 3 000 m : sous le plafond
     assert tile_alpha(fr, 70, 128) == 110
-    set_rank(fr, pg, 11)                                                       # 5 000 m : 100 + 5 000 − 100 > 3 600 : rien
+    set_rank(fr, pg, 12)                                                       # 6 000 m : au-dessus du plafond, rien n'est peint (100 + 6 000 − 100 > 3 600)
     assert tile_alpha(fr, 70, 128) == 0 and tile_alpha(fr, 60, 100) == 0
     assert fr.evaluate("__RP.thr.ver") == ver and len(pg.bench.log) == n0     # ni nouveau calcul, ni nouvelle tuile
     pg.context.close()
@@ -512,32 +512,35 @@ def test_height_is_kept_read_back_in_ft_and_the_last_step_follows_the_ceilings(b
     pg, fr = open_rp(browser)
     setup(fr, [sym(0, 'sa-8')])
     ticks = lambda: fr.evaluate("Array.from(document.querySelectorAll('#rp-thr .thr-tk')).map(e => e.textContent)")
-    assert ticks() == ['0', '30', '100', '300', '2' + NBSP + '000', '8' + NBSP + '000']       # plafond 5 100 m : le rang 12 (8 000 m) clôt la suite
+    assert ticks() == ['0', '30', '100', '300', '2' + NBSP + '000', '6' + NBSP + '000']       # plafond 5 100 m : le rang 12 (6 000 m) clôt la suite
     assert fr.evaluate("document.getElementById('thr-range').max") == '12' and fr.evaluate("document.getElementById('thr-v').textContent") == '30 m sol'
     set_rank(fr, pg, 7)
     assert fr.evaluate("DISP.thrStep") == 7 and json.loads(fr.evaluate("localStorage.getItem('rp_display_v1')"))['thrStep'] == 7
     assert fr.evaluate("document.getElementById('thr-v').textContent") == '500 m sol'
     fr.evaluate("unChoose('ft')")
     pg.wait_for_timeout(300)
-    assert ticks() == ['0', '100', '300', '1' + NBSP + '000', '6' + NBSP + '500', '26' + NBSP + '000']
+    assert ticks() == ['0', '100', '300', '1' + NBSP + '000', '6' + NBSP + '500', '20' + NBSP + '000']
     assert fr.evaluate("document.getElementById('thr-range').max") == '12' and fr.evaluate("document.getElementById('thr-v').textContent") == '1' + NBSP + '500 ft sol'
     fr.evaluate("setLang('en')")
     pg.wait_for_timeout(300)
     assert fr.evaluate("document.getElementById('thr-v').textContent") == '1,500 ft AGL'
     assert fr.evaluate("Math.abs(__RP.thrH() - 1500 * FT_M) < 1e-9")
     fr.evaluate("setLang('fr'); unChoose('m')")
-    # le dernier rang offert : le premier qui atteint le plus grand plafond connu ; sans plafond connu, le rang 9
+    # le dernier rang offert : le premier qui atteint le plus grand plafond connu ; sans plafond connu, le rang 12 ; jamais moins que le rang 12 (6 000 m ; 20 000 ft)
     top = lambda items: (setup(fr, items), fr.evaluate("__RP.thrTop()"))[1]
-    assert top([sym(0, 'sa-8'), sym(1, 'sa-5', *east(fr, T_LAT, T_LON, 1))]) == 17                       # 30 000 m
-    assert top([sym(0, 'stinger')]) == 9 and top([sym(0, 'stinger'), sym(1, 'sa-19', *east(fr, T_LAT, T_LON, 1))]) == 11
-    assert top([sym(0, 'sa-6')]) == 13
+    assert top([sym(0, 'sa-8'), sym(1, 'sa-5', *east(fr, T_LAT, T_LON, 1))]) == 18                       # 30 000 m
+    assert top([sym(0, 'stinger')]) == 12 and top([sym(0, 'stinger'), sym(1, 'sa-19', *east(fr, T_LAT, T_LON, 1))]) == 12
+    assert top([sym(0, 'sa-6')]) == 14
     fr.evaluate("unChoose('ft')")
-    assert fr.evaluate("__RP.thrTop()") == 13                                                              # 8 500 m : 33 000 ft
+    assert fr.evaluate("__RP.thrTop()") == 14                                                              # 8 500 m : 33 000 ft
+    for items, want in (([sym(0, 'stinger')], 12), ([sym(0, 'sa-19')], 12), ([sym(0, 'sa-8')], 12), ([sym(0, 'sa-5')], 18)):                  # en ft aussi
+        assert top(items) == want
+    assert fr.evaluate("[thrStepM(12), thrSteps()[12]]") == [20000 * fr.evaluate("FT_M"), 20000]
     fr.evaluate("unChoose('m')")
     # le rang gardé n'est pas réécrit quand il dépasse : la hauteur est celle du dernier rang offert
     fr.evaluate("DISP.thrStep = 15; saveDisplay();")
     setup(fr, [sym(0, 'stinger')])
-    assert fr.evaluate("[DISP.thrStep, __RP.thrRank(), __RP.thrH()]") == [15, 9, 2000]
+    assert fr.evaluate("[DISP.thrStep, __RP.thrRank(), __RP.thrH()]") == [15, 12, 6000]
     assert json.loads(fr.evaluate("localStorage.getItem('rp_display_v1')"))['thrStep'] == 15
     assert pg.errs == []
     pg.context.close()
@@ -683,10 +686,10 @@ def test_box_desktop_layout_and_hidden_in_draw_ruler_and_export_modes(browser):
 
 
 @needs_pw
-def test_ticks_do_not_overlap_at_760_and_at_the_last_ranks_9_and_17(browser):
+def test_ticks_do_not_overlap_at_760_and_at_the_last_ranks_12_14_and_18(browser):
     pg, fr = open_rp(browser, w=780, h=800)
     assert 760 <= fr.evaluate("document.getElementById('map').clientWidth") <= 800
-    for items, top, ranks in (([sym(0, 'stinger')], 9, [0, 2, 4, 6, 9]), ([sym(0, 'sa-5')], 17, [0, 2, 4, 6, 9, 17]), ([sym(0, 'sa-19')], 11, [0, 2, 4, 6, 9, 11])):
+    for items, top, ranks in (([sym(0, 'stinger')], 12, [0, 2, 4, 6, 9, 12]), ([sym(0, 'sa-6')], 14, [0, 2, 4, 6, 9, 14]), ([sym(0, 'sa-5')], 18, [0, 2, 4, 6, 9, 18])):
         setup(fr, items)
         assert fr.evaluate("__RP.thrTop()") == top
         for unit in ('m', 'ft'):
@@ -722,7 +725,7 @@ def test_box_on_a_phone_is_a_pill_with_two_44px_buttons(browser):
     assert i['step'] == 0 and i['v'] == '0 m sol' and [b[4] for b in i['btn']] == [True, False]                  # grisé au bas bout
     fr.evaluate("for (let k = 0; k < 20; k++) document.querySelector('#rp-thr .thr-b[data-d=\"1\"]').click()")
     i = info()
-    assert i['step'] == 12 and i['v'] == '8' + NBSP + '000 m sol' and [b[4] for b in i['btn']] == [False, True]    # grisé au haut bout (plafond 5 100 m)
+    assert i['step'] == 12 and i['v'] == '6' + NBSP + '000 m sol' and [b[4] for b in i['btn']] == [False, True]    # grisé au haut bout (plafond 5 100 m)
     fr.evaluate("setLang('en')")
     pg.wait_for_timeout(200)
     assert [b[2] for b in info()['btn']] == ['Lower', 'Higher']
@@ -1182,3 +1185,10 @@ def test_mixed_agl_to_msl_leg_is_judged_by_the_third_case_of_the_rule(browser):
     km = fr.evaluate("__RP.thr.seen['1'][0].km")
     want = seen_mixed_km(g, 30, 450)
     assert 6.5 < want < 7.5 and abs(km - want) <= 0.2, (km, want)              # ni « tout en AGL » (10 km), ni « A en MSL » (le début à 30 m du niveau de la mer : masqué)
+
+
+def test_field_manual_rp_threats_gives_the_checked_height_range():
+    fm = (ROOT / 'dist' / 'dcs_field_manual.html').read_text(encoding='utf-8')
+    rp = fm[fm.index('<section id="page-rp"'):fm.index('<!-- /page-rp -->')]
+    assert 'au téléphone, c’est une pastille avec <strong>−</strong> et <strong>+</strong>. Elle va de 0 à 20 000 ft (6 000 m) au moins, plus haut si un système affiché a un plafond plus haut\u202f; au-dessus de son plafond, un système ne teinte plus.' in rp
+    assert 'on a phone it is a pill with <strong>−</strong> and <strong>+</strong>. It goes from 0 to 20,000 ft (6,000 m) at least, higher if a system shown has a higher ceiling; above its ceiling, a system no longer tints.' in rp
