@@ -82,10 +82,10 @@ def base_table():
     ]}
 
 
-def run(tmp_path, table, name='out.json'):
+def run(tmp_path, table, name='out.json', vehicles=VEHICLES_PY):
     root = tmp_path / 'pydcs'
     (root / 'dcs').mkdir(parents=True, exist_ok=True)
-    (root / 'dcs' / 'vehicles.py').write_text(VEHICLES_PY, encoding='utf-8')
+    (root / 'dcs' / 'vehicles.py').write_text(vehicles, encoding='utf-8')
     tpath = tmp_path / 'table.json'
     tpath.write_text(json.dumps(table), encoding='utf-8')
     out = tmp_path / name
@@ -187,6 +187,91 @@ def test_refuses_an_unknown_kind_or_sensor(tmp_path):
     refuse(tmp_path, t, 'eyes')
 
 
+# ---------- la lecture de vehicles.py par ast.parse : ce qu'elle refuse, et un cas commenté ----------
+def one_type(body, extra=''):
+    return 'class AirDefence:\n\n    class Gun(unittype.VehicleType):\n' + body + '\n' + extra
+
+
+def gun_table():
+    return {'source': 'x', 'excluded': [], 'systems': [system('gun', ['gun'], kind='aaa', sensor='shooter')]}
+
+
+def refuse_text(tmp_path, vehicles, *needles):
+    with pytest.raises(SystemExit) as e:
+        run(tmp_path, gun_table(), vehicles=vehicles)
+    msg = str(e.value)
+    for n in needles:
+        assert n in msg, (n, msg)
+    return msg
+
+
+GOOD = '        id = "gun"\n        detection_range = 0\n        threat_range = 2000\n'
+
+
+def test_a_commented_range_is_read(tmp_path):
+    v = one_type('        id = "gun"\n        detection_range = 0  # m\n        threat_range = 4000  # m\n')
+    out = json.loads(run(tmp_path, gun_table(), vehicles=v).read_text(encoding='utf-8'))
+    assert out['systems'][0]['fire_m'] == 4000 and out['systems'][0]['detect_m'] == 0
+
+
+def test_the_file_is_read_as_text_and_never_run(tmp_path):
+    v = 'raise RuntimeError("executed")\n' + one_type(GOOD)
+    assert json.loads(run(tmp_path, gun_table(), vehicles=v).read_text(encoding='utf-8'))['systems'][0]['fire_m'] == 2000
+
+
+def test_refuses_a_type_without_id(tmp_path):
+    refuse_text(tmp_path, one_type('        detection_range = 0\n        threat_range = 2000\n'), 'Gun', 'id absent')
+
+
+def test_refuses_an_id_that_is_not_a_literal_string(tmp_path):
+    refuse_text(tmp_path, one_type('        id = NAME\n        threat_range = 2000\n'), 'Gun', 'id')
+    refuse_text(tmp_path, one_type('        id = 12\n        threat_range = 2000\n'), 'Gun', 'id')
+    refuse_text(tmp_path, one_type('        id = "a" + "b"\n        threat_range = 2000\n'), 'Gun', 'id')
+
+
+@pytest.mark.parametrize('line', ['threat_range = 2000.0', 'threat_range = 2 * 1000', 'threat_range = RANGE', 'threat_range = "2000"', 'threat_range = -5.5', 'threat_range = True'])
+def test_refuses_a_threat_range_that_is_not_an_integer_literal(tmp_path, line):
+    refuse_text(tmp_path, one_type('        id = "gun"\n        ' + line + '\n'), 'gun', 'threat_range', 'entier littéral')
+
+
+@pytest.mark.parametrize('line', ['detection_range = 9000.5', 'detection_range = 3 * 3000', 'detection_range = DET'])
+def test_refuses_a_detection_range_that_is_not_an_integer_literal(tmp_path, line):
+    refuse_text(tmp_path, one_type('        id = "gun"\n        ' + line + '\n        threat_range = 2000\n'), 'gun', 'detection_range', 'entier littéral')
+
+
+def test_an_absent_range_is_zero(tmp_path):
+    v = one_type('        id = "gun"\n        threat_range = 2000\n')
+    assert json.loads(run(tmp_path, gun_table(), vehicles=v).read_text(encoding='utf-8'))['systems'][0]['detect_m'] == 0
+
+
+def test_refuses_a_key_assigned_twice(tmp_path):
+    refuse_text(tmp_path, one_type(GOOD + '        threat_range = 3000\n'), 'Gun', 'threat_range', 'deux fois')
+    refuse_text(tmp_path, one_type(GOOD + '        id = "gun2"\n'), 'Gun', 'id', 'deux fois')
+
+
+def test_refuses_an_inherited_type(tmp_path):
+    refuse_text(tmp_path, one_type(GOOD, '    class Other(Gun):\n        id = "other"\n        threat_range = 1000\n'), 'Other', 'héritage')
+    refuse_text(tmp_path, one_type(GOOD, '    class Two(unittype.VehicleType, Mixin):\n        id = "two"\n'), 'Two', 'héritage')
+    refuse_text(tmp_path, one_type(GOOD, '    class Plain:\n        id = "plain"\n'), 'Plain', 'héritage')
+
+
+def test_refuses_two_classes_with_the_same_id(tmp_path):
+    refuse_text(tmp_path, one_type(GOOD, '    class Gun2(unittype.VehicleType):\n        id = "gun"\n        threat_range = 1\n'), 'gun', 'deux classes')
+
+
+def test_refuses_when_no_class_is_read(tmp_path):
+    refuse_text(tmp_path, 'class AirDefence:\n    pass\n', 'aucune classe')
+    refuse_text(tmp_path, 'class Other:\n    pass\n', 'AirDefence')
+
+
+def test_refuses_a_system_with_no_pieces(tmp_path):
+    t = gun_table()
+    t['systems'][0]['pieces'] = []
+    with pytest.raises(SystemExit) as e:
+        run(tmp_path, t, vehicles=one_type(GOOD))
+    assert 'gun' in str(e.value) and 'aucune pièce' in str(e.value)
+
+
 # ---------- la table livrée ----------
 DATA = json.loads((ROOT / 'data' / 'threats.json').read_text(encoding='utf-8'))
 INPUT = json.loads((ROOT / 'tools' / 'threat_systems.json').read_text(encoding='utf-8'))
@@ -217,6 +302,17 @@ def test_delivered_table_known_values():
     assert sa6['goldwolf'] == {'range_m': 35000, 'ceiling_m': 8500, 'page': 8}
     assert by['sa-22']['gap'] is False
     assert by['1l13']['detect_m'] == 300000 and by['1l13']['gap'] is True
+
+
+def test_delivered_gap_is_recomputed_from_the_goldwolf_range_and_the_reference_range():
+    for s in DATA['systems']:
+        g = s['goldwolf']
+        if g is None:
+            assert s['gap'] is False, s['id']
+            continue
+        ref = s['detect_m'] if s['kind'] == 'radar' else s['fire_m']
+        assert ref > 0, s['id']
+        assert s['gap'] is (abs(g['range_m'] - ref) / ref > DATA['gap_threshold']), s['id']
 
 
 def test_input_and_delivered_tables_agree():

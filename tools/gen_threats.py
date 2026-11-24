@@ -8,7 +8,6 @@ Usage : python3 tools/gen_threats.py <dossier racine de pydcs 1.0.0> tools/threa
 """
 import ast
 import json
-import re
 import sys
 
 SOURCE = ("pydcs 1.0.0 (LGPL-3.0-or-later) — dcs/vehicles.py, AirDefence: detection_range and threat_range of each unit type, "
@@ -17,27 +16,69 @@ SOURCE = ("pydcs 1.0.0 (LGPL-3.0-or-later) — dcs/vehicles.py, AirDefence: dete
 SENSOR_HEIGHT_M = {"search": 10, "fire-control": 5, "shooter": 2}
 GAP_THRESHOLD = 0.1
 KINDS = ('sam', 'aaa', 'radar')
+BASE_CLASS = 'unittype.VehicleType'
+
+
+def _dotted(node):
+    """Le nom pointé d'une base de classe (« unittype.VehicleType »), ou None si ce n'est ni un nom ni un attribut de noms."""
+    parts = []
+    while isinstance(node, ast.Attribute):
+        parts.append(node.attr)
+        node = node.value
+    if not isinstance(node, ast.Name):
+        return None
+    parts.append(node.id)
+    return '.'.join(reversed(parts))
+
+
+def _int_literal(node):
+    return isinstance(node, ast.Constant) and type(node.value) is int
 
 
 def read_air_defence(root):
+    """Lit dcs/vehicles.py par ast.parse (jamais exécuté) : la classe de tête AirDefence et ses classes imbriquées ; refuse ce qu'il ne sait pas lire."""
     with open(root + '/dcs/vehicles.py', encoding='utf-8') as f:
         text = f.read()
-    start = text.find('\nclass AirDefence')
-    if start < 0:
+    try:
+        tree = ast.parse(text)
+    except SyntaxError as e:
+        raise SystemExit('[ERREUR] dcs/vehicles.py illisible : %s' % e)
+    head = next((n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == 'AirDefence'), None)
+    if head is None:
         raise SystemExit('[ERREUR] classe AirDefence introuvable dans dcs/vehicles.py')
-    m = re.search(r'\nclass ', text[start + 1:])
-    body = text[start:start + 1 + m.start()] if m else text[start:]
     types = {}
-    for block in body.split('\n    class ')[1:]:
-        im = re.search(r'\n        id = ("(?:[^"\\\n]|\\.)*")', block)
-        if not im:
+    owner = {}
+    for cls in head.body:
+        if not isinstance(cls, ast.ClassDef):
             continue
-        tid = ast.literal_eval(im.group(1))
+        bases = [_dotted(b) for b in cls.bases]
+        if bases != [BASE_CLASS]:
+            raise SystemExit('[ERREUR] type %s : sa base (%s) n\'est pas %s, un héritage qu\'on ne sait pas lire' % (cls.name, ', '.join(str(b) for b in bases) or 'aucune', BASE_CLASS))
+        seen = {}
+        for st in cls.body:
+            if isinstance(st, ast.Assign) and len(st.targets) == 1 and isinstance(st.targets[0], ast.Name):
+                key, val = st.targets[0].id, st.value
+            elif isinstance(st, ast.AnnAssign) and isinstance(st.target, ast.Name) and st.value is not None:
+                key, val = st.target.id, st.value
+            else:
+                continue
+            if key in seen:
+                raise SystemExit('[ERREUR] type %s : la clé %s est affectée deux fois' % (cls.name, key))
+            seen[key] = val
+        if 'id' not in seen or not (isinstance(seen['id'], ast.Constant) and isinstance(seen['id'].value, str)):
+            raise SystemExit('[ERREUR] type %s : id absent ou qui n\'est pas une chaîne littérale' % cls.name)
+        tid = seen['id'].value
         vals = {}
         for key in ('detection_range', 'threat_range'):
-            km = re.search(r'\n        %s = (\d+)\s*(?:\n|$)' % key, block)
-            vals[key] = int(km.group(1)) if km else 0
+            if key in seen and not _int_literal(seen[key]):
+                raise SystemExit('[ERREUR] type %s : %s n\'est pas un entier littéral (flottant, expression ou nom)' % (tid, key))
+            vals[key] = seen[key].value if key in seen else 0
+        if tid in types:
+            raise SystemExit('[ERREUR] type %s : deux classes portent cet id (%s et %s)' % (tid, owner[tid], cls.name))
         types[tid] = vals
+        owner[tid] = cls.name
+    if not types:
+        raise SystemExit('[ERREUR] aucune classe lue dans AirDefence de dcs/vehicles.py')
     return types
 
 
@@ -59,6 +100,8 @@ def main(root, table_path, out_path):
             raise SystemExit('[ERREUR] nature inconnue (%r) pour le système %s' % (s['kind'], sid))
         if s['sensor'] not in SENSOR_HEIGHT_M:
             raise SystemExit('[ERREUR] capteur inconnu (%r) pour le système %s' % (s['sensor'], sid))
+        if not s['pieces']:
+            raise SystemExit('[ERREUR] le système %s n\'a aucune pièce' % sid)
         missing = [p for p in s['pieces'] if p not in types]
         if missing:
             raise SystemExit('[ERREUR] pièces absentes de pydcs pour le système %s : %s' % (sid, missing))
