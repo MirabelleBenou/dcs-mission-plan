@@ -505,14 +505,14 @@ def test_height_is_kept_read_back_in_ft_and_the_last_step_follows_the_ceilings(b
     pg, fr = open_rp(browser)
     setup(fr, [sym(0, 'sa-8')])
     ticks = lambda: fr.evaluate("Array.from(document.querySelectorAll('#rp-thr .thr-tk')).map(e => e.textContent)")
-    assert ticks() == ['0', '30', '100', '300', '1' + NBSP + '000', '2' + NBSP + '000', '8' + NBSP + '000']       # plafond 5 100 m : le rang 12 (8 000 m) clôt la suite
+    assert ticks() == ['0', '30', '100', '300', '2' + NBSP + '000', '8' + NBSP + '000']       # plafond 5 100 m : le rang 12 (8 000 m) clôt la suite
     assert fr.evaluate("document.getElementById('thr-range').max") == '12' and fr.evaluate("document.getElementById('thr-v').textContent") == '30 m sol'
     set_rank(fr, pg, 7)
     assert fr.evaluate("DISP.thrStep") == 7 and json.loads(fr.evaluate("localStorage.getItem('rp_display_v1')"))['thrStep'] == 7
     assert fr.evaluate("document.getElementById('thr-v').textContent") == '500 m sol'
     fr.evaluate("unChoose('ft')")
     pg.wait_for_timeout(300)
-    assert ticks() == ['0', '100', '300', '1' + NBSP + '000', '3' + NBSP + '000', '6' + NBSP + '500', '26' + NBSP + '000']
+    assert ticks() == ['0', '100', '300', '1' + NBSP + '000', '6' + NBSP + '500', '26' + NBSP + '000']
     assert fr.evaluate("document.getElementById('thr-range').max") == '12' and fr.evaluate("document.getElementById('thr-v').textContent") == '1' + NBSP + '500 ft sol'
     fr.evaluate("setLang('en')")
     pg.wait_for_timeout(300)
@@ -638,9 +638,9 @@ def test_box_desktop_layout_and_hidden_in_draw_ruler_and_export_modes(browser):
     assert box['legend'] == ['vu à 30 m du sol, à portée de tir', 'portée de tir', 'détection', 'route vue, à son altitude prévue']
     # chaque repère est sous son cran
     ok = fr.evaluate("""(() => { const rg = document.getElementById('thr-range'), r = rg.getBoundingClientRect(), max = +rg.max, th = 16;
-        return Array.from(document.querySelectorAll('#rp-thr .thr-tk')).map((e, i) => { const k = [0, 2, 4, 6, 8, 9, 12][i], c = e.getBoundingClientRect(), want = r.left + th / 2 + (r.width - th) * k / max;
+        return Array.from(document.querySelectorAll('#rp-thr .thr-tk')).map((e, i) => { const k = [0, 2, 4, 6, 9, 12][i], c = e.getBoundingClientRect(), want = r.left + th / 2 + (r.width - th) * k / max;
           return Math.abs((c.left + c.width / 2) - want) < 1.5 && c.top >= r.bottom - 6; }); })()""")
-    assert all(ok) and len(ok) == 7
+    assert all(ok) and len(ok) == 6
     fr.evaluate("setLang('en')")
     pg.wait_for_timeout(200)
     assert fr.evaluate("[document.querySelector('#rp-thr .thr-t').textContent, document.querySelector('#rp-thr label').textContent, document.getElementById('thr-v').textContent]") == ['THREATS', 'Checked height', '30 m AGL']
@@ -669,6 +669,26 @@ def test_box_desktop_layout_and_hidden_in_draw_ruler_and_export_modes(browser):
     pg.wait_for_timeout(300)
     assert fr.evaluate("window.__ig(document.getElementById('rp-thr'))") is True and fr.evaluate("window.__ig(document.getElementById('map'))") is False
     assert pg.errs == []
+    pg.context.close()
+
+
+@needs_pw
+def test_ticks_do_not_overlap_at_760_and_at_the_last_ranks_9_and_17(browser):
+    pg, fr = open_rp(browser, w=780, h=800)
+    assert 760 <= fr.evaluate("document.getElementById('map').clientWidth") <= 800
+    for items, top, ranks in (([sym(0, 'stinger')], 9, [0, 2, 4, 6, 9]), ([sym(0, 'sa-5')], 17, [0, 2, 4, 6, 9, 17]), ([sym(0, 'sa-19')], 11, [0, 2, 4, 6, 9, 11])):
+        setup(fr, items)
+        assert fr.evaluate("__RP.thrTop()") == top
+        for unit in ('m', 'ft'):
+            fr.evaluate("(u) => unChoose(u === 'm' ? 'm' : 'ft')", unit)
+            pg.wait_for_timeout(200)
+            boxes = fr.evaluate("Array.from(document.querySelectorAll('#rp-thr .thr-tk')).map(e => { const r = e.getBoundingClientRect(); return [r.left, r.right, r.width]; })")
+            assert len(boxes) == len(ranks), (top, unit)
+            assert fr.evaluate("Math.round(document.getElementById('rp-thr').getBoundingClientRect().width)") == 280
+            for a, b in zip(boxes, boxes[1:]):
+                assert a[1] <= b[0] - 2, (top, unit, a, b)
+            r = fr.evaluate("(() => { const b = document.getElementById('rp-thr').getBoundingClientRect(); return [b.left, b.right]; })()")
+            assert boxes[0][0] >= r[0] - 1 and boxes[-1][1] <= r[1] + 1
     pg.context.close()
 
 

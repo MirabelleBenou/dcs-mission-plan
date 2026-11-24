@@ -162,7 +162,7 @@ def test_row_first_off_by_default_kept_in_the_screen_settings_only(browser):
     menu(fr, pg, True)
     row = fr.evaluate("""(() => { const r = document.querySelector('#dsp-panel [data-k=relief]'); return { role: r.getAttribute('role'), checked: r.getAttribute('aria-checked'),
         cls: r.className, prev: r.previousElementSibling.textContent.trim(), next: r.nextElementSibling.textContent.trim(), title: r.title, txt: r.textContent.trim() }; })()""")
-    assert row == {'role': 'menuitemcheckbox', 'checked': 'false', 'cls': 'tbm-opt dsp-opt', 'prev': 'Afficher sur la carte', 'next': 'Mission', 'title': 'Relief du terrain, relevé dans DCS', 'txt': 'Relief'}
+    assert row == {'role': 'menuitemcheckbox', 'checked': 'false', 'cls': 'tbm-opt dsp-opt', 'prev': 'Afficher sur la carte', 'next': 'Menaces', 'title': 'Relief du terrain, relevé dans DCS', 'txt': 'Relief'}
     menu(fr, pg, False)
     before = fr.evaluate("localStorage.getItem('route_state_v1')")
     n0 = len(pg.bench.relief())
