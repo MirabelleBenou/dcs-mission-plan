@@ -16,7 +16,7 @@ Further down, *Before v2.0.0* keeps the history of each tool up to v1.24.0, when
 ### All tools
 
 **Build number on the hosted version**
-- Between two releases, the bottom of the home screen shows the build number, `MP-V2.1.0+11` for this one; a downloaded release shows none.
+- Between two releases, the bottom of the home screen shows the build number, `MP-V2.1.0+12` for this one; a downloaded release shows none.
 
 **Easier-to-read drop-down lists**
 - Their header, the chosen line and the line under the pointer have stronger contrast in every theme.
@@ -180,8 +180,9 @@ Further down, *Before v2.0.0* keeps the history of each tool up to v1.24.0, when
 **Fixed: the map height after typing**
 - On a phone, moving the handle while the on-screen keyboard is open no longer keeps the map small once the keyboard closes.
 
-**Threat data**
-- The data of the game's air defence systems is ready for the coming threats layer; nothing visible changes.
+**Threats layer**
+- A hostile SAM, AAA or radar symbol can be given its system, among the game’s 57 air defence systems; with Threats ticked in Display, the map shows where an aircraft at the checked height above the ground is seen and within firing range, masked by DCS’s relief, with the firing and detection ranges. On a theatre without relief, only the ranges are drawn.
+- Where the route is seen at its planned altitude, it is outlined in yellow, and the navigation sheet says by which threat and over what distance.
 
 ### Datacard Generator
 
@@ -222,6 +223,9 @@ Further down, *Before v2.0.0* keeps the history of each tool up to v1.24.0, when
 
 **The phone drawing of the home screen in the right order**
 - The title plate now sits under the toolbar buttons, as on screen.
+
+**Threats**
+- The Route Planner page explains the threats layer and lists the game’s air defence systems with their ranges and ceilings.
 
 ## MP-V2.1.0 — 2026-11-16
 A small release after v2.0.0: the Field Manual now draws every screen of the suite, and a few fixes in HQ and the Route Planner.

@@ -36,6 +36,7 @@ from messages_block import build_block as build_messages_block, build_css as bui
 from mission_line_block import build_block as build_mission_line_block, build_css as build_mission_line_css, verify as mission_line_verify
 from ui_block import build_tbm_css, build_tbm_block, build_block as build_ui_block, build_css as build_ui_css, verify as ui_verify, verify_bar as ui_verify_bar
 from shell_only_block import build_block as build_shell_only_block
+import threats_block
 from brand_block import add_tab_icons as brand_tab_icons
 # La garde du module seul : premier élément du <body> (build_mission_plan.py la vérifie dans le dist/)
 SHELL_ONLY_TAG = '<script data-lang-key="lang_v1">\n' + build_shell_only_block() + '</script>\n'
@@ -821,10 +822,10 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 
 /* ---------- le mode Dessin et la séparation carte / panneau (lot rp-v1.6.0) : les valeurs de la maquette, une pour une ---------- */
 .rp-drawing .leaflet-overlay-pane, .rp-drawing .leaflet-marker-pane, .rp-drawing .leaflet-refs-pane,
-.rp-drawing .leaflet-legticks-pane, .rp-drawing .leaflet-legnums-pane, .rp-drawing .leaflet-legboxes-pane {
+.rp-drawing .leaflet-legticks-pane, .rp-drawing .leaflet-legnums-pane, .rp-drawing .leaflet-legboxes-pane, .rp-drawing .leaflet-threats-pane, .rp-drawing .leaflet-thrroute-pane {
   opacity: .32; pointer-events: none !important; }
 .rp-drawing .leaflet-overlay-pane *, .rp-drawing .leaflet-marker-pane *, .rp-drawing .leaflet-refs-pane *,
-.rp-drawing .leaflet-legnums-pane *, .rp-drawing .leaflet-legboxes-pane *,
+.rp-drawing .leaflet-legnums-pane *, .rp-drawing .leaflet-legboxes-pane *, .rp-drawing .leaflet-threats-pane *, .rp-drawing .leaflet-thrroute-pane *,
 .rp-drawing .leaflet-airfields-pane *, .rp-drawing .leaflet-towns-pane * { pointer-events: none !important; }
 .leaflet-drawedit-pane { z-index: 640; }
 
@@ -836,10 +837,10 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
    il arrive à la carte, qui l'aimante (rlSnap) ; rien ne se glisse en mode Règle */
 .rp-ruling .leaflet-marker-pane, .rp-ruling .leaflet-refs-pane, .rp-ruling .leaflet-legticks-pane, .rp-ruling .leaflet-legnums-pane,
 .rp-ruling .leaflet-legboxes-pane, .rp-ruling .leaflet-airfields-pane, .rp-ruling .leaflet-towns-pane, .rp-ruling .leaflet-layers-pane,
-.rp-ruling .leaflet-overlay-pane { pointer-events: none !important; }
+.rp-ruling .leaflet-threats-pane, .rp-ruling .leaflet-thrroute-pane, .rp-ruling .leaflet-overlay-pane { pointer-events: none !important; }
 .rp-ruling .leaflet-marker-pane *, .rp-ruling .leaflet-refs-pane *, .rp-ruling .leaflet-legticks-pane *, .rp-ruling .leaflet-legnums-pane *,
 .rp-ruling .leaflet-legboxes-pane *, .rp-ruling .leaflet-airfields-pane *, .rp-ruling .leaflet-towns-pane *, .rp-ruling .leaflet-layers-pane *,
-.rp-ruling .leaflet-overlay-pane * { pointer-events: none !important; }
+.rp-ruling .leaflet-threats-pane *, .rp-ruling .leaflet-thrroute-pane *, .rp-ruling .leaflet-overlay-pane * { pointer-events: none !important; }
 .rp-ruling .ins-icon { visibility: hidden; }
 #map.rp-ruling, #map.rp-ruling.leaflet-grab, #map.rp-ruling.leaflet-dragging.leaflet-grab { cursor: crosshair; }
 .leaflet-ruler-pane { z-index: 660; }
@@ -1947,7 +1948,7 @@ function symSet(it, f, v) {
   if (f === 'style') { if (v !== 'fill' && v !== 'line') return false; it.style = v; return true; }
   if (f === 'size') { if (!symFind(SYM.tailles, v)) return false; it.size = v; return true; }
   if (f === 'formation') { if (!symIsUnit(it.sidc)) return false; it.formation = v; return true; }
-  if (f === 'side') { if (!symFind(SYM.camps, v)) return false; a[1] = v; it.sidc = a.join(''); return true; }
+  if (f === 'side') { if (!symFind(SYM.camps, v)) return false; a[1] = v; it.sidc = a.join(''); if (v !== 'H') delete it.threat; return true; }
   if (f === 'echelon') {
     if (!symIsUnit(it.sidc) || !symFind(SYM.echelons, v)) return false;
     a[11] = v;
@@ -1963,6 +1964,7 @@ function symSet(it, f, v) {
     if (!(was && now)) a[11] = '-';
     if (!now) it.formation = '';
     it.sidc = a.join('');
+    if (it.threat !== undefined) { const nat = thrNature(it.sidc), sys = THR_BY_ID[it.threat]; if (!nat || (sys && sys.kind !== nat)) delete it.threat; }       /* le système suit la nature du symbole */
     return true;
   }
   return false;
@@ -2168,6 +2170,33 @@ const I18N = {
     'relief.err.net': '⚠ Relief indisponible : le serveur des tuiles ne répond pas.',
     'relief.err.fmt': '⚠ Relief indisponible : la description reçue du serveur est illisible.',
     'relief.alt': 'Alt. sol',
+    'dsp.threats': 'Menaces',
+    'dsp.threats.tip': 'Zones de tir et de détection des symboles ennemis SAM, AAA et Radar qui ont un système',
+    'dr.f.threat': 'Système',
+    'thr.none': 'Aucun',
+    'thr.unknown': '{id} (inconnu)',
+    'thr.info.fire': 'Tir {fire} · détection {det} · {ceil} · capteur : {sensor}',
+    'thr.info.radar': 'Détection {det} · {ceil} · capteur : {sensor}',
+    'thr.ceil': 'plafond {v}',
+    'thr.ceil.none': 'plafond non connu',
+    'thr.sensor.search': 'radar de veille',
+    'thr.sensor.fire-control': 'radar de conduite de tir',
+    'thr.sensor.shooter': 'le tireur lui-même',
+    'cf.threat': 'Système : {n}',
+    'thr.title': 'MENACES',
+    'thr.src.relief': 'relief DCS · pydcs',
+    'thr.src.none': 'sans relief : portées seules',
+    'thr.src.err': 'relief indisponible : portées seules',
+    'thr.h': 'Hauteur vérifiée',
+    'thr.h.v': '{v} {u} sol',
+    'thr.leg.zone': 'vu à {h} du sol, à portée de tir',
+    'thr.leg.fire': 'portée de tir',
+    'thr.leg.det': 'détection',
+    'thr.leg.route': 'route vue, à son altitude prévue',
+    'thr.lower': 'Plus bas',
+    'thr.higher': 'Plus haut',
+    'nav.thr': '⚠ Vu par {l}',
+    'nav.thr.item': '{n} sur {d}',
     'fallback': 'Fond indisponible — grille seule',
     'sec.route': 'Route',
     'sec.points': '{n} points',
@@ -2709,6 +2738,33 @@ const I18N = {
     'relief.err.net': '⚠ Relief unavailable: the tile server does not answer.',
     'relief.err.fmt': '⚠ Relief unavailable: the description received from the server cannot be read.',
     'relief.alt': 'Ground',
+    'dsp.threats': 'Threats',
+    'dsp.threats.tip': 'Firing and detection zones of hostile SAM, AAA and Radar symbols that have a system',
+    'dr.f.threat': 'System',
+    'thr.none': 'None',
+    'thr.unknown': '{id} (unknown)',
+    'thr.info.fire': 'Fire {fire} · detection {det} · {ceil} · sensor: {sensor}',
+    'thr.info.radar': 'Detection {det} · {ceil} · sensor: {sensor}',
+    'thr.ceil': 'ceiling {v}',
+    'thr.ceil.none': 'ceiling not known',
+    'thr.sensor.search': 'search radar',
+    'thr.sensor.fire-control': 'fire-control radar',
+    'thr.sensor.shooter': 'the launcher itself',
+    'cf.threat': 'System: {n}',
+    'thr.title': 'THREATS',
+    'thr.src.relief': 'DCS relief · pydcs',
+    'thr.src.none': 'no relief: ranges only',
+    'thr.src.err': 'relief unavailable: ranges only',
+    'thr.h': 'Checked height',
+    'thr.h.v': '{v} {u} AGL',
+    'thr.leg.zone': 'seen at {h} above ground, within firing range',
+    'thr.leg.fire': 'firing range',
+    'thr.leg.det': 'detection',
+    'thr.leg.route': 'route seen, at its planned altitude',
+    'thr.lower': 'Lower',
+    'thr.higher': 'Higher',
+    'nav.thr': '⚠ Seen by {l}',
+    'nav.thr.item': '{n} over {d}',
     'fallback': 'Map unavailable — grid only',
     'sec.route': 'Route',
     'sec.points': '{n} waypoints',
@@ -3221,7 +3277,7 @@ let S = defaultState();
 let sel = -1;                 /* point sélectionné (non enregistré) */
 let selR = -1;                /* point de référence sélectionné (non enregistré) */
 const KEY_DISPLAY = 'rp_display_v1';
-const DISP = { routes: 'all', refs: true, draw: true, sym: true, cf: true, diss: false, relief: false };     /* ce que le menu « Affichage » montre ; gardé dans rp_display_v1, jamais dans route_state_v1 ; routes : 'none' | 'active' | 'all' */
+const DISP = { routes: 'all', refs: true, draw: true, sym: true, cf: true, diss: false, relief: false, threats: true, thrStep: 2 };     /* ce que le menu « Affichage » montre ; gardé dans rp_display_v1, jamais dans route_state_v1 ; routes : 'none' | 'active' | 'all' */
 const ROUTES_SHOW = ['none', 'active', 'all'];
 function routeShown() { return DISP.routes !== 'none'; }
 let tapMode = 'read';         /* ce que fait un toucher sur la carte : 'read' (ouvre les fiches des calques, ne pose rien : le mode de chaque ouverture), 'wp' (pose un point), 'ref' (pose une référence), 'draw' (dessine dans un calque) ou 'ruler' (mesure sur la carte, ne pose rien) — non enregistré */
@@ -3899,8 +3955,8 @@ function cfItem(src) {
   }
   if (type === 'symbol') {
     if (typeof src.sidc !== 'string' || !CF_SIDC_RE.test(src.sidc)) return null;
-    return { id: id, type: type, name: name, lat: lat, lon: lon, sidc: src.sidc, style: cfPick(src.style, ['fill', 'line'], 'fill'), size: cfPick(src.size, ['s', 'm', 'l'], 'm'),
-      formation: str(src.formation) };
+    return Object.assign({ id: id, type: type, name: name, lat: lat, lon: lon, sidc: src.sidc, style: cfPick(src.style, ['fill', 'line'], 'fill'), size: cfPick(src.size, ['s', 'm', 'l'], 'm'),
+      formation: str(src.formation) }, (typeof src.threat === 'string' && THR_ID_RE.test(src.threat)) ? { threat: src.threat } : {});       /* « threat » : le système d'un symbole ennemi SAM, AAA ou Radar, s'il est lisible */
   }
   return { id: id, type: type, name: name, lat: lat, lon: lon, text: typeof src.text === 'string' ? src.text : '', bg: cfColor(src.bg, '#ffffff'), fg: cfColor(src.fg, '#000000'),
     size: cfPos(src.size, 40, 400), bold: src.bold === true, border: src.border === true, filled: src.filled === true };
@@ -4540,6 +4596,8 @@ function reliefBind() {
   map.on('moveend', () => { if (RE.ev) { reliefDwellStop(); reliefSchedule(); } });       /* la carte a bougé sous un pointeur immobile (molette, boutons), ou le zoom passe sous minZoom : la valeur se relit */
 }
 
+@@THREATS_BLOCK@@
+
 /* Les aérodromes du théâtre choisi, dans leur panneau (au-dessus de la grille, sous les références et la route).
    Tous les marqueurs sont portés par la couche ; le zoom décide de ce qui se dessine (classes du panneau, CSS). */
 function airfieldsOf(theatre) { return Object.prototype.hasOwnProperty.call(AIRFIELDS, theatre) ? AIRFIELDS[theatre] : null; }
@@ -4914,6 +4972,13 @@ function createMap() {
   const reliefPane = map.createPane('relief');
   reliefPane.style.zIndex = 250;
   reliefPane.style.pointerEvents = 'none';
+  /* Les menaces (lot mp-rp-menaces-couche) : les cercles et la zone vue au-dessus du relief (250), sous les noms de lieux (300) ; la route vue (le halo) au-dessus des aérodromes (395), sous les tracés (400) ; rien ne se touche */
+  const thrPane = map.createPane('threats');
+  thrPane.style.zIndex = 260;
+  thrPane.style.pointerEvents = 'none';
+  const thrRoutePane = map.createPane('thrroute');
+  thrRoutePane.style.zIndex = 398;
+  thrRoutePane.style.pointerEvents = 'none';
   /* Le canevas de la grille : au-dessus des tuiles, sous la route */
   const pane = map.createPane('mgrs');
   pane.style.zIndex = 350;
@@ -4951,6 +5016,7 @@ function createMap() {
   routeGroup = L.layerGroup().addTo(map);
   decorGroup = L.layerGroup().addTo(map);
   RL.group = L.layerGroup().addTo(map);
+  thrInit();
   map.on('move zoom viewreset resize', scheduleGrid);
   map.on('zoomend', drawRoute);
   map.on('zoomend', syncAfZoom);
@@ -5217,6 +5283,7 @@ function drawRoute() {
     mk.addTo(routeGroup);
   });
   drawDecor();
+  thrSync();       /* la route vue suit la route */
 }
 
 /* ============= TRAITS DES MINUTES, CHIFFRES ET BOÎTES DE BRANCHE ============= */
@@ -5790,6 +5857,7 @@ function drawLayers() {
   cfPointMarks = [];
   CF_LAYERS.forEach(l => { if (l.visible) l.items.forEach(it => { if (cfItemShown(l, it)) cfDrawItem(it); }); });
   cfSyncPointNames();
+  thrSync();       /* les menaces suivent les symboles (système, position, calque, affichage) */
 }
 
 /* La fiche d'un objet (popup) : son nom, puis ce que dit son type ; un point offre « → Point de référence » */
@@ -5826,6 +5894,7 @@ function cfFiche(it) {
       const camp = symFind(SYM.camps, it.sidc[1]), ech = symIsUnit(it.sidc) ? symFind(SYM.echelons, it.sidc[11]) : null;
       line('cf-f-l', [symLabel(it.sidc), ech ? ech['nom_' + CURRENT_LANG] : '', camp ? camp[CURRENT_LANG] : ''].filter(Boolean).join(' · '));
       if (hasText(it.formation)) line('cf-f-l', t('cf.formation', { f: it.formation }));
+      if (it.type === 'symbol' && typeof it.threat === 'string' && THR_BY_ID[it.threat]) line('cf-f-l', t('cf.threat', { n: thrSysName(THR_BY_ID[it.threat]) }));
     } else line('cf-f-l', t('cf.p.' + it.kind));
     line('cf-f-mgrs', toMGRS(it.lat, it.lon));
     if (it.type === 'point' && it.note) line('cf-f-l', it.note);
@@ -6747,6 +6816,7 @@ function drSymSheetHtml(it, draft) {
   }).join('') + '</div>';
   h += f(t('dr.f.symbol'), '', seg('cat', SYM.categories.map(c => ({ v: c.v, on: c.v === cat.v, label: c[lg] }))) + '<div style="height:6px"></div>' + grid);
   if (unit) h += f(t('dr.f.echelon'), '', seg('echelon', SYM.echelons.map(e => ({ v: e.v, on: it.sidc[11] === e.v, label: e[lg] }))));
+  if (!draft && side === 'H' && thrNature(it.sidc)) h += f(t('dr.f.threat'), 'dr-f-threat', thrFieldHtml(it));       /* le système : un symbole existant, ennemi, SAM, AAA ou Radar */
   h += '<div class="dr-row2">' + f(t('dr.f.designation'), 'dr-f-name', txt('dr-f-name', 'name', it.name)) +
     (unit ? f(t('dr.f.formation'), 'dr-f-formation', txt('dr-f-formation', 'formation', it.formation)) : '') + '</div></div>';
   return h;
@@ -6827,7 +6897,7 @@ function drSheetHtml(it, draft) {
 
 /* Les listes de la fiche passent par la liste du module (tbmAttach) : le <select> reste, masqué ; la fiche se reconstruit, le
    rattachement se refait sur le <select> neuf, et une liste ouverte sur l'ancien se ferme avant qu'il ne disparaisse */
-const DR_LIST_LABELS = { kind: 'dr.f.type' };
+const DR_LIST_LABELS = { kind: 'dr.f.type', threat: 'dr.f.threat' };
 function drSheetListClose() {
   const sh = $('dr-sheet');
   if (TBM.cur && sh && sh.contains(TBM.cur.sel)) tbmClose(false);
@@ -6926,6 +6996,11 @@ function drSetField(it, f, v) {
     it.closed = false;
     it.filled = it.kind === 'corridor';
     if (it.kind === 'corridor' && !(it.widthNm > 0)) it.widthNm = 5;
+  } else if (f === 'threat') {
+    if (ty !== 'symbol') return false;
+    if (v === '') delete it.threat;
+    else if (typeof v === 'string' && THR_ID_RE.test(v)) it.threat = v;
+    else return false;
   } else if (f === 'side' || f === 'style' || f === 'size' || f === 'sym' || f === 'echelon' || f === 'formation') {
     if (ty !== 'symbol') return false;
     return symSet(it, f, v);
@@ -6945,6 +7020,7 @@ function drApply(tg, f, v) {
     return;
   }
   if (it.type === 'symbol' && it.id === DR.symId) drSymRemember(it);
+  if (f === 'threat') thrInfoRefresh(it);
   persistLayers();
   drawLayers();
   drContour();
@@ -7452,7 +7528,7 @@ function renderNav() {
   S.points.forEach((p, i) => {
     if (i > 0) {
       const lg = tm.legs[i];
-      rows += '<tr class="leg"><td></td><td colspan="2">' + esc(t('nav.leg', { cap: lg.cap, spd: speedText(lg.v), ete: fmtEte(lg.sec) })) + '</td><td class="r">' + esc(fmtDist(lg.km)) + '</td></tr>';
+      rows += '<tr class="leg"><td></td><td colspan="2">' + esc(t('nav.leg', { cap: lg.cap, spd: speedText(lg.v), ete: fmtEte(lg.sec) })) + '</td><td class="r">' + esc(fmtDist(lg.km)) + '</td></tr>' + thrNavRow(i);
     }
     rows += '<tr><td class="n">' + i + '</td><td class="nm">' + esc(p.name) + '<span class="co alt">' + esc(altText(p)) + '</span><span class="co alt tm">' + esc(t('nav.t', { t: fmtElapsed(tm.el[i]) })) + '</span>' +
       (calc ? '<span class="co alt dv-leg">' + esc(t('nav.var', { v: fmtVar(declAt(p, ys)) })) + '</span>' : '') + '</td>' +
@@ -7470,6 +7546,7 @@ function renderNav() {
   $('nav-refs').innerHTML = rr;
   $('nav-refs-wrap').hidden = !S.refs.length;
   rpFoldRefresh();
+  thrSync();       /* la route vue se juge sur la route d'aujourd'hui (une altitude saisie ne passe que par ici) */
 }
 
 function renderTheatreOptions() {
@@ -7489,6 +7566,7 @@ function baseRows() {
 function syncControls() {
   $('theatre').value = S.theatre;
   syncRelief();
+  thrSync();      /* le théâtre, la langue et les unités : les menaces */
   reliefAltRender();      /* la langue et l'unité d'altitude se relisent au cartouche */
   const mark = (attr, val) => document.querySelectorAll('[' + attr + ']').forEach(b => {
     const on = b.getAttribute(attr) === val;
@@ -7862,6 +7940,7 @@ function setTapMode(m, keep) {
   }
   $('map').classList.toggle('rp-ruling', tapMode === 'ruler');
   rlRender();
+  thrBoxRender();       /* le cartouche des menaces se cache en mode Dessin et en mode Règle */
 }
 
 function syncTapControl() {
@@ -9823,6 +9902,7 @@ function cfImportGo() {
 const DSP = { open: false, panel: null, x0: 0, y0: 0 };
 const DSP_ROWS = [
   { g: '', k: 'relief', l: 'dsp.relief' },       /* la première ligne sous le titre, sans sous-titre à elle */
+  { g: '', k: 'threats', l: 'dsp.threats' },     /* les menaces : juste sous « Relief », même groupe */
   { g: 'mission', k: 'routes', l: 'dsp.routes', seg: true, n: () => String(RSET.routes.length) },
   { g: 'mission', k: 'refs', l: 'dsp.refs', n: () => String(S.refs.length) },
   { g: 'layers', k: 'draw', l: 'dsp.draw' },
@@ -9841,6 +9921,7 @@ function loadDisplay() {
     if (o && typeof o === 'object' && !Array.isArray(o)) {
       Object.keys(DISP).forEach(k => { if (k !== 'routes' && typeof o[k] === 'boolean') DISP[k] = o[k]; });
       /* « routes » remplace « route » : un profil d'avant (route: false) s'ouvre sur « Aucune », (route: true) sur « Toutes » */
+      if (Number.isInteger(o.thrStep) && o.thrStep >= 0 && o.thrStep <= 99) DISP.thrStep = o.thrStep;      /* le rang de la hauteur vérifiée (menaces) */
       if (ROUTES_SHOW.indexOf(o.routes) !== -1) DISP.routes = o.routes;
       else if (o.route === false) DISP.routes = 'none';
       else if (o.route === true) DISP.routes = 'all';
@@ -9848,7 +9929,7 @@ function loadDisplay() {
   } catch (e) { /* valeurs par défaut */ }
 }
 function saveDisplay() {
-  try { localStorage.setItem(KEY_DISPLAY, JSON.stringify({ routes: DISP.routes, refs: DISP.refs, draw: DISP.draw, sym: DISP.sym, cf: DISP.cf, diss: DISP.diss, relief: DISP.relief })); } catch (e) { /* stockage indisponible */ }
+  try { localStorage.setItem(KEY_DISPLAY, JSON.stringify({ routes: DISP.routes, refs: DISP.refs, draw: DISP.draw, sym: DISP.sym, cf: DISP.cf, diss: DISP.diss, relief: DISP.relief, threats: DISP.threats, thrStep: DISP.thrStep })); } catch (e) { /* stockage indisponible */ }
 }
 
 /* L'état d'une ligne : cochée, grisée, info-bulle */
@@ -9857,6 +9938,7 @@ function dspState(k) {
     const has = reliefTheatre(S.theatre);
     return { on: has && !!DISP.relief, off: !has, tip: t(has ? 'dsp.relief.tip' : 'dsp.relief.off') };
   }
+  if (k === 'threats') return { on: !!DISP.threats, off: false, tip: t('dsp.threats.tip') };
   if (k === 'grid') return { on: !!S.ui.grid, off: false, tip: t('tb.grid') };
   if (k === 'places') return { on: !!S.ui.places, off: false, tip: t('tb.places.tip') };
   if (k === 'towns') {
@@ -9873,7 +9955,7 @@ function dspState(k) {
 /* Le point ambre : au moins un réglage du panneau n'est pas à sa valeur par défaut (fond Topo, km et m, tout affiché, sauf Lieux masqué) */
 function dspChanged() {
   return !(DISP.routes === 'all' && DISP.refs && DISP.draw && DISP.sym && DISP.cf && S.ui.grid && S.ui.towns && S.ui.airfields) || !!S.ui.places
-    || S.ui.layer !== 'topo' || S.units.distance !== 'km' || S.units.altitude !== 'm' || !!DISP.relief;
+    || S.ui.layer !== 'topo' || S.units.distance !== 'km' || S.units.altitude !== 'm' || !!DISP.relief || !DISP.threats;
 }
 
 function dspSync() {
@@ -10132,6 +10214,10 @@ function dspToggle(k) {
     DISP.relief = !DISP.relief;
     saveDisplay();
     syncRelief();
+  } else if (k === 'threats') {
+    DISP.threats = !DISP.threats;
+    saveDisplay();
+    thrSync();
   } else if (k === 'grid') {
     S.ui.grid = !S.ui.grid;
     persistState();
@@ -10436,6 +10522,7 @@ function expOpen() {
   $('export-layer').hidden = false;
   expSyncTexts();
   expLayout();
+  thrBoxRender();
 }
 
 function expClose() {
@@ -10446,6 +10533,7 @@ function expClose() {
   $('export-layer').classList.remove('busy');
   $('exp-go').disabled = false;
   setTapMode(EXP.prevTap, true);
+  thrBoxRender();
 }
 
 function expSetOrient(o) {
@@ -10456,7 +10544,7 @@ function expSetOrient(o) {
 }
 
 /* Les groupes qui possèdent des tracés : après le rendu, un tracé que son groupe a détruit entre-temps ne revient pas */
-function expOwners() { return [routeGroup, decorGroup, cfGroup, refGroup, twLayer, othersGroup].filter(g => !!g); }
+function expOwners() { return [routeGroup, decorGroup, cfGroup, refGroup, twLayer, othersGroup, THR.circ, THR.halo].filter(g => !!g); }
 
 /* Chaque tracé de la carte (hors panes d'édition et de recherche) passe au rendu canevas, un rendu par pane, par retrait puis ajout ;
    l'ordre de création est gardé, donc l'ordre de superposition aussi */
@@ -10559,7 +10647,7 @@ function expShoot(rect) {
       const c = el.classList;
       return c.contains('leaflet-control-container') || c.contains('leaflet-drawedit-pane') || c.contains('leaflet-ring-pane') ||
         c.contains('leaflet-popup-pane') || c.contains('ins-icon') || c.contains('sr-panel') ||
-        el.id === 'export-layer' || el.id === 'export-frame' || el.id === 'export-bar' || el.id === 'rp-alt' || el.id === 'rp-alt-x';
+        el.id === 'export-layer' || el.id === 'export-frame' || el.id === 'export-bar' || el.id === 'rp-alt' || el.id === 'rp-alt-x' || el.id === 'rp-thr';
     }
   });
 }
@@ -10999,7 +11087,7 @@ function init() {
   window.__RP = { map: map, get decorGroup() { return decorGroup; }, timing: timing, get S() { return S; }, drawGrid: drawGrid, setBase: setBase, get baseLayers() { return baseLayers; }, get inFallback() { return inFallback; },
     get placesLayer() { return placesLayer; }, get reliefLayer() { return RE.layer; }, reliefAltAt: reliefAltAt, get airfieldLayer() { return afLayer; }, get tapMode() { return tapMode; },
     get townsLayer() { return twLayer; }, townsReport: townsReport, get search() { return SR; },
-    get layers() { return CF_LAYERS; }, get layersGroup() { return cfGroup; }, get routes() { syncActive(); return RSET; }, get othersGroup() { return othersGroup; }, get draw() { return DR; }, get split() { return SP; }, get ruler() { return RL; } };
+    get layers() { return CF_LAYERS; }, get layersGroup() { return cfGroup; }, get thr() { return THR; }, thrCalc: thrCalc, thrProbe: thrProbe, thrRank: thrRank, thrTop: thrTop, thrH: thrH, get routes() { syncActive(); return RSET; }, get othersGroup() { return othersGroup; }, get draw() { return DR; }, get split() { return SP; }, get ruler() { return RL; } };
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
@@ -11016,6 +11104,7 @@ def build():
     js = JS.replace('__AIRFIELDS__', airfields_js).replace('__TOWNS__', towns_js)
     js = js.replace('@@GEO_BLOCK@@\n', GEO_BLOCK).replace('@@READNUM_BLOCK@@\n', READNUM_BLOCK).replace('@@MAGVAR_BLOCK@@\n', build_magvar_block()).replace('@@DISS_BLOCK@@\n', build_diss_block()).replace('@@PUBLIC_HOST_BLOCK@@\n', build_public_host_block()).replace('@@ROUTE_PACK_BLOCK@@\n', build_route_pack_block()).replace('@@ROUTE_THEATRE_BLOCK@@\n', build_route_theatre_block()).replace('@@ROUTE_WRITE_BLOCK@@\n', build_route_write_block()).replace('@@GROUP_STORE_BLOCK@@\n', build_group_store_block()).replace('@@RADIO_BLOCK@@\n', build_radio_block()).replace('@@RADIO_BANDS_BLOCK@@\n', build_radio_bands_block()).replace('@@AIRCRAFT_TYPES_BLOCK@@\n', build_aircraft_types_block()).replace('@@IMPORT_BLOCK@@\n', build_import_block() + build_mission_line_block()).replace('@@MESSAGES_BLOCK@@\n', build_messages_block() + build_ui_block())
     js = js.replace('@@TBM_JS@@\n', build_tbm_block())
+    js = js.replace('@@THREATS_BLOCK@@\n', threats_block.build_block())
     if '@@' in js:
         raise SystemExit("[ERREUR] Marqueur @@ non remplacé dans le script")
     lib = A['lib_leaflet']
@@ -11031,7 +11120,7 @@ def build():
 
     html = HTML.replace('<body data-theme="cw-nato">\n', '<body data-theme="cw-nato">\n' + SHELL_ONLY_TAG, 1)
     html = brand_tab_icons(html)
-    html = html.replace('__CSS__', CSS.replace('@@MESSAGES_CSS@@\n', build_messages_css() + build_ui_css()).replace('@@TBM_CSS@@\n', build_tbm_css()) + build_import_css() + build_mission_line_css() + CONTRAST_CSS)
+    html = html.replace('__CSS__', CSS.replace('@@MESSAGES_CSS@@\n', build_messages_css() + build_ui_css()).replace('@@TBM_CSS@@\n', build_tbm_css()) + build_import_css() + build_mission_line_css() + threats_block.CSS + CONTRAST_CSS)
     html = html.replace('__IMPORT_HTML__\n', build_import_html())
     html = html.replace('__LIB_LEAFLET_CSS__', A['lib_leaflet_css'])
     html = html.replace('__LIB_LEAFLET__', lib)
@@ -11052,7 +11141,7 @@ def build():
     print("[OK] Route Planner : réglage DISS-15 (Masquer / Afficher, libellés FR et EN, gardé dans rp_display_v1)")
     # Le relief de DCS : la table des théâtres, le panneau, la ligne du menu (la première, sans sous-titre) et ses textes FR et EN, le réglage d'écran
     if ("const RELIEF_THEATRES = ['Caucasus', 'GermanyCW', 'Syria'];" not in js or "reliefPane.style.zIndex = 250;" not in js
-            or "{ g: '', k: 'relief', l: 'dsp.relief' }," not in js or "relief: DISP.relief })" not in js or '|| !!DISP.relief;' not in js
+            or "{ g: '', k: 'relief', l: 'dsp.relief' }," not in js or "relief: DISP.relief, threats: DISP.threats, thrStep: DISP.thrStep })" not in js or '|| !!DISP.relief || !DISP.threats;' not in js
             or len(re.findall(r"'attr\.relief': '", js)) != 2 or len(re.findall(r"'relief\.err\.(?:net|fmt)': '\u26a0 ", js)) != 4
             or js.index("{ g: '', k: 'relief'") > js.index("{ g: 'mission', k: 'routes'")
             or "createImageBitmap(blob, { colorSpaceConversion: 'none', premultiplyAlpha: 'none' })" not in js or "j.tileSize !== 256" not in js

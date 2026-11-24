@@ -1692,10 +1692,10 @@ html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-
 
 /* ---------- le mode Dessin et la séparation carte / panneau (lot rp-v1.6.0) : les valeurs de la maquette, une pour une ---------- */
 .rp-drawing .leaflet-overlay-pane, .rp-drawing .leaflet-marker-pane, .rp-drawing .leaflet-refs-pane,
-.rp-drawing .leaflet-legticks-pane, .rp-drawing .leaflet-legnums-pane, .rp-drawing .leaflet-legboxes-pane {
+.rp-drawing .leaflet-legticks-pane, .rp-drawing .leaflet-legnums-pane, .rp-drawing .leaflet-legboxes-pane, .rp-drawing .leaflet-threats-pane, .rp-drawing .leaflet-thrroute-pane {
   opacity: .32; pointer-events: none !important; }
 .rp-drawing .leaflet-overlay-pane *, .rp-drawing .leaflet-marker-pane *, .rp-drawing .leaflet-refs-pane *,
-.rp-drawing .leaflet-legnums-pane *, .rp-drawing .leaflet-legboxes-pane *,
+.rp-drawing .leaflet-legnums-pane *, .rp-drawing .leaflet-legboxes-pane *, .rp-drawing .leaflet-threats-pane *, .rp-drawing .leaflet-thrroute-pane *,
 .rp-drawing .leaflet-airfields-pane *, .rp-drawing .leaflet-towns-pane * { pointer-events: none !important; }
 .leaflet-drawedit-pane { z-index: 640; }
 
@@ -1707,10 +1707,10 @@ html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-
    il arrive à la carte, qui l'aimante (rlSnap) ; rien ne se glisse en mode Règle */
 .rp-ruling .leaflet-marker-pane, .rp-ruling .leaflet-refs-pane, .rp-ruling .leaflet-legticks-pane, .rp-ruling .leaflet-legnums-pane,
 .rp-ruling .leaflet-legboxes-pane, .rp-ruling .leaflet-airfields-pane, .rp-ruling .leaflet-towns-pane, .rp-ruling .leaflet-layers-pane,
-.rp-ruling .leaflet-overlay-pane { pointer-events: none !important; }
+.rp-ruling .leaflet-threats-pane, .rp-ruling .leaflet-thrroute-pane, .rp-ruling .leaflet-overlay-pane { pointer-events: none !important; }
 .rp-ruling .leaflet-marker-pane *, .rp-ruling .leaflet-refs-pane *, .rp-ruling .leaflet-legticks-pane *, .rp-ruling .leaflet-legnums-pane *,
 .rp-ruling .leaflet-legboxes-pane *, .rp-ruling .leaflet-airfields-pane *, .rp-ruling .leaflet-towns-pane *, .rp-ruling .leaflet-layers-pane *,
-.rp-ruling .leaflet-overlay-pane * { pointer-events: none !important; }
+.rp-ruling .leaflet-threats-pane *, .rp-ruling .leaflet-thrroute-pane *, .rp-ruling .leaflet-overlay-pane * { pointer-events: none !important; }
 .rp-ruling .ins-icon { visibility: hidden; }
 #map.rp-ruling, #map.rp-ruling.leaflet-grab, #map.rp-ruling.leaflet-dragging.leaflet-grab { cursor: crosshair; }
 .leaflet-ruler-pane { z-index: 660; }
@@ -2125,6 +2125,37 @@ body.mp-ml-on { --mp-top: 86px; }
 .mp-ml > .mp-ml-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
 @media print { .mp-ml { display: none !important; } }
 /* ===== FIN DE LA FEUILLE DE LA LIGNE ===== */
+
+/* la couche des menaces (lot mp-rp-menaces-couche) */
+#rp-thr { position: absolute; left: 10px; bottom: 28px; z-index: 500; box-sizing: border-box; width: 360px; max-width: calc(100% - 20px); padding: 7px 10px 8px;
+  font: 500 12px/1.3 var(--f-ui); letter-spacing: .03em; background: rgba(26,28,20,.92); color: #e8dcb8; border: 1px solid var(--amber); border-radius: 2px; }
+#rp-thr[hidden] { display: none; }
+#rp-thr .thr-h, #rp-thr .thr-r { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+#rp-thr .thr-t { color: var(--amber); font-weight: 700; letter-spacing: .16em; font-size: 12px; }
+#rp-thr .thr-src { font-size: 11px; text-align: right; }
+#rp-thr .thr-r { margin-top: 6px; }
+#rp-thr .thr-r label { font-size: 12px; }
+#rp-thr .thr-r b { font-weight: 700; font-size: 13px; }
+#rp-thr input[type="range"] { display: block; width: 100%; height: 22px; margin: 2px 0 0; padding: 0; accent-color: var(--amber); cursor: pointer; }
+#rp-thr .thr-ticks { position: relative; height: 14px; margin: 0 0 6px; }
+#rp-thr .thr-tk { position: absolute; top: 0; transform: translateX(-50%); font-size: 10px; line-height: 14px; white-space: nowrap; }
+#rp-thr .thr-leg { display: flex; flex-wrap: wrap; gap: 3px 14px; font-size: 11px; line-height: 15px; }
+#rp-thr .thr-leg span { display: inline-flex; align-items: center; gap: 6px; }
+#rp-thr .thr-sw { display: inline-block; flex: none; width: 18px; height: 10px; box-sizing: border-box; }
+#rp-thr .thr-sw.zone { background: rgba(200,16,46,.43); border: 1px solid #c8102e; }
+#rp-thr .thr-sw.fire { height: 0; border-top: 2px solid #c8102e; }
+#rp-thr .thr-sw.det { height: 0; border-top: 2px dashed #c8102e; }
+#rp-thr .thr-sw.halo { height: 7px; background: #ffd400; }
+#rp-thr.thr-pill { display: flex; align-items: center; gap: 8px; width: auto; height: 44px; padding: 0 0 0 10px; bottom: 10px; left: 8px; }
+#rp-thr.thr-pill .thr-v { font-weight: 700; font-size: 13px; white-space: nowrap; }
+#rp-thr.thr-pill .thr-src { font-size: 11px; }
+#rp-thr .thr-b { flex: none; box-sizing: border-box; width: 44px; height: 44px; margin: 0; padding: 0; border: 0; border-left: 1px solid rgba(232,220,184,.35); border-radius: 0; background: transparent;
+  color: #e8dcb8; font: 700 24px/1 var(--f-ui); cursor: pointer; touch-action: manipulation; }
+#rp-thr .thr-b:disabled { opacity: .4; cursor: default; }
+.leaflet-threats-pane, .leaflet-thrroute-pane { pointer-events: none; }
+table.nav tr.thr td { background: rgba(158,27,20,.07); color: #9e1b14; font-family: var(--f-ui); font-weight: 600; font-size: 12px; letter-spacing: .3px; white-space: normal; overflow-wrap: anywhere; }
+.dr-thr-info { margin-top: 4px; font-size: 12px; line-height: 1.35; color: var(--khaki-light); }
+.dr-thr-info:empty { display: none; }
 
 /* MP-20 begin */
 /* Contrastes (texte sous 18 px, 4,5 : 1 au moins) : couleur du texte seule, la palette commune ne bouge pas. */
@@ -2735,7 +2766,7 @@ function symSet(it, f, v) {
   if (f === 'style') { if (v !== 'fill' && v !== 'line') return false; it.style = v; return true; }
   if (f === 'size') { if (!symFind(SYM.tailles, v)) return false; it.size = v; return true; }
   if (f === 'formation') { if (!symIsUnit(it.sidc)) return false; it.formation = v; return true; }
-  if (f === 'side') { if (!symFind(SYM.camps, v)) return false; a[1] = v; it.sidc = a.join(''); return true; }
+  if (f === 'side') { if (!symFind(SYM.camps, v)) return false; a[1] = v; it.sidc = a.join(''); if (v !== 'H') delete it.threat; return true; }
   if (f === 'echelon') {
     if (!symIsUnit(it.sidc) || !symFind(SYM.echelons, v)) return false;
     a[11] = v;
@@ -2751,6 +2782,7 @@ function symSet(it, f, v) {
     if (!(was && now)) a[11] = '-';
     if (!now) it.formation = '';
     it.sidc = a.join('');
+    if (it.threat !== undefined) { const nat = thrNature(it.sidc), sys = THR_BY_ID[it.threat]; if (!nat || (sys && sys.kind !== nat)) delete it.threat; }       /* le système suit la nature du symbole */
     return true;
   }
   return false;
@@ -2957,6 +2989,33 @@ const I18N = {
     'relief.err.net': '⚠ Relief indisponible : le serveur des tuiles ne répond pas.',
     'relief.err.fmt': '⚠ Relief indisponible : la description reçue du serveur est illisible.',
     'relief.alt': 'Alt. sol',
+    'dsp.threats': 'Menaces',
+    'dsp.threats.tip': 'Zones de tir et de détection des symboles ennemis SAM, AAA et Radar qui ont un système',
+    'dr.f.threat': 'Système',
+    'thr.none': 'Aucun',
+    'thr.unknown': '{id} (inconnu)',
+    'thr.info.fire': 'Tir {fire} · détection {det} · {ceil} · capteur : {sensor}',
+    'thr.info.radar': 'Détection {det} · {ceil} · capteur : {sensor}',
+    'thr.ceil': 'plafond {v}',
+    'thr.ceil.none': 'plafond non connu',
+    'thr.sensor.search': 'radar de veille',
+    'thr.sensor.fire-control': 'radar de conduite de tir',
+    'thr.sensor.shooter': 'le tireur lui-même',
+    'cf.threat': 'Système : {n}',
+    'thr.title': 'MENACES',
+    'thr.src.relief': 'relief DCS · pydcs',
+    'thr.src.none': 'sans relief : portées seules',
+    'thr.src.err': 'relief indisponible : portées seules',
+    'thr.h': 'Hauteur vérifiée',
+    'thr.h.v': '{v} {u} sol',
+    'thr.leg.zone': 'vu à {h} du sol, à portée de tir',
+    'thr.leg.fire': 'portée de tir',
+    'thr.leg.det': 'détection',
+    'thr.leg.route': 'route vue, à son altitude prévue',
+    'thr.lower': 'Plus bas',
+    'thr.higher': 'Plus haut',
+    'nav.thr': '⚠ Vu par {l}',
+    'nav.thr.item': '{n} sur {d}',
     'fallback': 'Fond indisponible — grille seule',
     'sec.route': 'Route',
     'sec.points': '{n} points',
@@ -3498,6 +3557,33 @@ const I18N = {
     'relief.err.net': '⚠ Relief unavailable: the tile server does not answer.',
     'relief.err.fmt': '⚠ Relief unavailable: the description received from the server cannot be read.',
     'relief.alt': 'Ground',
+    'dsp.threats': 'Threats',
+    'dsp.threats.tip': 'Firing and detection zones of hostile SAM, AAA and Radar symbols that have a system',
+    'dr.f.threat': 'System',
+    'thr.none': 'None',
+    'thr.unknown': '{id} (unknown)',
+    'thr.info.fire': 'Fire {fire} · detection {det} · {ceil} · sensor: {sensor}',
+    'thr.info.radar': 'Detection {det} · {ceil} · sensor: {sensor}',
+    'thr.ceil': 'ceiling {v}',
+    'thr.ceil.none': 'ceiling not known',
+    'thr.sensor.search': 'search radar',
+    'thr.sensor.fire-control': 'fire-control radar',
+    'thr.sensor.shooter': 'the launcher itself',
+    'cf.threat': 'System: {n}',
+    'thr.title': 'THREATS',
+    'thr.src.relief': 'DCS relief · pydcs',
+    'thr.src.none': 'no relief: ranges only',
+    'thr.src.err': 'relief unavailable: ranges only',
+    'thr.h': 'Checked height',
+    'thr.h.v': '{v} {u} AGL',
+    'thr.leg.zone': 'seen at {h} above ground, within firing range',
+    'thr.leg.fire': 'firing range',
+    'thr.leg.det': 'detection',
+    'thr.leg.route': 'route seen, at its planned altitude',
+    'thr.lower': 'Lower',
+    'thr.higher': 'Higher',
+    'nav.thr': '⚠ Seen by {l}',
+    'nav.thr.item': '{n} over {d}',
     'fallback': 'Map unavailable — grid only',
     'sec.route': 'Route',
     'sec.points': '{n} waypoints',
@@ -5424,7 +5510,7 @@ let S = defaultState();
 let sel = -1;                 /* point sélectionné (non enregistré) */
 let selR = -1;                /* point de référence sélectionné (non enregistré) */
 const KEY_DISPLAY = 'rp_display_v1';
-const DISP = { routes: 'all', refs: true, draw: true, sym: true, cf: true, diss: false, relief: false };     /* ce que le menu « Affichage » montre ; gardé dans rp_display_v1, jamais dans route_state_v1 ; routes : 'none' | 'active' | 'all' */
+const DISP = { routes: 'all', refs: true, draw: true, sym: true, cf: true, diss: false, relief: false, threats: true, thrStep: 2 };     /* ce que le menu « Affichage » montre ; gardé dans rp_display_v1, jamais dans route_state_v1 ; routes : 'none' | 'active' | 'all' */
 const ROUTES_SHOW = ['none', 'active', 'all'];
 function routeShown() { return DISP.routes !== 'none'; }
 let tapMode = 'read';         /* ce que fait un toucher sur la carte : 'read' (ouvre les fiches des calques, ne pose rien : le mode de chaque ouverture), 'wp' (pose un point), 'ref' (pose une référence), 'draw' (dessine dans un calque) ou 'ruler' (mesure sur la carte, ne pose rien) — non enregistré */
@@ -6378,8 +6464,8 @@ function cfItem(src) {
   }
   if (type === 'symbol') {
     if (typeof src.sidc !== 'string' || !CF_SIDC_RE.test(src.sidc)) return null;
-    return { id: id, type: type, name: name, lat: lat, lon: lon, sidc: src.sidc, style: cfPick(src.style, ['fill', 'line'], 'fill'), size: cfPick(src.size, ['s', 'm', 'l'], 'm'),
-      formation: str(src.formation) };
+    return Object.assign({ id: id, type: type, name: name, lat: lat, lon: lon, sidc: src.sidc, style: cfPick(src.style, ['fill', 'line'], 'fill'), size: cfPick(src.size, ['s', 'm', 'l'], 'm'),
+      formation: str(src.formation) }, (typeof src.threat === 'string' && THR_ID_RE.test(src.threat)) ? { threat: src.threat } : {});       /* « threat » : le système d'un symbole ennemi SAM, AAA ou Radar, s'il est lisible */
   }
   return { id: id, type: type, name: name, lat: lat, lon: lon, text: typeof src.text === 'string' ? src.text : '', bg: cfColor(src.bg, '#ffffff'), fg: cfColor(src.fg, '#000000'),
     size: cfPos(src.size, 40, 400), bold: src.bold === true, border: src.border === true, filled: src.filled === true };
@@ -7019,6 +7105,602 @@ function reliefBind() {
   map.on('moveend', () => { if (RE.ev) { reliefDwellStop(); reliefSchedule(); } });       /* la carte a bougé sous un pointeur immobile (molette, boutons), ou le zoom passe sous minZoom : la valeur se relit */
 }
 
+const THREATS = {"sensor_height_m":{"search":10,"fire-control":5,"shooter":2},"systems":[{"id":"sa-2","name_fr":"SA-2 S-75 Guideline","name_en":"SA-2 S-75 Guideline","kind":"sam","sensor":"fire-control","fire_m":43000,"detect_m":160000,"ceiling_m":25000},{"id":"sa-3","name_fr":"SA-3 S-125 Goa","name_en":"SA-3 S-125 Goa","kind":"sam","sensor":"fire-control","fire_m":18000,"detect_m":160000,"ceiling_m":20000},{"id":"sa-5","name_fr":"SA-5 S-200 Gammon","name_en":"SA-5 S-200 Gammon","kind":"sam","sensor":"fire-control","fire_m":255000,"detect_m":400000,"ceiling_m":30000},{"id":"sa-6","name_fr":"SA-6 Kub Gainful","name_en":"SA-6 Kub Gainful","kind":"sam","sensor":"fire-control","fire_m":25000,"detect_m":70000,"ceiling_m":8500},{"id":"sa-8","name_fr":"SA-8 Osa Gecko","name_en":"SA-8 Osa Gecko","kind":"sam","sensor":"fire-control","fire_m":10300,"detect_m":30000,"ceiling_m":5100},{"id":"sa-10","name_fr":"SA-10 S-300PS Grumble","name_en":"SA-10 S-300PS Grumble","kind":"sam","sensor":"fire-control","fire_m":120000,"detect_m":160000,"ceiling_m":45000},{"id":"sa-11","name_fr":"SA-11 Buk Gadfly","name_en":"SA-11 Buk Gadfly","kind":"sam","sensor":"fire-control","fire_m":50000,"detect_m":100000,"ceiling_m":14000},{"id":"sa-15","name_fr":"SA-15 Tor Gauntlet","name_en":"SA-15 Tor Gauntlet","kind":"sam","sensor":"fire-control","fire_m":12000,"detect_m":25000,"ceiling_m":12000},{"id":"sa-15-m2","name_fr":"SA-15 Tor M2 Gauntlet","name_en":"SA-15 Tor M2 Gauntlet","kind":"sam","sensor":"fire-control","fire_m":16000,"detect_m":32000,"ceiling_m":null},{"id":"sa-19","name_fr":"SA-19 Tunguska Grison","name_en":"SA-19 Tunguska Grison","kind":"sam","sensor":"fire-control","fire_m":8000,"detect_m":18000,"ceiling_m":3600},{"id":"sa-22","name_fr":"SA-22 Pantsir-S1 Greyhound","name_en":"SA-22 Pantsir-S1 Greyhound","kind":"sam","sensor":"fire-control","fire_m":20000,"detect_m":36000,"ceiling_m":10000},{"id":"hawk","name_fr":"MIM-23 Hawk","name_en":"MIM-23 Hawk","kind":"sam","sensor":"fire-control","fire_m":45000,"detect_m":90000,"ceiling_m":14000},{"id":"patriot","name_fr":"MIM-104 Patriot","name_en":"MIM-104 Patriot","kind":"sam","sensor":"fire-control","fire_m":100000,"detect_m":160000,"ceiling_m":25000},{"id":"nasams","name_fr":"NASAMS","name_en":"NASAMS","kind":"sam","sensor":"fire-control","fire_m":15000,"detect_m":50000,"ceiling_m":21000},{"id":"iris-t-slm","name_fr":"IRIS-T SLM","name_en":"IRIS-T SLM","kind":"sam","sensor":"fire-control","fire_m":40000,"detect_m":250000,"ceiling_m":6000},{"id":"hq-7","name_fr":"HQ-7","name_en":"HQ-7","kind":"sam","sensor":"fire-control","fire_m":15000,"detect_m":30000,"ceiling_m":6000},{"id":"roland","name_fr":"Roland","name_en":"Roland","kind":"sam","sensor":"fire-control","fire_m":8000,"detect_m":35000,"ceiling_m":6000},{"id":"rapier","name_fr":"Rapier","name_en":"Rapier","kind":"sam","sensor":"fire-control","fire_m":6800,"detect_m":30000,"ceiling_m":3000},{"id":"sa-9","name_fr":"SA-9 Strela-1 Gaskin","name_en":"SA-9 Strela-1 Gaskin","kind":"sam","sensor":"shooter","fire_m":4200,"detect_m":5000,"ceiling_m":3600},{"id":"sa-13","name_fr":"SA-13 Strela-10 Gopher","name_en":"SA-13 Strela-10 Gopher","kind":"sam","sensor":"shooter","fire_m":5000,"detect_m":8000,"ceiling_m":3600},{"id":"chaparral","name_fr":"M48 Chaparral","name_en":"M48 Chaparral","kind":"sam","sensor":"shooter","fire_m":8500,"detect_m":10000,"ceiling_m":null},{"id":"linebacker","name_fr":"M6 Linebacker","name_en":"M6 Linebacker","kind":"sam","sensor":"shooter","fire_m":4500,"detect_m":8000,"ceiling_m":null},{"id":"avenger","name_fr":"M1097 Avenger","name_en":"M1097 Avenger","kind":"sam","sensor":"shooter","fire_m":4500,"detect_m":5200,"ceiling_m":3600},{"id":"stinger","name_fr":"Stinger (MANPADS)","name_en":"Stinger (MANPADS)","kind":"sam","sensor":"shooter","fire_m":4500,"detect_m":5000,"ceiling_m":null},{"id":"igla","name_fr":"SA-18 Igla Grouse (MANPADS)","name_en":"SA-18 Igla Grouse (MANPADS)","kind":"sam","sensor":"shooter","fire_m":5200,"detect_m":5000,"ceiling_m":null},{"id":"igla-s","name_fr":"SA-18 Igla-S Grouse (MANPADS)","name_en":"SA-18 Igla-S Grouse (MANPADS)","kind":"sam","sensor":"shooter","fire_m":5200,"detect_m":5000,"ceiling_m":null},{"id":"zsu-23-4","name_fr":"ZSU-23-4 Shilka","name_en":"ZSU-23-4 Shilka","kind":"aaa","sensor":"shooter","fire_m":2500,"detect_m":5000,"ceiling_m":2000},{"id":"zu-23","name_fr":"ZU-23","name_en":"ZU-23","kind":"aaa","sensor":"shooter","fire_m":2500,"detect_m":5000,"ceiling_m":3000},{"id":"zsu-57-2","name_fr":"ZSU-57-2","name_en":"ZSU-57-2","kind":"aaa","sensor":"shooter","fire_m":7000,"detect_m":5000,"ceiling_m":null},{"id":"s-60","name_fr":"S-60 57 mm","name_en":"S-60 57 mm","kind":"aaa","sensor":"shooter","fire_m":6000,"detect_m":55000,"ceiling_m":3000},{"id":"ks-19","name_fr":"KS-19 100 mm","name_en":"KS-19 100 mm","kind":"aaa","sensor":"shooter","fire_m":20000,"detect_m":55000,"ceiling_m":null},{"id":"gepard","name_fr":"Gepard","name_en":"Gepard","kind":"aaa","sensor":"shooter","fire_m":4000,"detect_m":15000,"ceiling_m":3000},{"id":"vulcan","name_fr":"M163 Vulcan","name_en":"M163 Vulcan","kind":"aaa","sensor":"shooter","fire_m":2000,"detect_m":5000,"ceiling_m":1500},{"id":"c-ram","name_fr":"C-RAM Phalanx","name_en":"C-RAM Phalanx","kind":"aaa","sensor":"shooter","fire_m":2000,"detect_m":10000,"ceiling_m":1500},{"id":"bofors-40","name_fr":"Bofors 40 mm","name_en":"Bofors 40 mm","kind":"aaa","sensor":"shooter","fire_m":2000,"detect_m":0,"ceiling_m":3000},{"id":"flak-38","name_fr":"Flak 38 20 mm","name_en":"Flak 38 20 mm","kind":"aaa","sensor":"shooter","fire_m":2500,"detect_m":0,"ceiling_m":3000},{"id":"flak-30","name_fr":"Flak 30 20 mm","name_en":"Flak 30 20 mm","kind":"aaa","sensor":"shooter","fire_m":2500,"detect_m":0,"ceiling_m":null},{"id":"flak-88","name_fr":"Flak 8,8 cm","name_en":"Flak 8.8 cm","kind":"aaa","sensor":"shooter","fire_m":5000,"detect_m":30000,"ceiling_m":null},{"id":"qf-3-7","name_fr":"QF 3.7 inch","name_en":"QF 3.7 inch","kind":"aaa","sensor":"shooter","fire_m":9000,"detect_m":30000,"ceiling_m":null},{"id":"m1-37mm","name_fr":"M1 37 mm","name_en":"M1 37 mm","kind":"aaa","sensor":"shooter","fire_m":5700,"detect_m":0,"ceiling_m":null},{"id":"m45","name_fr":"M45 Quadmount 12.7 mm","name_en":"M45 Quadmount 12.7 mm","kind":"aaa","sensor":"shooter","fire_m":1500,"detect_m":0,"ceiling_m":null},{"id":"type-3-80mm","name_fr":"Type 3 80 mm","name_en":"Type 3 80 mm","kind":"aaa","sensor":"shooter","fire_m":3200,"detect_m":10000,"ceiling_m":null},{"id":"type-88-75mm","name_fr":"Type 88 75 mm","name_en":"Type 88 75 mm","kind":"aaa","sensor":"shooter","fire_m":3500,"detect_m":10000,"ceiling_m":null},{"id":"type-96-25mm","name_fr":"Type 96 / 94 25 mm","name_en":"Type 96 / 94 25 mm","kind":"aaa","sensor":"shooter","fire_m":3500,"detect_m":10000,"ceiling_m":null},{"id":"1l13","name_fr":"1L13 Nebo Box Spring","name_en":"1L13 Nebo Box Spring","kind":"radar","sensor":"search","fire_m":0,"detect_m":300000,"ceiling_m":20000},{"id":"55g6","name_fr":"55G6 Nebo Tall Rack","name_en":"55G6 Nebo Tall Rack","kind":"radar","sensor":"search","fire_m":0,"detect_m":400000,"ceiling_m":null},{"id":"fps-117","name_fr":"AN/FPS-117","name_en":"AN/FPS-117","kind":"radar","sensor":"search","fire_m":0,"detect_m":463000,"ceiling_m":null},{"id":"p-19","name_fr":"P-19 Flat Face","name_en":"P-19 Flat Face","kind":"radar","sensor":"search","fire_m":0,"detect_m":160000,"ceiling_m":25000},{"id":"p-14","name_fr":"P-14 Tall King","name_en":"P-14 Tall King","kind":"radar","sensor":"search","fire_m":0,"detect_m":400000,"ceiling_m":null},{"id":"big-bird","name_fr":"64N6E Big Bird","name_en":"64N6E Big Bird","kind":"radar","sensor":"search","fire_m":0,"detect_m":160000,"ceiling_m":45000},{"id":"clam-shell","name_fr":"40B6MD Clam Shell","name_en":"40B6MD Clam Shell","kind":"radar","sensor":"search","fire_m":0,"detect_m":60000,"ceiling_m":45000},{"id":"tin-shield","name_fr":"19Zh6 Tin Shield","name_en":"19Zh6 Tin Shield","kind":"radar","sensor":"search","fire_m":0,"detect_m":150000,"ceiling_m":45000},{"id":"snow-drift","name_fr":"9S18 Snow Drift","name_en":"9S18 Snow Drift","kind":"radar","sensor":"search","fire_m":0,"detect_m":100000,"ceiling_m":14000},{"id":"dog-ear","name_fr":"Dog Ear","name_en":"Dog Ear","kind":"radar","sensor":"search","fire_m":0,"detect_m":35000,"ceiling_m":8000},{"id":"fire-can","name_fr":"SON-9 Fire Can","name_en":"SON-9 Fire Can","kind":"radar","sensor":"search","fire_m":0,"detect_m":55000,"ceiling_m":2000},{"id":"freya","name_fr":"FuMG 401 Freya","name_en":"FuMG 401 Freya","kind":"radar","sensor":"search","fire_m":0,"detect_m":160000,"ceiling_m":null},{"id":"wurzburg","name_fr":"FuSe 65 Würzburg-Riese","name_en":"FuSe 65 Würzburg-Riese","kind":"radar","sensor":"search","fire_m":0,"detect_m":60000,"ceiling_m":null}]};
+
+/* ============= LES MENACES (lot mp-rp-menaces-couche) =============
+   Un symbole OTAN ennemi SAM, AAA ou Radar peut porter un système (champ « threat » de l'objet, dans route_layers_v1). Avec la case « Menaces » du menu Affichage, la carte montre :
+   - les cercles de portée (volet « threats », 260), toujours ;
+   - sur un théâtre qui a son relief, la zone vue (une seule GridLayer, une seule teinte) : où un aéronef à la hauteur vérifiée au-dessus du sol est vu de la menace et à sa portée de tir,
+     masqué par le relief de DCS, ligne de vue à plat (ni courbure, ni réfraction) ; la grille de chaque menace se calcule une fois (un Worker) ; changer la hauteur ne la recalcule pas ;
+   - la route choisie, jugée à sa propre altitude : un halo jaune sous la route vue (volet « thrroute », 398) et, à la feuille de navigation, par quelles menaces et sur quelle distance ;
+   - le cartouche #rp-thr : la hauteur vérifiée (au téléphone, une pastille avec « − » et « + »), la source, la légende.
+   Rien ne s'écrit dans le fichier de travail : seul le champ « threat » de l'objet ; la case et la hauteur sont des réglages d'écran (rp_display_v1). */
+const THR_ID_RE = /^[a-z0-9][a-z0-9-]{0,39}$/;
+const THR_NATURE = { 'GPEWMS--': 'sam', 'GPEWAH--': 'aaa', 'GPESR---': 'radar' };
+const THR_BY_ID = {};
+THREATS.systems.forEach(s => { THR_BY_ID[s.id] = s; });
+const THR_STEPS = {
+  m: [0, 15, 30, 60, 100, 150, 300, 500, 1000, 2000, 3000, 5000, 8000, 10000, 15000, 20000, 25000, 30000],
+  ft: [0, 50, 100, 200, 300, 500, 1000, 1500, 3000, 6500, 10000, 16000, 26000, 33000, 50000, 65000, 82000, 100000]
+};
+const THR_RANK_DEF = 2;        /* la hauteur vérifiée au départ : 30 m (100 ft) */
+const THR_RANK_NOCEIL = 9;     /* le dernier rang offert sans plafond connu : 2 000 m (6 500 ft) */
+const THR_TILES_MAX = 512;     /* tuiles d'altitude gardées au plus, dans un cache qui n'est pas celui du relief */
+const THR_PX_MAX = 1024;       /* le rayon d'une grille, en pixels, au niveau choisi */
+const THR_RAY_STEP = 0.5;      /* un échantillon tous les 0,5 pixel le long d'un rayon */
+const THR_SAMPLE_M = 100;      /* un échantillon de route tous les 100 m */
+const THR_NARROW = 760;        /* sous cette largeur de carte, le cartouche est une pastille */
+const THR_RED = '#c8102e';
+const THR_ZONE_ALPHA = 110;    /* rgba(200, 16, 46, 0.43) */
+const THR = {
+  tiles: new Map(),            /* adresse de la tuile d'altitude → { p: promesse de ses mètres (Float32Array de 65 536) ou de null } */
+  canvas: null,
+  grids: new Map(),            /* clé (système, lat, lon, théâtre) → grille calculée */
+  jobs: new Map(),             /* clé → le calcul en cours */
+  bad: new Set(),              /* les clés dont le calcul a échoué : pas de nouvel essai tant que la menace reste active */
+  ver: 0,                      /* monte à chaque grille posée ou retirée */
+  act: [], desc: null, state: '',
+  circ: null, halo: null, circSig: '', haloSig: '',
+  zone: null, zoneSig: '', paint: { H: 0, list: [] },
+  seen: null, routeSig: '', routeSeq: 0, routeTimer: 0,
+  box: null, boxSig: '', raf: 0,
+  blob: ''
+};
+
+function thrNature(sidc) { return typeof sidc === 'string' && sidc.length >= 10 ? (THR_NATURE[symCode(sidc)] || '') : ''; }
+/* Un symbole porte une menace : du camp Ennemi, d'une des trois natures, avec un champ « threat » */
+function thrCarries(it) { return !!it && it.type === 'symbol' && it.sidc[1] === 'H' && !!thrNature(it.sidc) && typeof it.threat === 'string' && it.threat !== ''; }
+function thrSysName(sys) { return CURRENT_LANG === 'fr' ? sys.name_fr : sys.name_en; }
+function thrSteps() { return THR_STEPS[S.units.altitude === 'ft' ? 'ft' : 'm']; }
+function thrStepM(rank) { const v = thrSteps()[rank]; return S.units.altitude === 'ft' ? v * FT_M : v; }
+/* Le dernier rang offert : le premier dont la hauteur atteint le plus grand plafond connu des menaces actives ; sans plafond connu, le rang 9 */
+function thrTop() {
+  let ceil = -1;
+  THR.act.forEach(a => { if (a.sys.ceiling_m != null && a.sys.ceiling_m > ceil) ceil = a.sys.ceiling_m; });
+  if (ceil < 0) return THR_RANK_NOCEIL;
+  const n = thrSteps().length;
+  for (let i = 0; i < n; i++) if (thrStepM(i) >= ceil) return i;
+  return n - 1;
+}
+/* Le rang gardé n'est pas réécrit quand il dépasse le dernier rang offert : la hauteur employée est celle de ce dernier rang */
+function thrRank() { return Math.max(0, Math.min(DISP.thrStep, thrTop())); }
+function thrH() { return thrStepM(thrRank()); }
+function thrNum(v) { return String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g, CURRENT_LANG === 'fr' ? ' ' : ','); }
+function thrAlt(m) { return thrNum(altValue(m)) + ' ' + t(S.units.altitude === 'ft' ? 'u.ft' : 'u.m'); }
+function thrHText() { return t('thr.h.v', { v: thrNum(thrSteps()[thrRank()]), u: t(S.units.altitude === 'ft' ? 'u.ft' : 'u.m') }); }
+
+/* ---- la fiche du symbole ---- */
+function thrListFor(kind) {
+  return THREATS.systems.filter(s => s.kind === kind).sort((a, b) => thrSysName(a).localeCompare(thrSysName(b), CURRENT_LANG));
+}
+function thrInfoLine(it) {
+  const sys = typeof it.threat === 'string' ? THR_BY_ID[it.threat] : null;
+  if (!sys) return '';
+  const ceil = sys.ceiling_m == null ? t('thr.ceil.none') : t('thr.ceil', { v: thrAlt(sys.ceiling_m) });
+  const sensor = t('thr.sensor.' + sys.sensor);
+  if (sys.kind === 'radar') return t('thr.info.radar', { det: fmtDist(sys.detect_m / 1000), ceil: ceil, sensor: sensor });
+  return t('thr.info.fire', { fire: fmtDist(sys.fire_m / 1000), det: fmtDist(sys.detect_m / 1000), ceil: ceil, sensor: sensor });
+}
+function thrFieldHtml(it) {
+  const kind = thrNature(it.sidc), cur = typeof it.threat === 'string' ? it.threat : '';
+  const list = thrListFor(kind);
+  let o = '<option value=""' + (cur === '' ? ' selected' : '') + '>' + esc(t('thr.none')) + '</option>';
+  if (cur !== '' && !list.some(s => s.id === cur)) {
+    const sys = THR_BY_ID[cur];
+    o += '<option value="' + esc(cur) + '" selected>' + esc(sys ? thrSysName(sys) : t('thr.unknown', { id: cur })) + '</option>';
+  }
+  list.forEach(s => { o += '<option value="' + esc(s.id) + '"' + (cur === s.id ? ' selected' : '') + '>' + esc(thrSysName(s)) + '</option>'; });
+  return '<select id="dr-f-threat" data-f="threat">' + o + '</select><div class="dr-thr-info" id="dr-f-threat-info">' + esc(thrInfoLine(it)) + '</div>';
+}
+function thrInfoRefresh(it) { const e = $('dr-f-threat-info'); if (e) e.textContent = thrInfoLine(it); }
+
+/* ---- les menaces actives ---- */
+function thrActive() {
+  const out = [];
+  if (!DISP.threats) return out;
+  CF_LAYERS.forEach(l => {
+    if (!l.visible) return;
+    l.items.forEach(it => {
+      if (!thrCarries(it) || !cfItemShown(l, it)) return;
+      const sys = THR_BY_ID[it.threat];
+      if (!sys) return;
+      out.push({ it: it, sys: sys, R: sys.kind === 'radar' ? sys.detect_m : sys.fire_m, key: sys.id + '|' + it.lat + '|' + it.lon + '|' + S.theatre,
+        name: hasText(it.name) ? it.name.trim() : thrSysName(sys) });
+    });
+  });
+  return out;
+}
+
+/* ---- le sol : les tuiles d'altitude (Terrain-RGB) du relief de DCS, dans un cache à part ---- */
+function thrMercV(lat) { const sn = Math.sin(lat * Math.PI / 180); return 0.5 - Math.log((1 + sn) / (1 - sn)) / (4 * Math.PI); }
+function thrMpp(lat, z) { return 40075016.686 * Math.cos(lat * Math.PI / 180) / (256 * Math.pow(2, z)); }
+/* Les mètres d'une tuile (Float32Array de 65 536), ou null : tuile absente, illisible, hors carte ; un pixel d'alpha 0 vaut 0 m */
+function thrTile(url, meta) {
+  const hit = THR.tiles.get(url);
+  if (hit) return hit;
+  const p = fetch(url, { mode: 'cors' })
+    .then(r => (r.ok ? r.blob() : null))
+    .then(blob => (blob ? createImageBitmap(blob, { colorSpaceConversion: 'none', premultiplyAlpha: 'none' }) : null))
+    .then(bm => {
+      if (!bm) return null;
+      try {
+        if (bm.width !== 256 || bm.height !== 256) return null;
+        if (!THR.canvas) { THR.canvas = document.createElement('canvas'); THR.canvas.width = 256; THR.canvas.height = 256; }
+        const cx = THR.canvas.getContext('2d', { willReadFrequently: true });
+        cx.clearRect(0, 0, 256, 256);
+        cx.drawImage(bm, 0, 0);
+        const d = cx.getImageData(0, 0, 256, 256).data, out = new Float32Array(65536);
+        for (let i = 0; i < 65536; i++) {
+          const k = i * 4;
+          out[i] = d[k + 3] === 0 ? 0 : meta.base + (d[k] * 65536 + d[k + 1] * 256 + d[k + 2]) * meta.step;
+        }
+        return out;
+      } catch (e) { return null; } finally { if (bm.close) bm.close(); }
+    })
+    .catch(() => null);
+  THR.tiles.set(url, p);
+  while (THR.tiles.size > THR_TILES_MAX) THR.tiles.delete(THR.tiles.keys().next().value);
+  return p;
+}
+function thrTileUrl(th, meta, z, tx, ty) { return RELIEF_BASE + th + '/' + fillTile(meta.elev, z, tx, ty); }
+/* Le sol d'un carré de pixels du niveau z (Float32Array de side × side) ; hors des bornes du relief, tuile absente ou alpha 0 : 0 m */
+function thrReadGround(th, meta, z, px0, py0, side) {
+  const n = 256 * Math.pow(2, z), b = meta.bounds;
+  const xmin = (b[0][1] + 180) / 360 * n, xmax = (b[1][1] + 180) / 360 * n, ymin = thrMercV(b[1][0]) * n, ymax = thrMercV(b[0][0]) * n;
+  const g = new Float32Array(side * side);
+  const tx0 = Math.floor(px0 / 256), tx1 = Math.floor((px0 + side - 1) / 256), ty0 = Math.floor(py0 / 256), ty1 = Math.floor((py0 + side - 1) / 256), lim = Math.pow(2, z);
+  const want = [];
+  for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++) {
+    if (tx < 0 || ty < 0 || tx >= lim || ty >= lim) continue;
+    want.push({ tx: tx, ty: ty, p: thrTile(thrTileUrl(th, meta, z, tx, ty), meta) });
+  }
+  return Promise.all(want.map(w => w.p)).then(arr => {
+    arr.forEach((d, i) => {
+      if (!d) return;
+      const tx = want[i].tx, ty = want[i].ty;
+      const ax0 = Math.max(px0, tx * 256), ax1 = Math.min(px0 + side, tx * 256 + 256), ay0 = Math.max(py0, ty * 256), ay1 = Math.min(py0 + side, ty * 256 + 256);
+      for (let py = ay0; py < ay1; py++) {
+        const yc = py + 0.5;
+        if (yc < ymin || yc > ymax) continue;
+        const row = (py - py0) * side - px0, trow = (py - ty * 256) * 256 - tx * 256;
+        for (let px = ax0; px < ax1; px++) {
+          const xc = px + 0.5;
+          if (xc < xmin || xc > xmax) continue;
+          g[row + px] = d[trow + px];
+        }
+      }
+    });
+    return { g: g, tiles: want.length };
+  });
+}
+
+/* ---- le calcul d'une grille : la hauteur de visibilité hv (Float32, mètres au-dessus du sol), à plat ----
+   Cette fonction est le code du Worker : elle ne lit rien de la page (elle s'écrit dans un Blob telle quelle).
+   m = { g (le sol, side × side), side, K (le demi-côté), mpp (mètres par pixel), R (portée, m), zs (altitude du capteur, m) } ; rend hv (Infinity hors du disque et là où rien ne voit). */
+function thrCalc(m) {
+  const g = m.g, side = m.side, K = m.K, mpp = m.mpp, R = m.R, zs = m.zs;
+  const hv = new Float32Array(side * side);
+  hv.fill(Infinity);
+  const c = K + 0.5, rpx = R / mpp, step = 0.5;
+  const ray = function (ex, ey) {
+    const dx = ex + 0.5 - c, dy = ey + 0.5 - c, len = Math.sqrt(dx * dx + dy * dy);
+    if (!(len > 0)) return;
+    const ux = dx / len, uy = dy / len, maxT = Math.min(len, rpx) + 1e-9;
+    let pmax = -Infinity;
+    for (let k = 1; ; k++) {
+      const tt = k * step;
+      if (tt > maxT) break;
+      const idx = Math.floor(c + uy * tt) * side + Math.floor(c + ux * tt), gg = g[idx], d = tt * mpp;
+      let h = zs + pmax * d - gg;
+      if (!(h > 0)) h = 0;
+      if (h < hv[idx]) hv[idx] = h;
+      const sl = (gg - zs) / d;
+      if (sl > pmax) pmax = sl;
+    }
+  };
+  for (let i = 0; i < side; i++) { ray(i, 0); ray(i, side - 1); }
+  for (let j = 1; j < side - 1; j++) { ray(0, j); ray(side - 1, j); }
+  /* un pixel du disque qu'aucun rayon ne touche prend le plus petit h de ses voisins touchés ; hors du disque : rien */
+  const fill = [], r2 = rpx * rpx;
+  for (let j = 0; j < side; j++) {
+    for (let i = 0; i < side; i++) {
+      const idx = j * side + i, ddx = i + 0.5 - c, ddy = j + 0.5 - c;
+      if (ddx * ddx + ddy * ddy > r2) { hv[idx] = Infinity; continue; }
+      if (hv[idx] !== Infinity) continue;
+      let best = Infinity;
+      for (let dj = -1; dj <= 1; dj++) {
+        const jj = j + dj;
+        if (jj < 0 || jj >= side) continue;
+        for (let di = -1; di <= 1; di++) {
+          const ii = i + di;
+          if ((di === 0 && dj === 0) || ii < 0 || ii >= side) continue;
+          const v = hv[jj * side + ii];
+          if (v < best) best = v;
+        }
+      }
+      if (best !== Infinity) fill.push(idx, best);
+    }
+  }
+  for (let q = 0; q < fill.length; q += 2) hv[fill[q]] = fill[q + 1];
+  return hv;
+}
+function thrWorkerSrc() { return thrCalc.toString() + '\nself.onmessage = function (e) { var r = thrCalc(e.data); self.postMessage(r, [r.buffer]); };'; }
+/* Dans un Worker (fait d'un Blob) ; si le Worker manque, lève ou échoue, le même code tourne sur la page */
+function thrRunCalc(msg, noWorker) {
+  const t0 = performance.now();
+  const inline = () => ({ hv: thrCalc(msg), worker: false, ms: performance.now() - t0 });
+  if (noWorker || typeof Worker !== 'function' || typeof Blob !== 'function' || !window.URL || !URL.createObjectURL) return Promise.resolve(inline());
+  return new Promise(res => {
+    let w = null, done = false;
+    const fail = () => { if (done) return; done = true; try { if (w) w.terminate(); } catch (e) { /* ignore */ } res(inline()); };
+    try {
+      if (!THR.blob) THR.blob = URL.createObjectURL(new Blob([thrWorkerSrc()], { type: 'text/javascript' }));
+      w = new Worker(THR.blob);
+      w.onmessage = ev => { if (done) return; done = true; w.terminate(); res({ hv: ev.data, worker: true, ms: performance.now() - t0 }); };
+      w.onerror = ev => { if (ev && ev.preventDefault) ev.preventDefault(); fail(); };
+      w.postMessage(msg);
+    } catch (e) { fail(); }
+  });
+}
+
+/* Le niveau d'une grille : le plus grand de minZoom à maxNativeZoom tel que R / mpp ≤ 1 024 ; à défaut, minZoom */
+function thrLevel(meta, lat, R) {
+  for (let z = meta.maxNativeZoom; z >= meta.minZoom; z--) if (R / thrMpp(lat, z) <= THR_PX_MAX) return z;
+  return meta.minZoom;
+}
+/* La grille d'une menace a = { sys, it: { lat, lon }, R } ; opt.noWorker : le calcul sur la page */
+function thrBuildGrid(a, th, meta, opt) {
+  const lat = a.it.lat, lon = a.it.lon, R = a.R, z = thrLevel(meta, lat, R), n = 256 * Math.pow(2, z);
+  const cx = Math.floor((lon + 180) / 360 * n), cy = Math.floor(thrMercV(lat) * n);
+  const mpp = thrMpp(lat, z), K = Math.ceil(R / mpp), side = 2 * K + 1, px0 = cx - K, py0 = cy - K;
+  const t0 = performance.now();
+  return thrReadGround(th, meta, z, px0, py0, side).then(rd => {
+    const gs = rd.g[K * side + K], zs = gs + THREATS.sensor_height_m[a.sys.sensor];
+    const msg = { g: rd.g, side: side, K: K, mpp: mpp, R: R, zs: zs };
+    return thrRunCalc(msg, !!(opt && opt.noWorker)).then(r => {
+      return { sys: a.sys, lat: lat, lon: lon, z: z, side: side, K: K, px0: px0, py0: py0, mpp: mpp, R: R, gs: gs, zs: zs, g: rd.g, hv: r.hv,
+        ceil: a.sys.ceiling_m, tiles: rd.tiles, worker: r.worker, calcMs: r.ms, ms: performance.now() - t0 };
+    });
+  });
+}
+
+function thrStartGrid(a, th, meta) {
+  const key = a.key;
+  if (THR.grids.has(key) || THR.jobs.has(key) || THR.bad.has(key)) return;
+  const job = { key: key };
+  THR.jobs.set(key, job);
+  thrBuildGrid(a, th, meta).then(gr => {
+    if (THR.jobs.get(key) !== job) return;           /* périmé : la menace a cessé d'être active, ou le théâtre a changé */
+    THR.jobs.delete(key);
+    THR.grids.set(key, gr);
+    THR.ver++;
+    thrSync();
+  }, () => {
+    if (THR.jobs.get(key) !== job) return;
+    THR.jobs.delete(key);
+    THR.bad.add(key);
+    thrSync();
+  });
+}
+
+/* ---- la zone : une seule GridLayer, une seule teinte, là où au moins une menace voit à la hauteur H ---- */
+function thrReady() {
+  const out = [];
+  THR.act.forEach(a => { const g = THR.grids.get(a.key); if (g) out.push(g); });
+  return out;
+}
+function thrPaintTile(cv, coords) {
+  const c2 = cv.getContext('2d'), img = c2.createImageData(256, 256), d = img.data, H = THR.paint.H;
+  let any = false;
+  THR.paint.list.forEach(gr => {
+    const s = Math.pow(2, gr.z - coords.z), gx0 = coords.x * 256 * s, gy0 = coords.y * 256 * s, size = 256 * s;
+    if (gx0 + size <= gr.px0 || gy0 + size <= gr.py0 || gx0 >= gr.px0 + gr.side || gy0 >= gr.py0 + gr.side) return;
+    const hv = gr.hv, g = gr.g, side = gr.side, cap = gr.ceil == null ? Infinity : gr.ceil - H + gr.gs;
+    for (let py = 0; py < 256; py++) {
+      const gy = Math.floor((coords.y * 256 + py + 0.5) * s) - gr.py0;
+      if (gy < 0 || gy >= side) continue;
+      for (let px = 0; px < 256; px++) {
+        const gx = Math.floor((coords.x * 256 + px + 0.5) * s) - gr.px0;
+        if (gx < 0 || gx >= side) continue;
+        const i = gy * side + gx;
+        if (hv[i] <= H && g[i] <= cap) { const k = (py * 256 + px) * 4; d[k] = 200; d[k + 1] = 16; d[k + 2] = 46; d[k + 3] = THR_ZONE_ALPHA; any = true; }
+      }
+    }
+  });
+  if (any) c2.putImageData(img, 0, 0);
+}
+let ThrZone = null;
+function thrZoneClass() {
+  if (!ThrZone) ThrZone = L.GridLayer.extend({
+    createTile: function (coords) {
+      const cv = document.createElement('canvas');
+      cv.width = 256; cv.height = 256;
+      thrPaintTile(cv, coords);
+      return cv;
+    }
+  });
+  return ThrZone;
+}
+function thrZoneSync() {
+  const list = THR.state === 'ok' ? thrReady() : [];
+  if (!list.length) {
+    if (THR.zone) { map.removeLayer(THR.zone); THR.zone = null; THR.zoneSig = ''; }
+    return;
+  }
+  const H = thrH(), sig = THR.ver + '|' + H + '|' + list.map(g => g.sys.id + g.lat + g.lon).join(';');
+  THR.paint = { H: H, list: list };
+  if (!THR.zone) {
+    THR.zoneSig = sig;
+    THR.zone = new (thrZoneClass())({ pane: 'threats', zIndex: -1, tileSize: 256, minZoom: 3, maxZoom: 18, updateWhenIdle: false, keepBuffer: 2 });
+    THR.zone.addTo(map);
+  } else if (sig !== THR.zoneSig) {
+    THR.zoneSig = sig;
+    THR.zone.redraw();
+  }
+}
+
+/* ---- les cercles : la portée de tir, la détection (sans relief aussi) ---- */
+function thrCircles() {
+  const sig = THR.act.map(a => a.key + '|' + a.R + '|' + a.sys.detect_m).join(';');
+  if (sig === THR.circSig) return;
+  THR.circSig = sig;
+  THR.circ.clearLayers();
+  THR.act.forEach(a => {
+    const c = [a.it.lat, a.it.lon], base = { pane: 'threats', interactive: false, fill: false, color: THR_RED, className: 'thr-circle' };
+    if (a.sys.kind === 'radar') {
+      if (a.sys.detect_m > 0) L.circle(c, Object.assign({ radius: a.sys.detect_m, weight: 1.6, opacity: 1 }, base)).addTo(THR.circ);
+      return;
+    }
+    if (a.sys.detect_m > 0) L.circle(c, Object.assign({ radius: a.sys.detect_m, weight: 1.2, opacity: 0.8, dashArray: '6 6' }, base)).addTo(THR.circ);
+    if (a.sys.fire_m > 0) L.circle(c, Object.assign({ radius: a.sys.fire_m, weight: 1.6, opacity: 1 }, base)).addTo(THR.circ);
+  });
+}
+
+/* ---- la route vue, à sa propre altitude ---- */
+function thrGroundNow(tiles, th, meta, lat, lon) {
+  const b = meta.bounds;
+  if (lat < b[0][0] || lat > b[1][0] || lon < b[0][1] || lon > b[1][1]) return 0;
+  const z = meta.maxNativeZoom, n = 256 * Math.pow(2, z), X = (lon + 180) / 360 * n, Y = thrMercV(lat) * n;
+  const tx = Math.floor(X / 256), ty = Math.floor(Y / 256), d = tiles.get(thrTileUrl(th, meta, z, tx, ty));
+  if (!d) return 0;
+  return d[Math.min(255, Math.floor(Y - ty * 256)) * 256 + Math.min(255, Math.floor(X - tx * 256))];
+}
+/* Les échantillons d'une branche, de 100 m en 100 m, extrémités comprises : { s (m), lat, lon, w (m, la moitié des intervalles qui le touchent) } */
+function thrLegSamples(a, b) {
+  const L0 = legCalc(a, b), m = L0.km * 1000;
+  if (!(m > 0)) return null;
+  const ss = [];
+  for (let s = 0; s < m - 1e-6; s += THR_SAMPLE_M) ss.push(s);
+  ss.push(m);
+  return { brg: L0.brg, m: m, list: ss.map((s, i) => {
+    const p = i === 0 ? { lat: a.lat, lon: a.lon } : (i === ss.length - 1 ? { lat: b.lat, lon: b.lon } : legDest(a, L0.brg, s / 1000));
+    const w = ((i > 0 ? s - ss[i - 1] : 0) + (i < ss.length - 1 ? ss[i + 1] - s : 0)) / 2;
+    return { s: s, lat: p.lat, lon: p.lon, w: w };
+  }) };
+}
+function thrRouteWanted() { return DISP.threats && routeShown() && S.points.length > 1 && THR.state === 'ok' && THR.act.length > 0 && THR.act.every(a => THR.grids.has(a.key)); }
+function thrRouteSig() {
+  if (!thrRouteWanted()) return 'off';
+  return JSON.stringify([S.theatre, THR.ver, THR.act.map(a => a.key + '|' + a.name), S.points.map(p => [p.lat, p.lon, p.alt, p.altRef])]);
+}
+function thrRouteSync() {
+  const sig = thrRouteSig();
+  if (sig === THR.routeSig) return;
+  THR.routeSig = sig;
+  clearTimeout(THR.routeTimer);
+  const seq = ++THR.routeSeq;
+  if (sig === 'off') { thrRouteSet(null, []); return; }
+  THR.routeTimer = setTimeout(() => { thrRouteCompute(seq); }, 60);
+}
+function thrRouteCompute(seq) {
+  const th = S.theatre, meta = THR.desc && THR.desc.meta, pts = S.points.map(p => ({ lat: p.lat, lon: p.lon, alt: p.alt, altRef: p.altRef })), acts = THR.act.slice();
+  const grids = acts.map(a => THR.grids.get(a.key));
+  if (!meta || grids.some(g => !g)) return;
+  const legs = [null];
+  let needGround = false;
+  for (let i = 1; i < pts.length; i++) {
+    const lg = thrLegSamples(pts[i - 1], pts[i]);
+    legs.push(lg);
+    if (lg && (pts[i - 1].altRef === 'AGL' || pts[i].altRef === 'AGL')) needGround = true;
+  }
+  const want = new Map();
+  if (needGround) {
+    const z = meta.maxNativeZoom, n = 256 * Math.pow(2, z);
+    legs.forEach(lg => { if (lg) lg.list.forEach(sp => {
+      const tx = Math.floor((sp.lon + 180) / 360 * n / 256), ty = Math.floor(thrMercV(sp.lat) * n / 256);
+      const u = thrTileUrl(th, meta, z, tx, ty);
+      if (!want.has(u)) want.set(u, thrTile(u, meta));
+    }); });
+  }
+  const urls = Array.from(want.keys());
+  Promise.all(urls.map(u => want.get(u))).then(arr => {
+    if (seq !== THR.routeSeq) return;
+    const tiles = new Map();
+    urls.forEach((u, i) => tiles.set(u, arr[i]));
+    const seen = {}, flat = [];
+    for (let i = 1; i < pts.length; i++) {
+      const lg = legs[i], a = pts[i - 1], b = pts[i];
+      if (!lg) continue;
+      const mixed = a.altRef !== b.altRef;
+      const gA = a.altRef === 'AGL' ? thrGroundNow(tiles, th, meta, a.lat, a.lon) : 0, gB = b.altRef === 'AGL' ? thrGroundNow(tiles, th, meta, b.lat, b.lon) : 0;
+      const kms = acts.map(() => 0);
+      lg.list.forEach((sp, k) => {
+        const f = sp.s / lg.m;
+        let alt;
+        if (!mixed && a.altRef === 'AGL') alt = a.alt + (b.alt - a.alt) * f + thrGroundNow(tiles, th, meta, sp.lat, sp.lon);
+        else if (!mixed) alt = a.alt + (b.alt - a.alt) * f;
+        else { const ea = a.altRef === 'AGL' ? a.alt + gA : a.alt, eb = b.altRef === 'AGL' ? b.alt + gB : b.alt; alt = ea + (eb - ea) * f; }
+        const u = (sp.lon + 180) / 360, v = thrMercV(sp.lat);
+        let any = false;
+        grids.forEach((gr, q) => {
+          const nn = 256 * Math.pow(2, gr.z), gx = Math.floor(u * nn) - gr.px0, gy = Math.floor(v * nn) - gr.py0;
+          if (gx < 0 || gy < 0 || gx >= gr.side || gy >= gr.side) return;
+          const idx = gy * gr.side + gx;
+          if (!(alt - gr.g[idx] >= gr.hv[idx])) return;
+          if (gr.ceil != null && alt - gr.gs > gr.ceil) return;
+          kms[q] += sp.w / 1000;
+          any = true;
+        });
+        flat.push({ a: a, lg: lg, k: k, sp: sp, seen: any });
+      });
+      const items = [];
+      acts.forEach((ac, q) => { if (kms[q] > 0) items.push({ name: ac.name, km: kms[q] }); });
+      items.sort((x, y) => y.km - x.km);
+      if (items.length) seen[i] = items;
+    }
+    /* une suite d'échantillons vus (d'une branche à l'autre si les deux bouts le sont) : de la moitié de l'intervalle avant le premier à la moitié de l'intervalle après le dernier */
+    const runs = [];
+    let cur = null;
+    const edge = (e, dir) => {
+      const l = e.lg.list, nb = l[e.k + dir];
+      return nb ? thrPointAt(e.a, e.lg, e.sp.s + (nb.s - e.sp.s) / 2) : { lat: e.sp.lat, lon: e.sp.lon };
+    };
+    flat.forEach((e, n) => {
+      if (e.seen) {
+        if (!cur) { cur = [edge(e, -1)]; }
+        cur.push({ lat: e.sp.lat, lon: e.sp.lon });
+        if (!(flat[n + 1] && flat[n + 1].seen)) { cur.push(edge(e, 1)); runs.push(cur); cur = null; }
+      }
+    });
+    thrRouteSet(seen, runs);
+  });
+}
+function thrPointAt(a, lg, s) { return s <= 0 ? { lat: a.lat, lon: a.lon } : (s >= lg.m ? lg.list[lg.list.length - 1] : legDest(a, lg.brg, s / 1000)); }
+function thrRouteSet(seen, runs) {
+  const sig = JSON.stringify(seen || null);
+  const was = JSON.stringify(THR.seen || null);
+  THR.seen = seen;
+  const hs = JSON.stringify(runs.map(r => r.map(p => [Math.round(p.lat * 1e6), Math.round(p.lon * 1e6)])));
+  if (hs !== THR.haloSig) {
+    THR.haloSig = hs;
+    THR.halo.clearLayers();
+    runs.forEach(r => {
+      L.polyline(r.map(p => [p.lat, p.lon]), { pane: 'thrroute', interactive: false, color: '#ffd400', weight: 20, opacity: 0.92, lineCap: 'butt', lineJoin: 'round', className: 'thr-halo' }).addTo(THR.halo);
+    });
+  }
+  if (sig !== was) renderNav();
+}
+/* La ligne sous la ligne d'une branche vue, à la feuille de navigation */
+function thrNavRow(i) {
+  const items = THR.seen && THR.seen[i];
+  if (!items || !items.length) return '';
+  const txt = t('nav.thr', { l: items.map(x => t('nav.thr.item', { n: x.name, d: fmtDist(x.km) })).join(' · ') });
+  return '<tr class="thr"><td></td><td colspan="3">' + esc(txt) + '</td></tr>';
+}
+
+/* ---- le cartouche #rp-thr ---- */
+function thrBoxEl() {
+  if (THR.box) return THR.box;
+  const el = document.createElement('div');
+  el.id = 'rp-thr'; el.hidden = true;
+  map.getContainer().appendChild(el);
+  L.DomEvent.disableClickPropagation(el);
+  L.DomEvent.disableScrollPropagation(el);
+  el.addEventListener('input', ev => { if (ev.target && ev.target.id === 'thr-range') thrSetRank(parseInt(ev.target.value, 10)); });
+  el.addEventListener('click', ev => {
+    const b = ev.target.closest ? ev.target.closest('.thr-b') : null;
+    if (b && !b.disabled) thrSetRank(thrRank() + parseInt(b.dataset.d, 10));
+  });
+  THR.box = el;
+  return el;
+}
+function thrSetRank(r) {
+  if (!(r >= 0)) return;
+  DISP.thrStep = Math.max(0, Math.min(thrTop(), r));
+  saveDisplay();
+  thrBoxValue();
+  if (!THR.raf) THR.raf = requestAnimationFrame(() => { THR.raf = 0; thrZoneSync(); });
+}
+function thrBoxValue() {
+  const el = THR.box;
+  if (!el || el.hidden) return;
+  const r = thrRank(), top = thrTop();
+  const v = el.querySelector('#thr-v'), rg = el.querySelector('#thr-range');
+  if (v) v.textContent = thrHText();
+  const lz = el.querySelector('#thr-lz');
+  if (lz) lz.textContent = t('thr.leg.zone', { h: thrAlt(thrH()) });
+  if (rg) { rg.value = String(r); rg.setAttribute('aria-valuetext', thrHText()); }
+  el.querySelectorAll('.thr-b').forEach(b => { b.disabled = parseInt(b.dataset.d, 10) < 0 ? r <= 0 : r >= top; });
+}
+function thrBoxRender() {
+  if (!mapCreated || !THR.circ) return;
+  const el = thrBoxEl();
+  const show = THR.act.length > 0 && tapMode !== 'draw' && tapMode !== 'ruler' && !EXP.on;
+  el.hidden = !show;
+  if (!show) return;
+  const W = $('map').clientWidth, narrow = W < THR_NARROW, top = thrTop(), st = THR.state;
+  const hasZone = st === 'ok' || st === 'wait';
+  const sig = [CURRENT_LANG, S.units.altitude, narrow ? 1 : 0, hasZone ? 1 : 0, st, top].join('|');
+  if (sig !== THR.boxSig) {
+    THR.boxSig = sig;
+    const src = t(st === 'none' ? 'thr.src.none' : st === 'err' ? 'thr.src.err' : 'thr.src.relief');
+    const title = '<b class="thr-t">' + esc(t('thr.title')) + '</b>';
+    el.classList.toggle('thr-pill', narrow);
+    if (narrow) {
+      el.innerHTML = title + (hasZone ? '<span class="thr-v" id="thr-v"></span><button type="button" class="thr-b" data-d="-1" aria-label="' + esc(t('thr.lower')) + '">−</button>' +
+        '<button type="button" class="thr-b" data-d="1" aria-label="' + esc(t('thr.higher')) + '">+</button>' : '<span class="thr-src">' + esc(src) + '</span>');
+    } else {
+      let h = '<div class="thr-h">' + title + '<span class="thr-src">' + esc(src) + '</span></div>';
+      if (hasZone) {
+        const marks = [0, 2, 4, 6, 8, 9];
+        if (top > 9) marks.push(top);
+        const steps = thrSteps();
+        h += '<div class="thr-r"><label for="thr-range">' + esc(t('thr.h')) + '</label><b id="thr-v"></b></div>' +
+          '<input type="range" id="thr-range" min="0" max="' + top + '" step="1" value="0" aria-label="' + esc(t('thr.h')) + '">' +
+          '<div class="thr-ticks">' + marks.filter(k => k <= top).map(k => '<span class="thr-tk" style="left: calc(8px + (100% - 16px) * ' + (top ? k / top : 0) + ')">' + esc(thrNum(steps[k])) + '</span>').join('') + '</div>';
+      }
+      h += '<div class="thr-leg">' + (hasZone ? '<span><i class="thr-sw zone"></i><span id="thr-lz"></span></span>' : '') +
+        '<span><i class="thr-sw fire"></i>' + esc(t('thr.leg.fire')) + '</span><span><i class="thr-sw det"></i>' + esc(t('thr.leg.det')) + '</span>' +
+        (hasZone ? '<span><i class="thr-sw halo"></i>' + esc(t('thr.leg.route')) + '</span>' : '') + '</div>';
+      el.innerHTML = h;
+    }
+  }
+  thrBoxValue();
+}
+
+/* ---- la synchronisation : un seul point d'entrée, peu coûteux quand rien n'a changé ---- */
+function thrSync() {
+  if (!mapCreated || !THR.circ) return;
+  const act = thrActive(), th = S.theatre;
+  THR.act = act;
+  let state = '';
+  if (act.length) {
+    if (!reliefTheatre(th)) state = 'none';
+    else {
+      let d = THR.desc;
+      if (!d || d.th !== th) {
+        const rec = { th: th, st: 'wait', meta: null };
+        THR.desc = d = rec;
+        reliefDesc(th).then(m => { rec.st = 'ok'; rec.meta = m; if (THR.desc === rec) thrSync(); }, () => { rec.st = 'err'; if (THR.desc === rec) thrSync(); });
+      }
+      state = d.st;
+    }
+  }
+  THR.state = state;
+  const keys = new Set(act.map(a => a.key));
+  let changed = false;
+  THR.grids.forEach((g, k) => { if (!keys.has(k) || state !== 'ok') { THR.grids.delete(k); changed = true; } });
+  THR.jobs.forEach((j, k) => { if (!keys.has(k) || state !== 'ok') THR.jobs.delete(k); });
+  THR.bad.forEach(k => { if (!keys.has(k) || state !== 'ok') THR.bad.delete(k); });
+  if (changed) THR.ver++;
+  if (state === 'ok') act.forEach(a => thrStartGrid(a, th, THR.desc.meta));
+  thrCircles();
+  thrZoneSync();
+  thrRouteSync();
+  thrBoxRender();
+}
+function thrInit() {
+  THR.circ = L.layerGroup().addTo(map);
+  THR.halo = L.layerGroup().addTo(map);
+  map.on('resize', thrBoxRender);
+}
+/* Un calcul de grille pour les essais et les mesures : { ms, calcMs, worker, z, side, tiles } */
+function thrProbe(sysId, lat, lon, noWorker) {
+  const sys = THR_BY_ID[sysId], th = S.theatre, meta = THR.desc && THR.desc.meta;
+  if (!sys || !meta) return Promise.reject(new Error('no relief'));
+  return thrBuildGrid({ sys: sys, it: { lat: lat, lon: lon }, R: sys.kind === 'radar' ? sys.detect_m : sys.fire_m }, th, meta, { noWorker: !!noWorker });
+}
+
 /* Les aérodromes du théâtre choisi, dans leur panneau (au-dessus de la grille, sous les références et la route).
    Tous les marqueurs sont portés par la couche ; le zoom décide de ce qui se dessine (classes du panneau, CSS). */
 function airfieldsOf(theatre) { return Object.prototype.hasOwnProperty.call(AIRFIELDS, theatre) ? AIRFIELDS[theatre] : null; }
@@ -7393,6 +8075,13 @@ function createMap() {
   const reliefPane = map.createPane('relief');
   reliefPane.style.zIndex = 250;
   reliefPane.style.pointerEvents = 'none';
+  /* Les menaces (lot mp-rp-menaces-couche) : les cercles et la zone vue au-dessus du relief (250), sous les noms de lieux (300) ; la route vue (le halo) au-dessus des aérodromes (395), sous les tracés (400) ; rien ne se touche */
+  const thrPane = map.createPane('threats');
+  thrPane.style.zIndex = 260;
+  thrPane.style.pointerEvents = 'none';
+  const thrRoutePane = map.createPane('thrroute');
+  thrRoutePane.style.zIndex = 398;
+  thrRoutePane.style.pointerEvents = 'none';
   /* Le canevas de la grille : au-dessus des tuiles, sous la route */
   const pane = map.createPane('mgrs');
   pane.style.zIndex = 350;
@@ -7430,6 +8119,7 @@ function createMap() {
   routeGroup = L.layerGroup().addTo(map);
   decorGroup = L.layerGroup().addTo(map);
   RL.group = L.layerGroup().addTo(map);
+  thrInit();
   map.on('move zoom viewreset resize', scheduleGrid);
   map.on('zoomend', drawRoute);
   map.on('zoomend', syncAfZoom);
@@ -7696,6 +8386,7 @@ function drawRoute() {
     mk.addTo(routeGroup);
   });
   drawDecor();
+  thrSync();       /* la route vue suit la route */
 }
 
 /* ============= TRAITS DES MINUTES, CHIFFRES ET BOÎTES DE BRANCHE ============= */
@@ -8269,6 +8960,7 @@ function drawLayers() {
   cfPointMarks = [];
   CF_LAYERS.forEach(l => { if (l.visible) l.items.forEach(it => { if (cfItemShown(l, it)) cfDrawItem(it); }); });
   cfSyncPointNames();
+  thrSync();       /* les menaces suivent les symboles (système, position, calque, affichage) */
 }
 
 /* La fiche d'un objet (popup) : son nom, puis ce que dit son type ; un point offre « → Point de référence » */
@@ -8305,6 +8997,7 @@ function cfFiche(it) {
       const camp = symFind(SYM.camps, it.sidc[1]), ech = symIsUnit(it.sidc) ? symFind(SYM.echelons, it.sidc[11]) : null;
       line('cf-f-l', [symLabel(it.sidc), ech ? ech['nom_' + CURRENT_LANG] : '', camp ? camp[CURRENT_LANG] : ''].filter(Boolean).join(' · '));
       if (hasText(it.formation)) line('cf-f-l', t('cf.formation', { f: it.formation }));
+      if (it.type === 'symbol' && typeof it.threat === 'string' && THR_BY_ID[it.threat]) line('cf-f-l', t('cf.threat', { n: thrSysName(THR_BY_ID[it.threat]) }));
     } else line('cf-f-l', t('cf.p.' + it.kind));
     line('cf-f-mgrs', toMGRS(it.lat, it.lon));
     if (it.type === 'point' && it.note) line('cf-f-l', it.note);
@@ -9226,6 +9919,7 @@ function drSymSheetHtml(it, draft) {
   }).join('') + '</div>';
   h += f(t('dr.f.symbol'), '', seg('cat', SYM.categories.map(c => ({ v: c.v, on: c.v === cat.v, label: c[lg] }))) + '<div style="height:6px"></div>' + grid);
   if (unit) h += f(t('dr.f.echelon'), '', seg('echelon', SYM.echelons.map(e => ({ v: e.v, on: it.sidc[11] === e.v, label: e[lg] }))));
+  if (!draft && side === 'H' && thrNature(it.sidc)) h += f(t('dr.f.threat'), 'dr-f-threat', thrFieldHtml(it));       /* le système : un symbole existant, ennemi, SAM, AAA ou Radar */
   h += '<div class="dr-row2">' + f(t('dr.f.designation'), 'dr-f-name', txt('dr-f-name', 'name', it.name)) +
     (unit ? f(t('dr.f.formation'), 'dr-f-formation', txt('dr-f-formation', 'formation', it.formation)) : '') + '</div></div>';
   return h;
@@ -9306,7 +10000,7 @@ function drSheetHtml(it, draft) {
 
 /* Les listes de la fiche passent par la liste du module (tbmAttach) : le <select> reste, masqué ; la fiche se reconstruit, le
    rattachement se refait sur le <select> neuf, et une liste ouverte sur l'ancien se ferme avant qu'il ne disparaisse */
-const DR_LIST_LABELS = { kind: 'dr.f.type' };
+const DR_LIST_LABELS = { kind: 'dr.f.type', threat: 'dr.f.threat' };
 function drSheetListClose() {
   const sh = $('dr-sheet');
   if (TBM.cur && sh && sh.contains(TBM.cur.sel)) tbmClose(false);
@@ -9405,6 +10099,11 @@ function drSetField(it, f, v) {
     it.closed = false;
     it.filled = it.kind === 'corridor';
     if (it.kind === 'corridor' && !(it.widthNm > 0)) it.widthNm = 5;
+  } else if (f === 'threat') {
+    if (ty !== 'symbol') return false;
+    if (v === '') delete it.threat;
+    else if (typeof v === 'string' && THR_ID_RE.test(v)) it.threat = v;
+    else return false;
   } else if (f === 'side' || f === 'style' || f === 'size' || f === 'sym' || f === 'echelon' || f === 'formation') {
     if (ty !== 'symbol') return false;
     return symSet(it, f, v);
@@ -9424,6 +10123,7 @@ function drApply(tg, f, v) {
     return;
   }
   if (it.type === 'symbol' && it.id === DR.symId) drSymRemember(it);
+  if (f === 'threat') thrInfoRefresh(it);
   persistLayers();
   drawLayers();
   drContour();
@@ -9931,7 +10631,7 @@ function renderNav() {
   S.points.forEach((p, i) => {
     if (i > 0) {
       const lg = tm.legs[i];
-      rows += '<tr class="leg"><td></td><td colspan="2">' + esc(t('nav.leg', { cap: lg.cap, spd: speedText(lg.v), ete: fmtEte(lg.sec) })) + '</td><td class="r">' + esc(fmtDist(lg.km)) + '</td></tr>';
+      rows += '<tr class="leg"><td></td><td colspan="2">' + esc(t('nav.leg', { cap: lg.cap, spd: speedText(lg.v), ete: fmtEte(lg.sec) })) + '</td><td class="r">' + esc(fmtDist(lg.km)) + '</td></tr>' + thrNavRow(i);
     }
     rows += '<tr><td class="n">' + i + '</td><td class="nm">' + esc(p.name) + '<span class="co alt">' + esc(altText(p)) + '</span><span class="co alt tm">' + esc(t('nav.t', { t: fmtElapsed(tm.el[i]) })) + '</span>' +
       (calc ? '<span class="co alt dv-leg">' + esc(t('nav.var', { v: fmtVar(declAt(p, ys)) })) + '</span>' : '') + '</td>' +
@@ -9949,6 +10649,7 @@ function renderNav() {
   $('nav-refs').innerHTML = rr;
   $('nav-refs-wrap').hidden = !S.refs.length;
   rpFoldRefresh();
+  thrSync();       /* la route vue se juge sur la route d'aujourd'hui (une altitude saisie ne passe que par ici) */
 }
 
 function renderTheatreOptions() {
@@ -9968,6 +10669,7 @@ function baseRows() {
 function syncControls() {
   $('theatre').value = S.theatre;
   syncRelief();
+  thrSync();      /* le théâtre, la langue et les unités : les menaces */
   reliefAltRender();      /* la langue et l'unité d'altitude se relisent au cartouche */
   const mark = (attr, val) => document.querySelectorAll('[' + attr + ']').forEach(b => {
     const on = b.getAttribute(attr) === val;
@@ -10341,6 +11043,7 @@ function setTapMode(m, keep) {
   }
   $('map').classList.toggle('rp-ruling', tapMode === 'ruler');
   rlRender();
+  thrBoxRender();       /* le cartouche des menaces se cache en mode Dessin et en mode Règle */
 }
 
 function syncTapControl() {
@@ -13870,6 +14573,7 @@ function cfImportGo() {
 const DSP = { open: false, panel: null, x0: 0, y0: 0 };
 const DSP_ROWS = [
   { g: '', k: 'relief', l: 'dsp.relief' },       /* la première ligne sous le titre, sans sous-titre à elle */
+  { g: '', k: 'threats', l: 'dsp.threats' },     /* les menaces : juste sous « Relief », même groupe */
   { g: 'mission', k: 'routes', l: 'dsp.routes', seg: true, n: () => String(RSET.routes.length) },
   { g: 'mission', k: 'refs', l: 'dsp.refs', n: () => String(S.refs.length) },
   { g: 'layers', k: 'draw', l: 'dsp.draw' },
@@ -13888,6 +14592,7 @@ function loadDisplay() {
     if (o && typeof o === 'object' && !Array.isArray(o)) {
       Object.keys(DISP).forEach(k => { if (k !== 'routes' && typeof o[k] === 'boolean') DISP[k] = o[k]; });
       /* « routes » remplace « route » : un profil d'avant (route: false) s'ouvre sur « Aucune », (route: true) sur « Toutes » */
+      if (Number.isInteger(o.thrStep) && o.thrStep >= 0 && o.thrStep <= 99) DISP.thrStep = o.thrStep;      /* le rang de la hauteur vérifiée (menaces) */
       if (ROUTES_SHOW.indexOf(o.routes) !== -1) DISP.routes = o.routes;
       else if (o.route === false) DISP.routes = 'none';
       else if (o.route === true) DISP.routes = 'all';
@@ -13895,7 +14600,7 @@ function loadDisplay() {
   } catch (e) { /* valeurs par défaut */ }
 }
 function saveDisplay() {
-  try { localStorage.setItem(KEY_DISPLAY, JSON.stringify({ routes: DISP.routes, refs: DISP.refs, draw: DISP.draw, sym: DISP.sym, cf: DISP.cf, diss: DISP.diss, relief: DISP.relief })); } catch (e) { /* stockage indisponible */ }
+  try { localStorage.setItem(KEY_DISPLAY, JSON.stringify({ routes: DISP.routes, refs: DISP.refs, draw: DISP.draw, sym: DISP.sym, cf: DISP.cf, diss: DISP.diss, relief: DISP.relief, threats: DISP.threats, thrStep: DISP.thrStep })); } catch (e) { /* stockage indisponible */ }
 }
 
 /* L'état d'une ligne : cochée, grisée, info-bulle */
@@ -13904,6 +14609,7 @@ function dspState(k) {
     const has = reliefTheatre(S.theatre);
     return { on: has && !!DISP.relief, off: !has, tip: t(has ? 'dsp.relief.tip' : 'dsp.relief.off') };
   }
+  if (k === 'threats') return { on: !!DISP.threats, off: false, tip: t('dsp.threats.tip') };
   if (k === 'grid') return { on: !!S.ui.grid, off: false, tip: t('tb.grid') };
   if (k === 'places') return { on: !!S.ui.places, off: false, tip: t('tb.places.tip') };
   if (k === 'towns') {
@@ -13920,7 +14626,7 @@ function dspState(k) {
 /* Le point ambre : au moins un réglage du panneau n'est pas à sa valeur par défaut (fond Topo, km et m, tout affiché, sauf Lieux masqué) */
 function dspChanged() {
   return !(DISP.routes === 'all' && DISP.refs && DISP.draw && DISP.sym && DISP.cf && S.ui.grid && S.ui.towns && S.ui.airfields) || !!S.ui.places
-    || S.ui.layer !== 'topo' || S.units.distance !== 'km' || S.units.altitude !== 'm' || !!DISP.relief;
+    || S.ui.layer !== 'topo' || S.units.distance !== 'km' || S.units.altitude !== 'm' || !!DISP.relief || !DISP.threats;
 }
 
 function dspSync() {
@@ -14179,6 +14885,10 @@ function dspToggle(k) {
     DISP.relief = !DISP.relief;
     saveDisplay();
     syncRelief();
+  } else if (k === 'threats') {
+    DISP.threats = !DISP.threats;
+    saveDisplay();
+    thrSync();
   } else if (k === 'grid') {
     S.ui.grid = !S.ui.grid;
     persistState();
@@ -14483,6 +15193,7 @@ function expOpen() {
   $('export-layer').hidden = false;
   expSyncTexts();
   expLayout();
+  thrBoxRender();
 }
 
 function expClose() {
@@ -14493,6 +15204,7 @@ function expClose() {
   $('export-layer').classList.remove('busy');
   $('exp-go').disabled = false;
   setTapMode(EXP.prevTap, true);
+  thrBoxRender();
 }
 
 function expSetOrient(o) {
@@ -14503,7 +15215,7 @@ function expSetOrient(o) {
 }
 
 /* Les groupes qui possèdent des tracés : après le rendu, un tracé que son groupe a détruit entre-temps ne revient pas */
-function expOwners() { return [routeGroup, decorGroup, cfGroup, refGroup, twLayer, othersGroup].filter(g => !!g); }
+function expOwners() { return [routeGroup, decorGroup, cfGroup, refGroup, twLayer, othersGroup, THR.circ, THR.halo].filter(g => !!g); }
 
 /* Chaque tracé de la carte (hors panes d'édition et de recherche) passe au rendu canevas, un rendu par pane, par retrait puis ajout ;
    l'ordre de création est gardé, donc l'ordre de superposition aussi */
@@ -14606,7 +15318,7 @@ function expShoot(rect) {
       const c = el.classList;
       return c.contains('leaflet-control-container') || c.contains('leaflet-drawedit-pane') || c.contains('leaflet-ring-pane') ||
         c.contains('leaflet-popup-pane') || c.contains('ins-icon') || c.contains('sr-panel') ||
-        el.id === 'export-layer' || el.id === 'export-frame' || el.id === 'export-bar' || el.id === 'rp-alt' || el.id === 'rp-alt-x';
+        el.id === 'export-layer' || el.id === 'export-frame' || el.id === 'export-bar' || el.id === 'rp-alt' || el.id === 'rp-alt-x' || el.id === 'rp-thr';
     }
   });
 }
@@ -15622,7 +16334,7 @@ function init() {
   window.__RP = { map: map, get decorGroup() { return decorGroup; }, timing: timing, get S() { return S; }, drawGrid: drawGrid, setBase: setBase, get baseLayers() { return baseLayers; }, get inFallback() { return inFallback; },
     get placesLayer() { return placesLayer; }, get reliefLayer() { return RE.layer; }, reliefAltAt: reliefAltAt, get airfieldLayer() { return afLayer; }, get tapMode() { return tapMode; },
     get townsLayer() { return twLayer; }, townsReport: townsReport, get search() { return SR; },
-    get layers() { return CF_LAYERS; }, get layersGroup() { return cfGroup; }, get routes() { syncActive(); return RSET; }, get othersGroup() { return othersGroup; }, get draw() { return DR; }, get split() { return SP; }, get ruler() { return RL; } };
+    get layers() { return CF_LAYERS; }, get layersGroup() { return cfGroup; }, get thr() { return THR; }, thrCalc: thrCalc, thrProbe: thrProbe, thrRank: thrRank, thrTop: thrTop, thrH: thrH, get routes() { syncActive(); return RSET; }, get othersGroup() { return othersGroup; }, get draw() { return DR; }, get split() { return SP; }, get ruler() { return RL; } };
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

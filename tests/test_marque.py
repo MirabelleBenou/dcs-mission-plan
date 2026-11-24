@@ -1,4 +1,4 @@
-"""L'insigne de la famille Squadron Ready Room (MP-V2.1.0+11) : les fichiers de brand/, leurs URL data: dans les pages de dist/, les liens d'onglet,
+"""L'insigne de la famille Squadron Ready Room (MP-V2.1.0+12) : les fichiers de brand/, leurs URL data: dans les pages de dist/, les liens d'onglet,
 l'accueil (plaque, écusson, signature), l'ancien logo « WG » lu comme le nouveau, le README, les licences et le CHANGELOG. Lecture des fichiers, sans navigateur."""
 import base64
 import hashlib
@@ -92,8 +92,8 @@ def test_shell_home_screen():
     # l'insigne de la Ready Room : une fois, dans le script de l'écusson
     assert html.count("var MP_CREST_RR = '" + url('insigne-ready-room.svg') + "';") == 1
     assert "'crest.wingAlt': 'Emblème de l’escadre'" in html and "'crest.wingAlt': 'Wing emblem'" in html
-    assert 'MP-V2.1.0+11' in html
-    assert re.search(r'^DEV_BUILD = 11$', (ROOT / 'version_block.py').read_text(encoding='utf-8'), re.M)
+    assert 'MP-V2.1.0+12' in html
+    assert re.search(r'^DEV_BUILD = 12$', (ROOT / 'version_block.py').read_text(encoding='utf-8'), re.M)
 
 
 def test_former_wg_logo_is_kept_once_each():
@@ -132,7 +132,8 @@ def test_readme_licences_changelog():
                          "**Menus easier to read from the keyboard**\n- In the toolbar's menus, the line reached with the arrow keys now has enough contrast in every theme."],
         '### Home screen': ["**The Mission Plan insignia**\n- The home screen shows the Mission Plan insignia beside its title — on a phone, as a seal on the title's corner — and the family's icon in the top bar; when the Squadron Ready Room opens Mission Plan, your wing's emblem takes its place.\n- A *Squadron Ready Room family* line sits above the credits."],
         '### Field Manual': ["**The home screen drawn with its insignia**\n- The two drawings of the home screen show the insignia and the family's icon.",
-                         "**The phone drawing of the home screen in the right order**\n- The title plate now sits under the toolbar buttons, as on screen."],
+                         "**The phone drawing of the home screen in the right order**\n- The title plate now sits under the toolbar buttons, as on screen.",
+                         "**Threats**\n- The Route Planner page explains the threats layer and lists the game’s air defence systems with their ranges and ceilings."],
     }
     for head_, es in entries.items():
         sec = unreleased.split('\n' + head_ + '\n', 1)[1].split('\n### ', 1)[0].rstrip('\n')
