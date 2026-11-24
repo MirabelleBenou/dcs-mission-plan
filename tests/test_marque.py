@@ -93,7 +93,7 @@ def test_shell_home_screen():
     assert html.count("var MP_CREST_RR = '" + url('insigne-ready-room.svg') + "';") == 1
     assert "'crest.wingAlt': 'Emblème de l’escadre'" in html and "'crest.wingAlt': 'Wing emblem'" in html
     assert 'MP-V2.1.0+13' in html
-    assert re.search(r'^DEV_BUILD = 12$', (ROOT / 'version_block.py').read_text(encoding='utf-8'), re.M)
+    assert re.search(r'^DEV_BUILD = 13$', (ROOT / 'version_block.py').read_text(encoding='utf-8'), re.M)
 
 
 def test_former_wg_logo_is_kept_once_each():

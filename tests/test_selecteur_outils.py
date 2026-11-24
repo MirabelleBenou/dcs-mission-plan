@@ -55,7 +55,7 @@ def test_texts_are_where_the_lot_says():
     assert seg.count(FM_FR) == 1 and seg.count(FM_EN) == 1
     assert seg.index(FM_BACK_FR) < seg.index(FM_FR) and seg.index('On a phone, the back gesture') < seg.index(FM_EN)
     assert seg[seg.index(FM_BACK_FR):seg.index(FM_FR)].count("('p',") == 1            # le paragraphe neuf suit aussitôt celui du geste retour
-    assert re.search(r'^DEV_BUILD = 12$', (ROOT / 'version_block.py').read_text(encoding='utf-8'), re.M)
+    assert re.search(r'^DEV_BUILD = 13$', (ROOT / 'version_block.py').read_text(encoding='utf-8'), re.M)
     assert 'MP-V2.1.0+13' in (ROOT / 'dist' / 'dcs_mission_plan.html').read_text(encoding='utf-8')
 
 
