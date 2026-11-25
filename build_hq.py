@@ -3389,7 +3389,7 @@ function exportWingConfig(ev) {{
     opener: ev && ev.currentTarget,
     hide: document.getElementById('wing-modal'),
     run: name => {{
-      const out = wingManagedBy(wingConfig) ? Object.assign({{}}, wingConfig) : wingConfig;
+      const out = wingManagedBy(wingConfig) ? uiCopy(wingConfig) : wingConfig;
       if (out !== wingConfig) delete out.managedBy;       // une copie qu'on peut emporter et modifier ailleurs : sans la marque
       const blob = new Blob([JSON.stringify(out, null, 2)], {{ type: 'application/json' }});
       shareOrDownload(blob, name + '.json', 'application/json', 'Config ' + wingConfig.wing.shortName, fallbackDownload);
@@ -3869,7 +3869,7 @@ async function loadMiz(file) {{
     // P3 — charger otherFiles (rezip sans corruption)
     const otherFilesMap = {{}};
     for (const name of Object.keys(zip.files)) {{
-      if (!zip.files[name].dir && name !== 'mission') {{
+      if (!zip.files[name].dir && name !== 'mission' && uiKeyOk(name)) {{
         otherFilesMap[name] = await zip.file(name).async('uint8array');
       }}
     }}
@@ -4121,7 +4121,7 @@ async function buildMissionSnapshot(ast, model, missionText, filename, theatre) 
       // Les options d'équipement de l'appareil (AddPropAircraft), telles que la mission les porte ; la clé est absente quand la mission n'en a pas
       const apData = rpData && rpData.unitAddProps && rpData.unitAddProps[u.unitId];
       const apFull = apData && apData.addPropNode ? astToValue(apData.addPropNode) : undefined;
-      return Object.assign({{}}, u, {{
+      return Object.assign(uiCopy(u), {{
         payload: payloadFull || {{ summary: '' }},
       }}, (apFull && typeof apFull === 'object' && !Array.isArray(apFull)) ? {{ addProp: apFull }} : {{}});
     }});
@@ -4566,7 +4566,7 @@ function buildPatchesFromPackage(pkg, ctx) {{
       try {{ cur = luaTableReproducible(an.addPropNode) ? astToValue(an.addPropNode) : null; }} catch (e) {{ cur = null; }}
       if (!cur || typeof cur !== 'object' || Array.isArray(cur)) {{ warnings.push({{ key: 'pk.w.serialize', args: [] }}); continue; }}
     }}
-    const merged = Object.assign({{}}, cur, aOv.addProp);
+    const merged = Object.assign(uiCopy(cur), uiCopy(aOv.addProp));
     const lua = serializeLua(merged);
     if (lua === null) {{ warnings.push({{ key: 'pk.w.serialize', args: [] }}); continue; }}
     let mine;
@@ -4757,7 +4757,7 @@ function pkBuildExport(groupIds) {{
         type:     unitTypeOf(fl, u),
         callsign: rawCs,
         liveryId: u.liveryId ? u.liveryId : null,
-        radios:   (u.radios || []).map(r => ({{ radioIndex: r.radioIndex, channels: Object.assign({{}}, r.channels) }})),
+        radios:   (u.radios || []).map(r => ({{ radioIndex: r.radioIndex, channels: uiCopy(r.channels) }})),
         payload:  payload,
       }};
     }});
@@ -6956,7 +6956,7 @@ async function dsxApply() {{
     if (plan.wp.length) {{
       wText = applyPatches(DSX.wh.text, plan.wp);
       try {{ wRootNew = delWhParse(wText); }} catch (e) {{ console.warn('[HQ] relecture du fichier warehouses :', e); throw delErr('dyn.w.e.whparse'); }}
-      otherFilesMap = Object.assign({{}}, base.otherFilesMap);
+      otherFilesMap = uiCopy(base.otherFilesMap);
       otherFilesMap['warehouses'] = new TextEncoder().encode(wText);
     }}
     const model = DCS_EXTRACTOR.extract(mAst, missionText, _mizFilename || '', otherFilesMap, missionText.split('\\n'));
@@ -7041,7 +7041,7 @@ async function pkDeleteApply(ids) {{
       try {{ after = delWhLinks(delWhParse(wtext)); }} catch (e) {{ throw delErr('pk.del.e.wh'); }}
       const want = wh.all.map(l => [l.sec, l.id, l.type, gset.has(l.gid) ? 0 : l.gid]);
       if (JSON.stringify(after.map(l => [l.sec, l.id, l.type, l.gid])) !== JSON.stringify(want)) throw delErr('pk.del.e.wh');
-      otherFilesMap = Object.assign({{}}, base.otherFilesMap);
+      otherFilesMap = uiCopy(base.otherFilesMap);
       otherFilesMap['warehouses'] = new TextEncoder().encode(wtext);
     }}
     const model = DCS_EXTRACTOR.extract(ast, missionText, _mizFilename || '', otherFilesMap, missionText.split('\\n'));

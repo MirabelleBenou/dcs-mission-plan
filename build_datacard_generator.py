@@ -3257,7 +3257,7 @@ function dgCanonCard(c) {
   Object.keys(c).forEach(k => { if (uiKeyOk(k) && !Object.prototype.hasOwnProperty.call(o, k)) o[k] = c[k]; });
   return o;
 }
-function dgCanonDoc(d) { return Object.assign({}, d, { cards: d.cards.map(dgCanonCard) }); }
+function dgCanonDoc(d) { return Object.assign(uiCopy(d), { cards: d.cards.map(dgCanonCard) }); }
 
 function normalizeDoc(src) {
   const d = { format: FORMAT_ID, mode: 'day', cards: [] };
@@ -3570,7 +3570,7 @@ function dgMergeNav(c, route) {
     if (matched.has(l)) { last = matched.get(l); return; }
     let a = typeof l.after === 'string' ? l.after : last;
     if (a !== '' && !ids.has(a)) a = last;
-    const o = Object.assign({}, l, { after: a });
+    const o = Object.assign(uiCopy(l), { after: a });
     if (parseCoord(o.coord)) o.coord = '';
     (own[a] = own[a] || []).push(o);
   });
@@ -7034,10 +7034,10 @@ function biSetFromFile(o) {
   /* seulement les routes de C, chacune classée par son theatre, sinon par le theatre de tête du fichier, sinon par la règle H2 (comme le stockage et l'ouverture au Route Planner) */
   const C = dgCommonTheatre(), ref = dgTheatreOk(o.theatre) ? o.theatre : dgStateTheatre(readJsonKey(KEY_ROUTE));
   const active = (Number.isInteger(o.active) && o.active >= 0 && o.active < o.routes.length) ? o.routes[o.active] : null;
-  const shared = Object.assign({}, o, { format: ROUTE_FORMAT, theatre: C });
+  const shared = Object.assign(uiCopy(o), { format: ROUTE_FORMAT, theatre: C });
   const all = list.filter(r => routeTheatre(r, ref) === C).map(r => {
     const f = r.flight;
-    return { src: r, route: routeFromObject(Object.assign({}, shared, { name: r.name, points: r.points, missionDate: r.missionDate })),
+    return { src: r, route: routeFromObject(Object.assign(uiCopy(shared), { name: r.name, points: r.points, missionDate: r.missionDate })),
       flight: (isPlainObject(f) && typeof f.groupName === 'string') ? f : null };
   });
   const routes = all.filter(e => e.route && e.route.points.length);
@@ -7092,12 +7092,12 @@ function biReadRouteSet() {
   if (!isPlainObject(set) || set.format !== SET_FORMAT || !Array.isArray(set.routes)) return [];
   const stOk = isPlainObject(st) && dgStateTheatre(st) === C;       /* route_state_v1 d'un autre théâtre que C : ignoré (ni la route active, ni ses réglages) */
   const ref = dgStateTheatre(st);       /* le théâtre des routes d'avant le lot (H2) */
-  const base = stOk ? Object.assign({}, st, { theatre: C }) : { format: ROUTE_FORMAT, theatre: C };
+  const base = stOk ? Object.assign(uiCopy(st), { theatre: C }) : { format: ROUTE_FORMAT, theatre: C };
   const out = [];
   set.routes.forEach((r, i) => {
     if (!isPlainObject(r) || !Array.isArray(r.points) || routeTheatre(r, ref) !== C) return;       /* seulement les routes de C (bloc partagé : une route sans theatre est lue comme le Route Planner l'écrira) */
     const o = (stOk && i === set.active) ? { name: st.name, points: st.points, missionDate: magRouteDate(st.missionDate) || r.missionDate } : { name: r.name, points: r.points, missionDate: r.missionDate };
-    const route = routeFromObject(Object.assign({}, base, o));
+    const route = routeFromObject(Object.assign(uiCopy(base), uiCopy(o)));
     if (!route || !route.points.length) return;
     route.rid = typeof r.rid === 'string' ? r.rid : '';
     const f = r.flight;

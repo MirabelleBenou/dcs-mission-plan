@@ -247,7 +247,7 @@ function gsReplaceAll(theatre, flights) {
 function gsMigrateFail() {
   /* le premier échec est noté dans fc_state_v1 : une migration retentée ne refait pas l'étape 2 */
   const fc = gsJson(GS_KEY_FC);
-  if (gsIsObj(fc) && fc.gsMigrateFailed !== true) gsLsSet(GS_KEY_FC, JSON.stringify(Object.assign({}, fc, { gsMigrateFailed: true })));
+  if (gsIsObj(fc) && fc.gsMigrateFailed !== true) gsLsSet(GS_KEY_FC, JSON.stringify(Object.assign(uiCopy(fc), { gsMigrateFailed: true })));
   return false;
 }
 function gsMigrate(packFn) {

@@ -3339,7 +3339,7 @@ function saveState() {{
   rsWingKeep();       // le logo du Wing choisi est gardé par la composition, aucun autre
   if (rsSections().length) rsFoldRefresh();
   try {{
-    const toSave = Object.assign({{}}, STATE, {{ schema: 2 }});
+    const toSave = Object.assign(uiCopy(STATE), {{ schema: 2 }});
     localStorage.setItem(KEY_STATE, JSON.stringify(toSave));
   }} catch(e) {{}}
 }}
@@ -3367,7 +3367,7 @@ function restoreState() {{
   if (!raw) return false;
   try {{
     const saved = JSON.parse(raw);
-    if (saved.fields)    STATE.fields    = {{ ...STATE.fields, ...saved.fields }};
+    if (saved.fields)    STATE.fields    = Object.assign(uiCopy(STATE.fields), uiCopy(saved.fields));
     if (saved.cartouche) STATE.cartouche = saved.cartouche;
     // B2 migration : entrées v1.0.0 sans x/y → point:false (pas de marqueur surprise)
     STATE.cartouche.forEach(e => {{

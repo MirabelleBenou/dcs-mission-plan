@@ -279,7 +279,7 @@ function payloadRuleConflicts(type, st, n, c) {
         if (id === r.bombs.id && r.bombs.st.indexOf(fa === r.bombs.fam ? a : fb === r.bombs.fam ? b : '') < 0) return null;
         return id;
       };
-      const E = Object.assign({}, st);
+      const E = uiCopy(st);
       E[n] = c;
       const sts = Object.keys(r.st);
       sts.forEach(m => {

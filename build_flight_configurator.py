@@ -4465,7 +4465,7 @@ function cmpTwin(n) {
 const cmpConflicts = (st, n, c) => payloadRuleConflicts(CMP.type, st, n, c).filter(x => x.rule !== 'oneof');
 // Les conflits de la situation (A) : `c` en `n` ET le miroir `m` sur la jumelle `tw` (emport simulé) : [{ st, rule }]
 function cmpClashPair(st, n, c, tw, m) {
-  const sim = Object.assign({}, st);
+  const sim = uiCopy(st);
   sim[n] = c; sim[tw.n] = m;
   const out = cmpConflicts(sim, n, c);
   // un conflit du miroir avec le choix lui-même est porté par la jumelle

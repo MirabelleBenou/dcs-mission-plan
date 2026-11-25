@@ -12608,7 +12608,7 @@ function payloadRuleConflicts(type, st, n, c) {
         if (id === r.bombs.id && r.bombs.st.indexOf(fa === r.bombs.fam ? a : fb === r.bombs.fam ? b : '') < 0) return null;
         return id;
       };
-      const E = Object.assign({}, st);
+      const E = uiCopy(st);
       E[n] = c;
       const sts = Object.keys(r.st);
       sts.forEach(m => {
@@ -13513,7 +13513,7 @@ function gsReplaceAll(theatre, flights) {
 function gsMigrateFail() {
   /* le premier échec est noté dans fc_state_v1 : une migration retentée ne refait pas l'étape 2 */
   const fc = gsJson(GS_KEY_FC);
-  if (gsIsObj(fc) && fc.gsMigrateFailed !== true) gsLsSet(GS_KEY_FC, JSON.stringify(Object.assign({}, fc, { gsMigrateFailed: true })));
+  if (gsIsObj(fc) && fc.gsMigrateFailed !== true) gsLsSet(GS_KEY_FC, JSON.stringify(Object.assign(uiCopy(fc), { gsMigrateFailed: true })));
   return false;
 }
 function gsMigrate(packFn) {
@@ -14584,6 +14584,8 @@ try { if (window.self !== window.top) document.documentElement.classList.add('mp
 
 /* ---- la garde commune des copies clé par clé : un objet lu d'un fichier, du stockage, d'un paquet, d'une route, d'un .miz ou d'un message ne se recopie pas par ces trois clés (__proto__ changerait le prototype de la copie) ---- */
 function uiKeyOk(k) { return k !== '__proto__' && k !== 'constructor' && k !== 'prototype'; }
+/* Copie propre d'un objet lu (fichier, stockage, .miz, message) : clé par clé, sans les clés qui changent un prototype ; Object.assign(uiCopy(x), extras) remplace Object.assign({}, x, extras) */
+function uiCopy(o) { const r = {}; if (o && typeof o === 'object') Object.keys(o).forEach(k => { if (uiKeyOk(k)) r[k] = o[k]; }); return r; }
 
 /* ---- la liste de thème suit le thème appliqué (le shell pousse data-theme sur le body du module) ---- */
 (function uiThemeFollow() {
@@ -19326,7 +19328,7 @@ function cmpTwin(n) {
 const cmpConflicts = (st, n, c) => payloadRuleConflicts(CMP.type, st, n, c).filter(x => x.rule !== 'oneof');
 // Les conflits de la situation (A) : `c` en `n` ET le miroir `m` sur la jumelle `tw` (emport simulé) : [{ st, rule }]
 function cmpClashPair(st, n, c, tw, m) {
-  const sim = Object.assign({}, st);
+  const sim = uiCopy(st);
   sim[n] = c; sim[tw.n] = m;
   const out = cmpConflicts(sim, n, c);
   // un conflit du miroir avec le choix lui-même est porté par la jumelle

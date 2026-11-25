@@ -1101,7 +1101,8 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
   #panel > .ed-section > .ed-body { display: block; }
   body.rp-kbmap #panel { display: none; }
   /* la carte en grand, pendant le cadre d'export et le dessin (spFull) : toute la hauteur sous la barre du haut ; le panneau, la poignée et la barre d'onglets sont cachés, rien n'est écrit en mémoire */
-  body.rp-mapfull .app { bottom: 0; grid-template-rows: auto !important; }
+  body.rp-mapfull .app { grid-template-rows: auto !important; }
+  html:not(.ui-kb) body.rp-mapfull .app { bottom: 0; }
   body.rp-mapfull #panel, body.rp-mapfull #rp-split { display: none; }
   body.rp-mapfull #tab-bar { display: none !important; }
   /* l'export : la barre des modes s'efface ; la barre d'export prend la largeur, en bas de la carte au-dessus de la mention Leaflet (--exp-bot, mesuré par expLayout), la consigne au-dessus des boutons (à côté d'eux dès 600 px) */
@@ -8666,7 +8667,7 @@ function openAsRoute(route, msgFn) {
       S.name = ''; S.points = nb.points;
     }
     /* route de plus : son nom, ses points et ses références viennent du fichier, les unités et les réglages restent ceux du RP ; route active vide remplacée : tout le fichier, comme avant */
-    setRoute(empty ? route : Object.assign({}, route, { units: S.units, navDisplay: S.navDisplay, groundSpeed: S.groundSpeed, legBoxes: S.legBoxes }));
+    setRoute(empty ? route : Object.assign(uiCopy(route), { units: S.units, navDisplay: S.navDisplay, groundSpeed: S.groundSpeed, legBoxes: S.legBoxes }));
     return true;
   };
   if (!replacing) { go(); if (msgFn) showToast(msgFn(), { type: 'ok' }); return true; }
@@ -8676,7 +8677,7 @@ function openAsRoute(route, msgFn) {
 
 /* Ouvrir un dcs-route-set-v1 : toutes les routes sont remplacées (confirmation s'il y a des points) ; les réglages partagés et les références, comme une route */
 function openRouteSet(parsed) {
-  const sh = parseRoute(Object.assign({}, parsed, { format: FORMAT_ID, points: [], name: '' }));
+  const sh = parseRoute(Object.assign(uiCopy(parsed), { format: FORMAT_ID, points: [], name: '' }));
   const rr = readRoutes(parsed.routes, THEATRE_IDS.indexOf(parsed.theatre) !== -1 ? parsed.theatre : S.theatre);       /* une route sans theatre prend celui de tête du fichier, sinon le courant */
   const lays = Array.isArray(parsed.layers) ? parsed.layers.map(cfLayer).filter(Boolean) : [];
   /* sans liste de routes, ou sans aucun point (et sans calque à ajouter) : rien ne s'ouvre, rien ne change */
@@ -9928,7 +9929,7 @@ function openCfImport(fileName, res) {
 
 /* « Afficher » : les calques cochés s'ajoutent aux calques présents (un même id remplace le sien) ; la carte ne bouge pas */
 function cfImportGo() {
-  const picked = CFI.layers.filter((l, i) => CFI.checked[i]).map(l => Object.assign({}, l, { visible: true }));
+  const picked = CFI.layers.filter((l, i) => CFI.checked[i]).map(l => Object.assign(uiCopy(l), { visible: true }));
   cfMerge(picked);
   rtHide('cf-import-modal');
   if (!layersChanged()) return;

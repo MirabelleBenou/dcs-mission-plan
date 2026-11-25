@@ -739,6 +739,8 @@ try { if (window.self !== window.top) document.documentElement.classList.add('mp
 
 /* ---- la garde commune des copies clé par clé : un objet lu d'un fichier, du stockage, d'un paquet, d'une route, d'un .miz ou d'un message ne se recopie pas par ces trois clés (__proto__ changerait le prototype de la copie) ---- */
 function uiKeyOk(k) { return k !== '__proto__' && k !== 'constructor' && k !== 'prototype'; }
+/* Copie propre d'un objet lu (fichier, stockage, .miz, message) : clé par clé, sans les clés qui changent un prototype ; Object.assign(uiCopy(x), extras) remplace Object.assign({}, x, extras) */
+function uiCopy(o) { const r = {}; if (o && typeof o === 'object') Object.keys(o).forEach(k => { if (uiKeyOk(k)) r[k] = o[k]; }); return r; }
 
 /* ---- la liste de thème suit le thème appliqué (le shell pousse data-theme sur le body du module) ---- */
 (function uiThemeFollow() {

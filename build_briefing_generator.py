@@ -6225,7 +6225,7 @@ function bgTakeFromHq() {
   try {
     const cur = _metarParams || _metarDefaults();
     const np = hq.hasWx ? bgHqToParams(hq, cur.icao) : null;
-    const line = p => buildMetarString(Object.assign({}, p, { icao: '' }));       // ce que l'assistant écrit, sans l'OACI
+    const line = p => buildMetarString(Object.assign(uiCopy(p), { icao: '' }));       // ce que l'assistant écrit, sans l'OACI
     const st = hq.sn.time < 0 ? -1 : Math.floor(hq.sn.time);
     const newDate = hq.sn.date, newTime = st < 0 ? '' : String(Math.floor(st / 3600) % 24).padStart(2, '0') + ':' + String(Math.floor((st % 3600) / 60)).padStart(2, '0');
     const oldDate = String(state.meta.date || '').trim(), oldTime = String(state.meta.time || '').trim();
