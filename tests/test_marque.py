@@ -129,7 +129,11 @@ def test_readme_licences_changelog():
     entries = {
         '### All tools': ["**The Squadron Ready Room family insignia**\n- Every page of the suite carries the family's icon in the browser tab and when pinned to a phone's home screen.\n- The default wing logo, in HQ and the Briefing Generator, is now the Squadron Ready Room insignia; a wing still on the former “WG” logo shows the new one and still counts as not set up.",
                          "**Fixed: “⋯” on very narrow screens**\n- Below 345 px wide, after the toolbar was scrolled, “⋯” could end up off the screen; it now stays in view.",
-                         "**Menus easier to read from the keyboard**\n- In the toolbar's menus, the line reached with the arrow keys now has enough contrast in every theme."],
+                         "**Menus easier to read from the keyboard**\n- In the toolbar's menus, the line reached with the arrow keys now has enough contrast in every theme.",
+                         "**Menus: the “Delete” line stands out**\n- In the Datacard Generator's and the Route Planner's menus, the “Delete” line under the pointer or reached with the arrow keys now turns red with dark text, readable in every theme.",
+                         "**The “⋯” menu from the keyboard**\n- The arrow keys move through the “⋯” menu, like the other toolbar menus.",
+                         "**Export in one tap**\n- With a list or a menu open, one tap on Export closes it and opens the export window, as the toolbar menus already did.",
+                         "**Bottom tabs from the keyboard**\n- On a narrow screen, the arrow keys move between the bottom tabs, and each tab is tied to its section for screen readers."],
         '### Home screen': ["**The Mission Plan insignia**\n- The home screen shows the Mission Plan insignia beside its title — on a phone, as a seal on the title's corner — and the family's icon in the top bar; when the Squadron Ready Room opens Mission Plan, your wing's emblem takes its place.\n- A *Squadron Ready Room family* line sits above the credits."],
         '### Field Manual': ["**The home screen drawn with its insignia**\n- The two drawings of the home screen show the insignia and the family's icon.",
                          "**The phone drawing of the home screen in the right order**\n- The title plate now sits under the toolbar buttons, as on screen.",

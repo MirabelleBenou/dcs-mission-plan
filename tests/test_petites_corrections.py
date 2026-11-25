@@ -68,12 +68,17 @@ def test_point_ref_dropped_keys_and_unchanged_found_flight_key():
 
 
 ALL_TOOLS_2 = ["**Fixed: “⋯” on very narrow screens**\n- Below 345 px wide, after the toolbar was scrolled, “⋯” could end up off the screen; it now stays in view.",
-               "**Menus easier to read from the keyboard**\n- In the toolbar's menus, the line reached with the arrow keys now has enough contrast in every theme."]
+               "**Menus easier to read from the keyboard**\n- In the toolbar's menus, the line reached with the arrow keys now has enough contrast in every theme.",
+               "**Menus: the “Delete” line stands out**\n- In the Datacard Generator's and the Route Planner's menus, the “Delete” line under the pointer or reached with the arrow keys now turns red with dark text, readable in every theme.",
+                         "**The “⋯” menu from the keyboard**\n- The arrow keys move through the “⋯” menu, like the other toolbar menus.",
+                         "**Export in one tap**\n- With a list or a menu open, one tap on Export closes it and opens the export window, as the toolbar menus already did.",
+                         "**Bottom tabs from the keyboard**\n- On a narrow screen, the arrow keys move between the bottom tabs, and each tab is tied to its section for screen readers."]
 CHANGELOG = {
     '### HQ': ["**The Wing button keeps its place**\n- The Wing button now always sits between Flight packages and Example, whether or not the wing is set up; until it is, the button stays highlighted.",
               "**A clearer warning on a created flight**\n- When a package creates a flight, a waypoint that pointed to a unit of the package’s mission is reported as removed, no longer as to be checked."],
     '### Flight Configurator': ["**Folded groups stay folded**\n- A group you fold, on its own or with Fold all, is still folded when you come back or reload.", "**Fixed: countermeasure limits without chaff**\n- For an aircraft that carries no chaff, such as the Mi-8MT, the limit now reads “max 128” instead of a formula with “chaff × 0”.",
-                                    "**The Kord on both doors is reported**\n- A Mi-24P loadout received with something on both doors — from a file, a preset or a copy — now shows the conflict under both doors, like any other rule."],
+                                    "**The Kord on both doors is reported**\n- A Mi-24P loadout received with something on both doors — from a file, a preset or a copy — now shows the conflict under both doors, like any other rule.",
+                                    "**Fixed: the chaff field of an aircraft without chaff**\n- For an aircraft that carries no chaff, such as the Mi-8MT, the greyed chaff field now reads “not carried” instead of the flare limit."],
     '### Briefing Generator': ["**Restore after opening a briefing**\n- Open a briefing… now offers Restore for 12 seconds, like the other tools: it brings back the briefing you had before.",
                                "**Fixed: briefing files are read safely**\n- A briefing file, or a briefing kept by the browser, can no longer change how the page works through special keys such as __proto__."],
     '### Route Planner': ["**“Clear everything”, as in the other tools**\n- In English, the button of the Clear window now reads “Clear everything”.",
