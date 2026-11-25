@@ -5015,6 +5015,7 @@ function profRender() {
   PROF.view = null; PROF.zones = []; PROF.bars = [];
   if (G.fold) return;
   const svg = PROF.svg;
+  svg.setAttribute('aria-label', t('prof.title'));
   svg.setAttribute('width', G.W); svg.setAttribute('height', G.gh); svg.setAttribute('viewBox', '0 0 ' + G.W + ' ' + G.gh);
   if (S.points.length < 2) {
     svg.innerHTML = '<text x="' + (G.W / 2) + '" y="' + (G.gh / 2) + '" text-anchor="middle" class="prof-empty">' + esc(t('prof.empty')) + '</text>';
