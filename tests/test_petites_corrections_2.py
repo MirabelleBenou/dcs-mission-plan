@@ -318,11 +318,21 @@ def test_a_received_loadout_with_the_kord_on_both_doors_is_reported_under_both(b
     assert ids == {'l': 'KORD_12_7_MI24_L', 'r': 'KORD_12_7_MI24_R'}
     # un fichier de travail : le Kord gauche en 7 et le droit en 8, rien d'autre ; le shell le rouvre
     pg.evaluate("""(c) => { const fs = JSON.parse(localStorage.getItem('flight_set_v1')); const u = fs.flights[0].units[0]; u.loadout.pylons = { '7': { CLSID: c.l }, '8': { CLSID: c.r } }; localStorage.setItem('flight_set_v1', JSON.stringify(fs)); }""", ids)
-    pg.reload(wait_until='commit')
-    pg.wait_for_function("() => typeof window.MP_WORK_EXAMPLE === 'function' && !!document.getElementById('card-hq')", timeout=60000)
-    pg.wait_for_selector('#iframe-fc', state='attached', timeout=30000)
-    pg.wait_for_timeout(3500)
-    fr = pg.query_selector('#iframe-fc').content_frame()
+    snap = pg.evaluate("() => JSON.stringify(Object.keys(localStorage).map(k => [k, localStorage.getItem(k)]))")
+    fr = None
+    for _ in range(3):                  # le contexte du banc perd parfois tout localStorage à un rechargement (rien de l'application) : on remet le stockage comme il était et on recharge
+        pg.reload(wait_until='commit')
+        pg.wait_for_function("() => typeof window.MP_WORK_EXAMPLE === 'function' && !!document.getElementById('card-hq')", timeout=60000)
+        pg.wait_for_timeout(1300)
+        if pg.evaluate("(ks) => ks.some(k => localStorage.getItem(k) === null)", [kv[0] for kv in json.loads(snap)]):
+            pg.evaluate("(d) => { JSON.parse(d).forEach(kv => localStorage.setItem(kv[0], kv[1])); }", snap)
+            continue
+        pg.wait_for_selector('#iframe-fc', state='attached', timeout=30000)
+        pg.wait_for_timeout(2600)
+        fr = pg.query_selector('#iframe-fc').content_frame()
+        break
+    assert fr is not None, 'localStorage lost three reloads in a row'
+    fr.wait_for_function("() => { try { return !!selUnit() && !!selUnit().u && document.querySelectorAll('#blk-cmp .cmp-row').length > 0; } catch (e) { return false; } }", timeout=30000)       # l'outil rouvert a fini de choisir son unité
     got = fr.evaluate(KORD_DOM)
     assert got['rows']['7']['rule'] == rule.format(8, phrase) and got['rows']['8']['rule'] == rule.format(7, phrase), got['rows']
     assert got['rows']['7']['sel'] == 'KORD_12_7_MI24_L' and got['rows']['8']['sel'] == 'KORD_12_7_MI24_R'        # rien n'est vidé

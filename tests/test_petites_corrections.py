@@ -471,7 +471,7 @@ def reopen_fc(pg):
         pg.reload(wait_until='commit')
         pg.wait_for_function("() => typeof window.MP_WORK_EXAMPLE === 'function' && !!document.getElementById('card-hq')", timeout=60000)
         pg.wait_for_timeout(1300)
-        if pg.evaluate("() => localStorage.getItem('fc_state_v1') === null") and '"fc_state_v1"' in snap:
+        if pg.evaluate("(ks) => ks.some(k => localStorage.getItem(k) === null)", [kv[0] for kv in json.loads(snap)]):       # une clé que le stockage avait avant le rechargement et n'a plus : il a tout perdu (l'outil a pu écrire un état vide à la place)
             pg.evaluate(LS_PUT, snap)
             continue
         pg.wait_for_selector('#iframe-fc', state='attached', timeout=30000)

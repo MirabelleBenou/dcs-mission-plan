@@ -603,6 +603,8 @@ def test_every_reference_point_row_stays_on_one_line_below_520_px(browser, w, h,
         fr.evaluate("(i) => { addRef(35 + i * 0.1, 36 + i * 0.1, 'REF' + i); }", i)
     pg.wait_for_timeout(300)
     tab(fr, 'refs')                                                               # la barre d'onglets est là jusqu'à 1 100 px, souris ou doigt
+    fr.wait_for_function("() => { const rows = [...document.querySelectorAll('#refs .pt-row')]; return rows.length >= 4 && rows.every(r => r.getClientRects().length && r.getBoundingClientRect().height > 0); }", timeout=10000)       # les quatre lignes sont posées
+    pg.wait_for_timeout(300)                                                      # et la mise en page de l'onglet est faite avant la mesure
     rows = fr.evaluate(REFROWS)
     assert len(rows) >= 4
     for r in rows:
