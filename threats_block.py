@@ -616,7 +616,7 @@ function thrRouteCompute(seq) {
         if (!(flat[n + 1] && flat[n + 1].seen)) { cur.push(edge(e, 1)); runs.push(cur); spans.push({ d0: d0, d1: edgeD(e, 1) }); cur = null; }
       }
     });
-    THR.spans = { pk: JSON.stringify(pts.map(p => [p.lat, p.lon])), list: spans };
+    THR.spans = { pk: JSON.stringify(pts.map(p => [p.lat, p.lon, p.alt, p.altRef])), list: spans };
     thrRouteSet(seen, runs);
   });
 }

@@ -933,12 +933,11 @@ select[data-tbm-src] { display: none !important; }
 #map { position: absolute; inset: 0 0 var(--prof-h, 0px) 0; background: #e8dfc6; }       /* --prof-h : la hauteur du profil du sol, posée sur .mapwrap quand il est ouvert (0 sinon) */
 /* le profil du sol (lot mp-route-profil) : sous la carte, dans .mapwrap ; la carte rétrécit d'autant (--prof-h), jamais recouverte */
 #rp-prof { position: absolute; left: 0; right: 0; bottom: 0; z-index: 3; box-sizing: border-box; background: #1a1c14; border-top: 2px solid var(--amber-dark); font-family: var(--f-ui); color: #e8dcb8; overflow: visible; }
-#rp-prof .prof-h { display: flex; align-items: center; gap: 12px; box-sizing: border-box; height: 24px; padding: 0 48px 0 10px; }
+#rp-prof .prof-h { display: flex; align-items: center; gap: 12px; box-sizing: border-box; height: calc(var(--prof-head, 26px) - 2px); padding: 0 48px 0 10px; }
 #rp-prof .prof-t { flex: none; color: var(--amber); font: 700 12px/1 var(--f-ui); letter-spacing: .16em; white-space: nowrap; }
 #rp-prof .prof-leg { flex: 1 1 auto; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font: 500 11px/1 var(--f-ui); letter-spacing: .03em; }
 #rp-prof .prof-leg[hidden] { display: none; }
-#rp-prof .prof-fb { position: absolute; right: 0; top: 0; z-index: 5; box-sizing: border-box; width: 44px; height: 44px; margin: 0; padding: 0 0 20px; border: 0; border-radius: 0; background: transparent; color: #c8923a; font: 700 17px/1 var(--f-ui); cursor: pointer; touch-action: manipulation; }
-#rp-prof.prof-fold .prof-fb { top: auto; bottom: 0; padding: 20px 0 0; }
+#rp-prof .prof-fb { position: absolute; right: 0; top: -2px; z-index: 5; box-sizing: border-box; width: 44px; height: var(--prof-head, 26px); margin: 0; padding: 0; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 0; background: transparent; color: #c8923a; font: 700 17px/1 var(--f-ui); cursor: pointer; touch-action: manipulation; }
 #rp-prof .prof-fb:focus-visible { outline: 2px solid var(--amber); outline-offset: -4px; }
 #rp-prof .prof-g { position: relative; }
 #rp-prof .prof-g[hidden] { display: none; }
@@ -3062,6 +3061,7 @@ const I18N = {
     'dsp.profile.off': 'Profil du sol — absent de ce théâtre',
     'prof.title': 'PROFIL DU SOL',
     'prof.empty': 'Tracez au moins deux points.',
+    'prof.err': '⚠ Profil indisponible : relief illisible ou absent du réseau.',
     'prof.ground': 'sol',
     'prof.seen': 'vu dès {v} ({n})',
     'prof.leg': '▲ Point le plus haut **{h}** · sécurité **{s}**',
@@ -3646,6 +3646,7 @@ const I18N = {
     'dsp.profile.off': 'Ground profile — not available for this theatre',
     'prof.title': 'GROUND PROFILE',
     'prof.empty': 'Draw at least two waypoints.',
+    'prof.err': '⚠ Profile unavailable: relief unreadable or not reachable.',
     'prof.ground': 'ground',
     'prof.seen': 'seen from {v} ({n})',
     'prof.leg': '▲ Highest point **{h}** · safety **{s}**',
@@ -7753,7 +7754,7 @@ function thrRouteCompute(seq) {
         if (!(flat[n + 1] && flat[n + 1].seen)) { cur.push(edge(e, 1)); runs.push(cur); spans.push({ d0: d0, d1: edgeD(e, 1) }); cur = null; }
       }
     });
-    THR.spans = { pk: JSON.stringify(pts.map(p => [p.lat, p.lon])), list: spans };
+    THR.spans = { pk: JSON.stringify(pts.map(p => [p.lat, p.lon, p.alt, p.altRef])), list: spans };
     thrRouteSet(seen, runs);
   });
 }
@@ -7934,12 +7935,15 @@ function thrProbe(sysId, lat, lon, noWorker) {
    le cache de ce profil est à lui (PROF.tiles) : il garde l'inconnu (hors des bornes, tuile absente, alpha 0), que les menaces et le pointeur lisent comme 0 m.
    La ligne de vol est une droite d'un point à l'autre, chaque point à son altitude prévue : une indication, jamais une alerte. Par branche : le point le plus haut (les échantillons connus) et la sécurité
    (le plus haut pixel du niveau natif à 9 260 m au plus du segment, plus 300 m, arrondi au-dessus). Avec « Menaces » : la zone vue et la barre « route vue » (celle du halo de la carte). */
-const PROF_HEAD = 26;          /* le bandeau replié : le bord supérieur de 2 px et l'en-tête */
+const PROF_HEAD = 26;          /* le bandeau replié, à la souris : le bord supérieur de 2 px et l'en-tête */
+const PROF_HEAD_TOUCH = 44;    /* et au doigt (pointer: coarse) : l'en-tête tient le bouton de 44 px */
+const PROF_GH_MIN = 60;        /* le graphique d'un petit écran ne descend pas sous 60 px */
+const PROF_MAP_MIN = 140;      /* la carte garde 140 px s'il reste de la place */
 const PROF_GH = 190;           /* la hauteur du graphique, carte large (au moins THR_NARROW) */
 const PROF_GH_NARROW = 130;    /* et en dessous */
 const PROF_CORR_M = 9260;      /* le couloir de sécurité : 5 NM de chaque côté */
 const PROF_PLUS_M = 300;       /* ajoutés au plus haut du couloir */
-const PROF_TILES = 192;        /* tuiles d'altitude gardées au plus, dans un cache qui n'est ni celui du relief ni celui des menaces */
+const PROF_TILES = 96;         /* tuiles d'altitude gardées au plus, dans un cache qui n'est ni celui du relief ni celui des menaces */
 const PROF_BLOCK = 16;         /* le couloir se parcourt par blocs de 16 × 16 pixels */
 const PROF_FT = 3.28084;
 const PROF_YEL = '#ffd400', PROF_GREEN = '#8fe08f', PROF_LINE = '#f08a6c', PROF_RED = '#c8102e';
@@ -7947,7 +7951,7 @@ const PROF = {
   tiles: new Map(),            /* adresse de la tuile d'altitude → promesse de ses mètres (Float32Array de 65 536, NaN là où l'alpha est 0) ou de null */
   canvas: null, el: null, wrap: null, svg: null, bub: null,
   data: null,                  /* le dernier relevé fini : { key, th, legs, flat, pts, total } */
-  key: '', seq: 0, timer: 0, rsig: '', nsig: 'off', shown: false, h: 0,
+  key: '', seq: 0, timer: 0, rsig: '', nsig: 'off', shown: false, h: 0, desc: null,
   view: null,                  /* l'échelle du dernier dessin (pour les mesures et le curseur) */
   zones: [],                   /* la zone de chaque menace, au dernier dessin : { id, name, top, runs: [{ d0, d1, s: [{ d, lo }] }] } */
   bars: [],                    /* la barre « route vue » au dernier dessin : [{ d0, d1 }] en mètres depuis le départ */
@@ -7958,17 +7962,22 @@ function profWanted() { return !!DISP.profile && reliefTheatre(S.theatre); }
 function profKey() { return JSON.stringify([S.theatre, S.points.map(p => [p.lat, p.lon])]); }
 function profUnit() { return t(S.units.altitude === 'ft' ? 'u.ft' : 'u.m'); }
 function profGeom() {
-  const W = PROF.wrap ? PROF.wrap.clientWidth : 0, narrow = W < THR_NARROW, gh = narrow ? PROF_GH_NARROW : PROF_GH, fold = !!DISP.profFold;
-  return { W: W, narrow: narrow, gh: gh, fold: fold, H: PROF_HEAD + (fold ? 0 : gh) };
+  const W = PROF.wrap ? PROF.wrap.clientWidth : 0, WH = PROF.wrap ? PROF.wrap.clientHeight : 0, narrow = W < THR_NARROW, fold = !!DISP.profFold;
+  const head = window.matchMedia && window.matchMedia('(pointer: coarse)').matches ? PROF_HEAD_TOUCH : PROF_HEAD;
+  /* sous 760 px, le graphique s'adapte à la place pour que la carte garde 140 px, sans descendre sous 60 px (sous ce plancher, la carte rétrécit) */
+  /* (le même calcul, 190 px au plus, pour une carte large dont .mapwrap est très basse : un téléphone en paysage ; à un écran de bureau, rien ne change) */
+  const gh = Math.max(PROF_GH_MIN, Math.min(narrow ? PROF_GH_NARROW : PROF_GH, WH - head - PROF_MAP_MIN));
+  return { W: W, WH: WH, narrow: narrow, gh: gh, head: head, fold: fold, H: head + (fold ? 0 : gh) };
 }
 
 /* ---- le sol : les tuiles d'altitude, l'inconnu gardé ---- */
 function profTile(url, meta) {
   const hit = PROF.tiles.get(url);
   if (hit) return hit;
+  /* 200 : la tuile ; 404 ou 410 : absente (inconnu, gardé) ; toute autre réponse ou un réseau en échec : une erreur, qui ne se garde pas (le prochain relevé relit) */
   const p = fetch(url, { mode: 'cors' })
-    .then(r => (r.ok ? r.blob() : null))
-    .then(blob => (blob ? createImageBitmap(blob, { colorSpaceConversion: 'none', premultiplyAlpha: 'none' }) : null))
+    .then(r => { if (r.ok) return r.blob(); if (r.status === 404 || r.status === 410) return null; throw new Error('tile ' + r.status); })
+    .then(blob => (blob ? createImageBitmap(blob, { colorSpaceConversion: 'none', premultiplyAlpha: 'none' }).catch(() => null) : null))
     .then(bm => {
       if (!bm) return null;
       try {
@@ -7984,8 +7993,8 @@ function profTile(url, meta) {
         }
         return out;
       } catch (e) { return null; } finally { if (bm.close) bm.close(); }
-    })
-    .catch(() => null);
+    });
+  p.catch(() => { if (PROF.tiles.get(url) === p) PROF.tiles.delete(url); });
   PROF.tiles.set(url, p);
   while (PROF.tiles.size > PROF_TILES) PROF.tiles.delete(PROF.tiles.keys().next().value);
   return p;
@@ -8089,15 +8098,36 @@ async function profCorridor(a, b, lg, th, meta) {
   return out;
 }
 
+/* La description du relief : celle des menaces et du Relief (une lecture par théâtre, l'échec gardé) ; si elle a échoué, le profil relit relief.json lui-même, sans rien changer à ce cache */
+async function profMeta(th) {
+  try { return await reliefDesc(th); } catch (e0) {
+    if (PROF.desc && PROF.desc.th === th) return PROF.desc.meta;
+    let r;
+    try { r = await fetch(RELIEF_BASE + encodeURIComponent(th) + '/relief.json', { cache: 'no-cache' }); } catch (e) { throw { kind: 'net' }; }
+    if (r.status !== 200) throw { kind: 'net' };
+    let j = null;
+    try { j = JSON.parse(await r.text()); } catch (e) { j = null; }
+    const m = reliefClean(j);
+    if (!m) throw { kind: 'fmt' };
+    PROF.desc = { th: th, meta: m };
+    return m;
+  }
+}
+/* Un relevé en échec : le bandeau le dit ; la clé est remise à zéro pour que le prochain profSync (la case, un redessin, la route) relance le calcul */
+function profFailed(key) {
+  PROF.data = { key: key, th: S.theatre, fail: true, legs: [null], flat: null, pts: [], total: 0 };
+  PROF.key = '';
+  profAfterData();
+}
+
 /* Le relevé de la route : le sol de chaque branche, son point le plus haut, son couloir ; un relevé périmé (seq) ne se pose pas */
 async function profCompute(seq, key) {
   const th = S.theatre, pts = S.points.map(p => ({ lat: p.lat, lon: p.lon }));
   let meta = null;
-  try { meta = await reliefDesc(th); } catch (e) {
+  try { meta = await profMeta(th); } catch (e) {
     if (seq !== PROF.seq) return;
     if (!RE.toasted.has(th)) { RE.toasted.add(th); showToast(t(e && e.kind === 'fmt' ? 'relief.err.fmt' : 'relief.err.net'), { type: 'err' }); }
-    PROF.data = { key: key, th: th, fail: true, legs: [null], flat: null, pts: [], total: 0 };
-    profAfterData();
+    profFailed(key);
     return;
   }
   const legs = [null];
@@ -8112,8 +8142,7 @@ async function profCompute(seq, key) {
     }
   } catch (e) {
     if (seq !== PROF.seq) return;
-    PROF.data = { key: key, th: th, fail: true, legs: [null], flat: null, pts: [], total: 0 };
-    profAfterData();
+    profFailed(key);
     return;
   }
   if (seq !== PROF.seq) return;
@@ -8231,8 +8260,9 @@ function profRender() {
   const G = profGeom(), el = PROF.el;
   if (!G.W) return;
   el.setAttribute('aria-label', t('prof.title'));
+  el.style.setProperty('--prof-head', G.head + 'px');
   const grids = profGrids(), thrOn = DISP.threats && THR.state === 'ok' && THR.act.length > 0, d = PROF.data, fresh = !!d && d.key === profKey() && !d.fail;
-  const sig = JSON.stringify([fresh ? d.key : '', S.points.map(p => [p.name, p.alt, p.altRef]), CURRENT_LANG, S.units.altitude, S.units.distance, G.W, G.fold, THR.ver, grids.map(x => x.a.key + '|' + x.a.name),
+  const sig = JSON.stringify([fresh ? d.key : '', S.points.map(p => [p.name, p.alt, p.altRef]), CURRENT_LANG, S.units.altitude, S.units.distance, G.W, G.gh, G.head, G.fold, !!d && d.fail && d.key === profKey(), THR.ver, grids.map(x => x.a.key + '|' + x.a.name),
     DISP.threats, THR.state, THR.spans, S.points.length]);
   PROF.shown = true;
   if (!el.parentNode) PROF.wrap.appendChild(el);
@@ -8264,7 +8294,13 @@ function profRender() {
     svg.innerHTML = '<text x="' + (G.W / 2) + '" y="' + (G.gh / 2) + '" text-anchor="middle" class="prof-empty">' + esc(t('prof.empty')) + '</text>';
     return;
   }
-  if (!fresh) { svg.innerHTML = ''; return; }
+  if (!fresh) {
+    if (d && d.fail && d.key === profKey()) {
+      const parts = t('prof.err').split(/([:：]) /), l1 = parts.length > 2 ? parts[0] + parts[1] : parts[0], l2 = parts.length > 2 ? parts.slice(2).join('') : '';
+      svg.innerHTML = '<text x="' + (G.W / 2) + '" y="' + (G.gh / 2 - (l2 ? 4 : -4)) + '" text-anchor="middle" class="prof-empty prof-err">' + esc(l1) + '</text>' + (l2 ? '<text x="' + (G.W / 2) + '" y="' + (G.gh / 2 + 14) + '" text-anchor="middle" class="prof-empty prof-err">' + esc(l2) + '</text>' : '');
+    } else svg.innerHTML = '';
+    return;
+  }
   svg.innerHTML = profSvg(G, d, grids);
 }
 
@@ -8282,7 +8318,7 @@ function profSvg(G, d, grids) {
   d.legs.forEach(lg => { if (!lg) return; if (lg.hi >= 0) see(lg.g[lg.hi]); const sv = profSafeVal(lg.safe); if (sv != null) see(ft ? sv * FT_M : sv); });
   if (!isFinite(vlo)) { vlo = 0; vhi = 1000; }
   const span0 = Math.max(vhi - vlo, 50), pad = span0 * 0.1;
-  const nt = Math.max(3, Math.min(6, Math.floor((axisY - mt) / 34)));
+  const nt = Math.max(axisY - mt < 60 ? 1 : 3, Math.min(6, Math.floor((axisY - mt) / 34)));       /* un graphique de 60 px : peu de graduations, lisibles */
   const step = profNice(((vhi + pad) - vlo) * uf / nt);
   const ulo = Math.floor(vlo * uf / step) * step;
   let uhi = Math.ceil((vhi + pad) * uf / step) * step;
@@ -8379,7 +8415,7 @@ function profSvg(G, d, grids) {
     }
   });
   /* la route vue : un trait de 5 px sous l'axe, sur les suites que la carte souligne (le halo) ; celles de la route d'aujourd'hui seulement */
-  if (DISP.threats && THR.state === 'ok' && grids.length && THR.spans && THR.spans.pk === JSON.stringify(pts.map(p => [p.lat, p.lon]))) THR.spans.list.forEach(b => {
+  if (DISP.threats && THR.state === 'ok' && grids.length && THR.spans && THR.spans.pk === JSON.stringify(pts.map(p => [p.lat, p.lon, p.alt, p.altRef]))) THR.spans.list.forEach(b => {
     s += '<rect x="' + X(b.d0).toFixed(2) + '" y="' + (axisY + 1) + '" width="' + Math.max(1, X(b.d1) - X(b.d0)).toFixed(2) + '" height="5" class="prof-seen" data-d0="' + (b.d0 / 1000).toFixed(3) + '" data-d1="' + (b.d1 / 1000).toFixed(3) + '"/>';
     PROF.bars.push({ d0: b.d0, d1: b.d1 });
   });
@@ -8395,11 +8431,9 @@ function profSvg(G, d, grids) {
   s += lbls.map(q => '<line x1="' + q.x.toFixed(2) + '" x2="' + q.x.toFixed(2) + '" y1="' + (mt - 2) + '" y2="' + axisY + '" class="prof-vert"/>').join('');
   const shown = [];
   lbls.forEach((q, n) => {
-    const prev = shown[shown.length - 1];
-    if (prev && q.l < prev.r + 3) {
-      if (n < lbls.length - 1) return;
-      if (shown.length > 1) shown.pop();
-    }
+    const hit = () => shown.length && q.l < shown[shown.length - 1].r + 3;
+    if (n === lbls.length - 1) { while (shown.length > 1 && hit()) shown.pop(); }       /* la dernière reste toujours, revérifiée contre la dernière étiquette gardée */
+    else if (hit()) return;
     shown.push(q);
   });
   shown.forEach(q => { s += '<text x="' + q.l.toFixed(1) + '" y="' + (mt - 6) + '" class="prof-pn" data-i="' + q.i + '">' + esc(q.txt) + '</text>'; });
@@ -11445,6 +11479,7 @@ function renderNav() {
       (dv && dv[i] ? '<span class="co diss"><span class="dv">' + esc(dv[i].fwd) + '</span> · <span class="dv">' + esc(dv[i].right) + '</span></span>' : '') + '</td></tr>';
   });
   $('nav-body').innerHTML = rows;
+  PROF.nsig = profNavSig();       /* la signature tenue est celle de ce que le tableau montre : un relevé qui rend les mêmes chiffres après un relevé périmé redessine quand même la ligne */
   $('nav-total').textContent = t('nav.total.v', { d: fmtDist(tm.km), t: fmtElapsed(tm.sec) });
   /* Les points de référence : après le total ; ni dans les branches ni dans le total */
   let rr = '';
