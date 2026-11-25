@@ -252,6 +252,10 @@ def test_every_opening_of_the_route_planner_starts_folded(browser):
     pg.evaluate("openModule('rp')")
     pg.wait_for_timeout(2300)
     fr2 = next(x for x in pg.frames if x != pg.main_frame and x.evaluate("typeof window.__RP !== 'undefined'"))
+    assert fr2.evaluate("__RP.thr.open") is False                                   # en mémoire, à la création du cartouche : repliée
+    if fr2.evaluate("S.theatre") != 'Syria':                                         # le théâtre de l'exemple n'est pas toujours déjà écrit au rechargement
+        fr2.evaluate("(id) => { const s = document.getElementById('theatre'); s.value = id; s.dispatchEvent(new Event('change', { bubbles: true })); }", 'Syria')
+        pg.wait_for_timeout(900)
     setup(fr2, [sym(0, 'sa-8')])
     f = fr2.evaluate(FOLD)
     assert f['exp'] == 'false' and f['text'] == '±' and f['steps'] == [], f
