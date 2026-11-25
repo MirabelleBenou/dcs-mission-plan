@@ -138,7 +138,9 @@ def test_the_pill_follows_the_credits_when_the_phone_turns_and_the_wide_box_is_l
     settle(pg, 5)
     b = fr.evaluate(BOX)
     g = gap(fr)
-    assert b['pill'] is False and b['style'] is None and b['bottom'] == 28 and b['mapw'] >= 760, (b, g)       # le cartouche large recouvre déjà des contrôles à la base à cette hauteur de carte (140 px) : non corrigé, non mesuré ici
+    bottom_over = fr.evaluate("""() => { const b = document.getElementById('rp-thr').getBoundingClientRect(); return Array.from(document.querySelectorAll('.leaflet-bottom .leaflet-control')).map(e => e.getBoundingClientRect())
+      .filter(r => r.width > 0 && r.height > 0 && r.left < b.right && b.left < r.right && r.top < b.bottom && b.top < r.bottom).length; }""")
+    assert b['pill'] is False and b['style'] is None and b['bottom'] == 28 and b['mapw'] >= 760 and bottom_over == 0, (b, bottom_over)       # le dépassement vers le haut de la carte (140 px) est connu, hors lot
     pg.set_viewport_size({'width': 360, 'height': 780})
     settle(pg, 5)
     assert fr.evaluate(BOX)['pill'] is True and abs(gap(fr)['gap'] - 6) <= 1
@@ -465,5 +467,82 @@ def test_above_1100_px_the_big_map_calls_no_move_at_all(browser):
         fr.evaluate(b)
         pg.wait_for_timeout(700)
     assert fr.evaluate("window.__ev") == {}
+    assert pg.errs == []
+    pg.context.close()
+
+
+# ---------- règle 4 : la vue pendant que l'outil est caché ----------
+def _hidden_path(browser, w, h, kind):
+    pg, fr = open_rp(browser, w=w, h=h)
+    setup(fr, [sym(0, 'sa-8')])
+    aim(fr, pg)
+    v0 = fr.evaluate(VIEW)
+    fr.evaluate("expOpen()" if kind.startswith('exp') else "setTapMode('draw')")
+    pg.wait_for_timeout(600)
+    if kind.endswith('pan'):
+        fr.evaluate("__RP.map.panBy([0, 100], { animate: false })")
+        pg.wait_for_timeout(300)
+    vin = fr.evaluate(VIEW)
+    pg.evaluate("openModule('dg')")
+    pg.wait_for_timeout(1200)
+    return pg, fr, v0, vin
+
+
+@needs_pw
+@pytest.mark.parametrize('w,h', [(345, 590), (915, 412)])
+def test_drawing_then_another_tool_changes_the_theatre_then_back_the_map_frames_the_new_theatre(browser, w, h):
+    pg, fr, v0, vin = _hidden_path(browser, w, h, 'draw')
+    pg.evaluate("localStorage.setItem('mp_theatre_v1', JSON.stringify({ theatre: 'Caucasus' }))")
+    pg.wait_for_timeout(900)
+    pg.evaluate("openModule('rp')")
+    pg.wait_for_timeout(1500)
+    r = fr.evaluate("() => { const c = __RP.map.getCenter(), t = theatreOf('Caucasus'); return { th: S.theatre, tap: tapMode, z: __RP.map.getZoom(), tz: t.z, dist: __RP.map.project(c, t.z).distanceTo(__RP.map.project(L.latLng(t.c[0], t.c[1]), t.z)) }; }")
+    assert r['th'] == 'Caucasus' and r['tap'] == 'read' and r['z'] == r['tz'] and r['dist'] <= 1, r        # le cadrage du nouveau théâtre, comme à la base
+    assert pg.errs == []
+    pg.context.close()
+
+
+@needs_pw
+@pytest.mark.parametrize('w,h', [(345, 590), (915, 412)])
+def test_drawing_then_another_tool_writes_the_route_then_back_the_view_is_the_one_the_base_gives(browser, w, h):
+    pg, fr, v0, vin = _hidden_path(browser, w, h, 'draw')
+    pg.evaluate("(() => { const s = JSON.parse(localStorage.getItem('route_state_v1')); (s.points || []).forEach(p => { p.lat += 1.0; p.lon += 1.5; }); localStorage.setItem('route_state_v1', JSON.stringify(s)); })()")
+    pg.wait_for_timeout(900)
+    pg.evaluate("openModule('rp')")
+    pg.wait_for_timeout(1500)
+    v1 = fr.evaluate(VIEW)
+    # le banc joue ce chemin (rpReloadSoon) : à la base la vue n'est pas recadrée sur la route, elle reste celle d'avant le dessin ; la livraison donne la même
+    assert fr.evaluate("tapMode") == 'read' and v1['z'] == v0['z'] and fr.evaluate(DRIFT, [v0, v1]) <= 1, (v0, v1)
+    assert pg.errs == []
+    pg.context.close()
+
+
+@needs_pw
+@pytest.mark.parametrize('w,h', [(345, 590), (915, 412)])
+def test_drawing_moved_by_100px_then_another_tool_then_back_the_last_seen_view_is_kept(browser, w, h):
+    pg, fr, v0, vin = _hidden_path(browser, w, h, 'drawpan')
+    assert fr.evaluate(DRIFT, [v0, vin]) > 50
+    pg.evaluate("openModule('rp')")
+    pg.wait_for_timeout(1500)
+    v1 = fr.evaluate(VIEW)
+    assert fr.evaluate("tapMode") == 'read' and v1['z'] == v0['z'] and abs(v1['h'] - v0['h']) <= 1 and fr.evaluate(DRIFT, [vin, v1]) <= 1, (vin, v1, fr.evaluate(DRIFT, [vin, v1]))
+    assert pg.errs == []
+    pg.context.close()
+
+
+@needs_pw
+@pytest.mark.parametrize('w,h', [(345, 590), (915, 412)])
+def test_export_moved_by_100px_then_another_tool_then_back_and_closed_the_last_seen_view_is_kept(browser, w, h):
+    pg, fr, v0, vin = _hidden_path(browser, w, h, 'exppan')
+    assert fr.evaluate(DRIFT, [v0, vin]) > 50
+    pg.evaluate("openModule('rp')")
+    pg.wait_for_timeout(1500)
+    assert fr.evaluate("EXP.on") is True
+    v1 = fr.evaluate(VIEW)
+    assert fr.evaluate(DRIFT, [vin, v1]) <= 1, (vin, v1)
+    fr.evaluate("expClose()")
+    pg.wait_for_timeout(600)
+    v2 = fr.evaluate(VIEW)
+    assert abs(v2['h'] - v0['h']) <= 1 and v2['z'] == v0['z'] and fr.evaluate(DRIFT, [vin, v2]) <= 1, (vin, v2)
     assert pg.errs == []
     pg.context.close()
