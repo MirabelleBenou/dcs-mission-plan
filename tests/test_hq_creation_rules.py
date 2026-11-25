@@ -37,6 +37,7 @@ def const_line(name):
 
 
 PRELUDE = '\n'.join([
+    fn('uiKeyOk'),       # la garde commune de ui_block.py, telle que la page la porte
     "function t(k) { return k; }",
     "function tf(k) { return [k].concat(Array.prototype.slice.call(arguments, 1)).join('|'); }",
     const_line('PK_CALLSIGNS'), const_line('PK_CS_RE'),

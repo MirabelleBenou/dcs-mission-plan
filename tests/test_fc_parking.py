@@ -130,6 +130,7 @@ THEATRES = {'Alpha': [[7, 'Base Sept', 100, 200, [
 AIRCRAFT = {'HeliA': [1, 10.0, 5.0, 3.0], 'HeliB': [1, 8.0, 4.0, 2.0], 'PlaneA': [0, 15.0, 10.0, None], 'PlaneB': [0, 11.0, 6.0, 3.5]}
 
 PRELUDE = '\n'.join([
+    fn('uiKeyOk'),       # la garde commune de ui_block.py, telle que la page la porte
     "const PARKINGS = " + json.dumps({'aircraft': AIRCRAFT, 'theatres': THEATRES}) + ";",
     "const has = (o, k) => Object.prototype.hasOwnProperty.call(o, k);",
     "const isObj = o => !!o && typeof o === 'object' && !Array.isArray(o);",
@@ -286,6 +287,7 @@ def test_opening_a_package_carries_the_departure():
 @needs_node
 def test_restore_flight_reads_junk_as_default():
     stubs = '\n'.join([
+        fn('uiKeyOk'),
         "const isObj = o => !!o && typeof o === 'object' && !Array.isArray(o);", "const str = v => (typeof v === 'string' ? v : '');",
         "const MAX_UNITS = 8, PAYLOAD_TYPES = ['HeliA', 'PlaneA'];", const_line('FP_STARTS'), "const UNIT_KEYS = ['type', 'name', 'callsign', 'csRaw', 'onboard', 'livery', 'folded', 'radios', 'loadout', 'payloadIn', 'stand', 'props', 'addPropIn'];",
         "const thOk = id => ['Alpha', 'Beta'].indexOf(id) >= 0;", "function newId() { return 'id'; }", "function newUnit(type) { return { type: type, name: '', callsign: '', onboard: '', livery: '', radios: {}, loadout: null, folded: false }; }",
