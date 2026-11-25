@@ -3,6 +3,8 @@ le focus de « ⋯ » à l'accueil après la liste « Thème », une ligne gris�
 Joué sur le shell construit (dist/dcs_mission_plan.html, chromium, aucun réseau) ; les contrôles passent par le DOM, jamais par une capture."""
 import json
 import re
+import shutil
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -96,12 +98,21 @@ def test_the_guard_is_in_ui_block_once_and_every_copy_passes_it():
         'build_hq.py': ["if (e.key && uiKeyOk(String(e.key.value))) obj[e.key.value] =", 'if (v !== undefined && uiKeyOk(String(e.key.value))) obj[e.key.value] = v;', 'if (uiKeyOk(c) && pkNum(fr) !== null) channels[c] = fr;', 'if (x === null || !uiKeyOk(k)) continue;',
                         'if (uiKeyOk(kk)) pt[kk] = v;', "if (k !== '1' && uiKeyOk(k)) pts[k] = v;"],
     }
+    sites['ui_block.py'] = ["function uiCopy(o) { const r = {}; if (o && typeof o === 'object') Object.keys(o).forEach(k => { if (uiKeyOk(k)) r[k] = o[k]; }); return r; }"]
+    sites['build_route_planner.py'] += ["Object.assign(uiCopy(parsed), { format: FORMAT_ID, points: [], name: '' })", 'Object.assign(uiCopy(route), { units: S.units,']
+    sites['build_datacard_generator.py'] += ['Object.assign(uiCopy(d), { cards: d.cards.map(dgCanonCard) })', 'Object.assign(uiCopy(l), { after: a })', 'Object.assign(uiCopy(o), { format: ROUTE_FORMAT, theatre: C })',
+                                             'Object.assign(uiCopy(st), { theatre: C })', 'routeFromObject(Object.assign(uiCopy(base), uiCopy(o)))']
+    sites['group_store_block.py'] += ['Object.assign(uiCopy(fc), { gsMigrateFailed: true })']
+    sites['build_hq.py'] += ['? uiCopy(wingConfig) : wingConfig', 'Object.assign(uiCopy(cur), uiCopy(aOv.addProp))', "name !== 'mission' && uiKeyOk(name)", 'otherFilesMap = uiCopy(base.otherFilesMap);', 'return Object.assign(uiCopy(u), {{']
+    sites['build_recon_station.py'] = ['Object.assign(uiCopy(STATE.fields), uiCopy(saved.fields))', 'Object.assign(uiCopy(STATE), {{ schema: 2 }})']
     for f, lines in sites.items():
         src = (ROOT / f).read_text(encoding='utf-8')
         for ln in lines:
-            assert src.count(ln) == 1, (f, ln)
+            assert src.count(ln) >= 1, (f, ln)
+            assert 'Object.assign({}, ' not in ln
     for page in ('dcs_flight_configurator', 'dcs_datacard_generator', 'dcs_route_planner', 'dcs_hq', 'dcs_briefing_generator', 'dcs_recon_station'):
-        assert (ROOT / 'dist' / (page + '.html')).read_text(encoding='utf-8').count('function uiKeyOk(') == 1, page
+        d = (ROOT / 'dist' / (page + '.html')).read_text(encoding='utf-8')
+        assert d.count('function uiKeyOk(') == 1 and d.count('function uiCopy(') == 1, page
 
 
 # ---------- les copies, au navigateur : un fichier de travail, un paquet, une route portant « __proto__ » à chaque niveau copié ----------
@@ -122,6 +133,11 @@ FC_JS = """() => {
   const f2 = { fcId: 'a', units: [], radioPrint: JSON.parse('{"__proto__": {"w": 1}, "t|1|1": {"on": false, "label": "", "mod": ""}}') };
   printSet(f2, 't|1|2', true);
   out.print = [proto(f2.radioPrint), f2.radioPrint.w, Object.keys(f2.radioPrint), f2.radioPrint['t|1|2'].on];
+  const f3 = { fcId: 'b', units: [], radioPrint: JSON.parse('{"__proto__": {"t|1|2": {"on": false, "label": "leak", "mod": "x"}}, "t|1|1": {"on": false, "label": "", "mod": ""}}') };
+  printSet(f3, 't|1|2', true);
+  out.printLeak = [JSON.stringify(f3.radioPrint['t|1|2']), proto(f3.radioPrint)];
+  const lk = gsStable(JSON.parse('{"constructor": {"a": 1}, "b": 1, "a": 2}'));
+  out.stableCtor = lk;
   const g = JSON.parse('{"__proto__": {"w": 1}, "t|1|1": {"on": true, "label": "a", "mod": ""}}');
   const nn = gsPrintNorm(g);
   out.norm = [proto(nn), nn.w, Object.keys(nn)];
@@ -147,6 +163,8 @@ def test_the_flight_configurator_and_the_group_store_copy_a_work_file_without_it
     assert o['norm'] == [True, None, ['t|1|1']], o
     assert o['merge'] == [True, None, None, ['t|1|1', 't|1|2'], 1], o
     assert o['stable'] == '{"a":2,"b":1}', o
+    assert o['printLeak'] == ['{"on":true,"label":"","mod":""}', True], o
+    assert o['stableCtor'] == '{"a":2,"b":1}', o
     assert o['legacy'] == [True, None, 'a', 'string'], o
     assert pg.errs == []
 
@@ -202,7 +220,7 @@ def test_hq_reads_a_mission_table_and_a_package_without_special_keys(browser):
     }""")
     assert o['ast'] == [True, None, ['a']], o
     assert o['clean'] == [True, '{"a":{"b":2}}'], o
-    assert o['radios'] in (['1'], []), o
+    assert o['radios'] == ['1'], o
     assert pg.errs == []
 
 
@@ -442,3 +460,155 @@ def test_a_greyed_row_of_the_more_menu_never_takes_the_focus(browser, how):
     rows = fr.evaluate(state_js)
     assert sum(r['act'] for r in rows) == 1 and any(r['foc'] and not r['dis'] for r in rows)
     assert pg.errs == []
+
+
+# ---------- les copies d'objets lus : un fichier de routes, de datacards, une fiche, un état gardé ----------
+
+@needs_pw
+def test_opening_a_route_set_keeps_the_units_and_the_settings_of_the_route_planner(browser):
+    pg = shell(browser, 1200, 800)
+    fr = open_tool(pg, 'rp')
+    o = fr.evaluate("""() => {
+      const P = Object.prototype, units0 = JSON.stringify(defaultState().units), gs0 = defaultState().groundSpeed;
+      const pt = (n, la, lo) => '{"__proto__": {"alt": 9999}, "name": "' + n + '", "lat": ' + la + ', "lon": ' + lo + ', "alt": 100, "altRef": "AGL"}';
+      const th = S.theatre;
+      const f = JSON.parse('{"format": "dcs-route-set-v1", "theatre": "' + th + '", "active": 0, "__proto__": {"units": {"distance": "nm", "altitude": "ft"}, "groundSpeed": 999, "name": "leak"},' +
+        ' "routes": [{"__proto__": {"name": "leak2"}, "name": "R1", "theatre": "' + th + '", "points": [' + pt('A', 42, 43) + ',' + pt('B', 42.1, 43.1) + ']}]}');
+      openRouteSet(f);
+      return { units0: units0, units: JSON.stringify(S.units), gs0: gs0, gs: S.groundSpeed, proto: [Object.getPrototypeOf(S) === P, ({}).units === undefined, ({}).alt === undefined],
+        n: S.points.length, alts: S.points.map(p => p.alt), name: S.name, units1: JSON.stringify(RSET.routes[RSET.active].units || null) };
+    }""")
+    assert o['units'] == o['units0'] and o['units'] == '{"distance":"km","altitude":"m"}', o
+    assert o['gs'] == o['gs0'] and o['proto'] == [True, True, True], o
+    assert o['n'] == 2 and o['alts'] == [100, 100] and o['name'] == 'R1', o
+    assert pg.errs == []
+
+
+@needs_pw
+def test_the_datacard_generator_copies_its_documents_and_routes_without_special_keys(browser):
+    pg = shell(browser, 1200, 800)
+    fr = open_tool(pg, 'dg')
+    o = fr.evaluate("""() => {
+      const P = Object.prototype, proto = x => Object.getPrototypeOf(x) === P;
+      const d = dgCanonDoc(JSON.parse('{"__proto__": {"x": 1}, "format": "f", "cards": []}'));
+      const c = { nav: [JSON.parse('{"__proto__": {"x": 1}, "name": "zz", "coord": "", "after": ""}')] };
+      const m = dgMergeNav(c, { points: [] });
+      const C = dgCommonTheatre();
+      const pts = '[{"__proto__": {"alt": 777}, "name": "A", "lat": 42, "lon": 43, "alt": 10, "altRef": "AGL"}, {"name": "B", "lat": 42.1, "lon": 43.1}]';
+      const set = biSetFromFile(JSON.parse('{"__proto__": {"units": {"distance": "nm", "altitude": "ft"}}, "active": 0, "routes": [{"name": "R", "theatre": "' + C + '", "points": ' + pts + '}]}'));
+      localStorage.setItem(KEY_ROUTE, '{"format": "dcs-route-v1", "__proto__": {"units": {"distance": "nm", "altitude": "ft"}}, "theatre": "' + C + '", "name": "S", "points": ' + pts + '}');
+      localStorage.setItem(KEY_ROUTESET, '{"format": "dcs-route-set-v1", "active": 0, "routes": [{"name": "R", "theatre": "' + C + '", "points": ' + pts + '}]}');
+      const rs = biReadRouteSet();
+      return { doc: [proto(d), d.x, d.format], nav: [m.length, proto(m[0]), m[0] && m[0].x, m[0] && m[0].name],
+        set: set ? [JSON.stringify(set.route.units), set.route.points.map(p => p.alt)] : null, read: rs.length ? [JSON.stringify(rs[0].route.units), rs[0].route.points.map(p => p.alt)] : null };
+    }""")
+    assert o['doc'] == [True, None, 'f'], o
+    assert o['nav'] == [1, True, None, 'zz'], o
+    assert o['set'] == ['{"distance":"km","altitude":"m"}', [10, 0]], o
+    assert o['read'] == ['{"distance":"km","altitude":"m"}', [10, 0]], o
+    assert pg.errs == []
+
+
+@needs_pw
+def test_a_failed_migration_note_keeps_the_work_state_without_special_keys(browser):
+    pg = shell(browser, 1200, 800)
+    fr = open_tool(pg, 'fc')
+    o = fr.evaluate("""() => {
+      localStorage.setItem(GS_KEY_FC, '{"__proto__": {"a": 1}, "constructor": 5, "v": 2, "sel": "k"}');
+      gsMigrateFail();
+      const s = JSON.parse(localStorage.getItem(GS_KEY_FC));
+      return { keys: Object.keys(s).sort(), failed: s.gsMigrateFailed, a: s.a, sel: s.sel };
+    }""")
+    assert o['keys'] == ['gsMigrateFailed', 'sel', 'v'] and o['failed'] is True and o['a'] is None and o['sel'] == 'k', o
+    assert pg.errs == []
+
+
+@needs_pw
+def test_the_recon_station_reads_its_saved_fields_without_special_keys(browser):
+    pg = shell(browser, 1200, 800)
+    fr = open_tool(pg, 'rs')
+    o = fr.evaluate("""() => {
+      const keys0 = Object.keys(STATE.fields).sort();
+      localStorage.setItem(KEY_STATE, '{"fields": {"__proto__": {"x": 1}, "constructor": "c", "' + keys0[0] + '": "valeur"}}');
+      restoreState();
+      return { keys0: keys0, keys: Object.keys(STATE.fields).sort(), first: STATE.fields[keys0[0]], proto: Object.getPrototypeOf(STATE.fields) === Object.prototype };
+    }""")
+    assert o['keys'] == o['keys0'] and o['first'] == 'valeur' and o['proto'] is True, o
+    assert pg.errs == []
+
+
+# ---------- HQ, joué par node : la route d'un paquet remplace celle du groupe sans clé spéciale ----------
+
+NODE = shutil.which('node')
+
+
+def hq_fn(src, name):
+    i = src.index('function %s(' % name)
+    j = src.index('{', i)
+    depth, k = 0, j
+    while True:
+        c = src[k]
+        depth += c == '{'
+        depth -= c == '}'
+        if depth == 0:
+            return src[i:k + 1]
+        k += 1
+
+
+@pytest.mark.skipif(NODE is None, reason='node absent')
+def test_hq_plans_a_package_route_without_special_keys():
+    src = (ROOT / 'dist' / 'dcs_hq.html').read_text(encoding='utf-8')
+    pre = '\n'.join([hq_fn(src, n) for n in ('uiKeyOk', 'pkPlanFlight', 'pkIsNum', 'pkStartsElsewhere', 'pkTheatreOf')] + [
+        "function _extractRouteAndPayloads() { return { pointsNode: { kind: 'table', entries: [{ key: { kind: 'int', value: 1 }, value: {} }] } }; }",
+        "function luaTableReproducible() { return true; }", "function astToValue() { return { x: 0, y: 0, type: 'Turning Point' }; }",
+    ])
+    body = """
+      const fl = { groupName: 'G', units: [], chk: { route: true, radios: false, loadout: false, livery: false }, avail: { route: true, radios: true, loadout: true, livery: true },
+        route: JSON.parse('{"__proto__": {"x": 1, "y": 1}, "1": {"x": 0, "y": 0}, "2": {"x": 5, "y": 5}, "3": {"x": 6, "y": 6}}') };
+      const r = pkPlanFlight({ theatre: 'Syria', ast: {} }, { theatre: 'Syria' }, fl, { group: { groupId: 7, pointsPos: true }, units: [] });
+      const pts = r.plan.replacements.route.points;
+      console.log(JSON.stringify({ proto: Object.getPrototypeOf(pts) === Object.prototype, x: pts.x === undefined, keys: Object.keys(pts), n: r.done.route }));
+    """
+    r = subprocess.run([NODE, '-e', pre + '\n' + body], capture_output=True, text=True, timeout=60)
+    assert r.returncode == 0, r.stderr
+    o = json.loads(r.stdout)
+    assert o == {'proto': True, 'x': True, 'keys': ['1', '2', '3'], 'n': 3}, o
+
+
+# ---------- le dessin, le clavier à l'écran ouvert : la carte en grand ne couvre pas la barre de dessin ----------
+
+@needs_pw
+def test_the_on_screen_keyboard_keeps_the_drawing_bar_above_it(browser):
+    pg = shell(browser, 345, 590, touch=True, init=SPLIT_SEED)
+    examples(pg)
+    fr = open_tool(pg, 'rp', touch=True)
+    hide_toasts(pg, fr)
+    tap(pg, fr, '#tapmode [data-tap="draw"]')
+    pg.wait_for_timeout(500)
+    o = fr.evaluate("""() => {
+      const root = document.documentElement;
+      root.classList.add('ui-kb'); root.style.setProperty('--ui-kb-bottom', '250px'); spSync();       /* ce que fait le clavier à l'écran : la classe, la marge, puis la mise en page */
+      const top = innerHeight - 250, r = s => { const e = document.querySelector(s); if (!e) return null; const b = e.getBoundingClientRect(); return { t: b.top, b: b.bottom, h: b.height }; };
+      const out = { full: document.body.classList.contains('rp-mapfull'), top: top, app: r('.app'), drui: r('#dr-ui'), map: r('#map') };
+      root.classList.remove('ui-kb'); root.style.removeProperty('--ui-kb-bottom'); spSync();
+      out.after = r('.app');
+      return out;
+    }""")
+    assert o['full'] and o['drui'] and o['drui']['h'] > 0, o
+    assert o['app']['b'] <= o['top'] + 0.5, o
+    assert o['drui']['b'] <= o['top'] + 0.5, o
+    assert abs(o['after']['b'] - 590) <= 1, o
+    assert pg.errs == []
+
+
+@pytest.mark.skipif(NODE is None, reason='node absent')
+def test_hq_builds_a_group_from_a_package_route_without_special_keys():
+    import test_hq_parking as HP
+    out = HP.run(HP.BUILD + """
+      const route = JSON.parse('{"__proto__": {"x": 1}, "1": {"x": -35775.78, "y": -268903.87, "alt": 0, "alt_type": "BARO", "type": "Turning Point", "action": "Turning Point", "speed": 61.11, "name": "A"},' +
+        ' "2": {"__proto__": {"x": 1}, "constructor": 4, "x": -26026.17, "y": -297606.2, "alt": 30, "alt_type": "RADIO", "speed": 61.11, "name": "B", "foo": 3}}');
+      const g = pkBuildGroup(work, fl({ route: route })).group, P = Object.prototype;
+      const p2 = g.route.points[2];
+      console.log(JSON.stringify({ n: Object.keys(g.route.points).length, protos: Object.values(g.route.points).map(p => Object.getPrototypeOf(p) === P), keys: Object.keys(p2).filter(k => ['foo', 'constructor', '__proto__', 'x'].indexOf(k) >= 0).sort() }));
+    """)
+    assert out['n'] == 2 and out['protos'] == [True, True] and out['keys'] == ['foo', 'x'], out
