@@ -2,6 +2,10 @@
 
 All notable changes to the **DCS Mission Plan** suite, newest first.
 
+Further down, *Before v2.0.0* keeps the history of each tool up to v1.24.0, when every tool still had its own version. Format loosely follows [Keep a Changelog](https://keepachangelog.com).
+
+### Version numbers
+
 Each release is a GitHub release tagged `MP-V<major>.<minor>.<patch>`; the whole suite has had one version number since 2.0.0:
 - **major**: a redesign, or a file format that breaks;
 - **minor**: a new tool, screen or function, or a change visible everywhere;
@@ -9,14 +13,12 @@ Each release is a GitHub release tagged `MP-V<major>.<minor>.<patch>`; the whole
 
 Between two releases, the hosted version shows its build number at the bottom of the home screen — `MP-V2.1.0+3` is the third update since 2.1.0. A released file shows none.
 
-Further down, *Before v2.0.0* keeps the history of each tool up to v1.24.0, when every tool still had its own version. Format loosely follows [Keep a Changelog](https://keepachangelog.com).
-
 ## Unreleased
 
 ### All tools
 
 **Build number on the hosted version**
-- Between two releases, the bottom of the home screen shows the build number, `MP-V2.1.0+14` for this one; a downloaded release shows none.
+- Between two releases, the bottom of the home screen shows the build number, `MP-V2.1.0+15` for this one; a downloaded release shows none.
 
 **Easier-to-read drop-down lists**
 - Their header, the chosen line and the line under the pointer have stronger contrast in every theme.
@@ -60,6 +62,18 @@ Further down, *Before v2.0.0* keeps the history of each tool up to v1.24.0, when
 
 **Menus easier to read from the keyboard**
 - In the toolbar's menus, the line reached with the arrow keys now has enough contrast in every theme.
+
+**Menus: the “Delete” line stands out**
+- In the Datacard Generator's and the Route Planner's menus, the “Delete” line under the pointer or reached with the arrow keys now turns red with dark text, readable in every theme.
+
+**The “⋯” menu from the keyboard**
+- The arrow keys move through the “⋯” menu, like the other toolbar menus.
+
+**Export in one tap**
+- With a list or a menu open, one tap on Export closes it and opens the export window, as the toolbar menus already did.
+
+**Bottom tabs from the keyboard**
+- On a narrow screen, the arrow keys move between the bottom tabs, and each tab is tied to its section for screen readers.
 
 ### Home screen
 
@@ -133,6 +147,9 @@ Further down, *Before v2.0.0* keeps the history of each tool up to v1.24.0, when
 
 **The Kord on both doors is reported**
 - A Mi-24P loadout received with something on both doors — from a file, a preset or a copy — now shows the conflict under both doors, like any other rule.
+
+**Fixed: the chaff field of an aircraft without chaff**
+- For an aircraft that carries no chaff, such as the Mi-8MT, the greyed chaff field now reads “not carried” instead of the flare limit.
 
 ### Briefing Generator
 

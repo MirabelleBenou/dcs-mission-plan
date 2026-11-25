@@ -17,7 +17,10 @@ import release  # noqa: E402
 REPO = 'owner/suite'
 TOKEN = 'ghs_TOPSECRETTOKEN0123456789'
 TITRE = 'MP-V2.0.0 — 16 November 2026'
-CHANGELOG = '# Changelog\n\n## Unreleased\n\n## MP-V2.0.0 — 2026-11-16\n\n**x**\n- y\n\n## Before v2.0.0 — one version per tool\n\n### HQ\n\n#### `v1.0.0`\n'
+PARA = 'Each release is a GitHub release tagged `MP-V<major>.<minor>.<patch>`:\n- **major**: a redesign;\n- **minor**: a new tool;\n- **patch**: fixes.\n\nBetween two releases, the hosted version shows its build number.'
+ENTETE = '# Changelog\n\nIntro.\n\n### Version numbers\n\n' + PARA + '\n\n'
+NOTES = 'Release text\n\n## Version numbers\n\n' + PARA + '\n'
+CHANGELOG = ENTETE + '## Unreleased\n\n## MP-V2.0.0 — 2026-11-16\n\n**x**\n- y\n\n## Before v2.0.0 — one version per tool\n\n### HQ\n\n#### `v1.0.0`\n'
 HTML = b'<!DOCTYPE html><html>not really a page but bytes</html>'
 
 
@@ -94,7 +97,7 @@ class FakeApi:
         raise AssertionError(f'unexpected call {methode} {chemin}')
 
 
-def monte(tmp_path, *, branche='release/MP-V2.0.0', tag='MP-V2.0.0', changelog=CHANGELOG, notes='Release text\n',
+def monte(tmp_path, *, branche='release/MP-V2.0.0', tag='MP-V2.0.0', changelog=CHANGELOG, notes=NOTES,
           assets=None, manifeste=True, manifest_edit=None, main_avance=False, hors_release=False, extra_asset=None,
           essai=False):
     """Depot origin nu, un commit C sur main, la branche release, puis un clone `action` sur la tete de la branche."""
@@ -172,7 +175,7 @@ def test_publication_reussie(tmp_path):
         ('GET', f'{base}/git/ref/tags/MP-V2.0.0'),
     ]
     b = api.bodies[0]
-    assert b == {'tag_name': 'MP-V2.0.0', 'target_commitish': c, 'name': TITRE, 'body': 'Release text\n',
+    assert b == {'tag_name': 'MP-V2.0.0', 'target_commitish': c, 'name': TITRE, 'body': NOTES,
                  'draft': True, 'prerelease': False}
     r = api.releases[101]
     assert r['draft'] is False and api.tags['MP-V2.0.0'] == c
@@ -280,8 +283,9 @@ def test_essai_reussi(tmp_path):
     assert api.writes == []
     check = sur_origin(origin, br, '.release/CHECK.md')
     lignes = check.strip().splitlines()
-    assert len(lignes) == 6 and all(' OK ' in l for l in lignes)
+    assert len(lignes) == 7 and all(' OK ' in l for l in lignes)
     assert 'head of main: no' in lignes[1]
+    assert lignes[6] == '7. OK - "Version numbers" paragraph matches the CHANGELOG header'
     assert br in branches(origin)
     assert sur_origin(origin, br, '.release/FAILED.md') is None
 
@@ -467,7 +471,7 @@ def test_essai_avec_morceaux(tmp_path, monkeypatch):
     assert release.run(deps, br) == 0
     assert api.writes == []
     lignes = (deps.root / '.release' / 'CHECK.md').read_text(encoding='utf-8').strip().splitlines()
-    assert len(lignes) == 6 and all(' OK ' in l for l in lignes)
+    assert len(lignes) == 7 and all(' OK ' in l for l in lignes)
     assert '5. OK' in lignes[4] and 'joined from parts' in lignes[4]
     assert list(rt.iterdir()) == []
 
@@ -495,11 +499,11 @@ def test_joints_supprimes_apres_echec_au_televersement(tmp_path, monkeypatch):
 # ------------------------------------------------------------------ adaptations Mission Plan (A2, A3)
 
 def _cl(section):
-    return f'# Changelog\n\n## Unreleased\n\n{section}'
+    return f'{ENTETE}## Unreleased\n\n{section}'
 
 
 def test_a2_titre_apres_unreleased_ne_gene_pas(tmp_path):
-    deps, api, origin, c, br = monte(tmp_path, changelog='# Changelog\n\n## Unreleased\n\n**All tools**\n- x\n\n## MP-V2.0.0 — 2026-11-16\n\n## Before v2.0.0 — one version per tool\n')
+    deps, api, origin, c, br = monte(tmp_path, changelog=ENTETE + '## Unreleased\n\n**All tools**\n- x\n\n## MP-V2.0.0 — 2026-11-16\n\n## Before v2.0.0 — one version per tool\n')
     assert release.run(deps, br) == 0
 
 
@@ -637,3 +641,38 @@ def test_fichier_en_morceaux_part001_part002(tmp_path, monkeypatch):
         'dcs_hq.html', 'dcs_mission_plan.html.part001', 'dcs_mission_plan.html.part002']
     assert release.run(deps, br) == 0
     assert deps.api.recus['dcs_mission_plan.html'] == GROS
+
+
+# ------------------------------------------------------------------ le controle 7 : « Version numbers » (le paragraphe des notes = l'en-tete du CHANGELOG)
+
+def test_controle_7_paragraphe_juste_passe_en_essai(tmp_path):
+    deps, api, origin, c, br = monte(tmp_path, branche='release/essai-un')
+    assert release.run(deps, br) == 0
+    assert api.writes == []
+    lignes = sur_origin(origin, br, '.release/CHECK.md').strip().splitlines()
+    assert lignes[-1] == '7. OK - "Version numbers" paragraph matches the CHANGELOG header'
+
+
+def test_controle_7_paragraphe_absent_des_notes(tmp_path):
+    deps, api, origin, c, br = monte(tmp_path, notes='Release text\n')
+    assert release.run(deps, br) == 1
+    assert api.writes == []
+    f = sur_origin(origin, br, '.release/FAILED.md')
+    assert 'Control or step: 7' in f and 'notes.md has no "## Version numbers" paragraph' in f
+    assert br in branches(origin)
+
+
+def test_controle_7_un_mot_change(tmp_path):
+    deps, api, origin, c, br = monte(tmp_path, notes=NOTES.replace('a redesign', 'a redesigned page'))
+    assert release.run(deps, br) == 1
+    assert api.writes == []
+    f = sur_origin(origin, br, '.release/FAILED.md')
+    assert 'Control or step: 7' in f and 'the "Version numbers" paragraph of notes.md differs from the CHANGELOG header' in f
+
+
+def test_controle_7_changelog_sans_bloc(tmp_path):
+    deps, api, origin, c, br = monte(tmp_path, changelog='# Changelog\n\n## Unreleased\n\n## MP-V2.0.0 — 2026-11-16\n\n**x**\n- y\n')
+    assert release.run(deps, br) == 1
+    assert api.writes == []
+    f = sur_origin(origin, br, '.release/FAILED.md')
+    assert 'Control or step: 7' in f and 'CHANGELOG.md at the commit has no "### Version numbers" block before "## Unreleased"' in f

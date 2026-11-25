@@ -1,4 +1,4 @@
-"""L'insigne de la famille Squadron Ready Room (MP-V2.1.0+14) : les fichiers de brand/, leurs URL data: dans les pages de dist/, les liens d'onglet,
+"""L'insigne de la famille Squadron Ready Room (MP-V2.1.0+15) : les fichiers de brand/, leurs URL data: dans les pages de dist/, les liens d'onglet,
 l'accueil (plaque, écusson, signature), l'ancien logo « WG » lu comme le nouveau, le README, les licences et le CHANGELOG. Lecture des fichiers, sans navigateur."""
 import base64
 import hashlib
@@ -92,8 +92,8 @@ def test_shell_home_screen():
     # l'insigne de la Ready Room : une fois, dans le script de l'écusson
     assert html.count("var MP_CREST_RR = '" + url('insigne-ready-room.svg') + "';") == 1
     assert "'crest.wingAlt': 'Emblème de l’escadre'" in html and "'crest.wingAlt': 'Wing emblem'" in html
-    assert 'MP-V2.1.0+14' in html
-    assert re.search(r'^DEV_BUILD = 14$', (ROOT / 'version_block.py').read_text(encoding='utf-8'), re.M)
+    assert 'MP-V2.1.0+15' in html
+    assert re.search(r'^DEV_BUILD = 15$', (ROOT / 'version_block.py').read_text(encoding='utf-8'), re.M)
 
 
 def test_former_wg_logo_is_kept_once_each():
@@ -180,7 +180,7 @@ def test_the_home_crest_shows_what_the_storage_says_at_three_sizes(browser, labe
         pg = ctx.new_page()
         pg.goto('file://' + str(DIST / 'dcs_mission_plan.html'), wait_until='commit')
         pg.wait_for_function("() => !!document.getElementById('mp-crest') && !!document.getElementById('card-hq')", timeout=60000)
-        pg.wait_for_timeout(900)
+        pg.wait_for_function("([src, w]) => { const e = document.getElementById('mp-crest'); return !!e && e.getAttribute('data-source') === src && getComputedStyle(e).width === w && !!e.getAttribute('src'); }", arg=[source, size], timeout=10000)
         got = pg.evaluate("() => { const e = document.getElementById('mp-crest'); return [e.getAttribute('data-source'), getComputedStyle(e).width, e.getAttribute('src').slice(0, 14)]; }")
         assert got[0] == source and got[1] == size, (label, w, got)
         if source == 'wing':

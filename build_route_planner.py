@@ -779,7 +779,10 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .mn-opt { color: var(--paper); }   /* comme au Datacard Generator : les lignes actives des menus sont à l'encre du papier, la ligne grisée seule s'efface */
 .mn-opt[aria-disabled="true"] { color: var(--khaki); cursor: not-allowed; opacity: .7; }
 .mn-opt[aria-disabled="true"]:hover { background: none; color: var(--khaki); }
-.tbm-opt.mn-danger, .tbm-opt.mn-danger:hover, .tbm-opt.mn-danger:focus-visible { color: var(--mp-warn); }
+.tbm-opt.mn-danger { color: var(--mp-warn); }
+/* « Supprimer » survolée, au clavier ou active : fond d'avertissement, texte sombre (comme .ui-btn.danger), 6,93 : 1 dans les quatre thèmes */
+.tbm-opt.mn-danger:hover, .tbm-opt.mn-danger:focus-visible, .tbm-opt.mn-danger.active { background: var(--mp-warn); color: #14110a; }
+.tbm-opt.mn-danger:hover .tbm-mark, .tbm-opt.mn-danger:focus-visible .tbm-mark, .tbm-opt.mn-danger.active .tbm-mark { border-color: #14110a; }
 
 /* ---------- la ligne de sélection des routes : « 1 · NOM ▾ » pleine largeur, « + » et « … » (44 × 44), puis le rang et le total ---------- */
 .rs-pick { display: flex; align-items: stretch; gap: 8px; }
@@ -7425,6 +7428,9 @@ function rpSetTab(id) {
 }
 function rpTabsInit() {
   document.querySelectorAll('#tab-bar [role="tab"]').forEach(b => b.addEventListener('click', () => rpSetTab(b.dataset.tab)));
+  const pn = {};
+  RP_TABS.forEach(id => { pn[id] = [document.querySelector('#panel > .ed-section[data-section="' + id + '"]')]; });
+  uiTabsWire(pn);
   rpSetTab('route');
   initToastPlace();      /* le toast se pose 12 px au-dessus de la barre (C6) */
 }
@@ -10197,7 +10203,7 @@ function dspOutside(e) {
   if (!DSP.open) return;
   const t = e.target;
   if (DSP.panel.contains(t) || $('btn-display').contains(t)) return;
-  const other = t && t.closest ? t.closest(MENU_TRIG) : null;
+  const other = t && t.closest ? (t.closest(MENU_TRIG) || uiDirectBtn(t)) : null;
   dspClose(false);
   if (other) return;
   tbmSwallowNext();
@@ -10388,7 +10394,7 @@ function mnOutside(e) {
   if (!m) return;
   const t = e.target;
   if (m.panel.contains(t) || m.btn.contains(t)) return;
-  const other = t && t.closest ? t.closest(MENU_TRIG) : null;
+  const other = t && t.closest ? (t.closest(MENU_TRIG) || uiDirectBtn(t)) : null;
   mnClose(false);
   if (other) return;
   tbmSwallowNext();

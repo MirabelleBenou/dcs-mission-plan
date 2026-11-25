@@ -441,7 +441,10 @@ body {
 .mn-opt + .mn-sep + .mn-opt { border-top: none; }
 .mn-opt[aria-disabled="true"] { color: var(--khaki-light); cursor: not-allowed; opacity: .7; }
 .mn-opt[aria-disabled="true"]:hover { background: none; color: var(--khaki-light); }
-.tbm-opt.mn-danger, .tbm-opt.mn-danger:hover, .tbm-opt.mn-danger:focus-visible { color: var(--mp-warn); }
+.tbm-opt.mn-danger { color: var(--mp-warn); }
+/* « Supprimer » survolée, au clavier ou active : fond d'avertissement, texte sombre (comme .ui-btn.danger), 6,93 : 1 dans les quatre thèmes */
+.tbm-opt.mn-danger:hover, .tbm-opt.mn-danger:focus-visible, .tbm-opt.mn-danger.active { background: var(--mp-warn); color: #14110a; }
+.tbm-opt.mn-danger:hover .tbm-mark, .tbm-opt.mn-danger:focus-visible .tbm-mark, .tbm-opt.mn-danger.active .tbm-mark { border-color: #14110a; }
 .tbm-panel.mn-list { max-width: min(560px, calc(100vw - 16px)); }
 .mn-list .tbm-opt .cr-tag { flex: none; }
 .dsp-sub { font-family: var(--f-ui); font-weight: 500; font-size: 10px; letter-spacing: 1.8px; text-transform: uppercase; color: var(--khaki); padding: 10px 18px 4px; }
@@ -1381,7 +1384,7 @@ __CSS__
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h11l4 4v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M8 3v5h7V3"/><rect x="7" y="13" width="10" height="8"/></svg>
     <span class="tb-btn-label" data-i18n="tb.json.export">Sauvegarder</span>
   </button>
-  <button class="tb-btn tb-file" id="btn-print" data-i18n-title="tb.export.tip" title="Exporter en PDF ou PNG">
+  <button class="tb-btn tb-file" id="btn-print" data-tb-direct data-i18n-title="tb.export.tip" title="Exporter en PDF ou PNG">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
     <span class="tb-btn-label" data-i18n="tb.export">Exporter</span>
   </button>
@@ -6390,6 +6393,7 @@ function renderEditor(keep) {
   try {
     document.getElementById('ed-sections').innerHTML = SECTION_IDS.map((id, i) => sectionHtml(id, i, c)).join('');
     uiTabsSolo(Array.prototype.slice.call(document.querySelectorAll('#ed-sections details.ed-section')), Array.prototype.slice.call(document.querySelectorAll('#ed-sections details.ed-section')).filter(d => DG_SOLO.indexOf(d.dataset.section) >= 0));       /* les sections seules dans leur onglet : le bloc commun les marque, comme au BG */
+    dgTabsWire();
     dgFoldIcons();
     const nw = kept && sel ? ed.querySelector(sel) : null;
     if (nw && nw !== kept && nw.tagName === kept.tagName) {
@@ -6720,6 +6724,13 @@ function packAct(act, btn) {
 }
 
 /* ----- Onglets (tablette) ----- */
+/* les onglets et leurs sections (WAI-ARIA « Tabs ») : DG_TAB_SECTIONS dit ce que montre chaque onglet ; les sections sont refaites à chaque rendu de l'éditeur, l'aperçu est le sien */
+function dgTabsWire() {
+  const m = {};
+  Object.keys(DG_TAB_SECTIONS).forEach(k => { m[k] = DG_TAB_SECTIONS[k].map(id => document.querySelector('#ed-sections > details.ed-section[data-section="' + id + '"]')); });
+  m.preview = [document.getElementById('preview-wrap')];
+  uiTabsWire(m);
+}
 function setActiveTab(id) {
   if (TAB_IDS.indexOf(id) === -1) id = TAB_IDS[0];
   document.body.dataset.activeTab = id;
@@ -7690,7 +7701,7 @@ function mnOutside(e) {
   if (!m) return;
   const t = e.target;
   if (m.panel.contains(t) || m.btn.contains(t)) return;
-  const other = t && t.closest ? t.closest(MENU_TRIG) : null;
+  const other = t && t.closest ? (t.closest(MENU_TRIG) || uiDirectBtn(t)) : null;
   mnClose(false);
   if (other) return;
   tbmSwallowNext();

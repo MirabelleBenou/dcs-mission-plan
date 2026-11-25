@@ -342,8 +342,44 @@ def _controle_notes(deps):
     return 'notes.md is not empty'
 
 
+def _paragraphe_changelog(deps, m):
+    """Le bloc qui suit la ligne `### Version numbers` du CHANGELOG au commit, jusqu'au titre `## ` suivant (`## Unreleased`, ou, une fois la release
+    nommee, `## MP-V<x.y.z> - AAAA-MM-JJ`), exclu, strip()."""
+    p = deps.git.run('show', f'{m["commit"]}:CHANGELOG.md', check=False)
+    manque = Echec('7', 'CHANGELOG.md at the commit has no "### Version numbers" block before "## Unreleased"')
+    if p.returncode != 0:
+        raise manque
+    bloc, dedans = [], False
+    for l in p.stdout.split('\n'):
+        if not dedans:
+            if l.rstrip() == '### Version numbers':
+                dedans = True
+            elif l.startswith('## '):
+                break
+        elif l.startswith('## '):
+            break
+        else:
+            bloc.append(l)
+    texte = '\n'.join(bloc).strip() if dedans else ''
+    if not texte:
+        raise manque
+    return texte
+
+
+def _controle_numerotation(deps, m):
+    source = _paragraphe_changelog(deps, m)
+    f = deps.root / RELEASE_DIR / 'notes.md'
+    lignes = f.read_text(encoding='utf-8').split('\n')
+    k = max((i for i, l in enumerate(lignes) if l.rstrip() == '## Version numbers'), default=-1)
+    if k < 0:
+        raise Echec('7', 'notes.md has no "## Version numbers" paragraph')
+    if '\n'.join(lignes[k + 1:]).strip() != source:
+        raise Echec('7', 'the "Version numbers" paragraph of notes.md differs from the CHANGELOG header')
+    return '"Version numbers" paragraph matches the CHANGELOG header'
+
+
 def controles(deps, branche, brut, lignes):
-    """Les six controles dans l'ordre ; ajoute une ligne par controle execute a `lignes` ; leve Echec au premier defaut.
+    """Les sept controles dans l'ordre ; ajoute une ligne par controle execute a `lignes` ; leve Echec au premier defaut.
     Renvoie (manifeste, essai)."""
     def ligne(n, etat, msg):
         lignes.append(f'{n}. {etat} - {msg}')
@@ -357,6 +393,7 @@ def controles(deps, branche, brut, lignes):
         ligne(4, 'OK', _controle_tag(deps, m))
         ligne(5, 'OK', _controle_assets(deps, m))
         ligne(6, 'OK', _controle_notes(deps))
+        ligne(7, 'OK', _controle_numerotation(deps, m))
     except Echec as e:
         ligne(e.quoi, 'FAILED', deps.scrub(e.message))
         raise

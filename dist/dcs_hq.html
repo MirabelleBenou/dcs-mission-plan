@@ -2610,7 +2610,7 @@ const UIBAR = { mq: null };
    Recalculée au chargement, après les polices, au redimensionnement, au changement de langue et quand le contenu de la barre change (un bouton, un tampon qui apparaît). Un menu « ⋯ » ouvert (et la liste ouverte depuis lui) reste ouvert tant que la décision est la même (les mêmes éléments dans « ⋯ », la même étape) :
    il reste aligné sur « ⋯ », ses lignes se refont si leur texte ou leur état change ; il se ferme quand la décision change, au redimensionnement de la fenêtre et aux gestes du menu. Ce texte est aussi celui du Field Manual (build_bar_js). ---- */
 const UISTEPS = ['tb-st1', 'tb-st2', 'tb-st3', 'tb-st4', 'tb-st5', 'tb-st6'];
-const UIMORE = { btn: null, panel: null, list: null, units: [], sig: '', bound: false };
+const UIMORE = { btn: null, panel: null, list: null, units: [], rows: [], sig: '', bound: false };
 /* la barre : celle de l'outil (.toolbar) ; à l'accueil, qui n'a pas de .toolbar, le groupe de commandes du rail (.rail .ctrl) : même code, même séquence */
 function uiBarEl() { return document.querySelector('.toolbar') || document.querySelector('.rail .ctrl'); }
 function uiBarStep(bar, k) { UISTEPS.forEach((c, i) => bar.classList.toggle(c, i < k)); }
@@ -2642,7 +2642,7 @@ function uiBarMoreBtn(bar) {
   if (!UIMORE.bound) {
     UIMORE.bound = true;
     document.addEventListener('pointerdown', uiBarMoreOutside, true);
-    document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && UIMORE.panel) { ev.stopPropagation(); uiBarMoreClose(); } }, true);
+    document.addEventListener('keydown', uiBarMoreKeydown, true);
     window.addEventListener('resize', () => uiBarMoreClose());       /* le redimensionnement ferme le menu (comme les listes) : un recalcul qui garde la même décision, lui, ne le ferme pas */
   }
   bar.appendChild(b);
@@ -2653,6 +2653,8 @@ function uiBarMoreBtn(bar) {
 /* les déclencheurs des menus de la barre du haut (ceux du module, TBM.cfg.trig, s'ils sont dans la .toolbar ; le Sommaire du Field Manual) : un toucher sur l'un d'eux, « ⋯ » ou la liste des outils ouverts, les ferme et ouvre ce menu d'un seul geste (son propre clic passe).
    Un bouton du contenu (la barre du paquet, le choix de route) n'en est pas un : il ne fait que fermer ; les listes au thème (.tbm-trigger) gardent leur geste d'avant. */
 function uiBarTrig() { return ((typeof TBM !== 'undefined' && TBM.cfg && TBM.cfg.trig) || '.tbm-trigger') + ', #btn-toc'; }
+/* un bouton qui ouvre une fenêtre d'un seul geste (Exporter) porte data-tb-direct : un toucher dessus ferme ce qui est ouvert et son propre clic passe, comme pour un déclencheur de menu ; toutes les gardes qui avalent le clic lisent ce repère, aucune ne nomme un bouton */
+function uiDirectBtn(t) { return t && t.closest ? t.closest('[data-tb-direct]') : null; }
 function uiBarMenuTrig(t) {
   if (!t || !t.closest) return null;
   if (t.closest('.tbm-trigger')) return t.closest('.tbm-trigger');
@@ -2664,11 +2666,12 @@ function uiBarMoreOutside(ev) {
   const t = ev.target;
   if (UIMORE.panel.contains(t) || (UIMORE.btn && UIMORE.btn.contains(t))) return;
   uiBarMoreClose();
-  const other = t && t.closest ? (t.closest('.tb-switch') || uiBarMenuTrig(t)) : null;       /* la marque ouvre la liste des outils par son propre clic ; un autre menu de la barre, par le sien */
+  const other = t && t.closest ? (t.closest('.tb-switch') || uiBarMenuTrig(t) || uiDirectBtn(t)) : null;       /* la marque ouvre la liste des outils par son propre clic ; un autre menu de la barre, par le sien */
   if (!other && typeof tbmSwallowNext === 'function') tbmSwallowNext();
 }
 function uiBarMoreClose() {
   if (UIMORE.panel) { UIMORE.panel.remove(); UIMORE.panel = null; }
+  UIMORE.rows = [];
   if (UIMORE.btn) UIMORE.btn.setAttribute('aria-expanded', 'false');
 }
 /* la liste (le théâtre) ouverte depuis une ligne du menu : son panneau, tant qu'elle est ouverte */
@@ -2679,7 +2682,7 @@ function uiBarListPanel() {
   return null;
 }
 function uiBarMoreRow(icon, text, chev, disabled, onclick, why) {
-  const li = document.createElement('li'); li.className = 'tbm-opt'; li.setAttribute('role', 'menuitem');
+  const li = document.createElement('li'); li.className = 'tbm-opt'; li.setAttribute('role', 'menuitem'); li.tabIndex = -1;
   const ic = document.createElement('span'); ic.className = 'tb-more-ic';
   if (icon) ic.appendChild(icon); else { const m = document.createElement('span'); m.className = 'tbm-mark'; ic.appendChild(m); }
   const tx = document.createElement('span'); tx.className = 'tbm-txt'; tx.textContent = text;
@@ -2721,7 +2724,7 @@ function uiBarMoreWhy(u) {
 /* ce que montre le menu (les textes, les lignes grisées et leur raison) : s'il change sans que la décision change, les lignes se refont ; sinon elles restent */
 function uiBarMoreKey() { return uiBarLang() + '\n' + UIMORE.units.map(u => uiBarMoreText(u) + (u.el.disabled ? '\u0001' + uiBarMoreWhy(u) : '')).join('\n'); }
 function uiBarMoreFill(ul) {
-  const b = UIMORE.btn;
+  const b = UIMORE.btn, had = UIMORE.rows.findIndex(r => r === document.activeElement);       /* des lignes refaites sous le clavier : la ligne courante reprend le focus */
   while (ul.firstChild) ul.removeChild(ul.firstChild);
   const pass = (u, after) => { uiBarMoreClose(); try { b.focus({ preventScroll: true }); } catch (e) { /* sans focus */ } after(); };
   UIMORE.units.forEach(u => {
@@ -2740,6 +2743,39 @@ function uiBarMoreFill(ul) {
       ul.appendChild(uiBarMoreRow(ic, text, e.getAttribute('aria-haspopup') === 'menu', e.disabled, () => pass(u, () => e.click()), uiBarMoreWhy(u)));
     }
   });
+  UIMORE.rows = Array.prototype.slice.call(ul.children);
+  if (had >= 0) uiBarMoreActive(had, 0);
+}
+/* le clavier : le menu se parcourt comme la liste des outils (uiSwKeydown) ; les lignes grisées sont sautées, en boucle ; le focus réel suit la ligne courante (classe active) */
+function uiBarMoreRowOk(r) { return !!r && r.getAttribute('aria-disabled') !== 'true'; }
+function uiBarMoreActive(k, dir) {
+  const rows = UIMORE.rows, n = rows.length;
+  if (!n) return;
+  let i = ((k % n) + n) % n, tries = 0;
+  while (!uiBarMoreRowOk(rows[i]) && tries++ < n) i = (((i + (dir || 1)) % n) + n) % n;
+  if (!uiBarMoreRowOk(rows[i])) return;
+  rows.forEach((r, j) => r.classList.toggle('active', j === i));
+  try { rows[i].focus({ preventScroll: true }); } catch (e) { /* sans focus */ }
+}
+function uiBarMoreKeydown(ev) {
+  const b = UIMORE.btn, k = ev.key;
+  if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
+  if (b && ev.target === b && (k === 'Enter' || k === ' ' || k === 'ArrowDown')) {         /* ouvert au clavier : le focus va à la première ligne active ; au doigt ou à la souris, rien ne change (le clic de « ⋯ ») */
+    ev.preventDefault(); ev.stopPropagation();
+    if (UIMORE.panel && k !== 'ArrowDown') uiBarMoreClose(); else if (!UIMORE.panel) { uiBarMoreOpen(); uiBarMoreActive(0, 1); }
+    else uiBarMoreActive(0, 1);
+    return;
+  }
+  if (!UIMORE.panel) return;
+  const rows = UIMORE.rows, cur = rows.findIndex(r => r === document.activeElement);
+  if (k === 'Escape') { ev.stopPropagation(); ev.preventDefault(); uiBarMoreClose(); if (b) { try { b.focus({ preventScroll: true }); } catch (e) { /* sans focus */ } } return; }
+  if (cur < 0 && !(UIMORE.panel.contains(document.activeElement))) return;       /* le focus est ailleurs (un clic souris ouvert) : le menu ne prend pas les flèches */
+  if (k === 'ArrowDown') { ev.preventDefault(); ev.stopPropagation(); uiBarMoreActive(cur + 1, 1); }
+  else if (k === 'ArrowUp') { ev.preventDefault(); ev.stopPropagation(); uiBarMoreActive(cur < 0 ? -1 : cur - 1, -1); }
+  else if (k === 'Home') { ev.preventDefault(); ev.stopPropagation(); uiBarMoreActive(0, 1); }
+  else if (k === 'End') { ev.preventDefault(); ev.stopPropagation(); uiBarMoreActive(-1, -1); }
+  else if ((k === 'Enter' || k === ' ') && cur >= 0) { ev.preventDefault(); ev.stopPropagation(); if (uiBarMoreRowOk(rows[cur])) rows[cur].click(); }
+  else if (k === 'Tab') { uiBarMoreClose(); if (b) { try { b.focus({ preventScroll: true }); } catch (e) { /* sans focus */ } } }       /* le focus revient à « ⋯ », puis Tab le porte plus loin */
 }
 function uiBarMoreOpen() {
   const b = UIMORE.btn;
@@ -2991,7 +3027,7 @@ function uiSwOutside(ev) {
   const t = ev.target;
   if (UISW.panel.contains(t) || (UISW.brand && UISW.brand.contains(t))) return;
   uiSwClose(false);
-  if (t && t.closest && (uiBarMenuTrig(t) || t.closest('.tb-more-btn'))) return;       /* « ⋯ » et les menus de la barre s'ouvrent par leur propre clic, en un seul geste */
+  if (t && t.closest && (uiBarMenuTrig(t) || t.closest('.tb-more-btn') || uiDirectBtn(t))) return;       /* « ⋯ » et les menus de la barre s'ouvrent par leur propre clic, en un seul geste */
   UISW.swallow = true;
   const rel = () => { document.removeEventListener('pointerup', rel, true); document.removeEventListener('pointercancel', rel, true); setTimeout(() => { UISW.swallow = false; }, 350); };
   document.addEventListener('pointerup', rel, true);
@@ -3244,7 +3280,34 @@ function uiTabsMark(id) {
     const on = b.dataset.tab === id;
     b.classList.toggle('current', on);
     b.setAttribute('aria-selected', on ? 'true' : 'false');
+    b.tabIndex = on ? 0 : -1;                       /* le motif « Tabs » de WAI-ARIA : seul l'onglet courant est dans l'ordre de Tab, les flèches font le reste */
   });
+}
+/* Les onglets au clavier et leurs sections. panels : { onglet (data-tab) : [éléments que l'onglet montre] } ; chaque onglet reçoit un id et aria-controls (les identifiants séparés d'une espace), chaque section role="tabpanel" et aria-labelledby ;
+   un onglet absent de panels (masqué par le format) n'a pas d'aria-controls. À rappeler quand les sections sont refaites. */
+function uiTabsWire(panels) {
+  document.querySelectorAll('.ui-tabbar > [role="tab"]').forEach(b => {
+    const k = b.dataset.tab;
+    if (!b.id) b.id = 'tab-' + k;
+    const ids = (panels[k] || []).filter(e => e).map(e => {
+      if (!e.id) e.id = 'tp-' + (e.dataset.section || k);
+      e.setAttribute('role', 'tabpanel'); e.setAttribute('aria-labelledby', b.id);
+      return e.id;
+    });
+    if (ids.length) b.setAttribute('aria-controls', ids.join(' ')); else b.removeAttribute('aria-controls');
+  });
+  if (!uiTabsWire.bound) { uiTabsWire.bound = true; document.addEventListener('keydown', uiTabsKeydown); }
+}
+/* ← → Début Fin : l'onglet visible voisin devient courant par le chemin du toucher (son clic) et reçoit le focus, en boucle ; un onglet masqué est sauté */
+function uiTabsKeydown(ev) {
+  const b = ev.target && ev.target.closest ? ev.target.closest('.ui-tabbar > [role="tab"]') : null, k = ev.key;
+  if (!b || ev.ctrlKey || ev.metaKey || ev.altKey || ev.shiftKey || (k !== 'ArrowLeft' && k !== 'ArrowRight' && k !== 'Home' && k !== 'End')) return;
+  const tabs = Array.prototype.filter.call(document.querySelectorAll('.ui-tabbar > [role="tab"]'), e => getComputedStyle(e).display !== 'none'), n = tabs.length, cur = tabs.indexOf(b);
+  if (cur < 0) return;
+  const i = k === 'Home' ? 0 : (k === 'End' ? n - 1 : (cur + (k === 'ArrowRight' ? 1 : -1) + n) % n);
+  ev.preventDefault();
+  tabs[i].click();
+  try { tabs[i].focus(); } catch (e) { /* sans focus */ }
 }
 /* all : les sections de l'éditeur ; solo : celles qui sont seules dans leur onglet (au format affiché) */
 function uiTabsSolo(all, solo) { all.forEach(d => { if (solo.indexOf(d) >= 0) d.setAttribute('data-solo', ''); else d.removeAttribute('data-solo'); }); }
@@ -11912,7 +11975,7 @@ function tbmOutside(e) {
   if (!m) return;
   const t = e.target;
   if (m.panel.contains(t) || m.btn.contains(t)) return;
-  const other = t && t.closest ? t.closest((TBM.cfg.trig || '.tbm-trigger') + ', .tb-more-btn, .tb-switch') : null;       /* « ⋯ » en est un : un toucher dessus, liste ouverte, ouvre le menu du premier coup */
+  const other = t && t.closest ? (t.closest((TBM.cfg.trig || '.tbm-trigger') + ', .tb-more-btn, .tb-switch') || (typeof uiDirectBtn === 'function' ? uiDirectBtn(t) : null)) : null;       /* « ⋯ » en est un : un toucher dessus, liste ouverte, ouvre le menu du premier coup */
   tbmClose(false);
   if (other) return;
   tbmSwallowNext();

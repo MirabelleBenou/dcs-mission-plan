@@ -718,6 +718,7 @@ I18N_FR = {
     'eq.title': 'Équipement · options de l’éditeur de DCS',
     'eq.full': 'au plein',
     'lo.max': 'max {0}',
+    'lo.notcarried': 'non emportées',
     'lo.none.cm': 'Pas de leurres ni de paillettes connus pour ce type.',
     'lo.none.one': 'Pas de limite connue pour : {0}.',
     'lo.pct': '{0} %',
@@ -1117,6 +1118,7 @@ I18N_EN = {
     'eq.title': 'Equipment · DCS editor options',
     'eq.full': 'when full',
     'lo.max': 'max {0}',
+    'lo.notcarried': 'not carried',
     'lo.none.cm': 'No flares or chaff known for this type.',
     'lo.none.one': 'No known limit for: {0}.',
     'lo.pct': '{0}%',
@@ -1866,10 +1868,10 @@ def _icon(d):
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>'
 
 
-def _btn(bid, key, icon, extra='', tip=None):
-    return ('<button type="button" class="tb-btn%s" id="btn-%s" data-i18n-title="%s" title="">%s'
+def _btn(bid, key, icon, extra='', tip=None, attrs=''):
+    return ('<button type="button" class="tb-btn%s" id="btn-%s"%s data-i18n-title="%s" title="">%s'
             '<span class="tb-btn-label" data-i18n="tb.%s">.</span></button>'
-            % (extra, bid, tip or 'tb.%s.tip' % key, _icon(icon), key))
+            % (extra, bid, attrs, tip or 'tb.%s.tip' % key, _icon(icon), key))
 
 
 BODY = r"""
@@ -1940,7 +1942,7 @@ OPEN_BTN = '''  <button type="button" class="tb-btn tb-file" id="btn-open" aria-
 FILES = '\n  '.join([
     OPEN_BTN,
     _btn('save', 'save', '<path d="M5 3h11l4 4v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M8 3v5h7V3"/><rect x="7" y="13" width="10" height="8"/>', ' tb-file', 'work.save.tip'),
-    _btn('export', 'export', '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>', ' tb-file'),
+    _btn('export', 'export', '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>', ' tb-file', None, ' data-tb-direct'),
 ])
 DISPLAY_BTN = '''<button type="button" class="tb-btn" id="btn-display" aria-haspopup="menu" aria-expanded="false" data-i18n-title="tb.display.tip" title="Unités d'affichage" data-i18n-aria-label="tb.display.tip" aria-label="Unités d'affichage">
     <svg class="dsp-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -2054,7 +2056,7 @@ function mnOutside(e) {
   if (!m) return;
   const t = e.target;
   if (m.panel.contains(t) || m.btn.contains(t)) return;
-  const other = t && t.closest ? t.closest(MENU_TRIG) : null;
+  const other = t && t.closest ? (t.closest(MENU_TRIG) || uiDirectBtn(t)) : null;
   mnClose(false);
   if (other) return;
   tbmSwallowNext();
@@ -4632,7 +4634,7 @@ function cmpSettingsHtml(f, ui, lo) {
   };
   const cl = chargeLimit(loLim(type));
   const note = k => k === 'fuel' ? tf('lo.max', fmtMHz(UMASS === 'lb' ? Math.round(payloadMassIn(d.fuel, 'lb')) : d.fuel)) : (k === 'gun' ? tf('lo.max', d.gun) : (cl ? chargeRule(cl) : tf('lo.max', d[k])));
-  const field = (k, step, disabled) => fieldHtml(k === 'gun' ? tfu('lo.gunfull', massTxt(AIRCRAFT_MASSES[type].ammo)) : `${loName(k)} · ${note(k)}`,
+  const field = (k, step, disabled) => fieldHtml(k === 'gun' ? tfu('lo.gunfull', massTxt(AIRCRAFT_MASSES[type].ammo)) : `${loName(k)} · ${disabled ? t('lo.notcarried') : note(k)}`,
     numberInputHtml(`${at} data-k="${k}"${disabled ? ' disabled' : ''}`, loShow(k, val(k)), 0, k === 'fuel' ? loShow(k, String(loFieldMax(type, k))) : loFieldMax(type, k), step) + (BAR_KEYS.indexOf(k) >= 0 ? bar(k) : ''));
   // Une limite inconnue (null dans la table) : le champ n'apparaît pas et une note le dit ; l'emport y écrit 0 (payloadDefaults)
   const unk = ['flare', 'chaff'].filter(k => !payloadKnown(type, k));

@@ -2799,7 +2799,7 @@ __CSS__
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h11l4 4v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M8 3v5h7V3"/><rect x="7" y="13" width="10" height="8"/></svg>
     <span class="tb-btn-label" data-i18n="toolbar.save">Sauvegarder</span>
   </button>
-  <button class="tb-btn tb-file" id="btn-print" data-i18n-title="toolbar.export.tooltip" title="Exporter en PDF ou PNG (kneeboard DCS)">
+  <button class="tb-btn tb-file" id="btn-print" data-tb-direct data-i18n-title="toolbar.export.tooltip" title="Exporter en PDF ou PNG (kneeboard DCS)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
     <span class="tb-btn-label" data-i18n="toolbar.export">Exporter</span>
   </button>
@@ -7918,6 +7918,14 @@ function bindTabBar() {
   document.querySelectorAll('.tab-bar button').forEach(b => {
     b.addEventListener('click', () => setActiveTab(b.dataset.tab));
   });
+  bgTabsWire();
+}
+/* les onglets et leurs sections (WAI-ARIA « Tabs »), selon le format affiché : BG_TABS dit ce que montre chaque onglet ; l'aperçu est le sien */
+function bgTabsWire() {
+  const m = {};
+  BG_TABS[bgFmt()].forEach(x => { m[x[0]] = x[1].map(id => document.querySelector('#editor > details.ed-section[data-section="' + id + '"]')); });
+  m.preview = [document.getElementById('preview-wrap')];
+  uiTabsWire(m);
 }
 
 /* ============= WING READ-ONLY PANEL (P1.B) ============= */
@@ -8075,6 +8083,7 @@ function applyFormatUi() {
   const fmt = (state && state.meta && state.meta.format === 'simple') ? 'simple' : 'full';
   document.body.dataset.format = fmt;
   bgFoldApply();       // l'état de repli, les sections seules de leur onglet et les icônes « Tout replier » suivent le format affiché
+  bgTabsWire();
   bgDispSync();
   placeMetarPanel(fmt);
   // l'onglet courant doit exister dans ce format : sinon l'onglet de même place dans l'autre (la 4e : Coord. ↔ Coord. ; la 5e : Photos ↔ Annexes)
@@ -8709,7 +8718,7 @@ function mnOutside(e) {
   if (!m) return;
   const t = e.target;
   if (m.panel.contains(t) || m.btn.contains(t)) return;
-  const other = t && t.closest ? t.closest(MENU_TRIG) : null;
+  const other = t && t.closest ? (t.closest(MENU_TRIG) || uiDirectBtn(t)) : null;
   mnClose(false);
   if (other) return;
   tbmSwallowNext();
