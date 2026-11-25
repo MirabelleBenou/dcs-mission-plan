@@ -72,7 +72,8 @@ ALL_TOOLS_2 = ["**Fixed: “⋯” on very narrow screens**\n- Below 345 px wide
                "**Menus: the “Delete” line stands out**\n- In the Datacard Generator's and the Route Planner's menus, the “Delete” line under the pointer or reached with the arrow keys now turns red with dark text, readable in every theme.",
                          "**The “⋯” menu from the keyboard**\n- The arrow keys move through the “⋯” menu, like the other toolbar menus.",
                          "**Export in one tap**\n- With a list or a menu open, one tap on Export closes it and opens the export window, as the toolbar menus already did.",
-                         "**Bottom tabs from the keyboard**\n- On a narrow screen, the arrow keys move between the bottom tabs, and each tab is tied to its section for screen readers."]
+                         "**Bottom tabs from the keyboard**\n- On a narrow screen, the arrow keys move between the bottom tabs, and each tab is tied to its section for screen readers.",
+                         "**Fixed: every file is read safely**\n- In every tool, special keys such as __proto__ in a work file, a package, a route, a datacard file, a mission or what the browser kept are now ignored, as the Briefing Generator already did."]
 CHANGELOG = {
     '### HQ': ["**The Wing button keeps its place**\n- The Wing button now always sits between Flight packages and Example, whether or not the wing is set up; until it is, the button stays highlighted.",
               "**A clearer warning on a created flight**\n- When a package creates a flight, a waypoint that pointed to a unit of the package’s mission is reported as removed, no longer as to be checked."],
@@ -83,7 +84,8 @@ CHANGELOG = {
                                "**Fixed: briefing files are read safely**\n- A briefing file, or a briefing kept by the browser, can no longer change how the page works through special keys such as __proto__."],
     '### Route Planner': ["**“Clear everything”, as in the other tools**\n- In English, the button of the Clear window now reads “Clear everything”.",
                           "**Fixed: the map height after typing**\n- On a phone, moving the handle while the on-screen keyboard is open no longer keeps the map small once the keyboard closes.",
-                          "**Threats layer**\n- A hostile SAM, AAA or radar symbol can be given its system, among the game’s 57 air defence systems; with Threats ticked in Display, the map shows where an aircraft at the checked height above the ground is seen and within firing range, masked by DCS’s relief, with the firing and detection ranges. On a theatre without relief, only the ranges are drawn.\n- Where the route is seen at its planned altitude, it is outlined in yellow, and the navigation sheet says by which threat and over what distance.\n- The checked height goes up to 20,000 ft (6,000 m) at least, whatever the ceilings; above a system’s ceiling, that system no longer tints.\n- Ceilings now come from Whiskey 188’s DCS SAM Threat Guide, taken from the game’s files, for the systems it covers; otherwise from Goldwolf’s DCS Threats Guide."],
+                          "**Threats layer**\n- A hostile SAM, AAA or radar symbol can be given its system, among the game’s 57 air defence systems; with Threats ticked in Display, the map shows where an aircraft at the checked height above the ground is seen and within firing range, masked by DCS’s relief, with the firing and detection ranges. On a theatre without relief, only the ranges are drawn.\n- Where the route is seen at its planned altitude, it is outlined in yellow, and the navigation sheet says by which threat and over what distance.\n- The checked height goes up to 20,000 ft (6,000 m) at least, whatever the ceilings; above a system’s ceiling, that system no longer tints.\n- Ceilings now come from Whiskey 188’s DCS SAM Threat Guide, taken from the game’s files, for the systems it covers; otherwise from Goldwolf’s DCS Threats Guide.",
+                          "**More map while exporting or drawing on a phone**\n- On a phone or a small tablet, the map takes the whole height while you frame an export or draw; the export buttons sit under the frame. Everything comes back when you finish."],
     '### Datacard Generator': ["**Fixed: a free card kept its last aircraft**\n- When every crew line of a free card goes back to “to pick”, the Aircraft and Count fields empty instead of keeping the last aircraft found."],
     '### Field Manual': ["**The HQ screen drawn with the Wing button in its place**\n- The two drawings of the HQ screen show the toolbar in its new order.",
                          "**The home screen drawn with its insignia**\n- The two drawings of the home screen show the insignia and the family's icon.",
@@ -98,7 +100,7 @@ def test_changelog_entries_end_their_sections():
     for head, entries in CHANGELOG.items():
         sec = unreleased.split('\n' + head + '\n', 1)[1].split('\n### ', 1)[0].rstrip('\n')
         assert sec.endswith('\n\n'.join(entries)), head
-    assert 'MP-V2.1.0+15` for this one' in unreleased and 'MP-V2.1.0+8' not in log
+    assert 'MP-V2.1.0+16` for this one' in unreleased and 'MP-V2.1.0+8' not in log
     all_tools = unreleased.split('\n### All tools\n', 1)[1].split('\n### ', 1)[0]
     assert all_tools.rstrip('\n').endswith('a wing still on the former “WG” logo shows the new one and still counts as not set up.\n\n' + '\n\n'.join(ALL_TOOLS_2))
 

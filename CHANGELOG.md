@@ -18,7 +18,7 @@ Between two releases, the hosted version shows its build number at the bottom of
 ### All tools
 
 **Build number on the hosted version**
-- Between two releases, the bottom of the home screen shows the build number, `MP-V2.1.0+15` for this one; a downloaded release shows none.
+- Between two releases, the bottom of the home screen shows the build number, `MP-V2.1.0+16` for this one; a downloaded release shows none.
 
 **Easier-to-read drop-down lists**
 - Their header, the chosen line and the line under the pointer have stronger contrast in every theme.
@@ -75,6 +75,9 @@ Between two releases, the hosted version shows its build number at the bottom of
 **Bottom tabs from the keyboard**
 - On a narrow screen, the arrow keys move between the bottom tabs, and each tab is tied to its section for screen readers.
 
+**Fixed: every file is read safely**
+- In every tool, special keys such as __proto__ in a work file, a package, a route, a datacard file, a mission or what the browser kept are now ignored, as the Briefing Generator already did.
+
 ### Home screen
 
 **The top bar fits on a phone**
@@ -83,6 +86,9 @@ Between two releases, the hosted version shows its build number at the bottom of
 **The Mission Plan insignia**
 - The home screen shows the Mission Plan insignia beside its title — on a phone, as a seal on the title's corner — and the family's icon in the top bar; when the Squadron Ready Room opens Mission Plan, your wing's emblem takes its place.
 - A *Squadron Ready Room family* line sits above the credits.
+
+**Fixed: keyboard focus after choosing a theme**
+- After choosing a theme from “⋯” with the keyboard, or closing the list with Escape, the focus goes back to “⋯”.
 
 ### HQ
 
@@ -202,6 +208,9 @@ Between two releases, the hosted version shows its build number at the bottom of
 - Where the route is seen at its planned altitude, it is outlined in yellow, and the navigation sheet says by which threat and over what distance.
 - The checked height goes up to 20,000 ft (6,000 m) at least, whatever the ceilings; above a system’s ceiling, that system no longer tints.
 - Ceilings now come from Whiskey 188’s DCS SAM Threat Guide, taken from the game’s files, for the systems it covers; otherwise from Goldwolf’s DCS Threats Guide.
+
+**More map while exporting or drawing on a phone**
+- On a phone or a small tablet, the map takes the whole height while you frame an export or draw; the export buttons sit under the frame. Everything comes back when you finish.
 
 ### Datacard Generator
 

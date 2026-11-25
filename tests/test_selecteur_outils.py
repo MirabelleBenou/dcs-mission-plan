@@ -33,7 +33,7 @@ ENTRY_INSIGNIA = ("**The Squadron Ready Room family insignia**\n"
                   "- The default wing logo, in HQ and the Briefing Generator, is now the Squadron Ready Room insignia; a wing still on the former “WG” logo shows the new one and still counts as not set up.")
 ENTRY_NARROW = "**Fixed: “⋯” on very narrow screens**\n- Below 345 px wide, after the toolbar was scrolled, “⋯” could end up off the screen; it now stays in view."
 ENTRY_MENUS = "**Menus easier to read from the keyboard**\n- In the toolbar's menus, the line reached with the arrow keys now has enough contrast in every theme."
-ENTRY_LOT3 = ''.join('\n\n' + e for e in ["**Menus: the “Delete” line stands out**\n- In the Datacard Generator's and the Route Planner's menus, the “Delete” line under the pointer or reached with the arrow keys now turns red with dark text, readable in every theme.", "**The “⋯” menu from the keyboard**\n- The arrow keys move through the “⋯” menu, like the other toolbar menus.", "**Export in one tap**\n- With a list or a menu open, one tap on Export closes it and opens the export window, as the toolbar menus already did.", "**Bottom tabs from the keyboard**\n- On a narrow screen, the arrow keys move between the bottom tabs, and each tab is tied to its section for screen readers."])
+ENTRY_LOT3 = ''.join('\n\n' + e for e in ["**Menus: the “Delete” line stands out**\n- In the Datacard Generator's and the Route Planner's menus, the “Delete” line under the pointer or reached with the arrow keys now turns red with dark text, readable in every theme.", "**The “⋯” menu from the keyboard**\n- The arrow keys move through the “⋯” menu, like the other toolbar menus.", "**Export in one tap**\n- With a list or a menu open, one tap on Export closes it and opens the export window, as the toolbar menus already did.", "**Bottom tabs from the keyboard**\n- On a narrow screen, the arrow keys move between the bottom tabs, and each tab is tied to its section for screen readers.", "**Fixed: every file is read safely**\n- In every tool, special keys such as __proto__ in a work file, a package, a route, a datacard file, a mission or what the browser kept are now ignored, as the Briefing Generator already did."])
 ENTRY_KEYBOARD = ("**The tab bar steps aside for the keyboard**\n"
                   "- On a phone, while the on-screen keyboard is open, the tab bar at the bottom of the Briefing Generator, the Datacard Generator and the Route Planner hides, so the field you type in stays in view; in the Route Planner, a search on the map gets the whole height.")
 FM_FR = ("Le nom de l’outil, ou son sigle, au début de la barre, ouvre la liste des outils (▾), dans l’ordre de l’accueil, l’outil ouvert marqué : un toucher de plus ouvre un autre outil, qui garde son travail. "
@@ -48,7 +48,7 @@ def test_texts_are_where_the_lot_says():
     unreleased = log.split('\n## Unreleased\n', 1)[1].split('\n## ', 1)[0]
     all_tools = unreleased.split('\n### All tools\n', 1)[1].split('\n### ', 1)[0].rstrip('\n')
     assert all_tools.endswith('\n\n' + CHANGELOG_ENTRY + '\n\n' + ENTRY_TABS + '\n\n' + ENTRY_TOUCHES + '\n\n' + ENTRY_KEYBOARD + '\n\n' + ENTRY_INSIGNIA + '\n\n' + ENTRY_NARROW + '\n\n' + ENTRY_MENUS + ENTRY_LOT3)       # le lot mp-mobile-onglets ajoute ses deux entrées après celle-ci ; le lot du clavier la sienne, qui termine la rubrique
-    assert 'MP-V2.1.0+15` for this one' in all_tools and 'MP-V2.1.0+3' not in all_tools
+    assert 'MP-V2.1.0+16` for this one' in all_tools and 'MP-V2.1.0+3' not in all_tools
     fm = (ROOT / 'build_field_manual.py').read_text(encoding='utf-8')
     i = fm.index('"La barre du haut", "The top bar"')
     j = fm.index('"Lire ce manuel au téléphone"', i)
@@ -56,8 +56,8 @@ def test_texts_are_where_the_lot_says():
     assert seg.count(FM_FR) == 1 and seg.count(FM_EN) == 1
     assert seg.index(FM_BACK_FR) < seg.index(FM_FR) and seg.index('On a phone, the back gesture') < seg.index(FM_EN)
     assert seg[seg.index(FM_BACK_FR):seg.index(FM_FR)].count("('p',") == 1            # le paragraphe neuf suit aussitôt celui du geste retour
-    assert re.search(r'^DEV_BUILD = 15$', (ROOT / 'version_block.py').read_text(encoding='utf-8'), re.M)
-    assert 'MP-V2.1.0+15' in (ROOT / 'dist' / 'dcs_mission_plan.html').read_text(encoding='utf-8')
+    assert re.search(r'^DEV_BUILD = 16$', (ROOT / 'version_block.py').read_text(encoding='utf-8'), re.M)
+    assert 'MP-V2.1.0+16' in (ROOT / 'dist' / 'dcs_mission_plan.html').read_text(encoding='utf-8')
 
 
 @pytest.fixture(scope='module')
