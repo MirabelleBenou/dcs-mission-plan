@@ -473,14 +473,14 @@ def test_opening_a_route_set_keeps_the_units_and_the_settings_of_the_route_plann
       const pt = (n, la, lo) => '{"__proto__": {"alt": 9999}, "name": "' + n + '", "lat": ' + la + ', "lon": ' + lo + ', "alt": 100, "altRef": "AGL"}';
       const th = S.theatre;
       const f = JSON.parse('{"format": "dcs-route-set-v1", "theatre": "' + th + '", "active": 0, "__proto__": {"units": {"distance": "nm", "altitude": "ft"}, "groundSpeed": 999, "name": "leak"},' +
-        ' "routes": [{"__proto__": {"name": "leak2"}, "name": "R1", "theatre": "' + th + '", "points": [' + pt('A', 42, 43) + ',' + pt('B', 42.1, 43.1) + ']}]}');
+        ' "routes": [{"__proto__": {"name": "leak2"}, "name": "Route A", "theatre": "' + th + '", "points": [' + pt('A', 42, 43) + ',' + pt('B', 42.1, 43.1) + ']}]}');
       openRouteSet(f);
       return { units0: units0, units: JSON.stringify(S.units), gs0: gs0, gs: S.groundSpeed, proto: [Object.getPrototypeOf(S) === P, ({}).units === undefined, ({}).alt === undefined],
         n: S.points.length, alts: S.points.map(p => p.alt), name: S.name, units1: JSON.stringify(RSET.routes[RSET.active].units || null) };
     }""")
     assert o['units'] == o['units0'] and o['units'] == '{"distance":"km","altitude":"m"}', o
     assert o['gs'] == o['gs0'] and o['proto'] == [True, True, True], o
-    assert o['n'] == 2 and o['alts'] == [100, 100] and o['name'] == 'R1', o
+    assert o['n'] == 2 and o['alts'] == [100, 100] and o["name"] == "Route A", o
     assert pg.errs == []
 
 
