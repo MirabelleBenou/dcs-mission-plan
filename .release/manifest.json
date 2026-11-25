@@ -1,0 +1,12 @@
+{
+ "tag": "MP-V2.2.0",
+ "title": "Mission Plan 2.2.0 (trial)",
+ "commit": "f21ead3e5c007dbc3f8e1cc1f4cb0e7189c90c8c",
+ "assets": [
+  {
+   "name": "dcs_mission_plan.html",
+   "size": 17269223,
+   "sha256": "75ef4d2652e67a44aae1863363251734ec828c2935f386e2cd644f602a1fa639"
+  }
+ ]
+}
