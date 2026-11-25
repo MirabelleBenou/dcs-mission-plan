@@ -2168,7 +2168,11 @@ body.mp-ml-on { --mp-top: 86px; }
 #rp-thr .thr-sw.fire { height: 0; border-top: 2px solid #c8102e; }
 #rp-thr .thr-sw.det { height: 0; border-top: 2px dashed #c8102e; }
 #rp-thr .thr-sw.halo { height: 7px; background: #ffd400; }
-#rp-thr.thr-pill { display: flex; align-items: center; gap: 8px; width: auto; height: 44px; padding: 0 0 0 10px; bottom: 10px; left: auto; right: 8px; border: 0; box-shadow: inset 0 0 0 1px var(--amber); }
+#rp-thr.thr-pill { display: flex; align-items: center; gap: 0; width: auto; height: 44px; padding: 0 0 0 10px; bottom: 10px; left: auto; right: 8px; border: 0; box-shadow: inset 0 0 0 1px var(--amber); }
+#rp-thr.thr-pill > * + * { margin-left: 8px; }       /* 8 px entre le titre, la valeur et le premier bouton ; entre deux boutons, rien : leur séparateur suffit */
+#rp-thr.thr-pill > .thr-v + .thr-b { margin-left: 8px; }
+#rp-thr.thr-pill > .thr-b + .thr-b, #rp-thr.thr-pill > .thr-b + .thr-fold { margin-left: 0; }
+#rp-thr.thr-pill.thr-shut > .thr-fold { margin-left: 8px; }
 #rp-thr.thr-pill .thr-v { font-weight: 700; font-size: 13px; white-space: nowrap; }
 #rp-thr.thr-pill .thr-src { font-size: 11px; }
 #rp-thr[hidden] { display: none; }       /* après .thr-pill (même spécificité) : décoché, la pastille disparaît aussi */
