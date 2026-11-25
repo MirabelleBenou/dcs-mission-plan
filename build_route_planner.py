@@ -7362,11 +7362,17 @@ function spSync() {
 
 /* Le champ du panneau qui a le focus pendant le clavier est amené dans la partie visible du panneau */
 /* La carte en grand pendant le cadre d'export (why = 'exp') et le dessin (why = 'dr') : un drapeau en mémoire, jamais écrit ; spSync fait le reste */
+function spSized() { const w = $('map'); return mapSized() && !!w && w.clientWidth > 0 && w.clientHeight > 0; }
 function spFull(why, on) {
-  const ok = !!(map && mapCreated), c = ok ? map.getCenter() : null, z = ok ? map.getZoom() : 0;
+  const sized = !!(map && mapCreated) && spSized();
+  if (sized) SP.view = { c: map.getCenter(), z: map.getZoom() };       /* le centre se prend quand la carte a une taille, jamais sur une carte à 0 × 0 (module caché par le shell) */
+  const s0 = sized ? map.getSize() : null;
   if (on) SP.full[why] = true; else delete SP.full[why];
   spSync();
-  if (ok) map.setView(c, z, { animate: false });       /* la carte change de hauteur : invalidateSize garde le coin haut gauche, le centre géographique revient où il était (le zoom aussi) */
+  if (!(map && mapCreated) || !SP.view) return;
+  const v = SP.view, s1 = map.getSize();
+  if (sized && spSized() && s1.x === s0.x && s1.y === s0.y) return;     /* la taille n'a pas changé : rien ne bouge, aucun mouvement de plus */
+  applyView(() => map.setView(v.c, v.z, { animate: false }));            /* la carte change de hauteur : le centre gardé revient, tout de suite ou au retour de sa taille */
 }
 
 function spKbReveal() {

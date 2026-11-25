@@ -1195,8 +1195,8 @@ def test_mixed_agl_to_msl_leg_is_judged_by_the_third_case_of_the_rule(browser):
 def test_field_manual_rp_threats_gives_the_checked_height_range():
     fm = (ROOT / 'dist' / 'dcs_field_manual.html').read_text(encoding='utf-8')
     rp = fm[fm.index('<section id="page-rp"'):fm.index('<!-- /page-rp -->')]
-    assert 'au téléphone, c’est une pastille repliée au-dessus des crédits de la carte\u202f: <strong>±</strong> y montre <strong>−</strong> et <strong>+</strong>. Elle va de 0 à 20 000 ft (6 000 m) au moins, plus haut si un système affiché a un plafond plus haut\u202f; au-dessus de son plafond, un système ne teinte plus.' in rp
-    assert 'on a phone it is a folded pill above the map credits: <strong>±</strong> shows <strong>−</strong> and <strong>+</strong>. It goes from 0 to 20,000 ft (6,000 m) at least, higher if a system shown has a higher ceiling; above its ceiling, a system no longer tints.' in rp
+    assert 'au téléphone, c’est une pastille repliée, en bas à droite au-dessus des crédits de la carte\u202f: <strong>±</strong> y montre <strong>−</strong> et <strong>+</strong>. Elle va de 0 à 20 000 ft (6 000 m) au moins, plus haut si un système affiché a un plafond plus haut\u202f; au-dessus de son plafond, un système ne teinte plus.' in rp
+    assert 'on a phone it is a folded pill at the bottom right, above the map credits: <strong>±</strong> shows <strong>−</strong> and <strong>+</strong>. It goes from 0 to 20,000 ft (6,000 m) at least, higher if a system shown has a higher ceiling; above its ceiling, a system no longer tints.' in rp
 
 
 def test_field_manual_rp_threats_credits_both_guides():

@@ -117,7 +117,7 @@ CSS = r"""
 #rp-thr .thr-sw.fire { height: 0; border-top: 2px solid #c8102e; }
 #rp-thr .thr-sw.det { height: 0; border-top: 2px dashed #c8102e; }
 #rp-thr .thr-sw.halo { height: 7px; background: #ffd400; }
-#rp-thr.thr-pill { display: flex; align-items: center; gap: 8px; width: auto; height: 44px; padding: 0 0 0 10px; bottom: 10px; left: 8px; border: 0; box-shadow: inset 0 0 0 1px var(--amber); }
+#rp-thr.thr-pill { display: flex; align-items: center; gap: 8px; width: auto; height: 44px; padding: 0 0 0 10px; bottom: 10px; left: auto; right: 8px; border: 0; box-shadow: inset 0 0 0 1px var(--amber); }
 #rp-thr.thr-pill .thr-v { font-weight: 700; font-size: 13px; white-space: nowrap; }
 #rp-thr.thr-pill .thr-src { font-size: 11px; }
 #rp-thr[hidden] { display: none; }       /* après .thr-pill (même spécificité) : décoché, la pastille disparaît aussi */
@@ -722,7 +722,7 @@ function thrFoldApply() {
 }
 /* À chaque ouverture du RP (le shell le réaffiche) : repliée */
 function thrFoldReset() { THR.open = false; thrFoldApply(); }
-/* En pastille : le bas de la pastille est 6 px au-dessus du haut de la mention de la carte, mesuré ; le cartouche large ne reçoit rien */
+/* En pastille (calée à droite, right: 8px) : le bas de la pastille est 6 px au-dessus du haut de la mention de la carte, mesuré ; le cartouche large ne reçoit rien */
 function thrBoxPlace() {
   const el = THR.box;
   if (!el) return;
