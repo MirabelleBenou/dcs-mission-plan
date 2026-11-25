@@ -1,4 +1,4 @@
-"""Route Planner au téléphone (MP-V2.1.0+17) : la pastille des menaces disparaît au décochage, se pose 6 px au-dessus des crédits de la carte, part repliée (« ± » montre « − » et « + ») ;
+"""Route Planner au téléphone (MP-V2.1.0+17) : la pastille des menaces disparaît au décochage, se pose en bas à droite, 6 px au-dessus des crédits de la carte, part repliée (« ± » montre « − » et « + ») ;
 la carte en grand (cadre d'export, dessin) garde son centre et son zoom.
 Joué sur le shell construit (dist/dcs_mission_plan.html, chromium), sans réseau : le banc de test_rp_menaces sert le relief. Les contrôles passent par le DOM, jamais par une capture."""
 import sys
