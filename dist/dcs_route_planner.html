@@ -1970,6 +1970,21 @@ html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-
   #panel > .ed-section > .ui-fa-box { display: none; }
   #panel > .ed-section > .ed-body { display: block; }
   body.rp-kbmap #panel { display: none; }
+  /* la carte en grand, pendant le cadre d'export et le dessin (spFull) : toute la hauteur sous la barre du haut ; le panneau, la poignée et la barre d'onglets sont cachés, rien n'est écrit en mémoire */
+  body.rp-mapfull .app { bottom: 0; grid-template-rows: auto !important; }
+  body.rp-mapfull #panel, body.rp-mapfull #rp-split { display: none; }
+  body.rp-mapfull #tab-bar { display: none !important; }
+  /* l'export : la barre des modes s'efface ; la barre d'export prend la largeur, en bas de la carte au-dessus de la mention Leaflet (--exp-bot, mesuré par expLayout), la consigne au-dessus des boutons (à côté d'eux dès 600 px) */
+  body.rp-mapfull-exp #tapmode { display: none; }
+  body.rp-mapfull-exp .export-bar { left: 0; right: 0; bottom: var(--exp-bot, 0px); transform: none; width: auto; max-width: none; gap: 0; align-items: stretch;
+    background: var(--olive-deep); border-top: 2px solid var(--amber-dark); box-shadow: 0 -2px 8px rgba(0,0,0,.4); }
+  body.rp-mapfull-exp .eb-row { flex-wrap: nowrap; border: 0; box-shadow: none; background: none; padding: 4px; }
+  body.rp-mapfull-exp .eb-hint { order: -1; background: none; padding: 5px 8px 0; }
+}
+@media (max-width: 1100px) and (min-width: 600px) {
+  body.rp-mapfull-exp .export-bar { flex-direction: row; align-items: center; justify-content: center; }
+  body.rp-mapfull-exp .eb-hint { order: 0; padding: 0 8px; flex: 0 1 auto; }
+  body.rp-mapfull-exp .eb-row { flex: 0 0 auto; }
 }
 /* « Calques » sans calque : la note qui dit comment en avoir, et pas de « Retirer tous les calques » */
 #layers-empty[hidden], #btn-layers-clear[hidden] { display: none; }
@@ -10364,6 +10379,7 @@ function drEnter() {
   if (!drLayer()) { const l = drDrawn()[0]; DR.layerId = l ? l.id : null; }
   map.getContainer().classList.add('rp-drawing');
   $('dr-ui').hidden = false;
+  spFull('dr', true);       /* la carte en grand : le panneau, la poignée et la barre d'onglets se cachent jusqu'à la sortie du dessin */
   drSyncUi();
 }
 
@@ -10379,6 +10395,7 @@ function drExit() {
   $('dr-ui').hidden = true;
   $('dr-sheet').hidden = true;
   $('dr-pop').hidden = true;
+  spFull('dr', false);
 }
 
 function drOnZoom() {
@@ -10468,7 +10485,7 @@ const KEY_SPLIT_LAND = 'rp_split_land_v1';
 const SP_MIN = 220, SP_MIN_LAND = 140, SP_MIN_F = 0.25, SP_MAX_F = 0.85, SP_DEF_F = 0.52, SP_STEP = 40, SP_DBL_MS = 350, SP_KB_PANEL = 100, SP_KB_MIN = 60;
 function spTopbar() { const a = document.getElementById('app'); return (a && a.getBoundingClientRect().top) || 60; }   /* le haut du contenu, lu sur le contenu : la barre (60 px) et, quand elle est là, la ligne de la mission d'HQ (--mp-top) */
 const SP_PORTRAIT_MQ = '(max-width: 1100px) and ((min-height: 600px) or (orientation: portrait))';
-const SP = { el: null, wrap: null, mq: null, port: null, h: null, hl: null, drag: null, raf: 0, want: 0, last: 0 };
+const SP = { el: null, wrap: null, mq: null, port: null, h: null, hl: null, drag: null, raf: 0, want: 0, last: 0, full: {} };
 
 function spLand() { return !SP.port.matches; }
 function spGet() { return spLand() ? SP.hl : SP.h; }
@@ -10523,14 +10540,24 @@ function spKbKind() {
 function spSync() {
   if (!SP.el) return;
   const h = spGet(), kb = SP.mq.matches ? spKbKind() : '';
+  const full = SP.mq.matches && !!(SP.full.exp || SP.full.dr);     /* la carte en grand : le cadre d'export ou le dessin est ouvert (jusqu'à 1 100 px seulement) */
+  document.body.classList.toggle('rp-mapfull', full);
+  document.body.classList.toggle('rp-mapfull-exp', full && !!SP.full.exp);
   document.body.classList.toggle('rp-kbmap', kb === 'map');         /* champ de la carte : le panneau est à 0 (sa marge intérieure ne le laisserait pas à moins de 20 px) */
   if (kb === 'map') spApply(spPlace());
   else if (kb === 'panel') spApply(Math.max(SP_KB_MIN, Math.min(spBounds()[0], spPlace() - SP_KB_PANEL)));
+  else if (full) spApply(spPlace());                                 /* toute la hauteur : la poignée et la barre d'onglets sont cachées, rien n'est écrit (ni rp_split_v1 ni rp_split_land_v1) ; à la fermeture, la hauteur gardée revient */
   else if (SP.mq.matches) spApply(spClamp(h != null ? h : SP_DEF_F * spPlace()));
   else spClear();
 }
 
 /* Le champ du panneau qui a le focus pendant le clavier est amené dans la partie visible du panneau */
+/* La carte en grand pendant le cadre d'export (why = 'exp') et le dessin (why = 'dr') : un drapeau en mémoire, jamais écrit ; spSync fait le reste */
+function spFull(why, on) {
+  if (on) SP.full[why] = true; else delete SP.full[why];
+  spSync();
+}
+
 function spKbReveal() {
   if (spKbKind() !== 'panel') return;
   const a = document.activeElement, go = () => { try { a.scrollIntoView({ block: 'center', inline: 'nearest' }); } catch (e) { /* ignore */ } };
@@ -15272,7 +15299,7 @@ const EXP_LONG = 1600;          /* le grand côté de la carte dans l'image, en 
 const EXP_BAND = 64;            /* la hauteur du bandeau sous la carte */
 const EXP_SCALE_STEPS = [0.5, 1, 2, 2.5, 5, 10, 15, 20, 25, 50, 100];
 const EXP_SKIP_PANES = ['drawedit', 'ring'];
-const EXP = { on: false, busy: false, orient: 'landscape', prevTap: 'wp', rect: null };
+const EXP = { on: false, busy: false, orient: 'landscape', prevTap: 'wp', rect: null, ro: null };
 
 function expRatioText() { return EXP.orient === 'portrait' ? '2:3' : '3:2'; }
 
@@ -15295,9 +15322,21 @@ function expLayout() {
   const W = wrap.clientWidth, H = wrap.clientHeight;
   if (!W || !H) { EXP.rect = null; return; }
   const r = EXP.orient === 'portrait' ? 2 / 3 : 3 / 2;
-  const fw = Math.floor(Math.min(W * 0.92, H * 0.86 * r));
-  const fh = Math.floor(fw / r);
-  const x = Math.round((W - fw) / 2), y = Math.round((H - fh) / 2);
+  let fw, fh, x, y;
+  if (document.body.classList.contains('rp-mapfull-exp')) {
+    /* la carte en grand (jusqu'à 1 100 px) : la barre d'export est en bas de la carte, sur toute la largeur, au-dessus de la mention Leaflet ; le cadre se calcule dans la place au-dessus d'elle, jamais dessous */
+    const bar = $('export-bar'), host = $('export-layer').getBoundingClientRect(), at = map.attributionControl.getContainer().getBoundingClientRect();
+    bar.style.setProperty('--exp-bot', Math.max(0, at.width ? Math.round(host.bottom - at.top) : 0) + 'px');
+    const room = Math.max(0, Math.floor(bar.getBoundingClientRect().top - host.top) - 6);
+    fw = Math.floor(Math.min(W * 0.92, room * 0.92 * r));
+    fh = Math.floor(fw / r);
+    x = Math.round((W - fw) / 2); y = Math.max(0, Math.round((room - fh) / 2));
+  } else {
+    $('export-bar').style.removeProperty('--exp-bot');
+    fw = Math.floor(Math.min(W * 0.92, H * 0.86 * r));
+    fh = Math.floor(fw / r);
+    x = Math.round((W - fw) / 2); y = Math.round((H - fh) / 2);
+  }
   fr.style.left = x + 'px'; fr.style.top = y + 'px'; fr.style.width = fw + 'px'; fr.style.height = fh + 'px';
   EXP.rect = { x: x, y: y, w: fw, h: fh };
 }
@@ -15310,6 +15349,8 @@ function expOpen() {
   map.closePopup();
   setTapMode('read', true);
   $('export-layer').hidden = false;
+  if (!EXP.ro && window.ResizeObserver) { EXP.ro = new ResizeObserver(() => expLayout()); EXP.ro.observe($('export-bar')); EXP.ro.observe(map.attributionControl.getContainer()); }       /* la barre ou la mention change de hauteur (langue, fond) : le cadre se recalcule */
+  spFull('exp', true);       /* la carte en grand (jusqu'à 1 100 px) : le panneau, la poignée, la barre d'onglets et la barre des modes se cachent jusqu'à la fermeture */
   expSyncTexts();
   expLayout();
   thrBoxRender();
@@ -15322,6 +15363,8 @@ function expClose() {
   $('export-layer').hidden = true;
   $('export-layer').classList.remove('busy');
   $('exp-go').disabled = false;
+  $('export-bar').style.removeProperty('--exp-bot');
+  spFull('exp', false);
   setTapMode(EXP.prevTap, true);
   thrBoxRender();
 }
