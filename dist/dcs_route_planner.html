@@ -4129,6 +4129,9 @@ function showToastAction(msg, label, fn, ms) { showToast(msg, { action: { label:
 /* ---- dans la suite : le module le sait par window.self !== window.top, à son démarrage ---- */
 try { if (window.self !== window.top) document.documentElement.classList.add('mp-in-shell'); } catch (e) { document.documentElement.classList.add('mp-in-shell'); }
 
+/* ---- la garde commune des copies clé par clé : un objet lu d'un fichier, du stockage, d'un paquet, d'une route, d'un .miz ou d'un message ne se recopie pas par ces trois clés (__proto__ changerait le prototype de la copie) ---- */
+function uiKeyOk(k) { return k !== '__proto__' && k !== 'constructor' && k !== 'prototype'; }
+
 /* ---- la liste de thème suit le thème appliqué (le shell pousse data-theme sur le body du module) ---- */
 (function uiThemeFollow() {
   const sync = () => {
@@ -4242,6 +4245,7 @@ function uiBarMoreRow(icon, text, chev, disabled, onclick, why) {
   } else li.appendChild(tx);
   if (chev) { const c = document.createElement('span'); c.className = 'tb-more-chev'; c.setAttribute('aria-hidden', 'true'); c.textContent = '▸'; li.appendChild(c); }
   if (disabled) li.setAttribute('aria-disabled', 'true');
+  if (disabled) li.addEventListener('mousedown', ev => ev.preventDefault());       /* un toucher ou un clic sur une ligne grisée ne lui donne pas le focus (le clavier les saute déjà) ; tabindex reste -1 comme les autres */
   li.addEventListener('click', ev => { ev.stopPropagation(); if (!disabled) onclick(); });
   return li;
 }
@@ -6312,7 +6316,7 @@ function rpSnap() { try { const o = JSON.parse(JSON.stringify(S)); delete o.ui; 
 /* Ce que cet écran a changé depuis sa dernière lecture : réglages, et points et références (par pid : champs changés, ajoutés avec leur voisin, retirés) ; l'ordre n'est pas rejoué */
 function rpDiff(base, mine) {
   const d = { set: {}, lists: {} };
-  Object.keys(mine).forEach(k => { if (k !== 'points' && k !== 'refs' && JSON.stringify(mine[k]) !== JSON.stringify(base[k])) d.set[k] = mine[k]; });
+  Object.keys(mine).forEach(k => { if (uiKeyOk(k) && k !== 'points' && k !== 'refs' && JSON.stringify(mine[k]) !== JSON.stringify(base[k])) d.set[k] = mine[k]; });
   ['points', 'refs'].forEach(k => {
     const b = Array.isArray(base[k]) ? base[k] : [], m = Array.isArray(mine[k]) ? mine[k] : [], bp = new Map(b.map(p => [p.pid, p])), mp = new Set(m.map(p => p.pid));
     const L = { changed: [], added: [], removed: [] };
@@ -6320,7 +6324,7 @@ function rpDiff(base, mine) {
       const o = bp.get(p.pid);
       if (!o) { L.added.push({ obj: p, after: i ? m[i - 1].pid : '' }); return; }
       const ch = {};
-      new Set(Object.keys(p).concat(Object.keys(o))).forEach(f => { if (JSON.stringify(p[f]) !== JSON.stringify(o[f])) ch[f] = p[f]; });
+      new Set(Object.keys(p).concat(Object.keys(o))).forEach(f => { if (uiKeyOk(f) && JSON.stringify(p[f]) !== JSON.stringify(o[f])) ch[f] = p[f]; });
       if (Object.keys(ch).length) L.changed.push({ pid: p.pid, ch: ch });
     });
     b.forEach(p => { if (!mp.has(p.pid)) L.removed.push(p.pid); });
@@ -6329,11 +6333,11 @@ function rpDiff(base, mine) {
   return d;
 }
 function rpApply(d) {
-  Object.keys(d.set).forEach(k => { S[k] = d.set[k]; });
+  Object.keys(d.set).forEach(k => { if (uiKeyOk(k)) S[k] = d.set[k]; });
   ['points', 'refs'].forEach(k => {
     const L = d.lists[k], list = S[k];
     L.removed.forEach(pid => { const i = list.findIndex(p => p.pid === pid); if (i >= 0) list.splice(i, 1); });
-    L.changed.forEach(c => { const p = list.find(q => q.pid === c.pid); if (p) Object.keys(c.ch).forEach(f => { if (c.ch[f] === undefined) delete p[f]; else p[f] = c.ch[f]; }); });
+    L.changed.forEach(c => { const p = list.find(q => q.pid === c.pid); if (p) Object.keys(c.ch).forEach(f => { if (!uiKeyOk(f)) return; if (c.ch[f] === undefined) delete p[f]; else p[f] = c.ch[f]; }); });
     L.added.forEach(a => { const i = a.after ? list.findIndex(p => p.pid === a.after) : -1; list.splice(i + 1, 0, a.obj); });
   });
 }
@@ -12053,7 +12057,7 @@ function gsStable(v) {
   return JSON.stringify(v, (k, x) => {
     if (!gsIsObj(x)) return x;
     const o = {};
-    Object.keys(x).sort().forEach(n => { o[n] = x[n]; });
+    Object.keys(x).sort().forEach(n => { if (uiKeyOk(n)) o[n] = x[n]; });
     return o;
   });
 }
@@ -12063,7 +12067,7 @@ function gsPrintNorm(o) {
   const r = {};
   if (gsIsObj(o)) Object.keys(o).forEach(k => {
     const e = o[k];
-    if (gsIsObj(e)) r[k] = { on: e.on === true, label: typeof e.label === 'string' ? e.label : '', mod: typeof e.mod === 'string' ? e.mod : '' };
+    if (uiKeyOk(k) && gsIsObj(e)) r[k] = { on: e.on === true, label: typeof e.label === 'string' ? e.label : '', mod: typeof e.mod === 'string' ? e.mod : '' };
   });
   return r;
 }
@@ -12073,11 +12077,12 @@ function gsPrintNorm(o) {
    gsPrintMergeOf(radioPrint du groupe, radioSel de la carte) rend { print, added } sans rien écrire ; gsPrintMerge(cards, g) l'écrit pour chaque groupe de la fiche qui a une carte liée dans cards (gsId = fcId du groupe) : g est la fiche
    déjà lue (sinon elle est lue ici). Sans cards, les cartes sont lues dans datacard_state_v1 (le Flight Configurator). Rend vrai si un groupe a été écrit. */
 function gsPrintMergeOf(grp, card) {
-  const print = gsIsObj(grp) ? Object.assign({}, grp) : {};
+  const print = {};
+  if (gsIsObj(grp)) Object.keys(grp).forEach(k => { if (uiKeyOk(k)) print[k] = grp[k]; });
   let added = 0;
   if (gsIsObj(card)) Object.keys(card).forEach(k => {
     const e = card[k];
-    if (gsIsObj(print[k]) || !gsIsObj(e)) return;
+    if (!uiKeyOk(k) || gsIsObj(print[k]) || !gsIsObj(e)) return;
     const n = { on: e.on === true, label: typeof e.label === 'string' ? e.label : '', mod: typeof e.mod === 'string' ? e.mod : '' };
     if (n.on || n.label !== '' || n.mod !== '') { print[k] = n; added++; }
   });
@@ -12130,7 +12135,10 @@ function gsLegacyIds(list) {
     if (id === '' || used.has(id)) {
       id = 'fv1' + i;
       while (used.has(id) || (seen.has(id) && id !== f.fcId)) id += 'x';
-      f = Object.assign({}, f, { fcId: id });
+      const g = {};
+      Object.keys(f).forEach(k => { if (uiKeyOk(k)) g[k] = f[k]; });
+      g.fcId = id;
+      f = g;
     }
     used.add(id);
     return f;
@@ -13185,7 +13193,12 @@ function impBriefingUnits(st, target, fi, row, chk, src) {
     if (tab.std) tab.used.forEach(i => { st.std.used[i] = true; });
     target.units.forEach(u => {
       if (u.type !== ty) return;
-      Object.keys(tab.posts).forEach(p => { u.radios[p] = Object.assign({}, tab.posts[p]); });
+      Object.keys(tab.posts).forEach(p => {
+        if (!uiKeyOk(p)) return;
+        const row = {};
+        Object.keys(tab.posts[p]).forEach(c => { if (uiKeyOk(c)) row[c] = tab.posts[p][c]; });
+        u.radios[p] = row;
+      });
     });
   }
 }

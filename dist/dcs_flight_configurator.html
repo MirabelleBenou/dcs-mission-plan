@@ -13327,7 +13327,7 @@ function gsStable(v) {
   return JSON.stringify(v, (k, x) => {
     if (!gsIsObj(x)) return x;
     const o = {};
-    Object.keys(x).sort().forEach(n => { o[n] = x[n]; });
+    Object.keys(x).sort().forEach(n => { if (uiKeyOk(n)) o[n] = x[n]; });
     return o;
   });
 }
@@ -13337,7 +13337,7 @@ function gsPrintNorm(o) {
   const r = {};
   if (gsIsObj(o)) Object.keys(o).forEach(k => {
     const e = o[k];
-    if (gsIsObj(e)) r[k] = { on: e.on === true, label: typeof e.label === 'string' ? e.label : '', mod: typeof e.mod === 'string' ? e.mod : '' };
+    if (uiKeyOk(k) && gsIsObj(e)) r[k] = { on: e.on === true, label: typeof e.label === 'string' ? e.label : '', mod: typeof e.mod === 'string' ? e.mod : '' };
   });
   return r;
 }
@@ -13347,11 +13347,12 @@ function gsPrintNorm(o) {
    gsPrintMergeOf(radioPrint du groupe, radioSel de la carte) rend { print, added } sans rien écrire ; gsPrintMerge(cards, g) l'écrit pour chaque groupe de la fiche qui a une carte liée dans cards (gsId = fcId du groupe) : g est la fiche
    déjà lue (sinon elle est lue ici). Sans cards, les cartes sont lues dans datacard_state_v1 (le Flight Configurator). Rend vrai si un groupe a été écrit. */
 function gsPrintMergeOf(grp, card) {
-  const print = gsIsObj(grp) ? Object.assign({}, grp) : {};
+  const print = {};
+  if (gsIsObj(grp)) Object.keys(grp).forEach(k => { if (uiKeyOk(k)) print[k] = grp[k]; });
   let added = 0;
   if (gsIsObj(card)) Object.keys(card).forEach(k => {
     const e = card[k];
-    if (gsIsObj(print[k]) || !gsIsObj(e)) return;
+    if (!uiKeyOk(k) || gsIsObj(print[k]) || !gsIsObj(e)) return;
     const n = { on: e.on === true, label: typeof e.label === 'string' ? e.label : '', mod: typeof e.mod === 'string' ? e.mod : '' };
     if (n.on || n.label !== '' || n.mod !== '') { print[k] = n; added++; }
   });
@@ -13404,7 +13405,10 @@ function gsLegacyIds(list) {
     if (id === '' || used.has(id)) {
       id = 'fv1' + i;
       while (used.has(id) || (seen.has(id) && id !== f.fcId)) id += 'x';
-      f = Object.assign({}, f, { fcId: id });
+      const g = {};
+      Object.keys(f).forEach(k => { if (uiKeyOk(k)) g[k] = f[k]; });
+      g.fcId = id;
+      f = g;
     }
     used.add(id);
     return f;
@@ -14149,7 +14153,12 @@ function impBriefingUnits(st, target, fi, row, chk, src) {
     if (tab.std) tab.used.forEach(i => { st.std.used[i] = true; });
     target.units.forEach(u => {
       if (u.type !== ty) return;
-      Object.keys(tab.posts).forEach(p => { u.radios[p] = Object.assign({}, tab.posts[p]); });
+      Object.keys(tab.posts).forEach(p => {
+        if (!uiKeyOk(p)) return;
+        const row = {};
+        Object.keys(tab.posts[p]).forEach(c => { if (uiKeyOk(c)) row[c] = tab.posts[p][c]; });
+        u.radios[p] = row;
+      });
     });
   }
 }
@@ -14573,6 +14582,9 @@ function showToastAction(msg, label, fn, ms) { showToast(msg, { action: { label:
 /* ---- dans la suite : le module le sait par window.self !== window.top, à son démarrage ---- */
 try { if (window.self !== window.top) document.documentElement.classList.add('mp-in-shell'); } catch (e) { document.documentElement.classList.add('mp-in-shell'); }
 
+/* ---- la garde commune des copies clé par clé : un objet lu d'un fichier, du stockage, d'un paquet, d'une route, d'un .miz ou d'un message ne se recopie pas par ces trois clés (__proto__ changerait le prototype de la copie) ---- */
+function uiKeyOk(k) { return k !== '__proto__' && k !== 'constructor' && k !== 'prototype'; }
+
 /* ---- la liste de thème suit le thème appliqué (le shell pousse data-theme sur le body du module) ---- */
 (function uiThemeFollow() {
   const sync = () => {
@@ -14686,6 +14698,7 @@ function uiBarMoreRow(icon, text, chev, disabled, onclick, why) {
   } else li.appendChild(tx);
   if (chev) { const c = document.createElement('span'); c.className = 'tb-more-chev'; c.setAttribute('aria-hidden', 'true'); c.textContent = '▸'; li.appendChild(c); }
   if (disabled) li.setAttribute('aria-disabled', 'true');
+  if (disabled) li.addEventListener('mousedown', ev => ev.preventDefault());       /* un toucher ou un clic sur une ligne grisée ne lui donne pas le focus (le clavier les saute déjà) ; tabindex reste -1 comme les autres */
   li.addEventListener('click', ev => { ev.stopPropagation(); if (!disabled) onclick(); });
   return li;
 }
@@ -17396,7 +17409,7 @@ function restoreFlight(f) {       // un groupe sans fcId en reçoit un par resto
   const types = rawUnits.map(u => (typeof u.type === 'string' ? u.type : (typeof f.type === 'string' ? f.type : '')));
   if (types.some(x => x !== '' && PAYLOAD_TYPES.indexOf(x) < 0)) return null;
   const nf = newFlight();
-  Object.keys(f).forEach(k => { if (['name', 'type', 'coalition', 'route', 'routeLink', 'units'].indexOf(k) < 0) nf[k] = f[k]; });
+  Object.keys(f).forEach(k => { if (uiKeyOk(k) && ['name', 'type', 'coalition', 'route', 'routeLink', 'units'].indexOf(k) < 0) nf[k] = f[k]; });
   if (typeof nf.fcId !== 'string' || nf.fcId === '') nf.fcId = newId();
   nf.name = str(f.name);
   nf.coalition = (f.coalition === 'blue' || f.coalition === 'red') ? f.coalition : '';
@@ -17413,7 +17426,7 @@ function restoreFlight(f) {       // un groupe sans fcId en reçoit un par resto
     nu.stand = nf.base !== null && Number.isInteger(u.stand) && u.stand >= 0 ? u.stand : null;       // la place (parking) dans la base du groupe
     nu.folded = u.folded === true;          // carte repliée : un état d'écran, gardé avec le travail, jamais dans le paquet
     nu.radios = isObj(u.radios) ? u.radios : {};
-    Object.keys(u).forEach(k => { if (UNIT_KEYS.indexOf(k) < 0) nu[k] = u[k]; });       // une clé inconnue d'une unité est gardée telle quelle
+    Object.keys(u).forEach(k => { if (uiKeyOk(k) && UNIT_KEYS.indexOf(k) < 0) nu[k] = u[k]; });       // une clé inconnue d'une unité est gardée telle quelle
     nu.props = fcPropsRead(nu.type, isObj(u.addPropIn) ? u.addPropIn : u.props);       // les options d'équipement : un import (addPropIn) remplace ; une valeur hors règle redevient le défaut, une clé hors table est gardée
     nu.loadout = (isObj(u.loadout) && isObj(u.loadout.pylons)) ? u.loadout : null;
     if (nu.loadout) loBring(nu.type, k => nu.loadout[k], (k, v) => { nu.loadout[k] = v; });       // un fichier de travail édité : jamais de valeur hors règle
@@ -17588,7 +17601,7 @@ function unitPropsOut(u) {
   if (!opts.length && !Object.keys(isObj(u.props) ? u.props : {}).length) return null;
   const out = {}, ids = {};
   opts.forEach(o => { out[o.id] = eqValue(o, u.props); ids[o.id] = true; });
-  Object.keys(isObj(u.props) ? u.props : {}).forEach(k => { if (!has(ids, k)) out[k] = u.props[k]; });
+  Object.keys(isObj(u.props) ? u.props : {}).forEach(k => { if (uiKeyOk(k) && !has(ids, k)) out[k] = u.props[k]; });
   return out;
 }
 const EQ_FR = {
@@ -17707,7 +17720,7 @@ function clampNum(raw, min, max, int) {
 }
 function cleanPylons(pylons) {
   const out = {};
-  Object.keys(pylons).forEach(n => { if (isObj(pylons[n]) && typeof pylons[n].CLSID === 'string' && pylons[n].CLSID !== '') out[n] = clone(pylons[n]); });
+  Object.keys(pylons).forEach(n => { if (uiKeyOk(n) && isObj(pylons[n]) && typeof pylons[n].CLSID === 'string' && pylons[n].CLSID !== '') out[n] = clone(pylons[n]); });
   return out;
 }
 // Un emport d'unité : { key, label, src, modified, pylons, fuel, flare, chaff, gun } ; les réglages viennent de `prev` s'il y en a un, sinon des défauts de la table.
@@ -19146,8 +19159,11 @@ function printShown(f, ty, r, c) { return f.units.some(x => x.type === ty && cha
 function printSet(f, key, on) {
   const cur = gsPrintBase(f), e = isObj(cur[key]) ? cur[key] : { on: false, label: '', mod: '' };       // le groupe, plus les canaux de sa datacard qu'il n'a pas encore : cocher une case ne fait disparaître aucun autre canal
   const nx = {};
-  Object.keys(cur).forEach(k => { nx[k] = cur[k]; });
-  nx[key] = Object.assign({}, e, { on: on });
+  Object.keys(cur).forEach(k => { if (uiKeyOk(k)) nx[k] = cur[k]; });
+  const ne = {};
+  Object.keys(e).forEach(k => { if (uiKeyOk(k)) ne[k] = e[k]; });
+  ne.on = on;
+  nx[key] = ne;
   f.radioPrint = nx;
 }
 function paintPrintBoxes() {

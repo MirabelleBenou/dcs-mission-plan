@@ -61,7 +61,7 @@ function gsStable(v) {
   return JSON.stringify(v, (k, x) => {
     if (!gsIsObj(x)) return x;
     const o = {};
-    Object.keys(x).sort().forEach(n => { o[n] = x[n]; });
+    Object.keys(x).sort().forEach(n => { if (uiKeyOk(n)) o[n] = x[n]; });
     return o;
   });
 }
@@ -71,7 +71,7 @@ function gsPrintNorm(o) {
   const r = {};
   if (gsIsObj(o)) Object.keys(o).forEach(k => {
     const e = o[k];
-    if (gsIsObj(e)) r[k] = { on: e.on === true, label: typeof e.label === 'string' ? e.label : '', mod: typeof e.mod === 'string' ? e.mod : '' };
+    if (uiKeyOk(k) && gsIsObj(e)) r[k] = { on: e.on === true, label: typeof e.label === 'string' ? e.label : '', mod: typeof e.mod === 'string' ? e.mod : '' };
   });
   return r;
 }
@@ -81,11 +81,12 @@ function gsPrintNorm(o) {
    gsPrintMergeOf(radioPrint du groupe, radioSel de la carte) rend { print, added } sans rien écrire ; gsPrintMerge(cards, g) l'écrit pour chaque groupe de la fiche qui a une carte liée dans cards (gsId = fcId du groupe) : g est la fiche
    déjà lue (sinon elle est lue ici). Sans cards, les cartes sont lues dans datacard_state_v1 (le Flight Configurator). Rend vrai si un groupe a été écrit. */
 function gsPrintMergeOf(grp, card) {
-  const print = gsIsObj(grp) ? Object.assign({}, grp) : {};
+  const print = {};
+  if (gsIsObj(grp)) Object.keys(grp).forEach(k => { if (uiKeyOk(k)) print[k] = grp[k]; });
   let added = 0;
   if (gsIsObj(card)) Object.keys(card).forEach(k => {
     const e = card[k];
-    if (gsIsObj(print[k]) || !gsIsObj(e)) return;
+    if (!uiKeyOk(k) || gsIsObj(print[k]) || !gsIsObj(e)) return;
     const n = { on: e.on === true, label: typeof e.label === 'string' ? e.label : '', mod: typeof e.mod === 'string' ? e.mod : '' };
     if (n.on || n.label !== '' || n.mod !== '') { print[k] = n; added++; }
   });
@@ -138,7 +139,10 @@ function gsLegacyIds(list) {
     if (id === '' || used.has(id)) {
       id = 'fv1' + i;
       while (used.has(id) || (seen.has(id) && id !== f.fcId)) id += 'x';
-      f = Object.assign({}, f, { fcId: id });
+      const g = {};
+      Object.keys(f).forEach(k => { if (uiKeyOk(k)) g[k] = f[k]; });
+      g.fcId = id;
+      f = g;
     }
     used.add(id);
     return f;

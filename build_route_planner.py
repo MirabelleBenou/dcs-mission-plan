@@ -3735,7 +3735,7 @@ function rpSnap() { try { const o = JSON.parse(JSON.stringify(S)); delete o.ui; 
 /* Ce que cet écran a changé depuis sa dernière lecture : réglages, et points et références (par pid : champs changés, ajoutés avec leur voisin, retirés) ; l'ordre n'est pas rejoué */
 function rpDiff(base, mine) {
   const d = { set: {}, lists: {} };
-  Object.keys(mine).forEach(k => { if (k !== 'points' && k !== 'refs' && JSON.stringify(mine[k]) !== JSON.stringify(base[k])) d.set[k] = mine[k]; });
+  Object.keys(mine).forEach(k => { if (uiKeyOk(k) && k !== 'points' && k !== 'refs' && JSON.stringify(mine[k]) !== JSON.stringify(base[k])) d.set[k] = mine[k]; });
   ['points', 'refs'].forEach(k => {
     const b = Array.isArray(base[k]) ? base[k] : [], m = Array.isArray(mine[k]) ? mine[k] : [], bp = new Map(b.map(p => [p.pid, p])), mp = new Set(m.map(p => p.pid));
     const L = { changed: [], added: [], removed: [] };
@@ -3743,7 +3743,7 @@ function rpDiff(base, mine) {
       const o = bp.get(p.pid);
       if (!o) { L.added.push({ obj: p, after: i ? m[i - 1].pid : '' }); return; }
       const ch = {};
-      new Set(Object.keys(p).concat(Object.keys(o))).forEach(f => { if (JSON.stringify(p[f]) !== JSON.stringify(o[f])) ch[f] = p[f]; });
+      new Set(Object.keys(p).concat(Object.keys(o))).forEach(f => { if (uiKeyOk(f) && JSON.stringify(p[f]) !== JSON.stringify(o[f])) ch[f] = p[f]; });
       if (Object.keys(ch).length) L.changed.push({ pid: p.pid, ch: ch });
     });
     b.forEach(p => { if (!mp.has(p.pid)) L.removed.push(p.pid); });
@@ -3752,11 +3752,11 @@ function rpDiff(base, mine) {
   return d;
 }
 function rpApply(d) {
-  Object.keys(d.set).forEach(k => { S[k] = d.set[k]; });
+  Object.keys(d.set).forEach(k => { if (uiKeyOk(k)) S[k] = d.set[k]; });
   ['points', 'refs'].forEach(k => {
     const L = d.lists[k], list = S[k];
     L.removed.forEach(pid => { const i = list.findIndex(p => p.pid === pid); if (i >= 0) list.splice(i, 1); });
-    L.changed.forEach(c => { const p = list.find(q => q.pid === c.pid); if (p) Object.keys(c.ch).forEach(f => { if (c.ch[f] === undefined) delete p[f]; else p[f] = c.ch[f]; }); });
+    L.changed.forEach(c => { const p = list.find(q => q.pid === c.pid); if (p) Object.keys(c.ch).forEach(f => { if (!uiKeyOk(f)) return; if (c.ch[f] === undefined) delete p[f]; else p[f] = c.ch[f]; }); });
     L.added.forEach(a => { const i = a.after ? list.findIndex(p => p.pid === a.after) : -1; list.splice(i + 1, 0, a.obj); });
   });
 }

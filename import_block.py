@@ -666,7 +666,12 @@ function impBriefingUnits(st, target, fi, row, chk, src) {
     if (tab.std) tab.used.forEach(i => { st.std.used[i] = true; });
     target.units.forEach(u => {
       if (u.type !== ty) return;
-      Object.keys(tab.posts).forEach(p => { u.radios[p] = Object.assign({}, tab.posts[p]); });
+      Object.keys(tab.posts).forEach(p => {
+        if (!uiKeyOk(p)) return;
+        const row = {};
+        Object.keys(tab.posts[p]).forEach(c => { if (uiKeyOk(c)) row[c] = tab.posts[p][c]; });
+        u.radios[p] = row;
+      });
     });
   }
 }

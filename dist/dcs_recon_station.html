@@ -2389,6 +2389,9 @@ function showToastAction(msg, label, fn, ms) { showToast(msg, { action: { label:
 /* ---- dans la suite : le module le sait par window.self !== window.top, à son démarrage ---- */
 try { if (window.self !== window.top) document.documentElement.classList.add('mp-in-shell'); } catch (e) { document.documentElement.classList.add('mp-in-shell'); }
 
+/* ---- la garde commune des copies clé par clé : un objet lu d'un fichier, du stockage, d'un paquet, d'une route, d'un .miz ou d'un message ne se recopie pas par ces trois clés (__proto__ changerait le prototype de la copie) ---- */
+function uiKeyOk(k) { return k !== '__proto__' && k !== 'constructor' && k !== 'prototype'; }
+
 /* ---- la liste de thème suit le thème appliqué (le shell pousse data-theme sur le body du module) ---- */
 (function uiThemeFollow() {
   const sync = () => {
@@ -2502,6 +2505,7 @@ function uiBarMoreRow(icon, text, chev, disabled, onclick, why) {
   } else li.appendChild(tx);
   if (chev) { const c = document.createElement('span'); c.className = 'tb-more-chev'; c.setAttribute('aria-hidden', 'true'); c.textContent = '▸'; li.appendChild(c); }
   if (disabled) li.setAttribute('aria-disabled', 'true');
+  if (disabled) li.addEventListener('mousedown', ev => ev.preventDefault());       /* un toucher ou un clic sur une ligne grisée ne lui donne pas le focus (le clavier les saute déjà) ; tabindex reste -1 comme les autres */
   li.addEventListener('click', ev => { ev.stopPropagation(); if (!disabled) onclick(); });
   return li;
 }

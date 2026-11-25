@@ -2548,7 +2548,7 @@ function restoreFlight(f) {       // un groupe sans fcId en reçoit un par resto
   const types = rawUnits.map(u => (typeof u.type === 'string' ? u.type : (typeof f.type === 'string' ? f.type : '')));
   if (types.some(x => x !== '' && PAYLOAD_TYPES.indexOf(x) < 0)) return null;
   const nf = newFlight();
-  Object.keys(f).forEach(k => { if (['name', 'type', 'coalition', 'route', 'routeLink', 'units'].indexOf(k) < 0) nf[k] = f[k]; });
+  Object.keys(f).forEach(k => { if (uiKeyOk(k) && ['name', 'type', 'coalition', 'route', 'routeLink', 'units'].indexOf(k) < 0) nf[k] = f[k]; });
   if (typeof nf.fcId !== 'string' || nf.fcId === '') nf.fcId = newId();
   nf.name = str(f.name);
   nf.coalition = (f.coalition === 'blue' || f.coalition === 'red') ? f.coalition : '';
@@ -2565,7 +2565,7 @@ function restoreFlight(f) {       // un groupe sans fcId en reçoit un par resto
     nu.stand = nf.base !== null && Number.isInteger(u.stand) && u.stand >= 0 ? u.stand : null;       // la place (parking) dans la base du groupe
     nu.folded = u.folded === true;          // carte repliée : un état d'écran, gardé avec le travail, jamais dans le paquet
     nu.radios = isObj(u.radios) ? u.radios : {};
-    Object.keys(u).forEach(k => { if (UNIT_KEYS.indexOf(k) < 0) nu[k] = u[k]; });       // une clé inconnue d'une unité est gardée telle quelle
+    Object.keys(u).forEach(k => { if (uiKeyOk(k) && UNIT_KEYS.indexOf(k) < 0) nu[k] = u[k]; });       // une clé inconnue d'une unité est gardée telle quelle
     nu.props = fcPropsRead(nu.type, isObj(u.addPropIn) ? u.addPropIn : u.props);       // les options d'équipement : un import (addPropIn) remplace ; une valeur hors règle redevient le défaut, une clé hors table est gardée
     nu.loadout = (isObj(u.loadout) && isObj(u.loadout.pylons)) ? u.loadout : null;
     if (nu.loadout) loBring(nu.type, k => nu.loadout[k], (k, v) => { nu.loadout[k] = v; });       // un fichier de travail édité : jamais de valeur hors règle
@@ -2740,7 +2740,7 @@ function unitPropsOut(u) {
   if (!opts.length && !Object.keys(isObj(u.props) ? u.props : {}).length) return null;
   const out = {}, ids = {};
   opts.forEach(o => { out[o.id] = eqValue(o, u.props); ids[o.id] = true; });
-  Object.keys(isObj(u.props) ? u.props : {}).forEach(k => { if (!has(ids, k)) out[k] = u.props[k]; });
+  Object.keys(isObj(u.props) ? u.props : {}).forEach(k => { if (uiKeyOk(k) && !has(ids, k)) out[k] = u.props[k]; });
   return out;
 }
 const EQ_FR = {
@@ -2859,7 +2859,7 @@ function clampNum(raw, min, max, int) {
 }
 function cleanPylons(pylons) {
   const out = {};
-  Object.keys(pylons).forEach(n => { if (isObj(pylons[n]) && typeof pylons[n].CLSID === 'string' && pylons[n].CLSID !== '') out[n] = clone(pylons[n]); });
+  Object.keys(pylons).forEach(n => { if (uiKeyOk(n) && isObj(pylons[n]) && typeof pylons[n].CLSID === 'string' && pylons[n].CLSID !== '') out[n] = clone(pylons[n]); });
   return out;
 }
 // Un emport d'unité : { key, label, src, modified, pylons, fuel, flare, chaff, gun } ; les réglages viennent de `prev` s'il y en a un, sinon des défauts de la table.
@@ -4298,8 +4298,11 @@ function printShown(f, ty, r, c) { return f.units.some(x => x.type === ty && cha
 function printSet(f, key, on) {
   const cur = gsPrintBase(f), e = isObj(cur[key]) ? cur[key] : { on: false, label: '', mod: '' };       // le groupe, plus les canaux de sa datacard qu'il n'a pas encore : cocher une case ne fait disparaître aucun autre canal
   const nx = {};
-  Object.keys(cur).forEach(k => { nx[k] = cur[k]; });
-  nx[key] = Object.assign({}, e, { on: on });
+  Object.keys(cur).forEach(k => { if (uiKeyOk(k)) nx[k] = cur[k]; });
+  const ne = {};
+  Object.keys(e).forEach(k => { if (uiKeyOk(k)) ne[k] = e[k]; });
+  ne.on = on;
+  nx[key] = ne;
   f.radioPrint = nx;
 }
 function paintPrintBoxes() {

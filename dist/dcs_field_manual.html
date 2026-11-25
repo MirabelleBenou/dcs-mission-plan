@@ -5236,6 +5236,7 @@ function uiBarMoreRow(icon, text, chev, disabled, onclick, why) {
   } else li.appendChild(tx);
   if (chev) { const c = document.createElement('span'); c.className = 'tb-more-chev'; c.setAttribute('aria-hidden', 'true'); c.textContent = '▸'; li.appendChild(c); }
   if (disabled) li.setAttribute('aria-disabled', 'true');
+  if (disabled) li.addEventListener('mousedown', ev => ev.preventDefault());       /* un toucher ou un clic sur une ligne grisée ne lui donne pas le focus (le clavier les saute déjà) ; tabindex reste -1 comme les autres */
   li.addEventListener('click', ev => { ev.stopPropagation(); if (!disabled) onclick(); });
   return li;
 }

@@ -3108,6 +3108,9 @@ function showToastAction(msg, label, fn, ms) { showToast(msg, { action: { label:
 /* ---- dans la suite : le module le sait par window.self !== window.top, à son démarrage ---- */
 try { if (window.self !== window.top) document.documentElement.classList.add('mp-in-shell'); } catch (e) { document.documentElement.classList.add('mp-in-shell'); }
 
+/* ---- la garde commune des copies clé par clé : un objet lu d'un fichier, du stockage, d'un paquet, d'une route, d'un .miz ou d'un message ne se recopie pas par ces trois clés (__proto__ changerait le prototype de la copie) ---- */
+function uiKeyOk(k) { return k !== '__proto__' && k !== 'constructor' && k !== 'prototype'; }
+
 /* ---- la liste de thème suit le thème appliqué (le shell pousse data-theme sur le body du module) ---- */
 (function uiThemeFollow() {
   const sync = () => {
@@ -3221,6 +3224,7 @@ function uiBarMoreRow(icon, text, chev, disabled, onclick, why) {
   } else li.appendChild(tx);
   if (chev) { const c = document.createElement('span'); c.className = 'tb-more-chev'; c.setAttribute('aria-hidden', 'true'); c.textContent = '▸'; li.appendChild(c); }
   if (disabled) li.setAttribute('aria-disabled', 'true');
+  if (disabled) li.addEventListener('mousedown', ev => ev.preventDefault());       /* un toucher ou un clic sur une ligne grisée ne lui donne pas le focus (le clavier les saute déjà) ; tabindex reste -1 comme les autres */
   li.addEventListener('click', ev => { ev.stopPropagation(); if (!disabled) onclick(); });
   return li;
 }
@@ -4978,7 +4982,7 @@ function normalizeCard(src) {
     c.radioSel = {};
     Object.keys(src.radioSel).forEach(k => {
       const o = src.radioSel[k];
-      if (o && typeof o === 'object') c.radioSel[k] = { on: o.on === true, label: str(o.label), mod: str(o.mod) };
+      if (uiKeyOk(k) && o && typeof o === 'object') c.radioSel[k] = { on: o.on === true, label: str(o.label), mod: str(o.mod) };
     });
   }
   if (src.gsGone === true) { c.gsGone = true; if ('gsSide' in src) c.gsSide = gsSide(src.gsSide); }       /* une carte dont le groupe a disparu garde son camp : relue, elle ne le perd plus (le document relu est celui qui a été écrit) */
@@ -4996,7 +5000,7 @@ const DG_CARD_OPTIONAL = ['refsOff', 'gsId', 'gsSide', 'radioSel', 'rid', 'loado
 function dgCanonCard(c) {
   const o = {}, has = k => Object.prototype.hasOwnProperty.call(c, k);
   Object.keys(newCard()).concat(DG_CARD_OPTIONAL).forEach(k => { if (has(k)) o[k] = c[k]; });
-  Object.keys(c).forEach(k => { if (!Object.prototype.hasOwnProperty.call(o, k)) o[k] = c[k]; });
+  Object.keys(c).forEach(k => { if (uiKeyOk(k) && !Object.prototype.hasOwnProperty.call(o, k)) o[k] = c[k]; });
   return o;
 }
 function dgCanonDoc(d) { return Object.assign({}, d, { cards: d.cards.map(dgCanonCard) }); }
@@ -5253,7 +5257,7 @@ function gsStable(v) {
   return JSON.stringify(v, (k, x) => {
     if (!gsIsObj(x)) return x;
     const o = {};
-    Object.keys(x).sort().forEach(n => { o[n] = x[n]; });
+    Object.keys(x).sort().forEach(n => { if (uiKeyOk(n)) o[n] = x[n]; });
     return o;
   });
 }
@@ -5263,7 +5267,7 @@ function gsPrintNorm(o) {
   const r = {};
   if (gsIsObj(o)) Object.keys(o).forEach(k => {
     const e = o[k];
-    if (gsIsObj(e)) r[k] = { on: e.on === true, label: typeof e.label === 'string' ? e.label : '', mod: typeof e.mod === 'string' ? e.mod : '' };
+    if (uiKeyOk(k) && gsIsObj(e)) r[k] = { on: e.on === true, label: typeof e.label === 'string' ? e.label : '', mod: typeof e.mod === 'string' ? e.mod : '' };
   });
   return r;
 }
@@ -5273,11 +5277,12 @@ function gsPrintNorm(o) {
    gsPrintMergeOf(radioPrint du groupe, radioSel de la carte) rend { print, added } sans rien écrire ; gsPrintMerge(cards, g) l'écrit pour chaque groupe de la fiche qui a une carte liée dans cards (gsId = fcId du groupe) : g est la fiche
    déjà lue (sinon elle est lue ici). Sans cards, les cartes sont lues dans datacard_state_v1 (le Flight Configurator). Rend vrai si un groupe a été écrit. */
 function gsPrintMergeOf(grp, card) {
-  const print = gsIsObj(grp) ? Object.assign({}, grp) : {};
+  const print = {};
+  if (gsIsObj(grp)) Object.keys(grp).forEach(k => { if (uiKeyOk(k)) print[k] = grp[k]; });
   let added = 0;
   if (gsIsObj(card)) Object.keys(card).forEach(k => {
     const e = card[k];
-    if (gsIsObj(print[k]) || !gsIsObj(e)) return;
+    if (!uiKeyOk(k) || gsIsObj(print[k]) || !gsIsObj(e)) return;
     const n = { on: e.on === true, label: typeof e.label === 'string' ? e.label : '', mod: typeof e.mod === 'string' ? e.mod : '' };
     if (n.on || n.label !== '' || n.mod !== '') { print[k] = n; added++; }
   });
@@ -5330,7 +5335,10 @@ function gsLegacyIds(list) {
     if (id === '' || used.has(id)) {
       id = 'fv1' + i;
       while (used.has(id) || (seen.has(id) && id !== f.fcId)) id += 'x';
-      f = Object.assign({}, f, { fcId: id });
+      const g = {};
+      Object.keys(f).forEach(k => { if (uiKeyOk(k)) g[k] = f[k]; });
+      g.fcId = id;
+      f = g;
     }
     used.add(id);
     return f;
@@ -6318,7 +6326,12 @@ function impBriefingUnits(st, target, fi, row, chk, src) {
     if (tab.std) tab.used.forEach(i => { st.std.used[i] = true; });
     target.units.forEach(u => {
       if (u.type !== ty) return;
-      Object.keys(tab.posts).forEach(p => { u.radios[p] = Object.assign({}, tab.posts[p]); });
+      Object.keys(tab.posts).forEach(p => {
+        if (!uiKeyOk(p)) return;
+        const row = {};
+        Object.keys(tab.posts[p]).forEach(c => { if (uiKeyOk(c)) row[c] = tab.posts[p][c]; });
+        u.radios[p] = row;
+      });
     });
   }
 }

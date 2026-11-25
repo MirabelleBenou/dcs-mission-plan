@@ -3236,7 +3236,7 @@ function normalizeCard(src) {
     c.radioSel = {};
     Object.keys(src.radioSel).forEach(k => {
       const o = src.radioSel[k];
-      if (o && typeof o === 'object') c.radioSel[k] = { on: o.on === true, label: str(o.label), mod: str(o.mod) };
+      if (uiKeyOk(k) && o && typeof o === 'object') c.radioSel[k] = { on: o.on === true, label: str(o.label), mod: str(o.mod) };
     });
   }
   if (src.gsGone === true) { c.gsGone = true; if ('gsSide' in src) c.gsSide = gsSide(src.gsSide); }       /* une carte dont le groupe a disparu garde son camp : relue, elle ne le perd plus (le document relu est celui qui a été écrit) */
@@ -3254,7 +3254,7 @@ const DG_CARD_OPTIONAL = ['refsOff', 'gsId', 'gsSide', 'radioSel', 'rid', 'loado
 function dgCanonCard(c) {
   const o = {}, has = k => Object.prototype.hasOwnProperty.call(c, k);
   Object.keys(newCard()).concat(DG_CARD_OPTIONAL).forEach(k => { if (has(k)) o[k] = c[k]; });
-  Object.keys(c).forEach(k => { if (!Object.prototype.hasOwnProperty.call(o, k)) o[k] = c[k]; });
+  Object.keys(c).forEach(k => { if (uiKeyOk(k) && !Object.prototype.hasOwnProperty.call(o, k)) o[k] = c[k]; });
   return o;
 }
 function dgCanonDoc(d) { return Object.assign({}, d, { cards: d.cards.map(dgCanonCard) }); }

@@ -4000,7 +4000,7 @@ async function buildMissionSnapshot(ast, model, missionText, filename, theatre) 
     if (!node || node.kind !== 'table') return {{}};
     const obj = {{}};
     for (const e of node.entries) {{
-      if (e.key) obj[e.key.value] = e.value && (e.value.kind === 'table') ? tableToObj(e.value) : scalarOf(e.value);
+      if (e.key && uiKeyOk(String(e.key.value))) obj[e.key.value] = e.value && (e.value.kind === 'table') ? tableToObj(e.value) : scalarOf(e.value);
     }}
     return obj;
   }}
@@ -4291,7 +4291,7 @@ function astToValue(node) {{
     for (const e of node.entries) {{
       if (!e.key) continue;
       const v = astToValue(e.value);
-      if (v !== undefined) obj[e.key.value] = v;
+      if (v !== undefined && uiKeyOk(String(e.key.value))) obj[e.key.value] = v;
     }}
     return obj;
   }}
@@ -4937,7 +4937,7 @@ function pkNormalize(obj, filename) {{
         .filter(r => !radioFreeCount(unitTypeOf(v1 ? f : null, u), r.radioIndex))      // un poste que la mission ne pré-règle pas (le poste HF des deux hélicoptères) : ignoré, rien n'est écrit ni dit
         .map(r => {{
           const channels = {{}};
-          for (const [c, fr] of Object.entries(r.channels)) if (pkNum(fr) !== null) channels[c] = fr;
+          for (const [c, fr] of Object.entries(r.channels)) if (uiKeyOk(c) && pkNum(fr) !== null) channels[c] = fr;
           return {{ radioIndex: r.radioIndex, channels }};
         }}),
       payload:  (u.payload && typeof u.payload === 'object') ? u.payload : null,
@@ -5183,7 +5183,7 @@ function pkClean(v) {{
   if (v && typeof v === 'object') {{
     const o = {{}};
     for (const [k, x] of Object.entries(v)) {{
-      if (x === null || k === '__proto__' || k === 'constructor' || k === 'prototype') continue;
+      if (x === null || !uiKeyOk(k)) continue;
       o[k] = pkClean(x);
     }}
     return o;
@@ -5310,7 +5310,7 @@ function pkBuildGroup(work, fl) {{
     for (const [kk, v] of Object.entries(raw)) {{
       if (kk === 'linkUnit' || kk === 'helipadId') {{ warns.push({{ key: 'pk.w.pointRefDropped', args: [label, k, kk, v] }}); continue; }}      // ils désignent des unités de la mission du paquet
       if (isFirst && kk === 'airdromeId') continue;      // le point 1 ne part plus d'un terrain
-      pt[kk] = v;
+      if (uiKeyOk(kk)) pt[kk] = v;
     }}
     if (isFirst && onStand) {{      // le point 1 du paquet, gardé en point 2 : un point de passage en vol, aux valeurs de départ en vol du paquet à défaut des siennes
       pt.type = 'Turning Point'; pt.action = 'Turning Point';
@@ -5742,7 +5742,7 @@ function pkPlanFlight(ctx, pk, fl, tg) {{
       }} else {{
         const p1 = astToValue(e1.value);
         const pts = {{ 1: p1 }};
-        for (const [k, v] of Object.entries(pkgPts)) if (k !== '1') pts[k] = v;
+        for (const [k, v] of Object.entries(pkgPts)) if (k !== '1' && uiKeyOk(k)) pts[k] = v;
         if (pkgPts['1'] && typeof pkgPts['1'] === 'object' && pkStartsElsewhere(pkgPts['1'], p1)) {{
           warns.push({{ key: 'pk.w.departure', args: [name] }});
         }}

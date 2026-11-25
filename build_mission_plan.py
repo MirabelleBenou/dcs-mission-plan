@@ -1842,7 +1842,11 @@ function tbmClose(refocus) {{
   m.active = -1;
   m.btn.classList.remove('tbm-trigger-open');
   m.btn.setAttribute('aria-expanded', 'false');
-  if (refocus) m.btn.focus({{ preventScroll: true }});
+  if (refocus) {{
+    const gone = m.btn.closest('[data-mp-off]');       /* le déclencheur d'origine est masqué (parti sous « ⋯ ») : le focus revient à « ⋯ », comme dans les outils */
+    const f = gone && typeof UIMORE !== 'undefined' && UIMORE.btn && !UIMORE.btn.hasAttribute('data-mp-off') ? UIMORE.btn : m.btn;
+    f.focus({{ preventScroll: true }});
+  }}
 }}
 
 /* Exemple ▾ de la barre du haut : le même panneau que les listes (tbm-panel), deux lignes, une par groupe ; il prend la place de TBM.cur (Échap, clic ailleurs, défilement, redimensionnement le ferment comme les listes) */
