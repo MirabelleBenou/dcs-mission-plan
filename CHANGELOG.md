@@ -18,7 +18,7 @@ Between two releases, the hosted version shows its build number at the bottom of
 ### All tools
 
 **Build number on the hosted version**
-- Between two releases, the bottom of the home screen shows the build number, `MP-V2.1.0+16` for this one; a downloaded release shows none.
+- Between two releases, the bottom of the home screen shows the build number, `MP-V2.1.0+17` for this one; a downloaded release shows none.
 
 **Easier-to-read drop-down lists**
 - Their header, the chosen line and the line under the pointer have stronger contrast in every theme.
@@ -211,6 +211,12 @@ Between two releases, the hosted version shows its build number at the bottom of
 
 **More map while exporting or drawing on a phone**
 - On a phone or a small tablet, the map takes the whole height while you frame an export or draw; the export buttons sit under the frame. Everything comes back when you finish.
+
+**Threats: the height control on a phone**
+- On a phone, the Threats height control sits above the map credits and starts folded: ± shows − and +, ‹ folds it again. Unticking Threats hides it.
+
+**The map keeps its centre when it grows**
+- On a phone, the map keeps the same centre when it takes the whole height to export or draw, and when it comes back.
 
 ### Datacard Generator
 

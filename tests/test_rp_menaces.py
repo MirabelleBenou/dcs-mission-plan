@@ -714,7 +714,12 @@ def test_box_on_a_phone_is_a_pill_with_two_44px_buttons(browser):
           btn: bs.map(x => { const q = x.getBoundingClientRect(); return [Math.round(q.width), Math.round(q.height), x.getAttribute('aria-label'), x.textContent, x.disabled]; }), range: !!document.getElementById('thr-range'), step: DISP.thrStep }; })()""")
     i = info()
     assert i['pill'] and i['h'] == 44 and i['mapw'] < 760 and i['t'] == 'MENACES' and i['v'] == '30 m sol' and i['range'] is False
-    assert i['btn'] == [[44, 44, 'Plus bas', '−', False], [44, 44, 'Plus haut', '+', False]]
+    # la pastille part repliée : « ± » seul, de 44 × 44 px ; on la déplie d'abord, puis « − » et « + » se mesurent comme à la base
+    assert fr.evaluate("(() => { const f = document.querySelector('#rp-thr .thr-fold'), r = f.getBoundingClientRect(); return [f.textContent, f.getAttribute('aria-expanded'), Math.round(r.width), Math.round(r.height)]; })()") == ['±', 'false', 44, 44]
+    assert fr.evaluate("Array.from(document.querySelectorAll('#rp-thr .thr-b')).every(e => getComputedStyle(e).display === 'none')")
+    fr.evaluate("document.querySelector('#rp-thr .thr-fold').click()")
+    assert fr.evaluate("(() => { const f = document.querySelector('#rp-thr .thr-fold'), r = f.getBoundingClientRect(); return [f.textContent, f.getAttribute('aria-expanded'), Math.round(r.width), Math.round(r.height)]; })()") == ['‹', 'true', 44, 44]
+    assert info()['btn'] == [[44, 44, 'Plus bas', '−', False], [44, 44, 'Plus haut', '+', False]]
     assert fr.evaluate("""(() => { const b = document.getElementById('rp-thr'), r = b.getBoundingClientRect(), cs = getComputedStyle(b);
         return parseFloat(cs.borderTopWidth) + parseFloat(cs.borderBottomWidth) + parseFloat(cs.borderRightWidth) === 0 && Array.from(b.querySelectorAll('.thr-b')).every(x => { const q = x.getBoundingClientRect();
           return q.top >= r.top && q.bottom <= r.bottom && q.right <= r.right && q.height === 44 && r.height === 44; }); })()""")
@@ -1190,8 +1195,8 @@ def test_mixed_agl_to_msl_leg_is_judged_by_the_third_case_of_the_rule(browser):
 def test_field_manual_rp_threats_gives_the_checked_height_range():
     fm = (ROOT / 'dist' / 'dcs_field_manual.html').read_text(encoding='utf-8')
     rp = fm[fm.index('<section id="page-rp"'):fm.index('<!-- /page-rp -->')]
-    assert 'au téléphone, c’est une pastille avec <strong>−</strong> et <strong>+</strong>. Elle va de 0 à 20 000 ft (6 000 m) au moins, plus haut si un système affiché a un plafond plus haut\u202f; au-dessus de son plafond, un système ne teinte plus.' in rp
-    assert 'on a phone it is a pill with <strong>−</strong> and <strong>+</strong>. It goes from 0 to 20,000 ft (6,000 m) at least, higher if a system shown has a higher ceiling; above its ceiling, a system no longer tints.' in rp
+    assert 'au téléphone, c’est une pastille repliée au-dessus des crédits de la carte\u202f: <strong>±</strong> y montre <strong>−</strong> et <strong>+</strong>. Elle va de 0 à 20 000 ft (6 000 m) au moins, plus haut si un système affiché a un plafond plus haut\u202f; au-dessus de son plafond, un système ne teinte plus.' in rp
+    assert 'on a phone it is a folded pill above the map credits: <strong>±</strong> shows <strong>−</strong> and <strong>+</strong>. It goes from 0 to 20,000 ft (6,000 m) at least, higher if a system shown has a higher ceiling; above its ceiling, a system no longer tints.' in rp
 
 
 def test_field_manual_rp_threats_credits_both_guides():

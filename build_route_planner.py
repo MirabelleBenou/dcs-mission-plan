@@ -2216,6 +2216,8 @@ const I18N = {
     'thr.leg.route': 'route vue, à son altitude prévue',
     'thr.lower': 'Plus bas',
     'thr.higher': 'Plus haut',
+    'thr.set': 'Régler la hauteur',
+    'thr.fold': 'Replier',
     'nav.thr': '⚠ Vu par {l}',
     'nav.thr.item': '{n} sur {d}',
     'fallback': 'Fond indisponible — grille seule',
@@ -2786,6 +2788,8 @@ const I18N = {
     'thr.leg.route': 'route seen, at its planned altitude',
     'thr.lower': 'Lower',
     'thr.higher': 'Higher',
+    'thr.set': 'Set the height',
+    'thr.fold': 'Fold',
     'nav.thr': '⚠ Seen by {l}',
     'nav.thr.item': '{n} over {d}',
     'fallback': 'Map unavailable — grid only',
@@ -7359,8 +7363,10 @@ function spSync() {
 /* Le champ du panneau qui a le focus pendant le clavier est amené dans la partie visible du panneau */
 /* La carte en grand pendant le cadre d'export (why = 'exp') et le dessin (why = 'dr') : un drapeau en mémoire, jamais écrit ; spSync fait le reste */
 function spFull(why, on) {
+  const ok = !!(map && mapCreated), c = ok ? map.getCenter() : null, z = ok ? map.getZoom() : 0;
   if (on) SP.full[why] = true; else delete SP.full[why];
   spSync();
+  if (ok) map.setView(c, z, { animate: false });       /* la carte change de hauteur : invalidateSize garde le coin haut gauche, le centre géographique revient où il était (le zoom aussi) */
 }
 
 function spKbReveal() {
@@ -10921,7 +10927,7 @@ function applyTheme(id, persist) {
 }
 
 /* Le shell réaffiche le Route Planner (retour de l'accueil) : le mode de toucher revient à Lire, sauf pendant le cadre d'export, qui garde la carte en lecture et rend le mode d'avant à sa fermeture */
-function mpOnShow() { if (!EXP.on) setTapMode('read'); }
+function mpOnShow() { if (!EXP.on) setTapMode('read'); thrFoldReset(); }       /* chaque ouverture du RP : la pastille des menaces repliée */
 function setLang(lang) {
   if (lang !== 'fr' && lang !== 'en') return;
   if (lang === CURRENT_LANG) return;

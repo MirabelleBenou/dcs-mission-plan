@@ -97,7 +97,6 @@ CSS = r"""
 /* la couche des menaces (lot mp-rp-menaces-couche) */
 #rp-thr { position: absolute; left: 10px; bottom: 28px; z-index: 500; box-sizing: border-box; width: 280px; max-width: calc(100% - 20px); padding: 7px 10px 8px;
   font: 500 12px/1.3 var(--f-ui); letter-spacing: .03em; background: rgba(26,28,20,.92); color: #e8dcb8; border: 1px solid var(--amber); border-radius: 2px; }
-#rp-thr[hidden] { display: none; }
 #rp-thr .thr-h, #rp-thr .thr-r { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
 #rp-thr .thr-t { color: var(--amber); font-weight: 700; letter-spacing: .16em; font-size: 12px; }
 #rp-thr .thr-src { font-size: 11px; text-align: right; }
@@ -121,9 +120,13 @@ CSS = r"""
 #rp-thr.thr-pill { display: flex; align-items: center; gap: 8px; width: auto; height: 44px; padding: 0 0 0 10px; bottom: 10px; left: 8px; border: 0; box-shadow: inset 0 0 0 1px var(--amber); }
 #rp-thr.thr-pill .thr-v { font-weight: 700; font-size: 13px; white-space: nowrap; }
 #rp-thr.thr-pill .thr-src { font-size: 11px; }
+#rp-thr[hidden] { display: none; }       /* après .thr-pill (même spécificité) : décoché, la pastille disparaît aussi */
 #rp-thr .thr-b { flex: none; box-sizing: border-box; width: 44px; height: 44px; margin: 0; padding: 0; border: 0; border-left: 1px solid rgba(232,220,184,.35); border-radius: 0; background: transparent;
   color: #e8dcb8; font: 700 24px/1 var(--f-ui); cursor: pointer; touch-action: manipulation; }
 #rp-thr .thr-b:disabled { opacity: .4; cursor: default; }
+#rp-thr .thr-fold { flex: none; box-sizing: border-box; width: 44px; height: 44px; margin: 0; padding: 0; border: 0; border-left: 1px solid rgba(232,220,184,.35); border-radius: 0; background: transparent;
+  color: #c8923a; font: 700 17px/1 var(--f-ui); cursor: pointer; touch-action: manipulation; }       /* l'ambre un peu éclairci : 4,5 : 1 au moins sur le fond de la pastille, même sur une carte blanche */
+#rp-thr.thr-shut .thr-b { display: none; }
 .leaflet-threats-pane, .leaflet-thrroute-pane { pointer-events: none; }
 table.nav tr.thr td { background: rgba(158,27,20,.07); color: #9e1b14; font-family: var(--f-ui); font-weight: 600; font-size: 12px; letter-spacing: .3px; white-space: normal; overflow-wrap: anywhere; }
 .dr-thr-info { margin-top: 4px; font-size: 12px; line-height: 1.35; color: var(--khaki-light); }
@@ -167,7 +170,7 @@ const THR = {
   circ: null, halo: null, circSig: '', haloSig: '',
   zone: null, zoneSig: '', paint: { H: 0, list: [] },
   seen: null, routeSig: '', routeSeq: 0, routeTimer: 0,
-  box: null, boxSig: '', raf: 0,
+  box: null, boxSig: '', raf: 0, open: false,       /* open : la pastille dépliée (« − » et « + » vus) ; en mémoire seulement, repliée à chaque ouverture du RP */
   blob: ''
 };
 
@@ -643,6 +646,8 @@ function thrBoxEl() {
   L.DomEvent.disableScrollPropagation(el);
   el.addEventListener('input', ev => { if (ev.target && ev.target.id === 'thr-range') thrSetRank(parseInt(ev.target.value, 10)); });
   el.addEventListener('click', ev => {
+    const f = ev.target.closest ? ev.target.closest('.thr-fold') : null;
+    if (f) { THR.open = !THR.open; thrFoldApply(); return; }
     const b = ev.target.closest ? ev.target.closest('.thr-b') : null;
     if (b && !b.disabled) thrSetRank(thrRank() + parseInt(b.dataset.d, 10));
   });
@@ -683,7 +688,7 @@ function thrBoxRender() {
     el.classList.toggle('thr-pill', narrow);
     if (narrow) {
       el.innerHTML = title + (hasZone ? '<span class="thr-v" id="thr-v"></span><button type="button" class="thr-b" data-d="-1" aria-label="' + esc(t('thr.lower')) + '">−</button>' +
-        '<button type="button" class="thr-b" data-d="1" aria-label="' + esc(t('thr.higher')) + '">+</button>' : '<span class="thr-src">' + esc(src) + '</span>');
+        '<button type="button" class="thr-b" data-d="1" aria-label="' + esc(t('thr.higher')) + '">+</button><button type="button" class="thr-fold"></button>' : '<span class="thr-src">' + esc(src) + '</span>');
     } else {
       let h = '<div class="thr-h">' + title + '<span class="thr-src">' + esc(src) + '</span></div>';
       if (hasZone) {
@@ -700,7 +705,36 @@ function thrBoxRender() {
       el.innerHTML = h;
     }
   }
+  thrFoldApply();
   thrBoxValue();
+  thrBoxPlace();
+}
+/* La pastille avec la teinte : repliée (titre, valeur, « ± ») ou dépliée (« − », « + », « ‹ ») ; le bouton n'est jamais refait par le geste, le focus y reste */
+function thrFoldApply() {
+  const el = THR.box;
+  if (!el) return;
+  const f = el.querySelector('.thr-fold');
+  el.classList.toggle('thr-shut', !!f && !THR.open);
+  if (!f) return;
+  f.textContent = THR.open ? '‹' : '±';
+  f.setAttribute('aria-expanded', THR.open ? 'true' : 'false');
+  f.setAttribute('aria-label', t(THR.open ? 'thr.fold' : 'thr.set'));
+}
+/* À chaque ouverture du RP (le shell le réaffiche) : repliée */
+function thrFoldReset() { THR.open = false; thrFoldApply(); }
+/* En pastille : le bas de la pastille est 6 px au-dessus du haut de la mention de la carte, mesuré ; le cartouche large ne reçoit rien */
+function thrBoxPlace() {
+  const el = THR.box;
+  if (!el) return;
+  if (!el.classList.contains('thr-pill')) {
+    if (el.style.bottom) { el.style.removeProperty('bottom'); if (!el.getAttribute('style')) el.removeAttribute('style'); }
+    return;
+  }
+  const c = map.getContainer(), a = map.attributionControl && map.attributionControl.getContainer();
+  const ar = a ? a.getBoundingClientRect() : null;
+  if (!ar || !ar.width || !ar.height) { el.style.removeProperty('bottom'); if (!el.getAttribute('style')) el.removeAttribute('style'); return; }       /* pas de mention vue : le bas de la feuille de style */
+  const cr = c.getBoundingClientRect();
+  el.style.bottom = Math.max(0, cr.top + c.clientTop + c.clientHeight - ar.top + 6) + 'px';
 }
 
 /* ---- la synchronisation : un seul point d'entrée, peu coûteux quand rien n'a changé ---- */
@@ -738,6 +772,8 @@ function thrInit() {
   THR.circ = L.layerGroup().addTo(map);
   THR.halo = L.layerGroup().addTo(map);
   map.on('resize', thrBoxRender);
+  const at = map.attributionControl && map.attributionControl.getContainer();
+  if (at && window.ResizeObserver) new ResizeObserver(() => thrBoxPlace()).observe(at);       /* la mention change de hauteur (relief, fond, langue, largeur) : la pastille suit */
 }
 /* Un calcul de grille pour les essais et les mesures : { ms, calcMs, worker, z, side, tiles } */
 function thrProbe(sysId, lat, lon, noWorker) {
