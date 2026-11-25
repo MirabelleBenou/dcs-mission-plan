@@ -3169,6 +3169,7 @@ function uiBarMoreBtn(bar) {
     UIMORE.bound = true;
     document.addEventListener('pointerdown', uiBarMoreOutside, true);
     document.addEventListener('keydown', uiBarMoreKeydown, true);
+    document.addEventListener('keyup', ev => { if (ev.key === ' ' && UIMORE.btn && ev.target === UIMORE.btn) ev.preventDefault(); }, true);       /* Espace ouvre au keydown : le clic que certains navigateurs lancent au keyup n'est pas voulu */
     window.addEventListener('resize', () => uiBarMoreClose());       /* le redimensionnement ferme le menu (comme les listes) : un recalcul qui garde la même décision, lui, ne le ferme pas */
   }
   bar.appendChild(b);
