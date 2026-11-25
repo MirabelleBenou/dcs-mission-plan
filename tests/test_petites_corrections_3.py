@@ -328,17 +328,27 @@ def visible(fr, sel):
     return fr.evaluate("(s) => { const e = document.querySelector(s); return !!e && !e.closest('[data-mp-off]') && getComputedStyle(e).display !== 'none' && e.getBoundingClientRect().width > 0; }", sel)
 
 
-def kinds(fr, tool):
-    """Les sortes d'ouvert que l'outil a à cette largeur : la liste des outils, « ⋯ », une liste au thème, chaque menu du module."""
-    out = [('tools', '.tb-switch')]
+MORE_CHEV_ROW = '.tb-more-panel .tbm-opt:has(.tb-more-chev):not([aria-disabled="true"])'
+
+
+def kinds(pg, fr, tool, touch):
+    """Les sortes d'ouvert que l'outil a à cette largeur : la liste des outils, « ⋯ », une liste ouverte depuis une ligne ▸ de « ⋯ » (là où « ⋯ » en porte une), une liste au thème, chaque menu du module.
+    Chaque sorte est (nom, sélecteur à toucher, ligne ▸ à toucher ensuite ou None)."""
+    out = [('tools', '.tb-switch', None)]
     if visible(fr, '#tb-more-btn'):
-        out.append(('more', '#tb-more-btn'))
+        out.append(('more', '#tb-more-btn', None))
+        press(pg, fr, '#tb-more-btn', touch)
+        has_row = fr.evaluate("(s) => !!document.querySelector(s)", MORE_CHEV_ROW)
+        press(pg, fr, '#tb-more-btn', touch)                             # « ⋯ » referme son menu
+        assert fr.evaluate(OPEN_JS) == 0
+        if has_row:
+            out.append(('more > list', '#tb-more-btn', MORE_CHEV_ROW))
     for s in ('.toolbar .tbm-trigger',):
         if visible(fr, s):
-            out.append(('list', s))
+            out.append(('list', s, None))
     for s in MENUS[tool]:
         if visible(fr, s):
-            out.append(('menu ' + s, s))
+            out.append(('menu ' + s, s, None))
     return out
 
 
@@ -354,11 +364,16 @@ def test_one_tap_on_export_closes_what_is_open_and_opens_the_window(browser, too
         d.evaluate("() => document.querySelectorAll('.toast, #toast').forEach(e => { e.style.pointerEvents = 'none'; })")       # le toast « Restaurer » de l'exemple ne couvre pas la bande neutre
     ex = EXPORT[tool]
     assert fr.evaluate("(s) => document.querySelector(s).hasAttribute('data-tb-direct') && !document.querySelector(s).disabled", ex)
-    ks = kinds(fr, tool)
+    ks = kinds(pg, fr, tool, touch)
     assert len(ks) >= (2 if tool == 'rs' else 3), ks
-    for name, sel in ks:
+    if touch and tool in ('dg', 'fc'):
+        assert 'more > list' in [k[0] for k in ks], (tool, ks)           # à 345 px, « ⋯ » de DG et de FC porte une ligne ▸
+    for name, sel, row in ks:
         # un toucher sur Exporter : l'ouvert se ferme, la fenêtre d'export s'ouvre
         press(pg, fr, sel, touch)
+        if row:
+            press(pg, fr, row, touch)                                   # la ligne ▸ de « ⋯ » : sa liste s'ouvre, « ⋯ » se ferme
+            assert fr.evaluate("() => !document.querySelector('.tb-more-panel')"), (tool, name, '« ⋯ » reste ouvert')
         assert fr.evaluate(OPEN_JS) >= 1, (tool, name, 'ne s\'ouvre pas')
         press(pg, fr, ex, touch)
         assert fr.evaluate(OPEN_JS) == 0, (tool, name, 'reste ouvert')
@@ -369,6 +384,8 @@ def test_one_tap_on_export_closes_what_is_open_and_opens_the_window(browser, too
         assert fr.evaluate(MODAL_JS) == []
         # un toucher sur une zone neutre : fermé, le clic est avalé ; le toucher suivant agit normalement
         press(pg, fr, sel, touch)
+        if row:
+            press(pg, fr, row, touch)
         assert fr.evaluate(OPEN_JS) >= 1
         fr.evaluate("() => { window.__probeClicks = 0; }")
         press(pg, fr, '#mp-probe', touch)
@@ -384,11 +401,19 @@ def test_export_greyed_in_the_recon_station_closes_what_is_open_and_opens_nothin
     pg = shell(browser, w, 900, touch=touch)
     fr = open_tool(pg, 'rs', touch=touch)
     assert fr.evaluate("() => document.getElementById('btn-export').disabled")
-    for name, sel in kinds(fr, 'rs'):
+    fr.evaluate(PROBE_BTN_JS)
+    for d in (pg, fr):
+        d.evaluate("() => document.querySelectorAll('.toast, #toast').forEach(e => { e.style.pointerEvents = 'none'; })")
+    for name, sel, row in kinds(pg, fr, 'rs', touch):
         press(pg, fr, sel, touch)
+        if row:
+            press(pg, fr, row, touch)
         assert fr.evaluate(OPEN_JS) >= 1, name
         press(pg, fr, '#btn-export', touch)
         assert fr.evaluate(OPEN_JS) == 0 and fr.evaluate(MODAL_JS) == [], name
+        fr.evaluate("() => { window.__probeClicks = 0; }")
+        press(pg, fr, '#mp-probe', touch)                               # le toucher suivant agit : l'Exporter grisé n'a rien avalé
+        assert fr.evaluate('() => window.__probeClicks') == 1, (name, 'le toucher suivant')
     assert pg.errs == []
 
 

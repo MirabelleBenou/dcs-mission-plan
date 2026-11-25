@@ -186,9 +186,12 @@ def test_the_home_crest_shows_what_the_storage_says_at_three_sizes(browser, labe
         pg = ctx.new_page()
         pg.goto('file://' + str(DIST / 'dcs_mission_plan.html'), wait_until='commit')
         pg.wait_for_function("() => !!document.getElementById('mp-crest') && !!document.getElementById('card-hq')", timeout=60000)
-        pg.wait_for_function("([src, w]) => { const e = document.getElementById('mp-crest'); return !!e && e.getAttribute('data-source') === src && getComputedStyle(e).width === w && !!e.getAttribute('src'); }", arg=[source, size], timeout=10000)
-        got = pg.evaluate("() => { const e = document.getElementById('mp-crest'); return [e.getAttribute('data-source'), getComputedStyle(e).width, e.getAttribute('src').slice(0, 14)]; }")
-        assert got[0] == source and got[1] == size, (label, w, got)
+        try:
+            pg.wait_for_function("([src, w]) => { const e = document.getElementById('mp-crest'); return !!e && e.getAttribute('data-source') === src && getComputedStyle(e).width === w && !!e.getAttribute('src'); }", arg=[source, size], timeout=10000)
+        except Exception:
+            pass                     # le diagnostic ci-dessous dit ce que la page montrait
+        got = pg.evaluate("() => { const e = document.getElementById('mp-crest'); return !e ? null : [e.getAttribute('data-source'), getComputedStyle(e).width, (e.getAttribute('src') || '').slice(0, 14)]; }")
+        assert got is not None and got[0] == source and got[1] == size and got[2], (label, w, got)
         if source == 'wing':
             assert got[2] == 'data:image/png'
         ctx.close()

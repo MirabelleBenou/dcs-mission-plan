@@ -20,7 +20,7 @@ TITRE = 'MP-V2.0.0 — 16 November 2026'
 PARA = 'Each release is a GitHub release tagged `MP-V<major>.<minor>.<patch>`:\n- **major**: a redesign;\n- **minor**: a new tool;\n- **patch**: fixes.\n\nBetween two releases, the hosted version shows its build number.'
 ENTETE = '# Changelog\n\nIntro.\n\n### Version numbers\n\n' + PARA + '\n\n'
 NOTES = 'Release text\n\n## Version numbers\n\n' + PARA + '\n'
-CHANGELOG = ENTETE + '## Unreleased\n\n## MP-V2.0.0 — 2026-11-16\n\n**x**\n- y\n\n## Before v2.0.0 — one version per tool\n\n### HQ\n\n#### `v1.0.0`\n'
+CHANGELOG = ENTETE + '## MP-V2.0.0 — 2026-11-16\n\n**x**\n- y\n\n## Before v2.0.0 — one version per tool\n\n### HQ\n\n#### `v1.0.0`\n'
 HTML = b'<!DOCTYPE html><html>not really a page but bytes</html>'
 
 
