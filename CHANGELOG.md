@@ -18,7 +18,7 @@ Between two releases, the hosted version shows its build number at the bottom of
 ### All tools
 
 **Build number on the hosted version**
-- Between two releases, the bottom of the home screen shows the build number, `MP-V2.1.0+17` for this one; a downloaded release shows none.
+- Between two releases, the bottom of the home screen shows the build number, `MP-V2.1.0+18` for this one; a downloaded release shows none.
 
 **Easier-to-read drop-down lists**
 - Their header, the chosen line and the line under the pointer have stronger contrast in every theme.
@@ -217,6 +217,11 @@ Between two releases, the hosted version shows its build number at the bottom of
 
 **The map keeps its centre when it grows**
 - On a phone, the map keeps the same centre when it takes the whole height to export or draw, and when it comes back.
+
+**Ground profile under the route**
+- New “Ground profile” option in the Display menu, on Caucasus, Cold War Germany and Syria: a strip under the map shows the ground under the chosen route, read in DCS, and a straight line from each waypoint to the next at its planned altitude; ▾ folds it.
+- For each leg, the strip and the navigation sheet give the highest point under the route and a safety altitude (the highest ground within 5 NM, plus 300 m); both are indications, without warnings.
+- With Threats ticked, the strip also shows in red where an aircraft is seen and within firing range, up to the ceiling, and marks under its axis where the route is seen; hovering over or touching it shows the distance, the ground and the threats that see that point, and the same point on the map.
 
 ### Datacard Generator
 

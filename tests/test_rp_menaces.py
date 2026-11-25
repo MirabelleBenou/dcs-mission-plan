@@ -485,7 +485,7 @@ def test_display_row_default_storage_and_dot(browser):
     display(fr, pg, True)
     row = fr.evaluate("""(() => { const r = document.querySelector('#dsp-panel [data-k=threats]'); return { role: r.getAttribute('role'), checked: r.getAttribute('aria-checked'), cls: r.className,
         prev: r.previousElementSibling.getAttribute('data-k'), next: r.nextElementSibling.textContent.trim(), disabled: r.getAttribute('aria-disabled'), title: r.title, txt: r.textContent.trim() }; })()""")
-    assert row == {'role': 'menuitemcheckbox', 'checked': 'true', 'cls': 'tbm-opt dsp-opt', 'prev': 'relief', 'next': 'Mission', 'disabled': None,
+    assert row == {'role': 'menuitemcheckbox', 'checked': 'true', 'cls': 'tbm-opt dsp-opt', 'prev': 'relief', 'next': 'Profil du sol', 'disabled': None,
                    'title': 'Zones de tir et de détection des symboles ennemis SAM, AAA et Radar qui ont un système', 'txt': 'Menaces'}
     fr.evaluate("persistLayers()")                                             # route_layers_v1 existe : on y vérifie que l'affichage n'entre pas
     before = fr.evaluate("localStorage.getItem('route_state_v1')")

@@ -930,7 +930,43 @@ select[data-tbm-src] { display: none !important; }
 .app { position: fixed; top: var(--mp-top, 60px); bottom: 0; left: 0; right: 0; display: grid; grid-template-columns: 440px 1fr; }
 .app > .panel { order: -1; }
 .mapwrap { position: relative; z-index: 0; min-width: 0; border-left: 2px solid var(--amber-dark); }
-#map { position: absolute; inset: 0; background: #e8dfc6; }
+#map { position: absolute; inset: 0 0 var(--prof-h, 0px) 0; background: #e8dfc6; }       /* --prof-h : la hauteur du profil du sol, posée sur .mapwrap quand il est ouvert (0 sinon) */
+/* le profil du sol (lot mp-route-profil) : sous la carte, dans .mapwrap ; la carte rétrécit d'autant (--prof-h), jamais recouverte */
+#rp-prof { position: absolute; left: 0; right: 0; bottom: 0; z-index: 3; box-sizing: border-box; background: #1a1c14; border-top: 2px solid var(--amber-dark); font-family: var(--f-ui); color: #e8dcb8; overflow: visible; }
+#rp-prof .prof-h { display: flex; align-items: center; gap: 12px; box-sizing: border-box; height: 24px; padding: 0 48px 0 10px; }
+#rp-prof .prof-t { flex: none; color: var(--amber); font: 700 12px/1 var(--f-ui); letter-spacing: .16em; white-space: nowrap; }
+#rp-prof .prof-leg { flex: 1 1 auto; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font: 500 11px/1 var(--f-ui); letter-spacing: .03em; }
+#rp-prof .prof-leg[hidden] { display: none; }
+#rp-prof .prof-fb { position: absolute; right: 0; top: 0; z-index: 5; box-sizing: border-box; width: 44px; height: 44px; margin: 0; padding: 0 0 20px; border: 0; border-radius: 0; background: transparent; color: #c8923a; font: 700 17px/1 var(--f-ui); cursor: pointer; touch-action: manipulation; }
+#rp-prof.prof-fold .prof-fb { top: auto; bottom: 0; padding: 20px 0 0; }
+#rp-prof .prof-fb:focus-visible { outline: 2px solid var(--amber); outline-offset: -4px; }
+#rp-prof .prof-g { position: relative; }
+#rp-prof .prof-g[hidden] { display: none; }
+#rp-prof .prof-svg { display: block; touch-action: none; user-select: none; -webkit-user-select: none; cursor: crosshair; }
+#rp-prof svg text { font-family: var(--f-ui); font-size: 11px; letter-spacing: .02em; fill: #e8dcb8; }
+#rp-prof svg text.prof-ax { font-size: 10px; fill: #bdb290; }
+#rp-prof svg text.prof-pn { font-weight: 600; }
+#rp-prof svg text.prof-sv { fill: #8fe08f; font-weight: 700; stroke: #1a1c14; stroke-width: 3px; paint-order: stroke; }
+#rp-prof svg text.prof-zname { fill: #ffffff; font-weight: 700; stroke: #1a1c14; stroke-width: 3px; paint-order: stroke; }
+#rp-prof svg text.prof-empty { font-size: 13px; fill: #bdb290; }
+#rp-prof .prof-grid { stroke: rgba(232,220,184,.14); stroke-width: 1; }
+#rp-prof .prof-axis { stroke: rgba(232,220,184,.6); stroke-width: 1; }
+#rp-prof .prof-fill { fill: #6d5c3f; }
+#rp-prof .prof-edge { fill: none; stroke: #c9b48a; stroke-width: 1.2; stroke-linejoin: round; }
+#rp-prof .prof-line { fill: none; stroke: #f08a6c; stroke-width: 2; stroke-linejoin: round; }
+#rp-prof .prof-pt { fill: #f08a6c; stroke: #1a1c14; stroke-width: 1; }
+#rp-prof .prof-high { stroke: #ffd400; stroke-width: 1.6; }
+#rp-prof .prof-hdot { fill: #ffd400; stroke: #1a1c14; stroke-width: 1; }
+#rp-prof .prof-safe { stroke: #8fe08f; stroke-width: 1.6; stroke-dasharray: 6 4; }
+#rp-prof .prof-seen { fill: #ffd400; }
+#rp-prof .prof-vert { stroke: rgba(232,220,184,.5); stroke-width: 1; stroke-dasharray: 2 3; }
+#rp-prof .prof-cl { stroke: #ffd400; stroke-width: 1.5; }
+#rp-prof .prof-cd { fill: #ffd400; stroke: #1a1c14; stroke-width: 1.5; }
+#rp-prof .prof-bub { position: absolute; top: 3px; left: 2px; z-index: 4; max-width: calc(100% - 4px); box-sizing: border-box; padding: 3px 8px; pointer-events: none; background: #1a1c14; border: 1px solid #ffd400; color: #f4ecd0; font: 600 12px/1.3 var(--f-ui); letter-spacing: .02em; }
+#rp-prof .prof-bub[hidden] { display: none; }
+.rp-prof-dot { box-sizing: border-box; width: 14px; height: 14px; border-radius: 50%; background: #ffd400; border: 2px solid #1a1c14; }
+table.nav tr.prof td { background: rgba(192,137,42,.16); color: #1f1c16; font-family: var(--f-ui); font-weight: 500; font-size: 12px; letter-spacing: .3px; white-space: normal; overflow-wrap: anywhere; }
+table.nav tr.prof b { font-weight: 700; }
 #map.grid-only { background:
   radial-gradient(ellipse at 30% 20%, rgba(255,255,255,.35), transparent 60%),
   repeating-linear-gradient(0deg, rgba(120,100,60,.035) 0 2px, transparent 2px 5px), #e6dcc2; }
@@ -1405,7 +1441,7 @@ select.rt-in { appearance: none; -webkit-appearance: none; padding-right: 28px; 
 .rs-count { margin: 8px 0 0; font-size: 12px; }
 
 /* ---------- export de la vue vers le briefing (lot rp-v1.12.0) : le cadre 3:2 / 2:3 posé sur la carte et sa barre ---------- */
-.export-layer { position: absolute; inset: 0; z-index: 800; overflow: hidden; pointer-events: none; }
+.export-layer { position: absolute; inset: 0 0 var(--prof-h, 0px) 0; z-index: 800; overflow: hidden; pointer-events: none; }
 .export-layer[hidden] { display: none; }
 .export-layer.busy { pointer-events: auto; cursor: progress; }
 .export-frame { position: absolute; box-sizing: border-box; border: 2px solid #f2c14e; box-shadow: 0 0 0 9999px rgba(0,0,0,.42); pointer-events: none; }
@@ -1735,7 +1771,7 @@ html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-
 @media print { .rl-bar, .leaflet-ruler-pane { display: none !important; } }
 
 /* la barre du bas */
-.dr-ui { position: absolute; left: 10px; right: 10px; bottom: 26px; z-index: 1000; display: flex; flex-direction: column; gap: 6px;
+.dr-ui { position: absolute; left: 10px; right: 10px; bottom: calc(26px + var(--prof-h, 0px)); z-index: 1000; display: flex; flex-direction: column; gap: 6px;
   pointer-events: none; font-family: var(--f-ui); }
 .dr-ui > * { pointer-events: auto; }
 .dr-ui[hidden] { display: none; }
@@ -1792,7 +1828,7 @@ html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-
 .dr-new .tb-btn { height: 40px; }
 
 /* la fiche de propriétés (feuille du bas) */
-.dr-sheet { position: absolute; right: 10px; bottom: 100px; width: 340px; max-width: calc(100% - 20px); box-sizing: border-box; z-index: 1001;
+.dr-sheet { position: absolute; right: 10px; bottom: calc(100px + var(--prof-h, 0px)); width: 340px; max-width: calc(100% - 20px); box-sizing: border-box; z-index: 1001;
   background: var(--olive-deep); border: 2px solid var(--amber-dark); box-shadow: 0 4px 14px rgba(0,0,0,.5); color: var(--paper-light);
   padding: 10px 12px 12px; font-family: var(--f-ui); max-height: calc(100% - 130px); overflow: auto; }
 .dr-sheet[hidden] { display: none; }
@@ -1847,9 +1883,9 @@ html.mp-in-shell #theme-select, html.mp-in-shell #theme, html.mp-in-shell [aria-
   .dr-tool { min-height: 50px; }
   .dr-bar.selmode .dr-chip { display: none; }
   .dr-bar.selmode .dr-tool { width: 52px; }
-  .dr-sheet { left: 6px; right: 6px; width: auto; max-width: none; bottom: 94px; }
+  .dr-sheet { left: 6px; right: 6px; width: auto; max-width: none; bottom: calc(94px + var(--prof-h, 0px)); }
   .dr-hint .dr-msg { font-size: 12px; }
-  .dr-sheet { padding: 8px 10px 10px; bottom: 90px; max-height: calc(100% - 100px); }
+  .dr-sheet { padding: 8px 10px 10px; bottom: calc(90px + var(--prof-h, 0px)); max-height: calc(100% - 100px); }
   .dr-f { margin-top: 6px; }
   .dr-sw { gap: 5px; } .dr-sw button { width: 34px; height: 34px; }
   .dr-f-in { flex: 0 0 120px !important; }
@@ -3021,6 +3057,18 @@ const I18N = {
     'relief.alt': 'Alt. sol',
     'dsp.threats': 'Menaces',
     'dsp.threats.tip': 'Zones de tir et de détection des symboles ennemis SAM, AAA et Radar qui ont un système',
+    'dsp.profile': 'Profil du sol',
+    'dsp.profile.tip': 'Le sol sous la route, relevé dans DCS',
+    'dsp.profile.off': 'Profil du sol — absent de ce théâtre',
+    'prof.title': 'PROFIL DU SOL',
+    'prof.empty': 'Tracez au moins deux points.',
+    'prof.ground': 'sol',
+    'prof.seen': 'vu dès {v} ({n})',
+    'prof.leg': '▲ Point le plus haut **{h}** · sécurité **{s}**',
+    'prof.fold': 'Replier le profil',
+    'prof.unfold': 'Déplier le profil',
+    'prof.legend': '▇ vu et à portée de tir des menaces (jusqu\'au plafond) · ▬ route vue (sous l\'axe) · ━ point le plus haut · ╍╍ sécurité',
+    'prof.legend.base': '━ point le plus haut · ╍╍ sécurité',
     'dr.f.threat': 'Système',
     'thr.none': 'Aucun',
     'thr.unknown': '{id} (inconnu)',
@@ -3593,6 +3641,18 @@ const I18N = {
     'relief.alt': 'Ground',
     'dsp.threats': 'Threats',
     'dsp.threats.tip': 'Firing and detection zones of hostile SAM, AAA and Radar symbols that have a system',
+    'dsp.profile': 'Ground profile',
+    'dsp.profile.tip': 'The ground under the route, read in DCS',
+    'dsp.profile.off': 'Ground profile — not available for this theatre',
+    'prof.title': 'GROUND PROFILE',
+    'prof.empty': 'Draw at least two waypoints.',
+    'prof.ground': 'ground',
+    'prof.seen': 'seen from {v} ({n})',
+    'prof.leg': '▲ Highest point **{h}** · safety **{s}**',
+    'prof.fold': 'Fold the profile',
+    'prof.unfold': 'Unfold the profile',
+    'prof.legend': '▇ seen and within firing range of threats (up to ceiling) · ▬ route seen (below the axis) · ━ highest point · ╍╍ safety',
+    'prof.legend.base': '━ highest point · ╍╍ safety',
     'dr.f.threat': 'System',
     'thr.none': 'None',
     'thr.unknown': '{id} (unknown)',
@@ -5618,7 +5678,7 @@ let S = defaultState();
 let sel = -1;                 /* point sélectionné (non enregistré) */
 let selR = -1;                /* point de référence sélectionné (non enregistré) */
 const KEY_DISPLAY = 'rp_display_v1';
-const DISP = { routes: 'all', refs: true, draw: true, sym: true, cf: true, diss: false, relief: false, threats: true, thrStep: 2 };     /* ce que le menu « Affichage » montre ; gardé dans rp_display_v1, jamais dans route_state_v1 ; routes : 'none' | 'active' | 'all' */
+const DISP = { routes: 'all', refs: true, draw: true, sym: true, cf: true, diss: false, relief: false, threats: true, profile: false, profFold: false, thrStep: 2 };     /* ce que le menu « Affichage » montre ; gardé dans rp_display_v1, jamais dans route_state_v1 ; routes : 'none' | 'active' | 'all' */
 const ROUTES_SHOW = ['none', 'active', 'all'];
 function routeShown() { return DISP.routes !== 'none'; }
 let tapMode = 'read';         /* ce que fait un toucher sur la carte : 'read' (ouvre les fiches des calques, ne pose rien : le mode de chaque ouverture), 'wp' (pose un point), 'ref' (pose une référence), 'draw' (dessine dans un calque) ou 'ruler' (mesure sur la carte, ne pose rien) — non enregistré */
@@ -7250,7 +7310,7 @@ const THR = {
   act: [], desc: null, state: '',
   circ: null, halo: null, circSig: '', haloSig: '',
   zone: null, zoneSig: '', paint: { H: 0, list: [] },
-  seen: null, routeSig: '', routeSeq: 0, routeTimer: 0,
+  seen: null, spans: null, routeSig: '', routeSeq: 0, routeTimer: 0,       /* spans : les suites vues, en mètres depuis le départ ({ pk: la route jugée, list: [{ d0, d1 }] }), pour le profil du sol */
   box: null, boxSig: '', raf: 0, open: false,       /* open : la pastille dépliée (« − » et « + » vus) ; en mémoire seulement, repliée à chaque ouverture du RP */
   blob: ''
 };
@@ -7616,18 +7676,19 @@ function thrRouteSync() {
   THR.routeSig = sig;
   clearTimeout(THR.routeTimer);
   const seq = ++THR.routeSeq;
-  if (sig === 'off') { thrRouteSet(null, []); return; }
+  if (sig === 'off') { THR.spans = null; thrRouteSet(null, []); return; }
   THR.routeTimer = setTimeout(() => { thrRouteCompute(seq); }, 60);
 }
 function thrRouteCompute(seq) {
   const th = S.theatre, meta = THR.desc && THR.desc.meta, pts = S.points.map(p => ({ lat: p.lat, lon: p.lon, alt: p.alt, altRef: p.altRef })), acts = thrRouteActs();
   const grids = acts.map(a => THR.grids.get(a.key));
   if (!meta || grids.some(g => !g)) return;
-  const legs = [null];
+  const legs = [null], cum = [0, 0];       /* cum[i] : la distance (m) du départ au début de la branche i */
   let needGround = false;
   for (let i = 1; i < pts.length; i++) {
     const lg = thrLegSamples(pts[i - 1], pts[i]);
     legs.push(lg);
+    cum[i + 1] = cum[i] + (lg ? lg.m : 0);
     if (lg && (pts[i - 1].altRef === 'AGL' || pts[i].altRef === 'AGL')) needGround = true;
   }
   const want = new Map();
@@ -7670,7 +7731,7 @@ function thrRouteCompute(seq) {
           kms[q] += sp.w / 1000;
           any = true;
         });
-        flat.push({ a: a, lg: lg, k: k, sp: sp, seen: any });
+        flat.push({ a: a, lg: lg, k: k, sp: sp, seen: any, i: i });
       });
       const items = [];
       acts.forEach((ac, q) => { if (kms[q] > 0) items.push({ name: ac.name, km: kms[q] }); });
@@ -7678,19 +7739,21 @@ function thrRouteCompute(seq) {
       if (items.length) seen[i] = items;
     }
     /* une suite d'échantillons vus (d'une branche à l'autre si les deux bouts le sont) : de la moitié de l'intervalle avant le premier à la moitié de l'intervalle après le dernier */
-    const runs = [];
-    let cur = null;
+    const runs = [], spans = [];
+    let cur = null, d0 = 0;
     const edge = (e, dir) => {
       const l = e.lg.list, nb = l[e.k + dir];
       return nb ? thrPointAt(e.a, e.lg, e.sp.s + (nb.s - e.sp.s) / 2) : { lat: e.sp.lat, lon: e.sp.lon };
     };
+    const edgeD = (e, dir) => { const nb = e.lg.list[e.k + dir]; return cum[e.i] + (nb ? e.sp.s + (nb.s - e.sp.s) / 2 : e.sp.s); };       /* la même suite, en mètres depuis le départ */
     flat.forEach((e, n) => {
       if (e.seen) {
-        if (!cur) { cur = [edge(e, -1)]; }
+        if (!cur) { cur = [edge(e, -1)]; d0 = edgeD(e, -1); }
         cur.push({ lat: e.sp.lat, lon: e.sp.lon });
-        if (!(flat[n + 1] && flat[n + 1].seen)) { cur.push(edge(e, 1)); runs.push(cur); cur = null; }
+        if (!(flat[n + 1] && flat[n + 1].seen)) { cur.push(edge(e, 1)); runs.push(cur); spans.push({ d0: d0, d1: edgeD(e, 1) }); cur = null; }
       }
     });
+    THR.spans = { pk: JSON.stringify(pts.map(p => [p.lat, p.lon])), list: spans };
     thrRouteSet(seen, runs);
   });
 }
@@ -7708,6 +7771,7 @@ function thrRouteSet(seen, runs) {
     });
   }
   if (sig !== was) renderNav();
+  if (typeof profSync === 'function') profSync();       /* le profil du sol redessine la barre « route vue » */
 }
 /* La ligne sous la ligne d'une branche vue, à la feuille de navigation */
 function thrNavRow(i) {
@@ -7848,6 +7912,7 @@ function thrSync() {
   thrZoneSync();
   thrRouteSync();
   thrBoxRender();
+  if (typeof profSync === 'function') profSync();       /* une grille prête ou retirée : la zone du profil du sol */
 }
 function thrInit() {
   THR.circ = L.layerGroup().addTo(map);
@@ -7861,6 +7926,551 @@ function thrProbe(sysId, lat, lon, noWorker) {
   const sys = THR_BY_ID[sysId], th = S.theatre, meta = THR.desc && THR.desc.meta;
   if (!sys || !meta) return Promise.reject(new Error('no relief'));
   return thrBuildGrid({ sys: sys, it: { lat: lat, lon: lon }, R: sys.kind === 'radar' ? sys.detect_m : sys.fire_m }, th, meta, { noWorker: !!noWorker });
+}
+
+/* ============= LE PROFIL DU SOL (lot mp-route-profil) =============
+   La case « Profil du sol » du menu Affichage (DISP.profile, dans rp_display_v1) ouvre #rp-prof sous la carte, dans .mapwrap : la carte (#mapbox) rétrécit d'autant (--prof-h) et n'est jamais recouverte.
+   Le sol est lu le long de chaque branche (grand cercle), d'un échantillon tous les demi-pixels du niveau natif, dans les tuiles d'altitude du relief de DCS, sans dépendre de la case Relief ;
+   le cache de ce profil est à lui (PROF.tiles) : il garde l'inconnu (hors des bornes, tuile absente, alpha 0), que les menaces et le pointeur lisent comme 0 m.
+   La ligne de vol est une droite d'un point à l'autre, chaque point à son altitude prévue : une indication, jamais une alerte. Par branche : le point le plus haut (les échantillons connus) et la sécurité
+   (le plus haut pixel du niveau natif à 9 260 m au plus du segment, plus 300 m, arrondi au-dessus). Avec « Menaces » : la zone vue et la barre « route vue » (celle du halo de la carte). */
+const PROF_HEAD = 26;          /* le bandeau replié : le bord supérieur de 2 px et l'en-tête */
+const PROF_GH = 190;           /* la hauteur du graphique, carte large (au moins THR_NARROW) */
+const PROF_GH_NARROW = 130;    /* et en dessous */
+const PROF_CORR_M = 9260;      /* le couloir de sécurité : 5 NM de chaque côté */
+const PROF_PLUS_M = 300;       /* ajoutés au plus haut du couloir */
+const PROF_TILES = 192;        /* tuiles d'altitude gardées au plus, dans un cache qui n'est ni celui du relief ni celui des menaces */
+const PROF_BLOCK = 16;         /* le couloir se parcourt par blocs de 16 × 16 pixels */
+const PROF_FT = 3.28084;
+const PROF_YEL = '#ffd400', PROF_GREEN = '#8fe08f', PROF_LINE = '#f08a6c', PROF_RED = '#c8102e';
+const PROF = {
+  tiles: new Map(),            /* adresse de la tuile d'altitude → promesse de ses mètres (Float32Array de 65 536, NaN là où l'alpha est 0) ou de null */
+  canvas: null, el: null, wrap: null, svg: null, bub: null,
+  data: null,                  /* le dernier relevé fini : { key, th, legs, flat, pts, total } */
+  key: '', seq: 0, timer: 0, rsig: '', nsig: 'off', shown: false, h: 0,
+  view: null,                  /* l'échelle du dernier dessin (pour les mesures et le curseur) */
+  zones: [],                   /* la zone de chaque menace, au dernier dessin : { id, name, top, runs: [{ d0, d1, s: [{ d, lo }] }] } */
+  bars: [],                    /* la barre « route vue » au dernier dessin : [{ d0, d1 }] en mètres depuis le départ */
+  cur: null, mark: null, drag: null, failed: ''
+};
+
+function profWanted() { return !!DISP.profile && reliefTheatre(S.theatre); }
+function profKey() { return JSON.stringify([S.theatre, S.points.map(p => [p.lat, p.lon])]); }
+function profUnit() { return t(S.units.altitude === 'ft' ? 'u.ft' : 'u.m'); }
+function profGeom() {
+  const W = PROF.wrap ? PROF.wrap.clientWidth : 0, narrow = W < THR_NARROW, gh = narrow ? PROF_GH_NARROW : PROF_GH, fold = !!DISP.profFold;
+  return { W: W, narrow: narrow, gh: gh, fold: fold, H: PROF_HEAD + (fold ? 0 : gh) };
+}
+
+/* ---- le sol : les tuiles d'altitude, l'inconnu gardé ---- */
+function profTile(url, meta) {
+  const hit = PROF.tiles.get(url);
+  if (hit) return hit;
+  const p = fetch(url, { mode: 'cors' })
+    .then(r => (r.ok ? r.blob() : null))
+    .then(blob => (blob ? createImageBitmap(blob, { colorSpaceConversion: 'none', premultiplyAlpha: 'none' }) : null))
+    .then(bm => {
+      if (!bm) return null;
+      try {
+        if (bm.width !== 256 || bm.height !== 256) return null;
+        if (!PROF.canvas) { PROF.canvas = document.createElement('canvas'); PROF.canvas.width = 256; PROF.canvas.height = 256; }
+        const cx = PROF.canvas.getContext('2d', { willReadFrequently: true });
+        cx.clearRect(0, 0, 256, 256);
+        cx.drawImage(bm, 0, 0);
+        const d = cx.getImageData(0, 0, 256, 256).data, out = new Float32Array(65536);
+        for (let i = 0; i < 65536; i++) {
+          const k = i * 4;
+          out[i] = d[k + 3] === 0 ? NaN : meta.base + (d[k] * 65536 + d[k + 1] * 256 + d[k + 2]) * meta.step;
+        }
+        return out;
+      } catch (e) { return null; } finally { if (bm.close) bm.close(); }
+    })
+    .catch(() => null);
+  PROF.tiles.set(url, p);
+  while (PROF.tiles.size > PROF_TILES) PROF.tiles.delete(PROF.tiles.keys().next().value);
+  return p;
+}
+
+/* Une branche : n intervalles égaux de moins d'un demi-pixel du niveau natif (à la plus haute latitude des deux bouts), les bouts exacts ; le sol de chaque échantillon (NaN : inconnu) et le plus haut des connus */
+async function profLegRead(a, b, th, meta) {
+  const z = meta.maxNativeZoom, n = 256 * Math.pow(2, z), lim = Math.pow(2, z), bb = meta.bounds;
+  const L0 = legCalc(a, b), m = L0.km * 1000;
+  const phi = Math.max(Math.abs(a.lat), Math.abs(b.lat));
+  const cnt = m > 0 ? Math.max(1, Math.ceil(m / (thrMpp(phi, z) / 2))) : 1;
+  const lat = new Float64Array(cnt + 1), lon = new Float64Array(cnt + 1), g = new Float32Array(cnt + 1);
+  let url = '', tile = null, hi = -1;
+  for (let j = 0; j <= cnt; j++) {
+    const p = j === 0 ? a : (j === cnt ? b : legDest(a, L0.brg, m * j / cnt / 1000));
+    lat[j] = p.lat; lon[j] = p.lon;
+    if (p.lat < bb[0][0] || p.lat > bb[1][0] || p.lon < bb[0][1] || p.lon > bb[1][1]) { g[j] = NaN; continue; }
+    const X = (p.lon + 180) / 360 * n, Y = thrMercV(p.lat) * n, tx = Math.floor(X / 256), ty = Math.floor(Y / 256);
+    if (tx < 0 || ty < 0 || tx >= lim || ty >= lim) { g[j] = NaN; continue; }
+    const u = thrTileUrl(th, meta, z, tx, ty);
+    if (u !== url) { url = u; tile = await profTile(u, meta); }
+    g[j] = tile ? tile[Math.min(255, Math.floor(Y - ty * 256)) * 256 + Math.min(255, Math.floor(X - tx * 256))] : NaN;
+    if (g[j] === g[j] && (hi < 0 || g[j] > g[hi])) hi = j;
+  }
+  return { m: m, brg: L0.brg, n: cnt, lat: lat, lon: lon, g: g, hi: hi, cum: 0, safe: null };
+}
+
+/* Le couloir de sécurité d'une branche : le plus haut des pixels du niveau natif dont le centre est à 9 260 m au plus du segment (le grand cercle de a à b), et si l'un d'eux est inconnu
+   (hors des bornes, tuile absente ou illisible, alpha 0). Le segment est jugé en 3 D (distance exacte) ; le couloir se parcourt par blocs, une tuile à la fois. */
+async function profCorridor(a, b, lg, th, meta) {
+  const z = meta.maxNativeZoom, n = 256 * Math.pow(2, z), lim = Math.pow(2, z), bb = meta.bounds, RAD = Math.PI / 180;
+  const Re = NAV_R_KM * 1000, ang = PROF_CORR_M / Re, sinT = Math.sin(ang), cosT = Math.cos(ang);
+  const vec = (la, lo) => { const p = la * RAD, l = lo * RAD, c = Math.cos(p); return [c * Math.cos(l), c * Math.sin(l), Math.sin(p)]; };
+  const dot = (u, v) => u[0] * v[0] + u[1] * v[1] + u[2] * v[2];
+  const cross = (u, v) => [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+  const va = vec(a.lat, a.lon), vb = vec(b.lat, b.lon), cr = cross(va, vb), cl = Math.sqrt(dot(cr, cr)), deg = !(cl > 1e-12);
+  const nr = deg ? [0, 0, 1] : [cr[0] / cl, cr[1] / cl, cr[2] / cl], w1 = cross(nr, va), w2 = cross(vb, nr), vs = [va[0] + vb[0], va[1] + vb[1], va[2] + vb[2]];
+  const acos = x => Math.acos(Math.max(-1, Math.min(1, x)));
+  const distM = p => {
+    if (deg) return acos(dot(p, va)) * Re;
+    if (dot(p, w1) >= 0 && dot(p, w2) >= 0 && dot(p, vs) > 0) return Math.asin(Math.min(1, Math.abs(dot(p, nr)))) * Re;
+    return Math.min(acos(dot(p, va)), acos(dot(p, vb))) * Re;
+  };
+  let la0 = Infinity, la1 = -Infinity, lo0 = Infinity, lo1 = -Infinity;
+  for (let j = 0; j <= lg.n; j++) {
+    if (lg.lat[j] < la0) la0 = lg.lat[j];
+    if (lg.lat[j] > la1) la1 = lg.lat[j];
+    if (lg.lon[j] < lo0) lo0 = lg.lon[j];
+    if (lg.lon[j] > lo1) lo1 = lg.lon[j];
+  }
+  const dd = PROF_CORR_M / 111195 * 1.05 + 0.0005, dl = dd / Math.cos(Math.min(89, Math.max(Math.abs(la0), Math.abs(la1)) + dd) * RAD);
+  const xa = Math.max(0, Math.floor((lo0 - dl + 180) / 360 * n)), xb = Math.min(n - 1, Math.floor((lo1 + dl + 180) / 360 * n));
+  const ya = Math.max(0, Math.floor(thrMercV(Math.min(85, la1 + dd)) * n)), yb = Math.min(n - 1, Math.floor(thrMercV(Math.max(-85, la0 - dd)) * n));
+  const out = { h: null, unk: false };
+  if (xb < xa || yb < ya) { out.unk = true; return out; }
+  const W = xb - xa + 1, H = yb - ya + 1, cL = new Float64Array(W), sL = new Float64Array(W), cP = new Float64Array(H), sP = new Float64Array(H);
+  for (let i = 0; i < W; i++) { const l = ((xa + i + 0.5) / n * 360 - 180) * RAD; cL[i] = Math.cos(l); sL[i] = Math.sin(l); }
+  for (let j = 0; j < H; j++) { const p = Math.atan(Math.sinh(Math.PI * (1 - 2 * (ya + j + 0.5) / n))); cP[j] = Math.cos(p); sP[j] = Math.sin(p); }
+  /* les blocs que le couloir touche, rangés par tuile */
+  const groups = new Map();
+  for (let by = Math.floor(ya / PROF_BLOCK); by <= Math.floor(yb / PROF_BLOCK); by++) {
+    for (let bx = Math.floor(xa / PROF_BLOCK); bx <= Math.floor(xb / PROF_BLOCK); bx++) {
+      const X = bx * PROF_BLOCK + PROF_BLOCK / 2, Y = by * PROF_BLOCK + PROF_BLOCK / 2;
+      const lon = X / n * 360 - 180, lat = Math.atan(Math.sinh(Math.PI * (1 - 2 * Y / n))) / RAD;
+      const rB = (PROF_BLOCK * 0.7072 + 1) * thrMpp(lat, z) * 1.02;
+      if (distM(vec(lat, lon)) > PROF_CORR_M + rB) continue;
+      const k = (bx >> 4) + '|' + (by >> 4);
+      if (!groups.has(k)) groups.set(k, { tx: bx >> 4, ty: by >> 4, blocks: [] });
+      groups.get(k).blocks.push([bx, by]);
+    }
+  }
+  const xmin = (bb[0][1] + 180) / 360 * n, xmax = (bb[1][1] + 180) / 360 * n, ymin = thrMercV(bb[1][0]) * n, ymax = thrMercV(bb[0][0]) * n;
+  let hmax = -Infinity, known = 0;
+  for (const gr of groups.values()) {
+    const tx = gr.tx, ty = gr.ty;
+    const outside = tx < 0 || ty < 0 || tx >= lim || ty >= lim || (tx + 1) * 256 <= xmin || tx * 256 >= xmax || (ty + 1) * 256 <= ymin || ty * 256 >= ymax;
+    const data = outside ? null : await profTile(thrTileUrl(th, meta, z, tx, ty), meta);
+    scan: for (const bk of gr.blocks) {
+      const px0 = Math.max(xa, bk[0] * PROF_BLOCK), px1 = Math.min(xb, bk[0] * PROF_BLOCK + PROF_BLOCK - 1), py0 = Math.max(ya, bk[1] * PROF_BLOCK), py1 = Math.min(yb, bk[1] * PROF_BLOCK + PROF_BLOCK - 1);
+      for (let py = py0; py <= py1; py++) {
+        const cp = cP[py - ya], sp = sP[py - ya];
+        for (let px = px0; px <= px1; px++) {
+          const cx = cL[px - xa] * cp, sx = sL[px - xa] * cp;       /* le point : (cx, sx, sp) */
+          let inside;
+          if (deg) inside = cx * va[0] + sx * va[1] + sp * va[2] >= cosT;
+          else {
+            if (Math.abs(cx * nr[0] + sx * nr[1] + sp * nr[2]) > sinT) continue;
+            if (cx * w1[0] + sx * w1[1] + sp * w1[2] >= 0 && cx * w2[0] + sx * w2[1] + sp * w2[2] >= 0 && cx * vs[0] + sx * vs[1] + sp * vs[2] > 0) inside = true;
+            else inside = cx * va[0] + sx * va[1] + sp * va[2] >= cosT || cx * vb[0] + sx * vb[1] + sp * vb[2] >= cosT;
+          }
+          if (!inside) continue;
+          const xc = px + 0.5, yc = py + 0.5;
+          if (!data || xc < xmin || xc > xmax || yc < ymin || yc > ymax) { out.unk = true; if (!data) break scan; continue; }
+          const v = data[(py - ty * 256) * 256 + (px - tx * 256)];
+          if (v === v) { known++; if (v > hmax) hmax = v; } else out.unk = true;
+        }
+      }
+    }
+  }
+  if (known) out.h = hmax;
+  return out;
+}
+
+/* Le relevé de la route : le sol de chaque branche, son point le plus haut, son couloir ; un relevé périmé (seq) ne se pose pas */
+async function profCompute(seq, key) {
+  const th = S.theatre, pts = S.points.map(p => ({ lat: p.lat, lon: p.lon }));
+  let meta = null;
+  try { meta = await reliefDesc(th); } catch (e) {
+    if (seq !== PROF.seq) return;
+    if (!RE.toasted.has(th)) { RE.toasted.add(th); showToast(t(e && e.kind === 'fmt' ? 'relief.err.fmt' : 'relief.err.net'), { type: 'err' }); }
+    PROF.data = { key: key, th: th, fail: true, legs: [null], flat: null, pts: [], total: 0 };
+    profAfterData();
+    return;
+  }
+  const legs = [null];
+  let cum = 0;
+  try {
+    for (let i = 1; i < pts.length; i++) {
+      if (seq !== PROF.seq) return;
+      const lg = await profLegRead(pts[i - 1], pts[i], th, meta);
+      lg.safe = await profCorridor(pts[i - 1], pts[i], lg, th, meta);
+      lg.cum = cum; cum += lg.m;
+      legs.push(lg);
+    }
+  } catch (e) {
+    if (seq !== PROF.seq) return;
+    PROF.data = { key: key, th: th, fail: true, legs: [null], flat: null, pts: [], total: 0 };
+    profAfterData();
+    return;
+  }
+  if (seq !== PROF.seq) return;
+  /* tous les échantillons de la route, bout à bout (le premier d'une branche est le dernier de la précédente) */
+  let N = 0;
+  legs.forEach((lg, i) => { if (lg) N += lg.n + (i === 1 ? 1 : 0); });
+  const flat = { N: N, d: new Float64Array(N), lat: new Float64Array(N), lon: new Float64Array(N), g: new Float32Array(N), leg: new Uint16Array(N) };
+  let k = 0;
+  legs.forEach((lg, i) => {
+    if (!lg) return;
+    for (let j = i === 1 ? 0 : 1; j <= lg.n; j++, k++) {
+      flat.d[k] = lg.cum + lg.m * j / lg.n; flat.lat[k] = lg.lat[j]; flat.lon[k] = lg.lon[j]; flat.g[k] = lg.g[j]; flat.leg[k] = i;
+    }
+  });
+  const gp = pts.map((p, i) => (i === 0 ? (legs[1] ? legs[1].g[0] : NaN) : (legs[i] ? legs[i].g[legs[i].n] : NaN)));
+  PROF.data = { key: key, th: th, fail: false, legs: legs, flat: flat, gp: gp, total: cum };
+  profAfterData();
+}
+
+/* ---- ce que le relevé dit d'une branche ---- */
+function profSafeVal(sf) {
+  if (!sf || sf.h == null) return null;
+  const h = sf.h + PROF_PLUS_M;
+  return S.units.altitude === 'ft' ? Math.ceil(h * PROF_FT / 100 - 1e-9) * 100 : Math.ceil(h / 50 - 1e-9) * 50;
+}
+function profSafeText(sf) { const v = profSafeVal(sf); return v == null ? '—' : (sf.unk ? '≥ ' : '') + thrNum(v) + ' ' + profUnit(); }
+function profHighText(lg) { return !lg || lg.hi < 0 ? '—' : thrAlt(lg.g[lg.hi]); }
+function profBold(s) { return esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>'); }
+function profFresh() { return profWanted() && !!PROF.data && !PROF.data.fail && PROF.data.key === profKey(); }
+/* La ligne sous la ligne d'une branche, à la feuille de navigation (avant celle des menaces) */
+function profNavRow(i) {
+  if (!profFresh()) return '';
+  const lg = PROF.data.legs[i];
+  if (!lg) return '';
+  const txt = t('prof.leg', { h: profHighText(lg), s: profSafeText(lg.safe) });
+  return '<tr class="prof"><td></td><td colspan="3">' + profBold(txt) + '</td></tr>';
+}
+function profNavSig() {
+  if (!profFresh()) return 'off';
+  return JSON.stringify([CURRENT_LANG, S.units.altitude, PROF.data.legs.map(lg => (lg ? [profHighText(lg), profSafeText(lg.safe)] : null))]);
+}
+function profAfterData() {
+  const s = profNavSig();
+  if (s !== PROF.nsig) { PROF.nsig = s; renderNav(); }
+  profRender();
+}
+
+/* ---- la synchronisation : un seul point d'entrée, peu coûteux quand rien n'a changé ---- */
+function profSync() {
+  if (!mapCreated || !PROF.el) return;
+  if (!profWanted()) {
+    if (PROF.shown) profHide();
+    PROF.key = ''; PROF.rsig = '';
+    clearTimeout(PROF.timer); PROF.seq++;
+    if (PROF.nsig !== 'off') { PROF.nsig = 'off'; renderNav(); }
+    return;
+  }
+  const key = profKey();
+  if (key !== PROF.key) {
+    PROF.key = key;
+    clearTimeout(PROF.timer);
+    const seq = ++PROF.seq;
+    profClearCursor();
+    if (S.points.length > 1) PROF.timer = setTimeout(() => { profCompute(seq, key); }, 60);
+    else { PROF.data = { key: key, th: S.theatre, fail: false, legs: [null], flat: null, gp: [], total: 0 }; profAfterData(); return; }
+  }
+  profRender();
+}
+
+/* ---- le dessin ---- */
+function profNice(x) {
+  if (!(x > 0)) return 1;
+  const e = Math.pow(10, Math.floor(Math.log10(x))), f = x / e;
+  return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * e;
+}
+function profFmt(v) { return decimal(String(Math.round(v * 100) / 100)); }
+function profLegendHtml(on) {
+  const col = { '▇': PROF_RED, '▬': PROF_YEL, '━': PROF_YEL, '╍╍': PROF_GREEN };
+  return t(on ? 'prof.legend' : 'prof.legend.base').split(' · ').map(s => esc(s).replace(/^(▇|▬|━|╍╍)/, g => '<span style="color:' + col[g] + '">' + g + '</span>')).join(' · ');
+}
+/* Les menaces qui jugent la route et dont la grille est prête */
+function profGrids() {
+  const out = [];
+  if (!DISP.threats || THR.state !== 'ok') return out;
+  thrRouteActs().forEach(a => { const g = THR.grids.get(a.key); if (g) out.push({ a: a, g: g }); });
+  return out;
+}
+/* Où le sol et la grille d'une menace se rencontrent à l'échantillon k : { lo, hi } en mètres, ou null */
+function profCell(F, k, a, gr) {
+  const nn = 256 * Math.pow(2, gr.g.z), gx = Math.floor((F.lon[k] + 180) / 360 * nn) - gr.g.px0, gy = Math.floor(thrMercV(F.lat[k]) * nn) - gr.g.py0;
+  if (gx < 0 || gy < 0 || gx >= gr.g.side || gy >= gr.g.side) return null;
+  const idx = gy * gr.g.side + gx, hv = gr.g.hv[idx];
+  if (!isFinite(hv)) return null;
+  const g = F.g[k], lo = Math.max(g === g ? g : -Infinity, gr.g.g[idx] + hv), hi = gr.g.ceil == null ? Infinity : gr.g.gs + gr.g.ceil;
+  return hi < lo ? null : { lo: lo, hi: hi };
+}
+
+/* Le bandeau n'est dans la page que s'il est voulu : décoché, .mapwrap est celle de la base */
+function profHide() {
+  PROF.shown = false;
+  profClearCursor();
+  if (PROF.el && PROF.el.parentNode) PROF.el.remove();
+  profSetH(0);
+}
+function profSetH(h) {
+  if (!PROF.wrap || h === PROF.h) return;
+  PROF.h = h;
+  if (h) PROF.wrap.style.setProperty('--prof-h', h + 'px');
+  else { PROF.wrap.style.removeProperty('--prof-h'); if (!PROF.wrap.getAttribute('style')) PROF.wrap.removeAttribute('style'); }
+  if (map && mapCreated) map.invalidateSize({ animate: false });
+}
+
+function profRender() {
+  if (!mapCreated || !PROF.el || !profWanted()) return;
+  const G = profGeom(), el = PROF.el;
+  if (!G.W) return;
+  el.setAttribute('aria-label', t('prof.title'));
+  const grids = profGrids(), thrOn = DISP.threats && THR.state === 'ok' && THR.act.length > 0, d = PROF.data, fresh = !!d && d.key === profKey() && !d.fail;
+  const sig = JSON.stringify([fresh ? d.key : '', S.points.map(p => [p.name, p.alt, p.altRef]), CURRENT_LANG, S.units.altitude, S.units.distance, G.W, G.fold, THR.ver, grids.map(x => x.a.key + '|' + x.a.name),
+    DISP.threats, THR.state, THR.spans, S.points.length]);
+  PROF.shown = true;
+  if (!el.parentNode) PROF.wrap.appendChild(el);
+  profSetH(G.H);
+  if (sig === PROF.rsig) return;
+  PROF.rsig = sig;
+  profClearCursor();
+  /* l'en-tête */
+  el.classList.toggle('prof-fold', G.fold);
+  el.classList.toggle('prof-narrow', G.narrow);
+  el.style.height = G.H + 'px';
+  el.querySelector('.prof-t').textContent = t('prof.title');
+  const lg = el.querySelector('.prof-leg');
+  lg.hidden = G.narrow;
+  if (!G.narrow) lg.innerHTML = profLegendHtml(thrOn);
+  const fb = el.querySelector('.prof-fb');
+  fb.textContent = G.fold ? '▴' : '▾';
+  fb.setAttribute('aria-label', t(G.fold ? 'prof.unfold' : 'prof.fold'));
+  fb.title = t(G.fold ? 'prof.unfold' : 'prof.fold');
+  fb.setAttribute('aria-expanded', G.fold ? 'false' : 'true');
+  const gbox = el.querySelector('.prof-g');
+  gbox.hidden = G.fold;
+  PROF.view = null; PROF.zones = []; PROF.bars = [];
+  if (G.fold) return;
+  const svg = PROF.svg;
+  svg.setAttribute('width', G.W); svg.setAttribute('height', G.gh); svg.setAttribute('viewBox', '0 0 ' + G.W + ' ' + G.gh);
+  if (S.points.length < 2) {
+    svg.innerHTML = '<text x="' + (G.W / 2) + '" y="' + (G.gh / 2) + '" text-anchor="middle" class="prof-empty">' + esc(t('prof.empty')) + '</text>';
+    return;
+  }
+  if (!fresh) { svg.innerHTML = ''; return; }
+  svg.innerHTML = profSvg(G, d, grids);
+}
+
+function profSvg(G, d, grids) {
+  const F = d.flat, N = F.N, D = Math.max(d.total, 1), pts = S.points, ft = S.units.altitude === 'ft', uf = ft ? 1 / FT_M : 1, nm = S.units.distance === 'nm';
+  const ml = G.narrow ? 36 : 42, mr = 8, mt = G.narrow ? 16 : 18, axisY = G.gh - 18, pw = G.W - ml - mr;
+  /* l'élévation de la ligne de vol à chaque point : l'altitude en MER, ou le sol au point (inconnu : 0) plus l'altitude en SOL */
+  const el = pts.map((p, i) => (p.altRef === 'AGL' ? p.alt + (d.gp[i] === d.gp[i] ? d.gp[i] : 0) : p.alt));
+  const pd = []; { let c = 0; pts.forEach((p, i) => { if (i > 0) c += d.legs[i].m; pd.push(c); }); }
+  /* l'échelle verticale : le sol connu, la ligne, les deux chiffres de chaque branche ; jamais les plafonds */
+  let vlo = Infinity, vhi = -Infinity;
+  const see = v => { if (v === v && isFinite(v)) { if (v < vlo) vlo = v; if (v > vhi) vhi = v; } };
+  for (let k = 0; k < N; k++) see(F.g[k]);
+  el.forEach(see);
+  d.legs.forEach(lg => { if (!lg) return; if (lg.hi >= 0) see(lg.g[lg.hi]); const sv = profSafeVal(lg.safe); if (sv != null) see(ft ? sv * FT_M : sv); });
+  if (!isFinite(vlo)) { vlo = 0; vhi = 1000; }
+  const span0 = Math.max(vhi - vlo, 50), pad = span0 * 0.1;
+  const nt = Math.max(3, Math.min(6, Math.floor((axisY - mt) / 34)));
+  const step = profNice(((vhi + pad) - vlo) * uf / nt);
+  const ulo = Math.floor(vlo * uf / step) * step;
+  let uhi = Math.ceil((vhi + pad) * uf / step) * step;
+  if (uhi <= ulo) uhi = ulo + step;
+  const X = dm => ml + dm / D * pw, Y = vm => mt + (1 - (vm * uf - ulo) / (uhi - ulo)) * (axisY - mt);
+  const topM = uhi / uf;
+  PROF.view = { W: G.W, gh: G.gh, ml: ml, mr: mr, mt: mt, axisY: axisY, pw: pw, D: D, ulo: ulo, uhi: uhi, uf: uf, X: X, Y: Y };
+  let s = '<defs><clipPath id="prof-clip"><rect x="' + ml + '" y="' + mt + '" width="' + pw + '" height="' + (axisY - mt) + '"/></clipPath></defs>';
+  /* la grille et les axes */
+  for (let v = ulo; v <= uhi + step * 1e-6; v += step) {
+    const y = mt + (1 - (v - ulo) / (uhi - ulo)) * (axisY - mt);
+    s += '<line x1="' + ml + '" x2="' + (G.W - mr) + '" y1="' + y.toFixed(2) + '" y2="' + y.toFixed(2) + '" class="prof-grid"/><text x="' + (ml - 4) + '" y="' + (y + 3.5).toFixed(2) + '" text-anchor="end" class="prof-ax">' + esc(thrNum(v)) + '</text>';
+  }
+  s += '<text x="' + (ml - 4) + '" y="' + (mt - 6) + '" text-anchor="end" class="prof-ax prof-un">' + esc(profUnit()) + '</text>';
+  const dtot = D / 1000 / (nm ? NM_KM : 1), dstep = profNice(dtot / Math.max(2, Math.floor(pw / 90)));
+  for (let v = 0; v <= dtot + dstep * 1e-6; v += dstep) {
+    const x = ml + v / dtot * pw;
+    s += '<line x1="' + x.toFixed(2) + '" x2="' + x.toFixed(2) + '" y1="' + axisY + '" y2="' + (axisY + 3) + '" class="prof-axis"/><text x="' + x.toFixed(2) + '" y="' + (G.gh - 3) + '" text-anchor="' + (v === 0 ? 'start' : (x > G.W - 24 ? 'end' : 'middle')) + '" class="prof-ax">' + esc(profFmt(v) + (v === 0 ? ' ' + t(nm ? 'u.nm' : 'u.km') : '')) + '</text>';
+  }
+  s += '<line x1="' + ml + '" x2="' + (G.W - mr) + '" y1="' + axisY + '" y2="' + axisY + '" class="prof-axis"/>';
+  /* le sol : un remplissage par suite d'échantillons connus, le bord par-dessus ; un trou là où le sol est inconnu */
+  let fill = '', edge = '', run = [];
+  const flush = () => {
+    if (run.length) {
+      let p = 'M' + run[0][0].toFixed(1) + ',' + axisY;
+      run.forEach(q => { p += 'L' + q[0].toFixed(1) + ',' + q[1].toFixed(1); });
+      fill += p + 'L' + run[run.length - 1][0].toFixed(1) + ',' + axisY + 'Z';
+      edge += 'M' + run.map(q => q[0].toFixed(1) + ',' + q[1].toFixed(1)).join('L');
+    }
+    run = [];
+  };
+  for (let k = 0; k < N; k++) {
+    const g = F.g[k];
+    if (g !== g) { flush(); continue; }
+    const x = X(F.d[k]), y = Y(g), last = run[run.length - 1];
+    if (last && x - last[0] < 0.5) { if (y < last[1]) last[1] = y; continue; }
+    run.push([x, y]);
+  }
+  flush();
+  s += '<path d="' + fill + '" class="prof-fill"/><path d="' + edge + '" class="prof-edge"/>';
+  /* les menaces : la zone, une seule teinte (l'union), puis le nom de chacune */
+  const zones = [];
+  let zs = '', names = '';
+  grids.forEach(x => {
+    const runs = [];
+    let cur = null;
+    const top = x.g.ceil == null ? Infinity : x.g.gs + x.g.ceil;
+    for (let k = 0; k < N; k++) {
+      const c = profCell(F, k, x.a, x);
+      if (c) { if (!cur) { cur = { d0: 0, d1: 0, s: [] }; runs.push(cur); } cur.s.push({ k: k, d: F.d[k], lo: c.lo }); } else cur = null;
+    }
+    runs.forEach(r => {
+      const k0 = r.s[0].k, k1 = r.s[r.s.length - 1].k;
+      r.d0 = k0 > 0 ? (F.d[k0 - 1] + F.d[k0]) / 2 : F.d[k0];
+      r.d1 = k1 < N - 1 ? (F.d[k1] + F.d[k1 + 1]) / 2 : F.d[k1];
+      r.s.forEach(q => { const k = q.k; q.xl = k > 0 ? (F.d[k - 1] + F.d[k]) / 2 : F.d[k]; q.xr = k < N - 1 ? (F.d[k] + F.d[k + 1]) / 2 : F.d[k]; });
+    });
+    zones.push({ id: x.a.sys.id, name: x.a.name, top: top, runs: runs });
+    const yT = top === Infinity ? mt : Math.max(mt, Y(Math.min(top, topM)));
+    let big = null;
+    runs.forEach(r => {
+      /* un seul tracé par suite : le haut d'un trait, le bas en marches ; en pixels de 0,5 pour que le tracé reste court */
+      const bins = [];
+      r.s.forEach(q => {
+        const xl = X(q.xl), xr = X(q.xr), yb = Math.min(axisY, Math.max(mt, Y(Math.min(q.lo, topM))));
+        const last = bins[bins.length - 1];
+        if (last && xl - last.xl < 0.5) { last.xr = xr; if (yb > last.yb) last.yb = yb; } else bins.push({ xl: xl, xr: xr, yb: yb });
+      });
+      let p = 'M' + bins[0].xl.toFixed(2) + ',' + yT.toFixed(2) + 'L' + bins[bins.length - 1].xr.toFixed(2) + ',' + yT.toFixed(2);
+      for (let i = bins.length - 1; i >= 0; i--) p += 'L' + bins[i].xr.toFixed(2) + ',' + bins[i].yb.toFixed(2) + 'L' + bins[i].xl.toFixed(2) + ',' + bins[i].yb.toFixed(2);
+      zs += '<path d="' + p + 'Z" class="prof-zone" data-th="' + esc(x.a.sys.id) + '" data-d0="' + (r.d0 / 1000).toFixed(3) + '" data-d1="' + (r.d1 / 1000).toFixed(3) + '"/>';
+      if (!big || r.d1 - r.d0 > big.d1 - big.d0) big = r;
+    });
+    if (big && X(big.d1) - X(big.d0) >= 14) {
+      const lows = big.s.map(q => Math.min(q.lo, topM)), lo = lows.reduce((u, v) => u + v, 0) / lows.length;
+      const ym = (yT + Math.min(axisY, Math.max(mt, Y(lo)))) / 2;
+      names += '<text x="' + ((X(big.d0) + X(big.d1)) / 2).toFixed(1) + '" y="' + (ym + 4).toFixed(1) + '" text-anchor="middle" class="prof-zname">' + esc(x.a.name) + '</text>';
+    }
+  });
+  PROF.zones = zones;
+  if (zs) s += '<g clip-path="url(#prof-clip)" opacity="0.55" fill="' + PROF_RED + '">' + zs + '</g>' + names;
+  /* les deux chiffres de chaque branche : le point le plus haut (trait jaune, point) et la sécurité (tirets verts) */
+  d.legs.forEach((lg, i) => {
+    if (!lg) return;
+    const x0 = X(lg.cum), x1 = X(lg.cum + lg.m);
+    const sv = profSafeVal(lg.safe);
+    if (sv != null) {
+      const y = Y(ft ? sv * FT_M : sv);
+      s += '<line x1="' + x0.toFixed(2) + '" x2="' + x1.toFixed(2) + '" y1="' + y.toFixed(2) + '" y2="' + y.toFixed(2) + '" class="prof-safe" data-leg="' + i + '"/><text x="' + (x0 + 4).toFixed(1) + '" y="' + (y - 3).toFixed(1) + '" class="prof-sv" data-leg="' + i + '">' + esc((lg.safe.unk ? '≥ ' : '') + thrNum(sv)) + '</text>';
+    }
+    if (lg.hi >= 0) {
+      const hv = lg.g[lg.hi], y = Y(hv), xm = X(lg.cum + lg.m * lg.hi / lg.n);
+      s += '<line x1="' + x0.toFixed(2) + '" x2="' + x1.toFixed(2) + '" y1="' + y.toFixed(2) + '" y2="' + y.toFixed(2) + '" class="prof-high" data-leg="' + i + '"/><circle cx="' + xm.toFixed(2) + '" cy="' + y.toFixed(2) + '" r="3" class="prof-hdot" data-leg="' + i + '"/>';
+    }
+  });
+  /* la route vue : un trait de 5 px sous l'axe, sur les suites que la carte souligne (le halo) ; celles de la route d'aujourd'hui seulement */
+  if (DISP.threats && THR.state === 'ok' && grids.length && THR.spans && THR.spans.pk === JSON.stringify(pts.map(p => [p.lat, p.lon]))) THR.spans.list.forEach(b => {
+    s += '<rect x="' + X(b.d0).toFixed(2) + '" y="' + (axisY + 1) + '" width="' + Math.max(1, X(b.d1) - X(b.d0)).toFixed(2) + '" height="5" class="prof-seen" data-d0="' + (b.d0 / 1000).toFixed(3) + '" data-d1="' + (b.d1 / 1000).toFixed(3) + '"/>';
+    PROF.bars.push({ d0: b.d0, d1: b.d1 });
+  });
+  /* la ligne de vol : une droite d'un point à l'autre, chaque point à son altitude prévue ; aucune marque quand elle passe sous le sol */
+  s += '<polyline points="' + pts.map((p, i) => X(pd[i]).toFixed(2) + ',' + Y(el[i]).toFixed(2)).join(' ') + '" class="prof-line"/>';
+  pts.forEach((p, i) => { s += '<circle cx="' + X(pd[i]).toFixed(2) + '" cy="' + Y(el[i]).toFixed(2) + '" r="3.5" class="prof-pt"/>'; });
+  /* chaque point : un trait pointillé et, en tête, « n NOM » (coupé à 4 lettres sous 760 px, sauf le premier et le dernier) ; un nom qui en recouvre un autre s'efface, jamais le premier ni le dernier */
+  const lbls = pts.map((p, i) => {
+    const nm0 = typeof p.name === 'string' ? p.name.trim() : '', nm1 = G.narrow && i > 0 && i < pts.length - 1 ? nm0.slice(0, 4) : nm0, txt = i + (nm1 ? ' ' + nm1 : ''), w = txt.length * 6.2, x = X(pd[i]);
+    const l = Math.max(2, Math.min(G.W - 46 - w, x - w / 2));
+    return { i: i, txt: txt, l: l, r: l + w, x: x };
+  });
+  s += lbls.map(q => '<line x1="' + q.x.toFixed(2) + '" x2="' + q.x.toFixed(2) + '" y1="' + (mt - 2) + '" y2="' + axisY + '" class="prof-vert"/>').join('');
+  const shown = [];
+  lbls.forEach((q, n) => {
+    const prev = shown[shown.length - 1];
+    if (prev && q.l < prev.r + 3) {
+      if (n < lbls.length - 1) return;
+      if (shown.length > 1) shown.pop();
+    }
+    shown.push(q);
+  });
+  shown.forEach(q => { s += '<text x="' + q.l.toFixed(1) + '" y="' + (mt - 6) + '" class="prof-pn" data-i="' + q.i + '">' + esc(q.txt) + '</text>'; });
+  s += '<g id="prof-cur"></g>';
+  return s;
+}
+
+/* ---- le curseur : un trait jaune, un rond sur le sol, une bulle, et un rond jaune sur la carte au même point de la route ---- */
+function profClearCursor() {
+  PROF.cur = null;
+  const g = PROF.svg ? PROF.svg.querySelector('#prof-cur') : null;
+  if (g) g.innerHTML = '';
+  if (PROF.bub) PROF.bub.hidden = true;
+  if (PROF.mark) { if (map) map.removeLayer(PROF.mark); PROF.mark = null; }
+}
+function profCursorAt(clientX) {
+  const d = PROF.data, v = PROF.view;
+  if (!d || d.fail || !d.flat || !v || d.key !== profKey()) return;
+  const F = d.flat, r = PROF.svg.getBoundingClientRect();
+  const dm = (Math.max(v.ml, Math.min(v.W - v.mr, clientX - r.left)) - v.ml) / v.pw * v.D;
+  let lo = 0, hi = F.N - 1;
+  while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (F.d[mid] <= dm) lo = mid; else hi = mid; }
+  profCursorShow(Math.abs(F.d[lo] - dm) <= Math.abs(F.d[hi] - dm) ? lo : hi);
+}
+function profCursorShow(k) {
+  const d = PROF.data, v = PROF.view, F = d.flat;
+  PROF.cur = k;
+  const xs = v.X(F.d[k]), g = F.g[k], known = g === g;
+  let txt = fmtDist(F.d[k] / 1000) + ' · ' + t('prof.ground') + ' ' + (known ? thrNum(altValue(g)) + ' ' + profUnit() : '—');
+  const seen = [];
+  profGrids().forEach(x => { const c = profCell(F, k, x.a, x); if (c) seen.push({ lo: c.lo, n: x.a.name }); });
+  if (seen.length) {
+    seen.sort((a, b) => a.lo - b.lo);
+    txt += ' · ' + t('prof.seen', { v: thrAlt(seen[0].lo), n: seen.map(q => q.n).join(', ') });
+  }
+  PROF.svg.querySelector('#prof-cur').innerHTML = '<line x1="' + xs.toFixed(2) + '" x2="' + xs.toFixed(2) + '" y1="' + v.mt + '" y2="' + v.axisY + '" class="prof-cl"/>' +
+    (known ? '<circle cx="' + xs.toFixed(2) + '" cy="' + v.Y(g).toFixed(2) + '" r="4" class="prof-cd"/>' : '');
+  const b = PROF.bub;
+  b.textContent = txt;
+  b.hidden = false;
+  const bw = b.offsetWidth;
+  let left = xs + 8;
+  if (left + bw > v.W - 2) left = xs - 8 - bw;
+  b.style.left = Math.max(2, Math.min(v.W - bw - 2, left)) + 'px';
+  const ll = L.latLng(F.lat[k], F.lon[k]);
+  if (!PROF.mark) PROF.mark = L.marker(ll, { icon: L.divIcon({ className: 'rp-prof-dot', iconSize: [14, 14], iconAnchor: [7, 7] }), interactive: false, keyboard: false, zIndexOffset: 1000 }).addTo(map);
+  else PROF.mark.setLatLng(ll);
+}
+
+function profInit() {
+  PROF.wrap = document.querySelector('.mapwrap');
+  if (!PROF.wrap) return;
+  const el = document.createElement('div');
+  el.id = 'rp-prof';
+  el.setAttribute('role', 'region');
+  el.innerHTML = '<div class="prof-h"><b class="prof-t"></b><span class="prof-leg"></span><button type="button" class="prof-fb" aria-expanded="true"></button></div>' +
+    '<div class="prof-g"><svg class="prof-svg" xmlns="http://www.w3.org/2000/svg" role="img" focusable="false" width="0" height="0"></svg><div class="prof-bub" role="status" hidden></div></div>';
+  PROF.el = el;
+  PROF.svg = el.querySelector('.prof-svg'); PROF.bub = el.querySelector('.prof-bub');
+  PROF.el.querySelector('.prof-fb').addEventListener('click', () => { DISP.profFold = !DISP.profFold; saveDisplay(); profRender(); });
+  const gb = PROF.el.querySelector('.prof-g');
+  gb.addEventListener('pointerdown', e => {
+    if (e.pointerType !== 'mouse') { try { gb.setPointerCapture(e.pointerId); } catch (x) { /* ignore */ } PROF.drag = e.pointerId; }
+    profCursorAt(e.clientX);
+  });
+  gb.addEventListener('pointermove', e => { if (e.pointerType === 'mouse' || PROF.drag === e.pointerId) profCursorAt(e.clientX); });
+  const up = e => { if (PROF.drag === e.pointerId) PROF.drag = null; };
+  gb.addEventListener('pointerup', up);
+  gb.addEventListener('pointercancel', up);
+  gb.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') profClearCursor(); });
+  document.addEventListener('pointerdown', e => { if (PROF.cur !== null && e.pointerType !== 'mouse' && !gb.contains(e.target)) profClearCursor(); }, true);
+  if (window.ResizeObserver) new ResizeObserver(() => profSync()).observe(PROF.wrap);
 }
 
 /* Les aérodromes du théâtre choisi, dans leur panneau (au-dessus de la grille, sous les références et la route).
@@ -8287,6 +8897,7 @@ function createMap() {
   decorGroup = L.layerGroup().addTo(map);
   RL.group = L.layerGroup().addTo(map);
   thrInit();
+  profInit();
   map.on('move zoom viewreset resize', scheduleGrid);
   map.on('zoomend', drawRoute);
   map.on('zoomend', syncAfZoom);
@@ -10825,7 +11436,7 @@ function renderNav() {
   S.points.forEach((p, i) => {
     if (i > 0) {
       const lg = tm.legs[i];
-      rows += '<tr class="leg"><td></td><td colspan="2">' + esc(t('nav.leg', { cap: lg.cap, spd: speedText(lg.v), ete: fmtEte(lg.sec) })) + '</td><td class="r">' + esc(fmtDist(lg.km)) + '</td></tr>' + thrNavRow(i);
+      rows += '<tr class="leg"><td></td><td colspan="2">' + esc(t('nav.leg', { cap: lg.cap, spd: speedText(lg.v), ete: fmtEte(lg.sec) })) + '</td><td class="r">' + esc(fmtDist(lg.km)) + '</td></tr>' + profNavRow(i) + thrNavRow(i);
     }
     rows += '<tr><td class="n">' + i + '</td><td class="nm">' + esc(p.name) + '<span class="co alt">' + esc(altText(p)) + '</span><span class="co alt tm">' + esc(t('nav.t', { t: fmtElapsed(tm.el[i]) })) + '</span>' +
       (calc ? '<span class="co alt dv-leg">' + esc(t('nav.var', { v: fmtVar(declAt(p, ys)) })) + '</span>' : '') + '</td>' +
@@ -10844,6 +11455,7 @@ function renderNav() {
   $('nav-refs-wrap').hidden = !S.refs.length;
   rpFoldRefresh();
   thrSync();       /* la route vue se juge sur la route d'aujourd'hui (une altitude saisie ne passe que par ici) */
+  profSync();      /* le profil du sol se relève sur la route d'aujourd'hui */
 }
 
 function renderTheatreOptions() {
@@ -10864,6 +11476,7 @@ function syncControls() {
   $('theatre').value = S.theatre;
   syncRelief();
   thrSync();      /* le théâtre, la langue et les unités : les menaces */
+  profSync();     /* et le profil du sol */
   reliefAltRender();      /* la langue et l'unité d'altitude se relisent au cartouche */
   const mark = (attr, val) => document.querySelectorAll('[' + attr + ']').forEach(b => {
     const on = b.getAttribute(attr) === val;
@@ -14777,6 +15390,7 @@ const DSP = { open: false, panel: null, x0: 0, y0: 0 };
 const DSP_ROWS = [
   { g: '', k: 'relief', l: 'dsp.relief' },       /* la première ligne sous le titre, sans sous-titre à elle */
   { g: '', k: 'threats', l: 'dsp.threats' },     /* les menaces : juste sous « Relief », même groupe */
+  { g: '', k: 'profile', l: 'dsp.profile' },     /* le profil du sol : juste sous « Menaces », même groupe */
   { g: 'mission', k: 'routes', l: 'dsp.routes', seg: true, n: () => String(RSET.routes.length) },
   { g: 'mission', k: 'refs', l: 'dsp.refs', n: () => String(S.refs.length) },
   { g: 'layers', k: 'draw', l: 'dsp.draw' },
@@ -14803,7 +15417,7 @@ function loadDisplay() {
   } catch (e) { /* valeurs par défaut */ }
 }
 function saveDisplay() {
-  try { localStorage.setItem(KEY_DISPLAY, JSON.stringify({ routes: DISP.routes, refs: DISP.refs, draw: DISP.draw, sym: DISP.sym, cf: DISP.cf, diss: DISP.diss, relief: DISP.relief, threats: DISP.threats, thrStep: DISP.thrStep })); } catch (e) { /* stockage indisponible */ }
+  try { localStorage.setItem(KEY_DISPLAY, JSON.stringify({ routes: DISP.routes, refs: DISP.refs, draw: DISP.draw, sym: DISP.sym, cf: DISP.cf, diss: DISP.diss, relief: DISP.relief, threats: DISP.threats, profile: DISP.profile, profFold: DISP.profFold, thrStep: DISP.thrStep })); } catch (e) { /* stockage indisponible */ }
 }
 
 /* L'état d'une ligne : cochée, grisée, info-bulle */
@@ -14813,6 +15427,10 @@ function dspState(k) {
     return { on: has && !!DISP.relief, off: !has, tip: t(has ? 'dsp.relief.tip' : 'dsp.relief.off') };
   }
   if (k === 'threats') return { on: !!DISP.threats, off: false, tip: t('dsp.threats.tip') };
+  if (k === 'profile') {
+    const has = reliefTheatre(S.theatre);
+    return { on: has && !!DISP.profile, off: !has, tip: t(has ? 'dsp.profile.tip' : 'dsp.profile.off') };
+  }
   if (k === 'grid') return { on: !!S.ui.grid, off: false, tip: t('tb.grid') };
   if (k === 'places') return { on: !!S.ui.places, off: false, tip: t('tb.places.tip') };
   if (k === 'towns') {
@@ -14829,7 +15447,7 @@ function dspState(k) {
 /* Le point ambre : au moins un réglage du panneau n'est pas à sa valeur par défaut (fond Topo, km et m, tout affiché, sauf Lieux masqué) */
 function dspChanged() {
   return !(DISP.routes === 'all' && DISP.refs && DISP.draw && DISP.sym && DISP.cf && S.ui.grid && S.ui.towns && S.ui.airfields) || !!S.ui.places
-    || S.ui.layer !== 'topo' || S.units.distance !== 'km' || S.units.altitude !== 'm' || !!DISP.relief || !DISP.threats;
+    || S.ui.layer !== 'topo' || S.units.distance !== 'km' || S.units.altitude !== 'm' || !!DISP.relief || !DISP.threats || !!DISP.profile;
 }
 
 function dspSync() {
@@ -15093,6 +15711,11 @@ function dspToggle(k) {
     DISP.threats = !DISP.threats;
     saveDisplay();
     thrSync();
+  } else if (k === 'profile') {
+    if (!reliefTheatre(S.theatre)) return;
+    DISP.profile = !DISP.profile;
+    saveDisplay();
+    profSync();
   } else if (k === 'grid') {
     S.ui.grid = !S.ui.grid;
     persistState();
@@ -16555,7 +17178,7 @@ function init() {
   window.__RP = { map: map, get decorGroup() { return decorGroup; }, timing: timing, get S() { return S; }, drawGrid: drawGrid, setBase: setBase, get baseLayers() { return baseLayers; }, get inFallback() { return inFallback; },
     get placesLayer() { return placesLayer; }, get reliefLayer() { return RE.layer; }, reliefAltAt: reliefAltAt, get airfieldLayer() { return afLayer; }, get tapMode() { return tapMode; },
     get townsLayer() { return twLayer; }, townsReport: townsReport, get search() { return SR; },
-    get layers() { return CF_LAYERS; }, get layersGroup() { return cfGroup; }, get thr() { return THR; }, thrCalc: thrCalc, thrProbe: thrProbe, thrRank: thrRank, thrTop: thrTop, thrH: thrH, get routes() { syncActive(); return RSET; }, get othersGroup() { return othersGroup; }, get draw() { return DR; }, get split() { return SP; }, get ruler() { return RL; } };
+    get layers() { return CF_LAYERS; }, get layersGroup() { return cfGroup; }, get thr() { return THR; }, get prof() { return PROF; }, thrCalc: thrCalc, thrProbe: thrProbe, thrRank: thrRank, thrTop: thrTop, thrH: thrH, get routes() { syncActive(); return RSET; }, get othersGroup() { return othersGroup; }, get draw() { return DR; }, get split() { return SP; }, get ruler() { return RL; } };
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

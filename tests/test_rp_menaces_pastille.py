@@ -1,4 +1,4 @@
-"""Route Planner au téléphone (MP-V2.1.0+17) : la pastille des menaces disparaît au décochage, se pose en bas à droite, 6 px au-dessus des crédits de la carte, part repliée (« ± » montre « − » et « + ») ;
+"""Route Planner au téléphone (MP-V2.1.0+18) : la pastille des menaces disparaît au décochage, se pose en bas à droite, 6 px au-dessus des crédits de la carte, part repliée (« ± » montre « − » et « + ») ;
 la carte en grand (cadre d'export, dessin) garde son centre et son zoom.
 Joué sur le shell construit (dist/dcs_mission_plan.html, chromium), sans réseau : le banc de test_rp_menaces sert le relief. Les contrôles passent par le DOM, jamais par une capture."""
 import sys
@@ -381,13 +381,13 @@ def test_dragging_the_handle_keeps_the_top_left_corner_as_before(browser):
 
 
 # ---------- le texte et le numéro ----------
-def test_the_field_manual_says_it_and_the_build_number_is_17():
+def test_the_field_manual_says_it_and_the_build_number_is_18():
     fm = (ROOT / 'dist' / 'dcs_field_manual.html').read_text(encoding='utf-8')
     rp = fm[fm.index('<section id="page-rp"'):fm.index('<!-- /page-rp -->')]
     assert 'au téléphone, c’est une pastille repliée, en bas à droite au-dessus des crédits de la carte : <strong>±</strong> y montre <strong>−</strong> et <strong>+</strong>.' in rp
     assert 'on a phone it is a folded pill at the bottom right, above the map credits: <strong>±</strong> shows <strong>−</strong> and <strong>+</strong>.' in rp
     assert 'une pastille avec <strong>−</strong>' not in rp and 'it is a pill with' not in rp
-    assert 'DEV_BUILD = 17' in (ROOT / 'version_block.py').read_text(encoding='utf-8')
+    assert 'DEV_BUILD = 18' in (ROOT / 'version_block.py').read_text(encoding='utf-8')
     rpd = (ROOT / 'dist' / 'dcs_route_planner.html').read_text(encoding='utf-8')
     for k in ('thr.set', 'thr.fold'):
         assert rpd.count("    '%s': '" % k) == 2, k

@@ -173,7 +173,7 @@ const THR = {
   act: [], desc: null, state: '',
   circ: null, halo: null, circSig: '', haloSig: '',
   zone: null, zoneSig: '', paint: { H: 0, list: [] },
-  seen: null, routeSig: '', routeSeq: 0, routeTimer: 0,
+  seen: null, spans: null, routeSig: '', routeSeq: 0, routeTimer: 0,       /* spans : les suites vues, en mètres depuis le départ ({ pk: la route jugée, list: [{ d0, d1 }] }), pour le profil du sol */
   box: null, boxSig: '', raf: 0, open: false,       /* open : la pastille dépliée (« − » et « + » vus) ; en mémoire seulement, repliée à chaque ouverture du RP */
   blob: ''
 };
@@ -539,18 +539,19 @@ function thrRouteSync() {
   THR.routeSig = sig;
   clearTimeout(THR.routeTimer);
   const seq = ++THR.routeSeq;
-  if (sig === 'off') { thrRouteSet(null, []); return; }
+  if (sig === 'off') { THR.spans = null; thrRouteSet(null, []); return; }
   THR.routeTimer = setTimeout(() => { thrRouteCompute(seq); }, 60);
 }
 function thrRouteCompute(seq) {
   const th = S.theatre, meta = THR.desc && THR.desc.meta, pts = S.points.map(p => ({ lat: p.lat, lon: p.lon, alt: p.alt, altRef: p.altRef })), acts = thrRouteActs();
   const grids = acts.map(a => THR.grids.get(a.key));
   if (!meta || grids.some(g => !g)) return;
-  const legs = [null];
+  const legs = [null], cum = [0, 0];       /* cum[i] : la distance (m) du départ au début de la branche i */
   let needGround = false;
   for (let i = 1; i < pts.length; i++) {
     const lg = thrLegSamples(pts[i - 1], pts[i]);
     legs.push(lg);
+    cum[i + 1] = cum[i] + (lg ? lg.m : 0);
     if (lg && (pts[i - 1].altRef === 'AGL' || pts[i].altRef === 'AGL')) needGround = true;
   }
   const want = new Map();
@@ -593,7 +594,7 @@ function thrRouteCompute(seq) {
           kms[q] += sp.w / 1000;
           any = true;
         });
-        flat.push({ a: a, lg: lg, k: k, sp: sp, seen: any });
+        flat.push({ a: a, lg: lg, k: k, sp: sp, seen: any, i: i });
       });
       const items = [];
       acts.forEach((ac, q) => { if (kms[q] > 0) items.push({ name: ac.name, km: kms[q] }); });
@@ -601,19 +602,21 @@ function thrRouteCompute(seq) {
       if (items.length) seen[i] = items;
     }
     /* une suite d'échantillons vus (d'une branche à l'autre si les deux bouts le sont) : de la moitié de l'intervalle avant le premier à la moitié de l'intervalle après le dernier */
-    const runs = [];
-    let cur = null;
+    const runs = [], spans = [];
+    let cur = null, d0 = 0;
     const edge = (e, dir) => {
       const l = e.lg.list, nb = l[e.k + dir];
       return nb ? thrPointAt(e.a, e.lg, e.sp.s + (nb.s - e.sp.s) / 2) : { lat: e.sp.lat, lon: e.sp.lon };
     };
+    const edgeD = (e, dir) => { const nb = e.lg.list[e.k + dir]; return cum[e.i] + (nb ? e.sp.s + (nb.s - e.sp.s) / 2 : e.sp.s); };       /* la même suite, en mètres depuis le départ */
     flat.forEach((e, n) => {
       if (e.seen) {
-        if (!cur) { cur = [edge(e, -1)]; }
+        if (!cur) { cur = [edge(e, -1)]; d0 = edgeD(e, -1); }
         cur.push({ lat: e.sp.lat, lon: e.sp.lon });
-        if (!(flat[n + 1] && flat[n + 1].seen)) { cur.push(edge(e, 1)); runs.push(cur); cur = null; }
+        if (!(flat[n + 1] && flat[n + 1].seen)) { cur.push(edge(e, 1)); runs.push(cur); spans.push({ d0: d0, d1: edgeD(e, 1) }); cur = null; }
       }
     });
+    THR.spans = { pk: JSON.stringify(pts.map(p => [p.lat, p.lon])), list: spans };
     thrRouteSet(seen, runs);
   });
 }
@@ -631,6 +634,7 @@ function thrRouteSet(seen, runs) {
     });
   }
   if (sig !== was) renderNav();
+  if (typeof profSync === 'function') profSync();       /* le profil du sol redessine la barre « route vue » */
 }
 /* La ligne sous la ligne d'une branche vue, à la feuille de navigation */
 function thrNavRow(i) {
@@ -771,6 +775,7 @@ function thrSync() {
   thrZoneSync();
   thrRouteSync();
   thrBoxRender();
+  if (typeof profSync === 'function') profSync();       /* une grille prête ou retirée : la zone du profil du sol */
 }
 function thrInit() {
   THR.circ = L.layerGroup().addTo(map);
