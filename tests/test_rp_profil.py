@@ -10,7 +10,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / 'tests'))
-from test_rp_menaces import (CREST_M, NBSP, PLAIN_M, TCOL, TX, TY, browser, display, needs_pw, open_rp, ready, setup, sym, tile_ll)  # noqa: E402,F401
+from test_rp_menaces import (png, rgb, CREST_M, NBSP, PLAIN_M, TCOL, TX, TY, browser, display, needs_pw, open_rp, ready, setup, sym, tile_ll)  # noqa: E402,F401
 
 PROF_READY = "(() => { const P = __RP.prof; return !!P.data && !P.data.fail && P.data.key === profKey() && !!P.view; })()"
 
@@ -619,3 +619,72 @@ def test_a3_a_wide_but_low_map_gives_the_graph_the_same_way(browser):
     assert abs(r['svg'][3] - gh) <= 1 and gh < 190 and r['prof'][1] >= r['wrap'][1] and r['map'][3] >= 140 - 1, r
     assert pg.errs == []
     pg.context.close()
+
+
+# ---------- l'échelle verticale (lot mp-route-profil-2) ----------
+def scale_of(browser, pixel, pts, lang='fr'):
+    """Ouvre le RP avec une tuile d'altitude fabriquée, trace la route, rend l'échelle du dessin : ulo, uhi, le sol échantillonné, les graduations."""
+    pg, fr = open_rp(browser, lang=lang)
+    pg.bench.elev = png(256, 256, pixel)
+    tick(fr, pg)
+    route(fr, pts)
+    wait_prof(fr)
+    pg.wait_for_timeout(500)
+    out = {}
+    for unit in ('m', 'ft'):
+        fr.evaluate("S.units.altitude = '%s'; renderAll();" % unit)
+        pg.wait_for_timeout(700)
+        wait_prof(fr)
+        out[unit] = fr.evaluate("""() => { const v = __RP.prof.view, F = __RP.prof.data.flat; let nan = 0, lo = Infinity, hi = -Infinity;
+          for (let k = 0; k < F.N; k++) { const g = F.g[k]; if (g !== g) nan++; else { if (g < lo) lo = g; if (g > hi) hi = g; } }
+          const ticks = Array.from(document.querySelectorAll('text.prof-ax')).filter(e => !e.classList.contains('prof-un') && e.getAttribute('text-anchor') === 'end').map(e => parseFloat(e.textContent.replace(/[^0-9.-]/g, '').replace('\u2212', '-')));
+          return { ulo: v.ulo, uhi: v.uhi, uf: v.uf, nan: nan, glo: lo, ghi: hi, ticks: ticks, rows: Array.from(document.querySelectorAll('table.nav tr.prof')).map(e => e.textContent) }; }""")
+        out[unit]['step'] = out[unit]['ticks'] and None
+    out['errs'] = pg.errs
+    pg.context.close()
+    return out
+
+
+@needs_pw
+def test_s1_an_impossible_ground_reads_as_the_sea_without_a_gap_and_the_scale_starts_at_zero(browser):
+    zero = lambda x, y: (0, 0, 0, 255) if (y in (127, 128, 129) and 100 <= x < 140) else rgb(500)
+    r = scale_of(browser, zero, [pt('A', 60 / 256, .5), pt('B', 250 / 256, .5)])
+    for u in ('m', 'ft'):
+        o = r[u]
+        assert o['nan'] == 0 and o['glo'] == 0 and o['ghi'] == 500, o                                      # ces pixels (-10 000 m) valent 0 m : pas de trou
+        assert o['ulo'] == 0 and min(o['ticks']) == 0, o                                                   # le bas de l'échelle est 0
+        assert all('≥' not in x for x in o['rows']), o
+    assert r['errs'] == []
+
+
+@needs_pw
+def test_s2_a_plain_at_1000_m_starts_500_m_below_it(browser):
+    r = scale_of(browser, lambda x, y: rgb(1000), [pt('A', 60 / 256, .5, 1500, 'MSL'), pt('B', 250 / 256, .5, 1500, 'MSL')])
+    m, ft = r['m'], r['ft']
+    step_m = m['ticks'][0] - m['ticks'][1] if len(m['ticks']) > 1 else None
+    assert m['ulo'] <= 500 and m['ulo'] > 500 - (m['uhi'] - m['ulo']) and m['ulo'] % 50 == 0 and m['ulo'] >= 0, m
+    step_f = abs(ft['ticks'][0] - ft['ticks'][1])
+    assert ft['ulo'] <= 1640.4 and ft['ulo'] > 1640.4 - step_f and ft['ulo'] % step_f == 0, ft
+    sm = abs(m['ticks'][0] - m['ticks'][1])
+    assert m['ulo'] <= 500 < m['ulo'] + sm and m['ulo'] % sm == 0
+    assert r['errs'] == []
+
+
+@needs_pw
+def test_s3_a_plain_at_100_m_starts_at_zero_with_no_negative_graduation(browser):
+    r = scale_of(browser, lambda x, y: rgb(100), [pt('A', 60 / 256, .5), pt('B', 250 / 256, .5)])
+    for u in ('m', 'ft'):
+        assert r[u]['ulo'] == 0 and min(r[u]['ticks']) >= 0, r[u]
+    assert r['errs'] == []
+
+
+@needs_pw
+def test_s4_a_ground_at_minus_300_m_starts_500_m_lower_rounded_to_the_step(browser):
+    r = scale_of(browser, lambda x, y: rgb(-300), [pt('A', 60 / 256, .5), pt('B', 250 / 256, .5)])
+    m, ft = r['m'], r['ft']
+    assert m['glo'] == pytest.approx(-300, abs=0.1) and m['nan'] == 0, m
+    sm = abs(m['ticks'][0] - m['ticks'][1])
+    assert m['ulo'] <= -800 < m['ulo'] + sm and m['ulo'] % sm == 0, (m, sm)
+    sf = abs(ft['ticks'][0] - ft['ticks'][1])
+    assert ft['ulo'] <= -800 / 0.3048 < ft['ulo'] + sf and ft['ulo'] % sf == 0, (ft, sf)
+    assert r['errs'] == []
