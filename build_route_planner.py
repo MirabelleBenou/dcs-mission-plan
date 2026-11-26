@@ -4761,7 +4761,7 @@ function profGeom() {
 }
 /* Le haut réglé revient à Auto à chaque changement de route choisie (une autre, une neuve, la choisie supprimée) et de théâtre : la clé est le théâtre et le rid de la route active */
 function profGuard() {
-  const a = typeof RSET !== 'undefined' && RSET && RSET.routes ? RSET.routes[RSET.active] : null, k = (S ? S.theatre : '') + '|' + (a && a.rid ? a.rid : '');
+  const a = RSET && RSET.routes ? RSET.routes[RSET.active] : null, k = (S ? S.theatre : '') + '|' + (a && a.rid ? a.rid : '');
   if (k !== PROF.rkey) { PROF.rkey = k; PROF.topM = null; }
 }
 

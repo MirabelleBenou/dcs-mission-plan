@@ -369,8 +369,9 @@ def test_the_cursor_bubble_stays_in_the_frame_and_the_map_gets_a_yellow_dot(brow
     pg.wait_for_timeout(1000)
     sv = fr.evaluate("(() => { const b = document.querySelector('.prof-svg').getBoundingClientRect(); return [b.x, b.y, b.width, b.height]; })()")
     seen_txt = None
+    vw = fr.evaluate("(() => { const v = __RP.prof.view; return [v.ml, v.pw]; })()")                       # la colonne du curseur du haut prend la droite du SVG : « au bord droit » se prend à 98 % de la largeur tracée
     for fx in (0.0, 0.02, 0.35, 0.5, 0.98, 1.0):
-        pg.mouse.move(sv[0] + fx * (sv[2] - 1) + (0.5 if fx == 0 else 0), sv[1] + 90)
+        pg.mouse.move(sv[0] + (vw[0] + 0.98 * vw[1] if fx == 0.98 else fx * (sv[2] - 1) + (0.5 if fx == 0 else 0)), sv[1] + 90)
         pg.wait_for_timeout(250)
         r = fr.evaluate("""() => { const b = document.querySelector('.prof-bub').getBoundingClientRect(), g = document.querySelector('.prof-g').getBoundingClientRect();
           return { hidden: document.querySelector('.prof-bub').hidden, l: b.left - g.left, r: g.right - b.right, txt: document.querySelector('.prof-bub').textContent,
